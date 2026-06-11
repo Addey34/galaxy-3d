@@ -1,6 +1,6 @@
 # Solar System 3D
 
-Visualisateur interactif du système solaire en temps réel, développé en TypeScript avec Three.js. Deux modes d'affichage : **Explo** (distances compressées, tout visible d'un coup) et **Simu** (vraie échelle astronomique, positions Kepler calculées par éphéméride).
+Visualisateur interactif du système solaire en temps réel, développé en TypeScript avec Three.js. Deux modes d'affichage : **Éducatif** (distances compressées en √, tout visible d'un coup) et **Exploration** (vraie échelle astronomique, positions Kepler calculées par éphéméride). Le mode Exploration est en cours de développement et actuellement désactivé dans l'interface.
 
 ## Aperçu
 
@@ -8,7 +8,7 @@ Visualisateur interactif du système solaire en temps réel, développé en Type
 - Time travel : naviguer librement dans le temps passé et futur
 - Planètes multi-couches : surface PBR, nuages, atmosphère, lueurs nocturnes (shader GLSL)
 - LOD automatique : résolution de texture adaptée à la distance caméra (1k → 8k)
-- Sprite LOD en mode Simu pour les planètes lointaines
+- Sprite LOD en mode Exploration pour les planètes lointaines
 - Responsive mobile avec qualité adaptative
 
 ## Stack
@@ -41,8 +41,9 @@ Ouvrir [http://localhost:5173](http://localhost:5173) dans le navigateur.
 
 ```bash
 pnpm dev        # Serveur de dev avec hot reload
-pnpm build      # Build de production → dist/
+pnpm build      # tsc --noEmit (vérification de types) puis build de production → dist/
 pnpm preview    # Servir le build de production localement
+pnpm typecheck  # tsc --noEmit seul — vérification stricte des types, sans build
 ```
 
 ## Textures
@@ -94,10 +95,10 @@ Résolutions disponibles : `1k`, `2k`, `4k`, `8k` (selon le corps, voir `src/con
 
 | Mode | Distances | Tailles | Orbites |
 |------|-----------|---------|---------|
-| **Explo** | Compressées (`√AU × 35`) | Visuelles | Circulaires |
-| **Simu** | Réelles (`AU × 35`) | Physiques (km) | Ellipses Kepler |
+| **Éducatif** (`educ`) | Compressées (`√AU × 35`) | Visuelles | Circulaires inclinées |
+| **Exploration** (`explo`) | Réelles (`AU × 35`) | Physiques (km) | Positions Kepler réelles |
 
-Basculer avec les boutons **Explo / Simu** dans l'interface.
+Basculer avec les boutons **Éduc. / Explo.** dans l'interface. Le mode **Exploration** est en cours de développement : son bouton est actuellement désactivé (grisé).
 
 ### Contrôle du temps
 
@@ -171,9 +172,9 @@ index.html
               ├── SceneSystem.setupCelestialBodies()        85%
               ├── CameraSystem.init()
               ├── EphemerisService + SimulationClock
-              ├── OrbitalMechanics (onSimuStateChanged hook)
-              ├── _recomputeSimuOrbits()                    95%
-              └── AnimationSystem.run()         /clear
+              ├── OrbitalMechanics (hook onOrbitsChanged)
+              ├── _recomputeOrbits()                        95%
+              └── AnimationSystem.run()
                           → boucle infinie
 ```
 
@@ -187,7 +188,7 @@ requestAnimationFrame
   │     └── EphemerisService → body.group.position  (positions Kepler)
   ├── Frustum culling (une passe pour tous les objets)
   ├── CelestialObject.update() × N
-  │     ├── Sprite ↔ mesh transition (mode Simu)
+  │     ├── Sprite ↔ mesh transition (mode Exploration)
   │     ├── Rotation du mesh + nuages
   │     └── Shader uniforms (position du soleil)
   ├── CameraSystem.update()            Suivi de la planète cible
@@ -197,8 +198,8 @@ requestAnimationFrame
 ### Système d'échelle
 
 ```
-Mode Explo : position = √(distanceAU) × 35   (compression visuelle)
-Mode Simu  : position = distanceAU × 35       (vraie proportionnalité)
+Mode Éducatif   : position = √(distanceAU) × 35   (compression visuelle)
+Mode Exploration : position = distanceAU × 35      (vraie proportionnalité)
 
 Terre (1 AU) → 35 unités dans les deux modes (point de calibration commun)
 ```
@@ -221,7 +222,7 @@ Repère écliptique → Three.js XZ-plane
 1. Déposer les textures dans `public/assets/textures/{nom}/`
 2. Ajouter une entrée dans `CELESTIAL_CONFIG.bodies` dans `src/config/settings.ts`
    - Inclure `realData.orbitPeriodDays` pour que les lignes d'orbite Kepler soient calculées
-3. Ajouter les distances dans `CAMERA_SETTINGS.bodyDistances` et `simuBodyDistances`
+3. Ajouter les distances dans `CAMERA_SETTINGS.bodyDistances` (Éducatif) et `exploBodyDistances` (Exploration)
 4. Ajouter à `TEXTURE_SETTINGS.loadPriority` si préchargement souhaité
 5. Ajouter le bouton dans `index.html` avec `id="orbit-{nom}"`
 6. Mapper le nom vers l'enum `Body` dans `EphemerisService.ts` (BODY_MAP)
@@ -236,12 +237,12 @@ Tout se configure dans `src/config/settings.ts` :
 | `APP_SETTINGS.performance.textureQuality` | Seuils de distance LOD par qualité |
 | `LIGHTING_SETTINGS` | Intensité lumière ambiante et solaire |
 | `SHADER_SETTINGS.nightLights` | Intensité / seuil / douceur des lueurs nocturnes |
-| `CAMERA_SETTINGS.bodyDistances` | Distance caméra par planète en mode Explo |
-| `CAMERA_SETTINGS.simuBodyDistances` | Idem en mode Simu |
+| `CAMERA_SETTINGS.bodyDistances` | Distance caméra par planète en mode Éducatif |
+| `CAMERA_SETTINGS.exploBodyDistances` | Idem en mode Exploration |
 | `SIMU_SCALES` (MainSolarSystemApp) | Vitesses disponibles : `[1, 3600, 10800, 21600]` |
 
 ## Dépendances de développement
 
-- **TypeScript strict** (`tsconfig.json`) — Vite compile via esbuild, pas de `tsc --emit`
+- **TypeScript strict** (`tsconfig.json`) — Vite sert/compile le TS via esbuild (pas de vérification de types en dev) ; `pnpm typecheck` ou `pnpm build` (qui lance `tsc --noEmit`) est ce qui valide réellement les types
 - **Prettier** — formatage automatique (`.prettierrc`)
 - Aucun test runner ni linter configuré
