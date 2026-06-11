@@ -48,7 +48,7 @@ pnpm typecheck  # tsc --noEmit seul — vérification stricte des types, sans bu
 
 ## Textures
 
-Les textures ne sont pas incluses dans le dépôt (trop volumineuses). Les déposer dans `public/assets/textures/` en respectant la structure suivante :
+Les textures sont incluses dans le dépôt, sous `public/assets/textures/`, organisées par corps céleste :
 
 ```
 public/assets/textures/
