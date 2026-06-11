@@ -1,3 +1,7 @@
+/* ============================================================================
+   BASE
+   ============================================================================ */
+
 body {
   margin: 0;
   overflow: hidden;
@@ -5,46 +9,139 @@ body {
   font-family: Arial, sans-serif;
 }
 
+/* ============================================================================
+   PLANET NAV (top)
+   ============================================================================ */
+
 .controls {
   position: fixed;
   padding: 1rem;
   left: 0;
   right: 0;
+  top: 0;
   display: flex;
   justify-content: center;
-  gap: 1rem;
+  gap: 0.6rem;
   flex-wrap: wrap;
   z-index: 100;
 }
 
-.controls button.active {
-  background: rgba(100, 150, 255, 0.7);
-  border-color: white;
+/* Bouton actif : teinté de la couleur de SA planète (variable --planet-rgb posée par JS). */
+.controls button.is-active {
+  background: rgba(var(--planet-rgb), 0.28);
+  border-color: rgb(var(--planet-rgb));
+  box-shadow: 0 0 18px rgba(var(--planet-rgb), 0.45);
+  text-shadow: 0 0 8px rgba(var(--planet-rgb), 0.85);
+}
+
+/* Bouton Vue Globale — séparé visuellement des planètes ; conserve l'accent bleu. */
+#orbit-overview {
+  --planet-rgb: 74, 143, 255;
+  border-color: rgba(74, 143, 255, 0.45);
+  color: rgba(160, 200, 255, 0.9);
+  margin-right: 0.4rem;
+}
+
+/* Masqué en mode explo (classe posée sur <body> par JS) */
+body.is-explo-mode #orbit-overview {
+  display: none;
 }
 
 .button {
-  padding: 10px 15px;
-  background: rgba(0, 0, 0, 0.7);
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  /* Accent par défaut (Vue Globale) ; surchargé par planète via JS (applyPlanetButtonColors). */
+  --planet-rgb: 100, 150, 255;
+  padding: 0.55rem 1rem;
+  background: rgba(0, 0, 0, 0.65);
+  border: 1px solid rgba(255, 255, 255, 0.22);
   color: white;
   cursor: pointer;
-  font-size: 1rem;
+  font-size: 0.9rem;
   border-radius: 0.5rem;
-  transition: all 0.3s ease;
-  backdrop-filter: blur(5px);
-  min-width: 6rem;
+  transition: background 0.25s, border-color 0.25s, box-shadow 0.25s, color 0.25s;
+  backdrop-filter: blur(6px);
+  min-width: 5rem;
 }
 
-.button:hover {
-  background: rgba(50, 50, 50, 0.7);
+/* Survol : léger halo de la couleur de la planète (sauf si le bouton est déjà actif). */
+.button:hover:not(.is-active) {
+  background: rgba(var(--planet-rgb), 0.14);
+  border-color: rgba(var(--planet-rgb), 0.6);
+  box-shadow: 0 0 14px rgba(var(--planet-rgb), 0.22);
 }
+
+/* ============================================================================
+   MODE TOGGLE — pilule segmentée (en bas à gauche)
+   Éducatif → accent bleu, Exploration → vert.
+   ============================================================================ */
+
+#mode-controls {
+  position: fixed;
+  bottom: 1rem;
+  left: 1rem;
+  z-index: 100;
+}
+
+.mode-seg {
+  display: flex;
+  background: rgba(4, 6, 18, 0.70);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 0.6rem;
+  overflow: hidden;
+  backdrop-filter: blur(12px);
+  box-shadow: 0 2px 16px rgba(0, 0, 0, 0.45);
+}
+
+.mode-btn {
+  padding: 0.45rem 1rem;
+  background: transparent;
+  border: none;
+  border-right: 1px solid rgba(255, 255, 255, 0.09);
+  color: rgba(255, 255, 255, 0.42);
+  cursor: pointer;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  font-family: inherit;
+  transition: background 0.2s, color 0.2s;
+}
+
+.mode-btn:last-child {
+  border-right: none;
+}
+
+.mode-btn:hover:not(.is-active):not(:disabled) {
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.75);
+}
+
+/* Mode désactivé (ex. Explo. tant qu'il n'est pas prêt) */
+.mode-btn:disabled {
+  color: rgba(255, 255, 255, 0.20);
+  cursor: not-allowed;
+  background: transparent;
+}
+
+/* Éducatif actif → accent bleu */
+.mode-btn.is-active[data-mode="education"] {
+  background: rgba(74, 143, 255, 0.20);
+  color: rgba(160, 200, 255, 1);
+}
+
+/* Exploration (vraie échelle) actif → accent vert */
+.mode-btn.is-active[data-mode="exploration"] {
+  background: rgba(80, 200, 110, 0.20);
+  color: rgba(120, 255, 150, 1);
+}
+
+
+/* ============================================================================
+   LOADER
+   ============================================================================ */
 
 #loader {
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
+  inset: 0;
   background: #000;
   display: flex;
   justify-content: center;
@@ -74,102 +171,386 @@ body {
   transition: width 0.3s;
 }
 
+/* ============================================================================
+   FULLSCREEN (bottom-right)
+   ============================================================================ */
+
 #fullscreen-btn {
   position: fixed;
-  font-size: 3rem;
+  font-size: 2.6rem;
   bottom: 1rem;
   right: 1rem;
-  padding: 0.5rem;
-  background: rgba(0, 0, 0, 0.5);
+  padding: 0.4rem;
+  background: rgba(0, 0, 0, 0.45);
   border: none;
-  color: white;
+  color: rgba(255, 255, 255, 0.6);
   border-radius: 50%;
   cursor: pointer;
   z-index: 100;
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: color 0.25s, transform 0.25s;
 }
 
 #fullscreen-btn:hover {
+  color: white;
   transform: scale(1.1);
-  transition: all 0.3s ease;
 }
 
 /* ============================================================================
-   CONTRÔLES DE VITESSE
+   TIME PANEL (bottom-center)
    ============================================================================ */
 
-.speed-controls {
+#time-panel {
   position: fixed;
-  bottom: 1.5rem;
+  bottom: 1rem;
   left: 50%;
   transform: translateX(-50%);
-  display: flex;
-  gap: 0.75rem;
   z-index: 100;
+  min-width: 13rem;
+
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+
+  background: rgba(4, 6, 18, 0.60);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 0.75rem;
+  backdrop-filter: blur(20px);
+  box-shadow:
+    0 4px 32px rgba(0, 0, 0, 0.55),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  overflow: hidden;
+
+  --accent: 74, 143, 255;
+  --green:  80, 200, 110;
 }
 
-.speed-button {
-  width: 3.5rem;
-  height: 3.5rem;
-  background: rgba(0, 0, 0, 0.7);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  color: white;
-  cursor: pointer;
-  font-size: 1.2rem;
-  font-weight: bold;
-  border-radius: 50%;
-  transition: all 0.3s ease;
-  backdrop-filter: blur(5px);
+/* ── Ligne 1 : play/pause | vitesse (centrée) | reset ───────────────────── */
+
+#playback-row {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.3rem 0.5rem;
+}
+
+.tp-flex1 { flex: 1; }
+
+/* ── Panneau date/heure (toujours visible, slide vers le bas) ───────────────── */
+
+#datetime-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  max-height: 0;
+  overflow: hidden;
+  opacity: 0;
+  border-top: 1px solid transparent;
+  transition:
+    max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+    opacity    0.30s ease,
+    border-color 0.3s ease;
+}
+
+#datetime-panel.is-open {
+  max-height: 5rem;
+  opacity: 1;
+  border-top-color: rgba(255, 255, 255, 0.06);
+}
+
+/* ── Ligne horloge ───────────────────────────────────────────────────────── */
+
+#clock-row {
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: 0.3rem;
+  padding: 0.4rem 0.9rem 0.08rem;
 }
 
-.speed-button:hover {
-  background: rgba(50, 50, 50, 0.8);
-  transform: scale(1.1);
+/* ── Input time : affichage ET édition ───────────────────────────────────── */
+
+.tp-clock-input {
+  color-scheme: dark;
+  background: transparent;
+  border: none;
+  outline: none;
+  font-family: 'SF Mono', 'Cascadia Code', 'Fira Mono', monospace;
+  font-size: 1.25rem;
+  font-weight: 300;
+  letter-spacing: 0.04em;
+  color: rgba(215, 232, 255, 0.96);
+  cursor: pointer;
+  padding: 0.03rem 0.2rem;
+  border-radius: 0.4rem;
+  transition: background 0.15s;
 }
 
-.speed-button.active {
-  background: rgba(100, 150, 255, 0.7);
-  border-color: white;
+/* Masque l'icône native — tout le champ est cliquable */
+.tp-clock-input::-webkit-calendar-picker-indicator { display: none; }
+
+.tp-clock-input:hover:not(:focus) { background: rgba(var(--accent), 0.09); }
+.tp-clock-input:focus              { background: rgba(var(--accent), 0.12); outline: none; }
+
+/* ── Tick animation (déclenché à chaque changement de seconde) ───────────── */
+
+@keyframes clock-tick {
+  0%   { box-shadow: 0 0 0 1.5px rgba(var(--accent), 0.40); }
+  100% { box-shadow: 0 0 0 0     rgba(var(--accent), 0.00); }
 }
 
-.speed-button.paused {
-  background: rgba(255, 100, 100, 0.7);
+.tp-clock-input.is-ticking { animation: clock-tick 0.5s ease-out; }
+
+/* ── Label UTC ───────────────────────────────────────────────────────────── */
+
+.disp-utc {
+  font-size: 0.47rem;
+  font-family: sans-serif;
+  letter-spacing: 0.15em;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.18);
+  align-self: flex-end;
+  padding-bottom: 0.25rem;
+  user-select: none;
 }
 
-@media (max-width: 640px) {
-  .speed-controls {
-    bottom: 1rem;
-    gap: 0.5rem;
-  }
+/* ── Ligne date ──────────────────────────────────────────────────────────── */
 
-  .speed-button {
-    width: 3rem;
-    height: 3rem;
-    font-size: 1rem;
-  }
+#calendar-row {
+  display: flex;
+  justify-content: center;
+  padding: 0.04rem 0.9rem 0.38rem;
 }
+
+/* ── Input date : affichage ET édition ───────────────────────────────────── */
+
+.tp-date-input {
+  color-scheme: dark;
+  background: transparent;
+  border: none;
+  outline: none;
+  font-family: 'SF Mono', 'Cascadia Code', 'Fira Mono', monospace;
+  font-size: 0.65rem;
+  font-weight: 500;
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
+  color: rgba(150, 180, 225, 0.50);
+  cursor: pointer;
+  padding: 0.06rem 0.35rem;
+  border-radius: 0.3rem;
+  transition: background 0.15s, color 0.15s;
+}
+
+.tp-date-input::-webkit-calendar-picker-indicator { display: none; }
+
+.tp-date-input:hover:not(:focus) {
+  background: rgba(var(--accent), 0.08);
+  color: rgba(150, 180, 225, 0.85);
+}
+
+.tp-date-input:focus { background: rgba(var(--accent), 0.10); outline: none; }
+
+/* ── Animation quand la date change (rare → plus prononcée) ──────────────── */
+
+@keyframes date-pop {
+  0%   { color: rgba(var(--accent), 0.9); letter-spacing: 0.20em; }
+  100% { color: rgba(150, 180, 225, 0.55); letter-spacing: 0.14em; }
+}
+
+.tp-date-input.is-ticking { animation: date-pop 0.55s ease-out; }
+
+/* ── Dot "temps réel" ────────────────────────────────────────────────────── */
+
+.tp-live-dot {
+  width: 0.38rem;
+  height: 0.38rem;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: rgba(var(--green), 0.8);
+  opacity: 0;
+  transition: opacity 0.3s, background 0.4s;
+}
+
+.tp-live-dot.is-live {
+  opacity: 1;
+  animation: tp-pulse 2s ease-in-out infinite;
+}
+
+.tp-live-dot.is-off-time {
+  opacity: 0.45;
+  background: rgba(160, 160, 170, 0.5);
+  animation: none;
+}
+
+@keyframes tp-pulse {
+  0%, 100% { opacity: 0.9; transform: scale(1); }
+  50%       { opacity: 0.2; transform: scale(0.55); }
+}
+
+/* ── Shared button base ───────────────────────────────────────────────────── */
+
+.tp-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  cursor: pointer;
+  color: white;
+  font-family: inherit;
+  line-height: 1;
+  transition: background 0.15s ease, color 0.15s ease;
+  background: transparent;
+}
+
+/* ── Play / Pause ─────────────────────────────────────────────────────────── */
+
+.tp-play {
+  width: 1.8rem;
+  height: 1.8rem;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: rgba(var(--accent), 0.12);
+  border: 1px solid rgba(var(--accent), 0.30) !important;
+  color: rgba(var(--accent), 0.9);
+}
+
+.tp-play svg { width: 9px; height: 10px; }
+
+.tp-play:hover {
+  background: rgba(var(--accent), 0.24);
+  color: rgba(180, 210, 255, 1);
+}
+
+.tp-play.is-paused {
+  background: rgba(220, 70, 70, 0.1);
+  border-color: rgba(255, 100, 100, 0.30) !important;
+  color: rgba(255, 120, 120, 0.92);
+}
+
+.tp-play.is-paused:hover {
+  background: rgba(220, 70, 70, 0.22);
+  color: rgba(255, 170, 170, 1);
+}
+
+/* ── Speed — segmented control ────────────────────────────────────────────── */
+
+.speed-group {
+  display: flex;
+  gap: 0;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 0.45rem;
+  overflow: hidden;
+}
+
+.tp-speed {
+  padding: 0 0.65rem;
+  height: 1.8rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  color: rgba(255, 255, 255, 0.32);
+  background: transparent;
+  border-right: 1px solid rgba(255, 255, 255, 0.08) !important;
+  white-space: nowrap;
+}
+
+.tp-speed:last-child { border-right: none !important; }
+
+.tp-speed:hover:not(.is-active) {
+  background: rgba(255, 255, 255, 0.07);
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.tp-speed.is-active {
+  background: rgba(var(--accent), 0.22);
+  color: rgba(160, 200, 255, 1);
+}
+
+/* Bouton "Réel" actif → teinté vert (correspond au dot live, tous modes) */
+.tp-speed.is-simutime.is-active {
+  background: rgba(var(--green), 0.18);
+  color: rgba(120, 255, 150, 1);
+}
+
+/* ── Reset inline (à droite de la playback row) ──────────────────────────── */
+
+.tp-reset-inline {
+  width: 1.8rem;
+  height: 1.8rem;
+  flex-shrink: 0;
+  border-radius: 50%;
+  font-size: 0.85rem;
+  color: rgba(var(--green), 0.6);
+  background: rgba(var(--green), 0.06);
+  border: 1px solid rgba(var(--green), 0.18) !important;
+  transition: background 0.15s, color 0.15s;
+}
+
+.tp-reset-inline:hover {
+  background: rgba(var(--green), 0.18);
+  color: rgba(130, 255, 160, 0.95);
+}
+
+/* ============================================================================
+   MOBILE
+   ============================================================================ */
 
 @media (max-width: 640px) {
   .controls {
-    flex-wrap: wrap;
-    justify-content: center;
     padding: 0.5rem;
-    gap: 0.5rem;
+    gap: 0.4rem;
   }
 
   .button {
-    flex: 1 1 calc(20% - 1rem);
-    font-size: 1rem;
-    padding: 1rem 0.5rem 1rem 0.5rem;
+    flex: 1 1 calc(20% - 0.5rem);
+    font-size: 0.82rem;
+    padding: 0.7rem 0.4rem;
     min-width: auto;
   }
 
-  #fullscreen-btn {
-    font-size: 2rem;
+  #fullscreen-btn { font-size: 1.9rem; }
+
+  /* FPS masqué sur mobile : le coin haut-droit est occupé par la navigation planètes. */
+  #fps-counter { display: none !important; }
+
+  #time-panel {
+    bottom: 0.5rem;
+    min-width: 12rem;
   }
+
+  /* Toggle de mode centré au-dessus du panneau temps pour éviter tout chevauchement. */
+  #mode-controls {
+    left: 50%;
+    right: auto;
+    transform: translateX(-50%);
+    bottom: 6.4rem;
+  }
+
+  .mode-btn { padding: 0.4rem 0.9rem; font-size: 0.74rem; }
+
+  #playback-row {
+    padding: 0.25rem 0.42rem;
+    gap: 0.25rem;
+  }
+
+  .tp-play, .tp-reset-inline {
+    width: 1.65rem;
+    height: 1.65rem;
+  }
+
+  .tp-speed {
+    padding: 0 0.5rem;
+    height: 1.65rem;
+    font-size: 0.63rem;
+  }
+
+  .tp-clock-input { font-size: 1.1rem; }
+  .tp-date-input  { font-size: 0.6rem; }
+
+  #clock-row    { padding: 0.35rem 0.75rem 0.06rem; }
+  #calendar-row { padding: 0.03rem 0.75rem 0.32rem; }
 }
