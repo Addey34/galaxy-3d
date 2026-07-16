@@ -13,15 +13,20 @@
     "test:e2e": "playwright test",
     "format": "prettier --write \"src/**/*.{ts,css}\"",
     "format:check": "prettier --check \"src/**/*.{ts,css}\"",
-    "verify": "tsc --noEmit && vitest run"
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "verify": "tsc --noEmit && eslint . && vitest run"
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
     "@playwright/test": "^1.61.1",
     "@types/node": "^25.9.1",
     "@types/three": "^0.184.1",
+    "eslint": "^10.7.0",
     "playwright": "^1.61.1",
     "prettier": "^3.9.5",
     "typescript": "^6.0.3",
+    "typescript-eslint": "^8.64.0",
     "vite": "^6.3.1",
     "vitest": "^4.1.10"
   },
