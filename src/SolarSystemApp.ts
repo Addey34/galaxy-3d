@@ -8,6 +8,7 @@ import { TextureSystem } from './components/systems/TextureSystem';
 import type { TextureSystemConfig } from './components/systems/TextureSystem';
 import { SimulationClock } from './core/SimulationClock';
 import { EphemerisService } from './core/EphemerisService';
+import { OrbitalElementsService } from './core/OrbitalElementsService';
 import { OrbitalMechanics } from './core/OrbitalMechanics';
 import { APP_SETTINGS, CELESTIAL_CONFIG, TEXTURE_SETTINGS } from './config/settings';
 import { forEachBody } from './config/catalog';
@@ -131,6 +132,7 @@ export class SolarSystemApp {
     this._orbitalMechanics = new OrbitalMechanics(
       new SimulationClock(),
       this._ephemerisService,
+      new OrbitalElementsService(),
       CELESTIAL_CONFIG,
       bodies
     );

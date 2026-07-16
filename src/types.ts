@@ -5,6 +5,9 @@
  */
 import type * as THREE from 'three';
 import type { Body } from 'astronomy-engine';
+import type { OrbitalElements } from './core/kepler';
+
+export type { OrbitalElements };
 
 /** Résolutions de texture disponibles (du plus léger au plus détaillé). */
 export type TextureQuality = '1k' | '2k' | '4k' | '8k';
@@ -66,6 +69,12 @@ export interface CelestialBodyConfig {
   realData?: RealData;
   /** Enum astronomy-engine pour les positions réelles. Absent = pas d'éphéméride (étoile fixe, skybox). */
   astroBody?: Body;
+  /**
+   * Éléments orbitaux képlériens — source de position alternative à `astroBody`, pour les
+   * corps absents d'astronomy-engine (astéroïdes, comètes, géocroiseurs, planètes naines).
+   * Utilisés seulement si `astroBody` est absent. Propagés par `OrbitalElementsService`.
+   */
+  orbitalElements?: OrbitalElements;
   /** Référentiel de position : héliocentrique (planètes) ou relatif au parent (lunes).
    *  Défaut heliocentric. */
   frame?: OrbitFrame;

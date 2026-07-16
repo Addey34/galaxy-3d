@@ -39,3 +39,17 @@ export function equatorialToScene(x: number, y: number, z: number): THREE.Vector
   const ez = -y * SIN_OBL + z * COS_OBL;
   return new THREE.Vector3(ex, ez, -ey);
 }
+
+/**
+ * Convertit un vecteur héliocentrique écliptique J2000 (AU) vers le repère Three.js.
+ *
+ * Les éléments orbitaux des petits corps (JPL Small-Body Database, Minor Planet Center)
+ * sont exprimés dans le plan de l'écliptique : la propagation de Kepler produit donc
+ * directement des coordonnées écliptiques, sans passer par l'obliquité. Il ne reste que le
+ * mapping écliptique → Three.js (identique à l'étape 2 de `equatorialToScene`) :
+ *   Three.X = x,  Three.Y = z,  Three.Z = -y
+ * C'est la même rotation propre (déterminant +1), donc orbites progrades cohérentes.
+ */
+export function eclipticToScene(x: number, y: number, z: number): THREE.Vector3 {
+  return new THREE.Vector3(x, z, -y);
+}

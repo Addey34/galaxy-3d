@@ -16,6 +16,7 @@ import type { CelestialBodyConfig, CelestialConfig } from '../types';
 import type { CelestialBodies } from '../components/systems/SceneSystem';
 import type { SimulationClock } from './SimulationClock';
 import type { EphemerisService } from './EphemerisService';
+import type { OrbitalElementsService } from './OrbitalElementsService';
 import { ScaleService, SQRT_K } from './ScaleService';
 import { angleInOrbitalPlane, orbitalPositionEduc } from './orbitalGeometry';
 import { forEachBody } from '../config/catalog';
@@ -46,6 +47,7 @@ export class OrbitalMechanics {
   constructor(
     private readonly clock: SimulationClock,
     private readonly ephemeris: EphemerisService,
+    private readonly elements: OrbitalElementsService,
     private readonly config: CelestialConfig,
     private bodies: CelestialBodies
   ) {
@@ -91,16 +93,26 @@ export class OrbitalMechanics {
     });
   }
 
-  /** Position en UA d'un corps selon son référentiel. null si pas d'éphéméride (astroBody absent). */
+  /**
+   * Position en UA d'un corps selon sa source, dans le repère scène.
+   *   - `astroBody` défini → éphéméride astronomy-engine (planètes, Lune, Soleil…).
+   *   - sinon `orbitalElements` défini → propagation képlérienne (astéroïdes, comètes…).
+   *   - sinon null (corps sans position calculable).
+   */
   private _positionAU(name: string, cfg: CelestialBodyConfig, date: Date): THREE.Vector3 | null {
-    if (cfg.astroBody === undefined) return null;
-    if (cfg.frame === 'parentRelative') {
-      const parentBody = this._parentAstroBody.get(name);
-      // Parent sans éphéméride → pas de position relative calculable.
-      if (parentBody === undefined) return null;
-      return this.ephemeris.getParentRelativeAU(cfg.astroBody, parentBody, date);
+    if (cfg.astroBody !== undefined) {
+      if (cfg.frame === 'parentRelative') {
+        const parentBody = this._parentAstroBody.get(name);
+        // Parent sans éphéméride → pas de position relative calculable.
+        if (parentBody === undefined) return null;
+        return this.ephemeris.getParentRelativeAU(cfg.astroBody, parentBody, date);
+      }
+      return this.ephemeris.getHeliocentricAU(cfg.astroBody, date);
     }
-    return this.ephemeris.getHeliocentricAU(cfg.astroBody, date);
+    if (cfg.orbitalElements) {
+      return this.elements.getHeliocentricAU(cfg.orbitalElements, date);
+    }
+    return null;
   }
 
   private _updateBody(
@@ -223,8 +235,13 @@ export class OrbitalMechanics {
       return arr;
     }
 
-    // Mode Explo : ellipse Kepler réelle depuis astronomy-engine.
-    const period = cfg.realData?.orbitPeriodDays;
+    // Mode Explo : ellipse Kepler réelle. Période depuis realData, ou dérivée du demi-grand
+    // axe pour les corps à éléments orbitaux (3ᵉ loi de Kepler : T = 365.256 · a^1.5 jours).
+    const period =
+      cfg.realData?.orbitPeriodDays ??
+      (cfg.orbitalElements
+        ? 365.256 * Math.pow(cfg.orbitalElements.semiMajorAxisAU, 1.5)
+        : undefined);
     if (!period) return null;
 
     const arr = new Float32Array((nPoints + 1) * 3);
