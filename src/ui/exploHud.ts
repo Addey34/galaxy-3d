@@ -17,6 +17,7 @@ import * as THREE from 'three';
 import { KM_PER_AU, SQRT_K } from '../core/ScaleService';
 import type { CameraSystem } from '../components/systems/CameraSystem';
 import type { SceneSystem } from '../components/systems/SceneSystem';
+import { markForwardedControlEvent } from './controlEventForwarding';
 import type { PlanetNavigation } from './planetNav';
 
 const C_KM_PER_S = 299_792.458; // vitesse de la lumière
@@ -167,7 +168,9 @@ export class ExploHud {
    */
   private readonly _forward = (ev: Event): void => {
     const Ctor = ev.constructor as new (type: string, init: Event) => Event;
-    this.controlSurface.dispatchEvent(new Ctor(ev.type, ev));
+    this.controlSurface.dispatchEvent(
+      markForwardedControlEvent(new Ctor(ev.type, ev))
+    );
   };
 
   private _label(name: string): HTMLButtonElement {

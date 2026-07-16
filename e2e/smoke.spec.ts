@@ -56,3 +56,22 @@ test('wires nav and playback controls (câblage ui/)', async ({ page }) => {
     /is-active/
   );
 });
+
+test('selects a celestial body by clicking its 3D mesh', async ({ page }) => {
+  await page.goto('/');
+  await expect(page.locator('#loader')).toBeHidden({ timeout: 30_000 });
+
+  // Le Soleil est fixe à l'origine, donc au centre de la vue d'ensemble initiale.
+  const canvas = page.locator('canvas[data-engine]');
+  const box = await canvas.boundingBox();
+  expect(box).not.toBeNull();
+
+  await canvas.click({
+    position: {
+      x: box!.width / 2,
+      y: box!.height / 2,
+    },
+  });
+
+  await expect(page.locator('#orbit-sun')).toHaveClass(/is-active/);
+});

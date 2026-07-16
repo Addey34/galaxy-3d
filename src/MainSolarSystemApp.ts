@@ -19,7 +19,10 @@ import { setupTimePanel } from './ui/timePanel';
 import { setupModeSwitcher } from './ui/modeSwitcher';
 import { ExploHud } from './ui/exploHud';
 import { SmallBodyOverlay } from './ui/smallBodyOverlay';
+import { setupBodyPicker } from './ui/bodyPicker';
 import { fetchSmallBodies } from './core/sbdb';
+import { CELESTIAL_CONFIG } from './config/settings';
+import { flattenBodies } from './config/catalog';
 
 setupFullscreen();
 
@@ -34,6 +37,21 @@ setupFullscreen();
     const planetNav = setupPlanetControls(cameraSystem);
     const playback = setupPlayback(animationSystem, orbitalMechanics);
     setupTimePanel(orbitalMechanics, playback);
+
+    // Clic 3D : sélectionner un corps en cliquant son mesh (surtout en Éducatif), via la
+    // même commande de navigation partagée que la barre et les labels.
+    const bodyNames = new Set(
+      [...flattenBodies(CELESTIAL_CONFIG).entries()]
+        .filter(([, cfg]) => cfg.kind !== 'skybox')
+        .map(([name]) => name)
+    );
+    setupBodyPicker(
+      sceneSystem.scene,
+      cameraSystem.camera,
+      cameraSystem.renderer.domElement,
+      planetNav,
+      bodyNames
+    );
 
     // HUD « Voyage spatial » — actif uniquement en mode Exploration. Ses labels projetés
     // ciblent les corps via la commande de navigation partagée.
