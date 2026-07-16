@@ -18,6 +18,8 @@ import { setupPlayback } from './ui/playback';
 import { setupTimePanel } from './ui/timePanel';
 import { setupModeSwitcher } from './ui/modeSwitcher';
 import { ExploHud } from './ui/exploHud';
+import { SmallBodyOverlay } from './ui/smallBodyOverlay';
+import { fetchSmallBodies } from './core/sbdb';
 
 setupFullscreen();
 
@@ -37,12 +39,21 @@ setupFullscreen();
     // ciblent les corps via la commande de navigation partagée.
     const exploHud = new ExploHud(planetNav, cameraSystem.renderer.domElement);
     exploHud.mount();
-    animationSystem.onFrame(() =>
-      exploHud.update(cameraSystem.camera, cameraSystem, sceneSystem)
-    );
-    setupModeSwitcher(orbitalMechanics, cameraSystem, (mode) =>
-      exploHud.setActive(mode === 'explo')
-    );
+
+    // Champ de masse des petits corps (SBDB) — couche instrument 2D, chargée en tâche de
+    // fond. Dégradation propre : si le fetch échoue (offline), l'overlay reste vide.
+    const smallBodyOverlay = new SmallBodyOverlay();
+    smallBodyOverlay.mount();
+    void fetchSmallBodies().then((bodies) => smallBodyOverlay.setBodies(bodies));
+
+    animationSystem.onFrame(() => {
+      exploHud.update(cameraSystem.camera, cameraSystem, sceneSystem);
+      smallBodyOverlay.update(cameraSystem.camera, orbitalMechanics.simulationDate);
+    });
+    setupModeSwitcher(orbitalMechanics, cameraSystem, (mode) => {
+      exploHud.setActive(mode === 'explo');
+      smallBodyOverlay.setActive(mode === 'explo');
+    });
 
     hideLoader();
   } catch (err) {

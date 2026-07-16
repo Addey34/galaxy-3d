@@ -1,11 +1,18 @@
 import { expect, test } from '@playwright/test';
 
+// Déterminisme : pas de dépendance à l'API JPL SBDB live pendant les tests.
+test.beforeEach(async ({ page }) => {
+  await page.route('**/sbdb_query.api*', (route) => route.abort());
+});
+
 /**
  * Test de fumée : l'application démarre, initialise Three.js et masque l'écran de
  * chargement. Ne vérifie pas le rendu pixel par pixel — juste que le boot se termine
  * sans erreur fatale et que le canvas WebGL est monté.
  */
-test('boots, mounts the WebGL canvas and dismisses the loader', async ({ page }) => {
+test('boots, mounts the WebGL canvas and dismisses the loader', async ({
+  page,
+}) => {
   const errors: string[] = [];
   page.on('pageerror', (err) => errors.push(err.message));
 
@@ -14,8 +21,9 @@ test('boots, mounts the WebGL canvas and dismisses the loader', async ({ page })
   // L'init (textures → scène → corps → caméra → astro → boucle) masque #loader en fin.
   await expect(page.locator('#loader')).toBeHidden({ timeout: 30_000 });
 
-  // Le renderer WebGL ajoute un <canvas> non nul au body.
-  const canvas = page.locator('canvas');
+  // Le renderer WebGL ajoute un <canvas> (marqué data-engine par three.js) non nul au body.
+  // On le cible précisément : l'overlay des petits corps ajoute un second <canvas>.
+  const canvas = page.locator('canvas[data-engine]');
   await expect(canvas).toBeVisible();
   const box = await canvas.boundingBox();
   expect(box?.width ?? 0).toBeGreaterThan(0);
@@ -44,5 +52,7 @@ test('wires nav and playback controls (câblage ui/)', async ({ page }) => {
 
   // Reset date-heure (ui/timePanel → PlaybackControls) : revient à « Réel ».
   await page.locator('#time-today').click();
-  await expect(page.locator('.speed-group .tp-speed').first()).toHaveClass(/is-active/);
+  await expect(page.locator('.speed-group .tp-speed').first()).toHaveClass(
+    /is-active/
+  );
 });

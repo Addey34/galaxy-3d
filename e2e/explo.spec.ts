@@ -1,5 +1,11 @@
 import { expect, test } from '@playwright/test';
 
+// Déterminisme : on ne dépend pas de l'API JPL SBDB live (réseau) pendant les tests.
+// L'overlay des petits corps dégrade proprement en champ vide — suffisant pour ces scénarios.
+test.beforeEach(async ({ page }) => {
+  await page.route('**/sbdb_query.api*', (route) => route.abort());
+});
+
 /**
  * Mode Exploration + HUD « Voyage spatial » : basculer en explo affiche le HUD cible
  * (distance réelle) et les marqueurs de corps ; revenir en éducatif les masque.
@@ -102,6 +108,33 @@ test('small bodies appear as explo labels but not in the nav bar', async ({
   await expect(page.locator('.explo-label', { hasText: 'Ceres' })).toHaveCount(
     1
   );
+
+  expect(errors, `Erreurs page : ${errors.join(' | ')}`).toEqual([]);
+});
+
+/**
+ * Champ de masse des petits corps (SBDB) : la couche instrument 2D est présente, s'affiche en
+ * Exploration et reste non bloquante (les gestes caméra la traversent). Le chargement SBDB est
+ * en tâche de fond et dégrade proprement — le boot reste sans erreur même hors ligne.
+ */
+test('small-body field overlay is present, shown in explo and non-blocking', async ({
+  page,
+}) => {
+  const errors: string[] = [];
+  page.on('pageerror', (err) => errors.push(err.message));
+
+  await page.goto('/');
+  await expect(page.locator('#loader')).toBeHidden({ timeout: 30_000 });
+
+  const overlay = page.locator('#smallbody-overlay');
+  await expect(overlay).toHaveCount(1);
+  await expect(overlay).not.toHaveClass(/is-visible/);
+
+  await page.locator('.mode-btn[data-mode=explo]').click();
+  await expect(overlay).toHaveClass(/is-visible/);
+
+  // Non bloquant : la couche laisse passer les événements pointeur vers la caméra.
+  await expect(overlay).toHaveCSS('pointer-events', 'none');
 
   expect(errors, `Erreurs page : ${errors.join(' | ')}`).toEqual([]);
 });

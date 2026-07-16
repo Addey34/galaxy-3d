@@ -611,6 +611,17 @@ body.is-explo-mode #orbit-overview {
 }
 #explo-hud.is-free .explo-hud-target { color: rgba(200, 225, 255, 0.55); }
 
+/* Champ des petits corps (SBDB) — canvas instrument sous les labels, non bloquant. */
+#smallbody-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 19;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+#smallbody-overlay.is-visible { opacity: 1; }
+
 /* Couche de marqueurs projetés — un label par corps, positionné en translate(). */
 #explo-labels {
   position: fixed;
