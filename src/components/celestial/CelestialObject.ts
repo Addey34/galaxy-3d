@@ -21,8 +21,8 @@ import {
   RING_SEGMENTS,
 } from '../../config/layerConfig';
 import { RENDER_SETTINGS, SHADER_SETTINGS } from '../../config/settings';
-import { SQRT_K } from '../../core/ScaleService';
-import type { CelestialBodyConfig } from '../../types';
+import { KM_PER_AU, SQRT_K } from '../../core/ScaleService';
+import type { CameraDistance, CelestialBodyConfig } from '../../types';
 import * as NightLightsShader from '../../shaders/NightLightsShader';
 import Logger from '../../utils/Logger';
 import type { AnimationSystem } from '../systems/AnimationSystem';
@@ -30,9 +30,6 @@ import type { TextureSystem } from '../systems/TextureSystem';
 
 const CLOUDS_ROTATION_FACTOR = 0.1;
 const SURFACE_TEXTURE_TYPES = ['surface', 'normalMap', 'bump', 'spec', 'specularMap'];
-
-// ── Mode Explo — vraie échelle ──────────────────────────────────────────────
-const KM_PER_AU = 149_597_870;
 
 // Orientation initiale (fallback) de l'axe : simple obliquité penchée vers -Z. Remplacée
 // dès le premier sync par setAxisDirection(), qui oriente l'axe le long du vrai pôle nord
@@ -87,6 +84,11 @@ export default class CelestialObject {
     this._registerForUpdates();
 
     Logger.info(`[CelestialObject] Created "${name}"`);
+  }
+
+  /** Distance de visite caméra par mode (source : catalogue). */
+  get cameraDistance(): CameraDistance | undefined {
+    return this.config.cameraDistance;
   }
 
   // ============================================================================

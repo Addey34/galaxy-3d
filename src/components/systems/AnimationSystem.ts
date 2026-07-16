@@ -38,6 +38,9 @@ export class AnimationSystem {
   private _updatablesList: IUpdatable[] = [];
   private _updatablesDirty = false;
 
+  // Callbacks exécutés en fin de frame (couche UI : HUD explo, etc.). Pas de rendu ici.
+  private readonly _frameCallbacks = new Set<() => void>();
+
   // External systems (set via init)
   readonly tweenGroup = new TweenGroup();
   private readonly fpsCounter = new FPSCounter();
@@ -128,6 +131,9 @@ export class AnimationSystem {
     this._updateObjects(simRot, sunWorldPosition);
     this.cameraSystem?.update(delta);
     this._updateLOD();
+
+    // Après le suivi caméra : la couche UI lit des positions à jour (HUD explo).
+    for (const cb of this._frameCallbacks) cb();
   }
 
   private _getSunWorldPosition(): THREE.Vector3 | null {
@@ -141,22 +147,15 @@ export class AnimationSystem {
     this._cameraPos.copy(this.camera.position);
 
     // Array.from(Set) est O(n) et alloue un tableau : on le recrée uniquement
-    // quand un objet est ajouté ou retiré, pas à chaque frame.
+    // quand un objet est ajouté ou retiré, pas à chaque frame. L'ordre d'itération
+    // n'a pas d'importance ici — update() ne fait que rotation/shader, le rendu (et
+    // donc l'ordre de transparence) est géré par Three.js indépendamment.
     if (this._updatablesDirty) {
       this._updatablesList = Array.from(this.updatables);
       this._updatablesDirty = false;
     }
 
-    // Sort in-place by distance to camera (must run every frame — positions change)
-    this._updatablesList.sort((a, b) => {
-      const dA = a.group?.position.distanceToSquared(this._cameraPos) ?? Infinity;
-      const dB = b.group?.position.distanceToSquared(this._cameraPos) ?? Infinity;
-      return dA - dB;
-    });
-
-    const sorted = this._updatablesList;
-
-    for (const obj of sorted) {
+    for (const obj of this._updatablesList) {
       // Test de visibilité via le frustum ; la position orbitale est mise à jour même hors-champ
       let visible = true;
       if (obj.group) {
@@ -184,6 +183,12 @@ export class AnimationSystem {
 
   private _render(): void {
     this.renderer.render(this.scene, this.camera);
+  }
+
+  /** Enregistre un callback exécuté en fin de chaque frame. Retourne une fonction de retrait. */
+  onFrame(cb: () => void): () => void {
+    this._frameCallbacks.add(cb);
+    return () => this._frameCallbacks.delete(cb);
   }
 
   addUpdatable(obj: IUpdatable): void {

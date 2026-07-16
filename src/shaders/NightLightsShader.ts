@@ -1,3 +1,12 @@
+/**
+ * Shader des lumières nocturnes (villes éclairées sur la face nuit de la Terre).
+ *
+ * Le layer `lights` se rend en AdditiveBlending par-dessus la surface. Le shader
+ * calcule, par fragment, un `nightFactor` à partir du produit scalaire normale↔Soleil :
+ * les lumières s'allument côté nuit et s'éteignent côté jour. La normale est perturbée
+ * avec la même normalMap que la surface, pour que le terminateur des lumières épouse
+ * exactement le relief (donc l'ombre de la surface), sans bande sombre au bord.
+ */
 import * as THREE from 'three';
 
 interface NightLightsSettings {

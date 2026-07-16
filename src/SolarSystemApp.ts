@@ -10,6 +10,7 @@ import { SimulationClock } from './core/SimulationClock';
 import { EphemerisService } from './core/EphemerisService';
 import { OrbitalMechanics } from './core/OrbitalMechanics';
 import { APP_SETTINGS, CELESTIAL_CONFIG, TEXTURE_SETTINGS } from './config/settings';
+import { forEachBody } from './config/catalog';
 import Logger from './utils/Logger';
 
 type ProgressCallback = (percent: number, message: string) => void;
@@ -76,7 +77,6 @@ export class SolarSystemApp {
     const config: TextureSystemConfig = {
       basePath:        TEXTURE_SETTINGS.basePath,
       defaultSettings: TEXTURE_SETTINGS.defaultSettings,
-      loadPriority:    TEXTURE_SETTINGS.loadPriority,
       bodies:          CELESTIAL_CONFIG.bodies,
       performance:     APP_SETTINGS.performance,
     };
@@ -159,24 +159,16 @@ export class SolarSystemApp {
     const date   = om.simulationDate;
     const mode   = om.scaleMode; // 'educ' | 'explo'
 
-    for (const [name, cfg] of Object.entries(CELESTIAL_CONFIG.bodies)) {
-      if (name === 'stars') continue;
+    forEachBody(CELESTIAL_CONFIG, ({ name, config: cfg }) => {
+      if (cfg.kind === 'skybox') return;         // la skybox n'est pas un CelestialObject
 
       bodies[name]?.setScaleMode(mode);
 
-      if (name === 'sun') continue;
+      if (cfg.kind === 'star') return;           // l'étoile centrale reste à l'origine (pas d'orbite)
 
       const points = om.computeOrbitPoints(name, cfg, date);
       if (points) scene.setOrbitPoints(name, points);
-
-      if (cfg.satellites) {
-        for (const [satName, satCfg] of Object.entries(cfg.satellites)) {
-          bodies[satName]?.setScaleMode(mode);
-          const satPoints = om.computeOrbitPoints(satName, satCfg, date);
-          if (satPoints) scene.setOrbitPoints(satName, satPoints);
-        }
-      }
-    }
+    });
 
     scene.applyOrbitPoints();
   }

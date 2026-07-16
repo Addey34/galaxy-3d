@@ -20,25 +20,17 @@
     </div>
 
     <!-- ─── Planet navigation (top) ────────────────────────────────────────── -->
+    <!-- Seule la Vue Globale est statique : les boutons de corps sont générés depuis
+         le catalogue (CELESTIAL_CONFIG) par buildPlanetButtons() dans MainSolarSystemApp. -->
     <nav class="controls">
       <button aria-label="Globale" id="orbit-overview" class="button is-active">Globale</button>
-      <button aria-label="Sun"     id="orbit-sun"     class="button">Sun</button>
-      <button aria-label="Mercury" id="orbit-mercury" class="button">Mercury</button>
-      <button aria-label="Venus"   id="orbit-venus"   class="button">Venus</button>
-      <button aria-label="Earth"   id="orbit-earth"   class="button">Earth</button>
-      <button aria-label="Moon"    id="orbit-moon"    class="button">Moon</button>
-      <button aria-label="Mars"    id="orbit-mars"    class="button">Mars</button>
-      <button aria-label="Jupiter" id="orbit-jupiter" class="button">Jupiter</button>
-      <button aria-label="Saturn"  id="orbit-saturn"  class="button">Saturn</button>
-      <button aria-label="Uranus"  id="orbit-uranus"  class="button">Uranus</button>
-      <button aria-label="Neptune" id="orbit-neptune" class="button">Neptune</button>
     </nav>
 
     <!-- ─── Mode toggle (bottom-left) ──────────────────────────────────────── -->
     <div id="mode-controls">
       <div class="mode-seg" role="group" aria-label="Mode de visualisation">
-        <button class="mode-btn is-active" data-mode="education"  title="Vue éducative — orbites circulaires">Éduc.</button>
-        <button class="mode-btn"           data-mode="exploration" disabled aria-disabled="true" title="Mode exploration — bientôt disponible">Explo.</button>
+        <button class="mode-btn is-active" data-mode="educ"  title="Vue éducative — orbites circulaires">Éduc.</button>
+        <button class="mode-btn"           data-mode="explo" title="Mode exploration — vraie échelle, voyage spatial">Explo.</button>
       </div>
     </div>
 

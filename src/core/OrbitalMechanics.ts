@@ -11,19 +11,32 @@
  * le voyage temporel et le calcul des points des lignes d'orbite.
  */
 import * as THREE from 'three';
+import type { Body } from 'astronomy-engine';
 import type { CelestialBodyConfig, CelestialConfig } from '../types';
 import type { CelestialBodies } from '../components/systems/SceneSystem';
 import type { SimulationClock } from './SimulationClock';
 import type { EphemerisService } from './EphemerisService';
 import { ScaleService, SQRT_K } from './ScaleService';
+import { angleInOrbitalPlane, orbitalPositionEduc } from './orbitalGeometry';
+import { forEachBody } from '../config/catalog';
 
-/** Nombre de points échantillonnés le long de chaque ligne d'orbite. */
-const ORBIT_SAMPLE_COUNT = 256;
+/** Corps sans mouvement orbital propre (skybox étoilée, étoile centrale à l'origine). */
+function hasOrbit(cfg: CelestialBodyConfig): boolean {
+  return cfg.kind !== 'skybox' && cfg.kind !== 'star';
+}
+
+const ZERO = new THREE.Vector3(0, 0, 0);
+
+/** Nombre de points échantillonnés le long de chaque ligne d'orbite.
+ *  Source unique partagée avec SceneSystem (taille des buffers de géométrie). */
+export const ORBIT_SAMPLE_COUNT = 256;
 
 export class OrbitalMechanics {
   private readonly scale = new ScaleService();
   private readonly _exploPos = new THREE.Vector3();
   private readonly _orbitAngles = new Map<string, number>();
+  /** Nom d'un satellite parentRelative → enum astronomy-engine de son parent. */
+  private readonly _parentAstroBody = new Map<string, Body>();
   private _prevPaused = false;
   private _simDeltaSeconds = 0;
 
@@ -35,7 +48,16 @@ export class OrbitalMechanics {
     private readonly ephemeris: EphemerisService,
     private readonly config: CelestialConfig,
     private bodies: CelestialBodies
-  ) {}
+  ) {
+    // Résout le parent de chaque satellite parentRelative une fois : sa position est
+    // exprimée relativement au parent (helio(corps) − helio(parent)), plus de référentiel
+    // terrestre codé en dur.
+    forEachBody(config, ({ name, config: cfg, parentName }) => {
+      if (cfg.frame !== 'parentRelative' || parentName === null) return;
+      const parentAstro = config.bodies[parentName]?.astroBody;
+      if (parentAstro !== undefined) this._parentAstroBody.set(name, parentAstro);
+    });
+  }
 
   // ============================================================================
   // UPDATE
@@ -64,16 +86,21 @@ export class OrbitalMechanics {
     const date = this.clock.date;
     const mode = this.scale.mode;
 
-    for (const [name, cfg] of Object.entries(this.config.bodies)) {
-      if (name === 'stars' || name === 'sun') continue;
-      this._updateBody(name, cfg, date, mode);
+    forEachBody(this.config, ({ name, config: cfg }) => {
+      if (hasOrbit(cfg)) this._updateBody(name, cfg, date, mode);
+    });
+  }
+
+  /** Position en UA d'un corps selon son référentiel. null si pas d'éphéméride (astroBody absent). */
+  private _positionAU(name: string, cfg: CelestialBodyConfig, date: Date): THREE.Vector3 | null {
+    if (cfg.astroBody === undefined) return null;
+    if (cfg.frame === 'parentRelative') {
+      const parentBody = this._parentAstroBody.get(name);
+      // Parent sans éphéméride → pas de position relative calculable.
+      if (parentBody === undefined) return null;
+      return this.ephemeris.getParentRelativeAU(cfg.astroBody, parentBody, date);
     }
-    for (const cfg of Object.values(this.config.bodies)) {
-      if (!cfg.satellites) continue;
-      for (const [satName, satCfg] of Object.entries(cfg.satellites)) {
-        this._updateBody(satName, satCfg, date, mode);
-      }
-    }
+    return this.ephemeris.getHeliocentricAU(cfg.astroBody, date);
   }
 
   private _updateBody(
@@ -87,7 +114,6 @@ export class OrbitalMechanics {
 
     if (mode === 'educ') {
       // Mode Éducatif — orbite circulaire avec inclinaison réelle (éléments orbitaux J2000).
-      // Transformation : plan orbital → écliptique via inclinaison i et nœud ascendant Ω.
       const periodDays = cfg.realData?.orbitPeriodDays;
       if (!periodDays) return;
       const angularVelocity = (Math.PI * 2) / (periodDays * 86_400);
@@ -95,37 +121,19 @@ export class OrbitalMechanics {
       this._orbitAngles.set(name, angle);
       const distanceAU = cfg.realData?.distanceAU;
       const r = distanceAU !== undefined ? Math.sqrt(distanceAU) * SQRT_K : (cfg.orbitalRadius ?? 0);
-      const i = cfg.realData?.orbitalInclination ?? 0;
-      const Ω = cfg.realData?.ascendingNode ?? 0;
-      const cosΩ = Math.cos(Ω), sinΩ = Math.sin(Ω), cosI = Math.cos(i), sinI = Math.sin(i);
-      const cosA = Math.cos(angle), sinA = Math.sin(angle);
-      // Z négatif : repère Three droitier (+Y nord), orbite prograde (cf. _toScene).
-      body.group.position.set(
-        r * (cosΩ * cosA - sinΩ * sinA * cosI),
-        r * sinA * sinI,
-        -r * (sinΩ * cosA + cosΩ * sinA * cosI)
-      );
+      body.group.position.copy(orbitalPositionEduc(
+        r,
+        angle,
+        cfg.realData?.orbitalInclination ?? 0,
+        cfg.realData?.ascendingNode ?? 0,
+      ));
     } else {
-      // Mode Explo — positions Kepler réelles depuis astronomy-engine
-      this._computeExploPos(name, date);
+      // Mode Explo — positions Kepler réelles depuis astronomy-engine.
+      // Échelle linéaire (AU × SQRT_K), sans compression √. Pour les corps
+      // parentRelative (Lune), la position géocentrique est déjà hors du mesh du parent.
+      const posAU = this._positionAU(name, cfg, date);
+      this._exploPos.copy(posAU ? this.scale.auVectorToScene(posAU) : ZERO);
       body.group.position.copy(this._exploPos);
-    }
-  }
-
-  private _computeExploPos(name: string, date: Date): void {
-    if (name === 'moon') {
-      const moonGeoAU = this.ephemeris.getMoonGeocentricAU(date);
-      // En mode Explo, la Terre a son vrai rayon (0.0015u) → la Lune à 0.0899u
-      // est bien en dehors du mesh. On utilise l'échelle linéaire (AU × SQRT_K)
-      // comme les autres planètes, sans compression √ (réservée au mode Éducatif).
-      this._exploPos.copy(this.scale.auVectorToScene(moonGeoAU));
-    } else {
-      const helioAU = this.ephemeris.getHeliocentricAU(name, date);
-      if (helioAU) {
-        this._exploPos.copy(this.scale.auVectorToScene(helioAU)); // AU × SQRT_K
-      } else {
-        this._exploPos.set(0, 0, 0);
-      }
     }
   }
 
@@ -144,12 +152,8 @@ export class OrbitalMechanics {
    * Synchronise les angles orbitaux du mode éducatif sur les positions réelles
    * d'astronomy-engine à la date donnée.
    *
-   * Transformation inverse : projette la position Three.js (plan XZ = écliptique,
-   * +Y nord, repère droitier — cf. _toScene) sur les axes e1/e2 du plan orbital
-   * définis par Ω (nœud ascendant) et i (inclinaison).
-   *   e1 = (cosΩ, 0, -sinΩ)              — direction du nœud ascendant
-   *   e2 = (-sinΩ·cosI, sinI, -cosΩ·cosI) — direction perpendiculaire dans le plan orbital
-   *   angle = atan2(pos·e2, pos·e1)
+   * Transformation inverse (cf. angleInOrbitalPlane dans orbitalGeometry.ts) : projette la
+   * position scène sur les axes e1/e2 du plan orbital définis par Ω et i.
    */
   syncAnglesFromEphemeris(date: Date): void {
     const syncBody = (name: string, cfg: CelestialBodyConfig): void => {
@@ -158,37 +162,25 @@ export class OrbitalMechanics {
       // Oriente l'axe de rotation sur le vrai pôle IAU (obliquité + azimut réels).
       // Pour un corps rétrograde (obliquité > 90°), le moment cinétique de spin pointe à
       // l'opposé du pôle nord IAU : on passe -pôle pour que +rotationSpeed reste correct.
-      if (body) {
-        const north = this.ephemeris.getNorthPoleDirection(name, date);
-        if (north) {
-          const retrograde = (cfg.realData?.axialTilt ?? 0) > Math.PI / 2;
-          body.setAxisDirection(retrograde ? north.multiplyScalar(-1) : north);
-        }
+      if (body && cfg.astroBody !== undefined) {
+        const north = this.ephemeris.getNorthPoleDirection(cfg.astroBody, date);
+        const retrograde = (cfg.realData?.axialTilt ?? 0) > Math.PI / 2;
+        body.setAxisDirection(retrograde ? north.multiplyScalar(-1) : north);
       }
 
       if (!cfg.realData?.distanceAU) return;
-      const Ω   = cfg.realData.ascendingNode ?? 0;
-      const inc = cfg.realData.orbitalInclination ?? 0;
-      const pos = name === 'moon'
-        ? this.ephemeris.getMoonGeocentricAU(date)
-        : this.ephemeris.getHeliocentricAU(name, date);
+      const pos = this._positionAU(name, cfg, date);
       if (!pos) return;
-      const cosΩ = Math.cos(Ω), sinΩ = Math.sin(Ω);
-      const cosI = Math.cos(inc), sinI = Math.sin(inc);
-      const dotE1 = pos.x * cosΩ - pos.z * sinΩ;
-      const dotE2 = -pos.x * sinΩ * cosI + pos.y * sinI - pos.z * cosΩ * cosI;
-      this._orbitAngles.set(name, Math.atan2(dotE2, dotE1));
+      this._orbitAngles.set(name, angleInOrbitalPlane(
+        pos,
+        cfg.realData.orbitalInclination ?? 0,
+        cfg.realData.ascendingNode ?? 0,
+      ));
     };
 
-    for (const [name, cfg] of Object.entries(this.config.bodies)) {
-      if (name === 'stars' || name === 'sun') continue;
-      syncBody(name, cfg);
-      if (cfg.satellites) {
-        for (const [satName, satCfg] of Object.entries(cfg.satellites)) {
-          syncBody(satName, satCfg);
-        }
-      }
-    }
+    forEachBody(this.config, ({ name, config: cfg }) => {
+      if (hasOrbit(cfg)) syncBody(name, cfg);
+    });
 
     // Aligne la rotation de surface de la Terre sur l'heure UTC réelle.
     //   θSun       = azimut du Soleil vu de la Terre, dans le plan écliptique XZ.
@@ -197,8 +189,9 @@ export class OrbitalMechanics {
     // On veut que le méridien subSolarLon pointe vers le Soleil (azimut θSun). Avec la
     // convention de la SphereGeometry (azimut d'un méridien = -longitude - rotation.y) :
     //   rotation.y = -θSun - subSolarLon
-    const earthPos = this.ephemeris.getHeliocentricAU('earth', date);
+    const earthCfg = this.config.bodies['earth'];
     const earthBody = this.bodies['earth'];
+    const earthPos = earthCfg ? this._positionAU('earth', earthCfg, date) : null;
     if (earthPos && earthBody) {
       const θSun = Math.atan2(-earthPos.z, -earthPos.x);
       const utcH = date.getUTCHours() + date.getUTCMinutes() / 60 + date.getUTCSeconds() / 3600;
@@ -207,7 +200,7 @@ export class OrbitalMechanics {
   }
 
   computeOrbitPoints(
-    bodyName: string,
+    name: string,
     cfg: CelestialBodyConfig,
     date: Date,
     nPoints = ORBIT_SAMPLE_COUNT
@@ -220,15 +213,12 @@ export class OrbitalMechanics {
       const r    = Math.sqrt(distanceAU) * SQRT_K;
       const inc  = cfg.realData?.orbitalInclination ?? 0;
       const node = cfg.realData?.ascendingNode ?? 0;
-      const cosΩ = Math.cos(node), sinΩ = Math.sin(node);
-      const cosI = Math.cos(inc),  sinI = Math.sin(inc);
       const arr  = new Float32Array((nPoints + 1) * 3);
       for (let i = 0; i <= nPoints; i++) {
-        const a    = (i / nPoints) * Math.PI * 2;
-        const cosA = Math.cos(a), sinA = Math.sin(a);
-        arr[i * 3]     = r * (cosΩ * cosA - sinΩ * sinA * cosI);
-        arr[i * 3 + 1] = r * sinA * sinI;
-        arr[i * 3 + 2] = -r * (sinΩ * cosA + cosΩ * sinA * cosI);
+        const p = orbitalPositionEduc(r, (i / nPoints) * Math.PI * 2, inc, node);
+        arr[i * 3]     = p.x;
+        arr[i * 3 + 1] = p.y;
+        arr[i * 3 + 2] = p.z;
       }
       return arr;
     }
@@ -242,16 +232,11 @@ export class OrbitalMechanics {
     for (let i = 0; i <= nPoints; i++) {
       const t = new Date(date.getTime() + (i / nPoints) * period * 86_400_000);
 
-      let s: THREE.Vector3;
-      if (bodyName === 'moon') {
-        // Explo : échelle linéaire pour la Lune (même que les planètes)
-        // Le mesh Terre est à 0.0015u → Lune à 0.0899u est en dehors. Pas de compression √.
-        s = this.scale.auVectorToScene(this.ephemeris.getMoonGeocentricAU(t));
-      } else {
-        const pos = this.ephemeris.getHeliocentricAU(bodyName, t);
-        if (!pos) return null;
-        s = this.scale.auVectorToScene(pos);  // AU × SQRT_K (linéaire)
-      }
+      // Explo : échelle linéaire (AU × SQRT_K), sans compression √. Les corps parentRelative
+      // (Lune) suivent leur position géocentrique — déjà hors du mesh du parent.
+      const pos = this._positionAU(name, cfg, t);
+      if (!pos) return null;
+      const s = this.scale.auVectorToScene(pos);
 
       arr[i * 3]     = s.x;
       arr[i * 3 + 1] = s.y;
@@ -279,20 +264,8 @@ export class OrbitalMechanics {
     this._afterTimeTravel(true);
   }
 
-  addTimeOffsetMonths(months: number): void {
-    this.clock.addMonths(months);
-    this._afterTimeTravel(true);
-  }
-
-  addTimeOffsetYears(years: number): void {
-    this.clock.addYears(years);
-    this._afterTimeTravel(true);
-  }
-
-  // Glissements heure/min/sec : re-sync angles + rotation, mais pas les lignes d'orbite
-  addTimeOffsetHours(hours: number): void     { this.clock.addHours(hours);     this._afterTimeTravel(false); }
-  addTimeOffsetMinutes(minutes: number): void { this.clock.addMinutes(minutes); this._afterTimeTravel(false); }
-  addTimeOffsetSeconds(seconds: number): void { this.clock.addSeconds(seconds); this._afterTimeTravel(false); }
+  // Glissement heure par heure : re-sync angles + rotation, mais pas les lignes d'orbite
+  addTimeOffsetHours(hours: number): void { this.clock.addHours(hours); this._afterTimeTravel(false); }
 
   setSimulationSpeed(scale: number): void { this.clock.setTimeScale(scale); }
 

@@ -4,9 +4,22 @@
  * contrat `IUpdatable` des objets mis à jour à chaque frame.
  */
 import type * as THREE from 'three';
+import type { Body } from 'astronomy-engine';
 
 /** Résolutions de texture disponibles (du plus léger au plus détaillé). */
 export type TextureQuality = '1k' | '2k' | '4k' | '8k';
+
+/** Catégorie d'un corps — remplace les tests par nom (`name === 'sun'`…). */
+export type BodyKind = 'star' | 'planet' | 'moon' | 'skybox';
+
+/** Référentiel de position d'un corps. */
+export type OrbitFrame = 'heliocentric' | 'parentRelative';
+
+/** Distance de visite caméra par mode d'affichage (unités scène). */
+export interface CameraDistance {
+  educ:  number;
+  explo: number;
+}
 
 export interface TextureConfig {
   surface?: string;
@@ -34,12 +47,13 @@ export interface RingConfig {
   bodyName: string;
   innerRadius: number;
   outerRadius: number;
-  rotationSpeed: number;
   textureResolutions: TextureQuality[];
   textures: string;
 }
 
 export interface CelestialBodyConfig {
+  /** Catégorie — pilote le traitement (rendu, orbite, hiérarchie de scène). */
+  kind: BodyKind;
   radius: number;
   rotationSpeed: number;
   orbitalRadius: number;
@@ -50,6 +64,15 @@ export interface CelestialBodyConfig {
   satellites?: Record<string, CelestialBodyConfig>;
   /** Données astronomiques réelles — utilisées par OrbitalMechanics en mode Explo. */
   realData?: RealData;
+  /** Enum astronomy-engine pour les positions réelles. Absent = pas d'éphéméride (étoile fixe, skybox). */
+  astroBody?: Body;
+  /** Référentiel de position : héliocentrique (planètes) ou relatif au parent (lunes).
+   *  Défaut heliocentric. */
+  frame?: OrbitFrame;
+  /** Distance de visite caméra par mode. Absent = fallback générique. */
+  cameraDistance?: CameraDistance;
+  /** Rang de préchargement des textures (croissant, 0 = en premier). Absent = non prioritaire. */
+  loadPriority?: number;
 }
 
 export interface CelestialConfig {

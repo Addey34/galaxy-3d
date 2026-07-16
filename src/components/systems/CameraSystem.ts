@@ -29,9 +29,7 @@ export class CameraSystem {
   private readonly minDistanceMultiplier = CAMERA_CONTROLS_SETTINGS.minDistanceMultiplier;
 
   private readonly targetWorldPosition = new THREE.Vector3();
-  private readonly smoothTargetPosition = new THREE.Vector3();
   private readonly cameraOffset = new THREE.Vector3();
-  private readonly lastTargetPosition = new THREE.Vector3();
 
   constructor() {
     Logger.info('[CameraSystem] Camera instance created ✅');
@@ -64,7 +62,6 @@ export class CameraSystem {
     this.controls.rotateSpeed        = CAMERA_CONTROLS_SETTINGS.rotateSpeed;
     this.controls.zoomSpeed          = CAMERA_CONTROLS_SETTINGS.zoomSpeed;
     this.controls.target.set(0, 0, 0);
-    this.smoothTargetPosition.set(0, 0, 0);
   }
 
   /**
@@ -94,18 +91,23 @@ export class CameraSystem {
 
     this.currentTarget = { name: bodyName, group: body, distance };
     this.cameraOffset.subVectors(cameraPosition, this.targetWorldPosition);
-    this.lastTargetPosition.copy(this.targetWorldPosition);
 
     this.animateToTarget(cameraPosition, this.targetWorldPosition.clone());
   }
 
   private animateToTarget(cameraPosition: THREE.Vector3, targetPosition: THREE.Vector3): void {
+    // Un nouveau clic remplace le vol en cours. Sans cette annulation, plusieurs paires de
+    // tweens écrivaient caméra/cible pendant les mêmes frames et produisaient un mouvement
+    // latéral de va-et-vient lors d'une navigation rapide entre les planètes.
+    this.tweenGroup.removeAll();
     this.isAnimating = true;
     this.controls.enabled = false; // bloque les inputs utilisateur pendant le tween pour éviter un conflit de position
 
     const camFrom = { x: this.camera.position.x, y: this.camera.position.y, z: this.camera.position.z };
     const camTo   = { x: cameraPosition.x,        y: cameraPosition.y,        z: cameraPosition.z };
-    const tgtFrom = { x: this.smoothTargetPosition.x, y: this.smoothTargetPosition.y, z: this.smoothTargetPosition.z };
+    // Toujours partir de la cible OrbitControls réellement affichée. La précédente valeur
+    // mémorisée devenait obsolète dès qu'un corps suivi avançait sur son orbite.
+    const tgtFrom = { x: this.controls.target.x, y: this.controls.target.y, z: this.controls.target.z };
     const tgtTo   = { x: targetPosition.x,            y: targetPosition.y,            z: targetPosition.z };
 
     new TWEEN.Tween(camFrom, this.tweenGroup)
@@ -118,13 +120,21 @@ export class CameraSystem {
       .to(tgtTo, 1200)
       .easing(TWEEN.Easing.Cubic.InOut)
       .onUpdate(() => {
-        this.smoothTargetPosition.set(tgtFrom.x, tgtFrom.y, tgtFrom.z);
-        this.controls.target.copy(this.smoothTargetPosition);
+        this.controls.target.set(tgtFrom.x, tgtFrom.y, tgtFrom.z);
       })
       .onComplete(() => {
+        // La cible a pu avancer pendant les 1,2 s du vol (visible à vitesse accélérée).
+        // Translate caméra et target du même delta pour terminer exactement sur sa position
+        // courante sans saut lors de la première frame de suivi.
+        if (this.currentTarget?.group) {
+          this.cameraOffset.subVectors(this.camera.position, this.controls.target);
+          this.currentTarget.group.getWorldPosition(this.targetWorldPosition);
+          this.controls.target.copy(this.targetWorldPosition);
+          this.camera.position.copy(this.targetWorldPosition).add(this.cameraOffset);
+        }
         this.isAnimating = false;
-        this.currentTarget?.group.getWorldPosition(this.lastTargetPosition);
         this.controls.enabled = true;
+        this.controls.update();
         Logger.success('[CameraSystem] Camera animation completed');
       })
       .start();
@@ -190,11 +200,21 @@ export class CameraSystem {
     }
   }
 
+  /** Nom du corps actuellement suivi, ou null en vue libre / vue d'ensemble. */
+  get targetName(): string | null {
+    return this.currentTarget?.name ?? null;
+  }
+
+  /** Distance caméra → cible suivie en unités scène, ou null si aucune cible. */
+  getDistanceToTargetSceneUnits(): number | null {
+    if (!this.currentTarget) return null;
+    return this.camera.position.distanceTo(this.controls.target);
+  }
+
   private getDefaultDistance(bodyName: string): number {
-    const distances = this._scaleMode === 'explo'
-      ? CAMERA_SETTINGS.exploBodyDistances
-      : CAMERA_SETTINGS.bodyDistances;
-    return distances[bodyName] ?? 10;
+    const cd = this.celestialBodies[bodyName]?.cameraDistance;
+    if (!cd) return CAMERA_SETTINGS.defaultBodyDistance;
+    return this._scaleMode === 'explo' ? cd.explo : cd.educ;
   }
 
   dispose(): void {

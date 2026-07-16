@@ -8,8 +8,9 @@
  * dans les géométries GPU.
  */
 import * as THREE from 'three';
-import { CAMERA_SETTINGS, RENDER_SETTINGS } from '../../config/settings';
+import { CAMERA_SETTINGS, RENDER_SETTINGS, currentMaxPixelRatio } from '../../config/settings';
 import { educRadius } from '../../core/ScaleService';
+import { ORBIT_SAMPLE_COUNT } from '../../core/OrbitalMechanics';
 import type { CelestialBodyConfig, CelestialConfig } from '../../types';
 import Logger from '../../utils/Logger';
 import { createStarfield } from '../celestial/Starfield';
@@ -19,8 +20,6 @@ import type CelestialObject from '../celestial/CelestialObject';
 /** Table nom → corps céleste, partagée entre les systèmes. */
 export type CelestialBodies = Record<string, CelestialObject>;
 
-/** Nombre de segments par ligne d'orbite (doit correspondre à OrbitalMechanics). */
-const ORBIT_POINT_COUNT = 256;
 
 export class SceneSystem {
   readonly scene = new THREE.Scene();
@@ -31,6 +30,10 @@ export class SceneSystem {
 
   private readonly _orbitLines   = new Map<string, THREE.Line>();
   private readonly _orbitPts = new Map<string, Float32Array>();
+
+  /** Table des corps, conservée pour exposer leurs positions monde (HUD explo). */
+  private _celestialBodies: CelestialBodies = {};
+  private readonly _tmpWorldPos = new THREE.Vector3();
 
   private readonly targetObject = new THREE.Object3D();
   private readonly disposeFunctions: Array<() => void> = [];
@@ -68,7 +71,7 @@ export class SceneSystem {
       antialias: RENDER_SETTINGS.antialias,
       powerPreference: RENDER_SETTINGS.powerPreference,
     });
-    const pixelRatio = Math.min(window.devicePixelRatio, RENDER_SETTINGS.maxPixelRatio);
+    const pixelRatio = Math.min(window.devicePixelRatio, currentMaxPixelRatio());
     this.renderer.setPixelRatio(pixelRatio);
     this.renderer.setSize(window.innerWidth, window.innerHeight);
     this.renderer.shadowMap.enabled = RENDER_SETTINGS.shadowMap.enabled;
@@ -90,12 +93,16 @@ export class SceneSystem {
       this.camera.aspect = window.innerWidth / window.innerHeight;
       this.camera.updateProjectionMatrix();
       this.renderer.setSize(window.innerWidth, window.innerHeight);
+      // Ré-applique le plafond de pixel ratio : franchir le seuil mobile (768px)
+      // par redimensionnement bascule 2 ↔ 1.5 sans recréer le renderer.
+      this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, currentMaxPixelRatio()));
     };
     window.addEventListener('resize', onResize, { passive: true });
     this.disposeFunctions.push(() => window.removeEventListener('resize', onResize));
   }
 
   setupCelestialBodies(celestialBodies: CelestialBodies): void {
+    this._celestialBodies = celestialBodies;
     const addBody = (
       name: string,
       config: CelestialBodyConfig,
@@ -134,12 +141,32 @@ export class SceneSystem {
       }
     };
 
-    addBody('sun', this.config.bodies['sun']);
+    // L'étoile centrale est la racine ; les planètes vivent dans son groupe (leurs
+    // satellites y sont ajoutés par récursion via addBody). La skybox n'est pas un corps.
+    const starEntry = Object.entries(this.config.bodies).find(([, cfg]) => cfg.kind === 'star');
+    let starGroup: THREE.Group | null = null;
+    if (starEntry) {
+      addBody(starEntry[0], starEntry[1]);
+      starGroup = celestialBodies[starEntry[0]]?.group ?? null;
+    }
+
     Object.entries(this.config.bodies)
-      .filter(([name]) => name !== 'sun' && name !== 'stars')
-      .forEach(([name, config]) => addBody(name, config, celestialBodies['sun']?.group ?? null));
+      .filter(([, cfg]) => cfg.kind === 'planet')
+      .forEach(([name, config]) => addBody(name, config, starGroup));
 
     Logger.success('[SceneSystem] Celestial bodies added to scene');
+  }
+
+  /**
+   * Applique `cb` à chaque corps navigable (hors skybox) avec sa position monde à jour.
+   * Le vecteur passé est réutilisé entre les appels — le copier si on veut le conserver.
+   */
+  forEachBodyWorldPosition(cb: (name: string, worldPos: THREE.Vector3) => void): void {
+    for (const [name, body] of Object.entries(this._celestialBodies)) {
+      if (!body.group || this.config.bodies[name]?.kind === 'skybox') continue;
+      body.group.getWorldPosition(this._tmpWorldPos);
+      cb(name, this._tmpWorldPos);
+    }
   }
 
   /**
@@ -147,7 +174,7 @@ export class SceneSystem {
    * Les points d'orbite sont injectés via setOrbitPoints() + applyOrbitPoints().
    */
   private createOrbitVisual(bodyName: string, color: number): THREE.Line {
-    const N = ORBIT_POINT_COUNT;
+    const N = ORBIT_SAMPLE_COUNT;
     const positions = new Float32Array((N + 1) * 3); // tout à zéro jusqu'au premier calcul Kepler
 
     const geometry = new THREE.BufferGeometry();

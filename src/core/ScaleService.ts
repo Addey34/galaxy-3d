@@ -20,6 +20,9 @@ export type ScaleMode = 'educ' | 'explo';
 
 export const SQRT_K = 35; // Terre (1 UA) → 35 unités
 
+/** Kilomètres par unité astronomique — conversion rayon physique ↔ UA. */
+export const KM_PER_AU = 149_597_870;
+
 export class ScaleService {
   private _mode: ScaleMode = 'educ';
 
@@ -64,7 +67,6 @@ export const educRadius = (distanceAU: number): number =>
  * Formule : (radiusKm / AU_KM) × SQRT_K × VIEW_FACTOR
  * VIEW_FACTOR = 7 → angle apparent ~8° (confortable).
  */
-const AU_KM = 149_597_870;
 const VIEW_FACTOR = 7;
 export const exploCameraDistance = (radiusKm: number): number =>
-  (radiusKm / AU_KM) * SQRT_K * VIEW_FACTOR;
+  (radiusKm / KM_PER_AU) * SQRT_K * VIEW_FACTOR;

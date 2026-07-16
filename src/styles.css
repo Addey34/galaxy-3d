@@ -123,13 +123,13 @@ body.is-explo-mode #orbit-overview {
 }
 
 /* Éducatif actif → accent bleu */
-.mode-btn.is-active[data-mode="education"] {
+.mode-btn.is-active[data-mode="educ"] {
   background: rgba(74, 143, 255, 0.20);
   color: rgba(160, 200, 255, 1);
 }
 
 /* Exploration (vraie échelle) actif → accent vert */
-.mode-btn.is-active[data-mode="exploration"] {
+.mode-btn.is-active[data-mode="explo"] {
   background: rgba(80, 200, 110, 0.20);
   color: rgba(120, 255, 150, 1);
 }
@@ -500,16 +500,29 @@ body.is-explo-mode #orbit-overview {
    ============================================================================ */
 
 @media (max-width: 640px) {
+  /* Nav planètes : une seule rangée défilable horizontalement plutôt que ~3 rangées
+     empilées qui masquent la vue. Dégradé aux bords pour signaler le défilement. */
   .controls {
-    padding: 0.5rem;
+    padding: 0.5rem 0.55rem;
     gap: 0.4rem;
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    scroll-snap-type: x proximity;
+    -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 1.1rem, #000 calc(100% - 1.1rem), transparent 100%);
+            mask-image: linear-gradient(90deg, transparent 0, #000 1.1rem, #000 calc(100% - 1.1rem), transparent 100%);
   }
+  .controls::-webkit-scrollbar { display: none; }
 
   .button {
-    flex: 1 1 calc(20% - 0.5rem);
+    flex: 0 0 auto;
     font-size: 0.82rem;
-    padding: 0.7rem 0.4rem;
+    padding: 0.55rem 0.85rem;
     min-width: auto;
+    scroll-snap-align: center;
   }
 
   #fullscreen-btn { font-size: 1.9rem; }
@@ -553,4 +566,92 @@ body.is-explo-mode #orbit-overview {
 
   #clock-row    { padding: 0.35rem 0.75rem 0.06rem; }
   #calendar-row { padding: 0.03rem 0.75rem 0.32rem; }
+}
+
+/* ── HUD Exploration « Voyage spatial » ───────────────────────────────────── */
+
+/* Panneau cible (haut-droite) — distance réelle + temps-lumière. */
+#explo-hud {
+  position: fixed;
+  top: 4rem; /* sous la barre de navigation (centrée en haut) */
+  right: 1rem;
+  z-index: 30;
+  min-width: 12rem;
+  padding: 0.6rem 0.85rem;
+  background: rgba(4, 6, 18, 0.70);
+  border: 1px solid rgba(120, 180, 255, 0.25);
+  border-radius: 0.6rem;
+  backdrop-filter: blur(12px);
+  box-shadow: 0 2px 16px rgba(0, 0, 0, 0.45);
+  color: rgba(200, 225, 255, 0.9);
+  font-family: Arial, sans-serif;
+  opacity: 0;
+  transform: translateY(-6px);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  pointer-events: none;
+}
+#explo-hud.is-visible { opacity: 1; transform: translateY(0); }
+
+.explo-hud-title {
+  font-size: 0.6rem;
+  letter-spacing: 0.18em;
+  color: rgba(140, 180, 255, 0.55);
+}
+.explo-hud-target {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #dcebff;
+  margin: 0.1rem 0 0.35rem;
+  text-shadow: 0 0 10px rgba(120, 180, 255, 0.5);
+}
+.explo-hud-line {
+  font-size: 0.72rem;
+  color: rgba(180, 210, 255, 0.82);
+  line-height: 1.5;
+}
+#explo-hud.is-free .explo-hud-target { color: rgba(200, 225, 255, 0.55); }
+
+/* Couche de marqueurs projetés — un label par corps, positionné en translate(). */
+#explo-labels {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+#explo-labels.is-visible { opacity: 1; }
+
+.explo-label {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: none;
+  align-items: center;
+  gap: 0.3rem;
+  /* recentrer le point sur la position projetée */
+  margin: -4px 0 0 -4px;
+  white-space: nowrap;
+}
+.explo-label-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: rgba(160, 200, 255, 0.9);
+  box-shadow: 0 0 8px rgba(120, 180, 255, 0.9);
+  flex: none;
+}
+.explo-label-text {
+  font-family: Arial, sans-serif;
+  font-size: 0.66rem;
+  color: rgba(200, 225, 255, 0.78);
+  text-shadow: 0 0 6px rgba(0, 0, 0, 0.9);
+}
+.explo-label.is-target .explo-label-dot {
+  background: #ffd27a;
+  box-shadow: 0 0 10px rgba(255, 200, 90, 1);
+}
+.explo-label.is-target .explo-label-text {
+  color: #ffe6b0;
+  font-weight: 700;
 }

@@ -58,26 +58,8 @@ export class SimulationClock {
     this._jumpTo(new Date(this._date.getTime() + days * MS_PER_DAY));
   }
 
-  addMonths(months: number): void {
-    const d = new Date(this._date);
-    d.setMonth(d.getMonth() + months);
-    this._jumpTo(d);
-  }
-
-  addYears(years: number): void {
-    this.addMonths(years * 12);
-  }
-
   addHours(hours: number): void {
     this._jumpTo(new Date(this._date.getTime() + hours * 3_600_000));
-  }
-
-  addMinutes(minutes: number): void {
-    this._jumpTo(new Date(this._date.getTime() + minutes * 60_000));
-  }
-
-  addSeconds(seconds: number): void {
-    this._jumpTo(new Date(this._date.getTime() + seconds * 1_000));
   }
 
   resetOffset(): void {

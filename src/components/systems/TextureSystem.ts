@@ -8,13 +8,13 @@
 import * as THREE from 'three';
 import type { CelestialBodyConfig, TextureQuality } from '../../types';
 import type { PerformanceSettings, TextureDefaultSettings } from '../../config/settings';
+import { allBodies, flattenBodies } from '../../config/catalog';
 import Logger from '../../utils/Logger';
 
-/** Données d'initialisation du TextureSystem (chemins, réglages par défaut, priorités). */
+/** Données d'initialisation du TextureSystem (chemins, réglages par défaut, corps). */
 export interface TextureSystemConfig {
   basePath: string;
   defaultSettings: TextureDefaultSettings;
-  loadPriority: string[];
   bodies: Record<string, CelestialBodyConfig>;
   performance: PerformanceSettings;
 }
@@ -33,12 +33,16 @@ export class TextureSystem {
   private readonly cache = new Map<string, THREE.Texture>();
   private readonly loadingPromises = new Map<string, Promise<THREE.Texture>>();
 
+  // Table nom → config (satellites inclus), construite une fois — évite un scan linéaire à chaque LOD.
+  private readonly _bodyByName: Map<string, CelestialBodyConfig>;
+
   // Niveaux de qualité triés par distance croissante, calculés une fois au démarrage
   // puis réutilisés à chaque sélection LOD (_chooseQuality).
   private readonly _sortedQuality: { distance: number; quality: string }[];
 
   private constructor(config: TextureSystemConfig) {
     this.config = config;
+    this._bodyByName = flattenBodies({ bodies: config.bodies });
     this._sortedQuality = (Object.values(config.performance.textureQuality) as { distance: number; quality: string }[])
       .sort((a, b) => a.distance - b.distance);
     Logger.info('[TextureSystem] Instance created ✅');
@@ -103,20 +107,16 @@ export class TextureSystem {
    * démarrage, en remontant la progression (0→1) pour l'écran de chargement.
    */
   async preloadCriticalTextures(progressCallback: (percent: number, msg: string) => void = () => {}): Promise<void> {
-    const priorityList = this.config.loadPriority;
+    // Corps à précharger : ceux qui déclarent un loadPriority, dans l'ordre croissant.
+    const priorityList = allBodies({ bodies: this.config.bodies })
+      .filter((e) => e.config.loadPriority !== undefined)
+      .sort((a, b) => a.config.loadPriority! - b.config.loadPriority!);
     const total = priorityList.length;
     let loaded = 0;
 
     Logger.info(`[TextureSystem] Preloading ${total} priority bodies`);
 
-    for (const bodyName of priorityList) {
-      const bodyConfig = this._resolveBodyConfig(bodyName);
-      if (!bodyConfig) {
-        Logger.warn(`[TextureSystem] No config for body: ${bodyName}`);
-        loaded++;
-        continue;
-      }
-
+    for (const { name: bodyName, config: bodyConfig } of priorityList) {
       const textureKeys = Object.keys(bodyConfig.textures) as (keyof typeof bodyConfig.textures)[];
       for (const key of textureKeys) {
         const textureBasePath = bodyConfig.textures[key];
@@ -158,14 +158,7 @@ export class TextureSystem {
   }
 
   private _resolveBodyConfig(bodyName: string): CelestialBodyConfig | undefined {
-    const direct = this.config.bodies[bodyName];
-    if (direct) return direct;
-
-    for (const planet of Object.values(this.config.bodies)) {
-      const sat = planet.satellites?.[bodyName];
-      if (sat) return sat;
-    }
-    return undefined;
+    return this._bodyByName.get(bodyName);
   }
 
   private _chooseQuality(distance: number, resolutions: string[]): string {
