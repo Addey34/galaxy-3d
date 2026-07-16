@@ -8,7 +8,11 @@
  * dans les géométries GPU.
  */
 import * as THREE from 'three';
-import { CAMERA_SETTINGS, RENDER_SETTINGS, currentMaxPixelRatio } from '../../config/settings';
+import {
+  CAMERA_SETTINGS,
+  RENDER_SETTINGS,
+  currentMaxPixelRatio,
+} from '../../config/settings';
 import { educRadius } from '../../core/ScaleService';
 import { ORBIT_SAMPLE_COUNT } from '../../core/OrbitalMechanics';
 import type { CelestialBodyConfig, CelestialConfig } from '../../types';
@@ -20,7 +24,6 @@ import type CelestialObject from '../celestial/CelestialObject';
 /** Table nom → corps céleste, partagée entre les systèmes. */
 export type CelestialBodies = Record<string, CelestialObject>;
 
-
 export class SceneSystem {
   readonly scene = new THREE.Scene();
   readonly orbitGroups: Record<string, THREE.Group> = {};
@@ -28,7 +31,7 @@ export class SceneSystem {
   camera!: THREE.PerspectiveCamera;
   renderer!: THREE.WebGLRenderer;
 
-  private readonly _orbitLines   = new Map<string, THREE.Line>();
+  private readonly _orbitLines = new Map<string, THREE.Line>();
   private readonly _orbitPts = new Map<string, Float32Array>();
 
   /** Table des corps, conservée pour exposer leurs positions monde (HUD explo). */
@@ -71,12 +74,15 @@ export class SceneSystem {
       antialias: RENDER_SETTINGS.antialias,
       powerPreference: RENDER_SETTINGS.powerPreference,
     });
-    const pixelRatio = Math.min(window.devicePixelRatio, currentMaxPixelRatio());
+    const pixelRatio = Math.min(
+      window.devicePixelRatio,
+      currentMaxPixelRatio()
+    );
     this.renderer.setPixelRatio(pixelRatio);
     this.renderer.setSize(window.innerWidth, window.innerHeight);
     this.renderer.shadowMap.enabled = RENDER_SETTINGS.shadowMap.enabled;
-    this.renderer.shadowMap.type   = RENDER_SETTINGS.shadowMap.type;
-    this.renderer.toneMapping       = RENDER_SETTINGS.toneMapping;
+    this.renderer.shadowMap.type = RENDER_SETTINGS.shadowMap.type;
+    this.renderer.toneMapping = RENDER_SETTINGS.toneMapping;
     this.renderer.toneMappingExposure = RENDER_SETTINGS.toneMappingExposure;
     document.body.appendChild(this.renderer.domElement);
   }
@@ -85,7 +91,9 @@ export class SceneSystem {
     this.textureSystem
       .loadTexture('stars/starsSurface', '8k')
       .then((tex) => this.scene.add(createStarfield(tex)))
-      .catch((err) => Logger.warn('[SceneSystem] Starfield texture failed', err));
+      .catch((err) =>
+        Logger.warn('[SceneSystem] Starfield texture failed', err)
+      );
   }
 
   private setupEventListeners(): void {
@@ -95,10 +103,14 @@ export class SceneSystem {
       this.renderer.setSize(window.innerWidth, window.innerHeight);
       // Ré-applique le plafond de pixel ratio : franchir le seuil mobile (768px)
       // par redimensionnement bascule 2 ↔ 1.5 sans recréer le renderer.
-      this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, currentMaxPixelRatio()));
+      this.renderer.setPixelRatio(
+        Math.min(window.devicePixelRatio, currentMaxPixelRatio())
+      );
     };
     window.addEventListener('resize', onResize, { passive: true });
-    this.disposeFunctions.push(() => window.removeEventListener('resize', onResize));
+    this.disposeFunctions.push(() =>
+      window.removeEventListener('resize', onResize)
+    );
   }
 
   setupCelestialBodies(celestialBodies: CelestialBodies): void {
@@ -117,9 +129,10 @@ export class SceneSystem {
       body.group.updateMatrixWorld(true);
       // Position initiale placeholder — OrbitalMechanics l'écrase au premier frame (educ comme explo).
       // Dérivée de distanceAU (échelle éducatif √-compressée) si disponible, sinon orbitalRadius du config.
-      const initR = config.realData?.distanceAU != null
-        ? educRadius(config.realData.distanceAU)
-        : (config.orbitalRadius ?? 0);
+      const initR =
+        config.realData?.distanceAU != null
+          ? educRadius(config.realData.distanceAU)
+          : (config.orbitalRadius ?? 0);
       body.group.position.set(initR, 0, 0);
 
       const orbitGroup = new THREE.Group();
@@ -143,7 +156,9 @@ export class SceneSystem {
 
     // L'étoile centrale est la racine ; les planètes vivent dans son groupe (leurs
     // satellites y sont ajoutés par récursion via addBody). La skybox n'est pas un corps.
-    const starEntry = Object.entries(this.config.bodies).find(([, cfg]) => cfg.kind === 'star');
+    const starEntry = Object.entries(this.config.bodies).find(
+      ([, cfg]) => cfg.kind === 'star'
+    );
     let starGroup: THREE.Group | null = null;
     if (starEntry) {
       addBody(starEntry[0], starEntry[1]);
@@ -164,7 +179,9 @@ export class SceneSystem {
    * Applique `cb` à chaque corps navigable (hors skybox) avec sa position monde à jour.
    * Le vecteur passé est réutilisé entre les appels — le copier si on veut le conserver.
    */
-  forEachBodyWorldPosition(cb: (name: string, worldPos: THREE.Vector3) => void): void {
+  forEachBodyWorldPosition(
+    cb: (name: string, worldPos: THREE.Vector3) => void
+  ): void {
     for (const [name, body] of Object.entries(this._celestialBodies)) {
       if (!body.group || this.config.bodies[name]?.kind === 'skybox') continue;
       body.group.getWorldPosition(this._tmpWorldPos);
@@ -183,7 +200,11 @@ export class SceneSystem {
     const geometry = new THREE.BufferGeometry();
     geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
 
-    const material = new THREE.LineBasicMaterial({ color, transparent: true, opacity: 0.25 });
+    const material = new THREE.LineBasicMaterial({
+      color,
+      transparent: true,
+      opacity: 0.25,
+    });
     const line = new THREE.Line(geometry, material);
 
     this._orbitLines.set(bodyName, line);
@@ -204,7 +225,9 @@ export class SceneSystem {
       const pts = this._orbitPts.get(bodyName);
       if (!pts) continue;
 
-      const attr = line.geometry.getAttribute('position') as THREE.BufferAttribute;
+      const attr = line.geometry.getAttribute(
+        'position'
+      ) as THREE.BufferAttribute;
       const n = attr.count;
 
       for (let i = 0; i < n; i++) {

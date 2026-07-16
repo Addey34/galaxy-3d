@@ -26,8 +26,12 @@ export const KM_PER_AU = 149_597_870;
 export class ScaleService {
   private _mode: ScaleMode = 'educ';
 
-  get mode(): ScaleMode { return this._mode; }
-  set mode(m: ScaleMode) { this._mode = m; }
+  get mode(): ScaleMode {
+    return this._mode;
+  }
+  set mode(m: ScaleMode) {
+    this._mode = m;
+  }
 
   /**
    * Convertit une distance en UA vers des unités Three.js.

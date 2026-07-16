@@ -13,13 +13,13 @@ Visualisateur interactif du système solaire en temps réel, développé en Type
 
 ## Stack
 
-| Lib | Version | Rôle |
-|-----|---------|------|
-| [Three.js](https://threejs.org/) | 0.176 | Rendu WebGL 3D |
-| [astronomy-engine](https://github.com/cosinekitty/astronomy) | 2.1.19 | Éphéméride — positions planétaires réelles |
-| [@tweenjs/tween.js](https://github.com/tweenjs/tween.js/) | 25.0 | Animations caméra fluides |
-| [Vite](https://vitejs.dev/) | 6.3 | Bundler + dev server |
-| TypeScript | 6.0 | Typage strict |
+| Lib                                                          | Version | Rôle                                       |
+| ------------------------------------------------------------ | ------- | ------------------------------------------ |
+| [Three.js](https://threejs.org/)                             | 0.176   | Rendu WebGL 3D                             |
+| [astronomy-engine](https://github.com/cosinekitty/astronomy) | 2.1.19  | Éphéméride — positions planétaires réelles |
+| [@tweenjs/tween.js](https://github.com/tweenjs/tween.js/)    | 25.0    | Animations caméra fluides                  |
+| [Vite](https://vitejs.dev/)                                  | 6.3     | Bundler + dev server                       |
+| TypeScript                                                   | 6.0     | Typage strict                              |
 
 ## Installation
 
@@ -98,10 +98,10 @@ Résolutions disponibles : `1k`, `2k`, `4k`, `8k` (selon le corps, voir `src/con
 
 ### Modes d'affichage
 
-| Mode | Distances | Tailles | Orbites |
-|------|-----------|---------|---------|
-| **Éducatif** (`educ`) | Compressées (`√AU × 35`) | Visuelles | Circulaires inclinées |
-| **Exploration** (`explo`) | Réelles (`AU × 35`) | Physiques (km) | Positions Kepler réelles |
+| Mode                      | Distances                | Tailles        | Orbites                  |
+| ------------------------- | ------------------------ | -------------- | ------------------------ |
+| **Éducatif** (`educ`)     | Compressées (`√AU × 35`) | Visuelles      | Circulaires inclinées    |
+| **Exploration** (`explo`) | Réelles (`AU × 35`)      | Physiques (km) | Positions Kepler réelles |
 
 Basculer avec les boutons **Éduc. / Explo.** dans l'interface. En Exploration, la caméra cible la Terre par défaut ; le HUD « Voyage spatial » affiche la cible, sa distance réelle et son temps-lumière. Les marqueurs projetés permettent de repérer les autres corps.
 
@@ -259,15 +259,15 @@ Aucune édition de `index.html`, `EphemerisService` ni des distances caméra n'e
 
 Réglages moteur dans `src/config/engine.ts`, catalogue des corps dans `src/config/bodies.ts` :
 
-| Constante | Fichier | Rôle |
-|-----------|---------|------|
-| `APP_SETTINGS.performance.targetFPS` | engine | FPS cible (défaut 60) |
-| `APP_SETTINGS.performance.textureQuality` | engine | Seuils de distance LOD par qualité |
-| `LIGHTING_SETTINGS` | engine | Intensité lumière ambiante et solaire |
-| `SHADER_SETTINGS.nightLights` | engine | Intensité / seuil / douceur des lueurs nocturnes |
-| `CAMERA_SETTINGS.defaultBodyDistance` | engine | Distance caméra fallback |
-| `CELESTIAL_CONFIG.bodies[*].cameraDistance` | bodies | Distance de visite par corps `{ educ, explo }` |
-| `SIMU_SCALES` | ui/playback | Vitesses disponibles : `[1, 3600, 10800, 21600]` |
+| Constante                                   | Fichier     | Rôle                                             |
+| ------------------------------------------- | ----------- | ------------------------------------------------ |
+| `APP_SETTINGS.performance.targetFPS`        | engine      | FPS cible (défaut 60)                            |
+| `APP_SETTINGS.performance.textureQuality`   | engine      | Seuils de distance LOD par qualité               |
+| `LIGHTING_SETTINGS`                         | engine      | Intensité lumière ambiante et solaire            |
+| `SHADER_SETTINGS.nightLights`               | engine      | Intensité / seuil / douceur des lueurs nocturnes |
+| `CAMERA_SETTINGS.defaultBodyDistance`       | engine      | Distance caméra fallback                         |
+| `CELESTIAL_CONFIG.bodies[*].cameraDistance` | bodies      | Distance de visite par corps `{ educ, explo }`   |
+| `SIMU_SCALES`                               | ui/playback | Vitesses disponibles : `[1, 3600, 10800, 21600]` |
 
 ## Dépendances de développement
 

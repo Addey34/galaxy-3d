@@ -30,16 +30,18 @@ function formatDistance(km: number): string {
   const au = km / KM_PER_AU;
   const auStr = `${au.toLocaleString('fr-FR', { maximumFractionDigits: 3 })} UA`;
   let kmStr: string;
-  if (km >= 1e9) kmStr = `${(km / 1e9).toLocaleString('fr-FR', { maximumFractionDigits: 2 })} Md km`;
-  else if (km >= 1e6) kmStr = `${(km / 1e6).toLocaleString('fr-FR', { maximumFractionDigits: 1 })} M km`;
+  if (km >= 1e9)
+    kmStr = `${(km / 1e9).toLocaleString('fr-FR', { maximumFractionDigits: 2 })} Md km`;
+  else if (km >= 1e6)
+    kmStr = `${(km / 1e6).toLocaleString('fr-FR', { maximumFractionDigits: 1 })} M km`;
   else kmStr = `${Math.round(km).toLocaleString('fr-FR')} km`;
   return `${auStr} · ${kmStr}`;
 }
 
 function formatLightTime(km: number): string {
   const s = km / C_KM_PER_S;
-  if (s < 1)   return `${(s * 1000).toFixed(0)} ms-lumière`;
-  if (s < 60)  return `${s.toFixed(1)} s-lumière`;
+  if (s < 1) return `${(s * 1000).toFixed(0)} ms-lumière`;
+  if (s < 60) return `${s.toFixed(1)} s-lumière`;
   if (s < 3600) {
     const m = Math.floor(s / 60);
     return `${m} min ${Math.round(s - m * 60)} s-lumière`;
@@ -109,7 +111,11 @@ export class ExploHud {
   }
 
   /** À appeler chaque frame quand actif. Lit des positions déjà à jour (post-suivi caméra). */
-  update(camera: THREE.PerspectiveCamera, cameraSystem: CameraSystem, sceneSystem: SceneSystem): void {
+  update(
+    camera: THREE.PerspectiveCamera,
+    cameraSystem: CameraSystem,
+    sceneSystem: SceneSystem
+  ): void {
     if (!this.active) return;
 
     // Bloc cible : distance réelle + temps-lumière.
@@ -118,13 +124,13 @@ export class ExploHud {
     if (name && sceneDist !== null) {
       const km = sceneUnitsToKm(sceneDist);
       this.targetName.textContent = cap(name);
-      this.distance.textContent   = formatDistance(km);
-      this.lightTime.textContent  = formatLightTime(km);
+      this.distance.textContent = formatDistance(km);
+      this.lightTime.textContent = formatLightTime(km);
       this.root.classList.remove('is-free');
     } else {
       this.targetName.textContent = 'Vue libre';
-      this.distance.textContent   = '—';
-      this.lightTime.textContent  = '';
+      this.distance.textContent = '—';
+      this.lightTime.textContent = '';
       this.root.classList.add('is-free');
     }
 
@@ -135,10 +141,17 @@ export class ExploHud {
       const el = this._label(bodyName);
       this._ndc.copy(worldPos).project(camera);
       // z hors [-1,1] → derrière la caméra ou au-delà du far : masquer.
-      const onScreen = this._ndc.z >= -1 && this._ndc.z <= 1
-        && this._ndc.x >= -1 && this._ndc.x <= 1
-        && this._ndc.y >= -1 && this._ndc.y <= 1;
-      if (!onScreen) { el.style.display = 'none'; return; }
+      const onScreen =
+        this._ndc.z >= -1 &&
+        this._ndc.z <= 1 &&
+        this._ndc.x >= -1 &&
+        this._ndc.x <= 1 &&
+        this._ndc.y >= -1 &&
+        this._ndc.y <= 1;
+      if (!onScreen) {
+        el.style.display = 'none';
+        return;
+      }
       const x = (this._ndc.x * 0.5 + 0.5) * w;
       const y = (-this._ndc.y * 0.5 + 0.5) * h;
       el.style.display = 'block';

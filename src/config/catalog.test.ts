@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { allBodies, assertUniqueBodyNames, flattenBodies, forEachBody } from './catalog';
+import {
+  allBodies,
+  assertUniqueBodyNames,
+  flattenBodies,
+  forEachBody,
+} from './catalog';
 import type { CelestialBodyConfig, CelestialConfig } from '../types';
 
 const stub = (kind: CelestialBodyConfig['kind']): CelestialBodyConfig => ({
@@ -23,7 +28,9 @@ const config: CelestialConfig = {
 describe('forEachBody', () => {
   it('visits parents then their satellites, tagging the parent name', () => {
     const seen: Array<[string, string | null]> = [];
-    forEachBody(config, ({ name, parentName }) => seen.push([name, parentName]));
+    forEachBody(config, ({ name, parentName }) =>
+      seen.push([name, parentName])
+    );
     expect(seen).toEqual([
       ['sun', null],
       ['earth', null],
@@ -35,7 +42,12 @@ describe('forEachBody', () => {
 
 describe('allBodies / flattenBodies', () => {
   it('allBodies flattens satellites into the list', () => {
-    expect(allBodies(config).map((e) => e.name)).toEqual(['sun', 'earth', 'moon', 'mars']);
+    expect(allBodies(config).map((e) => e.name)).toEqual([
+      'sun',
+      'earth',
+      'moon',
+      'mars',
+    ]);
   });
 
   it('flattenBodies resolves satellites by name', () => {

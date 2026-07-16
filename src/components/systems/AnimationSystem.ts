@@ -18,8 +18,8 @@ import type { CelestialBodies } from './SceneSystem';
 // LOD revu toutes les 5 frames seulement : un changement de texture déclenche un upload
 // GPU coûteux ; le faire à chaque frame provoquerait des à-coups (spikes de frame-time).
 const LOD_UPDATE_INTERVAL = 5;
-const LOD_MAX_DISTANCE = 100;      // au-delà, on ne recharge plus de textures (corps trop petit à l'écran)
-const LOD_DISTANCE_THRESHOLD = 5;  // variation de distance mini avant de reconsidérer le LOD
+const LOD_MAX_DISTANCE = 100; // au-delà, on ne recharge plus de textures (corps trop petit à l'écran)
+const LOD_DISTANCE_THRESHOLD = 5; // variation de distance mini avant de reconsidérer le LOD
 
 export class AnimationSystem {
   // Timing
@@ -73,10 +73,10 @@ export class AnimationSystem {
     cameraSystem: CameraSystem;
     celestialBodies: CelestialBodies;
   }): void {
-    this.scene          = params.scene;
-    this.camera          = params.camera;
-    this.renderer        = params.renderer;
-    this.cameraSystem    = params.cameraSystem;
+    this.scene = params.scene;
+    this.camera = params.camera;
+    this.renderer = params.renderer;
+    this.cameraSystem = params.cameraSystem;
     this.celestialBodies = params.celestialBodies;
 
     // Share tween group with camera system
@@ -143,7 +143,10 @@ export class AnimationSystem {
     return this._sunWorldPos;
   }
 
-  private _updateObjects(delta: number, sunWorldPosition: THREE.Vector3 | null): void {
+  private _updateObjects(
+    delta: number,
+    sunWorldPosition: THREE.Vector3 | null
+  ): void {
     this._cameraPos.copy(this.camera.position);
 
     // Array.from(Set) est O(n) et alloue un tableau : on le recrée uniquement
@@ -161,7 +164,8 @@ export class AnimationSystem {
       if (obj.group) {
         obj.group.getWorldPosition(this._bodyWorldPos);
         this._tmpSphere.center.copy(this._bodyWorldPos);
-        this._tmpSphere.radius = ((obj.group.userData['radius'] as number | undefined) ?? 10) * 2;
+        this._tmpSphere.radius =
+          ((obj.group.userData['radius'] as number | undefined) ?? 10) * 2;
         visible = this._frustum.intersectsSphere(this._tmpSphere);
       }
       obj.update(delta, sunWorldPosition, visible, this._cameraPos);
@@ -176,7 +180,11 @@ export class AnimationSystem {
     for (const body of Object.values(this.celestialBodies)) {
       if (typeof body.updateLODTextures === 'function' && body.group) {
         // fire-and-forget; CelestialObject guards concurrent calls with _lodPending
-        void body.updateLODTextures(this.camera, LOD_MAX_DISTANCE, LOD_DISTANCE_THRESHOLD);
+        void body.updateLODTextures(
+          this.camera,
+          LOD_MAX_DISTANCE,
+          LOD_DISTANCE_THRESHOLD
+        );
       }
     }
   }

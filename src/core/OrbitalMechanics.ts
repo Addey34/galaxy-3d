@@ -57,7 +57,8 @@ export class OrbitalMechanics {
     forEachBody(config, ({ name, config: cfg, parentName }) => {
       if (cfg.frame !== 'parentRelative' || parentName === null) return;
       const parentAstro = config.bodies[parentName]?.astroBody;
-      if (parentAstro !== undefined) this._parentAstroBody.set(name, parentAstro);
+      if (parentAstro !== undefined)
+        this._parentAstroBody.set(name, parentAstro);
     });
   }
 
@@ -66,7 +67,7 @@ export class OrbitalMechanics {
   // ============================================================================
 
   update(simDelta: number, _realDelta: number = simDelta): void {
-    const prevMs   = this.clock.date.getTime();
+    const prevMs = this.clock.date.getTime();
     const isPaused = simDelta === 0;
 
     if (!isPaused) {
@@ -99,13 +100,21 @@ export class OrbitalMechanics {
    *   - sinon `orbitalElements` défini → propagation képlérienne (astéroïdes, comètes…).
    *   - sinon null (corps sans position calculable).
    */
-  private _positionAU(name: string, cfg: CelestialBodyConfig, date: Date): THREE.Vector3 | null {
+  private _positionAU(
+    name: string,
+    cfg: CelestialBodyConfig,
+    date: Date
+  ): THREE.Vector3 | null {
     if (cfg.astroBody !== undefined) {
       if (cfg.frame === 'parentRelative') {
         const parentBody = this._parentAstroBody.get(name);
         // Parent sans éphéméride → pas de position relative calculable.
         if (parentBody === undefined) return null;
-        return this.ephemeris.getParentRelativeAU(cfg.astroBody, parentBody, date);
+        return this.ephemeris.getParentRelativeAU(
+          cfg.astroBody,
+          parentBody,
+          date
+        );
       }
       return this.ephemeris.getHeliocentricAU(cfg.astroBody, date);
     }
@@ -129,16 +138,23 @@ export class OrbitalMechanics {
       const periodDays = cfg.realData?.orbitPeriodDays;
       if (!periodDays) return;
       const angularVelocity = (Math.PI * 2) / (periodDays * 86_400);
-      const angle = (this._orbitAngles.get(name) ?? 0) + angularVelocity * this._simDeltaSeconds;
+      const angle =
+        (this._orbitAngles.get(name) ?? 0) +
+        angularVelocity * this._simDeltaSeconds;
       this._orbitAngles.set(name, angle);
       const distanceAU = cfg.realData?.distanceAU;
-      const r = distanceAU !== undefined ? Math.sqrt(distanceAU) * SQRT_K : (cfg.orbitalRadius ?? 0);
-      body.group.position.copy(orbitalPositionEduc(
-        r,
-        angle,
-        cfg.realData?.orbitalInclination ?? 0,
-        cfg.realData?.ascendingNode ?? 0,
-      ));
+      const r =
+        distanceAU !== undefined
+          ? Math.sqrt(distanceAU) * SQRT_K
+          : (cfg.orbitalRadius ?? 0);
+      body.group.position.copy(
+        orbitalPositionEduc(
+          r,
+          angle,
+          cfg.realData?.orbitalInclination ?? 0,
+          cfg.realData?.ascendingNode ?? 0
+        )
+      );
     } else {
       // Mode Explo — positions Kepler réelles depuis astronomy-engine.
       // Échelle linéaire (AU × SQRT_K), sans compression √. Pour les corps
@@ -183,11 +199,14 @@ export class OrbitalMechanics {
       if (!cfg.realData?.distanceAU) return;
       const pos = this._positionAU(name, cfg, date);
       if (!pos) return;
-      this._orbitAngles.set(name, angleInOrbitalPlane(
-        pos,
-        cfg.realData.orbitalInclination ?? 0,
-        cfg.realData.ascendingNode ?? 0,
-      ));
+      this._orbitAngles.set(
+        name,
+        angleInOrbitalPlane(
+          pos,
+          cfg.realData.orbitalInclination ?? 0,
+          cfg.realData.ascendingNode ?? 0
+        )
+      );
     };
 
     forEachBody(this.config, ({ name, config: cfg }) => {
@@ -203,11 +222,16 @@ export class OrbitalMechanics {
     //   rotation.y = -θSun - subSolarLon
     const earthCfg = this.config.bodies['earth'];
     const earthBody = this.bodies['earth'];
-    const earthPos = earthCfg ? this._positionAU('earth', earthCfg, date) : null;
+    const earthPos = earthCfg
+      ? this._positionAU('earth', earthCfg, date)
+      : null;
     if (earthPos && earthBody) {
       const θSun = Math.atan2(-earthPos.z, -earthPos.x);
-      const utcH = date.getUTCHours() + date.getUTCMinutes() / 60 + date.getUTCSeconds() / 3600;
-      earthBody.setInitialSurfaceRotation(-θSun - (12 - utcH) * Math.PI / 12);
+      const utcH =
+        date.getUTCHours() +
+        date.getUTCMinutes() / 60 +
+        date.getUTCSeconds() / 3600;
+      earthBody.setInitialSurfaceRotation(-θSun - ((12 - utcH) * Math.PI) / 12);
     }
   }
 
@@ -222,13 +246,18 @@ export class OrbitalMechanics {
     // Mode Éducatif : orbite circulaire inclinée (éléments J2000 — même formule que _updateBody).
     if (this.scale.mode === 'educ') {
       if (distanceAU === undefined) return null;
-      const r    = Math.sqrt(distanceAU) * SQRT_K;
-      const inc  = cfg.realData?.orbitalInclination ?? 0;
+      const r = Math.sqrt(distanceAU) * SQRT_K;
+      const inc = cfg.realData?.orbitalInclination ?? 0;
       const node = cfg.realData?.ascendingNode ?? 0;
-      const arr  = new Float32Array((nPoints + 1) * 3);
+      const arr = new Float32Array((nPoints + 1) * 3);
       for (let i = 0; i <= nPoints; i++) {
-        const p = orbitalPositionEduc(r, (i / nPoints) * Math.PI * 2, inc, node);
-        arr[i * 3]     = p.x;
+        const p = orbitalPositionEduc(
+          r,
+          (i / nPoints) * Math.PI * 2,
+          inc,
+          node
+        );
+        arr[i * 3] = p.x;
         arr[i * 3 + 1] = p.y;
         arr[i * 3 + 2] = p.z;
       }
@@ -255,7 +284,7 @@ export class OrbitalMechanics {
       if (!pos) return null;
       const s = this.scale.auVectorToScene(pos);
 
-      arr[i * 3]     = s.x;
+      arr[i * 3] = s.x;
       arr[i * 3 + 1] = s.y;
       arr[i * 3 + 2] = s.z;
     }
@@ -282,9 +311,14 @@ export class OrbitalMechanics {
   }
 
   // Glissement heure par heure : re-sync angles + rotation, mais pas les lignes d'orbite
-  addTimeOffsetHours(hours: number): void { this.clock.addHours(hours); this._afterTimeTravel(false); }
+  addTimeOffsetHours(hours: number): void {
+    this.clock.addHours(hours);
+    this._afterTimeTravel(false);
+  }
 
-  setSimulationSpeed(scale: number): void { this.clock.setTimeScale(scale); }
+  setSimulationSpeed(scale: number): void {
+    this.clock.setTimeScale(scale);
+  }
 
   resetTimeOffset(): void {
     this.clock.resetOffset();
@@ -292,9 +326,19 @@ export class OrbitalMechanics {
     this.onOrbitsChanged?.();
   }
 
-  get scaleMode(): 'educ' | 'explo' { return this.scale.mode; }
-  get simulationDate(): Date { return this.clock.date; }
-  get offsetDays(): number { return this.clock.offsetDays; }
-  get simulationTimeScale(): number { return this.clock.timeScale; }
-  get simDeltaSeconds(): number { return this._simDeltaSeconds; }
+  get scaleMode(): 'educ' | 'explo' {
+    return this.scale.mode;
+  }
+  get simulationDate(): Date {
+    return this.clock.date;
+  }
+  get offsetDays(): number {
+    return this.clock.offsetDays;
+  }
+  get simulationTimeScale(): number {
+    return this.clock.timeScale;
+  }
+  get simDeltaSeconds(): number {
+    return this._simDeltaSeconds;
+  }
 }

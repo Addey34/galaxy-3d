@@ -22,8 +22,9 @@ import type { TextureQuality } from '../types';
 export const isMobile = (): boolean => {
   if (typeof window === 'undefined') return false;
   return (
-    /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
-    window.innerWidth < 768
+    /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+      navigator.userAgent
+    ) || window.innerWidth < 768
   );
 };
 
@@ -44,9 +45,9 @@ export interface TextureQualityLevel {
 
 export interface TextureQualityMap {
   ultra: TextureQualityLevel;
-  high:  TextureQualityLevel;
+  high: TextureQualityLevel;
   medium: TextureQualityLevel;
-  low:   TextureQualityLevel;
+  low: TextureQualityLevel;
 }
 
 export interface PerformanceSettings {
@@ -94,16 +95,16 @@ export const APP_SETTINGS: AppSettings = {
     maxAnisotropy: IS_MOBILE ? 8 : 16,
     textureQuality: IS_MOBILE
       ? {
-          ultra:  { segments: 128, distance: 10,  quality: '4k' },
-          high:   { segments: 64,  distance: 20,  quality: '2k' },
-          medium: { segments: 64,  distance: 40,  quality: '2k' },
-          low:    { segments: 32,  distance: 80,  quality: '1k' },
+          ultra: { segments: 128, distance: 10, quality: '4k' },
+          high: { segments: 64, distance: 20, quality: '2k' },
+          medium: { segments: 64, distance: 40, quality: '2k' },
+          low: { segments: 32, distance: 80, quality: '1k' },
         }
       : {
-          ultra:  { segments: 256, distance: 10,  quality: '8k' },
-          high:   { segments: 128, distance: 20,  quality: '4k' },
-          medium: { segments: 64,  distance: 40,  quality: '2k' },
-          low:    { segments: 32,  distance: 80,  quality: '1k' },
+          ultra: { segments: 256, distance: 10, quality: '8k' },
+          high: { segments: 128, distance: 20, quality: '4k' },
+          medium: { segments: 64, distance: 40, quality: '2k' },
+          low: { segments: 32, distance: 80, quality: '1k' },
         },
   },
 };
@@ -124,10 +125,10 @@ export const CAMERA_SETTINGS = {
   fov: 75,
   // Mode Éducatif — near/far larges (planètes à 2-192u)
   educNear: 0.1,
-  educFar:  20_000,
+  educFar: 20_000,
   // Mode Explo — near très petit (planètes réelles à 0.003-0.12u de la caméra)
   exploNear: 1e-6,
-  exploFar:  3_000, // Neptune explo ≈ 1050u
+  exploFar: 3_000, // Neptune explo ≈ 1050u
   // Vue d'ensemble Éducatif — légèrement inclinée (~35°) pour montrer la profondeur des orbites
   initialPosition: new THREE.Vector3(0, 160, 220),
   // Distance de visite fallback quand un corps ne définit pas cameraDistance.
@@ -137,10 +138,10 @@ export const CAMERA_SETTINGS = {
 export const CAMERA_CONTROLS_SETTINGS = {
   smoothness: 0.15,
   minDistanceMultiplier: 2,
-  educMinDistance: 0.5,      // Éducatif — permet d'approcher le soleil visuellement
-  exploMinDistance: 0.0001,  // Explo — quelques km en vraie échelle
-  educMaxDistance: 500,      // Éducatif — Neptune à 192u + marge
-  exploMaxDistance: 3_000,   // Explo — Neptune réel à 1050u
+  educMinDistance: 0.5, // Éducatif — permet d'approcher le soleil visuellement
+  exploMinDistance: 0.0001, // Explo — quelques km en vraie échelle
+  educMaxDistance: 500, // Éducatif — Neptune à 192u + marge
+  exploMaxDistance: 3_000, // Explo — Neptune réel à 1050u
   maxPolarAngle: Math.PI,
   minPolarAngle: 0,
   screenSpacePanning: false,

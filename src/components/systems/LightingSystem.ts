@@ -43,14 +43,16 @@ export class LightingSystem {
 
     if (shadowConfig.enabled) {
       this.lights.sun.castShadow = true;
-      this.lights.sun.shadow.mapSize.width  = shadowConfig.mapSize;
+      this.lights.sun.shadow.mapSize.width = shadowConfig.mapSize;
       this.lights.sun.shadow.mapSize.height = shadowConfig.mapSize;
-      this.lights.sun.shadow.bias           = shadowConfig.bias;
-      this.lights.sun.shadow.normalBias     = shadowConfig.normalBias;
-      this.lights.sun.shadow.radius         = shadowConfig.radius;
-      this.lights.sun.shadow.camera.near    = shadowConfig.near;
-      this.lights.sun.shadow.camera.far     = shadowConfig.far;
-      Logger.success(`[LightingSystem] Shadows enabled (${shadowConfig.mapSize}px)`);
+      this.lights.sun.shadow.bias = shadowConfig.bias;
+      this.lights.sun.shadow.normalBias = shadowConfig.normalBias;
+      this.lights.sun.shadow.radius = shadowConfig.radius;
+      this.lights.sun.shadow.camera.near = shadowConfig.near;
+      this.lights.sun.shadow.camera.far = shadowConfig.far;
+      Logger.success(
+        `[LightingSystem] Shadows enabled (${shadowConfig.mapSize}px)`
+      );
     }
 
     this.scene.add(this.lights.sun);

@@ -28,7 +28,9 @@ export default class CelestialObjectFactory {
 
     const promises = Object.entries(this.objectConfig.bodies)
       .filter(([name]) => name !== 'stars')
-      .map(([name, config]) => this._createBodyWithHierarchy(name, config, null, bodies));
+      .map(([name, config]) =>
+        this._createBodyWithHierarchy(name, config, null, bodies)
+      );
 
     await Promise.all(promises);
     Logger.success('[CelestialObjectFactory] All celestial bodies created');
@@ -46,10 +48,15 @@ export default class CelestialObjectFactory {
 
     let body: CelestialObject;
     try {
-      body = new CelestialObject(this.textureSystem, config, name, this.animationSystem);
+      body = new CelestialObject(
+        this.textureSystem,
+        config,
+        name,
+        this.animationSystem
+      );
       body.group.userData = {
         config,
-        type:   'celestial-body',
+        type: 'celestial-body',
         parent: parentName,
         radius: config.radius,
       };
@@ -57,7 +64,10 @@ export default class CelestialObjectFactory {
       this.classCache.set(name, body);
       Logger.success(`[CelestialObjectFactory] Body created: ${name}`);
     } catch (error) {
-      Logger.error(`[CelestialObjectFactory] Failed to create body: ${name}`, error);
+      Logger.error(
+        `[CelestialObjectFactory] Failed to create body: ${name}`,
+        error
+      );
       return null;
     }
 

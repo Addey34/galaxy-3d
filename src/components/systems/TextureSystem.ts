@@ -7,7 +7,10 @@
  */
 import * as THREE from 'three';
 import type { CelestialBodyConfig, TextureQuality } from '../../types';
-import type { PerformanceSettings, TextureDefaultSettings } from '../../config/settings';
+import type {
+  PerformanceSettings,
+  TextureDefaultSettings,
+} from '../../config/settings';
 import { allBodies, flattenBodies } from '../../config/catalog';
 import Logger from '../../utils/Logger';
 
@@ -43,8 +46,12 @@ export class TextureSystem {
   private constructor(config: TextureSystemConfig) {
     this.config = config;
     this._bodyByName = flattenBodies({ bodies: config.bodies });
-    this._sortedQuality = (Object.values(config.performance.textureQuality) as { distance: number; quality: string }[])
-      .sort((a, b) => a.distance - b.distance);
+    this._sortedQuality = (
+      Object.values(config.performance.textureQuality) as {
+        distance: number;
+        quality: string;
+      }[]
+    ).sort((a, b) => a.distance - b.distance);
     Logger.info('[TextureSystem] Instance created ✅');
   }
 
@@ -59,7 +66,10 @@ export class TextureSystem {
    * Charge une texture (ou la renvoie depuis le cache). Si un chargement du même fichier
    * est déjà en cours, renvoie la promesse existante au lieu d'en lancer un second.
    */
-  async loadTexture(relativePath: string, quality: TextureQuality | string): Promise<THREE.Texture> {
+  async loadTexture(
+    relativePath: string,
+    quality: TextureQuality | string
+  ): Promise<THREE.Texture> {
     const fullPath = `${this.config.basePath}${relativePath}_${quality}.jpg`;
 
     const cached = this.cache.get(fullPath);
@@ -81,9 +91,12 @@ export class TextureSystem {
         (texture) => {
           Logger.success(`[TextureSystem] Loaded: ${fullPath}`);
           const settings = this.config.defaultSettings;
-          (Object.keys(settings) as (keyof TextureDefaultSettings)[]).forEach((key) => {
-            (texture as unknown as Record<string, unknown>)[key] = settings[key];
-          });
+          (Object.keys(settings) as (keyof TextureDefaultSettings)[]).forEach(
+            (key) => {
+              (texture as unknown as Record<string, unknown>)[key] =
+                settings[key];
+            }
+          );
           texture.needsUpdate = true;
           this.cache.set(fullPath, texture);
           this.loadingPromises.delete(fullPath);
@@ -106,7 +119,9 @@ export class TextureSystem {
    * Précharge la meilleure résolution des corps prioritaires (cf. `loadPriority`) au
    * démarrage, en remontant la progression (0→1) pour l'écran de chargement.
    */
-  async preloadCriticalTextures(progressCallback: (percent: number, msg: string) => void = () => {}): Promise<void> {
+  async preloadCriticalTextures(
+    progressCallback: (percent: number, msg: string) => void = () => {}
+  ): Promise<void> {
     // Corps à précharger : ceux qui déclarent un loadPriority, dans l'ordre croissant.
     const priorityList = allBodies({ bodies: this.config.bodies })
       .filter((e) => e.config.loadPriority !== undefined)
@@ -117,19 +132,26 @@ export class TextureSystem {
     Logger.info(`[TextureSystem] Preloading ${total} priority bodies`);
 
     for (const { name: bodyName, config: bodyConfig } of priorityList) {
-      const textureKeys = Object.keys(bodyConfig.textures) as (keyof typeof bodyConfig.textures)[];
+      const textureKeys = Object.keys(
+        bodyConfig.textures
+      ) as (keyof typeof bodyConfig.textures)[];
       for (const key of textureKeys) {
         const textureBasePath = bodyConfig.textures[key];
         const resolutions = bodyConfig.textureResolutions[key];
         if (!textureBasePath || !resolutions?.length) continue;
 
         const bestQuality = resolutions[0];
-        progressCallback(loaded / total, `Loading ${bodyName} ${key} (${bestQuality})`);
+        progressCallback(
+          loaded / total,
+          `Loading ${bodyName} ${key} (${bestQuality})`
+        );
 
         try {
           await this.loadTexture(textureBasePath, bestQuality);
         } catch {
-          Logger.warn(`[TextureSystem] Failed preload: ${textureBasePath}_${bestQuality}`);
+          Logger.warn(
+            `[TextureSystem] Failed preload: ${textureBasePath}_${bestQuality}`
+          );
         }
       }
 
@@ -142,22 +164,36 @@ export class TextureSystem {
   }
 
   /** Renvoie la texture d'un corps à la résolution adaptée à la distance caméra. */
-  async getLODTexture(bodyName: string, textureKey: string, distance: number): Promise<THREE.Texture> {
+  async getLODTexture(
+    bodyName: string,
+    textureKey: string,
+    distance: number
+  ): Promise<THREE.Texture> {
     const bodyConfig = this._resolveBodyConfig(bodyName);
     if (!bodyConfig) throw new Error(`Unknown body: ${bodyName}`);
 
-    const textureBasePath = bodyConfig.textures[textureKey as keyof typeof bodyConfig.textures];
-    const resolutions = bodyConfig.textureResolutions[textureKey as keyof typeof bodyConfig.textureResolutions];
+    const textureBasePath =
+      bodyConfig.textures[textureKey as keyof typeof bodyConfig.textures];
+    const resolutions =
+      bodyConfig.textureResolutions[
+        textureKey as keyof typeof bodyConfig.textureResolutions
+      ];
     if (!textureBasePath || !resolutions) {
-      throw new Error(`Texture key "${textureKey}" not found for body "${bodyName}"`);
+      throw new Error(
+        `Texture key "${textureKey}" not found for body "${bodyName}"`
+      );
     }
 
     const chosenQuality = this._chooseQuality(distance, resolutions);
-    Logger.debug(`[TextureSystem] LOD ${bodyName}:${textureKey} -> ${chosenQuality} (dist: ${distance.toFixed(1)})`);
+    Logger.debug(
+      `[TextureSystem] LOD ${bodyName}:${textureKey} -> ${chosenQuality} (dist: ${distance.toFixed(1)})`
+    );
     return this.loadTexture(textureBasePath, chosenQuality);
   }
 
-  private _resolveBodyConfig(bodyName: string): CelestialBodyConfig | undefined {
+  private _resolveBodyConfig(
+    bodyName: string
+  ): CelestialBodyConfig | undefined {
     return this._bodyByName.get(bodyName);
   }
 

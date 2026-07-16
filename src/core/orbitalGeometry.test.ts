@@ -39,7 +39,10 @@ describe('angleInOrbitalPlane (inverse of orbitalPositionEduc)', () => {
     ];
     for (const [angle, inc, node] of cases) {
       const pos = orbitalPositionEduc(9, angle, inc, node);
-      expect(norm(angleInOrbitalPlane(pos, inc, node))).toBeCloseTo(norm(angle), 10);
+      expect(norm(angleInOrbitalPlane(pos, inc, node))).toBeCloseTo(
+        norm(angle),
+        10
+      );
     }
   });
 

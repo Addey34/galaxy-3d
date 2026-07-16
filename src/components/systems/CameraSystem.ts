@@ -10,7 +10,10 @@
 import TWEEN, { Group as TweenGroup } from '@tweenjs/tween.js';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { CAMERA_CONTROLS_SETTINGS, CAMERA_SETTINGS } from '../../config/settings';
+import {
+  CAMERA_CONTROLS_SETTINGS,
+  CAMERA_SETTINGS,
+} from '../../config/settings';
 import Logger from '../../utils/Logger';
 import type { CelestialBodies } from './SceneSystem';
 
@@ -22,11 +25,16 @@ export class CameraSystem {
 
   private celestialBodies!: CelestialBodies;
   private isAnimating = false;
-  private currentTarget: { name: string; group: THREE.Group; distance: number } | null = null;
+  private currentTarget: {
+    name: string;
+    group: THREE.Group;
+    distance: number;
+  } | null = null;
   private _scaleMode: 'educ' | 'explo' = 'educ';
 
   private readonly smoothness = CAMERA_CONTROLS_SETTINGS.smoothness;
-  private readonly minDistanceMultiplier = CAMERA_CONTROLS_SETTINGS.minDistanceMultiplier;
+  private readonly minDistanceMultiplier =
+    CAMERA_CONTROLS_SETTINGS.minDistanceMultiplier;
 
   private readonly targetWorldPosition = new THREE.Vector3();
   private readonly cameraOffset = new THREE.Vector3();
@@ -50,17 +58,18 @@ export class CameraSystem {
 
   private initializeControls(): void {
     this.controls = new OrbitControls(this.camera, this.renderer.domElement);
-    this.controls.enableDamping      = false;
-    this.controls.screenSpacePanning = CAMERA_CONTROLS_SETTINGS.screenSpacePanning;
-    this.controls.maxPolarAngle      = CAMERA_CONTROLS_SETTINGS.maxPolarAngle;
-    this.controls.minPolarAngle      = CAMERA_CONTROLS_SETTINGS.minPolarAngle;
-    this.controls.enablePan          = CAMERA_CONTROLS_SETTINGS.enablePan;
-    this.controls.enableZoom         = CAMERA_CONTROLS_SETTINGS.enableZoom;
-    this.controls.enableRotate       = CAMERA_CONTROLS_SETTINGS.enableRotate;
-    this.controls.minDistance        = CAMERA_CONTROLS_SETTINGS.educMinDistance;
-    this.controls.maxDistance        = CAMERA_CONTROLS_SETTINGS.educMaxDistance;
-    this.controls.rotateSpeed        = CAMERA_CONTROLS_SETTINGS.rotateSpeed;
-    this.controls.zoomSpeed          = CAMERA_CONTROLS_SETTINGS.zoomSpeed;
+    this.controls.enableDamping = false;
+    this.controls.screenSpacePanning =
+      CAMERA_CONTROLS_SETTINGS.screenSpacePanning;
+    this.controls.maxPolarAngle = CAMERA_CONTROLS_SETTINGS.maxPolarAngle;
+    this.controls.minPolarAngle = CAMERA_CONTROLS_SETTINGS.minPolarAngle;
+    this.controls.enablePan = CAMERA_CONTROLS_SETTINGS.enablePan;
+    this.controls.enableZoom = CAMERA_CONTROLS_SETTINGS.enableZoom;
+    this.controls.enableRotate = CAMERA_CONTROLS_SETTINGS.enableRotate;
+    this.controls.minDistance = CAMERA_CONTROLS_SETTINGS.educMinDistance;
+    this.controls.maxDistance = CAMERA_CONTROLS_SETTINGS.educMaxDistance;
+    this.controls.rotateSpeed = CAMERA_CONTROLS_SETTINGS.rotateSpeed;
+    this.controls.zoomSpeed = CAMERA_CONTROLS_SETTINGS.zoomSpeed;
     this.controls.target.set(0, 0, 0);
   }
 
@@ -80,14 +89,19 @@ export class CameraSystem {
 
     const radius = (body.userData['radius'] as number | undefined) ?? 1;
     const defaultDistance = this.getDefaultDistance(bodyName);
-    const distance = Math.max(defaultDistance, radius * this.minDistanceMultiplier);
+    const distance = Math.max(
+      defaultDistance,
+      radius * this.minDistanceMultiplier
+    );
 
     const direction = new THREE.Vector3()
       .subVectors(this.camera.position, this.controls.target)
       .normalize();
     if (direction.length() < 0.1) direction.set(1, 0.3, 1).normalize();
 
-    const cameraPosition = this.targetWorldPosition.clone().add(direction.multiplyScalar(distance));
+    const cameraPosition = this.targetWorldPosition
+      .clone()
+      .add(direction.multiplyScalar(distance));
 
     this.currentTarget = { name: bodyName, group: body, distance };
     this.cameraOffset.subVectors(cameraPosition, this.targetWorldPosition);
@@ -95,7 +109,10 @@ export class CameraSystem {
     this.animateToTarget(cameraPosition, this.targetWorldPosition.clone());
   }
 
-  private animateToTarget(cameraPosition: THREE.Vector3, targetPosition: THREE.Vector3): void {
+  private animateToTarget(
+    cameraPosition: THREE.Vector3,
+    targetPosition: THREE.Vector3
+  ): void {
     // Un nouveau clic remplace le vol en cours. Sans cette annulation, plusieurs paires de
     // tweens écrivaient caméra/cible pendant les mêmes frames et produisaient un mouvement
     // latéral de va-et-vient lors d'une navigation rapide entre les planètes.
@@ -103,12 +120,28 @@ export class CameraSystem {
     this.isAnimating = true;
     this.controls.enabled = false; // bloque les inputs utilisateur pendant le tween pour éviter un conflit de position
 
-    const camFrom = { x: this.camera.position.x, y: this.camera.position.y, z: this.camera.position.z };
-    const camTo   = { x: cameraPosition.x,        y: cameraPosition.y,        z: cameraPosition.z };
+    const camFrom = {
+      x: this.camera.position.x,
+      y: this.camera.position.y,
+      z: this.camera.position.z,
+    };
+    const camTo = {
+      x: cameraPosition.x,
+      y: cameraPosition.y,
+      z: cameraPosition.z,
+    };
     // Toujours partir de la cible OrbitControls réellement affichée. La précédente valeur
     // mémorisée devenait obsolète dès qu'un corps suivi avançait sur son orbite.
-    const tgtFrom = { x: this.controls.target.x, y: this.controls.target.y, z: this.controls.target.z };
-    const tgtTo   = { x: targetPosition.x,            y: targetPosition.y,            z: targetPosition.z };
+    const tgtFrom = {
+      x: this.controls.target.x,
+      y: this.controls.target.y,
+      z: this.controls.target.z,
+    };
+    const tgtTo = {
+      x: targetPosition.x,
+      y: targetPosition.y,
+      z: targetPosition.z,
+    };
 
     new TWEEN.Tween(camFrom, this.tweenGroup)
       .to(camTo, 1200)
@@ -127,10 +160,15 @@ export class CameraSystem {
         // Translate caméra et target du même delta pour terminer exactement sur sa position
         // courante sans saut lors de la première frame de suivi.
         if (this.currentTarget?.group) {
-          this.cameraOffset.subVectors(this.camera.position, this.controls.target);
+          this.cameraOffset.subVectors(
+            this.camera.position,
+            this.controls.target
+          );
           this.currentTarget.group.getWorldPosition(this.targetWorldPosition);
           this.controls.target.copy(this.targetWorldPosition);
-          this.camera.position.copy(this.targetWorldPosition).add(this.cameraOffset);
+          this.camera.position
+            .copy(this.targetWorldPosition)
+            .add(this.cameraOffset);
         }
         this.isAnimating = false;
         this.controls.enabled = true;
@@ -167,7 +205,10 @@ export class CameraSystem {
   /** Vue d'ensemble Éducatif : recule la caméra à (0,160,220) pour cadrer tout le système (Neptune à 192u). */
   goToOverview(): void {
     this.currentTarget = null;
-    this.animateToTarget(new THREE.Vector3(0, 160, 220), new THREE.Vector3(0, 0, 0));
+    this.animateToTarget(
+      new THREE.Vector3(0, 160, 220),
+      new THREE.Vector3(0, 0, 0)
+    );
   }
 
   /**
@@ -179,16 +220,20 @@ export class CameraSystem {
     if (this._scaleMode === mode) return;
 
     this._scaleMode = mode;
-    this.controls.minDistance = mode === 'explo'
-      ? CAMERA_CONTROLS_SETTINGS.exploMinDistance
-      : CAMERA_CONTROLS_SETTINGS.educMinDistance;
-    this.controls.maxDistance = mode === 'explo'
-      ? CAMERA_CONTROLS_SETTINGS.exploMaxDistance
-      : CAMERA_CONTROLS_SETTINGS.educMaxDistance;
+    this.controls.minDistance =
+      mode === 'explo'
+        ? CAMERA_CONTROLS_SETTINGS.exploMinDistance
+        : CAMERA_CONTROLS_SETTINGS.educMinDistance;
+    this.controls.maxDistance =
+      mode === 'explo'
+        ? CAMERA_CONTROLS_SETTINGS.exploMaxDistance
+        : CAMERA_CONTROLS_SETTINGS.educMaxDistance;
 
     // Near/far : en Explo les planètes sont à 0.003–0.12u → near=0.1 les clipperait.
-    this.camera.near = mode === 'explo' ? CAMERA_SETTINGS.exploNear : CAMERA_SETTINGS.educNear;
-    this.camera.far  = mode === 'explo' ? CAMERA_SETTINGS.exploFar  : CAMERA_SETTINGS.educFar;
+    this.camera.near =
+      mode === 'explo' ? CAMERA_SETTINGS.exploNear : CAMERA_SETTINGS.educNear;
+    this.camera.far =
+      mode === 'explo' ? CAMERA_SETTINGS.exploFar : CAMERA_SETTINGS.educFar;
     this.camera.updateProjectionMatrix();
 
     if (mode === 'explo') {

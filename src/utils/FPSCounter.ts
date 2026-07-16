@@ -41,7 +41,9 @@ export class FPSCounter {
   update(now: number): void {
     this.frameCount++;
     if (now - this.lastFpsUpdate >= 1000) {
-      this.fps = Math.round((this.frameCount * 1000) / (now - this.lastFpsUpdate));
+      this.fps = Math.round(
+        (this.frameCount * 1000) / (now - this.lastFpsUpdate)
+      );
       if (this.fpsCounter) this.fpsCounter.textContent = `FPS: ${this.fps}`;
       this.frameCount = 0;
       this.lastFpsUpdate = now;

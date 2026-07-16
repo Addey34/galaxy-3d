@@ -8,10 +8,12 @@ const fullscreenBtn = document.getElementById('fullscreen-btn')!;
 export function setupFullscreen(): void {
   fullscreenBtn.addEventListener('click', () => {
     if (!document.fullscreenElement) {
-      document.documentElement.requestFullscreen()
+      document.documentElement
+        .requestFullscreen()
         .catch((err) => Logger.error('Fullscreen error', err));
     } else {
-      document.exitFullscreen()
+      document
+        .exitFullscreen()
         .catch((err) => Logger.error('Fullscreen exit error', err));
     }
   });

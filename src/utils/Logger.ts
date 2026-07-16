@@ -35,11 +35,21 @@ class Logger {
     );
   }
 
-  static info(...msg: unknown[]): void    { this.format('info',    this.colors.blue,   ...msg); }
-  static debug(...msg: unknown[]): void   { this.format('debug',   this.colors.gray,   ...msg); }
-  static warn(...msg: unknown[]): void    { this.format('warn',    this.colors.yellow, ...msg); }
-  static error(...msg: unknown[]): void   { this.format('error',   this.colors.red,    ...msg); }
-  static success(...msg: unknown[]): void { this.format('success', this.colors.green,  ...msg); }
+  static info(...msg: unknown[]): void {
+    this.format('info', this.colors.blue, ...msg);
+  }
+  static debug(...msg: unknown[]): void {
+    this.format('debug', this.colors.gray, ...msg);
+  }
+  static warn(...msg: unknown[]): void {
+    this.format('warn', this.colors.yellow, ...msg);
+  }
+  static error(...msg: unknown[]): void {
+    this.format('error', this.colors.red, ...msg);
+  }
+  static success(...msg: unknown[]): void {
+    this.format('success', this.colors.green, ...msg);
+  }
 
   /** Ouvre un groupe console repliable (no-op hors mode debug). */
   static group(label: string): void {

@@ -44,11 +44,16 @@ setupFullscreen();
     // fond. Dégradation propre : si le fetch échoue (offline), l'overlay reste vide.
     const smallBodyOverlay = new SmallBodyOverlay();
     smallBodyOverlay.mount();
-    void fetchSmallBodies().then((bodies) => smallBodyOverlay.setBodies(bodies));
+    void fetchSmallBodies().then((bodies) =>
+      smallBodyOverlay.setBodies(bodies)
+    );
 
     animationSystem.onFrame(() => {
       exploHud.update(cameraSystem.camera, cameraSystem, sceneSystem);
-      smallBodyOverlay.update(cameraSystem.camera, orbitalMechanics.simulationDate);
+      smallBodyOverlay.update(
+        cameraSystem.camera,
+        orbitalMechanics.simulationDate
+      );
     });
     setupModeSwitcher(orbitalMechanics, cameraSystem, (mode) => {
       exploHud.setActive(mode === 'explo');

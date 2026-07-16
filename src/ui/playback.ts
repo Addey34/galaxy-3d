@@ -44,7 +44,10 @@ function applySpeed(btn: HTMLButtonElement, om: OrbitalMechanics): void {
   setSpeedActive(btn);
 }
 
-export function setupPlayback(anim: AnimationSystem, om: OrbitalMechanics): PlaybackControls {
+export function setupPlayback(
+  anim: AnimationSystem,
+  om: OrbitalMechanics
+): PlaybackControls {
   playPauseBtn.addEventListener('click', () => {
     const paused = anim.togglePause();
     playPauseBtn.innerHTML = paused ? SVG_PLAY : SVG_PAUSE;

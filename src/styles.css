@@ -57,7 +57,11 @@ body.is-explo-mode #orbit-overview {
   cursor: pointer;
   font-size: 0.9rem;
   border-radius: 0.5rem;
-  transition: background 0.25s, border-color 0.25s, box-shadow 0.25s, color 0.25s;
+  transition:
+    background 0.25s,
+    border-color 0.25s,
+    box-shadow 0.25s,
+    color 0.25s;
   backdrop-filter: blur(6px);
   min-width: 5rem;
 }
@@ -83,7 +87,7 @@ body.is-explo-mode #orbit-overview {
 
 .mode-seg {
   display: flex;
-  background: rgba(4, 6, 18, 0.70);
+  background: rgba(4, 6, 18, 0.7);
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 0.6rem;
   overflow: hidden;
@@ -103,7 +107,9 @@ body.is-explo-mode #orbit-overview {
   letter-spacing: 0.04em;
   white-space: nowrap;
   font-family: inherit;
-  transition: background 0.2s, color 0.2s;
+  transition:
+    background 0.2s,
+    color 0.2s;
 }
 
 .mode-btn:last-child {
@@ -117,23 +123,22 @@ body.is-explo-mode #orbit-overview {
 
 /* Mode désactivé (ex. Explo. tant qu'il n'est pas prêt) */
 .mode-btn:disabled {
-  color: rgba(255, 255, 255, 0.20);
+  color: rgba(255, 255, 255, 0.2);
   cursor: not-allowed;
   background: transparent;
 }
 
 /* Éducatif actif → accent bleu */
-.mode-btn.is-active[data-mode="educ"] {
-  background: rgba(74, 143, 255, 0.20);
+.mode-btn.is-active[data-mode='educ'] {
+  background: rgba(74, 143, 255, 0.2);
   color: rgba(160, 200, 255, 1);
 }
 
 /* Exploration (vraie échelle) actif → accent vert */
-.mode-btn.is-active[data-mode="explo"] {
-  background: rgba(80, 200, 110, 0.20);
+.mode-btn.is-active[data-mode='explo'] {
+  background: rgba(80, 200, 110, 0.2);
   color: rgba(120, 255, 150, 1);
 }
-
 
 /* ============================================================================
    LOADER
@@ -190,7 +195,9 @@ body.is-explo-mode #orbit-overview {
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: color 0.25s, transform 0.25s;
+  transition:
+    color 0.25s,
+    transform 0.25s;
 }
 
 #fullscreen-btn:hover {
@@ -214,7 +221,7 @@ body.is-explo-mode #orbit-overview {
   flex-direction: column;
   align-items: stretch;
 
-  background: rgba(4, 6, 18, 0.60);
+  background: rgba(4, 6, 18, 0.6);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 0.75rem;
   backdrop-filter: blur(20px);
@@ -224,7 +231,7 @@ body.is-explo-mode #orbit-overview {
   overflow: hidden;
 
   --accent: 74, 143, 255;
-  --green:  80, 200, 110;
+  --green: 80, 200, 110;
 }
 
 /* ── Ligne 1 : play/pause | vitesse (centrée) | reset ───────────────────── */
@@ -236,7 +243,9 @@ body.is-explo-mode #orbit-overview {
   padding: 0.3rem 0.5rem;
 }
 
-.tp-flex1 { flex: 1; }
+.tp-flex1 {
+  flex: 1;
+}
 
 /* ── Panneau date/heure (toujours visible, slide vers le bas) ───────────────── */
 
@@ -251,7 +260,7 @@ body.is-explo-mode #orbit-overview {
   border-top: 1px solid transparent;
   transition:
     max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1),
-    opacity    0.30s ease,
+    opacity 0.3s ease,
     border-color 0.3s ease;
 }
 
@@ -290,19 +299,32 @@ body.is-explo-mode #orbit-overview {
 }
 
 /* Masque l'icône native — tout le champ est cliquable */
-.tp-clock-input::-webkit-calendar-picker-indicator { display: none; }
+.tp-clock-input::-webkit-calendar-picker-indicator {
+  display: none;
+}
 
-.tp-clock-input:hover:not(:focus) { background: rgba(var(--accent), 0.09); }
-.tp-clock-input:focus              { background: rgba(var(--accent), 0.12); outline: none; }
+.tp-clock-input:hover:not(:focus) {
+  background: rgba(var(--accent), 0.09);
+}
+.tp-clock-input:focus {
+  background: rgba(var(--accent), 0.12);
+  outline: none;
+}
 
 /* ── Tick animation (déclenché à chaque changement de seconde) ───────────── */
 
 @keyframes clock-tick {
-  0%   { box-shadow: 0 0 0 1.5px rgba(var(--accent), 0.40); }
-  100% { box-shadow: 0 0 0 0     rgba(var(--accent), 0.00); }
+  0% {
+    box-shadow: 0 0 0 1.5px rgba(var(--accent), 0.4);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(var(--accent), 0);
+  }
 }
 
-.tp-clock-input.is-ticking { animation: clock-tick 0.5s ease-out; }
+.tp-clock-input.is-ticking {
+  animation: clock-tick 0.5s ease-out;
+}
 
 /* ── Label UTC ───────────────────────────────────────────────────────────── */
 
@@ -335,32 +357,47 @@ body.is-explo-mode #orbit-overview {
   font-family: 'SF Mono', 'Cascadia Code', 'Fira Mono', monospace;
   font-size: 0.65rem;
   font-weight: 500;
-  letter-spacing: 0.10em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: rgba(150, 180, 225, 0.50);
+  color: rgba(150, 180, 225, 0.5);
   cursor: pointer;
   padding: 0.06rem 0.35rem;
   border-radius: 0.3rem;
-  transition: background 0.15s, color 0.15s;
+  transition:
+    background 0.15s,
+    color 0.15s;
 }
 
-.tp-date-input::-webkit-calendar-picker-indicator { display: none; }
+.tp-date-input::-webkit-calendar-picker-indicator {
+  display: none;
+}
 
 .tp-date-input:hover:not(:focus) {
   background: rgba(var(--accent), 0.08);
   color: rgba(150, 180, 225, 0.85);
 }
 
-.tp-date-input:focus { background: rgba(var(--accent), 0.10); outline: none; }
+.tp-date-input:focus {
+  background: rgba(var(--accent), 0.1);
+  outline: none;
+}
 
 /* ── Animation quand la date change (rare → plus prononcée) ──────────────── */
 
 @keyframes date-pop {
-  0%   { color: rgba(var(--accent), 0.9); letter-spacing: 0.20em; }
-  100% { color: rgba(150, 180, 225, 0.55); letter-spacing: 0.14em; }
+  0% {
+    color: rgba(var(--accent), 0.9);
+    letter-spacing: 0.2em;
+  }
+  100% {
+    color: rgba(150, 180, 225, 0.55);
+    letter-spacing: 0.14em;
+  }
 }
 
-.tp-date-input.is-ticking { animation: date-pop 0.55s ease-out; }
+.tp-date-input.is-ticking {
+  animation: date-pop 0.55s ease-out;
+}
 
 /* ── Dot "temps réel" ────────────────────────────────────────────────────── */
 
@@ -371,7 +408,9 @@ body.is-explo-mode #orbit-overview {
   flex-shrink: 0;
   background: rgba(var(--green), 0.8);
   opacity: 0;
-  transition: opacity 0.3s, background 0.4s;
+  transition:
+    opacity 0.3s,
+    background 0.4s;
 }
 
 .tp-live-dot.is-live {
@@ -386,8 +425,15 @@ body.is-explo-mode #orbit-overview {
 }
 
 @keyframes tp-pulse {
-  0%, 100% { opacity: 0.9; transform: scale(1); }
-  50%       { opacity: 0.2; transform: scale(0.55); }
+  0%,
+  100% {
+    opacity: 0.9;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.2;
+    transform: scale(0.55);
+  }
 }
 
 /* ── Shared button base ───────────────────────────────────────────────────── */
@@ -401,7 +447,9 @@ body.is-explo-mode #orbit-overview {
   color: white;
   font-family: inherit;
   line-height: 1;
-  transition: background 0.15s ease, color 0.15s ease;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease;
   background: transparent;
 }
 
@@ -413,11 +461,14 @@ body.is-explo-mode #orbit-overview {
   flex-shrink: 0;
   border-radius: 50%;
   background: rgba(var(--accent), 0.12);
-  border: 1px solid rgba(var(--accent), 0.30) !important;
+  border: 1px solid rgba(var(--accent), 0.3) !important;
   color: rgba(var(--accent), 0.9);
 }
 
-.tp-play svg { width: 9px; height: 10px; }
+.tp-play svg {
+  width: 9px;
+  height: 10px;
+}
 
 .tp-play:hover {
   background: rgba(var(--accent), 0.24);
@@ -426,7 +477,7 @@ body.is-explo-mode #orbit-overview {
 
 .tp-play.is-paused {
   background: rgba(220, 70, 70, 0.1);
-  border-color: rgba(255, 100, 100, 0.30) !important;
+  border-color: rgba(255, 100, 100, 0.3) !important;
   color: rgba(255, 120, 120, 0.92);
 }
 
@@ -458,7 +509,9 @@ body.is-explo-mode #orbit-overview {
   white-space: nowrap;
 }
 
-.tp-speed:last-child { border-right: none !important; }
+.tp-speed:last-child {
+  border-right: none !important;
+}
 
 .tp-speed:hover:not(.is-active) {
   background: rgba(255, 255, 255, 0.07);
@@ -487,7 +540,9 @@ body.is-explo-mode #orbit-overview {
   color: rgba(var(--green), 0.6);
   background: rgba(var(--green), 0.06);
   border: 1px solid rgba(var(--green), 0.18) !important;
-  transition: background 0.15s, color 0.15s;
+  transition:
+    background 0.15s,
+    color 0.15s;
 }
 
 .tp-reset-inline:hover {
@@ -512,10 +567,24 @@ body.is-explo-mode #orbit-overview {
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
     scroll-snap-type: x proximity;
-    -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 1.1rem, #000 calc(100% - 1.1rem), transparent 100%);
-            mask-image: linear-gradient(90deg, transparent 0, #000 1.1rem, #000 calc(100% - 1.1rem), transparent 100%);
+    -webkit-mask-image: linear-gradient(
+      90deg,
+      transparent 0,
+      #000 1.1rem,
+      #000 calc(100% - 1.1rem),
+      transparent 100%
+    );
+    mask-image: linear-gradient(
+      90deg,
+      transparent 0,
+      #000 1.1rem,
+      #000 calc(100% - 1.1rem),
+      transparent 100%
+    );
   }
-  .controls::-webkit-scrollbar { display: none; }
+  .controls::-webkit-scrollbar {
+    display: none;
+  }
 
   .button {
     flex: 0 0 auto;
@@ -525,10 +594,14 @@ body.is-explo-mode #orbit-overview {
     scroll-snap-align: center;
   }
 
-  #fullscreen-btn { font-size: 1.9rem; }
+  #fullscreen-btn {
+    font-size: 1.9rem;
+  }
 
   /* FPS masqué sur mobile : le coin haut-droit est occupé par la navigation planètes. */
-  #fps-counter { display: none !important; }
+  #fps-counter {
+    display: none !important;
+  }
 
   #time-panel {
     bottom: 0.5rem;
@@ -543,14 +616,18 @@ body.is-explo-mode #orbit-overview {
     bottom: 6.4rem;
   }
 
-  .mode-btn { padding: 0.4rem 0.9rem; font-size: 0.74rem; }
+  .mode-btn {
+    padding: 0.4rem 0.9rem;
+    font-size: 0.74rem;
+  }
 
   #playback-row {
     padding: 0.25rem 0.42rem;
     gap: 0.25rem;
   }
 
-  .tp-play, .tp-reset-inline {
+  .tp-play,
+  .tp-reset-inline {
     width: 1.65rem;
     height: 1.65rem;
   }
@@ -561,11 +638,19 @@ body.is-explo-mode #orbit-overview {
     font-size: 0.63rem;
   }
 
-  .tp-clock-input { font-size: 1.1rem; }
-  .tp-date-input  { font-size: 0.6rem; }
+  .tp-clock-input {
+    font-size: 1.1rem;
+  }
+  .tp-date-input {
+    font-size: 0.6rem;
+  }
 
-  #clock-row    { padding: 0.35rem 0.75rem 0.06rem; }
-  #calendar-row { padding: 0.03rem 0.75rem 0.32rem; }
+  #clock-row {
+    padding: 0.35rem 0.75rem 0.06rem;
+  }
+  #calendar-row {
+    padding: 0.03rem 0.75rem 0.32rem;
+  }
 }
 
 /* ── HUD Exploration « Voyage spatial » ───────────────────────────────────── */
@@ -578,7 +663,7 @@ body.is-explo-mode #orbit-overview {
   z-index: 30;
   min-width: 12rem;
   padding: 0.6rem 0.85rem;
-  background: rgba(4, 6, 18, 0.70);
+  background: rgba(4, 6, 18, 0.7);
   border: 1px solid rgba(120, 180, 255, 0.25);
   border-radius: 0.6rem;
   backdrop-filter: blur(12px);
@@ -587,10 +672,15 @@ body.is-explo-mode #orbit-overview {
   font-family: Arial, sans-serif;
   opacity: 0;
   transform: translateY(-6px);
-  transition: opacity 0.3s ease, transform 0.3s ease;
+  transition:
+    opacity 0.3s ease,
+    transform 0.3s ease;
   pointer-events: none;
 }
-#explo-hud.is-visible { opacity: 1; transform: translateY(0); }
+#explo-hud.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
 
 .explo-hud-title {
   font-size: 0.6rem;
@@ -609,7 +699,9 @@ body.is-explo-mode #orbit-overview {
   color: rgba(180, 210, 255, 0.82);
   line-height: 1.5;
 }
-#explo-hud.is-free .explo-hud-target { color: rgba(200, 225, 255, 0.55); }
+#explo-hud.is-free .explo-hud-target {
+  color: rgba(200, 225, 255, 0.55);
+}
 
 /* Champ des petits corps (SBDB) — canvas instrument sous les labels, non bloquant. */
 #smallbody-overlay {
@@ -620,7 +712,9 @@ body.is-explo-mode #orbit-overview {
   opacity: 0;
   transition: opacity 0.3s ease;
 }
-#smallbody-overlay.is-visible { opacity: 1; }
+#smallbody-overlay.is-visible {
+  opacity: 1;
+}
 
 /* Couche de marqueurs projetés — un label par corps, positionné en translate(). */
 #explo-labels {
@@ -631,7 +725,9 @@ body.is-explo-mode #orbit-overview {
   opacity: 0;
   transition: opacity 0.3s ease;
 }
-#explo-labels.is-visible { opacity: 1; }
+#explo-labels.is-visible {
+  opacity: 1;
+}
 
 .explo-label {
   position: absolute;

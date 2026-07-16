@@ -30,11 +30,15 @@ describe('equatorialToScene', () => {
     const a = new THREE.Vector3(1, 2, -0.5);
     const b = new THREE.Vector3(-0.4, 0.9, 1.3);
     const crossThenMap = equatorialToScene(
-      ...(new THREE.Vector3().crossVectors(a, b).toArray() as [number, number, number]),
+      ...(new THREE.Vector3().crossVectors(a, b).toArray() as [
+        number,
+        number,
+        number,
+      ])
     );
     const mapThenCross = new THREE.Vector3().crossVectors(
       equatorialToScene(a.x, a.y, a.z),
-      equatorialToScene(b.x, b.y, b.z),
+      equatorialToScene(b.x, b.y, b.z)
     );
     expect(mapThenCross.x).toBeCloseTo(crossThenMap.x, 12);
     expect(mapThenCross.y).toBeCloseTo(crossThenMap.y, 12);

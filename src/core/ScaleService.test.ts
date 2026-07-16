@@ -56,6 +56,9 @@ describe('helpers', () => {
 
   it('exploCameraDistance derives from physical radius in km', () => {
     // Terre : 6371 km → (6371 / KM_PER_AU) × SQRT_K × 7
-    expect(exploCameraDistance(6371)).toBeCloseTo((6371 / KM_PER_AU) * SQRT_K * 7, 12);
+    expect(exploCameraDistance(6371)).toBeCloseTo(
+      (6371 / KM_PER_AU) * SQRT_K * 7,
+      12
+    );
   });
 });

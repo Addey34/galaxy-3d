@@ -15,7 +15,10 @@ export interface BodyEntry {
 }
 
 /** Applique `cb` à chaque corps du catalogue, satellites inclus (profondeur 1). */
-export function forEachBody(config: CelestialConfig, cb: (entry: BodyEntry) => void): void {
+export function forEachBody(
+  config: CelestialConfig,
+  cb: (entry: BodyEntry) => void
+): void {
   for (const [name, cfg] of Object.entries(config.bodies)) {
     cb({ name, config: cfg, parentName: null });
     if (cfg.satellites) {
@@ -34,7 +37,9 @@ export function allBodies(config: CelestialConfig): BodyEntry[] {
 }
 
 /** Table nom → config (satellites inclus), construite une fois. */
-export function flattenBodies(config: CelestialConfig): Map<string, CelestialBodyConfig> {
+export function flattenBodies(
+  config: CelestialConfig
+): Map<string, CelestialBodyConfig> {
   const map = new Map<string, CelestialBodyConfig>();
   forEachBody(config, ({ name, config: cfg }) => map.set(name, cfg));
   return map;
@@ -54,6 +59,8 @@ export function assertUniqueBodyNames(config: CelestialConfig): void {
     else seen.add(name);
   });
   if (duplicates.length > 0) {
-    throw new Error(`Catalogue invalide — noms de corps en doublon : ${duplicates.join(', ')}`);
+    throw new Error(
+      `Catalogue invalide — noms de corps en doublon : ${duplicates.join(', ')}`
+    );
   }
 }

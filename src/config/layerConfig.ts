@@ -10,10 +10,10 @@ import * as THREE from 'three';
 // `lights` est à 1.002 et non 1.01 : trop éloigné du mesh surface casse
 // le calcul de la direction lumière dans le shader (décalage visible à l'oeil).
 export const LAYER_RADIUS_SCALE: Record<string, number> = {
-  surface:    1.0,
-  clouds:     1.01,
+  surface: 1.0,
+  clouds: 1.01,
   atmosphere: 1.02,
-  lights:     1.002,
+  lights: 1.002,
 };
 
 // 64 segments pour les planètes : bon compromis silhouette/perf (≈ 8 k triangles).
@@ -22,12 +22,21 @@ export const LAYER_RADIUS_SCALE: Record<string, number> = {
 export const GEOMETRY_SEGMENTS = 64;
 export const RING_SEGMENTS = 128;
 
-export function createSphereGeometry(radius: number, layerType = 'surface'): THREE.SphereGeometry {
+export function createSphereGeometry(
+  radius: number,
+  layerType = 'surface'
+): THREE.SphereGeometry {
   const scale = LAYER_RADIUS_SCALE[layerType] ?? 1.0;
-  return new THREE.SphereGeometry(radius * scale, GEOMETRY_SEGMENTS, GEOMETRY_SEGMENTS);
+  return new THREE.SphereGeometry(
+    radius * scale,
+    GEOMETRY_SEGMENTS,
+    GEOMETRY_SEGMENTS
+  );
 }
 
-export function createSurfaceMaterial(isSun: boolean): THREE.MeshBasicMaterial | THREE.MeshStandardMaterial {
+export function createSurfaceMaterial(
+  isSun: boolean
+): THREE.MeshBasicMaterial | THREE.MeshStandardMaterial {
   if (isSun) {
     return new THREE.MeshBasicMaterial({ color: 0xffff00 });
   }
@@ -61,7 +70,11 @@ export function createRingMaterial(): THREE.MeshStandardMaterial {
   });
 }
 
-export function configureShadows(mesh: THREE.Mesh, castShadow: boolean, receiveShadow: boolean): void {
+export function configureShadows(
+  mesh: THREE.Mesh,
+  castShadow: boolean,
+  receiveShadow: boolean
+): void {
   mesh.castShadow = castShadow;
   mesh.receiveShadow = receiveShadow;
 }

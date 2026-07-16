@@ -29,7 +29,13 @@ import type { AnimationSystem } from '../systems/AnimationSystem';
 import type { TextureSystem } from '../systems/TextureSystem';
 
 const CLOUDS_ROTATION_FACTOR = 0.1;
-const SURFACE_TEXTURE_TYPES = ['surface', 'normalMap', 'bump', 'spec', 'specularMap'];
+const SURFACE_TEXTURE_TYPES = [
+  'surface',
+  'normalMap',
+  'bump',
+  'spec',
+  'specularMap',
+];
 
 // Orientation initiale (fallback) de l'axe : simple obliquité penchée vers -Z. Remplacée
 // dès le premier sync par setAxisDirection(), qui oriente l'axe le long du vrai pôle nord
@@ -97,32 +103,42 @@ export default class CelestialObject {
 
   private _createAllLayers(): void {
     const { textures } = this.config;
-    if (textures.surface)    this._createSurfaceLayer();
-    if (textures.clouds)     this._createCloudsLayer();
+    if (textures.surface) this._createSurfaceLayer();
+    if (textures.clouds) this._createCloudsLayer();
     if (textures.atmosphere) this._createAtmosphereLayer();
-    if (textures.lights)     this._createLightsLayer();
-    if (this.config.ring)    this._createRingLayer();
+    if (textures.lights) this._createLightsLayer();
+    if (this.config.ring) this._createRingLayer();
   }
 
   private _createSurfaceLayer(): void {
-    const isSun   = this.name === 'sun';
+    const isSun = this.name === 'sun';
     const material = createSurfaceMaterial(isSun);
-    const mesh     = new THREE.Mesh(createSphereGeometry(this.config.radius, 'surface'), material);
-    mesh.name      = `${this.name}_surface`;
-    if (RENDER_SETTINGS.shadowMap.enabled && !isSun) configureShadows(mesh, true, true);
+    const mesh = new THREE.Mesh(
+      createSphereGeometry(this.config.radius, 'surface'),
+      material
+    );
+    mesh.name = `${this.name}_surface`;
+    if (RENDER_SETTINGS.shadowMap.enabled && !isSun)
+      configureShadows(mesh, true, true);
     this._addLayer('surface', mesh);
   }
 
   private _createCloudsLayer(): void {
-    const mesh = new THREE.Mesh(createSphereGeometry(this.config.radius, 'clouds'), createCloudsMaterial());
-    mesh.name  = `${this.name}_clouds`;
+    const mesh = new THREE.Mesh(
+      createSphereGeometry(this.config.radius, 'clouds'),
+      createCloudsMaterial()
+    );
+    mesh.name = `${this.name}_clouds`;
     if (RENDER_SETTINGS.shadowMap.enabled) configureShadows(mesh, false, true);
     this._addLayer('clouds', mesh);
   }
 
   private _createAtmosphereLayer(): void {
-    const mesh = new THREE.Mesh(createSphereGeometry(this.config.radius, 'atmosphere'), createAtmosphereMaterial());
-    mesh.name  = `${this.name}_atmosphere`;
+    const mesh = new THREE.Mesh(
+      createSphereGeometry(this.config.radius, 'atmosphere'),
+      createAtmosphereMaterial()
+    );
+    mesh.name = `${this.name}_atmosphere`;
     this._addLayer('atmosphere', mesh);
   }
 
@@ -132,23 +148,26 @@ export default class CelestialObject {
     uniforms.sunPosition.value = new THREE.Vector3(0, 0, 0);
 
     const material = new THREE.ShaderMaterial({
-      vertexShader:   NightLightsShader.vertexShader,
+      vertexShader: NightLightsShader.vertexShader,
       fragmentShader: NightLightsShader.fragmentShader,
       uniforms,
       transparent: true,
-      blending:    THREE.AdditiveBlending,
-      depthWrite:  false,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
       // depthTest: false — le depth buffer 24-bit ne peut pas distinguer le layer lights
       // (R×1.002) de la surface (R) au limbe de la sphère dès que la caméra dépasse ~12u.
       // Ça créait une barre noire verticale sur le côté ombre du limbe.
       // FrontSide + le shader (nightFactor=0 sur le jour) assurent que rien
       // d'incorrect n'est rendu — le depth test n'apporte rien ici.
-      depthTest:   false,
-      side:        THREE.FrontSide,
+      depthTest: false,
+      side: THREE.FrontSide,
     });
 
-    const mesh = new THREE.Mesh(createSphereGeometry(this.config.radius, 'lights'), material);
-    mesh.name  = `${this.name}_lights`;
+    const mesh = new THREE.Mesh(
+      createSphereGeometry(this.config.radius, 'lights'),
+      material
+    );
+    mesh.name = `${this.name}_lights`;
     // renderOrder > 0 : le layer lights se rend après les nuages (renderOrder=0 par défaut)
     // pour que son AdditiveBlending s'applique APRÈS le blend des nuages, pas dessous.
     mesh.renderOrder = 1;
@@ -163,19 +182,23 @@ export default class CelestialObject {
     const geometry = new THREE.RingGeometry(inner, outer, RING_SEGMENTS);
     this._correctRingUVs(geometry, inner, outer);
 
-    const mesh     = new THREE.Mesh(geometry, createRingMaterial());
-    mesh.name      = `${this.name}_ring`;
+    const mesh = new THREE.Mesh(geometry, createRingMaterial());
+    mesh.name = `${this.name}_ring`;
     mesh.rotation.x = Math.PI / 2;
     this._addLayer('ring', mesh);
     void this._loadRingTexture();
   }
 
-  private _correctRingUVs(geometry: THREE.RingGeometry, innerRadius: number, outerRadius: number): void {
+  private _correctRingUVs(
+    geometry: THREE.RingGeometry,
+    innerRadius: number,
+    outerRadius: number
+  ): void {
     const pos = geometry.attributes['position'] as THREE.BufferAttribute;
-    const uv  = geometry.attributes['uv']       as THREE.BufferAttribute;
+    const uv = geometry.attributes['uv'] as THREE.BufferAttribute;
     for (let i = 0; i < pos.count; i++) {
       const dist = Math.sqrt(pos.getX(i) ** 2 + pos.getY(i) ** 2);
-      const u    = (dist - innerRadius) / (outerRadius - innerRadius);
+      const u = (dist - innerRadius) / (outerRadius - innerRadius);
       uv.setXY(i, u, uv.getY(i));
     }
   }
@@ -192,11 +215,17 @@ export default class CelestialObject {
   private async _loadAllTextures(): Promise<void> {
     for (const textureKey of Object.keys(this.config.textures)) {
       try {
-        const texture = await this.textureSystem.getLODTexture(this.name, textureKey, 100);
+        const texture = await this.textureSystem.getLODTexture(
+          this.name,
+          textureKey,
+          100
+        );
         this._applyTexture(textureKey, texture);
         this._appliedTextures.set(textureKey, texture);
       } catch {
-        Logger.warn(`[CelestialObject] Failed to load ${textureKey} for ${this.name}`);
+        Logger.warn(
+          `[CelestialObject] Failed to load ${textureKey} for ${this.name}`
+        );
       }
     }
   }
@@ -206,14 +235,17 @@ export default class CelestialObject {
     if (!ring) return;
     try {
       const quality = ring.textureResolutions[0];
-      const texture = await this.textureSystem.loadTexture(ring.textures, quality);
+      const texture = await this.textureSystem.loadTexture(
+        ring.textures,
+        quality
+      );
       const ringMesh = this.layers.get('ring');
       if (ringMesh) {
         texture.wrapS = THREE.ClampToEdgeWrapping;
         texture.wrapT = THREE.RepeatWrapping;
         const mat = ringMesh.material as THREE.MeshStandardMaterial;
-        mat.map       = texture;
-        mat.alphaMap  = texture;
+        mat.map = texture;
+        mat.alphaMap = texture;
         mat.needsUpdate = true;
       }
     } catch {
@@ -227,14 +259,17 @@ export default class CelestialObject {
       return;
     }
     const handlers: Record<string, () => void> = {
-      clouds:     () => this._applyCloudsTexture(texture),
+      clouds: () => this._applyCloudsTexture(texture),
       atmosphere: () => this._applyAtmosphereTexture(texture),
-      lights:     () => this._applyLightsTexture(texture),
+      lights: () => this._applyLightsTexture(texture),
     };
     handlers[textureKey]?.();
   }
 
-  private _applySurfaceTexture(textureKey: string, texture: THREE.Texture): void {
+  private _applySurfaceTexture(
+    textureKey: string,
+    texture: THREE.Texture
+  ): void {
     const mesh = this.layers.get('surface');
     if (!mesh) return;
     const mat = mesh.material as THREE.MeshStandardMaterial;
@@ -244,19 +279,19 @@ export default class CelestialObject {
         mat.map = texture;
         break;
       case 'normalMap':
-        mat.normalMap   = texture;
+        mat.normalMap = texture;
         mat.normalScale = new THREE.Vector2(1, 1);
         // Partage la normalMap avec le shader des lumières pour aligner les terminateurs.
         this._applyLightsNormalMap(texture, mat.normalScale);
         break;
       case 'bump':
-        mat.bumpMap   = texture;
+        mat.bumpMap = texture;
         mat.bumpScale = 0.05;
         break;
       case 'spec':
       case 'specularMap':
         mat.roughnessMap = texture;
-        mat.roughness    = 1.0;
+        mat.roughness = 1.0;
         break;
     }
     mat.needsUpdate = true;
@@ -267,8 +302,8 @@ export default class CelestialObject {
     if (!mesh) return;
     texture.wrapS = THREE.RepeatWrapping;
     texture.wrapT = THREE.RepeatWrapping;
-    const mat   = mesh.material as THREE.MeshStandardMaterial;
-    mat.map      = texture;
+    const mat = mesh.material as THREE.MeshStandardMaterial;
+    mat.map = texture;
     mat.alphaMap = texture;
     mat.needsUpdate = true;
   }
@@ -284,17 +319,22 @@ export default class CelestialObject {
   private _applyLightsTexture(texture: THREE.Texture): void {
     const mesh = this.layers.get('lights');
     if (!(mesh?.material instanceof THREE.ShaderMaterial)) return;
-    const uniforms = mesh.material.uniforms as unknown as NightLightsShader.NightLightsUniforms;
+    const uniforms = mesh.material
+      .uniforms as unknown as NightLightsShader.NightLightsUniforms;
     uniforms.lightsMap.value = texture;
     mesh.material.needsUpdate = true;
   }
 
   // Donne au shader des lumières la même normalMap que la surface : son terminateur
   // suit alors le relief à l'identique, supprimant la bande sombre sans lumières.
-  private _applyLightsNormalMap(texture: THREE.Texture, normalScale: THREE.Vector2): void {
+  private _applyLightsNormalMap(
+    texture: THREE.Texture,
+    normalScale: THREE.Vector2
+  ): void {
     const mesh = this.layers.get('lights');
     if (!(mesh?.material instanceof THREE.ShaderMaterial)) return;
-    const uniforms = mesh.material.uniforms as unknown as NightLightsShader.NightLightsUniforms;
+    const uniforms = mesh.material
+      .uniforms as unknown as NightLightsShader.NightLightsUniforms;
     uniforms.normalMap.value = texture;
     uniforms.normalScale.value.copy(normalScale);
     uniforms.useNormalMap.value = 1;
@@ -314,17 +354,24 @@ export default class CelestialObject {
    * La position orbitale, elle, est gérée par OrbitalMechanics.
    * Ignorée quand le corps est hors-champ (visible=false).
    */
-  update(delta: number, sunWorldPosition: THREE.Vector3 | null, visible: boolean, _cameraPosition?: THREE.Vector3): void {
+  update(
+    delta: number,
+    sunWorldPosition: THREE.Vector3 | null,
+    visible: boolean,
+    _cameraPosition?: THREE.Vector3
+  ): void {
     if (!visible) return;
 
     this._meshGroup.rotation.y += this.rotationSpeed * delta;
 
     const clouds = this.layers.get('clouds');
-    if (clouds) clouds.rotation.y += this.rotationSpeed * delta * CLOUDS_ROTATION_FACTOR;
+    if (clouds)
+      clouds.rotation.y += this.rotationSpeed * delta * CLOUDS_ROTATION_FACTOR;
 
     const lights = this.layers.get('lights');
     if (lights?.material instanceof THREE.ShaderMaterial && sunWorldPosition) {
-      const uniforms = lights.material.uniforms as unknown as NightLightsShader.NightLightsUniforms;
+      const uniforms = lights.material
+        .uniforms as unknown as NightLightsShader.NightLightsUniforms;
       uniforms.sunPosition.value?.copy(sunWorldPosition);
     }
   }
@@ -361,7 +408,8 @@ export default class CelestialObject {
   setScaleMode(mode: 'educ' | 'explo'): void {
     if (mode === 'explo' && this.config.realData?.radiusKm) {
       // Vraie taille physique en mode Explo : radiusKm → UA → unités scène
-      const trueSceneRadius = (this.config.realData.radiusKm / KM_PER_AU) * SQRT_K;
+      const trueSceneRadius =
+        (this.config.realData.radiusKm / KM_PER_AU) * SQRT_K;
       this._scaleFactor = trueSceneRadius / this.config.radius;
     } else {
       this._scaleFactor = 1;
@@ -398,7 +446,11 @@ export default class CelestialObject {
 
     try {
       for (const textureKey of Object.keys(this.config.textures)) {
-        const texture = await this.textureSystem.getLODTexture(this.name, textureKey, distance);
+        const texture = await this.textureSystem.getLODTexture(
+          this.name,
+          textureKey,
+          distance
+        );
         // Même résolution qu'avant → inutile de réappliquer (évite un upload GPU).
         if (this._appliedTextures.get(textureKey) === texture) continue;
         this._applyTexture(textureKey, texture);
@@ -418,15 +470,20 @@ export default class CelestialObject {
   dispose(): void {
     this.layers.forEach((mesh) => {
       mesh.geometry?.dispose();
-      const material = Array.isArray(mesh.material) ? mesh.material[0] : mesh.material;
+      const material = Array.isArray(mesh.material)
+        ? mesh.material[0]
+        : mesh.material;
       if (material) {
         if (material instanceof THREE.MeshStandardMaterial) {
-          (['map', 'normalMap', 'bumpMap', 'roughnessMap', 'alphaMap'] as const).forEach((p) => {
+          (
+            ['map', 'normalMap', 'bumpMap', 'roughnessMap', 'alphaMap'] as const
+          ).forEach((p) => {
             material[p]?.dispose();
           });
         }
         if (material instanceof THREE.ShaderMaterial) {
-          const uniforms = material.uniforms as unknown as NightLightsShader.NightLightsUniforms;
+          const uniforms =
+            material.uniforms as unknown as NightLightsShader.NightLightsUniforms;
           uniforms.lightsMap?.value?.dispose();
         }
         material.dispose();

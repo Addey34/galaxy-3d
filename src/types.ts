@@ -19,13 +19,7 @@ export type TextureQuality = '1k' | '2k' | '4k' | '8k';
  * invisibles à l'œil nu, conformément à l'invariant du mode Exploration.
  */
 export type BodyKind =
-  | 'star'
-  | 'planet'
-  | 'moon'
-  | 'skybox'
-  | 'asteroid'
-  | 'comet'
-  | 'dwarf';
+  'star' | 'planet' | 'moon' | 'skybox' | 'asteroid' | 'comet' | 'dwarf';
 
 /** Catégories de petits corps — positionnés par éléments orbitaux, hors barre de navigation. */
 export const SMALL_BODY_KINDS: ReadonlySet<BodyKind> = new Set<BodyKind>([
@@ -39,7 +33,7 @@ export type OrbitFrame = 'heliocentric' | 'parentRelative';
 
 /** Distance de visite caméra par mode d'affichage (unités scène). */
 export interface CameraDistance {
-  educ:  number;
+  educ: number;
   explo: number;
 }
 
@@ -110,9 +104,9 @@ export interface CelestialConfig {
 /** Données astronomiques réelles d'un corps. */
 export interface RealData {
   /** Rayon physique en km — utilisé pour la vraie échelle en mode Explo. */
-  radiusKm?:        number;
+  radiusKm?: number;
   /** Distance en UA depuis le Soleil (ou la Terre pour la Lune) — référence documentaire. */
-  distanceAU?:      number;
+  distanceAU?: number;
   /** Période orbitale en jours — utilisée pour calculer les points d'orbite 3D. */
   orbitPeriodDays?: number;
   /** Inclinaison orbitale en radians (angle du plan orbital par rapport à l'écliptique). */
@@ -139,6 +133,15 @@ export interface RealData {
  */
 export interface IUpdatable {
   group?: THREE.Group;
-  update(delta: number, sunWorldPosition: THREE.Vector3 | null, visible: boolean, cameraPosition?: THREE.Vector3): void;
-  updateLODTextures?(camera: THREE.Camera, maxDistance: number, threshold: number): Promise<void>;
+  update(
+    delta: number,
+    sunWorldPosition: THREE.Vector3 | null,
+    visible: boolean,
+    cameraPosition?: THREE.Vector3
+  ): void;
+  updateLODTextures?(
+    camera: THREE.Camera,
+    maxDistance: number,
+    threshold: number
+  ): Promise<void>;
 }

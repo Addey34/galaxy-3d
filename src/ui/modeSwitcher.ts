@@ -16,9 +16,10 @@ export function setupModeSwitcher(
   const modeBtns = Array.from(
     document.querySelectorAll<HTMLButtonElement>('#mode-controls .mode-btn')
   );
-  const planetBtns = document.querySelectorAll<HTMLButtonElement>('.controls button');
+  const planetBtns =
+    document.querySelectorAll<HTMLButtonElement>('.controls button');
   const overviewBtn = document.getElementById('orbit-overview');
-  const earthBtn    = document.getElementById('orbit-earth');
+  const earthBtn = document.getElementById('orbit-earth');
 
   modeBtns.forEach((btn) => {
     btn.addEventListener('click', () => {

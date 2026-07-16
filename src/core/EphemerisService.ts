@@ -34,7 +34,9 @@ export class EphemerisService {
    * fait donc directement en coordonnées scène.
    */
   getParentRelativeAU(body: Body, parentBody: Body, date: Date): THREE.Vector3 {
-    return this.getHeliocentricAU(body, date).sub(this.getHeliocentricAU(parentBody, date));
+    return this.getHeliocentricAU(body, date).sub(
+      this.getHeliocentricAU(parentBody, date)
+    );
   }
 
   /**
@@ -50,6 +52,10 @@ export class EphemerisService {
    */
   getNorthPoleDirection(body: Body, date: Date): THREE.Vector3 {
     const axis = RotationAxis(body, date);
-    return equatorialToScene(axis.north.x, axis.north.y, axis.north.z).normalize();
+    return equatorialToScene(
+      axis.north.x,
+      axis.north.y,
+      axis.north.z
+    ).normalize();
   }
 }

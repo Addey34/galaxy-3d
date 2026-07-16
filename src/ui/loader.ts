@@ -7,13 +7,13 @@
 import Logger from '../utils/Logger';
 
 const progressBar = document.getElementById('load-progress')!;
-const loadStatus  = document.getElementById('load-status')!;
-const loader      = document.getElementById('loader')!;
+const loadStatus = document.getElementById('load-status')!;
+const loader = document.getElementById('loader')!;
 
 /** Callback de progression passé à `SolarSystemApp.init`. */
 export function updateProgress(percent: number, message: string): void {
   progressBar.style.width = `${percent}%`;
-  loadStatus.textContent  = message;
+  loadStatus.textContent = message;
 }
 
 /** Fait disparaître l'écran de chargement (fondu puis retrait du flux). */

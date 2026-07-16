@@ -10,7 +10,11 @@ import { SimulationClock } from './core/SimulationClock';
 import { EphemerisService } from './core/EphemerisService';
 import { OrbitalElementsService } from './core/OrbitalElementsService';
 import { OrbitalMechanics } from './core/OrbitalMechanics';
-import { APP_SETTINGS, CELESTIAL_CONFIG, TEXTURE_SETTINGS } from './config/settings';
+import {
+  APP_SETTINGS,
+  CELESTIAL_CONFIG,
+  TEXTURE_SETTINGS,
+} from './config/settings';
 import { forEachBody } from './config/catalog';
 import Logger from './utils/Logger';
 
@@ -18,11 +22,11 @@ type ProgressCallback = (percent: number, message: string) => void;
 
 /** Surface publique renvoyée par `init()` : ce que la couche UI (MainSolarSystemApp) pilote. */
 export interface PublicAPI {
-  sceneSystem:      SceneSystem;
-  animationSystem:  AnimationSystem;
-  cameraSystem:     CameraSystem;
+  sceneSystem: SceneSystem;
+  animationSystem: AnimationSystem;
+  cameraSystem: CameraSystem;
   orbitalMechanics: OrbitalMechanics;
-  cleanup:          () => void;
+  cleanup: () => void;
 }
 
 /**
@@ -33,20 +37,20 @@ export interface PublicAPI {
 export class SolarSystemApp {
   // bodyCache évite de recréer les CelestialObject si init() était appelé deux fois
   // (guard initialized) ou si _getCelestialBodies() est appelé en interne plusieurs fois.
-  private bodyCache:        CelestialBodies   | null = null;
+  private bodyCache: CelestialBodies | null = null;
   private initialized = false;
 
   private readonly systems = {
-    texture:   null as TextureSystem | null,
-    scene:     null as SceneSystem   | null,
-    lighting:  new LightingSystem(),
-    camera:    new CameraSystem(),
+    texture: null as TextureSystem | null,
+    scene: null as SceneSystem | null,
+    lighting: new LightingSystem(),
+    camera: new CameraSystem(),
     animation: new AnimationSystem(APP_SETTINGS.performance.targetFPS),
   };
 
   // Conservés pour le callback de recomputation des orbites
   private _orbitalMechanics: OrbitalMechanics | null = null;
-  private _ephemerisService: EphemerisService  | null = null;
+  private _ephemerisService: EphemerisService | null = null;
 
   async init(progressCallback: ProgressCallback): Promise<PublicAPI> {
     if (this.initialized) {
@@ -74,12 +78,14 @@ export class SolarSystemApp {
     }
   }
 
-  private async _loadResources(progressCallback: ProgressCallback): Promise<void> {
+  private async _loadResources(
+    progressCallback: ProgressCallback
+  ): Promise<void> {
     const config: TextureSystemConfig = {
-      basePath:        TEXTURE_SETTINGS.basePath,
+      basePath: TEXTURE_SETTINGS.basePath,
       defaultSettings: TEXTURE_SETTINGS.defaultSettings,
-      bodies:          CELESTIAL_CONFIG.bodies,
-      performance:     APP_SETTINGS.performance,
+      bodies: CELESTIAL_CONFIG.bodies,
+      performance: APP_SETTINGS.performance,
     };
     this.systems.texture = TextureSystem.getInstance(config);
     await this.systems.texture.preloadCriticalTextures((percent, msg) => {
@@ -89,7 +95,10 @@ export class SolarSystemApp {
 
   private _initCoreSystems(progressCallback: ProgressCallback): void {
     progressCallback(45, 'Building scene...');
-    this.systems.scene = new SceneSystem(CELESTIAL_CONFIG, this.systems.texture!);
+    this.systems.scene = new SceneSystem(
+      CELESTIAL_CONFIG,
+      this.systems.texture!
+    );
     this.systems.scene.init();
 
     progressCallback(60, 'Setting up lighting...');
@@ -107,7 +116,10 @@ export class SolarSystemApp {
     return this.bodyCache;
   }
 
-  private _finalizeSetup(bodies: CelestialBodies, progressCallback: ProgressCallback): void {
+  private _finalizeSetup(
+    bodies: CelestialBodies,
+    progressCallback: ProgressCallback
+  ): void {
     progressCallback(85, 'Finalizing...');
 
     this.systems.scene!.setupCelestialBodies(bodies);
@@ -120,10 +132,10 @@ export class SolarSystemApp {
     );
 
     this.systems.animation.init({
-      scene:           this.systems.scene!.scene,
-      camera:          this.systems.scene!.camera,
-      renderer:        this.systems.scene!.renderer,
-      cameraSystem:    this.systems.camera,
+      scene: this.systems.scene!.scene,
+      camera: this.systems.scene!.camera,
+      renderer: this.systems.scene!.renderer,
+      cameraSystem: this.systems.camera,
       celestialBodies: bodies,
     });
 
@@ -145,7 +157,9 @@ export class SolarSystemApp {
     this.systems.animation.setOrbitalMechanics(this._orbitalMechanics);
 
     // Positionner les planètes sur leurs positions réelles avant le premier rendu
-    this._orbitalMechanics.syncAnglesFromEphemeris(this._orbitalMechanics.simulationDate);
+    this._orbitalMechanics.syncAnglesFromEphemeris(
+      this._orbitalMechanics.simulationDate
+    );
     this._recomputeOrbits();
 
     progressCallback(95, 'Starting...');
@@ -155,18 +169,18 @@ export class SolarSystemApp {
   /** Calcule les points d'orbite 3D pour tous les corps et les envoie à SceneSystem.
    *  Met aussi à jour la taille visuelle des planètes selon le mode courant. */
   private _recomputeOrbits(): void {
-    const om     = this._orbitalMechanics!;
-    const scene  = this.systems.scene!;
+    const om = this._orbitalMechanics!;
+    const scene = this.systems.scene!;
     const bodies = this.bodyCache!;
-    const date   = om.simulationDate;
-    const mode   = om.scaleMode; // 'educ' | 'explo'
+    const date = om.simulationDate;
+    const mode = om.scaleMode; // 'educ' | 'explo'
 
     forEachBody(CELESTIAL_CONFIG, ({ name, config: cfg }) => {
-      if (cfg.kind === 'skybox') return;         // la skybox n'est pas un CelestialObject
+      if (cfg.kind === 'skybox') return; // la skybox n'est pas un CelestialObject
 
       bodies[name]?.setScaleMode(mode);
 
-      if (cfg.kind === 'star') return;           // l'étoile centrale reste à l'origine (pas d'orbite)
+      if (cfg.kind === 'star') return; // l'étoile centrale reste à l'origine (pas d'orbite)
 
       const points = om.computeOrbitPoints(name, cfg, date);
       if (points) scene.setOrbitPoints(name, points);
@@ -177,11 +191,11 @@ export class SolarSystemApp {
 
   private _publicAPI(): PublicAPI {
     return {
-      sceneSystem:      this.systems.scene!,
-      animationSystem:  this.systems.animation,
-      cameraSystem:     this.systems.camera,
+      sceneSystem: this.systems.scene!,
+      animationSystem: this.systems.animation,
+      cameraSystem: this.systems.camera,
       orbitalMechanics: this._orbitalMechanics!,
-      cleanup:          () => this.dispose(),
+      cleanup: () => this.dispose(),
     };
   }
 
@@ -191,7 +205,7 @@ export class SolarSystemApp {
     this.systems.lighting.dispose();
     this.systems.scene?.dispose();
     this.systems.texture?.dispose();
-    this.bodyCache   = null;
+    this.bodyCache = null;
     this.initialized = false;
     Logger.success('Cleanup complete.');
   }

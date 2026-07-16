@@ -33,9 +33,13 @@ const SIN_OBL = Math.sin(OBLIQUITY_RAD);
  * Comme c'est une rotation propre, elle s'applique telle quelle aussi bien à une
  * position qu'à une direction (ex. pôle de rotation) — pas de translation.
  */
-export function equatorialToScene(x: number, y: number, z: number): THREE.Vector3 {
-  const ex =  x;
-  const ey =  y * COS_OBL + z * SIN_OBL;
+export function equatorialToScene(
+  x: number,
+  y: number,
+  z: number
+): THREE.Vector3 {
+  const ex = x;
+  const ey = y * COS_OBL + z * SIN_OBL;
   const ez = -y * SIN_OBL + z * COS_OBL;
   return new THREE.Vector3(ex, ez, -ey);
 }
@@ -50,6 +54,10 @@ export function equatorialToScene(x: number, y: number, z: number): THREE.Vector
  *   Three.X = x,  Three.Y = z,  Three.Z = -y
  * C'est la même rotation propre (déterminant +1), donc orbites progrades cohérentes.
  */
-export function eclipticToScene(x: number, y: number, z: number): THREE.Vector3 {
+export function eclipticToScene(
+  x: number,
+  y: number,
+  z: number
+): THREE.Vector3 {
   return new THREE.Vector3(x, z, -y);
 }

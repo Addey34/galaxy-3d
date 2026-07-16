@@ -13,7 +13,10 @@ interface StarfieldOptions {
  * Construit la skybox étoilée, prête à être ajoutée à la scène.
  * @param texture Texture équirectangulaire du ciel, plaquée sur la face interne.
  */
-export function createStarfield(texture: THREE.Texture, options: StarfieldOptions = {}): THREE.Mesh {
+export function createStarfield(
+  texture: THREE.Texture,
+  options: StarfieldOptions = {}
+): THREE.Mesh {
   const { size = 10000 } = options;
 
   const geometry = new THREE.SphereGeometry(size, 128, 128);

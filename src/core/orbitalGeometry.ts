@@ -21,15 +21,18 @@ export function orbitalPositionEduc(
   r: number,
   angle: number,
   inclination: number,
-  ascendingNode: number,
+  ascendingNode: number
 ): THREE.Vector3 {
-  const cosΩ = Math.cos(ascendingNode), sinΩ = Math.sin(ascendingNode);
-  const cosI = Math.cos(inclination),   sinI = Math.sin(inclination);
-  const cosA = Math.cos(angle),         sinA = Math.sin(angle);
+  const cosΩ = Math.cos(ascendingNode),
+    sinΩ = Math.sin(ascendingNode);
+  const cosI = Math.cos(inclination),
+    sinI = Math.sin(inclination);
+  const cosA = Math.cos(angle),
+    sinA = Math.sin(angle);
   return new THREE.Vector3(
     r * (cosΩ * cosA - sinΩ * sinA * cosI),
     r * sinA * sinI,
-    -r * (sinΩ * cosA + cosΩ * sinA * cosI),
+    -r * (sinΩ * cosA + cosΩ * sinA * cosI)
   );
 }
 
@@ -42,10 +45,12 @@ export function orbitalPositionEduc(
 export function angleInOrbitalPlane(
   pos: THREE.Vector3,
   inclination: number,
-  ascendingNode: number,
+  ascendingNode: number
 ): number {
-  const cosΩ = Math.cos(ascendingNode), sinΩ = Math.sin(ascendingNode);
-  const cosI = Math.cos(inclination),   sinI = Math.sin(inclination);
+  const cosΩ = Math.cos(ascendingNode),
+    sinΩ = Math.sin(ascendingNode);
+  const cosI = Math.cos(inclination),
+    sinI = Math.sin(inclination);
   const dotE1 = pos.x * cosΩ - pos.z * sinΩ;
   const dotE2 = -pos.x * sinΩ * cosI + pos.y * sinI - pos.z * cosΩ * cosI;
   return Math.atan2(dotE2, dotE1);

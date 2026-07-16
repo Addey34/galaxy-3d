@@ -115,15 +115,17 @@ export const fragmentShader = /* glsl */ `
   }
 `;
 
-export function createUniforms(settings: Partial<NightLightsSettings> = {}): NightLightsUniforms {
+export function createUniforms(
+  settings: Partial<NightLightsSettings> = {}
+): NightLightsUniforms {
   return {
-    lightsMap:    { value: null },
-    sunPosition:  { value: null },
-    intensity:    { value: settings.intensity  ?? 1.0 },
-    threshold:    { value: settings.threshold  ?? 0.1 },
-    smoothness:   { value: settings.smoothness ?? 0.3 },
-    normalMap:    { value: null },
-    normalScale:  { value: new THREE.Vector2(1, 1) },
+    lightsMap: { value: null },
+    sunPosition: { value: null },
+    intensity: { value: settings.intensity ?? 1.0 },
+    threshold: { value: settings.threshold ?? 0.1 },
+    smoothness: { value: settings.smoothness ?? 0.3 },
+    normalMap: { value: null },
+    normalScale: { value: new THREE.Vector2(1, 1) },
     useNormalMap: { value: 0 },
   };
 }

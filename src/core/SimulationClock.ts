@@ -20,13 +20,15 @@ export class SimulationClock {
   // Invariant (l'horloge tourne toujours ainsi, quel que soit le mode educ/explo) :
   //   simDate = _baseRealTime + _offsetMs + (now - _baseRealTime) × _timeScale
   private _baseRealTime = Date.now();
-  private _offsetMs     = 0;
-  private _timeScale    = 1;
+  private _offsetMs = 0;
+  private _timeScale = 1;
 
   syncToRealTime(): void {
     const now = Date.now();
     this._date = new Date(
-      this._baseRealTime + this._offsetMs + (now - this._baseRealTime) * this._timeScale
+      this._baseRealTime +
+        this._offsetMs +
+        (now - this._baseRealTime) * this._timeScale
     );
   }
 
@@ -37,9 +39,9 @@ export class SimulationClock {
   setTimeScale(scale: number): void {
     const now = Date.now();
     // Préserver la date actuelle : recalculer offsetMs pour la nouvelle base
-    this._offsetMs     = this._date.getTime() - now;
+    this._offsetMs = this._date.getTime() - now;
     this._baseRealTime = now;
-    this._timeScale    = scale;
+    this._timeScale = scale;
     this.syncToRealTime();
   }
 
@@ -50,7 +52,8 @@ export class SimulationClock {
     const now = Date.now();
     const realElapsed = now - this._baseRealTime;
     // target = baseRealTime + newOffset + realElapsed * timeScale
-    this._offsetMs = target.getTime() - this._baseRealTime - realElapsed * this._timeScale;
+    this._offsetMs =
+      target.getTime() - this._baseRealTime - realElapsed * this._timeScale;
     this.syncToRealTime();
   }
 
@@ -64,13 +67,19 @@ export class SimulationClock {
 
   resetOffset(): void {
     this._baseRealTime = Date.now();
-    this._offsetMs     = 0;
+    this._offsetMs = 0;
     this.syncToRealTime();
   }
 
   // ── Getters ───────────────────────────────────────────────────────────────
 
-  get date(): Date      { return this._date; }
-  get offsetDays(): number { return this._offsetMs / MS_PER_DAY; }
-  get timeScale(): number  { return this._timeScale; }
+  get date(): Date {
+    return this._date;
+  }
+  get offsetDays(): number {
+    return this._offsetMs / MS_PER_DAY;
+  }
+  get timeScale(): number {
+    return this._timeScale;
+  }
 }
