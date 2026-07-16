@@ -78,6 +78,38 @@ test('keeps the followed body projected at the screen center', async ({
 });
 
 /**
+ * Régression : les labels cliquables ne doivent pas bloquer la caméra. Le label de la cible
+ * suivie est toujours au centre de l'écran ; une molette pile dessus doit malgré tout zoomer
+ * (les labels réémettent le geste vers OrbitControls). On l'observe via la distance du HUD.
+ */
+test('mouse wheel over the centered target label still zooms the camera', async ({
+  page,
+}) => {
+  test.setTimeout(60_000);
+  await page.goto('/');
+  await expect(page.locator('#loader')).toBeHidden({ timeout: 30_000 });
+
+  await page.locator('.mode-btn[data-mode=explo]').click();
+  await page.locator('#orbit-mars').click();
+  await expect(page.locator('.explo-hud-target')).toHaveText('Mars');
+  await page.waitForTimeout(1_600); // fin du vol : Mars centré, label is-target au centre
+
+  const distanceLine = page.locator('.explo-hud-line').first();
+  const before = await distanceLine.textContent();
+
+  // Molette au centre exact de l'écran, donc sur le label de la cible.
+  const viewport = page.viewportSize()!;
+  await page.mouse.move(viewport.width / 2, viewport.height / 2);
+  for (let i = 0; i < 8; i++) {
+    await page.mouse.wheel(0, -100);
+    await page.waitForTimeout(30);
+  }
+
+  // Le zoom a rapproché la caméra → la distance affichée a changé.
+  await expect(distanceLine).not.toHaveText(before ?? '');
+});
+
+/**
  * Labels projetés cliquables : en mode Explo, cliquer le label d'un corps le cible dans le
  * HUD, active son bouton de navigation, termine le vol caméra et le maintient centré, sans
  * erreur de page. On vole d'abord vers Mars via la barre : son label devient alors la cible

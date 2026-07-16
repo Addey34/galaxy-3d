@@ -35,7 +35,7 @@ setupFullscreen();
 
     // HUD « Voyage spatial » — actif uniquement en mode Exploration. Ses labels projetés
     // ciblent les corps via la commande de navigation partagée.
-    const exploHud = new ExploHud(planetNav);
+    const exploHud = new ExploHud(planetNav, cameraSystem.renderer.domElement);
     exploHud.mount();
     animationSystem.onFrame(() =>
       exploHud.update(cameraSystem.camera, cameraSystem, sceneSystem)

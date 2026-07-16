@@ -61,10 +61,17 @@ export class ExploHud {
   private readonly labels = new Map<string, HTMLButtonElement>();
   private readonly _ndc = new THREE.Vector3();
   private readonly nav: PlanetNavigation;
+  private readonly controlSurface: HTMLElement;
   private active = false;
 
-  constructor(nav: PlanetNavigation) {
+  /**
+   * @param nav             commande de navigation partagée (clic label → cible le corps)
+   * @param controlSurface  surface OrbitControls (canvas WebGL) : les labels lui réémettent
+   *                        molette/pointerdown pour ne jamais bloquer zoom, rotation ni pan.
+   */
+  constructor(nav: PlanetNavigation, controlSurface: HTMLElement) {
     this.nav = nav;
+    this.controlSurface = controlSurface;
 
     this.labelsLayer = document.createElement('div');
     this.labelsLayer.id = 'explo-labels';
@@ -140,6 +147,16 @@ export class ExploHud {
     });
   }
 
+  /**
+   * Réémet un geste (molette/pointerdown) vers la surface OrbitControls : clone l'événement
+   * et le redispatche sur le canvas, qui gère alors zoom/rotation/pan comme si le label
+   * n'était pas là. Le clic de sélection, lui, n'est pas réémis.
+   */
+  private readonly _forward = (ev: Event): void => {
+    const Ctor = ev.constructor as new (type: string, init: Event) => Event;
+    this.controlSurface.dispatchEvent(new Ctor(ev.type, ev));
+  };
+
   private _label(name: string): HTMLButtonElement {
     let el = this.labels.get(name);
     if (!el) {
@@ -160,6 +177,11 @@ export class ExploHud {
         if (!this.active) return;
         this.nav.selectBody(name);
       });
+      // Un label cliquable capterait sinon molette/drag destinés à la caméra — or celui de
+      // la cible suivie est toujours au centre. On réémet ces gestes vers OrbitControls pour
+      // préserver zoom, rotation et pan ; seul le clic (sélection) reste au label.
+      el.addEventListener('wheel', this._forward, { passive: false });
+      el.addEventListener('pointerdown', this._forward);
       this.labelsLayer.append(el);
       this.labels.set(name, el);
     }
