@@ -1,6 +1,6 @@
 # Solar System 3D
 
-Visualisateur interactif du système solaire en temps réel, développé en TypeScript avec Three.js. Deux modes d'affichage : **Éducatif** (distances compressées en √, tout visible d'un coup) et **Exploration** (vraie échelle astronomique, positions Kepler calculées par éphéméride). Le mode Exploration est en cours de développement et actuellement désactivé dans l'interface.
+Visualisateur interactif du système solaire en temps réel, développé en TypeScript avec Three.js. Deux modes d'affichage : **Éducatif** (distances compressées en √, tout visible d'un coup) et **Exploration** (vraie échelle astronomique, positions Kepler calculées par éphéméride). Le mode Exploration est actif avec l'expérience « Voyage spatial » : suivi caméra, distances réelles, temps-lumière et marqueurs projetés.
 
 ## Aperçu
 
@@ -8,7 +8,7 @@ Visualisateur interactif du système solaire en temps réel, développé en Type
 - Time travel : naviguer librement dans le temps passé et futur
 - Planètes multi-couches : surface PBR, nuages, atmosphère, lueurs nocturnes (shader GLSL)
 - LOD automatique : résolution de texture adaptée à la distance caméra (1k → 8k)
-- Sprite LOD en mode Exploration pour les planètes lointaines
+- HUD Exploration avec cible suivie, distance UA/km, temps-lumière et labels de corps
 - Responsive mobile avec qualité adaptative
 
 ## Stack
@@ -44,6 +44,11 @@ pnpm dev        # Serveur de dev avec hot reload
 pnpm build      # tsc --noEmit (vérification de types) puis build de production → dist/
 pnpm preview    # Servir le build de production localement
 pnpm typecheck  # tsc --noEmit seul — vérification stricte des types, sans build
+pnpm test       # vitest run — tests unitaires des modules mathématiques purs
+pnpm test:e2e   # playwright test — tests navigateur sur le port dédié 5273
+pnpm format     # Formater les fichiers TypeScript/CSS avec Prettier
+pnpm format:check # Vérifier le formatage sans réécrire
+pnpm verify     # tsc --noEmit && vitest run — types + tests (à lancer avant de considérer une tâche finie)
 ```
 
 ## Textures
@@ -98,7 +103,7 @@ Résolutions disponibles : `1k`, `2k`, `4k`, `8k` (selon le corps, voir `src/con
 | **Éducatif** (`educ`) | Compressées (`√AU × 35`) | Visuelles | Circulaires inclinées |
 | **Exploration** (`explo`) | Réelles (`AU × 35`) | Physiques (km) | Positions Kepler réelles |
 
-Basculer avec les boutons **Éduc. / Explo.** dans l'interface. Le mode **Exploration** est en cours de développement : son bouton est actuellement désactivé (grisé).
+Basculer avec les boutons **Éduc. / Explo.** dans l'interface. En Exploration, la caméra cible la Terre par défaut ; le HUD « Voyage spatial » affiche la cible, sa distance réelle et son temps-lumière. Les marqueurs projetés permettent de repérer les autres corps.
 
 ### Contrôle du temps
 
@@ -125,15 +130,18 @@ Basculer avec les boutons **Éduc. / Explo.** dans l'interface. Le mode **Explor
 
 ```
 src/
-├── MainSolarSystemApp.ts     # Point d'entrée — branche les contrôles DOM sur l'API
+├── MainSolarSystemApp.ts     # Racine de composition — démarre l'app et les modules UI
 ├── SolarSystemApp.ts         # Façade — coordonne l'initialisation dans l'ordre
 ├── types.ts                  # Interfaces TypeScript partagées
 │
 ├── core/
-│   ├── EphemerisService.ts   # Wrapper astronomy-engine → positions en UA (repère Three.js)
+│   ├── EphemerisService.ts   # Wrapper astronomy-engine → positions en UA (prend des enums Body)
+│   ├── frames.ts             # ⓟ Repères : équatorial J2000 → écliptique → Three.js
+│   ├── orbitalGeometry.ts    # ⓟ Orbite éducative : position + projection inverse d'angle
 │   ├── SimulationClock.ts    # Horloge simulée avec time travel et vitesse variable
-│   ├── ScaleService.ts       # Conversion UA → unités Three.js (modes explo/simu)
-│   └── OrbitalMechanics.ts  # Pilote les positions planétaires chaque frame
+│   ├── ScaleService.ts       # Conversion UA → unités Three.js (modes educ/explo)
+│   └── OrbitalMechanics.ts   # Pilote les positions planétaires chaque frame
+│   #  ⓟ = module pur sans état, testé unitairement (*.test.ts)
 │
 ├── components/
 │   ├── systems/
@@ -143,13 +151,22 @@ src/
 │   │   ├── LightingSystem.ts   # AmbientLight + PointLight solaire
 │   │   └── TextureSystem.ts    # Cache singleton + LOD textures
 │   └── celestial/
-│       ├── CelestialObject.ts        # Une planète (meshes, shader, sprite LOD)
+│       ├── CelestialObject.ts        # Une planète (meshes, couches, shader, LOD textures)
 │       ├── CelestialObjectFactory.ts # Crée tous les corps depuis la config
 │       └── Starfield.ts              # Skybox étoilée
 │
 ├── config/
-│   ├── settings.ts    # Source de vérité : toutes les constantes de l'app
+│   ├── bodies.ts      # Catalogue des corps célestes (CELESTIAL_CONFIG) — SOURCE UNIQUE
+│   ├── engine.ts      # Réglages moteur : rendu, perf/LOD, caméra, éclairage, shaders, textures
+│   ├── settings.ts    # Barrel de compat : ré-exporte bodies + engine
+│   ├── catalog.ts     # Itération/résolution du catalogue (forEachBody, flattenBodies)
 │   └── layerConfig.ts # Géométries et matériaux Three.js
+│
+├── ui/
+│   ├── planetNav.ts, modeSwitcher.ts # Navigation et modes
+│   ├── playback.ts, timePanel.ts      # Lecture et voyage temporel
+│   ├── exploHud.ts                    # HUD et labels « Voyage spatial »
+│   └── loader.ts, fullscreen.ts       # Contrôles transverses
 │
 ├── shaders/
 │   └── NightLightsShader.ts  # GLSL vertex + fragment shader pour les lueurs nocturnes
@@ -163,8 +180,8 @@ src/
 
 ```
 index.html
-  └── MainSolarSystemApp.ts (IIFE async)
-        └── SolarSystemApp.init(progressCallback)
+  └── MainSolarSystemApp.ts (racine de composition async)
+        ├── SolarSystemApp.init(progressCallback)
               ├── TextureSystem.preloadCriticalTextures()   0 → 40%
               ├── SceneSystem.init()                        45%
               ├── LightingSystem.setup()                    60%
@@ -174,8 +191,9 @@ index.html
               ├── EphemerisService + SimulationClock
               ├── OrbitalMechanics (hook onOrbitsChanged)
               ├── _recomputeOrbits()                        95%
-              └── AnimationSystem.run()
-                          → boucle infinie
+        │     └── AnimationSystem.run()
+        │                 → boucle infinie
+        └── setup*Controls() + ExploHud
 ```
 
 ### Flux par frame
@@ -188,10 +206,10 @@ requestAnimationFrame
   │     └── EphemerisService → body.group.position  (positions Kepler)
   ├── Frustum culling (une passe pour tous les objets)
   ├── CelestialObject.update() × N
-  │     ├── Sprite ↔ mesh transition (mode Exploration)
   │     ├── Rotation du mesh + nuages
   │     └── Shader uniforms (position du soleil)
   ├── CameraSystem.update()            Suivi de la planète cible
+  ├── ExploHud.update()                HUD + labels projetés (si Explo)
   └── renderer.render(scene, camera)
 ```
 
@@ -219,30 +237,48 @@ Repère écliptique → Three.js XZ-plane
 
 ## Ajouter un corps céleste
 
+Le catalogue (`src/config/bodies.ts`) est la **source unique** : boutons de navigation, préchargement des textures, éphéméride et hiérarchie de scène s'en dérivent automatiquement.
+
 1. Déposer les textures dans `public/assets/textures/{nom}/`
-2. Ajouter une entrée dans `CELESTIAL_CONFIG.bodies` dans `src/config/settings.ts`
-   - Inclure `realData.orbitPeriodDays` pour que les lignes d'orbite Kepler soient calculées
-3. Ajouter les distances dans `CAMERA_SETTINGS.bodyDistances` (Éducatif) et `exploBodyDistances` (Exploration)
-4. Ajouter à `TEXTURE_SETTINGS.loadPriority` si préchargement souhaité
-5. Ajouter le bouton dans `index.html` avec `id="orbit-{nom}"`
-6. Mapper le nom vers l'enum `Body` dans `EphemerisService.ts` (BODY_MAP)
+2. Ajouter **une seule entrée** dans `CELESTIAL_CONFIG.bodies` (`src/config/bodies.ts`) :
+   - `kind` : `'planet'` (ou `'moon'`, `'star'`, `'skybox'`)
+   - `astroBody` : l'enum `Body` d'astronomy-engine (positions réelles)
+   - `cameraDistance: { educ, explo }` : distances de visite caméra
+   - `loadPriority` : rang de préchargement (croissant) — optionnel
+   - `realData.orbitPeriodDays` : pour tracer la ligne d'orbite
+   - Pour une lune : `frame: 'parentRelative'` et l'imbriquer dans `satellites` du parent
+
+Aucune édition de `index.html`, `EphemerisService` ni des distances caméra n'est nécessaire.
 
 ## Configuration
 
-Tout se configure dans `src/config/settings.ts` :
+Réglages moteur dans `src/config/engine.ts`, catalogue des corps dans `src/config/bodies.ts` :
 
-| Constante | Rôle |
-|-----------|------|
-| `APP_SETTINGS.performance.targetFPS` | FPS cible (défaut 60) |
-| `APP_SETTINGS.performance.textureQuality` | Seuils de distance LOD par qualité |
-| `LIGHTING_SETTINGS` | Intensité lumière ambiante et solaire |
-| `SHADER_SETTINGS.nightLights` | Intensité / seuil / douceur des lueurs nocturnes |
-| `CAMERA_SETTINGS.bodyDistances` | Distance caméra par planète en mode Éducatif |
-| `CAMERA_SETTINGS.exploBodyDistances` | Idem en mode Exploration |
-| `SIMU_SCALES` (MainSolarSystemApp) | Vitesses disponibles : `[1, 3600, 10800, 21600]` |
+| Constante | Fichier | Rôle |
+|-----------|---------|------|
+| `APP_SETTINGS.performance.targetFPS` | engine | FPS cible (défaut 60) |
+| `APP_SETTINGS.performance.textureQuality` | engine | Seuils de distance LOD par qualité |
+| `LIGHTING_SETTINGS` | engine | Intensité lumière ambiante et solaire |
+| `SHADER_SETTINGS.nightLights` | engine | Intensité / seuil / douceur des lueurs nocturnes |
+| `CAMERA_SETTINGS.defaultBodyDistance` | engine | Distance caméra fallback |
+| `CELESTIAL_CONFIG.bodies[*].cameraDistance` | bodies | Distance de visite par corps `{ educ, explo }` |
+| `SIMU_SCALES` | ui/playback | Vitesses disponibles : `[1, 3600, 10800, 21600]` |
 
 ## Dépendances de développement
 
-- **TypeScript strict** (`tsconfig.json`) — Vite sert/compile le TS via esbuild (pas de vérification de types en dev) ; `pnpm typecheck` ou `pnpm build` (qui lance `tsc --noEmit`) est ce qui valide réellement les types
-- **Prettier** — formatage automatique (`.prettierrc`)
-- Aucun test runner ni linter configuré
+- **TypeScript strict** (`tsconfig.json`) — Vite sert/compile le TS via esbuild (pas de vérification de types en dev) ; `pnpm typecheck` ou `pnpm build` (qui lance `tsc --noEmit`) valide réellement les types
+- **Vitest** — tests unitaires des modules mathématiques purs (`src/**/*.test.ts`) ; `pnpm verify` = types + tests
+- **Prettier** — règles dans `.prettierrc`, commandes `pnpm format` et `pnpm format:check` ; le code historique n'est pas encore entièrement conforme
+- **Playwright** — quatre scénarios navigateur dans `e2e/` ; le serveur Vite de test utilise le port réservé 5273
+- Aucun linter ni seuil de couverture configuré
+
+## Qualité et limites actuelles
+
+- `pnpm verify` passe avec 31 tests répartis dans 7 fichiers ; Playwright complète cette couverture avec 4 scénarios DOM/WebGL.
+- `pnpm build` passe sans avertissement de taille : `three`, `astronomy-engine` et `tween` sont séparés, et le chunk applicatif reste autour de 72 kB minifié.
+- Le mode Exploration est actif. Les vols caméra concurrents sont annulés et la cible suivie reste centrée, y compris à vitesse accélérée.
+- `IS_MOBILE` reste figé pour les réglages créés à l'initialisation (anticrénelage, ombres, textures) ; seul le plafond de pixel ratio est recalculé au resize.
+- `frame: 'parentRelative'` calcule `helio(corps) − helio(parent)`. Astronomy Engine ne fournit toutefois une éphéméride naturelle que pour la Lune.
+- `.gitattributes` normalise les fichiers texte en LF. `pnpm format:check` signale encore la dette de formatage historique, à traiter dans un changement dédié.
+
+Le détail du chantier et des suites proposées se trouve dans `docs/ARCHITECTURE_STATUS.md`.
