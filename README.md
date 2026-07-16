@@ -105,6 +105,11 @@ Résolutions disponibles : `1k`, `2k`, `4k`, `8k` (selon le corps, voir `src/con
 
 Basculer avec les boutons **Éduc. / Explo.** dans l'interface. En Exploration, la caméra cible la Terre par défaut ; le HUD « Voyage spatial » affiche la cible, sa distance réelle et son temps-lumière. Les marqueurs projetés permettent de repérer les autres corps.
 
+Le mode Exploration respecte strictement les rayons, distances et tailles angulaires physiques.
+Un corps lointain peut donc être invisible à l'œil nu : les labels sont des instruments de
+navigation, pas un agrandissement du rendu. Un éventuel zoom optique devra modifier le champ de
+vision de la caméra, jamais l'échelle des objets.
+
 ### Contrôle du temps
 
 - **Play / Pause** — figer la simulation
@@ -282,3 +287,9 @@ Réglages moteur dans `src/config/engine.ts`, catalogue des corps dans `src/conf
 - `.gitattributes` normalise les fichiers texte en LF. `pnpm format:check` signale encore la dette de formatage historique, à traiter dans un changement dédié.
 
 Le détail du chantier et des suites proposées se trouve dans `docs/ARCHITECTURE_STATUS.md`.
+
+## Direction de développement
+
+La prochaine amélioration prioritaire est de rendre les labels Exploration cliquables et
+accessibles afin de cibler un corps sans altérer l'échelle réelle. Viendront ensuite la transition
+animée Éducatif→Exploration, puis éventuellement un zoom optique fondé sur le FOV de la caméra.
