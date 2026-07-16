@@ -6,13 +6,18 @@
  * (UA + km) et le temps-lumière, et projette un marqueur + label sur chaque corps pour
  * qu'aucun ne se perde à l'écran.
  *
+ * Les labels projetés sont des boutons accessibles : cliqués (ou activés au clavier), ils
+ * ciblent le corps via la commande de navigation partagée (`PlanetNavigation`) — le HUD ne
+ * touche jamais lui-même à la caméra ni aux boutons de la barre de navigation.
+ *
  * Piloté chaque frame par `AnimationSystem.onFrame` quand le mode explo est actif ; inerte
- * (aucune écriture DOM) sinon.
+ * (aucune écriture DOM, labels non cliquables) sinon.
  */
 import * as THREE from 'three';
 import { KM_PER_AU, SQRT_K } from '../core/ScaleService';
 import type { CameraSystem } from '../components/systems/CameraSystem';
 import type { SceneSystem } from '../components/systems/SceneSystem';
+import type { PlanetNavigation } from './planetNav';
 
 const C_KM_PER_S = 299_792.458; // vitesse de la lumière
 
@@ -53,11 +58,14 @@ export class ExploHud {
   private readonly distance: HTMLDivElement;
   private readonly lightTime: HTMLDivElement;
   private readonly labelsLayer: HTMLDivElement;
-  private readonly labels = new Map<string, HTMLDivElement>();
+  private readonly labels = new Map<string, HTMLButtonElement>();
   private readonly _ndc = new THREE.Vector3();
+  private readonly nav: PlanetNavigation;
   private active = false;
 
-  constructor() {
+  constructor(nav: PlanetNavigation) {
+    this.nav = nav;
+
     this.labelsLayer = document.createElement('div');
     this.labelsLayer.id = 'explo-labels';
 
@@ -132,17 +140,26 @@ export class ExploHud {
     });
   }
 
-  private _label(name: string): HTMLDivElement {
+  private _label(name: string): HTMLButtonElement {
     let el = this.labels.get(name);
     if (!el) {
-      el = document.createElement('div');
+      el = document.createElement('button');
+      el.type = 'button';
       el.className = 'explo-label';
+      el.setAttribute('aria-label', cap(name));
       const dot = document.createElement('span');
       dot.className = 'explo-label-dot';
+      dot.setAttribute('aria-hidden', 'true');
       const text = document.createElement('span');
       text.className = 'explo-label-text';
       text.textContent = cap(name);
       el.append(dot, text);
+      // Inerte hors mode explo : les labels masqués (display:none) ne sont ni cliquables ni
+      // focusables ; ce garde-fou couvre en plus une éventuelle frame de transition.
+      el.addEventListener('click', () => {
+        if (!this.active) return;
+        this.nav.selectBody(name);
+      });
       this.labelsLayer.append(el);
       this.labels.set(name, el);
     }

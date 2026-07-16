@@ -41,19 +41,40 @@ function buildPlanetButtons(): void {
   });
 }
 
-export function setupPlanetControls(camera: CameraSystem): void {
+/**
+ * Commande de navigation partagée entre la barre de boutons et les labels projetés du
+ * mode Exploration : un seul point d'entrée pour cibler un corps.
+ */
+export interface PlanetNavigation {
+  /**
+   * Cible un corps (ou la « Vue Globale » via `'overview'`) : lance le vol caméra et
+   * synchronise le bouton de navigation actif. Nom inconnu → sans effet.
+   */
+  selectBody(name: string): void;
+}
+
+export function setupPlanetControls(camera: CameraSystem): PlanetNavigation {
   buildPlanetButtons();
-  const btns = document.querySelectorAll<HTMLButtonElement>('.controls button');
+  const btns = Array.from(
+    document.querySelectorAll<HTMLButtonElement>('.controls button')
+  );
+
+  const selectBody = (name: string): void => {
+    const id = `orbit-${name}`;
+    if (!btns.some((b) => b.id === id)) return; // corps hors catalogue : ignorer
+    btns.forEach((b) => b.classList.toggle('is-active', b.id === id));
+    if (name === 'overview') {
+      camera.goToOverview();
+    } else {
+      camera.setTarget(name);
+    }
+  };
+
   btns.forEach((btn) => {
-    btn.addEventListener('click', () => {
-      btns.forEach((b) => b.classList.remove('is-active'));
-      btn.classList.add('is-active');
-      const bodyName = btn.id.replace('orbit-', '');
-      if (bodyName === 'overview') {
-        camera.goToOverview();
-      } else {
-        camera.setTarget(bodyName);
-      }
-    });
+    btn.addEventListener('click', () =>
+      selectBody(btn.id.replace('orbit-', ''))
+    );
   });
+
+  return { selectBody };
 }

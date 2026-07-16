@@ -29,12 +29,13 @@ setupFullscreen();
     const { cameraSystem, animationSystem, sceneSystem, orbitalMechanics } =
       await app.init(updateProgress);
 
-    setupPlanetControls(cameraSystem);
+    const planetNav = setupPlanetControls(cameraSystem);
     const playback = setupPlayback(animationSystem, orbitalMechanics);
     setupTimePanel(orbitalMechanics, playback);
 
-    // HUD « Voyage spatial » — actif uniquement en mode Exploration.
-    const exploHud = new ExploHud();
+    // HUD « Voyage spatial » — actif uniquement en mode Exploration. Ses labels projetés
+    // ciblent les corps via la commande de navigation partagée.
+    const exploHud = new ExploHud(planetNav);
     exploHud.mount();
     animationSystem.onFrame(() =>
       exploHud.update(cameraSystem.camera, cameraSystem, sceneSystem)

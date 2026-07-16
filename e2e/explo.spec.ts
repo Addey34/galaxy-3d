@@ -76,3 +76,55 @@ test('keeps the followed body projected at the screen center', async ({
   }
   expect(Math.max(...deviations)).toBeLessThan(0.25);
 });
+
+/**
+ * Labels projetés cliquables : en mode Explo, cliquer le label d'un corps le cible dans le
+ * HUD, active son bouton de navigation, termine le vol caméra et le maintient centré, sans
+ * erreur de page. On vole d'abord vers Mars via la barre : son label devient alors la cible
+ * centrée (donc visible de façon déterministe, indépendamment de la date d'éphéméride).
+ */
+test('clicking a projected label selects and centers the body', async ({
+  page,
+}) => {
+  test.setTimeout(60_000);
+  const errors: string[] = [];
+  page.on('pageerror', (err) => errors.push(err.message));
+
+  await page.goto('/');
+  await expect(page.locator('#loader')).toBeHidden({ timeout: 30_000 });
+
+  await page.locator('.mode-btn[data-mode=explo]').click();
+  await expect(page.locator('body')).toHaveClass(/is-explo-mode/);
+
+  // Amène Mars au centre (son label est alors visible et marqué is-target).
+  await page.locator('#orbit-mars').click();
+  await page.waitForTimeout(1_400);
+  const marsLabel = page.locator('.explo-label.is-target');
+  await expect(marsLabel).toBeVisible();
+  await expect(marsLabel).toContainText('Mars');
+
+  // Le label est un bouton accessible cliquable.
+  await expect(marsLabel).toHaveJSProperty('tagName', 'BUTTON');
+  await expect(marsLabel).toHaveAttribute('aria-label', 'Mars');
+  await marsLabel.click();
+
+  // Clic → cible Mars dans le HUD + bouton de nav actif.
+  await expect(page.locator('.explo-hud-target')).toHaveText('Mars');
+  await expect(page.locator('#orbit-mars')).toHaveClass(/is-active/);
+
+  // Le vol se termine et Mars reste centré.
+  await page.waitForTimeout(1_400);
+  const viewport = page.viewportSize();
+  expect(viewport).not.toBeNull();
+  const point = await marsLabel.evaluate((el) => {
+    const matrix = new DOMMatrixReadOnly(getComputedStyle(el).transform);
+    return { x: matrix.m41, y: matrix.m42 };
+  });
+  const deviation = Math.hypot(
+    point.x - viewport!.width / 2,
+    point.y - viewport!.height / 2
+  );
+  expect(deviation).toBeLessThan(0.25);
+
+  expect(errors, `Erreurs page : ${errors.join(' | ')}`).toEqual([]);
+});

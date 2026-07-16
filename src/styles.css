@@ -632,6 +632,23 @@ body.is-explo-mode #orbit-overview {
   /* recentrer le point sur la position projetée */
   margin: -4px 0 0 -4px;
   white-space: nowrap;
+  /* le conteneur #explo-labels reste non bloquant ; chaque label visible réactive le pointeur */
+  pointer-events: auto;
+  /* reset du bouton natif */
+  padding: 2px 4px;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+.explo-label:focus-visible {
+  outline: 2px solid #ffd27a;
+  outline-offset: 1px;
+  border-radius: 4px;
+}
+.explo-label:hover .explo-label-text {
+  color: #ffe6b0;
 }
 .explo-label-dot {
   width: 7px;
