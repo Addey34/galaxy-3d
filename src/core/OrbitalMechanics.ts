@@ -142,11 +142,9 @@ export class OrbitalMechanics {
         (this._orbitAngles.get(name) ?? 0) +
         angularVelocity * this._simDeltaSeconds;
       this._orbitAngles.set(name, angle);
-      const distanceAU = cfg.realData?.distanceAU;
-      const r =
-        distanceAU !== undefined
-          ? Math.sqrt(distanceAU) * SQRT_K
-          : (cfg.orbitalRadius ?? 0);
+      // Rayon d'orbite éducatif = √(distanceAU) × SQRT_K (échelle compressée). Les corps
+      // orbitants ont tous une distanceAU ; à défaut, rayon nul (reste à l'origine).
+      const r = Math.sqrt(cfg.realData?.distanceAU ?? 0) * SQRT_K;
       body.group.position.copy(
         orbitalPositionEduc(
           r,

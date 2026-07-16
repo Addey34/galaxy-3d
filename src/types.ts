@@ -72,7 +72,6 @@ export interface CelestialBodyConfig {
   kind: BodyKind;
   radius: number;
   rotationSpeed: number;
-  orbitalRadius: number;
   orbitalColor: number;
   textureResolutions: TextureResolutions;
   textures: TextureConfig;

@@ -128,11 +128,11 @@ export class SceneSystem {
 
       body.group.updateMatrixWorld(true);
       // Position initiale placeholder — OrbitalMechanics l'écrase au premier frame (educ comme explo).
-      // Dérivée de distanceAU (échelle éducatif √-compressée) si disponible, sinon orbitalRadius du config.
+      // Dérivée de distanceAU (échelle éducatif √-compressée) si disponible, sinon origine.
       const initR =
         config.realData?.distanceAU != null
           ? educRadius(config.realData.distanceAU)
-          : (config.orbitalRadius ?? 0);
+          : 0;
       body.group.position.set(initR, 0, 0);
 
       const orbitGroup = new THREE.Group();

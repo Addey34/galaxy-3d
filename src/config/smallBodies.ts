@@ -13,7 +13,7 @@
  * depuis un JSON streamé (phase ultérieure) plutôt que des littéraux.
  */
 import type { CelestialBodyConfig } from '../types';
-import { educRadius, exploCameraDistance } from '../core/ScaleService';
+import { exploCameraDistance } from '../core/ScaleService';
 
 const D2R = Math.PI / 180;
 
@@ -66,7 +66,6 @@ export function smallBodyToConfig(el: SmallBodyElements): CelestialBodyConfig {
     // par zéro dans setScaleMode et sert de garde-fou de cadrage caméra.
     radius: 0.1,
     rotationSpeed: 0,
-    orbitalRadius: educRadius(el.a),
     orbitalColor: el.color ?? DEFAULT_COLOR[kind],
     textureResolutions: {},
     textures: {},

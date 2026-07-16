@@ -11,7 +11,6 @@ const stub = (kind: CelestialBodyConfig['kind']): CelestialBodyConfig => ({
   kind,
   radius: 1,
   rotationSpeed: 0,
-  orbitalRadius: 0,
   orbitalColor: 0,
   textureResolutions: {},
   textures: {},

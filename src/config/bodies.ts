@@ -11,7 +11,7 @@
  */
 import { Body } from 'astronomy-engine';
 import type { CelestialConfig } from '../types';
-import { educRadius, exploCameraDistance } from '../core/ScaleService';
+import { exploCameraDistance } from '../core/ScaleService';
 import { assertUniqueBodyNames } from './catalog';
 import { SMALL_BODIES } from './smallBodies';
 
@@ -27,7 +27,6 @@ export const CELESTIAL_CONFIG: CelestialConfig = {
       kind: 'skybox',
       radius: 0,
       rotationSpeed: 0,
-      orbitalRadius: 0,
       orbitalColor: 0x000000,
       textureResolutions: { surface: ['8k'] },
       textures: { surface: 'stars/starsSurface' },
@@ -38,7 +37,6 @@ export const CELESTIAL_CONFIG: CelestialConfig = {
       kind: 'star',
       radius: 10,
       rotationSpeed: _R(609.6),
-      orbitalRadius: 0,
       orbitalColor: 0x000000,
       textureResolutions: { surface: ['4k', '2k', '1k'] },
       textures: { surface: 'sun/sunSurface' },
@@ -52,7 +50,6 @@ export const CELESTIAL_CONFIG: CelestialConfig = {
       kind: 'planet',
       radius: 0.38,
       rotationSpeed: _R(1407.6),
-      orbitalRadius: educRadius(0.387),
       orbitalColor: 0xaaaaaa,
       textureResolutions: { surface: ['8k', '4k', '2k', '1k'], bump: ['1k'] },
       textures: {
@@ -76,7 +73,6 @@ export const CELESTIAL_CONFIG: CelestialConfig = {
       kind: 'planet',
       radius: 0.95,
       rotationSpeed: _R(5832.6),
-      orbitalRadius: educRadius(0.723),
       orbitalColor: 0xffa500,
       textureResolutions: {
         surface: ['8k', '4k', '2k', '1k'],
@@ -105,7 +101,6 @@ export const CELESTIAL_CONFIG: CelestialConfig = {
       kind: 'planet',
       radius: 1,
       rotationSpeed: _R(23.9345),
-      orbitalRadius: educRadius(1.0),
       orbitalColor: 0x00bfff,
       textureResolutions: {
         surface: ['8k', '4k', '2k', '1k'],
@@ -138,7 +133,6 @@ export const CELESTIAL_CONFIG: CelestialConfig = {
           frame: 'parentRelative',
           radius: 0.27,
           rotationSpeed: _R(655.72),
-          orbitalRadius: educRadius(0.00257),
           orbitalColor: 0x999999,
           textureResolutions: {
             surface: ['8k', '4k', '2k', '1k'],
@@ -167,7 +161,6 @@ export const CELESTIAL_CONFIG: CelestialConfig = {
       kind: 'planet',
       radius: 0.53,
       rotationSpeed: _R(24.6229),
-      orbitalRadius: educRadius(1.524),
       orbitalColor: 0xff4500,
       textureResolutions: {
         surface: ['8k', '4k', '2k', '1k'],
@@ -194,7 +187,6 @@ export const CELESTIAL_CONFIG: CelestialConfig = {
       kind: 'planet',
       radius: 4,
       rotationSpeed: _R(9.9259),
-      orbitalRadius: educRadius(5.203),
       orbitalColor: 0xffc04d,
       textureResolutions: { surface: ['4k', '2k', '1k'] },
       textures: { surface: 'jupiter/jupiterSurface' },
@@ -215,7 +207,6 @@ export const CELESTIAL_CONFIG: CelestialConfig = {
       kind: 'planet',
       radius: 3.5,
       rotationSpeed: _R(10.656),
-      orbitalRadius: educRadius(9.537),
       orbitalColor: 0xf5deb3,
       ring: {
         bodyName: 'saturn-ring',
@@ -243,7 +234,6 @@ export const CELESTIAL_CONFIG: CelestialConfig = {
       kind: 'planet',
       radius: 2,
       rotationSpeed: _R(17.24),
-      orbitalRadius: educRadius(19.191),
       orbitalColor: 0x7fffd4,
       textureResolutions: { surface: ['2k', '1k'] },
       textures: { surface: 'uranus/uranusSurface' },
@@ -264,7 +254,6 @@ export const CELESTIAL_CONFIG: CelestialConfig = {
       kind: 'planet',
       radius: 1.9,
       rotationSpeed: _R(16.11),
-      orbitalRadius: educRadius(30.069),
       orbitalColor: 0x4169e1,
       textureResolutions: { surface: ['2k', '1k'] },
       textures: { surface: 'neptune/neptuneSurface' },

@@ -60,8 +60,8 @@ export class ScaleService {
 /**
  * Rayon d'orbite en échelle compressée √(AU) × SQRT_K — l'échelle du mode ÉDUCATIF
  * (le mode Explo, lui, est linéaire AU × SQRT_K et recalculé par OrbitalMechanics).
- * Sert de valeur `orbitalRadius` par défaut dans le config et de position initiale
- * placeholder, écrasée au premier frame.
+ * Sert de position initiale placeholder (dérivée de `realData.distanceAU`), écrasée au
+ * premier frame.
  */
 export const educRadius = (distanceAU: number): number =>
   Math.sqrt(Math.max(distanceAU, 0)) * SQRT_K;
