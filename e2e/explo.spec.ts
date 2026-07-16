@@ -78,6 +78,35 @@ test('keeps the followed body projected at the screen center', async ({
 });
 
 /**
+ * Petits corps (astéroïdes / comètes / planètes naines) : positionnés par éléments orbitaux
+ * képlériens, ils apparaissent comme labels Explo (instrument de navigation) mais restent
+ * hors de la barre de navigation principale. Vérifie aussi que leur présence ne provoque
+ * aucune erreur de boot.
+ */
+test('small bodies appear as explo labels but not in the nav bar', async ({
+  page,
+}) => {
+  const errors: string[] = [];
+  page.on('pageerror', (err) => errors.push(err.message));
+
+  await page.goto('/');
+  await expect(page.locator('#loader')).toBeHidden({ timeout: 30_000 });
+
+  // Cérès n'a pas de bouton de navigation (petit corps).
+  await expect(page.locator('#orbit-ceres')).toHaveCount(0);
+
+  await page.locator('.mode-btn[data-mode=explo]').click();
+  await expect(page.locator('body')).toHaveClass(/is-explo-mode/);
+
+  // Mais un label Cérès est bien projeté (créé au premier frame du HUD).
+  await expect(page.locator('.explo-label', { hasText: 'Ceres' })).toHaveCount(
+    1
+  );
+
+  expect(errors, `Erreurs page : ${errors.join(' | ')}`).toEqual([]);
+});
+
+/**
  * Régression : les labels cliquables ne doivent pas bloquer la caméra. Le label de la cible
  * suivie est toujours au centre de l'écran ; une molette pile dessus doit malgré tout zoomer
  * (les labels réémettent le geste vers OrbitControls). On l'observe via la distance du HUD.

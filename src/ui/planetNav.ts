@@ -6,6 +6,7 @@
  */
 import { CELESTIAL_CONFIG } from '../config/settings';
 import { forEachBody } from '../config/catalog';
+import { SMALL_BODY_KINDS } from '../types';
 import type { CameraSystem } from '../components/systems/CameraSystem';
 
 // Accent doré dédié au Soleil (son orbitalColor vaut 0x000000, inutilisable ici).
@@ -27,6 +28,9 @@ function buildPlanetButtons(): void {
 
   forEachBody(CELESTIAL_CONFIG, ({ name, config: cfg }) => {
     if (cfg.kind === 'skybox') return; // la skybox n'est pas navigable
+    // Les petits corps (astéroïdes, comètes, planètes naines) restent hors de la barre —
+    // ils seraient trop nombreux à terme. Ils se naviguent via leurs labels Explo cliquables.
+    if (SMALL_BODY_KINDS.has(cfg.kind)) return;
 
     const label = name.charAt(0).toUpperCase() + name.slice(1);
     const accent = cfg.kind === 'star' ? SUN_ACCENT : cfg.orbitalColor;
@@ -47,8 +51,10 @@ function buildPlanetButtons(): void {
  */
 export interface PlanetNavigation {
   /**
-   * Cible un corps (ou la « Vue Globale » via `'overview'`) : lance le vol caméra et
-   * synchronise le bouton de navigation actif. Nom inconnu → sans effet.
+   * Cible un corps (ou la « Vue Globale » via `'overview'`) : lance le vol caméra et, si le
+   * corps a un bouton dans la barre, le marque actif. Fonctionne aussi pour les corps sans
+   * bouton (petits corps naviguables uniquement par leur label Explo) ; la barre n'affiche
+   * alors aucun bouton actif. `CameraSystem.setTarget` ignore les noms inconnus.
    */
   selectBody(name: string): void;
 }
@@ -61,7 +67,7 @@ export function setupPlanetControls(camera: CameraSystem): PlanetNavigation {
 
   const selectBody = (name: string): void => {
     const id = `orbit-${name}`;
-    if (!btns.some((b) => b.id === id)) return; // corps hors catalogue : ignorer
+    // Synchronise l'état actif : le bouton du corps s'il existe, sinon aucun (petit corps).
     btns.forEach((b) => b.classList.toggle('is-active', b.id === id));
     if (name === 'overview') {
       camera.goToOverview();

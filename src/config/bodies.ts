@@ -13,6 +13,7 @@ import { Body } from 'astronomy-engine';
 import type { CelestialConfig } from '../types';
 import { educRadius, exploCameraDistance } from '../core/ScaleService';
 import { assertUniqueBodyNames } from './catalog';
+import { SMALL_BODIES } from './smallBodies';
 
 // Vitesse de rotation axiale — rad / seconde de simulation.
 const _R = (hours: number): number => (Math.PI * 2) / (hours * 3_600);
@@ -207,6 +208,11 @@ export const CELESTIAL_CONFIG: CelestialConfig = {
       cameraDistance: { educ: 10, explo: exploCameraDistance(24_764) },
       loadPriority: 10,
     },
+
+    // Petits corps (astéroïdes, comètes, planètes naines) — positionnés par éléments
+    // orbitaux képlériens, définis dans `smallBodies.ts`. Fusionnés ici pour dériver comme
+    // les autres corps (position, ligne d'orbite, label Explo), sans texture ni mesh.
+    ...SMALL_BODIES,
   },
 };
 

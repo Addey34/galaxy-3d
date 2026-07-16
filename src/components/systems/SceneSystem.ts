@@ -150,8 +150,11 @@ export class SceneSystem {
       starGroup = celestialBodies[starEntry[0]]?.group ?? null;
     }
 
+    // Tous les corps héliocentriques (planètes ET petits corps) vivent dans le groupe de
+    // l'étoile ; seules l'étoile (racine) et la skybox sont exclues. Leurs satellites sont
+    // ajoutés par récursion via addBody.
     Object.entries(this.config.bodies)
-      .filter(([, cfg]) => cfg.kind === 'planet')
+      .filter(([, cfg]) => cfg.kind !== 'star' && cfg.kind !== 'skybox')
       .forEach(([name, config]) => addBody(name, config, starGroup));
 
     Logger.success('[SceneSystem] Celestial bodies added to scene');
