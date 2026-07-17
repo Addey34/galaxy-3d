@@ -120,6 +120,22 @@ export class CameraSystem {
     this.isAnimating = true;
     this.controls.enabled = false; // bloque les inputs utilisateur pendant le tween pour éviter un conflit de position
 
+    // Suivi de la cible MOBILE pendant le vol : à vitesse accélérée le corps avance pendant
+    // les 1,2 s de transition. On mémorise sa position au départ et, à chaque frame, on
+    // décale caméra + cible du déplacement accumulé (drift) — sinon le corps glisse
+    // latéralement et sort de sa ligne d'orbite jusqu'au recalage final. `camTo`/`tgtTo`
+    // restent les valeurs figées au clic ; le drift les recale vers la position vivante.
+    const followGroup = this.currentTarget?.group ?? null;
+    const trackStart = new THREE.Vector3();
+    const drift = new THREE.Vector3();
+    if (followGroup) followGroup.getWorldPosition(trackStart);
+
+    const updateDrift = (): void => {
+      if (!followGroup) return;
+      followGroup.getWorldPosition(this.targetWorldPosition);
+      drift.subVectors(this.targetWorldPosition, trackStart);
+    };
+
     const camFrom = {
       x: this.camera.position.x,
       y: this.camera.position.y,
@@ -146,14 +162,27 @@ export class CameraSystem {
     new TWEEN.Tween(camFrom, this.tweenGroup)
       .to(camTo, 1200)
       .easing(TWEEN.Easing.Cubic.InOut)
-      .onUpdate(() => this.camera.position.set(camFrom.x, camFrom.y, camFrom.z))
+      // Ce tween est ajouté en premier : son onUpdate rafraîchit `drift` pour la frame,
+      // que le tween de la cible (ci-dessous) réutilise ensuite.
+      .onUpdate(() => {
+        updateDrift();
+        this.camera.position.set(
+          camFrom.x + drift.x,
+          camFrom.y + drift.y,
+          camFrom.z + drift.z
+        );
+      })
       .start();
 
     new TWEEN.Tween(tgtFrom, this.tweenGroup)
       .to(tgtTo, 1200)
       .easing(TWEEN.Easing.Cubic.InOut)
       .onUpdate(() => {
-        this.controls.target.set(tgtFrom.x, tgtFrom.y, tgtFrom.z);
+        this.controls.target.set(
+          tgtFrom.x + drift.x,
+          tgtFrom.y + drift.y,
+          tgtFrom.z + drift.z
+        );
       })
       .onComplete(() => {
         // La cible a pu avancer pendant les 1,2 s du vol (visible à vitesse accélérée).
