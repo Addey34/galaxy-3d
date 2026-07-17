@@ -293,3 +293,10 @@ Le détail du chantier et des suites proposées se trouve dans `docs/ARCHITECTUR
 La prochaine amélioration prioritaire est de rendre les labels Exploration cliquables et
 accessibles afin de cibler un corps sans altérer l'échelle réelle. Viendront ensuite la transition
 animée Éducatif→Exploration, puis éventuellement un zoom optique fondé sur le FOV de la caméra.
+
+## Licence
+
+Code sous **PolyForm Noncommercial License 1.0.0** — consultation, étude et usage
+non commercial autorisés ; l'usage commercial est réservé à l'auteur. Voir
+[`LICENSE.md`](LICENSE.md). Les textures planétaires restent soumises à leurs
+licences d'origine (Solar System Scope, NASA).
