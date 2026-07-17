@@ -16,6 +16,7 @@ import {
 import { educRadius } from '../../core/ScaleService';
 import { ORBIT_SAMPLE_COUNT } from '../../core/OrbitalMechanics';
 import type { CelestialBodyConfig, CelestialConfig } from '../../types';
+import { SMALL_BODY_KINDS } from '../../types';
 import Logger from '../../utils/Logger';
 import { createStarfield } from '../celestial/Starfield';
 import type { TextureSystem } from './TextureSystem';
@@ -139,7 +140,13 @@ export class SceneSystem {
       orbitGroup.name = `orbit_${name}`;
       orbitGroup.add(body.group);
       this.orbitGroups[name] = orbitGroup;
-      orbitGroup.add(this.createOrbitVisual(name, config.orbitalColor));
+      // Les petits corps (astéroïdes, comètes, planètes naines) n'ont pas de mesh (invisibles
+      // à taille physique réelle) : leur tracer une ligne d'orbite créerait une orbite « sans
+      // planète » — cercle √-compressé en Éduc, ellipse vide en Explo. Ils ne vivent que dans
+      // la couche instrument (overlay 2D + labels), donc pas de ligne d'orbite 3D.
+      if (!SMALL_BODY_KINDS.has(config.kind)) {
+        orbitGroup.add(this.createOrbitVisual(name, config.orbitalColor));
+      }
 
       if (parentGroup) {
         parentGroup.add(orbitGroup);

@@ -16,6 +16,7 @@ import {
   TEXTURE_SETTINGS,
 } from './config/settings';
 import { forEachBody } from './config/catalog';
+import { SMALL_BODY_KINDS } from './types';
 import Logger from './utils/Logger';
 
 type ProgressCallback = (percent: number, message: string) => void;
@@ -181,6 +182,11 @@ export class SolarSystemApp {
       bodies[name]?.setScaleMode(mode);
 
       if (cfg.kind === 'star') return; // l'étoile centrale reste à l'origine (pas d'orbite)
+
+      // Les petits corps (astéroïdes, comètes, planètes naines) n'ont pas de mesh 3D et
+      // ne vivent que dans la couche instrument (overlay 2D + labels). Leur calculer une
+      // ligne d'orbite dessinerait une orbite « sans planète » (cf. SceneSystem.addBody).
+      if (SMALL_BODY_KINDS.has(cfg.kind)) return;
 
       const points = om.computeOrbitPoints(name, cfg, date);
       if (points) scene.setOrbitPoints(name, points);
