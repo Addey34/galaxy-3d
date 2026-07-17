@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="fr">
+<html lang="en-GB">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -23,25 +23,29 @@
     <!-- Seule la Vue Globale est statique : les boutons de corps sont générés depuis
          le catalogue (CELESTIAL_CONFIG) par buildPlanetButtons() dans MainSolarSystemApp. -->
     <nav class="controls">
-      <button aria-label="Globale" id="orbit-overview" class="button is-active">
-        Globale
+      <button
+        aria-label="Overview"
+        id="orbit-overview"
+        class="button is-active"
+      >
+        Overview
       </button>
     </nav>
 
     <!-- ─── Mode toggle (bottom-left) ──────────────────────────────────────── -->
     <div id="mode-controls">
-      <div class="mode-seg" role="group" aria-label="Mode de visualisation">
+      <div class="mode-seg" role="group" aria-label="View mode">
         <button
           class="mode-btn is-active"
           data-mode="educ"
-          title="Vue éducative — orbites circulaires"
+          title="Educational view — circular orbits"
         >
-          Éduc.
+          Educ.
         </button>
         <button
           class="mode-btn"
           data-mode="explo"
-          title="Mode exploration — vraie échelle, voyage spatial"
+          title="Exploration mode — true scale, space voyage"
         >
           Explo.
         </button>
@@ -60,7 +64,7 @@
         </button>
         <div class="tp-flex1"></div>
         <div class="speed-group">
-          <button class="tp-btn tp-speed is-active">Réel</button>
+          <button class="tp-btn tp-speed is-active">Live</button>
           <button class="tp-btn tp-speed">1h/s</button>
           <button class="tp-btn tp-speed">3h/s</button>
           <button class="tp-btn tp-speed">6h/s</button>
@@ -69,7 +73,7 @@
         <button
           id="time-today"
           class="tp-btn tp-reset-inline"
-          title="Retour au présent"
+          title="Back to now"
         >
           ⟳
         </button>
@@ -80,7 +84,7 @@
         <!--
           L'input time EST l'affichage : molette desktop = ±1h,
           clic/tap = picker natif du système (roue iOS, material Android).
-          lang="fr" transmis depuis <html> → Chrome affiche en 24h.
+          lang="en-GB" transmis depuis <html> → Chrome affiche en 24h.
         -->
         <div id="clock-row">
           <span class="tp-live-dot" id="live-dot"></span>
@@ -89,7 +93,7 @@
             id="time-input"
             class="tp-clock-input"
             step="1"
-            title="Molette : ±1 h  ·  Clic : choisir l'heure"
+            title="Wheel: ±1 h  ·  Click: pick the time"
           />
           <span class="disp-utc">UTC</span>
         </div>
@@ -100,7 +104,7 @@
             type="date"
             id="date-input"
             class="tp-date-input"
-            title="Molette : ±1 jour  ·  Clic : choisir la date"
+            title="Wheel: ±1 day  ·  Click: pick the date"
           />
         </div>
       </div>
@@ -113,8 +117,8 @@
          vit dans le popover ci-dessous pour garder la scène 3D épurée. -->
     <button
       id="credits-btn"
-      title="Crédits & licence"
-      aria-label="Crédits et licence"
+      title="Credits & license"
+      aria-label="Credits and license"
       aria-haspopup="dialog"
       aria-expanded="false"
     >
@@ -123,10 +127,10 @@
     <div
       id="credits-popover"
       role="dialog"
-      aria-label="Crédits et licence"
+      aria-label="Credits and license"
       hidden
     >
-      <h3 class="credits-title">Voyage dans le système solaire</h3>
+      <h3 class="credits-title">Solar System Voyage</h3>
       <p class="credits-copy">© 2026 Adrian34</p>
       <dl class="credits-list">
         <dt>Code</dt>
@@ -139,8 +143,8 @@
           >
         </dd>
         <dt>Textures</dt>
-        <dd>Solar System Scope (CC BY 4.0) · imagerie NASA</dd>
-        <dt>Données</dt>
+        <dd>Solar System Scope (CC BY 4.0) · NASA imagery</dd>
+        <dt>Data</dt>
         <dd>Astronomy Engine · JPL Small-Body Database</dd>
       </dl>
       <a
@@ -149,7 +153,7 @@
         target="_blank"
         rel="noopener noreferrer"
       >
-        ♥ Soutenir le projet
+        ♥ Support the project
       </a>
     </div>
 

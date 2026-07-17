@@ -29,26 +29,26 @@ function sceneUnitsToKm(sceneUnits: number): number {
 
 function formatDistance(km: number): string {
   const au = km / KM_PER_AU;
-  const auStr = `${au.toLocaleString('fr-FR', { maximumFractionDigits: 3 })} UA`;
+  const auStr = `${au.toLocaleString('en-US', { maximumFractionDigits: 3 })} AU`;
   let kmStr: string;
   if (km >= 1e9)
-    kmStr = `${(km / 1e9).toLocaleString('fr-FR', { maximumFractionDigits: 2 })} Md km`;
+    kmStr = `${(km / 1e9).toLocaleString('en-US', { maximumFractionDigits: 2 })} B km`;
   else if (km >= 1e6)
-    kmStr = `${(km / 1e6).toLocaleString('fr-FR', { maximumFractionDigits: 1 })} M km`;
-  else kmStr = `${Math.round(km).toLocaleString('fr-FR')} km`;
+    kmStr = `${(km / 1e6).toLocaleString('en-US', { maximumFractionDigits: 1 })} M km`;
+  else kmStr = `${Math.round(km).toLocaleString('en-US')} km`;
   return `${auStr} · ${kmStr}`;
 }
 
 function formatLightTime(km: number): string {
   const s = km / C_KM_PER_S;
-  if (s < 1) return `${(s * 1000).toFixed(0)} ms-lumière`;
-  if (s < 60) return `${s.toFixed(1)} s-lumière`;
+  if (s < 1) return `${(s * 1000).toFixed(0)} ms light`;
+  if (s < 60) return `${s.toFixed(1)} s light`;
   if (s < 3600) {
     const m = Math.floor(s / 60);
-    return `${m} min ${Math.round(s - m * 60)} s-lumière`;
+    return `${m} min ${Math.round(s - m * 60)} s light`;
   }
   const h = Math.floor(s / 3600);
-  return `${h} h ${Math.round((s - h * 3600) / 60)} min-lumière`;
+  return `${h} h ${Math.round((s - h * 3600) / 60)} min light`;
 }
 
 function cap(name: string): string {
@@ -85,7 +85,7 @@ export class ExploHud {
 
     const title = document.createElement('div');
     title.className = 'explo-hud-title';
-    title.textContent = 'CIBLE';
+    title.textContent = 'TARGET';
     this.targetName = document.createElement('div');
     this.targetName.className = 'explo-hud-target';
     this.distance = document.createElement('div');
@@ -129,7 +129,7 @@ export class ExploHud {
       this.lightTime.textContent = formatLightTime(km);
       this.root.classList.remove('is-free');
     } else {
-      this.targetName.textContent = 'Vue libre';
+      this.targetName.textContent = 'Free view';
       this.distance.textContent = '—';
       this.lightTime.textContent = '';
       this.root.classList.add('is-free');

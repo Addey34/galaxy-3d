@@ -29,7 +29,7 @@ test('explo mode shows the voyage HUD and hides it on return', async ({
   // HUD visible, cible = Terre (setScaleMode explo cible la Terre), distance renseignée.
   await expect(hud).toHaveClass(/is-visible/);
   await expect(page.locator('.explo-hud-target')).toHaveText('Earth');
-  await expect(page.locator('.explo-hud-line').first()).toContainText('UA');
+  await expect(page.locator('.explo-hud-line').first()).toContainText('AU');
 
   // Au moins un marqueur de corps projeté est affiché.
   await expect(page.locator('.explo-label').first()).toBeVisible();
