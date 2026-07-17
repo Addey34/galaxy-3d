@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="fr">
   <head>
     <meta charset="UTF-8" />
@@ -23,26 +23,39 @@
     <!-- Seule la Vue Globale est statique : les boutons de corps sont générés depuis
          le catalogue (CELESTIAL_CONFIG) par buildPlanetButtons() dans MainSolarSystemApp. -->
     <nav class="controls">
-      <button aria-label="Globale" id="orbit-overview" class="button is-active">Globale</button>
+      <button aria-label="Globale" id="orbit-overview" class="button is-active">
+        Globale
+      </button>
     </nav>
 
     <!-- ─── Mode toggle (bottom-left) ──────────────────────────────────────── -->
     <div id="mode-controls">
       <div class="mode-seg" role="group" aria-label="Mode de visualisation">
-        <button class="mode-btn is-active" data-mode="educ"  title="Vue éducative — orbites circulaires">Éduc.</button>
-        <button class="mode-btn"           data-mode="explo" title="Mode exploration — vraie échelle, voyage spatial">Explo.</button>
+        <button
+          class="mode-btn is-active"
+          data-mode="educ"
+          title="Vue éducative — orbites circulaires"
+        >
+          Éduc.
+        </button>
+        <button
+          class="mode-btn"
+          data-mode="explo"
+          title="Mode exploration — vraie échelle, voyage spatial"
+        >
+          Explo.
+        </button>
       </div>
     </div>
 
     <!-- ─── Time panel (bottom-center) ─────────────────────────────────────── -->
     <div id="time-panel">
-
       <!-- Ligne 1 : play/pause | vitesse centrée | reset — toujours visible -->
       <div id="playback-row">
         <button id="play-pause-btn" class="tp-btn tp-play" title="Play / Pause">
           <svg width="11" height="13" viewBox="0 0 11 13" fill="currentColor">
-            <rect x="0"   y="0" width="3.8" height="13" rx="1.4"/>
-            <rect x="7.2" y="0" width="3.8" height="13" rx="1.4"/>
+            <rect x="0" y="0" width="3.8" height="13" rx="1.4" />
+            <rect x="7.2" y="0" width="3.8" height="13" rx="1.4" />
           </svg>
         </button>
         <div class="tp-flex1"></div>
@@ -53,12 +66,17 @@
           <button class="tp-btn tp-speed">6h/s</button>
         </div>
         <div class="tp-flex1"></div>
-        <button id="time-today" class="tp-btn tp-reset-inline" title="Retour au présent">⟳</button>
+        <button
+          id="time-today"
+          class="tp-btn tp-reset-inline"
+          title="Retour au présent"
+        >
+          ⟳
+        </button>
       </div>
 
       <!-- Panneau date/heure — mode réaliste uniquement -->
       <div id="datetime-panel">
-
         <!--
           L'input time EST l'affichage : molette desktop = ±1h,
           clic/tap = picker natif du système (roue iOS, material Android).
@@ -66,20 +84,71 @@
         -->
         <div id="clock-row">
           <span class="tp-live-dot" id="live-dot"></span>
-          <input type="time" id="time-input" class="tp-clock-input" step="1"
-                 title="Molette : ±1 h  ·  Clic : choisir l'heure" />
+          <input
+            type="time"
+            id="time-input"
+            class="tp-clock-input"
+            step="1"
+            title="Molette : ±1 h  ·  Clic : choisir l'heure"
+          />
           <span class="disp-utc">UTC</span>
         </div>
 
         <!-- Idem pour la date : molette = ±1 jour, clic = calendar picker -->
         <div id="calendar-row">
-          <input type="date" id="date-input" class="tp-date-input"
-                 title="Molette : ±1 jour  ·  Clic : choisir la date" />
+          <input
+            type="date"
+            id="date-input"
+            class="tp-date-input"
+            title="Molette : ±1 jour  ·  Clic : choisir la date"
+          />
         </div>
+      </div>
+      <!-- #datetime-panel -->
+    </div>
+    <!-- #time-panel -->
 
-      </div><!-- #datetime-panel -->
-
-    </div><!-- #time-panel -->
+    <!-- ─── Crédits & licence (bottom-right, à gauche du plein écran) ───────── -->
+    <!-- Icône discrète : tout le contenu (copyright, licence, crédits, futur don)
+         vit dans le popover ci-dessous pour garder la scène 3D épurée. -->
+    <button
+      id="credits-btn"
+      title="Crédits & licence"
+      aria-label="Crédits et licence"
+      aria-haspopup="dialog"
+      aria-expanded="false"
+    >
+      ⓘ
+    </button>
+    <div
+      id="credits-popover"
+      role="dialog"
+      aria-label="Crédits et licence"
+      hidden
+    >
+      <h3 class="credits-title">Voyage dans le système solaire</h3>
+      <p class="credits-copy">© 2026 Adrian34</p>
+      <dl class="credits-list">
+        <dt>Code</dt>
+        <dd>
+          <a
+            href="https://polyformproject.org/licenses/noncommercial/1.0.0"
+            target="_blank"
+            rel="noopener noreferrer"
+            >PolyForm Noncommercial 1.0.0</a
+          >
+        </dd>
+        <dt>Textures</dt>
+        <dd>Solar System Scope (CC BY 4.0) · imagerie NASA</dd>
+        <dt>Données</dt>
+        <dd>Astronomy Engine · JPL Small-Body Database</dd>
+      </dl>
+      <!-- Emplacement du futur bouton de don — décommenter le moment venu :
+      <a class="credits-donate" href="URL_DE_DON" target="_blank" rel="noopener noreferrer">
+        ♥ Soutenir le projet
+      </a>
+      -->
+    </div>
 
     <!-- ─── Fullscreen (bottom-right) ──────────────────────────────────────── -->
     <button id="fullscreen-btn" title="Fullscreen">⛶</button>

@@ -13,6 +13,7 @@
 import { SolarSystemApp } from './SolarSystemApp';
 import { updateProgress, hideLoader, showError } from './ui/loader';
 import { setupFullscreen } from './ui/fullscreen';
+import { setupCredits } from './ui/credits';
 import { setupPlanetControls } from './ui/planetNav';
 import { setupPlayback } from './ui/playback';
 import { setupTimePanel } from './ui/timePanel';
@@ -25,6 +26,7 @@ import { CELESTIAL_CONFIG } from './config/settings';
 import { flattenBodies } from './config/catalog';
 
 setupFullscreen();
+setupCredits();
 
 (async function loadApp(): Promise<void> {
   try {
