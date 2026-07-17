@@ -48,7 +48,8 @@ pnpm test       # vitest run — tests unitaires des modules mathématiques purs
 pnpm test:e2e   # playwright test — tests navigateur sur le port dédié 5273
 pnpm format     # Formater les fichiers TypeScript/CSS avec Prettier
 pnpm format:check # Vérifier le formatage sans réécrire
-pnpm verify     # tsc --noEmit && vitest run — types + tests (à lancer avant de considérer une tâche finie)
+pnpm lint       # eslint . (flat config) ; pnpm lint:fix pour corriger
+pnpm verify     # tsc --noEmit && eslint . && vitest run (à lancer avant de considérer une tâche finie)
 ```
 
 ## Textures
@@ -272,27 +273,30 @@ Réglages moteur dans `src/config/engine.ts`, catalogue des corps dans `src/conf
 ## Dépendances de développement
 
 - **TypeScript strict** (`tsconfig.json`) — Vite sert/compile le TS via esbuild (pas de vérification de types en dev) ; `pnpm typecheck` ou `pnpm build` (qui lance `tsc --noEmit`) valide réellement les types
-- **Vitest** — tests unitaires des modules mathématiques purs (`src/**/*.test.ts`) ; `pnpm verify` = types + tests
-- **Prettier** — règles dans `.prettierrc`, commandes `pnpm format` et `pnpm format:check` ; le code historique n'est pas encore entièrement conforme
-- **Playwright** — quatre scénarios navigateur dans `e2e/` ; le serveur Vite de test utilise le port réservé 5273
-- Aucun linter ni seuil de couverture configuré
+- **Vitest** — tests unitaires des modules mathématiques purs (`src/**/*.test.ts`) ; `pnpm verify` = types + lint + tests
+- **ESLint** — `eslint.config.js` (flat config, typescript-eslint recommended non-type-checked) ; `pnpm lint` / `pnpm lint:fix`, intégré à `pnpm verify`
+- **Prettier** — règles dans `.prettierrc`, commandes `pnpm format` et `pnpm format:check` ; l'arbre entier est conforme
+- **Playwright** — neuf scénarios navigateur dans `e2e/` (`smoke` + `explo`) ; le serveur Vite de test utilise le port réservé 5273
+- Aucun seuil de couverture configuré
 
 ## Qualité et limites actuelles
 
-- `pnpm verify` passe avec 31 tests répartis dans 7 fichiers ; Playwright complète cette couverture avec 4 scénarios DOM/WebGL.
-- `pnpm build` passe sans avertissement de taille : `three`, `astronomy-engine` et `tween` sont séparés, et le chunk applicatif reste autour de 72 kB minifié.
+- `pnpm verify` passe avec 59 tests répartis dans 12 fichiers ; Playwright complète cette couverture avec 9 scénarios DOM/WebGL.
+- `pnpm build` passe sans avertissement de taille : `three`, `astronomy-engine` et `tween` sont séparés, et le chunk applicatif reste autour de 80 kB minifié.
 - Le mode Exploration est actif. Les vols caméra concurrents sont annulés et la cible suivie reste centrée, y compris à vitesse accélérée.
 - `IS_MOBILE` reste figé pour les réglages créés à l'initialisation (anticrénelage, ombres, textures) ; seul le plafond de pixel ratio est recalculé au resize.
 - `frame: 'parentRelative'` calcule `helio(corps) − helio(parent)`. Astronomy Engine ne fournit toutefois une éphéméride naturelle que pour la Lune.
-- `.gitattributes` normalise les fichiers texte en LF. `pnpm format:check` signale encore la dette de formatage historique, à traiter dans un changement dédié.
+- `.gitattributes` normalise les fichiers texte en LF ; `pnpm format:check` passe sur tout l'arbre.
 
 Le détail du chantier et des suites proposées se trouve dans `docs/ARCHITECTURE_STATUS.md`.
 
 ## Direction de développement
 
-La prochaine amélioration prioritaire est de rendre les labels Exploration cliquables et
-accessibles afin de cibler un corps sans altérer l'échelle réelle. Viendront ensuite la transition
-animée Éducatif→Exploration, puis éventuellement un zoom optique fondé sur le FOV de la caméra.
+Les labels Exploration sont désormais cliquables et accessibles, doublés d'une sélection par
+clic 3D (raycasting) sur les meshes ; les astéroïdes/comètes sont projetés en couche instrument
+2D. Les prochaines pistes, dans l'ordre : transition animée Éducatif→Exploration, puis
+éventuellement un zoom optique fondé sur le FOV de la caméra, et des modèles orbitaux pour les
+lunes absentes d'Astronomy Engine.
 
 ## Licence
 
