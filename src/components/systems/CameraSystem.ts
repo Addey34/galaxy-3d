@@ -228,7 +228,40 @@ export class CameraSystem {
       );
     }
 
+    this._updateExploClipPlanes();
     this.controls.update();
+  }
+
+  /**
+   * Near/far adaptatifs en mode Explo. À vraie échelle, une planète est un mesh minuscule
+   * (Terre ≈ 0.0015u) posé loin de l'origine (Neptune ≈ 1050u), observé de très près. Un
+   * near fixe de 1e-6 avec far=3000 donne un ratio de 3 milliards:1 : le depth buffer 24-bit
+   * ne distingue plus les coques concentriques (surface, nuages, atmosphère) → z-fighting,
+   * la surface scintille et la planète paraît « vibrer » sur son axe.
+   *
+   * On resserre le near sur la distance réelle à la cible (juste devant la surface la plus
+   * proche), ce qui rétablit la précision de profondeur sans rien clipper d'utile. far reste
+   * large pour garder le reste du système visible. En Éducatif, near/far fixes suffisent.
+   */
+  private readonly _tgtDelta = new THREE.Vector3();
+  private _updateExploClipPlanes(): void {
+    if (this._scaleMode !== 'explo') return;
+
+    const d = this._tgtDelta
+      .subVectors(this.camera.position, this.controls.target)
+      .length();
+    // Rayon de la cible suivie : garantit que le near reste devant la surface proche.
+    const r =
+      (this.currentTarget?.group.userData['radius'] as number | undefined) ?? 0;
+    const near = Math.max((d - r) * 0.5, CAMERA_SETTINGS.exploNear);
+
+    // Ne reconfigure la projection que sur variation significative (évite un
+    // updateProjectionMatrix par frame quand la distance bouge à peine).
+    if (Math.abs(this.camera.near - near) > near * 0.05) {
+      this.camera.near = near;
+      this.camera.far = CAMERA_SETTINGS.exploFar;
+      this.camera.updateProjectionMatrix();
+    }
   }
 
   /** Vue d'ensemble Éducatif : recule la caméra à (0,160,220) pour cadrer tout le système (Neptune à 192u). */
