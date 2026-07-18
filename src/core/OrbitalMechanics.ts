@@ -2,13 +2,16 @@
  * Moteur de mouvement : positionne et oriente chaque corps à chaque frame, dans les
  * deux modes d'affichage.
  *
- *   - Éducatif ('educ') : orbites circulaires inclinées (éléments J2000 : distance,
- *     inclinaison, nœud ascendant), parcourues à la vraie vitesse angulaire moyenne.
- *   - Exploration ('explo') : positions de Kepler réelles fournies par EphemerisService.
+ *   - Éducatif ('educ') : MÊME mouvement que l'Explo — on lit la vraie position
+ *     astronomy-engine, on en extrait l'angle dans le plan orbital (Ω, i J2000) et on
+ *     la pose sur un cercle de rayon compressé √(distanceAU)×K. Éduc et Explo sont donc
+ *     le même mouvement aligné sur l'horloge/éphéméride, seule l'échelle radiale diffère.
+ *   - Exploration ('explo') : positions de Kepler réelles fournies par EphemerisService,
+ *     échelle linéaire (AU × K).
  *
- * Gère aussi la synchronisation avec l'horloge (`syncAnglesFromEphemeris` ré-ancre les
- * angles éducatifs, l'orientation des axes et la rotation de la Terre sur l'heure UTC),
- * le voyage temporel et le calcul des points des lignes d'orbite.
+ * Gère aussi la synchronisation avec l'horloge (`syncAnglesFromEphemeris` oriente les axes
+ * de rotation et cale la rotation de la Terre sur l'heure UTC), le voyage temporel et le
+ * calcul des points des lignes d'orbite.
  */
 import * as THREE from 'three';
 import type { Body } from 'astronomy-engine';
@@ -35,7 +38,6 @@ export const ORBIT_SAMPLE_COUNT = 256;
 export class OrbitalMechanics {
   private readonly scale = new ScaleService();
   private readonly _exploPos = new THREE.Vector3();
-  private readonly _orbitAngles = new Map<string, number>();
   /** Nom d'un satellite parentRelative → enum astronomy-engine de son parent. */
   private readonly _parentAstroBody = new Map<string, Body>();
   private _prevPaused = false;
@@ -134,25 +136,21 @@ export class OrbitalMechanics {
     if (!body) return;
 
     if (mode === 'educ') {
-      // Mode Éducatif — orbite circulaire avec inclinaison réelle (éléments orbitaux J2000).
-      const periodDays = cfg.realData?.orbitPeriodDays;
-      if (!periodDays) return;
-      const angularVelocity = (Math.PI * 2) / (periodDays * 86_400);
-      const angle =
-        (this._orbitAngles.get(name) ?? 0) +
-        angularVelocity * this._simDeltaSeconds;
-      this._orbitAngles.set(name, angle);
-      // Rayon d'orbite éducatif = √(distanceAU) × SQRT_K (échelle compressée). Les corps
-      // orbitants ont tous une distanceAU ; à défaut, rayon nul (reste à l'origine).
-      const r = Math.sqrt(cfg.realData?.distanceAU ?? 0) * SQRT_K;
-      body.group.position.copy(
-        orbitalPositionEduc(
-          r,
-          angle,
-          cfg.realData?.orbitalInclination ?? 0,
-          cfg.realData?.ascendingNode ?? 0
-        )
-      );
+      // Mode Éducatif — MÊME angle orbital que l'Explo : on lit la vraie position
+      // astronomy-engine à la date courante, on en extrait l'angle dans le plan orbital
+      // (projection inverse sur e1/e2, cf. angleInOrbitalPlane), puis on la pose sur un
+      // cercle compressé de rayon √(distanceAU)×SQRT_K. Éduc et Explo restent ainsi
+      // strictement synchronisés sur l'horloge/éphéméride — seule l'échelle radiale
+      // change (√ compressé vs linéaire) — et le corps reste exactement sur sa ligne d'orbite.
+      const distanceAU = cfg.realData?.distanceAU;
+      if (distanceAU == null) return;
+      const posAU = this._positionAU(name, cfg, date);
+      if (!posAU) return;
+      const inc = cfg.realData?.orbitalInclination ?? 0;
+      const node = cfg.realData?.ascendingNode ?? 0;
+      const angle = angleInOrbitalPlane(posAU, inc, node);
+      const r = Math.sqrt(distanceAU) * SQRT_K;
+      body.group.position.copy(orbitalPositionEduc(r, angle, inc, node));
     } else {
       // Mode Explo — positions Kepler réelles depuis astronomy-engine.
       // Échelle linéaire (AU × SQRT_K), sans compression √. Pour les corps
@@ -175,11 +173,10 @@ export class OrbitalMechanics {
   }
 
   /**
-   * Synchronise les angles orbitaux du mode éducatif sur les positions réelles
-   * d'astronomy-engine à la date donnée.
-   *
-   * Transformation inverse (cf. angleInOrbitalPlane dans orbitalGeometry.ts) : projette la
-   * position scène sur les axes e1/e2 du plan orbital définis par Ω et i.
+   * Cale sur l'heure/date donnée ce qui ne se déduit pas de la position orbitale :
+   * l'orientation de l'axe de rotation de chaque corps (pôle IAU réel) et la rotation de
+   * surface de la Terre sur l'heure UTC. Les angles orbitaux, eux, sont désormais lus
+   * directement de l'éphéméride à chaque frame (cf. _updateBody), donc plus rien à ré-ancrer ici.
    */
   syncAnglesFromEphemeris(date: Date): void {
     const syncBody = (name: string, cfg: CelestialBodyConfig): void => {
@@ -193,18 +190,6 @@ export class OrbitalMechanics {
         const retrograde = (cfg.realData?.axialTilt ?? 0) > Math.PI / 2;
         body.setAxisDirection(retrograde ? north.multiplyScalar(-1) : north);
       }
-
-      if (!cfg.realData?.distanceAU) return;
-      const pos = this._positionAU(name, cfg, date);
-      if (!pos) return;
-      this._orbitAngles.set(
-        name,
-        angleInOrbitalPlane(
-          pos,
-          cfg.realData.orbitalInclination ?? 0,
-          cfg.realData.ascendingNode ?? 0
-        )
-      );
     };
 
     forEachBody(this.config, ({ name, config: cfg }) => {
