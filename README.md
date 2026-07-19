@@ -1,5 +1,7 @@
 # Solar System 3D
 
+**🌍 [Démo en ligne → addey34.github.io/SolarSystem3D](https://addey34.github.io/SolarSystem3D/)**
+
 Visualisateur interactif du système solaire en temps réel, développé en TypeScript avec Three.js. Deux modes d'affichage : **Éducatif** (distances compressées en √, tout visible d'un coup) et **Exploration** (vraie échelle astronomique, positions Kepler calculées par éphéméride). Le mode Exploration est actif avec l'expérience « Voyage spatial » : suivi caméra, distances réelles, temps-lumière et marqueurs projetés.
 
 ## Aperçu
