@@ -30,3 +30,8 @@ playwright/.cache
 
 # Notes de travail privées
 docs/private/
+
+# Docs internes / outillage IA — jamais dans le depot public
+CLAUDE.md
+AGENTS.md
+.claude/
