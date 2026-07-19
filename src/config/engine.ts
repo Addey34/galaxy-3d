@@ -188,7 +188,8 @@ export const SHADER_SETTINGS = {
 };
 
 export const TEXTURE_SETTINGS: TextureSettings = {
-  basePath: '/assets/textures/',
+  // BASE_URL (Vite) pour rester compatible avec un déploiement sous sous-chemin (GitHub Pages)
+  basePath: `${import.meta.env.BASE_URL}assets/textures/`,
   defaultSettings: {
     wrapS: THREE.RepeatWrapping,
     wrapT: THREE.RepeatWrapping,

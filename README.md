@@ -288,15 +288,12 @@ Réglages moteur dans `src/config/engine.ts`, catalogue des corps dans `src/conf
 - `frame: 'parentRelative'` calcule `helio(corps) − helio(parent)`. Astronomy Engine ne fournit toutefois une éphéméride naturelle que pour la Lune.
 - `.gitattributes` normalise les fichiers texte en LF ; `pnpm format:check` passe sur tout l'arbre.
 
-Le détail du chantier et des suites proposées se trouve dans `docs/ARCHITECTURE_STATUS.md`.
-
 ## Direction de développement
 
-Les labels Exploration sont désormais cliquables et accessibles, doublés d'une sélection par
-clic 3D (raycasting) sur les meshes ; les astéroïdes/comètes sont projetés en couche instrument
-2D. Les prochaines pistes, dans l'ordre : transition animée Éducatif→Exploration, puis
-éventuellement un zoom optique fondé sur le FOV de la caméra, et des modèles orbitaux pour les
-lunes absentes d'Astronomy Engine.
+En résumé : d'abord rendre le projet visible (déploiement public, CI, SEO) et instructif
+(fiches d'information par corps, i18n FR/EN, transition animée Éducatif→Exploration), puis
+donner des raisons de revenir (permaliens, événements astronomiques, zoom optique FOV, lunes
+majeures), et à terme en faire une référence (tours guidés, missions spatiales, WebXR).
 
 ## Licence
 
