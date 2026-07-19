@@ -6,13 +6,13 @@
  * `getLODTexture` choisit la résolution selon la distance caméra (plafonnée sur mobile).
  */
 import * as THREE from 'three';
-import type { CelestialBodyConfig, TextureQuality } from '../../types';
+import type { CelestialBodyConfig, TextureQuality } from '@/types';
 import type {
   PerformanceSettings,
   TextureDefaultSettings,
-} from '../../config/settings';
-import { allBodies, flattenBodies } from '../../config/catalog';
-import Logger from '../../utils/Logger';
+} from '@/config/engine';
+import { allBodies, flattenBodies } from '@/config/catalog';
+import Logger from '@/utils/Logger';
 
 /** Données d'initialisation du TextureSystem (chemins, réglages par défaut, corps). */
 export interface TextureSystemConfig {

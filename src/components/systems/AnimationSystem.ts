@@ -8,10 +8,10 @@
  */
 import { Group as TweenGroup } from '@tweenjs/tween.js';
 import * as THREE from 'three';
-import { FPSCounter } from '../../utils/FPSCounter';
-import Logger from '../../utils/Logger';
-import type { IUpdatable } from '../../types';
-import type { OrbitalMechanics } from '../../core/OrbitalMechanics';
+import { FPSCounter } from '@/utils/FPSCounter';
+import Logger from '@/utils/Logger';
+import type { IUpdatable } from '@/types';
+import type { OrbitalMechanics } from '@/core/OrbitalMechanics';
 import type { CameraSystem } from './CameraSystem';
 import type { CelestialBodies } from './SceneSystem';
 

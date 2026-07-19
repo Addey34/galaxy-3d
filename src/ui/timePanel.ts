@@ -7,7 +7,7 @@
  *   - bouton reset → retour au présent + vitesse temps réel (via `PlaybackControls`).
  * Toujours visible (mode Kepler/temps-réel par défaut).
  */
-import type { OrbitalMechanics } from '../core/OrbitalMechanics';
+import type { OrbitalMechanics } from '@/core/OrbitalMechanics';
 import type { PlaybackControls } from './playback';
 
 const datetimePanel = document.getElementById('datetime-panel')!;

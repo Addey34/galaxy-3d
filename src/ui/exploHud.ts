@@ -14,9 +14,9 @@
  * (aucune écriture DOM, labels non cliquables) sinon.
  */
 import * as THREE from 'three';
-import { KM_PER_AU, SQRT_K } from '../core/ScaleService';
-import type { CameraSystem } from '../components/systems/CameraSystem';
-import type { SceneSystem } from '../components/systems/SceneSystem';
+import { KM_PER_AU, SQRT_K } from '@/core/ScaleService';
+import type { CameraSystem } from '@/components/systems/CameraSystem';
+import type { SceneSystem } from '@/components/systems/SceneSystem';
 import { markForwardedControlEvent } from './controlEventForwarding';
 import type { PlanetNavigation } from './planetNav';
 

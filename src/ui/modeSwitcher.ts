@@ -5,8 +5,8 @@
  * Terre en Explo (repère naturel), Vue Globale en Éducatif. Le bouton Explo est actif et
  * déclenche aussi le HUD « Voyage spatial » via le callback `onModeChange`.
  */
-import type { OrbitalMechanics } from '../core/OrbitalMechanics';
-import type { CameraSystem } from '../components/systems/CameraSystem';
+import type { OrbitalMechanics } from '@/core/OrbitalMechanics';
+import type { CameraSystem } from '@/components/systems/CameraSystem';
 
 export function setupModeSwitcher(
   om: OrbitalMechanics,

@@ -93,7 +93,7 @@ public/assets/textures/
 ```
 
 Pattern de nom : `{corps}/{corps}{Type}_{résolution}.jpg`
-Résolutions disponibles : `1k`, `2k`, `4k`, `8k` (selon le corps, voir `src/config/settings.ts`).
+Résolutions disponibles : `1k`, `2k`, `4k`, `8k` (selon le corps, voir `src/config/engine.ts`).
 
 ## Fonctionnalités
 
@@ -164,7 +164,7 @@ src/
 ├── config/
 │   ├── bodies.ts      # Catalogue des corps célestes (CELESTIAL_CONFIG) — SOURCE UNIQUE
 │   ├── engine.ts      # Réglages moteur : rendu, perf/LOD, caméra, éclairage, shaders, textures
-│   ├── settings.ts    # Barrel de compat : ré-exporte bodies + engine
+│   #  (imports via l'alias @/ → src/ ; ex. @/config/engine, @/core/frames)
 │   ├── catalog.ts     # Itération/résolution du catalogue (forEachBody, flattenBodies)
 │   └── layerConfig.ts # Géométries et matériaux Three.js
 │

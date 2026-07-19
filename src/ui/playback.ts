@@ -5,8 +5,8 @@
  *   om.setSimulationSpeed(scale) → scale = ratio vs temps réel
  *   1 = temps réel, 3 600 = 1h/s, 10 800 = 3h/s, 21 600 = 6h/s
  */
-import type { AnimationSystem } from '../components/systems/AnimationSystem';
-import type { OrbitalMechanics } from '../core/OrbitalMechanics';
+import type { AnimationSystem } from '@/components/systems/AnimationSystem';
+import type { OrbitalMechanics } from '@/core/OrbitalMechanics';
 
 // Réel = 1:1, 1h/s = 3600, 3h/s = 10 800, 6h/s = 21 600
 export const SIMU_SCALES = [1, 3_600, 10_800, 21_600] as const;

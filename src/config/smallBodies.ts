@@ -12,8 +12,8 @@
  * (nouvelle époque). À l'échelle de milliers de corps, alimenter ce même convertisseur
  * depuis un JSON streamé (phase ultérieure) plutôt que des littéraux.
  */
-import type { CelestialBodyConfig } from '../types';
-import { exploCameraDistance } from '../core/ScaleService';
+import type { CelestialBodyConfig } from '@/types';
+import { exploCameraDistance } from '@/core/ScaleService';
 
 const D2R = Math.PI / 180;
 

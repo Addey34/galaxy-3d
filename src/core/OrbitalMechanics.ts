@@ -15,14 +15,14 @@
  */
 import * as THREE from 'three';
 import type { Body } from 'astronomy-engine';
-import type { CelestialBodyConfig, CelestialConfig } from '../types';
-import type { CelestialBodies } from '../components/systems/SceneSystem';
+import type { CelestialBodyConfig, CelestialConfig } from '@/types';
+import type { CelestialBodies } from '@/components/systems/SceneSystem';
 import type { SimulationClock } from './SimulationClock';
 import type { EphemerisService } from './EphemerisService';
 import type { OrbitalElementsService } from './OrbitalElementsService';
 import { ScaleService, SQRT_K } from './ScaleService';
 import { angleInOrbitalPlane, orbitalPositionEduc } from './orbitalGeometry';
-import { forEachBody } from '../config/catalog';
+import { forEachBody } from '@/config/catalog';
 
 /** Corps sans mouvement orbital propre (skybox étoilée, étoile centrale à l'origine). */
 function hasOrbit(cfg: CelestialBodyConfig): boolean {

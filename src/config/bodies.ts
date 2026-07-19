@@ -10,8 +10,8 @@
  * navigation, préchargement, éphéméride, hiérarchie de scène) se dérive du catalogue.
  */
 import { Body } from 'astronomy-engine';
-import type { CelestialConfig } from '../types';
-import { exploCameraDistance } from '../core/ScaleService';
+import type { CelestialConfig } from '@/types';
+import { exploCameraDistance } from '@/core/ScaleService';
 import { assertUniqueBodyNames } from './catalog';
 import { SMALL_BODIES } from './smallBodies';
 

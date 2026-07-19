@@ -3,10 +3,9 @@
  * plus la détection mobile (`IS_MOBILE`) qui pilote la qualité partout.
  *
  * Le catalogue des corps célestes vit à part dans `bodies.ts` (il grossit indépendamment).
- * `settings.ts` ré-exporte les deux pour compatibilité.
  */
 import * as THREE from 'three';
-import type { TextureQuality } from '../types';
+import type { TextureQuality } from '@/types';
 
 // ============================================================================
 // MOBILE DETECTION

@@ -10,11 +10,8 @@
 import TWEEN, { Group as TweenGroup } from '@tweenjs/tween.js';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import {
-  CAMERA_CONTROLS_SETTINGS,
-  CAMERA_SETTINGS,
-} from '../../config/settings';
-import Logger from '../../utils/Logger';
+import { CAMERA_CONTROLS_SETTINGS, CAMERA_SETTINGS } from '@/config/engine';
+import Logger from '@/utils/Logger';
 import type { CelestialBodies } from './SceneSystem';
 
 export class CameraSystem {

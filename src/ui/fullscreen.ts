@@ -1,7 +1,7 @@
 /**
  * Bouton plein écran (#fullscreen-btn) — bascule l'API Fullscreen du document.
  */
-import Logger from '../utils/Logger';
+import Logger from '@/utils/Logger';
 
 const fullscreenBtn = document.getElementById('fullscreen-btn')!;
 

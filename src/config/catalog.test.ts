@@ -5,7 +5,7 @@ import {
   flattenBodies,
   forEachBody,
 } from './catalog';
-import type { CelestialBodyConfig, CelestialConfig } from '../types';
+import type { CelestialBodyConfig, CelestialConfig } from '@/types';
 
 const stub = (kind: CelestialBodyConfig['kind']): CelestialBodyConfig => ({
   kind,

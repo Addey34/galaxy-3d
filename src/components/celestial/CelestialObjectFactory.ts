@@ -3,11 +3,11 @@
  * Parcourt la hiérarchie (les satellites sont imbriqués sous leur planète) et renvoie
  * une table plate nom → corps. Les créations sont parallélisées (chargement de textures).
  */
-import type { CelestialBodyConfig, CelestialConfig } from '../../types';
-import Logger from '../../utils/Logger';
-import type { AnimationSystem } from '../systems/AnimationSystem';
-import type { TextureSystem } from '../systems/TextureSystem';
-import type { CelestialBodies } from '../systems/SceneSystem';
+import type { CelestialBodyConfig, CelestialConfig } from '@/types';
+import Logger from '@/utils/Logger';
+import type { AnimationSystem } from '@/components/systems/AnimationSystem';
+import type { TextureSystem } from '@/components/systems/TextureSystem';
+import type { CelestialBodies } from '@/components/systems/SceneSystem';
 import CelestialObject from './CelestialObject';
 
 export default class CelestialObjectFactory {

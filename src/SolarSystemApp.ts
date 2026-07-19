@@ -10,11 +10,8 @@ import { SimulationClock } from './core/SimulationClock';
 import { EphemerisService } from './core/EphemerisService';
 import { OrbitalElementsService } from './core/OrbitalElementsService';
 import { OrbitalMechanics } from './core/OrbitalMechanics';
-import {
-  APP_SETTINGS,
-  CELESTIAL_CONFIG,
-  TEXTURE_SETTINGS,
-} from './config/settings';
+import { APP_SETTINGS, TEXTURE_SETTINGS } from './config/engine';
+import { CELESTIAL_CONFIG } from './config/bodies';
 import { forEachBody } from './config/catalog';
 import { SMALL_BODY_KINDS } from './types';
 import Logger from './utils/Logger';

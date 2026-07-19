@@ -1,4 +1,4 @@
-import { LOGGER_SETTINGS } from '../config/settings';
+import { LOGGER_SETTINGS } from '@/config/engine';
 
 /**
  * Logger minimaliste à niveaux, coloré dans la console du navigateur.

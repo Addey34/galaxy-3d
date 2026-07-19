@@ -5,7 +5,7 @@
  * boucles `if (cfg.satellites) { for … }` dupliquées dans les systèmes. Les consommateurs
  * filtrent sur `kind`/`frame` plutôt que sur le nom du corps.
  */
-import type { CelestialBodyConfig, CelestialConfig } from '../types';
+import type { CelestialBodyConfig, CelestialConfig } from '@/types';
 
 export interface BodyEntry {
   name: string;

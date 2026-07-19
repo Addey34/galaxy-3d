@@ -11,10 +11,10 @@
  * les marqueurs visibles, plafonnés pour tenir à l'échelle de milliers de corps.
  */
 import * as THREE from 'three';
-import { SQRT_K } from '../core/ScaleService';
-import { keplerianPositionEcliptic } from '../core/kepler';
-import { eclipticToScene } from '../core/frames';
-import type { ParsedSmallBody } from '../core/sbdb';
+import { SQRT_K } from '@/core/ScaleService';
+import { keplerianPositionEcliptic } from '@/core/kepler';
+import { eclipticToScene } from '@/core/frames';
+import type { ParsedSmallBody } from '@/core/sbdb';
 
 /** Nombre maximal de marqueurs dessinés par frame (LOD : les plus proches d'abord). */
 const MAX_MARKERS = 1500;

@@ -4,10 +4,10 @@
  * Les boutons de corps sont générés depuis le catalogue (`CELESTIAL_CONFIG`) : ajouter un
  * corps ne demande AUCUNE édition HTML. Seule la Vue Globale est statique dans le HTML.
  */
-import { CELESTIAL_CONFIG } from '../config/settings';
-import { forEachBody } from '../config/catalog';
-import { SMALL_BODY_KINDS } from '../types';
-import type { CameraSystem } from '../components/systems/CameraSystem';
+import { CELESTIAL_CONFIG } from '@/config/bodies';
+import { forEachBody } from '@/config/catalog';
+import { SMALL_BODY_KINDS } from '@/types';
+import type { CameraSystem } from '@/components/systems/CameraSystem';
 
 // Accent doré dédié au Soleil (son orbitalColor vaut 0x000000, inutilisable ici).
 const SUN_ACCENT = 0xffcc33;

@@ -4,7 +4,7 @@
  * Possède les éléments DOM de progression (#loader, #load-progress, #load-status) et les
  * expose via des fonctions ; aucune logique applicative ici.
  */
-import Logger from '../utils/Logger';
+import Logger from '@/utils/Logger';
 
 const progressBar = document.getElementById('load-progress')!;
 const loadStatus = document.getElementById('load-status')!;

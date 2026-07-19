@@ -7,8 +7,8 @@
  * `LIGHTING_SETTINGS` ; la qualité des ombres est réduite sur mobile.
  */
 import * as THREE from 'three';
-import { LIGHTING_SETTINGS } from '../../config/settings';
-import Logger from '../../utils/Logger';
+import { LIGHTING_SETTINGS } from '@/config/engine';
+import Logger from '@/utils/Logger';
 
 export class LightingSystem {
   private lights: { ambient?: THREE.AmbientLight; sun?: THREE.PointLight } = {};

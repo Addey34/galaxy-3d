@@ -12,15 +12,15 @@ import {
   CAMERA_SETTINGS,
   RENDER_SETTINGS,
   currentMaxPixelRatio,
-} from '../../config/settings';
-import { educRadius } from '../../core/ScaleService';
-import { ORBIT_SAMPLE_COUNT } from '../../core/OrbitalMechanics';
-import type { CelestialBodyConfig, CelestialConfig } from '../../types';
-import { SMALL_BODY_KINDS } from '../../types';
-import Logger from '../../utils/Logger';
-import { createStarfield } from '../celestial/Starfield';
+} from '@/config/engine';
+import { educRadius } from '@/core/ScaleService';
+import { ORBIT_SAMPLE_COUNT } from '@/core/OrbitalMechanics';
+import type { CelestialBodyConfig, CelestialConfig } from '@/types';
+import { SMALL_BODY_KINDS } from '@/types';
+import Logger from '@/utils/Logger';
+import { createStarfield } from '@/components/celestial/Starfield';
 import type { TextureSystem } from './TextureSystem';
-import type CelestialObject from '../celestial/CelestialObject';
+import type CelestialObject from '@/components/celestial/CelestialObject';
 
 /** Table nom → corps céleste, partagée entre les systèmes. */
 export type CelestialBodies = Record<string, CelestialObject>;

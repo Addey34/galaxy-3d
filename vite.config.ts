@@ -7,6 +7,10 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 export default defineConfig({
   base: '/',
   publicDir: 'public',
+  resolve: {
+    // Alias @/ → src/ : imports absolus, résilients aux déplacements de fichiers
+    alias: { '@': resolve(__dirname, 'src') },
+  },
   build: {
     outDir: 'dist',
     assetsDir: 'assets',

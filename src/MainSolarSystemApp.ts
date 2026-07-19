@@ -22,7 +22,7 @@ import { ExploHud } from './ui/exploHud';
 import { SmallBodyOverlay } from './ui/smallBodyOverlay';
 import { setupBodyPicker } from './ui/bodyPicker';
 import { fetchSmallBodies } from './core/sbdb';
-import { CELESTIAL_CONFIG } from './config/settings';
+import { CELESTIAL_CONFIG } from './config/bodies';
 import { flattenBodies } from './config/catalog';
 
 setupFullscreen();
