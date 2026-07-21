@@ -12,7 +12,7 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { CAMERA_CONTROLS_SETTINGS, CAMERA_SETTINGS } from '@/config/engine';
 import Logger from '@/utils/Logger';
-import type { CelestialBodies } from './SceneSystem';
+import type { CelestialBodies, SceneSystem } from './SceneSystem';
 
 export class CameraSystem {
   camera!: THREE.PerspectiveCamera;
@@ -21,6 +21,7 @@ export class CameraSystem {
   tweenGroup!: TweenGroup;
 
   private celestialBodies!: CelestialBodies;
+  private sceneSystem: SceneSystem | null = null;
   private isAnimating = false;
   private currentTarget: {
     name: string;
@@ -44,11 +45,12 @@ export class CameraSystem {
     camera: THREE.PerspectiveCamera,
     renderer: THREE.WebGLRenderer,
     celestialBodies: CelestialBodies,
-    _sceneSystem?: unknown
+    sceneSystem?: SceneSystem
   ): void {
     this.camera = camera;
     this.renderer = renderer;
     this.celestialBodies = celestialBodies;
+    this.sceneSystem = sceneSystem ?? null;
     this.initializeControls();
     Logger.success('[CameraSystem] Initialized');
   }
@@ -102,8 +104,20 @@ export class CameraSystem {
 
     this.currentTarget = { name: bodyName, group: body, distance };
     this.cameraOffset.subVectors(cameraPosition, this.targetWorldPosition);
+    this._syncOrbitLinesVisibility();
 
     this.animateToTarget(cameraPosition, this.targetWorldPosition.clone());
+  }
+
+  /**
+   * Les lignes d'orbite 3D sont un repère de vue d'ensemble : on les masque en suivi rapproché
+   * Explo (collé au corps, le trait n'est ni alignable ni non-clippé, cf. SceneSystem), on les
+   * réaffiche en vue d'ensemble et en Éducatif (toujours vues de loin → traits lisses et utiles).
+   */
+  private _syncOrbitLinesVisibility(): void {
+    const followingInExplo =
+      this._scaleMode === 'explo' && this.currentTarget !== null;
+    this.sceneSystem?.setOrbitLinesVisible(!followingInExplo);
   }
 
   private animateToTarget(
@@ -244,36 +258,69 @@ export class CameraSystem {
   private _updateExploClipPlanes(): void {
     if (this._scaleMode !== 'explo') return;
 
-    const d = this._tgtDelta
-      .subVectors(this.camera.position, this.controls.target)
-      .length();
-    // Rayon de la cible suivie : garantit que le near reste devant la surface proche.
-    const r =
-      (this.currentTarget?.group.userData['radius'] as number | undefined) ?? 0;
-    const near = Math.max((d - r) * 0.5, CAMERA_SETTINGS.exploNear);
+    const originDist = this.camera.position.length();
 
-    // Ne reconfigure la projection que sur variation significative (évite un
-    // updateProjectionMatrix par frame quand la distance bouge à peine).
-    if (Math.abs(this.camera.near - near) > near * 0.05) {
+    if (this.currentTarget) {
+      // Suivi rapproché : near serré juste devant la surface proche (rétablit la précision de
+      // profondeur → supprime le scintillement des coques transparentes au limbe). far adaptatif
+      // couvrant le système intérieur, borné à exploFar. Les étoiles (scene.background) sont
+      // indépendantes du far, donc resserrer ne noircit plus le ciel.
+      const d = this._tgtDelta
+        .subVectors(this.camera.position, this.controls.target)
+        .length();
+      const r =
+        (this.currentTarget.group.userData['radius'] as number | undefined) ??
+        0;
+      const near = Math.max((d - r) * 0.5, CAMERA_SETTINGS.exploNear);
+      const far = Math.min(
+        CAMERA_SETTINGS.exploFar,
+        Math.max(originDist * 2.5, d * 50) + r
+      );
+      this._applyClipPlanes(near, far);
+    } else {
+      // Vue héliocentrique (pas de suivi) : near/far classiques couvrant tout le système, sans
+      // le near serré du suivi (qui clipperait les orbites proches de la caméra en vue large).
+      const near = Math.max(originDist * 0.1, 0.1);
+      const far = Math.min(CAMERA_SETTINGS.exploFar, originDist + 1200);
+      this._applyClipPlanes(near, far);
+    }
+  }
+
+  /** Applique near/far seulement sur variation significative (évite un updateProjectionMatrix/frame). */
+  private _applyClipPlanes(near: number, far: number): void {
+    if (
+      Math.abs(this.camera.near - near) > near * 0.05 ||
+      Math.abs(this.camera.far - far) > far * 0.05
+    ) {
       this.camera.near = near;
-      this.camera.far = CAMERA_SETTINGS.exploFar;
+      this.camera.far = far;
       this.camera.updateProjectionMatrix();
     }
   }
 
-  /** Vue d'ensemble Éducatif : recule la caméra à (0,160,220) pour cadrer tout le système (Neptune à 192u). */
+  /**
+   * Vue d'ensemble héliocentrique : caméra reculée au-dessus de l'écliptique, cadrant tout le
+   * système. Aucun suivi → caméra FIXE dans le repère du Soleil, donc AUCUNE parallaxe : les
+   * planètes décrivent des orbites lisses et rondes (contrairement au suivi d'une planète, qui
+   * embarque la caméra sur son orbite et fait apparaître le mouvement rétrograde des autres).
+   * La position est mise à l'échelle du mode : Explo à vraie échelle (Neptune ≈ 1050u) est ~5,5×
+   * plus grand que l'Éducatif compressé (Neptune ≈ 192u), d'où le même cadrage × ce facteur.
+   */
   goToOverview(): void {
     this.currentTarget = null;
-    this.animateToTarget(
-      new THREE.Vector3(0, 160, 220),
-      new THREE.Vector3(0, 0, 0)
-    );
+    this._syncOrbitLinesVisibility();
+    const pos =
+      this._scaleMode === 'explo'
+        ? new THREE.Vector3(0, 875, 1205) // vraie échelle : cadre Neptune à ~1050u
+        : new THREE.Vector3(0, 160, 220); // éducatif compressé : Neptune à ~192u
+    this.animateToTarget(pos, new THREE.Vector3(0, 0, 0));
   }
 
   /**
-   * Bascule le mode d'échelle : ajuste near/far, min/max distance et la cible par défaut.
+   * Bascule le mode d'échelle : ajuste near/far, min/max distance et la vue par défaut.
    *   educ  → vue d'ensemble (tout le système solaire visible)
-   *   explo → cible la Terre (perspective vraie échelle, le Soleil apparaît à ~0.5°)
+   *   explo → vue d'ensemble héliocentrique (orbites lisses, sans parallaxe ; le suivi d'une
+   *           planète reste disponible en cliquant un corps, pour un voyage rapproché)
    */
   setScaleMode(mode: 'educ' | 'explo'): void {
     if (this._scaleMode === mode) return;
@@ -295,13 +342,9 @@ export class CameraSystem {
       mode === 'explo' ? CAMERA_SETTINGS.exploFar : CAMERA_SETTINGS.educFar;
     this.camera.updateProjectionMatrix();
 
-    if (mode === 'explo') {
-      // Mode Explo : perspective depuis la Terre (le Soleil apparaît à ~0.5° — réel)
-      this.setTarget('earth');
-    } else {
-      // Mode Éducatif : vue d'ensemble — tout le système solaire visible
-      this.goToOverview();
-    }
+    // Les deux modes démarrent sur la vue d'ensemble : héliocentrique et FIXE, donc sans
+    // parallaxe → orbites lisses. En Explo, cliquer un corps lance ensuite le voyage rapproché.
+    this.goToOverview();
   }
 
   /** Nom du corps actuellement suivi, ou null en vue libre / vue d'ensemble. */

@@ -19,7 +19,6 @@ export function setupModeSwitcher(
   const planetBtns =
     document.querySelectorAll<HTMLButtonElement>('.controls button');
   const overviewBtn = document.getElementById('orbit-overview');
-  const earthBtn = document.getElementById('orbit-earth');
 
   modeBtns.forEach((btn) => {
     btn.addEventListener('click', () => {
@@ -32,12 +31,10 @@ export function setupModeSwitcher(
       camera.setScaleMode(mode);
       onModeChange?.(mode);
 
+      // Les deux modes démarrent sur la vue d'ensemble (héliocentrique en Explo) : c'est le
+      // bouton Vue Globale qui est actif, pas un corps.
       planetBtns.forEach((b) => b.classList.remove('is-active'));
-      if (isExplo) {
-        earthBtn?.classList.add('is-active');
-      } else {
-        overviewBtn?.classList.add('is-active');
-      }
+      overviewBtn?.classList.add('is-active');
     });
   });
 }

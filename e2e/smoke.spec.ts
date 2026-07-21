@@ -57,6 +57,26 @@ test('wires nav and playback controls (câblage ui/)', async ({ page }) => {
   );
 });
 
+test('opens the body info panel on selection and closes it on overview', async ({
+  page,
+}) => {
+  await page.goto('/');
+  await expect(page.locator('#loader')).toBeHidden({ timeout: 30_000 });
+
+  const panel = page.locator('#body-info');
+  await expect(panel).toBeHidden();
+
+  // Sélectionner un corps ouvre sa fiche, remplie depuis le catalogue (ui/bodyInfo).
+  await page.locator('#orbit-earth').click();
+  await expect(panel).toBeVisible();
+  await expect(panel.locator('.bi-name')).toHaveText('Earth');
+  await expect(panel.locator('.bi-stats dt')).not.toHaveCount(0);
+
+  // Retour Vue Globale : la fiche se referme.
+  await page.locator('#orbit-overview').click();
+  await expect(panel).toBeHidden();
+});
+
 test('selects a celestial body by clicking its 3D mesh', async ({ page }) => {
   await page.goto('/');
   await expect(page.locator('#loader')).toBeHidden({ timeout: 30_000 });

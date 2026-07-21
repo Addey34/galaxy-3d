@@ -1,65 +1,29 @@
 /**
- * HUD du mode Exploration — « Voyage spatial ».
+ * Couche de labels projetés du mode Exploration — « Voyage spatial ».
  *
- * En vraie échelle, les corps sont des points minuscules perdus dans le vide : ce HUD
- * transforme ce vide en information. Il affiche, pour la cible suivie, la distance réelle
- * (UA + km) et le temps-lumière, et projette un marqueur + label sur chaque corps pour
- * qu'aucun ne se perde à l'écran.
+ * En vraie échelle, les corps sont des points minuscules perdus dans le vide : cette couche
+ * projette un marqueur + label sur chaque corps pour qu'aucun ne se perde à l'écran. La
+ * distance réelle et le temps-lumière de la cible suivie, eux, sont affichés dans la fiche
+ * unique (`ui/bodyInfo`, bloc live) — plus de HUD « TARGET » séparé.
  *
  * Les labels projetés sont des boutons accessibles : cliqués (ou activés au clavier), ils
- * ciblent le corps via la commande de navigation partagée (`PlanetNavigation`) — le HUD ne
- * touche jamais lui-même à la caméra ni aux boutons de la barre de navigation.
+ * ciblent le corps via la commande de navigation partagée (`PlanetNavigation`) — la couche ne
+ * touche jamais elle-même à la caméra ni aux boutons de la barre de navigation.
  *
  * Piloté chaque frame par `AnimationSystem.onFrame` quand le mode explo est actif ; inerte
  * (aucune écriture DOM, labels non cliquables) sinon.
  */
 import * as THREE from 'three';
-import { KM_PER_AU, SQRT_K } from '@/core/ScaleService';
 import type { CameraSystem } from '@/components/systems/CameraSystem';
 import type { SceneSystem } from '@/components/systems/SceneSystem';
 import { markForwardedControlEvent } from './controlEventForwarding';
 import type { PlanetNavigation } from './planetNav';
-
-const C_KM_PER_S = 299_792.458; // vitesse de la lumière
-
-/** Convertit une distance en unités scène (explo : AU × SQRT_K) vers des kilomètres. */
-function sceneUnitsToKm(sceneUnits: number): number {
-  return (sceneUnits / SQRT_K) * KM_PER_AU;
-}
-
-function formatDistance(km: number): string {
-  const au = km / KM_PER_AU;
-  const auStr = `${au.toLocaleString('en-US', { maximumFractionDigits: 3 })} AU`;
-  let kmStr: string;
-  if (km >= 1e9)
-    kmStr = `${(km / 1e9).toLocaleString('en-US', { maximumFractionDigits: 2 })} B km`;
-  else if (km >= 1e6)
-    kmStr = `${(km / 1e6).toLocaleString('en-US', { maximumFractionDigits: 1 })} M km`;
-  else kmStr = `${Math.round(km).toLocaleString('en-US')} km`;
-  return `${auStr} · ${kmStr}`;
-}
-
-function formatLightTime(km: number): string {
-  const s = km / C_KM_PER_S;
-  if (s < 1) return `${(s * 1000).toFixed(0)} ms light`;
-  if (s < 60) return `${s.toFixed(1)} s light`;
-  if (s < 3600) {
-    const m = Math.floor(s / 60);
-    return `${m} min ${Math.round(s - m * 60)} s light`;
-  }
-  const h = Math.floor(s / 3600);
-  return `${h} h ${Math.round((s - h * 3600) / 60)} min light`;
-}
 
 function cap(name: string): string {
   return name.charAt(0).toUpperCase() + name.slice(1);
 }
 
 export class ExploHud {
-  private readonly root: HTMLDivElement;
-  private readonly targetName: HTMLDivElement;
-  private readonly distance: HTMLDivElement;
-  private readonly lightTime: HTMLDivElement;
   private readonly labelsLayer: HTMLDivElement;
   private readonly labels = new Map<string, HTMLButtonElement>();
   private readonly _ndc = new THREE.Vector3();
@@ -78,33 +42,16 @@ export class ExploHud {
 
     this.labelsLayer = document.createElement('div');
     this.labelsLayer.id = 'explo-labels';
-
-    this.root = document.createElement('div');
-    this.root.id = 'explo-hud';
-    this.root.setAttribute('aria-hidden', 'true');
-
-    const title = document.createElement('div');
-    title.className = 'explo-hud-title';
-    title.textContent = 'TARGET';
-    this.targetName = document.createElement('div');
-    this.targetName.className = 'explo-hud-target';
-    this.distance = document.createElement('div');
-    this.distance.className = 'explo-hud-line';
-    this.lightTime = document.createElement('div');
-    this.lightTime.className = 'explo-hud-line';
-
-    this.root.append(title, this.targetName, this.distance, this.lightTime);
   }
 
-  /** Ajoute le HUD au DOM (une fois, au démarrage). */
+  /** Ajoute la couche de labels au DOM (une fois, au démarrage). */
   mount(parent: HTMLElement = document.body): void {
-    parent.append(this.labelsLayer, this.root);
+    parent.append(this.labelsLayer);
   }
 
-  /** Affiche/masque le HUD. À l'extinction, purge les labels et vide les écritures. */
+  /** Affiche/masque la couche. À l'extinction, masque tous les labels. */
   setActive(active: boolean): void {
     this.active = active;
-    this.root.classList.toggle('is-visible', active);
     this.labelsLayer.classList.toggle('is-visible', active);
     if (!active) {
       this.labels.forEach((el) => (el.style.display = 'none'));
@@ -119,21 +66,8 @@ export class ExploHud {
   ): void {
     if (!this.active) return;
 
-    // Bloc cible : distance réelle + temps-lumière.
+    // Corps actuellement suivi : son label est marqué `is-target` (mis en avant).
     const name = cameraSystem.targetName;
-    const sceneDist = cameraSystem.getDistanceToTargetSceneUnits();
-    if (name && sceneDist !== null) {
-      const km = sceneUnitsToKm(sceneDist);
-      this.targetName.textContent = cap(name);
-      this.distance.textContent = formatDistance(km);
-      this.lightTime.textContent = formatLightTime(km);
-      this.root.classList.remove('is-free');
-    } else {
-      this.targetName.textContent = 'Free view';
-      this.distance.textContent = '—';
-      this.lightTime.textContent = '';
-      this.root.classList.add('is-free');
-    }
 
     // Marqueurs + labels projetés : aucun corps ne se perd dans le vide.
     const w = window.innerWidth;

@@ -59,7 +59,10 @@ export interface PlanetNavigation {
   selectBody(name: string): void;
 }
 
-export function setupPlanetControls(camera: CameraSystem): PlanetNavigation {
+export function setupPlanetControls(
+  camera: CameraSystem,
+  onSelect?: (name: string) => void
+): PlanetNavigation {
   buildPlanetButtons();
   const btns = Array.from(
     document.querySelectorAll<HTMLButtonElement>('.controls button')
@@ -74,6 +77,9 @@ export function setupPlanetControls(camera: CameraSystem): PlanetNavigation {
     } else {
       camera.setTarget(name);
     }
+    // Notifie les observateurs (fiche d'info…) — un seul point pour toutes les sources
+    // de sélection, puisque barre, picker 3D et labels Explo passent tous par ici.
+    onSelect?.(name);
   };
 
   btns.forEach((btn) => {

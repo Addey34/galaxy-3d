@@ -18,7 +18,6 @@ import { ORBIT_SAMPLE_COUNT } from '@/core/OrbitalMechanics';
 import type { CelestialBodyConfig, CelestialConfig } from '@/types';
 import { SMALL_BODY_KINDS } from '@/types';
 import Logger from '@/utils/Logger';
-import { createStarfield } from '@/components/celestial/Starfield';
 import type { TextureSystem } from './TextureSystem';
 import type CelestialObject from '@/components/celestial/CelestialObject';
 
@@ -91,7 +90,14 @@ export class SceneSystem {
   private setupStarfield(): void {
     this.textureSystem
       .loadTexture('stars/starsSurface', '8k')
-      .then((tex) => this.scene.add(createStarfield(tex)))
+      .then((tex) => {
+        // Fond équirectangulaire posé en `scene.background` plutôt qu'une sphère mesh :
+        // un décor à l'infini, insensible aux plans near/far. L'ancienne sphère de rayon
+        // 10000 était entièrement au-delà du far Explo (3000) → ciel noir en Exploration.
+        tex.mapping = THREE.EquirectangularReflectionMapping;
+        tex.colorSpace = THREE.SRGBColorSpace;
+        this.scene.background = tex;
+      })
       .catch((err) =>
         Logger.warn('[SceneSystem] Starfield texture failed', err)
       );
@@ -221,6 +227,17 @@ export class SceneSystem {
   /** Reçoit les points d'orbite calculés par OrbitalMechanics. */
   setOrbitPoints(bodyName: string, points: Float32Array): void {
     this._orbitPts.set(bodyName, points);
+  }
+
+  /**
+   * Affiche/masque toutes les lignes d'orbite 3D (repère de navigation pour la vue d'ensemble).
+   * Masquées en suivi rapproché Explo : collé au corps à vraie échelle, la caméra est à ~0,01u
+   * d'un trait de rayon ~35u. Le polygone (256 segments) coupe alors visiblement à l'intérieur du
+   * vrai cercle (flèche ≈ 0,0026u > rayon Terre 0,0015u → le corps sort de son trait), et le near
+   * plane serré le clippe. À cette échelle un trait d'orbite n'a plus de sens : on le retire.
+   */
+  setOrbitLinesVisible(visible: boolean): void {
+    for (const line of this._orbitLines.values()) line.visible = visible;
   }
 
   /**

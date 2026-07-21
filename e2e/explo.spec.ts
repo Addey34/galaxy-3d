@@ -7,10 +7,11 @@ test.beforeEach(async ({ page }) => {
 });
 
 /**
- * Mode Exploration + HUD « Voyage spatial » : basculer en explo affiche le HUD cible
- * (distance réelle) et les marqueurs de corps ; revenir en éducatif les masque.
+ * Mode Exploration : basculer en explo affiche la couche de labels projetés ; cliquer un
+ * corps ouvre sa fiche unique avec la distance réelle live (fusionnée depuis l'ancien HUD).
+ * Revenir en éducatif masque les labels.
  */
-test('explo mode shows the voyage HUD and hides it on return', async ({
+test('explo mode shows projected labels and the live distance in the info card', async ({
   page,
 }) => {
   const errors: string[] = [];
@@ -19,24 +20,28 @@ test('explo mode shows the voyage HUD and hides it on return', async ({
   await page.goto('/');
   await expect(page.locator('#loader')).toBeHidden({ timeout: 30_000 });
 
-  const hud = page.locator('#explo-hud');
-  await expect(hud).not.toHaveClass(/is-visible/);
+  const labels = page.locator('#explo-labels');
+  await expect(labels).not.toHaveClass(/is-visible/);
 
-  // Basculer en Exploration.
+  // Basculer en Exploration : la couche de labels s'affiche.
   await page.locator('.mode-btn[data-mode="explo"]').click();
   await expect(page.locator('body')).toHaveClass(/is-explo-mode/);
+  await expect(labels).toHaveClass(/is-visible/);
 
-  // HUD visible, cible = Terre (setScaleMode explo cible la Terre), distance renseignée.
-  await expect(hud).toHaveClass(/is-visible/);
-  await expect(page.locator('.explo-hud-target')).toHaveText('Earth');
-  await expect(page.locator('.explo-hud-line').first()).toContainText('AU');
+  // Cliquer un corps lance le voyage rapproché : la fiche unique s'ouvre avec la cible et sa
+  // distance réelle live (bloc .bi-live fusionné depuis l'ancien HUD « TARGET »).
+  await page.locator('#orbit-earth').click();
+  const info = page.locator('#body-info');
+  await expect(info).toBeVisible();
+  await expect(info.locator('.bi-name')).toHaveText('Earth');
+  await expect(info.locator('.bi-live-dist')).toContainText('AU');
 
   // Au moins un marqueur de corps projeté est affiché.
   await expect(page.locator('.explo-label').first()).toBeVisible();
 
-  // Retour en Éducatif : HUD masqué.
+  // Retour en Éducatif : labels masqués.
   await page.locator('.mode-btn[data-mode="educ"]').click();
-  await expect(hud).not.toHaveClass(/is-visible/);
+  await expect(labels).not.toHaveClass(/is-visible/);
 
   expect(errors, `Erreurs page : ${errors.join(' | ')}`).toEqual([]);
 });
@@ -50,7 +55,7 @@ test('keeps the followed body projected at the screen center', async ({
 
   await page.locator('.mode-btn[data-mode=explo]').click();
   await page.locator('#orbit-neptune').click();
-  await expect(page.locator('.explo-hud-target')).toHaveText('Neptune');
+  await expect(page.locator('#body-info .bi-name')).toHaveText('Neptune');
 
   // Laisse le tween de vol (1,2 s) se terminer avant de mesurer le suivi.
   await page.waitForTimeout(1_400);
@@ -153,10 +158,10 @@ test('mouse wheel over the centered target label still zooms the camera', async 
 
   await page.locator('.mode-btn[data-mode=explo]').click();
   await page.locator('#orbit-mars').click();
-  await expect(page.locator('.explo-hud-target')).toHaveText('Mars');
+  await expect(page.locator('#body-info .bi-name')).toHaveText('Mars');
   await page.waitForTimeout(1_600); // fin du vol : Mars centré, label is-target au centre
 
-  const distanceLine = page.locator('.explo-hud-line').first();
+  const distanceLine = page.locator('#body-info .bi-live-dist');
   const before = await distanceLine.textContent();
 
   // Molette au centre exact de l'écran, donc sur le label de la cible.
@@ -202,8 +207,8 @@ test('clicking a projected label selects and centers the body', async ({
   await expect(marsLabel).toHaveAttribute('aria-label', 'Mars');
   await marsLabel.click();
 
-  // Clic → cible Mars dans le HUD + bouton de nav actif.
-  await expect(page.locator('.explo-hud-target')).toHaveText('Mars');
+  // Clic → cible Mars dans la fiche + bouton de nav actif.
+  await expect(page.locator('#body-info .bi-name')).toHaveText('Mars');
   await expect(page.locator('#orbit-mars')).toHaveClass(/is-active/);
 
   // Le vol se termine et Mars reste centré.

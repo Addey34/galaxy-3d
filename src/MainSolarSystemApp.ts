@@ -13,8 +13,9 @@
 import { SolarSystemApp } from './SolarSystemApp';
 import { updateProgress, hideLoader, showError } from './ui/loader';
 import { setupFullscreen } from './ui/fullscreen';
-import { setupCredits } from './ui/credits';
+import { setupHelp } from './ui/help';
 import { setupPlanetControls } from './ui/planetNav';
+import { setupBodyInfo } from './ui/bodyInfo';
 import { setupPlayback } from './ui/playback';
 import { setupTimePanel } from './ui/timePanel';
 import { setupModeSwitcher } from './ui/modeSwitcher';
@@ -26,7 +27,7 @@ import { CELESTIAL_CONFIG } from './config/bodies';
 import { flattenBodies } from './config/catalog';
 
 setupFullscreen();
-setupCredits();
+setupHelp();
 
 (async function loadApp(): Promise<void> {
   try {
@@ -36,7 +37,13 @@ setupCredits();
     const { cameraSystem, animationSystem, sceneSystem, orbitalMechanics } =
       await app.init(updateProgress);
 
-    const planetNav = setupPlanetControls(cameraSystem);
+    // Fiche d'info par corps : s'ouvre pour toute sélection (barre, clic 3D, label Explo),
+    // se ferme sur retour Vue Globale. Toutes les sources passent par planetNav.selectBody.
+    const bodyInfo = setupBodyInfo();
+    const planetNav = setupPlanetControls(cameraSystem, (name) => {
+      if (name === 'overview') bodyInfo.hide();
+      else bodyInfo.show(name);
+    });
     const playback = setupPlayback(animationSystem, orbitalMechanics);
     setupTimePanel(orbitalMechanics, playback);
 
@@ -68,14 +75,25 @@ setupCredits();
       smallBodyOverlay.setBodies(bodies)
     );
 
+    // Le bloc live de la fiche (distance réelle + temps-lumière) n'a de sens qu'en Explo,
+    // pour la cible suivie ; en Éducatif ou en vue libre on passe `null` → bloc masqué.
+    let currentMode: 'educ' | 'explo' = 'educ';
     animationSystem.onFrame(() => {
       exploHud.update(cameraSystem.camera, cameraSystem, sceneSystem);
       smallBodyOverlay.update(
         cameraSystem.camera,
         orbitalMechanics.simulationDate
       );
+      bodyInfo.updateLive(
+        currentMode === 'explo'
+          ? cameraSystem.getDistanceToTargetSceneUnits()
+          : null
+      );
     });
     setupModeSwitcher(orbitalMechanics, cameraSystem, (mode) => {
+      currentMode = mode;
+      // Le changement de mode remet la sélection sur la Vue Globale → referme la fiche.
+      bodyInfo.hide();
       exploHud.setActive(mode === 'explo');
       smallBodyOverlay.setActive(mode === 'explo');
     });

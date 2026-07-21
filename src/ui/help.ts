@@ -1,14 +1,14 @@
 /**
- * Bouton crédits (#credits-btn) + popover (#credits-popover) — coin bas-droite.
+ * Bouton d'aide (#help-btn) + popover (#help-popover) — coin haut-gauche (desktop).
  *
- * Empreinte permanente réduite à une icône `ⓘ` ; tout le contenu (copyright, licence,
- * crédits textures/données, futur don) vit dans le popover. Ouverture au clic (pas un
- * hover pur : inutilisable au tactile), fermeture par Échap ou clic à l'extérieur.
+ * Empreinte permanente réduite à un « ? » ; tout le contenu (astuces de navigation puis
+ * crédits, licence et don) vit dans le popover. Ouverture au clic (pas un hover pur :
+ * inutilisable au tactile), fermeture par Échap ou clic à l'extérieur.
  */
-const btn = document.getElementById('credits-btn')!;
-const popover = document.getElementById('credits-popover')!;
+const btn = document.getElementById('help-btn')!;
+const popover = document.getElementById('help-popover')!;
 
-export function setupCredits(): void {
+export function setupHelp(): void {
   let open = false;
 
   const setOpen = (next: boolean): void => {

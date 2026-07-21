@@ -82,6 +82,14 @@ export interface CelestialBodyConfig {
   /** Enum astronomy-engine pour les positions réelles. Absent = pas d'éphéméride (étoile fixe, skybox). */
   astroBody?: Body;
   /**
+   * Corps astronomy-engine utilisé pour la POSITION héliocentrique, si différent d'`astroBody`.
+   * Cas Terre : `Body.EMB` (barycentre Terre-Lune) → supprime le ballant lunaire réel
+   * (~4700 km, période ~27 j) qui, à vraie échelle et à vitesse max, se voit comme une
+   * oscillation. `astroBody` reste `Body.Earth` pour l'axe de rotation / le jour-nuit.
+   * Sert aussi de référence parent pour les satellites `parentRelative`. Défaut : `astroBody`.
+   */
+  positionBody?: Body;
+  /**
    * Éléments orbitaux képlériens — source de position alternative à `astroBody`, pour les
    * corps absents d'astronomy-engine (astéroïdes, comètes, géocroiseurs, planètes naines).
    * Utilisés seulement si `astroBody` est absent. Propagés par `OrbitalElementsService`.
@@ -118,6 +126,18 @@ export interface RealData {
    *  au fallback initial et au test rétrograde :
    *  > 90° = rotation rétrograde (Vénus ≈ 177°, Uranus ≈ 98°). */
   axialTilt?: number;
+
+  // ── Champs documentaires (fiche d'info, `ui/bodyInfo`) — non utilisés par la simulation. ──
+  /** Masse en kg. */
+  massKg?: number;
+  /** Gravité de surface en m/s². */
+  gravity?: number;
+  /** Température moyenne de surface en °C (sommet des nuages pour les géantes gazeuses). */
+  meanTempC?: number;
+  /** Nombre de satellites naturels connus. */
+  moonCount?: number;
+  /** Courte description grand public (français). */
+  description?: string;
 }
 
 /**

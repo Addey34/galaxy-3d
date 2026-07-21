@@ -2,7 +2,13 @@
 <html lang="en-GB">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- App WebGL plein écran : on verrouille le zoom de page (pincer) pour qu'il pilote
+         toujours la caméra 3D via OrbitControls, jamais le navigateur — sinon on reste
+         « coincé zoomé » sur mobile. Le zoom caméra reste entier (molette / pincer sur le canvas). -->
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no"
+    />
     <title>3D Solar System — Real-Time Interactive Visualizer</title>
     <meta
       name="description"
@@ -50,6 +56,45 @@
         Overview
       </button>
     </nav>
+
+    <!-- ─── Body info panel (top-right) ────────────────────────────────────── -->
+    <!-- Fiche unique : données catalogue + (en Explo) distance réelle live et
+         temps-lumière, fusionnés depuis l'ancien HUD « TARGET ». La flèche replie la
+         fiche sur son seul en-tête pour ne pas gâcher la vue. Rempli par ui/bodyInfo. -->
+    <aside id="body-info" hidden>
+      <header class="bi-header">
+        <span class="bi-dot" aria-hidden="true"></span>
+        <h2 class="bi-name"></h2>
+        <button
+          class="bi-toggle"
+          aria-label="Collapse panel"
+          aria-expanded="true"
+          title="Collapse / expand"
+        >
+          <svg viewBox="0 0 12 12" width="12" height="12" aria-hidden="true">
+            <path
+              d="M2.5 4.5L6 8L9.5 4.5"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.6"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+          </svg>
+        </button>
+      </header>
+      <div class="bi-body">
+        <p class="bi-subtitle"></p>
+        <!-- Bloc live (Explo uniquement) : distance réelle depuis la caméra + temps-lumière. -->
+        <div class="bi-live" hidden>
+          <span class="bi-live-label">Distance from you</span>
+          <span class="bi-live-dist"></span>
+          <span class="bi-live-lt"></span>
+        </div>
+        <dl class="bi-stats"></dl>
+        <p class="bi-desc"></p>
+      </div>
+    </aside>
 
     <!-- ─── Mode toggle (bottom-left) ──────────────────────────────────────── -->
     <div id="mode-controls">
@@ -131,49 +176,60 @@
     </div>
     <!-- #time-panel -->
 
-    <!-- ─── Crédits & licence (bottom-right, à gauche du plein écran) ───────── -->
-    <!-- Icône discrète : tout le contenu (copyright, licence, crédits, futur don)
-         vit dans le popover ci-dessous pour garder la scène 3D épurée. -->
+    <!-- ─── Aide & crédits (haut-gauche sur desktop, coin libre opposé aux FPS) ─ -->
+    <!-- Bouton « ? » discret mais lisible : astuces de navigation d'abord (pour
+         qu'on comprenne l'appli), puis crédits / licence / don en bas du popover. -->
     <button
-      id="credits-btn"
-      title="Credits & license"
-      aria-label="Credits and license"
+      id="help-btn"
+      title="Help, tips & credits"
+      aria-label="Help, tips and credits"
       aria-haspopup="dialog"
       aria-expanded="false"
     >
-      ⓘ
+      ?
     </button>
-    <div
-      id="credits-popover"
-      role="dialog"
-      aria-label="Credits and license"
-      hidden
-    >
-      <h3 class="credits-title">Solar System Voyage</h3>
-      <p class="credits-copy">© 2026 Adrian34</p>
-      <dl class="credits-list">
-        <dt>Code</dt>
-        <dd>
+    <div id="help-popover" role="dialog" aria-label="Help and credits" hidden>
+      <h3 class="help-title">Navigation</h3>
+      <ul class="help-tips">
+        <li><span class="help-key">Drag</span> orbit the view</li>
+        <li><span class="help-key">Scroll · pinch</span> zoom in / out</li>
+        <li>
+          <span class="help-key">Click a body</span> or its label to travel to it
+        </li>
+        <li>
+          <span class="help-key">Educ · Explo</span> compressed overview vs
+          true-scale voyage
+        </li>
+        <li>
+          <span class="help-key">Clock · date</span> scroll to time-travel, tap to
+          pick
+        </li>
+      </ul>
+      <div class="help-credits">
+        <p class="credits-copy">
+          © 2026 Adrian34 ·
           <a
             href="https://polyformproject.org/licenses/noncommercial/1.0.0"
             target="_blank"
             rel="noopener noreferrer"
-            >PolyForm Noncommercial 1.0.0</a
+            >PolyForm NC 1.0.0</a
           >
-        </dd>
-        <dt>Textures</dt>
-        <dd>Solar System Scope (CC BY 4.0) · NASA imagery</dd>
-        <dt>Data</dt>
-        <dd>Astronomy Engine · JPL Small-Body Database</dd>
-      </dl>
-      <a
-        class="credits-donate"
-        href="https://ko-fi.com/adrian34"
-        target="_blank"
-        rel="noopener noreferrer"
-      >
-        ♥ Support the project
-      </a>
+        </p>
+        <dl class="credits-list">
+          <dt>Textures</dt>
+          <dd>Solar System Scope (CC BY 4.0) · NASA</dd>
+          <dt>Data</dt>
+          <dd>Astronomy Engine · JPL SBDB</dd>
+        </dl>
+        <a
+          class="credits-donate"
+          href="https://ko-fi.com/adrian34"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          ♥ Support the project
+        </a>
+      </div>
     </div>
 
     <!-- ─── Fullscreen (bottom-right) ──────────────────────────────────────── -->

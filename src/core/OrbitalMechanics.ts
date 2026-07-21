@@ -58,7 +58,10 @@ export class OrbitalMechanics {
     // terrestre codé en dur.
     forEachBody(config, ({ name, config: cfg, parentName }) => {
       if (cfg.frame !== 'parentRelative' || parentName === null) return;
-      const parentAstro = config.bodies[parentName]?.astroBody;
+      const parent = config.bodies[parentName];
+      // Réfère le satellite au corps de POSITION du parent (positionBody ?? astroBody) : pour
+      // la Lune, le parent Terre pointe sur l'EMB, gardant la Lune à sa vraie position.
+      const parentAstro = parent?.positionBody ?? parent?.astroBody;
       if (parentAstro !== undefined)
         this._parentAstroBody.set(name, parentAstro);
     });
@@ -118,7 +121,10 @@ export class OrbitalMechanics {
           date
         );
       }
-      return this.ephemeris.getHeliocentricAU(cfg.astroBody, date);
+      return this.ephemeris.getHeliocentricAU(
+        cfg.positionBody ?? cfg.astroBody,
+        date
+      );
     }
     if (cfg.orbitalElements) {
       return this.elements.getHeliocentricAU(cfg.orbitalElements, date);
