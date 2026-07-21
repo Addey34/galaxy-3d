@@ -1,0 +1,14 @@
+{
+  "projects": {
+    "default": "adrianguichard-apps"
+  },
+  "targets": {
+    "adrianguichard-apps": {
+      "hosting": {
+        "galaxy": [
+          "galaxy-ag"
+        ]
+      }
+    }
+  }
+}

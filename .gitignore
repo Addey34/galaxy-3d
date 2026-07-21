@@ -35,3 +35,6 @@ docs/private/
 CLAUDE.md
 AGENTS.md
 .claude/
+
+# Firebase deploy cache
+.firebase/
