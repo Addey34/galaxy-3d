@@ -744,6 +744,89 @@ body.is-explo-mode #orbit-overview {
 }
 
 /* ============================================================================
+   ONBOARDING (première visite)
+   ============================================================================ */
+
+.ob-card {
+  position: fixed;
+  bottom: 10rem;
+  left: 50%;
+
+  width: min(340px, calc(100% - 2rem));
+
+  background: rgba(4, 8, 24, 0.84);
+  border: 1px solid rgba(120, 170, 255, 0.22);
+  border-radius: 0.75rem;
+  backdrop-filter: blur(16px);
+  box-shadow: 0 4px 32px rgba(0, 0, 0, 0.5);
+  padding: 0.95rem 1.1rem 0.85rem;
+
+  opacity: 0;
+  transform: translateX(-50%) translateY(8px);
+  transition:
+    opacity 0.4s ease,
+    transform 0.4s ease;
+  pointer-events: none;
+  z-index: 110;
+}
+
+.ob-card.ob-visible {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+  pointer-events: auto;
+}
+
+.ob-title {
+  margin: 0 0 0.55rem;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: rgba(120, 170, 255, 0.9);
+}
+
+.ob-list {
+  margin: 0 0 0.75rem;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.28rem;
+}
+
+.ob-list li {
+  font-size: 0.72rem;
+  color: rgba(190, 215, 255, 0.85);
+  padding-left: 1rem;
+  position: relative;
+}
+
+.ob-list li::before {
+  content: '·';
+  position: absolute;
+  left: 0.25rem;
+  color: rgba(74, 143, 255, 0.7);
+}
+
+.ob-dismiss {
+  display: block;
+  margin-left: auto;
+  padding: 0.26rem 0.72rem;
+  border-radius: 0.4rem;
+  background: rgba(74, 143, 255, 0.18);
+  border: 1px solid rgba(120, 170, 255, 0.38);
+  color: rgba(190, 215, 255, 0.9);
+  font: inherit;
+  font-size: 0.67rem;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.ob-dismiss:hover {
+  background: rgba(74, 143, 255, 0.32);
+}
+
+/* ============================================================================
    MOBILE
    ============================================================================ */
 
@@ -815,6 +898,10 @@ body.is-explo-mode #orbit-overview {
   #time-panel {
     bottom: 0.5rem;
     min-width: 11rem;
+  }
+
+  .ob-card {
+    bottom: 5.5rem;
   }
 
   /* Bascule de mode sortie de la pile centrale (elle chevauchait le panneau temps) : dockée

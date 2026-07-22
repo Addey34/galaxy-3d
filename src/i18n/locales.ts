@@ -67,6 +67,15 @@ export const messages: Record<Locale, Dict> = {
     'credits.donate': '♥ Support the project',
     'lang.label': 'Language',
 
+    // ── Onboarding (première visite) ──
+    'onboarding.title': 'First steps',
+    'onboarding.aria': 'Getting started tips',
+    'onboarding.tip.select': 'Click any planet to fly to it',
+    'onboarding.tip.explo': 'Switch to Explo for true solar system scale',
+    'onboarding.tip.time': 'Scroll the clock or date to time-travel',
+    'onboarding.tip.help': '? button — full navigation tips',
+    'onboarding.dismiss': 'Got it',
+
     // ── Divers ──
     'fullscreen.title': 'Fullscreen',
 
@@ -157,6 +166,15 @@ export const messages: Record<Locale, Dict> = {
     'credits.data': 'Données',
     'credits.donate': '♥ Soutenir le projet',
     'lang.label': 'Langue',
+
+    // ── Onboarding (première visite) ──
+    'onboarding.title': 'Premiers pas',
+    'onboarding.aria': 'Astuces de démarrage',
+    'onboarding.tip.select': 'Cliquez une planète pour y voyager',
+    'onboarding.tip.explo': 'Passez en Explo pour la vraie échelle du système solaire',
+    'onboarding.tip.time': 'Molette sur l’horloge ou la date pour voyager dans le temps',
+    'onboarding.tip.help': 'Bouton ? — toutes les commandes',
+    'onboarding.dismiss': 'Compris',
 
     // ── Divers ──
     'fullscreen.title': 'Plein écran',

@@ -25,6 +25,7 @@ import { setupModeSwitcher } from './ui/modeSwitcher';
 import { ExploHud } from './ui/exploHud';
 import { SmallBodyOverlay } from './ui/smallBodyOverlay';
 import { setupBodyPicker } from './ui/bodyPicker';
+import { initOnboarding } from './ui/onboarding';
 import { fetchSmallBodies } from './core/sbdb';
 import { CELESTIAL_CONFIG } from './config/bodies';
 import { flattenBodies } from './config/catalog';
@@ -106,6 +107,7 @@ setupHelp();
     });
 
     hideLoader();
+    initOnboarding();
   } catch (err) {
     showError(err instanceof Error ? err : new Error(String(err)));
   }
