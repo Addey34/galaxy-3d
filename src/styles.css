@@ -897,42 +897,43 @@ body.is-explo-mode #orbit-overview {
 
   #time-panel {
     bottom: 0.5rem;
-    min-width: 11rem;
+    min-width: 10rem;
   }
 
+  /* Onboarding : au-dessus du mode toggle (lui-même élevé à 3.8rem). */
   .ob-card {
-    bottom: 5.5rem;
+    bottom: 7rem;
   }
 
-  /* Bascule de mode sortie de la pile centrale (elle chevauchait le panneau temps) : dockée
-     dans le coin bas-gauche, libre, la vue reste dégagée et le panneau temps garde le centre. */
+  /* Bascule de mode : remontée au-dessus du panneau temps pour éviter le chevauchement
+     (même bottom: 0.5rem → le time-panel, plus tard dans le DOM, le recouvrait). */
   #mode-controls {
     left: 0.5rem;
     right: auto;
     transform: none;
-    bottom: 0.5rem;
+    bottom: 3.8rem;
   }
 
   .mode-btn {
-    padding: 0.38rem 0.75rem;
-    font-size: 0.72rem;
+    padding: 0.32rem 0.65rem;
+    font-size: 0.7rem;
   }
 
   #playback-row {
-    padding: 0.25rem 0.42rem;
-    gap: 0.25rem;
+    padding: 0.18rem 0.35rem;
+    gap: 0.2rem;
   }
 
   .tp-play,
   .tp-reset-inline {
-    width: 1.65rem;
-    height: 1.65rem;
+    width: 1.5rem;
+    height: 1.5rem;
   }
 
   .tp-speed {
-    padding: 0 0.5rem;
-    height: 1.65rem;
-    font-size: 0.63rem;
+    padding: 0 0.45rem;
+    height: 1.5rem;
+    font-size: 0.6rem;
   }
 
   .tp-clock-input {
@@ -1188,12 +1189,16 @@ body.is-explo-mode #orbit-overview {
 }
 
 @media (max-width: 640px) {
-  /* Sous la barre de navigation (haut) plutôt qu'en bas, déjà occupé par mode + temps. */
+  /* Sous la barre de navigation (haut) plutôt qu'en bas, déjà occupé par mode + temps.
+     max-height réduit (55 → 38 vh) : la fiche ne doit pas couvrir plus du tiers de l'écran ;
+     démarre repliée via bodyInfo.ts (window.innerWidth ≤ 640). */
   #body-info {
     top: 3.5rem;
-    right: 0.5rem;
-    left: 0.5rem;
+    right: 0.25rem;
+    left: 0.25rem;
     width: auto;
-    max-height: 55vh;
+    max-height: 38vh;
+    padding: 0.65rem 0.8rem 0.8rem;
+    font-size: 0.75rem;
   }
 }

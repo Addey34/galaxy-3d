@@ -229,7 +229,8 @@ export function setupBodyInfo(): BodyInfoPanel {
 
   // Repli : la flèche plie la fiche sur son en-tête (le corps `.bi-body` disparaît) pour
   // ne pas gâcher la vue 3D. L'état est conservé entre deux sélections.
-  let collapsed = false;
+  // Sur mobile (viewport ≤ 640 px) on commence replié : la fiche couvre sinon trop de la vue.
+  let collapsed = window.innerWidth <= 640;
   const applyCollapsed = (): void => {
     panel.classList.toggle('is-collapsed', collapsed);
     toggleBtn.setAttribute('aria-expanded', String(!collapsed));

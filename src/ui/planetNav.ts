@@ -30,9 +30,11 @@ function buildPlanetButtons(): void {
 
   forEachBody(CELESTIAL_CONFIG, ({ name, config: cfg }) => {
     if (cfg.kind === 'skybox') return; // la skybox n'est pas navigable
-    // Les petits corps (astéroïdes, comètes, planètes naines) restent hors de la barre —
-    // ils seraient trop nombreux à terme. Ils se naviguent via leurs labels Explo cliquables.
-    if (SMALL_BODY_KINDS.has(cfg.kind)) return;
+    // Les petits corps sans texture (astéroïdes, comètes, planètes naines sans mesh) restent
+    // hors de la barre — ils se naviguent via leurs labels Explo. Exception : les corps à
+    // vraie taille significative ET dotés d'une texture surface (ex. Pluton, Cérès une fois
+    // leur texture ajoutée) obtiennent un bouton comme une planète ordinaire.
+    if (SMALL_BODY_KINDS.has(cfg.kind) && !cfg.textures.surface) return;
 
     const label = bodyDisplayName(name);
     const accent = cfg.kind === 'star' ? SUN_ACCENT : cfg.orbitalColor;
