@@ -14,6 +14,7 @@ import { APP_SETTINGS, TEXTURE_SETTINGS } from './config/engine';
 import { CELESTIAL_CONFIG } from './config/bodies';
 import { forEachBody } from './config/catalog';
 import { SMALL_BODY_KINDS } from './types';
+import { t } from './i18n';
 import Logger from './utils/Logger';
 
 type ProgressCallback = (percent: number, message: string) => void;
@@ -60,7 +61,7 @@ export class SolarSystemApp {
       await this._loadResources(progressCallback);
       this._initCoreSystems(progressCallback);
 
-      progressCallback(75, 'Creating celestial bodies...');
+      progressCallback(75, t('loader.bodies'));
       const bodies = await this._getCelestialBodies();
 
       this._finalizeSetup(bodies, progressCallback);
@@ -92,14 +93,14 @@ export class SolarSystemApp {
   }
 
   private _initCoreSystems(progressCallback: ProgressCallback): void {
-    progressCallback(45, 'Building scene...');
+    progressCallback(45, t('loader.scene'));
     this.systems.scene = new SceneSystem(
       CELESTIAL_CONFIG,
       this.systems.texture!
     );
     this.systems.scene.init();
 
-    progressCallback(60, 'Setting up lighting...');
+    progressCallback(60, t('loader.lighting'));
     this.systems.lighting.setup(this.systems.scene.scene);
   }
 
@@ -118,7 +119,7 @@ export class SolarSystemApp {
     bodies: CelestialBodies,
     progressCallback: ProgressCallback
   ): void {
-    progressCallback(85, 'Finalizing...');
+    progressCallback(85, t('loader.finalize'));
 
     this.systems.scene!.setupCelestialBodies(bodies);
 
@@ -152,6 +153,19 @@ export class SolarSystemApp {
       this._recomputeOrbits();
     };
 
+    // Transition animée Éduc↔Explo : la taille visuelle de chaque corps morphe avec les
+    // positions (piloté par OrbitalMechanics), et les lignes d'orbite sont masquées le temps
+    // du morph (recalcul par frame trop coûteux) puis rétablies en fin de transition.
+    this._orbitalMechanics.onScaleMorph = (p) => {
+      forEachBody(CELESTIAL_CONFIG, ({ name, config: cfg }) => {
+        if (cfg.kind === 'skybox') return;
+        this.bodyCache?.[name]?.setScaleMorph(p);
+      });
+    };
+    this._orbitalMechanics.onMorphPhase = (active) => {
+      this.systems.scene?.setOrbitLinesVisible(!active);
+    };
+
     this.systems.animation.setOrbitalMechanics(this._orbitalMechanics);
 
     // Positionner les planètes sur leurs positions réelles avant le premier rendu
@@ -160,7 +174,7 @@ export class SolarSystemApp {
     );
     this._recomputeOrbits();
 
-    progressCallback(95, 'Starting...');
+    progressCallback(95, t('loader.starting'));
     this.systems.animation.run();
   }
 

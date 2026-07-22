@@ -12,6 +12,8 @@ import type {
   TextureDefaultSettings,
 } from '@/config/engine';
 import { allBodies, flattenBodies } from '@/config/catalog';
+import { t } from '@/i18n';
+import { bodyDisplayName } from '@/i18n/bodyText';
 import Logger from '@/utils/Logger';
 
 /** Données d'initialisation du TextureSystem (chemins, réglages par défaut, corps). */
@@ -143,7 +145,7 @@ export class TextureSystem {
         const bestQuality = resolutions[0];
         progressCallback(
           loaded / total,
-          `Loading ${bodyName} ${key} (${bestQuality})`
+          t('loader.loadingBody', { body: bodyDisplayName(bodyName) })
         );
 
         try {
@@ -156,10 +158,13 @@ export class TextureSystem {
       }
 
       loaded++;
-      progressCallback(loaded / total, `Loaded ${bodyName}`);
+      progressCallback(
+        loaded / total,
+        t('loader.loadingBody', { body: bodyDisplayName(bodyName) })
+      );
     }
 
-    progressCallback(1, 'All critical textures loaded');
+    progressCallback(1, t('loader.texturesDone'));
     Logger.success('[TextureSystem] Priority textures loaded');
   }
 

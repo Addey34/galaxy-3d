@@ -16,12 +16,10 @@
 import * as THREE from 'three';
 import type { CameraSystem } from '@/components/systems/CameraSystem';
 import type { SceneSystem } from '@/components/systems/SceneSystem';
+import { onLocaleChange } from '@/i18n';
+import { bodyDisplayName } from '@/i18n/bodyText';
 import { markForwardedControlEvent } from './controlEventForwarding';
 import type { PlanetNavigation } from './planetNav';
-
-function cap(name: string): string {
-  return name.charAt(0).toUpperCase() + name.slice(1);
-}
 
 export class ExploHud {
   private readonly labelsLayer: HTMLDivElement;
@@ -42,6 +40,19 @@ export class ExploHud {
 
     this.labelsLayer = document.createElement('div');
     this.labelsLayer.id = 'explo-labels';
+
+    // Changement de langue : ré-étiquette les labels déjà créés (nom d'affichage localisé).
+    onLocaleChange(() => this._relabel());
+  }
+
+  /** Ré-étiquette tous les labels existants dans la langue courante. */
+  private _relabel(): void {
+    this.labels.forEach((el, name) => {
+      const label = bodyDisplayName(name);
+      el.setAttribute('aria-label', label);
+      const text = el.querySelector<HTMLElement>('.explo-label-text');
+      if (text) text.textContent = label;
+    });
   }
 
   /** Ajoute la couche de labels au DOM (une fois, au démarrage). */
@@ -113,13 +124,13 @@ export class ExploHud {
       el = document.createElement('button');
       el.type = 'button';
       el.className = 'explo-label';
-      el.setAttribute('aria-label', cap(name));
+      el.setAttribute('aria-label', bodyDisplayName(name));
       const dot = document.createElement('span');
       dot.className = 'explo-label-dot';
       dot.setAttribute('aria-hidden', 'true');
       const text = document.createElement('span');
       text.className = 'explo-label-text';
-      text.textContent = cap(name);
+      text.textContent = bodyDisplayName(name);
       el.append(dot, text);
       // Inerte hors mode explo : les labels masqués (display:none) ne sont ni cliquables ni
       // focusables ; ce garde-fou couvre en plus une éventuelle frame de transition.

@@ -7,6 +7,8 @@
 import { CELESTIAL_CONFIG } from '@/config/bodies';
 import { forEachBody } from '@/config/catalog';
 import { SMALL_BODY_KINDS } from '@/types';
+import { bodyDisplayName } from '@/i18n/bodyText';
+import { onLocaleChange } from '@/i18n';
 import type { CameraSystem } from '@/components/systems/CameraSystem';
 
 // Accent doré dédié au Soleil (son orbitalColor vaut 0x000000, inutilisable ici).
@@ -32,7 +34,7 @@ function buildPlanetButtons(): void {
     // ils seraient trop nombreux à terme. Ils se naviguent via leurs labels Explo cliquables.
     if (SMALL_BODY_KINDS.has(cfg.kind)) return;
 
-    const label = name.charAt(0).toUpperCase() + name.slice(1);
+    const label = bodyDisplayName(name);
     const accent = cfg.kind === 'star' ? SUN_ACCENT : cfg.orbitalColor;
 
     const btn = document.createElement('button');
@@ -43,6 +45,22 @@ function buildPlanetButtons(): void {
     btn.style.setProperty('--planet-rgb', hexToRgbTriplet(accent));
     nav.appendChild(btn);
   });
+}
+
+/** Ré-étiquette les boutons de corps dans la langue courante (nom d'affichage localisé). */
+function relabelPlanetButtons(): void {
+  document
+    // La Vue Globale (#orbit-overview) est statique et gérée par applyStaticI18n (data-i18n) :
+    // on ne ré-étiquette que les boutons de corps générés depuis le catalogue.
+    .querySelectorAll<HTMLButtonElement>(
+      '.controls button[id^="orbit-"]:not(#orbit-overview)'
+    )
+    .forEach((btn) => {
+      const name = btn.id.replace('orbit-', '');
+      const label = bodyDisplayName(name);
+      btn.textContent = label;
+      btn.setAttribute('aria-label', label);
+    });
 }
 
 /**
@@ -64,6 +82,7 @@ export function setupPlanetControls(
   onSelect?: (name: string) => void
 ): PlanetNavigation {
   buildPlanetButtons();
+  onLocaleChange(relabelPlanetButtons);
   const btns = Array.from(
     document.querySelectorAll<HTMLButtonElement>('.controls button')
   );

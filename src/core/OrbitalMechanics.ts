@@ -35,16 +35,40 @@ const ZERO = new THREE.Vector3(0, 0, 0);
  *  Source unique partagée avec SceneSystem (taille des buffers de géométrie). */
 export const ORBIT_SAMPLE_COUNT = 256;
 
+/** Durée (secondes) de la transition animée Éduc↔Explo (le « dolly zoom »). */
+const MORPH_DURATION_S = 1.2;
+
+/** Cubic InOut — même courbe que les vols caméra (TWEEN.Easing.Cubic.InOut). */
+function easeInOutCubic(t: number): number {
+  return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+}
+
 export class OrbitalMechanics {
   private readonly scale = new ScaleService();
   private readonly _exploPos = new THREE.Vector3();
+  private readonly _educPos = new THREE.Vector3();
   /** Nom d'un satellite parentRelative → enum astronomy-engine de son parent. */
   private readonly _parentAstroBody = new Map<string, Body>();
   private _prevPaused = false;
   private _simDeltaSeconds = 0;
 
+  // ── Transition animée Éduc↔Explo ──
+  // `_morph` : 0 = Éducatif (√ compressé), 1 = Explo (linéaire vrai). Au repos il vaut le mode
+  // courant ; pendant une transition il glisse de `_morphFrom` vers `_morphTo` sur MORPH_DURATION_S.
+  private _morph = 0;
+  private _morphActive = false;
+  private _morphFrom = 0;
+  private _morphTo = 0;
+  private _morphElapsed = 0;
+
   /** Appelé quand les lignes d'orbite doivent être recalculées (changement de mode ou de date). */
   onOrbitsChanged: (() => void) | null = null;
+  /** Émis chaque frame pendant la transition avec le facteur de morph courant (0→1) : la couche
+   *  app l'utilise pour interpoler la taille visuelle de chaque corps (cf. `setScaleMorph`). */
+  onScaleMorph: ((p: number) => void) | null = null;
+  /** Émis au début (`true`) et à la fin (`false`) d'une transition animée : la couche app masque
+   *  les lignes d'orbite pendant le morph (recalcul par frame trop coûteux) puis les rétablit. */
+  onMorphPhase: ((active: boolean) => void) | null = null;
 
   constructor(
     private readonly clock: SimulationClock,
@@ -71,7 +95,7 @@ export class OrbitalMechanics {
   // UPDATE
   // ============================================================================
 
-  update(simDelta: number, _realDelta: number = simDelta): void {
+  update(simDelta: number, realDelta: number = simDelta): void {
     const prevMs = this.clock.date.getTime();
     const isPaused = simDelta === 0;
 
@@ -91,12 +115,34 @@ export class OrbitalMechanics {
       ? 0
       : Math.abs(this.clock.date.getTime() - prevMs) / 1_000;
 
+    // Le morph avance sur le temps réel (realDelta) : il doit se dérouler même en pause.
+    this._advanceMorph(realDelta);
+
     const date = this.clock.date;
-    const mode = this.scale.mode;
 
     forEachBody(this.config, ({ name, config: cfg }) => {
-      if (hasOrbit(cfg)) this._updateBody(name, cfg, date, mode);
+      if (hasOrbit(cfg)) this._updateBody(name, cfg, date);
     });
+  }
+
+  /** Fait progresser la transition animée et notifie la couche app (taille visuelle). */
+  private _advanceMorph(realDelta: number): void {
+    if (!this._morphActive) return;
+    this._morphElapsed += realDelta;
+    const raw = Math.min(this._morphElapsed / MORPH_DURATION_S, 1);
+    const eased = easeInOutCubic(raw);
+    this._morph = this._morphFrom + (this._morphTo - this._morphFrom) * eased;
+    this.onScaleMorph?.(this._morph);
+
+    if (raw >= 1) {
+      // Fin de transition : on cale exactement sur le mode cible, on rétablit les lignes
+      // d'orbite (recalculées pour le mode final) et on fige les tailles via onOrbitsChanged.
+      this._morphActive = false;
+      this._morph = this._morphTo;
+      this.onScaleMorph?.(this._morph);
+      this.onMorphPhase?.(false);
+      this.onOrbitsChanged?.();
+    }
   }
 
   /**
@@ -132,37 +178,77 @@ export class OrbitalMechanics {
     return null;
   }
 
-  private _updateBody(
+  /**
+   * Position Éducatif (mode compressé) dans `out`. MÊME angle orbital que l'Explo : on lit la
+   * vraie position astronomy-engine à la date, on en extrait l'angle dans le plan orbital
+   * (projection inverse sur e1/e2, cf. angleInOrbitalPlane), puis on la pose sur un cercle
+   * compressé de rayon √(distanceAU)×SQRT_K. Éduc et Explo restent ainsi synchronisés sur
+   * l'horloge/éphéméride — seule l'échelle radiale change — et le corps reste sur sa ligne
+   * d'orbite. Renvoie false si la position n'est pas calculable.
+   */
+  private _computeEducPos(
     name: string,
     cfg: CelestialBodyConfig,
     date: Date,
-    mode: 'educ' | 'explo'
+    out: THREE.Vector3
+  ): boolean {
+    const distanceAU = cfg.realData?.distanceAU;
+    if (distanceAU == null) return false;
+    const posAU = this._positionAU(name, cfg, date);
+    if (!posAU) return false;
+    const inc = cfg.realData?.orbitalInclination ?? 0;
+    const node = cfg.realData?.ascendingNode ?? 0;
+    const angle = angleInOrbitalPlane(posAU, inc, node);
+    const r = Math.sqrt(distanceAU) * SQRT_K;
+    out.copy(orbitalPositionEduc(r, angle, inc, node));
+    return true;
+  }
+
+  /**
+   * Position Explo (vraie échelle) dans `out` : position Kepler réelle depuis astronomy-engine,
+   * échelle linéaire (AU × SQRT_K) sans compression √. Pour les corps parentRelative (Lune), la
+   * position géocentrique est déjà hors du mesh du parent.
+   */
+  private _computeExploPos(
+    name: string,
+    cfg: CelestialBodyConfig,
+    date: Date,
+    out: THREE.Vector3
+  ): void {
+    const posAU = this._positionAU(name, cfg, date);
+    out.copy(posAU ? this.scale.auVectorToScene(posAU) : ZERO);
+  }
+
+  private _updateBody(
+    name: string,
+    cfg: CelestialBodyConfig,
+    date: Date
   ): void {
     const body = this.bodies[name];
     if (!body) return;
 
-    if (mode === 'educ') {
-      // Mode Éducatif — MÊME angle orbital que l'Explo : on lit la vraie position
-      // astronomy-engine à la date courante, on en extrait l'angle dans le plan orbital
-      // (projection inverse sur e1/e2, cf. angleInOrbitalPlane), puis on la pose sur un
-      // cercle compressé de rayon √(distanceAU)×SQRT_K. Éduc et Explo restent ainsi
-      // strictement synchronisés sur l'horloge/éphéméride — seule l'échelle radiale
-      // change (√ compressé vs linéaire) — et le corps reste exactement sur sa ligne d'orbite.
-      const distanceAU = cfg.realData?.distanceAU;
-      if (distanceAU == null) return;
-      const posAU = this._positionAU(name, cfg, date);
-      if (!posAU) return;
-      const inc = cfg.realData?.orbitalInclination ?? 0;
-      const node = cfg.realData?.ascendingNode ?? 0;
-      const angle = angleInOrbitalPlane(posAU, inc, node);
-      const r = Math.sqrt(distanceAU) * SQRT_K;
-      body.group.position.copy(orbitalPositionEduc(r, angle, inc, node));
+    // Pendant la transition animée : on interpole la position Éduc ↔ Explo par `_morph`.
+    // Le lerp gère d'un coup le changement d'échelle radiale ET le morphing cercle→ellipse.
+    if (this._morphActive) {
+      const hasEduc = this._computeEducPos(name, cfg, date, this._educPos);
+      this._computeExploPos(name, cfg, date, this._exploPos);
+      if (hasEduc) {
+        body.group.position.lerpVectors(
+          this._educPos,
+          this._exploPos,
+          this._morph
+        );
+      } else {
+        body.group.position.copy(this._exploPos);
+      }
+      return;
+    }
+
+    if (this.scale.mode === 'educ') {
+      if (this._computeEducPos(name, cfg, date, this._educPos))
+        body.group.position.copy(this._educPos);
     } else {
-      // Mode Explo — positions Kepler réelles depuis astronomy-engine.
-      // Échelle linéaire (AU × SQRT_K), sans compression √. Pour les corps
-      // parentRelative (Lune), la position géocentrique est déjà hors du mesh du parent.
-      const posAU = this._positionAU(name, cfg, date);
-      this._exploPos.copy(posAU ? this.scale.auVectorToScene(posAU) : ZERO);
+      this._computeExploPos(name, cfg, date, this._exploPos);
       body.group.position.copy(this._exploPos);
     }
   }
@@ -171,11 +257,35 @@ export class OrbitalMechanics {
   // API PUBLIQUE
   // ============================================================================
 
-  /** Bascule l'échelle. Déclenche un recalcul des lignes d'orbite. */
-  setMode(mode: 'educ' | 'explo'): void {
-    if (this.scale.mode === mode) return;
+  /**
+   * Bascule l'échelle Éduc↔Explo.
+   *   - `animated = false` (défaut) : bascule instantanée + recalcul des lignes d'orbite.
+   *   - `animated = true` : lance la transition « dolly zoom » — les positions et tailles
+   *     glissent de l'échelle courante vers l'échelle cible sur MORPH_DURATION_S. Les lignes
+   *     d'orbite sont masquées le temps du morph puis recalculées pour le mode final.
+   * Un appel animé en cours de morph repart de l'état courant (interruptible sans saut).
+   */
+  setMode(mode: 'educ' | 'explo', animated = false): void {
+    if (this.scale.mode === mode && !this._morphActive) return;
+
+    const targetMorph = mode === 'explo' ? 1 : 0;
+    // Le mode d'échelle « au repos » passe immédiatement à la cible : les lignes d'orbite et
+    // les tailles finales (recalculées en fin de morph) utilisent déjà le bon mode. Les
+    // positions par frame, elles, suivent `_morph` tant que la transition est active.
     this.scale.mode = mode;
-    this.onOrbitsChanged?.();
+
+    if (!animated) {
+      this._morphActive = false;
+      this._morph = targetMorph;
+      this.onOrbitsChanged?.();
+      return;
+    }
+
+    this._morphFrom = this._morph;
+    this._morphTo = targetMorph;
+    this._morphElapsed = 0;
+    this._morphActive = true;
+    this.onMorphPhase?.(true);
   }
 
   /**

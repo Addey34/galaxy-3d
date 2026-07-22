@@ -67,9 +67,21 @@ export interface RingConfig {
   textures: string;
 }
 
+/** Chaîne localisée (contenu catalogue). L'anglais sert de repli. */
+export interface LocalizedText {
+  en: string;
+  fr: string;
+}
+
 export interface CelestialBodyConfig {
   /** Catégorie — pilote le traitement (rendu, orbite, hiérarchie de scène). */
   kind: BodyKind;
+  /**
+   * Nom d'affichage localisé. Absent → nom capitalisé depuis la clé du catalogue (correct en
+   * anglais pour tous les corps actuels). Renseigner par langue seulement là où le nom diffère
+   * de la clé capitalisée (français : Terre, Soleil, Vénus…).
+   */
+  displayName?: { en?: string; fr?: string };
   radius: number;
   rotationSpeed: number;
   orbitalColor: number;
@@ -136,8 +148,8 @@ export interface RealData {
   meanTempC?: number;
   /** Nombre de satellites naturels connus. */
   moonCount?: number;
-  /** Courte description grand public (français). */
-  description?: string;
+  /** Courte description grand public, localisée (FR/EN). Affichée par `ui/bodyInfo`. */
+  description?: LocalizedText;
 }
 
 /**

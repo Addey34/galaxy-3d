@@ -11,9 +11,12 @@
  *   - `ui/modeSwitcher` — bascule Éducatif ↔ Exploration.
  */
 import { SolarSystemApp } from './SolarSystemApp';
+import { t } from './i18n';
+import { initStaticI18n } from './i18n/dom';
 import { updateProgress, hideLoader, showError } from './ui/loader';
 import { setupFullscreen } from './ui/fullscreen';
 import { setupHelp } from './ui/help';
+import { setupLangSwitch } from './ui/langSwitch';
 import { setupPlanetControls } from './ui/planetNav';
 import { setupBodyInfo } from './ui/bodyInfo';
 import { setupPlayback } from './ui/playback';
@@ -26,12 +29,16 @@ import { fetchSmallBodies } from './core/sbdb';
 import { CELESTIAL_CONFIG } from './config/bodies';
 import { flattenBodies } from './config/catalog';
 
+// Traduit les chaînes statiques du HTML avant tout et synchronise <html lang> ; les modules
+// dynamiques (loader, bodyInfo…) se retraduisent ensuite via leurs propres abonnements.
+initStaticI18n();
+setupLangSwitch();
 setupFullscreen();
 setupHelp();
 
 (async function loadApp(): Promise<void> {
   try {
-    updateProgress(10, 'Loading core components...');
+    updateProgress(10, t('loader.core'));
 
     const app = new SolarSystemApp();
     const { cameraSystem, animationSystem, sceneSystem, orbitalMechanics } =

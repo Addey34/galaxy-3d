@@ -9,6 +9,8 @@
 import { CELESTIAL_CONFIG } from '@/config/bodies';
 import { flattenBodies } from '@/config/catalog';
 import { KM_PER_AU, SQRT_K } from '@/core/ScaleService';
+import { t, intlLocale, getLocale, onLocaleChange } from '@/i18n';
+import { bodyDisplayName, bodyDescription } from '@/i18n/bodyText';
 import type { CelestialBodyConfig } from '@/types';
 
 const RAD2DEG = 180 / Math.PI;
@@ -28,10 +30,10 @@ const PLANET_ORDINALS = ((): Map<string, number> => {
   return map;
 })();
 
-// ── Formateurs (anglais, comme le reste de l'UI : virgule des milliers, point décimal) ──
+// ── Formateurs (locale courante : séparateurs de milliers/décimales adaptés à la langue) ──
 
 function num(n: number, maxFractionDigits = 0): string {
-  return n.toLocaleString('en-US', {
+  return n.toLocaleString(intlLocale(), {
     maximumFractionDigits: maxFractionDigits,
   });
 }
@@ -72,11 +74,13 @@ function formatDay(rotationSpeed: number): string | null {
     const m = Math.round((hours - h) * 60);
     return m ? `${h}h ${m}m` : `${h}h`;
   }
-  return `${num(hours / 24)} d`;
+  return `${num(hours / 24)} ${t('unit.day.short')}`;
 }
 
 function formatPeriod(days: number): string {
-  return days < 400 ? `${num(days)} d` : `${num(days / 365.25, 1)} yr`;
+  return days < 400
+    ? `${num(days)} ${t('unit.day.short')}`
+    : `${num(days / 365.25, 1)} ${t('unit.year.short')}`;
 }
 
 // ── Bloc live (Explo) : distance réelle depuis la caméra + temps-lumière ──
@@ -89,26 +93,25 @@ function sceneUnitsToKm(sceneUnits: number): number {
 
 function formatLiveDistance(km: number): string {
   const au = km / KM_PER_AU;
-  const auStr = `${au.toLocaleString('en-US', { maximumFractionDigits: 3 })} AU`;
+  const auStr = `${num(au, 3)} ${t('unit.au')}`;
   let kmStr: string;
-  if (km >= 1e9)
-    kmStr = `${(km / 1e9).toLocaleString('en-US', { maximumFractionDigits: 2 })} B km`;
-  else if (km >= 1e6)
-    kmStr = `${(km / 1e6).toLocaleString('en-US', { maximumFractionDigits: 1 })} M km`;
-  else kmStr = `${Math.round(km).toLocaleString('en-US')} km`;
+  if (km >= 1e9) kmStr = `${num(km / 1e9, 2)} ${t('unit.billionKm')}`;
+  else if (km >= 1e6) kmStr = `${num(km / 1e6, 1)} ${t('unit.millionKm')}`;
+  else kmStr = `${num(Math.round(km))} km`;
   return `${auStr} · ${kmStr}`;
 }
 
 function formatLightTime(km: number): string {
   const s = km / C_KM_PER_S;
-  if (s < 1) return `${(s * 1000).toFixed(0)} ms light`;
-  if (s < 60) return `${s.toFixed(1)} s light`;
+  const light = t('unit.light');
+  if (s < 1) return `${(s * 1000).toFixed(0)} ms ${light}`;
+  if (s < 60) return `${s.toFixed(1)} s ${light}`;
   if (s < 3600) {
     const m = Math.floor(s / 60);
-    return `${m} min ${Math.round(s - m * 60)} s light`;
+    return `${m} min ${Math.round(s - m * 60)} s ${light}`;
   }
   const h = Math.floor(s / 3600);
-  return `${h} h ${Math.round((s - h * 3600) / 60)} min light`;
+  return `${h} h ${Math.round((s - h * 3600) / 60)} min ${light}`;
 }
 
 // ── Construction des lignes de la fiche depuis la config d'un corps ──
@@ -126,58 +129,67 @@ function buildStats(cfg: CelestialBodyConfig): Stat[] {
     if (value !== null) stats.push({ label, value });
   };
 
-  if (d.radiusKm) push('Radius', `${num(d.radiusKm)} km`);
+  if (d.radiusKm) push(t('stat.radius'), `${num(d.radiusKm)} km`);
   if (d.distanceAU !== undefined) {
     push(
-      cfg.kind === 'moon' ? 'Distance (Earth)' : 'Distance (Sun)',
+      cfg.kind === 'moon' ? t('stat.distanceEarth') : t('stat.distanceSun'),
       cfg.kind === 'moon'
         ? `${num(d.distanceAU * KM_PER_AU)} km`
-        : `${num(d.distanceAU, 2)} AU`
+        : `${num(d.distanceAU, 2)} ${t('unit.au')}`
     );
   }
-  if (d.massKg) push('Mass', formatMass(d.massKg));
-  if (d.gravity) push('Gravity', `${num(d.gravity, 2)} m/s²`);
-  if (d.meanTempC !== undefined) push('Temperature', `${num(d.meanTempC)} °C`);
+  if (d.massKg) push(t('stat.mass'), formatMass(d.massKg));
+  if (d.gravity) push(t('stat.gravity'), `${num(d.gravity, 2)} m/s²`);
+  if (d.meanTempC !== undefined)
+    push(t('stat.temperature'), `${num(d.meanTempC)} °C`);
   push(
-    cfg.kind === 'moon' ? 'Revolution' : 'Day',
+    cfg.kind === 'moon' ? t('stat.revolution') : t('stat.day'),
     formatDay(cfg.rotationSpeed)
   );
   if (d.orbitPeriodDays)
     push(
-      cfg.kind === 'moon' ? 'Orbit' : 'Year',
+      cfg.kind === 'moon' ? t('stat.orbit') : t('stat.year'),
       formatPeriod(d.orbitPeriodDays)
     );
-  if (d.moonCount !== undefined) push('Moons', num(d.moonCount));
+  if (d.moonCount !== undefined) push(t('stat.moons'), num(d.moonCount));
   if (d.axialTilt !== undefined)
-    push('Axial tilt', `${num(d.axialTilt * RAD2DEG, 1)}°`);
+    push(t('stat.axialTilt'), `${num(d.axialTilt * RAD2DEG, 1)}°`);
 
   return stats;
 }
 
-/** Suffixe ordinal anglais (1 → « st », 2 → « nd », 3 → « rd », sinon « th »). */
-function ordinalSuffix(n: number): string {
-  const t = n % 100;
-  if (t >= 11 && t <= 13) return 'th';
-  return { 1: 'st', 2: 'nd', 3: 'rd' }[n % 10] ?? 'th';
+/**
+ * Jeton ordinal localisé pour le rang planétaire.
+ * Anglais : « 1st », « 2nd », « 3rd », sinon « nth ». Français (planète est féminin) :
+ * « 1ʳᵉ », sinon « nᵉ ».
+ */
+function ordinalToken(n: number): string {
+  if (getLocale() === 'fr') return n === 1 ? '1ʳᵉ' : `${n}ᵉ`;
+  const t100 = n % 100;
+  const suffix =
+    t100 >= 11 && t100 <= 13
+      ? 'th'
+      : ({ 1: 'st', 2: 'nd', 3: 'rd' }[n % 10] ?? 'th');
+  return `${n}${suffix}`;
 }
 
 /** Sous-titre selon la catégorie (« 3rd planet from the Sun », « Natural satellite »…). */
 function subtitle(name: string, cfg: CelestialBodyConfig): string {
   switch (cfg.kind) {
     case 'star':
-      return 'Star of the Solar System';
+      return t('subtitle.star');
     case 'moon':
-      return 'Natural satellite';
+      return t('subtitle.moon');
     case 'dwarf':
-      return 'Dwarf planet';
+      return t('subtitle.dwarf');
     case 'asteroid':
-      return 'Asteroid';
+      return t('subtitle.asteroid');
     case 'comet':
-      return 'Comet';
+      return t('subtitle.comet');
     case 'planet': {
       const n = PLANET_ORDINALS.get(name);
-      if (!n) return 'Planet';
-      return `${n}${ordinalSuffix(n)} planet from the Sun`;
+      if (!n) return t('subtitle.planet');
+      return t('subtitle.planetOrdinal', { ordinal: ordinalToken(n) });
     }
     default:
       return '';
@@ -186,10 +198,6 @@ function subtitle(name: string, cfg: CelestialBodyConfig): string {
 
 function hexToRgbTriplet(hex: number): string {
   return `${(hex >> 16) & 0xff}, ${(hex >> 8) & 0xff}, ${hex & 0xff}`;
-}
-
-function capitalize(s: string): string {
-  return s.charAt(0).toUpperCase() + s.slice(1);
 }
 
 export interface BodyInfoPanel {
@@ -207,8 +215,7 @@ export interface BodyInfoPanel {
 
 export function setupBodyInfo(): BodyInfoPanel {
   const panel = document.getElementById('body-info');
-  if (!panel)
-    return { show: () => {}, hide: () => {}, updateLive: () => {} };
+  if (!panel) return { show: () => {}, hide: () => {}, updateLive: () => {} };
 
   const dot = panel.querySelector<HTMLElement>('.bi-dot')!;
   const nameEl = panel.querySelector<HTMLElement>('.bi-name')!;
@@ -228,7 +235,7 @@ export function setupBodyInfo(): BodyInfoPanel {
     toggleBtn.setAttribute('aria-expanded', String(!collapsed));
     toggleBtn.setAttribute(
       'aria-label',
-      collapsed ? 'Expand panel' : 'Collapse panel'
+      collapsed ? t('bi.expand.aria') : t('bi.collapse.aria')
     );
   };
   toggleBtn.addEventListener('click', () => {
@@ -238,7 +245,10 @@ export function setupBodyInfo(): BodyInfoPanel {
 
   const hide = (): void => panel.setAttribute('hidden', '');
 
-  const show = (name: string): void => {
+  // Dernier corps affiché : permet de re-rendre la fiche telle quelle au changement de langue.
+  let currentName: string | null = null;
+
+  const render = (name: string): void => {
     const cfg = CONFIGS.get(name);
     // Pas de fiche pour la skybox ni les corps sans données documentaires.
     if (!cfg || cfg.kind === 'skybox' || !cfg.realData) {
@@ -249,7 +259,7 @@ export function setupBodyInfo(): BodyInfoPanel {
     const accent = cfg.kind === 'star' ? SUN_ACCENT : cfg.orbitalColor;
     panel.style.setProperty('--planet-rgb', hexToRgbTriplet(accent));
     dot.style.background = `rgb(${hexToRgbTriplet(accent)})`;
-    nameEl.textContent = capitalize(name);
+    nameEl.textContent = bodyDisplayName(name);
     subEl.textContent = subtitle(name, cfg);
 
     statsEl.replaceChildren();
@@ -261,15 +271,27 @@ export function setupBodyInfo(): BodyInfoPanel {
       statsEl.append(dt, dd);
     }
 
-    descEl.textContent = cfg.realData.description ?? '';
-    descEl.hidden = !cfg.realData.description;
+    const desc = bodyDescription(cfg);
+    descEl.textContent = desc;
+    descEl.hidden = !desc;
 
-    // Neuf corps : on repart d'un bloc live masqué (updateLive le remplira à la frame
-    // suivante en Explo) pour ne pas laisser la distance du corps précédent.
-    liveEl.hidden = true;
     applyCollapsed();
     panel.removeAttribute('hidden');
   };
+
+  const show = (name: string): void => {
+    currentName = name;
+    render(name);
+    // Neuf corps : on repart d'un bloc live masqué (updateLive le remplira à la frame
+    // suivante en Explo) pour ne pas laisser la distance du corps précédent.
+    liveEl.hidden = true;
+  };
+
+  // Changement de langue : re-rend la fiche courante (noms, sous-titre, stats, description)
+  // sans rouvrir de sélection. Le bloc live se réactualise seul à la frame suivante.
+  onLocaleChange(() => {
+    if (currentName && !panel.hasAttribute('hidden')) render(currentName);
+  });
 
   const updateLive = (sceneDist: number | null): void => {
     if (panel.hasAttribute('hidden') || sceneDist === null) {

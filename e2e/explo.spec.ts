@@ -49,7 +49,6 @@ test('explo mode shows projected labels and the live distance in the info card',
 test('keeps the followed body projected at the screen center', async ({
   page,
 }) => {
-  test.setTimeout(60_000);
   await page.goto('/');
   await expect(page.locator('#loader')).toBeHidden({ timeout: 30_000 });
 
@@ -152,7 +151,6 @@ test('small-body field overlay is present, shown in explo and non-blocking', asy
 test('mouse wheel over the centered target label still zooms the camera', async ({
   page,
 }) => {
-  test.setTimeout(60_000);
   await page.goto('/');
   await expect(page.locator('#loader')).toBeHidden({ timeout: 30_000 });
 
@@ -185,7 +183,6 @@ test('mouse wheel over the centered target label still zooms the camera', async 
 test('clicking a projected label selects and centers the body', async ({
   page,
 }) => {
-  test.setTimeout(60_000);
   const errors: string[] = [];
   page.on('pageerror', (err) => errors.push(err.message));
 

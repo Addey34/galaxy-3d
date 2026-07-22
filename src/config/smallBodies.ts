@@ -21,6 +21,9 @@ const D2R = Math.PI / 180;
 export interface SmallBodyElements {
   /** Clé unique dans le catalogue (minuscule, sans espace). */
   name: string;
+  /** Nom d'affichage localisé — renseigner par langue seulement là où il diffère de la
+   *  clé capitalisée (français : Cérès, Hygie, Éris). Absent → clé capitalisée. */
+  displayName?: { en?: string; fr?: string };
   /** Demi-grand axe (UA). */
   a: number;
   /** Excentricité. */
@@ -62,6 +65,7 @@ export function smallBodyToConfig(el: SmallBodyElements): CelestialBodyConfig {
 
   return {
     kind,
+    ...(el.displayName ? { displayName: el.displayName } : {}),
     // Rayon de base nominal (aucun mesh n'est créé faute de texture) : évite une division
     // par zéro dans setScaleMode et sert de garde-fou de cadrage caméra.
     radius: 0.1,
@@ -97,6 +101,7 @@ export function smallBodyToConfig(el: SmallBodyElements): CelestialBodyConfig {
 export const SMALL_BODY_ELEMENTS: readonly SmallBodyElements[] = [
   {
     name: 'ceres',
+    displayName: { fr: 'Cérès' },
     a: 2.7691,
     e: 0.076,
     iDeg: 10.594,
@@ -131,6 +136,7 @@ export const SMALL_BODY_ELEMENTS: readonly SmallBodyElements[] = [
   },
   {
     name: 'hygiea',
+    displayName: { fr: 'Hygie' },
     a: 3.1415,
     e: 0.1125,
     iDeg: 3.842,
@@ -142,6 +148,7 @@ export const SMALL_BODY_ELEMENTS: readonly SmallBodyElements[] = [
   },
   {
     name: 'eris',
+    displayName: { fr: 'Éris' },
     a: 67.78,
     e: 0.436,
     iDeg: 44.04,

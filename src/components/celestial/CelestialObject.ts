@@ -189,24 +189,41 @@ export default class CelestialObject {
   }
 
   /**
+   * Facteur d'échelle visuel en mode Explo : vraie taille physique via radiusKm.
+   *   (radiusKm / KM_PER_AU × SQRT_K) / config.radius
+   * 1 si le corps n'a pas de rayon physique connu (garde la taille de base).
+   */
+  private _exploScaleFactor(): number {
+    const radiusKm = this.config.realData?.radiusKm;
+    if (!radiusKm) return 1;
+    return ((radiusKm / KM_PER_AU) * SQRT_K) / this.config.radius;
+  }
+
+  /** Applique un facteur d'échelle donné aux couches et met à jour le rayon de cadrage. */
+  private _applyScaleFactor(factor: number): void {
+    this._scaleFactor = factor;
+    this._meshGroup.scale.setScalar(factor);
+    this.group.userData['radius'] = this.config.radius * factor;
+    this._meshGroup.visible = true;
+  }
+
+  /**
    * Bascule le mode d'échelle.
    * En Explo : chaque corps est réduit/agrandi à sa vraie taille physique via radiusKm.
-   *   scaleFactor = (radiusKm / KM_PER_AU × SQRT_K) / config.radius
    * En Éducatif : retour à la taille de base (scaleFactor = 1).
    */
   setScaleMode(mode: 'educ' | 'explo'): void {
-    if (mode === 'explo' && this.config.realData?.radiusKm) {
-      // Vraie taille physique en mode Explo : radiusKm → UA → unités scène
-      const trueSceneRadius =
-        (this.config.realData.radiusKm / KM_PER_AU) * SQRT_K;
-      this._scaleFactor = trueSceneRadius / this.config.radius;
-    } else {
-      this._scaleFactor = 1;
-    }
+    this._applyScaleFactor(mode === 'explo' ? this._exploScaleFactor() : 1);
+  }
 
-    this._meshGroup.scale.setScalar(this._scaleFactor);
-    this.group.userData['radius'] = this.config.radius * this._scaleFactor;
-    this._meshGroup.visible = true;
+  /**
+   * Morphe la taille entre Éducatif (`p = 0`, taille de base) et Explo (`p = 1`, vraie
+   * taille physique). Sert à la transition animée Éduc↔Explo ; interpolation linéaire du
+   * facteur, cohérente avec le morphing des positions dans `OrbitalMechanics`.
+   */
+  setScaleMorph(p: number): void {
+    const explo = this._exploScaleFactor();
+    this._applyScaleFactor(1 + (explo - 1) * p);
   }
 
   /**

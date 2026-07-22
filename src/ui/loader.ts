@@ -5,6 +5,7 @@
  * expose via des fonctions ; aucune logique applicative ici.
  */
 import Logger from '@/utils/Logger';
+import { t } from '@/i18n';
 
 const progressBar = document.getElementById('load-progress')!;
 const loadStatus = document.getElementById('load-status')!;
@@ -27,9 +28,9 @@ export function showError(error: Error): void {
   Logger.error('Application Error:', error);
   loader.innerHTML = `
     <div style="text-align:center">
-      <h2 style="color:red">Application Error</h2>
+      <h2 style="color:red">${t('error.title')}</h2>
       <p>${error.message}</p>
       <button onclick="window.location.reload()"
-              style="padding:10px 20px;margin-top:20px">Retry</button>
+              style="padding:10px 20px;margin-top:20px">${t('error.retry')}</button>
     </div>`;
 }

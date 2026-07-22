@@ -18,12 +18,18 @@
     <link rel="canonical" href="https://addey34.github.io/SolarSystem3D/" />
     <!-- Open Graph / Twitter — aperçu riche quand un lien est partagé -->
     <meta property="og:type" content="website" />
-    <meta property="og:title" content="3D Solar System — Real-Time Interactive Visualizer" />
+    <meta
+      property="og:title"
+      content="3D Solar System — Real-Time Interactive Visualizer"
+    />
     <meta
       property="og:description"
       content="Real ephemeris positions, true-scale exploration mode, time travel. Built with Three.js."
     />
-    <meta property="og:url" content="https://addey34.github.io/SolarSystem3D/" />
+    <meta
+      property="og:url"
+      content="https://addey34.github.io/SolarSystem3D/"
+    />
     <meta
       property="og:image"
       content="https://addey34.github.io/SolarSystem3D/assets/social/og.jpg"
@@ -36,11 +42,11 @@
     <!-- ─── Loading screen ─────────────────────────────────────────────────── -->
     <div id="loader">
       <div class="loader-content">
-        <h2>Loading Solar System...</h2>
+        <h2 data-i18n="loader.title">Loading Solar System...</h2>
         <div class="progress-bar">
           <div class="progress" id="load-progress"></div>
         </div>
-        <div id="load-status">Initializing...</div>
+        <div id="load-status" data-i18n="loader.init">Initializing...</div>
       </div>
     </div>
 
@@ -50,6 +56,8 @@
     <nav class="controls">
       <button
         aria-label="Overview"
+        data-i18n="nav.overview"
+        data-i18n-aria="nav.overview"
         id="orbit-overview"
         class="button is-active"
       >
@@ -68,6 +76,7 @@
         <button
           class="bi-toggle"
           aria-label="Collapse panel"
+          data-i18n-title="bi.collapse.title"
           aria-expanded="true"
           title="Collapse / expand"
         >
@@ -87,7 +96,9 @@
         <p class="bi-subtitle"></p>
         <!-- Bloc live (Explo uniquement) : distance réelle depuis la caméra + temps-lumière. -->
         <div class="bi-live" hidden>
-          <span class="bi-live-label">Distance from you</span>
+          <span class="bi-live-label" data-i18n="bi.live.label"
+            >Distance from you</span
+          >
           <span class="bi-live-dist"></span>
           <span class="bi-live-lt"></span>
         </div>
@@ -98,10 +109,17 @@
 
     <!-- ─── Mode toggle (bottom-left) ──────────────────────────────────────── -->
     <div id="mode-controls">
-      <div class="mode-seg" role="group" aria-label="View mode">
+      <div
+        class="mode-seg"
+        role="group"
+        aria-label="View mode"
+        data-i18n-aria="mode.group"
+      >
         <button
           class="mode-btn is-active"
           data-mode="educ"
+          data-i18n="mode.educ"
+          data-i18n-title="mode.educ.title"
           title="Educational view — circular orbits"
         >
           Educ.
@@ -109,6 +127,8 @@
         <button
           class="mode-btn"
           data-mode="explo"
+          data-i18n="mode.explo"
+          data-i18n-title="mode.explo.title"
           title="Exploration mode — true scale, space voyage"
         >
           Explo.
@@ -120,7 +140,12 @@
     <div id="time-panel">
       <!-- Ligne 1 : play/pause | vitesse centrée | reset — toujours visible -->
       <div id="playback-row">
-        <button id="play-pause-btn" class="tp-btn tp-play" title="Play / Pause">
+        <button
+          id="play-pause-btn"
+          class="tp-btn tp-play"
+          data-i18n-title="playback.playpause"
+          title="Play / Pause"
+        >
           <svg width="11" height="13" viewBox="0 0 11 13" fill="currentColor">
             <rect x="0" y="0" width="3.8" height="13" rx="1.4" />
             <rect x="7.2" y="0" width="3.8" height="13" rx="1.4" />
@@ -128,7 +153,9 @@
         </button>
         <div class="tp-flex1"></div>
         <div class="speed-group">
-          <button class="tp-btn tp-speed is-active">Live</button>
+          <button class="tp-btn tp-speed is-active" data-i18n="speed.live">
+            Live
+          </button>
           <button class="tp-btn tp-speed">1h/s</button>
           <button class="tp-btn tp-speed">3h/s</button>
           <button class="tp-btn tp-speed">6h/s</button>
@@ -137,6 +164,7 @@
         <button
           id="time-today"
           class="tp-btn tp-reset-inline"
+          data-i18n-title="time.today"
           title="Back to now"
         >
           ⟳
@@ -157,6 +185,7 @@
             id="time-input"
             class="tp-clock-input"
             step="1"
+            data-i18n-title="time.wheelTime"
             title="Wheel: ±1 h  ·  Click: pick the time"
           />
           <span class="disp-utc">UTC</span>
@@ -168,6 +197,7 @@
             type="date"
             id="date-input"
             class="tp-date-input"
+            data-i18n-title="time.wheelDate"
             title="Wheel: ±1 day  ·  Click: pick the date"
           />
         </div>
@@ -183,26 +213,65 @@
       id="help-btn"
       title="Help, tips & credits"
       aria-label="Help, tips and credits"
+      data-i18n-title="help.btn.title"
+      data-i18n-aria="help.btn.aria"
       aria-haspopup="dialog"
       aria-expanded="false"
     >
       ?
     </button>
-    <div id="help-popover" role="dialog" aria-label="Help and credits" hidden>
-      <h3 class="help-title">Navigation</h3>
+    <div
+      id="help-popover"
+      role="dialog"
+      aria-label="Help and credits"
+      data-i18n-aria="help.dialog.aria"
+      hidden
+    >
+      <!-- Sélecteur de langue : segments EN | FR, câblé par ui/langSwitch. -->
+      <div
+        id="lang-switch"
+        role="group"
+        aria-label="Language"
+        data-i18n-aria="lang.label"
+      >
+        <button class="lang-btn" data-locale="en">EN</button>
+        <button class="lang-btn" data-locale="fr">FR</button>
+      </div>
+      <h3 class="help-title" data-i18n="help.title">Navigation</h3>
       <ul class="help-tips">
-        <li><span class="help-key">Drag</span> orbit the view</li>
-        <li><span class="help-key">Scroll · pinch</span> zoom in / out</li>
         <li>
-          <span class="help-key">Click a body</span> or its label to travel to it
+          <span class="help-key" data-i18n="help.tip.drag.key">Drag</span>
+          <span data-i18n="help.tip.drag.text">orbit the view</span>
         </li>
         <li>
-          <span class="help-key">Educ · Explo</span> compressed overview vs
-          true-scale voyage
+          <span class="help-key" data-i18n="help.tip.zoom.key"
+            >Scroll · pinch</span
+          >
+          <span data-i18n="help.tip.zoom.text">zoom in / out</span>
         </li>
         <li>
-          <span class="help-key">Clock · date</span> scroll to time-travel, tap to
-          pick
+          <span class="help-key" data-i18n="help.tip.click.key"
+            >Click a body</span
+          >
+          <span data-i18n="help.tip.click.text"
+            >or its label to travel to it</span
+          >
+        </li>
+        <li>
+          <span class="help-key" data-i18n="help.tip.mode.key"
+            >Educ · Explo</span
+          >
+          <span data-i18n="help.tip.mode.text"
+            >compressed overview vs true-scale voyage</span
+          >
+        </li>
+        <li>
+          <span class="help-key" data-i18n="help.tip.time.key"
+            >Clock · date</span
+          >
+          <span data-i18n="help.tip.time.text"
+            >scroll to time-travel, tap to pick</span
+          >
         </li>
       </ul>
       <div class="help-credits">
@@ -216,9 +285,9 @@
           >
         </p>
         <dl class="credits-list">
-          <dt>Textures</dt>
+          <dt data-i18n="credits.textures">Textures</dt>
           <dd>Solar System Scope (CC BY 4.0) · NASA</dd>
-          <dt>Data</dt>
+          <dt data-i18n="credits.data">Data</dt>
           <dd>Astronomy Engine · JPL SBDB</dd>
         </dl>
         <a
@@ -226,6 +295,7 @@
           href="https://ko-fi.com/adrian34"
           target="_blank"
           rel="noopener noreferrer"
+          data-i18n="credits.donate"
         >
           ♥ Support the project
         </a>
@@ -233,7 +303,13 @@
     </div>
 
     <!-- ─── Fullscreen (bottom-right) ──────────────────────────────────────── -->
-    <button id="fullscreen-btn" title="Fullscreen">⛶</button>
+    <button
+      id="fullscreen-btn"
+      title="Fullscreen"
+      data-i18n-title="fullscreen.title"
+    >
+      ⛶
+    </button>
 
     <script type="module" src="/src/MainSolarSystemApp.ts"></script>
   </body>

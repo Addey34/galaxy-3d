@@ -282,6 +282,40 @@ body.is-explo-mode #orbit-overview {
   display: none;
 }
 
+/* Sélecteur de langue : deux segments EN | FR alignés à droite, au-dessus des astuces. */
+#lang-switch {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.25rem;
+  margin: 0 0 0.7rem;
+}
+
+.lang-btn {
+  padding: 0.1rem 0.5rem;
+  border-radius: 0.4rem;
+  background: rgba(120, 170, 255, 0.1);
+  border: 1px solid rgba(120, 170, 255, 0.24);
+  color: rgba(190, 215, 255, 0.85);
+  font: inherit;
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease;
+}
+
+.lang-btn:hover {
+  background: rgba(120, 170, 255, 0.2);
+}
+
+.lang-btn.is-active {
+  background: rgba(74, 143, 255, 0.4);
+  border-color: rgba(120, 170, 255, 0.7);
+  color: #fff;
+}
+
 .help-title {
   margin: 0 0 0.5rem;
   font-size: 0.62rem;

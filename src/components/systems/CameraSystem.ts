@@ -122,7 +122,8 @@ export class CameraSystem {
 
   private animateToTarget(
     cameraPosition: THREE.Vector3,
-    targetPosition: THREE.Vector3
+    targetPosition: THREE.Vector3,
+    onArrive?: () => void
   ): void {
     // Un nouveau clic remplace le vol en cours. Sans cette annulation, plusieurs paires de
     // tweens écrivaient caméra/cible pendant les mêmes frames et produisaient un mouvement
@@ -214,6 +215,8 @@ export class CameraSystem {
         this.controls.enabled = true;
         this.controls.update();
         Logger.success('[CameraSystem] Camera animation completed');
+        // Enchaînement optionnel (ex. après le recul de transition, revenir au corps suivi).
+        onArrive?.();
       })
       .start();
   }
@@ -322,9 +325,8 @@ export class CameraSystem {
    *   explo → vue d'ensemble héliocentrique (orbites lisses, sans parallaxe ; le suivi d'une
    *           planète reste disponible en cliquant un corps, pour un voyage rapproché)
    */
-  setScaleMode(mode: 'educ' | 'explo'): void {
-    if (this._scaleMode === mode) return;
-
+  /** Ajuste bornes de distance + plans near/far pour le mode d'échelle (sans bouger la caméra). */
+  private _applyScaleModeBounds(mode: 'educ' | 'explo'): void {
     this._scaleMode = mode;
     this.controls.minDistance =
       mode === 'explo'
@@ -341,10 +343,38 @@ export class CameraSystem {
     this.camera.far =
       mode === 'explo' ? CAMERA_SETTINGS.exploFar : CAMERA_SETTINGS.educFar;
     this.camera.updateProjectionMatrix();
+  }
+
+  setScaleMode(mode: 'educ' | 'explo'): void {
+    if (this._scaleMode === mode) return;
+    this._applyScaleModeBounds(mode);
 
     // Les deux modes démarrent sur la vue d'ensemble : héliocentrique et FIXE, donc sans
     // parallaxe → orbites lisses. En Explo, cliquer un corps lance ensuite le voyage rapproché.
     this.goToOverview();
+  }
+
+  /**
+   * Transition de mode animée (le « dolly zoom ») : la caméra recule/avance vers la vue
+   * d'ensemble recentrée sur le Soleil pendant que positions et tailles se déploient, puis —
+   * si un corps était sélectionné — y revient une fois le recul terminé (sélection conservée).
+   */
+  transitionScaleMode(
+    mode: 'educ' | 'explo',
+    follow: string | null = null
+  ): void {
+    this._applyScaleModeBounds(mode);
+    this.currentTarget = null;
+    this._syncOrbitLinesVisibility();
+    const pos =
+      mode === 'explo'
+        ? new THREE.Vector3(0, 875, 1205)
+        : new THREE.Vector3(0, 160, 220);
+    this.animateToTarget(
+      pos,
+      new THREE.Vector3(0, 0, 0),
+      follow ? () => this.setTarget(follow) : undefined
+    );
   }
 
   /** Nom du corps actuellement suivi, ou null en vue libre / vue d'ensemble. */

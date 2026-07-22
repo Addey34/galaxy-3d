@@ -35,6 +35,7 @@ export const CELESTIAL_CONFIG: CelestialConfig = {
 
     sun: {
       kind: 'star',
+      displayName: { fr: 'Soleil' },
       radius: 10,
       rotationSpeed: _R(609.6),
       orbitalColor: 0x000000,
@@ -47,8 +48,10 @@ export const CELESTIAL_CONFIG: CelestialConfig = {
         gravity: 274,
         meanTempC: 5505,
         moonCount: 8,
-        description:
-          'The star at the heart of the Solar System: a ball of plasma holding 99.86% of all the mass orbiting it.',
+        description: {
+          en: 'The star at the heart of the Solar System: a ball of plasma holding 99.86% of all the mass orbiting it.',
+          fr: 'L’étoile au cœur du Système solaire : une boule de plasma qui concentre 99,86 % de toute la masse en orbite autour d’elle.',
+        },
       },
       astroBody: Body.Sun,
       cameraDistance: { educ: 50, explo: exploCameraDistance(695_700) },
@@ -57,6 +60,7 @@ export const CELESTIAL_CONFIG: CelestialConfig = {
 
     mercury: {
       kind: 'planet',
+      displayName: { fr: 'Mercure' },
       radius: 0.38,
       rotationSpeed: _R(1407.6),
       orbitalColor: 0xaaaaaa,
@@ -76,8 +80,10 @@ export const CELESTIAL_CONFIG: CelestialConfig = {
         gravity: 3.7,
         meanTempC: 167,
         moonCount: 0,
-        description:
-          'The smallest planet and the closest to the Sun. With no atmosphere, it swings from +430 °C by day to -180 °C at night.',
+        description: {
+          en: 'The smallest planet and the closest to the Sun. With no atmosphere, it swings from +430 °C by day to -180 °C at night.',
+          fr: 'La plus petite planète et la plus proche du Soleil. Sans atmosphère, elle passe de +430 °C le jour à -180 °C la nuit.',
+        },
       },
       astroBody: Body.Mercury,
       cameraDistance: { educ: 2, explo: exploCameraDistance(2_440) },
@@ -86,6 +92,7 @@ export const CELESTIAL_CONFIG: CelestialConfig = {
 
     venus: {
       kind: 'planet',
+      displayName: { fr: 'Vénus' },
       radius: 0.95,
       rotationSpeed: _R(5832.6),
       orbitalColor: 0xffa500,
@@ -110,8 +117,10 @@ export const CELESTIAL_CONFIG: CelestialConfig = {
         gravity: 8.87,
         meanTempC: 464,
         moonCount: 0,
-        description:
-          'The hottest planet: its thick CO₂ atmosphere traps heat through a runaway greenhouse effect. It spins backwards, very slowly.',
+        description: {
+          en: 'The hottest planet: its thick CO₂ atmosphere traps heat through a runaway greenhouse effect. It spins backwards, very slowly.',
+          fr: 'La planète la plus chaude : son épaisse atmosphère de CO₂ piège la chaleur par un effet de serre emballé. Elle tourne à l’envers, très lentement.',
+        },
       },
       astroBody: Body.Venus,
       cameraDistance: { educ: 5, explo: exploCameraDistance(6_052) },
@@ -120,6 +129,7 @@ export const CELESTIAL_CONFIG: CelestialConfig = {
 
     earth: {
       kind: 'planet',
+      displayName: { fr: 'Terre' },
       radius: 1,
       rotationSpeed: _R(23.9345),
       orbitalColor: 0x00bfff,
@@ -148,8 +158,10 @@ export const CELESTIAL_CONFIG: CelestialConfig = {
         gravity: 9.81,
         meanTempC: 15,
         moonCount: 1,
-        description:
-          'The only known planet to harbour life. Liquid water covers 71% of its surface, and its atmosphere shields it from solar radiation.',
+        description: {
+          en: 'The only known planet to harbour life. Liquid water covers 71% of its surface, and its atmosphere shields it from solar radiation.',
+          fr: 'La seule planète connue à abriter la vie. L’eau liquide couvre 71 % de sa surface, et son atmosphère la protège du rayonnement solaire.',
+        },
       },
       astroBody: Body.Earth,
       // Position au barycentre Terre-Lune : évite le ballant lunaire réel (~4700 km, ~27 j)
@@ -161,6 +173,7 @@ export const CELESTIAL_CONFIG: CelestialConfig = {
       satellites: {
         moon: {
           kind: 'moon',
+          displayName: { fr: 'Lune' },
           frame: 'parentRelative',
           radius: 0.27,
           rotationSpeed: _R(655.72),
@@ -184,8 +197,10 @@ export const CELESTIAL_CONFIG: CelestialConfig = {
             gravity: 1.62,
             meanTempC: -20,
             moonCount: 0,
-            description:
-              "Earth's only natural satellite. It always shows the same face and stabilises our planet's axial tilt.",
+            description: {
+              en: "Earth's only natural satellite. It always shows the same face and stabilises our planet's axial tilt.",
+              fr: 'Le seul satellite naturel de la Terre. Elle montre toujours la même face et stabilise l’inclinaison de l’axe de notre planète.',
+            },
           },
           astroBody: Body.Moon,
           cameraDistance: { educ: 2, explo: exploCameraDistance(1_737) },
@@ -218,8 +233,10 @@ export const CELESTIAL_CONFIG: CelestialConfig = {
         gravity: 3.71,
         meanTempC: -63,
         moonCount: 2,
-        description:
-          'The red planet, tinted by iron oxide. It hosts Olympus Mons, the tallest volcano in the Solar System (~22 km).',
+        description: {
+          en: 'The red planet, tinted by iron oxide. It hosts Olympus Mons, the tallest volcano in the Solar System (~22 km).',
+          fr: 'La planète rouge, teintée par l’oxyde de fer. Elle abrite Olympus Mons, le plus haut volcan du Système solaire (~22 km).',
+        },
       },
       astroBody: Body.Mars,
       cameraDistance: { educ: 3, explo: exploCameraDistance(3_390) },
@@ -244,8 +261,10 @@ export const CELESTIAL_CONFIG: CelestialConfig = {
         gravity: 24.79,
         meanTempC: -108,
         moonCount: 95,
-        description:
-          'The giant of the Solar System: more massive than all the other planets combined. Its Great Red Spot is a storm centuries old.',
+        description: {
+          en: 'The giant of the Solar System: more massive than all the other planets combined. Its Great Red Spot is a storm centuries old.',
+          fr: 'La géante du Système solaire : plus massive que toutes les autres planètes réunies. Sa Grande Tache rouge est une tempête vieille de plusieurs siècles.',
+        },
       },
       astroBody: Body.Jupiter,
       cameraDistance: { educ: 25, explo: exploCameraDistance(71_492) },
@@ -254,6 +273,7 @@ export const CELESTIAL_CONFIG: CelestialConfig = {
 
     saturn: {
       kind: 'planet',
+      displayName: { fr: 'Saturne' },
       radius: 3.5,
       rotationSpeed: _R(10.656),
       orbitalColor: 0xf5deb3,
@@ -277,8 +297,10 @@ export const CELESTIAL_CONFIG: CelestialConfig = {
         gravity: 10.44,
         meanTempC: -139,
         moonCount: 146,
-        description:
-          'Famous for its spectacular rings, made of billions of chunks of ice and rock. So low in density it would float on water.',
+        description: {
+          en: 'Famous for its spectacular rings, made of billions of chunks of ice and rock. So low in density it would float on water.',
+          fr: 'Célèbre pour ses anneaux spectaculaires, faits de milliards de blocs de glace et de roche. Si peu dense qu’elle flotterait sur l’eau.',
+        },
       },
       astroBody: Body.Saturn,
       cameraDistance: { educ: 20, explo: exploCameraDistance(60_268) },
@@ -303,8 +325,10 @@ export const CELESTIAL_CONFIG: CelestialConfig = {
         gravity: 8.69,
         meanTempC: -197,
         moonCount: 28,
-        description:
-          'The ice giant tipped on its side: its axis leans at 98°, so it rolls along its orbit. Each season lasts 21 years.',
+        description: {
+          en: 'The ice giant tipped on its side: its axis leans at 98°, so it rolls along its orbit. Each season lasts 21 years.',
+          fr: 'La géante de glace couchée sur le côté : son axe penche à 98°, si bien qu’elle roule le long de son orbite. Chaque saison dure 21 ans.',
+        },
       },
       astroBody: Body.Uranus,
       cameraDistance: { educ: 10, explo: exploCameraDistance(25_559) },
@@ -329,8 +353,10 @@ export const CELESTIAL_CONFIG: CelestialConfig = {
         gravity: 11.15,
         meanTempC: -201,
         moonCount: 16,
-        description:
-          'The most distant planet, invisible to the naked eye and found by calculation. Its winds reach 2,000 km/h, the fiercest in the Solar System.',
+        description: {
+          en: 'The most distant planet, invisible to the naked eye and found by calculation. Its winds reach 2,000 km/h, the fiercest in the Solar System.',
+          fr: 'La planète la plus lointaine, invisible à l’œil nu et découverte par le calcul. Ses vents atteignent 2 000 km/h, les plus violents du Système solaire.',
+        },
       },
       astroBody: Body.Neptune,
       cameraDistance: { educ: 10, explo: exploCameraDistance(24_764) },
