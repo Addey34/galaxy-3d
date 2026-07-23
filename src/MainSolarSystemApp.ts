@@ -26,6 +26,7 @@ import { ExploHud } from './ui/exploHud';
 import { SmallBodyOverlay } from './ui/smallBodyOverlay';
 import { setupBodyPicker } from './ui/bodyPicker';
 import { initOnboarding } from './ui/onboarding';
+import { setupOrbitOptions } from './ui/orbitOptions';
 import { fetchSmallBodies } from './core/sbdb';
 import { CELESTIAL_CONFIG } from './config/bodies';
 import { flattenBodies } from './config/catalog';
@@ -47,6 +48,7 @@ setupHelp();
 
     // Fiche d'info par corps : s'ouvre pour toute sélection (barre, clic 3D, label Explo),
     // se ferme sur retour Vue Globale. Toutes les sources passent par planetNav.selectBody.
+    setupOrbitOptions(sceneSystem);
     const bodyInfo = setupBodyInfo();
     const planetNav = setupPlanetControls(cameraSystem, (name) => {
       if (name === 'overview') bodyInfo.hide();

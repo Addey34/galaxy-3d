@@ -1,0 +1,42 @@
+{
+  "version": 1,
+  "source": "NASA/JPL Horizons",
+  "generatedAt": "2026-07-22T23:37:54.765Z",
+  "frame": "ECLIPTIC_J2000",
+  "center": "SUN",
+  "units": "AU-D",
+  "coverage": {
+    "start": "1900-01-01",
+    "stop": "2101-01-01"
+  },
+  "bodies": {
+    "ceres": {
+      "file": "ceres.ba82496af187.bin",
+      "target": "1;",
+      "startJdTdb": 2415020.5,
+      "stepDays": 4,
+      "sampleCount": 18354
+    },
+    "eris": {
+      "file": "eris.2027fcaf7c98.bin",
+      "target": "136199;",
+      "startJdTdb": 2415020.5,
+      "stepDays": 4,
+      "sampleCount": 18354
+    },
+    "haumea": {
+      "file": "haumea.a35f62977ece.bin",
+      "target": "136108;",
+      "startJdTdb": 2415020.5,
+      "stepDays": 4,
+      "sampleCount": 18354
+    },
+    "makemake": {
+      "file": "makemake.a93dd209df6a.bin",
+      "target": "136472;",
+      "startJdTdb": 2415020.5,
+      "stepDays": 4,
+      "sampleCount": 18354
+    }
+  }
+}

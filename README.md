@@ -6,7 +6,8 @@ Visualisateur interactif du système solaire en temps réel, développé en Type
 
 ## Aperçu
 
-- Positions planétaires calculées via la bibliothèque `astronomy-engine` (éphéméride J2000)
+- Positions planétaires calculées via `astronomy-engine`, complétées par des vecteurs NASA/JPL
+  Horizons pour Cérès, Éris, Hauméa et Makémaké (1900–2100, interpolation position-vitesse)
 - Time travel : naviguer librement dans le temps passé et futur
 - Planètes multi-couches : surface PBR, nuages, atmosphère, lueurs nocturnes (shader GLSL)
 - LOD automatique : résolution de texture adaptée à la distance caméra (1k → 8k)
@@ -48,6 +49,7 @@ pnpm preview    # Servir le build de production localement
 pnpm typecheck  # tsc --noEmit seul — vérification stricte des types, sans build
 pnpm test       # vitest run — tests unitaires des modules mathématiques purs
 pnpm test:e2e   # playwright test — tests navigateur sur le port dédié 5273
+pnpm ephemeris:generate # régénérer les vecteurs précis depuis NASA/JPL Horizons
 pnpm format     # Formater les fichiers TypeScript/CSS avec Prettier
 pnpm format:check # Vérifier le formatage sans réécrire
 pnpm lint       # eslint . (flat config) ; pnpm lint:fix pour corriger
@@ -101,10 +103,15 @@ Résolutions disponibles : `1k`, `2k`, `4k`, `8k` (selon le corps, voir `src/con
 
 ### Modes d'affichage
 
-| Mode                      | Distances                | Tailles        | Orbites                  |
-| ------------------------- | ------------------------ | -------------- | ------------------------ |
-| **Éducatif** (`educ`)     | Compressées (`√AU × 35`) | Visuelles      | Circulaires inclinées    |
-| **Exploration** (`explo`) | Réelles (`AU × 35`)      | Physiques (km) | Positions Kepler réelles |
+| Mode                      | Distances                | Tailles        | Positions                               |
+| ------------------------- | ------------------------ | -------------- | --------------------------------------- |
+| **Éducatif** (`educ`)     | Compressées (`√AU × 35`) | Visuelles      | Angle réel, rayon visuellement comprimé |
+| **Exploration** (`explo`) | Réelles (`AU × 35`)      | Physiques (km) | Vecteurs réels à l'échelle linéaire     |
+
+Les lignes d'orbite sont visibles uniquement en Éducation, pour tous les corps et après chaque
+changement de date. Elles servent de repère global ; l'Exploration n'en dessine aucune. Les deux
+modes utilisent le même vecteur astronomique instantané ; seule la transformation d'échelle
+diffère.
 
 Basculer avec les boutons **Éduc. / Explo.** dans l'interface. En Exploration, la caméra cible la Terre par défaut ; le HUD « Voyage spatial » affiche la cible, sa distance réelle et son temps-lumière. Les marqueurs projetés permettent de repérer les autres corps.
 
@@ -155,7 +162,7 @@ src/
 │   ├── systems/
 │   │   ├── AnimationSystem.ts  # Boucle requestAnimationFrame, frustum culling, LOD
 │   │   ├── CameraSystem.ts     # OrbitControls + suivi de cible + tweens
-│   │   ├── SceneSystem.ts      # Scène Three.js, renderer, lignes d'orbite
+│   │   ├── SceneSystem.ts      # Scène Three.js, renderer, hiérarchie des corps
 │   │   ├── LightingSystem.ts   # AmbientLight + PointLight solaire
 │   │   └── TextureSystem.ts    # Cache singleton + LOD textures
 │   └── celestial/
@@ -253,10 +260,24 @@ Le catalogue (`src/config/bodies.ts`) est la **source unique** : boutons de navi
    - `astroBody` : l'enum `Body` d'astronomy-engine (positions réelles)
    - `cameraDistance: { educ, explo }` : distances de visite caméra
    - `loadPriority` : rang de préchargement (croissant) — optionnel
-   - `realData.orbitPeriodDays` : pour tracer la ligne d'orbite
+   - `realData.orbitPeriodDays` : période orbitale documentaire
    - Pour une lune : `frame: 'parentRelative'` et l'imbriquer dans `satellites` du parent
 
 Aucune édition de `index.html`, `EphemerisService` ni des distances caméra n'est nécessaire.
+
+### Éphémérides précises Horizons
+
+Les fichiers binaires de `public/assets/ephemerides/` contiennent les états héliocentriques
+JPL en écliptique J2000, avec positions en UA et vitesses en UA/jour. Ils couvrent 1900–2100
+avec un pas de quatre jours ; `HorizonsEphemerisService` interpole entre deux états par une
+courbe cubique de Hermite. Hors couverture ou si les assets sont indisponibles, le moteur
+revient automatiquement aux éléments képlériens du catalogue.
+
+Pour actualiser les solutions orbitales après une mise à jour JPL :
+
+```bash
+pnpm ephemeris:generate
+```
 
 ## Configuration
 

@@ -76,6 +76,9 @@ export const messages: Record<Locale, Dict> = {
     'onboarding.tip.help': '? button — full navigation tips',
     'onboarding.dismiss': 'Got it',
 
+    // ── Panneau orbites (mode Éducatif) ──
+    'orbitOpts.title': 'Orbits',
+
     // ── Divers ──
     'fullscreen.title': 'Fullscreen',
 
@@ -175,6 +178,9 @@ export const messages: Record<Locale, Dict> = {
     'onboarding.tip.time': 'Molette sur l’horloge ou la date pour voyager dans le temps',
     'onboarding.tip.help': 'Bouton ? — toutes les commandes',
     'onboarding.dismiss': 'Compris',
+
+    // ── Panneau orbites (mode Éducatif) ──
+    'orbitOpts.title': 'Orbites',
 
     // ── Divers ──
     'fullscreen.title': 'Plein écran',

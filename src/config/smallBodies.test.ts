@@ -57,6 +57,31 @@ describe('smallBodyToConfig', () => {
       }).kind
     ).toBe('comet');
   });
+
+  it('connects an optional surface texture and physical rotation data', () => {
+    const textured = smallBodyToConfig({
+      name: 'dwarf',
+      a: 40,
+      e: 0.1,
+      iDeg: 10,
+      omDeg: 20,
+      wDeg: 30,
+      maDeg: 40,
+      epoch: '2000-01-01T12:00:00Z',
+      radiusKm: 700,
+      kind: 'dwarf',
+      surfaceResolutions: ['4k', '2k'],
+      visualRadius: 0.2,
+      rotationHours: 10,
+      axialTiltDeg: 30,
+    });
+
+    expect(textured.textures.surface).toBe('dwarf/dwarfSurface');
+    expect(textured.textureResolutions.surface).toEqual(['4k', '2k']);
+    expect(textured.radius).toBe(0.2);
+    expect(textured.rotationSpeed).toBeCloseTo((Math.PI * 2) / 36_000, 12);
+    expect(textured.realData?.axialTilt).toBeCloseTo(30 * D2R, 12);
+  });
 });
 
 describe('SMALL_BODIES catalogue', () => {
@@ -67,11 +92,25 @@ describe('SMALL_BODIES catalogue', () => {
       'pallas',
       'hygiea',
       'eris',
+      'haumea',
+      'makemake',
       'halley',
     ]) {
       expect(SMALL_BODIES[name]).toBeDefined();
       expect(SMALL_BODIES[name]?.orbitalElements).toBeDefined();
       expect(SMALL_BODIES[name]?.astroBody).toBeUndefined(); // positionné par éléments, pas par éphéméride
+    }
+  });
+
+  it('exposes local textures for the four newly rendered dwarf planets', () => {
+    for (const name of ['ceres', 'eris', 'haumea', 'makemake']) {
+      expect(SMALL_BODIES[name]?.textures.surface).toBe(
+        `${name}/${name}Surface`
+      );
+      expect(SMALL_BODIES[name]?.textureResolutions.surface).toEqual([
+        '4k',
+        '2k',
+      ]);
     }
   });
 

@@ -365,7 +365,8 @@ export const CELESTIAL_CONFIG: CelestialConfig = {
 
     // Petits corps (astéroïdes, comètes, planètes naines) — positionnés par éléments
     // orbitaux képlériens, définis dans `smallBodies.ts`. Fusionnés ici pour dériver comme
-    // les autres corps (position, ligne d'orbite, label Explo), sans texture ni mesh.
+    // les autres corps (position instantanée, label Explo). Les corps disposant d'une
+    // texture locale ont aussi un mesh et deviennent navigables dans les deux modes.
     ...SMALL_BODIES,
   },
 };

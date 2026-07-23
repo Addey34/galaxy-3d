@@ -1,11 +1,7 @@
 /**
  * Socle de rendu Three.js : possède la scène, la caméra perspective, le WebGLRenderer
- * et le fond étoilé. Construit aussi la hiérarchie des orbites (chaque corps vit dans un
- * `orbitGroup`) et gère la géométrie des lignes d'orbite.
- *
- * Les points d'orbite sont alimentés en deux temps : `setOrbitPoints()` stocke les
- * tableaux calculés par OrbitalMechanics, puis `applyOrbitPoints()` les copie d'un coup
- * dans les géométries GPU.
+ * et le fond étoilé. Construit aussi la hiérarchie de transformation des corps et les lignes
+ * d'orbite éducatives ; celles-ci sont masquées en Exploration.
  */
 import * as THREE from 'three';
 import {
@@ -16,7 +12,6 @@ import {
 import { educRadius } from '@/core/ScaleService';
 import { ORBIT_SAMPLE_COUNT } from '@/core/OrbitalMechanics';
 import type { CelestialBodyConfig, CelestialConfig } from '@/types';
-import { SMALL_BODY_KINDS } from '@/types';
 import Logger from '@/utils/Logger';
 import type { TextureSystem } from './TextureSystem';
 import type CelestialObject from '@/components/celestial/CelestialObject';
@@ -33,6 +28,9 @@ export class SceneSystem {
 
   private readonly _orbitLines = new Map<string, THREE.Line>();
   private readonly _orbitPts = new Map<string, Float32Array>();
+  private _orbitsGloballyVisible = false;
+  private _orbitMasterEnabled = true;
+  private readonly _orbitHidden = new Set<string>();
 
   /** Table des corps, conservée pour exposer leurs positions monde (HUD explo). */
   private _celestialBodies: CelestialBodies = {};
@@ -146,14 +144,10 @@ export class SceneSystem {
       orbitGroup.name = `orbit_${name}`;
       orbitGroup.add(body.group);
       this.orbitGroups[name] = orbitGroup;
-      // Les petits corps (astéroïdes, comètes, planètes naines) n'ont pas de mesh (invisibles
-      // à taille physique réelle) : leur tracer une ligne d'orbite créerait une orbite « sans
-      // planète » — cercle √-compressé en Éduc, ellipse vide en Explo. Ils ne vivent que dans
-      // la couche instrument (overlay 2D + labels), donc pas de ligne d'orbite 3D.
-      if (!SMALL_BODY_KINDS.has(config.kind)) {
-        orbitGroup.add(this.createOrbitVisual(name, config.orbitalColor));
-      }
-
+      // Les orbites éducatives couvrent tous les corps, y compris les planètes naines texturées
+      // et les petits corps sans mesh. Elles servent de repère global ; aucune n'est affichée
+      // en Exploration.
+      orbitGroup.add(this.createOrbitVisual(name, config.orbitalColor));
       if (parentGroup) {
         parentGroup.add(orbitGroup);
       } else {
@@ -202,61 +196,58 @@ export class SceneSystem {
     }
   }
 
-  /**
-   * Crée la ligne d'orbite avec une géométrie vide (zéros).
-   * Les points d'orbite sont injectés via setOrbitPoints() + applyOrbitPoints().
-   */
   private createOrbitVisual(bodyName: string, color: number): THREE.Line {
-    const N = ORBIT_SAMPLE_COUNT;
-    const positions = new Float32Array((N + 1) * 3); // tout à zéro jusqu'au premier calcul Kepler
-
+    const positions = new Float32Array((ORBIT_SAMPLE_COUNT + 1) * 3);
     const geometry = new THREE.BufferGeometry();
     geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-
     const material = new THREE.LineBasicMaterial({
       color,
       transparent: true,
       opacity: 0.25,
     });
     const line = new THREE.Line(geometry, material);
-
     this._orbitLines.set(bodyName, line);
     return line;
   }
 
-  /** Reçoit les points d'orbite calculés par OrbitalMechanics. */
   setOrbitPoints(bodyName: string, points: Float32Array): void {
     this._orbitPts.set(bodyName, points);
   }
 
-  /**
-   * Affiche/masque toutes les lignes d'orbite 3D (repère de navigation pour la vue d'ensemble).
-   * Masquées en suivi rapproché Explo : collé au corps à vraie échelle, la caméra est à ~0,01u
-   * d'un trait de rayon ~35u. Le polygone (256 segments) coupe alors visiblement à l'intérieur du
-   * vrai cercle (flèche ≈ 0,0026u > rayon Terre 0,0015u → le corps sort de son trait), et le near
-   * plane serré le clippe. À cette échelle un trait d'orbite n'a plus de sens : on le retire.
-   */
   setOrbitLinesVisible(visible: boolean): void {
-    for (const line of this._orbitLines.values()) line.visible = visible;
+    this._orbitsGloballyVisible = visible;
+    const base = visible && this._orbitMasterEnabled;
+    for (const [name, line] of this._orbitLines) {
+      line.visible = base && !this._orbitHidden.has(name);
+    }
   }
 
-  /**
-   * Copie les points d'orbite stockés dans les géométries de ligne.
-   * Appelé à chaque changement de date ou de mode.
-   */
+  /** Bascule globale (bouton ON/OFF du panneau Orbites). Persiste à travers educ↔explo. */
+  setOrbitMasterEnabled(enabled: boolean): void {
+    this._orbitMasterEnabled = enabled;
+    const base = this._orbitsGloballyVisible && enabled;
+    for (const [name, line] of this._orbitLines) {
+      line.visible = base && !this._orbitHidden.has(name);
+    }
+  }
+
+  setBodyOrbitVisible(name: string, visible: boolean): void {
+    if (visible) this._orbitHidden.delete(name);
+    else this._orbitHidden.add(name);
+    const line = this._orbitLines.get(name);
+    if (line) line.visible = this._orbitsGloballyVisible && this._orbitMasterEnabled && visible;
+  }
+
   applyOrbitPoints(): void {
     for (const [bodyName, line] of this._orbitLines) {
-      const pts = this._orbitPts.get(bodyName);
-      if (!pts) continue;
-
+      const points = this._orbitPts.get(bodyName);
+      if (!points) continue;
       const attr = line.geometry.getAttribute(
         'position'
       ) as THREE.BufferAttribute;
-      const n = attr.count;
-
-      for (let i = 0; i < n; i++) {
+      for (let i = 0; i < attr.count; i++) {
         const i3 = i * 3;
-        attr.setXYZ(i, pts[i3], pts[i3 + 1], pts[i3 + 2]);
+        attr.setXYZ(i, points[i3], points[i3 + 1], points[i3 + 2]);
       }
       attr.needsUpdate = true;
       line.geometry.computeBoundingSphere();

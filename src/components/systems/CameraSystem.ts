@@ -12,7 +12,7 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { CAMERA_CONTROLS_SETTINGS, CAMERA_SETTINGS } from '@/config/engine';
 import Logger from '@/utils/Logger';
-import type { CelestialBodies, SceneSystem } from './SceneSystem';
+import type { CelestialBodies } from './SceneSystem';
 
 export class CameraSystem {
   camera!: THREE.PerspectiveCamera;
@@ -21,7 +21,6 @@ export class CameraSystem {
   tweenGroup!: TweenGroup;
 
   private celestialBodies!: CelestialBodies;
-  private sceneSystem: SceneSystem | null = null;
   private isAnimating = false;
   private currentTarget: {
     name: string;
@@ -44,13 +43,11 @@ export class CameraSystem {
   init(
     camera: THREE.PerspectiveCamera,
     renderer: THREE.WebGLRenderer,
-    celestialBodies: CelestialBodies,
-    sceneSystem?: SceneSystem
+    celestialBodies: CelestialBodies
   ): void {
     this.camera = camera;
     this.renderer = renderer;
     this.celestialBodies = celestialBodies;
-    this.sceneSystem = sceneSystem ?? null;
     this.initializeControls();
     Logger.success('[CameraSystem] Initialized');
   }
@@ -104,20 +101,7 @@ export class CameraSystem {
 
     this.currentTarget = { name: bodyName, group: body, distance };
     this.cameraOffset.subVectors(cameraPosition, this.targetWorldPosition);
-    this._syncOrbitLinesVisibility();
-
     this.animateToTarget(cameraPosition, this.targetWorldPosition.clone());
-  }
-
-  /**
-   * Les lignes d'orbite 3D sont un repère de vue d'ensemble : on les masque en suivi rapproché
-   * Explo (collé au corps, le trait n'est ni alignable ni non-clippé, cf. SceneSystem), on les
-   * réaffiche en vue d'ensemble et en Éducatif (toujours vues de loin → traits lisses et utiles).
-   */
-  private _syncOrbitLinesVisibility(): void {
-    const followingInExplo =
-      this._scaleMode === 'explo' && this.currentTarget !== null;
-    this.sceneSystem?.setOrbitLinesVisible(!followingInExplo);
   }
 
   private animateToTarget(
@@ -135,7 +119,7 @@ export class CameraSystem {
     // Suivi de la cible MOBILE pendant le vol : à vitesse accélérée le corps avance pendant
     // les 1,2 s de transition. On mémorise sa position au départ et, à chaque frame, on
     // décale caméra + cible du déplacement accumulé (drift) — sinon le corps glisse
-    // latéralement et sort de sa ligne d'orbite jusqu'au recalage final. `camTo`/`tgtTo`
+    // latéralement hors du centre jusqu'au recalage final. `camTo`/`tgtTo`
     // restent les valeurs figées au clic ; le drift les recale vers la position vivante.
     const followGroup = this.currentTarget?.group ?? null;
     const trackStart = new THREE.Vector3();
@@ -311,7 +295,6 @@ export class CameraSystem {
    */
   goToOverview(): void {
     this.currentTarget = null;
-    this._syncOrbitLinesVisibility();
     const pos =
       this._scaleMode === 'explo'
         ? new THREE.Vector3(0, 875, 1205) // vraie échelle : cadre Neptune à ~1050u
@@ -365,7 +348,6 @@ export class CameraSystem {
   ): void {
     this._applyScaleModeBounds(mode);
     this.currentTarget = null;
-    this._syncOrbitLinesVisibility();
     const pos =
       mode === 'explo'
         ? new THREE.Vector3(0, 875, 1205)

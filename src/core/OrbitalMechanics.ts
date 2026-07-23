@@ -10,8 +10,8 @@
  *     échelle linéaire (AU × K).
  *
  * Gère aussi la synchronisation avec l'horloge (`syncAnglesFromEphemeris` oriente les axes
- * de rotation et cale la rotation de la Terre sur l'heure UTC), le voyage temporel et le
- * calcul des points des lignes d'orbite.
+ * de rotation et cale la rotation de la Terre sur l'heure UTC), le voyage temporel et les
+ * points des orbites éducatives.
  */
 import * as THREE from 'three';
 import type { Body } from 'astronomy-engine';
@@ -20,6 +20,7 @@ import type { CelestialBodies } from '@/components/systems/SceneSystem';
 import type { SimulationClock } from './SimulationClock';
 import type { EphemerisService } from './EphemerisService';
 import type { OrbitalElementsService } from './OrbitalElementsService';
+import type { HorizonsEphemerisService } from './HorizonsEphemerisService';
 import { ScaleService, SQRT_K } from './ScaleService';
 import { angleInOrbitalPlane, orbitalPositionEduc } from './orbitalGeometry';
 import { forEachBody } from '@/config/catalog';
@@ -31,8 +32,6 @@ function hasOrbit(cfg: CelestialBodyConfig): boolean {
 
 const ZERO = new THREE.Vector3(0, 0, 0);
 
-/** Nombre de points échantillonnés le long de chaque ligne d'orbite.
- *  Source unique partagée avec SceneSystem (taille des buffers de géométrie). */
 export const ORBIT_SAMPLE_COUNT = 256;
 
 /** Durée (secondes) de la transition animée Éduc↔Explo (le « dolly zoom »). */
@@ -52,6 +51,9 @@ export class OrbitalMechanics {
   private _prevPaused = false;
   private _simDeltaSeconds = 0;
 
+  /** Notifie l'application pour recalculer les lignes éducatives après un saut/date ou mode. */
+  onOrbitsChanged: (() => void) | null = null;
+
   // ── Transition animée Éduc↔Explo ──
   // `_morph` : 0 = Éducatif (√ compressé), 1 = Explo (linéaire vrai). Au repos il vaut le mode
   // courant ; pendant une transition il glisse de `_morphFrom` vers `_morphTo` sur MORPH_DURATION_S.
@@ -61,19 +63,17 @@ export class OrbitalMechanics {
   private _morphTo = 0;
   private _morphElapsed = 0;
 
-  /** Appelé quand les lignes d'orbite doivent être recalculées (changement de mode ou de date). */
-  onOrbitsChanged: (() => void) | null = null;
   /** Émis chaque frame pendant la transition avec le facteur de morph courant (0→1) : la couche
    *  app l'utilise pour interpoler la taille visuelle de chaque corps (cf. `setScaleMorph`). */
   onScaleMorph: ((p: number) => void) | null = null;
-  /** Émis au début (`true`) et à la fin (`false`) d'une transition animée : la couche app masque
-   *  les lignes d'orbite pendant le morph (recalcul par frame trop coûteux) puis les rétablit. */
+  /** Masque les lignes pendant une transition vers/depuis l'Exploration. */
   onMorphPhase: ((active: boolean) => void) | null = null;
 
   constructor(
     private readonly clock: SimulationClock,
     private readonly ephemeris: EphemerisService,
     private readonly elements: OrbitalElementsService,
+    private readonly horizons: HorizonsEphemerisService,
     private readonly config: CelestialConfig,
     private bodies: CelestialBodies
   ) {
@@ -135,8 +135,7 @@ export class OrbitalMechanics {
     this.onScaleMorph?.(this._morph);
 
     if (raw >= 1) {
-      // Fin de transition : on cale exactement sur le mode cible, on rétablit les lignes
-      // d'orbite (recalculées pour le mode final) et on fige les tailles via onOrbitsChanged.
+      // Fin de transition : on cale exactement positions et tailles sur le mode cible.
       this._morphActive = false;
       this._morph = this._morphTo;
       this.onScaleMorph?.(this._morph);
@@ -156,6 +155,11 @@ export class OrbitalMechanics {
     cfg: CelestialBodyConfig,
     date: Date
   ): THREE.Vector3 | null {
+    // Les vecteurs numériques Horizons sont prioritaires lorsqu'ils couvrent ce corps et
+    // cette date. Les deux modes consomment ensuite exactement cette même position source.
+    const precisePosition = this.horizons.getHeliocentricAU(name, date);
+    if (precisePosition) return precisePosition;
+
     if (cfg.astroBody !== undefined) {
       if (cfg.frame === 'parentRelative') {
         const parentBody = this._parentAstroBody.get(name);
@@ -259,24 +263,23 @@ export class OrbitalMechanics {
 
   /**
    * Bascule l'échelle Éduc↔Explo.
-   *   - `animated = false` (défaut) : bascule instantanée + recalcul des lignes d'orbite.
+   *   - `animated = false` (défaut) : bascule instantanée des positions et tailles.
    *   - `animated = true` : lance la transition « dolly zoom » — les positions et tailles
-   *     glissent de l'échelle courante vers l'échelle cible sur MORPH_DURATION_S. Les lignes
-   *     d'orbite sont masquées le temps du morph puis recalculées pour le mode final.
+   *     glissent de l'échelle courante vers l'échelle cible sur MORPH_DURATION_S.
    * Un appel animé en cours de morph repart de l'état courant (interruptible sans saut).
    */
   setMode(mode: 'educ' | 'explo', animated = false): void {
     if (this.scale.mode === mode && !this._morphActive) return;
 
     const targetMorph = mode === 'explo' ? 1 : 0;
-    // Le mode d'échelle « au repos » passe immédiatement à la cible : les lignes d'orbite et
-    // les tailles finales (recalculées en fin de morph) utilisent déjà le bon mode. Les
-    // positions par frame, elles, suivent `_morph` tant que la transition est active.
+    // Le mode d'échelle « au repos » passe immédiatement à la cible. Les positions par frame
+    // suivent `_morph` tant que la transition animée est active.
     this.scale.mode = mode;
 
     if (!animated) {
       this._morphActive = false;
       this._morph = targetMorph;
+      this.onScaleMorph?.(targetMorph);
       this.onOrbitsChanged?.();
       return;
     }
@@ -334,85 +337,53 @@ export class OrbitalMechanics {
     }
   }
 
+  /** Calcule uniquement les lignes éducatives : cercle incliné et distance compressée. */
   computeOrbitPoints(
-    name: string,
+    _name: string,
     cfg: CelestialBodyConfig,
-    date: Date,
+    _date: Date,
     nPoints = ORBIT_SAMPLE_COUNT
   ): Float32Array | null {
+    if (this.scale.mode !== 'educ') return null;
     const distanceAU = cfg.realData?.distanceAU;
+    if (distanceAU === undefined) return null;
 
-    // Mode Éducatif : orbite circulaire inclinée (éléments J2000 — même formule que _updateBody).
-    if (this.scale.mode === 'educ') {
-      if (distanceAU === undefined) return null;
-      const r = Math.sqrt(distanceAU) * SQRT_K;
-      const inc = cfg.realData?.orbitalInclination ?? 0;
-      const node = cfg.realData?.ascendingNode ?? 0;
-      const arr = new Float32Array((nPoints + 1) * 3);
-      for (let i = 0; i <= nPoints; i++) {
-        const p = orbitalPositionEduc(
-          r,
-          (i / nPoints) * Math.PI * 2,
-          inc,
-          node
-        );
-        arr[i * 3] = p.x;
-        arr[i * 3 + 1] = p.y;
-        arr[i * 3 + 2] = p.z;
-      }
-      return arr;
-    }
-
-    // Mode Explo : ellipse Kepler réelle. Période depuis realData, ou dérivée du demi-grand
-    // axe pour les corps à éléments orbitaux (3ᵉ loi de Kepler : T = 365.256 · a^1.5 jours).
-    const period =
-      cfg.realData?.orbitPeriodDays ??
-      (cfg.orbitalElements
-        ? 365.256 * Math.pow(cfg.orbitalElements.semiMajorAxisAU, 1.5)
-        : undefined);
-    if (!period) return null;
-
-    const arr = new Float32Array((nPoints + 1) * 3);
-
+    const radius = Math.sqrt(distanceAU) * SQRT_K;
+    const inc = cfg.realData?.orbitalInclination ?? 0;
+    const node = cfg.realData?.ascendingNode ?? 0;
+    const points = new Float32Array((nPoints + 1) * 3);
     for (let i = 0; i <= nPoints; i++) {
-      const t = new Date(date.getTime() + (i / nPoints) * period * 86_400_000);
-
-      // Explo : échelle linéaire (AU × SQRT_K), sans compression √. Les corps parentRelative
-      // (Lune) suivent leur position géocentrique — déjà hors du mesh du parent.
-      const pos = this._positionAU(name, cfg, t);
-      if (!pos) return null;
-      const s = this.scale.auVectorToScene(pos);
-
-      arr[i * 3] = s.x;
-      arr[i * 3 + 1] = s.y;
-      arr[i * 3 + 2] = s.z;
+      const point = orbitalPositionEduc(
+        radius,
+        (i / nPoints) * Math.PI * 2,
+        inc,
+        node
+      );
+      points[i * 3] = point.x;
+      points[i * 3 + 1] = point.y;
+      points[i * 3 + 2] = point.z;
     }
-
-    return arr;
+    return points;
   }
 
   /**
    * À appeler après tout saut temporel. Re-synchronise IMPÉRATIVEMENT :
    *   - les angles orbitaux éducatifs (sinon les planètes restent figées au scrubbing) ;
    *   - la rotation de surface de la Terre sur l'heure UTC (sinon le jour/nuit ne suit pas).
-   * `recomputeOrbitLines` : recalcule les ellipses (jour+ seulement — inutile pour h/m/s,
-   *   la forme d'orbite ne change pas visiblement en quelques heures).
    */
-  private _afterTimeTravel(recomputeOrbitLines: boolean): void {
+  private _afterTimeTravel(): void {
     this.syncAnglesFromEphemeris(this.clock.date);
-    if (recomputeOrbitLines) this.onOrbitsChanged?.();
+    this.onOrbitsChanged?.();
   }
 
-  // Time travel — les changements de jour+ recompilent aussi les lignes d'orbite (inclinaison varie)
   addTimeOffset(days: number): void {
     this.clock.addDays(days);
-    this._afterTimeTravel(true);
+    this._afterTimeTravel();
   }
 
-  // Glissement heure par heure : re-sync angles + rotation, mais pas les lignes d'orbite
   addTimeOffsetHours(hours: number): void {
     this.clock.addHours(hours);
-    this._afterTimeTravel(false);
+    this._afterTimeTravel();
   }
 
   setSimulationSpeed(scale: number): void {

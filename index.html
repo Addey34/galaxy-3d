@@ -107,6 +107,23 @@
       </div>
     </aside>
 
+    <!-- ─── Orbit options panel (left — educ mode only) ────────────────────── -->
+    <!-- Coches pour afficher/masquer les orbites des planètes naines en mode Éducatif.
+         Rempli dynamiquement par ui/orbitOptions depuis le catalogue ; masqué en Explo. -->
+    <aside id="orbit-options" hidden>
+      <header class="oo-header">
+        <h3 class="oo-title" data-i18n="orbitOpts.title">Orbits</h3>
+        <button
+          class="oo-master-btn"
+          aria-pressed="true"
+          title="Toggle all orbits"
+        >ON</button>
+      </header>
+      <div class="oo-body">
+        <!-- populated by ui/orbitOptions.ts -->
+      </div>
+    </aside>
+
     <!-- ─── Mode toggle (bottom-left) ──────────────────────────────────────── -->
     <div id="mode-controls">
       <div

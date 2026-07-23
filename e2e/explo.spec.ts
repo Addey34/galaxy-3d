@@ -88,28 +88,55 @@ test('keeps the followed body projected at the screen center', async ({
 });
 
 /**
- * Petits corps (astéroïdes / comètes / planètes naines) : positionnés par éléments orbitaux
- * képlériens, ils apparaissent comme labels Explo (instrument de navigation) mais restent
- * hors de la barre de navigation principale. Vérifie aussi que leur présence ne provoque
- * aucune erreur de boot.
+ * Petits corps : tous apparaissent comme labels Explo. Les planètes naines qui disposent
+ * d'une texture ont aussi un mesh et un bouton de navigation ; les corps sans texture
+ * restent uniquement accessibles par leur label. Vérifie aussi l'absence d'erreur au boot.
  */
-test('small bodies appear as explo labels but not in the nav bar', async ({
+test('textured dwarf planets are navigable and other small bodies stay label-only', async ({
   page,
 }) => {
   const errors: string[] = [];
+  const ephemerisResponses: { file: string; status: number }[] = [];
   page.on('pageerror', (err) => errors.push(err.message));
+  page.on('response', (response) => {
+    const pathname = new URL(response.url()).pathname;
+    if (!pathname.includes('/assets/ephemerides/')) return;
+    ephemerisResponses.push({
+      file: pathname.slice(pathname.lastIndexOf('/') + 1),
+      status: response.status(),
+    });
+  });
 
   await page.goto('/');
   await expect(page.locator('#loader')).toBeHidden({ timeout: 30_000 });
 
-  // Cérès n'a pas de bouton de navigation (petit corps).
-  await expect(page.locator('#orbit-ceres')).toHaveCount(0);
+  expect(ephemerisResponses).toHaveLength(5);
+  expect(ephemerisResponses.every(({ status }) => status === 200)).toBe(true);
+  expect(ephemerisResponses.map(({ file }) => file)).toEqual(
+    expect.arrayContaining([
+      'manifest.json',
+      expect.stringMatching(/^ceres\.[a-f0-9]{12}\.bin$/),
+      expect.stringMatching(/^eris\.[a-f0-9]{12}\.bin$/),
+      expect.stringMatching(/^haumea\.[a-f0-9]{12}\.bin$/),
+      expect.stringMatching(/^makemake\.[a-f0-9]{12}\.bin$/),
+    ])
+  );
+
+  // Les quatre planètes naines nouvellement texturées ont un mesh et un bouton.
+  for (const name of ['ceres', 'eris', 'haumea', 'makemake']) {
+    await expect(page.locator(`#orbit-${name}`)).toHaveCount(1);
+  }
+  // Vesta reste un petit corps sans texture, donc sans bouton dans la barre.
+  await expect(page.locator('#orbit-vesta')).toHaveCount(0);
 
   await page.locator('.mode-btn[data-mode=explo]').click();
   await expect(page.locator('body')).toHaveClass(/is-explo-mode/);
 
-  // Mais un label Cérès est bien projeté (créé au premier frame du HUD).
+  // Les deux catégories ont bien un label projeté (créé au premier frame du HUD).
   await expect(page.locator('.explo-label', { hasText: 'Ceres' })).toHaveCount(
+    1
+  );
+  await expect(page.locator('.explo-label', { hasText: 'Vesta' })).toHaveCount(
     1
   );
 

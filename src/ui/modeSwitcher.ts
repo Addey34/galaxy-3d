@@ -47,8 +47,6 @@ export function setupModeSwitcher(
       // pendant la transition, puis revient au corps suivi une fois le recul terminé.
       // Seul le morph de positions/tailles est gouverné par prefers-reduced-motion (mouvement
       // nouveau) ; le vol caméra, lui, existait déjà et reste identique dans les deux cas.
-      // Ordre important : la caméra passe en vue d'ensemble (qui réaffiche les lignes d'orbite)
-      // AVANT `om.setMode`, dont la phase de morph les masque ensuite le temps de la transition.
       const follow = selectedBody();
       camera.transitionScaleMode(mode, follow);
       om.setMode(mode, !prefersReducedMotion());

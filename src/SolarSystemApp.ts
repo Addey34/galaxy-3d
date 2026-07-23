@@ -10,10 +10,10 @@ import { SimulationClock } from './core/SimulationClock';
 import { EphemerisService } from './core/EphemerisService';
 import { OrbitalElementsService } from './core/OrbitalElementsService';
 import { OrbitalMechanics } from './core/OrbitalMechanics';
+import { HorizonsEphemerisService } from './core/HorizonsEphemerisService';
 import { APP_SETTINGS, TEXTURE_SETTINGS } from './config/engine';
 import { CELESTIAL_CONFIG } from './config/bodies';
 import { forEachBody } from './config/catalog';
-import { SMALL_BODY_KINDS } from './types';
 import { t } from './i18n';
 import Logger from './utils/Logger';
 
@@ -50,6 +50,7 @@ export class SolarSystemApp {
   // Conservés pour le callback de recomputation des orbites
   private _orbitalMechanics: OrbitalMechanics | null = null;
   private _ephemerisService: EphemerisService | null = null;
+  private _horizonsEphemeris: HorizonsEphemerisService | null = null;
 
   async init(progressCallback: ProgressCallback): Promise<PublicAPI> {
     if (this.initialized) {
@@ -87,9 +88,14 @@ export class SolarSystemApp {
       performance: APP_SETTINGS.performance,
     };
     this.systems.texture = TextureSystem.getInstance(config);
-    await this.systems.texture.preloadCriticalTextures((percent, msg) => {
-      progressCallback(percent * 0.4, msg);
-    });
+    const manifestUrl = `${import.meta.env.BASE_URL}assets/ephemerides/manifest.json`;
+    const [, horizons] = await Promise.all([
+      this.systems.texture.preloadCriticalTextures((percent, msg) => {
+        progressCallback(percent * 0.4, msg);
+      }),
+      HorizonsEphemerisService.load(manifestUrl),
+    ]);
+    this._horizonsEphemeris = horizons;
   }
 
   private _initCoreSystems(progressCallback: ProgressCallback): void {
@@ -126,8 +132,7 @@ export class SolarSystemApp {
     this.systems.camera.init(
       this.systems.scene!.camera,
       this.systems.scene!.renderer,
-      bodies,
-      this.systems.scene!
+      bodies
     );
 
     this.systems.animation.init({
@@ -144,65 +149,58 @@ export class SolarSystemApp {
       new SimulationClock(),
       this._ephemerisService,
       new OrbitalElementsService(),
+      this._horizonsEphemeris!,
       CELESTIAL_CONFIG,
       bodies
     );
 
-    // Callback : recalcul des orbites à chaque changement de mode ou de date
+    // Transition animée Éduc↔Explo : la taille visuelle de chaque corps morphe avec sa
+    // position. Les lignes éducatives sont masquées dès que l'Exploration devient active.
     this._orbitalMechanics.onOrbitsChanged = () => {
       this._recomputeOrbits();
+      this.systems.scene?.setOrbitLinesVisible(
+        this._orbitalMechanics?.scaleMode === 'educ'
+      );
     };
-
-    // Transition animée Éduc↔Explo : la taille visuelle de chaque corps morphe avec les
-    // positions (piloté par OrbitalMechanics), et les lignes d'orbite sont masquées le temps
-    // du morph (recalcul par frame trop coûteux) puis rétablies en fin de transition.
     this._orbitalMechanics.onScaleMorph = (p) => {
       forEachBody(CELESTIAL_CONFIG, ({ name, config: cfg }) => {
         if (cfg.kind === 'skybox') return;
         this.bodyCache?.[name]?.setScaleMorph(p);
       });
     };
-    this._orbitalMechanics.onMorphPhase = (active) => {
-      this.systems.scene?.setOrbitLinesVisible(!active);
+    this._orbitalMechanics.onMorphPhase = () => {
+      this.systems.scene?.setOrbitLinesVisible(false);
     };
-
     this.systems.animation.setOrbitalMechanics(this._orbitalMechanics);
 
     // Positionner les planètes sur leurs positions réelles avant le premier rendu
     this._orbitalMechanics.syncAnglesFromEphemeris(
       this._orbitalMechanics.simulationDate
     );
+    forEachBody(CELESTIAL_CONFIG, ({ name, config: cfg }) => {
+      if (cfg.kind !== 'skybox') bodies[name]?.setScaleMode('educ');
+    });
     this._recomputeOrbits();
 
     progressCallback(95, t('loader.starting'));
     this.systems.animation.run();
   }
 
-  /** Calcule les points d'orbite 3D pour tous les corps et les envoie à SceneSystem.
-   *  Met aussi à jour la taille visuelle des planètes selon le mode courant. */
+  /** Recalcule les lignes du mode Éducation ; aucune ligne n'est produite en Exploration. */
   private _recomputeOrbits(): void {
     const om = this._orbitalMechanics!;
     const scene = this.systems.scene!;
     const bodies = this.bodyCache!;
     const date = om.simulationDate;
-    const mode = om.scaleMode; // 'educ' | 'explo'
+    const mode = om.scaleMode;
 
     forEachBody(CELESTIAL_CONFIG, ({ name, config: cfg }) => {
-      if (cfg.kind === 'skybox') return; // la skybox n'est pas un CelestialObject
-
+      if (cfg.kind === 'skybox') return;
       bodies[name]?.setScaleMode(mode);
-
-      if (cfg.kind === 'star') return; // l'étoile centrale reste à l'origine (pas d'orbite)
-
-      // Les petits corps (astéroïdes, comètes, planètes naines) n'ont pas de mesh 3D et
-      // ne vivent que dans la couche instrument (overlay 2D + labels). Leur calculer une
-      // ligne d'orbite dessinerait une orbite « sans planète » (cf. SceneSystem.addBody).
-      if (SMALL_BODY_KINDS.has(cfg.kind)) return;
-
+      if (cfg.kind === 'star') return;
       const points = om.computeOrbitPoints(name, cfg, date);
       if (points) scene.setOrbitPoints(name, points);
     });
-
     scene.applyOrbitPoints();
   }
 

@@ -12,7 +12,7 @@
  * (nouvelle époque). À l'échelle de milliers de corps, alimenter ce même convertisseur
  * depuis un JSON streamé (phase ultérieure) plutôt que des littéraux.
  */
-import type { CelestialBodyConfig } from '@/types';
+import type { CelestialBodyConfig, TextureQuality } from '@/types';
 import { exploCameraDistance } from '@/core/ScaleService';
 
 const D2R = Math.PI / 180;
@@ -44,6 +44,14 @@ export interface SmallBodyElements {
   kind?: 'asteroid' | 'comet' | 'dwarf';
   /** Couleur d'orbite/marqueur (0xRRGGBB) — défaut selon la catégorie. */
   color?: number;
+  /** Résolutions d'une texture de surface locale. Absent = corps sans mesh. */
+  surfaceResolutions?: TextureQuality[];
+  /** Rayon visuel en mode Éducatif. Absent = 0,1 unité. */
+  visualRadius?: number;
+  /** Période de rotation sidérale (heures). */
+  rotationHours?: number;
+  /** Obliquité de l'axe de rotation (degrés). */
+  axialTiltDeg?: number;
 }
 
 const DEFAULT_COLOR: Record<NonNullable<SmallBodyElements['kind']>, number> = {
@@ -54,8 +62,9 @@ const DEFAULT_COLOR: Record<NonNullable<SmallBodyElements['kind']>, number> = {
 
 /**
  * Convertit une ligne d'éléments (degrés/UA) en entrée de catalogue : angles en radians,
- * période dérivée du demi-grand axe (3ᵉ loi de Kepler), aucune texture (rendu invisible à
- * taille physique réelle — invariant Explo respecté). Fonction pure, testée.
+ * période dérivée du demi-grand axe (3ᵉ loi de Kepler). Une texture de surface peut être
+ * déclarée pour les corps disposant d'un asset local ; les autres restent sans mesh.
+ * Fonction pure, testée.
  */
 export function smallBodyToConfig(el: SmallBodyElements): CelestialBodyConfig {
   const kind = el.kind ?? 'asteroid';
@@ -66,20 +75,26 @@ export function smallBodyToConfig(el: SmallBodyElements): CelestialBodyConfig {
   return {
     kind,
     ...(el.displayName ? { displayName: el.displayName } : {}),
-    // Rayon de base nominal (aucun mesh n'est créé faute de texture) : évite une division
-    // par zéro dans setScaleMode et sert de garde-fou de cadrage caméra.
-    radius: 0.1,
-    rotationSpeed: 0,
+    // Rayon de base nominal : évite une division par zéro dans setScaleMode et sert aussi
+    // de garde-fou de cadrage pour les corps sans mesh.
+    radius: el.visualRadius ?? 0.1,
+    rotationSpeed: el.rotationHours
+      ? (Math.PI * 2) / (el.rotationHours * 3_600)
+      : 0,
     orbitalColor: el.color ?? DEFAULT_COLOR[kind],
-    textureResolutions: {},
-    textures: {},
+    textureResolutions: el.surfaceResolutions
+      ? { surface: el.surfaceResolutions }
+      : {},
+    textures: el.surfaceResolutions
+      ? { surface: `${el.name}/${el.name}Surface` }
+      : {},
     realData: {
       radiusKm: el.radiusKm,
       distanceAU: el.a,
       orbitPeriodDays: periodDays,
       orbitalInclination: inclinationRad,
       ascendingNode: ascendingNodeRad,
-      axialTilt: 0,
+      axialTilt: (el.axialTiltDeg ?? 0) * D2R,
     },
     orbitalElements: {
       semiMajorAxisAU: el.a,
@@ -111,6 +126,11 @@ export const SMALL_BODY_ELEMENTS: readonly SmallBodyElements[] = [
     epoch: '2000-01-01T12:00:00Z',
     radiusKm: 473,
     kind: 'dwarf',
+    color: 0xa09880,
+    surfaceResolutions: ['4k', '2k'],
+    visualRadius: 0.1,
+    rotationHours: 9.074,
+    axialTiltDeg: 4,
   },
   {
     name: 'vesta',
@@ -172,6 +192,47 @@ export const SMALL_BODY_ELEMENTS: readonly SmallBodyElements[] = [
     epoch: '2000-01-01T12:00:00Z',
     radiusKm: 1163,
     kind: 'dwarf',
+    color: 0x88aad0,
+    surfaceResolutions: ['4k', '2k'],
+    visualRadius: 0.183,
+    rotationHours: 25.9,
+    axialTiltDeg: 78,
+  },
+  {
+    name: 'haumea',
+    displayName: { en: 'Haumea', fr: 'Hauméa' },
+    a: 43.218,
+    e: 0.1913,
+    iDeg: 28.19,
+    omDeg: 121.91,
+    wDeg: 239.04,
+    maDeg: 205.65,
+    epoch: '2000-01-01T12:00:00Z',
+    radiusKm: 780,
+    kind: 'dwarf',
+    color: 0xe08878,
+    surfaceResolutions: ['4k', '2k'],
+    visualRadius: 0.123,
+    rotationHours: 3.9155,
+    axialTiltDeg: 126,
+  },
+  {
+    name: 'makemake',
+    displayName: { en: 'Makemake', fr: 'Makémaké' },
+    a: 45.715,
+    e: 0.1559,
+    iDeg: 28.98,
+    omDeg: 79.62,
+    wDeg: 294.83,
+    maDeg: 165.51,
+    epoch: '2000-01-01T12:00:00Z',
+    radiusKm: 715,
+    kind: 'dwarf',
+    color: 0xc98c68,
+    surfaceResolutions: ['4k', '2k'],
+    visualRadius: 0.112,
+    rotationHours: 22.826,
+    axialTiltDeg: 0,
   },
   {
     name: 'halley',

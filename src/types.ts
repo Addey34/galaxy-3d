@@ -15,8 +15,8 @@ export type TextureQuality = '1k' | '2k' | '4k' | '8k';
 /**
  * Catégorie d'un corps — remplace les tests par nom (`name === 'sun'`…).
  * Les petits corps (`asteroid` / `comet` / `dwarf`) sont positionnés par éléments orbitaux
- * (cf. `orbitalElements`) et rendus sans texture : leur taille physique réelle les rend
- * invisibles à l'œil nu, conformément à l'invariant du mode Exploration.
+ * (cf. `orbitalElements`). Ceux qui disposent d'une texture ont un mesh ; les autres restent
+ * des marqueurs, conformément à l'invariant de vraie taille du mode Exploration.
  */
 export type BodyKind =
   'star' | 'planet' | 'moon' | 'skybox' | 'asteroid' | 'comet' | 'dwarf';
