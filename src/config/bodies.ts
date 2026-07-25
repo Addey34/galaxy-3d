@@ -52,6 +52,10 @@ export const CELESTIAL_CONFIG: CelestialConfig = {
           en: 'The star at the heart of the Solar System: a ball of plasma holding 99.86% of all the mass orbiting it.',
           fr: 'L’étoile au cœur du Système solaire : une boule de plasma qui concentre 99,86 % de toute la masse en orbite autour d’elle.',
         },
+        wiki: {
+          en: 'https://en.wikipedia.org/wiki/Sun',
+          fr: 'https://fr.wikipedia.org/wiki/Soleil',
+        },
       },
       astroBody: Body.Sun,
       cameraDistance: { educ: 50, explo: exploCameraDistance(695_700) },
@@ -83,6 +87,10 @@ export const CELESTIAL_CONFIG: CelestialConfig = {
         description: {
           en: 'The smallest planet and the closest to the Sun. With no atmosphere, it swings from +430 °C by day to -180 °C at night.',
           fr: 'La plus petite planète et la plus proche du Soleil. Sans atmosphère, elle passe de +430 °C le jour à -180 °C la nuit.',
+        },
+        wiki: {
+          en: 'https://en.wikipedia.org/wiki/Mercury_(planet)',
+          fr: 'https://fr.wikipedia.org/wiki/Mercure_(plan%C3%A8te)',
         },
       },
       astroBody: Body.Mercury,
@@ -120,6 +128,10 @@ export const CELESTIAL_CONFIG: CelestialConfig = {
         description: {
           en: 'The hottest planet: its thick CO₂ atmosphere traps heat through a runaway greenhouse effect. It spins backwards, very slowly.',
           fr: 'La planète la plus chaude : son épaisse atmosphère de CO₂ piège la chaleur par un effet de serre emballé. Elle tourne à l’envers, très lentement.',
+        },
+        wiki: {
+          en: 'https://en.wikipedia.org/wiki/Venus',
+          fr: 'https://fr.wikipedia.org/wiki/V%C3%A9nus_(plan%C3%A8te)',
         },
       },
       astroBody: Body.Venus,
@@ -162,6 +174,10 @@ export const CELESTIAL_CONFIG: CelestialConfig = {
           en: 'The only known planet to harbour life. Liquid water covers 71% of its surface, and its atmosphere shields it from solar radiation.',
           fr: 'La seule planète connue à abriter la vie. L’eau liquide couvre 71 % de sa surface, et son atmosphère la protège du rayonnement solaire.',
         },
+        wiki: {
+          en: 'https://en.wikipedia.org/wiki/Earth',
+          fr: 'https://fr.wikipedia.org/wiki/Terre',
+        },
       },
       astroBody: Body.Earth,
       // Position au barycentre Terre-Lune : évite le ballant lunaire réel (~4700 km, ~27 j)
@@ -201,6 +217,10 @@ export const CELESTIAL_CONFIG: CelestialConfig = {
               en: "Earth's only natural satellite. It always shows the same face and stabilises our planet's axial tilt.",
               fr: 'Le seul satellite naturel de la Terre. Elle montre toujours la même face et stabilise l’inclinaison de l’axe de notre planète.',
             },
+            wiki: {
+              en: 'https://en.wikipedia.org/wiki/Moon',
+              fr: 'https://fr.wikipedia.org/wiki/Lune',
+            },
           },
           astroBody: Body.Moon,
           cameraDistance: { educ: 2, explo: exploCameraDistance(1_737) },
@@ -237,6 +257,10 @@ export const CELESTIAL_CONFIG: CelestialConfig = {
           en: 'The red planet, tinted by iron oxide. It hosts Olympus Mons, the tallest volcano in the Solar System (~22 km).',
           fr: 'La planète rouge, teintée par l’oxyde de fer. Elle abrite Olympus Mons, le plus haut volcan du Système solaire (~22 km).',
         },
+        wiki: {
+          en: 'https://en.wikipedia.org/wiki/Mars',
+          fr: 'https://fr.wikipedia.org/wiki/Mars_(plan%C3%A8te)',
+        },
       },
       astroBody: Body.Mars,
       cameraDistance: { educ: 3, explo: exploCameraDistance(3_390) },
@@ -264,6 +288,10 @@ export const CELESTIAL_CONFIG: CelestialConfig = {
         description: {
           en: 'The giant of the Solar System: more massive than all the other planets combined. Its Great Red Spot is a storm centuries old.',
           fr: 'La géante du Système solaire : plus massive que toutes les autres planètes réunies. Sa Grande Tache rouge est une tempête vieille de plusieurs siècles.',
+        },
+        wiki: {
+          en: 'https://en.wikipedia.org/wiki/Jupiter',
+          fr: 'https://fr.wikipedia.org/wiki/Jupiter_(plan%C3%A8te)',
         },
       },
       astroBody: Body.Jupiter,
@@ -301,6 +329,10 @@ export const CELESTIAL_CONFIG: CelestialConfig = {
           en: 'Famous for its spectacular rings, made of billions of chunks of ice and rock. So low in density it would float on water.',
           fr: 'Célèbre pour ses anneaux spectaculaires, faits de milliards de blocs de glace et de roche. Si peu dense qu’elle flotterait sur l’eau.',
         },
+        wiki: {
+          en: 'https://en.wikipedia.org/wiki/Saturn',
+          fr: 'https://fr.wikipedia.org/wiki/Saturne_(plan%C3%A8te)',
+        },
       },
       astroBody: Body.Saturn,
       cameraDistance: { educ: 20, explo: exploCameraDistance(60_268) },
@@ -329,6 +361,10 @@ export const CELESTIAL_CONFIG: CelestialConfig = {
           en: 'The ice giant tipped on its side: its axis leans at 98°, so it rolls along its orbit. Each season lasts 21 years.',
           fr: 'La géante de glace couchée sur le côté : son axe penche à 98°, si bien qu’elle roule le long de son orbite. Chaque saison dure 21 ans.',
         },
+        wiki: {
+          en: 'https://en.wikipedia.org/wiki/Uranus',
+          fr: 'https://fr.wikipedia.org/wiki/Uranus_(plan%C3%A8te)',
+        },
       },
       astroBody: Body.Uranus,
       cameraDistance: { educ: 10, explo: exploCameraDistance(25_559) },
@@ -356,6 +392,10 @@ export const CELESTIAL_CONFIG: CelestialConfig = {
         description: {
           en: 'The most distant planet, invisible to the naked eye and found by calculation. Its winds reach 2,000 km/h, the fiercest in the Solar System.',
           fr: 'La planète la plus lointaine, invisible à l’œil nu et découverte par le calcul. Ses vents atteignent 2 000 km/h, les plus violents du Système solaire.',
+        },
+        wiki: {
+          en: 'https://en.wikipedia.org/wiki/Neptune',
+          fr: 'https://fr.wikipedia.org/wiki/Neptune_(plan%C3%A8te)',
         },
       },
       astroBody: Body.Neptune,

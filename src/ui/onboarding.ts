@@ -25,9 +25,18 @@ export function initOnboarding(): void {
     dismissed = true;
     try {
       localStorage.setItem(STORAGE_KEY, '1');
-    } catch { /* best-effort */ }
+    } catch {
+      /* best-effort */
+    }
     card.classList.remove('ob-visible');
-    card.addEventListener('transitionend', () => { unsub?.(); card.remove(); }, { once: true });
+    card.addEventListener(
+      'transitionend',
+      () => {
+        unsub?.();
+        card.remove();
+      },
+      { once: true }
+    );
   }
 
   function render(): void {
@@ -42,7 +51,9 @@ export function initOnboarding(): void {
       </ul>
       <button class="ob-dismiss">${t('onboarding.dismiss')}</button>
     `;
-    card.querySelector('.ob-dismiss')!.addEventListener('click', dismiss, { once: true });
+    card
+      .querySelector('.ob-dismiss')!
+      .addEventListener('click', dismiss, { once: true });
   }
 
   render();
@@ -50,5 +61,7 @@ export function initOnboarding(): void {
 
   document.body.appendChild(card);
   // Double rAF : le premier frame attache le DOM, le second déclenche la transition CSS.
-  requestAnimationFrame(() => requestAnimationFrame(() => card.classList.add('ob-visible')));
+  requestAnimationFrame(() =>
+    requestAnimationFrame(() => card.classList.add('ob-visible'))
+  );
 }

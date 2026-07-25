@@ -7,9 +7,10 @@ test.beforeEach(async ({ page }) => {
 });
 
 /**
- * Mode Exploration : basculer en explo affiche la couche de labels projetés ; cliquer un
- * corps ouvre sa fiche unique avec la distance réelle live (fusionnée depuis l'ancien HUD).
- * Revenir en éducatif masque les labels.
+ * Mode Exploration : la couche de labels projetés est active dès le boot (style éduc) ;
+ * basculer en explo change son style (points de repère) ; cliquer un corps ouvre sa fiche
+ * unique avec la distance réelle live (fusionnée depuis l'ancien HUD). Revenir en éducatif
+ * restaure le style éduc.
  */
 test('explo mode shows projected labels and the live distance in the info card', async ({
   page,
@@ -20,13 +21,15 @@ test('explo mode shows projected labels and the live distance in the info card',
   await page.goto('/');
   await expect(page.locator('#loader')).toBeHidden({ timeout: 30_000 });
 
+  // Dès le boot : couche active, en style éducatif (labels au-dessus des meshes).
   const labels = page.locator('#explo-labels');
-  await expect(labels).not.toHaveClass(/is-visible/);
+  await expect(labels).toHaveClass(/is-visible/);
+  await expect(labels).toHaveClass(/is-educ-mode/);
 
-  // Basculer en Exploration : la couche de labels s'affiche.
+  // Basculer en Exploration : la couche passe en style explo (point + texte).
   await page.locator('.mode-btn[data-mode="explo"]').click();
   await expect(page.locator('body')).toHaveClass(/is-explo-mode/);
-  await expect(labels).toHaveClass(/is-visible/);
+  await expect(labels).not.toHaveClass(/is-educ-mode/);
 
   // Cliquer un corps lance le voyage rapproché : la fiche unique s'ouvre avec la cible et sa
   // distance réelle live (bloc .bi-live fusionné depuis l'ancien HUD « TARGET »).
@@ -39,9 +42,9 @@ test('explo mode shows projected labels and the live distance in the info card',
   // Au moins un marqueur de corps projeté est affiché.
   await expect(page.locator('.explo-label').first()).toBeVisible();
 
-  // Retour en Éducatif : labels masqués.
+  // Retour en Éducatif : la couche reste active mais repasse en style éduc.
   await page.locator('.mode-btn[data-mode="educ"]').click();
-  await expect(labels).not.toHaveClass(/is-visible/);
+  await expect(labels).toHaveClass(/is-educ-mode/);
 
   expect(errors, `Erreurs page : ${errors.join(' | ')}`).toEqual([]);
 });
@@ -224,7 +227,9 @@ test('clicking a projected label selects and centers the body', async ({
   await page.waitForTimeout(1_400);
   const marsLabel = page.locator('.explo-label.is-target');
   await expect(marsLabel).toBeVisible();
-  await expect(marsLabel).toContainText('Mars');
+  // Le nom de la cible est volontairement masqué (il cacherait le corps qu'on regarde) ;
+  // seul le point de repère doré reste visible.
+  await expect(marsLabel.locator('.explo-label-text')).toBeHidden();
 
   // Le label est un bouton accessible cliquable.
   await expect(marsLabel).toHaveJSProperty('tagName', 'BUTTON');

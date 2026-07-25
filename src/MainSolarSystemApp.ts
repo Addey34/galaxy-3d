@@ -72,10 +72,24 @@ setupHelp();
       bodyNames
     );
 
-    // HUD « Voyage spatial » — actif uniquement en mode Exploration. Ses labels projetés
-    // ciblent les corps via la commande de navigation partagée.
+    // HUD de labels projetés — actif en Éducatif ET Exploration.
+    // En Éducatif : labels texte au-dessus de chaque corps avec mesh.
+    // En Exploration : point + texte pour tous les corps (corps invisible à l'œil nu).
     const exploHud = new ExploHud(planetNav, cameraSystem.renderer.domElement);
     exploHud.mount();
+    // Filtre éduc : corps avec mesh uniquement (planètes, naines texturées — pas astéroïdes/comètes).
+    exploHud.setEducFilter(
+      new Set(
+        [...flattenBodies(CELESTIAL_CONFIG).entries()]
+          .filter(
+            ([, cfg]) =>
+              cfg.kind !== 'skybox' && Object.keys(cfg.textures).length > 0
+          )
+          .map(([name]) => name)
+      )
+    );
+    exploHud.setMode('educ');
+    exploHud.setActive(true);
 
     // Champ de masse des petits corps (SBDB) — couche instrument 2D, chargée en tâche de
     // fond. Dégradation propre : si le fetch échoue (offline), l'overlay reste vide.
@@ -102,9 +116,8 @@ setupHelp();
     });
     setupModeSwitcher(orbitalMechanics, cameraSystem, (mode) => {
       currentMode = mode;
-      // Le changement de mode remet la sélection sur la Vue Globale → referme la fiche.
       bodyInfo.hide();
-      exploHud.setActive(mode === 'explo');
+      exploHud.setMode(mode); // change le style des labels (éduc ↔ explo), reste actif
       smallBodyOverlay.setActive(mode === 'explo');
     });
 

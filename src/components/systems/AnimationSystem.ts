@@ -24,8 +24,6 @@ const LOD_DISTANCE_THRESHOLD = 5; // variation de distance mini avant de reconsi
 export class AnimationSystem {
   // Timing
   private readonly clock = new THREE.Clock();
-  private readonly targetFPS: number;
-  private lastFrameTime = 0;
   private lodUpdateFrame = 0;
 
   // State
@@ -61,8 +59,7 @@ export class AnimationSystem {
   private readonly _projScreenMatrix = new THREE.Matrix4();
   private readonly _tmpSphere = new THREE.Sphere();
 
-  constructor(targetFPS = 60) {
-    this.targetFPS = targetFPS;
+  constructor(_targetFPS = 60) {
     Logger.info('[AnimationSystem] Instance created ✅');
   }
 
@@ -98,17 +95,15 @@ export class AnimationSystem {
 
     const rawDelta = Math.min(this.clock.getDelta(), 0.1);
     const now = performance.now();
-    const frameInterval = 1000 / this.targetFPS;
 
+    // Le requestAnimationFrame se synchronise déjà sur le vsync du navigateur :
+    // laisser le RAF dicter le rythme évite les sauts de frame du throttle manuel.
     this.tweenGroup.update(now);
 
-    if (now - this.lastFrameTime >= frameInterval) {
-      const delta = this.isPaused ? 0 : rawDelta;
-      this._update(delta, rawDelta);
-      this._render();
-      this.fpsCounter.update(now);
-      this.lastFrameTime = now;
-    }
+    const delta = this.isPaused ? 0 : rawDelta;
+    this._update(delta, rawDelta);
+    this._render();
+    this.fpsCounter.update(now);
   }
 
   private _update(delta: number, rawDelta: number = delta): void {

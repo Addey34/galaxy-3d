@@ -8,6 +8,7 @@
  */
 import { CELESTIAL_CONFIG } from '@/config/bodies';
 import { flattenBodies } from '@/config/catalog';
+import { TEXTURE_SETTINGS } from '@/config/engine';
 import { KM_PER_AU, SQRT_K } from '@/core/ScaleService';
 import { t, intlLocale, getLocale, onLocaleChange } from '@/i18n';
 import { bodyDisplayName, bodyDescription } from '@/i18n/bodyText';
@@ -223,6 +224,7 @@ export function setupBodyInfo(): BodyInfoPanel {
   const statsEl = panel.querySelector<HTMLElement>('.bi-stats')!;
   const descEl = panel.querySelector<HTMLElement>('.bi-desc')!;
   const toggleBtn = panel.querySelector<HTMLButtonElement>('.bi-toggle')!;
+  const moreEl = panel.querySelector<HTMLAnchorElement>('.bi-more')!;
   const liveEl = panel.querySelector<HTMLElement>('.bi-live')!;
   const liveDist = panel.querySelector<HTMLElement>('.bi-live-dist')!;
   const liveLt = panel.querySelector<HTMLElement>('.bi-live-lt')!;
@@ -275,6 +277,32 @@ export function setupBodyInfo(): BodyInfoPanel {
     const desc = bodyDescription(cfg);
     descEl.textContent = desc;
     descEl.hidden = !desc;
+
+    // Lien « En savoir plus » — article Wikipédia dans la langue courante (realData.wiki).
+    const wiki = cfg.realData.wiki;
+    if (wiki) {
+      moreEl.href = getLocale() === 'fr' ? wiki.fr : wiki.en;
+      moreEl.textContent = t('bi.more');
+      moreEl.hidden = false;
+    } else {
+      moreEl.hidden = true;
+    }
+
+    // Fond d'en-tête : la texture de surface du corps (plus petite résolution disponible,
+    // déjà en cache navigateur puisque chargée pour le mesh) derrière un dégradé sombre.
+    const surface = cfg.textures.surface;
+    const resolutions = cfg.textureResolutions.surface;
+    const res = resolutions?.[resolutions.length - 1];
+    if (surface && res) {
+      panel.style.setProperty(
+        '--bi-hero',
+        `url("${TEXTURE_SETTINGS.basePath}${surface}_${res}.jpg")`
+      );
+      panel.classList.add('has-hero');
+    } else {
+      panel.classList.remove('has-hero');
+      panel.style.removeProperty('--bi-hero');
+    }
 
     applyCollapsed();
     panel.removeAttribute('hidden');

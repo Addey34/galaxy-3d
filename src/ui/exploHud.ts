@@ -1,17 +1,17 @@
 /**
- * Couche de labels projetés du mode Exploration — « Voyage spatial ».
+ * Couche de labels projetés — active en mode Éducatif ET Exploration.
  *
- * En vraie échelle, les corps sont des points minuscules perdus dans le vide : cette couche
- * projette un marqueur + label sur chaque corps pour qu'aucun ne se perde à l'écran. La
- * distance réelle et le temps-lumière de la cible suivie, eux, sont affichés dans la fiche
- * unique (`ui/bodyInfo`, bloc live) — plus de HUD « TARGET » séparé.
+ * En Exploration (vraie échelle), les corps sont des points minuscules perdus dans le vide :
+ * labels + points de repère maintiennent leur visibilité. En Éducatif, les corps sont des
+ * meshes visibles : les labels apparaissent légèrement au-dessus de chaque corps pour
+ * l'identifier, sans point de repère. Dans les deux cas le clic cible le corps via la commande
+ * de navigation partagée (`PlanetNavigation`).
  *
- * Les labels projetés sont des boutons accessibles : cliqués (ou activés au clavier), ils
- * ciblent le corps via la commande de navigation partagée (`PlanetNavigation`) — la couche ne
- * touche jamais elle-même à la caméra ni aux boutons de la barre de navigation.
+ * En Éducatif, seuls les corps possédant un mesh (planètes, naines texturées) sont étiquetés ;
+ * astéroïdes et comètes sans texture restent sans label (corps invisibles à cette échelle).
  *
- * Piloté chaque frame par `AnimationSystem.onFrame` quand le mode explo est actif ; inerte
- * (aucune écriture DOM, labels non cliquables) sinon.
+ * Piloté chaque frame par `AnimationSystem.onFrame`. Inerte (aucune écriture DOM) quand
+ * `setActive(false)` a été appelé.
  */
 import * as THREE from 'three';
 import type { CameraSystem } from '@/components/systems/CameraSystem';
@@ -21,6 +21,9 @@ import { bodyDisplayName } from '@/i18n/bodyText';
 import { markForwardedControlEvent } from './controlEventForwarding';
 import type { PlanetNavigation } from './planetNav';
 
+/** Déplacement max (px) entre pointerdown et pointerup pour rester un « clic » (sinon glisser). */
+const CLICK_MOVE_TOLERANCE = 5;
+
 export class ExploHud {
   private readonly labelsLayer: HTMLDivElement;
   private readonly labels = new Map<string, HTMLButtonElement>();
@@ -28,6 +31,16 @@ export class ExploHud {
   private readonly nav: PlanetNavigation;
   private readonly controlSurface: HTMLElement;
   private active = false;
+  private _mode: 'educ' | 'explo' = 'educ';
+  /** En éduc, seuls les noms de ce Set reçoivent un label (corps avec mesh). */
+  private _educFilter: ReadonlySet<string> | null = null;
+  /** Clic de label en cours (pointerdown reçu, en attente du pointerup). */
+  private _pendingClick: {
+    name: string;
+    id: number;
+    x: number;
+    y: number;
+  } | null = null;
 
   /**
    * @param nav             commande de navigation partagée (clic label → cible le corps)
@@ -40,6 +53,25 @@ export class ExploHud {
 
     this.labelsLayer = document.createElement('div');
     this.labelsLayer.id = 'explo-labels';
+
+    // La sélection est résolue au pointerup GLOBAL, pas au `click` du label : le pointerdown
+    // réémis au canvas fait qu'OrbitControls capture le pointeur (`setPointerCapture`), le
+    // pointerup est alors retargeté vers le canvas et le `click` du label ne part jamais.
+    // Même logique que le picker 3D : un vrai clic = même pointeur + déplacement ≤ tolérance.
+    window.addEventListener('pointerup', (e) => {
+      const p = this._pendingClick;
+      if (!p || e.pointerId !== p.id) return;
+      this._pendingClick = null;
+      if (
+        this.active &&
+        Math.hypot(e.clientX - p.x, e.clientY - p.y) <= CLICK_MOVE_TOLERANCE
+      ) {
+        this.nav.selectBody(p.name);
+      }
+    });
+    window.addEventListener('pointercancel', (e) => {
+      if (this._pendingClick?.id === e.pointerId) this._pendingClick = null;
+    });
 
     // Changement de langue : ré-étiquette les labels déjà créés (nom d'affichage localisé).
     onLocaleChange(() => this._relabel());
@@ -69,6 +101,24 @@ export class ExploHud {
     }
   }
 
+  /**
+   * Bascule le mode d'affichage des labels.
+   * Éduc : labels texte au-dessus des corps visibles (sans point de repère).
+   * Explo : point + texte sur chaque corps (corps invisibles à l'œil nu).
+   */
+  setMode(mode: 'educ' | 'explo'): void {
+    this._mode = mode;
+    this.labelsLayer.classList.toggle('is-educ-mode', mode === 'educ');
+  }
+
+  /**
+   * Définit les corps affichés en mode Éducatif (ceux avec un mesh).
+   * Les corps absents du Set sont masqués en éduc ; tous sont visibles en explo.
+   */
+  setEducFilter(names: ReadonlySet<string>): void {
+    this._educFilter = names;
+  }
+
   /** À appeler chaque frame quand actif. Lit des positions déjà à jour (post-suivi caméra). */
   update(
     camera: THREE.PerspectiveCamera,
@@ -80,10 +130,20 @@ export class ExploHud {
     // Corps actuellement suivi : son label est marqué `is-target` (mis en avant).
     const name = cameraSystem.targetName;
 
-    // Marqueurs + labels projetés : aucun corps ne se perd dans le vide.
     const w = window.innerWidth;
     const h = window.innerHeight;
     sceneSystem.forEachBodyWorldPosition((bodyName, worldPos) => {
+      // En éduc : masquer les corps sans mesh (astéroïdes/comètes non texturés).
+      if (
+        this._mode === 'educ' &&
+        this._educFilter &&
+        !this._educFilter.has(bodyName)
+      ) {
+        const el = this.labels.get(bodyName);
+        if (el) el.style.display = 'none';
+        return;
+      }
+
       const el = this._label(bodyName);
       this._ndc.copy(worldPos).project(camera);
       // z hors [-1,1] → derrière la caméra ou au-delà du far : masquer.
@@ -100,8 +160,10 @@ export class ExploHud {
       }
       const x = (this._ndc.x * 0.5 + 0.5) * w;
       const y = (-this._ndc.y * 0.5 + 0.5) * h;
-      el.style.display = 'block';
-      el.style.transform = `translate(${x}px, ${y}px)`;
+      // Éduc : label légèrement au-dessus du corps visible (décalage Y en px).
+      const yOffset = this._mode === 'educ' ? -14 : 0;
+      el.style.display = 'flex';
+      el.style.transform = `translate(${x}px, ${y + yOffset}px)`;
       el.classList.toggle('is-target', bodyName === name);
     });
   }
@@ -132,17 +194,28 @@ export class ExploHud {
       text.className = 'explo-label-text';
       text.textContent = bodyDisplayName(name);
       el.append(dot, text);
-      // Inerte hors mode explo : les labels masqués (display:none) ne sont ni cliquables ni
-      // focusables ; ce garde-fou couvre en plus une éventuelle frame de transition.
-      el.addEventListener('click', () => {
-        if (!this.active) return;
+      // Clavier uniquement (Enter/Espace → click avec detail 0) : les clics pointeur sont
+      // résolus par le pointerup global (cf. constructeur), le `click` souris étant avalé
+      // par la capture de pointeur d'OrbitControls.
+      el.addEventListener('click', (ev) => {
+        if (!this.active || ev.detail !== 0) return;
         this.nav.selectBody(name);
       });
       // Un label cliquable capterait sinon molette/drag destinés à la caméra — or celui de
       // la cible suivie est toujours au centre. On réémet ces gestes vers OrbitControls pour
-      // préserver zoom, rotation et pan ; seul le clic (sélection) reste au label.
+      // préserver zoom, rotation et pan ; la sélection est arbitrée au pointerup global.
       el.addEventListener('wheel', this._forward, { passive: false });
-      el.addEventListener('pointerdown', this._forward);
+      el.addEventListener('pointerdown', (ev) => {
+        if (ev.isPrimary && ev.button === 0) {
+          this._pendingClick = {
+            name,
+            id: ev.pointerId,
+            x: ev.clientX,
+            y: ev.clientY,
+          };
+        }
+        this._forward(ev);
+      });
       this.labelsLayer.append(el);
       this.labels.set(name, el);
     }

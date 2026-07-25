@@ -7,9 +7,12 @@
  *   - bouton reset → retour au présent + vitesse temps réel (via `PlaybackControls`).
  * Toujours visible (mode Kepler/temps-réel par défaut).
  */
+import { onLocaleChange, t } from '@/i18n';
 import type { OrbitalMechanics } from '@/core/OrbitalMechanics';
 import type { PlaybackControls } from './playback';
 
+const timePanel = document.getElementById('time-panel')!;
+const timeCollapseBtn = document.getElementById('time-collapse');
 const datetimePanel = document.getElementById('datetime-panel')!;
 const liveDot = document.getElementById('live-dot')!;
 const timeTodayBtn = document.getElementById('time-today')!;
@@ -96,6 +99,26 @@ export function setupTimePanel(
   playback: PlaybackControls
 ): void {
   const refresh = () => refreshDisplay(om);
+
+  // Poignée complet ↔ simplifié : replie la ligne lecture/vitesse pour ne garder que
+  // l'horloge/date — un maximum de scène visible. État conservé pendant la session.
+  if (timeCollapseBtn) {
+    let simplified = false;
+    const applySimplified = (): void => {
+      timePanel.classList.toggle('is-simplified', simplified);
+      timeCollapseBtn.setAttribute('aria-expanded', String(!simplified));
+      timeCollapseBtn.setAttribute(
+        'aria-label',
+        simplified ? t('time.full') : t('time.simplify')
+      );
+    };
+    timeCollapseBtn.addEventListener('click', () => {
+      simplified = !simplified;
+      applySimplified();
+    });
+    onLocaleChange(applySimplified);
+    applySimplified();
+  }
 
   // Ouvrir le panneau immédiatement
   datetimePanel.classList.add('is-open');

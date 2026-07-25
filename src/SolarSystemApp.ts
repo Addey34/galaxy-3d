@@ -181,6 +181,10 @@ export class SolarSystemApp {
       if (cfg.kind !== 'skybox') bodies[name]?.setScaleMode('educ');
     });
     this._recomputeOrbits();
+    // Synchronise _orbitsGloballyVisible avec l'état réel des lignes (educ au démarrage).
+    // Sans cet appel, le flag reste false alors que les lignes THREE.Line sont visibles
+    // par défaut, ce qui casse le toggle master OFF→ON avant le premier changement de mode.
+    this.systems.scene?.setOrbitLinesVisible(true);
 
     progressCallback(95, t('loader.starting'));
     this.systems.animation.run();

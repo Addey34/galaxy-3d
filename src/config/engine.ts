@@ -112,7 +112,11 @@ export const RENDER_SETTINGS = {
   antialias: !IS_MOBILE,
   powerPreference: 'high-performance' as const,
   shadowMap: {
-    enabled: true,
+    // Shadow maps désactivées : la PointLight solaire nécessiterait un cube map
+    // 6 faces (6 passes de rendu par frame) — coût GPU énorme pour des ombres
+    // quasi invisibles à l'échelle du système solaire. Le shader jour/nuit
+    // (NightLightsShader) gère déjà le terminateur lumière/ombre sur chaque corps.
+    enabled: false,
     type: THREE.PCFSoftShadowMap as THREE.ShadowMapType,
   },
   toneMapping: THREE.ACESFilmicToneMapping as THREE.ToneMapping,
@@ -147,8 +151,8 @@ export const CAMERA_CONTROLS_SETTINGS = {
   enablePan: false,
   enableZoom: true,
   enableRotate: true,
-  rotateSpeed: 0.2,
-  zoomSpeed: 0.2,
+  rotateSpeed: 0.5,
+  zoomSpeed: 0.7,
 };
 
 export const LIGHTING_SETTINGS = {
@@ -163,7 +167,7 @@ export const LIGHTING_SETTINGS = {
     decay: 0,
     position: new THREE.Vector3(0, 0, 0),
     shadow: {
-      enabled: true,
+      enabled: false,
       mapSize: IS_MOBILE ? 2048 : 4096,
       bias: -0.00005,
       normalBias: 0.02,

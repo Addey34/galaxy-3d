@@ -150,6 +150,8 @@ export interface RealData {
   moonCount?: number;
   /** Courte description grand public, localisée (FR/EN). Affichée par `ui/bodyInfo`. */
   description?: LocalizedText;
+  /** Lien « En savoir plus » par langue (article Wikipédia dédié). Affiché par `ui/bodyInfo`. */
+  wiki?: LocalizedText;
 }
 
 /**

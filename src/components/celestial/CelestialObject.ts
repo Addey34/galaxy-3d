@@ -45,6 +45,7 @@ export default class CelestialObject {
   private lastLODUpdateDistance = Infinity;
   private _lodPending = false;
   private readonly _lodWorldPos = new THREE.Vector3();
+  private readonly _hasTextures: boolean;
   // Dernière texture appliquée par clé — évite de re-uploader au GPU une résolution
   // identique (getLODTexture renvoie le même objet depuis le cache).
   private readonly _appliedTextures = new Map<string, THREE.Texture>();
@@ -69,6 +70,7 @@ export default class CelestialObject {
     this._tiltGroup.add(this._meshGroup);
 
     this.rotationSpeed = config.rotationSpeed ?? 0;
+    this._hasTextures = Object.keys(config.textures).length > 0;
 
     this.layers = buildLayers(config, name);
     this.layers.forEach((mesh) => this._meshGroup.add(mesh));
@@ -236,7 +238,8 @@ export default class CelestialObject {
     maxDistance = 200,
     threshold = 5
   ): Promise<void> {
-    if (this._lodPending || !camera || !this.group) return;
+    if (!this._hasTextures || this._lodPending || !camera || !this.group)
+      return;
 
     this.group.getWorldPosition(this._lodWorldPos);
     const distance = camera.position.distanceTo(this._lodWorldPos);

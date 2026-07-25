@@ -235,7 +235,14 @@ export class SceneSystem {
     if (visible) this._orbitHidden.delete(name);
     else this._orbitHidden.add(name);
     const line = this._orbitLines.get(name);
-    if (line) line.visible = this._orbitsGloballyVisible && this._orbitMasterEnabled && visible;
+    if (line)
+      line.visible =
+        this._orbitsGloballyVisible && this._orbitMasterEnabled && visible;
+  }
+
+  /** Noms de tous les corps dotés d'une ligne d'orbite (planètes, naines, lunes, petits corps). */
+  orbitBodyNames(): string[] {
+    return [...this._orbitLines.keys()];
   }
 
   applyOrbitPoints(): void {

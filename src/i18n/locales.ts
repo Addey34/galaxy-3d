@@ -78,6 +78,19 @@ export const messages: Record<Locale, Dict> = {
 
     // ── Panneau orbites (mode Éducatif) ──
     'orbitOpts.title': 'Orbits',
+    'orbitOpts.all': 'All orbits',
+    'orbitOpts.collapse': 'Collapse panel',
+    'orbitOpts.expand': 'Orbit options',
+
+    // ── Barre de navigation planètes ──
+    'nav.collapse': 'Hide planet bar',
+    'nav.expand': 'Show planet bar',
+    'nav.scrollLeft': 'Scroll left',
+    'nav.scrollRight': 'Scroll right',
+
+    // ── Horloge : repli complet/simplifié ──
+    'time.simplify': 'Simplified view',
+    'time.full': 'Full controls',
 
     // ── Divers ──
     'fullscreen.title': 'Fullscreen',
@@ -87,6 +100,7 @@ export const messages: Record<Locale, Dict> = {
     'bi.collapse.aria': 'Collapse panel',
     'bi.expand.aria': 'Expand panel',
     'bi.live.label': 'Distance from you',
+    'bi.more': 'Learn more',
     'stat.radius': 'Radius',
     'stat.distanceSun': 'Distance (Sun)',
     'stat.distanceEarth': 'Distance (Earth)',
@@ -174,13 +188,28 @@ export const messages: Record<Locale, Dict> = {
     'onboarding.title': 'Premiers pas',
     'onboarding.aria': 'Astuces de démarrage',
     'onboarding.tip.select': 'Cliquez une planète pour y voyager',
-    'onboarding.tip.explo': 'Passez en Explo pour la vraie échelle du système solaire',
-    'onboarding.tip.time': 'Molette sur l’horloge ou la date pour voyager dans le temps',
+    'onboarding.tip.explo':
+      'Passez en Explo pour la vraie échelle du système solaire',
+    'onboarding.tip.time':
+      'Molette sur l’horloge ou la date pour voyager dans le temps',
     'onboarding.tip.help': 'Bouton ? — toutes les commandes',
     'onboarding.dismiss': 'Compris',
 
     // ── Panneau orbites (mode Éducatif) ──
     'orbitOpts.title': 'Orbites',
+    'orbitOpts.all': 'Toutes les orbites',
+    'orbitOpts.collapse': 'Replier le panneau',
+    'orbitOpts.expand': 'Options d’orbites',
+
+    // ── Barre de navigation planètes ──
+    'nav.collapse': 'Masquer la barre',
+    'nav.expand': 'Afficher la barre',
+    'nav.scrollLeft': 'Défiler à gauche',
+    'nav.scrollRight': 'Défiler à droite',
+
+    // ── Horloge : repli complet/simplifié ──
+    'time.simplify': 'Vue simplifiée',
+    'time.full': 'Contrôles complets',
 
     // ── Divers ──
     'fullscreen.title': 'Plein écran',
@@ -189,6 +218,7 @@ export const messages: Record<Locale, Dict> = {
     'bi.collapse.title': 'Replier / déplier',
     'bi.collapse.aria': 'Replier le panneau',
     'bi.expand.aria': 'Déplier le panneau',
+    'bi.more': 'En savoir plus',
     'bi.live.label': 'Distance depuis vous',
     'stat.radius': 'Rayon',
     'stat.distanceSun': 'Distance (Soleil)',

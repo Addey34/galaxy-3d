@@ -87,9 +87,11 @@ export function setupBodyPicker(
     ndc.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
     raycaster.setFromCamera(ndc, camera);
 
-    // Intersections triées par distance croissante : le premier corps touché gagne (les
-    // corps proches passent avant la sphère lointaine du fond étoilé).
+    // Intersections triées par distance croissante : le premier mesh touché gagne.
+    // Les lignes d'orbite (THREE.Line) sont ignorées : leur hiérarchie remonte au groupe
+    // parent (orbit_X → sun.group ou earth.group), ce qui produirait de faux positifs.
     for (const hit of raycaster.intersectObjects(scene.children, true)) {
+      if (hit.object instanceof THREE.Line) continue;
       const name = resolveBodyName(hit.object, validNames);
       if (name) {
         nav.selectBody(name);

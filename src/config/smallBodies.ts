@@ -52,6 +52,20 @@ export interface SmallBodyElements {
   rotationHours?: number;
   /** Obliquité de l'axe de rotation (degrés). */
   axialTiltDeg?: number;
+
+  // ── Champs documentaires (fiche d'info) — mêmes unités que `RealData`. ──
+  /** Masse en kg. */
+  massKg?: number;
+  /** Gravité de surface en m/s². */
+  gravity?: number;
+  /** Température moyenne de surface en °C. */
+  meanTempC?: number;
+  /** Nombre de satellites naturels connus. */
+  moonCount?: number;
+  /** Courte description grand public, localisée (FR/EN). */
+  description?: { en: string; fr: string };
+  /** Lien « En savoir plus » par langue (article Wikipédia dédié). */
+  wiki?: { en: string; fr: string };
 }
 
 const DEFAULT_COLOR: Record<NonNullable<SmallBodyElements['kind']>, number> = {
@@ -95,6 +109,13 @@ export function smallBodyToConfig(el: SmallBodyElements): CelestialBodyConfig {
       orbitalInclination: inclinationRad,
       ascendingNode: ascendingNodeRad,
       axialTilt: (el.axialTiltDeg ?? 0) * D2R,
+      // Champs documentaires optionnels — transmis tels quels à la fiche d'info.
+      ...(el.massKg !== undefined ? { massKg: el.massKg } : {}),
+      ...(el.gravity !== undefined ? { gravity: el.gravity } : {}),
+      ...(el.meanTempC !== undefined ? { meanTempC: el.meanTempC } : {}),
+      ...(el.moonCount !== undefined ? { moonCount: el.moonCount } : {}),
+      ...(el.description ? { description: el.description } : {}),
+      ...(el.wiki ? { wiki: el.wiki } : {}),
     },
     orbitalElements: {
       semiMajorAxisAU: el.a,
@@ -131,6 +152,18 @@ export const SMALL_BODY_ELEMENTS: readonly SmallBodyElements[] = [
     visualRadius: 0.1,
     rotationHours: 9.074,
     axialTiltDeg: 4,
+    massKg: 9.39e20,
+    gravity: 0.28,
+    meanTempC: -105,
+    moonCount: 0,
+    description: {
+      en: 'The largest body of the asteroid belt and the only dwarf planet of the inner Solar System. NASA’s Dawn probe revealed bright salt deposits there — traces of a briny subsurface ocean.',
+      fr: 'Le plus gros corps de la ceinture d’astéroïdes et la seule planète naine du Système solaire interne. La sonde Dawn y a révélé des dépôts de sel brillants — traces d’un océan souterrain saumâtre.',
+    },
+    wiki: {
+      en: 'https://en.wikipedia.org/wiki/Ceres_(dwarf_planet)',
+      fr: 'https://fr.wikipedia.org/wiki/(1)_C%C3%A9r%C3%A8s',
+    },
   },
   {
     name: 'vesta',
@@ -179,6 +212,22 @@ export const SMALL_BODY_ELEMENTS: readonly SmallBodyElements[] = [
     radiusKm: 1188,
     kind: 'dwarf',
     color: 0xd4c4a8,
+    surfaceResolutions: ['4k', '2k'],
+    visualRadius: 0.188,
+    rotationHours: 153.3,
+    axialTiltDeg: 119.6,
+    massKg: 1.303e22,
+    gravity: 0.62,
+    meanTempC: -229,
+    moonCount: 5,
+    description: {
+      en: 'Demoted from planet to dwarf planet in 2006, it hosts a heart-shaped nitrogen glacier photographed by New Horizons in 2015. Its moon Charon is so large that the two form a double system.',
+      fr: 'Rétrogradée de planète à planète naine en 2006, elle abrite un glacier d’azote en forme de cœur photographié par New Horizons en 2015. Sa lune Charon est si grande que les deux forment un système double.',
+    },
+    wiki: {
+      en: 'https://en.wikipedia.org/wiki/Pluto',
+      fr: 'https://fr.wikipedia.org/wiki/Pluton_(plan%C3%A8te_naine)',
+    },
   },
   {
     name: 'eris',
@@ -197,6 +246,18 @@ export const SMALL_BODY_ELEMENTS: readonly SmallBodyElements[] = [
     visualRadius: 0.183,
     rotationHours: 25.9,
     axialTiltDeg: 78,
+    massKg: 1.66e22,
+    gravity: 0.82,
+    meanTempC: -231,
+    moonCount: 1,
+    description: {
+      en: 'More massive than Pluto: its discovery in 2005 forced astronomers to define what a planet is — and cost Pluto its status. It roams up to three times farther from the Sun than Pluto.',
+      fr: 'Plus massive que Pluton : sa découverte en 2005 a forcé les astronomes à définir ce qu’est une planète — et a coûté son statut à Pluton. Elle s’éloigne jusqu’à trois fois plus loin du Soleil que Pluton.',
+    },
+    wiki: {
+      en: 'https://en.wikipedia.org/wiki/Eris_(dwarf_planet)',
+      fr: 'https://fr.wikipedia.org/wiki/(136199)_%C3%89ris',
+    },
   },
   {
     name: 'haumea',
@@ -215,6 +276,18 @@ export const SMALL_BODY_ELEMENTS: readonly SmallBodyElements[] = [
     visualRadius: 0.123,
     rotationHours: 3.9155,
     axialTiltDeg: 126,
+    massKg: 4.006e21,
+    gravity: 0.44,
+    meanTempC: -241,
+    moonCount: 2,
+    description: {
+      en: 'Spinning in under 4 hours — the fastest of any large body in the Solar System — it has been stretched into an egg shape. In 2017 it became the first trans-Neptunian object found to have a ring.',
+      fr: 'Tournant sur elle-même en moins de 4 heures — record des grands corps du Système solaire — elle s’est étirée en forme d’œuf. En 2017, elle est devenue le premier objet transneptunien doté d’un anneau connu.',
+    },
+    wiki: {
+      en: 'https://en.wikipedia.org/wiki/Haumea',
+      fr: 'https://fr.wikipedia.org/wiki/(136108)_Haum%C3%A9a',
+    },
   },
   {
     name: 'makemake',
@@ -233,6 +306,18 @@ export const SMALL_BODY_ELEMENTS: readonly SmallBodyElements[] = [
     visualRadius: 0.112,
     rotationHours: 22.826,
     axialTiltDeg: 0,
+    massKg: 3.1e21,
+    gravity: 0.5,
+    meanTempC: -239,
+    moonCount: 1,
+    description: {
+      en: 'Discovered just after Easter 2005 and nicknamed “Easterbunny”, it was later named after the creator god of Rapa Nui (Easter Island). Its reddish surface is coated in frozen methane.',
+      fr: 'Découverte juste après Pâques 2005 et surnommée « Easterbunny », elle fut ensuite nommée d’après le dieu créateur de Rapa Nui (île de Pâques). Sa surface rougeâtre est couverte de méthane gelé.',
+    },
+    wiki: {
+      en: 'https://en.wikipedia.org/wiki/Makemake',
+      fr: 'https://fr.wikipedia.org/wiki/(136472)_Mak%C3%A9mak%C3%A9',
+    },
   },
   {
     name: 'halley',
@@ -245,6 +330,14 @@ export const SMALL_BODY_ELEMENTS: readonly SmallBodyElements[] = [
     epoch: '2000-01-01T12:00:00Z',
     radiusKm: 5.5,
     kind: 'comet',
+    description: {
+      en: 'The most famous comet, visible from Earth every ~76 years — next return in 2061. It orbits backwards, against the flow of the planets.',
+      fr: 'La plus célèbre des comètes, visible depuis la Terre tous les ~76 ans — prochain retour en 2061. Elle orbite à rebours, à contre-courant des planètes.',
+    },
+    wiki: {
+      en: 'https://en.wikipedia.org/wiki/Halley%27s_Comet',
+      fr: 'https://fr.wikipedia.org/wiki/Com%C3%A8te_de_Halley',
+    },
   },
 ];
 
