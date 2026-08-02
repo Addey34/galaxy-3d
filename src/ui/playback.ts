@@ -11,14 +11,33 @@ import type { OrbitalMechanics } from '@/core/OrbitalMechanics';
 // Réel = 1:1, 1h/s = 3600, 3h/s = 10 800, 6h/s = 21 600
 export const SIMU_SCALES = [1, 3_600, 10_800, 21_600] as const;
 
-const SVG_PAUSE = `<svg width="11" height="13" viewBox="0 0 11 13" fill="currentColor">
-  <rect x="0"   y="0" width="3.8" height="13" rx="1.4"/>
-  <rect x="7.2" y="0" width="3.8" height="13" rx="1.4"/>
-</svg>`;
+const SVG_NS = 'http://www.w3.org/2000/svg';
 
-const SVG_PLAY = `<svg width="11" height="13" viewBox="0 0 11 13" fill="currentColor">
-  <path d="M1 0.8L10.5 6.5L1 12.2V0.8Z"/>
-</svg>`;
+function createPlaybackIcon(paused: boolean): SVGElement {
+  const svg = document.createElementNS(SVG_NS, 'svg');
+  svg.setAttribute('width', '11');
+  svg.setAttribute('height', '13');
+  svg.setAttribute('viewBox', '0 0 11 13');
+  svg.setAttribute('fill', 'currentColor');
+
+  if (paused) {
+    const path = document.createElementNS(SVG_NS, 'path');
+    path.setAttribute('d', 'M1 0.8L10.5 6.5L1 12.2V0.8Z');
+    svg.append(path);
+  } else {
+    for (const x of ['0', '7.2']) {
+      const rect = document.createElementNS(SVG_NS, 'rect');
+      rect.setAttribute('x', x);
+      rect.setAttribute('y', '0');
+      rect.setAttribute('width', '3.8');
+      rect.setAttribute('height', '13');
+      rect.setAttribute('rx', '1.4');
+      svg.append(rect);
+    }
+  }
+
+  return svg;
+}
 
 /** Poignée exposée au panneau date-heure pour revenir au temps réel (bouton reset). */
 export interface PlaybackControls {
@@ -50,7 +69,7 @@ export function setupPlayback(
 ): PlaybackControls {
   playPauseBtn.addEventListener('click', () => {
     const paused = anim.togglePause();
-    playPauseBtn.innerHTML = paused ? SVG_PLAY : SVG_PAUSE;
+    playPauseBtn.replaceChildren(createPlaybackIcon(paused));
     playPauseBtn.classList.toggle('is-paused', paused);
   });
 

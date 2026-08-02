@@ -13,11 +13,12 @@ import { KM_PER_AU, SQRT_K } from '@/core/ScaleService';
 import { t, intlLocale, getLocale, onLocaleChange } from '@/i18n';
 import { bodyDisplayName, bodyDescription } from '@/i18n/bodyText';
 import type { CelestialBodyConfig } from '@/types';
+import { bodyAccentColor, hexToRgbTriplet } from './bodyAccent';
+import { setupOverlayDisclosure } from './sceneOverlay';
+import { safeExternalUrl } from '@/utils/safeUrl';
 
 const RAD2DEG = 180 / Math.PI;
 const C_KM_PER_S = 299_792.458; // vitesse de la lumière
-// Accent doré pour le Soleil (son orbitalColor vaut 0x000000, inutilisable comme teinte).
-const SUN_ACCENT = 0xffcc33;
 
 const CONFIGS = flattenBodies(CELESTIAL_CONFIG);
 
@@ -197,10 +198,6 @@ function subtitle(name: string, cfg: CelestialBodyConfig): string {
   }
 }
 
-function hexToRgbTriplet(hex: number): string {
-  return `${(hex >> 16) & 0xff}, ${(hex >> 8) & 0xff}, ${hex & 0xff}`;
-}
-
 export interface BodyInfoPanel {
   /** Affiche la fiche du corps `name` (rien si le corps est inconnu ou sans données). */
   show(name: string): void;
@@ -229,21 +226,15 @@ export function setupBodyInfo(): BodyInfoPanel {
   const liveDist = panel.querySelector<HTMLElement>('.bi-live-dist')!;
   const liveLt = panel.querySelector<HTMLElement>('.bi-live-lt')!;
 
-  // Repli : la flèche plie la fiche sur son en-tête (le corps `.bi-body` disparaît) pour
-  // ne pas gâcher la vue 3D. L'état est conservé entre deux sélections.
-  // Sur mobile (viewport ≤ 640 px) on commence replié : la fiche couvre sinon trop de la vue.
-  let collapsed = window.innerWidth <= 640;
-  const applyCollapsed = (): void => {
-    panel.classList.toggle('is-collapsed', collapsed);
-    toggleBtn.setAttribute('aria-expanded', String(!collapsed));
-    toggleBtn.setAttribute(
-      'aria-label',
-      collapsed ? t('bi.expand.aria') : t('bi.collapse.aria')
-    );
-  };
-  toggleBtn.addEventListener('click', () => {
-    collapsed = !collapsed;
-    applyCollapsed();
+  // Shared disclosure keeps visual state, aria state and translations consistent.
+  const disclosure = setupOverlayDisclosure({
+    container: panel,
+    toggle: toggleBtn,
+    initialCollapsed: window.innerWidth <= 640,
+    labels: {
+      expand: () => t('bi.expand.aria'),
+      collapse: () => t('bi.collapse.aria'),
+    },
   });
 
   const hide = (): void => panel.setAttribute('hidden', '');
@@ -259,7 +250,7 @@ export function setupBodyInfo(): BodyInfoPanel {
       return;
     }
 
-    const accent = cfg.kind === 'star' ? SUN_ACCENT : cfg.orbitalColor;
+    const accent = bodyAccentColor(cfg);
     panel.style.setProperty('--planet-rgb', hexToRgbTriplet(accent));
     dot.style.background = `rgb(${hexToRgbTriplet(accent)})`;
     nameEl.textContent = bodyDisplayName(name);
@@ -280,8 +271,14 @@ export function setupBodyInfo(): BodyInfoPanel {
 
     // Lien « En savoir plus » — article Wikipédia dans la langue courante (realData.wiki).
     const wiki = cfg.realData.wiki;
-    if (wiki) {
-      moreEl.href = getLocale() === 'fr' ? wiki.fr : wiki.en;
+    const wikiUrl = safeExternalUrl(
+      wiki ? (getLocale() === 'fr' ? wiki.fr : wiki.en) : undefined,
+      new Set(['fr.wikipedia.org', 'en.wikipedia.org'])
+    );
+    if (wikiUrl) {
+      moreEl.href = wikiUrl;
+      moreEl.rel = 'noopener noreferrer';
+      moreEl.target = '_blank';
       moreEl.textContent = t('bi.more');
       moreEl.hidden = false;
     } else {
@@ -304,7 +301,7 @@ export function setupBodyInfo(): BodyInfoPanel {
       panel.style.removeProperty('--bi-hero');
     }
 
-    applyCollapsed();
+    disclosure.refresh();
     panel.removeAttribute('hidden');
   };
 

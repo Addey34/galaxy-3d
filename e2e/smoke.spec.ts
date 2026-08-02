@@ -86,7 +86,10 @@ test('selects a celestial body by clicking its 3D mesh', async ({ page }) => {
   const box = await canvas.boundingBox();
   expect(box).not.toBeNull();
 
+  // Les labels éducatifs sont volontairement cliquables et peuvent recouvrir le point
+  // central. Force le hit-test du canvas pour tester exclusivement le picker 3D.
   await canvas.click({
+    force: true,
     position: {
       x: box!.width / 2,
       y: box!.height / 2,

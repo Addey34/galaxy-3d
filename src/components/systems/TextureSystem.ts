@@ -17,6 +17,27 @@ import { bodyDisplayName } from '@/i18n/bodyText';
 import Logger from '@/utils/Logger';
 
 /** Données d'initialisation du TextureSystem (chemins, réglages par défaut, corps). */
+export interface TextureQualityThreshold {
+  distance: number;
+  quality: string;
+}
+
+export function chooseTextureQuality(
+  levels: readonly TextureQualityThreshold[],
+  resolutions: readonly string[],
+  normalizedDistance: number
+): string {
+  for (const level of levels) {
+    if (
+      normalizedDistance <= level.distance &&
+      resolutions.includes(level.quality)
+    ) {
+      return level.quality;
+    }
+  }
+  return resolutions[resolutions.length - 1];
+}
+
 export interface TextureSystemConfig {
   basePath: string;
   defaultSettings: TextureDefaultSettings;
@@ -118,45 +139,48 @@ export class TextureSystem {
   }
 
   /**
-   * Précharge la meilleure résolution des corps prioritaires (cf. `loadPriority`) au
-   * démarrage, en remontant la progression (0→1) pour l'écran de chargement.
+   * Précharge uniquement une surface légère par corps prioritaire. Les couches secondaires
+   * et les hautes résolutions arrivent ensuite via le LOD, sans bloquer le premier rendu.
    */
   async preloadCriticalTextures(
     progressCallback: (percent: number, msg: string) => void = () => {}
   ): Promise<void> {
-    // Corps à précharger : ceux qui déclarent un loadPriority, dans l'ordre croissant.
-    const priorityList = allBodies({ bodies: this.config.bodies })
-      .filter((e) => e.config.loadPriority !== undefined)
-      .sort((a, b) => a.config.loadPriority! - b.config.loadPriority!);
-    const total = priorityList.length;
+    const lowQuality = this.config.performance.textureQuality.low.quality;
+    const preloadTasks = allBodies({ bodies: this.config.bodies })
+      .filter(({ config }) => config.loadPriority !== undefined)
+      .sort((a, b) => a.config.loadPriority! - b.config.loadPriority!)
+      .flatMap(({ name: bodyName, config }) => {
+        const textureBasePath = config.textures.surface;
+        const resolutions = config.textureResolutions.surface;
+        if (!textureBasePath || !resolutions?.length) return [];
+        const quality = resolutions.includes(lowQuality)
+          ? lowQuality
+          : resolutions[resolutions.length - 1];
+        return [{ bodyName, textureBasePath, quality }];
+      });
+    const total = preloadTasks.length;
     let loaded = 0;
 
-    Logger.info(`[TextureSystem] Preloading ${total} priority bodies`);
+    Logger.info(
+      '[TextureSystem] Preloading ' + total + ' lightweight surface textures'
+    );
+    if (total === 0) {
+      progressCallback(1, t('loader.texturesDone'));
+      return;
+    }
 
-    for (const { name: bodyName, config: bodyConfig } of priorityList) {
-      const textureKeys = Object.keys(
-        bodyConfig.textures
-      ) as (keyof typeof bodyConfig.textures)[];
-      for (const key of textureKeys) {
-        const textureBasePath = bodyConfig.textures[key];
-        const resolutions = bodyConfig.textureResolutions[key];
-        if (!textureBasePath || !resolutions?.length) continue;
-
-        const bestQuality = resolutions[0];
-        progressCallback(
-          loaded / total,
-          t('loader.loadingBody', { body: bodyDisplayName(bodyName) })
+    for (const { bodyName, textureBasePath, quality } of preloadTasks) {
+      progressCallback(
+        loaded / total,
+        t('loader.loadingBody', { body: bodyDisplayName(bodyName) })
+      );
+      try {
+        await this.loadTexture(textureBasePath, quality);
+      } catch {
+        Logger.warn(
+          '[TextureSystem] Failed preload: ' + textureBasePath + '_' + quality
         );
-
-        try {
-          await this.loadTexture(textureBasePath, bestQuality);
-        } catch {
-          Logger.warn(
-            `[TextureSystem] Failed preload: ${textureBasePath}_${bestQuality}`
-          );
-        }
       }
-
       loaded++;
       progressCallback(
         loaded / total,
@@ -165,7 +189,19 @@ export class TextureSystem {
     }
 
     progressCallback(1, t('loader.texturesDone'));
-    Logger.success('[TextureSystem] Priority textures loaded');
+    Logger.success('[TextureSystem] Lightweight surface textures loaded');
+  }
+
+  async getRingLODTexture(
+    textureBasePath: string,
+    resolutions: TextureQuality[],
+    normalizedDistance: number
+  ): Promise<THREE.Texture> {
+    const chosenQuality = this._chooseQuality(
+      normalizedDistance,
+      resolutions
+    ) as TextureQuality;
+    return this.loadTexture(textureBasePath, chosenQuality);
   }
 
   /** Renvoie la texture d'un corps à la résolution adaptée à la distance caméra. */
@@ -203,12 +239,7 @@ export class TextureSystem {
   }
 
   private _chooseQuality(distance: number, resolutions: string[]): string {
-    for (const level of this._sortedQuality) {
-      if (distance <= level.distance && resolutions.includes(level.quality)) {
-        return level.quality;
-      }
-    }
-    return resolutions[resolutions.length - 1];
+    return chooseTextureQuality(this._sortedQuality, resolutions, distance);
   }
 
   dispose(): void {

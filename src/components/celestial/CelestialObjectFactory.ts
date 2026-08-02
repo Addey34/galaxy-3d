@@ -1,18 +1,23 @@
 /**
  * Fabrique qui lit `CELESTIAL_CONFIG` et instancie tous les `CelestialObject`.
- * Parcourt la hiérarchie (les satellites sont imbriqués sous leur planète) et renvoie
- * une table plate nom → corps. Les créations sont parallélisées (chargement de textures).
+ * Parcourt la hierarchie (les satellites sont imbriques sous leur planete) et renvoie
+ * une table plate nom -> corps. Les creations sont parallelisees.
  */
 import type { CelestialBodyConfig, CelestialConfig } from '@/types';
 import Logger from '@/utils/Logger';
 import type { AnimationSystem } from '@/components/systems/AnimationSystem';
 import type { TextureSystem } from '@/components/systems/TextureSystem';
 import type { CelestialBodies } from '@/components/systems/SceneSystem';
+import { allBodies } from '@/config/catalog';
+import { t } from '@/i18n';
+import { bodyDisplayName } from '@/i18n/bodyText';
 import CelestialObject from './CelestialObject';
 
+type FactoryProgressCallback = (percent: number, msg: string) => void;
+
 export default class CelestialObjectFactory {
-  // Évite de créer deux fois le même CelestialObject si _createBodyWithHierarchy
-  // est appelé en parallèle sur le même nom (ex. un satellite référencé par deux parents).
+  // Evite de creer deux fois le meme CelestialObject si _createBodyWithHierarchy
+  // est appele en parallele sur le meme nom.
   private readonly classCache = new Map<string, CelestialObject>();
 
   constructor(
@@ -21,15 +26,30 @@ export default class CelestialObjectFactory {
     private readonly animationSystem: AnimationSystem
   ) {}
 
-  /** Crée tous les corps (hors fond étoilé) et renvoie la table nom → corps. */
-  async createAll(): Promise<CelestialBodies> {
+  /** Cree tous les corps (hors fond etoile) et renvoie la table nom -> corps. */
+  async createAll(
+    progressCallback: FactoryProgressCallback = () => {}
+  ): Promise<CelestialBodies> {
     const bodies: CelestialBodies = {};
     Logger.info('[CelestialObjectFactory] Creating all celestial bodies...');
+
+    const total = allBodies(this.objectConfig).filter(
+      ({ name }) => name !== 'stars'
+    ).length;
+    let created = 0;
+
+    const reportCreated = (name: string): void => {
+      created++;
+      progressCallback(
+        total > 0 ? created / total : 1,
+        t('loader.creatingBody', { body: bodyDisplayName(name) })
+      );
+    };
 
     const promises = Object.entries(this.objectConfig.bodies)
       .filter(([name]) => name !== 'stars')
       .map(([name, config]) =>
-        this._createBodyWithHierarchy(name, config, null, bodies)
+        this._createBodyWithHierarchy(name, config, null, bodies, reportCreated)
       );
 
     await Promise.all(promises);
@@ -41,7 +61,8 @@ export default class CelestialObjectFactory {
     name: string,
     config: CelestialBodyConfig,
     parentName: string | null,
-    bodies: CelestialBodies
+    bodies: CelestialBodies,
+    reportCreated: (name: string) => void
   ): Promise<CelestialObject | null> {
     const cached = this.classCache.get(name);
     if (cached) return cached;
@@ -63,6 +84,7 @@ export default class CelestialObjectFactory {
       bodies[name] = body;
       this.classCache.set(name, body);
       Logger.success(`[CelestialObjectFactory] Body created: ${name}`);
+      reportCreated(name);
     } catch (error) {
       Logger.error(
         `[CelestialObjectFactory] Failed to create body: ${name}`,
@@ -74,7 +96,13 @@ export default class CelestialObjectFactory {
     if (config.satellites) {
       await Promise.all(
         Object.entries(config.satellites).map(([satName, satConfig]) =>
-          this._createBodyWithHierarchy(satName, satConfig, name, bodies)
+          this._createBodyWithHierarchy(
+            satName,
+            satConfig,
+            name,
+            bodies,
+            reportCreated
+          )
         )
       );
     }

@@ -4,7 +4,8 @@
  * En Exploration (vraie échelle), les corps sont des points minuscules perdus dans le vide :
  * labels + points de repère maintiennent leur visibilité. En Éducatif, les corps sont des
  * meshes visibles : les labels apparaissent légèrement au-dessus de chaque corps pour
- * l'identifier, sans point de repère. Dans les deux cas le clic cible le corps via la commande
+ * l'identifier. Dans les deux modes, la cible masque son nom pour ne pas couvrir l'astre,
+ * et le clic cible le corps via la commande
  * de navigation partagée (`PlanetNavigation`).
  *
  * En Éducatif, seuls les corps possédant un mesh (planètes, naines texturées) sont étiquetés ;
@@ -16,13 +17,194 @@
 import * as THREE from 'three';
 import type { CameraSystem } from '@/components/systems/CameraSystem';
 import type { SceneSystem } from '@/components/systems/SceneSystem';
+import { CELESTIAL_CONFIG } from '@/config/bodies';
+import { flattenBodies } from '@/config/catalog';
 import { onLocaleChange } from '@/i18n';
 import { bodyDisplayName } from '@/i18n/bodyText';
-import { markForwardedControlEvent } from './controlEventForwarding';
+import { bodyAccentTriplet } from './bodyAccent';
+import { getSceneOverlayRects } from './sceneOverlay';
 import type { PlanetNavigation } from './planetNav';
 
-/** Déplacement max (px) entre pointerdown et pointerup pour rester un « clic » (sinon glisser). */
-const CLICK_MOVE_TOLERANCE = 5;
+const BODY_CONFIGS = flattenBodies(CELESTIAL_CONFIG);
+function labelRgb(name: string): string {
+  return bodyAccentTriplet(BODY_CONFIGS.get(name));
+}
+
+const MAJOR_BODIES = new Set([
+  'sun',
+  'mercury',
+  'venus',
+  'earth',
+  'moon',
+  'mars',
+  'jupiter',
+  'saturn',
+  'uranus',
+  'neptune',
+]);
+
+interface ProjectedLabel {
+  name: string;
+  element: HTMLButtonElement;
+  x: number;
+  y: number;
+  z: number;
+  target: boolean;
+  major: boolean;
+}
+
+export interface LabelRect {
+  left: number;
+  right: number;
+  top: number;
+  bottom: number;
+}
+
+export interface LabelPlacement {
+  /** Exact screen position of the projected body. The marker never leaves this anchor. */
+  x: number;
+  y: number;
+  /** Text capsule offset relative to the marker. */
+  textOffsetX: number;
+  textOffsetY: number;
+  /** Geometry of the line connecting marker and text. */
+  leaderLength: number;
+  leaderAngle: number;
+  rect: LabelRect;
+  offset: boolean;
+  markerOnly: boolean;
+}
+
+export function findLabelPlacement(
+  candidate: Pick<ProjectedLabel, 'name' | 'x' | 'y' | 'target'> &
+    Partial<Pick<ProjectedLabel, 'major'>>,
+  occupied: readonly LabelRect[],
+  viewportWidth: number,
+  viewportHeight: number,
+  mode: 'educ' | 'explo'
+): LabelPlacement | null {
+  const markerSize = candidate.target ? 26 : 18;
+  if (candidate.target) {
+    const rect = {
+      left: candidate.x - markerSize / 2,
+      right: candidate.x + markerSize / 2,
+      top: candidate.y - markerSize / 2,
+      bottom: candidate.y + markerSize / 2,
+    };
+    if (
+      rect.left < 6 ||
+      rect.right > viewportWidth - 6 ||
+      rect.top < 48 ||
+      rect.bottom > viewportHeight - 46
+    )
+      return null;
+
+    return {
+      x: candidate.x,
+      y: candidate.y,
+      textOffsetX: 0,
+      textOffsetY: 0,
+      leaderLength: 0,
+      leaderAngle: 0,
+      rect,
+      offset: false,
+      markerOnly: false,
+    };
+  }
+
+  // Only the text capsule moves to avoid collisions. The marker stays on the exact
+  // projected body position and a leader keeps the marker-to-name relationship clear.
+  const textWidth = Math.max(
+    46,
+    bodyDisplayName(candidate.name).length * 6.6 + 16
+  );
+  const textHeight = mode === 'educ' ? 22 : 20;
+  const side = textWidth / 2 + 12;
+  const offsets =
+    mode === 'educ'
+      ? [
+          [0, -25],
+          [side, 0],
+          [-side, 0],
+          [side, -24],
+          [-side, -24],
+          [0, 25],
+          [side, 24],
+          [-side, 24],
+        ]
+      : [
+          [side, 0],
+          [-side, 0],
+          [0, -25],
+          [0, 25],
+          [side, -24],
+          [-side, -24],
+          [side, 24],
+          [-side, 24],
+        ];
+
+  for (let index = 0; index < offsets.length; index++) {
+    const [dx, dy] = offsets[index];
+    const textX = candidate.x + dx;
+    const textY = candidate.y + dy;
+    const rect = {
+      left: textX - textWidth / 2,
+      right: textX + textWidth / 2,
+      top: textY - textHeight / 2,
+      bottom: textY + textHeight / 2,
+    };
+    if (
+      rect.left < 6 ||
+      rect.right > viewportWidth - 6 ||
+      rect.top < 48 ||
+      rect.bottom > viewportHeight - 46
+    ) {
+      continue;
+    }
+    const collides = occupied.some(
+      (other) =>
+        rect.left < other.right + 4 &&
+        rect.right + 4 > other.left &&
+        rect.top < other.bottom + 3 &&
+        rect.bottom + 3 > other.top
+    );
+    if (!collides) {
+      return {
+        x: candidate.x,
+        y: candidate.y,
+        textOffsetX: dx,
+        textOffsetY: dy,
+        leaderLength: Math.hypot(dx, dy),
+        leaderAngle: Math.atan2(dy, dx),
+        rect,
+        offset: index > 0,
+        markerOnly: false,
+      };
+    }
+  }
+
+  if (candidate.major) {
+    const markerSize = 14;
+    const rect = {
+      left: candidate.x - markerSize / 2,
+      right: candidate.x + markerSize / 2,
+      top: candidate.y - markerSize / 2,
+      bottom: candidate.y + markerSize / 2,
+    };
+    return {
+      x: candidate.x,
+      y: candidate.y,
+      textOffsetX: 0,
+      textOffsetY: 0,
+      leaderLength: 0,
+      leaderAngle: 0,
+      rect,
+      offset: true,
+      markerOnly: true,
+    };
+  }
+  return null;
+}
 
 export class ExploHud {
   private readonly labelsLayer: HTMLDivElement;
@@ -31,21 +213,16 @@ export class ExploHud {
   private readonly nav: PlanetNavigation;
   private readonly controlSurface: HTMLElement;
   private active = false;
+  private labelsVisible = true;
   private _mode: 'educ' | 'explo' = 'educ';
+  private _lastTarget: string | null = null;
   /** En éduc, seuls les noms de ce Set reçoivent un label (corps avec mesh). */
   private _educFilter: ReadonlySet<string> | null = null;
-  /** Clic de label en cours (pointerdown reçu, en attente du pointerup). */
-  private _pendingClick: {
-    name: string;
-    id: number;
-    x: number;
-    y: number;
-  } | null = null;
 
   /**
    * @param nav             commande de navigation partagée (clic label → cible le corps)
-   * @param controlSurface  surface OrbitControls (canvas WebGL) : les labels lui réémettent
-   *                        molette/pointerdown pour ne jamais bloquer zoom, rotation ni pan.
+   * @param controlSurface  surface OrbitControls (canvas WebGL) qui reçoit la molette
+   *                        transférée depuis les labels pour préserver le zoom caméra.
    */
   constructor(nav: PlanetNavigation, controlSurface: HTMLElement) {
     this.nav = nav;
@@ -53,25 +230,6 @@ export class ExploHud {
 
     this.labelsLayer = document.createElement('div');
     this.labelsLayer.id = 'explo-labels';
-
-    // La sélection est résolue au pointerup GLOBAL, pas au `click` du label : le pointerdown
-    // réémis au canvas fait qu'OrbitControls capture le pointeur (`setPointerCapture`), le
-    // pointerup est alors retargeté vers le canvas et le `click` du label ne part jamais.
-    // Même logique que le picker 3D : un vrai clic = même pointeur + déplacement ≤ tolérance.
-    window.addEventListener('pointerup', (e) => {
-      const p = this._pendingClick;
-      if (!p || e.pointerId !== p.id) return;
-      this._pendingClick = null;
-      if (
-        this.active &&
-        Math.hypot(e.clientX - p.x, e.clientY - p.y) <= CLICK_MOVE_TOLERANCE
-      ) {
-        this.nav.selectBody(p.name);
-      }
-    });
-    window.addEventListener('pointercancel', (e) => {
-      if (this._pendingClick?.id === e.pointerId) this._pendingClick = null;
-    });
 
     // Changement de langue : ré-étiquette les labels déjà créés (nom d'affichage localisé).
     onLocaleChange(() => this._relabel());
@@ -103,12 +261,21 @@ export class ExploHud {
 
   /**
    * Bascule le mode d'affichage des labels.
-   * Éduc : labels texte au-dessus des corps visibles (sans point de repère).
-   * Explo : point + texte sur chaque corps (corps invisibles à l'œil nu).
+   * Éduc : point + nom légèrement renforcés au-dessus des corps visibles.
+   * Explo : même langage visuel sur chaque corps, à la vraie échelle.
    */
   setMode(mode: 'educ' | 'explo'): void {
     this._mode = mode;
     this.labelsLayer.classList.toggle('is-educ-mode', mode === 'educ');
+  }
+
+  /** Affiche les points d’ancrage même lorsque les noms sont masqués par les paramètres. */
+  setLabelsVisible(visible: boolean): void {
+    this.labelsVisible = visible;
+    this.labelsLayer.classList.toggle('is-labels-hidden', !visible);
+    if (!visible) {
+      this.labels.forEach((element) => (element.style.display = 'none'));
+    }
   }
 
   /**
@@ -127,26 +294,32 @@ export class ExploHud {
   ): void {
     if (!this.active) return;
 
-    // Corps actuellement suivi : son label est marqué `is-target` (mis en avant).
-    const name = cameraSystem.targetName;
+    const targetName = cameraSystem.targetName;
+    const targetChanged = targetName !== this._lastTarget;
+    this._lastTarget = targetName;
+    const width = window.innerWidth;
+    const height = window.innerHeight;
+    const candidates: ProjectedLabel[] = [];
 
-    const w = window.innerWidth;
-    const h = window.innerHeight;
+    this.labels.forEach((element) => {
+      element.style.display = 'none';
+      element.classList.remove('is-target');
+      if (targetChanged) element.classList.remove('is-acquiring');
+      element.classList.remove('is-marker-only');
+    });
+    if (!this.labelsVisible) return;
+
     sceneSystem.forEachBodyWorldPosition((bodyName, worldPos) => {
-      // En éduc : masquer les corps sans mesh (astéroïdes/comètes non texturés).
       if (
         this._mode === 'educ' &&
         this._educFilter &&
         !this._educFilter.has(bodyName)
       ) {
-        const el = this.labels.get(bodyName);
-        if (el) el.style.display = 'none';
         return;
       }
 
-      const el = this._label(bodyName);
+      const element = this._label(bodyName);
       this._ndc.copy(worldPos).project(camera);
-      // z hors [-1,1] → derrière la caméra ou au-delà du far : masquer.
       const onScreen =
         this._ndc.z >= -1 &&
         this._ndc.z <= 1 &&
@@ -154,71 +327,129 @@ export class ExploHud {
         this._ndc.x <= 1 &&
         this._ndc.y >= -1 &&
         this._ndc.y <= 1;
-      if (!onScreen) {
-        el.style.display = 'none';
-        return;
-      }
-      const x = (this._ndc.x * 0.5 + 0.5) * w;
-      const y = (-this._ndc.y * 0.5 + 0.5) * h;
-      // Éduc : label légèrement au-dessus du corps visible (décalage Y en px).
-      const yOffset = this._mode === 'educ' ? -14 : 0;
-      el.style.display = 'flex';
-      el.style.transform = `translate(${x}px, ${y + yOffset}px)`;
-      el.classList.toggle('is-target', bodyName === name);
+      if (!onScreen) return;
+
+      candidates.push({
+        name: bodyName,
+        element,
+        x: (this._ndc.x * 0.5 + 0.5) * width,
+        y: (-this._ndc.y * 0.5 + 0.5) * height,
+        z: this._ndc.z,
+        target: bodyName === targetName,
+        major: MAJOR_BODIES.has(bodyName),
+      });
     });
+
+    candidates.sort(
+      (a, b) =>
+        Number(b.target) - Number(a.target) ||
+        Number(b.major) - Number(a.major) ||
+        a.z - b.z
+    );
+
+    const occupied: LabelRect[] = getSceneOverlayRects();
+    for (const candidate of candidates) {
+      const placement = this._placeLabel(candidate, occupied, width, height);
+      if (!placement) continue;
+
+      const { element } = candidate;
+      element.style.display = 'block';
+      element.style.transform =
+        'translate3d(' + placement.x + 'px, ' + placement.y + 'px, 0)';
+      element.style.setProperty(
+        '--label-offset-x',
+        `${placement.textOffsetX}px`
+      );
+      element.style.setProperty(
+        '--label-offset-y',
+        `${placement.textOffsetY}px`
+      );
+      element.style.setProperty(
+        '--leader-length',
+        `${placement.leaderLength}px`
+      );
+      element.style.setProperty(
+        '--leader-angle',
+        `${placement.leaderAngle}rad`
+      );
+      element.classList.toggle('is-target', candidate.target);
+      element.classList.toggle('is-offset', placement.offset);
+      element.classList.toggle('is-marker-only', placement.markerOnly);
+      if (candidate.target && targetChanged) {
+        element.classList.remove('is-acquiring');
+        void element.offsetWidth;
+        element.classList.add('is-acquiring');
+        window.setTimeout(() => element.classList.remove('is-acquiring'), 1800);
+      }
+      occupied.push(placement.rect);
+    }
   }
 
-  /**
-   * Réémet un geste (molette/pointerdown) vers la surface OrbitControls : clone l'événement
-   * et le redispatche sur le canvas, qui gère alors zoom/rotation/pan comme si le label
-   * n'était pas là. Le clic de sélection, lui, n'est pas réémis.
-   */
-  private readonly _forward = (ev: Event): void => {
-    const Ctor = ev.constructor as new (type: string, init: Event) => Event;
-    this.controlSurface.dispatchEvent(
-      markForwardedControlEvent(new Ctor(ev.type, ev))
+  private _placeLabel(
+    candidate: ProjectedLabel,
+    occupied: readonly LabelRect[],
+    viewportWidth: number,
+    viewportHeight: number
+  ): LabelPlacement | null {
+    return findLabelPlacement(
+      candidate,
+      occupied,
+      viewportWidth,
+      viewportHeight,
+      this._mode
     );
-  };
+  }
 
   private _label(name: string): HTMLButtonElement {
-    let el = this.labels.get(name);
-    if (!el) {
-      el = document.createElement('button');
-      el.type = 'button';
-      el.className = 'explo-label';
-      el.setAttribute('aria-label', bodyDisplayName(name));
-      const dot = document.createElement('span');
-      dot.className = 'explo-label-dot';
-      dot.setAttribute('aria-hidden', 'true');
-      const text = document.createElement('span');
-      text.className = 'explo-label-text';
-      text.textContent = bodyDisplayName(name);
-      el.append(dot, text);
-      // Clavier uniquement (Enter/Espace → click avec detail 0) : les clics pointeur sont
-      // résolus par le pointerup global (cf. constructeur), le `click` souris étant avalé
-      // par la capture de pointeur d'OrbitControls.
-      el.addEventListener('click', (ev) => {
-        if (!this.active || ev.detail !== 0) return;
-        this.nav.selectBody(name);
-      });
-      // Un label cliquable capterait sinon molette/drag destinés à la caméra — or celui de
-      // la cible suivie est toujours au centre. On réémet ces gestes vers OrbitControls pour
-      // préserver zoom, rotation et pan ; la sélection est arbitrée au pointerup global.
-      el.addEventListener('wheel', this._forward, { passive: false });
-      el.addEventListener('pointerdown', (ev) => {
-        if (ev.isPrimary && ev.button === 0) {
-          this._pendingClick = {
-            name,
-            id: ev.pointerId,
-            x: ev.clientX,
-            y: ev.clientY,
-          };
-        }
-        this._forward(ev);
-      });
-      this.labelsLayer.append(el);
-      this.labels.set(name, el);
-    }
-    return el;
+    let element = this.labels.get(name);
+    if (element) return element;
+
+    element = document.createElement('button');
+    element.type = 'button';
+    element.className = 'explo-label';
+    if (MAJOR_BODIES.has(name)) element.classList.add('is-major');
+    element.setAttribute('aria-label', bodyDisplayName(name));
+    element.style.setProperty('--label-rgb', labelRgb(name));
+
+    const dot = document.createElement('span');
+    dot.className = 'explo-label-dot';
+    dot.setAttribute('aria-hidden', 'true');
+    const leader = document.createElement('span');
+    leader.className = 'explo-label-leader';
+    leader.setAttribute('aria-hidden', 'true');
+    const text = document.createElement('span');
+    text.className = 'explo-label-text';
+    text.textContent = bodyDisplayName(name);
+    element.append(leader, dot, text);
+
+    element.addEventListener('click', () => {
+      if (this.active) this.nav.selectBody(name);
+    });
+    element.addEventListener(
+      'wheel',
+      (event) => {
+        event.preventDefault();
+        this.controlSurface.dispatchEvent(
+          new WheelEvent('wheel', {
+            bubbles: true,
+            cancelable: true,
+            clientX: event.clientX,
+            clientY: event.clientY,
+            deltaX: event.deltaX,
+            deltaY: event.deltaY,
+            deltaMode: event.deltaMode,
+            ctrlKey: event.ctrlKey,
+            shiftKey: event.shiftKey,
+            altKey: event.altKey,
+            metaKey: event.metaKey,
+          })
+        );
+      },
+      { passive: false }
+    );
+
+    this.labelsLayer.append(element);
+    this.labels.set(name, element);
+    return element;
   }
 }

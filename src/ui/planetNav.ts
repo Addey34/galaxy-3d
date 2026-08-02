@@ -10,14 +10,8 @@ import { SMALL_BODY_KINDS } from '@/types';
 import { bodyDisplayName } from '@/i18n/bodyText';
 import { onLocaleChange, t } from '@/i18n';
 import type { CameraSystem } from '@/components/systems/CameraSystem';
-
-// Accent doré dédié au Soleil (son orbitalColor vaut 0x000000, inutilisable ici).
-const SUN_ACCENT = 0xffcc33;
-
-/** Convertit une couleur hexadécimale (0xRRGGBB) en triplet CSS « r, g, b ». */
-function hexToRgbTriplet(hex: number): string {
-  return `${(hex >> 16) & 0xff}, ${(hex >> 8) & 0xff}, ${hex & 0xff}`;
-}
+import { bodyAccentColor, hexToRgbTriplet } from './bodyAccent';
+import { setupOverlayDisclosure } from './sceneOverlay';
 
 /**
  * Génère un bouton de navigation par corps depuis le catalogue. Chaque bouton porte
@@ -39,7 +33,7 @@ function buildPlanetButtons(): void {
     if (SMALL_BODY_KINDS.has(cfg.kind) && !cfg.textures.surface) return;
 
     const label = bodyDisplayName(name);
-    const accent = cfg.kind === 'star' ? SUN_ACCENT : cfg.orbitalColor;
+    const accent = bodyAccentColor(cfg);
 
     const btn = document.createElement('button');
     btn.id = `orbit-${name}`;
@@ -131,22 +125,15 @@ function setupNavChrome(): void {
   const collapseBtn =
     nav.querySelector<HTMLButtonElement>('.controls-collapse');
   if (collapseBtn) {
-    let collapsed = false;
-    const applyCollapsed = (): void => {
-      nav.classList.toggle('is-collapsed', collapsed);
-      collapseBtn.setAttribute('aria-expanded', String(!collapsed));
-      collapseBtn.setAttribute(
-        'aria-label',
-        collapsed ? t('nav.expand') : t('nav.collapse')
-      );
-    };
-    collapseBtn.addEventListener('click', () => {
-      collapsed = !collapsed;
-      applyCollapsed();
-      if (!collapsed) requestAnimationFrame(syncArrows);
+    setupOverlayDisclosure({
+      container: nav,
+      toggle: collapseBtn,
+      labels: {
+        expand: () => t('nav.expand'),
+        collapse: () => t('nav.collapse'),
+      },
+      onExpand: () => requestAnimationFrame(syncArrows),
     });
-    onLocaleChange(applyCollapsed);
-    applyCollapsed();
   }
 }
 

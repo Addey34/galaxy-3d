@@ -32,9 +32,11 @@ function hasOrbit(cfg: CelestialBodyConfig): boolean {
 
 const ZERO = new THREE.Vector3(0, 0, 0);
 
-export const ORBIT_SAMPLE_COUNT = 256;
+export const ORBIT_SAMPLE_COUNT = 512;
+export const EXPLO_ORBIT_SAMPLE_COUNT = 4096;
+const MS_PER_DAY = 86_400_000;
 
-/** Durée (secondes) de la transition animée Éduc↔Explo (le « dolly zoom »). */
+/** Durée (secondes) de la transition animée des positions et tailles Éduc↔Explo. */
 const MORPH_DURATION_S = 1.2;
 
 /** Cubic InOut — même courbe que les vols caméra (TWEEN.Easing.Cubic.InOut). */
@@ -264,7 +266,7 @@ export class OrbitalMechanics {
   /**
    * Bascule l'échelle Éduc↔Explo.
    *   - `animated = false` (défaut) : bascule instantanée des positions et tailles.
-   *   - `animated = true` : lance la transition « dolly zoom » — les positions et tailles
+   *   - animated = true : lance la transition — les positions et tailles
    *     glissent de l'échelle courante vers l'échelle cible sur MORPH_DURATION_S.
    * Un appel animé en cours de morph repart de l'état courant (interruptible sans saut).
    */
@@ -337,14 +339,44 @@ export class OrbitalMechanics {
     }
   }
 
-  /** Calcule uniquement les lignes éducatives : cercle incliné et distance compressée. */
+  /** Calcule la trajectoire orbitale adaptée au mode courant. */
   computeOrbitPoints(
     _name: string,
     cfg: CelestialBodyConfig,
     _date: Date,
-    nPoints = ORBIT_SAMPLE_COUNT
+    nPoints = this.scale.mode === 'explo'
+      ? EXPLO_ORBIT_SAMPLE_COUNT
+      : ORBIT_SAMPLE_COUNT
   ): Float32Array | null {
-    if (this.scale.mode !== 'educ') return null;
+    if (this.scale.mode === 'explo') {
+      const periodDays = cfg.realData?.orbitPeriodDays;
+      if (!periodDays || periodDays <= 0) return null;
+
+      const points = new Float32Array((nPoints + 1) * 3);
+      const first = this._positionAU(_name, cfg, _date);
+      if (!first) return null;
+
+      // Center the sampled period on the current date. The seam is then opposite
+      // the currently displayed body instead of moving through it as time advances.
+      for (let i = 0; i < nPoints; i++) {
+        const phase = i / nPoints - 0.5;
+        const sampleDate = new Date(
+          _date.getTime() + phase * periodDays * MS_PER_DAY
+        );
+        const point =
+          i === 0 ? first : this._positionAU(_name, cfg, sampleDate);
+        if (!point) return null;
+        const i3 = i * 3;
+        points[i3] = point.x * SQRT_K;
+        points[i3 + 1] = point.y * SQRT_K;
+        points[i3 + 2] = point.z * SQRT_K;
+      }
+
+      // Ferme exactement la courbe : les perturbations peuvent empêcher
+      // la position à date + période de rejoindre le premier échantillon.
+      points.set(points.subarray(0, 3), nPoints * 3);
+      return points;
+    }
     const distanceAU = cfg.realData?.distanceAU;
     if (distanceAU === undefined) return null;
 

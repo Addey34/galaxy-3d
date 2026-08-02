@@ -92,11 +92,6 @@ function createLightsLayer(
     transparent: true,
     blending: THREE.AdditiveBlending,
     depthWrite: false,
-    // depthTest: false — le depth buffer 24-bit ne peut pas distinguer le layer lights
-    // (R×1.002) de la surface (R) au limbe de la sphère dès que la caméra dépasse ~12u.
-    // Ça créait une barre noire verticale sur le côté ombre du limbe.
-    // FrontSide + le shader (nightFactor=0 sur le jour) assurent que rien
-    // d'incorrect n'est rendu — le depth test n'apporte rien ici.
     depthTest: false,
     side: THREE.FrontSide,
   });
@@ -106,8 +101,6 @@ function createLightsLayer(
     material
   );
   mesh.name = `${name}_lights`;
-  // renderOrder > 0 : le layer lights se rend après les nuages (renderOrder=0 par défaut)
-  // pour que son AdditiveBlending s'applique APRÈS le blend des nuages, pas dessous.
   mesh.renderOrder = 1;
   return mesh;
 }

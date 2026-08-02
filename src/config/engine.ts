@@ -125,7 +125,8 @@ export const RENDER_SETTINGS = {
 };
 
 export const CAMERA_SETTINGS = {
-  fov: 75,
+  fov: 65,
+  focusFov: 55,
   // Mode Éducatif — near/far larges (planètes à 2-192u)
   educNear: 0.1,
   educFar: 20_000,
@@ -158,12 +159,13 @@ export const CAMERA_CONTROLS_SETTINGS = {
 export const LIGHTING_SETTINGS = {
   ambient: {
     color: 0x404040,
-    intensity: 0.05,
+    intensity: 0.02,
   },
   sun: {
     color: 0xfffaf0,
     intensity: 2.5,
     distance: 0,
+    // L'atténuation 1/r² et les éclipses sont appliquées par corps dans AnimationSystem.
     decay: 0,
     position: new THREE.Vector3(0, 0, 0),
     shadow: {
@@ -191,7 +193,7 @@ export const SHADER_SETTINGS = {
 };
 
 export const TEXTURE_SETTINGS: TextureSettings = {
-  // BASE_URL (Vite) pour rester compatible avec un déploiement sous sous-chemin (GitHub Pages)
+  // BASE_URL (Vite) pour rester compatible avec Firebase Hosting et les déploiements sous sous-chemin
   basePath: `${import.meta.env.BASE_URL}assets/textures/`,
   defaultSettings: {
     wrapS: THREE.RepeatWrapping,

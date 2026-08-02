@@ -74,13 +74,34 @@ interface LoadedBody {
 function isManifest(value: unknown): value is HorizonsManifest {
   if (!value || typeof value !== 'object') return false;
   const manifest = value as Partial<HorizonsManifest>;
+  const bodies = manifest.bodies;
   return (
     manifest.version === 1 &&
     manifest.frame === 'ECLIPTIC_J2000' &&
     manifest.center === 'SUN' &&
     manifest.units === 'AU-D' &&
-    typeof manifest.bodies === 'object' &&
-    manifest.bodies !== null
+    typeof bodies === 'object' &&
+    bodies !== null &&
+    Object.values(bodies).every(isManifestBody)
+  );
+}
+
+function isManifestBody(value: unknown): value is HorizonsBodyManifest {
+  if (!value || typeof value !== 'object') return false;
+  const body = value as Partial<HorizonsBodyManifest>;
+  const stepDays = body.stepDays;
+  const sampleCount = body.sampleCount;
+  return (
+    typeof body.file === 'string' &&
+    /^[a-z0-9-]+\.[a-f0-9]{12}\.bin$/i.test(body.file) &&
+    typeof body.target === 'string' &&
+    Number.isFinite(body.startJdTdb) &&
+    typeof stepDays === 'number' &&
+    Number.isFinite(stepDays) &&
+    stepDays > 0 &&
+    typeof sampleCount === 'number' &&
+    Number.isInteger(sampleCount) &&
+    sampleCount >= 2
   );
 }
 
@@ -119,10 +140,20 @@ export class HorizonsEphemerisService {
       const raw: unknown = await response.json();
       if (!isManifest(raw)) throw new Error('invalid manifest schema');
 
-      const baseUrl = new URL('.', new URL(manifestUrl, window.location.href));
+      const manifestAbsoluteUrl = new URL(manifestUrl, window.location.href);
+      if (manifestAbsoluteUrl.origin !== window.location.origin) {
+        throw new Error('manifest must use the application origin');
+      }
+      const baseUrl = new URL('.', manifestAbsoluteUrl);
       const loaded = await Promise.all(
         Object.entries(raw.bodies).map(async ([name, body]) => {
-          const binaryResponse = await fetch(new URL(body.file, baseUrl));
+          const binaryUrl = new URL(body.file, baseUrl);
+          if (binaryUrl.origin !== baseUrl.origin) {
+            throw new Error(
+              `${name}: binary asset must use the application origin`
+            );
+          }
+          const binaryResponse = await fetch(binaryUrl);
           if (!binaryResponse.ok)
             throw new Error(`${name} HTTP ${binaryResponse.status}`);
           const buffer = await binaryResponse.arrayBuffer();

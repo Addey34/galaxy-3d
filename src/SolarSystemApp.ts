@@ -19,6 +19,17 @@ import Logger from './utils/Logger';
 
 type ProgressCallback = (percent: number, message: string) => void;
 
+function reportProgress(
+  progressCallback: ProgressCallback,
+  start: number,
+  end: number,
+  fraction: number,
+  message: string
+): void {
+  const bounded = Math.min(1, Math.max(0, fraction));
+  progressCallback(start + (end - start) * bounded, message);
+}
+
 /** Surface publique renvoyée par `init()` : ce que la couche UI (MainSolarSystemApp) pilote. */
 export interface PublicAPI {
   sceneSystem: SceneSystem;
@@ -59,11 +70,12 @@ export class SolarSystemApp {
     }
     try {
       Logger.group('SolarSystemApp Init');
+      progressCallback(5, t('loader.core'));
       await this._loadResources(progressCallback);
       this._initCoreSystems(progressCallback);
 
-      progressCallback(75, t('loader.bodies'));
-      const bodies = await this._getCelestialBodies();
+      progressCallback(65, t('loader.bodies'));
+      const bodies = await this._getCelestialBodies(progressCallback);
 
       this._finalizeSetup(bodies, progressCallback);
       this.initialized = true;
@@ -89,12 +101,30 @@ export class SolarSystemApp {
     };
     this.systems.texture = TextureSystem.getInstance(config);
     const manifestUrl = `${import.meta.env.BASE_URL}assets/ephemerides/manifest.json`;
-    const [, horizons] = await Promise.all([
-      this.systems.texture.preloadCriticalTextures((percent, msg) => {
-        progressCallback(percent * 0.4, msg);
-      }),
-      HorizonsEphemerisService.load(manifestUrl),
-    ]);
+    let textureProgress = 0;
+    let ephemeridesReady = false;
+    let lastTextureMessage = t('loader.core');
+    const reportResourceProgress = (message = lastTextureMessage): void => {
+      const combined = textureProgress * 0.75 + (ephemeridesReady ? 0.25 : 0);
+      reportProgress(progressCallback, 8, 45, combined, message);
+    };
+
+    const texturePromise = this.systems.texture.preloadCriticalTextures(
+      (percent, msg) => {
+        textureProgress = percent;
+        lastTextureMessage = msg;
+        reportResourceProgress(msg);
+      }
+    );
+    const horizonsPromise = HorizonsEphemerisService.load(manifestUrl).then(
+      (horizons) => {
+        ephemeridesReady = true;
+        reportResourceProgress(t('loader.ephemerides'));
+        return horizons;
+      }
+    );
+
+    const [, horizons] = await Promise.all([texturePromise, horizonsPromise]);
     this._horizonsEphemeris = horizons;
   }
 
@@ -108,16 +138,21 @@ export class SolarSystemApp {
 
     progressCallback(60, t('loader.lighting'));
     this.systems.lighting.setup(this.systems.scene.scene);
+    progressCallback(65, t('loader.lighting'));
   }
 
-  private async _getCelestialBodies(): Promise<CelestialBodies> {
+  private async _getCelestialBodies(
+    progressCallback: ProgressCallback
+  ): Promise<CelestialBodies> {
     if (this.bodyCache) return this.bodyCache;
     const factory = new CelestialObjectFactory(
       this.systems.texture!,
       CELESTIAL_CONFIG,
       this.systems.animation
     );
-    this.bodyCache = await factory.createAll();
+    this.bodyCache = await factory.createAll((percent, msg) => {
+      reportProgress(progressCallback, 65, 82, percent, msg);
+    });
     return this.bodyCache;
   }
 
@@ -125,15 +160,17 @@ export class SolarSystemApp {
     bodies: CelestialBodies,
     progressCallback: ProgressCallback
   ): void {
-    progressCallback(85, t('loader.finalize'));
+    progressCallback(84, t('loader.finalize'));
 
     this.systems.scene!.setupCelestialBodies(bodies);
+    progressCallback(87, t('loader.finalize'));
 
     this.systems.camera.init(
       this.systems.scene!.camera,
       this.systems.scene!.renderer,
       bodies
     );
+    progressCallback(90, t('loader.finalize'));
 
     this.systems.animation.init({
       scene: this.systems.scene!.scene,
@@ -142,6 +179,7 @@ export class SolarSystemApp {
       cameraSystem: this.systems.camera,
       celestialBodies: bodies,
     });
+    progressCallback(93, t('loader.finalize'));
 
     // Créer les systèmes astronomiques
     this._ephemerisService = new EphemerisService();
@@ -158,9 +196,9 @@ export class SolarSystemApp {
     // position. Les lignes éducatives sont masquées dès que l'Exploration devient active.
     this._orbitalMechanics.onOrbitsChanged = () => {
       this._recomputeOrbits();
-      this.systems.scene?.setOrbitLinesVisible(
-        this._orbitalMechanics?.scaleMode === 'educ'
-      );
+      this.systems.scene?.setOrbitLinesVisible(true);
+      // Les orbites restent disponibles dans les deux modes ; le panneau Paramètres
+      // permet de réduire la densité sans imposer une règle liée au mode d’échelle.
     };
     this._orbitalMechanics.onScaleMorph = (p) => {
       forEachBody(CELESTIAL_CONFIG, ({ name, config: cfg }) => {
@@ -186,11 +224,11 @@ export class SolarSystemApp {
     // par défaut, ce qui casse le toggle master OFF→ON avant le premier changement de mode.
     this.systems.scene?.setOrbitLinesVisible(true);
 
-    progressCallback(95, t('loader.starting'));
+    progressCallback(98, t('loader.starting'));
     this.systems.animation.run();
   }
 
-  /** Recalcule les lignes du mode Éducation ; aucune ligne n'est produite en Exploration. */
+  /** Recalcule le cercle éducatif ou la trajectoire réelle du mode courant. */
   private _recomputeOrbits(): void {
     const om = this._orbitalMechanics!;
     const scene = this.systems.scene!;

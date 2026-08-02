@@ -38,4 +38,60 @@ describe('CameraSystem target flights', () => {
     expect(cameraSystem.targetName).toBe('mars');
     expect(cameraSystem.tweenGroup.getAll()).toHaveLength(2);
   });
+  it('adapts FOV and exposure for a distant true-scale target', () => {
+    const cameraSystem = new CameraSystem();
+    cameraSystem.camera = new THREE.PerspectiveCamera(65);
+    cameraSystem.camera.position.set(0, 10, 10);
+    cameraSystem.controls = {
+      target: new THREE.Vector3(),
+      enabled: true,
+      update: () => {},
+    } as unknown as CameraSystem['controls'];
+    cameraSystem.renderer = {
+      toneMappingExposure: 1,
+    } as unknown as CameraSystem['renderer'];
+    cameraSystem.tweenGroup = new TweenGroup();
+    Reflect.set(cameraSystem, '_scaleMode', 'explo');
+    Reflect.set(cameraSystem, 'celestialBodies', {
+      neptune: bodyAt(1050),
+    });
+
+    cameraSystem.setTarget('neptune');
+
+    expect(cameraSystem.camera.fov).toBe(55);
+    expect(cameraSystem.renderer.toneMappingExposure).toBe(4);
+  });
+
+  it('keeps the current camera framing during a scale-mode transition', () => {
+    const cameraSystem = new CameraSystem();
+    cameraSystem.camera = new THREE.PerspectiveCamera(65);
+    cameraSystem.camera.position.set(7, 11, 13);
+    cameraSystem.controls = {
+      target: new THREE.Vector3(2, 3, 5),
+      enabled: true,
+      minDistance: 0,
+      maxDistance: 100,
+      update: () => {},
+    } as unknown as CameraSystem['controls'];
+    cameraSystem.renderer = {
+      toneMappingExposure: 1,
+    } as unknown as CameraSystem['renderer'];
+    cameraSystem.tweenGroup = new TweenGroup();
+    Reflect.set(cameraSystem, '_scaleMode', 'educ');
+    Reflect.set(cameraSystem, 'currentTarget', {
+      name: 'earth',
+      group: bodyAt(35).group,
+      distance: 5,
+    });
+
+    const position = cameraSystem.camera.position.clone();
+    const target = cameraSystem.controls.target.clone();
+    cameraSystem.transitionScaleMode('explo');
+
+    expect(cameraSystem.camera.position.equals(position)).toBe(true);
+    expect(cameraSystem.controls.target.equals(target)).toBe(true);
+    expect(cameraSystem.camera.fov).toBe(65);
+    expect(cameraSystem.targetName).toBe('earth');
+    expect(cameraSystem.tweenGroup.getAll()).toHaveLength(0);
+  });
 });

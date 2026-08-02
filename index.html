@@ -15,7 +15,7 @@
       content="Explore the solar system in 3D with real ephemeris positions. Two modes: educational overview and true-scale space voyage. Time travel, real distances, light-time."
     />
     <meta name="theme-color" content="#000000" />
-    <link rel="canonical" href="https://addey34.github.io/SolarSystem3D/" />
+    <link rel="canonical" href="https://galaxy-ag.web.app/" />
     <!-- Open Graph / Twitter — aperçu riche quand un lien est partagé -->
     <meta property="og:type" content="website" />
     <meta
@@ -26,13 +26,10 @@
       property="og:description"
       content="Real ephemeris positions, true-scale exploration mode, time travel. Built with Three.js."
     />
-    <meta
-      property="og:url"
-      content="https://addey34.github.io/SolarSystem3D/"
-    />
+    <meta property="og:url" content="https://galaxy-ag.web.app/" />
     <meta
       property="og:image"
-      content="https://addey34.github.io/SolarSystem3D/assets/social/og.jpg"
+      content="https://galaxy-ag.web.app/assets/social/og.jpg"
     />
     <meta name="twitter:card" content="summary_large_image" />
     <link rel="icon" href="/favicon.ico" type="image/x-icon" />
@@ -42,11 +39,76 @@
     <!-- ─── Loading screen ─────────────────────────────────────────────────── -->
     <div id="loader">
       <div class="loader-content">
-        <h2 data-i18n="loader.title">Loading Solar System...</h2>
-        <div class="progress-bar">
-          <div class="progress" id="load-progress"></div>
+        <div class="loader-orbit" aria-hidden="true">
+          <span class="loader-sun"></span>
+          <span class="loader-path loader-path--inner">
+            <span class="loader-planet loader-planet--inner"></span>
+          </span>
+          <span class="loader-path loader-path--outer">
+            <span class="loader-planet loader-planet--outer"></span>
+          </span>
         </div>
-        <div id="load-status" data-i18n="loader.init">Initializing...</div>
+        <p class="loader-kicker">Three.js Solar System</p>
+
+        <h2 class="loader-title">Solar System 3D</h2>
+        <div class="load-meta">
+          <span id="load-percent">0%</span>
+        </div>
+        <div
+          class="loader-bar"
+          role="progressbar"
+          aria-valuemin="0"
+          aria-valuemax="100"
+        >
+          <span id="load-progress-fill"></span>
+        </div>
+        <div
+          class="loader-stages"
+          role="progressbar"
+          aria-valuemin="0"
+          aria-valuemax="100"
+        >
+          <span
+            class="loader-stage"
+            data-loader-stage="core"
+            data-i18n="loader.stage.core"
+            >Core</span
+          >
+          <span
+            class="loader-stage"
+            data-loader-stage="data"
+            data-i18n="loader.stage.data"
+            >Data</span
+          >
+          <span
+            class="loader-stage"
+            data-loader-stage="scene"
+            data-i18n="loader.stage.scene"
+            >Scene</span
+          >
+          <span
+            class="loader-stage"
+            data-loader-stage="bodies"
+            data-i18n="loader.stage.bodies"
+            >Bodies</span
+          >
+          <span
+            class="loader-stage"
+            data-loader-stage="orbit"
+            data-i18n="loader.stage.orbit"
+            >Orbits</span
+          >
+          <span
+            class="loader-stage"
+            data-loader-stage="ready"
+            data-i18n="loader.stage.ready"
+            >Ready</span
+          >
+        </div>
+        <div class="loader-readout">
+          <span id="load-step">01 / 06</span>
+          <span id="load-status" data-i18n="loader.init">Initializing...</span>
+        </div>
       </div>
     </div>
 
@@ -130,7 +192,7 @@
     <!-- Fiche unique : données catalogue + (en Explo) distance réelle live et
          temps-lumière, fusionnés depuis l'ancien HUD « TARGET ». La flèche replie la
          fiche sur son seul en-tête pour ne pas gâcher la vue. Rempli par ui/bodyInfo. -->
-    <aside id="body-info" hidden>
+    <aside id="body-info" class="scene-panel scene-panel--side" hidden>
       <header class="bi-header">
         <span class="bi-dot" aria-hidden="true"></span>
         <h2 class="bi-name"></h2>
@@ -173,15 +235,64 @@
     <!-- ─── Orbit options panel (left — educ mode only) ────────────────────── -->
     <!-- Coches pour afficher/masquer les orbites des planètes naines en mode Éducatif.
          Rempli dynamiquement par ui/orbitOptions depuis le catalogue ; masqué en Explo. -->
-    <aside id="orbit-options" hidden>
+    <aside id="orbit-options" class="scene-panel scene-panel--side" hidden>
       <header class="oo-header">
-        <h3 class="oo-title" data-i18n="orbitOpts.title">Orbits</h3>
+        <h3 class="oo-title" data-i18n="settings.title">Settings</h3>
       </header>
-      <div class="oo-body">
-        <!-- populated by ui/orbitOptions.ts -->
-      </div>
-      <!-- Languette de repli centrée sous le panneau — même style que la poignée de la
-           nav du haut. aria-label géré en JS (dépend de l'état replié/déplié). -->
+      <section
+        class="settings-section settings-section--display"
+        aria-labelledby="settings-display-heading"
+      >
+        <h4
+          id="settings-display-heading"
+          class="settings-section-title"
+          data-i18n="settings.labelsTitle"
+        >
+          Display
+        </h4>
+        <label class="settings-switch">
+          <input
+            id="labels-visible"
+            class="oo-checkbox settings-checkbox"
+            type="checkbox"
+            checked
+            aria-label="Show body names and markers"
+            data-i18n-aria="settings.labelsToggle"
+          />
+          <span class="settings-switch-copy">
+            <span class="settings-switch-label" data-i18n="settings.labels"
+              >Names &amp; markers</span
+            >
+          </span>
+        </label>
+        <label class="settings-switch">
+          <input
+            id="orbits-visible"
+            class="oo-checkbox settings-checkbox"
+            type="checkbox"
+            checked
+            aria-label="Show orbits"
+            data-i18n-aria="settings.orbitsToggle"
+          />
+          <span class="settings-switch-copy">
+            <span class="settings-switch-label" data-i18n="settings.orbitsToggle"
+              >Orbits</span
+            >
+          </span>
+        </label>
+        <details class="orbit-picker">
+          <summary
+            class="orbit-picker-summary"
+            data-i18n="settings.orbitsChoose"
+          >
+            Choose orbits
+          </summary>
+          <div class="oo-body">
+            <!-- populated by ui/orbitOptions.ts -->
+          </div>
+        </details>
+      </section>
+
       <button
         class="oo-toggle"
         type="button"
@@ -204,9 +315,10 @@
     <!-- ─── Mode toggle (bottom-left) ──────────────────────────────────────── -->
     <div id="mode-controls">
       <div
-        class="mode-seg"
+        class="mode-seg scene-panel scene-panel--compact"
         role="group"
         aria-label="View mode"
+        aria-describedby="scale-disclaimer"
         data-i18n-aria="mode.group"
       >
         <button
@@ -228,10 +340,18 @@
           Explo.
         </button>
       </div>
+      <p
+        id="scale-disclaimer"
+        role="tooltip"
+        data-i18n="mode.educ.scale"
+        aria-live="polite"
+      >
+        Compressed distances · enlarged bodies
+      </p>
     </div>
 
     <!-- ─── Time panel (bottom-center) ─────────────────────────────────────── -->
-    <div id="time-panel">
+    <div id="time-panel" class="scene-panel scene-panel--time">
       <!-- Poignée : replie la partie supérieure (lecture/vitesse) → horloge simplifiée.
            aria-label géré en JS (dépend de l'état replié/déplié). -->
       <button

@@ -10,7 +10,6 @@ import {
   currentMaxPixelRatio,
 } from '@/config/engine';
 import { educRadius } from '@/core/ScaleService';
-import { ORBIT_SAMPLE_COUNT } from '@/core/OrbitalMechanics';
 import type { CelestialBodyConfig, CelestialConfig } from '@/types';
 import Logger from '@/utils/Logger';
 import type { TextureSystem } from './TextureSystem';
@@ -197,15 +196,18 @@ export class SceneSystem {
   }
 
   private createOrbitVisual(bodyName: string, color: number): THREE.Line {
-    const positions = new Float32Array((ORBIT_SAMPLE_COUNT + 1) * 3);
     const geometry = new THREE.BufferGeometry();
-    geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
     const material = new THREE.LineBasicMaterial({
       color,
       transparent: true,
       opacity: 0.25,
+      // The orbit must disappear behind opaque celestial surfaces.
+      depthTest: true,
+      depthWrite: false,
     });
     const line = new THREE.Line(geometry, material);
+    line.renderOrder = 3;
+    line.frustumCulled = false;
     this._orbitLines.set(bodyName, line);
     return line;
   }
@@ -249,19 +251,18 @@ export class SceneSystem {
     for (const [bodyName, line] of this._orbitLines) {
       const points = this._orbitPts.get(bodyName);
       if (!points) continue;
-      const attr = line.geometry.getAttribute(
-        'position'
-      ) as THREE.BufferAttribute;
-      for (let i = 0; i < attr.count; i++) {
-        const i3 = i * 3;
-        attr.setXYZ(i, points[i3], points[i3 + 1], points[i3 + 2]);
-      }
-      attr.needsUpdate = true;
-      line.geometry.computeBoundingSphere();
+      const previousGeometry = line.geometry;
+      const geometry = new THREE.BufferGeometry();
+      geometry.setAttribute('position', new THREE.BufferAttribute(points, 3));
+      geometry.computeBoundingSphere();
+      line.geometry = geometry;
+      previousGeometry.dispose();
     }
   }
 
   dispose(): void {
+    Object.values(this._celestialBodies).forEach((body) => body.dispose());
+    this._celestialBodies = {};
     Object.values(this.orbitGroups).forEach((group) => {
       group.traverse((child) => {
         if (child instanceof THREE.Line) {
@@ -271,8 +272,8 @@ export class SceneSystem {
       });
     });
     this.disposeFunctions.forEach((fn) => fn());
-    this.renderer.dispose();
-    this.renderer.domElement.remove();
+    this.renderer?.dispose();
+    this.renderer?.domElement.remove();
     Logger.warn('[SceneSystem] Disposed');
   }
 }

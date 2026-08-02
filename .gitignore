@@ -11,6 +11,16 @@ node_modules
 dist
 dist-ssr
 *.local
+*.tmp
+*.temp
+*.bak
+*.orig
+*.pid
+*.seed
+*.tsbuildinfo
+coverage/
+.vite/
+.cache/
 
 # Editor directories and files
 .vscode/*
@@ -24,8 +34,12 @@ dist-ssr
 *.sw?
 
 # Playwright
-test-results
-playwright-report
+test-results/
+playwright-report/
+blob-report/
+*.trace.zip
+playwright/.cache
+
 playwright/.cache
 
 # Notes de travail privées
@@ -36,5 +50,19 @@ CLAUDE.md
 AGENTS.md
 .claude/
 
+.npmrc.local
+# Secrets and local credentials
+.env
+.env.*
+!.env.example
+firebase-debug.log
+*-service-account*.json
+*.pem
+*.key
 # Firebase deploy cache
 .firebase/
+
+# Local reports and generated test artifacts
+reports/
+tmp/
+temp/

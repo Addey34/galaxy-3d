@@ -40,7 +40,7 @@ test('explo mode shows projected labels and the live distance in the info card',
   await expect(info.locator('.bi-live-dist')).toContainText('AU');
 
   // Au moins un marqueur de corps projeté est affiché.
-  await expect(page.locator('.explo-label').first()).toBeVisible();
+  await expect(page.locator('.explo-label:visible').first()).toBeVisible();
 
   // Retour en Éducatif : la couche reste active mais repasse en style éduc.
   await page.locator('.mode-btn[data-mode="educ"]').click();

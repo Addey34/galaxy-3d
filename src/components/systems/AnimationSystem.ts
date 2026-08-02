@@ -12,19 +12,23 @@ import { FPSCounter } from '@/utils/FPSCounter';
 import Logger from '@/utils/Logger';
 import type { IUpdatable } from '@/types';
 import type { OrbitalMechanics } from '@/core/OrbitalMechanics';
+import { computeLightAttenuation, solarIrradianceFactor } from '@/core/eclipse';
+import { SQRT_K } from '@/core/ScaleService';
 import type { CameraSystem } from './CameraSystem';
 import type { CelestialBodies } from './SceneSystem';
 
 // LOD revu toutes les 5 frames seulement : un changement de texture déclenche un upload
 // GPU coûteux ; le faire à chaque frame provoquerait des à-coups (spikes de frame-time).
 const LOD_UPDATE_INTERVAL = 5;
-const LOD_MAX_DISTANCE = 100; // au-delà, on ne recharge plus de textures (corps trop petit à l'écran)
-const LOD_DISTANCE_THRESHOLD = 5; // variation de distance mini avant de reconsidérer le LOD
+const LOD_MAX_NORMALIZED_DISTANCE = 250;
+const LOD_NORMALIZED_DISTANCE_THRESHOLD = 2;
 
 export class AnimationSystem {
   // Timing
   private readonly clock = new THREE.Clock();
   private lodUpdateFrame = 0;
+  private lightingUpdateFrame = 0;
+  private lastLightingMode: 'educ' | 'explo' | null = null;
 
   // State
   private isRunning = false;
@@ -111,6 +115,7 @@ export class AnimationSystem {
     this.orbitalMechanics?.update(delta, rawDelta);
 
     const sunWorldPosition = this._getSunWorldPosition();
+    this._updatePhysicalLighting(sunWorldPosition);
 
     // Frustum calculé une fois par frame (réutilise les matrices de la frame précédente — acceptable)
     this.camera.updateMatrixWorld();
@@ -136,6 +141,59 @@ export class AnimationSystem {
     if (!sunBody?.group) return null;
     sunBody.group.getWorldPosition(this._sunWorldPos);
     return this._sunWorldPos;
+  }
+
+  private _updatePhysicalLighting(
+    sunWorldPosition: THREE.Vector3 | null
+  ): void {
+    if (!sunWorldPosition) return;
+    const mode = this.orbitalMechanics?.scaleMode ?? 'educ';
+    const modeChanged = mode !== this.lastLightingMode;
+    this.lastLightingMode = mode;
+
+    if (mode === 'educ') {
+      if (modeChanged) {
+        for (const body of Object.values(this.celestialBodies)) {
+          body.setLightAttenuation(1);
+        }
+      }
+      return;
+    }
+
+    this.lightingUpdateFrame++;
+    if (!modeChanged && this.lightingUpdateFrame % 6 !== 0) return;
+
+    const sunBody = this.celestialBodies['sun'];
+    const sunRadius =
+      (sunBody?.group.userData['radius'] as number | undefined) ?? 0;
+    const entries = Object.entries(this.celestialBodies);
+    for (const [name, body] of entries) {
+      if (name === 'sun') {
+        body.setLightAttenuation(1);
+        continue;
+      }
+
+      const bodyPosition = new THREE.Vector3();
+      body.group.getWorldPosition(bodyPosition);
+      const occluders = entries
+        .filter(([otherName]) => otherName !== name && otherName !== 'sun')
+        .map(([, other]) => {
+          const position = new THREE.Vector3();
+          other.group.getWorldPosition(position);
+          return {
+            position,
+            radius: (other.group.userData['radius'] as number | undefined) ?? 0,
+          };
+        });
+      const eclipse = computeLightAttenuation(
+        bodyPosition,
+        sunWorldPosition,
+        sunRadius,
+        occluders
+      );
+      const distanceAU = bodyPosition.distanceTo(sunWorldPosition) / SQRT_K;
+      body.setLightAttenuation(eclipse * solarIrradianceFactor(distanceAU));
+    }
   }
 
   private _updateObjects(
@@ -177,8 +235,8 @@ export class AnimationSystem {
         // fire-and-forget; CelestialObject guards concurrent calls with _lodPending
         void body.updateLODTextures(
           this.camera,
-          LOD_MAX_DISTANCE,
-          LOD_DISTANCE_THRESHOLD
+          LOD_MAX_NORMALIZED_DISTANCE,
+          LOD_NORMALIZED_DISTANCE_THRESHOLD
         );
       }
     }
@@ -224,6 +282,9 @@ export class AnimationSystem {
       this.animationFrame = null;
     }
     this.updatables.clear();
+    this._updatablesList = [];
+    this._frameCallbacks.clear();
+    this.orbitalMechanics = null;
     this.fpsCounter.dispose();
     this.isRunning = false;
     Logger.warn('[AnimationSystem] Disposed');

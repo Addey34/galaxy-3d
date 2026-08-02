@@ -36,7 +36,9 @@ export const CELESTIAL_CONFIG: CelestialConfig = {
     sun: {
       kind: 'star',
       displayName: { fr: 'Soleil' },
-      radius: 10,
+      // Rayon éducatif volontairement tempéré : le Soleil reste dominant sans saturer la vue.
+      // En Explo, le rayon physique de realData.radiusKm reprend entièrement la main.
+      radius: 7,
       rotationSpeed: _R(609.6),
       orbitalColor: 0x000000,
       textureResolutions: { surface: ['4k', '2k', '1k'] },
@@ -67,7 +69,7 @@ export const CELESTIAL_CONFIG: CelestialConfig = {
       displayName: { fr: 'Mercure' },
       radius: 0.38,
       rotationSpeed: _R(1407.6),
-      orbitalColor: 0xaaaaaa,
+      orbitalColor: 0xb8b0a5,
       textureResolutions: { surface: ['8k', '4k', '2k', '1k'], bump: ['1k'] },
       textures: {
         surface: 'mercury/mercurySurface',
@@ -103,7 +105,7 @@ export const CELESTIAL_CONFIG: CelestialConfig = {
       displayName: { fr: 'Vénus' },
       radius: 0.95,
       rotationSpeed: _R(5832.6),
-      orbitalColor: 0xffa500,
+      orbitalColor: 0xe9a13b,
       textureResolutions: {
         surface: ['8k', '4k', '2k', '1k'],
         bump: ['1k'],
@@ -144,7 +146,7 @@ export const CELESTIAL_CONFIG: CelestialConfig = {
       displayName: { fr: 'Terre' },
       radius: 1,
       rotationSpeed: _R(23.9345),
-      orbitalColor: 0x00bfff,
+      orbitalColor: 0x2f9dff,
       textureResolutions: {
         surface: ['8k', '4k', '2k', '1k'],
         normalMap: ['8k', '4k', '2k', '1k'],
@@ -193,7 +195,7 @@ export const CELESTIAL_CONFIG: CelestialConfig = {
           frame: 'parentRelative',
           radius: 0.27,
           rotationSpeed: _R(655.72),
-          orbitalColor: 0x999999,
+          orbitalColor: 0x8f98a5,
           textureResolutions: {
             surface: ['8k', '4k', '2k', '1k'],
             bump: ['4k', '2k', '1k'],
@@ -233,7 +235,7 @@ export const CELESTIAL_CONFIG: CelestialConfig = {
       kind: 'planet',
       radius: 0.53,
       rotationSpeed: _R(24.6229),
-      orbitalColor: 0xff4500,
+      orbitalColor: 0xe85d3f,
       textureResolutions: {
         surface: ['8k', '4k', '2k', '1k'],
         normalMap: ['1k'],
@@ -271,7 +273,7 @@ export const CELESTIAL_CONFIG: CelestialConfig = {
       kind: 'planet',
       radius: 4,
       rotationSpeed: _R(9.9259),
-      orbitalColor: 0xffc04d,
+      orbitalColor: 0xd89a5b,
       textureResolutions: { surface: ['4k', '2k', '1k'] },
       textures: { surface: 'jupiter/jupiterSurface' },
       realData: {
@@ -304,7 +306,7 @@ export const CELESTIAL_CONFIG: CelestialConfig = {
       displayName: { fr: 'Saturne' },
       radius: 3.5,
       rotationSpeed: _R(10.656),
-      orbitalColor: 0xf5deb3,
+      orbitalColor: 0xe7d28d,
       ring: {
         bodyName: 'saturn-ring',
         innerRadius: 1.5,
@@ -343,7 +345,7 @@ export const CELESTIAL_CONFIG: CelestialConfig = {
       kind: 'planet',
       radius: 2,
       rotationSpeed: _R(17.24),
-      orbitalColor: 0x7fffd4,
+      orbitalColor: 0x69d6d3,
       textureResolutions: { surface: ['2k', '1k'] },
       textures: { surface: 'uranus/uranusSurface' },
       realData: {
@@ -375,7 +377,7 @@ export const CELESTIAL_CONFIG: CelestialConfig = {
       kind: 'planet',
       radius: 1.9,
       rotationSpeed: _R(16.11),
-      orbitalColor: 0x4169e1,
+      orbitalColor: 0x647cff,
       textureResolutions: { surface: ['2k', '1k'] },
       textures: { surface: 'neptune/neptuneSurface' },
       realData: {

@@ -14,6 +14,7 @@ import * as THREE from 'three';
 import { buildLayers } from '@/components/celestial/celestialLayers';
 import { applyTexture } from '@/components/celestial/celestialTextures';
 import { KM_PER_AU, SQRT_K } from '@/core/ScaleService';
+import { setMaterialLightAttenuation } from '@/config/layerConfig';
 import type { CameraDistance, CelestialBodyConfig } from '@/types';
 import * as NightLightsShader from '@/shaders/NightLightsShader';
 import Logger from '@/utils/Logger';
@@ -42,8 +43,9 @@ export default class CelestialObject {
   // Facteur d'échelle visuel : 1 en Éducatif, vraie taille physique en Explo.
   private _scaleFactor = 1;
 
-  private lastLODUpdateDistance = Infinity;
+  private lastLODNormalizedDistance = Infinity;
   private _lodPending = false;
+  private _disposed = false;
   private readonly _lodWorldPos = new THREE.Vector3();
   private readonly _hasTextures: boolean;
   // Dernière texture appliquée par clé — évite de re-uploader au GPU une résolution
@@ -109,24 +111,25 @@ export default class CelestialObject {
     }
   }
 
-  private async _loadRingTexture(): Promise<void> {
+  private async _loadRingTexture(normalizedDistance = 250): Promise<void> {
     const ring = this.config.ring;
     if (!ring) return;
     try {
-      const quality = ring.textureResolutions[0];
-      const texture = await this.textureSystem.loadTexture(
+      const texture = await this.textureSystem.getRingLODTexture(
         ring.textures,
-        quality
+        ring.textureResolutions,
+        normalizedDistance
       );
+      if (this._appliedTextures.get('ring') === texture) return;
       const ringMesh = this.layers.get('ring');
-      if (ringMesh) {
-        texture.wrapS = THREE.ClampToEdgeWrapping;
-        texture.wrapT = THREE.RepeatWrapping;
-        const mat = ringMesh.material as THREE.MeshStandardMaterial;
-        mat.map = texture;
-        mat.alphaMap = texture;
-        mat.needsUpdate = true;
-      }
+      if (!ringMesh) return;
+      texture.wrapS = THREE.ClampToEdgeWrapping;
+      texture.wrapT = THREE.RepeatWrapping;
+      const material = ringMesh.material as THREE.MeshStandardMaterial;
+      material.map = texture;
+      material.alphaMap = texture;
+      material.needsUpdate = true;
+      this._appliedTextures.set('ring', texture);
     } catch {
       Logger.warn(`[CelestialObject] Ring texture failed for ${this.name}`);
     }
@@ -173,6 +176,19 @@ export default class CelestialObject {
    */
   setInitialSurfaceRotation(radians: number): void {
     this._meshGroup.rotation.y = radians;
+  }
+
+  /** Applique l'irradiance solaire et l'occultation analytique à toutes les couches PBR. */
+  setLightAttenuation(attenuation: number): void {
+    const bounded = THREE.MathUtils.clamp(attenuation, 0, 6);
+    this.layers.forEach((mesh) => {
+      const materials = Array.isArray(mesh.material)
+        ? mesh.material
+        : [mesh.material];
+      materials.forEach((material) =>
+        setMaterialLightAttenuation(material, bounded)
+      );
+    });
   }
 
   /**
@@ -229,44 +245,52 @@ export default class CelestialObject {
   }
 
   /**
-   * Ajuste la résolution des textures (LOD) selon la distance à la caméra.
-   * `_lodPending` empêche d'empiler plusieurs chargements concurrents pour le même
-   * corps quand la caméra se déplace rapidement.
+   * Ajuste le LOD selon la distance exprimée en rayons apparents. Cette métrique reste
+   * cohérente entre tailles pédagogiques et rayons physiques, contrairement aux unités scène.
+   * `_lodPending` empêche d'empiler plusieurs chargements concurrents.
    */
   async updateLODTextures(
     camera: THREE.Camera,
-    maxDistance = 200,
-    threshold = 5
+    maxNormalizedDistance = 250,
+    threshold = 2
   ): Promise<void> {
     if (!this._hasTextures || this._lodPending || !camera || !this.group)
       return;
 
     this.group.getWorldPosition(this._lodWorldPos);
     const distance = camera.position.distanceTo(this._lodWorldPos);
-
-    if (distance > maxDistance) {
-      this.lastLODUpdateDistance = distance;
+    const worldRadius = Math.max(
+      (this.group.userData['radius'] as number | undefined) ??
+        this.config.radius * this._scaleFactor,
+      1e-9
+    );
+    const normalizedDistance = Math.min(
+      distance / worldRadius,
+      maxNormalizedDistance
+    );
+    if (
+      Math.abs(normalizedDistance - this.lastLODNormalizedDistance) < threshold
+    ) {
       return;
     }
-    if (Math.abs(distance - this.lastLODUpdateDistance) < threshold) return;
 
     this._lodPending = true;
-    this.lastLODUpdateDistance = distance;
+    this.lastLODNormalizedDistance = normalizedDistance;
 
     try {
       for (const textureKey of Object.keys(this.config.textures)) {
         const texture = await this.textureSystem.getLODTexture(
           this.name,
           textureKey,
-          distance
+          normalizedDistance
         );
-        // Même résolution qu'avant → inutile de réappliquer (évite un upload GPU).
         if (this._appliedTextures.get(textureKey) === texture) continue;
         applyTexture(this.layers, textureKey, texture);
         this._appliedTextures.set(textureKey, texture);
       }
+      if (this.config.ring) await this._loadRingTexture(normalizedDistance);
     } catch {
-      // silent — avoids log spam during rapid camera movement
+      // Dégradation silencieuse : la dernière texture valide reste appliquée.
     } finally {
       this._lodPending = false;
     }
@@ -277,26 +301,31 @@ export default class CelestialObject {
   // ============================================================================
 
   dispose(): void {
+    if (this._disposed) return;
+    this._disposed = true;
+    this.animationSystem.removeUpdatable(this);
     this.layers.forEach((mesh) => {
       mesh.geometry?.dispose();
-      const material = Array.isArray(mesh.material)
-        ? mesh.material[0]
-        : mesh.material;
-      if (material) {
+      const materials = Array.isArray(mesh.material)
+        ? mesh.material
+        : [mesh.material];
+      materials.forEach((material) => {
+        // TextureSystem owns cached textures. Detach them here, but do not dispose
+        // them per mesh: several materials may share one cached GPU resource.
         if (material instanceof THREE.MeshStandardMaterial) {
-          (
-            ['map', 'normalMap', 'bumpMap', 'roughnessMap', 'alphaMap'] as const
-          ).forEach((p) => {
-            material[p]?.dispose();
-          });
+          material.map = null;
+          material.normalMap = null;
+          material.bumpMap = null;
+          material.roughnessMap = null;
+          material.alphaMap = null;
         }
         if (material instanceof THREE.ShaderMaterial) {
           const uniforms =
             material.uniforms as unknown as NightLightsShader.NightLightsUniforms;
-          uniforms.lightsMap?.value?.dispose();
+          if (uniforms.lightsMap) uniforms.lightsMap.value = null;
         }
         material.dispose();
-      }
+      });
     });
     this.layers.clear();
     Logger.warn(`[CelestialObject] Disposed "${this.name}"`);

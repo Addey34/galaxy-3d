@@ -1,29 +1,21 @@
 /**
  * Bascule de mode Éducatif ↔ Exploration (#mode-controls .mode-btn).
  *
- * Lance la transition animée « dolly zoom » : positions et tailles se déploient de l'échelle
- * compressée vers la vraie échelle (ou l'inverse) tandis que la caméra recule et recentre sur
- * le Soleil, puis revient au corps sélectionné (la sélection est conservée à travers la
- * bascule). Respecte `prefers-reduced-motion` : bascule instantanée si l'utilisateur le demande.
+ * Lance la transition animée des positions et tailles entre les deux échelles. Le cadrage de la
+ * caméra reste inchangé pendant le morph ; la sélection est conservée, mais le suivi automatique
+ * est suspendu jusqu'à une nouvelle sélection. Respecte prefers-reduced-motion : bascule
+ * instantanée si l'utilisateur le demande.
  * Le bouton Explo actif déclenche aussi le HUD « Voyage spatial » via `onModeChange`.
  */
 import type { OrbitalMechanics } from '@/core/OrbitalMechanics';
 import type { CameraSystem } from '@/components/systems/CameraSystem';
+import { onLocaleChange, t } from '@/i18n';
 
 /** L'utilisateur préfère-t-il un mouvement réduit ? (bascule instantanée, sans morph). */
 function prefersReducedMotion(): boolean {
   return (
     window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false
   );
-}
-
-/** Corps actuellement sélectionné dans la barre de navigation, ou null (Vue Globale). */
-function selectedBody(): string | null {
-  const active = document.querySelector<HTMLButtonElement>(
-    '.controls button.is-active'
-  );
-  if (!active || active.id === 'orbit-overview') return null;
-  return active.id.replace('orbit-', '') || null;
 }
 
 export function setupModeSwitcher(
@@ -34,6 +26,22 @@ export function setupModeSwitcher(
   const modeBtns = Array.from(
     document.querySelectorAll<HTMLButtonElement>('#mode-controls .mode-btn')
   );
+  const scaleDisclaimer = document.getElementById('scale-disclaimer');
+  const updateScaleDisclaimer = (mode: 'educ' | 'explo'): void => {
+    if (!scaleDisclaimer) return;
+    const key = mode === 'explo' ? 'mode.explo.scale' : 'mode.educ.scale';
+    scaleDisclaimer.dataset['i18n'] = key;
+    scaleDisclaimer.textContent = t(key);
+  };
+
+  onLocaleChange(() => {
+    const active = modeBtns.find((button) =>
+      button.classList.contains('is-active')
+    );
+    updateScaleDisclaimer(
+      active?.dataset['mode'] === 'explo' ? 'explo' : 'educ'
+    );
+  });
 
   modeBtns.forEach((btn) => {
     btn.addEventListener('click', () => {
@@ -42,13 +50,10 @@ export function setupModeSwitcher(
       const isExplo = mode === 'explo';
       modeBtns.forEach((b) => b.classList.toggle('is-active', b === btn));
       document.body.classList.toggle('is-explo-mode', isExplo);
+      updateScaleDisclaimer(mode);
 
-      // Sélection conservée : la caméra recule vers la vue d'ensemble (recentrée Soleil)
-      // pendant la transition, puis revient au corps suivi une fois le recul terminé.
-      // Seul le morph de positions/tailles est gouverné par prefers-reduced-motion (mouvement
-      // nouveau) ; le vol caméra, lui, existait déjà et reste identique dans les deux cas.
-      const follow = selectedBody();
-      camera.transitionScaleMode(mode, follow);
+      // La caméra conserve son cadrage pendant que seules les positions et tailles morphent.
+      camera.transitionScaleMode(mode);
       om.setMode(mode, !prefersReducedMotion());
 
       onModeChange?.(mode);

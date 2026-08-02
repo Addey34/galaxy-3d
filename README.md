@@ -1,6 +1,6 @@
 # Solar System 3D
 
-**🌍 [Démo en ligne → addey34.github.io/SolarSystem3D](https://addey34.github.io/SolarSystem3D/)**
+**🌍 [Démo en ligne → galaxy-ag.web.app](https://galaxy-ag.web.app/)**
 
 Visualisateur interactif du système solaire en temps réel, développé en TypeScript avec Three.js. Deux modes d'affichage : **Éducatif** (distances compressées en √, tout visible d'un coup) et **Exploration** (vraie échelle astronomique, positions Kepler calculées par éphéméride). Le mode Exploration est actif avec l'expérience « Voyage spatial » : suivi caméra, distances réelles, temps-lumière et marqueurs projetés.
 
@@ -53,7 +53,8 @@ pnpm ephemeris:generate # régénérer les vecteurs précis depuis NASA/JPL Hori
 pnpm format     # Formater les fichiers TypeScript/CSS avec Prettier
 pnpm format:check # Vérifier le formatage sans réécrire
 pnpm lint       # eslint . (flat config) ; pnpm lint:fix pour corriger
-pnpm verify     # tsc --noEmit && eslint . && vitest run (à lancer avant de considérer une tâche finie)
+pnpm verify     # tsc --noEmit && eslint . && vitest run (gate local rapide)
+pnpm verify:all # verify + build + test:e2e (validation exhaustive)
 ```
 
 ## Textures
@@ -299,13 +300,13 @@ Réglages moteur dans `src/config/engine.ts`, catalogue des corps dans `src/conf
 - **Vitest** — tests unitaires des modules mathématiques purs (`src/**/*.test.ts`) ; `pnpm verify` = types + lint + tests
 - **ESLint** — `eslint.config.js` (flat config, typescript-eslint recommended non-type-checked) ; `pnpm lint` / `pnpm lint:fix`, intégré à `pnpm verify`
 - **Prettier** — règles dans `.prettierrc`, commandes `pnpm format` et `pnpm format:check` ; l'arbre entier est conforme
-- **Playwright** — neuf scénarios navigateur dans `e2e/` (`smoke` + `explo`) ; le serveur Vite de test utilise le port réservé 5273
+- **Playwright** — 18 scénarios navigateur dans `e2e/` (`smoke`, `modes`, `explo`, `i18n`, `onboarding`) ; le serveur Vite de test utilise le port réservé 5273
 - Aucun seuil de couverture configuré
 
 ## Qualité et limites actuelles
 
-- `pnpm verify` passe avec 59 tests répartis dans 12 fichiers ; Playwright complète cette couverture avec 9 scénarios DOM/WebGL.
-- `pnpm build` passe sans avertissement de taille : `three`, `astronomy-engine` et `tween` sont séparés, et le chunk applicatif reste autour de 80 kB minifié.
+- `pnpm verify` passe avec 73 tests répartis dans 16 fichiers ; Playwright complète cette couverture avec 18 scénarios DOM/WebGL.
+- `pnpm build` passe sans avertissement de taille : `three`, `astronomy-engine` et `tween` sont séparés, et le chunk applicatif reste autour de 120 kB minifié.
 - Le mode Exploration est actif. Les vols caméra concurrents sont annulés et la cible suivie reste centrée, y compris à vitesse accélérée.
 - `IS_MOBILE` reste figé pour les réglages créés à l'initialisation (anticrénelage, ombres, textures) ; seul le plafond de pixel ratio est recalculé au resize.
 - `frame: 'parentRelative'` calcule `helio(corps) − helio(parent)`. Astronomy Engine ne fournit toutefois une éphéméride naturelle que pour la Lune.
@@ -317,6 +318,21 @@ En résumé : d'abord rendre le projet visible (déploiement public, CI, SEO) et
 (fiches d'information par corps, i18n FR/EN, transition animée Éducatif→Exploration), puis
 donner des raisons de revenir (permaliens, événements astronomiques, zoom optique FOV, lunes
 majeures), et à terme en faire une référence (tours guidés, missions spatiales, WebXR).
+
+## Documentation technique
+
+- [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — frontières, cycle de vie et invariants
+- [`docs/TESTING.md`](docs/TESTING.md) — stratégie et commandes de validation
+- [`AGENTS.md`](AGENTS.md) — règles de contribution pour les agents et développeurs
+
+## Déploiement
+
+Le site public est hébergé sur Firebase Hosting (`galaxy-ag`). La CI GitHub vérifie le projet ; le déploiement est réalisé sur Firebase Hosting.
+
+```bash
+pnpm build
+firebase deploy --only hosting:galaxy
+```
 
 ## Licence
 

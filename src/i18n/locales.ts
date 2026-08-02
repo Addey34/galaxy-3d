@@ -26,6 +26,16 @@ export const messages: Record<Locale, Dict> = {
     'loader.finalize': 'Finalizing…',
     'loader.starting': 'Starting…',
     'loader.loadingBody': 'Loading {body}…',
+    'loader.creatingBody': 'Creating {body}...',
+    'loader.ephemerides': 'Ephemeris data loaded',
+    'loader.ready': 'Ready for launch',
+    'loader.verified': 'verified loading',
+    'loader.stage.core': 'Core',
+    'loader.stage.data': 'Data',
+    'loader.stage.scene': 'Scène',
+    'loader.stage.bodies': 'Bodies',
+    'loader.stage.orbit': 'Orbits',
+    'loader.stage.ready': 'Ready',
     'loader.texturesDone': 'Textures loaded',
     'error.title': 'Application Error',
     'error.retry': 'Retry',
@@ -39,6 +49,8 @@ export const messages: Record<Locale, Dict> = {
     'mode.explo': 'Explo.',
     'mode.educ.title': 'Educational view — circular orbits',
     'mode.explo.title': 'Exploration mode — true scale, space voyage',
+    'mode.educ.scale': 'Compressed distances · enlarged bodies',
+    'mode.explo.scale': 'Linear distances · physical radii',
 
     // ── Lecture / temps ──
     'playback.playpause': 'Play / Pause',
@@ -81,6 +93,14 @@ export const messages: Record<Locale, Dict> = {
     'orbitOpts.all': 'All orbits',
     'orbitOpts.collapse': 'Collapse panel',
     'orbitOpts.expand': 'Orbit options',
+    'settings.title': 'Settings',
+    'settings.orbits': 'Orbits',
+    'settings.orbitsToggle': 'Show orbits',
+    'settings.orbitsChoose': 'Choose orbits',
+    'settings.labelsTitle': 'Display',
+    'settings.labels': 'Names & markers',
+
+    'settings.labelsToggle': 'Show body names and markers',
 
     // ── Barre de navigation planètes ──
     'nav.collapse': 'Hide planet bar',
@@ -142,6 +162,16 @@ export const messages: Record<Locale, Dict> = {
     'loader.finalize': 'Finalisation…',
     'loader.starting': 'Démarrage…',
     'loader.loadingBody': 'Chargement de {body}…',
+    'loader.creatingBody': 'Création de {body}...',
+    'loader.ephemerides': 'Données éphémérides chargées',
+    'loader.ready': 'Prêt au lancement',
+    'loader.verified': 'chargement vérifié',
+    'loader.stage.core': 'Moteur',
+    'loader.stage.data': 'Données',
+    'loader.stage.scene': 'Scène',
+    'loader.stage.bodies': 'Corps',
+    'loader.stage.orbit': 'Orbites',
+    'loader.stage.ready': 'Prêt',
     'loader.texturesDone': 'Textures chargées',
     'error.title': 'Erreur de l’application',
     'error.retry': 'Réessayer',
@@ -155,6 +185,8 @@ export const messages: Record<Locale, Dict> = {
     'mode.explo': 'Explo.',
     'mode.educ.title': 'Vue éducative — orbites circulaires',
     'mode.explo.title': 'Mode exploration — vraie échelle, voyage spatial',
+    'mode.educ.scale': 'Distances compressées · corps agrandis',
+    'mode.explo.scale': 'Distances linéaires · rayons physiques',
 
     // ── Lecture / temps ──
     'playback.playpause': 'Lecture / Pause',
@@ -200,6 +232,14 @@ export const messages: Record<Locale, Dict> = {
     'orbitOpts.all': 'Toutes les orbites',
     'orbitOpts.collapse': 'Replier le panneau',
     'orbitOpts.expand': 'Options d’orbites',
+    'settings.title': 'Paramètres',
+    'settings.orbits': 'Orbites',
+    'settings.orbitsToggle': 'Afficher les orbites',
+    'settings.orbitsChoose': 'Choisir les orbites',
+    'settings.labelsTitle': 'Affichage',
+    'settings.labels': 'Noms et points',
+
+    'settings.labelsToggle': 'Afficher les noms et les points',
 
     // ── Barre de navigation planètes ──
     'nav.collapse': 'Masquer la barre',

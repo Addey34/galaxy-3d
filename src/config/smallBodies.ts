@@ -69,9 +69,9 @@ export interface SmallBodyElements {
 }
 
 const DEFAULT_COLOR: Record<NonNullable<SmallBodyElements['kind']>, number> = {
-  asteroid: 0x9c8f7a,
-  comet: 0x6fd8e0,
-  dwarf: 0xc9a0dc,
+  asteroid: 0xb3956c,
+  comet: 0x6fe6e8,
+  dwarf: 0xc391e6,
 };
 
 /**
@@ -147,7 +147,7 @@ export const SMALL_BODY_ELEMENTS: readonly SmallBodyElements[] = [
     epoch: '2000-01-01T12:00:00Z',
     radiusKm: 473,
     kind: 'dwarf',
-    color: 0xa09880,
+    color: 0xc5a46d,
     surfaceResolutions: ['4k', '2k'],
     visualRadius: 0.1,
     rotationHours: 9.074,
@@ -211,7 +211,7 @@ export const SMALL_BODY_ELEMENTS: readonly SmallBodyElements[] = [
     epoch: '2000-01-01T12:00:00Z',
     radiusKm: 1188,
     kind: 'dwarf',
-    color: 0xd4c4a8,
+    color: 0xd8b894,
     surfaceResolutions: ['4k', '2k'],
     visualRadius: 0.188,
     rotationHours: 153.3,
@@ -241,7 +241,7 @@ export const SMALL_BODY_ELEMENTS: readonly SmallBodyElements[] = [
     epoch: '2000-01-01T12:00:00Z',
     radiusKm: 1163,
     kind: 'dwarf',
-    color: 0x88aad0,
+    color: 0x91bce6,
     surfaceResolutions: ['4k', '2k'],
     visualRadius: 0.183,
     rotationHours: 25.9,
@@ -271,7 +271,7 @@ export const SMALL_BODY_ELEMENTS: readonly SmallBodyElements[] = [
     epoch: '2000-01-01T12:00:00Z',
     radiusKm: 780,
     kind: 'dwarf',
-    color: 0xe08878,
+    color: 0xe58f7a,
     surfaceResolutions: ['4k', '2k'],
     visualRadius: 0.123,
     rotationHours: 3.9155,
@@ -301,7 +301,7 @@ export const SMALL_BODY_ELEMENTS: readonly SmallBodyElements[] = [
     epoch: '2000-01-01T12:00:00Z',
     radiusKm: 715,
     kind: 'dwarf',
-    color: 0xc98c68,
+    color: 0xd78352,
     surfaceResolutions: ['4k', '2k'],
     visualRadius: 0.112,
     rotationHours: 22.826,

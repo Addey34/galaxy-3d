@@ -4,7 +4,22 @@ import { defineConfig } from 'vitest/config';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
+/**
+ * Removes authoring-only HTML comments from the production document. Comments are
+ * useful while editing the static shell, but they add no runtime value and expose
+ * internal implementation notes in the deployed page source.
+ */
+function stripProductionHtmlComments() {
+  return {
+    name: 'strip-production-html-comments',
+    transformIndexHtml(html: string): string {
+      return html.replace(/<!--[\s\S]*?-->/g, '');
+    },
+  };
+}
+
 export default defineConfig({
+  plugins: [stripProductionHtmlComments()],
   base: '/',
   publicDir: 'public',
   resolve: {

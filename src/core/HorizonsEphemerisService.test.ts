@@ -14,7 +14,7 @@ describe('HorizonsEphemerisService', () => {
       units: 'AU-D',
       bodies: {
         test: {
-          file: 'test.bin',
+          file: 'test.000000000000.bin',
           target: 'test',
           startJdTdb: 2_451_545,
           stepDays: 4,
@@ -23,7 +23,12 @@ describe('HorizonsEphemerisService', () => {
       },
     };
 
-    vi.stubGlobal('window', { location: { href: 'https://example.test/' } });
+    vi.stubGlobal('window', {
+      location: {
+        href: 'https://example.test/',
+        origin: 'https://example.test',
+      },
+    });
     vi.stubGlobal(
       'fetch',
       vi

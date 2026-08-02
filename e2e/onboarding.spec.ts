@@ -8,7 +8,9 @@ test.beforeEach(async ({ page }) => {
  * Onboarding (première visite) : la carte apparaît après le chargement, se ferme au clic
  * et ne se ré-affiche plus (persistance localStorage `ssv-onboarding-v1`).
  */
-test('shows on first visit and stays dismissed after reload', async ({ page }) => {
+test('shows on first visit and stays dismissed after reload', async ({
+  page,
+}) => {
   await page.goto('/');
   await expect(page.locator('#loader')).toBeHidden({ timeout: 30_000 });
 

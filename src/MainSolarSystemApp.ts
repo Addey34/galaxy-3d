@@ -40,7 +40,7 @@ setupHelp();
 
 (async function loadApp(): Promise<void> {
   try {
-    updateProgress(10, t('loader.core'));
+    updateProgress(0, t('loader.init'));
 
     const app = new SolarSystemApp();
     const { cameraSystem, animationSystem, sceneSystem, orbitalMechanics } =
@@ -48,7 +48,6 @@ setupHelp();
 
     // Fiche d'info par corps : s'ouvre pour toute sélection (barre, clic 3D, label Explo),
     // se ferme sur retour Vue Globale. Toutes les sources passent par planetNav.selectBody.
-    setupOrbitOptions(sceneSystem);
     const bodyInfo = setupBodyInfo();
     const planetNav = setupPlanetControls(cameraSystem, (name) => {
       if (name === 'overview') bodyInfo.hide();
@@ -90,6 +89,9 @@ setupHelp();
     );
     exploHud.setMode('educ');
     exploHud.setActive(true);
+    setupOrbitOptions(sceneSystem, (visible) =>
+      exploHud.setLabelsVisible(visible)
+    );
 
     // Champ de masse des petits corps (SBDB) — couche instrument 2D, chargée en tâche de
     // fond. Dégradation propre : si le fetch échoue (offline), l'overlay reste vide.
@@ -116,7 +118,6 @@ setupHelp();
     });
     setupModeSwitcher(orbitalMechanics, cameraSystem, (mode) => {
       currentMode = mode;
-      bodyInfo.hide();
       exploHud.setMode(mode); // change le style des labels (éduc ↔ explo), reste actif
       smallBodyOverlay.setActive(mode === 'explo');
     });

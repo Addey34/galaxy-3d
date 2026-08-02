@@ -41,19 +41,31 @@ export function initOnboarding(): void {
 
   function render(): void {
     card.setAttribute('aria-label', t('onboarding.aria'));
-    card.innerHTML = `
-      <h3 class="ob-title">${t('onboarding.title')}</h3>
-      <ul class="ob-list">
-        <li>${t('onboarding.tip.select')}</li>
-        <li>${t('onboarding.tip.explo')}</li>
-        <li>${t('onboarding.tip.time')}</li>
-        <li>${t('onboarding.tip.help')}</li>
-      </ul>
-      <button class="ob-dismiss">${t('onboarding.dismiss')}</button>
-    `;
-    card
-      .querySelector('.ob-dismiss')!
-      .addEventListener('click', dismiss, { once: true });
+    card.replaceChildren();
+
+    const title = document.createElement('h3');
+    title.className = 'ob-title';
+    title.textContent = t('onboarding.title');
+
+    const list = document.createElement('ul');
+    list.className = 'ob-list';
+    for (const key of [
+      'onboarding.tip.select',
+      'onboarding.tip.explo',
+      'onboarding.tip.time',
+      'onboarding.tip.help',
+    ]) {
+      const item = document.createElement('li');
+      item.textContent = t(key);
+      list.append(item);
+    }
+
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'ob-dismiss';
+    button.textContent = t('onboarding.dismiss');
+    button.addEventListener('click', dismiss, { once: true });
+    card.append(title, list, button);
   }
 
   render();

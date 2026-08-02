@@ -10,7 +10,13 @@
 import TWEEN, { Group as TweenGroup } from '@tweenjs/tween.js';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { CAMERA_CONTROLS_SETTINGS, CAMERA_SETTINGS } from '@/config/engine';
+import {
+  CAMERA_CONTROLS_SETTINGS,
+  CAMERA_SETTINGS,
+  RENDER_SETTINGS,
+} from '@/config/engine';
+import { solarIrradianceFactor } from '@/core/eclipse';
+import { SQRT_K } from '@/core/ScaleService';
 import Logger from '@/utils/Logger';
 import type { CelestialBodies } from './SceneSystem';
 
@@ -27,6 +33,8 @@ export class CameraSystem {
     group: THREE.Group;
     distance: number;
   } | null = null;
+  /** Keeps the selected label while a mode morph temporarily freezes camera tracking. */
+  private trackingPaused = false;
   private _scaleMode: 'educ' | 'explo' = 'educ';
 
   private readonly smoothness = CAMERA_CONTROLS_SETTINGS.smoothness;
@@ -80,8 +88,11 @@ export class CameraSystem {
       return;
     }
 
+    this._setFov(CAMERA_SETTINGS.focusFov);
+    this.trackingPaused = false;
     body.updateWorldMatrix(true, false);
     body.getWorldPosition(this.targetWorldPosition);
+    this._setAdaptiveExposure(bodyName, this.targetWorldPosition);
 
     const radius = (body.userData['radius'] as number | undefined) ?? 1;
     const defaultDistance = this.getDefaultDistance(bodyName);
@@ -209,7 +220,11 @@ export class CameraSystem {
   update(_delta: number): void {
     if (!this.controls) return;
 
-    if (this.currentTarget?.group && !this.isAnimating) {
+    if (
+      this.currentTarget?.group &&
+      !this.isAnimating &&
+      !this.trackingPaused
+    ) {
       // Conserve l'offset caméra→cible calculé au moment du setTarget() et
       // le réapplique à la nouvelle position mondiale du corps (qui orbite).
       // Sans ça la caméra resterait fixe pendant que la planète s'éloigne.
@@ -285,6 +300,31 @@ export class CameraSystem {
     }
   }
 
+  private _setAdaptiveExposure(
+    bodyName: string | null,
+    worldPosition?: THREE.Vector3
+  ): void {
+    if (!this.renderer) return;
+    let exposure = RENDER_SETTINGS.toneMappingExposure;
+    if (
+      this._scaleMode === 'explo' &&
+      bodyName &&
+      bodyName !== 'sun' &&
+      worldPosition
+    ) {
+      const distanceAU = worldPosition.length() / SQRT_K;
+      const irradiance = solarIrradianceFactor(distanceAU);
+      exposure *= THREE.MathUtils.clamp(1 / Math.sqrt(irradiance), 0.65, 4);
+    }
+    this.renderer.toneMappingExposure = exposure;
+  }
+
+  private _setFov(fov: number): void {
+    if (Math.abs(this.camera.fov - fov) < 0.01) return;
+    this.camera.fov = fov;
+    this.camera.updateProjectionMatrix();
+  }
+
   /**
    * Vue d'ensemble héliocentrique : caméra reculée au-dessus de l'écliptique, cadrant tout le
    * système. Aucun suivi → caméra FIXE dans le repère du Soleil, donc AUCUNE parallaxe : les
@@ -295,6 +335,9 @@ export class CameraSystem {
    */
   goToOverview(): void {
     this.currentTarget = null;
+    this.trackingPaused = false;
+    this._setFov(CAMERA_SETTINGS.fov);
+    this._setAdaptiveExposure(null);
     const pos =
       this._scaleMode === 'explo'
         ? new THREE.Vector3(0, 875, 1205) // vraie échelle : cadre Neptune à ~1050u
@@ -338,25 +381,20 @@ export class CameraSystem {
   }
 
   /**
-   * Transition de mode animée (le « dolly zoom ») : la caméra recule/avance vers la vue
-   * d'ensemble recentrée sur le Soleil pendant que positions et tailles se déploient, puis —
-   * si un corps était sélectionné — y revient une fois le recul terminé (sélection conservée).
+   * Prépare la caméra pour le morph de mode sans modifier son cadrage.
+   *
+   * Le morph concerne uniquement les positions et tailles de la scène. La position, la cible
+   * OrbitControls et le FOV restent donc stables ; si un corps était sélectionné, sa sélection
+   * reste affichée mais son suivi automatique est suspendu jusqu'à une nouvelle sélection.
    */
-  transitionScaleMode(
-    mode: 'educ' | 'explo',
-    follow: string | null = null
-  ): void {
+  transitionScaleMode(mode: 'educ' | 'explo'): void {
     this._applyScaleModeBounds(mode);
-    this.currentTarget = null;
-    const pos =
-      mode === 'explo'
-        ? new THREE.Vector3(0, 875, 1205)
-        : new THREE.Vector3(0, 160, 220);
-    this.animateToTarget(
-      pos,
-      new THREE.Vector3(0, 0, 0),
-      follow ? () => this.setTarget(follow) : undefined
-    );
+    this.tweenGroup.removeAll();
+    this.isAnimating = false;
+    this.controls.enabled = true;
+    this.trackingPaused = this.currentTarget !== null;
+    this._setAdaptiveExposure(null);
+    this.controls.update();
   }
 
   /** Nom du corps actuellement suivi, ou null en vue libre / vue d'ensemble. */

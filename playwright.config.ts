@@ -15,7 +15,7 @@ import { defineConfig, devices } from '@playwright/test';
  * On calibre donc les timeouts sur ce coût réel (sans masquer une vraie régression : un
  * scénario cassé échoue à toutes les tentatives) et on absorbe l'aléa GPU intrinsèque avec :
  *   - un seul worker + pas de parallélisme → aucune contention GPU entre onglets ;
- *   - une reprise (retry) — standard pour une suite de fumée WebGL.
+ * Les scénarios sont désormais déterministes et ne masquent plus un échec local par une reprise.
  */
 export default defineConfig({
   testDir: './e2e',
@@ -24,8 +24,8 @@ export default defineConfig({
   fullyParallel: false,
   workers: 1,
   forbidOnly: !!process.env.CI,
-  // Reprise 1× en local (aléa GPU/boot), 2× en CI (machines partagées plus chargées).
-  retries: process.env.CI ? 2 : 1,
+  // Une reprise uniquement en CI pour absorber l'aléa des machines partagées.
+  retries: process.env.CI ? 1 : 0,
   // Budget par test : boot (~15-30 s) + interactions + vols caméra (1,2 s chacun).
   timeout: 60_000,
   expect: {
