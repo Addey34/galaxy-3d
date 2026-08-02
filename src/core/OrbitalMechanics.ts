@@ -363,8 +363,7 @@ export class OrbitalMechanics {
         const sampleDate = new Date(
           _date.getTime() + phase * periodDays * MS_PER_DAY
         );
-        const point =
-          i === 0 ? first : this._positionAU(_name, cfg, sampleDate);
+        const point = this._positionAU(_name, cfg, sampleDate);
         if (!point) return null;
         const i3 = i * 3;
         points[i3] = point.x * SQRT_K;

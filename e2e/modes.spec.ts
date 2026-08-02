@@ -188,3 +188,18 @@ test('projected marker dots stay on their exact body anchors after labels spread
   expect(Math.max(...deviations)).toBeLessThan(0.25);
   await expect(page.locator('#orbit-overview')).toBeVisible();
 });
+
+test('keeps untextured catalog bodies available in both modes', async ({
+  page,
+}) => {
+  await boot(page);
+  const pallas = page.locator('.explo-label[aria-label="Pallas"]');
+  const halley = page.locator('.explo-label[aria-label="Halley"]');
+  await expect(pallas).toHaveCount(1);
+  await expect(halley).toHaveCount(1);
+
+  await page.locator('.mode-btn[data-mode="explo"]').click();
+  await expect(page.locator('body')).toHaveClass(/is-explo-mode/);
+  await expect(pallas).toHaveCount(1);
+  await expect(halley).toHaveCount(1);
+});

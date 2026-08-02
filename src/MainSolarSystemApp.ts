@@ -80,10 +80,7 @@ setupHelp();
     exploHud.setEducFilter(
       new Set(
         [...flattenBodies(CELESTIAL_CONFIG).entries()]
-          .filter(
-            ([, cfg]) =>
-              cfg.kind !== 'skybox' && Object.keys(cfg.textures).length > 0
-          )
+          .filter(([, cfg]) => cfg.kind !== 'skybox')
           .map(([name]) => name)
       )
     );
