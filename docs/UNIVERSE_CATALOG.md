@@ -183,6 +183,8 @@ GitHub reste réservé au code, au manifeste et aux petits dérivés contrôlés
 solution pour l'archive de 109 Go : les limites de fichier et le coût de clonage restent inadaptés.
 Le traitement d'une source brute se prépare avec `pnpm textures:process-large --body=venus --source=<local-file>` (dry-run). GDAL est requis pour le `--apply` ; Sharp ne reçoit ensuite que la mosaïque intermédiaire bornée.
 
+Le workflow de surface exige maintenant une source raster RGB (au moins trois bandes). Une source mono-canal est refusee : elle ne doit pas etre convertie artificiellement en texture couleur. Dans ce cas, on conserve l''asset couleur existant ou on recherche une mosaique couleur validee.
+
 Le script `pnpm textures:publish --bucket=<bucket>` ne publie que les fichiers déjà présents dans
 `public/assets/textures/`, fonctionne en dry-run par défaut et n'active l'envoi qu'avec `--apply`.
 

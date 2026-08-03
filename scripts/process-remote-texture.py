@@ -99,6 +99,13 @@ def main() -> None:
         GDAL_CACHEMAX=512,
     ):
         with rasterio.open(remote_path) as source:
+            if source.count < 3:
+                fail(
+                    f"surface source exposes {source.count} raster band(s); "
+                    "an RGB surface requires at least three bands. "
+                    "Use a validated color mosaic or keep the existing asset."
+                )
+
             radius = BODY_RADII[args.body]
             target_transform = from_bounds(
                 -math.pi * radius,
@@ -108,15 +115,28 @@ def main() -> None:
                 width,
                 height,
             )
-            source_band = np.zeros((height, width), dtype=np.uint8)
+            source_rgb = np.zeros((height, width, 3), dtype=np.uint8)
+            for channel in range(3):
+                reproject(
+                    source=rasterio.band(source, channel + 1),
+                    destination=source_rgb[:, :, channel],
+                    src_transform=source.transform,
+                    src_crs=source.crs,
+                    dst_transform=target_transform,
+                    dst_crs=source.crs,
+                    resampling=Resampling.average,
+                    num_threads=4,
+                )
+
+            source_valid = np.zeros((height, width), dtype=np.uint8)
             reproject(
-                source=rasterio.band(source, 1),
-                destination=source_band,
+                source=source.read_masks(1),
+                destination=source_valid,
                 src_transform=source.transform,
                 src_crs=source.crs,
                 dst_transform=target_transform,
                 dst_crs=source.crs,
-                resampling=Resampling.average,
+                resampling=Resampling.nearest,
                 num_threads=4,
             )
             source_bounds = source.bounds
@@ -140,7 +160,8 @@ def main() -> None:
     )
     covered = (target_y <= source_bounds.top) & (target_y >= source_bounds.bottom)
     output = fallback.copy()
-    output[covered] = np.repeat(source_band[covered, :, None], 3, axis=2)
+    valid = covered[:, None] & (source_valid > 0)
+    output[valid] = source_rgb[valid]
 
     for quality, output_width in QUALITY_WIDTHS.items():
         if output_width > width:
