@@ -167,26 +167,11 @@ La qualite est classee ainsi :
 Une texture ne doit pas etre remplacee par la premiere image trouvee sur le Web. Le manifeste `scripts/texture-sources.json` doit contenir la page officielle, le telechargement, la projection, la resolution native, la licence et le credit. Les mosaïques USGS/NASA sont privilegiees ; les sources trop volumineuses ou non equirectangulaires doivent etre reprojetees et traitees hors du pipeline avant import.
 
 
-## 7. Pipeline des sources volumineuses
+## 7. Sources volumineuses et import local
 
-Une source scientifique brute n'est pas un asset de livraison. Pour une mosaïque comme Vénus
-Magellan (environ 109 Go), le flux validé est :
+Les sources cartographiques brutes restent hors Git et hors du bundle public. Le depot conserve les assets JPEG valides, leur provenance et les resolutions effectivement utilisees par le viewer.
 
-1. conserver l'original hors Git, avec URL officielle, taille, SHA-256, projection et couverture ;
-2. traiter par fenêtres/tiles avec GDAL ou un worker équivalent, sans charger toute la mosaïque en mémoire ;
-3. reprojeter vers l'équirectangulaire consommée par le viewer, sans inventer les zones NoData ;
-4. générer seulement les LOD 1k/2k/4k/8k utiles, en distinguant albedo, relief et masques de données ;
-5. auditer dimensions, ratio, licence et checksums avant publication ;
-6. publier les dérivés dans Cloud Storage et garder 1k/2k localement comme fallback.
-
-GitHub reste réservé au code, au manifeste et aux petits dérivés contrôlés. Git LFS n'est pas une
-solution pour l'archive de 109 Go : les limites de fichier et le coût de clonage restent inadaptés.
-Le traitement d'une source brute se prépare avec `pnpm textures:process-large --body=venus --source=<local-file>` (dry-run). GDAL est requis pour le `--apply` ; Sharp ne reçoit ensuite que la mosaïque intermédiaire bornée.
-
-Le workflow de surface exige maintenant une source raster RGB (au moins trois bandes). Une source mono-canal est refusee : elle ne doit pas etre convertie artificiellement en texture couleur. Dans ce cas, on conserve l''asset couleur existant ou on recherche une mosaique couleur validee.
-
-Le script `pnpm textures:publish --bucket=<bucket>` ne publie que les fichiers déjà présents dans
-`public/assets/textures/`, fonctionne en dry-run par défaut et n'active l'envoi qu'avec `--apply`.
+Un nouvel asset doit etre importe manuellement depuis une source officielle, controle pour sa projection, sa licence, sa couverture et sa resolution, puis passe par `pnpm textures:audit`. Aucun workflow distant ni bucket externe n'est requis pour le fonctionnement de l'application.
 
 ## 8. Contrat de qualite pour les corps actuels et futurs
 

@@ -51,14 +51,6 @@ pnpm test       # vitest run — tests unitaires des modules mathématiques purs
 pnpm test:e2e   # playwright test — tests navigateur sur le port dédié 5273
 pnpm ephemeris:generate # régénérer les vecteurs précis depuis NASA/JPL Horizons
 pnpm textures:resize    # generate missing derived texture resolutions
-pnpm textures:fetch --body=io,europa # import validated sources and generate texture LODs
-pnpm textures:process-large --body=venus --source=<local-file> # dry-run GDAL par tiles
-pnpm textures:process-remote --body=mercury # dry-run depuis la source officielle distante
-pnpm textures:process-remote --body=mercury --apply --force # générer les LOD Mercure
-pnpm textures:process-large --body=venus --source=<local-file> --apply --force # conversion explicite
-pnpm textures:publish --bucket=<bucket> # dry-run vers le stockage objet
-pnpm textures:publish --bucket=<bucket> --apply # publier les LOD déjà dérivés
-pnpm textures:publish --bucket=<bucket> --body=venus --apply # publier un corps progressivement
 pnpm format     # Formater les fichiers TypeScript/CSS avec Prettier
 pnpm format:check # Vérifier le formatage sans réécrire
 pnpm lint       # eslint . (flat config) ; pnpm lint:fix pour corriger
@@ -374,35 +366,3 @@ proprietaire GPU et fallback. Voir docs/UNIVERSE_CATALOG.md avant tout nouvel as
 `pnpm textures:audit` verifie que chaque texture declaree dans le catalogue possede ses LOD sur disque et controle les dimensions/projections JPEG avec Sharp. Une resolution 8k generee par upscale n'est jamais consideree comme une source native : le catalogue est plafonne a la meilleure resolution reelle disponible.
 
 Les avertissements de largeur non canonique sont conserves volontairement pour les sources historiques (par exemple Halley 3674 px et le bump lunaire 4000 px) ; ils signalent une approximation documentee, pas une texture manquante.
-
-
-## Assets très volumineux et déploiement public
-
-Les sources cartographiques brutes, comme la mosaïque radar de Vénus d'environ 109 Go,
-ne doivent pas être commitées dans Git, Git LFS ou Firebase Hosting. GitHub bloque les fichiers
-Git classiques au-delà de 100 Mo et Firebase Hosting limite un fichier à 2 Go. Le dépôt conserve
-le code, le manifeste de provenance et les LOD de secours 1k/2k ; les LOD 4k/8k dérivés sont
-publiés dans un bucket Cloud Storage séparé.
-
-Le chemin de production est optionnel : définir `VITE_TEXTURE_BASE_URL` dans l'environnement de
-build avec une URL HTTPS du type `https://storage.googleapis.com/<bucket>/galaxy/assets/textures/`.
-Sans cette variable, l'application utilise les assets versionnés localement. Le script
-`textures:publish` est volontairement en dry-run par défaut et ne remplace jamais les objets
-distants : `--apply` doit être ajouté explicitement après vérification.
-
-Le traitement local se lance en dry-run avec `pnpm textures:process-large --body=venus --source=<local-file>`. Il exige GDAL, conserve une mosaïque intermédiaire bornée dans `tmp/` et ne remplace les JPEG existants qu'avec `--force --apply`.
-Pour une source distante, `textures:process-remote` utilise rasterio/GDAL `/vsicurl/` et ne crée aucun fichier TIFF intermédiaire.
-
-Le fichier source brut reste archivé hors du dépôt, avec son SHA-256, sa projection, sa couverture,
-la version des outils et les paramètres de conversion. Le traitement se fait par fenêtres/tiles avec
-un outil géospatial adapté, puis produit uniquement les résolutions réellement consommées par le
-LOD. Le bucket ne contient que des fichiers dérivés publics en lecture seule ; aucune clé secrète
-ou autorisation d'écriture n'est embarquée dans l'application.
-
-## Traitement gratuit des sources massives
-
-Pour eviter toute infrastructure payante, le workflow .github/workflows/process-remote-texture.yml se lance manuellement depuis Actions. Il accepte toute cle de corps declaree dans scripts/texture-sources.json et pousse uniquement une branche de revue contenant les LOD generes ; aucun bucket GCP ni artefact distant nest utilise.
-
-Pour les reliefs scientifiques, le workflow .github/workflows/process-remote-dem.yml utilise pnpm textures:process-dem --body=moon --max-quality=4k en dry-run local ou un runner GitHub Actions gratuit. Il convertit uniquement les entrees dem-linear du manifeste et conserve la plage d'altitude utilisee dans tmp/, jamais dans Git.
-
-Le workflow distant de surface accepte toute cle de corps declaree dans scripts/texture-sources.json. Un futur corps doit donc fournir sa page officielle, son URL HTTPS, sa projection, sa resolution native, sa licence et son credit avant toute publication.

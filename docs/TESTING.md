@@ -39,7 +39,7 @@ des invariants physiques et des frontières d’architecture.
 
 ## Snapshot actuel
 
-La suite compte actuellement 21 fichiers Vitest et 87 tests unitaires. La suite Playwright
+La suite compte actuellement 21 fichiers Vitest et 88 tests unitaires. La suite Playwright
 compte 20 scenarios Chromium/WebGL. Ces chiffres sont un instantane documentaire : la
 commande fait foi si un fichier de test est ajoute.
 
@@ -51,6 +51,3 @@ de rendre l'objet navigable.
 ### Audit des assets visuels
 
 `pnpm textures:audit` verifie le lien catalogue -> fichiers JPEG, les LOD declares, la lisibilite des images et leur projection. Cette commande est requise apres tout ajout de planete, lune, couche nuageuse, anneau, relief ou lumiere nocturne.
-
-
-Le chemin externe des textures est couvert par `src/config/texturePaths.test.ts` : une URL de bucket doit être HTTPS, et l'absence de variable doit revenir aux assets locaux.
