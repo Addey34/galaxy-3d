@@ -16,12 +16,30 @@ const SURFACE_TEXTURE_TYPES = [
   'specularMap',
 ];
 
+const DATA_TEXTURE_TYPES = new Set([
+  'normalMap',
+  'bump',
+  'spec',
+  'specularMap',
+]);
+
+/** Configure le profil couleur selon la nature de la carte GPU. */
+export function configureTextureColorSpace(
+  textureKey: string,
+  texture: THREE.Texture
+): void {
+  texture.colorSpace = DATA_TEXTURE_TYPES.has(textureKey)
+    ? THREE.NoColorSpace
+    : THREE.SRGBColorSpace;
+}
+
 /** Route une texture (par clé) vers la couche qui la consomme. */
 export function applyTexture(
   layers: Layers,
   textureKey: string,
   texture: THREE.Texture
 ): void {
+  configureTextureColorSpace(textureKey, texture);
   if (SURFACE_TEXTURE_TYPES.includes(textureKey)) {
     applySurfaceTexture(layers, textureKey, texture);
     return;

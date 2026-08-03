@@ -392,7 +392,7 @@ export class CameraSystem {
     this.tweenGroup.removeAll();
     this.isAnimating = false;
     this.controls.enabled = true;
-    this.trackingPaused = this.currentTarget !== null;
+    this.trackingPaused = false;
     this._setAdaptiveExposure(null);
     this.controls.update();
   }

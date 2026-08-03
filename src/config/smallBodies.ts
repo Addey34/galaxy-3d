@@ -175,6 +175,8 @@ export const SMALL_BODY_ELEMENTS: readonly SmallBodyElements[] = [
     maDeg: 307.802,
     epoch: '2000-01-01T12:00:00Z',
     radiusKm: 262,
+    color: 0xc8795d,
+    surfaceResolutions: ['2k'],
   },
   {
     name: 'pallas',
@@ -186,6 +188,8 @@ export const SMALL_BODY_ELEMENTS: readonly SmallBodyElements[] = [
     maDeg: 40.0,
     epoch: '2000-01-01T12:00:00Z',
     radiusKm: 256,
+    color: 0x9b82d1,
+    surfaceResolutions: ['2k'],
   },
   {
     name: 'hygiea',
@@ -198,6 +202,8 @@ export const SMALL_BODY_ELEMENTS: readonly SmallBodyElements[] = [
     maDeg: 152.18,
     epoch: '2000-01-01T12:00:00Z',
     radiusKm: 217,
+    color: 0x6fbf8a,
+    surfaceResolutions: ['2k'],
   },
   {
     name: 'pluto',
@@ -329,6 +335,8 @@ export const SMALL_BODY_ELEMENTS: readonly SmallBodyElements[] = [
     maDeg: 38.38,
     epoch: '2000-01-01T12:00:00Z',
     radiusKm: 5.5,
+    color: 0xf08ac6,
+    surfaceResolutions: ['4k', '2k'],
     kind: 'comet',
     description: {
       en: 'The most famous comet, visible from Earth every ~76 years — next return in 2061. It orbits backwards, against the flow of the planets.',

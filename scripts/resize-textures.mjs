@@ -26,9 +26,16 @@ const TEX = (p) => resolve(ROOT, 'public/assets/textures', p);
 
 /** { src, dst, width, height } — height = width/2 pour équirectangulaire. */
 const TASKS = [
-  { src: TEX('pluto/plutoSurface_4k.jpg'),     dst: TEX('pluto/plutoSurface_2k.jpg'),     width: 2048  },
-  { src: TEX('mercury/mercurySurface_4k.jpg'),  dst: TEX('mercury/mercurySurface_8k.jpg'),  width: 8192, comment: 'upscale — remplace quand tu as le vrai 8k' },
-  { src: TEX('moon/moonSurface_4k.jpg'),        dst: TEX('moon/moonSurface_8k.jpg'),        width: 8192, comment: 'upscale — remplace quand tu as le vrai 8k' },
+  {
+    src: TEX('pluto/plutoSurface_4k.jpg'),
+    dst: TEX('pluto/plutoSurface_2k.jpg'),
+    width: 2048,
+  },
+  {
+    src: TEX('halley/halleySurface_4k.jpg'),
+    dst: TEX('halley/halleySurface_2k.jpg'),
+    width: 2048,
+  },
 ];
 
 for (const task of TASKS) {

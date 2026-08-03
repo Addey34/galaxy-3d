@@ -22,7 +22,6 @@ import type { EphemerisService } from './EphemerisService';
 import type { OrbitalElementsService } from './OrbitalElementsService';
 import type { HorizonsEphemerisService } from './HorizonsEphemerisService';
 import { ScaleService, SQRT_K } from './ScaleService';
-import { angleInOrbitalPlane, orbitalPositionEduc } from './orbitalGeometry';
 import { forEachBody } from '@/config/catalog';
 
 /** Corps sans mouvement orbital propre (skybox étoilée, étoile centrale à l'origine). */
@@ -162,6 +161,13 @@ export class OrbitalMechanics {
     const precisePosition = this.horizons.getHeliocentricAU(name, date);
     if (precisePosition) return precisePosition;
 
+    if (cfg.relativeEphemeris) {
+      return this.ephemeris.getJupiterMoonRelativeAU(
+        cfg.relativeEphemeris.moon,
+        date
+      );
+    }
+
     if (cfg.astroBody !== undefined) {
       if (cfg.frame === 'parentRelative') {
         const parentBody = this._parentAstroBody.get(name);
@@ -185,12 +191,11 @@ export class OrbitalMechanics {
   }
 
   /**
-   * Position Éducatif (mode compressé) dans `out`. MÊME angle orbital que l'Explo : on lit la
-   * vraie position astronomy-engine à la date, on en extrait l'angle dans le plan orbital
-   * (projection inverse sur e1/e2, cf. angleInOrbitalPlane), puis on la pose sur un cercle
-   * compressé de rayon √(distanceAU)×SQRT_K. Éduc et Explo restent ainsi synchronisés sur
-   * l'horloge/éphéméride — seule l'échelle radiale change — et le corps reste sur sa ligne
-   * d'orbite. Renvoie false si la position n'est pas calculable.
+   * Position Éducatif (mode compressé) dans `out`. La vraie position astronomy-engine,
+   * Horizons ou képlérienne est conservée en direction et sa distance radiale est compressée
+   * par √(distanceAU)×SQRT_K. Éduc et Explo restent ainsi synchronisés sur l'horloge et
+   * l'excentricité réelle — seule l'échelle radiale change. Renvoie false si la position n'est
+   * pas calculable.
    */
   private _computeEducPos(
     name: string,
@@ -198,15 +203,17 @@ export class OrbitalMechanics {
     date: Date,
     out: THREE.Vector3
   ): boolean {
-    const distanceAU = cfg.realData?.distanceAU;
-    if (distanceAU == null) return false;
     const posAU = this._positionAU(name, cfg, date);
     if (!posAU) return false;
-    const inc = cfg.realData?.orbitalInclination ?? 0;
-    const node = cfg.realData?.ascendingNode ?? 0;
-    const angle = angleInOrbitalPlane(posAU, inc, node);
-    const r = Math.sqrt(distanceAU) * SQRT_K;
-    out.copy(orbitalPositionEduc(r, angle, inc, node));
+    const distanceAU = posAU.length();
+    if (distanceAU < 1e-12) {
+      out.set(0, 0, 0);
+      return true;
+    }
+    out
+      .copy(posAU)
+      .normalize()
+      .multiplyScalar(Math.sqrt(distanceAU) * SQRT_K);
     return true;
   }
 
@@ -376,24 +383,24 @@ export class OrbitalMechanics {
       points.set(points.subarray(0, 3), nPoints * 3);
       return points;
     }
-    const distanceAU = cfg.realData?.distanceAU;
-    if (distanceAU === undefined) return null;
-
-    const radius = Math.sqrt(distanceAU) * SQRT_K;
-    const inc = cfg.realData?.orbitalInclination ?? 0;
-    const node = cfg.realData?.ascendingNode ?? 0;
+    const periodDays = cfg.realData?.orbitPeriodDays;
+    if (!periodDays || periodDays <= 0) return null;
     const points = new Float32Array((nPoints + 1) * 3);
-    for (let i = 0; i <= nPoints; i++) {
-      const point = orbitalPositionEduc(
-        radius,
-        (i / nPoints) * Math.PI * 2,
-        inc,
-        node
+    for (let i = 0; i < nPoints; i++) {
+      const phase = i / nPoints - 0.5;
+      const sampleDate = new Date(
+        _date.getTime() + phase * periodDays * MS_PER_DAY
       );
-      points[i * 3] = point.x;
-      points[i * 3 + 1] = point.y;
-      points[i * 3 + 2] = point.z;
+      const pointAU = this._positionAU(_name, cfg, sampleDate);
+      if (!pointAU) return null;
+      const scaledRadius = Math.sqrt(pointAU.length()) * SQRT_K;
+      const point = pointAU.normalize().multiplyScalar(scaledRadius);
+      const i3 = i * 3;
+      points[i3] = point.x;
+      points[i3 + 1] = point.y;
+      points[i3 + 2] = point.z;
     }
+    points.set(points.subarray(0, 3), nPoints * 3);
     return points;
   }
 

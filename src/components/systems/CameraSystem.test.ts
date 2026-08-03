@@ -92,6 +92,13 @@ describe('CameraSystem target flights', () => {
     expect(cameraSystem.controls.target.equals(target)).toBe(true);
     expect(cameraSystem.camera.fov).toBe(65);
     expect(cameraSystem.targetName).toBe('earth');
+    const targetBody = (
+      Reflect.get(cameraSystem, 'currentTarget') as { group: THREE.Group }
+    ).group;
+    targetBody.position.x = 40;
+    cameraSystem.update(0);
+    expect(cameraSystem.controls.target.x).toBeCloseTo(40);
+    expect(cameraSystem.camera.position.x).toBeCloseTo(45);
     expect(cameraSystem.tweenGroup.getAll()).toHaveLength(0);
   });
 });

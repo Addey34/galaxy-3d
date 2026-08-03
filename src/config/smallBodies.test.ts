@@ -102,8 +102,8 @@ describe('SMALL_BODIES catalogue', () => {
     }
   });
 
-  it('exposes local textures for the four newly rendered dwarf planets', () => {
-    for (const name of ['ceres', 'eris', 'haumea', 'makemake']) {
+  it('exposes local textures with the available resolutions', () => {
+    for (const name of ['ceres', 'eris', 'haumea', 'makemake', 'halley']) {
       expect(SMALL_BODIES[name]?.textures.surface).toBe(
         `${name}/${name}Surface`
       );
@@ -114,6 +114,21 @@ describe('SMALL_BODIES catalogue', () => {
     }
   });
 
+  it('keeps small-body orbit colors distinct', () => {
+    const names = [
+      'ceres',
+      'vesta',
+      'pallas',
+      'hygiea',
+      'pluto',
+      'eris',
+      'haumea',
+      'makemake',
+      'halley',
+    ];
+    const colors = names.map((name) => SMALL_BODIES[name]?.orbitalColor);
+    expect(new Set(colors).size).toBe(names.length);
+  });
   it('models Halley as a retrograde comet (i > 90°)', () => {
     expect(SMALL_BODIES['halley']?.kind).toBe('comet');
     expect(

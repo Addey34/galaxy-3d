@@ -1,0 +1,418 @@
+{
+  "version": 1,
+  "qualityWidths": {
+    "1k": 1024,
+    "2k": 2048,
+    "4k": 4096,
+    "8k": 8192
+  },
+  "sources": [
+    {
+      "body": "io",
+      "layer": "surface",
+      "status": "ready",
+      "downloadUrl": "https://planetarymaps.usgs.gov/mosaic/Io_GalileoSSI-Voyager_Global_Mosaic_1km.tif",
+      "sourcePage": "https://astrogeology.usgs.gov/search/map/io_galileo_ssi_voyager_color_merged_global_mosaic_1km",
+      "projection": "equirectangular",
+      "sourceResolution": "1 km/pixel",
+      "maxQuality": "2k",
+      "outputBase": "io/ioSurface",
+      "license": "public-domain",
+      "credit": "USGS Astrogeology Science Center, Galileo SSI and Voyager"
+    },
+    {
+      "body": "europa",
+      "layer": "surface",
+      "status": "ready",
+      "downloadUrl": "https://planetarymaps.usgs.gov/mosaic/Europa_Voyager_GalileoSSI_global_mosaic_500m.tif",
+      "sourcePage": "https://astrogeology.usgs.gov/search/map/europa_voyager_galileo_ssi_global_mosaic_500m",
+      "projection": "equirectangular",
+      "sourceResolution": "500 m/pixel",
+      "maxQuality": "2k",
+      "outputBase": "europa/europaSurface",
+      "license": "public-domain",
+      "credit": "USGS Astrogeology Science Center, Galileo SSI and Voyager"
+    },
+    {
+      "body": "ganymede",
+      "layer": "surface",
+      "status": "ready",
+      "downloadUrl": "https://planetarymaps.usgs.gov/mosaic/Ganymede_Voyager_GalileoSSI_global_mosaic_1km.tif",
+      "sourcePage": "https://astrogeology.usgs.gov/search/map/ganymede_voyager_galileo_global_mosaic_mercator",
+      "projection": "equirectangular",
+      "sourceResolution": "2 km/pixel",
+      "maxQuality": "2k",
+      "outputBase": "ganymede/ganymedeSurface",
+      "license": "public-domain",
+      "credit": "USGS Astrogeology Science Center, Galileo SSI and Voyager"
+    },
+    {
+      "body": "callisto",
+      "layer": "surface",
+      "status": "ready",
+      "downloadUrl": "https://planetarymaps.usgs.gov/mosaic/Callisto_Voyager_GalileoSSI_global_mosaic_1km.tif",
+      "sourcePage": "https://astrogeology.usgs.gov/search/map/callisto_galileo_voyager_global_mosaic_1km",
+      "projection": "equirectangular",
+      "sourceResolution": "1 km/pixel",
+      "maxQuality": "2k",
+      "outputBase": "callisto/callistoSurface",
+      "license": "public-domain",
+      "credit": "USGS Astrogeology Science Center, Galileo SSI and Voyager"
+    }
+  ],
+  "reviews": [
+    {
+      "body": "stars",
+      "layer": "surface",
+      "status": "not-applicable",
+      "sourcePage": "https://maps.jpl.nasa.gov/tmaps/",
+      "sourceResolution": "background starfield, not a surface map",
+      "projection": "skybox",
+      "qualityClass": "illustrative",
+      "note": "Sky background; no physical planetary surface texture."
+    },
+    {
+      "body": "sun",
+      "layer": "surface",
+      "status": "reference",
+      "sourcePage": "https://sdo.gsfc.nasa.gov/data/",
+      "sourceResolution": "dynamic solar imagery, no fixed global albedo map",
+      "projection": "not-applicable",
+      "qualityClass": "dynamic",
+      "note": "The photosphere changes; use a scientific solar visualization rather than a static surface claim."
+    },
+    {
+      "body": "mercury",
+      "layer": "surface",
+      "status": "manual",
+      "processing": "gdal-required",
+      "sourcePage": "https://astrogeology.usgs.gov/search/map/mercury_messenger_mdis_global_basemap_bdr_166m",
+      "downloadUrl": "https://planetarymaps.usgs.gov/mosaic/Mercury_MESSENGER_MDIS_Basemap_BDR_Mosaic_Global_166m.tif",
+      "sourceResolution": "166 m/pixel",
+      "projection": "equirectangular",
+      "qualityClass": "native-candidate",
+      "note": "Best global monochrome MESSENGER basemap; 4 GB source, requires offline conversion."
+    },
+    {
+      "body": "mercury",
+      "layer": "bump",
+      "status": "manual",
+      "sourcePage": "https://astrogeology.usgs.gov/search/map/mercury_messenger_mdis_global_basemap_bdr_166m",
+      "sourceResolution": "166 m/pixel reflectance, not DEM",
+      "projection": "equirectangular",
+      "qualityClass": "derived-candidate",
+      "note": "Generate a conservative height map only from a validated DEM; do not treat reflectance as elevation."
+    },
+    {
+      "body": "venus",
+      "layer": "surface",
+      "status": "manual",
+      "processing": "gdal-required",
+      "sourcePage": "https://astrogeology.usgs.gov/search/map/venus_magellan_sar_fmap_left_look_global_mosaic_75m",
+      "downloadUrl": "https://asc-pds-services.s3.us-west-2.amazonaws.com/mosaic/Venus_Magellan_LeftLook_mosaic_global_75m.tif",
+      "sourceResolution": "75 m/pixel",
+      "projection": "equirectangular",
+      "qualityClass": "native-candidate",
+      "note": "Highest-resolution global radar mosaic, about 92% coverage; not optical true color and 109 GB source."
+    },
+    {
+      "body": "venus",
+      "layer": "bump",
+      "status": "reference",
+      "sourcePage": "https://astrogeology.usgs.gov/search/map/venus-magellan-global-products",
+      "sourceResolution": "Magellan altimetry/radar products",
+      "projection": "equirectangular",
+      "qualityClass": "derived-candidate",
+      "note": "Needs a separately validated topography product; current bump is not certified as a DEM."
+    },
+    {
+      "body": "venus",
+      "layer": "atmosphere",
+      "status": "reference",
+      "sourcePage": "https://www.jpl.nasa.gov/images/pia00271-magellan-mission-to-venus/",
+      "sourceResolution": "dynamic cloud/atmosphere imagery",
+      "projection": "not-confirmed",
+      "qualityClass": "dynamic",
+      "note": "Atmosphere should be represented as a cloud/haze layer, not confused with surface radar."
+    },
+    {
+      "body": "earth",
+      "layer": "surface",
+      "status": "reference",
+      "sourcePage": "https://visibleearth.nasa.gov/images/74343/may-blue-marble-next-generation-w-topography/74345l",
+      "sourceResolution": "500 m/pixel monthly composites",
+      "projection": "equirectangular",
+      "qualityClass": "native-candidate",
+      "note": "NASA Blue Marble Next Generation is the preferred global color baseline."
+    },
+    {
+      "body": "earth",
+      "layer": "clouds",
+      "status": "reference",
+      "sourcePage": "https://science.nasa.gov/earth/earth-observatory/global-maps/cloud-fraction/",
+      "sourceResolution": "monthly MODIS cloud fraction",
+      "projection": "global map",
+      "qualityClass": "dynamic",
+      "note": "Cloud fraction is scientific coverage data; visible cloud albedo and alpha need a dedicated compositing step."
+    },
+    {
+      "body": "earth",
+      "layer": "normalMap",
+      "status": "reference",
+      "sourcePage": "https://visibleearth.nasa.gov/images/74343/may-blue-marble-next-generation-w-topography/74345l",
+      "sourceResolution": "500 m/pixel topography product",
+      "projection": "equirectangular",
+      "qualityClass": "derived-candidate",
+      "note": "Use a real elevation/normal source, never derive mountain height from color alone."
+    },
+    {
+      "body": "earth",
+      "layer": "spec",
+      "status": "derived",
+      "sourcePage": "https://visibleearth.nasa.gov/images/57723/the-blue-marble",
+      "sourceResolution": "land/ocean mask derived from authoritative surface data",
+      "projection": "equirectangular",
+      "qualityClass": "derived",
+      "note": "Specular response is a rendering mask, not a spacecraft texture."
+    },
+    {
+      "body": "earth",
+      "layer": "lights",
+      "status": "reference",
+      "sourcePage": "https://science.nasa.gov/earth/earth-observatory/earth-at-night/maps/",
+      "sourceResolution": "500 m/pixel tiled Black Marble product",
+      "projection": "equirectangular",
+      "qualityClass": "native-candidate",
+      "note": "NASA VIIRS Black Marble; global 500 m product is tiled and needs mosaicking."
+    },
+    {
+      "body": "moon",
+      "layer": "surface",
+      "status": "manual",
+      "downloadUrl": "https://planetarymaps.usgs.gov/mosaic/Lunar_LRO_LROC-WAC_Mosaic_global_100m_June2013.tif",
+      "processing": "gdal-required",
+      "sourcePage": "https://astrogeology.usgs.gov/search/map/moon_lro_lroc_wac_global_morphology_mosaic_100m",
+      "sourceResolution": "100 m/pixel",
+      "projection": "equirectangular",
+      "qualityClass": "native-candidate",
+      "note": "Best global optical morphology candidate; source is very large."
+    },
+    {
+      "body": "moon",
+      "layer": "bump",
+      "status": "manual",
+      "downloadUrl": "https://planetarymaps.usgs.gov/mosaic/Lunar_LRO_LOLA_Global_LDEM_118m_Mar2014.tif",
+      "processing": "dem-linear",
+      "sourcePage": "https://astrogeology.usgs.gov/search/map/moon_lro_lola_dem_118m",
+      "sourceResolution": "118 m/pixel DEM",
+      "projection": "equirectangular",
+      "qualityClass": "native-candidate",
+      "note": "Use as height data after scaling DN*0.5; do not import as ordinary sRGB."
+    },
+    {
+      "body": "mars",
+      "layer": "surface",
+      "status": "manual",
+      "processing": "gdal-required",
+      "sourcePage": "https://astrogeology.usgs.gov/search/map/mars_viking_colorized_global_mosaic_232m",
+      "downloadUrl": "https://planetarymaps.usgs.gov/mosaic/Mars_Viking_MDIM21_ClrMosaic_global_232m.tif",
+      "sourceResolution": "232 m/pixel",
+      "projection": "equirectangular",
+      "qualityClass": "native-candidate",
+      "note": "Authoritative global colorized baseline; 12 GB source."
+    },
+    {
+      "body": "mars",
+      "layer": "normalMap",
+      "status": "reference",
+      "sourcePage": "https://astrogeology.usgs.gov/search",
+      "sourceResolution": "MOLA/mission DEM products",
+      "projection": "equirectangular",
+      "qualityClass": "derived-candidate",
+      "note": "Needs a validated global elevation source and a linear height-to-normal conversion."
+    },
+    {
+      "body": "jupiter",
+      "layer": "surface",
+      "status": "reference",
+      "downloadUrl": "https://assets.science.nasa.gov/content/dam/science/psd/photojournal/pia/pia19/pia19643/PIA19643.tif",
+      "sourcePage": "https://science.nasa.gov/photojournal/spinning-jupiter-and-global-map/",
+      "sourceResolution": "global Hubble map, dynamic atmosphere",
+      "projection": "equirectangular",
+      "qualityClass": "dynamic",
+      "note": "Jupiter has no permanent surface; texture is an atmospheric snapshot and must be date-labelled."
+    },
+    {
+      "body": "io",
+      "layer": "surface",
+      "status": "verified-ready",
+      "sourcePage": "https://astrogeology.usgs.gov/search/map/io_galileo_ssi_voyager_color_merged_global_mosaic_1km",
+      "sourceResolution": "1 km/pixel",
+      "projection": "equirectangular",
+      "qualityClass": "native",
+      "note": "Imported through the validated fetch pipeline."
+    },
+    {
+      "body": "europa",
+      "layer": "surface",
+      "status": "verified-ready",
+      "sourcePage": "https://astrogeology.usgs.gov/search/map/europa_voyager_galileo_ssi_global_mosaic_500m",
+      "sourceResolution": "500 m/pixel",
+      "projection": "equirectangular",
+      "qualityClass": "native",
+      "note": "Imported through the validated fetch pipeline."
+    },
+    {
+      "body": "ganymede",
+      "layer": "surface",
+      "status": "verified-ready",
+      "sourcePage": "https://astrogeology.usgs.gov/search/map/ganymede_voyager_galileo_global_mosaic_mercator",
+      "sourceResolution": "1 km/pixel",
+      "projection": "equirectangular",
+      "qualityClass": "native",
+      "note": "Imported through the validated fetch pipeline."
+    },
+    {
+      "body": "callisto",
+      "layer": "surface",
+      "status": "verified-ready",
+      "sourcePage": "https://astrogeology.usgs.gov/search/map/callisto_galileo_voyager_global_mosaic_1km",
+      "sourceResolution": "1 km/pixel",
+      "projection": "equirectangular",
+      "qualityClass": "native",
+      "note": "Imported through the validated fetch pipeline."
+    },
+    {
+      "body": "saturn",
+      "layer": "surface",
+      "status": "reference",
+      "sourcePage": "https://maps.jpl.nasa.gov/tmaps/",
+      "sourceResolution": "representative atmospheric map",
+      "projection": "equirectangular",
+      "qualityClass": "dynamic",
+      "note": "JPL explicitly treats gas-giant maps as representative, not scientific static surfaces."
+    },
+    {
+      "body": "saturn",
+      "layer": "ring",
+      "status": "reference",
+      "sourcePage": "https://www.nasa.gov/news-release/nasa-cassini-spacecraft-provides-new-view-of-saturn-and-earth/",
+      "sourceResolution": "Cassini natural-color ring imagery",
+      "projection": "radial",
+      "qualityClass": "native-candidate",
+      "note": "Ring texture needs a dedicated radial photometric map, not a planetary surface map."
+    },
+    {
+      "body": "uranus",
+      "layer": "surface",
+      "status": "reference",
+      "sourcePage": "https://maps.jpl.nasa.gov/tmaps/",
+      "sourceResolution": "representative atmospheric map",
+      "projection": "equirectangular",
+      "qualityClass": "dynamic",
+      "note": "No fixed surface; methane haze and seasonal atmosphere require a date-labelled model."
+    },
+    {
+      "body": "neptune",
+      "layer": "surface",
+      "status": "reference",
+      "sourcePage": "https://science.nasa.gov/asset/hubble/full-color-neptune-global-map-from-hubbles-opal-program-dark-spot-and-companion-clouds-closeup/",
+      "sourceResolution": "Hubble global atmospheric map",
+      "projection": "equirectangular",
+      "qualityClass": "dynamic",
+      "note": "Atmospheric snapshot, not a permanent surface."
+    },
+    {
+      "body": "ceres",
+      "layer": "surface",
+      "status": "manual",
+      "sourcePage": "https://astrogeology.usgs.gov/search/map/ceres_dawn_fc_global_mosaic_140m",
+      "sourceResolution": "140 m/pixel global, 35 m/pixel local LAMO products",
+      "projection": "equirectangular",
+      "qualityClass": "native-candidate",
+      "note": "Use the global controlled Dawn mosaic; local 35 m data must not be stretched into fake global coverage."
+    },
+    {
+      "body": "vesta",
+      "layer": "surface",
+      "status": "manual",
+      "sourcePage": "https://astrogeology.usgs.gov/search/map/vesta_dawn_fc_hamo_global_mosaic_60m",
+      "sourceResolution": "60 m/pixel",
+      "projection": "equirectangular",
+      "qualityClass": "native-candidate",
+      "note": "Best global Dawn HAMO mosaic currently identified."
+    },
+    {
+      "body": "pallas",
+      "layer": "surface",
+      "status": "unresolved",
+      "sourcePage": "https://fdp.astrogeology.usgs.gov/fdp/smallbodies/",
+      "sourceResolution": "no validated global spacecraft albedo mosaic located",
+      "projection": "unknown",
+      "qualityClass": "illustrative",
+      "note": "Keep current asset explicitly illustrative until a controlled global map exists."
+    },
+    {
+      "body": "hygiea",
+      "layer": "surface",
+      "status": "unresolved",
+      "sourcePage": "https://fdp.astrogeology.usgs.gov/fdp/smallbodies/",
+      "sourceResolution": "no validated global spacecraft albedo mosaic located",
+      "projection": "unknown",
+      "qualityClass": "illustrative",
+      "note": "Keep current asset explicitly illustrative until a controlled global map exists."
+    },
+    {
+      "body": "pluto",
+      "layer": "surface",
+      "status": "manual",
+      "processing": "gdal-required",
+      "sourcePage": "https://astrogeology.usgs.gov/search/map/pluto_new_horizons_lorri_mvic_global_mosaic_300m",
+      "downloadUrl": "https://planetarymaps.usgs.gov/mosaic/Pluto_NewHorizons_Global_Mosaic_300m_Jul2017_8bit.tif",
+      "sourceResolution": "300 m/pixel",
+      "projection": "equirectangular",
+      "qualityClass": "native-candidate",
+      "note": "Best comprehensive global New Horizons mosaic currently identified."
+    },
+    {
+      "body": "eris",
+      "layer": "surface",
+      "status": "unresolved",
+      "sourcePage": "https://fdp.astrogeology.usgs.gov/fdp/smallbodies/",
+      "sourceResolution": "no resolved global surface map",
+      "projection": "unknown",
+      "qualityClass": "illustrative",
+      "note": "Distant unresolved body; no spacecraft global texture to import."
+    },
+    {
+      "body": "haumea",
+      "layer": "surface",
+      "status": "unresolved",
+      "sourcePage": "https://fdp.astrogeology.usgs.gov/fdp/smallbodies/",
+      "sourceResolution": "no resolved global surface map",
+      "projection": "unknown",
+      "qualityClass": "illustrative",
+      "note": "Distant rapidly rotating body; current map is illustrative."
+    },
+    {
+      "body": "makemake",
+      "layer": "surface",
+      "status": "unresolved",
+      "sourcePage": "https://fdp.astrogeology.usgs.gov/fdp/smallbodies/",
+      "sourceResolution": "no resolved global surface map",
+      "projection": "unknown",
+      "qualityClass": "illustrative",
+      "note": "Distant unresolved body; current map is illustrative."
+    },
+    {
+      "body": "halley",
+      "layer": "surface",
+      "status": "manual",
+      "sourcePage": "https://pds-smallbodies.astro.umd.edu/data_sb/comet_type.shtml",
+      "sourceResolution": "Giotto/Vega observations and shape model, no global photometric mosaic",
+      "projection": "shape-model dependent",
+      "qualityClass": "illustrative-candidate",
+      "note": "A true surface map requires projecting flyby images onto the Stooke shape model; current flat texture is not a scientific global map."
+    }
+  ]
+}

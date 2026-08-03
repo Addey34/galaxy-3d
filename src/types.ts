@@ -31,6 +31,15 @@ export const SMALL_BODY_KINDS: ReadonlySet<BodyKind> = new Set<BodyKind>([
 /** Référentiel de position d'un corps. */
 export type OrbitFrame = 'heliocentric' | 'parentRelative';
 
+/** Corps jovien supporté par le modèle d'éphémérides astronomy-engine. */
+export type JupiterMoonKey = 'io' | 'europa' | 'ganymede' | 'callisto';
+
+/** Source d'une position relative fournie par une éphéméride spécialisée. */
+export interface RelativeEphemerisSource {
+  kind: 'jupiterMoon';
+  moon: JupiterMoonKey;
+}
+
 /** Distance de visite caméra par mode d'affichage (unités scène). */
 export interface CameraDistance {
   educ: number;
@@ -87,6 +96,8 @@ export interface CelestialBodyConfig {
   orbitalColor: number;
   textureResolutions: TextureResolutions;
   textures: TextureConfig;
+  /** Couleur de secours pour représenter un corps sans texture locale. */
+  fallbackColor?: number;
   ring?: RingConfig;
   satellites?: Record<string, CelestialBodyConfig>;
   /** Données astronomiques réelles — utilisées par OrbitalMechanics en mode Explo. */
@@ -101,6 +112,11 @@ export interface CelestialBodyConfig {
    * Sert aussi de référence parent pour les satellites `parentRelative`. Défaut : `astroBody`.
    */
   positionBody?: Body;
+  /**
+   * Source d'éphéméride relative spécialisée, par exemple les lunes joviennes.
+   * Le corps doit vivre dans un parent avec frame parentRelative.
+   */
+  relativeEphemeris?: RelativeEphemerisSource;
   /**
    * Éléments orbitaux képlériens — source de position alternative à `astroBody`, pour les
    * corps absents d'astronomy-engine (astéroïdes, comètes, géocroiseurs, planètes naines).

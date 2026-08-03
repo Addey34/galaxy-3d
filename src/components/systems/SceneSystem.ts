@@ -1,7 +1,7 @@
 /**
  * Socle de rendu Three.js : possède la scène, la caméra perspective, le WebGLRenderer
  * et le fond étoilé. Construit aussi la hiérarchie de transformation des corps et les lignes
- * d'orbite éducatives ; celles-ci sont masquées en Exploration.
+ * d'orbite disponibles dans les deux modes.
  */
 import * as THREE from 'three';
 import {
@@ -144,8 +144,7 @@ export class SceneSystem {
       orbitGroup.add(body.group);
       this.orbitGroups[name] = orbitGroup;
       // Les orbites éducatives couvrent tous les corps, y compris les planètes naines texturées
-      // et les petits corps sans mesh. Elles servent de repère global ; aucune n'est affichée
-      // en Exploration.
+      // et les petits corps sans mesh. Elles servent de repère global dans les deux modes.
       orbitGroup.add(this.createOrbitVisual(name, config.orbitalColor));
       if (parentGroup) {
         parentGroup.add(orbitGroup);

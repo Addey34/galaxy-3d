@@ -37,12 +37,17 @@ export function createSphereGeometry(
 }
 
 export function createSurfaceMaterial(
-  isSun: boolean
+  isSun: boolean,
+  fallbackColor?: number
 ): THREE.MeshBasicMaterial | THREE.MeshStandardMaterial {
   if (isSun) {
     return new THREE.MeshBasicMaterial({ color: 0xffff00 });
   }
-  return createShadowAwareStandardMaterial({ roughness: 0.7, metalness: 0.0 });
+  return createShadowAwareStandardMaterial({
+    color: fallbackColor,
+    roughness: 0.7,
+    metalness: 0.0,
+  });
 }
 
 export function createCloudsMaterial(): THREE.MeshStandardMaterial {

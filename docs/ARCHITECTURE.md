@@ -69,7 +69,7 @@ Toute nouvelle ressource doit avoir un propriétaire unique et un chemin de lib�
 - Exploration : distances, rayons et tailles angulaires physiques ; aucune taille minimale ou sprite proxy.
 - Les labels et le champ de petits corps sont des instruments de navigation, pas des modifications du rendu physique.
 - Les deux modes utilisent la même position astronomique instantanée.
-- Les orbites éducatives sont masquées pendant l’Exploration et pendant le morph animé.
+- Les orbites restent disponibles dans les deux modes et pendant le morph animé.
 
 ## Ajouter une fonctionnalité
 
@@ -81,3 +81,26 @@ Toute nouvelle ressource doit avoir un propriétaire unique et un chemin de lib�
 6. Mettre à jour README et cette page si le flux ou un invariant change.
 
 Voir aussi [`TESTING.md`](./TESTING.md).
+
+## Contrat de contenu et extension de l'univers
+
+Le catalogue est organise en trois niveaux :
+
+1. Donnees : position, epoque, referentiel, rayon, orientation, source et incertitude.
+2. Representation : sphere, couche texturee, anneau, particules ou futur modele 3D.
+3. Presentation : labels, fiche, couleur, filtres et aides de navigation.
+
+Les corps naturels sont ajoutes dans le catalogue avant leurs assets. Les textures JPEG
+suivent le schema public/assets/textures/{body}/{body}{layer}_{quality}.jpg. Les modeles
+GLB, les missions, les populations et le ciel profond attendent une capacite de rendu
+typee, un proprietaire GPU, une politique LOD et un fallback.
+
+Le mode Educatif compresse les distances avec la racine carree mais conserve la distance
+radiale instantanee et l'excentricite. Le mode Exploration conserve la proportion lineaire,
+les rayons et les tailles angulaires physiques. Les orbites sont disponibles dans les deux
+modes. Pendant un morph, une cible selectionnee conserve son offset camera-cible.
+
+Les systemes stellaires, les galaxies et les vues cosmologiques doivent introduire un
+referentiel explicite : ils ne sont pas des corps heliocentriques ajoutes par exception.
+La matrice des familles, des assets et des candidats se trouve dans
+docs/UNIVERSE_CATALOG.md.

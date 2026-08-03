@@ -18,16 +18,16 @@ ownership order. New browser UI must be added to the composition root or a dedic
 
 ## Source directories
 
-| Directory | Responsibility | Allowed dependencies |
-| --- | --- | --- |
-| `src/config` | Catalogues and engine settings | Pure data and shared types |
-| `src/core` | Clocks, frames, scales, ephemerides and orbital math | Three.js only at the service boundary |
-| `src/components/systems` | Renderer, camera, textures, lighting and animation ownership | Three.js and config |
-| `src/components/celestial` | Mesh/layer construction and disposal | Three.js, config and texture system |
-| `src/ui` | DOM controls and projected overlays | DOM, i18n and public API |
-| `src/i18n` | Locale state and static/dynamic translation | DOM only in `dom.ts` |
-| `src/utils` | Cross-cutting browser-safe helpers and logging | No application orchestration |
-| `scripts` | Maintainer-only asset generation | Node.js and development dependencies |
+| Directory                  | Responsibility                                               | Allowed dependencies                  |
+| -------------------------- | ------------------------------------------------------------ | ------------------------------------- |
+| `src/config`               | Catalogues and engine settings                               | Pure data and shared types            |
+| `src/core`                 | Clocks, frames, scales, ephemerides and orbital math         | Three.js only at the service boundary |
+| `src/components/systems`   | Renderer, camera, textures, lighting and animation ownership | Three.js and config                   |
+| `src/components/celestial` | Mesh/layer construction and disposal                         | Three.js, config and texture system   |
+| `src/ui`                   | DOM controls and projected overlays                          | DOM, i18n and public API              |
+| `src/i18n`                 | Locale state and static/dynamic translation                  | DOM only in `dom.ts`                  |
+| `src/utils`                | Cross-cutting browser-safe helpers and logging               | No application orchestration          |
+| `scripts`                  | Maintainer-only asset generation                             | Node.js and development dependencies  |
 
 The catalogue in `src/config/bodies.ts` is the source of truth. Generic systems must
 branch on `kind`, `frame` or an optional capability, never on a body name.
@@ -97,3 +97,16 @@ service-account files must remain outside the client bundle and are ignored by G
 5. Add or update a Playwright contract for visible UI or WebGL behavior.
 6. Run `pnpm verify`, `pnpm build`, and targeted e2e; use `pnpm verify:all` for a
    release or substantial UI change.
+
+## Content and asset pipeline
+
+The public content roadmap is maintained in docs/UNIVERSE_CATALOG.md.
+Natural bodies are added to src/config/bodies.ts or src/config/smallBodies.ts first.
+Textures currently use JPEG files under public/assets/textures/{body}/ and are generated
+with pnpm textures:resize when a declared derived resolution is missing.
+
+Models, probes, deep-sky objects and large populations are not supported by dropping a
+file into public/assets. Each future capability needs a typed catalogue contract, an
+explicit position referential, a license note, LOD policy, fallback and disposal tests.
+Use instancing, point fields or statistical envelopes for populations; do not create one
+mesh per star, asteroid, Oort-cloud body or galaxy particle.

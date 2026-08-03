@@ -6,6 +6,7 @@
  */
 import * as THREE from 'three';
 import type { TextureQuality } from '@/types';
+import { resolveTextureBasePath } from './texturePaths';
 
 // ============================================================================
 // MOBILE DETECTION
@@ -194,7 +195,11 @@ export const SHADER_SETTINGS = {
 
 export const TEXTURE_SETTINGS: TextureSettings = {
   // BASE_URL (Vite) pour rester compatible avec Firebase Hosting et les déploiements sous sous-chemin
-  basePath: `${import.meta.env.BASE_URL}assets/textures/`,
+  // Un bucket public optionnel peut fournir les LOD lourds ; le fallback local reste le défaut.
+  basePath: resolveTextureBasePath(
+    import.meta.env.VITE_TEXTURE_BASE_URL,
+    import.meta.env.BASE_URL
+  ),
   defaultSettings: {
     wrapS: THREE.RepeatWrapping,
     wrapT: THREE.RepeatWrapping,

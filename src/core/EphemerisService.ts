@@ -10,8 +10,14 @@
  * nom → Body vit désormais sur le catalogue des corps (`CelestialBodyConfig.astroBody`).
  */
 
-import { Body, HelioVector, RotationAxis } from 'astronomy-engine';
+import {
+  Body,
+  HelioVector,
+  JupiterMoons,
+  RotationAxis,
+} from 'astronomy-engine';
 import * as THREE from 'three';
+import type { JupiterMoonKey } from '@/types';
 import { equatorialToScene } from './frames';
 
 export class EphemerisService {
@@ -37,6 +43,15 @@ export class EphemerisService {
     return this.getHeliocentricAU(body, date).sub(
       this.getHeliocentricAU(parentBody, date)
     );
+  }
+
+  /**
+   * Position jovicentrique d'une des quatre lunes galiléennes, en UA et dans le repère
+   * Three.js. astronomy-engine fournit directement ces vecteurs relatifs au centre de Jupiter.
+   */
+  getJupiterMoonRelativeAU(moon: JupiterMoonKey, date: Date): THREE.Vector3 {
+    const vector = JupiterMoons(date)[moon];
+    return equatorialToScene(vector.x, vector.y, vector.z);
   }
 
   /**

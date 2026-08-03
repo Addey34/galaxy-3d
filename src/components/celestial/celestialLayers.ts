@@ -27,7 +27,8 @@ export function buildLayers(
 ): Map<string, THREE.Mesh> {
   const layers = new Map<string, THREE.Mesh>();
   const { textures } = config;
-  if (textures.surface) layers.set('surface', createSurfaceLayer(config, name));
+  if (textures.surface || config.fallbackColor !== undefined)
+    layers.set('surface', createSurfaceLayer(config, name));
   if (textures.clouds) layers.set('clouds', createCloudsLayer(config, name));
   if (textures.atmosphere)
     layers.set('atmosphere', createAtmosphereLayer(config, name));
@@ -41,7 +42,10 @@ function createSurfaceLayer(
   name: string
 ): THREE.Mesh {
   const isSun = name === 'sun';
-  const material = createSurfaceMaterial(isSun);
+  const material = createSurfaceMaterial(
+    isSun,
+    config.textures.surface ? undefined : config.fallbackColor
+  );
   const mesh = new THREE.Mesh(
     createSphereGeometry(config.radius, 'surface'),
     material

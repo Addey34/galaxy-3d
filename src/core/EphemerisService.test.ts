@@ -24,3 +24,15 @@ describe('EphemerisService.getParentRelativeAU', () => {
     expect(ab.z).toBeCloseTo(-ba.z, 10);
   });
 });
+
+describe('EphemerisService.getJupiterMoonRelativeAU', () => {
+  it('returns a jovicentric AU vector at the expected scale for Io', () => {
+    const io = eph.getJupiterMoonRelativeAU(
+      'io',
+      new Date('2026-07-16T12:00:00Z')
+    );
+    expect(io.length()).toBeGreaterThan(0.0025);
+    expect(io.length()).toBeLessThan(0.0031);
+    expect(io.toArray().every(Number.isFinite)).toBe(true);
+  });
+});

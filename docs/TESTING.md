@@ -6,10 +6,10 @@
 | ----------------- | --------------------------------------- | ----------------- |
 | `pnpm typecheck`  | TypeScript strict, sans émission        | court             |
 | `pnpm lint`       | ESLint flat config                      | court             |
-| `pnpm test`       | 16 fichiers Vitest, logique et services | court             |
+| `pnpm test`       | 21 fichiers Vitest, logique et services | court             |
 | `pnpm verify`     | typecheck + lint + Vitest               | gate local rapide |
 | `pnpm build`      | typecheck + bundle Vite production      | moyen             |
-| `pnpm test:e2e`   | 18 scénarios Playwright Chromium/WebGL  | long              |
+| `pnpm test:e2e`   | 20 scénarios Playwright Chromium/WebGL  | long              |
 | `pnpm verify:all` | verify + build + e2e                    | gate complet      |
 
 ## Règles
@@ -36,3 +36,21 @@ navigation, sélection 3D, modes, labels, i18n, mobile et petits corps.
 
 Il n’y a pas encore de seuil de couverture chiffré : la priorité est la couverture comportementale
 des invariants physiques et des frontières d’architecture.
+
+## Snapshot actuel
+
+La suite compte actuellement 21 fichiers Vitest et 87 tests unitaires. La suite Playwright
+compte 20 scenarios Chromium/WebGL. Ces chiffres sont un instantane documentaire : la
+commande fait foi si un fichier de test est ajoute.
+
+Tout ajout de contenu doit verifier le chemin catalogue-asset, la resolution effectivement
+presente, le fallback si une donnee manque et la propriete des ressources Three.js. Pour un
+modele 3D ou une mission, ajouter en plus un test de referentiel et de liberation GPU avant
+de rendre l'objet navigable.
+
+### Audit des assets visuels
+
+`pnpm textures:audit` verifie le lien catalogue -> fichiers JPEG, les LOD declares, la lisibilite des images et leur projection. Cette commande est requise apres tout ajout de planete, lune, couche nuageuse, anneau, relief ou lumiere nocturne.
+
+
+Le chemin externe des textures est couvert par `src/config/texturePaths.test.ts` : une URL de bucket doit être HTTPS, et l'absence de variable doit revenir aux assets locaux.

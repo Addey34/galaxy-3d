@@ -33,8 +33,33 @@ describe('OrbitalMechanics orbit sampling', () => {
     const seamEnd = points![12];
     expect(seamStart).toBeCloseTo((date.getTime() / DAY_MS - 4) * 35);
     expect(seamEnd).toBeCloseTo(seamStart);
-    expect(seamStart).not.toBeCloseTo(
-      (date.getTime() / DAY_MS) * 35
+    expect(seamStart).not.toBeCloseTo((date.getTime() / DAY_MS) * 35);
+  });
+  it('keeps real radial variation in compressed educational orbits', () => {
+    const mechanics = Object.create(
+      OrbitalMechanics.prototype
+    ) as OrbitalMechanics;
+    Object.defineProperty(mechanics, 'scale', { value: { mode: 'educ' } });
+    Object.defineProperty(mechanics, '_positionAU', {
+      value: (_name: string, _cfg: CelestialBodyConfig, date: Date) => {
+        const phase = (date.getTime() / DAY_MS) % 8;
+        return new THREE.Vector3(
+          1.5 + 0.5 * Math.cos((phase / 8) * Math.PI * 2),
+          0,
+          0
+        );
+      },
+    });
+    const config = { realData: { orbitPeriodDays: 8 } } as CelestialBodyConfig;
+    const points = mechanics.computeOrbitPoints(
+      'test',
+      config,
+      new Date('2026-08-02T00:00:00Z'),
+      8
     );
+    const radii = [0, 1, 2, 3].map((i) => Math.abs(points![i * 3]));
+    expect(
+      new Set(radii.map((radius) => radius.toFixed(6))).size
+    ).toBeGreaterThan(1);
   });
 });
