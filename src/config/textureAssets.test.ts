@@ -92,7 +92,7 @@ describe('catalogue texture integrity', () => {
     }
   });
 
-  it("has complete provenance for every remotely processable source", () => {
+  it('has complete provenance for every remotely processable source', () => {
     for (const review of PROCESSABLE_REVIEWS) {
       expect(
         review.downloadUrl,

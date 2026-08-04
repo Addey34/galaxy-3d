@@ -1,11 +1,30 @@
 import { describe, expect, it } from 'vitest';
 import * as THREE from 'three';
 import type { CelestialBodyConfig } from '@/types';
-import { OrbitalMechanics } from './OrbitalMechanics';
+import {
+  educationalParentOrbitScale,
+  OrbitalMechanics,
+} from './OrbitalMechanics';
+import { SQRT_K } from './ScaleService';
+import { CELESTIAL_CONFIG } from '@/config/bodies';
 
 const DAY_MS = 86_400_000;
 
 describe('OrbitalMechanics orbit sampling', () => {
+  it('keeps Jupiter moons ordered and outside the enlarged educational Jupiter', () => {
+    const jupiter = CELESTIAL_CONFIG.bodies.jupiter;
+    const scale = educationalParentOrbitScale(jupiter);
+    const radii = ['io', 'europa', 'ganymede', 'callisto'].map((name) => {
+      const distanceAU = jupiter.satellites?.[name].realData?.distanceAU ?? 0;
+      return Math.sqrt(distanceAU) * SQRT_K * scale;
+    });
+
+    expect(scale).toBeGreaterThan(1);
+    expect(radii[0]).toBeGreaterThan(jupiter.radius);
+    expect(radii[0]).toBeLessThan(radii[1]);
+    expect(radii[1]).toBeLessThan(radii[2]);
+    expect(radii[2]).toBeLessThan(radii[3]);
+  });
   it('starts the Explo curve opposite the current body and closes it there', () => {
     const mechanics = Object.create(
       OrbitalMechanics.prototype

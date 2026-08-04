@@ -104,6 +104,8 @@ export interface CelestialBodyConfig {
   realData?: RealData;
   /** Enum astronomy-engine pour les positions réelles. Absent = pas d'éphéméride (étoile fixe, skybox). */
   astroBody?: Body;
+  /** Corps dont le pôle de rotation sert de repère aux satellites synchrones. */
+  rotationBody?: Body;
   /**
    * Corps astronomy-engine utilisé pour la POSITION héliocentrique, si différent d'`astroBody`.
    * Cas Terre : `Body.EMB` (barycentre Terre-Lune) → supprime le ballant lunaire réel

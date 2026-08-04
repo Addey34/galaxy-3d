@@ -35,6 +35,32 @@ export const ORBIT_SAMPLE_COUNT = 512;
 export const EXPLO_ORBIT_SAMPLE_COUNT = 4096;
 const MS_PER_DAY = 86_400_000;
 
+/** Marge visuelle minimale entre un parent et ses satellites en mode éducatif. */
+export const EDUCATIVE_PARENT_GAP = 0.12;
+
+/**
+ * Échelle commune des orbites parentRelative d'un même parent.
+ * Elle évite que les corps satellites soient cachés par le parent tout en
+ * conservant leur ordre de distance réel.
+ */
+export function educationalParentOrbitScale(
+  parent: CelestialBodyConfig | undefined
+): number {
+  if (!parent?.satellites) return 1;
+
+  let scale = 1;
+  for (const satellite of Object.values(parent.satellites)) {
+    if (satellite.frame !== 'parentRelative') continue;
+    const distanceAU = satellite.realData?.distanceAU;
+    if (!distanceAU || distanceAU <= 0) continue;
+    const rawRadius = Math.sqrt(distanceAU) * SQRT_K;
+    const requiredRadius =
+      parent.radius + satellite.radius + EDUCATIVE_PARENT_GAP;
+    scale = Math.max(scale, requiredRadius / rawRadius);
+  }
+  return scale;
+}
+
 /** Durée (secondes) de la transition animée des positions et tailles Éduc↔Explo. */
 const MORPH_DURATION_S = 1.2;
 
@@ -49,6 +75,7 @@ export class OrbitalMechanics {
   private readonly _educPos = new THREE.Vector3();
   /** Nom d'un satellite parentRelative → enum astronomy-engine de son parent. */
   private readonly _parentAstroBody = new Map<string, Body>();
+  private readonly _parentName = new Map<string, string>();
   private _prevPaused = false;
   private _simDeltaSeconds = 0;
 
@@ -83,6 +110,7 @@ export class OrbitalMechanics {
     // terrestre codé en dur.
     forEachBody(config, ({ name, config: cfg, parentName }) => {
       if (cfg.frame !== 'parentRelative' || parentName === null) return;
+      this._parentName.set(name, parentName);
       const parent = config.bodies[parentName];
       // Réfère le satellite au corps de POSITION du parent (positionBody ?? astroBody) : pour
       // la Lune, le parent Terre pointe sur l'EMB, gardant la Lune à sa vraie position.
@@ -213,7 +241,15 @@ export class OrbitalMechanics {
     out
       .copy(posAU)
       .normalize()
-      .multiplyScalar(Math.sqrt(distanceAU) * SQRT_K);
+      .multiplyScalar(
+        Math.sqrt(distanceAU) *
+          SQRT_K *
+          educationalParentOrbitScale(
+            this._parentName?.has(name)
+              ? this.config.bodies[this._parentName.get(name)!]
+              : undefined
+          )
+      );
     return true;
   }
 
@@ -313,8 +349,9 @@ export class OrbitalMechanics {
       // Oriente l'axe de rotation sur le vrai pôle IAU (obliquité + azimut réels).
       // Pour un corps rétrograde (obliquité > 90°), le moment cinétique de spin pointe à
       // l'opposé du pôle nord IAU : on passe -pôle pour que +rotationSpeed reste correct.
-      if (body && cfg.astroBody !== undefined) {
-        const north = this.ephemeris.getNorthPoleDirection(cfg.astroBody, date);
+      const rotationBody = cfg.rotationBody ?? cfg.astroBody;
+      if (body && rotationBody !== undefined) {
+        const north = this.ephemeris.getNorthPoleDirection(rotationBody, date);
         const retrograde = (cfg.realData?.axialTilt ?? 0) > Math.PI / 2;
         body.setAxisDirection(retrograde ? north.multiplyScalar(-1) : north);
       }
@@ -393,7 +430,11 @@ export class OrbitalMechanics {
       );
       const pointAU = this._positionAU(_name, cfg, sampleDate);
       if (!pointAU) return null;
-      const scaledRadius = Math.sqrt(pointAU.length()) * SQRT_K;
+      const parentName = this._parentName?.get(_name);
+      const parentScale = educationalParentOrbitScale(
+        parentName ? this.config.bodies[parentName] : undefined
+      );
+      const scaledRadius = Math.sqrt(pointAU.length()) * SQRT_K * parentScale;
       const point = pointAU.normalize().multiplyScalar(scaledRadius);
       const i3 = i * 3;
       points[i3] = point.x;

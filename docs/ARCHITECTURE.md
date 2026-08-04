@@ -66,6 +66,8 @@ Toute nouvelle ressource doit avoir un propriétaire unique et un chemin de lib�
 ## Invariants métier
 
 - Éducatif : distances compressées par `sqrt(AU)`, rayons pédagogiques.
+- Pour un groupe de satellites parentRelative, un facteur commun garantit une séparation visuelle minimale sans changer leur ordre relatif.
+- Les satellites synchrones peuvent déclarer rotationBody pour orienter leur axe sur le pôle réel de leur parent.
 - Exploration : distances, rayons et tailles angulaires physiques ; aucune taille minimale ou sprite proxy.
 - Les labels et le champ de petits corps sont des instruments de navigation, pas des modifications du rendu physique.
 - Les deux modes utilisent la même position astronomique instantanée.
@@ -96,7 +98,8 @@ GLB, les missions, les populations et le ciel profond attendent une capacite de 
 typee, un proprietaire GPU, une politique LOD et un fallback.
 
 Le mode Educatif compresse les distances avec la racine carree mais conserve la distance
-radiale instantanee et l'excentricite. Le mode Exploration conserve la proportion lineaire,
+radiale instantanee et l'excentricite.
+Pour les satellites parent-relative, le facteur de groupe est identique pour la position et la ligne d'orbite afin d’eviter qu’un parent masque ses lunes. Le mode Exploration conserve la proportion lineaire,
 les rayons et les tailles angulaires physiques. Les orbites sont disponibles dans les deux
 modes. Pendant un morph, une cible selectionnee conserve son offset camera-cible.
 

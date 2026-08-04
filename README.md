@@ -235,6 +235,10 @@ requestAnimationFrame
 Mode Éducatif   : position = √(distanceAU) × 35   (compression visuelle)
 Mode Exploration : position = distanceAU × 35      (vraie proportionnalité)
 
+Pour un satellite parent-relative, le mode Éducatif applique en plus un facteur commun
+au groupe de satellites afin de garder chaque lune hors du parent tout en conservant
+l’ordre de distance réel. Le mode Exploration n’applique aucun facteur visuel.
+
 Terre (1 AU) → 35 unités dans les deux modes (point de calibration commun)
 ```
 
