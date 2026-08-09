@@ -51,6 +51,7 @@ describe('CameraSystem target flights', () => {
       toneMappingExposure: 1,
     } as unknown as CameraSystem['renderer'];
     cameraSystem.tweenGroup = new TweenGroup();
+
     Reflect.set(cameraSystem, '_scaleMode', 'explo');
     Reflect.set(cameraSystem, 'celestialBodies', {
       neptune: bodyAt(1050),
@@ -101,4 +102,16 @@ describe('CameraSystem target flights', () => {
     expect(cameraSystem.camera.position.x).toBeCloseTo(45);
     expect(cameraSystem.tweenGroup.getAll()).toHaveLength(0);
   });
+});
+it('clamps optical FOV in Educational mode too', () => {
+  const cameraSystem = new CameraSystem();
+  cameraSystem.camera = new THREE.PerspectiveCamera(55);
+
+  cameraSystem.setOpticalFov(1);
+  expect(cameraSystem.opticalFov).toBe(8);
+  expect(cameraSystem.camera.fov).toBe(8);
+
+  cameraSystem.setOpticalFov(90);
+  expect(cameraSystem.opticalFov).toBe(55);
+  expect(cameraSystem.camera.fov).toBe(55);
 });

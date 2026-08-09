@@ -7,6 +7,7 @@
  */
 import type { AnimationSystem } from '@/components/systems/AnimationSystem';
 import type { OrbitalMechanics } from '@/core/OrbitalMechanics';
+import { onLocaleChange, t } from '@/i18n';
 
 // Réel = 1:1, 1h/s = 3600, 3h/s = 10 800, 6h/s = 21 600
 export const SIMU_SCALES = [1, 3_600, 10_800, 21_600] as const;
@@ -52,6 +53,8 @@ const speedBtns = Array.from(
 function setSpeedActive(activeBtn: HTMLButtonElement): void {
   speedBtns.forEach((b, i) => {
     b.classList.toggle('is-active', b === activeBtn);
+    b.setAttribute('aria-pressed', String(b === activeBtn));
+    b.setAttribute('aria-label', b.textContent?.trim() || t('speed.live'));
     // Teinture verte sur "Réel" (index 0) quand actif — indique le temps réel
     b.classList.toggle('is-simutime', i === 0 && b === activeBtn);
   });
@@ -71,6 +74,11 @@ export function setupPlayback(
     const paused = anim.togglePause();
     playPauseBtn.replaceChildren(createPlaybackIcon(paused));
     playPauseBtn.classList.toggle('is-paused', paused);
+    playPauseBtn.setAttribute('aria-pressed', String(paused));
+    playPauseBtn.setAttribute(
+      'aria-label',
+      t(paused ? 'playback.play' : 'playback.pause')
+    );
   });
 
   speedBtns.forEach((btn) => {
@@ -80,6 +88,18 @@ export function setupPlayback(
   // Activer le premier bouton (Réel) au démarrage
   const first = speedBtns[0];
   if (first) setSpeedActive(first);
+  playPauseBtn.setAttribute('aria-label', t('playback.pause'));
+  onLocaleChange(() => {
+    speedBtns.forEach((btn) =>
+      btn.setAttribute('aria-label', btn.textContent?.trim() || t('speed.live'))
+    );
+    playPauseBtn.setAttribute(
+      'aria-label',
+      playPauseBtn.classList.contains('is-paused')
+        ? t('playback.play')
+        : t('playback.pause')
+    );
+  });
 
   return {
     selectRealtime: () => {

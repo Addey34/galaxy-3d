@@ -127,6 +127,8 @@ export const RENDER_SETTINGS = {
 export const CAMERA_SETTINGS = {
   fov: 65,
   focusFov: 55,
+  opticalMinFov: 8,
+  opticalMaxFov: 55,
   // Mode Éducatif — near/far larges (planètes à 2-192u)
   educNear: 0.1,
   educFar: 20_000,

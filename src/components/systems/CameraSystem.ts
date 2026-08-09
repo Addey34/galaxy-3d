@@ -35,6 +35,7 @@ export class CameraSystem {
   } | null = null;
   /** Keeps the selected label while a mode morph temporarily freezes camera tracking. */
   private trackingPaused = false;
+  private _opticalFov = CAMERA_SETTINGS.opticalMaxFov;
   private _scaleMode: 'educ' | 'explo' = 'educ';
 
   private readonly smoothness = CAMERA_CONTROLS_SETTINGS.smoothness;
@@ -88,7 +89,9 @@ export class CameraSystem {
       return;
     }
 
-    this._setFov(CAMERA_SETTINGS.focusFov);
+    this._setFov(
+      this._scaleMode === 'explo' ? this._opticalFov : CAMERA_SETTINGS.focusFov
+    );
     this.trackingPaused = false;
     body.updateWorldMatrix(true, false);
     body.getWorldPosition(this.targetWorldPosition);
@@ -323,6 +326,19 @@ export class CameraSystem {
     if (Math.abs(this.camera.fov - fov) < 0.01) return;
     this.camera.fov = fov;
     this.camera.updateProjectionMatrix();
+  }
+  /** Ajuste le zoom optique sans modifier la distance ni l'echelle des objets. */
+  setOpticalFov(fov: number): void {
+    this._opticalFov = THREE.MathUtils.clamp(
+      fov,
+      CAMERA_SETTINGS.opticalMinFov,
+      CAMERA_SETTINGS.opticalMaxFov
+    );
+    this._setFov(this._opticalFov);
+  }
+
+  get opticalFov(): number {
+    return this._opticalFov;
   }
 
   /**

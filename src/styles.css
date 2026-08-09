@@ -3,9 +3,9 @@
    ============================================================================ */
 
 :root {
-  --overlay-edge: 1rem;
+  --overlay-edge: 0.75rem;
   /* Keep side panels below the open planet navigation. */
-  --overlay-top: 4.75rem;
+  --overlay-top: 4.25rem;
   --overlay-surface: rgba(4, 6, 18, 0.82);
   --overlay-border: rgba(160, 195, 255, 0.16);
   --overlay-radius: 0.75rem;
@@ -287,64 +287,42 @@ a:focus-visible {
    Éducatif → accent bleu, Exploration → vert.
    ============================================================================ */
 
-#mode-controls {
+#bottom-controls {
+  --dock-control-height: 4.4rem;
   position: fixed;
   bottom: var(--overlay-edge);
   left: var(--overlay-edge);
   z-index: 100;
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.3rem;
+  align-items: stretch;
+  gap: 0.45rem;
+}
+
+#mode-controls {
+  position: static;
+  display: flex;
+  align-items: stretch;
   min-width: 9rem;
-}
-
-#scale-disclaimer {
-  max-width: 16rem;
-  margin: 0;
-  padding: 0.25rem 0.45rem;
-  border: 1px solid rgba(100, 150, 255, 0.22);
-  border-radius: 0.35rem;
-  background: rgba(3, 5, 14, 0.72);
-  color: rgba(190, 215, 255, 0.74);
-  font-size: 0.58rem;
-  letter-spacing: 0.025em;
-  pointer-events: none;
-  text-align: center;
-  opacity: 0;
-  visibility: hidden;
-  transform: translateY(0.2rem);
-  transition:
-    opacity 0.18s ease,
-    transform 0.18s ease,
-    visibility 0.18s ease;
-}
-
-/* Indication available to keyboard users without competing with the toggle at rest. */
-#mode-controls:hover #scale-disclaimer,
-#mode-controls:focus-within #scale-disclaimer {
-  opacity: 1;
-  visibility: visible;
-  transform: translateY(0);
-}
-
-body.is-explo-mode #scale-disclaimer {
-  border-color: rgba(70, 215, 145, 0.25);
-  color: rgba(170, 240, 205, 0.78);
 }
 
 .mode-seg {
   display: flex;
+  align-items: stretch;
+  width: 100%;
+  min-height: var(--dock-control-height);
+  margin: 0;
   background: rgba(4, 6, 18, 0.7);
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 0.6rem;
   overflow: hidden;
   backdrop-filter: blur(12px);
   box-shadow: 0 2px 16px rgba(0, 0, 0, 0.45);
-  margin-inline: auto;
 }
 
 .mode-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   padding: 0.45rem 1rem;
   background: transparent;
   border: none;
@@ -388,7 +366,6 @@ body.is-explo-mode #scale-disclaimer {
   background: rgba(80, 200, 110, 0.2);
   color: rgba(120, 255, 150, 1);
 }
-
 /* ============================================================================
    LOADER
    ============================================================================ */
@@ -737,7 +714,7 @@ body.is-explo-mode #scale-disclaimer {
 
 #fullscreen-btn {
   position: fixed;
-  font-size: 2.6rem;
+  font-size: 2rem;
   bottom: 1rem;
   right: 1rem;
   padding: 0.4rem;
@@ -1318,96 +1295,13 @@ body.is-explo-mode #scale-disclaimer {
 }
 
 /* ============================================================================
-   ONBOARDING (première visite)
-   ============================================================================ */
-
-.ob-card {
-  position: fixed;
-  bottom: 10rem;
-  left: 50%;
-
-  width: min(340px, calc(100% - 2rem));
-
-  background: rgba(4, 8, 24, 0.84);
-  border: 1px solid rgba(120, 170, 255, 0.22);
-  border-radius: 0.75rem;
-  backdrop-filter: blur(16px);
-  box-shadow: 0 4px 32px rgba(0, 0, 0, 0.5);
-  padding: 0.95rem 1.1rem 0.85rem;
-
-  opacity: 0;
-  transform: translateX(-50%) translateY(8px);
-  transition:
-    opacity 0.4s ease,
-    transform 0.4s ease;
-  pointer-events: none;
-  z-index: 110;
-}
-
-.ob-card.ob-visible {
-  opacity: 1;
-  transform: translateX(-50%) translateY(0);
-  pointer-events: auto;
-}
-
-.ob-title {
-  margin: 0 0 0.55rem;
-  font-size: clamp(0.52rem, 2.2vw, 0.62rem);
-  font-weight: 700;
-  letter-spacing: 0.09em;
-  text-transform: uppercase;
-  color: rgba(120, 170, 255, 0.9);
-}
-
-.ob-list {
-  margin: 0 0 0.75rem;
-  padding: 0;
-  list-style: none;
-  display: flex;
-  flex-direction: column;
-  gap: 0.28rem;
-}
-
-.ob-list li {
-  font-size: 0.72rem;
-  color: rgba(190, 215, 255, 0.85);
-  padding-left: 1rem;
-  position: relative;
-}
-
-.ob-list li::before {
-  content: '·';
-  position: absolute;
-  left: 0.25rem;
-  color: rgba(74, 143, 255, 0.7);
-}
-
-.ob-dismiss {
-  display: block;
-  margin-left: auto;
-  padding: 0.26rem 0.72rem;
-  border-radius: 0.4rem;
-  background: rgba(74, 143, 255, 0.18);
-  border: 1px solid rgba(120, 170, 255, 0.38);
-  color: rgba(190, 215, 255, 0.9);
-  font: inherit;
-  font-size: 0.67rem;
-  cursor: pointer;
-  transition: background 0.15s ease;
-}
-
-.ob-dismiss:hover {
-  background: rgba(74, 143, 255, 0.32);
-}
-
-/* ============================================================================
    MOBILE
    ============================================================================ */
 
 @media (max-width: 640px) {
   :root {
     --overlay-edge: 0.5rem;
-    --overlay-top: 4.75rem;
+    --overlay-top: 4.25rem;
   }
 
   /* Nav planètes : coins haut libres sur mobile (? en bas, FPS masqué) → pleine largeur.
@@ -1461,20 +1355,18 @@ body.is-explo-mode #scale-disclaimer {
     max-width: calc(100vw - 1rem);
   }
 
-  /* Onboarding : au-dessus du bloc mode + indication d'échelle et du panneau temps. */
-  .ob-card {
-    bottom: 12rem;
-  }
-
-  /* Bascule de mode : remontée au-dessus du panneau temps pour éviter le chevauchement
-     (même bottom: 0.5rem → le time-panel, plus tard dans le DOM, le recouvrait). */
-  #mode-controls {
+  #bottom-controls {
     left: 0.5rem;
-    right: auto;
-    transform: none;
+    right: 0.5rem;
     bottom: 7.25rem;
+    gap: 0.35rem;
+    --dock-control-height: 3.8rem;
   }
 
+  #mode-controls {
+    min-width: 0;
+    flex: 1 1 auto;
+  }
   .mode-btn {
     padding: 0.32rem 0.65rem;
     font-size: 0.7rem;
@@ -1529,7 +1421,8 @@ body.is-explo-mode #scale-disclaimer {
   .mode-seg,
   #help-btn,
   #time-panel,
-  .ob-card,
+  #optical-zoom,
+  #events-toggle,
   #orbit-options,
   #body-info {
     backdrop-filter: none;

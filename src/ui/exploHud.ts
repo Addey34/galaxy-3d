@@ -407,6 +407,7 @@ export class ExploHud {
     element = document.createElement('button');
     element.type = 'button';
     element.className = 'explo-label';
+    element.dataset.bodyName = name;
     if (MAJOR_BODIES.has(name)) element.classList.add('is-major');
     element.setAttribute('aria-label', bodyDisplayName(name));
     element.style.setProperty('--label-rgb', labelRgb(name));

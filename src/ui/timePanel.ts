@@ -80,7 +80,8 @@ function refreshDisplay(om: OrbitalMechanics): void {
 function addWheelAdjust(
   el: HTMLInputElement,
   onDelta: (n: number) => void,
-  refresh: () => void
+  refresh: () => void,
+  onChange?: () => void
 ): void {
   el.addEventListener(
     'wheel',
@@ -90,6 +91,7 @@ function addWheelAdjust(
       onDelta(e.deltaY > 0 ? 1 : -1);
       refresh();
       flash(el);
+      onChange?.();
     },
     { passive: false }
   );
@@ -97,7 +99,8 @@ function addWheelAdjust(
 
 export function setupTimePanel(
   om: OrbitalMechanics,
-  playback: PlaybackControls
+  playback: PlaybackControls,
+  onChange?: () => void
 ): void {
   const refresh = () => refreshDisplay(om);
 
@@ -123,8 +126,8 @@ export function setupTimePanel(
   setInterval(refresh, 250);
 
   // Scroll rapide (desktop)
-  addWheelAdjust(timeInput, (d) => om.addTimeOffsetHours(d), refresh);
-  addWheelAdjust(dateInput, (d) => om.addTimeOffset(d), refresh);
+  addWheelAdjust(timeInput, (d) => om.addTimeOffsetHours(d), refresh, onChange);
+  addWheelAdjust(dateInput, (d) => om.addTimeOffset(d), refresh, onChange);
 
   // Picker natif → change event
   timeInput.addEventListener('change', () => {
@@ -137,6 +140,7 @@ export function setupTimePanel(
     _prevTime = timeInput.value;
     flash(timeInput);
     refresh();
+    onChange?.();
   });
 
   dateInput.addEventListener('change', () => {
@@ -149,6 +153,7 @@ export function setupTimePanel(
     _prevDate = dateInput.value;
     flash(dateInput);
     refresh();
+    onChange?.();
   });
 
   // Bouton reset → retour au présent + vitesse temps réel
@@ -160,5 +165,6 @@ export function setupTimePanel(
     refresh();
     flash(timeInput);
     flash(dateInput);
+    onChange?.();
   });
 }

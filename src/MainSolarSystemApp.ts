@@ -16,16 +16,19 @@ import { initStaticI18n } from './i18n/dom';
 import { updateProgress, hideLoader, showError } from './ui/loader';
 import { setupFullscreen } from './ui/fullscreen';
 import { setupHelp } from './ui/help';
+import { setupGuidedTour } from './ui/guidedTour';
 import { setupLangSwitch } from './ui/langSwitch';
 import { setupPlanetControls } from './ui/planetNav';
 import { setupBodyInfo } from './ui/bodyInfo';
 import { setupPlayback } from './ui/playback';
 import { setupTimePanel } from './ui/timePanel';
 import { setupModeSwitcher } from './ui/modeSwitcher';
+import { setupPermalinks } from './ui/permalink';
+import { setupAstronomicalEvents } from './ui/astronomicalEvents';
+import { setupOpticalZoom } from './ui/opticalZoom';
 import { ExploHud } from './ui/exploHud';
 import { SmallBodyOverlay } from './ui/smallBodyOverlay';
 import { setupBodyPicker } from './ui/bodyPicker';
-import { initOnboarding } from './ui/onboarding';
 import { setupOrbitOptions } from './ui/orbitOptions';
 import { fetchSmallBodies } from './core/sbdb';
 import { CELESTIAL_CONFIG } from './config/bodies';
@@ -37,6 +40,7 @@ initStaticI18n();
 setupLangSwitch();
 setupFullscreen();
 setupHelp();
+const guidedTour = setupGuidedTour();
 
 (async function loadApp(): Promise<void> {
   try {
@@ -48,13 +52,17 @@ setupHelp();
 
     // Fiche d'info par corps : s'ouvre pour toute sélection (barre, clic 3D, label Explo),
     // se ferme sur retour Vue Globale. Toutes les sources passent par planetNav.selectBody.
+    let syncPermalink = (): void => undefined;
     const bodyInfo = setupBodyInfo();
     const planetNav = setupPlanetControls(cameraSystem, (name) => {
       if (name === 'overview') bodyInfo.hide();
       else bodyInfo.show(name);
+      syncPermalink();
     });
     const playback = setupPlayback(animationSystem, orbitalMechanics);
-    setupTimePanel(orbitalMechanics, playback);
+    setupTimePanel(orbitalMechanics, playback, () => {
+      syncPermalink();
+    });
 
     // Clic 3D : sélectionner un corps en cliquant son mesh (surtout en Éducatif), via la
     // même commande de navigation partagée que la barre et les labels.
@@ -113,14 +121,30 @@ setupHelp();
           : null
       );
     });
-    setupModeSwitcher(orbitalMechanics, cameraSystem, (mode) => {
-      currentMode = mode;
-      exploHud.setMode(mode); // change le style des labels (éduc ↔ explo), reste actif
-      smallBodyOverlay.setActive(mode === 'explo');
-    });
+    const opticalZoom = setupOpticalZoom(cameraSystem);
+    const modeSwitcher = setupModeSwitcher(
+      orbitalMechanics,
+      cameraSystem,
+      (mode) => {
+        currentMode = mode;
+        opticalZoom.setMode(mode);
+        exploHud.setMode(mode); // change le style des labels (éduc ↔ explo), reste actif
+        smallBodyOverlay.setActive(mode === 'explo');
+        syncPermalink();
+      }
+    );
 
+    const permalink = setupPermalinks(
+      orbitalMechanics,
+      planetNav,
+      modeSwitcher,
+      bodyNames
+    );
+    syncPermalink = permalink.sync;
+    permalink.applyInitialState();
+    setupAstronomicalEvents(orbitalMechanics, () => syncPermalink());
     hideLoader();
-    initOnboarding();
+    guidedTour.startIfFirstVisit();
   } catch (err) {
     showError(err instanceof Error ? err : new Error(String(err)));
   }

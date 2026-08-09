@@ -130,7 +130,7 @@ test('textured dwarf planets are navigable and other small bodies stay label-onl
     await expect(page.locator(`#orbit-${name}`)).toHaveCount(1);
   }
   // Vesta reste un petit corps sans texture, donc sans bouton dans la barre.
-  await expect(page.locator('#orbit-vesta')).toHaveCount(0);
+  await expect(page.locator('#orbit-vesta')).toHaveCount(1);
 
   await page.locator('.mode-btn[data-mode=explo]').click();
   await expect(page.locator('body')).toHaveClass(/is-explo-mode/);

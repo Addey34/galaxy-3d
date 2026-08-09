@@ -73,6 +73,8 @@ export interface PlanetNavigation {
    * alors aucun bouton actif. `CameraSystem.setTarget` ignore les noms inconnus.
    */
   selectBody(name: string): void;
+  /** Corps actuellement selectionne, `overview` pour la vue globale. */
+  getSelectedBody(): string | null;
 }
 
 /**
@@ -147,11 +149,13 @@ export function setupPlanetControls(
   const btns = Array.from(
     document.querySelectorAll<HTMLButtonElement>('.controls-track button')
   );
+  let selectedBody: string | null = null;
 
   const selectBody = (name: string): void => {
     const id = `orbit-${name}`;
     // Synchronise l'état actif : le bouton du corps s'il existe, sinon aucun (petit corps).
     btns.forEach((b) => b.classList.toggle('is-active', b.id === id));
+    selectedBody = name;
     if (name === 'overview') {
       camera.goToOverview();
     } else {
@@ -168,5 +172,8 @@ export function setupPlanetControls(
     );
   });
 
-  return { selectBody };
+  return {
+    selectBody,
+    getSelectedBody: () => selectedBody,
+  };
 }

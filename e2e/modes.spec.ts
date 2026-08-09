@@ -2,6 +2,9 @@ import { expect, test, type Page } from '@playwright/test';
 
 test.beforeEach(async ({ page }) => {
   await page.route('**/sbdb_query.api*', (route) => route.abort());
+  await page.addInitScript(() => {
+    localStorage.setItem('ssv-guided-tour-v1', '1');
+  });
 });
 
 async function boot(page: Page): Promise<void> {
@@ -36,10 +39,6 @@ test('selection, information panel and target semantics survive both mode switch
   await expect(page.locator('body')).toHaveClass(/is-explo-mode/);
   await expect(info).toBeVisible();
   await expect(info.locator('.bi-name')).toHaveText('Earth');
-  await expect(page.locator('#scale-disclaimer')).toContainText(
-    'Linear distances'
-  );
-
   const target = page.locator('.explo-label.is-target');
   await expect(target).toHaveAttribute('aria-label', 'Earth');
   await expect(target.locator('.explo-label-text')).toBeHidden();
@@ -53,9 +52,6 @@ test('selection, information panel and target semantics survive both mode switch
   await expect(info).toBeVisible();
   await expect(target.locator('.explo-label-text')).toBeHidden();
   await expect(target.locator('.explo-label-dot')).toBeVisible();
-  await expect(page.locator('#scale-disclaimer')).toContainText(
-    'Compressed distances'
-  );
 });
 
 test('settings stay available in both modes and control label density', async ({
@@ -202,4 +198,75 @@ test('keeps untextured catalog bodies available in both modes', async ({
   await expect(page.locator('body')).toHaveClass(/is-explo-mode/);
   await expect(pallas).toHaveCount(1);
   await expect(halley).toHaveCount(1);
+});
+
+test('Galilean moons stay available around Jupiter in both display modes', async ({
+  page,
+}) => {
+  await boot(page);
+  await page.locator('#orbit-jupiter').click();
+  await expect(page.locator('#body-info .bi-name')).toHaveText('Jupiter');
+
+  const target = page.locator('.explo-label.is-target');
+  await expect(target).toHaveAttribute('aria-label', 'Jupiter');
+
+  const moonNames = ['io', 'europa', 'ganymede', 'callisto'];
+  for (const name of moonNames) {
+    await expect(
+      page.locator('#explo-labels .explo-label[data-body-name="' + name + '"]')
+    ).toHaveCount(1);
+  }
+
+  const targetPosition = async (): Promise<{ x: number; y: number }> =>
+    target.evaluate((element) => {
+      const matrix = new DOMMatrixReadOnly(getComputedStyle(element).transform);
+      return { x: matrix.m41, y: matrix.m42 };
+    });
+
+  const waitForStableTarget = async (): Promise<void> => {
+    await expect
+      .poll(
+        async () => {
+          const first = await targetPosition();
+          await page.evaluate(
+            () =>
+              new Promise<void>((resolve) =>
+                requestAnimationFrame(() => resolve())
+              )
+          );
+          const second = await targetPosition();
+          return Math.hypot(second.x - first.x, second.y - first.y);
+        },
+        { timeout: 15_000 }
+      )
+      .toBeLessThan(0.5);
+  };
+  await waitForStableTarget();
+  const before = await targetPosition();
+
+  await page.locator('.mode-btn[data-mode="explo"]').click();
+  await expect(page.locator('body')).toHaveClass(/is-explo-mode/);
+  await expect(target).toHaveAttribute('aria-label', 'Jupiter');
+  await expect
+    .poll(
+      async () => {
+        const position = await targetPosition();
+        return Math.hypot(position.x - before.x, position.y - before.y);
+      },
+      { timeout: 15_000 }
+    )
+    .toBeLessThan(1);
+
+  await page.locator('.mode-btn[data-mode="educ"]').click();
+  await expect(page.locator('body')).not.toHaveClass(/is-explo-mode/);
+  await expect(target).toHaveAttribute('aria-label', 'Jupiter');
+  await expect
+    .poll(
+      async () => {
+        const position = await targetPosition();
+        return Math.hypot(position.x - before.x, position.y - before.y);
+      },
+      { timeout: 15_000 }
+    )
+    .toBeLessThan(1);
 });

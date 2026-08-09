@@ -275,7 +275,9 @@
             data-i18n-aria="settings.orbitsToggle"
           />
           <span class="settings-switch-copy">
-            <span class="settings-switch-label" data-i18n="settings.orbitsToggle"
+            <span
+              class="settings-switch-label"
+              data-i18n="settings.orbitsToggle"
               >Orbits</span
             >
           </span>
@@ -313,44 +315,38 @@
     </aside>
 
     <!-- ─── Mode toggle (bottom-left) ──────────────────────────────────────── -->
-    <div id="mode-controls">
-      <div
-        class="mode-seg scene-panel scene-panel--compact"
-        role="group"
-        aria-label="View mode"
-        aria-describedby="scale-disclaimer"
-        data-i18n-aria="mode.group"
-      >
-        <button
-          class="mode-btn is-active"
-          data-mode="educ"
-          data-i18n="mode.educ"
-          data-i18n-title="mode.educ.title"
-          title="Educational view — circular orbits"
+    <div id="bottom-controls">
+      <div id="mode-controls">
+        <div
+          class="mode-seg scene-panel scene-panel--compact"
+          role="group"
+          aria-label="View mode"
+          data-i18n-aria="mode.group"
         >
-          Educ.
-        </button>
-        <button
-          class="mode-btn"
-          data-mode="explo"
-          data-i18n="mode.explo"
-          data-i18n-title="mode.explo.title"
-          title="Exploration mode — true scale, space voyage"
-        >
-          Explo.
-        </button>
+          <button
+            class="mode-btn is-active"
+            data-mode="educ"
+            data-i18n="mode.educ"
+            data-i18n-title="mode.educ.title"
+            title="Educational view — circular orbits"
+          >
+            Educ.
+          </button>
+          <button
+            class="mode-btn"
+            data-mode="explo"
+            data-i18n="mode.explo"
+            data-i18n-title="mode.explo.title"
+            title="Exploration mode — true scale, space voyage"
+          >
+            Explo.
+          </button>
+        </div>
       </div>
-      <p
-        id="scale-disclaimer"
-        role="tooltip"
-        data-i18n="mode.educ.scale"
-        aria-live="polite"
-      >
-        Compressed distances · enlarged bodies
-      </p>
     </div>
 
     <!-- ─── Time panel (bottom-center) ─────────────────────────────────────── -->
+
     <div id="time-panel" class="scene-panel scene-panel--time">
       <!-- Poignée : replie la partie supérieure (lecture/vitesse) → horloge simplifiée.
            aria-label géré en JS (dépend de l'état replié/déplié). -->

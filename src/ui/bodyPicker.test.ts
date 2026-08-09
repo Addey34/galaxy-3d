@@ -68,7 +68,10 @@ function createFixture(): {
   canvas.getBoundingClientRect = () => CANVAS_RECT;
 
   const selectBody = vi.fn();
-  const nav: PlanetNavigation = { selectBody };
+  const nav: PlanetNavigation = {
+    selectBody,
+    getSelectedBody: () => null,
+  };
   setupBodyPicker(scene, camera, canvas, nav, new Set(['earth']));
 
   return { canvas, selectBody };

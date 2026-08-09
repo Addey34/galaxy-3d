@@ -9,7 +9,11 @@
  */
 import type { OrbitalMechanics } from '@/core/OrbitalMechanics';
 import type { CameraSystem } from '@/components/systems/CameraSystem';
-import { onLocaleChange, t } from '@/i18n';
+
+export interface ModeSwitcher {
+  setMode(mode: 'educ' | 'explo'): void;
+  getMode(): 'educ' | 'explo';
+}
 
 /** L'utilisateur préfère-t-il un mouvement réduit ? (bascule instantanée, sans morph). */
 function prefersReducedMotion(): boolean {
@@ -22,35 +26,43 @@ export function setupModeSwitcher(
   om: OrbitalMechanics,
   camera: CameraSystem,
   onModeChange?: (mode: 'educ' | 'explo') => void
-): void {
+): ModeSwitcher {
   const modeBtns = Array.from(
     document.querySelectorAll<HTMLButtonElement>('#mode-controls .mode-btn')
   );
-  const scaleDisclaimer = document.getElementById('scale-disclaimer');
-  const updateScaleDisclaimer = (mode: 'educ' | 'explo'): void => {
-    if (!scaleDisclaimer) return;
-    const key = mode === 'explo' ? 'mode.explo.scale' : 'mode.educ.scale';
-    scaleDisclaimer.dataset['i18n'] = key;
-    scaleDisclaimer.textContent = t(key);
+  modeBtns.forEach((btn) =>
+    btn.setAttribute(
+      'aria-pressed',
+      String(btn.classList.contains('is-active'))
+    )
+  );
+  const setMode = (mode: 'educ' | 'explo'): void => {
+    const btn = modeBtns.find(
+      (candidate) => candidate.dataset['mode'] === mode
+    );
+    if (!btn || btn.disabled || btn.classList.contains('is-active')) return;
+    const isExplo = mode === 'explo';
+    modeBtns.forEach((b) => {
+      const active = b === btn;
+      b.classList.toggle('is-active', active);
+      b.setAttribute('aria-pressed', String(active));
+    });
+    document.body.classList.toggle('is-explo-mode', isExplo);
+    camera.transitionScaleMode(mode);
+    om.setMode(mode, !prefersReducedMotion());
+    onModeChange?.(mode);
   };
-
-  onLocaleChange(() => {
-    const active = modeBtns.find((button) =>
-      button.classList.contains('is-active')
-    );
-    updateScaleDisclaimer(
-      active?.dataset['mode'] === 'explo' ? 'explo' : 'educ'
-    );
-  });
-
   modeBtns.forEach((btn) => {
     btn.addEventListener('click', () => {
       if (btn.disabled || btn.classList.contains('is-active')) return;
       const mode = btn.dataset['mode'] === 'explo' ? 'explo' : 'educ';
       const isExplo = mode === 'explo';
-      modeBtns.forEach((b) => b.classList.toggle('is-active', b === btn));
+      modeBtns.forEach((b) => {
+        const active = b === btn;
+        b.classList.toggle('is-active', active);
+        b.setAttribute('aria-pressed', String(active));
+      });
       document.body.classList.toggle('is-explo-mode', isExplo);
-      updateScaleDisclaimer(mode);
 
       // La caméra conserve son cadrage pendant que seules les positions et tailles morphent.
       camera.transitionScaleMode(mode);
@@ -59,4 +71,13 @@ export function setupModeSwitcher(
       onModeChange?.(mode);
     });
   });
+  return {
+    setMode,
+    getMode: () =>
+      modeBtns.find((btn) => btn.classList.contains('is-active'))?.dataset[
+        'mode'
+      ] === 'explo'
+        ? 'explo'
+        : 'educ',
+  };
 }

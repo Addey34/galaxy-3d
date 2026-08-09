@@ -42,6 +42,20 @@ export const messages: Record<Locale, Dict> = {
 
     // ── Navigation ──
     'nav.overview': 'Overview',
+    'events.title': 'Upcoming events',
+    'events.open': 'Open astronomical events',
+    'events.close': 'Close astronomical events',
+    'events.empty': 'No upcoming event found',
+    'events.newMoon': 'New Moon',
+    'events.firstQuarter': 'First Quarter',
+    'events.fullMoon': 'Full Moon',
+    'events.thirdQuarter': 'Third Quarter',
+    'events.solarEclipse': 'Solar eclipse',
+    'events.lunarEclipse': 'Lunar eclipse',
+    'events.kind.penumbral': 'penumbral',
+    'events.kind.partial': 'partial',
+    'events.kind.annular': 'annular',
+    'events.kind.total': 'total',
 
     // ── Bascule de mode ──
     'mode.group': 'View mode',
@@ -49,13 +63,17 @@ export const messages: Record<Locale, Dict> = {
     'mode.explo': 'Explo.',
     'mode.educ.title': 'Educational view — circular orbits',
     'mode.explo.title': 'Exploration mode — true scale, space voyage',
-    'mode.educ.scale': 'Compressed distances · enlarged bodies',
-    'mode.explo.scale': 'Linear distances · physical radii',
+    'zoom.optical': 'Optical zoom (FOV)',
 
     // ── Lecture / temps ──
     'playback.playpause': 'Play / Pause',
+    'playback.play': 'Resume simulation',
+    'playback.pause': 'Pause simulation',
     'speed.live': 'Live',
     'time.today': 'Back to now',
+    'time.group': 'Time controls',
+    'time.inputTime': 'Simulation time',
+    'time.inputDate': 'Simulation date',
     'time.wheelTime': 'Wheel: ±1 h  ·  Click: pick the time',
     'time.wheelDate': 'Wheel: ±1 day  ·  Click: pick the date',
 
@@ -78,15 +96,25 @@ export const messages: Record<Locale, Dict> = {
     'credits.data': 'Data',
     'credits.donate': '♥ Support the project',
     'lang.label': 'Language',
-
-    // ── Onboarding (première visite) ──
-    'onboarding.title': 'First steps',
-    'onboarding.aria': 'Getting started tips',
-    'onboarding.tip.select': 'Click any planet to fly to it',
-    'onboarding.tip.explo': 'Switch to Explo for true solar system scale',
-    'onboarding.tip.time': 'Scroll the clock or date to time-travel',
-    'onboarding.tip.help': '? button — full navigation tips',
-    'onboarding.dismiss': 'Got it',
+    // ── Guided tour (first visit) ──
+    'tour.start': 'Start quick tour',
+    'tour.previous': 'Previous',
+    'tour.next': 'Next',
+    'tour.finish': 'Finish',
+    'tour.close': 'Close tour',
+    'tour.progress': 'Step {current} of {total}',
+    'tour.step.navigation.title': '1. Navigate',
+    'tour.step.navigation.text':
+      'Choose a planet in the top bar or drag the scene.',
+    'tour.step.mode.title': '2. Choose your view',
+    'tour.step.mode.text':
+      'Educational is simple; Exploration shows the true scale.',
+    'tour.step.time.title': '3. Change time',
+    'tour.step.time.text':
+      'Use the date and speed controls to move through time.',
+    'tour.step.help.title': '4. Find help',
+    'tour.step.help.text':
+      'You can reopen this quick tour from the ? help button.',
 
     // ── Panneau orbites (mode Éducatif) ──
     'orbitOpts.title': 'Orbits',
@@ -178,6 +206,20 @@ export const messages: Record<Locale, Dict> = {
 
     // ── Navigation ──
     'nav.overview': 'Vue globale',
+    'events.title': '?v?nements ? venir',
+    'events.open': 'Ouvrir les ?v?nements astronomiques',
+    'events.close': 'Fermer les ?v?nements astronomiques',
+    'events.empty': 'Aucun ?v?nement ? venir',
+    'events.newMoon': 'Nouvelle Lune',
+    'events.firstQuarter': 'Premier quartier',
+    'events.fullMoon': 'Pleine Lune',
+    'events.thirdQuarter': 'Dernier quartier',
+    'events.solarEclipse': '?clipse solaire',
+    'events.lunarEclipse': '?clipse lunaire',
+    'events.kind.penumbral': 'p?nombrale',
+    'events.kind.partial': 'partielle',
+    'events.kind.annular': 'annulaire',
+    'events.kind.total': 'totale',
 
     // ── Bascule de mode ──
     'mode.group': 'Mode d’affichage',
@@ -185,12 +227,16 @@ export const messages: Record<Locale, Dict> = {
     'mode.explo': 'Explo.',
     'mode.educ.title': 'Vue éducative — orbites circulaires',
     'mode.explo.title': 'Mode exploration — vraie échelle, voyage spatial',
-    'mode.educ.scale': 'Distances compressées · corps agrandis',
-    'mode.explo.scale': 'Distances linéaires · rayons physiques',
+    'zoom.optical': 'Zoom optique (FOV)',
 
     // ── Lecture / temps ──
     'playback.playpause': 'Lecture / Pause',
+    'playback.play': 'Reprendre la simulation',
+    'playback.pause': 'Mettre la simulation en pause',
     'speed.live': 'Direct',
+    'time.group': 'Contr?les temporels',
+    'time.inputTime': 'Heure de simulation',
+    'time.inputDate': 'Date de simulation',
     'time.today': 'Revenir à maintenant',
     'time.wheelTime': 'Molette : ±1 h  ·  Clic : choisir l’heure',
     'time.wheelDate': 'Molette : ±1 jour  ·  Clic : choisir la date',
@@ -215,17 +261,25 @@ export const messages: Record<Locale, Dict> = {
     'credits.data': 'Données',
     'credits.donate': '♥ Soutenir le projet',
     'lang.label': 'Langue',
-
-    // ── Onboarding (première visite) ──
-    'onboarding.title': 'Premiers pas',
-    'onboarding.aria': 'Astuces de démarrage',
-    'onboarding.tip.select': 'Cliquez une planète pour y voyager',
-    'onboarding.tip.explo':
-      'Passez en Explo pour la vraie échelle du système solaire',
-    'onboarding.tip.time':
-      'Molette sur l’horloge ou la date pour voyager dans le temps',
-    'onboarding.tip.help': 'Bouton ? — toutes les commandes',
-    'onboarding.dismiss': 'Compris',
+    // ── Visite guidée (première visite) ──
+    'tour.start': 'Lancer la visite rapide',
+    'tour.previous': 'Précédent',
+    'tour.next': 'Suivant',
+    'tour.finish': 'Terminer',
+    'tour.close': 'Fermer la visite',
+    'tour.progress': 'Étape {current} sur {total}',
+    'tour.step.navigation.title': '1. Naviguer',
+    'tour.step.navigation.text':
+      'Choisissez une planète dans la barre du haut ou faites glisser la scène.',
+    'tour.step.mode.title': '2. Choisir une vue',
+    'tour.step.mode.text':
+      'Éducatif simplifie les distances ; Exploration montre l’échelle réelle.',
+    'tour.step.time.title': '3. Changer le temps',
+    'tour.step.time.text':
+      'Utilisez la date et la vitesse pour voyager dans le temps.',
+    'tour.step.help.title': '4. Retrouver l’aide',
+    'tour.step.help.text':
+      'Vous pourrez relancer cette visite avec le bouton ?.',
 
     // ── Panneau orbites (mode Éducatif) ──
     'orbitOpts.title': 'Orbites',
