@@ -1,8 +1,13 @@
 import { expect, test } from '@playwright/test';
 
 // Déterminisme : pas de dépendance à l'API JPL SBDB live pendant les tests.
+// La visite guidée du premier lancement est neutralisée (son backdrop plein écran
+// intercepterait sinon les clics sur les contrôles).
 test.beforeEach(async ({ page }) => {
   await page.route('**/sbdb_query.api*', (route) => route.abort());
+  await page.addInitScript(() => {
+    localStorage.setItem('ssv-guided-tour-v1', '1');
+  });
 });
 
 /**

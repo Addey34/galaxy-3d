@@ -2,8 +2,13 @@ import { expect, test } from '@playwright/test';
 
 // Déterminisme : on ne dépend pas de l'API JPL SBDB live (réseau) pendant les tests.
 // L'overlay des petits corps dégrade proprement en champ vide — suffisant pour ces scénarios.
+// La visite guidée du premier lancement est neutralisée (son backdrop plein écran
+// intercepterait sinon les clics sur le canvas et les labels).
 test.beforeEach(async ({ page }) => {
   await page.route('**/sbdb_query.api*', (route) => route.abort());
+  await page.addInitScript(() => {
+    localStorage.setItem('ssv-guided-tour-v1', '1');
+  });
 });
 
 /**
