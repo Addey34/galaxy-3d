@@ -107,3 +107,12 @@ Les systemes stellaires, les galaxies et les vues cosmologiques doivent introdui
 referentiel explicite : ils ne sont pas des corps heliocentriques ajoutes par exception.
 La matrice des familles, des assets et des candidats se trouve dans
 docs/UNIVERSE_CATALOG.md.
+
+## Flux UI recents
+
+- src/core/permalink.ts encode et decode l'etat partageable sans dependre du DOM.
+- src/core/astronomicalEvents.ts calcule les prochains evenements a partir de la date simulee.
+- src/ui/guidedTour.ts orchestre la visite clavier et souris avec focus et fermeture Escape.
+
+Les overlays restent dans src/ui/; SolarSystemApp reste headless et ne connait ni les permaliens,
+ni les panneaux facultatifs.

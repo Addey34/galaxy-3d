@@ -14,6 +14,16 @@ Visualisateur interactif du système solaire en temps réel, développé en Type
 - HUD Exploration avec cible suivie, distance UA/km, temps-lumière et labels de corps
 - Responsive mobile avec qualité adaptative
 
+Permaliens partageables, événements astronomiques, zoom optique et visite guidée au premier
+démarrage complètent les contrôles de navigation, de temps et les deux modes d'échelle.
+
+## Fonctionnalités d'exploration
+
+- **Permalien** : rouvrir une sélection, un mode et une date depuis une URL.
+- **Événements** : consulter les prochaines phases lunaires et éclipses.
+- **Zoom optique** : ajuster le champ de vision en Exploration sans modifier la physique.
+- **Visite guidée** : parcourir les commandes au clavier ou à la souris au premier démarrage.
+
 ## Stack
 
 | Lib                                                          | Version | Rôle                                       |
@@ -304,12 +314,12 @@ Réglages moteur dans `src/config/engine.ts`, catalogue des corps dans `src/conf
 - **Vitest** — tests unitaires des modules mathématiques purs (`src/**/*.test.ts`) ; `pnpm verify` = types + lint + tests
 - **ESLint** — `eslint.config.js` (flat config, typescript-eslint recommended non-type-checked) ; `pnpm lint` / `pnpm lint:fix`, intégré à `pnpm verify`
 - **Prettier** — règles dans `.prettierrc`, commandes `pnpm format` et `pnpm format:check` ; l'arbre entier est conforme
-- **Playwright** — 18 scénarios navigateur dans `e2e/` (`smoke`, `modes`, `explo`, `i18n`, `onboarding`) ; le serveur Vite de test utilise le port réservé 5273
+- **Playwright** — 18 scénarios navigateur dans `e2e/` (`smoke`, `modes`, `explo`, `i18n`, `guided-tour`) ; le serveur Vite de test utilise le port réservé 5273
 - Aucun seuil de couverture configuré
 
 ## Qualité et limites actuelles
 
-- `pnpm verify` passe avec 73 tests répartis dans 16 fichiers ; Playwright complète cette couverture avec 18 scénarios DOM/WebGL.
+- `pnpm verify` passe avec 103 tests répartis dans 26 fichiers ; Playwright complète cette couverture avec 28 scénarios DOM/WebGL.
 - `pnpm build` passe sans avertissement de taille : `three`, `astronomy-engine` et `tween` sont séparés, et le chunk applicatif reste autour de 120 kB minifié.
 - Le mode Exploration est actif. Les vols caméra concurrents sont annulés et la cible suivie reste centrée, y compris à vitesse accélérée.
 - `IS_MOBILE` reste figé pour les réglages créés à l'initialisation (anticrénelage, ombres, textures) ; seul le plafond de pixel ratio est recalculé au resize.
@@ -319,9 +329,10 @@ Réglages moteur dans `src/config/engine.ts`, catalogue des corps dans `src/conf
 ## Direction de développement
 
 En résumé : d'abord rendre le projet visible (déploiement public, CI, SEO) et instructif
-(fiches d'information par corps, i18n FR/EN, transition animée Éducatif→Exploration), puis
-donner des raisons de revenir (permaliens, événements astronomiques, zoom optique FOV, lunes
-majeures), et à terme en faire une référence (tours guidés, missions spatiales, WebXR).
+(fiches d'information par corps, i18n FR/EN, transition animée Éducatif→Exploration), ensuite
+donner des raisons de revenir — permaliens, événements astronomiques, zoom optique FOV et visite
+guidée sont désormais livrés ; restent les lunes majeures et le mode hors-ligne (PWA). À terme,
+en faire une référence (missions spatiales, WebXR).
 
 ## Documentation technique
 

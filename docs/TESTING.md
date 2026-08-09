@@ -6,10 +6,10 @@
 | ----------------- | --------------------------------------- | ----------------- |
 | `pnpm typecheck`  | TypeScript strict, sans émission        | court             |
 | `pnpm lint`       | ESLint flat config                      | court             |
-| `pnpm test`       | 21 fichiers Vitest, logique et services | court             |
+| `pnpm test`       | 26 fichiers Vitest, logique et services | court             |
 | `pnpm verify`     | typecheck + lint + Vitest               | gate local rapide |
 | `pnpm build`      | typecheck + bundle Vite production      | moyen             |
-| `pnpm test:e2e`   | 20 scénarios Playwright Chromium/WebGL  | long              |
+| `pnpm test:e2e`   | 28 scénarios Playwright Chromium/WebGL  | long              |
 | `pnpm verify:all` | verify + build + e2e                    | gate complet      |
 
 ## Règles
@@ -31,16 +31,17 @@
 ## Couverture actuelle
 
 La suite Vitest couvre les transformations de repères, Kepler, éphémérides, horloge, échelles,
-catalogue, éclipses, texture LOD et câblage de certaines UI. Playwright couvre le boot, loader,
-navigation, sélection 3D, modes, labels, i18n, mobile et petits corps.
+catalogue, éclipses, texture LOD, permaliens, événements astronomiques et câblage de certaines UI.
+Playwright couvre le boot, loader, navigation, sélection 3D, modes, labels, i18n, mobile, petits
+corps, permaliens, événements astronomiques, zoom optique, visite guidée et accessibilité.
 
 Il n’y a pas encore de seuil de couverture chiffré : la priorité est la couverture comportementale
 des invariants physiques et des frontières d’architecture.
 
 ## Snapshot actuel
 
-La suite compte actuellement 21 fichiers Vitest et 88 tests unitaires. La suite Playwright
-compte 20 scenarios Chromium/WebGL. Ces chiffres sont un instantane documentaire : la
+La suite compte actuellement 26 fichiers Vitest et 103 tests unitaires. La suite Playwright
+compte 28 scenarios Chromium/WebGL. Ces chiffres sont un instantane documentaire : la
 commande fait foi si un fichier de test est ajoute.
 
 Tout ajout de contenu doit verifier le chemin catalogue-asset, la resolution effectivement

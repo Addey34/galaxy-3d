@@ -9,7 +9,7 @@ remain true when the project evolves.
 `index.html` owns the static DOM shell and loads `src/MainSolarSystemApp.ts`.
 `MainSolarSystemApp` is the only composition root that may wire DOM modules. It
 creates the headless `SolarSystemApp`, then connects navigation, playback, mode
-switching, overlays, i18n, onboarding and fullscreen controls.
+switching, overlays, i18n, guided tour and fullscreen controls.
 
 `SolarSystemApp` has no DOM dependency. Its `init` method creates the core services
 and Three.js systems in dependency order, while `dispose` releases them in reverse
@@ -43,7 +43,7 @@ ordered by layout ownership:
 4. loader and error state;
 5. help, language and credits;
 6. time/playback panel;
-7. onboarding;
+7. guided tour;
 8. mobile overrides;
 9. orbit settings;
 10. projected exploration labels and body information.
