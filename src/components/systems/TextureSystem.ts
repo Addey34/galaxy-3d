@@ -12,6 +12,10 @@ import type {
   TextureDefaultSettings,
 } from '@/config/engine';
 import { allBodies, flattenBodies } from '@/config/catalog';
+import {
+  assertSafeTexturePath,
+  assertSafeTextureQuality,
+} from '@/config/catalogValidation';
 import { t } from '@/i18n';
 import { bodyDisplayName } from '@/i18n/bodyText';
 import Logger from '@/utils/Logger';
@@ -93,6 +97,8 @@ export class TextureSystem {
     relativePath: string,
     quality: TextureQuality | string
   ): Promise<THREE.Texture> {
+    assertSafeTexturePath(relativePath, 'TextureSystem asset path');
+    assertSafeTextureQuality(String(quality), 'TextureSystem quality');
     const fullPath = `${this.config.basePath}${relativePath}_${quality}.jpg`;
 
     const cached = this.cache.get(fullPath);

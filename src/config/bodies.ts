@@ -13,6 +13,7 @@ import { Body } from 'astronomy-engine';
 import type { CelestialConfig } from '@/types';
 import { exploCameraDistance } from '@/core/ScaleService';
 import { assertUniqueBodyNames } from './catalog';
+import { assertValidCelestialCatalog } from './catalogValidation';
 import { SMALL_BODIES } from './smallBodies';
 
 // Vitesse de rotation axiale — rad / seconde de simulation.
@@ -70,7 +71,7 @@ export const CELESTIAL_CONFIG: CelestialConfig = {
       radius: 0.38,
       rotationSpeed: _R(1407.6),
       orbitalColor: 0xb8b0a5,
-      textureResolutions: { surface: ['4k', '2k', '1k'], bump: ['1k'] },
+      textureResolutions: { surface: ['8k', '4k', '2k', '1k'], bump: ['1k'] },
       textures: {
         surface: 'mercury/mercurySurface',
         bump: 'mercury/mercuryBump',
@@ -197,7 +198,7 @@ export const CELESTIAL_CONFIG: CelestialConfig = {
           rotationSpeed: _R(655.72),
           orbitalColor: 0x8f98a5,
           textureResolutions: {
-            surface: ['4k', '2k', '1k'],
+            surface: ['8k', '4k', '2k', '1k'],
             bump: ['4k', '2k', '1k'],
           },
           textures: {
@@ -545,3 +546,5 @@ export const CELESTIAL_CONFIG: CelestialConfig = {
 
 // Fail-fast : un nom en doublon (corps ou satellite) écraserait silencieusement une entrée.
 assertUniqueBodyNames(CELESTIAL_CONFIG);
+// Fail-fast: a body without fallback, LOD or safe asset path must fail at startup.
+assertValidCelestialCatalog(CELESTIAL_CONFIG);
