@@ -130,6 +130,8 @@ export class AnimationSystem {
     const simRot = this.orbitalMechanics?.simDeltaSeconds ?? delta;
     this._updateObjects(simRot, sunWorldPosition);
     this.cameraSystem?.update(delta);
+    // OrbitControls peut déplacer la caméra après le calcul de frustum ; les callbacks HUD
+    // doivent projeter avec sa matrice monde de la frame courante.
     this._updateLOD();
 
     // Après le suivi caméra : la couche UI lit des positions à jour (HUD explo).

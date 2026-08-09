@@ -44,7 +44,7 @@ export function createSurfaceMaterial(
     return new THREE.MeshBasicMaterial({ color: 0xffff00 });
   }
   return createShadowAwareStandardMaterial({
-    color: fallbackColor,
+    color: fallbackColor ?? 0xffffff,
     roughness: 0.7,
     metalness: 0.0,
   });
