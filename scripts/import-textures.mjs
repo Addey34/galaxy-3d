@@ -360,10 +360,37 @@ const IMPORTS = [
     ...SSS_FICT,
   },
 
+  // --- Corps solides : mosaïques USGS/NASA (domaine public), sources V1 récentes ---
+  {
+    body: 'titan',
+    layer: 'surface',
+    src: `${V1}/titan/Titan_ISS_P19658_Mosaic_Global_4km.tif`,
+    resolutions: ['4k', '2k', '1k'],
+    fillHoles: true, // trous documentés aux hautes latitudes nord
+    tint: null,
+    source:
+      'https://astrogeology.usgs.gov/search/map/titan_cassini_iss_global_mosaic_4005m',
+    license: 'public-domain',
+    credit: 'USGS Astrogeology / NASA-JPL-Caltech / SSI (Cassini ISS)',
+    tier: 'free',
+  },
+  {
+    body: 'deimos',
+    layer: 'surface',
+    src: `${V1}/deimos/Mars - Deimos nasa gov.tif`,
+    resolutions: ['1k'],
+    fillHoles: false,
+    tint: null,
+    source: 'https://science.nasa.gov/3d-resources/mars-deimos/',
+    license: 'public-domain',
+    credit: 'NASA (Viking-derived)',
+    tier: 'free',
+  },
+
   // --- À traiter / manquants (voir docs/private/TEXTURE_LICENSING_AUDIT.md) ---
-  // titan  : source cassée (1024×313) → re-sourcer un mosaic Cassini ISS 2:1, ou couleur unie orange.
-  // deimos, halley : sources absentes de V1.
-  // pallas, hygiea : pas de map → couleur unie (fallbackColor, pas d'import texture).
+  // halley : garder la carte Stooke actuelle (crédit Philip Stooke / NASA PDS requis).
+  // pallas, hygiea : aucune texture fidèle n'existe (VLT/SPHERE = forme grise sans texture)
+  //   → couleur unie via fallbackColor, pas d'import.
 ];
 
 /**

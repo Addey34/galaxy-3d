@@ -7,7 +7,7 @@
  * Le contenu est dérivé du catalogue — ajouter un corps n'exige aucune édition ici.
  */
 import { CELESTIAL_CONFIG } from '@/config/bodies';
-import { flattenBodies } from '@/config/catalog';
+import { flattenBodies, hasIllustrativeSurface } from '@/config/catalog';
 import { TEXTURE_SETTINGS } from '@/config/engine';
 import { KM_PER_AU, SQRT_K } from '@/core/ScaleService';
 import { t, intlLocale, getLocale, onLocaleChange } from '@/i18n';
@@ -218,6 +218,7 @@ export function setupBodyInfo(coordinator?: OverlayCoordinator): BodyInfoPanel {
   const dot = panel.querySelector<HTMLElement>('.bi-dot')!;
   const nameEl = panel.querySelector<HTMLElement>('.bi-name')!;
   const subEl = panel.querySelector<HTMLElement>('.bi-subtitle')!;
+  const fictionalEl = panel.querySelector<HTMLElement>('.bi-fictional-badge')!;
   const statsEl = panel.querySelector<HTMLElement>('.bi-stats')!;
   const descEl = panel.querySelector<HTMLElement>('.bi-desc')!;
   const closeBtn = panel.querySelector<HTMLButtonElement>('.bi-close')!;
@@ -280,6 +281,14 @@ export function setupBodyInfo(coordinator?: OverlayCoordinator): BodyInfoPanel {
     dot.style.background = `rgb(${hexToRgbTriplet(accent)})`;
     nameEl.textContent = bodyDisplayName(name);
     subEl.textContent = subtitle(name, cfg);
+
+    // Badge « surface fictive » : texture illustrative, pas une mosaïque scientifique fidèle.
+    const illustrative = hasIllustrativeSurface(name);
+    fictionalEl.hidden = !illustrative;
+    if (illustrative) {
+      fictionalEl.textContent = t('bi.fictional');
+      fictionalEl.title = t('bi.fictional.hint');
+    }
 
     statsEl.replaceChildren();
     for (const { label, value } of buildStats(cfg)) {

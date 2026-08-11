@@ -41,11 +41,11 @@
     { "body": "eris", "layer": "surface", "license": "CC BY 4.0", "credit": "Solar System Scope — illustratif (CC BY 4.0)", "tier": "free", "illustrative": true },
     { "body": "haumea", "layer": "surface", "license": "CC BY 4.0", "credit": "Solar System Scope — illustratif (CC BY 4.0)", "tier": "free", "illustrative": true },
     { "body": "makemake", "layer": "surface", "license": "CC BY 4.0", "credit": "Solar System Scope — illustratif (CC BY 4.0)", "tier": "free", "illustrative": true },
-    { "body": "titan", "layer": "surface", "license": "unconfirmed", "credit": "à traiter (source cassée)", "tier": "free", "todo": true },
-    { "body": "deimos", "layer": "surface", "license": "unconfirmed", "credit": "à confirmer", "tier": "free", "todo": true },
-    { "body": "halley", "layer": "surface", "license": "unconfirmed", "credit": "à confirmer", "tier": "free", "todo": true },
-    { "body": "pallas", "layer": "surface", "license": "unconfirmed", "credit": "à confirmer", "tier": "free", "todo": true },
-    { "body": "hygiea", "layer": "surface", "license": "unconfirmed", "credit": "à confirmer", "tier": "free", "todo": true }
+    { "body": "titan", "layer": "surface", "license": "public-domain", "credit": "USGS Astrogeology / NASA-JPL-Caltech / SSI (Cassini ISS 4005m)", "tier": "free", "filled": true },
+    { "body": "deimos", "layer": "surface", "license": "public-domain", "credit": "NASA 3D Resources (Viking-derived)", "tier": "free" },
+    { "body": "halley", "layer": "surface", "license": "public-domain", "credit": "Philip Stooke / NASA PDS (Giotto/Vega) — crédit requis", "tier": "free", "illustrative": true },
+    { "body": "pallas", "layer": "surface", "license": "unconfirmed", "credit": "carte illustrative — aucune mosaïque fidèle n'existe (VLT/SPHERE = forme grise sans texture)", "tier": "free", "illustrative": true },
+    { "body": "hygiea", "layer": "surface", "license": "unconfirmed", "credit": "carte illustrative — aucune mosaïque fidèle n'existe (VLT/SPHERE = forme grise sans texture)", "tier": "free", "illustrative": true }
   ],
   "sources": [
     {

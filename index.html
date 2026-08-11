@@ -9,7 +9,7 @@
       name="viewport"
       content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no"
     />
-    <title>3D Solar System — Real-Time Interactive Visualizer</title>
+    <title>3D Solar System: Real-Time Interactive Visualizer</title>
     <meta
       name="description"
       content="Explore the solar system in 3D with real ephemeris positions. Two modes: educational overview and true-scale space voyage. Time travel, real distances, light-time."
@@ -20,7 +20,7 @@
     <meta property="og:type" content="website" />
     <meta
       property="og:title"
-      content="3D Solar System — Real-Time Interactive Visualizer"
+      content="3D Solar System: Real-Time Interactive Visualizer"
     />
     <meta
       property="og:description"
@@ -416,7 +416,7 @@
             data-mode="educ"
             data-i18n="mode.educ"
             data-i18n-title="mode.educ.title"
-            title="Educational view — circular orbits"
+            title="Educational view, circular orbits"
           >
             Educ.
           </button>
@@ -426,7 +426,7 @@
             data-mode="explo"
             data-i18n="mode.explo"
             data-i18n-title="mode.explo.title"
-            title="Exploration mode — true scale, space voyage"
+            title="Exploration mode, true scale"
           >
             Explo.
           </button>
@@ -514,6 +514,13 @@
         <div class="bi-heading">
           <h2 class="bi-name"></h2>
           <p class="bi-subtitle"></p>
+          <span
+            class="bi-fictional-badge"
+            data-i18n="bi.fictional"
+            data-i18n-title="bi.fictional.hint"
+            hidden
+            >Illustrative surface</span
+          >
         </div>
         <button
           class="bi-close surface-close"
@@ -703,8 +710,13 @@
             <dt data-i18n="credits.textures">Textures</dt>
             <dd>
               USGS Astrogeology / NASA-JPL (public domain) · Solar System Scope
-              (CC BY 4.0). Certains corps lointains utilisent une carte
-              illustrative.
+              (CC BY 4.0) · Halley : Philip Stooke / NASA PDS.
+            </dd>
+            <dt data-i18n="credits.fictional">Illustrative surfaces</dt>
+            <dd data-i18n="credits.fictional.list">
+              No spacecraft has resolved these surfaces; their textures are
+              illustrative, not scientific maps: Ceres, Eris, Haumea, Makemake,
+              Pallas, Hygiea, Halley.
             </dd>
             <dt data-i18n="credits.data">Data</dt>
             <dd>Astronomy Engine · JPL SBDB</dd>

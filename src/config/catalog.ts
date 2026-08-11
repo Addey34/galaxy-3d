@@ -11,6 +11,27 @@ import type {
   TextureConfig,
 } from '@/types';
 
+/**
+ * Corps dont la texture de surface est **illustrative**, pas une mosaïque scientifique fidèle
+ * (aucune image de sonde résolue n'existe, ou noyau irrégulier approximé en sphère). Source de
+ * vérité côté app pour le badge « surface fictive » de la fiche d'info et les crédits. Doit
+ * rester aligné avec les entrées `illustrative: true` de `scripts/texture-sources.json`.
+ */
+export const ILLUSTRATIVE_SURFACES: ReadonlySet<string> = new Set([
+  'ceres',
+  'eris',
+  'haumea',
+  'makemake',
+  'halley',
+  'pallas',
+  'hygiea',
+]);
+
+/** Vrai si la surface affichée du corps est illustrative (pas une mosaïque fidèle). */
+export function hasIllustrativeSurface(bodyName: string): boolean {
+  return ILLUSTRATIVE_SURFACES.has(bodyName);
+}
+
 /** camelCase → snake_case (normalMap → normal_map). */
 function toSnake(s: string): string {
   return s.replace(/([a-z0-9])([A-Z])/g, '$1_$2').toLowerCase();

@@ -16,7 +16,7 @@ describe('Titan catalogue entry', () => {
     );
     expect(titan?.relativeOrbitalElements?.eccentricity).toBe(0.029);
     expect(titan?.textures?.surface).toBe('titan/titan_surface');
-    expect(titan?.textureResolutions.surface).toEqual(['1k']);
+    expect(titan?.textureResolutions.surface).toEqual(['2k', '1k']);
     expect(titan?.fallbackColor).toBeTypeOf('number');
     expect(titan?.realData?.radiusKm).toBeCloseTo(2_574.76, 2);
     expect(titan?.realData?.orbitPeriodDays).toBeCloseTo(15.945448, 6);

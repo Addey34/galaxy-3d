@@ -45,7 +45,7 @@ export const messages: Record<Locale, Dict> = {
     'nav.bodies': 'Bodies',
     'nav.search': 'Search a body',
     'nav.searchPlaceholder': 'Search a body…',
-    'nav.paletteAria': 'Bodies — search and select',
+    'nav.paletteAria': 'Search and select a body',
     'nav.group.star': 'Star',
     'nav.group.planet': 'Planets',
     'nav.group.moon': 'Moons',
@@ -76,8 +76,8 @@ export const messages: Record<Locale, Dict> = {
     'mode.group': 'View mode',
     'mode.educ': 'Educ.',
     'mode.explo': 'Explo.',
-    'mode.educ.title': 'Educational view — circular orbits',
-    'mode.explo.title': 'Exploration mode — true scale, space voyage',
+    'mode.educ.title': 'Educational view, circular orbits',
+    'mode.explo.title': 'Exploration mode, true scale',
     'zoom.optical': 'Optical zoom (FOV)',
 
     // ── Lecture / temps ──
@@ -108,6 +108,9 @@ export const messages: Record<Locale, Dict> = {
     'help.tip.time.key': 'Clock · date',
     'help.tip.time.text': 'scroll to time-travel, tap to pick',
     'credits.textures': 'Textures',
+    'credits.fictional': 'Illustrative surfaces',
+    'credits.fictional.list':
+      'No spacecraft has resolved these surfaces; their textures are illustrative, not scientific maps: Ceres, Eris, Haumea, Makemake, Pallas, Hygiea, Halley.',
     'credits.data': 'Data',
     'credits.donate': '♥ Support the project',
     'lang.label': 'Language',
@@ -166,6 +169,9 @@ export const messages: Record<Locale, Dict> = {
     'bi.expand.aria': 'Expand panel',
     'bi.live.label': 'Distance from you',
     'bi.more': 'Learn more',
+    'bi.fictional': 'Illustrative surface',
+    'bi.fictional.hint':
+      'No spacecraft has resolved this surface, so the texture is illustrative, not a scientific map.',
     'stat.radius': 'Radius',
     'stat.distanceSun': 'Distance (Sun)',
     'stat.distanceEarth': 'Distance (Earth)',
@@ -226,7 +232,7 @@ export const messages: Record<Locale, Dict> = {
     'nav.bodies': 'Corps',
     'nav.search': 'Rechercher un corps',
     'nav.searchPlaceholder': 'Rechercher un corps…',
-    'nav.paletteAria': 'Corps — recherche et sélection',
+    'nav.paletteAria': 'Rechercher et sélectionner un corps',
     'nav.group.star': 'Étoile',
     'nav.group.planet': 'Planètes',
     'nav.group.moon': 'Lunes',
@@ -257,8 +263,8 @@ export const messages: Record<Locale, Dict> = {
     'mode.group': 'Mode d’affichage',
     'mode.educ': 'Éduc.',
     'mode.explo': 'Explo.',
-    'mode.educ.title': 'Vue éducative — orbites circulaires',
-    'mode.explo.title': 'Mode exploration — vraie échelle, voyage spatial',
+    'mode.educ.title': 'Vue éducative, orbites circulaires',
+    'mode.explo.title': 'Mode exploration, vraie échelle',
     'zoom.optical': 'Zoom optique (FOV)',
 
     // ── Lecture / temps ──
@@ -290,6 +296,9 @@ export const messages: Record<Locale, Dict> = {
     'help.tip.time.text':
       'molette pour voyager dans le temps, tap pour choisir',
     'credits.textures': 'Textures',
+    'credits.fictional': 'Surfaces fictives',
+    'credits.fictional.list':
+      'Aucune sonde n’a résolu ces surfaces ; leurs textures sont illustratives, pas des cartes scientifiques : Cérès, Éris, Hauméa, Makémaké, Pallas, Hygie, Halley.',
     'credits.data': 'Données',
     'credits.donate': '♥ Soutenir le projet',
     'lang.label': 'Langue',
@@ -348,6 +357,9 @@ export const messages: Record<Locale, Dict> = {
     'bi.expand.aria': 'Déplier le panneau',
     'bi.more': 'En savoir plus',
     'bi.live.label': 'Distance depuis vous',
+    'bi.fictional': 'Surface fictive',
+    'bi.fictional.hint':
+      'Aucune sonde n’a résolu cette surface, la texture est donc illustrative, pas une carte scientifique.',
     'stat.radius': 'Rayon',
     'stat.distanceSun': 'Distance (Soleil)',
     'stat.distanceEarth': 'Distance (Terre)',
