@@ -1,26 +1,63 @@
 /* ============================================================================
-   BASE
+   GALAXY — OVERLAY SYSTEM
+   Conçu d'un seul bloc : un jeu de tokens unique, une seule surface de base,
+   trois docks fixes autour de la scène, des surfaces contextuelles mutuellement
+   exclusives. La scène 3D reste toujours l'élément dominant.
    ============================================================================ */
 
 :root {
-  --overlay-edge: 0.75rem;
-  /* Keep side panels below the open planet navigation. */
-  --overlay-top: 4.25rem;
-  --overlay-surface: rgba(4, 6, 18, 0.82);
-  --overlay-border: rgba(160, 195, 255, 0.16);
-  --overlay-radius: 0.75rem;
-  --overlay-blur: blur(18px);
-  --overlay-shadow: 0 4px 28px rgba(0, 0, 0, 0.5);
-  --overlay-text: rgba(215, 232, 255, 0.9);
-  --overlay-control-bg: rgba(4, 6, 18, 0.82);
-  --overlay-control-border: rgba(160, 195, 255, 0.16);
-  --overlay-control-radius: 0.75rem;
+  /* ── Échelle d'espacement (base 4px) ── */
+  --sp-1: 0.25rem;
+  --sp-2: 0.5rem;
+  --sp-3: 0.75rem;
+  --sp-4: 1rem;
+  --sp-5: 1.5rem;
+
+  /* ── Rayons ── */
+  --r-sm: 0.5rem;
+  --r-md: 0.75rem;
+  --r-lg: 1rem;
+  --r-pill: 999px;
+
+  /* ── Marge des docks au bord de l'écran (respecte les encoches mobiles) ── */
+  --edge: 0.75rem;
+  --edge-x: max(var(--edge), env(safe-area-inset-left));
+  --edge-b: max(var(--edge), env(safe-area-inset-bottom));
+
+  /* ── Surface unique (une seule densité, un seul contraste, une seule profondeur) ── */
+  --surface: rgba(9, 13, 26, 0.82);
+  --surface-solid: rgba(9, 13, 26, 0.96);
+  --hairline: rgba(150, 185, 255, 0.14);
+  --hairline-strong: rgba(150, 185, 255, 0.24);
+  --blur: blur(20px);
+  --shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
+
+  /* ── Contrôles (chips, tools) ── */
+  --control-h: 2.25rem;
+  --control-bg: rgba(255, 255, 255, 0.04);
+  --control-bg-hover: rgba(150, 185, 255, 0.12);
+
+  /* ── Texte ── */
+  --ink: rgba(224, 236, 255, 0.95);
+  --ink-dim: rgba(200, 218, 255, 0.62);
+  --ink-faint: rgba(200, 218, 255, 0.4);
+
+  /* ── Accents fonctionnels ── */
+  --accent: 96, 165, 255; /* bleu — sélection, actions primaires, Éducatif */
+  --explo: 74, 210, 140; /* vert — Exploration, "temps réel / présent" */
+
+  /* ── Empilement (z-index) — hiérarchie unique et documentée ── */
+  --z-scene-canvas: 1;
+  --z-smallbody: 19;
+  --z-labels: 20;
+  --z-scrim: 60;
+  --z-dock: 70;
+  --z-surface: 80;
+  --z-loader: 1000;
 }
+
 html,
 body {
-  /* App WebGL plein écran : on neutralise les comportements navigateur qui parasitent
-     la navigation 3D — sélection de texte accidentelle (les contrôles semblaient « bloqués
-     comme du texte sélectionné »), rebond de scroll, flash bleu de tap et menu tactile long. */
   overscroll-behavior: none;
   -webkit-user-select: none;
   user-select: none;
@@ -32,13 +69,16 @@ body {
   margin: 0;
   overflow: hidden;
   background: #000;
-  font-family: Arial, sans-serif;
+  font-family:
+    system-ui,
+    -apple-system,
+    'Segoe UI',
+    Roboto,
+    Arial,
+    sans-serif;
+  color: var(--ink);
 }
 
-/* Canvas WebGL (three.js) : `touch-action: none` remet TOUS les gestes tactiles à
-   OrbitControls (rotation, zoom pincer, pan) au lieu de les laisser scroller/zoomer la page.
-   Combiné au viewport `user-scalable=no`, le pincer pilote toujours la caméra, jamais le zoom
-   navigateur — plus de « coincé zoomé » sur mobile. */
 canvas {
   touch-action: none;
   display: block;
@@ -47,325 +87,1289 @@ canvas {
 button,
 input,
 summary {
+  font-family: inherit;
   -webkit-tap-highlight-color: transparent;
 }
 
-button:focus-visible,
-input:focus-visible,
-summary:focus-visible,
-a:focus-visible {
-  outline: 2px solid rgba(120, 215, 255, 0.95);
-  outline-offset: 2px;
-}
-/* Shared scene-overlay surface: consistent density, contrast and depth across modules. */
-.scene-panel {
-  background: var(--overlay-surface);
-  border: 1px solid var(--overlay-border);
-  border-radius: var(--overlay-radius);
-  color: var(--overlay-text);
-  backdrop-filter: var(--overlay-blur);
-  box-shadow: var(--overlay-shadow);
+button {
+  cursor: pointer;
 }
 
-/* FPS status mirrors the help control footprint at the opposite top corner. */
+:where(button, input, summary, a):focus-visible {
+  outline: 2px solid rgba(var(--accent), 0.95);
+  outline-offset: 2px;
+}
+
+/* Le FPS n'appartient plus à l'overlay permanent (diagnostic uniquement). */
 #fps-counter {
-  top: 1rem !important;
-  right: 1rem !important;
-  min-width: 3.7rem;
-  height: 2rem;
-  box-sizing: border-box;
-  display: flex !important;
-  align-items: center;
-  justify-content: center;
-  padding: 0.25rem 0.55rem !important;
-  background: var(--overlay-control-bg) !important;
-  border: 1px solid var(--overlay-control-border) !important;
-  border-radius: 999px !important;
-  backdrop-filter: var(--overlay-blur) !important;
-  box-shadow: var(--overlay-shadow) !important;
+  display: none !important;
 }
 
 /* ============================================================================
-   PLANET NAV (top)
+   DOCKS — trois ancres fixes autour de la scène.
+   pointer-events neutralisé sur le conteneur (les clics passent vers la 3D
+   entre les contrôles), réactivé sur chaque enfant interactif.
    ============================================================================ */
 
-/* Conteneur fixe en haut : rangée défilable (flèche | piste | flèche) + poignée tiroir
-   en dessous. Insets left/right pour dégager le bouton « ? » (gauche) et le FPS (droite).
-   `pointer-events` neutralisé sur le conteneur pour laisser passer les clics vers la 3D
-   entre les éléments ; réactivé sur les enfants interactifs. */
-.controls {
+.dock {
   position: fixed;
-  top: 0;
-  left: 3.5rem;
-  right: 5.5rem;
-  z-index: 100;
+  z-index: var(--z-dock);
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.25rem;
-  padding: 0.6rem 0.5rem 0;
+  gap: var(--sp-2);
   pointer-events: none;
-  transition: padding 0.35s cubic-bezier(0.4, 0, 0.2, 1);
 }
-/* Replié : la poignée seule reste, collée au bord haut de la page (mode casier). */
-.controls.is-collapsed {
-  padding-top: 0;
-  gap: 0;
-}
-.controls > *,
-.controls-bar > * {
+.dock > * {
   pointer-events: auto;
 }
 
-/* Rangée : flèche gauche | piste défilable | flèche droite. Glisse vers le haut au repli. */
-.controls-bar {
-  display: flex;
+.dock--top-left {
+  top: var(--edge);
+  left: var(--edge-x);
   align-items: center;
-  gap: 0.4rem;
-  max-width: 100%;
-  max-height: 4rem;
-  transition:
-    transform 0.35s cubic-bezier(0.4, 0, 0.2, 1),
-    opacity 0.25s ease,
-    max-height 0.35s cubic-bezier(0.4, 0, 0.2, 1);
-}
-.controls.is-collapsed .controls-bar {
-  transform: translateY(-140%);
-  opacity: 0;
-  max-height: 0;
-  pointer-events: none;
 }
 
-/* Piste : la seule rangée défilable horizontalement (droite↔gauche). Dégradé aux bords
-   pour signaler le débordement ; molette verticale convertie en scroll horizontal par JS. */
-.controls-track {
-  display: flex;
-  flex: 0 1 auto;
-  min-width: 0;
-  flex-wrap: nowrap;
-  justify-content: safe center;
-  gap: 0.6rem;
-  overflow-x: auto;
-  overflow-y: hidden;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: none;
-  scroll-snap-type: x proximity;
-  padding: 0.4rem 0.2rem;
-  -webkit-mask-image: linear-gradient(
-    90deg,
-    transparent 0,
-    #000 1rem,
-    #000 calc(100% - 1rem),
-    transparent 100%
-  );
-  mask-image: linear-gradient(
-    90deg,
-    transparent 0,
-    #000 1rem,
-    #000 calc(100% - 1rem),
-    transparent 100%
-  );
+.dock--top-right {
+  top: var(--edge);
+  right: var(--edge-x);
+  align-items: center;
+  gap: var(--sp-1);
 }
-.controls-track::-webkit-scrollbar {
+
+.dock--bottom {
+  bottom: var(--edge-b);
+  left: 50%;
+  transform: translateX(-50%);
+  align-items: flex-end;
+  gap: var(--sp-2);
+  /* Ne jamais déborder horizontalement des marges d'écran. */
+  max-width: calc(100vw - 2 * var(--edge));
+}
+
+.dock-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+}
+
+/* ── Chip (dock haut-gauche : Vue globale, recherche) ── */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  height: var(--control-h);
+  padding: 0 var(--sp-3);
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-pill);
+  background: var(--surface);
+  backdrop-filter: var(--blur);
+  color: var(--ink);
+  font-size: 0.82rem;
+  font-weight: 600;
+  white-space: nowrap;
+  transition:
+    background 0.18s,
+    border-color 0.18s,
+    color 0.18s;
+}
+.chip svg {
+  flex: 0 0 auto;
+  opacity: 0.85;
+}
+.chip-label {
+  line-height: 1;
+}
+.chip:hover {
+  border-color: var(--hairline-strong);
+  background: var(--control-bg-hover);
+}
+.chip--overview.is-active {
+  border-color: rgba(var(--accent), 0.7);
+  background: rgba(var(--accent), 0.16);
+  color: rgb(var(--accent));
+}
+.chip--search .chip-label--current {
+  color: var(--ink-dim);
+  font-weight: 500;
+  max-width: 8rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.chip--search[aria-expanded='true'] {
+  border-color: rgba(var(--accent), 0.6);
+  background: rgba(var(--accent), 0.12);
+}
+
+/* ── Tool (icône carrée : info, réglages, événements, aide, plein écran) ── */
+.tool {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--control-h);
+  height: var(--control-h);
+  padding: 0;
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-md);
+  background: var(--surface);
+  backdrop-filter: var(--blur);
+  color: var(--ink-dim);
+  transition:
+    background 0.18s,
+    border-color 0.18s,
+    color 0.18s;
+}
+.tool:hover,
+.tool[aria-expanded='true'] {
+  color: var(--ink);
+  border-color: var(--hairline-strong);
+  background: var(--control-bg-hover);
+}
+.tool[aria-expanded='true'] {
+  color: rgb(var(--accent));
+  border-color: rgba(var(--accent), 0.55);
+}
+.tool[hidden] {
   display: none;
 }
-
-/* Flèches de défilement — thème des boutons planète, carrées. Masquées quand ce côté
-   ne peut plus défiler (classe .is-hidden posée par JS). */
-.nav-arrow {
-  flex: 0 0 auto;
-  width: 2rem;
-  height: 2rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0;
-  background: rgba(0, 0, 0, 0.65);
-  border: 1px solid rgba(255, 255, 255, 0.22);
-  color: rgba(200, 220, 255, 0.85);
-  border-radius: 0.5rem;
-  cursor: pointer;
-  backdrop-filter: blur(6px);
-  transition:
-    background 0.2s,
-    border-color 0.2s,
-    color 0.2s,
-    opacity 0.2s;
-}
-.nav-arrow:hover {
-  background: rgba(100, 150, 255, 0.16);
-  border-color: rgba(100, 150, 255, 0.6);
-  color: #fff;
-}
-.nav-arrow.is-hidden {
-  opacity: 0;
-  pointer-events: none;
-}
-
-/* Poignée tiroir : languette collée sous la barre (donc au bord haut une fois repliée). */
-.controls-collapse {
-  flex: 0 0 auto;
-  width: 2.8rem;
-  height: 1.15rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0;
-  background: rgba(0, 0, 0, 0.65);
-  border: 1px solid rgba(255, 255, 255, 0.22);
-  border-top: none;
-  border-radius: 0 0 0.5rem 0.5rem;
-  color: rgba(200, 220, 255, 0.85);
-  cursor: pointer;
-  backdrop-filter: blur(6px);
-  transition:
-    background 0.2s,
-    border-color 0.2s,
-    color 0.2s;
-}
-.controls-collapse:hover {
-  background: rgba(100, 150, 255, 0.16);
-  border-color: rgba(100, 150, 255, 0.6);
-  color: #fff;
-}
-.controls-collapse svg {
-  transition: transform 0.3s ease;
-}
-/* Repliée : le chevron pointe vers le bas (invite à rouvrir). */
-.controls.is-collapsed .controls-collapse svg {
-  transform: rotate(180deg);
-}
-
-/* Bouton actif : teinté de la couleur de SA planète (variable --planet-rgb posée par JS). */
-.controls button.is-active {
-  background: rgba(var(--planet-rgb), 0.28);
-  border-color: rgb(var(--planet-rgb));
-  box-shadow: 0 0 18px rgba(var(--planet-rgb), 0.45);
-  text-shadow: 0 0 8px rgba(var(--planet-rgb), 0.85);
-}
-
-/* Bouton Vue Globale — séparé visuellement des planètes ; conserve l'accent bleu. */
-#orbit-overview {
-  --planet-rgb: 74, 143, 255;
-  border-color: rgba(74, 143, 255, 0.45);
-  color: rgba(160, 200, 255, 0.9);
-  margin-right: 0.4rem;
-}
-
-.button {
-  /* Accent par défaut (Vue Globale) ; surchargé par planète via JS (applyPlanetButtonColors). */
-  --planet-rgb: 100, 150, 255;
-  padding: 0.55rem 1rem;
-  background: rgba(0, 0, 0, 0.65);
-  border: 1px solid rgba(255, 255, 255, 0.22);
-  color: white;
-  cursor: pointer;
-  font-size: 0.9rem;
-  border-radius: 0.5rem;
-  transition:
-    background 0.25s,
-    border-color 0.25s,
-    box-shadow 0.25s,
-    color 0.25s;
-  backdrop-filter: blur(6px);
-  min-width: 5rem;
-  /* Barre défilable : les boutons gardent leur taille et ne reviennent pas à la ligne. */
-  flex: 0 0 auto;
-  white-space: nowrap;
-  scroll-snap-align: center;
-}
-
-/* Survol : léger halo de la couleur de la planète (sauf si le bouton est déjà actif). */
-.button:hover:not(.is-active) {
-  background: rgba(var(--planet-rgb), 0.14);
-  border-color: rgba(var(--planet-rgb), 0.6);
-  box-shadow: 0 0 14px rgba(var(--planet-rgb), 0.22);
+/* Les tools du dock bas partagent la hauteur du groupe de modes. */
+.tool--dock {
+  width: var(--control-h);
+  height: var(--control-h);
 }
 
 /* ============================================================================
-   MODE TOGGLE — pilule segmentée (en bas à gauche)
-   Éducatif → accent bleu, Exploration → vert.
+   MODE SEGMENT — Éducatif ↔ Exploration (dock bas droit)
    ============================================================================ */
 
-#bottom-controls {
-  --dock-control-height: 4.4rem;
-  position: fixed;
-  bottom: var(--overlay-edge);
-  left: var(--overlay-edge);
-  z-index: 100;
-  display: flex;
-  align-items: stretch;
-  gap: 0.45rem;
-}
-
-#mode-controls {
-  position: static;
-  display: flex;
-  align-items: stretch;
-  min-width: 9rem;
-}
-
 .mode-seg {
-  display: flex;
-  align-items: stretch;
-  width: 100%;
-  min-height: var(--dock-control-height);
-  margin: 0;
-  background: rgba(4, 6, 18, 0.7);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 0.6rem;
-  overflow: hidden;
-  backdrop-filter: blur(12px);
-  box-shadow: 0 2px 16px rgba(0, 0, 0, 0.45);
+  display: inline-flex;
+  height: var(--control-h);
+  padding: 0.15rem;
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-md);
+  background: var(--surface);
+  backdrop-filter: var(--blur);
+}
+.mode-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 var(--sp-3);
+  border: none;
+  border-radius: calc(var(--r-md) - 0.15rem);
+  background: transparent;
+  color: var(--ink-faint);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+  transition:
+    background 0.18s,
+    color 0.18s;
+}
+.mode-btn:hover:not(.is-active):not(:disabled) {
+  color: var(--ink-dim);
+}
+.mode-btn:disabled {
+  color: var(--ink-faint);
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.mode-btn.is-active[data-mode='educ'] {
+  background: rgba(var(--accent), 0.2);
+  color: rgb(var(--accent));
+}
+.mode-btn.is-active[data-mode='explo'] {
+  background: rgba(var(--explo), 0.2);
+  color: rgb(var(--explo));
 }
 
-.mode-btn {
+/* ============================================================================
+   TIME BAR — une seule surface, style lecteur multimédia (dock bas centre).
+   Compact = play + horloge/vitesse + présent. S'étend EN PLACE (le contenu
+   avancé pousse la barre vers le haut) : aucune largeur ni hauteur ne saute
+   pendant l'usage du slider.
+   ============================================================================ */
+
+.time-bar {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-lg);
+  background: var(--surface);
+  backdrop-filter: var(--blur);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+.time-bar-primary {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: var(--sp-1) var(--sp-2);
+  height: var(--control-h);
+  box-sizing: content-box;
+}
+
+/* Play / pause — pastille ronde, verte en lecture, rouge en pause. */
+.tb-play {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border: 1px solid rgba(var(--explo), 0.4);
+  border-radius: 50%;
+  background: rgba(var(--explo), 0.14);
+  color: rgb(var(--explo));
+  transition:
+    background 0.15s,
+    color 0.15s,
+    border-color 0.15s;
+}
+.tb-play:hover {
+  background: rgba(var(--explo), 0.24);
+}
+.tb-play.is-paused {
+  border-color: rgba(240, 110, 110, 0.42);
+  background: rgba(240, 90, 90, 0.14);
+  color: rgba(255, 138, 138, 0.95);
+}
+.tb-play.is-paused:hover {
+  background: rgba(240, 90, 90, 0.24);
+}
+
+/* Lecture centrale : horloge (grande) + vitesse (petite). Clic = étend. */
+.tb-readout {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.05rem;
+  padding: 0.1rem var(--sp-2);
+  border: none;
+  border-radius: var(--r-sm);
+  background: transparent;
+  color: var(--ink);
+  text-align: left;
+  transition: background 0.15s;
+}
+.tb-readout:hover {
+  background: var(--control-bg);
+}
+.tb-clock-line {
+  display: flex;
+  align-items: baseline;
+  gap: 0.35rem;
+  min-width: 0;
+}
+.tb-live-dot {
+  align-self: center;
+  width: 0.4rem;
+  height: 0.4rem;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: rgba(var(--explo), 0.9);
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+.tb-live-dot.is-live {
+  opacity: 1;
+  animation: tb-pulse 2s ease-in-out infinite;
+}
+.tb-live-dot.is-off-time {
+  opacity: 0.5;
+  background: rgba(170, 170, 180, 0.6);
+  animation: none;
+}
+@keyframes tb-pulse {
+  0%,
+  100% {
+    opacity: 0.9;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.25;
+    transform: scale(0.6);
+  }
+}
+.tb-clock {
+  font-variant-numeric: tabular-nums;
+  font-size: 1.02rem;
+  font-weight: 500;
+  letter-spacing: 0.03em;
+  line-height: 1.1;
+  color: var(--ink);
+}
+.tb-clock.is-ticking {
+  animation: tb-tick 0.5s ease-out;
+}
+@keyframes tb-tick {
+  0% {
+    color: rgb(var(--accent));
+  }
+  100% {
+    color: var(--ink);
+  }
+}
+.tb-utc {
+  font-size: 0.5rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  color: var(--ink-faint);
+}
+.tb-speed {
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: rgba(var(--accent), 0.9);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+/* Retour au présent — discret, vert. */
+.tb-now {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.9rem;
+  height: 1.9rem;
+  border: 1px solid rgba(var(--explo), 0.22);
+  border-radius: 50%;
+  background: rgba(var(--explo), 0.06);
+  color: rgba(var(--explo), 0.75);
+  transition:
+    background 0.15s,
+    color 0.15s;
+}
+.tb-now:hover {
+  background: rgba(var(--explo), 0.18);
+  color: rgb(var(--explo));
+}
+
+/* ── Zone étendue : slider de vitesse + date/heure ── */
+.time-bar-advanced {
+  display: grid;
+  grid-template-rows: 0fr;
+  overflow: hidden;
+  transition: grid-template-rows 0.32s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.time-bar.is-expanded .time-bar-advanced {
+  grid-template-rows: 1fr;
+}
+/* Un unique enfant occupe la piste 0fr↔1fr : tout son contenu est masqué d'un bloc
+   à l'état compact (pas de ligne résiduelle visible). */
+.tb-advanced-inner {
+  min-height: 0;
+  overflow: hidden;
+}
+.tb-speed-control {
+  padding: var(--sp-2) var(--sp-3) var(--sp-1);
+  border-top: 1px solid var(--hairline);
+  display: grid;
+  gap: 0.2rem;
+}
+.tb-speed-range {
+  width: 100%;
+  height: 1rem;
+  margin: 0;
+  appearance: none;
+  -webkit-appearance: none;
+  background: transparent;
+}
+.tb-speed-range::-webkit-slider-runnable-track {
+  height: 0.25rem;
+  border-radius: var(--r-pill);
+  background: rgba(150, 190, 255, 0.2);
+}
+.tb-speed-range::-moz-range-track {
+  height: 0.25rem;
+  border-radius: var(--r-pill);
+  background: rgba(150, 190, 255, 0.2);
+}
+.tb-speed-range::-webkit-slider-thumb {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 0.85rem;
+  height: 0.85rem;
+  margin-top: -0.3rem;
+  border: 2px solid rgba(210, 232, 255, 0.95);
+  border-radius: 50%;
+  background: rgb(var(--accent));
+  box-shadow: 0 0 0 0.18rem rgba(var(--accent), 0.16);
+}
+.tb-speed-range::-moz-range-thumb {
+  width: 0.75rem;
+  height: 0.75rem;
+  border: 2px solid rgba(210, 232, 255, 0.95);
+  border-radius: 50%;
+  background: rgb(var(--accent));
+}
+.tb-speed-ticks {
+  display: flex;
+  justify-content: space-between;
+  padding: 0 0.1rem;
+  color: var(--ink-faint);
+  font-size: 0.5rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+.tb-datetime {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0.45rem 1rem;
+  gap: var(--sp-2);
+  padding: var(--sp-1) var(--sp-3) var(--sp-2);
+}
+.tb-datetime-sep {
+  color: var(--ink-faint);
+}
+.tb-input {
+  color-scheme: dark;
   background: transparent;
-  border: none;
-  border-right: 1px solid rgba(255, 255, 255, 0.09);
-  color: rgba(255, 255, 255, 0.42);
-  cursor: pointer;
-  font-size: 0.78rem;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  white-space: nowrap;
-  font-family: inherit;
+  border: 1px solid transparent;
+  border-radius: var(--r-sm);
+  color: var(--ink);
+  font-family: 'SF Mono', 'Cascadia Code', ui-monospace, 'Fira Mono', monospace;
+  padding: 0.18rem 0.4rem;
   transition:
-    background 0.2s,
-    color 0.2s;
+    background 0.15s,
+    border-color 0.15s;
+}
+.tb-input::-webkit-calendar-picker-indicator {
+  display: none;
+}
+.tb-input:hover {
+  background: rgba(var(--accent), 0.08);
+}
+.tb-input:focus {
+  outline: none;
+  background: rgba(var(--accent), 0.12);
+  border-color: rgba(var(--accent), 0.4);
+}
+.tb-input--time {
+  font-size: 0.92rem;
+  font-weight: 500;
+  letter-spacing: 0.03em;
+}
+.tb-input--date {
+  font-size: 0.72rem;
+  color: var(--ink-dim);
+  letter-spacing: 0.06em;
+}
+.tb-input.is-ticking {
+  animation: tb-tick 0.5s ease-out;
 }
 
-.mode-btn:last-child {
-  border-right: none;
+/* ============================================================================
+   SURFACES CONTEXTUELLES — un seul style, une seule à la fois.
+   Ancrées près de leur déclencheur sur desktop ; deviennent des feuilles
+   ancrées en bas sur mobile (voir media query). Le scrim gère la fermeture.
+   ============================================================================ */
+
+.surface {
+  position: fixed;
+  z-index: var(--z-surface);
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-lg);
+  background: var(--surface-solid);
+  backdrop-filter: var(--blur);
+  box-shadow: var(--shadow);
+  color: var(--ink);
+  animation: surface-in 0.16s ease-out;
+}
+.surface[hidden] {
+  display: none;
+}
+@keyframes surface-in {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
-.mode-btn:hover:not(.is-active):not(:disabled) {
-  background: rgba(255, 255, 255, 0.06);
-  color: rgba(255, 255, 255, 0.75);
+.surface-header {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: var(--sp-3) var(--sp-3) var(--sp-2);
 }
-
-/* Mode désactivé (ex. Explo. tant qu'il n'est pas prêt) */
-.mode-btn:disabled {
-  color: rgba(255, 255, 255, 0.2);
-  cursor: not-allowed;
+.surface-title {
+  flex: 1;
+  margin: 0;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+}
+.surface-close {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  margin: -0.25rem -0.25rem -0.25rem 0;
+  border: none;
+  border-radius: var(--r-sm);
   background: transparent;
+  color: var(--ink-faint);
+  transition:
+    color 0.15s,
+    background 0.15s;
+}
+.surface-close:hover {
+  color: var(--ink);
+  background: var(--control-bg);
+}
+.surface-body {
+  padding: 0 var(--sp-3) var(--sp-3);
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
 }
 
-/* Éducatif actif → accent bleu */
-.mode-btn.is-active[data-mode='educ'] {
-  background: rgba(74, 143, 255, 0.2);
-  color: rgba(160, 200, 255, 1);
+/* Positions d'ancrage (desktop). */
+.surface--palette {
+  top: calc(var(--edge) + var(--control-h) + var(--sp-2));
+  left: var(--edge-x);
+  width: min(22rem, calc(100vw - 2 * var(--edge)));
+  max-height: min(70vh, 34rem);
+  padding: var(--sp-2);
+  gap: var(--sp-2);
+}
+.surface--info,
+.surface--settings,
+.surface--events,
+.surface--help {
+  top: calc(var(--edge) + var(--control-h) + var(--sp-2));
+  right: var(--edge-x);
+  width: min(20rem, calc(100vw - 2 * var(--edge)));
+  max-height: calc(100vh - var(--control-h) - 4 * var(--edge));
 }
 
-/* Exploration (vraie échelle) actif → accent vert */
-.mode-btn.is-active[data-mode='explo'] {
-  background: rgba(80, 200, 110, 0.2);
-  color: rgba(120, 255, 150, 1);
+/* ── Scrim ── */
+/* Scrim : sur desktop il ne DOIT PAS bloquer les gestes sur la scène (molette/zoom,
+   rotation) — les surfaces sont de petits panneaux de coin, la fermeture au clic extérieur
+   passe par un écouteur document. Il devient une couche tactile (tap = fermer) uniquement
+   sur mobile, où les surfaces sont des feuilles plein largeur. */
+#surface-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-scrim);
+  background: transparent;
+  pointer-events: none;
 }
+#surface-scrim[hidden] {
+  display: none;
+}
+
+/* ============================================================================
+   PALETTE DE CORPS — recherche + liste groupée (remplace la barre horizontale)
+   ============================================================================ */
+
+.palette-search {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: 0 var(--sp-2);
+  height: 2.4rem;
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-md);
+  background: var(--control-bg);
+  color: var(--ink-dim);
+  flex: 0 0 auto;
+}
+.palette-search:focus-within {
+  border-color: rgba(var(--accent), 0.5);
+  color: rgb(var(--accent));
+}
+.palette-input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  background: transparent;
+  color: var(--ink);
+  font-size: 0.9rem;
+  outline: none;
+}
+.palette-input::placeholder {
+  color: var(--ink-faint);
+}
+.palette-results {
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+.palette-group-title {
+  padding: var(--sp-2) var(--sp-2) 0.2rem;
+  font-size: 0.56rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+.palette-item {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  width: 100%;
+  padding: 0.5rem var(--sp-2);
+  border: none;
+  border-radius: var(--r-sm);
+  background: transparent;
+  color: var(--ink);
+  font-size: 0.86rem;
+  text-align: left;
+  transition: background 0.12s;
+}
+.palette-item:hover,
+.palette-item.is-highlighted {
+  background: var(--control-bg-hover);
+}
+.palette-item.is-active {
+  background: rgba(var(--accent), 0.16);
+  color: rgb(var(--accent));
+}
+.palette-item-dot {
+  flex: 0 0 auto;
+  width: 0.6rem;
+  height: 0.6rem;
+  border-radius: 50%;
+  background: rgb(var(--body-rgb, 150, 185, 255));
+  box-shadow: 0 0 8px rgba(var(--body-rgb, 150, 185, 255), 0.6);
+}
+.palette-item-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.palette-item-kind {
+  flex: 0 0 auto;
+  font-size: 0.6rem;
+  color: var(--ink-faint);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.palette-empty {
+  padding: var(--sp-3) var(--sp-2);
+  color: var(--ink-faint);
+  font-size: 0.8rem;
+  text-align: center;
+}
+
+/* ============================================================================
+   BODY INFO — fiche d'un corps
+   ============================================================================ */
+
+.surface--info {
+  --planet-rgb: 120, 160, 255;
+  border-color: rgba(var(--planet-rgb), 0.35);
+}
+.bi-header {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: var(--sp-3) var(--sp-3) var(--sp-2);
+}
+/* Titre + croix restent ancrés en haut ; le hero est une bannière en fond, derrière
+   l'en-tête, avec un dégradé qui garantit la lisibilité du titre par-dessus. */
+.surface--info.has-hero .bi-header {
+  padding-bottom: 2.6rem;
+}
+.surface--info.has-hero::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 6rem;
+  z-index: 0;
+  background:
+    linear-gradient(
+      180deg,
+      rgba(9, 13, 26, 0.28) 0%,
+      rgba(9, 13, 26, 0.55) 60%,
+      var(--surface-solid) 100%
+    ),
+    var(--bi-hero) center 38% / cover no-repeat;
+  border-radius: var(--r-lg) var(--r-lg) 0 0;
+  pointer-events: none;
+}
+.bi-dot {
+  flex: 0 0 auto;
+  width: 0.7rem;
+  height: 0.7rem;
+  border-radius: 50%;
+  box-shadow: 0 0 10px rgba(var(--planet-rgb), 0.85);
+}
+/* Bloc titre : nom puis sous-titre empilés verticalement, entre la pastille et la croix. */
+.bi-heading {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+.bi-name {
+  min-width: 0;
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #fff;
+}
+.surface--info.has-hero .bi-name {
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.85);
+}
+.bi-close {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border: none;
+  border-radius: var(--r-sm);
+  background: transparent;
+  color: rgba(255, 255, 255, 0.55);
+  transition:
+    color 0.15s,
+    background 0.15s;
+}
+.bi-close:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.1);
+}
+.bi-body {
+  position: relative;
+  z-index: 1;
+  padding: 0 var(--sp-3) var(--sp-3);
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+}
+.bi-subtitle {
+  margin: 0;
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(var(--planet-rgb), 0.95);
+}
+/* Sous-titre lisible par-dessus le hero, comme le nom. */
+.surface--info.has-hero .bi-subtitle {
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.85);
+}
+.bi-live {
+  margin: 0 0 var(--sp-2);
+  padding: var(--sp-2) 0.65rem;
+  border-radius: var(--r-sm);
+  background: rgba(var(--planet-rgb), 0.1);
+  border: 1px solid rgba(var(--planet-rgb), 0.25);
+  display: grid;
+  gap: 0.1rem;
+}
+.bi-live[hidden] {
+  display: none;
+}
+.bi-live-label {
+  font-size: 0.58rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(var(--planet-rgb), 0.85);
+}
+.bi-live-dist {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #eaf3ff;
+  font-variant-numeric: tabular-nums;
+}
+.bi-live-lt {
+  font-size: 0.7rem;
+  color: var(--ink-dim);
+  font-variant-numeric: tabular-nums;
+}
+.bi-stats {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.32rem 0.75rem;
+  margin: 0;
+  font-size: 0.8rem;
+}
+.bi-stats dt {
+  color: var(--ink-faint);
+}
+.bi-stats dd {
+  margin: 0;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  color: rgba(235, 244, 255, 0.95);
+}
+.bi-desc {
+  margin: var(--sp-3) 0 0;
+  padding-top: var(--sp-2);
+  border-top: 1px solid var(--hairline);
+  font-size: 0.78rem;
+  line-height: 1.5;
+  color: var(--ink-dim);
+}
+.bi-desc[hidden] {
+  display: none;
+}
+.bi-more {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  margin-top: var(--sp-3);
+  padding: 0.32rem 0.68rem;
+  font-size: 0.72rem;
+  color: rgba(var(--planet-rgb), 0.95);
+  text-decoration: none;
+  background: rgba(var(--planet-rgb), 0.1);
+  border: 1px solid rgba(var(--planet-rgb), 0.35);
+  border-radius: var(--r-sm);
+  transition:
+    background 0.18s,
+    border-color 0.18s;
+}
+.bi-more::after {
+  content: '↗';
+  font-size: 0.8em;
+}
+.bi-more:hover {
+  background: rgba(var(--planet-rgb), 0.2);
+  border-color: rgb(var(--planet-rgb));
+}
+.bi-more[hidden] {
+  display: none;
+}
+
+/* ============================================================================
+   SETTINGS — noms & orbites (+ FOV en Explo, injecté par ui/opticalZoom)
+   ============================================================================ */
+
+.settings-switch {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  margin-bottom: var(--sp-2);
+  padding: 0.45rem 0.55rem;
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-sm);
+  background: var(--control-bg);
+  cursor: pointer;
+}
+.settings-switch:hover {
+  border-color: var(--hairline-strong);
+  background: var(--control-bg-hover);
+}
+.settings-switch-label {
+  flex: 1;
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: var(--ink);
+}
+.settings-checkbox,
+.oo-checkbox {
+  flex: 0 0 auto;
+  margin: 0;
+  -webkit-appearance: none;
+  appearance: none;
+  width: 1.05rem;
+  height: 1.05rem;
+  border: 1px solid var(--hairline-strong);
+  border-radius: 4px;
+  background: transparent;
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    border-color 0.15s;
+}
+.settings-checkbox:checked,
+.oo-checkbox:checked {
+  background: rgba(var(--accent), 0.28);
+  border-color: rgba(var(--accent), 0.75);
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 10 10' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M2 5 L4.5 7.5 L8 3' fill='none' stroke='rgba(190%2C218%2C255%2C0.98)' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 82%;
+}
+.orbit-picker {
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-sm);
+  background: var(--control-bg);
+  overflow: hidden;
+}
+.orbit-picker-summary {
+  position: relative;
+  padding: 0.5rem 1.8rem 0.5rem 0.6rem;
+  color: var(--ink-dim);
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  list-style: none;
+}
+.orbit-picker-summary::-webkit-details-marker {
+  display: none;
+}
+.orbit-picker-summary::after {
+  content: '⌄';
+  position: absolute;
+  right: 0.6rem;
+  top: 50%;
+  transform: translateY(-55%);
+  color: var(--ink-faint);
+  transition: transform 0.2s;
+}
+.orbit-picker[open] .orbit-picker-summary::after {
+  transform: translateY(-45%) rotate(180deg);
+}
+.orbit-picker-summary:hover {
+  color: var(--ink);
+  background: var(--control-bg-hover);
+}
+.oo-body {
+  max-height: min(42vh, 16rem);
+  padding: 0.35rem 0.45rem 0.45rem;
+  border-top: 1px solid var(--hairline);
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+.oo-row {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: 0.3rem 0.35rem;
+  border-radius: var(--r-sm);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.oo-row:hover {
+  background: var(--control-bg);
+}
+.oo-dot {
+  flex: 0 0 auto;
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: 50%;
+  background: rgb(var(--orbit-rgb));
+  transition: opacity 0.2s;
+}
+.oo-row:has(.oo-checkbox:not(:checked)) .oo-dot {
+  opacity: 0.35;
+}
+.oo-name {
+  flex: 1;
+  font-size: 0.78rem;
+  color: var(--ink);
+  transition: color 0.2s;
+}
+.oo-row:has(.oo-checkbox:not(:checked)) .oo-name {
+  color: var(--ink-faint);
+}
+/* FOV (optical zoom) — injecté dans la surface réglages, visible en Explo. */
+.optical-zoom {
+  margin-top: var(--sp-3);
+  padding-top: var(--sp-3);
+  border-top: 1px solid var(--hairline);
+  display: grid;
+  gap: 0.3rem;
+}
+.optical-zoom[hidden] {
+  display: none;
+}
+.optical-zoom-label {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+}
+.optical-zoom-value {
+  font-variant-numeric: tabular-nums;
+  color: rgb(var(--accent));
+}
+.optical-zoom-range {
+  width: 100%;
+  height: 1rem;
+  margin: 0;
+  accent-color: rgb(var(--accent));
+  cursor: pointer;
+}
+
+/* ============================================================================
+   EVENTS — panneau des événements astronomiques
+   ============================================================================ */
+
+.events-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  max-height: min(60vh, 26rem);
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+}
+.event-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 0.1rem var(--sp-2);
+  padding: 0.5rem var(--sp-2);
+  border: none;
+  border-radius: var(--r-sm);
+  background: transparent;
+  color: var(--ink);
+  text-align: left;
+  transition: background 0.12s;
+}
+.event-row:hover {
+  background: var(--control-bg-hover);
+}
+.event-row-label {
+  font-size: 0.82rem;
+  font-weight: 500;
+}
+.event-row-go {
+  grid-row: 1 / span 2;
+  grid-column: 2;
+  color: var(--ink-faint);
+  font-size: 1rem;
+}
+.event-row-date {
+  grid-column: 1;
+  font-size: 0.66rem;
+  color: var(--ink-dim);
+  font-variant-numeric: tabular-nums;
+}
+.events-empty {
+  padding: var(--sp-3) var(--sp-2);
+  color: var(--ink-faint);
+  font-size: 0.8rem;
+  text-align: center;
+}
+
+/* ============================================================================
+   HELP — astuces + langue + crédits
+   ============================================================================ */
+
+.help-tips {
+  margin: 0 0 var(--sp-3);
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.4rem;
+}
+.help-tips li {
+  display: flex;
+  align-items: baseline;
+  gap: var(--sp-2);
+  font-size: 0.8rem;
+  color: var(--ink-dim);
+  line-height: 1.35;
+}
+.help-key {
+  flex: 0 0 auto;
+  padding: 0.08rem 0.42rem;
+  border-radius: var(--r-sm);
+  background: rgba(var(--accent), 0.14);
+  border: 1px solid rgba(var(--accent), 0.28);
+  color: rgba(var(--accent), 0.98);
+  font-size: 0.7rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.help-credits {
+  padding-top: var(--sp-3);
+  border-top: 1px solid var(--hairline);
+  font-size: 0.72rem;
+}
+#lang-switch {
+  display: flex;
+  gap: var(--sp-1);
+  margin-bottom: var(--sp-3);
+}
+.lang-btn {
+  padding: 0.2rem 0.6rem;
+  border-radius: var(--r-sm);
+  background: rgba(var(--accent), 0.1);
+  border: 1px solid rgba(var(--accent), 0.24);
+  color: var(--ink-dim);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  transition:
+    background 0.15s,
+    color 0.15s;
+}
+.lang-btn:hover {
+  background: rgba(var(--accent), 0.2);
+  color: var(--ink);
+}
+.lang-btn.is-active {
+  background: rgba(var(--accent), 0.4);
+  border-color: rgba(var(--accent), 0.7);
+  color: #fff;
+}
+.credits-copy {
+  margin: 0 0 var(--sp-2);
+  color: var(--ink-faint);
+}
+.credits-list {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.15rem 0.6rem;
+  margin: 0;
+}
+.credits-list dt {
+  color: var(--ink-faint);
+}
+.credits-list dd {
+  margin: 0;
+  color: var(--ink-dim);
+}
+.help-credits a {
+  color: rgba(var(--accent), 0.95);
+  text-decoration: none;
+}
+.help-credits a:hover {
+  text-decoration: underline;
+}
+.credits-donate {
+  display: inline-block;
+  margin-top: var(--sp-3);
+  padding: 0.35rem 0.75rem;
+  border-radius: var(--r-pill);
+  background: rgba(var(--accent), 0.18);
+  border: 1px solid rgba(var(--accent), 0.5);
+  color: rgb(var(--accent)) !important;
+  font-weight: 600;
+}
+
+/* ============================================================================
+   RESPONSIVE — les composants reflowent ; pas de DOM par breakpoint.
+   Les surfaces contextuelles deviennent des feuilles ancrées en bas.
+   ============================================================================ */
+
+@media (max-width: 640px) {
+  :root {
+    --edge: 0.5rem;
+    --control-h: 2.5rem;
+  }
+
+  /* La barre temps prend la largeur du dock ; les modes passent au-dessus si besoin. */
+  .dock--bottom {
+    left: var(--edge-x);
+    right: var(--edge-x);
+    transform: none;
+    flex-direction: column-reverse;
+    align-items: stretch;
+    max-width: none;
+    gap: var(--sp-2);
+  }
+  .dock-actions {
+    justify-content: space-between;
+  }
+  .mode-seg {
+    flex: 1;
+  }
+  .mode-btn {
+    flex: 1;
+  }
+  .time-bar {
+    width: 100%;
+  }
+
+  /* Chip recherche : garde l'icône, masque son libellé courant pour rester compact. */
+  .chip--search .chip-label--current {
+    display: none;
+  }
+
+  /* Surfaces = feuilles ancrées en bas, largeur pleine, coins hauts arrondis. */
+  .surface {
+    top: auto !important;
+    left: var(--edge-x) !important;
+    right: var(--edge-x) !important;
+    bottom: calc(var(--edge-b) + 2 * var(--control-h) + 2 * var(--sp-2));
+    width: auto !important;
+    max-height: 60vh !important;
+    animation: sheet-in 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  @keyframes sheet-in {
+    from {
+      opacity: 0;
+      transform: translateY(12px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  /* Le scrim s'assombrit sur mobile (les feuilles doivent se détacher du fond). */
+  #surface-scrim:not([hidden]) {
+    background: rgba(0, 0, 0, 0.35);
+  }
+
+  /* backdrop-filter re-rend la scène WebGL à chaque frame — coûteux sur mobile.
+     Les fonds sont assez opaques pour rester lisibles sans flou. */
+  .chip,
+  .tool,
+  .mode-seg,
+  .time-bar,
+  .surface {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+}
+
+/* Hauteur réduite (mobile paysage, fenêtres basses) : la barre temps reste compacte,
+   les surfaces se limitent en hauteur. */
+@media (max-height: 460px) {
+  .surface {
+    max-height: calc(100vh - 2 * var(--edge)) !important;
+  }
+  .dock--top-left,
+  .dock--top-right {
+    top: var(--edge);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .surface,
+  .time-bar-advanced,
+  .tb-live-dot.is-live {
+    animation: none;
+    transition: none;
+  }
+}
+
 /* ============================================================================
    LOADER
    ============================================================================ */
@@ -707,1015 +1711,6 @@ a:focus-visible {
     animation: none;
   }
 }
-
-/* ============================================================================
-   FULLSCREEN (bottom-right)
-   ============================================================================ */
-
-#fullscreen-btn {
-  position: fixed;
-  font-size: 2rem;
-  bottom: 1rem;
-  right: 1rem;
-  padding: 0.4rem;
-  background: rgba(0, 0, 0, 0.45);
-  border: none;
-  color: rgba(255, 255, 255, 0.6);
-  border-radius: 50%;
-  cursor: pointer;
-  z-index: 100;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition:
-    color 0.25s,
-    transform 0.25s;
-}
-
-#fullscreen-btn:hover {
-  color: white;
-  transform: scale(1.1);
-}
-
-/* ============================================================================
-   HELP & CREDITS (bouton « ? » — haut-gauche desktop, coin libre opposé aux FPS)
-   ============================================================================ */
-
-#help-btn {
-  position: fixed;
-  top: 1rem;
-  left: 1rem;
-  width: 2rem;
-  height: 2rem;
-  padding: 0;
-  font-size: 1.15rem;
-  font-weight: 700;
-  line-height: 1;
-  background: var(--overlay-control-bg);
-  border: 1px solid var(--overlay-control-border);
-  color: rgba(200, 220, 255, 0.7);
-  border-radius: 50%;
-  cursor: pointer;
-  z-index: 100;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  backdrop-filter: var(--overlay-blur);
-  box-shadow: var(--overlay-shadow);
-  transition:
-    color 0.25s,
-    border-color 0.25s,
-    transform 0.25s;
-}
-
-#help-btn:hover {
-  color: #fff;
-  border-color: rgba(120, 180, 255, 0.6);
-  transform: scale(1.1);
-}
-
-#help-popover {
-  position: fixed;
-  top: 3.4rem;
-  left: 1rem;
-  z-index: 101;
-  max-width: min(20rem, calc(100vw - 2rem));
-  padding: 0.9rem 1.05rem;
-  background: var(--overlay-surface);
-  border-color: var(--overlay-border);
-  border-radius: var(--overlay-radius);
-  backdrop-filter: var(--overlay-blur);
-  box-shadow: var(--overlay-shadow);
-  color: var(--overlay-text);
-  font-size: 0.8rem;
-  line-height: 1.45;
-}
-#help-popover[hidden] {
-  display: none;
-}
-
-/* Sélecteur de langue : deux segments EN | FR alignés à droite, au-dessus des astuces. */
-#lang-switch {
-  display: flex;
-  justify-content: flex-end;
-  gap: 0.25rem;
-  margin: 0 0 0.7rem;
-}
-
-.lang-btn {
-  padding: 0.1rem 0.5rem;
-  border-radius: 0.4rem;
-  background: rgba(120, 170, 255, 0.1);
-  border: 1px solid rgba(120, 170, 255, 0.24);
-  color: rgba(190, 215, 255, 0.85);
-  font: inherit;
-  font-size: 0.66rem;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  cursor: pointer;
-  transition:
-    background 0.15s ease,
-    color 0.15s ease;
-}
-
-.lang-btn:hover {
-  background: rgba(120, 170, 255, 0.2);
-}
-
-.lang-btn.is-active {
-  background: rgba(74, 143, 255, 0.4);
-  border-color: rgba(120, 170, 255, 0.7);
-  color: #fff;
-}
-
-.help-title {
-  margin: 0 0 0.5rem;
-  font-size: clamp(0.52rem, 2.2vw, 0.62rem);
-  font-weight: 700;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: rgba(140, 180, 255, 0.7);
-}
-
-.help-tips {
-  margin: 0;
-  padding: 0;
-  list-style: none;
-  display: grid;
-  gap: 0.32rem;
-}
-
-.help-tips li {
-  color: rgba(210, 225, 255, 0.78);
-  line-height: 1.35;
-}
-
-.help-key {
-  display: inline-block;
-  margin-right: 0.35rem;
-  padding: 0.05rem 0.4rem;
-  border-radius: 0.35rem;
-  background: rgba(120, 170, 255, 0.14);
-  border: 1px solid rgba(120, 170, 255, 0.28);
-  color: rgba(190, 215, 255, 0.95);
-  font-size: 0.72rem;
-  font-weight: 600;
-  white-space: nowrap;
-}
-
-.help-credits {
-  margin-top: 0.85rem;
-  padding-top: 0.7rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
-  font-size: 0.72rem;
-}
-
-.credits-copy {
-  margin: 0 0 0.5rem;
-  color: rgba(255, 255, 255, 0.5);
-}
-
-.credits-list {
-  display: grid;
-  grid-template-columns: auto 1fr;
-  gap: 0.15rem 0.6rem;
-  margin: 0;
-}
-
-.credits-list dt {
-  color: rgba(255, 255, 255, 0.4);
-}
-
-.credits-list dd {
-  margin: 0;
-}
-
-#help-popover a {
-  color: rgba(120, 170, 255, 0.95);
-  text-decoration: none;
-}
-
-#help-popover a:hover {
-  text-decoration: underline;
-}
-
-.credits-donate {
-  display: inline-block;
-  margin-top: 0.75rem;
-  padding: 0.35rem 0.75rem;
-  border-radius: 999px;
-  background: rgba(74, 143, 255, 0.18);
-  border: 1px solid rgba(74, 143, 255, 0.5);
-  color: rgba(180, 210, 255, 1) !important;
-  font-weight: 600;
-}
-
-/* ============================================================================
-   TIME PANEL (bottom-center)
-   ============================================================================ */
-
-#time-panel {
-  position: fixed;
-  bottom: var(--overlay-edge);
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 100;
-  min-width: 13rem;
-
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-
-  background: var(--overlay-surface);
-  border-color: var(--overlay-border);
-  border-radius: var(--overlay-radius);
-  backdrop-filter: var(--overlay-blur);
-  box-shadow:
-    var(--overlay-shadow),
-    inset 0 1px 0 rgba(255, 255, 255, 0.05);
-  overflow: hidden;
-
-  --accent: 74, 143, 255;
-  --green: 80, 200, 110;
-}
-
-/* ── Poignée de repli : masque la partie supérieure (lecture/vitesse) → vue simplifiée ── */
-
-/* Même thème que les boutons de ciblage (rappel visuel commun aux replis). */
-#time-collapse {
-  align-self: center;
-  width: 2.8rem;
-  height: 1.05rem;
-  margin-top: 0.25rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0;
-  background: rgba(0, 0, 0, 0.65);
-  border: 1px solid rgba(255, 255, 255, 0.22);
-  border-top: none;
-  border-radius: 0 0 0.5rem 0.5rem;
-  color: rgba(200, 220, 255, 0.85);
-  cursor: pointer;
-  transition:
-    background 0.2s,
-    border-color 0.2s,
-    color 0.2s;
-}
-#time-collapse:hover {
-  background: rgba(100, 150, 255, 0.16);
-  border-color: rgba(100, 150, 255, 0.6);
-  color: #fff;
-}
-#time-collapse svg {
-  transition: transform 0.3s ease;
-}
-/* Simplifié : le chevron s'inverse et la ligne lecture/vitesse disparaît. */
-#time-panel.is-simplified #time-collapse svg {
-  transform: rotate(180deg);
-}
-#time-panel.is-simplified #playback-row {
-  display: none;
-}
-
-/* ── Ligne 1 : play/pause | vitesse (centrée) | reset ───────────────────── */
-
-#playback-row {
-  display: flex;
-  align-items: center;
-  gap: 0.3rem;
-  padding: 0.1rem 0.5rem 0.3rem;
-}
-
-.tp-flex1 {
-  flex: 1;
-}
-
-/* ── Panneau date/heure (toujours visible, slide vers le bas) ───────────────── */
-
-#datetime-panel {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-
-  max-height: 0;
-  overflow: hidden;
-  opacity: 0;
-  border-top: 1px solid transparent;
-  transition:
-    max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1),
-    opacity 0.3s ease,
-    border-color 0.3s ease;
-}
-
-#datetime-panel.is-open {
-  max-height: 5rem;
-  opacity: 1;
-  border-top-color: rgba(255, 255, 255, 0.06);
-}
-
-/* ── Ligne horloge ───────────────────────────────────────────────────────── */
-
-#clock-row {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.3rem;
-  padding: 0.4rem 0.9rem 0.08rem;
-}
-
-/* ── Input time : affichage ET édition ───────────────────────────────────── */
-
-.tp-clock-input {
-  color-scheme: dark;
-  background: transparent;
-  border: none;
-  outline: none;
-  font-family: 'SF Mono', 'Cascadia Code', 'Fira Mono', monospace;
-  font-size: 1.25rem;
-  font-weight: 300;
-  letter-spacing: 0.04em;
-  color: rgba(215, 232, 255, 0.96);
-  cursor: pointer;
-  padding: 0.03rem 0.2rem;
-  border-radius: 0.4rem;
-  transition: background 0.15s;
-}
-
-/* Masque l'icône native — tout le champ est cliquable */
-.tp-clock-input::-webkit-calendar-picker-indicator {
-  display: none;
-}
-
-.tp-clock-input:hover:not(:focus) {
-  background: rgba(var(--accent), 0.09);
-}
-.tp-clock-input:focus {
-  background: rgba(var(--accent), 0.12);
-  outline: none;
-}
-
-/* ── Tick animation (déclenché à chaque changement de seconde) ───────────── */
-
-@keyframes clock-tick {
-  0% {
-    box-shadow: 0 0 0 1.5px rgba(var(--accent), 0.4);
-  }
-  100% {
-    box-shadow: 0 0 0 0 rgba(var(--accent), 0);
-  }
-}
-
-.tp-clock-input.is-ticking {
-  animation: clock-tick 0.5s ease-out;
-}
-
-/* ── Label UTC ───────────────────────────────────────────────────────────── */
-
-.disp-utc {
-  font-size: 0.47rem;
-  font-family: sans-serif;
-  letter-spacing: 0.15em;
-  font-weight: 700;
-  color: rgba(255, 255, 255, 0.18);
-  align-self: flex-end;
-  padding-bottom: 0.25rem;
-  user-select: none;
-}
-
-/* ── Ligne date ──────────────────────────────────────────────────────────── */
-
-#calendar-row {
-  display: flex;
-  justify-content: center;
-  padding: 0.04rem 0.9rem 0.38rem;
-}
-
-/* ── Input date : affichage ET édition ───────────────────────────────────── */
-
-.tp-date-input {
-  color-scheme: dark;
-  background: transparent;
-  border: none;
-  outline: none;
-  font-family: 'SF Mono', 'Cascadia Code', 'Fira Mono', monospace;
-  font-size: 0.65rem;
-  font-weight: 500;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: rgba(150, 180, 225, 0.5);
-  cursor: pointer;
-  padding: 0.06rem 0.35rem;
-  border-radius: 0.3rem;
-  transition:
-    background 0.15s,
-    color 0.15s;
-}
-
-.tp-date-input::-webkit-calendar-picker-indicator {
-  display: none;
-}
-
-.tp-date-input:hover:not(:focus) {
-  background: rgba(var(--accent), 0.08);
-  color: rgba(150, 180, 225, 0.85);
-}
-
-.tp-date-input:focus {
-  background: rgba(var(--accent), 0.1);
-  outline: none;
-}
-
-/* ── Animation quand la date change (rare → plus prononcée) ──────────────── */
-
-@keyframes date-pop {
-  0% {
-    color: rgba(var(--accent), 0.9);
-    letter-spacing: 0.2em;
-  }
-  100% {
-    color: rgba(150, 180, 225, 0.55);
-    letter-spacing: 0.14em;
-  }
-}
-
-.tp-date-input.is-ticking {
-  animation: date-pop 0.55s ease-out;
-}
-
-/* ── Dot "temps réel" ────────────────────────────────────────────────────── */
-
-.tp-live-dot {
-  width: 0.38rem;
-  height: 0.38rem;
-  border-radius: 50%;
-  flex-shrink: 0;
-  background: rgba(var(--green), 0.8);
-  opacity: 0;
-  transition:
-    opacity 0.3s,
-    background 0.4s;
-}
-
-.tp-live-dot.is-live {
-  opacity: 1;
-  animation: tp-pulse 2s ease-in-out infinite;
-}
-
-.tp-live-dot.is-off-time {
-  opacity: 0.45;
-  background: rgba(160, 160, 170, 0.5);
-  animation: none;
-}
-
-@keyframes tp-pulse {
-  0%,
-  100% {
-    opacity: 0.9;
-    transform: scale(1);
-  }
-  50% {
-    opacity: 0.2;
-    transform: scale(0.55);
-  }
-}
-
-/* ── Shared button base ───────────────────────────────────────────────────── */
-
-.tp-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: none;
-  cursor: pointer;
-  color: white;
-  font-family: inherit;
-  line-height: 1;
-  transition:
-    background 0.15s ease,
-    color 0.15s ease;
-  background: transparent;
-}
-
-/* ── Play / Pause ─────────────────────────────────────────────────────────── */
-
-.tp-play {
-  width: 1.8rem;
-  height: 1.8rem;
-  flex-shrink: 0;
-  border-radius: 50%;
-  background: rgba(var(--accent), 0.12);
-  border: 1px solid rgba(var(--accent), 0.3) !important;
-  color: rgba(var(--accent), 0.9);
-}
-
-.tp-play svg {
-  width: 9px;
-  height: 10px;
-}
-
-.tp-play:hover {
-  background: rgba(var(--accent), 0.24);
-  color: rgba(180, 210, 255, 1);
-}
-
-.tp-play.is-paused {
-  background: rgba(220, 70, 70, 0.1);
-  border-color: rgba(255, 100, 100, 0.3) !important;
-  color: rgba(255, 120, 120, 0.92);
-}
-
-.tp-play.is-paused:hover {
-  background: rgba(220, 70, 70, 0.22);
-  color: rgba(255, 170, 170, 1);
-}
-
-/* ── Speed — segmented control ────────────────────────────────────────────── */
-
-.speed-group {
-  display: flex;
-  gap: 0;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.09);
-  border-radius: 0.45rem;
-  overflow: hidden;
-}
-
-.tp-speed {
-  padding: 0 0.65rem;
-  height: 1.8rem;
-  font-size: 0.7rem;
-  font-weight: 700;
-  letter-spacing: 0.03em;
-  color: rgba(255, 255, 255, 0.32);
-  background: transparent;
-  border-right: 1px solid rgba(255, 255, 255, 0.08) !important;
-  white-space: nowrap;
-}
-
-.tp-speed:last-child {
-  border-right: none !important;
-}
-
-.tp-speed:hover:not(.is-active) {
-  background: rgba(255, 255, 255, 0.07);
-  color: rgba(255, 255, 255, 0.7);
-}
-
-.tp-speed.is-active {
-  background: rgba(var(--accent), 0.22);
-  color: rgba(160, 200, 255, 1);
-}
-
-/* Bouton "Réel" actif → teinté vert (correspond au dot live, tous modes) */
-.tp-speed.is-simutime.is-active {
-  background: rgba(var(--green), 0.18);
-  color: rgba(120, 255, 150, 1);
-}
-
-/* ── Reset inline (à droite de la playback row) ──────────────────────────── */
-
-.tp-reset-inline {
-  width: 1.8rem;
-  height: 1.8rem;
-  flex-shrink: 0;
-  border-radius: 50%;
-  font-size: 0.85rem;
-  color: rgba(var(--green), 0.6);
-  background: rgba(var(--green), 0.06);
-  border: 1px solid rgba(var(--green), 0.18) !important;
-  transition:
-    background 0.15s,
-    color 0.15s;
-}
-
-.tp-reset-inline:hover {
-  background: rgba(var(--green), 0.18);
-  color: rgba(130, 255, 160, 0.95);
-}
-
-/* ============================================================================
-   MOBILE
-   ============================================================================ */
-
-@media (max-width: 640px) {
-  :root {
-    --overlay-edge: 0.5rem;
-    --overlay-top: 4.25rem;
-  }
-
-  /* Nav planètes : coins haut libres sur mobile (? en bas, FPS masqué) → pleine largeur.
-     Le défilement tactile suffit → flèches masquées ; poignée tiroir conservée. */
-  .controls {
-    left: 0;
-    right: 0;
-    padding: 0.4rem 0.3rem 0;
-  }
-  .nav-arrow {
-    display: none;
-  }
-  .controls-track {
-    padding: 0.4rem 0.55rem;
-    justify-content: flex-start;
-  }
-
-  .button {
-    font-size: 0.82rem;
-    padding: 0.55rem 0.85rem;
-    min-width: auto;
-  }
-
-  #fullscreen-btn {
-    font-size: 1.9rem;
-  }
-
-  /* Global actions use opposite bottom corners, clear of the centered time panel. */
-  #help-btn {
-    top: auto;
-    left: 0.75rem;
-    bottom: 1.55rem;
-    right: auto;
-  }
-  #help-popover {
-    top: auto;
-    left: 0.75rem;
-    right: 0.75rem;
-    bottom: 4.3rem;
-    max-width: none;
-  }
-
-  /* FPS masqué sur mobile : le coin haut-droit est occupé par la navigation planètes. */
-  #fps-counter {
-    display: none !important;
-  }
-
-  #time-panel {
-    bottom: 0.5rem;
-    min-width: 10rem;
-    max-width: calc(100vw - 1rem);
-  }
-
-  #bottom-controls {
-    left: 0.5rem;
-    right: 0.5rem;
-    bottom: 7.25rem;
-    gap: 0.35rem;
-    --dock-control-height: 3.8rem;
-  }
-
-  #mode-controls {
-    min-width: 0;
-    flex: 1 1 auto;
-  }
-  .mode-btn {
-    padding: 0.32rem 0.65rem;
-    font-size: 0.7rem;
-  }
-
-  #playback-row {
-    padding: 0.18rem 0.35rem;
-    gap: 0.2rem;
-    min-width: 0;
-  }
-
-  .speed-group {
-    max-width: calc(100vw - 6rem);
-    overflow-x: auto;
-    scrollbar-width: none;
-  }
-
-  .speed-group::-webkit-scrollbar {
-    display: none;
-  }
-
-  .tp-play,
-  .tp-reset-inline {
-    width: 1.5rem;
-    height: 1.5rem;
-  }
-
-  .tp-speed {
-    padding: 0 0.45rem;
-    height: 1.5rem;
-    font-size: 0.6rem;
-  }
-
-  .tp-clock-input {
-    font-size: 1.1rem;
-  }
-  .tp-date-input {
-    font-size: 0.6rem;
-  }
-
-  #clock-row {
-    padding: 0.35rem 0.75rem 0.06rem;
-  }
-  #calendar-row {
-    padding: 0.03rem 0.75rem 0.32rem;
-  }
-
-  /* backdrop-filter : chaque panneau visible force le GPU à re-rendre la scène WebGL
-     en fond à chaque frame — coût élevé sur mobile. Les fonds sont assez sombres et
-     opaques pour rester lisibles sans flou. */
-  .button,
-  .mode-seg,
-  #help-btn,
-  #time-panel,
-  #optical-zoom,
-  #events-toggle,
-  #orbit-options,
-  #body-info {
-    backdrop-filter: none;
-    -webkit-backdrop-filter: none;
-  }
-}
-
-/* ============================================================================
-   ORBIT OPTIONS PANEL (left — mode Éducatif uniquement)
-   Header : titre seul. Body : ligne master « Toutes les orbites » puis une ligne
-   par planète naine — toutes avec le même style checkbox. Masqué en Exploration.
-   ============================================================================ */
-
-#orbit-options {
-  --oo-left: 1rem; /* aussi utilisé par le repli (glissement hors écran) */
-  position: fixed;
-  top: var(--overlay-top);
-  left: var(--oo-left);
-  z-index: 90;
-  width: min(13.25rem, calc(100vw - 2rem));
-  padding: 0.6rem 0.7rem 0.65rem;
-  background: var(--overlay-surface);
-  border-color: var(--overlay-border);
-  border-radius: var(--overlay-radius);
-  backdrop-filter: var(--overlay-blur);
-  box-shadow: var(--overlay-shadow);
-  color: var(--overlay-text);
-  font-size: 0.8rem;
-  transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-#orbit-options[hidden] {
-  display: none;
-}
-
-.settings-section {
-  min-width: 0;
-}
-
-.settings-section + .settings-section {
-  margin-top: 0.65rem;
-  padding-top: 0.55rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-.settings-section-title {
-  margin: 0;
-  color: rgba(140, 180, 255, 0.7);
-  font-size: 0.56rem;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-}
-
-.settings-switch {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  align-items: center;
-  gap: 0.55rem;
-  margin-top: 0.4rem;
-  padding: 0.38rem 0.3rem;
-  border: 1px solid rgba(160, 195, 255, 0.12);
-  border-radius: 0.45rem;
-  background: rgba(120, 170, 255, 0.06);
-  cursor: pointer;
-}
-
-.settings-switch:hover {
-  border-color: rgba(120, 170, 255, 0.35);
-  background: rgba(120, 170, 255, 0.1);
-}
-
-.settings-checkbox {
-  margin: 0;
-}
-
-.settings-switch-copy {
-  min-width: 0;
-}
-
-.settings-switch-label {
-  color: rgba(220, 232, 255, 0.9);
-  font-size: 0.72rem;
-  font-weight: 600;
-}
-
-.orbit-picker {
-  margin-top: 0.45rem;
-  border: 1px solid rgba(160, 195, 255, 0.12);
-  border-radius: 0.45rem;
-  background: rgba(120, 170, 255, 0.04);
-  overflow: hidden;
-}
-
-.orbit-picker-summary {
-  position: relative;
-  padding: 0.42rem 1.8rem 0.42rem 0.55rem;
-  color: rgba(190, 215, 255, 0.78);
-  font-size: 0.68rem;
-  font-weight: 600;
-  cursor: pointer;
-  list-style: none;
-}
-
-.orbit-picker-summary::-webkit-details-marker {
-  display: none;
-}
-
-.orbit-picker-summary::after {
-  content: '⌄';
-  position: absolute;
-  right: 0.55rem;
-  top: 50%;
-  color: rgba(160, 195, 255, 0.7);
-  transform: translateY(-55%);
-  transition: transform 0.2s ease;
-}
-
-.orbit-picker[open] .orbit-picker-summary::after {
-  transform: translateY(-45%) rotate(180deg);
-}
-
-.orbit-picker-summary:hover {
-  color: rgba(235, 243, 255, 0.98);
-  background: rgba(120, 170, 255, 0.1);
-}
-
-#orbit-options .orbit-picker .oo-body {
-  max-height: min(42vh, 16rem);
-  margin: 0;
-  padding: 0.35rem 0.45rem 0.45rem;
-  border-top: 1px solid rgba(160, 195, 255, 0.1);
-}
-
-.oo-header {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.oo-title {
-  margin: 0;
-  font-size: clamp(0.52rem, 2.2vw, 0.62rem);
-  font-weight: 700;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: rgba(140, 180, 255, 0.7);
-  flex: 1;
-}
-
-/* Languette de repli — accrochée au bord droit du panneau, centrée verticalement,
-   même thème que la poignée de la nav (rappel visuel commun à tous les replis). */
-.oo-toggle {
-  position: absolute;
-  top: 50%;
-  right: 0;
-  transform: translate(100%, -50%);
-  width: 1.05rem;
-  height: 2.8rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0;
-  background: rgba(0, 0, 0, 0.65);
-  border: 1px solid rgba(255, 255, 255, 0.22);
-  border-left: none;
-  border-radius: 0 0.5rem 0.5rem 0;
-  color: rgba(200, 220, 255, 0.85);
-  cursor: pointer;
-  backdrop-filter: blur(6px);
-  transition:
-    background 0.2s,
-    border-color 0.2s,
-    color 0.2s;
-}
-.oo-toggle:hover {
-  background: rgba(100, 150, 255, 0.16);
-  border-color: rgba(100, 150, 255, 0.6);
-  color: #fff;
-}
-/* Chevron pointé vers la gauche (replier vers l'extérieur) ; vers la droite une fois replié. */
-.oo-toggle svg {
-  transform: rotate(-90deg);
-  transition: transform 0.3s ease;
-}
-#orbit-options.is-collapsed .oo-toggle svg {
-  transform: rotate(90deg);
-}
-/* Replié : le panneau glisse vers l'extérieur (hors écran à gauche) — seule la
-   languette reste visible, collée au bord de l'écran. */
-#orbit-options.is-collapsed {
-  transform: translateX(calc(-100% - var(--oo-left)));
-}
-
-.oo-body {
-  margin-top: 0.55rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.18rem;
-  transition: opacity 0.2s;
-  /* Liste plus longue (planètes + naines) : défilement borné plutôt que déborder l'écran. */
-  max-height: min(58vh, 22rem);
-  overflow-y: auto;
-  scrollbar-width: thin;
-  scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
-}
-
-/* Séparateur entre la ligne master (raccourci) et les corps. */
-.oo-sep {
-  height: 1px;
-  background: rgba(255, 255, 255, 0.08);
-  margin: 0.2rem 0.3rem;
-}
-
-.oo-row {
-  display: flex;
-  align-items: center;
-  gap: 0.55rem;
-  cursor: pointer;
-  padding: 0.22rem 0.3rem;
-  border-radius: 6px;
-  transition: background 0.15s;
-  -webkit-user-select: none;
-  user-select: none;
-}
-
-.oo-row:hover {
-  background: rgba(255, 255, 255, 0.05);
-}
-
-.oo-dot {
-  width: 0.55rem;
-  height: 0.55rem;
-  border-radius: 50%;
-  flex: 0 0 auto;
-  transition: opacity 0.2s;
-}
-
-.oo-row:has(.oo-checkbox:not(:checked)) .oo-dot {
-  opacity: 0.35;
-}
-
-.oo-name {
-  flex: 1;
-  font-size: 0.75rem;
-  color: rgba(210, 225, 255, 0.85);
-  transition: color 0.2s;
-}
-
-.oo-row:has(.oo-checkbox:not(:checked)) .oo-name {
-  color: rgba(210, 225, 255, 0.4);
-}
-
-.oo-checkbox {
-  flex: 0 0 auto;
-  -webkit-appearance: none;
-  appearance: none;
-  width: 1rem;
-  height: 1rem;
-  border: 1px solid rgba(255, 255, 255, 0.28);
-  border-radius: 3px;
-  background: transparent;
-  cursor: pointer;
-  transition:
-    background 0.15s,
-    border-color 0.15s;
-}
-
-.oo-checkbox:checked {
-  background: rgba(74, 143, 255, 0.28);
-  border-color: rgba(120, 170, 255, 0.75);
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 10 10' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M2 5 L4.5 7.5 L8 3' fill='none' stroke='rgba(160%2C200%2C255%2C0.95)' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: center;
-  background-size: 82%;
-}
-
-@media (max-width: 640px) {
-  /* Sur mobile, repositionner le panneau sous la barre de nav (compacte) et
-     limiter sa hauteur pour ne pas masquer les contrôles en bas. */
-  #orbit-options {
-    --oo-left: 0.75rem;
-    top: var(--overlay-top);
-    width: min(11.5rem, calc(100vw - 1.5rem));
-    padding: 0.5rem 0.6rem 0.55rem;
-  }
-  /* Le défilement vit dans .oo-body (un overflow sur le panneau clipperait la
-     languette de repli suspendue sous lui). */
-  #orbit-options .oo-body {
-    max-height: calc(100vh - 15rem);
-  }
-}
-
 /* ── HUD Exploration « Voyage spatial » ───────────────────────────────────── */
 
 /* La distance réelle + temps-lumière de la cible vivent désormais dans la fiche unique
@@ -1915,237 +1910,4 @@ a:focus-visible {
   box-shadow:
     0 2px 10px rgba(0, 0, 0, 0.26),
     inset 2px 0 0 rgba(var(--label-rgb), 0.62);
-}
-/* ============================================================================
-   BODY INFO PANEL (top-right) — fiche d'un corps, ouverte à chaque sélection
-   ============================================================================ */
-#body-info {
-  --planet-rgb: 120, 160, 255; /* écrasé par JS avec la couleur du corps */
-  position: fixed;
-  top: var(--overlay-top);
-  right: 1rem;
-  z-index: 90;
-  width: min(15rem, calc(100vw - 2rem));
-  max-height: calc(100vh - 6rem);
-  overflow-y: auto;
-  padding: 0.8rem 0.9rem 0.9rem;
-  background: rgba(4, 6, 18, 0.85);
-  border: 1px solid rgba(var(--planet-rgb), 0.4);
-  border-radius: 12px;
-  backdrop-filter: blur(20px);
-  box-shadow: 0 4px 32px rgba(0, 0, 0, 0.55);
-  color: rgba(215, 232, 255, 0.9);
-  font-size: 0.8rem;
-  line-height: 1.5;
-  animation: bi-in 0.18s ease-out;
-}
-#body-info[hidden] {
-  display: none;
-}
-
-/* ── Bandeau « héro » : texture de surface du corps derrière l'en-tête ─────────
-   Dégradé sombre par-dessus pour garder le nom lisible, fondu vers le fond du
-   panneau en bas. Masqué quand la fiche est repliée (le bandeau dépasserait). */
-#body-info.has-hero::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 5.4rem;
-  background:
-    linear-gradient(
-      180deg,
-      rgba(4, 6, 18, 0.42) 0%,
-      rgba(4, 6, 18, 0.72) 55%,
-      rgba(4, 6, 18, 1) 100%
-    ),
-    var(--bi-hero) center 38% / cover no-repeat;
-  border-radius: 12px 12px 0 0;
-  pointer-events: none;
-}
-#body-info.is-collapsed::before {
-  display: none;
-}
-/* L'en-tête et le corps passent au-dessus du bandeau. */
-.bi-header,
-.bi-body {
-  position: relative;
-  z-index: 1;
-}
-/* Nom lisible sur la texture. */
-#body-info.has-hero .bi-name {
-  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.85);
-}
-
-/* ── Lien « En savoir plus » — pilule à l'accent du corps ── */
-.bi-more {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.3rem;
-  margin-top: 0.65rem;
-  padding: 0.32rem 0.68rem;
-  font-size: 0.72rem;
-  color: rgba(var(--planet-rgb), 0.95);
-  text-decoration: none;
-  background: rgba(var(--planet-rgb), 0.09);
-  border: 1px solid rgba(var(--planet-rgb), 0.35);
-  border-radius: 0.5rem;
-  transition:
-    background 0.2s,
-    border-color 0.2s;
-}
-.bi-more::after {
-  content: '↗';
-  font-size: 0.8em;
-}
-.bi-more:hover {
-  background: rgba(var(--planet-rgb), 0.2);
-  border-color: rgb(var(--planet-rgb));
-}
-.bi-more[hidden] {
-  display: none;
-}
-
-@keyframes bi-in {
-  from {
-    opacity: 0;
-    transform: translateY(-6px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-/* Flèche de repli : plie la fiche sur son en-tête (remplace l'ancienne croix). */
-.bi-toggle {
-  flex: 0 0 auto;
-  margin-left: auto;
-  width: 1.5rem;
-  height: 1.5rem;
-  border: none;
-  background: transparent;
-  color: rgba(255, 255, 255, 0.5);
-  cursor: pointer;
-  border-radius: 6px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition:
-    color 0.2s,
-    background 0.2s;
-}
-.bi-toggle:hover {
-  color: #fff;
-  background: rgba(255, 255, 255, 0.08);
-}
-.bi-toggle svg {
-  transition: transform 0.25s ease;
-}
-/* Repliée : la flèche pointe vers le haut (chevron retourné) et le corps est masqué. */
-#body-info.is-collapsed .bi-toggle svg {
-  transform: rotate(180deg);
-}
-#body-info.is-collapsed .bi-body {
-  display: none;
-}
-
-.bi-header {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  margin: 0;
-}
-
-/* ── Bloc live (Explo) : distance réelle + temps-lumière de la cible ── */
-.bi-live {
-  margin: 0.7rem 0 0.2rem;
-  padding: 0.5rem 0.65rem;
-  border-radius: 8px;
-  background: rgba(var(--planet-rgb), 0.1);
-  border: 1px solid rgba(var(--planet-rgb), 0.25);
-  display: grid;
-  gap: 0.1rem;
-}
-.bi-live[hidden] {
-  display: none;
-}
-.bi-live-label {
-  font-size: 0.6rem;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: rgba(var(--planet-rgb), 0.85);
-}
-.bi-live-dist {
-  font-size: 0.9rem;
-  font-weight: 600;
-  color: #eaf3ff;
-  font-variant-numeric: tabular-nums;
-}
-.bi-live-lt {
-  font-size: 0.7rem;
-  color: rgba(200, 220, 255, 0.7);
-  font-variant-numeric: tabular-nums;
-}
-.bi-dot {
-  width: 0.7rem;
-  height: 0.7rem;
-  border-radius: 50%;
-  flex: 0 0 auto;
-  box-shadow: 0 0 10px rgba(var(--planet-rgb), 0.85);
-}
-.bi-name {
-  margin: 0;
-  font-size: 1.15rem;
-  font-weight: 600;
-  color: #fff;
-}
-.bi-subtitle {
-  margin: 0.1rem 0 0.8rem;
-  font-size: 0.72rem;
-  color: rgba(var(--planet-rgb), 0.95);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
-.bi-stats {
-  display: grid;
-  grid-template-columns: auto 1fr;
-  gap: 0.32rem 0.75rem;
-  margin: 0;
-}
-.bi-stats dt {
-  color: rgba(255, 255, 255, 0.45);
-}
-.bi-stats dd {
-  margin: 0;
-  text-align: right;
-  font-variant-numeric: tabular-nums;
-  color: rgba(235, 244, 255, 0.95);
-}
-.bi-desc {
-  margin: 0.85rem 0 0;
-  padding-top: 0.75rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
-  font-size: 0.78rem;
-  line-height: 1.5;
-  color: rgba(210, 225, 255, 0.75);
-}
-.bi-desc[hidden] {
-  display: none;
-}
-
-@media (max-width: 640px) {
-  /* Sous la barre de navigation (haut) plutôt qu'en bas, déjà occupé par mode + temps.
-     max-height réduit (55 → 38 vh) : la fiche ne doit pas couvrir plus du tiers de l'écran ;
-     démarre repliée via bodyInfo.ts (window.innerWidth ≤ 640). */
-  #body-info {
-    top: var(--overlay-top);
-    right: 0.25rem;
-    left: 0.25rem;
-    width: auto;
-    max-height: 38vh;
-    padding: 0.65rem 0.8rem 0.8rem;
-    font-size: 0.75rem;
-  }
 }

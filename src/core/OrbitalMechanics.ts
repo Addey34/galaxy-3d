@@ -20,7 +20,7 @@ import type { CelestialBodies } from '@/components/systems/SceneSystem';
 import type { SimulationClock } from './SimulationClock';
 import type { EphemerisService } from './EphemerisService';
 import type { OrbitalElementsService } from './OrbitalElementsService';
-import type { HorizonsEphemerisService } from './HorizonsEphemerisService';
+import type { PreciseEphemerisProvider } from './PreciseEphemerisProvider';
 import { ScaleService, SQRT_K } from './ScaleService';
 import { forEachBody } from '@/config/catalog';
 
@@ -37,6 +37,45 @@ const MS_PER_DAY = 86_400_000;
 
 /** Marge visuelle minimale entre un parent et ses satellites en mode éducatif. */
 export const EDUCATIVE_PARENT_GAP = 0.12;
+
+/**
+ * Les éléments orbitaux relatifs servent aussi de borne de cohérence pour une source précise.
+ * Une éphéméride enfant-parent valide ne peut pas s'éloigner durablement de son orbite publiée.
+ * Cette vérification protège notamment les anciens fichiers Horizons générés avec le Soleil
+ * comme centre, puis interprétés à tort comme des vecteurs parent-relative.
+ */
+const RELATIVE_EPHEMERIS_TOLERANCE = 2;
+const HELIOCENTRIC_DISTANCE_MIN_FACTOR = 0.5;
+const HELIOCENTRIC_DISTANCE_MAX_FACTOR = 2;
+
+function isPlausibleRelativePosition(
+  position: THREE.Vector3,
+  cfg: CelestialBodyConfig
+): boolean {
+  const elements = cfg.relativeOrbitalElements;
+  if (!elements) return true;
+  const maxDistanceAU = elements.semiMajorAxisAU * (1 + elements.eccentricity);
+  return position.length() <= maxDistanceAU * RELATIVE_EPHEMERIS_TOLERANCE;
+}
+
+/**
+ * Vérifie qu'une position précise reste à la distance attendue du Soleil. Les fichiers
+ * Horizons optionnels peuvent être absents, obsolètes ou avoir été générés avec un mauvais
+ * centre ; dans ce cas, Astronomy Engine/Kepler fournit une trajectoire cohérente plutôt
+ * qu'une orbite visuelle épaissie par des points provenant de plusieurs rayons.
+ */
+function isPlausibleHeliocentricPosition(
+  position: THREE.Vector3,
+  cfg: CelestialBodyConfig
+): boolean {
+  const expectedDistanceAU = cfg.realData?.distanceAU;
+  if (!expectedDistanceAU || expectedDistanceAU <= 0) return true;
+  const distanceAU = position.length();
+  return (
+    distanceAU >= expectedDistanceAU * HELIOCENTRIC_DISTANCE_MIN_FACTOR &&
+    distanceAU <= expectedDistanceAU * HELIOCENTRIC_DISTANCE_MAX_FACTOR
+  );
+}
 
 /**
  * Échelle commune des orbites parentRelative d'un même parent.
@@ -101,7 +140,7 @@ export class OrbitalMechanics {
     private readonly clock: SimulationClock,
     private readonly ephemeris: EphemerisService,
     private readonly elements: OrbitalElementsService,
-    private readonly horizons: HorizonsEphemerisService,
+    private readonly horizons: PreciseEphemerisProvider,
     private readonly config: CelestialConfig,
     private bodies: CelestialBodies
   ) {
@@ -184,12 +223,35 @@ export class OrbitalMechanics {
     cfg: CelestialBodyConfig,
     date: Date
   ): THREE.Vector3 | null {
-    // Les vecteurs numériques Horizons sont prioritaires lorsqu'ils couvrent ce corps et
-    // cette date. Les deux modes consomment ensuite exactement cette même position source.
-    const precisePosition = this.horizons.getHeliocentricAU(name, date);
-    if (precisePosition) return precisePosition;
+    // Un corps imbriqué doit rester dans le repère local de son parent. Cette branche doit
+    // précéder toute lecture héliocentrique : un fichier SPK peut aussi exposer la position
+    // lune→Soleil, mais l'utiliser ici sous le groupe Terre/Jupiter appliquerait le parent
+    // deux fois et fausserait distance, position et ligne d'orbite dans les deux modes.
+    if (cfg.frame === 'parentRelative') {
+      const parentName = this._parentName?.get(name);
+      const preciseRelative = parentName
+        ? this.horizons.getParentRelativeAU(name, parentName, date)
+        : null;
+      if (
+        preciseRelative &&
+        isPlausibleRelativePosition(preciseRelative, cfg)
+      ) {
+        return preciseRelative;
+      }
+    } else {
+      // Les vecteurs numériques Horizons/SPK sont prioritaires lorsqu'ils couvrent ce corps
+      // et cette date. Les deux modes consomment ensuite exactement la même position source.
+      const precisePosition = this.horizons.getHeliocentricAU(name, date);
+      if (
+        precisePosition &&
+        isPlausibleHeliocentricPosition(precisePosition, cfg)
+      ) {
+        return precisePosition;
+      }
+    }
 
-    if (cfg.relativeEphemeris) {
+    if (cfg.relativeEphemeris?.kind === 'jupiterMoon') {
+      // astronomy-engine fournit directement les vecteurs relatifs aux lunes joviennes.
       return this.ephemeris.getJupiterMoonRelativeAU(
         cfg.relativeEphemeris.moon,
         date
@@ -211,6 +273,9 @@ export class OrbitalMechanics {
         cfg.positionBody ?? cfg.astroBody,
         date
       );
+    }
+    if (cfg.relativeOrbitalElements) {
+      return this.elements.getHeliocentricAU(cfg.relativeOrbitalElements, date);
     }
     if (cfg.orbitalElements) {
       return this.elements.getHeliocentricAU(cfg.orbitalElements, date);

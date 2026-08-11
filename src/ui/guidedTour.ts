@@ -13,7 +13,7 @@ const STEPS: Array<
   Pick<TourStep, 'target'> & { titleKey: string; textKey: string }
 > = [
   {
-    target: '.controls',
+    target: '.dock--top-left',
     titleKey: 'tour.step.navigation.title',
     textKey: 'tour.step.navigation.text',
   },

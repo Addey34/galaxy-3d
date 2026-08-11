@@ -19,6 +19,11 @@ export function applyStaticI18n(root: ParentNode = document): void {
   root.querySelectorAll<HTMLElement>('[data-i18n-aria]').forEach((el) => {
     el.setAttribute('aria-label', t(el.dataset.i18nAria!));
   });
+  root
+    .querySelectorAll<HTMLInputElement>('[data-i18n-placeholder]')
+    .forEach((el) => {
+      el.placeholder = t(el.dataset.i18nPlaceholder!);
+    });
 }
 
 /**

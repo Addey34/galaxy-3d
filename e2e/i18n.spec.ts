@@ -21,10 +21,11 @@ test('switches UI language live and persists the choice', async ({ page }) => {
   await expect(page.locator('#loader')).toBeHidden({ timeout: 30_000 });
 
   // Contexte navigateur en anglais par défaut → l'UI démarre en anglais.
-  const overview = page.locator('#orbit-overview');
+  const overview = page.locator('#orbit-overview .chip-label');
   await expect(overview).toHaveText('Overview');
 
   // Fiche d'info d'un corps : nom + sous-titre en anglais.
+  await page.locator('#body-search-trigger').click();
   await page.locator('#orbit-earth').click();
   const panel = page.locator('#body-info');
   await expect(panel).toBeVisible();
@@ -45,5 +46,7 @@ test('switches UI language live and persists the choice', async ({ page }) => {
   // `domcontentloaded` plutôt que `load` : la boucle rAF + le streaming de textures
   // gardent des requêtes en vol, l'événement `load` peut tarder au-delà du timeout.
   await page.reload({ waitUntil: 'domcontentloaded' });
-  await expect(page.locator('#orbit-overview')).toHaveText('Vue globale');
+  await expect(page.locator('#orbit-overview .chip-label')).toHaveText(
+    'Vue globale'
+  );
 });

@@ -13,7 +13,7 @@ test('opens upcoming astronomical events and jumps the simulation to one', async
   await page.goto('/');
   await expect(page.locator('#loader')).toBeHidden({ timeout: 30_000 });
 
-  const toggle = page.locator('#events-toggle');
+  const toggle = page.locator('#events-trigger');
   await expect(toggle).toBeVisible();
   await toggle.click();
 

@@ -30,7 +30,8 @@ export class FPSCounter {
       pointerEvents: 'none',
       zIndex: '100',
     });
-    document.body.appendChild(element);
+    const host = document.getElementById('utility-controls') ?? document.body;
+    host.appendChild(element);
     this.fpsCounter = element;
   }
 

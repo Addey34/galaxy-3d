@@ -13,6 +13,8 @@ export default tseslint.config(
       'node_modules/**',
       'playwright-report/**',
       'test-results/**',
+      // Harnais de capture d'écran jetable (contexte navigateur Playwright).
+      'scripts/ui-audit.mjs',
     ],
   },
   js.configs.recommended,

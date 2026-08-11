@@ -30,6 +30,7 @@ import { ExploHud } from './ui/exploHud';
 import { SmallBodyOverlay } from './ui/smallBodyOverlay';
 import { setupBodyPicker } from './ui/bodyPicker';
 import { setupOrbitOptions } from './ui/orbitOptions';
+import { setupOverlayCoordinator } from './ui/overlayCoordinator';
 import { fetchSmallBodies } from './core/sbdb';
 import { CELESTIAL_CONFIG } from './config/bodies';
 import { flattenBodies } from './config/catalog';
@@ -39,8 +40,33 @@ import { flattenBodies } from './config/catalog';
 initStaticI18n();
 setupLangSwitch();
 setupFullscreen();
-setupHelp();
+const overlayCoordinator = setupOverlayCoordinator();
+setupHelp(overlayCoordinator);
 const guidedTour = setupGuidedTour();
+
+// Fermeture au clic extérieur d'une surface contextuelle.
+//   - Mobile : le scrim est une couche tactile plein écran (tap hors feuille = fermer).
+//   - Desktop : le scrim est volontairement transparent aux évènements (il ne doit pas
+//     bloquer la molette/rotation sur la scène) ; on capte donc le clic extérieur au niveau
+//     du document, en ignorant les clics dans une surface ou sur un déclencheur du dock.
+const surfaceScrim = document.getElementById('surface-scrim');
+if (surfaceScrim) {
+  overlayCoordinator.onOpen((id) => {
+    surfaceScrim.hidden = id === null;
+  });
+  // Couche tactile mobile.
+  surfaceScrim.addEventListener('click', () => overlayCoordinator.closeAll());
+
+  // Clic extérieur desktop : seul un clic DANS LA SCÈNE (canvas WebGL) ferme la surface
+  // ouverte. Les autres docks (modes, temps, plein écran) laissent la surface en place —
+  // basculer de mode ou lire l'heure ne doit pas refermer la fiche ou les réglages. Les
+  // déclencheurs gèrent eux-mêmes leur bascule. `pointerdown` pour devancer le focus.
+  document.addEventListener('pointerdown', (event) => {
+    if (surfaceScrim.hidden) return; // aucune surface ouverte
+    const target = event.target as HTMLElement;
+    if (target.tagName === 'CANVAS') overlayCoordinator.closeAll();
+  });
+}
 
 (async function loadApp(): Promise<void> {
   try {
@@ -53,16 +79,25 @@ const guidedTour = setupGuidedTour();
     // Fiche d'info par corps : s'ouvre pour toute sélection (barre, clic 3D, label Explo),
     // se ferme sur retour Vue Globale. Toutes les sources passent par planetNav.selectBody.
     let syncPermalink = (): void => undefined;
-    const bodyInfo = setupBodyInfo();
-    const planetNav = setupPlanetControls(cameraSystem, (name) => {
-      if (name === 'overview') bodyInfo.hide();
-      else bodyInfo.show(name);
-      syncPermalink();
-    });
+    const bodyInfo = setupBodyInfo(overlayCoordinator);
+    const planetNav = setupPlanetControls(
+      cameraSystem,
+      (name) => {
+        if (name === 'overview') bodyInfo.hide();
+        else bodyInfo.show(name);
+        syncPermalink();
+      },
+      overlayCoordinator
+    );
     const playback = setupPlayback(animationSystem, orbitalMechanics);
-    setupTimePanel(orbitalMechanics, playback, () => {
-      syncPermalink();
-    });
+    setupTimePanel(
+      orbitalMechanics,
+      playback,
+      () => {
+        syncPermalink();
+      },
+      overlayCoordinator
+    );
 
     // Clic 3D : sélectionner un corps en cliquant son mesh (surtout en Éducatif), via la
     // même commande de navigation partagée que la barre et les labels.
@@ -94,8 +129,10 @@ const guidedTour = setupGuidedTour();
     );
     exploHud.setMode('educ');
     exploHud.setActive(true);
-    setupOrbitOptions(sceneSystem, (visible) =>
-      exploHud.setLabelsVisible(visible)
+    setupOrbitOptions(
+      sceneSystem,
+      (visible) => exploHud.setLabelsVisible(visible),
+      overlayCoordinator
     );
 
     // Champ de masse des petits corps (SBDB) — couche instrument 2D, chargée en tâche de
@@ -142,7 +179,11 @@ const guidedTour = setupGuidedTour();
     );
     syncPermalink = permalink.sync;
     permalink.applyInitialState();
-    setupAstronomicalEvents(orbitalMechanics, () => syncPermalink());
+    setupAstronomicalEvents(
+      orbitalMechanics,
+      () => syncPermalink(),
+      overlayCoordinator
+    );
     hideLoader();
     guidedTour.startIfFirstVisit();
   } catch (err) {

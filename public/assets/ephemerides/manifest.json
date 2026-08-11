@@ -1,7 +1,7 @@
 {
   "version": 1,
   "source": "NASA/JPL Horizons",
-  "generatedAt": "2026-07-22T23:37:54.765Z",
+  "generatedAt": "2026-08-09T09:48:21.535Z",
   "frame": "ECLIPTIC_J2000",
   "center": "SUN",
   "units": "AU-D",
@@ -34,6 +34,90 @@
     "makemake": {
       "file": "makemake.a93dd209df6a.bin",
       "target": "136472;",
+      "startJdTdb": 2415020.5,
+      "stepDays": 4,
+      "sampleCount": 18354
+    },
+    "saturn": {
+      "file": "saturn.9c6cec2efd04.bin",
+      "target": "699;",
+      "startJdTdb": 2415020.5,
+      "stepDays": 4,
+      "sampleCount": 18354
+    },
+    "enceladus": {
+      "file": "enceladus.71b7d2862321.bin",
+      "target": "602;",
+      "startJdTdb": 2415020.5,
+      "stepDays": 4,
+      "sampleCount": 18354
+    },
+    "rhea": {
+      "file": "rhea.ec4b81a2e45e.bin",
+      "target": "605;",
+      "startJdTdb": 2415020.5,
+      "stepDays": 4,
+      "sampleCount": 18354
+    },
+    "titan": {
+      "file": "titan.92b604920637.bin",
+      "target": "606;",
+      "startJdTdb": 2415020.5,
+      "stepDays": 4,
+      "sampleCount": 18354
+    },
+    "iapetus": {
+      "file": "iapetus.39f24bbcb11a.bin",
+      "target": "608;",
+      "startJdTdb": 2415020.5,
+      "stepDays": 4,
+      "sampleCount": 18354
+    },
+    "mars": {
+      "file": "mars.4e2021784480.bin",
+      "target": "499;",
+      "startJdTdb": 2415020.5,
+      "stepDays": 4,
+      "sampleCount": 18354
+    },
+    "phobos": {
+      "file": "phobos.7ef169291ef7.bin",
+      "target": "401;",
+      "startJdTdb": 2415020.5,
+      "stepDays": 4,
+      "sampleCount": 18354
+    },
+    "deimos": {
+      "file": "deimos.4585a6ea5932.bin",
+      "target": "402;",
+      "startJdTdb": 2415020.5,
+      "stepDays": 4,
+      "sampleCount": 18354
+    },
+    "neptune": {
+      "file": "neptune.018526b57b6c.bin",
+      "target": "899;",
+      "startJdTdb": 2415020.5,
+      "stepDays": 4,
+      "sampleCount": 18354
+    },
+    "triton": {
+      "file": "triton.7f716e983b18.bin",
+      "target": "801;",
+      "startJdTdb": 2415020.5,
+      "stepDays": 4,
+      "sampleCount": 18354
+    },
+    "pluto": {
+      "file": "pluto.67e59efa4418.bin",
+      "target": "999;",
+      "startJdTdb": 2415020.5,
+      "stepDays": 4,
+      "sampleCount": 18354
+    },
+    "charon": {
+      "file": "charon.0ca123ca39c4.bin",
+      "target": "901;",
       "startJdTdb": 2415020.5,
       "stepDays": 4,
       "sampleCount": 18354

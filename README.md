@@ -6,8 +6,7 @@ Visualisateur interactif du système solaire en temps réel, développé en Type
 
 ## Aperçu
 
-- Positions planétaires calculées via `astronomy-engine`, complétées par des vecteurs NASA/JPL
-  Horizons pour Cérès, Éris, Hauméa et Makémaké (1900–2100, interpolation position-vitesse)
+- Positions planetaires calculees via astronomy-engine, completees par des vecteurs NASA/JPL Horizons locaux pour Ceres, Eris, Haumea, Makemake, Saturne et ses lunes, Mars et ses lunes, Neptune/Triton et Pluto/Charon (1900-2100, interpolation position-vitesse)
 - Time travel : naviguer librement dans le temps passé et futur
 - Planètes multi-couches : surface PBR, nuages, atmosphère, lueurs nocturnes (shader GLSL)
 - LOD automatique : résolution de texture adaptée à la distance caméra (1k → 8k)
@@ -75,41 +74,33 @@ Les textures sont incluses dans le dépôt, sous `public/assets/textures/`, orga
 ```
 public/assets/textures/
 ├── stars/
-│   └── starsSurface_8k.jpg
+│   └── stars_surface_8k.jpg       (+ _4k, _2k, _1k)
 ├── sun/
-│   └── sunSurface_4k.jpg          (+ _2k, _1k)
+│   └── sun_surface_4k.jpg         (+ _2k, _1k)
 ├── earth/
-│   ├── earthSurface_8k.jpg        (+ _4k, _2k, _1k)
-│   ├── earthNormalMap_8k.jpg
-│   ├── earthClouds_8k.jpg
-│   ├── earthSpec_8k.jpg
-│   └── earthLights_8k.jpg         (lueurs nocturnes)
-├── moon/
-│   ├── moonSurface_8k.jpg
-│   └── moonBump_4k.jpg
+│   ├── earth_surface_8k.jpg       (+ _4k, _2k, _1k)
+│   ├── earth_normal_map_8k.jpg
+│   ├── earth_clouds_8k.jpg
+│   ├── earth_spec_8k.jpg
+│   └── earth_lights_8k.jpg        (lueurs nocturnes)
 ├── mars/
-│   ├── marsSurface_8k.jpg
-│   └── marsNormalMap_1k.jpg
-├── mercury/
-│   ├── mercurySurface_8k.jpg
-│   └── mercuryBump_1k.jpg
+│   └── mars_surface_8k.jpg        (+ _4k, _2k, _1k)
 ├── venus/
-│   ├── venusSurface_8k.jpg
-│   ├── venusAtmosphere_4k.jpg
-│   └── venusBump_1k.jpg
-├── jupiter/
-│   └── jupiterSurface_4k.jpg
+│   ├── venus_surface_8k.jpg       (+ _4k, _2k, _1k)
+│   └── venus_atmosphere_4k.jpg    (+ _2k, _1k)
 ├── saturn/
-│   ├── saturnSurface_4k.jpg
-│   └── saturnRing_8k.jpg
-├── uranus/
-│   └── uranusSurface_2k.jpg
-└── neptune/
-    └── neptuneSurface_2k.jpg
+│   ├── saturn_surface_4k.jpg      (+ _2k, _1k)
+│   └── saturn_ring_8k.jpg         (bande radiale, ratio conservé)
+├── callisto/
+│   └── callisto_surface_8k.jpg    (+ _4k, _2k, _1k)
+└── …                              (un dossier par corps du catalogue)
 ```
 
-Pattern de nom : `{corps}/{corps}{Type}_{résolution}.jpg`
-Résolutions disponibles : `1k`, `2k`, `4k`, `8k` (selon le corps, voir `src/config/engine.ts`).
+Pattern de nom : `{corps}/{corps}_{couche}_{résolution}.jpg` (snake_case).
+Le chemin est **dérivé de la clé du corps** (`src/config/catalog.ts` → `texturePath`) : aucun
+chemin n'est écrit à la main dans le catalogue. Couches : `surface`, `clouds`, `atmosphere`,
+`lights`, `normal_map`, `spec`, `ring`. Résolutions : `1k`, `2k`, `4k`, `8k` (la plus haute
+selon le corps ; voir `src/config/engine.ts` pour les seuils de LOD).
 
 ## Fonctionnalités
 
@@ -269,13 +260,18 @@ Repère écliptique → Three.js XZ-plane
 
 Le catalogue (`src/config/bodies.ts`) est la **source unique** : boutons de navigation, préchargement des textures, éphéméride et hiérarchie de scène s'en dérivent automatiquement.
 
-1. Déposer les textures dans `public/assets/textures/{nom}/`
+1. Déposer les textures dans `public/assets/textures/{nom}/` au format
+   `{nom}_{couche}_{résolution}.jpg` (snake_case). Le pipeline `scripts/import-textures.mjs`
+   génère les variantes de résolution depuis une source brute (TIF/JPG/PNG) sans jamais
+   agrandir au-delà de la source.
 2. Ajouter **une seule entrée** dans `CELESTIAL_CONFIG.bodies` (`src/config/bodies.ts`) :
    - `kind` : `'planet'` (ou `'moon'`, `'star'`, `'skybox'`)
    - `astroBody` : l'enum `Body` d'astronomy-engine (positions réelles)
    - `cameraDistance: { educ, explo }` : distances de visite caméra
    - `loadPriority` : rang de préchargement (croissant) — optionnel
    - `realData.orbitPeriodDays` : période orbitale documentaire
+   - `textureResolutions` : les couches et résolutions disponibles (le **chemin** est
+     dérivé de la clé, pas à écrire à la main)
    - Pour une lune : `frame: 'parentRelative'` et l'imbriquer dans `satellites` du parent
 
 Aucune édition de `index.html`, `EphemerisService` ni des distances caméra n'est nécessaire.
@@ -288,11 +284,19 @@ avec un pas de quatre jours ; `HorizonsEphemerisService` interpole entre deux é
 courbe cubique de Hermite. Hors couverture ou si les assets sont indisponibles, le moteur
 revient automatiquement aux éléments képlériens du catalogue.
 
+SpkKernel lit les kernels DAF/SPK en types 2 et 3 (Chebyshev), SpkPositionReader convertit le J2000 equatorial en repere Galaxy, et SpkKernelWorkerClient deplace le chargement et le parsing hors du thread principal ; avec une URL configuree, le Worker lit d abord les tables DAF puis les segments requis par HTTP Range. L application continue d utiliser Horizons par defaut.
+
+Pour activer le chemin SPK optionnel, definir `VITE_SPK_KERNEL_URL` vers un kernel same-origin avant le demarrage Vite. Le provider Worker se charge en tache de fond, utilise les vitesses pour une extrapolation courte et revient a Horizons ou Kepler en cas de manque.
+
+Le mode de publication du gros kernel SAT441 et sa vérification HTTP Range sont détaillés dans [`docs/SPK_DEPLOYMENT.md`](docs/SPK_DEPLOYMENT.md).
+
 Pour actualiser les solutions orbitales après une mise à jour JPL :
 
 ```bash
 pnpm ephemeris:generate
 ```
+
+Le moteur depend du contrat PreciseEphemerisProvider : Horizons reste la source embarquee par defaut, tandis que SpiceEphemerisService fournit le point d injection pour un lecteur SPK externe.
 
 ## Configuration
 
@@ -319,11 +323,11 @@ Réglages moteur dans `src/config/engine.ts`, catalogue des corps dans `src/conf
 
 ## Qualité et limites actuelles
 
-- `pnpm verify` passe avec 103 tests répartis dans 26 fichiers ; Playwright complète cette couverture avec 28 scénarios DOM/WebGL.
+- pnpm verify passe avec 132 tests repartis dans 33 fichiers ;
 - `pnpm build` passe sans avertissement de taille : `three`, `astronomy-engine` et `tween` sont séparés, et le chunk applicatif reste autour de 120 kB minifié.
 - Le mode Exploration est actif. Les vols caméra concurrents sont annulés et la cible suivie reste centrée, y compris à vitesse accélérée.
 - `IS_MOBILE` reste figé pour les réglages créés à l'initialisation (anticrénelage, ombres, textures) ; seul le plafond de pixel ratio est recalculé au resize.
-- `frame: 'parentRelative'` calcule `helio(corps) − helio(parent)`. Astronomy Engine ne fournit toutefois une éphéméride naturelle que pour la Lune.
+- `frame: 'parentRelative'` calcule `helio(corps) − helio(parent)`. Les lunes joviennes viennent d'Astronomy Engine ; les lunes saturniennes utilisent les vecteurs locaux NASA/JPL Horizons issus de SAT441.
 - `.gitattributes` normalise les fichiers texte en LF ; `pnpm format:check` passe sur tout l'arbre.
 
 ## Direction de développement
@@ -361,9 +365,15 @@ licences d'origine (Solar System Scope, NASA).
 
 Le catalogue actuel couvre le Soleil, les huit planetes, la Lune, Io, Europe, Ganymede et Callisto, cinq planetes naines et
 les petits corps Ceres, Vesta, Pallas, Hygiea, Eris, Haumea, Makemake et Halley. Les
-textures presentes suivent le schema public/assets/textures/{body}/{body}{layer}_{quality}.jpg.
-Les lunes joviennes disposent maintenant de leurs textures de surface 2k. Le fallback coloré
-reste disponible si un asset manque au chargement.
+textures presentes suivent le schema public/assets/textures/{body}/{body}_{layer}_{quality}.jpg
+(snake_case, chemin derive de la cle du corps). Le fallback colore reste disponible si un asset
+manque au chargement.
+Les lunes joviennes (Io couleur, Europe, Ganymede, Callisto) disposent de mosaiques USGS
+haute resolution jusqu'a 8k. Titan, Encelade, Rhea et Japet sont disponibles autour de Saturne
+avec des orbites relatives keplerienne et des mosaiques Cassini/Voyager validees par l'USGS.
+Triton, Charon, Phobos et Deimos sont navigables avec des vecteurs locaux Horizons relatifs au
+parent et des textures USGS/NASA. Les provenances et licences sont tracees dans
+scripts/texture-sources.json (bloc `imported`).
 
 La feuille de route complete distingue :
 

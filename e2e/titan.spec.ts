@@ -1,0 +1,50 @@
+import { expect, test } from '@playwright/test';
+
+test.beforeEach(async ({ page }) => {
+  await page.route('**/sbdb_query.api*', (route) => route.abort());
+  await page.addInitScript(() => {
+    localStorage.setItem('ssv-guided-tour-v1', '1');
+    localStorage.setItem('ssv-locale', 'en');
+  });
+});
+
+test('Planetary moons are navigable in both display modes with live information cards', async ({
+  page,
+}) => {
+  await page.goto('/');
+  await expect(page.locator('#loader')).toBeHidden({ timeout: 30_000 });
+
+  const info = page.locator('#body-info');
+  for (const [id, name] of [
+    ['enceladus', 'Enceladus'],
+    ['rhea', 'Rhea'],
+    ['iapetus', 'Iapetus'],
+    ['titan', 'Titan'],
+    ['phobos', 'Phobos'],
+    ['deimos', 'Deimos'],
+    ['triton', 'Triton'],
+    ['charon', 'Charon'],
+  ] as const) {
+    // La navigation vit dans la palette : on l'ouvre, on cherche la lune, on la sélectionne.
+    await page.locator('#body-search-trigger').click();
+    await page.locator('#palette-input').fill(name);
+    const moonButton = page.locator(`#orbit-${id}`);
+    await expect(moonButton).toBeVisible();
+    await moonButton.click();
+    await expect(moonButton).toHaveClass(/is-active/);
+    await expect(info).toBeVisible();
+    await expect(info.locator('.bi-name')).toHaveText(name);
+
+    await page.locator('.mode-btn[data-mode="explo"]').click();
+    await expect(page.locator('body')).toHaveClass(/is-explo-mode/);
+    await expect(info.locator('.bi-name')).toHaveText(name);
+    await expect(info.locator('.bi-live-dist')).toContainText('AU');
+    await expect(
+      page.locator(`.explo-label[aria-label="${name}"]`)
+    ).toBeVisible();
+
+    await page.locator('.mode-btn[data-mode="educ"]').click();
+    await expect(page.locator('body')).not.toHaveClass(/is-explo-mode/);
+    await expect(info.locator('.bi-name')).toHaveText(name);
+  }
+});

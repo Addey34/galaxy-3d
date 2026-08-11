@@ -4,7 +4,8 @@ import {
   type AstronomicalEvent,
 } from '@/core/astronomicalEvents';
 import type { OrbitalMechanics } from '@/core/OrbitalMechanics';
-import { getLocale, intlLocale, onLocaleChange, t } from '@/i18n';
+import { intlLocale, onLocaleChange, t } from '@/i18n';
+import type { OverlayCoordinator } from './overlayCoordinator';
 
 const MS_PER_DAY = 86_400_000;
 
@@ -34,10 +35,6 @@ function eventLabel(event: AstronomicalEvent): string {
   return `${label} · ${t(`events.kind.${event.eclipseKind}`)}`;
 }
 
-function createButtonLabel(): string {
-  return getLocale() === 'fr' ? 'Événements' : 'Events';
-}
-
 export interface AstronomicalEventsPanel {
   refresh(): void;
   dispose(): void;
@@ -45,55 +42,58 @@ export interface AstronomicalEventsPanel {
 
 export function setupAstronomicalEvents(
   om: OrbitalMechanics,
-  onDateChange?: () => void
+  onDateChange?: () => void,
+  coordinator?: OverlayCoordinator
 ): AstronomicalEventsPanel {
-  const toggle = document.createElement('button');
-  toggle.id = 'events-toggle';
-  toggle.className = 'events-toggle scene-panel scene-panel--compact';
-  toggle.type = 'button';
-  toggle.setAttribute('aria-expanded', 'false');
-  toggle.setAttribute('aria-haspopup', 'dialog');
+  // Le déclencheur vit dans le dock (statique) ; le panneau est une surface contextuelle.
+  const toggle = document.getElementById(
+    'events-trigger'
+  ) as HTMLButtonElement | null;
 
   const panel = document.createElement('aside');
   panel.id = 'astronomical-events';
-  panel.className = 'events-panel scene-panel';
+  panel.className = 'surface surface--events';
   panel.hidden = true;
   panel.setAttribute('role', 'dialog');
   panel.setAttribute('aria-labelledby', 'astronomical-events-title');
 
   const header = document.createElement('header');
-  header.className = 'events-header';
+  header.className = 'surface-header';
   const title = document.createElement('h2');
-  title.className = 'events-title';
+  title.className = 'surface-title';
   title.id = 'astronomical-events-title';
   const close = document.createElement('button');
-  close.className = 'events-close';
+  close.className = 'events-close surface-close';
   close.type = 'button';
-  close.textContent = '×';
   close.setAttribute('aria-label', t('events.close'));
+  close.innerHTML =
+    '<svg viewBox="0 0 14 14" width="13" height="13" aria-hidden="true"><path d="M3.5 3.5l7 7M10.5 3.5l-7 7" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>';
   header.append(title, close);
 
+  const body = document.createElement('div');
+  body.className = 'surface-body';
   const list = document.createElement('div');
   list.className = 'events-list';
-  panel.append(header, list);
-  const host = document.getElementById('bottom-controls') ?? document.body;
-  host.append(toggle, panel);
+  body.append(list);
+  panel.append(header, body);
+  document.body.append(panel);
 
   const setOpen = (open: boolean): void => {
+    if (open) coordinator?.requestOpen('events');
     panel.hidden = !open;
-    toggle.setAttribute('aria-expanded', String(open));
+    toggle?.setAttribute('aria-expanded', String(open));
     if (open) {
       render();
       close.focus();
     } else if (document.activeElement === close) {
-      toggle.focus();
+      toggle?.focus();
     }
   };
+  coordinator?.register('events', () => setOpen(false));
 
   const render = (): void => {
     title.textContent = t('events.title');
-    toggle.textContent = createButtonLabel();
-    toggle.setAttribute('aria-label', t('events.open'));
+    toggle?.setAttribute('aria-label', t('events.open'));
     close.setAttribute('aria-label', t('events.close'));
     list.replaceChildren();
 
@@ -138,12 +138,16 @@ export function setupAstronomicalEvents(
     }
   };
 
-  toggle.addEventListener('click', () => setOpen(panel.hidden === true));
-  close.addEventListener('click', () => setOpen(false));
+  toggle?.addEventListener('click', () => setOpen(panel.hidden === true));
+  close.addEventListener('click', () => {
+    setOpen(false);
+    toggle?.focus();
+  });
   panel.addEventListener('keydown', (event) => {
     if (event.key === 'Escape') {
       event.preventDefault();
       setOpen(false);
+      toggle?.focus();
     }
   });
   onLocaleChange(render);
@@ -152,7 +156,6 @@ export function setupAstronomicalEvents(
   return {
     refresh: render,
     dispose: () => {
-      toggle.remove();
       panel.remove();
     },
   };

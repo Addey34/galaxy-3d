@@ -38,6 +38,7 @@ test('explo mode shows projected labels and the live distance in the info card',
 
   // Cliquer un corps lance le voyage rapproché : la fiche unique s'ouvre avec la cible et sa
   // distance réelle live (bloc .bi-live fusionné depuis l'ancien HUD « TARGET »).
+  await page.locator('#body-search-trigger').click();
   await page.locator('#orbit-earth').click();
   const info = page.locator('#body-info');
   await expect(info).toBeVisible();
@@ -61,6 +62,7 @@ test('keeps the followed body projected at the screen center', async ({
   await expect(page.locator('#loader')).toBeHidden({ timeout: 30_000 });
 
   await page.locator('.mode-btn[data-mode=explo]').click();
+  await page.locator('#body-search-trigger').click();
   await page.locator('#orbit-neptune').click();
   await expect(page.locator('#body-info .bi-name')).toHaveText('Neptune');
 
@@ -87,7 +89,8 @@ test('keeps the followed body projected at the screen center', async ({
     deviations.push(await sampleDeviation());
     await page.waitForTimeout(40);
   }
-  await page.locator('.speed-group .tp-speed').last().click();
+  const speedRange = page.locator('#speed-range');
+  await speedRange.press('End');
   for (let i = 0; i < 6; i++) {
     deviations.push(await sampleDeviation());
     await page.waitForTimeout(40);
@@ -118,7 +121,9 @@ test('textured dwarf planets are navigable and other small bodies stay label-onl
   await page.goto('/');
   await expect(page.locator('#loader')).toBeHidden({ timeout: 30_000 });
 
-  expect(ephemerisResponses).toHaveLength(5);
+  // Le manifeste + les éphémérides des planètes naines texturées sont chargés (le nombre
+  // total dépend des lunes/corps ajoutés par ailleurs, on ne le fige donc pas).
+  expect(ephemerisResponses.length).toBeGreaterThanOrEqual(5);
   expect(ephemerisResponses.every(({ status }) => status === 200)).toBe(true);
   expect(ephemerisResponses.map(({ file }) => file)).toEqual(
     expect.arrayContaining([
@@ -190,6 +195,7 @@ test('mouse wheel over the centered target label still zooms the camera', async 
   await expect(page.locator('#loader')).toBeHidden({ timeout: 30_000 });
 
   await page.locator('.mode-btn[data-mode=explo]').click();
+  await page.locator('#body-search-trigger').click();
   await page.locator('#orbit-mars').click();
   await expect(page.locator('#body-info .bi-name')).toHaveText('Mars');
   await page.waitForTimeout(1_600); // fin du vol : Mars centré, label is-target au centre
@@ -228,6 +234,7 @@ test('clicking a projected label selects and centers the body', async ({
   await expect(page.locator('body')).toHaveClass(/is-explo-mode/);
 
   // Amène Mars au centre (son label est alors visible et marqué is-target).
+  await page.locator('#body-search-trigger').click();
   await page.locator('#orbit-mars').click();
   await page.waitForTimeout(1_400);
   const marsLabel = page.locator('.explo-label.is-target');

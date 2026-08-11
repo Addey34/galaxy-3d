@@ -6,10 +6,10 @@
 | ----------------- | --------------------------------------- | ----------------- |
 | `pnpm typecheck`  | TypeScript strict, sans émission        | court             |
 | `pnpm lint`       | ESLint flat config                      | court             |
-| `pnpm test`       | 26 fichiers Vitest, logique et services | court             |
+| `pnpm test`       | 33 fichiers Vitest, logique et services | court             |
 | `pnpm verify`     | typecheck + lint + Vitest               | gate local rapide |
 | `pnpm build`      | typecheck + bundle Vite production      | moyen             |
-| `pnpm test:e2e`   | 28 scénarios Playwright Chromium/WebGL  | long              |
+| `pnpm test:e2e`   | 29 scénarios Playwright Chromium/WebGL  | long              |
 | `pnpm verify:all` | verify + build + e2e                    | gate complet      |
 
 ## Règles
@@ -40,8 +40,8 @@ des invariants physiques et des frontières d’architecture.
 
 ## Snapshot actuel
 
-La suite compte actuellement 26 fichiers Vitest et 103 tests unitaires. La suite Playwright
-compte 28 scenarios Chromium/WebGL. Ces chiffres sont un instantane documentaire : la
+La suite compte actuellement 33 fichiers Vitest et 132 tests unitaires. La suite Playwright
+compte 29 scenarios Chromium/WebGL. Ces chiffres sont un instantane documentaire : la
 commande fait foi si un fichier de test est ajoute.
 
 Tout ajout de contenu doit verifier le chemin catalogue-asset, la resolution effectivement

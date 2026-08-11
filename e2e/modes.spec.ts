@@ -21,7 +21,11 @@ test('educational projected names are pointer-clickable and select a new body', 
   await expect(marsLabel).toHaveCSS('pointer-events', 'auto');
   await expect(marsLabel).toHaveCSS('--label-rgb', '232, 93, 63');
 
-  await marsLabel.click();
+  // Le label est un vrai <button> ; on active son gestionnaire directement. Un clic par
+  // coordonnées serait fragile ici : Deimos orbite Mars, donc leurs labels sont adjacents
+  // et peuvent se chevaucher à certaines dates d'éphéméride (le hit-test tomberait sur
+  // l'un ou l'autre). On teste ainsi le CÂBLAGE (label → selectBody), pas la topologie.
+  await marsLabel.evaluate((el) => (el as HTMLButtonElement).click());
   await expect(page.locator('#orbit-mars')).toHaveClass(/is-active/);
   await expect(page.locator('#body-info')).toBeVisible();
   await expect(page.locator('#body-info .bi-name')).toHaveText('Mars');
@@ -31,6 +35,7 @@ test('selection, information panel and target semantics survive both mode switch
   page,
 }) => {
   await boot(page);
+  await page.locator('#body-search-trigger').click();
   await page.locator('#orbit-earth').click();
   const info = page.locator('#body-info');
   await expect(info).toBeVisible();
@@ -65,6 +70,9 @@ test('settings stay available in both modes and control label density', async ({
       labels.some((label) => getComputedStyle(label).display !== 'none')
     );
 
+  // La surface de réglages démarre masquée ; le déclencheur du dock l'ouvre.
+  await expect(settings).toBeHidden();
+  await page.locator('#settings-trigger').click();
   await expect(settings).toBeVisible();
   await expect(page.locator('#labels-visible')).toBeChecked();
   await expect(page.locator('#orbits-visible')).toBeChecked();
@@ -122,12 +130,13 @@ test('visible projected annotations do not overlap each other', async ({
   expect(overlaps).toEqual([]);
 });
 
-test('mobile mode control stays above time controls and remains clickable', async ({
+test('mobile mode control stays clear of other controls and remains clickable', async ({
   page,
 }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await boot(page);
-  await expect(page.locator('#orbit-options')).toHaveClass(/is-collapsed/);
+  // Aucune surface ouverte au démarrage.
+  await expect(page.locator('#orbit-options')).toBeHidden();
 
   const exploButton = page.locator('.mode-btn[data-mode="explo"]');
   const unobstructed = await exploButton.evaluate((button) => {
@@ -142,6 +151,29 @@ test('mobile mode control stays above time controls and remains clickable', asyn
   expect(unobstructed).toBe(true);
   await exploButton.click();
   await expect(page.locator('body')).toHaveClass(/is-explo-mode/);
+});
+
+test('mobile contextual surfaces are mutually exclusive and keep the time bar', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await boot(page);
+
+  const info = page.locator('#body-info');
+  const settings = page.locator('#orbit-options');
+
+  // Sélectionner un corps ouvre directement sa fiche (feuille en bas) — feedback immédiat.
+  await page.locator('#body-search-trigger').click();
+  await page.locator('#orbit-sun').click();
+  await expect(info).toBeVisible();
+  // La barre temps reste toujours présente et essentielle (play + vitesse).
+  await expect(page.locator('#play-pause-btn')).toBeVisible();
+  await expect(page.locator('#speed-value')).toBeVisible();
+
+  // Ouvrir les réglages ferme la fiche : une seule surface à la fois.
+  await page.locator('#settings-trigger').click();
+  await expect(settings).toBeVisible();
+  await expect(info).toBeHidden();
 });
 
 test('initial boot avoids blocking on highest-resolution planet textures', async ({
@@ -204,6 +236,7 @@ test('Galilean moons stay available around Jupiter in both display modes', async
   page,
 }) => {
   await boot(page);
+  await page.locator('#body-search-trigger').click();
   await page.locator('#orbit-jupiter').click();
   await expect(page.locator('#body-info .bi-name')).toHaveText('Jupiter');
 

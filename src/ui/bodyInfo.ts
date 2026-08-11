@@ -14,8 +14,8 @@ import { t, intlLocale, getLocale, onLocaleChange } from '@/i18n';
 import { bodyDisplayName, bodyDescription } from '@/i18n/bodyText';
 import type { CelestialBodyConfig } from '@/types';
 import { bodyAccentColor, hexToRgbTriplet } from './bodyAccent';
-import { setupOverlayDisclosure } from './sceneOverlay';
 import { safeExternalUrl } from '@/utils/safeUrl';
+import type { OverlayCoordinator } from './overlayCoordinator';
 
 const RAD2DEG = 180 / Math.PI;
 const C_KM_PER_S = 299_792.458; // vitesse de la lumière
@@ -206,12 +206,12 @@ export interface BodyInfoPanel {
   /**
    * Met à jour le bloc live (distance réelle + temps-lumière) à chaque frame en Explo.
    * `sceneDist` = distance caméra→cible en unités scène ; `null` (Éducatif ou vue libre)
-   * masque le bloc. Sans effet si la fiche est repliée ou masquée.
+   * masque le bloc. Sans effet si la fiche est masquée.
    */
   updateLive(sceneDist: number | null): void;
 }
 
-export function setupBodyInfo(): BodyInfoPanel {
+export function setupBodyInfo(coordinator?: OverlayCoordinator): BodyInfoPanel {
   const panel = document.getElementById('body-info');
   if (!panel) return { show: () => {}, hide: () => {}, updateLive: () => {} };
 
@@ -220,24 +220,49 @@ export function setupBodyInfo(): BodyInfoPanel {
   const subEl = panel.querySelector<HTMLElement>('.bi-subtitle')!;
   const statsEl = panel.querySelector<HTMLElement>('.bi-stats')!;
   const descEl = panel.querySelector<HTMLElement>('.bi-desc')!;
-  const toggleBtn = panel.querySelector<HTMLButtonElement>('.bi-toggle')!;
+  const closeBtn = panel.querySelector<HTMLButtonElement>('.bi-close')!;
+  // Déclencheur d'accès (dock haut-droit) : réaffiche la fiche du corps courant après
+  // fermeture, sans reprendre le vol caméra. Masqué tant qu'aucun corps n'est sélectionné.
+  const triggerBtn = document.querySelector<HTMLButtonElement>('#info-trigger');
   const moreEl = panel.querySelector<HTMLAnchorElement>('.bi-more')!;
   const liveEl = panel.querySelector<HTMLElement>('.bi-live')!;
   const liveDist = panel.querySelector<HTMLElement>('.bi-live-dist')!;
   const liveLt = panel.querySelector<HTMLElement>('.bi-live-lt')!;
 
-  // Shared disclosure keeps visual state, aria state and translations consistent.
-  const disclosure = setupOverlayDisclosure({
-    container: panel,
-    toggle: toggleBtn,
-    initialCollapsed: window.innerWidth <= 640,
-    labels: {
-      expand: () => t('bi.expand.aria'),
-      collapse: () => t('bi.collapse.aria'),
-    },
+  let visible = false;
+
+  const setVisible = (next: boolean): void => {
+    visible = next;
+    panel.hidden = !next;
+    triggerBtn?.setAttribute('aria-expanded', String(next));
+  };
+
+  // Ferme la fiche mais garde le déclencheur (le corps reste sélectionné).
+  const collapse = (): void => setVisible(false);
+  coordinator?.register('body-info', collapse);
+
+  closeBtn.addEventListener('click', collapse);
+  panel.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      collapse();
+      triggerBtn?.focus();
+    }
+  });
+  triggerBtn?.addEventListener('click', () => {
+    if (visible) collapse();
+    else if (currentName) {
+      coordinator?.requestOpen('body-info');
+      setVisible(true);
+    }
   });
 
-  const hide = (): void => panel.setAttribute('hidden', '');
+  // Masque totalement la fiche ET son déclencheur (retour Vue globale : plus de corps).
+  const hide = (): void => {
+    currentName = null;
+    setVisible(false);
+    if (triggerBtn) triggerBtn.hidden = true;
+  };
 
   // Dernier corps affiché : permet de re-rendre la fiche telle quelle au changement de langue.
   let currentName: string | null = null;
@@ -287,7 +312,7 @@ export function setupBodyInfo(): BodyInfoPanel {
 
     // Fond d'en-tête : la texture de surface du corps (plus petite résolution disponible,
     // déjà en cache navigateur puisque chargée pour le mesh) derrière un dégradé sombre.
-    const surface = cfg.textures.surface;
+    const surface = cfg.textures?.surface;
     const resolutions = cfg.textureResolutions.surface;
     const res = resolutions?.[resolutions.length - 1];
     if (surface && res) {
@@ -301,26 +326,36 @@ export function setupBodyInfo(): BodyInfoPanel {
       panel.style.removeProperty('--bi-hero');
     }
 
-    disclosure.refresh();
-    panel.removeAttribute('hidden');
+    if (triggerBtn) triggerBtn.hidden = false;
   };
 
   const show = (name: string): void => {
+    const cfg = CONFIGS.get(name);
+    // Corps sans fiche (skybox, sans données) : ne pas ouvrir de surface vide.
+    if (!cfg || cfg.kind === 'skybox' || !cfg.realData) {
+      hide();
+      return;
+    }
     currentName = name;
     render(name);
+    // La sélection ouvre la fiche : sur toutes tailles, la surface s'affiche (elle est
+    // désormais compacte et n'occulte pas la scène). L'utilisateur peut la fermer.
+    coordinator?.requestOpen('body-info');
+    setVisible(true);
     // Neuf corps : on repart d'un bloc live masqué (updateLive le remplira à la frame
     // suivante en Explo) pour ne pas laisser la distance du corps précédent.
     liveEl.hidden = true;
   };
 
-  // Changement de langue : re-rend la fiche courante (noms, sous-titre, stats, description)
-  // sans rouvrir de sélection. Le bloc live se réactualise seul à la frame suivante.
+  // Changement de langue : re-rend la fiche du corps courant (noms, sous-titre, stats,
+  // description) même si elle est momentanément fermée — son contenu reste ainsi à jour pour
+  // sa prochaine réouverture. Le bloc live se réactualise seul à la frame suivante.
   onLocaleChange(() => {
-    if (currentName && !panel.hasAttribute('hidden')) render(currentName);
+    if (currentName) render(currentName);
   });
 
   const updateLive = (sceneDist: number | null): void => {
-    if (panel.hasAttribute('hidden') || sceneDist === null) {
+    if (!visible || sceneDist === null) {
       liveEl.hidden = true;
       return;
     }

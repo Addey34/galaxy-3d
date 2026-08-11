@@ -30,6 +30,7 @@ faire de branchement par nom de planète dans les systèmes génériques.
 
 1. `TextureSystem` précharge les textures critiques et déduplique les chargements.
 2. `HorizonsEphemerisService` charge les assets locaux ; en cas d’échec, le fallback képlérien reste disponible.
+   Le contrat `PreciseEphemerisProvider` decouple le moteur du format numerique ; `SpiceEphemerisService` formalise le lecteur SPK synchrone ; avec `VITE_SPK_KERNEL_URL`, `SolarSystemApp` demarre aussi le Worker SPK optionnel, puis `FallbackPreciseEphemerisProvider` conserve Horizons ou Kepler pendant les cache misses.
 3. `SceneSystem` crée renderer, caméra, fond étoilé et lignes d’orbite.
 4. `CelestialObjectFactory` construit les meshes depuis le catalogue.
 5. `CameraSystem` et `AnimationSystem` sont initialisés.
@@ -93,7 +94,8 @@ Le catalogue est organise en trois niveaux :
 3. Presentation : labels, fiche, couleur, filtres et aides de navigation.
 
 Les corps naturels sont ajoutes dans le catalogue avant leurs assets. Les textures JPEG
-suivent le schema public/assets/textures/{body}/{body}{layer}_{quality}.jpg. Les modeles
+suivent le schema public/assets/textures/{body}/{body}_{layer}_{quality}.jpg (snake_case ;
+le chemin est derive de la cle du corps par catalog.texturePath, pas ecrit a la main). Les modeles
 GLB, les missions, les populations et le ciel profond attendent une capacite de rendu
 typee, un proprietaire GPU, une politique LOD et un fallback.
 
@@ -113,6 +115,9 @@ docs/UNIVERSE_CATALOG.md.
 - src/core/permalink.ts encode et decode l'etat partageable sans dependre du DOM.
 - src/core/astronomicalEvents.ts calcule les prochains evenements a partir de la date simulee.
 - src/ui/guidedTour.ts orchestre la visite clavier et souris avec focus et fermeture Escape.
+- src/ui/overlayCoordinator.ts impose un seul panneau contextuel ouvert parmi la fiche,
+  les paramètres, les événements et l'aide. La navigation et le deck temporel restent les
+  deux seuls ancrages permanents; sur mobile, ouvrir un panneau contextuel simplifie le deck.
 
 Les overlays restent dans src/ui/; SolarSystemApp reste headless et ne connait ni les permaliens,
 ni les panneaux facultatifs.

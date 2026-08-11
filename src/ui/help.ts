@@ -1,31 +1,32 @@
 /**
- * Bouton d'aide (#help-btn) + popover (#help-popover) — coin haut-gauche (desktop).
+ * Aide & crédits (#help-btn dans le dock + #help-popover en surface contextuelle).
  *
- * Empreinte permanente réduite à un « ? » ; tout le contenu (astuces de navigation puis
- * crédits, licence et don) vit dans le popover. Ouverture au clic (pas un hover pur :
- * inutilisable au tactile), fermeture par Échap ou clic à l'extérieur.
+ * Empreinte permanente réduite à une icône « ? » ; astuces de navigation puis crédits /
+ * licence / don vivent dans une surface, mutuellement exclusive avec les autres (fiche,
+ * réglages, événements, palette). Fermeture par la croix, Échap, le scrim ou une autre surface.
  */
+import type { OverlayCoordinator } from './overlayCoordinator';
+
 const btn = document.getElementById('help-btn')!;
 const popover = document.getElementById('help-popover')!;
+const closeBtn = popover.querySelector<HTMLButtonElement>('.surface-close');
 
-export function setupHelp(): void {
+export function setupHelp(coordinator?: OverlayCoordinator): void {
   let open = false;
 
   const setOpen = (next: boolean): void => {
+    if (next) coordinator?.requestOpen('help');
     open = next;
     popover.hidden = !next;
     btn.setAttribute('aria-expanded', String(next));
   };
+  coordinator?.register('help', () => setOpen(false));
 
-  btn.addEventListener('click', (event) => {
-    event.stopPropagation();
-    setOpen(!open);
+  btn.addEventListener('click', () => setOpen(!open));
+  closeBtn?.addEventListener('click', () => {
+    setOpen(false);
+    btn.focus();
   });
-
-  // Clic à l'extérieur : referme (le clic sur le popover lui-même ne remonte pas jusqu'ici
-  // grâce au stopPropagation, on garde donc les liens cliquables).
-  popover.addEventListener('click', (event) => event.stopPropagation());
-  document.addEventListener('click', () => setOpen(false));
 
   document.addEventListener('keydown', (event) => {
     if (event.key === 'Escape' && open) {

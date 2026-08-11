@@ -108,6 +108,36 @@ export const APP_SETTINGS: AppSettings = {
   },
 };
 
+/** Optional SPK runtime source; unset deployments keep the local Horizons path. */
+export const SPK_SETTINGS = {
+  url: import.meta.env.VITE_SPK_KERNEL_URL?.trim() || null,
+  bodyIds: {
+    sun: 10,
+    mercury: 199,
+    venus: 299,
+    earth: 399,
+    moon: 301,
+    mars: 499,
+    phobos: 401,
+    deimos: 402,
+    jupiter: 599,
+    io: 501,
+    europa: 502,
+    ganymede: 503,
+    callisto: 504,
+    saturn: 699,
+    enceladus: 602,
+    rhea: 605,
+    titan: 606,
+    iapetus: 608,
+    uranus: 799,
+    neptune: 899,
+    triton: 801,
+    pluto: 999,
+    charon: 901,
+  } as const,
+};
+
 export const RENDER_SETTINGS = {
   antialias: !IS_MOBILE,
   powerPreference: 'high-performance' as const,

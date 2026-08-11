@@ -1,5 +1,5 @@
 /**
- * Contrôles de lecture : play/pause et vitesse de simulation (#play-pause-btn, .tp-speed).
+ * Contrôles de lecture : play/pause et vitesse de simulation (#play-pause-btn, #speed-range).
  *
  * Toujours en mode Kepler/temps-réel :
  *   om.setSimulationSpeed(scale) → scale = ratio vs temps réel
@@ -7,10 +7,20 @@
  */
 import type { AnimationSystem } from '@/components/systems/AnimationSystem';
 import type { OrbitalMechanics } from '@/core/OrbitalMechanics';
-import { onLocaleChange, t } from '@/i18n';
+import { getLocale, onLocaleChange, t } from '@/i18n';
 
 // Réel = 1:1, 1h/s = 3600, 3h/s = 10 800, 6h/s = 21 600
-export const SIMU_SCALES = [1, 3_600, 10_800, 21_600] as const;
+export const MAX_SIMULATION_SCALE = 31_557_600;
+
+const SPEED_SLIDER_MAX = 100;
+const SPEED_UNITS = [
+  { scale: 31_557_600, fr: 'an', en: 'y' },
+  { scale: 2_592_000, fr: 'mois', en: 'mo' },
+  { scale: 604_800, fr: 'sem', en: 'wk' },
+  { scale: 86_400, fr: 'j', en: 'd' },
+  { scale: 3_600, fr: 'h', en: 'h' },
+  { scale: 60, fr: 'min', en: 'min' },
+] as const;
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
 
@@ -46,24 +56,46 @@ export interface PlaybackControls {
 }
 
 const playPauseBtn = document.getElementById('play-pause-btn')!;
-const speedBtns = Array.from(
-  document.querySelectorAll<HTMLButtonElement>('.speed-group .tp-speed')
-);
-
-function setSpeedActive(activeBtn: HTMLButtonElement): void {
-  speedBtns.forEach((b, i) => {
-    b.classList.toggle('is-active', b === activeBtn);
-    b.setAttribute('aria-pressed', String(b === activeBtn));
-    b.setAttribute('aria-label', b.textContent?.trim() || t('speed.live'));
-    // Teinture verte sur "Réel" (index 0) quand actif — indique le temps réel
-    b.classList.toggle('is-simutime', i === 0 && b === activeBtn);
-  });
+const speedRange = document.getElementById('speed-range') as HTMLInputElement;
+const speedValue = document.getElementById('speed-value')!;
+function scaleFromSlider(value: number): number {
+  const normalized = Math.max(0, Math.min(SPEED_SLIDER_MAX, value));
+  if (normalized === 0) return 1;
+  return Math.max(
+    1,
+    Math.round(
+      Math.exp((normalized / SPEED_SLIDER_MAX) * Math.log(MAX_SIMULATION_SCALE))
+    )
+  );
 }
 
-function applySpeed(btn: HTMLButtonElement, om: OrbitalMechanics): void {
-  const i = speedBtns.indexOf(btn);
-  om.setSimulationSpeed(SIMU_SCALES[i] ?? 1);
-  setSpeedActive(btn);
+function formatQuantity(value: number): string {
+  if (value < 10) return value.toFixed(1).replace(/\.0$/, '');
+  if (value < 100) return String(Math.round(value));
+  return String(Math.round(value / 10) * 10);
+}
+
+function speedLabel(scale: number): string {
+  if (scale === 1)
+    return getLocale() === 'fr'
+      ? '1:1 · Échelle réelle Terre'
+      : '1:1 · Earth real time';
+
+  const unit = SPEED_UNITS.find((candidate) => scale >= candidate.scale);
+  if (!unit) return `× ${formatQuantity(scale)}`;
+  return `${formatQuantity(scale / unit.scale)} ${
+    getLocale() === 'fr' ? unit.fr : unit.en
+  }/s`;
+}
+
+function applySpeed(sliderValue: number, om: OrbitalMechanics): void {
+  const safeValue = Math.max(0, Math.min(SPEED_SLIDER_MAX, sliderValue));
+  const scale = scaleFromSlider(safeValue);
+  const label = speedLabel(scale);
+  om.setSimulationSpeed(scale);
+  speedRange.value = String(safeValue);
+  speedRange.setAttribute('aria-valuetext', label);
+  speedValue.textContent = label;
 }
 
 export function setupPlayback(
@@ -81,18 +113,15 @@ export function setupPlayback(
     );
   });
 
-  speedBtns.forEach((btn) => {
-    btn.addEventListener('click', () => applySpeed(btn, om));
+  speedRange.addEventListener('input', () => {
+    applySpeed(Number(speedRange.value), om);
   });
 
   // Activer le premier bouton (Réel) au démarrage
-  const first = speedBtns[0];
-  if (first) setSpeedActive(first);
+  applySpeed(0, om);
   playPauseBtn.setAttribute('aria-label', t('playback.pause'));
   onLocaleChange(() => {
-    speedBtns.forEach((btn) =>
-      btn.setAttribute('aria-label', btn.textContent?.trim() || t('speed.live'))
-    );
+    applySpeed(Number(speedRange.value), om);
     playPauseBtn.setAttribute(
       'aria-label',
       playPauseBtn.classList.contains('is-paused')
@@ -102,9 +131,6 @@ export function setupPlayback(
   });
 
   return {
-    selectRealtime: () => {
-      const realtime = speedBtns[0];
-      if (realtime) applySpeed(realtime, om);
-    },
+    selectRealtime: () => applySpeed(0, om),
   };
 }

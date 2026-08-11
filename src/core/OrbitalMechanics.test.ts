@@ -25,6 +25,52 @@ describe('OrbitalMechanics orbit sampling', () => {
     expect(radii[1]).toBeLessThan(radii[2]);
     expect(radii[2]).toBeLessThan(radii[3]);
   });
+  it('rejects a heliocentric ephemeris at the wrong planetary distance', () => {
+    const mechanics = Object.create(
+      OrbitalMechanics.prototype
+    ) as OrbitalMechanics;
+    const fallbackElements = {
+      semiMajorAxisAU: 1.524,
+      eccentricity: 0,
+      inclinationRad: 0,
+      ascendingNodeRad: 0,
+      argPerihelionRad: 0,
+      meanAnomalyAtEpochRad: 0,
+      epoch: new Date('2026-01-01T00:00:00Z'),
+    };
+    Object.defineProperty(mechanics, 'horizons', {
+      value: {
+        getHeliocentricAU: () => new THREE.Vector3(4.6, 0, 0),
+      },
+    });
+    Object.defineProperty(mechanics, 'elements', {
+      value: {
+        getHeliocentricAU: () => new THREE.Vector3(1.524, 0, 0),
+      },
+    });
+
+    const config = {
+      kind: 'planet',
+      radius: 0.53,
+      rotationSpeed: 0,
+      orbitalColor: 0xffffff,
+      textureResolutions: {},
+      textures: {},
+      realData: { distanceAU: 1.524 },
+      orbitalElements: fallbackElements,
+    } as CelestialBodyConfig;
+    const position = (
+      mechanics as unknown as {
+        _positionAU: (
+          name: string,
+          config: CelestialBodyConfig,
+          date: Date
+        ) => THREE.Vector3 | null;
+      }
+    )._positionAU('mars', config, new Date('2026-08-09T00:00:00Z'));
+
+    expect(position?.length()).toBeCloseTo(1.524, 8);
+  });
   it('starts the Explo curve opposite the current body and closes it there', () => {
     const mechanics = Object.create(
       OrbitalMechanics.prototype

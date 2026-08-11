@@ -1,14 +1,15 @@
 import { flattenBodies } from '@/config/catalog';
 import { CELESTIAL_CONFIG } from '@/config/bodies';
-import { onLocaleChange, t } from '@/i18n';
+import { onLocaleChange } from '@/i18n';
 import { bodyDisplayName } from '@/i18n/bodyText';
 import type { SceneSystem } from '@/components/systems/SceneSystem';
 import { hexToRgbTriplet } from './bodyAccent';
-import { setupOverlayDisclosure } from './sceneOverlay';
+import type { OverlayCoordinator } from './overlayCoordinator';
 
 export function setupOrbitOptions(
   sceneSystem: SceneSystem,
-  onLabelsVisibleChange?: (visible: boolean) => void
+  onLabelsVisibleChange?: (visible: boolean) => void,
+  coordinator?: OverlayCoordinator
 ): void {
   const panel = document.getElementById('orbit-options');
   if (!panel) return;
@@ -88,18 +89,30 @@ export function setupOrbitOptions(
   buildRows();
   onLocaleChange(buildRows);
 
-  const toggleBtn = panel.querySelector<HTMLButtonElement>('.oo-toggle');
-  if (toggleBtn) {
-    setupOverlayDisclosure({
-      container: panel,
-      toggle: toggleBtn,
-      initialCollapsed: window.innerWidth <= 640,
-      labels: {
-        expand: () => t('orbitOpts.expand'),
-        collapse: () => t('orbitOpts.collapse'),
-      },
-    });
-  }
+  // Surface contextuelle : ouverte par le déclencheur du dock, fermée par sa croix,
+  // le scrim ou une autre surface (coordinateur). Démarre masquée.
+  const triggerBtn =
+    document.querySelector<HTMLButtonElement>('#settings-trigger');
+  const closeBtn = panel.querySelector<HTMLButtonElement>('.surface-close');
+  let open = false;
 
-  panel.removeAttribute('hidden');
+  const setOpen = (next: boolean): void => {
+    open = next;
+    if (open) coordinator?.requestOpen('orbit-options');
+    panel.hidden = !open;
+    triggerBtn?.setAttribute('aria-expanded', String(open));
+  };
+  coordinator?.register('orbit-options', () => setOpen(false));
+
+  triggerBtn?.addEventListener('click', () => setOpen(!open));
+  closeBtn?.addEventListener('click', () => setOpen(false));
+  panel.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      setOpen(false);
+      triggerBtn?.focus();
+    }
+  });
+
+  setOpen(false);
 }

@@ -11,21 +11,40 @@ const API_URL = 'https://ssd.jpl.nasa.gov/api/horizons.api';
 const START_TIME = '1900-01-01';
 const STOP_TIME = '2101-01-01';
 const STEP_DAYS = 4;
+const CENTER_IDS = {
+  sun: '10',
+  mars: '499',
+  saturn: '699',
+  neptune: '899',
+  pluto: '999',
+};
 const BODIES = [
-  { name: 'ceres', target: '1;' },
-  { name: 'eris', target: '136199;' },
-  { name: 'haumea', target: '136108;' },
-  { name: 'makemake', target: '136472;' },
+  { name: 'ceres', target: '1;', center: 'sun' },
+  { name: 'eris', target: '136199;', center: 'sun' },
+  { name: 'haumea', target: '136108;', center: 'sun' },
+  { name: 'makemake', target: '136472;', center: 'sun' },
+  { name: 'saturn', target: '699;', center: 'sun' },
+  { name: 'enceladus', target: '602;', center: 'saturn' },
+  { name: 'rhea', target: '605;', center: 'saturn' },
+  { name: 'titan', target: '606;', center: 'saturn' },
+  { name: 'iapetus', target: '608;', center: 'saturn' },
+  { name: 'mars', target: '499;', center: 'sun' },
+  { name: 'phobos', target: '401;', center: 'mars' },
+  { name: 'deimos', target: '402;', center: 'mars' },
+  { name: 'neptune', target: '899;', center: 'sun' },
+  { name: 'triton', target: '801;', center: 'neptune' },
+  { name: 'pluto', target: '999;', center: 'sun' },
+  { name: 'charon', target: '901;', center: 'pluto' },
 ];
 
-function buildUrl(target) {
+function buildUrl(target, center) {
   const params = new URLSearchParams({
     format: 'json',
     COMMAND: `'${target}'`,
     OBJ_DATA: 'NO',
     MAKE_EPHEM: 'YES',
     EPHEM_TYPE: 'VECTORS',
-    CENTER: '500@10',
+    CENTER: `500@${CENTER_IDS[center]}`,
     START_TIME: `'${START_TIME}'`,
     STOP_TIME: `'${STOP_TIME}'`,
     STEP_SIZE: `'${STEP_DAYS} d'`,
@@ -86,7 +105,7 @@ function encodeBinary(rows) {
 
 async function fetchBody(body) {
   process.stdout.write(`Fetching ${body.name}... `);
-  const response = await fetch(buildUrl(body.target), {
+  const response = await fetch(buildUrl(body.target, body.center), {
     headers: { 'User-Agent': 'Galaxy-Ephemeris-Generator/1.0' },
   });
   if (!response.ok) throw new Error(`${body.name}: HTTP ${response.status}`);
@@ -103,6 +122,7 @@ async function fetchBody(body) {
   return {
     file,
     target: body.target,
+    center: body.center,
     startJdTdb: rows[0].jd,
     stepDays,
     sampleCount: rows.length,

@@ -21,7 +21,7 @@ Les textures actuelles sont dans public/assets/textures/. Le chargeur supporte a
 
 Une planete, lune, naine ou petite sphere n'a pas besoin d'un modele 3D externe : le moteur construit une sphere Three.js et applique les couches configurees.
 
-    public/assets/textures/{body}/{body}{layer}_{quality}.jpg
+    public/assets/textures/{body}/{body}_{layer}_{quality}.jpg
 
 Un corps sans texture peut declarer fallbackColor pour obtenir une sphere de secours explicitement
 identifiee. Ce fallback ne remplace pas une texture scientifique et doit rester documente.
@@ -72,17 +72,18 @@ Ils necessitent une trajectoire temporelle, un referentiel, une echelle physique
 
 - [x] Lune terrestre et quatre lunes galileennes avec positions astronomy-engine.
 - [x] Textures dediees 2k pour Io, Europe, Ganymede et Callisto.
-- [ ] Lunes saturniennes prioritaires : Titan, Encelade, Rhea, Japet.
-- [ ] Triton, Charon, Phobos et Deimos.
+- [x] Titan, Encelade, Rhéa et Japet, avec vecteurs locaux Horizons issus de SAT441 et mosaïques Cassini/Voyager 1k.
+- [x] Contrat PreciseEphemerisProvider, adaptateur SpiceEphemerisService et lecteur DAF/SPK types 2/3.
+- [x] Worker SPK asynchrone pour charger et parser un kernel same-origin hors thread principal.
+- [x] Triton, Charon, Phobos et Deimos, avec vecteurs locaux Horizons relatifs au parent et textures USGS/NASA 1k.
 
 ### Vague A - completude du Systeme solaire
 
 Priorite haute, compatible avec les frontieres actuelles :
 
 - lunes galileennes : Io, Europe, Ganymede, Callisto (positions et textures 1k/2k integrees) ;
-- Titan, Encelade, Rhea, Japet ;
-- Triton et Charon ;
-- Phobos et Deimos ;
+- [x] Triton et Charon, avec textures USGS et vecteurs Horizons relatifs ;
+- [x] Phobos et Deimos, avec textures USGS/NASA et vecteurs Horizons relatifs ;
 - asteroides remarquables : Eros, Itokawa, Bennu, Ryugu, Apophis, Ida ;
 - cometes de missions : 67P/Churyumov-Gerasimenko, Tempel 1, Wild 2, Borrelly ;
 - objets transneptuniens : Orcus, Quaoar, Gonggong, Salacia, Varuna, Sedna.
@@ -166,7 +167,6 @@ La qualite est classee ainsi :
 
 Une texture ne doit pas etre remplacee par la premiere image trouvee sur le Web. Le manifeste `scripts/texture-sources.json` doit contenir la page officielle, le telechargement, la projection, la resolution native, la licence et le credit. Les mosaïques USGS/NASA sont privilegiees ; les sources trop volumineuses ou non equirectangulaires doivent etre reprojetees et traitees hors du pipeline avant import.
 
-
 ## 7. Sources volumineuses et import local
 
 Les sources cartographiques brutes restent hors Git et hors du bundle public. Le depot conserve les assets JPEG valides, leur provenance et les resolutions effectivement utilisees par le viewer.
@@ -180,3 +180,7 @@ Pour declarer un corps pret, chaque couche configuree doit etre classee comme na
 Le test textureAssets.test.ts impose une fiche de provenance pour chaque couche et un LOD present sur disque. Le workflow de surface et le workflow DEM acceptent une nouvelle cle sans liste codee en dur ; la validation echoue si la source, la projection ou la resolution manquent. Les sorties de traitement restent dans tmp/ et les sources brutes restent hors Git.
 
 Definition de fini operationnelle : source officielle verifiee, projection equirectangulaire validee pour une sphere, couche scientifiquement justifiee, LOD sans upscale artificiel, fallback explicite si la couverture est incomplete, attribution et licence conservees, audit pnpm textures:audit et gate pnpm verify passes. Une texture seulement plausible mais non verifiee reste un candidat et ne remplace pas l'asset courant.
+
+- [x] Integration runtime SPK optionnelle via Worker, cache synchronise par vitesse et fallback Horizons ;
+- [x] Streaming HTTP Range du Worker pour charger les segments SPK a la demande ;
+- [x] Publier et verifier un artefact SAT441 same-origin avec support Range en production.

@@ -42,6 +42,21 @@ export const messages: Record<Locale, Dict> = {
 
     // ── Navigation ──
     'nav.overview': 'Overview',
+    'nav.bodies': 'Bodies',
+    'nav.search': 'Search a body',
+    'nav.searchPlaceholder': 'Search a body…',
+    'nav.paletteAria': 'Bodies — search and select',
+    'nav.group.star': 'Star',
+    'nav.group.planet': 'Planets',
+    'nav.group.moon': 'Moons',
+    'nav.group.dwarf': 'Dwarf planets',
+    'nav.group.other': 'Small bodies',
+    'nav.kind.moon': 'moon',
+    'nav.kind.dwarf': 'dwarf',
+    'surface.close': 'Close',
+    'bi.trigger.aria': 'Body information',
+    'settings.trigger.aria': 'Display settings',
+    'time.expand': 'Time settings',
     'events.title': 'Upcoming events',
     'events.open': 'Open astronomical events',
     'events.close': 'Close astronomical events',
@@ -135,6 +150,8 @@ export const messages: Record<Locale, Dict> = {
     'nav.expand': 'Show planet bar',
     'nav.scrollLeft': 'Scroll left',
     'nav.scrollRight': 'Scroll right',
+    'nav.bodiesOpen': 'Show all bodies',
+    'nav.bodiesClose': 'Show nearby bodies',
 
     // ── Horloge : repli complet/simplifié ──
     'time.simplify': 'Simplified view',
@@ -206,6 +223,21 @@ export const messages: Record<Locale, Dict> = {
 
     // ── Navigation ──
     'nav.overview': 'Vue globale',
+    'nav.bodies': 'Corps',
+    'nav.search': 'Rechercher un corps',
+    'nav.searchPlaceholder': 'Rechercher un corps…',
+    'nav.paletteAria': 'Corps — recherche et sélection',
+    'nav.group.star': 'Étoile',
+    'nav.group.planet': 'Planètes',
+    'nav.group.moon': 'Lunes',
+    'nav.group.dwarf': 'Planètes naines',
+    'nav.group.other': 'Petits corps',
+    'nav.kind.moon': 'lune',
+    'nav.kind.dwarf': 'naine',
+    'surface.close': 'Fermer',
+    'bi.trigger.aria': 'Informations du corps',
+    'settings.trigger.aria': "Réglages d'affichage",
+    'time.expand': 'Réglages du temps',
     'events.title': '?v?nements ? venir',
     'events.open': 'Ouvrir les ?v?nements astronomiques',
     'events.close': 'Fermer les ?v?nements astronomiques',
@@ -300,6 +332,8 @@ export const messages: Record<Locale, Dict> = {
     'nav.expand': 'Afficher la barre',
     'nav.scrollLeft': 'Défiler à gauche',
     'nav.scrollRight': 'Défiler à droite',
+    'nav.bodiesOpen': 'Afficher tous les corps',
+    'nav.bodiesClose': 'Afficher les corps voisins',
 
     // ── Horloge : repli complet/simplifié ──
     'time.simplify': 'Vue simplifiée',

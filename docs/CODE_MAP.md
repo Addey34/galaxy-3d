@@ -54,6 +54,10 @@ border, blur and shadow declarations. Mobile rules disable expensive backdrop bl
 bound panel widths to the viewport, preserve 44px-class touch targets where practical,
 and keep mode controls above the time panel.
 
+`overlayCoordinator.ts` owns contextual exclusivity: body information, orbit settings,
+events and help close one another. `timePanel.ts` composes the persistent command deck and
+keeps play, the current speed and the UTC clock visible in its simplified state.
+
 When adding a selector, verify its producer in `index.html` or `src/ui`. Dynamic labels
 are produced by `exploHud.ts`; a selector can therefore be absent from the static HTML
 and still be live. Prefer class state over inline style state so keyboard and automated
@@ -67,6 +71,9 @@ consumed by the application:
 - `generate-horizons-ephemerides.mjs` downloads fixed NASA/JPL Horizons vectors and
   writes the local manifest plus hashed binary files. These generated files belong in
   `public/assets/ephemerides` because deployment must work without runtime NASA calls.
+- `SpkKernel.ts` reads DAF/SPK Type 2/3 Chebyshev segments; `SpkPositionReader.ts` adapts J2000 states to the precise-provider contract.
+- `SpkKernelWorker.ts` parses a same-origin kernel off the main thread; `SpkKernelWorkerClient.ts` exposes load and state requests.
+- `SpkWorkerEphemerisProvider.ts` bridges asynchronous Worker states to the synchronous orbital loop with bounded velocity extrapolation and fallback composition.
 - `resize-textures.mjs` creates missing derived texture resolutions. It never overwrites
   an existing destination. It is a maintainer tool, not part of the browser bundle.
 

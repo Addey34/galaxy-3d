@@ -1,20 +1,22 @@
 /**
- * Panneau date-heure (#datetime-panel) — voyage temporel.
+ * Barre de temps (#time-panel) — surface unique, style lecteur multimédia.
  *
- * Affiche l'horloge/la date de simulation en UTC et permet de les modifier :
- *   - molette sur les inputs → ±1 h / ±1 jour ;
+ * État compact : lecture/pause + horloge + vitesse + retour au présent. Un clic sur la
+ * zone d'horloge (#time-readout) l'étend EN PLACE pour révéler le slider de vitesse et
+ * l'édition date/heure — aucune taille ne saute pendant le drag. Les entrées date/heure :
+ *   - molette → ±1 h / ±1 jour ;
  *   - picker natif (clic) → saut à l'heure/date choisie ;
- *   - bouton reset → retour au présent + vitesse temps réel (via `PlaybackControls`).
- * Toujours visible (mode Kepler/temps-réel par défaut).
+ *   - bouton présent → retour au temps réel (via `PlaybackControls`).
  */
 import { t } from '@/i18n';
 import type { OrbitalMechanics } from '@/core/OrbitalMechanics';
 import type { PlaybackControls } from './playback';
-import { setupOverlayDisclosure } from './sceneOverlay';
+import type { OverlayCoordinator } from './overlayCoordinator';
 
 const timePanel = document.getElementById('time-panel')!;
-const timeCollapseBtn = document.getElementById('time-collapse');
-const datetimePanel = document.getElementById('datetime-panel')!;
+const readoutBtn = document.getElementById('time-readout')!;
+const advanced = document.getElementById('time-advanced')!;
+const clockDisplay = document.getElementById('clock-display')!;
 const liveDot = document.getElementById('live-dot')!;
 const timeTodayBtn = document.getElementById('time-today')!;
 const timeInput = document.getElementById('time-input') as HTMLInputElement;
@@ -24,6 +26,7 @@ const LIVE_THRESHOLD_DAYS = 5 / (24 * 60); // ±5 min
 
 let _prevTime = '';
 let _prevDate = '';
+let _prevClock = '';
 let _editingInput: HTMLInputElement | null = null;
 
 timeInput.addEventListener('focus', () => {
@@ -41,22 +44,27 @@ dateInput.addEventListener('blur', () => {
 
 function flash(el: HTMLElement): void {
   el.classList.remove('is-ticking');
-  void el.offsetWidth; // force un reflow DOM pour réinitialiser l'animation CSS (sans ça, remove+add sur la même frame ne déclenche rien)
+  void el.offsetWidth; // reflow pour réarmer l'animation CSS
   el.classList.add('is-ticking');
 }
 
 function refreshDisplay(om: OrbitalMechanics): void {
   const d = om.simulationDate;
+  const hh = String(d.getUTCHours()).padStart(2, '0');
+  const mm = String(d.getUTCMinutes()).padStart(2, '0');
+  const ss = String(d.getUTCSeconds()).padStart(2, '0');
+  const time = `${hh}:${mm}:${ss}`;
 
-  if (_editingInput !== timeInput) {
-    const hh = String(d.getUTCHours()).padStart(2, '0');
-    const mm = String(d.getUTCMinutes()).padStart(2, '0');
-    const ss = String(d.getUTCSeconds()).padStart(2, '0');
-    const t = `${hh}:${mm}:${ss}`;
-    if (t !== _prevTime) {
-      timeInput.value = t;
-      _prevTime = t;
-    }
+  // Horloge condensée (toujours visible).
+  if (time !== _prevClock) {
+    clockDisplay.textContent = time;
+    _prevClock = time;
+    if (om.simulationTimeScale <= 1) flash(clockDisplay);
+  }
+
+  if (_editingInput !== timeInput && time !== _prevTime) {
+    timeInput.value = time;
+    _prevTime = time;
   }
 
   if (_editingInput !== dateInput) {
@@ -87,7 +95,7 @@ function addWheelAdjust(
     'wheel',
     (e) => {
       if (_editingInput === el) return;
-      e.preventDefault(); // passive: false obligatoire pour pouvoir appeler preventDefault() et bloquer le scroll de page
+      e.preventDefault();
       onDelta(e.deltaY > 0 ? 1 : -1);
       refresh();
       flash(el);
@@ -100,36 +108,42 @@ function addWheelAdjust(
 export function setupTimePanel(
   om: OrbitalMechanics,
   playback: PlaybackControls,
-  onChange?: () => void
+  onChange?: () => void,
+  coordinator?: OverlayCoordinator
 ): void {
   const refresh = () => refreshDisplay(om);
 
-  // Poignée complet ↔ simplifié : replie la ligne lecture/vitesse pour ne garder que
-  // l'horloge/date — un maximum de scène visible. État conservé pendant la session.
-  if (timeCollapseBtn) {
-    setupOverlayDisclosure({
-      container: timePanel,
-      toggle: timeCollapseBtn as HTMLButtonElement,
-      collapsedClass: 'is-simplified',
-      labels: {
-        expand: () => t('time.full'),
-        collapse: () => t('time.simplify'),
-      },
-    });
-  }
+  // ── Expansion en place (compact ↔ étendu) ──
+  let expanded = false;
+  const setExpanded = (next: boolean): void => {
+    expanded = next;
+    timePanel.classList.toggle('is-expanded', expanded);
+    readoutBtn.setAttribute('aria-expanded', String(expanded));
+    advanced.setAttribute('aria-hidden', String(!expanded));
+  };
+  setExpanded(false);
+  readoutBtn.addEventListener('click', () => setExpanded(!expanded));
 
-  // Ouvrir le panneau immédiatement
-  datetimePanel.classList.add('is-open');
+  // Sur mobile, la barre temps reste toujours accessible : quand une surface
+  // contextuelle s'ouvre (feuille en bas), on replie la partie avancée pour
+  // dégager la scène et éviter le chevauchement.
+  coordinator?.onOpen((id) => {
+    if (id && expanded && window.matchMedia('(max-width: 640px)').matches) {
+      setExpanded(false);
+    }
+  });
+
   _prevTime = '';
   _prevDate = '';
+  _prevClock = '';
   refresh();
   setInterval(refresh, 250);
 
-  // Scroll rapide (desktop)
+  // Molette (desktop) : ±1 h / ±1 jour.
   addWheelAdjust(timeInput, (d) => om.addTimeOffsetHours(d), refresh, onChange);
   addWheelAdjust(dateInput, (d) => om.addTimeOffset(d), refresh, onChange);
 
-  // Picker natif → change event
+  // Picker natif → change event.
   timeInput.addEventListener('change', () => {
     if (!timeInput.value) return;
     const [h = 0, m = 0, s = 0] = timeInput.value.split(':').map(Number);
@@ -156,15 +170,17 @@ export function setupTimePanel(
     onChange?.();
   });
 
-  // Bouton reset → retour au présent + vitesse temps réel
+  // Retour au présent → temps réel.
   timeTodayBtn.addEventListener('click', () => {
     om.resetTimeOffset();
     playback.selectRealtime();
     _prevTime = '';
     _prevDate = '';
+    _prevClock = '';
     refresh();
     flash(timeInput);
     flash(dateInput);
     onChange?.();
   });
+  timeTodayBtn.setAttribute('aria-label', t('time.today'));
 }

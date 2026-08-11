@@ -11,7 +11,10 @@ import { EphemerisService } from './core/EphemerisService';
 import { OrbitalElementsService } from './core/OrbitalElementsService';
 import { OrbitalMechanics } from './core/OrbitalMechanics';
 import { HorizonsEphemerisService } from './core/HorizonsEphemerisService';
-import { APP_SETTINGS, TEXTURE_SETTINGS } from './config/engine';
+import { FallbackPreciseEphemerisProvider } from './core/PreciseEphemerisProvider';
+import { SpkKernelWorkerClient } from './core/SpkKernelWorkerClient';
+import { SpkWorkerEphemerisProvider } from './core/SpkWorkerEphemerisProvider';
+import { APP_SETTINGS, SPK_SETTINGS, TEXTURE_SETTINGS } from './config/engine';
 import { CELESTIAL_CONFIG } from './config/bodies';
 import { forEachBody } from './config/catalog';
 import { t } from './i18n';
@@ -62,6 +65,7 @@ export class SolarSystemApp {
   private _orbitalMechanics: OrbitalMechanics | null = null;
   private _ephemerisService: EphemerisService | null = null;
   private _horizonsEphemeris: HorizonsEphemerisService | null = null;
+  private _spkProvider: SpkWorkerEphemerisProvider | null = null;
 
   async init(progressCallback: ProgressCallback): Promise<PublicAPI> {
     if (this.initialized) {
@@ -124,10 +128,31 @@ export class SolarSystemApp {
       }
     );
 
+    this._startOptionalSpk();
+
     const [, horizons] = await Promise.all([texturePromise, horizonsPromise]);
     this._horizonsEphemeris = horizons;
   }
 
+  private _startOptionalSpk(): void {
+    if (!SPK_SETTINGS.url) return;
+    const provider = new SpkWorkerEphemerisProvider(
+      new SpkKernelWorkerClient(),
+      SPK_SETTINGS.bodyIds
+    );
+    this._spkProvider = provider;
+    void provider
+      .loadUrl(SPK_SETTINGS.url)
+      .then(() => Logger.success('[SolarSystemApp] SPK provider ready'))
+      .catch((error) => {
+        Logger.warn(
+          '[SolarSystemApp] SPK unavailable; keeping Horizons',
+          error
+        );
+        provider.dispose();
+        if (this._spkProvider === provider) this._spkProvider = null;
+      });
+  }
   private _initCoreSystems(progressCallback: ProgressCallback): void {
     progressCallback(45, t('loader.scene'));
     this.systems.scene = new SceneSystem(
@@ -187,7 +212,12 @@ export class SolarSystemApp {
       new SimulationClock(),
       this._ephemerisService,
       new OrbitalElementsService(),
-      this._horizonsEphemeris!,
+      this._spkProvider
+        ? new FallbackPreciseEphemerisProvider(
+            this._spkProvider,
+            this._horizonsEphemeris!
+          )
+        : this._horizonsEphemeris!,
       CELESTIAL_CONFIG,
       bodies
     );
@@ -262,6 +292,8 @@ export class SolarSystemApp {
     this.systems.lighting.dispose();
     this.systems.scene?.dispose();
     this.systems.texture?.dispose();
+    this._spkProvider?.dispose();
+    this._spkProvider = null;
     this.bodyCache = null;
     this.initialized = false;
     Logger.success('Cleanup complete.');

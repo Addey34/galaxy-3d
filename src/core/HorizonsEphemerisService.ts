@@ -9,6 +9,7 @@
 import * as THREE from 'three';
 import { MakeTime } from 'astronomy-engine';
 import { eclipticToScene } from './frames';
+import type { PreciseEphemerisProvider } from './PreciseEphemerisProvider';
 import Logger from '@/utils/Logger';
 
 const J2000_JD = 2_451_545;
@@ -51,6 +52,8 @@ const TT_MINUS_UTC: readonly [number, number][] = [
 interface HorizonsBodyManifest {
   file: string;
   target: string;
+  /** Body name when the binary is sampled relative to a parent instead of the Sun. */
+  center?: string;
   startJdTdb: number;
   stepDays: number;
   sampleCount: number;
@@ -125,7 +128,7 @@ function dateToJdTdb(date: Date): number {
   return jdTt + tdbMinusTtSeconds / 86_400;
 }
 
-export class HorizonsEphemerisService {
+export class HorizonsEphemerisService implements PreciseEphemerisProvider {
   private constructor(private readonly bodies: Map<string, LoadedBody>) {}
 
   /**
@@ -210,6 +213,48 @@ export class HorizonsEphemerisService {
     const b = a + COMPONENTS_PER_SAMPLE;
     const values = body.samples;
 
+    const interpolate = (axis: number): number =>
+      h00 * values[a + axis] +
+      h10 * stepDays * values[a + 3 + axis] +
+      h01 * values[b + axis] +
+      h11 * stepDays * values[b + 3 + axis];
+
+    return eclipticToScene(interpolate(0), interpolate(1), interpolate(2));
+  }
+  /** Returns a precise child-minus-parent vector when both Horizons states are covered. */
+  getParentRelativeAU(
+    childName: string,
+    parentName: string,
+    date: Date
+  ): THREE.Vector3 | null {
+    // New manifests store satellite files directly in the parent frame. Keep accepting
+    // legacy Sun-centered files below so existing deployments can update incrementally.
+    const child = this.bodies.get(childName);
+    if (child?.manifest.center === parentName) {
+      return this._samplePosition(child, date);
+    }
+    const childPosition = this.getHeliocentricAU(childName, date);
+    const parentPosition = this.getHeliocentricAU(parentName, date);
+    if (!childPosition || !parentPosition) return null;
+    return childPosition.sub(parentPosition);
+  }
+
+  private _samplePosition(body: LoadedBody, date: Date): THREE.Vector3 | null {
+    const { startJdTdb, stepDays, sampleCount } = body.manifest;
+    const samplePosition = (dateToJdTdb(date) - startJdTdb) / stepDays;
+    const index = Math.floor(samplePosition);
+    if (index < 0 || index >= sampleCount - 1) return null;
+
+    const u = samplePosition - index;
+    const u2 = u * u;
+    const u3 = u2 * u;
+    const h00 = 2 * u3 - 3 * u2 + 1;
+    const h10 = u3 - 2 * u2 + u;
+    const h01 = -2 * u3 + 3 * u2;
+    const h11 = u3 - u2;
+    const a = index * COMPONENTS_PER_SAMPLE;
+    const b = a + COMPONENTS_PER_SAMPLE;
+    const values = body.samples;
     const interpolate = (axis: number): number =>
       h00 * values[a + axis] +
       h10 * stepDays * values[a + 3 + axis] +

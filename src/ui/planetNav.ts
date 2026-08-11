@@ -1,176 +1,54 @@
 /**
- * Barre de navigation entre corps (nav.controls).
+ * Navigation entre corps — commande de sélection partagée.
  *
- * Les boutons de corps sont générés depuis le catalogue (`CELESTIAL_CONFIG`) : ajouter un
- * corps ne demande AUCUNE édition HTML. Seule la Vue Globale est statique dans le HTML.
+ * `PlanetNavigation.selectBody(name)` est le point d'entrée unique : la palette de recherche
+ * (`ui/bodyPalette`), le clic 3D (`ui/bodyPicker`) et les labels projetés (`ui/exploHud`) y
+ * passent tous. Ce module pilote la caméra et tient l'état sélectionné ; l'affichage de la
+ * liste des corps est délégué à la palette (qui garde le contrat `#orbit-{name}` / `.is-active`).
  */
-import { CELESTIAL_CONFIG } from '@/config/bodies';
-import { forEachBody } from '@/config/catalog';
-import { SMALL_BODY_KINDS } from '@/types';
-import { bodyDisplayName } from '@/i18n/bodyText';
-import { onLocaleChange, t } from '@/i18n';
 import type { CameraSystem } from '@/components/systems/CameraSystem';
-import { bodyAccentColor, hexToRgbTriplet } from './bodyAccent';
-import { setupOverlayDisclosure } from './sceneOverlay';
+import { setupBodyPalette, type BodyPalette } from './bodyPalette';
+import type { OverlayCoordinator } from './overlayCoordinator';
 
-/**
- * Génère un bouton de navigation par corps depuis le catalogue. Chaque bouton porte
- * `--planet-rgb` = couleur de son orbite (survol + état actif en CSS). Le Soleil reçoit un
- * accent doré (son orbitalColor est noir) ; la Vue Globale garde son accent CSS statique.
- */
-function buildPlanetButtons(): void {
-  // Les boutons vivent dans la piste défilable, pas dans le conteneur (qui porte
-  // aussi les flèches et la poignée de repli).
-  const nav = document.querySelector<HTMLElement>('.controls-track');
-  if (!nav) return;
-
-  forEachBody(CELESTIAL_CONFIG, ({ name, config: cfg }) => {
-    if (cfg.kind === 'skybox') return; // la skybox n'est pas navigable
-    // Les petits corps sans texture (astéroïdes, comètes, planètes naines sans mesh) restent
-    // hors de la barre — ils se naviguent via leurs labels Explo. Exception : les corps à
-    // vraie taille significative ET dotés d'une texture surface (ex. Pluton, Cérès une fois
-    // leur texture ajoutée) obtiennent un bouton comme une planète ordinaire.
-    if (SMALL_BODY_KINDS.has(cfg.kind) && !cfg.textures.surface) return;
-
-    const label = bodyDisplayName(name);
-    const accent = bodyAccentColor(cfg);
-
-    const btn = document.createElement('button');
-    btn.id = `orbit-${name}`;
-    btn.className = 'button';
-    btn.textContent = label;
-    btn.setAttribute('aria-label', label);
-    btn.style.setProperty('--planet-rgb', hexToRgbTriplet(accent));
-    nav.appendChild(btn);
-  });
-}
-
-/** Ré-étiquette les boutons de corps dans la langue courante (nom d'affichage localisé). */
-function relabelPlanetButtons(): void {
-  document
-    // La Vue Globale (#orbit-overview) est statique et gérée par applyStaticI18n (data-i18n) :
-    // on ne ré-étiquette que les boutons de corps générés depuis le catalogue.
-    .querySelectorAll<HTMLButtonElement>(
-      '.controls-track button[id^="orbit-"]:not(#orbit-overview)'
-    )
-    .forEach((btn) => {
-      const name = btn.id.replace('orbit-', '');
-      const label = bodyDisplayName(name);
-      btn.textContent = label;
-      btn.setAttribute('aria-label', label);
-    });
-}
-
-/**
- * Commande de navigation partagée entre la barre de boutons et les labels projetés du
- * mode Exploration : un seul point d'entrée pour cibler un corps.
- */
 export interface PlanetNavigation {
   /**
-   * Cible un corps (ou la « Vue Globale » via `'overview'`) : lance le vol caméra et, si le
-   * corps a un bouton dans la barre, le marque actif. Fonctionne aussi pour les corps sans
-   * bouton (petits corps naviguables uniquement par leur label Explo) ; la barre n'affiche
-   * alors aucun bouton actif. `CameraSystem.setTarget` ignore les noms inconnus.
+   * Cible un corps (ou la « Vue globale » via `'overview'`) : lance le vol caméra et
+   * synchronise l'état actif. Fonctionne aussi pour les corps sans entrée de palette
+   * (petits corps naviguables par leur label Explo). `CameraSystem.setTarget` ignore les
+   * noms inconnus.
    */
   selectBody(name: string): void;
-  /** Corps actuellement selectionne, `overview` pour la vue globale. */
+  /** Corps actuellement sélectionné, `overview` pour la vue globale. */
   getSelectedBody(): string | null;
-}
-
-/**
- * Câble le chrome de la barre : molette verticale → défilement horizontal de la piste,
- * flèches gauche/droite (masquées quand leur côté ne peut plus défiler), et poignée
- * tiroir qui replie la barre vers le haut de la page.
- */
-function setupNavChrome(): void {
-  const nav = document.querySelector<HTMLElement>('.controls');
-  const track = document.querySelector<HTMLElement>('.controls-track');
-  if (!nav || !track) return;
-
-  // Molette : le geste vertical naturel défile la piste horizontalement (sans Shift).
-  track.addEventListener(
-    'wheel',
-    (e) => {
-      const delta =
-        Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
-      if (!delta) return;
-      e.preventDefault(); // passive: false requis — on remplace le scroll de page par le nôtre
-      track.scrollLeft += delta;
-    },
-    { passive: false }
-  );
-
-  // Flèches : défilement d'environ un « écran » de piste par clic, en douceur.
-  const leftArrow = nav.querySelector<HTMLButtonElement>('.nav-arrow--left');
-  const rightArrow = nav.querySelector<HTMLButtonElement>('.nav-arrow--right');
-  const scrollByPage = (dir: -1 | 1): void =>
-    track.scrollBy({
-      left: dir * track.clientWidth * 0.65,
-      behavior: 'smooth',
-    });
-  leftArrow?.addEventListener('click', () => scrollByPage(-1));
-  rightArrow?.addEventListener('click', () => scrollByPage(1));
-
-  // Chaque flèche disparaît quand son côté est en butée (ou si rien ne déborde).
-  const syncArrows = (): void => {
-    const overflow = track.scrollWidth - track.clientWidth;
-    leftArrow?.classList.toggle('is-hidden', track.scrollLeft <= 1);
-    rightArrow?.classList.toggle('is-hidden', track.scrollLeft >= overflow - 1);
-  };
-  track.addEventListener('scroll', syncArrows, { passive: true });
-  window.addEventListener('resize', syncArrows);
-  // Largeur des boutons dépendante de la langue → resynchronise après re-étiquetage.
-  onLocaleChange(() => requestAnimationFrame(syncArrows));
-  requestAnimationFrame(syncArrows);
-
-  // Poignée tiroir : replie/déplie la barre (mode casier collé en haut de page).
-  const collapseBtn =
-    nav.querySelector<HTMLButtonElement>('.controls-collapse');
-  if (collapseBtn) {
-    setupOverlayDisclosure({
-      container: nav,
-      toggle: collapseBtn,
-      labels: {
-        expand: () => t('nav.expand'),
-        collapse: () => t('nav.collapse'),
-      },
-      onExpand: () => requestAnimationFrame(syncArrows),
-    });
-  }
 }
 
 export function setupPlanetControls(
   camera: CameraSystem,
-  onSelect?: (name: string) => void
+  onSelect?: (name: string) => void,
+  coordinator?: OverlayCoordinator
 ): PlanetNavigation {
-  buildPlanetButtons();
-  setupNavChrome();
-  onLocaleChange(relabelPlanetButtons);
-  const btns = Array.from(
-    document.querySelectorAll<HTMLButtonElement>('.controls-track button')
-  );
-  let selectedBody: string | null = null;
+  let selectedBody: string | null = 'overview';
 
   const selectBody = (name: string): void => {
-    const id = `orbit-${name}`;
-    // Synchronise l'état actif : le bouton du corps s'il existe, sinon aucun (petit corps).
-    btns.forEach((b) => b.classList.toggle('is-active', b.id === id));
     selectedBody = name;
+    palette.setActive(name === 'overview' ? 'overview' : name);
+    palette.close();
     if (name === 'overview') {
       camera.goToOverview();
     } else {
       camera.setTarget(name);
     }
-    // Notifie les observateurs (fiche d'info…) — un seul point pour toutes les sources
-    // de sélection, puisque barre, picker 3D et labels Explo passent tous par ici.
+    // Un seul point de notification : palette, picker 3D et labels Explo passent tous ici.
     onSelect?.(name);
   };
 
-  btns.forEach((btn) => {
-    btn.addEventListener('click', () =>
-      selectBody(btn.id.replace('orbit-', ''))
-    );
-  });
+  // `selectBody` référence `palette`, mais n'est invoqué qu'après cette construction
+  // (au clic / à la frappe), donc l'ordre d'initialisation est sûr.
+  const palette: BodyPalette = setupBodyPalette(
+    (name) => selectBody(name),
+    coordinator
+  );
+  palette.setActive('overview');
 
   return {
     selectBody,

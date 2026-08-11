@@ -29,7 +29,7 @@ test('interactive overlays expose state and close with Escape', async ({
     'true'
   );
 
-  const eventsToggle = page.locator('#events-toggle');
+  const eventsToggle = page.locator('#events-trigger');
   await eventsToggle.click();
   const eventsPanel = page.locator('#astronomical-events');
   await expect(eventsPanel).toBeVisible();

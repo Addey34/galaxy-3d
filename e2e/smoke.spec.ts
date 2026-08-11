@@ -34,9 +34,11 @@ test('boots, mounts the WebGL canvas and dismisses the loader', async ({
   expect(box?.width ?? 0).toBeGreaterThan(0);
   expect(box?.height ?? 0).toBeGreaterThan(0);
 
-  // Les boutons de navigation sont générés depuis le catalogue (au-delà de « Globale »).
-  const earthBtn = page.locator('#orbit-earth');
-  await expect(earthBtn).toBeVisible();
+  // La navigation vit dans la palette (ouverte depuis le dock) : les entrées sont
+  // générées depuis le catalogue et gardent leurs id `#orbit-{name}` historiques.
+  await page.locator('#body-search-trigger').click();
+  await expect(page.locator('#body-palette')).toBeVisible();
+  await expect(page.locator('#orbit-earth')).toBeVisible();
 
   expect(errors, `Erreurs page : ${errors.join(' | ')}`).toEqual([]);
 });
@@ -45,21 +47,23 @@ test('wires nav and playback controls (câblage ui/)', async ({ page }) => {
   await page.goto('/');
   await expect(page.locator('#loader')).toBeHidden({ timeout: 30_000 });
 
-  // Navigation (ui/planetNav) : cliquer un corps le marque actif.
+  // Navigation (ui/planetNav → palette) : cliquer un corps le marque actif.
+  await page.locator('#body-search-trigger').click();
   const earthBtn = page.locator('#orbit-earth');
   await earthBtn.click();
   await expect(earthBtn).toHaveClass(/is-active/);
 
-  // Lecture (ui/playback) : sélectionner une vitesse la marque active.
-  const speed1h = page.locator('.speed-group .tp-speed').nth(1);
-  await speed1h.click();
-  await expect(speed1h).toHaveClass(/is-active/);
+  // Lecture (ui/playback) : la barre temps s'étend pour révéler le slider de vitesse.
+  await page.locator('#time-readout').click();
+  const speedRange = page.locator('#speed-range');
+  await speedRange.press('End');
+  // Vitesse max → libellé « N unité/s » (langue courante : "y/s" en anglais, "an/s" en français).
+  await expect(page.locator('#speed-value')).toHaveText(/\d+\s*(y|an)\/s/);
 
-  // Reset date-heure (ui/timePanel → PlaybackControls) : revient à « Réel ».
+  // Retour au présent (ui/timePanel → PlaybackControls) : revient à « Réel ».
   await page.locator('#time-today').click();
-  await expect(page.locator('.speed-group .tp-speed').first()).toHaveClass(
-    /is-active/
-  );
+  await expect(speedRange).toHaveValue('0');
+  await expect(page.locator('#speed-value')).toContainText('1:1');
 });
 
 test('opens the body info panel on selection and closes it on overview', async ({
@@ -72,6 +76,7 @@ test('opens the body info panel on selection and closes it on overview', async (
   await expect(panel).toBeHidden();
 
   // Sélectionner un corps ouvre sa fiche, remplie depuis le catalogue (ui/bodyInfo).
+  await page.locator('#body-search-trigger').click();
   await page.locator('#orbit-earth').click();
   await expect(panel).toBeVisible();
   await expect(panel.locator('.bi-name')).toHaveText('Earth');
