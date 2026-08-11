@@ -1,0 +1,15 @@
+{
+  "sat441": {
+    "name": "SAT441",
+    "file": "sat441l.bsp",
+    "deploymentPath": "/assets/kernels/sat441l.bsp",
+    "source": "https://ssd.jpl.nasa.gov/ftp/eph/satellites/bsp/sat441l.bsp",
+    "bytes": 638564352,
+    "etag": "\"61a7c585-260fb800\"",
+    "coverage": {
+      "start": "1749-12-30",
+      "stop": "2250-01-06"
+    },
+    "requiresHttpRange": true
+  }
+}
