@@ -788,9 +788,18 @@ button {
   position: relative;
   z-index: 1;
   display: flex;
-  align-items: center;
+  /* Aligné en haut : la pastille et la croix suivent la 1re ligne (le nom), pas le centre
+     d'un bloc titre qui peut faire 2-3 lignes (sous-titre + badge « surface fictive »). */
+  align-items: flex-start;
   gap: var(--sp-2);
   padding: var(--sp-3) var(--sp-3) var(--sp-2);
+}
+/* Pastille et croix cadrées sur la hauteur de ligne du nom (1.1rem). */
+.bi-header .bi-dot {
+  margin-top: 0.42rem;
+}
+.bi-header .bi-close {
+  margin-top: -0.15rem;
 }
 /* Titre + croix restent ancrés en haut ; le hero est une bannière en fond, derrière
    l'en-tête, avec un dégradé qui garantit la lisibilité du titre par-dessus. */
@@ -879,6 +888,24 @@ button {
 /* Sous-titre lisible par-dessus le hero, comme le nom. */
 .surface--info.has-hero .bi-subtitle {
   text-shadow: 0 1px 8px rgba(0, 0, 0, 0.85);
+}
+/* Badge « surface fictive » : pastille ambrée discrète, sous le sous-titre. */
+.bi-fictional-badge {
+  align-self: flex-start;
+  margin-top: 0.15rem;
+  padding: 0.1rem 0.4rem;
+  border: 1px solid rgba(230, 170, 70, 0.45);
+  border-radius: var(--r-sm);
+  background: rgba(230, 170, 70, 0.15);
+  color: rgb(240, 190, 110);
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  cursor: help;
+}
+.bi-fictional-badge[hidden] {
+  display: none;
 }
 .bi-live {
   margin: 0 0 var(--sp-2);

@@ -98,6 +98,9 @@ export class CameraSystem {
     this._setAdaptiveExposure(bodyName, this.targetWorldPosition);
 
     const radius = (body.userData['radius'] as number | undefined) ?? 1;
+    // Bornes de zoom proportionnelles au rayon visuel du corps ciblé : on peut approcher
+    // chaque corps (petit ou gros) autant que sa taille le permet, sans traverser la surface.
+    this._applyTargetZoomBounds(radius);
     const defaultDistance = this.getDefaultDistance(bodyName);
     const distance = Math.max(
       defaultDistance,
@@ -354,6 +357,9 @@ export class CameraSystem {
     this.trackingPaused = false;
     this._setFov(CAMERA_SETTINGS.fov);
     this._setAdaptiveExposure(null);
+    // Retour à la vue d'ensemble : restaure les bornes de zoom globales du mode (sinon on
+    // resterait limité aux bornes proportionnelles du dernier corps ciblé).
+    this._applyGlobalZoomBounds();
     const pos =
       this._scaleMode === 'explo'
         ? new THREE.Vector3(0, 875, 1205) // vraie échelle : cadre Neptune à ~1050u
@@ -367,17 +373,49 @@ export class CameraSystem {
    *   explo → vue d'ensemble héliocentrique (orbites lisses, sans parallaxe ; le suivi d'une
    *           planète reste disponible en cliquant un corps, pour un voyage rapproché)
    */
+  /**
+   * Bornes de zoom adaptées au corps ciblé : `minDistance`/`maxDistance` deviennent des
+   * multiples de son rayon visuel courant. Un petit corps peut donc être approché autant
+   * qu'un gros (proportionnellement), et le zoom max reste borné à un cadrage utile plutôt
+   * qu'à une constante globale. Sans corps ciblé (vue d'ensemble), on garde les bornes du mode.
+   */
+  private _applyTargetZoomBounds(radius: number): void {
+    const explo = this._scaleMode === 'explo';
+    const minFloor = explo
+      ? CAMERA_CONTROLS_SETTINGS.exploMinFloor
+      : CAMERA_CONTROLS_SETTINGS.educMinFloor;
+    const modeMax = explo
+      ? CAMERA_CONTROLS_SETTINGS.exploMaxDistance
+      : CAMERA_CONTROLS_SETTINGS.educMaxDistance;
+
+    // Min : on frôle la surface (facteur × rayon), jamais sous le garde-fou du mode.
+    this.controls.minDistance = Math.max(
+      minFloor,
+      radius * CAMERA_CONTROLS_SETTINGS.targetMinRadiusFactor
+    );
+    // Max : cadrage large du corps (facteur × rayon), plafonné par le max global du mode
+    // pour ne jamais permettre de sortir du système.
+    this.controls.maxDistance = Math.min(
+      modeMax,
+      radius * CAMERA_CONTROLS_SETTINGS.targetMaxRadiusFactor
+    );
+  }
+
+  /** Bornes de zoom globales du mode courant (vue d'ensemble, sans corps ciblé). */
+  private _applyGlobalZoomBounds(): void {
+    const explo = this._scaleMode === 'explo';
+    this.controls.minDistance = explo
+      ? CAMERA_CONTROLS_SETTINGS.exploMinDistance
+      : CAMERA_CONTROLS_SETTINGS.educMinDistance;
+    this.controls.maxDistance = explo
+      ? CAMERA_CONTROLS_SETTINGS.exploMaxDistance
+      : CAMERA_CONTROLS_SETTINGS.educMaxDistance;
+  }
+
   /** Ajuste bornes de distance + plans near/far pour le mode d'échelle (sans bouger la caméra). */
   private _applyScaleModeBounds(mode: 'educ' | 'explo'): void {
     this._scaleMode = mode;
-    this.controls.minDistance =
-      mode === 'explo'
-        ? CAMERA_CONTROLS_SETTINGS.exploMinDistance
-        : CAMERA_CONTROLS_SETTINGS.educMinDistance;
-    this.controls.maxDistance =
-      mode === 'explo'
-        ? CAMERA_CONTROLS_SETTINGS.exploMaxDistance
-        : CAMERA_CONTROLS_SETTINGS.educMaxDistance;
+    this._applyGlobalZoomBounds();
 
     // Near/far : en Explo les planètes sont à 0.003–0.12u → near=0.1 les clipperait.
     this.camera.near =

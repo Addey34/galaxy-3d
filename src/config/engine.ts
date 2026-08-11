@@ -178,6 +178,14 @@ export const CAMERA_CONTROLS_SETTINGS = {
   exploMinDistance: 0.0001, // Explo — quelques km en vraie échelle
   educMaxDistance: 500, // Éducatif — Neptune à 192u + marge
   exploMaxDistance: 3_000, // Explo — Neptune réel à 1050u
+  // ── Bornes de zoom ADAPTÉES AU CORPS ciblé (multiples de son rayon visuel courant) ──
+  // Recalculées à chaque sélection : un petit corps se zoome autant qu'un gros,
+  // proportionnellement à sa taille, sans jamais traverser la surface.
+  targetMinRadiusFactor: 1.15, // au plus près : on frôle la surface (1.15× le rayon)
+  targetMaxRadiusFactor: 60, // au plus loin d'un corps suivi : 60× son rayon
+  // Garde-fous absolus (le facteur ne doit pas descendre/monter hors de ces bornes par mode).
+  educMinFloor: 0.05,
+  exploMinFloor: 0.00002,
   maxPolarAngle: Math.PI,
   minPolarAngle: 0,
   screenSpacePanning: false,

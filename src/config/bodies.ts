@@ -55,8 +55,8 @@ export const CELESTIAL_CONFIG: CelestialConfig = {
         meanTempC: 5505,
         moonCount: 8,
         description: {
-          en: 'The star at the heart of the Solar System: a ball of plasma holding 99.86% of all the mass orbiting it.',
-          fr: 'L’étoile au cœur du Système solaire : une boule de plasma qui concentre 99,86 % de toute la masse en orbite autour d’elle.',
+          en: 'The star at the heart of the Solar System. This ball of plasma holds 99.86% of all the mass orbiting it.',
+          fr: 'L’étoile au cœur du Système solaire. Cette boule de plasma concentre 99,86 % de toute la masse en orbite autour d’elle.',
         },
         wiki: {
           en: 'https://en.wikipedia.org/wiki/Sun',
@@ -122,8 +122,8 @@ export const CELESTIAL_CONFIG: CelestialConfig = {
         meanTempC: 464,
         moonCount: 0,
         description: {
-          en: 'The hottest planet: its thick CO₂ atmosphere traps heat through a runaway greenhouse effect. It spins backwards, very slowly.',
-          fr: 'La planète la plus chaude : son épaisse atmosphère de CO₂ piège la chaleur par un effet de serre emballé. Elle tourne à l’envers, très lentement.',
+          en: 'The hottest planet. Its thick CO₂ atmosphere traps heat through a runaway greenhouse effect, and it spins backwards, very slowly.',
+          fr: 'La planète la plus chaude. Son épaisse atmosphère de CO₂ piège la chaleur par un effet de serre emballé, et elle tourne à l’envers, très lentement.',
         },
         wiki: {
           en: 'https://en.wikipedia.org/wiki/Venus',
@@ -352,8 +352,8 @@ export const CELESTIAL_CONFIG: CelestialConfig = {
         meanTempC: -108,
         moonCount: 95,
         description: {
-          en: 'The giant of the Solar System: more massive than all the other planets combined. Its Great Red Spot is a storm centuries old.',
-          fr: 'La géante du Système solaire : plus massive que toutes les autres planètes réunies. Sa Grande Tache rouge est une tempête vieille de plusieurs siècles.',
+          en: 'The giant of the Solar System, more massive than all the other planets combined. Its Great Red Spot is a storm centuries old.',
+          fr: 'La géante du Système solaire, plus massive que toutes les autres planètes réunies. Sa Grande Tache rouge est une tempête vieille de plusieurs siècles.',
         },
         wiki: {
           en: 'https://en.wikipedia.org/wiki/Jupiter',
@@ -680,7 +680,7 @@ export const CELESTIAL_CONFIG: CelestialConfig = {
             meanAnomalyAtEpochRad: 11.7 * D2R,
             epoch: new Date('2000-01-01T12:00:00Z'),
           },
-          textureResolutions: { surface: ['1k'] },
+          textureResolutions: { surface: ['2k', '1k'] },
           realData: {
             radiusKm: 2_574.76,
             distanceAU: 0.008167897,
@@ -724,8 +724,8 @@ export const CELESTIAL_CONFIG: CelestialConfig = {
         meanTempC: -197,
         moonCount: 28,
         description: {
-          en: 'The ice giant tipped on its side: its axis leans at 98°, so it rolls along its orbit. Each season lasts 21 years.',
-          fr: 'La géante de glace couchée sur le côté : son axe penche à 98°, si bien qu’elle roule le long de son orbite. Chaque saison dure 21 ans.',
+          en: 'The ice giant tipped on its side, with an axis leaning at 98°, so it rolls along its orbit. Each season lasts 21 years.',
+          fr: 'La géante de glace couchée sur le côté, avec un axe penché à 98°, si bien qu’elle roule le long de son orbite. Chaque saison dure 21 ans.',
         },
         wiki: {
           en: 'https://en.wikipedia.org/wiki/Uranus',

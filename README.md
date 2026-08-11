@@ -28,7 +28,7 @@ démarrage complètent les contrôles de navigation, de temps et les deux modes 
 | Lib                                                          | Version | Rôle                                       |
 | ------------------------------------------------------------ | ------- | ------------------------------------------ |
 | [Three.js](https://threejs.org/)                             | 0.176   | Rendu WebGL 3D                             |
-| [astronomy-engine](https://github.com/cosinekitty/astronomy) | 2.1.19  | Éphéméride — positions planétaires réelles |
+| [astronomy-engine](https://github.com/cosinekitty/astronomy) | 2.1.19  | Éphéméride : positions planétaires réelles |
 | [@tweenjs/tween.js](https://github.com/tweenjs/tween.js/)    | 25.0    | Animations caméra fluides                  |
 | [Vite](https://vitejs.dev/)                                  | 6.3     | Bundler + dev server                       |
 | TypeScript                                                   | 6.0     | Typage strict                              |
@@ -55,9 +55,9 @@ Ouvrir [http://localhost:5173](http://localhost:5173) dans le navigateur.
 pnpm dev        # Serveur de dev avec hot reload
 pnpm build      # tsc --noEmit (vérification de types) puis build de production → dist/
 pnpm preview    # Servir le build de production localement
-pnpm typecheck  # tsc --noEmit seul — vérification stricte des types, sans build
-pnpm test       # vitest run — tests unitaires des modules mathématiques purs
-pnpm test:e2e   # playwright test — tests navigateur sur le port dédié 5273
+pnpm typecheck  # tsc --noEmit seul : vérification stricte des types, sans build
+pnpm test       # vitest run : tests unitaires des modules mathématiques purs
+pnpm test:e2e   # playwright test : tests navigateur sur le port dédié 5273
 pnpm ephemeris:generate # régénérer les vecteurs précis depuis NASA/JPL Horizons
 pnpm textures:resize    # generate missing derived texture resolutions
 pnpm format     # Formater les fichiers TypeScript/CSS avec Prettier
@@ -124,31 +124,31 @@ vision de la caméra, jamais l'échelle des objets.
 
 ### Contrôle du temps
 
-- **Play / Pause** — figer la simulation
-- **Réel / 1h/s / 3h/s / 6h/s** — vitesse de simulation
-- **Champ date** — cliquer ou faire défiler la molette pour changer de jour
-- **Champ heure** — idem pour naviguer heure par heure
-- **Aujourd'hui** — revenir au présent
+- **Play / Pause** : figer la simulation
+- **Réel / 1h/s / 3h/s / 6h/s** : vitesse de simulation
+- **Champ date** : cliquer ou faire défiler la molette pour changer de jour
+- **Champ heure** : idem pour naviguer heure par heure
+- **Aujourd'hui** : revenir au présent
 - Le point **LIVE** (vert) s'allume quand la simulation est à ±5 min du temps réel
 
 ### Navigation caméra
 
-- **Clic + drag** — orbiter autour du point cible
-- **Scroll** — zoom
-- **Boutons de planète** — voler vers un corps céleste (animation 1.2 s)
+- **Clic + drag** : orbiter autour du point cible
+- **Scroll** : zoom
+- **Boutons de planète** : voler vers un corps céleste (animation 1.2 s)
 
 ### Couches visuelles (Terre)
 
-1. **Surface** — `MeshStandardMaterial` PBR avec normal map et specular map
-2. **Nuages** — sphère transparente légèrement plus grande (×1.01), rotation indépendante
-3. **Lueurs nocturnes** — shader GLSL custom : les lumières de villes apparaissent uniquement côté nuit
+1. **Surface** : `MeshStandardMaterial` PBR avec normal map et specular map
+2. **Nuages** : sphère transparente légèrement plus grande (×1.01), rotation indépendante
+3. **Lueurs nocturnes** : shader GLSL custom, les lumières de villes apparaissent uniquement côté nuit
 
 ## Architecture
 
 ```
 src/
-├── MainSolarSystemApp.ts     # Racine de composition — démarre l'app et les modules UI
-├── SolarSystemApp.ts         # Façade — coordonne l'initialisation dans l'ordre
+├── MainSolarSystemApp.ts     # Racine de composition : démarre l'app et les modules UI
+├── SolarSystemApp.ts         # Façade : coordonne l'initialisation dans l'ordre
 ├── types.ts                  # Interfaces TypeScript partagées
 │
 ├── core/
@@ -173,7 +173,7 @@ src/
 │       └── Starfield.ts              # Skybox étoilée
 │
 ├── config/
-│   ├── bodies.ts      # Catalogue des corps célestes (CELESTIAL_CONFIG) — SOURCE UNIQUE
+│   ├── bodies.ts      # Catalogue des corps célestes (CELESTIAL_CONFIG) : SOURCE UNIQUE
 │   ├── engine.ts      # Réglages moteur : rendu, perf/LOD, caméra, éclairage, shaders, textures
 │   #  (imports via l'alias @/ → src/ ; ex. @/config/engine, @/core/frames)
 │   ├── catalog.ts     # Itération/résolution du catalogue (forEachBody, flattenBodies)
@@ -268,7 +268,7 @@ Le catalogue (`src/config/bodies.ts`) est la **source unique** : boutons de navi
    - `kind` : `'planet'` (ou `'moon'`, `'star'`, `'skybox'`)
    - `astroBody` : l'enum `Body` d'astronomy-engine (positions réelles)
    - `cameraDistance: { educ, explo }` : distances de visite caméra
-   - `loadPriority` : rang de préchargement (croissant) — optionnel
+   - `loadPriority` : rang de préchargement (croissant), optionnel
    - `realData.orbitPeriodDays` : période orbitale documentaire
    - `textureResolutions` : les couches et résolutions disponibles (le **chemin** est
      dérivé de la clé, pas à écrire à la main)
@@ -314,11 +314,11 @@ Réglages moteur dans `src/config/engine.ts`, catalogue des corps dans `src/conf
 
 ## Dépendances de développement
 
-- **TypeScript strict** (`tsconfig.json`) — Vite sert/compile le TS via esbuild (pas de vérification de types en dev) ; `pnpm typecheck` ou `pnpm build` (qui lance `tsc --noEmit`) valide réellement les types
-- **Vitest** — tests unitaires des modules mathématiques purs (`src/**/*.test.ts`) ; `pnpm verify` = types + lint + tests
-- **ESLint** — `eslint.config.js` (flat config, typescript-eslint recommended non-type-checked) ; `pnpm lint` / `pnpm lint:fix`, intégré à `pnpm verify`
-- **Prettier** — règles dans `.prettierrc`, commandes `pnpm format` et `pnpm format:check` ; l'arbre entier est conforme
-- **Playwright** — 18 scénarios navigateur dans `e2e/` (`smoke`, `modes`, `explo`, `i18n`, `guided-tour`) ; le serveur Vite de test utilise le port réservé 5273
+- **TypeScript strict** (`tsconfig.json`) : Vite sert/compile le TS via esbuild (pas de vérification de types en dev) ; `pnpm typecheck` ou `pnpm build` (qui lance `tsc --noEmit`) valide réellement les types
+- **Vitest** : tests unitaires des modules mathématiques purs (`src/**/*.test.ts`) ; `pnpm verify` = types + lint + tests
+- **ESLint** : `eslint.config.js` (flat config, typescript-eslint recommended non-type-checked) ; `pnpm lint` / `pnpm lint:fix`, intégré à `pnpm verify`
+- **Prettier** : règles dans `.prettierrc`, commandes `pnpm format` et `pnpm format:check` ; l'arbre entier est conforme
+- **Playwright** : 18 scénarios navigateur dans `e2e/` (`smoke`, `modes`, `explo`, `i18n`, `guided-tour`) ; le serveur Vite de test utilise le port réservé 5273
 - Aucun seuil de couverture configuré
 
 ## Qualité et limites actuelles
@@ -334,16 +334,16 @@ Réglages moteur dans `src/config/engine.ts`, catalogue des corps dans `src/conf
 
 En résumé : d'abord rendre le projet visible (déploiement public, CI, SEO) et instructif
 (fiches d'information par corps, i18n FR/EN, transition animée Éducatif→Exploration), ensuite
-donner des raisons de revenir — permaliens, événements astronomiques, zoom optique FOV et visite
-guidée sont désormais livrés ; restent les lunes majeures et le mode hors-ligne (PWA). À terme,
+donner des raisons de revenir. Les permaliens, événements astronomiques, zoom optique FOV et
+visite guidée sont désormais livrés ; restent les lunes majeures et le mode hors-ligne (PWA). À terme,
 en faire une référence (missions spatiales, WebXR).
 
 ## Documentation technique
 
-- [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — frontières, cycle de vie et invariants
-- [`docs/TESTING.md`](docs/TESTING.md) — stratégie et commandes de validation
+- [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) : frontières, cycle de vie et invariants
+- [`docs/TESTING.md`](docs/TESTING.md) : stratégie et commandes de validation
 - [docs/UNIVERSE_CATALOG.md](docs/UNIVERSE_CATALOG.md) - catalogue, assets et feuille de route de l'univers
-- [`AGENTS.md`](AGENTS.md) — règles de contribution pour les agents et développeurs
+- [`AGENTS.md`](AGENTS.md) : règles de contribution pour les agents et développeurs
 
 ## Déploiement
 
@@ -356,7 +356,7 @@ firebase deploy --only hosting:galaxy
 
 ## Licence
 
-Code sous **PolyForm Noncommercial License 1.0.0** — consultation, étude et usage
+Code sous **PolyForm Noncommercial License 1.0.0** : consultation, étude et usage
 non commercial autorisés ; l'usage commercial est réservé à l'auteur. Voir
 [`LICENSE.md`](LICENSE.md). Les textures planétaires restent soumises à leurs
 licences d'origine (Solar System Scope, NASA).

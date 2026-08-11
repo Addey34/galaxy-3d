@@ -157,8 +157,8 @@ export const SMALL_BODY_ELEMENTS: readonly SmallBodyElements[] = [
     meanTempC: -105,
     moonCount: 0,
     description: {
-      en: 'The largest body of the asteroid belt and the only dwarf planet of the inner Solar System. NASA’s Dawn probe revealed bright salt deposits there — traces of a briny subsurface ocean.',
-      fr: 'Le plus gros corps de la ceinture d’astéroïdes et la seule planète naine du Système solaire interne. La sonde Dawn y a révélé des dépôts de sel brillants — traces d’un océan souterrain saumâtre.',
+      en: 'The largest body of the asteroid belt and the only dwarf planet of the inner Solar System. NASA’s Dawn probe revealed bright salt deposits there, traces of a briny subsurface ocean.',
+      fr: 'Le plus gros corps de la ceinture d’astéroïdes et la seule planète naine du Système solaire interne. La sonde Dawn y a révélé des dépôts de sel brillants, traces d’un océan souterrain saumâtre.',
     },
     wiki: {
       en: 'https://en.wikipedia.org/wiki/Ceres_(dwarf_planet)',
@@ -185,8 +185,8 @@ export const SMALL_BODY_ELEMENTS: readonly SmallBodyElements[] = [
     meanTempC: -108,
     moonCount: 0,
     description: {
-      en: 'The brightest asteroid, and the only one occasionally visible to the naked eye. A giant impact blasted away its south pole — fragments of that crater rain down on Earth as some of our meteorites.',
-      fr: 'L’astéroïde le plus brillant, et le seul parfois visible à l’œil nu. Un impact géant a arraché son pôle sud — des fragments de ce cratère tombent sur Terre sous forme de certaines de nos météorites.',
+      en: 'The brightest asteroid, and the only one occasionally visible to the naked eye. A giant impact blasted away its south pole, and fragments of that crater rain down on Earth as some of our meteorites.',
+      fr: 'L’astéroïde le plus brillant, et le seul parfois visible à l’œil nu. Un impact géant a arraché son pôle sud, et des fragments de ce cratère tombent sur Terre sous forme de certaines de nos météorites.',
     },
     wiki: {
       en: 'https://en.wikipedia.org/wiki/4_Vesta',
@@ -241,8 +241,8 @@ export const SMALL_BODY_ELEMENTS: readonly SmallBodyElements[] = [
     meanTempC: -109,
     moonCount: 0,
     description: {
-      en: 'The fourth-largest asteroid. In 2019 it was found to be nearly spherical — so round it may qualify as the smallest dwarf planet in the Solar System.',
-      fr: 'Le quatrième plus gros astéroïde. En 2019, on l’a découvert quasi sphérique — si rond qu’il pourrait être la plus petite planète naine du Système solaire.',
+      en: 'The fourth-largest asteroid. In 2019 it was found to be nearly spherical, so round it may qualify as the smallest dwarf planet in the Solar System.',
+      fr: 'Le quatrième plus gros astéroïde. En 2019, on l’a découvert quasi sphérique, si rond qu’il pourrait être la plus petite planète naine du Système solaire.',
     },
     wiki: {
       en: 'https://en.wikipedia.org/wiki/10_Hygiea',
@@ -345,8 +345,8 @@ export const SMALL_BODY_ELEMENTS: readonly SmallBodyElements[] = [
     meanTempC: -231,
     moonCount: 1,
     description: {
-      en: 'More massive than Pluto: its discovery in 2005 forced astronomers to define what a planet is — and cost Pluto its status. It roams up to three times farther from the Sun than Pluto.',
-      fr: 'Plus massive que Pluton : sa découverte en 2005 a forcé les astronomes à définir ce qu’est une planète — et a coûté son statut à Pluton. Elle s’éloigne jusqu’à trois fois plus loin du Soleil que Pluton.',
+      en: 'More massive than Pluto. Its discovery in 2005 forced astronomers to define what a planet is, and cost Pluto its status. It roams up to three times farther from the Sun than Pluto.',
+      fr: 'Plus massive que Pluton. Sa découverte en 2005 a forcé les astronomes à définir ce qu’est une planète, et a coûté son statut à Pluton. Elle s’éloigne jusqu’à trois fois plus loin du Soleil que Pluton.',
     },
     wiki: {
       en: 'https://en.wikipedia.org/wiki/Eris_(dwarf_planet)',
@@ -375,8 +375,8 @@ export const SMALL_BODY_ELEMENTS: readonly SmallBodyElements[] = [
     meanTempC: -241,
     moonCount: 2,
     description: {
-      en: 'Spinning in under 4 hours — the fastest of any large body in the Solar System — it has been stretched into an egg shape. In 2017 it became the first trans-Neptunian object found to have a ring.',
-      fr: 'Tournant sur elle-même en moins de 4 heures — record des grands corps du Système solaire — elle s’est étirée en forme d’œuf. En 2017, elle est devenue le premier objet transneptunien doté d’un anneau connu.',
+      en: 'It spins in under 4 hours, the fastest of any large body in the Solar System, which has stretched it into an egg shape. In 2017 it became the first trans-Neptunian object found to have a ring.',
+      fr: 'Elle tourne sur elle-même en moins de 4 heures, un record parmi les grands corps du Système solaire, ce qui l’a étirée en forme d’œuf. En 2017, elle est devenue le premier objet transneptunien doté d’un anneau connu.',
     },
     wiki: {
       en: 'https://en.wikipedia.org/wiki/Haumea',
@@ -427,8 +427,8 @@ export const SMALL_BODY_ELEMENTS: readonly SmallBodyElements[] = [
     surfaceResolutions: ['4k', '2k'],
     kind: 'comet',
     description: {
-      en: 'The most famous comet, visible from Earth every ~76 years — next return in 2061. It orbits backwards, against the flow of the planets.',
-      fr: 'La plus célèbre des comètes, visible depuis la Terre tous les ~76 ans — prochain retour en 2061. Elle orbite à rebours, à contre-courant des planètes.',
+      en: 'The most famous comet, visible from Earth about every 76 years, with its next return in 2061. It orbits backwards, against the flow of the planets.',
+      fr: 'La plus célèbre des comètes, visible depuis la Terre tous les 76 ans environ, avec un prochain retour en 2061. Elle orbite à rebours, à contre-courant des planètes.',
     },
     wiki: {
       en: 'https://en.wikipedia.org/wiki/Halley%27s_Comet',
