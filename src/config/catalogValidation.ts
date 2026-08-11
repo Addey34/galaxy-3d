@@ -1,4 +1,4 @@
-import { allBodies } from './catalog';
+import { allBodies, deriveTextures, ringTexturePath } from './catalog';
 import type {
   CelestialBodyConfig,
   CelestialConfig,
@@ -88,10 +88,12 @@ function validateBody(
   name: string,
   body: CelestialBodyConfig
 ): void {
-  const textureEntries = Object.entries(body.textures);
-  const resolutionEntries = Object.entries(body.textureResolutions);
+  // Les chemins sont dérivés de la clé du corps (deriveTextures) ; on valide les chemins
+  // effectifs, en dérivant ici aussi pour être robuste à l'ordre d'initialisation.
+  const textures = deriveTextures(name, body);
+  const textureEntries = Object.entries(textures);
   const resolutionByLayer = body.textureResolutions as TextureResolutions;
-  const surface = body.textures.surface;
+  const surface = textures.surface;
   const hasSurface = typeof surface === 'string' && surface.length > 0;
 
   if (
@@ -128,20 +130,10 @@ function validateBody(
     );
   }
 
-  for (const [layer, resolutions] of resolutionEntries) {
-    const texturePath = body.textures[layer as keyof typeof body.textures];
-    if (!texturePath && Array.isArray(resolutions) && resolutions.length > 0) {
-      errors.push(
-        `${name}:${layer} declares resolutions without a texture path`
-      );
-    }
-  }
-
   if (body.ring) {
-    if (!isSafeTexturePath(body.ring.textures)) {
-      errors.push(
-        `${name}:ring has an unsafe texture path "${body.ring.textures}"`
-      );
+    const ringPath = body.ring.textures ?? ringTexturePath(name);
+    if (!isSafeTexturePath(ringPath)) {
+      errors.push(`${name}:ring has an unsafe texture path "${ringPath}"`);
     }
     validateQualityChain(errors, `${name}:ring`, body.ring.textureResolutions);
   }

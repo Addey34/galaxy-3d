@@ -2,7 +2,7 @@ import { existsSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
-import { allBodies } from './catalog';
+import { allBodies, ringTexturePath } from './catalog';
 import { CELESTIAL_CONFIG } from './bodies';
 import type { TextureQuality, TextureResolutions } from '@/types';
 import sourceManifest from '../../scripts/texture-sources.json';
@@ -49,7 +49,7 @@ describe('catalogue texture integrity', () => {
   it('has a surface or an explicit fallback for every rendered body', () => {
     for (const { name, config } of allBodies(CELESTIAL_CONFIG)) {
       expect(
-        Boolean(config.textures.surface) || config.fallbackColor !== undefined,
+        Boolean(config.textures?.surface) || config.fallbackColor !== undefined,
         `${name} must declare a surface texture or fallbackColor`
       ).toBe(true);
     }
@@ -57,7 +57,7 @@ describe('catalogue texture integrity', () => {
 
   it('has a reviewed source record for every configured layer', () => {
     for (const { name, config } of allBodies(CELESTIAL_CONFIG)) {
-      for (const layer of Object.keys(config.textures)) {
+      for (const layer of Object.keys(config.textures ?? {})) {
         expect(REVIEW_KEYS.has(`${name}/${layer}`), `${name}:${layer}`).toBe(
           true
         );
@@ -68,7 +68,9 @@ describe('catalogue texture integrity', () => {
 
   it('contains every configured texture LOD on disk', () => {
     for (const { name, config } of allBodies(CELESTIAL_CONFIG)) {
-      for (const [layer, rawBasePath] of Object.entries(config.textures)) {
+      for (const [layer, rawBasePath] of Object.entries(
+        config.textures ?? {}
+      )) {
         if (!rawBasePath) continue;
         const basePath = rawBasePath as string;
         const resolutions =
@@ -85,7 +87,7 @@ describe('catalogue texture integrity', () => {
         assertQualityChain(
           name,
           'ring',
-          ring.textures,
+          ring.textures ?? ringTexturePath(name),
           ring.textureResolutions
         );
       }

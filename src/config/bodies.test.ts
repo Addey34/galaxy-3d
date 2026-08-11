@@ -18,8 +18,13 @@ describe('Jupiter Galilean moons catalogue', () => {
       });
       expect(moon?.rotationBody).toBe(Body.Jupiter);
       expect(moon?.fallbackColor).toBeTypeOf('number');
-      expect(moon?.textures.surface).toBe(name + '/' + name + 'Surface');
-      expect(moon?.textureResolutions.surface).toEqual(['2k', '1k']);
+      expect(moon?.textures?.surface).toBe(name + '/' + name + '_surface');
+      expect(moon?.textureResolutions.surface).toEqual([
+        '8k',
+        '4k',
+        '2k',
+        '1k',
+      ]);
       expect(moon?.realData?.radiusKm).toBeGreaterThan(1_000);
       expect(moon?.realData?.orbitPeriodDays).toBeGreaterThan(1);
     }

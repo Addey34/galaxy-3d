@@ -36,7 +36,8 @@ describe('smallBodyToConfig', () => {
 
   it('defaults to the asteroid kind and carries no texture (no mesh, invariant-safe)', () => {
     expect(cfg.kind).toBe('asteroid');
-    expect(cfg.textures).toEqual({});
+    // `textures` est dérivé au niveau du catalogue (deriveTextures), pas par le converter.
+    expect(cfg.textures).toBeUndefined();
     expect(cfg.textureResolutions).toEqual({});
     expect(cfg.radius).toBeGreaterThan(0); // évite une division par zéro dans setScaleMode
   });
@@ -76,7 +77,7 @@ describe('smallBodyToConfig', () => {
       axialTiltDeg: 30,
     });
 
-    expect(textured.textures.surface).toBe('dwarf/dwarfSurface');
+    // Le converter déclare les résolutions ; le chemin `textures` est dérivé au catalogue.
     expect(textured.textureResolutions.surface).toEqual(['4k', '2k']);
     expect(textured.radius).toBe(0.2);
     expect(textured.rotationSpeed).toBeCloseTo((Math.PI * 2) / 36_000, 12);
@@ -103,14 +104,17 @@ describe('SMALL_BODIES catalogue', () => {
   });
 
   it('exposes local textures with the available resolutions', () => {
-    for (const name of ['ceres', 'eris', 'haumea', 'makemake', 'halley']) {
-      expect(SMALL_BODIES[name]?.textures.surface).toBe(
-        `${name}/${name}Surface`
-      );
-      expect(SMALL_BODIES[name]?.textureResolutions.surface).toEqual([
-        '4k',
-        '2k',
-      ]);
+    // Le chemin `textures` est dérivé au niveau du catalogue (deriveTextures) ; ici on
+    // vérifie que chaque corps déclare les résolutions réellement livrées sur disque.
+    const expected: Record<string, string[]> = {
+      ceres: ['4k', '2k', '1k'],
+      eris: ['4k', '2k', '1k'],
+      haumea: ['4k', '2k', '1k'],
+      makemake: ['4k', '2k', '1k'],
+      halley: ['4k', '2k'],
+    };
+    for (const [name, res] of Object.entries(expected)) {
+      expect(SMALL_BODIES[name]?.textureResolutions.surface).toEqual(res);
     }
   });
 

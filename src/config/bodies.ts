@@ -12,7 +12,12 @@
 import { Body } from 'astronomy-engine';
 import type { CelestialConfig } from '@/types';
 import { exploCameraDistance } from '@/core/ScaleService';
-import { assertUniqueBodyNames } from './catalog';
+import {
+  assertUniqueBodyNames,
+  deriveTextures,
+  forEachBody,
+  ringTexturePath,
+} from './catalog';
 import { assertValidCelestialCatalog } from './catalogValidation';
 import { SMALL_BODIES } from './smallBodies';
 
@@ -29,8 +34,7 @@ export const CELESTIAL_CONFIG: CelestialConfig = {
       radius: 0,
       rotationSpeed: 0,
       orbitalColor: 0x000000,
-      textureResolutions: { surface: ['8k'] },
-      textures: { surface: 'stars/starsSurface' },
+      textureResolutions: { surface: ['8k', '4k', '2k', '1k'] },
       loadPriority: 0,
     },
 
@@ -43,7 +47,6 @@ export const CELESTIAL_CONFIG: CelestialConfig = {
       rotationSpeed: _R(609.6),
       orbitalColor: 0x000000,
       textureResolutions: { surface: ['4k', '2k', '1k'] },
-      textures: { surface: 'sun/sunSurface' },
       realData: {
         radiusKm: 695_700,
         axialTilt: 7.25 * D2R,
@@ -71,11 +74,7 @@ export const CELESTIAL_CONFIG: CelestialConfig = {
       radius: 0.38,
       rotationSpeed: _R(1407.6),
       orbitalColor: 0xb8b0a5,
-      textureResolutions: { surface: ['8k', '4k', '2k', '1k'], bump: ['1k'] },
-      textures: {
-        surface: 'mercury/mercurySurface',
-        bump: 'mercury/mercuryBump',
-      },
+      textureResolutions: { surface: ['8k', '4k', '2k', '1k'] },
       realData: {
         radiusKm: 2_440,
         distanceAU: 0.387,
@@ -109,13 +108,7 @@ export const CELESTIAL_CONFIG: CelestialConfig = {
       orbitalColor: 0xe9a13b,
       textureResolutions: {
         surface: ['8k', '4k', '2k', '1k'],
-        bump: ['1k'],
         atmosphere: ['4k', '2k', '1k'],
-      },
-      textures: {
-        surface: 'venus/venusSurface',
-        atmosphere: 'venus/venusAtmosphere',
-        bump: 'venus/venusBump',
       },
       realData: {
         radiusKm: 6_052,
@@ -155,13 +148,6 @@ export const CELESTIAL_CONFIG: CelestialConfig = {
         spec: ['8k', '4k', '2k', '1k'],
         lights: ['8k', '4k', '2k', '1k'],
       },
-      textures: {
-        surface: 'earth/earthSurface',
-        normalMap: 'earth/earthNormalMap',
-        clouds: 'earth/earthClouds',
-        spec: 'earth/earthSpec',
-        lights: 'earth/earthLights',
-      },
       realData: {
         radiusKm: 6_371,
         distanceAU: 1.0,
@@ -199,11 +185,6 @@ export const CELESTIAL_CONFIG: CelestialConfig = {
           orbitalColor: 0x8f98a5,
           textureResolutions: {
             surface: ['8k', '4k', '2k', '1k'],
-            bump: ['4k', '2k', '1k'],
-          },
-          textures: {
-            surface: 'moon/moonSurface',
-            bump: 'moon/moonBump',
           },
           realData: {
             radiusKm: 1_737,
@@ -239,11 +220,6 @@ export const CELESTIAL_CONFIG: CelestialConfig = {
       orbitalColor: 0xe85d3f,
       textureResolutions: {
         surface: ['8k', '4k', '2k', '1k'],
-        normalMap: ['1k'],
-      },
-      textures: {
-        surface: 'mars/marsSurface',
-        normalMap: 'mars/marsNormalMap',
       },
       realData: {
         radiusKm: 3_390,
@@ -268,6 +244,94 @@ export const CELESTIAL_CONFIG: CelestialConfig = {
       astroBody: Body.Mars,
       cameraDistance: { educ: 3, explo: exploCameraDistance(3_390) },
       loadPriority: 4,
+      satellites: {
+        phobos: {
+          kind: 'moon',
+          displayName: { en: 'Phobos', fr: 'Phobos' },
+          radius: 0.08,
+          rotationSpeed: _R(7.6488),
+          orbitalColor: 0xb6a28d,
+          fallbackColor: 0x8f7b69,
+          frame: 'parentRelative',
+          rotationBody: Body.Mars,
+          relativeEphemeris: { kind: 'horizonsParentRelative' },
+          relativeOrbitalElements: {
+            semiMajorAxisAU: 0.0000626680043,
+            eccentricity: 0.015,
+            inclinationRad: 1.1 * D2R,
+            ascendingNodeRad: 169.2 * D2R,
+            argPerihelionRad: 216.3 * D2R,
+            meanAnomalyAtEpochRad: 189.7 * D2R,
+            epoch: new Date('2000-01-01T12:00:00Z'),
+          },
+          textureResolutions: { surface: ['8k', '4k', '2k', '1k'] },
+          realData: {
+            radiusKm: 11.08,
+            distanceAU: 0.0000626680043,
+            orbitPeriodDays: 0.3187,
+            orbitalInclination: 1.1 * D2R,
+            ascendingNode: 169.2 * D2R,
+            axialTilt: 0,
+            massKg: 1.0659e16,
+            gravity: 0.0057,
+            meanTempC: -40,
+            moonCount: 0,
+            description: {
+              en: "The larger and faster-orbiting of Mars' two small moons, shaped by ancient impacts.",
+              fr: 'La plus grande et la plus rapide des deux petites lunes de Mars, façonnée par les impacts anciens.',
+            },
+            wiki: {
+              en: 'https://en.wikipedia.org/wiki/Phobos_(moon)',
+              fr: 'https://fr.wikipedia.org/wiki/Phobos_(lune)',
+            },
+          },
+          cameraDistance: { educ: 0.35, explo: exploCameraDistance(11.08) },
+          loadPriority: 11,
+        },
+        deimos: {
+          kind: 'moon',
+          displayName: { en: 'Deimos', fr: 'Déimos' },
+          radius: 0.06,
+          rotationSpeed: _R(30.3),
+          orbitalColor: 0xc1aa91,
+          fallbackColor: 0x927d68,
+          frame: 'parentRelative',
+          rotationBody: Body.Mars,
+          relativeEphemeris: { kind: 'horizonsParentRelative' },
+          relativeOrbitalElements: {
+            semiMajorAxisAU: 0.00015680036,
+            eccentricity: 0,
+            inclinationRad: 1.8 * D2R,
+            ascendingNodeRad: 54.3 * D2R,
+            argPerihelionRad: 0,
+            meanAnomalyAtEpochRad: 205 * D2R,
+            epoch: new Date('2000-01-01T12:00:00Z'),
+          },
+          textureResolutions: { surface: ['1k'] },
+          realData: {
+            radiusKm: 6.2,
+            distanceAU: 0.00015680036,
+            orbitPeriodDays: 1.2625,
+            orbitalInclination: 1.8 * D2R,
+            ascendingNode: 54.3 * D2R,
+            axialTilt: 0.9 * D2R,
+            massKg: 1.4762e15,
+            gravity: 0.003,
+            meanTempC: -40,
+            moonCount: 0,
+            description: {
+              en: "Mars' smaller outer moon, a dark irregular body with a slow synchronous orbit.",
+              fr: 'La plus petite lune extérieure de Mars, un corps sombre et irrégulier en orbite synchrone lente.',
+            },
+            wiki: {
+              en: 'https://en.wikipedia.org/wiki/Deimos_(moon)',
+              fr: 'https://fr.wikipedia.org/wiki/D%C3%A9imos_(lune)',
+            },
+          },
+          cameraDistance: { educ: 0.3, explo: exploCameraDistance(6.2) },
+          loadPriority: 11,
+        },
+      },
     },
 
     jupiter: {
@@ -276,7 +340,6 @@ export const CELESTIAL_CONFIG: CelestialConfig = {
       rotationSpeed: _R(9.9259),
       orbitalColor: 0xd89a5b,
       textureResolutions: { surface: ['4k', '2k', '1k'] },
-      textures: { surface: 'jupiter/jupiterSurface' },
       realData: {
         radiusKm: 71_492,
         distanceAU: 5.203,
@@ -311,8 +374,7 @@ export const CELESTIAL_CONFIG: CelestialConfig = {
           rotationSpeed: _R(42.46),
           orbitalColor: 0xffc857,
           fallbackColor: 0xffc857,
-          textureResolutions: { surface: ['2k', '1k'] },
-          textures: { surface: 'io/ioSurface' },
+          textureResolutions: { surface: ['8k', '4k', '2k', '1k'] },
           realData: {
             radiusKm: 1_821.6,
             distanceAU: 0.002819,
@@ -343,8 +405,7 @@ export const CELESTIAL_CONFIG: CelestialConfig = {
           rotationSpeed: _R(85.22),
           orbitalColor: 0xd9c7a4,
           fallbackColor: 0xd9c7a4,
-          textureResolutions: { surface: ['2k', '1k'] },
-          textures: { surface: 'europa/europaSurface' },
+          textureResolutions: { surface: ['8k', '4k', '2k', '1k'] },
           realData: {
             radiusKm: 1_560.8,
             distanceAU: 0.004486,
@@ -375,8 +436,7 @@ export const CELESTIAL_CONFIG: CelestialConfig = {
           rotationSpeed: _R(171.7),
           orbitalColor: 0x9c8b78,
           fallbackColor: 0x9c8b78,
-          textureResolutions: { surface: ['2k', '1k'] },
-          textures: { surface: 'ganymede/ganymedeSurface' },
+          textureResolutions: { surface: ['8k', '4k', '2k', '1k'] },
           realData: {
             radiusKm: 2_631.2,
             distanceAU: 0.007155,
@@ -407,8 +467,7 @@ export const CELESTIAL_CONFIG: CelestialConfig = {
           rotationSpeed: _R(400.5),
           orbitalColor: 0x7c746f,
           fallbackColor: 0x7c746f,
-          textureResolutions: { surface: ['2k', '1k'] },
-          textures: { surface: 'callisto/callistoSurface' },
+          textureResolutions: { surface: ['8k', '4k', '2k', '1k'] },
           realData: {
             radiusKm: 2_410.3,
             distanceAU: 0.012585,
@@ -443,10 +502,8 @@ export const CELESTIAL_CONFIG: CelestialConfig = {
         innerRadius: 1.5,
         outerRadius: 2.2,
         textureResolutions: ['8k', '4k', '2k', '1k'],
-        textures: 'saturn/saturnRing',
       },
       textureResolutions: { surface: ['4k', '2k', '1k'] },
-      textures: { surface: 'saturn/saturnSurface' },
       realData: {
         radiusKm: 60_268,
         distanceAU: 9.537,
@@ -470,15 +527,191 @@ export const CELESTIAL_CONFIG: CelestialConfig = {
       astroBody: Body.Saturn,
       cameraDistance: { educ: 20, explo: exploCameraDistance(60_268) },
       loadPriority: 6,
+      satellites: {
+        enceladus: {
+          kind: 'moon',
+          displayName: { en: 'Enceladus', fr: 'Encelade' },
+          radius: 0.12,
+          rotationSpeed: _R(32.885232),
+          orbitalColor: 0xdedbd4,
+          fallbackColor: 0xc7c8c9,
+          frame: 'parentRelative',
+          rotationBody: Body.Saturn,
+          // JPL SAT441 mean elements, epoch 2000-01-01.5 TDB.
+          relativeEphemeris: { kind: 'horizonsParentRelative' },
+          relativeOrbitalElements: {
+            semiMajorAxisAU: 0.00159360557,
+            eccentricity: 0.005,
+            inclinationRad: 0,
+            ascendingNodeRad: 0,
+            argPerihelionRad: 119.5 * D2R,
+            meanAnomalyAtEpochRad: 57 * D2R,
+            epoch: new Date('2000-01-01T12:00:00Z'),
+          },
+          textureResolutions: { surface: ['1k'] },
+          realData: {
+            radiusKm: 252.1,
+            distanceAU: 0.00159360557,
+            orbitPeriodDays: 1.370218,
+            orbitalInclination: 0,
+            ascendingNode: 0,
+            axialTilt: 0,
+            massKg: 1.08022e20,
+            gravity: 0.113,
+            meanTempC: -201,
+            moonCount: 0,
+            description: {
+              en: 'A bright icy moon with an active south-polar plume and a subsurface ocean.',
+              fr: 'Une lune glacée très brillante, avec un panache actif au pôle sud et un océan souterrain.',
+            },
+            wiki: {
+              en: 'https://en.wikipedia.org/wiki/Enceladus',
+              fr: 'https://fr.wikipedia.org/wiki/Encelade_(lune)',
+            },
+          },
+          cameraDistance: { educ: 0.8, explo: exploCameraDistance(252.1) },
+          loadPriority: 8,
+        },
+        rhea: {
+          kind: 'moon',
+          displayName: { en: 'Rhea', fr: 'Rhéa' },
+          radius: 0.2,
+          rotationSpeed: _R(108.420072),
+          orbitalColor: 0xbcb9b1,
+          fallbackColor: 0xa4a39e,
+          frame: 'parentRelative',
+          rotationBody: Body.Saturn,
+          relativeEphemeris: { kind: 'horizonsParentRelative' },
+          // JPL SAT441 mean elements, epoch 2000-01-01.5 TDB.
+          relativeOrbitalElements: {
+            semiMajorAxisAU: 0.00352411433,
+            eccentricity: 0.001,
+            inclinationRad: 0.3 * D2R,
+            ascendingNodeRad: 133.7 * D2R,
+            argPerihelionRad: 44.3 * D2R,
+            meanAnomalyAtEpochRad: 31.5 * D2R,
+            epoch: new Date('2000-01-01T12:00:00Z'),
+          },
+          textureResolutions: { surface: ['1k'] },
+          realData: {
+            radiusKm: 763.5,
+            distanceAU: 0.00352411433,
+            orbitPeriodDays: 4.517503,
+            orbitalInclination: 0.3 * D2R,
+            ascendingNode: 133.7 * D2R,
+            axialTilt: 0,
+            massKg: 2.3065e21,
+            gravity: 0.264,
+            meanTempC: -174,
+            moonCount: 0,
+            description: {
+              en: "Saturn's second-largest moon, a heavily cratered world of bright water ice.",
+              fr: "La deuxième plus grande lune de Saturne, un monde de glace d'eau très cratérisé.",
+            },
+            wiki: {
+              en: 'https://en.wikipedia.org/wiki/Rhea_(moon)',
+              fr: 'https://fr.wikipedia.org/wiki/Rh%C3%A9a_(lune)',
+            },
+          },
+          cameraDistance: { educ: 1, explo: exploCameraDistance(763.5) },
+          loadPriority: 8,
+        },
+        iapetus: {
+          kind: 'moon',
+          displayName: { en: 'Iapetus', fr: 'Japet' },
+          radius: 0.18,
+          rotationSpeed: _R(1903.944048),
+          orbitalColor: 0x9b8d79,
+          fallbackColor: 0x756e62,
+          frame: 'parentRelative',
+          relativeEphemeris: { kind: 'horizonsParentRelative' },
+          rotationBody: Body.Saturn,
+          // JPL SAT441 mean elements, epoch 2000-01-01.5 TDB.
+          relativeOrbitalElements: {
+            semiMajorAxisAU: 0.02380849395,
+            eccentricity: 0.028,
+            inclinationRad: 7.6 * D2R,
+            ascendingNodeRad: 86.5 * D2R,
+            argPerihelionRad: 254.5 * D2R,
+            meanAnomalyAtEpochRad: 74.8 * D2R,
+            epoch: new Date('2000-01-01T12:00:00Z'),
+          },
+          textureResolutions: { surface: ['4k', '2k', '1k'] },
+          realData: {
+            radiusKm: 734.3,
+            distanceAU: 0.02380849395,
+            orbitPeriodDays: 79.331002,
+            orbitalInclination: 7.6 * D2R,
+            ascendingNode: 86.5 * D2R,
+            axialTilt: 0,
+            massKg: 1.805e21,
+            gravity: 0.223,
+            meanTempC: -143,
+            moonCount: 0,
+            description: {
+              en: 'A two-toned outer moon known for its dark leading hemisphere and equatorial ridge.',
+              fr: 'Une lune extérieure bicolore, connue pour son hémisphère avant sombre et sa crête équatoriale.',
+            },
+            wiki: {
+              en: 'https://en.wikipedia.org/wiki/Iapetus_(moon)',
+              fr: 'https://fr.wikipedia.org/wiki/Japet_(lune)',
+            },
+          },
+          cameraDistance: { educ: 1.2, explo: exploCameraDistance(734.3) },
+          loadPriority: 8,
+        },
+        titan: {
+          kind: 'moon',
+          displayName: { en: 'Titan', fr: 'Titan' },
+          radius: 0.55,
+          rotationSpeed: _R(382.690752),
+          orbitalColor: 0xc78b57,
+          fallbackColor: 0x9b6a45,
+          relativeEphemeris: { kind: 'horizonsParentRelative' },
+          frame: 'parentRelative',
+          rotationBody: Body.Saturn,
+          // JPL SAT441 mean elements, epoch 2000-01-01.5 TDB.
+          relativeOrbitalElements: {
+            semiMajorAxisAU: 0.008167897,
+            eccentricity: 0.029,
+            inclinationRad: 0.3 * D2R,
+            ascendingNodeRad: 78.6 * D2R,
+            argPerihelionRad: 78.3 * D2R,
+            meanAnomalyAtEpochRad: 11.7 * D2R,
+            epoch: new Date('2000-01-01T12:00:00Z'),
+          },
+          textureResolutions: { surface: ['1k'] },
+          realData: {
+            radiusKm: 2_574.76,
+            distanceAU: 0.008167897,
+            orbitPeriodDays: 15.945448,
+            orbitalInclination: 0.3 * D2R,
+            ascendingNode: 78.6 * D2R,
+            axialTilt: 26.7 * D2R,
+            massKg: 1.3452e23,
+            gravity: 1.352,
+            meanTempC: -179,
+            moonCount: 0,
+            description: {
+              en: "Saturn's largest moon, with a dense atmosphere and rivers, lakes, and seas of methane and ethane.",
+              fr: "La plus grande lune de Saturne, avec une atmosphere dense et des rivieres, lacs et mers de methane et d'ethane.",
+            },
+            wiki: {
+              en: 'https://en.wikipedia.org/wiki/Titan_(moon)',
+              fr: 'https://fr.wikipedia.org/wiki/Titan_(lune)',
+            },
+          },
+          cameraDistance: { educ: 2.5, explo: exploCameraDistance(2_574.76) },
+          loadPriority: 7,
+        },
+      },
     },
-
     uranus: {
       kind: 'planet',
       radius: 2,
       rotationSpeed: _R(17.24),
       orbitalColor: 0x69d6d3,
       textureResolutions: { surface: ['2k', '1k'] },
-      textures: { surface: 'uranus/uranusSurface' },
       realData: {
         radiusKm: 25_559,
         distanceAU: 19.191,
@@ -510,7 +743,6 @@ export const CELESTIAL_CONFIG: CelestialConfig = {
       rotationSpeed: _R(16.11),
       orbitalColor: 0x647cff,
       textureResolutions: { surface: ['2k', '1k'] },
-      textures: { surface: 'neptune/neptuneSurface' },
       realData: {
         radiusKm: 24_764,
         distanceAU: 30.069,
@@ -534,6 +766,51 @@ export const CELESTIAL_CONFIG: CelestialConfig = {
       astroBody: Body.Neptune,
       cameraDistance: { educ: 10, explo: exploCameraDistance(24_764) },
       loadPriority: 10,
+      satellites: {
+        triton: {
+          kind: 'moon',
+          displayName: { en: 'Triton', fr: 'Triton' },
+          radius: 0.28,
+          rotationSpeed: -_R(141.047856),
+          orbitalColor: 0x9dc4cf,
+          fallbackColor: 0x7796a2,
+          frame: 'parentRelative',
+          rotationBody: Body.Neptune,
+          relativeEphemeris: { kind: 'horizonsParentRelative' },
+          relativeOrbitalElements: {
+            semiMajorAxisAU: 0.00237169151,
+            eccentricity: 0,
+            inclinationRad: 157.3 * D2R,
+            ascendingNodeRad: 178.1 * D2R,
+            argPerihelionRad: 0,
+            meanAnomalyAtEpochRad: 63 * D2R,
+            epoch: new Date('2000-01-01T12:00:00Z'),
+          },
+          textureResolutions: { surface: ['8k', '4k', '2k', '1k'] },
+          realData: {
+            radiusKm: 1_352.6,
+            distanceAU: 0.00237169151,
+            orbitPeriodDays: 5.876994,
+            orbitalInclination: 157.3 * D2R,
+            ascendingNode: 178.1 * D2R,
+            axialTilt: 0.4 * D2R,
+            massKg: 2.14e22,
+            gravity: 0.779,
+            meanTempC: -235,
+            moonCount: 0,
+            description: {
+              en: "Neptune's largest moon and the Solar System's only major retrograde satellite, with nitrogen geysers.",
+              fr: "La plus grande lune de Neptune et la seule grande lune rétrograde du Système solaire, avec des geysers d'azote.",
+            },
+            wiki: {
+              en: 'https://en.wikipedia.org/wiki/Triton_(moon)',
+              fr: 'https://fr.wikipedia.org/wiki/Triton_(lune)',
+            },
+          },
+          cameraDistance: { educ: 1.5, explo: exploCameraDistance(1_352.6) },
+          loadPriority: 12,
+        },
+      },
     },
 
     // Petits corps (astéroïdes, comètes, planètes naines) — positionnés par éléments
@@ -543,6 +820,16 @@ export const CELESTIAL_CONFIG: CelestialConfig = {
     ...SMALL_BODIES,
   },
 };
+
+// Dérive les chemins de texture depuis la clé du corps + les couches déclarées dans
+// `textureResolutions` (nommage snake_case `{body}/{body}_{layer}`). Aucun chemin n'est
+// écrit à la main dans le catalogue ci-dessus : c'est `catalog.texturePath` qui fait foi.
+forEachBody(CELESTIAL_CONFIG, ({ name, config }) => {
+  config.textures = deriveTextures(name, config);
+  if (config.ring && !config.ring.textures) {
+    config.ring.textures = ringTexturePath(name);
+  }
+});
 
 // Fail-fast : un nom en doublon (corps ou satellite) écraserait silencieusement une entrée.
 assertUniqueBodyNames(CELESTIAL_CONFIG);

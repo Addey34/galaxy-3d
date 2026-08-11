@@ -5,7 +5,46 @@
  * boucles `if (cfg.satellites) { for … }` dupliquées dans les systèmes. Les consommateurs
  * filtrent sur `kind`/`frame` plutôt que sur le nom du corps.
  */
-import type { CelestialBodyConfig, CelestialConfig } from '@/types';
+import type {
+  CelestialBodyConfig,
+  CelestialConfig,
+  TextureConfig,
+} from '@/types';
+
+/** camelCase → snake_case (normalMap → normal_map). */
+function toSnake(s: string): string {
+  return s.replace(/([a-z0-9])([A-Z])/g, '$1_$2').toLowerCase();
+}
+
+/**
+ * Chemin de base d'une texture, dérivé de la clé du corps + la couche :
+ * `{body}/{body}_{layer}` en snake_case (ex. `earth/earth_normal_map`).
+ * Source unique du nommage — aucun chemin n'est écrit à la main dans le catalogue.
+ */
+export function texturePath(bodyName: string, layer: string): string {
+  return `${bodyName}/${bodyName}_${toSnake(layer)}`;
+}
+
+/**
+ * Construit l'objet `textures` d'un corps en dérivant chaque chemin depuis
+ * `textureResolutions` (source de vérité des couches actives). Un chemin explicite
+ * dans `config.textures[layer]` reste prioritaire (override rare).
+ */
+export function deriveTextures(
+  bodyName: string,
+  config: CelestialBodyConfig
+): TextureConfig {
+  const out: Record<string, string> = { ...(config.textures ?? {}) };
+  for (const layer of Object.keys(config.textureResolutions)) {
+    if (!out[layer]) out[layer] = texturePath(bodyName, layer);
+  }
+  return out as TextureConfig;
+}
+
+/** Chemin de base d'une texture d'anneau : `{body}/{body}_ring`. */
+export function ringTexturePath(bodyName: string): string {
+  return texturePath(bodyName, 'ring');
+}
 
 export interface BodyEntry {
   name: string;

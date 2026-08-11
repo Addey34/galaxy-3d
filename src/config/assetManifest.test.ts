@@ -1,7 +1,7 @@
 import { existsSync, readdirSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { allBodies } from './catalog';
+import { allBodies, ringTexturePath } from './catalog';
 import { CELESTIAL_CONFIG } from './bodies';
 import type { TextureQuality, TextureResolutions } from '@/types';
 
@@ -25,8 +25,10 @@ describe('catalogue texture manifest', () => {
   it('references every local JPEG and every declared LOD', () => {
     const configured = new Set<string>();
 
-    for (const { config } of allBodies(CELESTIAL_CONFIG)) {
-      for (const [layer, rawBasePath] of Object.entries(config.textures)) {
+    for (const { name, config } of allBodies(CELESTIAL_CONFIG)) {
+      for (const [layer, rawBasePath] of Object.entries(
+        config.textures ?? {}
+      )) {
         const resolutions =
           config.textureResolutions[layer as keyof TextureResolutions];
         if (!rawBasePath || !resolutions) continue;
@@ -39,7 +41,10 @@ describe('catalogue texture manifest', () => {
 
       if (config.ring) {
         for (const quality of config.ring.textureResolutions) {
-          const path = assetPath(config.ring.textures, quality);
+          const path = assetPath(
+            config.ring.textures ?? ringTexturePath(name),
+            quality
+          );
           configured.add(resolve(path));
           expect(existsSync(path), `ring:${quality} -> ${path}`).toBe(true);
         }

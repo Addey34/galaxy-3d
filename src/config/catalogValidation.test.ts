@@ -51,12 +51,14 @@ describe('catalog texture validation', () => {
     expect(() => assertSafeTexturePath('../outside')).toThrow(/Unsafe/);
   });
 
-  it('rejects resolutions that are not backed by a texture path', () => {
+  it('derives a texture path for declared resolutions (no explicit path needed)', () => {
+    // Le chemin est dérivé de la clé du corps (deriveTextures) : déclarer une résolution
+    // suffit, plus besoin d'un `textures.surface` explicite dans le catalogue.
     expect(() =>
       assertValidCelestialCatalog(
         catalog(body({ textureResolutions: { surface: ['2k'] } }))
       )
-    ).toThrow(/declares resolutions without a texture path/);
+    ).not.toThrow();
   });
 
   it('rejects malformed LOD order and duplicate resolutions', () => {

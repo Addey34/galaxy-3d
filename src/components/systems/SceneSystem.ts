@@ -10,6 +10,7 @@ import {
   currentMaxPixelRatio,
 } from '@/config/engine';
 import { educRadius } from '@/core/ScaleService';
+import { texturePath } from '@/config/catalog';
 import type { CelestialBodyConfig, CelestialConfig } from '@/types';
 import Logger from '@/utils/Logger';
 import type { TextureSystem } from './TextureSystem';
@@ -85,8 +86,16 @@ export class SceneSystem {
   }
 
   private setupStarfield(): void {
+    // Chemin + meilleure résolution dérivés de la config (jamais hardcodés) : le fond de ciel
+    // prend toujours la plus haute qualité déclarée pour le corps `stars` (ordre décroissant).
+    const starsConfig = Object.entries(this.config.bodies).find(
+      ([, cfg]) => cfg.kind === 'skybox'
+    );
+    const starsName = starsConfig?.[0] ?? 'stars';
+    const bestQuality =
+      starsConfig?.[1].textureResolutions.surface?.[0] ?? '8k';
     this.textureSystem
-      .loadTexture('stars/starsSurface', '8k')
+      .loadTexture(texturePath(starsName, 'surface'), bestQuality)
       .then((tex) => {
         // Fond équirectangulaire posé en `scene.background` plutôt qu'une sphère mesh :
         // un décor à l'infini, insensible aux plans near/far. L'ancienne sphère de rayon

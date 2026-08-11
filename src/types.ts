@@ -35,10 +35,9 @@ export type OrbitFrame = 'heliocentric' | 'parentRelative';
 export type JupiterMoonKey = 'io' | 'europa' | 'ganymede' | 'callisto';
 
 /** Source d'une position relative fournie par une éphéméride spécialisée. */
-export interface RelativeEphemerisSource {
-  kind: 'jupiterMoon';
-  moon: JupiterMoonKey;
-}
+export type RelativeEphemerisSource =
+  | { kind: 'jupiterMoon'; moon: JupiterMoonKey }
+  | { kind: 'horizonsParentRelative' };
 
 /** Distance de visite caméra par mode d'affichage (unités scène). */
 export interface CameraDistance {
@@ -73,7 +72,8 @@ export interface RingConfig {
   innerRadius: number;
   outerRadius: number;
   textureResolutions: TextureQuality[];
-  textures: string;
+  /** Chemin de base ; dérivé de la clé du corps si absent (`{body}/{body}_ring`). */
+  textures?: string;
 }
 
 /** Chaîne localisée (contenu catalogue). L'anglais sert de repli. */
@@ -95,7 +95,13 @@ export interface CelestialBodyConfig {
   rotationSpeed: number;
   orbitalColor: number;
   textureResolutions: TextureResolutions;
-  textures: TextureConfig;
+  /**
+   * Chemins de texture par couche. Normalement **dérivé** de la clé du corps +
+   * `textureResolutions` (voir `catalog.deriveTextures`, peuplé au chargement) ; ne l'écrire
+   * à la main que pour un override rare. Optionnel dans la définition brute du catalogue,
+   * toujours peuplé après initialisation (`bodies.ts` appelle `deriveTextures`).
+   */
+  textures?: TextureConfig;
   /** Couleur de secours pour représenter un corps sans texture locale. */
   fallbackColor?: number;
   ring?: RingConfig;
@@ -119,6 +125,11 @@ export interface CelestialBodyConfig {
    * Le corps doit vivre dans un parent avec frame parentRelative.
    */
   relativeEphemeris?: RelativeEphemerisSource;
+  /**
+   * Keplerian orbital elements expressed in the parent body's reference frame. Used for
+   * regular satellites without a dedicated astronomy-engine ephemeris.
+   */
+  relativeOrbitalElements?: OrbitalElements;
   /**
    * Éléments orbitaux képlériens — source de position alternative à `astroBody`, pour les
    * corps absents d'astronomy-engine (astéroïdes, comètes, géocroiseurs, planètes naines).

@@ -15,6 +15,7 @@ import { buildLayers } from '@/components/celestial/celestialLayers';
 import { applyTexture } from '@/components/celestial/celestialTextures';
 import { KM_PER_AU, SQRT_K } from '@/core/ScaleService';
 import { setMaterialLightAttenuation } from '@/config/layerConfig';
+import { ringTexturePath } from '@/config/catalog';
 import type { CameraDistance, CelestialBodyConfig } from '@/types';
 import * as NightLightsShader from '@/shaders/NightLightsShader';
 import Logger from '@/utils/Logger';
@@ -72,7 +73,7 @@ export default class CelestialObject {
     this._tiltGroup.add(this._meshGroup);
 
     this.rotationSpeed = config.rotationSpeed ?? 0;
-    this._hasTextures = Object.keys(config.textures).length > 0;
+    this._hasTextures = Object.keys(config.textures ?? {}).length > 0;
 
     this.layers = buildLayers(config, name);
     this.layers.forEach((mesh) => this._meshGroup.add(mesh));
@@ -94,7 +95,7 @@ export default class CelestialObject {
   // ============================================================================
 
   private async _loadAllTextures(): Promise<void> {
-    for (const textureKey of Object.keys(this.config.textures)) {
+    for (const textureKey of Object.keys(this.config.textures ?? {})) {
       try {
         const texture = await this.textureSystem.getLODTexture(
           this.name,
@@ -116,7 +117,7 @@ export default class CelestialObject {
     if (!ring) return;
     try {
       const texture = await this.textureSystem.getRingLODTexture(
-        ring.textures,
+        ring.textures ?? ringTexturePath(this.name),
         ring.textureResolutions,
         normalizedDistance
       );
@@ -278,7 +279,7 @@ export default class CelestialObject {
     this.lastLODNormalizedDistance = normalizedDistance;
 
     try {
-      for (const textureKey of Object.keys(this.config.textures)) {
+      for (const textureKey of Object.keys(this.config.textures ?? {})) {
         const texture = await this.textureSystem.getLODTexture(
           this.name,
           textureKey,

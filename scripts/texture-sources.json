@@ -6,6 +6,47 @@
     "4k": 4096,
     "8k": 8192
   },
+  "importedNote": "Provenance réelle des textures livrées après l'import V1 (scripts/import-textures.mjs). Nommage snake_case {body}/{body}_{layer}_{res}.jpg. Tier: free = domaine public ou CC BY 4.0 (monétisable). Les blocs `sources`/`reviews` ci-dessous sont l'historique de recherche des sources.",
+  "imported": [
+    { "body": "callisto", "layer": "surface", "license": "public-domain", "credit": "USGS Astrogeology / NASA Galileo SSI & Voyager", "tier": "free", "filled": true },
+    { "body": "charon", "layer": "surface", "license": "public-domain", "credit": "USGS Astrogeology / NASA New Horizons", "tier": "free", "filled": true },
+    { "body": "europa", "layer": "surface", "license": "public-domain", "credit": "USGS Astrogeology / NASA Voyager & Galileo", "tier": "free", "filled": true },
+    { "body": "ganymede", "layer": "surface", "license": "public-domain", "credit": "USGS Astrogeology / NASA Voyager & Galileo", "tier": "free", "filled": true },
+    { "body": "io", "layer": "surface", "license": "public-domain", "credit": "USGS Astrogeology / NASA Galileo SSI & Voyager (ClrMerge)", "tier": "free", "filled": true },
+    { "body": "iapetus", "layer": "surface", "license": "public-domain", "credit": "USGS Astrogeology / NASA Cassini & Voyager", "tier": "free", "filled": true },
+    { "body": "pluto", "layer": "surface", "license": "public-domain", "credit": "USGS Astrogeology / NASA New Horizons", "tier": "free", "filled": true },
+    { "body": "triton", "layer": "surface", "license": "public-domain", "credit": "USGS Astrogeology / NASA Voyager 2 (ClrMosaic)", "tier": "free", "filled": true },
+    { "body": "phobos", "layer": "surface", "license": "public-domain", "credit": "USGS Astrogeology / ESA Mars Express (DLR control)", "tier": "free" },
+    { "body": "vesta", "layer": "surface", "license": "public-domain", "credit": "USGS Astrogeology / NASA Dawn FC HAMO", "tier": "free" },
+    { "body": "enceladus", "layer": "surface", "license": "public-domain", "credit": "USGS Astrogeology / NASA Cassini", "tier": "free" },
+    { "body": "rhea", "layer": "surface", "license": "public-domain", "credit": "USGS Astrogeology / NASA Cassini & Voyager", "tier": "free" },
+    { "body": "mercury", "layer": "surface", "license": "CC BY 4.0", "credit": "Solar System Scope (solarsystemscope.com)", "tier": "free" },
+    { "body": "venus", "layer": "surface", "license": "CC BY 4.0", "credit": "Solar System Scope (solarsystemscope.com)", "tier": "free" },
+    { "body": "venus", "layer": "atmosphere", "license": "CC BY 4.0", "credit": "Solar System Scope (solarsystemscope.com)", "tier": "free" },
+    { "body": "mars", "layer": "surface", "license": "CC BY 4.0", "credit": "Solar System Scope (solarsystemscope.com)", "tier": "free" },
+    { "body": "jupiter", "layer": "surface", "license": "CC BY 4.0", "credit": "Solar System Scope (solarsystemscope.com)", "tier": "free" },
+    { "body": "saturn", "layer": "surface", "license": "CC BY 4.0", "credit": "Solar System Scope (solarsystemscope.com)", "tier": "free" },
+    { "body": "saturn", "layer": "ring", "license": "CC BY 4.0", "credit": "Solar System Scope (solarsystemscope.com)", "tier": "free" },
+    { "body": "uranus", "layer": "surface", "license": "CC BY 4.0", "credit": "Solar System Scope (solarsystemscope.com)", "tier": "free" },
+    { "body": "neptune", "layer": "surface", "license": "CC BY 4.0", "credit": "Solar System Scope (solarsystemscope.com)", "tier": "free" },
+    { "body": "sun", "layer": "surface", "license": "CC BY 4.0", "credit": "Solar System Scope (solarsystemscope.com)", "tier": "free" },
+    { "body": "stars", "layer": "surface", "license": "CC BY 4.0", "credit": "Solar System Scope (solarsystemscope.com)", "tier": "free" },
+    { "body": "moon", "layer": "surface", "license": "CC BY 4.0", "credit": "Solar System Scope (solarsystemscope.com)", "tier": "free" },
+    { "body": "earth", "layer": "surface", "license": "public-domain", "credit": "NASA Visible Earth / Blue Marble", "tier": "free" },
+    { "body": "earth", "layer": "clouds", "license": "public-domain", "credit": "NASA Visible Earth / Blue Marble", "tier": "free" },
+    { "body": "earth", "layer": "lights", "license": "public-domain", "credit": "NASA Earth Observatory / Black Marble", "tier": "free" },
+    { "body": "earth", "layer": "normalMap", "license": "public-domain", "credit": "NASA Visible Earth (topography)", "tier": "free" },
+    { "body": "earth", "layer": "spec", "license": "public-domain", "credit": "NASA Visible Earth (land/ocean mask)", "tier": "free" },
+    { "body": "ceres", "layer": "surface", "license": "CC BY 4.0", "credit": "Solar System Scope — illustratif (CC BY 4.0)", "tier": "free", "illustrative": true },
+    { "body": "eris", "layer": "surface", "license": "CC BY 4.0", "credit": "Solar System Scope — illustratif (CC BY 4.0)", "tier": "free", "illustrative": true },
+    { "body": "haumea", "layer": "surface", "license": "CC BY 4.0", "credit": "Solar System Scope — illustratif (CC BY 4.0)", "tier": "free", "illustrative": true },
+    { "body": "makemake", "layer": "surface", "license": "CC BY 4.0", "credit": "Solar System Scope — illustratif (CC BY 4.0)", "tier": "free", "illustrative": true },
+    { "body": "titan", "layer": "surface", "license": "unconfirmed", "credit": "à traiter (source cassée)", "tier": "free", "todo": true },
+    { "body": "deimos", "layer": "surface", "license": "unconfirmed", "credit": "à confirmer", "tier": "free", "todo": true },
+    { "body": "halley", "layer": "surface", "license": "unconfirmed", "credit": "à confirmer", "tier": "free", "todo": true },
+    { "body": "pallas", "layer": "surface", "license": "unconfirmed", "credit": "à confirmer", "tier": "free", "todo": true },
+    { "body": "hygiea", "layer": "surface", "license": "unconfirmed", "credit": "à confirmer", "tier": "free", "todo": true }
+  ],
   "sources": [
     {
       "body": "io",
@@ -53,11 +94,65 @@
       "downloadUrl": "https://planetarymaps.usgs.gov/mosaic/Callisto_Voyager_GalileoSSI_global_mosaic_1km.tif",
       "sourcePage": "https://astrogeology.usgs.gov/search/map/callisto_galileo_voyager_global_mosaic_1km",
       "projection": "equirectangular",
-      "sourceResolution": "1 km/pixel",
-      "maxQuality": "2k",
+      "sourceResolution": "1 km/pixel; TIFF source 15138x7569 (V1)",
+      "maxQuality": "8k",
       "outputBase": "callisto/callistoSurface",
       "license": "public-domain",
-      "credit": "USGS Astrogeology Science Center, Galileo SSI and Voyager"
+      "credit": "USGS Astrogeology Science Center, Galileo SSI and Voyager",
+      "tier": "free",
+      "importNote": "Importé depuis le TIFF USGS via scripts/import-textures.mjs (8k/4k/2k/1k). Trou non-imagé au pôle sud (~3.5%) conservé; option fillHoles disponible. Version fictive Askaniy (CC BY-NC, 1920px) écartée: plus basse résolution que le réel."
+    },
+    {
+      "body": "titan",
+      "layer": "surface",
+      "status": "ready",
+      "downloadUrl": "https://astrogeology.usgs.gov/ckan/dataset/8ee17e4e-26c6-4e22-9c23-bc9a4c7ed35e/resource/c3f3006c-3174-4716-920f-44f5dc749a4a/download/titan_iss_p19658_mosaic_global_1024.jpg",
+      "sourcePage": "https://astrogeology.usgs.gov/search/map/titan_cassini_iss_global_mosaic_4005m",
+      "projection": "equirectangular",
+      "sourceResolution": "4.005 km/pixel; official 1024 px JPEG sample",
+      "maxQuality": "1k",
+      "outputBase": "titan/titanSurface",
+      "license": "public-domain",
+      "credit": "USGS Astrogeology Science Center, NASA/JPL-Caltech/SSI"
+    },
+    {
+      "body": "enceladus",
+      "layer": "surface",
+      "status": "ready",
+      "downloadUrl": "https://astrogeology.usgs.gov/ckan/dataset/30bff65e-56bb-4fd1-bd04-edd9bc2e77d0/resource/19ba2e14-9ceb-45e6-8cc8-e784e36ed4f0/download/full.jpg",
+      "sourcePage": "https://astrogeology.usgs.gov/search/map/enceladus_cassini_global_mosaic_110m",
+      "projection": "equirectangular",
+      "sourceResolution": "110 m/pixel; official JPEG preview",
+      "maxQuality": "1k",
+      "outputBase": "enceladus/enceladusSurface",
+      "license": "public-domain",
+      "credit": "USGS Astrogeology Science Center, Cassini/JPL/SSI"
+    },
+    {
+      "body": "rhea",
+      "layer": "surface",
+      "status": "ready",
+      "downloadUrl": "https://astrogeology.usgs.gov/ckan/dataset/22bc1015-d9c9-4212-86c3-e42061b204d4/resource/77fa77f8-6d6b-4072-9360-17138caa6e7d/download/full.jpg",
+      "sourcePage": "https://astrogeology.usgs.gov/search/map/rhea_cassini_voyager_global_mosaic_417m",
+      "projection": "equirectangular",
+      "sourceResolution": "417 m/pixel; official JPEG preview",
+      "maxQuality": "1k",
+      "outputBase": "rhea/rheaSurface",
+      "license": "public-domain",
+      "credit": "USGS Astrogeology Science Center, Cassini and Voyager"
+    },
+    {
+      "body": "iapetus",
+      "layer": "surface",
+      "status": "ready",
+      "downloadUrl": "https://astrogeology.usgs.gov/ckan/dataset/6ac8ecfb-36e7-4113-8d16-c92ba857c3d7/resource/141c2d1e-aa01-4e2f-969a-e46a581db4b9/download/full.jpg",
+      "sourcePage": "https://astrogeology.usgs.gov/search/map/iapetus_cassini_voyager_global_mosaic_803m",
+      "projection": "equirectangular",
+      "sourceResolution": "803 m/pixel; official JPEG preview",
+      "maxQuality": "1k",
+      "outputBase": "iapetus/iapetusSurface",
+      "license": "public-domain",
+      "credit": "USGS Astrogeology Science Center, Cassini/JPL and Voyager"
     }
   ],
   "reviews": [
@@ -330,7 +425,11 @@
       "sourceResolution": "140 m/pixel global, 35 m/pixel local LAMO products",
       "projection": "equirectangular",
       "qualityClass": "native-candidate",
-      "note": "Use the global controlled Dawn mosaic; local 35 m data must not be stretched into fake global coverage."
+      "note": "Use the global controlled Dawn mosaic; local 35 m data must not be stretched into fake global coverage.",
+      "license": "public-domain-if-usgs",
+      "credit": "USGS Astrogeology / NASA Dawn (if sourced from the mosaic above)",
+      "attributionNeeded": true,
+      "provenanceNote": "USGS Dawn mosaic is public domain, but the shipped 4096x2048 file predates the validated pipeline. Confirm the delivered file derives from the USGS source above, otherwise treat as unconfirmed."
     },
     {
       "body": "vesta",
@@ -340,7 +439,11 @@
       "sourceResolution": "60 m/pixel",
       "projection": "equirectangular",
       "qualityClass": "native-candidate",
-      "note": "Best global Dawn HAMO mosaic currently identified."
+      "note": "Best global Dawn HAMO mosaic currently identified.",
+      "license": "public-domain-if-usgs",
+      "credit": "USGS Astrogeology / NASA Dawn (if sourced from the mosaic above)",
+      "attributionNeeded": true,
+      "provenanceNote": "USGS Dawn mosaic is public domain, but the shipped 2048x1024 file predates the validated pipeline. Confirm the delivered file derives from the USGS source above, otherwise treat as unconfirmed."
     },
     {
       "body": "pallas",
@@ -350,7 +453,11 @@
       "sourceResolution": "no validated global spacecraft albedo mosaic located",
       "projection": "unknown",
       "qualityClass": "illustrative",
-      "note": "Keep current asset explicitly illustrative until a controlled global map exists."
+      "note": "Keep current asset explicitly illustrative until a controlled global map exists.",
+      "license": "unconfirmed",
+      "credit": "unconfirmed",
+      "attributionNeeded": true,
+      "provenanceNote": "Artistic/semi-fictional map, no spacecraft mosaic. Likely community source (e.g. planet-texture-map.fandom.com, CC BY-NC-SA). Record exact author + licence or replace before commercial reuse."
     },
     {
       "body": "hygiea",
@@ -360,7 +467,11 @@
       "sourceResolution": "no validated global spacecraft albedo mosaic located",
       "projection": "unknown",
       "qualityClass": "illustrative",
-      "note": "Keep current asset explicitly illustrative until a controlled global map exists."
+      "note": "Keep current asset explicitly illustrative until a controlled global map exists.",
+      "license": "unconfirmed",
+      "credit": "unconfirmed",
+      "attributionNeeded": true,
+      "provenanceNote": "Artistic/semi-fictional map, no spacecraft mosaic. Likely community source (e.g. planet-texture-map.fandom.com, CC BY-NC-SA). Record exact author + licence or replace before commercial reuse."
     },
     {
       "body": "pluto",
@@ -372,7 +483,11 @@
       "sourceResolution": "300 m/pixel",
       "projection": "equirectangular",
       "qualityClass": "native-candidate",
-      "note": "Best comprehensive global New Horizons mosaic currently identified."
+      "note": "Best comprehensive global New Horizons mosaic currently identified.",
+      "license": "public-domain-if-usgs",
+      "credit": "USGS Astrogeology / NASA New Horizons (if sourced from the mosaic above)",
+      "attributionNeeded": true,
+      "provenanceNote": "USGS New Horizons mosaic is public domain, but the shipped 4096x2048 file predates the validated pipeline. Confirm the delivered file derives from the USGS source above, otherwise treat as unconfirmed."
     },
     {
       "body": "eris",
@@ -382,7 +497,11 @@
       "sourceResolution": "no resolved global surface map",
       "projection": "unknown",
       "qualityClass": "illustrative",
-      "note": "Distant unresolved body; no spacecraft global texture to import."
+      "note": "Distant unresolved body; no spacecraft global texture to import.",
+      "license": "unconfirmed",
+      "credit": "unconfirmed",
+      "attributionNeeded": true,
+      "provenanceNote": "No spacecraft map exists — texture is necessarily fictional. Likely community source (e.g. planet-texture-map.fandom.com, CC BY-NC-SA). Record exact author + licence or replace before commercial reuse."
     },
     {
       "body": "haumea",
@@ -392,7 +511,11 @@
       "sourceResolution": "no resolved global surface map",
       "projection": "unknown",
       "qualityClass": "illustrative",
-      "note": "Distant rapidly rotating body; current map is illustrative."
+      "note": "Distant rapidly rotating body; current map is illustrative.",
+      "license": "unconfirmed",
+      "credit": "unconfirmed",
+      "attributionNeeded": true,
+      "provenanceNote": "No spacecraft map exists — texture is necessarily fictional. Likely community source (e.g. planet-texture-map.fandom.com, CC BY-NC-SA). Record exact author + licence or replace before commercial reuse."
     },
     {
       "body": "makemake",
@@ -402,7 +525,11 @@
       "sourceResolution": "no resolved global surface map",
       "projection": "unknown",
       "qualityClass": "illustrative",
-      "note": "Distant unresolved body; current map is illustrative."
+      "note": "Distant unresolved body; current map is illustrative.",
+      "license": "unconfirmed",
+      "credit": "unconfirmed",
+      "attributionNeeded": true,
+      "provenanceNote": "No spacecraft map exists — texture is necessarily fictional. Likely community source (e.g. planet-texture-map.fandom.com, CC BY-NC-SA). Record exact author + licence or replace before commercial reuse."
     },
     {
       "body": "halley",
@@ -412,7 +539,107 @@
       "sourceResolution": "Giotto/Vega observations and shape model, no global photometric mosaic",
       "projection": "shape-model dependent",
       "qualityClass": "illustrative-candidate",
-      "note": "A true surface map requires projecting flyby images onto the Stooke shape model; current flat texture is not a scientific global map."
+      "note": "A true surface map requires projecting flyby images onto the Stooke shape model; current flat texture is not a scientific global map.",
+      "license": "unconfirmed",
+      "credit": "unconfirmed",
+      "attributionNeeded": true,
+      "provenanceNote": "Non-standard 3674x1837 dimensions suggest a third-party crop, not a USGS pipeline output. Record exact source + licence or replace before commercial reuse."
+    },
+    {
+      "body": "titan",
+      "layer": "surface",
+      "status": "ready",
+      "processing": "direct-jpeg-sample",
+      "downloadUrl": "https://astrogeology.usgs.gov/ckan/dataset/8ee17e4e-26c6-4e22-9c23-bc9a4c7ed35e/resource/c3f3006c-3174-4716-920f-44f5dc749a4a/download/titan_iss_p19658_mosaic_global_1024.jpg",
+      "sourcePage": "https://astrogeology.usgs.gov/search/map/titan_cassini_iss_global_mosaic_4005m",
+      "sourceResolution": "4.005 km/pixel global mosaic; 1024 px viewer sample",
+      "projection": "equirectangular",
+      "qualityClass": "derived",
+      "note": "Official Cassini ISS methane-window global mosaic. The northern mid-latitudes contain documented coverage gaps; the 1k sample is used without artificial upscaling."
+    },
+    {
+      "body": "enceladus",
+      "layer": "surface",
+      "status": "ready",
+      "processing": "direct-jpeg-sample",
+      "downloadUrl": "https://astrogeology.usgs.gov/ckan/dataset/30bff65e-56bb-4fd1-bd04-edd9bc2e77d0/resource/19ba2e14-9ceb-45e6-8cc8-e784e36ed4f0/download/full.jpg",
+      "sourcePage": "https://astrogeology.usgs.gov/search/map/enceladus_cassini_global_mosaic_110m",
+      "sourceResolution": "110 m/pixel global mosaic; official JPEG preview",
+      "projection": "equirectangular",
+      "qualityClass": "derived",
+      "note": "Official Cassini global mosaic preview from USGS; kept at its native preview size without artificial upscaling."
+    },
+    {
+      "body": "rhea",
+      "layer": "surface",
+      "status": "ready",
+      "processing": "direct-jpeg-sample",
+      "downloadUrl": "https://astrogeology.usgs.gov/ckan/dataset/22bc1015-d9c9-4212-86c3-e42061b204d4/resource/77fa77f8-6d6b-4072-9360-17138caa6e7d/download/full.jpg",
+      "sourcePage": "https://astrogeology.usgs.gov/search/map/rhea_cassini_voyager_global_mosaic_417m",
+      "sourceResolution": "417 m/pixel global mosaic; official JPEG preview",
+      "projection": "equirectangular",
+      "qualityClass": "derived",
+      "note": "Official Cassini/Voyager global mosaic preview from USGS; kept at its native preview size without artificial upscaling."
+    },
+    {
+      "body": "iapetus",
+      "layer": "surface",
+      "status": "ready",
+      "processing": "direct-jpeg-sample",
+      "downloadUrl": "https://astrogeology.usgs.gov/ckan/dataset/6ac8ecfb-36e7-4113-8d16-c92ba857c3d7/resource/141c2d1e-aa01-4e2f-969a-e46a581db4b9/download/full.jpg",
+      "sourcePage": "https://astrogeology.usgs.gov/search/map/iapetus_cassini_voyager_global_mosaic_803m",
+      "sourceResolution": "803 m/pixel global mosaic; official JPEG preview",
+      "projection": "equirectangular",
+      "qualityClass": "derived",
+      "note": "Official Cassini/Voyager global mosaic preview from USGS; kept at its native preview size without artificial upscaling."
+    },
+    {
+      "body": "triton",
+      "layer": "surface",
+      "status": "ready",
+      "processing": "direct-jpeg-sample",
+      "downloadUrl": "https://astrogeology.usgs.gov/ckan/dataset/445b4c39-e87a-4e4d-88a8-e48d8e755c5c/resource/de0ba9f1-3034-4e5f-a99a-3201fba9a764/download/triton_voyager2_clrmosaic_1024.jpg",
+      "sourcePage": "https://astrogeology.usgs.gov/search/map/triton_voyager_2_global_color_mosaic_600m",
+      "sourceResolution": "600 m/pixel global mosaic; official 1024 px viewer sample",
+      "projection": "equirectangular",
+      "qualityClass": "derived",
+      "note": "Official Voyager 2 global color mosaic preview from USGS; kept at its native preview size without artificial upscaling."
+    },
+    {
+      "body": "charon",
+      "layer": "surface",
+      "status": "ready",
+      "processing": "direct-jpeg-sample",
+      "downloadUrl": "https://astrogeology.usgs.gov/ckan/dataset/93827f6c-8feb-42b6-98e6-b0ce57c7d2c8/resource/1abf318c-3290-4aa0-932e-a34f32d7f6ad/download/charon_newhorizons_global_mosaic_300m_jul2017_1024.jpg",
+      "sourcePage": "https://astrogeology.usgs.gov/search/map/charon_new_horizons_lorri_mvic_global_mosaic_300m",
+      "sourceResolution": "300 m/pixel global mosaic; official 1024 px viewer sample",
+      "projection": "equirectangular",
+      "qualityClass": "derived",
+      "note": "Official New Horizons LORRI/MVIC global mosaic preview from USGS; kept at its native preview size without artificial upscaling."
+    },
+    {
+      "body": "phobos",
+      "layer": "surface",
+      "status": "ready",
+      "processing": "direct-jpeg-sample",
+      "downloadUrl": "https://astrogeology.usgs.gov/ckan/dataset/ca781f2d-0e29-4560-a14e-1b41269c74a9/resource/6c47165c-4094-4ff5-8a21-065deb4319d6/download/phobos_me_src_mosaic_global_1024.jpg",
+      "sourcePage": "https://astrogeology.usgs.gov/search/map/phobos_mars_express_src_global_mosaic_12m",
+      "sourceResolution": "12 m/pixel global mosaic; official 1024 px viewer sample",
+      "projection": "simple cylindrical",
+      "qualityClass": "derived",
+      "note": "Official Mars Express SRC global mosaic preview from USGS; kept at its native preview size without artificial upscaling."
+    },
+    {
+      "body": "deimos",
+      "layer": "surface",
+      "status": "ready",
+      "processing": "direct-jpeg-sample",
+      "downloadUrl": "https://assets.science.nasa.gov/content/dam/science/cds/3d/resources/image/mars---deimos/Mars%20-%20Deimos.jpg",
+      "sourcePage": "https://science.nasa.gov/3d-resources/mars-deimos/",
+      "sourceResolution": "NASA Viking-derived JPEG texture",
+      "projection": "equirectangular",
+      "qualityClass": "derived",
+      "note": "NASA-published Deimos texture used at its native resolution; no artificial upscaling."
     }
   ]
 }

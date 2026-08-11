@@ -26,7 +26,7 @@ export function buildLayers(
   name: string
 ): Map<string, THREE.Mesh> {
   const layers = new Map<string, THREE.Mesh>();
-  const { textures } = config;
+  const textures = config.textures ?? {};
   if (textures.surface || config.fallbackColor !== undefined)
     layers.set('surface', createSurfaceLayer(config, name));
   if (textures.clouds) layers.set('clouds', createCloudsLayer(config, name));
@@ -44,7 +44,7 @@ function createSurfaceLayer(
   const isSun = name === 'sun';
   const material = createSurfaceMaterial(
     isSun,
-    config.textures.surface ? undefined : config.fallbackColor
+    config.textures?.surface ? undefined : config.fallbackColor
   );
   const mesh = new THREE.Mesh(
     createSphereGeometry(config.radius, 'surface'),

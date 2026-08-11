@@ -66,6 +66,7 @@ export interface SmallBodyElements {
   description?: { en: string; fr: string };
   /** Lien « En savoir plus » par langue (article Wikipédia dédié). */
   wiki?: { en: string; fr: string };
+  satellites?: Record<string, CelestialBodyConfig>;
 }
 
 const DEFAULT_COLOR: Record<NonNullable<SmallBodyElements['kind']>, number> = {
@@ -99,9 +100,8 @@ export function smallBodyToConfig(el: SmallBodyElements): CelestialBodyConfig {
     textureResolutions: el.surfaceResolutions
       ? { surface: el.surfaceResolutions }
       : {},
-    textures: el.surfaceResolutions
-      ? { surface: `${el.name}/${el.name}Surface` }
-      : {},
+    // `textures` est dérivé au chargement du catalogue (voir bodies.ts / deriveTextures).
+    ...(el.satellites ? { satellites: el.satellites } : {}),
     realData: {
       radiusKm: el.radiusKm,
       distanceAU: el.a,
@@ -148,7 +148,7 @@ export const SMALL_BODY_ELEMENTS: readonly SmallBodyElements[] = [
     radiusKm: 473,
     kind: 'dwarf',
     color: 0xc5a46d,
-    surfaceResolutions: ['4k', '2k'],
+    surfaceResolutions: ['4k', '2k', '1k'],
     visualRadius: 0.1,
     rotationHours: 9.074,
     axialTiltDeg: 4,
@@ -167,6 +167,7 @@ export const SMALL_BODY_ELEMENTS: readonly SmallBodyElements[] = [
   },
   {
     name: 'vesta',
+    displayName: { en: 'Vesta', fr: 'Vesta' },
     a: 2.3617,
     e: 0.0889,
     iDeg: 7.14,
@@ -176,10 +177,25 @@ export const SMALL_BODY_ELEMENTS: readonly SmallBodyElements[] = [
     epoch: '2000-01-01T12:00:00Z',
     radiusKm: 262,
     color: 0xc8795d,
-    surfaceResolutions: ['2k'],
+    surfaceResolutions: ['8k', '4k', '2k', '1k'],
+    rotationHours: 5.342,
+    axialTiltDeg: 29,
+    massKg: 2.59e20,
+    gravity: 0.25,
+    meanTempC: -108,
+    moonCount: 0,
+    description: {
+      en: 'The brightest asteroid, and the only one occasionally visible to the naked eye. A giant impact blasted away its south pole — fragments of that crater rain down on Earth as some of our meteorites.',
+      fr: 'L’astéroïde le plus brillant, et le seul parfois visible à l’œil nu. Un impact géant a arraché son pôle sud — des fragments de ce cratère tombent sur Terre sous forme de certaines de nos météorites.',
+    },
+    wiki: {
+      en: 'https://en.wikipedia.org/wiki/4_Vesta',
+      fr: 'https://fr.wikipedia.org/wiki/(4)_Vesta',
+    },
   },
   {
     name: 'pallas',
+    displayName: { en: 'Pallas', fr: 'Pallas' },
     a: 2.7721,
     e: 0.2302,
     iDeg: 34.837,
@@ -190,10 +206,24 @@ export const SMALL_BODY_ELEMENTS: readonly SmallBodyElements[] = [
     radiusKm: 256,
     color: 0x9b82d1,
     surfaceResolutions: ['2k'],
+    rotationHours: 7.813,
+    axialTiltDeg: 84,
+    massKg: 2.04e20,
+    gravity: 0.21,
+    meanTempC: -109,
+    moonCount: 0,
+    description: {
+      en: 'The third-largest asteroid, and the very first to be discovered after Ceres, in 1802. Its steeply tilted orbit is so inclined that no spacecraft has ever visited it.',
+      fr: 'Le troisième plus gros astéroïde, et le tout premier découvert après Cérès, en 1802. Son orbite fortement inclinée est si penchée qu’aucune sonde ne l’a jamais visité.',
+    },
+    wiki: {
+      en: 'https://en.wikipedia.org/wiki/2_Pallas',
+      fr: 'https://fr.wikipedia.org/wiki/(2)_Pallas',
+    },
   },
   {
     name: 'hygiea',
-    displayName: { fr: 'Hygie' },
+    displayName: { en: 'Hygiea', fr: 'Hygie' },
     a: 3.1415,
     e: 0.1125,
     iDeg: 3.842,
@@ -204,6 +234,20 @@ export const SMALL_BODY_ELEMENTS: readonly SmallBodyElements[] = [
     radiusKm: 217,
     color: 0x6fbf8a,
     surfaceResolutions: ['2k'],
+    rotationHours: 13.83,
+    axialTiltDeg: 0,
+    massKg: 8.74e19,
+    gravity: 0.09,
+    meanTempC: -109,
+    moonCount: 0,
+    description: {
+      en: 'The fourth-largest asteroid. In 2019 it was found to be nearly spherical — so round it may qualify as the smallest dwarf planet in the Solar System.',
+      fr: 'Le quatrième plus gros astéroïde. En 2019, on l’a découvert quasi sphérique — si rond qu’il pourrait être la plus petite planète naine du Système solaire.',
+    },
+    wiki: {
+      en: 'https://en.wikipedia.org/wiki/10_Hygiea',
+      fr: 'https://fr.wikipedia.org/wiki/(10)_Hygie',
+    },
   },
   {
     name: 'pluto',
@@ -218,7 +262,7 @@ export const SMALL_BODY_ELEMENTS: readonly SmallBodyElements[] = [
     radiusKm: 1188,
     kind: 'dwarf',
     color: 0xd8b894,
-    surfaceResolutions: ['4k', '2k'],
+    surfaceResolutions: ['8k', '4k', '2k', '1k'],
     visualRadius: 0.188,
     rotationHours: 153.3,
     axialTiltDeg: 119.6,
@@ -234,6 +278,50 @@ export const SMALL_BODY_ELEMENTS: readonly SmallBodyElements[] = [
       en: 'https://en.wikipedia.org/wiki/Pluto',
       fr: 'https://fr.wikipedia.org/wiki/Pluton_(plan%C3%A8te_naine)',
     },
+    satellites: {
+      charon: {
+        kind: 'moon',
+        displayName: { en: 'Charon', fr: 'Charon' },
+        radius: 0.1,
+        rotationSpeed: (Math.PI * 2) / (153.293328 * 3_600),
+        orbitalColor: 0xb9b3aa,
+        fallbackColor: 0x8c8882,
+        frame: 'parentRelative',
+        relativeEphemeris: { kind: 'horizonsParentRelative' },
+        relativeOrbitalElements: {
+          semiMajorAxisAU: 0.000131017908,
+          eccentricity: 0,
+          inclinationRad: 0,
+          ascendingNodeRad: 0,
+          argPerihelionRad: 0,
+          meanAnomalyAtEpochRad: 304.1 * D2R,
+          epoch: new Date('2000-01-01T12:00:00Z'),
+        },
+        textureResolutions: { surface: ['8k', '4k', '2k', '1k'] },
+        realData: {
+          radiusKm: 606,
+          distanceAU: 0.000131017908,
+          orbitPeriodDays: 6.387222,
+          orbitalInclination: 0,
+          ascendingNode: 0,
+          axialTilt: 0,
+          massKg: 1.586e21,
+          gravity: 0.288,
+          meanTempC: -220,
+          moonCount: 0,
+          description: {
+            en: "Pluto's largest moon, so massive that Pluto and Charon orbit a common barycenter.",
+            fr: "La plus grande lune de Pluton, si massive que Pluton et Charon orbitent autour d'un barycentre commun.",
+          },
+          wiki: {
+            en: 'https://en.wikipedia.org/wiki/Charon_(moon)',
+            fr: 'https://fr.wikipedia.org/wiki/Charon_(lune)',
+          },
+        },
+        cameraDistance: { educ: 0.8, explo: exploCameraDistance(606) },
+        loadPriority: 12,
+      },
+    },
   },
   {
     name: 'eris',
@@ -248,7 +336,7 @@ export const SMALL_BODY_ELEMENTS: readonly SmallBodyElements[] = [
     radiusKm: 1163,
     kind: 'dwarf',
     color: 0x91bce6,
-    surfaceResolutions: ['4k', '2k'],
+    surfaceResolutions: ['4k', '2k', '1k'],
     visualRadius: 0.183,
     rotationHours: 25.9,
     axialTiltDeg: 78,
@@ -278,7 +366,7 @@ export const SMALL_BODY_ELEMENTS: readonly SmallBodyElements[] = [
     radiusKm: 780,
     kind: 'dwarf',
     color: 0xe58f7a,
-    surfaceResolutions: ['4k', '2k'],
+    surfaceResolutions: ['4k', '2k', '1k'],
     visualRadius: 0.123,
     rotationHours: 3.9155,
     axialTiltDeg: 126,
@@ -308,7 +396,7 @@ export const SMALL_BODY_ELEMENTS: readonly SmallBodyElements[] = [
     radiusKm: 715,
     kind: 'dwarf',
     color: 0xd78352,
-    surfaceResolutions: ['4k', '2k'],
+    surfaceResolutions: ['4k', '2k', '1k'],
     visualRadius: 0.112,
     rotationHours: 22.826,
     axialTiltDeg: 0,

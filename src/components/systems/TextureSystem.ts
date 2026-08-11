@@ -11,7 +11,7 @@ import type {
   PerformanceSettings,
   TextureDefaultSettings,
 } from '@/config/engine';
-import { allBodies, flattenBodies } from '@/config/catalog';
+import { allBodies, flattenBodies, texturePath } from '@/config/catalog';
 import {
   assertSafeTexturePath,
   assertSafeTextureQuality,
@@ -156,9 +156,10 @@ export class TextureSystem {
       .filter(({ config }) => config.loadPriority !== undefined)
       .sort((a, b) => a.config.loadPriority! - b.config.loadPriority!)
       .flatMap(({ name: bodyName, config }) => {
-        const textureBasePath = config.textures.surface;
         const resolutions = config.textureResolutions.surface;
-        if (!textureBasePath || !resolutions?.length) return [];
+        if (!resolutions?.length) return [];
+        const textureBasePath =
+          config.textures?.surface ?? texturePath(bodyName, 'surface');
         const quality = resolutions.includes(lowQuality)
           ? lowQuality
           : resolutions[resolutions.length - 1];
@@ -219,17 +220,18 @@ export class TextureSystem {
     const bodyConfig = this._resolveBodyConfig(bodyName);
     if (!bodyConfig) throw new Error(`Unknown body: ${bodyName}`);
 
-    const textureBasePath =
-      bodyConfig.textures[textureKey as keyof typeof bodyConfig.textures];
     const resolutions =
       bodyConfig.textureResolutions[
         textureKey as keyof typeof bodyConfig.textureResolutions
       ];
-    if (!textureBasePath || !resolutions) {
+    if (!resolutions) {
       throw new Error(
         `Texture key "${textureKey}" not found for body "${bodyName}"`
       );
     }
+    const textureBasePath =
+      bodyConfig.textures?.[textureKey as keyof typeof bodyConfig.textures] ??
+      texturePath(bodyName, textureKey);
 
     const chosenQuality = this._chooseQuality(distance, resolutions);
     Logger.debug(
