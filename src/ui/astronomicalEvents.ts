@@ -21,18 +21,60 @@ function formatEventDate(date: Date): string {
   }).format(date);
 }
 
+const EVENT_KEYS: Record<AstronomicalEvent['kind'], string> = {
+  'new-moon': 'events.newMoon',
+  'first-quarter': 'events.firstQuarter',
+  'full-moon': 'events.fullMoon',
+  'third-quarter': 'events.thirdQuarter',
+  'solar-eclipse': 'events.solarEclipse',
+  'lunar-eclipse': 'events.lunarEclipse',
+  'march-equinox': 'events.marchEquinox',
+  'june-solstice': 'events.juneSolstice',
+  'september-equinox': 'events.septemberEquinox',
+  'december-solstice': 'events.decemberSolstice',
+  perihelion: 'events.perihelion',
+  aphelion: 'events.aphelion',
+};
+
 function eventLabel(event: AstronomicalEvent): string {
-  const key: Record<AstronomicalEvent['kind'], string> = {
-    'new-moon': 'events.newMoon',
-    'first-quarter': 'events.firstQuarter',
-    'full-moon': 'events.fullMoon',
-    'third-quarter': 'events.thirdQuarter',
-    'solar-eclipse': 'events.solarEclipse',
-    'lunar-eclipse': 'events.lunarEclipse',
-  };
-  const label = t(key[event.kind]);
+  const label = t(EVENT_KEYS[event.kind]);
   if (!event.eclipseKind) return label;
-  return `${label} · ${t(`events.kind.${event.eclipseKind}`)}`;
+  // Éclipse : type (totale/partielle…) + ampleur obscurcie.
+  const parts = [t(`events.kind.${event.eclipseKind}`)];
+  if (event.obscuration !== undefined && event.obscuration > 0) {
+    parts.push(`${Math.round(event.obscuration * 100)}%`);
+  }
+  return `${label} · ${parts.join(' · ')}`;
+}
+
+/** Infobulle au survol : détails (visibilité d'éclipse) + rappel « cliquer pour y aller ». */
+function eventTooltip(event: AstronomicalEvent): string {
+  const lines: string[] = [];
+  if (
+    event.kind === 'solar-eclipse' &&
+    event.peakLatitude !== undefined &&
+    event.peakLongitude !== undefined
+  ) {
+    const lat = event.peakLatitude;
+    const lon = event.peakLongitude;
+    const ns = lat >= 0 ? 'N' : 'S';
+    const ew = lon >= 0 ? 'E' : 'W';
+    lines.push(
+      t('events.tip.peak', {
+        lat: `${Math.abs(lat).toFixed(1)}°${ns}`,
+        lon: `${Math.abs(lon).toFixed(1)}°${ew}`,
+      })
+    );
+  }
+  if (event.obscuration !== undefined && event.obscuration > 0) {
+    lines.push(
+      t('events.tip.obscuration', {
+        percent: `${Math.round(event.obscuration * 100)}`,
+      })
+    );
+  }
+  lines.push(t('events.tip.goto'));
+  return lines.join('\n');
 }
 
 export interface AstronomicalEventsPanel {
@@ -114,6 +156,7 @@ export function setupAstronomicalEvents(
       row.type = 'button';
       row.className = 'event-row';
       row.dataset['eventDate'] = event.date.toISOString();
+      row.title = eventTooltip(event);
 
       const label = document.createElement('span');
       label.className = 'event-row-label';

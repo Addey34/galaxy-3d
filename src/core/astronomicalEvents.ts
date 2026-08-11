@@ -1,10 +1,14 @@
 import {
+  Body,
   NextGlobalSolarEclipse,
   NextLunarEclipse,
   NextMoonQuarter,
+  NextPlanetApsis,
   SearchGlobalSolarEclipse,
   SearchLunarEclipse,
   SearchMoonQuarter,
+  SearchPlanetApsis,
+  Seasons,
   type EclipseKind,
 } from 'astronomy-engine';
 
@@ -14,12 +18,23 @@ export type AstronomicalEventKind =
   | 'full-moon'
   | 'third-quarter'
   | 'solar-eclipse'
-  | 'lunar-eclipse';
+  | 'lunar-eclipse'
+  | 'march-equinox'
+  | 'june-solstice'
+  | 'september-equinox'
+  | 'december-solstice'
+  | 'perihelion'
+  | 'aphelion';
 
 export interface AstronomicalEvent {
   kind: AstronomicalEventKind;
   date: Date;
   eclipseKind?: EclipseKind;
+  /** Éclipse : fraction obscurcie (0–1) de l'astre au pic. */
+  obscuration?: number;
+  /** Éclipse solaire : position du pic de totalité (lat/lon), où l'ombre passe. */
+  peakLatitude?: number;
+  peakLongitude?: number;
 }
 
 export interface AstronomicalEventOptions {
@@ -66,6 +81,9 @@ function addSolarEclipses(
         kind: 'solar-eclipse',
         date: new Date(eclipse.peak.date),
         eclipseKind: eclipse.kind,
+        obscuration: eclipse.obscuration,
+        peakLatitude: eclipse.latitude,
+        peakLongitude: eclipse.longitude,
       });
     }
     eclipse = NextGlobalSolarEclipse(eclipse.peak);
@@ -84,9 +102,49 @@ function addLunarEclipses(
         kind: 'lunar-eclipse',
         date: new Date(eclipse.peak.date),
         eclipseKind: eclipse.kind,
+        obscuration: eclipse.obscuration,
       });
     }
     eclipse = NextLunarEclipse(eclipse.peak);
+  }
+}
+
+/** Équinoxes et solstices sur la fenêtre (via Seasons, une passe par année civile). */
+function addSeasons(events: AstronomicalEvent[], start: Date, end: Date): void {
+  for (
+    let year = start.getUTCFullYear();
+    year <= end.getUTCFullYear();
+    year += 1
+  ) {
+    const s = Seasons(year);
+    const points: Array<[AstronomicalEventKind, Date]> = [
+      ['march-equinox', s.mar_equinox.date],
+      ['june-solstice', s.jun_solstice.date],
+      ['september-equinox', s.sep_equinox.date],
+      ['december-solstice', s.dec_solstice.date],
+    ];
+    for (const [kind, date] of points) {
+      if (date > start && date <= end) events.push({ kind, date });
+    }
+  }
+}
+
+/** Périhélie / aphélie de la Terre (distance min/max au Soleil). */
+function addEarthApsides(
+  events: AstronomicalEvent[],
+  start: Date,
+  end: Date
+): void {
+  let apsis = SearchPlanetApsis(Body.Earth, start);
+  while (apsis.time.date <= end) {
+    if (apsis.time.date > start) {
+      // kind 0 = périhélie (au plus proche), 1 = aphélie (au plus loin).
+      events.push({
+        kind: apsis.kind === 0 ? 'perihelion' : 'aphelion',
+        date: new Date(apsis.time.date),
+      });
+    }
+    apsis = NextPlanetApsis(Body.Earth, apsis);
   }
 }
 
@@ -104,6 +162,8 @@ export function findUpcomingAstronomicalEvents(
   addMoonQuarters(events, start, end);
   addSolarEclipses(events, start, end);
   addLunarEclipses(events, start, end);
+  addSeasons(events, start, end);
+  addEarthApsides(events, start, end);
 
   return events
     .sort((a, b) => a.date.getTime() - b.date.getTime())
