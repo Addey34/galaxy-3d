@@ -30,6 +30,7 @@ import { ExploHud } from './ui/exploHud';
 import { SmallBodyOverlay } from './ui/smallBodyOverlay';
 import { setupBodyPicker } from './ui/bodyPicker';
 import { setupOrbitOptions } from './ui/orbitOptions';
+import { setupRealtimeClouds } from './ui/realtimeClouds';
 import { setupOverlayCoordinator } from './ui/overlayCoordinator';
 import { fetchSmallBodies } from './core/sbdb';
 import { CELESTIAL_CONFIG } from './config/bodies';
@@ -73,8 +74,12 @@ if (surfaceScrim) {
     updateProgress(0, t('loader.init'));
 
     const app = new SolarSystemApp();
-    const { cameraSystem, animationSystem, sceneSystem, orbitalMechanics } =
-      await app.init(updateProgress);
+    const api = await app.init(updateProgress);
+    const { cameraSystem, animationSystem, sceneSystem, orbitalMechanics } = api;
+
+    // Couverture nuageuse réelle de la Terre (NASA GIBS) synchronisée sur la date de
+    // simulation ; repli automatique sur la texture nuages statique hors-ligne.
+    setupRealtimeClouds(api);
 
     // Fiche d'info par corps : s'ouvre pour toute sélection (barre, clic 3D, label Explo),
     // se ferme sur retour Vue Globale. Toutes les sources passent par planetNav.selectBody.

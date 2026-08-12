@@ -259,6 +259,34 @@ export const BLOOM_SETTINGS = {
   threshold: 0.85,
 };
 
+// Couverture nuageuse RÉELLE de la Terre depuis NASA GIBS (imagerie satellite
+// quotidienne), synchronisée sur la date de la simulation. Remplace la couche
+// nuages statique quand disponible ; repli automatique sur la texture statique
+// hors-ligne / date hors plage. Voir core/gibsClouds.ts (URL/date) et
+// ui/realtimeClouds.ts (chargement + application). Un seul endroit à régler.
+export const REALTIME_CLOUDS_SETTINGS = {
+  enabled: true,
+  // Couche GIBS : VIIRS SNPP True Color (nuages blancs réalistes, fauchée large).
+  layer: 'VIIRS_SNPP_CorrectedReflectance_TrueColor',
+  // Résolution de l'image équirectangulaire (2:1). 2048×1024 ≈ 150–300 Ko.
+  resolution: 2048,
+  // Latence de publication GIBS : « aujourd'hui » charge J-latencyDays.
+  latencyDays: 1,
+  // Borne basse de la couche (avant → fallback statique).
+  minDate: '2015-11-24',
+  // Extraction shader : seuils de luminance (min RGB) et de saturation max pour ne
+  // garder que les nuages (blanc désaturé lumineux) et rejeter le sol coloré. Deux
+  // seuils bas : sur l'océan (fond sombre) on capte même les nuages fins ; sur la
+  // terre (sable clair ≈ nuage) on n'accepte que les nuages francs (lumLowLand plus
+  // haut). La distinction eau/terre vient du canal g de la spec map surface.
+  cloudLuminanceLow: 0.32,
+  cloudLuminanceLowLand: 0.55,
+  cloudLuminanceHigh: 0.62,
+  cloudSaturationMax: 0.3,
+  // Opacité globale de la couche nuages réelle (0..1).
+  opacity: 0.9,
+};
+
 export const TEXTURE_SETTINGS: TextureSettings = {
   // Vite BASE_URL keeps Firebase Hosting sub-path deployments working.
   basePath: `${import.meta.env.BASE_URL}assets/textures/`,

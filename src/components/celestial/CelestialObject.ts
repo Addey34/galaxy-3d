@@ -21,6 +21,7 @@ import {
   getCloudShadowUniforms,
   getMoonlightUniforms,
   getOceanGlintUniforms,
+  getRealCloudsUniforms,
   getRingShadowUniforms,
   setMaterialLightAttenuation,
   type CloudShadowUniforms,
@@ -92,6 +93,10 @@ export default class CelestialObject {
   // la direction du Soleil, masqué sur l'océan via la spec map.
   private _oceanGlint?: OceanGlintUniforms;
   private readonly _selfWorldPos = new THREE.Vector3();
+  // Nuages géoréférencés réels (GIBS) : quand actif, on suspend la dérive continue
+  // de la couche nuages (qui simule des nuages fictifs) — une vraie image satellite
+  // doit rester alignée sur sa longitude. La Terre continue de tourner (_meshGroup).
+  private _realCloudDrift = true;
 
   constructor(
     private readonly textureSystem: TextureSystem,
@@ -172,6 +177,66 @@ export default class CelestialObject {
     this._cloudShadow.strength.value = CLOUD_SHADOW_STRENGTH;
   }
 
+  /**
+   * Applique une couverture nuageuse RÉELLE (image satellite GIBS) à la couche
+   * nuages : la texture sert de `map` et son alpha est dérivé par extraction shader
+   * (nuages = blanc lumineux désaturé). Aligne l'image (rotation nuages remise à 0),
+   * suspend la dérive fictive, et branche l'ombre portée. `opacity`/seuils optionnels
+   * surchargent les valeurs par défaut du matériau. Sans couche nuages → no-op.
+   */
+  setRealCloudsTexture(
+    texture: THREE.Texture,
+    options: {
+      opacity?: number;
+      lumLow?: number;
+      lumHigh?: number;
+      satMax?: number;
+      lumLowLand?: number;
+    } = {}
+  ): void {
+    const clouds = this.layers.get('clouds');
+    if (!clouds || Array.isArray(clouds.material)) return;
+    const mat = clouds.material as THREE.MeshStandardMaterial;
+    texture.wrapS = THREE.RepeatWrapping;
+    texture.wrapT = THREE.ClampToEdgeWrapping;
+    texture.colorSpace = THREE.SRGBColorSpace;
+    mat.map = texture;
+    // L'alpha vient de l'extraction shader (diffuseColor.a), pas d'une alphaMap :
+    // on retire toute alphaMap héritée de la couche statique.
+    mat.alphaMap = null;
+    if (options.opacity !== undefined) mat.opacity = options.opacity;
+    mat.needsUpdate = true;
+
+    const uniforms = getRealCloudsUniforms(mat);
+    if (uniforms) {
+      uniforms.enabled.value = 1;
+      if (options.lumLow !== undefined) uniforms.lumLow.value = options.lumLow;
+      if (options.lumHigh !== undefined)
+        uniforms.lumHigh.value = options.lumHigh;
+      if (options.satMax !== undefined) uniforms.satMax.value = options.satMax;
+      if (options.lumLowLand !== undefined)
+        uniforms.lumLowLand.value = options.lumLowLand;
+      // Carte océan = canal g de la spec map (roughnessMap) de la surface : lève
+      // l'ambiguïté sable-clair/nuage (voir REAL_CLOUDS_GLSL). Peut être absente si la
+      // spec map n'est pas encore chargée → extraction « terre stricte » partout jusque-là.
+      const surface = this.layers.get('surface');
+      const surfaceMat =
+        surface && !Array.isArray(surface.material)
+          ? (surface.material as THREE.MeshStandardMaterial)
+          : undefined;
+      const oceanMask = surfaceMat?.roughnessMap ?? null;
+      uniforms.oceanMask.value = oceanMask;
+      uniforms.hasOceanMask.value = oceanMask ? 1 : 0;
+    }
+
+    // Image géoréférencée : on la fige à sa longitude (fin de la dérive fictive) et
+    // on aligne l'ombre portée sur l'orientation courante de la couche.
+    clouds.rotation.y = 0;
+    this._realCloudDrift = false;
+    this._bindCloudShadow('clouds', texture);
+    if (this._cloudShadow) this._cloudShadow.offset.value = 0;
+  }
+
   private async _loadRingTexture(normalizedDistance = 250): Promise<void> {
     const ring = this.config.ring;
     if (!ring) return;
@@ -230,7 +295,7 @@ export default class CelestialObject {
     this._meshGroup.rotation.y += this.rotationSpeed * delta;
 
     const clouds = this.layers.get('clouds');
-    if (clouds) {
+    if (clouds && this._realCloudDrift) {
       clouds.rotation.y += this.rotationSpeed * delta * CLOUDS_ROTATION_FACTOR;
       // Suit la dérive des nuages pour aligner l'ombre portée sur la surface :
       // une rotation Y = décalage de longitude = décalage d'UV.x (÷ 2π).

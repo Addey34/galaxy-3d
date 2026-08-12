@@ -90,13 +90,109 @@ export function createSurfaceMaterial(
   );
 }
 
+const REAL_CLOUDS_UNIFORM_KEY = '__realCloudsUniforms';
+
+export interface RealCloudsUniforms {
+  /** 0 = couche nuages statique classique ; 1 = extraction depuis l'imagerie GIBS. */
+  enabled: { value: number };
+  /** Bornes de luminance (min RGB) du smoothstep d'extraction. */
+  lumLow: { value: number };
+  lumHigh: { value: number };
+  /** Saturation maximale tolérée : au-dessus = sol coloré, rejeté. */
+  satMax: { value: number };
+  /**
+   * Seuil de luminance bas SUR LA TERRE FERME (plus strict que sur l'océan) : le sable
+   * clair d'un désert (Sahara) a une luminance proche d'un nuage → sur terre on n'accepte
+   * que les nuages francs. Sur l'océan (fond sombre) le seuil `lumLow` capte même les
+   * nuages fins.
+   */
+  lumLowLand: { value: number };
+  /** Carte océan (canal g de la spec map surface : 1 = eau). Partagée depuis la surface. */
+  oceanMask: { value: THREE.Texture | null };
+  /** 1 quand une carte océan est fournie, sinon 0 (extraction « terre stricte » partout). */
+  hasOceanMask: { value: number };
+}
+
+/** Récupère les uniforms d'extraction nuages réels d'un matériau, s'il en a. */
+export function getRealCloudsUniforms(
+  material: THREE.Material
+): RealCloudsUniforms | undefined {
+  return material.userData[REAL_CLOUDS_UNIFORM_KEY] as
+    | RealCloudsUniforms
+    | undefined;
+}
+
+// Extraction des nuages depuis une image satellite True Color (GIBS). L'image contient
+// nuages (blanc lumineux désaturé), océans/trous (noir) ET continents (sol coloré). Le
+// sable clair d'un désert a une luminance proche d'un nuage → une extraction par simple
+// seuil produit de faux nuages sur le Sahara. On lève l'ambiguïté avec la CARTE OCÉAN
+// (canal g de la spec map surface, déjà utilisée par le glint) : sur l'eau (fond sombre)
+// on capte les nuages avec un seuil bas ; sur la terre on n'accepte que les nuages francs
+// (seuil `lumLowLand` plus haut). Alpha = luminance (min RGB) × désaturation. On écrase
+// la couleur vers le blanc pour ne pas teinter le nuage avec le sol résiduel.
+// Injecté après <map_fragment> (diffuseColor = texel). Inerte si uRealClouds == 0.
+const REAL_CLOUDS_GLSL = `
+        #ifdef USE_MAP
+        if ( uRealClouds > 0.5 ) {
+          vec3 rc = diffuseColor.rgb;
+          float rcMax = max( rc.r, max( rc.g, rc.b ) );
+          float rcMin = min( rc.r, min( rc.g, rc.b ) );
+          float rcSat = rcMax > 0.0001 ? ( rcMax - rcMin ) / rcMax : 0.0;
+          // Océan = 1 (eau) → seuil bas ; terre = 0 → seuil haut (lumLowLand).
+          float rcOcean = uHasOceanMask > 0.5
+            ? texture2D( uCloudOceanMask, vMapUv ).g
+            : 0.0;
+          float rcLumLow = mix( uCloudLumLowLand, uCloudLumLow, rcOcean );
+          float rcBright = smoothstep( rcLumLow, uCloudLumHigh, rcMin );
+          float rcDesat = 1.0 - smoothstep( uCloudSatMax, uCloudSatMax + 0.15, rcSat );
+          float rcAlpha = rcBright * rcDesat;
+          diffuseColor.a *= rcAlpha;
+          // Nuage blanc pur (l'imagerie tire vers le gris/bleu) : couleur neutralisée,
+          // l'éclairage jour/nuit du matériau fait le reste (face nuit → sombre).
+          diffuseColor.rgb = vec3( 1.0 );
+        }
+        #endif`;
+
 export function createCloudsMaterial(): THREE.MeshStandardMaterial {
-  return createShadowAwareStandardMaterial({
+  const material = createShadowAwareStandardMaterial({
     transparent: true,
     opacity: 0.72,
     depthWrite: false,
     side: THREE.DoubleSide,
   });
+
+  const realClouds: RealCloudsUniforms = {
+    enabled: { value: 0 },
+    lumLow: { value: 0.32 },
+    lumHigh: { value: 0.62 },
+    satMax: { value: 0.3 },
+    lumLowLand: { value: 0.55 },
+    oceanMask: { value: null },
+    hasOceanMask: { value: 0 },
+  };
+  material.userData[REAL_CLOUDS_UNIFORM_KEY] = realClouds;
+
+  chainOnBeforeCompile(material, (shader) => {
+    shader.uniforms['uRealClouds'] = realClouds.enabled;
+    shader.uniforms['uCloudLumLow'] = realClouds.lumLow;
+    shader.uniforms['uCloudLumHigh'] = realClouds.lumHigh;
+    shader.uniforms['uCloudSatMax'] = realClouds.satMax;
+    shader.uniforms['uCloudLumLowLand'] = realClouds.lumLowLand;
+    shader.uniforms['uCloudOceanMask'] = realClouds.oceanMask;
+    shader.uniforms['uHasOceanMask'] = realClouds.hasOceanMask;
+    shader.fragmentShader = shader.fragmentShader
+      .replace(
+        '#include <common>',
+        '#include <common>\nuniform float uRealClouds;\nuniform float uCloudLumLow;\nuniform float uCloudLumHigh;\nuniform float uCloudSatMax;\nuniform float uCloudLumLowLand;\nuniform sampler2D uCloudOceanMask;\nuniform float uHasOceanMask;'
+      )
+      .replace('#include <map_fragment>', '#include <map_fragment>' + REAL_CLOUDS_GLSL);
+  });
+  // Clé de cache distincte : la variante nuages réels compile un shader différent.
+  const previousCacheKey = material.customProgramCacheKey?.bind(material);
+  material.customProgramCacheKey = () =>
+    `${previousCacheKey ? previousCacheKey() : ''}-realclouds`;
+
+  return material;
 }
 
 const RING_SHADOW_UNIFORM_KEY = '__ringShadowUniforms';

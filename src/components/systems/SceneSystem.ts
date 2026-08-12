@@ -272,6 +272,11 @@ export class SceneSystem {
     }
   }
 
+  /** Renvoie l'objet céleste par nom (ou undefined). Accès ciblé pour l'UI. */
+  getBody(name: string): CelestialObject | undefined {
+    return this._celestialBodies[name];
+  }
+
   private createOrbitVisual(bodyName: string, color: number): THREE.Line {
     const geometry = new THREE.BufferGeometry();
     const material = new THREE.LineBasicMaterial({
