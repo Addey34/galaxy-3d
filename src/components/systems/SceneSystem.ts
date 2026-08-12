@@ -4,7 +4,12 @@
  * d'orbite disponibles dans les deux modes.
  */
 import * as THREE from 'three';
+import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
+import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js';
 import {
+  BLOOM_SETTINGS,
   CAMERA_SETTINGS,
   RENDER_SETTINGS,
   currentMaxPixelRatio,
@@ -25,6 +30,8 @@ export class SceneSystem {
 
   camera!: THREE.PerspectiveCamera;
   renderer!: THREE.WebGLRenderer;
+  /** Composer de post-process (bloom) ; null si désactivé (mobile). */
+  composer: EffectComposer | null = null;
 
   private readonly _orbitLines = new Map<string, THREE.Line>();
   private readonly _orbitPts = new Map<string, Float32Array>();
@@ -51,9 +58,37 @@ export class SceneSystem {
   init(): this {
     this.setupCamera();
     this.setupRenderer();
+    this.setupPostProcessing();
     this.setupStarfield();
     this.setupEventListeners();
     return this;
+  }
+
+  /**
+   * Chaîne de post-process : rendu de base → bloom (seuil élevé = seules les
+   * sources très lumineuses bavent : Soleil + lumières de ville) → OutputPass
+   * (tone mapping + conversion sRGB en fin de chaîne). Désactivé sur mobile.
+   */
+  private setupPostProcessing(): void {
+    if (!BLOOM_SETTINGS.enabled) return;
+
+    const composer = new EffectComposer(this.renderer);
+    composer.addPass(new RenderPass(this.scene, this.camera));
+
+    const size = this.renderer.getSize(new THREE.Vector2());
+    const bloom = new UnrealBloomPass(
+      size,
+      BLOOM_SETTINGS.strength,
+      BLOOM_SETTINGS.radius,
+      BLOOM_SETTINGS.threshold
+    );
+    composer.addPass(bloom);
+    // OutputPass reprend le tone mapping du renderer : sans lui, EffectComposer
+    // shunte le tone mapping/sRGB câblé sur le renderer et l'image sort délavée.
+    composer.addPass(new OutputPass());
+    composer.setPixelRatio(this.renderer.getPixelRatio());
+
+    this.composer = composer;
   }
 
   private setupCamera(): void {
@@ -103,6 +138,9 @@ export class SceneSystem {
         tex.mapping = THREE.EquirectangularReflectionMapping;
         tex.colorSpace = THREE.SRGBColorSpace;
         this.scene.background = tex;
+        // Rehausse la bande galactique (texture source très sombre) ; le cœur le
+        // plus brillant nourrit le bloom pour un ciel vivant.
+        this.scene.backgroundIntensity = RENDER_SETTINGS.backgroundIntensity;
       })
       .catch((err) =>
         Logger.warn('[SceneSystem] Starfield texture failed', err)
@@ -116,9 +154,15 @@ export class SceneSystem {
       this.renderer.setSize(window.innerWidth, window.innerHeight);
       // Ré-applique le plafond de pixel ratio : franchir le seuil mobile (768px)
       // par redimensionnement bascule 2 ↔ 1.5 sans recréer le renderer.
-      this.renderer.setPixelRatio(
-        Math.min(window.devicePixelRatio, currentMaxPixelRatio())
+      const pixelRatio = Math.min(
+        window.devicePixelRatio,
+        currentMaxPixelRatio()
       );
+      this.renderer.setPixelRatio(pixelRatio);
+      if (this.composer) {
+        this.composer.setSize(window.innerWidth, window.innerHeight);
+        this.composer.setPixelRatio(pixelRatio);
+      }
     };
     window.addEventListener('resize', onResize, { passive: true });
     this.disposeFunctions.push(() =>
@@ -280,6 +324,7 @@ export class SceneSystem {
       });
     });
     this.disposeFunctions.forEach((fn) => fn());
+    this.composer?.dispose();
     this.renderer?.dispose();
     this.renderer?.domElement.remove();
     Logger.warn('[SceneSystem] Disposed');

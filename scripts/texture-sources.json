@@ -22,7 +22,7 @@
     { "body": "rhea", "layer": "surface", "license": "public-domain", "credit": "USGS Astrogeology / NASA Cassini & Voyager", "tier": "free" },
     { "body": "mercury", "layer": "surface", "license": "CC BY 4.0", "credit": "Solar System Scope (solarsystemscope.com)", "tier": "free" },
     { "body": "venus", "layer": "surface", "license": "CC BY 4.0", "credit": "Solar System Scope (solarsystemscope.com)", "tier": "free" },
-    { "body": "venus", "layer": "atmosphere", "license": "CC BY 4.0", "credit": "Solar System Scope (solarsystemscope.com)", "tier": "free" },
+    { "body": "venus", "layer": "clouds", "license": "CC BY 4.0", "credit": "Solar System Scope (solarsystemscope.com)", "tier": "free" },
     { "body": "mars", "layer": "surface", "license": "CC BY 4.0", "credit": "Solar System Scope (solarsystemscope.com)", "tier": "free" },
     { "body": "jupiter", "layer": "surface", "license": "CC BY 4.0", "credit": "Solar System Scope (solarsystemscope.com)", "tier": "free" },
     { "body": "saturn", "layer": "surface", "license": "CC BY 4.0", "credit": "Solar System Scope (solarsystemscope.com)", "tier": "free" },
@@ -222,7 +222,7 @@
     },
     {
       "body": "venus",
-      "layer": "atmosphere",
+      "layer": "clouds",
       "status": "reference",
       "sourcePage": "https://www.jpl.nasa.gov/images/pia00271-magellan-mission-to-venus/",
       "sourceResolution": "dynamic cloud/atmosphere imagery",

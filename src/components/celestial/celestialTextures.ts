@@ -46,7 +46,6 @@ export function applyTexture(
   }
   const handlers: Record<string, () => void> = {
     clouds: () => applyCloudsTexture(layers, texture),
-    atmosphere: () => applyAtmosphereTexture(layers, texture),
     lights: () => applyLightsTexture(layers, texture),
   };
   handlers[textureKey]?.();
@@ -92,14 +91,6 @@ function applyCloudsTexture(layers: Layers, texture: THREE.Texture): void {
   const mat = mesh.material as THREE.MeshStandardMaterial;
   mat.map = texture;
   mat.alphaMap = texture;
-  mat.needsUpdate = true;
-}
-
-function applyAtmosphereTexture(layers: Layers, texture: THREE.Texture): void {
-  const mesh = layers.get('atmosphere');
-  if (!mesh) return;
-  const mat = mesh.material as THREE.MeshStandardMaterial;
-  mat.map = texture;
   mat.needsUpdate = true;
 }
 

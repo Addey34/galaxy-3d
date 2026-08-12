@@ -152,6 +152,11 @@ export const RENDER_SETTINGS = {
   toneMapping: THREE.ACESFilmicToneMapping as THREE.ToneMapping,
   toneMappingExposure: 1.0,
   maxPixelRatio: IS_MOBILE ? 1.5 : 2,
+  // Intensité du fond étoilé (Voie lactée équirectangulaire). La texture source
+  // est volontairement sombre (fond spatial crédible) ; un léger boost rend la
+  // bande galactique lisible sans délaver le ciel, et le cœur galactique le plus
+  // brillant alimente joliment le bloom.
+  backgroundIntensity: 2.2,
 };
 
 export const CAMERA_SETTINGS = {
@@ -230,6 +235,27 @@ export const SHADER_SETTINGS = {
     threshold: 0.15,
     smoothness: 0.08,
   },
+  atmosphere: {
+    // Halo Fresnel (voir AtmosphereShader). power élevé = liseré fin ; nightWrap
+    // laisse un peu de halo déborder côté nuit pour un dégradé crépusculaire doux.
+    power: 3.0,
+    intensity: 1.1,
+    nightWrap: 0.25,
+    defaultColor: 0x5a8fdb,
+  },
+};
+
+export const BLOOM_SETTINGS = {
+  // Désactivé sur mobile : une passe de post-process supplémentaire coûte cher sur
+  // GPU intégré. Le seuil élevé sélectionne naturellement les sources très
+  // lumineuses (Soleil, lumières de ville additives) sans faire baver les planètes.
+  enabled: !IS_MOBILE,
+  // strength/radius relevés pour un halo de Soleil lisible (le réglage précédent
+  // restait imperceptible à distance) ; le seuil reste haut pour ne pas faire
+  // baver les planètes éclairées (elles plafonnent sous 0.85 après tone mapping).
+  strength: 0.85,
+  radius: 0.5,
+  threshold: 0.85,
 };
 
 export const TEXTURE_SETTINGS: TextureSettings = {

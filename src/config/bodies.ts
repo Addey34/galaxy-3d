@@ -108,8 +108,11 @@ export const CELESTIAL_CONFIG: CelestialConfig = {
       orbitalColor: 0xe9a13b,
       textureResolutions: {
         surface: ['8k', '4k', '2k', '1k'],
-        atmosphere: ['4k', '2k', '1k'],
+        // Le voile nuageux opaque de Vénus est rendu comme couche `clouds`
+        // (sphère texturée), le halo atmosphérique Fresnel s'ajoutant au limbe.
+        clouds: ['4k', '2k', '1k'],
       },
+      atmosphereColor: 0xd9b26a,
       realData: {
         radiusKm: 6_052,
         distanceAU: 0.723,

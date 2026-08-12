@@ -6,7 +6,6 @@
 import * as THREE from 'three';
 import {
   configureShadows,
-  createAtmosphereMaterial,
   createCloudsMaterial,
   createRingMaterial,
   createSphereGeometry,
@@ -15,6 +14,7 @@ import {
 } from '@/config/layerConfig';
 import { RENDER_SETTINGS, SHADER_SETTINGS } from '@/config/engine';
 import * as NightLightsShader from '@/shaders/NightLightsShader';
+import * as AtmosphereShader from '@/shaders/AtmosphereShader';
 import type { CelestialBodyConfig } from '@/types';
 
 /**
@@ -73,11 +73,27 @@ function createAtmosphereLayer(
   config: CelestialBodyConfig,
   name: string
 ): THREE.Mesh {
+  const settings = SHADER_SETTINGS.atmosphere;
+  const color = config.atmosphereColor ?? settings.defaultColor;
+  const material = new THREE.ShaderMaterial({
+    vertexShader: AtmosphereShader.vertexShader,
+    fragmentShader: AtmosphereShader.fragmentShader,
+    uniforms: AtmosphereShader.createUniforms(color, settings),
+    transparent: true,
+    blending: THREE.AdditiveBlending,
+    // BackSide : on ne voit que la face arrière de la sphère → un anneau de halo
+    // au limbe. depthWrite off (couche additive), depthTest on pour être occulté
+    // par les corps devant.
+    side: THREE.BackSide,
+    depthWrite: false,
+  });
+
   const mesh = new THREE.Mesh(
     createSphereGeometry(config.radius, 'atmosphere'),
-    createAtmosphereMaterial()
+    material
   );
   mesh.name = `${name}_atmosphere`;
+  mesh.renderOrder = 2;
   return mesh;
 }
 
@@ -96,7 +112,12 @@ function createLightsLayer(
     transparent: true,
     blending: THREE.AdditiveBlending,
     depthWrite: false,
-    depthTest: false,
+    // depthTest ACTIVÉ : sans lui, les lumières de ville (AdditiveBlending) se
+    // rendent par-dessus tout et « traversent » les corps qui passent devant la
+    // Terre. Le test de profondeur les masque correctement derrière un occulteur ;
+    // le léger sur-rayon (LAYER_RADIUS_SCALE.lights) + renderOrder les gardent
+    // au-dessus de leur propre surface sans z-fighting.
+    depthTest: true,
     side: THREE.FrontSide,
   });
 
