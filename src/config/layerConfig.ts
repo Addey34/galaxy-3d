@@ -215,6 +215,8 @@ export interface PrecipUniforms {
   enabled: { value: number };
   /** Opacité globale de la couche pluie. */
   opacity: { value: number };
+  /** Position monde du Soleil : éclaire la couche côté jour, l'assombrit côté nuit. */
+  sunPosition: { value: THREE.Vector3 };
 }
 
 /** Récupère les uniforms de la couche pluie d'un matériau, s'il en a. */
@@ -253,14 +255,22 @@ const PRECIP_REMAP_GLSL = `
           // Densité : voile fin pour la pluie faible (ne noie pas la Terre), opaque pour
           // les gros systèmes.
           float dens = mix( 0.4, 1.0, smoothstep( 0.1, 0.6, pRain ) );
-          diffuseColor.rgb = col;
+          // Éclairage jour/nuit : les nuages d'orage sont éclairés par le Soleil comme
+          // le reste de la Terre. Côté nuit → sombres (cohérent avec la surface/nuages),
+          // avec un léger plancher pour ne pas être totalement noirs au terminateur.
+          vec3 pN = normalize( vPrecipWorldNormal );
+          vec3 pToSun = normalize( uPrecipSunPos - vPrecipWorldPos );
+          float pDay = clamp( dot( pN, pToSun ) * 1.1 + 0.1, 0.0, 1.0 );
+          float pLight = mix( 0.08, 1.0, pDay );
+          diffuseColor.rgb = col * pLight;
           diffuseColor.a = pMask * dens * uPrecipOpacity;
         }
         #endif`;
 
 export function createPrecipMaterial(): THREE.MeshBasicMaterial {
-  // MeshBasicMaterial (non éclairé) : la pluie est une couche d'information visible de
-  // jour comme de nuit, elle ne dépend pas de la PointLight du Soleil.
+  // MeshBasicMaterial : le remap produit lui-même la couleur ; on ajoute un éclairage
+  // jour/nuit manuel (uPrecipSunPos + normale monde) pour que les nuages d'orage
+  // s'assombrissent côté nuit, comme la surface et les nuages.
   const material = new THREE.MeshBasicMaterial({
     transparent: true,
     depthWrite: false,
@@ -270,23 +280,35 @@ export function createPrecipMaterial(): THREE.MeshBasicMaterial {
   const precip: PrecipUniforms = {
     enabled: { value: 0 },
     opacity: { value: 0.85 },
+    sunPosition: { value: new THREE.Vector3(1, 0, 0) },
   };
   material.userData[PRECIP_UNIFORM_KEY] = precip;
 
   chainOnBeforeCompile(material, (shader) => {
     shader.uniforms['uPrecipEnabled'] = precip.enabled;
     shader.uniforms['uPrecipOpacity'] = precip.opacity;
+    shader.uniforms['uPrecipSunPos'] = precip.sunPosition;
+    // Position + normale monde du fragment (pour le facteur jour/nuit).
+    shader.vertexShader = shader.vertexShader
+      .replace(
+        '#include <common>',
+        '#include <common>\nvarying vec3 vPrecipWorldPos;\nvarying vec3 vPrecipWorldNormal;'
+      )
+      .replace(
+        '#include <worldpos_vertex>',
+        '#include <worldpos_vertex>\n\tvPrecipWorldPos = ( modelMatrix * vec4( transformed, 1.0 ) ).xyz;\n\tvPrecipWorldNormal = normalize( mat3( modelMatrix ) * normal );'
+      );
     shader.fragmentShader = shader.fragmentShader
       .replace(
         '#include <common>',
-        '#include <common>\nuniform float uPrecipEnabled;\nuniform float uPrecipOpacity;'
+        '#include <common>\nuniform float uPrecipEnabled;\nuniform float uPrecipOpacity;\nuniform vec3 uPrecipSunPos;\nvarying vec3 vPrecipWorldPos;\nvarying vec3 vPrecipWorldNormal;'
       )
       .replace(
         '#include <map_fragment>',
         '#include <map_fragment>' + PRECIP_REMAP_GLSL
       );
   });
-  material.customProgramCacheKey = () => 'precip-remap-v1';
+  material.customProgramCacheKey = () => 'precip-remap-v2-daynight';
 
   return material;
 }

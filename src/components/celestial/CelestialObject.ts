@@ -24,6 +24,7 @@ import {
   getPrecipUniforms,
   getRealCloudsUniforms,
   getRingShadowUniforms,
+  type PrecipUniforms,
   setMaterialLightAttenuation,
   type CloudShadowUniforms,
   type MoonlightUniforms,
@@ -93,6 +94,8 @@ export default class CelestialObject {
   // Uniforms du reflet solaire océanique (Terre) : lobe spéculaire dédié suivant
   // la direction du Soleil, masqué sur l'océan via la spec map.
   private _oceanGlint?: OceanGlintUniforms;
+  // Uniforms de la couche pluie (Terre) : position du Soleil pour l'éclairage jour/nuit.
+  private _precip?: PrecipUniforms;
   private readonly _selfWorldPos = new THREE.Vector3();
   // Nuages géoréférencés réels (GIBS) : quand actif, on suspend la dérive continue
   // de la couche nuages (qui simule des nuages fictifs) — une vraie image satellite
@@ -134,6 +137,9 @@ export default class CelestialObject {
       this._moonlight = getMoonlightUniforms(surface.material);
       this._oceanGlint = getOceanGlintUniforms(surface.material);
     }
+    const precip = this.layers.get('precip');
+    if (precip && !Array.isArray(precip.material))
+      this._precip = getPrecipUniforms(precip.material);
     const ring = this.layers.get('ring');
     if (ring && !Array.isArray(ring.material))
       this._ringShadow = getRingShadowUniforms(ring.material);
@@ -339,6 +345,10 @@ export default class CelestialObject {
         .uniforms as unknown as NightLightsShader.NightLightsUniforms;
       uniforms.sunPosition.value?.copy(sunWorldPosition);
     }
+
+    // Couche pluie : direction du Soleil pour l'éclairage jour/nuit des nuages d'orage.
+    if (this._precip && sunWorldPosition)
+      this._precip.sunPosition.value.copy(sunWorldPosition);
 
     // Le halo Fresnel a besoin de la position du Soleil pour n'illuminer que le
     // côté jour du limbe.
