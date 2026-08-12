@@ -146,10 +146,18 @@ const REAL_CLOUDS_GLSL = `
           float rcBright = smoothstep( rcLumLow, uCloudLumHigh, rcMin );
           float rcDesat = 1.0 - smoothstep( uCloudSatMax, uCloudSatMax + 0.15, rcSat );
           float rcAlpha = rcBright * rcDesat;
+          // Atténuation POLAIRE : en projection équirectangulaire, les rangées extrêmes
+          // (v→0 pôle Sud, v→1 pôle Nord) convergent au pôle → toute rangée claire s'étire
+          // en une calotte (le « super Groenland » : la rangée Arctique de l'imagerie est
+          // ~99 % blanche). Au-delà de ~78° de latitude la donnée est déformée/peu fiable :
+          // on fond l'alpha vers 0 pour supprimer la calotte parasite.
+          float rcLat = abs( vMapUv.y - 0.5 ) * 2.0; // 0 = équateur, 1 = pôle
+          float rcPole = 1.0 - smoothstep( 0.86, 0.97, rcLat );
+          rcAlpha *= rcPole;
           diffuseColor.a *= rcAlpha;
-          // Nuage blanc pur (l'imagerie tire vers le gris/bleu) : couleur neutralisée,
-          // l'éclairage jour/nuit du matériau fait le reste (face nuit → sombre).
-          diffuseColor.rgb = vec3( 1.0 );
+          // Nuage réaliste vu de l'espace : blanc très légèrement chaud (pas un blanc
+          // clinique). L'éclairage jour/nuit du matériau fait le reste (face nuit sombre).
+          diffuseColor.rgb = vec3( 1.0, 0.995, 0.985 );
         }
         #endif`;
 
