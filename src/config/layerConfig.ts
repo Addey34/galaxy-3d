@@ -389,17 +389,15 @@ export function createShadowAwareStandardMaterial(
       );
 
     if (invertRoughness) {
-      // Les spec maps Terre suivent la convention « blanc = océan » (lisse).
-      // On inverse le canal, MAIS on le remappe dans une plage bornée
-      // Océan volontairement RUGUEUX (0.88), pas lisse : un océan lisse produit un
-      // highlight spéculaire GGX carré (la PointLight révèle la grille de la spec
-      // map basse résolution → le « carré blanc » disgracieux). En le rendant
-      // rugueux, ce highlight de base disparaît ; le seul reflet solaire visible
-      // est alors le lobe dédié OCEAN_GLINT_GLSL, rond par construction et
-      // indépendant de la PointLight. Terre émergée mate (0.92).
+      // On NEUTRALISE complètement le highlight spéculaire GGX de base (roughness
+      // forcée à ~1.0 sur toute la surface). C'était lui — modulé par la spec map
+      // basse résolution — qui produisait le « carré blanc » éblouissant sur la
+      // terre ferme. On ignore donc la spec map pour la rugosité PBR : le SEUL
+      // reflet solaire reste le lobe dédié OCEAN_GLINT_GLSL (léger, jaune, rond,
+      // strictement masqué sur l'océan). Terre ferme = totalement mate.
       shader.fragmentShader = shader.fragmentShader.replace(
         'roughnessFactor *= texelRoughness.g;',
-        'roughnessFactor *= mix( 0.92, 0.88, texelRoughness.g );'
+        'roughnessFactor = 1.0;'
       );
     }
 
