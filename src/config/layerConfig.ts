@@ -232,18 +232,23 @@ const OCEAN_GLINT_GLSL = `
           vec3 gToView = normalize( cameraPosition - vMoonWorldPos );
           vec3 gHalf = normalize( gToSun + gToView );
           float gDay = max( dot( gN, gToSun ), 0.0 );
+          float gNdotH = max( dot( gN, gHalf ), 0.0 );
           // Masque océan : canal g de la spec map (blanc = eau lisse et réfléchissante).
           float gOcean = texture2D( roughnessMap, vRoughnessMapUv ).g;
-          float gSpec = pow( max( dot( gN, gHalf ), 0.0 ), 320.0 );
-          outgoingLight += uGlintSunColor * ( gSpec * gDay * gOcean * uGlintStrength );
+          // Lobe resserré (pow 500) : un vrai reflet solaire vu de l'espace est un
+          // petit point brillant, pas un large halo. Seul reflet océanique (le
+          // highlight GGX de base est neutralisé par la rugosité). Uniquement sur
+          // l'océan ; la terre ferme n'a pas de reflet (la roche ne fait pas miroir).
+          float gOceanSpec = pow( gNdotH, 500.0 ) * gOcean;
+          outgoingLight += uGlintSunColor * ( gOceanSpec * gDay * uGlintStrength );
         }
         #endif`;
 
 const OCEAN_GLINT_UNIFORM_KEY = '__oceanGlintUniforms';
-// Intensité du reflet solaire océanique. Élevée car le lobe spéculaire est très
-// étroit (pow 320) : hors du point exact du glint, le terme est nul. Réglée
-// discrète — un point net et lumineux, pas une large tache.
-const OCEAN_GLINT_STRENGTH = 1.8;
+// Intensité du reflet solaire océanique. Le lobe spéculaire est très étroit
+// (pow 900) : hors du point exact du glint, le terme est nul. Réglée modérée pour
+// un point brillant sans saturation blanche laiteuse (effet « loupe »).
+const OCEAN_GLINT_STRENGTH = 1.6;
 
 export interface OceanGlintUniforms {
   /** Direction monde du Soleil (partagée avec le clair de Lune). */
@@ -301,8 +306,9 @@ export function createShadowAwareStandardMaterial(
   moonlightUniforms.sunDir = sunDirUniform;
   const glintUniforms: OceanGlintUniforms = {
     sunDir: sunDirUniform,
-    // Teinte solaire chaude ; intensité forte car le lobe est très étroit (pow 220).
-    color: { value: new THREE.Color(0xfff2d6) },
+    // Teinte dorée chaude : un vrai reflet solaire sur l'eau tire vers l'or, pas le
+    // blanc laiteux (qui donnait l'effet « loupe » artificiel).
+    color: { value: new THREE.Color(0xffd98a) },
     strength: { value: invertRoughness ? OCEAN_GLINT_STRENGTH : 0 },
   };
 
@@ -385,17 +391,15 @@ export function createShadowAwareStandardMaterial(
     if (invertRoughness) {
       // Les spec maps Terre suivent la convention « blanc = océan » (lisse).
       // On inverse le canal, MAIS on le remappe dans une plage bornée
-      // [OCEAN_ROUGH, LAND_ROUGH] au lieu de [0,1] : un océan à roughness 0 est
-      // un miroir parfait → le reflet solaire devient un point saturé, dur et
-      // « carré » (structure de la spec map basse résolution grossie). Un plancher
-      // de rugosité transforme ce miroir en reflet doux et étalé, et supprime
-      // l'artefact carré. Océan à 0.5 : assez lisse pour une base PBR réfléchissante,
-      // mais le vrai reflet solaire visible est fourni par le lobe dédié
-      // OCEAN_GLINT_GLSL (rond, lumineux, indépendant de la PointLight faible).
-      // Terre émergée franchement mate (0.92).
+      // Océan volontairement RUGUEUX (0.88), pas lisse : un océan lisse produit un
+      // highlight spéculaire GGX carré (la PointLight révèle la grille de la spec
+      // map basse résolution → le « carré blanc » disgracieux). En le rendant
+      // rugueux, ce highlight de base disparaît ; le seul reflet solaire visible
+      // est alors le lobe dédié OCEAN_GLINT_GLSL, rond par construction et
+      // indépendant de la PointLight. Terre émergée mate (0.92).
       shader.fragmentShader = shader.fragmentShader.replace(
         'roughnessFactor *= texelRoughness.g;',
-        'roughnessFactor *= mix( 0.92, 0.5, texelRoughness.g );'
+        'roughnessFactor *= mix( 0.92, 0.88, texelRoughness.g );'
       );
     }
 
@@ -423,7 +427,7 @@ export function createShadowAwareStandardMaterial(
     }
   });
   material.customProgramCacheKey = () =>
-    `shadow-aware-standard-v3${invertRoughness ? '-invrough' : ''}${
+    `shadow-aware-standard-v2${invertRoughness ? '-invrough' : ''}${
       cloudShadow ? '-cloudshadow' : ''
     }${moonlight ? '-moonlight' : ''}`;
 
