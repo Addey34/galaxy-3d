@@ -87,6 +87,10 @@ function createPrecipLayer(
     createPrecipMaterial()
   );
   mesh.name = `${name}_precip`;
+  // renderOrder au-dessus des nuages (0) : la pluie, transparente (depthWrite:false),
+  // doit se composer PAR-DESSUS les nuages, sinon le tri des transparents peut la
+  // rendre sous eux et la rendre invisible.
+  mesh.renderOrder = 2;
   // Pas d'ombre : couche d'information transparente.
   return mesh;
 }

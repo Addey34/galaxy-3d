@@ -240,14 +240,19 @@ const PRECIP_REMAP_GLSL = `
           float denom = max( pc.r + pc.g, 0.0001 );
           float pRain = clamp( pc.r / denom, 0.0, 1.0 ); // 0 vert (léger) → 1 rouge (intense)
           float pSnow = clamp( ( pc.b - max( pc.r, pc.g ) ) * 2.0, 0.0, 1.0 );
-          // Teinte pluie : gris-bleu → blanc chaud quand intense (cœur d'orage).
-          vec3 rainLight = vec3( 0.55, 0.62, 0.72 );
-          vec3 rainHeavy = vec3( 1.0, 0.97, 0.9 );
+          // Teinte pluie DISTINCTE des nuages blancs : bleu-cyan froid pour la pluie
+          // (se lit comme une couche météo), virant au blanc chaud pour les cœurs
+          // d'orage intenses. Le contraste bleu vs blanc-nuage rend la couche lisible.
+          vec3 rainLight = vec3( 0.30, 0.55, 0.85 );
+          vec3 rainHeavy = vec3( 1.0, 0.95, 0.85 );
           vec3 rainCol = mix( rainLight, rainHeavy, smoothstep( 0.45, 0.85, pRain ) );
-          vec3 snowCol = vec3( 0.86, 0.9, 0.96 );
+          vec3 snowCol = vec3( 0.80, 0.88, 0.98 );
           vec3 col = mix( rainCol, snowCol, pSnow );
-          // Densité optique : pluie fine perceptible, orage bien dense.
-          float dens = mix( 0.5, 1.0, smoothstep( 0.0, 0.8, pRain ) );
+          // Densité optique : la pluie couvre de vastes zones (bande tropicale) →
+          // pluie fine volontairement translucide (0.35) pour ne pas noyer la Terre
+          // sous un voile, montant à opaque (1.0) pour les cœurs d'orage intenses qui,
+          // eux, doivent ressortir nettement.
+          float dens = mix( 0.35, 1.0, smoothstep( 0.15, 0.7, pRain ) );
           diffuseColor.rgb = col;
           diffuseColor.a = pMask * dens * uPrecipOpacity;
         }
@@ -643,17 +648,18 @@ export function createShadowAwareStandardMaterial(
       // Calotte polaire de glace. En projection équirectangulaire, la rangée de
       // texels au pôle (banquise arctique/antarctique, ~blanche) converge en un point
       // → un « cap » blanc grossièrement étiré (le « super Groenland »). On masque
-      // cette singularité en fondant, très près des pôles (|lat| > ~0.90 de vMapUv.y
-      // depuis l'équateur), la couleur smearée vers une glace PROPRE : blanc
-      // légèrement bleuté avec une micro-variation de luminance pour ne pas être plat.
-      // L'éclairage jour/nuit du matériau (dotNL) s'applique ensuite normalement.
+      // cette singularité en fondant, UNIQUEMENT sur le tout dernier bonnet polaire
+      // (|lat| > ~0.965 de vMapUv.y depuis l'équateur ≈ 87°), la couleur smearée vers
+      // une glace propre. Seuil volontairement très haut : plus bas (0.90 ≈ 81°) la
+      // glace débordait et brumait tout le nord — il ne faut couvrir que le point de
+      // convergence. L'éclairage jour/nuit du matériau s'applique ensuite normalement.
       shader.fragmentShader = shader.fragmentShader.replace(
         '#include <map_fragment>',
         `#include <map_fragment>
         #ifdef USE_MAP
         {
           float pcLat = abs( vMapUv.y - 0.5 ) * 2.0; // 0 équateur, 1 pôle
-          float pcMix = smoothstep( 0.90, 0.985, pcLat );
+          float pcMix = smoothstep( 0.965, 0.995, pcLat );
           // Glace réaliste : blanc froid très légèrement bleuté, micro-grain via une
           // ondulation douce en longitude pour casser l'aspect « disque plat ».
           float pcGrain = 0.96 + 0.04 * sin( vMapUv.x * 90.0 );
