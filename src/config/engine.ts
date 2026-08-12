@@ -152,11 +152,12 @@ export const RENDER_SETTINGS = {
   toneMapping: THREE.ACESFilmicToneMapping as THREE.ToneMapping,
   toneMappingExposure: 1.0,
   maxPixelRatio: IS_MOBILE ? 1.5 : 2,
-  // Intensité du fond étoilé (Voie lactée équirectangulaire). La texture source
-  // est volontairement sombre (fond spatial crédible) ; un léger boost rend la
-  // bande galactique lisible sans délaver le ciel, et le cœur galactique le plus
-  // brillant alimente joliment le bloom.
-  backgroundIntensity: 2.2,
+  // Intensité du fond étoilé (Voie lactée équirectangulaire). Volontairement
+  // modérée : la texture JPEG est compressée, et un boost trop fort (2.2)
+  // surexpose les blocs de compression DCT autour des étoiles brillantes → elles
+  // apparaissent « carrées ». 1.4 garde la bande galactique lisible et nourrit le
+  // bloom sans révéler ces artefacts.
+  backgroundIntensity: 1.4,
 };
 
 export const CAMERA_SETTINGS = {
