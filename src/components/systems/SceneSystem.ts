@@ -18,6 +18,7 @@ import { educRadius } from '@/core/ScaleService';
 import { texturePath } from '@/config/catalog';
 import type { CelestialBodyConfig, CelestialConfig } from '@/types';
 import Logger from '@/utils/Logger';
+import { Starfield } from '@/components/celestial/Starfield';
 import type { TextureSystem } from './TextureSystem';
 import type CelestialObject from '@/components/celestial/CelestialObject';
 
@@ -32,6 +33,14 @@ export class SceneSystem {
   renderer!: THREE.WebGLRenderer;
   /** Composer de post-process (bloom) ; null si désactivé (mobile). */
   composer: EffectComposer | null = null;
+
+  /** Champ d'étoiles procédural (points ronds) superposé au fond Voie lactée. */
+  private _starfield: Starfield | null = null;
+
+  /** Champ d'étoiles procédural, pour que la boucle d'animation le suive à la caméra. */
+  get starfield(): Starfield | null {
+    return this._starfield;
+  }
 
   private readonly _orbitLines = new Map<string, THREE.Line>();
   private readonly _orbitPts = new Map<string, Float32Array>();
@@ -156,6 +165,11 @@ export class SceneSystem {
       .catch((err) =>
         Logger.warn('[SceneSystem] Starfield texture failed', err)
       );
+
+    // Vraies étoiles ponctuelles (points ronds) par-dessus la Voie lactée de fond :
+    // nettes et rondes, indépendantes de la compression JPEG du fond.
+    this._starfield = new Starfield();
+    this.scene.add(this._starfield.points);
   }
 
   private setupEventListeners(): void {
@@ -335,6 +349,7 @@ export class SceneSystem {
       });
     });
     this.disposeFunctions.forEach((fn) => fn());
+    this._starfield?.dispose();
     this.composer?.dispose();
     this.renderer?.dispose();
     this.renderer?.domElement.remove();

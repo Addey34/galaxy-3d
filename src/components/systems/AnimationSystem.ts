@@ -13,6 +13,7 @@ import Logger from '@/utils/Logger';
 import type { IUpdatable } from '@/types';
 import type { OrbitalMechanics } from '@/core/OrbitalMechanics';
 import type { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
+import type { Starfield } from '@/components/celestial/Starfield';
 import { computeLightAttenuation, solarIrradianceFactor } from '@/core/eclipse';
 import { SQRT_K } from '@/core/ScaleService';
 import type { CameraSystem } from './CameraSystem';
@@ -51,6 +52,7 @@ export class AnimationSystem {
   private camera!: THREE.PerspectiveCamera;
   private renderer!: THREE.WebGLRenderer;
   private composer: EffectComposer | null = null;
+  private starfield: Starfield | null = null;
   private cameraSystem!: CameraSystem;
   private celestialBodies!: CelestialBodies;
   private orbitalMechanics: OrbitalMechanics | null = null;
@@ -75,6 +77,7 @@ export class AnimationSystem {
     camera: THREE.PerspectiveCamera;
     renderer: THREE.WebGLRenderer;
     composer?: EffectComposer | null;
+    starfield?: Starfield | null;
     cameraSystem: CameraSystem;
     celestialBodies: CelestialBodies;
   }): void {
@@ -82,6 +85,7 @@ export class AnimationSystem {
     this.camera = params.camera;
     this.renderer = params.renderer;
     this.composer = params.composer ?? null;
+    this.starfield = params.starfield ?? null;
     this.cameraSystem = params.cameraSystem;
     this.celestialBodies = params.celestialBodies;
 
@@ -286,6 +290,8 @@ export class AnimationSystem {
   }
 
   private _render(): void {
+    // Recentre le champ d'étoiles sur la caméra (décor à l'infini, cf. Starfield).
+    this.starfield?.followCamera(this.camera.position);
     // Le composer (bloom) prend le relais quand il est actif ; sinon rendu direct.
     if (this.composer) this.composer.render();
     else this.renderer.render(this.scene, this.camera);
