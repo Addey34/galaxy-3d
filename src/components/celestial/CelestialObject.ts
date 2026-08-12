@@ -97,6 +97,11 @@ export default class CelestialObject {
   // de la couche nuages (qui simule des nuages fictifs) — une vraie image satellite
   // doit rester alignée sur sa longitude. La Terre continue de tourner (_meshGroup).
   private _realCloudDrift = true;
+  // Vrai dès qu'une couverture nuageuse réelle (GIBS) est appliquée : le LOD de
+  // textures ne doit alors PLUS toucher la couche `clouds` (sinon il réécrit la
+  // cloud map statique par-dessus l'image satellite à chaque changement de distance
+  // caméra — c'était la cause de « nuages statiques / absents »).
+  private _realCloudsActive = false;
 
   constructor(
     private readonly textureSystem: TextureSystem,
@@ -196,6 +201,8 @@ export default class CelestialObject {
   ): void {
     const clouds = this.layers.get('clouds');
     if (!clouds || Array.isArray(clouds.material)) return;
+    // À partir d'ici, le LOD de textures ne doit plus écraser la couche nuages.
+    this._realCloudsActive = true;
     const mat = clouds.material as THREE.MeshStandardMaterial;
     texture.wrapS = THREE.RepeatWrapping;
     texture.wrapT = THREE.ClampToEdgeWrapping;
@@ -475,11 +482,17 @@ export default class CelestialObject {
 
     try {
       for (const textureKey of Object.keys(this.config.textures ?? {})) {
+        // Nuages réels actifs : le LOD ne remplace pas la couche `clouds` (l'image
+        // satellite GIBS prime sur la texture statique versionnée).
+        if (textureKey === 'clouds' && this._realCloudsActive) continue;
         const texture = await this.textureSystem.getLODTexture(
           this.name,
           textureKey,
           normalizedDistance
         );
+        // Re-vérifie après l'await : les nuages réels ont pu s'activer pendant le
+        // chargement d'un LOD `clouds` en vol → ne pas l'appliquer par-dessus.
+        if (textureKey === 'clouds' && this._realCloudsActive) continue;
         if (this._appliedTextures.get(textureKey) === texture) continue;
         applyTexture(this.layers, textureKey, texture);
         this._bindCloudShadow(textureKey, texture);
