@@ -233,20 +233,37 @@ const OCEAN_GLINT_GLSL = `
           vec3 gHalf = normalize( gToSun + gToView );
           float gDay = max( dot( gN, gToSun ), 0.0 );
           float gNdotH = max( dot( gN, gHalf ), 0.0 );
-          // Masque océan : canal g de la spec map (blanc = eau lisse et réfléchissante).
-          float gOcean = texture2D( roughnessMap, vRoughnessMapUv ).g;
-          // Lobe resserré (pow 500) : un vrai reflet solaire vu de l'espace est un
-          // petit point brillant, pas un large halo. Seul reflet océanique (le
-          // highlight GGX de base est neutralisé par la rugosité). Uniquement sur
-          // l'océan ; la terre ferme n'a pas de reflet (la roche ne fait pas miroir).
-          float gOceanSpec = pow( gNdotH, 500.0 ) * gOcean;
-          outgoingLight += uGlintSunColor * ( gOceanSpec * gDay * uGlintStrength );
+          // Masque océan STRICT. La spec map vaut ~1 sur l'eau, ~0 sur la terre ; on
+          // exige un océan franc (smoothstep 0.88→0.97). Seuil haut = la frange
+          // côtière (valeurs interpolées) et la terre restent à 0 → pas de débord sur
+          // les continents. Bord légèrement adouci (vs step dur) pour ne pas créer un
+          // liseré net à la limite eau/terre quand le lobe touche une côte.
+          float gRaw = texture2D( roughnessMap, vRoughnessMapUv ).g;
+          float gOcean = smoothstep( 0.88, 0.97, gRaw );
+          // Largeur du lobe = compromis réaliste. Un vrai reflet solaire océanique
+          // n'est PAS un point-miroir parfait : la mer est rugueuse (vagues) et étale
+          // le reflet en une tache douce (le « sunglint » des photos ISS). pow 2000
+          // (miroir parfait) donnait un point sous-pixel invisible → on avait
+          // l'impression que le Soleil ne se reflétait plus. pow 250 était trop large
+          // et débordait des mers sur la terre. pow 450 = tache visible mais contenue,
+          // strictement portée par le masque océan (pas de débord sur les côtes).
+          float gOceanSpec = pow( gNdotH, 450.0 ) * gOcean;
+          float gGlint = gOceanSpec * gDay * uGlintStrength;
+          // Ajout du reflet SANS jamais franchir le seuil de bloom (0.82 < 0.85) :
+          // on ne comble que la marge restante sous ce plafond à partir de la
+          // luminance déjà présente. Ainsi le reflet éclaire l'eau sombre mais ne
+          // peut pas saturer en blanc ni nourrir le bloom (donc plus de tache carrée).
+          const float BLOOM_SAFE = 0.82;
+          float gLum = dot( outgoingLight, vec3( 0.2126, 0.7152, 0.0722 ) );
+          float gHeadroom = max( BLOOM_SAFE - gLum, 0.0 );
+          outgoingLight += uGlintSunColor * min( gGlint, gHeadroom );
         }
         #endif`;
 
 const OCEAN_GLINT_UNIFORM_KEY = '__oceanGlintUniforms';
 // Intensité du reflet solaire océanique. Le lobe spéculaire est très étroit
-// (pow 900) : hors du point exact du glint, le terme est nul. Réglée modérée pour
+// (pow 2000) : hors du point exact du glint, le terme est nul → un point compact
+// strictement sur l'eau, sans déborder sur la terre voisine. Réglée modérée pour
 // un point brillant sans saturation blanche laiteuse (effet « loupe »).
 const OCEAN_GLINT_STRENGTH = 1.6;
 
@@ -383,18 +400,27 @@ export function createShadowAwareStandardMaterial(
       )
       .replace(
         'vec3 outgoingLight = totalDiffuse + totalSpecular + totalEmissiveRadiance;',
-        'vec3 outgoingLight = (totalDiffuse + totalSpecular) * uLightAttenuation + totalEmissiveRadiance;' +
+        // Terre (invertRoughness) : on EXCLUT totalSpecular du rendu. Le highlight
+        // spéculaire GGX de base (PointLight du Soleil réfléchie par le diélectrique)
+        // produisait une tache blanche éblouissante indépendante du masque océan —
+        // visible même sur la terre ferme (Sahara, Arabie). Forcer roughnessFactor à
+        // 1.0 ne suffisait pas : à roughness 1 le lobe reste non nul et sature via le
+        // bloom/tone mapping. On supprime donc totalement le highlight de base ; le
+        // SEUL reflet solaire devient le lobe océanique dédié (OCEAN_GLINT_GLSL),
+        // masqué sur l'eau, doux et jaune. Les autres matériaux gardent totalSpecular.
+        (invertRoughness
+          ? 'vec3 outgoingLight = totalDiffuse * uLightAttenuation + totalEmissiveRadiance;'
+          : 'vec3 outgoingLight = (totalDiffuse + totalSpecular) * uLightAttenuation + totalEmissiveRadiance;') +
           (moonlight ? MOONLIGHT_GLSL : '') +
           (invertRoughness ? OCEAN_GLINT_GLSL : '')
       );
 
     if (invertRoughness) {
-      // On NEUTRALISE complètement le highlight spéculaire GGX de base (roughness
-      // forcée à ~1.0 sur toute la surface). C'était lui — modulé par la spec map
-      // basse résolution — qui produisait le « carré blanc » éblouissant sur la
-      // terre ferme. On ignore donc la spec map pour la rugosité PBR : le SEUL
-      // reflet solaire reste le lobe dédié OCEAN_GLINT_GLSL (léger, jaune, rond,
-      // strictement masqué sur l'océan). Terre ferme = totalement mate.
+      // Rugosité PBR forcée à 1.0 : on ignore la spec map pour la rugosité (elle ne
+      // sert plus qu'au masque océan du glint dédié). La vraie suppression du highlight
+      // spéculaire éblouissant se fait plus haut en excluant `totalSpecular` de
+      // l'outgoingLight ; ce forçage n'est qu'une cohérence PBR (pas d'eau « miroir »
+      // résiduelle si le spéculaire venait à être réintroduit).
       shader.fragmentShader = shader.fragmentShader.replace(
         'roughnessFactor *= texelRoughness.g;',
         'roughnessFactor = 1.0;'

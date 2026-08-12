@@ -228,12 +228,12 @@ export const LIGHTING_SETTINGS = {
 
 export const SHADER_SETTINGS = {
   nightLights: {
-    intensity: 1.5,
+    intensity: 1.0,
     // Le shader perturbe sa normale avec la normalMap (voir NightLightsShader) :
-    // son terminateur suit le relief comme l'ombre de la surface. Plus besoin de
-    // gonfler le threshold pour cacher un décalage — léger débord côté jour (0.15)
-    // pour absorber l'écart du layer (R×1.002) et la lumière à distance finie.
-    threshold: 0.15,
+    // son terminateur suit le relief comme l'ombre de la surface. threshold ramené
+    // à ~0 : les lumières s'arrêtent pile au terminateur, sans déborder côté jour
+    // (le débord + le bloom produisaient une tache blanche saturée sur la face jour).
+    threshold: 0.02,
     smoothness: 0.08,
   },
   atmosphere: {
