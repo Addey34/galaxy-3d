@@ -215,6 +215,45 @@ export interface CloudShadowUniforms {
   strength: { value: number };
 }
 
+// Reflet solaire (« sun glint ») dédié sur l'océan. La réponse spéculaire d'un
+// diélectrique (metalness 0, réflectance ~4 %) éclairé par la PointLight faible
+// est quasi invisible sur du bleu foncé → on ajoute un lobe spéculaire explicite.
+// Rond par construction (pow(NdotH, exposant) est un lobe circulaire), masqué sur
+// l'océan via la spec map (canal g élevé = eau), côté jour uniquement, en teinte
+// solaire chaude. Réutilise les varyings/uniforms monde déjà posés par la branche
+// moonlight (vMoonWorldPos/Normal, uMoonSunDir = direction du Soleil) et
+// uGlintSunColor/Strength propres. Sans roughnessMap (USE_ROUGHNESSMAP absent), le
+// masque océan est indisponible → l'effet est gardé par #ifdef.
+const OCEAN_GLINT_GLSL = `
+        #ifdef USE_ROUGHNESSMAP
+        if ( uGlintStrength > 0.0 ) {
+          vec3 gN = normalize( vMoonWorldNormal );
+          vec3 gToSun = normalize( uMoonSunDir );
+          vec3 gToView = normalize( cameraPosition - vMoonWorldPos );
+          vec3 gHalf = normalize( gToSun + gToView );
+          float gDay = max( dot( gN, gToSun ), 0.0 );
+          // Masque océan : canal g de la spec map (blanc = eau lisse et réfléchissante).
+          float gOcean = texture2D( roughnessMap, vRoughnessMapUv ).g;
+          float gSpec = pow( max( dot( gN, gHalf ), 0.0 ), 320.0 );
+          outgoingLight += uGlintSunColor * ( gSpec * gDay * gOcean * uGlintStrength );
+        }
+        #endif`;
+
+const OCEAN_GLINT_UNIFORM_KEY = '__oceanGlintUniforms';
+// Intensité du reflet solaire océanique. Élevée car le lobe spéculaire est très
+// étroit (pow 320) : hors du point exact du glint, le terme est nul. Réglée
+// discrète — un point net et lumineux, pas une large tache.
+const OCEAN_GLINT_STRENGTH = 1.8;
+
+export interface OceanGlintUniforms {
+  /** Direction monde du Soleil (partagée avec le clair de Lune). */
+  sunDir: { value: THREE.Vector3 };
+  /** Teinte solaire chaude du reflet. */
+  color: { value: THREE.Color };
+  /** Intensité globale ; 0 désactive la branche shader. */
+  strength: { value: number };
+}
+
 const MOONLIGHT_UNIFORM_KEY = '__moonlightUniforms';
 
 export interface MoonlightUniforms {
@@ -256,10 +295,23 @@ export function createShadowAwareStandardMaterial(
     color: { value: new THREE.Color(0xbcd2ff) },
   };
 
+  // Direction monde du Soleil, partagée par le clair de Lune et le reflet
+  // océanique. Alimentée chaque frame par CelestialObject (setSunDirection).
+  const sunDirUniform = { value: new THREE.Vector3(1, 0, 0) };
+  moonlightUniforms.sunDir = sunDirUniform;
+  const glintUniforms: OceanGlintUniforms = {
+    sunDir: sunDirUniform,
+    // Teinte solaire chaude ; intensité forte car le lobe est très étroit (pow 220).
+    color: { value: new THREE.Color(0xfff2d6) },
+    strength: { value: invertRoughness ? OCEAN_GLINT_STRENGTH : 0 },
+  };
+
   material.userData[SHADOW_AWARE_UNIFORM_KEY] = attenuationUniform;
   if (cloudShadow)
     material.userData[CLOUD_SHADOW_UNIFORM_KEY] = cloudShadowUniforms;
   if (moonlight) material.userData[MOONLIGHT_UNIFORM_KEY] = moonlightUniforms;
+  if (invertRoughness)
+    material.userData[OCEAN_GLINT_UNIFORM_KEY] = glintUniforms;
   chainOnBeforeCompile(material, (shader) => {
     shader.uniforms['uLightAttenuation'] = attenuationUniform;
     shader.uniforms['uTerminatorWrap'] = { value: TERMINATOR_WRAP };
@@ -270,13 +322,21 @@ export function createShadowAwareStandardMaterial(
     }
     if (moonlight) {
       shader.uniforms['uMoonPosition'] = moonlightUniforms.position;
-      shader.uniforms['uMoonSunDir'] = moonlightUniforms.sunDir;
       shader.uniforms['uMoonStrength'] = moonlightUniforms.strength;
       shader.uniforms['uMoonColor'] = moonlightUniforms.color;
+    }
+    if (invertRoughness) {
+      shader.uniforms['uGlintSunColor'] = glintUniforms.color;
+      shader.uniforms['uGlintStrength'] = glintUniforms.strength;
+    }
+    // Direction Soleil partagée (clair de Lune + reflet océanique).
+    if (moonlight || invertRoughness) {
+      shader.uniforms['uMoonSunDir'] = sunDirUniform;
+    }
 
-      // Position + normale monde du fragment pour le calcul du clair de Lune
-      // (dot(normale, dirVersLune)). On réutilise le chunk worldpos et on reconstruit
-      // la normale monde depuis la normale objet.
+    // Position + normale monde du fragment. Nécessaires au clair de Lune ET au
+    // reflet solaire océanique : on les produit dès que l'un des deux est actif.
+    if (moonlight || invertRoughness) {
       shader.vertexShader = shader.vertexShader
         .replace(
           '#include <common>',
@@ -295,7 +355,16 @@ export function createShadowAwareStandardMaterial(
             ? '\nuniform sampler2D uCloudShadowMap;\nuniform float uCloudShadowOffset;\nuniform float uCloudShadowStrength;'
             : '') +
           (moonlight
-            ? '\nuniform vec3 uMoonPosition;\nuniform vec3 uMoonSunDir;\nuniform float uMoonStrength;\nuniform vec3 uMoonColor;\nvarying vec3 vMoonWorldPos;\nvarying vec3 vMoonWorldNormal;'
+            ? '\nuniform vec3 uMoonPosition;\nuniform float uMoonStrength;\nuniform vec3 uMoonColor;'
+            : '') +
+          (invertRoughness
+            ? '\nuniform vec3 uGlintSunColor;\nuniform float uGlintStrength;'
+            : '') +
+          // uMoonSunDir (direction monde du Soleil) est partagé par le clair de
+          // Lune et le reflet océanique ; déclaré si l'un des deux est actif.
+          (moonlight || invertRoughness ? '\nuniform vec3 uMoonSunDir;' : '') +
+          (moonlight || invertRoughness
+            ? '\nvarying vec3 vMoonWorldPos;\nvarying vec3 vMoonWorldNormal;'
             : '')
       )
       // Wrap lighting : three.js clampe dotNL à [0,1] dans RE_Direct_Physical.
@@ -309,7 +378,8 @@ export function createShadowAwareStandardMaterial(
       .replace(
         'vec3 outgoingLight = totalDiffuse + totalSpecular + totalEmissiveRadiance;',
         'vec3 outgoingLight = (totalDiffuse + totalSpecular) * uLightAttenuation + totalEmissiveRadiance;' +
-          (moonlight ? MOONLIGHT_GLSL : '')
+          (moonlight ? MOONLIGHT_GLSL : '') +
+          (invertRoughness ? OCEAN_GLINT_GLSL : '')
       );
 
     if (invertRoughness) {
@@ -318,11 +388,14 @@ export function createShadowAwareStandardMaterial(
       // [OCEAN_ROUGH, LAND_ROUGH] au lieu de [0,1] : un océan à roughness 0 est
       // un miroir parfait → le reflet solaire devient un point saturé, dur et
       // « carré » (structure de la spec map basse résolution grossie). Un plancher
-      // de rugosité (~0.35) transforme ce miroir en reflet doux et étalé (sun
-      // glint crédible), et supprime l'artefact carré.
+      // de rugosité transforme ce miroir en reflet doux et étalé, et supprime
+      // l'artefact carré. Océan à 0.5 : assez lisse pour une base PBR réfléchissante,
+      // mais le vrai reflet solaire visible est fourni par le lobe dédié
+      // OCEAN_GLINT_GLSL (rond, lumineux, indépendant de la PointLight faible).
+      // Terre émergée franchement mate (0.92).
       shader.fragmentShader = shader.fragmentShader.replace(
         'roughnessFactor *= texelRoughness.g;',
-        'roughnessFactor *= mix( 0.95, 0.55, texelRoughness.g );'
+        'roughnessFactor *= mix( 0.92, 0.5, texelRoughness.g );'
       );
     }
 
@@ -350,7 +423,7 @@ export function createShadowAwareStandardMaterial(
     }
   });
   material.customProgramCacheKey = () =>
-    `shadow-aware-standard-v2${invertRoughness ? '-invrough' : ''}${
+    `shadow-aware-standard-v3${invertRoughness ? '-invrough' : ''}${
       cloudShadow ? '-cloudshadow' : ''
     }${moonlight ? '-moonlight' : ''}`;
 
@@ -372,6 +445,15 @@ export function getMoonlightUniforms(
 ): MoonlightUniforms | undefined {
   return material.userData[MOONLIGHT_UNIFORM_KEY] as
     | MoonlightUniforms
+    | undefined;
+}
+
+/** Récupère les uniforms du reflet solaire océanique d'un matériau, s'il en a. */
+export function getOceanGlintUniforms(
+  material: THREE.Material
+): OceanGlintUniforms | undefined {
+  return material.userData[OCEAN_GLINT_UNIFORM_KEY] as
+    | OceanGlintUniforms
     | undefined;
 }
 

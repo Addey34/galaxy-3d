@@ -20,10 +20,12 @@ import {
   createSphereGeometry,
   getCloudShadowUniforms,
   getMoonlightUniforms,
+  getOceanGlintUniforms,
   getRingShadowUniforms,
   setMaterialLightAttenuation,
   type CloudShadowUniforms,
   type MoonlightUniforms,
+  type OceanGlintUniforms,
   type RingShadowUniforms,
 } from '@/config/layerConfig';
 import { ringTexturePath } from '@/config/catalog';
@@ -86,6 +88,9 @@ export default class CelestialObject {
   // Uniforms de clair de Lune du matériau surface (Terre) : la face nuit reçoit
   // une lueur diffuse selon la position réelle de la Lune (réflecteur).
   private _moonlight?: MoonlightUniforms;
+  // Uniforms du reflet solaire océanique (Terre) : lobe spéculaire dédié suivant
+  // la direction du Soleil, masqué sur l'océan via la spec map.
+  private _oceanGlint?: OceanGlintUniforms;
   private readonly _selfWorldPos = new THREE.Vector3();
 
   constructor(
@@ -116,6 +121,7 @@ export default class CelestialObject {
     if (surface && !Array.isArray(surface.material)) {
       this._cloudShadow = getCloudShadowUniforms(surface.material);
       this._moonlight = getMoonlightUniforms(surface.material);
+      this._oceanGlint = getOceanGlintUniforms(surface.material);
     }
     const ring = this.layers.get('ring');
     if (ring && !Array.isArray(ring.material))
@@ -261,16 +267,22 @@ export default class CelestialObject {
         .normalize();
     }
 
-    // Clair de Lune sur la face nuit (Terre) : on alimente position de la Lune,
-    // direction du Soleil (masque nuit) et intensité selon la phase. La phase =
-    // fraction éclairée de la Lune vue depuis la Terre ≈ (1 + cos(angle
-    // Soleil-Lune-Terre)) / 2 : ~1 à la pleine Lune, ~0 à la nouvelle Lune.
-    if (this._moonlight && sunWorldPosition && moonWorldPosition) {
+    // Direction monde du Soleil, partagée par le clair de Lune (masque nuit) et le
+    // reflet solaire océanique (lobe spéculaire). L'uniform sunDir est le MÊME
+    // objet dans les deux (partagé dans createShadowAwareStandardMaterial) : une
+    // seule écriture suffit. Le reflet n'a besoin que de cette direction ;
+    // le glint est ainsi actif même sans données lunaires.
+    if ((this._oceanGlint || this._moonlight) && sunWorldPosition) {
       this.group.getWorldPosition(this._selfWorldPos);
+      const sunDir = this._oceanGlint?.sunDir ?? this._moonlight?.sunDir;
+      sunDir?.value.subVectors(sunWorldPosition, this._selfWorldPos).normalize();
+    }
+
+    // Clair de Lune sur la face nuit (Terre) : position de la Lune + intensité
+    // selon la phase = fraction éclairée de la Lune vue depuis la Terre ≈
+    // (1 + cos(angle Soleil-Lune-Terre)) / 2 : ~1 à la pleine Lune, ~0 à la nouvelle.
+    if (this._moonlight && sunWorldPosition && moonWorldPosition) {
       this._moonlight.position.value.copy(moonWorldPosition);
-      this._moonlight.sunDir.value
-        .subVectors(sunWorldPosition, this._selfWorldPos)
-        .normalize();
 
       const toSun = _tmpMoonVecA
         .subVectors(sunWorldPosition, moonWorldPosition)

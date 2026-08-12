@@ -137,6 +137,17 @@ export class SceneSystem {
         // 10000 était entièrement au-delà du far Explo (3000) → ciel noir en Exploration.
         tex.mapping = THREE.EquirectangularReflectionMapping;
         tex.colorSpace = THREE.SRGBColorSpace;
+        // Adoucit les étoiles « en blocs » du fond équirectangulaire : sans
+        // filtrage trilinéaire + anisotropie, une étoile d'un pixel projetée sur
+        // la sphère céleste apparaît comme un carré dur. Filtrage linéaire (min +
+        // mag) + mipmaps + anisotropie maximale du GPU → les points deviennent
+        // ronds et flous plutôt que carrés, surtout au ras de l'horizon céleste
+        // où l'échantillonnage est le plus étiré.
+        tex.magFilter = THREE.LinearFilter;
+        tex.minFilter = THREE.LinearMipMapLinearFilter;
+        tex.generateMipmaps = true;
+        tex.anisotropy = this.renderer.capabilities.getMaxAnisotropy();
+        tex.needsUpdate = true;
         this.scene.background = tex;
         // Rehausse la bande galactique (texture source très sombre) ; le cœur le
         // plus brillant nourrit le bloom pour un ciel vivant.
