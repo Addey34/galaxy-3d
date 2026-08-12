@@ -1,17 +1,18 @@
 /**
- * Couche PLUIE mondiale (NASA IMERG) superposée à la Terre. Étape A : frame unique (la
- * précipitation la plus récente disponible, ou celle de la date de simulation), remappée
- * en teinte réaliste par le matériau (voir createPrecipMaterial). L'étape B (boucle
- * animée multi-frames) réutilisera `imergFrameTimes` du service pur.
+ * Couche PLUIE mondiale animée (NASA IMERG) superposée à la Terre. Charge les N
+ * dernières frames de précipitation (pas de 30 min) autour de la date de simulation et
+ * les joue EN BOUCLE → les systèmes pluvieux/orageux se déplacent réellement. Chaque
+ * frame est remappée en nuages d'orage réalistes par le matériau (createPrecipMaterial).
  *
- * Jumeau de `ui/realtimeClouds` : chargement par URL (TextureLoader dédié, hors
- * TextureSystem qui ne gère que des fichiers locaux), observation de la date via
- * `AnimationSystem.onFrame` (throttlé), repli silencieux si le réseau échoue.
+ * Réutilise le service pur `core/gibsPrecip` (URL + génération des instants). Chargement
+ * par URL via un TextureLoader dédié (hors TextureSystem, réservé aux fichiers locaux).
+ * Fenêtre de frames recalée sur la date (SimulationClock) ; repli silencieux si le
+ * réseau échoue (couche masquée).
  */
 import * as THREE from 'three';
 import Logger from '@/utils/Logger';
 import { PRECIP_SETTINGS } from '@/config/engine';
-import { imergEndForDate, imergUrl } from '@/core/gibsPrecip';
+import { imergEndForDate, imergFrameTimes, imergUrl } from '@/core/gibsPrecip';
 import type { PublicAPI } from '@/SolarSystemApp';
 
 const EARTH_NAME = 'earth';
@@ -26,26 +27,37 @@ export function setupPrecipLayer(api: PublicAPI): () => void {
   const loader = new THREE.TextureLoader();
   loader.setCrossOrigin('anonymous');
 
+  // Cache par instant IMERG (ISO). Les textures sont réutilisées entre fenêtres.
   const cache = new Map<string, THREE.Texture>();
   const inFlight = new Map<string, Promise<THREE.Texture>>();
 
-  // Dernier instant IMERG (ISO) appliqué / demandé : évite de recharger tant que la
-  // frame cible (arrondie à 30 min) ne change pas.
+  // Fenêtre courante = liste ordonnée d'instants (clés ISO). La boucle joue les frames
+  // de cette fenêtre qui sont chargées.
+  let windowKeys: string[] = [];
+  // Clé de la fin de fenêtre : évite de recalculer la fenêtre tant que le jour/heure
+  // cible (arrondi 30 min) n'a pas changé.
+  let lastEndKey: string | null = null;
+  // Index de lecture courant dans windowKeys.
+  let playIndex = 0;
+  // Dernière frame réellement appliquée (évite de re-binder la même texture).
   let appliedKey: string | null = null;
-  let lastRequestedKey: string | null = null;
 
-  function loadForKey(key: string, url: string): Promise<THREE.Texture> {
+  function loadKey(key: string): Promise<THREE.Texture> {
     const cached = cache.get(key);
     if (cached) return Promise.resolve(cached);
     const existing = inFlight.get(key);
     if (existing) return existing;
+    const url = imergUrl(new Date(key), {
+      layer: settings.layer,
+      width: settings.resolution,
+    });
     const promise = new Promise<THREE.Texture>((resolve, reject) => {
       loader.load(
         url,
-        (texture) => {
-          cache.set(key, texture);
+        (t) => {
+          cache.set(key, t);
           inFlight.delete(key);
-          resolve(texture);
+          resolve(t);
         },
         undefined,
         (err) => {
@@ -58,50 +70,73 @@ export function setupPrecipLayer(api: PublicAPI): () => void {
     return promise;
   }
 
-  function applyForSimulationDate(simDate: Date): void {
+  /** Recalcule la fenêtre de frames pour une date de simulation et précharge tout. */
+  function refreshWindow(simDate: Date): void {
     const end = imergEndForDate(simDate, {
       latencyHours: settings.latencyHours,
       minDate: settings.minDate,
     });
-    // Hors plage (avant le début IMERG) : rien à afficher.
     if (end === null) {
-      lastRequestedKey = null;
+      // Hors plage : on garde la dernière fenêtre (rien à recharger).
+      lastEndKey = null;
       return;
     }
-    const key = end.toISOString();
-    if (key === lastRequestedKey) return;
-    lastRequestedKey = key;
+    const endKey = end.toISOString();
+    if (endKey === lastEndKey) return;
+    lastEndKey = endKey;
 
-    const url = imergUrl(end, {
-      layer: settings.layer,
-      width: settings.resolution,
+    const frames = imergFrameTimes(end, settings.frameCount, {
+      minDate: settings.minDate,
     });
-    void loadForKey(key, url)
-      .then((texture) => {
-        if (key !== lastRequestedKey) return;
-        if (key === appliedKey) return;
-        earth!.setPrecipTexture(texture, { opacity: settings.opacity });
-        appliedKey = key;
-        Logger.success(`[PrecipLayer] Pluie appliquée (${key}).`);
-      })
-      .catch((err) => {
-        lastRequestedKey = appliedKey;
-        Logger.warn(
-          `[PrecipLayer] Échec du chargement IMERG (${key}) — couche pluie masquée.`,
-          err
-        );
+    windowKeys = frames.map((d) => d.toISOString());
+    playIndex = 0;
+    // Précharge toutes les frames (échec toléré par frame : la boucle saute les trous).
+    for (const key of windowKeys) {
+      void loadKey(key).catch((err) => {
+        Logger.warn(`[PrecipLayer] Frame IMERG indisponible (${key}).`, err);
       });
+    }
   }
 
-  applyForSimulationDate(api.orbitalMechanics.simulationDate);
+  // Avance la lecture à la cadence playbackFps et applique la frame chargée courante.
+  let lastAdvance = 0;
+  const advanceMs = 1000 / Math.max(0.1, settings.playbackFps);
 
-  let lastCheck = 0;
-  const CHECK_INTERVAL_MS = 500;
+  function tickPlayback(nowMs: number): void {
+    if (windowKeys.length === 0) return;
+    if (nowMs - lastAdvance < advanceMs) return;
+    lastAdvance = nowMs;
+
+    // Cherche la prochaine frame CHARGÉE à partir de playIndex (saute les trous).
+    const n = windowKeys.length;
+    for (let step = 0; step < n; step++) {
+      const idx = (playIndex + step) % n;
+      const key = windowKeys[idx];
+      const tex = cache.get(key);
+      if (tex) {
+        if (key !== appliedKey) {
+          earth!.setPrecipTexture(tex, { opacity: settings.opacity });
+          appliedKey = key;
+        }
+        playIndex = (idx + 1) % n;
+        return;
+      }
+    }
+    // Aucune frame chargée pour l'instant : on réessaiera au prochain tick.
+  }
+
+  // Première fenêtre + boucle.
+  refreshWindow(api.orbitalMechanics.simulationDate);
+
+  let lastWindowCheck = 0;
+  const WINDOW_CHECK_MS = 1000;
   const unsubscribe = api.animationSystem.onFrame(() => {
     const now = performance.now();
-    if (now - lastCheck < CHECK_INTERVAL_MS) return;
-    lastCheck = now;
-    applyForSimulationDate(api.orbitalMechanics.simulationDate);
+    if (now - lastWindowCheck >= WINDOW_CHECK_MS) {
+      lastWindowCheck = now;
+      refreshWindow(api.orbitalMechanics.simulationDate);
+    }
+    tickPlayback(now);
   });
 
   return () => {
@@ -109,5 +144,6 @@ export function setupPrecipLayer(api: PublicAPI): () => void {
     cache.forEach((t) => t.dispose());
     cache.clear();
     inFlight.clear();
+    windowKeys = [];
   };
 }
