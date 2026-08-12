@@ -53,6 +53,8 @@ function createPlaybackIcon(paused: boolean): SVGElement {
 /** Poignée exposée au panneau date-heure pour revenir au temps réel (bouton reset). */
 export interface PlaybackControls {
   selectRealtime(): void;
+  /** Met la simulation en pause et synchronise le bouton lecture/pause. */
+  pause(): void;
 }
 
 const playPauseBtn = document.getElementById('play-pause-btn')!;
@@ -102,8 +104,8 @@ export function setupPlayback(
   anim: AnimationSystem,
   om: OrbitalMechanics
 ): PlaybackControls {
-  playPauseBtn.addEventListener('click', () => {
-    const paused = anim.togglePause();
+  // Synchronise l'icône, les classes et l'ARIA du bouton sur l'état de pause donné.
+  const syncPauseButton = (paused: boolean): void => {
     playPauseBtn.replaceChildren(createPlaybackIcon(paused));
     playPauseBtn.classList.toggle('is-paused', paused);
     playPauseBtn.setAttribute('aria-pressed', String(paused));
@@ -111,6 +113,10 @@ export function setupPlayback(
       'aria-label',
       t(paused ? 'playback.play' : 'playback.pause')
     );
+  };
+
+  playPauseBtn.addEventListener('click', () => {
+    syncPauseButton(anim.togglePause());
   });
 
   speedRange.addEventListener('input', () => {
@@ -132,5 +138,9 @@ export function setupPlayback(
 
   return {
     selectRealtime: () => applySpeed(0, om),
+    pause: () => {
+      anim.setPaused(true);
+      syncPauseButton(true);
+    },
   };
 }

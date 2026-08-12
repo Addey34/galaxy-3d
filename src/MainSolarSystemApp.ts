@@ -179,11 +179,12 @@ if (surfaceScrim) {
     );
     syncPermalink = permalink.sync;
     permalink.applyInitialState();
-    setupAstronomicalEvents(
-      orbitalMechanics,
-      () => syncPermalink(),
-      overlayCoordinator
-    );
+    setupAstronomicalEvents(orbitalMechanics, {
+      onDateChange: () => syncPermalink(),
+      coordinator: overlayCoordinator,
+      navigation: planetNav,
+      playback,
+    });
     hideLoader();
     guidedTour.startIfFirstVisit();
   } catch (err) {

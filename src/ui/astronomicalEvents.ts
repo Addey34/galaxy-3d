@@ -6,6 +6,8 @@ import {
 import type { OrbitalMechanics } from '@/core/OrbitalMechanics';
 import { intlLocale, onLocaleChange, t } from '@/i18n';
 import type { OverlayCoordinator } from './overlayCoordinator';
+import type { PlanetNavigation } from './planetNav';
+import type { PlaybackControls } from './playback';
 
 const MS_PER_DAY = 86_400_000;
 
@@ -34,6 +36,26 @@ const EVENT_KEYS: Record<AstronomicalEvent['kind'], string> = {
   'december-solstice': 'events.decemberSolstice',
   perihelion: 'events.perihelion',
   aphelion: 'events.aphelion',
+};
+
+/**
+ * Corps sur lequel recadrer la caméra pour chaque type d'événement.
+ * Phases + éclipses lunaires → la Lune (l'astre observé) ; éclipses solaires,
+ * saisons et apsides → la Terre (l'observateur / l'ombre au sol).
+ */
+const FOCUS_BODY: Record<AstronomicalEvent['kind'], string> = {
+  'new-moon': 'moon',
+  'first-quarter': 'moon',
+  'full-moon': 'moon',
+  'third-quarter': 'moon',
+  'lunar-eclipse': 'moon',
+  'solar-eclipse': 'earth',
+  'march-equinox': 'earth',
+  'june-solstice': 'earth',
+  'september-equinox': 'earth',
+  'december-solstice': 'earth',
+  perihelion: 'earth',
+  aphelion: 'earth',
 };
 
 function eventLabel(event: AstronomicalEvent): string {
@@ -82,11 +104,20 @@ export interface AstronomicalEventsPanel {
   dispose(): void;
 }
 
+export interface AstronomicalEventsDeps {
+  onDateChange?: () => void;
+  coordinator?: OverlayCoordinator;
+  /** Sélection partagée : recadre la caméra + ouvre la fiche du corps concerné. */
+  navigation?: Pick<PlanetNavigation, 'selectBody'>;
+  /** Contrôles de lecture : fige la simulation sur la date de l'événement. */
+  playback?: Pick<PlaybackControls, 'pause'>;
+}
+
 export function setupAstronomicalEvents(
   om: OrbitalMechanics,
-  onDateChange?: () => void,
-  coordinator?: OverlayCoordinator
+  deps: AstronomicalEventsDeps = {}
 ): AstronomicalEventsPanel {
+  const { onDateChange, coordinator, navigation, playback } = deps;
   // Le déclencheur vit dans le dock (statique) ; le panneau est une surface contextuelle.
   const toggle = document.getElementById(
     'events-trigger'
@@ -171,10 +202,15 @@ export function setupAstronomicalEvents(
       row.append(label, date, go);
 
       row.addEventListener('click', () => {
+        // 1. Fige la lecture pour rester sur l'instant précis de l'événement.
+        playback?.pause();
+        // 2. Voyage jusqu'à la date/heure exacte (fraction de jour préservée).
         const deltaDays =
           (event.date.getTime() - om.simulationDate.getTime()) / MS_PER_DAY;
         om.addTimeOffset(deltaDays);
         onDateChange?.();
+        // 3. Recadre la caméra sur le corps observé (Lune, Terre…).
+        navigation?.selectBody(FOCUS_BODY[event.kind]);
         setOpen(false);
       });
       list.append(row);

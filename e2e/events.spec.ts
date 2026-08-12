@@ -53,4 +53,9 @@ test('opens upcoming astronomical events and jumps the simulation to one', async
   expect(url.searchParams.get('date')).toContain(
     expectedDate.toISOString().slice(0, 19)
   );
+
+  // La lecture doit être figée sur l'instant de l'événement…
+  await expect(page.locator('#play-pause-btn')).toHaveClass(/is-paused/);
+  // …et un corps observé (Lune ou Terre) doit être sélectionné.
+  expect(url.searchParams.get('body')).toMatch(/^(moon|earth)$/);
 });
