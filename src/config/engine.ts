@@ -287,9 +287,11 @@ export const REALTIME_CLOUDS_SETTINGS = {
   opacity: 0.9,
 };
 
-// Couche PLUIE mondiale animée (NASA IMERG, taux de précipitation toutes les 30 min).
-// Superposée aux nuages, remappée en teinte réaliste (voir createPrecipMaterial).
-// Étape A = frame unique ; frameCount/playback servent à l'étape B (boucle animée).
+// Couche PLUIE mondiale (NASA IMERG, taux de précipitation toutes les 30 min).
+// Superposée aux nuages, remappée en nuages d'orage réalistes (createPrecipMaterial).
+// On affiche la frame RÉELLE de l'instant de simulation : la pluie change au rythme réel
+// des données (nouvelle image toutes les 30 min), jamais en time-lapse accéléré. Elle
+// « bouge » quand le temps de simulation avance (lecture accélérée) ou en time-travel.
 export const PRECIP_SETTINGS = {
   enabled: !IS_MOBILE,
   layer: 'IMERG_Precipitation_Rate_30min',
@@ -297,10 +299,6 @@ export const PRECIP_SETTINGS = {
   // Latence de publication IMERG (heures) : « maintenant » vise now - latencyHours.
   latencyHours: 4,
   minDate: '2000-06-01',
-  // Boucle animée (étape B) : nombre de frames (30 min chacune) et vitesse de lecture.
-  frameCount: 8,
-  frameStepMinutes: 30,
-  playbackFps: 2,
   // Opacité globale de la couche pluie.
   opacity: 0.85,
 };
