@@ -14,7 +14,18 @@ import * as THREE from 'three';
 import { buildLayers } from '@/components/celestial/celestialLayers';
 import { applyTexture } from '@/components/celestial/celestialTextures';
 import { KM_PER_AU, SQRT_K } from '@/core/ScaleService';
-import { setMaterialLightAttenuation } from '@/config/layerConfig';
+import {
+  GEOMETRY_SEGMENTS,
+  GEOMETRY_SEGMENTS_HI,
+  createSphereGeometry,
+  getCloudShadowUniforms,
+  getMoonlightUniforms,
+  getRingShadowUniforms,
+  setMaterialLightAttenuation,
+  type CloudShadowUniforms,
+  type MoonlightUniforms,
+  type RingShadowUniforms,
+} from '@/config/layerConfig';
 import { ringTexturePath } from '@/config/catalog';
 import type { CameraDistance, CelestialBodyConfig } from '@/types';
 import * as NightLightsShader from '@/shaders/NightLightsShader';
@@ -23,6 +34,17 @@ import type { AnimationSystem } from '@/components/systems/AnimationSystem';
 import type { TextureSystem } from '@/components/systems/TextureSystem';
 
 const CLOUDS_ROTATION_FACTOR = 0.1;
+// Opacité de l'ombre portée des nuages sur la surface (0 = aucune, 1 = noir).
+const CLOUD_SHADOW_STRENGTH = 0.35;
+// Distance (en rayons apparents) sous laquelle on densifie la surface pour le
+// displacement. Au-delà, le relief géométrique est invisible → géométrie standard.
+const HI_RES_TESSELLATION_THRESHOLD = 12;
+// Intensité maximale du clair de Lune (pleine Lune, point face à la Lune). Faible :
+// la nuit reste sombre, la Lune ne fait que déposer une lueur subtile sur les mers/sol.
+const MOONLIGHT_MAX_STRENGTH = 0.12;
+// Vecteurs de travail (calcul de phase lunaire) — évite d'allouer chaque frame.
+const _tmpMoonVecA = new THREE.Vector3();
+const _tmpMoonVecB = new THREE.Vector3();
 
 // Orientation initiale (fallback) de l'axe : simple obliquité penchée vers -Z. Remplacée
 // dès le premier sync par setAxisDirection(), qui oriente l'axe le long du vrai pôle nord
@@ -49,9 +71,22 @@ export default class CelestialObject {
   private _disposed = false;
   private readonly _lodWorldPos = new THREE.Vector3();
   private readonly _hasTextures: boolean;
+  // Géométrie surface haute densité active (pour le displacement au gros plan) :
+  // évite de reconstruire la sphère à chaque frame, seulement sur transition.
+  private _hiResSurfaceActive = false;
   // Dernière texture appliquée par clé — évite de re-uploader au GPU une résolution
   // identique (getLODTexture renvoie le même objet depuis le cache).
   private readonly _appliedTextures = new Map<string, THREE.Texture>();
+  // Uniforms d'ombre nuageuse du matériau surface (si présent) : la cloud map y
+  // est partagée pour projeter l'ombre des nuages, et l'offset suit leur dérive.
+  private _cloudShadow?: CloudShadowUniforms;
+  // Uniforms d'ombre portée de la planète sur son anneau (Saturne).
+  private _ringShadow?: RingShadowUniforms;
+  private readonly _ringWorldPos = new THREE.Vector3();
+  // Uniforms de clair de Lune du matériau surface (Terre) : la face nuit reçoit
+  // une lueur diffuse selon la position réelle de la Lune (réflecteur).
+  private _moonlight?: MoonlightUniforms;
+  private readonly _selfWorldPos = new THREE.Vector3();
 
   constructor(
     private readonly textureSystem: TextureSystem,
@@ -77,6 +112,14 @@ export default class CelestialObject {
 
     this.layers = buildLayers(config, name);
     this.layers.forEach((mesh) => this._meshGroup.add(mesh));
+    const surface = this.layers.get('surface');
+    if (surface && !Array.isArray(surface.material)) {
+      this._cloudShadow = getCloudShadowUniforms(surface.material);
+      this._moonlight = getMoonlightUniforms(surface.material);
+    }
+    const ring = this.layers.get('ring');
+    if (ring && !Array.isArray(ring.material))
+      this._ringShadow = getRingShadowUniforms(ring.material);
     if (this.layers.has('ring')) void this._loadRingTexture();
 
     void this._loadAllTextures();
@@ -103,6 +146,7 @@ export default class CelestialObject {
           100
         );
         applyTexture(this.layers, textureKey, texture);
+        this._bindCloudShadow(textureKey, texture);
         this._appliedTextures.set(textureKey, texture);
       } catch {
         Logger.warn(
@@ -110,6 +154,16 @@ export default class CelestialObject {
         );
       }
     }
+  }
+
+  /**
+   * Partage la cloud map avec le matériau surface pour projeter l'ombre des
+   * nuages, et active l'effet (strength > 0). Sans clouds, la branche reste inerte.
+   */
+  private _bindCloudShadow(textureKey: string, texture: THREE.Texture): void {
+    if (textureKey !== 'clouds' || !this._cloudShadow) return;
+    this._cloudShadow.map.value = texture;
+    this._cloudShadow.strength.value = CLOUD_SHADOW_STRENGTH;
   }
 
   private async _loadRingTexture(normalizedDistance = 250): Promise<void> {
@@ -129,6 +183,15 @@ export default class CelestialObject {
       const material = ringMesh.material as THREE.MeshStandardMaterial;
       material.map = texture;
       material.alphaMap = texture;
+      // Émissif piloté par l'albédo de l'anneau : un disque plat MeshStandard
+      // éclairé par la PointLight du Soleil reçoit la lumière en incidence rasante
+      // (≈ 0 diffus) → anneau quasi invisible. Les particules de glace réelles
+      // diffusent pourtant vivement. On ré-illumine donc l'anneau par sa propre
+      // texture en émissif ; l'ombre portée de la planète (shader) assombrit aussi
+      // ce terme pour garder l'arc occulté crédible.
+      material.emissive = new THREE.Color(0xffffff);
+      material.emissiveMap = texture;
+      material.emissiveIntensity = 0.6;
       material.needsUpdate = true;
       this._appliedTextures.set('ring', texture);
     } catch {
@@ -153,21 +216,70 @@ export default class CelestialObject {
     delta: number,
     sunWorldPosition: THREE.Vector3 | null,
     visible: boolean,
-    _cameraPosition?: THREE.Vector3
+    _cameraPosition?: THREE.Vector3,
+    moonWorldPosition?: THREE.Vector3 | null
   ): void {
     if (!visible) return;
 
     this._meshGroup.rotation.y += this.rotationSpeed * delta;
 
     const clouds = this.layers.get('clouds');
-    if (clouds)
+    if (clouds) {
       clouds.rotation.y += this.rotationSpeed * delta * CLOUDS_ROTATION_FACTOR;
+      // Suit la dérive des nuages pour aligner l'ombre portée sur la surface :
+      // une rotation Y = décalage de longitude = décalage d'UV.x (÷ 2π).
+      if (this._cloudShadow)
+        this._cloudShadow.offset.value = clouds.rotation.y / (Math.PI * 2);
+    }
 
     const lights = this.layers.get('lights');
     if (lights?.material instanceof THREE.ShaderMaterial && sunWorldPosition) {
       const uniforms = lights.material
         .uniforms as unknown as NightLightsShader.NightLightsUniforms;
       uniforms.sunPosition.value?.copy(sunWorldPosition);
+    }
+
+    // Le halo Fresnel a besoin de la position du Soleil pour n'illuminer que le
+    // côté jour du limbe.
+    const atmosphere = this.layers.get('atmosphere');
+    if (atmosphere?.material instanceof THREE.ShaderMaterial && sunWorldPosition) {
+      const uniforms = atmosphere.material.uniforms as unknown as {
+        sunPosition: THREE.IUniform<THREE.Vector3 | null>;
+      };
+      uniforms.sunPosition.value?.copy(sunWorldPosition);
+    }
+
+    // Ombre portée de la planète sur son anneau : centre + rayon (échelle
+    // courante) + direction du Soleil, en coordonnées monde.
+    if (this._ringShadow && sunWorldPosition) {
+      this.group.getWorldPosition(this._ringWorldPos);
+      this._ringShadow.planetCenter.value.copy(this._ringWorldPos);
+      this._ringShadow.planetRadius.value =
+        this.config.radius * this._scaleFactor;
+      this._ringShadow.sunDirection.value
+        .subVectors(sunWorldPosition, this._ringWorldPos)
+        .normalize();
+    }
+
+    // Clair de Lune sur la face nuit (Terre) : on alimente position de la Lune,
+    // direction du Soleil (masque nuit) et intensité selon la phase. La phase =
+    // fraction éclairée de la Lune vue depuis la Terre ≈ (1 + cos(angle
+    // Soleil-Lune-Terre)) / 2 : ~1 à la pleine Lune, ~0 à la nouvelle Lune.
+    if (this._moonlight && sunWorldPosition && moonWorldPosition) {
+      this.group.getWorldPosition(this._selfWorldPos);
+      this._moonlight.position.value.copy(moonWorldPosition);
+      this._moonlight.sunDir.value
+        .subVectors(sunWorldPosition, this._selfWorldPos)
+        .normalize();
+
+      const toSun = _tmpMoonVecA
+        .subVectors(sunWorldPosition, moonWorldPosition)
+        .normalize();
+      const toEarth = _tmpMoonVecB
+        .subVectors(this._selfWorldPos, moonWorldPosition)
+        .normalize();
+      const phase = (1 + toSun.dot(toEarth)) * 0.5;
+      this._moonlight.strength.value = phase * MOONLIGHT_MAX_STRENGTH;
     }
   }
 
@@ -179,10 +291,16 @@ export default class CelestialObject {
     this._meshGroup.rotation.y = radians;
   }
 
-  /** Applique l'irradiance solaire et l'occultation analytique à toutes les couches PBR. */
+  /**
+   * Applique l'irradiance solaire et l'occultation analytique aux couches PBR.
+   * La couche `lights` (lumières de ville) en est exclue : c'est un phénomène de
+   * la face nuit, alimenté par les villes — une éclipse (ombre sur la face jour)
+   * ne doit pas l'éteindre. Son shader gère lui-même sa visibilité jour/nuit.
+   */
   setLightAttenuation(attenuation: number): void {
     const bounded = THREE.MathUtils.clamp(attenuation, 0, 6);
-    this.layers.forEach((mesh) => {
+    this.layers.forEach((mesh, layerName) => {
+      if (layerName === 'lights') return;
       const materials = Array.isArray(mesh.material)
         ? mesh.material
         : [mesh.material];
@@ -287,14 +405,41 @@ export default class CelestialObject {
         );
         if (this._appliedTextures.get(textureKey) === texture) continue;
         applyTexture(this.layers, textureKey, texture);
+        this._bindCloudShadow(textureKey, texture);
         this._appliedTextures.set(textureKey, texture);
       }
+      this._updateSurfaceTessellation(normalizedDistance);
       if (this.config.ring) await this._loadRingTexture(normalizedDistance);
     } catch {
       // Dégradation silencieuse : la dernière texture valide reste appliquée.
     } finally {
       this._lodPending = false;
     }
+  }
+
+  /**
+   * Densifie la géométrie de surface au gros plan pour rendre le displacement
+   * (relief géométrique) visible, et revient à la géométrie standard au loin.
+   * N'agit que si le corps déclare une carte `displacement` — sinon rien à faire,
+   * l'effet reste totalement inerte (aucun coût). Ne reconstruit la sphère que sur
+   * transition de seuil (pas à chaque frame).
+   */
+  private _updateSurfaceTessellation(normalizedDistance: number): void {
+    if (!this.config.textures?.displacement) return;
+    const surface = this.layers.get('surface');
+    if (!surface) return;
+
+    const shouldBeHiRes =
+      normalizedDistance <= HI_RES_TESSELLATION_THRESHOLD;
+    if (shouldBeHiRes === this._hiResSurfaceActive) return;
+
+    const segments = shouldBeHiRes
+      ? GEOMETRY_SEGMENTS_HI
+      : GEOMETRY_SEGMENTS;
+    const next = createSphereGeometry(this.config.radius, 'surface', segments);
+    surface.geometry.dispose();
+    surface.geometry = next;
+    this._hiResSurfaceActive = shouldBeHiRes;
   }
 
   // ============================================================================
@@ -317,8 +462,13 @@ export default class CelestialObject {
           material.map = null;
           material.normalMap = null;
           material.bumpMap = null;
+          material.displacementMap = null;
           material.roughnessMap = null;
           material.alphaMap = null;
+          material.emissiveMap = null;
+          // Sampler custom de l'ombre nuageuse : détaché du cache partagé.
+          const cloudShadow = getCloudShadowUniforms(material);
+          if (cloudShadow) cloudShadow.map.value = null;
         }
         if (material instanceof THREE.ShaderMaterial) {
           const uniforms =

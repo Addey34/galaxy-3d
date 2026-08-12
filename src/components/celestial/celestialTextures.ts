@@ -12,6 +12,7 @@ const SURFACE_TEXTURE_TYPES = [
   'surface',
   'normalMap',
   'bump',
+  'displacement',
   'spec',
   'specularMap',
 ];
@@ -19,6 +20,7 @@ const SURFACE_TEXTURE_TYPES = [
 const DATA_TEXTURE_TYPES = new Set([
   'normalMap',
   'bump',
+  'displacement',
   'spec',
   'specularMap',
 ]);
@@ -73,6 +75,15 @@ function applySurfaceTexture(
     case 'bump':
       mat.bumpMap = texture;
       mat.bumpScale = 0.05;
+      break;
+    case 'displacement':
+      // Relief géométrique réel : ne rend correctement qu'avec une géométrie
+      // suffisamment subdivisée (voir createSphereGeometry 'surface-hi' + le LOD
+      // de CelestialObject qui densifie le corps proche). displacementScale petit
+      // car le rayon des corps est ~1 unité — un relief exagéré déformerait la
+      // silhouette.
+      mat.displacementMap = texture;
+      mat.displacementScale = 0.03;
       break;
     case 'spec':
     case 'specularMap':

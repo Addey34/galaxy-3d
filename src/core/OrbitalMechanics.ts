@@ -14,14 +14,15 @@
  * points des orbites éducatives.
  */
 import * as THREE from 'three';
-import type { Body } from 'astronomy-engine';
+import { Body } from 'astronomy-engine';
 import type { CelestialBodyConfig, CelestialConfig } from '@/types';
 import type { CelestialBodies } from '@/components/systems/SceneSystem';
 import type { SimulationClock } from './SimulationClock';
 import type { EphemerisService } from './EphemerisService';
 import type { OrbitalElementsService } from './OrbitalElementsService';
 import type { PreciseEphemerisProvider } from './PreciseEphemerisProvider';
-import { ScaleService, SQRT_K } from './ScaleService';
+import { KM_PER_AU, ScaleService, SQRT_K } from './ScaleService';
+import { computeLightAttenuation } from './eclipse';
 import { forEachBody } from '@/config/catalog';
 
 /** Corps sans mouvement orbital propre (skybox étoilée, étoile centrale à l'origine). */
@@ -538,6 +539,37 @@ export class OrbitalMechanics {
     this.clock.resetOffset();
     this.syncAnglesFromEphemeris(this.clock.date);
     this.onOrbitsChanged?.();
+  }
+
+  /**
+   * Atténuation d'éclipse Terre-Lune-Soleil calculée sur la **vraie** géométrie
+   * (positions et rayons réels en AU via l'éphéméride), indépendamment de
+   * l'échelle d'affichage compressée du mode educ. Sert à rendre visible
+   * l'éclipse solaire (Lune devant le Soleil, ombre sur la Terre) et l'éclipse
+   * lunaire (Lune dans l'ombre de la Terre) même en educ, où les positions de la
+   * scène sont sur des cercles √-compressés inexploitables pour l'occultation.
+   * Limité à ce seul triplet : les orbites educ sont trop plates/rapprochées pour
+   * un calcul d'éclipse fiable sur les autres corps (fausses éclipses partout).
+   */
+  getEarthMoonEclipse(): { earth: number; moon: number } {
+    const date = this.clock.date;
+    const sunPos = new THREE.Vector3(0, 0, 0); // Soleil à l'origine héliocentrique.
+    const earthPos = this.ephemeris.getHeliocentricAU(Body.Earth, date);
+    const moonPos = this.ephemeris.getHeliocentricAU(Body.Moon, date);
+
+    const sunRadiusAU = 696_000 / KM_PER_AU;
+    const earthRadiusAU = 6_371 / KM_PER_AU;
+    const moonRadiusAU = 1_737 / KM_PER_AU;
+
+    // Éclipse solaire vue de la Terre : la Lune occulte le Soleil.
+    const earth = computeLightAttenuation(earthPos, sunPos, sunRadiusAU, [
+      { position: moonPos, radius: moonRadiusAU },
+    ]);
+    // Éclipse lunaire : la Lune entre dans l'ombre projetée par la Terre.
+    const moon = computeLightAttenuation(moonPos, sunPos, sunRadiusAU, [
+      { position: earthPos, radius: earthRadiusAU },
+    ]);
+    return { earth, moon };
   }
 
   get scaleMode(): 'educ' | 'explo' {

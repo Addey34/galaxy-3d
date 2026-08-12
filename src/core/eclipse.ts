@@ -2,6 +2,14 @@ import * as THREE from 'three';
 
 const MIN_LIGHT_ATTENUATION = 0.02;
 const EPSILON = 1e-9;
+/**
+ * Resserrement perceptuel de l'ombre. La fraction obscurcie du disque solaire
+ * est géométriquement exacte, mais l'œil ne perçoit un assombrissement net que
+ * lors des phases profondes d'une éclipse (à 10 % occulté il fait encore plein
+ * jour). On applique une courbe puissance : les occultations partielles restent
+ * quasi lumineuses, seule l'approche de la totalité plonge le corps dans l'ombre.
+ */
+const SHADOW_GAMMA = 3.2;
 
 export interface SphericalOccluder {
   position: THREE.Vector3;
@@ -93,7 +101,9 @@ export function computeLightAttenuation(
     if (maxOccultation >= 1) break;
   }
 
-  return THREE.MathUtils.lerp(1, MIN_LIGHT_ATTENUATION, maxOccultation);
+  // Courbe puissance : ombre resserrée sur les phases profondes (voir SHADOW_GAMMA).
+  const shaped = Math.pow(maxOccultation, SHADOW_GAMMA);
+  return THREE.MathUtils.lerp(1, MIN_LIGHT_ATTENUATION, shaped);
 }
 
 /** Intensité solaire relative à la Terre, bornée pour conserver une image exploitable. */

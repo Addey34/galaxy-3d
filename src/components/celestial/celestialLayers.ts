@@ -42,9 +42,13 @@ function createSurfaceLayer(
   name: string
 ): THREE.Mesh {
   const isSun = name === 'sun';
+  // Clair de Lune activé pour les corps à lumières nocturnes (Terre) : sa face
+  // nuit peut être partiellement éclairée par la Lune (réflecteur).
+  const hasNightLights = Boolean(config.textures?.lights);
   const material = createSurfaceMaterial(
     isSun,
-    config.textures?.surface ? undefined : config.fallbackColor
+    config.textures?.surface ? undefined : config.fallbackColor,
+    hasNightLights
   );
   const mesh = new THREE.Mesh(
     createSphereGeometry(config.radius, 'surface'),

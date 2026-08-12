@@ -104,12 +104,23 @@ export const fragmentShader = /* glsl */ `
     float nightFactor = 1.0 - smoothstep(-smoothness, threshold, sunLight);
 
     vec4 lightsColor = texture2D(lightsMap, vUv);
-    vec3 boostedColor = lightsColor.rgb * 1.5;
+
+    // La texture « black marble » NASA n'a PAS un fond noir : océans et continents
+    // non éclairés sont d'un bleu nuit sombre. En AdditiveBlending, ce fond bleu
+    // s'ajoute sur TOUTE la face nuit → halo bleuté irréaliste au lieu de villes
+    // ponctuelles. On isole donc les vraies lumières : on retire un plancher de
+    // luminance (le fond) et on ne garde que ce qui dépasse, ce qui éteint le bleu
+    // diffus tout en préservant les points de ville (ambrés, haute luminance).
+    float lum = dot(lightsColor.rgb, vec3(0.299, 0.587, 0.114));
+    // Plancher = niveau du fond bleu ; en dessous → éteint. Remap au-dessus pour
+    // restaurer le contraste des villes.
+    float cityMask = smoothstep(0.06, 0.16, lum);
+    vec3 cityColor = lightsColor.rgb * cityMask;
 
     // AdditiveBlending (défini côté THREE.js) : finalAlpha contrôle l'additivité.
     // Quand nightFactor = 0 (jour), les lumières disparaissent complètement.
-    float finalAlpha = lightsColor.a * nightFactor * intensity;
-    vec3 finalColor = boostedColor * intensity * (1.0 + nightFactor * 0.5);
+    float finalAlpha = cityMask * nightFactor * intensity;
+    vec3 finalColor = cityColor * intensity * 1.5;
 
     gl_FragColor = vec4(finalColor, finalAlpha);
   }

@@ -12,6 +12,7 @@ import { FPSCounter } from '@/utils/FPSCounter';
 import Logger from '@/utils/Logger';
 import type { IUpdatable } from '@/types';
 import type { OrbitalMechanics } from '@/core/OrbitalMechanics';
+import type { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
 import { computeLightAttenuation, solarIrradianceFactor } from '@/core/eclipse';
 import { SQRT_K } from '@/core/ScaleService';
 import type { CameraSystem } from './CameraSystem';
@@ -49,6 +50,7 @@ export class AnimationSystem {
   private scene!: THREE.Scene;
   private camera!: THREE.PerspectiveCamera;
   private renderer!: THREE.WebGLRenderer;
+  private composer: EffectComposer | null = null;
   private cameraSystem!: CameraSystem;
   private celestialBodies!: CelestialBodies;
   private orbitalMechanics: OrbitalMechanics | null = null;
@@ -56,6 +58,7 @@ export class AnimationSystem {
   // Reusable vectors (avoid per-frame allocations)
   private readonly _cameraPos = new THREE.Vector3();
   private readonly _sunWorldPos = new THREE.Vector3();
+  private readonly _moonWorldPos = new THREE.Vector3();
   private readonly _bodyWorldPos = new THREE.Vector3();
 
   // Frustum culling — objets réutilisés pour éviter les allocations à chaque frame
@@ -71,12 +74,14 @@ export class AnimationSystem {
     scene: THREE.Scene;
     camera: THREE.PerspectiveCamera;
     renderer: THREE.WebGLRenderer;
+    composer?: EffectComposer | null;
     cameraSystem: CameraSystem;
     celestialBodies: CelestialBodies;
   }): void {
     this.scene = params.scene;
     this.camera = params.camera;
     this.renderer = params.renderer;
+    this.composer = params.composer ?? null;
     this.cameraSystem = params.cameraSystem;
     this.celestialBodies = params.celestialBodies;
 
@@ -128,7 +133,8 @@ export class AnimationSystem {
     // Rotation physique : utilise les secondes de simulation réelles (pas le delta d'animation).
     // rotationSpeed est en rad/sim-seconde → précis en Réel, 1h/s, 3h/s, 6h/s et éducatif.
     const simRot = this.orbitalMechanics?.simDeltaSeconds ?? delta;
-    this._updateObjects(simRot, sunWorldPosition);
+    const moonWorldPosition = this._getMoonWorldPosition();
+    this._updateObjects(simRot, sunWorldPosition, moonWorldPosition);
     this.cameraSystem?.update(delta);
     // OrbitControls peut déplacer la caméra après le calcul de frustum ; les callbacks HUD
     // doivent projeter avec sa matrice monde de la frame courante.
@@ -145,6 +151,13 @@ export class AnimationSystem {
     return this._sunWorldPos;
   }
 
+  private _getMoonWorldPosition(): THREE.Vector3 | null {
+    const moonBody = this.celestialBodies?.['moon'];
+    if (!moonBody?.group) return null;
+    moonBody.group.getWorldPosition(this._moonWorldPos);
+    return this._moonWorldPos;
+  }
+
   private _updatePhysicalLighting(
     sunWorldPosition: THREE.Vector3 | null
   ): void {
@@ -159,6 +172,7 @@ export class AnimationSystem {
           body.setLightAttenuation(1);
         }
       }
+      this._updateEducEarthMoonEclipse(modeChanged);
       return;
     }
 
@@ -198,9 +212,30 @@ export class AnimationSystem {
     }
   }
 
+  /**
+   * En educ, applique l'éclipse Terre-Lune-Soleil calculée sur la vraie géométrie
+   * (cf. OrbitalMechanics.getEarthMoonEclipse) aux seuls corps `earth` et `moon`.
+   * Pas d'irradiance solaire ici : educ garde une luminosité uniforme, seule
+   * l'ombre d'éclipse module ces deux corps.
+   */
+  private _updateEducEarthMoonEclipse(modeChanged: boolean): void {
+    if (!this.orbitalMechanics) return;
+    this.lightingUpdateFrame++;
+    if (!modeChanged && this.lightingUpdateFrame % 6 !== 0) return;
+
+    const earth = this.celestialBodies['earth'];
+    const moon = this.celestialBodies['moon'];
+    if (!earth && !moon) return;
+
+    const eclipse = this.orbitalMechanics.getEarthMoonEclipse();
+    earth?.setLightAttenuation(eclipse.earth);
+    moon?.setLightAttenuation(eclipse.moon);
+  }
+
   private _updateObjects(
     delta: number,
-    sunWorldPosition: THREE.Vector3 | null
+    sunWorldPosition: THREE.Vector3 | null,
+    moonWorldPosition: THREE.Vector3 | null
   ): void {
     this._cameraPos.copy(this.camera.position);
 
@@ -223,7 +258,13 @@ export class AnimationSystem {
           ((obj.group.userData['radius'] as number | undefined) ?? 10) * 2;
         visible = this._frustum.intersectsSphere(this._tmpSphere);
       }
-      obj.update(delta, sunWorldPosition, visible, this._cameraPos);
+      obj.update(
+        delta,
+        sunWorldPosition,
+        visible,
+        this._cameraPos,
+        moonWorldPosition
+      );
     }
   }
 
@@ -245,7 +286,9 @@ export class AnimationSystem {
   }
 
   private _render(): void {
-    this.renderer.render(this.scene, this.camera);
+    // Le composer (bloom) prend le relais quand il est actif ; sinon rendu direct.
+    if (this.composer) this.composer.render();
+    else this.renderer.render(this.scene, this.camera);
   }
 
   /** Enregistre un callback exécuté en fin de chaque frame. Retourne une fonction de retrait. */
@@ -268,6 +311,11 @@ export class AnimationSystem {
   togglePause(): boolean {
     this.isPaused = !this.isPaused;
     return this.isPaused;
+  }
+
+  /** Force l'état de pause (utilisé quand une action externe fige la simulation). */
+  setPaused(paused: boolean): void {
+    this.isPaused = paused;
   }
 
   setOrbitalMechanics(om: OrbitalMechanics): void {

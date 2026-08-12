@@ -201,6 +201,7 @@ export class SolarSystemApp {
       scene: this.systems.scene!.scene,
       camera: this.systems.scene!.camera,
       renderer: this.systems.scene!.renderer,
+      composer: this.systems.scene!.composer,
       cameraSystem: this.systems.camera,
       celestialBodies: bodies,
     });

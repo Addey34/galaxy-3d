@@ -27,6 +27,16 @@ describe('physical light attenuation', () => {
     expect(partial).toBeLessThan(1);
   });
 
+  it('keeps shallow partial eclipses nearly luminous (tightened umbra)', () => {
+    // Occulteur légèrement décalé : le disque solaire n'est que faiblement mordu.
+    const shallow = computeLightAttenuation(body, sun, 1, [
+      { position: new THREE.Vector3(5, 0.9, 0), radius: 0.75 },
+    ]);
+    // La courbe puissance doit laisser >85 % de lumière sur une occultation faible.
+    expect(shallow).toBeGreaterThan(0.85);
+    expect(shallow).toBeLessThan(1);
+  });
+
   it('uses inverse-square irradiance with safe visual bounds', () => {
     expect(solarIrradianceFactor(1)).toBe(1);
     expect(solarIrradianceFactor(0.5)).toBe(4);

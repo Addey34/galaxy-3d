@@ -49,6 +49,8 @@ export interface TextureConfig {
   surface?: string;
   normalMap?: string;
   bump?: string;
+  /** Carte de hauteur pour le displacement vertex réel (relief géométrique). */
+  displacement?: string;
   spec?: string;
   specularMap?: string;
   clouds?: string;
@@ -60,6 +62,7 @@ export interface TextureResolutions {
   surface?: TextureQuality[];
   normalMap?: TextureQuality[];
   bump?: TextureQuality[];
+  displacement?: TextureQuality[];
   spec?: TextureQuality[];
   specularMap?: TextureQuality[];
   clouds?: TextureQuality[];
@@ -104,6 +107,8 @@ export interface CelestialBodyConfig {
   textures?: TextureConfig;
   /** Couleur de secours pour représenter un corps sans texture locale. */
   fallbackColor?: number;
+  /** Teinte du halo atmosphérique (Fresnel). Défaut : bleu ciel. */
+  atmosphereColor?: number;
   ring?: RingConfig;
   satellites?: Record<string, CelestialBodyConfig>;
   /** Données astronomiques réelles — utilisées par OrbitalMechanics en mode Explo. */
@@ -199,7 +204,8 @@ export interface IUpdatable {
     delta: number,
     sunWorldPosition: THREE.Vector3 | null,
     visible: boolean,
-    cameraPosition?: THREE.Vector3
+    cameraPosition?: THREE.Vector3,
+    moonWorldPosition?: THREE.Vector3 | null
   ): void;
   updateLODTextures?(
     camera: THREE.Camera,
