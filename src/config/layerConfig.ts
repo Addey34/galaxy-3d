@@ -31,6 +31,8 @@ function chainOnBeforeCompile(
 export const LAYER_RADIUS_SCALE: Record<string, number> = {
   surface: 1.0,
   clouds: 1.01,
+  // Couche pluie IMERG : juste au-dessus des nuages, sous l'atmosphère.
+  precip: 1.011,
   atmosphere: 1.02,
   lights: 1.002,
 };
@@ -202,6 +204,84 @@ export function createCloudsMaterial(): THREE.MeshStandardMaterial {
   const previousCacheKey = material.customProgramCacheKey?.bind(material);
   material.customProgramCacheKey = () =>
     `${previousCacheKey ? previousCacheKey() : ''}-realclouds`;
+
+  return material;
+}
+
+const PRECIP_UNIFORM_KEY = '__precipUniforms';
+
+export interface PrecipUniforms {
+  /** 0 = couche pluie inerte ; 1 = active (une frame IMERG assignée). */
+  enabled: { value: number };
+  /** Opacité globale de la couche pluie. */
+  opacity: { value: number };
+}
+
+/** Récupère les uniforms de la couche pluie d'un matériau, s'il en a. */
+export function getPrecipUniforms(
+  material: THREE.Material
+): PrecipUniforms | undefined {
+  return material.userData[PRECIP_UNIFORM_KEY] as PrecipUniforms | undefined;
+}
+
+// Remap de la carte de pluie IMERG (fausses couleurs) vers une teinte RÉALISTE intégrée.
+// Palette IMERG : vert = pluie légère, jaune = modérée, rouge/orange = intense, cyan =
+// neige/glace. On dérive l'intensité de pluie du glissement vert→rouge (rIntensity ≈
+// R/(R+G)) et on détecte la neige (bleu élevé). On produit alors :
+//   - pluie : gris-bleu translucide, plus dense et légèrement plus clair quand intense ;
+//   - orage fort : éclat blanc chaud (cœurs convectifs) ;
+//   - neige : blanc froid très diffus.
+// L'alpha (masque pluie IMERG) module l'opacité. Injecté après <map_fragment>.
+const PRECIP_REMAP_GLSL = `
+        #ifdef USE_MAP
+        if ( uPrecipEnabled > 0.5 ) {
+          vec3 pc = diffuseColor.rgb;
+          float pMask = diffuseColor.a; // alpha IMERG = présence de précip
+          float denom = max( pc.r + pc.g, 0.0001 );
+          float pRain = clamp( pc.r / denom, 0.0, 1.0 ); // 0 vert (léger) → 1 rouge (intense)
+          float pSnow = clamp( ( pc.b - max( pc.r, pc.g ) ) * 2.0, 0.0, 1.0 );
+          // Teinte pluie : gris-bleu → blanc chaud quand intense (cœur d'orage).
+          vec3 rainLight = vec3( 0.55, 0.62, 0.72 );
+          vec3 rainHeavy = vec3( 1.0, 0.97, 0.9 );
+          vec3 rainCol = mix( rainLight, rainHeavy, smoothstep( 0.45, 0.85, pRain ) );
+          vec3 snowCol = vec3( 0.86, 0.9, 0.96 );
+          vec3 col = mix( rainCol, snowCol, pSnow );
+          // Densité optique : pluie fine perceptible, orage bien dense.
+          float dens = mix( 0.5, 1.0, smoothstep( 0.0, 0.8, pRain ) );
+          diffuseColor.rgb = col;
+          diffuseColor.a = pMask * dens * uPrecipOpacity;
+        }
+        #endif`;
+
+export function createPrecipMaterial(): THREE.MeshBasicMaterial {
+  // MeshBasicMaterial (non éclairé) : la pluie est une couche d'information visible de
+  // jour comme de nuit, elle ne dépend pas de la PointLight du Soleil.
+  const material = new THREE.MeshBasicMaterial({
+    transparent: true,
+    depthWrite: false,
+    side: THREE.FrontSide,
+    opacity: 1,
+  });
+  const precip: PrecipUniforms = {
+    enabled: { value: 0 },
+    opacity: { value: 0.85 },
+  };
+  material.userData[PRECIP_UNIFORM_KEY] = precip;
+
+  chainOnBeforeCompile(material, (shader) => {
+    shader.uniforms['uPrecipEnabled'] = precip.enabled;
+    shader.uniforms['uPrecipOpacity'] = precip.opacity;
+    shader.fragmentShader = shader.fragmentShader
+      .replace(
+        '#include <common>',
+        '#include <common>\nuniform float uPrecipEnabled;\nuniform float uPrecipOpacity;'
+      )
+      .replace(
+        '#include <map_fragment>',
+        '#include <map_fragment>' + PRECIP_REMAP_GLSL
+      );
+  });
+  material.customProgramCacheKey = () => 'precip-remap-v1';
 
   return material;
 }

@@ -7,6 +7,7 @@ import * as THREE from 'three';
 import {
   configureShadows,
   createCloudsMaterial,
+  createPrecipMaterial,
   createRingMaterial,
   createSphereGeometry,
   createSurfaceMaterial,
@@ -30,6 +31,10 @@ export function buildLayers(
   if (textures.surface || config.fallbackColor !== undefined)
     layers.set('surface', createSurfaceLayer(config, name));
   if (textures.clouds) layers.set('clouds', createCloudsLayer(config, name));
+  // Couche pluie IMERG : réservée aux corps « type Terre » (présence de lumières
+  // nocturnes = Terre). La texture (frame de précipitation) est fournie à l'exécution
+  // par ui/precipLayer, pas via config.textures → le LOD ne la touche pas.
+  if (textures.lights) layers.set('precip', createPrecipLayer(config, name));
   if (textures.atmosphere)
     layers.set('atmosphere', createAtmosphereLayer(config, name));
   if (textures.lights) layers.set('lights', createLightsLayer(config, name));
@@ -70,6 +75,19 @@ function createCloudsLayer(
   );
   mesh.name = `${name}_clouds`;
   if (RENDER_SETTINGS.shadowMap.enabled) configureShadows(mesh, false, true);
+  return mesh;
+}
+
+function createPrecipLayer(
+  config: CelestialBodyConfig,
+  name: string
+): THREE.Mesh {
+  const mesh = new THREE.Mesh(
+    createSphereGeometry(config.radius, 'precip'),
+    createPrecipMaterial()
+  );
+  mesh.name = `${name}_precip`;
+  // Pas d'ombre : couche d'information transparente.
   return mesh;
 }
 

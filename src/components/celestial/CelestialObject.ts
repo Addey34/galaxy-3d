@@ -21,6 +21,7 @@ import {
   getCloudShadowUniforms,
   getMoonlightUniforms,
   getOceanGlintUniforms,
+  getPrecipUniforms,
   getRealCloudsUniforms,
   getRingShadowUniforms,
   setMaterialLightAttenuation,
@@ -242,6 +243,28 @@ export default class CelestialObject {
     this._realCloudDrift = false;
     this._bindCloudShadow('clouds', texture);
     if (this._cloudShadow) this._cloudShadow.offset.value = 0;
+  }
+
+  /**
+   * Applique une frame de PRÉCIPITATION (carte IMERG) à la couche `precip`. La texture
+   * sert de `map` (fausses couleurs) et le matériau la remappe en teinte réaliste + alpha
+   * (voir createPrecipMaterial). `opacity` optionnelle surcharge le défaut. Sans couche
+   * precip → no-op. La couche tourne avec la Terre (enfant du meshGroup), comme les nuages.
+   */
+  setPrecipTexture(texture: THREE.Texture, options: { opacity?: number } = {}): void {
+    const precip = this.layers.get('precip');
+    if (!precip || Array.isArray(precip.material)) return;
+    const mat = precip.material as THREE.MeshBasicMaterial;
+    texture.wrapS = THREE.RepeatWrapping;
+    texture.wrapT = THREE.ClampToEdgeWrapping;
+    texture.colorSpace = THREE.SRGBColorSpace;
+    mat.map = texture;
+    mat.needsUpdate = true;
+    const uniforms = getPrecipUniforms(mat);
+    if (uniforms) {
+      uniforms.enabled.value = 1;
+      if (options.opacity !== undefined) uniforms.opacity.value = options.opacity;
+    }
   }
 
   private async _loadRingTexture(normalizedDistance = 250): Promise<void> {

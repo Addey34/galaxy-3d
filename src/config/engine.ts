@@ -287,6 +287,24 @@ export const REALTIME_CLOUDS_SETTINGS = {
   opacity: 0.9,
 };
 
+// Couche PLUIE mondiale animée (NASA IMERG, taux de précipitation toutes les 30 min).
+// Superposée aux nuages, remappée en teinte réaliste (voir createPrecipMaterial).
+// Étape A = frame unique ; frameCount/playback servent à l'étape B (boucle animée).
+export const PRECIP_SETTINGS = {
+  enabled: !IS_MOBILE,
+  layer: 'IMERG_Precipitation_Rate_30min',
+  resolution: 1024,
+  // Latence de publication IMERG (heures) : « maintenant » vise now - latencyHours.
+  latencyHours: 4,
+  minDate: '2000-06-01',
+  // Boucle animée (étape B) : nombre de frames (30 min chacune) et vitesse de lecture.
+  frameCount: 8,
+  frameStepMinutes: 30,
+  playbackFps: 2,
+  // Opacité globale de la couche pluie.
+  opacity: 0.85,
+};
+
 export const TEXTURE_SETTINGS: TextureSettings = {
   // Vite BASE_URL keeps Firebase Hosting sub-path deployments working.
   basePath: `${import.meta.env.BASE_URL}assets/textures/`,

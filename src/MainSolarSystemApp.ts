@@ -31,6 +31,7 @@ import { SmallBodyOverlay } from './ui/smallBodyOverlay';
 import { setupBodyPicker } from './ui/bodyPicker';
 import { setupOrbitOptions } from './ui/orbitOptions';
 import { setupRealtimeClouds } from './ui/realtimeClouds';
+import { setupPrecipLayer } from './ui/precipLayer';
 import { setupOverlayCoordinator } from './ui/overlayCoordinator';
 import { fetchSmallBodies } from './core/sbdb';
 import { CELESTIAL_CONFIG } from './config/bodies';
@@ -80,6 +81,8 @@ if (surfaceScrim) {
     // Couverture nuageuse réelle de la Terre (NASA GIBS) synchronisée sur la date de
     // simulation ; repli automatique sur la texture nuages statique hors-ligne.
     setupRealtimeClouds(api);
+    // Couche pluie mondiale (NASA IMERG) superposée aux nuages, teinte réaliste.
+    setupPrecipLayer(api);
 
     // Fiche d'info par corps : s'ouvre pour toute sélection (barre, clic 3D, label Explo),
     // se ferme sur retour Vue Globale. Toutes les sources passent par planetNav.selectBody.
