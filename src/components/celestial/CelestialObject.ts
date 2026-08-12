@@ -261,6 +261,19 @@ export default class CelestialObject {
     if (this._cloudShadow) this._cloudShadow.offset.value = 0;
   }
 
+  /**
+   * Attache un objet 3D au groupe qui porte la rotation diurne (comme la surface/les
+   * nuages) : il tourne donc avec le corps. Utilisé par la couche de particules de vent.
+   */
+  attachSpinningChild(object: THREE.Object3D): void {
+    this._meshGroup.add(object);
+  }
+
+  /** Rayon local des couches (espace du _meshGroup), avant scaleFactor de scène. */
+  get layerRadius(): number {
+    return this.config.radius;
+  }
+
   private static _configurePrecipTex(texture: THREE.Texture): void {
     texture.wrapS = THREE.RepeatWrapping;
     texture.wrapT = THREE.ClampToEdgeWrapping;

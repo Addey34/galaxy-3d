@@ -32,6 +32,7 @@ import { setupBodyPicker } from './ui/bodyPicker';
 import { setupOrbitOptions } from './ui/orbitOptions';
 import { setupRealtimeClouds } from './ui/realtimeClouds';
 import { setupPrecipLayer } from './ui/precipLayer';
+import { setupWindLayer } from './ui/windLayer';
 import { setupOverlayCoordinator } from './ui/overlayCoordinator';
 import { fetchSmallBodies } from './core/sbdb';
 import { CELESTIAL_CONFIG } from './config/bodies';
@@ -83,6 +84,8 @@ if (surfaceScrim) {
     setupRealtimeClouds(api);
     // Couche pluie mondiale (NASA IMERG) superposée aux nuages, teinte réaliste.
     setupPrecipLayer(api);
+    // Prototype couche vent : particules advectées par le champ de vent réel (Open-Meteo).
+    setupWindLayer(api);
 
     // Fiche d'info par corps : s'ouvre pour toute sélection (barre, clic 3D, label Explo),
     // se ferme sur retour Vue Globale. Toutes les sources passent par planetNav.selectBody.

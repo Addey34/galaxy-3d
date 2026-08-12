@@ -303,6 +303,24 @@ export const PRECIP_SETTINGS = {
   opacity: 0.85,
 };
 
+// Prototype couche VENT : particules advectées par le champ de vent réel (Open-Meteo GFS).
+// Voir core/windField.ts, components/celestial/WindParticles.ts, ui/windLayer.ts.
+export const WIND_SETTINGS = {
+  enabled: !IS_MOBILE,
+  // Pas de la grille de vent (degrés). 10° = 612 points en une requête.
+  gridStep: 10,
+  // Nombre de particules (advection CPU au prototype).
+  particleCount: 2500,
+  // Vitesse d'advection : degrés de déplacement par (km/h · s). Réglé pour un flux lisible.
+  speedScale: 0.02,
+  // Durée de vie moyenne d'une particule (s) avant ré-ensemencement (traînées).
+  lifeSeconds: 4,
+  color: 0xcfe6ff,
+  opacity: 0.5,
+  // Décalage de longitude (rad) pour aligner les particules sur les textures.
+  lonOffset: Math.PI / 2,
+};
+
 export const TEXTURE_SETTINGS: TextureSettings = {
   // Vite BASE_URL keeps Firebase Hosting sub-path deployments working.
   basePath: `${import.meta.env.BASE_URL}assets/textures/`,

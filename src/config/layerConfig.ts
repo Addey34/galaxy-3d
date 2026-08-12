@@ -33,6 +33,8 @@ export const LAYER_RADIUS_SCALE: Record<string, number> = {
   clouds: 1.01,
   // Couche pluie IMERG : juste au-dessus des nuages, sous l'atmosphère.
   precip: 1.011,
+  // Particules de vent : légèrement au-dessus de la pluie.
+  wind: 1.012,
   atmosphere: 1.02,
   lights: 1.002,
 };
