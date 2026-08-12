@@ -225,13 +225,15 @@ export function getPrecipUniforms(
 }
 
 // Remap de la carte de pluie IMERG (fausses couleurs) vers une teinte RÉALISTE intégrée.
-// Palette IMERG : vert = pluie légère, jaune = modérée, rouge/orange = intense, cyan =
-// neige/glace. On dérive l'intensité de pluie du glissement vert→rouge (rIntensity ≈
-// R/(R+G)) et on détecte la neige (bleu élevé). On produit alors :
-//   - pluie : gris-bleu translucide, plus dense et légèrement plus clair quand intense ;
-//   - orage fort : éclat blanc chaud (cœurs convectifs) ;
-//   - neige : blanc froid très diffus.
-// L'alpha (masque pluie IMERG) module l'opacité. Injecté après <map_fragment>.
+// Rendu PHOTO-RÉALISTE « vu de l'espace » : depuis l'orbite on ne voit pas la pluie
+// elle-même mais les NUAGES de pluie (systèmes convectifs) — masses denses gris-sombre,
+// dont les cœurs d'orage (cumulonimbus) crèvent en blanc éclatant. On mappe donc
+// l'intensité IMERG (vert léger → rouge intense) sur un dégradé gris sombre → blanc :
+//   - pluie faible : gris moyen, peu opaque (voile de nuage épais) ;
+//   - pluie forte : gris sombre dense (base de l'orage) ;
+//   - cœur intense : sommet blanc brillant (tour convective) ;
+//   - neige (cyan IMERG) : blanc froid diffus.
+// L'alpha (masque IMERG) module l'opacité. Injecté après <map_fragment>.
 const PRECIP_REMAP_GLSL = `
         #ifdef USE_MAP
         if ( uPrecipEnabled > 0.5 ) {
@@ -240,19 +242,17 @@ const PRECIP_REMAP_GLSL = `
           float denom = max( pc.r + pc.g, 0.0001 );
           float pRain = clamp( pc.r / denom, 0.0, 1.0 ); // 0 vert (léger) → 1 rouge (intense)
           float pSnow = clamp( ( pc.b - max( pc.r, pc.g ) ) * 2.0, 0.0, 1.0 );
-          // Teinte pluie DISTINCTE des nuages blancs : bleu-cyan froid pour la pluie
-          // (se lit comme une couche météo), virant au blanc chaud pour les cœurs
-          // d'orage intenses. Le contraste bleu vs blanc-nuage rend la couche lisible.
-          vec3 rainLight = vec3( 0.30, 0.55, 0.85 );
-          vec3 rainHeavy = vec3( 1.0, 0.95, 0.85 );
-          vec3 rainCol = mix( rainLight, rainHeavy, smoothstep( 0.45, 0.85, pRain ) );
-          vec3 snowCol = vec3( 0.80, 0.88, 0.98 );
-          vec3 col = mix( rainCol, snowCol, pSnow );
-          // Densité optique : la pluie couvre de vastes zones (bande tropicale) →
-          // pluie fine volontairement translucide (0.35) pour ne pas noyer la Terre
-          // sous un voile, montant à opaque (1.0) pour les cœurs d'orage intenses qui,
-          // eux, doivent ressortir nettement.
-          float dens = mix( 0.35, 1.0, smoothstep( 0.15, 0.7, pRain ) );
+          // Nuage de pluie : gris moyen (léger) → gris sombre (base d'orage) → blanc
+          // éclatant (cœur convectif qui crève). Deux mélanges successifs.
+          vec3 cloudMid = vec3( 0.62, 0.64, 0.68 );  // stratus pluvieux
+          vec3 cloudDark = vec3( 0.32, 0.34, 0.40 ); // base sombre d'orage
+          vec3 stormTop = vec3( 1.0, 1.0, 1.0 );     // sommet convectif brillant
+          vec3 col = mix( cloudMid, cloudDark, smoothstep( 0.20, 0.55, pRain ) );
+          col = mix( col, stormTop, smoothstep( 0.7, 0.95, pRain ) );
+          col = mix( col, vec3( 0.85, 0.89, 0.95 ), pSnow ); // neige
+          // Densité : voile fin pour la pluie faible (ne noie pas la Terre), opaque pour
+          // les gros systèmes.
+          float dens = mix( 0.4, 1.0, smoothstep( 0.1, 0.6, pRain ) );
           diffuseColor.rgb = col;
           diffuseColor.a = pMask * dens * uPrecipOpacity;
         }
