@@ -107,10 +107,7 @@ export class CameraSystem {
       radius * this.minDistanceMultiplier
     );
 
-    const direction = new THREE.Vector3()
-      .subVectors(this.camera.position, this.controls.target)
-      .normalize();
-    if (direction.length() < 0.1) direction.set(1, 0.3, 1).normalize();
+    const direction = this._approachDirection(bodyName);
 
     const cameraPosition = this.targetWorldPosition
       .clone()
@@ -119,6 +116,54 @@ export class CameraSystem {
     this.currentTarget = { name: bodyName, group: body, distance };
     this.cameraOffset.subVectors(cameraPosition, this.targetWorldPosition);
     this.animateToTarget(cameraPosition, this.targetWorldPosition.clone());
+  }
+
+  /**
+   * Direction d'approche caméra → corps, biaisée vers la face **éclairée**.
+   *
+   * Le Soleil est à l'origine héliocentrique : le côté jour d'un corps regarde
+   * donc vers l'origine (`origin − bodyPos`, normalisé). On place la caméra de ce
+   * côté pour que la face éclairée soit face au spectateur à l'arrivée — sinon la
+   * direction (héritée de la position caméra précédente) tombait au hasard et un
+   * corps bootait souvent côté nuit (Terre « boule noire »). On ajoute une légère
+   * élévation et un décalage latéral pour montrer le terminateur (vue 3/4 flatteuse
+   * plutôt qu'un disque plein plat), et on garde une composante Y minimale pour ne
+   * jamais regarder exactement dans l'axe du Soleil.
+   *
+   * Le Soleil lui-même n'a pas de face nuit : on conserve pour lui la direction
+   * courante (ou un fallback 3/4) afin de ne pas figer un angle arbitraire.
+   */
+  private _approachDirection(bodyName: string): THREE.Vector3 {
+    const current = new THREE.Vector3()
+      .subVectors(this.camera.position, this.controls.target)
+      .normalize();
+
+    if (bodyName === 'sun') {
+      if (current.length() < 0.1) current.set(1, 0.3, 1).normalize();
+      return current;
+    }
+
+    // Vecteur corps → Soleil (origine) = direction de la face jour.
+    const toSun = this.targetWorldPosition.clone().negate();
+    if (toSun.lengthSq() < 1e-9) {
+      // Corps quasi à l'origine (improbable hors Soleil) : garde la direction courante.
+      if (current.length() < 0.1) current.set(1, 0.3, 1).normalize();
+      return current;
+    }
+    toSun.normalize();
+
+    // Décalage latéral (produit vectoriel avec l'axe monde Y) pour une vue 3/4 :
+    // on voit alors le terminateur, plus lisible qu'un disque frontalement éclairé.
+    const up = new THREE.Vector3(0, 1, 0);
+    const lateral = new THREE.Vector3().crossVectors(toSun, up);
+    if (lateral.lengthSq() < 1e-6) lateral.set(1, 0, 0);
+    lateral.normalize();
+
+    return toSun
+      .multiplyScalar(0.82)
+      .addScaledVector(lateral, 0.45)
+      .addScaledVector(up, 0.35)
+      .normalize();
   }
 
   private animateToTarget(
