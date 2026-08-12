@@ -88,10 +88,10 @@ export function createSurfaceMaterial(
     // qu'une roughnessMap est présente ; sans map, la branche shader est inerte.
     // cloudShadow : la branche ne s'active que si une cloud map est fournie au
     // matériau (uCloudShadowMap non nul) — voir CelestialObject.
-    // polarCaps : masque la singularité polaire équirectangulaire (« super Groenland »)
-    // par une calotte de glace propre. Réservé aux corps « type Terre » (moonlight) :
-    // une calotte de glace n'a pas de sens sur une géante gazeuse (Jupiter/Saturn).
-    { invertRoughnessMap: true, cloudShadow: true, moonlight, polarCaps: moonlight }
+    // La singularité polaire équirectangulaire (« super Groenland ») est désormais
+    // corrigée À LA SOURCE dans la texture (scripts/fix-earth-poles.mjs adoucit les
+    // rangées polaires de earth_surface_*.jpg) → plus besoin de calotte shader.
+    { invertRoughnessMap: true, cloudShadow: true, moonlight }
   );
 }
 
@@ -487,7 +487,6 @@ export function createShadowAwareStandardMaterial(
     invertRoughnessMap?: boolean;
     cloudShadow?: boolean;
     moonlight?: boolean;
-    polarCaps?: boolean;
   } = {}
 ): THREE.MeshStandardMaterial {
   const material = new THREE.MeshStandardMaterial(params);
@@ -495,7 +494,6 @@ export function createShadowAwareStandardMaterial(
   const invertRoughness = options.invertRoughnessMap === true;
   const cloudShadow = options.cloudShadow === true;
   const moonlight = options.moonlight === true;
-  const polarCaps = options.polarCaps === true;
   const cloudShadowUniforms: CloudShadowUniforms = {
     map: { value: null },
     offset: { value: 0 },
@@ -644,36 +642,11 @@ export function createShadowAwareStandardMaterial(
       );
     }
 
-    if (polarCaps) {
-      // Calotte polaire de glace. En projection équirectangulaire, la rangée de
-      // texels au pôle (banquise arctique/antarctique, ~blanche) converge en un point
-      // → un « cap » blanc grossièrement étiré (le « super Groenland »). On masque
-      // cette singularité en fondant, UNIQUEMENT sur le tout dernier bonnet polaire
-      // (|lat| > ~0.965 de vMapUv.y depuis l'équateur ≈ 87°), la couleur smearée vers
-      // une glace propre. Seuil volontairement très haut : plus bas (0.90 ≈ 81°) la
-      // glace débordait et brumait tout le nord — il ne faut couvrir que le point de
-      // convergence. L'éclairage jour/nuit du matériau s'applique ensuite normalement.
-      shader.fragmentShader = shader.fragmentShader.replace(
-        '#include <map_fragment>',
-        `#include <map_fragment>
-        #ifdef USE_MAP
-        {
-          float pcLat = abs( vMapUv.y - 0.5 ) * 2.0; // 0 équateur, 1 pôle
-          float pcMix = smoothstep( 0.965, 0.995, pcLat );
-          // Glace réaliste : blanc froid très légèrement bleuté, micro-grain via une
-          // ondulation douce en longitude pour casser l'aspect « disque plat ».
-          float pcGrain = 0.96 + 0.04 * sin( vMapUv.x * 90.0 );
-          vec3 pcIce = vec3( 0.90, 0.93, 0.97 ) * pcGrain;
-          diffuseColor.rgb = mix( diffuseColor.rgb, pcIce, pcMix );
-        }
-        #endif`
-      );
-    }
   });
   material.customProgramCacheKey = () =>
     `shadow-aware-standard-v2${invertRoughness ? '-invrough' : ''}${
       cloudShadow ? '-cloudshadow' : ''
-    }${moonlight ? '-moonlight' : ''}${polarCaps ? '-polarcaps' : ''}`;
+    }${moonlight ? '-moonlight' : ''}`;
 
   return material;
 }
