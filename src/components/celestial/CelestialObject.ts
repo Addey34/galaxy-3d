@@ -47,6 +47,10 @@ const HI_RES_TESSELLATION_THRESHOLD = 12;
 // Intensité maximale du clair de Lune (pleine Lune, point face à la Lune). Faible :
 // la nuit reste sombre, la Lune ne fait que déposer une lueur subtile sur les mers/sol.
 const MOONLIGHT_MAX_STRENGTH = 0.12;
+
+// Durée du fondu enchaîné entre deux frames de pluie IMERG (transition douce, sans
+// clignotement au changement de demi-heure). Piloté par le temps réel (delta).
+const PRECIP_FADE_SECONDS = 0.6;
 // Vecteurs de travail (calcul de phase lunaire) — évite d'allouer chaque frame.
 const _tmpMoonVecA = new THREE.Vector3();
 const _tmpMoonVecB = new THREE.Vector3();
@@ -96,6 +100,10 @@ export default class CelestialObject {
   private _oceanGlint?: OceanGlintUniforms;
   // Uniforms de la couche pluie (Terre) : position du Soleil pour l'éclairage jour/nuit.
   private _precip?: PrecipUniforms;
+  private _precipMat?: THREE.MeshBasicMaterial;
+  // Fondu enchaîné pluie : durée écoulée (s) de la transition en cours (< 0 = inactive).
+  private _precipFadeElapsed = -1;
+  private _precipFadeTarget: THREE.Texture | null = null;
   private readonly _selfWorldPos = new THREE.Vector3();
   // Nuages géoréférencés réels (GIBS) : quand actif, on suspend la dérive continue
   // de la couche nuages (qui simule des nuages fictifs) — une vraie image satellite
@@ -138,8 +146,10 @@ export default class CelestialObject {
       this._oceanGlint = getOceanGlintUniforms(surface.material);
     }
     const precip = this.layers.get('precip');
-    if (precip && !Array.isArray(precip.material))
+    if (precip && !Array.isArray(precip.material)) {
+      this._precipMat = precip.material as THREE.MeshBasicMaterial;
       this._precip = getPrecipUniforms(precip.material);
+    }
     const ring = this.layers.get('ring');
     if (ring && !Array.isArray(ring.material))
       this._ringShadow = getRingShadowUniforms(ring.material);
@@ -251,25 +261,69 @@ export default class CelestialObject {
     if (this._cloudShadow) this._cloudShadow.offset.value = 0;
   }
 
-  /**
-   * Applique une frame de PRÉCIPITATION (carte IMERG) à la couche `precip`. La texture
-   * sert de `map` (fausses couleurs) et le matériau la remappe en teinte réaliste + alpha
-   * (voir createPrecipMaterial). `opacity` optionnelle surcharge le défaut. Sans couche
-   * precip → no-op. La couche tourne avec la Terre (enfant du meshGroup), comme les nuages.
-   */
-  setPrecipTexture(texture: THREE.Texture, options: { opacity?: number } = {}): void {
-    const precip = this.layers.get('precip');
-    if (!precip || Array.isArray(precip.material)) return;
-    const mat = precip.material as THREE.MeshBasicMaterial;
+  private static _configurePrecipTex(texture: THREE.Texture): void {
     texture.wrapS = THREE.RepeatWrapping;
     texture.wrapT = THREE.ClampToEdgeWrapping;
     texture.colorSpace = THREE.SRGBColorSpace;
-    mat.map = texture;
+  }
+
+  /**
+   * Affiche une frame de PRÉCIPITATION (carte IMERG) sur la couche `precip`, avec FONDU
+   * ENCHAÎNÉ depuis la frame précédente (pas de clignotement au changement de demi-heure).
+   * La première frame est posée directement ; les suivantes fondent en douceur via
+   * `_tickPrecipFade` (uniforms map/mapB + mix). `opacity` optionnelle surcharge le défaut.
+   * Sans couche precip → no-op.
+   */
+  setPrecipTexture(texture: THREE.Texture, options: { opacity?: number } = {}): void {
+    const mat = this._precipMat;
+    const uniforms = this._precip;
+    if (!mat || !uniforms) return;
+    CelestialObject._configurePrecipTex(texture);
+    if (options.opacity !== undefined) uniforms.opacity.value = options.opacity;
+    uniforms.enabled.value = 1;
+
+    // Première frame (aucune map encore) : pose directe, pas de fondu.
+    if (!mat.map) {
+      mat.map = texture;
+      uniforms.mix.value = 0;
+      mat.needsUpdate = true;
+      return;
+    }
+    // Même texture déjà en cours d'affichage : rien à faire.
+    if (mat.map === texture || this._precipFadeTarget === texture) return;
+
+    // Un fondu est déjà en cours : on le finalise (la cible devient la frame courante)
+    // avant d'enchaîner sur la nouvelle → pas de map figée si les frames arrivent vite.
+    if (this._precipFadeTarget) {
+      mat.map = this._precipFadeTarget;
+      this._precipFadeTarget = null;
+    }
+
+    // Démarre un fondu map → texture (via mapB).
+    uniforms.mapB.value = texture;
+    uniforms.mix.value = 0;
+    this._precipFadeTarget = texture;
+    this._precipFadeElapsed = 0;
     mat.needsUpdate = true;
-    const uniforms = getPrecipUniforms(mat);
-    if (uniforms) {
-      uniforms.enabled.value = 1;
-      if (options.opacity !== undefined) uniforms.opacity.value = options.opacity;
+  }
+
+  /** Avance le fondu enchaîné pluie ; à la fin, promeut mapB en map et réarme. */
+  private _tickPrecipFade(delta: number): void {
+    if (this._precipFadeElapsed < 0 || !this._precipMat || !this._precip) return;
+    // `delta` ici est en secondes de SIMULATION (mise à l'échelle par la vitesse) : en
+    // accéléré il serait énorme → le fondu se ferait instantanément. On le borne à un pas
+    // temps-réel plausible (rawDelta est plafonné à 0.1 s) pour un fondu toujours fluide.
+    this._precipFadeElapsed += Math.min(Math.max(delta, 0), 0.1);
+    const t = Math.min(this._precipFadeElapsed / PRECIP_FADE_SECONDS, 1);
+    this._precip.mix.value = t;
+    if (t >= 1) {
+      // Fin : la cible devient la frame courante (map), on réinitialise le fondu.
+      if (this._precipFadeTarget) this._precipMat.map = this._precipFadeTarget;
+      this._precip.mix.value = 0;
+      this._precip.mapB.value = null;
+      this._precipFadeTarget = null;
+      this._precipFadeElapsed = -1;
+      this._precipMat.needsUpdate = true;
     }
   }
 
@@ -346,9 +400,10 @@ export default class CelestialObject {
       uniforms.sunPosition.value?.copy(sunWorldPosition);
     }
 
-    // Couche pluie : direction du Soleil pour l'éclairage jour/nuit des nuages d'orage.
+    // Couche pluie : direction du Soleil (éclairage jour/nuit) + fondu enchaîné.
     if (this._precip && sunWorldPosition)
       this._precip.sunPosition.value.copy(sunWorldPosition);
+    this._tickPrecipFade(delta);
 
     // Le halo Fresnel a besoin de la position du Soleil pour n'illuminer que le
     // côté jour du limbe.

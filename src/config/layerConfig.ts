@@ -217,6 +217,10 @@ export interface PrecipUniforms {
   opacity: { value: number };
   /** Position monde du Soleil : éclaire la couche côté jour, l'assombrit côté nuit. */
   sunPosition: { value: THREE.Vector3 };
+  /** Seconde frame IMERG (cible du fondu enchaîné). */
+  mapB: { value: THREE.Texture | null };
+  /** Fondu 0→1 entre la frame courante (`map`) et `mapB` : transition douce sans clignotement. */
+  mix: { value: number };
 }
 
 /** Récupère les uniforms de la couche pluie d'un matériau, s'il en a. */
@@ -239,8 +243,13 @@ export function getPrecipUniforms(
 const PRECIP_REMAP_GLSL = `
         #ifdef USE_MAP
         if ( uPrecipEnabled > 0.5 ) {
-          vec3 pc = diffuseColor.rgb;
-          float pMask = diffuseColor.a; // alpha IMERG = présence de précip
+          // Fondu enchaîné entre la frame courante (map, déjà dans diffuseColor) et la
+          // frame suivante (uPrecipMapB) → transition douce au changement de demi-heure
+          // IMERG, sans clignotement (plus de disparition/réapparition brutale).
+          vec4 pB = texture2D( uPrecipMapB, vMapUv );
+          vec4 pBlend = mix( diffuseColor, pB, uPrecipMix );
+          vec3 pc = pBlend.rgb;
+          float pMask = pBlend.a; // alpha IMERG = présence de précip
           float denom = max( pc.r + pc.g, 0.0001 );
           float pRain = clamp( pc.r / denom, 0.0, 1.0 ); // 0 vert (léger) → 1 rouge (intense)
           float pSnow = clamp( ( pc.b - max( pc.r, pc.g ) ) * 2.0, 0.0, 1.0 );
@@ -281,6 +290,8 @@ export function createPrecipMaterial(): THREE.MeshBasicMaterial {
     enabled: { value: 0 },
     opacity: { value: 0.85 },
     sunPosition: { value: new THREE.Vector3(1, 0, 0) },
+    mapB: { value: null },
+    mix: { value: 0 },
   };
   material.userData[PRECIP_UNIFORM_KEY] = precip;
 
@@ -288,6 +299,8 @@ export function createPrecipMaterial(): THREE.MeshBasicMaterial {
     shader.uniforms['uPrecipEnabled'] = precip.enabled;
     shader.uniforms['uPrecipOpacity'] = precip.opacity;
     shader.uniforms['uPrecipSunPos'] = precip.sunPosition;
+    shader.uniforms['uPrecipMapB'] = precip.mapB;
+    shader.uniforms['uPrecipMix'] = precip.mix;
     // Position + normale monde du fragment (pour le facteur jour/nuit).
     shader.vertexShader = shader.vertexShader
       .replace(
@@ -301,14 +314,14 @@ export function createPrecipMaterial(): THREE.MeshBasicMaterial {
     shader.fragmentShader = shader.fragmentShader
       .replace(
         '#include <common>',
-        '#include <common>\nuniform float uPrecipEnabled;\nuniform float uPrecipOpacity;\nuniform vec3 uPrecipSunPos;\nvarying vec3 vPrecipWorldPos;\nvarying vec3 vPrecipWorldNormal;'
+        '#include <common>\nuniform float uPrecipEnabled;\nuniform float uPrecipOpacity;\nuniform vec3 uPrecipSunPos;\nuniform sampler2D uPrecipMapB;\nuniform float uPrecipMix;\nvarying vec3 vPrecipWorldPos;\nvarying vec3 vPrecipWorldNormal;'
       )
       .replace(
         '#include <map_fragment>',
         '#include <map_fragment>' + PRECIP_REMAP_GLSL
       );
   });
-  material.customProgramCacheKey = () => 'precip-remap-v2-daynight';
+  material.customProgramCacheKey = () => 'precip-remap-v3-crossfade';
 
   return material;
 }
