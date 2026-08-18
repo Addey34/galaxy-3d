@@ -89,6 +89,19 @@ export const messages: Record<Locale, Dict> = {
     'mode.explo.title': 'Exploration mode, true scale',
     'zoom.optical': 'Optical zoom (FOV)',
 
+    // ── Qualité graphique (perf adaptative) ──
+    'quality.title': 'Graphics quality',
+    'quality.heading': 'Graphics quality',
+    'quality.auto': 'Auto',
+    'quality.auto.hint': 'Match this device',
+    'quality.low': 'Low',
+    'quality.low.hint': 'Smoothest on weak GPUs',
+    'quality.medium': 'Medium',
+    'quality.medium.hint': 'Balanced',
+    'quality.high': 'High',
+    'quality.high.hint': 'Best looking',
+    'quality.reloadNote': 'Some options apply on next reload.',
+
     // ── Lecture / temps ──
     'playback.playpause': 'Play / Pause',
     'playback.play': 'Resume simulation',
@@ -156,6 +169,52 @@ export const messages: Record<Locale, Dict> = {
     'settings.labels': 'Names & markers',
 
     'settings.labelsToggle': 'Show body names and markers',
+
+    // ── Couches météo ──
+    'weather.title': 'Weather layers',
+    'weather.trigger.aria': 'Weather layers',
+    'weather.dialog.aria': 'Weather layers',
+    'weather.clouds': 'Clouds (NASA)',
+    'weather.cloudsModel': 'Clouds (Open-Meteo)',
+    'weather.precip': 'Rain (NASA IMERG)',
+    'weather.precipModel': 'Rain (Open-Meteo)',
+    'weather.wind': 'Wind',
+    'weather.thermal': 'Air temperature (MERRA-2)',
+    'weather.thermalModel': 'Air temperature (Open-Meteo)',
+    'weather.clouds.note': "Real cloud cover from NASA satellite imagery (day's snapshot).",
+    'weather.cloudsModel.note':
+      'Modelled cloud cover (Open-Meteo): gap-free worldwide, supports past and forecast — pick this for live/time-travel.',
+    'weather.precip.note':
+      'Observed NASA IMERG V07 rain: its native alpha mask is preserved; no polar extrapolation is added.',
+    'weather.precip.legendLo': 'Light',
+    'weather.precip.legendHi': 'Intense',
+    'weather.precipModel.note':
+      'Modelled rainfall (Open-Meteo): gap-free worldwide, past + forecast. Dry areas stay transparent.',
+    'weather.precipModel.lo': '0 mm/h',
+    'weather.precipModel.hi': '20+ mm/h',
+    'weather.thermalModel.note':
+      'Modelled 2 m air temperature (Open-Meteo): gap-free worldwide, past (ERA5) + forecast.',
+    'weather.thermalModel.lo': '−40 °C',
+    'weather.thermalModel.hi': '+45 °C',
+    'weather.pressureModel': 'Sea-level pressure (Open-Meteo)',
+    'weather.pressureModel.note': 'Sea-level pressure shown as smooth isobars in hPa.',
+    'weather.pressureModel.lo': '960 hPa',
+    'weather.pressureModel.hi': '1060 hPa',
+    'weather.humidityModel': 'Relative humidity (Open-Meteo)',
+    'weather.humidityModel.note': 'Relative humidity at 2 m from Open-Meteo, in percent.',
+    'weather.humidityModel.lo': '0 %',
+    'weather.humidityModel.hi': '100 %',
+    'weather.source.prefix': 'Source:',
+    'weather.source.approx': 'nearest available',
+    // Statut temporel honnête de la donnée (voir core/dataStatus.ts).
+    'weather.status.observed': 'observed',
+    'weather.status.analysis': 'analysis',
+    'weather.status.forecast': 'forecast',
+    'weather.status.forecast_uncertain': 'uncertain forecast',
+    'weather.status.climatology': 'climate average',
+    'weather.status.unavailable': 'unavailable',
+    'weather.wind.note': 'Wind flow (Open-Meteo): colour and speed follow wind strength.',
+    'weather.thermal.note': 'Air temperature near the surface (MERRA-2 monthly):',
 
     // ── Barre de navigation planètes ──
     'nav.collapse': 'Hide planet bar',
@@ -285,6 +344,19 @@ export const messages: Record<Locale, Dict> = {
     'mode.explo.title': 'Mode exploration, vraie échelle',
     'zoom.optical': 'Zoom optique (FOV)',
 
+    // ── Qualité graphique (perf adaptative) ──
+    'quality.title': 'Qualité graphique',
+    'quality.heading': 'Qualité graphique',
+    'quality.auto': 'Auto',
+    'quality.auto.hint': 'Adapté à cet appareil',
+    'quality.low': 'Basse',
+    'quality.low.hint': 'La plus fluide sur GPU faible',
+    'quality.medium': 'Moyenne',
+    'quality.medium.hint': 'Équilibrée',
+    'quality.high': 'Élevée',
+    'quality.high.hint': 'Plus beau rendu',
+    'quality.reloadNote': 'Certaines options s’appliquent au rechargement.',
+
     // ── Lecture / temps ──
     'playback.playpause': 'Lecture / Pause',
     'playback.play': 'Reprendre la simulation',
@@ -353,6 +425,55 @@ export const messages: Record<Locale, Dict> = {
     'settings.labels': 'Noms et points',
 
     'settings.labelsToggle': 'Afficher les noms et les points',
+
+    // ── Couches météo ──
+    'weather.title': 'Couches météo',
+    'weather.trigger.aria': 'Couches météo',
+    'weather.dialog.aria': 'Couches météo',
+    'weather.clouds': 'Nuages (NASA)',
+    'weather.cloudsModel': 'Nuages (Open-Meteo)',
+    'weather.precip': 'Pluie (NASA IMERG)',
+    'weather.precipModel': 'Pluie (Open-Meteo)',
+    'weather.wind': 'Vent',
+    'weather.thermal': 'Température MERRA-2',
+    'weather.thermalModel': 'Température Open-Meteo',
+    'weather.clouds.note':
+      "Couverture nuageuse réelle, imagerie satellite NASA (image du jour).",
+    'weather.cloudsModel.note':
+      'Couverture nuageuse modélisée (Open-Meteo) : mondiale sans trou, gère passé et prévision — à choisir pour le direct / voyage dans le temps.',
+    'weather.precip.note':
+      'Pluie observée NASA IMERG V07 : son masque alpha natif est conservé ; aucune extrapolation polaire.',
+    'weather.precip.legendLo': 'Faible',
+    'weather.precip.legendHi': 'Intense',
+    'weather.precipModel.note':
+      'Pluie modélisée (Open-Meteo) : mondiale sans trou, passé + prévision. Les zones sèches restent transparentes.',
+    'weather.precipModel.lo': '0 mm/h',
+    'weather.precipModel.hi': '20+ mm/h',
+    'weather.thermalModel.note':
+      "Température de l'air à 2 m modélisée (Open-Meteo) : mondiale sans trou, passé (ERA5) + prévision.",
+    'weather.thermalModel.lo': '−40 °C',
+    'weather.thermalModel.hi': '+45 °C',
+    'weather.pressureModel': 'Pression Open-Meteo',
+    'weather.pressureModel.note': 'Pression au niveau de la mer affichée en isobares (hPa).',
+    'weather.pressureModel.lo': '960 hPa',
+    'weather.pressureModel.hi': '1060 hPa',
+    'weather.humidityModel': 'Humidité Open-Meteo',
+    'weather.humidityModel.note': 'Humidité relative à 2 m, fournie par Open-Meteo, en pourcentage.',
+    'weather.humidityModel.lo': '0 %',
+    'weather.humidityModel.hi': '100 %',
+    'weather.source.prefix': 'Source :',
+    'weather.source.approx': 'date la plus proche',
+    // Statut temporel honnête de la donnée (voir core/dataStatus.ts).
+    'weather.status.observed': 'observé',
+    'weather.status.analysis': 'analyse',
+    'weather.status.forecast': 'prévision',
+    'weather.status.forecast_uncertain': 'prévision incertaine',
+    'weather.status.climatology': 'moyenne climatique',
+    'weather.status.unavailable': 'indisponible',
+    'weather.wind.note':
+      'Flux du vent (Open-Meteo) : la couleur et la vitesse suivent la force du vent.',
+    'weather.thermal.note':
+      'Température de l’air près du sol (MERRA-2 mensuel) :',
 
     // ── Barre de navigation planètes ──
     'nav.collapse': 'Masquer la barre',

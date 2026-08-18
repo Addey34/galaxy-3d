@@ -21,6 +21,7 @@ import { setupLangSwitch } from './ui/langSwitch';
 import { setupPlanetControls } from './ui/planetNav';
 import { setupBodyInfo } from './ui/bodyInfo';
 import { setupPlayback } from './ui/playback';
+import { setupQualitySwitch } from './ui/qualitySwitch';
 import { setupTimePanel } from './ui/timePanel';
 import { setupModeSwitcher } from './ui/modeSwitcher';
 import { setupPermalinks } from './ui/permalink';
@@ -31,9 +32,20 @@ import { SmallBodyOverlay } from './ui/smallBodyOverlay';
 import { setupBodyPicker } from './ui/bodyPicker';
 import { setupOrbitOptions } from './ui/orbitOptions';
 import { setupRealtimeClouds } from './ui/realtimeClouds';
+import { setupCloudModelLayer } from './ui/cloudModelLayer';
 import { setupPrecipLayer } from './ui/precipLayer';
+import { setupPrecipModelLayer } from './ui/precipModelLayer';
 import { setupWindLayer } from './ui/windLayer';
+import { setupThermalLayer } from './ui/thermalLayer';
+import { setupThermalModelLayer } from './ui/thermalModelLayer';
+import { setupPressureModelLayer } from './ui/pressureModelLayer';
+import { setupHumidityModelLayer } from './ui/humidityModelLayer';
+import { setupWeatherLayers } from './ui/weatherLayers';
+import type { WeatherLayerHandle } from './ui/earthLayer';
 import { setupOverlayCoordinator } from './ui/overlayCoordinator';
+import { setupSolarDebug } from './ui/solarDebug';
+import { setupEarthDebug } from './ui/earthDebug';
+import { setupMeteoDebug } from './ui/meteoDebug';
 import { fetchSmallBodies } from './core/sbdb';
 import { CELESTIAL_CONFIG } from './config/bodies';
 import { flattenBodies } from './config/catalog';
@@ -78,14 +90,47 @@ if (surfaceScrim) {
     const app = new SolarSystemApp();
     const api = await app.init(updateProgress);
     const { cameraSystem, animationSystem, sceneSystem, orbitalMechanics } = api;
+    setupSolarDebug(api);
+    setupEarthDebug(api);
 
-    // Couverture nuageuse réelle de la Terre (NASA GIBS) synchronisée sur la date de
-    // simulation ; repli automatique sur la texture nuages statique hors-ligne.
-    setupRealtimeClouds(api);
-    // Couche pluie mondiale (NASA IMERG) superposée aux nuages, teinte réaliste.
-    setupPrecipLayer(api);
-    // Prototype couche vent : particules advectées par le champ de vent réel (Open-Meteo).
-    setupWindLayer(api);
+    // Registre des COUCHES MÉTÉO de la Terre. Chaque `setup*` monte sa couche (données
+    // GIBS/Open-Meteo synchronisées sur la date de simulation, repli statique hors-ligne)
+    // et renvoie un `WeatherLayerHandle` uniforme. On les collecte dans l'ordre d'affichage :
+    // - nuages réels (NASA GIBS), affichés par défaut ;
+    // - pluie mondiale (NASA IMERG), affichée par défaut ;
+    // - vent (particules Open-Meteo) : null si désactivé (WIND_SETTINGS) ou Terre absente ;
+    // - température de surface (MERRA-2) : chargée en fond, masquée par défaut.
+    // Le panneau météo construit ses toggles par simple itération sur ce tableau.
+    const weatherLayers = [
+      setupRealtimeClouds(api),
+      setupCloudModelLayer(api),
+      setupPrecipLayer(api),
+      setupPrecipModelLayer(api),
+      setupWindLayer(api),
+      setupThermalLayer(api),
+      setupThermalModelLayer(api),
+      setupPressureModelLayer(api),
+      setupHumidityModelLayer(api),
+    ].filter((layer): layer is WeatherLayerHandle => layer !== null);
+
+    // Chaque couche satellite/GIBS et son équivalent MODÈLE sont mutuellement exclusifs (ils
+    // partagent le même mesh Terre) : nuages, pluie. Les couches modèle COLORÉES (température,
+    // pression, humidité) partagent TOUTES le mesh `thermal` → un seul groupe les rend exclusives
+    // entre elles ET avec la couche satellite température (activer l'une masque les autres).
+    setupWeatherLayers(
+      api,
+      {
+        layers: weatherLayers,
+        exclusiveGroups: [
+          ['clouds', 'clouds-model'],
+          ['precip', 'precip-model'],
+          ['thermal', 'thermal-model', 'pressure-model', 'humidity-model'],
+        ],
+      },
+      overlayCoordinator
+    );
+
+    setupMeteoDebug(api, weatherLayers);
 
     // Fiche d'info par corps : s'ouvre pour toute sélection (barre, clic 3D, label Explo),
     // se ferme sur retour Vue Globale. Toutes les sources passent par planetNav.selectBody.
@@ -101,6 +146,7 @@ if (surfaceScrim) {
       overlayCoordinator
     );
     const playback = setupPlayback(animationSystem, orbitalMechanics);
+    setupQualitySwitch(sceneSystem);
     setupTimePanel(
       orbitalMechanics,
       playback,

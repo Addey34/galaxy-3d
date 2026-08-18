@@ -313,6 +313,32 @@
         </svg>
       </button>
       <button
+        id="weather-trigger"
+        class="tool"
+        type="button"
+        aria-label="Weather layers"
+        aria-expanded="false"
+        aria-controls="weather-layers"
+        data-i18n-aria="weather.trigger.aria"
+      >
+        <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
+          <path
+            d="M4.5 10.5a2.5 2.5 0 0 1 .2-4.98A3.2 3.2 0 0 1 11 5.6a2.2 2.2 0 0 1 .3 4.9z"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.3"
+            stroke-linejoin="round"
+          />
+          <path
+            d="M6 12.5l-.6 1.4M8.2 12.5l-.6 1.4M10.4 12.5l-.6 1.4"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.3"
+            stroke-linecap="round"
+          />
+        </svg>
+      </button>
+      <button
         id="events-trigger"
         class="tool"
         type="button"
@@ -331,6 +357,35 @@
             stroke-width="1.4"
           />
           <circle cx="12.2" cy="4.4" r="1.7" fill="currentColor" />
+        </svg>
+      </button>
+      <button
+        id="quality-btn"
+        class="tool"
+        type="button"
+        title="Graphics quality"
+        aria-label="Graphics quality"
+        aria-haspopup="menu"
+        aria-expanded="false"
+        data-i18n-title="quality.title"
+        data-i18n-aria="quality.title"
+      >
+        <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
+          <circle
+            cx="8"
+            cy="8"
+            r="2.1"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.3"
+          />
+          <path
+            d="M8 1.2v2M8 12.8v2M14.8 8h-2M3.2 8h-2M12.8 3.2l-1.4 1.4M4.6 11.4l-1.4 1.4M12.8 12.8l-1.4-1.4M4.6 4.6L3.2 3.2"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.3"
+            stroke-linecap="round"
+          />
         </svg>
       </button>
       <button
@@ -366,8 +421,39 @@
       </button>
     </div>
 
-    <!-- ─── Dock bas : barre temps (centre) + modes/plein écran (droite) ────── -->
+    <!-- ─── Dock bas : toggle mode (gauche) · barre temps (centre) · plein écran (droite) ── -->
     <div class="dock dock--bottom">
+      <!-- Toggle mode Educ/Explo — action persistante, tout à gauche du dock bas. -->
+      <div class="dock-actions dock-actions--start">
+        <div
+          id="mode-controls"
+          class="mode-seg"
+          role="group"
+          aria-label="View mode"
+          data-i18n-aria="mode.group"
+        >
+          <button
+            class="mode-btn is-active"
+            type="button"
+            data-mode="educ"
+            data-i18n="mode.educ"
+            data-i18n-title="mode.educ.title"
+            title="Educational view, circular orbits"
+          >
+            Educ.
+          </button>
+          <button
+            class="mode-btn"
+            type="button"
+            data-mode="explo"
+            data-i18n="mode.explo"
+            data-i18n-title="mode.explo.title"
+            title="Exploration mode, true scale"
+          >
+            Explo.
+          </button>
+        </div>
+      </div>
       <!-- Barre temps : une seule surface, style lecteur multimédia. État compact
            = play + vitesse + horloge ; s'étend en place pour révéler le slider de
            vitesse et l'édition date/heure. Aucune taille ne saute au drag. -->
@@ -443,20 +529,20 @@
             <div class="tb-speed-control">
               <input
                 id="speed-range"
-                class="tb-speed-range"
+                class="tb-speed-range is-bidirectional"
                 type="range"
                 min="0"
                 max="100"
                 step="1"
-                value="0"
+                value="50"
                 aria-label="Simulation speed"
               />
               <div class="tb-speed-ticks" aria-hidden="true">
-                <span>1:1</span>
-                <span>min</span>
-                <span>h</span>
+                <span>◀ y</span>
                 <span>d</span>
-                <span>y</span>
+                <span>1:1</span>
+                <span>d</span>
+                <span>y ▶</span>
               </div>
             </div>
             <div class="tb-datetime">
@@ -481,36 +567,8 @@
         </div>
       </section>
 
-      <!-- Modes + plein écran — actions persistantes, à l'écart de la barre temps. -->
-      <div class="dock-actions">
-        <div
-          id="mode-controls"
-          class="mode-seg"
-          role="group"
-          aria-label="View mode"
-          data-i18n-aria="mode.group"
-        >
-          <button
-            class="mode-btn is-active"
-            type="button"
-            data-mode="educ"
-            data-i18n="mode.educ"
-            data-i18n-title="mode.educ.title"
-            title="Educational view, circular orbits"
-          >
-            Educ.
-          </button>
-          <button
-            class="mode-btn"
-            type="button"
-            data-mode="explo"
-            data-i18n="mode.explo"
-            data-i18n-title="mode.explo.title"
-            title="Exploration mode, true scale"
-          >
-            Explo.
-          </button>
-        </div>
+      <!-- Plein écran — action persistante, tout à droite du dock bas. -->
+      <div class="dock-actions dock-actions--end">
         <button
           id="fullscreen-btn"
           class="tool tool--dock"
@@ -532,6 +590,48 @@
           </svg>
         </button>
       </div>
+    </div>
+
+    <!-- ─── Menu qualité graphique (perf adaptative) : ouvert par #quality-btn ── -->
+    <div
+      id="quality-menu"
+      class="quality-menu"
+      role="menu"
+      aria-labelledby="quality-btn"
+      hidden
+    >
+      <p class="quality-menu-title" data-i18n="quality.heading">
+        Graphics quality
+      </p>
+      <button class="quality-opt" role="menuitemradio" data-quality="auto">
+        <span class="quality-opt-name" data-i18n="quality.auto">Auto</span>
+        <span class="quality-opt-hint" data-i18n="quality.auto.hint"
+          >Match this device</span
+        >
+      </button>
+      <button class="quality-opt" role="menuitemradio" data-quality="low">
+        <span class="quality-opt-name" data-i18n="quality.low">Low</span>
+        <span class="quality-opt-hint" data-i18n="quality.low.hint"
+          >Smoothest on weak GPUs</span
+        >
+      </button>
+      <button class="quality-opt" role="menuitemradio" data-quality="medium">
+        <span class="quality-opt-name" data-i18n="quality.medium">Medium</span>
+        <span class="quality-opt-hint" data-i18n="quality.medium.hint"
+          >Balanced</span
+        >
+      </button>
+      <button class="quality-opt" role="menuitemradio" data-quality="high">
+        <span class="quality-opt-name" data-i18n="quality.high">High</span>
+        <span class="quality-opt-hint" data-i18n="quality.high.hint"
+          >Best looking</span
+        >
+      </button>
+      <p class="quality-menu-note" id="quality-reload-note" hidden>
+        <span data-i18n="quality.reloadNote"
+          >Some options apply on next reload.</span
+        >
+      </p>
     </div>
 
     <!-- =====================================================================
@@ -699,6 +799,41 @@
             <!-- populated by ui/orbitOptions.ts -->
           </div>
         </details>
+      </div>
+    </aside>
+
+    <!-- ─── Couches météo (nuages / pluie / vent / température) ─────────────── -->
+    <aside
+      id="weather-layers"
+      class="surface surface--settings"
+      role="dialog"
+      aria-label="Weather layers"
+      data-i18n-aria="weather.dialog.aria"
+      hidden
+    >
+      <header class="surface-header">
+        <h3 class="surface-title" data-i18n="weather.title">Weather layers</h3>
+        <button
+          class="surface-close"
+          type="button"
+          aria-label="Close"
+          data-i18n-aria="surface.close"
+        >
+          <svg viewBox="0 0 14 14" width="13" height="13" aria-hidden="true">
+            <path
+              d="M3.5 3.5l7 7M10.5 3.5l-7 7"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.6"
+              stroke-linecap="round"
+            />
+          </svg>
+        </button>
+      </header>
+      <div class="surface-body">
+        <div class="wl-body">
+          <!-- populated by ui/weatherLayers.ts -->
+        </div>
       </div>
     </aside>
 

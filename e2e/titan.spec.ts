@@ -2,6 +2,11 @@ import { expect, test } from '@playwright/test';
 
 test.beforeEach(async ({ page }) => {
   await page.route('**/sbdb_query.api*', (route) => route.abort());
+  // Ce test navigue entre lunes : il ne dépend pas des données météo Terre. On coupe les
+  // appels réseau externes (SBDB, Open-Meteo) pour le rendre DÉTERMINISTE — sinon, sous
+  // quota Open-Meteo épuisé (429), la rafale de retries pendant les 8 navigations peut
+  // déstabiliser la page WebGL. Les couches météo dégradent proprement sans réseau.
+  await page.route('**open-meteo.com/**', (route) => route.abort());
   await page.addInitScript(() => {
     localStorage.setItem('ssv-guided-tour-v1', '1');
     localStorage.setItem('ssv-locale', 'en');

@@ -172,6 +172,18 @@ export class SceneSystem {
     this.scene.add(this._starfield.points);
   }
 
+  /**
+   * Ré-applique À CHAUD les leviers de qualité ajustables sans recréer le renderer : le
+   * plafond de pixel ratio (impact #1 sur la fluidité — divise le nombre de pixels rendus).
+   * Antialiasing et anisotropie, figés à la création du renderer/des textures, ne changent
+   * qu'au prochain chargement (l'UI le signale). Appelé par le sélecteur de qualité.
+   */
+  applyQualityLive(): void {
+    const pixelRatio = Math.min(window.devicePixelRatio, currentMaxPixelRatio());
+    this.renderer.setPixelRatio(pixelRatio);
+    if (this.composer) this.composer.setPixelRatio(pixelRatio);
+  }
+
   private setupEventListeners(): void {
     const onResize = (): void => {
       this.camera.aspect = window.innerWidth / window.innerHeight;
