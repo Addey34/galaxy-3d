@@ -1,7 +1,6 @@
 /**
- * Application d'une texture chargée à la bonne couche/matériau d'un corps céleste.
- * Extrait de CelestialObject : la logique « quelle texture va où » vit ici, découplée
- * du cycle de vie de l'objet. Opère uniquement sur la map de couches passée en argument.
+ * Applies a loaded texture to the correct layer/material of a celestial body.
+ * Texture ownership remains with TextureSystem; this module only attaches maps.
  */
 import * as THREE from 'three';
 import * as NightLightsShader from '@/shaders/NightLightsShader';
@@ -17,6 +16,11 @@ const SURFACE_TEXTURE_TYPES = [
   'specularMap',
 ];
 
+/** Physical Earth relief: 8,849 m / 6,371 km, expressed with Earth radius = 1. */
+export const EARTH_DISPLACEMENT_SCALE = 0.0014;
+/** Keep only small-scale shading after large-scale DEM geometry is displaced. */
+export const EARTH_NORMAL_SCALE_WITH_DISPLACEMENT = 0.4;
+
 const DATA_TEXTURE_TYPES = new Set([
   'normalMap',
   'bump',
@@ -25,7 +29,6 @@ const DATA_TEXTURE_TYPES = new Set([
   'specularMap',
 ]);
 
-/** Configure le profil couleur selon la nature de la carte GPU. */
 export function configureTextureColorSpace(
   textureKey: string,
   texture: THREE.Texture
@@ -35,7 +38,6 @@ export function configureTextureColorSpace(
     : THREE.SRGBColorSpace;
 }
 
-/** Route une texture (par clé) vers la couche qui la consomme. */
 export function applyTexture(
   layers: Layers,
   textureKey: string,
@@ -66,24 +68,29 @@ function applySurfaceTexture(
     case 'surface':
       mat.map = texture;
       break;
-    case 'normalMap':
+    case 'normalMap': {
       mat.normalMap = texture;
-      mat.normalScale = new THREE.Vector2(1, 1);
-      // Partage la normalMap avec le shader des lumières pour aligner les terminateurs.
+      const scale = mat.displacementMap
+        ? EARTH_NORMAL_SCALE_WITH_DISPLACEMENT
+        : 1;
+      mat.normalScale = new THREE.Vector2(scale, scale);
       applyLightsNormalMap(layers, texture, mat.normalScale);
       break;
+    }
     case 'bump':
       mat.bumpMap = texture;
       mat.bumpScale = 0.05;
       break;
     case 'displacement':
-      // Relief géométrique réel : ne rend correctement qu'avec une géométrie
-      // suffisamment subdivisée (voir createSphereGeometry 'surface-hi' + le LOD
-      // de CelestialObject qui densifie le corps proche). displacementScale petit
-      // car le rayon des corps est ~1 unité — un relief exagéré déformerait la
-      // silhouette.
       mat.displacementMap = texture;
-      mat.displacementScale = 0.03;
+      mat.displacementScale = EARTH_DISPLACEMENT_SCALE;
+      if (mat.normalMap) {
+        mat.normalScale.set(
+          EARTH_NORMAL_SCALE_WITH_DISPLACEMENT,
+          EARTH_NORMAL_SCALE_WITH_DISPLACEMENT
+        );
+        applyLightsNormalMap(layers, mat.normalMap, mat.normalScale);
+      }
       break;
     case 'spec':
     case 'specularMap':
@@ -98,7 +105,7 @@ function applyCloudsTexture(layers: Layers, texture: THREE.Texture): void {
   const mesh = layers.get('clouds');
   if (!mesh) return;
   texture.wrapS = THREE.RepeatWrapping;
-  texture.wrapT = THREE.RepeatWrapping;
+  texture.wrapT = THREE.ClampToEdgeWrapping;
   const mat = mesh.material as THREE.MeshStandardMaterial;
   mat.map = texture;
   mat.alphaMap = texture;
@@ -114,8 +121,6 @@ function applyLightsTexture(layers: Layers, texture: THREE.Texture): void {
   mesh.material.needsUpdate = true;
 }
 
-// Donne au shader des lumières la même normalMap que la surface : son terminateur
-// suit alors le relief à l'identique, supprimant la bande sombre sans lumières.
 function applyLightsNormalMap(
   layers: Layers,
   texture: THREE.Texture,

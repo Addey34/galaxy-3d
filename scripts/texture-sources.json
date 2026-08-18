@@ -8,44 +8,290 @@
   },
   "importedNote": "Provenance réelle des textures livrées après l'import V1 (scripts/import-textures.mjs). Nommage snake_case {body}/{body}_{layer}_{res}.jpg. Tier: free = domaine public ou CC BY 4.0 (monétisable). Les blocs `sources`/`reviews` ci-dessous sont l'historique de recherche des sources.",
   "imported": [
-    { "body": "callisto", "layer": "surface", "license": "public-domain", "credit": "USGS Astrogeology / NASA Galileo SSI & Voyager", "tier": "free", "filled": true },
-    { "body": "charon", "layer": "surface", "license": "public-domain", "credit": "USGS Astrogeology / NASA New Horizons", "tier": "free", "filled": true },
-    { "body": "europa", "layer": "surface", "license": "public-domain", "credit": "USGS Astrogeology / NASA Voyager & Galileo", "tier": "free", "filled": true },
-    { "body": "ganymede", "layer": "surface", "license": "public-domain", "credit": "USGS Astrogeology / NASA Voyager & Galileo", "tier": "free", "filled": true },
-    { "body": "io", "layer": "surface", "license": "public-domain", "credit": "USGS Astrogeology / NASA Galileo SSI & Voyager (ClrMerge)", "tier": "free", "filled": true },
-    { "body": "iapetus", "layer": "surface", "license": "public-domain", "credit": "USGS Astrogeology / NASA Cassini & Voyager", "tier": "free", "filled": true },
-    { "body": "pluto", "layer": "surface", "license": "public-domain", "credit": "USGS Astrogeology / NASA New Horizons", "tier": "free", "filled": true },
-    { "body": "triton", "layer": "surface", "license": "public-domain", "credit": "USGS Astrogeology / NASA Voyager 2 (ClrMosaic)", "tier": "free", "filled": true },
-    { "body": "phobos", "layer": "surface", "license": "public-domain", "credit": "USGS Astrogeology / ESA Mars Express (DLR control)", "tier": "free" },
-    { "body": "vesta", "layer": "surface", "license": "public-domain", "credit": "USGS Astrogeology / NASA Dawn FC HAMO", "tier": "free" },
-    { "body": "enceladus", "layer": "surface", "license": "public-domain", "credit": "USGS Astrogeology / NASA Cassini", "tier": "free" },
-    { "body": "rhea", "layer": "surface", "license": "public-domain", "credit": "USGS Astrogeology / NASA Cassini & Voyager", "tier": "free" },
-    { "body": "mercury", "layer": "surface", "license": "CC BY 4.0", "credit": "Solar System Scope (solarsystemscope.com)", "tier": "free" },
-    { "body": "venus", "layer": "surface", "license": "CC BY 4.0", "credit": "Solar System Scope (solarsystemscope.com)", "tier": "free" },
-    { "body": "venus", "layer": "clouds", "license": "CC BY 4.0", "credit": "Solar System Scope (solarsystemscope.com)", "tier": "free" },
-    { "body": "mars", "layer": "surface", "license": "CC BY 4.0", "credit": "Solar System Scope (solarsystemscope.com)", "tier": "free" },
-    { "body": "jupiter", "layer": "surface", "license": "CC BY 4.0", "credit": "Solar System Scope (solarsystemscope.com)", "tier": "free" },
-    { "body": "saturn", "layer": "surface", "license": "CC BY 4.0", "credit": "Solar System Scope (solarsystemscope.com)", "tier": "free" },
-    { "body": "saturn", "layer": "ring", "license": "CC BY 4.0", "credit": "Solar System Scope (solarsystemscope.com)", "tier": "free" },
-    { "body": "uranus", "layer": "surface", "license": "CC BY 4.0", "credit": "Solar System Scope (solarsystemscope.com)", "tier": "free" },
-    { "body": "neptune", "layer": "surface", "license": "CC BY 4.0", "credit": "Solar System Scope (solarsystemscope.com)", "tier": "free" },
-    { "body": "sun", "layer": "surface", "license": "CC BY 4.0", "credit": "Solar System Scope (solarsystemscope.com)", "tier": "free" },
-    { "body": "stars", "layer": "surface", "license": "CC BY 4.0", "credit": "Solar System Scope (solarsystemscope.com)", "tier": "free" },
-    { "body": "moon", "layer": "surface", "license": "CC BY 4.0", "credit": "Solar System Scope (solarsystemscope.com)", "tier": "free" },
-    { "body": "earth", "layer": "surface", "license": "public-domain", "credit": "NASA Visible Earth / Blue Marble", "tier": "free" },
-    { "body": "earth", "layer": "clouds", "license": "public-domain", "credit": "NASA Visible Earth / Blue Marble", "tier": "free" },
-    { "body": "earth", "layer": "lights", "license": "public-domain", "credit": "NASA Earth Observatory / Black Marble", "tier": "free" },
-    { "body": "earth", "layer": "normalMap", "license": "public-domain", "credit": "NASA Visible Earth (topography)", "tier": "free" },
-    { "body": "earth", "layer": "spec", "license": "public-domain", "credit": "NASA Visible Earth (land/ocean mask)", "tier": "free" },
-    { "body": "ceres", "layer": "surface", "license": "CC BY 4.0", "credit": "Solar System Scope — illustratif (CC BY 4.0)", "tier": "free", "illustrative": true },
-    { "body": "eris", "layer": "surface", "license": "CC BY 4.0", "credit": "Solar System Scope — illustratif (CC BY 4.0)", "tier": "free", "illustrative": true },
-    { "body": "haumea", "layer": "surface", "license": "CC BY 4.0", "credit": "Solar System Scope — illustratif (CC BY 4.0)", "tier": "free", "illustrative": true },
-    { "body": "makemake", "layer": "surface", "license": "CC BY 4.0", "credit": "Solar System Scope — illustratif (CC BY 4.0)", "tier": "free", "illustrative": true },
-    { "body": "titan", "layer": "surface", "license": "public-domain", "credit": "USGS Astrogeology / NASA-JPL-Caltech / SSI (Cassini ISS 4005m)", "tier": "free", "filled": true },
-    { "body": "deimos", "layer": "surface", "license": "public-domain", "credit": "NASA 3D Resources (Viking-derived)", "tier": "free" },
-    { "body": "halley", "layer": "surface", "license": "public-domain", "credit": "Philip Stooke / NASA PDS (Giotto/Vega) — crédit requis", "tier": "free", "illustrative": true },
-    { "body": "pallas", "layer": "surface", "license": "unconfirmed", "credit": "carte illustrative — aucune mosaïque fidèle n'existe (VLT/SPHERE = forme grise sans texture)", "tier": "free", "illustrative": true },
-    { "body": "hygiea", "layer": "surface", "license": "unconfirmed", "credit": "carte illustrative — aucune mosaïque fidèle n'existe (VLT/SPHERE = forme grise sans texture)", "tier": "free", "illustrative": true }
+    {
+      "body": "callisto",
+      "layer": "surface",
+      "license": "public-domain",
+      "credit": "USGS Astrogeology / NASA Galileo SSI & Voyager",
+      "tier": "free",
+      "filled": true
+    },
+    {
+      "body": "charon",
+      "layer": "surface",
+      "license": "public-domain",
+      "credit": "USGS Astrogeology / NASA New Horizons",
+      "tier": "free",
+      "filled": true
+    },
+    {
+      "body": "europa",
+      "layer": "surface",
+      "license": "public-domain",
+      "credit": "USGS Astrogeology / NASA Voyager & Galileo",
+      "tier": "free",
+      "filled": true
+    },
+    {
+      "body": "ganymede",
+      "layer": "surface",
+      "license": "public-domain",
+      "credit": "USGS Astrogeology / NASA Voyager & Galileo",
+      "tier": "free",
+      "filled": true
+    },
+    {
+      "body": "io",
+      "layer": "surface",
+      "license": "public-domain",
+      "credit": "USGS Astrogeology / NASA Galileo SSI & Voyager (ClrMerge)",
+      "tier": "free",
+      "filled": true
+    },
+    {
+      "body": "iapetus",
+      "layer": "surface",
+      "license": "public-domain",
+      "credit": "USGS Astrogeology / NASA Cassini & Voyager",
+      "tier": "free",
+      "filled": true
+    },
+    {
+      "body": "pluto",
+      "layer": "surface",
+      "license": "public-domain",
+      "credit": "USGS Astrogeology / NASA New Horizons",
+      "tier": "free",
+      "filled": true
+    },
+    {
+      "body": "triton",
+      "layer": "surface",
+      "license": "public-domain",
+      "credit": "USGS Astrogeology / NASA Voyager 2 (ClrMosaic)",
+      "tier": "free",
+      "filled": true
+    },
+    {
+      "body": "phobos",
+      "layer": "surface",
+      "license": "public-domain",
+      "credit": "USGS Astrogeology / ESA Mars Express (DLR control)",
+      "tier": "free"
+    },
+    {
+      "body": "vesta",
+      "layer": "surface",
+      "license": "public-domain",
+      "credit": "USGS Astrogeology / NASA Dawn FC HAMO",
+      "tier": "free"
+    },
+    {
+      "body": "enceladus",
+      "layer": "surface",
+      "license": "public-domain",
+      "credit": "USGS Astrogeology / NASA Cassini",
+      "tier": "free"
+    },
+    {
+      "body": "rhea",
+      "layer": "surface",
+      "license": "public-domain",
+      "credit": "USGS Astrogeology / NASA Cassini & Voyager",
+      "tier": "free"
+    },
+    {
+      "body": "mercury",
+      "layer": "surface",
+      "license": "CC BY 4.0",
+      "credit": "Solar System Scope (solarsystemscope.com)",
+      "tier": "free"
+    },
+    {
+      "body": "venus",
+      "layer": "surface",
+      "license": "CC BY 4.0",
+      "credit": "Solar System Scope (solarsystemscope.com)",
+      "tier": "free"
+    },
+    {
+      "body": "venus",
+      "layer": "clouds",
+      "license": "CC BY 4.0",
+      "credit": "Solar System Scope (solarsystemscope.com)",
+      "tier": "free"
+    },
+    {
+      "body": "mars",
+      "layer": "surface",
+      "license": "CC BY 4.0",
+      "credit": "Solar System Scope (solarsystemscope.com)",
+      "tier": "free"
+    },
+    {
+      "body": "jupiter",
+      "layer": "surface",
+      "license": "CC BY 4.0",
+      "credit": "Solar System Scope (solarsystemscope.com)",
+      "tier": "free"
+    },
+    {
+      "body": "saturn",
+      "layer": "surface",
+      "license": "CC BY 4.0",
+      "credit": "Solar System Scope (solarsystemscope.com)",
+      "tier": "free"
+    },
+    {
+      "body": "saturn",
+      "layer": "ring",
+      "license": "CC BY 4.0",
+      "credit": "Solar System Scope (solarsystemscope.com)",
+      "tier": "free"
+    },
+    {
+      "body": "uranus",
+      "layer": "surface",
+      "license": "CC BY 4.0",
+      "credit": "Solar System Scope (solarsystemscope.com)",
+      "tier": "free"
+    },
+    {
+      "body": "neptune",
+      "layer": "surface",
+      "license": "CC BY 4.0",
+      "credit": "Solar System Scope (solarsystemscope.com)",
+      "tier": "free"
+    },
+    {
+      "body": "sun",
+      "layer": "surface",
+      "license": "CC BY 4.0",
+      "credit": "Solar System Scope (solarsystemscope.com)",
+      "tier": "free"
+    },
+    {
+      "body": "stars",
+      "layer": "surface",
+      "license": "CC BY 4.0",
+      "credit": "Solar System Scope (solarsystemscope.com)",
+      "tier": "free"
+    },
+    {
+      "body": "moon",
+      "layer": "surface",
+      "license": "CC BY 4.0",
+      "credit": "Solar System Scope (solarsystemscope.com)",
+      "tier": "free"
+    },
+    {
+      "body": "earth",
+      "layer": "surface",
+      "license": "public-domain",
+      "credit": "NASA Earth Observatory / Blue Marble Next Generation (August 2004, 21600×10800)",
+      "tier": "free",
+      "sourceUrl": "https://eoimages.gsfc.nasa.gov/images/imagerecords/73000/73776/world.topo.bathy.200408.3x21600x10800.jpg",
+      "postProcess": "Aucune amplification bleue : référence NASA restaurée avec océans et glace polaire conservés."
+    },
+    {
+      "body": "earth",
+      "layer": "clouds",
+      "license": "public-domain",
+      "credit": "NASA Visible Earth / Blue Marble",
+      "tier": "free"
+    },
+    {
+      "body": "earth",
+      "layer": "lights",
+      "license": "public-domain",
+      "credit": "NASA Earth Observatory / Black Marble",
+      "tier": "free"
+    },
+    {
+      "body": "earth",
+      "layer": "normalMap",
+      "license": "public-domain",
+      "credit": "NASA Visible Earth (topography)",
+      "tier": "free"
+    },
+    {
+      "body": "earth",
+      "layer": "spec",
+      "license": "public-domain",
+      "credit": "NASA Visible Earth (land/ocean mask)",
+      "tier": "free"
+    },
+    {
+      "body": "ceres",
+      "layer": "surface",
+      "license": "CC BY 4.0",
+      "credit": "Solar System Scope — illustratif (CC BY 4.0)",
+      "tier": "free",
+      "illustrative": true
+    },
+    {
+      "body": "eris",
+      "layer": "surface",
+      "license": "CC BY 4.0",
+      "credit": "Solar System Scope — illustratif (CC BY 4.0)",
+      "tier": "free",
+      "illustrative": true
+    },
+    {
+      "body": "haumea",
+      "layer": "surface",
+      "license": "CC BY 4.0",
+      "credit": "Solar System Scope — illustratif (CC BY 4.0)",
+      "tier": "free",
+      "illustrative": true
+    },
+    {
+      "body": "makemake",
+      "layer": "surface",
+      "license": "CC BY 4.0",
+      "credit": "Solar System Scope — illustratif (CC BY 4.0)",
+      "tier": "free",
+      "illustrative": true
+    },
+    {
+      "body": "titan",
+      "layer": "surface",
+      "license": "public-domain",
+      "credit": "USGS Astrogeology / NASA-JPL-Caltech / SSI (Cassini ISS 4005m)",
+      "tier": "free",
+      "filled": true
+    },
+    {
+      "body": "deimos",
+      "layer": "surface",
+      "license": "public-domain",
+      "credit": "NASA 3D Resources (Viking-derived)",
+      "tier": "free"
+    },
+    {
+      "body": "halley",
+      "layer": "surface",
+      "license": "public-domain",
+      "credit": "Philip Stooke / NASA PDS (Giotto/Vega) — crédit requis",
+      "tier": "free",
+      "illustrative": true
+    },
+    {
+      "body": "pallas",
+      "layer": "surface",
+      "license": "unconfirmed",
+      "credit": "carte illustrative — aucune mosaïque fidèle n'existe (VLT/SPHERE = forme grise sans texture)",
+      "tier": "free",
+      "illustrative": true
+    },
+    {
+      "body": "hygiea",
+      "layer": "surface",
+      "license": "unconfirmed",
+      "credit": "carte illustrative — aucune mosaïque fidèle n'existe (VLT/SPHERE = forme grise sans texture)",
+      "tier": "free",
+      "illustrative": true
+    }
   ],
   "sources": [
     {
@@ -253,12 +499,26 @@
     {
       "body": "earth",
       "layer": "normalMap",
-      "status": "reference",
-      "sourcePage": "https://visibleearth.nasa.gov/images/74343/may-blue-marble-next-generation-w-topography/74345l",
-      "sourceResolution": "500 m/pixel topography product",
+      "status": "derived",
+      "sourcePage": "https://www.ncei.noaa.gov/products/etopo-global-relief-model",
+      "downloadUrl": "https://www.ngdc.noaa.gov/mgg/global/relief/ETOPO2022/data/60s/60s_surface_elev_gtif/ETOPO_2022_v1_60s_N90W180_surface.tif",
+      "sourceResolution": "60 arc-second global ETOPO 2022 surface elevation GeoTIFF",
       "projection": "equirectangular",
       "qualityClass": "derived-candidate",
-      "note": "Use a real elevation/normal source, never derive mountain height from color alone."
+      "processing": "generate-earth-normal.mjs: physical DEM gradients in meters with latitude-aware spacing; display NORMAL_STRENGTH=24",
+      "note": "Derived tangent-space normal from NOAA ETOPO 2022 surface elevation; display-scaled normal, not raw altitude."
+    },
+    {
+      "body": "earth",
+      "layer": "displacement",
+      "status": "derived",
+      "sourcePage": "https://www.ncei.noaa.gov/products/etopo-global-relief-model",
+      "downloadUrl": "https://www.ngdc.noaa.gov/mgg/global/relief/ETOPO2022/data/60s/60s_surface_elev_gtif/ETOPO_2022_v1_60s_N90W180_surface.tif",
+      "sourceResolution": "60 arc-second global ETOPO 2022 surface elevation GeoTIFF",
+      "projection": "equirectangular",
+      "qualityClass": "derived-candidate",
+      "processing": "generate-earth-height.mjs: clamp negative elevations and ocean-mask pixels to sea level; normalize to 8,849 m",
+      "note": "Displacement uses continental elevation only; ocean bathymetry is excluded because the seafloor is not visible surface relief."
     },
     {
       "body": "earth",
