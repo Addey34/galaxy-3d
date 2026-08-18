@@ -147,10 +147,14 @@ export const CELESTIAL_CONFIG: CelestialConfig = {
       textureResolutions: {
         surface: ['8k', '4k', '2k', '1k'],
         normalMap: ['8k', '4k', '2k', '1k'],
+        displacement: ['2k', '1k'],
         clouds: ['8k', '4k', '2k', '1k'],
         spec: ['8k', '4k', '2k', '1k'],
         lights: ['8k', '4k', '2k', '1k'],
       },
+      // L'atmosphère terrestre est un phénomène de diffusion rendu par shader ; elle
+      // ne nécessite pas une texture bitmap supplémentaire.
+      atmosphereColor: 0x4a90e0,
       realData: {
         radiusKm: 6_371,
         distanceAU: 1.0,

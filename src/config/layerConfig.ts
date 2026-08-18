@@ -4,6 +4,11 @@
  * atmosphère, lumières), finesse des sphères/anneaux et matériaux standard réutilisés.
  */
 import * as THREE from 'three';
+import {
+  BOOT_QUALITY_PROFILE,
+  EARTH_OCEAN_ROUGHNESS_SETTINGS,
+  REALTIME_CLOUDS_SETTINGS,
+} from './engine';
 
 const SHADOW_AWARE_UNIFORM_KEY = '__lightAttenuationUniform';
 
@@ -31,6 +36,7 @@ function chainOnBeforeCompile(
 export const LAYER_RADIUS_SCALE: Record<string, number> = {
   surface: 1.0,
   clouds: 1.01,
+  thermal: 1.013,
   // Couche pluie IMERG : juste au-dessus des nuages, sous l'atmosphère.
   precip: 1.011,
   // Particules de vent : légèrement au-dessus de la pluie.
@@ -46,7 +52,7 @@ export const GEOMETRY_SEGMENTS = 64;
 // Segments haute densité pour le displacement (relief géométrique) : une carte de
 // hauteur n'est visible qu'avec assez de vertices. Réservé au corps proche/
 // sélectionné (cf. CelestialObject) — trop coûteux pour tous les corps en continu.
-export const GEOMETRY_SEGMENTS_HI = 256;
+export const GEOMETRY_SEGMENTS_HI = BOOT_QUALITY_PROFILE.hiResSegments;
 export const RING_SEGMENTS = 128;
 
 export function createSphereGeometry(
@@ -61,18 +67,12 @@ export function createSphereGeometry(
 export function createSurfaceMaterial(
   isSun: boolean,
   fallbackColor?: number,
-  // Clair de Lune : activé pour les corps « habités » (couche lights → Terre).
-  // Inerte tant que la position lunaire n'alimente pas l'uniform chaque frame.
-  moonlight = false
+  // Moonlight is enabled for bodies with a night-lights layer (Earth).
+  moonlight = false,
+  // Earth ocean specular is bounded to prevent an overexposed white glint.
+  limitSpecular = false
 ): THREE.MeshBasicMaterial | THREE.MeshStandardMaterial {
   if (isSun) {
-    // toneMapped=false : la couleur n'est pas compressée par l'ACESFilmicToneMapping
-    // du renderer, donc le Soleil reste au-dessus du seuil de bloom (0.85) et
-    // « brûle » franchement. On pousse la couleur en HDR (composantes > 1 via
-    // multiplyScalar) : MeshBasicMaterial.color clampe à 1.0 en écriture littérale
-    // (0xfff2cc plafonne le disque à ~0.95 → il effleure à peine le seuil), donc on
-    // sur-expose explicitement pour que même les bandes sombres de la texture
-    // franchissent 0.85 et nourrissent franchement le bloom.
     const sunMat = new THREE.MeshBasicMaterial({
       color: 0xfff2cc,
       toneMapped: false,
@@ -86,58 +86,98 @@ export function createSurfaceMaterial(
       roughness: 0.7,
       metalness: 0.0,
     },
-    // Inversion de la spec map (convention « blanc = océan lisse ») active dès
-    // qu'une roughnessMap est présente ; sans map, la branche shader est inerte.
-    // cloudShadow : la branche ne s'active que si une cloud map est fournie au
-    // matériau (uCloudShadowMap non nul) — voir CelestialObject.
-    // La singularité polaire équirectangulaire (« super Groenland ») est désormais
-    // corrigée À LA SOURCE dans la texture (scripts/fix-earth-poles.mjs adoucit les
-    // rangées polaires de earth_surface_*.jpg) → plus besoin de calotte shader.
-    { invertRoughnessMap: true, cloudShadow: true, moonlight }
+    {
+      invertRoughnessMap: true,
+      cloudShadow: true,
+      moonlight,
+      limitSpecular,
+      varyOceanRoughness: limitSpecular,
+    }
   );
 }
 
+const EARTH_OCEAN_ROUGHNESS_GLSL = `
+        uniform float uEarthOceanRoughnessBase;
+        uniform float uEarthOceanRoughnessVariation;
+        uniform float uEarthOceanRoughnessMin;
+        uniform float uEarthOceanRoughnessMax;
+        float earthOceanRoughness( vec2 uv ) {
+          const float tau = 6.28318530718;
+          float waveA = sin( tau * ( uv.x * ${EARTH_OCEAN_ROUGHNESS_SETTINGS.longitudeFrequencyA.toFixed(1)} + uv.y * ${EARTH_OCEAN_ROUGHNESS_SETTINGS.latitudeFrequencyA.toFixed(1)} ) );
+          float waveB = sin( tau * ( uv.x * ${EARTH_OCEAN_ROUGHNESS_SETTINGS.longitudeFrequencyB.toFixed(1)} - uv.y * ${EARTH_OCEAN_ROUGHNESS_SETTINGS.latitudeFrequencyB.toFixed(1)} ) );
+          float waveC = sin( tau * ( uv.x * ${EARTH_OCEAN_ROUGHNESS_SETTINGS.longitudeFrequencyC.toFixed(1)} + uv.y * ${EARTH_OCEAN_ROUGHNESS_SETTINGS.latitudeFrequencyC.toFixed(1)} ) );
+          float pattern = clamp( 0.5 + 0.275 * waveA + 0.15 * waveB + 0.075 * waveC, 0.0, 1.0 );
+          return clamp(
+            uEarthOceanRoughnessBase
+              + ( pattern - 0.5 ) * uEarthOceanRoughnessVariation,
+            uEarthOceanRoughnessMin,
+            uEarthOceanRoughnessMax
+          );
+        }`;
 const REAL_CLOUDS_UNIFORM_KEY = '__realCloudsUniforms';
 
 export interface RealCloudsUniforms {
-  /** 0 = couche nuages statique classique ; 1 = extraction depuis l'imagerie GIBS. */
   enabled: { value: number };
-  /** Bornes de luminance (min RGB) du smoothstep d'extraction. */
   lumLow: { value: number };
   lumHigh: { value: number };
-  /** Saturation maximale tolérée : au-dessus = sol coloré, rejeté. */
   satMax: { value: number };
-  /**
-   * Seuil de luminance bas SUR LA TERRE FERME (plus strict que sur l'océan) : le sable
-   * clair d'un désert (Sahara) a une luminance proche d'un nuage → sur terre on n'accepte
-   * que les nuages francs. Sur l'océan (fond sombre) le seuil `lumLow` capte même les
-   * nuages fins.
-   */
   lumLowLand: { value: number };
-  /** Carte océan (canal g de la spec map surface : 1 = eau). Partagée depuis la surface. */
   oceanMask: { value: THREE.Texture | null };
-  /** 1 quand une carte océan est fournie, sinon 0 (extraction « terre stricte » partout). */
   hasOceanMask: { value: number };
+  edgeSoftness: { value: number };
+  satOceanBoost: { value: number };
+  opticalAvailabilityLow: { value: number };
+  opticalAvailabilityHigh: { value: number };
+  opticalBlendRadiusTexels: { value: number };
+  coverageBlendRadiusTexels: { value: number };
+  dayMap: { value: THREE.Texture | null };
+  hasDayMap: { value: number };
+  dayStrength: { value: number };
+  dayTexelSize: { value: THREE.Vector2 };
+  modelMap: { value: THREE.Texture | null };
+  hasModelMap: { value: number };
+  modelStrength: { value: number };
+  nightMap: { value: THREE.Texture | null };
+  hasNightMap: { value: number };
+  nightStrength: { value: number };
+  nightTexelSize: { value: THREE.Vector2 };
+  staticMap: { value: THREE.Texture | null };
+  hasStaticMap: { value: number };
+  staticStrength: { value: number };
 }
 
-/** Récupère les uniforms d'extraction nuages réels d'un matériau, s'il en a. */
 export function getRealCloudsUniforms(
   material: THREE.Material
 ): RealCloudsUniforms | undefined {
   return material.userData[REAL_CLOUDS_UNIFORM_KEY] as
-    | RealCloudsUniforms
-    | undefined;
+    RealCloudsUniforms | undefined;
 }
 
-// Extraction des nuages depuis une image satellite True Color (GIBS). L'image contient
-// nuages (blanc lumineux désaturé), océans/trous (noir) ET continents (sol coloré). Le
-// sable clair d'un désert a une luminance proche d'un nuage → une extraction par simple
-// seuil produit de faux nuages sur le Sahara. On lève l'ambiguïté avec la CARTE OCÉAN
-// (canal g de la spec map surface, déjà utilisée par le glint) : sur l'eau (fond sombre)
-// on capte les nuages avec un seuil bas ; sur la terre on n'accepte que les nuages francs
-// (seuil `lumLowLand` plus haut). Alpha = luminance (min RGB) × désaturation. On écrase
-// la couleur vers le blanc pour ne pas teinter le nuage avec le sol résiduel.
-// Injecté après <map_fragment> (diffuseColor = texel). Inerte si uRealClouds == 0.
+const CLOUD_FRACTION_DECODE_GLSL = `
+        float decodeCloudFraction( vec3 c ) {
+          vec3 p = floor( c * 255.0 + 0.5 );
+          float r = p.r;
+          float g = p.g;
+          float b = p.b;
+          if ( abs(r-102.0)<1.5 && abs(b-119.0)<1.5 ) return g / 100.0;
+          if ( abs(r-183.0)<1.5 && abs(b-141.0)<1.5 ) return (6.0 + (g-15.0)) / 100.0;
+          if ( abs(r-0.0)<1.5 && abs(b-100.0)<1.5 ) return (12.0 + g) / 100.0;
+          if ( abs(r-0.0)<1.5 && abs(b-170.0)<1.5 ) return (19.0 + g) / 100.0;
+          if ( abs(r-0.0)<1.5 && abs(b-255.0)<1.5 ) return (25.0 + g) / 100.0;
+          if ( abs(g-136.0)<1.5 && abs(b-238.0)<1.5 ) return (31.0 + r) / 100.0;
+          if ( abs(g-80.0)<1.5 && abs(b-0.0)<1.5 ) return (38.0 + r) / 100.0;
+          if ( abs(g-136.0)<1.5 && abs(b-0.0)<1.5 ) return (44.0 + r) / 100.0;
+          if ( abs(g-220.0)<1.5 && abs(b-0.0)<1.5 ) return (50.0 + r) / 100.0;
+          if ( abs(r-255.0)<1.5 && abs(g-255.0)<1.5 ) return (57.0 + b) / 100.0;
+          if ( abs(r-240.0)<1.5 && abs(g-190.0)<1.5 ) return (63.0 + (b-64.0)) / 100.0;
+          if ( abs(r-187.0)<1.5 && abs(g-136.0)<1.5 ) return (69.0 + b) / 100.0;
+          if ( abs(r-122.0)<1.5 && abs(g-90.0)<1.5 ) return (76.0 + (b-3.0)) / 100.0;
+          if ( abs(r-110.0)<1.5 && abs(g-0.0)<1.5 ) return (82.0 + b) / 100.0;
+          if ( abs(r-170.0)<1.5 && abs(g-0.0)<1.5 ) return (88.0 + b) / 100.0;
+          if ( abs(r-255.0)<1.5 && abs(g-0.0)<1.5 ) return (95.0 + b) / 100.0;
+          return 0.0;
+        }`;
+
 const REAL_CLOUDS_GLSL = `
         #ifdef USE_MAP
         if ( uRealClouds > 0.5 ) {
@@ -145,25 +185,150 @@ const REAL_CLOUDS_GLSL = `
           float rcMax = max( rc.r, max( rc.g, rc.b ) );
           float rcMin = min( rc.r, min( rc.g, rc.b ) );
           float rcSat = rcMax > 0.0001 ? ( rcMax - rcMin ) / rcMax : 0.0;
-          // Océan = 1 (eau) → seuil bas ; terre = 0 → seuil haut (lumLowLand).
           float rcOcean = uHasOceanMask > 0.5
             ? texture2D( uCloudOceanMask, vMapUv ).g
             : 0.0;
           float rcLumLow = mix( uCloudLumLowLand, uCloudLumLow, rcOcean );
           float rcBright = smoothstep( rcLumLow, uCloudLumHigh, rcMin );
-          float rcDesat = 1.0 - smoothstep( uCloudSatMax, uCloudSatMax + 0.15, rcSat );
+          float rcSatMax = uCloudSatMax + rcOcean * uCloudSatOceanBoost;
+          float rcDesat = 1.0 - smoothstep( rcSatMax, rcSatMax + uCloudEdgeSoft, rcSat );
           float rcAlpha = rcBright * rcDesat;
-          // Atténuation POLAIRE : en projection équirectangulaire, les rangées extrêmes
-          // (v→0 pôle Sud, v→1 pôle Nord) convergent au pôle → toute rangée claire s'étire
-          // en une calotte (le « super Groenland » : la rangée Arctique de l'imagerie est
-          // ~99 % blanche). Au-delà de ~78° de latitude la donnée est déformée/peu fiable :
-          // on fond l'alpha vers 0 pour supprimer la calotte parasite.
-          float rcLat = abs( vMapUv.y - 0.5 ) * 2.0; // 0 = équateur, 1 = pôle
-          float rcPole = 1.0 - smoothstep( 0.86, 0.97, rcLat );
-          rcAlpha *= rcPole;
+          // Lissage de la frontière True Color/no-data : la décision de bascule vers MODIS
+          // est spatiale, tandis que rcMax reste local pour extraire les nuages optiques.
+          vec2 opticalStep = uCloudDayTexelSize * uCloudOpticalBlendRadiusTexels;
+          // Bornage vertical des voisins : sans lui, le voisin +opticalStep.y DÉPASSE v=1 au
+          // pôle Sud et, avec wrapT=ClampToEdge, retombe sur la BANDE no-data du bord d'image.
+          // opticalNeighbourMax s'effondre alors le long d'un CERCLE de latitude fixe → bascule
+          // nette vers le masque MODIS = « déchirure circulaire » au pôle. On clampe donc la
+          // coordonnée v des voisins verticaux à [0,1] : au pôle, le voisin = le pixel courant,
+          // pas le bord no-data. Aucun effet ailleurs (loin des bords, le clamp est inactif).
+          float opticalUp = clamp( vMapUv.y - opticalStep.y, 0.0, 1.0 );
+          float opticalDown = clamp( vMapUv.y + opticalStep.y, 0.0, 1.0 );
+          vec3 optN = texture2D( map, vMapUv ).rgb;
+          vec3 optL = texture2D( map, vec2( vMapUv.x - opticalStep.x, vMapUv.y ) ).rgb;
+          vec3 optR = texture2D( map, vec2( vMapUv.x + opticalStep.x, vMapUv.y ) ).rgb;
+          vec3 optU = texture2D( map, vec2( vMapUv.x, opticalUp ) ).rgb;
+          vec3 optD = texture2D( map, vec2( vMapUv.x, opticalDown ) ).rgb;
+          float opticalNeighbourMax = (
+              max( optN.r, max( optN.g, optN.b ) )
+              + max( optL.r, max( optL.g, optL.b ) )
+              + max( optR.r, max( optR.g, optR.b ) )
+              + max( optU.r, max( optU.g, optU.b ) )
+              + max( optD.r, max( optD.g, optD.b ) )
+            ) / 5.0;
+          float opticalAvailability = smoothstep(
+            uCloudOpticalAvailabilityLow,
+            uCloudOpticalAvailabilityHigh,
+            opticalNeighbourMax
+          );
+          // Voisins verticaux clampés en v (même raison qu'opticalNeighbourMax : pas de
+          // rabattement sur la bande de bord au pôle → pas d'anneau).
+          // FRACTION locale (précise) : 3 samples verticaux serrés, pondérés par leur alpha.
+          float dY = uCloudDayTexelSize.y;
+          vec4 dayTexel1 = texture2D( uCloudDayMap, vec2( vMapUv.x, clamp( vMapUv.y - dY, 0.0, 1.0 ) ) );
+          vec4 dayTexel2 = texture2D( uCloudDayMap, vMapUv );
+          vec4 dayTexel3 = texture2D( uCloudDayMap, vec2( vMapUv.x, clamp( vMapUv.y + dY, 0.0, 1.0 ) ) );
+          float dayFracWeight = dayTexel1.a + dayTexel2.a + dayTexel3.a;
+          float dayFraction = (
+              decodeCloudFraction( dayTexel1.rgb ) * dayTexel1.a
+              + decodeCloudFraction( dayTexel2.rgb ) * dayTexel2.a
+              + decodeCloudFraction( dayTexel3.rgb ) * dayTexel3.a
+            ) / max( dayFracWeight, 0.001 );
+          // COUVERTURE (frontière douce) : l'alpha MODIS est binaire (1 sur la fauchée, 0 hors) →
+          // une frontière NETTE = déchirure. On l'étale sur une LARGE bande verticale (rayon
+          // uCloudOpticalBlendRadiusTexels) : la moyenne des alphas sur ~16 texels donne une rampe
+          // 0→1 progressive au lieu d'une marche, donc une jonction fondue avec la True Color.
+          float dCov = dY * uCloudCoverageBlendRadiusTexels;
+          float dayCoverRaw = (
+              texture2D( uCloudDayMap, vec2( vMapUv.x, clamp( vMapUv.y - dCov * 2.0, 0.0, 1.0 ) ) ).a
+              + texture2D( uCloudDayMap, vec2( vMapUv.x, clamp( vMapUv.y - dCov, 0.0, 1.0 ) ) ).a
+              + dayTexel2.a
+              + texture2D( uCloudDayMap, vec2( vMapUv.x, clamp( vMapUv.y + dCov, 0.0, 1.0 ) ) ).a
+              + texture2D( uCloudDayMap, vec2( vMapUv.x, clamp( vMapUv.y + dCov * 2.0, 0.0, 1.0 ) ) ).a
+            ) / 5.0;
+          float dayCoverage = dayCoverRaw * uHasCloudDayMap;
+          float dayAlpha = pow( clamp( dayFraction, 0.0, 1.0 ), 0.72 )
+            * dayCoverage * uCloudDayStrength;
+          // Fraction nuit : 3 samples verticaux serrés, pondérés par leur alpha.
+          float nY = uCloudNightTexelSize.y;
+          vec4 nightTexel1 = texture2D( uCloudNightMap, vec2( vMapUv.x, clamp( vMapUv.y - nY, 0.0, 1.0 ) ) );
+          vec4 nightTexel2 = texture2D( uCloudNightMap, vMapUv );
+          vec4 nightTexel3 = texture2D( uCloudNightMap, vec2( vMapUv.x, clamp( vMapUv.y + nY, 0.0, 1.0 ) ) );
+          float nightFracWeight = nightTexel1.a + nightTexel2.a + nightTexel3.a;
+          float nightFraction = (
+              decodeCloudFraction( nightTexel1.rgb ) * nightTexel1.a
+              + decodeCloudFraction( nightTexel2.rgb ) * nightTexel2.a
+              + decodeCloudFraction( nightTexel3.rgb ) * nightTexel3.a
+            ) / max( nightFracWeight, 0.001 );
+          // Couverture nuit : même frontière douce large que le jour (alpha binaire → rampe).
+          float nCov = nY * uCloudCoverageBlendRadiusTexels;
+          float nightCoverRaw = (
+              texture2D( uCloudNightMap, vec2( vMapUv.x, clamp( vMapUv.y - nCov * 2.0, 0.0, 1.0 ) ) ).a
+              + texture2D( uCloudNightMap, vec2( vMapUv.x, clamp( vMapUv.y - nCov, 0.0, 1.0 ) ) ).a
+              + nightTexel2.a
+              + texture2D( uCloudNightMap, vec2( vMapUv.x, clamp( vMapUv.y + nCov, 0.0, 1.0 ) ) ).a
+              + texture2D( uCloudNightMap, vec2( vMapUv.x, clamp( vMapUv.y + nCov * 2.0, 0.0, 1.0 ) ) ).a
+            ) / 5.0;
+          float nightCoverage = nightCoverRaw * uHasCloudNightMap;
+          float nightAlpha = pow( clamp( nightFraction, 0.0, 1.0 ), 0.72 )
+            * nightCoverage * uCloudNightStrength * uHasCloudNightMap;
+          // Les produits NASA changent de source là où True Color n'a plus d'observation
+          // (nuit polaire / couverture orbitale). On prépare un alpha de secours puis on
+          // effectue UN FONDU selon la disponibilité optique ; max seul produisait une
+          // couture nette au bord de la bande sans donnée.
+          float nightFallbackAlpha = nightAlpha;
+          // La carte jour ne complète que les pixels sans carte nuit : on évite une couture
+          // créée par la superposition de deux produits MODIS différents.
+          float dayGapAlpha = dayAlpha * ( 1.0 - nightCoverage );
+          float supplementalAlpha = max( nightFallbackAlpha, dayGapAlpha );
+          float staticCoverage = texture2D( uCloudStaticMap, vMapUv ).g;
+          float staticAlpha = smoothstep( 0.08, 0.28, staticCoverage )
+            * uHasCloudStaticMap;
+          float staticPolarAlpha = ( 1.0 - nightCoverage ) * ( 1.0 - dayCoverage )
+            * staticAlpha * uCloudStaticStrength;
+          supplementalAlpha = max( supplementalAlpha, staticPolarAlpha );
+          // PORTE DE COUVERTURE : les masques MODIS ont des TROUS de fauchée orbitale (bandes
+          // entre passages satellite). Là où la couverture locale est partielle (bord de bande,
+          // trou), on n'affiche RIEN plutôt que d'étaler des blocs géométriques disgracieux :
+          // une donnée absente reste absente (invariant produit). Seules les zones BIEN couvertes
+          // (couverture ≥ seuil) contribuent ; la rampe smoothstep garde une lisière douce.
+          float coverGate = smoothstep( 0.35, 0.75, max( dayCoverage, nightCoverage ) );
+          supplementalAlpha *= coverGate;
+          // JONCTION True Color ↔ masques MODIS : c'est ici que se crée la « déchirure »
+          // circulaire (couture nette entre les nuages du Sud, issus des masques MODIS, et le
+          // reste de la Terre en True Color). L'ancien smoothstep(0,1, opticalAvailability)
+          // RAIDISSAIT la transition (opticalAvailability est déjà un smoothstep serré) → bascule
+          // sur une bande très mince = ligne visible. On veut au contraire une jonction LARGE :
+          // au lieu d'un choix binaire entre les deux sources, on prend le MAX de leurs alphas
+          // dans la zone de recouvrement, pondéré par une rampe douce. Résultat : là où les deux
+          // sources coexistent, les nuages se fondent en continuité au lieu de se couper net.
+          // Fondu de SUBSTITUTION (pas d'addition) : le masque MODIS ne comble QUE là où la
+          // True Color manque. Là où l'optique est pleinement disponible (opticalBlend→1), la
+          // contribution du masque s'efface TOTALEMENT — sinon les nuages MODIS s'ajoutent aux
+          // nuages True Color = « deux fois plus de nuages » (visible selon l'ordre de chargement
+          // des deux couches). interp élargit la bande de recouvrement pour une jonction douce
+          // (transition graduelle, pas une ligne), tout en garantissant 0 masque en plein jour.
+          // La True Color reste TOUJOURS pleinement visible là où elle existe (rcAlpha intact) :
+          // on ne la mélange plus (mix pouvait l'atténuer si opticalBlend était bas → nuages
+          // disparus). Le masque MODIS ne fait qu'AJOUTER de la couverture là où la True Color
+          // est absente/faible, atténué par la disponibilité optique pour éviter le doublon en
+          // plein jour. max = jamais moins de nuages que la True Color, jonction douce au Sud.
+          float supplementalFill = supplementalAlpha * ( 1.0 - opticalAvailability );
+          rcAlpha = max( rcAlpha, supplementalFill );
+          float satelliteCoverage = max( dayCoverage, max( nightCoverage, opticalAvailability ) );
+          float modelAlpha = texture2D( uCloudModelMap, vMapUv ).g
+            * uHasCloudModelMap * uCloudModelStrength;
+          rcAlpha = max( rcAlpha, modelAlpha * ( 1.0 - satelliteCoverage ) );
+          // Anti-aliasing du bord d'extraction : les seuils (luminance/saturation) produisent
+          // un alpha quasi binaire → lisières de nuages en escalier (« griffures ») visibles au
+          // gros plan. On enveloppe l'alpha final d'un fondu large d'UN pixel-écran via fwidth
+          // (dérivée d'écran de rcAlpha). Effet uniquement sur les bords francs ; les zones
+          // pleines (alpha ~0 ou ~1) ont une dérivée nulle → inchangées. N'altère AUCUNE
+          // donnée : la position des nuages reste celle vue par le satellite, seuls les bords
+          // deviennent vaporeux au lieu de crénelés. Indépendant de la calibration océan/pôles.
+          float rcAA = fwidth( rcAlpha );
+          rcAlpha = smoothstep( 0.5 - rcAA, 0.5 + rcAA, rcAlpha );
           diffuseColor.a *= rcAlpha;
-          // Nuage réaliste vu de l'espace : blanc très légèrement chaud (pas un blanc
-          // clinique). L'éclairage jour/nuit du matériau fait le reste (face nuit sombre).
           diffuseColor.rgb = vec3( 1.0, 0.995, 0.985 );
         }
         #endif`;
@@ -171,22 +336,52 @@ const REAL_CLOUDS_GLSL = `
 export function createCloudsMaterial(): THREE.MeshStandardMaterial {
   const material = createShadowAwareStandardMaterial({
     transparent: true,
-    opacity: 0.72,
+    opacity: REALTIME_CLOUDS_SETTINGS.opacity,
     depthWrite: false,
     side: THREE.DoubleSide,
   });
-
   const realClouds: RealCloudsUniforms = {
     enabled: { value: 0 },
-    lumLow: { value: 0.32 },
-    lumHigh: { value: 0.62 },
-    satMax: { value: 0.3 },
-    lumLowLand: { value: 0.55 },
+    lumLow: { value: REALTIME_CLOUDS_SETTINGS.cloudLuminanceLow },
+    lumHigh: { value: REALTIME_CLOUDS_SETTINGS.cloudLuminanceHigh },
+    satMax: { value: REALTIME_CLOUDS_SETTINGS.cloudSaturationMax },
+    lumLowLand: { value: REALTIME_CLOUDS_SETTINGS.cloudLuminanceLowLand },
     oceanMask: { value: null },
     hasOceanMask: { value: 0 },
+    edgeSoftness: { value: REALTIME_CLOUDS_SETTINGS.edgeSoftness },
+    satOceanBoost: { value: REALTIME_CLOUDS_SETTINGS.cloudSatOceanBoost },
+    opticalAvailabilityLow: {
+      value: REALTIME_CLOUDS_SETTINGS.cloudOpticalAvailabilityLow,
+    },
+    opticalAvailabilityHigh: {
+      value: REALTIME_CLOUDS_SETTINGS.cloudOpticalAvailabilityHigh,
+    },
+    opticalBlendRadiusTexels: {
+      value: REALTIME_CLOUDS_SETTINGS.cloudOpticalBlendRadiusTexels,
+    },
+    coverageBlendRadiusTexels: {
+      value: REALTIME_CLOUDS_SETTINGS.cloudCoverageBlendRadiusTexels,
+    },
+    dayMap: { value: null },
+    hasDayMap: { value: 0 },
+    dayStrength: { value: REALTIME_CLOUDS_SETTINGS.cloudDayStrength },
+    dayTexelSize: { value: new THREE.Vector2(0, 0) },
+    modelMap: { value: null },
+    hasModelMap: { value: 0 },
+    modelStrength: { value: 0.72 },
+    nightMap: { value: null },
+    hasNightMap: { value: 0 },
+    nightStrength: {
+      value: REALTIME_CLOUDS_SETTINGS.cloudNightFallbackStrength,
+    },
+    nightTexelSize: { value: new THREE.Vector2(0, 0) },
+    staticMap: { value: null },
+    hasStaticMap: { value: 0 },
+    staticStrength: {
+      value: REALTIME_CLOUDS_SETTINGS.cloudStaticPolarFallbackStrength,
+    },
   };
   material.userData[REAL_CLOUDS_UNIFORM_KEY] = realClouds;
-
   chainOnBeforeCompile(material, (shader) => {
     shader.uniforms['uRealClouds'] = realClouds.enabled;
     shader.uniforms['uCloudLumLow'] = realClouds.lumLow;
@@ -195,21 +390,85 @@ export function createCloudsMaterial(): THREE.MeshStandardMaterial {
     shader.uniforms['uCloudLumLowLand'] = realClouds.lumLowLand;
     shader.uniforms['uCloudOceanMask'] = realClouds.oceanMask;
     shader.uniforms['uHasOceanMask'] = realClouds.hasOceanMask;
+    shader.uniforms['uCloudEdgeSoft'] = realClouds.edgeSoftness;
+    shader.uniforms['uCloudSatOceanBoost'] = realClouds.satOceanBoost;
+    shader.uniforms['uCloudOpticalAvailabilityLow'] =
+      realClouds.opticalAvailabilityLow;
+    shader.uniforms['uCloudOpticalAvailabilityHigh'] =
+      realClouds.opticalAvailabilityHigh;
+    shader.uniforms['uCloudOpticalBlendRadiusTexels'] =
+      realClouds.opticalBlendRadiusTexels;
+    shader.uniforms['uCloudCoverageBlendRadiusTexels'] =
+      realClouds.coverageBlendRadiusTexels;
+    shader.uniforms['uCloudDayMap'] = realClouds.dayMap;
+    shader.uniforms['uHasCloudDayMap'] = realClouds.hasDayMap;
+    shader.uniforms['uCloudDayStrength'] = realClouds.dayStrength;
+    shader.uniforms['uCloudDayTexelSize'] = realClouds.dayTexelSize;
+    shader.uniforms['uCloudModelMap'] = realClouds.modelMap;
+    shader.uniforms['uHasCloudModelMap'] = realClouds.hasModelMap;
+    shader.uniforms['uCloudModelStrength'] = realClouds.modelStrength;
+    shader.uniforms['uCloudNightMap'] = realClouds.nightMap;
+    shader.uniforms['uHasCloudNightMap'] = realClouds.hasNightMap;
+    shader.uniforms['uCloudNightStrength'] = realClouds.nightStrength;
+    shader.uniforms['uCloudNightTexelSize'] = realClouds.nightTexelSize;
+    shader.uniforms['uCloudStaticMap'] = realClouds.staticMap;
+    shader.uniforms['uHasCloudStaticMap'] = realClouds.hasStaticMap;
+    shader.uniforms['uCloudStaticStrength'] = realClouds.staticStrength;
     shader.fragmentShader = shader.fragmentShader
       .replace(
         '#include <common>',
-        '#include <common>\nuniform float uRealClouds;\nuniform float uCloudLumLow;\nuniform float uCloudLumHigh;\nuniform float uCloudSatMax;\nuniform float uCloudLumLowLand;\nuniform sampler2D uCloudOceanMask;\nuniform float uHasOceanMask;'
+        '#include <common>\nuniform float uRealClouds;\nuniform float uCloudLumLow;\nuniform float uCloudLumHigh;\nuniform float uCloudSatMax;\nuniform float uCloudLumLowLand;\nuniform sampler2D uCloudOceanMask;\nuniform float uHasOceanMask;\nuniform float uCloudEdgeSoft;\nuniform float uCloudSatOceanBoost;\nuniform float uCloudOpticalAvailabilityLow;\nuniform float uCloudOpticalAvailabilityHigh;\nuniform float uCloudOpticalBlendRadiusTexels;\nuniform float uCloudCoverageBlendRadiusTexels;\nuniform sampler2D uCloudDayMap;\nuniform float uHasCloudDayMap;\nuniform float uCloudDayStrength;\nuniform vec2 uCloudDayTexelSize;\nuniform sampler2D uCloudModelMap;\nuniform float uHasCloudModelMap;\nuniform float uCloudModelStrength;\nuniform sampler2D uCloudNightMap;\nuniform float uHasCloudNightMap;\nuniform float uCloudNightStrength;\nuniform vec2 uCloudNightTexelSize;\nuniform sampler2D uCloudStaticMap;\nuniform float uHasCloudStaticMap;\nuniform float uCloudStaticStrength;' +
+          CLOUD_FRACTION_DECODE_GLSL
       )
-      .replace('#include <map_fragment>', '#include <map_fragment>' + REAL_CLOUDS_GLSL);
+      .replace(
+        '#include <map_fragment>',
+        '#include <map_fragment>' + REAL_CLOUDS_GLSL
+      );
   });
-  // Clé de cache distincte : la variante nuages réels compile un shader différent.
   const previousCacheKey = material.customProgramCacheKey?.bind(material);
   material.customProgramCacheKey = () =>
-    `${previousCacheKey ? previousCacheKey() : ''}-realclouds`;
+    `${previousCacheKey ? previousCacheKey() : ''}-realclouds-covgate2`;
+  return material;
+}
+const THERMAL_UNIFORM_KEY = '__thermalUniforms';
 
+export interface ThermalUniforms {
+  enabled: { value: number };
+  opacity: { value: number };
+}
+
+export function getThermalUniforms(
+  material: THREE.Material
+): ThermalUniforms | undefined {
+  return material.userData[THERMAL_UNIFORM_KEY] as ThermalUniforms | undefined;
+}
+
+export function createThermalMaterial(): THREE.MeshBasicMaterial {
+  const material = new THREE.MeshBasicMaterial({
+    transparent: true,
+    depthWrite: false,
+    side: THREE.FrontSide,
+    opacity: 0.72,
+  });
+  material.userData[THERMAL_UNIFORM_KEY] = {
+    enabled: { value: 0 },
+    opacity: { value: 0.72 },
+  } satisfies ThermalUniforms;
   return material;
 }
 
+/** Matériau pour les textures météo déjà colorées et porteuses de leur propre alpha. */
+export function createColoredOverlayMaterial(
+  opacity = 0.85
+): THREE.MeshBasicMaterial {
+  return new THREE.MeshBasicMaterial({
+    transparent: true,
+    depthWrite: false,
+    side: THREE.FrontSide,
+    opacity,
+    toneMapped: false,
+  });
+}
 const PRECIP_UNIFORM_KEY = '__precipUniforms';
 
 export interface PrecipUniforms {
@@ -411,8 +670,7 @@ export function getRingShadowUniforms(
   material: THREE.Material
 ): RingShadowUniforms | undefined {
   return material.userData[RING_SHADOW_UNIFORM_KEY] as
-    | RingShadowUniforms
-    | undefined;
+    RingShadowUniforms | undefined;
 }
 
 // Douceur du terminateur jour/nuit (wrap lighting). Adoucit UNIQUEMENT la bande
@@ -444,67 +702,6 @@ export interface CloudShadowUniforms {
   strength: { value: number };
 }
 
-// Reflet solaire (« sun glint ») dédié sur l'océan. La réponse spéculaire d'un
-// diélectrique (metalness 0, réflectance ~4 %) éclairé par la PointLight faible
-// est quasi invisible sur du bleu foncé → on ajoute un lobe spéculaire explicite.
-// Rond par construction (pow(NdotH, exposant) est un lobe circulaire), masqué sur
-// l'océan via la spec map (canal g élevé = eau), côté jour uniquement, en teinte
-// solaire chaude. Réutilise les varyings/uniforms monde déjà posés par la branche
-// moonlight (vMoonWorldPos/Normal, uMoonSunDir = direction du Soleil) et
-// uGlintSunColor/Strength propres. Sans roughnessMap (USE_ROUGHNESSMAP absent), le
-// masque océan est indisponible → l'effet est gardé par #ifdef.
-const OCEAN_GLINT_GLSL = `
-        #ifdef USE_ROUGHNESSMAP
-        if ( uGlintStrength > 0.0 ) {
-          vec3 gN = normalize( vMoonWorldNormal );
-          vec3 gToSun = normalize( uMoonSunDir );
-          vec3 gToView = normalize( cameraPosition - vMoonWorldPos );
-          vec3 gHalf = normalize( gToSun + gToView );
-          float gDay = max( dot( gN, gToSun ), 0.0 );
-          float gNdotH = max( dot( gN, gHalf ), 0.0 );
-          // Masque océan STRICT. La spec map vaut ~1 sur l'eau, ~0 sur la terre ; on
-          // exige un océan franc (smoothstep 0.88→0.97). Seuil haut = la frange
-          // côtière (valeurs interpolées) et la terre restent à 0 → pas de débord sur
-          // les continents. Bord légèrement adouci (vs step dur) pour ne pas créer un
-          // liseré net à la limite eau/terre quand le lobe touche une côte.
-          float gRaw = texture2D( roughnessMap, vRoughnessMapUv ).g;
-          float gOcean = smoothstep( 0.88, 0.97, gRaw );
-          // Largeur du lobe = compromis réaliste. Un vrai reflet solaire océanique
-          // n'est PAS un point-miroir parfait : la mer est rugueuse (vagues) et étale
-          // le reflet en une tache douce (le « sunglint » des photos ISS). pow 2000
-          // (miroir parfait) donnait un point sous-pixel invisible → on avait
-          // l'impression que le Soleil ne se reflétait plus. pow 250 était trop large
-          // et débordait des mers sur la terre. pow 450 = tache visible mais contenue,
-          // strictement portée par le masque océan (pas de débord sur les côtes).
-          float gOceanSpec = pow( gNdotH, 450.0 ) * gOcean;
-          float gGlint = gOceanSpec * gDay * uGlintStrength;
-          // Ajout du reflet SANS jamais franchir le seuil de bloom (0.82 < 0.85) :
-          // on ne comble que la marge restante sous ce plafond à partir de la
-          // luminance déjà présente. Ainsi le reflet éclaire l'eau sombre mais ne
-          // peut pas saturer en blanc ni nourrir le bloom (donc plus de tache carrée).
-          const float BLOOM_SAFE = 0.82;
-          float gLum = dot( outgoingLight, vec3( 0.2126, 0.7152, 0.0722 ) );
-          float gHeadroom = max( BLOOM_SAFE - gLum, 0.0 );
-          outgoingLight += uGlintSunColor * min( gGlint, gHeadroom );
-        }
-        #endif`;
-
-const OCEAN_GLINT_UNIFORM_KEY = '__oceanGlintUniforms';
-// Intensité du reflet solaire océanique. Le lobe spéculaire est très étroit
-// (pow 2000) : hors du point exact du glint, le terme est nul → un point compact
-// strictement sur l'eau, sans déborder sur la terre voisine. Réglée modérée pour
-// un point brillant sans saturation blanche laiteuse (effet « loupe »).
-const OCEAN_GLINT_STRENGTH = 1.6;
-
-export interface OceanGlintUniforms {
-  /** Direction monde du Soleil (partagée avec le clair de Lune). */
-  sunDir: { value: THREE.Vector3 };
-  /** Teinte solaire chaude du reflet. */
-  color: { value: THREE.Color };
-  /** Intensité globale ; 0 désactive la branche shader. */
-  strength: { value: number };
-}
-
 const MOONLIGHT_UNIFORM_KEY = '__moonlightUniforms';
 
 export interface MoonlightUniforms {
@@ -524,6 +721,8 @@ export function createShadowAwareStandardMaterial(
     invertRoughnessMap?: boolean;
     cloudShadow?: boolean;
     moonlight?: boolean;
+    limitSpecular?: boolean;
+    varyOceanRoughness?: boolean;
   } = {}
 ): THREE.MeshStandardMaterial {
   const material = new THREE.MeshStandardMaterial(params);
@@ -531,6 +730,14 @@ export function createShadowAwareStandardMaterial(
   const invertRoughness = options.invertRoughnessMap === true;
   const cloudShadow = options.cloudShadow === true;
   const moonlight = options.moonlight === true;
+  const limitSpecular = options.limitSpecular === true;
+  const varyOceanRoughness = options.varyOceanRoughness === true;
+  const oceanRoughnessUniforms = {
+    base: { value: EARTH_OCEAN_ROUGHNESS_SETTINGS.oceanBase },
+    variation: { value: EARTH_OCEAN_ROUGHNESS_SETTINGS.oceanVariation },
+    min: { value: EARTH_OCEAN_ROUGHNESS_SETTINGS.oceanMin },
+    max: { value: EARTH_OCEAN_ROUGHNESS_SETTINGS.oceanMax },
+  };
   const cloudShadowUniforms: CloudShadowUniforms = {
     map: { value: null },
     offset: { value: 0 },
@@ -546,26 +753,26 @@ export function createShadowAwareStandardMaterial(
     color: { value: new THREE.Color(0xbcd2ff) },
   };
 
-  // Direction monde du Soleil, partagée par le clair de Lune et le reflet
-  // océanique. Alimentée chaque frame par CelestialObject (setSunDirection).
+  // Direction monde du Soleil, alimentee chaque frame par CelestialObject (setSunDirection).
   const sunDirUniform = { value: new THREE.Vector3(1, 0, 0) };
   moonlightUniforms.sunDir = sunDirUniform;
-  const glintUniforms: OceanGlintUniforms = {
-    sunDir: sunDirUniform,
-    // Teinte dorée chaude : un vrai reflet solaire sur l'eau tire vers l'or, pas le
-    // blanc laiteux (qui donnait l'effet « loupe » artificiel).
-    color: { value: new THREE.Color(0xffd98a) },
-    strength: { value: invertRoughness ? OCEAN_GLINT_STRENGTH : 0 },
-  };
-
   material.userData[SHADOW_AWARE_UNIFORM_KEY] = attenuationUniform;
   if (cloudShadow)
     material.userData[CLOUD_SHADOW_UNIFORM_KEY] = cloudShadowUniforms;
   if (moonlight) material.userData[MOONLIGHT_UNIFORM_KEY] = moonlightUniforms;
-  if (invertRoughness)
-    material.userData[OCEAN_GLINT_UNIFORM_KEY] = glintUniforms;
   chainOnBeforeCompile(material, (shader) => {
     shader.uniforms['uLightAttenuation'] = attenuationUniform;
+    if (varyOceanRoughness) {
+      shader.uniforms['uEarthOceanRoughnessBase'] = oceanRoughnessUniforms.base;
+      shader.uniforms['uEarthOceanRoughnessVariation'] =
+        oceanRoughnessUniforms.variation;
+      shader.uniforms['uEarthOceanRoughnessMin'] = oceanRoughnessUniforms.min;
+      shader.uniforms['uEarthOceanRoughnessMax'] = oceanRoughnessUniforms.max;
+      shader.fragmentShader = shader.fragmentShader.replace(
+        '#include <common>',
+        '#include <common>\n' + EARTH_OCEAN_ROUGHNESS_GLSL
+      );
+    }
     shader.uniforms['uTerminatorWrap'] = { value: TERMINATOR_WRAP };
     if (cloudShadow) {
       shader.uniforms['uCloudShadowMap'] = cloudShadowUniforms.map;
@@ -577,18 +784,13 @@ export function createShadowAwareStandardMaterial(
       shader.uniforms['uMoonStrength'] = moonlightUniforms.strength;
       shader.uniforms['uMoonColor'] = moonlightUniforms.color;
     }
-    if (invertRoughness) {
-      shader.uniforms['uGlintSunColor'] = glintUniforms.color;
-      shader.uniforms['uGlintStrength'] = glintUniforms.strength;
-    }
-    // Direction Soleil partagée (clair de Lune + reflet océanique).
-    if (moonlight || invertRoughness) {
+    // Direction Soleil utilisee par le clair de Lune.
+    if (moonlight) {
       shader.uniforms['uMoonSunDir'] = sunDirUniform;
     }
 
-    // Position + normale monde du fragment. Nécessaires au clair de Lune ET au
-    // reflet solaire océanique : on les produit dès que l'un des deux est actif.
-    if (moonlight || invertRoughness) {
+    // Position et normale monde du fragment, necessaires au clair de Lune.
+    if (moonlight) {
       shader.vertexShader = shader.vertexShader
         .replace(
           '#include <common>',
@@ -609,13 +811,8 @@ export function createShadowAwareStandardMaterial(
           (moonlight
             ? '\nuniform vec3 uMoonPosition;\nuniform float uMoonStrength;\nuniform vec3 uMoonColor;'
             : '') +
-          (invertRoughness
-            ? '\nuniform vec3 uGlintSunColor;\nuniform float uGlintStrength;'
-            : '') +
-          // uMoonSunDir (direction monde du Soleil) est partagé par le clair de
-          // Lune et le reflet océanique ; déclaré si l'un des deux est actif.
-          (moonlight || invertRoughness ? '\nuniform vec3 uMoonSunDir;' : '') +
-          (moonlight || invertRoughness
+          (moonlight ? '\nuniform vec3 uMoonSunDir;' : '') +
+          (moonlight
             ? '\nvarying vec3 vMoonWorldPos;\nvarying vec3 vMoonWorldNormal;'
             : '')
       )
@@ -629,30 +826,25 @@ export function createShadowAwareStandardMaterial(
       )
       .replace(
         'vec3 outgoingLight = totalDiffuse + totalSpecular + totalEmissiveRadiance;',
-        // Terre (invertRoughness) : on EXCLUT totalSpecular du rendu. Le highlight
-        // spéculaire GGX de base (PointLight du Soleil réfléchie par le diélectrique)
-        // produisait une tache blanche éblouissante indépendante du masque océan —
-        // visible même sur la terre ferme (Sahara, Arabie). Forcer roughnessFactor à
-        // 1.0 ne suffisait pas : à roughness 1 le lobe reste non nul et sature via le
-        // bloom/tone mapping. On supprime donc totalement le highlight de base ; le
-        // SEUL reflet solaire devient le lobe océanique dédié (OCEAN_GLINT_GLSL),
-        // masqué sur l'eau, doux et jaune. Les autres matériaux gardent totalSpecular.
-        (invertRoughness
-          ? 'vec3 outgoingLight = totalDiffuse * uLightAttenuation + totalEmissiveRadiance;'
-          : 'vec3 outgoingLight = (totalDiffuse + totalSpecular) * uLightAttenuation + totalEmissiveRadiance;') +
-          (moonlight ? MOONLIGHT_GLSL : '') +
-          (invertRoughness ? OCEAN_GLINT_GLSL : '')
+        // Le spéculaire standard de Three.js reste actif pour la Terre. La carte
+        // La carte oceanique convertie en rugosite controle le reflet, avec un plafond speculaire Terre pour eviter une saturation blanche.
+        (limitSpecular
+          ? 'vec3 boundedSpecular = min( totalSpecular, vec3( 0.20 ) );' +
+            'vec3 outgoingLight = (totalDiffuse + boundedSpecular) * uLightAttenuation'
+          : 'vec3 outgoingLight = (totalDiffuse + totalSpecular) * uLightAttenuation') +
+          (cloudShadow ? ' * cloudDirectFactor' : '') +
+          ' + totalEmissiveRadiance;' +
+          (moonlight ? MOONLIGHT_GLSL : '')
       );
 
     if (invertRoughness) {
-      // Rugosité PBR forcée à 1.0 : on ignore la spec map pour la rugosité (elle ne
-      // sert plus qu'au masque océan du glint dédié). La vraie suppression du highlight
-      // spéculaire éblouissant se fait plus haut en excluant `totalSpecular` de
-      // l'outgoingLight ; ce forçage n'est qu'une cohérence PBR (pas d'eau « miroir »
-      // résiduelle si le spéculaire venait à être réintroduit).
+      // La carte Terre suit la convention « blanc = océan lisse ». Three.js attend
+      // l'inverse pour roughnessMap : terre rugueuse (~0.92), eau peu rugueuse (~0.08).
       shader.fragmentShader = shader.fragmentShader.replace(
         'roughnessFactor *= texelRoughness.g;',
-        'roughnessFactor = 1.0;'
+        varyOceanRoughness
+          ? `roughnessFactor = mix( ${EARTH_OCEAN_ROUGHNESS_SETTINGS.land.toFixed(2)}, earthOceanRoughness( vMapUv ), texelRoughness.g );`
+          : `roughnessFactor = mix( ${EARTH_OCEAN_ROUGHNESS_SETTINGS.land.toFixed(2)}, ${EARTH_OCEAN_ROUGHNESS_SETTINGS.oceanBase.toFixed(2)}, texelRoughness.g );`
       );
     }
 
@@ -669,21 +861,24 @@ export function createShadowAwareStandardMaterial(
       shader.fragmentShader = shader.fragmentShader.replace(
         '#include <map_fragment>',
         `#include <map_fragment>
+        float cloudDirectFactor = 1.0;
         #ifdef USE_MAP
         if ( uCloudShadowStrength > 0.0 ) {
           vec2 cloudUv = vec2( vMapUv.x - uCloudShadowOffset, vMapUv.y );
           float cloudDensity = texture2D( uCloudShadowMap, cloudUv ).r;
-          diffuseColor.rgb *= 1.0 - cloudDensity * uCloudShadowStrength;
+          cloudDirectFactor = 1.0 - cloudDensity * uCloudShadowStrength;
+          diffuseColor.rgb *= cloudDirectFactor;
         }
         #endif`
       );
     }
-
   });
   material.customProgramCacheKey = () =>
-    `shadow-aware-standard-v2${invertRoughness ? '-invrough' : ''}${
+    `shadow-aware-standard-v2${invertRoughness ? '-invrough-v2' : ''}${
       cloudShadow ? '-cloudshadow' : ''
-    }${moonlight ? '-moonlight' : ''}`;
+    }${moonlight ? '-moonlight' : ''}${
+      varyOceanRoughness ? '-oceanrough-v1' : ''
+    }`;
 
   return material;
 }
@@ -693,8 +888,7 @@ export function getCloudShadowUniforms(
   material: THREE.Material
 ): CloudShadowUniforms | undefined {
   return material.userData[CLOUD_SHADOW_UNIFORM_KEY] as
-    | CloudShadowUniforms
-    | undefined;
+    CloudShadowUniforms | undefined;
 }
 
 /** Récupère les uniforms de clair de Lune d'un matériau, s'il en a. */
@@ -702,19 +896,10 @@ export function getMoonlightUniforms(
   material: THREE.Material
 ): MoonlightUniforms | undefined {
   return material.userData[MOONLIGHT_UNIFORM_KEY] as
-    | MoonlightUniforms
-    | undefined;
+    MoonlightUniforms | undefined;
 }
 
-/** Récupère les uniforms du reflet solaire océanique d'un matériau, s'il en a. */
-export function getOceanGlintUniforms(
-  material: THREE.Material
-): OceanGlintUniforms | undefined {
-  return material.userData[OCEAN_GLINT_UNIFORM_KEY] as
-    | OceanGlintUniforms
-    | undefined;
-}
-
+/** Configure les ombres et le rendu de la maille. */
 export function configureShadows(
   mesh: THREE.Mesh,
   castShadow: boolean,

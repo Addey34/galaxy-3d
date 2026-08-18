@@ -1,23 +1,26 @@
 /**
- * Halo atmosphérique par effet Fresnel (limbe lumineux autour d'un corps).
- *
- * La sphère d'atmosphère (légèrement plus grande que la surface) se rend en
- * BackSide + AdditiveBlending : on ne voit que sa face arrière, ce qui dessine
- * un anneau de lumière au bord du disque. L'intensité suit un terme Fresnel
- * `pow(1 - |N·V|, power)` (fort au limbe, nul au centre) modulé par un facteur
- * jour/nuit `N·L` — le halo s'illumine côté Soleil et s'éteint côté nuit, comme
- * la diffusion de Rayleigh réelle. Aucune passe de rendu supplémentaire : c'est
- * un simple ShaderMaterial sur un mesh déjà présent.
+ * Analytic single-pass atmosphere: spectral Rayleigh plus anisotropic Mie scattering.
+ * The shell is rendered BackSide + AdditiveBlending. This is intentionally a lightweight
+ * approximation, not a volumetric ray marcher: it preserves the useful visual signals
+ * (blue daylight, warm twilight edge, deep-night extinction) at one fragment pass.
  */
 import * as THREE from 'three';
 
 export interface AtmosphereSettings {
-  /** Puissance du Fresnel : plus haut = liseré plus fin. */
+  /** Edge profile power: higher values make the atmospheric rim thinner. */
   power: number;
-  /** Intensité globale du halo. */
+  /** Global scattering intensity. */
   intensity: number;
-  /** Débord côté nuit (0 = halo strictement côté jour, 1 = halo uniforme). */
+  /** Small twilight wrap; deep night remains extinguished. */
   nightWrap: number;
+  /** Wavelength-dependent Rayleigh gain. */
+  rayleighStrength: number;
+  /** White, forward-peaked Mie gain. */
+  mieStrength: number;
+  /** Henyey-Greenstein anisotropy, clamped in the shader. */
+  mieG: number;
+  /** Solar optical-path scale near the terminator. */
+  opticalDepth: number;
 }
 
 export interface AtmosphereUniforms {
@@ -26,7 +29,11 @@ export interface AtmosphereUniforms {
   uPower: THREE.IUniform<number>;
   uIntensity: THREE.IUniform<number>;
   uNightWrap: THREE.IUniform<number>;
-  // index signature requise par le type uniforms de THREE.ShaderMaterial
+  uRayleighStrength: THREE.IUniform<number>;
+  uMieStrength: THREE.IUniform<number>;
+  uMieG: THREE.IUniform<number>;
+  uOpticalDepth: THREE.IUniform<number>;
+  // Required by THREE.ShaderMaterial's uniform type.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   [key: string]: THREE.IUniform<any>;
 }
@@ -49,6 +56,10 @@ export const fragmentShader = /* glsl */ `
   uniform float uPower;
   uniform float uIntensity;
   uniform float uNightWrap;
+  uniform float uRayleighStrength;
+  uniform float uMieStrength;
+  uniform float uMieG;
+  uniform float uOpticalDepth;
 
   varying vec3 vNormal;
   varying vec3 vWorldPosition;
@@ -58,14 +69,36 @@ export const fragmentShader = /* glsl */ `
     vec3 viewDir = normalize(cameraPosition - vWorldPosition);
     vec3 sunDir = normalize(sunPosition - vWorldPosition);
 
-    // Fresnel : lumineux quand la surface est vue de biais (limbe), nul de face.
-    float fresnel = pow(1.0 - abs(dot(normal, viewDir)), uPower);
+    float viewCos = abs(dot(normal, viewDir));
+    float rim = pow(1.0 - viewCos, uPower);
+    float sunCos = dot(normal, sunDir);
 
-    // Facteur jour : le halo s'illumine côté Soleil, s'éteint côté nuit.
-    float dayFactor = clamp((dot(normal, sunDir) + uNightWrap) / (1.0 + uNightWrap), 0.0, 1.0);
+    // The shell fades through the terminator and is black on deep night.
+    float dayFactor = smoothstep(-uNightWrap, 0.28, sunCos);
+    float twilight = exp(-pow(abs(sunCos) / 0.32, 2.0)) * dayFactor;
 
-    float glow = fresnel * dayFactor * uIntensity;
-    gl_FragColor = vec4(uColor * glow, glow);
+    // Rayleigh phase: wavelength-dependent and symmetric front/back.
+    float mu = dot(sunDir, viewDir);
+    float rayleighPhase = 0.0596831 * (1.0 + mu * mu); // 3 / (16*pi)
+    vec3 rayleighBeta = vec3(0.58, 1.35, 3.31);
+
+    // Mie phase: white and forward-peaked around the solar direction.
+    float g = clamp(uMieG, 0.0, 0.95);
+    float mieDenominator = pow(1.0 + g * g - 2.0 * g * mu, 1.5);
+    float miePhase = (1.0 - g * g) / (12.56637 * max(mieDenominator, 0.0001));
+
+    // Longer solar paths near the terminator remove more short wavelengths.
+    float sunPath = 1.0 + uOpticalDepth * twilight;
+    vec3 transmission = exp(-rayleighBeta * sunPath * 0.18);
+    vec3 rayleigh = rayleighBeta * rayleighPhase * transmission * uRayleighStrength;
+    vec3 mie = vec3(miePhase) * transmission * uMieStrength;
+
+    vec3 dayColor = rayleigh + mie;
+    vec3 warmColor = vec3(1.0, 0.32, 0.08) * (rayleighPhase + miePhase);
+    vec3 scattering = mix(dayColor, mix(dayColor, warmColor, 0.72), twilight);
+    float glow = rim * dayFactor * uIntensity;
+
+    gl_FragColor = vec4(uColor * scattering * glow, glow);
   }
 `;
 
@@ -79,5 +112,9 @@ export function createUniforms(
     uPower: { value: settings.power },
     uIntensity: { value: settings.intensity },
     uNightWrap: { value: settings.nightWrap },
+    uRayleighStrength: { value: settings.rayleighStrength },
+    uMieStrength: { value: settings.mieStrength },
+    uMieG: { value: settings.mieG },
+    uOpticalDepth: { value: settings.opticalDepth },
   };
 }

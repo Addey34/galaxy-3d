@@ -18,32 +18,36 @@ import {
   GEOMETRY_SEGMENTS,
   GEOMETRY_SEGMENTS_HI,
   createSphereGeometry,
+  createColoredOverlayMaterial,
   getCloudShadowUniforms,
   getMoonlightUniforms,
-  getOceanGlintUniforms,
   getPrecipUniforms,
   getRealCloudsUniforms,
   getRingShadowUniforms,
+  getThermalUniforms,
   type PrecipUniforms,
+  type ThermalUniforms,
   setMaterialLightAttenuation,
   type CloudShadowUniforms,
   type MoonlightUniforms,
-  type OceanGlintUniforms,
   type RingShadowUniforms,
 } from '@/config/layerConfig';
+import { PRECIP_SETTINGS, REALTIME_CLOUDS_SETTINGS } from '@/config/engine';
 import { ringTexturePath } from '@/config/catalog';
 import type { CameraDistance, CelestialBodyConfig } from '@/types';
 import * as NightLightsShader from '@/shaders/NightLightsShader';
 import Logger from '@/utils/Logger';
 import type { AnimationSystem } from '@/components/systems/AnimationSystem';
 import type { TextureSystem } from '@/components/systems/TextureSystem';
+import type { MeteoRenderDiagnostics } from '@/core/meteoDiagnostics';
 
 const CLOUDS_ROTATION_FACTOR = 0.1;
 // Opacité de l'ombre portée des nuages sur la surface (0 = aucune, 1 = noir).
 const CLOUD_SHADOW_STRENGTH = 0.35;
 // Distance (en rayons apparents) sous laquelle on densifie la surface pour le
 // displacement. Au-delà, le relief géométrique est invisible → géométrie standard.
-const HI_RES_TESSELLATION_THRESHOLD = 12;
+const HI_RES_TESSELLATION_ENTER = 12;
+const HI_RES_TESSELLATION_EXIT = 14;
 // Intensité maximale du clair de Lune (pleine Lune, point face à la Lune). Faible :
 // la nuit reste sombre, la Lune ne fait que déposer une lueur subtile sur les mers/sol.
 const MOONLIGHT_MAX_STRENGTH = 0.12;
@@ -54,6 +58,7 @@ const PRECIP_FADE_SECONDS = 0.6;
 // Vecteurs de travail (calcul de phase lunaire) — évite d'allouer chaque frame.
 const _tmpMoonVecA = new THREE.Vector3();
 const _tmpMoonVecB = new THREE.Vector3();
+const _tmpWorldQuaternion = new THREE.Quaternion();
 
 // Orientation initiale (fallback) de l'axe : simple obliquité penchée vers -Z. Remplacée
 // dès le premier sync par setAxisDirection(), qui oriente l'axe le long du vrai pôle nord
@@ -95,12 +100,23 @@ export default class CelestialObject {
   // Uniforms de clair de Lune du matériau surface (Terre) : la face nuit reçoit
   // une lueur diffuse selon la position réelle de la Lune (réflecteur).
   private _moonlight?: MoonlightUniforms;
-  // Uniforms du reflet solaire océanique (Terre) : lobe spéculaire dédié suivant
-  // la direction du Soleil, masqué sur l'océan via la spec map.
-  private _oceanGlint?: OceanGlintUniforms;
   // Uniforms de la couche pluie (Terre) : position du Soleil pour l'éclairage jour/nuit.
   private _precip?: PrecipUniforms;
   private _precipMat?: THREE.MeshBasicMaterial;
+  // Couche température de surface (Terre, MODIS LST) : mesh + uniforms + activité (toggle).
+
+  private _thermalMat?: THREE.MeshBasicMaterial;
+  private _thermal?: ThermalUniforms;
+  // Matériaux d'overlay de DONNÉE PRÉ-COLORÉE (famille B modèle : température/pluie sur grille),
+  // un par couche cible (`thermal`, `precip`). Le mesh cible bascule sur ce matériau dédié quand la
+  // donnée modèle est active (le matériau GIBS/IMERG d'origine est MÉMORISÉ, pas disposé, pour
+  // pouvoir revenir au satellite/GIBS). Couches modèle et satellite/GIBS sont exclusives sur un
+  // même mesh, mais réversibles.
+  private readonly _dataOverlayMats = new Map<
+    string,
+    THREE.MeshBasicMaterial
+  >();
+  private readonly _originalLayerMats = new Map<string, THREE.Material>();
   // Fondu enchaîné pluie : durée écoulée (s) de la transition en cours (< 0 = inactive).
   private _precipFadeElapsed = -1;
   private _precipFadeTarget: THREE.Texture | null = null;
@@ -114,6 +130,8 @@ export default class CelestialObject {
   // cloud map statique par-dessus l'image satellite à chaque changement de distance
   // caméra — c'était la cause de « nuages statiques / absents »).
   private _realCloudsActive = false;
+  // Carte statique complète, conservée comme secours uniquement pour les pixels polaires sans donnée NASA.
+  private _staticCloudTexture: THREE.Texture | null = null;
 
   constructor(
     private readonly textureSystem: TextureSystem,
@@ -143,12 +161,16 @@ export default class CelestialObject {
     if (surface && !Array.isArray(surface.material)) {
       this._cloudShadow = getCloudShadowUniforms(surface.material);
       this._moonlight = getMoonlightUniforms(surface.material);
-      this._oceanGlint = getOceanGlintUniforms(surface.material);
     }
     const precip = this.layers.get('precip');
     if (precip && !Array.isArray(precip.material)) {
       this._precipMat = precip.material as THREE.MeshBasicMaterial;
       this._precip = getPrecipUniforms(precip.material);
+    }
+    const thermal = this.layers.get('thermal');
+    if (thermal && !Array.isArray(thermal.material)) {
+      this._thermalMat = thermal.material as THREE.MeshBasicMaterial;
+      this._thermal = getThermalUniforms(thermal.material);
     }
     const ring = this.layers.get('ring');
     if (ring && !Array.isArray(ring.material))
@@ -178,7 +200,10 @@ export default class CelestialObject {
           textureKey,
           100
         );
+        if (textureKey === 'clouds') this._staticCloudTexture = texture;
         applyTexture(this.layers, textureKey, texture);
+        if (textureKey === 'clouds') this._refreshRealCloudStaticFallback();
+        this._refreshRealCloudOceanMask();
         this._bindCloudShadow(textureKey, texture);
         this._appliedTextures.set(textureKey, texture);
       } catch {
@@ -199,6 +224,31 @@ export default class CelestialObject {
     this._cloudShadow.strength.value = CLOUD_SHADOW_STRENGTH;
   }
 
+  /** Refresh the ocean mask after the satellite image and body textures load in parallel. */
+  private _refreshRealCloudStaticFallback(): void {
+    const clouds = this.layers.get('clouds');
+    if (!clouds || Array.isArray(clouds.material)) return;
+    const uniforms = getRealCloudsUniforms(clouds.material);
+    if (!uniforms) return;
+    uniforms.staticMap.value = this._staticCloudTexture;
+    uniforms.hasStaticMap.value = this._staticCloudTexture ? 1 : 0;
+  }
+  private _refreshRealCloudOceanMask(): void {
+    const clouds = this.layers.get('clouds');
+    if (!clouds || Array.isArray(clouds.material)) return;
+    const uniforms = getRealCloudsUniforms(clouds.material);
+    if (!uniforms || uniforms.enabled.value <= 0.5) return;
+
+    const surface = this.layers.get('surface');
+    const surfaceMat =
+      surface && !Array.isArray(surface.material)
+        ? (surface.material as THREE.MeshStandardMaterial)
+        : undefined;
+    const oceanMask = surfaceMat?.roughnessMap ?? null;
+    uniforms.oceanMask.value = oceanMask;
+    uniforms.hasOceanMask.value = oceanMask ? 1 : 0;
+  }
+
   /**
    * Applique une couverture nuageuse RÉELLE (image satellite GIBS) à la couche
    * nuages : la texture sert de `map` et son alpha est dérivé par extraction shader
@@ -214,6 +264,17 @@ export default class CelestialObject {
       lumHigh?: number;
       satMax?: number;
       lumLowLand?: number;
+      /** Désactive les cartes MODIS/modèle/statique pour le diagnostic True Color brut. */
+      supplementalMaps?: boolean;
+      /**
+       * Comblement SYNTHÉTIQUE des trous de couverture satellite (carte nuages statique
+       * versionnée + modèle Open-Meteo 4°). false par défaut : on n'affiche QUE la donnée
+       * satellite réelle du jour (True Color + masques MODIS Cloud Fraction Day/Night, eux
+       * aussi observés). Là où le satellite n'a pas vu (nuit polaire, trou de fauchée), on
+       * laisse un vide honnête plutôt qu'une invention étirée aux pôles. Réactivable par la
+       * couche « Nuages (modèle) », explicitement étiquetée comme non observée.
+       */
+      syntheticFill?: boolean;
     } = {}
   ): void {
     const clouds = this.layers.get('clouds');
@@ -240,6 +301,19 @@ export default class CelestialObject {
       if (options.satMax !== undefined) uniforms.satMax.value = options.satMax;
       if (options.lumLowLand !== undefined)
         uniforms.lumLowLand.value = options.lumLowLand;
+      if (options.supplementalMaps === false) {
+        uniforms.hasDayMap.value = 0;
+        uniforms.hasNightMap.value = 0;
+        uniforms.hasModelMap.value = 0;
+        uniforms.staticStrength.value = 0;
+      }
+      // Par défaut (syntheticFill non true), on coupe le comblement INVENTÉ (modèle Open-Meteo
+      // + carte statique) tout en gardant les masques MODIS Day/Night, qui sont de la vraie
+      // observation satellite. Résultat : aucun voile étiré aux pôles, seulement du réel.
+      if (options.syntheticFill !== true) {
+        uniforms.hasModelMap.value = 0;
+        uniforms.staticStrength.value = 0;
+      }
       // Carte océan = canal g de la spec map (roughnessMap) de la surface : lève
       // l'ambiguïté sable-clair/nuage (voir REAL_CLOUDS_GLSL). Peut être absente si la
       // spec map n'est pas encore chargée → extraction « terre stricte » partout jusque-là.
@@ -251,6 +325,8 @@ export default class CelestialObject {
       const oceanMask = surfaceMat?.roughnessMap ?? null;
       uniforms.oceanMask.value = oceanMask;
       uniforms.hasOceanMask.value = oceanMask ? 1 : 0;
+      if (options.supplementalMaps !== false)
+        uniforms.hasNightMap.value = uniforms.nightMap.value ? 1 : 0;
     }
 
     // Image géoréférencée : on la fige à sa longitude (fin de la dérive fictive) et
@@ -261,6 +337,77 @@ export default class CelestialObject {
     if (this._cloudShadow) this._cloudShadow.offset.value = 0;
   }
 
+  /**
+   * Applique une couverture nuageuse MODÉLISÉE (grille Open-Meteo `cloud_cover`, famille B) à la
+   * couche nuages. Contrairement à {@link setRealCloudsTexture} (image satellite dont l'alpha est
+   * EXTRAIT par shader), ici la donnée EST déjà la couverture : la texture (niveaux de gris) sert
+   * d'`alphaMap` (three lit son canal vert) et la couleur blanche vient du matériau. L'extraction
+   * shader est donc DÉSACTIVÉE (`uRealClouds = 0`). Avantage produit : couverture globale sans
+   * trou (pas de fauchée satellite) + passé/futur. Sans couche nuages → no-op.
+   */
+  /**
+   * Attache la carte MODIS Cloud Fraction Night au shader True Color. Elle est échantillonnée
+   * uniquement lorsque le pixel optique est noir (nuit polaire / absence de soleil).
+   */
+  /**
+   * Attache la carte MODIS Cloud Fraction Day au shader nuages. La palette scientifique
+   * est dÃ©codÃ©e dans le shader ; l'alpha PNG indique les zones couvertes par le produit.
+   */
+  setRealCloudsDayTexture(texture: THREE.Texture): void {
+    const clouds = this.layers.get('clouds');
+    if (!clouds || Array.isArray(clouds.material)) return;
+    const uniforms = getRealCloudsUniforms(clouds.material);
+    if (!uniforms) return;
+    texture.wrapS = THREE.RepeatWrapping;
+    texture.wrapT = THREE.ClampToEdgeWrapping;
+    texture.magFilter = THREE.NearestFilter;
+    texture.minFilter = THREE.NearestFilter;
+    texture.colorSpace = THREE.NoColorSpace;
+    uniforms.dayMap.value = texture;
+    const image = texture.image as
+      { width?: number; height?: number } | undefined;
+    const width = Math.max(image?.width ?? 1, 1);
+    const height = Math.max(image?.height ?? 1, 1);
+    uniforms.dayTexelSize.value.set(1 / width, 1 / height);
+    uniforms.hasDayMap.value = 1;
+  }
+
+  /**
+   * Attache la couverture nuageuse modélisée comme secours des produits satellite.
+   * Elle n'écrase jamais la texture True Color ni les masques MODIS : le shader ne
+   * l'utilise que lorsque ces sources n'ont pas de couverture valide au pixel.
+   */
+  setRealCloudsModelFallbackTexture(texture: THREE.Texture): void {
+    const clouds = this.layers.get('clouds');
+    if (!clouds || Array.isArray(clouds.material)) return;
+    const uniforms = getRealCloudsUniforms(clouds.material);
+    if (!uniforms) return;
+    texture.wrapS = THREE.RepeatWrapping;
+    texture.wrapT = THREE.ClampToEdgeWrapping;
+    texture.magFilter = THREE.LinearFilter;
+    texture.minFilter = THREE.LinearFilter;
+    texture.colorSpace = THREE.NoColorSpace;
+    uniforms.modelMap.value = texture;
+    uniforms.hasModelMap.value = 1;
+  }
+  setRealCloudsNightFallbackTexture(texture: THREE.Texture): void {
+    const clouds = this.layers.get('clouds');
+    if (!clouds || Array.isArray(clouds.material)) return;
+    const uniforms = getRealCloudsUniforms(clouds.material);
+    if (!uniforms) return;
+    texture.wrapS = THREE.RepeatWrapping;
+    texture.wrapT = THREE.ClampToEdgeWrapping;
+    texture.magFilter = THREE.NearestFilter;
+    texture.minFilter = THREE.NearestFilter;
+    texture.colorSpace = THREE.NoColorSpace;
+    uniforms.nightMap.value = texture;
+    const image = texture.image as
+      { width?: number; height?: number } | undefined;
+    const width = Math.max(image?.width ?? 1, 1);
+    const height = Math.max(image?.height ?? 1, 1);
+    uniforms.nightTexelSize.value.set(1 / width, 1 / height);
+    uniforms.hasNightMap.value = 1;
+  }
   /**
    * Attache un objet 3D au groupe qui porte la rotation diurne (comme la surface/les
    * nuages) : il tourne donc avec le corps. Utilisé par la couche de particules de vent.
@@ -287,7 +434,10 @@ export default class CelestialObject {
    * `_tickPrecipFade` (uniforms map/mapB + mix). `opacity` optionnelle surcharge le défaut.
    * Sans couche precip → no-op.
    */
-  setPrecipTexture(texture: THREE.Texture, options: { opacity?: number } = {}): void {
+  setPrecipTexture(
+    texture: THREE.Texture,
+    options: { opacity?: number } = {}
+  ): void {
     const mat = this._precipMat;
     const uniforms = this._precip;
     if (!mat || !uniforms) return;
@@ -320,9 +470,161 @@ export default class CelestialObject {
     mat.needsUpdate = true;
   }
 
+  /**
+   * Applique une carte de TEMPÉRATURE de surface (MODIS LST) sur la couche `thermal`.
+   * La texture est colorée (arc-en-ciel) : affichée telle quelle, le fond blanc (pas de
+   * donnée) devenant transparent via le shader. Sans couche thermal → no-op.
+   */
+  setThermalTexture(
+    texture: THREE.Texture,
+    options: { opacity?: number } = {}
+  ): void {
+    const mat = this._thermalMat;
+    const uniforms = this._thermal;
+    if (!mat || !uniforms) return;
+    CelestialObject._configurePrecipTex(texture); // même config d'image GIBS équirectangulaire
+    if (options.opacity !== undefined) uniforms.opacity.value = options.opacity;
+    uniforms.enabled.value = 1;
+    mat.map = texture;
+    mat.needsUpdate = true;
+  }
+
+  /**
+   * Affiche une texture de DONNÉE PRÉ-COLORÉE (famille B modèle : température/pluie sur grille
+   * Open-Meteo, déjà colorée par palette + alpha propre) sur la couche `layerKey` (`thermal` ou
+   * `precip`). La première fois, bascule le mesh cible sur un matériau d'overlay dédié qui respecte
+   * l'alpha de la texture (le matériau GIBS/IMERG d'origine — recalcul d'alpha / remap de teinte —
+   * corromprait nos couleurs) ; ensuite met seulement à jour la `map`. Couche inconnue → no-op.
+   */
+  setDataOverlay(
+    layerKey: string,
+    texture: THREE.Texture,
+    options: { opacity?: number } = {}
+  ): void {
+    const mesh = this.layers.get(layerKey);
+    if (!mesh || Array.isArray(mesh.material)) return;
+
+    let mat = this._dataOverlayMats.get(layerKey);
+    if (!mat) {
+      mat = createColoredOverlayMaterial(options.opacity ?? 0.85);
+      this._dataOverlayMats.set(layerKey, mat);
+    }
+    // Bascule le mesh sur le matériau d'overlay pré-coloré, en MÉMORISANT l'original (GIBS/IMERG)
+    // une seule fois pour pouvoir y revenir (retour au satellite/GIBS).
+    if (mesh.material !== mat) {
+      if (!this._originalLayerMats.has(layerKey)) {
+        this._originalLayerMats.set(layerKey, mesh.material as THREE.Material);
+      }
+      mesh.material = mat;
+    }
+    // Notre RGBA est déjà en couleurs d'affichage (palette) — pas de conversion sRGB.
+    texture.colorSpace = THREE.NoColorSpace;
+    texture.wrapS = THREE.RepeatWrapping;
+    texture.wrapT = THREE.ClampToEdgeWrapping;
+    if (options.opacity !== undefined) mat.opacity = options.opacity;
+    mat.map = texture;
+    mat.needsUpdate = true;
+  }
+
+  /**
+   * Rétablit le matériau d'origine (GIBS/IMERG) de la couche `layerKey` après un overlay de donnée
+   * modèle, pour que la couche satellite/GIBS reprenne le mesh. No-op si aucun overlay n'a été posé.
+   */
+  restoreLayerMaterial(layerKey: string): void {
+    const mesh = this.layers.get(layerKey);
+    const original = this._originalLayerMats.get(layerKey);
+    if (mesh && original && !Array.isArray(mesh.material)) {
+      mesh.material = original;
+    }
+  }
+
+  /**
+   * Expose uniquement les invariants de rendu nécessaires au diagnostic météo. Le panneau normal
+   * n'appelle jamais cette méthode ; elle sert à relier une donnée reçue au mesh réellement rendu.
+   */
+  getLayerDiagnostics(key: string): MeteoRenderDiagnostics {
+    const mesh = this.layers.get(key);
+    if (!mesh) return { exists: false, visible: false };
+
+    const material = Array.isArray(mesh.material) ? undefined : mesh.material;
+    const position = mesh.geometry.getAttribute('position');
+    if (!mesh.geometry.boundingSphere) mesh.geometry.computeBoundingSphere();
+    const radius = mesh.geometry.boundingSphere?.radius ?? 0;
+    const record = material as
+      | (THREE.Material & {
+          map?: THREE.Texture | null;
+          opacity?: number;
+        })
+      | undefined;
+    const texture = record?.map ?? undefined;
+    const image = texture?.image as
+      { width?: number; height?: number } | undefined;
+
+    return {
+      exists: true,
+      visible: mesh.visible,
+      geometry: {
+        type: mesh.geometry.type,
+        radius,
+        vertexCount: position?.count ?? 0,
+        uvCount: mesh.geometry.getAttribute('uv')?.count ?? 0,
+      },
+      materialType: material?.type,
+      materialName: material?.name || undefined,
+      opacity: record?.opacity,
+      map: texture
+        ? {
+            width: image?.width ?? 0,
+            height: image?.height ?? 0,
+            wrapS:
+              texture.wrapS === THREE.RepeatWrapping
+                ? 'RepeatWrapping'
+                : String(texture.wrapS),
+            wrapT:
+              texture.wrapT === THREE.ClampToEdgeWrapping
+                ? 'ClampToEdgeWrapping'
+                : String(texture.wrapT),
+            minFilter:
+              texture.minFilter === THREE.LinearFilter
+                ? 'LinearFilter'
+                : String(texture.minFilter),
+            magFilter:
+              texture.magFilter === THREE.LinearFilter
+                ? 'LinearFilter'
+                : String(texture.magFilter),
+            generateMipmaps: texture.generateMipmaps,
+            colorSpace: texture.colorSpace,
+          }
+        : undefined,
+    };
+  }
+  setLayerVisible(key: string, visible: boolean): void {
+    const mesh = this.layers.get(key);
+    if (mesh) mesh.visible = visible;
+  }
+
+  /**
+   * Applique un FACTEUR d'atténuation (0..1) à l'opacité de base d'une couche `clouds` ou
+   * `precip`, sans changer sa visibilité. Sert au panneau météo à estomper les nuages/pluie
+   * quand l'overlay température est actif (pour que la donnée thermique reste lisible), puis
+   * à les restaurer. La valeur de base vient de la config (via set*Texture) ; on multiplie.
+   */
+  setLayerOpacityScale(key: string, scale: number): void {
+    const s = Math.max(0, Math.min(1, scale));
+    if (key === 'clouds') {
+      const mesh = this.layers.get('clouds');
+      if (mesh && !Array.isArray(mesh.material))
+        (mesh.material as THREE.Material).opacity =
+          REALTIME_CLOUDS_SETTINGS.opacity * s;
+    } else if (key === 'precip' && this._precip) {
+      this._precip.opacity.value = PRECIP_SETTINGS.opacity * s;
+    }
+  }
+
   /** Avance le fondu enchaîné pluie ; à la fin, promeut mapB en map et réarme. */
   private _tickPrecipFade(delta: number): void {
-    if (this._precipFadeElapsed < 0 || !this._precipMat || !this._precip) return;
+    if (this._precipFadeElapsed < 0 || !this._precipMat || !this._precip)
+      return;
     // `delta` ici est en secondes de SIMULATION (mise à l'échelle par la vitesse) : en
     // accéléré il serait énorme → le fondu se ferait instantanément. On le borne à un pas
     // temps-réel plausible (rawDelta est plafonné à 0.1 s) pour un fondu toujours fluide.
@@ -421,7 +723,10 @@ export default class CelestialObject {
     // Le halo Fresnel a besoin de la position du Soleil pour n'illuminer que le
     // côté jour du limbe.
     const atmosphere = this.layers.get('atmosphere');
-    if (atmosphere?.material instanceof THREE.ShaderMaterial && sunWorldPosition) {
+    if (
+      atmosphere?.material instanceof THREE.ShaderMaterial &&
+      sunWorldPosition
+    ) {
       const uniforms = atmosphere.material.uniforms as unknown as {
         sunPosition: THREE.IUniform<THREE.Vector3 | null>;
       };
@@ -440,21 +745,11 @@ export default class CelestialObject {
         .normalize();
     }
 
-    // Direction monde du Soleil, partagée par le clair de Lune (masque nuit) et le
-    // reflet solaire océanique (lobe spéculaire). L'uniform sunDir est le MÊME
-    // objet dans les deux (partagé dans createShadowAwareStandardMaterial) : une
-    // seule écriture suffit. Le reflet n'a besoin que de cette direction ;
-    // le glint est ainsi actif même sans données lunaires.
-    if ((this._oceanGlint || this._moonlight) && sunWorldPosition) {
-      this.group.getWorldPosition(this._selfWorldPos);
-      const sunDir = this._oceanGlint?.sunDir ?? this._moonlight?.sunDir;
-      sunDir?.value.subVectors(sunWorldPosition, this._selfWorldPos).normalize();
-    }
-
     // Clair de Lune sur la face nuit (Terre) : position de la Lune + intensité
     // selon la phase = fraction éclairée de la Lune vue depuis la Terre ≈
     // (1 + cos(angle Soleil-Lune-Terre)) / 2 : ~1 à la pleine Lune, ~0 à la nouvelle.
     if (this._moonlight && sunWorldPosition && moonWorldPosition) {
+      this.group.getWorldPosition(this._selfWorldPos);
       this._moonlight.position.value.copy(moonWorldPosition);
 
       const toSun = _tmpMoonVecA
@@ -510,6 +805,12 @@ export default class CelestialObject {
     this._tiltGroup.quaternion.setFromUnitVectors(LOCAL_UP, sceneNorth);
   }
 
+  /** Retourne l'axe nord de rotation courant dans le rep�re monde. */
+  getAxisDirection(out = new THREE.Vector3()): THREE.Vector3 {
+    this._tiltGroup.getWorldQuaternion(_tmpWorldQuaternion);
+    return out.copy(LOCAL_UP).applyQuaternion(_tmpWorldQuaternion).normalize();
+  }
+
   /**
    * Facteur d'échelle visuel en mode Explo : vraie taille physique via radiusKm.
    *   (radiusKm / KM_PER_AU × SQRT_K) / config.radius
@@ -558,8 +859,7 @@ export default class CelestialObject {
     maxNormalizedDistance = 250,
     threshold = 2
   ): Promise<void> {
-    if (!this._hasTextures || this._lodPending || !camera || !this.group)
-      return;
+    if (!this._hasTextures || !camera || !this.group) return;
 
     this.group.getWorldPosition(this._lodWorldPos);
     const distance = camera.position.distanceTo(this._lodWorldPos);
@@ -572,6 +872,10 @@ export default class CelestialObject {
       distance / worldRadius,
       maxNormalizedDistance
     );
+    // La géométrie de relief dépend uniquement de la distance courante et doit pouvoir
+    // repasser immédiatement en résolution standard, même si un chargement de texture est
+    // encore en vol.
+    this._updateSurfaceTessellation(normalizedDistance);
     if (
       Math.abs(normalizedDistance - this.lastLODNormalizedDistance) < threshold
     ) {
@@ -595,11 +899,13 @@ export default class CelestialObject {
         // chargement d'un LOD `clouds` en vol → ne pas l'appliquer par-dessus.
         if (textureKey === 'clouds' && this._realCloudsActive) continue;
         if (this._appliedTextures.get(textureKey) === texture) continue;
+        if (textureKey === 'clouds') this._staticCloudTexture = texture;
         applyTexture(this.layers, textureKey, texture);
+        if (textureKey === 'clouds') this._refreshRealCloudStaticFallback();
+        this._refreshRealCloudOceanMask();
         this._bindCloudShadow(textureKey, texture);
         this._appliedTextures.set(textureKey, texture);
       }
-      this._updateSurfaceTessellation(normalizedDistance);
       if (this.config.ring) await this._loadRingTexture(normalizedDistance);
     } catch {
       // Dégradation silencieuse : la dernière texture valide reste appliquée.
@@ -620,13 +926,12 @@ export default class CelestialObject {
     const surface = this.layers.get('surface');
     if (!surface) return;
 
-    const shouldBeHiRes =
-      normalizedDistance <= HI_RES_TESSELLATION_THRESHOLD;
+    const shouldBeHiRes = this._hiResSurfaceActive
+      ? normalizedDistance <= HI_RES_TESSELLATION_EXIT
+      : normalizedDistance <= HI_RES_TESSELLATION_ENTER;
     if (shouldBeHiRes === this._hiResSurfaceActive) return;
 
-    const segments = shouldBeHiRes
-      ? GEOMETRY_SEGMENTS_HI
-      : GEOMETRY_SEGMENTS;
+    const segments = shouldBeHiRes ? GEOMETRY_SEGMENTS_HI : GEOMETRY_SEGMENTS;
     const next = createSphereGeometry(this.config.radius, 'surface', segments);
     surface.geometry.dispose();
     surface.geometry = next;
