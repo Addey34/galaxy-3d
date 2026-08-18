@@ -14,7 +14,7 @@
  * points des orbites éducatives.
  */
 import * as THREE from 'three';
-import { Body } from 'astronomy-engine';
+import { Body, Equator, Observer, SiderealTime } from 'astronomy-engine';
 import type { CelestialBodyConfig, CelestialConfig } from '@/types';
 import type { CelestialBodies } from '@/components/systems/SceneSystem';
 import type { SimulationClock } from './SimulationClock';
@@ -107,6 +107,29 @@ const MORPH_DURATION_S = 1.2;
 /** Cubic InOut — même courbe que les vols caméra (TWEEN.Easing.Cubic.InOut). */
 function easeInOutCubic(t: number): number {
   return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+}
+
+const EARTH_OBSERVER = new Observer(0, 0, 0);
+const HOURS_TO_RADIANS = Math.PI / 12;
+
+/**
+ * Greenwich subsolar longitude, positive east, from apparent sidereal time.
+ *
+ * GAST is the right ascension crossing Greenwich. The solar meridian is where
+ * the Sun's apparent right ascension equals local apparent sidereal time.
+ */
+export function computeGreenwichSubsolarLongitude(date: Date): number {
+  const gastHours = SiderealTime(date);
+  const sunRightAscensionHours = Equator(
+    Body.Sun,
+    date,
+    EARTH_OBSERVER,
+    true,
+    true
+  ).ra;
+  const rawHours = sunRightAscensionHours - gastHours;
+  const wrappedHours = ((((rawHours + 12) % 24) + 24) % 24) - 12;
+  return wrappedHours * HOURS_TO_RADIANS;
 }
 
 export class OrbitalMechanics {
@@ -427,12 +450,11 @@ export class OrbitalMechanics {
       if (hasOrbit(cfg)) syncBody(name, cfg);
     });
 
-    // Aligne la rotation de surface de la Terre sur l'heure UTC réelle.
+    // Aligne la rotation de surface de la Terre sur le Soleil apparent.
     //   θSun       = azimut du Soleil vu de la Terre, dans le plan écliptique XZ.
-    //   subSolarLon = longitude géographique face au Soleil = (12 - utcH)·π/12
-    //                 (0° à 12h UTC = midi à Greenwich ; -90° à 18h ; +180° à 0h).
-    // On veut que le méridien subSolarLon pointe vers le Soleil (azimut θSun). Avec la
-    // convention de la SphereGeometry (azimut d'un méridien = -longitude - rotation.y) :
+    //   subSolarLon = RA apparente du Soleil - GAST, ramenée dans [-12 h, +12 h].
+    // Cette longitude Greenwich exacte remplace l'ancienne approximation UTC linéaire.
+    // Avec la convention de SphereGeometry (azimut méridien = -longitude - rotation.y) :
     //   rotation.y = -θSun - subSolarLon
     const earthCfg = this.config.bodies['earth'];
     const earthBody = this.bodies['earth'];
@@ -440,12 +462,11 @@ export class OrbitalMechanics {
       ? this._positionAU('earth', earthCfg, date)
       : null;
     if (earthPos && earthBody) {
-      const θSun = Math.atan2(-earthPos.z, -earthPos.x);
-      const utcH =
-        date.getUTCHours() +
-        date.getUTCMinutes() / 60 +
-        date.getUTCSeconds() / 3600;
-      earthBody.setInitialSurfaceRotation(-θSun - ((12 - utcH) * Math.PI) / 12);
+      const thetaSun = Math.atan2(-earthPos.z, -earthPos.x);
+      const subSolarLon = computeGreenwichSubsolarLongitude(date);
+      // SphereGeometry convention: the visible geographic meridian has azimuth
+      // -longitude - rotation.y in the scene.
+      earthBody.setInitialSurfaceRotation(-thetaSun - subSolarLon);
     }
   }
 

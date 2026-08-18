@@ -60,9 +60,10 @@ test('wires nav and playback controls (câblage ui/)', async ({ page }) => {
   // Vitesse max → libellé « N unité/s » (langue courante : "y/s" en anglais, "an/s" en français).
   await expect(page.locator('#speed-value')).toHaveText(/\d+\s*(y|an)\/s/);
 
-  // Retour au présent (ui/timePanel → PlaybackControls) : revient à « Réel ».
+  // Retour au présent (ui/timePanel → PlaybackControls) : revient à « Réel » = CENTRE du
+  // slider bidirectionnel (50 = 1:1 ; gauche = passé, droite = futur).
   await page.locator('#time-today').click();
-  await expect(speedRange).toHaveValue('0');
+  await expect(speedRange).toHaveValue('50');
   await expect(page.locator('#speed-value')).toContainText('1:1');
 });
 

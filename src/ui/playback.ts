@@ -13,6 +13,12 @@ import { getLocale, onLocaleChange, t } from '@/i18n';
 export const MAX_SIMULATION_SCALE = 31_557_600;
 
 const SPEED_SLIDER_MAX = 100;
+// Slider BIDIRECTIONNEL : centre = temps réel 1:1, droite = futur accéléré, gauche = passé
+// accéléré (le moteur d'horloge accepte un timeScale négatif → le temps recule). La demi-course
+// de chaque côté est mappée exponentiellement de ±1 (au centre) à ±MAX_SIMULATION_SCALE (au bord).
+const SPEED_SLIDER_CENTER = 50;
+// Petite zone morte autour du centre : facilite le retour exact au 1:1 sans viser au pixel.
+const SPEED_CENTER_DEADZONE = 2;
 const SPEED_UNITS = [
   { scale: 31_557_600, fr: 'an', en: 'y' },
   { scale: 2_592_000, fr: 'mois', en: 'mo' },
@@ -60,15 +66,23 @@ export interface PlaybackControls {
 const playPauseBtn = document.getElementById('play-pause-btn')!;
 const speedRange = document.getElementById('speed-range') as HTMLInputElement;
 const speedValue = document.getElementById('speed-value')!;
+/**
+ * Slider → vitesse SIGNÉE. Centre (50) = +1 (temps réel). Écart au centre normalisé dans
+ * [0, 1] → magnitude exponentielle de 1 à MAX_SIMULATION_SCALE. Le SIGNE suit le côté :
+ * droite du centre = futur (+), gauche = passé (−). Zone morte centrale → exactement +1.
+ */
 function scaleFromSlider(value: number): number {
-  const normalized = Math.max(0, Math.min(SPEED_SLIDER_MAX, value));
-  if (normalized === 0) return 1;
-  return Math.max(
+  const clamped = Math.max(0, Math.min(SPEED_SLIDER_MAX, value));
+  const offset = clamped - SPEED_SLIDER_CENTER; // <0 passé, >0 futur
+  if (Math.abs(offset) <= SPEED_CENTER_DEADZONE) return 1;
+  const halfCourse = SPEED_SLIDER_MAX - SPEED_SLIDER_CENTER; // 50
+  const magnitudeNorm = (Math.abs(offset) - SPEED_CENTER_DEADZONE) /
+    (halfCourse - SPEED_CENTER_DEADZONE);
+  const magnitude = Math.max(
     1,
-    Math.round(
-      Math.exp((normalized / SPEED_SLIDER_MAX) * Math.log(MAX_SIMULATION_SCALE))
-    )
+    Math.round(Math.exp(magnitudeNorm * Math.log(MAX_SIMULATION_SCALE)))
   );
+  return offset < 0 ? -magnitude : magnitude;
 }
 
 function formatQuantity(value: number): string {
@@ -83,11 +97,18 @@ function speedLabel(scale: number): string {
       ? '1:1 · Échelle réelle Terre'
       : '1:1 · Earth real time';
 
-  const unit = SPEED_UNITS.find((candidate) => scale >= candidate.scale);
-  if (!unit) return `× ${formatQuantity(scale)}`;
-  return `${formatQuantity(scale / unit.scale)} ${
-    getLocale() === 'fr' ? unit.fr : unit.en
-  }/s`;
+  // Vitesse signée : magnitude commune, préfixe directionnel pour le passé (temps qui recule).
+  const magnitude = Math.abs(scale);
+  const reversed = scale < 0;
+  const unit = SPEED_UNITS.find((candidate) => magnitude >= candidate.scale);
+  const body = unit
+    ? `${formatQuantity(magnitude / unit.scale)} ${
+        getLocale() === 'fr' ? unit.fr : unit.en
+      }/s`
+    : `× ${formatQuantity(magnitude)}`;
+  if (!reversed) return body;
+  // Préfixe « ◀ » + mention passé : on remonte le temps.
+  return getLocale() === 'fr' ? `◀ ${body} (passé)` : `◀ ${body} (past)`;
 }
 
 function applySpeed(sliderValue: number, om: OrbitalMechanics): void {
@@ -123,8 +144,8 @@ export function setupPlayback(
     applySpeed(Number(speedRange.value), om);
   });
 
-  // Activer le premier bouton (Réel) au démarrage
-  applySpeed(0, om);
+  // Démarrage au CENTRE = temps réel 1:1.
+  applySpeed(SPEED_SLIDER_CENTER, om);
   playPauseBtn.setAttribute('aria-label', t('playback.pause'));
   onLocaleChange(() => {
     applySpeed(Number(speedRange.value), om);
@@ -137,7 +158,7 @@ export function setupPlayback(
   });
 
   return {
-    selectRealtime: () => applySpeed(0, om),
+    selectRealtime: () => applySpeed(SPEED_SLIDER_CENTER, om),
     pause: () => {
       anim.setPaused(true);
       syncPauseButton(true);

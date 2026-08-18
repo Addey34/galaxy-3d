@@ -4,6 +4,7 @@ import type { CelestialBodyConfig } from '@/types';
 import {
   educationalParentOrbitScale,
   OrbitalMechanics,
+  computeGreenwichSubsolarLongitude,
 } from './OrbitalMechanics';
 import { SQRT_K } from './ScaleService';
 import { CELESTIAL_CONFIG } from '@/config/bodies';
@@ -126,5 +127,17 @@ describe('OrbitalMechanics orbit sampling', () => {
     expect(
       new Set(radii.map((radius) => radius.toFixed(6))).size
     ).toBeGreaterThan(1);
+  });
+  it('uses apparent sidereal time for Greenwich subsolar longitude', () => {
+    const noon = new Date('2026-08-17T12:00:00Z');
+    const nextNoon = new Date('2026-08-18T12:00:00Z');
+    const noonLongitude = computeGreenwichSubsolarLongitude(noon);
+    const nextNoonLongitude = computeGreenwichSubsolarLongitude(nextNoon);
+
+    // On this date the equation of time puts the subsolar meridian just east
+    // of Greenwich at 12:00 UTC.
+    expect(noonLongitude).toBeCloseTo(0.017862, 5);
+    // The Sun's apparent right ascension advances more slowly than GAST over a day.
+    expect(nextNoonLongitude - noonLongitude).toBeCloseTo(-0.00094, 4);
   });
 });
