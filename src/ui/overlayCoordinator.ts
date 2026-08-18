@@ -1,5 +1,10 @@
 export type SecondaryOverlayId =
-  'body-palette' | 'body-info' | 'orbit-options' | 'events' | 'help';
+  | 'body-palette'
+  | 'body-info'
+  | 'orbit-options'
+  | 'weather-layers'
+  | 'events'
+  | 'help';
 
 export interface OverlayCoordinator {
   register(id: SecondaryOverlayId, close: () => void): () => void;

@@ -121,3 +121,52 @@ docs/UNIVERSE_CATALOG.md.
 
 Les overlays restent dans src/ui/; SolarSystemApp reste headless et ne connait ni les permaliens,
 ni les panneaux facultatifs.
+
+## Architecture meteo
+
+La meteorologie suit trois frontieres simples :
+
+- src/core/ decide la source, la date, le fallback, la grille et la conversion en donnees
+  testables sans DOM ni Three.js.
+- src/ui/ orchestre le cycle date -> chargement -> cache -> badge et expose un
+  WeatherLayerHandle uniforme au panneau.
+- CelestialObject et src/config/layerConfig.ts possedent le rendu Three.js, les materiaux,
+  les UV, l alpha et l eclairage.
+
+Les couches satellite reutilisent ui/observedTextureLayer.ts. Les couches Open-Meteo reutilisent
+ui/meteoModelLayer.ts ; leurs fichiers specifiques ne contiennent que leur variable, palette,
+grille et configuration. ui/weatherLayers.ts ne connait pas le type de source : il construit le
+panneau et applique les groupes exclusifs. Les groupes qui partagent un mesh sont declares dans
+MainSolarSystemApp.ts, et l ordre d activation desactive les concurrents avant d afficher la
+couche choisie.
+
+Le mesh surface reste la base opaque de la Terre. Les donnees meteorologiques transparentes sont
+des overlays sur les meshes dedies ; un changement de source restaure le materiau precedent avant
+de masquer ou d activer la couche suivante. Cela evite de melanger un shader satellite avec une
+texture RGBA deja palettee et rend le diagnostic localisable par famille.
+
+### Contrat de couverture des nuages
+
+Le rendu NASA est la source officielle par défaut : True Color fournit la couleur et les masques MODIS Cloud Fraction Day/Night fournissent l'alpha lorsqu'une observation couvre le pixel. Le remplissage Open-Meteo `cloud_cover` et la texture statique historique sont des replis explicitement optionnels ; ils ne doivent pas rendre le mesh visible en l'absence de leur propre donnée. `cloudStaticTextureFallbackEnabled` reste donc désactivé par défaut.
+
+Le diagnostic `?debug-meteo` expose l'état de chaque source, la date réelle, la grille, la texture, le mesh cible et la couverture géographique. Le scénario `e2e/weather.spec.ts` vérifie notamment qu'une coupure réseau ne révèle pas un ancien rendu statique et que les couches modèle restent cachées tant que leur propre grille n'est pas disponible.
+
+### Contrat Terre temps réel : réel par défaut
+
+La règle produit est : une donnée absente, en attente ou hors couverture reste absente à l'écran. Aucun modèle ou remplissage synthétique ne doit être présenté comme une observation officielle.
+
+| Couche                                                | Source par défaut  | Visibilité par défaut                     | Politique de couverture                                                           |
+| ----------------------------------------------------- | ------------------ | ----------------------------------------- | --------------------------------------------------------------------------------- |
+| Nuages                                                | NASA VIIRS / MODIS | active selon qualité et appareil          | alpha natif des masques ; replis Open-Meteo/statique désactivés par défaut        |
+| Précipitations                                        | NASA IMERG         | active sur desktop, désactivée sur mobile | alpha natif du produit ; aucune valeur polaire inventée                           |
+| Température                                           | MERRA-2            | cachée                                    | réanalyse officielle disponible dans le panneau                                   |
+| Nuages, pluie, température, pression, humidité modèle | Open-Meteo         | cachées                                   | activation manuelle uniquement ; mesh caché jusqu'à réception de sa propre grille |
+| Vent                                                  | Open-Meteo         | désactivé                                 | modèle facultatif, sans substitution silencieuse                                  |
+
+Les couches Open-Meteo partagent parfois un mesh technique (par exemple `thermal`), mais les groupes exclusifs et la visibilité sont séparés par couche. Une couche modèle ne peut donc pas révéler par erreur l'ancienne texture d'une observation MERRA-2 ou IMERG.
+
+Les panneaux et diagnostics conservent le statut `observed`, `analysis`, `forecast`, `forecast_uncertain`, `climatology` ou `unavailable`, ainsi que la date réelle et la source. Les délais de publication d'une réanalyse sont signalés comme approximation temporelle ; ils ne sont pas maquillés en observation instantanée.
+
+Le client partagé `src/core/meteoClient.ts` déduplique les requêtes identiques en vol, conserve les réponses réussies cinq minutes et réessaie uniquement les erreurs transitoires 429/5xx avec un délai borné et prise en compte de `Retry-After`. Cela protège le temps réel contre les limites de service Open-Meteo sans activer les modèles par défaut ni inventer de données.
+
+Les textures de surface, le relief et les lumières nocturnes de la Terre restent des assets scientifiques documentés, non des observations météo instantanées. Le relief dérivé d'ETOPO est une représentation statique ; la météo et les nuages sont les seules familles temps réel décrites ici.

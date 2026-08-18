@@ -15,8 +15,60 @@
 export const GIBS_WMS_ENDPOINT =
   'https://gibs.earthdata.nasa.gov/wms/epsg4326/best/wms.cgi';
 
-/** Couche par défaut : nuages « vrais » quotidiens, fauchée large. */
+/** Base des légendes SVG officielles GIBS (barre de couleur + graduations en unités). */
+export const GIBS_LEGEND_BASE = 'https://gibs.earthdata.nasa.gov/legends';
+
+/**
+ * URL de la légende SVG officielle d'une couche GIBS (`{layer}_H.svg` horizontale par défaut,
+ * `_V` verticale). Rendue via `<img>` : le SVG s'affiche statiquement (le script interne ne
+ * s'exécute pas), on ne récupère que la barre de couleur graduée. CORS ouvert.
+ */
+export function gibsLegendUrl(
+  layer: string,
+  orientation: 'H' | 'V' = 'H'
+): string {
+  return `${GIBS_LEGEND_BASE}/${layer}_${orientation}.svg`;
+}
+
+/** Couche par défaut : nuages « vrais » quotidiens, fauchée large (VIIRS SNPP). */
 export const GIBS_DEFAULT_LAYER = 'VIIRS_SNPP_CorrectedReflectance_TrueColor';
+
+/**
+ * Couches nuages de FALLBACK pour les dates antérieures à VIIRS (~fin 2015) : MODIS Terra
+ * (depuis 2000) puis MODIS Aqua (depuis 2002). Même endpoint WMS que VIIRS, seul `LAYERS`
+ * change. Fauchée plus étroite que VIIRS (plus de bandes) mais couvre 15 ans d'archive
+ * supplémentaires. Confirmées disponibles sur GIBS (probe réseau).
+ */
+export const GIBS_MODIS_TERRA_LAYER =
+  'MODIS_Terra_CorrectedReflectance_TrueColor';
+export const GIBS_MODIS_AQUA_LAYER =
+  'MODIS_Aqua_CorrectedReflectance_TrueColor';
+/** Premières dates disponibles des couches MODIS True Color sur GIBS. */
+export const GIBS_MODIS_TERRA_MIN_DATE = '2000-02-24';
+export const GIBS_MODIS_AQUA_MIN_DATE = '2002-07-04';
+
+/** Couche satellite de fraction nuageuse diurne MODIS Aqua. */
+export const GIBS_CLOUD_FRACTION_DAY_LAYER = 'MODIS_Aqua_Cloud_Fraction_Day';
+/** Première date disponible de la fraction nuageuse diurne Aqua. */
+export const GIBS_CLOUD_FRACTION_DAY_MIN_DATE = '2002-07-04';
+
+/** Couche satellite de fraction nuageuse nocturne, utilisable dans les zones True Color sans lumière. */
+export const GIBS_CLOUD_FRACTION_NIGHT_LAYER =
+  'MODIS_Aqua_Cloud_Fraction_Night';
+/** Première date disponible de la fraction nuageuse nocturne Aqua. */
+export const GIBS_CLOUD_FRACTION_NIGHT_MIN_DATE = '2002-07-04';
+
+/**
+ * Couche TEMPÉRATURE de surface (air 2 m) MERRA-2 MENSUELLE : réanalyse modèle (assimilation),
+ * donc couverture GLOBALE TOTALE, terre + mer, champ parfaitement lisse SANS trous ni bandes
+ * (contrairement aux couches satellite quotidiennes AIRS/MODIS, criblées de swath gaps).
+ * Palette arc-en-ciel (violet froid → rouge chaud). Mensuelle → la date est snappée au 1er du
+ * mois (voir {@link gibsMonthlyDateFor}). Même endpoint WMS que les nuages, seul `LAYERS` change.
+ */
+export const GIBS_LST_LAYER = 'MERRA2_2m_Air_Temperature_Monthly';
+
+/** Première date disponible de MERRA-2 sur GIBS (début de la réanalyse, 1980). */
+export const GIBS_LST_MIN_DATE = '1980-01-01';
 
 /**
  * Première date où la couche VIIRS SNPP est disponible sur GIBS (~fin 2015). Avant
@@ -90,6 +142,48 @@ export function gibsCloudDateFor(
 
   // Sous la borne basse de la couche → pas d'image.
   const floor = startOfUtcDay(new Date(`${minDate}T00:00:00Z`));
+  if (target.getTime() < floor.getTime()) return null;
+
+  return toGibsDateString(target);
+}
+
+export interface GibsMonthlyDateOptions {
+  /**
+   * Latence de publication en mois : MERRA-2 est publié avec ~1 mois de décalage. Le mois
+   * courant n'existe pas encore → on vise le mois (now - latencyMonths). Défaut 1.
+   */
+  latencyMonths?: number;
+  /** Borne basse ISO `YYYY-MM-DD` (défaut GIBS_LST_MIN_DATE). */
+  minDate?: string;
+  /** « Maintenant » injectable pour les tests. Défaut new Date(). */
+  now?: Date;
+}
+
+/** Tronque une date au 1er du mois à minuit UTC (les couches mensuelles sont datées ainsi). */
+function startOfUtcMonth(date: Date): Date {
+  return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), 1));
+}
+
+/**
+ * Normalise une date de simulation vers la date GIBS d'une couche MENSUELLE (ex. MERRA-2
+ * température) : renvoie le 1er du mois `YYYY-MM-01`, clampé au dernier mois publié
+ * (now - latencyMonths). `null` si antérieur à la borne basse (→ pas d'image).
+ */
+export function gibsMonthlyDateFor(
+  date: Date,
+  options: GibsMonthlyDateOptions = {}
+): string | null {
+  const latencyMonths = options.latencyMonths ?? 1;
+  const now = options.now ?? new Date();
+  const minDate = options.minDate ?? GIBS_LST_MIN_DATE;
+
+  const requested = startOfUtcMonth(date);
+  const latest = startOfUtcMonth(now);
+  latest.setUTCMonth(latest.getUTCMonth() - latencyMonths);
+
+  const target = requested.getTime() > latest.getTime() ? latest : requested;
+
+  const floor = startOfUtcMonth(new Date(`${minDate}T00:00:00Z`));
   if (target.getTime() < floor.getTime()) return null;
 
   return toGibsDateString(target);

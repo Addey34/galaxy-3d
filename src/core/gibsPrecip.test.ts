@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { GIBS_WMS_ENDPOINT } from './gibsClouds';
 import {
   IMERG_LAYER,
+  IMERG_COVERAGE,
   imergEndForDate,
   imergFrameTimes,
   imergLatestAvailable,
@@ -35,9 +36,9 @@ describe('toImergTimeString', () => {
 describe('imergLatestAvailable', () => {
   it('subtracts the publication latency and snaps to the half hour', () => {
     const now = new Date('2026-08-09T12:10:00Z');
-    expect(
-      imergLatestAvailable({ now, latencyHours: 4 }).toISOString()
-    ).toBe('2026-08-09T08:00:00.000Z');
+    expect(imergLatestAvailable({ now, latencyHours: 4 }).toISOString()).toBe(
+      '2026-08-09T08:00:00.000Z'
+    );
   });
 });
 
@@ -106,5 +107,16 @@ describe('imergUrl', () => {
     expect(p.get('TIME')).toBe('2026-08-09T10:30:00Z');
     expect(p.get('WIDTH')).toBe('1024');
     expect(p.get('HEIGHT')).toBe('512');
+  });
+});
+
+describe('IMERG native coverage policy', () => {
+  it('keeps the official V07 field global and forbids synthetic polar filling', () => {
+    expect(IMERG_COVERAGE).toMatchObject({
+      minLatitude: -90,
+      maxLatitude: 90,
+      productVersion: '07',
+      policy: 'native-alpha-no-extrapolation',
+    });
   });
 });

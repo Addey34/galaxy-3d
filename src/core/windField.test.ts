@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  buildWindArchiveUrl,
   buildWindGridUrl,
   parseWindGrid,
   sampleWind,
@@ -26,6 +27,22 @@ describe('buildWindGridUrl', () => {
     expect(url.searchParams.get('hourly')).toBe(
       'wind_speed_10m,wind_direction_10m'
     );
+    expect(url.searchParams.get('latitude')?.split(',').length).toBe(612);
+  });
+});
+
+describe('buildWindArchiveUrl (voyage temps ERA5)', () => {
+  it('targets the ERA5 archive endpoint for a single past day', () => {
+    const url = new URL(buildWindArchiveUrl('2019-03-10', { step: 10 }));
+    expect(url.origin + url.pathname).toBe(
+      'https://archive-api.open-meteo.com/v1/archive'
+    );
+    expect(url.searchParams.get('hourly')).toBe(
+      'wind_speed_10m,wind_direction_10m'
+    );
+    // Journée unique : start = end. La grille est identique à celle du forecast.
+    expect(url.searchParams.get('start_date')).toBe('2019-03-10');
+    expect(url.searchParams.get('end_date')).toBe('2019-03-10');
     expect(url.searchParams.get('latitude')?.split(',').length).toBe(612);
   });
 });

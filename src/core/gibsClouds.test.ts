@@ -1,9 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import {
   GIBS_DEFAULT_LAYER,
+  GIBS_CLOUD_FRACTION_DAY_LAYER,
   GIBS_WMS_ENDPOINT,
   gibsCloudDateFor,
   gibsCloudUrl,
+  gibsLegendUrl,
+  gibsMonthlyDateFor,
   toGibsDateString,
 } from './gibsClouds';
 
@@ -37,7 +40,10 @@ describe('gibsCloudDateFor', () => {
 
   it('honours a custom latency', () => {
     expect(
-      gibsCloudDateFor(new Date('2026-08-12T00:00:00Z'), { now, latencyDays: 3 })
+      gibsCloudDateFor(new Date('2026-08-12T00:00:00Z'), {
+        now,
+        latencyDays: 3,
+      })
     ).toBe('2026-08-09');
   });
 
@@ -66,6 +72,71 @@ describe('gibsCloudDateFor', () => {
         minDate: '2019-01-01',
       })
     ).toBe('2019-06-01');
+  });
+});
+
+describe('gibsLegendUrl', () => {
+  it('builds the official GIBS SVG legend URL (horizontal by default)', () => {
+    expect(gibsLegendUrl('MERRA2_2m_Air_Temperature_Monthly')).toBe(
+      'https://gibs.earthdata.nasa.gov/legends/MERRA2_2m_Air_Temperature_Monthly_H.svg'
+    );
+  });
+
+  it('supports the vertical orientation', () => {
+    expect(gibsLegendUrl('MERRA2_2m_Air_Temperature_Monthly', 'V')).toBe(
+      'https://gibs.earthdata.nasa.gov/legends/MERRA2_2m_Air_Temperature_Monthly_V.svg'
+    );
+  });
+});
+
+describe('gibsMonthlyDateFor', () => {
+  const now = new Date('2026-08-13T09:00:00Z');
+
+  it('snaps any date to the first of its month (YYYY-MM-01)', () => {
+    expect(gibsMonthlyDateFor(new Date('2024-03-17T12:00:00Z'), { now })).toBe(
+      '2024-03-01'
+    );
+  });
+
+  it('clamps today/future to the latest published month (now - latency)', () => {
+    // Août 2026 → J-1 mois = juillet 2026 (latence de publication par défaut).
+    expect(gibsMonthlyDateFor(new Date('2026-08-20T00:00:00Z'), { now })).toBe(
+      '2026-07-01'
+    );
+    expect(gibsMonthlyDateFor(new Date('2030-01-01T00:00:00Z'), { now })).toBe(
+      '2026-07-01'
+    );
+  });
+
+  it('honours a custom monthly latency', () => {
+    expect(
+      gibsMonthlyDateFor(new Date('2026-08-01T00:00:00Z'), {
+        now,
+        latencyMonths: 3,
+      })
+    ).toBe('2026-05-01');
+  });
+
+  it('returns null before the layer start date', () => {
+    expect(
+      gibsMonthlyDateFor(new Date('1979-06-01T00:00:00Z'), {
+        now,
+        minDate: '1980-01-01',
+      })
+    ).toBe(null);
+  });
+});
+
+describe('gibsCloudUrl - cloud fraction day', () => {
+  it('builds a PNG URL for the day cloud fraction layer', () => {
+    const url = new URL(
+      gibsCloudUrl('2026-08-11', {
+        layer: GIBS_CLOUD_FRACTION_DAY_LAYER,
+        format: 'image/png',
+      })
+    );
+    expect(url.searchParams.get('LAYERS')).toBe(GIBS_CLOUD_FRACTION_DAY_LAYER);
+    expect(url.searchParams.get('FORMAT')).toBe('image/png');
   });
 });
 

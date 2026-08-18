@@ -10,11 +10,34 @@
  */
 import { GIBS_WMS_ENDPOINT } from './gibsClouds';
 
-/** Couche IMERG taux de précipitation, pas de temps 30 min. */
+/** Couche IMERG taux de précipitation, pas de temps 30 min (produit principal). */
 export const IMERG_LAYER = 'IMERG_Precipitation_Rate_30min';
+
+/**
+ * Couche IMERG QUOTIDIENNE (`IMERG_Precipitation_Rate`) — fallback de dernier recours quand la
+ * demi-heure exacte manque : plus robuste (une image par jour, moins de trous), même archive
+ * (~2000) et même palette que la 30 min. Confirmée disponible sur GIBS (probe réseau). Note :
+ * GIBS n'expose PAS de runs Early/Late/Final séparés — le `_30min` sert déjà le meilleur run.
+ */
+export const IMERG_DAILY_LAYER = 'IMERG_Precipitation_Rate';
 
 /** Première date où IMERG est disponible sur GIBS (mission GPM, ~2000 via reprocessing). */
 export const IMERG_MIN_DATE = '2000-06-01';
+/**
+ * Couverture native du produit IMERG V07 servi par GIBS.
+ *
+ * Le champ WMS est demandé sur la grille mondiale, mais son canal alpha porte le masque
+ * de rendu natif du produit. Le rendu doit donc conserver ce masque, y compris ses zones
+ * transparentes : aucune valeur ne doit être prolongée ou inventée vers les pôles.
+ * Les anciennes documentations IMERG mentionnant une limite stricte à ±60° ne
+ * décrivent pas le produit V07 actuellement référencé par GIBS.
+ */
+export const IMERG_COVERAGE = {
+  minLatitude: -90,
+  maxLatitude: 90,
+  productVersion: '07',
+  policy: 'native-alpha-no-extrapolation',
+} as const;
 
 const HALF_HOUR_MS = 30 * 60 * 1000;
 
@@ -96,7 +119,10 @@ export function imergFrameTimes(
 }
 
 /** URL WMS GetMap pour la couche pluie à un instant donné (BBOX global, EPSG:4326). */
-export function imergUrl(timestamp: Date, options: ImergUrlOptions = {}): string {
+export function imergUrl(
+  timestamp: Date,
+  options: ImergUrlOptions = {}
+): string {
   const width = options.width ?? 1024;
   const height = options.height ?? Math.round(width / 2);
   const params = new URLSearchParams({

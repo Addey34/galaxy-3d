@@ -11,6 +11,7 @@ import {
   createRingMaterial,
   createSphereGeometry,
   createSurfaceMaterial,
+  createThermalMaterial,
   RING_SEGMENTS,
 } from '@/config/layerConfig';
 import { RENDER_SETTINGS, SHADER_SETTINGS } from '@/config/engine';
@@ -30,12 +31,19 @@ export function buildLayers(
   const textures = config.textures ?? {};
   if (textures.surface || config.fallbackColor !== undefined)
     layers.set('surface', createSurfaceLayer(config, name));
+  // Couche température de surface (MERRA-2) : réservée aux corps « type Terre » (lumières
+  // nocturnes). Superposée AU-DESSUS des nuages (couche d'information). Texture fournie à
+  // l'exécution par ui/thermalLayer (hors LOD).
+  if (textures.lights) layers.set('thermal', createThermalLayer(config, name));
   if (textures.clouds) layers.set('clouds', createCloudsLayer(config, name));
   // Couche pluie IMERG : réservée aux corps « type Terre » (présence de lumières
   // nocturnes = Terre). La texture (frame de précipitation) est fournie à l'exécution
   // par ui/precipLayer, pas via config.textures → le LOD ne la touche pas.
   if (textures.lights) layers.set('precip', createPrecipLayer(config, name));
-  if (textures.atmosphere)
+  // Une atmosphère est une capacité visuelle, pas une texture obligatoire : le shader
+  // Fresnel peut être alimenté uniquement par atmosphereColor. Cela permet à la Terre
+  // de conserver une atmosphère même lorsqu'aucun asset bitmap dédié n'est nécessaire.
+  if (textures.atmosphere || config.atmosphereColor !== undefined)
     layers.set('atmosphere', createAtmosphereLayer(config, name));
   if (textures.lights) layers.set('lights', createLightsLayer(config, name));
   if (config.ring) layers.set('ring', createRingLayer(config, name));
@@ -53,6 +61,7 @@ function createSurfaceLayer(
   const material = createSurfaceMaterial(
     isSun,
     config.textures?.surface ? undefined : config.fallbackColor,
+    hasNightLights,
     hasNightLights
   );
   const mesh = new THREE.Mesh(
@@ -75,6 +84,23 @@ function createCloudsLayer(
   );
   mesh.name = `${name}_clouds`;
   if (RENDER_SETTINGS.shadowMap.enabled) configureShadows(mesh, false, true);
+  return mesh;
+}
+
+function createThermalLayer(
+  config: CelestialBodyConfig,
+  name: string
+): THREE.Mesh {
+  const mesh = new THREE.Mesh(
+    createSphereGeometry(config.radius, 'thermal'),
+    createThermalMaterial()
+  );
+  mesh.name = `${name}_thermal`;
+  // renderOrder = 4 : AU-DESSUS de la surface (0), des nuages (0) et de la pluie (2). La
+  // température est une couche d'INFORMATION superposée qui doit rester lisible quand active
+  // (sinon les nuages réels l'étouffent). Transparent, pas d'ombre.
+  mesh.renderOrder = 4;
+  mesh.visible = false; // activée à la demande (toggle du panneau météo)
   return mesh;
 }
 

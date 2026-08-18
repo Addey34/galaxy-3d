@@ -6,17 +6,17 @@
 | ----------------- | --------------------------------------- | ----------------- |
 | `pnpm typecheck`  | TypeScript strict, sans émission        | court             |
 | `pnpm lint`       | ESLint flat config                      | court             |
-| `pnpm test`       | 33 fichiers Vitest, logique et services | court             |
+| `pnpm test`       | 50 fichiers Vitest, logique et services | court             |
 | `pnpm verify`     | typecheck + lint + Vitest               | gate local rapide |
 | `pnpm build`      | typecheck + bundle Vite production      | moyen             |
-| `pnpm test:e2e`   | 29 scénarios Playwright Chromium/WebGL  | long              |
+| `pnpm test:e2e`   | scénarios Playwright Chromium/WebGL     | long              |
 | `pnpm verify:all` | verify + build + e2e                    | gate complet      |
 
 ## Règles
 
 - Toute logique mathématique, catalogue, horloge ou état déterministe reçoit un test Vitest voisin.
 - Toute interaction DOM, navigation, boot WebGL ou régression de mode reçoit un scénario dans `e2e/`.
-- Les tests e2e testent le câblage et les contrats accessibles ; ils ne valident pas les pixels.
+- Les tests e2e valident le câblage, les contrats observables et les erreurs WebGL ; ils ne constituent pas une preuve scientifique pixel par pixel.
 - Les textures haute résolution ne doivent pas bloquer le boot : le test de démarrage vérifie ce contrat.
 - Les tests doivent éviter les délais arbitraires ; utiliser des assertions Playwright et des états DOM observables.
 - Après une modification visuelle, lancer au minimum `pnpm verify:all` et joindre une capture dans la PR.
@@ -40,14 +40,31 @@ des invariants physiques et des frontières d’architecture.
 
 ## Snapshot actuel
 
-La suite compte actuellement 33 fichiers Vitest et 132 tests unitaires. La suite Playwright
-compte 29 scenarios Chromium/WebGL. Ces chiffres sont un instantane documentaire : la
-commande fait foi si un fichier de test est ajoute.
+La suite compte actuellement 50 fichiers Vitest et 288 tests unitaires (instantané du 17 août 2026). Le nombre de scénarios Playwright est volontairement laissé à la commande `pnpm exec playwright test --list` : la commande fait foi si un fichier est ajouté.
 
 Tout ajout de contenu doit verifier le chemin catalogue-asset, la resolution effectivement
 presente, le fallback si une donnee manque et la propriete des ressources Three.js. Pour un
 modele 3D ou une mission, ajouter en plus un test de referentiel et de liberation GPU avant
 de rendre l'objet navigable.
+
+### Matrice Terre et météo
+
+Après une modification de la Terre, exécuter au minimum :
+
+- `pnpm typecheck`
+- `pnpm lint`
+- `pnpm exec vitest run --testTimeout=15000`
+- `pnpm build`
+- `pnpm textures:audit`
+- `pnpm exec playwright test e2e/weather.spec.ts --reporter=line`
+- `pnpm exec playwright test e2e/precip-visual.spec.ts --reporter=line`
+- `pnpm exec playwright test e2e/earth-visual.spec.ts --reporter=line`
+
+`weather.spec.ts` couvre le panneau, les groupes exclusifs, le diagnostic et l'invariant « modèle caché sans donnée propre ». `precip-visual.spec.ts` utilise un fixture déterministe IMERG pour vérifier l'alpha natif et l'absence d'extrapolation polaire. `earth-visual.spec.ts` vérifie le câblage du displacement et le retour LOD sans dépendre d'une réponse météo.
+
+Le client Open-Meteo possède en plus des tests Vitest déterministes pour le retry 429/5xx, `Retry-After`, la déduplication en vol et le cache des réponses. Les tests de réseau ne valident pas la disponibilité du fournisseur en production ; une capture live et le diagnostic `?debug-meteo` sont requis pour qualifier une donnée réellement reçue.
+
+`verify:all` reste le gate complet de release. Si son étape SPK/Playwright atteint la limite d'infrastructure sans assertion exploitable, conserver les résultats des commandes ciblées ci-dessus et signaler le timeout séparément.
 
 ### Audit des assets visuels
 

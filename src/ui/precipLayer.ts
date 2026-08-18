@@ -1,47 +1,35 @@
-/**
- * Couche PLUIE mondiale (NASA IMERG) superposée à la Terre. Fine configuration du socle
- * générique `datedTextureLayer` : affiche la frame de précipitation RÉELLE correspondant à
- * l'instant de simulation (demi-heure courante). La pluie change au rythme réel des données
- * (30 min) — jamais en time-lapse accéléré ; le FONDU ENCHAÎNÉ entre frames est géré côté
- * `CelestialObject.setPrecipTexture` (transition douce, sans clignotement).
- *
- * Préchargement de la demi-heure suivante (transition sans à-coup quand le temps avance).
- * Repli silencieux si le réseau échoue (le socle n'applique rien → la Terre reste normale).
- */
+/** Couche satellite NASA IMERG. Configuration fine de observedTextureLayer. */
 import { PRECIP_SETTINGS } from '@/config/engine';
-import { imergEndForDate, imergUrl } from '@/core/gibsPrecip';
-import { createDatedTextureLayer } from './datedTextureLayer';
+import { resolvePrecipSources } from '@/core/layerSource';
+import { getEarth, type WeatherLayerHandle } from './earthLayer';
+import { setupObservedTextureLayer } from './observedTextureLayer';
 import type { PublicAPI } from '@/SolarSystemApp';
 
-const EARTH_NAME = 'earth';
-const HALF_HOUR_MS = 30 * 60 * 1000;
-
-export function setupPrecipLayer(api: PublicAPI): () => void {
+export function setupPrecipLayer(api: PublicAPI): WeatherLayerHandle | null {
   const settings = PRECIP_SETTINGS;
-  const earth = api.sceneSystem.getBody(EARTH_NAME);
-
-  const dateOptions = {
-    latencyHours: settings.latencyHours,
-    minDate: settings.minDate,
-  };
-
-  return createDatedTextureLayer(api, {
+  return setupObservedTextureLayer(api, {
     name: 'PrecipLayer',
-    enabled: settings.enabled && !!earth,
-    // Clé = instant IMERG (ISO) de la demi-heure courante ; null hors plage.
-    keyForDate: (date) => imergEndForDate(date, dateOptions)?.toISOString() ?? null,
-    urlForKey: (key) =>
-      imergUrl(new Date(key), {
-        layer: settings.layer,
-        width: settings.resolution,
+    id: 'precip',
+    labelKey: 'weather.precip',
+    noteKey: 'weather.precip.note',
+    enabled: settings.enabled,
+    initial: settings.enabled,
+    earth: getEarth(api, 'PrecipLayer', settings.enabled),
+    targetLayer: 'precip',
+    resolveSources: (simDate, now) =>
+      resolvePrecipSources(simDate, now, {
+        latencyHours: settings.latencyHours,
+        minDate: settings.minDate,
+        stepBack: settings.stepBack,
+        resolution: settings.resolution,
       }),
-    apply: (texture) =>
-      earth!.setPrecipTexture(texture, { opacity: settings.opacity }),
-    // Précharge la demi-heure suivante pour une transition sans à-coup.
-    prefetchKeys: (key) => {
-      const next = new Date(new Date(key).getTime() + HALF_HOUR_MS);
-      const nextEnd = imergEndForDate(next, dateOptions);
-      return nextEnd ? [nextEnd.toISOString()] : [];
+    minTileBytes: settings.minTileBytes,
+    legendGradient: {
+      css: 'linear-gradient(90deg, rgb(191,230,255) 0%, rgb(51,133,242) 55%, rgb(8,26,107) 100%)',
+      loKey: 'weather.precip.legendLo',
+      hiKey: 'weather.precip.legendHi',
     },
+    apply: (earth, texture) =>
+      earth.setPrecipTexture(texture, { opacity: settings.opacity }),
   });
 }

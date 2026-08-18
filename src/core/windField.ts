@@ -12,6 +12,10 @@
  */
 
 const OPEN_METEO_GFS = 'https://api.open-meteo.com/v1/gfs';
+// Réanalyse ERA5 pour le VOYAGE TEMPS vers le passé (jusqu'à ~5 j avant le présent, retour
+// jusqu'en 1940). Même schéma horaire vitesse+direction que le forecast GFS ; seule l'URL et
+// la fenêtre temporelle (start_date=end_date=jour ciblé) changent. Cf. core/meteoTimeTravel.
+const OPEN_METEO_ARCHIVE = 'https://archive-api.open-meteo.com/v1/archive';
 const DEG2RAD = Math.PI / 180;
 
 export interface WindGridOptions {
@@ -60,6 +64,27 @@ export function buildWindGridUrl(options: WindGridOptions = {}): string {
     forecast_days: '1',
   });
   return `${OPEN_METEO_GFS}?${params.toString()}`;
+}
+
+/**
+ * URL archive ERA5 pour la grille de vent d'un JOUR passé (`isoDay` = `YYYY-MM-DD`).
+ * `start_date`/`end_date` bornent la journée ; la réponse porte 24 valeurs horaires par
+ * point, dont `parseWindGrid` sélectionne l'heure via `hourIndex`. Mêmes coordonnées de
+ * grille que `buildWindGridUrl` → réponse dans le même ordre, parsing identique.
+ */
+export function buildWindArchiveUrl(
+  isoDay: string,
+  options: WindGridOptions = {}
+): string {
+  const { lats, lons } = windGridCoords(options);
+  const params = new URLSearchParams({
+    latitude: lats.join(','),
+    longitude: lons.join(','),
+    hourly: 'wind_speed_10m,wind_direction_10m',
+    start_date: isoDay,
+    end_date: isoDay,
+  });
+  return `${OPEN_METEO_ARCHIVE}?${params.toString()}`;
 }
 
 /** Convertit vitesse (km/h) + direction météo (°) en composantes u (est) / v (nord). */
