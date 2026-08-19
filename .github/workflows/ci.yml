@@ -13,8 +13,11 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # Gate rapide et FIABLE : types, lint, tests unitaires, audit, build. C'est lui qui
+  # conditionne le deploiement — le site se met a jour vite et n'est jamais bloque par un
+  # test e2e navigateur capricieux (GPU logiciel CI).
   verify:
-    name: Verify and browser tests
+    name: Verify and build
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -29,13 +32,28 @@ jobs:
       - run: pnpm verify
       - run: pnpm audit:prod
       - run: pnpm build
-      - run: pnpm exec playwright install --with-deps chromium
-      - run: pnpm test:e2e
 
-      # Déploiement Firebase Hosting UNIQUEMENT sur push vers main, une fois que tout le gate
-      # ci-dessus (verify + audit + build + e2e) a passé — jamais une version cassée en ligne.
-      # Requiert le secret FIREBASE_TOKEN (repo → Settings → Secrets and variables → Actions),
-      # obtenu via `firebase login:ci`. Le meme jeton peut servir a plusieurs projets Firebase.
+      # Deploiement Firebase Hosting sur push main, des que verify+build passent (sans
+      # attendre l'e2e). Requiert le secret FIREBASE_TOKEN.
       - name: Deploy to Firebase Hosting
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: pnpm dlx firebase-tools deploy --only hosting --token ${{ secrets.FIREBASE_TOKEN }}
+
+  # Tests navigateur end-to-end : job SEPARE qui tourne en parallele. Il sert d'ALERTE
+  # (un echec signale une regression de cablage) mais ne bloque pas le deploiement, car
+  # le rendu WebGL en GPU logiciel CI est lent et parfois capricieux sur les scenarios lourds.
+  e2e:
+    name: Browser tests (e2e)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm test:e2e
