@@ -188,10 +188,10 @@
       "body": "earth",
       "layer": "surface",
       "license": "public-domain",
-      "credit": "NASA Earth Observatory / Blue Marble Next Generation (August 2004, 21600×10800)",
+      "credit": "NASA Earth Observatory / Blue Marble — Land Surface, Shallow Water & Shaded Topography (domaine public, 21600×10800)",
       "tier": "free",
-      "sourceUrl": "https://eoimages.gsfc.nasa.gov/images/imagerecords/73000/73776/world.topo.bathy.200408.3x21600x10800.jpg",
-      "postProcess": "Aucune amplification bleue : référence NASA restaurée avec océans et glace polaire conservés."
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:Land_shallow_topo_2048.jpg",
+      "postProcess": "Base NASA SANS couche nuageuse (Arctique propre, pas de voile blanc diffus). Teinte de l'océan éclaircie uniformément vers un bleu de référence (R30 G59 B117, mesuré sur la composite Blue Marble pour un rendu honnête vu de l'espace), appliquée UNIQUEMENT aux pixels océan via le masque terre/mer (spec map) — continents et vraie glace polaire (Groenland, Antarctique) intacts. Regénérée en 8k/4k/2k/1k (Lanczos, mozjpeg q90)."
     },
     {
       "body": "earth",

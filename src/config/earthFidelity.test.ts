@@ -158,20 +158,26 @@ describe('Earth scientific fidelity guardrails', () => {
     const file = earthTexture('earth_surface_2k.jpg');
     expect(existsSync(file)).toBe(true);
 
+    // La référence NASA « Land shallow topo » représente le pôle Nord de façon RÉALISTE :
+    // pas un aplat blanc jusqu'au bord (ancien voile), mais de la banquise/glace vive (Groenland,
+    // archipel arctique) au milieu d'océan sombre. On vérifie donc la PRÉSENCE de glace blanche
+    // dans la bande arctique (~0–15 % du haut), pas la blancheur moyenne de la ligne extrême.
+    const band = Math.round(1024 * 0.15);
     const { data, info } = await sharp(file)
-      .extract({ left: 0, top: 0, width: 2048, height: 1 })
+      .extract({ left: 0, top: 0, width: 2048, height: band })
       .raw()
       .toBuffer({ resolveWithObject: true });
-    const channelMeans = [0, 1, 2].map(
-      (channel) =>
-        Array.from(
-          { length: info.width },
-          (_, index) => data[index * 3 + channel]
-        ).reduce((sum, value) => sum + value, 0) / info.width
-    );
 
-    expect(channelMeans[0]).toBeGreaterThan(150);
-    expect(channelMeans[2] - channelMeans[0]).toBeLessThan(50);
+    let icePixels = 0;
+    for (let i = 0; i < data.length; i += info.channels) {
+      const r = data[i];
+      const g = data[i + 1];
+      const b = data[i + 2];
+      // Glace = clair et peu coloré (R,G,B élevés et proches).
+      if (r > 150 && g > 150 && b > 150 && Math.abs(r - b) < 40) icePixels += 1;
+    }
+    // Le Groenland + l'archipel arctique fournissent largement cette quantité de glace vive.
+    expect(icePixels).toBeGreaterThan(3000);
   });
 
   it('keeps the surface seam and ocean color below the documented ceiling', async () => {
