@@ -1,10 +1,11 @@
 import { expect, test } from '@playwright/test';
+import { blockExternalNetwork } from './netBlock';
 
 // Déterminisme : pas de dépendance à l'API JPL SBDB live pendant les tests.
 // La visite guidée du premier lancement est neutralisée (son backdrop plein écran
 // bloquerait sinon les clics sur le canvas et les contrôles).
 test.beforeEach(async ({ page }) => {
-  await page.route('**/sbdb_query.api*', (route) => route.abort());
+  await blockExternalNetwork(page);
   await page.addInitScript(() => {
     localStorage.setItem('ssv-guided-tour-v1', '1');
   });

@@ -1,9 +1,10 @@
 import { expect, test, type Page } from '@playwright/test';
+import { blockExternalNetwork } from './netBlock';
 
 // La visite guidée du premier lancement est neutralisée (son backdrop plein écran
 // intercepterait sinon les clics sur les overlays testés ici).
 test.beforeEach(async ({ page }) => {
-  await page.route('**/sbdb_query.api*', (route) => route.abort());
+  await blockExternalNetwork(page);
   await page.addInitScript(() => {
     localStorage.setItem('ssv-guided-tour-v1', '1');
   });

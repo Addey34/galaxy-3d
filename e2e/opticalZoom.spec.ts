@@ -1,7 +1,8 @@
 import { expect, test } from '@playwright/test';
+import { blockExternalNetwork } from './netBlock';
 
 test.beforeEach(async ({ page }) => {
-  await page.route('**/sbdb_query.api*', (route) => route.abort());
+  await blockExternalNetwork(page);
   await page.addInitScript(() => {
     localStorage.setItem('ssv-guided-tour-v1', '1');
   });

@@ -1,8 +1,9 @@
 import { expect, test } from '@playwright/test';
+import { blockExternalNetwork } from './netBlock';
 
 test.describe('first visit', () => {
   test.beforeEach(async ({ page }) => {
-    await page.route('**/sbdb_query.api*', (route) => route.abort());
+    await blockExternalNetwork(page);
   });
 
   test('starts a short four-step tour on the first visit', async ({ page }) => {
@@ -56,7 +57,7 @@ test.describe('first visit', () => {
 
 test.describe('relaunch', () => {
   test.beforeEach(async ({ page }) => {
-    await page.route('**/sbdb_query.api*', (route) => route.abort());
+    await blockExternalNetwork(page);
     await page.addInitScript(() => {
       localStorage.setItem('ssv-guided-tour-v1', '1');
     });

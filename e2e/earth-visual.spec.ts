@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { blockExternalNetwork } from './netBlock';
 
 /**
  * Validation visuelle du relief géométrique de la Terre (EA-03).
@@ -14,7 +15,7 @@ import { expect, test } from '@playwright/test';
  */
 test.beforeEach(async ({ page }) => {
   // Déterminisme : pas d'appel réseau SBDB, pas de visite guidée bloquante, locale figée.
-  await page.route('**/sbdb_query.api*', (route) => route.abort());
+  await blockExternalNetwork(page);
   await page.addInitScript(() => {
     localStorage.setItem('ssv-guided-tour-v1', '1');
     localStorage.setItem('ssv-locale', 'en');

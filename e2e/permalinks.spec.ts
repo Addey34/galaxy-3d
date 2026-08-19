@@ -1,7 +1,8 @@
 import { expect, test } from '@playwright/test';
+import { blockExternalNetwork } from './netBlock';
 
 test.beforeEach(async ({ page }) => {
-  await page.route('**/sbdb_query.api*', (route) => route.abort());
+  await blockExternalNetwork(page);
 });
 
 test('restores mode, selected body and simulation date from a permalink', async ({

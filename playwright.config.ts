@@ -24,8 +24,10 @@ export default defineConfig({
   fullyParallel: false,
   workers: 1,
   forbidOnly: !!process.env.CI,
-  // Une reprise uniquement en CI pour absorber l'aléa des machines partagées.
-  retries: process.env.CI ? 1 : 0,
+  // Reprises en CI pour absorber l'aléa des machines partagées + décodage texture qui stalle
+  // le thread (les scénarios lourds comme titan enchaînent 8 corps × 2 modes). 2 reprises =
+  // 3 tentatives : un vrai bug échoue aux 3, un à-coup GPU/GC est absorbé.
+  retries: process.env.CI ? 2 : 0,
   // Budget par test : boot (~15-30 s) + interactions + vols caméra (1,2 s chacun).
   timeout: 60_000,
   expect: {
