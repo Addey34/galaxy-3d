@@ -148,23 +148,29 @@ export const messages: Record<Locale, Dict> = {
       'Choose a planet in the top bar or drag the scene.',
     'tour.step.mode.title': '2. Choose your view',
     'tour.step.mode.text':
-      'Educational is simple; Exploration shows the true scale.',
+      'Educational stays simple while Exploration shows the true scale.',
     'tour.step.time.title': '3. Change time',
     'tour.step.time.text':
       'Use the date and speed controls to move through time.',
-    'tour.step.settings.title': '4. Adjust display',
+    'tour.step.expand.title': '4. Unfold the clock',
+    'tour.step.expand.text':
+      'Click the clock to unfold the advanced date and speed settings.',
+    'tour.step.info.title': '5. Inspect a target',
+    'tour.step.info.text':
+      'After selecting a body, open its information panel from the target button.',
+    'tour.step.settings.title': '6. Adjust display',
     'tour.step.settings.text':
       'Open display settings to show or hide orbits, names and markers.',
-    'tour.step.weather.title': '5. Explore weather',
+    'tour.step.weather.title': '7. Explore weather',
     'tour.step.weather.text':
       'Open weather layers to see clouds, rain, wind and surface data on Earth.',
-    'tour.step.events.title': '6. Watch the sky',
+    'tour.step.events.title': '8. Watch the sky',
     'tour.step.events.text':
       'Check upcoming astronomical events and select an event for details.',
-    'tour.step.quality.title': '7. Tune graphics',
+    'tour.step.quality.title': '9. Tune graphics',
     'tour.step.quality.text':
       'Choose a graphics quality level to balance visual detail and smoothness.',
-    'tour.step.help.title': '8. Find help',
+    'tour.step.help.title': '10. Find help',
     'tour.step.help.text':
       'You can reopen this quick tour from the ? help button.',
 
@@ -193,7 +199,8 @@ export const messages: Record<Locale, Dict> = {
     'weather.wind': 'Wind',
     'weather.thermal': 'Air temperature (MERRA-2)',
     'weather.thermalModel': 'Air temperature (Open-Meteo)',
-    'weather.clouds.note': "Real cloud cover from NASA satellite imagery (day's snapshot).",
+    'weather.clouds.note':
+      "Real cloud cover from NASA satellite imagery (day's snapshot).",
     'weather.cloudsModel.note':
       'Modelled cloud cover (Open-Meteo): gap-free worldwide, supports past and forecast — pick this for live/time-travel.',
     'weather.precip.note':
@@ -209,11 +216,13 @@ export const messages: Record<Locale, Dict> = {
     'weather.thermalModel.lo': '−40 °C',
     'weather.thermalModel.hi': '+45 °C',
     'weather.pressureModel': 'Sea-level pressure (Open-Meteo)',
-    'weather.pressureModel.note': 'Sea-level pressure shown as smooth isobars in hPa.',
+    'weather.pressureModel.note':
+      'Sea-level pressure shown as smooth isobars in hPa.',
     'weather.pressureModel.lo': '960 hPa',
     'weather.pressureModel.hi': '1060 hPa',
     'weather.humidityModel': 'Relative humidity (Open-Meteo)',
-    'weather.humidityModel.note': 'Relative humidity at 2 m from Open-Meteo, in percent.',
+    'weather.humidityModel.note':
+      'Relative humidity at 2 m from Open-Meteo, in percent.',
     'weather.humidityModel.lo': '0 %',
     'weather.humidityModel.hi': '100 %',
     'weather.source.prefix': 'Source:',
@@ -225,8 +234,10 @@ export const messages: Record<Locale, Dict> = {
     'weather.status.forecast_uncertain': 'uncertain forecast',
     'weather.status.climatology': 'climate average',
     'weather.status.unavailable': 'unavailable',
-    'weather.wind.note': 'Wind flow (Open-Meteo): colour and speed follow wind strength.',
-    'weather.thermal.note': 'Air temperature near the surface (MERRA-2 monthly):',
+    'weather.wind.note':
+      'Wind flow (Open-Meteo): colour and speed follow wind strength.',
+    'weather.thermal.note':
+      'Air temperature near the surface (MERRA-2 monthly):',
 
     // ── Barre de navigation planètes ──
     'nav.collapse': 'Hide planet bar',
@@ -416,23 +427,29 @@ export const messages: Record<Locale, Dict> = {
       'Choisissez une planète dans la barre du haut ou faites glisser la scène.',
     'tour.step.mode.title': '2. Choisir une vue',
     'tour.step.mode.text':
-      'Éducatif simplifie les distances ; Exploration montre l’échelle réelle.',
+      'Éducatif simplifie les distances quand Exploration montre l’échelle réelle.',
     'tour.step.time.title': '3. Changer le temps',
     'tour.step.time.text':
       'Utilisez la date et la vitesse pour voyager dans le temps.',
-    'tour.step.settings.title': '4. Régler l’affichage',
+    'tour.step.expand.title': '4. Déplier l’horloge',
+    'tour.step.expand.text':
+      'Cliquez sur l’horloge pour déplier les réglages avancés de date et de vitesse.',
+    'tour.step.info.title': '5. Inspecter une cible',
+    'tour.step.info.text':
+      'Après avoir sélectionné un corps, ouvrez sa fiche avec le bouton d’information de la cible.',
+    'tour.step.settings.title': '6. Régler l’affichage',
     'tour.step.settings.text':
       'Ouvrez les réglages d’affichage pour afficher ou masquer les orbites, les noms et les points.',
-    'tour.step.weather.title': '5. Explorer la météo',
+    'tour.step.weather.title': '7. Explorer la météo',
     'tour.step.weather.text':
       'Ouvrez les couches météo pour voir les nuages, la pluie, le vent et les données de surface sur Terre.',
-    'tour.step.events.title': '6. Observer le ciel',
+    'tour.step.events.title': '8. Observer le ciel',
     'tour.step.events.text':
-      'Consultez les prochains événements astronomiques et sélectionnez-en un pour plus de détails.',
-    'tour.step.quality.title': '7. Ajuster les graphismes',
+      'Consultez les prochains événements astronomiques et choisissez en un pour plus de détails.',
+    'tour.step.quality.title': '9. Ajuster les graphismes',
     'tour.step.quality.text':
       'Choisissez une qualité graphique pour équilibrer le niveau de détail et la fluidité.',
-    'tour.step.help.title': '8. Retrouver l’aide',
+    'tour.step.help.title': '10. Retrouver l’aide',
     'tour.step.help.text':
       'Vous pourrez relancer cette visite avec le bouton ?.',
 
@@ -462,7 +479,7 @@ export const messages: Record<Locale, Dict> = {
     'weather.thermal': 'Température MERRA-2',
     'weather.thermalModel': 'Température Open-Meteo',
     'weather.clouds.note':
-      "Couverture nuageuse réelle, imagerie satellite NASA (image du jour).",
+      'Couverture nuageuse réelle, imagerie satellite NASA (image du jour).',
     'weather.cloudsModel.note':
       'Couverture nuageuse modélisée (Open-Meteo) : mondiale sans trou, gère passé et prévision — à choisir pour le direct / voyage dans le temps.',
     'weather.precip.note':
@@ -478,11 +495,13 @@ export const messages: Record<Locale, Dict> = {
     'weather.thermalModel.lo': '−40 °C',
     'weather.thermalModel.hi': '+45 °C',
     'weather.pressureModel': 'Pression Open-Meteo',
-    'weather.pressureModel.note': 'Pression au niveau de la mer affichée en isobares (hPa).',
+    'weather.pressureModel.note':
+      'Pression au niveau de la mer affichée en isobares (hPa).',
     'weather.pressureModel.lo': '960 hPa',
     'weather.pressureModel.hi': '1060 hPa',
     'weather.humidityModel': 'Humidité Open-Meteo',
-    'weather.humidityModel.note': 'Humidité relative à 2 m, fournie par Open-Meteo, en pourcentage.',
+    'weather.humidityModel.note':
+      'Humidité relative à 2 m, fournie par Open-Meteo, en pourcentage.',
     'weather.humidityModel.lo': '0 %',
     'weather.humidityModel.hi': '100 %',
     'weather.source.prefix': 'Source :',

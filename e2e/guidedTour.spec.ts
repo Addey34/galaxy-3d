@@ -6,7 +6,9 @@ test.describe('first visit', () => {
     await blockExternalNetwork(page);
   });
 
-  test('starts the complete eight-step tour on the first visit', async ({ page }) => {
+  test('starts the complete nine-step tour on the first visit', async ({
+    page,
+  }) => {
     await page.goto('/');
     await expect(page.locator('#loader')).toBeHidden({ timeout: 30_000 });
 
@@ -15,7 +17,7 @@ test.describe('first visit', () => {
     await expect(dialog).toHaveAttribute('data-step', '1');
     await expect(page.locator('.tour-progress')).toContainText('1');
 
-    for (const step of ['2', '3', '4', '5', '6', '7', '8']) {
+    for (const step of ['2', '3', '4', '5', '6', '7', '8', '9']) {
       await page.locator('.tour-next').click();
       await expect(dialog).toHaveAttribute('data-step', step);
     }
@@ -37,7 +39,7 @@ test.describe('first visit', () => {
       const dialog = page.locator('.tour-dialog');
       await expect(dialog).toBeVisible();
 
-      for (const step of ['1', '2', '3', '4', '5', '6', '7', '8']) {
+      for (const step of ['1', '2', '3', '4', '5', '6', '7', '8', '9']) {
         await expect(dialog).toHaveAttribute('data-step', step);
         const box = await dialog.boundingBox();
         if (!box)
@@ -46,7 +48,7 @@ test.describe('first visit', () => {
         expect(box.y).toBeGreaterThanOrEqual(0);
         expect(box.x + box.width).toBeLessThanOrEqual(390);
         expect(box.y + box.height).toBeLessThanOrEqual(844);
-        if (step !== '8') await page.locator('.tour-next').click();
+        if (step !== '9') await page.locator('.tour-next').click();
       }
 
       await page.keyboard.press('Escape');

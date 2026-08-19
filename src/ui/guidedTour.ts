@@ -28,6 +28,16 @@ const STEPS: Array<
     textKey: 'tour.step.time.text',
   },
   {
+    target: '#time-readout',
+    titleKey: 'tour.step.expand.title',
+    textKey: 'tour.step.expand.text',
+  },
+  {
+    target: '#info-trigger',
+    titleKey: 'tour.step.info.title',
+    textKey: 'tour.step.info.text',
+  },
+  {
     target: '#settings-trigger',
     titleKey: 'tour.step.settings.title',
     textKey: 'tour.step.settings.text',
@@ -145,7 +155,6 @@ export function setupGuidedTour(): GuidedTour {
     const config = STEPS[stepIndex];
     if (!config) return;
     const target = document.querySelector<HTMLElement>(config.target);
-    if (!target) return;
     const step: TourStep = {
       target: config.target,
       title: t(config.titleKey),
@@ -161,6 +170,28 @@ export function setupGuidedTour(): GuidedTour {
     previous.disabled = stepIndex === 0;
     next.textContent =
       stepIndex === STEPS.length - 1 ? t('tour.finish') : t('tour.next');
+
+    // Some controls, such as the target info button, are intentionally hidden until
+    // the user selects a body. Keep their explanatory step visible without leaving a
+    // stale highlight on the previous target.
+    const targetRect = target?.getBoundingClientRect();
+    const targetVisible =
+      !!target &&
+      !target.hidden &&
+      !!targetRect &&
+      targetRect.width > 0 &&
+      targetRect.height > 0;
+    if (!target || !targetVisible) {
+      highlight.hidden = true;
+      const dialogWidth = Math.min(320, window.innerWidth - 24);
+      dialog.style.left = `${Math.max(12, (window.innerWidth - dialogWidth) / 2)}px`;
+      dialog.style.top = '50%';
+      dialog.style.width = `${dialogWidth}px`;
+      dialog.style.transform = 'translateY(-50%)';
+      return;
+    }
+    highlight.hidden = false;
+    dialog.style.transform = 'none';
     position(target);
   };
 
