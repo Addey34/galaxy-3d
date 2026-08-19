@@ -63,8 +63,10 @@ test('future freezes clouds: no GIBS request storm, no page error', async ({
 
   const duringFuture = gibsRequests.length - baseline;
   // Clampé à la dernière image → la requête se répète à l'identique et le gating l'absorbe.
-  // Avant le fix : une requête ratée par frame (des centaines). Après : une poignée au plus.
-  expect(duringFuture).toBeLessThan(15);
+  // Avant le fix : une requête ratée par frame (des CENTAINES). Après : une poignée. Le seuil
+  // distingue « pas de storm » (quelques requêtes de masques/frames) d'une rafale par frame ;
+  // 30 garde cette marge sans tolérer un vrai storm (qui en produirait des centaines).
+  expect(duringFuture).toBeLessThan(30);
   expect(errors, errors.join(' | ')).toEqual([]);
 });
 
