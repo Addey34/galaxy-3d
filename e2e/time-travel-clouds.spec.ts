@@ -19,6 +19,13 @@ import { expect, test } from '@playwright/test';
  */
 test.beforeEach(async ({ page }) => {
   await page.route('**/sbdb_query.api*', (route) => route.abort());
+  // GIBS/Open-Meteo : on ABORT (échec immédiat) au lieu de laisser pendre. Les compteurs de
+  // requêtes de ce test s'incrémentent à l'ÉMISSION (event `request`), donc le comptage reste
+  // valide ; mais l'app ne bloque plus en attendant une vraie tuile réseau → le loader se cache
+  // en CI (GPU logiciel lent) sans dépendre de la latence NASA. Le repli silencieux des couches
+  // garde le rendu propre. sbdb déjà abort ci-dessus.
+  await page.route('**gibs.earthdata.nasa.gov/**', (route) => route.abort());
+  await page.route('**open-meteo.com/**', (route) => route.abort());
   await page.addInitScript(() => {
     localStorage.setItem('ssv-guided-tour-v1', '1');
     localStorage.setItem('ssv-locale', 'en');
@@ -39,7 +46,7 @@ test('future freezes clouds: no GIBS request storm, no page error', async ({
 
   await page.setViewportSize({ width: 1400, height: 1000 });
   await page.goto('/?body=earth');
-  await expect(page.locator('#loader')).toBeHidden({ timeout: 30_000 });
+  await expect(page.locator('#loader')).toBeHidden({ timeout: 60_000 });
   // Laisse charger l'observation temps réel (baseline) avant de mesurer le futur.
   await page.waitForTimeout(6000);
   const baseline = gibsRequests.length;
@@ -78,7 +85,7 @@ test('past loads the dated GIBS archive for the simulated day', async ({
   await page.setViewportSize({ width: 1400, height: 1000 });
   // Boot sur une date passée dans l'archive VIIRS via permalink.
   await page.goto('/?body=earth&date=2018-06-15T12:00:00Z');
-  await expect(page.locator('#loader')).toBeHidden({ timeout: 30_000 });
+  await expect(page.locator('#loader')).toBeHidden({ timeout: 60_000 });
   await page.waitForTimeout(8000);
 
   // La couche True Color doit viser juin 2018 (archive réelle), pas la date du jour.

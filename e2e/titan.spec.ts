@@ -17,7 +17,7 @@ test('Planetary moons are navigable in both display modes with live information 
   page,
 }) => {
   await page.goto('/');
-  await expect(page.locator('#loader')).toBeHidden({ timeout: 30_000 });
+  await expect(page.locator('#loader')).toBeHidden({ timeout: 60_000 });
 
   const info = page.locator('#body-info');
   for (const [id, name] of [

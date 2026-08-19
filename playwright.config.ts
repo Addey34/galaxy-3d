@@ -28,11 +28,15 @@ export default defineConfig({
   // le thread (les scénarios lourds comme titan enchaînent 8 corps × 2 modes). 2 reprises =
   // 3 tentatives : un vrai bug échoue aux 3, un à-coup GPU/GC est absorbé.
   retries: process.env.CI ? 2 : 0,
-  // Budget par test : boot (~15-30 s) + interactions + vols caméra (1,2 s chacun).
-  timeout: 60_000,
+  // Budget par test : boot (~15-30 s) + interactions + vols caméra (1,2 s chacun). En CI, le
+  // runner rend en GPU LOGICIEL (SwiftShader, pas de vrai GPU) : le decodage des textures haute
+  // resolution (dont la normal map 8k) est bien plus lent → on double le budget en CI pour les
+  // scenarios lourds (titan, solarDebug), sans masquer un vrai bug (qui echoue quand meme aux 3
+  // tentatives).
+  timeout: process.env.CI ? 120_000 : 60_000,
   expect: {
     // Assertions jouées pendant/juste après le boot (thread encore sous à-coups de décodage).
-    timeout: 15_000,
+    timeout: process.env.CI ? 30_000 : 15_000,
   },
   reporter: 'list',
   use: {

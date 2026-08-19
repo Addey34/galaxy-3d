@@ -10,7 +10,7 @@ test.beforeEach(async ({ page }) => {
 
 test('solar debug exposes pole illumination diagnostics', async ({ page }) => {
   await page.goto('/?debug-solar');
-  await expect(page.locator('#loader')).toBeHidden({ timeout: 30_000 });
+  await expect(page.locator('#loader')).toBeHidden({ timeout: 60_000 });
 
   const panel = page.locator('#solar-debug');
   await expect(panel).toBeVisible();
