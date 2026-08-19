@@ -142,6 +142,27 @@ export class OrbitalMechanics {
   private _prevPaused = false;
   private _simDeltaSeconds = 0;
 
+  // ── Throttle du recalcul d'éphéméride ──
+  // HelioVector (astronomy-engine) est un calcul de séries coûteux, exécuté par corps et par
+  // frame. Au temps réel (1×) la date n'avance que de ~16 ms/frame : les positions sont
+  // visuellement identiques d'une frame à l'autre → recalculer chaque frame est du gaspillage
+  // CPU pur + des allocations Vector3 qui nourrissent le GC (lag continu, aggravé sous RAM
+  // saturée). On ne recalcule donc les positions que lorsque la date SIMULÉE a avancé d'assez
+  // pour être VISIBLE. Le seuil est PAR CORPS, dérivé de sa période orbitale : un seuil absolu
+  // global ferait saccader les lunes rapides (Phobos, période ~7,6 h, saut ~14°/pas à 5 min)
+  // tout en sur-recalculant Neptune. On borne le mouvement à ~0,5° d'orbite par pas → invisible
+  // pour tous, tout en gardant un recalcul rare au 1× (Phobos : ~0,5° en ~38 s réelles).
+  // `_lastPositionMs = null` force le premier recalcul (et après tout saut/morph/reprise).
+  private _lastPositionMs: number | null = null;
+  // Fraction d'orbite tolérée entre deux recalculs (0,5° → mouvement lisse, saut imperceptible).
+  private static readonly _RECOMPUTE_ORBIT_FRACTION = 0.5 / 360;
+  // Corps sans période connue (aucun mouvement orbital rapide) : seuil de repli confortable.
+  private static readonly _FALLBACK_THRESHOLD_MS = 5 * 60 * 1000;
+  // Seuil du corps le plus rapide (ms simulées) : c'est lui qui décide quand recalculer le
+  // batch entier (les corps restent ainsi cohérents entre eux). Calculé une fois au boot ;
+  // la valeur initiale n'est qu'un repli avant le calcul du constructeur.
+  private _minRecomputeThresholdMs = OrbitalMechanics._FALLBACK_THRESHOLD_MS;
+
   /** Notifie l'application pour recalculer les lignes éducatives après un saut/date ou mode. */
   onOrbitsChanged: (() => void) | null = null;
 
@@ -168,10 +189,15 @@ export class OrbitalMechanics {
     private readonly config: CelestialConfig,
     private bodies: CelestialBodies
   ) {
-    // Résout le parent de chaque satellite parentRelative une fois : sa position est
-    // exprimée relativement au parent (helio(corps) − helio(parent)), plus de référentiel
-    // terrestre codé en dur.
+    // Une seule passe sur le catalogue, deux responsabilités indépendantes :
+    //   1. Résoudre le parent de chaque satellite parentRelative (position relative au parent :
+    //      helio(corps) − helio(parent), plus de référentiel terrestre codé en dur).
+    //   2. Retenir la période orbitale la plus courte, qui fixe le seuil de throttle (ci-dessous).
+    let minPeriodDays = Infinity;
     forEachBody(config, ({ name, config: cfg, parentName }) => {
+      const period = cfg.realData?.orbitPeriodDays;
+      if (period && period > 0 && period < minPeriodDays) minPeriodDays = period;
+
       if (cfg.frame !== 'parentRelative' || parentName === null) return;
       this._parentName.set(name, parentName);
       const parent = config.bodies[parentName];
@@ -181,6 +207,14 @@ export class OrbitalMechanics {
       if (parentAstro !== undefined)
         this._parentAstroBody.set(name, parentAstro);
     });
+
+    // Seuil de recalcul = fraction d'orbite du corps LE PLUS RAPIDE (période la plus courte).
+    // Il gouverne le batch entier : dès qu'il est franchi, on recalcule tous les corps (cohérence
+    // mutuelle). Les corps lents sont donc recalculés « en avance », mais leur mouvement propre
+    // reste bien sous 0,5° → aucun coût visuel.
+    this._minRecomputeThresholdMs = Number.isFinite(minPeriodDays)
+      ? minPeriodDays * MS_PER_DAY * OrbitalMechanics._RECOMPUTE_ORBIT_FRACTION
+      : OrbitalMechanics._FALLBACK_THRESHOLD_MS;
   }
 
   // ============================================================================
@@ -211,6 +245,18 @@ export class OrbitalMechanics {
     this._advanceMorph(realDelta);
 
     const date = this.clock.date;
+
+    // Throttle du recalcul de positions (cf. champs `_lastPositionMs`). On ne relit
+    // l'éphéméride que si la date simulée a assez avancé — SAUF pendant une transition de
+    // morph (les positions s'interpolent chaque frame) ou au tout premier passage / après un
+    // saut temporel (`_lastPositionMs === null`), où un recalcul immédiat est obligatoire.
+    const nowMs = date.getTime();
+    const mustRecompute =
+      this._morphActive ||
+      this._lastPositionMs === null ||
+      Math.abs(nowMs - this._lastPositionMs) >= this._minRecomputeThresholdMs;
+    if (!mustRecompute) return;
+    this._lastPositionMs = nowMs;
 
     forEachBody(this.config, ({ name, config: cfg }) => {
       if (hasOrbit(cfg)) this._updateBody(name, cfg, date);
@@ -413,6 +459,9 @@ export class OrbitalMechanics {
     if (!animated) {
       this._morphActive = false;
       this._morph = targetMorph;
+      // L'échelle radiale change (educ √-compressé ↔ explo linéaire) : les positions
+      // mémorisées ne sont plus valides → force un recalcul à la prochaine frame.
+      this._lastPositionMs = null;
       this.onScaleMorph?.(targetMorph);
       this.onOrbitsChanged?.();
       return;
@@ -538,6 +587,9 @@ export class OrbitalMechanics {
    *   - la rotation de surface de la Terre sur l'heure UTC (sinon le jour/nuit ne suit pas).
    */
   private _afterTimeTravel(): void {
+    // Force un recalcul de position à la prochaine frame : la date a sauté, les positions
+    // mémorisées sont obsolètes (sinon les corps resteraient figés jusqu'au prochain seuil).
+    this._lastPositionMs = null;
     this.syncAnglesFromEphemeris(this.clock.date);
     this.onOrbitsChanged?.();
   }
@@ -558,6 +610,7 @@ export class OrbitalMechanics {
 
   resetTimeOffset(): void {
     this.clock.resetOffset();
+    this._lastPositionMs = null;
     this.syncAnglesFromEphemeris(this.clock.date);
     this.onOrbitsChanged?.();
   }

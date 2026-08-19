@@ -63,6 +63,12 @@ export class TextureSystem {
   private readonly cache = new Map<string, THREE.Texture>();
   private readonly loadingPromises = new Map<string, Promise<THREE.Texture>>();
 
+  // Renderer optionnel, branché après la création de la scène. Sert à uploader la texture
+  // au GPU (initTexture) DÈS son décodage, hors de la boucle de rendu — sinon le premier
+  // renderer.render() qui suit un changement de LOD paie l'upload synchrone (un pic de
+  // frame-time = le micro-freeze ressenti au déplacement caméra). Absent avant le boot scène.
+  private renderer: THREE.WebGLRenderer | null = null;
+
   // Table nom → config (satellites inclus), construite une fois — évite un scan linéaire à chaque LOD.
   private readonly _bodyByName: Map<string, CelestialBodyConfig>;
 
@@ -87,6 +93,15 @@ export class TextureSystem {
       TextureSystem.#instance = new TextureSystem(config);
     }
     return TextureSystem.#instance;
+  }
+
+  /**
+   * Branche le renderer une fois la scène créée, pour uploader les textures au GPU hors
+   * de la boucle de rendu (cf. champ `renderer`). Appelé par `SolarSystemApp` après
+   * `SceneSystem.init()`. Idempotent.
+   */
+  setRenderer(renderer: THREE.WebGLRenderer): void {
+    this.renderer = renderer;
   }
 
   /**
@@ -127,6 +142,15 @@ export class TextureSystem {
             }
           );
           texture.needsUpdate = true;
+          // Upload GPU immédiat, hors boucle de rendu : sans ça, le premier render()
+          // après un changement de LOD paie l'upload synchrone (pic de frame-time =
+          // micro-freeze au déplacement caméra). initTexture décode + transfère la
+          // texture maintenant, pendant qu'on est déjà hors du chemin critique.
+          try {
+            this.renderer?.initTexture(texture);
+          } catch {
+            // Contexte WebGL indisponible/perdu : on laisse le rendu faire l'upload.
+          }
           this.cache.set(fullPath, texture);
           this.loadingPromises.delete(fullPath);
           resolve(texture);
@@ -209,6 +233,19 @@ export class TextureSystem {
       resolutions
     ) as TextureQuality;
     return this.loadTexture(textureBasePath, chosenQuality);
+  }
+
+  /**
+   * Palier de qualité (`ultra`/`high`/…) que servirait la couche `surface` d'un corps à cette
+   * distance normalisée — SANS rien charger. Sert au LOD à ne relancer un chargement que lorsque
+   * le palier CHANGE réellement (cf. hystérésis dans CelestialObject), au lieu de recharger à
+   * chaque petit déplacement caméra. Renvoie une chaîne opaque (quelconque marqueur de palier).
+   */
+  resolveSurfaceQuality(bodyName: string, distance: number): string | null {
+    const bodyConfig = this._resolveBodyConfig(bodyName);
+    const resolutions = bodyConfig?.textureResolutions.surface;
+    if (!resolutions?.length) return null;
+    return this._chooseQuality(distance, resolutions);
   }
 
   /** Renvoie la texture d'un corps à la résolution adaptée à la distance caméra. */

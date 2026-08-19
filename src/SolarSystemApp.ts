@@ -160,6 +160,9 @@ export class SolarSystemApp {
       this.systems.texture!
     );
     this.systems.scene.init();
+    // Le renderer existe désormais : le TextureSystem peut uploader les textures LOD au
+    // GPU dès leur décodage (hors boucle de rendu), évitant les pics de frame-time.
+    this.systems.texture!.setRenderer(this.systems.scene.renderer);
 
     progressCallback(60, t('loader.lighting'));
     this.systems.lighting.setup(this.systems.scene.scene);

@@ -15,7 +15,6 @@ import { buildLayers } from '@/components/celestial/celestialLayers';
 import { applyTexture } from '@/components/celestial/celestialTextures';
 import { KM_PER_AU, SQRT_K } from '@/core/ScaleService';
 import {
-  GEOMETRY_SEGMENTS,
   GEOMETRY_SEGMENTS_HI,
   createSphereGeometry,
   createColoredOverlayMaterial,
@@ -81,6 +80,10 @@ export default class CelestialObject {
   private _scaleFactor = 1;
 
   private lastLODNormalizedDistance = Infinity;
+  // Dernier palier de qualité surface effectivement chargé (ultra/high/…). Le LOD ne
+  // relance un chargement que lorsque ce palier CHANGE, pas à chaque petit déplacement
+  // caméra : évite le « thrash » d'oscillation entre deux résolutions autour d'un seuil.
+  private _lastLODQuality: string | null = null;
   private _lodPending = false;
   private _disposed = false;
   private readonly _lodWorldPos = new THREE.Vector3();
@@ -88,6 +91,12 @@ export default class CelestialObject {
   // Géométrie surface haute densité active (pour le displacement au gros plan) :
   // évite de reconstruire la sphère à chaque frame, seulement sur transition.
   private _hiResSurfaceActive = false;
+  // Les deux géométries de surface (standard + hi-res) sont construites une seule fois,
+  // à la première demande, puis conservées et simplement RÉ-ASSIGNÉES sur transition —
+  // au lieu d'être reconstruites + dispose() à chaque franchissement de seuil (alloc +
+  // upload GPU = freeze ponctuel à l'approche). Disposées ensemble dans dispose().
+  private _surfaceGeoStd: THREE.BufferGeometry | null = null;
+  private _surfaceGeoHi: THREE.BufferGeometry | null = null;
   // Dernière texture appliquée par clé — évite de re-uploader au GPU une résolution
   // identique (getLODTexture renvoie le même objet depuis le cache).
   private readonly _appliedTextures = new Map<string, THREE.Texture>();
@@ -100,6 +109,10 @@ export default class CelestialObject {
   // Uniforms de clair de Lune du matériau surface (Terre) : la face nuit reçoit
   // une lueur diffuse selon la position réelle de la Lune (réflecteur).
   private _moonlight?: MoonlightUniforms;
+  // Uniforms « clair de Lune » du matériau NUAGES : on n'exploite que sa direction Soleil
+  // (uMoonSunDir) pour le fondu jour/nuit des nuages (disparition côté nuit). Le glow lunaire
+  // reste inerte (strength jamais alimentée pour les nuages).
+  private _cloudsMoonlight?: MoonlightUniforms;
   // Uniforms de la couche pluie (Terre) : position du Soleil pour l'éclairage jour/nuit.
   private _precip?: PrecipUniforms;
   private _precipMat?: THREE.MeshBasicMaterial;
@@ -161,6 +174,10 @@ export default class CelestialObject {
     if (surface && !Array.isArray(surface.material)) {
       this._cloudShadow = getCloudShadowUniforms(surface.material);
       this._moonlight = getMoonlightUniforms(surface.material);
+    }
+    const clouds = this.layers.get('clouds');
+    if (clouds && !Array.isArray(clouds.material)) {
+      this._cloudsMoonlight = getMoonlightUniforms(clouds.material);
     }
     const precip = this.layers.get('precip');
     if (precip && !Array.isArray(precip.material)) {
@@ -604,6 +621,35 @@ export default class CelestialObject {
   }
 
   /**
+   * DIAGNOSTIC (?debug-earth) : active/désactive une map du matériau surface (`normalMap`,
+   * `displacementMap`, `bumpMap`) sans la détruire, pour isoler visuellement la source d'un
+   * artefact de relief. La texture retirée est mémorisée et restaurée au ré-activation.
+   * Hors debug, jamais appelé. Renvoie l'état effectif (true = map active).
+   */
+  private readonly _debugStashedMaps = new Map<string, THREE.Texture | null>();
+  debugToggleSurfaceMap(
+    key: 'normalMap' | 'displacementMap' | 'bumpMap'
+  ): 'on' | 'off' | 'absent' {
+    const surface = this.layers.get('surface');
+    if (!surface || Array.isArray(surface.material)) return 'absent';
+    const mat = surface.material as THREE.MeshStandardMaterial;
+
+    // Map active → on la retire (mémorisée pour restauration).
+    if (mat[key]) {
+      this._debugStashedMaps.set(key, mat[key]);
+      mat[key] = null;
+      mat.needsUpdate = true;
+      return 'off';
+    }
+    // Rien à restaurer ET rien n'a jamais été retiré → ce corps n'a pas cette map.
+    const stashed = this._debugStashedMaps.get(key);
+    if (stashed == null && !this._debugStashedMaps.has(key)) return 'absent';
+    mat[key] = stashed ?? null;
+    mat.needsUpdate = true;
+    return stashed ? 'on' : 'absent';
+  }
+
+  /**
    * Applique un FACTEUR d'atténuation (0..1) à l'opacité de base d'une couche `clouds` ou
    * `precip`, sans changer sa visibilité. Sert au panneau météo à estomper les nuages/pluie
    * quand l'overlay température est actif (pour que la donnée thermique reste lisible), puis
@@ -752,6 +798,17 @@ export default class CelestialObject {
       this.group.getWorldPosition(this._selfWorldPos);
       this._moonlight.position.value.copy(moonWorldPosition);
 
+      // Direction monde Terre → Soleil : alimente uMoonSunDir, utilisé À LA FOIS par le
+      // masque nuit du clair de Lune ET par la coupe de normal map côté nuit (terminateur).
+      // Sans cette écriture par frame, uMoonSunDir restait figé à sa valeur par défaut
+      // (1,0,0) → terminateur faux → relief visible sur toute la face nuit + clair de Lune
+      // désaligné. C'est la cause du « relief partout la nuit ».
+      this._moonlight.sunDir.value
+        .subVectors(sunWorldPosition, this._selfWorldPos)
+        .normalize();
+      // Même direction Soleil pour le fondu jour/nuit des nuages (disparition côté nuit).
+      this._cloudsMoonlight?.sunDir.value.copy(this._moonlight.sunDir.value);
+
       const toSun = _tmpMoonVecA
         .subVectors(sunWorldPosition, moonWorldPosition)
         .normalize();
@@ -876,7 +933,23 @@ export default class CelestialObject {
     // repasser immédiatement en résolution standard, même si un chargement de texture est
     // encore en vol.
     this._updateSurfaceTessellation(normalizedDistance);
+
+    // Un chargement (async) est déjà en vol : ne pas en empiler un second. Le tick LOD
+    // suivant réévaluera une fois celui-ci terminé. Sans ce garde, un corps dont la texture
+    // met du temps à décoder (grosse 4k, ex. le Soleil) accumulait des requêtes concurrentes
+    // à chaque tick — le garde était décrit en commentaire mais jamais réellement posé.
+    if (this._lodPending) return;
+
+    // On ne recharge que si le PALIER de qualité change réellement. Comparer la distance
+    // brute (± threshold) relançait un chargement au moindre déplacement autour d'un seuil
+    // de palier → oscillation entre deux résolutions (« thrash » LOD) et re-décodes inutiles.
+    const nextQuality = this.textureSystem.resolveSurfaceQuality(
+      this.name,
+      normalizedDistance
+    );
+    // Garde-fou distance : sous le seuil ET même palier → rien à faire.
     if (
+      nextQuality === this._lastLODQuality &&
       Math.abs(normalizedDistance - this.lastLODNormalizedDistance) < threshold
     ) {
       return;
@@ -884,6 +957,7 @@ export default class CelestialObject {
 
     this._lodPending = true;
     this.lastLODNormalizedDistance = normalizedDistance;
+    this._lastLODQuality = nextQuality;
 
     try {
       for (const textureKey of Object.keys(this.config.textures ?? {})) {
@@ -931,10 +1005,18 @@ export default class CelestialObject {
       : normalizedDistance <= HI_RES_TESSELLATION_ENTER;
     if (shouldBeHiRes === this._hiResSurfaceActive) return;
 
-    const segments = shouldBeHiRes ? GEOMETRY_SEGMENTS_HI : GEOMETRY_SEGMENTS;
-    const next = createSphereGeometry(this.config.radius, 'surface', segments);
-    surface.geometry.dispose();
-    surface.geometry = next;
+    // Première demande : on mémorise la géométrie standard (déjà en place) et on construit
+    // la hi-res une seule fois. Les swaps suivants ne font que ré-assigner la référence.
+    if (!this._surfaceGeoStd) this._surfaceGeoStd = surface.geometry;
+    if (shouldBeHiRes && !this._surfaceGeoHi) {
+      this._surfaceGeoHi = createSphereGeometry(
+        this.config.radius,
+        'surface',
+        GEOMETRY_SEGMENTS_HI
+      );
+    }
+    const next = shouldBeHiRes ? this._surfaceGeoHi : this._surfaceGeoStd;
+    if (next && surface.geometry !== next) surface.geometry = next;
     this._hiResSurfaceActive = shouldBeHiRes;
   }
 
@@ -975,6 +1057,13 @@ export default class CelestialObject {
       });
     });
     this.layers.clear();
+    // Les deux géométries de surface sont conservées hors du mesh (swap sans reconstruire) :
+    // celle actuellement attachée a été disposée ci-dessus, mais la détachée doit l'être ici
+    // pour ne pas fuir. dispose() est idempotent → double appel inoffensif sur l'attachée.
+    this._surfaceGeoStd?.dispose();
+    this._surfaceGeoHi?.dispose();
+    this._surfaceGeoStd = null;
+    this._surfaceGeoHi = null;
     Logger.warn(`[CelestialObject] Disposed "${this.name}"`);
   }
 }

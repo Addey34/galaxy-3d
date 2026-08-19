@@ -328,18 +328,32 @@ const REAL_CLOUDS_GLSL = `
           // deviennent vaporeux au lieu de crénelés. Indépendant de la calibration océan/pôles.
           float rcAA = fwidth( rcAlpha );
           rcAlpha = smoothstep( 0.5 - rcAA, 0.5 + rcAA, rcAlpha );
+          // Fondu jour/nuit : les nuages sont éclairés par le Soleil comme la surface → côté
+          // NUIT profonde ils doivent DISPARAÎTRE (comme la pluie), pas rester une couche grise
+          // opaque. On atténue l'alpha selon l'orientation de la normale monde vs Soleil (même
+          // signal que la coupe de relief et le clair de Lune). Transition douce au terminateur.
+          float cloudSunFacing = dot( normalize( vMoonWorldNormal ), normalize( uMoonSunDir ) );
+          float cloudNightVisibility = smoothstep( -0.25, 0.15, cloudSunFacing );
+          rcAlpha *= cloudNightVisibility;
           diffuseColor.a *= rcAlpha;
           diffuseColor.rgb = vec3( 1.0, 0.995, 0.985 );
         }
         #endif`;
 
 export function createCloudsMaterial(): THREE.MeshStandardMaterial {
-  const material = createShadowAwareStandardMaterial({
-    transparent: true,
-    opacity: REALTIME_CLOUDS_SETTINGS.opacity,
-    depthWrite: false,
-    side: THREE.DoubleSide,
-  });
+  const material = createShadowAwareStandardMaterial(
+    {
+      transparent: true,
+      opacity: REALTIME_CLOUDS_SETTINGS.opacity,
+      depthWrite: false,
+      side: THREE.DoubleSide,
+    },
+    // noSpecular : nuages = milieu diffusant, pas de reflet spéculaire (sinon lueur dans l'ombre).
+    // moonlight : NON pour le glow lunaire, mais pour câbler uMoonSunDir + vMoonWorldNormal —
+    // le même signal jour/nuit que la surface — afin de faire DISPARAÎTRE les nuages côté nuit
+    // (fondu d'alpha, cf. CLOUD_NIGHT_FADE_GLSL), au lieu de les laisser en couche grise opaque.
+    { noSpecular: true, moonlight: true }
+  );
   const realClouds: RealCloudsUniforms = {
     enabled: { value: 0 },
     lumLow: { value: REALTIME_CLOUDS_SETTINGS.cloudLuminanceLow },
@@ -531,9 +545,15 @@ const PRECIP_REMAP_GLSL = `
           vec3 pN = normalize( vPrecipWorldNormal );
           vec3 pToSun = normalize( uPrecipSunPos - vPrecipWorldPos );
           float pDay = clamp( dot( pN, pToSun ) * 1.1 + 0.1, 0.0, 1.0 );
-          float pLight = mix( 0.08, 1.0, pDay );
+          float pLight = mix( 0.04, 1.0, pDay );
           diffuseColor.rgb = col * pLight;
-          diffuseColor.a = pMask * dens * uPrecipOpacity;
+          // La pluie/les nuages d'orage sont éclairés par le Soleil comme la surface : côté
+          // NUIT ils doivent DISPARAÎTRE (comme la surface qui s'assombrit), pas rester une
+          // couche grise opaque. On applique donc le facteur jour/nuit AUSSI à l'alpha (fondu
+          // doux au terminateur via nightVisibility), pas seulement à la couleur. Résultat :
+          // pluie pleinement visible le jour, invisible dans la nuit profonde.
+          float nightVisibility = smoothstep( 0.0, 0.35, pDay );
+          diffuseColor.a = pMask * dens * uPrecipOpacity * nightVisibility;
         }
         #endif`;
 
@@ -722,6 +742,7 @@ export function createShadowAwareStandardMaterial(
     cloudShadow?: boolean;
     moonlight?: boolean;
     limitSpecular?: boolean;
+    noSpecular?: boolean;
     varyOceanRoughness?: boolean;
   } = {}
 ): THREE.MeshStandardMaterial {
@@ -731,6 +752,7 @@ export function createShadowAwareStandardMaterial(
   const cloudShadow = options.cloudShadow === true;
   const moonlight = options.moonlight === true;
   const limitSpecular = options.limitSpecular === true;
+  const noSpecular = options.noSpecular === true;
   const varyOceanRoughness = options.varyOceanRoughness === true;
   const oceanRoughnessUniforms = {
     base: { value: EARTH_OCEAN_ROUGHNESS_SETTINGS.oceanBase },
@@ -828,14 +850,50 @@ export function createShadowAwareStandardMaterial(
         'vec3 outgoingLight = totalDiffuse + totalSpecular + totalEmissiveRadiance;',
         // Le spéculaire standard de Three.js reste actif pour la Terre. La carte
         // La carte oceanique convertie en rugosite controle le reflet, avec un plafond speculaire Terre pour eviter une saturation blanche.
-        (limitSpecular
-          ? 'vec3 boundedSpecular = min( totalSpecular, vec3( 0.20 ) );' +
-            'vec3 outgoingLight = (totalDiffuse + boundedSpecular) * uLightAttenuation'
-          : 'vec3 outgoingLight = (totalDiffuse + totalSpecular) * uLightAttenuation') +
+        // noSpecular : les nuages sont un MILIEU DIFFUSANT (gouttelettes/cristaux), pas une
+        // surface réfléchissante. Un lobe spéculaire GGX sur leur albédo blanc débordait au-delà
+        // du terminateur → « reflets » lumineux sur la face nuit (dans l'ombre). On le supprime :
+        // les nuages ne sont éclairés que par le diffus, qui suit le terminateur × uLightAttenuation
+        // → face nuit correctement sombre.
+        (noSpecular
+          ? 'vec3 outgoingLight = totalDiffuse * uLightAttenuation'
+          : limitSpecular
+            ? 'vec3 boundedSpecular = min( totalSpecular, vec3( 0.20 ) );' +
+              'vec3 outgoingLight = (totalDiffuse + boundedSpecular) * uLightAttenuation'
+            : 'vec3 outgoingLight = (totalDiffuse + totalSpecular) * uLightAttenuation') +
           (cloudShadow ? ' * cloudDirectFactor' : '') +
           ' + totalEmissiveRadiance;' +
           (moonlight ? MOONLIGHT_GLSL : '')
       );
+
+    if (moonlight) {
+      // Coupe la normal map côté NUIT, exactement comme le shader des lumières de ville
+      // (NightLightsShader) éteint les villes côté jour — les deux couches partagent donc
+      // la même frontière de terminateur. À lumière rasante, la normale PERTURBÉE incline
+      // chaque ride du relief vers/hors du Soleil → micro-facettes en fort contraste =
+      // contours durs « bleu-gris » sur la face nuit. On fond la normale perturbée vers la
+      // normale GÉOMÉTRIQUE (lisse) : relief plein en plein jour, TOTALEMENT effacé sur toute
+      // la face nuit. Le facteur = complément de la rampe des lumières : reliefFactor = 1
+      // quand sunGraze ≥ +0.1 (jour), 0 quand sunGraze ≤ -0.3 (nuit). Constantes = threshold
+      // (0.1) / smoothness (0.3) du NightLightsShader → les deux transitions coïncident.
+      // sunGraze sur la vraie normale monde (vMoonWorldNormal, non perturbée) : pas de
+      // référence circulaire (on ne module pas la normal map par elle-même).
+      // Gated moonlight → Terre uniquement (là où ces varyings existent).
+      shader.fragmentShader = shader.fragmentShader.replace(
+        '#include <normal_fragment_maps>',
+        `#include <normal_fragment_maps>
+        {
+          float sunGraze = dot( normalize( vMoonWorldNormal ), normalize( uMoonSunDir ) );
+          // La coupe du relief doit être TERMINÉE avant que l'éclairage direct ne s'éteigne,
+          // sinon la normal map reste active dans la bande déjà sombre juste avant le terminateur
+          // → relief visible dans l'ombre. L'éclairage direct tombe à 0 vers dot(N,L) = -uTerminatorWrap
+          // (≈ -0.12) ; on fixe donc reliefFactor = 0 dès sunGraze ≤ 0 (bande [0, 0.25] côté JOUR),
+          // bien AVANT l'ombre. Résultat : plus aucun relief dans la zone sombre.
+          float reliefFactor = smoothstep( 0.0, 0.25, sunGraze );
+          normal = normalize( mix( nonPerturbedNormal, normal, reliefFactor ) );
+        }`
+      );
+    }
 
     if (invertRoughness) {
       // La carte Terre suit la convention « blanc = océan lisse ». Three.js attend
@@ -878,7 +936,7 @@ export function createShadowAwareStandardMaterial(
       cloudShadow ? '-cloudshadow' : ''
     }${moonlight ? '-moonlight' : ''}${
       varyOceanRoughness ? '-oceanrough-v1' : ''
-    }`;
+    }${limitSpecular ? '-limitspec' : ''}${noSpecular ? '-nospec' : ''}`;
 
   return material;
 }

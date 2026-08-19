@@ -20,6 +20,12 @@ import { SQRT_K } from '@/core/ScaleService';
 import Logger from '@/utils/Logger';
 import type { CelestialBodies } from './SceneSystem';
 
+// Bornes de durée du vol caméra (ms). La durée réelle est proportionnelle à la distance
+// parcourue, resserrée entre ces bornes : un court saut reste vif, un long voyage posé.
+// Le plafond conserve l'ancien ressenti du vol long (1,2 s) désormais réservé aux grands trajets.
+const TRANSITION_MIN_MS = 550;
+const TRANSITION_MAX_MS = 1200;
+
 export class CameraSystem {
   camera!: THREE.PerspectiveCamera;
   renderer!: THREE.WebGLRenderer;
@@ -152,6 +158,15 @@ export class CameraSystem {
     }
     toSun.normalize();
 
+    // Si la caméra regarde DÉJÀ suffisamment la face éclairée (produit scalaire élevé avec
+    // la direction du jour), on conserve sa direction courante au lieu de la forcer vers
+    // l'angle 3/4 canonique. Évite l'arc parasite (« mouvement en trop ») quand on re-cible
+    // un corps déjà bien cadré ou qu'on enchaîne des sélections proches. Le seuil 0.55
+    // (~57°) garantit qu'on part d'une vue déjà largement diurne, pas côté nuit.
+    if (current.length() > 0.1 && current.dot(toSun) > 0.55) {
+      return current;
+    }
+
     // Décalage latéral (produit vectoriel avec l'axe monde Y) pour une vue 3/4 :
     // on voit alors le terminateur, plus lisible qu'un disque frontalement éclairé.
     const up = new THREE.Vector3(0, 1, 0);
@@ -204,6 +219,23 @@ export class CameraSystem {
       y: cameraPosition.y,
       z: cameraPosition.z,
     };
+
+    // Durée proportionnelle à la distance parcourue, bornée : un court saut (Terre→Lune)
+    // devient vif, un long voyage (Terre→Neptune) reste posé — au lieu d'un 1200 ms fixe
+    // qui rend les courts trajets « mous » et les longs trop brusques. On normalise par la
+    // distance max de zoom du mode (≈ taille de la scène : ~500u educ, ~3000u explo), pour
+    // que la sensation soit cohérente entre les deux échelles.
+    const travel = Math.hypot(
+      camTo.x - camFrom.x,
+      camTo.y - camFrom.y,
+      camTo.z - camFrom.z
+    );
+    const modeSpan = Math.max(this.controls.maxDistance, 1);
+    const duration = THREE.MathUtils.clamp(
+      (travel / modeSpan) * TRANSITION_MAX_MS,
+      TRANSITION_MIN_MS,
+      TRANSITION_MAX_MS
+    );
     // Toujours partir de la cible OrbitControls réellement affichée. La précédente valeur
     // mémorisée devenait obsolète dès qu'un corps suivi avançait sur son orbite.
     const tgtFrom = {
@@ -218,7 +250,7 @@ export class CameraSystem {
     };
 
     new TWEEN.Tween(camFrom, this.tweenGroup)
-      .to(camTo, 1200)
+      .to(camTo, duration)
       .easing(TWEEN.Easing.Cubic.InOut)
       // Ce tween est ajouté en premier : son onUpdate rafraîchit `drift` pour la frame,
       // que le tween de la cible (ci-dessous) réutilise ensuite.
@@ -233,7 +265,7 @@ export class CameraSystem {
       .start();
 
     new TWEEN.Tween(tgtFrom, this.tweenGroup)
-      .to(tgtTo, 1200)
+      .to(tgtTo, duration)
       .easing(TWEEN.Easing.Cubic.InOut)
       .onUpdate(() => {
         this.controls.target.set(

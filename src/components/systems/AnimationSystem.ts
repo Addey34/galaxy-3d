@@ -14,7 +14,11 @@ import type { IUpdatable } from '@/types';
 import type { OrbitalMechanics } from '@/core/OrbitalMechanics';
 import type { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
 import type { Starfield } from '@/components/celestial/Starfield';
-import { computeLightAttenuation, solarIrradianceFactor } from '@/core/eclipse';
+import {
+  computeLightAttenuation,
+  solarIrradianceFactor,
+  type SphericalOccluder,
+} from '@/core/eclipse';
 import { SQRT_K } from '@/core/ScaleService';
 import type { CameraSystem } from './CameraSystem';
 import type { CelestialBodies } from './SceneSystem';
@@ -67,6 +71,14 @@ export class AnimationSystem {
   private readonly _frustum = new THREE.Frustum();
   private readonly _projScreenMatrix = new THREE.Matrix4();
   private readonly _tmpSphere = new THREE.Sphere();
+
+  // Éclipse explo — instantané réutilisé des corps (position monde + rayon), reconstruit
+  // en place à chaque passe d'éclairage. Évitait ~n² allocations de Vector3 + un tableau
+  // d'occludeurs par corps et par frame (pression GC → micro-saccades). Le pool grandit
+  // au besoin puis est réutilisé ; `_occluderList` sert d'argument aux appels sans réallouer.
+  // Type = `SphericalOccluder` (celui qu'attend `computeLightAttenuation`), position mutable.
+  private readonly _lightingSnapshot: SphericalOccluder[] = [];
+  private readonly _occluderList: SphericalOccluder[] = [];
 
   constructor(_targetFPS = 60) {
     Logger.info('[AnimationSystem] Instance created ✅');
@@ -187,29 +199,43 @@ export class AnimationSystem {
     const sunRadius =
       (sunBody?.group.userData['radius'] as number | undefined) ?? 0;
     const entries = Object.entries(this.celestialBodies);
-    for (const [name, body] of entries) {
+
+    // Instantané des positions monde + rayons, calculé UNE fois par passe (pas une fois
+    // par corps). Chaque `getWorldPosition` écrit dans un Vector3 déjà alloué du pool ;
+    // l'index i du snapshot correspond à entries[i]. Le pool grandit puis est réutilisé.
+    for (let i = 0; i < entries.length; i++) {
+      let slot = this._lightingSnapshot[i];
+      if (!slot) {
+        slot = { position: new THREE.Vector3(), radius: 0 };
+        this._lightingSnapshot[i] = slot;
+      }
+      const group = entries[i][1].group;
+      group.getWorldPosition(slot.position);
+      slot.radius = (group.userData['radius'] as number | undefined) ?? 0;
+    }
+
+    for (let i = 0; i < entries.length; i++) {
+      const [name, body] = entries[i];
       if (name === 'sun') {
         body.setLightAttenuation(1);
         continue;
       }
 
-      const bodyPosition = new THREE.Vector3();
-      body.group.getWorldPosition(bodyPosition);
-      const occluders = entries
-        .filter(([otherName]) => otherName !== name && otherName !== 'sun')
-        .map(([, other]) => {
-          const position = new THREE.Vector3();
-          other.group.getWorldPosition(position);
-          return {
-            position,
-            radius: (other.group.userData['radius'] as number | undefined) ?? 0,
-          };
-        });
+      const bodyPosition = this._lightingSnapshot[i].position;
+      // Réutilise le tableau d'occludeurs : on le vide (length=0) puis on y réinsère les
+      // slots du snapshot (autres que ce corps et le Soleil). Aucun Vector3 alloué ici.
+      this._occluderList.length = 0;
+      for (let j = 0; j < entries.length; j++) {
+        if (j === i) continue;
+        if (entries[j][0] === 'sun') continue;
+        this._occluderList.push(this._lightingSnapshot[j]);
+      }
+
       const eclipse = computeLightAttenuation(
         bodyPosition,
         sunWorldPosition,
         sunRadius,
-        occluders
+        this._occluderList
       );
       const distanceAU = bodyPosition.distanceTo(sunWorldPosition) / SQRT_K;
       body.setLightAttenuation(eclipse * solarIrradianceFactor(distanceAU));
