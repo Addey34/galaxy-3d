@@ -60,6 +60,26 @@ test('selection, information panel and target semantics survive both mode switch
   await expect(target.locator('.explo-label-dot')).toBeVisible();
 });
 
+test('quality control uses a gear icon and closes outside', async ({ page }) => {
+  await boot(page);
+  const quality = page.locator('#quality-btn');
+  const menu = page.locator('#quality-menu');
+
+  await expect(quality.locator('svg path')).toHaveAttribute('d', /M6\.35/);
+  await quality.click();
+  await expect(menu).toBeVisible();
+
+  // Opening another contextual surface closes the quality menu too.
+  await page.locator('#settings-trigger').click();
+  await expect(menu).toBeHidden();
+  await expect(page.locator('#orbit-options')).toBeVisible();
+
+  // Opening quality settings closes the other contextual surface in return.
+  await quality.click();
+  await expect(menu).toBeVisible();
+  await expect(page.locator('#orbit-options')).toBeHidden();
+});
+
 test('settings stay available in both modes and control label density', async ({
   page,
 }) => {

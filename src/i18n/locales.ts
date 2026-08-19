@@ -152,7 +152,19 @@ export const messages: Record<Locale, Dict> = {
     'tour.step.time.title': '3. Change time',
     'tour.step.time.text':
       'Use the date and speed controls to move through time.',
-    'tour.step.help.title': '4. Find help',
+    'tour.step.settings.title': '4. Adjust display',
+    'tour.step.settings.text':
+      'Open display settings to show or hide orbits, names and markers.',
+    'tour.step.weather.title': '5. Explore weather',
+    'tour.step.weather.text':
+      'Open weather layers to see clouds, rain, wind and surface data on Earth.',
+    'tour.step.events.title': '6. Watch the sky',
+    'tour.step.events.text':
+      'Check upcoming astronomical events and select an event for details.',
+    'tour.step.quality.title': '7. Tune graphics',
+    'tour.step.quality.text':
+      'Choose a graphics quality level to balance visual detail and smoothness.',
+    'tour.step.help.title': '8. Find help',
     'tour.step.help.text':
       'You can reopen this quick tour from the ? help button.',
 
@@ -408,7 +420,19 @@ export const messages: Record<Locale, Dict> = {
     'tour.step.time.title': '3. Changer le temps',
     'tour.step.time.text':
       'Utilisez la date et la vitesse pour voyager dans le temps.',
-    'tour.step.help.title': '4. Retrouver l’aide',
+    'tour.step.settings.title': '4. Régler l’affichage',
+    'tour.step.settings.text':
+      'Ouvrez les réglages d’affichage pour afficher ou masquer les orbites, les noms et les points.',
+    'tour.step.weather.title': '5. Explorer la météo',
+    'tour.step.weather.text':
+      'Ouvrez les couches météo pour voir les nuages, la pluie, le vent et les données de surface sur Terre.',
+    'tour.step.events.title': '6. Observer le ciel',
+    'tour.step.events.text':
+      'Consultez les prochains événements astronomiques et sélectionnez-en un pour plus de détails.',
+    'tour.step.quality.title': '7. Ajuster les graphismes',
+    'tour.step.quality.text':
+      'Choisissez une qualité graphique pour équilibrer le niveau de détail et la fluidité.',
+    'tour.step.help.title': '8. Retrouver l’aide',
     'tour.step.help.text':
       'Vous pourrez relancer cette visite avec le bouton ?.',
 

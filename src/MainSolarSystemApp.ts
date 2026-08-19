@@ -146,7 +146,7 @@ if (surfaceScrim) {
       overlayCoordinator
     );
     const playback = setupPlayback(animationSystem, orbitalMechanics);
-    setupQualitySwitch(sceneSystem);
+    setupQualitySwitch(sceneSystem, overlayCoordinator);
     setupTimePanel(
       orbitalMechanics,
       playback,

@@ -4,7 +4,8 @@ export type SecondaryOverlayId =
   | 'orbit-options'
   | 'weather-layers'
   | 'events'
-  | 'help';
+  | 'help'
+  | 'quality-menu';
 
 export interface OverlayCoordinator {
   register(id: SecondaryOverlayId, close: () => void): () => void;

@@ -19,8 +19,12 @@ import {
 } from '@/core/qualityTier';
 import type { SceneSystem } from '@/components/systems/SceneSystem';
 import { t } from '@/i18n';
+import type { OverlayCoordinator } from './overlayCoordinator';
 
-export function setupQualitySwitch(scene: SceneSystem): () => void {
+export function setupQualitySwitch(
+  scene: SceneSystem,
+  coordinator?: OverlayCoordinator
+): () => void {
   const btn = document.getElementById('quality-btn');
   const menu = document.getElementById('quality-menu');
   const reloadNote = document.getElementById('quality-reload-note');
@@ -52,10 +56,12 @@ export function setupQualitySwitch(scene: SceneSystem): () => void {
     btn.setAttribute('aria-expanded', 'false');
   };
   const openMenu = (): void => {
+    coordinator?.requestOpen('quality-menu');
     syncMenu();
     menu.hidden = false;
     btn.setAttribute('aria-expanded', 'true');
   };
+  const unregister = coordinator?.register('quality-menu', closeMenu) ?? (() => undefined);
 
   const onBtnClick = (e: MouseEvent): void => {
     e.stopPropagation();
@@ -74,10 +80,15 @@ export function setupQualitySwitch(scene: SceneSystem): () => void {
   };
 
   // Ferme au clic extérieur / Échap (menu léger, pas d'overlay bloquant).
+  const isInsideQualityMenu = (target: EventTarget | null): boolean =>
+    target instanceof Node && (menu.contains(target) || btn.contains(target));
+  const onDocPointerDown = (e: PointerEvent): void => {
+    if (menu.hidden || isInsideQualityMenu(e.target)) return;
+    closeMenu();
+  };
+  // Le clic reste écouté pour les activations au clavier, qui ne déclenchent pas toujours pointerdown.
   const onDocClick = (e: MouseEvent): void => {
-    if (menu.hidden) return;
-    if (e.target instanceof Node && (menu.contains(e.target) || btn.contains(e.target)))
-      return;
+    if (menu.hidden || isInsideQualityMenu(e.target)) return;
     closeMenu();
   };
   const onKey = (e: KeyboardEvent): void => {
@@ -93,6 +104,7 @@ export function setupQualitySwitch(scene: SceneSystem): () => void {
     opt.addEventListener('click', h);
     return [opt, h] as const;
   });
+  document.addEventListener('pointerdown', onDocPointerDown);
   document.addEventListener('click', onDocClick);
   document.addEventListener('keydown', onKey);
 
@@ -107,7 +119,9 @@ export function setupQualitySwitch(scene: SceneSystem): () => void {
   return () => {
     btn.removeEventListener('click', onBtnClick as EventListener);
     for (const [opt, h] of optHandlers) opt.removeEventListener('click', h);
+    document.removeEventListener('pointerdown', onDocPointerDown);
     document.removeEventListener('click', onDocClick);
     document.removeEventListener('keydown', onKey);
+    unregister();
   };
 }

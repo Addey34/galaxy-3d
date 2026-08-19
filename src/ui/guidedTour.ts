@@ -28,6 +28,26 @@ const STEPS: Array<
     textKey: 'tour.step.time.text',
   },
   {
+    target: '#settings-trigger',
+    titleKey: 'tour.step.settings.title',
+    textKey: 'tour.step.settings.text',
+  },
+  {
+    target: '#weather-trigger',
+    titleKey: 'tour.step.weather.title',
+    textKey: 'tour.step.weather.text',
+  },
+  {
+    target: '#events-trigger',
+    titleKey: 'tour.step.events.title',
+    textKey: 'tour.step.events.text',
+  },
+  {
+    target: '#quality-btn',
+    titleKey: 'tour.step.quality.title',
+    textKey: 'tour.step.quality.text',
+  },
+  {
     target: '#help-btn',
     titleKey: 'tour.step.help.title',
     textKey: 'tour.step.help.text',
