@@ -31,3 +31,11 @@ jobs:
       - run: pnpm build
       - run: pnpm exec playwright install --with-deps chromium
       - run: pnpm test:e2e
+
+      # Déploiement Firebase Hosting UNIQUEMENT sur push vers main, une fois que tout le gate
+      # ci-dessus (verify + audit + build + e2e) a passé — jamais une version cassée en ligne.
+      # Requiert le secret FIREBASE_TOKEN (repo → Settings → Secrets and variables → Actions),
+      # obtenu via `firebase login:ci`. Le meme jeton peut servir a plusieurs projets Firebase.
+      - name: Deploy to Firebase Hosting
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: pnpm dlx firebase-tools deploy --only hosting --token ${{ secrets.FIREBASE_TOKEN }}
