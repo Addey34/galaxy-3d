@@ -182,7 +182,10 @@ export const messages: Record<Locale, Dict> = {
     'tour.step.quality.title': '9. Tune graphics',
     'tour.step.quality.text':
       'Choose a graphics quality level to balance visual detail and smoothness.',
-    'tour.step.help.title': '10. Find help',
+    'tour.step.share.title': '10. Share a view',
+    'tour.step.share.text':
+      'Set up a view, then share its link. Whoever opens it lands on the exact same scene.',
+    'tour.step.help.title': '11. Find help',
     'tour.step.help.text':
       'You can reopen this quick tour from the ? help button.',
 
@@ -473,7 +476,10 @@ export const messages: Record<Locale, Dict> = {
     'tour.step.quality.title': '9. Ajuster les graphismes',
     'tour.step.quality.text':
       'Choisissez une qualité graphique pour équilibrer le niveau de détail et la fluidité.',
-    'tour.step.help.title': '10. Retrouver l’aide',
+    'tour.step.share.title': '10. Partager une vue',
+    'tour.step.share.text':
+      'Réglez une vue, puis partagez son lien. Celui qui l’ouvre retrouve exactement la même scène.',
+    'tour.step.help.title': '11. Retrouver l’aide',
     'tour.step.help.text':
       'Vous pourrez relancer cette visite avec le bouton ?.',
 

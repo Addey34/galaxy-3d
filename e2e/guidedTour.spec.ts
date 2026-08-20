@@ -6,7 +6,7 @@ test.describe('first visit', () => {
     await blockExternalNetwork(page);
   });
 
-  test('starts the complete nine-step tour on the first visit', async ({
+  test('walks through every step then closes on the first visit', async ({
     page,
   }) => {
     await page.goto('/');
@@ -17,9 +17,15 @@ test.describe('first visit', () => {
     await expect(dialog).toHaveAttribute('data-step', '1');
     await expect(page.locator('.tour-progress')).toContainText('1');
 
-    for (const step of ['2', '3', '4', '5', '6', '7', '8', '9']) {
+    // Le nombre d'étapes est dérivé du fil d'Ariane (« 1 / N ») plutôt que codé en dur,
+    // pour que l'ajout d'une étape ne casse pas ce test.
+    const progressText = await page.locator('.tour-progress').textContent();
+    const total = Number(progressText?.match(/(\d+)\s*$/)?.[1] ?? '0');
+    expect(total).toBeGreaterThan(1);
+
+    for (let step = 2; step <= total; step++) {
       await page.locator('.tour-next').click();
-      await expect(dialog).toHaveAttribute('data-step', step);
+      await expect(dialog).toHaveAttribute('data-step', String(step));
     }
 
     await page.locator('.tour-next').click();
@@ -39,8 +45,12 @@ test.describe('first visit', () => {
       const dialog = page.locator('.tour-dialog');
       await expect(dialog).toBeVisible();
 
-      for (const step of ['1', '2', '3', '4', '5', '6', '7', '8', '9']) {
-        await expect(dialog).toHaveAttribute('data-step', step);
+      const progressText = await page.locator('.tour-progress').textContent();
+      const total = Number(progressText?.match(/(\d+)\s*$/)?.[1] ?? '0');
+      expect(total).toBeGreaterThan(1);
+
+      for (let step = 1; step <= total; step++) {
+        await expect(dialog).toHaveAttribute('data-step', String(step));
         const box = await dialog.boundingBox();
         if (!box)
           throw new Error(`Tour dialog is not measurable at step ${step}`);
@@ -48,7 +58,7 @@ test.describe('first visit', () => {
         expect(box.y).toBeGreaterThanOrEqual(0);
         expect(box.x + box.width).toBeLessThanOrEqual(390);
         expect(box.y + box.height).toBeLessThanOrEqual(844);
-        if (step !== '9') await page.locator('.tour-next').click();
+        if (step !== total) await page.locator('.tour-next').click();
       }
 
       await page.keyboard.press('Escape');
