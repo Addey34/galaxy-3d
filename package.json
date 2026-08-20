@@ -14,6 +14,7 @@
     "ephemeris:generate": "node scripts/generate-horizons-ephemerides.mjs",
     "spk:stage": "node scripts/stage-sat441.mjs",
     "spk:verify": "node scripts/verify-spk-range.mjs",
+    "icons:generate": "node scripts/generate-icons.mjs",
     "textures:resize": "node scripts/resize-textures.mjs",
     "textures:audit": "vitest run src/config/textureAssets.test.ts src/config/assetManifest.test.ts && node scripts/audit-textures.mjs",
     "format": "prettier --write \"src/**/*.{ts,css}\"",
@@ -36,6 +37,7 @@
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.64.0",
     "vite": "^6.3.1",
+    "vite-plugin-pwa": "^1.3.0",
     "vitest": "^4.1.10"
   },
   "dependencies": {
