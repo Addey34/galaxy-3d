@@ -3,6 +3,8 @@
    inline. Affiche une seule langue à la fois et réutilise la préférence de l'app
    (localStorage 'ssv-locale'), pour un comportement cohérent avec le reste. */
 (function () {
+  // Doit rester synchronisé avec STORAGE_KEYS.locale (src/config/storageKeys.ts) :
+  // cette page statique est hors bundle et ne peut pas l'importer.
   var STORAGE_KEY = 'ssv-locale';
 
   function detectLocale() {

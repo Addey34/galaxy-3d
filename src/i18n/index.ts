@@ -7,11 +7,12 @@
  * externe : dictionnaires plats dans `./locales`.
  */
 import { messages, LOCALES, type Locale } from './locales';
+import { STORAGE_KEYS } from '@/config/storageKeys';
 
 export type { Locale } from './locales';
 export { LOCALES } from './locales';
 
-const STORAGE_KEY = 'ssv-locale';
+const STORAGE_KEY = STORAGE_KEYS.locale;
 
 /** `lang` HTML par langue (en-GB conserve l'horloge 24 h des inputs date/heure). */
 const HTML_LANG: Record<Locale, string> = { en: 'en-GB', fr: 'fr' };

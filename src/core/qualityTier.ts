@@ -12,14 +12,16 @@
  * choix (forcer `low` sur une machine qui rame, `high` sur un mobile puissant).
  */
 
+import { STORAGE_KEYS } from '@/config/storageKeys';
+
 /** Palier de rendu effectif : bas / moyen / élevé. */
 export type QualityTier = 'low' | 'medium' | 'high';
 
 /** Choix utilisateur : un palier fixe, ou `auto` (déduit de l'appareil). */
 export type QualityMode = QualityTier | 'auto';
 
-/** Clé localStorage de persistance du choix. */
-export const QUALITY_STORAGE_KEY = 'ssv-quality';
+/** Clé localStorage de persistance du choix (réexport de la source unique). */
+export const QUALITY_STORAGE_KEY = STORAGE_KEYS.quality;
 
 const MODES: readonly QualityMode[] = ['auto', 'low', 'medium', 'high'];
 

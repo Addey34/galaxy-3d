@@ -1,7 +1,8 @@
 import './guidedTour.css';
 import { onLocaleChange, t } from '@/i18n';
+import { STORAGE_KEYS } from '@/config/storageKeys';
 
-const STORAGE_KEY = 'ssv-guided-tour-v1';
+const STORAGE_KEY = STORAGE_KEYS.guidedTour;
 
 interface TourStep {
   target: string;
