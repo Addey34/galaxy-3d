@@ -19,6 +19,8 @@ jobs:
   verify:
     name: Verify and build
     runs-on: ubuntu-latest
+    # Ce gate conditionne le deploiement : un blocage ne doit jamais l'immobiliser des heures.
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -45,6 +47,10 @@ jobs:
   e2e:
     name: Browser tests (e2e)
     runs-on: ubuntu-latest
+    # Garde-fou : le rendu WebGL en GPU logiciel est lent, mais 20 min suffisent largement.
+    # Sans ca, une install apt bloquee (miroirs Ubuntu injoignables) peut trainer des heures
+    # et polluer le statut global du workflow. On echoue vite ; le job restant non bloquant.
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
