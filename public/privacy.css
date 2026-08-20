@@ -1,0 +1,195 @@
+/* Style de la page de confidentialité (public/privacy.html).
+   Fichier externe (et non un <style> inline) : la CSP `style-src 'self'` bloque
+   tout CSS inline. Reprend les tokens de design de l'app (src/styles.css) pour
+   que la page soit une extension visuelle du produit, pas un document isolé. */
+:root {
+  color-scheme: dark;
+  --sp-2: 0.5rem;
+  --sp-3: 0.75rem;
+  --sp-4: 1rem;
+  --sp-5: 1.5rem;
+  --r-md: 0.75rem;
+  --r-lg: 1rem;
+  --r-pill: 999px;
+  --surface: rgba(9, 13, 26, 0.82);
+  --hairline: rgba(150, 185, 255, 0.14);
+  --hairline-strong: rgba(150, 185, 255, 0.24);
+  --shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
+  --ink: rgba(224, 236, 255, 0.95);
+  --ink-dim: rgba(200, 218, 255, 0.62);
+  --ink-faint: rgba(200, 218, 255, 0.4);
+  --accent: 96, 165, 255;
+}
+* {
+  box-sizing: border-box;
+}
+html {
+  scroll-behavior: smooth;
+}
+body {
+  margin: 0;
+  min-height: 100vh;
+  color: var(--ink);
+  font:
+    16px/1.65 system-ui,
+    -apple-system,
+    'Segoe UI',
+    Roboto,
+    Arial,
+    sans-serif;
+  /* Fond spatial : dégradé radial sombre bleuté, comme la scène 3D. */
+  background:
+    radial-gradient(120% 90% at 50% -10%, #0d1730 0%, #060a16 45%, #02040a 100%)
+    fixed;
+  padding: 0 1.25rem 4rem;
+}
+a {
+  color: rgb(var(--accent));
+  text-decoration: none;
+}
+a:hover {
+  text-decoration: underline;
+}
+
+/* En-tête : branding app + retour, en surface collante translucide. */
+.page-header {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  max-width: 780px;
+  margin: 0 auto var(--sp-5);
+  padding: var(--sp-3) 0;
+  border-bottom: 1px solid var(--hairline);
+  background: linear-gradient(
+    to bottom,
+    rgba(2, 4, 10, 0.92),
+    rgba(2, 4, 10, 0.72)
+  );
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+.page-header img {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  border: 1px solid var(--hairline-strong);
+}
+.page-header .app-name {
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: var(--ink);
+}
+.page-header .back {
+  margin-left: auto;
+  padding: 0.35rem 0.8rem;
+  border-radius: var(--r-pill);
+  background: rgba(var(--accent), 0.14);
+  border: 1px solid rgba(var(--accent), 0.4);
+  color: rgb(var(--accent));
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+.page-header .back:hover {
+  background: rgba(var(--accent), 0.22);
+  text-decoration: none;
+}
+
+main {
+  max-width: 780px;
+  margin: 0 auto;
+}
+.lang {
+  color: var(--ink-faint);
+  font-size: 0.8rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin: 0 0 1.25rem;
+}
+h1 {
+  font-size: 1.7rem;
+  margin: 0 0 0.3rem;
+  letter-spacing: -0.01em;
+}
+h2 {
+  font-size: 1.1rem;
+  margin: 2.2rem 0 0.6rem;
+  color: rgb(var(--accent));
+}
+.updated {
+  color: var(--ink-faint);
+  font-size: 0.9rem;
+}
+/* Surface en verre dépoli, identique aux panneaux de l'app. */
+section {
+  background: var(--surface);
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  padding: 1.25rem 1.5rem;
+  margin-top: 1.1rem;
+}
+section p:first-child {
+  margin-top: 0;
+}
+section p:last-child {
+  margin-bottom: 0;
+}
+/* Paragraphe détaché après une liste (remplace un style="" inline, bloqué par la CSP). */
+.note {
+  margin-top: var(--sp-3);
+}
+ul {
+  padding-left: 0;
+  list-style: none;
+  margin: 0.4rem 0 0;
+  display: grid;
+  gap: 0.4rem;
+}
+li {
+  position: relative;
+  padding-left: 1.4rem;
+  color: var(--ink-dim);
+}
+li::before {
+  content: '✓';
+  position: absolute;
+  left: 0;
+  color: rgb(var(--accent));
+  font-weight: 700;
+}
+strong {
+  color: var(--ink);
+}
+.tag {
+  display: inline-block;
+  font-size: 0.78rem;
+  color: var(--ink-dim);
+  background: rgba(var(--accent), 0.08);
+  border: 1px solid rgba(var(--accent), 0.28);
+  border-radius: var(--r-pill);
+  padding: 0.15rem 0.7rem;
+  margin: 0.3rem 0.3rem 0 0;
+}
+.tags {
+  margin-top: var(--sp-3);
+}
+hr {
+  border: none;
+  border-top: 1px solid var(--hairline);
+  margin: 3.5rem auto;
+  max-width: 780px;
+}
+footer {
+  max-width: 780px;
+  margin: 3rem auto 0;
+  padding-top: var(--sp-4);
+  border-top: 1px solid var(--hairline);
+  color: var(--ink-faint);
+  font-size: 0.82rem;
+  text-align: center;
+}
