@@ -1,8 +1,8 @@
 /** Visual diagnostic for the Earth terminator, enabled only with ?debug-solar. */
 import * as THREE from 'three';
 import type { PublicAPI } from '@/SolarSystemApp';
+import { RAD_TO_DEG as DEG } from '@/core/MathConstants';
 
-const DEG = 180 / Math.PI;
 const NEWLINE = String.fromCharCode(10);
 
 export function setupSolarDebug(api: PublicAPI): () => void {

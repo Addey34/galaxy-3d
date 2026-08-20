@@ -14,8 +14,7 @@
  */
 import * as THREE from 'three';
 import { sampleWind, type WindGrid } from '@/core/windField';
-
-const DEG2RAD = Math.PI / 180;
+import { DEG_TO_RAD as DEG2RAD } from '@/core/MathConstants';
 
 export interface WindParticlesOptions {
   radius: number;

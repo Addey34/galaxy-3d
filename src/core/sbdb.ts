@@ -10,14 +10,13 @@
  * Réf. : https://ssd-api.jpl.nasa.gov/doc/sbdb_query.html
  */
 import type { OrbitalElements } from './kepler';
+import { DEG_TO_RAD as D2R } from './MathConstants';
 
 /** Un petit corps chargé depuis SBDB : nom lisible + éléments orbitaux. */
 export interface ParsedSmallBody {
   name: string;
   elements: OrbitalElements;
 }
-
-const D2R = Math.PI / 180;
 
 /** Convertit une date julienne (JD, TDB≈UTC à cette précision) en Date JavaScript. */
 export function julianDateToDate(jd: number): Date {

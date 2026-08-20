@@ -14,8 +14,7 @@
  */
 import type { CelestialBodyConfig, TextureQuality } from '@/types';
 import { exploCameraDistance } from '@/core/ScaleService';
-
-const D2R = Math.PI / 180;
+import { DEG_TO_RAD as D2R } from '@/core/MathConstants';
 
 /** Éléments orbitaux d'un petit corps, dans les unités publiées (degrés, UA). */
 export interface SmallBodyElements {

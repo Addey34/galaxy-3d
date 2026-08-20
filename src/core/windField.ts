@@ -11,12 +11,13 @@
  * (vent « du Nord », dir=0 → v = -speed, l'air va vers le Sud : correct.)
  */
 
+import { DEG_TO_RAD as DEG2RAD } from './MathConstants';
+
 const OPEN_METEO_GFS = 'https://api.open-meteo.com/v1/gfs';
 // Réanalyse ERA5 pour le VOYAGE TEMPS vers le passé (jusqu'à ~5 j avant le présent, retour
 // jusqu'en 1940). Même schéma horaire vitesse+direction que le forecast GFS ; seule l'URL et
 // la fenêtre temporelle (start_date=end_date=jour ciblé) changent. Cf. core/meteoTimeTravel.
 const OPEN_METEO_ARCHIVE = 'https://archive-api.open-meteo.com/v1/archive';
-const DEG2RAD = Math.PI / 180;
 
 export interface WindGridOptions {
   /** Pas de la grille en degrés (défaut 10 → 612 points, 1 requête). */

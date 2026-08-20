@@ -12,6 +12,7 @@
 import { Body } from 'astronomy-engine';
 import type { CelestialConfig } from '@/types';
 import { exploCameraDistance } from '@/core/ScaleService';
+import { DEG_TO_RAD as D2R } from '@/core/MathConstants';
 import {
   assertUniqueBodyNames,
   deriveTextures,
@@ -23,9 +24,6 @@ import { SMALL_BODIES } from './smallBodies';
 
 // Vitesse de rotation axiale — rad / seconde de simulation.
 const _R = (hours: number): number => (Math.PI * 2) / (hours * 3_600);
-
-// Degrés → radians pour les éléments orbitaux.
-const D2R = Math.PI / 180;
 
 export const CELESTIAL_CONFIG: CelestialConfig = {
   bodies: {

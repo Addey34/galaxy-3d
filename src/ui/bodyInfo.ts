@@ -10,6 +10,7 @@ import { CELESTIAL_CONFIG } from '@/config/bodies';
 import { flattenBodies, hasIllustrativeSurface } from '@/config/catalog';
 import { TEXTURE_SETTINGS } from '@/config/engine';
 import { KM_PER_AU, SQRT_K } from '@/core/ScaleService';
+import { RAD_TO_DEG as RAD2DEG } from '@/core/MathConstants';
 import { t, intlLocale, getLocale, onLocaleChange } from '@/i18n';
 import { bodyDisplayName, bodyDescription } from '@/i18n/bodyText';
 import type { CelestialBodyConfig } from '@/types';
@@ -17,7 +18,6 @@ import { bodyAccentColor, hexToRgbTriplet } from './bodyAccent';
 import { safeExternalUrl } from '@/utils/safeUrl';
 import type { OverlayCoordinator } from './overlayCoordinator';
 
-const RAD2DEG = 180 / Math.PI;
 const C_KM_PER_S = 299_792.458; // vitesse de la lumière
 
 const CONFIGS = flattenBodies(CELESTIAL_CONFIG);

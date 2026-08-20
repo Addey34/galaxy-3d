@@ -23,6 +23,7 @@ import type { OrbitalElementsService } from './OrbitalElementsService';
 import type { PreciseEphemerisProvider } from './PreciseEphemerisProvider';
 import { KM_PER_AU, ScaleService, SQRT_K } from './ScaleService';
 import { computeLightAttenuation } from './eclipse';
+import { HOURS_TO_RAD } from './MathConstants';
 import { forEachBody } from '@/config/catalog';
 
 /** Corps sans mouvement orbital propre (skybox étoilée, étoile centrale à l'origine). */
@@ -110,7 +111,6 @@ function easeInOutCubic(t: number): number {
 }
 
 const EARTH_OBSERVER = new Observer(0, 0, 0);
-const HOURS_TO_RADIANS = Math.PI / 12;
 
 /**
  * Greenwich subsolar longitude, positive east, from apparent sidereal time.
@@ -129,7 +129,7 @@ export function computeGreenwichSubsolarLongitude(date: Date): number {
   ).ra;
   const rawHours = sunRightAscensionHours - gastHours;
   const wrappedHours = ((((rawHours + 12) % 24) + 24) % 24) - 12;
-  return wrappedHours * HOURS_TO_RADIANS;
+  return wrappedHours * HOURS_TO_RAD;
 }
 
 export class OrbitalMechanics {
