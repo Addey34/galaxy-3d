@@ -18,7 +18,39 @@ import {
 // ============================================================================
 
 /**
- * Détection mobile réévaluable à tout moment (dépend de `innerWidth`, donc du
+ * Signaux d'appareil, pour classer « rendu allégé » (mobile/tablette) vs « rendu complet »
+ * (desktop). Extrait de `isMobile()` pour rester PUR et testable (pas d'accès à `window`).
+ */
+export interface DeviceSignals {
+  /** User-agent d'un mobile/tablette connu. */
+  mobileUserAgent: boolean;
+  /** L'appareil expose une entrée tactile (`navigator.maxTouchPoints > 0`). */
+  touch: boolean;
+  /** Plus grande dimension de l'écran en px CSS (max(innerWidth, innerHeight)). */
+  largestViewportSide: number;
+}
+
+// Au-delà de cette largeur, un appareil tactile est traité comme un desktop (écran de
+// bureau tactile, PC tout-en-un) : assez puissant pour le rendu complet. En deçà, un
+// appareil tactile est une tablette → rendu allégé, même en paysage (≥ 768).
+const TOUCH_TABLET_MAX_SIDE = 1280;
+// Petit écran : mobile quelle que soit l'entrée (filet de sécurité historique).
+const SMALL_SCREEN_SIDE = 768;
+
+/**
+ * Décide si l'appareil mérite un rendu allégé (profil « mobile »). PUR : ne dépend que des
+ * signaux passés. Un appareil TACTILE à écran moyen (tablette, même en paysage ≥ 768) est
+ * désormais capté — l'ancien seuil `innerWidth < 768` classait une tablette paysage comme
+ * desktop et lui infligeait un rendu trop lourd.
+ */
+export function isLowPowerDevice(signals: DeviceSignals): boolean {
+  if (signals.mobileUserAgent) return true;
+  if (signals.largestViewportSide < SMALL_SCREEN_SIDE) return true;
+  return signals.touch && signals.largestViewportSide <= TOUCH_TABLET_MAX_SIDE;
+}
+
+/**
+ * Détection réévaluable à tout moment (dépend de `innerWidth`/`innerHeight`, donc du
  * redimensionnement). `IS_MOBILE` en fige la valeur au chargement pour les réglages
  * figés à l'init (antialiasing, taille des shadow maps, qualité des textures — non
  * modifiables sans recréer le renderer/les matériaux). Seuls les réglages ré-applicables
@@ -26,11 +58,14 @@ import {
  */
 export const isMobile = (): boolean => {
   if (typeof window === 'undefined') return false;
-  return (
-    /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-      navigator.userAgent
-    ) || window.innerWidth < 768
-  );
+  return isLowPowerDevice({
+    mobileUserAgent:
+      /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+        navigator.userAgent
+      ),
+    touch: navigator.maxTouchPoints > 0,
+    largestViewportSide: Math.max(window.innerWidth, window.innerHeight),
+  });
 };
 
 export const IS_MOBILE = isMobile();
