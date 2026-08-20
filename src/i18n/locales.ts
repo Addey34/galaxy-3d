@@ -135,6 +135,7 @@ export const messages: Record<Locale, Dict> = {
       'No spacecraft has resolved these surfaces; their textures are illustrative, not scientific maps: Ceres, Eris, Haumea, Makemake, Pallas, Hygiea, Halley.',
     'credits.data': 'Data',
     'credits.donate': '♥ Support the project',
+    'credits.privacy': 'Privacy',
     'lang.label': 'Language',
     // ── Guided tour (first visit) ──
     'tour.start': 'Start quick tour',
@@ -414,6 +415,7 @@ export const messages: Record<Locale, Dict> = {
       'Aucune sonde n’a résolu ces surfaces ; leurs textures sont illustratives, pas des cartes scientifiques : Cérès, Éris, Hauméa, Makémaké, Pallas, Hygie, Halley.',
     'credits.data': 'Données',
     'credits.donate': '♥ Soutenir le projet',
+    'credits.privacy': 'Confidentialité',
     'lang.label': 'Langue',
     // ── Visite guidée (première visite) ──
     'tour.start': 'Lancer la visite rapide',

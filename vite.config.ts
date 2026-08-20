@@ -63,6 +63,9 @@ export default defineConfig({
         globPatterns: ['**/*.{js,css,html,ico,svg,woff2}'],
         // SPA : toute navigation retombe sur index.html (déjà rewrité côté Firebase).
         navigateFallback: '/index.html',
+        // …sauf les pages statiques autonomes (confidentialité) : elles doivent être
+        // servies telles quelles, pas remplacées par l'app WebGL.
+        navigateFallbackDenylist: [/^\/privacy\.html$/],
         cleanupOutdatedCaches: true,
         runtimeCaching: [
           {
