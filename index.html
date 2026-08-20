@@ -82,6 +82,16 @@
     />
 
     <link rel="icon" href="/favicon.ico" type="image/x-icon" />
+    <link rel="icon" href="/icon.svg" type="image/svg+xml" />
+    <!-- PWA : le <link rel="manifest"> est injecte automatiquement par vite-plugin-pwa.
+         apple-touch-icon reste explicite (iOS ne lit pas les icones du manifest). -->
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta
+      name="apple-mobile-web-app-status-bar-style"
+      content="black-translucent"
+    />
+    <meta name="apple-mobile-web-app-title" content="Solar System" />
     <link rel="stylesheet" href="/src/styles.css" />
 
     <!-- Données structurées (schema.org) : aide Google à comprendre le contenu. -->
