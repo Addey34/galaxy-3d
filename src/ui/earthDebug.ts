@@ -13,14 +13,12 @@
  * produit l'artefact (ex. contours bleu-gris) en la coupant seule.
  */
 import type { PublicAPI } from '@/SolarSystemApp';
+import { hasDebugFlag } from '@/utils/debugFlags';
 
 const NEWLINE = String.fromCharCode(10);
 
 export function setupEarthDebug(api: PublicAPI): () => void {
-  if (
-    typeof window === 'undefined' ||
-    !new URLSearchParams(window.location.search).has('debug-earth')
-  ) {
+  if (!hasDebugFlag('debug-earth')) {
     return () => undefined;
   }
 

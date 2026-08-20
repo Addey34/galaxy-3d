@@ -2,14 +2,12 @@
 import * as THREE from 'three';
 import type { PublicAPI } from '@/SolarSystemApp';
 import { RAD_TO_DEG as DEG } from '@/core/MathConstants';
+import { hasDebugFlag } from '@/utils/debugFlags';
 
 const NEWLINE = String.fromCharCode(10);
 
 export function setupSolarDebug(api: PublicAPI): () => void {
-  if (
-    typeof window === 'undefined' ||
-    !new URLSearchParams(window.location.search).has('debug-solar')
-  ) {
+  if (!hasDebugFlag('debug-solar')) {
     return () => undefined;
   }
 

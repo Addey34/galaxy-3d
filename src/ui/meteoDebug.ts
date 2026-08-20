@@ -7,6 +7,7 @@
 import type { MeteoLayerDiagnostics } from '@/core/meteoDiagnostics';
 import type { PublicAPI } from '@/SolarSystemApp';
 import type { WeatherLayerHandle } from './earthLayer';
+import { hasDebugFlag } from '@/utils/debugFlags';
 
 const NEWLINE = String.fromCharCode(10);
 
@@ -14,10 +15,7 @@ export function setupMeteoDebug(
   api: PublicAPI,
   layers: WeatherLayerHandle[]
 ): () => void {
-  if (
-    typeof window === 'undefined' ||
-    !new URLSearchParams(window.location.search).has('debug-meteo')
-  ) {
+  if (!hasDebugFlag('debug-meteo')) {
     return () => undefined;
   }
 

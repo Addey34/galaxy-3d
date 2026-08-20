@@ -1,7 +1,13 @@
 /* Style de la page de confidentialité (public/privacy.html).
    Fichier externe (et non un <style> inline) : la CSP `style-src 'self'` bloque
    tout CSS inline. Reprend les tokens de design de l'app (src/styles.css) pour
-   que la page soit une extension visuelle du produit, pas un document isolé. */
+   que la page soit une extension visuelle du produit, pas un document isolé.
+
+   Page volontairement AUTONOME (hors bundle Vite, servie en statique) : les tokens
+   ci-dessous sont un MIROIR délibéré de src/styles.css. On ne factorise pas dans un
+   fichier partagé pour préserver cette autonomie (aucune dépendance au build, chargement
+   robuste, isolation CSP). Ces valeurs de marque changent très rarement ; si tu en
+   modifies une dans src/styles.css, reporte-la ici. */
 :root {
   color-scheme: dark;
   --sp-2: 0.5rem;

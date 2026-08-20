@@ -23,14 +23,10 @@ import {
 } from './earthLayer';
 import type { MeteoLayerDiagnostics } from '@/core/meteoDiagnostics';
 import type { PublicAPI } from '@/SolarSystemApp';
+import { hasDebugFlag } from '@/utils/debugFlags';
 
-const DEBUG_CLOUDS_RAW =
-  typeof window !== 'undefined' &&
-  new URLSearchParams(window.location.search).has('debug-clouds-raw');
-const DEBUG_CLOUDS =
-  typeof window !== 'undefined' &&
-  (new URLSearchParams(window.location.search).has('debug-clouds') ||
-    DEBUG_CLOUDS_RAW);
+const DEBUG_CLOUDS_RAW = hasDebugFlag('debug-clouds-raw');
+const DEBUG_CLOUDS = hasDebugFlag('debug-clouds') || DEBUG_CLOUDS_RAW;
 
 async function debugTexture(
   label: string,
