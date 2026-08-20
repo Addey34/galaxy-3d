@@ -117,6 +117,10 @@ export const messages: Record<Locale, Dict> = {
     // ── Aide & crédits ──
     'help.btn.title': 'Help, tips & credits',
     'help.btn.aria': 'Help, tips and credits',
+    'share.btn.title': 'Share this view',
+    'share.btn.aria': 'Share this view',
+    'share.copied': 'Link copied',
+    'share.failed': 'Copy failed',
     'help.dialog.aria': 'Help and credits',
     'help.title': 'Navigation',
     'help.tip.drag.key': 'Drag',
@@ -403,6 +407,10 @@ export const messages: Record<Locale, Dict> = {
     // ── Aide & crédits ──
     'help.btn.title': 'Aide, astuces et crédits',
     'help.btn.aria': 'Aide, astuces et crédits',
+    'share.btn.title': 'Partager cette vue',
+    'share.btn.aria': 'Partager cette vue',
+    'share.copied': 'Lien copié',
+    'share.failed': 'Échec de la copie',
     'help.dialog.aria': 'Aide et crédits',
     'help.title': 'Navigation',
     'help.tip.drag.key': 'Glisser',

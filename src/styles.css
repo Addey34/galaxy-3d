@@ -1429,6 +1429,34 @@ button {
   margin-top: var(--sp-1);
 }
 
+/* Toast de confirmation « Lien copié » (partage de vue). Éphémère, centré en bas,
+   au-dessus des surfaces. N'intercepte pas les clics. */
+.share-toast {
+  position: fixed;
+  left: 50%;
+  bottom: calc(var(--edge-b) + 4.5rem);
+  transform: translate(-50%, 0.5rem);
+  z-index: var(--z-loader);
+  padding: 0.5rem 1rem;
+  border-radius: var(--r-pill);
+  background: var(--surface-solid);
+  border: 1px solid var(--hairline-strong);
+  box-shadow: var(--shadow);
+  backdrop-filter: var(--blur);
+  color: var(--ink);
+  font-size: 0.85rem;
+  font-weight: 600;
+  pointer-events: none;
+  opacity: 0;
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease;
+}
+.share-toast.is-visible {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
 /* ============================================================================
    RESPONSIVE — les composants reflowent ; pas de DOM par breakpoint.
    Les surfaces contextuelles deviennent des feuilles ancrées en bas.
