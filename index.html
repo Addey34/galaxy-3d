@@ -950,15 +950,37 @@
             <dt data-i18n="credits.data">Data</dt>
             <dd>Astronomy Engine · JPL SBDB</dd>
           </dl>
-          <a
-            class="credits-donate"
-            href="https://ko-fi.com/adrian34"
-            target="_blank"
-            rel="noopener noreferrer"
-            data-i18n="credits.donate"
+          <!-- Dépliant « Soutenir » : message personnel + arguments de crédibilité,
+               puis redirection Ko-fi au clic (paiement toujours chez le prestataire —
+               aucun script/iframe tiers chargé ici, CSP intacte). -->
+          <section
+            class="support-card"
+            aria-labelledby="support-title"
           >
-            ♥ Support the project
-          </a>
+            <h4 class="support-title" id="support-title" data-i18n="support.title">
+              Support the project
+            </h4>
+            <p class="support-lead" data-i18n="support.lead">
+              I build this solar system alone, on my free time, and give it away
+              free to everyone.
+            </p>
+            <ul class="support-points">
+              <li data-i18n="support.point.free">Free, no ads, no trackers</li>
+              <li data-i18n="support.point.data">Real NASA/JPL data</li>
+              <li data-i18n="support.point.use">
+                Your donation keeps it online and independent
+              </li>
+            </ul>
+            <a
+              class="credits-donate"
+              href="https://ko-fi.com/adrian34"
+              target="_blank"
+              rel="noopener noreferrer"
+              data-i18n="credits.donate"
+            >
+              ♥ Support on Ko-fi
+            </a>
+          </section>
         </div>
       </div>
     </aside>
