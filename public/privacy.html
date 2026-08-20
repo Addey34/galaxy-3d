@@ -13,92 +13,211 @@
     <link rel="icon" href="/favicon.ico" type="image/x-icon" />
     <link rel="icon" href="/icon.svg" type="image/svg+xml" />
     <style>
+      /* Reprend les tokens de design de l'app (src/styles.css) pour que cette page
+         soit une extension visuelle du produit, pas un document isolé. */
       :root {
         color-scheme: dark;
-        --bg: #02040a;
-        --panel: #0b1224;
-        --text: #e8edf6;
-        --muted: #9fb0cc;
-        --accent: #6fb7ff;
-        --line: rgba(143, 180, 255, 0.18);
+        --sp-2: 0.5rem;
+        --sp-3: 0.75rem;
+        --sp-4: 1rem;
+        --sp-5: 1.5rem;
+        --r-md: 0.75rem;
+        --r-lg: 1rem;
+        --r-pill: 999px;
+        --surface: rgba(9, 13, 26, 0.82);
+        --hairline: rgba(150, 185, 255, 0.14);
+        --hairline-strong: rgba(150, 185, 255, 0.24);
+        --shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
+        --ink: rgba(224, 236, 255, 0.95);
+        --ink-dim: rgba(200, 218, 255, 0.62);
+        --ink-faint: rgba(200, 218, 255, 0.4);
+        --accent: 96, 165, 255;
       }
       * {
         box-sizing: border-box;
       }
+      html {
+        scroll-behavior: smooth;
+      }
       body {
         margin: 0;
-        background: var(--bg);
-        color: var(--text);
+        min-height: 100vh;
+        color: var(--ink);
         font:
           16px/1.65 system-ui,
           -apple-system,
-          Segoe UI,
+          'Segoe UI',
           Roboto,
+          Arial,
           sans-serif;
-        padding: 2.5rem 1.25rem 4rem;
-      }
-      main {
-        max-width: 760px;
-        margin: 0 auto;
+        /* Fond spatial : dégradé radial sombre bleuté, comme la scène 3D. */
+        background:
+          radial-gradient(
+            120% 90% at 50% -10%,
+            #0d1730 0%,
+            #060a16 45%,
+            #02040a 100%
+          )
+          fixed;
+        padding: 0 1.25rem 4rem;
       }
       a {
-        color: var(--accent);
+        color: rgb(var(--accent));
+        text-decoration: none;
       }
-      h1 {
-        font-size: 1.6rem;
-        margin: 0 0 0.25rem;
+      a:hover {
+        text-decoration: underline;
       }
-      h2 {
-        font-size: 1.15rem;
-        margin: 2rem 0 0.5rem;
-        color: var(--accent);
+
+      /* En-tête : branding app + retour, en surface collante translucide. */
+      .page-header {
+        position: sticky;
+        top: 0;
+        z-index: 2;
+        display: flex;
+        align-items: center;
+        gap: var(--sp-3);
+        max-width: 780px;
+        margin: 0 auto;
+        padding: var(--sp-3) 0;
+        margin-bottom: var(--sp-5);
+        border-bottom: 1px solid var(--hairline);
+        background: linear-gradient(
+          to bottom,
+          rgba(2, 4, 10, 0.92),
+          rgba(2, 4, 10, 0.72)
+        );
+        backdrop-filter: blur(14px);
+        -webkit-backdrop-filter: blur(14px);
+      }
+      .page-header img {
+        width: 34px;
+        height: 34px;
+        border-radius: 8px;
+        border: 1px solid var(--hairline-strong);
+      }
+      .page-header .app-name {
+        font-weight: 700;
+        font-size: 0.95rem;
+        color: var(--ink);
+      }
+      .page-header .back {
+        margin-left: auto;
+        padding: 0.35rem 0.8rem;
+        border-radius: var(--r-pill);
+        background: rgba(var(--accent), 0.14);
+        border: 1px solid rgba(var(--accent), 0.4);
+        color: rgb(var(--accent));
+        font-size: 0.85rem;
+        white-space: nowrap;
+      }
+      .page-header .back:hover {
+        background: rgba(var(--accent), 0.22);
+        text-decoration: none;
+      }
+
+      main {
+        max-width: 780px;
+        margin: 0 auto;
       }
       .lang {
-        color: var(--muted);
-        font-size: 0.85rem;
-        letter-spacing: 0.04em;
+        color: var(--ink-faint);
+        font-size: 0.8rem;
+        letter-spacing: 0.06em;
         text-transform: uppercase;
-        margin: 0 0 1.5rem;
+        margin: 0 0 1.25rem;
+      }
+      h1 {
+        font-size: 1.7rem;
+        margin: 0 0 0.3rem;
+        letter-spacing: -0.01em;
+      }
+      h2 {
+        font-size: 1.1rem;
+        margin: 2.2rem 0 0.6rem;
+        color: rgb(var(--accent));
       }
       .updated {
-        color: var(--muted);
+        color: var(--ink-faint);
         font-size: 0.9rem;
       }
+      /* Surface en verre dépoli, identique aux panneaux de l'app. */
       section {
-        background: var(--panel);
-        border: 1px solid var(--line);
-        border-radius: 14px;
+        background: var(--surface);
+        border: 1px solid var(--hairline);
+        border-radius: var(--r-lg);
+        box-shadow: var(--shadow);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
         padding: 1.25rem 1.5rem;
-        margin-top: 1.25rem;
+        margin-top: 1.1rem;
+      }
+      section p:first-child {
+        margin-top: 0;
+      }
+      section p:last-child {
+        margin-bottom: 0;
       }
       ul {
-        padding-left: 1.2rem;
+        padding-left: 0;
+        list-style: none;
+        margin: 0.4rem 0 0;
+        display: grid;
+        gap: 0.4rem;
       }
       li {
-        margin: 0.3rem 0;
+        position: relative;
+        padding-left: 1.4rem;
+        color: var(--ink-dim);
       }
-      .back {
-        display: inline-block;
-        margin-top: 2rem;
-        color: var(--muted);
+      li::before {
+        content: '✓';
+        position: absolute;
+        left: 0;
+        color: rgb(var(--accent));
+        font-weight: 700;
       }
-      hr {
-        border: none;
-        border-top: 1px solid var(--line);
-        margin: 3rem 0;
+      strong {
+        color: var(--ink);
       }
       .tag {
         display: inline-block;
         font-size: 0.78rem;
-        color: var(--muted);
-        border: 1px solid var(--line);
-        border-radius: 999px;
-        padding: 0.1rem 0.6rem;
-        margin: 0 0.3rem 0.3rem 0;
+        color: var(--ink-dim);
+        background: rgba(var(--accent), 0.08);
+        border: 1px solid rgba(var(--accent), 0.28);
+        border-radius: var(--r-pill);
+        padding: 0.15rem 0.7rem;
+        margin: 0.3rem 0.3rem 0 0;
+      }
+      .tags {
+        margin-top: var(--sp-3);
+      }
+      hr {
+        border: none;
+        border-top: 1px solid var(--hairline);
+        margin: 3.5rem auto;
+        max-width: 780px;
+      }
+      footer {
+        max-width: 780px;
+        margin: 3rem auto 0;
+        padding-top: var(--sp-4);
+        border-top: 1px solid var(--hairline);
+        color: var(--ink-faint);
+        font-size: 0.82rem;
+        text-align: center;
       }
     </style>
   </head>
   <body>
+    <!-- En-tête commun aux deux langues -->
+    <header class="page-header" id="top">
+      <img src="/icon.svg" alt="" width="34" height="34" />
+      <span class="app-name">3D Solar System</span>
+      <a class="back" href="/">← <span data-back-label>App</span></a>
+    </header>
+
     <main>
       <!-- ─────────────── FRANÇAIS ─────────────── -->
       <p class="lang">Français · <a href="#en">English below</a></p>
@@ -111,7 +230,7 @@
           système solaire, gratuit et sans publicité. Le respect de votre vie
           privée est intégré dès la conception :
         </p>
-        <p>
+        <p class="tags">
           <span class="tag">Aucune donnée personnelle</span>
           <span class="tag">Aucun cookie</span>
           <span class="tag">Aucun traceur</span>
@@ -150,7 +269,7 @@
           <li>le fait que la visite guidée a déjà été affichée ;</li>
           <li>le niveau de qualité graphique sélectionné.</li>
         </ul>
-        <p>
+        <p style="margin-top: var(--sp-3)">
           Vous pouvez les effacer à tout moment en vidant les données de site de
           votre navigateur.
         </p>
@@ -180,7 +299,7 @@
             corps du système solaire.
           </li>
         </ul>
-        <p>
+        <p style="margin-top: var(--sp-3)">
           Les liens vers Wikipédia sont de simples liens : ils ne sont suivis
           que si vous cliquez dessus.
         </p>
@@ -205,8 +324,6 @@
         </p>
       </section>
 
-      <p><a class="back" href="/">← Retour à l'application</a></p>
-
       <hr id="en" />
 
       <!-- ─────────────── ENGLISH ─────────────── -->
@@ -219,7 +336,7 @@
           <strong>3D Solar System</strong> is a free, ad-free educational solar
           system visualizer. Privacy is built in by design:
         </p>
-        <p>
+        <p class="tags">
           <span class="tag">No personal data</span>
           <span class="tag">No cookies</span>
           <span class="tag">No trackers</span>
@@ -258,7 +375,7 @@
           <li>whether the guided tour has already been shown;</li>
           <li>the selected graphics quality level.</li>
         </ul>
-        <p>
+        <p style="margin-top: var(--sp-3)">
           You can clear them at any time by clearing your browser's site data.
         </p>
       </section>
@@ -285,7 +402,7 @@
             small-body database.
           </li>
         </ul>
-        <p>
+        <p style="margin-top: var(--sp-3)">
           Links to Wikipedia are plain links: they are only followed if you
           click them.
         </p>
@@ -310,7 +427,16 @@
         </p>
       </section>
 
-      <p><a class="back" href="/">← Back to the app</a></p>
+      <footer>
+        © 2026 Adrian Guichard ·
+        <a
+          href="https://polyformproject.org/licenses/noncommercial/1.0.0"
+          target="_blank"
+          rel="noopener noreferrer"
+          >PolyForm NC 1.0.0</a
+        >
+        · <a href="/">Retour à l'application / Back to the app</a>
+      </footer>
     </main>
   </body>
 </html>
