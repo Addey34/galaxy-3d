@@ -51,29 +51,44 @@ a:hover {
   text-decoration: underline;
 }
 
-/* En-tête : branding app + retour, en surface collante translucide. */
+/* Topbar : branding cliquable · toggle langue · retour. Surface collante
+   translucide (verre dépoli) qui reste visible au défilement, comme les docks
+   de l'app. */
 .page-header {
   position: sticky;
   top: 0;
   z-index: 2;
   display: flex;
   align-items: center;
-  gap: var(--sp-3);
+  gap: var(--sp-4);
+  flex-wrap: wrap;
   max-width: 780px;
   margin: 0 auto var(--sp-5);
-  padding: var(--sp-3) 0;
-  border-bottom: 1px solid var(--hairline);
+  padding: var(--sp-3) var(--sp-4);
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-lg);
+  margin-top: var(--sp-4);
   background: linear-gradient(
     to bottom,
-    rgba(2, 4, 10, 0.92),
-    rgba(2, 4, 10, 0.72)
+    rgba(11, 18, 36, 0.92),
+    rgba(9, 13, 26, 0.78)
   );
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
 }
-.page-header img {
-  width: 34px;
-  height: 34px;
+.page-header .brand {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  color: var(--ink);
+}
+.page-header .brand:hover {
+  text-decoration: none;
+}
+.page-header .brand img {
+  width: 32px;
+  height: 32px;
   border-radius: 8px;
   border: 1px solid var(--hairline-strong);
 }
@@ -82,14 +97,53 @@ a:hover {
   font-size: 0.95rem;
   color: var(--ink);
 }
-.page-header .back {
+.topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
   margin-left: auto;
-  padding: 0.35rem 0.8rem;
+}
+
+/* Toggle langue — repris du sélecteur EN|FR de l'app (segments pilule). */
+.lang-switch {
+  display: flex;
+  gap: 0.15rem;
+  padding: 0.15rem;
+  border-radius: var(--r-pill);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--hairline);
+}
+.lang-btn {
+  padding: 0.2rem 0.7rem;
+  border: none;
+  border-radius: var(--r-pill);
+  background: transparent;
+  color: var(--ink-dim);
+  font: inherit;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    color 0.15s;
+}
+.lang-btn:hover {
+  color: var(--ink);
+}
+.lang-btn.is-active {
+  background: rgba(var(--accent), 0.9);
+  color: #fff;
+}
+
+.page-header .back {
+  padding: 0.4rem 0.85rem;
   border-radius: var(--r-pill);
   background: rgba(var(--accent), 0.14);
   border: 1px solid rgba(var(--accent), 0.4);
   color: rgb(var(--accent));
   font-size: 0.85rem;
+  font-weight: 600;
   white-space: nowrap;
 }
 .page-header .back:hover {
@@ -100,13 +154,6 @@ a:hover {
 main {
   max-width: 780px;
   margin: 0 auto;
-}
-.lang {
-  color: var(--ink-faint);
-  font-size: 0.8rem;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  margin: 0 0 1.25rem;
 }
 h1 {
   font-size: 1.7rem;
@@ -177,12 +224,6 @@ strong {
 }
 .tags {
   margin-top: var(--sp-3);
-}
-hr {
-  border: none;
-  border-top: 1px solid var(--hairline);
-  margin: 3.5rem auto;
-  max-width: 780px;
 }
 footer {
   max-width: 780px;

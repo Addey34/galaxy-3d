@@ -13,223 +13,241 @@
     <link rel="icon" href="/favicon.ico" type="image/x-icon" />
     <link rel="icon" href="/icon.svg" type="image/svg+xml" />
     <link rel="stylesheet" href="/privacy.css" />
+    <script src="/privacy.js" defer></script>
   </head>
   <body>
-    <!-- En-tête commun aux deux langues -->
+    <!-- Topbar : branding · sélecteur de langue (même toggle que l'app) · retour. -->
     <header class="page-header" id="top">
-      <img src="/icon.svg" alt="" width="34" height="34" />
-      <span class="app-name">3D Solar System</span>
-      <a class="back" href="/">← <span data-back-label>App</span></a>
+      <a class="brand" href="/">
+        <img src="/icon.svg" alt="" width="32" height="32" />
+        <span class="app-name">3D Solar System</span>
+      </a>
+      <div class="topbar-actions">
+        <div
+          class="lang-switch"
+          role="group"
+          aria-label="Language / Langue"
+        >
+          <button class="lang-btn" type="button" data-locale="fr">FR</button>
+          <button class="lang-btn" type="button" data-locale="en">EN</button>
+        </div>
+        <a class="back" href="/">
+          <span data-lang="fr">← Retour à l'app</span>
+          <span data-lang="en" hidden>← Back to the app</span>
+        </a>
+      </div>
     </header>
 
     <main>
       <!-- ─────────────── FRANÇAIS ─────────────── -->
-      <p class="lang">Français · <a href="#en">English below</a></p>
-      <h1>Politique de confidentialité</h1>
-      <p class="updated">Dernière mise à jour : 20 août 2026</p>
+      <div data-lang="fr">
+        <h1>Politique de confidentialité</h1>
+        <p class="updated">Dernière mise à jour : 20 août 2026</p>
 
-      <section>
-        <p>
-          <strong>3D Solar System</strong> est un visualiseur pédagogique du
-          système solaire, gratuit et sans publicité. Le respect de votre vie
-          privée est intégré dès la conception :
-        </p>
-        <p class="tags">
-          <span class="tag">Aucune donnée personnelle</span>
-          <span class="tag">Aucun cookie</span>
-          <span class="tag">Aucun traceur</span>
-          <span class="tag">Aucune publicité</span>
-          <span class="tag">Aucun compte</span>
-        </p>
-      </section>
+        <section>
+          <p>
+            <strong>3D Solar System</strong> est un visualiseur pédagogique du
+            système solaire, gratuit et sans publicité. Le respect de votre vie
+            privée est intégré dès la conception :
+          </p>
+          <p class="tags">
+            <span class="tag">Aucune donnée personnelle</span>
+            <span class="tag">Aucun cookie</span>
+            <span class="tag">Aucun traceur</span>
+            <span class="tag">Aucune publicité</span>
+            <span class="tag">Aucun compte</span>
+          </p>
+        </section>
 
-      <h2>Données que nous ne collectons pas</h2>
-      <section>
-        <p>
-          Nous ne collectons, ne stockons ni ne transmettons
-          <strong>aucune donnée personnelle</strong>. Concrètement :
-        </p>
-        <ul>
-          <li>Aucun cookie n'est déposé.</li>
-          <li>
-            Aucun outil d'analyse d'audience ni traceur tiers (pas de Google
-            Analytics, pas de régie publicitaire).
-          </li>
-          <li>Aucun compte, aucune inscription, aucune adresse e-mail.</li>
-          <li>Votre position géographique n'est jamais demandée ni utilisée.</li>
-        </ul>
-      </section>
+        <h2>Données que nous ne collectons pas</h2>
+        <section>
+          <p>
+            Nous ne collectons, ne stockons ni ne transmettons
+            <strong>aucune donnée personnelle</strong>. Concrètement :
+          </p>
+          <ul>
+            <li>Aucun cookie n'est déposé.</li>
+            <li>
+              Aucun outil d'analyse d'audience ni traceur tiers (pas de Google
+              Analytics, pas de régie publicitaire).
+            </li>
+            <li>Aucun compte, aucune inscription, aucune adresse e-mail.</li>
+            <li>
+              Votre position géographique n'est jamais demandée ni utilisée.
+            </li>
+          </ul>
+        </section>
 
-      <h2>Préférences enregistrées sur votre appareil</h2>
-      <section>
-        <p>
-          Pour que l'application se souvienne de vos réglages, quelques
-          préférences <strong>techniques</strong> sont enregistrées localement
-          dans votre navigateur (via <em>localStorage</em>). Elles ne quittent
-          jamais votre appareil et ne sont accessibles par personne d'autre :
-        </p>
-        <ul>
-          <li>la langue choisie (français / anglais) ;</li>
-          <li>le fait que la visite guidée a déjà été affichée ;</li>
-          <li>le niveau de qualité graphique sélectionné.</li>
-        </ul>
-        <p class="note">
-          Vous pouvez les effacer à tout moment en vidant les données de site de
-          votre navigateur.
-        </p>
-      </section>
+        <h2>Préférences enregistrées sur votre appareil</h2>
+        <section>
+          <p>
+            Pour que l'application se souvienne de vos réglages, quelques
+            préférences <strong>techniques</strong> sont enregistrées localement
+            dans votre navigateur (via <em>localStorage</em>). Elles ne quittent
+            jamais votre appareil et ne sont accessibles par personne d'autre :
+          </p>
+          <ul>
+            <li>la langue choisie (français / anglais) ;</li>
+            <li>le fait que la visite guidée a déjà été affichée ;</li>
+            <li>le niveau de qualité graphique sélectionné.</li>
+          </ul>
+          <p class="note">
+            Vous pouvez les effacer à tout moment en vidant les données de site
+            de votre navigateur.
+          </p>
+        </section>
 
-      <h2>Services scientifiques externes</h2>
-      <section>
-        <p>
-          Pour afficher des données réelles (positions, imagerie, météo),
-          l'application interroge des services scientifiques publics. Ces
-          requêtes transmettent uniquement les informations techniques
-          inhérentes à toute connexion web (par ex. votre adresse IP, gérée par
-          ces services selon leurs propres règles) — jamais d'identifiant que
-          nous créerions :
-        </p>
-        <ul>
-          <li>
-            <strong>NASA GIBS</strong> (gibs.earthdata.nasa.gov) — imagerie
-            satellite (nuages).
-          </li>
-          <li>
-            <strong>Open-Meteo</strong> (open-meteo.com) — données
-            météorologiques.
-          </li>
-          <li>
-            <strong>NASA JPL</strong> (ssd-api.jpl.nasa.gov) — base des petits
-            corps du système solaire.
-          </li>
-        </ul>
-        <p class="note">
-          Les liens vers Wikipédia sont de simples liens : ils ne sont suivis
-          que si vous cliquez dessus.
-        </p>
-      </section>
+        <h2>Services scientifiques externes</h2>
+        <section>
+          <p>
+            Pour afficher des données réelles (positions, imagerie, météo),
+            l'application interroge des services scientifiques publics. Ces
+            requêtes transmettent uniquement les informations techniques
+            inhérentes à toute connexion web (par ex. votre adresse IP, gérée par
+            ces services selon leurs propres règles) — jamais d'identifiant que
+            nous créerions :
+          </p>
+          <ul>
+            <li>
+              <strong>NASA GIBS</strong> (gibs.earthdata.nasa.gov) — imagerie
+              satellite (nuages).
+            </li>
+            <li>
+              <strong>Open-Meteo</strong> (open-meteo.com) — données
+              météorologiques.
+            </li>
+            <li>
+              <strong>NASA JPL</strong> (ssd-api.jpl.nasa.gov) — base des petits
+              corps du système solaire.
+            </li>
+          </ul>
+          <p class="note">
+            Les liens vers Wikipédia sont de simples liens : ils ne sont suivis
+            que si vous cliquez dessus.
+          </p>
+        </section>
 
-      <h2>Hébergement</h2>
-      <section>
-        <p>
-          Le site est hébergé par <strong>Firebase Hosting</strong> (Google
-          LLC), qui peut conserver des journaux techniques de connexion à des
-          fins de sécurité et de fonctionnement du service.
-        </p>
-      </section>
+        <h2>Hébergement</h2>
+        <section>
+          <p>
+            Le site est hébergé par <strong>Firebase Hosting</strong> (Google
+            LLC), qui peut conserver des journaux techniques de connexion à des
+            fins de sécurité et de fonctionnement du service.
+          </p>
+        </section>
 
-      <h2>Vos droits &amp; contact</h2>
-      <section>
-        <p>
-          Aucune donnée personnelle n'étant collectée, il n'y a rien à
-          consulter, rectifier ou supprimer de notre côté. Pour toute question
-          relative à cette politique, vous pouvez contacter l'auteur, Adrian
-          Guichard, via <a href="https://ko-fi.com/adrian34">Ko-fi</a>.
-        </p>
-      </section>
-
-      <hr id="en" />
+        <h2>Vos droits &amp; contact</h2>
+        <section>
+          <p>
+            Aucune donnée personnelle n'étant collectée, il n'y a rien à
+            consulter, rectifier ou supprimer de notre côté. Pour toute question
+            relative à cette politique, vous pouvez contacter l'auteur, Adrian
+            Guichard, via <a href="https://ko-fi.com/adrian34">Ko-fi</a>.
+          </p>
+        </section>
+      </div>
 
       <!-- ─────────────── ENGLISH ─────────────── -->
-      <p class="lang">English · <a href="#top">Français ci-dessus</a></p>
-      <h1>Privacy Policy</h1>
-      <p class="updated">Last updated: 20 August 2026</p>
+      <div data-lang="en" hidden>
+        <h1>Privacy Policy</h1>
+        <p class="updated">Last updated: 20 August 2026</p>
 
-      <section>
-        <p>
-          <strong>3D Solar System</strong> is a free, ad-free educational solar
-          system visualizer. Privacy is built in by design:
-        </p>
-        <p class="tags">
-          <span class="tag">No personal data</span>
-          <span class="tag">No cookies</span>
-          <span class="tag">No trackers</span>
-          <span class="tag">No ads</span>
-          <span class="tag">No account</span>
-        </p>
-      </section>
+        <section>
+          <p>
+            <strong>3D Solar System</strong> is a free, ad-free educational solar
+            system visualizer. Privacy is built in by design:
+          </p>
+          <p class="tags">
+            <span class="tag">No personal data</span>
+            <span class="tag">No cookies</span>
+            <span class="tag">No trackers</span>
+            <span class="tag">No ads</span>
+            <span class="tag">No account</span>
+          </p>
+        </section>
 
-      <h2>Data we do not collect</h2>
-      <section>
-        <p>
-          We do not collect, store or transmit
-          <strong>any personal data</strong>. Specifically:
-        </p>
-        <ul>
-          <li>No cookies are set.</li>
-          <li>
-            No audience analytics or third-party trackers (no Google Analytics,
-            no ad networks).
-          </li>
-          <li>No account, no sign-up, no email address.</li>
-          <li>Your location is never requested or used.</li>
-        </ul>
-      </section>
+        <h2>Data we do not collect</h2>
+        <section>
+          <p>
+            We do not collect, store or transmit
+            <strong>any personal data</strong>. Specifically:
+          </p>
+          <ul>
+            <li>No cookies are set.</li>
+            <li>
+              No audience analytics or third-party trackers (no Google Analytics,
+              no ad networks).
+            </li>
+            <li>No account, no sign-up, no email address.</li>
+            <li>Your location is never requested or used.</li>
+          </ul>
+        </section>
 
-      <h2>Preferences stored on your device</h2>
-      <section>
-        <p>
-          So the app can remember your settings, a few
-          <strong>technical</strong> preferences are stored locally in your
-          browser (via <em>localStorage</em>). They never leave your device and
-          are not accessible to anyone else:
-        </p>
-        <ul>
-          <li>your chosen language (French / English);</li>
-          <li>whether the guided tour has already been shown;</li>
-          <li>the selected graphics quality level.</li>
-        </ul>
-        <p class="note">
-          You can clear them at any time by clearing your browser's site data.
-        </p>
-      </section>
+        <h2>Preferences stored on your device</h2>
+        <section>
+          <p>
+            So the app can remember your settings, a few
+            <strong>technical</strong> preferences are stored locally in your
+            browser (via <em>localStorage</em>). They never leave your device and
+            are not accessible to anyone else:
+          </p>
+          <ul>
+            <li>your chosen language (French / English);</li>
+            <li>whether the guided tour has already been shown;</li>
+            <li>the selected graphics quality level.</li>
+          </ul>
+          <p class="note">
+            You can clear them at any time by clearing your browser's site data.
+          </p>
+        </section>
 
-      <h2>External scientific services</h2>
-      <section>
-        <p>
-          To display real data (positions, imagery, weather), the app queries
-          public scientific services. These requests only transmit the technical
-          information inherent to any web connection (e.g. your IP address,
-          handled by those services under their own rules) — never an identifier
-          we would create:
-        </p>
-        <ul>
-          <li>
-            <strong>NASA GIBS</strong> (gibs.earthdata.nasa.gov) — satellite
-            imagery (clouds).
-          </li>
-          <li>
-            <strong>Open-Meteo</strong> (open-meteo.com) — weather data.
-          </li>
-          <li>
-            <strong>NASA JPL</strong> (ssd-api.jpl.nasa.gov) — solar system
-            small-body database.
-          </li>
-        </ul>
-        <p class="note">
-          Links to Wikipedia are plain links: they are only followed if you
-          click them.
-        </p>
-      </section>
+        <h2>External scientific services</h2>
+        <section>
+          <p>
+            To display real data (positions, imagery, weather), the app queries
+            public scientific services. These requests only transmit the
+            technical information inherent to any web connection (e.g. your IP
+            address, handled by those services under their own rules) — never an
+            identifier we would create:
+          </p>
+          <ul>
+            <li>
+              <strong>NASA GIBS</strong> (gibs.earthdata.nasa.gov) — satellite
+              imagery (clouds).
+            </li>
+            <li>
+              <strong>Open-Meteo</strong> (open-meteo.com) — weather data.
+            </li>
+            <li>
+              <strong>NASA JPL</strong> (ssd-api.jpl.nasa.gov) — solar system
+              small-body database.
+            </li>
+          </ul>
+          <p class="note">
+            Links to Wikipedia are plain links: they are only followed if you
+            click them.
+          </p>
+        </section>
 
-      <h2>Hosting</h2>
-      <section>
-        <p>
-          The site is hosted by <strong>Firebase Hosting</strong> (Google LLC),
-          which may keep technical connection logs for security and service
-          operation purposes.
-        </p>
-      </section>
+        <h2>Hosting</h2>
+        <section>
+          <p>
+            The site is hosted by <strong>Firebase Hosting</strong> (Google LLC),
+            which may keep technical connection logs for security and service
+            operation purposes.
+          </p>
+        </section>
 
-      <h2>Your rights &amp; contact</h2>
-      <section>
-        <p>
-          Since no personal data is collected, there is nothing on our side to
-          access, correct or delete. For any question about this policy, you can
-          contact the author, Adrian Guichard, via
-          <a href="https://ko-fi.com/adrian34">Ko-fi</a>.
-        </p>
-      </section>
+        <h2>Your rights &amp; contact</h2>
+        <section>
+          <p>
+            Since no personal data is collected, there is nothing on our side to
+            access, correct or delete. For any question about this policy, you can
+            contact the author, Adrian Guichard, via
+            <a href="https://ko-fi.com/adrian34">Ko-fi</a>.
+          </p>
+        </section>
+      </div>
 
       <footer>
         © 2026 Adrian Guichard ·
