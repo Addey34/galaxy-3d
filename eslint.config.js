@@ -38,5 +38,19 @@ export default tseslint.config(
     rules: {
       '@typescript-eslint/no-explicit-any': 'off',
     },
+  },
+  {
+    // Scripts navigateur statiques servis depuis public/ (ex. privacy.js) : script
+    // classique, pas un module TS. On leur fournit les globals du navigateur pour
+    // que `no-undef` ne signale pas document/localStorage/navigator.
+    files: ['public/**/*.js'],
+    languageOptions: {
+      globals: {
+        document: 'readonly',
+        navigator: 'readonly',
+        localStorage: 'readonly',
+        window: 'readonly',
+      },
+    },
   }
 );
