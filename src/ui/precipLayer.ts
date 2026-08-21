@@ -1,5 +1,5 @@
 /** Couche satellite NASA IMERG. Configuration fine de observedTextureLayer. */
-import { PRECIP_SETTINGS } from '@/config/engine';
+import { IS_MOBILE, PRECIP_SETTINGS } from '@/config/engine';
 import { resolvePrecipSources } from '@/core/layerSource';
 import { getEarth, type WeatherLayerHandle } from './earthLayer';
 import { setupObservedTextureLayer } from './observedTextureLayer';
@@ -13,7 +13,7 @@ export function setupPrecipLayer(api: PublicAPI): WeatherLayerHandle | null {
     labelKey: 'weather.precip',
     noteKey: 'weather.precip.note',
     enabled: settings.enabled,
-    initial: settings.enabled,
+    initial: !IS_MOBILE && settings.enabled,
     earth: getEarth(api, 'PrecipLayer', settings.enabled),
     targetLayer: 'precip',
     resolveSources: (simDate, now) =>

@@ -76,18 +76,26 @@ test('mobile viewport applies the Earth surface texture', async ({ page }) => {
     { timeout: 20_000 }
   );
 });
-test('mobile boot defers hidden thermal imagery', async ({ page }) => {
-  const thermalRequests: string[] = [];
+test('mobile boot defers hidden Earth weather imagery', async ({ page }) => {
+  const weatherRequests: string[] = [];
   page.on('request', (request) => {
-    if (request.url().includes('MERRA2_2m_Air_Temperature_Monthly'))
-      thermalRequests.push(request.url());
+    const url = request.url();
+    if (
+      url.includes('MERRA2_2m_Air_Temperature_Monthly') ||
+      url.includes('VIIRS_SNPP_CorrectedReflectance_TrueColor') ||
+      url.includes('MODIS_Aqua_Cloud_Fraction_Day') ||
+      url.includes('MODIS_Aqua_Cloud_Fraction_Night') ||
+      url.includes('IMERG_Precipitation_Rate_30min')
+    ) {
+      weatherRequests.push(url);
+    }
   });
 
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/?debug-earth&body=earth');
   await expect(page.locator('#loader')).toBeHidden({ timeout: 30_000 });
 
-  expect(thermalRequests).toEqual([]);
+  expect(weatherRequests).toEqual([]);
 });
 
 test('Earth surface returns to standard tessellation when zoomed out', async ({

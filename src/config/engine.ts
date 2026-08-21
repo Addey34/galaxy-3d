@@ -490,9 +490,9 @@ export const HUMIDITY_MODEL_SETTINGS = {
 };
 export const PRECIP_MODEL_SETTINGS = {
   ...METEO_MODEL_GRID_SETTINGS,
-  // Désactivée sur MOBILE (charge réseau/GPU) et au palier `low` ; disponible en medium/high
-  // desktop. Le fournisseur reste conservé pour la simulation et une future stratégie adaptée.
-  enabled: !IS_MOBILE && BOOT_QUALITY_TIER !== 'low',
+  // Disponible sur mobile et desktop, mais non activée par défaut sur mobile ;
+  // le palier low la désactive.
+  enabled: BOOT_QUALITY_TIER !== 'low',
   variable: 'precipitation',
   opacity: 0.85,
   // Sous ce taux (mm/h), le pixel est transparent (il ne « pleut » pas) ; rampe douce au-dessus.
@@ -506,9 +506,9 @@ export const PRECIP_MODEL_SETTINGS = {
 // des données (nouvelle image toutes les 30 min), jamais en time-lapse accéléré. Elle
 // « bouge » quand le temps de simulation avance (lecture accélérée) ou en time-travel.
 export const PRECIP_SETTINGS = {
-  // Couche satellite lourde : désactivée sur MOBILE et au palier `low`, disponible en
-  // medium/high desktop. Conservée pour un futur mode explicite ou la simulation.
-  enabled: !IS_MOBILE && BOOT_QUALITY_TIER !== 'low',
+  // Couche satellite lourde : disponible sur mobile et desktop, mais non activée
+  // par défaut sur mobile ; le palier low la désactive.
+  enabled: BOOT_QUALITY_TIER !== 'low',
   layer: 'IMERG_Precipitation_Rate_30min',
   resolution: 1024,
   // Latence de publication IMERG (heures) : « maintenant » vise now - latencyHours. Mesuré

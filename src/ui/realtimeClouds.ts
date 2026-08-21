@@ -9,7 +9,7 @@
  * déjà en place reste affichée (repli non destructif).
  */
 import type * as THREE from 'three';
-import { REALTIME_CLOUDS_SETTINGS } from '@/config/engine';
+import { IS_MOBILE, REALTIME_CLOUDS_SETTINGS } from '@/config/engine';
 import {
   resolveCloudSources,
   resolveCloudFractionDaySource,
@@ -117,83 +117,95 @@ export function setupRealtimeClouds(api: PublicAPI): WeatherLayerHandle {
   let lastNightMaskSource: MeteoLayerDiagnostics['source'];
   let satelliteVisible = false;
 
-  const disposeSatellite = createDatedTextureLayer(api, {
-    name: 'RealtimeClouds',
-    enabled: settings.enabled && !!earth,
-    // Fallback en chaîne : VIIRS (≥2015) → MODIS Terra (≥2000) → MODIS Aqua (≥2002).
-    // Latence config propagée (défaut 2 j) : l'imagerie satellite de J-1 est souvent
-    // incomplète (fauchée orbitale) → J-2 pour une image complète sans bande « chauve ».
-    resolveSources: (simDate, now) =>
-      resolveCloudSources(simDate, now, { latencyDays: settings.latencyDays }),
-    minTileBytes: settings.minTileBytes,
-    apply: (texture) => {
-      lastTexture = texture;
-      if (satelliteVisible) {
-        applySatellite(texture);
-        earth?.setLayerVisible('clouds', true);
-      }
-    },
-    onResolved: (candidate) => {
-      lastSource = candidate;
-      if (DEBUG_CLOUDS)
-        console.info('[cloud-debug] true-color source', candidate);
-      relay.push(candidate);
-    },
-  });
+  let disposeSatellite: () => void = () => {};
+  let disposeDayMask: () => void = () => {};
+  let disposeNightFallback: () => void = () => {};
+  let dataStarted = false;
+  const startData = (): void => {
+    if (dataStarted) return;
+    dataStarted = true;
+    disposeSatellite = createDatedTextureLayer(api, {
+      name: 'RealtimeClouds',
+      enabled: settings.enabled && !!earth,
+      // Fallback en chaîne : VIIRS (≥2015) → MODIS Terra (≥2000) → MODIS Aqua (≥2002).
+      // Latence config propagée (défaut 2 j) : l'imagerie satellite de J-1 est souvent
+      // incomplète (fauchée orbitale) → J-2 pour une image complète sans bande « chauve ».
+      resolveSources: (simDate, now) =>
+        resolveCloudSources(simDate, now, {
+          latencyDays: settings.latencyDays,
+        }),
+      minTileBytes: settings.minTileBytes,
+      apply: (texture) => {
+        lastTexture = texture;
+        if (satelliteVisible) {
+          applySatellite(texture);
+          earth?.setLayerVisible('clouds', true);
+        }
+      },
+      onResolved: (candidate) => {
+        lastSource = candidate;
+        if (DEBUG_CLOUDS)
+          console.info('[cloud-debug] true-color source', candidate);
+        relay.push(candidate);
+      },
+    });
 
-  // Masque satellite de jour : il remplace l'heuristique True Color dès qu'un pixel
-  // possède une mesure scientifique de couverture nuageuse.
-  const disposeDayMask = createDatedTextureLayer(api, {
-    name: 'RealtimeCloudsDayMask',
-    enabled: settings.enabled && !!earth && !DEBUG_CLOUDS_RAW,
-    resolveSources: (simDate, now) => {
-      const candidate = resolveCloudFractionDaySource(simDate, now, {
-        latencyDays: settings.latencyDays,
-        resolution: settings.resolution,
-      });
-      return candidate ? [candidate] : [];
-    },
-    minTileBytes: settings.minTileBytes,
-    apply: (texture) => {
-      if (DEBUG_CLOUDS) console.info('[cloud-debug] day mask applied');
-      void debugTexture('cloud-fraction-day', texture);
-      earth!.setRealCloudsDayTexture(texture);
-    },
-    onResolved: (candidate) => {
-      lastDayMaskSource = candidate;
-    },
-  });
+    // Masque satellite de jour : il remplace l'heuristique True Color dès qu'un pixel
+    // possède une mesure scientifique de couverture nuageuse.
+    disposeDayMask = createDatedTextureLayer(api, {
+      name: 'RealtimeCloudsDayMask',
+      enabled: settings.enabled && !!earth && !DEBUG_CLOUDS_RAW,
+      resolveSources: (simDate, now) => {
+        const candidate = resolveCloudFractionDaySource(simDate, now, {
+          latencyDays: settings.latencyDays,
+          resolution: settings.resolution,
+        });
+        return candidate ? [candidate] : [];
+      },
+      minTileBytes: settings.minTileBytes,
+      apply: (texture) => {
+        if (DEBUG_CLOUDS) console.info('[cloud-debug] day mask applied');
+        void debugTexture('cloud-fraction-day', texture);
+        earth!.setRealCloudsDayTexture(texture);
+      },
+      onResolved: (candidate) => {
+        lastDayMaskSource = candidate;
+      },
+    });
 
-  // Complément satellite : MODIS Cloud Fraction Night remplit uniquement les pixels True Color
-  // noirs (nuit polaire). Ce n'est ni le modèle Open-Meteo ni une seconde couche visible.
-  const disposeNightFallback = createDatedTextureLayer(api, {
-    name: 'RealtimeCloudsNightFallback',
-    enabled: settings.enabled && !!earth && !DEBUG_CLOUDS_RAW,
-    resolveSources: (simDate, now) => {
-      const candidate = resolveCloudFractionNightSource(simDate, now, {
-        latencyDays: settings.latencyDays,
-        resolution: settings.resolution,
-      });
-      return candidate ? [candidate] : [];
-    },
-    minTileBytes: settings.minTileBytes,
-    apply: (texture) => {
-      if (DEBUG_CLOUDS) console.info('[cloud-debug] night fallback applied');
-      void debugTexture('cloud-fraction-night', texture);
-      earth!.setRealCloudsNightFallbackTexture(texture);
-    },
-    onResolved: (candidate) => {
-      lastNightMaskSource = candidate;
-    },
-  });
+    // Complément satellite : MODIS Cloud Fraction Night remplit uniquement les pixels True Color
+    // noirs (nuit polaire). Ce n'est ni le modèle Open-Meteo ni une seconde couche visible.
+    disposeNightFallback = createDatedTextureLayer(api, {
+      name: 'RealtimeCloudsNightFallback',
+      enabled: settings.enabled && !!earth && !DEBUG_CLOUDS_RAW,
+      resolveSources: (simDate, now) => {
+        const candidate = resolveCloudFractionNightSource(simDate, now, {
+          latencyDays: settings.latencyDays,
+          resolution: settings.resolution,
+        });
+        return candidate ? [candidate] : [];
+      },
+      minTileBytes: settings.minTileBytes,
+      apply: (texture) => {
+        if (DEBUG_CLOUDS) console.info('[cloud-debug] night fallback applied');
+        void debugTexture('cloud-fraction-night', texture);
+        earth!.setRealCloudsNightFallbackTexture(texture);
+      },
+      onResolved: (candidate) => {
+        lastNightMaskSource = candidate;
+      },
+    });
+  };
+  if (!IS_MOBILE) startData();
   return {
     id: 'clouds',
     labelKey: 'weather.clouds',
-    initial: true, // couche satellite par défaut ; le modèle est un secours explicite.
+    initial: !IS_MOBILE, // Desktop conserve l’affichage historique ; mobile l’active à la demande.
     // Nuages : couleur non quantitative (blanc réaliste) → texte explicatif, pas de barre.
     noteKey: 'weather.clouds.note',
     setVisible: (next) => {
       satelliteVisible = next;
+      if (next) startData();
       // Devient visible : la couche modèle a pu écraser la map nuages (extraction OFF, alphaMap).
       // On ré-applique la dernière image satellite pour restaurer l'extraction et la texture.
       if (next && lastTexture) {
