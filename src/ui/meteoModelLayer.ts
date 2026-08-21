@@ -18,7 +18,11 @@ import {
 } from '@/core/meteoDiagnostics';
 import { createDatedDataLayer } from './datedDataLayer';
 import { createMeteoDataTexture } from './meteoTexture';
-import { createResolvedRelay, type WeatherLayerHandle } from './earthLayer';
+import {
+  createResolvedRelay,
+  createLoadStateRelay,
+  type WeatherLayerHandle,
+} from './earthLayer';
 import type { SourceCandidate } from '@/core/layerSource';
 import type { PublicAPI } from '@/SolarSystemApp';
 
@@ -78,6 +82,7 @@ export function setupMeteoModelLayer(
   if (!earth) return null;
 
   const relay = createResolvedRelay();
+  const loadState = createLoadStateRelay();
   let currentTexture: THREE.DataTexture | null = null;
   let visible = config.initial ?? false;
   let lastSource: MeteoLayerDiagnostics['source'];
@@ -111,6 +116,10 @@ export function setupMeteoModelLayer(
           forecastGrid: config.forecastGrid,
           archiveGrid: config.archiveGrid,
         });
+      },
+      onStateChange: (next) => {
+        phase = next;
+        loadState.push(next);
       },
       apply: (data) => {
         if (data.grid) {
@@ -170,6 +179,7 @@ export function setupMeteoModelLayer(
       };
     },
     onResolved: relay.subscribe,
+    onLoadStateChange: loadState.subscribe,
     dispose: () => {
       stopData?.();
       stopData = null;

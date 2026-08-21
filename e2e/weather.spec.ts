@@ -99,7 +99,7 @@ test('weather debug exposes the render contract', async ({ page }) => {
     .check();
   await expect
     .poll(() => debug.innerText())
-    .toContain('humidity-model [model] idle ON');
+    .toMatch(/humidity-model \[model\] (idle|loading|ready|error) ON/);
   const debugText = await debug.innerText();
   const humidityStart = debugText.indexOf('humidity-model [model]');
   const humidityEnd = debugText.indexOf(
@@ -144,22 +144,42 @@ test('pressure and humidity models stay optional and mutually exclusive', async 
 test.describe('mobile weather defaults', () => {
   test.use({ viewport: { width: 375, height: 800 } });
 
-  test('does not mount heavy precipitation layers by default', async ({
+  test('mobile weather layers stay available but disabled by default', async ({
     page,
   }) => {
     await openWeatherPanel(page);
 
-    await expect(page.locator('#weather-layers .wl-item')).toHaveCount(6);
+    await expect(page.locator('#weather-layers .wl-item')).toHaveCount(8);
     await expect(
       weatherRow(page, 'Clouds (NASA)').locator('input')
-    ).toBeChecked();
-    await expect(weatherRow(page, 'Rain (NASA IMERG)')).toHaveCount(0);
-    await expect(weatherRow(page, 'Rain (Open-Meteo)')).toHaveCount(0);
+    ).not.toBeChecked();
+    await expect(
+      weatherRow(page, 'Rain (NASA IMERG)').locator('input')
+    ).not.toBeChecked();
+    await expect(
+      weatherRow(page, 'Rain (Open-Meteo)').locator('input')
+    ).not.toBeChecked();
     await expect(
       weatherRow(page, 'Sea-level pressure (Open-Meteo)')
     ).toHaveCount(1);
     await expect(
       weatherRow(page, 'Relative humidity (Open-Meteo)')
     ).toHaveCount(1);
+  });
+
+  test('mobile weather layer activates with one click', async ({ page }) => {
+    const requests: string[] = [];
+    page.on('request', (request) => {
+      if (request.url().includes('gibs.earthdata.nasa.gov')) {
+        requests.push(request.url());
+      }
+    });
+
+    await openWeatherPanel(page);
+    const clouds = weatherRow(page, 'Clouds (NASA)').locator('input');
+    await clouds.check();
+
+    await expect(clouds).toBeChecked();
+    await expect.poll(() => requests.length).toBeGreaterThan(0);
   });
 });

@@ -19,8 +19,15 @@ import {
 } from '@/core/windField';
 import { WindParticles } from '@/components/celestial/WindParticles';
 import { createDatedDataLayer } from './datedDataLayer';
-import { getEarth, type WeatherLayerHandle } from './earthLayer';
-import { describeMeteoGrid, type MeteoLayerDiagnostics } from '@/core/meteoDiagnostics';
+import {
+  getEarth,
+  createLoadStateRelay,
+  type WeatherLayerHandle,
+} from './earthLayer';
+import {
+  describeMeteoGrid,
+  type MeteoLayerDiagnostics,
+} from '@/core/meteoDiagnostics';
 import type { PublicAPI } from '@/SolarSystemApp';
 
 /**
@@ -53,6 +60,7 @@ export function setupWindLayer(api: PublicAPI): WeatherLayerHandle | null {
   let grid: WindGrid | null = null;
   let gridDiagnostics: MeteoLayerDiagnostics['grid'];
   let phase: MeteoLayerDiagnostics['phase'] = 'idle';
+  const loadState = createLoadStateRelay();
 
   // Cycle de données délégué : clé = heure de simulation ; fetch = grille Open-Meteo GFS.
   const stopData = createDatedDataLayer<WindGrid>(api, {
@@ -66,7 +74,8 @@ export function setupWindLayer(api: PublicAPI): WeatherLayerHandle | null {
       // grille : le socle garde la dernière valide, sinon les particules dérivent (minDrift).
       const simDate = new Date(`${key}:00:00Z`);
       const plan = planMeteoRequest(simDate);
-      if (plan.outOfRange) throw new Error(`wind out of range (${plan.status})`);
+      if (plan.outOfRange)
+        throw new Error(`wind out of range (${plan.status})`);
       const gridOptions = { step: settings.gridStep, maxLat: settings.maxLat };
       const url =
         plan.source === 'archive' && plan.date
@@ -79,6 +88,10 @@ export function setupWindLayer(api: PublicAPI): WeatherLayerHandle | null {
       // exposent l'heure 0..23 de la journée demandée.
       const hour = simDate.getUTCHours();
       return parseWindGrid(json, gridOptions, hour);
+    },
+    onStateChange: (next) => {
+      phase = next;
+      loadState.push(next);
     },
     apply: (loaded) => {
       grid = loaded;
@@ -101,6 +114,7 @@ export function setupWindLayer(api: PublicAPI): WeatherLayerHandle | null {
   return {
     id: 'wind',
     labelKey: 'weather.wind',
+    onLoadStateChange: loadState.subscribe,
     initial: true, // présente → affichée par défaut (le panneau la masque au besoin)
     noteKey: 'weather.wind.note',
     setVisible: (visible) => {

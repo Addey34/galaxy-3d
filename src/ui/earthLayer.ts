@@ -27,7 +27,9 @@ export function getEarth(
 ): CelestialObject | undefined {
   const earth = api.sceneSystem.getBody(EARTH_NAME);
   if (!earth && warnIfMissing) {
-    Logger.warn(`[${layerName ?? 'EarthLayer'}] Terre introuvable — couche désactivée.`);
+    Logger.warn(
+      `[${layerName ?? 'EarthLayer'}] Terre introuvable — couche désactivée.`
+    );
   }
   return earth;
 }
@@ -37,6 +39,23 @@ export function getEarth(
  * `setVisible`/`dispose` sont toujours présents (handle inerte si la couche est désactivée) ;
  * `legendUrl`/`noteKey` alimentent le détail replié sous le toggle dans le panneau.
  */
+export function createLoadStateRelay(): {
+  push: (state: MeteoLayerDiagnostics['phase']) => void;
+  subscribe: (cb: (state: MeteoLayerDiagnostics['phase']) => void) => void;
+} {
+  let state: MeteoLayerDiagnostics['phase'] = 'idle';
+  let cb: ((state: MeteoLayerDiagnostics['phase']) => void) | undefined;
+  return {
+    push: (next) => {
+      state = next;
+      cb?.(next);
+    },
+    subscribe: (next) => {
+      cb = next;
+      next(state);
+    },
+  };
+}
 export interface WeatherLayerHandle {
   /** Identifiant stable de la couche (`clouds`, `precip`, `thermal`, `wind`). */
   id: string;
@@ -46,6 +65,10 @@ export interface WeatherLayerHandle {
   initial: boolean;
   /** Montre/masque la couche (piloté par le toggle du panneau). */
   setVisible(visible: boolean): void;
+  /** Notifie le panneau du cycle de chargement de la couche. */
+  onLoadStateChange?: (
+    cb: (state: MeteoLayerDiagnostics['phase']) => void
+  ) => void;
   /** Arrête la couche et libère ses ressources (cleanup global). */
   dispose(): void;
   /** URL d'une légende image (SVG GIBS) affichée sous le toggle quand la couche est active. */

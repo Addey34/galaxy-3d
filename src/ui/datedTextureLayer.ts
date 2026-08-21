@@ -16,14 +16,9 @@
 import * as THREE from 'three';
 import Logger from '@/utils/Logger';
 import { createBackoff, type BackoffOptions } from '@/core/retryBackoff';
-import {
-  fetchTileWithContentCheck,
-  EmptyTileError,
-} from '@/core/tileContent';
-import type {
-  LayerSourceResolver,
-  SourceCandidate,
-} from '@/core/layerSource';
+import { fetchTileWithContentCheck, EmptyTileError } from '@/core/tileContent';
+import type { LayerSourceResolver, SourceCandidate } from '@/core/layerSource';
+import type { MeteoLayerPhase } from '@/core/meteoDiagnostics';
 import type { PublicAPI } from '@/SolarSystemApp';
 
 export interface DatedTextureLayerConfig {
@@ -44,6 +39,8 @@ export interface DatedTextureLayerConfig {
   apply: (texture: THREE.Texture) => void;
   /** Notifie la source réellement appliquée (badge de traçabilité). */
   onResolved?: (candidate: SourceCandidate) => void;
+  /** Notifie l'état observable du chargement au panneau. */
+  onStateChange?: (state: MeteoLayerPhase) => void;
   /** Seuil d'octets sous lequel une tuile est jugée vide (mode fallback). Défaut du core. */
   minTileBytes?: number;
   /** Optionnel : clés supplémentaires à précharger (mode hérité uniquement). */
@@ -84,7 +81,9 @@ export function createDatedTextureLayer(
       const key = config.keyForDate?.(simDate) ?? null;
       if (key === null) return [];
       const url = config.urlForKey?.(key) ?? key;
-      return [{ id: key, label: config.name, url, realDate: key, approx: false }];
+      return [
+        { id: key, label: config.name, url, realDate: key, approx: false },
+      ];
     });
 
   // Cache par id de candidat (image réutilisée entre visites) + dédup des requêtes en vol.
@@ -135,7 +134,9 @@ export function createDatedTextureLayer(
       } catch (err) {
         lastErr = err;
         if (err instanceof EmptyTileError) {
-          Logger.info(`[${config.name}] Tuile vide (${cand.label} ${cand.realDate}) → fallback.`);
+          Logger.info(
+            `[${config.name}] Tuile vide (${cand.label} ${cand.realDate}) → fallback.`
+          );
         }
       }
     }
@@ -160,16 +161,25 @@ export function createDatedTextureLayer(
     if (requestKey === lastRequestedKey) return;
     // Ré-essai de la MÊME demande qui vient d'échouer → throttlé par le backoff. Une AUTRE
     // demande (time-travel) passe toujours immédiatement.
-    if (requestKey === failedRequestKey && !backoff.shouldRetry(performance.now())) return;
+    if (
+      requestKey === failedRequestKey &&
+      !backoff.shouldRetry(performance.now())
+    )
+      return;
     lastRequestedKey = requestKey;
+    config.onStateChange?.('loading');
 
     // Préchargement optionnel (mode hérité) des clés voisines.
     if (config.prefetchKeys && config.urlForKey) {
       config.prefetchKeys(requestKey).forEach((k) => {
         const url = config.urlForKey!(k);
-        void loadCandidate({ id: k, label: config.name, url, realDate: k, approx: false }).catch(
-          () => {}
-        );
+        void loadCandidate({
+          id: k,
+          label: config.name,
+          url,
+          realDate: k,
+          approx: false,
+        }).catch(() => {});
       });
     }
 
@@ -180,6 +190,7 @@ export function createDatedTextureLayer(
         if (requestKey === appliedRequestKey) return;
         config.apply(texture);
         config.onResolved?.(candidate);
+        config.onStateChange?.('ready');
         appliedRequestKey = requestKey;
         failedRequestKey = null;
         backoff.noteSuccess();
@@ -193,7 +204,11 @@ export function createDatedTextureLayer(
         lastRequestedKey = appliedRequestKey;
         failedRequestKey = requestKey;
         backoff.noteFailure(performance.now());
-        Logger.warn(`[${config.name}] Aucun candidat chargé (${requestKey}).`, err);
+        config.onStateChange?.('error');
+        Logger.warn(
+          `[${config.name}] Aucun candidat chargé (${requestKey}).`,
+          err
+        );
       });
   }
 

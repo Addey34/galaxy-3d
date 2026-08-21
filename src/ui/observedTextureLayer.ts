@@ -10,6 +10,7 @@ import type { LayerSourceResolver } from '@/core/layerSource';
 import { createDatedTextureLayer } from './datedTextureLayer';
 import {
   createResolvedRelay,
+  createLoadStateRelay,
   type WeatherLayerHandle,
 } from './earthLayer';
 import type CelestialObject from '@/components/celestial/CelestialObject';
@@ -40,6 +41,7 @@ export function setupObservedTextureLayer(
   if (!config.enabled || !earth) return null;
 
   const relay = createResolvedRelay();
+  const loadState = createLoadStateRelay();
   let lastSource: MeteoLayerDiagnostics['source'];
   let lastTexture: THREE.Texture | null = null;
   let phase: MeteoLayerDiagnostics['phase'] = 'idle';
@@ -53,6 +55,10 @@ export function setupObservedTextureLayer(
       enabled: true,
       resolveSources: config.resolveSources,
       minTileBytes: config.minTileBytes,
+      onStateChange: (next) => {
+        phase = next;
+        loadState.push(next);
+      },
       apply: (texture) => {
         lastTexture = texture;
         phase = 'ready';
@@ -98,6 +104,7 @@ export function setupObservedTextureLayer(
       };
     },
     onResolved: relay.subscribe,
+    onLoadStateChange: loadState.subscribe,
     dispose,
   };
 }

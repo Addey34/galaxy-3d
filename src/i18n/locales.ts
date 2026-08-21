@@ -145,8 +145,7 @@ export const messages: Record<Locale, Dict> = {
       'I build this solar system alone, on my free time, and give it away free to everyone.',
     'support.point.free': 'Free, no ads, no trackers',
     'support.point.data': 'Real NASA/JPL data',
-    'support.point.use':
-      'Your donation keeps it online and independent',
+    'support.point.use': 'Your donation keeps it online and independent',
     'lang.label': 'Language',
     // ── Guided tour (first visit) ──
     'tour.start': 'Start quick tour',
@@ -242,6 +241,7 @@ export const messages: Record<Locale, Dict> = {
     'weather.humidityModel.hi': '100 %',
     'weather.source.prefix': 'Source:',
     'weather.source.approx': 'nearest available',
+    'weather.loading': 'Loading…',
     // Statut temporel honnête de la donnée (voir core/dataStatus.ts).
     'weather.status.observed': 'observed',
     'weather.status.analysis': 'analysis',
@@ -439,8 +439,7 @@ export const messages: Record<Locale, Dict> = {
       'Je développe seul ce système solaire, sur mon temps libre, et je l’offre gratuitement à tous.',
     'support.point.free': 'Gratuit, sans publicité, sans traceur',
     'support.point.data': 'Vraies données NASA/JPL',
-    'support.point.use':
-      'Votre don le garde en ligne et indépendant',
+    'support.point.use': 'Votre don le garde en ligne et indépendant',
     'lang.label': 'Langue',
     // ── Visite guidée (première visite) ──
     'tour.start': 'Lancer la visite rapide',
@@ -536,6 +535,7 @@ export const messages: Record<Locale, Dict> = {
     'weather.humidityModel.hi': '100 %',
     'weather.source.prefix': 'Source :',
     'weather.source.approx': 'date la plus proche',
+    'weather.loading': 'Chargement…',
     // Statut temporel honnête de la donnée (voir core/dataStatus.ts).
     'weather.status.observed': 'observé',
     'weather.status.analysis': 'analyse',

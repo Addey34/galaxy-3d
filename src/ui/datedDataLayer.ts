@@ -13,6 +13,7 @@
  */
 import Logger from '@/utils/Logger';
 import { createBackoff, type BackoffOptions } from '@/core/retryBackoff';
+import type { MeteoLayerPhase } from '@/core/meteoDiagnostics';
 import type { PublicAPI } from '@/SolarSystemApp';
 
 export interface DatedDataLayerConfig<T> {
@@ -26,6 +27,8 @@ export interface DatedDataLayerConfig<T> {
   fetchForKey: (key: string) => Promise<T>;
   /** Applique la donnée chargée (stocke la grille de vent courante, etc.). */
   apply: (data: T) => void;
+  /** Notifie l'état observable du chargement au panneau. */
+  onStateChange?: (state: MeteoLayerPhase) => void;
   /** Intervalle de réévaluation de la date (ms). Défaut 1000 (données horaires). */
   checkIntervalMs?: number;
   /** Réglages du backoff exponentiel après échec réseau (défauts de createBackoff). */
@@ -84,6 +87,7 @@ export function createDatedDataLayer<T>(
     // (time-travel) passe toujours immédiatement.
     if (key === failedKey && !backoff.shouldRetry(performance.now())) return;
     lastRequestedKey = key;
+    config.onStateChange?.('loading');
 
     void fetchForKey(key)
       .then((data) => {
@@ -92,6 +96,7 @@ export function createDatedDataLayer<T>(
         if (key !== lastRequestedKey) return;
         if (key === appliedKey) return;
         config.apply(data);
+        config.onStateChange?.('ready');
         appliedKey = key;
         failedKey = null;
         backoff.noteSuccess();
@@ -103,6 +108,7 @@ export function createDatedDataLayer<T>(
         lastRequestedKey = appliedKey;
         failedKey = key;
         backoff.noteFailure(performance.now());
+        config.onStateChange?.('error');
         Logger.warn(`[${config.name}] Échec du chargement (${key}).`, err);
       });
   }

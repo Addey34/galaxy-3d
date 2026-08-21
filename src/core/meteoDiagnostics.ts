@@ -7,7 +7,7 @@
 import type { SourceCandidate } from './layerSource';
 
 export type MeteoLayerFamily = 'observed' | 'model' | 'vector' | 'realtime';
-export type MeteoLayerPhase = 'idle' | 'ready' | 'error';
+export type MeteoLayerPhase = 'idle' | 'loading' | 'ready' | 'error';
 
 export interface MeteoGridDiagnostics {
   step: number;

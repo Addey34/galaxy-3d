@@ -12,6 +12,7 @@
  */
 import { t, onLocaleChange } from '@/i18n';
 import { dataStatusFor, dataStatusLabelKey } from '@/core/dataStatus';
+import type { MeteoLayerDiagnostics } from '@/core/meteoDiagnostics';
 import type { PublicAPI } from '@/SolarSystemApp';
 import type { WeatherLayerHandle } from './earthLayer';
 import type { OverlayCoordinator } from './overlayCoordinator';
@@ -54,12 +55,37 @@ export function setupWeatherLayers(
   const byId = new Map(layers.map((l) => [l.id, l]));
   const exclusiveGroups = deps.exclusiveGroups ?? [];
   const state = new Map<string, boolean>(layers.map((l) => [l.id, l.initial]));
+  const loadState = new Map<string, MeteoLayerDiagnostics['phase']>(
+    layers.map((l) => [l.id, 'idle'])
+  );
+  const controls = new Map<
+    string,
+    { checkbox: HTMLInputElement; loading: HTMLElement }
+  >();
+
+  const syncLoading = (layerId: string): void => {
+    const control = controls.get(layerId);
+    if (!control) return;
+    const isLoading = loadState.get(layerId) === 'loading';
+    control.checkbox.disabled = isLoading;
+    control.checkbox.setAttribute('aria-busy', String(isLoading));
+    control.loading.hidden = !isLoading;
+  };
+
+  for (const layer of layers) {
+    layer.onLoadStateChange?.((phase) => {
+      loadState.set(layer.id, phase);
+      syncLoading(layer.id);
+    });
+  }
 
   const hasActiveSibling = (layerId: string): boolean =>
     exclusiveGroups.some(
       (group) =>
         group.includes(layerId) &&
-        group.some((otherId) => otherId !== layerId && state.get(otherId) === true)
+        group.some(
+          (otherId) => otherId !== layerId && state.get(otherId) === true
+        )
     );
 
   // Active d'abord les couches initiales. Une couche inactive qui partage un mesh avec une couche
@@ -76,6 +102,7 @@ export function setupWeatherLayers(
    * Les rangées visibles sont resynchronisées par un `buildRows()` de l'appelant si nécessaire.
    */
   const applyExclusivity = (activeId: string): void => {
+    let changed = false;
     for (const group of exclusiveGroups) {
       if (!group.includes(activeId)) continue;
       for (const otherId of group) {
@@ -83,10 +110,11 @@ export function setupWeatherLayers(
         if (state.get(otherId)) {
           state.set(otherId, false);
           byId.get(otherId)?.setVisible(false);
+          changed = true;
         }
       }
     }
-    buildRows();
+    if (changed) buildRows();
   };
 
   // Interaction entre couches : quand l'overlay TEMPÉRATURE est actif, on estompe nuages et
@@ -104,6 +132,7 @@ export function setupWeatherLayers(
   applyThermalInteraction();
 
   function buildRows(): void {
+    controls.clear();
     bodyEl!.replaceChildren();
     for (const layer of layers) {
       // Conteneur : la ligne (switch) + un détail (légende/texte) replié sous elle.
@@ -121,7 +150,13 @@ export function setupWeatherLayers(
       const nameEl = document.createElement('span');
       nameEl.className = 'settings-switch-label';
       nameEl.textContent = t(layer.labelKey);
-      row.append(checkbox, nameEl);
+      const loading = document.createElement('span');
+      loading.className = 'wl-loading';
+      loading.textContent = t('weather.loading');
+      loading.hidden = true;
+      loading.setAttribute('aria-live', 'polite');
+      row.append(checkbox, nameEl, loading);
+      controls.set(layer.id, { checkbox, loading });
 
       // Détail (légende + note) : visible seulement quand la couche est active.
       const detail = document.createElement('div');
@@ -172,7 +207,9 @@ export function setupWeatherLayers(
         const badge = document.createElement('p');
         badge.className = 'wl-source';
         layer.onResolved((c) => {
-          const status = t(dataStatusLabelKey(dataStatusFor(parseRealDate(c.realDate))));
+          const status = t(
+            dataStatusLabelKey(dataStatusFor(parseRealDate(c.realDate)))
+          );
           const approx = c.approx ? ` · ${t('weather.source.approx')}` : '';
           badge.textContent = `${t('weather.source.prefix')} ${c.label} · ${c.realDate.slice(0, 10)} · ${status}${approx}`;
           syncDetail();
@@ -183,8 +220,8 @@ export function setupWeatherLayers(
         state.set(layer.id, checkbox.checked);
         // Exclusivité : activer une couche d'un groupe désactive les autres du même groupe.
         if (checkbox.checked) {
-          applyExclusivity(layer.id);
           layer.setVisible(true);
+          applyExclusivity(layer.id);
         } else {
           layer.setVisible(false);
         }
@@ -193,6 +230,7 @@ export function setupWeatherLayers(
         syncDetail();
       });
       syncDetail();
+      syncLoading(layer.id);
 
       item.append(row, detail);
       bodyEl!.append(item);
@@ -203,7 +241,8 @@ export function setupWeatherLayers(
   onLocaleChange(buildRows);
 
   // Surface contextuelle (dock) : même choreographie que orbitOptions.
-  const triggerBtn = document.querySelector<HTMLButtonElement>('#weather-trigger');
+  const triggerBtn =
+    document.querySelector<HTMLButtonElement>('#weather-trigger');
   const closeBtn = panel.querySelector<HTMLButtonElement>('.surface-close');
   let open = false;
 

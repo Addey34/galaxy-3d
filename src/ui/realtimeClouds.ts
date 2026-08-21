@@ -19,6 +19,7 @@ import { createDatedTextureLayer } from './datedTextureLayer';
 import {
   getEarth,
   createResolvedRelay,
+  createLoadStateRelay,
   type WeatherLayerHandle,
 } from './earthLayer';
 import type { MeteoLayerDiagnostics } from '@/core/meteoDiagnostics';
@@ -81,6 +82,8 @@ export function setupRealtimeClouds(api: PublicAPI): WeatherLayerHandle {
   const settings = REALTIME_CLOUDS_SETTINGS;
   const earth = getEarth(api, 'RealtimeClouds', settings.enabled);
   const relay = createResolvedRelay();
+  const loadState = createLoadStateRelay();
+  let phase: MeteoLayerDiagnostics['phase'] = 'idle';
 
   // La texture statique historique reste cachée tant qu'une observation NASA n'est pas
   // disponible, sauf si le fallback hors-ligne est explicitement activé dans la configuration.
@@ -135,6 +138,10 @@ export function setupRealtimeClouds(api: PublicAPI): WeatherLayerHandle {
           latencyDays: settings.latencyDays,
         }),
       minTileBytes: settings.minTileBytes,
+      onStateChange: (next) => {
+        phase = next;
+        loadState.push(next);
+      },
       apply: (texture) => {
         lastTexture = texture;
         if (satelliteVisible) {
@@ -225,7 +232,7 @@ export function setupRealtimeClouds(api: PublicAPI): WeatherLayerHandle {
         family: 'realtime',
         targetLayer: 'clouds',
         visible: render?.visible ?? satelliteVisible,
-        phase: lastTexture ? 'ready' : 'idle',
+        phase,
         updatedAt: Date.now(),
         source: lastSource,
         message:
@@ -238,6 +245,7 @@ export function setupRealtimeClouds(api: PublicAPI): WeatherLayerHandle {
       };
     },
     onResolved: relay.subscribe,
+    onLoadStateChange: loadState.subscribe,
     dispose: () => {
       disposeSatellite();
       disposeDayMask();

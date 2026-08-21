@@ -519,14 +519,14 @@ button {
    milieu de la piste. Purement visuel, aide à retrouver le neutre. */
 .tb-speed-range.is-bidirectional::-webkit-slider-runnable-track {
   background:
-    linear-gradient(rgba(210, 232, 255, 0.85), rgba(210, 232, 255, 0.85)) no-repeat
-      50% / 2px 100%,
+    linear-gradient(rgba(210, 232, 255, 0.85), rgba(210, 232, 255, 0.85))
+      no-repeat 50% / 2px 100%,
     rgba(150, 190, 255, 0.2);
 }
 .tb-speed-range.is-bidirectional::-moz-range-track {
   background:
-    linear-gradient(rgba(210, 232, 255, 0.85), rgba(210, 232, 255, 0.85)) no-repeat
-      50% / 2px 100%,
+    linear-gradient(rgba(210, 232, 255, 0.85), rgba(210, 232, 255, 0.85))
+      no-repeat 50% / 2px 100%,
     rgba(150, 190, 255, 0.2);
 }
 .tb-speed-range::-webkit-slider-thumb {
@@ -1072,6 +1072,16 @@ button {
   font-size: 0.82rem;
   font-weight: 500;
   color: var(--ink);
+}
+.wl-loading {
+  flex: 0 0 auto;
+  color: var(--ink-faint);
+  font-size: 0.64rem;
+  white-space: nowrap;
+}
+.settings-switch:has(.settings-checkbox:disabled) {
+  cursor: wait;
+  opacity: 0.76;
 }
 .settings-checkbox,
 .oo-checkbox {
