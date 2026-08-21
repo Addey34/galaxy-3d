@@ -209,6 +209,32 @@ export default class CelestialObject {
   // TEXTURE LOADING
   // ============================================================================
 
+  private _applyLoadedTexture(
+    textureKey: string,
+    texture: THREE.Texture
+  ): void {
+    // Une observation GIBS active remplace la carte statique : ne la réinstalle pas
+    // lorsqu’un chargement LOD commencé avant l’observation se termine plus tard.
+    if (textureKey === 'clouds' && this._realCloudsActive) {
+      this.textureSystem.releaseCachedTexture(texture);
+      return;
+    }
+
+    const previous = this._appliedTextures.get(textureKey);
+    if (previous === texture) return;
+    if (textureKey === 'clouds') this._staticCloudTexture = texture;
+    applyTexture(this.layers, textureKey, texture);
+    if (textureKey === 'clouds') this._refreshRealCloudStaticFallback();
+    this._refreshRealCloudOceanMask();
+    this._bindCloudShadow(textureKey, texture);
+    this._appliedTextures.set(textureKey, texture);
+
+    // Le nouveau palier est maintenant attaché au mesh : l’ancienne variante peut
+    // être libérée, ce qui évite de conserver simultanément 1K + 2K + 4K du même layer.
+    if (previous && previous !== texture)
+      this.textureSystem.releaseCachedTexture(previous);
+  }
+
   private async _loadAllTextures(): Promise<void> {
     for (const textureKey of Object.keys(this.config.textures ?? {})) {
       try {
@@ -217,12 +243,7 @@ export default class CelestialObject {
           textureKey,
           100
         );
-        if (textureKey === 'clouds') this._staticCloudTexture = texture;
-        applyTexture(this.layers, textureKey, texture);
-        if (textureKey === 'clouds') this._refreshRealCloudStaticFallback();
-        this._refreshRealCloudOceanMask();
-        this._bindCloudShadow(textureKey, texture);
-        this._appliedTextures.set(textureKey, texture);
+        this._applyLoadedTexture(textureKey, texture);
       } catch {
         Logger.warn(
           `[CelestialObject] Failed to load ${textureKey} for ${this.name}`
@@ -298,6 +319,14 @@ export default class CelestialObject {
     if (!clouds || Array.isArray(clouds.material)) return;
     // À partir d'ici, le LOD de textures ne doit plus écraser la couche nuages.
     this._realCloudsActive = true;
+    // La carte statique n’est plus utilisée dès qu’une observation GIBS est appliquée.
+    // On la retire du cache GPU : elle ne sert qu’au fallback hors ligne avant résolution.
+    const staticCloudTexture = this._staticCloudTexture;
+    this._staticCloudTexture = null;
+    this._refreshRealCloudStaticFallback();
+    this._appliedTextures.delete('clouds');
+    if (staticCloudTexture && staticCloudTexture !== texture)
+      this.textureSystem.releaseCachedTexture(staticCloudTexture);
     const mat = clouds.material as THREE.MeshStandardMaterial;
     texture.wrapS = THREE.RepeatWrapping;
     texture.wrapT = THREE.ClampToEdgeWrapping;
@@ -969,16 +998,9 @@ export default class CelestialObject {
           textureKey,
           normalizedDistance
         );
-        // Re-vérifie après l'await : les nuages réels ont pu s'activer pendant le
-        // chargement d'un LOD `clouds` en vol → ne pas l'appliquer par-dessus.
-        if (textureKey === 'clouds' && this._realCloudsActive) continue;
-        if (this._appliedTextures.get(textureKey) === texture) continue;
-        if (textureKey === 'clouds') this._staticCloudTexture = texture;
-        applyTexture(this.layers, textureKey, texture);
-        if (textureKey === 'clouds') this._refreshRealCloudStaticFallback();
-        this._refreshRealCloudOceanMask();
-        this._bindCloudShadow(textureKey, texture);
-        this._appliedTextures.set(textureKey, texture);
+        // Le helper ré-vérifie l'état après l'await : une observation peut avoir
+        // remplacé les nuages pendant le chargement LOD.
+        this._applyLoadedTexture(textureKey, texture);
       }
       if (this.config.ring) await this._loadRingTexture(normalizedDistance);
     } catch {

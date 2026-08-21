@@ -45,21 +45,32 @@ export function setupObservedTextureLayer(
   let phase: MeteoLayerDiagnostics['phase'] = 'idle';
   let visible = config.initial;
 
-  const dispose = createDatedTextureLayer(api, {
-    name: config.name,
-    enabled: true,
-    resolveSources: config.resolveSources,
-    minTileBytes: config.minTileBytes,
-    apply: (texture) => {
-      lastTexture = texture;
-      phase = 'ready';
-      config.apply(earth, texture);
-    },
-    onResolved: (source) => {
-      lastSource = source;
-      relay.push(source);
-    },
-  });
+  let dataDispose: (() => void) | null = null;
+  const startData = (): void => {
+    if (dataDispose) return;
+    dataDispose = createDatedTextureLayer(api, {
+      name: config.name,
+      enabled: true,
+      resolveSources: config.resolveSources,
+      minTileBytes: config.minTileBytes,
+      apply: (texture) => {
+        lastTexture = texture;
+        phase = 'ready';
+        config.apply(earth, texture);
+      },
+      onResolved: (source) => {
+        lastSource = source;
+        relay.push(source);
+      },
+    });
+  };
+  // Une couche masquée n’a pas besoin de décoder ni d’uploader sa texture au démarrage.
+  if (visible) startData();
+
+  const dispose = (): void => {
+    dataDispose?.();
+    dataDispose = null;
+  };
 
   return {
     id: config.id,
@@ -70,6 +81,7 @@ export function setupObservedTextureLayer(
     legendGradient: config.legendGradient,
     setVisible: (next) => {
       visible = next;
+      if (next) startData();
       earth.setLayerVisible(config.targetLayer, next);
     },
     diagnostics: () => {

@@ -76,6 +76,20 @@ test('mobile viewport applies the Earth surface texture', async ({ page }) => {
     { timeout: 20_000 }
   );
 });
+test('mobile boot defers hidden thermal imagery', async ({ page }) => {
+  const thermalRequests: string[] = [];
+  page.on('request', (request) => {
+    if (request.url().includes('MERRA2_2m_Air_Temperature_Monthly'))
+      thermalRequests.push(request.url());
+  });
+
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/?debug-earth&body=earth');
+  await expect(page.locator('#loader')).toBeHidden({ timeout: 30_000 });
+
+  expect(thermalRequests).toEqual([]);
+});
+
 test('Earth surface returns to standard tessellation when zoomed out', async ({
   page,
 }) => {

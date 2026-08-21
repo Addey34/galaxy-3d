@@ -314,6 +314,17 @@ export class TextureSystem {
     );
   }
 
+  /**
+   * Libère une variante devenue inutile après un changement de LOD.
+   * Le cache appartient à TextureSystem : les meshes ne disposent jamais directement les textures.
+   */
+  releaseCachedTexture(texture: THREE.Texture): void {
+    for (const [key, cached] of this.cache) {
+      if (cached === texture) this.cache.delete(key);
+    }
+    texture.dispose();
+  }
+
   dispose(): void {
     Logger.warn('[TextureSystem] Disposing textures cache...');
     this.cache.forEach((texture) => texture.dispose());
