@@ -698,6 +698,23 @@ button {
   max-height: calc(100vh - var(--control-h) - 4 * var(--edge));
 }
 
+/* Une seule zone de défilement par panneau : les listes spécialisées possèdent
+   déjà leur propre limite et ne doivent pas faire défiler leur parent en parallèle. */
+.surface--settings > .surface-body {
+  min-height: 0;
+  overflow: hidden;
+}
+.surface--events > .surface-body {
+  display: flex;
+  min-height: 0;
+  overflow: hidden;
+}
+.surface--events .events-list {
+  flex: 1 1 auto;
+  min-height: 0;
+  max-height: none;
+}
+
 /* ── Scrim ── */
 /* Scrim : sur desktop il ne DOIT PAS bloquer les gestes sur la scène (molette/zoom,
    rotation) — les surfaces sont de petits panneaux de coin, la fermeture au clic extérieur
@@ -1573,6 +1590,105 @@ button {
   }
   .dock--top-right > .tool {
     flex: 0 0 var(--control-h);
+  }
+}
+
+/* Petits écrans et tablettes compactes : conserver la géométrie desktop du dock bas
+   (gauche / centre / droite) tout en empilant les contrôles qui manquent de largeur. */
+@media (max-width: 768px) {
+  .dock--top-right {
+    top: var(--edge);
+    right: var(--edge-x);
+    width: auto;
+    max-width: none;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    align-items: flex-end;
+    justify-content: flex-start;
+    gap: var(--sp-1);
+  }
+  .dock--top-right > .tool {
+    flex: 0 0 var(--control-h);
+  }
+
+  .dock--bottom {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    align-items: end;
+    flex-direction: initial;
+    gap: var(--sp-2);
+  }
+  .dock-actions--start,
+  .dock-actions--end {
+    flex: 0 0 auto;
+    align-items: flex-end;
+  }
+  .dock-actions--start {
+    grid-column: 1;
+    justify-content: flex-start;
+  }
+  .dock-actions--end {
+    grid-column: 3;
+    justify-content: flex-end;
+  }
+  .time-bar {
+    grid-column: 2;
+    justify-self: center;
+    width: min(15rem, calc(100vw - 7rem));
+  }
+  .mode-seg {
+    flex-direction: column;
+    height: auto;
+    align-items: stretch;
+  }
+  .mode-btn {
+    flex: 0 0 auto;
+    min-width: 3.5rem;
+    min-height: 2.25rem;
+    padding: var(--sp-2);
+  }
+
+  /* Chaque surface s’ouvre juste à gauche de son propre bouton. Les variables sont
+     renseignées par MainSolarSystemApp et le fallback garde un placement sûr. */
+  .surface--info,
+  .surface--settings,
+  .surface--events,
+  .surface--help {
+    top: var(
+      --surface-anchor-top,
+      calc(var(--edge) + var(--control-h) + var(--sp-2))
+    ) !important;
+    right: var(
+      --surface-anchor-right,
+      calc(var(--edge-x) + var(--control-h) + var(--sp-2))
+    ) !important;
+    bottom: auto !important;
+    left: auto !important;
+    width: min(18rem, calc(100vw - 4rem)) !important;
+    max-height: min(46vh, 26rem) !important;
+    overflow: hidden;
+    animation: surface-in 0.16s ease-out;
+  }
+  .surface--info .surface-body,
+  .surface--settings .surface-body,
+  .surface--events .surface-body,
+  .surface--help .surface-body {
+    min-height: 0;
+  }
+
+  .quality-menu {
+    top: var(
+      --surface-anchor-top,
+      calc(var(--edge) + var(--control-h) + var(--sp-2))
+    ) !important;
+    right: var(
+      --surface-anchor-right,
+      calc(var(--edge-x) + var(--control-h) + var(--sp-2))
+    ) !important;
+    left: auto !important;
+    width: min(15rem, calc(100vw - 4rem));
+    max-height: min(46vh, 26rem);
+    overflow-y: auto;
   }
 }
 

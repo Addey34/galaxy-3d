@@ -54,7 +54,11 @@ test.describe('mobile bottom dock', () => {
     await expect(page.locator('#loader')).toBeHidden({ timeout: 30_000 });
 
     // Les contrôles persistants du dock bas : modes + plein écran + barre temps.
-    for (const selector of ['#mode-controls', '#fullscreen-btn', '#time-panel']) {
+    for (const selector of [
+      '#mode-controls',
+      '#fullscreen-btn',
+      '#time-panel',
+    ]) {
       const rect = await page.locator(selector).evaluate((el) => {
         const r = el.getBoundingClientRect();
         return { left: r.left, right: r.right, top: r.top, bottom: r.bottom };
@@ -64,6 +68,31 @@ test.describe('mobile bottom dock', () => {
       expect(rect.top).toBeGreaterThanOrEqual(0);
       expect(rect.bottom).toBeLessThanOrEqual(844);
     }
+    const layout = await page.evaluate(() => {
+      const rect = (selector: string) => {
+        const r = document.querySelector(selector)!.getBoundingClientRect();
+        return { left: r.left, right: r.right, top: r.top, bottom: r.bottom };
+      };
+      return {
+        mode: rect('#mode-controls'),
+        time: rect('#time-panel'),
+        fullscreen: rect('#fullscreen-btn'),
+        topLeft: rect('.dock--top-left'),
+        topRight: rect('.dock--top-right'),
+        modeDirection: getComputedStyle(document.querySelector('.mode-seg')!)
+          .flexDirection,
+        toolsDirection: getComputedStyle(
+          document.querySelector('.dock--top-right')!
+        ).flexDirection,
+      };
+    });
+    expect(layout.modeDirection).toBe('column');
+    expect(layout.toolsDirection).toBe('column');
+    expect(layout.mode.left).toBeLessThan(layout.time.left);
+    expect(layout.time.right).toBeLessThan(layout.fullscreen.left);
+    expect((layout.time.left + layout.time.right) / 2).toBeCloseTo(195, 0);
+    expect(layout.topRight.top).toBeCloseTo(layout.topLeft.top, 0);
+    expect(layout.topRight.left).toBeGreaterThan(layout.topLeft.right);
   });
 
   // Invariant : aucune taille ne saute pendant l'usage d'un curseur.

@@ -60,7 +60,9 @@ test('selection, information panel and target semantics survive both mode switch
   await expect(target.locator('.explo-label-dot')).toBeVisible();
 });
 
-test('quality control uses a gear icon and closes outside', async ({ page }) => {
+test('quality control uses a gear icon and closes outside', async ({
+  page,
+}) => {
   await boot(page);
   const quality = page.locator('#quality-btn');
   const menu = page.locator('#quality-menu');
@@ -195,6 +197,64 @@ test('mobile contextual surfaces are mutually exclusive and keep the time bar', 
   await page.locator('#settings-trigger').click();
   await expect(settings).toBeVisible();
   await expect(info).toBeHidden();
+  await expect
+    .poll(async () =>
+      page.evaluate(() => {
+        const trigger = document
+          .querySelector('#settings-trigger')!
+          .getBoundingClientRect();
+        const panel = document
+          .querySelector('#orbit-options')!
+          .getBoundingClientRect();
+        return Math.abs(panel.top - trigger.top);
+      })
+    )
+    .toBeLessThan(0.5);
+
+  const anchoredSurface = await page.evaluate(() => {
+    const trigger = document
+      .querySelector('#settings-trigger')!
+      .getBoundingClientRect();
+    const panel = document
+      .querySelector('#orbit-options')!
+      .getBoundingClientRect();
+    return {
+      triggerTop: trigger.top,
+      triggerLeft: trigger.left,
+      panelTop: panel.top,
+      panelRight: panel.right,
+    };
+  });
+  expect(anchoredSurface.panelTop).toBeCloseTo(anchoredSurface.triggerTop, 0);
+  expect(anchoredSurface.panelRight).toBeLessThan(anchoredSurface.triggerLeft);
+  const expectSingleScrollOwner = async (
+    panelSelector: string,
+    nestedSelector: string
+  ): Promise<void> => {
+    const metrics = await page.evaluate(
+      ({ panelSelector: panelId, nestedSelector: nestedId }) => {
+        const panel = document.querySelector(panelId)!;
+        const outer = panel.querySelector('.surface-body')!;
+        const nested = panel.querySelector(nestedId);
+        return {
+          outerCanScroll: outer.scrollHeight > outer.clientHeight,
+          nestedCanScroll: nested
+            ? nested.scrollHeight > nested.clientHeight
+            : false,
+        };
+      },
+      { panelSelector, nestedSelector }
+    );
+    expect(metrics.outerCanScroll && metrics.nestedCanScroll).toBe(false);
+  };
+
+  await page.locator('#weather-trigger').click();
+  await expect(page.locator('#weather-layers')).toBeVisible();
+  await expectSingleScrollOwner('#weather-layers', '.wl-body');
+
+  await page.locator('#events-trigger').click();
+  await expect(page.locator('#astronomical-events')).toBeVisible();
+  await expectSingleScrollOwner('#astronomical-events', '.events-list');
 });
 
 test('initial boot avoids blocking on highest-resolution planet textures', async ({

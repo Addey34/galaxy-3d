@@ -43,7 +43,10 @@ import { setupPressureModelLayer } from './ui/pressureModelLayer';
 import { setupHumidityModelLayer } from './ui/humidityModelLayer';
 import { setupWeatherLayers } from './ui/weatherLayers';
 import type { WeatherLayerHandle } from './ui/earthLayer';
-import { setupOverlayCoordinator } from './ui/overlayCoordinator';
+import {
+  setupOverlayCoordinator,
+  type SecondaryOverlayId,
+} from './ui/overlayCoordinator';
 import { setupSolarDebug } from './ui/solarDebug';
 import { setupEarthDebug } from './ui/earthDebug';
 import { setupMeteoDebug } from './ui/meteoDebug';
@@ -60,6 +63,36 @@ setupShare();
 const overlayCoordinator = setupOverlayCoordinator();
 setupHelp(overlayCoordinator);
 const guidedTour = setupGuidedTour();
+const CONTEXTUAL_SURFACE_ANCHORS: Partial<
+  Record<SecondaryOverlayId, { trigger: string; panel: string }>
+> = {
+  'body-info': { trigger: '#info-trigger', panel: '#body-info' },
+  'orbit-options': { trigger: '#settings-trigger', panel: '#orbit-options' },
+  'weather-layers': { trigger: '#weather-trigger', panel: '#weather-layers' },
+  events: { trigger: '#events-trigger', panel: '#astronomical-events' },
+  help: { trigger: '#help-btn', panel: '#help-popover' },
+  'quality-menu': { trigger: '#quality-btn', panel: '#quality-menu' },
+};
+
+function positionContextualSurface(id: SecondaryOverlayId): void {
+  const anchor = CONTEXTUAL_SURFACE_ANCHORS[id];
+  if (!anchor) return;
+
+  const trigger = document.querySelector<HTMLElement>(anchor.trigger);
+  const panel = document.querySelector<HTMLElement>(anchor.panel);
+  if (!trigger || !panel) return;
+
+  const triggerRect = trigger.getBoundingClientRect();
+  const gap = 8;
+  panel.style.setProperty(
+    '--surface-anchor-top',
+    `${Math.round(triggerRect.top)}px`
+  );
+  panel.style.setProperty(
+    '--surface-anchor-right',
+    `${Math.max(8, Math.round(window.innerWidth - triggerRect.left + gap))}px`
+  );
+}
 
 // Fermeture au clic extérieur d'une surface contextuelle.
 //   - Mobile : le scrim est une couche tactile plein écran (tap hors feuille = fermer).
@@ -68,8 +101,14 @@ const guidedTour = setupGuidedTour();
 //     du document, en ignorant les clics dans une surface ou sur un déclencheur du dock.
 const surfaceScrim = document.getElementById('surface-scrim');
 if (surfaceScrim) {
+  let activeSurfaceId: SecondaryOverlayId | null = null;
   overlayCoordinator.onOpen((id) => {
+    activeSurfaceId = id;
+    if (id) positionContextualSurface(id);
     surfaceScrim.hidden = id === null;
+  });
+  window.addEventListener('resize', () => {
+    if (activeSurfaceId) positionContextualSurface(activeSurfaceId);
   });
   // Couche tactile mobile.
   surfaceScrim.addEventListener('click', () => overlayCoordinator.closeAll());
@@ -91,7 +130,8 @@ if (surfaceScrim) {
 
     const app = new SolarSystemApp();
     const api = await app.init(updateProgress);
-    const { cameraSystem, animationSystem, sceneSystem, orbitalMechanics } = api;
+    const { cameraSystem, animationSystem, sceneSystem, orbitalMechanics } =
+      api;
     setupSolarDebug(api);
     setupEarthDebug(api);
 
