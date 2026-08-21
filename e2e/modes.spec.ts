@@ -266,8 +266,9 @@ test('initial boot avoids blocking on highest-resolution planet textures', async
     if (path.includes('/textures/') && path.endsWith('_8k.jpg'))
       loaded8k.push(path);
   });
+  await page.setViewportSize({ width: 390, height: 844 });
   await boot(page);
-  expect(loaded8k.filter((path) => !path.includes('/stars/'))).toEqual([]);
+  expect(loaded8k).toEqual([]);
 });
 
 test('projected marker dots stay on their exact body anchors after labels spread out', async ({

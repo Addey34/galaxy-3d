@@ -15,7 +15,6 @@ import {
   currentMaxPixelRatio,
 } from '@/config/engine';
 import { educRadius } from '@/core/ScaleService';
-import { texturePath } from '@/config/catalog';
 import type { CelestialBodyConfig, CelestialConfig } from '@/types';
 import Logger from '@/utils/Logger';
 import { Starfield } from '@/components/celestial/Starfield';
@@ -67,6 +66,8 @@ export class SceneSystem {
   init(): this {
     this.setupCamera();
     this.setupRenderer();
+    // Le TextureSystem doit connaître les capacités WebGL avant tout chargement de texture.
+    this.textureSystem.setRenderer(this.renderer);
     this.setupPostProcessing();
     this.setupStarfield();
     this.setupEventListeners();
@@ -130,16 +131,14 @@ export class SceneSystem {
   }
 
   private setupStarfield(): void {
-    // Chemin + meilleure résolution dérivés de la config (jamais hardcodés) : le fond de ciel
-    // prend toujours la plus haute qualité déclarée pour le corps `stars` (ordre décroissant).
-    const starsConfig = Object.entries(this.config.bodies).find(
-      ([, cfg]) => cfg.kind === 'skybox'
-    );
-    const starsName = starsConfig?.[0] ?? 'stars';
-    const bestQuality =
-      starsConfig?.[1].textureResolutions.surface?.[0] ?? '8k';
+    // Le fond de ciel passe par le même LOD que les autres textures : le profil mobile
+    // et la limite WebGL réelle sont appliqués avant de lancer le chargement.
+    const starsName =
+      Object.entries(this.config.bodies).find(
+        ([, cfg]) => cfg.kind === 'skybox'
+      )?.[0] ?? 'stars';
     this.textureSystem
-      .loadTexture(texturePath(starsName, 'surface'), bestQuality)
+      .getLODTexture(starsName, 'surface', 0)
       .then((tex) => {
         // Fond équirectangulaire posé en `scene.background` plutôt qu'une sphère mesh :
         // un décor à l'infini, insensible aux plans near/far. L'ancienne sphère de rayon
