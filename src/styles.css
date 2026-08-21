@@ -84,6 +84,16 @@ canvas {
   display: block;
 }
 
+/* La scene se manipule comme une camera orbitale : le curseur doit suggerer le glissement,
+   sans transformer les corps 3D en boutons classiques. */
+canvas[data-engine] {
+  cursor: grab;
+}
+
+canvas[data-engine]:active {
+  cursor: grabbing;
+}
+
 button,
 input,
 summary {
@@ -810,6 +820,7 @@ button {
 .surface--info {
   --planet-rgb: 120, 160, 255;
   border-color: rgba(var(--planet-rgb), 0.35);
+  overflow: hidden;
 }
 .bi-header {
   position: relative;
@@ -899,6 +910,8 @@ button {
 .bi-body {
   position: relative;
   z-index: 1;
+  flex: 1 1 auto;
+  min-height: 0;
   padding: 0 var(--sp-3) var(--sp-3);
   overflow-y: auto;
   scrollbar-width: thin;
@@ -1488,6 +1501,12 @@ button {
   .dock-actions {
     justify-content: space-between;
   }
+  .dock-actions--start {
+    justify-content: flex-start;
+  }
+  .dock-actions--end {
+    justify-content: flex-end;
+  }
   .mode-seg {
     flex: 1;
   }
@@ -1508,7 +1527,7 @@ button {
     top: auto !important;
     left: var(--edge-x) !important;
     right: var(--edge-x) !important;
-    bottom: calc(var(--edge-b) + 2 * var(--control-h) + 2 * var(--sp-2));
+    bottom: calc(var(--edge-b) + 10rem);
     width: auto !important;
     max-height: 60vh !important;
     animation: sheet-in 0.22s cubic-bezier(0.4, 0, 0.2, 1);
@@ -1542,6 +1561,21 @@ button {
 
 /* Hauteur réduite (mobile paysage, fenêtres basses) : la barre temps reste compacte,
    les surfaces se limitent en hauteur. */
+@media (max-width: 520px) {
+  .dock--top-right {
+    top: calc(var(--edge) + var(--control-h) + var(--sp-2));
+    right: var(--edge-x);
+    width: 8rem;
+    max-width: calc(100vw - 2 * var(--edge-x));
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: var(--sp-1);
+  }
+  .dock--top-right > .tool {
+    flex: 0 0 var(--control-h);
+  }
+}
+
 @media (max-height: 460px) {
   .surface {
     max-height: calc(100vh - 2 * var(--edge)) !important;

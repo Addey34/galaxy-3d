@@ -26,19 +26,37 @@ export interface TextureQualityThreshold {
   quality: string;
 }
 
+/** Pixel size represented by the quality suffix used by the local texture assets. */
+const TEXTURE_QUALITY_PIXELS: Readonly<Record<string, number>> = {
+  '1k': 1024,
+  '2k': 2048,
+  '4k': 4096,
+  '8k': 8192,
+};
+function fitsMaxTextureSize(quality: string, maxTextureSize: number): boolean {
+  return (
+    (TEXTURE_QUALITY_PIXELS[quality] ?? Number.POSITIVE_INFINITY) <=
+    maxTextureSize
+  );
+}
 export function chooseTextureQuality(
   levels: readonly TextureQualityThreshold[],
   resolutions: readonly string[],
-  normalizedDistance: number
+  normalizedDistance: number,
+  maxTextureSize = Number.POSITIVE_INFINITY
 ): string {
   for (const level of levels) {
     if (
       normalizedDistance <= level.distance &&
-      resolutions.includes(level.quality)
-    ) {
+      resolutions.includes(level.quality) &&
+      fitsMaxTextureSize(level.quality, maxTextureSize)
+    )
       return level.quality;
-    }
   }
+  const supportedFallback = [...resolutions]
+    .reverse()
+    .find((quality) => fitsMaxTextureSize(quality, maxTextureSize));
+  if (supportedFallback) return supportedFallback;
   return resolutions[resolutions.length - 1];
 }
 
@@ -68,6 +86,9 @@ export class TextureSystem {
   // renderer.render() qui suit un changement de LOD paie l'upload synchrone (un pic de
   // frame-time = le micro-freeze ressenti au déplacement caméra). Absent avant le boot scène.
   private renderer: THREE.WebGLRenderer | null = null;
+  // Limite materielle du contexte WebGL. Certains mobiles refusent les maps 4K alors que
+  // le profil medium les autorise ; le LOD doit respecter la limite reelle du GPU.
+  private maxTextureSize = Number.POSITIVE_INFINITY;
 
   // Table nom → config (satellites inclus), construite une fois — évite un scan linéaire à chaque LOD.
   private readonly _bodyByName: Map<string, CelestialBodyConfig>;
@@ -102,6 +123,7 @@ export class TextureSystem {
    */
   setRenderer(renderer: THREE.WebGLRenderer): void {
     this.renderer = renderer;
+    this.maxTextureSize = renderer.capabilities.maxTextureSize;
   }
 
   /**
@@ -284,7 +306,12 @@ export class TextureSystem {
   }
 
   private _chooseQuality(distance: number, resolutions: string[]): string {
-    return chooseTextureQuality(this._sortedQuality, resolutions, distance);
+    return chooseTextureQuality(
+      this._sortedQuality,
+      resolutions,
+      distance,
+      this.maxTextureSize
+    );
   }
 
   dispose(): void {

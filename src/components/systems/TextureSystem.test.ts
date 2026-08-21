@@ -21,4 +21,13 @@ describe('texture quality selection', () => {
     expect(chooseTextureQuality(levels, ['4k', '2k', '1k'], 7)).toBe('4k');
     expect(chooseTextureQuality(levels, ['2k', '1k'], 18)).toBe('2k');
   });
+
+  it('respects the WebGL maximum texture size on constrained mobile GPUs', () => {
+    expect(
+      chooseTextureQuality(levels, ['8k', '4k', '2k', '1k'], 7, 2048)
+    ).toBe('2k');
+    expect(chooseTextureQuality(levels, ['4k', '2k', '1k'], 7, 1024)).toBe(
+      '1k'
+    );
+  });
 });

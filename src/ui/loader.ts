@@ -114,10 +114,12 @@ export function updateProgress(percent: number, message: string): void {
 export function hideLoader(): void {
   hideRequested = true;
   verifiedPercent = 100;
+  // La fermeture ne doit pas dependre d'un dernier tick RAF : les mobiles peuvent
+  // suspendre ou ralentir cette boucle lorsque le contexte WebGL vient de demarrer.
+  displayedPercent = 100;
+  renderProgress(displayedPercent);
   loadStatus.textContent = t('loader.starting');
-  if (!animationFrame) {
-    animationFrame = window.requestAnimationFrame(animateProgress);
-  }
+  animationFrame = 0;
   finishLoaderWhenReady();
 }
 

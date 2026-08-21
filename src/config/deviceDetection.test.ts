@@ -48,6 +48,17 @@ describe('isLowPowerDevice', () => {
     ).toBe(true);
   });
 
+  it('reconnait aussi un mobile portrait dont la hauteur depasse 768 px', () => {
+    expect(
+      isLowPowerDevice({
+        mobileUserAgent: false,
+        touch: false,
+        largestViewportSide: 800,
+        smallestViewportSide: 375,
+      })
+    ).toBe(true);
+  });
+
   it('traite un grand écran tactile (> 1280) comme desktop', () => {
     // Écran de bureau tactile / tout-en-un : assez puissant pour le rendu complet.
     expect(

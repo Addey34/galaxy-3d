@@ -47,10 +47,11 @@ jobs:
   e2e:
     name: Browser tests (e2e)
     runs-on: ubuntu-latest
-    # Garde-fou : le rendu WebGL en GPU logiciel est lent, mais 20 min suffisent largement.
+    # Garde-fou : le rendu WebGL en GPU logiciel est lent et les retries CI peuvent prolonger
+    # la suite ; on laisse le temps d obtenir un resultat complet plutot qu une annulation.
     # Sans ca, une install apt bloquee (miroirs Ubuntu injoignables) peut trainer des heures
-    # et polluer le statut global du workflow. On echoue vite ; le job restant non bloquant.
-    timeout-minutes: 20
+    # et polluer le statut global du workflow. Le job reste non bloquant pour le deploiement.
+    timeout-minutes: 35
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -63,3 +64,12 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm exec playwright install --with-deps chromium
       - run: pnpm test:e2e
+      - name: Upload Playwright diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-diagnostics-${{ github.run_id }}
+          path: |
+            playwright-report/
+            test-results/
+          if-no-files-found: ignore

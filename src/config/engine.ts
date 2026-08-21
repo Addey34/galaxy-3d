@@ -28,6 +28,8 @@ export interface DeviceSignals {
   touch: boolean;
   /** Plus grande dimension de l'écran en px CSS (max(innerWidth, innerHeight)). */
   largestViewportSide: number;
+  /** Plus petite dimension CSS, utile pour reconnaitre un mobile portrait haut. */
+  smallestViewportSide?: number;
 }
 
 // Au-delà de cette largeur, un appareil tactile est traité comme un desktop (écran de
@@ -45,7 +47,13 @@ const SMALL_SCREEN_SIDE = 768;
  */
 export function isLowPowerDevice(signals: DeviceSignals): boolean {
   if (signals.mobileUserAgent) return true;
-  if (signals.largestViewportSide < SMALL_SCREEN_SIDE) return true;
+  const smallestViewportSide =
+    signals.smallestViewportSide ?? signals.largestViewportSide;
+  if (
+    smallestViewportSide < SMALL_SCREEN_SIDE &&
+    signals.largestViewportSide < 1024
+  )
+    return true;
   return signals.touch && signals.largestViewportSide <= TOUCH_TABLET_MAX_SIDE;
 }
 
@@ -65,6 +73,7 @@ export const isMobile = (): boolean => {
       ),
     touch: navigator.maxTouchPoints > 0,
     largestViewportSide: Math.max(window.innerWidth, window.innerHeight),
+    smallestViewportSide: Math.min(window.innerWidth, window.innerHeight),
   });
 };
 
