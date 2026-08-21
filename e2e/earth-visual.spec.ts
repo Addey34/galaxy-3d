@@ -72,7 +72,7 @@ test('mobile viewport applies the Earth surface texture', async ({ page }) => {
   await expect(page.locator('#loader')).toBeHidden({ timeout: 30_000 });
 
   await expect(page.locator('#earth-debug')).toContainText(
-    /surface map\s+\d+x\d+/,
+    /surface map\s+(1024x512|2048x1024)/,
     { timeout: 20_000 }
   );
 });

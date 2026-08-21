@@ -172,7 +172,7 @@ export const APP_SETTINGS: AppSettings = {
     targetFPS: 60,
     maxAnisotropy: BOOT_QUALITY_PROFILE.maxAnisotropy,
     // Le palier de tête (ultra) est plafonné par la résolution max du profil : high sert 8k,
-    // medium 4k, low 2k. Les paliers inférieurs restent inchangés (déjà légers).
+    // medium 2k, low 2k. Les paliers inférieurs restent inchangés (déjà légers).
     textureQuality: textureQualityForProfile(BOOT_QUALITY_PROFILE),
   },
 };

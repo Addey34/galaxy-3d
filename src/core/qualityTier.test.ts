@@ -46,6 +46,9 @@ describe('qualityTier — profils', () => {
     expect(med.maxAnisotropy).toBeLessThanOrEqual(high.maxAnisotropy);
     expect(low.hiResSegments).toBeLessThanOrEqual(med.hiResSegments);
     expect(med.hiResSegments).toBeLessThanOrEqual(high.hiResSegments);
+    expect(low.maxTextureQuality).toBe('2k');
+    expect(med.maxTextureQuality).toBe('2k');
+    expect(high.maxTextureQuality).toBe('8k');
   });
 
   it('seul high active antialiasing et bloom (leviers coûteux)', () => {

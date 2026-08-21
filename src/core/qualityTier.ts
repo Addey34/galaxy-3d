@@ -75,7 +75,7 @@ export const QUALITY_PROFILES: Record<QualityTier, QualityProfile> = {
     bloom: false,
     maxAnisotropy: 8,
     hiResSegments: 192,
-    maxTextureQuality: '4k',
+    maxTextureQuality: '2k',
   },
   high: {
     maxPixelRatio: 2.0,
