@@ -40,7 +40,8 @@ export function setupEarthDebug(api: PublicAPI): () => void {
   };
   const onKey = (e: KeyboardEvent): void => {
     const k = e.key.toLowerCase();
-    if (k === 'n') mapState.normalMap = earth.debugToggleSurfaceMap('normalMap');
+    if (k === 'n')
+      mapState.normalMap = earth.debugToggleSurfaceMap('normalMap');
     else if (k === 'd')
       mapState.displacementMap = earth.debugToggleSurfaceMap('displacementMap');
     else if (k === 'b')
@@ -91,6 +92,8 @@ export function setupEarthDebug(api: PublicAPI): () => void {
       'surface verts   ' + vertexCount,
       'surface tessel  ' + (hiRes ? 'HI-RES' : 'STANDARD'),
       'material        ' + (surface.materialType ?? '—'),
+      'surface map     ' +
+        (surface.map ? `${surface.map.width}x${surface.map.height}` : 'ABSENT'),
       'uv count        ' + (surface.geometry?.uvCount ?? 0),
       '── toggles ──',
       '[N] normalMap   ' + mapState.normalMap,

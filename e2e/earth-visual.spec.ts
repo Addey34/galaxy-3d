@@ -66,6 +66,16 @@ test('close-up Earth densifies its surface for real geometric relief', async ({
   expect(errors, `Erreurs page : ${errors.join(' | ')}`).toEqual([]);
 });
 
+test('mobile viewport applies the Earth surface texture', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/?debug-earth&body=earth');
+  await expect(page.locator('#loader')).toBeHidden({ timeout: 30_000 });
+
+  await expect(page.locator('#earth-debug')).toContainText(
+    /surface map\s+\d+x\d+/,
+    { timeout: 20_000 }
+  );
+});
 test('Earth surface returns to standard tessellation when zoomed out', async ({
   page,
 }) => {
