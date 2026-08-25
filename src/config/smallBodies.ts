@@ -167,12 +167,15 @@ export const SMALL_BODY_ELEMENTS: readonly SmallBodyElements[] = [
   {
     name: 'vesta',
     displayName: { en: 'Vesta', fr: 'Vesta' },
-    a: 2.3617,
-    e: 0.0889,
-    iDeg: 7.14,
-    omDeg: 103.851,
-    wDeg: 151.198,
-    maDeg: 307.802,
+    // Éléments osculateurs JPL Horizons EXACTEMENT à cette époque (EPHEM_TYPE=ELEMENTS,
+    // TLIST=2451545.0) — les anciennes valeurs plaçaient Vesta ~0.9 UA de sa vraie position
+    // à cette date (vérifié contre le vecteur d'état Horizons réel).
+    a: 2.361534934739072,
+    e: 0.09002244561937413,
+    iDeg: 7.133935828421654,
+    omDeg: 103.9514370845001,
+    wDeg: 149.5866679599199,
+    maDeg: 341.0238343838706,
     epoch: '2000-01-01T12:00:00Z',
     radiusKm: 262,
     color: 0xc8795d,
@@ -195,12 +198,14 @@ export const SMALL_BODY_ELEMENTS: readonly SmallBodyElements[] = [
   {
     name: 'pallas',
     displayName: { en: 'Pallas', fr: 'Pallas' },
-    a: 2.7721,
-    e: 0.2302,
-    iDeg: 34.837,
-    omDeg: 173.024,
-    wDeg: 310.457,
-    maDeg: 40.0,
+    // Éléments osculateurs JPL Horizons exactement à cette époque — voir le commentaire sur
+    // Vesta ci-dessus (même correction, même méthode de vérification).
+    a: 2.772322475089011,
+    e: 0.2296435321697976,
+    iDeg: 34.84614003622473,
+    omDeg: 173.1977991340821,
+    wDeg: 310.2656379003444,
+    maDeg: 352.9602856167207,
     epoch: '2000-01-01T12:00:00Z',
     radiusKm: 256,
     color: 0x9b82d1,
@@ -223,12 +228,14 @@ export const SMALL_BODY_ELEMENTS: readonly SmallBodyElements[] = [
   {
     name: 'hygiea',
     displayName: { en: 'Hygiea', fr: 'Hygie' },
-    a: 3.1415,
-    e: 0.1125,
-    iDeg: 3.842,
-    omDeg: 283.198,
-    wDeg: 312.301,
-    maDeg: 152.18,
+    // Éléments osculateurs JPL Horizons exactement à cette époque — voir le commentaire sur
+    // Vesta ci-dessus (même correction, même méthode de vérification).
+    a: 3.138421324853723,
+    e: 0.1194647926154634,
+    iDeg: 3.842651449337091,
+    omDeg: 283.6632054163321,
+    wDeg: 314.3682343023398,
+    maDeg: 339.2148139451292,
     epoch: '2000-01-01T12:00:00Z',
     radiusKm: 217,
     color: 0x6fbf8a,
@@ -414,12 +421,16 @@ export const SMALL_BODY_ELEMENTS: readonly SmallBodyElements[] = [
   },
   {
     name: 'halley',
-    a: 17.834,
-    e: 0.9671,
-    iDeg: 162.26,
-    omDeg: 58.42,
-    wDeg: 111.33,
-    maDeg: 38.38,
+    // Éléments osculateurs JPL Horizons EXACTEMENT à cette époque (record 90000030, apparition
+    // 1986 ; EPHEM_TYPE=ELEMENTS, TLIST=2451545.0). L'ancienne maDeg=38.38° était fausse pour
+    // cette époque : vérifié en propageant jusqu'à la vraie date de périhélie 1986-02-09, ce qui
+    // plaçait la comète à ~15.5 UA du Soleil au lieu de ~0.575 UA (son q réel).
+    a: 17.9215074123436,
+    e: 0.967270202449048,
+    iDeg: 162.1960426230816,
+    omDeg: 59.5078653556394,
+    wDeg: 112.449622028568,
+    maDeg: 65.84890057257185,
     epoch: '2000-01-01T12:00:00Z',
     radiusKm: 5.5,
     color: 0xf08ac6,

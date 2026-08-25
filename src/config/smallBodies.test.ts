@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { SMALL_BODIES, smallBodyToConfig } from './smallBodies';
+import { OrbitalElementsService } from '@/core/OrbitalElementsService';
 
 const D2R = Math.PI / 180;
 
@@ -139,4 +140,36 @@ describe('SMALL_BODIES catalogue', () => {
       SMALL_BODIES['halley']?.orbitalElements?.inclinationRad
     ).toBeGreaterThan(Math.PI / 2);
   });
+
+  /**
+   * Régression pour un bug réel : Vesta, Pallas, Hygiea et Halley sont les 4 corps SANS
+   * fallback Horizons (voir `scripts/generate-horizons-ephemerides.mjs`) — leur position
+   * dépend à 100% de ces éléments képlériens statiques. `maDeg` (anomalie moyenne à l'époque)
+   * était faux pour l'époque déclarée sur les 4 : par exemple Halley affichait ~15,5 UA à sa
+   * vraie date de périhélie de 1986 (1986-02-09) au lieu de ~0,575 UA — un décalage de phase
+   * d'environ 6 ans sur son orbite de 76 ans, à N'IMPORTE QUELLE date simulée, pas seulement
+   * aux extrêmes. Corrigé avec les éléments osculateurs JPL Horizons exacts à l'époque
+   * 2000-01-01T12:00Z. Ces distances de référence viennent du vecteur d'état Horizons réel à
+   * la même date (Vesta/Pallas/Hygiea) ou à la vraie date de périhélie 1986 (Halley, tolérance
+   * plus large : modèle 2 corps propagé sur 14 ans pour une comète non-gravitationnellement
+   * perturbée — limite documentée dans `kepler.ts`, pas une imprécision de cette correction).
+   */
+  it.each([
+    ['vesta', new Date('2000-01-01T12:00:00Z'), 2.163],
+    ['pallas', new Date('2000-01-01T12:00:00Z'), 2.144],
+    ['hygiea', new Date('2000-01-01T12:00:00Z'), 2.795],
+    ['halley', new Date('1986-02-09T00:00:00Z'), 0.575],
+  ] as const)(
+    '%s heliocentric distance matches the real Horizons ephemeris within tolerance',
+    (name, date, expectedAU) => {
+      const elements = SMALL_BODIES[name]?.orbitalElements;
+      expect(elements, `${name}: missing orbitalElements`).toBeDefined();
+      const service = new OrbitalElementsService();
+      const position = service.getHeliocentricAU(elements!, date);
+      expect(
+        position.length(),
+        `${name} @ ${date.toISOString()}: got ${position.length().toFixed(4)} AU, expected ~${expectedAU} AU`
+      ).toBeCloseTo(expectedAU, 1);
+    }
+  );
 });
