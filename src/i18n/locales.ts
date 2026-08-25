@@ -188,7 +188,7 @@ export const messages: Record<Locale, Dict> = {
       'Set up a view, then share its link. Whoever opens it lands on the exact same scene.',
     'tour.step.help.title': '11. Find help',
     'tour.step.help.text':
-      'You can reopen this quick tour from the ? help button.',
+      'Check the help page for more information.',
 
     // ── Panneau orbites (mode Éducatif) ──
     'orbitOpts.title': 'Orbits',
@@ -484,7 +484,7 @@ export const messages: Record<Locale, Dict> = {
       'Réglez une vue, puis partagez son lien. Celui qui l’ouvre retrouve exactement la même scène.',
     'tour.step.help.title': '11. Retrouver l’aide',
     'tour.step.help.text':
-      'Vous pourrez relancer cette visite avec le bouton ?.',
+      'Consultez la page d\'aide pour plus d\'informations.',
 
     // ── Panneau orbites (mode Éducatif) ──
     'orbitOpts.title': 'Orbites',
