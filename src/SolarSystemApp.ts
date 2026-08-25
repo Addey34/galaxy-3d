@@ -76,7 +76,7 @@ export class SolarSystemApp {
       Logger.group('SolarSystemApp Init');
       progressCallback(5, t('loader.core'));
       await this._loadResources(progressCallback);
-      this._initCoreSystems(progressCallback);
+      await this._initCoreSystems(progressCallback);
 
       progressCallback(65, t('loader.bodies'));
       const bodies = await this._getCelestialBodies(progressCallback);
@@ -153,13 +153,15 @@ export class SolarSystemApp {
         if (this._spkProvider === provider) this._spkProvider = null;
       });
   }
-  private _initCoreSystems(progressCallback: ProgressCallback): void {
+  private async _initCoreSystems(
+    progressCallback: ProgressCallback
+  ): Promise<void> {
     progressCallback(45, t('loader.scene'));
     this.systems.scene = new SceneSystem(
       CELESTIAL_CONFIG,
       this.systems.texture!
     );
-    this.systems.scene.init();
+    await this.systems.scene.init();
     // Le renderer existe désormais : le TextureSystem peut uploader les textures LOD au
     // GPU dès leur décodage (hors boucle de rendu), évitant les pics de frame-time.
     this.systems.texture!.setRenderer(this.systems.scene.renderer);

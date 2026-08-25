@@ -47,8 +47,13 @@ export function setupOpticalZoom(camera: CameraSystem): OpticalZoomControl {
   const refresh = (): void => {
     caption.textContent = t('zoom.optical');
     range.setAttribute('aria-label', t('zoom.optical'));
-    range.value = String(Math.round(camera.opticalFov));
-    value.textContent = `${Math.round(camera.opticalFov)}°`;
+    const rounded = Math.round(camera.opticalFov);
+    range.value = String(rounded);
+    value.textContent = `${rounded}°`;
+    // Le natif expose déjà aria-valuenow/min/max depuis les attributs value/min/max,
+    // mais un lecteur d'écran annoncerait juste "50" sans unité : valuetext donne le
+    // libellé humain ("50°") qu'il annonce à la place.
+    range.setAttribute('aria-valuetext', `${rounded}°`);
   };
 
   range.addEventListener('input', () => {

@@ -62,6 +62,18 @@ function occultationFraction(
   return THREE.MathUtils.clamp(overlapArea / (Math.PI * sun * sun), 0, 1);
 }
 
+/**
+ * LIMITE CONNUE (simplification délibérée) : le résultat est UN scalaire par corps et par
+ * frame, appliqué uniformément à toute la sphère via `setMaterialLightAttenuation`. Une vraie
+ * éclipse n'assombrit que la portion sous l'ombre/pénombre de l'occulteur — le reste du corps
+ * reste éclairé. À l'échelle du système solaire (le cas d'usage normal), l'approximation est
+ * imperceptible : on est rarement assez près pour résoudre la bande d'ombre. Elle devient
+ * visible si l'utilisateur zoome sur Terre/Lune pendant une éclipse — l'assombrissement plonge
+ * alors tout le disque au lieu d'une bande. Un ombrage par fragment (position/rayon des
+ * occulteurs déjà disponibles ici) résoudrait ça pour les corps proches ; non implémenté à ce
+ * jour faute de besoin produit démontré. Voir aussi le clair de Lune et l'ombre d'anneau dans
+ * `config/layerConfig.ts`, qui utilisent déjà ce pattern par-fragment pour d'autres effets.
+ */
 export function computeLightAttenuation(
   bodyPosition: THREE.Vector3,
   sunPosition: THREE.Vector3,

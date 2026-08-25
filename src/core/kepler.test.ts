@@ -23,6 +23,14 @@ describe('solveKepler', () => {
   it('returns E = M for a circular orbit (e = 0)', () => {
     expect(solveKepler(1.23, 0)).toBeCloseTo(1.23, 12);
   });
+
+  it('clamps out-of-range eccentricities instead of diverging', () => {
+    // e >= 1 (parabolique/hyperbolique) n'est pas supporté par cette forme elliptique :
+    // le solveur doit rester fini et stable plutôt que diverger silencieusement.
+    expect(Number.isFinite(solveKepler(1.0, 1))).toBe(true);
+    expect(Number.isFinite(solveKepler(1.0, 5))).toBe(true);
+    expect(Number.isFinite(solveKepler(1.0, -0.2))).toBe(true);
+  });
 });
 
 /** Orbite circulaire dans le plan de l'écliptique, périhélie sur +X. */

@@ -73,6 +73,14 @@ export interface TextureSystemConfig {
  * chargée deux fois, même si CelestialObject et updateLODTextures la demandent
  * simultanément — la Map `loadingPromises` déduplique les requêtes en vol.
  */
+// Plafond souple du cache : au-delà, l'entrée la moins récemment consultée est retirée
+// de la Map (LRU). On ne dispose() JAMAIS la texture évincée ici : un mesh peut encore la
+// référencer via `material.map`. L'éviction ne fait donc que renoncer à la dédup pour
+// l'entrée la plus froide — au pire un futur re-fetch réseau, jamais une texture GPU
+// invalidée sous les pieds d'un matériau actif. Protège les sessions longues (visite de
+// tout le catalogue en zoom max) contre une croissance mémoire sans borne du cache.
+const MAX_CACHE_ENTRIES = 64;
+
 export class TextureSystem {
   static #instance: TextureSystem | undefined;
 
@@ -141,6 +149,9 @@ export class TextureSystem {
     const cached = this.cache.get(fullPath);
     if (cached) {
       Logger.debug(`[TextureSystem] Cache hit: ${fullPath}`);
+      // Bump vers la fin de la Map (le plus "chaud") : l'ordre d'itération sert de LRU.
+      this.cache.delete(fullPath);
+      this.cache.set(fullPath, cached);
       return cached;
     }
 
@@ -174,6 +185,7 @@ export class TextureSystem {
             // Contexte WebGL indisponible/perdu : on laisse le rendu faire l'upload.
           }
           this.cache.set(fullPath, texture);
+          this._evictLeastRecentlyUsed();
           this.loadingPromises.delete(fullPath);
           resolve(texture);
         },
@@ -303,6 +315,17 @@ export class TextureSystem {
     bodyName: string
   ): CelestialBodyConfig | undefined {
     return this._bodyByName.get(bodyName);
+  }
+
+  /** Retire l'entrée la plus froide (première de la Map) une fois le plafond dépassé. */
+  private _evictLeastRecentlyUsed(): void {
+    while (this.cache.size > MAX_CACHE_ENTRIES) {
+      const oldestKey = this.cache.keys().next().value;
+      if (oldestKey === undefined) break;
+      Logger.debug(`[TextureSystem] LRU evict: ${oldestKey}`);
+      // Pas de dispose() ici : voir le commentaire sur MAX_CACHE_ENTRIES.
+      this.cache.delete(oldestKey);
+    }
   }
 
   private _chooseQuality(distance: number, resolutions: string[]): string {

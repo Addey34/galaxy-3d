@@ -1057,7 +1057,10 @@ export default class CelestialObject {
         : [mesh.material];
       materials.forEach((material) => {
         // TextureSystem owns cached textures. Detach them here, but do not dispose
-        // them per mesh: several materials may share one cached GPU resource.
+        // them per mesh: several materials may share one cached GPU resource. Safe today
+        // because the catalogue is static and CelestialObjects are never destroyed/recreated
+        // mid-session; a future feature that does so would need TextureSystem reference
+        // counting before dispose() could safely free the underlying GPU texture too.
         if (material instanceof THREE.MeshStandardMaterial) {
           material.map = null;
           material.normalMap = null;

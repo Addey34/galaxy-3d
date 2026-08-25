@@ -4,10 +4,11 @@
  * d'orbite disponibles dans les deux modes.
  */
 import * as THREE from 'three';
-import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
-import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
-import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
-import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js';
+// Chargées dynamiquement dans setupPostProcessing : le bloom est désactivé sur les paliers
+// low/medium (la majorité du parc mobile — cf. BOOT_QUALITY_PROFILE), un import statique
+// embarquerait ces modules dans le bundle initial pour des appareils qui ne les utilisent
+// jamais. Seul le TYPE est importé ici (effacé à la compilation, aucun poids runtime).
+import type { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
 import {
   BLOOM_SETTINGS,
   CAMERA_SETTINGS,
@@ -63,12 +64,12 @@ export class SceneSystem {
     Logger.info('[SceneSystem] Scene instance created ✅');
   }
 
-  init(): this {
+  async init(): Promise<this> {
     this.setupCamera();
     this.setupRenderer();
     // Le TextureSystem doit connaître les capacités WebGL avant tout chargement de texture.
     this.textureSystem.setRenderer(this.renderer);
-    this.setupPostProcessing();
+    await this.setupPostProcessing();
     this.setupStarfield();
     this.setupEventListeners();
     return this;
@@ -78,9 +79,23 @@ export class SceneSystem {
    * Chaîne de post-process : rendu de base → bloom (seuil élevé = seules les
    * sources très lumineuses bavent : Soleil + lumières de ville) → OutputPass
    * (tone mapping + conversion sRGB en fin de chaîne). Désactivé sur mobile.
+   * Modules chargés à la demande (cf. l'import de type en tête de fichier) : les
+   * appareils au palier low/medium ne téléchargent jamais le code du bloom.
    */
-  private setupPostProcessing(): void {
+  private async setupPostProcessing(): Promise<void> {
     if (!BLOOM_SETTINGS.enabled) return;
+
+    const [
+      { EffectComposer },
+      { RenderPass },
+      { UnrealBloomPass },
+      { OutputPass },
+    ] = await Promise.all([
+      import('three/examples/jsm/postprocessing/EffectComposer.js'),
+      import('three/examples/jsm/postprocessing/RenderPass.js'),
+      import('three/examples/jsm/postprocessing/UnrealBloomPass.js'),
+      import('three/examples/jsm/postprocessing/OutputPass.js'),
+    ]);
 
     const composer = new EffectComposer(this.renderer);
     composer.addPass(new RenderPass(this.scene, this.camera));

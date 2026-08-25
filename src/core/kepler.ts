@@ -49,9 +49,22 @@ function daysBetween(a: Date, b: Date): number {
  * par itération de Newton-Raphson. Converge en quelques itérations pour e < 1.
  *
  * @param meanAnomaly  anomalie moyenne M (rad), quelconque (non normalisée requise)
- * @param eccentricity excentricité e (0 ≤ e < 1)
+ * @param eccentricity excentricité e (0 ≤ e < 1) — une valeur ≥ 1 (parabolique/hyperbolique)
+ *   n'est PAS supportée par cette forme elliptique : Newton-Raphson diverge ou converge vers
+ *   un résultat faux sans le signaler. On avertit en dev et on clampe pour rester stable plutôt
+ *   que de renvoyer une position silencieusement erronée (cf. handoff : jeu de données courant
+ *   tout elliptique, mais un futur import SBDB en direct pourrait fournir e ≥ 1 sans le savoir).
  */
 export function solveKepler(meanAnomaly: number, eccentricity: number): number {
+  if (eccentricity >= 1 || eccentricity < 0) {
+    if (import.meta.env?.DEV) {
+      console.warn(
+        `[kepler] eccentricity ${eccentricity} is outside the supported elliptical range [0, 1) — clamping. ` +
+          'Parabolic/hyperbolic orbits need a dedicated solver (not implemented).'
+      );
+    }
+    eccentricity = Math.min(Math.max(eccentricity, 0), 0.999);
+  }
   // Normalise M dans [-π, π] pour une bonne graine et une convergence symétrique.
   const twoPi = Math.PI * 2;
   let m = meanAnomaly % twoPi;
