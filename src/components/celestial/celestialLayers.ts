@@ -55,6 +55,7 @@ function createSurfaceLayer(
   name: string
 ): THREE.Mesh {
   const isSun = name === 'sun';
+  const isMoon = name === 'moon';
   // Clair de Lune activé pour les corps à lumières nocturnes (Terre) : sa face
   // nuit peut être partiellement éclairée par la Lune (réflecteur).
   const hasNightLights = Boolean(config.textures?.lights);
@@ -62,7 +63,11 @@ function createSurfaceLayer(
     isSun,
     config.textures?.surface ? undefined : config.fallbackColor,
     hasNightLights,
-    hasNightLights
+    hasNightLights,
+    // Ombre d'éclipse par fragment : Terre (via clair de Lune) ET Lune (éclipse lunaire,
+    // ombre de la Terre) — la seule autre paire occulteur/occulté assez rapprochée pour que
+    // le proxy pleine-sphère se voie en gros plan. Cf. config/layerConfig.ts.
+    hasNightLights || isMoon
   );
   const mesh = new THREE.Mesh(
     createSphereGeometry(config.radius, 'surface'),

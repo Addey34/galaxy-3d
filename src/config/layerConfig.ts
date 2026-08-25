@@ -71,7 +71,10 @@ export function createSurfaceMaterial(
   // Moonlight is enabled for bodies with a night-lights layer (Earth).
   moonlight = false,
   // Earth ocean specular is bounded to prevent an overexposed white glint.
-  limitSpecular = false
+  limitSpecular = false,
+  // Per-fragment eclipse shadow (needs the same world-position varying as moonlight, but is
+  // independent of it — the Moon gets it without moonlight's night-lights infrastructure).
+  eclipseShadow = moonlight
 ): THREE.MeshBasicMaterial | THREE.MeshStandardMaterial {
   if (isSun) {
     const sunMat = new THREE.MeshBasicMaterial({
@@ -93,9 +96,7 @@ export function createSurfaceMaterial(
       moonlight,
       limitSpecular,
       varyOceanRoughness: limitSpecular,
-      // Le clair de Lune n'est câblé que sur la Terre (cf. `hasNightLights` à l'appelant) —
-      // même signal pour activer l'ombre d'éclipse par fragment, qui a besoin du même varying.
-      eclipseShadow: moonlight,
+      eclipseShadow,
     }
   );
 }
@@ -824,8 +825,9 @@ export function createShadowAwareStandardMaterial(
   const limitSpecular = options.limitSpecular === true;
   const noSpecular = options.noSpecular === true;
   const varyOceanRoughness = options.varyOceanRoughness === true;
-  // Dépend du varying vMoonWorldPos, câblé uniquement quand moonlight est actif.
-  const eclipseShadow = options.eclipseShadow === true && moonlight;
+  const eclipseShadow = options.eclipseShadow === true;
+  // Les deux options partagent le même varying de position/normale monde du fragment.
+  const needsWorldPosVarying = moonlight || eclipseShadow;
   const oceanRoughnessUniforms = {
     base: { value: EARTH_OCEAN_ROUGHNESS_SETTINGS.oceanBase },
     variation: { value: EARTH_OCEAN_ROUGHNESS_SETTINGS.oceanVariation },
@@ -899,8 +901,8 @@ export function createShadowAwareStandardMaterial(
       shader.uniforms['uEclipseOccRadius'] = eclipseShadowUniforms.occluderRadius;
     }
 
-    // Position et normale monde du fragment, necessaires au clair de Lune.
-    if (moonlight) {
+    // Position et normale monde du fragment : clair de Lune ET/OU ombre d'éclipse.
+    if (needsWorldPosVarying) {
       shader.vertexShader = shader.vertexShader
         .replace(
           '#include <common>',
@@ -922,7 +924,7 @@ export function createShadowAwareStandardMaterial(
             ? '\nuniform vec3 uMoonPosition;\nuniform float uMoonStrength;\nuniform vec3 uMoonColor;'
             : '') +
           (moonlight ? '\nuniform vec3 uMoonSunDir;' : '') +
-          (moonlight
+          (needsWorldPosVarying
             ? '\nvarying vec3 vMoonWorldPos;\nvarying vec3 vMoonWorldNormal;'
             : '') +
           (eclipseShadow

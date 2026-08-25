@@ -186,6 +186,12 @@ export class AnimationSystem {
       if (modeChanged) {
         for (const body of Object.values(this.celestialBodies)) {
           body.setLightAttenuation(1);
+          // Désactive l'ombre d'éclipse PAR FRAGMENT (Terre/Lune) : ses uniforms tiennent
+          // des positions monde ÉCHELLE RÉELLE (dernière frame explo), incompatibles avec
+          // les positions COMPRESSÉES de l'éducatif — sunRadius=0 neutralise proprement le
+          // calcul GLSL (cf. eclipseShadowAt) sans dépendre d'un appel par corps ci-dessous,
+          // le proxy pleine-sphère scripté (_updateEducEarthMoonEclipse) prend le relais.
+          body.setEclipseShadowSource(sunWorldPosition, 0, null, 0);
         }
       }
       this._updateEducEarthMoonEclipse(modeChanged);
@@ -199,9 +205,11 @@ export class AnimationSystem {
     const sunRadius =
       (sunBody?.group.userData['radius'] as number | undefined) ?? 0;
     const entries = Object.entries(this.celestialBodies);
-    // Index de la Lune dans `entries` (constant pour la passe) : sert à retrouver son
-    // instantané position+rayon pour l'ombre d'éclipse PAR FRAGMENT de la Terre ci-dessous.
+    // Index Lune/Terre dans `entries` (constants pour la passe) : servent à retrouver leurs
+    // instantanés position+rayon pour l'ombre d'éclipse PAR FRAGMENT (Terre occultée par la
+    // Lune ; Lune occultée par la Terre lors d'une éclipse lunaire) ci-dessous.
     const moonIndex = entries.findIndex(([name]) => name === 'moon');
+    const earthIndex = entries.findIndex(([name]) => name === 'earth');
 
     // Instantané des positions monde + rayons, calculé UNE fois par passe (pas une fois
     // par corps). Chaque `getWorldPosition` écrit dans un Vector3 déjà alloué du pool ;
@@ -243,19 +251,21 @@ export class AnimationSystem {
       const distanceAU = bodyPosition.distanceTo(sunWorldPosition) / SQRT_K;
       const irradiance = solarIrradianceFactor(distanceAU);
 
-      if (name === 'earth') {
-        // La Terre calcule sa propre ombre d'éclipse PAR FRAGMENT dans le shader (bande
-        // d'ombre réelle Soleil/Lune, cf. config/layerConfig.ts option eclipseShadow) : on
-        // ne lui envoie donc que l'irradiance via uLightAttenuation, sans la composante
-        // `eclipse` scalaire — sinon l'assombrissement se cumulerait (proxy pleine-sphère
-        // ET bande projetée). setEclipseShadowSource est un no-op silencieux si le matériau
-        // Terre n'a pas cette capacité (ex. texture pas encore chargée).
-        const moonSlot = moonIndex >= 0 ? this._lightingSnapshot[moonIndex] : null;
+      if (name === 'earth' || name === 'moon') {
+        // Terre et Lune calculent leur propre ombre d'éclipse PAR FRAGMENT dans le shader
+        // (bande d'ombre réelle, cf. config/layerConfig.ts option eclipseShadow) : on ne leur
+        // envoie donc que l'irradiance via uLightAttenuation, sans la composante `eclipse`
+        // scalaire — sinon l'assombrissement se cumulerait (proxy pleine-sphère ET bande
+        // projetée). setEclipseShadowSource est un no-op silencieux si le matériau n'a pas
+        // cette capacité (ex. texture pas encore chargée).
+        const occluderIndex = name === 'earth' ? moonIndex : earthIndex;
+        const occluderSlot =
+          occluderIndex >= 0 ? this._lightingSnapshot[occluderIndex] : null;
         body.setEclipseShadowSource(
           sunWorldPosition,
           sunRadius,
-          moonSlot?.position ?? null,
-          moonSlot?.radius ?? 0
+          occluderSlot?.position ?? null,
+          occluderSlot?.radius ?? 0
         );
         body.setLightAttenuation(irradiance);
       } else {
