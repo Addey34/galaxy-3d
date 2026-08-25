@@ -47,6 +47,7 @@ import {
   setupOverlayCoordinator,
   type SecondaryOverlayId,
 } from './ui/overlayCoordinator';
+import { setupContextRecovery } from './ui/contextRecovery';
 import { setupSolarDebug } from './ui/solarDebug';
 import { setupEarthDebug } from './ui/earthDebug';
 import { setupMeteoDebug } from './ui/meteoDebug';
@@ -133,6 +134,7 @@ if (surfaceScrim) {
       api;
     setupSolarDebug(api);
     setupEarthDebug(api);
+    setupContextRecovery(sceneSystem);
 
     // Registre des COUCHES MÉTÉO de la Terre. Chaque `setup*` monte sa couche (données
     // GIBS/Open-Meteo synchronisées sur la date de simulation, repli statique hors-ligne)

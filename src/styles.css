@@ -2008,6 +2008,61 @@ button {
   font: inherit;
 }
 
+/* Bannière de reconnexion WebGL (perte/restauration de contexte GPU) — non bloquante,
+   contrairement à l'écran d'erreur de démarrage, car la restauration est le cas courant. */
+#context-recovery-banner[hidden] {
+  display: none;
+}
+
+#context-recovery-banner {
+  position: fixed;
+  top: 0.75rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 500;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.55rem 1rem;
+  border-radius: 999px;
+  border: 1px solid rgba(120, 215, 255, 0.4);
+  background: rgba(10, 16, 28, 0.88);
+  backdrop-filter: blur(6px);
+  color: #fff;
+  font-size: 0.85rem;
+  pointer-events: none;
+}
+
+#context-recovery-banner.is-timeout {
+  border-color: rgba(255, 120, 120, 0.5);
+  pointer-events: auto;
+}
+
+#context-recovery-banner button {
+  padding: 0.3rem 0.7rem;
+  border: 1px solid rgba(120, 215, 255, 0.5);
+  border-radius: 0.5rem;
+  background: rgba(74, 143, 255, 0.2);
+  color: #fff;
+  cursor: pointer;
+  font: inherit;
+}
+
+#context-recovery-banner .context-recovery-spinner {
+  width: 0.8rem;
+  height: 0.8rem;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: #fff;
+  animation: context-recovery-spin 0.8s linear infinite;
+}
+
+@keyframes context-recovery-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 @keyframes loader-orbit {
   to {
     transform: translate(-50%, -50%) rotate(360deg);
@@ -2059,6 +2114,10 @@ button {
   #loader::before,
   .loader-path--inner,
   .loader-path--outer {
+    animation: none;
+  }
+
+  .context-recovery-spinner {
     animation: none;
   }
 }

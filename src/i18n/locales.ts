@@ -39,6 +39,9 @@ export const messages: Record<Locale, Dict> = {
     'loader.texturesDone': 'Textures loaded',
     'error.title': 'Application Error',
     'error.retry': 'Retry',
+    'error.contextLost': 'Reconnecting the 3D view…',
+    'error.contextLostTimeout':
+      'The 3D view could not reconnect. Reload the page.',
 
     // ── Navigation ──
     'nav.overview': 'Overview',
@@ -334,6 +337,9 @@ export const messages: Record<Locale, Dict> = {
     'loader.texturesDone': 'Textures chargées',
     'error.title': 'Erreur de l’application',
     'error.retry': 'Réessayer',
+    'error.contextLost': 'Reconnexion de la vue 3D…',
+    'error.contextLostTimeout':
+      'La vue 3D n’a pas pu se reconnecter. Rechargez la page.',
 
     // ── Navigation ──
     'nav.overview': 'Vue globale',

@@ -37,6 +37,15 @@ export class SceneSystem {
   /** Champ d'étoiles procédural (points ronds) superposé au fond Voie lactée. */
   private _starfield: Starfield | null = null;
 
+  /**
+   * Callbacks optionnels câblés par la couche UI (voir `src/ui/contextRecovery.ts`) : le
+   * GPU peut reprendre le contexte WebGL à tout moment (onglet en arrière-plan sur mobile,
+   * reset driver, trop de contextes ouverts) — sans `preventDefault()` sur `webglcontextlost`,
+   * le navigateur ne tente même pas de le restaurer.
+   */
+  onContextLost: (() => void) | null = null;
+  onContextRestored: (() => void) | null = null;
+
   /** Champ d'étoiles procédural, pour que la boucle d'animation le suive à la caméra. */
   get starfield(): Starfield | null {
     return this._starfield;
@@ -219,6 +228,39 @@ export class SceneSystem {
     this.disposeFunctions.push(() =>
       window.removeEventListener('resize', onResize)
     );
+
+    const onContextLost = (event: Event): void => {
+      // Sans preventDefault(), la perte est définitive : le navigateur ne relance jamais
+      // 'webglcontextrestored'. Three.js (r176+) recrée textures/géométries/matériaux à
+      // la volée au prochain render() une fois le contexte restauré ; rien d'autre à refaire ici.
+      event.preventDefault();
+      Logger.warn('[SceneSystem] WebGL context lost');
+      this.onContextLost?.();
+    };
+    const onContextRestored = (): void => {
+      Logger.success('[SceneSystem] WebGL context restored');
+      this.onContextRestored?.();
+    };
+    this.renderer.domElement.addEventListener(
+      'webglcontextlost',
+      onContextLost,
+      false
+    );
+    this.renderer.domElement.addEventListener(
+      'webglcontextrestored',
+      onContextRestored,
+      false
+    );
+    this.disposeFunctions.push(() => {
+      this.renderer.domElement.removeEventListener(
+        'webglcontextlost',
+        onContextLost
+      );
+      this.renderer.domElement.removeEventListener(
+        'webglcontextrestored',
+        onContextRestored
+      );
+    });
   }
 
   setupCelestialBodies(celestialBodies: CelestialBodies): void {
