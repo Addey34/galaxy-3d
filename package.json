@@ -11,6 +11,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
+    "test:a11y": "playwright test e2e/a11y-audit.spec.ts",
+    "test:perf": "playwright test e2e/perf-fps.spec.ts",
     "ephemeris:generate": "node scripts/generate-horizons-ephemerides.mjs",
     "spk:stage": "node scripts/stage-sat441.mjs",
     "spk:verify": "node scripts/verify-spk-range.mjs",
@@ -26,6 +28,7 @@
     "verify:all": "pnpm verify && pnpm build && pnpm test:e2e"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.13.0",
     "@eslint/js": "^10.0.1",
     "@playwright/test": "^1.61.1",
     "@types/node": "^25.9.1",

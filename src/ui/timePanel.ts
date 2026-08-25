@@ -120,6 +120,12 @@ export function setupTimePanel(
     timePanel.classList.toggle('is-expanded', expanded);
     readoutBtn.setAttribute('aria-expanded', String(expanded));
     advanced.setAttribute('aria-hidden', String(!expanded));
+    // `aria-hidden` seul masque le contenu aux lecteurs d'écran mais ne retire pas les
+    // champs (vitesse, date, heure) de l'ordre de tabulation — un clavier pouvait tabuler
+    // dans un panneau visuellement/sémantiquement caché (trouvé par un audit axe-core).
+    // `inert` couvre les deux : hors tabulation ET hors arbre d'accessibilité.
+    if (expanded) advanced.removeAttribute('inert');
+    else advanced.setAttribute('inert', '');
   };
   setExpanded(false);
   readoutBtn.addEventListener('click', () => setExpanded(!expanded));

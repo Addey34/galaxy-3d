@@ -2,13 +2,13 @@
 <html lang="en-GB">
   <head>
     <meta charset="UTF-8" />
-    <!-- App WebGL plein écran : on verrouille le zoom de page (pincer) pour qu'il pilote
-         toujours la caméra 3D via OrbitControls, jamais le navigateur — sinon on reste
-         « coincé zoomé » sur mobile. Le zoom caméra reste entier (molette / pincer sur le canvas). -->
-    <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no"
-    />
+    <!-- Le pincer sur le CANVAS pilote la caméra 3D (OrbitControls), jamais le zoom de page :
+         géré par `touch-action: none` sur `canvas` (styles.css), pas ici. `user-scalable=no`
+         a été retiré (trouvé par un audit axe-core, WCAG 1.4.4) — il désactivait le zoom de
+         page PARTOUT, y compris sur les panneaux UI, pour un malvoyant qui en a besoin ; le
+         verrou canvas-only ci-dessus suffit à éviter le « coincé zoomé » que ce blocage
+         global visait à l'origine. -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>
       3D Solar System: Real-Time Interactive Visualizer | Explore the Planets
     </title>
