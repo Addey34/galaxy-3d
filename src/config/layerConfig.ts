@@ -9,6 +9,7 @@ import {
   EARTH_OCEAN_ROUGHNESS_SETTINGS,
   REALTIME_CLOUDS_SETTINGS,
 } from './engine';
+import { MIN_LIGHT_ATTENUATION, SHADOW_GAMMA } from '@/core/eclipse';
 
 const SHADOW_AWARE_UNIFORM_KEY = '__lightAttenuationUniform';
 
@@ -92,6 +93,9 @@ export function createSurfaceMaterial(
       moonlight,
       limitSpecular,
       varyOceanRoughness: limitSpecular,
+      // Le clair de Lune n'est câblé que sur la Terre (cf. `hasNightLights` à l'appelant) —
+      // même signal pour activer l'ombre d'éclipse par fragment, qui a besoin du même varying.
+      eclipseShadow: moonlight,
     }
   );
 }
@@ -714,6 +718,65 @@ const MOONLIGHT_GLSL = `
           outgoingLight += moonGlow * diffuseColor.rgb;
         }`;
 
+const ECLIPSE_SHADOW_UNIFORM_KEY = '__eclipseShadowUniforms';
+
+export interface EclipseShadowUniforms {
+  sunPosition: { value: THREE.Vector3 };
+  /** Rayon du Soleil en unités scène (même échelle que les positions monde). */
+  sunRadius: { value: number };
+  occluderPosition: { value: THREE.Vector3 };
+  /** 0 = pas d'occulteur connu cette frame (ex. Lune hors catalogue) : désactive
+   *  proprement le calcul (eclipseShadowAt renvoie 1.0 sans occulteur valide). */
+  occluderRadius: { value: number };
+}
+
+/**
+ * Traduction GLSL de `occultationFraction` (core/eclipse.ts) : aire de recouvrement de deux
+ * disques angulaires (Soleil, occulteur). Même formule des deux côtés — CPU (proxy pleine-
+ * sphère utilisé par tous les corps) et GPU (bande d'ombre réelle, Terre uniquement) restent
+ * cohérents par construction plutôt que par deux implémentations à maintenir en parallèle.
+ */
+const ECLIPSE_OCCLUSION_GLSL = `
+        float eclipseOcclusionFraction( float sunAngRad, float occAngRad, float separation ) {
+          if ( sunAngRad <= 0.0 || occAngRad <= 0.0 || separation >= sunAngRad + occAngRad ) return 0.0;
+          if ( separation <= abs( sunAngRad - occAngRad ) ) {
+            return occAngRad >= sunAngRad ? 1.0 : ( occAngRad * occAngRad ) / ( sunAngRad * sunAngRad );
+          }
+          float sunTerm = acos( clamp(
+            ( separation * separation + sunAngRad * sunAngRad - occAngRad * occAngRad )
+              / ( 2.0 * separation * sunAngRad ), -1.0, 1.0 ) );
+          float occTerm = acos( clamp(
+            ( separation * separation + occAngRad * occAngRad - sunAngRad * sunAngRad )
+              / ( 2.0 * separation * occAngRad ), -1.0, 1.0 ) );
+          float lens = sqrt( max( 0.0,
+            ( -separation + sunAngRad + occAngRad ) * ( separation + sunAngRad - occAngRad )
+              * ( separation - sunAngRad + occAngRad ) * ( separation + sunAngRad + occAngRad ) ) );
+          float overlapArea = sunAngRad * sunAngRad * sunTerm + occAngRad * occAngRad * occTerm - lens * 0.5;
+          return clamp( overlapArea / ( 3.14159265359 * sunAngRad * sunAngRad ), 0.0, 1.0 );
+        }
+        float eclipseShadowAt( vec3 fragWorldPos, vec3 sunPos, float sunRad, vec3 occPos, float occRad ) {
+          vec3 toSun = sunPos - fragWorldPos;
+          float sunDist = length( toSun );
+          if ( sunDist < 0.0001 || sunRad <= 0.0 ) return 1.0;
+          vec3 toOcc = occPos - fragWorldPos;
+          float occDist = length( toOcc );
+          if ( occDist < 0.0001 || occDist >= sunDist ) return 1.0;
+          float sunAngRad = asin( clamp( sunRad / sunDist, 0.0, 1.0 ) );
+          float occAngRad = asin( clamp( occRad / occDist, 0.0, 1.0 ) );
+          float separation = acos( clamp( dot( toSun, toOcc ) / ( sunDist * occDist ), -1.0, 1.0 ) );
+          float occlusion = eclipseOcclusionFraction( sunAngRad, occAngRad, separation );
+          float shaped = pow( occlusion, ${SHADOW_GAMMA.toFixed(2)} );
+          return mix( 1.0, ${MIN_LIGHT_ATTENUATION.toFixed(3)}, shaped );
+        }`;
+
+/** Récupère les uniforms d'ombrage d'éclipse par fragment d'un matériau, s'il en a. */
+export function getEclipseShadowUniforms(
+  material: THREE.Material
+): EclipseShadowUniforms | undefined {
+  return material.userData[ECLIPSE_SHADOW_UNIFORM_KEY] as
+    EclipseShadowUniforms | undefined;
+}
+
 const CLOUD_SHADOW_UNIFORM_KEY = '__cloudShadowUniforms';
 
 export interface CloudShadowUniforms {
@@ -744,6 +807,13 @@ export function createShadowAwareStandardMaterial(
     limitSpecular?: boolean;
     noSpecular?: boolean;
     varyOceanRoughness?: boolean;
+    /**
+     * Ombre d'éclipse PAR FRAGMENT (bande d'ombre réelle Soleil/occulteur) au lieu du
+     * proxy pleine-sphère de `uLightAttenuation`. Nécessite `moonlight: true` (réutilise
+     * son varying `vMoonWorldPos`) — sans lui l'option est silencieusement ignorée.
+     * Alimenté chaque frame par `CelestialObject.setEclipseShadowSource`.
+     */
+    eclipseShadow?: boolean;
   } = {}
 ): THREE.MeshStandardMaterial {
   const material = new THREE.MeshStandardMaterial(params);
@@ -754,6 +824,8 @@ export function createShadowAwareStandardMaterial(
   const limitSpecular = options.limitSpecular === true;
   const noSpecular = options.noSpecular === true;
   const varyOceanRoughness = options.varyOceanRoughness === true;
+  // Dépend du varying vMoonWorldPos, câblé uniquement quand moonlight est actif.
+  const eclipseShadow = options.eclipseShadow === true && moonlight;
   const oceanRoughnessUniforms = {
     base: { value: EARTH_OCEAN_ROUGHNESS_SETTINGS.oceanBase },
     variation: { value: EARTH_OCEAN_ROUGHNESS_SETTINGS.oceanVariation },
@@ -775,6 +847,14 @@ export function createShadowAwareStandardMaterial(
     color: { value: new THREE.Color(0xbcd2ff) },
   };
 
+  const eclipseShadowUniforms: EclipseShadowUniforms = {
+    sunPosition: { value: new THREE.Vector3() },
+    sunRadius: { value: 0 },
+    occluderPosition: { value: new THREE.Vector3() },
+    // 0 = pas d'occulteur cette frame → eclipseShadowAt renvoie 1.0 (inerte).
+    occluderRadius: { value: 0 },
+  };
+
   // Direction monde du Soleil, alimentee chaque frame par CelestialObject (setSunDirection).
   const sunDirUniform = { value: new THREE.Vector3(1, 0, 0) };
   moonlightUniforms.sunDir = sunDirUniform;
@@ -782,6 +862,8 @@ export function createShadowAwareStandardMaterial(
   if (cloudShadow)
     material.userData[CLOUD_SHADOW_UNIFORM_KEY] = cloudShadowUniforms;
   if (moonlight) material.userData[MOONLIGHT_UNIFORM_KEY] = moonlightUniforms;
+  if (eclipseShadow)
+    material.userData[ECLIPSE_SHADOW_UNIFORM_KEY] = eclipseShadowUniforms;
   chainOnBeforeCompile(material, (shader) => {
     shader.uniforms['uLightAttenuation'] = attenuationUniform;
     if (varyOceanRoughness) {
@@ -810,6 +892,12 @@ export function createShadowAwareStandardMaterial(
     if (moonlight) {
       shader.uniforms['uMoonSunDir'] = sunDirUniform;
     }
+    if (eclipseShadow) {
+      shader.uniforms['uEclipseSunPos'] = eclipseShadowUniforms.sunPosition;
+      shader.uniforms['uEclipseSunRadius'] = eclipseShadowUniforms.sunRadius;
+      shader.uniforms['uEclipseOccPos'] = eclipseShadowUniforms.occluderPosition;
+      shader.uniforms['uEclipseOccRadius'] = eclipseShadowUniforms.occluderRadius;
+    }
 
     // Position et normale monde du fragment, necessaires au clair de Lune.
     if (moonlight) {
@@ -836,6 +924,10 @@ export function createShadowAwareStandardMaterial(
           (moonlight ? '\nuniform vec3 uMoonSunDir;' : '') +
           (moonlight
             ? '\nvarying vec3 vMoonWorldPos;\nvarying vec3 vMoonWorldNormal;'
+            : '') +
+          (eclipseShadow
+            ? '\nuniform vec3 uEclipseSunPos;\nuniform float uEclipseSunRadius;\nuniform vec3 uEclipseOccPos;\nuniform float uEclipseOccRadius;\n' +
+              ECLIPSE_OCCLUSION_GLSL
             : '')
       )
       // Wrap lighting : three.js clampe dotNL à [0,1] dans RE_Direct_Physical.
@@ -862,6 +954,7 @@ export function createShadowAwareStandardMaterial(
               'vec3 outgoingLight = (totalDiffuse + boundedSpecular) * uLightAttenuation'
             : 'vec3 outgoingLight = (totalDiffuse + totalSpecular) * uLightAttenuation') +
           (cloudShadow ? ' * cloudDirectFactor' : '') +
+          (eclipseShadow ? ' * eclipseShadowFactor' : '') +
           ' + totalEmissiveRadiance;' +
           (moonlight ? MOONLIGHT_GLSL : '')
       );
@@ -930,13 +1023,30 @@ export function createShadowAwareStandardMaterial(
         #endif`
       );
     }
+
+    if (eclipseShadow) {
+      // Bande d'ombre réelle (Soleil occulté par la Lune), évaluée au point MONDE de ce
+      // fragment — cf. ECLIPSE_OCCLUSION_GLSL, traduction fidèle de eclipse.ts. Remplace
+      // le proxy pleine-sphère de uLightAttenuation UNIQUEMENT sur ce corps (Terre) :
+      // AnimationSystem lui envoie une irradiance sans la composante éclipse (cf.
+      // AnimationSystem._updateLighting), pour ne pas cumuler les deux effets.
+      shader.fragmentShader = shader.fragmentShader.replace(
+        '#include <map_fragment>',
+        `#include <map_fragment>
+        float eclipseShadowFactor = eclipseShadowAt(
+          vMoonWorldPos, uEclipseSunPos, uEclipseSunRadius, uEclipseOccPos, uEclipseOccRadius
+        );`
+      );
+    }
   });
   material.customProgramCacheKey = () =>
     `shadow-aware-standard-v2${invertRoughness ? '-invrough-v2' : ''}${
       cloudShadow ? '-cloudshadow' : ''
     }${moonlight ? '-moonlight' : ''}${
       varyOceanRoughness ? '-oceanrough-v1' : ''
-    }${limitSpecular ? '-limitspec' : ''}${noSpecular ? '-nospec' : ''}`;
+    }${limitSpecular ? '-limitspec' : ''}${noSpecular ? '-nospec' : ''}${
+      eclipseShadow ? '-eclipseshadow' : ''
+    }`;
 
   return material;
 }

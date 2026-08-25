@@ -1,6 +1,10 @@
 import * as THREE from 'three';
 
-const MIN_LIGHT_ATTENUATION = 0.02;
+// Exportées : le shader d'ombrage par fragment (config/layerConfig.ts,
+// createShadowAwareStandardMaterial option eclipseShadow) reproduit exactement cette
+// courbe côté GPU pour la Terre en gros plan — une seule source de vérité pour le
+// « look » de l'ombre, CPU (proxy pleine-sphère) et GPU (bande projetée) inclus.
+export const MIN_LIGHT_ATTENUATION = 0.02;
 const EPSILON = 1e-9;
 /**
  * Resserrement perceptuel de l'ombre. La fraction obscurcie du disque solaire
@@ -9,7 +13,7 @@ const EPSILON = 1e-9;
  * jour). On applique une courbe puissance : les occultations partielles restent
  * quasi lumineuses, seule l'approche de la totalité plonge le corps dans l'ombre.
  */
-const SHADOW_GAMMA = 3.2;
+export const SHADOW_GAMMA = 3.2;
 
 export interface SphericalOccluder {
   position: THREE.Vector3;
@@ -63,16 +67,17 @@ function occultationFraction(
 }
 
 /**
- * LIMITE CONNUE (simplification délibérée) : le résultat est UN scalaire par corps et par
- * frame, appliqué uniformément à toute la sphère via `setMaterialLightAttenuation`. Une vraie
- * éclipse n'assombrit que la portion sous l'ombre/pénombre de l'occulteur — le reste du corps
- * reste éclairé. À l'échelle du système solaire (le cas d'usage normal), l'approximation est
- * imperceptible : on est rarement assez près pour résoudre la bande d'ombre. Elle devient
- * visible si l'utilisateur zoome sur Terre/Lune pendant une éclipse — l'assombrissement plonge
- * alors tout le disque au lieu d'une bande. Un ombrage par fragment (position/rayon des
- * occulteurs déjà disponibles ici) résoudrait ça pour les corps proches ; non implémenté à ce
- * jour faute de besoin produit démontré. Voir aussi le clair de Lune et l'ombre d'anneau dans
- * `config/layerConfig.ts`, qui utilisent déjà ce pattern par-fragment pour d'autres effets.
+ * LIMITE CONNUE (simplification délibérée, partiellement levée pour la Terre) : le résultat
+ * est UN scalaire par corps et par frame, appliqué uniformément à toute la sphère via
+ * `setMaterialLightAttenuation`. Une vraie éclipse n'assombrit que la portion sous l'ombre/
+ * pénombre de l'occulteur — le reste du corps reste éclairé. À l'échelle du système solaire
+ * (le cas d'usage normal), l'approximation est imperceptible : on est rarement assez près pour
+ * résoudre la bande d'ombre. Pour la Terre spécifiquement, `config/layerConfig.ts` (option
+ * `eclipseShadow` de `createShadowAwareStandardMaterial`) reproduit CETTE MÊME fonction en
+ * GLSL et l'évalue par fragment (position/rayon Soleil+Lune envoyés en uniforms depuis
+ * `AnimationSystem`) — le gros plan Terre pendant une éclipse voit donc la vraie bande
+ * d'ombre. Les autres corps (pas de Lune, pas de varying de position monde câblé) gardent le
+ * proxy pleine-sphère ci-dessous, qui reste le signal utilisé pour la vue d'ensemble.
  */
 export function computeLightAttenuation(
   bodyPosition: THREE.Vector3,

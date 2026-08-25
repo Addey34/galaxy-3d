@@ -19,11 +19,13 @@ import {
   createSphereGeometry,
   createColoredOverlayMaterial,
   getCloudShadowUniforms,
+  getEclipseShadowUniforms,
   getMoonlightUniforms,
   getPrecipUniforms,
   getRealCloudsUniforms,
   getRingShadowUniforms,
   getThermalUniforms,
+  type EclipseShadowUniforms,
   type PrecipUniforms,
   type ThermalUniforms,
   setMaterialLightAttenuation,
@@ -113,6 +115,10 @@ export default class CelestialObject {
   // (uMoonSunDir) pour le fondu jour/nuit des nuages (disparition côté nuit). Le glow lunaire
   // reste inerte (strength jamais alimentée pour les nuages).
   private _cloudsMoonlight?: MoonlightUniforms;
+  // Uniforms d'ombre d'éclipse PAR FRAGMENT du matériau surface (Terre uniquement, cf.
+  // config/layerConfig.ts option eclipseShadow) : bande d'ombre réelle Soleil/Lune au gros
+  // plan, alimentée chaque frame par setEclipseShadowSource (appelé depuis AnimationSystem).
+  private _eclipseShadow?: EclipseShadowUniforms;
   // Uniforms de la couche pluie (Terre) : position du Soleil pour l'éclairage jour/nuit.
   private _precip?: PrecipUniforms;
   private _precipMat?: THREE.MeshBasicMaterial;
@@ -174,6 +180,7 @@ export default class CelestialObject {
     if (surface && !Array.isArray(surface.material)) {
       this._cloudShadow = getCloudShadowUniforms(surface.material);
       this._moonlight = getMoonlightUniforms(surface.material);
+      this._eclipseShadow = getEclipseShadowUniforms(surface.material);
     }
     const clouds = this.layers.get('clouds');
     if (clouds && !Array.isArray(clouds.material)) {
@@ -874,6 +881,29 @@ export default class CelestialObject {
         setMaterialLightAttenuation(material, bounded)
       );
     });
+  }
+
+  /**
+   * Alimente l'ombrage d'éclipse par fragment (Terre uniquement — no-op silencieux sur les
+   * autres corps, `_eclipseShadow` y est `undefined`). `occluderPosition: null` ou
+   * `occluderRadius <= 0` désactive proprement le calcul pour cette frame (pas de Lune dans
+   * la scène) : le shader renvoie alors un facteur neutre (1.0), voir `eclipseShadowAt`.
+   */
+  setEclipseShadowSource(
+    sunPosition: THREE.Vector3,
+    sunRadius: number,
+    occluderPosition: THREE.Vector3 | null,
+    occluderRadius: number
+  ): void {
+    if (!this._eclipseShadow) return;
+    this._eclipseShadow.sunPosition.value.copy(sunPosition);
+    this._eclipseShadow.sunRadius.value = sunRadius;
+    if (occluderPosition && occluderRadius > 0) {
+      this._eclipseShadow.occluderPosition.value.copy(occluderPosition);
+      this._eclipseShadow.occluderRadius.value = occluderRadius;
+    } else {
+      this._eclipseShadow.occluderRadius.value = 0;
+    }
   }
 
   /**
