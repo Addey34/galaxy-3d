@@ -18,6 +18,7 @@ import {
 import { solarIrradianceFactor } from '@/core/eclipse';
 import { SQRT_K } from '@/core/ScaleService';
 import Logger from '@/utils/Logger';
+import { prefersReducedMotion } from '@/utils/reducedMotion';
 import type { CelestialBodies } from './SceneSystem';
 
 // Bornes de durée du vol caméra (ms). La durée réelle est proportionnelle à la distance
@@ -190,6 +191,26 @@ export class CameraSystem {
     // tweens écrivaient caméra/cible pendant les mêmes frames et produisaient un mouvement
     // latéral de va-et-vient lors d'une navigation rapide entre les planètes.
     this.tweenGroup.removeAll();
+
+    // prefers-reduced-motion : saut instantané au lieu du vol de 550-1200 ms. Chaque
+    // sélection de corps passe par ici — sans ce garde-fou, un utilisateur ayant demandé
+    // moins de mouvement subirait quand même une animation caméra à chaque navigation.
+    if (prefersReducedMotion()) {
+      this.camera.position.copy(cameraPosition);
+      this.controls.target.copy(targetPosition);
+      if (this.currentTarget?.group) {
+        this.cameraOffset.subVectors(this.camera.position, this.controls.target);
+        this.currentTarget.group.getWorldPosition(this.targetWorldPosition);
+        this.controls.target.copy(this.targetWorldPosition);
+        this.camera.position.copy(this.targetWorldPosition).add(this.cameraOffset);
+      }
+      this.isAnimating = false;
+      this.controls.enabled = true;
+      this.controls.update();
+      onArrive?.();
+      return;
+    }
+
     this.isAnimating = true;
     this.controls.enabled = false; // bloque les inputs utilisateur pendant le tween pour éviter un conflit de position
 

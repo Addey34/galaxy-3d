@@ -57,6 +57,7 @@ function collectEntries(): PaletteEntry[] {
     button.type = 'button';
     button.className = 'palette-item';
     button.setAttribute('role', 'option');
+    button.setAttribute('aria-selected', 'false');
     button.style.setProperty('--body-rgb', accent);
     entries.push({ name, label, kind: cfg.kind, accent, button });
   });
@@ -169,11 +170,17 @@ export function setupBodyPalette(
   };
 
   const syncHighlight = (visible: PaletteEntry[]): void => {
-    visible.forEach((entry, index) =>
-      entry.button.classList.toggle('is-highlighted', index === highlighted)
-    );
-    if (highlighted >= 0 && visible[highlighted]) {
-      visible[highlighted].button.scrollIntoView({ block: 'nearest' });
+    visible.forEach((entry, index) => {
+      const isHighlighted = index === highlighted;
+      entry.button.classList.toggle('is-highlighted', isHighlighted);
+      entry.button.setAttribute('aria-selected', String(isHighlighted));
+    });
+    const active = highlighted >= 0 ? visible[highlighted] : undefined;
+    if (active) {
+      active.button.scrollIntoView({ block: 'nearest' });
+      input.setAttribute('aria-activedescendant', active.button.id);
+    } else {
+      input.removeAttribute('aria-activedescendant');
     }
   };
 
@@ -183,6 +190,7 @@ export function setupBodyPalette(
     if (open) coordinator?.requestOpen('body-palette');
     panel.hidden = !open;
     trigger.setAttribute('aria-expanded', String(open));
+    input.setAttribute('aria-expanded', String(open));
     if (open) {
       input.value = '';
       render('');

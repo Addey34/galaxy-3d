@@ -9,17 +9,11 @@
  */
 import type { OrbitalMechanics } from '@/core/OrbitalMechanics';
 import type { CameraSystem } from '@/components/systems/CameraSystem';
+import { prefersReducedMotion } from '@/utils/reducedMotion';
 
 export interface ModeSwitcher {
   setMode(mode: 'educ' | 'explo'): void;
   getMode(): 'educ' | 'explo';
-}
-
-/** L'utilisateur préfère-t-il un mouvement réduit ? (bascule instantanée, sans morph). */
-function prefersReducedMotion(): boolean {
-  return (
-    window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false
-  );
 }
 
 export function setupModeSwitcher(
