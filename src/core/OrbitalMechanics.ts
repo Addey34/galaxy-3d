@@ -50,7 +50,8 @@ const RELATIVE_EPHEMERIS_TOLERANCE = 2;
 const HELIOCENTRIC_DISTANCE_MIN_FACTOR = 0.5;
 const HELIOCENTRIC_DISTANCE_MAX_FACTOR = 2;
 
-function isPlausibleRelativePosition(
+/** Exportée pour être réutilisée par un test offline sur les fichiers Horizons committés. */
+export function isPlausibleRelativePosition(
   position: THREE.Vector3,
   cfg: CelestialBodyConfig
 ): boolean {
@@ -66,7 +67,8 @@ function isPlausibleRelativePosition(
  * centre ; dans ce cas, Astronomy Engine/Kepler fournit une trajectoire cohérente plutôt
  * qu'une orbite visuelle épaissie par des points provenant de plusieurs rayons.
  */
-function isPlausibleHeliocentricPosition(
+/** Exportée pour être réutilisée par un test offline sur les fichiers Horizons committés. */
+export function isPlausibleHeliocentricPosition(
   position: THREE.Vector3,
   cfg: CelestialBodyConfig
 ): boolean {

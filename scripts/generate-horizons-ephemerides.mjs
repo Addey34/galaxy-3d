@@ -18,23 +18,50 @@ const CENTER_IDS = {
   neptune: '899',
   pluto: '999',
 };
+// IMPORTANT — le point-virgule final sur COMMAND force Horizons à chercher dans la base des
+// PETITS corps (astéroïdes/comètes) plutôt que dans la table des corps majeurs/satellites.
+// C'est correct et nécessaire pour désambiguïser un numéro de petit corps (ex. Cérès = astéroïde
+// 1 — sans ';' Horizons pourrait matcher autre chose). C'est en revanche une erreur silencieuse
+// pour un ID de planète/satellite majeur (ex. 699 = Saturne) : '699;' matche l'astéroïde 699 Hela
+// au lieu de Saturne — un bug réel qui a affecté cette liste (voir fetchBody : la vérification
+// du nom de cible sert de garde-fou définitif contre toute régression de ce type).
 const BODIES = [
-  { name: 'ceres', target: '1;', center: 'sun' },
-  { name: 'eris', target: '136199;', center: 'sun' },
-  { name: 'haumea', target: '136108;', center: 'sun' },
-  { name: 'makemake', target: '136472;', center: 'sun' },
-  { name: 'saturn', target: '699;', center: 'sun' },
-  { name: 'enceladus', target: '602;', center: 'saturn' },
-  { name: 'rhea', target: '605;', center: 'saturn' },
-  { name: 'titan', target: '606;', center: 'saturn' },
-  { name: 'iapetus', target: '608;', center: 'saturn' },
-  { name: 'mars', target: '499;', center: 'sun' },
-  { name: 'phobos', target: '401;', center: 'mars' },
-  { name: 'deimos', target: '402;', center: 'mars' },
-  { name: 'neptune', target: '899;', center: 'sun' },
-  { name: 'triton', target: '801;', center: 'neptune' },
-  { name: 'pluto', target: '999;', center: 'sun' },
-  { name: 'charon', target: '901;', center: 'pluto' },
+  { name: 'ceres', target: '1;', expectedName: 'ceres', center: 'sun' },
+  { name: 'eris', target: '136199;', expectedName: 'eris', center: 'sun' },
+  { name: 'haumea', target: '136108;', expectedName: 'haumea', center: 'sun' },
+  {
+    name: 'makemake',
+    target: '136472;',
+    expectedName: 'makemake',
+    center: 'sun',
+  },
+  { name: 'saturn', target: '699', expectedName: 'saturn', center: 'sun' },
+  {
+    name: 'enceladus',
+    target: '602',
+    expectedName: 'enceladus',
+    center: 'saturn',
+  },
+  { name: 'rhea', target: '605', expectedName: 'rhea', center: 'saturn' },
+  { name: 'titan', target: '606', expectedName: 'titan', center: 'saturn' },
+  {
+    name: 'iapetus',
+    target: '608',
+    expectedName: 'iapetus',
+    center: 'saturn',
+  },
+  { name: 'mars', target: '499', expectedName: 'mars', center: 'sun' },
+  { name: 'phobos', target: '401', expectedName: 'phobos', center: 'mars' },
+  { name: 'deimos', target: '402', expectedName: 'deimos', center: 'mars' },
+  { name: 'neptune', target: '899', expectedName: 'neptune', center: 'sun' },
+  {
+    name: 'triton',
+    target: '801',
+    expectedName: 'triton',
+    center: 'neptune',
+  },
+  { name: 'pluto', target: '999', expectedName: 'pluto', center: 'sun' },
+  { name: 'charon', target: '901', expectedName: 'charon', center: 'pluto' },
 ];
 
 function buildUrl(target, center) {
@@ -103,6 +130,21 @@ function encodeBinary(rows) {
   return buffer;
 }
 
+/**
+ * Vérifie que Horizons a bien résolu la cible attendue plutôt qu'un homonyme numérique dans
+ * une autre base (le bug qui a motivé cette fonction : '699;' matchait l'astéroïde 699 Hela
+ * au lieu de Saturne — un résultat silencieusement plausible, jamais une erreur HTTP).
+ */
+function assertResolvedTarget(result, body) {
+  const match = result.match(/Target body name:\s*([^\n{]+)/);
+  const resolvedName = match?.[1]?.trim().toLowerCase() ?? '';
+  if (!resolvedName.includes(body.expectedName)) {
+    throw new Error(
+      `${body.name}: Horizons resolved target "${body.target}" to "${resolvedName || 'UNKNOWN'}", expected a name containing "${body.expectedName}" — wrong COMMAND/CENTER, not a network error`
+    );
+  }
+}
+
 async function fetchBody(body) {
   process.stdout.write(`Fetching ${body.name}... `);
   const response = await fetch(buildUrl(body.target, body.center), {
@@ -112,6 +154,7 @@ async function fetchBody(body) {
   const payload = await response.json();
   if (typeof payload.result !== 'string')
     throw new Error(`${body.name}: invalid Horizons response`);
+  assertResolvedTarget(payload.result, body);
 
   const { rows, stepDays } = parseVectors(payload.result, body.name);
   const binary = encodeBinary(rows);
