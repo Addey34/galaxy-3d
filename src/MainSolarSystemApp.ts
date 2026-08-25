@@ -59,7 +59,6 @@ import { flattenBodies } from './config/catalog';
 initStaticI18n();
 setupLangSwitch();
 setupFullscreen();
-setupShare();
 const overlayCoordinator = setupOverlayCoordinator();
 setupHelp(overlayCoordinator);
 const guidedTour = setupGuidedTour();
@@ -274,10 +273,12 @@ if (surfaceScrim) {
       orbitalMechanics,
       planetNav,
       modeSwitcher,
-      bodyNames
+      bodyNames,
+      cameraSystem
     );
     syncPermalink = permalink.sync;
     permalink.applyInitialState();
+    setupShare(cameraSystem, permalink);
     setupAstronomicalEvents(orbitalMechanics, {
       onDateChange: () => syncPermalink(),
       coordinator: overlayCoordinator,

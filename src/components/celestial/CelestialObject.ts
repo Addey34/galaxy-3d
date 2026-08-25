@@ -947,6 +947,22 @@ export default class CelestialObject {
   }
 
   /**
+   * Rayon de cadrage FINAL pour un mode donné, calculé directement (indépendant de
+   * `userData['radius']`, qui peut être en cours de morph — cf. `setScaleMorph`). Sert à
+   * `CameraSystem.setTarget` pour poser les bornes de zoom sur la taille CIBLE plutôt que sur
+   * une valeur transitoire : sans ça, sélectionner un corps pendant que le morph Éduc→Explo
+   * est encore en cours (ex. un permalien `?mode=explo&body=...`, où le mode ET le corps sont
+   * appliqués dans la même passe synchrone) verrouillait des bornes de zoom calculées sur la
+   * taille éducative encore affichée à cet instant, bien plus grosse que la taille physique
+   * réelle — jusqu'à ~240× trop permissif sur le zoom arrière une fois le morph terminé.
+   */
+  getFrameRadius(mode: 'educ' | 'explo'): number {
+    return mode === 'explo'
+      ? this.config.radius * this._exploScaleFactor()
+      : this.config.radius;
+  }
+
+  /**
    * Bascule le mode d'échelle.
    * En Explo : chaque corps est réduit/agrandi à sa vraie taille physique via radiusKm.
    * En Éducatif : retour à la taille de base (scaleFactor = 1).

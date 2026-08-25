@@ -104,7 +104,13 @@ export class CameraSystem {
     body.getWorldPosition(this.targetWorldPosition);
     this._setAdaptiveExposure(bodyName, this.targetWorldPosition);
 
-    const radius = (body.userData['radius'] as number | undefined) ?? 1;
+    // Rayon CIBLE du mode courant (pas `userData['radius']`, qui peut être en cours de morph
+    // Éduc↔Explo au moment précis de cette sélection — cf. CelestialObject.getFrameRadius) :
+    // les bornes de zoom doivent refléter la taille FINALE, pas une valeur transitoire.
+    const radius =
+      this.celestialBodies[bodyName]?.getFrameRadius?.(this._scaleMode) ??
+      (body.userData['radius'] as number | undefined) ??
+      1;
     // Bornes de zoom proportionnelles au rayon visuel du corps ciblé : on peut approcher
     // chaque corps (petit ou gros) autant que sa taille le permet, sans traverser la surface.
     this._applyTargetZoomBounds(radius);
@@ -558,6 +564,56 @@ export class CameraSystem {
   getDistanceToTargetSceneUnits(): number | null {
     if (!this.currentTarget) return null;
     return this.camera.position.distanceTo(this.controls.target);
+  }
+
+  /** Vrai pendant un vol caméra (tween en cours) — sert à différer une action jusqu'à l'arrivée. */
+  get isFlying(): boolean {
+    return this.isAnimating;
+  }
+
+  /**
+   * Orientation actuelle de la caméra autour de sa cible (azimut/polaire en degrés + distance
+   * en unités scène) — assez pour reconstruire exactement le cadrage courant depuis un permalien.
+   * `null` avant l'initialisation des controls.
+   */
+  getViewAngles(): {
+    azimuthDeg: number;
+    polarDeg: number;
+    distance: number;
+  } | null {
+    if (!this.controls) return null;
+    return {
+      azimuthDeg: THREE.MathUtils.radToDeg(this.controls.getAzimuthalAngle()),
+      polarDeg: THREE.MathUtils.radToDeg(this.controls.getPolarAngle()),
+      distance: this.controls.getDistance(),
+    };
+  }
+
+  /**
+   * Réoriente la caméra autour de sa cible COURANTE (`controls.target`, déjà posée par
+   * `setTarget`) selon des angles explicites — restaure le cadrage exact d'un permalien.
+   * N'anime pas : à appeler une fois le vol vers la cible terminé (cf. `isFlying`), sinon le
+   * tween en cours écraserait aussitôt la position posée ici.
+   */
+  applyViewAngles(azimuthDeg: number, polarDeg: number, distance: number): void {
+    const polar = THREE.MathUtils.clamp(
+      THREE.MathUtils.degToRad(polarDeg),
+      this.controls.minPolarAngle,
+      this.controls.maxPolarAngle
+    );
+    const dist = THREE.MathUtils.clamp(
+      distance,
+      this.controls.minDistance,
+      this.controls.maxDistance
+    );
+    const offset = new THREE.Vector3().setFromSphericalCoords(
+      dist,
+      polar,
+      THREE.MathUtils.degToRad(azimuthDeg)
+    );
+    this.camera.position.copy(this.controls.target).add(offset);
+    this.cameraOffset.copy(offset);
+    this.controls.update();
   }
 
   private getDefaultDistance(bodyName: string): number {

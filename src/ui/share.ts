@@ -1,14 +1,17 @@
 /**
  * Bouton « Partager cette vue » (#share-btn).
  *
- * La vue courante (corps + date + mode) est déjà encodée dans l'URL par le système de
- * permaliens (`history.replaceState` à chaque changement). Ce bouton ne fait que la RENDRE
- * PARTAGEABLE : partage natif sur mobile (`navigator.share`), sinon copie presse-papier
- * avec un retour visuel. C'est le levier de diffusion — chaque configuration devient un
- * lien qu'un prof ou un curieux peut coller ailleurs.
+ * Le corps/date/mode courants sont déjà encodés dans l'URL par le système de permaliens
+ * (`history.replaceState` à chaque changement). Ce bouton fait deux choses : 1) capture
+ * l'angle de caméra EXACT du moment (azimut/polaire/distance, cf. CameraSystem.getViewAngles)
+ * et le grave dans l'URL — sans ça, ouvrir le lien retomberait sur le cadrage par défaut du
+ * corps plutôt que la vue précise regardée ; 2) la RENDS PARTAGEABLE : partage natif sur
+ * mobile (`navigator.share`), sinon copie presse-papier avec un retour visuel.
  */
 import { t } from '@/i18n';
 import Logger from '@/utils/Logger';
+import type { CameraSystem } from '@/components/systems/CameraSystem';
+import type { PermalinkController } from './permalink';
 
 const btn = document.getElementById('share-btn');
 
@@ -57,10 +60,19 @@ async function copyToClipboard(url: string): Promise<boolean> {
   }
 }
 
-export function setupShare(): void {
+export function setupShare(
+  camera: CameraSystem,
+  permalink: PermalinkController
+): void {
   if (!btn) return;
 
   btn.addEventListener('click', async () => {
+    // Grave l'angle de vue EXACT dans l'URL avant de la lire : sans ce point de capture
+    // explicite, un partage pendant un vol caméra ou après un simple drag manquerait le
+    // cadrage réellement regardé (le permalien de base ne suit que corps/date/mode).
+    const view = camera.getViewAngles();
+    if (view) permalink.sync(view);
+
     const url = window.location.href;
     const title = document.title;
 
