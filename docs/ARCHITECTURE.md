@@ -1,41 +1,10 @@
 # Architecture — Solar System 3D
 
-## Vue d’ensemble
-
-L’application est un viewer Three.js/Vite composé de trois frontières :
-
-```text
-index.html
-  -> MainSolarSystemApp        racine de composition DOM
-      -> SolarSystemApp        façade headless d’initialisation
-          -> systèmes Three.js (Scene, Camera, Lighting, Texture, Animation)
-          -> moteur domaine (Clock, Ephemeris, OrbitalMechanics, Scale)
-      -> modules UI             commandes DOM et overlays projetés
-```
-
-`SolarSystemApp` ne connaît pas le DOM. Il retourne une `PublicAPI` minimale à la racine UI :
-les systèmes de scène, caméra, animation, mécanique orbitale et une fonction `cleanup`.
-
-## Source de vérité
-
-- `src/config/bodies.ts` : catalogue des corps célestes, hiérarchie et données physiques.
-- `src/config/smallBodies.ts` : dataset képlérien des petits corps.
-- `src/config/engine.ts` : réglages de rendu, caméra, qualité et éclairage.
-- `src/config/catalog.ts` : itération et aplatissement du catalogue.
-
-Les comportements doivent dépendre de `kind`, `frame` ou des capacités de configuration, jamais
-faire de branchement par nom de planète dans les systèmes génériques.
-
-## Flux de démarrage
-
-1. `TextureSystem` précharge les textures critiques et déduplique les chargements.
-2. `HorizonsEphemerisService` charge les assets locaux ; en cas d’échec, le fallback képlérien reste disponible.
-   Le contrat `PreciseEphemerisProvider` decouple le moteur du format numerique ; `SpiceEphemerisService` formalise le lecteur SPK synchrone ; avec `VITE_SPK_KERNEL_URL`, `SolarSystemApp` demarre aussi le Worker SPK optionnel, puis `FallbackPreciseEphemerisProvider` conserve Horizons ou Kepler pendant les cache misses.
-3. `SceneSystem` crée renderer, caméra, fond étoilé et lignes d’orbite.
-4. `CelestialObjectFactory` construit les meshes depuis le catalogue.
-5. `CameraSystem` et `AnimationSystem` sont initialisés.
-6. `OrbitalMechanics` synchronise date, positions, axes et mode d’échelle.
-7. `MainSolarSystemApp` monte les contrôles et les overlays UI.
+> Vue d'ensemble, invariants et liste des modules : voir `CLAUDE.md` à la racine, qui est la
+> source unique tenue à jour à chaque session. Cette page ne documente que ce que `CLAUDE.md`
+> ne couvre pas : l'ordre exact de la boucle par frame, la propriété des ressources, la carte CSS,
+> le contrat de sécurité et le pipeline de contenu. Ne pas dupliquer ici la liste des modules ou
+> des invariants métier — la mettre à jour uniquement dans `CLAUDE.md`.
 
 ## Boucle par frame
 
@@ -51,122 +20,118 @@ requestAnimationFrame
   -> rendu WebGL
 ```
 
-Les modules de calcul dans `src/core/` restent purs ou faiblement stateful et sont testés par
-Vitest. Le DOM vit dans `src/ui/`; les systèmes Three.js ne sélectionnent jamais d’élément DOM.
+## Index des répertoires
+
+| Répertoire                  | Responsabilité                                                | Dépendances autorisées                 |
+| --------------------------- | -------------------------------------------------------------- | -------------------------------------- |
+| `src/config`                | Catalogues et réglages moteur                                  | Données pures et types partagés        |
+| `src/core`                  | Horloges, repères, échelles, éphémérides, mécanique orbitale   | Three.js seulement à la frontière service |
+| `src/components/systems`    | Renderer, caméra, textures, éclairage, animation               | Three.js et config                     |
+| `src/components/celestial`  | Construction et disposal des meshes/couches                    | Three.js, config et TextureSystem      |
+| `src/ui`                    | Contrôles DOM et overlays projetés                              | DOM, i18n et PublicAPI                 |
+| `src/i18n`                  | État de locale et traduction statique/dynamique                | DOM seulement dans `dom.ts`            |
+| `src/utils`                 | Helpers navigateur transverses et logging                       | Pas d'orchestration applicative        |
+| `scripts`                   | Génération d'assets réservée aux mainteneurs                   | Node.js et dépendances de dev          |
 
 ## Propriété des ressources
 
-- `SceneSystem` possède scène, renderer, lignes d’orbite et corps construits.
+- `SceneSystem` possède scène, renderer, lignes d'orbite et corps construits.
 - `TextureSystem` possède le cache de textures GPU et les promesses de chargement.
-- `CelestialObject` possède géométries et matériaux et se désinscrit d’`AnimationSystem` lors de `dispose()`.
-- `AnimationSystem` annule le RAF, vide ses callbacks et son cache d’updatables.
-- `SolarSystemApp.dispose()` orchestre le nettoyage dans l’ordre inverse de l’initialisation.
+- `CelestialObject` possède géométries et matériaux et se désinscrit d'`AnimationSystem` lors de `dispose()`.
+- `AnimationSystem` annule le RAF, vide ses callbacks et son cache d'updatables.
+- `SolarSystemApp.dispose()` orchestre le nettoyage dans l'ordre inverse de l'initialisation.
 
 Toute nouvelle ressource doit avoir un propriétaire unique et un chemin de libération explicite.
 
-## Invariants métier
+## Carte CSS
 
-- Éducatif : distances compressées par `sqrt(AU)`, rayons pédagogiques.
-- Pour un groupe de satellites parentRelative, un facteur commun garantit une séparation visuelle minimale sans changer leur ordre relatif.
-- Les satellites synchrones peuvent déclarer rotationBody pour orienter leur axe sur le pôle réel de leur parent.
-- Exploration : distances, rayons et tailles angulaires physiques ; aucune taille minimale ou sprite proxy.
-- Les labels et le champ de petits corps sont des instruments de navigation, pas des modifications du rendu physique.
-- Les deux modes utilisent la même position astronomique instantanée.
-- Les orbites restent disponibles dans les deux modes et pendant le morph animé.
+`src/styles.css` est volontairement une seule feuille déployable. Ses sections sont ordonnées par
+propriétaire de mise en page : surface de scène partagée et règles d'input navigateur ; nav du
+haut ; sélecteur de mode ; loader/erreur ; aide/langue/crédits ; panneau temps/lecture ; visite
+guidée ; overrides mobile ; options d'orbite ; labels Exploration projetés et fiche corps.
 
-## Ajouter une fonctionnalité
+Les variables partagées `.scene-panel` sont le contrat visuel des overlays : un composant peut
+surcharger son accent ou sa géométrie, mais ne doit pas dupliquer la surface, la bordure, le flou
+et l'ombre de base. Les règles mobiles désactivent le flou de fond coûteux, bornent la largeur des
+panneaux au viewport, préservent des cibles tactiles classe 44px, et gardent les contrôles de mode
+au-dessus du panneau temps.
 
-1. Définir ou étendre la configuration/catalogue.
-2. Implémenter la logique pure dans `src/core/` si elle est calculable sans DOM/WebGL.
-3. Ajouter le système ou composant Three.js dans sa frontière existante.
-4. Ajouter un module UI dédié dans `src/ui/`.
-5. Écrire les tests unitaires puis le scénario Playwright de câblage si nécessaire.
-6. Mettre à jour README et cette page si le flux ou un invariant change.
+`overlayCoordinator.ts` possède l'exclusivité contextuelle (fiche corps, options d'orbite,
+événements et aide se ferment mutuellement). `timePanel.ts` compose le deck de commande persistant.
+Quand on ajoute un sélecteur, vérifier son producteur dans `index.html` ou `src/ui` — les labels
+dynamiques d'`exploHud.ts` peuvent être absents du HTML statique tout en étant vivants. Préférer
+l'état de classe à l'état de style inline pour que le clavier et les audits d'accessibilité
+automatisés observent le même résultat.
+
+## Contrat de sécurité
+
+Firebase Hosting fournit CSP et en-têtes de durcissement depuis `firebase.json`. L'application doit
+donc garder scripts et styles externes et ne jamais réintroduire de gestionnaires d'événements
+inline. Le texte utilisateur est assigné via `textContent` ; pas de parsing HTML pour du contenu
+traduit ou dérivé du réseau.
+
+Le manifeste Horizons est traité comme une entrée non fiable : schéma, plages numériques, nom de
+fichier binaire haché et URL same-origin sont vérifiés avant de charger un binaire. Les liens
+externes vers un corps sont restreints aux hôtes Wikipedia HTTPS, toujours avec `noopener
+noreferrer`.
+
+Ces contrôles ne font pas d'un front public un coffre secret : clés API, identifiants et fichiers
+de compte de service restent hors du bundle client et sont ignorés par Git.
+
+## Pipeline de contenu et d'assets
+
+Le catalogue est organisé en trois niveaux : données (position, époque, référentiel, rayon,
+orientation, source, incertitude), représentation (sphère, couche texturée, anneau, particules ou
+futur modèle 3D), présentation (labels, fiche, couleur, filtres, aides de navigation).
+
+Les corps naturels sont ajoutés au catalogue avant leurs assets. Les textures JPEG suivent
+`public/assets/textures/{body}/{body}_{layer}_{quality}.jpg` (snake_case ; le chemin est dérivé de
+la clé du corps par `catalog.texturePath`, jamais écrit à la main). Modèles GLB, missions,
+populations et ciel profond attendent une capacité de rendu typée, un propriétaire GPU, une
+politique LOD et un fallback avant d'entrer dans le catalogue — voir `docs/UNIVERSE_CATALOG.md`
+pour la matrice complète des familles, assets et candidats.
+
+`generate-horizons-ephemerides.mjs` télécharge des vecteurs JPL Horizons fixes et écrit le
+manifeste local plus les binaires hachés ; ces fichiers générés vivent dans
+`public/assets/ephemerides` car le déploiement doit fonctionner sans appel réseau NASA au
+démarrage. `resize-textures.mjs` crée les résolutions dérivées manquantes sans jamais écraser une
+destination existante — outil mainteneur, pas partie du bundle navigateur. Ne pas ajouter de
+rapports générés, fichiers temporaires, identifiants ou état Firebase local au dépôt : `.gitignore`
+couvre ces sorties, les éphémérides et textures commitées restent des assets de déploiement
+intentionnellement suivis.
+
+## Checklist de changement
+
+1. Étendre la configuration/catalogue en premier.
+2. Garder les calculs purs dans `src/core` et ajouter un test Vitest déterministe.
+3. Donner à chaque ressource Three.js un propriétaire unique et un chemin de disposal explicite.
+4. Utiliser les API DOM et des nœuds de texte traduits pour la sortie UI.
+5. Ajouter ou mettre à jour un contrat Playwright pour tout comportement UI/WebGL visible.
+6. Lancer `pnpm verify`, `pnpm build`, et l'e2e ciblé ; `pnpm verify:all` pour une release ou un
+   changement UI substantiel.
 
 Voir aussi [`TESTING.md`](./TESTING.md).
 
-## Contrat de contenu et extension de l'univers
+## Architecture météo
 
-Le catalogue est organise en trois niveaux :
+Trois frontières simples (résumées ici ; le plan directeur complet avec l'historique des décisions
+et des tranches T1–T6 est dans `docs/private/WEATHER_ARCHITECTURE.md`) :
 
-1. Donnees : position, epoque, referentiel, rayon, orientation, source et incertitude.
-2. Representation : sphere, couche texturee, anneau, particules ou futur modele 3D.
-3. Presentation : labels, fiche, couleur, filtres et aides de navigation.
-
-Les corps naturels sont ajoutes dans le catalogue avant leurs assets. Les textures JPEG
-suivent le schema public/assets/textures/{body}/{body}_{layer}_{quality}.jpg (snake_case ;
-le chemin est derive de la cle du corps par catalog.texturePath, pas ecrit a la main). Les modeles
-GLB, les missions, les populations et le ciel profond attendent une capacite de rendu
-typee, un proprietaire GPU, une politique LOD et un fallback.
-
-Le mode Educatif compresse les distances avec la racine carree mais conserve la distance
-radiale instantanee et l'excentricite.
-Pour les satellites parent-relative, le facteur de groupe est identique pour la position et la ligne d'orbite afin d’eviter qu’un parent masque ses lunes. Le mode Exploration conserve la proportion lineaire,
-les rayons et les tailles angulaires physiques. Les orbites sont disponibles dans les deux
-modes. Pendant un morph, une cible selectionnee conserve son offset camera-cible.
-
-Les systemes stellaires, les galaxies et les vues cosmologiques doivent introduire un
-referentiel explicite : ils ne sont pas des corps heliocentriques ajoutes par exception.
-La matrice des familles, des assets et des candidats se trouve dans
-docs/UNIVERSE_CATALOG.md.
-
-## Flux UI recents
-
-- src/core/permalink.ts encode et decode l'etat partageable sans dependre du DOM.
-- src/core/astronomicalEvents.ts calcule les prochains evenements a partir de la date simulee.
-- src/ui/guidedTour.ts orchestre la visite clavier et souris avec focus et fermeture Escape.
-- src/ui/overlayCoordinator.ts impose un seul panneau contextuel ouvert parmi la fiche,
-  les paramètres, les événements et l'aide. La navigation et le deck temporel restent les
-  deux seuls ancrages permanents; sur mobile, ouvrir un panneau contextuel simplifie le deck.
-
-Les overlays restent dans src/ui/; SolarSystemApp reste headless et ne connait ni les permaliens,
-ni les panneaux facultatifs.
-
-## Architecture meteo
-
-La meteorologie suit trois frontieres simples :
-
-- src/core/ decide la source, la date, le fallback, la grille et la conversion en donnees
+- `src/core/` décide la source, la date, le fallback, la grille et la conversion en données
   testables sans DOM ni Three.js.
-- src/ui/ orchestre le cycle date -> chargement -> cache -> badge et expose un
-  WeatherLayerHandle uniforme au panneau.
-- CelestialObject et src/config/layerConfig.ts possedent le rendu Three.js, les materiaux,
-  les UV, l alpha et l eclairage.
+- `src/ui/` orchestre le cycle date → chargement → cache → badge et expose un `WeatherLayerHandle`
+  uniforme au panneau.
+- `CelestialObject` et `src/config/layerConfig.ts` possèdent le rendu Three.js, les matériaux, les
+  UV, l'alpha et l'éclairage.
 
-Les couches satellite reutilisent ui/observedTextureLayer.ts. Les couches Open-Meteo reutilisent
-ui/meteoModelLayer.ts ; leurs fichiers specifiques ne contiennent que leur variable, palette,
-grille et configuration. ui/weatherLayers.ts ne connait pas le type de source : il construit le
-panneau et applique les groupes exclusifs. Les groupes qui partagent un mesh sont declares dans
-MainSolarSystemApp.ts, et l ordre d activation desactive les concurrents avant d afficher la
-couche choisie.
+Les couches satellite réutilisent `ui/observedTextureLayer.ts`, les couches Open-Meteo
+`ui/meteoModelLayer.ts` ; leurs fichiers spécifiques ne contiennent que variable, palette, grille
+et configuration. `ui/weatherLayers.ts` ne connaît pas le type de source : il construit le panneau
+et applique les groupes exclusifs (déclarés dans `MainSolarSystemApp.ts`) sur les couches qui
+partagent un mesh.
 
-Le mesh surface reste la base opaque de la Terre. Les donnees meteorologiques transparentes sont
-des overlays sur les meshes dedies ; un changement de source restaure le materiau precedent avant
-de masquer ou d activer la couche suivante. Cela evite de melanger un shader satellite avec une
-texture RGBA deja palettee et rend le diagnostic localisable par famille.
-
-### Contrat de couverture des nuages
-
-Le rendu NASA est la source officielle par défaut : True Color fournit la couleur et les masques MODIS Cloud Fraction Day/Night fournissent l'alpha lorsqu'une observation couvre le pixel. Le remplissage Open-Meteo `cloud_cover` et la texture statique historique sont des replis explicitement optionnels ; ils ne doivent pas rendre le mesh visible en l'absence de leur propre donnée. `cloudStaticTextureFallbackEnabled` reste donc désactivé par défaut.
-
-Le diagnostic `?debug-meteo` expose l'état de chaque source, la date réelle, la grille, la texture, le mesh cible et la couverture géographique. Le scénario `e2e/weather.spec.ts` vérifie notamment qu'une coupure réseau ne révèle pas un ancien rendu statique et que les couches modèle restent cachées tant que leur propre grille n'est pas disponible.
-
-### Contrat Terre temps réel : réel par défaut
-
-La règle produit est : une donnée absente, en attente ou hors couverture reste absente à l'écran. Aucun modèle ou remplissage synthétique ne doit être présenté comme une observation officielle.
-
-| Couche                                                | Source par défaut  | Visibilité par défaut                     | Politique de couverture                                                           |
-| ----------------------------------------------------- | ------------------ | ----------------------------------------- | --------------------------------------------------------------------------------- |
-| Nuages                                                | NASA VIIRS / MODIS | active selon qualité et appareil          | alpha natif des masques ; replis Open-Meteo/statique désactivés par défaut        |
-| Précipitations                                        | NASA IMERG         | active sur desktop, désactivée sur mobile | alpha natif du produit ; aucune valeur polaire inventée                           |
-| Température                                           | MERRA-2            | cachée                                    | réanalyse officielle disponible dans le panneau                                   |
-| Nuages, pluie, température, pression, humidité modèle | Open-Meteo         | cachées                                   | activation manuelle uniquement ; mesh caché jusqu'à réception de sa propre grille |
-| Vent                                                  | Open-Meteo         | désactivé                                 | modèle facultatif, sans substitution silencieuse                                  |
-
-Les couches Open-Meteo partagent parfois un mesh technique (par exemple `thermal`), mais les groupes exclusifs et la visibilité sont séparés par couche. Une couche modèle ne peut donc pas révéler par erreur l'ancienne texture d'une observation MERRA-2 ou IMERG.
-
-Les panneaux et diagnostics conservent le statut `observed`, `analysis`, `forecast`, `forecast_uncertain`, `climatology` ou `unavailable`, ainsi que la date réelle et la source. Les délais de publication d'une réanalyse sont signalés comme approximation temporelle ; ils ne sont pas maquillés en observation instantanée.
-
-Le client partagé `src/core/meteoClient.ts` déduplique les requêtes identiques en vol, conserve les réponses réussies cinq minutes et réessaie uniquement les erreurs transitoires 429/5xx avec un délai borné et prise en compte de `Retry-After`. Cela protège le temps réel contre les limites de service Open-Meteo sans activer les modèles par défaut ni inventer de données.
-
-Les textures de surface, le relief et les lumières nocturnes de la Terre restent des assets scientifiques documentés, non des observations météo instantanées. Le relief dérivé d'ETOPO est une représentation statique ; la météo et les nuages sont les seules familles temps réel décrites ici.
+Règle produit : une donnée absente, en attente ou hors couverture reste absente à l'écran — aucun
+modèle ou remplissage synthétique n'est présenté comme une observation officielle. Chaque couche
+porte un statut (`observed`/`analysis`/`forecast`/`forecast_uncertain`/`climatology`/
+`unavailable`) affiché dans son badge. Voir `docs/private/METEOROLOGY_CODE_MAP.md` pour la carte
+de repérage fichier par fichier utile en debug.

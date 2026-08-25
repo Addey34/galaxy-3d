@@ -152,7 +152,7 @@ Un contenu est considere pret quand :
 - les assets sont compatibles avec la licence du depot et ne contiennent aucune donnee privee ;
 - les ressources Three.js ont un proprietaire et sont liberees par dispose().
 
-Voir aussi ARCHITECTURE.md, TESTING.md et CODE_MAP.md.
+Voir aussi ARCHITECTURE.md et TESTING.md.
 
 ## 6. Audit et provenance des textures
 

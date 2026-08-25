@@ -6,7 +6,7 @@
 | ----------------- | --------------------------------------- | ----------------- |
 | `pnpm typecheck`  | TypeScript strict, sans émission        | court             |
 | `pnpm lint`       | ESLint flat config                      | court             |
-| `pnpm test`       | 50 fichiers Vitest, logique et services | court             |
+| `pnpm test`       | Vitest, logique et services              | court             |
 | `pnpm verify`     | typecheck + lint + Vitest               | gate local rapide |
 | `pnpm build`      | typecheck + bundle Vite production      | moyen             |
 | `pnpm test:e2e`   | scénarios Playwright Chromium/WebGL     | long              |
@@ -38,9 +38,12 @@ corps, permaliens, événements astronomiques, zoom optique, visite guidée et a
 Il n’y a pas encore de seuil de couverture chiffré : la priorité est la couverture comportementale
 des invariants physiques et des frontières d’architecture.
 
-## Snapshot actuel
+## Compter les tests
 
-La suite compte actuellement 50 fichiers Vitest et 288 tests unitaires (instantané du 17 août 2026). Le nombre de scénarios Playwright est volontairement laissé à la commande `pnpm exec playwright test --list` : la commande fait foi si un fichier est ajouté.
+Ne pas figer de nombre de tests dans ce document : il devient faux au prochain commit et personne
+ne pense à le corriger. Faire foi via les commandes elles-mêmes — `pnpm test` affiche le nombre de
+fichiers/tests Vitest en fin d'exécution, `pnpm exec playwright test --list` liste les scénarios
+Playwright actuels.
 
 Tout ajout de contenu doit verifier le chemin catalogue-asset, la resolution effectivement
 presente, le fallback si une donnee manque et la propriete des ressources Three.js. Pour un
