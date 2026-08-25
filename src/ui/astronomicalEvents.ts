@@ -5,6 +5,7 @@ import {
 } from '@/core/astronomicalEvents';
 import type { OrbitalMechanics } from '@/core/OrbitalMechanics';
 import { intlLocale, onLocaleChange, t } from '@/i18n';
+import { bodyDisplayName } from '@/i18n/bodyText';
 import type { OverlayCoordinator } from './overlayCoordinator';
 import type { PlanetNavigation } from './planetNav';
 import type { PlaybackControls } from './playback';
@@ -36,14 +37,18 @@ const EVENT_KEYS: Record<AstronomicalEvent['kind'], string> = {
   'december-solstice': 'events.decemberSolstice',
   perihelion: 'events.perihelion',
   aphelion: 'events.aphelion',
+  opposition: 'events.opposition',
+  conjunction: 'events.conjunction',
 };
 
 /**
  * Corps sur lequel recadrer la caméra pour chaque type d'événement.
  * Phases + éclipses lunaires → la Lune (l'astre observé) ; éclipses solaires,
- * saisons et apsides → la Terre (l'observateur / l'ombre au sol).
+ * saisons et apsides → la Terre (l'observateur / l'ombre au sol). Opposition/conjonction
+ * n'ont pas d'entrée ici : le corps varie par événement, lu depuis `event.body` (cf.
+ * `focusBody` ci-dessous).
  */
-const FOCUS_BODY: Record<AstronomicalEvent['kind'], string> = {
+const FOCUS_BODY: Partial<Record<AstronomicalEvent['kind'], string>> = {
   'new-moon': 'moon',
   'first-quarter': 'moon',
   'full-moon': 'moon',
@@ -58,8 +63,18 @@ const FOCUS_BODY: Record<AstronomicalEvent['kind'], string> = {
   aphelion: 'earth',
 };
 
+/** Corps sur lequel recadrer la caméra : `event.body` (opposition/conjonction) sinon FOCUS_BODY. */
+function focusBody(event: AstronomicalEvent): string {
+  return event.body ?? FOCUS_BODY[event.kind] ?? 'earth';
+}
+
 function eventLabel(event: AstronomicalEvent): string {
   const label = t(EVENT_KEYS[event.kind]);
+  if (event.body) {
+    // Opposition/conjonction : « Mars · Opposition » — le nom de la planète prime, le
+    // libellé générique précise le type d'alignement.
+    return `${bodyDisplayName(event.body)} · ${label}`;
+  }
   if (!event.eclipseKind) return label;
   // Éclipse : type (totale/partielle…) + ampleur obscurcie.
   const parts = [t(`events.kind.${event.eclipseKind}`)];
@@ -210,7 +225,7 @@ export function setupAstronomicalEvents(
         om.addTimeOffset(deltaDays);
         onDateChange?.();
         // 3. Recadre la caméra sur le corps observé (Lune, Terre…).
-        navigation?.selectBody(FOCUS_BODY[event.kind]);
+        navigation?.selectBody(focusBody(event));
         setOpen(false);
       });
       list.append(row);
