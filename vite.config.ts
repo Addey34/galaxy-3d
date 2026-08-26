@@ -69,6 +69,34 @@ export default defineConfig({
         cleanupOutdatedCaches: true,
         runtimeCaching: [
           {
+            // manifest.json n'est PAS un asset immuable : c'est le pointeur mutable vers les
+            // .bin d'éphémérides (nommés avec un hash de contenu, eux). Il est régénéré en
+            // place (même nom de fichier) quand des données sont corrigées — ça s'est produit
+            // deux fois dans cette session (bug de manifest obsolète, puis bug de cible
+            // Horizons résolvant vers un astéroïde différent). Si cette règle passait par le
+            // CacheFirst générique ci-dessous, un utilisateur PWA ayant mis le manifeste en
+            // cache avant une correction continuerait, jusqu'à 30 jours, à pointer vers des
+            // .bin à l'ancien hash — que le déploiement suivant supprime du serveur (ancien
+            // hash absent du nouveau build) : non pas des données périmées mais un vrai 404,
+            // silencieux, sur l'éphéméride d'un corps. Cette règle doit précéder la règle
+            // générique /assets/ (Workbox retient la première correspondance) et repasser par
+            // le réseau à chaque fois que possible — cohérent avec le Cache-Control d'1h que
+            // Firebase applique déjà à ce chemin précis (voir firebase.json).
+            urlPattern: ({ url }) =>
+              url.pathname === '/assets/ephemerides/manifest.json',
+            handler: 'NetworkFirst',
+            options: {
+              cacheName: 'ssv-ephemeris-manifest',
+              networkTimeoutSeconds: 4,
+              expiration: {
+                maxEntries: 1,
+                maxAgeSeconds: 60 * 60,
+                purgeOnQuotaError: true,
+              },
+              cacheableResponse: { statuses: [0, 200] },
+            },
+          },
+          {
             // Textures + éphémérides : immutables (hash dans le nom), cache à la demande.
             // Plafonné pour ne pas saturer le disque d'un poste partagé.
             urlPattern: ({ url }) => url.pathname.startsWith('/assets/'),
