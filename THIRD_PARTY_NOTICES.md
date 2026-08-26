@@ -9,24 +9,34 @@ The visual assets under `public/assets/textures/` are third-party or derived ass
 retain their original attribution and usage terms. They fall into three groups; the machine-readable
 provenance (source URL, resolution, licence) is in [`scripts/texture-sources.json`](scripts/texture-sources.json).
 
-1. **Public domain — USGS Astrogeology / NASA-JPL spacecraft mosaics.** Derived from official
-   global mosaics, no copyright restriction. Bodies: `io`, `europa`, `ganymede`, `callisto`,
-   `titan`, `enceladus`, `rhea`, `iapetus`, `triton`, `charon`, `phobos`, `deimos`. Attribution is
-   courteous but not legally required.
+1. **Public domain — USGS Astrogeology / NASA-JPL / ESA spacecraft mosaics.** Derived from
+   official global mosaics, no copyright restriction. Bodies: `io`, `europa`, `ganymede`,
+   `callisto`, `titan`, `enceladus`, `rhea`, `iapetus`, `triton`, `charon`, `phobos`, `deimos`,
+   `vesta`, `pluto`, `earth` (Blue Marble / Black Marble, NASA Earth Observatory / Visible Earth —
+   all layers). Attribution is courteous but not legally required.
 
 2. **CC BY 4.0 — Solar System Scope.** Requires attribution; compatible with non-commercial and
    donation-supported use. Bodies (surface / cloud / normal / spec / lights / ring layers, incl.
-   8k variants): `mercury`, `venus`, `earth`, `mars`, `moon`, `jupiter`, `saturn`, `uranus`,
-   `neptune`, `sun`, `stars`. Keep the "Solar System Scope (CC BY 4.0)" credit in the app.
+   8k variants): `mercury`, `venus`, `mars`, `moon`, `jupiter`, `saturn`, `uranus`, `neptune`,
+   `sun`, `stars`. Keep the "Solar System Scope (CC BY 4.0)" credit in the app. **Note: `earth` is
+   NASA public domain (group 1 above), not Solar System Scope** — despite otherwise sharing this
+   provider with the rest of the planet set.
 
-3. **Illustrative / provenance to confirm.** No validated global spacecraft map exists for these
-   bodies, so their textures are artistic/semi-fictional (some sourced from community maps such as
-   planet-texture-map.fandom.com under **CC BY-NC-SA**, which forbids commercial use and requires
-   author attribution + share-alike). Bodies: `eris`, `haumea`, `makemake`, `pallas`, `hygiea`,
-   `vesta`, `ceres`, `pluto`, `halley`. **Action required:** record the exact author + licence of
-   each in `texture-sources.json`, or replace with a public-domain / CC BY asset before any
-   commercial reuse. Current non-commercial, donation-supported use is compatible with CC BY-NC-SA
-   provided each author is credited.
+3. **Confirmed licence, explicitly illustrative.** The licence and source are known and recorded,
+   but the map itself is not a validated scientific global mosaic (either no spacecraft imaged the
+   body, or — for `halley` — flyby images were never assembled into one): `ceres`, `eris`,
+   `haumea`, `makemake` (CC BY 4.0, Solar System Scope — illustrative per `texture-sources.json`),
+   `halley` (public domain, Philip Stooke / NASA PDS Giotto/Vega — credit required per its entry).
+   The app's own credits list (`index.html`) already discloses these as illustrative, not
+   scientific maps. No action required beyond keeping that disclosure current.
+
+4. **Unconfirmed licence — action required.** No validated global spacecraft map exists and the
+   asset's author/licence has not been confirmed (community sources such as
+   planet-texture-map.fandom.com are typically **CC BY-NC-SA**, which forbids commercial use and
+   requires author attribution + share-alike). Bodies: `pallas`, `hygiea` — both marked
+   `"tier": "full-only"` in `texture-sources.json` specifically because of this, i.e. excluded from
+   any future monetized/free tier until resolved. Record the exact author + licence, or replace
+   with a public-domain / CC BY asset, before any commercial reuse.
 
 The social preview image is a project asset and should be replaced only with material whose
 redistribution rights are known.
