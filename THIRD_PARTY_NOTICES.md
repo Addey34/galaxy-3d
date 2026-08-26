@@ -12,8 +12,9 @@ provenance (source URL, resolution, licence) is in [`scripts/texture-sources.jso
 1. **Public domain — USGS Astrogeology / NASA-JPL / ESA spacecraft mosaics.** Derived from
    official global mosaics, no copyright restriction. Bodies: `io`, `europa`, `ganymede`,
    `callisto`, `titan`, `enceladus`, `rhea`, `iapetus`, `triton`, `charon`, `phobos`, `deimos`,
-   `vesta`, `pluto`, `earth` (Blue Marble / Black Marble, NASA Earth Observatory / Visible Earth —
-   all layers). Attribution is courteous but not legally required.
+   `vesta`, `pluto`, `tethys`, `dione` (USGS Astrogeology Cassini/Voyager global mosaics, 293m
+   and 154m/pixel respectively), `earth` (Blue Marble / Black Marble, NASA Earth Observatory /
+   Visible Earth — all layers). Attribution is courteous but not legally required.
 
 2. **CC BY 4.0 — Solar System Scope.** Requires attribution; compatible with non-commercial and
    donation-supported use. Bodies (surface / cloud / normal / spec / lights / ring layers, incl.

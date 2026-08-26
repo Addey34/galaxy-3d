@@ -291,6 +291,22 @@
       "credit": "carte illustrative — aucune mosaïque fidèle n'existe (VLT/SPHERE = forme grise sans texture)",
       "tier": "full-only",
       "illustrative": true
+    },
+    {
+      "body": "tethys",
+      "layer": "surface",
+      "license": "public-domain",
+      "credit": "USGS Astrogeology / NASA-JPL-Caltech (Cassini/Voyager mosaic 293m)",
+      "tier": "free",
+      "filled": true
+    },
+    {
+      "body": "dione",
+      "layer": "surface",
+      "license": "public-domain",
+      "credit": "USGS Astrogeology / NASA-JPL-Caltech (Cassini/Voyager mosaic 154m)",
+      "tier": "free",
+      "filled": true
     }
   ],
   "sources": [
@@ -900,6 +916,79 @@
       "projection": "equirectangular",
       "qualityClass": "derived",
       "note": "NASA-published Deimos texture used at its native resolution; no artificial upscaling."
+    },
+    {
+      "body": "tethys",
+      "layer": "surface",
+      "status": "ready",
+      "processing": "direct-jpeg-sample",
+      "downloadUrl": "https://astrogeology.usgs.gov/ckan/dataset/e40296c1-b4bf-46d8-86af-4b6cf0301b0c/resource/36d40203-d9b3-447e-9004-c3dc100bde04/download/full.jpg",
+      "sourcePage": "https://astrogeology.usgs.gov/search/map/tethys_cassini_global_mosaic_293m",
+      "sourceResolution": "293 m/pixel global mosaic; 1024x512 equirectangular sample",
+      "projection": "equirectangular",
+      "qualityClass": "derived",
+      "note": "Real controlled global Cassini/Voyager mosaic; verified via a live USGS fetch (2026-08-26), not assumed from naming convention."
+    },
+    {
+      "body": "dione",
+      "layer": "surface",
+      "status": "ready",
+      "processing": "direct-jpeg-sample",
+      "downloadUrl": "https://astrogeology.usgs.gov/ckan/dataset/acb98ae6-ec50-42df-9a74-142d177bbe6d/resource/8a6a8ada-42e1-4b92-b13e-c63493133efc/download/full.jpg",
+      "sourcePage": "https://astrogeology.usgs.gov/search/map/dione_cassini_voyager_global_mosaic_154m",
+      "sourceResolution": "154 m/pixel global mosaic; 1024x512 equirectangular sample",
+      "projection": "equirectangular",
+      "qualityClass": "derived",
+      "note": "Real controlled global Cassini/Voyager mosaic; verified via a live USGS fetch (2026-08-26), not assumed from naming convention."
+    },
+    {
+      "body": "mimas",
+      "layer": "surface",
+      "status": "no-map",
+      "sourcePage": "https://astrogeology.usgs.gov/search/results?target=mimas",
+      "note": "Checked live (2026-08-26): USGS's Mimas catalog has no controlled global photo mosaic, only an airbrush shaded-relief map, a pictorial map and a control-point network — none is a real photographic texture. Rendered with fallbackColor only until a genuine source is found; do not fabricate a texture path."
+    },
+    {
+      "body": "miranda",
+      "layer": "surface",
+      "status": "no-map",
+      "sourcePage": "https://astrogeology.usgs.gov/search/results?target=miranda",
+      "note": "Checked live (2026-08-26): USGS has no controlled global mosaic for Miranda, only a nomenclature map and a Voyager 2 control-point network (imagery covers roughly its southern hemisphere only, from the single 1986 flyby). Rendered with fallbackColor only."
+    },
+    {
+      "body": "ariel",
+      "layer": "surface",
+      "status": "no-map",
+      "sourcePage": "https://astrogeology.usgs.gov/search/results?target=ariel",
+      "note": "Checked live (2026-08-26): same situation as Miranda — no controlled global mosaic published by USGS, single-flyby Voyager 2 coverage only. Rendered with fallbackColor only."
+    },
+    {
+      "body": "umbriel",
+      "layer": "surface",
+      "status": "no-map",
+      "sourcePage": "https://astrogeology.usgs.gov/search/results?target=umbriel",
+      "note": "Checked live (2026-08-26): no controlled global mosaic published by USGS. Rendered with fallbackColor only."
+    },
+    {
+      "body": "titania",
+      "layer": "surface",
+      "status": "no-map",
+      "sourcePage": "https://astrogeology.usgs.gov/search/results?target=titania",
+      "note": "Checked live (2026-08-26): no controlled global mosaic published by USGS. Rendered with fallbackColor only."
+    },
+    {
+      "body": "oberon",
+      "layer": "surface",
+      "status": "no-map",
+      "sourcePage": "https://astrogeology.usgs.gov/search/results?target=oberon",
+      "note": "Checked live (2026-08-26): no controlled global mosaic published by USGS. Rendered with fallbackColor only."
+    },
+    {
+      "body": "hyperion",
+      "layer": "surface",
+      "status": "no-map",
+      "sourcePage": "https://astrogeology.usgs.gov/search/results?target=hyperion",
+      "note": "Checked live (2026-08-26): USGS has only a control-point network and a nomenclature map for Hyperion, no photo mosaic — consistent with the physical reality that Hyperion is a highly irregular, chaotically-rotating body (no fixed 'global' surface projection is even well-defined). Rendered with fallbackColor only."
     }
   ]
 }

@@ -15,6 +15,7 @@ const CENTER_IDS = {
   sun: '10',
   mars: '499',
   saturn: '699',
+  uranus: '799',
   neptune: '899',
   pluto: '999',
 };
@@ -62,6 +63,50 @@ const BODIES = [
   },
   { name: 'pluto', target: '999', expectedName: 'pluto', center: 'sun' },
   { name: 'charon', target: '901', expectedName: 'charon', center: 'pluto' },
+  {
+    name: 'mimas',
+    target: '601',
+    expectedName: 'mimas',
+    center: 'saturn',
+  },
+  {
+    name: 'tethys',
+    target: '603',
+    expectedName: 'tethys',
+    center: 'saturn',
+  },
+  { name: 'dione', target: '604', expectedName: 'dione', center: 'saturn' },
+  {
+    name: 'hyperion',
+    target: '607',
+    expectedName: 'hyperion',
+    center: 'saturn',
+  },
+  {
+    name: 'miranda',
+    target: '705',
+    expectedName: 'miranda',
+    center: 'uranus',
+  },
+  { name: 'ariel', target: '701', expectedName: 'ariel', center: 'uranus' },
+  {
+    name: 'umbriel',
+    target: '702',
+    expectedName: 'umbriel',
+    center: 'uranus',
+  },
+  {
+    name: 'titania',
+    target: '703',
+    expectedName: 'titania',
+    center: 'uranus',
+  },
+  {
+    name: 'oberon',
+    target: '704',
+    expectedName: 'oberon',
+    center: 'uranus',
+  },
 ];
 
 function buildUrl(target, center) {
