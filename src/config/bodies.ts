@@ -355,7 +355,10 @@ export const CELESTIAL_CONFIG: CelestialConfig = {
         massKg: 1.898e27,
         gravity: 24.79,
         meanTempC: -108,
-        moonCount: 95,
+        // Compte de lunes confirmées : chiffre datant, mis à jour vers la valeur courante
+        // (source JPL via l'infobox Wikipedia, 2026) — les lots de nouvelles lunes confirmées
+        // par l'UAI rendent ce chiffre daté en quelques années, pas figé une fois pour toutes.
+        moonCount: 115,
         description: {
           en: 'The giant of the Solar System, more massive than all the other planets combined. Its Great Red Spot is a storm centuries old.',
           fr: 'La géante du Système solaire, plus massive que toutes les autres planètes réunies. Sa Grande Tache rouge est une tempête vieille de plusieurs siècles.',
@@ -519,7 +522,10 @@ export const CELESTIAL_CONFIG: CelestialConfig = {
         massKg: 5.683e26,
         gravity: 10.44,
         meanTempC: -139,
-        moonCount: 146,
+        // Voir le commentaire équivalent sur Jupiter : chiffre daté, mis à jour (source JPL
+        // via l'infobox Wikipedia, 2026) — un gros lot de lunes irrégulières confirmées par
+        // l'UAI en 2023 a fait plus que doubler ce chiffre en quelques années.
+        moonCount: 293,
         description: {
           en: 'Famous for its spectacular rings, made of billions of chunks of ice and rock. So low in density it would float on water.',
           fr: 'Célèbre pour ses anneaux spectaculaires, faits de milliards de blocs de glace et de roche. Si peu dense qu’elle flotterait sur l’eau.',
@@ -727,7 +733,7 @@ export const CELESTIAL_CONFIG: CelestialConfig = {
         massKg: 8.681e25,
         gravity: 8.69,
         meanTempC: -197,
-        moonCount: 28,
+        moonCount: 29, // 29ᵉ lune confirmée en 2023 (S/2023 U1) ; 28 était daté.
         description: {
           en: 'The ice giant tipped on its side, with an axis leaning at 98°, so it rolls along its orbit. Each season lasts 21 years.',
           fr: 'La géante de glace couchée sur le côté, avec un axe penché à 98°, si bien qu’elle roule le long de son orbite. Chaque saison dure 21 ans.',
