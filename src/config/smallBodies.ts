@@ -243,7 +243,9 @@ export const SMALL_BODY_ELEMENTS: readonly SmallBodyElements[] = [
     rotationHours: 13.83,
     axialTiltDeg: 0,
     massKg: 8.74e19,
-    gravity: 0.09,
+    // g = GM/r² à partir de massKg/radiusKm ci-dessus (0,09 était ~27 % trop bas et
+    // incohérent avec ces deux valeurs).
+    gravity: 0.124,
     meanTempC: -109,
     moonCount: 0,
     description: {
@@ -407,7 +409,10 @@ export const SMALL_BODY_ELEMENTS: readonly SmallBodyElements[] = [
     rotationHours: 22.826,
     axialTiltDeg: 0,
     massKg: 3.1e21,
-    gravity: 0.5,
+    // g = GM/r² à partir de massKg/radiusKm ci-dessus (0,5 était incohérent : ~24 % trop haut,
+    // vraisemblablement une estimation de masse pré-découverte de la lune MK2 en 2016, jamais
+    // reconciliée avec la masse mise à jour).
+    gravity: 0.405,
     meanTempC: -239,
     moonCount: 1,
     description: {
