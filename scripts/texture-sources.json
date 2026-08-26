@@ -281,7 +281,7 @@
       "layer": "surface",
       "license": "unconfirmed",
       "credit": "carte illustrative — aucune mosaïque fidèle n'existe (VLT/SPHERE = forme grise sans texture)",
-      "tier": "free",
+      "tier": "full-only",
       "illustrative": true
     },
     {
@@ -289,7 +289,7 @@
       "layer": "surface",
       "license": "unconfirmed",
       "credit": "carte illustrative — aucune mosaïque fidèle n'existe (VLT/SPHERE = forme grise sans texture)",
-      "tier": "free",
+      "tier": "full-only",
       "illustrative": true
     }
   ],
