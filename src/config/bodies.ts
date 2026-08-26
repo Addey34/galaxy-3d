@@ -372,6 +372,55 @@ export const CELESTIAL_CONFIG: CelestialConfig = {
       cameraDistance: { educ: 25, explo: exploCameraDistance(71_492) },
       loadPriority: 5,
       satellites: {
+        amalthea: {
+          kind: 'moon',
+          displayName: { en: 'Amalthea', fr: 'Amalthée' },
+          frame: 'parentRelative',
+          rotationBody: Body.Jupiter,
+          radius: 0.06,
+          rotationSpeed: _R(0.5016447757055735 * 24),
+          orbitalColor: 0xa8544a,
+          fallbackColor: 0x9c4a3c,
+          relativeEphemeris: { kind: 'horizonsParentRelative' },
+          // JPL Horizons osculating elements, epoch 2000-01-01.5 TDB (EPHEM_TYPE=ELEMENTS,
+          // TLIST=2451545.0) — même méthode que les autres lunes de ce fichier. Vérifiée
+          // cohérente avec la période réelle publiée (0.498 j).
+          relativeOrbitalElements: {
+            semiMajorAxisAU: 0.0012165730245027,
+            eccentricity: 0.006131496682479541,
+            inclinationRad: 2.442089133637652 * D2R,
+            ascendingNodeRad: 330.4106584847095 * D2R,
+            argPerihelionRad: 105.1175845531084 * D2R,
+            meanAnomalyAtEpochRad: 336.2664083066824 * D2R,
+            epoch: new Date('2000-01-01T12:00:00Z'),
+          },
+          // Aucune mosaïque photo globale contrôlée n'existe côté USGS pour Amalthea (imagée
+          // partiellement par Galileo, jamais assemblée en carte globale contrôlée) — vérifié
+          // en direct (2026-08-26). Sphère de couleur unie plutôt qu'une texture inventée.
+          textureResolutions: {},
+          realData: {
+            radiusKm: 83.5,
+            distanceAU: 0.0012165730245027,
+            orbitPeriodDays: 0.5016447757055735,
+            orbitalInclination: 2.442089133637652 * D2R,
+            ascendingNode: 330.4106584847095 * D2R,
+            axialTilt: 0,
+            massKg: 2.4655e18,
+            gravity: 0.0236,
+            meanTempC: -108,
+            moonCount: 0,
+            description: {
+              en: "Jupiter's reddest moon, tidally locked with its long axis always pointing at the planet, likely stained by sulfur from Io.",
+              fr: 'La lune la plus rouge de Jupiter, verrouillée par effet de marée avec son grand axe toujours pointé vers la planète, probablement teintée par le soufre en provenance d’Io.',
+            },
+            wiki: {
+              en: 'https://en.wikipedia.org/wiki/Amalthea_(moon)',
+              fr: 'https://fr.wikipedia.org/wiki/Amalth%C3%A9e_(lune)',
+            },
+          },
+          cameraDistance: { educ: 0.5, explo: exploCameraDistance(83.5) },
+          loadPriority: 10,
+        },
         io: {
           kind: 'moon',
           displayName: { fr: 'Io' },
@@ -1231,6 +1280,103 @@ export const CELESTIAL_CONFIG: CelestialConfig = {
           },
           cameraDistance: { educ: 1.5, explo: exploCameraDistance(1_352.6) },
           loadPriority: 12,
+        },
+        proteus: {
+          kind: 'moon',
+          displayName: { en: 'Proteus', fr: 'Protée' },
+          radius: 0.12,
+          rotationSpeed: _R(1.122842386036011 * 24),
+          orbitalColor: 0x6a6a6a,
+          fallbackColor: 0x4a4a4a,
+          frame: 'parentRelative',
+          rotationBody: Body.Neptune,
+          relativeEphemeris: { kind: 'horizonsParentRelative' },
+          // JPL Horizons osculating elements, epoch 2000-01-01.5 TDB — cohérents avec la
+          // période réelle publiée (1.122 j).
+          relativeOrbitalElements: {
+            semiMajorAxisAU: 0.0007866074366734613,
+            eccentricity: 0.0004949303539595451,
+            inclinationRad: 28.99163681179519 * D2R,
+            ascendingNodeRad: 48.27950205867285 * D2R,
+            argPerihelionRad: 326.8036455837504 * D2R,
+            meanAnomalyAtEpochRad: 283.6240862259231 * D2R,
+            epoch: new Date('2000-01-01T12:00:00Z'),
+          },
+          // Aucune mosaïque photo globale contrôlée n'existe côté USGS pour Protée (une seule
+          // face imagée par Voyager 2, jamais assemblée en carte globale contrôlée) — vérifié
+          // en direct (2026-08-26). Sphère de couleur unie plutôt qu'une texture inventée.
+          textureResolutions: {},
+          realData: {
+            radiusKm: 208,
+            distanceAU: 0.0007866074366734613,
+            orbitPeriodDays: 1.122842386036011,
+            orbitalInclination: 28.99163681179519 * D2R,
+            ascendingNode: 48.27950205867285 * D2R,
+            axialTilt: 0,
+            massKg: 3.871e19,
+            gravity: 0.0597,
+            meanTempC: -222,
+            moonCount: 0,
+            description: {
+              en: "Neptune's second-largest moon, an irregularly shaped, tidally locked body near the size limit a body of its density can hold without becoming round.",
+              fr: 'La deuxième plus grande lune de Neptune, un corps de forme irrégulière verrouillé par effet de marée, proche de la taille limite qu’un corps de sa densité peut atteindre sans devenir sphérique.',
+            },
+            wiki: {
+              en: 'https://en.wikipedia.org/wiki/Proteus_(moon)',
+              fr: 'https://fr.wikipedia.org/wiki/Prot%C3%A9e_(lune)',
+            },
+          },
+          cameraDistance: { educ: 1.2, explo: exploCameraDistance(208) },
+          loadPriority: 13,
+        },
+        nereid: {
+          kind: 'moon',
+          displayName: { en: 'Nereid', fr: 'Néréide' },
+          radius: 0.11,
+          rotationSpeed: _R(11.594),
+          orbitalColor: 0x8c8c8c,
+          fallbackColor: 0x8c8c8c,
+          frame: 'parentRelative',
+          rotationBody: Body.Neptune,
+          relativeEphemeris: { kind: 'horizonsParentRelative' },
+          // JPL Horizons osculating elements, epoch 2000-01-01.5 TDB — cohérents avec la
+          // période réelle publiée (~360.13 j). Rotation NON verrouillée : 11.594 h, mesure
+          // bien déterminée par Kepler (2016) — sans lien avec sa période orbitale.
+          relativeOrbitalElements: {
+            semiMajorAxisAU: 0.03683979459947609,
+            eccentricity: 0.7506509374056886,
+            inclinationRad: 5.060553241702044 * D2R,
+            ascendingNodeRad: 319.5912156886533 * D2R,
+            argPerihelionRad: 297.0020523243177 * D2R,
+            meanAnomalyAtEpochRad: 215.6255522626936 * D2R,
+            epoch: new Date('2000-01-01T12:00:00Z'),
+          },
+          // Aucune mosaïque photo globale contrôlée n'existe côté USGS pour Néréide (résolution
+          // Voyager 2 de ~43 km/pixel seulement — insuffisant pour une carte globale) — vérifié
+          // en direct (2026-08-26). Sphère de couleur unie plutôt qu'une texture inventée.
+          textureResolutions: {},
+          realData: {
+            radiusKm: 170,
+            distanceAU: 0.03683979459947609,
+            orbitPeriodDays: 359.879914569329,
+            orbitalInclination: 5.060553241702044 * D2R,
+            ascendingNode: 319.5912156886533 * D2R,
+            axialTilt: 0,
+            massKg: 3.1e19,
+            gravity: 0.0716,
+            meanTempC: -218,
+            moonCount: 0,
+            description: {
+              en: 'A small, distant moon with the second-most eccentric orbit of any known moon, likely a captured object rather than one formed alongside Neptune.',
+              fr: 'Une petite lune lointaine dotée de l’orbite la plus excentrique parmi les lunes connues après une autre, probablement un objet capturé plutôt que formé avec Neptune.',
+            },
+            wiki: {
+              en: 'https://en.wikipedia.org/wiki/Nereid_(moon)',
+              fr: 'https://fr.wikipedia.org/wiki/N%C3%A9r%C3%A9ide_(lune)',
+            },
+          },
+          cameraDistance: { educ: 1.2, explo: exploCameraDistance(170) },
+          loadPriority: 14,
         },
       },
     },

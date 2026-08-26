@@ -329,6 +329,152 @@ export const SMALL_BODY_ELEMENTS: readonly SmallBodyElements[] = [
         cameraDistance: { educ: 0.8, explo: exploCameraDistance(606) },
         loadPriority: 12,
       },
+      // Styx, Nix, Kerberos et Hydra n'ont volontairement PAS de `relativeOrbitalElements` :
+      // un ajustement képlérien à deux corps sur une seule époque (JPL Horizons
+      // EPHEM_TYPE=ELEMENTS, TLIST=2451545.0) donne pour ces quatre lunes des résultats
+      // incohérents avec leurs périodes réelles publiées (écarts jusqu'à ×3.7 pour Kerberos) —
+      // conséquence directe des forts couples gravitationnels du système binaire Pluton-Charon
+      // qui rendent l'orbite osculatrice à un instant donné non représentative de l'orbite
+      // moyenne réelle. Les propager en avant produirait une position silencieusement fausse.
+      // Sans cet élément, `OrbitalMechanics` retombe sur `null` (corps non affiché) plutôt que
+      // sur une position erronée si jamais le binaire `horizonsParentRelative` venait à manquer
+      // — préférable à une fausse précision. Les champs `distanceAU`/`orbitPeriodDays` de
+      // `realData` ci-dessous utilisent donc les valeurs moyennes réelles publiées (Showalter &
+      // Hamilton 2015 / Porter et al. 2023), pas les éléments osculateurs Horizons.
+      styx: {
+        kind: 'moon',
+        displayName: { en: 'Styx', fr: 'Styx' },
+        radius: 0.04,
+        // Rotation chaotique confirmée (pas de verrouillage marémoteur) — période
+        // instantanée publiée à titre indicatif seulement, non un cycle fixe réel.
+        rotationSpeed: (Math.PI * 2) / (3.24 * 24 * 3_600),
+        orbitalColor: 0xcfd6d6,
+        fallbackColor: 0xc4cbcb,
+        frame: 'parentRelative',
+        relativeEphemeris: { kind: 'horizonsParentRelative' },
+        textureResolutions: {},
+        realData: {
+          radiusKm: 5.2,
+          distanceAU: 2.8514e-4,
+          orbitPeriodDays: 20.16,
+          orbitalInclination: 0,
+          ascendingNode: 0,
+          axialTilt: 0,
+          massKg: 4.494e15,
+          gravity: 0.0111,
+          meanTempC: -232,
+          moonCount: 0,
+          description: {
+            en: 'The smallest and innermost of Pluto’s four small moons, tumbling chaotically under the combined pull of Pluto and Charon.',
+            fr: 'La plus petite et la plus proche des quatre petites lunes de Pluton, en rotation chaotique sous l’attraction combinée de Pluton et Charon.',
+          },
+          wiki: {
+            en: 'https://en.wikipedia.org/wiki/Styx_(moon)',
+            fr: 'https://fr.wikipedia.org/wiki/Styx_(lune)',
+          },
+        },
+        cameraDistance: { educ: 0.5, explo: exploCameraDistance(5.2) },
+        loadPriority: 13,
+      },
+      nix: {
+        kind: 'moon',
+        displayName: { en: 'Nix', fr: 'Nix' },
+        radius: 0.06,
+        rotationSpeed: (Math.PI * 2) / (43.9 * 3_600),
+        orbitalColor: 0xd8d3c9,
+        fallbackColor: 0xcfc9bd,
+        frame: 'parentRelative',
+        relativeEphemeris: { kind: 'horizonsParentRelative' },
+        textureResolutions: {},
+        realData: {
+          radiusKm: 18,
+          distanceAU: 3.2551e-4,
+          orbitPeriodDays: 24.85,
+          orbitalInclination: 0,
+          ascendingNode: 0,
+          axialTilt: 0,
+          massKg: 2.247e16,
+          gravity: 0.00463,
+          meanTempC: -232,
+          moonCount: 0,
+          description: {
+            en: 'A moon with a reddish crater on an otherwise bright icy surface, rotating chaotically and retrograde relative to its own orbit.',
+            fr: 'Une lune marquée d’un cratère rougeâtre sur une surface glacée par ailleurs brillante, en rotation chaotique et rétrograde par rapport à sa propre orbite.',
+          },
+          wiki: {
+            en: 'https://en.wikipedia.org/wiki/Nix_(moon)',
+            fr: 'https://fr.wikipedia.org/wiki/Nix_(lune)',
+          },
+        },
+        cameraDistance: { educ: 0.5, explo: exploCameraDistance(18) },
+        loadPriority: 14,
+      },
+      kerberos: {
+        kind: 'moon',
+        displayName: { en: 'Kerberos', fr: 'Cerbère' },
+        radius: 0.04,
+        rotationSpeed: (Math.PI * 2) / (5.31 * 24 * 3_600),
+        orbitalColor: 0xbfc4c4,
+        fallbackColor: 0xb4baba,
+        frame: 'parentRelative',
+        relativeEphemeris: { kind: 'horizonsParentRelative' },
+        textureResolutions: {},
+        realData: {
+          radiusKm: 6,
+          distanceAU: 3.8626e-4,
+          orbitPeriodDays: 32.17,
+          orbitalInclination: 0,
+          ascendingNode: 0,
+          axialTilt: 0,
+          massKg: 2.996e15,
+          gravity: 0.00556,
+          meanTempC: -232,
+          moonCount: 0,
+          description: {
+            en: 'A double-lobed moon, likely the fusion of two smaller bodies, rotating chaotically in the Pluto-Charon system.',
+            fr: 'Une lune à double lobe, probablement issue de la fusion de deux corps plus petits, en rotation chaotique dans le système Pluton-Charon.',
+          },
+          wiki: {
+            en: 'https://en.wikipedia.org/wiki/Kerberos_(moon)',
+            fr: 'https://fr.wikipedia.org/wiki/Kerb%C3%A8ros_(lune)',
+          },
+        },
+        cameraDistance: { educ: 0.5, explo: exploCameraDistance(6) },
+        loadPriority: 15,
+      },
+      hydra: {
+        kind: 'moon',
+        displayName: { en: 'Hydra', fr: 'Hydre' },
+        radius: 0.06,
+        rotationSpeed: (Math.PI * 2) / (10 * 3_600),
+        orbitalColor: 0xdcd8ce,
+        fallbackColor: 0xd2cdc1,
+        frame: 'parentRelative',
+        relativeEphemeris: { kind: 'horizonsParentRelative' },
+        textureResolutions: {},
+        realData: {
+          radiusKm: 18.5,
+          distanceAU: 4.3277e-4,
+          orbitPeriodDays: 38.2,
+          orbitalInclination: 0,
+          ascendingNode: 0,
+          axialTilt: 0,
+          massKg: 2.996e16,
+          gravity: 0.00584,
+          meanTempC: -250,
+          moonCount: 0,
+          description: {
+            en: "Pluto's outermost known moon, the fastest tumbler of the small moons, spinning once roughly every 10 hours.",
+            fr: 'La plus lointaine lune connue de Pluton, celle qui tourne le plus vite parmi les petites lunes, bouclant un tour environ toutes les 10 heures.',
+          },
+          wiki: {
+            en: 'https://en.wikipedia.org/wiki/Hydra_(moon)',
+            fr: 'https://fr.wikipedia.org/wiki/Hydre_(lune)',
+          },
+        },
+        cameraDistance: { educ: 0.5, explo: exploCameraDistance(18.5) },
+        loadPriority: 16,
+      },
     },
   },
   {

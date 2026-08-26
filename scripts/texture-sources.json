@@ -989,6 +989,55 @@
       "status": "no-map",
       "sourcePage": "https://astrogeology.usgs.gov/search/results?target=hyperion",
       "note": "Checked live (2026-08-26): USGS has only a control-point network and a nomenclature map for Hyperion, no photo mosaic — consistent with the physical reality that Hyperion is a highly irregular, chaotically-rotating body (no fixed 'global' surface projection is even well-defined). Rendered with fallbackColor only."
+    },
+    {
+      "body": "amalthea",
+      "layer": "surface",
+      "status": "no-map",
+      "sourcePage": "https://astrogeology.usgs.gov/search?target=Amalthea",
+      "note": "Checked live (2026-08-26) via USGS search + web search: no controlled global photomosaic exists for Amalthea (Galileo imaged it only partially, at closer range than any other Jovian moon, but the coverage was never assembled into a global map). Rendered with fallbackColor only."
+    },
+    {
+      "body": "proteus",
+      "layer": "surface",
+      "status": "no-map",
+      "sourcePage": "https://astrogeology.usgs.gov/search?target=Proteus",
+      "note": "Checked live (2026-08-26): Voyager 2 imaged only one hemisphere of Proteus at usable resolution during its single 1989 flyby; no controlled global mosaic was ever produced. Rendered with fallbackColor only."
+    },
+    {
+      "body": "nereid",
+      "layer": "surface",
+      "status": "no-map",
+      "sourcePage": "https://www.jpl.nasa.gov/images/pia00054-nereid/",
+      "note": "Checked live (2026-08-26): Voyager 2's closest approach to Nereid was 4.7 million km at ~43 km/pixel resolution — the moon (radius ~170 km) is barely resolved, nowhere near enough detail for any surface map, global or otherwise. Rendered with fallbackColor only."
+    },
+    {
+      "body": "styx",
+      "layer": "surface",
+      "status": "no-map",
+      "sourcePage": "https://en.wikipedia.org/wiki/Styx_(moon)",
+      "note": "Checked live (2026-08-26): New Horizons resolved Styx (radius ~5 km) only as a handful of pixels during its single 2015 flyby of the Pluto system — no surface map is possible at that resolution. Rendered with fallbackColor only."
+    },
+    {
+      "body": "nix",
+      "layer": "surface",
+      "status": "no-map",
+      "sourcePage": "https://en.wikipedia.org/wiki/Nix_(moon)",
+      "note": "Checked live (2026-08-26): New Horizons resolved detail down to ~3 km/pixel on Nix during its single 2015 flyby — enough to see its shape and one notable red crater, but not enough for a controlled global photomosaic. Rendered with fallbackColor only."
+    },
+    {
+      "body": "kerberos",
+      "layer": "surface",
+      "status": "no-map",
+      "sourcePage": "https://en.wikipedia.org/wiki/Kerberos_(moon)",
+      "note": "Checked live (2026-08-26): New Horizons imaged Kerberos only distantly during its single 2015 flyby, enough to reveal a double-lobed shape but not a global photomosaic. Rendered with fallbackColor only."
+    },
+    {
+      "body": "hydra",
+      "layer": "surface",
+      "status": "no-map",
+      "sourcePage": "https://en.wikipedia.org/wiki/Hydra_(moon)",
+      "note": "Checked live (2026-08-26): same single-flyby limitation as Pluto's other small moons — shape and rough dimensions known from New Horizons, but no controlled global mosaic exists. Rendered with fallbackColor only."
     }
   ]
 }

@@ -14,6 +14,7 @@ const STEP_DAYS = 4;
 const CENTER_IDS = {
   sun: '10',
   mars: '499',
+  jupiter: '599',
   saturn: '699',
   uranus: '799',
   neptune: '899',
@@ -107,6 +108,33 @@ const BODIES = [
     expectedName: 'oberon',
     center: 'uranus',
   },
+  {
+    name: 'amalthea',
+    target: '505',
+    expectedName: 'amalthea',
+    center: 'jupiter',
+  },
+  {
+    name: 'proteus',
+    target: '808',
+    expectedName: 'proteus',
+    center: 'neptune',
+  },
+  {
+    name: 'nereid',
+    target: '802',
+    expectedName: 'nereid',
+    center: 'neptune',
+  },
+  { name: 'styx', target: '905', expectedName: 'styx', center: 'pluto' },
+  { name: 'nix', target: '902', expectedName: 'nix', center: 'pluto' },
+  {
+    name: 'kerberos',
+    target: '904',
+    expectedName: 'kerberos',
+    center: 'pluto',
+  },
+  { name: 'hydra', target: '903', expectedName: 'hydra', center: 'pluto' },
 ];
 
 function buildUrl(target, center) {

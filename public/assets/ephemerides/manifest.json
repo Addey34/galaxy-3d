@@ -1,7 +1,7 @@
 {
   "version": 1,
   "source": "NASA/JPL Horizons",
-  "generatedAt": "2026-08-26T08:35:53.311Z",
+  "generatedAt": "2026-08-26T20:50:23.117Z",
   "frame": "ECLIPTIC_J2000",
   "center": "SUN",
   "units": "AU-D",
@@ -206,6 +206,62 @@
       "file": "oberon.4102a08aa504.bin",
       "target": "704",
       "center": "uranus",
+      "startJdTdb": 2415020.5,
+      "stepDays": 4,
+      "sampleCount": 18354
+    },
+    "amalthea": {
+      "file": "amalthea.4501fb9b6d26.bin",
+      "target": "505",
+      "center": "jupiter",
+      "startJdTdb": 2415020.5,
+      "stepDays": 4,
+      "sampleCount": 18354
+    },
+    "proteus": {
+      "file": "proteus.f9beb51c0eb6.bin",
+      "target": "808",
+      "center": "neptune",
+      "startJdTdb": 2415020.5,
+      "stepDays": 4,
+      "sampleCount": 18354
+    },
+    "nereid": {
+      "file": "nereid.f7e812a7c081.bin",
+      "target": "802",
+      "center": "neptune",
+      "startJdTdb": 2415020.5,
+      "stepDays": 4,
+      "sampleCount": 18354
+    },
+    "styx": {
+      "file": "styx.240c7c195ffb.bin",
+      "target": "905",
+      "center": "pluto",
+      "startJdTdb": 2415020.5,
+      "stepDays": 4,
+      "sampleCount": 18354
+    },
+    "nix": {
+      "file": "nix.d0f6340e04d4.bin",
+      "target": "902",
+      "center": "pluto",
+      "startJdTdb": 2415020.5,
+      "stepDays": 4,
+      "sampleCount": 18354
+    },
+    "kerberos": {
+      "file": "kerberos.a43429580769.bin",
+      "target": "904",
+      "center": "pluto",
+      "startJdTdb": 2415020.5,
+      "stepDays": 4,
+      "sampleCount": 18354
+    },
+    "hydra": {
+      "file": "hydra.f5fc85a2324f.bin",
+      "target": "903",
+      "center": "pluto",
       "startJdTdb": 2415020.5,
       "stepDays": 4,
       "sampleCount": 18354
