@@ -41,6 +41,7 @@ import Logger from '@/utils/Logger';
 import type { AnimationSystem } from '@/components/systems/AnimationSystem';
 import type { TextureSystem } from '@/components/systems/TextureSystem';
 import type { MeteoRenderDiagnostics } from '@/core/meteoDiagnostics';
+import { whenIdle } from '@/utils/idleCallback';
 
 const CLOUDS_ROTATION_FACTOR = 0.1;
 // Opacité de l'ombre portée des nuages sur la surface (0 = aucune, 1 = noir).
@@ -201,7 +202,18 @@ export default class CelestialObject {
       this._ringShadow = getRingShadowUniforms(ring.material);
     if (this.layers.has('ring')) void this._loadRingTexture();
 
-    void this._loadAllTextures();
+    // Les corps sans loadPriority (astéroïdes/comètes du catalogue, hors couche instrument
+    // 2D) ne sont pas sur le chemin critique du boot : repousser leur texture après la
+    // rafale d'initialisation évite qu'ils se disputent la bande passante/le thread principal
+    // avec les corps réellement affichés d'entrée (Soleil, planètes, Lune). Mesuré via
+    // Lighthouse : ces textures apparaissaient dans la même fenêtre que le Total Blocking
+    // Time du boot sans bénéfice visuel immédiat, la caméra ne les regardant jamais au
+    // premier rendu (vue d'ensemble, corps minuscules ou hors-champ).
+    if (this.config.loadPriority === undefined) {
+      whenIdle(() => void this._loadAllTextures());
+    } else {
+      void this._loadAllTextures();
+    }
     this._registerForUpdates();
 
     Logger.info(`[CelestialObject] Created "${name}"`);

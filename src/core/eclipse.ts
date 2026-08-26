@@ -85,27 +85,42 @@ export function computeLightAttenuation(
   sunRadius: number,
   occluders: readonly SphericalOccluder[]
 ): number {
-  const toSun = new THREE.Vector3().subVectors(sunPosition, bodyPosition);
-  const sunDistance = toSun.length();
+  // Maths en scalaires plutôt qu'en THREE.Vector3 temporaires : cette fonction tourne dans
+  // la boucle d'éclairage physique (AnimationSystem._updatePhysicalLighting, throttlée à 1
+  // frame sur 6 mais pour CHAQUE corps × occulteur) — le reste de cette passe pool déjà tous
+  // ses Vector3 (snapshot + liste d'occulteurs réutilisés) ; ces deux `new Vector3()` par
+  // occulteur restaient le seul point d'allocation. Purement scalaire = zéro allocation, sans
+  // introduire d'état partagé qui casserait la pureté de cette fonction.
+  const sunDx = sunPosition.x - bodyPosition.x;
+  const sunDy = sunPosition.y - bodyPosition.y;
+  const sunDz = sunPosition.z - bodyPosition.z;
+  const sunDistance = Math.hypot(sunDx, sunDy, sunDz);
   if (sunDistance <= EPSILON || sunRadius <= 0) return 1;
 
-  const sunDirection = toSun.normalize();
+  const invSunDistance = 1 / sunDistance;
+  const sunDirX = sunDx * invSunDistance;
+  const sunDirY = sunDy * invSunDistance;
+  const sunDirZ = sunDz * invSunDistance;
   const sunAngularRadius = angularRadius(sunRadius, sunDistance);
   let maxOccultation = 0;
 
   for (const occluder of occluders) {
     if (occluder.radius <= 0) continue;
 
-    const toOccluder = new THREE.Vector3().subVectors(
-      occluder.position,
-      bodyPosition
-    );
-    const occluderDistance = toOccluder.length();
+    const occDx = occluder.position.x - bodyPosition.x;
+    const occDy = occluder.position.y - bodyPosition.y;
+    const occDz = occluder.position.z - bodyPosition.z;
+    const occluderDistance = Math.hypot(occDx, occDy, occDz);
     if (occluderDistance <= EPSILON || occluderDistance >= sunDistance)
       continue;
 
-    const occluderDirection = toOccluder.normalize();
-    const separation = sunDirection.angleTo(occluderDirection);
+    const invOccluderDistance = 1 / occluderDistance;
+    const cosSeparation =
+      (sunDirX * occDx + sunDirY * occDy + sunDirZ * occDz) *
+      invOccluderDistance;
+    const separation = Math.acos(
+      THREE.MathUtils.clamp(cosSeparation, -1, 1)
+    );
     const occluderAngularRadius = angularRadius(
       occluder.radius,
       occluderDistance
