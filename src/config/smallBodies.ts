@@ -45,6 +45,9 @@ export interface SmallBodyElements {
   color?: number;
   /** Résolutions d'une texture de surface locale. Absent = corps sans mesh. */
   surfaceResolutions?: TextureQuality[];
+  /** Couleur de secours (0xRRGGBB) quand aucune texture de surface n'existe —
+   *  requise par `catalogValidation` si `surfaceResolutions` est absent. */
+  fallbackColor?: number;
   /** Rayon visuel en mode Éducatif. Absent = 0,1 unité. */
   visualRadius?: number;
   /** Période de rotation sidérale (heures). */
@@ -100,6 +103,7 @@ export function smallBodyToConfig(el: SmallBodyElements): CelestialBodyConfig {
       ? { surface: el.surfaceResolutions }
       : {},
     // `textures` est dérivé au chargement du catalogue (voir bodies.ts / deriveTextures).
+    ...(el.fallbackColor !== undefined ? { fallbackColor: el.fallbackColor } : {}),
     ...(el.satellites ? { satellites: el.satellites } : {}),
     realData: {
       radiusKm: el.radiusKm,
@@ -568,6 +572,135 @@ export const SMALL_BODY_ELEMENTS: readonly SmallBodyElements[] = [
     wiki: {
       en: 'https://en.wikipedia.org/wiki/Makemake',
       fr: 'https://fr.wikipedia.org/wiki/(136472)_Mak%C3%A9mak%C3%A9',
+    },
+  },
+  {
+    name: 'orcus',
+    displayName: { en: 'Orcus', fr: 'Orcus' },
+    // Éléments osculateurs JPL Horizons exactement à cette époque — même méthode que
+    // Vesta/Pallas/Hygiea/Halley ci-dessus (EPHEM_TYPE=ELEMENTS, TLIST=2451545.0).
+    a: 39.26252228984306,
+    e: 0.225751142405386,
+    iDeg: 20.53929449722906,
+    omDeg: 268.4572431140700,
+    wDeg: 73.75098677536380,
+    maDeg: 150.0400595978003,
+    epoch: '2000-01-01T12:00:00Z',
+    radiusKm: 458,
+    kind: 'dwarf',
+    color: 0xcbc7c0,
+    fallbackColor: 0xcbc7c0,
+    visualRadius: 0.072,
+    // Rotation possiblement verrouillée sur l'orbite de sa lune Vanth (9,5393 j) — les études
+    // photométriques directes sont non concluantes (Orcus est vu quasi pôle-sur, ce qui aplatit
+    // sa courbe de lumière) mais l'hypothèse de synchronisation mutuelle est la mieux étayée.
+    rotationHours: 9.5393 * 24,
+    massKg: 5.478e20,
+    gravity: 0.174,
+    meanTempC: -228,
+    moonCount: 1,
+    description: {
+      en: "Sometimes nicknamed the \"anti-Pluto\" for an orbit that mirrors Pluto's own 2:3 resonance with Neptune, timed so the two are never close together. Its large moon Vanth may be tidally locked to it, much like Charon is to Pluto.",
+      fr: "Parfois surnommée « anti-Pluton » pour une orbite qui reflète la même résonance 2:3 avec Neptune que Pluton, mais synchronisée pour que les deux ne soient jamais proches. Sa grande lune Vanth serait verrouillée gravitationnellement, un peu comme Charon l’est à Pluton.",
+    },
+    wiki: {
+      en: 'https://en.wikipedia.org/wiki/Orcus_(dwarf_planet)',
+      fr: 'https://fr.wikipedia.org/wiki/(90482)_Orcus',
+    },
+  },
+  {
+    name: 'quaoar',
+    displayName: { en: 'Quaoar', fr: 'Quaoar' },
+    // Éléments osculateurs JPL Horizons exactement à cette époque — voir le commentaire sur
+    // Vesta ci-dessus (même méthode de vérification).
+    a: 43.13300737717343,
+    e: 0.03951007383606750,
+    iDeg: 8.005089469375157,
+    omDeg: 189.0799904468402,
+    wDeg: 163.7854906986470,
+    maDeg: 258.9555093443548,
+    epoch: '2000-01-01T12:00:00Z',
+    radiusKm: 549,
+    kind: 'dwarf',
+    color: 0x9c8873,
+    fallbackColor: 0x9c8873,
+    visualRadius: 0.086,
+    rotationHours: 8.84,
+    massKg: 1.212e21,
+    gravity: 0.27,
+    meanTempC: -229,
+    moonCount: 1,
+    description: {
+      en: 'A large Kuiper Belt object that surprised astronomers in 2023 with a system of rings orbiting far beyond the distance where rings should be stable — its moon Weywot may be responsible for keeping them from collapsing.',
+      fr: 'Un grand objet de la ceinture de Kuiper qui a surpris les astronomes en 2023 : un système d’anneaux en orbite bien au-delà de la distance où des anneaux sont censés rester stables — sa lune Weywot pourrait les empêcher de s’effondrer.',
+    },
+    wiki: {
+      en: 'https://en.wikipedia.org/wiki/Quaoar',
+      fr: 'https://fr.wikipedia.org/wiki/(50000)_Quaoar',
+    },
+  },
+  {
+    name: 'gonggong',
+    displayName: { en: 'Gonggong', fr: 'Gonggong' },
+    // Éléments osculateurs JPL Horizons exactement à cette époque — voir le commentaire sur
+    // Vesta ci-dessus (même méthode de vérification).
+    a: 67.05125643630976,
+    e: 0.4995734299445327,
+    iDeg: 30.71460943458106,
+    omDeg: 336.8754145198811,
+    wDeg: 206.9409316772891,
+    maDeg: 94.20389141650462,
+    epoch: '2000-01-01T12:00:00Z',
+    radiusKm: 615,
+    kind: 'dwarf',
+    color: 0xc25a3f,
+    fallbackColor: 0xc25a3f,
+    visualRadius: 0.097,
+    rotationHours: 22.4,
+    massKg: 1.75e21,
+    gravity: 0.31,
+    meanTempC: -235,
+    moonCount: 1,
+    description: {
+      en: 'Named after the Chinese god of water and chaos, this reddish, methane-frosted world spins nearly on its side and shares a steeply tilted, eccentric orbit with its lone moon Xiangliu.',
+      fr: 'Nommée d’après le dieu chinois de l’eau et du chaos, ce monde rougeâtre couvert de givre de méthane tourne presque couché sur le côté et partage une orbite très inclinée et excentrique avec son unique lune Xiangliu.',
+    },
+    wiki: {
+      en: 'https://en.wikipedia.org/wiki/Gonggong_(dwarf_planet)',
+      fr: 'https://fr.wikipedia.org/wiki/(225088)_Gonggong',
+    },
+  },
+  {
+    name: 'sedna',
+    displayName: { en: 'Sedna', fr: 'Sedna' },
+    // Éléments osculateurs JPL Horizons exactement à cette époque — voir le commentaire sur
+    // Vesta ci-dessus (même méthode de vérification).
+    a: 549.8732686054069,
+    e: 0.8609804671093849,
+    iDeg: 11.92524941582647,
+    omDeg: 144.3169286137796,
+    wDeg: 310.7328635633867,
+    maDeg: 357.9014766680082,
+    epoch: '2000-01-01T12:00:00Z',
+    radiusKm: 498,
+    kind: 'dwarf',
+    color: 0xb84a3a,
+    fallbackColor: 0xb84a3a,
+    visualRadius: 0.078,
+    rotationHours: 10.273,
+    // Masse estimée à partir de sa taille et d'une densité type objet glacé — sans lune connue,
+    // sa masse ne peut pas être mesurée directement (aucune sonde ne l'a visitée).
+    massKg: 8.3e20,
+    gravity: 0.22,
+    meanTempC: -240,
+    moonCount: 0,
+    description: {
+      en: 'One of the most distant and coldest known objects in the Solar System, journeying on an extremely elongated, multi-millennial orbit that carries it beyond the Kuiper Belt toward the inner edge of the hypothesized Oort Cloud.',
+      fr: 'L’un des objets connus les plus lointains et les plus froids du Système solaire, parcourant une orbite extrêmement allongée, longue de plusieurs millénaires, qui l’entraîne au-delà de la ceinture de Kuiper vers les abords du nuage d’Oort hypothétique.',
+    },
+    wiki: {
+      en: 'https://en.wikipedia.org/wiki/Sedna_(dwarf_planet)',
+      fr: 'https://fr.wikipedia.org/wiki/(90377)_Sedna',
     },
   },
   {

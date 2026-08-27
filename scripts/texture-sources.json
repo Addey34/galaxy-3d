@@ -1038,6 +1038,34 @@
       "status": "no-map",
       "sourcePage": "https://en.wikipedia.org/wiki/Hydra_(moon)",
       "note": "Checked live (2026-08-26): same single-flyby limitation as Pluto's other small moons — shape and rough dimensions known from New Horizons, but no controlled global mosaic exists. Rendered with fallbackColor only."
+    },
+    {
+      "body": "orcus",
+      "layer": "surface",
+      "status": "no-map",
+      "sourcePage": "https://www.solarsystemscope.com/textures/",
+      "note": "Checked live (2026-08-27): no spacecraft has ever visited Orcus, and Solar System Scope's illustrative dwarf-planet set (used for Ceres/Eris/Haumea/Makemake) does not include it. Only unresolved point-source photometry exists — no surface map, illustrative or otherwise. Rendered with fallbackColor only."
+    },
+    {
+      "body": "quaoar",
+      "layer": "surface",
+      "status": "no-map",
+      "sourcePage": "https://www.solarsystemscope.com/textures/",
+      "note": "Checked live (2026-08-27): no spacecraft has ever visited Quaoar; not part of Solar System Scope's illustrative dwarf-planet set. Only unresolved point-source photometry and stellar-occultation profiles exist. Rendered with fallbackColor only."
+    },
+    {
+      "body": "gonggong",
+      "layer": "surface",
+      "status": "no-map",
+      "sourcePage": "https://www.solarsystemscope.com/textures/",
+      "note": "Checked live (2026-08-27): no spacecraft has ever visited Gonggong; not part of Solar System Scope's illustrative dwarf-planet set. Only unresolved point-source photometry exists. Rendered with fallbackColor only."
+    },
+    {
+      "body": "sedna",
+      "layer": "surface",
+      "status": "no-map",
+      "sourcePage": "https://www.solarsystemscope.com/textures/",
+      "note": "Checked live (2026-08-27): no spacecraft has ever visited Sedna; not part of Solar System Scope's illustrative dwarf-planet set. Even its size is only estimated from unresolved photometry. Rendered with fallbackColor only."
     }
   ]
 }
