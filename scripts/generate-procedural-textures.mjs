@@ -120,11 +120,18 @@ function craterHeight(craters, nx, ny, nz) {
     if (a > 1.08) continue;
     // Bol creusé au centre (profil plus raide = bord net) + fin bourrelet surélevé sur le rebord.
     const bowl = a < 0.92 ? -c.depth * (1 - (a / 0.92) ** 2) ** 0.6 : 0;
+    // `rimStrength` à 0 pour un impact "sans éjecta" (ex. Hyperion — Thomas et al. 2007).
+    const rimStrength = c.rimStrength ?? 1;
     const rim =
-      a > 0.85 && a < 1.08
-        ? c.depth * 0.4 * (1 - Math.abs(a - 0.96) / 0.12)
+      rimStrength > 0 && a > 0.85 && a < 1.08
+        ? c.depth * 0.4 * rimStrength * (1 - Math.abs(a - 0.96) / 0.12)
         : 0;
-    h += bowl + Math.max(0, rim);
+    // Pic central : bassins géants type Herschel (Mimas) / Pharos (Protée), dôme au fond.
+    const peak =
+      c.centralPeak && a < 0.18
+        ? c.depth * 0.5 * (1 - (a / 0.18) ** 2)
+        : 0;
+    h += bowl + Math.max(0, rim) + peak;
   }
   return h;
 }
@@ -152,7 +159,7 @@ function makeIcePatches(rng, count, minRadius, maxRadius) {
   return patches;
 }
 
-function icePatchIntensity(patches, nx, ny, nz) {
+function patchIntensity(patches, nx, ny, nz) {
   let intensity = 0;
   for (const p of patches) {
     const cosAngle = nx * p.x + ny * p.y + nz * p.z;
@@ -168,10 +175,24 @@ function icePatchIntensity(patches, nx, ny, nz) {
       0.1 * Math.sin(p.wobbleFreq2 * bearing + p.wobblePhase2);
     const a = angle / (p.radius * wobble);
     if (a > 1) continue;
-    // Bord adouci (exposant plus faible) : moins net qu'un cratère, cohérent avec un dépôt.
+    // Bord adouci (exposant plus faible) : moins net qu'un cratère, cohérent avec un dépôt/tache.
     intensity = Math.max(intensity, p.strength * (1 - a * a) ** 2.2);
   }
   return intensity; // [0, ~1]
+}
+
+/**
+ * Contraste hémisphérique doux (transition en S, pas de bruit) — pour un corps dont la
+ * littérature rapporte explicitement un "hémisphère sombre"/"clair" plutôt qu'un mottling
+ * aléatoire (ex. Néréide — Voyager 2, Schaefer & Schaefer 2000).
+ */
+function hemisphereContrast(rng, strength) {
+  const axis = spherePoint(rng);
+  return (nx, ny, nz) => {
+    const d = nx * axis.x + ny * axis.y + nz * axis.z; // [-1, 1]
+    const s = d / Math.sqrt(0.35 + d * d); // transition adoucie, pas un bord net
+    return s * strength;
+  };
 }
 
 function clamp255(v) {
@@ -186,24 +207,30 @@ async function generateBody({
   craterMaxRadius,
   albedoVariation,
   heightContrast,
-  largeBasins = [], // grands bassins d'impact ponctuels (ex. Pallas — Marsset et al. 2020)
-  icePatches, // taches de glace/givre "fraîches" — resurfaçage cryovolcanique ou dépôt de givre
-  iceColor,
+  largeBasins = [], // grands bassins d'impact ponctuels (ex. Pallas, Mimas, Protée)
+  craterRimStrength = 1, // 0 = pas de bourrelet d'éjecta (ex. Hyperion)
+  patchGroups = [], // taches colorées (givre, terrain distinct, tache sombre/claire isolée…)
+  hemisphere, // { strength } — contraste doux entre deux hémisphères opposés (ex. Néréide)
 }) {
   const rng = makeRng(name);
   const macroNoise = makeSphericalNoise(rng, 4, 1.5, 2.3); // grandes taches d'albédo
   const mesoNoise = makeSphericalNoise(rng, 3, 10, 2.1); // relief moyen (dizaines de cycles)
   const craters = makeCraters(rng, craterCount, craterMinRadius, craterMaxRadius);
+  for (const c of craters) c.rimStrength = craterRimStrength;
   for (const basin of largeBasins) {
-    craters.push({ ...spherePoint(rng), ...basin });
+    craters.push({ ...spherePoint(rng), rimStrength: craterRimStrength, ...basin });
   }
-  const patches = icePatches
-    ? makeIcePatches(rng, icePatches.count, icePatches.minRadius, icePatches.maxRadius)
-    : [];
+  const groups = patchGroups.map((g) => ({
+    patches: makeIcePatches(rng, g.count, g.minRadius, g.maxRadius),
+    opacity: g.opacity,
+    color: g.color,
+  }));
+  const hemisphereFn = hemisphere
+    ? hemisphereContrast(rng, hemisphere.strength)
+    : null;
 
   const buffer = Buffer.allocUnsafe(WIDTH * HEIGHT * 3);
   const [br, bg, bb] = baseColor;
-  const [ir, ig, ib] = iceColor ?? [255, 255, 255];
 
   for (let y = 0; y < HEIGHT; y++) {
     const lat = Math.PI / 2 - (y / (HEIGHT - 1)) * Math.PI;
@@ -219,23 +246,27 @@ async function generateBody({
       const meso = mesoNoise(nx, ny, nz);
       const grain = pixelGrain(x, y);
       const craterH = craterHeight(craters, nx, ny, nz);
+      const hemi = hemisphereFn ? hemisphereFn(nx, ny, nz) : 0;
 
       const shade =
         1 +
         macro * albedoVariation +
         meso * albedoVariation * 0.5 +
         grain * 0.07 +
-        craterH * heightContrast;
+        craterH * heightContrast +
+        hemi;
 
       let r = br * shade;
       let g = bg * shade;
       let b = bb * shade;
 
-      if (patches.length > 0) {
-        const ice = icePatchIntensity(patches, nx, ny, nz) * icePatches.opacity;
-        r = r * (1 - ice) + ir * shade * ice;
-        g = g * (1 - ice) + ig * shade * ice;
-        b = b * (1 - ice) + ib * shade * ice;
+      for (const group of groups) {
+        const intensity = patchIntensity(group.patches, nx, ny, nz) * group.opacity;
+        if (intensity <= 0) continue;
+        const [pr, pg, pb] = group.color;
+        r = r * (1 - intensity) + pr * shade * intensity;
+        g = g * (1 - intensity) + pg * shade * intensity;
+        b = b * (1 - intensity) + pb * shade * intensity;
       }
 
       const offset = (y * WIDTH + x) * 3;
@@ -266,8 +297,9 @@ const BODIES = [
     craterMaxRadius: 0.16,
     albedoVariation: 0.12,
     heightContrast: 0.45,
-    icePatches: { count: 6, minRadius: 0.18, maxRadius: 0.4, opacity: 0.4 },
-    iceColor: [235, 238, 240],
+    patchGroups: [
+      { count: 6, minRadius: 0.18, maxRadius: 0.4, opacity: 0.4, color: [235, 238, 240] },
+    ],
   },
   // Jewitt & Luu 2004 : glace d'eau cristalline (± hydrate d'ammoniac/méthane) — même signature
   // de resurfaçage récent qu'Orcus, même traitement (peu de cratères, plages de givre).
@@ -279,8 +311,9 @@ const BODIES = [
     craterMaxRadius: 0.15,
     albedoVariation: 0.15,
     heightContrast: 0.5,
-    icePatches: { count: 5, minRadius: 0.15, maxRadius: 0.35, opacity: 0.35 },
-    iceColor: [220, 214, 200],
+    patchGroups: [
+      { count: 5, minRadius: 0.15, maxRadius: 0.35, opacity: 0.35, color: [220, 214, 200] },
+    ],
   },
   // JWST (2024) : tholins (pentes spectrales rouges) + glace d'eau + givre de méthane par plaques.
   // Cratères normaux (pas de preuve de resurfaçage massif comme Orcus/Quaoar) + givre localisé.
@@ -292,8 +325,9 @@ const BODIES = [
     craterMaxRadius: 0.24,
     albedoVariation: 0.22,
     heightContrast: 0.45,
-    icePatches: { count: 4, minRadius: 0.12, maxRadius: 0.28, opacity: 0.3 },
-    iceColor: [214, 168, 140],
+    patchGroups: [
+      { count: 4, minRadius: 0.12, maxRadius: 0.28, opacity: 0.3, color: [214, 168, 140] },
+    ],
   },
   // Barucci et al. 2010 : surface homogène en couleur/spectre — explication avancée par les
   // auteurs : les impacts (qui exposeraient de la glace fraîche et brisent l'homogénéité) sont
@@ -331,6 +365,185 @@ const BODIES = [
     craterMinRadius: 0.09,
     craterMaxRadius: 0.14,
     albedoVariation: 0.1,
+    heightContrast: 0.35,
+  },
+
+  // ── Lunes sans mosaïque photo réelle (aucun bassin/tache n'est une vraie position — voir
+  //    scripts/texture-sources.json pour la limite de couverture de chaque survol). ──
+
+  // "Death Star" — le cratère Herschel fait ~1/3 du diamètre de Mimas, parois hautes, pic
+  // central de ~6 km (comparable à l'Everest) ; cratérisation dense par ailleurs.
+  {
+    name: 'mimas',
+    baseColor: [217, 214, 205],
+    craterCount: 26,
+    craterMinRadius: 0.04,
+    craterMaxRadius: 0.11,
+    albedoVariation: 0.12,
+    heightContrast: 0.5,
+    largeBasins: [{ radius: 0.62, depth: 1, centralPeak: true }],
+  },
+  // Aspect "éponge" : cratères profonds, denses, sans bourrelet d'éjecta visible (Thomas et al.
+  // 2007) — cratérisation très dense + `craterRimStrength: 0`.
+  {
+    name: 'hyperion',
+    baseColor: [168, 158, 140],
+    craterCount: 55,
+    craterMinRadius: 0.04,
+    craterMaxRadius: 0.1,
+    albedoVariation: 0.16,
+    heightContrast: 0.4,
+    craterRimStrength: 0,
+  },
+  // Coronae (Inverness/Arden/Elsinore) : vastes terrains tectoniques en chevron, distincts du
+  // terrain cratérisé environnant — approximés par de larges "taches" de terrain plutôt que des
+  // cratères ; peu de grands cratères (surface partiellement renouvelée par la tectonique).
+  {
+    name: 'miranda',
+    baseColor: [200, 198, 195],
+    craterCount: 12,
+    craterMinRadius: 0.05,
+    craterMaxRadius: 0.12,
+    albedoVariation: 0.12,
+    heightContrast: 0.4,
+    patchGroups: [
+      { count: 3, minRadius: 0.22, maxRadius: 0.32, opacity: 0.55, color: [168, 166, 160] },
+    ],
+  },
+  // Surface la plus brillante/jeune des lunes d'Uranus : peu de grands cratères (effacés par un
+  // resurfaçage relativement récent), beaucoup de petits (Voyager 2 imaging science, 1986).
+  {
+    name: 'ariel',
+    baseColor: [196, 194, 190],
+    craterCount: 28,
+    craterMinRadius: 0.03,
+    craterMaxRadius: 0.08,
+    albedoVariation: 0.1,
+    heightContrast: 0.35,
+  },
+  // La plus sombre des grandes lunes d'Uranus ; cratère Wunda (plancher/parois clairs) au pôle
+  // nord — seule feature isolée nommée, approximée par un unique groupe de patch à 1 élément.
+  {
+    name: 'umbriel',
+    baseColor: [110, 106, 100],
+    craterCount: 20,
+    craterMinRadius: 0.04,
+    craterMaxRadius: 0.14,
+    albedoVariation: 0.1,
+    heightContrast: 0.45,
+    patchGroups: [
+      { count: 1, minRadius: 0.1, maxRadius: 0.14, opacity: 0.55, color: [200, 198, 194] },
+    ],
+  },
+  // Réseau de canyons (Messina Chasmata, ~1500 km) + cratères à pics centraux — canyons non
+  // modélisés par ce générateur (pas de primitive linéaire) ; cratérisation modérée seule.
+  {
+    name: 'titania',
+    baseColor: [166, 160, 152],
+    craterCount: 18,
+    craterMinRadius: 0.04,
+    craterMaxRadius: 0.13,
+    albedoVariation: 0.11,
+    heightContrast: 0.45,
+  },
+  // Surface sombre, cratères jusqu'à ~200 km avec pics centraux, l'une des plus anciennes du
+  // système (peu de resurfaçage) — cratérisation dense avec quelques grands bassins.
+  {
+    name: 'oberon',
+    baseColor: [118, 112, 104],
+    craterCount: 22,
+    craterMinRadius: 0.04,
+    craterMaxRadius: 0.12,
+    albedoVariation: 0.1,
+    heightContrast: 0.45,
+    largeBasins: [
+      { radius: 0.22, depth: 0.8, centralPeak: true },
+      { radius: 0.18, depth: 0.7, centralPeak: true },
+    ],
+  },
+  // "L'objet le plus rouge du Système solaire" (plus rouge que Mars) — dépôt de soufre en
+  // provenance d'Io. Petit corps irrégulier, cratérisation modeste.
+  {
+    name: 'amalthea',
+    baseColor: [156, 68, 56],
+    craterCount: 8,
+    craterMinRadius: 0.08,
+    craterMaxRadius: 0.18,
+    albedoVariation: 0.14,
+    heightContrast: 0.4,
+  },
+  // Forme "polyédrique" bosselée dominée par le cratère Pharos (~250 km, plus de la moitié du
+  // diamètre de Protée, dôme central) — même traitement que Mimas/Herschel. Surface sombre et
+  // neutre, fortement cratérisée par ailleurs (Voyager 2, 1989).
+  {
+    name: 'proteus',
+    baseColor: [128, 124, 118],
+    craterCount: 20,
+    craterMinRadius: 0.04,
+    craterMaxRadius: 0.1,
+    albedoVariation: 0.12,
+    heightContrast: 0.45,
+    largeBasins: [{ radius: 0.58, depth: 0.85, centralPeak: true }],
+  },
+  // Grande variabilité photométrique attribuée à un "hémisphère sombre" + rotation chaotique
+  // (Schaefer & Schaefer 2000, Voyager 2) — contraste hémisphérique doux plutôt qu'un mottling
+  // aléatoire, gris neutre légèrement plus clair que la moyenne des TNO/lunes glacées sombres.
+  {
+    name: 'nereid',
+    baseColor: [176, 172, 166],
+    craterCount: 5,
+    craterMinRadius: 0.08,
+    craterMaxRadius: 0.16,
+    albedoVariation: 0.1,
+    heightContrast: 0.3,
+    hemisphere: { strength: 0.22 },
+  },
+
+  // ── Les 4 petites lunes de Pluton (New Horizons 2015) : albédo élevé (>50 %, exceptionnel pour
+  //    un objet de la ceinture de Kuiper), composition dominée par la glace d'eau, couleur
+  //    globalement neutre — base claire commune, peu de cratères vu la résolution d'imagerie
+  //    limitée à quelques pixels par corps (voir texture-sources.json pour le détail). ──
+
+  {
+    name: 'styx',
+    baseColor: [214, 212, 208],
+    craterCount: 3,
+    craterMinRadius: 0.1,
+    craterMaxRadius: 0.2,
+    albedoVariation: 0.08,
+    heightContrast: 0.35,
+  },
+  // Showalter et al. 2015 : une tache rougeâtre autour d'un cratère d'impact identifié sur Nix,
+  // contrastant avec le reste de la surface (grise, dominée par la glace d'eau) — seule feature
+  // de couleur distincte parmi les 4 petites lunes, rendue comme un unique patch rougeâtre.
+  {
+    name: 'nix',
+    baseColor: [212, 208, 200],
+    craterCount: 3,
+    craterMinRadius: 0.1,
+    craterMaxRadius: 0.2,
+    albedoVariation: 0.08,
+    heightContrast: 0.35,
+    patchGroups: [
+      { count: 1, minRadius: 0.09, maxRadius: 0.13, opacity: 0.55, color: [176, 92, 76] },
+    ],
+  },
+  {
+    name: 'kerberos',
+    baseColor: [206, 204, 200],
+    craterCount: 3,
+    craterMinRadius: 0.1,
+    craterMaxRadius: 0.2,
+    albedoVariation: 0.08,
+    heightContrast: 0.35,
+  },
+  {
+    name: 'hydra',
+    baseColor: [216, 214, 210],
+    craterCount: 3,
+    craterMinRadius: 0.1,
+    craterMaxRadius: 0.2,
+    albedoVariation: 0.08,
     heightContrast: 0.35,
   },
 ];

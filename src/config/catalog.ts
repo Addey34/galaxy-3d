@@ -29,6 +29,20 @@ export const ILLUSTRATIVE_SURFACES: ReadonlySet<string> = new Set([
   'quaoar',
   'gonggong',
   'sedna',
+  'amalthea',
+  'mimas',
+  'hyperion',
+  'miranda',
+  'ariel',
+  'umbriel',
+  'titania',
+  'oberon',
+  'proteus',
+  'nereid',
+  'styx',
+  'nix',
+  'kerberos',
+  'hydra',
 ]);
 
 /** Vrai si la surface affichée du corps est illustrative (pas une mosaïque fidèle). */

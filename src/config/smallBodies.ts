@@ -356,7 +356,10 @@ export const SMALL_BODY_ELEMENTS: readonly SmallBodyElements[] = [
         fallbackColor: 0xc4cbcb,
         frame: 'parentRelative',
         relativeEphemeris: { kind: 'horizonsParentRelative' },
-        textureResolutions: {},
+        // Résolution New Horizons trop faible pour une vraie mosaïque (quelques pixels — voir
+        // texture-sources.json). Texture procédurale générée : base claire, peu de cratères,
+        // cohérente avec l'albédo élevé (>50 %) mesuré pour les 4 petites lunes de Pluton.
+        textureResolutions: { surface: ['2k'] },
         realData: {
           radiusKm: 5.2,
           distanceAU: 2.8514e-4,
@@ -389,7 +392,10 @@ export const SMALL_BODY_ELEMENTS: readonly SmallBodyElements[] = [
         fallbackColor: 0xcfc9bd,
         frame: 'parentRelative',
         relativeEphemeris: { kind: 'horizonsParentRelative' },
-        textureResolutions: {},
+        // Texture procédurale générée : base claire + une tache rougeâtre isolée, paramétrée
+        // sur la vraie tache rouge autour d'un cratère d'impact repérée par New Horizons
+        // (Showalter et al. 2015 — voir texture-sources.json).
+        textureResolutions: { surface: ['2k'] },
         realData: {
           radiusKm: 18,
           distanceAU: 3.2551e-4,
@@ -422,7 +428,10 @@ export const SMALL_BODY_ELEMENTS: readonly SmallBodyElements[] = [
         fallbackColor: 0xb4baba,
         frame: 'parentRelative',
         relativeEphemeris: { kind: 'horizonsParentRelative' },
-        textureResolutions: {},
+        // Résolution New Horizons trop faible pour une vraie mosaïque (voir
+        // texture-sources.json). Texture procédurale générée, même traitement que ses 3
+        // lunes sœurs (base claire, peu de cratères).
+        textureResolutions: { surface: ['2k'] },
         realData: {
           radiusKm: 6,
           distanceAU: 3.8626e-4,
@@ -455,7 +464,10 @@ export const SMALL_BODY_ELEMENTS: readonly SmallBodyElements[] = [
         fallbackColor: 0xd2cdc1,
         frame: 'parentRelative',
         relativeEphemeris: { kind: 'horizonsParentRelative' },
-        textureResolutions: {},
+        // Résolution New Horizons trop faible pour une vraie mosaïque (voir
+        // texture-sources.json). Texture procédurale générée, même traitement que ses 3
+        // lunes sœurs (base claire, peu de cratères).
+        textureResolutions: { surface: ['2k'] },
         realData: {
           radiusKm: 18.5,
           distanceAU: 4.3277e-4,

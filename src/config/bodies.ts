@@ -396,8 +396,8 @@ export const CELESTIAL_CONFIG: CelestialConfig = {
           },
           // Aucune mosaïque photo globale contrôlée n'existe côté USGS pour Amalthea (imagée
           // partiellement par Galileo, jamais assemblée en carte globale contrôlée) — vérifié
-          // en direct (2026-08-26). Sphère de couleur unie plutôt qu'une texture inventée.
-          textureResolutions: {},
+          // en direct (2026-08-26). Texture procédurale générée (voir texture-sources.json).
+          textureResolutions: { surface: ['2k'] },
           realData: {
             radiusKm: 83.5,
             distanceAU: 0.0012165730245027,
@@ -787,9 +787,9 @@ export const CELESTIAL_CONFIG: CelestialConfig = {
           },
           // Aucune mosaïque photo globale contrôlée n'existe côté USGS pour Mimas (seulement
           // relief ombré et carte picturale, pas une texture réelle) — vérifié en direct
-          // (2026-08-26, voir scripts/texture-sources.json). Sphère de couleur unie plutôt
-          // qu'une texture inventée.
-          textureResolutions: {},
+          // (2026-08-26, voir scripts/texture-sources.json). Texture procédurale générée,
+          // paramétrée sur le cratère Herschel réel (~1/3 du diamètre, pic central).
+          textureResolutions: { surface: ['2k'] },
           realData: {
             radiusKm: 198.2,
             distanceAU: 0.001243579347218559,
@@ -925,8 +925,9 @@ export const CELESTIAL_CONFIG: CelestialConfig = {
           },
           // Aucune mosaïque globale : Hyperion est trop irrégulier (éponge poreuse
           // ~180×133×103 km) pour qu'une "carte globale" ait vraiment un sens — vérifié en
-          // direct (2026-08-26, voir texture-sources.json).
-          textureResolutions: {},
+          // direct (2026-08-26, voir texture-sources.json). Texture procédurale générée,
+          // paramétrée sur son aspect "éponge" réel (cratères denses, sans bourrelet d'éjecta).
+          textureResolutions: { surface: ['2k'] },
           realData: {
             radiusKm: 135,
             distanceAU: 0.009927017407098830,
@@ -1008,8 +1009,9 @@ export const CELESTIAL_CONFIG: CelestialConfig = {
           },
           // Aucune mosaïque globale contrôlée : Voyager 2 (survol unique, 1986) n'a imagé en
           // détail qu'environ la moitié de Miranda — vérifié en direct (2026-08-26, voir
-          // texture-sources.json). Sphère de couleur unie plutôt qu'une texture inventée.
-          textureResolutions: {},
+          // texture-sources.json). Texture procédurale générée, avec de larges plages de
+          // terrain distinct approximant ses coronae réelles (Inverness/Arden/Elsinore).
+          textureResolutions: { surface: ['2k'] },
           realData: {
             radiusKm: 235.8,
             distanceAU: 0.0008681390616993154,
@@ -1052,7 +1054,10 @@ export const CELESTIAL_CONFIG: CelestialConfig = {
             meanAnomalyAtEpochRad: 152.7943682479845 * D2R,
             epoch: new Date('2000-01-01T12:00:00Z'),
           },
-          textureResolutions: {},
+          // Aucune mosaïque globale contrôlée n'existe côté USGS pour Ariel — vérifié en direct
+          // (2026-08-26, voir texture-sources.json). Texture procédurale générée : peu de
+          // grands cratères + beaucoup de petits (Voyager 2 imaging science, 1986).
+          textureResolutions: { surface: ['2k'] },
           realData: {
             radiusKm: 578.9,
             distanceAU: 0.001276364069125674,
@@ -1095,7 +1100,11 @@ export const CELESTIAL_CONFIG: CelestialConfig = {
             meanAnomalyAtEpochRad: 271.2233789529364 * D2R,
             epoch: new Date('2000-01-01T12:00:00Z'),
           },
-          textureResolutions: {},
+          // Aucune mosaïque globale contrôlée n'existe côté USGS pour Umbriel — vérifié en
+          // direct (2026-08-26, voir texture-sources.json). Texture procédurale générée, avec
+          // un unique point clair approximant le cratère Wunda réel (plancher/parois clairs,
+          // pôle nord).
+          textureResolutions: { surface: ['2k'] },
           realData: {
             radiusKm: 584.7,
             distanceAU: 0.001778181651275977,
@@ -1138,7 +1147,12 @@ export const CELESTIAL_CONFIG: CelestialConfig = {
             meanAnomalyAtEpochRad: 74.41677554285916 * D2R,
             epoch: new Date('2000-01-01T12:00:00Z'),
           },
-          textureResolutions: {},
+          // Aucune mosaïque globale contrôlée n'existe côté USGS pour Titania — vérifié en
+          // direct (2026-08-26, voir texture-sources.json). Texture procédurale générée
+          // (cratérisation modérée seule — le générateur ne modélise pas les réseaux de
+          // canyons comme Messina Chasma, voir le commentaire sur cette limite dans
+          // scripts/generate-procedural-textures.mjs).
+          textureResolutions: { surface: ['2k'] },
           realData: {
             radiusKm: 788.4,
             distanceAU: 0.002916436400823477,
@@ -1181,7 +1195,10 @@ export const CELESTIAL_CONFIG: CelestialConfig = {
             meanAnomalyAtEpochRad: 93.49629094330373 * D2R,
             epoch: new Date('2000-01-01T12:00:00Z'),
           },
-          textureResolutions: {},
+          // Aucune mosaïque globale contrôlée n'existe côté USGS pour Obéron — vérifié en
+          // direct (2026-08-26, voir texture-sources.json). Texture procédurale générée :
+          // surface sombre, cratérisation dense avec quelques grands bassins à pic central.
+          textureResolutions: { surface: ['2k'] },
           realData: {
             radiusKm: 761.4,
             distanceAU: 0.003900790441203894,
@@ -1304,8 +1321,9 @@ export const CELESTIAL_CONFIG: CelestialConfig = {
           },
           // Aucune mosaïque photo globale contrôlée n'existe côté USGS pour Protée (une seule
           // face imagée par Voyager 2, jamais assemblée en carte globale contrôlée) — vérifié
-          // en direct (2026-08-26). Sphère de couleur unie plutôt qu'une texture inventée.
-          textureResolutions: {},
+          // en direct (2026-08-26). Texture procédurale générée, paramétrée sur le cratère
+          // Pharos réel (~250 km, plus de la moitié du diamètre de Protée, dôme central).
+          textureResolutions: { surface: ['2k'] },
           realData: {
             radiusKm: 208,
             distanceAU: 0.0007866074366734613,
@@ -1353,8 +1371,10 @@ export const CELESTIAL_CONFIG: CelestialConfig = {
           },
           // Aucune mosaïque photo globale contrôlée n'existe côté USGS pour Néréide (résolution
           // Voyager 2 de ~43 km/pixel seulement — insuffisant pour une carte globale) — vérifié
-          // en direct (2026-08-26). Sphère de couleur unie plutôt qu'une texture inventée.
-          textureResolutions: {},
+          // en direct (2026-08-26). Texture procédurale générée, avec un contraste hémisphérique
+          // doux approximant l'hémisphère sombre réel évoqué pour expliquer sa variabilité
+          // photométrique (Schaefer & Schaefer 2000).
+          textureResolutions: { surface: ['2k'] },
           realData: {
             radiusKm: 170,
             distanceAU: 0.03683979459947609,

@@ -32,13 +32,19 @@ provenance (source URL, resolution, licence) is in [`scripts/texture-sources.jso
    scientific maps. No action required beyond keeping that disclosure current.
 
 4. **Generated — original, no third-party rights.** Procedurally generated textures
-   (`scripts/generate-procedural-textures.mjs` — seeded fractal noise + synthetic craters, no
-   external image involved) for bodies that have never been imaged by any spacecraft and are not
-   covered by Solar System Scope's illustrative set: `orcus`, `quaoar`, `gonggong`, `sedna`, plus
-   `pallas` and `hygiea` (2026-08-27: replaced their previous asset, whose community-sourced
-   licence was unconfirmed and likely CC BY-NC-SA — incompatible with commercial use — with this
-   generated one). Fully covered by this project's own `LICENSE.md`; no attribution, no
-   third-party licence, and no commercial restriction beyond the project's own license terms.
+   (`scripts/generate-procedural-textures.mjs` — seeded fractal noise, synthetic craters/basins/
+   ice-patches parameterized from each body's real published data, no external image involved)
+   for bodies that have never been imaged well enough for a global mosaic to exist: `orcus`,
+   `quaoar`, `gonggong`, `sedna` (never visited by any spacecraft, not covered by Solar System
+   Scope's illustrative set), `mimas`, `hyperion`, `miranda`, `ariel`, `umbriel`, `titania`,
+   `oberon`, `amalthea`, `proteus`, `nereid`, `styx`, `nix`, `kerberos`, `hydra` (imaged by
+   Voyager 2 / Galileo / New Horizons, but only partially or at too low a resolution for a
+   controlled global mosaic — see each body's entry in `texture-sources.json` for the specific
+   coverage limit), plus `pallas` and `hygiea` (2026-08-27: replaced their previous asset, whose
+   community-sourced licence was unconfirmed and likely CC BY-NC-SA — incompatible with
+   commercial use — with this generated one). Fully covered by this project's own `LICENSE.md`;
+   no attribution, no third-party licence, and no commercial restriction beyond the project's own
+   license terms.
 
 The social preview image is a project asset and should be replaced only with material whose
 redistribution rights are known.

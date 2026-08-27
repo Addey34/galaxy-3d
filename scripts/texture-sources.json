@@ -325,6 +325,118 @@
       "illustrative": true
     },
     {
+      "body": "mimas",
+      "layer": "surface",
+      "license": "generated",
+      "credit": "généré proceduralement (scripts/generate-procedural-textures.mjs) — aucun tiers, aucune attribution requise",
+      "tier": "free",
+      "illustrative": true
+    },
+    {
+      "body": "hyperion",
+      "layer": "surface",
+      "license": "generated",
+      "credit": "généré proceduralement (scripts/generate-procedural-textures.mjs) — aucun tiers, aucune attribution requise",
+      "tier": "free",
+      "illustrative": true
+    },
+    {
+      "body": "miranda",
+      "layer": "surface",
+      "license": "generated",
+      "credit": "généré proceduralement (scripts/generate-procedural-textures.mjs) — aucun tiers, aucune attribution requise",
+      "tier": "free",
+      "illustrative": true
+    },
+    {
+      "body": "ariel",
+      "layer": "surface",
+      "license": "generated",
+      "credit": "généré proceduralement (scripts/generate-procedural-textures.mjs) — aucun tiers, aucune attribution requise",
+      "tier": "free",
+      "illustrative": true
+    },
+    {
+      "body": "umbriel",
+      "layer": "surface",
+      "license": "generated",
+      "credit": "généré proceduralement (scripts/generate-procedural-textures.mjs) — aucun tiers, aucune attribution requise",
+      "tier": "free",
+      "illustrative": true
+    },
+    {
+      "body": "titania",
+      "layer": "surface",
+      "license": "generated",
+      "credit": "généré proceduralement (scripts/generate-procedural-textures.mjs) — aucun tiers, aucune attribution requise",
+      "tier": "free",
+      "illustrative": true
+    },
+    {
+      "body": "oberon",
+      "layer": "surface",
+      "license": "generated",
+      "credit": "généré proceduralement (scripts/generate-procedural-textures.mjs) — aucun tiers, aucune attribution requise",
+      "tier": "free",
+      "illustrative": true
+    },
+    {
+      "body": "amalthea",
+      "layer": "surface",
+      "license": "generated",
+      "credit": "généré proceduralement (scripts/generate-procedural-textures.mjs) — aucun tiers, aucune attribution requise",
+      "tier": "free",
+      "illustrative": true
+    },
+    {
+      "body": "proteus",
+      "layer": "surface",
+      "license": "generated",
+      "credit": "généré proceduralement (scripts/generate-procedural-textures.mjs) — aucun tiers, aucune attribution requise",
+      "tier": "free",
+      "illustrative": true
+    },
+    {
+      "body": "nereid",
+      "layer": "surface",
+      "license": "generated",
+      "credit": "généré proceduralement (scripts/generate-procedural-textures.mjs) — aucun tiers, aucune attribution requise",
+      "tier": "free",
+      "illustrative": true
+    },
+    {
+      "body": "styx",
+      "layer": "surface",
+      "license": "generated",
+      "credit": "généré proceduralement (scripts/generate-procedural-textures.mjs) — aucun tiers, aucune attribution requise",
+      "tier": "free",
+      "illustrative": true
+    },
+    {
+      "body": "nix",
+      "layer": "surface",
+      "license": "generated",
+      "credit": "généré proceduralement (scripts/generate-procedural-textures.mjs) — aucun tiers, aucune attribution requise",
+      "tier": "free",
+      "illustrative": true
+    },
+    {
+      "body": "kerberos",
+      "layer": "surface",
+      "license": "generated",
+      "credit": "généré proceduralement (scripts/generate-procedural-textures.mjs) — aucun tiers, aucune attribution requise",
+      "tier": "free",
+      "illustrative": true
+    },
+    {
+      "body": "hydra",
+      "layer": "surface",
+      "license": "generated",
+      "credit": "généré proceduralement (scripts/generate-procedural-textures.mjs) — aucun tiers, aucune attribution requise",
+      "tier": "free",
+      "illustrative": true
+    },
+    {
       "body": "tethys",
       "layer": "surface",
       "license": "public-domain",
@@ -974,100 +1086,100 @@
     {
       "body": "mimas",
       "layer": "surface",
-      "status": "no-map",
-      "sourcePage": "https://astrogeology.usgs.gov/search/results?target=mimas",
-      "note": "Checked live (2026-08-26): USGS's Mimas catalog has no controlled global photo mosaic, only an airbrush shaded-relief map, a pictorial map and a control-point network — none is a real photographic texture. Rendered with fallbackColor only until a genuine source is found; do not fabricate a texture path."
+      "status": "generated",
+      "sourcePage": "scripts/generate-procedural-textures.mjs",
+      "note": "Checked live (2026-08-26): USGS's Mimas catalog has no controlled global photo mosaic, only an airbrush shaded-relief map, a pictorial map and a control-point network — none is a real photographic texture. Replaced 2026-08-27's fallbackColor-only rendering with a procedural texture parameterized on the real Herschel crater (spans ~1/3 of Mimas's diameter, ~6 km central peak) — one oversized basin with a central peak, plus moderate general cratering."
     },
     {
       "body": "miranda",
       "layer": "surface",
-      "status": "no-map",
-      "sourcePage": "https://astrogeology.usgs.gov/search/results?target=miranda",
-      "note": "Checked live (2026-08-26): USGS has no controlled global mosaic for Miranda, only a nomenclature map and a Voyager 2 control-point network (imagery covers roughly its southern hemisphere only, from the single 1986 flyby). Rendered with fallbackColor only."
+      "status": "generated",
+      "sourcePage": "scripts/generate-procedural-textures.mjs",
+      "note": "Checked live (2026-08-26): USGS has no controlled global mosaic for Miranda, only a nomenclature map and a Voyager 2 control-point network (imagery covers roughly its southern hemisphere only, from the single 1986 flyby). Procedural texture: large distinct-terrain patches approximate its real coronae (Inverness/Arden/Elsinore chevron terrains) — the generator has no linear-groove primitive, so the actual V-shaped ridges are not modeled, only their presence as a distinct terrain type."
     },
     {
       "body": "ariel",
       "layer": "surface",
-      "status": "no-map",
-      "sourcePage": "https://astrogeology.usgs.gov/search/results?target=ariel",
-      "note": "Checked live (2026-08-26): same situation as Miranda — no controlled global mosaic published by USGS, single-flyby Voyager 2 coverage only. Rendered with fallbackColor only."
+      "status": "generated",
+      "sourcePage": "scripts/generate-procedural-textures.mjs",
+      "note": "Checked live (2026-08-26): same situation as Miranda — no controlled global mosaic published by USGS, single-flyby Voyager 2 coverage only. Procedural texture: Voyager 2 imaging science found Ariel is Uranus's brightest/youngest-surfaced moon with few large craters and many small ones (recent low-impact resurfacing erased older large craters) — rendered as many small craters, no large basins."
     },
     {
       "body": "umbriel",
       "layer": "surface",
-      "status": "no-map",
-      "sourcePage": "https://astrogeology.usgs.gov/search/results?target=umbriel",
-      "note": "Checked live (2026-08-26): no controlled global mosaic published by USGS. Rendered with fallbackColor only."
+      "status": "generated",
+      "sourcePage": "scripts/generate-procedural-textures.mjs",
+      "note": "Checked live (2026-08-26): no controlled global mosaic published by USGS. Procedural texture: darkest of the five major Uranian moons, with the single named feature Wunda (a bright-floored crater near its north pole) — rendered as a dark base with one isolated bright patch."
     },
     {
       "body": "titania",
       "layer": "surface",
-      "status": "no-map",
-      "sourcePage": "https://astrogeology.usgs.gov/search/results?target=titania",
-      "note": "Checked live (2026-08-26): no controlled global mosaic published by USGS. Rendered with fallbackColor only."
+      "status": "generated",
+      "sourcePage": "scripts/generate-procedural-textures.mjs",
+      "note": "Checked live (2026-08-26): no controlled global mosaic published by USGS. Procedural texture: moderate cratering only — Titania's real defining feature is its canyon network (Messina Chasmata, ~1500 km), which this generator cannot represent (no linear-groove primitive), documented as a known limitation rather than approximated inaccurately."
     },
     {
       "body": "oberon",
       "layer": "surface",
-      "status": "no-map",
-      "sourcePage": "https://astrogeology.usgs.gov/search/results?target=oberon",
-      "note": "Checked live (2026-08-26): no controlled global mosaic published by USGS. Rendered with fallbackColor only."
+      "status": "generated",
+      "sourcePage": "scripts/generate-procedural-textures.mjs",
+      "note": "Checked live (2026-08-26): no controlled global mosaic published by USGS. Procedural texture: one of the oldest, least-resurfaced Uranian moon surfaces, with craters up to ~200 km bearing central peaks — rendered as dense cratering with two large central-peak basins."
     },
     {
       "body": "hyperion",
       "layer": "surface",
-      "status": "no-map",
-      "sourcePage": "https://astrogeology.usgs.gov/search/results?target=hyperion",
-      "note": "Checked live (2026-08-26): USGS has only a control-point network and a nomenclature map for Hyperion, no photo mosaic — consistent with the physical reality that Hyperion is a highly irregular, chaotically-rotating body (no fixed 'global' surface projection is even well-defined). Rendered with fallbackColor only."
+      "status": "generated",
+      "sourcePage": "scripts/generate-procedural-textures.mjs",
+      "note": "Checked live (2026-08-26): USGS has only a control-point network and a nomenclature map for Hyperion, no photo mosaic — consistent with the physical reality that Hyperion is a highly irregular, chaotically-rotating body (no fixed 'global' surface projection is even well-defined). Procedural texture parameterized on Thomas et al. 2007's 'sponge-like' description: very dense, deep small craters with no ejecta rim (craterRimStrength: 0), unlike every other generated body here."
     },
     {
       "body": "amalthea",
       "layer": "surface",
-      "status": "no-map",
-      "sourcePage": "https://astrogeology.usgs.gov/search?target=Amalthea",
-      "note": "Checked live (2026-08-26) via USGS search + web search: no controlled global photomosaic exists for Amalthea (Galileo imaged it only partially, at closer range than any other Jovian moon, but the coverage was never assembled into a global map). Rendered with fallbackColor only."
+      "status": "generated",
+      "sourcePage": "scripts/generate-procedural-textures.mjs",
+      "note": "Checked live (2026-08-26) via USGS search + web search: no controlled global photomosaic exists for Amalthea (Galileo imaged it only partially, at closer range than any other Jovian moon, but the coverage was never assembled into a global map). Procedural texture: deep red base color reflecting its real status as the reddest known object in the Solar System (redder than Mars), attributed to sulfur dust from Io."
     },
     {
       "body": "proteus",
       "layer": "surface",
-      "status": "no-map",
-      "sourcePage": "https://astrogeology.usgs.gov/search?target=Proteus",
-      "note": "Checked live (2026-08-26): Voyager 2 imaged only one hemisphere of Proteus at usable resolution during its single 1989 flyby; no controlled global mosaic was ever produced. Rendered with fallbackColor only."
+      "status": "generated",
+      "sourcePage": "scripts/generate-procedural-textures.mjs",
+      "note": "Checked live (2026-08-26): Voyager 2 imaged only one hemisphere of Proteus at usable resolution during its single 1989 flyby; no controlled global mosaic was ever produced. Procedural texture parameterized on the real Pharos crater (~250 km, over half of Proteus's own diameter, with a central dome) — one oversized basin with a central peak, plus dense general cratering, same treatment as Mimas/Herschel above."
     },
     {
       "body": "nereid",
       "layer": "surface",
-      "status": "no-map",
-      "sourcePage": "https://www.jpl.nasa.gov/images/pia00054-nereid/",
-      "note": "Checked live (2026-08-26): Voyager 2's closest approach to Nereid was 4.7 million km at ~43 km/pixel resolution — the moon (radius ~170 km) is barely resolved, nowhere near enough detail for any surface map, global or otherwise. Rendered with fallbackColor only."
+      "status": "generated",
+      "sourcePage": "scripts/generate-procedural-textures.mjs",
+      "note": "Checked live (2026-08-26): Voyager 2's closest approach to Nereid was 4.7 million km at ~43 km/pixel resolution — the moon (radius ~170 km) is barely resolved, nowhere near enough detail for any surface map, global or otherwise. Procedural texture uses a smooth hemisphere-contrast primitive (not noise) reflecting the literature's explicit 'dark hemisphere' explanation for Nereid's large photometric variability (Schaefer & Schaefer 2000), rather than generic random mottling."
     },
     {
       "body": "styx",
       "layer": "surface",
-      "status": "no-map",
-      "sourcePage": "https://en.wikipedia.org/wiki/Styx_(moon)",
-      "note": "Checked live (2026-08-26): New Horizons resolved Styx (radius ~5 km) only as a handful of pixels during its single 2015 flyby of the Pluto system — no surface map is possible at that resolution. Rendered with fallbackColor only."
+      "status": "generated",
+      "sourcePage": "scripts/generate-procedural-textures.mjs",
+      "note": "Checked live (2026-08-26): New Horizons resolved Styx (radius ~5 km) only as a handful of pixels during its single 2015 flyby of the Pluto system — no surface map is possible at that resolution. Procedural texture: bright neutral base with light cratering, reflecting the real >50% geometric albedo measured for Pluto's small moons (unusually high for the Kuiper belt) and their water-ice-dominated composition."
     },
     {
       "body": "nix",
       "layer": "surface",
-      "status": "no-map",
-      "sourcePage": "https://en.wikipedia.org/wiki/Nix_(moon)",
-      "note": "Checked live (2026-08-26): New Horizons resolved detail down to ~3 km/pixel on Nix during its single 2015 flyby — enough to see its shape and one notable red crater, but not enough for a controlled global photomosaic. Rendered with fallbackColor only."
+      "status": "generated",
+      "sourcePage": "scripts/generate-procedural-textures.mjs",
+      "note": "Checked live (2026-08-26): New Horizons resolved detail down to ~3 km/pixel on Nix during its single 2015 flyby — enough to see its shape and one notable red crater, but not enough for a controlled global photomosaic. Procedural texture parameterized directly on that real feature: bright neutral base plus one isolated reddish patch, matching Showalter et al. 2015's reported red blotch around an impact crater on Nix's otherwise grey, water-ice surface."
     },
     {
       "body": "kerberos",
       "layer": "surface",
-      "status": "no-map",
-      "sourcePage": "https://en.wikipedia.org/wiki/Kerberos_(moon)",
-      "note": "Checked live (2026-08-26): New Horizons imaged Kerberos only distantly during its single 2015 flyby, enough to reveal a double-lobed shape but not a global photomosaic. Rendered with fallbackColor only."
+      "status": "generated",
+      "sourcePage": "scripts/generate-procedural-textures.mjs",
+      "note": "Checked live (2026-08-26): New Horizons imaged Kerberos only distantly during its single 2015 flyby, enough to reveal a double-lobed shape but not a global photomosaic. Procedural texture: bright neutral base with light cratering, same treatment as its 3 sibling small moons (real >50% albedo, water-ice composition) — its real double-lobed (contact-binary) shape is not modeled, this is a sphere mesh."
     },
     {
       "body": "hydra",
       "layer": "surface",
-      "status": "no-map",
-      "sourcePage": "https://en.wikipedia.org/wiki/Hydra_(moon)",
-      "note": "Checked live (2026-08-26): same single-flyby limitation as Pluto's other small moons — shape and rough dimensions known from New Horizons, but no controlled global mosaic exists. Rendered with fallbackColor only."
+      "status": "generated",
+      "sourcePage": "scripts/generate-procedural-textures.mjs",
+      "note": "Checked live (2026-08-26): same single-flyby limitation as Pluto's other small moons — shape and rough dimensions known from New Horizons, but no controlled global mosaic exists. Procedural texture: bright neutral base with light cratering, same treatment as its 3 sibling small moons (real >50% albedo, water-ice composition)."
     },
     {
       "body": "orcus",
