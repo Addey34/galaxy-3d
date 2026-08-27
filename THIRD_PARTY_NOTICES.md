@@ -31,13 +31,14 @@ provenance (source URL, resolution, licence) is in [`scripts/texture-sources.jso
    The app's own credits list (`index.html`) already discloses these as illustrative, not
    scientific maps. No action required beyond keeping that disclosure current.
 
-4. **Unconfirmed licence — action required.** No validated global spacecraft map exists and the
-   asset's author/licence has not been confirmed (community sources such as
-   planet-texture-map.fandom.com are typically **CC BY-NC-SA**, which forbids commercial use and
-   requires author attribution + share-alike). Bodies: `pallas`, `hygiea` — both marked
-   `"tier": "full-only"` in `texture-sources.json` specifically because of this, i.e. excluded from
-   any future monetized/free tier until resolved. Record the exact author + licence, or replace
-   with a public-domain / CC BY asset, before any commercial reuse.
+4. **Generated — original, no third-party rights.** Procedurally generated textures
+   (`scripts/generate-procedural-textures.mjs` — seeded fractal noise + synthetic craters, no
+   external image involved) for bodies that have never been imaged by any spacecraft and are not
+   covered by Solar System Scope's illustrative set: `orcus`, `quaoar`, `gonggong`, `sedna`, plus
+   `pallas` and `hygiea` (2026-08-27: replaced their previous asset, whose community-sourced
+   licence was unconfirmed and likely CC BY-NC-SA — incompatible with commercial use — with this
+   generated one). Fully covered by this project's own `LICENSE.md`; no attribution, no
+   third-party licence, and no commercial restriction beyond the project's own license terms.
 
 The social preview image is a project asset and should be replaced only with material whose
 redistribution rights are known.

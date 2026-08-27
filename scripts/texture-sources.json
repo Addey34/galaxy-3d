@@ -279,17 +279,49 @@
     {
       "body": "pallas",
       "layer": "surface",
-      "license": "unconfirmed",
-      "credit": "carte illustrative — aucune mosaïque fidèle n'existe (VLT/SPHERE = forme grise sans texture)",
-      "tier": "full-only",
+      "license": "generated",
+      "credit": "généré proceduralement (scripts/generate-procedural-textures.mjs) — aucun tiers, aucune attribution requise",
+      "tier": "free",
       "illustrative": true
     },
     {
       "body": "hygiea",
       "layer": "surface",
-      "license": "unconfirmed",
-      "credit": "carte illustrative — aucune mosaïque fidèle n'existe (VLT/SPHERE = forme grise sans texture)",
-      "tier": "full-only",
+      "license": "generated",
+      "credit": "généré proceduralement (scripts/generate-procedural-textures.mjs) — aucun tiers, aucune attribution requise",
+      "tier": "free",
+      "illustrative": true
+    },
+    {
+      "body": "orcus",
+      "layer": "surface",
+      "license": "generated",
+      "credit": "généré proceduralement (scripts/generate-procedural-textures.mjs) — aucun tiers, aucune attribution requise",
+      "tier": "free",
+      "illustrative": true
+    },
+    {
+      "body": "quaoar",
+      "layer": "surface",
+      "license": "generated",
+      "credit": "généré proceduralement (scripts/generate-procedural-textures.mjs) — aucun tiers, aucune attribution requise",
+      "tier": "free",
+      "illustrative": true
+    },
+    {
+      "body": "gonggong",
+      "layer": "surface",
+      "license": "generated",
+      "credit": "généré proceduralement (scripts/generate-procedural-textures.mjs) — aucun tiers, aucune attribution requise",
+      "tier": "free",
+      "illustrative": true
+    },
+    {
+      "body": "sedna",
+      "layer": "surface",
+      "license": "generated",
+      "credit": "généré proceduralement (scripts/generate-procedural-textures.mjs) — aucun tiers, aucune attribution requise",
+      "tier": "free",
       "illustrative": true
     },
     {
@@ -724,30 +756,28 @@
     {
       "body": "pallas",
       "layer": "surface",
-      "status": "unresolved",
-      "sourcePage": "https://fdp.astrogeology.usgs.gov/fdp/smallbodies/",
-      "sourceResolution": "no validated global spacecraft albedo mosaic located",
-      "projection": "unknown",
+      "status": "generated",
+      "sourcePage": "scripts/generate-procedural-textures.mjs",
+      "sourceResolution": "n/a — procedurally generated, no spacecraft mosaic exists",
+      "projection": "equirectangular",
       "qualityClass": "illustrative",
-      "note": "Keep current asset explicitly illustrative until a controlled global map exists.",
-      "license": "unconfirmed",
-      "credit": "unconfirmed",
-      "attributionNeeded": true,
-      "provenanceNote": "Artistic/semi-fictional map, no spacecraft mosaic. Likely community source (e.g. planet-texture-map.fandom.com, CC BY-NC-SA). Record exact author + licence or replace before commercial reuse."
+      "note": "Replaced 2026-08-27: the previous asset's licence was unconfirmed (likely CC BY-NC-SA community source), which blocked commercial reuse. Regenerated as an original procedural texture (seeded noise + craters) — no external asset, no third-party licence, no attribution needed.",
+      "license": "generated",
+      "credit": "générée proceduralement, projet",
+      "attributionNeeded": false
     },
     {
       "body": "hygiea",
       "layer": "surface",
-      "status": "unresolved",
-      "sourcePage": "https://fdp.astrogeology.usgs.gov/fdp/smallbodies/",
-      "sourceResolution": "no validated global spacecraft albedo mosaic located",
-      "projection": "unknown",
+      "status": "generated",
+      "sourcePage": "scripts/generate-procedural-textures.mjs",
+      "sourceResolution": "n/a — procedurally generated, no spacecraft mosaic exists",
+      "projection": "equirectangular",
       "qualityClass": "illustrative",
-      "note": "Keep current asset explicitly illustrative until a controlled global map exists.",
-      "license": "unconfirmed",
-      "credit": "unconfirmed",
-      "attributionNeeded": true,
-      "provenanceNote": "Artistic/semi-fictional map, no spacecraft mosaic. Likely community source (e.g. planet-texture-map.fandom.com, CC BY-NC-SA). Record exact author + licence or replace before commercial reuse."
+      "note": "Replaced 2026-08-27: the previous asset's licence was unconfirmed (likely CC BY-NC-SA community source), which blocked commercial reuse. Regenerated as an original procedural texture (seeded noise + craters) — no external asset, no third-party licence, no attribution needed.",
+      "license": "generated",
+      "credit": "générée proceduralement, projet",
+      "attributionNeeded": false
     },
     {
       "body": "pluto",
@@ -1042,30 +1072,30 @@
     {
       "body": "orcus",
       "layer": "surface",
-      "status": "no-map",
-      "sourcePage": "https://www.solarsystemscope.com/textures/",
-      "note": "Checked live (2026-08-27): no spacecraft has ever visited Orcus, and Solar System Scope's illustrative dwarf-planet set (used for Ceres/Eris/Haumea/Makemake) does not include it. Only unresolved point-source photometry exists — no surface map, illustrative or otherwise. Rendered with fallbackColor only."
+      "status": "generated",
+      "sourcePage": "scripts/generate-procedural-textures.mjs",
+      "note": "No spacecraft has ever visited Orcus and it is not part of Solar System Scope's illustrative dwarf-planet set (checked live 2026-08-27), so no external image of any kind exists to source. Replaced the earlier fallbackColor-only rendering with a procedurally generated surface (seeded noise + craters, no external asset, no third-party licence) — same technique as Pallas/Hygiea below."
     },
     {
       "body": "quaoar",
       "layer": "surface",
-      "status": "no-map",
-      "sourcePage": "https://www.solarsystemscope.com/textures/",
-      "note": "Checked live (2026-08-27): no spacecraft has ever visited Quaoar; not part of Solar System Scope's illustrative dwarf-planet set. Only unresolved point-source photometry and stellar-occultation profiles exist. Rendered with fallbackColor only."
+      "status": "generated",
+      "sourcePage": "scripts/generate-procedural-textures.mjs",
+      "note": "No spacecraft has ever visited Quaoar; not part of Solar System Scope's illustrative dwarf-planet set (checked live 2026-08-27). Procedurally generated surface — no external asset, no third-party licence."
     },
     {
       "body": "gonggong",
       "layer": "surface",
-      "status": "no-map",
-      "sourcePage": "https://www.solarsystemscope.com/textures/",
-      "note": "Checked live (2026-08-27): no spacecraft has ever visited Gonggong; not part of Solar System Scope's illustrative dwarf-planet set. Only unresolved point-source photometry exists. Rendered with fallbackColor only."
+      "status": "generated",
+      "sourcePage": "scripts/generate-procedural-textures.mjs",
+      "note": "No spacecraft has ever visited Gonggong; not part of Solar System Scope's illustrative dwarf-planet set (checked live 2026-08-27). Procedurally generated surface — no external asset, no third-party licence."
     },
     {
       "body": "sedna",
       "layer": "surface",
-      "status": "no-map",
-      "sourcePage": "https://www.solarsystemscope.com/textures/",
-      "note": "Checked live (2026-08-27): no spacecraft has ever visited Sedna; not part of Solar System Scope's illustrative dwarf-planet set. Even its size is only estimated from unresolved photometry. Rendered with fallbackColor only."
+      "status": "generated",
+      "sourcePage": "scripts/generate-procedural-textures.mjs",
+      "note": "No spacecraft has ever visited Sedna; not part of Solar System Scope's illustrative dwarf-planet set (checked live 2026-08-27); even its size is only an estimate. Procedurally generated surface — no external asset, no third-party licence."
     }
   ]
 }
