@@ -9,6 +9,13 @@
  * Contenu généré mathématiquement à partir d'un PRNG seedé par nom de corps — aucune image
  * source, donc aucun droit tiers à gérer : pas de crédit à ajouter, licence = celle du projet.
  * Sortie : équirectangulaire 2048x1024 (2:1), conforme à `scripts/audit-textures.mjs`.
+ *
+ * Les paramètres par corps (densité de cratères, bassins, plages de givre) ne sont pas
+ * arbitraires : chacun est choisi pour refléter une donnée ou une hypothèse publiée sur ce corps
+ * précis (imagerie VLT/SPHERE pour Pallas/Hygiea, spectroscopie glace/ammoniac pour Orcus/Quaoar,
+ * etc.) — la source est citée en commentaire à côté de chaque entrée de `BODIES` ci-dessous.
+ * L'objectif est une estimation illustrative plausible, pas une carte scientifique — aucune
+ * position de cratère ou de plage de givre n'est réelle, seule leur présence/absence l'est.
  */
 import { mkdir } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
@@ -82,20 +89,21 @@ function pixelGrain(x, y) {
   return ((h >>> 0) / 4294967295) * 2 - 1; // [-1, 1]
 }
 
+/** Point uniforme sur la sphère, calottes polaires exclues (un point centré près d'un pôle
+ *  s'étire sur toute la largeur en projection équirectangulaire — artefact de projection). */
+function spherePoint(rng) {
+  let z = rng() * 2 - 1;
+  while (Math.abs(z) > 0.88) z = rng() * 2 - 1;
+  const theta = rng() * Math.PI * 2;
+  const r = Math.sqrt(1 - z * z);
+  return { x: r * Math.cos(theta), y: r * Math.sin(theta), z };
+}
+
 function makeCraters(rng, count, minRadius, maxRadius) {
   const craters = [];
   for (let i = 0; i < count; i++) {
-    // Point uniforme sur la sphère (évite la concentration aux pôles d'un tirage lat/lon naïf),
-    // en excluant les calottes polaires : un cratère centré près d'un pôle s'étire sur toute la
-    // largeur en projection équirectangulaire — artefact de projection, pas un vrai relief.
-    let z = rng() * 2 - 1;
-    while (Math.abs(z) > 0.88) z = rng() * 2 - 1;
-    const theta = rng() * Math.PI * 2;
-    const r = Math.sqrt(1 - z * z);
     craters.push({
-      x: r * Math.cos(theta),
-      y: r * Math.sin(theta),
-      z,
+      ...spherePoint(rng),
       radius: minRadius + rng() * (maxRadius - minRadius),
       depth: 0.4 + rng() * 0.6,
     });
@@ -121,6 +129,51 @@ function craterHeight(craters, nx, ny, nz) {
   return h;
 }
 
+/**
+ * Taches claires irrégulières (glace cristalline / givre) — pas des cratères : bosse lisse sans
+ * bol ni bourrelet, et le rayon effectif est modulé par du bruit pour un contour non circulaire,
+ * cohérent avec un dépôt cryovolcanique/de givre plutôt qu'un impact.
+ */
+function makeIcePatches(rng, count, minRadius, maxRadius) {
+  const patches = [];
+  for (let i = 0; i < count; i++) {
+    patches.push({
+      ...spherePoint(rng),
+      radius: minRadius + rng() * (maxRadius - minRadius),
+      strength: 0.6 + rng() * 0.4,
+      // Deux harmoniques à fréquences non liées : casse la symétrie en "étoile" qu'un seul
+      // sin(k·θ) produit, pour un contour plus organique (givre/dépôt) que géométrique.
+      wobbleFreq1: 2.3 + rng() * 2.1,
+      wobblePhase1: rng() * Math.PI * 2,
+      wobbleFreq2: 5.7 + rng() * 4.3,
+      wobblePhase2: rng() * Math.PI * 2,
+    });
+  }
+  return patches;
+}
+
+function icePatchIntensity(patches, nx, ny, nz) {
+  let intensity = 0;
+  for (const p of patches) {
+    const cosAngle = nx * p.x + ny * p.y + nz * p.z;
+    const angle = Math.acos(Math.min(1, Math.max(-1, cosAngle)));
+    // Angle autour du centre de la tache, pour moduler son contour (forme non circulaire).
+    const bearing = Math.atan2(
+      nz - cosAngle * p.z,
+      nx * p.y - ny * p.x || 1e-6
+    );
+    const wobble =
+      1 +
+      0.16 * Math.sin(p.wobbleFreq1 * bearing + p.wobblePhase1) +
+      0.1 * Math.sin(p.wobbleFreq2 * bearing + p.wobblePhase2);
+    const a = angle / (p.radius * wobble);
+    if (a > 1) continue;
+    // Bord adouci (exposant plus faible) : moins net qu'un cratère, cohérent avec un dépôt.
+    intensity = Math.max(intensity, p.strength * (1 - a * a) ** 2.2);
+  }
+  return intensity; // [0, ~1]
+}
+
 function clamp255(v) {
   return Math.max(0, Math.min(255, Math.round(v)));
 }
@@ -133,14 +186,24 @@ async function generateBody({
   craterMaxRadius,
   albedoVariation,
   heightContrast,
+  largeBasins = [], // grands bassins d'impact ponctuels (ex. Pallas — Marsset et al. 2020)
+  icePatches, // taches de glace/givre "fraîches" — resurfaçage cryovolcanique ou dépôt de givre
+  iceColor,
 }) {
   const rng = makeRng(name);
   const macroNoise = makeSphericalNoise(rng, 4, 1.5, 2.3); // grandes taches d'albédo
   const mesoNoise = makeSphericalNoise(rng, 3, 10, 2.1); // relief moyen (dizaines de cycles)
   const craters = makeCraters(rng, craterCount, craterMinRadius, craterMaxRadius);
+  for (const basin of largeBasins) {
+    craters.push({ ...spherePoint(rng), ...basin });
+  }
+  const patches = icePatches
+    ? makeIcePatches(rng, icePatches.count, icePatches.minRadius, icePatches.maxRadius)
+    : [];
 
   const buffer = Buffer.allocUnsafe(WIDTH * HEIGHT * 3);
   const [br, bg, bb] = baseColor;
+  const [ir, ig, ib] = iceColor ?? [255, 255, 255];
 
   for (let y = 0; y < HEIGHT; y++) {
     const lat = Math.PI / 2 - (y / (HEIGHT - 1)) * Math.PI;
@@ -164,10 +227,21 @@ async function generateBody({
         grain * 0.07 +
         craterH * heightContrast;
 
+      let r = br * shade;
+      let g = bg * shade;
+      let b = bb * shade;
+
+      if (patches.length > 0) {
+        const ice = icePatchIntensity(patches, nx, ny, nz) * icePatches.opacity;
+        r = r * (1 - ice) + ir * shade * ice;
+        g = g * (1 - ice) + ig * shade * ice;
+        b = b * (1 - ice) + ib * shade * ice;
+      }
+
       const offset = (y * WIDTH + x) * 3;
-      buffer[offset] = clamp255(br * shade);
-      buffer[offset + 1] = clamp255(bg * shade);
-      buffer[offset + 2] = clamp255(bb * shade);
+      buffer[offset] = clamp255(r);
+      buffer[offset + 1] = clamp255(g);
+      buffer[offset + 2] = clamp255(b);
     }
   }
 
@@ -181,18 +255,84 @@ async function generateBody({
 }
 
 const BODIES = [
-  // Glace-roche neutre, cratères modérés (cohérent avec Charon, même famille de TNO).
-  { name: 'orcus', baseColor: [203, 199, 192], craterCount: 14, craterMinRadius: 0.08, craterMaxRadius: 0.22, albedoVariation: 0.14, heightContrast: 0.5 },
-  // Gris-brun, cratères modérés ; Quaoar a des anneaux mais la surface elle-même est neutre.
-  { name: 'quaoar', baseColor: [156, 136, 115], craterCount: 16, craterMinRadius: 0.07, craterMaxRadius: 0.2, albedoVariation: 0.16, heightContrast: 0.55 },
-  // Rouge tholins prononcé, givre de méthane par plaques plus claires.
-  { name: 'gonggong', baseColor: [194, 90, 63], craterCount: 10, craterMinRadius: 0.09, craterMaxRadius: 0.24, albedoVariation: 0.22, heightContrast: 0.45 },
-  // Le plus rouge des objets connus, surface très homogène (peu de relief net observé).
-  { name: 'sedna', baseColor: [184, 74, 58], craterCount: 6, craterMinRadius: 0.1, craterMaxRadius: 0.26, albedoVariation: 0.12, heightContrast: 0.3 },
-  // Astéroïde de type B (bleuté, sombre) ; VLT/SPHERE montre de grands cratères marqués.
-  { name: 'pallas', baseColor: [138, 143, 153], craterCount: 12, craterMinRadius: 0.1, craterMaxRadius: 0.28, albedoVariation: 0.16, heightContrast: 0.6 },
-  // Astéroïde de type C, très sombre, quasi sphérique et peu cratérisé (peu de relief net).
-  { name: 'hygiea', baseColor: [92, 86, 78], craterCount: 5, craterMinRadius: 0.12, craterMaxRadius: 0.3, albedoVariation: 0.13, heightContrast: 0.3 },
+  // Barucci et al. 2008 : glace d'eau cristalline + hydrate d'ammoniac détectés — signature d'un
+  // resurfaçage cryovolcanique. Peu de vieux cratères (surface renouvelée) + larges plages de
+  // givre "frais" plus claires. Couleur neutre-claire (parmi les TNO les plus brillants connus).
+  {
+    name: 'orcus',
+    baseColor: [203, 199, 192],
+    craterCount: 6,
+    craterMinRadius: 0.07,
+    craterMaxRadius: 0.16,
+    albedoVariation: 0.12,
+    heightContrast: 0.45,
+    icePatches: { count: 6, minRadius: 0.18, maxRadius: 0.4, opacity: 0.4 },
+    iceColor: [235, 238, 240],
+  },
+  // Jewitt & Luu 2004 : glace d'eau cristalline (± hydrate d'ammoniac/méthane) — même signature
+  // de resurfaçage récent qu'Orcus, même traitement (peu de cratères, plages de givre).
+  {
+    name: 'quaoar',
+    baseColor: [156, 136, 115],
+    craterCount: 7,
+    craterMinRadius: 0.06,
+    craterMaxRadius: 0.15,
+    albedoVariation: 0.15,
+    heightContrast: 0.5,
+    icePatches: { count: 5, minRadius: 0.15, maxRadius: 0.35, opacity: 0.35 },
+    iceColor: [220, 214, 200],
+  },
+  // JWST (2024) : tholins (pentes spectrales rouges) + glace d'eau + givre de méthane par plaques.
+  // Cratères normaux (pas de preuve de resurfaçage massif comme Orcus/Quaoar) + givre localisé.
+  {
+    name: 'gonggong',
+    baseColor: [194, 90, 63],
+    craterCount: 10,
+    craterMinRadius: 0.09,
+    craterMaxRadius: 0.24,
+    albedoVariation: 0.22,
+    heightContrast: 0.45,
+    icePatches: { count: 4, minRadius: 0.12, maxRadius: 0.28, opacity: 0.3 },
+    iceColor: [214, 168, 140],
+  },
+  // Barucci et al. 2010 : surface homogène en couleur/spectre — explication avancée par les
+  // auteurs : les impacts (qui exposeraient de la glace fraîche et brisent l'homogénéité) sont
+  // rares à cette distance. D'où quasi aucun cratère et aucune plage de givre ici.
+  {
+    name: 'sedna',
+    baseColor: [184, 74, 58],
+    craterCount: 2,
+    craterMinRadius: 0.08,
+    craterMaxRadius: 0.16,
+    albedoVariation: 0.08,
+    heightContrast: 0.25,
+  },
+  // Marsset et al. 2020 (VLT/SPHERE) : "l'objet le plus cratérisé connu de la ceinture
+  // d'astéroïdes" (aspect "balle de golf") + deux grands bassins d'impact distincts.
+  {
+    name: 'pallas',
+    baseColor: [138, 143, 153],
+    craterCount: 34,
+    craterMinRadius: 0.05,
+    craterMaxRadius: 0.13,
+    albedoVariation: 0.14,
+    heightContrast: 0.55,
+    largeBasins: [
+      { radius: 0.34, depth: 0.9 },
+      { radius: 0.27, depth: 0.75 },
+    ],
+  },
+  // Vernazza et al. 2019 (VLT/SPHERE) : forme quasi sphérique "sans bassin", seulement deux
+  // petits cratères distincts identifiés dans toute l'imagerie — la plus lisse des six ici.
+  {
+    name: 'hygiea',
+    baseColor: [92, 86, 78],
+    craterCount: 2,
+    craterMinRadius: 0.09,
+    craterMaxRadius: 0.14,
+    albedoVariation: 0.1,
+    heightContrast: 0.35,
+  },
 ];
 
 for (const body of BODIES) await generateBody(body);

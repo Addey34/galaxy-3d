@@ -761,7 +761,7 @@
       "sourceResolution": "n/a — procedurally generated, no spacecraft mosaic exists",
       "projection": "equirectangular",
       "qualityClass": "illustrative",
-      "note": "Replaced 2026-08-27: the previous asset's licence was unconfirmed (likely CC BY-NC-SA community source), which blocked commercial reuse. Regenerated as an original procedural texture (seeded noise + craters) — no external asset, no third-party licence, no attribution needed.",
+      "note": "Replaced 2026-08-27: the previous asset's licence was unconfirmed (likely CC BY-NC-SA community source), which blocked commercial reuse. Regenerated as an original procedural texture — no external asset, no third-party licence, no attribution needed. Parameters follow Marsset et al. 2020 (VLT/SPHERE): Pallas is 'the most cratered object known in the asteroid belt' (a 'golf ball' texture) with two distinct large impact basins, so it gets the densest cratering plus two oversized basins of the six generated bodies.",
       "license": "generated",
       "credit": "générée proceduralement, projet",
       "attributionNeeded": false
@@ -774,7 +774,7 @@
       "sourceResolution": "n/a — procedurally generated, no spacecraft mosaic exists",
       "projection": "equirectangular",
       "qualityClass": "illustrative",
-      "note": "Replaced 2026-08-27: the previous asset's licence was unconfirmed (likely CC BY-NC-SA community source), which blocked commercial reuse. Regenerated as an original procedural texture (seeded noise + craters) — no external asset, no third-party licence, no attribution needed.",
+      "note": "Replaced 2026-08-27: the previous asset's licence was unconfirmed (likely CC BY-NC-SA community source), which blocked commercial reuse. Regenerated as an original procedural texture — no external asset, no third-party licence, no attribution needed. Parameters follow Vernazza et al. 2019 (VLT/SPHERE): a 'basin-free' near-perfect sphere with only two distinct small craters identified in the imagery, so it gets exactly two shallow craters and is otherwise the smoothest of the six generated bodies.",
       "license": "generated",
       "credit": "générée proceduralement, projet",
       "attributionNeeded": false
@@ -1074,28 +1074,28 @@
       "layer": "surface",
       "status": "generated",
       "sourcePage": "scripts/generate-procedural-textures.mjs",
-      "note": "No spacecraft has ever visited Orcus and it is not part of Solar System Scope's illustrative dwarf-planet set (checked live 2026-08-27), so no external image of any kind exists to source. Replaced the earlier fallbackColor-only rendering with a procedurally generated surface (seeded noise + craters, no external asset, no third-party licence) — same technique as Pallas/Hygiea below."
+      "note": "No spacecraft has ever visited Orcus and it is not part of Solar System Scope's illustrative dwarf-planet set (checked live 2026-08-27), so no external image of any kind exists to source. Procedurally generated surface (no external asset, no third-party licence) parameterized from the actual literature: Barucci et al. 2008 detected crystalline water ice + a possible ammonia-hydrate band, evidence of a cryovolcanic resurfacing event — rendered as light cratering (old craters erased by resurfacing) plus brighter irregular ice-patch regions, not just a generic bump map."
     },
     {
       "body": "quaoar",
       "layer": "surface",
       "status": "generated",
       "sourcePage": "scripts/generate-procedural-textures.mjs",
-      "note": "No spacecraft has ever visited Quaoar; not part of Solar System Scope's illustrative dwarf-planet set (checked live 2026-08-27). Procedurally generated surface — no external asset, no third-party licence."
+      "note": "No spacecraft has ever visited Quaoar; not part of Solar System Scope's illustrative dwarf-planet set (checked live 2026-08-27). Procedurally generated surface parameterized from Jewitt & Luu 2004 (crystalline water ice + ammonia-hydrate/methane detection, indicating recent cryovolcanic resurfacing): light cratering plus brighter ice-patch regions, same reasoning as Orcus above."
     },
     {
       "body": "gonggong",
       "layer": "surface",
       "status": "generated",
       "sourcePage": "scripts/generate-procedural-textures.mjs",
-      "note": "No spacecraft has ever visited Gonggong; not part of Solar System Scope's illustrative dwarf-planet set (checked live 2026-08-27). Procedurally generated surface — no external asset, no third-party licence."
+      "note": "No spacecraft has ever visited Gonggong; not part of Solar System Scope's illustrative dwarf-planet set (checked live 2026-08-27). Procedurally generated surface parameterized from JWST spectroscopy (tholins/red slope, water ice, methane frost — 2024): red tholin base with patchy brighter methane-frost regions, normal (not reduced) cratering since no resurfacing evidence exists for this body."
     },
     {
       "body": "sedna",
       "layer": "surface",
       "status": "generated",
       "sourcePage": "scripts/generate-procedural-textures.mjs",
-      "note": "No spacecraft has ever visited Sedna; not part of Solar System Scope's illustrative dwarf-planet set (checked live 2026-08-27); even its size is only an estimate. Procedurally generated surface — no external asset, no third-party licence."
+      "note": "No spacecraft has ever visited Sedna; not part of Solar System Scope's illustrative dwarf-planet set (checked live 2026-08-27); even its size is only an estimate. Procedurally generated surface parameterized from Barucci et al. 2010, which explains Sedna's observed spectral/color homogeneity by the rarity of impacts at its extreme distance (impacts are what expose fresh, spectrally distinct ice elsewhere) — rendered with almost no craters and no ice patches, the most uniform of the six generated bodies."
     }
   ]
 }
