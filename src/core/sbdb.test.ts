@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { fetchSmallBodies, julianDateToDate, parseSbdbRows } from './sbdb';
+import {
+  fetchAllSmallBodies,
+  fetchSmallBodies,
+  julianDateToDate,
+  parseSbdbRows,
+  sbdbQueryUrl,
+} from './sbdb';
 
 const D2R = Math.PI / 180;
 
@@ -56,6 +62,87 @@ describe('parseSbdbRows', () => {
     expect(parseSbdbRows(['full_name', 'a', 'e'], [['x', '2', '0.1']])).toEqual(
       []
     );
+  });
+});
+
+describe('sbdbQueryUrl', () => {
+  it('defaults to the historical main-belt query (non-regression)', () => {
+    const url = new URL(sbdbQueryUrl());
+    expect(url.searchParams.get('fields')).toBe(
+      'full_name,a,e,i,om,w,ma,epoch'
+    );
+    expect(url.searchParams.get('sb-kind')).toBe('a');
+    expect(url.searchParams.get('sb-cdata')).toBe('{"AND":["a|LT|4.5"]}');
+    expect(url.searchParams.get('sb-group')).toBeNull();
+    expect(url.searchParams.get('limit')).toBe('2000');
+  });
+
+  it('queries NEOs via sb-group, without sb-kind', () => {
+    const url = new URL(sbdbQueryUrl('neo'));
+    expect(url.searchParams.get('sb-group')).toBe('neo');
+    expect(url.searchParams.get('sb-kind')).toBeNull();
+  });
+
+  it('queries comets via sb-kind=c', () => {
+    const url = new URL(sbdbQueryUrl('comet'));
+    expect(url.searchParams.get('sb-kind')).toBe('c');
+  });
+
+  it('queries TNOs via sb-kind=a with a semi-major-axis floor', () => {
+    const url = new URL(sbdbQueryUrl('tno'));
+    expect(url.searchParams.get('sb-kind')).toBe('a');
+    expect(url.searchParams.get('sb-cdata')).toContain('a|GT|30');
+  });
+});
+
+describe('fetchAllSmallBodies', () => {
+  function rowFor(name: string): string[] {
+    return [name, '2.5', '0.1', '5', '10', '15', '20', '2451545.0'];
+  }
+
+  it('merges the 4 categories and tags each body with its category', async () => {
+    const fetchImpl = (async (input: string | URL) => {
+      const url = new URL(input.toString());
+      const category = url.searchParams.has('sb-group')
+        ? 'neo'
+        : url.searchParams.get('sb-kind') === 'c'
+          ? 'comet'
+          : (url.searchParams.get('sb-cdata') ?? '').includes('GT')
+            ? 'tno'
+            : 'main-belt';
+      return {
+        ok: true,
+        json: async () => ({
+          fields: FIELDS,
+          data: [rowFor(category)],
+        }),
+      };
+    }) as unknown as typeof fetch;
+
+    const bodies = await fetchAllSmallBodies(fetchImpl);
+    expect(bodies).toHaveLength(4);
+    const byCategory = new Map(bodies.map((b) => [b.category, b.name]));
+    expect(byCategory.get('main-belt')).toBe('main-belt');
+    expect(byCategory.get('neo')).toBe('neo');
+    expect(byCategory.get('comet')).toBe('comet');
+    expect(byCategory.get('tno')).toBe('tno');
+  });
+
+  it('keeps the other 3 categories when one fails', async () => {
+    const fetchImpl = (async (input: string | URL) => {
+      const url = new URL(input.toString());
+      if (url.searchParams.get('sb-kind') === 'c') {
+        return { ok: false, json: async () => ({}) };
+      }
+      return {
+        ok: true,
+        json: async () => ({ fields: FIELDS, data: [rowFor('x')] }),
+      };
+    }) as unknown as typeof fetch;
+
+    const bodies = await fetchAllSmallBodies(fetchImpl);
+    expect(bodies).toHaveLength(3);
+    expect(bodies.some((b) => b.category === 'comet')).toBe(false);
   });
 });
 

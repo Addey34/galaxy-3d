@@ -14,7 +14,7 @@ import * as THREE from 'three';
 import { SQRT_K } from '@/core/ScaleService';
 import { keplerianPositionEcliptic } from '@/core/kepler';
 import { eclipticToScene } from '@/core/frames';
-import type { ParsedSmallBody } from '@/core/sbdb';
+import type { ParsedSmallBody, SmallBodyCategory } from '@/core/sbdb';
 
 /** Nombre maximal de marqueurs dessinés par frame (LOD : les plus proches d'abord). */
 const MAX_MARKERS = 1500;
@@ -23,6 +23,12 @@ export class SmallBodyOverlay {
   private readonly canvas: HTMLCanvasElement;
   private readonly ctx: CanvasRenderingContext2D | null;
   private bodies: ParsedSmallBody[] = [];
+  private visibleCategories: ReadonlySet<SmallBodyCategory> = new Set([
+    'main-belt',
+    'neo',
+    'comet',
+    'tno',
+  ]);
   private active = false;
   private readonly _p = new THREE.Vector3();
   private readonly _cam = new THREE.Vector3();
@@ -43,6 +49,11 @@ export class SmallBodyOverlay {
   /** Remplace le lot de corps affichés (appelé une fois le fetch SBDB résolu). */
   setBodies(bodies: ParsedSmallBody[]): void {
     this.bodies = bodies;
+  }
+
+  /** Catégories à dessiner (panneau de filtres) — un corps sans catégorie reste toujours dessiné. */
+  setVisibleCategories(categories: ReadonlySet<SmallBodyCategory>): void {
+    this.visibleCategories = categories;
   }
 
   /** Affiche/masque l'overlay. À l'extinction, efface le canvas. */
@@ -69,7 +80,9 @@ export class SmallBodyOverlay {
     this.ctx.fillStyle = 'rgba(180, 200, 235, 0.75)';
     let drawn = 0;
     for (let b = 0; b < this.bodies.length && drawn < MAX_MARKERS; b++) {
-      const pos = keplerianPositionEcliptic(this.bodies[b].elements, date);
+      const body = this.bodies[b];
+      if (body.category && !this.visibleCategories.has(body.category)) continue;
+      const pos = keplerianPositionEcliptic(body.elements, date);
       this._p.copy(eclipticToScene(pos.x, pos.y, pos.z)).multiplyScalar(SQRT_K);
 
       if (cutoff > 0 && this._p.distanceToSquared(this._cam) > cutoff) continue;

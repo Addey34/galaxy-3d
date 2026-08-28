@@ -32,6 +32,7 @@ import { setupAstronomicalEvents } from './ui/astronomicalEvents';
 import { setupOpticalZoom } from './ui/opticalZoom';
 import { ExploHud } from './ui/exploHud';
 import { SmallBodyOverlay } from './ui/smallBodyOverlay';
+import { setupSmallBodyFilters } from './ui/smallBodyFilters';
 import { SpacecraftOverlay } from './ui/spacecraftOverlay';
 import { SPACECRAFT_MISSIONS } from './config/spacecraft';
 import { setupBodyPicker } from './ui/bodyPicker';
@@ -55,7 +56,7 @@ import { setupContextRecovery } from './ui/contextRecovery';
 import { setupSolarDebug } from './ui/solarDebug';
 import { setupEarthDebug } from './ui/earthDebug';
 import { setupMeteoDebug } from './ui/meteoDebug';
-import { fetchSmallBodies } from './core/sbdb';
+import { fetchAllSmallBodies } from './core/sbdb';
 import { CELESTIAL_CONFIG } from './config/bodies';
 import { flattenBodies } from './config/catalog';
 
@@ -73,6 +74,10 @@ const CONTEXTUAL_SURFACE_ANCHORS: Partial<
   'body-info': { trigger: '#info-trigger', panel: '#body-info' },
   'orbit-options': { trigger: '#settings-trigger', panel: '#orbit-options' },
   'weather-layers': { trigger: '#weather-trigger', panel: '#weather-layers' },
+  'small-body-filters': {
+    trigger: '#smallbody-filters-trigger',
+    panel: '#smallbody-filters',
+  },
   events: { trigger: '#events-trigger', panel: '#astronomical-events' },
   help: { trigger: '#help-btn', panel: '#help-popover' },
   'quality-menu': { trigger: '#quality-btn', panel: '#quality-menu' },
@@ -248,8 +253,12 @@ if (surfaceScrim) {
     // fond. Dégradation propre : si le fetch échoue (offline), l'overlay reste vide.
     const smallBodyOverlay = new SmallBodyOverlay();
     smallBodyOverlay.mount();
-    void fetchSmallBodies().then((bodies) =>
+    void fetchAllSmallBodies().then((bodies) =>
       smallBodyOverlay.setBodies(bodies)
+    );
+    const smallBodyFilters = setupSmallBodyFilters(
+      smallBodyOverlay,
+      overlayCoordinator
     );
 
     // Couche instrument 2D des sondes spatiales — positions réelles Horizons (mêmes binaires
@@ -287,6 +296,7 @@ if (surfaceScrim) {
         opticalZoom.setMode(mode);
         exploHud.setMode(mode); // change le style des labels (éduc ↔ explo), reste actif
         smallBodyOverlay.setActive(mode === 'explo');
+        smallBodyFilters.setTriggerVisible(mode === 'explo');
         spacecraftOverlay.setActive(mode === 'explo');
         syncPermalink();
       }

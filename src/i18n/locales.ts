@@ -218,6 +218,15 @@ export const messages: Record<Locale, Dict> = {
 
     'settings.labelsToggle': 'Show body names and markers',
 
+    // ── Filtres petits corps (NEO / comètes / TNO) ──
+    'smallBodies.trigger.aria': 'Small-body filters',
+    'smallBodies.dialog.aria': 'Small-body filters',
+    'smallBodies.title': 'Small bodies',
+    'smallBodies.mainBelt': 'Main belt',
+    'smallBodies.neo': 'Near-Earth objects',
+    'smallBodies.comet': 'Comets',
+    'smallBodies.tno': 'Trans-Neptunian objects',
+
     // ── Couches météo ──
     'weather.title': 'Weather layers',
     'weather.trigger.aria': 'Weather layers',
@@ -527,6 +536,15 @@ export const messages: Record<Locale, Dict> = {
     'settings.labels': 'Noms et points',
 
     'settings.labelsToggle': 'Afficher les noms et les points',
+
+    // ── Filtres petits corps (NEO / comètes / TNO) ──
+    'smallBodies.trigger.aria': 'Filtres petits corps',
+    'smallBodies.dialog.aria': 'Filtres petits corps',
+    'smallBodies.title': 'Petits corps',
+    'smallBodies.mainBelt': 'Ceinture principale',
+    'smallBodies.neo': 'Géocroiseurs',
+    'smallBodies.comet': 'Comètes',
+    'smallBodies.tno': 'Objets transneptuniens',
 
     // ── Couches météo ──
     'weather.title': 'Couches météo',

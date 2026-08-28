@@ -12,10 +12,15 @@
 import type { OrbitalElements } from './kepler';
 import { DEG_TO_RAD as D2R } from './MathConstants';
 
+/** Catégorie de petit corps — pilote le jeu de paramètres de requête SBDB (voir `sbdbQueryUrl`). */
+export type SmallBodyCategory = 'main-belt' | 'neo' | 'comet' | 'tno';
+
 /** Un petit corps chargé depuis SBDB : nom lisible + éléments orbitaux. */
 export interface ParsedSmallBody {
   name: string;
   elements: OrbitalElements;
+  /** Absent pour un appel bas niveau direct (`fetchSmallBodies`) ; posé par `fetchAllSmallBodies`. */
+  category?: SmallBodyCategory;
 }
 
 /** Convertit une date julienne (JD, TDB≈UTC à cette précision) en Date JavaScript. */
@@ -77,14 +82,35 @@ export function parseSbdbRows(
   return out;
 }
 
-/** URL de requête SBDB par défaut : astéroïdes numérotés, éléments osculateurs. */
-export function sbdbQueryUrl(limit = 2000): string {
-  const params = new URLSearchParams({
-    fields: 'full_name,a,e,i,om,w,ma,epoch',
-    'sb-kind': 'a', // a = astéroïdes
-    'sb-cdata': '{"AND":["a|LT|4.5"]}', // ceinture principale interne — limite le volume
-    limit: String(limit),
-  });
+/**
+ * URL de requête SBDB pour une catégorie. Paramètres vérifiés en direct contre l'API réelle :
+ * `sb-group` n'accepte que 'neo'/'pha' (pas de valeur TNO dédiée — dérivé via `sb-cdata` sur le
+ * demi-grand axe, même mécanisme que le filtre ceinture principale) ; `sb-kind` n'accepte que
+ * 'a'/'c'. `main-belt` reproduit exactement l'URL historique (limite le volume, comportement par
+ * défaut inchangé).
+ */
+export function sbdbQueryUrl(
+  category: SmallBodyCategory = 'main-belt',
+  limit = 2000
+): string {
+  const params = new URLSearchParams({ fields: 'full_name,a,e,i,om,w,ma,epoch' });
+  switch (category) {
+    case 'main-belt':
+      params.set('sb-kind', 'a'); // a = astéroïdes
+      params.set('sb-cdata', '{"AND":["a|LT|4.5"]}'); // ceinture principale interne
+      break;
+    case 'neo':
+      params.set('sb-group', 'neo');
+      break;
+    case 'comet':
+      params.set('sb-kind', 'c'); // c = comètes
+      break;
+    case 'tno':
+      params.set('sb-kind', 'a');
+      params.set('sb-cdata', '{"AND":["a|GT|30"]}'); // ceinture de Kuiper / au-delà
+      break;
+  }
+  params.set('limit', String(limit));
   return `https://ssd-api.jpl.nasa.gov/sbdb_query.api?${params.toString()}`;
 }
 
@@ -105,4 +131,28 @@ export async function fetchSmallBodies(
   } catch {
     return [];
   }
+}
+
+const ALL_CATEGORIES: readonly SmallBodyCategory[] = [
+  'main-belt',
+  'neo',
+  'comet',
+  'tno',
+];
+
+/**
+ * Récupère les 4 catégories en parallèle et fusionne, chaque corps tagué de sa catégorie.
+ * `fetchSmallBodies` ne rejette jamais (dégrade déjà à `[]`) : l'échec d'une catégorie n'empêche
+ * donc pas les 3 autres de charger normalement — pas besoin d'`allSettled`.
+ */
+export async function fetchAllSmallBodies(
+  fetchImpl: typeof fetch = fetch
+): Promise<ParsedSmallBody[]> {
+  const results = await Promise.all(
+    ALL_CATEGORIES.map(async (category) => {
+      const bodies = await fetchSmallBodies(sbdbQueryUrl(category), fetchImpl);
+      return bodies.map((b) => ({ ...b, category }));
+    })
+  );
+  return results.flat();
 }
