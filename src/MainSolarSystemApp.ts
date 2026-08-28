@@ -17,6 +17,7 @@ import { updateProgress, hideLoader, showError } from './ui/loader';
 import { setupFullscreen } from './ui/fullscreen';
 import { setupShare } from './ui/share';
 import { setupCapture } from './ui/capture';
+import { setupWebXR } from './ui/webxr';
 import { setupHelp } from './ui/help';
 import { setupGuidedTour } from './ui/guidedTour';
 import { setupTourPlayer } from './ui/tourPlayer';
@@ -314,6 +315,7 @@ if (surfaceScrim) {
     permalink.applyInitialState();
     setupShare(cameraSystem, permalink);
     setupCapture(cameraSystem, orbitalMechanics, planetNav);
+    setupWebXR(cameraSystem);
     setupAstronomicalEvents(orbitalMechanics, {
       onDateChange: () => syncPermalink(),
       coordinator: overlayCoordinator,

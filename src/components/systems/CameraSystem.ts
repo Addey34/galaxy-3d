@@ -329,6 +329,9 @@ export class CameraSystem {
   /** Appelé chaque frame : maintient la caméra collée au corps suivi pendant qu'il orbite. */
   update(_delta: number): void {
     if (!this.controls) return;
+    // Session XR active : renderer.xr pilote seul la pose caméra depuis le casque. Continuer
+    // le suivi de cible/controls.update() ici écraserait ou ferait vibrer la vue à chaque frame.
+    if (this.renderer.xr.isPresenting) return;
 
     if (
       this.currentTarget?.group &&

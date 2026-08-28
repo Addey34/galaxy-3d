@@ -49,6 +49,7 @@ describe('CameraSystem target flights', () => {
     } as unknown as CameraSystem['controls'];
     cameraSystem.renderer = {
       toneMappingExposure: 1,
+      xr: { isPresenting: false },
     } as unknown as CameraSystem['renderer'];
     cameraSystem.tweenGroup = new TweenGroup();
 
@@ -76,6 +77,7 @@ describe('CameraSystem target flights', () => {
     } as unknown as CameraSystem['controls'];
     cameraSystem.renderer = {
       toneMappingExposure: 1,
+      xr: { isPresenting: false },
     } as unknown as CameraSystem['renderer'];
     cameraSystem.tweenGroup = new TweenGroup();
     Reflect.set(cameraSystem, '_scaleMode', 'educ');

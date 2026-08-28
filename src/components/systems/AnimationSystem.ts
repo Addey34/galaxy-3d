@@ -39,7 +39,6 @@ export class AnimationSystem {
   // State
   private isRunning = false;
   private isPaused = false;
-  private animationFrame: number | null = null;
 
   // Updatable objects
   private readonly updatables = new Set<IUpdatable>();
@@ -112,12 +111,12 @@ export class AnimationSystem {
     if (this.isRunning) return;
     this.isRunning = true;
     this.clock.start();
-    this._animate();
+    // setAnimationLoop (pas requestAnimationFrame manuel) : WebXR l'exige pour driver le rendu
+    // par frame pendant une session casque — sur-ensemble direct de rAF hors XR, même cadence.
+    this.renderer.setAnimationLoop(() => this._animate());
   }
 
   private _animate(): void {
-    this.animationFrame = requestAnimationFrame(() => this._animate());
-
     const rawDelta = Math.min(this.clock.getDelta(), 0.1);
     const now = performance.now();
 
@@ -350,8 +349,11 @@ export class AnimationSystem {
   private _render(): void {
     // Recentre le champ d'étoiles sur la caméra (décor à l'infini, cf. Starfield).
     this.starfield?.followCamera(this.camera.position);
-    // Le composer (bloom) prend le relais quand il est actif ; sinon rendu direct.
-    if (this.composer) this.composer.render();
+    // En session XR : rendu direct obligatoire, l'EffectComposer (bloom) n'a pas de chemin
+    // stéréo/multiview dans cette version de Three.js. Sinon, le composer prend le relais
+    // quand il est actif.
+    if (this.renderer.xr.isPresenting) this.renderer.render(this.scene, this.camera);
+    else if (this.composer) this.composer.render();
     else this.renderer.render(this.scene, this.camera);
   }
 
@@ -391,10 +393,7 @@ export class AnimationSystem {
   }
 
   dispose(): void {
-    if (this.animationFrame !== null) {
-      cancelAnimationFrame(this.animationFrame);
-      this.animationFrame = null;
-    }
+    this.renderer.setAnimationLoop(null);
     this.updatables.clear();
     this._updatablesList = [];
     this._frameCallbacks.clear();

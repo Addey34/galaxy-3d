@@ -152,6 +152,10 @@ export class SceneSystem {
     this.renderer.shadowMap.type = RENDER_SETTINGS.shadowMap.type;
     this.renderer.toneMapping = RENDER_SETTINGS.toneMapping;
     this.renderer.toneMappingExposure = RENDER_SETTINGS.toneMappingExposure;
+    // Coût nul hors session XR (flag dormant) — active la prise en charge WebXR pour
+    // ui/webxr.ts. La stéréo passe par renderer.render() direct, pas par l'EffectComposer
+    // (bloom) : aucun chemin multiview-aware dans cette version de Three.js.
+    this.renderer.xr.enabled = true;
     document.body.appendChild(this.renderer.domElement);
   }
 
