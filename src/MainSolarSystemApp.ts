@@ -32,6 +32,8 @@ import { setupAstronomicalEvents } from './ui/astronomicalEvents';
 import { setupOpticalZoom } from './ui/opticalZoom';
 import { ExploHud } from './ui/exploHud';
 import { SmallBodyOverlay } from './ui/smallBodyOverlay';
+import { SpacecraftOverlay } from './ui/spacecraftOverlay';
+import { SPACECRAFT_MISSIONS } from './config/spacecraft';
 import { setupBodyPicker } from './ui/bodyPicker';
 import { setupOrbitOptions } from './ui/orbitOptions';
 import { setupRealtimeClouds } from './ui/realtimeClouds';
@@ -132,8 +134,13 @@ if (surfaceScrim) {
 
     const app = new SolarSystemApp();
     const api = await app.init(updateProgress);
-    const { cameraSystem, animationSystem, sceneSystem, orbitalMechanics } =
-      api;
+    const {
+      cameraSystem,
+      animationSystem,
+      sceneSystem,
+      orbitalMechanics,
+      horizonsEphemeris,
+    } = api;
     setupSolarDebug(api);
     setupEarthDebug(api);
     setupContextRecovery(sceneSystem);
@@ -245,6 +252,12 @@ if (surfaceScrim) {
       smallBodyOverlay.setBodies(bodies)
     );
 
+    // Couche instrument 2D des sondes spatiales — positions réelles Horizons (mêmes binaires
+    // que planètes/lunes), jamais avant leur lancement (getHeliocentricAU renvoie null hors
+    // couverture, cf. spacecraftOverlay.ts).
+    const spacecraftOverlay = new SpacecraftOverlay(SPACECRAFT_MISSIONS);
+    spacecraftOverlay.mount();
+
     // Le bloc live de la fiche (distance réelle + temps-lumière) n'a de sens qu'en Explo,
     // pour la cible suivie ; en Éducatif ou en vue libre on passe `null` → bloc masqué.
     let currentMode: 'educ' | 'explo' = 'educ';
@@ -253,6 +266,11 @@ if (surfaceScrim) {
       smallBodyOverlay.update(
         cameraSystem.camera,
         orbitalMechanics.simulationDate
+      );
+      spacecraftOverlay.update(
+        cameraSystem.camera,
+        orbitalMechanics.simulationDate,
+        horizonsEphemeris
       );
       bodyInfo.updateLive(
         currentMode === 'explo'
@@ -269,6 +287,7 @@ if (surfaceScrim) {
         opticalZoom.setMode(mode);
         exploHud.setMode(mode); // change le style des labels (éduc ↔ explo), reste actif
         smallBodyOverlay.setActive(mode === 'explo');
+        spacecraftOverlay.setActive(mode === 'explo');
         syncPermalink();
       }
     );

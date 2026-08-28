@@ -2139,6 +2139,19 @@ button {
   opacity: 1;
 }
 
+/* Couche instrument des sondes spatiales — au-dessus des labels de planètes (z-index 20). */
+#spacecraft-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 21;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+#spacecraft-overlay.is-visible {
+  opacity: 1;
+}
+
 /* Couche de marqueurs projetés — un label par corps, positionné en translate(). */
 #explo-labels {
   position: fixed;

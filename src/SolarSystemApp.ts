@@ -39,6 +39,7 @@ export interface PublicAPI {
   animationSystem: AnimationSystem;
   cameraSystem: CameraSystem;
   orbitalMechanics: OrbitalMechanics;
+  horizonsEphemeris: HorizonsEphemerisService;
   cleanup: () => void;
 }
 
@@ -289,6 +290,7 @@ export class SolarSystemApp {
       animationSystem: this.systems.animation,
       cameraSystem: this.systems.camera,
       orbitalMechanics: this._orbitalMechanics!,
+      horizonsEphemeris: this._horizonsEphemeris!,
       cleanup: () => this.dispose(),
     };
   }

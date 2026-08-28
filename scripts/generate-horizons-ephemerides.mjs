@@ -135,9 +135,55 @@ const BODIES = [
     center: 'pluto',
   },
   { name: 'hydra', target: '903', expectedName: 'hydra', center: 'pluto' },
+  // Sondes spatiales — cibles JPL Horizons par ID négatif, pas de ';' final (contrairement aux
+  // numéros de petits corps ambigus, ces IDs sont déjà uniques). `startTime` par corps évite de
+  // demander des décennies de non-données à Horizons avant le lancement réel.
+  {
+    name: 'voyager1',
+    target: '-31',
+    expectedName: 'voyager 1',
+    center: 'sun',
+    // +1 jour après le lancement réel : Horizons n'a pas de vecteur au tout premier instant
+    // (état initial encore indéterminé), une marge d'un jour tombe dans la couverture réelle.
+    // `stopTime` : la solution de trajectoire Horizons pour une sonde est bornée dans le temps
+    // (contrairement à la théorie planétaire) — au-delà, Horizons répond une erreur, pas des
+    // données tronquées silencieusement. Bornes vérifiées une à une contre l'API réelle.
+    startTime: '1977-09-06',
+    stopTime: '2099-12-31',
+  },
+  {
+    name: 'voyager2',
+    target: '-32',
+    expectedName: 'voyager 2',
+    center: 'sun',
+    startTime: '1977-08-21',
+    stopTime: '2099-12-31',
+  },
+  {
+    name: 'parker-solar-probe',
+    target: '-96',
+    expectedName: 'parker solar probe',
+    center: 'sun',
+    startTime: '2018-08-13',
+    stopTime: '2029-12-31',
+  },
+  {
+    name: 'jwst',
+    target: '-170',
+    // Horizons résout au nom complet "James Webb Space Telescope", pas au sigle.
+    expectedName: 'james webb',
+    center: 'sun',
+    startTime: '2021-12-26',
+    stopTime: '2031-08-23',
+  },
 ];
 
-function buildUrl(target, center) {
+function buildUrl(
+  target,
+  center,
+  startTime = START_TIME,
+  stopTime = STOP_TIME
+) {
   const params = new URLSearchParams({
     format: 'json',
     COMMAND: `'${target}'`,
@@ -145,8 +191,8 @@ function buildUrl(target, center) {
     MAKE_EPHEM: 'YES',
     EPHEM_TYPE: 'VECTORS',
     CENTER: `500@${CENTER_IDS[center]}`,
-    START_TIME: `'${START_TIME}'`,
-    STOP_TIME: `'${STOP_TIME}'`,
+    START_TIME: `'${startTime}'`,
+    STOP_TIME: `'${stopTime}'`,
     STEP_SIZE: `'${STEP_DAYS} d'`,
     REF_PLANE: 'ECLIPTIC',
     REF_SYSTEM: 'ICRF',
@@ -220,9 +266,10 @@ function assertResolvedTarget(result, body) {
 
 async function fetchBody(body) {
   process.stdout.write(`Fetching ${body.name}... `);
-  const response = await fetch(buildUrl(body.target, body.center), {
-    headers: { 'User-Agent': 'Galaxy-Ephemeris-Generator/1.0' },
-  });
+  const response = await fetch(
+    buildUrl(body.target, body.center, body.startTime, body.stopTime),
+    { headers: { 'User-Agent': 'Galaxy-Ephemeris-Generator/1.0' } }
+  );
   if (!response.ok) throw new Error(`${body.name}: HTTP ${response.status}`);
   const payload = await response.json();
   if (typeof payload.result !== 'string')

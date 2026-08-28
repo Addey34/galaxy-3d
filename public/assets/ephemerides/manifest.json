@@ -1,7 +1,7 @@
 {
   "version": 1,
   "source": "NASA/JPL Horizons",
-  "generatedAt": "2026-08-26T20:50:23.117Z",
+  "generatedAt": "2026-08-28T01:53:53.593Z",
   "frame": "ECLIPTIC_J2000",
   "center": "SUN",
   "units": "AU-D",
@@ -265,6 +265,38 @@
       "startJdTdb": 2415020.5,
       "stepDays": 4,
       "sampleCount": 18354
+    },
+    "voyager1": {
+      "file": "voyager1.4aa0502eceba.bin",
+      "target": "-31",
+      "center": "sun",
+      "startJdTdb": 2443392.5,
+      "stepDays": 4,
+      "sampleCount": 11170
+    },
+    "voyager2": {
+      "file": "voyager2.856277fdf0ad.bin",
+      "target": "-32",
+      "center": "sun",
+      "startJdTdb": 2443376.5,
+      "stepDays": 4,
+      "sampleCount": 11174
+    },
+    "parker-solar-probe": {
+      "file": "parker-solar-probe.4165c02ff801.bin",
+      "target": "-96",
+      "center": "sun",
+      "startJdTdb": 2458343.5,
+      "stepDays": 4,
+      "sampleCount": 1040
+    },
+    "jwst": {
+      "file": "jwst.0ce7b9ae8648.bin",
+      "target": "-170",
+      "center": "sun",
+      "startJdTdb": 2459574.5,
+      "stepDays": 4,
+      "sampleCount": 882
     }
   }
 }
