@@ -308,6 +308,20 @@ describe('OrbitalMechanics orbit sampling', () => {
       mechanics.update(1);
       expect(updateBody).toHaveBeenCalledTimes(1);
     });
+
+    it('jumpToDate lands exactly on the target date and forces a recompute', () => {
+      const { mechanics, setDate, updateBody } = makeThrottleHarness(1_000_000);
+      setDate(0);
+      mechanics.update(1);
+      updateBody.mockClear();
+
+      const target = new Date(7 * DAY_MS + 12 * 3_600_000);
+      mechanics.jumpToDate(target);
+      expect(mechanics.simulationDate.getTime()).toBe(target.getTime());
+
+      mechanics.update(1);
+      expect(updateBody).toHaveBeenCalledTimes(1);
+    });
   });
 
   it('uses apparent sidereal time for Greenwich subsolar longitude', () => {

@@ -193,6 +193,17 @@ export const messages: Record<Locale, Dict> = {
     'tour.step.help.text':
       'Check the help page for more information.',
 
+    // ── Tours guidés scénarisés ──
+    'tours.start': 'Scripted tours',
+    'tours.pause': 'Pause',
+    'tours.resume': 'Resume',
+    'tours.next': 'Next',
+    'tours.close': 'Close',
+    'tours.progress': 'Step {current} of {total}',
+    'tours.status.flyingTo': 'Flying to {body}…',
+    'tours.status.jumping': 'Jumping through time…',
+    'tours.status.speeding': 'Speeding up time…',
+
     // ── Panneau orbites (mode Éducatif) ──
     'orbitOpts.title': 'Orbits',
     'orbitOpts.all': 'All orbits',
@@ -491,6 +502,17 @@ export const messages: Record<Locale, Dict> = {
     'tour.step.help.title': '11. Retrouver l’aide',
     'tour.step.help.text':
       'Consultez la page d\'aide pour plus d\'informations.',
+
+    // ── Tours guidés scénarisés ──
+    'tours.start': 'Tours guidés',
+    'tours.pause': 'Pause',
+    'tours.resume': 'Reprendre',
+    'tours.next': 'Suivant',
+    'tours.close': 'Fermer',
+    'tours.progress': 'Étape {current} sur {total}',
+    'tours.status.flyingTo': 'Vol vers {body}…',
+    'tours.status.jumping': 'Saut dans le temps…',
+    'tours.status.speeding': 'Accélération du temps…',
 
     // ── Panneau orbites (mode Éducatif) ──
     'orbitOpts.title': 'Orbites',

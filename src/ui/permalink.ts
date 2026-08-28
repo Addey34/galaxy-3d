@@ -23,6 +23,12 @@ export interface PermalinkController {
    * l'angle courant et le passe explicitement ici.
    */
   sync(view?: PermalinkViewAngles): void;
+  /**
+   * Suspend `sync()` (no-op tant que suspendu) — utilisé par `ui/tourPlayer.ts` pour ne pas
+   * écraser le permalien de l'utilisateur à chaque étape intermédiaire d'un tour scénarisé.
+   * Lever la suspension ne resynchronise pas automatiquement : appeler `sync()` explicitement.
+   */
+  setSuspended(suspended: boolean): void;
 }
 
 /** Attend que le vol caméra en cours se termine (ou le délai max), puis appelle `then`. */
@@ -46,9 +52,10 @@ export function setupPermalinks(
   camera: CameraSystem
 ): PermalinkController {
   let applying = false;
+  let suspended = false;
 
   const sync = (view?: PermalinkViewAngles): void => {
-    if (applying) return;
+    if (applying || suspended) return;
     const selectedBody = navigation.getSelectedBody();
     const nextSearch = serializePermalink(
       {
@@ -95,5 +102,11 @@ export function setupPermalinks(
   };
 
   window.addEventListener('popstate', applyInitialState);
-  return { applyInitialState, sync };
+  return {
+    applyInitialState,
+    sync,
+    setSuspended: (v) => {
+      suspended = v;
+    },
+  };
 }

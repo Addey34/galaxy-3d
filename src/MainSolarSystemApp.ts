@@ -18,6 +18,8 @@ import { setupFullscreen } from './ui/fullscreen';
 import { setupShare } from './ui/share';
 import { setupHelp } from './ui/help';
 import { setupGuidedTour } from './ui/guidedTour';
+import { setupTourPlayer } from './ui/tourPlayer';
+import { TOUR_SCRIPTS } from './config/tourScripts';
 import { setupLangSwitch } from './ui/langSwitch';
 import { setupPlanetControls } from './ui/planetNav';
 import { setupBodyInfo } from './ui/bodyInfo';
@@ -287,6 +289,7 @@ if (surfaceScrim) {
       navigation: planetNav,
       playback,
     });
+    setupTourPlayer(cameraSystem, orbitalMechanics, planetNav, TOUR_SCRIPTS, permalink);
     hideLoader();
     guidedTour.startIfFirstVisit();
   } catch (err) {

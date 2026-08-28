@@ -1,0 +1,129 @@
+.stour-start {
+  display: block;
+  width: 100%;
+  margin-top: 0.5rem;
+  padding: 0.4rem 0.65rem;
+  border: 1px solid rgba(120, 180, 255, 0.42);
+  border-radius: 0.45rem;
+  background: rgba(74, 143, 255, 0.16);
+  color: rgba(205, 225, 255, 0.96);
+  cursor: pointer;
+  font: inherit;
+}
+
+.stour-start:hover,
+.stour-start:focus-visible {
+  background: rgba(74, 143, 255, 0.3);
+  outline: 2px solid rgba(150, 205, 255, 0.8);
+  outline-offset: 2px;
+}
+
+.stour-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin-top: 0.5rem;
+}
+
+.stour-picker-item {
+  padding: 0.4rem 0.6rem;
+  border: 1px solid rgba(150, 195, 255, 0.3);
+  border-radius: 0.4rem;
+  background: rgba(100, 150, 220, 0.12);
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.8rem;
+}
+
+.stour-picker-item:hover,
+.stour-picker-item:focus-visible {
+  background: rgba(74, 143, 255, 0.3);
+  outline: 2px solid rgba(150, 205, 255, 0.8);
+  outline-offset: 2px;
+}
+
+.stour-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 120;
+  background: rgba(0, 0, 0, 0.35);
+  pointer-events: none;
+}
+
+.stour-card {
+  position: fixed;
+  left: 50%;
+  bottom: 6vh;
+  z-index: 122;
+  box-sizing: border-box;
+  width: min(480px, calc(100vw - 24px));
+  padding: 0.9rem 1rem 0.8rem;
+  border: 1px solid rgba(135, 190, 255, 0.45);
+  border-radius: 0.7rem;
+  background: rgba(5, 10, 28, 0.94);
+  color: rgba(225, 238, 255, 0.95);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+  transform: translateX(-50%);
+}
+
+.stour-progress {
+  margin: 0 0 0.35rem;
+  color: rgba(145, 195, 255, 0.75);
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.stour-caption {
+  margin: 0.2rem 0 0.8rem;
+  color: rgba(205, 220, 245, 0.9);
+  font-size: 0.85rem;
+  line-height: 1.5;
+  min-height: 2.5em;
+}
+
+.stour-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.4rem;
+}
+
+.stour-actions button {
+  padding: 0.3rem 0.55rem;
+  border: 1px solid rgba(150, 195, 255, 0.3);
+  border-radius: 0.35rem;
+  background: rgba(100, 150, 220, 0.12);
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.72rem;
+}
+
+.stour-actions .stour-next {
+  background: rgba(74, 143, 255, 0.3);
+  border-color: rgba(125, 185, 255, 0.65);
+}
+
+.stour-actions button:focus-visible {
+  outline: 2px solid rgba(170, 220, 255, 0.9);
+  outline-offset: 2px;
+}
+
+.stour-actions button:disabled {
+  cursor: not-allowed;
+  opacity: 0.4;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stour-card {
+    transition: none;
+  }
+}
+
+@media (max-width: 520px) {
+  .stour-card {
+    bottom: 3vh;
+  }
+}

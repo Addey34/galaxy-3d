@@ -606,6 +606,11 @@ export class OrbitalMechanics {
     this._afterTimeTravel();
   }
 
+  /** Saute à une date absolue (delta calculé depuis la date simulée courante). */
+  jumpToDate(target: Date): void {
+    this.addTimeOffset((target.getTime() - this.simulationDate.getTime()) / 86_400_000);
+  }
+
   setSimulationSpeed(scale: number): void {
     this.clock.setTimeScale(scale);
   }
