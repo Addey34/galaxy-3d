@@ -140,6 +140,7 @@ export class SceneSystem {
     this.renderer = new THREE.WebGLRenderer({
       antialias: RENDER_SETTINGS.antialias,
       powerPreference: RENDER_SETTINGS.powerPreference,
+      preserveDrawingBuffer: RENDER_SETTINGS.preserveDrawingBuffer,
     });
     const pixelRatio = Math.min(
       window.devicePixelRatio,

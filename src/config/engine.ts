@@ -228,6 +228,10 @@ export const SPK_SETTINGS = {
 export const RENDER_SETTINGS = {
   antialias: BOOT_QUALITY_PROFILE.antialias,
   powerPreference: 'high-performance' as const,
+  // Uniquement pour ui/capture.ts : sans ça, le buffer de rendu serait déjà remplacé (double
+  // buffer navigateur) par le prochain requestAnimationFrame avant qu'un toBlob() asynchrone
+  // ne puisse le lire. Coût : désactive une optimisation navigateur mineure, en permanence.
+  preserveDrawingBuffer: true,
   shadowMap: {
     // Shadow maps désactivées : la PointLight solaire nécessiterait un cube map
     // 6 faces (6 passes de rendu par frame) — coût GPU énorme pour des ombres

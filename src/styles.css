@@ -1497,6 +1497,19 @@ button {
   transform: translate(-50%, 0);
 }
 
+/* Mode capture/planétarium : masquage instantané du chrome, sans transition — l'image exportée
+   ne vient que du canvas WebGL, pas d'une capture DOM plein écran, donc rien à attendre. */
+body.is-capturing .dock,
+body.is-capturing .surface,
+body.is-capturing #quality-menu,
+body.is-capturing #surface-scrim,
+body.is-capturing #explo-labels,
+body.is-capturing #smallbody-overlay,
+body.is-capturing #spacecraft-overlay,
+body.is-capturing #loader {
+  display: none;
+}
+
 /* ============================================================================
    RESPONSIVE — les composants reflowent ; pas de DOM par breakpoint.
    Les surfaces contextuelles deviennent des feuilles ancrées en bas.

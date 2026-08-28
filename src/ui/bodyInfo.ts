@@ -89,11 +89,12 @@ function formatPeriod(days: number): string {
 // Fusionné depuis l'ancien HUD « TARGET ». La distance vient de la caméra en unités
 // scène (explo : AU × SQRT_K) ; on la reconvertit en km puis en AU / temps-lumière.
 
-function sceneUnitsToKm(sceneUnits: number): number {
+/** Exportée pour `ui/capture.ts` (cartouche d'export image) — même conversion, pas de doublon. */
+export function sceneUnitsToKm(sceneUnits: number): number {
   return (sceneUnits / SQRT_K) * KM_PER_AU;
 }
 
-function formatLiveDistance(km: number): string {
+export function formatLiveDistance(km: number): string {
   const au = km / KM_PER_AU;
   const auStr = `${num(au, 3)} ${t('unit.au')}`;
   let kmStr: string;
@@ -103,7 +104,7 @@ function formatLiveDistance(km: number): string {
   return `${auStr} · ${kmStr}`;
 }
 
-function formatLightTime(km: number): string {
+export function formatLightTime(km: number): string {
   const s = km / C_KM_PER_S;
   const light = t('unit.light');
   if (s < 1) return `${(s * 1000).toFixed(0)} ms ${light}`;
