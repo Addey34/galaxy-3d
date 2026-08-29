@@ -96,6 +96,20 @@ export class CameraSystem {
       return;
     }
 
+    if (this.renderer.xr.isPresenting) {
+      // renderer.xr pilote seul la pose caméra pendant une session : les tweens
+      // d'animateToTarget écriraient sur camera.position/controls pour rien (écrasés chaque
+      // frame). On garde la comptabilité (panneau d'info VR, ui/webxrSelection.ts) sans voler.
+      body.updateWorldMatrix(true, false);
+      body.getWorldPosition(this.targetWorldPosition);
+      this.currentTarget = {
+        name: bodyName,
+        group: body,
+        distance: this.getDefaultDistance(bodyName),
+      };
+      return;
+    }
+
     this._setFov(
       this._scaleMode === 'explo' ? this._opticalFov : CAMERA_SETTINGS.focusFov
     );
@@ -460,6 +474,10 @@ export class CameraSystem {
    * plus grand que l'Éducatif compressé (Neptune ≈ 192u), d'où le même cadrage × ce facteur.
    */
   goToOverview(): void {
+    if (this.renderer.xr.isPresenting) {
+      this.currentTarget = null;
+      return;
+    }
     this.currentTarget = null;
     this.trackingPaused = false;
     this._setFov(CAMERA_SETTINGS.fov);

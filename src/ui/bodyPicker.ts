@@ -24,7 +24,7 @@ interface PointerStart {
  * Remonte la hiérarchie depuis l'objet touché jusqu'au premier ancêtre dont le nom est un
  * corps du catalogue (le `group` d'un `CelestialObject` porte le nom du corps).
  */
-function resolveBodyName(
+export function resolveBodyName(
   object: THREE.Object3D,
   validNames: ReadonlySet<string>
 ): string | null {
@@ -34,6 +34,22 @@ function resolveBodyName(
     o = o.parent;
   }
   return null;
+}
+
+/**
+ * Objets testables par un rayon — exclut les lignes d'orbite (`THREE.Line`) de la liste AVANT
+ * l'appel à `intersectObjects`, pas seulement du résultat après coup : `Line.raycast` peut lancer
+ * (géométrie en cours de reconstruction par `_recomputeOrbits`, attributs momentanément
+ * incohérents) et une exception dans `intersectObjects` remonte avant tout filtrage du résultat.
+ * Un pointeur souris ponctuel a peu de chances de tomber sur cette fenêtre transitoire, mais un
+ * raycast par frame (VR, `webxrSelection.ts`) la rencontre en quelques secondes.
+ */
+export function raycastTargets(scene: THREE.Scene): THREE.Object3D[] {
+  const targets: THREE.Object3D[] = [];
+  scene.traverse((obj) => {
+    if (!(obj instanceof THREE.Line)) targets.push(obj);
+  });
+  return targets;
 }
 
 export function setupBodyPicker(
@@ -87,11 +103,11 @@ export function setupBodyPicker(
     ndc.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
     raycaster.setFromCamera(ndc, camera);
 
-    // Intersections triées par distance croissante : le premier mesh touché gagne.
-    // Les lignes d'orbite (THREE.Line) sont ignorées : leur hiérarchie remonte au groupe
-    // parent (orbit_X → sun.group ou earth.group), ce qui produirait de faux positifs.
-    for (const hit of raycaster.intersectObjects(scene.children, true)) {
-      if (hit.object instanceof THREE.Line) continue;
+    // Intersections triées par distance croissante : le premier mesh touché gagne. Les lignes
+    // d'orbite sont exclues de la liste testée (voir `raycastTargets`), pas juste du résultat :
+    // leur hiérarchie remonte au groupe parent (orbit_X → sun.group ou earth.group), ce qui
+    // produirait aussi de faux positifs si on les laissait passer.
+    for (const hit of raycaster.intersectObjects(raycastTargets(scene), false)) {
       const name = resolveBodyName(hit.object, validNames);
       if (name) {
         nav.selectBody(name);

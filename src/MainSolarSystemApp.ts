@@ -290,6 +290,13 @@ if (surfaceScrim) {
       );
     });
     const opticalZoom = setupOpticalZoom(cameraSystem);
+    const webxr = setupWebXR(
+      cameraSystem,
+      sceneSystem,
+      animationSystem,
+      planetNav,
+      bodyNames
+    );
     const modeSwitcher = setupModeSwitcher(
       orbitalMechanics,
       cameraSystem,
@@ -300,6 +307,7 @@ if (surfaceScrim) {
         smallBodyOverlay.setActive(mode === 'explo');
         smallBodyFilters.setTriggerVisible(mode === 'explo');
         spacecraftOverlay.setActive(mode === 'explo');
+        webxr.setMode(mode);
         syncPermalink();
       }
     );
@@ -315,7 +323,6 @@ if (surfaceScrim) {
     permalink.applyInitialState();
     setupShare(cameraSystem, permalink);
     setupCapture(cameraSystem, orbitalMechanics, planetNav);
-    setupWebXR(cameraSystem);
     setupAstronomicalEvents(orbitalMechanics, {
       onDateChange: () => syncPermalink(),
       coordinator: overlayCoordinator,

@@ -25,6 +25,9 @@ describe('CameraSystem target flights', () => {
       target: new THREE.Vector3(),
       enabled: true,
     } as unknown as CameraSystem['controls'];
+    cameraSystem.renderer = {
+      xr: { isPresenting: false },
+    } as unknown as CameraSystem['renderer'];
     cameraSystem.tweenGroup = new TweenGroup();
     Reflect.set(cameraSystem, 'celestialBodies', {
       earth: bodyAt(35),
