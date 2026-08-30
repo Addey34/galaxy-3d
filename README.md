@@ -343,7 +343,14 @@ en faire une référence (missions spatiales, WebXR).
 - [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) : frontières, cycle de vie et invariants
 - [`docs/TESTING.md`](docs/TESTING.md) : stratégie et commandes de validation
 - [docs/UNIVERSE_CATALOG.md](docs/UNIVERSE_CATALOG.md) - catalogue, assets et feuille de route de l'univers
+- [`docs/PERMALINK_GALLERY.md`](docs/PERMALINK_GALLERY.md) : vues remarquables partageables par URL
 - [`AGENTS.md`](AGENTS.md) : règles de contribution pour les agents et développeurs
+
+## Contribuer
+
+Voir [`CONTRIBUTING.md`](CONTRIBUTING.md) — en particulier la marche à suivre pour ajouter un
+corps céleste (catalogue + textures + vérification), le workflow de PR et les gabarits d'issues
+(`.github/ISSUE_TEMPLATE/`).
 
 ## Déploiement
 
