@@ -137,11 +137,16 @@ export class AnimationSystem {
     const sunWorldPosition = this._getSunWorldPosition();
     this._updatePhysicalLighting(sunWorldPosition);
 
-    // Frustum calculé une fois par frame (réutilise les matrices de la frame précédente — acceptable)
-    this.camera.updateMatrixWorld();
+    // Frustum calculé une fois par frame (réutilise les matrices de la frame précédente — acceptable).
+    // En session XR, `this.camera` reste la caméra desktop mono — sa `projectionMatrix` ne
+    // représente pas le frustum stéréo réellement affiché. `renderer.xr.getCamera()` (ArrayCamera)
+    // porte une projection déjà fusionnée (union des deux frustums œil gauche/droit, calculée par
+    // WebXRManager) : c'est la seule source correcte pour le culling en VR.
+    const cullingCamera = this._getCullingCamera();
+    cullingCamera.updateMatrixWorld();
     this._projScreenMatrix.multiplyMatrices(
-      this.camera.projectionMatrix,
-      this.camera.matrixWorldInverse
+      cullingCamera.projectionMatrix,
+      cullingCamera.matrixWorldInverse
     );
     this._frustum.setFromProjectionMatrix(this._projScreenMatrix);
 
@@ -298,7 +303,7 @@ export class AnimationSystem {
     sunWorldPosition: THREE.Vector3 | null,
     moonWorldPosition: THREE.Vector3 | null
   ): void {
-    this._cameraPos.copy(this.camera.position);
+    this._cameraPos.copy(this._getCullingCamera().position);
 
     // Array.from(Set) est O(n) et alloue un tableau : on le recrée uniquement
     // quand un objet est ajouté ou retiré, pas à chaque frame. L'ordre d'itération
@@ -334,16 +339,28 @@ export class AnimationSystem {
     if (this.lodUpdateFrame % LOD_UPDATE_INTERVAL !== 0) return;
     if (!this.celestialBodies) return;
 
+    const lodCamera = this._getCullingCamera();
     for (const body of Object.values(this.celestialBodies)) {
       if (typeof body.updateLODTextures === 'function' && body.group) {
         // fire-and-forget; CelestialObject guards concurrent calls with _lodPending
         void body.updateLODTextures(
-          this.camera,
+          lodCamera,
           LOD_MAX_NORMALIZED_DISTANCE,
           LOD_NORMALIZED_DISTANCE_THRESHOLD
         );
       }
     }
+  }
+
+  /**
+   * Caméra à utiliser pour culling/LOD : la caméra XR fusionnée (deux yeux) pendant une session
+   * casque, sinon la caméra desktop. `renderer.xr.getCamera()` ne doit être appelée qu'en session
+   * (WebXRManager n'a pas encore de pose valide sinon).
+   */
+  private _getCullingCamera(): THREE.PerspectiveCamera {
+    return this.renderer.xr.isPresenting
+      ? this.renderer.xr.getCamera()
+      : this.camera;
   }
 
   private _render(): void {
@@ -352,7 +369,8 @@ export class AnimationSystem {
     // En session XR : rendu direct obligatoire, l'EffectComposer (bloom) n'a pas de chemin
     // stéréo/multiview dans cette version de Three.js. Sinon, le composer prend le relais
     // quand il est actif.
-    if (this.renderer.xr.isPresenting) this.renderer.render(this.scene, this.camera);
+    if (this.renderer.xr.isPresenting)
+      this.renderer.render(this.scene, this.camera);
     else if (this.composer) this.composer.render();
     else this.renderer.render(this.scene, this.camera);
   }

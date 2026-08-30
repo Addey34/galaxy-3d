@@ -427,10 +427,37 @@
         data-i18n-aria="share.btn.aria"
       >
         <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
-          <circle cx="4" cy="8" r="1.9" fill="none" stroke="currentColor" stroke-width="1.3" />
-          <circle cx="11.5" cy="3.6" r="1.9" fill="none" stroke="currentColor" stroke-width="1.3" />
-          <circle cx="11.5" cy="12.4" r="1.9" fill="none" stroke="currentColor" stroke-width="1.3" />
-          <path d="M5.7 7.1l4.1-2.4M5.7 8.9l4.1 2.4" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" />
+          <circle
+            cx="4"
+            cy="8"
+            r="1.9"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.3"
+          />
+          <circle
+            cx="11.5"
+            cy="3.6"
+            r="1.9"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.3"
+          />
+          <circle
+            cx="11.5"
+            cy="12.4"
+            r="1.9"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.3"
+          />
+          <path
+            d="M5.7 7.1l4.1-2.4M5.7 8.9l4.1 2.4"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.3"
+            stroke-linecap="round"
+          />
         </svg>
       </button>
       <button
@@ -450,7 +477,46 @@
             stroke-width="1.3"
             stroke-linejoin="round"
           />
-          <circle cx="8" cy="9" r="2.3" fill="none" stroke="currentColor" stroke-width="1.3" />
+          <circle
+            cx="8"
+            cy="9"
+            r="2.3"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.3"
+          />
+        </svg>
+      </button>
+      <button
+        id="webxr-btn"
+        class="tool"
+        type="button"
+        title="Enter VR"
+        aria-label="Enter virtual reality"
+        data-i18n-title="webxr.btn.enter.title"
+        data-i18n-aria="webxr.btn.enter.aria"
+        hidden
+      >
+        <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
+          <rect
+            x="1.5"
+            y="5"
+            width="13"
+            height="7"
+            rx="2.5"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.3"
+          />
+          <circle cx="5.3" cy="8.5" r="1.35" fill="currentColor" />
+          <circle cx="10.7" cy="8.5" r="1.35" fill="currentColor" />
+          <path
+            d="M6.7 5.7h2.6"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.3"
+            stroke-linecap="round"
+          />
         </svg>
       </button>
       <button
@@ -1046,11 +1112,12 @@
           <!-- Dépliant « Soutenir » : message personnel + arguments de crédibilité,
                puis redirection Ko-fi au clic (paiement toujours chez le prestataire —
                aucun script/iframe tiers chargé ici, CSP intacte). -->
-          <section
-            class="support-card"
-            aria-labelledby="support-title"
-          >
-            <h4 class="support-title" id="support-title" data-i18n="support.title">
+          <section class="support-card" aria-labelledby="support-title">
+            <h4
+              class="support-title"
+              id="support-title"
+              data-i18n="support.title"
+            >
               Support the project
             </h4>
             <p class="support-lead" data-i18n="support.lead">

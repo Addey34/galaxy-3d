@@ -4,9 +4,10 @@
  * d'échelle pour la VR, conformément à l'invariant de réalisme Explo (voir CLAUDE.md).
  *
  * Même philosophie que `share.ts` : détection de capacité au démarrage, repli silencieux plutôt
- * qu'un bouton mort — Safari/iOS n'expose pas `navigator.xr` du tout.
+ * qu'un bouton mort — Safari/iOS n'expose pas `navigator.xr` du tout. Le bouton d'entrée est un
+ * `.tool` du dock (`#webxr-btn`), pas le `VRButton` flottant par défaut de Three.js, pour rester
+ * visuellement cohérent avec le reste de la barre d'outils (capture/partage/aide).
  */
-import { VRButton } from 'three/addons/webxr/VRButton.js';
 import type { CameraSystem } from '@/components/systems/CameraSystem';
 import type { SceneSystem } from '@/components/systems/SceneSystem';
 import type { AnimationSystem } from '@/components/systems/AnimationSystem';
@@ -52,15 +53,50 @@ export function setupWebXR(
     },
   };
 
-  if (!navigator.xr) return handle;
+  const button = document.getElementById('webxr-btn');
+  if (!navigator.xr || !button) return handle;
 
   const catalog = flattenBodies(CELESTIAL_CONFIG);
 
   void navigator.xr.isSessionSupported('immersive-vr').then((supported) => {
     if (!supported) return;
 
-    const button = VRButton.createButton(camera.renderer);
-    document.body.appendChild(button);
+    button.hidden = false;
+    let activeSession: XRSession | null = null;
+
+    const setButtonLabel = (entering: boolean): void => {
+      const title = t(
+        entering ? 'webxr.btn.enter.title' : 'webxr.btn.exit.title'
+      );
+      const aria = t(entering ? 'webxr.btn.enter.aria' : 'webxr.btn.exit.aria');
+      button.setAttribute('title', title);
+      button.setAttribute('aria-label', aria);
+    };
+
+    button.addEventListener('click', () => {
+      if (activeSession) {
+        void activeSession.end();
+        return;
+      }
+      void navigator.xr
+        ?.requestSession('immersive-vr', {
+          optionalFeatures: ['local-floor', 'bounded-floor'],
+        })
+        .then((session) => {
+          activeSession = session;
+          setButtonLabel(false);
+          session.addEventListener('end', () => {
+            activeSession = null;
+            setButtonLabel(true);
+          });
+          void camera.renderer.xr.setSession(session);
+        })
+        .catch(() => {
+          // Capacité déjà confirmée par isSessionSupported ; un rejet ici signifie que
+          // l'utilisateur a refusé la permission ou qu'aucun runtime XR n'a répondu — pas la
+          // peine d'un message dédié, le bouton reste utilisable pour réessayer.
+        });
+    });
 
     const infoPanel: XRInfoPanel = createInfoPanel();
     scene.scene.add(infoPanel.mesh);
@@ -116,12 +152,22 @@ export function setupWebXR(
         const viewDistance =
           body.cameraDistance?.explo ?? CAMERA_SETTINGS.defaultBodyDistance;
         locomotion.state.offset.copy(
-          computeTeleportTarget(bodyWorldPos, viewDistance, locomotion.state.offset)
+          computeTeleportTarget(
+            bodyWorldPos,
+            viewDistance,
+            locomotion.state.offset
+          )
         );
         locomotion.applyOffset(camera.renderer);
       };
       selectionHandles = controllers.map((controller) =>
-        setupControllerSelection(controller, scene.scene, bodyNames, nav, onSelect)
+        setupControllerSelection(
+          controller,
+          scene.scene,
+          bodyNames,
+          nav,
+          onSelect
+        )
       );
 
       lastTime = null;
@@ -131,12 +177,15 @@ export function setupWebXR(
         if (!session) return;
 
         const now = performance.now();
-        const dt = lastTime === null ? 0 : Math.min((now - lastTime) / 1000, 0.1);
+        const dt =
+          lastTime === null ? 0 : Math.min((now - lastTime) / 1000, 0.1);
         lastTime = now;
 
         let changed = pollSnapTurn(session, locomotion.state);
         if (mode === 'educ') {
-          changed = pollMovement(session, camera.camera, locomotion.state, dt) || changed;
+          changed =
+            pollMovement(session, camera.camera, locomotion.state, dt) ||
+            changed;
         }
         if (changed) locomotion.applyOffset(camera.renderer);
 

@@ -130,6 +130,11 @@ export const messages: Record<Locale, Dict> = {
     'capture.btn.aria': 'Capture this view',
     'capture.success': 'Image downloaded',
     'capture.failed': 'Capture failed',
+    'webxr.btn.enter.title': 'Enter VR',
+    'webxr.btn.enter.aria': 'Enter virtual reality',
+    'webxr.btn.exit.title': 'Exit VR',
+    'webxr.btn.exit.aria': 'Exit virtual reality',
+    'webxr.btn.unavailable.title': 'VR not available',
     'help.dialog.aria': 'Help and credits',
     'help.title': 'Navigation',
     'help.tip.drag.key': 'Drag',
@@ -194,8 +199,7 @@ export const messages: Record<Locale, Dict> = {
     'tour.step.share.text':
       'Set up a view, then share its link. Whoever opens it lands on the exact same scene.',
     'tour.step.help.title': '11. Find help',
-    'tour.step.help.text':
-      'Check the help page for more information.',
+    'tour.step.help.text': 'Check the help page for more information.',
 
     // ── Tours guidés scénarisés ──
     'tours.start': 'Scripted tours',
@@ -399,7 +403,8 @@ export const messages: Record<Locale, Dict> = {
     'events.perihelion': 'Périhélie (Terre au plus près du Soleil)',
     'events.aphelion': 'Aphélie (Terre au plus loin du Soleil)',
     'events.opposition': 'Opposition (au plus près, visible toute la nuit)',
-    'events.conjunction': 'Conjonction inférieure (passe entre Terre et Soleil)',
+    'events.conjunction':
+      'Conjonction inférieure (passe entre Terre et Soleil)',
     'events.kind.penumbral': 'pénombrale',
     'events.kind.partial': 'partielle',
     'events.kind.annular': 'annulaire',
@@ -452,6 +457,11 @@ export const messages: Record<Locale, Dict> = {
     'capture.btn.aria': 'Capturer cette vue',
     'capture.success': 'Image téléchargée',
     'capture.failed': 'Échec de la capture',
+    'webxr.btn.enter.title': 'Entrer en VR',
+    'webxr.btn.enter.aria': 'Entrer en réalité virtuelle',
+    'webxr.btn.exit.title': 'Quitter la VR',
+    'webxr.btn.exit.aria': 'Quitter la réalité virtuelle',
+    'webxr.btn.unavailable.title': 'VR non disponible',
     'help.dialog.aria': 'Aide et crédits',
     'help.title': 'Navigation',
     'help.tip.drag.key': 'Glisser',
@@ -517,8 +527,7 @@ export const messages: Record<Locale, Dict> = {
     'tour.step.share.text':
       'Réglez une vue, puis partagez son lien. Celui qui l’ouvre retrouve exactement la même scène.',
     'tour.step.help.title': '11. Retrouver l’aide',
-    'tour.step.help.text':
-      'Consultez la page d\'aide pour plus d\'informations.',
+    'tour.step.help.text': "Consultez la page d'aide pour plus d'informations.",
 
     // ── Tours guidés scénarisés ──
     'tours.start': 'Tours guidés',
