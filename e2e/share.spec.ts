@@ -6,6 +6,7 @@ test.beforeEach(async ({ page, context }) => {
   await context.grantPermissions(['clipboard-read', 'clipboard-write']);
   await page.addInitScript(() => {
     localStorage.setItem('ssv-guided-tour-v1', '1');
+    localStorage.setItem('ssv-explo-tour-nudge-v1', '1');
   });
 });
 
@@ -67,10 +68,7 @@ test('share captures the exact camera angle, and reopening the link restores it'
   await expect(page.locator('#loader')).toBeHidden({ timeout: 30_000 });
   await page.waitForTimeout(2_000);
   const restoredUrl = new URL(page.url());
-  expect(Number(restoredUrl.searchParams.get('az'))).toBeCloseTo(
-    Number(az),
-    0
-  );
+  expect(Number(restoredUrl.searchParams.get('az'))).toBeCloseTo(Number(az), 0);
   expect(Number(restoredUrl.searchParams.get('pol'))).toBeCloseTo(
     Number(pol),
     0

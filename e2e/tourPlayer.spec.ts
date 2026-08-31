@@ -7,6 +7,7 @@ test.beforeEach(async ({ page }) => {
   // et n'intercepte les clics — sans rapport avec les tours scénarisés testés ici.
   await page.addInitScript(() => {
     localStorage.setItem('ssv-guided-tour-v1', '1');
+    localStorage.setItem('ssv-explo-tour-nudge-v1', '1');
   });
 });
 

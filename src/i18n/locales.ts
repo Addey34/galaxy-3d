@@ -214,6 +214,19 @@ export const messages: Record<Locale, Dict> = {
     'tours.status.jumping': 'Jumping through time…',
     'tours.status.speeding': 'Speeding up time…',
 
+    // ── Nudge visite guidée (premier passage en Explo) ──
+    'exploNudge.text': 'Try a guided tour to see exploration mode’s best side.',
+    'exploNudge.action': 'Show me',
+    'exploNudge.dismiss': 'Dismiss',
+
+    // ── Badge d'échelle permanent (vue d'ensemble Explo, aucune cible) ──
+    'exploScale.fact.earth': 'Sunlight takes about 8 minutes to reach Earth.',
+    'exploScale.fact.jupiter':
+      'Sunlight takes about 43 minutes to reach Jupiter.',
+    'exploScale.fact.neptune': 'Sunlight takes about 4 hours to reach Neptune.',
+    'exploScale.fact.voyager':
+      'Voyager 1, humanity’s farthest spacecraft, is already over 24 billion km from Earth.',
+
     // ── Panneau orbites (mode Éducatif) ──
     'orbitOpts.title': 'Orbits',
     'orbitOpts.all': 'All orbits',
@@ -547,6 +560,22 @@ export const messages: Record<Locale, Dict> = {
     'tours.status.flyingTo': 'Vol vers {body}…',
     'tours.status.jumping': 'Saut dans le temps…',
     'tours.status.speeding': 'Accélération du temps…',
+
+    // ── Nudge visite guidée (premier passage en Explo) ──
+    'exploNudge.text':
+      'Essayez une visite guidée pour découvrir le meilleur du mode Exploration.',
+    'exploNudge.action': 'Me montrer',
+    'exploNudge.dismiss': 'Fermer',
+
+    // ── Badge d'échelle permanent (vue d'ensemble Explo, aucune cible) ──
+    'exploScale.fact.earth':
+      'La lumière du Soleil met environ 8 minutes à atteindre la Terre.',
+    'exploScale.fact.jupiter':
+      'La lumière du Soleil met environ 43 minutes à atteindre Jupiter.',
+    'exploScale.fact.neptune':
+      'La lumière du Soleil met environ 4 heures à atteindre Neptune.',
+    'exploScale.fact.voyager':
+      'Voyager 1, la sonde la plus lointaine de l’humanité, est déjà à plus de 24 milliards de km de la Terre.',
 
     // ── Panneau orbites (mode Éducatif) ──
     'orbitOpts.title': 'Orbites',

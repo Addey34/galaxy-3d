@@ -61,6 +61,7 @@ test('IMERG keeps its native alpha mask and compiles the observed rain layer', a
   });
   await page.addInitScript(() => {
     localStorage.setItem('ssv-guided-tour-v1', '1');
+    localStorage.setItem('ssv-explo-tour-nudge-v1', '1');
     localStorage.setItem('ssv-locale', 'en');
   });
 

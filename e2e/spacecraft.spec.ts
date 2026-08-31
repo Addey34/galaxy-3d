@@ -6,6 +6,7 @@ test.beforeEach(async ({ page }) => {
   // Évite que le tour d'accueil première-visite n'intercepte les clics sur les boutons de mode.
   await page.addInitScript(() => {
     localStorage.setItem('ssv-guided-tour-v1', '1');
+    localStorage.setItem('ssv-explo-tour-nudge-v1', '1');
   });
 });
 

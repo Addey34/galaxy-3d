@@ -16,6 +16,8 @@ export const STORAGE_KEYS = {
   guidedTour: 'ssv-guided-tour-v1',
   /** Palier de qualité graphique sélectionné. */
   quality: 'ssv-quality',
+  /** Nudge « essayer une visite guidée » déjà affiché au premier passage en Exploration. */
+  exploTourNudge: 'ssv-explo-tour-nudge-v1',
 } as const;
 
 export type StorageKey = (typeof STORAGE_KEYS)[keyof typeof STORAGE_KEYS];

@@ -29,6 +29,8 @@ import { setupPlayback } from './ui/playback';
 import { setupQualitySwitch } from './ui/qualitySwitch';
 import { setupTimePanel } from './ui/timePanel';
 import { setupModeSwitcher } from './ui/modeSwitcher';
+import { setupExploTourNudge } from './ui/exploTourNudge';
+import { setupExploScaleBadge } from './ui/exploScaleBadge';
 import { setupPermalinks } from './ui/permalink';
 import { setupAstronomicalEvents } from './ui/astronomicalEvents';
 import { setupOpticalZoom } from './ui/opticalZoom';
@@ -195,11 +197,13 @@ if (surfaceScrim) {
     // se ferme sur retour Vue Globale. Toutes les sources passent par planetNav.selectBody.
     let syncPermalink = (): void => undefined;
     const bodyInfo = setupBodyInfo(overlayCoordinator);
+    const exploScaleBadge = setupExploScaleBadge();
     const planetNav = setupPlanetControls(
       cameraSystem,
       (name) => {
         if (name === 'overview') bodyInfo.hide();
         else bodyInfo.show(name);
+        exploScaleBadge.setHasTarget(name !== 'overview');
         syncPermalink();
       },
       overlayCoordinator
@@ -293,6 +297,7 @@ if (surfaceScrim) {
       planetNav,
       bodyNames
     );
+    const exploTourNudge = setupExploTourNudge();
     const modeSwitcher = setupModeSwitcher(
       orbitalMechanics,
       cameraSystem,
@@ -304,6 +309,8 @@ if (surfaceScrim) {
         smallBodyFilters.setTriggerVisible(mode === 'explo');
         spacecraftOverlay.setActive(mode === 'explo');
         webxr.setMode(mode);
+        exploScaleBadge.setMode(mode);
+        if (mode === 'explo') exploTourNudge.notifyExploEntered();
         syncPermalink();
       }
     );

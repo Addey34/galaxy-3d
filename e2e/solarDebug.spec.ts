@@ -5,6 +5,7 @@ test.beforeEach(async ({ page }) => {
   await blockExternalNetwork(page);
   await page.addInitScript(() => {
     localStorage.setItem('ssv-guided-tour-v1', '1');
+    localStorage.setItem('ssv-explo-tour-nudge-v1', '1');
   });
 });
 
@@ -20,7 +21,9 @@ test('solar debug exposes pole illumination diagnostics', async ({ page }) => {
   await expect(panel).toContainText('subsolar');
   await expect(panel).toContainText('latitude');
 });
-test('solar debug keeps the correct hemisphere illuminated at both solstices', async ({ page }) => {
+test('solar debug keeps the correct hemisphere illuminated at both solstices', async ({
+  page,
+}) => {
   for (const scenario of [
     { date: '2026-06-21', latitude: 23.44, north: 'DAY', south: 'NIGHT' },
     { date: '2026-12-21', latitude: -23.43, north: 'NIGHT', south: 'DAY' },

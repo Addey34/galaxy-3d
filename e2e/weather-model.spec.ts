@@ -48,6 +48,7 @@ test('cloud model fallback loads and activates without a WebGL shader error', as
   });
   await page.addInitScript(() => {
     localStorage.setItem('ssv-guided-tour-v1', '1');
+    localStorage.setItem('ssv-explo-tour-nudge-v1', '1');
     localStorage.setItem('ssv-locale', 'en');
   });
 
@@ -98,6 +99,7 @@ test('satellite cloud shader compiles with a local NASA image', async ({
   );
   await page.addInitScript(() => {
     localStorage.setItem('ssv-guided-tour-v1', '1');
+    localStorage.setItem('ssv-explo-tour-nudge-v1', '1');
     localStorage.setItem('ssv-locale', 'en');
   });
 
@@ -137,6 +139,7 @@ test('raw cloud diagnostic uses True Color without supplemental maps', async ({
   );
   await page.addInitScript(() => {
     localStorage.setItem('ssv-guided-tour-v1', '1');
+    localStorage.setItem('ssv-explo-tour-nudge-v1', '1');
     localStorage.setItem('ssv-locale', 'en');
   });
 

@@ -14,6 +14,7 @@ test.beforeEach(async ({ page }) => {
   await blockExternalNetwork(page);
   await page.addInitScript(() => {
     localStorage.setItem('ssv-guided-tour-v1', '1');
+    localStorage.setItem('ssv-explo-tour-nudge-v1', '1');
   });
 });
 
@@ -23,11 +24,13 @@ async function boot(page: import('@playwright/test').Page): Promise<void> {
 }
 
 async function runAxe(page: import('@playwright/test').Page) {
-  return new AxeBuilder({ page })
-    // wcag2a/wcag2aa/wcag21aa : le socle normatif standard. Pas de disable de règle — si axe
-    // trouve quelque chose, c'est traité comme un vrai finding, pas filtré par défaut.
-    .withTags(['wcag2a', 'wcag2aa', 'wcag21aa'])
-    .analyze();
+  return (
+    new AxeBuilder({ page })
+      // wcag2a/wcag2aa/wcag21aa : le socle normatif standard. Pas de disable de règle — si axe
+      // trouve quelque chose, c'est traité comme un vrai finding, pas filtré par défaut.
+      .withTags(['wcag2a', 'wcag2aa', 'wcag21aa'])
+      .analyze()
+  );
 }
 
 test('overview screen has no automatically detectable a11y violations', async ({
@@ -35,9 +38,10 @@ test('overview screen has no automatically detectable a11y violations', async ({
 }) => {
   await boot(page);
   const results = await runAxe(page);
-  expect(results.violations, JSON.stringify(results.violations, null, 2)).toEqual(
-    []
-  );
+  expect(
+    results.violations,
+    JSON.stringify(results.violations, null, 2)
+  ).toEqual([]);
 });
 
 test('body info panel has no automatically detectable a11y violations', async ({
@@ -48,9 +52,10 @@ test('body info panel has no automatically detectable a11y violations', async ({
   await page.locator('#orbit-earth').click();
   await expect(page.locator('#body-info')).toBeVisible();
   const results = await runAxe(page);
-  expect(results.violations, JSON.stringify(results.violations, null, 2)).toEqual(
-    []
-  );
+  expect(
+    results.violations,
+    JSON.stringify(results.violations, null, 2)
+  ).toEqual([]);
 });
 
 test('body search palette has no automatically detectable a11y violations', async ({
@@ -60,9 +65,10 @@ test('body search palette has no automatically detectable a11y violations', asyn
   await page.locator('#body-search-trigger').click();
   await expect(page.locator('#body-palette')).toBeVisible();
   const results = await runAxe(page);
-  expect(results.violations, JSON.stringify(results.violations, null, 2)).toEqual(
-    []
-  );
+  expect(
+    results.violations,
+    JSON.stringify(results.violations, null, 2)
+  ).toEqual([]);
 });
 
 test('display settings panel has no automatically detectable a11y violations', async ({
@@ -72,9 +78,10 @@ test('display settings panel has no automatically detectable a11y violations', a
   await page.locator('#settings-trigger').click();
   await expect(page.locator('#orbit-options')).toBeVisible();
   const results = await runAxe(page);
-  expect(results.violations, JSON.stringify(results.violations, null, 2)).toEqual(
-    []
-  );
+  expect(
+    results.violations,
+    JSON.stringify(results.violations, null, 2)
+  ).toEqual([]);
 });
 
 test('weather layers panel has no automatically detectable a11y violations', async ({
@@ -84,9 +91,10 @@ test('weather layers panel has no automatically detectable a11y violations', asy
   await page.locator('#weather-trigger').click();
   await expect(page.locator('#weather-layers')).toBeVisible();
   const results = await runAxe(page);
-  expect(results.violations, JSON.stringify(results.violations, null, 2)).toEqual(
-    []
-  );
+  expect(
+    results.violations,
+    JSON.stringify(results.violations, null, 2)
+  ).toEqual([]);
 });
 
 test('astronomical events panel has no automatically detectable a11y violations', async ({
@@ -96,9 +104,10 @@ test('astronomical events panel has no automatically detectable a11y violations'
   await page.locator('#events-trigger').click();
   await expect(page.locator('#astronomical-events')).toBeVisible();
   const results = await runAxe(page);
-  expect(results.violations, JSON.stringify(results.violations, null, 2)).toEqual(
-    []
-  );
+  expect(
+    results.violations,
+    JSON.stringify(results.violations, null, 2)
+  ).toEqual([]);
 });
 
 test('quality menu has no automatically detectable a11y violations', async ({
@@ -108,9 +117,10 @@ test('quality menu has no automatically detectable a11y violations', async ({
   await page.locator('#quality-btn').click();
   await expect(page.locator('#quality-menu')).toBeVisible();
   const results = await runAxe(page);
-  expect(results.violations, JSON.stringify(results.violations, null, 2)).toEqual(
-    []
-  );
+  expect(
+    results.violations,
+    JSON.stringify(results.violations, null, 2)
+  ).toEqual([]);
 });
 
 test('help popover has no automatically detectable a11y violations', async ({
@@ -120,9 +130,10 @@ test('help popover has no automatically detectable a11y violations', async ({
   await page.locator('#help-btn').click();
   await expect(page.locator('#help-popover')).toBeVisible();
   const results = await runAxe(page);
-  expect(results.violations, JSON.stringify(results.violations, null, 2)).toEqual(
-    []
-  );
+  expect(
+    results.violations,
+    JSON.stringify(results.violations, null, 2)
+  ).toEqual([]);
 });
 
 test('explo mode overview has no automatically detectable a11y violations', async ({
@@ -131,9 +142,10 @@ test('explo mode overview has no automatically detectable a11y violations', asyn
   await page.goto('/?mode=explo');
   await expect(page.locator('#loader')).toBeHidden({ timeout: 30_000 });
   const results = await runAxe(page);
-  expect(results.violations, JSON.stringify(results.violations, null, 2)).toEqual(
-    []
-  );
+  expect(
+    results.violations,
+    JSON.stringify(results.violations, null, 2)
+  ).toEqual([]);
 });
 
 test.describe('mobile viewport', () => {

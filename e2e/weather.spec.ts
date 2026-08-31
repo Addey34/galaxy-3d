@@ -9,6 +9,7 @@ test.beforeEach(async ({ page }) => {
   await page.route('**/gibs.earthdata.nasa.gov/**', (route) => route.abort());
   await page.addInitScript(() => {
     localStorage.setItem('ssv-guided-tour-v1', '1');
+    localStorage.setItem('ssv-explo-tour-nudge-v1', '1');
     localStorage.setItem('ssv-locale', 'en');
   });
 });

@@ -316,6 +316,13 @@ export class ExploHud {
     });
     if (!this.labelsVisible) return;
 
+    // Vue d'ensemble Explo (aucune cible suivie) : à cette échelle, TOUS les corps projettent
+    // dans un même amas minuscule au centre — sans filtre, c'est une bouillie de labels
+    // superposés qui ne donne aucune envie d'explorer. Ne garder que les planètes majeures ici ;
+    // dès qu'une cible est suivie, la sélectivité naturelle de la projection à l'écran suffit
+    // (la plupart des corps sortent du cadre), donc pas de filtre à cette étape.
+    const isOverview = this._mode === 'explo' && targetName === null;
+
     sceneSystem.forEachBodyWorldPosition((bodyName, worldPos) => {
       if (
         this._mode === 'educ' &&
@@ -326,7 +333,11 @@ export class ExploHud {
       }
       if (this._hiddenNames.has(bodyName)) return;
 
+      // Créé même si masqué ci-dessous : d'autres surfaces (recherche, tests) s'attendent à
+      // ce que le label existe dans le DOM dès qu'un corps est navigable, pas seulement une
+      // fois affiché — `.explo-label` est masqué par défaut en CSS (display: none).
       const element = this._label(bodyName);
+      if (isOverview && !MAJOR_BODIES.has(bodyName)) return;
       this._ndc.copy(worldPos).project(camera);
       const onScreen =
         this._ndc.z >= -1 &&

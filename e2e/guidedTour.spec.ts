@@ -72,6 +72,7 @@ test.describe('relaunch', () => {
     await blockExternalNetwork(page);
     await page.addInitScript(() => {
       localStorage.setItem('ssv-guided-tour-v1', '1');
+      localStorage.setItem('ssv-explo-tour-nudge-v1', '1');
     });
   });
 
