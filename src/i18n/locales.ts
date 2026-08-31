@@ -122,6 +122,8 @@ export const messages: Record<Locale, Dict> = {
     // ── Aide & crédits ──
     'help.btn.title': 'Help, tips & credits',
     'help.btn.aria': 'Help, tips and credits',
+    'kofi.btn.title': 'Buy me a coffee',
+    'kofi.btn.aria': 'Support this project on Ko-fi',
     'share.btn.title': 'Share this view',
     'share.btn.aria': 'Share this view',
     'share.copied': 'Link copied',
@@ -225,6 +227,10 @@ export const messages: Record<Locale, Dict> = {
     'settings.labels': 'Names & markers',
 
     'settings.labelsToggle': 'Show body names and markers',
+    'settings.labelsChoose': 'Choose names & markers',
+    'settings.bodies': 'Bodies',
+    'settings.bodiesToggle': 'Show celestial bodies',
+    'settings.bodiesChoose': 'Choose bodies',
 
     // ── Filtres petits corps (NEO / comètes / TNO) ──
     'smallBodies.trigger.aria': 'Small-body filters',
@@ -449,6 +455,8 @@ export const messages: Record<Locale, Dict> = {
     // ── Aide & crédits ──
     'help.btn.title': 'Aide, astuces et crédits',
     'help.btn.aria': 'Aide, astuces et crédits',
+    'kofi.btn.title': "M'offrir un café",
+    'kofi.btn.aria': 'Soutenir ce projet sur Ko-fi',
     'share.btn.title': 'Partager cette vue',
     'share.btn.aria': 'Partager cette vue',
     'share.copied': 'Lien copié',
@@ -553,6 +561,10 @@ export const messages: Record<Locale, Dict> = {
     'settings.labels': 'Noms et points',
 
     'settings.labelsToggle': 'Afficher les noms et les points',
+    'settings.labelsChoose': 'Choisir les noms et points',
+    'settings.bodies': 'Corps',
+    'settings.bodiesToggle': 'Afficher les corps célestes',
+    'settings.bodiesChoose': 'Choisir les corps',
 
     // ── Filtres petits corps (NEO / comètes / TNO) ──
     'smallBodies.trigger.aria': 'Filtres petits corps',

@@ -56,6 +56,8 @@ export class SceneSystem {
   private _orbitsGloballyVisible = false;
   private _orbitMasterEnabled = true;
   private readonly _orbitHidden = new Set<string>();
+  private _bodyMasterEnabled = true;
+  private readonly _bodyHidden = new Set<string>();
 
   /** Table des corps, conservée pour exposer leurs positions monde (HUD explo). */
   private _celestialBodies: CelestialBodies = {};
@@ -207,7 +209,10 @@ export class SceneSystem {
    * qu'au prochain chargement (l'UI le signale). Appelé par le sélecteur de qualité.
    */
   applyQualityLive(): void {
-    const pixelRatio = Math.min(window.devicePixelRatio, currentMaxPixelRatio());
+    const pixelRatio = Math.min(
+      window.devicePixelRatio,
+      currentMaxPixelRatio()
+    );
     this.renderer.setPixelRatio(pixelRatio);
     if (this.composer) this.composer.setPixelRatio(pixelRatio);
   }
@@ -400,6 +405,27 @@ export class SceneSystem {
   /** Noms de tous les corps dotés d'une ligne d'orbite (planètes, naines, lunes, petits corps). */
   orbitBodyNames(): string[] {
     return [...this._orbitLines.keys()];
+  }
+
+  private _applyBodyVisibility(name: string): void {
+    this._celestialBodies[name]?.setVisible(
+      this._bodyMasterEnabled && !this._bodyHidden.has(name)
+    );
+  }
+
+  /** Bascule globale (bouton ON/OFF du panneau Réglages « Bodies »). */
+  setBodyMasterEnabled(enabled: boolean): void {
+    this._bodyMasterEnabled = enabled;
+    for (const name of Object.keys(this._celestialBodies)) {
+      this._applyBodyVisibility(name);
+    }
+  }
+
+  /** Affiche/masque un corps individuellement (indépendant de la bascule globale). */
+  setBodyVisible(name: string, visible: boolean): void {
+    if (visible) this._bodyHidden.delete(name);
+    else this._bodyHidden.add(name);
+    this._applyBodyVisibility(name);
   }
 
   applyOrbitPoints(): void {

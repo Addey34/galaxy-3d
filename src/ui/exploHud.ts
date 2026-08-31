@@ -218,6 +218,8 @@ export class ExploHud {
   private _lastTarget: string | null = null;
   /** En éduc, seuls les noms de ce Set reçoivent un label (corps avec mesh). */
   private _educFilter: ReadonlySet<string> | null = null;
+  /** Corps exclus individuellement du panneau Réglages, dans les deux modes. */
+  private _hiddenNames: ReadonlySet<string> = new Set();
 
   /**
    * @param nav             commande de navigation partagée (clic label → cible le corps)
@@ -286,6 +288,11 @@ export class ExploHud {
     this._educFilter = names;
   }
 
+  /** Corps dont le label (nom + marqueur) reste masqué, quel que soit le mode. */
+  setHiddenNames(names: ReadonlySet<string>): void {
+    this._hiddenNames = names;
+  }
+
   /** À appeler chaque frame quand actif. Lit des positions déjà à jour (post-suivi caméra). */
   update(
     camera: THREE.PerspectiveCamera,
@@ -317,6 +324,7 @@ export class ExploHud {
       ) {
         return;
       }
+      if (this._hiddenNames.has(bodyName)) return;
 
       const element = this._label(bodyName);
       this._ndc.copy(worldPos).project(camera);

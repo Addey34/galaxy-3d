@@ -259,6 +259,18 @@ button {
   height: var(--control-h);
 }
 
+/* Lien Ko-fi : teinté en permanence (pas seulement au survol comme les autres .tool) pour
+   rester repérable au milieu d'icônes neutres — le but même de ce bouton est d'être vu. */
+.tool--kofi {
+  color: rgba(255, 129, 100, 0.85);
+  border-color: rgba(255, 129, 100, 0.35);
+}
+.tool--kofi:hover {
+  color: rgb(255, 129, 100);
+  border-color: rgba(255, 129, 100, 0.6);
+  background: rgba(255, 129, 100, 0.12);
+}
+
 /* ============================================================================
    MODE SEGMENT — Éducatif ↔ Exploration (dock bas droit)
    ============================================================================ */
@@ -698,11 +710,13 @@ button {
   max-height: calc(100vh - var(--control-h) - 4 * var(--edge));
 }
 
-/* Une seule zone de défilement par panneau : les listes spécialisées possèdent
-   déjà leur propre limite et ne doivent pas faire défiler leur parent en parallèle. */
+/* Trois bascules + leurs dépliants (noms, corps, orbites) : le corps du panneau peut
+   dépasser sur les viewports bas. Chaque `.oo-body` garde sa propre limite/défilement
+   interne ; le scroll ici ne s'active qu'en secours si l'ensemble dépasse la hauteur
+   du panneau (évite un contenu tronqué et invisible plutôt qu'un double scroll gênant). */
 .surface--settings > .surface-body {
   min-height: 0;
-  overflow: hidden;
+  overflow-y: auto;
 }
 .surface--events > .surface-body {
   display: flex;
@@ -1108,13 +1122,16 @@ button {
   background-position: center;
   background-size: 82%;
 }
-.orbit-picker {
+/* Dépliant « Choisir… » générique (noms/marqueurs, corps, orbites — un par bascule
+   principale du panneau Réglages, cf. index.html). */
+.settings-picker {
+  margin-bottom: var(--sp-2);
   border: 1px solid var(--hairline);
   border-radius: var(--r-sm);
   background: var(--control-bg);
   overflow: hidden;
 }
-.orbit-picker-summary {
+.settings-picker-summary {
   position: relative;
   padding: 0.5rem 1.8rem 0.5rem 0.6rem;
   color: var(--ink-dim);
@@ -1123,10 +1140,10 @@ button {
   cursor: pointer;
   list-style: none;
 }
-.orbit-picker-summary::-webkit-details-marker {
+.settings-picker-summary::-webkit-details-marker {
   display: none;
 }
-.orbit-picker-summary::after {
+.settings-picker-summary::after {
   content: '⌄';
   position: absolute;
   right: 0.6rem;
@@ -1135,10 +1152,10 @@ button {
   color: var(--ink-faint);
   transition: transform 0.2s;
 }
-.orbit-picker[open] .orbit-picker-summary::after {
+.settings-picker[open] .settings-picker-summary::after {
   transform: translateY(-45%) rotate(180deg);
 }
-.orbit-picker-summary:hover {
+.settings-picker-summary:hover {
   color: var(--ink);
   background: var(--control-bg-hover);
 }

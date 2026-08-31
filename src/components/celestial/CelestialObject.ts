@@ -669,6 +669,15 @@ export default class CelestialObject {
   }
 
   /**
+   * Affiche/masque le corps entier (tous ses calques). Bascule `_tiltGroup`, pas `group` :
+   * les satellites sont ajoutés comme enfants de `group` (cf. SceneSystem.setupCelestialBodies),
+   * masquer `group` masquerait leurs orbites et leurs propres corps avec.
+   */
+  setVisible(visible: boolean): void {
+    this._tiltGroup.visible = visible;
+  }
+
+  /**
    * DIAGNOSTIC (?debug-earth) : active/désactive une map du matériau surface (`normalMap`,
    * `displacementMap`, `bumpMap`) sans la détruire, pour isoler visuellement la source d'un
    * artefact de relief. La texture retirée est mémorisée et restaurée au ré-activation.

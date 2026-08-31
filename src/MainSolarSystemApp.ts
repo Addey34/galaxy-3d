@@ -245,11 +245,7 @@ if (surfaceScrim) {
     );
     exploHud.setMode('educ');
     exploHud.setActive(true);
-    setupOrbitOptions(
-      sceneSystem,
-      (visible) => exploHud.setLabelsVisible(visible),
-      overlayCoordinator
-    );
+    setupOrbitOptions(sceneSystem, exploHud, overlayCoordinator);
 
     // Champ de masse des petits corps (SBDB) — couche instrument 2D, chargée en tâche de
     // fond. Dégradation propre : si le fetch échoue (offline), l'overlay reste vide.
@@ -329,7 +325,13 @@ if (surfaceScrim) {
       navigation: planetNav,
       playback,
     });
-    setupTourPlayer(cameraSystem, orbitalMechanics, planetNav, TOUR_SCRIPTS, permalink);
+    setupTourPlayer(
+      cameraSystem,
+      orbitalMechanics,
+      planetNav,
+      TOUR_SCRIPTS,
+      permalink
+    );
     hideLoader();
     guidedTour.startIfFirstVisit();
   } catch (err) {
