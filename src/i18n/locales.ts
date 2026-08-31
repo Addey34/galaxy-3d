@@ -187,7 +187,7 @@ export const messages: Record<Locale, Dict> = {
       'After selecting a body, open its information panel from the target button.',
     'tour.step.settings.title': '6. Adjust display',
     'tour.step.settings.text':
-      'Open display settings to show or hide orbits, names and markers.',
+      'Open display settings to show or hide orbits, names, markers, or even individual bodies.',
     'tour.step.weather.title': '7. Explore weather',
     'tour.step.weather.text':
       'Open weather layers to see clouds, rain, wind and surface data on Earth.',
@@ -521,7 +521,7 @@ export const messages: Record<Locale, Dict> = {
       'Après avoir sélectionné un corps, ouvrez sa fiche avec le bouton d’information de la cible.',
     'tour.step.settings.title': '6. Régler l’affichage',
     'tour.step.settings.text':
-      'Ouvrez les réglages d’affichage pour afficher ou masquer les orbites, les noms et les points.',
+      'Ouvrez les réglages d’affichage pour afficher ou masquer les orbites, les noms, les points, ou même certains corps individuellement.',
     'tour.step.weather.title': '7. Explorer la météo',
     'tour.step.weather.text':
       'Ouvrez les couches météo pour voir les nuages, la pluie, le vent et les données de surface sur Terre.',
