@@ -235,15 +235,18 @@ export const messages: Record<Locale, Dict> = {
     'settings.title': 'Settings',
     'settings.orbits': 'Orbits',
     'settings.orbitsToggle': 'Show orbits',
-    'settings.orbitsChoose': 'Choose orbits',
-    'settings.labelsTitle': 'Display',
-    'settings.labels': 'Names & markers',
-
     'settings.labelsToggle': 'Show body names and markers',
-    'settings.labelsChoose': 'Choose names & markers',
-    'settings.bodies': 'Bodies',
     'settings.bodiesToggle': 'Show celestial bodies',
-    'settings.bodiesChoose': 'Choose bodies',
+    'settings.tableHint':
+      'Column header toggles the whole column; each row controls one body.',
+    'settings.tableCaption': 'Per-body display settings',
+    'settings.col.bodyName': 'Celestial body',
+    'settings.col.names': 'Name',
+    'settings.col.bodies': 'Body',
+    'settings.col.orbits': 'Orbit',
+    'settings.row.name.aria': "Show {name}'s name",
+    'settings.row.body.aria': 'Show {name}',
+    'settings.row.orbit.aria': "Show {name}'s orbit",
 
     // ── Filtres petits corps (NEO / comètes / TNO) ──
     'smallBodies.trigger.aria': 'Small-body filters',
@@ -585,15 +588,18 @@ export const messages: Record<Locale, Dict> = {
     'settings.title': 'Paramètres',
     'settings.orbits': 'Orbites',
     'settings.orbitsToggle': 'Afficher les orbites',
-    'settings.orbitsChoose': 'Choisir les orbites',
-    'settings.labelsTitle': 'Affichage',
-    'settings.labels': 'Noms et points',
-
     'settings.labelsToggle': 'Afficher les noms et les points',
-    'settings.labelsChoose': 'Choisir les noms et points',
-    'settings.bodies': 'Corps',
     'settings.bodiesToggle': 'Afficher les corps célestes',
-    'settings.bodiesChoose': 'Choisir les corps',
+    'settings.tableHint':
+      'L’en-tête bascule toute la colonne ; chaque ligne règle un seul corps.',
+    'settings.tableCaption': 'Réglages d’affichage par corps',
+    'settings.col.bodyName': 'Corps céleste',
+    'settings.col.names': 'Nom',
+    'settings.col.bodies': 'Corps',
+    'settings.col.orbits': 'Orbite',
+    'settings.row.name.aria': 'Afficher le nom de {name}',
+    'settings.row.body.aria': 'Afficher {name}',
+    'settings.row.orbit.aria': 'Afficher l’orbite de {name}',
 
     // ── Filtres petits corps (NEO / comètes / TNO) ──
     'smallBodies.trigger.aria': 'Filtres petits corps',

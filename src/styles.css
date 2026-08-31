@@ -1062,6 +1062,20 @@ button {
   display: none;
 }
 
+/* Contenu réservé aux lecteurs d'écran (en-têtes de colonne/légendes de tableau sans
+   doublon visuel — le contexte est déjà porté par la mise en page). */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
 /* ============================================================================
    SETTINGS — noms & orbites (+ FOV en Explo, injecté par ui/opticalZoom)
    ============================================================================ */
@@ -1122,42 +1136,80 @@ button {
   background-position: center;
   background-size: 82%;
 }
-/* Dépliant « Choisir… » générique (noms/marqueurs, corps, orbites — un par bascule
-   principale du panneau Réglages, cf. index.html). */
-.settings-picker {
-  margin-bottom: var(--sp-2);
+/* Tableau réglages unifié (index.html #orbit-options) : un corps par ligne, une bascule
+   par colonne. L'en-tête (<th>) porte la bascule maître de sa colonne ; chaque <td> une
+   bascule individuelle. Remplace les 3 dépliants « Choisir… » qui répétaient la même
+   liste de corps trois fois. */
+.oo-table-hint {
+  margin: 0 0 var(--sp-2);
+  font-size: 0.68rem;
+  line-height: 1.35;
+  color: var(--ink-faint);
+}
+.oo-table-scroll {
+  max-height: min(52vh, 22rem);
+  overflow-y: auto;
   border: 1px solid var(--hairline);
   border-radius: var(--r-sm);
-  background: var(--control-bg);
-  overflow: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
 }
-.settings-picker-summary {
-  position: relative;
-  padding: 0.5rem 1.8rem 0.5rem 0.6rem;
-  color: var(--ink-dim);
-  font-size: 0.75rem;
+.oo-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.oo-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  padding: 0.4rem 0.3rem;
+  background: var(--surface-solid);
+  border-bottom: 1px solid var(--hairline);
   font-weight: 600;
+  text-align: center;
+}
+.oo-th-name {
+  width: 100%;
+}
+.oo-th-toggle {
+  width: 2.7rem;
+}
+.oo-th-toggle label {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
   cursor: pointer;
-  list-style: none;
-}
-.settings-picker-summary::-webkit-details-marker {
-  display: none;
-}
-.settings-picker-summary::after {
-  content: '⌄';
-  position: absolute;
-  right: 0.6rem;
-  top: 50%;
-  transform: translateY(-55%);
+  font-size: 0.6rem;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
   color: var(--ink-faint);
-  transition: transform 0.2s;
 }
-.settings-picker[open] .settings-picker-summary::after {
-  transform: translateY(-45%) rotate(180deg);
+.oo-th-toggle label:hover {
+  color: var(--ink-dim);
 }
-.settings-picker-summary:hover {
-  color: var(--ink);
-  background: var(--control-bg-hover);
+.oo-tr td {
+  padding: 0.28rem 0.3rem;
+  border-bottom: 1px solid var(--hairline);
+}
+.oo-tr:last-child td {
+  border-bottom: none;
+}
+.oo-tr:hover td {
+  background: var(--control-bg);
+}
+.oo-td-name {
+  vertical-align: middle;
+}
+.oo-td-name-inner {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  min-width: 0;
+}
+.oo-td-toggle {
+  vertical-align: middle;
+  text-align: center;
 }
 .oo-body,
 .wl-body {

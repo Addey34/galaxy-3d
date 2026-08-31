@@ -1,48 +1,30 @@
 import { flattenBodies } from '@/config/catalog';
 import { CELESTIAL_CONFIG } from '@/config/bodies';
-import { onLocaleChange } from '@/i18n';
+import { onLocaleChange, t } from '@/i18n';
 import { bodyDisplayName } from '@/i18n/bodyText';
 import type { SceneSystem } from '@/components/systems/SceneSystem';
 import type { ExploHud } from './exploHud';
 import { hexToRgbTriplet } from './bodyAccent';
 import type { OverlayCoordinator } from './overlayCoordinator';
 
-/** Construit les lignes d'un dépliant « Choisir… » : une case à cocher par corps. */
-function buildPickerRows(
-  container: HTMLElement,
-  bodies: readonly [string, { orbitalColor: number }][],
-  isVisible: (name: string) => boolean,
-  onChange: (name: string, visible: boolean) => void,
-  withDot: boolean
-): void {
-  container.replaceChildren();
-  for (const [name, cfg] of bodies) {
-    const row = document.createElement('label');
-    row.className = 'oo-row';
+/** Une <td> avec sa case à cocher — la brique répétée trois fois par ligne du tableau. */
+function buildToggleCell(
+  checked: boolean,
+  ariaLabel: string,
+  onChange: (checked: boolean) => void
+): HTMLTableCellElement {
+  const cell = document.createElement('td');
+  cell.className = 'oo-td oo-td-toggle';
 
-    if (withDot) {
-      const rgb = hexToRgbTriplet(cfg.orbitalColor);
-      row.style.setProperty('--orbit-rgb', rgb);
-      const dot = document.createElement('span');
-      dot.className = 'oo-dot';
-      row.append(dot);
-    }
+  const checkbox = document.createElement('input');
+  checkbox.type = 'checkbox';
+  checkbox.className = 'oo-checkbox';
+  checkbox.checked = checked;
+  checkbox.setAttribute('aria-label', ariaLabel);
+  checkbox.addEventListener('change', () => onChange(checkbox.checked));
 
-    const nameEl = document.createElement('span');
-    nameEl.className = 'oo-name';
-    nameEl.textContent = bodyDisplayName(name);
-
-    const checkbox = document.createElement('input');
-    checkbox.type = 'checkbox';
-    checkbox.className = 'oo-checkbox';
-    checkbox.checked = isVisible(name);
-    checkbox.addEventListener('change', () => {
-      onChange(name, checkbox.checked);
-    });
-
-    row.append(nameEl, checkbox);
-    container.append(row);
-  }
+  cell.append(checkbox);
+  return cell;
 }
 
 export function setupOrbitOptions(
@@ -53,14 +35,15 @@ export function setupOrbitOptions(
   const panel = document.getElementById('orbit-options');
   if (!panel) return;
 
-  const labelsBodyEl = panel.querySelector<HTMLElement>('#labels-picker-body');
-  const bodiesBodyEl = panel.querySelector<HTMLElement>('#bodies-picker-body');
-  const orbitsBodyEl = panel.querySelector<HTMLElement>('#orbits-picker-body');
-  if (!labelsBodyEl || !bodiesBodyEl || !orbitsBodyEl) return;
+  const tableBodyEl = panel.querySelector<HTMLElement>('#settings-table-body');
+  const labelsToggle = panel.querySelector<HTMLInputElement>('#labels-visible');
+  const bodiesToggle = panel.querySelector<HTMLInputElement>('#bodies-visible');
+  const orbitsToggle = panel.querySelector<HTMLInputElement>('#orbits-visible');
+  if (!tableBodyEl || !labelsToggle || !bodiesToggle || !orbitsToggle) return;
 
-  // Même liste de corps pour les trois dépliants : tout ce qui a une ligne d'orbite
-  // (planètes, lunes, naines texturées, petits corps du catalogue) hors étoile/skybox —
-  // le Soleil reste toujours affiché, pas de case à cocher pour lui.
+  // Une seule liste de corps pour les trois colonnes (tout ce qui a une ligne d'orbite —
+  // planètes, lunes, naines texturées, petits corps du catalogue — hors étoile/skybox ;
+  // le Soleil reste toujours affiché, pas de ligne pour lui).
   const configs = flattenBodies(CELESTIAL_CONFIG);
   const orbitNames = new Set(sceneSystem.orbitBodyNames());
   const bodies = [...configs.entries()].filter(
@@ -68,57 +51,32 @@ export function setupOrbitOptions(
       orbitNames.has(name) && cfg.kind !== 'skybox' && cfg.kind !== 'star'
   );
 
-  // ── Bascule + dépliant « Noms & marqueurs » ──────────────────────────────
-  const labelsToggle = panel.querySelector<HTMLInputElement>('#labels-visible');
+  // ── Colonne « Nom » : bascule maître + état individuel ──────────────────
   const hiddenLabelNames = new Set<string>();
   const applyHiddenLabelNames = (): void =>
     exploHud.setHiddenNames(new Set(hiddenLabelNames));
-  labelsToggle?.addEventListener('change', () => {
+  labelsToggle.addEventListener('change', () => {
     exploHud.setLabelsVisible(labelsToggle.checked);
   });
-  exploHud.setLabelsVisible(labelsToggle?.checked ?? true);
+  exploHud.setLabelsVisible(labelsToggle.checked);
   applyHiddenLabelNames();
 
-  function buildLabelRows(): void {
-    buildPickerRows(
-      labelsBodyEl!,
-      bodies,
-      (name) => !hiddenLabelNames.has(name),
-      (name, visible) => {
-        if (visible) hiddenLabelNames.delete(name);
-        else hiddenLabelNames.add(name);
-        applyHiddenLabelNames();
-      },
-      false
-    );
-  }
-
-  // ── Bascule + dépliant « Corps » ─────────────────────────────────────────
-  const bodiesToggle = panel.querySelector<HTMLInputElement>('#bodies-visible');
-  bodiesToggle?.addEventListener('change', () => {
+  // ── Colonne « Corps » : bascule maître + état individuel ─────────────────
+  const hiddenBodyNames = new Set<string>();
+  bodiesToggle.addEventListener('change', () => {
     sceneSystem.setBodyMasterEnabled(bodiesToggle.checked);
   });
-  sceneSystem.setBodyMasterEnabled(bodiesToggle?.checked ?? true);
+  sceneSystem.setBodyMasterEnabled(bodiesToggle.checked);
 
-  function buildBodyRows(): void {
-    buildPickerRows(
-      bodiesBodyEl!,
-      bodies,
-      () => true, // tous visibles par défaut ; l'état vit dans SceneSystem, pas ici.
-      (name, visible) => sceneSystem.setBodyVisible(name, visible),
-      false
-    );
-  }
-
-  // ── Bascule + dépliant « Orbites » (comportement historique inchangé) ───
-  const orbitsToggle = panel.querySelector<HTMLInputElement>('#orbits-visible');
-  orbitsToggle?.addEventListener('change', () => {
+  // ── Colonne « Orbite » : bascule maître + état individuel ────────────────
+  // Le picker expose toutes les orbites générées. Seules les planètes majeures sont
+  // visibles au départ ; lunes, naines, astéroïdes et comètes restent en opt-in
+  // (comportement historique inchangé).
+  orbitsToggle.addEventListener('change', () => {
     sceneSystem.setOrbitMasterEnabled(orbitsToggle.checked);
   });
-  sceneSystem.setOrbitMasterEnabled(orbitsToggle?.checked ?? true);
+  sceneSystem.setOrbitMasterEnabled(orbitsToggle.checked);
 
-  // Le picker compact expose toutes les orbites générées. Seules les planètes majeures
-  // sont visibles au départ ; lunes, naines, astéroïdes et comètes restent en opt-in.
   const orbitState = new Map<string, boolean>(
     bodies.map(([name, cfg]) => [name, cfg.kind === 'planet'])
   );
@@ -130,26 +88,62 @@ export function setupOrbitOptions(
     if (!panelNames.has(name)) sceneSystem.setBodyOrbitVisible(name, false);
   }
 
-  function buildOrbitRows(): void {
-    buildPickerRows(
-      orbitsBodyEl!,
-      bodies,
-      (name) => orbitState.get(name) ?? false,
-      (name, visible) => {
-        orbitState.set(name, visible);
-        sceneSystem.setBodyOrbitVisible(name, visible);
-      },
-      true
-    );
-  }
+  function buildTableRows(): void {
+    tableBodyEl!.replaceChildren();
+    for (const [name, cfg] of bodies) {
+      const display = bodyDisplayName(name);
+      const row = document.createElement('tr');
+      row.className = 'oo-tr';
 
-  function buildAllRows(): void {
-    buildLabelRows();
-    buildBodyRows();
-    buildOrbitRows();
+      const nameCell = document.createElement('td');
+      nameCell.className = 'oo-td oo-td-name';
+      const nameInner = document.createElement('span');
+      nameInner.className = 'oo-td-name-inner';
+      const rgb = hexToRgbTriplet(cfg.orbitalColor);
+      const dot = document.createElement('span');
+      dot.className = 'oo-dot';
+      dot.style.setProperty('--orbit-rgb', rgb);
+      const nameEl = document.createElement('span');
+      nameEl.className = 'oo-name';
+      nameEl.textContent = display;
+      nameInner.append(dot, nameEl);
+      nameCell.append(nameInner);
+
+      const labelCell = buildToggleCell(
+        !hiddenLabelNames.has(name),
+        t('settings.row.name.aria', { name: display }),
+        (checked) => {
+          if (checked) hiddenLabelNames.delete(name);
+          else hiddenLabelNames.add(name);
+          applyHiddenLabelNames();
+        }
+      );
+
+      const bodyCell = buildToggleCell(
+        !hiddenBodyNames.has(name),
+        t('settings.row.body.aria', { name: display }),
+        (checked) => {
+          if (checked) hiddenBodyNames.delete(name);
+          else hiddenBodyNames.add(name);
+          sceneSystem.setBodyVisible(name, checked);
+        }
+      );
+
+      const orbitCell = buildToggleCell(
+        orbitState.get(name) ?? false,
+        t('settings.row.orbit.aria', { name: display }),
+        (checked) => {
+          orbitState.set(name, checked);
+          sceneSystem.setBodyOrbitVisible(name, checked);
+        }
+      );
+
+      row.append(nameCell, labelCell, bodyCell, orbitCell);
+      tableBodyEl!.append(row);
+    }
   }
-  buildAllRows();
-  onLocaleChange(buildAllRows);
+  buildTableRows();
+  onLocaleChange(buildTableRows);
 
   // Surface contextuelle : ouverte par le déclencheur du dock, fermée par sa croix,
   // le scrim ou une autre surface (coordinateur). Démarre masquée.

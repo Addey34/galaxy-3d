@@ -100,10 +100,7 @@ test('settings stay available in both modes and control label density', async ({
   await expect(settings).toBeVisible();
   await expect(page.locator('#labels-visible')).toBeChecked();
   await expect(page.locator('#orbits-visible')).toBeChecked();
-  await expect(page.locator('.orbit-picker')).not.toHaveAttribute('open', '');
-  await page.locator('.orbit-picker-summary').click();
-  await expect(page.locator('.orbit-picker')).toHaveAttribute('open', '');
-  await expect(page.locator('.orbit-picker .oo-row').first()).toBeVisible();
+  await expect(page.locator('#settings-table-body .oo-tr').first()).toBeVisible();
   expect(await hasVisibleLabel()).toBe(true);
 
   await page.locator('#labels-visible').uncheck();

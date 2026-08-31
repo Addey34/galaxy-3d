@@ -932,83 +932,72 @@
         </button>
       </header>
       <div class="surface-body">
-        <!-- Chaque bascule principale (nom, corps, orbite) est immédiatement suivie de son
-             propre dépliant « Choisir… » pour un contrôle individuel par corps — même schéma
-             appliqué trois fois, cf. ui/orbitOptions.ts. -->
-        <label class="settings-switch">
-          <input
-            id="labels-visible"
-            class="oo-checkbox settings-checkbox"
-            type="checkbox"
-            checked
-            aria-label="Show body names and markers"
-            data-i18n-aria="settings.labelsToggle"
-          />
-          <span class="settings-switch-label" data-i18n="settings.labels"
-            >Names &amp; markers</span
-          >
-        </label>
-        <details class="settings-picker labels-picker">
-          <summary
-            class="settings-picker-summary labels-picker-summary"
-            data-i18n="settings.labelsChoose"
-          >
-            Choose names &amp; markers
-          </summary>
-          <div class="oo-body" id="labels-picker-body">
-            <!-- populated by ui/orbitOptions.ts -->
-          </div>
-        </details>
-
-        <label class="settings-switch">
-          <input
-            id="bodies-visible"
-            class="oo-checkbox settings-checkbox"
-            type="checkbox"
-            checked
-            aria-label="Show celestial bodies"
-            data-i18n-aria="settings.bodiesToggle"
-          />
-          <span class="settings-switch-label" data-i18n="settings.bodies"
-            >Bodies</span
-          >
-        </label>
-        <details class="settings-picker bodies-picker">
-          <summary
-            class="settings-picker-summary bodies-picker-summary"
-            data-i18n="settings.bodiesChoose"
-          >
-            Choose bodies
-          </summary>
-          <div class="oo-body" id="bodies-picker-body">
-            <!-- populated by ui/orbitOptions.ts -->
-          </div>
-        </details>
-
-        <label class="settings-switch">
-          <input
-            id="orbits-visible"
-            class="oo-checkbox settings-checkbox"
-            type="checkbox"
-            checked
-            aria-label="Show orbits"
-            data-i18n-aria="settings.orbitsToggle"
-          />
-          <span class="settings-switch-label" data-i18n="settings.orbitsToggle"
-            >Orbits</span
-          >
-        </label>
-        <details class="settings-picker orbit-picker">
-          <summary
-            class="settings-picker-summary orbit-picker-summary"
-            data-i18n="settings.orbitsChoose"
-          >
-            Choose orbits
-          </summary>
-          <div class="oo-body" id="orbits-picker-body">
-            <!-- populated by ui/orbitOptions.ts -->
-          </div>
-        </details>
+        <!-- Tableau unifié : un corps par ligne, une colonne par bascule (nom, corps,
+             orbite). L'en-tête de colonne bascule toute la colonne d'un coup (comportement
+             des anciens interrupteurs maîtres) ; chaque case règle un seul corps — tout est
+             visible en un coup d'œil au lieu de 3 listes séparées répétant les mêmes noms.
+             Lignes construites par ui/orbitOptions.ts. -->
+        <p class="oo-table-hint" data-i18n="settings.tableHint">
+          Column header toggles the whole column; each row controls one body.
+        </p>
+        <div class="oo-table-scroll">
+          <table class="oo-table">
+            <caption class="sr-only" data-i18n="settings.tableCaption">
+              Per-body display settings
+            </caption>
+            <thead>
+              <tr>
+                <th scope="col" class="oo-th oo-th-name">
+                  <span class="sr-only" data-i18n="settings.col.bodyName"
+                    >Celestial body</span
+                  >
+                </th>
+                <th scope="col" class="oo-th oo-th-toggle">
+                  <label>
+                    <input
+                      id="labels-visible"
+                      class="oo-checkbox"
+                      type="checkbox"
+                      checked
+                      aria-label="Show body names and markers"
+                      data-i18n-aria="settings.labelsToggle"
+                    />
+                    <span data-i18n="settings.col.names">Name</span>
+                  </label>
+                </th>
+                <th scope="col" class="oo-th oo-th-toggle">
+                  <label>
+                    <input
+                      id="bodies-visible"
+                      class="oo-checkbox"
+                      type="checkbox"
+                      checked
+                      aria-label="Show celestial bodies"
+                      data-i18n-aria="settings.bodiesToggle"
+                    />
+                    <span data-i18n="settings.col.bodies">Body</span>
+                  </label>
+                </th>
+                <th scope="col" class="oo-th oo-th-toggle">
+                  <label>
+                    <input
+                      id="orbits-visible"
+                      class="oo-checkbox"
+                      type="checkbox"
+                      checked
+                      aria-label="Show orbits"
+                      data-i18n-aria="settings.orbitsToggle"
+                    />
+                    <span data-i18n="settings.col.orbits">Orbit</span>
+                  </label>
+                </th>
+              </tr>
+            </thead>
+            <tbody id="settings-table-body">
+              <!-- populated by ui/orbitOptions.ts -->
+            </tbody>
+          </table>
+        </div>
       </div>
     </aside>
 
