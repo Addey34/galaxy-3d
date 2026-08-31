@@ -96,11 +96,13 @@ export const fragmentShader = /* glsl */ `
     // dot product : 1.0 = surface face au Soleil (plein jour), -1.0 = dos au Soleil (pleine nuit)
     float sunLight = dot(normal, sunDir);
 
-    // La transition est entièrement du côté jour : nightFactor = 1.0 sur TOUT le côté nuit
-    // (sunLight <= -smoothness) et décroît vers 0 au-delà du terminateur (sunLight = threshold).
-    // smoothness crée une légère rampe côté nuit pour éviter un saut brutal.
-    // Avec threshold >> smoothness, les lumières atteignent ~90% dès le terminateur exact,
-    // éliminant toute zone morte entre l'ombre Three.js et l'activation du shader.
+    // nightFactor = 0.0 tant que sunLight >= threshold — la surface (createShadowAwareStandardMaterial,
+    // autre shader) est encore visible en gris crépusculaire jusque-là, donc threshold est négatif,
+    // calé sur ce point précis où elle finit de s'éteindre (voir SHADER_SETTINGS.nightLights dans
+    // engine.ts) — puis nightFactor monte à 1.0 (pleine intensité) une fois sunLight <= -smoothness.
+    // Sans cet alignement, les deux transitions se chevauchent : les lumières s'allument alors que
+    // la surface est encore éclairée, ce qui ressemble à des lumières nocturnes qui débordent sur
+    // le jour.
     float nightFactor = 1.0 - smoothstep(-smoothness, threshold, sunLight);
 
     vec4 lightsColor = texture2D(lightsMap, vUv);
@@ -133,8 +135,10 @@ export function createUniforms(
     lightsMap: { value: null },
     sunPosition: { value: null },
     intensity: { value: settings.intensity ?? 1.0 },
-    threshold: { value: settings.threshold ?? 0.1 },
-    smoothness: { value: settings.smoothness ?? 0.3 },
+    // Repli aligné sur SHADER_SETTINGS.nightLights (config/engine.ts) : voir ce fichier pour le
+    // raisonnement (synchronisation avec TERMINATOR_WRAP de layerConfig.ts).
+    threshold: { value: settings.threshold ?? -0.12 },
+    smoothness: { value: settings.smoothness ?? 0.18 },
     normalMap: { value: null },
     normalScale: { value: new THREE.Vector2(1, 1) },
     useNormalMap: { value: 0 },

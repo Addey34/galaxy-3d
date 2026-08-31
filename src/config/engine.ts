@@ -321,12 +321,17 @@ export const LIGHTING_SETTINGS = {
 export const SHADER_SETTINGS = {
   nightLights: {
     intensity: 1.0,
-    // Le shader perturbe sa normale avec la normalMap (voir NightLightsShader) :
-    // son terminateur suit le relief comme l'ombre de la surface. threshold ramené
-    // à ~0 : les lumières s'arrêtent pile au terminateur, sans déborder côté jour
-    // (le débord + le bloom produisaient une tache blanche saturée sur la face jour).
-    threshold: 0.02,
-    smoothness: 0.08,
+    // threshold=0.02 laissait les lumières atteindre ~90 % d'intensité DÈS le
+    // terminateur astronomique (dot=0) — or la surface (createShadowAwareStandardMaterial,
+    // TERMINATOR_WRAP=0.12 dans layerConfig.ts) reste volontairement visible en gris crépusculaire
+    // jusqu'à dot=-0.12, pour montrer le relief au lever/coucher du soleil. Résultat : sur toute
+    // la bande dot ∈ [-0.12, 0], les villes brillaient déjà par-dessus une surface encore
+    // clairement éclairée — vu comme des lumières nocturnes qui « bavent » sur le jour. threshold
+    // aligné sur -0.12 (pile où la surface finit de s'éteindre) : les lumières restent à zéro tant
+    // que la surface est encore visible, puis montent en régime sur 0.18 de plus (deep night à
+    // dot=-0.30) — plus aucun chevauchement entre les deux transitions.
+    threshold: -0.12,
+    smoothness: 0.18,
   },
   atmosphere: {
     // Diffusion analytique single-pass (voir AtmosphereShader). power élevé = bord
