@@ -1778,23 +1778,6 @@ body.is-capturing #loader {
   transition: opacity 0.5s;
 }
 
-#loader::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background-image:
-    radial-gradient(circle, rgba(255, 255, 255, 0.7) 0 1px, transparent 1.5px),
-    radial-gradient(circle, rgba(120, 178, 255, 0.5) 0 1px, transparent 1.4px);
-  background-position:
-    0 0,
-    36px 54px;
-  background-size:
-    92px 92px,
-    148px 148px;
-  opacity: 0.34;
-  animation: loader-stars 18s linear infinite;
-}
-
 .loader-content {
   position: relative;
   width: min(28rem, calc(100vw - 1.25rem));
@@ -1856,18 +1839,27 @@ body.is-capturing #loader {
   transform: translateX(-50%);
 }
 
+/* Les deux planètes en orbite cyclent à travers les 8 vraies couleurs du catalogue
+   (mêmes teintes que orbitalColor dans config/bodies.ts) via `color` + currentColor, en
+   contretemps (délai négatif) pour un effet ludique de « relais » plutôt qu'un clignotement
+   synchronisé. Remplace les deux couleurs fixes précédentes — c'est LE logo du chargement,
+   pas un détail : le voir changer de planète en planète donne le ton du reste de l'appli. */
+.loader-planet--inner,
+.loader-planet--outer {
+  background: currentColor;
+  box-shadow: 0 0 0.9rem currentColor;
+  animation: loader-planet-hue 1.6s steps(1, end) infinite;
+}
+
 .loader-planet--inner {
   width: 0.56rem;
   height: 0.56rem;
-  background: #79d7ff;
-  box-shadow: 0 0 0.9rem rgba(121, 215, 255, 0.85);
 }
 
 .loader-planet--outer {
   width: 0.72rem;
   height: 0.72rem;
-  background: #d9a06b;
-  box-shadow: 0 0 1rem rgba(217, 160, 107, 0.75);
+  animation-delay: -0.8s;
 }
 
 .loader-kicker {
@@ -1919,8 +1911,21 @@ body.is-capturing #loader {
   width: 0%;
   height: 100%;
   border-radius: inherit;
-  background: linear-gradient(90deg, #4f8dff, #78d7ff 52%, #f4b453);
-  box-shadow: 0 0 1rem rgba(120, 215, 255, 0.62);
+  /* Spectre des 8 planètes réelles (Mercure → Neptune, mêmes teintes qu'orbitalColor dans
+     config/bodies.ts) plutôt qu'un dégradé bleu/orange générique : la barre elle-même
+     raconte le système solaire, cohérente avec les points en orbite du logo au-dessus. */
+  background: linear-gradient(
+    90deg,
+    #b8b0a5 0%,
+    #e9a13b 14%,
+    #2f9dff 28%,
+    #e85d3f 42%,
+    #d89a5b 57%,
+    #e7d28d 71%,
+    #69d6d3 85%,
+    #647cff 100%
+  );
+  box-shadow: 0 0 1rem rgba(255, 255, 255, 0.35);
 }
 
 .loader-stages {
@@ -2099,11 +2104,41 @@ body.is-capturing #loader {
   }
 }
 
-@keyframes loader-stars {
-  to {
-    background-position:
-      92px 92px,
-      184px 202px;
+/* 8 planètes réelles, mêmes teintes que orbitalColor dans config/bodies.ts. `steps(1, end)`
+   sur l'animation (pas cette timing-function) donne le changement net d'une couleur à l'autre
+   plutôt qu'un fondu — l'effet « relais ludique » recherché sur le logo du chargement. */
+@keyframes loader-planet-hue {
+  0%,
+  11% {
+    color: #b8b0a5; /* Mercure */
+  }
+  12%,
+  23% {
+    color: #e9a13b; /* Vénus */
+  }
+  24%,
+  35% {
+    color: #2f9dff; /* Terre */
+  }
+  36%,
+  47% {
+    color: #e85d3f; /* Mars */
+  }
+  48%,
+  59% {
+    color: #d89a5b; /* Jupiter */
+  }
+  60%,
+  71% {
+    color: #e7d28d; /* Saturne */
+  }
+  72%,
+  83% {
+    color: #69d6d3; /* Uranus */
+  }
+  84%,
+  100% {
+    color: #647cff; /* Neptune */
   }
 }
 
@@ -2141,10 +2176,20 @@ body.is-capturing #loader {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  #loader::before,
   .loader-path--inner,
   .loader-path--outer {
     animation: none;
+  }
+
+  .loader-planet--inner,
+  .loader-planet--outer {
+    animation: none;
+  }
+  .loader-planet--inner {
+    color: #2f9dff; /* Terre — repli statique, mêmes teintes qu'avant ce changement */
+  }
+  .loader-planet--outer {
+    color: #d89a5b; /* Jupiter */
   }
 
   .context-recovery-spinner {
