@@ -318,12 +318,12 @@ Réglages moteur dans `src/config/engine.ts`, catalogue des corps dans `src/conf
 - **Vitest** : tests unitaires des modules mathématiques purs (`src/**/*.test.ts`) ; `pnpm verify` = types + lint + tests
 - **ESLint** : `eslint.config.js` (flat config, typescript-eslint recommended non-type-checked) ; `pnpm lint` / `pnpm lint:fix`, intégré à `pnpm verify`
 - **Prettier** : règles dans `.prettierrc`, commandes `pnpm format` et `pnpm format:check` ; l'arbre entier est conforme
-- **Playwright** : 18 scénarios navigateur dans `e2e/` (`smoke`, `modes`, `explo`, `i18n`, `guided-tour`) ; le serveur Vite de test utilise le port réservé 5273
+- **Playwright** : suite de scénarios navigateur dans `e2e/` (boot, navigation, i18n, accessibilité, WebXR, météo, etc. — voir `pnpm exec playwright test --list` pour le compte à jour) ; le serveur Vite de test utilise le port réservé 5273
 - Aucun seuil de couverture configuré
 
 ## Qualité et limites actuelles
 
-- pnpm verify passe avec 132 tests repartis dans 33 fichiers ;
+- `pnpm verify` passe (types + lint + tests unitaires) — voir `pnpm test` pour le compte à jour, ces chiffres évoluent trop souvent pour rester figés ici ;
 - `pnpm build` passe sans avertissement de taille : `three`, `astronomy-engine` et `tween` sont séparés, et le chunk applicatif reste autour de 120 kB minifié.
 - Le mode Exploration est actif. Les vols caméra concurrents sont annulés et la cible suivie reste centrée, y compris à vitesse accélérée.
 - `IS_MOBILE` reste figé pour les réglages créés à l'initialisation (anticrénelage, ombres, textures) ; seul le plafond de pixel ratio est recalculé au resize.
