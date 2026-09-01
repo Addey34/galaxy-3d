@@ -1616,60 +1616,6 @@ button {
 .help-credits a:hover {
   text-decoration: underline;
 }
-.credits-donate {
-  display: inline-block;
-  margin-top: var(--sp-3);
-  padding: 0.35rem 0.75rem;
-  border-radius: var(--r-pill);
-  background: rgba(var(--accent), 0.18);
-  border: 1px solid rgba(var(--accent), 0.5);
-  color: rgb(var(--accent)) !important;
-  font-weight: 600;
-}
-
-/* Dépliant « Soutenir » : carte discrète mais lisible en bas des crédits.
-   Message personnel (créateur) + preuves de confiance + bouton Ko-fi. */
-.support-card {
-  margin-top: var(--sp-3);
-  padding: var(--sp-3);
-  border: 1px solid rgba(var(--accent), 0.28);
-  border-radius: var(--r-md, 12px);
-  background: rgba(var(--accent), 0.06);
-}
-.support-title {
-  margin: 0 0 var(--sp-1);
-  font-size: 0.82rem;
-  font-weight: 700;
-  color: var(--ink);
-}
-.support-lead {
-  margin: 0 0 var(--sp-2);
-  color: var(--ink-dim);
-  line-height: 1.5;
-}
-.support-points {
-  list-style: none;
-  margin: 0 0 var(--sp-2);
-  padding: 0;
-  display: grid;
-  gap: 0.2rem;
-}
-.support-points li {
-  position: relative;
-  padding-left: 1.1rem;
-  color: var(--ink-faint);
-}
-.support-points li::before {
-  content: '✓';
-  position: absolute;
-  left: 0;
-  color: rgb(var(--accent));
-  font-weight: 700;
-}
-.support-card .credits-donate {
-  margin-top: var(--sp-1);
-}
-
 /* Toast de confirmation « Lien copié » (partage de vue). Éphémère, centré en bas,
    au-dessus des surfaces. N'intercepte pas les clics. */
 .share-toast {

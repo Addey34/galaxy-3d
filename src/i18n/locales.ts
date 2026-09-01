@@ -153,14 +153,7 @@ export const messages: Record<Locale, Dict> = {
     'credits.fictional.list':
       'No spacecraft has resolved these surfaces; their textures are illustrative, not scientific maps: Ceres, Eris, Haumea, Makemake, Pallas, Hygiea, Halley.',
     'credits.data': 'Data',
-    'credits.donate': '♥ Support on Ko-fi',
     'credits.privacy': 'Privacy',
-    'support.title': 'Support the project',
-    'support.lead':
-      'I build this solar system alone, on my free time, and give it away free to everyone.',
-    'support.point.free': 'Free, no ads, no trackers',
-    'support.point.data': 'Real NASA/JPL data',
-    'support.point.use': 'Your donation keeps it online and independent',
     'lang.label': 'Language',
     // ── Guided tour (first visit) ──
     'tour.start': 'Start quick tour',
@@ -502,14 +495,7 @@ export const messages: Record<Locale, Dict> = {
     'credits.fictional.list':
       'Aucune sonde n’a résolu ces surfaces ; leurs textures sont illustratives, pas des cartes scientifiques : Cérès, Éris, Hauméa, Makémaké, Pallas, Hygie, Halley.',
     'credits.data': 'Données',
-    'credits.donate': '♥ Soutenir sur Ko-fi',
     'credits.privacy': 'Confidentialité',
-    'support.title': 'Soutenir le projet',
-    'support.lead':
-      'Je développe seul ce système solaire, sur mon temps libre, et je l’offre gratuitement à tous.',
-    'support.point.free': 'Gratuit, sans publicité, sans traceur',
-    'support.point.data': 'Vraies données NASA/JPL',
-    'support.point.use': 'Votre don le garde en ligne et indépendant',
     'lang.label': 'Langue',
     // ── Visite guidée (première visite) ──
     'tour.start': 'Lancer la visite rapide',
