@@ -107,6 +107,7 @@
         "browserRequirements": "Requires WebGL",
         "inLanguage": ["en", "fr"],
         "isAccessibleForFree": true,
+        "keywords": "Sun, Mercury, Venus, Earth, Moon, Mars, Phobos, Deimos, Jupiter, Io, Europa, Ganymede, Callisto, Amalthea, Saturn, Titan, Enceladus, Mimas, Tethys, Dione, Rhea, Iapetus, Hyperion, Uranus, Miranda, Ariel, Umbriel, Titania, Oberon, Neptune, Triton, Proteus, Nereid, Pluto, Ceres, Vesta, Pallas, Hygiea, Eris, Haumea, Makemake, Orcus, Quaoar, Gonggong, Sedna, Halley's Comet, 3D solar system",
         "offers": {
           "@type": "Offer",
           "price": "0",
@@ -119,13 +120,39 @@
       }
     </script>
 
-    <!-- ANALYTICS : coller ici la balise Umami / Cloudflare quand le compte est prêt.
-         Choisir un outil sans cookies (Umami Cloud, Cloudflare Web Analytics) évite le
-         bandeau de consentement RGPD. Exemple Umami :
-         <script defer src="https://cloud.umami.is/script.js"
-                 data-website-id="TON-ID"></script> -->
+    <!-- ANALYTICS : Cloudflare Web Analytics — sans cookie, sans fingerprinting, pas de
+         bandeau RGPD requis, aucune infra à gérer. Remplacer YOUR-BEACON-TOKEN par le token
+         du site une fois créé sur https://dash.cloudflare.com (Analytics & Logs → Web
+         Analytics → Add a site) ; le script ne s'active qu'avec un vrai token, celui-ci ne
+         collecte rien. -->
+    <script
+      type="module"
+      src="https://static.cloudflareinsights.com/beacon.min.js"
+      data-cf-beacon='{"token": "0e30fd8b340b406889644940b0fdfceb"}'
+    ></script>
   </head>
   <body>
+    <!-- Titre logique de la page : le rendu visuel (loader puis scène 3D) ne porte pas de
+         titre de premier niveau à l'écran, ce H1 sert le SEO/l'accessibilité sans dupliquer
+         visuellement le <title>. -->
+    <h1 class="sr-only">
+      3D Solar System: Real-Time Interactive Visualizer — Explore the
+      Planets, Moons and Dwarf Planets
+    </h1>
+    <!-- Repli sans JavaScript : la scène 3D exige WebGL + JS, mais un résumé du contenu reste
+         indexable même si un crawler n'exécute pas le script (budget de rendu dépassé, etc.). -->
+    <noscript>
+      <p>
+        3D Solar System is an interactive, real-time visualizer of the solar
+        system built with WebGL, using real NASA/JPL ephemeris positions. It
+        needs JavaScript and a WebGL-capable browser to run. Explore the Sun,
+        Mercury, Venus, Earth, the Moon, Mars, Jupiter and its Galilean
+        moons, Saturn and its rings, Uranus, Neptune, the dwarf planets
+        (Pluto, Ceres, Eris, Haumea, Makemake) and other small bodies in an
+        educational compressed-scale view or a true-scale space voyage, with
+        time travel.
+      </p>
+    </noscript>
     <!-- ─── Loading screen ─────────────────────────────────────────────────── -->
     <div id="loader">
       <div class="loader-content">
