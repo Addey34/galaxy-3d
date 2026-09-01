@@ -95,7 +95,6 @@ export const messages: Record<Locale, Dict> = {
     'zoom.optical': 'Optical zoom (FOV)',
 
     // ── Qualité graphique (perf adaptative) ──
-    'quality.title': 'Graphics quality',
     'quality.heading': 'Graphics quality',
     'quality.auto': 'Auto',
     'quality.auto.hint': 'Match this device',
@@ -194,13 +193,10 @@ export const messages: Record<Locale, Dict> = {
     'tour.step.events.title': '8. Watch the sky',
     'tour.step.events.text':
       'Check upcoming astronomical events and select an event for details.',
-    'tour.step.quality.title': '9. Tune graphics',
-    'tour.step.quality.text':
-      'Choose a graphics quality level to balance visual detail and smoothness.',
-    'tour.step.share.title': '10. Share a view',
+    'tour.step.share.title': '9. Share a view',
     'tour.step.share.text':
       'Set up a view, then share its link. Whoever opens it lands on the exact same scene.',
-    'tour.step.help.title': '11. Find help',
+    'tour.step.help.title': '10. Find help',
     'tour.step.help.text': 'Check the help page for more information.',
 
     // ── Tours guidés scénarisés ──
@@ -447,7 +443,6 @@ export const messages: Record<Locale, Dict> = {
     'zoom.optical': 'Zoom optique (FOV)',
 
     // ── Qualité graphique (perf adaptative) ──
-    'quality.title': 'Qualité graphique',
     'quality.heading': 'Qualité graphique',
     'quality.auto': 'Auto',
     'quality.auto.hint': 'Adapté à cet appareil',
@@ -547,13 +542,10 @@ export const messages: Record<Locale, Dict> = {
     'tour.step.events.title': '8. Observer le ciel',
     'tour.step.events.text':
       'Consultez les prochains événements astronomiques et choisissez en un pour plus de détails.',
-    'tour.step.quality.title': '9. Ajuster les graphismes',
-    'tour.step.quality.text':
-      'Choisissez une qualité graphique pour équilibrer le niveau de détail et la fluidité.',
-    'tour.step.share.title': '10. Partager une vue',
+    'tour.step.share.title': '9. Partager une vue',
     'tour.step.share.text':
       'Réglez une vue, puis partagez son lien. Celui qui l’ouvre retrouve exactement la même scène.',
-    'tour.step.help.title': '11. Retrouver l’aide',
+    'tour.step.help.title': '10. Retrouver l’aide',
     'tour.step.help.text': "Consultez la page d'aide pour plus d'informations.",
 
     // ── Tours guidés scénarisés ──

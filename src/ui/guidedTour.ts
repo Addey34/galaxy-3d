@@ -54,11 +54,6 @@ const STEPS: Array<
     textKey: 'tour.step.events.text',
   },
   {
-    target: '#quality-btn',
-    titleKey: 'tour.step.quality.title',
-    textKey: 'tour.step.quality.text',
-  },
-  {
     target: '#share-btn',
     titleKey: 'tour.step.share.title',
     textKey: 'tour.step.share.text',

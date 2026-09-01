@@ -61,26 +61,22 @@ test('selection, information panel and target semantics survive both mode switch
   await expect(target.locator('.explo-label-dot')).toBeVisible();
 });
 
-test('quality control uses a gear icon and closes outside', async ({
+test('graphics quality controls live inline inside settings', async ({
   page,
 }) => {
   await boot(page);
-  const quality = page.locator('#quality-btn');
-  const menu = page.locator('#quality-menu');
-
-  await expect(quality.locator('svg path')).toHaveAttribute('d', /M6\.35/);
-  await quality.click();
-  await expect(menu).toBeVisible();
-
-  // Opening another contextual surface closes the quality menu too.
+  // La qualité graphique est fusionnée dans le panneau Réglages : plus de
+  // bouton/popover dédié, le groupe de radios apparaît dans le même panneau.
   await page.locator('#settings-trigger').click();
-  await expect(menu).toBeHidden();
-  await expect(page.locator('#orbit-options')).toBeVisible();
+  const settings = page.locator('#orbit-options');
+  await expect(settings).toBeVisible();
+  const qualityGroup = settings.locator('#quality-group');
+  await expect(qualityGroup).toBeVisible();
+  const radios = qualityGroup.locator('.quality-radio');
+  await expect(radios).toHaveCount(4);
 
-  // Opening quality settings closes the other contextual surface in return.
-  await quality.click();
-  await expect(menu).toBeVisible();
-  await expect(page.locator('#orbit-options')).toBeHidden();
+  await radios.nth(1).check();
+  await expect(radios.nth(1)).toBeChecked();
 });
 
 test('settings stay available in both modes and control label density', async ({

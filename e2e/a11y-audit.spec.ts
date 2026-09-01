@@ -77,6 +77,7 @@ test('display settings panel has no automatically detectable a11y violations', a
   await boot(page);
   await page.locator('#settings-trigger').click();
   await expect(page.locator('#orbit-options')).toBeVisible();
+  await expect(page.locator('#quality-group')).toBeVisible();
   const results = await runAxe(page);
   expect(
     results.violations,
@@ -103,19 +104,6 @@ test('astronomical events panel has no automatically detectable a11y violations'
   await boot(page);
   await page.locator('#events-trigger').click();
   await expect(page.locator('#astronomical-events')).toBeVisible();
-  const results = await runAxe(page);
-  expect(
-    results.violations,
-    JSON.stringify(results.violations, null, 2)
-  ).toEqual([]);
-});
-
-test('quality menu has no automatically detectable a11y violations', async ({
-  page,
-}) => {
-  await boot(page);
-  await page.locator('#quality-btn').click();
-  await expect(page.locator('#quality-menu')).toBeVisible();
   const results = await runAxe(page);
   expect(
     results.violations,

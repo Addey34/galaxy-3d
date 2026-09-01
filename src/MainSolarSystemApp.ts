@@ -26,7 +26,7 @@ import { setupLangSwitch } from './ui/langSwitch';
 import { setupPlanetControls } from './ui/planetNav';
 import { setupBodyInfo } from './ui/bodyInfo';
 import { setupPlayback } from './ui/playback';
-import { setupQualitySwitch } from './ui/qualitySwitch';
+import { setupQualitySection } from './ui/qualitySection';
 import { setupTimePanel } from './ui/timePanel';
 import { setupModeSwitcher } from './ui/modeSwitcher';
 import { setupExploTourNudge } from './ui/exploTourNudge';
@@ -87,7 +87,6 @@ const CONTEXTUAL_SURFACE_ANCHORS: Partial<
   },
   events: { trigger: '#events-trigger', panel: '#astronomical-events' },
   help: { trigger: '#help-btn', panel: '#help-popover' },
-  'quality-menu': { trigger: '#quality-btn', panel: '#quality-menu' },
 };
 
 function positionContextualSurface(id: SecondaryOverlayId): void {
@@ -212,7 +211,6 @@ if (surfaceScrim) {
       overlayCoordinator
     );
     const playback = setupPlayback(animationSystem, orbitalMechanics);
-    setupQualitySwitch(sceneSystem, overlayCoordinator);
     setupTimePanel(
       orbitalMechanics,
       playback,
@@ -256,6 +254,7 @@ if (surfaceScrim) {
     setupRenderExposure(sceneSystem);
     setupColorblindToggle(sceneSystem);
     setupUnitsToggle();
+    setupQualitySection(sceneSystem);
 
     // Champ de masse des petits corps (SBDB) — couche instrument 2D, chargée en tâche de
     // fond. Dégradation propre : si le fetch échoue (offline), l'overlay reste vide.

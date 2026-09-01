@@ -5,7 +5,6 @@ export type SecondaryOverlayId =
   | 'weather-layers'
   | 'events'
   | 'help'
-  | 'quality-menu'
   | 'small-body-filters';
 
 export interface OverlayCoordinator {
