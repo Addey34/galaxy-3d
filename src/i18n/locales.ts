@@ -247,6 +247,9 @@ export const messages: Record<Locale, Dict> = {
     'settings.row.name.aria': "Show {name}'s name",
     'settings.row.body.aria': 'Show {name}',
     'settings.row.orbit.aria': "Show {name}'s orbit",
+    'settings.exposure': 'Brightness (exposure)',
+    'settings.colorblind': 'Color-blind friendly orbit colors',
+    'settings.units': 'Imperial units (mi, °F)',
 
     // ── Filtres petits corps (NEO / comètes / TNO) ──
     'smallBodies.trigger.aria': 'Small-body filters',
@@ -359,8 +362,8 @@ export const messages: Record<Locale, Dict> = {
     'unit.day.short': 'd',
     'unit.year.short': 'yr',
     'unit.au': 'AU',
-    'unit.millionKm': 'M km',
-    'unit.billionKm': 'B km',
+    'unit.million': 'M',
+    'unit.billion': 'B',
   },
 
   fr: {
@@ -600,6 +603,9 @@ export const messages: Record<Locale, Dict> = {
     'settings.row.name.aria': 'Afficher le nom de {name}',
     'settings.row.body.aria': 'Afficher {name}',
     'settings.row.orbit.aria': 'Afficher l’orbite de {name}',
+    'settings.exposure': 'Luminosité (exposition)',
+    'settings.colorblind': 'Couleurs d’orbite adaptées au daltonisme',
+    'settings.units': 'Unités impériales (mi, °F)',
 
     // ── Filtres petits corps (NEO / comètes / TNO) ──
     'smallBodies.trigger.aria': 'Filtres petits corps',
@@ -711,7 +717,7 @@ export const messages: Record<Locale, Dict> = {
     'unit.day.short': 'j',
     'unit.year.short': 'ans',
     'unit.au': 'UA',
-    'unit.millionKm': 'M km',
-    'unit.billionKm': 'Md km',
+    'unit.million': 'M',
+    'unit.billion': 'Md',
   },
 };

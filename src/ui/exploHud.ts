@@ -21,13 +21,13 @@ import { CELESTIAL_CONFIG } from '@/config/bodies';
 import { flattenBodies } from '@/config/catalog';
 import { onLocaleChange } from '@/i18n';
 import { bodyDisplayName } from '@/i18n/bodyText';
-import { bodyAccentTriplet } from './bodyAccent';
+import { bodyAccentTriplet, onAccentChange } from './bodyAccent';
 import { getSceneOverlayRects } from './sceneOverlay';
 import type { PlanetNavigation } from './planetNav';
 
 const BODY_CONFIGS = flattenBodies(CELESTIAL_CONFIG);
 function labelRgb(name: string): string {
-  return bodyAccentTriplet(BODY_CONFIGS.get(name));
+  return bodyAccentTriplet(BODY_CONFIGS.get(name), name);
 }
 
 const MAJOR_BODIES = new Set([
@@ -213,7 +213,6 @@ export class ExploHud {
   private readonly nav: PlanetNavigation;
   private readonly controlSurface: HTMLElement;
   private active = false;
-  private labelsVisible = true;
   private _mode: 'educ' | 'explo' = 'educ';
   private _lastTarget: string | null = null;
   /** En éduc, seuls les noms de ce Set reçoivent un label (corps avec mesh). */
@@ -235,6 +234,8 @@ export class ExploHud {
 
     // Changement de langue : ré-étiquette les labels déjà créés (nom d'affichage localisé).
     onLocaleChange(() => this._relabel());
+    // Mode daltonien basculé : recolore les labels déjà créés (couleur figée à la création).
+    onAccentChange(() => this._repaintAccents());
   }
 
   /** Ré-étiquette tous les labels existants dans la langue courante. */
@@ -244,6 +245,13 @@ export class ExploHud {
       el.setAttribute('aria-label', label);
       const text = el.querySelector<HTMLElement>('.explo-label-text');
       if (text) text.textContent = label;
+    });
+  }
+
+  /** Recolore tous les labels existants (palette daltonienne activée/désactivée). */
+  private _repaintAccents(): void {
+    this.labels.forEach((el, name) => {
+      el.style.setProperty('--label-rgb', labelRgb(name));
     });
   }
 
@@ -269,15 +277,6 @@ export class ExploHud {
   setMode(mode: 'educ' | 'explo'): void {
     this._mode = mode;
     this.labelsLayer.classList.toggle('is-educ-mode', mode === 'educ');
-  }
-
-  /** Affiche les points d’ancrage même lorsque les noms sont masqués par les paramètres. */
-  setLabelsVisible(visible: boolean): void {
-    this.labelsVisible = visible;
-    this.labelsLayer.classList.toggle('is-labels-hidden', !visible);
-    if (!visible) {
-      this.labels.forEach((element) => (element.style.display = 'none'));
-    }
   }
 
   /**
@@ -314,7 +313,6 @@ export class ExploHud {
       if (targetChanged) element.classList.remove('is-acquiring');
       element.classList.remove('is-marker-only');
     });
-    if (!this.labelsVisible) return;
 
     // Vue d'ensemble Explo (aucune cible suivie) : à cette échelle, TOUS les corps projettent
     // dans un même amas minuscule au centre — sans filtre, c'est une bouillie de labels

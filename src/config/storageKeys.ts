@@ -18,6 +18,12 @@ export const STORAGE_KEYS = {
   quality: 'ssv-quality',
   /** Nudge « essayer une visite guidée » déjà affiché au premier passage en Exploration. */
   exploTourNudge: 'ssv-explo-tour-nudge-v1',
+  /** Exposition du tone mapping (réglage utilisateur). */
+  exposure: 'ssv-exposure',
+  /** Palette d'orbites daltonienne activée. */
+  colorblind: 'ssv-colorblind',
+  /** Système d'unités préféré (métrique/impérial). */
+  units: 'ssv-units',
 } as const;
 
 export type StorageKey = (typeof STORAGE_KEYS)[keyof typeof STORAGE_KEYS];

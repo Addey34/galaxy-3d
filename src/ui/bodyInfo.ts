@@ -14,7 +14,12 @@ import { RAD_TO_DEG as RAD2DEG } from '@/core/MathConstants';
 import { t, intlLocale, getLocale, onLocaleChange } from '@/i18n';
 import { bodyDisplayName, bodyDescription } from '@/i18n/bodyText';
 import type { CelestialBodyConfig } from '@/types';
-import { bodyAccentColor, hexToRgbTriplet } from './bodyAccent';
+import { bodyAccentColor, hexToRgbTriplet, onAccentChange } from './bodyAccent';
+import {
+  convertDistanceKm,
+  convertTemperatureC,
+  onUnitSystemChange,
+} from '@/core/units';
 import { safeExternalUrl } from '@/utils/safeUrl';
 import type { OverlayCoordinator } from './overlayCoordinator';
 
@@ -97,10 +102,11 @@ export function sceneUnitsToKm(sceneUnits: number): number {
 export function formatLiveDistance(km: number): string {
   const au = km / KM_PER_AU;
   const auStr = `${num(au, 3)} ${t('unit.au')}`;
+  const { value: dist, unit } = convertDistanceKm(km);
   let kmStr: string;
-  if (km >= 1e9) kmStr = `${num(km / 1e9, 2)} ${t('unit.billionKm')}`;
-  else if (km >= 1e6) kmStr = `${num(km / 1e6, 1)} ${t('unit.millionKm')}`;
-  else kmStr = `${num(Math.round(km))} km`;
+  if (dist >= 1e9) kmStr = `${num(dist / 1e9, 2)} ${t('unit.billion')} ${unit}`;
+  else if (dist >= 1e6) kmStr = `${num(dist / 1e6, 1)} ${t('unit.million')} ${unit}`;
+  else kmStr = `${num(Math.round(dist))} ${unit}`;
   return `${auStr} · ${kmStr}`;
 }
 
@@ -132,19 +138,25 @@ function buildStats(cfg: CelestialBodyConfig): Stat[] {
     if (value !== null) stats.push({ label, value });
   };
 
-  if (d.radiusKm) push(t('stat.radius'), `${num(d.radiusKm)} km`);
+  if (d.radiusKm) {
+    const radius = convertDistanceKm(d.radiusKm);
+    push(t('stat.radius'), `${num(radius.value)} ${radius.unit}`);
+  }
   if (d.distanceAU !== undefined) {
+    const distFromParent = convertDistanceKm(d.distanceAU * KM_PER_AU);
     push(
       cfg.kind === 'moon' ? t('stat.distanceEarth') : t('stat.distanceSun'),
       cfg.kind === 'moon'
-        ? `${num(d.distanceAU * KM_PER_AU)} km`
+        ? `${num(distFromParent.value)} ${distFromParent.unit}`
         : `${num(d.distanceAU, 2)} ${t('unit.au')}`
     );
   }
   if (d.massKg) push(t('stat.mass'), formatMass(d.massKg));
   if (d.gravity) push(t('stat.gravity'), `${num(d.gravity, 2)} m/s²`);
-  if (d.meanTempC !== undefined)
-    push(t('stat.temperature'), `${num(d.meanTempC)} °C`);
+  if (d.meanTempC !== undefined) {
+    const temp = convertTemperatureC(d.meanTempC);
+    push(t('stat.temperature'), `${num(temp.value)} ${temp.unit}`);
+  }
   push(
     cfg.kind === 'moon' ? t('stat.revolution') : t('stat.day'),
     formatDay(cfg.rotationSpeed)
@@ -277,7 +289,7 @@ export function setupBodyInfo(coordinator?: OverlayCoordinator): BodyInfoPanel {
       return;
     }
 
-    const accent = bodyAccentColor(cfg);
+    const accent = bodyAccentColor(cfg, name);
     panel.style.setProperty('--planet-rgb', hexToRgbTriplet(accent));
     dot.style.background = `rgb(${hexToRgbTriplet(accent)})`;
     nameEl.textContent = bodyDisplayName(name);
@@ -361,6 +373,14 @@ export function setupBodyInfo(coordinator?: OverlayCoordinator): BodyInfoPanel {
   // description) même si elle est momentanément fermée — son contenu reste ainsi à jour pour
   // sa prochaine réouverture. Le bloc live se réactualise seul à la frame suivante.
   onLocaleChange(() => {
+    if (currentName) render(currentName);
+  });
+  // Mode daltonien basculé : recolore l'accent de la fiche du corps courant.
+  onAccentChange(() => {
+    if (currentName) render(currentName);
+  });
+  // Système d'unités basculé (métrique/impérial) : reformate les stats affichées.
+  onUnitSystemChange(() => {
     if (currentName) render(currentName);
   });
 

@@ -88,10 +88,12 @@ test('settings stay available in both modes and control label density', async ({
 }) => {
   await boot(page);
   const settings = page.locator('#orbit-options');
-  const labelTexts = page.locator('.explo-label-text');
+  // Le Soleil n'a pas de ligne dans le tableau Réglages (toujours affiché, pas d'orbite
+  // pour lui) donc son label échappe volontairement au bascule groupé « Nom ».
+  const labels = page.locator('.explo-label:not([aria-label="Sun"])');
   const hasVisibleLabel = () =>
-    labelTexts.evaluateAll((labels) =>
-      labels.some((label) => getComputedStyle(label).display !== 'none')
+    labels.evaluateAll((els) =>
+      els.some((el) => getComputedStyle(el).display !== 'none')
     );
 
   // La surface de réglages démarre masquée ; le déclencheur du dock l'ouvre.
@@ -99,14 +101,21 @@ test('settings stay available in both modes and control label density', async ({
   await page.locator('#settings-trigger').click();
   await expect(settings).toBeVisible();
   await expect(page.locator('#labels-visible')).toBeChecked();
-  await expect(page.locator('#orbits-visible')).toBeChecked();
+  // Seules les planètes ont leur orbite visible par défaut (les lunes/naines/petits corps
+  // sont en opt-in) : l'en-tête « Orbite » reflète cet état mixte, ni cochée ni décochée.
+  await expect(page.locator('#orbits-visible')).toHaveJSProperty(
+    'indeterminate',
+    true
+  );
   await expect(page.locator('#settings-table-body .oo-tr').first()).toBeVisible();
   expect(await hasVisibleLabel()).toBe(true);
 
   await page.locator('#labels-visible').uncheck();
   expect(await hasVisibleLabel()).toBe(false);
   await expect(
-    page.locator('.explo-label:not(.is-target) .explo-label-dot').first()
+    page
+      .locator('.explo-label:not(.is-target):not([aria-label="Sun"]) .explo-label-dot')
+      .first()
   ).toBeHidden();
 
   await page.locator('.mode-btn[data-mode="explo"]').click();
@@ -116,6 +125,36 @@ test('settings stay available in both modes and control label density', async ({
 
   await page.locator('#labels-visible').check();
   expect(await hasVisibleLabel()).toBe(true);
+});
+
+test('settings column header reflects mixed row state and bulk-toggles all rows', async ({
+  page,
+}) => {
+  await boot(page);
+  await page.locator('#settings-trigger').click();
+
+  const bodyToggle = page.locator('#bodies-visible');
+  const marsRow = page.locator('#settings-table-body tr', {
+    hasText: 'Mars',
+  });
+  const marsBodyCheckbox = marsRow.locator('td:nth-child(3) .oo-checkbox');
+
+  // Tout est coché au démarrage : l'en-tête « Corps » doit être pleinement cochée, pas
+  // seulement visuellement — decocher UNE ligne doit la faire passer à indéterminée
+  // (ancien bug : l'en-tête restait un interrupteur figé, déconnecté des lignes).
+  await expect(bodyToggle).toBeChecked();
+  await marsBodyCheckbox.uncheck();
+  await expect(bodyToggle).toHaveJSProperty('indeterminate', true);
+
+  // Cliquer l'en-tête (même indéterminée) coche TOUTES les lignes, Mars y compris —
+  // une vraie action « tout cocher », pas un interrupteur caché indépendant des lignes.
+  await bodyToggle.check();
+  await expect(bodyToggle).toHaveJSProperty('indeterminate', false);
+  await expect(marsBodyCheckbox).toBeChecked();
+
+  // Et « tout décocher » doit se refléter sur chaque ligne individuellement.
+  await bodyToggle.uncheck();
+  await expect(marsBodyCheckbox).not.toBeChecked();
 });
 
 test('visible projected annotations do not overlap each other', async ({

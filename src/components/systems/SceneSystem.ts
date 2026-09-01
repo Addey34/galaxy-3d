@@ -21,6 +21,8 @@ import Logger from '@/utils/Logger';
 import { Starfield } from '@/components/celestial/Starfield';
 import type { TextureSystem } from './TextureSystem';
 import type CelestialObject from '@/components/celestial/CelestialObject';
+import { flattenBodies } from '@/config/catalog';
+import { bodyAccentColor, setColorblindEnabled } from '@/ui/bodyAccent';
 
 /** Table nom → corps céleste, partagée entre les systèmes. */
 export type CelestialBodies = Record<string, CelestialObject>;
@@ -54,9 +56,7 @@ export class SceneSystem {
   private readonly _orbitLines = new Map<string, THREE.Line>();
   private readonly _orbitPts = new Map<string, Float32Array>();
   private _orbitsGloballyVisible = false;
-  private _orbitMasterEnabled = true;
   private readonly _orbitHidden = new Set<string>();
-  private _bodyMasterEnabled = true;
   private readonly _bodyHidden = new Set<string>();
 
   /** Table des corps, conservée pour exposer leurs positions monde (HUD explo). */
@@ -217,6 +217,27 @@ export class SceneSystem {
     if (this.composer) this.composer.setPixelRatio(pixelRatio);
   }
 
+  /** Expose l'exposition du tone mapping — réglage utilisateur (voir ui/renderExposure.ts). */
+  setToneMappingExposure(value: number): void {
+    this.renderer.toneMappingExposure = value;
+  }
+
+  /**
+   * Bascule la palette daltonienne (voir `core/colorblindPalette.ts`) et recolore À CHAUD
+   * les lignes d'orbite déjà créées (couleur figée au `LineBasicMaterial` de chacune) —
+   * les autres consommateurs (labels Explo, palette de corps, fiche d'info) s'abonnent
+   * eux-mêmes à `ui/bodyAccent.ts::onAccentChange`.
+   */
+  setColorblindMode(enabled: boolean): void {
+    setColorblindEnabled(enabled);
+    const flat = flattenBodies(this.config);
+    for (const [name, line] of this._orbitLines) {
+      const cfg = flat.get(name);
+      const material = line.material as THREE.LineBasicMaterial;
+      material.color.setHex(bodyAccentColor(cfg, name));
+    }
+  }
+
   private setupEventListeners(): void {
     const onResize = (): void => {
       this.camera.aspect = window.innerWidth / window.innerHeight;
@@ -301,7 +322,9 @@ export class SceneSystem {
       this.orbitGroups[name] = orbitGroup;
       // Les orbites éducatives couvrent tous les corps, y compris les planètes naines texturées
       // et les petits corps sans mesh. Elles servent de repère global dans les deux modes.
-      orbitGroup.add(this.createOrbitVisual(name, config.orbitalColor));
+      orbitGroup.add(
+        this.createOrbitVisual(name, bodyAccentColor(config, name))
+      );
       if (parentGroup) {
         parentGroup.add(orbitGroup);
       } else {
@@ -378,18 +401,8 @@ export class SceneSystem {
 
   setOrbitLinesVisible(visible: boolean): void {
     this._orbitsGloballyVisible = visible;
-    const base = visible && this._orbitMasterEnabled;
     for (const [name, line] of this._orbitLines) {
-      line.visible = base && !this._orbitHidden.has(name);
-    }
-  }
-
-  /** Bascule globale (bouton ON/OFF du panneau Orbites). Persiste à travers educ↔explo. */
-  setOrbitMasterEnabled(enabled: boolean): void {
-    this._orbitMasterEnabled = enabled;
-    const base = this._orbitsGloballyVisible && enabled;
-    for (const [name, line] of this._orbitLines) {
-      line.visible = base && !this._orbitHidden.has(name);
+      line.visible = visible && !this._orbitHidden.has(name);
     }
   }
 
@@ -397,9 +410,7 @@ export class SceneSystem {
     if (visible) this._orbitHidden.delete(name);
     else this._orbitHidden.add(name);
     const line = this._orbitLines.get(name);
-    if (line)
-      line.visible =
-        this._orbitsGloballyVisible && this._orbitMasterEnabled && visible;
+    if (line) line.visible = this._orbitsGloballyVisible && visible;
   }
 
   /** Noms de tous les corps dotés d'une ligne d'orbite (planètes, naines, lunes, petits corps). */
@@ -407,25 +418,11 @@ export class SceneSystem {
     return [...this._orbitLines.keys()];
   }
 
-  private _applyBodyVisibility(name: string): void {
-    this._celestialBodies[name]?.setVisible(
-      this._bodyMasterEnabled && !this._bodyHidden.has(name)
-    );
-  }
-
-  /** Bascule globale (bouton ON/OFF du panneau Réglages « Bodies »). */
-  setBodyMasterEnabled(enabled: boolean): void {
-    this._bodyMasterEnabled = enabled;
-    for (const name of Object.keys(this._celestialBodies)) {
-      this._applyBodyVisibility(name);
-    }
-  }
-
-  /** Affiche/masque un corps individuellement (indépendant de la bascule globale). */
+  /** Affiche/masque un corps individuellement (checkbox « Corps » du tableau Réglages). */
   setBodyVisible(name: string, visible: boolean): void {
     if (visible) this._bodyHidden.delete(name);
     else this._bodyHidden.add(name);
-    this._applyBodyVisibility(name);
+    this._celestialBodies[name]?.setVisible(!this._bodyHidden.has(name));
   }
 
   applyOrbitPoints(): void {

@@ -41,6 +41,9 @@ import { SpacecraftOverlay } from './ui/spacecraftOverlay';
 import { SPACECRAFT_MISSIONS } from './config/spacecraft';
 import { setupBodyPicker } from './ui/bodyPicker';
 import { setupOrbitOptions } from './ui/orbitOptions';
+import { setupRenderExposure } from './ui/renderExposure';
+import { setupColorblindToggle } from './ui/colorblindToggle';
+import { setupUnitsToggle } from './ui/unitsToggle';
 import { setupRealtimeClouds } from './ui/realtimeClouds';
 import { setupCloudModelLayer } from './ui/cloudModelLayer';
 import { setupPrecipLayer } from './ui/precipLayer';
@@ -250,6 +253,9 @@ if (surfaceScrim) {
     exploHud.setMode('educ');
     exploHud.setActive(true);
     setupOrbitOptions(sceneSystem, exploHud, overlayCoordinator);
+    setupRenderExposure(sceneSystem);
+    setupColorblindToggle(sceneSystem);
+    setupUnitsToggle();
 
     // Champ de masse des petits corps (SBDB) — couche instrument 2D, chargée en tâche de
     // fond. Dégradation propre : si le fetch échoue (offline), l'overlay reste vide.

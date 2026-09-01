@@ -1136,6 +1136,18 @@ button {
   background-position: center;
   background-size: 82%;
 }
+/* En-tête de colonne « tout cocher » quand seuls certains corps sont cochés (voir
+   ui/orbitOptions.ts::syncHeader) : un tiret plutôt qu'une coche, comme toute case « tout
+   sélectionner » d'un tableau — sans quoi une coche pleine mentirait sur l'état réel des lignes. */
+.settings-checkbox:indeterminate,
+.oo-checkbox:indeterminate {
+  background: rgba(var(--accent), 0.2);
+  border-color: rgba(var(--accent), 0.6);
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 10 10' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M2.5 5 L7.5 5' fill='none' stroke='rgba(190%2C218%2C255%2C0.98)' stroke-width='1.6' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 82%;
+}
 /* Tableau réglages unifié (index.html #orbit-options) : un corps par ligne, une bascule
    par colonne. L'en-tête (<th>) porte la bascule maître de sa colonne ; chaque <td> une
    bascule individuelle. Remplace les 3 dépliants « Choisir… » qui répétaient la même
@@ -1339,6 +1351,38 @@ button {
   color: rgb(var(--accent));
 }
 .optical-zoom-range {
+  width: 100%;
+  height: 1rem;
+  margin: 0;
+  accent-color: rgb(var(--accent));
+  cursor: pointer;
+}
+
+/* Exposition du rendu (tone mapping) — même schéma visuel que le FOV ci-dessus, mais
+   toujours visible (Éduc + Explo) : c'est un réglage d'affichage général, pas propre à
+   l'échelle réelle. */
+.render-exposure {
+  margin-top: var(--sp-3);
+  padding-top: var(--sp-3);
+  border-top: 1px solid var(--hairline);
+  display: grid;
+  gap: 0.3rem;
+}
+.render-exposure-label {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+}
+.render-exposure-value {
+  font-variant-numeric: tabular-nums;
+  color: rgb(var(--accent));
+}
+.render-exposure-range {
   width: 100%;
   height: 1rem;
   margin: 0;
@@ -2530,16 +2574,6 @@ body.is-capturing #loader {
     opacity: 0;
     transform: translate(-50%, -50%) scale(1.2);
   }
-}
-
-#explo-labels.is-labels-hidden .explo-label {
-  display: none !important;
-}
-
-#explo-labels.is-labels-hidden .explo-label-dot,
-#explo-labels.is-labels-hidden .explo-label-leader,
-#explo-labels.is-labels-hidden .explo-label-text {
-  display: none !important;
 }
 
 /* Educational mode uses the same anchor language with slightly stronger names. */

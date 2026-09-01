@@ -4,15 +4,21 @@ import { onLocaleChange, t } from '@/i18n';
 import { bodyDisplayName } from '@/i18n/bodyText';
 import type { SceneSystem } from '@/components/systems/SceneSystem';
 import type { ExploHud } from './exploHud';
-import { hexToRgbTriplet } from './bodyAccent';
+import { bodyAccentColor, hexToRgbTriplet, onAccentChange } from './bodyAccent';
 import type { OverlayCoordinator } from './overlayCoordinator';
+
+interface RowCheckboxes {
+  label: HTMLInputElement;
+  body: HTMLInputElement;
+  orbit: HTMLInputElement;
+}
 
 /** Une <td> avec sa case à cocher — la brique répétée trois fois par ligne du tableau. */
 function buildToggleCell(
   checked: boolean,
   ariaLabel: string,
   onChange: (checked: boolean) => void
-): HTMLTableCellElement {
+): { cell: HTMLTableCellElement; checkbox: HTMLInputElement } {
   const cell = document.createElement('td');
   cell.className = 'oo-td oo-td-toggle';
 
@@ -24,12 +30,12 @@ function buildToggleCell(
   checkbox.addEventListener('change', () => onChange(checkbox.checked));
 
   cell.append(checkbox);
-  return cell;
+  return { cell, checkbox };
 }
 
 export function setupOrbitOptions(
   sceneSystem: SceneSystem,
-  exploHud: Pick<ExploHud, 'setLabelsVisible' | 'setHiddenNames'>,
+  exploHud: Pick<ExploHud, 'setHiddenNames'>,
   coordinator?: OverlayCoordinator
 ): void {
   const panel = document.getElementById('orbit-options');
@@ -51,32 +57,10 @@ export function setupOrbitOptions(
       orbitNames.has(name) && cfg.kind !== 'skybox' && cfg.kind !== 'star'
   );
 
-  // ── Colonne « Nom » : bascule maître + état individuel ──────────────────
   const hiddenLabelNames = new Set<string>();
-  const applyHiddenLabelNames = (): void =>
-    exploHud.setHiddenNames(new Set(hiddenLabelNames));
-  labelsToggle.addEventListener('change', () => {
-    exploHud.setLabelsVisible(labelsToggle.checked);
-  });
-  exploHud.setLabelsVisible(labelsToggle.checked);
-  applyHiddenLabelNames();
-
-  // ── Colonne « Corps » : bascule maître + état individuel ─────────────────
   const hiddenBodyNames = new Set<string>();
-  bodiesToggle.addEventListener('change', () => {
-    sceneSystem.setBodyMasterEnabled(bodiesToggle.checked);
-  });
-  sceneSystem.setBodyMasterEnabled(bodiesToggle.checked);
-
-  // ── Colonne « Orbite » : bascule maître + état individuel ────────────────
-  // Le picker expose toutes les orbites générées. Seules les planètes majeures sont
-  // visibles au départ ; lunes, naines, astéroïdes et comètes restent en opt-in
-  // (comportement historique inchangé).
-  orbitsToggle.addEventListener('change', () => {
-    sceneSystem.setOrbitMasterEnabled(orbitsToggle.checked);
-  });
-  sceneSystem.setOrbitMasterEnabled(orbitsToggle.checked);
-
+  // Seules les planètes majeures ont leur orbite visible au départ ; lunes, naines,
+  // astéroïdes et comètes restent en opt-in (comportement historique inchangé).
   const orbitState = new Map<string, boolean>(
     bodies.map(([name, cfg]) => [name, cfg.kind === 'planet'])
   );
@@ -88,8 +72,76 @@ export function setupOrbitOptions(
     if (!panelNames.has(name)) sceneSystem.setBodyOrbitVisible(name, false);
   }
 
+  const isLabelVisible = (name: string): boolean => !hiddenLabelNames.has(name);
+  const isBodyVisible = (name: string): boolean => !hiddenBodyNames.has(name);
+  const isOrbitVisible = (name: string): boolean => orbitState.get(name) ?? false;
+
+  const applyHiddenLabelNames = (): void =>
+    exploHud.setHiddenNames(new Set(hiddenLabelNames));
+
+  // Références aux cases de chaque ligne — permet à l'en-tête de colonne (tout cocher/décocher)
+  // de mettre à jour les cases déjà rendues sans reconstruire tout le tableau (perd le focus/
+  // le défilement sinon), et à une case individuelle de resynchroniser l'en-tête en retour.
+  const rows = new Map<string, RowCheckboxes>();
+
+  /**
+   * Reflète l'état agrégé d'une colonne sur son en-tête : cochée si TOUS les corps sont
+   * cochés, décochée si AUCUN ne l'est, indéterminée (tiret) sinon — sémantique standard
+   * d'une case « tout cocher » de tableau.
+   */
+  function syncHeader(
+    header: HTMLInputElement,
+    isChecked: (name: string) => boolean
+  ): void {
+    const total = bodies.length;
+    const checkedCount = bodies.filter(([name]) => isChecked(name)).length;
+    header.checked = checkedCount === total;
+    header.indeterminate = checkedCount > 0 && checkedCount < total;
+  }
+
+  // ── En-tête « Nom » : coche/décoche tous les corps, jamais un simple interrupteur caché ──
+  labelsToggle.addEventListener('change', () => {
+    const checked = labelsToggle.checked;
+    for (const [name] of bodies) {
+      if (checked) hiddenLabelNames.delete(name);
+      else hiddenLabelNames.add(name);
+      const row = rows.get(name);
+      if (row) row.label.checked = checked;
+    }
+    applyHiddenLabelNames();
+    labelsToggle.indeterminate = false;
+  });
+
+  // ── En-tête « Corps » ─────────────────────────────────────────────────────
+  bodiesToggle.addEventListener('change', () => {
+    const checked = bodiesToggle.checked;
+    for (const [name] of bodies) {
+      if (checked) hiddenBodyNames.delete(name);
+      else hiddenBodyNames.add(name);
+      sceneSystem.setBodyVisible(name, checked);
+      const row = rows.get(name);
+      if (row) row.body.checked = checked;
+    }
+    bodiesToggle.indeterminate = false;
+  });
+
+  // ── En-tête « Orbite » ────────────────────────────────────────────────────
+  orbitsToggle.addEventListener('change', () => {
+    const checked = orbitsToggle.checked;
+    for (const [name] of bodies) {
+      orbitState.set(name, checked);
+      sceneSystem.setBodyOrbitVisible(name, checked);
+      const row = rows.get(name);
+      if (row) row.orbit.checked = checked;
+    }
+    orbitsToggle.indeterminate = false;
+  });
+
+  applyHiddenLabelNames();
+
   function buildTableRows(): void {
     tableBodyEl!.replaceChildren();
+    rows.clear();
     for (const [name, cfg] of bodies) {
       const display = bodyDisplayName(name);
       const row = document.createElement('tr');
@@ -99,7 +151,7 @@ export function setupOrbitOptions(
       nameCell.className = 'oo-td oo-td-name';
       const nameInner = document.createElement('span');
       nameInner.className = 'oo-td-name-inner';
-      const rgb = hexToRgbTriplet(cfg.orbitalColor);
+      const rgb = hexToRgbTriplet(bodyAccentColor(cfg, name));
       const dot = document.createElement('span');
       dot.className = 'oo-dot';
       dot.style.setProperty('--orbit-rgb', rgb);
@@ -109,41 +161,55 @@ export function setupOrbitOptions(
       nameInner.append(dot, nameEl);
       nameCell.append(nameInner);
 
-      const labelCell = buildToggleCell(
-        !hiddenLabelNames.has(name),
+      const { cell: labelCell, checkbox: labelCheckbox } = buildToggleCell(
+        isLabelVisible(name),
         t('settings.row.name.aria', { name: display }),
         (checked) => {
           if (checked) hiddenLabelNames.delete(name);
           else hiddenLabelNames.add(name);
           applyHiddenLabelNames();
+          syncHeader(labelsToggle!, isLabelVisible);
         }
       );
 
-      const bodyCell = buildToggleCell(
-        !hiddenBodyNames.has(name),
+      const { cell: bodyCell, checkbox: bodyCheckbox } = buildToggleCell(
+        isBodyVisible(name),
         t('settings.row.body.aria', { name: display }),
         (checked) => {
           if (checked) hiddenBodyNames.delete(name);
           else hiddenBodyNames.add(name);
           sceneSystem.setBodyVisible(name, checked);
+          syncHeader(bodiesToggle!, isBodyVisible);
         }
       );
 
-      const orbitCell = buildToggleCell(
-        orbitState.get(name) ?? false,
+      const { cell: orbitCell, checkbox: orbitCheckbox } = buildToggleCell(
+        isOrbitVisible(name),
         t('settings.row.orbit.aria', { name: display }),
         (checked) => {
           orbitState.set(name, checked);
           sceneSystem.setBodyOrbitVisible(name, checked);
+          syncHeader(orbitsToggle!, isOrbitVisible);
         }
       );
+
+      rows.set(name, {
+        label: labelCheckbox,
+        body: bodyCheckbox,
+        orbit: orbitCheckbox,
+      });
 
       row.append(nameCell, labelCell, bodyCell, orbitCell);
       tableBodyEl!.append(row);
     }
+    syncHeader(labelsToggle!, isLabelVisible);
+    syncHeader(bodiesToggle!, isBodyVisible);
+    syncHeader(orbitsToggle!, isOrbitVisible);
   }
   buildTableRows();
   onLocaleChange(buildTableRows);
+  // Mode daltonien basculé : recolore les pastilles d'orbite déjà rendues.
+  onAccentChange(buildTableRows);
 
   // Surface contextuelle : ouverte par le déclencheur du dock, fermée par sa croix,
   // le scrim ou une autre surface (coordinateur). Démarre masquée.

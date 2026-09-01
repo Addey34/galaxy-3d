@@ -8,12 +8,14 @@
  * ajouter un corps n'exige aucune édition HTML.
  */
 import { CELESTIAL_CONFIG } from '@/config/bodies';
-import { forEachBody } from '@/config/catalog';
+import { forEachBody, flattenBodies } from '@/config/catalog';
 import { SMALL_BODY_KINDS, type BodyKind } from '@/types';
 import { bodyDisplayName } from '@/i18n/bodyText';
 import { onLocaleChange, t } from '@/i18n';
-import { bodyAccentColor, hexToRgbTriplet } from './bodyAccent';
+import { bodyAccentColor, hexToRgbTriplet, onAccentChange } from './bodyAccent';
 import type { OverlayCoordinator } from './overlayCoordinator';
+
+const BODY_CONFIGS = flattenBodies(CELESTIAL_CONFIG);
 
 interface PaletteEntry {
   name: string;
@@ -50,7 +52,7 @@ function collectEntries(): PaletteEntry[] {
     if (SMALL_BODY_KINDS.has(cfg.kind) && !cfg.textures?.surface) return;
 
     const label = bodyDisplayName(name);
-    const accent = hexToRgbTriplet(bodyAccentColor(cfg));
+    const accent = hexToRgbTriplet(bodyAccentColor(cfg, name));
 
     const button = document.createElement('button');
     button.id = `orbit-${name}`;
@@ -246,6 +248,16 @@ export function setupBodyPalette(
     if (currentLabel && currentActive && currentActive !== 'overview') {
       const entry = byName.get(currentActive);
       if (entry) currentLabel.textContent = entry.label;
+    }
+  });
+
+  // Mode daltonien basculé : recolore les pastilles déjà créées (couleur figée à la création).
+  onAccentChange(() => {
+    for (const entry of entries) {
+      entry.accent = hexToRgbTriplet(
+        bodyAccentColor(BODY_CONFIGS.get(entry.name), entry.name)
+      );
+      entry.button.style.setProperty('--body-rgb', entry.accent);
     }
   });
 
