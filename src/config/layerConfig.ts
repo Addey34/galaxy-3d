@@ -482,16 +482,33 @@ export function getThermalUniforms(
   return material.userData[THERMAL_UNIFORM_KEY] as ThermalUniforms | undefined;
 }
 
+/** Opacité de rendu de la couche thermique une fois qu'elle porte une vraie donnée. */
+export const THERMAL_DEFAULT_OPACITY = 0.72;
+
+/**
+ * Matériau de la couche température (GIBS/MERRA-2, texture déjà colorée).
+ *
+ * `opacity: 0` au départ, et ce n'est pas cosmétique : un MeshBasicMaterial SANS map rend
+ * sa couleur de base — blanc, opaque, non éclairé — sur une sphère posée devant la Terre.
+ * La texture arrive à l'exécution, et `observedTextureLayer` rend le mesh visible AU CLIC,
+ * avant que la tuile ne soit décodée : sans ce garde-fou, activer la couche produisait un
+ * voile blanc sur toute la planète pendant la requête. Même classe de bug que la couche
+ * pluie qui chargeait la Terre en soleil blanc éblouissant (cf. createPrecipMaterial) ;
+ * là-bas le `mesh.visible = false` initial masquait le problème, il ne le corrigeait pas.
+ *
+ * `setThermalTexture` remonte l'opacité au moment où il assigne la map — donc « pas de
+ * donnée ⇒ rien à l'écran » est structurel, pas une question d'ordre d'appels.
+ */
 export function createThermalMaterial(): THREE.MeshBasicMaterial {
   const material = new THREE.MeshBasicMaterial({
     transparent: true,
     depthWrite: false,
     side: THREE.FrontSide,
-    opacity: 0.72,
+    opacity: 0,
   });
   material.userData[THERMAL_UNIFORM_KEY] = {
     enabled: { value: 0 },
-    opacity: { value: 0.72 },
+    opacity: { value: THERMAL_DEFAULT_OPACITY },
   } satisfies ThermalUniforms;
   return material;
 }

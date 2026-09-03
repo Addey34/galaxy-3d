@@ -551,6 +551,17 @@ export default class CelestialObject {
     if (options.opacity !== undefined) uniforms.opacity.value = options.opacity;
     uniforms.enabled.value = 1;
     mat.map = texture;
+    // C'est ICI que la couche devient visible, jamais avant : le matériau naît à opacity 0
+    // (cf. createThermalMaterial) parce que sans map il rendrait un voile BLANC opaque sur
+    // toute la planète, et observedTextureLayer affiche le mesh dès le clic, avant la fin
+    // de la requête. Reporter l'opacité au moment de l'assignation de la map rend
+    // « pas de donnée ⇒ rien à l'écran » structurel.
+    //
+    // Effet de bord corrigé au passage : cette opacité était jusqu'ici morte. Elle n'était
+    // stockée que dans userData, qu'aucun shader ne lit (ce matériau n'a pas de
+    // onBeforeCompile), donc THERMAL_SETTINGS.opacity était silencieusement ignoré au
+    // profit du 0.72 codé en dur dans le constructeur.
+    mat.opacity = uniforms.opacity.value;
     mat.needsUpdate = true;
   }
 

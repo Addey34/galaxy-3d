@@ -4,6 +4,9 @@ import {
   createCloudsMaterial,
   createPrecipMaterial,
   createSurfaceMaterial,
+  createThermalMaterial,
+  getThermalUniforms,
+  THERMAL_DEFAULT_OPACITY,
 } from './layerConfig';
 import { EARTH_OCEAN_ROUGHNESS_SETTINGS, SHADER_SETTINGS } from './engine';
 import {
@@ -272,6 +275,33 @@ describe('precip layer at rest', () => {
     // La cle de cache doit changer avec la source, sinon un programme compile avant le
     // correctif serait reutilise tel quel.
     expect(material.customProgramCacheKey()).toBe('precip-remap-v5-sharedterm');
+    material.dispose();
+  });
+});
+
+describe('thermal layer at rest', () => {
+  it('draws nothing until real temperature data arrives', () => {
+    // Meme classe de bug que la pluie, declenchee par le TOGGLE au lieu du boot :
+    // observedTextureLayer rend le mesh visible des le clic, la tuile GIBS n'arrive
+    // qu'ensuite. Entre les deux, un MeshBasicMaterial sans map rend sa couleur de base —
+    // blanc opaque, non eclaire — sur toute la planete. Le `mesh.visible = false` initial
+    // ne protegeait que le boot, pas l'activation.
+    const material = createThermalMaterial();
+    expect(material.opacity).toBe(0);
+    expect(material.transparent).toBe(true);
+    expect(material.map).toBeNull();
+    material.dispose();
+  });
+
+  it('carries the configured opacity as the value to restore, not a hardcoded one', () => {
+    // L'opacite cible vit dans userData et n'est appliquee au materiau qu'a l'assignation
+    // de la map (CelestialObject.setThermalTexture). Elle doit donc rester lisible ici,
+    // sinon la couche resterait invisible une fois la donnee arrivee.
+    const material = createThermalMaterial();
+    const uniforms = getThermalUniforms(material);
+    expect(uniforms?.opacity.value).toBe(THERMAL_DEFAULT_OPACITY);
+    expect(THERMAL_DEFAULT_OPACITY).toBeGreaterThan(0);
+    expect(uniforms?.enabled.value).toBe(0);
     material.dispose();
   });
 });
