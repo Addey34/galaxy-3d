@@ -329,7 +329,12 @@ export const SHADER_SETTINGS = {
     // clairement éclairée — vu comme des lumières nocturnes qui « bavent » sur le jour. threshold
     // aligné sur -0.12 (pile où la surface finit de s'éteindre) : les lumières restent à zéro tant
     // que la surface est encore visible, puis montent en régime sur 0.18 de plus (deep night à
-    // dot=-0.30) — plus aucun chevauchement entre les deux transitions.
+    // dot=-0.30) — plus aucun chevauchement entre les deux transitions. Cette plage (dot -0.12 à
+    // -0.30, soit ~6.9° à ~18° sous l'horizon) correspond au crépuscule nautique→astronomique
+    // réel : la fenêtre où les lumières de ville deviennent effectivement visibles depuis l'espace
+    // (voir NightLightsShader.ts pour la formule smootherstep qui applique cette plage — un bug
+    // antérieur utilisait -smoothness seul comme borne basse, donnant une rampe de 0.06 au lieu de
+    // 0.18, quasi un cutoff dur).
     threshold: -0.12,
     smoothness: 0.18,
   },

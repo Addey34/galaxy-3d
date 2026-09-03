@@ -111,11 +111,20 @@ export const fragmentShader = /* glsl */ `
     // nightFactor = 0.0 tant que sunLight >= threshold — la surface (createShadowAwareStandardMaterial,
     // autre shader) est encore visible en gris crépusculaire jusque-là, donc threshold est négatif,
     // calé sur ce point précis où elle finit de s'éteindre (voir SHADER_SETTINGS.nightLights dans
-    // engine.ts) — puis nightFactor monte à 1.0 (pleine intensité) une fois sunLight <= -smoothness.
-    // Sans cet alignement, les deux transitions se chevauchent : les lumières s'allument alors que
-    // la surface est encore éclairée, ce qui ressemble à des lumières nocturnes qui débordent sur
-    // le jour.
-    float nightFactor = 1.0 - smoothstep(-smoothness, threshold, sunLight);
+    // engine.ts) — puis nightFactor monte à 1.0 (pleine intensité) une fois sunLight <= threshold -
+    // smoothness. La borne basse DOIT être threshold-smoothness (pas -smoothness seule : ça donnait
+    // une rampe de 0.06 en dot, ~3.4°, quasi un cutoff dur perçu comme « noir d'un coup » — bug
+    // corrigé ici) pour retrouver la largeur de rampe voulue (0.18 en dot ≈ crépuscule nautique
+    // à astronomique, 6.9°→18°, la plage réelle où les lumières de ville deviennent visibles
+    // depuis l'espace). Sans l'alignement sur threshold, les deux transitions (surface/lumières)
+    // se chevauchent : les lumières s'allument alors que la surface est encore éclairée, ce qui
+    // ressemble à des lumières nocturnes qui débordent sur le jour.
+    //
+    // smootherstep (Ken Perlin, 6t^5-15t^4+10t^3) plutôt que smoothstep cubique : dérivée SECONDE
+    // nulle aux deux bornes (pas seulement la première), donc le raccord avec les paliers plats
+    // (0 avant, 1 après) est imperceptible — pas de « coude » visible au début/fin de la rampe.
+    float t = clamp((sunLight - threshold) / -smoothness, 0.0, 1.0);
+    float nightFactor = t * t * t * (t * (t * 6.0 - 15.0) + 10.0);
 
     vec4 lightsColor = texture2D(lightsMap, vUv);
 
