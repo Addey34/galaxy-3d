@@ -89,6 +89,18 @@ export const fragmentShader = /* glsl */ `
     // Perturbe la normale géométrique avec la normalMap pour que le terminateur
     // des lumières suive le relief comme l'ombre de la surface (sinon : bande
     // sombre sans lumières là où le relief décale le bord de l'ombre).
+    //
+    // Pas de signe négatif ici : la surface (createShadowAwareStandardMaterial, via le
+    // chunk three.js normal_fragment_begin) appelle getTangentFrame(-vViewPosition, ...),
+    // et vViewPosition est LUI-MÊME déjà l'opposé de la position vue réelle (voir
+    // lights_fragment_begin.glsl.js : geometryPosition = -vViewPosition). Donc
+    // -vViewPosition == la position vue réelle, non négée — la surface reconstruit son
+    // repère tangent à partir de la position réelle du fragment, pas de son opposé.
+    // L'équivalent monde de "la position réelle" est +vWorldPosition. Un signe négatif
+    // ici inverserait tangente et bitangente par rapport à la surface, penchant la
+    // normale perturbée du côté opposé partout où le relief a une pente (visible
+    // seulement là où la normalMap a du relief, jamais sur une sphère lisse : c'est ce
+    // qui produit un décalage asymétrique du terminateur, pas un simple biais uniforme).
     if (useNormalMap > 0.5) {
       normal = perturbNormal(vWorldPosition, normal, vUv);
     }
