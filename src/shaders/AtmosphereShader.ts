@@ -5,6 +5,7 @@
  * (blue daylight, warm twilight edge, deep-night extinction) at one fragment pass.
  */
 import * as THREE from 'three';
+import { TERMINATOR_GLSL } from '@/core/terminator';
 
 export interface AtmosphereSettings {
   /** Edge profile power: higher values make the atmospheric rim thinner. */
@@ -50,7 +51,9 @@ export const vertexShader = /* glsl */ `
   }
 `;
 
-export const fragmentShader = /* glsl */ `
+export const fragmentShader =
+  TERMINATOR_GLSL +
+  /* glsl */ `
   uniform vec3 uColor;
   uniform vec3 sunPosition;
   uniform float uPower;
@@ -73,8 +76,10 @@ export const fragmentShader = /* glsl */ `
     float rim = pow(1.0 - viewCos, uPower);
     float sunCos = dot(normal, sunDir);
 
-    // The shell fades through the terminator and is black on deep night.
-    float dayFactor = smoothstep(-uNightWrap, 0.28, sunCos);
+    // La coque s'éteint au terminateur, noire en nuit profonde. Même fonction que toutes
+    // les autres couches (core/terminator.ts) : le halo cesse EXACTEMENT là où la couche
+    // qu'il enveloppe cesse, au lieu de suivre sa propre rampe asymétrique.
+    float dayFactor = terminatorDay(sunCos, uNightWrap);
     float twilight = exp(-pow(abs(sunCos) / 0.32, 2.0)) * dayFactor;
 
     // Rayleigh phase: wavelength-dependent and symmetric front/back.

@@ -8,6 +8,7 @@
  * exactement le relief (donc l'ombre de la surface), sans bande sombre au bord.
  */
 import * as THREE from 'three';
+import { TERMINATOR_GLSL } from '@/core/terminator';
 
 interface NightLightsSettings {
   intensity: number;
@@ -45,7 +46,9 @@ export const vertexShader = /* glsl */ `
   }
 `;
 
-export const fragmentShader = /* glsl */ `
+export const fragmentShader =
+  TERMINATOR_GLSL +
+  /* glsl */ `
   uniform sampler2D lightsMap;
   uniform vec3 sunPosition;
   uniform float intensity;
@@ -126,8 +129,7 @@ export const fragmentShader = /* glsl */ `
     // smootherstep (Ken Perlin, 6t^5-15t^4+10t^3) plutôt que smoothstep cubique : dérivée SECONDE
     // nulle aux deux bornes (pas seulement la première), donc le raccord avec les paliers plats
     // (0 avant, 1 après) est imperceptible — pas de « coude » visible au début/fin de la rampe.
-    float t = clamp((sunLight - threshold) / -smoothness, 0.0, 1.0);
-    float nightFactor = t * t * t * (t * (t * 6.0 - 15.0) + 10.0);
+    float nightFactor = terminatorNight(sunLight, threshold, smoothness);
 
     vec4 lightsColor = texture2D(lightsMap, vUv);
 

@@ -6,6 +6,15 @@ import {
   createSurfaceMaterial,
 } from './layerConfig';
 import { EARTH_OCEAN_ROUGHNESS_SETTINGS, SHADER_SETTINGS } from './engine';
+import {
+  TERMINATOR_WRAP_ATMOSPHERE,
+  TERMINATOR_WRAP_ATMOSPHERE_SHELL,
+  TERMINATOR_WRAP_CLOUDS,
+  TERMINATOR_WRAP_STORM,
+  TERMINATOR_WRAP_VACUUM,
+  terminatorLight,
+  terminatorNight,
+} from '@/core/terminator';
 
 describe('MODIS cloud-fraction shader', () => {
   it('converts NASA percentage palette values to shader fractions', () => {
@@ -88,64 +97,78 @@ describe('Earth ocean PBR shader', () => {
   });
 });
 
-describe('day/night terminator falloff', () => {
-  // Réplique EXACTE de TERMINATOR_FALLOFF_GLSL (layerConfig.ts). Si la formule du
-  // shader change, ce miroir doit changer avec — les assertions ci-dessous décrivent
-  // les propriétés que la courbe DOIT garder, pas la formule elle-même.
-  const dotNL = (raw: number, w: number): number => {
-    const t = Math.min(Math.max((raw + w) / (2 * w), 0), 1);
-    return Math.min(Math.max(Math.max(raw, w * t * t), 0), 1);
-  };
+describe('day/night terminator wiring', () => {
+  // La COURBE elle-même (Lambert exact au-dessus de +w, extinction à pente nulle,
+  // monotonie, plafond anti-inondation w/4) est testée dans src/core/terminator.test.ts,
+  // sa source unique. Ici on ne teste que le CÂBLAGE : quelle largeur reçoit quelle
+  // couche, et le remplacement de chaîne dans le chunk three.js.
 
-  const wrapOf = (material: THREE.Material): number => {
+  const wrapOf = (material: THREE.Material, uniform: string): number => {
     const shader = {
       uniforms: {},
       vertexShader: '',
       fragmentShader: '#include <common>',
     } as Parameters<NonNullable<THREE.Material['onBeforeCompile']>>[0];
     material.onBeforeCompile(shader, {} as THREE.WebGLRenderer);
-    return (shader.uniforms as Record<string, { value: number }>)[
-      'uTerminatorWrap'
-    ].value;
+    return (shader.uniforms as Record<string, { value: number }>)[uniform]
+      .value;
   };
 
-  it('leaves the lit side as exact Lambert', () => {
-    // Le wrap linéaire précédent surexposait TOUT le disque (+11 % à raw=0.5) : le jour
-    // était délavé. Au-delà de w la courbe doit rendre le dot brut, à l'identique.
-    for (const raw of [0.31, 0.5, 0.75, 1.0])
-      expect(dotNL(raw, 0.31)).toBeCloseTo(raw, 6);
-  });
-
-  it('reaches zero with a zero slope, not a hard edge', () => {
-    // La cause du « noir d'un coup » : le wrap linéaire touchait 0 avec une pente non
-    // nulle → cassure de dérivée = arête franche visible. Ici l'extinction est tangente,
-    // donc la dérivée doit tendre vers 0 en approchant -w.
-    const w = 0.31;
-    expect(dotNL(-w, w)).toBe(0);
-    const eps = 1e-4;
-    const slopeNearEnd = (dotNL(-w + eps, w) - dotNL(-w, w)) / eps;
-    const slopeMidBand = (dotNL(-w / 2 + eps, w) - dotNL(-w / 2, w)) / eps;
-    expect(slopeNearEnd).toBeLessThan(0.01);
-    expect(slopeMidBand).toBeGreaterThan(slopeNearEnd * 10);
-  });
-
-  it('stays continuous and monotonic across the whole band', () => {
-    const w = 0.31;
-    let previous = -1;
-    for (let raw = -1; raw <= 1.0001; raw += 0.005) {
-      const value = dotNL(raw, w);
-      expect(value).toBeGreaterThanOrEqual(previous - 1e-9);
-      previous = value;
+  it('routes every layer through the shared core/terminator source', () => {
+    // Le problème d'origine : six couches concentriques, six formules jour/nuit
+    // indépendantes, extinctions étalées de -0.08 à -0.31 (facteur 4) — d'où des bandes
+    // et des décalages au terminateur. Chaque couche doit maintenant appeler les
+    // fonctions partagées, pas re-dériver sa propre rampe.
+    for (const material of [
+      createSurfaceMaterial(false, undefined, false, false, false, true),
+      createCloudsMaterial(),
+      createPrecipMaterial(),
+    ]) {
+      const shader = {
+        uniforms: {},
+        vertexShader: '',
+        fragmentShader: '#include <common>\n#include <map_fragment>',
+      } as Parameters<NonNullable<THREE.Material['onBeforeCompile']>>[0];
+      material.onBeforeCompile(shader, {} as THREE.WebGLRenderer);
+      expect(shader.fragmentShader).toContain('float terminatorLight( float');
+      expect(shader.fragmentShader).toContain('float terminatorDay( float');
+      material.dispose();
     }
   });
 
-  it('keeps the geometric terminator dim enough not to flood the night side', () => {
-    // Le garde-fou qui rend l'élargissement à 18° sûr : un wrap LINÉAIRE à w=0.31
-    // éclairerait la bande à w/(1+w) ≈ 0.237 (le « flood bleu »). La queue quadratique
-    // ne donne que w/4 — c'est pourquoi on peut élargir sans inonder la face nuit.
-    const w = 0.31;
-    expect(dotNL(0, w)).toBeCloseTo(w / 4, 6);
-    expect(dotNL(0, w)).toBeLessThan(w / (1 + w) / 3);
+  it('derives each layer width from its real altitude, not from its mesh radius', () => {
+    // Une couche en altitude reste au soleil APRÈS le coucher au sol (son horizon est
+    // abaissé) : c'est pourquoi les nuages rougeoient sur un sol déjà sombre. La largeur
+    // vient de l'altitude réelle — les rayons de mesh (LAYER_RADIUS_SCALE) sont exagérés
+    // pour la lisibilité et ne disent rien de la physique.
+    const clouds = createCloudsMaterial();
+    const precip = createPrecipMaterial();
+    expect(wrapOf(clouds, 'uTerminatorWrap')).toBeCloseTo(
+      TERMINATOR_WRAP_CLOUDS,
+      12
+    );
+    expect(wrapOf(precip, 'uPrecipWrap')).toBeCloseTo(
+      TERMINATOR_WRAP_STORM,
+      12
+    );
+    expect(wrapOf(precip, 'uPrecipWrap')).toBeGreaterThan(
+      wrapOf(clouds, 'uTerminatorWrap')
+    );
+    expect(wrapOf(clouds, 'uTerminatorWrap')).toBeGreaterThan(
+      TERMINATOR_WRAP_ATMOSPHERE
+    );
+    clouds.dispose();
+    precip.dispose();
+  });
+
+  it('gives the atmospheric halo the widest twilight of all', () => {
+    // Le halo au limbe survit au sol ET aux nuages : c'est la dernière chose éteinte.
+    expect(SHADER_SETTINGS.atmosphere.nightWrap).toBe(
+      TERMINATOR_WRAP_ATMOSPHERE_SHELL
+    );
+    expect(SHADER_SETTINGS.atmosphere.nightWrap).toBeGreaterThan(
+      TERMINATOR_WRAP_STORM
+    );
   });
 
   it('lights the cities at sunset, not an hour later', () => {
@@ -161,30 +184,23 @@ describe('day/night terminator falloff', () => {
     expect(-lightsFullAt).toBeCloseTo(Math.sin((6 * Math.PI) / 180), 2);
   });
 
-  it('never lets the city lights bleed onto the day side', () => {
-    // La crainte qui justifiait le retard d'allumage. Elle ne tient pas : au-dessus du
-    // seuil le nightFactor est clampé à zéro EXACTEMENT, quel que soit le seuil.
-    // Réplique de la rampe smootherstep de NightLightsShader.
-    const { threshold, smoothness } = SHADER_SETTINGS.nightLights;
-    const nightFactor = (raw: number): number => {
-      const t = Math.min(Math.max((raw - threshold) / -smoothness, 0), 1);
-      return t * t * t * (t * (t * 6 - 15) + 10);
-    };
-    for (const raw of [1, 0.5, 0.2, 0.05, 0.001]) expect(nightFactor(raw)).toBe(0);
-    expect(nightFactor(-smoothness)).toBeCloseTo(1, 6);
-  });
-
   it('keeps a ground glow while the cities come up (real crossfade)', () => {
     // Au crépuscule les deux coexistent réellement : sol encore faiblement éclairé ET
-    // villes allumées. Le crépuscule de surface court jusqu'à -w, bien au-delà du
-    // plein régime des lumières — donc aucune des deux couches ne saute.
-    const w = 0.31;
+    // villes allumées. Le crépuscule de surface court jusqu'à -w (18°), bien au-delà du
+    // plein régime des lumières (6°) — donc aucune des deux couches ne saute.
     const { threshold, smoothness } = SHADER_SETTINGS.nightLights;
+    const w = TERMINATOR_WRAP_ATMOSPHERE;
     const lightsFullAt = threshold - smoothness;
     expect(lightsFullAt).toBeGreaterThan(-w);
-    expect(dotNL(lightsFullAt, w)).toBeGreaterThan(0);
+    expect(terminatorNight(lightsFullAt, threshold, smoothness)).toBeCloseTo(
+      1,
+      12
+    );
+    expect(terminatorLight(lightsFullAt, w)).toBeGreaterThan(0);
     // Mais la lueur a déjà nettement baissé : moins de la moitié de sa valeur au coucher.
-    expect(dotNL(lightsFullAt, w)).toBeLessThan(dotNL(threshold, w) * 0.5);
+    expect(terminatorLight(lightsFullAt, w)).toBeLessThan(
+      terminatorLight(threshold, w) * 0.5
+    );
   });
 
   it('still matches the string three.js actually ships (upgrade guard)', () => {
@@ -212,12 +228,15 @@ describe('day/night terminator falloff', () => {
       true
     );
     const airless = createSurfaceMaterial(false, undefined, false, false);
-    expect(wrapOf(withAtmosphere)).toBeGreaterThan(wrapOf(airless));
-    // 0.31 en dot = 18° = fin du crépuscule astronomique réel.
-    expect(wrapOf(withAtmosphere)).toBeCloseTo(
-      Math.sin((18 * Math.PI) / 180),
-      2
+    expect(wrapOf(withAtmosphere, 'uTerminatorWrap')).toBeGreaterThan(
+      wrapOf(airless, 'uTerminatorWrap')
     );
+    // 0.31 en dot = 18° = fin du crépuscule astronomique réel.
+    expect(wrapOf(withAtmosphere, 'uTerminatorWrap')).toBeCloseTo(
+      TERMINATOR_WRAP_ATMOSPHERE,
+      12
+    );
+    expect(wrapOf(airless, 'uTerminatorWrap')).toBe(TERMINATOR_WRAP_VACUUM);
     withAtmosphere.dispose();
     airless.dispose();
   });
@@ -252,7 +271,7 @@ describe('precip layer at rest', () => {
     expect(shader.fragmentShader).toContain('diffuseColor.a = 0.0;');
     // La cle de cache doit changer avec la source, sinon un programme compile avant le
     // correctif serait reutilise tel quel.
-    expect(material.customProgramCacheKey()).toBe('precip-remap-v4-offalpha');
+    expect(material.customProgramCacheKey()).toBe('precip-remap-v5-sharedterm');
     material.dispose();
   });
 });

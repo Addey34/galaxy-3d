@@ -5,6 +5,13 @@
  */
 import * as THREE from 'three';
 import {
+  TERMINATOR_GLSL,
+  TERMINATOR_WRAP_ATMOSPHERE,
+  TERMINATOR_WRAP_CLOUDS,
+  TERMINATOR_WRAP_STORM,
+  TERMINATOR_WRAP_VACUUM,
+} from '@/core/terminator';
+import {
   BOOT_QUALITY_PROFILE,
   EARTH_OCEAN_ROUGHNESS_SETTINGS,
   REALTIME_CLOUDS_SETTINGS,
@@ -345,8 +352,7 @@ const REAL_CLOUDS_GLSL = `
           // opaque. On atténue l'alpha selon l'orientation de la normale monde vs Soleil (même
           // signal que la coupe de relief et le clair de Lune). Transition douce au terminateur.
           float cloudSunFacing = dot( normalize( vMoonWorldNormal ), normalize( uMoonSunDir ) );
-          float cloudNightVisibility = smoothstep( -0.25, 0.15, cloudSunFacing );
-          rcAlpha *= cloudNightVisibility;
+          rcAlpha *= terminatorDay( cloudSunFacing, uTerminatorWrap );
           diffuseColor.a *= rcAlpha;
           diffuseColor.rgb = vec3( 1.0, 0.995, 0.985 );
         }
@@ -370,7 +376,7 @@ export function createCloudsMaterial(): THREE.MeshStandardMaterial {
     {
       noSpecular: true,
       moonlight: true,
-      terminatorWrap: TERMINATOR_WRAP_ATMOSPHERE,
+      terminatorWrap: TERMINATOR_WRAP_CLOUDS,
     }
   );
   const realClouds: RealCloudsUniforms = {
@@ -460,7 +466,7 @@ export function createCloudsMaterial(): THREE.MeshStandardMaterial {
   });
   const previousCacheKey = material.customProgramCacheKey?.bind(material);
   material.customProgramCacheKey = () =>
-    `${previousCacheKey ? previousCacheKey() : ''}-realclouds-covgate2`;
+    `${previousCacheKey ? previousCacheKey() : ''}-realclouds-covgate3`;
   return material;
 }
 const THERMAL_UNIFORM_KEY = '__thermalUniforms';
@@ -563,7 +569,12 @@ const PRECIP_REMAP_GLSL = `
           // avec un léger plancher pour ne pas être totalement noirs au terminateur.
           vec3 pN = normalize( vPrecipWorldNormal );
           vec3 pToSun = normalize( uPrecipSunPos - vPrecipWorldPos );
-          float pDay = clamp( dot( pN, pToSun ) * 1.1 + 0.1, 0.0, 1.0 );
+          // UNE seule fraction de jour, partagée par la couleur ET l'alpha. Avant, deux rampes
+          // indépendantes se contredisaient : la couleur suivait clamp( dot*1.1 + 0.1 ) — noire
+          // dès dot = -0.091 — et l'alpha un smoothstep par-dessus, éteint vers dot = -0.09.
+          // La pluie disparaissait donc ~3.4× plus tôt que le sol sous elle (-0.31), alors
+          // qu'un sommet d'orage est physiquement éclairé PLUS LONGTEMPS que le sol.
+          float pDay = terminatorDay( dot( pN, pToSun ), uPrecipWrap );
           float pLight = mix( 0.04, 1.0, pDay );
           diffuseColor.rgb = col * pLight;
           // La pluie/les nuages d'orage sont éclairés par le Soleil comme la surface : côté
@@ -571,8 +582,7 @@ const PRECIP_REMAP_GLSL = `
           // couche grise opaque. On applique donc le facteur jour/nuit AUSSI à l'alpha (fondu
           // doux au terminateur via nightVisibility), pas seulement à la couleur. Résultat :
           // pluie pleinement visible le jour, invisible dans la nuit profonde.
-          float nightVisibility = smoothstep( 0.0, 0.35, pDay );
-          diffuseColor.a = pMask * dens * uPrecipOpacity * nightVisibility;
+          diffuseColor.a = pMask * dens * uPrecipOpacity * pDay;
         } else {
           // Map présente mais couche pas encore armée : rien à dessiner. Sans ce else,
           // c'est la couleur de base du matériau (blanc opaque) qui subsistait.
@@ -618,6 +628,9 @@ export function createPrecipMaterial(): THREE.MeshBasicMaterial {
     shader.uniforms['uPrecipSunPos'] = precip.sunPosition;
     shader.uniforms['uPrecipMapB'] = precip.mapB;
     shader.uniforms['uPrecipMix'] = precip.mix;
+    // Sommets d'orage (~12 km) : leur horizon est abaissé, ils restent au soleil après le
+    // coucher au sol. Dérivé de l'altitude réelle, pas réglé à l'œil (core/terminator.ts).
+    shader.uniforms['uPrecipWrap'] = { value: TERMINATOR_WRAP_STORM };
     // Position + normale monde du fragment (pour le facteur jour/nuit).
     shader.vertexShader = shader.vertexShader
       .replace(
@@ -631,14 +644,15 @@ export function createPrecipMaterial(): THREE.MeshBasicMaterial {
     shader.fragmentShader = shader.fragmentShader
       .replace(
         '#include <common>',
-        '#include <common>\nuniform float uPrecipEnabled;\nuniform float uPrecipOpacity;\nuniform vec3 uPrecipSunPos;\nuniform sampler2D uPrecipMapB;\nuniform float uPrecipMix;\nvarying vec3 vPrecipWorldPos;\nvarying vec3 vPrecipWorldNormal;'
+        '#include <common>\nuniform float uPrecipEnabled;\nuniform float uPrecipOpacity;\nuniform vec3 uPrecipSunPos;\nuniform sampler2D uPrecipMapB;\nuniform float uPrecipMix;\nvarying vec3 vPrecipWorldPos;\nvarying vec3 vPrecipWorldNormal;\nuniform float uPrecipWrap;' +
+          TERMINATOR_GLSL
       )
       .replace(
         '#include <map_fragment>',
         '#include <map_fragment>' + PRECIP_REMAP_GLSL
       );
   });
-  material.customProgramCacheKey = () => 'precip-remap-v4-offalpha';
+  material.customProgramCacheKey = () => 'precip-remap-v5-sharedterm';
 
   return material;
 }
@@ -729,50 +743,10 @@ export function getRingShadowUniforms(
     RingShadowUniforms | undefined;
 }
 
-// Largeur du crépuscule (wrap lighting), en dot(N,L). Adoucit UNIQUEMENT la bande
-// autour du terminateur : en dessous de -w la face nuit reste noire.
-//
-// ATTENTION — un wrap LINÉAIRE ( (raw+w)/(1+w) ) ne supporte pas d'être élargi :
-// il vaut w/(1+w) au terminateur géométrique, donc w=0.35 éclairait ~26 % TOUTE la
-// bande crépusculaire → face nuit inondée de bleu. C'est pourquoi cette constante
-// était bloquée à 0.12 (≈6.9°, crépuscule civil+) : au-delà, flood garanti.
-// `TERMINATOR_FALLOFF_GLSL` remplace ce wrap linéaire par une queue QUADRATIQUE
-// (voir sa doc) qui ne vaut plus que w/4 au terminateur — élargir devient sûr, la
-// bande s'étire au lieu de s'éclaircir.
-//
-// Corps SANS atmosphère (Lune, Mercure…) : physiquement le terminateur y est net
-// (aucune diffusion). On conserve néanmoins 0.12, la valeur historique, pour ne pas
-// modifier leur rendu — c'est un adoucissement purement esthétique, assumé.
-const TERMINATOR_WRAP_VACUUM = 0.12;
-// Corps AVEC atmosphère (Terre, Vénus) : 0.31 en dot = 18°, exactement la fin du
-// crépuscule astronomique — l'angle réel sous l'horizon où le ciel cesse d'être
-// éclairé par diffusion. C'est la valeur physique, pas un réglage arbitraire, et
-// elle fait coïncider la fin du dégradé de surface avec la pleine intensité des
-// lumières de ville (NightLightsShader : rampe -0.12 → -0.30). Voir aussi
-// SHADER_SETTINGS.nightLights dans engine.ts.
-const TERMINATOR_WRAP_ATMOSPHERE = 0.31;
-
-// Terminateur jour/nuit. three.js clampe dotNL à [0,1] dans RE_Direct_Physical ;
-// on remplace ce saturate par une courbe qui déborde côté nuit (crépuscule).
-//
-// f(raw) = max( raw, w * s² ) avec s = clamp( (raw + w) / 2w, 0, 1 )
-//
-// Trois propriétés, et c'est ce qui la distingue du wrap linéaire précédent :
-//  1. raw ≥ +w  → f = raw EXACTEMENT. Le jour reste du Lambert pur, non délavé
-//     (le wrap linéaire, lui, surexposait tout le disque : +11 % à raw=0.5).
-//  2. raw ≤ -w  → f = 0, et la pente y est nulle (f' = s = 0). Le wrap linéaire
-//     atteignait 0 avec une pente de 1/(1+w) : cassure de dérivée = arête franche,
-//     le « noir d'un coup » perçu au bord de l'ombre. Ici l'extinction est tangente.
-//  3. Raccord C1 aussi en haut (f'(w) = 1) : aucun coude visible où le crépuscule
-//     rejoint le jour. Les deux morceaux se touchent tangentiellement, donc le max()
-//     est lui-même C1 (w·s² - raw = w(s-1)² ≥ 0, nul seulement en s=1).
-// Au terminateur géométrique (raw=0, s=0.5) : f = w/4 au lieu de w/(1+w) ≈ w — soit
-// ~3.6× moins de lumière diffusée. D'où la possibilité d'élargir w à 18° sans flood.
-const TERMINATOR_FALLOFF_GLSL =
-  'float rawNL = dot( geometryNormal, directLight.direction );\n' +
-  '\tfloat twilightT = clamp( ( rawNL + uTerminatorWrap ) / ( 2.0 * uTerminatorWrap ), 0.0, 1.0 );\n' +
-  '\tfloat dotNL = saturate( max( rawNL, uTerminatorWrap * twilightT * twilightT ) );';
-
+// Le terminateur (largeurs + courbes) vit dans core/terminator.ts, source unique partagée
+// par TOUTES les couches — surface, nuages, pluie, clair de Lune, coupe de relief, lumières
+// de ville et halo atmosphérique. Voir ce module pour le raisonnement physique ; ici on ne
+// fait que câbler les uniforms et appeler les fonctions.
 // Clair de Lune (réflecteur nocturne) injecté après le calcul d'outgoingLight.
 // N'agit que côté nuit (masque via dot normale/dirSoleil) et proportionnellement
 // a l'orientation du point vers la Lune. uMoonStrength encode la phase. Lueur
@@ -783,7 +757,11 @@ const MOONLIGHT_GLSL = `
           vec3 nrm = normalize( vMoonWorldNormal );
           vec3 toMoon = normalize( uMoonPosition - vMoonWorldPos );
           float moonFacing = max( dot( nrm, toMoon ), 0.0 );
-          float nightMask = smoothstep( 0.05, -0.10, dot( nrm, uMoonSunDir ) );
+          // Complément EXACT de la fraction de jour de la surface : la lueur lunaire monte
+          // au rythme précis où la lumière solaire directe se retire, sur la même largeur.
+          // Deux constantes indépendantes laissaient un trou (ou un recouvrement) entre la fin
+          // du crépuscule et l'apparition du clair de Lune.
+          float nightMask = 1.0 - terminatorDay( dot( nrm, uMoonSunDir ), uTerminatorWrap );
           vec3 moonGlow = uMoonColor * ( moonFacing * nightMask * uMoonStrength );
           outgoingLight += moonGlow * diffuseColor.rgb;
         }`;
@@ -996,6 +974,7 @@ export function createShadowAwareStandardMaterial(
       .replace(
         '#include <common>',
         '#include <common>\nuniform float uLightAttenuation;\nuniform float uTerminatorWrap;' +
+          TERMINATOR_GLSL +
           (cloudShadow
             ? '\nuniform sampler2D uCloudShadowMap;\nuniform float uCloudShadowOffset;\nuniform float uCloudShadowStrength;'
             : '') +
@@ -1011,12 +990,12 @@ export function createShadowAwareStandardMaterial(
               ECLIPSE_OCCLUSION_GLSL
             : '')
       )
-      // Crépuscule : on remplace le calcul de dotNL de three.js par la courbe
-      // TERMINATOR_FALLOFF_GLSL (voir sa doc pour la forme et le pourquoi). Une
-      // seule occurrence dans le shader Standard (pars physical) — remplacement unique.
+      // Crépuscule : on remplace le calcul de dotNL de three.js par terminatorLight
+      // (core/terminator.ts, partagé avec toutes les autres couches). Une seule
+      // occurrence dans le shader Standard (pars physical) — remplacement unique correct.
       .replace(
         'float dotNL = saturate( dot( geometryNormal, directLight.direction ) );',
-        TERMINATOR_FALLOFF_GLSL
+        'float dotNL = terminatorLight( dot( geometryNormal, directLight.direction ), uTerminatorWrap );'
       )
       .replace(
         'vec3 outgoingLight = totalDiffuse + totalSpecular + totalEmissiveRadiance;',
@@ -1063,7 +1042,10 @@ export function createShadowAwareStandardMaterial(
           // (-0.31 pour la Terre, cf. TERMINATOR_WRAP_ATMOSPHERE) ; on fixe donc reliefFactor = 0
           // dès sunGraze ≤ 0 (bande [0, 0.25] côté JOUR), bien AVANT l'ombre. La marge n'a fait
           // que grandir avec l'élargissement du crépuscule — l'invariant tient a fortiori.
-          float reliefFactor = smoothstep( 0.0, 0.25, sunGraze );
+          // Rampe DÉCALÉE côté jour, volontairement : elle doit être terminée AVANT l'ombre.
+          // Exprimée dans le vocabulaire partagé (centre 0.125, demi-largeur 0.125) plutôt
+          // qu'avec un smoothstep isolé, pour qu'un changement de convention se propage ici.
+          float reliefFactor = terminatorDay( sunGraze - 0.125, 0.125 );
           normal = normalize( mix( nonPerturbedNormal, normal, reliefFactor ) );
         }`
       );
@@ -1121,7 +1103,7 @@ export function createShadowAwareStandardMaterial(
     }
   });
   material.customProgramCacheKey = () =>
-    `shadow-aware-standard-v2${invertRoughness ? '-invrough-v2' : ''}${
+    `shadow-aware-standard-v3${invertRoughness ? '-invrough-v2' : ''}${
       cloudShadow ? '-cloudshadow' : ''
     }${moonlight ? '-moonlight' : ''}${
       varyOceanRoughness ? '-oceanrough-v1' : ''

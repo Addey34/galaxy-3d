@@ -5,6 +5,7 @@
  * Le catalogue des corps célestes vit à part dans `bodies.ts` (il grossit indépendamment).
  */
 import * as THREE from 'three';
+import { TERMINATOR_WRAP_ATMOSPHERE_SHELL } from '@/core/terminator';
 import type { TextureQuality } from '@/types';
 import {
   qualityProfile,
@@ -343,11 +344,14 @@ export const SHADER_SETTINGS = {
     smoothness: 0.105,
   },
   atmosphere: {
-    // Diffusion analytique single-pass (voir AtmosphereShader). power élevé = bord
-    // fin ; nightWrap conserve uniquement une frange crépusculaire très faible.
+    // Diffusion analytique single-pass (voir AtmosphereShader). power élevé = bord fin.
+    // nightWrap = largeur du crépuscule de la COQUE, dérivée de son altitude réelle
+    // (~50 km) comme toutes les autres couches — cf. core/terminator.ts. Le halo s'éteint
+    // donc plus tard que les nuages, qui s'éteignent plus tard que le sol : c'est
+    // exactement l'ordre réel, et les trois utilisent la même fonction.
     power: 3.0,
     intensity: 1.35,
-    nightWrap: 0.08,
+    nightWrap: TERMINATOR_WRAP_ATMOSPHERE_SHELL,
     rayleighStrength: 1.0,
     mieStrength: 0.55,
     mieG: 0.76,
