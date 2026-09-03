@@ -67,7 +67,11 @@ function createSurfaceLayer(
     // Ombre d'éclipse par fragment : Terre (via clair de Lune) ET Lune (éclipse lunaire,
     // ombre de la Terre) — la seule autre paire occulteur/occulté assez rapprochée pour que
     // le proxy pleine-sphère se voie en gros plan. Cf. config/layerConfig.ts.
-    hasNightLights || isMoon
+    hasNightLights || isMoon,
+    // Atmosphère = même signal que la couche atmosphère plus bas (atmosphereColor ou
+    // texture dédiée) : le catalogue reste la source unique de vérité, pas un test de nom.
+    // Elle pilote la largeur du crépuscule sur la surface (cf. TERMINATOR_WRAP_ATMOSPHERE).
+    Boolean(config.textures?.atmosphere) || config.atmosphereColor !== undefined
   );
   const mesh = new THREE.Mesh(
     createSphereGeometry(config.radius, 'surface'),

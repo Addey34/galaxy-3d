@@ -178,9 +178,7 @@ export const APP_SETTINGS: AppSettings = {
 };
 
 /** Construit la table LOD de textures selon la résolution max autorisée par le palier. */
-function textureQualityForProfile(
-  profile: QualityProfile
-): TextureQualityMap {
+function textureQualityForProfile(profile: QualityProfile): TextureQualityMap {
   const ultraQuality = profile.maxTextureQuality;
   const highQuality: TextureQuality = ultraQuality === '8k' ? '4k' : '2k';
   return {
@@ -321,20 +319,21 @@ export const LIGHTING_SETTINGS = {
 export const SHADER_SETTINGS = {
   nightLights: {
     intensity: 1.0,
-    // threshold=0.02 laissait les lumières atteindre ~90 % d'intensité DÈS le
-    // terminateur astronomique (dot=0) — or la surface (createShadowAwareStandardMaterial,
-    // TERMINATOR_WRAP=0.12 dans layerConfig.ts) reste volontairement visible en gris crépusculaire
-    // jusqu'à dot=-0.12, pour montrer le relief au lever/coucher du soleil. Résultat : sur toute
-    // la bande dot ∈ [-0.12, 0], les villes brillaient déjà par-dessus une surface encore
-    // clairement éclairée — vu comme des lumières nocturnes qui « bavent » sur le jour. threshold
-    // aligné sur -0.12 (pile où la surface finit de s'éteindre) : les lumières restent à zéro tant
-    // que la surface est encore visible, puis montent en régime sur 0.18 de plus (deep night à
-    // dot=-0.30) — plus aucun chevauchement entre les deux transitions. Cette plage (dot -0.12 à
-    // -0.30, soit ~6.9° à ~18° sous l'horizon) correspond au crépuscule nautique→astronomique
-    // réel : la fenêtre où les lumières de ville deviennent effectivement visibles depuis l'espace
-    // (voir NightLightsShader.ts pour la formule smootherstep qui applique cette plage — un bug
-    // antérieur utilisait -smoothness seul comme borne basse, donnant une rampe de 0.06 au lieu de
-    // 0.18, quasi un cutoff dur).
+    // threshold=0.02 laissait les lumières atteindre ~90 % d'intensité DÈS le terminateur
+    // géométrique (dot=0), alors que la surface y est encore clairement éclairée — vu comme
+    // des lumières nocturnes qui « bavent » sur le jour.
+    //
+    // Cette plage (dot -0.12 → -0.30, soit ~6.9° → ~18° sous l'horizon) est le crépuscule
+    // nautique→astronomique réel : la fenêtre où les lumières de ville deviennent
+    // effectivement visibles depuis l'espace. Elle FONDU-ENCHAÎNE avec le crépuscule de la
+    // surface (createShadowAwareStandardMaterial, TERMINATOR_WRAP_ATMOSPHERE=0.31 dans
+    // layerConfig.ts) : les villes commencent à s'allumer à -0.12, quand la lueur
+    // crépusculaire du sol a déjà perdu les deux tiers de son intensité, et atteignent leur
+    // plein régime à -0.30 — juste avant que cette lueur ne s'éteigne complètement à -0.31.
+    // Aucune des deux couches ne saute : l'une monte pendant que l'autre descend.
+    //
+    // Bug antérieur (corrigé) : NightLightsShader utilisait -smoothness seul comme borne
+    // basse, donnant une rampe de 0.06 au lieu de 0.18 — quasi un cutoff dur.
     threshold: -0.12,
     smoothness: 0.18,
   },

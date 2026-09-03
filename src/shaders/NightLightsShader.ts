@@ -109,9 +109,10 @@ export const fragmentShader = /* glsl */ `
     float sunLight = dot(normal, sunDir);
 
     // nightFactor = 0.0 tant que sunLight >= threshold — la surface (createShadowAwareStandardMaterial,
-    // autre shader) est encore visible en gris crépusculaire jusque-là, donc threshold est négatif,
-    // calé sur ce point précis où elle finit de s'éteindre (voir SHADER_SETTINGS.nightLights dans
-    // engine.ts) — puis nightFactor monte à 1.0 (pleine intensité) une fois sunLight <= threshold -
+    // autre shader) est encore nettement éclairée jusque-là, donc threshold est négatif : les villes
+    // ne s'allument qu'une fois la lueur crépusculaire du sol largement retombée, et atteignent leur
+    // plein régime juste avant qu'elle ne s'éteigne (fondu-enchaîné ; voir SHADER_SETTINGS.nightLights
+    // dans engine.ts) — nightFactor monte donc à 1.0 (pleine intensité) une fois sunLight <= threshold -
     // smoothness. La borne basse DOIT être threshold-smoothness (pas -smoothness seule : ça donnait
     // une rampe de 0.06 en dot, ~3.4°, quasi un cutoff dur perçu comme « noir d'un coup » — bug
     // corrigé ici) pour retrouver la largeur de rampe voulue (0.18 en dot ≈ crépuscule nautique
