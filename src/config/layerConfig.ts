@@ -573,6 +573,10 @@ const PRECIP_REMAP_GLSL = `
           // pluie pleinement visible le jour, invisible dans la nuit profonde.
           float nightVisibility = smoothstep( 0.0, 0.35, pDay );
           diffuseColor.a = pMask * dens * uPrecipOpacity * nightVisibility;
+        } else {
+          // Map présente mais couche pas encore armée : rien à dessiner. Sans ce else,
+          // c'est la couleur de base du matériau (blanc opaque) qui subsistait.
+          diffuseColor.a = 0.0;
         }
         #endif`;
 
@@ -580,11 +584,24 @@ export function createPrecipMaterial(): THREE.MeshBasicMaterial {
   // MeshBasicMaterial : le remap produit lui-même la couleur ; on ajoute un éclairage
   // jour/nuit manuel (uPrecipSunPos + normale monde) pour que les nuages d'orage
   // s'assombrissent côté nuit, comme la surface et les nuages.
+  // opacity: 0 = état AU REPOS, et c'est un correctif, pas un détail.
+  // La texture IMERG arrive à l'exécution (ui/precipLayer), pas depuis config.textures :
+  // entre le boot et son arrivée, ce matériau n'a AUCUNE map, donc `USE_MAP` n'est pas
+  // défini et tout PRECIP_REMAP_GLSL — qui vit dans ce #ifdef — est absent du programme
+  // compilé. Il ne restait alors que la valeur par défaut d'un MeshBasicMaterial :
+  // blanc, opaque, NON éclairé. Soit une sphère blanche pleine, insensible au Soleil,
+  // posée sur la Terre : elle s'affichait exactement comme un second soleil éblouissant
+  // pendant tout le chargement (et indéfiniment si IMERG échoue ou est hors ligne).
+  // La couche thermique, elle, y échappait par `mesh.visible = false` ; la pluie démarre
+  // visible (initial = !IS_MOBILE) et n'avait donc aucun garde-fou.
+  // À 0, l'état sans données ne dessine rien. Aucun effet sur l'état actif : le remap
+  // écrase `diffuseColor.a` intégralement, et l'opacité réelle passe par l'uniform
+  // uPrecipOpacity — `material.opacity` n'est jamais relu (cf. setPrecipTexture).
   const material = new THREE.MeshBasicMaterial({
     transparent: true,
     depthWrite: false,
     side: THREE.FrontSide,
-    opacity: 1,
+    opacity: 0,
   });
   const precip: PrecipUniforms = {
     enabled: { value: 0 },
@@ -621,7 +638,7 @@ export function createPrecipMaterial(): THREE.MeshBasicMaterial {
         '#include <map_fragment>' + PRECIP_REMAP_GLSL
       );
   });
-  material.customProgramCacheKey = () => 'precip-remap-v3-crossfade';
+  material.customProgramCacheKey = () => 'precip-remap-v4-offalpha';
 
   return material;
 }

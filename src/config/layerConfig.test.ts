@@ -1,6 +1,10 @@
 import * as THREE from 'three';
 import { describe, expect, it } from 'vitest';
-import { createCloudsMaterial, createSurfaceMaterial } from './layerConfig';
+import {
+  createCloudsMaterial,
+  createPrecipMaterial,
+  createSurfaceMaterial,
+} from './layerConfig';
 import { EARTH_OCEAN_ROUGHNESS_SETTINGS, SHADER_SETTINGS } from './engine';
 
 describe('MODIS cloud-fraction shader', () => {
@@ -144,16 +148,43 @@ describe('day/night terminator falloff', () => {
     expect(dotNL(0, w)).toBeLessThan(w / (1 + w) / 3);
   });
 
-  it('hands over to the city lights before the twilight glow dies', () => {
-    // Fondu-enchaîné surface ↔ lumières : à threshold la lueur du sol doit avoir
-    // largement retombé (sinon les villes « bavent » sur le jour), et elle doit
-    // s'éteindre APRÈS que les lumières aient atteint leur plein régime.
+  it('lights the cities at sunset, not an hour later', () => {
+    // Un éclairage public s'allume au COUCHER du soleil. Le réglage précédent
+    // (-0.12 → -0.30) ne les allumait qu'à 6.9° sous l'horizon (~27 min après) et
+    // n'atteignait le plein régime qu'à 17.5° (~70 min) : une heure de retard,
+    // visible comme une bande noire entre le terminateur et les premières lumières.
+    const { threshold, smoothness } = SHADER_SETTINGS.nightLights;
+    // Le coucher, c'est dot = 0 exactement — le soleil pile à l'horizon.
+    expect(threshold).toBe(0);
+    // Plein régime à la fin du crépuscule civil (6°), ~24 min après le coucher.
+    const lightsFullAt = threshold - smoothness;
+    expect(-lightsFullAt).toBeCloseTo(Math.sin((6 * Math.PI) / 180), 2);
+  });
+
+  it('never lets the city lights bleed onto the day side', () => {
+    // La crainte qui justifiait le retard d'allumage. Elle ne tient pas : au-dessus du
+    // seuil le nightFactor est clampé à zéro EXACTEMENT, quel que soit le seuil.
+    // Réplique de la rampe smootherstep de NightLightsShader.
+    const { threshold, smoothness } = SHADER_SETTINGS.nightLights;
+    const nightFactor = (raw: number): number => {
+      const t = Math.min(Math.max((raw - threshold) / -smoothness, 0), 1);
+      return t * t * t * (t * (t * 6 - 15) + 10);
+    };
+    for (const raw of [1, 0.5, 0.2, 0.05, 0.001]) expect(nightFactor(raw)).toBe(0);
+    expect(nightFactor(-smoothness)).toBeCloseTo(1, 6);
+  });
+
+  it('keeps a ground glow while the cities come up (real crossfade)', () => {
+    // Au crépuscule les deux coexistent réellement : sol encore faiblement éclairé ET
+    // villes allumées. Le crépuscule de surface court jusqu'à -w, bien au-delà du
+    // plein régime des lumières — donc aucune des deux couches ne saute.
     const w = 0.31;
     const { threshold, smoothness } = SHADER_SETTINGS.nightLights;
     const lightsFullAt = threshold - smoothness;
-    expect(dotNL(threshold, w)).toBeLessThan(dotNL(0, w) * 0.4);
     expect(lightsFullAt).toBeGreaterThan(-w);
-    expect(dotNL(lightsFullAt, w)).toBeLessThan(0.001);
+    expect(dotNL(lightsFullAt, w)).toBeGreaterThan(0);
+    // Mais la lueur a déjà nettement baissé : moins de la moitié de sa valeur au coucher.
+    expect(dotNL(lightsFullAt, w)).toBeLessThan(dotNL(threshold, w) * 0.5);
   });
 
   it('still matches the string three.js actually ships (upgrade guard)', () => {
@@ -189,5 +220,39 @@ describe('day/night terminator falloff', () => {
     );
     withAtmosphere.dispose();
     airless.dispose();
+  });
+});
+
+describe('precip layer at rest', () => {
+  // Regression : la Terre s'affichait comme un soleil blanc eblouissant pendant tout le
+  // chargement. La texture IMERG arrive a l'execution, donc au boot ce materiau n'a pas de
+  // map : `USE_MAP` non defini => tout le remap (qui vit dans ce #ifdef) absent du programme
+  // => il ne restait que la couleur de base d'un MeshBasicMaterial, blanc OPAQUE et NON
+  // eclaire, sur une sphere posee devant la Terre. La couche thermique y echappait via
+  // `mesh.visible = false` ; la pluie demarre visible et n'avait aucun garde-fou.
+  it('draws nothing until real precipitation data arrives', () => {
+    const material = createPrecipMaterial();
+    // Le seul etat que voit un fragment sans map : il DOIT etre transparent.
+    expect(material.opacity).toBe(0);
+    expect(material.transparent).toBe(true);
+    material.dispose();
+  });
+
+  it('also blanks the fragment when a map exists but the layer is not armed', () => {
+    // Second etat mort, distinct du premier : map presente, uPrecipEnabled encore a 0.
+    // Sans branche else, c'est de nouveau le blanc opaque du materiau qui subsiste.
+    const material = createPrecipMaterial();
+    const shader = {
+      uniforms: {},
+      vertexShader: '#include <common>\n#include <worldpos_vertex>',
+      fragmentShader: '#include <common>\n#include <map_fragment>',
+    } as Parameters<NonNullable<THREE.Material['onBeforeCompile']>>[0];
+    material.onBeforeCompile(shader, {} as THREE.WebGLRenderer);
+    expect(shader.fragmentShader).toContain('} else {');
+    expect(shader.fragmentShader).toContain('diffuseColor.a = 0.0;');
+    // La cle de cache doit changer avec la source, sinon un programme compile avant le
+    // correctif serait reutilise tel quel.
+    expect(material.customProgramCacheKey()).toBe('precip-remap-v4-offalpha');
+    material.dispose();
   });
 });

@@ -319,23 +319,28 @@ export const LIGHTING_SETTINGS = {
 export const SHADER_SETTINGS = {
   nightLights: {
     intensity: 1.0,
-    // threshold=0.02 laissait les lumières atteindre ~90 % d'intensité DÈS le terminateur
-    // géométrique (dot=0), alors que la surface y est encore clairement éclairée — vu comme
-    // des lumières nocturnes qui « bavent » sur le jour.
+    // Ces deux nombres répondent à UNE question : à quel moment un éclairage public
+    // s'allume ? Réponse réelle : au coucher du soleil, pas des dizaines de minutes après.
     //
-    // Cette plage (dot -0.12 → -0.30, soit ~6.9° → ~18° sous l'horizon) est le crépuscule
-    // nautique→astronomique réel : la fenêtre où les lumières de ville deviennent
-    // effectivement visibles depuis l'espace. Elle FONDU-ENCHAÎNE avec le crépuscule de la
-    // surface (createShadowAwareStandardMaterial, TERMINATOR_WRAP_ATMOSPHERE=0.31 dans
-    // layerConfig.ts) : les villes commencent à s'allumer à -0.12, quand la lueur
-    // crépusculaire du sol a déjà perdu les deux tiers de son intensité, et atteignent leur
-    // plein régime à -0.30 — juste avant que cette lueur ne s'éteigne complètement à -0.31.
-    // Aucune des deux couches ne saute : l'une monte pendant que l'autre descend.
+    // threshold = 0.0 = le terminateur géométrique = le soleil pile à l'horizon = le
+    // coucher. C'est là que les villes s'allument, et c'est un ancrage physique, pas un
+    // réglage esthétique. smoothness = 0.105 = sin(6°) = la fin du crépuscule CIVIL :
+    // les lumières atteignent leur plein régime ~24 min après le coucher, la durée
+    // pendant laquelle une ville finit réellement de s'allumer et devient visible depuis
+    // l'orbite. La rampe complète couvre donc 0° → 6° sous l'horizon.
     //
-    // Bug antérieur (corrigé) : NightLightsShader utilisait -smoothness seul comme borne
-    // basse, donnant une rampe de 0.06 au lieu de 0.18 — quasi un cutoff dur.
-    threshold: -0.12,
-    smoothness: 0.18,
+    // Réglage antérieur (-0.12 → -0.30) : les villes n'apparaissaient qu'à 6.9° sous
+    // l'horizon (~27 min après le coucher) et n'atteignaient leur plein régime qu'à 17.5°
+    // (~70 min) — une heure de retard, visible comme une bande noire entre le terminateur
+    // et les premières lumières. Il venait d'une crainte infondée : « les lumières
+    // baveraient sur le jour ». Elles ne peuvent pas — au-dessus du seuil nightFactor est
+    // clampé à zéro EXACTEMENT, donc aucune fuite côté jour quel que soit le seuil. Et
+    // dans la réalité les deux coexistent : au crépuscule on voit le sol encore faiblement
+    // éclairé ET les villes allumées. Le crépuscule de surface
+    // (TERMINATOR_WRAP_ATMOSPHERE = 0.31 dans layerConfig.ts) court jusqu'à -0.31, donc il
+    // reste une lueur au sol pendant que les lumières montent : c'est le fondu correct.
+    threshold: 0.0,
+    smoothness: 0.105,
   },
   atmosphere: {
     // Diffusion analytique single-pass (voir AtmosphereShader). power élevé = bord
