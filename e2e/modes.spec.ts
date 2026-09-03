@@ -87,6 +87,11 @@ test('settings stay available in both modes and control label density', async ({
   // Le Soleil n'a pas de ligne dans le tableau Réglages (toujours affiché, pas d'orbite
   // pour lui) donc son label échappe volontairement au bascule groupé « Nom ».
   const labels = page.locator('.explo-label:not([aria-label="Sun"])');
+  // `expect.poll` et non `expect(await ...)` : la bascule « Nom » ne se traduit dans le DOM
+  // qu'a la prochaine passe de projection de l'ExploHud (une frame rAF). Une lecture unique
+  // juste apres le clic peut donc tomber AVANT cette frame et lire l'ancien etat — un faux
+  // echec intermittent, sans rapport avec la fonctionnalite testee. Les autres assertions
+  // du fichier passent par `expect(locator)`, qui reessaie deja tout seul.
   const hasVisibleLabel = () =>
     labels.evaluateAll((els) =>
       els.some((el) => getComputedStyle(el).display !== 'none')
@@ -103,14 +108,18 @@ test('settings stay available in both modes and control label density', async ({
     'indeterminate',
     true
   );
-  await expect(page.locator('#settings-table-body .oo-tr').first()).toBeVisible();
-  expect(await hasVisibleLabel()).toBe(true);
+  await expect(
+    page.locator('#settings-table-body .oo-tr').first()
+  ).toBeVisible();
+  await expect.poll(hasVisibleLabel).toBe(true);
 
   await page.locator('#labels-visible').uncheck();
-  expect(await hasVisibleLabel()).toBe(false);
+  await expect.poll(hasVisibleLabel).toBe(false);
   await expect(
     page
-      .locator('.explo-label:not(.is-target):not([aria-label="Sun"]) .explo-label-dot')
+      .locator(
+        '.explo-label:not(.is-target):not([aria-label="Sun"]) .explo-label-dot'
+      )
       .first()
   ).toBeHidden();
 
@@ -120,7 +129,7 @@ test('settings stay available in both modes and control label density', async ({
   await expect(page.locator('#orbit-overview')).toBeVisible();
 
   await page.locator('#labels-visible').check();
-  expect(await hasVisibleLabel()).toBe(true);
+  await expect.poll(hasVisibleLabel).toBe(true);
 });
 
 test('settings column header reflects mixed row state and bulk-toggles all rows', async ({
