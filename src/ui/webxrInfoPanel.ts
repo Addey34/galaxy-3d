@@ -6,14 +6,20 @@
  */
 import * as THREE from 'three';
 
-const FONT_STACK = "system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif";
+const FONT_STACK =
+  "system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif";
 const CANVAS_W = 512;
 const CANVAS_H = 256;
 
 export interface XRInfoPanel {
   mesh: THREE.Mesh;
   /** `worldPos` = position du corps ; `bodyRadius` (unités scène) sert à décaler le panneau au-dessus. */
-  show(title: string, lines: string[], worldPos: THREE.Vector3, bodyRadius: number): void;
+  show(
+    title: string,
+    lines: string[],
+    worldPos: THREE.Vector3,
+    bodyRadius: number
+  ): void;
   hide(): void;
   /** À appeler chaque frame tant que le panneau est visible. */
   updateBillboard(camera: THREE.Camera): void;

@@ -1,5 +1,10 @@
 import { describe, expect, it, vi } from 'vitest';
-import { runTour, type TourRuntimeHost, type TourScript, type TourSignal } from './tourEngine';
+import {
+  runTour,
+  type TourRuntimeHost,
+  type TourScript,
+  type TourSignal,
+} from './tourEngine';
 
 function makeHost(overrides: Partial<TourRuntimeHost> = {}): TourRuntimeHost {
   return {
@@ -38,7 +43,9 @@ describe('runTour', () => {
 
     expect(seen).toEqual([0, 1, 2]);
     expect(host.flyTo).toHaveBeenCalledWith('earth');
-    expect(host.jumpToDate).toHaveBeenCalledWith(new Date('2030-01-01T00:00:00Z'));
+    expect(host.jumpToDate).toHaveBeenCalledWith(
+      new Date('2030-01-01T00:00:00Z')
+    );
     expect(host.setTimeScale).toHaveBeenCalledWith(1000);
     vi.useRealTimers();
   });

@@ -56,7 +56,8 @@ describe('chunkCoords', () => {
 
   it('respecte la limite serveur par défaut (1000 points)', () => {
     const chunks = chunkCoords({ step: 4, maxLat: 90 });
-    for (const c of chunks) expect(c.lats.length).toBeLessThanOrEqual(OPEN_METEO_MAX_POINTS);
+    for (const c of chunks)
+      expect(c.lats.length).toBeLessThanOrEqual(OPEN_METEO_MAX_POINTS);
   });
 });
 
@@ -118,7 +119,10 @@ describe('parseScalarGrid', () => {
   });
 
   it('met 0 pour les points manquants sans planter', () => {
-    const g = parseScalarGrid([{ hourly: {} }], 'cloud_cover', { step: 90, maxLat: 90 });
+    const g = parseScalarGrid([{ hourly: {} }], 'cloud_cover', {
+      step: 90,
+      maxLat: 90,
+    });
     expect(g.values[0]).toBe(0);
   });
 });
@@ -131,9 +135,18 @@ describe('sampleScalar', () => {
     nLat: 3,
     nLon: 4,
     values: new Float32Array([
-      0, 0, 0, 0, // lat -90
-      10, 20, 30, 40, // lat 0
-      0, 0, 0, 0, // lat 90
+      0,
+      0,
+      0,
+      0, // lat -90
+      10,
+      20,
+      30,
+      40, // lat 0
+      0,
+      0,
+      0,
+      0, // lat 90
     ]),
   };
 

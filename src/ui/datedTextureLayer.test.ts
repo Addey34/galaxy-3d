@@ -287,7 +287,9 @@ describe('createDatedTextureLayer — mode fallback (resolveSources)', () => {
     await flush();
     expect(loaded).toEqual(['viirs', 'modis']); // essaie viirs puis modis
     expect(apply).toHaveBeenCalledTimes(1);
-    expect(onResolved).toHaveBeenCalledWith(expect.objectContaining({ id: 'modis' }));
+    expect(onResolved).toHaveBeenCalledWith(
+      expect.objectContaining({ id: 'modis' })
+    );
     cleanup();
   });
 
@@ -310,7 +312,9 @@ describe('createDatedTextureLayer — mode fallback (resolveSources)', () => {
     });
     await flush();
     expect(loaded).toEqual(['viirs']); // pas de fallback si le 1er marche
-    expect(onResolved).toHaveBeenCalledWith(expect.objectContaining({ id: 'viirs' }));
+    expect(onResolved).toHaveBeenCalledWith(
+      expect.objectContaining({ id: 'viirs' })
+    );
     cleanup();
   });
 

@@ -46,7 +46,10 @@ describe('committed Horizons ephemerides stay within plausible bounds', () => {
         const path = new URL(url.toString()).pathname.split('/').pop()!;
         const bytes = readFileSync(join(EPHEMERIS_DIR, path));
         if (path.endsWith('.json')) {
-          return { ok: true, json: async () => JSON.parse(bytes.toString('utf8')) };
+          return {
+            ok: true,
+            json: async () => JSON.parse(bytes.toString('utf8')),
+          };
         }
         const buffer = bytes.buffer.slice(
           bytes.byteOffset,
@@ -62,7 +65,12 @@ describe('committed Horizons ephemerides stay within plausible bounds', () => {
 
     const manifest = JSON.parse(
       readFileSync(join(EPHEMERIS_DIR, 'manifest.json'), 'utf8')
-    ) as { bodies: Record<string, { startJdTdb: number; stepDays: number; sampleCount: number }> };
+    ) as {
+      bodies: Record<
+        string,
+        { startJdTdb: number; stepDays: number; sampleCount: number }
+      >;
+    };
 
     const catalogueBodies = new Map(
       [
@@ -85,8 +93,15 @@ describe('committed Horizons ephemerides stay within plausible bounds', () => {
 
       if (catalogueBody.config.frame === 'parentRelative') {
         if (!catalogueBody.parentName) continue;
-        const relative = service.getParentRelativeAU(name, catalogueBody.parentName, date);
-        expect(relative, `${name}: no sample at mid-coverage date`).not.toBeNull();
+        const relative = service.getParentRelativeAU(
+          name,
+          catalogueBody.parentName,
+          date
+        );
+        expect(
+          relative,
+          `${name}: no sample at mid-coverage date`
+        ).not.toBeNull();
         expect(
           isPlausibleRelativePosition(relative!, catalogueBody.config),
           `${name}: relative position ${relative!.toArray()} (magnitude ${relative!.length().toFixed(6)} AU) implausible for its published orbital elements — wrong Horizons target?`

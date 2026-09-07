@@ -89,7 +89,10 @@ export function buildWindArchiveUrl(
 }
 
 /** Convertit vitesse (km/h) + direction météo (°) en composantes u (est) / v (nord). */
-export function windToUV(speed: number, directionDeg: number): { u: number; v: number } {
+export function windToUV(
+  speed: number,
+  directionDeg: number
+): { u: number; v: number } {
   const r = directionDeg * DEG2RAD;
   return { u: -speed * Math.sin(r), v: -speed * Math.cos(r) };
 }
@@ -143,7 +146,10 @@ export function sampleWind(
   lon: number
 ): { u: number; v: number } {
   const { step, latMin, lonMin, nLat, nLon, u, v } = grid;
-  const clampedLat = Math.max(latMin, Math.min(latMin + (nLat - 1) * step, lat));
+  const clampedLat = Math.max(
+    latMin,
+    Math.min(latMin + (nLat - 1) * step, lat)
+  );
   const fLat = (clampedLat - latMin) / step;
   const fLon = (wrapLon(lon) - lonMin) / step;
 
@@ -154,7 +160,7 @@ export function sampleWind(
   const tr = fLat - r0;
   const tc = fLon - c0;
 
-  const idx = (r: number, c: number) => r * nLon + ((c % nLon) + nLon) % nLon;
+  const idx = (r: number, c: number) => r * nLon + (((c % nLon) + nLon) % nLon);
   const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
 
   const u0 = lerp(u[idx(r0, c0)], u[idx(r0, c1)], tc);

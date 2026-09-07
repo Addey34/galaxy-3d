@@ -107,7 +107,10 @@ export function setupBodyPicker(
     // d'orbite sont exclues de la liste testée (voir `raycastTargets`), pas juste du résultat :
     // leur hiérarchie remonte au groupe parent (orbit_X → sun.group ou earth.group), ce qui
     // produirait aussi de faux positifs si on les laissait passer.
-    for (const hit of raycaster.intersectObjects(raycastTargets(scene), false)) {
+    for (const hit of raycaster.intersectObjects(
+      raycastTargets(scene),
+      false
+    )) {
       const name = resolveBodyName(hit.object, validNames);
       if (name) {
         nav.selectBody(name);

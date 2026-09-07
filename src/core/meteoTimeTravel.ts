@@ -76,7 +76,9 @@ export function planMeteoRequest(
   const now = options.now ?? new Date();
   const archiveCutoffDays = options.archiveCutoffDays ?? 5;
   const forecastHorizonDays = options.forecastHorizonDays ?? 16;
-  const archiveMin = new Date(`${options.archiveMinDate ?? '1940-01-01'}T00:00:00Z`);
+  const archiveMin = new Date(
+    `${options.archiveMinDate ?? '1940-01-01'}T00:00:00Z`
+  );
 
   const status = dataStatusFor(simDate, {
     now,
@@ -98,7 +100,12 @@ export function planMeteoRequest(
 
   // Passé lointain → archive ERA5 (jour ciblé).
   if (deltaDays < -archiveCutoffDays) {
-    return { source: 'archive', date: isoDay(simDate), outOfRange: false, status };
+    return {
+      source: 'archive',
+      date: isoDay(simDate),
+      outOfRange: false,
+      status,
+    };
   }
 
   // Zone récente + futur dans l'horizon → forecast. La fenêtre couvre de `pastDays` avant now
@@ -111,7 +118,13 @@ export function planMeteoRequest(
     forecastHorizonDays,
     Math.max(1, Math.ceil(deltaDays) + 1)
   );
-  return { source: 'forecast', pastDays, forecastDays, outOfRange: false, status };
+  return {
+    source: 'forecast',
+    pastDays,
+    forecastDays,
+    outOfRange: false,
+    status,
+  };
 }
 
 /**

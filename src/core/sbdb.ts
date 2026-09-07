@@ -93,7 +93,9 @@ export function sbdbQueryUrl(
   category: SmallBodyCategory = 'main-belt',
   limit = 2000
 ): string {
-  const params = new URLSearchParams({ fields: 'full_name,a,e,i,om,w,ma,epoch' });
+  const params = new URLSearchParams({
+    fields: 'full_name,a,e,i,om,w,ma,epoch',
+  });
   switch (category) {
     case 'main-belt':
       params.set('sb-kind', 'a'); // a = astéroïdes

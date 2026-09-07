@@ -1,5 +1,8 @@
 import { beforeAll, describe, expect, it } from 'vitest';
-import { computeOffsetReferenceSpace, createPlayerState } from './webxrReferenceSpace';
+import {
+  computeOffsetReferenceSpace,
+  createPlayerState,
+} from './webxrReferenceSpace';
 
 /**
  * `XRRigidTransform` est une API navigateur, absente de l'environnement Node de Vitest

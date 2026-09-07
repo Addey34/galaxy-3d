@@ -76,7 +76,8 @@ function scaleFromSlider(value: number): number {
   const offset = clamped - SPEED_SLIDER_CENTER; // <0 passé, >0 futur
   if (Math.abs(offset) <= SPEED_CENTER_DEADZONE) return 1;
   const halfCourse = SPEED_SLIDER_MAX - SPEED_SLIDER_CENTER; // 50
-  const magnitudeNorm = (Math.abs(offset) - SPEED_CENTER_DEADZONE) /
+  const magnitudeNorm =
+    (Math.abs(offset) - SPEED_CENTER_DEADZONE) /
     (halfCourse - SPEED_CENTER_DEADZONE);
   const magnitude = Math.max(
     1,

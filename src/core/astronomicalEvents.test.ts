@@ -27,9 +27,7 @@ describe('astronomical events', () => {
     });
 
     const oppositions = events.filter((event) => event.kind === 'opposition');
-    const conjunctions = events.filter(
-      (event) => event.kind === 'conjunction'
-    );
+    const conjunctions = events.filter((event) => event.kind === 'conjunction');
     expect(oppositions.length).toBeGreaterThan(0);
     expect(conjunctions.length).toBeGreaterThan(0);
     expect(
@@ -43,8 +41,7 @@ describe('astronomical events', () => {
     ).toBe(true);
     expect(
       conjunctions.every(
-        (event) =>
-          event.body === 'mercury' || event.body === 'venus'
+        (event) => event.body === 'mercury' || event.body === 'venus'
       )
     ).toBe(true);
     expect(events.every((event) => event.date > start)).toBe(true);

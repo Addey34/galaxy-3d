@@ -216,9 +216,7 @@ describe('OrbitalMechanics orbit sampling', () => {
     // catalogue (les dépendances de service ne sont pas touchées par le constructeur) et on
     // compare au minimum calculé indépendamment ici.
     let minPeriodDays = Infinity;
-    const walk = (
-      bodies: Record<string, CelestialBodyConfig>
-    ): void => {
+    const walk = (bodies: Record<string, CelestialBodyConfig>): void => {
       for (const cfg of Object.values(bodies)) {
         const period = cfg.realData?.orbitPeriodDays;
         if (period && period > 0 && period < minPeriodDays)
@@ -239,7 +237,10 @@ describe('OrbitalMechanics orbit sampling', () => {
       noopClock as never,
       {} as never,
       {} as never,
-      { getHeliocentricAU: () => null, getParentRelativeAU: () => null } as never,
+      {
+        getHeliocentricAU: () => null,
+        getParentRelativeAU: () => null,
+      } as never,
       CELESTIAL_CONFIG,
       {}
     );

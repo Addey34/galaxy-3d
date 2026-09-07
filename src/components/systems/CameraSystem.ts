@@ -219,10 +219,15 @@ export class CameraSystem {
       this.camera.position.copy(cameraPosition);
       this.controls.target.copy(targetPosition);
       if (this.currentTarget?.group) {
-        this.cameraOffset.subVectors(this.camera.position, this.controls.target);
+        this.cameraOffset.subVectors(
+          this.camera.position,
+          this.controls.target
+        );
         this.currentTarget.group.getWorldPosition(this.targetWorldPosition);
         this.controls.target.copy(this.targetWorldPosition);
-        this.camera.position.copy(this.targetWorldPosition).add(this.cameraOffset);
+        this.camera.position
+          .copy(this.targetWorldPosition)
+          .add(this.cameraOffset);
       }
       this.isAnimating = false;
       this.controls.enabled = true;
@@ -616,7 +621,11 @@ export class CameraSystem {
    * N'anime pas : à appeler une fois le vol vers la cible terminé (cf. `isFlying`), sinon le
    * tween en cours écraserait aussitôt la position posée ici.
    */
-  applyViewAngles(azimuthDeg: number, polarDeg: number, distance: number): void {
+  applyViewAngles(
+    azimuthDeg: number,
+    polarDeg: number,
+    distance: number
+  ): void {
     const polar = THREE.MathUtils.clamp(
       THREE.MathUtils.degToRad(polarDeg),
       this.controls.minPolarAngle,

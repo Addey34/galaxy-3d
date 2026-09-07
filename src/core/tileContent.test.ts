@@ -79,7 +79,9 @@ describe('fetchTileWithContentCheck', () => {
   });
 
   it('uses DEFAULT_MIN_TILE_BYTES when minBytes is omitted', async () => {
-    const fetchImpl = vi.fn(async () => fakeResponse(DEFAULT_MIN_TILE_BYTES - 1));
+    const fetchImpl = vi.fn(async () =>
+      fakeResponse(DEFAULT_MIN_TILE_BYTES - 1)
+    );
     await expect(
       fetchTileWithContentCheck('u', {
         fetchImpl: fetchImpl as unknown as typeof fetch,

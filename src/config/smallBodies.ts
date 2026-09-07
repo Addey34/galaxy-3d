@@ -103,7 +103,9 @@ export function smallBodyToConfig(el: SmallBodyElements): CelestialBodyConfig {
       ? { surface: el.surfaceResolutions }
       : {},
     // `textures` est dérivé au chargement du catalogue (voir bodies.ts / deriveTextures).
-    ...(el.fallbackColor !== undefined ? { fallbackColor: el.fallbackColor } : {}),
+    ...(el.fallbackColor !== undefined
+      ? { fallbackColor: el.fallbackColor }
+      : {}),
     ...(el.satellites ? { satellites: el.satellites } : {}),
     realData: {
       radiusKm: el.radiusKm,
@@ -594,8 +596,8 @@ export const SMALL_BODY_ELEMENTS: readonly SmallBodyElements[] = [
     a: 39.26252228984306,
     e: 0.225751142405386,
     iDeg: 20.53929449722906,
-    omDeg: 268.4572431140700,
-    wDeg: 73.75098677536380,
+    omDeg: 268.45724311407,
+    wDeg: 73.7509867753638,
     maDeg: 150.0400595978003,
     epoch: '2000-01-01T12:00:00Z',
     radiusKm: 458,
@@ -613,8 +615,8 @@ export const SMALL_BODY_ELEMENTS: readonly SmallBodyElements[] = [
     meanTempC: -228,
     moonCount: 1,
     description: {
-      en: "Sometimes nicknamed the \"anti-Pluto\" for an orbit that mirrors Pluto's own 2:3 resonance with Neptune, timed so the two are never close together. Its large moon Vanth may be tidally locked to it, much like Charon is to Pluto.",
-      fr: "Parfois surnommée « anti-Pluton » pour une orbite qui reflète la même résonance 2:3 avec Neptune que Pluton, mais synchronisée pour que les deux ne soient jamais proches. Sa grande lune Vanth serait verrouillée gravitationnellement, un peu comme Charon l’est à Pluton.",
+      en: 'Sometimes nicknamed the "anti-Pluto" for an orbit that mirrors Pluto\'s own 2:3 resonance with Neptune, timed so the two are never close together. Its large moon Vanth may be tidally locked to it, much like Charon is to Pluto.',
+      fr: 'Parfois surnommée « anti-Pluton » pour une orbite qui reflète la même résonance 2:3 avec Neptune que Pluton, mais synchronisée pour que les deux ne soient jamais proches. Sa grande lune Vanth serait verrouillée gravitationnellement, un peu comme Charon l’est à Pluton.',
     },
     wiki: {
       en: 'https://en.wikipedia.org/wiki/Orcus_(dwarf_planet)',
@@ -627,10 +629,10 @@ export const SMALL_BODY_ELEMENTS: readonly SmallBodyElements[] = [
     // Éléments osculateurs JPL Horizons exactement à cette époque — voir le commentaire sur
     // Vesta ci-dessus (même méthode de vérification).
     a: 43.13300737717343,
-    e: 0.03951007383606750,
+    e: 0.0395100738360675,
     iDeg: 8.005089469375157,
     omDeg: 189.0799904468402,
-    wDeg: 163.7854906986470,
+    wDeg: 163.785490698647,
     maDeg: 258.9555093443548,
     epoch: '2000-01-01T12:00:00Z',
     radiusKm: 549,

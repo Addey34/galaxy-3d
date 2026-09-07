@@ -13,7 +13,8 @@
 
 export const OPEN_METEO_FORECAST = 'https://api.open-meteo.com/v1/forecast';
 /** Endpoint archive (réanalyse ERA5, 1940 → ~5 j avant aujourd'hui). */
-export const OPEN_METEO_ARCHIVE = 'https://archive-api.open-meteo.com/v1/archive';
+export const OPEN_METEO_ARCHIVE =
+  'https://archive-api.open-meteo.com/v1/archive';
 
 /**
  * Nombre MAX de points par requête Open-Meteo (contrainte serveur : « Only up to 1000 locations
@@ -67,7 +68,10 @@ export function meteoGridDims(options: MeteoGridOptions = {}): {
 } {
   const step = options.step ?? DEFAULT_STEP;
   const maxLat = options.maxLat ?? 90;
-  return { nLat: Math.round((2 * maxLat) / step) + 1, nLon: Math.round(360 / step) };
+  return {
+    nLat: Math.round((2 * maxLat) / step) + 1,
+    nLon: Math.round(360 / step),
+  };
 }
 
 /**
@@ -85,7 +89,8 @@ export function buildMeteoGridUrl(
     longitude: lons.join(','),
     hourly: variable,
   });
-  if (options.pastDays !== undefined) params.set('past_days', String(options.pastDays));
+  if (options.pastDays !== undefined)
+    params.set('past_days', String(options.pastDays));
   params.set('forecast_days', String(options.forecastDays ?? 1));
   return `${OPEN_METEO_FORECAST}?${params.toString()}`;
 }
@@ -108,7 +113,10 @@ export function chunkCoords(
   const { lats, lons } = meteoGridCoords(options);
   const chunks: CoordChunk[] = [];
   for (let i = 0; i < lats.length; i += maxPoints) {
-    chunks.push({ lats: lats.slice(i, i + maxPoints), lons: lons.slice(i, i + maxPoints) });
+    chunks.push({
+      lats: lats.slice(i, i + maxPoints),
+      lons: lons.slice(i, i + maxPoints),
+    });
   }
   return chunks;
 }
@@ -159,7 +167,9 @@ export function buildMeteoPayloads(
       latitude: chunk.lats,
       longitude: chunk.lons,
       hourly: [variable],
-      ...(options.pastDays !== undefined ? { past_days: options.pastDays } : {}),
+      ...(options.pastDays !== undefined
+        ? { past_days: options.pastDays }
+        : {}),
       forecast_days: options.forecastDays ?? 1,
     };
   });
@@ -255,9 +265,16 @@ function wrapLon(lon: number): number {
  * Échantillonne le champ (interpolation bilinéaire) à une position quelconque. Longitude enroulée
  * sur ±180 ; latitude clampée aux bornes de la grille.
  */
-export function sampleScalar(grid: ScalarGrid, lat: number, lon: number): number {
+export function sampleScalar(
+  grid: ScalarGrid,
+  lat: number,
+  lon: number
+): number {
   const { step, latMin, lonMin, nLat, nLon, values } = grid;
-  const clampedLat = Math.max(latMin, Math.min(latMin + (nLat - 1) * step, lat));
+  const clampedLat = Math.max(
+    latMin,
+    Math.min(latMin + (nLat - 1) * step, lat)
+  );
   const fLat = (clampedLat - latMin) / step;
   const fLon = (wrapLon(lon) - lonMin) / step;
 
@@ -267,7 +284,8 @@ export function sampleScalar(grid: ScalarGrid, lat: number, lon: number): number
   const tr = fLat - r0;
   const tc = fLon - c0;
 
-  const idx = (r: number, c: number): number => r * nLon + (((c % nLon) + nLon) % nLon);
+  const idx = (r: number, c: number): number =>
+    r * nLon + (((c % nLon) + nLon) % nLon);
   const lerp = (a: number, b: number, t: number): number => a + (b - a) * t;
 
   const top = lerp(values[idx(r0, c0)], values[idx(r0, c0 + 1)], tc);

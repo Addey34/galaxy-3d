@@ -74,7 +74,8 @@ export function setupOrbitOptions(
 
   const isLabelVisible = (name: string): boolean => !hiddenLabelNames.has(name);
   const isBodyVisible = (name: string): boolean => !hiddenBodyNames.has(name);
-  const isOrbitVisible = (name: string): boolean => orbitState.get(name) ?? false;
+  const isOrbitVisible = (name: string): boolean =>
+    orbitState.get(name) ?? false;
 
   const applyHiddenLabelNames = (): void =>
     exploHud.setHiddenNames(new Set(hiddenLabelNames));

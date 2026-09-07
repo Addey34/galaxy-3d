@@ -47,7 +47,7 @@ describe('buildWindArchiveUrl (voyage temps ERA5)', () => {
   });
 });
 
-describe('windToUV (météo: direction = d\'où vient le vent)', () => {
+describe("windToUV (météo: direction = d'où vient le vent)", () => {
   it('north wind (0°) blows toward the south → v negative', () => {
     const { u, v } = windToUV(10, 0);
     expect(Math.abs(u)).toBeLessThan(1e-6);

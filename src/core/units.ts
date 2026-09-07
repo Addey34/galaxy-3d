@@ -60,9 +60,10 @@ export function convertDistanceKm(km: number): { value: number; unit: string } {
 }
 
 /** °C → valeur + unité dans le système courant. */
-export function convertTemperatureC(
-  celsius: number
-): { value: number; unit: string } {
+export function convertTemperatureC(celsius: number): {
+  value: number;
+  unit: string;
+} {
   return current === 'metric'
     ? { value: celsius, unit: '°C' }
     : { value: (celsius * 9) / 5 + 32, unit: '°F' };

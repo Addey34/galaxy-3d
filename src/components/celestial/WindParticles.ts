@@ -86,9 +86,18 @@ export class WindParticles {
       'position',
       new THREE.BufferAttribute(this.positions, 3)
     );
-    this.geometry.setAttribute('alpha', new THREE.BufferAttribute(this.alphas, 1));
-    this.geometry.setAttribute('color', new THREE.BufferAttribute(this.colors, 3));
-    this.geometry.setAttribute('aSize', new THREE.BufferAttribute(this.sizes, 1));
+    this.geometry.setAttribute(
+      'alpha',
+      new THREE.BufferAttribute(this.alphas, 1)
+    );
+    this.geometry.setAttribute(
+      'color',
+      new THREE.BufferAttribute(this.colors, 3)
+    );
+    this.geometry.setAttribute(
+      'aSize',
+      new THREE.BufferAttribute(this.sizes, 1)
+    );
 
     const material = new THREE.PointsMaterial({
       size: options.size,
@@ -113,12 +122,18 @@ export class WindParticles {
           '#include <common>',
           '#include <common>\nattribute float alpha;\nattribute float aSize;\nvarying float vAlpha;'
         )
-        .replace('#include <begin_vertex>', '#include <begin_vertex>\n\tvAlpha = alpha;')
+        .replace(
+          '#include <begin_vertex>',
+          '#include <begin_vertex>\n\tvAlpha = alpha;'
+        )
         // Remplace la taille uniforme par la taille par particule (aSize). Le facteur
         // d'atténuation par la distance (#ifdef USE_SIZEATTENUATION) suit derrière.
         .replace('gl_PointSize = size;', 'gl_PointSize = aSize;');
       shader.fragmentShader = shader.fragmentShader
-        .replace('#include <common>', '#include <common>\nvarying float vAlpha;')
+        .replace(
+          '#include <common>',
+          '#include <common>\nvarying float vAlpha;'
+        )
         .replace(
           'vec4 diffuseColor = vec4( diffuse, opacity );',
           [

@@ -105,8 +105,14 @@ export function createReticle(): WebXRReticle {
     mesh,
     update(aim, controller) {
       mesh.position.copy(aim.point);
-      const toController = controller.position.clone().sub(aim.point).normalize();
-      mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), toController);
+      const toController = controller.position
+        .clone()
+        .sub(aim.point)
+        .normalize();
+      mesh.quaternion.setFromUnitVectors(
+        new THREE.Vector3(0, 0, 1),
+        toController
+      );
       material.color.set(aim.name ? RETICLE_VALID_COLOR : RETICLE_EMPTY_COLOR);
     },
     setVisible(visible) {

@@ -118,9 +118,7 @@ export function computeLightAttenuation(
     const cosSeparation =
       (sunDirX * occDx + sunDirY * occDy + sunDirZ * occDz) *
       invOccluderDistance;
-    const separation = Math.acos(
-      THREE.MathUtils.clamp(cosSeparation, -1, 1)
-    );
+    const separation = Math.acos(THREE.MathUtils.clamp(cosSeparation, -1, 1));
     const occluderAngularRadius = angularRadius(
       occluder.radius,
       occluderDistance

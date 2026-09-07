@@ -15,9 +15,15 @@ describe('dataStatusFor', () => {
   });
 
   it('qualifie le présent (dans ±6 h par défaut) en analysis', () => {
-    expect(dataStatusFor(new Date('2026-08-14T12:00:00Z'), opts)).toBe('analysis');
-    expect(dataStatusFor(new Date('2026-08-14T09:00:00Z'), opts)).toBe('analysis');
-    expect(dataStatusFor(new Date('2026-08-14T17:00:00Z'), opts)).toBe('analysis');
+    expect(dataStatusFor(new Date('2026-08-14T12:00:00Z'), opts)).toBe(
+      'analysis'
+    );
+    expect(dataStatusFor(new Date('2026-08-14T09:00:00Z'), opts)).toBe(
+      'analysis'
+    );
+    expect(dataStatusFor(new Date('2026-08-14T17:00:00Z'), opts)).toBe(
+      'analysis'
+    );
   });
 
   it('qualifie le futur proche (≤ 7 j) en forecast', () => {
@@ -37,11 +43,15 @@ describe('dataStatusFor', () => {
 
   it('respecte des horizons personnalisés', () => {
     const d = new Date('2026-08-16T12:00:00Z'); // +2 j
-    expect(dataStatusFor(d, { now, forecastDays: 1 })).toBe('forecast_uncertain');
+    expect(dataStatusFor(d, { now, forecastDays: 1 })).toBe(
+      'forecast_uncertain'
+    );
   });
 
   it('dérive une clé i18n stable par statut', () => {
     expect(dataStatusLabelKey('observed')).toBe('weather.status.observed');
-    expect(dataStatusLabelKey('climatology')).toBe('weather.status.climatology');
+    expect(dataStatusLabelKey('climatology')).toBe(
+      'weather.status.climatology'
+    );
   });
 });

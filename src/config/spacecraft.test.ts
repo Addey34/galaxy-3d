@@ -54,7 +54,10 @@ describe('spacecraft ephemerides stay within plausible bounds', () => {
         const path = new URL(url.toString()).pathname.split('/').pop()!;
         const bytes = readFileSync(join(EPHEMERIS_DIR, path));
         if (path.endsWith('.json')) {
-          return { ok: true, json: async () => JSON.parse(bytes.toString('utf8')) };
+          return {
+            ok: true,
+            json: async () => JSON.parse(bytes.toString('utf8')),
+          };
         }
         const buffer = bytes.buffer.slice(
           bytes.byteOffset,
@@ -78,7 +81,10 @@ describe('spacecraft ephemerides stay within plausible bounds', () => {
       const midDate = new Date((midJd - JD_UNIX_EPOCH) * JD_TO_MS);
 
       const helio = service.getHeliocentricAU(mission.name, midDate);
-      expect(helio, `${mission.name}: no sample at mid-coverage date`).not.toBeNull();
+      expect(
+        helio,
+        `${mission.name}: no sample at mid-coverage date`
+      ).not.toBeNull();
       const distanceAU = helio!.length();
       // Bornes larges : Parker plonge sous l'orbite de Mercure, Voyager 1 dépasse 150 UA.
       expect(

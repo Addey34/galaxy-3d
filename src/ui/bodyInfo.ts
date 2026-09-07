@@ -105,7 +105,8 @@ export function formatLiveDistance(km: number): string {
   const { value: dist, unit } = convertDistanceKm(km);
   let kmStr: string;
   if (dist >= 1e9) kmStr = `${num(dist / 1e9, 2)} ${t('unit.billion')} ${unit}`;
-  else if (dist >= 1e6) kmStr = `${num(dist / 1e6, 1)} ${t('unit.million')} ${unit}`;
+  else if (dist >= 1e6)
+    kmStr = `${num(dist / 1e6, 1)} ${t('unit.million')} ${unit}`;
   else kmStr = `${num(Math.round(dist))} ${unit}`;
   return `${auStr} · ${kmStr}`;
 }

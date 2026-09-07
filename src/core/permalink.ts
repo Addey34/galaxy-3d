@@ -43,7 +43,11 @@ function parseView(params: URLSearchParams): PermalinkViewAngles | undefined {
   const distance = parseFiniteNumber(params.get('dist'));
   // Les trois valeurs doivent être présentes ensemble : un sous-ensemble partiel ne
   // permettrait pas de reconstruire un cadrage cohérent.
-  if (azimuthDeg === undefined || polarDeg === undefined || distance === undefined)
+  if (
+    azimuthDeg === undefined ||
+    polarDeg === undefined ||
+    distance === undefined
+  )
     return undefined;
   if (distance <= 0) return undefined;
   return { azimuthDeg, polarDeg, distance };

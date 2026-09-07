@@ -191,7 +191,10 @@ export function setupTourPlayer(
     const steps =
       id === 'eclipse'
         ? [
-            { kind: 'jumpToDate', date: resolveEclipseDate(om.simulationDate) } as TourStep,
+            {
+              kind: 'jumpToDate',
+              date: resolveEclipseDate(om.simulationDate),
+            } as TourStep,
             ...script.steps,
           ]
         : script.steps;

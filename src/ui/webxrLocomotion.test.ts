@@ -20,16 +20,12 @@ describe('stepSnapTurn', () => {
   it('turns once when crossing the deadzone while armed', () => {
     const result = stepSnapTurn(0.8, true);
     expect(result.armed).toBe(false);
-    expect(result.yawDeltaRad).toBeCloseTo(
-      (SNAP_TURN_DEG * Math.PI) / 180
-    );
+    expect(result.yawDeltaRad).toBeCloseTo((SNAP_TURN_DEG * Math.PI) / 180);
   });
 
   it('turns the other way for a negative axis', () => {
     const result = stepSnapTurn(-0.8, true);
-    expect(result.yawDeltaRad).toBeCloseTo(
-      -(SNAP_TURN_DEG * Math.PI) / 180
-    );
+    expect(result.yawDeltaRad).toBeCloseTo(-(SNAP_TURN_DEG * Math.PI) / 180);
   });
 
   it('does not repeat while held past the deadzone (not re-armed)', () => {

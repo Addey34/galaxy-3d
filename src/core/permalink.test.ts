@@ -43,10 +43,7 @@ describe('permalink state', () => {
     const partial = parsePermalink('?az=45.5&pol=60', validBodies);
     expect(partial.view).toBeUndefined();
 
-    const zeroDistance = parsePermalink(
-      '?az=0&pol=0&dist=0',
-      validBodies
-    );
+    const zeroDistance = parsePermalink('?az=0&pol=0&dist=0', validBodies);
     expect(zeroDistance.view).toBeUndefined();
   });
 

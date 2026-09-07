@@ -161,9 +161,8 @@ export function setupCapture(
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       const isoDate = om.simulationDate.toISOString().slice(0, 10);
-      const slug = (selected && selected !== 'overview'
-        ? selected
-        : 'overview'
+      const slug = (
+        selected && selected !== 'overview' ? selected : 'overview'
       ).toLowerCase();
       a.href = url;
       a.download = `galaxy-${slug}-${isoDate}.png`;

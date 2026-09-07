@@ -83,7 +83,11 @@ export class SpacecraftOverlay {
 
       this.ctx.font = '11px sans-serif';
       this.ctx.fillStyle = 'rgba(225, 238, 255, 0.9)';
-      this.ctx.fillText(mission.displayName[locale] ?? mission.displayName.en, x + 6, y + 4);
+      this.ctx.fillText(
+        mission.displayName[locale] ?? mission.displayName.en,
+        x + 6,
+        y + 4
+      );
     }
   }
 

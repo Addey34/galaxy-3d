@@ -10,7 +10,9 @@ import { setupMeteoModelLayer } from './meteoModelLayer';
 import { getEarth, type WeatherLayerHandle } from './earthLayer';
 import type { PublicAPI } from '@/SolarSystemApp';
 
-export function setupPrecipModelLayer(api: PublicAPI): WeatherLayerHandle | null {
+export function setupPrecipModelLayer(
+  api: PublicAPI
+): WeatherLayerHandle | null {
   const settings = PRECIP_MODEL_SETTINGS;
   if (!settings.enabled) return null;
 
