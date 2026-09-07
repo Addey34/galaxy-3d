@@ -59,7 +59,10 @@ function refreshDisplay(om: OrbitalMechanics): void {
   if (time !== _prevClock) {
     clockDisplay.textContent = time;
     _prevClock = time;
-    if (om.simulationTimeScale <= 1) flash(clockDisplay);
+    // Le battement de seconde n'a de sens qu'à vitesse humaine : on compare la MAGNITUDE,
+    // sinon la marche arrière (timeScale négatif) le réarmait à chaque tick, y compris à
+    // 1 an/s où l'horloge défile trop vite pour qu'un flash veuille dire quoi que ce soit.
+    if (Math.abs(om.simulationTimeScale) <= 1) flash(clockDisplay);
   }
 
   if (_editingInput !== timeInput && time !== _prevTime) {

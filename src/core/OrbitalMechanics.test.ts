@@ -27,17 +27,26 @@ function makeThrottleHarness(thresholdMs: number): {
     OrbitalMechanics.prototype
   ) as OrbitalMechanics;
 
-  let currentMs = 0;
+  // La vraie horloge n'avance pas toute seule : `update()` échantillonne la date AVANT
+  // d'appeler `syncToRealTime()`, et c'est cet écart qui donne le pas de simulation (son
+  // SIGNE porte le sens du temps). Le faux doit donc reproduire ce décalage : `setDate`
+  // arme la date suivante, `syncToRealTime` la publie. Un saut temporel (`addDays`), lui,
+  // s'applique immédiatement dans les deux — comme `_jumpTo` qui resynchronise aussitôt.
+  let committedMs = 0;
+  let pendingMs = 0;
   const clock = {
     get date(): Date {
-      return new Date(currentMs);
+      return new Date(committedMs);
     },
-    syncToRealTime: () => {},
+    syncToRealTime: () => {
+      committedMs = pendingMs;
+    },
     setTimeScale: () => {},
     timeScale: 1,
     // Utilisé par _afterTimeTravel via addTimeOffset dans un test.
     addDays: (days: number) => {
-      currentMs += days * DAY_MS;
+      pendingMs += days * DAY_MS;
+      committedMs = pendingMs;
     },
     resetOffset: () => {},
   };
@@ -87,7 +96,7 @@ function makeThrottleHarness(thresholdMs: number): {
   return {
     mechanics,
     setDate: (ms: number) => {
-      currentMs = ms;
+      pendingMs = ms;
     },
     updateBody,
   };
@@ -306,6 +315,44 @@ describe('OrbitalMechanics orbit sampling', () => {
 
       // Saut temporel : _afterTimeTravel remet _lastPositionMs à null → recalcul forcé.
       mechanics.addTimeOffset(2);
+      mechanics.update(1);
+      expect(updateBody).toHaveBeenCalledTimes(1);
+    });
+
+    /**
+     * La timebar est bidirectionnelle : à gauche du centre, `timeScale` est négatif et la
+     * date SIMULÉE RECULE. `simDeltaSeconds` est l'unique source du pas de rotation propre
+     * (AnimationSystem → CelestialObject._advanceSpin, une intégrale) : s'il ne porte que la
+     * magnitude, chaque planète continue de tourner vers l'AVANT pendant que le temps recule.
+     * Défaut réellement livré, et invisible sur la Terre seule — sa phase est dérivée de la
+     * date (syncEarthSurfaceRotation), donc elle repartait correctement à l'envers pendant
+     * que toutes les autres tournaient à l'endroit.
+     */
+    it('reports a negative sim delta when the clock runs backwards', () => {
+      const { mechanics, setDate } = makeThrottleHarness(1000);
+      setDate(10_000);
+      mechanics.update(1);
+
+      setDate(6_000); // 4 s de simulation en ARRIÈRE
+      mechanics.update(1);
+      expect(mechanics.simDeltaSeconds).toBeCloseTo(-4, 6);
+
+      setDate(9_000); // puis 3 s en avant : le signe suit le sens
+      mechanics.update(1);
+      expect(mechanics.simDeltaSeconds).toBeCloseTo(3, 6);
+    });
+
+    it('still recomputes positions when the clock runs backwards', () => {
+      const { mechanics, setDate, updateBody } = makeThrottleHarness(1000);
+      setDate(10_000);
+      mechanics.update(1);
+      updateBody.mockClear();
+
+      setDate(9_600); // recul < seuil → skip
+      mechanics.update(1);
+      expect(updateBody).not.toHaveBeenCalled();
+
+      setDate(8_600); // recul cumulé ≥ seuil → recalcul
       mechanics.update(1);
       expect(updateBody).toHaveBeenCalledTimes(1);
     });

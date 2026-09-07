@@ -69,6 +69,39 @@ test('wires nav and playback controls (câblage ui/)', async ({ page }) => {
   await expect(page.locator('#speed-value')).toContainText('1:1');
 });
 
+/**
+ * Marche arrière de la timebar : à gauche du centre, la date simulée doit RECULER.
+ * Le slider est le seul contrôle de sens de l'application, et la moitié gauche de sa course
+ * ne se distingue de la droite par aucun état visible — seule la date le prouve.
+ *
+ * `Home` (= buttée gauche) plutôt qu'un drag à la souris : le drag s'est montré instable, la
+ * boîte du slider étant mesurée pendant que le panneau finit de se déplier, si bien que le
+ * mouse-down tombait parfois à côté de la poignée et le slider ne bougeait pas du tout.
+ * C'est aussi l'idiome déjà utilisé plus haut dans ce fichier pour la buttée droite.
+ */
+test('rewinds the simulated date when the speed slider goes left of centre', async ({
+  page,
+}) => {
+  await page.goto('/');
+  await expect(page.locator('#loader')).toBeHidden({ timeout: 30_000 });
+
+  await page.locator('#time-readout').click();
+  const speedRange = page.locator('#speed-range');
+  const dateInput = page.locator('#date-input');
+
+  await speedRange.press('Home');
+  await expect(speedRange).toHaveValue('0');
+  // Libellé signé : le « ◀ » est le seul indice à l'écran que le temps recule.
+  await expect(page.locator('#speed-value')).toContainText('◀');
+
+  const start = new Date(await dateInput.inputValue()).getTime();
+  await expect
+    .poll(async () => new Date(await dateInput.inputValue()).getTime(), {
+      timeout: 10_000,
+    })
+    .toBeLessThan(start - 86_400_000);
+});
+
 test('opens the body info panel on selection and closes it on overview', async ({
   page,
 }) => {

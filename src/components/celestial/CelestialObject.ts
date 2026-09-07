@@ -746,7 +746,10 @@ export default class CelestialObject {
     // `delta` ici est en secondes de SIMULATION (mise à l'échelle par la vitesse) : en
     // accéléré il serait énorme → le fondu se ferait instantanément. On le borne à un pas
     // temps-réel plausible (rawDelta est plafonné à 0.1 s) pour un fondu toujours fluide.
-    this._precipFadeElapsed += Math.min(Math.max(delta, 0), 0.1);
+    // |delta| : un fondu est une DURÉE, pas un déplacement dans le temps — il doit se
+    // dérouler pareil quand la timebar fait reculer la simulation (delta négatif), sinon
+    // il reste figé à mix = 0 tout le temps de la marche arrière.
+    this._precipFadeElapsed += Math.min(Math.abs(delta), 0.1);
     const t = Math.min(this._precipFadeElapsed / PRECIP_FADE_SECONDS, 1);
     this._precip.mix.value = t;
     if (t >= 1) {

@@ -152,6 +152,8 @@ export class AnimationSystem {
 
     // Rotation physique : utilise les secondes de simulation réelles (pas le delta d'animation).
     // rotationSpeed est en rad/sim-seconde → précis en Réel, 1h/s, 3h/s, 6h/s et éducatif.
+    // Grandeur SIGNÉE : négative quand la timebar fait reculer le temps, pour que la rotation
+    // propre s'inverse avec lui (cf. OrbitalMechanics.simDeltaSeconds).
     const simRot = this.orbitalMechanics?.simDeltaSeconds ?? delta;
     const moonWorldPosition = this._getMoonWorldPosition();
     this._updateObjects(simRot, sunWorldPosition, moonWorldPosition);

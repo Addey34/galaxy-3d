@@ -252,13 +252,18 @@ export class OrbitalMechanics {
     }
     this._prevPaused = isPaused;
 
-    // Delta toujours ≥ 0 : l'horloge n'avance que vers l'avant (timeScale ≥ 1) et les
-    // sauts temporels sont déjà appliqués avant l'échantillon de prevMs ci-dessus.
-    // _simDeltaSeconds est une magnitude ; le sens de rotation est porté par l'orientation
-    // de l'axe (les corps rétrogrades ont leur axe retourné, cf. setAxisDirection).
+    // Delta SIGNÉ : la timebar est bidirectionnelle (timeScale négatif → la date recule),
+    // et la rotation propre des corps est une intégrale de ce delta. Prendre la magnitude
+    // faisait tourner toutes les planètes vers l'avant pendant que le temps reculait — le
+    // sens de rotation restait celui du futur, seule la Terre (phase dérivée de la date,
+    // cf. syncEarthSurfaceRotation) repartait à l'envers. Le sens PROPRE d'un corps reste,
+    // lui, porté par l'orientation de son axe (rétrogrades retournés, cf. setAxisDirection) :
+    // les deux se composent. Un consommateur qui veut une durée (fondu, minuterie) doit
+    // prendre |delta| explicitement.
+    // Les sauts temporels sont déjà appliqués avant l'échantillon de prevMs ci-dessus.
     this._simDeltaSeconds = isPaused
       ? 0
-      : Math.abs(this.clock.date.getTime() - prevMs) / 1_000;
+      : (this.clock.date.getTime() - prevMs) / 1_000;
 
     // Le morph avance sur le temps réel (realDelta) : il doit se dérouler même en pause.
     this._advanceMorph(realDelta);
