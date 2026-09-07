@@ -261,13 +261,13 @@ export const CELESTIAL_CONFIG: CelestialConfig = {
           rotationBody: Body.Mars,
           relativeEphemeris: { kind: 'horizonsParentRelative' },
           relativeOrbitalElements: {
-            semiMajorAxisAU: 0.0000626680043,
-            eccentricity: 0.015,
-            inclinationRad: 1.1 * D2R,
-            ascendingNodeRad: 169.2 * D2R,
-            argPerihelionRad: 216.3 * D2R,
-            meanAnomalyAtEpochRad: 189.7 * D2R,
-            epoch: new Date('2000-01-01T12:00:00Z'),
+            semiMajorAxisAU: 6.269718996e-5,
+            eccentricity: 0.0154998,
+            inclinationRad: 27.4238 * D2R,
+            ascendingNodeRad: 81.0943 * D2R,
+            argPerihelionRad: 158.0363 * D2R,
+            meanAnomalyAtEpochRad: 324.1419 * D2R,
+            epoch: new Date('2025-12-31T00:00:00.000Z'),
           },
           textureResolutions: { surface: ['8k', '4k', '2k', '1k'] },
           realData: {
@@ -304,13 +304,13 @@ export const CELESTIAL_CONFIG: CelestialConfig = {
           rotationBody: Body.Mars,
           relativeEphemeris: { kind: 'horizonsParentRelative' },
           relativeOrbitalElements: {
-            semiMajorAxisAU: 0.00015680036,
-            eccentricity: 0,
-            inclinationRad: 1.8 * D2R,
-            ascendingNodeRad: 54.3 * D2R,
-            argPerihelionRad: 0,
-            meanAnomalyAtEpochRad: 205 * D2R,
-            epoch: new Date('2000-01-01T12:00:00Z'),
+            semiMajorAxisAU: 0.0001568163438,
+            eccentricity: 0.000312172,
+            inclinationRad: 24.1734 * D2R,
+            ascendingNodeRad: 81.2256 * D2R,
+            argPerihelionRad: 32.0428 * D2R,
+            meanAnomalyAtEpochRad: 22.0077 * D2R,
+            epoch: new Date('2025-12-31T00:00:00.000Z'),
           },
           textureResolutions: { surface: ['1k'] },
           realData: {
@@ -386,13 +386,13 @@ export const CELESTIAL_CONFIG: CelestialConfig = {
           // TLIST=2451545.0) — même méthode que les autres lunes de ce fichier. Vérifiée
           // cohérente avec la période réelle publiée (0.498 j).
           relativeOrbitalElements: {
-            semiMajorAxisAU: 0.0012165730245027,
-            eccentricity: 0.006131496682479541,
-            inclinationRad: 2.442089133637652 * D2R,
-            ascendingNodeRad: 330.4106584847095 * D2R,
-            argPerihelionRad: 105.1175845531084 * D2R,
-            meanAnomalyAtEpochRad: 336.2664083066824 * D2R,
-            epoch: new Date('2000-01-01T12:00:00Z'),
+            semiMajorAxisAU: 0.001216649081,
+            eccentricity: 0.00679747,
+            inclinationRad: 2.2995 * D2R,
+            ascendingNodeRad: 328.503 * D2R,
+            argPerihelionRad: 235.7284 * D2R,
+            meanAnomalyAtEpochRad: 357.0786 * D2R,
+            epoch: new Date('2025-12-31T00:00:00.000Z'),
           },
           // Aucune mosaïque photo globale contrôlée n'existe côté USGS pour Amalthea (imagée
           // partiellement par Galileo, jamais assemblée en carte globale contrôlée) — vérifié
@@ -600,13 +600,13 @@ export const CELESTIAL_CONFIG: CelestialConfig = {
           // JPL SAT441 mean elements, epoch 2000-01-01.5 TDB.
           relativeEphemeris: { kind: 'horizonsParentRelative' },
           relativeOrbitalElements: {
-            semiMajorAxisAU: 0.00159360557,
-            eccentricity: 0.005,
-            inclinationRad: 0,
-            ascendingNodeRad: 0,
-            argPerihelionRad: 119.5 * D2R,
-            meanAnomalyAtEpochRad: 57 * D2R,
-            epoch: new Date('2000-01-01T12:00:00Z'),
+            semiMajorAxisAU: 0.001593781246,
+            eccentricity: 0.00623192,
+            inclinationRad: 28.0528 * D2R,
+            ascendingNodeRad: 169.5148 * D2R,
+            argPerihelionRad: 103.893 * D2R,
+            meanAnomalyAtEpochRad: 8.9737 * D2R,
+            epoch: new Date('2025-12-31T00:00:00.000Z'),
           },
           textureResolutions: { surface: ['1k'] },
           realData: {
@@ -644,13 +644,13 @@ export const CELESTIAL_CONFIG: CelestialConfig = {
           relativeEphemeris: { kind: 'horizonsParentRelative' },
           // JPL SAT441 mean elements, epoch 2000-01-01.5 TDB.
           relativeOrbitalElements: {
-            semiMajorAxisAU: 0.00352411433,
-            eccentricity: 0.001,
-            inclinationRad: 0.3 * D2R,
-            ascendingNodeRad: 133.7 * D2R,
-            argPerihelionRad: 44.3 * D2R,
-            meanAnomalyAtEpochRad: 31.5 * D2R,
-            epoch: new Date('2000-01-01T12:00:00Z'),
+            semiMajorAxisAU: 0.003524524486,
+            eccentricity: 0.000535696,
+            inclinationRad: 28.2425 * D2R,
+            ascendingNodeRad: 170.0344 * D2R,
+            argPerihelionRad: 179.3946 * D2R,
+            meanAnomalyAtEpochRad: 169.1991 * D2R,
+            epoch: new Date('2025-12-31T00:00:00.000Z'),
           },
           textureResolutions: { surface: ['1k'] },
           realData: {
@@ -688,13 +688,13 @@ export const CELESTIAL_CONFIG: CelestialConfig = {
           rotationBody: Body.Saturn,
           // JPL SAT441 mean elements, epoch 2000-01-01.5 TDB.
           relativeOrbitalElements: {
-            semiMajorAxisAU: 0.02380849395,
-            eccentricity: 0.028,
-            inclinationRad: 7.6 * D2R,
-            ascendingNodeRad: 86.5 * D2R,
-            argPerihelionRad: 254.5 * D2R,
-            meanAnomalyAtEpochRad: 74.8 * D2R,
-            epoch: new Date('2000-01-01T12:00:00Z'),
+            semiMajorAxisAU: 0.02378693598,
+            eccentricity: 0.0289728,
+            inclinationRad: 16.9971 * D2R,
+            ascendingNodeRad: 138.8929 * D2R,
+            argPerihelionRad: 230.7372 * D2R,
+            meanAnomalyAtEpochRad: 97.8466 * D2R,
+            epoch: new Date('2025-12-31T00:00:00.000Z'),
           },
           textureResolutions: { surface: ['4k', '2k', '1k'] },
           realData: {
@@ -732,13 +732,13 @@ export const CELESTIAL_CONFIG: CelestialConfig = {
           rotationBody: Body.Saturn,
           // JPL SAT441 mean elements, epoch 2000-01-01.5 TDB.
           relativeOrbitalElements: {
-            semiMajorAxisAU: 0.008167897,
-            eccentricity: 0.029,
-            inclinationRad: 0.3 * D2R,
-            ascendingNodeRad: 78.6 * D2R,
-            argPerihelionRad: 78.3 * D2R,
-            meanAnomalyAtEpochRad: 11.7 * D2R,
-            epoch: new Date('2000-01-01T12:00:00Z'),
+            semiMajorAxisAU: 0.008170397946,
+            eccentricity: 0.0290328,
+            inclinationRad: 27.709 * D2R,
+            ascendingNodeRad: 169.0774 * D2R,
+            argPerihelionRad: 177.6352 * D2R,
+            meanAnomalyAtEpochRad: 330.0425 * D2R,
+            epoch: new Date('2025-12-31T00:00:00.000Z'),
           },
           textureResolutions: { surface: ['2k', '1k'] },
           realData: {
@@ -777,13 +777,13 @@ export const CELESTIAL_CONFIG: CelestialConfig = {
           // JPL Horizons osculating elements, epoch 2000-01-01.5 TDB (EPHEM_TYPE=ELEMENTS,
           // TLIST=2451545.0) — même méthode que pour les autres lunes de ce fichier.
           relativeOrbitalElements: {
-            semiMajorAxisAU: 0.001243579347218559,
-            eccentricity: 0.02175635,
-            inclinationRad: 27.00265761372071 * D2R,
-            ascendingNodeRad: 172.0569449519339 * D2R,
-            argPerihelionRad: 108.7253838060412 * D2R,
-            meanAnomalyAtEpochRad: 37.39805775106126 * D2R,
-            epoch: new Date('2000-01-01T12:00:00Z'),
+            semiMajorAxisAU: 0.001243567234,
+            eccentricity: 0.0212823,
+            inclinationRad: 29.6251 * D2R,
+            ascendingNodeRad: 169.6602 * D2R,
+            argPerihelionRad: 256.0964 * D2R,
+            meanAnomalyAtEpochRad: 50.0846 * D2R,
+            epoch: new Date('2025-12-31T00:00:00.000Z'),
           },
           // Aucune mosaïque photo globale contrôlée n'existe côté USGS pour Mimas (seulement
           // relief ombré et carte picturale, pas une texture réelle) — vérifié en direct
@@ -824,13 +824,13 @@ export const CELESTIAL_CONFIG: CelestialConfig = {
           rotationBody: Body.Saturn,
           relativeEphemeris: { kind: 'horizonsParentRelative' },
           relativeOrbitalElements: {
-            semiMajorAxisAU: 0.001971821201097222,
-            eccentricity: 0.00096988,
-            inclinationRad: 27.22072909012297 * D2R,
-            ascendingNodeRad: 167.9977256763769 * D2R,
-            argPerihelionRad: 158.0570744864902 * D2R,
-            meanAnomalyAtEpochRad: 350.3828192477454 * D2R,
-            epoch: new Date('2000-01-01T12:00:00Z'),
+            semiMajorAxisAU: 0.00197185976,
+            eccentricity: 0.000999015,
+            inclinationRad: 27.2076 * D2R,
+            ascendingNodeRad: 171.0212 * D2R,
+            argPerihelionRad: 116.0616 * D2R,
+            meanAnomalyAtEpochRad: 5.1256 * D2R,
+            epoch: new Date('2025-12-31T00:00:00.000Z'),
           },
           textureResolutions: { surface: ['1k'] },
           realData: {
@@ -867,13 +867,13 @@ export const CELESTIAL_CONFIG: CelestialConfig = {
           rotationBody: Body.Saturn,
           relativeEphemeris: { kind: 'horizonsParentRelative' },
           relativeOrbitalElements: {
-            semiMajorAxisAU: 0.002524448888976435,
-            eccentricity: 0.00292836,
-            inclinationRad: 28.04139510566285 * D2R,
-            ascendingNodeRad: 169.470196786071 * D2R,
-            argPerihelionRad: 164.9353995421455 * D2R,
-            meanAnomalyAtEpochRad: 332.0565629313631 * D2R,
-            epoch: new Date('2000-01-01T12:00:00Z'),
+            semiMajorAxisAU: 0.002524502777,
+            eccentricity: 0.00278575,
+            inclinationRad: 28.0246 * D2R,
+            ascendingNodeRad: 169.5295 * D2R,
+            argPerihelionRad: 259.2396 * D2R,
+            meanAnomalyAtEpochRad: 27.6597 * D2R,
+            epoch: new Date('2025-12-31T00:00:00.000Z'),
           },
           textureResolutions: { surface: ['1k'] },
           realData: {
@@ -915,13 +915,13 @@ export const CELESTIAL_CONFIG: CelestialConfig = {
           rotationBody: Body.Saturn,
           relativeEphemeris: { kind: 'horizonsParentRelative' },
           relativeOrbitalElements: {
-            semiMajorAxisAU: 0.00992701740709883,
-            eccentricity: 0.126731,
-            inclinationRad: 27.20902903280515 * D2R,
-            ascendingNodeRad: 168.305013991762 * D2R,
-            argPerihelionRad: 188.6932689050722 * D2R,
-            meanAnomalyAtEpochRad: 70.60386395985986 * D2R,
-            epoch: new Date('2000-01-01T12:00:00Z'),
+            semiMajorAxisAU: 0.009868051277,
+            eccentricity: 0.0947541,
+            inclinationRad: 27.0526 * D2R,
+            ascendingNodeRad: 169.4913 * D2R,
+            argPerihelionRad: 81.9189 * D2R,
+            meanAnomalyAtEpochRad: 276.1022 * D2R,
+            epoch: new Date('2025-12-31T00:00:00.000Z'),
           },
           // Aucune mosaïque globale : Hyperion est trop irrégulier (éponge poreuse
           // ~180×133×103 km) pour qu'une "carte globale" ait vraiment un sens — vérifié en
@@ -999,13 +999,13 @@ export const CELESTIAL_CONFIG: CelestialConfig = {
           // au plan équatorial d'Uranus (axe couché à 97,77°, voir realData.axialTilt
           // d'Uranus) — ces lunes orbitent normalement dans ce plan équatorial.
           relativeOrbitalElements: {
-            semiMajorAxisAU: 0.0008681390616993154,
-            eccentricity: 0.0015098,
-            inclinationRad: 97.25415391960598 * D2R,
-            ascendingNodeRad: 172.0875833032825 * D2R,
-            argPerihelionRad: 261.0221270814858 * D2R,
-            meanAnomalyAtEpochRad: 62.06189119864032 * D2R,
-            epoch: new Date('2000-01-01T12:00:00Z'),
+            semiMajorAxisAU: 0.0008681342197,
+            eccentricity: 0.0011455,
+            inclinationRad: 99.1894 * D2R,
+            ascendingNodeRad: 163.4238 * D2R,
+            argPerihelionRad: 40.5448 * D2R,
+            meanAnomalyAtEpochRad: 217.1554 * D2R,
+            epoch: new Date('2025-12-31T00:00:00.000Z'),
           },
           // Aucune mosaïque globale contrôlée : Voyager 2 (survol unique, 1986) n'a imagé en
           // détail qu'environ la moitié de Miranda — vérifié en direct (2026-08-26, voir
@@ -1046,13 +1046,13 @@ export const CELESTIAL_CONFIG: CelestialConfig = {
           rotationBody: Body.Uranus,
           relativeEphemeris: { kind: 'horizonsParentRelative' },
           relativeOrbitalElements: {
-            semiMajorAxisAU: 0.001276364069125674,
-            eccentricity: 0.0015208,
-            inclinationRad: 97.719319228073 * D2R,
-            ascendingNodeRad: 167.6455486422633 * D2R,
-            argPerihelionRad: 45.35674156751863 * D2R,
-            meanAnomalyAtEpochRad: 152.7943682479845 * D2R,
-            epoch: new Date('2000-01-01T12:00:00Z'),
+            semiMajorAxisAU: 0.001276431879,
+            eccentricity: 0.000467748,
+            inclinationRad: 97.7152 * D2R,
+            ascendingNodeRad: 167.6645 * D2R,
+            argPerihelionRad: 247.4797 * D2R,
+            meanAnomalyAtEpochRad: 126.517 * D2R,
+            epoch: new Date('2025-12-31T00:00:00.000Z'),
           },
           // Aucune mosaïque globale contrôlée n'existe côté USGS pour Ariel — vérifié en direct
           // (2026-08-26, voir texture-sources.json). Texture procédurale générée : peu de
@@ -1092,13 +1092,13 @@ export const CELESTIAL_CONFIG: CelestialConfig = {
           rotationBody: Body.Uranus,
           relativeEphemeris: { kind: 'horizonsParentRelative' },
           relativeOrbitalElements: {
-            semiMajorAxisAU: 0.001778181651275977,
-            eccentricity: 0.0041702,
-            inclinationRad: 97.66606723745439 * D2R,
-            ascendingNodeRad: 167.6381821495947 * D2R,
-            argPerihelionRad: 334.9516684490692 * D2R,
-            meanAnomalyAtEpochRad: 271.2233789529364 * D2R,
-            epoch: new Date('2000-01-01T12:00:00Z'),
+            semiMajorAxisAU: 0.001778187188,
+            eccentricity: 0.00412565,
+            inclinationRad: 97.7115 * D2R,
+            ascendingNodeRad: 167.7242 * D2R,
+            argPerihelionRad: 53.7962 * D2R,
+            meanAnomalyAtEpochRad: 295.8029 * D2R,
+            epoch: new Date('2025-12-31T00:00:00.000Z'),
           },
           // Aucune mosaïque globale contrôlée n'existe côté USGS pour Umbriel — vérifié en
           // direct (2026-08-26, voir texture-sources.json). Texture procédurale générée, avec
@@ -1139,13 +1139,13 @@ export const CELESTIAL_CONFIG: CelestialConfig = {
           rotationBody: Body.Uranus,
           relativeEphemeris: { kind: 'horizonsParentRelative' },
           relativeOrbitalElements: {
-            semiMajorAxisAU: 0.002916436400823477,
-            eccentricity: 0.002479,
-            inclinationRad: 97.818368383812 * D2R,
-            ascendingNodeRad: 167.6178145945835 * D2R,
-            argPerihelionRad: 202.1167721066045 * D2R,
-            meanAnomalyAtEpochRad: 74.41677554285916 * D2R,
-            epoch: new Date('2000-01-01T12:00:00Z'),
+            semiMajorAxisAU: 0.002916024747,
+            eccentricity: 0.00242536,
+            inclinationRad: 97.7633 * D2R,
+            ascendingNodeRad: 167.6422 * D2R,
+            argPerihelionRad: 263.5451 * D2R,
+            meanAnomalyAtEpochRad: 265.2945 * D2R,
+            epoch: new Date('2025-12-31T00:00:00.000Z'),
           },
           // Aucune mosaïque globale contrôlée n'existe côté USGS pour Titania — vérifié en
           // direct (2026-08-26, voir texture-sources.json). Texture procédurale générée
@@ -1187,13 +1187,13 @@ export const CELESTIAL_CONFIG: CelestialConfig = {
           rotationBody: Body.Uranus,
           relativeEphemeris: { kind: 'horizonsParentRelative' },
           relativeOrbitalElements: {
-            semiMajorAxisAU: 0.003900790441203894,
-            eccentricity: 0.00055232,
-            inclinationRad: 97.87585296035932 * D2R,
-            ascendingNodeRad: 167.7555265636234 * D2R,
-            argPerihelionRad: 254.006725206052 * D2R,
-            meanAnomalyAtEpochRad: 93.49629094330373 * D2R,
-            epoch: new Date('2000-01-01T12:00:00Z'),
+            semiMajorAxisAU: 0.003901129947,
+            eccentricity: 0.00202223,
+            inclinationRad: 97.9056 * D2R,
+            ascendingNodeRad: 167.7098 * D2R,
+            argPerihelionRad: 155.1112 * D2R,
+            meanAnomalyAtEpochRad: 297.1523 * D2R,
+            epoch: new Date('2025-12-31T00:00:00.000Z'),
           },
           // Aucune mosaïque globale contrôlée n'existe côté USGS pour Obéron — vérifié en
           // direct (2026-08-26, voir texture-sources.json). Texture procédurale générée :
@@ -1266,13 +1266,13 @@ export const CELESTIAL_CONFIG: CelestialConfig = {
           rotationBody: Body.Neptune,
           relativeEphemeris: { kind: 'horizonsParentRelative' },
           relativeOrbitalElements: {
-            semiMajorAxisAU: 0.00237169151,
-            eccentricity: 0,
-            inclinationRad: 157.3 * D2R,
-            ascendingNodeRad: 178.1 * D2R,
-            argPerihelionRad: 0,
-            meanAnomalyAtEpochRad: 63 * D2R,
-            epoch: new Date('2000-01-01T12:00:00Z'),
+            semiMajorAxisAU: 0.002372182357,
+            eccentricity: 0.000278328,
+            inclinationRad: 129.148 * D2R,
+            ascendingNodeRad: 222.6618 * D2R,
+            argPerihelionRad: 11.0207 * D2R,
+            meanAnomalyAtEpochRad: 337.3679 * D2R,
+            epoch: new Date('2025-12-31T00:00:00.000Z'),
           },
           textureResolutions: { surface: ['8k', '4k', '2k', '1k'] },
           realData: {
@@ -1311,13 +1311,13 @@ export const CELESTIAL_CONFIG: CelestialConfig = {
           // JPL Horizons osculating elements, epoch 2000-01-01.5 TDB — cohérents avec la
           // période réelle publiée (1.122 j).
           relativeOrbitalElements: {
-            semiMajorAxisAU: 0.0007866074366734613,
-            eccentricity: 0.0004949303539595451,
-            inclinationRad: 28.99163681179519 * D2R,
-            ascendingNodeRad: 48.27950205867285 * D2R,
-            argPerihelionRad: 326.8036455837504 * D2R,
-            meanAnomalyAtEpochRad: 283.6240862259231 * D2R,
-            epoch: new Date('2000-01-01T12:00:00Z'),
+            semiMajorAxisAU: 0.0007866692793,
+            eccentricity: 0.000438469,
+            inclinationRad: 29.0597 * D2R,
+            ascendingNodeRad: 48.7125 * D2R,
+            argPerihelionRad: 43.5662 * D2R,
+            meanAnomalyAtEpochRad: 76.5645 * D2R,
+            epoch: new Date('2025-12-31T00:00:00.000Z'),
           },
           // Aucune mosaïque photo globale contrôlée n'existe côté USGS pour Protée (une seule
           // face imagée par Voyager 2, jamais assemblée en carte globale contrôlée) — vérifié
@@ -1361,13 +1361,13 @@ export const CELESTIAL_CONFIG: CelestialConfig = {
           // période réelle publiée (~360.13 j). Rotation NON verrouillée : 11.594 h, mesure
           // bien déterminée par Kepler (2016) — sans lien avec sa période orbitale.
           relativeOrbitalElements: {
-            semiMajorAxisAU: 0.03683979459947609,
-            eccentricity: 0.7506509374056886,
-            inclinationRad: 5.060553241702044 * D2R,
-            ascendingNodeRad: 319.5912156886533 * D2R,
-            argPerihelionRad: 297.0020523243177 * D2R,
-            meanAnomalyAtEpochRad: 215.6255522626936 * D2R,
-            epoch: new Date('2000-01-01T12:00:00Z'),
+            semiMajorAxisAU: 0.03683832723,
+            eccentricity: 0.74552,
+            inclinationRad: 5.0266 * D2R,
+            ascendingNodeRad: 319.233 * D2R,
+            argPerihelionRad: 296.8466 * D2R,
+            meanAnomalyAtEpochRad: 349.0552 * D2R,
+            epoch: new Date('2025-12-31T00:00:00.000Z'),
           },
           // Aucune mosaïque photo globale contrôlée n'existe côté USGS pour Néréide (résolution
           // Voyager 2 de ~43 km/pixel seulement — insuffisant pour une carte globale) — vérifié

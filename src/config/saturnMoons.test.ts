@@ -29,10 +29,20 @@ describe('Saturnian moon catalogue entries', () => {
         kind: 'horizonsParentRelative',
       });
       expect(moon?.rotationBody).toBe(Body.Saturn);
-      expect(moon?.relativeOrbitalElements?.semiMajorAxisAU).toBeCloseTo(
-        semiMajorAxisAU,
-        9
-      );
+      // Tolerance RELATIVE de 0,5 %, et non une egalite a 9 decimales : le catalogue porte
+      // desormais le demi-grand axe OSCULATEUR derive des etats Horizons
+      // (`scripts/derive-relative-elements.mjs`), la ou cette valeur de reference est le
+      // demi-grand axe MOYEN publie. Les deux decrivent la meme orbite et different de
+      // quelques centiemes de pourcent, par definition. La marge reste tres en dessous de
+      // ce qu'une coquille de saisie produirait (chiffre transpose, ordre de grandeur), ce
+      // que cette assertion garde vraiment.
+      expect(
+        Math.abs(
+          (moon!.relativeOrbitalElements!.semiMajorAxisAU - semiMajorAxisAU) /
+            semiMajorAxisAU
+        ),
+        `${key} : demi-grand axe`
+      ).toBeLessThan(0.005);
       expect(moon?.textures?.surface).toBe(`${key}/${key}_surface`);
       expect(moon?.textureResolutions.surface).toEqual(SATURN_MOON_RES[key]);
       expect(moon?.fallbackColor).toBeTypeOf('number');
