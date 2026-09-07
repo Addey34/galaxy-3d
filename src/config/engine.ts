@@ -5,7 +5,10 @@
  * Le catalogue des corps célestes vit à part dans `bodies.ts` (il grossit indépendamment).
  */
 import * as THREE from 'three';
-import { TERMINATOR_WRAP_ATMOSPHERE_SHELL } from '@/core/terminator';
+import {
+  CIVIL_TWILIGHT_DOT,
+  TERMINATOR_WRAP_ATMOSPHERE_SHELL,
+} from '@/core/terminator';
 import type { TextureQuality } from '@/types';
 import {
   qualityProfile,
@@ -320,28 +323,27 @@ export const LIGHTING_SETTINGS = {
 export const SHADER_SETTINGS = {
   nightLights: {
     intensity: 1.0,
-    // Ces deux nombres répondent à UNE question : à quel moment un éclairage public
-    // s'allume ? Réponse réelle : au coucher du soleil, pas des dizaines de minutes après.
+    // Ces deux nombres repondent a UNE question : ou commencent les lumieres de ville ?
     //
-    // threshold = 0.0 = le terminateur géométrique = le soleil pile à l'horizon = le
-    // coucher. C'est là que les villes s'allument, et c'est un ancrage physique, pas un
-    // réglage esthétique. smoothness = 0.105 = sin(6°) = la fin du crépuscule CIVIL :
-    // les lumières atteignent leur plein régime ~24 min après le coucher, la durée
-    // pendant laquelle une ville finit réellement de s'allumer et devient visible depuis
-    // l'orbite. La rampe complète couvre donc 0° → 6° sous l'horizon.
+    // Reponse (regle produit explicite) : a 0 EXACTEMENT — le terminateur geometrique, le
+    // soleil pile a l'horizon, le coucher. Au-dessus, terminatorNight est clampe a zero
+    // STRICT : aucune lumiere de ville nulle part sur le cote eclaire, quel que soit le reste.
     //
-    // Réglage antérieur (-0.12 → -0.30) : les villes n'apparaissaient qu'à 6.9° sous
-    // l'horizon (~27 min après le coucher) et n'atteignaient leur plein régime qu'à 17.5°
-    // (~70 min) — une heure de retard, visible comme une bande noire entre le terminateur
-    // et les premières lumières. Il venait d'une crainte infondée : « les lumières
-    // baveraient sur le jour ». Elles ne peuvent pas — au-dessus du seuil nightFactor est
-    // clampé à zéro EXACTEMENT, donc aucune fuite côté jour quel que soit le seuil. Et
-    // dans la réalité les deux coexistent : au crépuscule on voit le sol encore faiblement
-    // éclairé ET les villes allumées. Le crépuscule de surface
-    // (TERMINATOR_WRAP_ATMOSPHERE = 0.31 dans layerConfig.ts) court jusqu'à -0.31, donc il
-    // reste une lueur au sol pendant que les lumières montent : c'est le fondu correct.
+    // Ne PAS reculer ce seuil pour "eviter que les lumieres debordent sur le jour". Essaye en
+    // 2026-09 : seuil recule a -TERMINATOR_WRAP_ATMOSPHERE, soit pile le point d'extinction
+    // du sol. L'argument etait que les deux courbes se rejoignent en un point donc sans trou.
+    // C'est vrai analytiquement et faux a l'ecran : les deux ont une PENTE NULLE en ce point,
+    // donc tout est noir de part et d'autre sur plusieurs degres — la bande noire entre
+    // l'ombre et les premieres lumieres revient, exactement comme avec l'ancien -0.12.
+    //
+    // Le vrai levier contre le debordement n'est pas ce seuil, c'est la largeur du crepuscule
+    // du SOL (TERMINATOR_WRAP_ATMOSPHERE) : tant qu'elle valait 18° alors que les lumieres
+    // montaient sur 6°, il restait ~12° de villes a plein regime sur un sol encore eclaire.
     threshold: 0.0,
-    smoothness: 0.105,
+    // Plein regime a la fin du crepuscule CIVIL — la meme largeur que le crepuscule du sol,
+    // donc les deux rampes couvrent exactement la meme bande et se croisent au lieu de
+    // basculer : lueur au sol qui decroit pendant que les villes montent, extinction commune.
+    smoothness: CIVIL_TWILIGHT_DOT,
   },
   atmosphere: {
     // Diffusion analytique single-pass (voir AtmosphereShader). power élevé = bord fin.

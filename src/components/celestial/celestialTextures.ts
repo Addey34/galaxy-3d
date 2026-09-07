@@ -74,7 +74,6 @@ function applySurfaceTexture(
         ? EARTH_NORMAL_SCALE_WITH_DISPLACEMENT
         : 1;
       mat.normalScale = new THREE.Vector2(scale, scale);
-      applyLightsNormalMap(layers, texture, mat.normalScale);
       break;
     }
     case 'bump':
@@ -89,7 +88,6 @@ function applySurfaceTexture(
           EARTH_NORMAL_SCALE_WITH_DISPLACEMENT,
           EARTH_NORMAL_SCALE_WITH_DISPLACEMENT
         );
-        applyLightsNormalMap(layers, mat.normalMap, mat.normalScale);
       }
       break;
     case 'spec':
@@ -118,20 +116,5 @@ function applyLightsTexture(layers: Layers, texture: THREE.Texture): void {
   const uniforms = mesh.material
     .uniforms as unknown as NightLightsShader.NightLightsUniforms;
   uniforms.lightsMap.value = texture;
-  mesh.material.needsUpdate = true;
-}
-
-function applyLightsNormalMap(
-  layers: Layers,
-  texture: THREE.Texture,
-  normalScale: THREE.Vector2
-): void {
-  const mesh = layers.get('lights');
-  if (!(mesh?.material instanceof THREE.ShaderMaterial)) return;
-  const uniforms = mesh.material
-    .uniforms as unknown as NightLightsShader.NightLightsUniforms;
-  uniforms.normalMap.value = texture;
-  uniforms.normalScale.value.copy(normalScale);
-  uniforms.useNormalMap.value = 1;
   mesh.material.needsUpdate = true;
 }

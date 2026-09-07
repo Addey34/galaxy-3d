@@ -20,6 +20,15 @@
 - Les textures haute résolution ne doivent pas bloquer le boot : le test de démarrage vérifie ce contrat.
 - Les tests doivent éviter les délais arbitraires ; utiliser des assertions Playwright et des états DOM observables.
 - Après une modification visuelle, lancer au minimum `pnpm verify:all` et joindre une capture dans la PR.
+- **Un test doit énoncer la propriété qui casserait, pas une propriété commodément vraie.** Cas
+  réel : `leaves no dark gap between the shadow and the first lights` vérifiait que les deux rampes
+  du terminateur sont `> 0` sur la bande. C'est toujours vrai pour deux smootherstep sur un
+  intervalle ouvert — et `0,5 % + 0,5 %` passait l'assertion en s'affichant noir à l'écran. Le test
+  existait, était vert, et n'a rien vu pendant que le défaut était visible. Il énonce désormais le
+  vrai invariant : la somme normalisée des deux contributions ne redescend jamais sous 1.
+- **Falsifier chaque garde avant de le croire.** Remettre le défaut et vérifier que le test échoue
+  vraiment, avec le bon message. Un test qui ne casse pas quand on réintroduit le bug ne garde rien
+  — c'est la seule façon de distinguer un garde d'une décoration.
 
 ## Diagnostic d’un échec e2e
 

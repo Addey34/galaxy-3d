@@ -351,7 +351,7 @@ const REAL_CLOUDS_GLSL = `
           // NUIT profonde ils doivent DISPARAÎTRE (comme la pluie), pas rester une couche grise
           // opaque. On atténue l'alpha selon l'orientation de la normale monde vs Soleil (même
           // signal que la coupe de relief et le clair de Lune). Transition douce au terminateur.
-          float cloudSunFacing = dot( normalize( vMoonWorldNormal ), normalize( uMoonSunDir ) );
+          float cloudSunFacing = dot( normalize( vMoonWorldNormal ), fragmentSunDir() );
           rcAlpha *= terminatorDay( cloudSunFacing, uTerminatorWrap );
           diffuseColor.a *= rcAlpha;
           diffuseColor.rgb = vec3( 1.0, 0.995, 0.985 );
@@ -367,7 +367,7 @@ export function createCloudsMaterial(): THREE.MeshStandardMaterial {
       side: THREE.DoubleSide,
     },
     // noSpecular : nuages = milieu diffusant, pas de reflet spéculaire (sinon lueur dans l'ombre).
-    // moonlight : NON pour le glow lunaire, mais pour câbler uMoonSunDir + vMoonWorldNormal —
+    // moonlight : NON pour le glow lunaire, mais pour câbler uMoonSunPos + vMoonWorldNormal —
     // le même signal jour/nuit que la surface — afin de faire DISPARAÎTRE les nuages côté nuit
     // (fondu d'alpha, cf. CLOUD_NIGHT_FADE_GLSL), au lieu de les laisser en couche grise opaque.
     // terminatorWrap atmosphérique : une couche nuageuse n'existe QUE sur un corps qui a
@@ -764,6 +764,39 @@ export function getRingShadowUniforms(
 // par TOUTES les couches — surface, nuages, pluie, clair de Lune, coupe de relief, lumières
 // de ville et halo atmosphérique. Voir ce module pour le raisonnement physique ; ici on ne
 // fait que câbler les uniforms et appeler les fonctions.
+/**
+ * Direction fragment → Soleil, recalculée PAR FRAGMENT depuis la position monde du point,
+ * et non fournie toute faite depuis le CENTRE du corps.
+ *
+ * Une direction unique pour toute la sphère est fausse d'au plus asin(R / D), le demi-angle
+ * sous lequel le corps voit le Soleil. En Explo c'est négligeable (~0,002° pour la Terre),
+ * mais en Éducatif les distances sont compressées (√UA × 35) alors que les rayons ne le sont
+ * pas : la Terre y fait 1 unité de rayon pour 35 de distance, soit asin(1/35) ≈ 1,64°.
+ *
+ * 1,64°, c'est l'ordre de grandeur des largeurs de crépuscule elles-mêmes (3° dans le vide,
+ * 6° civil). Or l'éclairage direct de three.js, les lumières de ville, le halo atmosphérique
+ * et la pluie calculent TOUS leur direction par fragment. Les trois masques de ce matériau —
+ * clair de Lune, fondu jour/nuit des nuages, coupe de relief — s'en écartaient donc d'un
+ * biais systématique du même ordre que la bande qu'ils sont censés suivre : le clair de Lune
+ * n'était plus le complément EXACT du jour qu'il prétend être, la coupe de relief ne
+ * finissait plus avant l'ombre sur tout le limbe, et les nuages s'éteignaient sur une ligne
+ * décalée de celle du sol. Un défaut de centrage de même nature que celui des lumières de
+ * ville, mais visible en Éducatif seulement puisqu'il est proportionnel à R/D.
+ *
+ * Coût : une soustraction et une normalisation par fragment. La cohérence entre couches n'est
+ * atteignable d'aucune autre façon — c'est la formule employée en face qui fixe la référence,
+ * pas un réglage qu'on pourrait accorder à l'oeil.
+ *
+ * Le GLSL reste volontairement en ASCII pur : le raisonnement vit ici, pas dans la source du
+ * shader, qui traverse des compilateurs de pilote dont on ne maîtrise pas le jeu de caractères.
+ */
+const FRAGMENT_SUN_DIR_GLSL = `
+// Direction fragment -> Soleil, PAR FRAGMENT (jamais depuis le centre du corps).
+vec3 fragmentSunDir() {
+  return normalize( uMoonSunPos - vMoonWorldPos );
+}
+`;
+
 // Clair de Lune (réflecteur nocturne) injecté après le calcul d'outgoingLight.
 // N'agit que côté nuit (masque via dot normale/dirSoleil) et proportionnellement
 // a l'orientation du point vers la Lune. uMoonStrength encode la phase. Lueur
@@ -774,11 +807,18 @@ const MOONLIGHT_GLSL = `
           vec3 nrm = normalize( vMoonWorldNormal );
           vec3 toMoon = normalize( uMoonPosition - vMoonWorldPos );
           float moonFacing = max( dot( nrm, toMoon ), 0.0 );
-          // Complément EXACT de la fraction de jour de la surface : la lueur lunaire monte
-          // au rythme précis où la lumière solaire directe se retire, sur la même largeur.
-          // Deux constantes indépendantes laissaient un trou (ou un recouvrement) entre la fin
-          // du crépuscule et l'apparition du clair de Lune.
-          float nightMask = 1.0 - terminatorDay( dot( nrm, uMoonSunDir ), uTerminatorWrap );
+          // MÊME fonction que les lumières de ville : terminatorNight est la courbe des
+          // couches qui APPARAISSENT la nuit, et core/terminator.ts nomme d'ailleurs le clair
+          // de Lune parmi ses consommateurs. Cette ligne roulait pourtant sa propre formule,
+          // 1 - terminatorDay, dont la bande s'étend de +wrap à -wrap au lieu de 0 à -wrap :
+          // le clair de Lune débordait donc jusqu'à 6° AU-DESSUS de l'horizon, à 49,8 % de son
+          // masque au terminateur même, là où les villes sont à 0 strict. Une couche nocturne
+          // visible sur le côté éclairé — la règle produit que les villes respectent.
+          // Invisible en pratique (≤ 1,2 % d'albédo à 3°, cf. MOONLIGHT_MAX_STRENGTH), mais
+          // c'est une divergence de RÈGLE, et une formule de moins à maintenir à part.
+          // L'alignement ne coûte rien : la garantie anti-creux est identique (minimum 1,0000
+          // dans les deux cas), seule la fuite côté jour disparaît.
+          float nightMask = terminatorNight( dot( nrm, fragmentSunDir() ), 0.0, uTerminatorWrap );
           vec3 moonGlow = uMoonColor * ( moonFacing * nightMask * uMoonStrength );
           outgoingLight += moonGlow * diffuseColor.rgb;
         }`;
@@ -855,8 +895,12 @@ const MOONLIGHT_UNIFORM_KEY = '__moonlightUniforms';
 export interface MoonlightUniforms {
   /** Position monde de la Lune (réflecteur nocturne). */
   position: { value: THREE.Vector3 };
-  /** Direction monde du Soleil (pour n'éclairer que la face NUIT). */
-  sunDir: { value: THREE.Vector3 };
+  /**
+   * Position monde du Soleil — PAS une direction. La direction est recalculée PAR FRAGMENT
+   * (`fragmentSunDir()` en GLSL), au même titre que l'atmosphère, les lumières de ville, la
+   * pluie et l'éclairage direct de three.js. Voir `fragmentSunDir` pour le pourquoi.
+   */
+  sunPosition: { value: THREE.Vector3 };
   /** Intensité globale, modulée par la phase (fraction éclairée de la Lune). */
   strength: { value: number };
   /** Teinte du clair de Lune (blanc légèrement froid). */
@@ -915,7 +959,9 @@ export function createShadowAwareStandardMaterial(
   };
   const moonlightUniforms: MoonlightUniforms = {
     position: { value: new THREE.Vector3() },
-    sunDir: { value: new THREE.Vector3(1, 0, 0) },
+    // Le Soleil est à l'origine de la scène : (0,0,0) est donc la valeur JUSTE tant que
+    // CelestialObject n'a pas encore écrit, et non un placeholder faux à corriger.
+    sunPosition: { value: new THREE.Vector3() },
     // 0 tant que la position lunaire n'est pas fournie chaque frame : branche inerte.
     strength: { value: 0 },
     color: { value: new THREE.Color(0xbcd2ff) },
@@ -929,9 +975,6 @@ export function createShadowAwareStandardMaterial(
     occluderRadius: { value: 0 },
   };
 
-  // Direction monde du Soleil, alimentee chaque frame par CelestialObject (setSunDirection).
-  const sunDirUniform = { value: new THREE.Vector3(1, 0, 0) };
-  moonlightUniforms.sunDir = sunDirUniform;
   material.userData[SHADOW_AWARE_UNIFORM_KEY] = attenuationUniform;
   if (cloudShadow)
     material.userData[CLOUD_SHADOW_UNIFORM_KEY] = cloudShadowUniforms;
@@ -962,9 +1005,10 @@ export function createShadowAwareStandardMaterial(
       shader.uniforms['uMoonStrength'] = moonlightUniforms.strength;
       shader.uniforms['uMoonColor'] = moonlightUniforms.color;
     }
-    // Direction Soleil utilisee par le clair de Lune.
+    // Position du Soleil, partagée par les TROIS masques décidés sur dot(N, Soleil) de ce
+    // matériau : clair de Lune, fondu jour/nuit des nuages et coupe de relief.
     if (moonlight) {
-      shader.uniforms['uMoonSunDir'] = sunDirUniform;
+      shader.uniforms['uMoonSunPos'] = moonlightUniforms.sunPosition;
     }
     if (eclipseShadow) {
       shader.uniforms['uEclipseSunPos'] = eclipseShadowUniforms.sunPosition;
@@ -998,10 +1042,11 @@ export function createShadowAwareStandardMaterial(
           (moonlight
             ? '\nuniform vec3 uMoonPosition;\nuniform float uMoonStrength;\nuniform vec3 uMoonColor;'
             : '') +
-          (moonlight ? '\nuniform vec3 uMoonSunDir;' : '') +
+          (moonlight ? '\nuniform vec3 uMoonSunPos;' : '') +
           (needsWorldPosVarying
             ? '\nvarying vec3 vMoonWorldPos;\nvarying vec3 vMoonWorldNormal;'
             : '') +
+          (moonlight ? FRAGMENT_SUN_DIR_GLSL : '') +
           (eclipseShadow
             ? '\nuniform vec3 uEclipseSunPos;\nuniform float uEclipseSunRadius;\nuniform vec3 uEclipseOccPos;\nuniform float uEclipseOccRadius;\n' +
               ECLIPSE_OCCLUSION_GLSL
@@ -1026,7 +1071,31 @@ export function createShadowAwareStandardMaterial(
         (noSpecular
           ? 'vec3 outgoingLight = totalDiffuse * uLightAttenuation'
           : limitSpecular
-            ? 'vec3 boundedSpecular = min( totalSpecular, vec3( 0.20 ) );' +
+            ? // Compression DOUCE, pas un min() : le clamp dur laissait un LISERE gris uniforme
+              // au limbe. En incidence rasante le Fresnel de Schlick tend vers 1, donc le
+              // speculaire depasse le plafond sur toute cette bande et TOUS ces pixels
+              // ressortaient a la meme valeur — un plateau plat, achromatique, a bord franc
+              // (mesure : 0.20 lineaire -> ~121/255 en sRGB, exactement la couleur relevee).
+              // Aplatir une plage entiere sur une constante, c'est fabriquer une bande.
+              //
+              // x / (1 + x/limit) : identique a x quand x << limit (le reflet ocean garde sa
+              // dynamique), tend vers limit sans jamais l'atteindre quand x explose. Le
+              // plafond joue toujours son role — empecher la saturation blanche — mais il
+              // n'existe plus aucun intervalle ou la sortie est constante.
+              // Occultation du speculaire en incidence RASANTE — c'est ce qui supprime le
+              // lisere, la compression ci-dessus ne faisant que le rendre moins clair.
+              // Mesure : avec le seul plafond, toute la bande sortait a 120/255 ; avec la
+              // compression douce seule, a 83/255 — toujours un PLATEAU, car le speculaire y
+              // depasse le plafond d'un ordre de grandeur et tout y retombe sur la meme
+              // valeur. Le probleme n'est donc pas la courbe de compression, c'est l'amplitude.
+              //
+              // Physiquement : le Fresnel de Schlick tend vers 1 quand N.V -> 0, alors que sur
+              // une surface rugueuse le masquage geometrique des micro-facettes eteint au
+              // contraire le reflet a cet angle. On applique donc cette extinction (specular
+              // horizon occlusion), avec le vocabulaire partage du module terminateur.
+              'float specGraze = dot( geometryNormal, geometryViewDir );' +
+              'vec3 boundedSpecular = totalSpecular / ( 1.0 + totalSpecular / vec3( 0.20 ) );' +
+              'boundedSpecular *= terminatorDay( specGraze - 0.125, 0.125 );' +
               'vec3 outgoingLight = (totalDiffuse + boundedSpecular) * uLightAttenuation'
             : 'vec3 outgoingLight = (totalDiffuse + totalSpecular) * uLightAttenuation') +
           (cloudShadow ? ' * cloudDirectFactor' : '') +
@@ -1036,15 +1105,19 @@ export function createShadowAwareStandardMaterial(
       );
 
     if (moonlight) {
-      // Coupe la normal map côté NUIT, exactement comme le shader des lumières de ville
-      // (NightLightsShader) éteint les villes côté jour — les deux couches partagent donc
-      // la même frontière de terminateur. À lumière rasante, la normale PERTURBÉE incline
-      // chaque ride du relief vers/hors du Soleil → micro-facettes en fort contraste =
-      // contours durs « bleu-gris » sur la face nuit. On fond la normale perturbée vers la
-      // normale GÉOMÉTRIQUE (lisse) : relief plein en plein jour, TOTALEMENT effacé sur toute
-      // la face nuit. Le facteur = complément de la rampe des lumières : reliefFactor = 1
-      // quand sunGraze ≥ +0.1 (jour), 0 quand sunGraze ≤ -0.3 (nuit). Constantes = threshold
-      // (0.1) / smoothness (0.3) du NightLightsShader → les deux transitions coïncident.
+      // Coupe la normal map à l'approche du terminateur. À lumière rasante, la normale
+      // PERTURBÉE incline chaque ride du relief vers/hors du Soleil → micro-facettes en fort
+      // contraste = contours durs « bleu-gris » sur la face nuit. On fond donc la normale
+      // perturbée vers la normale GÉOMÉTRIQUE (lisse) : relief plein en plein jour,
+      // TOTALEMENT effacé dès `RELIEF_FADE_END`.
+      //
+      // Ces bornes vivent dans `core/terminator.ts` et non ici, parce qu'elles engagent les
+      // AUTRES couches : elles définissent la zone où la seule normale valide est la
+      // géométrique, donc celle que tout masque décidé sur dot(N, Soleil) doit employer.
+      // NightLightsShader s'y conforme (il n'échantillonne plus aucune normal map) ; quand il
+      // ne le faisait pas, le bord des lumières suivait les pentes du terrain au lieu de
+      // suivre l'ombre. `layerConfig.test.ts` verrouille les deux bouts de ce contrat.
+      //
       // sunGraze sur la vraie normale monde (vMoonWorldNormal, non perturbée) : pas de
       // référence circulaire (on ne module pas la normal map par elle-même).
       // Gated moonlight → Terre uniquement (là où ces varyings existent).
@@ -1052,18 +1125,14 @@ export function createShadowAwareStandardMaterial(
         '#include <normal_fragment_maps>',
         `#include <normal_fragment_maps>
         {
-          float sunGraze = dot( normalize( vMoonWorldNormal ), normalize( uMoonSunDir ) );
+          float sunGraze = dot( normalize( vMoonWorldNormal ), fragmentSunDir() );
           // La coupe du relief doit être TERMINÉE avant que l'éclairage direct ne s'éteigne,
           // sinon la normal map reste active dans la bande déjà sombre juste avant le terminateur
           // → relief visible dans l'ombre. L'éclairage direct tombe à 0 en dot(N,L) = -uTerminatorWrap
-          // (-0.31 pour la Terre, cf. TERMINATOR_WRAP_ATMOSPHERE) ; on fixe donc reliefFactor = 0
-          // dès sunGraze ≤ 0 (bande [0, 0.25] côté JOUR), bien AVANT l'ombre. La marge n'a fait
-          // que grandir avec l'élargissement du crépuscule — l'invariant tient a fortiori.
-          // Rampe DÉCALÉE côté jour, volontairement : elle doit être terminée AVANT l'ombre.
-          // Exprimée dans le vocabulaire partagé (centre 0.125, demi-largeur 0.125) plutôt
-          // qu'avec un smoothstep isolé, pour qu'un changement de convention se propage ici.
-          float reliefFactor = terminatorDay( sunGraze - 0.125, 0.125 );
-          normal = normalize( mix( nonPerturbedNormal, normal, reliefFactor ) );
+          // (cf. TERMINATOR_WRAP_ATMOSPHERE) ; la rampe est donc DÉCALÉE côté jour, terminée dès
+          // sunGraze ≤ RELIEF_FADE_END = 0, bien AVANT l'ombre. La marge n'a fait que grandir
+          // avec l'élargissement du crépuscule — l'invariant tient a fortiori.
+          normal = normalize( mix( nonPerturbedNormal, normal, reliefFade( sunGraze ) ) );
         }`
       );
     }
@@ -1124,7 +1193,7 @@ export function createShadowAwareStandardMaterial(
       cloudShadow ? '-cloudshadow' : ''
     }${moonlight ? '-moonlight' : ''}${
       varyOceanRoughness ? '-oceanrough-v1' : ''
-    }${limitSpecular ? '-limitspec' : ''}${noSpecular ? '-nospec' : ''}${
+    }${limitSpecular ? '-limitspec-v3-grazeocclusion' : ''}${noSpecular ? '-nospec' : ''}${
       eclipseShadow ? '-eclipseshadow' : ''
     }`;
 

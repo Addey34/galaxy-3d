@@ -112,8 +112,8 @@ export default class CelestialObject {
   // Uniforms de clair de Lune du matériau surface (Terre) : la face nuit reçoit
   // une lueur diffuse selon la position réelle de la Lune (réflecteur).
   private _moonlight?: MoonlightUniforms;
-  // Uniforms « clair de Lune » du matériau NUAGES : on n'exploite que sa direction Soleil
-  // (uMoonSunDir) pour le fondu jour/nuit des nuages (disparition côté nuit). Le glow lunaire
+  // Uniforms « clair de Lune » du matériau NUAGES : on n'exploite que sa position Soleil
+  // (uMoonSunPos) pour le fondu jour/nuit des nuages (disparition côté nuit). Le glow lunaire
   // reste inerte (strength jamais alimentée pour les nuages).
   private _cloudsMoonlight?: MoonlightUniforms;
   // Uniforms d'ombre d'éclipse PAR FRAGMENT du matériau surface (Terre uniquement, cf.
@@ -145,6 +145,10 @@ export default class CelestialObject {
   // de la couche nuages (qui simule des nuages fictifs) — une vraie image satellite
   // doit rester alignée sur sa longitude. La Terre continue de tourner (_meshGroup).
   private _realCloudDrift = true;
+  // Vrai dès que la phase de rotation du corps est imposée depuis la date plutôt qu'intégrée
+  // frame par frame (cf. setSurfaceRotation) — la Terre, seul corps ayant une longitude
+  // subsolaire vraie à respecter.
+  private _surfaceRotationDriven = false;
   // Vrai dès qu'une couverture nuageuse réelle (GIBS) est appliquée : le LOD de
   // textures ne doit alors PLUS toucher la couche `clouds` (sinon il réécrit la
   // cloud map statique par-dessus l'image satellite à chaque changement de distance
@@ -809,18 +813,17 @@ export default class CelestialObject {
     _cameraPosition?: THREE.Vector3,
     moonWorldPosition?: THREE.Vector3 | null
   ): void {
+    // AVANT le test de visibilité, délibérément. La rotation propre est une INTÉGRALE : sauter
+    // une frame ne la retarde pas d'une frame, il la décale DÉFINITIVEMENT — rien ne la
+    // rattrape ensuite. La placer après le `return` hors-champ faisait donc perdre la phase de
+    // tout le temps passé hors du frustum, de façon cumulative et invisible : on s'éloigne d'un
+    // corps, on y revient, sa face éclairée n'est plus la bonne. Mesuré sur la Terre au
+    // démarrage (?debug-solar) : 0,68° puis 2,35° d'erreur de longitude selon la durée, soit
+    // exactement le temps simulé écoulé sans intégration — 50× le seuil de e2e/subsolar.spec.ts.
+    // Le reste de cette méthode (uniformes de shader) n'a, lui, aucun effet cumulatif : il reste
+    // légitimement derrière le test de visibilité.
+    this._advanceSpin(delta);
     if (!visible) return;
-
-    this._meshGroup.rotation.y += this.rotationSpeed * delta;
-
-    const clouds = this.layers.get('clouds');
-    if (clouds && this._realCloudDrift) {
-      clouds.rotation.y += this.rotationSpeed * delta * CLOUDS_ROTATION_FACTOR;
-      // Suit la dérive des nuages pour aligner l'ombre portée sur la surface :
-      // une rotation Y = décalage de longitude = décalage d'UV.x (÷ 2π).
-      if (this._cloudShadow)
-        this._cloudShadow.offset.value = clouds.rotation.y / (Math.PI * 2);
-    }
 
     const lights = this.layers.get('lights');
     if (lights?.material instanceof THREE.ShaderMaterial && sunWorldPosition) {
@@ -859,23 +862,27 @@ export default class CelestialObject {
         .normalize();
     }
 
+    // Position monde du Soleil : alimente uMoonSunPos, dont dépendent TROIS masques — le
+    // masque nuit du clair de Lune, le fondu jour/nuit des nuages et la coupe de normal map
+    // au terminateur. Le shader en dérive sa direction par fragment (cf. fragmentSunDir).
+    //
+    // Écrit HORS de la condition sur la Lune, délibérément : deux de ces trois masques n'ont
+    // rien à voir avec elle, et les faire dépendre de la disponibilité d'une position lunaire
+    // les laissait sur l'ancienne valeur par défaut dès que celle-ci manquait — terminateur
+    // faux, relief visible sur toute la face nuit. C'était la cause du « relief partout la
+    // nuit ». La valeur par défaut est désormais (0,0,0), c'est-à-dire la position RÉELLE du
+    // Soleil dans cette scène : même non écrite, elle est juste. Ceinture et bretelles.
+    if (this._moonlight && sunWorldPosition) {
+      this._moonlight.sunPosition.value.copy(sunWorldPosition);
+      this._cloudsMoonlight?.sunPosition.value.copy(sunWorldPosition);
+    }
+
     // Clair de Lune sur la face nuit (Terre) : position de la Lune + intensité
     // selon la phase = fraction éclairée de la Lune vue depuis la Terre ≈
     // (1 + cos(angle Soleil-Lune-Terre)) / 2 : ~1 à la pleine Lune, ~0 à la nouvelle.
     if (this._moonlight && sunWorldPosition && moonWorldPosition) {
       this.group.getWorldPosition(this._selfWorldPos);
       this._moonlight.position.value.copy(moonWorldPosition);
-
-      // Direction monde Terre → Soleil : alimente uMoonSunDir, utilisé À LA FOIS par le
-      // masque nuit du clair de Lune ET par la coupe de normal map côté nuit (terminateur).
-      // Sans cette écriture par frame, uMoonSunDir restait figé à sa valeur par défaut
-      // (1,0,0) → terminateur faux → relief visible sur toute la face nuit + clair de Lune
-      // désaligné. C'est la cause du « relief partout la nuit ».
-      this._moonlight.sunDir.value
-        .subVectors(sunWorldPosition, this._selfWorldPos)
-        .normalize();
-      // Même direction Soleil pour le fondu jour/nuit des nuages (disparition côté nuit).
-      this._cloudsMoonlight?.sunDir.value.copy(this._moonlight.sunDir.value);
 
       const toSun = _tmpMoonVecA
         .subVectors(sunWorldPosition, moonWorldPosition)
@@ -889,10 +896,43 @@ export default class CelestialObject {
   }
 
   /**
-   * Initialise l'angle de rotation axiale de la surface (Y) pour aligner le jour/nuit
-   * avec l'heure UTC réelle. Appelé par OrbitalMechanics au démarrage et sur reset.
+   * Fait avancer la rotation propre d'une frame. Séparé de `update` parce qu'il doit tourner
+   * même hors-champ (cf. l'appel).
+   *
+   * Un corps dont la phase est PILOTÉE par la date (`setSurfaceRotation`, la Terre) n'intègre
+   * pas : sa rotation lui est réassignée en absolu à chaque frame, et l'incrément viendrait
+   * s'ajouter par-dessus. Inoffensif au temps réel (~0,004°/frame), catastrophique à 1 an/s où
+   * une frame vaut ~6 jours simulés.
+   *
+   * La dérive PROPRE des nuages, elle, reste incrémentale dans les deux cas : elle est
+   * relative au `_meshGroup`, donc indépendante de la façon dont la phase du sol est obtenue.
    */
-  setInitialSurfaceRotation(radians: number): void {
+  private _advanceSpin(delta: number): void {
+    if (!this._surfaceRotationDriven)
+      this._meshGroup.rotation.y += this.rotationSpeed * delta;
+
+    const clouds = this.layers.get('clouds');
+    if (clouds && this._realCloudDrift) {
+      clouds.rotation.y += this.rotationSpeed * delta * CLOUDS_ROTATION_FACTOR;
+      // Suit la dérive des nuages pour aligner l'ombre portée sur la surface :
+      // une rotation Y = décalage de longitude = décalage d'UV.x (÷ 2π).
+      if (this._cloudShadow)
+        this._cloudShadow.offset.value = clouds.rotation.y / (Math.PI * 2);
+    }
+  }
+
+  /**
+   * Impose l'angle de rotation axiale de la surface (Y), calculé depuis la date par
+   * `OrbitalMechanics` pour que le point subsolaire tombe sur sa vraie longitude géographique.
+   *
+   * Appeler cette méthode déclare le corps « à phase pilotée » : il cesse définitivement
+   * d'intégrer sa rotation lui-même (cf. `_advanceSpin`). C'est ce qui fait de la phase une
+   * grandeur DÉRIVÉE de la date plutôt qu'un cumul — donc insensible aux frames sautées, au
+   * culling, à la pause, à un onglet mis en arrière-plan ou à une reprise après éclipse de
+   * rendu. Le cumul, lui, ne se rattrapait jamais.
+   */
+  setSurfaceRotation(radians: number): void {
+    this._surfaceRotationDriven = true;
     this._meshGroup.rotation.y = radians;
   }
 
@@ -951,6 +991,16 @@ export default class CelestialObject {
    */
   setAxisDirection(sceneNorth: THREE.Vector3): void {
     this._tiltGroup.quaternion.setFromUnitVectors(LOCAL_UP, sceneNorth);
+  }
+
+  /**
+   * Quaternion monde du `_tiltGroup` : le repère dans lequel `_meshGroup` effectue sa rotation
+   * propre. C'est CE repère (aligné sur le vrai pôle IAU, obliquité + azimut) qui est
+   * équatorial ; le repère de la scène, lui, est écliptique. Toute grandeur équatoriale
+   * (longitude subsolaire = RA − GAST) doit donc être composée ici, pas dans la scène.
+   */
+  getTiltQuaternion(out = new THREE.Quaternion()): THREE.Quaternion {
+    return this._tiltGroup.getWorldQuaternion(out);
   }
 
   /** Retourne l'axe nord de rotation courant dans le rep�re monde. */

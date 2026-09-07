@@ -112,6 +112,74 @@ intentionnellement suivis.
 
 Voir aussi [`TESTING.md`](./TESTING.md).
 
+## Terminateur jour/nuit — contrat partagé entre couches
+
+`src/core/terminator.ts` est la **source unique** de toute décision jour/nuit. Le module expose
+une implémentation JS *et* son miroir GLSL exact (`TERMINATOR_GLSL`, injecté dans les shaders en
+remplacement de `#include <common>`) : les deux côtés doivent rester la même formule, c'est ce
+qui rend les invariants ci-dessous testables sans GPU.
+
+### Les trois courbes
+
+| Fonction | Pour quoi | Bande | Forme |
+| --- | --- | --- | --- |
+| `terminatorLight(raw, wrap)` | éclairement direct d'une surface (remplace le `dotNL` de three.js) | `+wrap` → `−wrap` | Lambert pur au-dessus de `+wrap`, extinction tangente en `−wrap` |
+| `terminatorDay(raw, wrap)` | fraction de jour d'un calque superposé (nuages, pluie, halo) | `+wrap` → `−wrap` | smootherstep |
+| `terminatorNight(raw, onset, rampWidth)` | couche qui **apparaît** la nuit (lumières de ville, clair de Lune) | `onset` → `onset − rampWidth` | ease-out cubique |
+
+`raw` est **toujours** `dot(normaleMonde, directionSoleil)`, c'est-à-dire le sinus de la hauteur
+solaire. Aucune couche ne doit re-dériver sa propre rampe.
+
+### Quatre invariants, chacun verrouillé par un test
+
+1. **Règle produit — rien de nocturne sur le côté éclairé.** Toute couche qui n'existe que la
+   nuit vaut `0` *exactement* dès que le Soleil est au-dessus de l'horizon. C'est pourquoi
+   `terminatorNight` part de `onset = 0` et non d'une valeur reculée.
+
+2. **Direction du Soleil par fragment, jamais depuis le centre du corps.** Une direction unique
+   pour toute la sphère est fausse de `asin(R/D)` — négligeable en Explo (~0,002° pour la Terre)
+   mais ~1,64° en Éducatif, où les distances sont compressées alors que les rayons ne le sont
+   pas. C'est l'ordre de grandeur des largeurs de crépuscule elles-mêmes. Les matériaux patchés
+   disposent de `fragmentSunDir()`; les shaders écrits à la main calculent
+   `normalize(sunPosition - vWorldPosition)`.
+
+3. **Normale géométrique dans la bande du terminateur.** La surface abandonne sa normal map
+   avant le terminateur (`reliefFade`, bornes `RELIEF_FADE_START/END`) parce qu'à lumière
+   rasante les micro-facettes dessinent des contours durs. Toute couche qui décide un masque sur
+   `dot(N, Soleil)` dans cette zone doit donc employer la normale **non perturbée** — sinon deux
+   couches concentriques décident du même terminateur à partir de deux normales différentes et
+   le bord suit le relief au lieu de suivre l'ombre.
+
+4. **Pas de creux de luminosité au terminateur.** Le sol ne vaut plus que `wrap/4` au coucher et
+   s'effondre ; la couche nocturne qui prend le relais doit monter **au moins aussi vite**, dès
+   le coucher. D'où l'ease-out cubique (`f'(0) = 3`) et non smootherstep, dont les dérivées
+   première et seconde nulles en `0` laissaient une marge sombre le long du terminateur.
+
+### Largeurs
+
+La largeur du crépuscule est une **propriété du corps et de l'altitude de la couche**, pas un
+réglage global : `TERMINATOR_WRAP_VACUUM` (3°) pour un corps sans atmosphère,
+`TERMINATOR_WRAP_ATMOSPHERE` (6°, crépuscule civil) pour un corps qui en a une, et
+`twilightWrapAtAltitude()` pour les couches en altitude — une couche haute reste au soleil après
+le coucher au sol, c'est ce qui fait rougeoyer les nuages sur un sol déjà sombre.
+
+### Ajouter une couche
+
+Les couches sont **opt-in par corps** : aujourd'hui seule la Terre porte la pile complète
+(surface, lumières, nuages, pluie, thermique, atmosphère) et seule elle a une normal map. Un
+corps sans couche ne paie rien — les uniformes et les blocs GLSL ne sont injectés que si l'option
+correspondante est demandée (`moonlight`, `cloudShadow`, `eclipseShadow`…). Pour en ajouter une :
+
+1. déclarer la géométrie/matériau dans `config/layerConfig.ts` et son rayon dans
+   `LAYER_RADIUS_SCALE` ;
+2. choisir sa largeur par son **altitude réelle**, pas par son rayon de mesh ;
+3. appeler la fonction partagée qui correspond à sa nature (calque diurne → `terminatorDay`,
+   couche nocturne → `terminatorNight`), jamais une formule maison ;
+4. dériver la direction du Soleil par fragment.
+
+`src/config/layerConfig.test.ts` et `src/shaders/terminatorUsage.test.ts` refusent une couche qui
+appelle une fonction du terminateur sans en embarquer la définition, ou qui contourne le contrat.
+
 ## Architecture météo
 
 Trois frontières simples (résumées ici ; le plan directeur complet avec l'historique des décisions

@@ -23,13 +23,24 @@ describe('terminator constants', () => {
     // six conventions, des bandes visibles au terminateur).
     expect(ASTRONOMICAL_TWILIGHT_DOT).toBeCloseTo(sinDeg(18), 12);
     expect(CIVIL_TWILIGHT_DOT).toBeCloseTo(sinDeg(6), 12);
-    expect(TERMINATOR_WRAP_ATMOSPHERE).toBe(ASTRONOMICAL_TWILIGHT_DOT);
+    // Le sol suit le crépuscule CIVIL, pas l'astronomique : 18° est l'instant où le CIEL
+    // devient noir, 6° celui où le SOL cesse d'être utilement éclairé. Seule la coque
+    // atmosphérique (la lueur du ciel au limbe) part de l'astronomique.
+    expect(TERMINATOR_WRAP_ATMOSPHERE).toBe(CIVIL_TWILIGHT_DOT);
   });
 
   it('keeps an airless body visibly sharper than one with an atmosphere', () => {
     // Physique : sans diffusion, pas de crépuscule. Le wrap non nul de la Lune est un
     // adoucissement assumé, il doit rester nettement plus serré que celui de la Terre.
-    expect(TERMINATOR_WRAP_VACUUM).toBeLessThan(TERMINATOR_WRAP_ATMOSPHERE / 2);
+    // La comparaison se fait en ANGLE, pas en dot : sin est concave, donc sin(3°) est
+    // très légèrement SUPÉRIEUR à sin(6°)/2 — comparer les dots ferait échouer un rapport
+    // d'angles pourtant exactement de 1 à 2.
+    const asDeg = (dot: number): number => (Math.asin(dot) * 180) / Math.PI;
+    expect(TERMINATOR_WRAP_VACUUM).toBeLessThan(TERMINATOR_WRAP_ATMOSPHERE);
+    expect(asDeg(TERMINATOR_WRAP_VACUUM)).toBeCloseTo(
+      asDeg(TERMINATOR_WRAP_ATMOSPHERE) / 2,
+      9
+    );
   });
 });
 
@@ -171,15 +182,29 @@ describe('terminatorNight (layers that appear at night)', () => {
     }
   });
 
-  it('overlaps the surface twilight instead of switching over', () => {
-    // Au crépuscule les deux coexistent réellement : sol encore faiblement éclairé ET
-    // villes allumées. Les lumières atteignent leur plein régime (6°) bien avant que le
-    // sol ne s'éteigne (18°) — aucune des deux couches ne saute.
-    const lightsFullAt = -CIVIL_TWILIGHT_DOT;
-    expect(lightsFullAt).toBeGreaterThan(-TERMINATOR_WRAP_ATMOSPHERE);
+  it('extinguishes the ground with a flat tangent, so the lights can start there', () => {
+    // Le bout de la bande : c'est la que le sol atteint zero, et c'est aussi la que les
+    // lumieres de ville atteignent leur plein regime (SHADER_SETTINGS.nightLights monte de
+    // 0 a -TERMINATOR_WRAP_ATMOSPHERE). Les deux rampes couvrent donc la meme bande.
+    //
+    // Ce que ce test verifie, cote sol : l'extinction arrive bien a -wrap, et elle y arrive
+    // avec une PENTE NULLE — sans cette tangence, le bord de l'ombre montrerait une arete.
+    const meet = -TERMINATOR_WRAP_ATMOSPHERE;
+    expect(terminatorLight(meet, TERMINATOR_WRAP_ATMOSPHERE)).toBe(0);
+
+    const eps = 1e-4;
+    const slope =
+      (terminatorLight(meet + eps, TERMINATOR_WRAP_ATMOSPHERE) -
+        terminatorLight(meet, TERMINATOR_WRAP_ATMOSPHERE)) /
+      eps;
+    expect(Math.abs(slope)).toBeLessThan(1e-3);
+
+    // Et au-dessus du point de rencontre le sol garde un eclairement strictement positif
+    // sur toute la bande : c'est exactement le domaine ou les lumieres doivent rester nulles.
     expect(
-      terminatorLight(lightsFullAt, TERMINATOR_WRAP_ATMOSPHERE)
+      terminatorLight(meet / 2, TERMINATOR_WRAP_ATMOSPHERE)
     ).toBeGreaterThan(0);
+    expect(terminatorLight(0, TERMINATOR_WRAP_ATMOSPHERE)).toBeGreaterThan(0);
   });
 });
 

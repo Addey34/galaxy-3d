@@ -41,12 +41,31 @@ export const CIVIL_TWILIGHT_DOT = sinDeg(6);
 /**
  * Corps SANS atmosphère (Lune, Mercure). Physiquement le terminateur y est net : aucune
  * diffusion ne porte la lumière au-delà. La valeur non nulle conservée ici est un
- * adoucissement purement esthétique, assumé, et volontairement bien plus serré.
+ * adoucissement purement esthétique, assumé — mais il DOIT rester plus serré que celui
+ * d'un corps atmosphérique, sinon la Lune aurait un crépuscule plus doux que la Terre.
+ * Fixé à la moitié du crépuscule civil pour garder cet ordre par construction.
  */
-export const TERMINATOR_WRAP_VACUUM = 0.12;
+export const TERMINATOR_WRAP_VACUUM = sinDeg(3);
 
-/** Corps AVEC atmosphère, au niveau du sol. */
-export const TERMINATOR_WRAP_ATMOSPHERE = ASTRONOMICAL_TWILIGHT_DOT;
+/**
+ * Corps AVEC atmosphère, au niveau du SOL.
+ *
+ * C'est le crépuscule CIVIL (6°), pas l'astronomique (18°). Les deux angles ne répondent pas
+ * à la même question : 18° est le moment où le CIEL devient noir, 6° celui où le SOL cesse
+ * d'être utilement éclairé. Cette couche éclaire le sol — c'est donc 6°.
+ *
+ * Régression réellement livrée, corrigée ici : avec 18°, la rampe du sol s'étendait sur ±18°
+ * (~4000 km de bande de terminateur, là où l'imagerie réelle en montre ~1300) alors que les
+ * lumières de ville atteignaient déjà leur plein régime à 6° (fin du crépuscule civil, cf.
+ * SHADER_SETTINGS.nightLights). Il restait donc ~12° où les villes brillaient à fond SUR un
+ * sol encore éclairé. Vu de l'orbite, cela se lit exactement comme des lumières décalées qui
+ * « débordent sur le côté éclairé » — un défaut de LARGEUR perçu comme un défaut de rotation.
+ * Aligner cette largeur sur celle des lumières fait coïncider les deux extinctions.
+ *
+ * La lueur du ciel, elle, dure bien jusqu'à 18° : c'est la coque atmosphérique qui la porte
+ * (TERMINATOR_WRAP_ATMOSPHERE_SHELL), pas le sol.
+ */
+export const TERMINATOR_WRAP_ATMOSPHERE = CIVIL_TWILIGHT_DOT;
 
 /** Sommet des nuages troposphériques (km). */
 export const CLOUD_TOP_ALTITUDE_KM = 10;
@@ -84,19 +103,38 @@ export function twilightWrapAtAltitude(
 export const ATMOSPHERE_GLOW_ALTITUDE_KM = 50;
 
 /** Largeur du crépuscule de la coque atmosphérique (halo au limbe). */
+/**
+ * Largeur du crépuscule de la coque atmosphérique (halo au limbe).
+ *
+ * Elle part de la MÊME base que toutes les autres couches (le crépuscule du sol) plus son
+ * propre abaissement d'horizon. Tenté un temps sur la base ASTRONOMIQUE au motif que la lueur
+ * du ciel dure jusqu'à 18° : erreur visible immédiatement. La coque débordait alors de ~20°
+ * au-delà de l'extinction du sol, et cette lueur sans aucun sol éclairé dessous se voyait
+ * comme un LISERÉ GRIS uniforme et à bord franc le long du limbe. Le halo doit rester
+ * solidaire du sol qu'il surplombe : c'est toute la raison d'être de la base partagée.
+ */
 export const TERMINATOR_WRAP_ATMOSPHERE_SHELL = twilightWrapAtAltitude(
   ATMOSPHERE_GLOW_ALTITUDE_KM
 );
 
 /** Largeur du crépuscule de la couche nuages (sommets à ~10 km). */
-export const TERMINATOR_WRAP_CLOUDS =
-  twilightWrapAtAltitude(CLOUD_TOP_ALTITUDE_KM);
+export const TERMINATOR_WRAP_CLOUDS = twilightWrapAtAltitude(
+  CLOUD_TOP_ALTITUDE_KM
+);
 /** Largeur du crépuscule de la couche précipitations (sommets d'orage à ~12 km). */
-export const TERMINATOR_WRAP_STORM =
-  twilightWrapAtAltitude(STORM_TOP_ALTITUDE_KM);
+export const TERMINATOR_WRAP_STORM = twilightWrapAtAltitude(
+  STORM_TOP_ALTITUDE_KM
+);
 
 const smootherstep01 = (t: number): number =>
   t * t * t * (t * (t * 6 - 15) + 10);
+
+// Pente 3 en t = 0, plate en t = 1 : l'inverse exact du profil de smootherstep. Voir
+// `terminatorNight`, seule consommatrice, pour la raison.
+const easeOutCubic01 = (t: number): number => {
+  const u = 1 - t;
+  return 1 - u * u * u;
+};
 
 const clamp01 = (v: number): number => Math.min(Math.max(v, 0), 1);
 
@@ -140,17 +178,76 @@ export function terminatorDay(raw: number, wrap: number): number {
  *
  * `onset = 0` (le coucher) est la convention du projet : une couche nocturne commence à
  * apparaître quand le Soleil passe l'horizon, pas des dizaines de minutes plus tard.
+ *
+ * COURBE : ease-out cubique 1−(1−t)³, et NON smootherstep comme les autres fonctions d'ici.
+ * Ce n'est pas une incohérence, c'est la seule des trois courbes dont le partenaire s'éteint
+ * au même endroit qu'elle s'allume.
+ *
+ * Smootherstep a une dérivée première ET seconde nulles en t = 0. La couche nocturne démarrait
+ * donc à plat exactement là où l'éclairement du sol, lui, a déjà chuté : au terminateur le sol
+ * ne vaut plus que wrap/4 ≈ 2,6 % et s'effondre, pendant que les villes restent sous 4 % sur le
+ * premier degré. Le total plongeait à 0,65 de sa valeur au terminateur vers 1,9° sous l'horizon
+ * — une marge sombre le long du terminateur, côté ombre, avant les premières lumières. Le
+ * défaut est une affaire de PENTE À L'ORIGINE, pas de largeur ni de seuil : élargir ou reculer
+ * ne fait que déplacer le creux (cf. les deux tentatives documentées dans SHADER_SETTINGS).
+ *
+ * L'ease-out cubique conserve les deux contraintes dures et corrige la troisième :
+ *   - f(0) = 0 EXACTEMENT → aucune lumière nulle part sur le côté éclairé (règle produit) ;
+ *   - f(1) = 1 avec f'(1) = f''(1) = 0 → raccord invisible avec le palier de pleine nuit ;
+ *   - f'(0) = 3 → la couche monte dès le coucher, plus vite que le sol ne s'éteint.
+ * Le total ne décroît plus nulle part (minimum 1,0000, atteint au terminateur même).
+ *
+ * Physiquement c'est aussi le bon modèle : l'éclairage public est déjà allumé au coucher, et
+ * ce qui rend une ville visible depuis l'orbite n'est pas la montée des lampes mais la chute
+ * du sol autour d'elles. La visibilité doit donc suivre cette chute, pas s'y ajouter en retard.
  */
 export function terminatorNight(
   raw: number,
   onset: number,
   rampWidth: number
 ): number {
-  return smootherstep01(clamp01((raw - onset) / -rampWidth));
+  return easeOutCubic01(clamp01((raw - onset) / -rampWidth));
 }
 
 /**
- * Les trois fonctions ci-dessus en GLSL, à l'identique. Injecté dans `#include <common>` par
+ * COUPE DE RELIEF — bornes de la disparition de la normal map à l'approche du terminateur.
+ *
+ * À lumière rasante, une normale perturbée incline chaque ride du relief vers ou hors du
+ * Soleil : les micro-facettes passent en fort contraste et dessinent des contours durs sur la
+ * face nuit. La surface fond donc la normale perturbée vers la normale GÉOMÉTRIQUE avant
+ * d'arriver au terminateur (cf. `createShadowAwareStandardMaterial`, option `moonlight`).
+ *
+ * Ces deux bornes sont exportées parce qu'elles ne concernent PAS que la surface : elles
+ * définissent, pour toutes les couches, la zone où la seule normale valide est la géométrique.
+ * `RELIEF_FADE_END = 0` place cette zone exactement sur la moitié nuit — c'est-à-dire sur
+ * TOUTE la bande où la rampe des lumières de ville varie (elle part de 0 vers le négatif).
+ *
+ * Régression réellement livrée, corrigée grâce à ce partage : `NightLightsShader` perturbait sa
+ * normale à 100 % PARTOUT, y compris dans cette bande où la surface, elle, avait déjà basculé
+ * sur la normale lisse. Les deux couches ne parlaient donc plus du même terminateur sur les
+ * 6° exacts où le masque des villes se construit. Une normal map à pentes de 5–10° y déplace
+ * le seuil de plus que la largeur TOTALE de la rampe : villes débordant côté jour là où le
+ * terrain penche à l'opposé du Soleil, sol noir sans lumières là où il penche vers lui. Le
+ * défaut suit le relief, donc il est irrégulier et asymétrique — ce qui se lit comme un
+ * mauvais centrage des lumières, jamais comme un défaut de largeur.
+ */
+export const RELIEF_FADE_END = 0;
+export const RELIEF_FADE_START = 0.25;
+const RELIEF_FADE_CENTER = (RELIEF_FADE_START + RELIEF_FADE_END) / 2;
+const RELIEF_FADE_HALF_WIDTH = (RELIEF_FADE_START - RELIEF_FADE_END) / 2;
+
+/**
+ * Poids de la normale PERTURBÉE à l'éclairement `raw` : 1 en plein jour, 0 dès
+ * `raw ≤ RELIEF_FADE_END`. Toute couche qui décide d'un seuil à partir de `dot(N, Soleil)`
+ * doit utiliser la même normale que la surface — donc appliquer ce fondu, ou n'employer que
+ * la normale géométrique dans la zone où il vaut 0.
+ */
+export function reliefFade(raw: number): number {
+  return terminatorDay(raw - RELIEF_FADE_CENTER, RELIEF_FADE_HALF_WIDTH);
+}
+
+/**
+ * Les fonctions ci-dessus en GLSL, à l'identique. Injecté dans `#include <common>` par
  * chaque matériau/shader qui en a besoin. Miroir exact du JS au-dessus : toute modification
  * doit être faite dans les deux, et les tests du miroir JS décrivent le contrat.
  */
@@ -165,7 +262,14 @@ float terminatorLight( float raw, float wrap ) {
 float terminatorDay( float raw, float wrap ) {
   return terminatorSmootherstep01( clamp( ( raw + wrap ) / ( 2.0 * wrap ), 0.0, 1.0 ) );
 }
+float terminatorEaseOutCubic01( float t ) {
+  float u = 1.0 - t;
+  return 1.0 - u * u * u;
+}
 float terminatorNight( float raw, float onset, float rampWidth ) {
-  return terminatorSmootherstep01( clamp( ( raw - onset ) / -rampWidth, 0.0, 1.0 ) );
+  return terminatorEaseOutCubic01( clamp( ( raw - onset ) / -rampWidth, 0.0, 1.0 ) );
+}
+float reliefFade( float raw ) {
+  return terminatorDay( raw - ${RELIEF_FADE_CENTER.toFixed(4)}, ${RELIEF_FADE_HALF_WIDTH.toFixed(4)} );
 }
 `;

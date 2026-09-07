@@ -3,12 +3,16 @@
  *
  * Le layer `lights` se rend en AdditiveBlending par-dessus la surface. Le shader
  * calcule, par fragment, un `nightFactor` à partir du produit scalaire normale↔Soleil :
- * les lumières s'allument côté nuit et s'éteignent côté jour. La normale est perturbée
- * avec la même normalMap que la surface, pour que le terminateur des lumières épouse
- * exactement le relief (donc l'ombre de la surface), sans bande sombre au bord.
+ * les lumières s'allument côté nuit et s'éteignent côté jour.
+ *
+ * La normale employée est la normale GÉOMÉTRIQUE, jamais une normale perturbée par la
+ * normalMap — parce que c'est celle que la surface utilise elle aussi sur toute la bande où
+ * ce masque se construit (`RELIEF_FADE_END`, cf. `core/terminator.ts` pour l'historique du
+ * bug que ce choix corrige). Deux couches concentriques qui décident d'un même terminateur à
+ * partir de deux normales différentes ne peuvent pas coïncider.
  */
 import * as THREE from 'three';
-import { TERMINATOR_GLSL } from '@/core/terminator';
+import { CIVIL_TWILIGHT_DOT, TERMINATOR_GLSL } from '@/core/terminator';
 
 interface NightLightsSettings {
   intensity: number;
@@ -22,11 +26,9 @@ export interface NightLightsUniforms {
   intensity: THREE.IUniform<number>;
   threshold: THREE.IUniform<number>;
   smoothness: THREE.IUniform<number>;
-  // Même normalMap que la surface : le shader perturbe sa normale à l'identique
-  // pour que le terminateur des lumières épouse exactement l'ombre du relief.
-  normalMap: THREE.IUniform<THREE.Texture | null>;
-  normalScale: THREE.IUniform<THREE.Vector2>;
-  useNormalMap: THREE.IUniform<number>; // 0/1 — pas de bool fiable en GLSL1
+  // Pas de normalMap ici, volontairement : voir l'en-tête du module. Le masque nuit se
+  // décide sur la normale géométrique, la seule que la surface utilise elle aussi dans
+  // cette bande.
   // index signature required by THREE.ShaderMaterial uniforms type
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   [key: string]: THREE.IUniform<any>;
@@ -54,59 +56,31 @@ export const fragmentShader =
   uniform float intensity;
   uniform float threshold;
   uniform float smoothness;
-  uniform sampler2D normalMap;
-  uniform vec2 normalScale;
-  uniform float useNormalMap;
 
   varying vec3 vNormal;
   varying vec3 vWorldPosition;
   varying vec2 vUv;
 
-  // Repère tangent reconstruit en espace écran (dérivées), sans attribut tangent —
-  // c'est exactement ce que fait MeshStandardMaterial (méthode de Morten Mikkelsen).
-  // Calculé en espace monde car le dot produit Soleil↔normale l'est aussi.
-  vec3 perturbNormal(vec3 worldPos, vec3 surfNorm, vec2 uv) {
-    vec3 q0 = dFdx(worldPos);
-    vec3 q1 = dFdy(worldPos);
-    vec2 st0 = dFdx(uv);
-    vec2 st1 = dFdy(uv);
-
-    vec3 N = surfNorm;
-    vec3 q1perp = cross(q1, N);
-    vec3 q0perp = cross(N, q0);
-    vec3 T = q1perp * st0.x + q0perp * st1.x;
-    vec3 B = q1perp * st0.y + q0perp * st1.y;
-
-    float det = max(dot(T, T), dot(B, B));
-    float scale = (det == 0.0) ? 0.0 : inversesqrt(det);
-
-    vec3 mapN = texture2D(normalMap, uv).xyz * 2.0 - 1.0;
-    mapN.xy *= normalScale;
-    return normalize(T * (mapN.x * scale) + B * (mapN.y * scale) + N * mapN.z);
-  }
-
   void main() {
     vec3 sunDir = normalize(sunPosition - vWorldPosition);
-    vec3 normal = normalize(vNormal);
-
-    // Perturbe la normale géométrique avec la normalMap pour que le terminateur
-    // des lumières suive le relief comme l'ombre de la surface (sinon : bande
-    // sombre sans lumières là où le relief décale le bord de l'ombre).
+    // Normale GÉOMÉTRIQUE, jamais perturbée par la normalMap.
     //
-    // Pas de signe négatif ici : la surface (createShadowAwareStandardMaterial, via le
-    // chunk three.js normal_fragment_begin) appelle getTangentFrame(-vViewPosition, ...),
-    // et vViewPosition est LUI-MÊME déjà l'opposé de la position vue réelle (voir
-    // lights_fragment_begin.glsl.js : geometryPosition = -vViewPosition). Donc
-    // -vViewPosition == la position vue réelle, non négée — la surface reconstruit son
-    // repère tangent à partir de la position réelle du fragment, pas de son opposé.
-    // L'équivalent monde de "la position réelle" est +vWorldPosition. Un signe négatif
-    // ici inverserait tangente et bitangente par rapport à la surface, penchant la
-    // normale perturbée du côté opposé partout où le relief a une pente (visible
-    // seulement là où la normalMap a du relief, jamais sur une sphère lisse : c'est ce
-    // qui produit un décalage asymétrique du terminateur, pas un simple biais uniforme).
-    if (useNormalMap > 0.5) {
-      normal = perturbNormal(vWorldPosition, normal, vUv);
-    }
+    // Le shader perturbait autrefois sa normale à l'identique de la surface, pour que le
+    // terminateur des lumières épouse le relief comme l'ombre. Cet argument est devenu FAUX
+    // le jour où la surface a cessé, elle, de suivre le relief près du terminateur : elle
+    // fond sa normale perturbée vers la géométrique et l'a totalement abandonnée dès
+    // dot(N, Soleil) ≤ RELIEF_FADE_END = 0 (cf. core/terminator.ts). Or c'est exactement là
+    // que vit la rampe des villes — elle part de 0 vers le négatif. Les deux couches
+    // décidaient donc du même terminateur avec deux normales différentes sur 100 % de la
+    // bande utile, d'où un bord de lumières qui suit les pentes du terrain au lieu de suivre
+    // l'ombre : villes côté jour d'un côté, sol noir sans villes de l'autre.
+    //
+    // On ne peut pas non plus « rétablir » la perturbation côté surface : elle y a été
+    // coupée pour une raison physique (à lumière rasante, les micro-facettes passent en fort
+    // contraste et dessinent des contours durs sur la face nuit). La seule normale sur
+    // laquelle les deux couches peuvent s'accorder dans cette bande est donc la géométrique.
+    // Y appliquer reliefFade() serait un no-op coûteux : il vaut 0 sur toute la bande.
+    vec3 normal = normalize(vNormal);
 
     // dot product : 1.0 = surface face au Soleil (plein jour), -1.0 = dos au Soleil (pleine nuit)
     float sunLight = dot(normal, sunDir);
@@ -162,11 +136,9 @@ export function createUniforms(
     sunPosition: { value: null },
     intensity: { value: settings.intensity ?? 1.0 },
     // Repli aligné sur SHADER_SETTINGS.nightLights (config/engine.ts) : allumage au coucher
-    // (0) et plein régime à la fin du crépuscule civil (6° → sin 6° ≈ 0.105).
+    // (0 strict — rien côté jour) et plein régime à la fin du crépuscule civil, soit
+    // exactement la bande que couvre le crépuscule du sol.
     threshold: { value: settings.threshold ?? 0.0 },
-    smoothness: { value: settings.smoothness ?? 0.105 },
-    normalMap: { value: null },
-    normalScale: { value: new THREE.Vector2(1, 1) },
-    useNormalMap: { value: 0 },
+    smoothness: { value: settings.smoothness ?? CIVIL_TWILIGHT_DOT },
   };
 }

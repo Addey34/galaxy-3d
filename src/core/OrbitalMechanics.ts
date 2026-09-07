@@ -24,6 +24,7 @@ import type { PreciseEphemerisProvider } from './PreciseEphemerisProvider';
 import { KM_PER_AU, ScaleService, SQRT_K } from './ScaleService';
 import { computeLightAttenuation } from './eclipse';
 import { HOURS_TO_RAD } from './MathConstants';
+import { surfaceRotationForSubsolarLongitude } from './frames';
 import { forEachBody } from '@/config/catalog';
 
 /** Corps sans mouvement orbital propre (skybox étoilée, étoile centrale à l'origine). */
@@ -114,6 +115,10 @@ function easeInOutCubic(t: number): number {
 
 const EARTH_OBSERVER = new Observer(0, 0, 0);
 
+// Vecteurs de travail du calage de rotation terrestre — évite d'allouer à chaque sync.
+const _tmpSunDirection = new THREE.Vector3();
+const _tmpTiltQuaternion = new THREE.Quaternion();
+
 /**
  * Greenwich subsolar longitude, positive east, from apparent sidereal time.
  *
@@ -132,6 +137,17 @@ export function computeGreenwichSubsolarLongitude(date: Date): number {
   const rawHours = sunRightAscensionHours - gastHours;
   const wrappedHours = ((((rawHours + 12) % 24) + 24) % 24) - 12;
   return wrappedHours * HOURS_TO_RAD;
+}
+
+/**
+ * Latitude du point subsolaire = declinaison apparente du Soleil (equateur de la date), en
+ * degres. Verite INDEPENDANTE du chemin qui oriente la Terre : la longitude subsolaire ne
+ * dit rien de l'orientation de l'AXE, or une erreur d'axe fait pivoter le terminateur autour
+ * du point sous-observateur — les lumieres de ville prennent alors de l'avance a un bout du
+ * terminateur et du retard a l'autre, sans aucune erreur de longitude.
+ */
+export function computeSubsolarLatitude(date: Date): number {
+  return Equator(Body.Sun, date, EARTH_OBSERVER, true, true).dec;
 }
 
 export class OrbitalMechanics {
@@ -198,7 +214,8 @@ export class OrbitalMechanics {
     let minPeriodDays = Infinity;
     forEachBody(config, ({ name, config: cfg, parentName }) => {
       const period = cfg.realData?.orbitPeriodDays;
-      if (period && period > 0 && period < minPeriodDays) minPeriodDays = period;
+      if (period && period > 0 && period < minPeriodDays)
+        minPeriodDays = period;
 
       if (cfg.frame !== 'parentRelative' || parentName === null) return;
       this._parentName.set(name, parentName);
@@ -257,12 +274,20 @@ export class OrbitalMechanics {
       this._morphActive ||
       this._lastPositionMs === null ||
       Math.abs(nowMs - this._lastPositionMs) >= this._minRecomputeThresholdMs;
-    if (!mustRecompute) return;
-    this._lastPositionMs = nowMs;
+    if (mustRecompute) {
+      this._lastPositionMs = nowMs;
+      // L'axe de rotation vieillit comme la position : même cadence, même date.
+      this.syncAxesFromEphemeris(date);
+      forEachBody(this.config, ({ name, config: cfg }) => {
+        if (hasOrbit(cfg)) this._updateBody(name, cfg, date);
+      });
+    }
 
-    forEachBody(this.config, ({ name, config: cfg }) => {
-      if (hasOrbit(cfg)) this._updateBody(name, cfg, date);
-    });
+    // HORS du throttle, et après lui : la phase de rotation terrestre est la seule grandeur
+    // qui doit être exacte À CHAQUE frame. Le throttle ci-dessus ne concerne que les positions
+    // orbitales, dont l'imprécision tolérée est bornée à 0,5° d'orbite ; une erreur de phase,
+    // elle, se cumulerait sans borne (cf. syncEarthSurfaceRotation).
+    this.syncEarthSurfaceRotation(date);
   }
 
   /** Fait progresser la transition animée et notifie la couche app (taille visuelle). */
@@ -483,42 +508,86 @@ export class OrbitalMechanics {
    * directement de l'éphéméride à chaque frame (cf. _updateBody), donc plus rien à ré-ancrer ici.
    */
   syncAnglesFromEphemeris(date: Date): void {
-    const syncBody = (name: string, cfg: CelestialBodyConfig): void => {
-      const body = this.bodies[name];
+    this.syncAxesFromEphemeris(date);
+    this.syncEarthSurfaceRotation(date);
+  }
 
-      // Oriente l'axe de rotation sur le vrai pôle IAU (obliquité + azimut réels).
+  /**
+   * Oriente l'axe de rotation de chaque corps sur son vrai pôle IAU (obliquité + azimut réels).
+   *
+   * Ré-appelé sur la MÊME cadence que le recalcul des positions, et pas seulement aux sauts
+   * temporels comme avant. L'orientation de l'axe est elle aussi un ancrage : figée, elle
+   * vieillit dès que la date avance vite. Mesuré à 1 an/s (?debug-solar) : 0,15° d'erreur de
+   * latitude subsolaire après ~58 ans simulés, en croissance continue. Ce n'est pas cosmétique
+   * — une erreur d'axe fait PIVOTER le terminateur autour du point sous-observateur, donc les
+   * lumières de ville prennent de l'avance à un bout et du retard à l'autre, sans la moindre
+   * erreur de longitude. Coût mesuré : ~0,4 µs par corps, contre un `HelioVector` complet déjà
+   * payé par corps au même moment.
+   */
+  syncAxesFromEphemeris(date: Date): void {
+    forEachBody(this.config, ({ name, config: cfg }) => {
+      if (!hasOrbit(cfg)) return;
+      const body = this.bodies[name];
+      const rotationBody = cfg.rotationBody ?? cfg.astroBody;
+      if (!body || rotationBody === undefined) return;
+
+      const north = this.ephemeris.getNorthPoleDirection(rotationBody, date);
       // Pour un corps rétrograde (obliquité > 90°), le moment cinétique de spin pointe à
       // l'opposé du pôle nord IAU : on passe -pôle pour que +rotationSpeed reste correct.
-      const rotationBody = cfg.rotationBody ?? cfg.astroBody;
-      if (body && rotationBody !== undefined) {
-        const north = this.ephemeris.getNorthPoleDirection(rotationBody, date);
-        const retrograde = (cfg.realData?.axialTilt ?? 0) > Math.PI / 2;
-        body.setAxisDirection(retrograde ? north.multiplyScalar(-1) : north);
-      }
-    };
-
-    forEachBody(this.config, ({ name, config: cfg }) => {
-      if (hasOrbit(cfg)) syncBody(name, cfg);
+      const retrograde = (cfg.realData?.axialTilt ?? 0) > Math.PI / 2;
+      body.setAxisDirection(retrograde ? north.multiplyScalar(-1) : north);
     });
+  }
 
-    // Aligne la rotation de surface de la Terre sur le Soleil apparent.
-    //   θSun       = azimut du Soleil vu de la Terre, dans le plan écliptique XZ.
-    //   subSolarLon = RA apparente du Soleil - GAST, ramenée dans [-12 h, +12 h].
-    // Cette longitude Greenwich exacte remplace l'ancienne approximation UTC linéaire.
-    // Avec la convention de SphereGeometry (azimut méridien = -longitude - rotation.y) :
-    //   rotation.y = -θSun - subSolarLon
-    const earthCfg = this.config.bodies['earth'];
+  /**
+   * Aligne la rotation de surface de la Terre sur le Soleil apparent : le point subsolaire
+   * doit tomber sur sa VRAIE longitude géographique (RA apparente du Soleil - GAST).
+   *
+   * Appelé À CHAQUE FRAME, et c'est le point important. La phase était auparavant ancrée ici
+   * puis laissée s'intégrer toute seule dans `CelestialObject.update` — un cumul qui perdait
+   * silencieusement tout le temps passé hors du frustum, en pause, ou pendant une éclipse de
+   * rendu, sans jamais se rattraper. Mesuré au démarrage (?debug-solar) : 0,68° puis 2,35°
+   * d'erreur de longitude selon la durée, soit exactement le temps simulé écoulé sans
+   * intégration. Une phase DÉRIVÉE de la date ne peut pas dériver : il n'y a plus d'état à
+   * désynchroniser. Coût mesuré : ~3,3 µs/frame (un `Equator` + un `SiderealTime`), 0,02 %
+   * d'une frame à 60 fps.
+   *
+   * L'azimut du Soleil est mesuré dans le repère où la Terre TOURNE (le _tiltGroup, aligné
+   * sur le pôle IAU réel), pas dans celui de la scène. Le plan XZ de la scène est
+   * l'ÉCLIPTIQUE, alors que la longitude subsolaire est ÉQUATORIALE : les composer
+   * directement laissait exactement l'écart RA - λ, le terme d'obliquité de l'équation du
+   * temps. Mesuré avant correction (?debug-solar) : ±2.4°, nul aux équinoxes ET aux
+   * solstices, extrême entre les deux. Le terminateur, lui, restait juste — il ne dépend
+   * que de dot(normale, Soleil) — d'où des continents et des lumières de ville décalés par
+   * rapport à l'ombre, en avance sur un limbe et en retard sur l'autre.
+   */
+  syncEarthSurfaceRotation(date: Date): void {
     const earthBody = this.bodies['earth'];
-    const earthPos = earthCfg
-      ? this._positionAU('earth', earthCfg, date)
-      : null;
-    if (earthPos && earthBody) {
-      const thetaSun = Math.atan2(-earthPos.z, -earthPos.x);
-      const subSolarLon = computeGreenwichSubsolarLongitude(date);
-      // SphereGeometry convention: the visible geographic meridian has azimuth
-      // -longitude - rotation.y in the scene.
-      earthBody.setInitialSurfaceRotation(-thetaSun - subSolarLon);
-    }
+    if (!earthBody?.group) return;
+
+    // Direction Terre->Soleil lue sur la position RENDUE, pas sur un recalcul d'éphéméride :
+    // c'est elle qui produit le terminateur qu'on voit, donc la seule sur laquelle caler la
+    // longitude subsolaire. Elle est aussi gratuite, là où `_positionAU` est le calcul lourd
+    // que tout le reste de cette classe s'applique à throttler. Les deux coïncident de toute
+    // façon : la position éduc est un pur redimensionnement RADIAL de la position vraie
+    // (cf. _computeEducPos), donc de même direction, et le morph éduc↔explo interpole entre
+    // deux vecteurs colinéaires.
+    // Soleil à l'origine de la scène : direction Terre->Soleil = -position de la Terre.
+    earthBody.group.getWorldPosition(_tmpSunDirection);
+    if (_tmpSunDirection.lengthSq() < 1e-24) return;
+    const sunDirection = _tmpSunDirection
+      .negate()
+      .normalize()
+      .applyQuaternion(
+        earthBody.getTiltQuaternion(_tmpTiltQuaternion).invert()
+      );
+
+    earthBody.setSurfaceRotation(
+      surfaceRotationForSubsolarLongitude(
+        sunDirection,
+        computeGreenwichSubsolarLongitude(date)
+      )
+    );
   }
 
   /** Calcule la trajectoire orbitale adaptée au mode courant. */
@@ -608,7 +677,9 @@ export class OrbitalMechanics {
 
   /** Saute à une date absolue (delta calculé depuis la date simulée courante). */
   jumpToDate(target: Date): void {
-    this.addTimeOffset((target.getTime() - this.simulationDate.getTime()) / 86_400_000);
+    this.addTimeOffset(
+      (target.getTime() - this.simulationDate.getTime()) / 86_400_000
+    );
   }
 
   setSimulationSpeed(scale: number): void {
