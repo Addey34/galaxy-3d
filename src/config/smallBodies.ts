@@ -12,6 +12,7 @@
  * (nouvelle époque). À l'échelle de milliers de corps, alimenter ce même convertisseur
  * depuis un JSON streamé (phase ultérieure) plutôt que des littéraux.
  */
+import { Body } from 'astronomy-engine';
 import type { CelestialBodyConfig, TextureQuality } from '@/types';
 import { exploCameraDistance } from '@/core/ScaleService';
 import { DEG_TO_RAD as D2R } from '@/core/MathConstants';
@@ -54,6 +55,14 @@ export interface SmallBodyElements {
   rotationHours?: number;
   /** Obliquité de l'axe de rotation (degrés). */
   axialTiltDeg?: number;
+  /**
+   * Corps astronomy-engine dont le pôle WGCCRE oriente l'axe de rotation. `axialTiltDeg`
+   * ne donne qu'une obliquité sans azimut : le corps est alors penché dans une direction
+   * arbitraire du plan écliptique. Quand le pôle est publié (`RotationAxis` couvre Pluton),
+   * le renseigner ici donne l'orientation complète — et surtout la même que celle de ses
+   * satellites verrouillés, qui l'empruntent par ce même champ.
+   */
+  rotationBody?: Body;
 
   // ── Champs documentaires (fiche d'info) — mêmes unités que `RealData`. ──
   /** Masse en kg. */
@@ -107,6 +116,7 @@ export function smallBodyToConfig(el: SmallBodyElements): CelestialBodyConfig {
       ? { fallbackColor: el.fallbackColor }
       : {}),
     ...(el.satellites ? { satellites: el.satellites } : {}),
+    ...(el.rotationBody !== undefined ? { rotationBody: el.rotationBody } : {}),
     realData: {
       radiusKm: el.radiusKm,
       distanceAU: el.a,
@@ -280,6 +290,7 @@ export const SMALL_BODY_ELEMENTS: readonly SmallBodyElements[] = [
     visualRadius: 0.188,
     rotationHours: 153.3,
     axialTiltDeg: 119.6,
+    rotationBody: Body.Pluto,
     massKg: 1.303e22,
     gravity: 0.62,
     meanTempC: -229,
@@ -301,6 +312,7 @@ export const SMALL_BODY_ELEMENTS: readonly SmallBodyElements[] = [
         orbitalColor: 0xb9b3aa,
         fallbackColor: 0x8c8882,
         frame: 'parentRelative',
+        rotationBody: Body.Pluto,
         relativeEphemeris: { kind: 'horizonsParentRelative' },
         relativeOrbitalElements: {
           semiMajorAxisAU: 0.000131017908,
@@ -357,6 +369,7 @@ export const SMALL_BODY_ELEMENTS: readonly SmallBodyElements[] = [
         orbitalColor: 0xcfd6d6,
         fallbackColor: 0xc4cbcb,
         frame: 'parentRelative',
+        rotationBody: Body.Pluto,
         relativeEphemeris: { kind: 'horizonsParentRelative' },
         // Résolution New Horizons trop faible pour une vraie mosaïque (quelques pixels — voir
         // texture-sources.json). Texture procédurale générée : base claire, peu de cratères,
@@ -393,6 +406,7 @@ export const SMALL_BODY_ELEMENTS: readonly SmallBodyElements[] = [
         orbitalColor: 0xd8d3c9,
         fallbackColor: 0xcfc9bd,
         frame: 'parentRelative',
+        rotationBody: Body.Pluto,
         relativeEphemeris: { kind: 'horizonsParentRelative' },
         // Texture procédurale générée : base claire + une tache rougeâtre isolée, paramétrée
         // sur la vraie tache rouge autour d'un cratère d'impact repérée par New Horizons
@@ -429,6 +443,7 @@ export const SMALL_BODY_ELEMENTS: readonly SmallBodyElements[] = [
         orbitalColor: 0xbfc4c4,
         fallbackColor: 0xb4baba,
         frame: 'parentRelative',
+        rotationBody: Body.Pluto,
         relativeEphemeris: { kind: 'horizonsParentRelative' },
         // Résolution New Horizons trop faible pour une vraie mosaïque (voir
         // texture-sources.json). Texture procédurale générée, même traitement que ses 3
@@ -465,6 +480,7 @@ export const SMALL_BODY_ELEMENTS: readonly SmallBodyElements[] = [
         orbitalColor: 0xdcd8ce,
         fallbackColor: 0xd2cdc1,
         frame: 'parentRelative',
+        rotationBody: Body.Pluto,
         relativeEphemeris: { kind: 'horizonsParentRelative' },
         // Résolution New Horizons trop faible pour une vraie mosaïque (voir
         // texture-sources.json). Texture procédurale générée, même traitement que ses 3

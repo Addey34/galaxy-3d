@@ -536,11 +536,21 @@ export class OrbitalMechanics {
       const rotationBody = cfg.rotationBody ?? cfg.astroBody;
       if (!body || rotationBody === undefined) return;
 
-      const north = this.ephemeris.getNorthPoleDirection(rotationBody, date);
-      // Pour un corps rétrograde (obliquité > 90°), le moment cinétique de spin pointe à
-      // l'opposé du pôle nord IAU : on passe -pôle pour que +rotationSpeed reste correct.
-      const retrograde = (cfg.realData?.axialTilt ?? 0) > Math.PI / 2;
-      body.setAxisDirection(retrograde ? north.multiplyScalar(-1) : north);
+      // Axe = moment cinétique de SPIN du corps qui fournit le pôle, pas son pôle nord
+      // cartographique : c'est autour de lui que `+rotationSpeed` tourne dans le bon sens.
+      //
+      // La règle précédente déduisait le retournement rétrograde de l'obliquité DU CORPS
+      // ORIENTÉ (> 90°). Elle se trompait doublement. D'abord pour un satellite, qui
+      // emprunte le pôle de sa planète (`rotationBody`) mais dont l'obliquité catalogue est
+      // mesurée sur SON orbite, donc ≈ 0 : les cinq lunes d'Uranus recevaient le pôle nord
+      // IAU d'Uranus sans le retournement qu'Uranus, lui, recevait — elles tournaient donc à
+      // l'inverse de leur planète alors qu'elles lui sont verrouillées par effet de marée.
+      // Ensuite parce que « obliquité > 90° » n'est pas le critère du sens : il vaut pour
+      // les planètes, pas pour les planètes naines, qui ne suivent pas la même convention de
+      // pôle dans WGCCRE 2015 (cf. `getSpinAxisDirection`, qui lit le sens à sa source).
+      body.setAxisDirection(
+        this.ephemeris.getSpinAxisDirection(rotationBody, date)
+      );
     });
   }
 

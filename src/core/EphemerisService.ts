@@ -73,4 +73,54 @@ export class EphemerisService {
       axis.north.z
     ).normalize();
   }
+
+  /**
+   * Direction du MOMENT CINÉTIQUE DE SPIN d'un corps, dans le repère Three.js (vecteur
+   * unité). C'est autour de ce vecteur, et en main droite, que le corps tourne réellement —
+   * la grandeur dont le rendu a besoin, là où `getNorthPoleDirection` ne donne qu'un repère
+   * cartographique.
+   *
+   * Les deux ne coïncident pas toujours, et c'est tout l'enjeu : le rapport WGCCRE 2015
+   * n'emploie pas la même convention pour tout le monde. Pour les planètes et leurs
+   * satellites, le « nord » est le pôle situé du côté nord du plan invariable, quel que soit
+   * le sens de rotation : Vénus et Uranus tournent donc en main GAUCHE autour de leur nord
+   * IAU. Pour les planètes naines, astéroïdes et comètes, c'est au contraire la règle de la
+   * main droite qui définit le pôle : le nord de Pluton pointe sous l'écliptique et sa
+   * rotation est bien directe autour de lui.
+   *
+   * On ne peut donc PAS déduire le sens d'une obliquité « > 90° » : le critère dirait vrai
+   * pour Vénus et Uranus, et faux pour Pluton. On lit le sens à sa source — celui de la
+   * dérivée de l'angle de méridien W, positif en main droite —, ce qui couvre les deux
+   * conventions sans avoir à savoir laquelle s'applique.
+   *
+   * Mémorisé par corps : le sens de rotation d'un corps ne change pas, et cette méthode est
+   * appelée pour chaque corps à chaque recalcul de positions.
+   */
+  getSpinAxisDirection(body: Body, date: Date): THREE.Vector3 {
+    const north = this.getNorthPoleDirection(body, date);
+    return this._spinsRightHanded(body) ? north : north.multiplyScalar(-1);
+  }
+
+  private readonly _rightHanded = new Map<Body, boolean>();
+
+  /**
+   * Le corps tourne-t-il en main droite autour de son pôle nord WGCCRE ? Lu sur le signe de
+   * dW/dt. La base de 100 s est un compromis borné des deux côtés : assez courte pour
+   * qu'aucun corps ne puisse faire un tour complet (Jupiter, le plus rapide du catalogue,
+   * n'avance que d'un degré) et lever l'ambiguïté modulo 360°, assez longue pour que l'écart
+   * domine très largement la troncature sur W (Vénus, la plus lente, avance encore de 1,7e-3
+   * degré, contre ~1e-9 de bruit).
+   */
+  private _spinsRightHanded(body: Body): boolean {
+    const cached = this._rightHanded.get(body);
+    if (cached !== undefined) return cached;
+
+    const epoch = new Date('2000-01-01T12:00:00Z');
+    const w1 = RotationAxis(body, epoch).spin;
+    const w2 = RotationAxis(body, new Date(epoch.getTime() + 100_000)).spin;
+    const advance = ((((w2 - w1) % 360) + 540) % 360) - 180;
+    const rightHanded = advance > 0;
+    this._rightHanded.set(body, rightHanded);
+    return rightHanded;
+  }
 }
