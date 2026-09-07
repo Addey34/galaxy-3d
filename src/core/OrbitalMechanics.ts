@@ -23,6 +23,7 @@ import type { OrbitalElementsService } from './OrbitalElementsService';
 import type { PreciseEphemerisProvider } from './PreciseEphemerisProvider';
 import { KM_PER_AU, ScaleService, SQRT_K } from './ScaleService';
 import { computeLightAttenuation } from './eclipse';
+import { solveKepler } from './kepler';
 import { HOURS_TO_RAD } from './MathConstants';
 import { surfaceRotationForSubsolarLongitude } from './frames';
 import { forEachBody } from '@/config/catalog';
@@ -37,6 +38,10 @@ const ZERO = new THREE.Vector3(0, 0, 0);
 export const ORBIT_SAMPLE_COUNT = 512;
 export const EXPLO_ORBIT_SAMPLE_COUNT = 4096;
 const MS_PER_DAY = 86_400_000;
+
+/** Excentricite a partir de laquelle la ligne d'orbite est echantillonnee en anomalie
+ *  excentrique plutot qu'en temps (cf. `_orbitSampleDate`). */
+const ORBIT_SAMPLE_WARP_MIN_ECCENTRICITY = 0.2;
 
 /** Marge visuelle minimale entre un parent et ses satellites en mode éducatif. */
 export const EDUCATIVE_PARENT_GAP = 0.12;
@@ -615,6 +620,58 @@ export class OrbitalMechanics {
     );
   }
 
+  /**
+   * Fraction d'orbite [-0,5 ; 0,5[ -> date d'echantillonnage de la ligne d'orbite.
+   *
+   * Un echantillonnage uniforme dans le TEMPS place les points la ou le corps passe son
+   * temps, ce qui est exactement le contraire de ce qu'il faut pour dessiner une courbe :
+   * la deuxieme loi de Kepler concentre presque toute la periode pres de l'aphelie. Mesure
+   * sur Halley (e = 0,967), 512 points sur 76 ans : deux points consecutifs s'ecartaient de
+   * 130 deg, une corde droite traversait toute la region du perihelie, et la ligne
+   * n'atteignait meme jamais sa distance minimale (rapport des rayons rendu 6,7 pour 7,8
+   * attendu). Le bout pointu de l'ellipse etait litteralement coupe. Meme defaut en Explo,
+   * seulement attenue par ses 4096 points (20,7 deg d'ecart au lieu de 130).
+   *
+   * On repartit donc les points uniformement en ANOMALIE EXCENTRIQUE E, dont la longueur
+   * d'arc |d(pos)/dE| = a*sqrt(1 - e^2 cos^2 E) ne varie plus que d'un facteur a/b entre
+   * l'apside et le quadrant, contre un facteur illimite pour le temps. La conversion vers
+   * la date se fait par l'equation de Kepler M = E - e sin E, exacte, donc les points
+   * restent sur la vraie trajectoire : on ne change QUE la repartition, jamais la courbe.
+   *
+   * Seuil a 0,2 : en dessous, la reparation ne se voit pas et le temps uniforme evite de
+   * dependre de la phase des elements pour un corps dont la position vient d'ailleurs
+   * (fichier Horizons). Au-dessus, l'excentricite est justement ce qu'on veut montrer.
+   */
+  private _orbitSampleDate(
+    cfg: CelestialBodyConfig,
+    date: Date,
+    phase: number,
+    periodDays: number
+  ): Date {
+    const uniform = new Date(date.getTime() + phase * periodDays * MS_PER_DAY);
+    const elements = cfg.orbitalElements ?? cfg.relativeOrbitalElements;
+    const eccentricity = elements?.eccentricity ?? 0;
+    if (!elements || eccentricity < ORBIT_SAMPLE_WARP_MIN_ECCENTRICITY) {
+      return uniform;
+    }
+
+    // Anomalies a la date courante, sur les elements eux-memes.
+    const meanMotion = (2 * Math.PI) / periodDays;
+    const daysSinceEpoch =
+      (date.getTime() - elements.epoch.getTime()) / MS_PER_DAY;
+    const meanNow =
+      elements.meanAnomalyAtEpochRad + meanMotion * daysSinceEpoch;
+    const eccentricNow = solveKepler(meanNow, eccentricity);
+
+    // Un tour complet d'anomalie excentrique centre sur la position courante : la couture
+    // reste a l'oppose du corps affiche, et phase = 0 retombe exactement sur lui.
+    const eccentric = eccentricNow + 2 * Math.PI * phase;
+    const mean = eccentric - eccentricity * Math.sin(eccentric);
+    return new Date(
+      date.getTime() + ((mean - meanNow) / meanMotion) * MS_PER_DAY
+    );
+  }
+
   /** Calcule la trajectoire orbitale adaptée au mode courant. */
   computeOrbitPoints(
     _name: string,
@@ -636,9 +693,7 @@ export class OrbitalMechanics {
       // the currently displayed body instead of moving through it as time advances.
       for (let i = 0; i < nPoints; i++) {
         const phase = i / nPoints - 0.5;
-        const sampleDate = new Date(
-          _date.getTime() + phase * periodDays * MS_PER_DAY
-        );
+        const sampleDate = this._orbitSampleDate(cfg, _date, phase, periodDays);
         const point = this._positionAU(_name, cfg, sampleDate);
         if (!point) return null;
         const i3 = i * 3;
@@ -657,9 +712,7 @@ export class OrbitalMechanics {
     const points = new Float32Array((nPoints + 1) * 3);
     for (let i = 0; i < nPoints; i++) {
       const phase = i / nPoints - 0.5;
-      const sampleDate = new Date(
-        _date.getTime() + phase * periodDays * MS_PER_DAY
-      );
+      const sampleDate = this._orbitSampleDate(cfg, _date, phase, periodDays);
       const pointAU = this._positionAU(_name, cfg, sampleDate);
       if (!pointAU) return null;
       const parentName = this._parentName?.get(_name);
