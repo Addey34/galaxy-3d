@@ -377,7 +377,17 @@ export class OrbitalMechanics {
       );
     }
     if (cfg.relativeOrbitalElements) {
-      return this.elements.getHeliocentricAU(cfg.relativeOrbitalElements, date);
+      // Le corps central est la PLANÈTE, pas le Soleil : on fournit la période publiée du
+      // catalogue, faute de quoi le mouvement moyen serait déduit du μ solaire (cf.
+      // `OrbitalElements.periodDays`). Une entrée qui porte déjà sa propre période garde
+      // la main.
+      return this.elements.getHeliocentricAU(
+        {
+          periodDays: cfg.realData?.orbitPeriodDays,
+          ...cfg.relativeOrbitalElements,
+        },
+        date
+      );
     }
     if (cfg.orbitalElements) {
       return this.elements.getHeliocentricAU(cfg.orbitalElements, date);

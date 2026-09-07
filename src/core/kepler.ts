@@ -31,6 +31,24 @@ export interface OrbitalElements {
   meanAnomalyAtEpochRad: number;
   /** Époque de référence des éléments (date à laquelle M = M₀). */
   epoch: Date;
+  /**
+   * Période de révolution (jours). À renseigner dès que le corps central N'EST PAS le
+   * Soleil — typiquement une lune autour de sa planète.
+   *
+   * Sans elle, le mouvement moyen est déduit de la troisième loi de Kepler avec la constante
+   * de Gauss, donc avec le μ du SOLEIL. Pour un satellite, cela revient à le faire tourner
+   * comme s'il orbitait le Soleil à quelques dizaines de milliers de kilomètres : l'erreur
+   * est le rapport √(M☉/M_parent), soit de 32× (Amalthée) à 11 661× (Charon) trop rapide —
+   * mesuré sur le catalogue, pas estimé. La géométrie de l'orbite restait juste, seule sa
+   * CADENCE était fausse : le corps parcourait la bonne ellipse des milliers de fois trop
+   * vite, ce qui, échantillonné pour tracer la ligne d'orbite, produisait un repliement
+   * complet (la ligne ne décrivait plus l'orbite du tout).
+   *
+   * On passe la période plutôt qu'un μ : elle est déjà dans le catalogue
+   * (`realData.orbitPeriodDays`), publiée et vérifiable corps par corps, là où un μ
+   * demanderait une table de masses à tenir à jour en plus.
+   */
+  periodDays?: number;
 }
 
 /** Constante gravitationnelle de Gauss (rad/jour) — mouvement moyen n = k / a^1.5. */
@@ -95,8 +113,12 @@ export function keplerianPositionEcliptic(
   const a = el.semiMajorAxisAU;
   const e = el.eccentricity;
 
-  // Mouvement moyen (rad/jour) puis anomalie moyenne à la date.
-  const n = GAUSS_K / Math.sqrt(a * a * a);
+  // Mouvement moyen (rad/jour) puis anomalie moyenne à la date. La période explicite prime :
+  // la loi de Gauss ci-dessous suppose le Soleil au foyer (cf. `periodDays`).
+  const n =
+    el.periodDays && el.periodDays > 0
+      ? (2 * Math.PI) / el.periodDays
+      : GAUSS_K / Math.sqrt(a * a * a);
   const M = el.meanAnomalyAtEpochRad + n * daysBetween(date, el.epoch);
 
   const E = solveKepler(M, e);

@@ -16,6 +16,7 @@ import { SpkKernelWorkerClient } from './core/SpkKernelWorkerClient';
 import { SpkWorkerEphemerisProvider } from './core/SpkWorkerEphemerisProvider';
 import { APP_SETTINGS, SPK_SETTINGS, TEXTURE_SETTINGS } from './config/engine';
 import { CELESTIAL_CONFIG } from './config/bodies';
+import { bodyDynamics } from './config/gravity';
 import { forEachBody } from './config/catalog';
 import { t } from './i18n';
 import Logger from './utils/Logger';
@@ -121,13 +122,17 @@ export class SolarSystemApp {
         reportResourceProgress(msg);
       }
     );
-    const horizonsPromise = HorizonsEphemerisService.load(manifestUrl).then(
-      (horizons) => {
-        ephemeridesReady = true;
-        reportResourceProgress(t('loader.ephemerides'));
-        return horizons;
-      }
-    );
+    // Les masses du catalogue disent au service autour de quoi chaque fichier est centre :
+    // il en a besoin pour interpoler par la dynamique les satellites que son pas
+    // d'echantillonnage ne resout pas (cf. HorizonsEphemerisService).
+    const horizonsPromise = HorizonsEphemerisService.load(
+      manifestUrl,
+      bodyDynamics(CELESTIAL_CONFIG)
+    ).then((horizons) => {
+      ephemeridesReady = true;
+      reportResourceProgress(t('loader.ephemerides'));
+      return horizons;
+    });
 
     this._startOptionalSpk();
 
