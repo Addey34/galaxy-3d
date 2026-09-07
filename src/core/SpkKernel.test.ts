@@ -171,8 +171,11 @@ describe('SpkKernel — vrai kernel sat441l.bsp (si présent)', () => {
   const present = existsSync(kernelPath);
   const maybe = present ? it : it.skip;
 
+  // 60 s : voir la note du test suivant — relire et reparser le kernel SAT441 depasse
+  // regulierement le timeout de 5 s par defaut des que la machine est chargee.
   maybe(
     'compose des positions lunaires réelles relatives à Saturne (699)',
+    { timeout: 60_000 },
     () => {
       const buf = readFileSync(kernelPath);
       const ab = buf.buffer.slice(
@@ -204,44 +207,53 @@ describe('SpkKernel — vrai kernel sat441l.bsp (si présent)', () => {
   // Reproduit le chemin de PRODUCTION (mode HTTP Range du worker) : on ne charge QUE les
   // deux segments nécessaires par tranche d'octets, on compose, et on vérifie l'égalité
   // exacte avec le kernel entier. Garantit que le déploiement Range résout bien les lunes.
-  maybe('mode Range : composition par segment == kernel entier', () => {
-    const buf = readFileSync(kernelPath);
-    const ab = buf.buffer.slice(
-      buf.byteOffset,
-      buf.byteOffset + buf.byteLength
-    );
-    const full = SpkKernel.parse(ab);
-    const et = etSecondsFromDate(new Date('2026-08-11T00:00:00Z'));
-
-    // Descripteurs directs (moon←6 et Saturne←6) tels que le worker les trouverait.
-    const descOf = (target: number, center: number): SpkSegmentDescriptor => {
-      const d = full.segments.find(
-        (s) =>
-          s.target === target &&
-          s.center === center &&
-          et >= s.startEtSeconds &&
-          et <= s.endEtSeconds &&
-          (s.type === 2 || s.type === 3)
+  // 60 s de timeout, et non les 5 s par defaut : ce test relit et reparse un kernel SAT441
+  // de plusieurs centaines de Mo. Mesure sur cette machine : 4 s a vide, 14 s sous charge
+  // (une suite e2e en parallele suffit). Le defaut le rendait donc flaky par construction —
+  // invisible en CI, ou le kernel optionnel n'est pas stage et le test est skip, mais il
+  // faisait rougir `pnpm verify` en local au hasard de la charge.
+  maybe(
+    'mode Range : composition par segment == kernel entier',
+    { timeout: 60_000 },
+    () => {
+      const buf = readFileSync(kernelPath);
+      const ab = buf.buffer.slice(
+        buf.byteOffset,
+        buf.byteOffset + buf.byteLength
       );
-      if (!d) throw new Error(`segment ${target}<-${center} introuvable`);
-      return d;
-    };
-    // Charge un segment isolé par "range" d'octets (comme loadSegment via fetchRange).
-    const loadRanged = (d: SpkSegmentDescriptor): SpkKernel => {
-      const start = (d.initialAddress - 1) * 8;
-      const end = d.finalAddress * 8;
-      return SpkKernel.fromSegment(d, ab.slice(start, end), true);
-    };
+      const full = SpkKernel.parse(ab);
+      const et = etSecondsFromDate(new Date('2026-08-11T00:00:00Z'));
 
-    const titanSeg = descOf(606, 6);
-    const saturnSeg = descOf(699, 6);
-    const ranged = subtractStates(
-      loadRanged(titanSeg).getState(606, 6, et),
-      loadRanged(saturnSeg).getState(699, 6, et)
-    );
-    const whole = full.getState(606, 699, et);
-    expect(ranged).not.toBeNull();
-    expect(ranged!.positionKm).toEqual(whole!.positionKm);
-    expect(ranged!.velocityKmPerSecond).toEqual(whole!.velocityKmPerSecond);
-  });
+      // Descripteurs directs (moon←6 et Saturne←6) tels que le worker les trouverait.
+      const descOf = (target: number, center: number): SpkSegmentDescriptor => {
+        const d = full.segments.find(
+          (s) =>
+            s.target === target &&
+            s.center === center &&
+            et >= s.startEtSeconds &&
+            et <= s.endEtSeconds &&
+            (s.type === 2 || s.type === 3)
+        );
+        if (!d) throw new Error(`segment ${target}<-${center} introuvable`);
+        return d;
+      };
+      // Charge un segment isolé par "range" d'octets (comme loadSegment via fetchRange).
+      const loadRanged = (d: SpkSegmentDescriptor): SpkKernel => {
+        const start = (d.initialAddress - 1) * 8;
+        const end = d.finalAddress * 8;
+        return SpkKernel.fromSegment(d, ab.slice(start, end), true);
+      };
+
+      const titanSeg = descOf(606, 6);
+      const saturnSeg = descOf(699, 6);
+      const ranged = subtractStates(
+        loadRanged(titanSeg).getState(606, 6, et),
+        loadRanged(saturnSeg).getState(699, 6, et)
+      );
+      const whole = full.getState(606, 699, et);
+      expect(ranged).not.toBeNull();
+      expect(ranged!.positionKm).toEqual(whole!.positionKm);
+      expect(ranged!.velocityKmPerSecond).toEqual(whole!.velocityKmPerSecond);
+    }
+  );
 });
