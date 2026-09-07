@@ -154,7 +154,6 @@ src/
 ├── core/
 │   ├── EphemerisService.ts   # Wrapper astronomy-engine → positions en UA (prend des enums Body)
 │   ├── frames.ts             # ⓟ Repères : équatorial J2000 → écliptique → Three.js
-│   ├── orbitalGeometry.ts    # ⓟ Orbite éducative : position + projection inverse d'angle
 │   ├── SimulationClock.ts    # Horloge simulée avec time travel et vitesse variable
 │   ├── ScaleService.ts       # Conversion UA → unités Three.js (modes educ/explo)
 │   └── OrbitalMechanics.ts   # Pilote les positions planétaires chaque frame
