@@ -48,9 +48,10 @@ export const EDUCATIVE_PARENT_GAP = 0.12;
 
 /**
  * Les éléments orbitaux relatifs servent aussi de borne de cohérence pour une source précise.
- * Une éphéméride enfant-parent valide ne peut pas s'éloigner durablement de son orbite publiée.
- * Cette vérification protège notamment les anciens fichiers Horizons générés avec le Soleil
- * comme centre, puis interprétés à tort comme des vecteurs parent-relative.
+ * Une éphéméride enfant-parent valide ne peut pas s'éloigner durablement de son orbite publiée,
+ * ni s'en rapprocher. Cette vérification protège notamment les anciens fichiers Horizons
+ * générés avec le Soleil comme centre, puis interprétés à tort comme des vecteurs
+ * parent-relative.
  */
 const RELATIVE_EPHEMERIS_TOLERANCE = 2;
 const HELIOCENTRIC_DISTANCE_MIN_FACTOR = 0.5;
@@ -63,8 +64,18 @@ export function isPlausibleRelativePosition(
 ): boolean {
   const elements = cfg.relativeOrbitalElements;
   if (!elements) return true;
-  const maxDistanceAU = elements.semiMajorAxisAU * (1 + elements.eccentricity);
-  return position.length() <= maxDistanceAU * RELATIVE_EPHEMERIS_TOLERANCE;
+  const distanceAU = position.length();
+  const apoapsisAU = elements.semiMajorAxisAU * (1 + elements.eccentricity);
+  const periapsisAU = elements.semiMajorAxisAU * (1 - elements.eccentricity);
+  // Les DEUX bornes, et la basse n'est pas décorative : elle est celle qui manquait.
+  // Une position qui s'effondre vers la planète est tout aussi fausse qu'une qui s'en
+  // échappe, mais elle passait sans être vue — c'est ainsi qu'Encelade a pu se promener
+  // entre 1/11 et 1 fois son rayon orbital pendant des mois, sous un garde-fou qui ne
+  // regardait que le haut.
+  return (
+    distanceAU >= periapsisAU / RELATIVE_EPHEMERIS_TOLERANCE &&
+    distanceAU <= apoapsisAU * RELATIVE_EPHEMERIS_TOLERANCE
+  );
 }
 
 /**
