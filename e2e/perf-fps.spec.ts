@@ -10,6 +10,35 @@ import { blockExternalNetwork } from './netBlock';
  * Sert à détecter une RÉGRESSION nette de perf, pas à certifier un chiffre absolu.
  */
 
+/**
+ * PLANCHERS DE FPS — deux jeux, parce qu'un plancher absolu n'a pas de sens ici.
+ *
+ * Ce test ne certifie pas une fluidité : il détecte un DECROCHAGE (boucle bloquée, scène
+ * figée), où le framerate tombe vers zéro. Le chiffre qui sépare « lent » de « cassé »
+ * dépend entièrement de la machine, et l'écart entre les deux environnements est d'un
+ * facteur ~2,5. Mesures réelles :
+ *
+ *                          poste de dev        runner GitHub (GPU logiciel, VM partagée)
+ *   desktop                13,3 - 14,0         4,3 - 5,7
+ *   4x throttlé            ~10,3               3,7 - 4,7
+ *   mobile 4x throttlé     ~59                 23,3
+ *
+ * Les anciens seuils (10 et 8) avaient été calibrés sur un rendu logiciel LOCAL mesuré à
+ * ~15 fps, pas sur le runner : en CI ils échouaient systématiquement, retries compris. Le
+ * défaut n'a jamais été vu parce que le job e2e n'avait jamais abouti — 22 des 25 derniers
+ * runs annulés par timeout. Un job rouge en permanence ne signale plus rien : on apprend à
+ * ignorer sa couleur, ce qui coûte plus cher que l'absence de test.
+ *
+ * Les planchers CI gardent ~2x de marge sous la mesure la plus basse observée, ce qui laisse
+ * passer la lenteur du runner et attrape toujours un vrai blocage (qui donne 0-1 fps).
+ */
+const IS_CI = Boolean(process.env.CI);
+const FPS_FLOOR = {
+  desktop: IS_CI ? 2 : 10,
+  throttled: IS_CI ? 1.5 : 8,
+  mobileThrottled: IS_CI ? 5 : 8,
+};
+
 test.beforeEach(async ({ page }) => {
   await blockExternalNetwork(page);
   await page.addInitScript(() => {
@@ -66,12 +95,9 @@ test('measures real FPS on desktop (baseline, no throttling)', async ({
 
   const fps = await measureFps(page, 3000);
   console.log(`[perf] Desktop baseline FPS: ${fps.toFixed(1)}`);
-  // Garde-fou large : détecte un vrai plantage/blocage du rendu, pas une variation de perf.
-  // Sur un rendu logiciel (GPU absent/non accéléré en CI ou VM), la ligne de base sans
-  // throttling a été mesurée à ~14.7-15 fps de façon reproductible — sous l'ancien seuil de 15,
-  // faisant échouer ce test à chaque run sans qu'aucun vrai décrochage ne se produise. 10 reste
-  // largement en dessous de tout rendu logiciel viable tout en détectant un vrai plantage.
-  expect(fps).toBeGreaterThan(10);
+  // Garde-fou large : détecte un vrai plantage/blocage du rendu, pas une variation de perf
+  // (cf. `FPS_FLOOR` pour les mesures des deux environnements).
+  expect(fps).toBeGreaterThan(FPS_FLOOR.desktop);
 });
 
 test('measures real FPS under 4x CPU throttling (Lighthouse-style mid-tier mobile proxy)', async ({
@@ -94,7 +120,7 @@ test('measures real FPS under 4x CPU throttling (Lighthouse-style mid-tier mobil
   // Seuil bas et volontairement permissif : ce test veut détecter un décrochage complet
   // (scène figée, boucle bloquée), pas fixer un objectif de fluidité — voir le commentaire
   // d'en-tête sur les limites de ce proxy vs un vrai appareil.
-  expect(fps).toBeGreaterThan(8);
+  expect(fps).toBeGreaterThan(FPS_FLOOR.throttled);
 });
 
 test.describe('mobile viewport + CPU throttling', () => {
@@ -117,6 +143,6 @@ test.describe('mobile viewport + CPU throttling', () => {
     );
     await cdp.send('Emulation.setCPUThrottlingRate', { rate: 1 });
 
-    expect(fps).toBeGreaterThan(8);
+    expect(fps).toBeGreaterThan(FPS_FLOOR.mobileThrottled);
   });
 });
