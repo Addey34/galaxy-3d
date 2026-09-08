@@ -4,7 +4,7 @@
  *
  * Lit une source TIF / JPG / PNG (sharp gère le TIFF nativement, pas de conversion
  * en amont), génère les variantes de résolution au nom attendu par l'app
- * (`{body}/{body}{Layer}_{res}.jpg`, ex. `callisto/callistoSurface_2k.jpg`), et n'agrandit
+ * (`{body}/{body}_{layer}_{res}.jpg`, ex. `callisto/callisto_surface_2k.jpg`), et n'agrandit
  * jamais au-delà de la largeur réelle de la source (pas de faux détail).
  *
  * Usage :

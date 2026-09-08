@@ -18,6 +18,7 @@
     "spk:stage": "node scripts/stage-sat441.mjs",
     "spk:verify": "node scripts/verify-spk-range.mjs",
     "icons:generate": "node scripts/generate-icons.mjs",
+    "textures:import": "node scripts/import-textures.mjs",
     "textures:resize": "node scripts/resize-textures.mjs",
     "textures:audit": "vitest run src/config/textureAssets.test.ts src/config/assetManifest.test.ts && node scripts/audit-textures.mjs",
     "format": "prettier --write \"{src,e2e,scripts}/**/*.{ts,css,mjs}\"",

@@ -41,6 +41,35 @@ bugs réels de ce type (positions décalées silencieusement, aucune erreur, auc
 « Horizons » dans l'historique git pour le détail). La leçon : toujours comparer la position
 calculée à un vecteur d'état JPL réel avant de committer.
 
+#### Cas particulier : une lune
+
+Une lune reçoit sa position du binaire Horizons de son parent, mais elle a **aussi** besoin d'un
+jeu de secours `relativeOrbitalElements` — utilisé si le binaire manque, sort de sa couverture ou
+échoue au contrôle de plausibilité, y compris quand les assets ne se chargent pas, cas où il
+travaille aux dates courantes sous les yeux de l'utilisateur.
+
+Deux pièges, tous deux déjà livrés en production :
+
+1. **Les angles doivent être ÉCLIPTIQUES.** Les valeurs publiées (Wikipédia, fiches JPL) sont le
+   plus souvent données par rapport à l'ÉQUATEUR de la planète, et rien ne distingue les deux
+   dans un fichier de config. 8 jeux sur 20 étaient dans le mauvais repère : Charon était à i = 0°
+   au lieu de 112,9°, soit 145° d'écart de position dès que le repli prenait la main.
+2. **`realData.orbitPeriodDays` est obligatoire.** `kepler.ts` s'en sert comme mouvement moyen ;
+   sans elle il le déduit de la constante de Gauss, c'est-à-dire du μ du SOLEIL, et la lune tourne
+   de 32× à 11 661× trop vite selon la planète.
+
+Ne saisissez donc pas ces éléments à la main :
+
+```bash
+pnpm ephemeris:elements        # les dérive des états exacts des binaires committés
+```
+
+Le script les sort déjà formatés pour le catalogue, dans le bon repère par construction.
+`src/core/relativeElements.test.ts` compare ensuite le repli au binaire et échouera si l'un des
+deux dérive. Exception assumée : un satellite qui n'orbite pas le centre de sa planète mais un
+barycentre déporté (les quatre petites lunes de Pluton) n'a pas d'éléments osculateurs
+exploitables — mieux vaut aucun repli qu'un repli faux.
+
 ### 2. Ajouter les textures
 
 Déposer les fichiers dans `public/assets/textures/{nom}/` au format

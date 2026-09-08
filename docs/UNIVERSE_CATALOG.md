@@ -136,7 +136,8 @@ Avant tout ajout :
 7. ajouter un test catalogue et un test de position ou de transformation ;
 8. ajouter un scenario Playwright si l'objet modifie le boot, la navigation ou le WebGL ;
 9. lancer pnpm textures:resize, pnpm verify, pnpm build et les E2E concernes.
-   Pour une source validee, utiliser pnpm textures:fetch --body=io,europa.
+   Pour importer une source validee, utiliser pnpm textures:import --only io
+   (un corps a la fois ; --dry-run annonce sans ecrire).
 
 Un objet incomplet reste dans une roadmap ou une couche de marqueurs. Il n'entre pas dans le rendu physique avec des donnees inventees.
 
