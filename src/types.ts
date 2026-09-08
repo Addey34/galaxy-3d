@@ -186,7 +186,35 @@ export interface RealData {
   description?: LocalizedText;
   /** Lien « En savoir plus » par langue (article Wikipédia dédié). Affiché par `ui/bodyInfo`. */
   wiki?: LocalizedText;
+
+  /**
+   * Champs dont il n'existe PAS de valeur publiée unique, avec la raison, localisée.
+   *
+   * Un champ simplement absent est ambigu : l'utilisateur ne peut pas distinguer « la science
+   * ne donne pas ce chiffre » de « le catalogue l'a oublié ». La fiche d'information affiche
+   * donc ces champs avec un tiret cadratin et la raison en infobulle, plutôt que de faire
+   * disparaître la ligne.
+   *
+   * Ne PAS confondre avec une donnée non applicable : le Soleil n'a pas de période orbitale
+   * parce qu'il est l'origine du repère, ce n'est pas une inconnue. Ce cas-là se déduit du
+   * `kind` et ne se déclare pas ici.
+   *
+   * Renseigner une moyenne inventee pour combler une case serait pire que la case vide :
+   * rien ne distinguerait alors une valeur mesuree d'une valeur fabriquee.
+   */
+  unknown?: Partial<Record<UnknownableField, LocalizedText>>;
 }
+
+/** Champs documentaires qui peuvent legitimement n'avoir aucune valeur publiee. */
+export type UnknownableField =
+  | 'radiusKm'
+  | 'massKg'
+  | 'gravity'
+  | 'meanTempC'
+  | 'moonCount'
+  | 'axialTilt'
+  | 'distanceAU'
+  | 'orbitPeriodDays';
 
 /**
  * Contrat partagé entre AnimationSystem et tous les objets mis à jour chaque frame.

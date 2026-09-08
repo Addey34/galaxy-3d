@@ -1,27 +1,35 @@
 import { describe, expect, it } from 'vitest';
 import { CELESTIAL_CONFIG } from './bodies';
 import { forEachBody } from './catalog';
+import type { CelestialBodyConfig, UnknownableField } from '@/types';
 
 /**
- * COMPLÉTUDE DU CATALOGUE — chaque corps porte-t-il les données que l'application promet ?
+ * COMPLÉTUDE DU CATALOGUE — chaque corps porte-t-il ce que l'application promet d'afficher ?
  *
- * La fiche d'information (`ui/bodyInfo.ts`) affiche ces champs pour n'importe quel corps
- * sélectionnable. Un champ absent ne casse rien : la ligne disparaît, silencieusement. C'est
- * exactement le mode de défaut de ce projet — pas d'erreur, pas de log, juste une information
- * qui n'est plus là. Audit du 2026-09-08 : 45 corps sur 51 complets, et les 6 autres l'étaient
- * par oubli, pas par choix.
+ * La fiche d'information affiche ces champs pour n'importe quel corps sélectionnable. Un champ
+ * simplement absent ne casse rien : la ligne disparaît, silencieusement. C'est le mode de
+ * défaut habituel de ce projet — pas d'erreur, pas de log, juste une information qui n'est
+ * plus là. Audit du 2026-09-08 : 45 corps sur 51 complets, les 6 autres par oubli.
  *
- * Ce test rend le choix EXPLICITE. Un champ manquant est soit un oubli (le test échoue), soit
- * une exemption inscrite ci-dessous avec sa raison. Il n'y a pas de troisième cas.
+ * Trois états possibles pour un champ, et un seul est un défaut :
  *
- * La règle qui gouverne les exemptions : on n'exempte que ce qui n'a **pas de valeur publiée
- * unique**, jamais ce qu'on n'a simplement pas pris le temps de chercher. Inventer une moyenne
- * pour combler une case serait pire que la case vide — l'utilisateur ne peut pas distinguer une
- * donnée mesurée d'une donnée inventée.
+ *   1. **renseigné** — la valeur est là, sourcée ;
+ *   2. **déclaré inconnu** — `realData.unknown[champ]` porte la raison, et la fiche affiche
+ *      un tiret cadratin avec cette raison en infobulle plutôt que de masquer la ligne ;
+ *   3. **oublié** — rien de tout cela : c'est ce que ce test fait échouer.
+ *
+ * Le NON APPLICABLE est un quatrième cas, volontairement absent de la donnée : le Soleil n'a
+ * pas de période orbitale parce qu'il est l'origine du repère, pas parce qu'on l'ignore. Cela
+ * se déduit du `kind`, ça ne se déclare pas corps par corps — sinon on maintiendrait à la main
+ * une évidence structurelle.
+ *
+ * La raison des inconnues vit dans le CATALOGUE, pas ici. C'est la règle du projet (« config
+ * is the single source of truth ») et c'est surtout ce qui permet à la fiche d'information de
+ * l'afficher à l'utilisateur : une raison enfermée dans un fichier de test ne sert personne.
  */
 
 /** Champs que la fiche d'information affiche, et que tout corps devrait donc porter. */
-const DOCUMENTED_FIELDS = [
+const DOCUMENTED_FIELDS: UnknownableField[] = [
   'radiusKm',
   'massKg',
   'gravity',
@@ -30,60 +38,23 @@ const DOCUMENTED_FIELDS = [
   'distanceAU',
   'axialTilt',
   'moonCount',
-  'description',
-  'wiki',
-] as const;
-
-type Field = (typeof DOCUMENTED_FIELDS)[number];
+];
 
 /**
- * Exemptions, chacune avec la raison qui la justifie. Toute entrée ici est une affirmation
- * vérifiable : si la raison cesse d'être vraie, l'exemption doit sauter.
+ * Champs qui n'ont structurellement pas de sens pour un `kind` donné. Une étoile centrale
+ * n'orbite rien : lui réclamer une période ou une distance serait une erreur de modèle, pas
+ * une donnée manquante.
  */
-const EXEMPT: Record<string, Partial<Record<Field, string>>> = {
-  sun: {
-    orbitPeriodDays:
-      "il est l'origine du repère héliocentrique, il n'orbite rien",
-    distanceAU: "idem — sa distance à lui-même n'a pas de sens",
-  },
-  // Les quatre galiléennes : masse et gravité sont désormais dérivées du GM publié par JPL
-  // (cf. `bodies.ts`). La température, elle, n'a pas de valeur moyenne publiée.
-  io: {
-    meanTempC:
-      'la NASA publie une plage, pas une moyenne : ~80-85 K la nuit, 420-620 K sur les zones volcaniques',
-  },
-  europa: {
-    meanTempC:
-      'plage publiée de ~50 K aux pôles à ~140 K à l’équateur (science.nasa.gov), aucune moyenne officielle',
-  },
-  ganymede: {
-    meanTempC:
-      'la fiche NASA donne « 90 to 160 Kelvin » en journée, sans moyenne',
-  },
-  callisto: {
-    meanTempC:
-      'même situation que ses voisines : plage publiée, pas de moyenne',
-  },
-  // Note : `halley.axialTilt` n'est PAS exempte ici parce que `smallBodyToConfig` le met a 0
-  // par defaut, donc le champ existe toujours. C'est une limite differente, hors de portee de
-  // ce test : une valeur presente mais defaultee, pas une valeur absente.
-  halley: {
-    massKg:
-      'aucune mesure directe : la masse du noyau se déduit d’une densité elle-même mal contrainte (« pas plus du quart de celle de la glace »)',
-    gravity:
-      'noyau irrégulier de ~15 × 8 km — la gravité de surface varie d’un facteur plusieurs selon l’endroit, une valeur unique serait trompeuse',
-    meanTempC:
-      'la température parcourt ~340 K le long de l’orbite, d’au-delà de −250 °C à l’aphélie à plusieurs dizaines de °C au périhélie : une moyenne ne décrirait aucun instant réel',
-  },
-};
+function notApplicable(cfg: CelestialBodyConfig): Set<UnknownableField> {
+  return cfg.kind === 'star'
+    ? new Set<UnknownableField>(['orbitPeriodDays', 'distanceAU'])
+    : new Set<UnknownableField>();
+}
 
-const bodies: { name: string; realData: Record<string, unknown> }[] = [];
+const bodies: { name: string; cfg: CelestialBodyConfig }[] = [];
 forEachBody(CELESTIAL_CONFIG, ({ name, config }) => {
   if (config.kind === 'skybox') return;
-  bodies.push({
-    name,
-    realData: (config.realData ?? {}) as Record<string, unknown>,
-  });
+  bodies.push({ name, cfg: config });
 });
 
 describe('complétude documentaire du catalogue', () => {
@@ -91,52 +62,63 @@ describe('complétude documentaire du catalogue', () => {
     expect(bodies.length).toBeGreaterThanOrEqual(50);
   });
 
-  for (const { name, realData } of bodies) {
-    it(`${name} porte toutes ses données documentaires`, () => {
-      const missing = DOCUMENTED_FIELDS.filter(
-        (field) => realData[field] === undefined && !EXEMPT[name]?.[field]
+  for (const { name, cfg } of bodies) {
+    it(`${name} : chaque champ est renseigné, déclaré inconnu, ou hors sujet`, () => {
+      const realData = (cfg.realData ?? {}) as Record<string, unknown>;
+      const skip = notApplicable(cfg);
+
+      const forgotten = DOCUMENTED_FIELDS.filter(
+        (field) =>
+          !skip.has(field) &&
+          realData[field] === undefined &&
+          cfg.realData?.unknown?.[field] === undefined
       );
+
       expect(
-        missing,
-        `${name} : champ(s) absent(s) sans exemption justifiée — ` +
-          `soit renseigner la valeur (sourcée), soit ajouter une exemption motivée dans EXEMPT`
+        forgotten,
+        `${name} : champ(s) ni renseigné(s) ni déclaré(s) inconnu(s). Soit fournir la ` +
+          `valeur avec sa source, soit ajouter realData.unknown.<champ> avec la raison — ` +
+          `la fiche d'information l'affichera à l'utilisateur.`
       ).toEqual([]);
     });
   }
 
   /**
-   * Une exemption qui ne correspond plus à rien est un mensonge qui dort : elle laisse croire
-   * qu'une absence est réfléchie alors que la donnée est peut-être là depuis longtemps. Ce cas
-   * garde la table honnête dans les deux sens.
+   * Une déclaration d'inconnue qui ne correspond plus à rien est un mensonge qui dort : elle
+   * ferait afficher « non publié » sur une donnée présente. Ce cas garde la table honnête
+   * dans l'autre sens.
    */
-  it('ne garde aucune exemption devenue inutile', () => {
-    const stale: string[] = [];
-    for (const [name, fields] of Object.entries(EXEMPT)) {
-      const body = bodies.find((b) => b.name === name);
-      expect(
-        body,
-        `EXEMPT référence « ${name} », absent du catalogue`
-      ).toBeDefined();
-      for (const field of Object.keys(fields)) {
-        if (body!.realData[field] !== undefined) {
-          stale.push(`${name}.${field}`);
-        }
+  it('ne déclare inconnu aucun champ pourtant renseigné', () => {
+    const contradictions: string[] = [];
+    for (const { name, cfg } of bodies) {
+      const realData = (cfg.realData ?? {}) as Record<string, unknown>;
+      for (const field of Object.keys(cfg.realData?.unknown ?? {})) {
+        if (realData[field] !== undefined)
+          contradictions.push(`${name}.${field}`);
       }
     }
     expect(
-      stale,
-      'ces champs sont renseignés : retirer leur exemption'
+      contradictions,
+      'ces champs ont une valeur : retirer leur déclaration d’inconnue'
     ).toEqual([]);
   });
 
-  /** Une exemption sans raison lisible n'en est pas une. */
-  it('justifie chaque exemption', () => {
-    for (const [name, fields] of Object.entries(EXEMPT)) {
-      for (const [field, reason] of Object.entries(fields)) {
-        expect(
-          reason.length,
-          `${name}.${field} : raison trop courte pour être une justification`
-        ).toBeGreaterThan(25);
+  /**
+   * Une raison doit être lisible par un utilisateur, dans les deux langues — elle finit en
+   * infobulle sur sa fiche, pas dans un log de développeur.
+   */
+  it('justifie chaque inconnue dans les deux langues', () => {
+    for (const { name, cfg } of bodies) {
+      for (const [field, reason] of Object.entries(
+        cfg.realData?.unknown ?? {}
+      )) {
+        for (const locale of ['en', 'fr'] as const) {
+          expect(
+            reason[locale]?.length ?? 0,
+            `${name}.${field} (${locale}) : raison absente ou trop courte pour expliquer ` +
+              `une absence à un utilisateur`
+          ).toBeGreaterThan(30);
+        }
       }
     }
   });

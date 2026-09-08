@@ -433,6 +433,12 @@ export const CELESTIAL_CONFIG: CelestialConfig = {
           fallbackColor: 0xffc857,
           textureResolutions: { surface: ['8k', '4k', '2k', '1k'] },
           realData: {
+            unknown: {
+              meanTempC: {
+                en: 'NASA publishes a range, not a mean: about 80-85 K at night, 420-620 K over volcanic regions.',
+                fr: 'La NASA publie une plage, pas une moyenne : environ 80-85 K la nuit, 420-620 K sur les zones volcaniques.',
+              },
+            },
             radiusKm: 1_821.6,
             // Masse et gravite derivees du GM publie par JPL SSD (ephemeride JUP365,
             // https://ssd.jpl.nasa.gov/sats/phys_par/) : m = GM/G, g = GM/R^2. Ni l'un ni
@@ -469,6 +475,12 @@ export const CELESTIAL_CONFIG: CelestialConfig = {
           fallbackColor: 0xd9c7a4,
           textureResolutions: { surface: ['8k', '4k', '2k', '1k'] },
           realData: {
+            unknown: {
+              meanTempC: {
+                en: 'Published range runs from about 50 K at the poles to about 140 K at the equator; no official mean exists.',
+                fr: "Plage publiée d'environ 50 K aux pôles à environ 140 K à l'équateur ; aucune moyenne officielle n'existe.",
+              },
+            },
             radiusKm: 1_560.8,
             // Masse et gravite derivees du GM publie par JPL SSD (ephemeride JUP365,
             // https://ssd.jpl.nasa.gov/sats/phys_par/) : m = GM/G, g = GM/R^2. Ni l'un ni
@@ -505,6 +517,12 @@ export const CELESTIAL_CONFIG: CelestialConfig = {
           fallbackColor: 0x9c8b78,
           textureResolutions: { surface: ['8k', '4k', '2k', '1k'] },
           realData: {
+            unknown: {
+              meanTempC: {
+                en: 'The NASA fact sheet gives "90 to 160 Kelvin" for daytime, without a mean.',
+                fr: 'La fiche NASA donne « 90 to 160 Kelvin » en journée, sans moyenne.',
+              },
+            },
             radiusKm: 2_631.2,
             // Masse et gravite derivees du GM publie par JPL SSD (ephemeride JUP365,
             // https://ssd.jpl.nasa.gov/sats/phys_par/) : m = GM/G, g = GM/R^2. Ni l'un ni
@@ -541,6 +559,12 @@ export const CELESTIAL_CONFIG: CelestialConfig = {
           fallbackColor: 0x7c746f,
           textureResolutions: { surface: ['8k', '4k', '2k', '1k'] },
           realData: {
+            unknown: {
+              meanTempC: {
+                en: 'Same as its neighbours: a published range, no single mean surface temperature.',
+                fr: 'Même situation que ses voisines : une plage publiée, pas de température moyenne unique.',
+              },
+            },
             radiusKm: 2_410.3,
             // Masse et gravite derivees du GM publie par JPL SSD (ephemeride JUP365,
             // https://ssd.jpl.nasa.gov/sats/phys_par/) : m = GM/G, g = GM/R^2. Ni l'un ni

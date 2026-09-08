@@ -1023,6 +1023,14 @@ button {
   font-variant-numeric: tabular-nums;
   color: rgba(235, 244, 255, 0.95);
 }
+/* Valeur non publiée : le tiret reste lisible mais s'efface visuellement, et le curseur
+   d'aide signale qu'une explication est disponible en infobulle. */
+.bi-stats dd.is-unknown {
+  color: var(--ink-faint);
+  cursor: help;
+  text-decoration: underline dotted rgba(235, 244, 255, 0.35);
+  text-underline-offset: 0.2em;
+}
 .bi-desc {
   margin: var(--sp-3) 0 0;
   padding-top: var(--sp-2);

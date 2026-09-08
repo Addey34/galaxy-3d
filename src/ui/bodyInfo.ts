@@ -13,7 +13,7 @@ import { KM_PER_AU, SQRT_K } from '@/core/ScaleService';
 import { RAD_TO_DEG as RAD2DEG } from '@/core/MathConstants';
 import { t, intlLocale, getLocale, onLocaleChange } from '@/i18n';
 import { bodyDisplayName, bodyDescription } from '@/i18n/bodyText';
-import type { CelestialBodyConfig } from '@/types';
+import type { CelestialBodyConfig, UnknownableField } from '@/types';
 import { bodyAccentColor, hexToRgbTriplet, onAccentChange } from './bodyAccent';
 import {
   convertDistanceKm,
@@ -129,7 +129,12 @@ export function formatLightTime(km: number): string {
 interface Stat {
   label: string;
   value: string;
+  /** Raison, quand la valeur est absente parce qu'aucune n'est publiee. */
+  note?: string;
 }
+
+/** Tiret cadratin : marque une valeur non publiee, distincte d'un zero ou d'une absence. */
+const UNKNOWN_MARK = '—';
 
 function buildStats(cfg: CelestialBodyConfig): Stat[] {
   const d = cfg.realData;
@@ -137,6 +142,22 @@ function buildStats(cfg: CelestialBodyConfig): Stat[] {
   const stats: Stat[] = [];
   const push = (label: string, value: string | null): void => {
     if (value !== null) stats.push({ label, value });
+  };
+
+  /**
+   * Affiche un champ declare sans valeur publiee (cf. `RealData.unknown`) plutot que de
+   * faire disparaitre la ligne. Une ligne absente est ambigue : l'utilisateur ne peut pas
+   * distinguer « la science ne donne pas ce chiffre » de « le catalogue l'a oublie ».
+   */
+  const pushUnknown = (label: string, field: UnknownableField): boolean => {
+    const reason = d.unknown?.[field];
+    if (!reason) return false;
+    stats.push({
+      label,
+      value: UNKNOWN_MARK,
+      note: `${t('stat.unknown')} — ${reason[getLocale() === 'fr' ? 'fr' : 'en']}`,
+    });
+    return true;
   };
 
   if (d.radiusKm) {
@@ -153,10 +174,14 @@ function buildStats(cfg: CelestialBodyConfig): Stat[] {
     );
   }
   if (d.massKg) push(t('stat.mass'), formatMass(d.massKg));
+  else pushUnknown(t('stat.mass'), 'massKg');
   if (d.gravity) push(t('stat.gravity'), `${num(d.gravity, 2)} m/s²`);
+  else pushUnknown(t('stat.gravity'), 'gravity');
   if (d.meanTempC !== undefined) {
     const temp = convertTemperatureC(d.meanTempC);
     push(t('stat.temperature'), `${num(temp.value)} ${temp.unit}`);
+  } else {
+    pushUnknown(t('stat.temperature'), 'meanTempC');
   }
   push(
     cfg.kind === 'moon' ? t('stat.revolution') : t('stat.day'),
@@ -168,8 +193,10 @@ function buildStats(cfg: CelestialBodyConfig): Stat[] {
       formatPeriod(d.orbitPeriodDays)
     );
   if (d.moonCount !== undefined) push(t('stat.moons'), num(d.moonCount));
+  else pushUnknown(t('stat.moons'), 'moonCount');
   if (d.axialTilt !== undefined)
     push(t('stat.axialTilt'), `${num(d.axialTilt * RAD2DEG, 1)}°`);
+  else pushUnknown(t('stat.axialTilt'), 'axialTilt');
 
   return stats;
 }
@@ -305,11 +332,18 @@ export function setupBodyInfo(coordinator?: OverlayCoordinator): BodyInfoPanel {
     }
 
     statsEl.replaceChildren();
-    for (const { label, value } of buildStats(cfg)) {
+    for (const { label, value, note } of buildStats(cfg)) {
       const dt = document.createElement('dt');
       dt.textContent = label;
       const dd = document.createElement('dd');
       dd.textContent = value;
+      if (note) {
+        // `title` pour la souris, `aria-label` pour un lecteur d'ecran : un tiret seul
+        // n'annonce rien d'utile sans la raison qui l'accompagne.
+        dd.title = note;
+        dd.setAttribute('aria-label', note);
+        dd.classList.add('is-unknown');
+      }
       statsEl.append(dt, dd);
     }
 

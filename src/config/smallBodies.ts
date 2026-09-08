@@ -75,6 +75,8 @@ export interface SmallBodyElements {
   moonCount?: number;
   /** Courte description grand public, localisée (FR/EN). */
   description?: { en: string; fr: string };
+  /** Champs sans valeur publiée unique, avec leur raison (cf. `RealData.unknown`). */
+  unknown?: NonNullable<CelestialBodyConfig['realData']>['unknown'];
   /** Lien « En savoir plus » par langue (article Wikipédia dédié). */
   wiki?: { en: string; fr: string };
   satellites?: Record<string, CelestialBodyConfig>;
@@ -124,6 +126,7 @@ export function smallBodyToConfig(el: SmallBodyElements): CelestialBodyConfig {
       orbitalInclination: inclinationRad,
       ascendingNode: ascendingNodeRad,
       axialTilt: (el.axialTiltDeg ?? 0) * D2R,
+      ...(el.unknown ? { unknown: el.unknown } : {}),
       // Champs documentaires optionnels — transmis tels quels à la fiche d'info.
       ...(el.massKg !== undefined ? { massKg: el.massKg } : {}),
       ...(el.gravity !== undefined ? { gravity: el.gravity } : {}),
@@ -758,6 +761,20 @@ export const SMALL_BODY_ELEMENTS: readonly SmallBodyElements[] = [
     // dans ce fichier ; on retient la valeur observee plutot que de laisser le corps fige.
     rotationHours: 53.5,
     moonCount: 0,
+    unknown: {
+      massKg: {
+        en: 'No direct measurement: the nucleus mass is inferred from a density that is itself poorly constrained ("no more than a quarter that of ice").',
+        fr: "Aucune mesure directe : la masse du noyau se déduit d'une densité elle-même mal contrainte (« pas plus du quart de celle de la glace »).",
+      },
+      gravity: {
+        en: 'Irregular nucleus of about 15 x 8 km: surface gravity varies by a large factor depending on where you stand, so a single value would mislead.',
+        fr: "Noyau irrégulier d'environ 15 x 8 km : la gravité de surface varie d'un facteur important selon l'endroit, une valeur unique serait trompeuse.",
+      },
+      meanTempC: {
+        en: 'Temperature sweeps about 340 K along the orbit, from below -250 C at aphelion to tens of degrees C at perihelion: a mean would describe no real moment.',
+        fr: "La température parcourt environ 340 K le long de l'orbite, de moins de -250 C à l'aphélie à plusieurs dizaines de degrés au périhélie : une moyenne ne décrirait aucun instant réel.",
+      },
+    },
     color: 0xf08ac6,
     surfaceResolutions: ['4k', '2k'],
     kind: 'comet',
