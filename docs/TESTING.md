@@ -41,6 +41,13 @@
 
 La suite Vitest couvre les transformations de repères, Kepler, éphémérides, horloge, échelles,
 catalogue, éclipses, texture LOD, permaliens, événements astronomiques et câblage de certaines UI.
+
+**Invariants physiques du mouvement** (cf. `docs/ARCHITECTURE.md` § « Position d'un corps ») :
+sens de rotation des 52 corps dans les deux sens du temps, cadence de révolution des satellites,
+répartition des points d'une ligne d'orbite, propagation deux-corps, et deux tests qui lisent les
+binaires Horizons **réellement committés** plutôt qu'une donnée de test. Cette famille garde des
+défauts qui ne lèvent aucune erreur — une position fausse reste une position — et chaque garde
+y a été vérifiée falsifiable : on réintroduit le défaut, on confirme que le test tombe.
 Playwright couvre le boot, loader, navigation, sélection 3D, modes, labels, i18n, mobile, petits
 corps, permaliens, événements astronomiques, zoom optique, visite guidée et accessibilité.
 

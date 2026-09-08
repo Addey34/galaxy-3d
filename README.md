@@ -154,6 +154,8 @@ src/
 ├── core/
 │   ├── EphemerisService.ts   # Wrapper astronomy-engine → positions en UA (prend des enums Body)
 │   ├── frames.ts             # ⓟ Repères : équatorial J2000 → écliptique → Three.js
+│   ├── kepler.ts             # ⓟ Éléments orbitaux → position écliptique
+│   ├── twoBodyPropagation.ts # ⓟ Propagation d'un état (position + vitesse) sur sa conique
 │   ├── SimulationClock.ts    # Horloge simulée avec time travel et vitesse variable
 │   ├── ScaleService.ts       # Conversion UA → unités Three.js (modes educ/explo)
 │   └── OrbitalMechanics.ts   # Pilote les positions planétaires chaque frame
@@ -278,10 +280,15 @@ Aucune édition de `index.html`, `EphemerisService` ni des distances caméra n'e
 ### Éphémérides précises Horizons
 
 Les fichiers binaires de `public/assets/ephemerides/` contiennent les états héliocentriques
-JPL en écliptique J2000, avec positions en UA et vitesses en UA/jour. Ils couvrent 1900–2100
-avec un pas de quatre jours ; `HorizonsEphemerisService` interpole entre deux états par une
-courbe cubique de Hermite. Hors couverture ou si les assets sont indisponibles, le moteur
-revient automatiquement aux éléments képlériens du catalogue.
+JPL en écliptique J2000, avec positions en UA et vitesses en UA/jour. Ils couvrent 1900–2101
+avec un pas de quatre jours.
+
+`HorizonsEphemerisService` choisit son interpolation selon ce que ce pas résout. Au-delà de cinq
+échantillons par révolution, une cubique de Hermite suffit. En dessous — le cas de la plupart des
+satellites, dont la période est plus courte que quatre jours — une cubique ne reconstruit plus
+rien : les deux états qui encadrent la date sont alors propagés le long de leur conique puis
+fondus, ce qui garde les échantillons exacts comme ancres. Hors couverture ou si les assets sont
+indisponibles, le moteur revient aux éléments képlériens du catalogue.
 
 SpkKernel lit les kernels DAF/SPK en types 2 et 3 (Chebyshev), SpkPositionReader convertit le J2000 equatorial en repere Galaxy, et SpkKernelWorkerClient deplace le chargement et le parsing hors du thread principal ; avec une URL configuree, le Worker lit d abord les tables DAF puis les segments requis par HTTP Range. L application continue d utiliser Horizons par defaut.
 

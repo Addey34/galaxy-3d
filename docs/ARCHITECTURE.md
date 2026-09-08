@@ -112,6 +112,92 @@ intentionnellement suivis.
 
 Voir aussi [`TESTING.md`](./TESTING.md).
 
+## Position d'un corps — quelle source, quelle interpolation
+
+Quatre défauts livrés se sont logés dans cette chaîne sans qu'aucun ne produise d'erreur ni de
+log : une position fausse reste une position. Les règles ci-dessous sont donc écrites une fois
+ici, et chacune est verrouillée par un test nommé.
+
+### Les sources, par ordre de priorité
+
+`OrbitalMechanics._positionAU` essaie dans cet ordre, et le premier qui répond gagne :
+
+| Source | Pour qui | Remarque |
+| --- | --- | --- |
+| Binaire Horizons (`HorizonsEphemerisService`) | planètes, naines, satellites, sondes | états exacts tous les 4 jours |
+| `JupiterMoons()` d'astronomy-engine | Io, Europe, Ganymède, Callisto | vecteurs jovicentriques directs |
+| Éphéméride astronomy-engine (`astroBody`) | planètes, Lune, Soleil | théorie planétaire |
+| Éléments képlériens du catalogue | petits corps, et **repli** de tout satellite | cf. « le repli » ci-dessous |
+
+Une position issue d'un binaire passe d'abord `isPlausibleRelativePosition` /
+`isPlausibleHeliocentricPosition`, qui bornent la distance **des deux côtés**. La borne basse
+n'est pas décorative : c'est son absence qui a laissé Encelade osciller d'un facteur 11,4 en
+distance à Saturne pendant des mois, sous un garde-fou censé attraper exactement ça.
+
+### Interpolation entre deux échantillons : jamais une cubique seule
+
+Un fichier Horizons est échantillonné à pas fixe. L'interpolation de Hermite entre deux états
+suppose un mouvement **lisse sur l'intervalle** — hypothèse fausse dès que le corps y fait
+plusieurs tours. Avec le pas de 4 jours livré, 22 des 24 satellites du catalogue ont une période
+plus courte que ce pas, et la cubique ne reconstruisait alors plus rien : Phobos balayait 2° au
+lieu de 360° sur une période.
+
+`HorizonsEphemerisService` choisit donc son interpolation d'après le nombre d'échantillons par
+révolution, calculé sur la période **catalogue** (stable) et non sur la période osculatrice de
+l'état courant (erratique dès que le mouvement n'est pas à deux corps) :
+
+- **≥ 5 échantillons/orbite** → Hermite cubique, comme avant.
+- **< 5** → `twoBodyPropagation.ts` : les deux états qui encadrent la date sont propagés le long
+  de leur conique, l'un vers l'avant l'autre vers l'arrière, puis fondus en smoothstep. Chaque
+  ancre reste exacte à l'échantillon (poids 0 puis 1, dérivée nulle aux deux bouts → raccord C¹),
+  donc les perturbations réelles restent portées par les données. **On ne remplace pas les
+  données par un modèle, on les relie par la bonne courbe.**
+
+Le seuil de 5 vient d'une mesure des deux branches corps par corps, pas d'une règle du pouce : la
+dynamique domine tant que la cubique n'a pas de quoi décrire un tour, puis passe *derrière* elle
+(les petites lunes de Pluton n'ont pas de mouvement à deux corps autour du centre de Pluton —
+elles orbitent le barycentre Pluton-Charon, que la cubique suit et qu'une conique ignore).
+
+La propagation a besoin d'un μ : `config/gravity.ts` le dérive des masses du catalogue, avec la
+règle du problème à deux corps relatif — **la masse du parent plus tout ce qui orbite à
+l'intérieur de l'orbite du corps, lui compris**. Charon pèse 12,2 % de Pluton : l'ignorer donnait
+13° d'erreur de phase par pas.
+
+### Le repli képlérien
+
+Il sert quand un binaire manque, sort de sa couverture ou échoue au test de plausibilité —
+notamment si les assets ne se chargent pas, auquel cas il travaille **aux dates courantes**.
+Deux règles :
+
+- **Le corps central n'est pas le Soleil.** `kepler.ts` déduit sinon le mouvement moyen de la
+  constante de Gauss, soit μ☉ : un satellite tournait de 32× à 11 661× trop vite. Passer
+  `periodDays` (la période publiée du catalogue) est obligatoire pour tout `relativeOrbitalElements`.
+- **Les angles sont ÉCLIPTIQUES.** Les valeurs publiées le sont souvent par rapport à l'équateur
+  de la planète, et rien ne distingue les deux dans un fichier de config — 8 jeux sur 20 étaient
+  dans le mauvais repère. Ne pas les saisir à la main : `scripts/derive-relative-elements.mjs`
+  (`pnpm ephemeris:elements`) les dérive des états exacts des binaires, donc du bon repère par
+  construction.
+
+### Ligne d'orbite : répartir les points, pas le temps
+
+`computeOrbitPoints` échantillonne une période. Uniformément **dans le temps**, la deuxième loi
+de Kepler place presque tous les points près de l'aphélie : Halley (e = 0,967) se retrouvait avec
+une corde droite de 130° en travers du périhélie, et la courbe n'atteignait jamais sa distance
+minimale. Les points sont donc répartis uniformément en **anomalie excentrique** dès que
+e ≥ 0,2 — seule la répartition change, jamais la courbe.
+
+### Tests qui verrouillent tout ça
+
+| Fichier | Ce qu'il garde |
+| --- | --- |
+| `core/horizonsSatelliteOrbits.test.ts` | chaque satellite boucle un tour sur sa période, sur les binaires **réellement committés** |
+| `core/relativeElements.test.ts` | le repli décrit la même orbite que le binaire (deux sources sans code commun) |
+| `core/satelliteOrbitRate.test.ts` | la cadence du repli, sur la sortie observable |
+| `core/twoBodyPropagation.test.ts` | la propagation, jusqu'à 40 révolutions |
+| `core/orbitLineSampling.test.ts` | amplitude **et** régularité de la ligne, dans les deux modes |
+| `core/ephemerisPlausibility.test.ts` | les deux bornes, sur 400 dates par fichier |
+| `components/celestial/spinDirection.test.ts` | sens de rotation des 52 corps, dans les deux sens du temps |
+
 ## Terminateur jour/nuit — contrat partagé entre couches
 
 `src/core/terminator.ts` est la **source unique** de toute décision jour/nuit. Le module expose
