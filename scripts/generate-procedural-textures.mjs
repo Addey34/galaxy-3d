@@ -128,9 +128,7 @@ function craterHeight(craters, nx, ny, nz) {
         : 0;
     // Pic central : bassins géants type Herschel (Mimas) / Pharos (Protée), dôme au fond.
     const peak =
-      c.centralPeak && a < 0.18
-        ? c.depth * 0.5 * (1 - (a / 0.18) ** 2)
-        : 0;
+      c.centralPeak && a < 0.18 ? c.depth * 0.5 * (1 - (a / 0.18) ** 2) : 0;
     h += bowl + Math.max(0, rim) + peak;
   }
   return h;
@@ -215,10 +213,19 @@ async function generateBody({
   const rng = makeRng(name);
   const macroNoise = makeSphericalNoise(rng, 4, 1.5, 2.3); // grandes taches d'albédo
   const mesoNoise = makeSphericalNoise(rng, 3, 10, 2.1); // relief moyen (dizaines de cycles)
-  const craters = makeCraters(rng, craterCount, craterMinRadius, craterMaxRadius);
+  const craters = makeCraters(
+    rng,
+    craterCount,
+    craterMinRadius,
+    craterMaxRadius
+  );
   for (const c of craters) c.rimStrength = craterRimStrength;
   for (const basin of largeBasins) {
-    craters.push({ ...spherePoint(rng), rimStrength: craterRimStrength, ...basin });
+    craters.push({
+      ...spherePoint(rng),
+      rimStrength: craterRimStrength,
+      ...basin,
+    });
   }
   const groups = patchGroups.map((g) => ({
     patches: makeIcePatches(rng, g.count, g.minRadius, g.maxRadius),
@@ -261,7 +268,8 @@ async function generateBody({
       let b = bb * shade;
 
       for (const group of groups) {
-        const intensity = patchIntensity(group.patches, nx, ny, nz) * group.opacity;
+        const intensity =
+          patchIntensity(group.patches, nx, ny, nz) * group.opacity;
         if (intensity <= 0) continue;
         const [pr, pg, pb] = group.color;
         r = r * (1 - intensity) + pr * shade * intensity;
@@ -298,7 +306,13 @@ const BODIES = [
     albedoVariation: 0.12,
     heightContrast: 0.45,
     patchGroups: [
-      { count: 6, minRadius: 0.18, maxRadius: 0.4, opacity: 0.4, color: [235, 238, 240] },
+      {
+        count: 6,
+        minRadius: 0.18,
+        maxRadius: 0.4,
+        opacity: 0.4,
+        color: [235, 238, 240],
+      },
     ],
   },
   // Jewitt & Luu 2004 : glace d'eau cristalline (± hydrate d'ammoniac/méthane) — même signature
@@ -312,7 +326,13 @@ const BODIES = [
     albedoVariation: 0.15,
     heightContrast: 0.5,
     patchGroups: [
-      { count: 5, minRadius: 0.15, maxRadius: 0.35, opacity: 0.35, color: [220, 214, 200] },
+      {
+        count: 5,
+        minRadius: 0.15,
+        maxRadius: 0.35,
+        opacity: 0.35,
+        color: [220, 214, 200],
+      },
     ],
   },
   // JWST (2024) : tholins (pentes spectrales rouges) + glace d'eau + givre de méthane par plaques.
@@ -326,7 +346,13 @@ const BODIES = [
     albedoVariation: 0.22,
     heightContrast: 0.45,
     patchGroups: [
-      { count: 4, minRadius: 0.12, maxRadius: 0.28, opacity: 0.3, color: [214, 168, 140] },
+      {
+        count: 4,
+        minRadius: 0.12,
+        maxRadius: 0.28,
+        opacity: 0.3,
+        color: [214, 168, 140],
+      },
     ],
   },
   // Barucci et al. 2010 : surface homogène en couleur/spectre — explication avancée par les
@@ -407,7 +433,13 @@ const BODIES = [
     albedoVariation: 0.12,
     heightContrast: 0.4,
     patchGroups: [
-      { count: 3, minRadius: 0.22, maxRadius: 0.32, opacity: 0.55, color: [168, 166, 160] },
+      {
+        count: 3,
+        minRadius: 0.22,
+        maxRadius: 0.32,
+        opacity: 0.55,
+        color: [168, 166, 160],
+      },
     ],
   },
   // Surface la plus brillante/jeune des lunes d'Uranus : peu de grands cratères (effacés par un
@@ -432,7 +464,13 @@ const BODIES = [
     albedoVariation: 0.1,
     heightContrast: 0.45,
     patchGroups: [
-      { count: 1, minRadius: 0.1, maxRadius: 0.14, opacity: 0.55, color: [200, 198, 194] },
+      {
+        count: 1,
+        minRadius: 0.1,
+        maxRadius: 0.14,
+        opacity: 0.55,
+        color: [200, 198, 194],
+      },
     ],
   },
   // Réseau de canyons (Messina Chasmata, ~1500 km) + cratères à pics centraux — canyons non
@@ -525,7 +563,13 @@ const BODIES = [
     albedoVariation: 0.08,
     heightContrast: 0.35,
     patchGroups: [
-      { count: 1, minRadius: 0.09, maxRadius: 0.13, opacity: 0.55, color: [176, 92, 76] },
+      {
+        count: 1,
+        minRadius: 0.09,
+        maxRadius: 0.13,
+        opacity: 0.55,
+        color: [176, 92, 76],
+      },
     ],
   },
   {

@@ -59,7 +59,9 @@ for (const date of CASES) {
   test(`subsolar point lands on its true longitude at ${date}`, async ({
     page,
   }) => {
-    await page.goto(`/?debug-solar&body=earth&date=${encodeURIComponent(date)}`);
+    await page.goto(
+      `/?debug-solar&body=earth&date=${encodeURIComponent(date)}`
+    );
     const panel = page.locator('#solar-debug');
     await expect(panel).toBeVisible({ timeout: 40_000 });
     await expect(panel).toContainText('lat error', { timeout: 20_000 });
@@ -107,21 +109,17 @@ test('the subsolar longitude does not drift while the clock races', async ({
   });
 
   const dateOf = () =>
-    panel.evaluate(
-      (el) => el.textContent?.match(/date\s+(\S+)/)?.[1] ?? ''
-    );
+    panel.evaluate((el) => el.textContent?.match(/date\s+(\S+)/)?.[1] ?? '');
   const startDate = await dateOf();
 
   // Laisse réellement défiler : sans avance de date, le test ne prouverait rien.
-  await expect
-    .poll(dateOf, { timeout: 20_000 })
-    .not.toBe(startDate);
+  await expect.poll(dateOf, { timeout: 20_000 }).not.toBe(startDate);
   await page.waitForTimeout(4_000);
 
   const advanced = await dateOf();
-  expect(new Date(advanced).getTime() - new Date(startDate).getTime()).toBeGreaterThan(
-    86_400_000
-  );
+  expect(
+    new Date(advanced).getTime() - new Date(startDate).getTime()
+  ).toBeGreaterThan(86_400_000);
 
   const lonError = await readError(panel, 'lon error');
   expect(Number.isNaN(lonError)).toBe(false);
