@@ -156,11 +156,85 @@ function elementsFromState(r, v, mu) {
 }
 
 const asJson = process.argv.includes('--json');
+/**
+ * Mode ELEMENTS MOYENS. Les elements osculateurs supposent un centre fixe ; c'est faux pour un
+ * satellite qui orbite un barycentre deporte. Dans le systeme de Pluton, Charon pese 12,2 % du
+ * couple et deplace Pluton de ~2 100 km : l'etat instantane des quatre petites lunes decrit
+ * alors une conique qui n'existe pas (Styx : periode osculatrice 47 j pour 20,2 j reels).
+ *
+ * Ce mode mesure donc les grandeurs MOYENNES sur une fenetre longue, ou le ballant se compense :
+ * plan orbital = direction moyenne du moment cinetique, demi-grand axe = rayon moyen, phase =
+ * angle dans ce plan a l'epoque. La periode, elle, vient du catalogue a l'execution.
+ *
+ *   node scripts/derive-relative-elements.mjs --mean styx nix kerberos hydra
+ */
+const asMean = process.argv.includes('--mean');
+const MEAN_WINDOW_DAYS = 400;
 const jsonOut = {};
+
+/** Elements MOYENS d'un corps, mesures sur une fenetre longue (cf. `--mean`). */
+function meanElementsFromWindow(name) {
+  const first = stateAt(name, EPOCH);
+  if (!first) return null;
+
+  let hSum = [0, 0, 0];
+  let radiusSum = 0;
+  let count = 0;
+  for (
+    let day = 0;
+    day < MEAN_WINDOW_DAYS;
+    day += manifest.bodies[name].stepDays
+  ) {
+    const st = stateAt(name, new Date(EPOCH.getTime() + day * MS_PER_DAY));
+    if (!st) break;
+    const h = cross(st.r, st.v);
+    const hLen = norm(h);
+    hSum = hSum.map((x, k) => x + h[k] / hLen);
+    radiusSum += norm(st.r);
+    count++;
+  }
+  if (count === 0) return null;
+
+  const hHat = hSum.map((x) => x / norm(hSum));
+  const a = radiusSum / count;
+  const inclination = Math.acos(hHat[2]);
+  const node = [-hHat[1], hHat[0], 0];
+  const nodeLen = norm(node);
+  const nodeHat = node.map((x) => x / nodeLen);
+
+  // Argument de latitude a l'epoque : le perigee n'etant pas defini pour une orbite prise
+  // circulaire, toute la phase est portee par l'anomalie moyenne.
+  const r0 = first.r;
+  const r0Len = norm(r0);
+  const argLatitude = wrap(
+    Math.atan2(dot(cross(hHat, nodeHat), r0) / r0Len, dot(nodeHat, r0) / r0Len)
+  );
+
+  return {
+    a,
+    e: 0,
+    inclination,
+    ascendingNode: wrap(Math.atan2(node[1], node[0])),
+    argPeriapsis: 0,
+    meanAnomaly: argLatitude,
+    periodDays: NaN, // vient du catalogue : la periode osculatrice n'a pas de sens ici
+    date: first.date,
+    samples: count,
+  };
+}
+
+/** Noms passes en argument : restreint la sortie a ces corps. Vide = tous les satellites. */
+const requested = new Set(
+  process.argv.slice(2).filter((arg, i, all) => {
+    if (arg.startsWith('--')) return false;
+    return all[i - 1] !== '--epoch'; // la valeur d'--epoch n'est pas un nom de corps
+  })
+);
 
 const satellites = Object.entries(manifest.bodies)
   .filter(([, entry]) => entry.center && entry.center !== 'sun')
   .map(([name]) => name)
+  .filter((name) => requested.size === 0 || requested.has(name))
   .sort();
 
 if (!asJson) {
@@ -184,7 +258,13 @@ for (const name of satellites) {
     console.log(`// ${name}: masse inconnue pour le centre "${state.center}"`);
     continue;
   }
-  const el = elementsFromState(state.r, state.v, G * mass);
+  const el = asMean
+    ? meanElementsFromWindow(name)
+    : elementsFromState(state.r, state.v, G * mass);
+  if (!el) {
+    console.log(`// ${name}: fenetre insuffisante`);
+    continue;
+  }
   if (asJson) {
     jsonOut[name] = {
       center: state.center,
@@ -200,7 +280,9 @@ for (const name of satellites) {
     continue;
   }
   console.log(
-    `// ${name} (autour de ${state.center}) — période ${el.periodDays.toFixed(4)} j`
+    asMean
+      ? `// ${name} (autour de ${state.center}) — elements MOYENS sur ${MEAN_WINDOW_DAYS} j (${el.samples} echantillons)`
+      : `// ${name} (autour de ${state.center}) — période ${el.periodDays.toFixed(4)} j`
   );
   console.log(`relativeOrbitalElements: {`);
   console.log(`  semiMajorAxisAU: ${el.a.toPrecision(10)},`);

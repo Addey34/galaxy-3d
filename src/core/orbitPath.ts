@@ -1,4 +1,3 @@
-import * as THREE from 'three';
 import type { CelestialBodyConfig, CelestialConfig } from '@/types';
 import type { BodyPositionResolver } from './BodyPositionResolver';
 import type { ScaleService } from './ScaleService';

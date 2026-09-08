@@ -26,7 +26,6 @@ import { computeLightAttenuation } from './eclipse';
 import { BodyPositionResolver } from './BodyPositionResolver';
 import { OrbitPathBuilder } from './orbitPath';
 import { educationalParentOrbitScale } from './educationalScale';
-import { solveKepler } from './kepler';
 import { HOURS_TO_RAD } from './MathConstants';
 import { surfaceRotationForSubsolarLongitude } from './frames';
 import { forEachBody } from '@/config/catalog';

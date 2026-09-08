@@ -373,6 +373,22 @@ export const SMALL_BODY_ELEMENTS: readonly SmallBodyElements[] = [
         fallbackColor: 0xc4cbcb,
         frame: 'parentRelative',
         rotationBody: Body.Pluto,
+        // Elements MOYENS, mesures sur le binaire (cf. scripts/derive-relative-elements.mjs
+        // --mean). Les elements OSCULATEURS sont ici aberrants : cette lune orbite le
+        // barycentre Pluton-Charon, et Pluton oscille de 2 100 km autour de ce point, si
+        // bien que l'etat instantane decrit une conique qui n'existe pas (Styx : periode
+        // osculatrice 47 j pour 20,2 j reels). Le plan et le rayon sont donc moyennes sur
+        // 400 jours, ou le ballant se compense ; la periode vient du catalogue.
+        // Precision attendue : de l'ordre du ballant residuel, quelques pour cent.
+        relativeOrbitalElements: {
+          semiMajorAxisAU: 0.0002837055114,
+          eccentricity: 0,
+          inclinationRad: 112.8548 * D2R,
+          ascendingNodeRad: 227.3768 * D2R,
+          argPerihelionRad: 0,
+          meanAnomalyAtEpochRad: 194.2283 * D2R,
+          epoch: new Date('2025-12-31T00:00:00.000Z'),
+        },
         relativeEphemeris: { kind: 'horizonsParentRelative' },
         // Résolution New Horizons trop faible pour une vraie mosaïque (quelques pixels — voir
         // texture-sources.json). Texture procédurale générée : base claire, peu de cratères,
@@ -410,6 +426,22 @@ export const SMALL_BODY_ELEMENTS: readonly SmallBodyElements[] = [
         fallbackColor: 0xcfc9bd,
         frame: 'parentRelative',
         rotationBody: Body.Pluto,
+        // Elements MOYENS, mesures sur le binaire (cf. scripts/derive-relative-elements.mjs
+        // --mean). Les elements OSCULATEURS sont ici aberrants : cette lune orbite le
+        // barycentre Pluton-Charon, et Pluton oscille de 2 100 km autour de ce point, si
+        // bien que l'etat instantane decrit une conique qui n'existe pas (Styx : periode
+        // osculatrice 47 j pour 20,2 j reels). Le plan et le rayon sont donc moyennes sur
+        // 400 jours, ou le ballant se compense ; la periode vient du catalogue.
+        // Precision attendue : de l'ordre du ballant residuel, quelques pour cent.
+        relativeOrbitalElements: {
+          semiMajorAxisAU: 0.0003256427173,
+          eccentricity: 0,
+          inclinationRad: 112.8719 * D2R,
+          ascendingNodeRad: 227.3803 * D2R,
+          argPerihelionRad: 0,
+          meanAnomalyAtEpochRad: 125.705 * D2R,
+          epoch: new Date('2025-12-31T00:00:00.000Z'),
+        },
         relativeEphemeris: { kind: 'horizonsParentRelative' },
         // Texture procédurale générée : base claire + une tache rougeâtre isolée, paramétrée
         // sur la vraie tache rouge autour d'un cratère d'impact repérée par New Horizons
@@ -447,6 +479,22 @@ export const SMALL_BODY_ELEMENTS: readonly SmallBodyElements[] = [
         fallbackColor: 0xb4baba,
         frame: 'parentRelative',
         rotationBody: Body.Pluto,
+        // Elements MOYENS, mesures sur le binaire (cf. scripts/derive-relative-elements.mjs
+        // --mean). Les elements OSCULATEURS sont ici aberrants : cette lune orbite le
+        // barycentre Pluton-Charon, et Pluton oscille de 2 100 km autour de ce point, si
+        // bien que l'etat instantane decrit une conique qui n'existe pas (Styx : periode
+        // osculatrice 47 j pour 20,2 j reels). Le plan et le rayon sont donc moyennes sur
+        // 400 jours, ou le ballant se compense ; la periode vient du catalogue.
+        // Precision attendue : de l'ordre du ballant residuel, quelques pour cent.
+        relativeOrbitalElements: {
+          semiMajorAxisAU: 0.0003860530818,
+          eccentricity: 0,
+          inclinationRad: 113.2981 * D2R,
+          ascendingNodeRad: 227.3586 * D2R,
+          argPerihelionRad: 0,
+          meanAnomalyAtEpochRad: 350.4908 * D2R,
+          epoch: new Date('2025-12-31T00:00:00.000Z'),
+        },
         relativeEphemeris: { kind: 'horizonsParentRelative' },
         // Résolution New Horizons trop faible pour une vraie mosaïque (voir
         // texture-sources.json). Texture procédurale générée, même traitement que ses 3
@@ -484,6 +532,22 @@ export const SMALL_BODY_ELEMENTS: readonly SmallBodyElements[] = [
         fallbackColor: 0xd2cdc1,
         frame: 'parentRelative',
         rotationBody: Body.Pluto,
+        // Elements MOYENS, mesures sur le binaire (cf. scripts/derive-relative-elements.mjs
+        // --mean). Les elements OSCULATEURS sont ici aberrants : cette lune orbite le
+        // barycentre Pluton-Charon, et Pluton oscille de 2 100 km autour de ce point, si
+        // bien que l'etat instantane decrit une conique qui n'existe pas (Styx : periode
+        // osculatrice 47 j pour 20,2 j reels). Le plan et le rayon sont donc moyennes sur
+        // 400 jours, ou le ballant se compense ; la periode vient du catalogue.
+        // Precision attendue : de l'ordre du ballant residuel, quelques pour cent.
+        relativeOrbitalElements: {
+          semiMajorAxisAU: 0.0004327871245,
+          eccentricity: 0,
+          inclinationRad: 112.6164 * D2R,
+          ascendingNodeRad: 227.4572 * D2R,
+          argPerihelionRad: 0,
+          meanAnomalyAtEpochRad: 93.1374 * D2R,
+          epoch: new Date('2025-12-31T00:00:00.000Z'),
+        },
         relativeEphemeris: { kind: 'horizonsParentRelative' },
         // Résolution New Horizons trop faible pour une vraie mosaïque (voir
         // texture-sources.json). Texture procédurale générée, même traitement que ses 3

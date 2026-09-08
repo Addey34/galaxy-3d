@@ -59,6 +59,49 @@ forEachBody(CELESTIAL_CONFIG, ({ name, config, parentName }) => {
   satellites.push({ name, parent: parentName, elements, period });
 });
 
+/**
+ * Amplitude du BALLANT du parent autour du barycentre de son systeme, rapportee au rayon
+ * orbital du satellite considere.
+ *
+ * Un satellite mesure depuis le CENTRE de sa planete voit sa distance osciller si la planete
+ * elle-meme tourne autour d'un barycentre deporte. Ce n'est pas une erreur du repli, c'est un
+ * fait geometrique : dans le systeme de Pluton, Charon pese 12,2 % du couple et deplace Pluton
+ * de ~2 100 km, soit 5 % du rayon orbital de Styx. Un repli keplerien, qui suppose un centre
+ * fixe, ne peut pas reproduire cela — et n'a pas a le faire.
+ *
+ * La tolerance est donc DERIVEE de la donnee plutot que relachee au jugé : elle vaut zero pour
+ * une planete dont aucune lune n'est massive, et grandit exactement de ce que la physique
+ * impose ailleurs.
+ */
+function barycentreWobbleRatio(
+  satellite: string,
+  parent: string,
+  satelliteAxisAU: number
+): number {
+  const parentCfg = CELESTIAL_CONFIG.bodies[parent];
+  const parentMass = parentCfg?.realData?.massKg;
+  if (!parentCfg?.satellites || !parentMass || satelliteAxisAU <= 0) return 0;
+
+  let displacementAU = 0;
+  for (const [companionName, companion] of Object.entries(
+    parentCfg.satellites
+  )) {
+    // Un satellite ne subit PAS son propre ballant : lui et sa planete tournent autour de
+    // leur barycentre commun, mais leur SEPARATION reste constante. Sans cette exclusion,
+    // Charon — qui pese 12,2 % du couple — s'accordait a lui-meme 16 % de tolerance, soit
+    // trois fois ce que la garde doit laisser passer.
+    if (companionName === satellite) continue;
+    const mass = companion.realData?.massKg;
+    const axis = companion.realData?.distanceAU;
+    if (!mass || !axis) continue;
+    displacementAU = Math.max(
+      displacementAU,
+      axis * (mass / (parentMass + mass))
+    );
+  }
+  return displacementAU / satelliteAxisAU;
+}
+
 const elementsService = new OrbitalElementsService();
 const horizons = horizonsServiceFromDisk();
 
@@ -116,8 +159,16 @@ describe('repli képlérien confronté aux binaires Horizons', () => {
       );
       // La DISTANCE au parent est la propriété la plus robuste : elle ne dépend ni de la
       // phase ni de l'orientation, seulement de a et e. 5 % de marge absorbe les
-      // perturbations à court terme.
-      expect(maxRadiusRatio, `${name} : rayon`).toBeLessThan(1.05);
+      // perturbations à court terme, plus le ballant du parent quand son système en a un.
+      const wobble = barycentreWobbleRatio(
+        name,
+        parent,
+        elements.semiMajorAxisAU
+      );
+      expect(
+        maxRadiusRatio,
+        `${name} : rayon (tolérance ${(1.05 + wobble).toFixed(3)}, dont ${(wobble * 100).toFixed(1)} % de ballant du parent)`
+      ).toBeLessThan(1.05 + wobble);
       // La POSITION doit rester du bon côté de la planète. Un mauvais repère donnait des
       // dizaines de degrés en permanence — Charon aurait été à 113° de son plan.
       expect(maxAngleDeg, `${name} : position`).toBeLessThan(20);
