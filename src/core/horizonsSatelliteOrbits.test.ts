@@ -1,10 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import * as THREE from 'three';
-import { readFileSync } from 'node:fs';
 import { CELESTIAL_CONFIG } from '@/config/bodies';
 import { forEachBody } from '@/config/catalog';
-import { bodyDynamics } from '@/config/gravity';
-import { HorizonsEphemerisService } from './HorizonsEphemerisService';
+import {
+  horizonsManifest,
+  horizonsServiceFromDisk,
+} from './horizonsTestFixture';
 
 /**
  * ORBITES DES SATELLITES, lues sur les fichiers Horizons RÉELLEMENT LIVRÉS.
@@ -31,52 +32,18 @@ import { HorizonsEphemerisService } from './HorizonsEphemerisService';
  * font partie du produit.
  */
 
-const EPHEMERIDES_DIR = 'public/assets/ephemerides/';
-
-interface ManifestEntry {
-  file: string;
-  center?: string;
-  stepDays: number;
-}
-
-const manifest = JSON.parse(
-  readFileSync(EPHEMERIDES_DIR + 'manifest.json', 'utf-8')
-) as { bodies: Record<string, ManifestEntry> };
-
-/**
- * Instancie le service sur les fichiers du dépôt. `load()` passe par `fetch` et
- * `window.location`, indisponibles ici : on construit la même structure interne depuis le
- * disque, en injectant la même table de μ que la couche de composition.
- */
-function serviceFromDisk(): HorizonsEphemerisService {
-  const mu = bodyDynamics(CELESTIAL_CONFIG);
-  const loaded = new Map<string, unknown>();
-  for (const [name, entry] of Object.entries(manifest.bodies)) {
-    const file = readFileSync(EPHEMERIDES_DIR + entry.file);
-    loaded.set(name, {
-      manifest: entry,
-      samples: new Float64Array(
-        file.buffer.slice(file.byteOffset, file.byteOffset + file.byteLength)
-      ),
-      ...(mu[name] !== undefined ? { dynamics: mu[name] } : {}),
-    });
-  }
-  type Ctor = new (bodies: Map<string, unknown>) => HorizonsEphemerisService;
-  return new (HorizonsEphemerisService as unknown as Ctor)(loaded);
-}
-
 const DATE = new Date('2026-03-15T00:00:00Z');
 
 const satellites: { name: string; parent: string; period: number }[] = [];
 forEachBody(CELESTIAL_CONFIG, ({ name, config, parentName }) => {
   const period = config.realData?.orbitPeriodDays;
   if (parentName === null || !period) return;
-  if (!(name in manifest.bodies)) return;
+  if (!(name in horizonsManifest.bodies)) return;
   satellites.push({ name, parent: parentName, period });
 });
 
 describe('orbites des satellites sur les binaires Horizons livrés', () => {
-  const service = serviceFromDisk();
+  const service = horizonsServiceFromDisk();
 
   it('couvre bien les satellites qui ont un binaire', () => {
     expect(satellites.length).toBeGreaterThanOrEqual(18);

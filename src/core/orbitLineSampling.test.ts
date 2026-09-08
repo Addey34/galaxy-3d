@@ -7,6 +7,7 @@ import { OrbitalElementsService } from './OrbitalElementsService';
 import { OrbitalMechanics } from './OrbitalMechanics';
 import { SimulationClock } from './SimulationClock';
 import type { PreciseEphemerisProvider } from './PreciseEphemerisProvider';
+import { horizonsServiceFromDisk } from './horizonsTestFixture';
 import type { CelestialBodies } from '@/components/systems/SceneSystem';
 import type { CelestialBodyConfig } from '@/types';
 
@@ -45,12 +46,15 @@ const noPreciseData: PreciseEphemerisProvider = {
 
 const DATE = new Date('2026-03-15T00:00:00Z');
 
-function makeMechanics(mode: 'educ' | 'explo'): OrbitalMechanics {
+function makeMechanics(
+  mode: 'educ' | 'explo',
+  precise: PreciseEphemerisProvider = noPreciseData
+): OrbitalMechanics {
   const mechanics = new OrbitalMechanics(
     new SimulationClock(),
     new EphemerisService(),
     new OrbitalElementsService(),
-    noPreciseData,
+    precise,
     CELESTIAL_CONFIG,
     {} as CelestialBodies
   );
@@ -174,4 +178,38 @@ describe('répartition des points sur la ligne d’orbite', () => {
     });
     expect(checked).toBeGreaterThanOrEqual(30);
   });
+
+  /**
+   * La MEME garde, mais sur le chemin de PRODUCTION : binaires Horizons réellement committés
+   * plutôt que repli képlérien forcé.
+   *
+   * Sans elle, la garde ci-dessus ne prouve rien de ce que voit l'utilisateur. Elle injecte un
+   * fournisseur vide, donc tout corps dont la position vient d'un binaire retourne `null` et
+   * se fait **silencieusement sauter** par le `if (!metrics) return`. C'était le cas de la
+   * moitié du catalogue.
+   *
+   * Elle ferme aussi un piège identifié mais non gardé jusqu'ici : la répartition en anomalie
+   * excentrique s'active sur la présence d'éléments orbitaux (`_orbitSampleDate`). Un futur
+   * corps très excentrique alimenté par un binaire mais SANS jeu d'éléments retomberait donc
+   * sur l'échantillonnage uniforme en temps — exactement le défaut Halley. Ici il se verrait,
+   * puisqu'on mesure la courbe telle qu'elle est tracée.
+   */
+  for (const mode of ['educ', 'explo'] as const) {
+    it(`ne laisse aucun trou sur les lignes d’orbite réelles (${mode}, binaires Horizons)`, () => {
+      const mechanics = makeMechanics(mode, horizonsServiceFromDisk());
+      let checked = 0;
+      forEachBody(CELESTIAL_CONFIG, ({ name, config }) => {
+        if (config.kind === 'skybox' || config.kind === 'star') return;
+        const metrics = measure(mechanics, name, config);
+        if (!metrics) return;
+        checked++;
+        expect(metrics.maxGapDeg, `${name} : trou angulaire`).toBeLessThan(10);
+        expect(
+          metrics.maxSegmentRatio,
+          `${name} : segment démesuré`
+        ).toBeLessThan(6);
+      });
+      expect(checked).toBeGreaterThanOrEqual(30);
+    });
+  }
 });

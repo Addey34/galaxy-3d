@@ -336,7 +336,13 @@ export class OrbitalMechanics {
    *   - sinon `orbitalElements` défini → propagation képlérienne (astéroïdes, comètes…).
    *   - sinon null (corps sans position calculable).
    */
-  private _positionAU(
+  /**
+   * Position issue de la source PRÉCISE (binaire Horizons / SPK) uniquement, ou `null` si
+   * elle ne couvre pas ce corps à cette date, ou si sa réponse échoue au test de
+   * plausibilité. Isolée du repli pour que `computeOrbitPoints` puisse INTERROGER la
+   * couverture avant de tracer, sans dupliquer les branches.
+   */
+  private _precisePositionAU(
     name: string,
     cfg: CelestialBodyConfig,
     date: Date
@@ -350,23 +356,27 @@ export class OrbitalMechanics {
       const preciseRelative = parentName
         ? this.horizons.getParentRelativeAU(name, parentName, date)
         : null;
-      if (
-        preciseRelative &&
+      return preciseRelative &&
         isPlausibleRelativePosition(preciseRelative, cfg)
-      ) {
-        return preciseRelative;
-      }
-    } else {
-      // Les vecteurs numériques Horizons/SPK sont prioritaires lorsqu'ils couvrent ce corps
-      // et cette date. Les deux modes consomment ensuite exactement la même position source.
-      const precisePosition = this.horizons.getHeliocentricAU(name, date);
-      if (
-        precisePosition &&
-        isPlausibleHeliocentricPosition(precisePosition, cfg)
-      ) {
-        return precisePosition;
-      }
+        ? preciseRelative
+        : null;
     }
+    // Les vecteurs numériques Horizons/SPK sont prioritaires lorsqu'ils couvrent ce corps
+    // et cette date. Les deux modes consomment ensuite exactement la même position source.
+    const precisePosition = this.horizons.getHeliocentricAU(name, date);
+    return precisePosition &&
+      isPlausibleHeliocentricPosition(precisePosition, cfg)
+      ? precisePosition
+      : null;
+  }
+
+  private _positionAU(
+    name: string,
+    cfg: CelestialBodyConfig,
+    date: Date
+  ): THREE.Vector3 | null {
+    const precise = this._precisePositionAU(name, cfg, date);
+    if (precise) return precise;
 
     if (cfg.relativeEphemeris?.kind === 'jupiterMoon') {
       // astronomy-engine fournit directement les vecteurs relatifs aux lunes joviennes.
@@ -392,6 +402,18 @@ export class OrbitalMechanics {
         date
       );
     }
+    return this._elementsPositionAU(cfg, date);
+  }
+
+  /**
+   * Position issue des ÉLÉMENTS KÉPLÉRIENS du catalogue uniquement, ou `null` si le corps
+   * n'en a pas. C'est la seule source dont la couverture est INFINIE : elle vaut à n'importe
+   * quelle date, là où un binaire s'arrête. D'où son rôle pour tracer une orbite entière.
+   */
+  private _elementsPositionAU(
+    cfg: CelestialBodyConfig,
+    date: Date
+  ): THREE.Vector3 | null {
     if (cfg.relativeOrbitalElements) {
       // Le corps central est la PLANÈTE, pas le Soleil : on fournit la période publiée du
       // catalogue, faute de quoi le mouvement moyen serait déduit du μ solaire (cf.
@@ -409,6 +431,37 @@ export class OrbitalMechanics {
       return this.elements.getHeliocentricAU(cfg.orbitalElements, date);
     }
     return null;
+  }
+
+  /**
+   * Une ligne d'orbite doit venir d'UNE SEULE source — sinon elle épisse deux trajectoires
+   * qui ne coïncident pas, et le raccord se voit.
+   *
+   * Le cas se produit dès qu'une période dépasse la couverture du binaire : les fichiers
+   * livrés couvrent 201 ans, or Pluton (248 ans), Hauméa (284), Makémaké (309) et Éris (558)
+   * font davantage. Tracer un tour complet sortait donc forcément de la couverture, la
+   * position basculait sur les éléments képlériens en cours de courbe, et l'écart entre les
+   * deux sources apparaissait comme un coude. Mesuré sur Hauméa : **20° de saut** entre deux
+   * points consécutifs, pile au franchissement (2101-02-12, couverture close le 2101-01-03).
+   *
+   * On sonde donc les deux extrémités de la courbe : si la source précise n'y répond pas et
+   * que le corps possède des éléments, on trace TOUT depuis les éléments. La courbe perd un
+   * peu de précision absolue et gagne d'être continue et fermée — ce qu'on attend d'un tracé.
+   * La position du CORPS, elle, continue d'utiliser la meilleure source disponible : seul le
+   * tracé est homogénéisé.
+   */
+  private _orbitNeedsElementsOnly(
+    name: string,
+    cfg: CelestialBodyConfig,
+    date: Date,
+    periodDays: number
+  ): boolean {
+    if (!cfg.orbitalElements && !cfg.relativeOrbitalElements) return false;
+    for (const phase of [-0.5, 0.5]) {
+      const at = this._orbitSampleDate(cfg, date, phase, periodDays);
+      if (this._precisePositionAU(name, cfg, at) === null) return true;
+    }
+    return false;
   }
 
   /**
@@ -699,13 +752,21 @@ export class OrbitalMechanics {
       const points = new Float32Array((nPoints + 1) * 3);
       const first = this._positionAU(_name, cfg, _date);
       if (!first) return null;
+      const elementsOnly = this._orbitNeedsElementsOnly(
+        _name,
+        cfg,
+        _date,
+        periodDays
+      );
 
       // Center the sampled period on the current date. The seam is then opposite
       // the currently displayed body instead of moving through it as time advances.
       for (let i = 0; i < nPoints; i++) {
         const phase = i / nPoints - 0.5;
         const sampleDate = this._orbitSampleDate(cfg, _date, phase, periodDays);
-        const point = this._positionAU(_name, cfg, sampleDate);
+        const point = elementsOnly
+          ? this._elementsPositionAU(cfg, sampleDate)
+          : this._positionAU(_name, cfg, sampleDate);
         if (!point) return null;
         const i3 = i * 3;
         points[i3] = point.x * SQRT_K;
@@ -721,10 +782,18 @@ export class OrbitalMechanics {
     const periodDays = cfg.realData?.orbitPeriodDays;
     if (!periodDays || periodDays <= 0) return null;
     const points = new Float32Array((nPoints + 1) * 3);
+    const elementsOnly = this._orbitNeedsElementsOnly(
+      _name,
+      cfg,
+      _date,
+      periodDays
+    );
     for (let i = 0; i < nPoints; i++) {
       const phase = i / nPoints - 0.5;
       const sampleDate = this._orbitSampleDate(cfg, _date, phase, periodDays);
-      const pointAU = this._positionAU(_name, cfg, sampleDate);
+      const pointAU = elementsOnly
+        ? this._elementsPositionAU(cfg, sampleDate)
+        : this._positionAU(_name, cfg, sampleDate);
       if (!pointAU) return null;
       const parentName = this._parentName?.get(_name);
       const parentScale = educationalParentOrbitScale(

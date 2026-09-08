@@ -1,9 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { readFileSync } from 'node:fs';
 import { CELESTIAL_CONFIG } from '@/config/bodies';
 import { forEachBody } from '@/config/catalog';
-import { bodyDynamics } from '@/config/gravity';
-import { HorizonsEphemerisService } from './HorizonsEphemerisService';
+import {
+  horizonsManifest,
+  horizonsServiceFromDisk,
+} from './horizonsTestFixture';
 import { OrbitalElementsService } from './OrbitalElementsService';
 
 /**
@@ -39,35 +40,6 @@ import { OrbitalElementsService } from './OrbitalElementsService';
  * servir : rester sur la bonne orbite, dans le bon plan, à la bonne cadence.
  */
 
-const EPHEMERIDES_DIR = 'public/assets/ephemerides/';
-
-interface ManifestEntry {
-  file: string;
-  center?: string;
-  stepDays: number;
-}
-
-const manifest = JSON.parse(
-  readFileSync(EPHEMERIDES_DIR + 'manifest.json', 'utf-8')
-) as { bodies: Record<string, ManifestEntry> };
-
-function horizonsFromDisk(): HorizonsEphemerisService {
-  const dynamics = bodyDynamics(CELESTIAL_CONFIG);
-  const loaded = new Map<string, unknown>();
-  for (const [name, entry] of Object.entries(manifest.bodies)) {
-    const file = readFileSync(EPHEMERIDES_DIR + entry.file);
-    loaded.set(name, {
-      manifest: entry,
-      samples: new Float64Array(
-        file.buffer.slice(file.byteOffset, file.byteOffset + file.byteLength)
-      ),
-      ...(dynamics[name] !== undefined ? { dynamics: dynamics[name] } : {}),
-    });
-  }
-  type Ctor = new (bodies: Map<string, unknown>) => HorizonsEphemerisService;
-  return new (HorizonsEphemerisService as unknown as Ctor)(loaded);
-}
-
 /** Époque des éléments dérivés — le repli est à son meilleur ici. */
 const EPOCH = new Date('2025-12-31T00:00:00Z');
 
@@ -83,12 +55,12 @@ forEachBody(CELESTIAL_CONFIG, ({ name, config, parentName }) => {
   const elements = config.relativeOrbitalElements;
   const period = config.realData?.orbitPeriodDays;
   if (!elements || parentName === null || !period) return;
-  if (!(name in manifest.bodies)) return;
+  if (!(name in horizonsManifest.bodies)) return;
   satellites.push({ name, parent: parentName, elements, period });
 });
 
 const elementsService = new OrbitalElementsService();
-const horizons = horizonsFromDisk();
+const horizons = horizonsServiceFromDisk();
 
 /** Écart angulaire et radial entre les deux sources, sur une fenêtre autour de l'époque. */
 function compare(
