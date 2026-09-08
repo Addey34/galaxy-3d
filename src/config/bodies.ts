@@ -434,6 +434,11 @@ export const CELESTIAL_CONFIG: CelestialConfig = {
           textureResolutions: { surface: ['8k', '4k', '2k', '1k'] },
           realData: {
             radiusKm: 1_821.6,
+            // Masse et gravite derivees du GM publie par JPL SSD (ephemeride JUP365,
+            // https://ssd.jpl.nasa.gov/sats/phys_par/) : m = GM/G, g = GM/R^2. Ni l'un ni
+            // l'autre n'est saisi a la main.
+            massKg: 8.9296e22,
+            gravity: 1.796,
             distanceAU: 0.002819,
             orbitPeriodDays: 1.769,
             orbitalInclination: 0,
@@ -465,6 +470,11 @@ export const CELESTIAL_CONFIG: CelestialConfig = {
           textureResolutions: { surface: ['8k', '4k', '2k', '1k'] },
           realData: {
             radiusKm: 1_560.8,
+            // Masse et gravite derivees du GM publie par JPL SSD (ephemeride JUP365,
+            // https://ssd.jpl.nasa.gov/sats/phys_par/) : m = GM/G, g = GM/R^2. Ni l'un ni
+            // l'autre n'est saisi a la main.
+            massKg: 4.7986e22,
+            gravity: 1.315,
             distanceAU: 0.004486,
             orbitPeriodDays: 3.551,
             orbitalInclination: 0,
@@ -496,6 +506,11 @@ export const CELESTIAL_CONFIG: CelestialConfig = {
           textureResolutions: { surface: ['8k', '4k', '2k', '1k'] },
           realData: {
             radiusKm: 2_631.2,
+            // Masse et gravite derivees du GM publie par JPL SSD (ephemeride JUP365,
+            // https://ssd.jpl.nasa.gov/sats/phys_par/) : m = GM/G, g = GM/R^2. Ni l'un ni
+            // l'autre n'est saisi a la main.
+            massKg: 1.4815e23,
+            gravity: 1.428,
             distanceAU: 0.007155,
             orbitPeriodDays: 7.155,
             orbitalInclination: 0,
@@ -527,6 +542,11 @@ export const CELESTIAL_CONFIG: CelestialConfig = {
           textureResolutions: { surface: ['8k', '4k', '2k', '1k'] },
           realData: {
             radiusKm: 2_410.3,
+            // Masse et gravite derivees du GM publie par JPL SSD (ephemeride JUP365,
+            // https://ssd.jpl.nasa.gov/sats/phys_par/) : m = GM/G, g = GM/R^2. Ni l'un ni
+            // l'autre n'est saisi a la main.
+            massKg: 1.0757e23,
+            gravity: 1.236,
             distanceAU: 0.012585,
             orbitPeriodDays: 16.689,
             orbitalInclination: 0,

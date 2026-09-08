@@ -751,6 +751,13 @@ export const SMALL_BODY_ELEMENTS: readonly SmallBodyElements[] = [
     maDeg: 65.84890057257185,
     epoch: '2000-01-01T12:00:00Z',
     radiusKm: 5.5,
+    // Periode de rotation mesuree par Vega 1/2 : 53,5 +/- 1 h, confirmee par les images
+    // Giotto. A prendre pour ce qu'elle est : le noyau est en PRECESSION LIBRE (rotation
+    // hors axe principal), et la litterature en tire deux periodicites, ~2,2 j et ~7,4 j.
+    // Il n'existe donc pas de cycle fixe unique, comme pour Hyperion et Styx ailleurs
+    // dans ce fichier ; on retient la valeur observee plutot que de laisser le corps fige.
+    rotationHours: 53.5,
+    moonCount: 0,
     color: 0xf08ac6,
     surfaceResolutions: ['4k', '2k'],
     kind: 'comet',
