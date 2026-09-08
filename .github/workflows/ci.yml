@@ -45,13 +45,24 @@ jobs:
   # (un echec signale une regression de cablage) mais ne bloque pas le deploiement, car
   # le rendu WebGL en GPU logiciel CI est lent et parfois capricieux sur les scenarios lourds.
   e2e:
-    name: Browser tests (e2e)
+    name: Browser tests (e2e ${{ matrix.shard }}/3)
     runs-on: ubuntu-latest
-    # Garde-fou : le rendu WebGL en GPU logiciel est lent et les retries CI peuvent prolonger
-    # la suite ; on laisse le temps d obtenir un resultat complet plutot qu une annulation.
-    # Sans ca, une install apt bloquee (miroirs Ubuntu injoignables) peut trainer des heures
-    # et polluer le statut global du workflow. Le job reste non bloquant pour le deploiement.
-    timeout-minutes: 35
+    # SHARDING sur 3 runners. La suite entiere ne tenait PAS dans le budget : mesure du
+    # 2026-09-08, elle atteignait 69 tests sur 88 en 35 min avec ZERO echec, puis se faisait
+    # couper. C'est la cause des 22 runs annules de l'historique, longtemps prise pour de
+    # l'instabilite. Un tiers de la suite par runner ramene chaque shard autour de 12-15 min.
+    #
+    # On repartit sur des MACHINES, jamais sur des workers : `playwright.config.ts` impose
+    # `workers: 1` et `fullyParallel: false` parce que deux contextes WebGL en GPU logiciel
+    # se disputent le meme CPU et rendent les scenarios lourds instables. Chaque shard garde
+    # donc son worker unique, la calibration est intacte.
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3]
+    # Garde-fou : sans lui, une install apt bloquee (miroirs Ubuntu injoignables) peut trainer
+    # des heures et polluer le statut global. Large marge sur les ~15 min attendus par shard.
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -63,12 +74,14 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm exec playwright install --with-deps chromium
-      - run: pnpm test:e2e
+      # `playwright` en direct plutot que `pnpm test:e2e --` : pas d'ambiguite sur la
+      # transmission des arguments a travers le script npm.
+      - run: pnpm exec playwright test --shard=${{ matrix.shard }}/3
       - name: Upload Playwright diagnostics
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: playwright-diagnostics-${{ github.run_id }}
+          name: playwright-diagnostics-${{ github.run_id }}-${{ matrix.shard }}
           path: |
             playwright-report/
             test-results/
