@@ -6,7 +6,7 @@ import { HorizonsEphemerisService } from './HorizonsEphemerisService';
 import {
   isPlausibleHeliocentricPosition,
   isPlausibleRelativePosition,
-} from './OrbitalMechanics';
+} from './ephemerisPlausibility';
 import { allBodies } from '@/config/catalog';
 import { CELESTIAL_CONFIG } from '@/config/bodies';
 import { SMALL_BODIES } from '@/config/smallBodies';

@@ -23,6 +23,7 @@ import type { OrbitalElementsService } from './OrbitalElementsService';
 import type { PreciseEphemerisProvider } from './PreciseEphemerisProvider';
 import { KM_PER_AU, ScaleService, SQRT_K } from './ScaleService';
 import { computeLightAttenuation } from './eclipse';
+import { BodyPositionResolver } from './BodyPositionResolver';
 import { solveKepler } from './kepler';
 import { HOURS_TO_RAD } from './MathConstants';
 import { surfaceRotationForSubsolarLongitude } from './frames';
@@ -45,58 +46,6 @@ const ORBIT_SAMPLE_WARP_MIN_ECCENTRICITY = 0.2;
 
 /** Marge visuelle minimale entre un parent et ses satellites en mode éducatif. */
 export const EDUCATIVE_PARENT_GAP = 0.12;
-
-/**
- * Les éléments orbitaux relatifs servent aussi de borne de cohérence pour une source précise.
- * Une éphéméride enfant-parent valide ne peut pas s'éloigner durablement de son orbite publiée,
- * ni s'en rapprocher. Cette vérification protège notamment les anciens fichiers Horizons
- * générés avec le Soleil comme centre, puis interprétés à tort comme des vecteurs
- * parent-relative.
- */
-const RELATIVE_EPHEMERIS_TOLERANCE = 2;
-const HELIOCENTRIC_DISTANCE_MIN_FACTOR = 0.5;
-const HELIOCENTRIC_DISTANCE_MAX_FACTOR = 2;
-
-/** Exportée pour être réutilisée par un test offline sur les fichiers Horizons committés. */
-export function isPlausibleRelativePosition(
-  position: THREE.Vector3,
-  cfg: CelestialBodyConfig
-): boolean {
-  const elements = cfg.relativeOrbitalElements;
-  if (!elements) return true;
-  const distanceAU = position.length();
-  const apoapsisAU = elements.semiMajorAxisAU * (1 + elements.eccentricity);
-  const periapsisAU = elements.semiMajorAxisAU * (1 - elements.eccentricity);
-  // Les DEUX bornes, et la basse n'est pas décorative : elle est celle qui manquait.
-  // Une position qui s'effondre vers la planète est tout aussi fausse qu'une qui s'en
-  // échappe, mais elle passait sans être vue — c'est ainsi qu'Encelade a pu se promener
-  // entre 1/11 et 1 fois son rayon orbital pendant des mois, sous un garde-fou qui ne
-  // regardait que le haut.
-  return (
-    distanceAU >= periapsisAU / RELATIVE_EPHEMERIS_TOLERANCE &&
-    distanceAU <= apoapsisAU * RELATIVE_EPHEMERIS_TOLERANCE
-  );
-}
-
-/**
- * Vérifie qu'une position précise reste à la distance attendue du Soleil. Les fichiers
- * Horizons optionnels peuvent être absents, obsolètes ou avoir été générés avec un mauvais
- * centre ; dans ce cas, Astronomy Engine/Kepler fournit une trajectoire cohérente plutôt
- * qu'une orbite visuelle épaissie par des points provenant de plusieurs rayons.
- */
-/** Exportée pour être réutilisée par un test offline sur les fichiers Horizons committés. */
-export function isPlausibleHeliocentricPosition(
-  position: THREE.Vector3,
-  cfg: CelestialBodyConfig
-): boolean {
-  const expectedDistanceAU = cfg.realData?.distanceAU;
-  if (!expectedDistanceAU || expectedDistanceAU <= 0) return true;
-  const distanceAU = position.length();
-  return (
-    distanceAU >= expectedDistanceAU * HELIOCENTRIC_DISTANCE_MIN_FACTOR &&
-    distanceAU <= expectedDistanceAU * HELIOCENTRIC_DISTANCE_MAX_FACTOR
-  );
-}
 
 /**
  * Échelle commune des orbites parentRelative d'un même parent.
@@ -173,6 +122,11 @@ export class OrbitalMechanics {
   /** Nom d'un satellite parentRelative → enum astronomy-engine de son parent. */
   private readonly _parentAstroBody = new Map<string, Body>();
   private readonly _parentName = new Map<string, string>();
+  /**
+   * Seule autorite sur « d'ou vient la position de ce corps » (cf. `BodyPositionResolver`).
+   * Construit en fin de constructeur, une fois les tables de parents remplies.
+   */
+  private _positions!: BodyPositionResolver;
   private _prevPaused = false;
   private _simDeltaSeconds = 0;
 
@@ -250,6 +204,15 @@ export class OrbitalMechanics {
     this._minRecomputeThresholdMs = Number.isFinite(minPeriodDays)
       ? minPeriodDays * MS_PER_DAY * OrbitalMechanics._RECOMPUTE_ORBIT_FRACTION
       : OrbitalMechanics._FALLBACK_THRESHOLD_MS;
+
+    // Apres la passe ci-dessus : le resolveur lit les tables de parents qu'elle remplit.
+    this._positions = new BodyPositionResolver(
+      this.ephemeris,
+      this.elements,
+      this.horizons,
+      this._parentName,
+      this._parentAstroBody
+    );
   }
 
   // ============================================================================
@@ -331,109 +294,6 @@ export class OrbitalMechanics {
   }
 
   /**
-   * Position en UA d'un corps selon sa source, dans le repère scène.
-   *   - `astroBody` défini → éphéméride astronomy-engine (planètes, Lune, Soleil…).
-   *   - sinon `orbitalElements` défini → propagation képlérienne (astéroïdes, comètes…).
-   *   - sinon null (corps sans position calculable).
-   */
-  /**
-   * Position issue de la source PRÉCISE (binaire Horizons / SPK) uniquement, ou `null` si
-   * elle ne couvre pas ce corps à cette date, ou si sa réponse échoue au test de
-   * plausibilité. Isolée du repli pour que `computeOrbitPoints` puisse INTERROGER la
-   * couverture avant de tracer, sans dupliquer les branches.
-   */
-  private _precisePositionAU(
-    name: string,
-    cfg: CelestialBodyConfig,
-    date: Date
-  ): THREE.Vector3 | null {
-    // Un corps imbriqué doit rester dans le repère local de son parent. Cette branche doit
-    // précéder toute lecture héliocentrique : un fichier SPK peut aussi exposer la position
-    // lune→Soleil, mais l'utiliser ici sous le groupe Terre/Jupiter appliquerait le parent
-    // deux fois et fausserait distance, position et ligne d'orbite dans les deux modes.
-    if (cfg.frame === 'parentRelative') {
-      const parentName = this._parentName?.get(name);
-      const preciseRelative = parentName
-        ? this.horizons.getParentRelativeAU(name, parentName, date)
-        : null;
-      return preciseRelative &&
-        isPlausibleRelativePosition(preciseRelative, cfg)
-        ? preciseRelative
-        : null;
-    }
-    // Les vecteurs numériques Horizons/SPK sont prioritaires lorsqu'ils couvrent ce corps
-    // et cette date. Les deux modes consomment ensuite exactement la même position source.
-    const precisePosition = this.horizons.getHeliocentricAU(name, date);
-    return precisePosition &&
-      isPlausibleHeliocentricPosition(precisePosition, cfg)
-      ? precisePosition
-      : null;
-  }
-
-  private _positionAU(
-    name: string,
-    cfg: CelestialBodyConfig,
-    date: Date
-  ): THREE.Vector3 | null {
-    const precise = this._precisePositionAU(name, cfg, date);
-    if (precise) return precise;
-
-    if (cfg.relativeEphemeris?.kind === 'jupiterMoon') {
-      // astronomy-engine fournit directement les vecteurs relatifs aux lunes joviennes.
-      return this.ephemeris.getJupiterMoonRelativeAU(
-        cfg.relativeEphemeris.moon,
-        date
-      );
-    }
-
-    if (cfg.astroBody !== undefined) {
-      if (cfg.frame === 'parentRelative') {
-        const parentBody = this._parentAstroBody.get(name);
-        // Parent sans éphéméride → pas de position relative calculable.
-        if (parentBody === undefined) return null;
-        return this.ephemeris.getParentRelativeAU(
-          cfg.astroBody,
-          parentBody,
-          date
-        );
-      }
-      return this.ephemeris.getHeliocentricAU(
-        cfg.positionBody ?? cfg.astroBody,
-        date
-      );
-    }
-    return this._elementsPositionAU(cfg, date);
-  }
-
-  /**
-   * Position issue des ÉLÉMENTS KÉPLÉRIENS du catalogue uniquement, ou `null` si le corps
-   * n'en a pas. C'est la seule source dont la couverture est INFINIE : elle vaut à n'importe
-   * quelle date, là où un binaire s'arrête. D'où son rôle pour tracer une orbite entière.
-   */
-  private _elementsPositionAU(
-    cfg: CelestialBodyConfig,
-    date: Date
-  ): THREE.Vector3 | null {
-    if (cfg.relativeOrbitalElements) {
-      // Le corps central est la PLANÈTE, pas le Soleil : on fournit la période publiée du
-      // catalogue, faute de quoi le mouvement moyen serait déduit du μ solaire (cf.
-      // `OrbitalElements.periodDays`). Une entrée qui porte déjà sa propre période garde
-      // la main.
-      return this.elements.getHeliocentricAU(
-        {
-          periodDays: cfg.realData?.orbitPeriodDays,
-          ...cfg.relativeOrbitalElements,
-        },
-        date
-      );
-    }
-    if (cfg.orbitalElements) {
-      return this.elements.getHeliocentricAU(cfg.orbitalElements, date);
-    }
-    return null;
-  }
-
-  /**
    * Une ligne d'orbite doit venir d'UNE SEULE source — sinon elle épisse deux trajectoires
    * qui ne coïncident pas, et le raccord se voit.
    *
@@ -459,7 +319,7 @@ export class OrbitalMechanics {
     if (!cfg.orbitalElements && !cfg.relativeOrbitalElements) return false;
     for (const phase of [-0.5, 0.5]) {
       const at = this._orbitSampleDate(cfg, date, phase, periodDays);
-      if (this._precisePositionAU(name, cfg, at) === null) return true;
+      if (this._positions.precise(name, cfg, at) === null) return true;
     }
     return false;
   }
@@ -477,7 +337,7 @@ export class OrbitalMechanics {
     date: Date,
     out: THREE.Vector3
   ): boolean {
-    const posAU = this._positionAU(name, cfg, date);
+    const posAU = this._positions.resolve(name, cfg, date);
     if (!posAU) return false;
     const distanceAU = posAU.length();
     if (distanceAU < 1e-12) {
@@ -510,7 +370,7 @@ export class OrbitalMechanics {
     date: Date,
     out: THREE.Vector3
   ): void {
-    const posAU = this._positionAU(name, cfg, date);
+    const posAU = this._positions.resolve(name, cfg, date);
     out.copy(posAU ? this.scale.auVectorToScene(posAU) : ZERO);
   }
 
@@ -661,7 +521,7 @@ export class OrbitalMechanics {
 
     // Direction Terre->Soleil lue sur la position RENDUE, pas sur un recalcul d'éphéméride :
     // c'est elle qui produit le terminateur qu'on voit, donc la seule sur laquelle caler la
-    // longitude subsolaire. Elle est aussi gratuite, là où `_positionAU` est le calcul lourd
+    // longitude subsolaire. Elle est aussi gratuite, là où `BodyPositionResolver.resolve` est le calcul lourd
     // que tout le reste de cette classe s'applique à throttler. Les deux coïncident de toute
     // façon : la position éduc est un pur redimensionnement RADIAL de la position vraie
     // (cf. _computeEducPos), donc de même direction, et le morph éduc↔explo interpole entre
@@ -750,7 +610,7 @@ export class OrbitalMechanics {
       if (!periodDays || periodDays <= 0) return null;
 
       const points = new Float32Array((nPoints + 1) * 3);
-      const first = this._positionAU(_name, cfg, _date);
+      const first = this._positions.resolve(_name, cfg, _date);
       if (!first) return null;
       const elementsOnly = this._orbitNeedsElementsOnly(
         _name,
@@ -765,8 +625,8 @@ export class OrbitalMechanics {
         const phase = i / nPoints - 0.5;
         const sampleDate = this._orbitSampleDate(cfg, _date, phase, periodDays);
         const point = elementsOnly
-          ? this._elementsPositionAU(cfg, sampleDate)
-          : this._positionAU(_name, cfg, sampleDate);
+          ? this._positions.elementsOnly(cfg, sampleDate)
+          : this._positions.resolve(_name, cfg, sampleDate);
         if (!point) return null;
         const i3 = i * 3;
         points[i3] = point.x * SQRT_K;
@@ -792,8 +652,8 @@ export class OrbitalMechanics {
       const phase = i / nPoints - 0.5;
       const sampleDate = this._orbitSampleDate(cfg, _date, phase, periodDays);
       const pointAU = elementsOnly
-        ? this._elementsPositionAU(cfg, sampleDate)
-        : this._positionAU(_name, cfg, sampleDate);
+        ? this._positions.elementsOnly(cfg, sampleDate)
+        : this._positions.resolve(_name, cfg, sampleDate);
       if (!pointAU) return null;
       const parentName = this._parentName?.get(_name);
       const parentScale = educationalParentOrbitScale(
