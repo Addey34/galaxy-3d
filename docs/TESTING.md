@@ -30,6 +30,10 @@
   vraiment, avec le bon message. Un test qui ne casse pas quand on réintroduit le bug ne garde rien
   — c'est la seule façon de distinguer un garde d'une décoration.
 
+`tsconfig.json` inclut `e2e` : les scénarios Playwright sont **typés par `pnpm typecheck`**, pas
+seulement lintés. Sans cela une erreur de type dans un spec n'apparaissait qu'à l'exécution — donc
+après vingt minutes de suite, ou jamais si la branche fautive n'était pas empruntée.
+
 ## Diagnostic d’un échec e2e
 
 1. Lancer le fichier concerné : `pnpm exec playwright test e2e/smoke.spec.ts --reporter=line`.
@@ -50,6 +54,17 @@ défauts qui ne lèvent aucune erreur — une position fausse reste une position
 y a été vérifiée falsifiable : on réintroduit le défaut, on confirme que le test tombe.
 Playwright couvre le boot, loader, navigation, sélection 3D, modes, labels, i18n, mobile, petits
 corps, permaliens, événements astronomiques, zoom optique, visite guidée et accessibilité.
+
+**Un cran au-dessus du câblage : `e2e/terminator.spec.ts` compte des PIXELS.** C'est la seule
+partie de la suite qui juge l'image et non la plomberie, et elle existe pour une raison précise :
+deux défauts de terminateur livrés de suite sont passés sous des tests unitaires verts. Les
+courbes de `core/terminator.ts` étaient justes ; ce que l'écran en faisait ne l'était pas — une
+garantie exprimée en relatif contre une référence elle-même invisible reste vraie pendant que la
+bande rend zéro pixel. La sonde `?debug-terminator` (`src/ui/terminatorProbe.ts`) cadre le
+terminateur au centre du disque et renvoie, par tranche de hauteur solaire, la part de pixels
+au-dessus du plancher d'affichage. Quand une propriété se voit à l'écran et pas dans la donnée,
+c'est le niveau à viser — mais seulement là : une assertion en pixels coûte cher et se casse pour
+des raisons d'environnement (cf. la limite `DataTexture` documentée dans ce fichier même).
 
 Il n’y a pas encore de seuil de couverture chiffré : la priorité est la couverture comportementale
 des invariants physiques et des frontières d’architecture.
@@ -78,8 +93,16 @@ Après une modification de la Terre, exécuter au minimum :
 - `pnpm exec playwright test e2e/weather.spec.ts --reporter=line`
 - `pnpm exec playwright test e2e/precip-visual.spec.ts --reporter=line`
 - `pnpm exec playwright test e2e/earth-visual.spec.ts --reporter=line`
+- `pnpm exec playwright test e2e/terminator.spec.ts --reporter=line`
 
 `weather.spec.ts` couvre le panneau, les groupes exclusifs, le diagnostic et l'invariant « modèle caché sans donnée propre ». `precip-visual.spec.ts` utilise un fixture déterministe IMERG pour vérifier l'alpha natif et l'absence d'extrapolation polaire. `earth-visual.spec.ts` vérifie le câblage du displacement et le retour LOD sans dépendre d'une réponse météo.
+
+`terminator.spec.ts` mesure la bande de crépuscule en pixels et vérifie qu'une couche météo
+MODÈLE porte la largeur de crépuscule de sa couche, pas la sienne. **Limite connue à ne pas
+« corriger »** : sous le rendu logiciel des runners, la `DataTexture` des couches modèle ne
+remonte pas — le calque sort noir opaque avec ou sans correction. C'est pourquoi ce second cas
+lit la largeur annoncée par le matériau (`twilight=` dans `?debug-meteo`) au lieu de compter des
+pixels ; une assertion en pixels y serait verte pour une mauvaise raison.
 
 Le client Open-Meteo possède en plus des tests Vitest déterministes pour le retry 429/5xx, `Retry-After`, la déduplication en vol et le cache des réponses. Les tests de réseau ne valident pas la disponibilité du fournisseur en production ; une capture live et le diagnostic `?debug-meteo` sont requis pour qualifier une donnée réellement reçue.
 

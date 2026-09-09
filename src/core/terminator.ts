@@ -230,8 +230,13 @@ export const ATMOSPHERE_SCALE_HEIGHT_KM = 8;
  */
 export function sunlitColumnFraction(raw: number): number {
   if (raw >= 0) return 1;
-  const shadowTopKm =
-    EARTH_MEAN_RADIUS_KM * (1 / Math.sqrt(Math.max(1 - raw * raw, 1e-12)) - 1);
+  // `1/cos h − 1` écrit SANS soustraction : la forme directe retranche deux nombres tous deux
+  // proches de 1 (à 1° sous l'horizon, 1,000153 − 1) et perd l'essentiel de ses chiffres
+  // significatifs. Négligeable en double, pas en float32 côté GPU — et c'est justement là,
+  // dans le premier degré sous l'horizon, que la lueur est la plus forte. L'identité
+  // `1/cos − 1 = sin² / (cos·(1+cos))` donne le même nombre sans jamais soustraire.
+  const cos = Math.sqrt(Math.max(1 - raw * raw, 1e-12));
+  const shadowTopKm = (EARTH_MEAN_RADIUS_KM * raw * raw) / (cos * (1 + cos));
   return Math.exp(-shadowTopKm / ATMOSPHERE_SCALE_HEIGHT_KM);
 }
 
@@ -342,7 +347,8 @@ float terminatorNight( float raw, float onset, float rampWidth ) {
 }
 float terminatorSunlitColumn( float raw ) {
   if ( raw >= 0.0 ) return 1.0;
-  float shadowTopKm = ${EARTH_MEAN_RADIUS_KM.toFixed(1)} * ( 1.0 / sqrt( max( 1.0 - raw * raw, 1e-12 ) ) - 1.0 );
+  float c = sqrt( max( 1.0 - raw * raw, 1e-12 ) );
+  float shadowTopKm = ${EARTH_MEAN_RADIUS_KM.toFixed(1)} * raw * raw / ( c * ( 1.0 + c ) );
   return exp( - shadowTopKm / ${ATMOSPHERE_SCALE_HEIGHT_KM.toFixed(1)} );
 }
 float terminatorTwilight( float raw, float wrap ) {

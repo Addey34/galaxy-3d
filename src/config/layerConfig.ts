@@ -78,7 +78,7 @@ export const LAYER_RADIUS_SCALE: Record<string, number> = {
  * physique, sur le MÊME mesh — brillaient à plein régime sur la face nuit. Deux
  * représentations d'un même objet ne peuvent pas décider différemment de leur terminateur.
  */
-export const LAYER_TERMINATOR_WRAP: Record<string, number> = {
+export const LAYER_TERMINATOR_WRAP: Record<string, number | undefined> = {
   clouds: TERMINATOR_WRAP_CLOUDS,
   precip: TERMINATOR_WRAP_STORM,
 };
@@ -629,8 +629,14 @@ export function createColoredOverlayMaterial(
         {
           // Même fonction, même largeur que la jumelle satellite de cette couche : une
           // apparence physique s'éteint la nuit, quelle que soit la SOURCE de la donnée.
-          // Un plancher garde la teinte au terminateur au lieu de couper net, exactement
-          // comme la couche pluie.
+          //
+          // DEUX facteurs, et non un seul, parce que ce materiau-ci n'est pas eclaire. La
+          // jumelle satellite est un MeshStandardMaterial : sa couleur est deja assombrie par
+          // l'eclairage direct (dont le dotNL passe par terminatorLight) et son alpha s'efface
+          // en plus. Un MeshBasicMaterial ne recoit aucun eclairage — sans le facteur sur la
+          // couleur, il garderait sa pleine teinte en s'effacant, donc il traverserait le
+          // terminateur autrement que sa jumelle. Le plancher evite de couper net, comme la
+          // couche pluie qui a exactement le meme probleme.
           vec3 oN = normalize( vOverlayWorldNormal );
           vec3 oToSun = normalize( uOverlaySunPos - vOverlayWorldPos );
           float oDay = terminatorDay( dot( oN, oToSun ), uOverlayWrap );
@@ -924,19 +930,6 @@ vec3 fragmentSunDir() {
 const TWILIGHT_REFERENCE_ALBEDO = 0.306;
 
 /**
- * Amplitude du bandeau crépusculaire, POSÉE PAR CONTINUITÉ et non réglée à l'œil.
- *
- * Au HAUT de la bande (`raw = +wrap`) le terme s'annule par construction, et le sol y émet
- * `dotNL · I · albédo / π` avec `dotNL = wrap`. On donne au maximum de la lueur exactement
- * cette valeur : la courbe rendue continue donc la rampe du jour au lieu de tomber d'une
- * falaise, et l'amplitude se déduit de trois grandeurs déjà fixées ailleurs (largeur du
- * crépuscule, intensité solaire, albédo publié) plutôt que d'un nombre choisi.
- *
- * Divisé par le maximum du profil (`TWILIGHT_BAND_PEAK`, balayé dans `core/terminator.ts`)
- * pour que l'uniforme porte bien une RADIANCE de crête et non une valeur dépendant de la
- * forme exacte de la courbe.
- */
-/**
  * Teinte du bandeau, NORMALISÉE EN LUMINANCE (Rec. 709).
  *
  * La couleur du catalogue décide de la teinte, `TWILIGHT_STRENGTH` de la luminosité — sans
@@ -952,6 +945,19 @@ function twilightTint(color: number): THREE.Color {
   return tint.multiplyScalar(1 / Math.max(luminance, 1e-4));
 }
 
+/**
+ * Amplitude du bandeau crépusculaire, POSÉE PAR CONTINUITÉ et non réglée à l'œil.
+ *
+ * Au HAUT de la bande (`raw = +wrap`) le terme s'annule par construction, et le sol y émet
+ * `dotNL · I · albédo / π` avec `dotNL = wrap`. On donne au maximum de la lueur exactement
+ * cette valeur : la courbe rendue continue donc la rampe du jour au lieu de tomber d'une
+ * falaise, et l'amplitude se déduit de trois grandeurs déjà fixées ailleurs (largeur du
+ * crépuscule, intensité solaire, albédo publié) plutôt que d'un nombre choisi.
+ *
+ * Divisé par le maximum du profil (`TWILIGHT_BAND_PEAK`, balayé dans `core/terminator.ts`)
+ * pour que l'uniforme porte bien une RADIANCE de crête et non une valeur dépendant de la
+ * forme exacte de la courbe.
+ */
 const TWILIGHT_PEAK_RADIANCE =
   (TERMINATOR_WRAP_ATMOSPHERE *
     LIGHTING_SETTINGS.sun.intensity *

@@ -529,15 +529,19 @@ describe('day/night terminator wiring', () => {
         .uniforms['uOverlayWrap']?.value as number | undefined;
 
     const clouds = createCloudsMaterial();
-    expect(compile(clouds).uniforms['uTerminatorWrap']?.value).toBe(
-      overlayWrap('clouds')
-    );
+    const cloudsWrap = compile(clouds).uniforms['uTerminatorWrap']?.value as
+      number | undefined;
+    // `toBe` seul se satisferait de deux `undefined` : on exige d'abord une VRAIE largeur des
+    // deux côtés, sinon retirer l'entrée de la carte ferait passer l'égalité en silence.
+    expect(typeof cloudsWrap).toBe('number');
+    expect(cloudsWrap).toBe(overlayWrap('clouds'));
     clouds.dispose();
 
     const precip = createPrecipMaterial();
-    expect(compile(precip).uniforms['uPrecipWrap']?.value).toBe(
-      overlayWrap('precip')
-    );
+    const precipWrap = compile(precip).uniforms['uPrecipWrap']?.value as
+      number | undefined;
+    expect(typeof precipWrap).toBe('number');
+    expect(precipWrap).toBe(overlayWrap('precip'));
     precip.dispose();
   });
 

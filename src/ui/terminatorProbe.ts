@@ -47,7 +47,11 @@ export interface TerminatorBin {
 }
 
 export interface TerminatorProbe {
-  /** Place la caméra à 90° du Soleil : le terminateur passe par le centre du disque. */
+  /**
+   * Place la caméra à 90° du Soleil : le terminateur passe par le centre du disque.
+   * À ne pas appeler PENDANT la transition éduc↔explo : le rayon vient du mode courant
+   * alors que le mesh est à une taille interpolée, donc le cadrage serait faux.
+   */
   frame(bodyName?: string): boolean;
   /** Mesure le rendu courant, tranche d'éclairement par tranche d'éclairement. */
   sample(options?: { bodyName?: string; step?: number }): TerminatorBin[];
@@ -139,7 +143,14 @@ export function setupTerminatorProbe(api: PublicAPI): () => void {
     if (!target) return [];
 
     const ray = new THREE.Vector3();
-    const origin = new THREE.Vector3();
+    // Constant pour tout le balayage (la pose est figée par l'instantané) : hors boucle.
+    const origin = new THREE.Vector3().subVectors(
+      cameraPosition,
+      target.center
+    );
+    const radiusSquared = target.radius * target.radius;
+    // Terme constant de l'équation du second degré rayon/sphère.
+    const originTerm = origin.dot(origin) - radiusSquared;
     const hit = new THREE.Vector3();
     const normal = new THREE.Vector3();
     const toSun = new THREE.Vector3();
@@ -147,7 +158,6 @@ export function setupTerminatorProbe(api: PublicAPI): () => void {
       number,
       { pixels: number; lit: number; sum: number; max: number }
     >();
-    const radiusSquared = target.radius * target.radius;
 
     for (let y = 0; y < canvas.height; y += step) {
       for (let x = 0; x < canvas.width; x += step) {
@@ -157,10 +167,8 @@ export function setupTerminatorProbe(api: PublicAPI): () => void {
           .applyMatrix4(matrixWorld)
           .sub(cameraPosition)
           .normalize();
-        origin.subVectors(cameraPosition, target.center);
         const b = 2 * origin.dot(ray);
-        const c = origin.dot(origin) - radiusSquared;
-        const discriminant = b * b - 4 * c;
+        const discriminant = b * b - 4 * originTerm;
         if (discriminant < 0) continue;
         const distance = (-b - Math.sqrt(discriminant)) / 2;
         if (distance <= 0) continue;

@@ -308,7 +308,9 @@ describe('GLSL mirror', () => {
     expect(TERMINATOR_GLSL).toContain('( raw - onset ) / -rampWidth');
     // Le rayon terrestre et la hauteur d'échelle traversent le template : une édition d'un
     // seul côté ferait diverger le bandeau rendu de celui que ces tests décrivent.
-    expect(TERMINATOR_GLSL).toContain('6371.0 * ( 1.0 / sqrt(');
+    expect(TERMINATOR_GLSL).toContain(
+      '6371.0 * raw * raw / ( c * ( 1.0 + c ) )'
+    );
     expect(TERMINATOR_GLSL).toContain('exp( - shadowTopKm / 8.0 )');
     expect(TERMINATOR_GLSL).toContain(
       'terminatorSunlitColumn( raw ) * ( 1.0 - terminatorDay( raw, wrap ) )'
