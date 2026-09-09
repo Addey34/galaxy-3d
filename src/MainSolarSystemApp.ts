@@ -61,6 +61,7 @@ import {
 } from './ui/overlayCoordinator';
 import { setupContextRecovery } from './ui/contextRecovery';
 import { setupSolarDebug } from './ui/solarDebug';
+import { setupTerminatorProbe } from './ui/terminatorProbe';
 import { setupEarthDebug } from './ui/earthDebug';
 import { setupMeteoDebug } from './ui/meteoDebug';
 import { fetchAllSmallBodies } from './core/sbdb';
@@ -154,6 +155,7 @@ if (surfaceScrim) {
     } = api;
     setupSolarDebug(api);
     setupEarthDebug(api);
+    setupTerminatorProbe(api);
     setupContextRecovery(sceneSystem);
 
     // Registre des COUCHES MÉTÉO de la Terre. Chaque `setup*` monte sa couche (données

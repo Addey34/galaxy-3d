@@ -117,7 +117,11 @@ function formatSnapshot(snapshot: MeteoLayerDiagnostics): string {
       ' material=' +
       (snapshot.render.materialType ?? '-') +
       ' opacity=' +
-      (snapshot.render.opacity ?? '-')
+      (snapshot.render.opacity ?? '-') +
+      ' twilight=' +
+      (snapshot.render.twilightWrap === undefined
+        ? 'none'
+        : snapshot.render.twilightWrap.toFixed(3))
     : '-';
 
   return [

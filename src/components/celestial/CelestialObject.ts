@@ -25,6 +25,7 @@ import {
   getPrecipUniforms,
   getRealCloudsUniforms,
   getRingShadowUniforms,
+  getLayerTwilightWrap,
   getThermalUniforms,
   LAYER_TERMINATOR_WRAP,
   type EclipseShadowUniforms,
@@ -661,6 +662,9 @@ export default class CelestialObject {
       materialType: material?.type,
       materialName: material?.name || undefined,
       opacity: record?.opacity,
+      // La largeur du crépuscule RÉELLEMENT appliquée : c'est elle qui divergeait en silence
+      // entre une couche satellite et sa jumelle modèle posées sur le même mesh.
+      twilightWrap: material ? getLayerTwilightWrap(material) : undefined,
       map: texture
         ? {
             width: image?.width ?? 0,

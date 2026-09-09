@@ -555,6 +555,22 @@ export function createThermalMaterial(): THREE.MeshBasicMaterial {
   return material;
 }
 
+const TWILIGHT_WRAP_KEY = '__twilightWrap';
+
+/**
+ * Largeur du crépuscule RÉELLEMENT appliquée par ce matériau, ou `undefined` s'il n'en a pas.
+ *
+ * Exposée parce que c'est précisément ce qui était invisible : deux matériaux posés tour à tour
+ * sur le MÊME mesh (satellite / modèle) pouvaient diverger sans que rien ne le montre. Le
+ * panneau `?debug-meteo` l'affiche désormais par couche, ce qui rend la divergence observable
+ * à l'exécution — donc vérifiable par un test e2e dans un vrai contexte WebGL.
+ */
+export function getLayerTwilightWrap(
+  material: THREE.Material
+): number | undefined {
+  return material.userData[TWILIGHT_WRAP_KEY] as number | undefined;
+}
+
 const OVERLAY_SUN_UNIFORM_KEY = '__overlaySunUniform';
 
 /** Position monde du Soleil d'un overlay de donnée, s'il a un terminateur. */
@@ -585,6 +601,7 @@ export function createColoredOverlayMaterial(
     toneMapped: false,
   });
   if (terminatorWrap === undefined) return material;
+  material.userData[TWILIGHT_WRAP_KEY] = terminatorWrap;
 
   const sunPosition = { value: new THREE.Vector3() };
   material.userData[OVERLAY_SUN_UNIFORM_KEY] = sunPosition;
@@ -738,6 +755,7 @@ export function createPrecipMaterial(): THREE.MeshBasicMaterial {
     mix: { value: 0 },
   };
   material.userData[PRECIP_UNIFORM_KEY] = precip;
+  material.userData[TWILIGHT_WRAP_KEY] = LAYER_TERMINATOR_WRAP['precip'];
 
   chainOnBeforeCompile(material, (shader) => {
     shader.uniforms['uPrecipEnabled'] = precip.enabled;
@@ -1154,6 +1172,7 @@ export function createShadowAwareStandardMaterial(
   };
 
   material.userData[SHADOW_AWARE_UNIFORM_KEY] = attenuationUniform;
+  material.userData[TWILIGHT_WRAP_KEY] = terminatorWrap;
   if (cloudShadow)
     material.userData[CLOUD_SHADOW_UNIFORM_KEY] = cloudShadowUniforms;
   if (moonlight) material.userData[MOONLIGHT_UNIFORM_KEY] = moonlightUniforms;

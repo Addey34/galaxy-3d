@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { mockOpenMeteo } from './openMeteoMock';
 
 test('cloud model fallback loads and activates without a WebGL shader error', async ({
   page,
@@ -16,36 +17,7 @@ test('cloud model fallback loads and activates without a WebGL shader error', as
   });
 
   await page.route('**/sbdb_query.api*', (route) => route.abort());
-  await page.route('**/api.open-meteo.com/**', async (route) => {
-    const body = route.request().postDataJSON() as {
-      latitude?: number[];
-      hourly?: string[];
-    };
-    const variable = body.hourly?.[0] ?? 'cloud_cover';
-    const points = (body.latitude ?? []).map(() => ({
-      hourly: { [variable]: Array.from({ length: 48 }, () => 70) },
-    }));
-    await route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify(points),
-    });
-  });
-  await page.route('**/archive-api.open-meteo.com/**', async (route) => {
-    const body = route.request().postDataJSON() as {
-      latitude?: number[];
-      hourly?: string[];
-    };
-    const variable = body.hourly?.[0] ?? 'cloud_cover';
-    const points = (body.latitude ?? []).map(() => ({
-      hourly: { [variable]: Array.from({ length: 24 }, () => 70) },
-    }));
-    await route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify(points),
-    });
-  });
+  await mockOpenMeteo(page);
   await page.addInitScript(() => {
     localStorage.setItem('ssv-guided-tour-v1', '1');
     localStorage.setItem('ssv-explo-tour-nudge-v1', '1');

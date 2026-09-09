@@ -323,6 +323,27 @@ la même chose physique sur le **même mesh**, brillaient à plein régime sur l
 `src/config/layerConfig.test.ts` et `src/shaders/terminatorUsage.test.ts` refusent une couche qui
 appelle une fonction du terminateur sans en embarquer la définition, ou qui contourne le contrat.
 
+### Mesurer le terminateur en pixels (`?debug-terminator`)
+
+Les deux derniers défauts de cette section sont passés sous des tests unitaires verts : les
+courbes étaient justes, c'est ce que l'écran en faisait qui ne l'était pas. `src/ui/
+terminatorProbe.ts` rend cette mesure reproductible — `frame()` place la caméra à 90° du Soleil
+(le terminateur traverse le centre du disque), `sample()` renvoie par tranche d'éclairement la
+part de pixels au-dessus du plancher d'affichage, la luminance moyenne et le maximum.
+`e2e/terminator.spec.ts` s'en sert comme garde-fou.
+
+Deux pièges y sont encodés, tous deux payés une fois : l'instantané doit être **atomique**
+(pixels, pose de caméra et position du corps lus dans la même frame, sinon la correspondance
+pixel → éclairement est fausse en silence), et le **bord du disque** doit être exclu (`N·V <
+0.45`) — le rayon y est tangent et le halo atmosphérique additif y est brillant, si bien que
+chaque tranche ramasse un pixel de limbe et la mesure sort plate.
+
+**Limite connue** : sous le rendu logiciel des runners, la `DataTexture` des couches météo
+MODÈLE ne remonte pas — le calque sort noir opaque, avec ou sans correction. Une assertion en
+pixels y serait verte pour une mauvaise raison ; c'est pourquoi le test de ces couches lit la
+largeur de crépuscule annoncée par le matériau (`twilight=` dans `?debug-meteo`) plutôt que des
+pixels.
+
 ## Architecture météo
 
 Trois frontières simples (résumées ici ; le plan directeur complet avec l'historique des décisions

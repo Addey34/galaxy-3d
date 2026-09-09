@@ -44,6 +44,8 @@ export interface MeteoRenderDiagnostics {
   materialType?: string;
   materialName?: string;
   opacity?: number;
+  /** Largeur du crépuscule appliquée par le matériau, `undefined` = couche d'instrument. */
+  twilightWrap?: number;
   map?: MeteoTextureDiagnostics;
 }
 
