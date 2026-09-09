@@ -30,6 +30,11 @@
  *      erreur d'un pixel déplace `raw` de bout en bout, et le halo atmosphérique (additif,
  *      BackSide) y est brillant. Sans ce filtre, CHAQUE tranche de `raw` ramasse un pixel de
  *      limbe et la mesure sort plate — c'est ce qui a fait perdre deux tours à la main.
+ *   3. **Il faut DESSINER, pas seulement lire.** Un onglet en arrière-plan voit son
+ *      `requestAnimationFrame` bridé : le tampon de dessin peut être vieux ou noir, et la
+ *      sonde renvoyait alors 0 % partout — exactement ce qu'elle renvoie quand la bande est
+ *      réellement éteinte. L'outil de mesure reproduisait le mode d'échec silencieux qu'il
+ *      existe pour interdire. `sample()` rend donc la frame lui-même.
  */
 import * as THREE from 'three';
 import type { PublicAPI } from '@/SolarSystemApp';
@@ -124,8 +129,20 @@ export function setupTerminatorProbe(api: PublicAPI): () => void {
     const canvas = scene.renderer.domElement;
     if (!readoutCtx) return [];
 
-    // INSTANTANÉ ATOMIQUE (piège 1) : les pixels et la géométrie qui les explique sont lus
-    // dans la même frame, jamais dans deux appels séparés.
+    // RENDU À LA DEMANDE, et pas seulement une lecture du tampon courant.
+    //
+    // Sans cela la sonde lit ce que la boucle a bien voulu dessiner en dernier — et un onglet
+    // en ARRIÈRE-PLAN voit son `requestAnimationFrame` bridé, donc ce tampon peut être vieux
+    // ou noir. La sonde renvoyait alors des tranches à 0 % partout, c'est-à-dire exactement ce
+    // qu'elle renvoie quand la bande est réellement éteinte : impossible de distinguer « rien
+    // à l'écran » de « personne n'a dessiné ». C'est le mode d'échec silencieux que tout ce
+    // module existe pour interdire, reproduit dans l'outil de mesure lui-même.
+    //
+    // Dessiner ici rend aussi l'instantané atomique par construction (piège 1) : les pixels
+    // sortent de la pose de caméra qu'on relève juste après, pas d'une frame antérieure.
+    if (scene.composer) scene.composer.render();
+    else scene.renderer.render(scene.scene, scene.camera);
+
     readout.width = canvas.width;
     readout.height = canvas.height;
     readoutCtx.drawImage(canvas, 0, 0);
