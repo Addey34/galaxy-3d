@@ -8,7 +8,11 @@ import {
   getThermalUniforms,
   THERMAL_DEFAULT_OPACITY,
 } from './layerConfig';
-import { EARTH_OCEAN_ROUGHNESS_SETTINGS, SHADER_SETTINGS } from './engine';
+import {
+  EARTH_OCEAN_ROUGHNESS_SETTINGS,
+  LIGHTING_SETTINGS,
+  SHADER_SETTINGS,
+} from './engine';
 import {
   RELIEF_FADE_END,
   RELIEF_FADE_START,
@@ -20,6 +24,8 @@ import {
   TERMINATOR_WRAP_VACUUM,
   terminatorLight,
   terminatorNight,
+  terminatorTwilight,
+  TWILIGHT_BAND_PEAK,
 } from '@/core/terminator';
 import { fragmentShader as nightLightsFragment } from '@/shaders/NightLightsShader';
 
@@ -322,7 +328,16 @@ describe('day/night terminator wiring', () => {
     expect(shader.fragmentShader).toContain(
       'float nightMask = terminatorNight('
     );
-    expect(shader.fragmentShader).not.toContain('1.0 - terminatorDay(');
+    // `1.0 - terminatorDay(` subsiste UNE fois, dans la définition partagée de
+    // `terminatorTwilight` (core/terminator.ts), où il annule le bandeau crépusculaire du
+    // côté jour — un usage qui n'a rien d'un masque nocturne. Ce qui reste interdit, c'est
+    // qu'un masque de ce matériau le recalcule pour son compte.
+    expect(
+      shader.fragmentShader.match(/1\.0 - terminatorDay\(/g)?.length ?? 0
+    ).toBe(1);
+    expect(shader.fragmentShader).not.toMatch(
+      /(nightMask|moonFacing|moonGlow)[^;]*1\.0 - terminatorDay\(/
+    );
     surface.dispose();
   });
 
@@ -354,6 +369,16 @@ describe('day/night terminator wiring', () => {
     // La vraie propriete est un CREUX : la somme des deux contributions, normalisee par sa
     // valeur au terminateur, ne doit jamais redescendre en dessous de 1. Le sol part de
     // wrap/4 et s'effondre ; les villes doivent monter au moins aussi vite, des le coucher.
+    //
+    // ET CE N'ÉTAIT TOUJOURS PAS SUFFISANT — le bandeau a été signalé à nouveau après cette
+    // correction. La raison : la référence elle-même. `terminatorLight(0, w) = w/4 ≈ 2,6 %`
+    // du plein soleil est DÉJÀ sous le plancher d'affichage une fois multipliée par l'albédo
+    // et compressée par le tone mapping. Normaliser par une grandeur invisible rend la
+    // garantie vide : « la somme ne descend pas sous son niveau au terminateur » était vraie
+    // et le rendu noir. Mesuré sur le rendu réel (albédo neutre 0,5) : la surface atteint le
+    // noir 8 bits dès `raw ≈ +0,013`, soit 0,75° AU-DESSUS de l'horizon, et vaut 0 sur toute
+    // la bande. C'est pourquoi la lueur du ciel (`terminatorTwilight`) a été ajoutée : elle
+    // est le seul terme de la bande qui ne multiplie pas l'albédo.
     const { threshold, smoothness } = SHADER_SETTINGS.nightLights;
     const w = TERMINATOR_WRAP_ATMOSPHERE;
     const reference = terminatorLight(0, w);
@@ -361,8 +386,9 @@ describe('day/night terminator wiring', () => {
 
     for (let raw = 0; raw > -w; raw -= 0.0005) {
       const ground = terminatorLight(raw, w) / reference;
+      const sky = terminatorTwilight(raw, w) / TWILIGHT_BAND_PEAK;
       const cities = terminatorNight(raw, threshold, smoothness);
-      expect(ground + cities).toBeGreaterThanOrEqual(1);
+      expect(ground + sky + cities).toBeGreaterThanOrEqual(1);
     }
 
     // Et les deux bornes dures que la forme de la courbe ne doit jamais sacrifier.
@@ -371,6 +397,110 @@ describe('day/night terminator wiring', () => {
     expect(terminatorNight(threshold - smoothness, threshold, smoothness)).toBe(
       1
     );
+  });
+
+  it('adds the twilight glow to the surface, and only where there is a sky', () => {
+    // Le bandeau est de la lumière de CIEL : il n'a de sens que sur un corps qui a une
+    // atmosphère, et il réutilise les varyings monde de `moonlight`. Les deux conditions
+    // sont donc vérifiées ici plutôt que documentées.
+    const compile = (
+      material: THREE.MeshBasicMaterial | THREE.MeshStandardMaterial
+    ): Parameters<NonNullable<THREE.Material['onBeforeCompile']>>[0] => {
+      const shader = {
+        uniforms: {},
+        vertexShader: '#include <common>\n#include <worldpos_vertex>',
+        fragmentShader:
+          '#include <common>\n#include <map_fragment>\n' +
+          'vec3 outgoingLight = totalDiffuse + totalSpecular + totalEmissiveRadiance;',
+      } as Parameters<NonNullable<THREE.Material['onBeforeCompile']>>[0];
+      material.onBeforeCompile?.(shader, {} as THREE.WebGLRenderer);
+      return shader;
+    };
+
+    // Terre : atmosphère + lumières nocturnes.
+    const earth = createSurfaceMaterial(
+      false,
+      undefined,
+      true,
+      true,
+      true,
+      true,
+      0x4a90e0
+    );
+    const earthShader = compile(earth);
+    // On vise le SITE D'APPEL, pas la définition : `TERMINATOR_GLSL` est injecté dans tous
+    // les matériaux, donc la fonction existe partout — ce qui distingue les corps, c'est
+    // qu'elle soit appelée ou non.
+    expect(earthShader.fragmentShader).toContain(
+      'terminatorTwilight( twilightGraze, uTerminatorWrap )'
+    );
+    expect(earthShader.uniforms['uTwilightColor']).toBeDefined();
+    // La lueur suit la MÊME atténuation solaire que l'éclairage direct — c'est sur lui que
+    // son amplitude est calée, les deux doivent s'éteindre ensemble (distance et éclipse).
+    expect(earthShader.fragmentShader).toContain(
+      'uTwilightStrength * uLightAttenuation * eclipseShadowFactor'
+    );
+    earth.dispose();
+
+    // Corps sans atmosphère : terminateur net, aucun bandeau, shader inchangé.
+    const airless = createSurfaceMaterial(
+      false,
+      undefined,
+      true,
+      true,
+      true,
+      false
+    );
+    const airlessShader = compile(airless);
+    expect(airlessShader.fragmentShader).not.toContain('twilightGraze');
+    expect(airlessShader.uniforms['uTwilightColor']).toBeUndefined();
+    airless.dispose();
+  });
+
+  it('anchors the glow amplitude on the ground it continues, not on taste', () => {
+    // Le maximum de la lueur vaut exactement l'éclairement du sol au HAUT de la bande, là
+    // où le terme s'annule : la courbe rendue prolonge la rampe du jour au lieu de tomber
+    // d'une falaise, et l'amplitude se déduit de trois grandeurs déjà fixées ailleurs
+    // (largeur du crépuscule, intensité solaire, albédo publié) plutôt que d'un réglage.
+    const earth = createSurfaceMaterial(
+      false,
+      undefined,
+      true,
+      true,
+      true,
+      true,
+      0x4a90e0
+    );
+    const shader = {
+      uniforms: {},
+      vertexShader: '#include <common>\n#include <worldpos_vertex>',
+      fragmentShader:
+        '#include <common>\n#include <map_fragment>\n' +
+        'vec3 outgoingLight = totalDiffuse + totalSpecular + totalEmissiveRadiance;',
+    } as Parameters<NonNullable<THREE.Material['onBeforeCompile']>>[0];
+    earth.onBeforeCompile?.(shader, {} as THREE.WebGLRenderer);
+
+    const EARTH_BOND_ALBEDO = 0.306;
+    const expected =
+      (TERMINATOR_WRAP_ATMOSPHERE *
+        LIGHTING_SETTINGS.sun.intensity *
+        EARTH_BOND_ALBEDO) /
+      Math.PI /
+      TWILIGHT_BAND_PEAK;
+    expect(shader.uniforms['uTwilightStrength']?.value).toBeCloseTo(
+      expected,
+      12
+    );
+
+    // La teinte est normalisée en LUMINANCE : elle choisit la couleur, jamais la
+    // luminosité. Sans cela, un bleu saturé diviserait l'amplitude par presque 4 et
+    // changer la couleur du catalogue changerait silencieusement le rendu du bandeau.
+    const tint = shader.uniforms['uTwilightColor']?.value as THREE.Color;
+    expect(0.2126 * tint.r + 0.7152 * tint.g + 0.0722 * tint.b).toBeCloseTo(
+      1,
+      6
+    );
+    earth.dispose();
   });
 
   it('still matches the string three.js actually ships (upgrade guard)', () => {

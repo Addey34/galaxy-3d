@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   ASTRONOMICAL_TWILIGHT_DOT,
+  ATMOSPHERE_SCALE_HEIGHT_KM,
   CIVIL_TWILIGHT_DOT,
   TERMINATOR_GLSL,
   TERMINATOR_WRAP_ATMOSPHERE,
@@ -11,6 +12,9 @@ import {
   terminatorDay,
   terminatorLight,
   terminatorNight,
+  terminatorTwilight,
+  sunlitColumnFraction,
+  TWILIGHT_BAND_PEAK,
   twilightWrapAtAltitude,
 } from './terminator';
 
@@ -208,6 +212,79 @@ describe('terminatorNight (layers that appear at night)', () => {
   });
 });
 
+describe('terminatorTwilight (bandeau crépusculaire)', () => {
+  const w = TERMINATOR_WRAP_ATMOSPHERE;
+
+  it('suit la montée de l’ombre dans la colonne d’air, sans réglage', () => {
+    // Aucune constante libre : `exp( -R·(1/cos h − 1) / H )`. Ces quatre valeurs se
+    // recalculent à la main depuis le rayon terrestre et la hauteur d'échelle — si l'une
+    // bouge, c'est que la formule a changé, pas qu'un curseur a été tourné.
+    expect(ATMOSPHERE_SCALE_HEIGHT_KM).toBe(8);
+    expect(sunlitColumnFraction(0)).toBe(1);
+    expect(sunlitColumnFraction(0.5)).toBe(1);
+    expect(sunlitColumnFraction(-sinDeg(1))).toBeCloseTo(0.886, 3);
+    expect(sunlitColumnFraction(-sinDeg(3))).toBeCloseTo(0.335, 3);
+    expect(sunlitColumnFraction(-sinDeg(6))).toBeCloseTo(0.0124, 4);
+
+    // Décroissance stricte sous l'horizon : l'ombre ne redescend jamais.
+    let previous = 1;
+    for (let deg = 0; deg <= 12; deg += 0.25) {
+      const value = sunlitColumnFraction(-sinDeg(deg));
+      expect(value).toBeLessThanOrEqual(previous);
+      previous = value;
+    }
+  });
+
+  it('laisse le côté éclairé strictement intact', () => {
+    // Règle produit : ce terme ne doit RIEN changer au rendu du jour. Il s'annule
+    // exactement en +wrap grâce au facteur `1 − terminatorDay`, pas « presque ».
+    for (const raw of [w, w + 1e-9, 0.2, 0.5, 1])
+      expect(terminatorTwilight(raw, w)).toBe(0);
+  });
+
+  it('s’éteint avant la nuit profonde, pour ne pas voiler les lumières de ville', () => {
+    // Un plancher résiduel sur la face nuit écraserait le contraste des villes — le
+    // défaut symétrique de celui qu'on corrige. La colonne n'est plus éclairée du tout
+    // dès la fin du crépuscule NAUTIQUE, donc la lueur s'éteint d'elle-même.
+    expect(terminatorTwilight(-sinDeg(9), w)).toBeLessThan(1e-3);
+    expect(terminatorTwilight(-sinDeg(12), w)).toBeLessThan(1e-6);
+    expect(terminatorTwilight(-1, w)).toBe(0);
+  });
+
+  it('culmine dans la bande que le rendu laissait noire', () => {
+    // Mesure sur le rendu réel avant correction (Terre texturée, statistique pixel par
+    // pixel du disque) : 4 % de pixels au-dessus du plancher d'affichage à +0,6°, puis
+    // 0 % de 0° à −2°. Le maximum de la lueur doit tomber DANS cet intervalle, sinon
+    // elle éclaire à côté du trou.
+    let argmax = 0;
+    let peak = 0;
+    for (let raw = -0.3; raw <= 0.3; raw += 1e-4) {
+      const value = terminatorTwilight(raw, w);
+      if (value > peak) {
+        peak = value;
+        argmax = raw;
+      }
+    }
+    expect(argmax).toBeLessThan(sinDeg(0.6));
+    expect(argmax).toBeGreaterThan(-sinDeg(2));
+    // Et `TWILIGHT_BAND_PEAK` dit bien la vérité : c'est lui qui normalise l'amplitude
+    // câblée dans le matériau (cf. config/layerConfig.ts).
+    expect(TWILIGHT_BAND_PEAK).toBeCloseTo(peak, 6);
+  });
+
+  it('domine le sol partout où le sol s’est effondré', () => {
+    // LA propriété qui distingue ce terme de `terminatorLight` : sous l'horizon, l'image
+    // ne doit plus dépendre de l'albédo. Un éclairement de SOL y reste noir au-dessus de
+    // l'océan — c'est-à-dire sur 71 % de la planète — quelle que soit la courbe qu'on lui
+    // donne. La lueur du ciel, elle, ne multiplie aucune texture.
+    const peak = TWILIGHT_BAND_PEAK;
+    for (let raw = 0; raw >= -w; raw -= 0.001) {
+      const sky = (terminatorTwilight(raw, w) / peak) * w;
+      expect(sky).toBeGreaterThanOrEqual(terminatorLight(raw, w));
+    }
+  });
+});
+
 describe('GLSL mirror', () => {
   // Le GLSL ne peut pas être exécuté hors d'un contexte WebGL : la seule protection réelle
   // est l'adjacence dans le fichier. Ces assertions attrapent au moins une suppression ou
@@ -218,6 +295,8 @@ describe('GLSL mirror', () => {
       'float terminatorLight( float raw, float wrap )',
       'float terminatorDay( float raw, float wrap )',
       'float terminatorNight( float raw, float onset, float rampWidth )',
+      'float terminatorSunlitColumn( float raw )',
+      'float terminatorTwilight( float raw, float wrap )',
     ])
       expect(TERMINATOR_GLSL).toContain(signature);
   });
@@ -227,5 +306,12 @@ describe('GLSL mirror', () => {
     expect(TERMINATOR_GLSL).toContain('( raw + wrap ) / ( 2.0 * wrap )');
     expect(TERMINATOR_GLSL).toContain('max( raw, wrap * s * s )');
     expect(TERMINATOR_GLSL).toContain('( raw - onset ) / -rampWidth');
+    // Le rayon terrestre et la hauteur d'échelle traversent le template : une édition d'un
+    // seul côté ferait diverger le bandeau rendu de celui que ces tests décrivent.
+    expect(TERMINATOR_GLSL).toContain('6371.0 * ( 1.0 / sqrt(');
+    expect(TERMINATOR_GLSL).toContain('exp( - shadowTopKm / 8.0 )');
+    expect(TERMINATOR_GLSL).toContain(
+      'terminatorSunlitColumn( raw ) * ( 1.0 - terminatorDay( raw, wrap ) )'
+    );
   });
 });

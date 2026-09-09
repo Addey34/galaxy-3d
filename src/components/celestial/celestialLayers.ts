@@ -71,7 +71,10 @@ function createSurfaceLayer(
     // Atmosphère = même signal que la couche atmosphère plus bas (atmosphereColor ou
     // texture dédiée) : le catalogue reste la source unique de vérité, pas un test de nom.
     // Elle pilote la largeur du crépuscule sur la surface (cf. TERMINATOR_WRAP_ATMOSPHERE).
-    Boolean(config.textures?.atmosphere) || config.atmosphereColor !== undefined
+    Boolean(config.textures?.atmosphere) ||
+      config.atmosphereColor !== undefined,
+    // Couleur du ciel de ce corps : le bandeau crépusculaire en hérite (cf. layerConfig).
+    config.atmosphereColor
   );
   const mesh = new THREE.Mesh(
     createSphereGeometry(config.radius, 'surface'),

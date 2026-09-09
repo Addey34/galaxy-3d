@@ -210,6 +210,77 @@ export function terminatorNight(
 }
 
 /**
+ * Hauteur d'échelle de l'atmosphère terrestre (km) : altitude sur laquelle la densité de
+ * l'air est divisée par e. Valeur publiée standard, pas un réglage.
+ */
+export const ATMOSPHERE_SCALE_HEIGHT_KM = 8;
+
+/**
+ * FRACTION DE LA COLONNE D'AIR ENCORE ÉCLAIRÉE au-dessus d'un point d'éclairement `raw`.
+ *
+ * Après le coucher, le sol est dans l'ombre mais l'air au-dessus de lui ne l'est pas : le
+ * rayon solaire rasant passe au-dessus de l'horizon local, et l'ombre monte dans la colonne à
+ * mesure que le Soleil descend. Le sommet de cette ombre vaut `R · (1/cos h − 1)`, et comme la
+ * densité décroît en `exp(−z/H)`, la part de colonne encore au Soleil vaut `exp(−z/H)`.
+ *
+ * Aucun paramètre libre : seulement le rayon terrestre et la hauteur d'échelle. En degrés
+ * sous l'horizon cela donne 1,00 au coucher, 0,89 à 1°, 0,34 à 3°, 0,012 à 6° et ~0 à 9° —
+ * autrement dit la lueur s'éteint d'elle-même à la fin du crépuscule CIVIL, la même borne
+ * que `TERMINATOR_WRAP_ATMOSPHERE`, sans qu'on ait eu à la lui imposer.
+ */
+export function sunlitColumnFraction(raw: number): number {
+  if (raw >= 0) return 1;
+  const shadowTopKm =
+    EARTH_MEAN_RADIUS_KM * (1 / Math.sqrt(Math.max(1 - raw * raw, 1e-12)) - 1);
+  return Math.exp(-shadowTopKm / ATMOSPHERE_SCALE_HEIGHT_KM);
+}
+
+/**
+ * BANDEAU CRÉPUSCULAIRE — lumière diffusée par l'atmosphère au-dessus d'un sol déjà éteint.
+ *
+ * Pourquoi il fallait l'ajouter, mesuré et non supposé. `terminatorLight` porte bien un
+ * éclairement jusqu'à `−wrap`, mais il y vaut au plus `wrap/4 ≈ 2,6 %` du plein soleil, et il
+ * est ensuite multiplié par l'albédo puis compressé par le tone mapping. Rendu réel, albédo
+ * neutre 0,5 : la surface atteint le noir 8 bits dès `raw ≈ +0,013` (0,75° AU-DESSUS de
+ * l'horizon) et vaut 0 sur TOUTE la bande de crépuscule. Sur la Terre texturée, la mesure
+ * pixel par pixel du disque donne 100 % de pixels au-dessus du plancher d'affichage à +8°,
+ * 4 % à +0,6°, puis 0 % de 0° à −2° — le bandeau noir signalé. La rampe des villes ne peut
+ * pas le combler : elle ne s'allume que là où il y a des villes.
+ *
+ * La lumière qui manque n'est donc pas de la lumière de SOL, c'est de la lumière de CIEL :
+ * albédo-indépendante, présente au-dessus de l'océan comme du continent. Le halo
+ * atmosphérique (`AtmosphereShader`) la modélise déjà, mais son facteur `rim =
+ * (1 − |N·V|)^power` s'annule en incidence normale : par construction il ne dessine que le
+ * limbe, jamais le bandeau en travers du disque.
+ *
+ * Le profil combine donc deux facteurs, sans constante réglée à l'œil :
+ *   - `sunlitColumnFraction(raw)` — combien d'air reste éclairé, physique pure ;
+ *   - `1 − terminatorDay(raw, wrap)` — l'extinction côté JOUR, qui ramène le terme à zéro
+ *     exactement en `+wrap` : le côté éclairé garde le rendu qu'il a aujourd'hui, la lueur
+ *     n'existe que là où le sol a cessé d'être éclairé.
+ * Il s'éteint de lui-même en nuit profonde (la colonne n'est plus éclairée), donc les
+ * lumières de ville gardent leur contraste.
+ *
+ * Renvoie le profil NON normalisé : son maximum est une propriété de la physique, pas un
+ * réglage. `TWILIGHT_BAND_PEAK` l'expose pour que l'amplitude puisse être calibrée ailleurs.
+ */
+export function terminatorTwilight(raw: number, wrap: number): number {
+  return sunlitColumnFraction(raw) * (1 - terminatorDay(raw, wrap));
+}
+
+/**
+ * Maximum du profil ci-dessus pour la largeur du crépuscule au sol — la seule employée, la
+ * bande à combler étant exactement celle où le sol s'éteint. Balayé plutôt qu'écrit en dur :
+ * si la courbe change, la normalisation suit au lieu de mentir.
+ */
+export const TWILIGHT_BAND_PEAK = ((): number => {
+  let peak = 0;
+  for (let raw = -0.4; raw <= 0.4; raw += 1e-4)
+    peak = Math.max(peak, terminatorTwilight(raw, TERMINATOR_WRAP_ATMOSPHERE));
+  return peak;
+})();
+
+/**
  * COUPE DE RELIEF — bornes de la disparition de la normal map à l'approche du terminateur.
  *
  * À lumière rasante, une normale perturbée incline chaque ride du relief vers ou hors du
@@ -268,6 +339,14 @@ float terminatorEaseOutCubic01( float t ) {
 }
 float terminatorNight( float raw, float onset, float rampWidth ) {
   return terminatorEaseOutCubic01( clamp( ( raw - onset ) / -rampWidth, 0.0, 1.0 ) );
+}
+float terminatorSunlitColumn( float raw ) {
+  if ( raw >= 0.0 ) return 1.0;
+  float shadowTopKm = ${EARTH_MEAN_RADIUS_KM.toFixed(1)} * ( 1.0 / sqrt( max( 1.0 - raw * raw, 1e-12 ) ) - 1.0 );
+  return exp( - shadowTopKm / ${ATMOSPHERE_SCALE_HEIGHT_KM.toFixed(1)} );
+}
+float terminatorTwilight( float raw, float wrap ) {
+  return terminatorSunlitColumn( raw ) * ( 1.0 - terminatorDay( raw, wrap ) );
 }
 float reliefFade( float raw ) {
   return terminatorDay( raw - ${RELIEF_FADE_CENTER.toFixed(4)}, ${RELIEF_FADE_HALF_WIDTH.toFixed(4)} );

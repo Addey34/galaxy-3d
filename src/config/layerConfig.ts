@@ -10,11 +10,14 @@ import {
   TERMINATOR_WRAP_CLOUDS,
   TERMINATOR_WRAP_STORM,
   TERMINATOR_WRAP_VACUUM,
+  TWILIGHT_BAND_PEAK,
 } from '@/core/terminator';
 import {
   BOOT_QUALITY_PROFILE,
   EARTH_OCEAN_ROUGHNESS_SETTINGS,
+  LIGHTING_SETTINGS,
   REALTIME_CLOUDS_SETTINGS,
+  SHADER_SETTINGS,
 } from './engine';
 import { MIN_LIGHT_ATTENUATION, SHADOW_GAMMA } from '@/core/eclipse';
 
@@ -85,7 +88,10 @@ export function createSurfaceMaterial(
   // Atmosphère : c'est elle qui diffuse la lumière au-delà du terminateur géométrique.
   // Un corps qui en a une reçoit le crépuscule large (18°, astronomique) ; les autres
   // gardent le terminateur serré historique. Cf. TERMINATOR_WRAP_ATMOSPHERE.
-  hasAtmosphere = false
+  hasAtmosphere = false,
+  // Couleur de l'air du corps (catalogue `atmosphereColor`) : sert au bandeau crépusculaire,
+  // qui est de la lumière de CIEL et doit donc porter la couleur de ce ciel-là.
+  atmosphereColor?: number
 ): THREE.MeshBasicMaterial | THREE.MeshStandardMaterial {
   if (isSun) {
     const sunMat = new THREE.MeshBasicMaterial({
@@ -111,6 +117,15 @@ export function createSurfaceMaterial(
       terminatorWrap: hasAtmosphere
         ? TERMINATOR_WRAP_ATMOSPHERE
         : TERMINATOR_WRAP_VACUUM,
+      // Bandeau crépusculaire : réservé aux corps qui ont À LA FOIS une atmosphère (sans
+      // elle il n'y a pas de ciel à éclairer, et le terminateur y est net par construction)
+      // et le socle `moonlight` dont ce terme réutilise les varyings monde. Aujourd'hui la
+      // Terre seule ; l'étendre à Vénus ou Mars demande d'y activer ces varyings, pas de
+      // toucher au terme lui-même.
+      twilightColor:
+        hasAtmosphere && moonlight
+          ? (atmosphereColor ?? SHADER_SETTINGS.atmosphere.defaultColor)
+          : undefined,
     }
   );
 }
@@ -797,6 +812,73 @@ vec3 fragmentSunDir() {
 }
 `;
 
+/**
+ * Albédo de Bond de la Terre (NASA Earth fact sheet). Sert d'unique référence d'amplitude au
+ * bandeau crépusculaire ci-dessous : ce n'est pas un curseur de rendu.
+ */
+const TWILIGHT_REFERENCE_ALBEDO = 0.306;
+
+/**
+ * Amplitude du bandeau crépusculaire, POSÉE PAR CONTINUITÉ et non réglée à l'œil.
+ *
+ * Au HAUT de la bande (`raw = +wrap`) le terme s'annule par construction, et le sol y émet
+ * `dotNL · I · albédo / π` avec `dotNL = wrap`. On donne au maximum de la lueur exactement
+ * cette valeur : la courbe rendue continue donc la rampe du jour au lieu de tomber d'une
+ * falaise, et l'amplitude se déduit de trois grandeurs déjà fixées ailleurs (largeur du
+ * crépuscule, intensité solaire, albédo publié) plutôt que d'un nombre choisi.
+ *
+ * Divisé par le maximum du profil (`TWILIGHT_BAND_PEAK`, balayé dans `core/terminator.ts`)
+ * pour que l'uniforme porte bien une RADIANCE de crête et non une valeur dépendant de la
+ * forme exacte de la courbe.
+ */
+/**
+ * Teinte du bandeau, NORMALISÉE EN LUMINANCE (Rec. 709).
+ *
+ * La couleur du catalogue décide de la teinte, `TWILIGHT_STRENGTH` de la luminosité — sans
+ * cette séparation les deux se mélangent : le bleu ciel de la Terre (0x4a90e0) a une luminance
+ * de 0,26 en linéaire, il diviserait donc par presque 4 l'amplitude que l'ancrage de
+ * continuité vient de fixer, et changer la teinte du catalogue changerait silencieusement la
+ * largeur apparente du bandeau. Les composantes peuvent dépasser 1 : on est en linéaire HDR,
+ * avant tone mapping.
+ */
+function twilightTint(color: number): THREE.Color {
+  const tint = new THREE.Color(color);
+  const luminance = 0.2126 * tint.r + 0.7152 * tint.g + 0.0722 * tint.b;
+  return tint.multiplyScalar(1 / Math.max(luminance, 1e-4));
+}
+
+const TWILIGHT_PEAK_RADIANCE =
+  (TERMINATOR_WRAP_ATMOSPHERE *
+    LIGHTING_SETTINGS.sun.intensity *
+    TWILIGHT_REFERENCE_ALBEDO) /
+  Math.PI;
+const TWILIGHT_STRENGTH = TWILIGHT_PEAK_RADIANCE / TWILIGHT_BAND_PEAK;
+
+/**
+ * Bandeau crépusculaire : lumière du CIEL au-dessus d'un sol déjà éteint, ajoutée après
+ * `outgoingLight` comme le clair de Lune.
+ *
+ * Additif et INDÉPENDANT DE L'ALBÉDO — c'est la différence de fond avec `terminatorLight` :
+ * la diffusion atmosphérique ne renvoie pas la couleur du sol, elle éclaire l'océan comme le
+ * continent. C'est ce qui la rend capable de combler le bandeau noir mesuré entre l'extinction
+ * du sol et les premières lumières de ville, là où un éclairement de sol, lui, reste noir
+ * partout où l'albédo est faible.
+ *
+ * Le profil (`terminatorTwilight`, cf. `core/terminator.ts`) vaut 0 exactement en `+wrap` :
+ * le côté éclairé garde donc le rendu qu'il avait, à l'identique. Il s'éteint de lui-même en
+ * nuit profonde, donc les lumières de ville gardent tout leur contraste.
+ *
+ * La direction du Soleil est reprise PAR FRAGMENT (`fragmentSunDir`) et la normale monde non
+ * perturbée (`vMoonWorldNormal`) : mêmes entrées que les autres masques de ce matériau, ce qui
+ * est la seule façon que les couches concentriques tombent d'accord sur un même terminateur.
+ */
+const twilightGlsl = (sunReach: string): string => `
+        {
+          float twilightGraze = dot( normalize( vMoonWorldNormal ), fragmentSunDir() );
+          float twilightBand = terminatorTwilight( twilightGraze, uTerminatorWrap );
+          outgoingLight += uTwilightColor * ( twilightBand * uTwilightStrength${sunReach} );
+        }`;
+
 // Clair de Lune (réflecteur nocturne) injecté après le calcul d'outgoingLight.
 // N'agit que côté nuit (masque via dot normale/dirSoleil) et proportionnellement
 // a l'orientation du point vers la Lune. uMoonStrength encode la phase. Lueur
@@ -930,6 +1012,14 @@ export function createShadowAwareStandardMaterial(
      * géométrique, donc la largeur est une PROPRIÉTÉ DU CORPS, pas un réglage global.
      */
     terminatorWrap?: number;
+    /**
+     * Couleur du BANDEAU CRÉPUSCULAIRE (lueur du ciel au-dessus d'un sol déjà éteint) —
+     * typiquement l'`atmosphereColor` du catalogue. Absente = pas de bandeau, rendu inchangé.
+     * Nécessite `moonlight: true` : le terme réutilise ses varyings de normale/position monde
+     * et `fragmentSunDir()`, sans quoi il déciderait du terminateur sur d'autres entrées que
+     * les masques voisins — exactement ce que ce module existe pour empêcher.
+     */
+    twilightColor?: number;
   } = {}
 ): THREE.MeshStandardMaterial {
   const material = new THREE.MeshStandardMaterial(params);
@@ -942,6 +1032,7 @@ export function createShadowAwareStandardMaterial(
   const varyOceanRoughness = options.varyOceanRoughness === true;
   const eclipseShadow = options.eclipseShadow === true;
   const terminatorWrap = options.terminatorWrap ?? TERMINATOR_WRAP_VACUUM;
+  const twilight = options.twilightColor !== undefined && moonlight;
   // Les deux options partagent le même varying de position/normale monde du fragment.
   const needsWorldPosVarying = moonlight || eclipseShadow;
   const oceanRoughnessUniforms = {
@@ -995,6 +1086,12 @@ export function createShadowAwareStandardMaterial(
       );
     }
     shader.uniforms['uTerminatorWrap'] = { value: terminatorWrap };
+    if (twilight) {
+      shader.uniforms['uTwilightColor'] = {
+        value: twilightTint(options.twilightColor as number),
+      };
+      shader.uniforms['uTwilightStrength'] = { value: TWILIGHT_STRENGTH };
+    }
     if (cloudShadow) {
       shader.uniforms['uCloudShadowMap'] = cloudShadowUniforms.map;
       shader.uniforms['uCloudShadowOffset'] = cloudShadowUniforms.offset;
@@ -1043,6 +1140,9 @@ export function createShadowAwareStandardMaterial(
             ? '\nuniform vec3 uMoonPosition;\nuniform float uMoonStrength;\nuniform vec3 uMoonColor;'
             : '') +
           (moonlight ? '\nuniform vec3 uMoonSunPos;' : '') +
+          (twilight
+            ? '\nuniform vec3 uTwilightColor;\nuniform float uTwilightStrength;'
+            : '') +
           (needsWorldPosVarying
             ? '\nvarying vec3 vMoonWorldPos;\nvarying vec3 vMoonWorldNormal;'
             : '') +
@@ -1101,7 +1201,16 @@ export function createShadowAwareStandardMaterial(
           (cloudShadow ? ' * cloudDirectFactor' : '') +
           (eclipseShadow ? ' * eclipseShadowFactor' : '') +
           ' + totalEmissiveRadiance;' +
-          (moonlight ? MOONLIGHT_GLSL : '')
+          (moonlight ? MOONLIGHT_GLSL : '') +
+          // La lueur suit la MÊME atténuation solaire que l'éclairage direct : c'est sur lui
+          // que son amplitude est calée, les deux doivent donc s'éteindre ensemble (distance,
+          // et bande d'ombre d'éclipse là où elle est calculée par fragment).
+          (twilight
+            ? twilightGlsl(
+                ' * uLightAttenuation' +
+                  (eclipseShadow ? ' * eclipseShadowFactor' : '')
+              )
+            : '')
       );
 
     if (moonlight) {
@@ -1191,7 +1300,7 @@ export function createShadowAwareStandardMaterial(
   material.customProgramCacheKey = () =>
     `shadow-aware-standard-v3${invertRoughness ? '-invrough-v2' : ''}${
       cloudShadow ? '-cloudshadow' : ''
-    }${moonlight ? '-moonlight' : ''}${
+    }${moonlight ? '-moonlight' : ''}${twilight ? '-twilight-v1' : ''}${
       varyOceanRoughness ? '-oceanrough-v1' : ''
     }${limitSpecular ? '-limitspec-v3-grazeocclusion' : ''}${noSpecular ? '-nospec' : ''}${
       eclipseShadow ? '-eclipseshadow' : ''

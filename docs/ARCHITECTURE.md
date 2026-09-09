@@ -212,6 +212,7 @@ qui rend les invariants ci-dessous testables sans GPU.
 | `terminatorLight(raw, wrap)` | éclairement direct d'une surface (remplace le `dotNL` de three.js) | `+wrap` → `−wrap` | Lambert pur au-dessus de `+wrap`, extinction tangente en `−wrap` |
 | `terminatorDay(raw, wrap)` | fraction de jour d'un calque superposé (nuages, pluie, halo) | `+wrap` → `−wrap` | smootherstep |
 | `terminatorNight(raw, onset, rampWidth)` | couche qui **apparaît** la nuit (lumières de ville, clair de Lune) | `onset` → `onset − rampWidth` | ease-out cubique |
+| `terminatorTwilight(raw, wrap)` | lueur du **ciel** au-dessus d'un sol déjà éteint (bandeau crépusculaire) | `+wrap` → ~`−wrap` | colonne d'air éclairée × extinction côté jour |
 
 `raw` est **toujours** `dot(normaleMonde, directionSoleil)`, c'est-à-dire le sinus de la hauteur
 solaire. Aucune couche ne doit re-dériver sa propre rampe.
@@ -240,6 +241,40 @@ solaire. Aucune couche ne doit re-dériver sa propre rampe.
    s'effondre ; la couche nocturne qui prend le relais doit monter **au moins aussi vite**, dès
    le coucher. D'où l'ease-out cubique (`f'(0) = 3`) et non smootherstep, dont les dérivées
    première et seconde nulles en `0` laissaient une marge sombre le long du terminateur.
+
+5. **La bande ne doit pas dépendre de l'albédo.** L'invariant 4 était formulé en *relatif* —
+   « la somme sol + villes ne descend pas sous sa valeur au terminateur » — et cela ne suffit
+   pas : cette valeur de référence, `wrap/4 ≈ 2,6 %` du plein soleil, est elle-même **sous le
+   plancher d'affichage** une fois multipliée par l'albédo et compressée par le tone mapping.
+   Mesuré sur le rendu (albédo neutre 0,5) : la surface atteint le noir 8 bits dès `raw ≈
+   +0,013`, soit **0,75° au-dessus** de l'horizon, et vaut 0 sur toute la bande de crépuscule.
+   Statistique pixel par pixel du disque texturé : 100 % des pixels au-dessus du plancher à
+   +8°, 4 % à +0,6°, **0 % de 0° à −2°**. La rampe des villes ne peut pas combler ce trou —
+   elle ne s'allume que là où il y a des villes.
+
+   La lumière qui manque est de la lumière de **ciel**, pas de sol : indépendante de l'albédo,
+   présente au-dessus de l'océan comme du continent. `AtmosphereShader` la modélise déjà mais
+   son facteur `rim = (1 − |N·V|)^power` s'annule en incidence normale : par construction il ne
+   dessine que le limbe. D'où `terminatorTwilight`, ajouté sur la **surface** (là où vit déjà
+   le clair de Lune), additif et sans multiplier `diffuseColor` :
+
+   - `sunlitColumnFraction(raw) = exp(−R·(1/cos h − 1)/H)` — la part de colonne d'air encore au
+     soleil, avec `H = 8 km` (hauteur d'échelle). Aucun paramètre libre : 1,00 au coucher, 0,89
+     à 1°, 0,34 à 3°, 0,012 à 6°. La lueur s'éteint donc d'elle-même à la fin du crépuscule
+     civil — la même borne que `TERMINATOR_WRAP_ATMOSPHERE`, sans qu'on l'ait imposée.
+   - `× (1 − terminatorDay(raw, wrap))` — nul **exactement** en `+wrap` : le côté éclairé garde
+     son rendu à l'identique, la lueur n'existe que là où le sol a cessé d'être éclairé.
+
+   Amplitude posée par **continuité**, pas à l'œil : le maximum vaut l'éclairement du sol au
+   haut de la bande (`wrap × I × albédo / π`, albédo de Bond publié 0,306), donc la courbe
+   rendue prolonge la rampe du jour au lieu de tomber d'une falaise. La teinte vient de
+   `atmosphereColor` du catalogue, **normalisée en luminance** — elle choisit la couleur, jamais
+   la luminosité. Après correction, mesuré au même endroit : 100 % des pixels au-dessus du
+   plancher de +3,4° à −4,0°, 0 % dès −5,2° (les villes reprennent, contraste intact).
+
+   Le bandeau est réservé aux corps qui ont **à la fois** une atmosphère et le socle `moonlight`
+   dont il réutilise les varyings monde — aujourd'hui la Terre seule. L'étendre à Vénus ou Mars
+   demande d'y activer ces varyings, pas de toucher au terme.
 
 ### Largeurs
 
