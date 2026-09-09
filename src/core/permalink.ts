@@ -53,13 +53,42 @@ function parseView(params: URLSearchParams): PermalinkViewAngles | undefined {
   return { azimuthDeg, polarDeg, distance };
 }
 
+/**
+ * Corps nommé par le CHEMIN, s'il en nomme un — `/jupiter` → `jupiter`.
+ *
+ * Les pages d'atterrissage par corps sont de vrais fichiers statiques (`dist/jupiter/index.html`),
+ * pas des routes : Firebase les sert avant la réécriture SPA. Elles ne peuvent donc pas porter
+ * `?body=` dans leur URL, et un script en ligne pour le faire est exclu — la CSP du projet est
+ * `script-src 'self'` sans `unsafe-inline`. Le chemin devient donc une source d'état à part
+ * entière, lue ici plutôt que dans un cas particulier côté interface.
+ *
+ * Un seul segment, insensible à la casse, et validé contre le catalogue : tout le reste
+ * (`/privacy.html`, `/`, une faute de frappe) ne nomme aucun corps et ne change rien.
+ */
+export function bodyFromPathname(
+  pathname: string,
+  validBodies: ReadonlySet<string>
+): string | undefined {
+  const segments = pathname.split('/').filter((part) => part.length > 0);
+  if (segments.length !== 1) return undefined;
+  const candidate = segments[0]?.trim().toLowerCase();
+  return candidate !== undefined && validBodies.has(candidate)
+    ? candidate
+    : undefined;
+}
+
 export function parsePermalink(
   search: string,
-  validBodies: ReadonlySet<string>
+  validBodies: ReadonlySet<string>,
+  pathname = ''
 ): PermalinkState {
   const params = new URLSearchParams(search);
   const modeValue = params.get('mode');
   const bodyValue = params.get('body')?.trim().toLowerCase();
+  // La QUERY primait déjà et continue de primer : depuis `/jupiter`, naviguer vers Titan écrit
+  // `?body=titan` et c'est bien Titan qu'un lien partagé doit rouvrir. Le chemin n'est qu'un
+  // défaut, pour la page d'atterrissage elle-même.
+  const pathBody = bodyFromPathname(pathname, validBodies);
 
   return {
     mode: modeValue === 'educ' || modeValue === 'explo' ? modeValue : undefined,
@@ -67,7 +96,7 @@ export function parsePermalink(
       bodyValue === 'overview' ||
       (bodyValue !== undefined && validBodies.has(bodyValue))
         ? bodyValue
-        : undefined,
+        : pathBody,
     date: parseDate(params.get('date')),
     view: parseView(params),
   };
@@ -98,13 +127,21 @@ function roundSignificant(value: number, digits: number): number {
 
 export function serializePermalink(
   state: PermalinkState,
-  currentSearch = ''
+  currentSearch = '',
+  pathname = ''
 ): string {
   const params = new URLSearchParams(currentSearch);
   for (const key of PERMALINK_KEYS) params.delete(key);
 
   if (state.mode) params.set('mode', state.mode);
-  if (state.body) params.set('body', state.body);
+  // `?body=` est REDONDANT quand le chemin nomme déjà ce corps : sans cette omission, ouvrir
+  // `/jupiter` réécrivait aussitôt l'URL en `/jupiter?body=jupiter` — deux URL pour un même
+  // contenu (ce que le canonique est censé éviter) et une adresse qui a l'air cassée.
+  if (
+    state.body &&
+    state.body !== bodyFromPathname(pathname, new Set([state.body]))
+  )
+    params.set('body', state.body);
   if (state.date) params.set('date', formatPermalinkDate(state.date));
   if (state.view) {
     params.set('az', String(roundForUrl(state.view.azimuthDeg, 1)));

@@ -64,7 +64,8 @@ export function setupPermalinks(
         date: om.simulationDate,
         view,
       },
-      window.location.search
+      window.location.search,
+      window.location.pathname
     );
     const nextUrl = `${window.location.pathname}${nextSearch}${window.location.hash}`;
     const currentUrl = `${window.location.pathname}${window.location.search}${window.location.hash}`;
@@ -72,7 +73,11 @@ export function setupPermalinks(
   };
 
   const applyInitialState = (): void => {
-    const state = parsePermalink(window.location.search, validBodies);
+    const state = parsePermalink(
+      window.location.search,
+      validBodies,
+      window.location.pathname
+    );
     if (!state.mode && !state.body && !state.date && !state.view) return;
 
     applying = true;

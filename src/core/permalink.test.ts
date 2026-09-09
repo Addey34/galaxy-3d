@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  bodyFromPathname,
   formatPermalinkDate,
   parsePermalink,
   serializePermalink,
@@ -78,5 +79,62 @@ describe('permalink state', () => {
     ).toBe(
       '?utm_source=share&mode=explo&body=mars&date=2026-11-20T18%3A00%3A00Z'
     );
+  });
+});
+
+/**
+ * LE CHEMIN COMME SOURCE D'ÉTAT — les pages d'atterrissage par corps.
+ *
+ * `/jupiter` est un vrai fichier statique (`dist/jupiter/index.html`), pas une route : Firebase
+ * le sert avant la réécriture SPA. Il ne peut donc pas porter `?body=` dans son URL, et un
+ * script en ligne pour l'injecter est exclu — la CSP du projet est `script-src 'self'` sans
+ * `unsafe-inline`. Le chemin doit donc être lu comme un état à part entière.
+ */
+describe('permalink — corps nommé par le chemin', () => {
+  const bodies = new Set(['jupiter', 'titan', 'earth']);
+
+  it('lit le corps depuis le chemin, quelle que soit sa forme', () => {
+    for (const path of ['/jupiter', '/jupiter/', 'jupiter', '/JUPITER'])
+      expect(bodyFromPathname(path, bodies)).toBe('jupiter');
+  });
+
+  it('ne nomme aucun corps pour tout le reste', () => {
+    // La racine, une autre page statique, un segment inconnu, un chemin à deux segments :
+    // aucun ne doit sélectionner un corps par accident.
+    for (const path of ['/', '', '/privacy.html', '/jupitre', '/a/jupiter'])
+      expect(bodyFromPathname(path, bodies)).toBeUndefined();
+  });
+
+  it('applique le corps du chemin quand la query n’en donne pas', () => {
+    expect(parsePermalink('', bodies, '/titan').body).toBe('titan');
+    expect(parsePermalink('?mode=explo', bodies, '/titan')).toEqual(
+      expect.objectContaining({ mode: 'explo', body: 'titan' })
+    );
+  });
+
+  it('laisse la QUERY primer sur le chemin', () => {
+    // Depuis `/jupiter`, naviguer vers Titan écrit `?body=titan` : c'est Titan qu'un lien
+    // partagé doit rouvrir, pas la page d'atterrissage d'où l'on vient.
+    expect(parsePermalink('?body=titan', bodies, '/jupiter').body).toBe(
+      'titan'
+    );
+    // `overview` est une valeur explicite de la query : elle doit pouvoir ANNULER le chemin,
+    // sinon on ne pourrait plus partager la vue d'ensemble depuis une page de corps.
+    expect(parsePermalink('?body=overview', bodies, '/jupiter').body).toBe(
+      'overview'
+    );
+  });
+
+  it('n’écrit pas `body=` quand le chemin le dit déjà', () => {
+    // Sans cette omission, ouvrir `/jupiter` réécrivait aussitôt l'URL en
+    // `/jupiter?body=jupiter` : deux URL pour un même contenu, et une adresse qui a l'air
+    // cassée juste après le chargement.
+    expect(serializePermalink({ body: 'jupiter' }, '', '/jupiter')).toBe('');
+    // Mais un corps DIFFÉRENT du chemin doit bien être écrit.
+    expect(serializePermalink({ body: 'titan' }, '', '/jupiter')).toBe(
+      '?body=titan'
+    );
+    // Et sans chemin (la racine), rien ne change du comportement d'origine.
+    expect(serializePermalink({ body: 'jupiter' }, '')).toBe('?body=jupiter');
   });
 });

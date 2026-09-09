@@ -19,9 +19,74 @@ function stripProductionHtmlComments() {
   };
 }
 
+const SITE_ORIGIN = 'https://galaxy.adrianguichard.dev';
+
+/**
+ * Une page d'atterrissage statique par corps — `dist/jupiter/index.html` — plus le sitemap
+ * complet. Le POURQUOI et les contraintes vivent dans `src/seo/bodyLandingPage.ts` ; ici on ne
+ * fait que de l'entrée/sortie.
+ *
+ * Le catalogue est du TypeScript qui importe par l'alias `@/`, que Node ne sait pas résoudre.
+ * On passe donc par le chargeur de modules de Vite lui-même (`ssrLoadModule`) : les pages sont
+ * générées à partir EXACTEMENT du même catalogue que l'application, sans copie ni export
+ * intermédiaire qui pourrait dériver.
+ */
+function bodyLandingPages() {
+  return {
+    name: 'galaxy-body-landing-pages',
+    apply: 'build' as const,
+    async closeBundle(): Promise<void> {
+      const { createServer } = await import('vite');
+      const { mkdir, readFile, writeFile } = await import('fs/promises');
+      const loader = await createServer({
+        configFile: false,
+        logLevel: 'error',
+        server: { middlewareMode: true },
+        resolve: { alias: { '@': resolve(__dirname, 'src') } },
+      });
+      try {
+        const catalogue = (await loader.ssrLoadModule(
+          '/src/config/bodies.ts'
+        )) as typeof import('./src/config/bodies');
+        const seo = (await loader.ssrLoadModule(
+          '/src/seo/bodyLandingPage.ts'
+        )) as typeof import('./src/seo/bodyLandingPage');
+
+        const dist = resolve(__dirname, 'dist');
+        const baseHtml = await readFile(resolve(dist, 'index.html'), 'utf-8');
+        const pages = seo.bodyLandingPages(
+          catalogue.CELESTIAL_CONFIG,
+          SITE_ORIGIN
+        );
+        for (const page of pages) {
+          const dir = resolve(dist, page.slug);
+          await mkdir(dir, { recursive: true });
+          await writeFile(
+            resolve(dir, 'index.html'),
+            seo.renderBodyPage(baseHtml, page),
+            'utf-8'
+          );
+        }
+        const today = new Date().toISOString().slice(0, 10);
+        await writeFile(
+          resolve(dist, 'sitemap.xml'),
+          seo.renderSitemap(pages, SITE_ORIGIN, today),
+          'utf-8'
+        );
+        loader.config.logger.info(
+          `  ${pages.length} pages de corps + sitemap générés`
+        );
+      } finally {
+        await loader.close();
+      }
+    },
+  };
+}
+
 export default defineConfig({
   plugins: [
     stripProductionHtmlComments(),
+    bodyLandingPages(),
     // PWA installable + hors-ligne. Pensé pour l'usage en classe (wifi d'école saturé) :
     // au 2e chargement, l'app boote sans réseau et les corps déjà visités restent
     // consultables. On ne PRÉCACHE que l'app shell (JS/CSS/HTML) — jamais les grosses
@@ -61,11 +126,23 @@ export default defineConfig({
         // Non, mais on relève la borne par sécurité pour ne jamais exclure un chunk.
         maximumFileSizeToCacheInBytes: 4 * 1024 * 1024,
         globPatterns: ['**/*.{js,css,html,ico,svg,woff2}'],
+        // Les 51 pages d'atterrissage sont des quasi-copies de `index.html` : les précacher
+        // triplait le poids de l'installation (1 019 → 2 941 Kio mesurés) pour du contenu que
+        // l'app shell couvre déjà. Elles restent servies par le réseau, ce que la denylist de
+        // `navigateFallback` impose de toute façon.
+        globIgnores: ['*/index.html'],
         // SPA : toute navigation retombe sur index.html (déjà rewrité côté Firebase).
         navigateFallback: '/index.html',
         // …sauf les pages statiques autonomes (confidentialité) : elles doivent être
         // servies telles quelles, pas remplacées par l'app WebGL.
-        navigateFallbackDenylist: [/^\/privacy\.html$/],
+        // Les pages d'atterrissage par corps (`/jupiter`) sont de VRAIS fichiers : sans cette
+        // exclusion, un visiteur qui a déjà le service worker recevrait le `/index.html` en
+        // cache et donc les balises de tête de l'accueil. L'application ouvrirait quand même le
+        // bon corps (le chemin suffit, cf. `bodyFromPathname`), mais le document servi serait le
+        // mauvais. Motif : un segment unique sans point — ce qui exclut `/`, `/assets/…` et les
+        // fichiers. Contrepartie assumée : hors ligne, une URL d'un seul segment INCONNUE ne
+        // retombe plus sur l'app ; en ligne la réécriture Firebase s'en charge comme avant.
+        navigateFallbackDenylist: [/^\/privacy\.html$/, /^\/[^/.]+\/?$/],
         cleanupOutdatedCaches: true,
         runtimeCaching: [
           {
