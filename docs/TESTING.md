@@ -94,6 +94,7 @@ Après une modification de la Terre, exécuter au minimum :
 - `pnpm exec playwright test e2e/precip-visual.spec.ts --reporter=line`
 - `pnpm exec playwright test e2e/earth-visual.spec.ts --reporter=line`
 - `pnpm exec playwright test e2e/terminator.spec.ts --reporter=line`
+- `pnpm exec playwright test e2e/a11y-tree.spec.ts e2e/touch.spec.ts --reporter=line`
 
 `weather.spec.ts` couvre le panneau, les groupes exclusifs, le diagnostic et l'invariant « modèle caché sans donnée propre ». `precip-visual.spec.ts` utilise un fixture déterministe IMERG pour vérifier l'alpha natif et l'absence d'extrapolation polaire. `earth-visual.spec.ts` vérifie le câblage du displacement et le retour LOD sans dépendre d'une réponse météo.
 
@@ -107,6 +108,46 @@ pixels ; une assertion en pixels y serait verte pour une mauvaise raison.
 Le client Open-Meteo possède en plus des tests Vitest déterministes pour le retry 429/5xx, `Retry-After`, la déduplication en vol et le cache des réponses. Les tests de réseau ne valident pas la disponibilité du fournisseur en production ; une capture live et le diagnostic `?debug-meteo` sont requis pour qualifier une donnée réellement reçue.
 
 `verify:all` reste le gate complet de release. Si son étape SPK/Playwright atteint la limite d'infrastructure sans assertion exploitable, conserver les résultats des commandes ciblées ci-dessus et signaler le timeout séparément.
+
+### Accessibilité : deux niveaux, et ce qu'aucun des deux ne fait
+
+- `pnpm test:a11y` (`e2e/a11y-audit.spec.ts`, axe-core) balaie neuf panneaux à la recherche de
+  violations WCAG détectables automatiquement. Il vérifie des **règles**.
+- `e2e/a11y-tree.spec.ts` lit l'**arbre d'accessibilité** calculé par Chromium (CDP
+  `Accessibility.getFullAXTree`, via `e2e/axTree.ts`) : rôles, **noms accessibles**, états. Il
+  vérifie des **valeurs**. C'est le complément d'axe, qui passerait sans broncher sur un bouton
+  nommé « Button », une boîte de dialogue anonyme, ou un interrupteur dont `aria-pressed` ne suit
+  jamais l'état réel. Quatre propriétés verrouillées : tout contrôle porte un nom utilisable ; un
+  panneau annonce son ouverture (`aria-expanded`) et se nomme lui-même ; le bouton lecture/pause
+  décrit l'action offerte et expose son état ; un seul mode d'échelle est `pressed` à la fois.
+
+**Ce qu'aucun des deux ne fait, et qui reste manuel** : ce qu'un lecteur d'écran ANNONCE. Cela
+dépend du lecteur, de sa version, de sa verbosité et du navigateur ; aucune API ne permet de le
+capturer, donc l'automatiser produirait un test qui ment. L'ordre d'annonce, le ressenti du
+parcours clavier et la pertinence des libellés se jugent avec NVDA ou VoiceOver, à la main.
+
+**Piège CDP à connaître** : `expanded` revient en booléen, `pressed` en CHAÎNE
+(« true »/« false »/« mixed » — le type `tristate` d'ARIA). `axTree.ts` normalise ; sans cela une
+comparaison à `true` réussit pour l'un et échoue pour l'autre. Noter aussi que
+`page.accessibility.snapshot()` a été retiré de Playwright : passer par CDP.
+
+### Mobile : viewport contre profil d'appareil
+
+Les scénarios « mobile » de la suite ne changent que le **viewport** (390×844). Ce n'est pas
+symbolique — vérifié : `isLowPowerDevice` a un filet « petit écran » (côté court < 768 et côté
+long < 1024), donc `IS_MOBILE` bascule et le rendu allégé est bien exercé.
+
+`e2e/touch.spec.ts` couvre ce qui leur échappe, avec un **descripteur d'appareil** Playwright
+(`devices['Pixel 7']`) : `navigator.maxTouchPoints > 0` (la branche tactile de la détection
+n'était couverte que par des tests unitaires purs), un `devicePixelRatio` réel, et surtout un
+**geste tactile** — le glissement à un doigt sur OrbitControls, seul moyen de tourner la caméra
+sur un téléphone, n'était joué nulle part. Le test met la simulation en pause, vérifie d'abord
+que deux relevés d'image sont IDENTIQUES (sans quoi il passerait aussi bien si le geste ne
+faisait rien), puis exige que l'image change après le glissement.
+
+**Un émulateur Android complet a été écarté** : plusieurs gigaoctets, démarrage lent, pont ADB à
+maintenir — et il ne donnerait toujours ni GPU réel ni comportement thermique, donc il n'ajoute
+rien aux deux points ci-dessus. Le vrai téléphone reste un passage manuel.
 
 ### Audit des assets visuels
 
