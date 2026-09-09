@@ -298,7 +298,11 @@
     </div>
 
     <!-- ─── Dock haut-droit : outils occasionnels (une seule surface ouverte) ── -->
-    <div class="dock dock--top-right" aria-label="Tools">
+    <div
+      class="dock dock--top-right"
+      aria-label="Tools"
+      data-i18n-aria="dock.tools.aria"
+    >
       <button
         id="info-trigger"
         class="tool"
@@ -410,8 +414,8 @@
         id="events-trigger"
         class="tool"
         type="button"
-        title="Astronomical events"
-        aria-label="Astronomical events"
+        title="Open astronomical events"
+        aria-label="Open astronomical events"
         aria-expanded="false"
         aria-controls="astronomical-events"
         data-i18n-title="events.open"
@@ -710,6 +714,7 @@
                 step="1"
                 value="50"
                 aria-label="Simulation speed"
+                data-i18n-aria="speed.aria"
               />
               <div class="tb-speed-ticks" aria-hidden="true">
                 <span>◀ y</span>
@@ -775,7 +780,7 @@
       id="body-palette"
       class="surface surface--palette"
       role="dialog"
-      aria-label="Bodies"
+      aria-label="Search and select a body"
       data-i18n-aria="nav.paletteAria"
       hidden
     >
@@ -806,6 +811,7 @@
           data-i18n-placeholder="nav.searchPlaceholder"
           placeholder="Search a body…"
           aria-label="Search a body"
+          data-i18n-aria="nav.search"
           role="combobox"
           aria-expanded="false"
           aria-autocomplete="list"
@@ -875,6 +881,7 @@
       class="surface surface--settings"
       role="dialog"
       aria-label="Display settings"
+      data-i18n-aria="settings.trigger.aria"
       hidden
     >
       <header class="surface-header">

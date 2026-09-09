@@ -131,6 +131,22 @@ parcours clavier et la pertinence des libellés se jugent avec NVDA ou VoiceOver
 comparaison à `true` réussit pour l'un et échoue pour l'autre. Noter aussi que
 `page.accessibility.snapshot()` a été retiré de Playwright : passer par CDP.
 
+### Libellés statiques de `index.html`
+
+`src/i18n/staticLabels.test.ts` est un contrôle purement STATIQUE (aucun navigateur, quelques
+millisecondes dans `pnpm verify`) sur trois propriétés que rien ne signalait :
+
+- tout `aria-label`/`title` du HTML est lié à une clé (`data-i18n-aria`/`data-i18n-title`) —
+  sans quoi un francophone se fait annoncer un libellé anglais figé ;
+- le texte en dur ÉGALE la valeur anglaise du dictionnaire. Ce texte est un repli légitime (il
+  sert avant `applyStaticI18n` et si l'i18n échoue), mais devient un mensonge dès que le
+  dictionnaire évolue sans lui. L'égalité transforme une redondance en garantie ;
+- toute clé référencée par le HTML a bien une traduction française.
+
+Aucun test de rendu ne pouvait attraper ça : la page s'affiche, axe-core est content (le nom
+accessible EXISTE) et `a11y-tree.spec.ts` aussi (il vérifie qu'un nom existe, pas qu'il est
+traduit).
+
 ### Mobile : viewport contre profil d'appareil
 
 Les scénarios « mobile » de la suite ne changent que le **viewport** (390×844). Ce n'est pas
