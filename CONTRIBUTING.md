@@ -147,6 +147,26 @@ d'écart — ne retirez pas ce garde-fou.
 - **i18n** : toute chaîne d'interface visible passe par `t()`/`data-i18n*` (`src/i18n/`), en
   anglais et en français.
 
+### Ajouter une couche visuelle sur un corps
+
+Une couche se déclare dans `src/components/celestial/celestialLayers.ts` (mesh) et
+`src/config/layerConfig.ts` (géométrie, matériau, rayon dans `LAYER_RADIUS_SCALE`). Avant
+d'écrire la moindre ligne, trancher **ce que la couche est** — c'est cette question, longtemps
+implicite, qui a laissé passer un défaut livré :
+
+- **une apparence physique** (nuages, précipitations) : un objet qu'on verrait depuis l'orbite,
+  donc éclairé par le Soleil, donc éteint la nuit. Lui donner une entrée dans
+  `LAYER_TERMINATOR_WRAP`, choisie par son **altitude réelle** — un sommet d'orage reste au
+  soleil après le coucher au sol, et c'est ce que la largeur encode ;
+- **une couche d'instrument** (température, pression, humidité, vent) : un champ de données
+  colorié, l'apparence de rien. Pas d'entrée : l'assombrir la nuit ne la rendrait pas plus
+  réaliste, cela rendrait illisible une information. Même famille que le HUD et les labels.
+
+La largeur est une propriété de la **couche**, jamais de la **source** de la donnée : une couche
+satellite et sa jumelle « modèle » représentent la même chose sur le même mesh et doivent
+traverser la nuit ensemble. Toute décision jour/nuit passe par `src/core/terminator.ts` —
+jamais une formule maison, jamais une constante réglée à l'œil.
+
 ## Style de code
 
 - TypeScript strict, alias `@/` → `src/` pour les imports cross-module.
@@ -154,6 +174,21 @@ d'écart — ne retirez pas ce garde-fou.
   pas évident (contrainte cachée, invariant, contournement d'un bug précis).
 - Pas d'abstraction ni de gestion d'erreur pour un cas qui ne peut pas se produire.
 - `pnpm format` avant de committer (Prettier).
+
+## Écrire un test qui protège vraiment
+
+Ce projet livre des bugs qui ne lèvent **aucune erreur** : une position fausse reste une
+position, une planète qui tourne à l'envers tourne quand même. D'où deux exigences, apprises ici
+et pas théoriques :
+
+- **Falsifiez votre garde-fou.** Réintroduisez le défaut, vérifiez que le test tombe, restaurez.
+  Deux minutes. Un test de ce dépôt a passé pendant des mois en ne prouvant rien : il vérifiait
+  que deux rampes étaient `> 0` sur un intervalle, ce qui est toujours vrai — et `0,5 % + 0,5 %`
+  passait l'assertion sur un écran noir.
+- **Vérifiez l'unité de votre garantie.** Le même test, corrigé, affirmait ensuite « la somme ne
+  descend jamais sous sa valeur au terminateur » : vrai, et l'écran toujours noir, parce que cette
+  valeur de référence est elle-même sous le plancher d'affichage. Une propriété qui se juge à
+  l'œil se mesure en pixels (`?debug-terminator`), pas en ratios d'une grandeur invisible.
 
 ## Pull requests
 
