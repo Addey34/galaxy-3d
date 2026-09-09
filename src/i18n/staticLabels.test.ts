@@ -93,6 +93,37 @@ describe('libellés statiques de index.html', () => {
     });
   }
 
+  /**
+   * Sécurité des liens sortants, pas de l'i18n — mais c'est le seul endroit du dépôt qui lit
+   * `index.html` en statique, et un lien externe sans `rel` est une vraie faille : la page
+   * ouverte reçoit `window.opener` et peut remplacer l'onglet d'origine par une imitation
+   * (reverse tabnabbing). Deux liens sortants existent (Ko-fi, retour utilisateur) et rien ne
+   * vérifiait la règle.
+   */
+  it('protège chaque lien sortant contre le reverse tabnabbing', () => {
+    const external = TAGS.filter(
+      (tag) => /^<a\s/i.test(tag) && /\shref="https?:\/\//.test(tag)
+    );
+    // Si le document n'a plus de lien sortant, ce test doit le dire au lieu de passer à vide.
+    expect(external.length).toBeGreaterThan(0);
+
+    const unsafe = external
+      .filter((tag) => {
+        const rel = attribute(tag, 'rel') ?? '';
+        const tokens = rel.split(/[ ]+/);
+        return !tokens.includes('noopener') || !tokens.includes('noreferrer');
+      })
+      .map((tag) => `${identify(tag)} → rel="${attribute(tag, 'rel') ?? ''}"`);
+    expect(unsafe, 'ajouter rel="noopener noreferrer"').toEqual([]);
+
+    // Et ils s'ouvrent dans un nouvel onglet : quitter la scène 3D pour un lien externe ferait
+    // perdre l'état de la vue (corps, date, mode) sans avertissement.
+    const sameTab = external
+      .filter((tag) => attribute(tag, 'target') !== '_blank')
+      .map((tag) => identify(tag));
+    expect(sameTab, 'ajouter target="_blank"').toEqual([]);
+  });
+
   it('traduit en français chaque clé référencée par le HTML', () => {
     const missing = new Set<string>();
     for (const tag of TAGS)

@@ -335,7 +335,8 @@
       </button>
       <!-- Ordre logique du dock : réglages d'affichage (settings — la qualité graphique y est
            fusionnée, plus de bouton dédié → filtres petits corps → météo), contenu/découverte
-           (événements), actions sur la vue (partage → capture → VR), méta (aide), puis
+           (événements), actions sur la vue (partage → capture → VR), méta (aide → retour
+           utilisateur), puis
            soutien (Ko-fi) tout à la fin — jamais au milieu des outils de travail. -->
       <button
         id="settings-trigger"
@@ -559,6 +560,40 @@
           <circle cx="7.7" cy="11.6" r="0.85" fill="currentColor" />
         </svg>
       </button>
+      <!-- Retour utilisateur : le tableau Fider (feedback.adrianguichard.dev) existait sans
+           AUCUN point d'entrée dans l'application — deux conteneurs et un quota SMTP pour une
+           page que personne ne pouvait trouver. Un seul lien, dans le dock et pas dans l'aide :
+           le dépôt a déjà retiré une carte « soutenir le projet » de l'aide parce que le bouton
+           Ko-fi la doublonnait. Groupe « méta » (avec l'aide), avant le soutien qui reste dernier.
+           Redirection directe : la CSP ne contraint pas la navigation, seulement les ressources. -->
+      <a
+        id="feedback-btn"
+        class="tool"
+        href="https://feedback.adrianguichard.dev"
+        target="_blank"
+        rel="noopener noreferrer"
+        title="Suggestions and bug reports"
+        aria-label="Suggestions and bug reports"
+        data-i18n-title="feedback.btn.title"
+        data-i18n-aria="feedback.btn.aria"
+      >
+        <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
+          <path
+            d="M13.2 9.4a1.6 1.6 0 0 1-1.6 1.6H6.2L3.4 13.2V4.2a1.6 1.6 0 0 1 1.6-1.6h6.6a1.6 1.6 0 0 1 1.6 1.6z"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.3"
+            stroke-linejoin="round"
+          />
+          <path
+            d="M6.3 5.9h4.3M6.3 7.9h2.6"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.3"
+            stroke-linecap="round"
+          />
+        </svg>
+      </a>
       <!-- Lien direct Ko-fi, seul point d'entrée pour le soutien (l'aide ne duplique plus ce
            message) : icône teintée en permanence (pas juste au survol) pour rester repérable
            au milieu d'icônes neutres. Tout à la fin du dock, jamais mêlé aux outils de travail.

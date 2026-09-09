@@ -123,6 +123,8 @@ export const messages: Record<Locale, Dict> = {
     // ── Aide & crédits ──
     'help.btn.title': 'Help, tips & credits',
     'help.btn.aria': 'Help, tips and credits',
+    'feedback.btn.title': 'Suggestions and bug reports',
+    'feedback.btn.aria': 'Suggestions and bug reports',
     'kofi.btn.title': 'Buy me a coffee',
     'kofi.btn.aria': 'Support this project on Ko-fi',
     'share.btn.title': 'Share this view',
@@ -467,6 +469,8 @@ export const messages: Record<Locale, Dict> = {
     // ── Aide & crédits ──
     'help.btn.title': 'Aide, astuces et crédits',
     'help.btn.aria': 'Aide, astuces et crédits',
+    'feedback.btn.title': 'Suggestions et signalements',
+    'feedback.btn.aria': 'Suggestions et signalements',
     'kofi.btn.title': "M'offrir un café",
     'kofi.btn.aria': 'Soutenir ce projet sur Ko-fi',
     'share.btn.title': 'Partager cette vue',
