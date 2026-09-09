@@ -56,6 +56,33 @@ export const LAYER_RADIUS_SCALE: Record<string, number> = {
   lights: 1.002,
 };
 
+/**
+ * Largeur du crépuscule de chaque couche, **par son altitude réelle**.
+ *
+ * La règle est celle du produit : rendre le plus réaliste possible sous nos contraintes, à
+ * l'échelle équivalente. Elle sépare donc les couches en deux familles, et c'est cette
+ * séparation — jamais écrite jusqu'ici — qui décide de la présence d'un terminateur :
+ *
+ *   - **apparence physique** (nuages, précipitations) : ce sont des OBJETS qu'on verrait
+ *     depuis l'orbite. Ils sont éclairés par le Soleil, donc ils s'éteignent la nuit, chacun
+ *     à la largeur de SON altitude (un sommet d'orage reste au soleil après le coucher au
+ *     sol). Une entrée ici.
+ *   - **couche d'instrument** (température, pression, humidité, vent) : un champ de données
+ *     colorié, pas une apparence. Rien à éteindre — l'assombrir la nuit ne le rendrait pas
+ *     plus réaliste, cela rendrait illisible une information qui n'a jamais prétendu être une
+ *     image. Même famille que le HUD et les labels (cf. l'invariant Explo). Pas d'entrée.
+ *
+ * Défaut réellement livré, corrigé par cette carte : les couches MODÈLE (Open-Meteo) passent
+ * par `setDataOverlay`, qui remplaçait le matériau de la couche par un `MeshBasicMaterial` nu.
+ * Les nuages satellite s'éteignaient donc au terminateur et les nuages modèle — la même chose
+ * physique, sur le MÊME mesh — brillaient à plein régime sur la face nuit. Deux
+ * représentations d'un même objet ne peuvent pas décider différemment de leur terminateur.
+ */
+export const LAYER_TERMINATOR_WRAP: Record<string, number> = {
+  clouds: TERMINATOR_WRAP_CLOUDS,
+  precip: TERMINATOR_WRAP_STORM,
+};
+
 // 64 segments pour les planètes : bon compromis silhouette/perf (≈ 8 k triangles).
 // 128 pour les anneaux de Saturne : la géométrie RingGeometry est plate, mais ses
 // subdivisions radiales déterminent la précision des UVs corrigés (_correctRingUVs).
@@ -391,7 +418,7 @@ export function createCloudsMaterial(): THREE.MeshStandardMaterial {
     {
       noSpecular: true,
       moonlight: true,
-      terminatorWrap: TERMINATOR_WRAP_CLOUDS,
+      terminatorWrap: LAYER_TERMINATOR_WRAP['clouds'],
     }
   );
   const realClouds: RealCloudsUniforms = {
@@ -528,17 +555,75 @@ export function createThermalMaterial(): THREE.MeshBasicMaterial {
   return material;
 }
 
-/** Matériau pour les textures météo déjà colorées et porteuses de leur propre alpha. */
+const OVERLAY_SUN_UNIFORM_KEY = '__overlaySunUniform';
+
+/** Position monde du Soleil d'un overlay de donnée, s'il a un terminateur. */
+export function getOverlaySunUniform(
+  material: THREE.Material
+): { value: THREE.Vector3 } | undefined {
+  return material.userData[OVERLAY_SUN_UNIFORM_KEY] as
+    { value: THREE.Vector3 } | undefined;
+}
+
+/**
+ * Matériau pour les textures météo déjà colorées et porteuses de leur propre alpha.
+ *
+ * `terminatorWrap` absent = couche d'INSTRUMENT, rendue telle quelle (cf.
+ * `LAYER_TERMINATOR_WRAP` pour la règle). Fourni, la couche représente une apparence
+ * physique : on lui applique le MÊME `terminatorDay` que sa jumelle satellite, à la même
+ * largeur, pour que basculer de l'une à l'autre ne change pas la nuit.
+ */
 export function createColoredOverlayMaterial(
-  opacity = 0.85
+  opacity = 0.85,
+  terminatorWrap?: number
 ): THREE.MeshBasicMaterial {
-  return new THREE.MeshBasicMaterial({
+  const material = new THREE.MeshBasicMaterial({
     transparent: true,
     depthWrite: false,
     side: THREE.FrontSide,
     opacity,
     toneMapped: false,
   });
+  if (terminatorWrap === undefined) return material;
+
+  const sunPosition = { value: new THREE.Vector3() };
+  material.userData[OVERLAY_SUN_UNIFORM_KEY] = sunPosition;
+  chainOnBeforeCompile(material, (shader) => {
+    shader.uniforms['uOverlaySunPos'] = sunPosition;
+    shader.uniforms['uOverlayWrap'] = { value: terminatorWrap };
+    shader.vertexShader = shader.vertexShader
+      .replace(
+        '#include <common>',
+        '#include <common>\nvarying vec3 vOverlayWorldPos;\nvarying vec3 vOverlayWorldNormal;'
+      )
+      .replace(
+        '#include <worldpos_vertex>',
+        '#include <worldpos_vertex>\n\tvOverlayWorldPos = ( modelMatrix * vec4( transformed, 1.0 ) ).xyz;\n\tvOverlayWorldNormal = normalize( mat3( modelMatrix ) * normal );'
+      );
+    shader.fragmentShader = shader.fragmentShader
+      .replace(
+        '#include <common>',
+        '#include <common>\nuniform vec3 uOverlaySunPos;\nuniform float uOverlayWrap;\nvarying vec3 vOverlayWorldPos;\nvarying vec3 vOverlayWorldNormal;' +
+          TERMINATOR_GLSL
+      )
+      .replace(
+        '#include <map_fragment>',
+        `#include <map_fragment>
+        {
+          // Même fonction, même largeur que la jumelle satellite de cette couche : une
+          // apparence physique s'éteint la nuit, quelle que soit la SOURCE de la donnée.
+          // Un plancher garde la teinte au terminateur au lieu de couper net, exactement
+          // comme la couche pluie.
+          vec3 oN = normalize( vOverlayWorldNormal );
+          vec3 oToSun = normalize( uOverlaySunPos - vOverlayWorldPos );
+          float oDay = terminatorDay( dot( oN, oToSun ), uOverlayWrap );
+          diffuseColor.rgb *= mix( 0.04, 1.0, oDay );
+          diffuseColor.a *= oDay;
+        }`
+      );
+  });
+  material.customProgramCacheKey = () => 'overlay-terminator-v1';
+  return material;
 }
 const PRECIP_UNIFORM_KEY = '__precipUniforms';
 
@@ -662,7 +747,9 @@ export function createPrecipMaterial(): THREE.MeshBasicMaterial {
     shader.uniforms['uPrecipMix'] = precip.mix;
     // Sommets d'orage (~12 km) : leur horizon est abaissé, ils restent au soleil après le
     // coucher au sol. Dérivé de l'altitude réelle, pas réglé à l'œil (core/terminator.ts).
-    shader.uniforms['uPrecipWrap'] = { value: TERMINATOR_WRAP_STORM };
+    shader.uniforms['uPrecipWrap'] = {
+      value: LAYER_TERMINATOR_WRAP['precip'],
+    };
     // Position + normale monde du fragment (pour le facteur jour/nuit).
     shader.vertexShader = shader.vertexShader
       .replace(

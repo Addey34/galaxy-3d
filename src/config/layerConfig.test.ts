@@ -2,8 +2,10 @@ import * as THREE from 'three';
 import { describe, expect, it } from 'vitest';
 import {
   createCloudsMaterial,
+  createColoredOverlayMaterial,
   createPrecipMaterial,
   createSurfaceMaterial,
+  LAYER_TERMINATOR_WRAP,
   createThermalMaterial,
   getThermalUniforms,
   THERMAL_DEFAULT_OPACITY,
@@ -501,6 +503,68 @@ describe('day/night terminator wiring', () => {
       6
     );
     earth.dispose();
+  });
+
+  it('gives a layer one twilight width, whatever the data source', () => {
+    // Défaut réellement livré : les couches MODÈLE (Open-Meteo) passent par `setDataOverlay`,
+    // qui remplaçait le matériau par un MeshBasicMaterial nu. Les nuages satellite
+    // s'éteignaient au terminateur et les nuages modèle — la même chose physique, sur le MÊME
+    // mesh — brillaient à plein régime sur la face nuit. La largeur est une propriété de la
+    // COUCHE (son altitude réelle), jamais de la source de la donnée.
+    const compile = (
+      material: THREE.Material
+    ): Parameters<NonNullable<THREE.Material['onBeforeCompile']>>[0] => {
+      const shader = {
+        uniforms: {},
+        vertexShader: '#include <common>\n#include <worldpos_vertex>',
+        fragmentShader:
+          '#include <common>\n#include <map_fragment>\n' +
+          'vec3 outgoingLight = totalDiffuse + totalSpecular + totalEmissiveRadiance;',
+      } as Parameters<NonNullable<THREE.Material['onBeforeCompile']>>[0];
+      material.onBeforeCompile?.(shader, {} as THREE.WebGLRenderer);
+      return shader;
+    };
+    const overlayWrap = (layer: string): number | undefined =>
+      compile(createColoredOverlayMaterial(0.85, LAYER_TERMINATOR_WRAP[layer]))
+        .uniforms['uOverlayWrap']?.value as number | undefined;
+
+    const clouds = createCloudsMaterial();
+    expect(compile(clouds).uniforms['uTerminatorWrap']?.value).toBe(
+      overlayWrap('clouds')
+    );
+    clouds.dispose();
+
+    const precip = createPrecipMaterial();
+    expect(compile(precip).uniforms['uPrecipWrap']?.value).toBe(
+      overlayWrap('precip')
+    );
+    precip.dispose();
+  });
+
+  it('leaves instrument layers unshaded — they are data, not an appearance', () => {
+    // La règle : le plus réaliste possible à notre échelle. Une couche qui montre un OBJET
+    // (nuages, précipitations) s'éteint la nuit parce que le Soleil l'éclaire. Un champ de
+    // température ou de pression n'est l'apparence de rien : l'assombrir ne le rendrait pas
+    // plus réaliste, cela rendrait illisible une information — même famille que le HUD et les
+    // labels. C'est l'absence d'entrée dans la carte qui l'exprime, pas un cas particulier.
+    expect(Object.keys(LAYER_TERMINATOR_WRAP).sort()).toEqual([
+      'clouds',
+      'precip',
+    ]);
+    for (const instrument of ['thermal', 'wind'])
+      expect(LAYER_TERMINATOR_WRAP[instrument]).toBeUndefined();
+
+    const instrument = createColoredOverlayMaterial(0.85, undefined);
+    const shader = {
+      uniforms: {},
+      vertexShader: '#include <common>\n#include <worldpos_vertex>',
+      fragmentShader: '#include <common>\n#include <map_fragment>',
+    } as Parameters<NonNullable<THREE.Material['onBeforeCompile']>>[0];
+    instrument.onBeforeCompile(shader, {} as THREE.WebGLRenderer);
+    // Aucun patch : ni uniforme, ni varying, ni facteur jour/nuit dans le fragment.
+    expect(shader.uniforms['uOverlayWrap']).toBeUndefined();
+    expect(shader.fragmentShader).not.toContain('vOverlayWorldNormal');
+    instrument.dispose();
   });
 
   it('still matches the string three.js actually ships (upgrade guard)', () => {

@@ -4,6 +4,7 @@ import CelestialObject from './CelestialObject';
 import type { AnimationSystem } from '@/components/systems/AnimationSystem';
 import type { TextureSystem } from '@/components/systems/TextureSystem';
 import { CELESTIAL_CONFIG } from '@/config/bodies';
+import { getOverlaySunUniform } from '@/config/layerConfig';
 
 /**
  * CONTRAT DES COUCHES DE DONNÉES DE `CelestialObject`, vu par `src/ui/*Layer.ts`.
@@ -58,6 +59,7 @@ function internals(body: CelestialObject) {
     _thermalMat?: THREE.MeshBasicMaterial;
     _thermal?: { opacity: { value: number }; enabled: { value: number } };
     _precipFadeElapsed: number;
+    layers: Map<string, THREE.Mesh>;
   };
 }
 
@@ -153,6 +155,34 @@ describe('couches de données — contrat vu par src/ui', () => {
       expect(_thermalMat!.map).toBe(map);
       expect(_thermal!.enabled.value).toBe(1);
       expect(_thermalMat!.opacity).toBeGreaterThan(0);
+    });
+  });
+
+  describe('overlay de donnée modèle : le terminateur vient de la COUCHE', () => {
+    it('éteint la nuit un overlay posé sur une couche d’apparence physique', () => {
+      // Défaut réellement livré : `setDataOverlay` remplaçait le matériau de la couche par un
+      // MeshBasicMaterial nu. Les nuages satellite s'éteignaient au terminateur et les nuages
+      // MODÈLE — la même chose physique, sur le même mesh — brillaient à plein régime sur la
+      // face nuit. Basculer d'une source à l'autre ne doit rien changer à la nuit.
+      earth.setDataOverlay('clouds', tex());
+      const clouds = internals(earth).layers.get('clouds')!
+        .material as THREE.Material;
+      expect(getOverlaySunUniform(clouds)).toBeDefined();
+
+      // Et la position du Soleil lui parvient bien chaque frame, sinon le masque resterait
+      // figé sur sa valeur par défaut.
+      const sun = new THREE.Vector3(7, 0, 0);
+      earth.update(0.016, sun, true);
+      expect(getOverlaySunUniform(clouds)!.value.x).toBe(7);
+    });
+
+    it('laisse une couche d’instrument telle quelle', () => {
+      // La température n'est l'apparence de rien : l'assombrir la nuit rendrait illisible une
+      // information, pas le rendu plus réaliste.
+      earth.setDataOverlay('thermal', tex());
+      const thermal = internals(earth).layers.get('thermal')!
+        .material as THREE.Material;
+      expect(getOverlaySunUniform(thermal)).toBeUndefined();
     });
   });
 

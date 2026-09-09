@@ -21,10 +21,12 @@ import {
   getCloudShadowUniforms,
   getEclipseShadowUniforms,
   getMoonlightUniforms,
+  getOverlaySunUniform,
   getPrecipUniforms,
   getRealCloudsUniforms,
   getRingShadowUniforms,
   getThermalUniforms,
+  LAYER_TERMINATOR_WRAP,
   type EclipseShadowUniforms,
   type PrecipUniforms,
   type ThermalUniforms,
@@ -586,7 +588,14 @@ export default class CelestialObject {
 
     let mat = this._dataOverlayMats.get(layerKey);
     if (!mat) {
-      mat = createColoredOverlayMaterial(options.opacity ?? 0.85);
+      // La largeur du crépuscule vient de la COUCHE, pas de la source de la donnée : une
+      // couche modèle et sa jumelle satellite représentent la même chose physique sur le
+      // même mesh, elles doivent traverser la nuit ensemble (cf. LAYER_TERMINATOR_WRAP).
+      // Absente = couche d'instrument, rendue telle quelle.
+      mat = createColoredOverlayMaterial(
+        options.opacity ?? 0.85,
+        LAYER_TERMINATOR_WRAP[layerKey]
+      );
       this._dataOverlayMats.set(layerKey, mat);
     }
     // Bascule le mesh sur le matériau d'overlay pré-coloré, en MÉMORISANT l'original (GIBS/IMERG)
@@ -838,6 +847,14 @@ export default class CelestialObject {
     // Couche pluie : direction du Soleil (éclairage jour/nuit) + fondu enchaîné.
     if (this._precip && sunWorldPosition)
       this._precip.sunPosition.value.copy(sunWorldPosition);
+
+    // Overlays de donnée MODÈLE posés sur une couche d'apparence physique : ils portent le
+    // même terminateur que la couche qu'ils remplacent, donc la même position du Soleil.
+    if (sunWorldPosition && this._dataOverlayMats.size > 0) {
+      for (const overlay of this._dataOverlayMats.values()) {
+        getOverlaySunUniform(overlay)?.value.copy(sunWorldPosition);
+      }
+    }
     this._tickPrecipFade(delta);
 
     // Le halo Fresnel a besoin de la position du Soleil pour n'illuminer que le

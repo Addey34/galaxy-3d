@@ -293,10 +293,32 @@ correspondante est demandée (`moonlight`, `cloudShadow`, `eclipseShadow`…). P
 
 1. déclarer la géométrie/matériau dans `config/layerConfig.ts` et son rayon dans
    `LAYER_RADIUS_SCALE` ;
-2. choisir sa largeur par son **altitude réelle**, pas par son rayon de mesh ;
+2. trancher d'abord **apparence physique ou couche d'instrument** (voir ci-dessous) ; si c'est
+   une apparence, lui donner une entrée dans `LAYER_TERMINATOR_WRAP`, choisie par son
+   **altitude réelle** et non par son rayon de mesh ;
 3. appeler la fonction partagée qui correspond à sa nature (calque diurne → `terminatorDay`,
    couche nocturne → `terminatorNight`), jamais une formule maison ;
 4. dériver la direction du Soleil par fragment.
+
+### Apparence physique ou couche d'instrument
+
+La règle produit est de rendre le plus réaliste possible sous nos contraintes, à l'échelle
+équivalente. Elle sépare les couches en deux familles, et c'est cette séparation — longtemps
+implicite — qui décide de la présence d'un terminateur :
+
+- **apparence physique** (nuages, précipitations) : un objet qu'on verrait depuis l'orbite. Le
+  Soleil l'éclaire, donc il s'éteint la nuit, à la largeur de **son** altitude. Une entrée dans
+  `LAYER_TERMINATOR_WRAP`.
+- **couche d'instrument** (température, pression, humidité, vent) : un champ de données colorié,
+  l'apparence de rien. L'assombrir la nuit ne le rendrait pas plus réaliste, cela rendrait
+  illisible une information qui n'a jamais prétendu être une image. Même famille que le HUD et
+  les labels (cf. l'invariant Explo). Pas d'entrée.
+
+La largeur est une propriété de la **couche**, jamais de la **source** de la donnée. Défaut
+réellement livré et corrigé par cette carte : les couches modèle (Open-Meteo) passent par
+`CelestialObject.setDataOverlay`, qui remplaçait le matériau de la couche par un
+`MeshBasicMaterial` nu — les nuages satellite s'éteignaient au terminateur et les nuages modèle,
+la même chose physique sur le **même mesh**, brillaient à plein régime sur la face nuit.
 
 `src/config/layerConfig.test.ts` et `src/shaders/terminatorUsage.test.ts` refusent une couche qui
 appelle une fonction du terminateur sans en embarquer la définition, ou qui contourne le contrat.
