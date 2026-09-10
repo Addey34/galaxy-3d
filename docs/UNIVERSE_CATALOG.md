@@ -8,10 +8,11 @@ Ce document definit ce que Galaxy peut deja representer, ce qui peut etre ajoute
 | -------------------------- | -------------------------------------------------------------- | ---------------------------------------------------- | --------------------------------------- |
 | Etoiles et fond            | Soleil, fond etoile                                            | astronomy-engine pour le Soleil, skybox pour le fond | Sphere emettrice, starfield             |
 | Planetes                   | Mercure, Venus, Terre, Mars, Jupiter, Saturne, Uranus, Neptune | astronomy-engine                                     | Spheres texturees, couches optionnelles |
-| Satellites                 | Lune, Io, Europe, Ganymede, Callisto                           | Terre-Lune et JupiterMoons                           | Spheres texturees, bump pour la Lune    |
-| Planetes naines            | Ceres, Pluton, Eris, Haumea, Makemake                          | Horizons local puis Kepler                           | Spheres texturees                       |
-| Petits corps               | Vesta, Pallas, Hygiea, Halley                                  | Elements orbitaux Kepler                             | Spheres texturees et orbites            |
-| Collections instrumentales | Champ SBDB des petits corps                                    | Donnees chargees en couche UI                        | Marqueurs 2D, pas de meshes physiques   |
+| Satellites                 | 29 lunes, de la Lune aux quatre petites lunes de Pluton         | astronomy-engine (Lune, galileennes), sinon binaires Horizons relatifs au parent, repli keplerien | Spheres texturees, bump pour la Lune    |
+| Planetes naines            | Ceres, Pluton, Eris, Haumea, Makemake, Orcus, Quaoar, Gonggong, Sedna | Horizons local puis Kepler                     | Spheres texturees                       |
+| Petits corps               | Vesta, Pallas, Hygiea, Halley                                  | Elements orbitaux Kepler, sans repli Horizons        | Spheres texturees et orbites            |
+| Collections instrumentales | Champ SBDB des petits corps, filtrable par categorie (NEO, cometes, TNO, ceinture principale) | Donnees chargees en couche UI  | Marqueurs 2D, pas de meshes physiques   |
+| Engins spatiaux            | Voyager 1 et 2, Parker Solar Probe, James Webb                 | Binaires Horizons bornes a la couverture reelle de chaque mission | Marqueurs 2D en couche instrument, mode Exploration uniquement |
 
 Les textures actuelles sont dans public/assets/textures/. Le chargeur supporte actuellement des fichiers JPEG nommes par corps, couche et resolution. Les fichiers ephemerides Horizons sont locaux dans public/assets/ephemerides/ : le rendu deploye ne depend pas d'un appel reseau au demarrage.
 
@@ -76,6 +77,14 @@ Ils necessitent une trajectoire temporelle, un referentiel, une echelle physique
 - [x] Contrat PreciseEphemerisProvider, adaptateur SpiceEphemerisService et lecteur DAF/SPK types 2/3.
 - [x] Worker SPK asynchrone pour charger et parser un kernel same-origin hors thread principal.
 - [x] Triton, Charon, Phobos et Deimos, avec vecteurs locaux Horizons relatifs au parent et textures USGS/NASA 1k.
+- [x] Lunes mineures de Saturne, Uranus, Neptune et Pluton (Mimas, Tethys, Dione, Hyperion, Miranda, Ariel, Umbriel, Titania, Oberon, Protee, Nereide, Styx, Nix, Kerberos, Hydra) et Amalthee.
+- [x] Transneptuniens Orcus, Quaoar, Gonggong et Sedna (vague A ci-dessous, partiellement close : Salacia et Varuna restent).
+- [x] Quatre premieres missions de la vague C : Voyager 1 et 2, Parker Solar Probe, James Webb.
+- [x] Population SBDB filtrable par categorie, en couche instrument 2D (amorce de la vague B pour la ceinture principale et Kuiper).
+
+Le catalogue fait foi, pas cette liste, et **rien ne verifie qu'elle reste juste** : elle a deja
+derive une fois, en omettant quinze lunes, quatre transneptuniens et quatre missions deja livres.
+Avant de s'y fier, lire `flattenBodies(CELESTIAL_CONFIG)` — c'est l'etat reel en une ligne.
 
 ### Vague A - completude du Systeme solaire
 
