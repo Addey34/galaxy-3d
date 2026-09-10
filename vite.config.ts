@@ -58,6 +58,14 @@ function bodyLandingPages() {
           catalogue.CELESTIAL_CONFIG,
           SITE_ORIGIN
         );
+        // Un catalogue vide, un chargeur qui rend un module vide, un renommage de champ : le
+        // build produirait alors zéro page et un sitemap réduit à deux URL, SANS rien signaler
+        // — et le déploiement effacerait les pages existantes. Le seuil est délibérément bas :
+        // il attrape la panne, pas la suppression volontaire d'un corps.
+        if (pages.length < 20)
+          throw new Error(
+            `génération des pages de corps : ${pages.length} page(s) seulement, catalogue non chargé ?`
+          );
         for (const page of pages) {
           const dir = resolve(dist, page.slug);
           await mkdir(dir, { recursive: true });
