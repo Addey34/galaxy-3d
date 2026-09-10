@@ -4,6 +4,8 @@ import {
   CARD_WIDTH,
   SPHERE_CENTER_X,
   SPHERE_SIZE,
+  LIGHT_DIRECTION,
+  RING_TILT_DEG,
   cardBackgroundSvg,
   cardTextSvg,
   renderSphere,
@@ -275,12 +277,68 @@ describe('anneau de la vignette', () => {
   });
 
   it('reçoit l’ombre portée du globe, du côté opposé au Soleil', () => {
-    // Deux points diamétralement opposés, à la même distance du centre : même texture, même
-    // incidence. Tout écart vient de l'ombre. Sans elle, l'anneau brille au travers du corps
-    // qui le masque — le genre de faute qu'on ne voit pas si on ne la cherche pas.
-    const shadowed = luminance(at(withRing, 1.1176, 0.4386));
-    const sunlit = luminance(at(withRing, -1.1176, -0.4386));
-    expect(shadowed).toBeLessThan(sunlit * 0.75);
+    // Sans elle, l'anneau brille au travers du corps qui le masque — le genre de faute qu'on
+    // ne voit pas si on ne la cherche pas.
+    //
+    // DEUX versions précédentes de ce test étaient fausses, chacune à sa manière, et les deux
+    // ont failli faire conclure n'importe quoi :
+    //   1. deux coordonnées écrites en dur, calculées à la main pour la lumière d'alors. Régler
+    //      l'éclairage l'a fait tomber en signalant un défaut inexistant ;
+    //   2. un point DÉDUIT de la lumière, mais pris à mi-rayon — il tombait derrière le globe,
+    //      donc invisible, et le test comparait deux pixels de planète. Il passait même en
+    //      supprimant complètement l'ombre.
+    // D'où ce balayage : on ne vise aucun point, on cherche la propriété partout.
+    //
+    // Chaque pixel d'anneau visible est comparé à son symétrique par rapport au centre — même
+    // rayon, même texture, même incidence : seule l'ombre les distingue.
+    const bodyRadius = (RING_SIZE / 2 - 1) / OUTER;
+    let darkened = 0;
+    let strongest = 1;
+    let strongestOnShadowSide = true;
+
+    // Direction de la lumière projetée dans le plan de l'anneau : l'ombre part à l'opposé.
+    const tilt = (RING_TILT_DEG * Math.PI) / 180;
+    const normal = [0, Math.cos(tilt), Math.sin(tilt)] as const;
+    const alongNormal =
+      LIGHT_DIRECTION[0] * normal[0] +
+      LIGHT_DIRECTION[1] * normal[1] +
+      LIGHT_DIRECTION[2] * normal[2];
+    const inPlaneX = LIGHT_DIRECTION[0] - alongNormal * normal[0];
+    const inPlaneY = LIGHT_DIRECTION[1] - alongNormal * normal[1];
+
+    for (let py = 0; py < RING_SIZE; py++)
+      for (let px = 0; px < RING_SIZE; px++) {
+        const x = (px + 0.5 - MID) / bodyRadius;
+        const y = -(py + 0.5 - MID) / bodyRadius;
+        // Hors de la silhouette du globe : on est sûr de regarder l'anneau seul.
+        if (Math.hypot(x, y) <= 1.05) continue;
+        const here = pixel(withRing, RING_SIZE, px, py);
+        if (here[3] < 200) continue;
+        const mirror = at(withRing, -x, -y);
+        if (mirror[3] < 200) continue;
+        const ratio = luminance(here) / Math.max(luminance(mirror), 1);
+        if (ratio < 0.75) {
+          darkened++;
+          if (ratio < strongest) {
+            strongest = ratio;
+            // Le plus assombri doit être du côté OPPOSÉ à la lumière.
+            strongestOnShadowSide = x * inPlaneX + y * inPlaneY < 0;
+          }
+        }
+      }
+
+    // Mesuré : 57 pixels à cette résolution. Le seuil est bas exprès — supprimer l'ombre en
+    // donne exactement ZÉRO (les symétriques deviennent identiques), donc 20 sépare déjà
+    // franchement les deux mondes sans se casser au moindre reglage d'éclairage.
+    expect(
+      darkened,
+      'aucun pixel d’anneau assombri par le globe'
+    ).toBeGreaterThan(20);
+    expect(strongest).toBeLessThan(0.6);
+    expect(
+      strongestOnShadowSide,
+      'la zone la plus sombre n’est pas du côté opposé au Soleil'
+    ).toBe(true);
   });
 
   it('incline AUSSI le globe, du même angle que l’anneau', () => {

@@ -90,14 +90,32 @@ const RING_SHADOW_DIFFUSE = 0.08;
 const RING_SHADOW_EMISSIVE = 0.15;
 
 /**
- * Lumière venue d'en haut à gauche, légèrement de face : le terminateur tombe sur la droite
- * du disque, du côté du texte, ce qui équilibre la composition.
+ * Lumière venue d'en haut à gauche, très majoritairement de face : le terminateur tombe sur la
+ * droite du disque, du côté du texte, ce qui équilibre la composition.
+ *
+ * L'angle de phase (21°) est le seul réglage qui compte ici, et il a été MESURÉ plutôt que
+ * choisi à l'œil. À 39°, la valeur d'origine, seuls 74 % du disque terrestre passaient
+ * au-dessus du plancher de lisibilité et 82 % de celui de Bennu : la géométrie n'en laissait
+ * pourtant que 11 % dans l'ombre, mais l'atténuation de Lambert noie une large bande bien avant
+ * le terminateur, d'autant plus visible que le corps est sombre. À 21° on monte à 80 % et 92 %.
+ *
+ * Ne pas aller beaucoup plus bas : le gain s'aplatit (16° ne rend que deux points de plus) et
+ * une lumière frontale supprime le modelé — la sphère redevient la pastille que ce rendu existe
+ * précisément pour éviter.
  */
 const LIGHT: [number, number, number] = (() => {
-  const raw: [number, number, number] = [-0.55, 0.3, 0.78];
+  const raw: [number, number, number] = [-0.32, 0.17, 0.93];
   const norm = Math.hypot(...raw);
   return [raw[0] / norm, raw[1] / norm, raw[2] / norm];
 })();
+
+/**
+ * Direction de la lumière, normalisée. Exportée pour les tests : sans elle, une assertion sur
+ * l'ombre portée doit coder en dur des coordonnées calculées à la main pour une valeur donnée
+ * de `LIGHT` — et tombe dès qu'on règle l'éclairage, en signalant un défaut qui n'existe pas.
+ * Un test doit suivre la propriété, pas le chiffre.
+ */
+export const LIGHT_DIRECTION: readonly [number, number, number] = LIGHT;
 
 /** Lueur minimale de la face nuit : noire pure, la sphère disparaîtrait dans le fond. */
 const AMBIENT = 0.035;
