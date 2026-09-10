@@ -333,11 +333,18 @@ export function renderBodyPage(
     escapeHtml(page.heading)
   );
   html = replaceBetween(html, '<noscript>', '</noscript>', block);
-  // Le même contenu, visible des moteurs qui exécutent le script : sans lui, une page rendue
-  // par un crawler moderne ne verrait que le canevas WebGL et aucun mot à indexer.
+  // Le même contenu, cette fois hors de `<noscript>` : une page rendue par un crawler moderne
+  // (qui exécute donc le script) ne verrait sinon qu'un canevas WebGL et aucun mot à indexer.
+  //
+  // PAS de `aria-hidden` ici, et c'est délibéré. Masqué à l'œil ET aux lecteurs d'écran, ce
+  // bloc n'aurait servi qu'aux robots — c'est la forme même du cloaking, et le risque de
+  // sanction dépasse de loin le gain. Sans lui, il devient ce qu'il aurait toujours dû être :
+  // l'alternative textuelle d'un canevas WebGL, c'est-à-dire la seule description de la scène
+  // qu'un utilisateur de lecteur d'écran arrivant sur `/jupiter/` puisse entendre. Utile à
+  // quelqu'un, donc légitime pour un moteur.
   html = html.replace(
     '</noscript>',
-    `</noscript><section class="sr-only" aria-hidden="true">${block}</section>`
+    `</noscript><section class="sr-only">${block}</section>`
   );
   return html;
 }
