@@ -159,6 +159,9 @@ describe('SMALL_BODIES catalogue', () => {
     ['pallas', new Date('2000-01-01T12:00:00Z'), 2.144],
     ['hygiea', new Date('2000-01-01T12:00:00Z'), 2.795],
     ['halley', new Date('1986-02-09T00:00:00Z'), 0.575],
+    // Bennu rejoint cette famille : géocroiseur sans binaire Horizons, donc entièrement
+    // dépendant de ces éléments. Référence = vecteur d'état Horizons à la même époque.
+    ['bennu', new Date('2000-01-01T12:00:00Z'), 0.9613],
   ] as const)(
     '%s heliocentric distance matches the real Horizons ephemeris within tolerance',
     (name, date, expectedAU) => {

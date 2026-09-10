@@ -17,6 +17,7 @@ import type { CelestialBodyConfig, UnknownableField } from '@/types';
 import { bodyAccentColor, hexToRgbTriplet, onAccentChange } from './bodyAccent';
 import {
   convertDistanceKm,
+  distanceDecimals,
   convertTemperatureC,
   onUnitSystemChange,
 } from '@/core/units';
@@ -162,7 +163,15 @@ function buildStats(cfg: CelestialBodyConfig): Stat[] {
 
   if (d.radiusKm) {
     const radius = convertDistanceKm(d.radiusKm);
-    push(t('stat.radius'), `${num(radius.value)} ${radius.unit}`);
+    // Décimales selon l'ordre de grandeur. Sans ça un corps sous le kilomètre s'affichait
+    // « 0 km » : Bennu, 242 mètres de rayon, annonçait donc zéro — faux, et faux d'une façon
+    // qui a l'air d'un bug de données alors que la donnée est juste. L'arrondi par défaut
+    // convient aux planètes parce qu'elles se comptent en milliers de kilomètres, pas parce
+    // qu'il serait correct en général.
+    push(
+      t('stat.radius'),
+      `${num(radius.value, distanceDecimals(radius.value))} ${radius.unit}`
+    );
   }
   if (d.distanceAU !== undefined) {
     const distFromParent = convertDistanceKm(d.distanceAU * KM_PER_AU);

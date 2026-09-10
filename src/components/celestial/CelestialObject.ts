@@ -14,6 +14,7 @@ import * as THREE from 'three';
 import { buildLayers } from '@/components/celestial/celestialLayers';
 import { applyTexture } from '@/components/celestial/celestialTextures';
 import { KM_PER_AU, SQRT_K } from '@/core/ScaleService';
+import { boundingRadius, fitScale } from '@/core/modelFit';
 import {
   GEOMETRY_SEGMENTS_HI,
   createSphereGeometry,
@@ -111,6 +112,11 @@ export default class CelestialObject {
   private _cloudShadow?: CloudShadowUniforms;
   // Uniforms d'ombre portée de la planète sur son anneau (Saturne).
   private _ringShadow?: RingShadowUniforms;
+  // Modèle de forme d'un corps irrégulier. Propriété EXPLICITE : ces maillages ne passent pas
+  // par `layers` (qui suppose une couche = un mesh nommé, itérée par les textures et le morph
+  // d'échelle), donc rien ne les libérerait sans cette référence. Disposés dans dispose().
+  private _modelRoot: THREE.Group | null = null;
+  private _modelMeshes: THREE.Mesh[] = [];
   private readonly _ringWorldPos = new THREE.Vector3();
   // Uniforms de clair de Lune du matériau surface (Terre) : la face nuit reçoit
   // une lueur diffuse selon la position réelle de la Lune (réflecteur).
@@ -208,6 +214,7 @@ export default class CelestialObject {
     if (ring && !Array.isArray(ring.material))
       this._ringShadow = getRingShadowUniforms(ring.material);
     if (this.layers.has('ring')) void this._loadRingTexture();
+    if (this.config.model) void this._loadShapeModel();
 
     // Les corps sans loadPriority (astéroïdes/comètes du catalogue, hors couche instrument
     // 2D) ne sont pas sur le chemin critique du boot : repousser leur texture après la
@@ -1195,6 +1202,82 @@ export default class CelestialObject {
   }
 
   // ============================================================================
+  // MODÈLE DE FORME (corps irréguliers)
+  // ============================================================================
+
+  /**
+   * Charge le maillage déclaré par `config.model` et masque la sphère.
+   *
+   * La sphère n'est jamais supprimée, seulement rendue invisible : tout échec — réseau, 404,
+   * glTF illisible — laisse le corps affiché en sphère plutôt qu'en trou noir. Le repli est
+   * donc l'état par défaut, pas une branche qu'on aurait pu oublier d'écrire.
+   *
+   * Le maillage est REDIMENSIONNÉ sur le rayon du catalogue à partir de sa propre sphère
+   * englobante : le fichier peut être en kilomètres, en mètres ou en unités arbitraires, la
+   * scène n'a pas à le savoir. C'est aussi ce qui garantit qu'un modèle mal exporté ne fasse
+   * pas soudain mille fois la taille de sa planète.
+   */
+  private async _loadShapeModel(): Promise<void> {
+    const model = this.config.model;
+    if (!model) return;
+    try {
+      const { GLTFLoader } =
+        await import('three/examples/jsm/loaders/GLTFLoader.js');
+      const gltf = await new GLTFLoader().loadAsync(model.url);
+      if (this._disposed) return;
+
+      const meshes: THREE.Mesh[] = [];
+      gltf.scene.traverse((child) => {
+        if ((child as THREE.Mesh).isMesh) meshes.push(child as THREE.Mesh);
+      });
+      if (meshes.length === 0)
+        throw new Error('glTF sans maillage — on garde la sphère');
+
+      // Recentre puis met à l'échelle du rayon catalogue, quelle que soit l'unité du fichier.
+      const box = new THREE.Box3().setFromObject(gltf.scene);
+      const centre = box.getCenter(new THREE.Vector3());
+      // Rayon mesuré sur les SOMMETS — surtout pas via `Box3.getBoundingSphere`, qui
+      // circonscrit la BOÎTE et vaut √3 fois trop pour un corps rond. Le calcul vit dans
+      // `core/modelFit.ts`, où il est testé : il a déjà été faux une fois.
+      const world: number[] = [];
+      const vertex = new THREE.Vector3();
+      for (const mesh of meshes) {
+        const attribute = mesh.geometry.getAttribute('position');
+        if (!attribute) continue;
+        mesh.updateWorldMatrix(true, false);
+        for (let i = 0; i < attribute.count; i++) {
+          vertex.fromBufferAttribute(attribute as THREE.BufferAttribute, i);
+          mesh.localToWorld(vertex);
+          world.push(vertex.x, vertex.y, vertex.z);
+        }
+      }
+      const measured = boundingRadius(world, [centre.x, centre.y, centre.z]);
+      const scale = fitScale(measured, this.config.radius);
+      if (scale === null)
+        throw new Error('modèle de rayon inexploitable — on garde la sphère');
+      gltf.scene.position.copy(centre).multiplyScalar(-1);
+      const root = new THREE.Group();
+      root.name = `${this.name}_model`;
+      root.add(gltf.scene);
+      root.scale.setScalar(scale);
+
+      this._modelRoot = root;
+      this._modelMeshes = meshes;
+      this._meshGroup.add(root);
+      const surface = this.layers.get('surface');
+      if (surface) surface.visible = false;
+      Logger.info(
+        `[CelestialObject] Shape model loaded for "${this.name}" (${meshes.length} mesh(es))`
+      );
+    } catch (error) {
+      // Volontairement non fatal : la sphère est déjà là et reste affichée.
+      Logger.warn(
+        `[CelestialObject] Shape model failed for "${this.name}", keeping the sphere: ${String(error)}`
+      );
+    }
+  }
+
+  // ============================================================================
   // CLEANUP
   // ============================================================================
 
@@ -1241,6 +1324,17 @@ export default class CelestialObject {
     this._surfaceGeoHi?.dispose();
     this._surfaceGeoStd = null;
     this._surfaceGeoHi = null;
+    // Modèle de forme : hors de `layers`, donc libéré ici et nulle part ailleurs.
+    for (const mesh of this._modelMeshes) {
+      mesh.geometry?.dispose();
+      const materials = Array.isArray(mesh.material)
+        ? mesh.material
+        : [mesh.material];
+      for (const material of materials) material?.dispose();
+    }
+    this._modelMeshes = [];
+    this._modelRoot?.removeFromParent();
+    this._modelRoot = null;
     Logger.warn(`[CelestialObject] Disposed "${this.name}"`);
   }
 }

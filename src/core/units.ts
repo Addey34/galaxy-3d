@@ -59,6 +59,21 @@ export function convertDistanceKm(km: number): { value: number; unit: string } {
     : { value: km / KM_PER_MI, unit: 'mi' };
 }
 
+/**
+ * Nombre de décimales pour afficher une distance, selon son ordre de grandeur.
+ *
+ * L'arrondi à l'entier convient aux planètes parce qu'elles se comptent en milliers de
+ * kilomètres, pas parce qu'il serait correct en général : appliqué à Bennu, 242 mètres de
+ * rayon, il affichait « 0 km ». Une donnée juste présentée comme un zéro se lit comme un bug
+ * de données, et personne ne va vérifier le catalogue pour s'en assurer.
+ */
+export function distanceDecimals(value: number): number {
+  const magnitude = Math.abs(value);
+  if (magnitude < 1) return 3;
+  if (magnitude < 100) return 1;
+  return 0;
+}
+
 /** °C → valeur + unité dans le système courant. */
 export function convertTemperatureC(celsius: number): {
   value: number;

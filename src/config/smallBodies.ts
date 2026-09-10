@@ -13,7 +13,7 @@
  * depuis un JSON streamé (phase ultérieure) plutôt que des littéraux.
  */
 import { Body } from 'astronomy-engine';
-import type { CelestialBodyConfig, TextureQuality } from '@/types';
+import type { CelestialBodyConfig, ModelConfig, TextureQuality } from '@/types';
 import { exploCameraDistance } from '@/core/ScaleService';
 import { DEG_TO_RAD as D2R } from '@/core/MathConstants';
 
@@ -49,6 +49,8 @@ export interface SmallBodyElements {
   /** Couleur de secours (0xRRGGBB) quand aucune texture de surface n'existe —
    *  requise par `catalogValidation` si `surfaceResolutions` est absent. */
   fallbackColor?: number;
+  /** Modèle de forme 3D (corps irrégulier) — la sphère reste le repli. Voir `ModelConfig`. */
+  model?: ModelConfig;
   /** Rayon visuel en mode Éducatif. Absent = 0,1 unité. */
   visualRadius?: number;
   /** Période de rotation sidérale (heures). */
@@ -117,6 +119,7 @@ export function smallBodyToConfig(el: SmallBodyElements): CelestialBodyConfig {
     ...(el.fallbackColor !== undefined
       ? { fallbackColor: el.fallbackColor }
       : {}),
+    ...(el.model ? { model: el.model } : {}),
     ...(el.satellites ? { satellites: el.satellites } : {}),
     ...(el.rotationBody !== undefined ? { rotationBody: el.rotationBody } : {}),
     realData: {
@@ -849,6 +852,58 @@ export const SMALL_BODY_ELEMENTS: readonly SmallBodyElements[] = [
     wiki: {
       en: 'https://en.wikipedia.org/wiki/Halley%27s_Comet',
       fr: 'https://fr.wikipedia.org/wiki/Com%C3%A8te_de_Halley',
+    },
+  },
+  {
+    name: 'bennu',
+    displayName: { en: 'Bennu', fr: 'Bennu' },
+    // Éléments osculateurs JPL Horizons EXACTEMENT à cette époque (COMMAND '101955;',
+    // EPHEM_TYPE=ELEMENTS, TLIST=2451545.0). Vecteur d'état à la même date : 0,961301 UA —
+    // c'est ce que le test de régression compare, comme pour les quatre corps ci-dessus.
+    a: 1.12892336246788,
+    e: 0.2046521729007511,
+    iDeg: 6.025536314644479,
+    omDeg: 2.178544486232719,
+    wDeg: 65.67192633324575,
+    maDeg: 35.41801662915039,
+    epoch: '2000-01-01T12:00:00Z',
+    // Diamètre 0,48444 km (JPL SBDB, ±0,0003) → rayon moyen.
+    radiusKm: 0.24222,
+    kind: 'asteroid',
+    color: 0x6b6560,
+    // Pas de texture : la surface de Bennu n'a pas de mosaïque équirectangulaire publiée à
+    // laquelle on puisse se fier. C'est la FORME qui la fait reconnaître, pas sa couleur.
+    fallbackColor: 0x59544f,
+    model: {
+      url: '/assets/models/bennu/bennu.glb',
+      credit:
+        'NASA/Goddard Scientific Visualization Studio — OSIRIS-REx OLA v20 PTM global shape model (NASA/University of Arizona/CSA/York University/MDA), décimé pour le web.',
+    },
+    rotationHours: 4.296061,
+    // Obliquité DÉRIVÉE, pas recopiée : pôle SBDB (RA 85,4522°, Dec −60,3678°) converti en
+    // écliptique puis comparé à la normale orbitale (i, Ω ci-dessus) → 177,6°. Bennu tourne
+    // donc à l'envers, ce qui est bien la valeur publiée — le calcul la retrouve.
+    axialTiltDeg: 177.6,
+    // GM = 4,8904e-9 km³/s² (SBDB) ÷ G → 7,33e10 kg.
+    massKg: 7.33e10,
+    moonCount: 0,
+    unknown: {
+      gravity: {
+        en: 'About 8e-5 m/s2, a hundred-thousandth of Earth: a walking pace would put you into orbit, and the usual two-decimal figure would read as zero.',
+        fr: "Environ 8e-5 m/s2, cent-millième de celle de la Terre : marcher vite suffirait à se mettre en orbite, et l'affichage habituel à deux décimales lirait zéro.",
+      },
+      meanTempC: {
+        en: 'Surface temperature swings by more than 100 C over its 4.3-hour day: a mean would describe no real moment.',
+        fr: 'La température de surface varie de plus de 100 C au fil de sa journée de 4,3 heures : une moyenne ne décrirait aucun instant réel.',
+      },
+    },
+    description: {
+      en: 'A 500-metre rubble pile shaped like a spinning top, visited by OSIRIS-REx, which brought a sample of it back to Earth in 2023.',
+      fr: 'Un amas de gravats de 500 mètres en forme de toupie, visité par OSIRIS-REx, qui en a rapporté un échantillon sur Terre en 2023.',
+    },
+    wiki: {
+      en: 'https://en.wikipedia.org/wiki/101955_Bennu',
+      fr: 'https://fr.wikipedia.org/wiki/(101955)_Bennu',
     },
   },
 ];

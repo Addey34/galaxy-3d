@@ -53,6 +53,26 @@ Before adding or replacing an asset, record its source, license and attribution 
 `texture-sources.json` (and here if it introduces a new licence class). Do not assume that the
 PolyForm license covers images, textures or fonts.
 
+## 3D shape models
+
+`public/assets/models/bennu/bennu.glb` — asteroid (101955) Bennu.
+
+- **Source**: NASA/Goddard Scientific Visualization Studio, *Global Bennu 3D Model — OLA v20 PTM*
+  (<https://svs.gsfc.nasa.gov/5069>).
+- **Data credit**: NASA / University of Arizona / CSA / York University / MDA, from the
+  OSIRIS-REx laser altimeter (OLA). Public domain, as NASA-produced work.
+- **Modification**: reduced from 3,366,134 to 22,811 triangles by vertex clustering with
+  `scripts/decimate-shape-model.mjs`, so it can be served on the web (60.6 MB → 400 KiB). No
+  geometry was invented: the script reports the shape statistics before and after, and the two
+  that characterise the body are unchanged (radius standard deviation 6.00 % → 6.03 %, equator
+  to pole ratio 1.118 → 1.119). The credit above is also embedded in the file's glTF `asset.copyright`.
+
+A mesh may not enter this repository without a source and a credit — `ModelConfig.credit` is
+required by the type, and a test rejects an empty or unattributed one. Note that "NASA-published"
+is not by itself a guarantee of scientific content: the only small-body mesh in the
+`nasa/NASA-3D-Resources` repository is a decorative sphere, not a shape model. Measure before
+trusting a file (see `docs/UNIVERSE_CATALOG.md` § "Corps irreguliers").
+
 ## Ephemerides and external data
 
 The binary ephemerides under `public/assets/ephemerides/` are generated from NASA/JPL Horizons.

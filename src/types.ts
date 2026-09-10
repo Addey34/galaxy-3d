@@ -70,6 +70,28 @@ export interface TextureResolutions {
   lights?: TextureQuality[];
 }
 
+/**
+ * Modèle de forme 3D d'un corps irrégulier (astéroïde, noyau cométaire).
+ *
+ * Une sphère texturée ne dit rien de vrai d'un corps de quelques centaines de mètres : ce qui
+ * distingue Bennu, c'est sa forme de toupie, pas sa couleur. Le maillage vient d'un modèle de
+ * forme scientifique décimé par `scripts/decimate-shape-model.mjs`.
+ *
+ * **La sphère reste construite** même quand un modèle est déclaré : elle est simplement masquée
+ * quand le maillage arrive. Le repli n'est donc pas un cas particulier à écrire, c'est l'état
+ * par défaut — réseau coupé, fichier absent, glTF illisible, appareil qui abandonne : le corps
+ * reste visible et rond, jamais absent.
+ */
+export interface ModelConfig {
+  /** Chemin du .glb depuis la racine du site (`/assets/models/{body}/{body}.glb`). */
+  url: string;
+  /**
+   * Crédit à afficher. Obligatoire : un maillage tiers sans provenance ne doit pas entrer dans
+   * le dépôt (`scripts/texture-sources.json` tient la même règle pour les textures).
+   */
+  credit: string;
+}
+
 export interface RingConfig {
   bodyName: string;
   innerRadius: number;
@@ -107,6 +129,8 @@ export interface CelestialBodyConfig {
   textures?: TextureConfig;
   /** Couleur de secours pour représenter un corps sans texture locale. */
   fallbackColor?: number;
+  /** Modèle de forme 3D — remplace la sphère quand il charge. Voir `ModelConfig`. */
+  model?: ModelConfig;
   /** Teinte du halo atmosphérique (Fresnel). Défaut : bleu ciel. */
   atmosphereColor?: number;
   ring?: RingConfig;

@@ -10,7 +10,7 @@ Ce document definit ce que Galaxy peut deja representer, ce qui peut etre ajoute
 | Planetes                   | Mercure, Venus, Terre, Mars, Jupiter, Saturne, Uranus, Neptune | astronomy-engine                                     | Spheres texturees, couches optionnelles |
 | Satellites                 | 29 lunes, de la Lune aux quatre petites lunes de Pluton         | astronomy-engine (Lune, galileennes), sinon binaires Horizons relatifs au parent, repli keplerien | Spheres texturees, bump pour la Lune    |
 | Planetes naines            | Ceres, Pluton, Eris, Haumea, Makemake, Orcus, Quaoar, Gonggong, Sedna | Horizons local puis Kepler                     | Spheres texturees                       |
-| Petits corps               | Vesta, Pallas, Hygiea, Halley                                  | Elements orbitaux Kepler, sans repli Horizons        | Spheres texturees et orbites            |
+| Petits corps               | Vesta, Pallas, Hygiea, Halley, Bennu (modele de forme 3D)      | Elements orbitaux Kepler, sans repli Horizons        | Spheres texturees et orbites            |
 | Collections instrumentales | Champ SBDB des petits corps, filtrable par categorie (NEO, cometes, TNO, ceinture principale) | Donnees chargees en couche UI  | Marqueurs 2D, pas de meshes physiques   |
 | Engins spatiaux            | 11 missions, de Voyager 1 a Hayabusa2                          | Binaires Horizons bornes a la couverture reelle de chaque mission | Marqueurs 2D en couche instrument, mode Exploration uniquement |
 
@@ -48,7 +48,33 @@ Les asteroides et noyaux cometaires peuvent commencer par une sphere visuelle si
 - les metres, l'orientation et le centre de masse documentes ;
 - un fallback sphere explicite pour les appareils faibles.
 
-Le contrat de modele n'existe pas encore dans CelestialBodyConfig. Un fichier .glb ne doit donc pas etre depose seul dans le depot : il faudra d'abord ajouter ModelConfig, un proprietaire de ressources et un chemin dispose().
+**Le contrat existe depuis 2026-09-10** : `ModelConfig` dans `src/types.ts` (`url` + `credit`,
+tous deux obligatoires), chargement paresseux dans `CelestialObject._loadShapeModel()`,
+proprietaire explicite (`_modelRoot` / `_modelMeshes`) et liberation dans `dispose()`. Bennu est
+le premier corps a l'utiliser.
+
+**La sphere reste toujours construite.** Le modele ne la remplace pas, il la masque. Le repli
+n'est donc pas une branche qu'on pourrait oublier d'ecrire : reseau coupe, 404, glTF illisible,
+appareil qui abandonne — le corps reste visible et rond. Un test verifie que tout corps declarant
+un modele a bien de quoi s'afficher sans lui (texture ou `fallbackColor`).
+
+**Deux pieges payes une fois**, tous deux invisibles sans mesure :
+
+- **Un modele « leger » trouve en ligne n'est pas forcement un modele de forme.** Celui du depot
+  NASA-3D-Resources, seul petit corps qu'il contienne, est une sphere bosselee : ecart-type du
+  rayon 0,76 % et rapport equateur/poles 0,999, alors que Bennu est une toupie a 6,00 % et 1,118.
+  Son maillage est d'ailleurs nomme « Fake ». Mesurer ces deux nombres AVANT d'integrer un
+  maillage, avec `scripts/decimate-shape-model.mjs` qui les imprime.
+- **`Box3.getBoundingSphere()` ne donne pas le rayon d'un corps** mais celui de la sphere
+  circonscrite a la BOITE, soit la demi-diagonale — √3 fois trop pour un corps rond. Le modele
+  sortait 42 % trop petit sans que rien ne le signale. Le calcul vit maintenant dans
+  `core/modelFit.ts`, pur et teste.
+
+**Poids.** Les modeles scientifiques publies sont hors de portee du web : celui de Bennu fait
+3,37 M de triangles et 60 Mo. `scripts/decimate-shape-model.mjs` le ramene a 22,8 k triangles et
+400 Kio par regroupement de sommets, en imprimant avant/apres les deux statistiques de forme —
+sur Bennu 6,00 % → 6,03 % et 1,118 → 1,119, donc la signature du corps survit. Le fichier produit
+est deterministe.
 
 ### Anneaux, atmospheres et champs
 
@@ -80,6 +106,7 @@ Ils necessitent une trajectoire temporelle, un referentiel, une echelle physique
 - [x] Lunes mineures de Saturne, Uranus, Neptune et Pluton (Mimas, Tethys, Dione, Hyperion, Miranda, Ariel, Umbriel, Titania, Oberon, Protee, Nereide, Styx, Nix, Kerberos, Hydra) et Amalthee.
 - [x] Transneptuniens Orcus, Quaoar, Gonggong et Sedna (vague A ci-dessous, partiellement close : Salacia et Varuna restent).
 - [x] Vague C close : onze missions (Voyager 1 et 2, Parker Solar Probe, James Webb, New Horizons, Cassini, Juno, Rosetta, BepiColombo, OSIRIS-REx, Hayabusa2). Hubble exclu pour cause, voir la vague C ci-dessous.
+- [x] Contrat ModelConfig + premier corps a maillage reel : Bennu, modele de forme OSIRIS-REx decime (vague A, asteroides remarquables — Eros, Itokawa, Ryugu, Apophis, Ida restent).
 - [x] Population SBDB filtrable par categorie, en couche instrument 2D (amorce de la vague B pour la ceinture principale et Kuiper).
 
 Le catalogue fait foi, pas cette liste, et **rien ne verifie qu'elle reste juste** : elle a deja
