@@ -59,6 +59,20 @@ describe('pages d’atterrissage par corps', () => {
     }
   });
 
+  it('garde les titres dans le budget affiché par un moteur', () => {
+    // Mesuré : le premier format tenait en 58 à 65 caractères et 43 des 51 titres se faisaient
+    // tronquer. Un titre coupé perd son ellipse au mauvais endroit et n'apporte rien de plus.
+    for (const page of pages) {
+      expect(
+        page.title.length,
+        `${page.slug} : « ${page.title} »`
+      ).toBeLessThanOrEqual(60);
+      // Et le NOM DU CORPS ouvre le titre : c'est le mot que quelqu'un cherche, il doit
+      // survivre à toute troncature quelle qu'en soit la règle.
+      expect(page.title.startsWith(page.displayName)).toBe(true);
+    }
+  });
+
   it('garde les descriptions dans le budget d’un extrait de résultat', () => {
     for (const page of pages) {
       expect(page.description.length).toBeLessThanOrEqual(160);

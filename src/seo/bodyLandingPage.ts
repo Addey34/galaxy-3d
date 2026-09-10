@@ -179,7 +179,13 @@ export function bodyLandingPages(
     pages.push({
       slug,
       displayName,
-      title: `${displayName} in 3D — live position, size and orbit | Solar System 3D`,
+      // Titre COURT, sans nom de site. Mesuré sur les 51 pages générées : le format précédent
+      // (« … — live position, size and orbit | Solar System 3D ») faisait 58 à 65 caractères et
+      // 43 d'entre eux se faisaient tronquer dans les résultats de recherche. Le nom du corps
+      // était déjà en tête, donc la coupe mangeait le nom du site plutôt que le sujet — mais
+      // une ellipse en fin de titre reste du bruit. Google ajoute lui-même le nom du site quand
+      // il le juge utile ; le budget est mieux dépensé sur ce qui distingue la page.
+      title: `${displayName} in 3D — live position and orbit`,
       // La phrase d'appel est ajoutée APRÈS la troncature : sinon c'est elle qui se fait
       // couper en plein milieu dans les résultats de recherche, ce qui est exactement
       // l'endroit où elle doit être lisible.
