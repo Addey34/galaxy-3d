@@ -63,4 +63,74 @@ export const SPACECRAFT_MISSIONS: SpacecraftMission[] = [
     launchDate: '2021-12-25',
     color: 0x88ddff,
   },
+  {
+    name: 'new-horizons',
+    displayName: { en: 'New Horizons', fr: 'New Horizons' },
+    description: {
+      en: 'Launched in 2006, flew past Pluto in 2015 and the Kuiper belt object Arrokoth in 2019.',
+      fr: 'Lancée en 2006, elle a survolé Pluton en 2015 puis l’objet de la ceinture de Kuiper Arrokoth en 2019.',
+    },
+    launchDate: '2006-01-19',
+    color: 0xc9a0ff,
+  },
+  {
+    name: 'cassini',
+    displayName: { en: 'Cassini', fr: 'Cassini' },
+    description: {
+      en: 'Launched in 1997, orbited Saturn from 2004 and ended its mission inside the planet in 2017.',
+      fr: 'Lancée en 1997, en orbite autour de Saturne à partir de 2004, elle a fini sa mission dans la planète en 2017.',
+    },
+    launchDate: '1997-10-15',
+    color: 0x5fd7c8,
+  },
+  {
+    name: 'juno',
+    displayName: { en: 'Juno', fr: 'Juno' },
+    description: {
+      en: 'Launched in 2011, orbiting Jupiter since 2016 on a long polar orbit.',
+      fr: 'Lancée en 2011, en orbite polaire très allongée autour de Jupiter depuis 2016.',
+    },
+    launchDate: '2011-08-05',
+    color: 0xff92c2,
+  },
+  {
+    name: 'rosetta',
+    displayName: { en: 'Rosetta', fr: 'Rosetta' },
+    description: {
+      en: 'Launched in 2004, the first mission to orbit a comet, and to land on one with Philae in 2014.',
+      fr: 'Lancée en 2004, première mission à se mettre en orbite autour d’une comète et à s’y poser avec Philae en 2014.',
+    },
+    launchDate: '2004-03-02',
+    color: 0x9ee87a,
+  },
+  {
+    name: 'bepicolombo',
+    displayName: { en: 'BepiColombo', fr: 'BepiColombo' },
+    description: {
+      en: 'Launched in 2018, on its way to Mercury through a long series of planetary flybys.',
+      fr: 'Lancée en 2018, en route vers Mercure via une longue série de survols planétaires.',
+    },
+    launchDate: '2018-10-20',
+    color: 0x7aa7ff,
+  },
+  {
+    name: 'osiris-rex',
+    displayName: { en: 'OSIRIS-REx', fr: 'OSIRIS-REx' },
+    description: {
+      en: 'Launched in 2016, collected a sample from asteroid Bennu and returned it to Earth in 2023.',
+      fr: 'Lancée en 2016, elle a prélevé un échantillon de l’astéroïde Bennu et l’a rapporté sur Terre en 2023.',
+    },
+    launchDate: '2016-09-08',
+    color: 0xe8d44d,
+  },
+  {
+    name: 'hayabusa2',
+    displayName: { en: 'Hayabusa2', fr: 'Hayabusa2' },
+    description: {
+      en: 'Launched in 2014, sampled asteroid Ryugu and returned the capsule to Earth in 2020.',
+      fr: 'Lancée en 2014, elle a prélevé l’astéroïde Ryugu et rapporté sa capsule sur Terre en 2020.',
+    },
+    launchDate: '2014-12-03',
+    color: 0xff8a4d,
+  },
 ];

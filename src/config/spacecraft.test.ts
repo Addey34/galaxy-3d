@@ -106,4 +106,84 @@ describe('spacecraft ephemerides stay within plausible bounds', () => {
       ).toBeNull();
     }
   });
+
+  it('stops showing a mission once its trajectory solution ends', async () => {
+    // Cassini a plongé dans Saturne en 2017, Rosetta s'est posée sur 67P en 2016. Une sonde
+    // détruite qui continue de voler est le genre de faute que personne ne signale et que rien
+    // ne fait planter : la couverture du manifeste est la seule chose qui l'en empêche.
+    // Ce test tient aussi la borne HAUTE de chaque fenêtre, lue dans la réponse de Horizons
+    // plutôt que devinée — s'en écarter produirait des positions extrapolées, pas une erreur.
+    vi.stubGlobal('window', {
+      location: {
+        href: 'https://example.test/assets/ephemerides/manifest.json',
+        origin: 'https://example.test',
+      },
+    });
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (url: string | URL) => {
+        const path = new URL(url.toString()).pathname.split('/').pop()!;
+        const bytes = readFileSync(join(EPHEMERIS_DIR, path));
+        if (path.endsWith('.json'))
+          return {
+            ok: true,
+            json: async () => JSON.parse(bytes.toString('utf8')),
+          };
+        const buffer = bytes.buffer.slice(
+          bytes.byteOffset,
+          bytes.byteOffset + bytes.byteLength
+        );
+        return { ok: true, arrayBuffer: async () => buffer };
+      })
+    );
+    const service = await HorizonsEphemerisService.load(
+      'https://example.test/assets/ephemerides/manifest.json'
+    );
+
+    for (const [name, ended] of [
+      ['cassini', '2017-09-15'],
+      ['rosetta', '2016-10-05'],
+    ] as const) {
+      const dayBefore = new Date(`${ended}T00:00:00Z`);
+      dayBefore.setUTCDate(dayBefore.getUTCDate() - 3);
+      expect(
+        service.getHeliocentricAU(name, dayBefore),
+        `${name}: should still fly three days before the end`
+      ).not.toBeNull();
+      expect(
+        service.getHeliocentricAU(name, new Date('2030-01-01T00:00:00Z')),
+        `${name}: mission is over, it must not keep flying`
+      ).toBeNull();
+    }
+  });
+});
+
+/**
+ * La date de lancement affichée est écrite à la main, alors que la couverture vient des
+ * données. Les deux doivent raconter la même histoire : Horizons commence sa solution au
+ * lancement réel, donc un écart de plus de quelques jours signale une date recopiée de
+ * travers — invisible autrement, puisqu'elle ne sert qu'à un libellé.
+ */
+describe('launch dates agree with the ephemeris coverage', () => {
+  const JD_TO_MS = 86_400_000;
+  const JD_UNIX_EPOCH = 2_440_587.5;
+
+  it.each(SPACECRAFT_MISSIONS.map((m) => [m.name, m.launchDate] as const))(
+    '%s launched %s',
+    (name, launchDate) => {
+      const entry = manifest.bodies[name];
+      const firstSample = new Date(
+        (entry.startJdTdb - JD_UNIX_EPOCH) * JD_TO_MS
+      );
+      const launched = new Date(`${launchDate}T00:00:00Z`);
+      const gapDays = (firstSample.getTime() - launched.getTime()) / JD_TO_MS;
+      expect(
+        gapDays,
+        `${name}: first sample is ${gapDays.toFixed(1)} days after the stated launch date`
+      ).toBeGreaterThanOrEqual(0);
+      expect(gapDays, `${name}: stated launch date looks wrong`).toBeLessThan(
+        5
+      );
+    }
+  );
 });

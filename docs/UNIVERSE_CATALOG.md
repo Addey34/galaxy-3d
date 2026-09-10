@@ -12,7 +12,7 @@ Ce document definit ce que Galaxy peut deja representer, ce qui peut etre ajoute
 | Planetes naines            | Ceres, Pluton, Eris, Haumea, Makemake, Orcus, Quaoar, Gonggong, Sedna | Horizons local puis Kepler                     | Spheres texturees                       |
 | Petits corps               | Vesta, Pallas, Hygiea, Halley                                  | Elements orbitaux Kepler, sans repli Horizons        | Spheres texturees et orbites            |
 | Collections instrumentales | Champ SBDB des petits corps, filtrable par categorie (NEO, cometes, TNO, ceinture principale) | Donnees chargees en couche UI  | Marqueurs 2D, pas de meshes physiques   |
-| Engins spatiaux            | Voyager 1 et 2, Parker Solar Probe, James Webb                 | Binaires Horizons bornes a la couverture reelle de chaque mission | Marqueurs 2D en couche instrument, mode Exploration uniquement |
+| Engins spatiaux            | 11 missions, de Voyager 1 a Hayabusa2                          | Binaires Horizons bornes a la couverture reelle de chaque mission | Marqueurs 2D en couche instrument, mode Exploration uniquement |
 
 Les textures actuelles sont dans public/assets/textures/. Le chargeur supporte actuellement des fichiers JPEG nommes par corps, couche et resolution. Les fichiers ephemerides Horizons sont locaux dans public/assets/ephemerides/ : le rendu deploye ne depend pas d'un appel reseau au demarrage.
 
@@ -79,7 +79,7 @@ Ils necessitent une trajectoire temporelle, un referentiel, une echelle physique
 - [x] Triton, Charon, Phobos et Deimos, avec vecteurs locaux Horizons relatifs au parent et textures USGS/NASA 1k.
 - [x] Lunes mineures de Saturne, Uranus, Neptune et Pluton (Mimas, Tethys, Dione, Hyperion, Miranda, Ariel, Umbriel, Titania, Oberon, Protee, Nereide, Styx, Nix, Kerberos, Hydra) et Amalthee.
 - [x] Transneptuniens Orcus, Quaoar, Gonggong et Sedna (vague A ci-dessous, partiellement close : Salacia et Varuna restent).
-- [x] Quatre premieres missions de la vague C : Voyager 1 et 2, Parker Solar Probe, James Webb.
+- [x] Vague C close : onze missions (Voyager 1 et 2, Parker Solar Probe, James Webb, New Horizons, Cassini, Juno, Rosetta, BepiColombo, OSIRIS-REx, Hayabusa2). Hubble exclu pour cause, voir la vague C ci-dessous.
 - [x] Population SBDB filtrable par categorie, en couche instrument 2D (amorce de la vague B pour la ceinture principale et Kuiper).
 
 Le catalogue fait foi, pas cette liste, et **rien ne verifie qu'elle reste juste** : elle a deja
@@ -112,9 +112,27 @@ Ces ensembles sont des representations de population. Ils ne doivent pas etre co
 
 ### Vague C - missions spatiales
 
-Premiers candidats : Voyager 1/2, New Horizons, Cassini, Juno, Parker Solar Probe, Rosetta/Philae, James Webb, Hubble, BepiColombo, OSIRIS-REx et Hayabusa2.
+**Close, a une exclusion motivee pres.** Onze missions sont livrees : Voyager 1 et 2, Parker
+Solar Probe, James Webb, New Horizons, Cassini, Juno, Rosetta, BepiColombo, OSIRIS-REx et
+Hayabusa2 (`src/config/spacecraft.ts`, marqueurs 2D en couche instrument, mode Exploration).
 
-Chaque mission devra avoir une fiche, une trajectoire locale versionnee et une date de validite. Les donnees de trajectoire ne doivent pas etre recuperees a chaque frame depuis une API distante.
+**Hubble est exclu deliberement**, ce n'est pas un oubli : il orbite a 540 km en 95 minutes. A
+l'echelle du Systeme solaire son marqueur se superposerait exactement a celui de la Terre, et
+l'echantillonnage a 4 jours des binaires ne represente rien d'une orbite de 95 minutes. On
+afficherait un point faux a un endroit deja occupe. Son ID Horizons est -48 si la couche
+instrument apprend un jour a zoomer sur l'orbite terrestre. Philae n'a pas non plus d'entree
+propre : pose sur 67P, sa position est celle de Rosetta a l'echelle ou on la regarde.
+
+Chaque mission a une fiche, une trajectoire locale versionnee et une date de validite. Les
+donnees de trajectoire ne sont jamais recuperees a chaque frame depuis une API distante.
+
+**La fenetre de validite est la partie qui demande du soin.** Contrairement a la theorie
+planetaire, la solution de trajectoire d'une sonde est bornee dans le temps. Chaque borne est
+LUE dans la reponse de Horizons, jamais devinee : demander une fenetre trop large fait repondre
+`No ephemeris for target "X" prior to / after <date>`, qui nomme les bornes reelles. En dehors,
+`getHeliocentricAU` rend `null` et la couche saute la sonde — c'est ainsi que Cassini cesse de
+voler apres sa plongee finale de 2017 et Rosetta apres son poser de 2016, ce qu'un test tient
+explicitement.
 
 ### Vague D - etoiles proches et exoplanetes
 

@@ -1,7 +1,7 @@
 {
   "version": 1,
   "source": "NASA/JPL Horizons",
-  "generatedAt": "2026-08-28T01:53:53.593Z",
+  "generatedAt": "2026-09-10T09:37:57.207Z",
   "frame": "ECLIPTIC_J2000",
   "center": "SUN",
   "units": "AU-D",
@@ -291,12 +291,68 @@
       "sampleCount": 1040
     },
     "jwst": {
-      "file": "jwst.0ce7b9ae8648.bin",
+      "file": "jwst.7a139f3d7ebd.bin",
       "target": "-170",
       "center": "sun",
       "startJdTdb": 2459574.5,
       "stepDays": 4,
       "sampleCount": 882
+    },
+    "new-horizons": {
+      "file": "new-horizons.dd654d07964b.bin",
+      "target": "-98",
+      "center": "sun",
+      "startJdTdb": 2453756.5,
+      "stepDays": 4,
+      "sampleCount": 4013
+    },
+    "cassini": {
+      "file": "cassini.cdcadb90ab09.bin",
+      "target": "-82",
+      "center": "sun",
+      "startJdTdb": 2450738.5,
+      "stepDays": 4,
+      "sampleCount": 1819
+    },
+    "juno": {
+      "file": "juno.d2d8d5ada7f4.bin",
+      "target": "-61",
+      "center": "sun",
+      "startJdTdb": 2455780.5,
+      "stepDays": 4,
+      "sampleCount": 1566
+    },
+    "rosetta": {
+      "file": "rosetta.e0c02fc00d85.bin",
+      "target": "-226",
+      "center": "sun",
+      "startJdTdb": 2453068.5,
+      "stepDays": 4,
+      "sampleCount": 1150
+    },
+    "bepicolombo": {
+      "file": "bepicolombo.6958cb2c4ebe.bin",
+      "target": "-121",
+      "center": "sun",
+      "startJdTdb": 2458413.5,
+      "stepDays": 4,
+      "sampleCount": 773
+    },
+    "osiris-rex": {
+      "file": "osiris-rex.f186c573d241.bin",
+      "target": "-64",
+      "center": "sun",
+      "startJdTdb": 2457641.5,
+      "stepDays": 4,
+      "sampleCount": 1235
+    },
+    "hayabusa2": {
+      "file": "hayabusa2.dff56b2da46d.bin",
+      "target": "-37",
+      "center": "sun",
+      "startJdTdb": 2456996.5,
+      "stepDays": 4,
+      "sampleCount": 1094
     }
   }
 }

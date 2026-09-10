@@ -176,6 +176,77 @@ const BODIES = [
     startTime: '2021-12-26',
     stopTime: '2031-08-23',
   },
+  // Vague C du catalogue (`docs/UNIVERSE_CATALOG.md`). Chaque fenêtre ci-dessous a été LUE
+  // dans la réponse de Horizons, pas devinée : demander une fenêtre trop large fait répondre
+  // « No ephemeris for target X prior to / after <date> », qui nomme les bornes réelles de la
+  // solution de trajectoire. On se place un jour à l'intérieur de chaque côté.
+  //
+  // HUBBLE est délibérément ABSENT, et ce n'est pas un oubli. Il orbite à 540 km en 95
+  // minutes : à l'échelle du Système solaire son marqueur se superposerait exactement à celui
+  // de la Terre, et un échantillonnage à 4 jours ne représente rien d'une orbite de 95 minutes
+  // — on afficherait un point faux à un endroit déjà occupé. Son ID Horizons est -48 si un
+  // jour la couche instrument sait zoomer sur l'orbite terrestre.
+  {
+    name: 'new-horizons',
+    target: '-98',
+    expectedName: 'new horizons',
+    center: 'sun',
+    startTime: '2006-01-21',
+    stopTime: '2049-12-31',
+  },
+  {
+    name: 'cassini',
+    target: '-82',
+    expectedName: 'cassini',
+    center: 'sun',
+    // Mission TERMINÉE : plongée finale dans Saturne le 15 septembre 2017, et la solution
+    // s'arrête là. Au-delà, `getHeliocentricAU` rend `null` et la couche saute la sonde —
+    // c'est le comportement voulu, une sonde détruite ne doit pas continuer de voler.
+    startTime: '1997-10-17',
+    stopTime: '2017-09-14',
+  },
+  {
+    name: 'juno',
+    target: '-61',
+    expectedName: 'juno',
+    center: 'sun',
+    startTime: '2011-08-07',
+    stopTime: '2028-09-29',
+  },
+  {
+    name: 'rosetta',
+    target: '-226',
+    expectedName: 'rosetta',
+    center: 'sun',
+    // Autre mission terminée : posée sur 67P le 30 septembre 2016.
+    startTime: '2004-03-04',
+    stopTime: '2016-10-03',
+  },
+  {
+    name: 'bepicolombo',
+    target: '-121',
+    expectedName: 'bepicolombo',
+    center: 'sun',
+    startTime: '2018-10-22',
+    stopTime: '2027-04-09',
+  },
+  {
+    name: 'osiris-rex',
+    target: '-64',
+    expectedName: 'osiris-rex',
+    center: 'sun',
+    startTime: '2016-09-10',
+    stopTime: '2030-03-20',
+  },
+  {
+    name: 'hayabusa2',
+    target: '-37',
+    // Horizons écrit « Hayabusa 2 », avec une espace ; la clé du catalogue n'en a pas.
+    expectedName: 'hayabusa 2',
+    center: 'sun',
+    startTime: '2014-12-05',
+    stopTime: '2026-11-25',
+  },
 ];
 
 function buildUrl(
