@@ -330,7 +330,7 @@ Réglages moteur dans `src/config/engine.ts`, catalogue des corps dans `src/conf
 ## Qualité et limites actuelles
 
 - `pnpm verify` passe (types + lint + tests unitaires) — voir `pnpm test` pour le compte à jour, ces chiffres évoluent trop souvent pour rester figés ici ;
-- `pnpm build` passe sans avertissement de taille : `three`, `astronomy-engine` et `tween` sont séparés, et le chunk applicatif reste autour de 120 kB minifié.
+- `pnpm build` passe sans avertissement de taille : `three`, `astronomy-engine` et `tween` sont séparés du chunk applicatif, qui reste autour de 107 kB gzippés (345 kB avant compression — c'est le premier chiffre qui décrit ce qui transite réellement).
 - Le mode Exploration est actif. Les vols caméra concurrents sont annulés et la cible suivie reste centrée, y compris à vitesse accélérée.
 - `IS_MOBILE` reste figé pour les réglages créés à l'initialisation (anticrénelage, ombres, textures) ; seul le plafond de pixel ratio est recalculé au resize.
 - `frame: 'parentRelative'` calcule `helio(corps) − helio(parent)`. Les lunes joviennes viennent d'Astronomy Engine ; les lunes saturniennes utilisent les vecteurs locaux NASA/JPL Horizons issus de SAT441.
@@ -340,9 +340,14 @@ Réglages moteur dans `src/config/engine.ts`, catalogue des corps dans `src/conf
 
 En résumé : d'abord rendre le projet visible (déploiement public, CI, SEO) et instructif
 (fiches d'information par corps, i18n FR/EN, transition animée Éducatif→Exploration), ensuite
-donner des raisons de revenir. Les permaliens, événements astronomiques, zoom optique FOV et
-visite guidée sont désormais livrés ; restent les lunes majeures et le mode hors-ligne (PWA). À terme,
-en faire une référence (missions spatiales, WebXR).
+donner des raisons de revenir, enfin en faire une référence.
+
+Les trois étapes sont livrées : permaliens, événements astronomiques, zoom optique FOV, visite
+guidée, lunes majeures sur éphémérides réelles, mode hors-ligne (PWA), tours guidés scriptés,
+missions spatiales, filtres de petits corps, mode capture, WebXR, et une page indexable par corps
+avec sa propre vignette de partage. Ce qui reste demande du matériel ou un humain : confirmer le
+vol libre WebXR sur un vrai casque, une passe lecteur d'écran (NVDA/VoiceOver) et une mesure FPS
+sur GPU physique.
 
 ## Documentation technique
 
@@ -350,7 +355,7 @@ en faire une référence (missions spatiales, WebXR).
 - [`docs/TESTING.md`](docs/TESTING.md) : stratégie et commandes de validation
 - [docs/UNIVERSE_CATALOG.md](docs/UNIVERSE_CATALOG.md) - catalogue, assets et feuille de route de l'univers
 - [`docs/PERMALINK_GALLERY.md`](docs/PERMALINK_GALLERY.md) : vues remarquables partageables par URL
-- [`AGENTS.md`](AGENTS.md) : règles de contribution pour les agents et développeurs
+- [`CONTRIBUTING.md`](CONTRIBUTING.md) : règles de contribution, ajout d'un corps, workflow de PR
 
 ## Contribuer
 
@@ -361,6 +366,11 @@ corps céleste (catalogue + textures + vérification), le workflow de PR et les 
 ## Déploiement
 
 Le site public est hébergé sur Firebase Hosting (`galaxy-ag`). La CI GitHub vérifie le projet ; le déploiement est réalisé sur Firebase Hosting.
+
+Le build émet, en plus du bundle, une page statique indexable par corps (`dist/jupiter/index.html`),
+le sitemap complet et une vignette de partage par corps (`dist/social/jupiter.jpg`, rendue depuis
+la texture déjà versionnée du corps). Tout cela est dérivé du catalogue et régénéré à chaque
+build : rien n'est committé. Voir `docs/ARCHITECTURE.md` § « Pages d'atterrissage par corps ».
 
 ```bash
 pnpm build

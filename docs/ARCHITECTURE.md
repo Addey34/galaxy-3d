@@ -31,6 +31,7 @@ requestAnimationFrame
 | `src/ui`                    | Contrôles DOM et overlays projetés                              | DOM, i18n et PublicAPI                 |
 | `src/i18n`                  | État de locale et traduction statique/dynamique                | DOM seulement dans `dom.ts`            |
 | `src/utils`                 | Helpers navigateur transverses et logging                       | Pas d'orchestration applicative        |
+| `src/seo`                   | Pages d'atterrissage par corps, sitemap, vignettes de partage   | Catalogue seulement — **jamais chargé par l'application** |
 | `scripts`                   | Génération d'assets réservée aux mainteneurs                   | Node.js et dépendances de dev          |
 
 ## Propriété des ressources
@@ -343,6 +344,69 @@ MODÈLE ne remonte pas — le calque sort noir opaque, avec ou sans correction. 
 pixels y serait verte pour une mauvaise raison ; c'est pourquoi le test de ces couches lit la
 largeur de crépuscule annoncée par le matériau (`twilight=` dans `?debug-meteo`) plutôt que des
 pixels.
+
+## Pages d'atterrissage par corps et vignettes de partage
+
+L'application est une URL unique : `?body=jupiter` est un paramètre, pas une route. Un moteur de
+recherche ne peut donc classer qu'UN sujet pour tout le site alors que le catalogue en contient
+une cinquantaine. `src/seo/` produit, au build, une vraie page indexable par corps
+(`dist/jupiter/index.html`) plus le sitemap complet et une vignette de partage par corps
+(`dist/social/jupiter.jpg`).
+
+**Ce module n'est jamais chargé par l'application.** Il n'est importé que par le plugin
+`bodyLandingPages()` de `vite.config.ts`, via `ssrLoadModule`, pour lire EXACTEMENT le même
+catalogue que l'app sans copie intermédiaire. Rien de tout cela n'entre dans le bundle client —
+c'est vérifiable en cherchant `renderSphere` dans `dist/assets/*.js`.
+
+### Quatre contraintes qui ont dicté la forme
+
+1. **Fichiers statiques, pas routes.** `dist/jupiter/index.html` est servi par Firebase avant la
+   réécriture SPA `** → /index.html`. Aucun changement d'hébergement ; en contrepartie une page
+   de corps ne peut pas porter `?body=` dans son URL.
+2. **Pas de script en ligne.** La CSP est `script-src 'self'` sans `unsafe-inline` : impossible
+   d'injecter le corps courant par un `<script>` généré. C'est le CHEMIN qui porte l'information,
+   relu par `core/permalink.ts::bodyFromPathname` — d'où `e2e/bodyLanding.spec.ts`, qui vérifie
+   ce comportement côté APPLICATION, là où les tests unitaires ne voient que le HTML.
+3. **Du contenu réel.** Chaque page porte la description du catalogue et les données mesurées de
+   ce corps. Cinquante coquilles identiques seraient du contenu dupliqué, exactement ce que
+   l'opération existe pour éviter.
+4. **Un repère absent doit CASSER le build.** `replaceBetween`/`replaceAttrAfter` lèvent une
+   erreur quand leur ancre a disparu du HTML. Un `replace` qui ne correspond plus est un no-op
+   silencieux : il produirait cinquante et une pages portant le titre de l'accueil, sans rien
+   pour le signaler. Une évolution de Vite ou d'`index.html` doit casser le build, pas le
+   référencement.
+
+### La vignette
+
+`src/seo/socialCard.ts` est pur (pixels et chaînes) ; le décodage/encodage d'image vit dans le
+plugin. La sphère est un vrai rendu — projection orthographique de la carte équirectangulaire du
+corps, éclairage lambertien en linéaire, bord lissé, assombrissement centre-bord pour une étoile
+qui émet au lieu d'être éclairée. Calcul JavaScript pur, sans GPU ni navigateur, donc
+DÉTERMINISTE : même entrée, même image, en local comme sur le runner.
+
+Trois règles à ne pas défaire :
+
+- **Les vignettes ne sont PAS sous `/assets/`**, où `firebase.json` déclare un cache immuable d'un
+  an. Leur nom est stable et leur contenu réécrit à chaque build ; un an de cache dessus, c'est
+  une vignette périmée qu'on ne peut plus corriger. Servies telles quelles, elles héritent du
+  `max-age=3600` par défaut — vérifié en production.
+- **`og:image:width`/`height` sont réécrites depuis `CARD_WIDTH`/`CARD_HEIGHT`**, pas laissées en
+  dur. Ce sont les deux nombres sur lesquels un réseau social réserve sa place avant d'avoir
+  téléchargé l'image.
+- **Chaque corps doit avoir une texture de surface OU un `fallbackColor`.** Sans l'un des deux il
+  sort en boule grise anonyme — une vignette pire que l'ancienne, parce qu'elle prétend montrer
+  ce corps-là. Le repli neutre du code existe pour ne pas casser le build ; c'est un test qui
+  empêche de s'en contenter.
+
+Le build échoue si une vignette manque ou sort vide : sinon la page se déploie, la balise pointe
+vers un 404, et l'aperçu de partage tombe silencieusement sur rien.
+
+**Limites connues.** Saturne est rendue sans ses anneaux, alors que c'est à eux qu'on la
+reconnaît : les projeter demande une ellipse, l'occultation par la sphère et son ombre portée.
+Et les octets produits ne sont identiques d'une machine à l'autre que si les polices le sont —
+le runner rend le texte en DejaVu Sans, un poste Windows en Segoe UI. La mise en page et les
+chiffres suscrits tiennent dans les deux cas (vérifié à l'écran sur l'artefact déployé), mais ne
+pas s'attendre à une comparaison d'empreinte entre local et production.
 
 ## Architecture météo
 

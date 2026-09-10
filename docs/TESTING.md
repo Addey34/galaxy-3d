@@ -66,6 +66,18 @@ au-dessus du plancher d'affichage. Quand une propriété se voit à l'écran et 
 c'est le niveau à viser — mais seulement là : une assertion en pixels coûte cher et se casse pour
 des raisons d'environnement (cf. la limite `DataTexture` documentée dans ce fichier même).
 
+**Pages d'atterrissage et vignettes de partage** (`src/seo/*.test.ts`) : ces artefacts ne
+naissent qu'au build et personne ne les regarde pendant le développement — une vignette ne
+s'affiche que dans une conversation, chez quelqu'un d'autre, une fois déployée. Les tests tiennent
+donc ce qui casserait en silence : chaque page a un titre, une description, un canonique et une
+vignette DISTINCTS des cinquante autres ; un repère disparu du HTML lève une erreur au lieu de
+produire cinquante et une copies de l'accueil ; la sphère est éclairée et détourée plutôt que
+plate et carrée ; le SVG reste bien formé quand le catalogue contient un chevron ; et chaque
+corps a soit une texture de surface, soit une couleur déclarée. Les chemins de texture sont
+vérifiés EXISTANTS sur disque : sinon le défaut n'apparaîtrait qu'au build, vingt minutes plus
+tard, sans nommer le corps en cause. Ce que ces tests ne voient pas, c'est l'application ouverte
+sur un tel chemin — c'est le rôle d'`e2e/bodyLanding.spec.ts`.
+
 Il n’y a pas encore de seuil de couverture chiffré : la priorité est la couverture comportementale
 des invariants physiques et des frontières d’architecture.
 

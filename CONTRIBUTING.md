@@ -106,6 +106,16 @@ Une seule entrée dans `CELESTIAL_CONFIG.bodies` (`src/config/bodies.ts`) :
 
 `assertUniqueBodyNames` rejette tout doublon de nom au chargement.
 
+**Ce que l'entrée déclenche ailleurs.** Le build en dérive aussi une page d'atterrissage
+indexable (`dist/<nom>/index.html`), son entrée de sitemap et sa vignette de partage
+(`dist/social/<nom>.jpg`). Deux conséquences concrètes :
+
+- Le nom de catalogue devient un SEGMENT D'URL. Il doit rester en `[a-z0-9-]` : un accent, un
+  espace ou un point produirait une URL encodée que l'application ne saurait plus relire, et la
+  page s'ouvrirait sur la vue d'ensemble au lieu du corps. Un test le vérifie.
+- Le corps doit avoir une texture de surface OU un `fallbackColor`. Sans l'un des deux, sa
+  vignette est une boule grise anonyme qui prétend le montrer. Un test le vérifie aussi.
+
 ### 4. Vérifier
 
 ```bash
