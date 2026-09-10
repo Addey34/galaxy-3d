@@ -149,6 +149,34 @@ describe('faits affichés', () => {
     );
   });
 
+  it('n’arrondit jamais un rayon RÉEL jusqu’à zéro', () => {
+    // Défaut vécu, et vécu DEUX FOIS. Bennu mesure 242 mètres de rayon ; l'arrondi à l'entier
+    // affichait « 0 km » — sur sa page comme sur sa vignette de partage. Corrigé d'abord dans
+    // la fiche de l'application seulement, parce que ce chemin-ci a son propre formateur : le
+    // défaut a survécu jusqu'à ce qu'on REGARDE l'image déployée. Une donnée juste présentée
+    // comme un zéro se lit comme un bug de données, et personne ne va vérifier le catalogue.
+    //
+    // On compare l'affiché à la SOURCE, pas à zéro dans l'absolu : un vrai zéro est légitime
+    // (l'obliquité d'Amalthée est nulle, son nombre de lunes aussi). Ce qu'on interdit, c'est
+    // qu'une grandeur non nulle sorte comme un zéro.
+    const flat = flattenBodies(CELESTIAL_CONFIG);
+    let checked = 0;
+    for (const page of pages) {
+      const radiusKm = flat.get(page.slug)?.realData?.radiusKm;
+      if (!radiusKm) continue;
+      const fact = page.facts.find((f) => f.label === 'Radius');
+      if (!fact) continue;
+      checked++;
+      const displayed = Number(fact.value.replace(/[^0-9.]/g, ''));
+      expect(
+        displayed,
+        `${page.slug} : rayon réel ${radiusKm} km affiché « ${fact.value} »`
+      ).toBeGreaterThan(0);
+    }
+    // Sans cette borne, un `find` qui ne trouve plus rien viderait la boucle en silence.
+    expect(checked).toBeGreaterThan(40);
+  });
+
   it('situe une lune par rapport à sa planète', () => {
     const moon = { realData: { radiusKm: 1 } } as CelestialBodyConfig;
     expect(bodyFacts(moon, 'Jupiter')).toContainEqual({

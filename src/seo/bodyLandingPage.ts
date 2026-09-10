@@ -29,6 +29,7 @@ import type {
   CelestialConfig,
   TextureQuality,
 } from '@/types';
+import { distanceDecimals } from '@/core/units';
 import { CARD_HEIGHT, CARD_WIDTH } from './socialCard';
 
 export interface BodyFact {
@@ -228,7 +229,16 @@ export function bodyFacts(
     facts.push({ label, value: render(value) });
   };
 
-  push('radiusKm', 'Radius', data.radiusKm, (v) => `${formatNumber(v)} km`);
+  // Décimales selon l'ordre de grandeur — même règle que la fiche de l'application. Sans elle
+  // Bennu, 242 mètres de rayon, annonçait « 0 km » sur sa page ET sur sa vignette de partage.
+  // La correction avait été faite dans `ui/bodyInfo.ts` seulement : ce chemin-ci a son propre
+  // formateur, et le défaut y a survécu jusqu'à ce qu'on regarde l'image déployée.
+  push(
+    'radiusKm',
+    'Radius',
+    data.radiusKm,
+    (v) => `${formatNumber(v, distanceDecimals(v))} km`
+  );
   push('massKg', 'Mass', data.massKg, formatMass);
   push(
     'gravity',
