@@ -22,6 +22,18 @@ function stripProductionHtmlComments() {
 const SITE_ORIGIN = 'https://galaxy.adrianguichard.dev';
 
 /**
+ * Taille à laquelle la carte équirectangulaire est relue avant d'être projetée.
+ *
+ * Le disque fait 440 px et n'en montre qu'un hémisphère : au centre, un pixel écran couvre
+ * environ 0,41° de longitude, un texel de cette largeur 0,35°. C'est le point d'équilibre —
+ * plus large, la texture est suréchantillonnée et scintille au bord ; plus étroite, le centre
+ * du disque devient flou. Le rééchantillonnage de sharp fait la moyenne des texels, ce qu'un
+ * simple filtrage bilinéaire sur la 2k d'origine ne ferait pas.
+ */
+const CARD_TEXTURE_WIDTH = 1024;
+const CARD_TEXTURE_HEIGHT = 512;
+
+/**
  * Une page d'atterrissage statique par corps — `dist/jupiter/index.html` — plus le sitemap
  * complet. Le POURQUOI et les contraintes vivent dans `src/seo/bodyLandingPage.ts` ; ici on ne
  * fait que de l'entrée/sortie.
@@ -37,7 +49,8 @@ function bodyLandingPages() {
     apply: 'build' as const,
     async closeBundle(): Promise<void> {
       const { createServer } = await import('vite');
-      const { mkdir, readFile, writeFile } = await import('fs/promises');
+      const { mkdir, readFile, stat, writeFile } = await import('fs/promises');
+      const sharp = (await import('sharp')).default;
       const loader = await createServer({
         configFile: false,
         logLevel: 'error',
@@ -51,6 +64,9 @@ function bodyLandingPages() {
         const seo = (await loader.ssrLoadModule(
           '/src/seo/bodyLandingPage.ts'
         )) as typeof import('./src/seo/bodyLandingPage');
+        const card = (await loader.ssrLoadModule(
+          '/src/seo/socialCard.ts'
+        )) as typeof import('./src/seo/socialCard');
 
         const dist = resolve(__dirname, 'dist');
         const baseHtml = await readFile(resolve(dist, 'index.html'), 'utf-8');
@@ -75,6 +91,79 @@ function bodyLandingPages() {
             'utf-8'
           );
         }
+        // Vignettes de partage, une par corps — voir `src/seo/socialCard.ts` pour le POURQUOI.
+        // Elles DÉRIVENT des textures déjà versionnées, donc rien de nouveau n'est committé ;
+        // elles sont reconstruites à l'identique à chaque build (rendu déterministe, sans GPU).
+        const socialDir = resolve(dist, 'social');
+        await mkdir(socialDir, { recursive: true });
+        const domain = new URL(SITE_ORIGIN).host;
+        const sphereLeft = Math.round(
+          card.SPHERE_CENTER_X - card.SPHERE_SIZE / 2
+        );
+        const sphereTop = Math.round(
+          (card.CARD_HEIGHT - card.SPHERE_SIZE) / 2
+        );
+        for (const page of pages) {
+          let texture: import('./src/seo/socialCard').RawImage | null = null;
+          if (page.visual.surface) {
+            const source = resolve(__dirname, page.visual.surface);
+            const { data, info } = await sharp(source)
+              .resize(CARD_TEXTURE_WIDTH, CARD_TEXTURE_HEIGHT, { fit: 'fill' })
+              .removeAlpha()
+              .raw()
+              .toBuffer({ resolveWithObject: true });
+            texture = {
+              data,
+              width: info.width,
+              height: info.height,
+              channels: info.channels,
+            };
+          }
+          const sphere = card.renderSphere(
+            texture,
+            page.visual.fallback,
+            card.SPHERE_SIZE,
+            page.visual.emissive
+          );
+          const target = resolve(socialDir, `${page.slug}.jpg`);
+          await sharp(Buffer.from(card.cardBackgroundSvg(page.visual.emissive)))
+            .composite([
+              {
+                input: Buffer.from(
+                  sphere.buffer,
+                  sphere.byteOffset,
+                  sphere.byteLength
+                ),
+                raw: {
+                  width: card.SPHERE_SIZE,
+                  height: card.SPHERE_SIZE,
+                  channels: 4,
+                },
+                left: sphereLeft,
+                top: sphereTop,
+              },
+              {
+                input: Buffer.from(
+                  card.cardTextSvg(
+                    page.displayName,
+                    page.facts.map((fact) => `${fact.label}: ${fact.value}`),
+                    domain
+                  )
+                ),
+              },
+            ])
+            // 4:2:0 (le défaut) délave les aplats colorés du texte sur fond sombre — un
+            // liseré terne autour de chaque lettre, très visible à cette taille.
+            .jpeg({ quality: 85, chromaSubsampling: '4:4:4' })
+            .toFile(target);
+          // Une vignette absente ou vide ne se voit NULLE PART : la page se déploie, la balise
+          // pointe vers un 404, et l'aperçu de partage tombe silencieusement sur rien. Le seul
+          // endroit où ça peut encore échouer bruyamment, c'est ici.
+          const written = await stat(target).catch(() => null);
+          if (!written || written.size === 0)
+            throw new Error(`vignette de partage manquante : ${page.slug}.jpg`);
+        }
+
         const today = new Date().toISOString().slice(0, 10);
         await writeFile(
           resolve(dist, 'sitemap.xml'),
@@ -82,7 +171,7 @@ function bodyLandingPages() {
           'utf-8'
         );
         loader.config.logger.info(
-          `  ${pages.length} pages de corps + sitemap générés`
+          `  ${pages.length} pages de corps + vignettes + sitemap générés`
         );
       } finally {
         await loader.close();

@@ -24,11 +24,86 @@
  * sans build.
  */
 import { flattenBodies } from '@/config/catalog';
-import type { CelestialBodyConfig, CelestialConfig } from '@/types';
+import type {
+  CelestialBodyConfig,
+  CelestialConfig,
+  TextureQuality,
+} from '@/types';
+import { CARD_HEIGHT, CARD_WIDTH } from './socialCard';
 
 export interface BodyFact {
   label: string;
   value: string;
+}
+
+/**
+ * De quoi PEINDRE la vignette de partage de ce corps — la matière première que le plugin de
+ * build passe à `socialCard.ts`. Décidée ici, dans le module pur, pour la même raison que tout
+ * le reste : ce qui décide quelque chose doit être testable sans build.
+ */
+export interface BodyVisual {
+  /**
+   * Carte équirectangulaire de la surface, chemin depuis la racine du dépôt, ou `null` pour un
+   * corps sans texture locale.
+   */
+  surface: string | null;
+  /** Teinte de repli, en composantes 0-255 — utilisée quand `surface` est `null`. */
+  fallback: [number, number, number];
+  /** Le corps ÉMET sa lumière (étoile) : pas de terminateur, un assombrissement centre-bord. */
+  emissive: boolean;
+}
+
+/**
+ * Repli quand le catalogue ne déclare aucune couleur : un gris moyen neutre. Surtout pas du
+ * noir — sur un fond spatial la sphère disparaîtrait, et une vignette vide se partage mal.
+ */
+const NEUTRAL_FALLBACK: [number, number, number] = [154, 154, 154];
+
+/** Du plus petit au plus grand — sert à choisir « la plus petite disponible » sans deviner. */
+const RESOLUTION_ORDER: readonly TextureQuality[] = ['1k', '2k', '4k', '8k'];
+
+/**
+ * Résolution de texture à charger pour une vignette.
+ *
+ * Le disque fait 440 px : au centre, un pixel écran couvre environ 0,4° de longitude, ce qu'une
+ * carte 2k (0,18°/texel) sature déjà largement. Charger la 8k d'une planète ne changerait rien
+ * à l'image et coûterait cinquante décodages inutiles au build. On prend donc la 2k quand elle
+ * existe, la 1k sinon (cinq lunes n'ont que celle-là), et à défaut la plus petite disponible —
+ * jamais la première du tableau, dont l'ordre est une convention d'affichage, pas un contrat.
+ */
+export function pickSurfaceResolution(
+  available: readonly TextureQuality[] | undefined
+): TextureQuality | null {
+  if (!available || available.length === 0) return null;
+  if (available.includes('2k')) return '2k';
+  if (available.includes('1k')) return '1k';
+  return (
+    [...available].sort(
+      (a, b) => RESOLUTION_ORDER.indexOf(a) - RESOLUTION_ORDER.indexOf(b)
+    )[0] ?? null
+  );
+}
+
+/** `0x9b6a45` → `[155, 106, 69]`. */
+function rgbFromHex(hex: number): [number, number, number] {
+  return [(hex >> 16) & 0xff, (hex >> 8) & 0xff, hex & 0xff];
+}
+
+/** Ce qu'il faut pour dessiner ce corps : sa carte de surface, sa couleur, son éclairage. */
+export function bodyVisual(config: CelestialBodyConfig): BodyVisual {
+  const resolution = pickSurfaceResolution(config.textureResolutions?.surface);
+  const base = config.textures?.surface;
+  return {
+    surface:
+      base && resolution
+        ? `public/assets/textures/${base}_${resolution}.jpg`
+        : null,
+    fallback:
+      config.fallbackColor === undefined
+        ? NEUTRAL_FALLBACK
+        : rgbFromHex(config.fallbackColor),
+    emissive: config.kind === 'star',
+  };
 }
 
 export interface BodyPage {
@@ -41,6 +116,20 @@ export interface BodyPage {
   summary: string;
   facts: BodyFact[];
   canonical: string;
+  /**
+   * Vignette de partage PROPRE à ce corps. Les cinquante et une pages partageaient jusqu'ici
+   * une vieille capture générique de la vue d'ensemble : un lien vers Titan montrait le Soleil.
+   * Pour un site qui vit du partage, c'est l'image qui décide du clic.
+   *
+   * Hors de `/assets/` volontairement : Firebase y applique un cache immuable d'un an, et ces
+   * fichiers-ci portent un nom STABLE (`/social/titan.jpg`) que chaque régénération réécrit.
+   * Un an de cache sur une URL qui change de contenu, c'est une vignette périmée qu'on ne peut
+   * plus corriger.
+   */
+  image: string;
+  imageAlt: string;
+  /** De quoi peindre cette vignette au build — voir `socialCard.ts`. */
+  visual: BodyVisual;
 }
 
 /** Échappement HTML — tout ce qui vient du catalogue traverse ceci. */
@@ -201,6 +290,11 @@ export function bodyLandingPages(
       // Vérifié localement : `vite preview` sert la page sur `/jupiter/` et retombe sur le
       // shell SPA sur `/jupiter`, même distinction.
       canonical: `${origin}/${slug}/`,
+      image: `${origin}/social/${slug}.jpg`,
+      // Décrit ce que l'image MONTRE, pas ce que la page raconte : c'est un texte alternatif,
+      // lu à voix haute par un lecteur d'écran sur une carte de partage.
+      imageAlt: `${displayName} rendered as a 3D sphere — Solar System 3D`,
+      visual: bodyVisual(cfg),
     });
   }
   return pages.sort((a, b) => a.slug.localeCompare(b.slug));
@@ -292,6 +386,32 @@ export function renderBodyPage(
     page.description
   );
   html = replaceAttrAfter(html, 'property="og:url"', 'content', page.canonical);
+  // L'ancre porte son guillemet fermant : sans lui `property="og:image` correspondrait aussi à
+  // `og:image:width`, et selon l'ordre des balises la vignette finirait écrite dans la largeur.
+  html = replaceAttrAfter(html, 'property="og:image"', 'content', page.image);
+  html = replaceAttrAfter(
+    html,
+    'property="og:image:alt"',
+    'content',
+    page.imageAlt
+  );
+  // Réécrites depuis les constantes de `socialCard.ts` plutôt que laissées telles quelles : ces
+  // deux nombres sont ce sur quoi un réseau social réserve sa place avant d'avoir téléchargé
+  // l'image. Les laisser en dur, c'est accepter qu'un jour on change le format de la carte et
+  // que cinquante et une pages annoncent des dimensions fausses sans que rien ne le dise.
+  html = replaceAttrAfter(
+    html,
+    'property="og:image:width"',
+    'content',
+    String(CARD_WIDTH)
+  );
+  html = replaceAttrAfter(
+    html,
+    'property="og:image:height"',
+    'content',
+    String(CARD_HEIGHT)
+  );
+  html = replaceAttrAfter(html, 'name="twitter:image"', 'content', page.image);
   html = replaceAttrAfter(html, 'name="twitter:title"', 'content', page.title);
   html = replaceAttrAfter(
     html,
