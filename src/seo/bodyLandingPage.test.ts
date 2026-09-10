@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { CELESTIAL_CONFIG } from '@/config/bodies';
+import { bodyFromPathname } from '@/core/permalink';
 import { flattenBodies } from '@/config/catalog';
 import type { CelestialBodyConfig } from '@/types';
 import {
@@ -90,6 +91,28 @@ describe('pages d’atterrissage par corps', () => {
   });
 });
 
+describe('URL des pages', () => {
+  it('donne à chaque corps un segment d’URL sûr, qui se relit', () => {
+    // PIÈGE LATENT : le slug vient du nom de catalogue. Un futur corps nommé avec un accent,
+    // un espace ou un point produirait une URL encodée que `bodyFromPathname` ne reconnaîtrait
+    // plus — la page existerait, serait servie, et n'ouvrirait PAS le bon corps. Rien ne le
+    // signalerait : ni le build, ni le rendu, ni un test de contenu.
+    const slugs = new Set(pages.map((page) => page.slug));
+    for (const page of pages) {
+      expect(page.slug, `${page.slug} : segment d'URL non sûr`).toMatch(
+        /^[a-z0-9-]+$/
+      );
+      expect(encodeURIComponent(page.slug)).toBe(page.slug);
+      // Aller-retour complet : c'est ce chemin-là que l'application relira.
+      expect(bodyFromPathname(`/${page.slug}/`, slugs)).toBe(page.slug);
+    }
+  });
+
+  it('n’émet aucune URL en double', () => {
+    expect(new Set(pages.map((page) => page.slug)).size).toBe(pages.length);
+  });
+});
+
 describe('faits affichés', () => {
   it('omet un champ déclaré inconnu plutôt que d’aligner un tiret', () => {
     // La raison publiée vit dans la fiche de l'application ; une page statique qui affiche « — »
@@ -172,6 +195,24 @@ describe('rendu de la page', () => {
 });
 
 describe('sitemap', () => {
+  it('produit un XML que la Search Console peut accepter', () => {
+    // Un sitemap malformé est rejeté EN BLOC : les cinquante-trois URL deviennent alors
+    // invisibles d'un coup, et le message d'erreur arrive des jours plus tard, hors de tout
+    // contexte. Contrôle de forme minimal, ici, tout de suite.
+    const xml = renderSitemap(pages, ORIGIN, '2026-09-10');
+    expect(xml.startsWith('<?xml version="1.0" encoding="UTF-8"?>')).toBe(true);
+    expect(xml).toContain(
+      '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'
+    );
+    expect(xml.trimEnd().endsWith('</urlset>')).toBe(true);
+    // Balises appariées, et aucune URL relative ou non chiffrée.
+    expect(xml.match(/<url>/g)?.length).toBe(xml.match(/<\/url>/g)?.length);
+    for (const loc of xml.match(/<loc>([^<]*)<\/loc>/g) ?? [])
+      expect(loc.slice(5, -6)).toMatch(/^https:\/\//);
+    // Rien d'échappable ne doit avoir échappé à l'échappement.
+    expect(xml).not.toMatch(/<loc>[^<]*[<>"][^<]*<\/loc>/);
+  });
+
   it('liste l’accueil, la confidentialité et chaque corps', () => {
     const xml = renderSitemap(pages, ORIGIN, '2026-09-10');
     expect(xml.match(/<loc>/g)?.length).toBe(pages.length + 2);
