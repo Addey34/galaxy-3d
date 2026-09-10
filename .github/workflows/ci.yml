@@ -35,12 +35,14 @@ jobs:
       - run: pnpm audit:prod
       - run: pnpm build
 
-      # Garde-fou de poids, AVANT le deploiement. Firebase facture le stockage sur la somme des
-      # versions retenues : un fichier lourd se paie autant de fois qu'il y a de versions, et le
-      # quota finit par sauter sur un HTTP 429 qui ne nomme pas le coupable. Ce script mesure ce
-      # que Firebase recevra vraiment (exclusions de firebase.json appliquees) et nomme les plus
-      # gros fichiers. Deja arrive une fois avec le noyau SPK de 638 Mo.
-      - name: Check deploy payload size
+      # Mesure INFORMATIVE de la charge utile reelle (exclusions de firebase.json appliquees),
+      # pour qu'un poids inattendu se voie dans le journal du deploiement.
+      #
+      # Ne bloque volontairement RIEN : un plafond finirait par refuser un ajout de textures
+      # parfaitement legitime, et un garde-fou qui gene le projet se fait desactiver. Ce qui
+      # empeche le retour du noyau SPK de 638 Mo, c'est son exclusion dans firebase.json,
+      # verrouillee par src/config/hostingPayload.test.ts.
+      - name: Report deploy payload size
         run: node scripts/check-deploy-size.mjs
 
       # Deploiement Firebase Hosting sur push main, des que verify+build passent (sans

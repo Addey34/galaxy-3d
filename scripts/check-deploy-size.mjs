@@ -23,13 +23,19 @@ const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const MEGABYTE = 1024 * 1024;
 
 /**
- * Plafond de la charge utile déployée.
+ * Repère d'attention — PAS un plafond.
  *
- * Mesuré au moment de l'écriture : environ 200 Mo, dont 164 Mo de textures — celles-ci sont la
- * raison d'être du produit, elles ont vocation à grossir un peu. La marge laisse la place à
- * cette croissance normale tout en arrêtant net un fichier qui n'aurait rien à faire là.
+ * Une première version faisait échouer le build au-delà de 260 Mo. Mauvaise idée : les textures
+ * sont la raison d'être du produit et le catalogue a vocation à grandir, donc ce garde-fou
+ * aurait fini par bloquer un ajout parfaitement légitime. Un outil qui freine le projet qu'il
+ * est censé protéger se fait désactiver, et alors il ne protège plus rien.
+ *
+ * Le script se contente donc de MESURER et de signaler. Ce qui empêche réellement l'accident
+ * du noyau SPK, c'est son exclusion dans `firebase.json`, verrouillée par
+ * `src/config/hostingPayload.test.ts` : une règle précise sur un fichier précis, qui ne dit
+ * rien sur la taille que le projet a le droit d'atteindre.
  */
-const LIMIT_MB = Number(process.env.DEPLOY_SIZE_LIMIT_MB ?? 260);
+const NOTICE_MB = Number(process.env.DEPLOY_SIZE_NOTICE_MB ?? 260);
 
 const firebase = JSON.parse(readFileSync(join(ROOT, 'firebase.json'), 'utf8'));
 const publicDir = join(ROOT, firebase.hosting.public ?? 'dist');
@@ -102,28 +108,22 @@ for (const f of files) {
 }
 
 console.log(
-  `Charge utile du déploiement : ${totalMb.toFixed(1)} Mo en ${files.length} fichiers (plafond ${LIMIT_MB} Mo)`
+  `Charge utile du déploiement : ${totalMb.toFixed(1)} Mo en ${files.length} fichiers`
 );
 for (const [name, size] of [...byDir.entries()]
   .sort((a, b) => b[1] - a[1])
   .slice(0, 6))
   console.log(`  ${(size / MEGABYTE).toFixed(1).padStart(7)} Mo  ${name}`);
 
-if (totalMb > LIMIT_MB) {
+if (totalMb > NOTICE_MB) {
   const worst = [...files].sort((a, b) => b.size - a.size).slice(0, 5);
-  console.error(
-    `\nÉCHEC : ${totalMb.toFixed(1)} Mo dépassent le plafond de ${LIMIT_MB} Mo.\n` +
-      `Firebase conserve une copie par version retenue : ce poids se multiplie et finit par\n` +
-      `saturer le quota, avec une erreur 429 qui ne dit pas quel fichier est en cause.\n\n` +
-      `Les plus gros fichiers de cette charge utile :`
+  console.log(
+    `\nÀ REGARDER : ${totalMb.toFixed(1)} Mo, au-dessus du repère de ${NOTICE_MB} Mo.\n` +
+      `Firebase garde une copie par version retenue, donc ce poids se multiplie. Si cette\n` +
+      `croissance est voulue, il n'y a rien à faire : vérifier simplement que le nombre de\n` +
+      `versions conservées est borné côté console. Les plus gros fichiers :`
   );
   for (const f of worst)
-    console.error(
-      `  ${(f.size / MEGABYTE).toFixed(1).padStart(7)} Mo  ${f.rel}`
-    );
-  console.error(
-    `\nSi ce poids est VOULU, relever le plafond dans ce script en expliquant pourquoi.\n` +
-      `Sinon, exclure le fichier via \`hosting.ignore\` dans firebase.json.`
-  );
-  process.exit(1);
+    console.log(`  ${(f.size / MEGABYTE).toFixed(1).padStart(7)} Mo  ${f.rel}`);
 }
+// Volontairement AUCUN code de sortie non nul : ce script informe, il ne bloque pas.
