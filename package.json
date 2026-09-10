@@ -27,7 +27,8 @@
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "verify": "tsc --noEmit && eslint . && pnpm format:check && vitest run",
-    "verify:all": "pnpm verify && pnpm build && pnpm test:e2e"
+    "verify:all": "pnpm verify && pnpm build && pnpm test:e2e",
+    "deploy:size": "node scripts/check-deploy-size.mjs"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.13.0",

@@ -35,6 +35,14 @@ jobs:
       - run: pnpm audit:prod
       - run: pnpm build
 
+      # Garde-fou de poids, AVANT le deploiement. Firebase facture le stockage sur la somme des
+      # versions retenues : un fichier lourd se paie autant de fois qu'il y a de versions, et le
+      # quota finit par sauter sur un HTTP 429 qui ne nomme pas le coupable. Ce script mesure ce
+      # que Firebase recevra vraiment (exclusions de firebase.json appliquees) et nomme les plus
+      # gros fichiers. Deja arrive une fois avec le noyau SPK de 638 Mo.
+      - name: Check deploy payload size
+        run: node scripts/check-deploy-size.mjs
+
       # Deploiement Firebase Hosting sur push main, des que verify+build passent (sans
       # attendre l'e2e). Requiert le secret FIREBASE_TOKEN.
       - name: Deploy to Firebase Hosting
