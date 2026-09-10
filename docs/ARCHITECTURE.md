@@ -401,9 +401,33 @@ Trois règles à ne pas défaire :
 Le build échoue si une vignette manque ou sort vide : sinon la page se déploie, la balise pointe
 vers un 404, et l'aperçu de partage tombe silencieusement sur rien.
 
-**Limites connues.** Saturne est rendue sans ses anneaux, alors que c'est à eux qu'on la
-reconnaît : les projeter demande une ellipse, l'occultation par la sphère et son ombre portée.
-Et les octets produits ne sont identiques d'une machine à l'autre que si les polices le sont —
+### L'anneau
+
+Un corps dont le catalogue déclare `ring` (Saturne, et elle seule aujourd'hui) est rendu
+différemment, parce qu'une Saturne sans anneaux est une boule beige de plus :
+
+- **La vue est inclinée de 20°** (`RING_TILT_DEG`). Sans inclinaison, la carte équirectangulaire
+  est projetée sans basculement : le plan équatorial est vu par la tranche et l'anneau sort en
+  trait. C'est un CHOIX DE COMPOSITION, pas l'ouverture réelle des anneaux à une date donnée —
+  ne pas le relire comme une donnée physique. Le même angle incline le globe ET l'anneau, sinon
+  les deux ne décrivent plus le même équateur.
+- **Le globe rétrécit, la carte ne s'élargit pas.** L'anneau va à 2,2 rayons : à taille de globe
+  égale il passerait sous le texte. `RINGED_SPAN` (540 px) borne le système entier, contre 440
+  pour un corps nu, et un test tient la marge avec `TEXT_LEFT`.
+- **L'occultation se décide par pixel.** L'anneau est intersecté en tant que plan ; l'arc dont le
+  z est supérieur à celui de la surface passe devant, l'autre disparaît derrière. C'est cette
+  seule asymétrie qui fait lire l'image en trois dimensions.
+- **Les paramètres viennent du catalogue et de la scène 3D**, jamais de valeurs écrites dans la
+  vignette : rayons de `config.ring`, opacité et partage diffus/émissif de `createRingMaterial`
+  et `_loadRingTexture`, ombre cylindrique du globe reprise du shader de l'anneau. La vignette
+  décrit la même représentation que la scène, elle n'en invente pas une seconde.
+- **Rendu au double puis réduit.** L'ellipse et sa découpe sur le globe sont des bords
+  géométriques francs, très visiblement crénelés sinon. Un corps sans anneau garde le rendu
+  direct, ce qui laisse ses octets inchangés — propriété vérifiée par comparaison d'empreintes :
+  après l'ajout de l'anneau, une seule des cinquante et une vignettes avait changé.
+
+**Limites connues.** Les octets produits ne sont identiques d'une machine à l'autre que si les
+polices le sont —
 le runner rend le texte en DejaVu Sans, un poste Windows en Segoe UI. La mise en page et les
 chiffres suscrits tiennent dans les deux cas (vérifié à l'écran sur l'artefact déployé), mais ne
 pas s'attendre à une comparaison d'empreinte entre local et production.

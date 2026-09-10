@@ -202,3 +202,126 @@ describe('fond et texte de la vignette', () => {
     expect(svg).not.toContain('>trois<');
   });
 });
+
+/**
+ * L'ANNEAU. Saturne est le seul corps que tout le monde reconnaît à autre chose qu'à sa
+ * couleur ; sans anneaux sa vignette est une boule beige de plus. Ce qui suit tient les trois
+ * propriétés qui font qu'on y croit — l'anneau dépasse du globe, l'arc proche passe DEVANT et
+ * l'arc lointain DERRIÈRE, et le globe porte son ombre sur l'anneau — plus celle qui protège
+ * les cinquante autres vignettes : sans anneau, rien ne change.
+ */
+describe('anneau de la vignette', () => {
+  const RING_SIZE = 200;
+  const INNER = 1.5;
+  const OUTER = 2.2;
+  /** Rayon du globe en pixels, tel que le calcule `renderSphere`. */
+  const BODY = (RING_SIZE / 2 - 1) / OUTER;
+  const MID = RING_SIZE / 2;
+
+  /** Profil uniforme : toute variation observée vient donc de la géométrie ou de la lumière. */
+  const strip = (level: number): RawImage => {
+    const width = 64;
+    const height = 4;
+    const data = new Uint8Array(width * height * 3).fill(level);
+    return { data, width, height, channels: 3 };
+  };
+
+  const ring = {
+    texture: strip(255),
+    innerRadius: INNER,
+    outerRadius: OUTER,
+    opacity: 0.9,
+  };
+  /** Même géométrie, anneau totalement transparent : isole la contribution de l'anneau. */
+  const invisibleRing = { ...ring, texture: strip(0) };
+
+  const withRing = renderSphere(null, GREY, RING_SIZE, false, ring);
+  const withoutRing = renderSphere(null, GREY, RING_SIZE, false, invisibleRing);
+
+  /** Pixel correspondant à une position (x, y) exprimée en rayons du corps. */
+  const at = (
+    buffer: Uint8ClampedArray,
+    x: number,
+    y: number
+  ): [number, number, number, number] =>
+    pixel(
+      buffer,
+      RING_SIZE,
+      Math.round(MID + x * BODY),
+      Math.round(MID - y * BODY)
+    );
+
+  it('dépasse du globe, et laisse le vide entre les deux', () => {
+    // L'anse de l'anneau, bien au-delà du disque.
+    expect(at(withRing, -1.9, 0)[3]).toBeGreaterThan(200);
+    // Et l'espace entre la surface et le bord interne reste du ciel : c'est `innerRadius` qui
+    // le decide, pris dans le catalogue. Un anneau collé au globe serait une soucoupe.
+    expect(at(withRing, 1.25, 0)[3]).toBe(0);
+    // Le globe, lui, a retreci : à 1,2 rayon on est hors surface.
+    expect(at(withRing, 0, 0)[3]).toBe(255);
+  });
+
+  it('passe DEVANT le globe en bas et DERRIÈRE en haut', () => {
+    // C'est cette seule asymétrie qui fait lire l'image en 3D. Le plan de l'anneau est incliné
+    // vers l'observateur : sous le centre il est plus proche que la surface, au-dessus il est
+    // derrière. Comparé à un anneau invisible de MÊME géométrie, donc à globe identique.
+    const frontLit = luminance(at(withRing, 0, -0.6));
+    const frontBare = luminance(at(withoutRing, 0, -0.6));
+    expect(frontLit).not.toBe(frontBare);
+
+    const behind = at(withRing, 0, 0.6);
+    const behindBare = at(withoutRing, 0, 0.6);
+    expect([...behind]).toEqual([...behindBare]);
+  });
+
+  it('reçoit l’ombre portée du globe, du côté opposé au Soleil', () => {
+    // Deux points diamétralement opposés, à la même distance du centre : même texture, même
+    // incidence. Tout écart vient de l'ombre. Sans elle, l'anneau brille au travers du corps
+    // qui le masque — le genre de faute qu'on ne voit pas si on ne la cherche pas.
+    const shadowed = luminance(at(withRing, 1.1176, 0.4386));
+    const sunlit = luminance(at(withRing, -1.1176, -0.4386));
+    expect(shadowed).toBeLessThan(sunlit * 0.75);
+  });
+
+  it('incline AUSSI le globe, du même angle que l’anneau', () => {
+    // Le piège de tout l'exercice : incliner le plan de l'anneau sans incliner la projection
+    // de la carte donnerait un anneau qui traverse un globe vu de face — la planète et son
+    // anneau ne décriraient plus le même équateur. Rien ne planterait, ça aurait juste l'air
+    // faux sans qu'on sache dire pourquoi.
+    // Carte nord rouge / sud bleue : à 20° d'inclinaison l'équateur descend sous le centre, un
+    // point légèrement sous le centre reste donc dans l'hémisphère NORD.
+    const width = 8;
+    const height = 8;
+    const data = new Uint8Array(width * height * 3);
+    for (let y = 0; y < height; y++)
+      for (let x = 0; x < width; x++)
+        data[(y * width + x) * 3 + (y < height / 2 ? 0 : 2)] = 255;
+    const map: RawImage = { data, width, height, channels: 3 };
+
+    const tilted = renderSphere(map, GREY, RING_SIZE, false, invisibleRing);
+    const flat = renderSphere(map, GREY, RING_SIZE, false);
+    const belowCentre = at(tilted, 0, -0.2);
+    expect(belowCentre[0]).toBeGreaterThan(belowCentre[2]);
+    const flatBelowCentre = pixel(
+      flat,
+      RING_SIZE,
+      MID,
+      Math.round(MID + 0.2 * (RING_SIZE / 2 - 1))
+    );
+    expect(flatBelowCentre[2]).toBeGreaterThan(flatBelowCentre[0]);
+  });
+
+  it('n’allume pas l’anneau là où la texture est noire', () => {
+    // La texture sert d'`alphaMap`, comme dans la scène 3D : le noir est un TROU. Sans ça la
+    // division de Cassini serait un trait gris et l'anneau une assiette opaque.
+    expect(at(withoutRing, -1.9, 0)[3]).toBe(0);
+  });
+
+  it('ne change RIEN quand le corps n’a pas d’anneau', () => {
+    // Cinquante vignettes déjà livrées dependent de cette égalité — vérifiée aussi au build,
+    // par comparaison d'empreintes, mais autant la tenir ici où elle coûte une milliseconde.
+    const plain = renderSphere(null, GREY, 64, false);
+    const explicitlyNone = renderSphere(null, GREY, 64, false, null);
+    expect([...explicitlyNone]).toEqual([...plain]);
+  });
+});

@@ -23,7 +23,7 @@
  * le plugin Vite (`vite.config.ts`), pour que tout ce qui décide quelque chose soit testable
  * sans build.
  */
-import { flattenBodies } from '@/config/catalog';
+import { flattenBodies, ringTexturePath } from '@/config/catalog';
 import type {
   CelestialBodyConfig,
   CelestialConfig,
@@ -51,6 +51,20 @@ export interface BodyVisual {
   fallback: [number, number, number];
   /** Le corps ÉMET sa lumière (étoile) : pas de terminateur, un assombrissement centre-bord. */
   emissive: boolean;
+  /**
+   * Anneau à peindre, ou `null`. Les rayons viennent du CATALOGUE (`config.ring`) : la vignette
+   * décrit la même représentation que la scène 3D, elle n'en invente pas une seconde.
+   */
+  ring: BodyRingVisual | null;
+}
+
+export interface BodyRingVisual {
+  /** Profil radial de l'anneau, chemin depuis la racine du dépôt. */
+  texture: string;
+  /** Rayon interne, en rayons du corps. */
+  innerRadius: number;
+  /** Rayon externe, en rayons du corps. */
+  outerRadius: number;
 }
 
 /**
@@ -90,7 +104,10 @@ function rgbFromHex(hex: number): [number, number, number] {
 }
 
 /** Ce qu'il faut pour dessiner ce corps : sa carte de surface, sa couleur, son éclairage. */
-export function bodyVisual(config: CelestialBodyConfig): BodyVisual {
+export function bodyVisual(
+  config: CelestialBodyConfig,
+  bodyName: string
+): BodyVisual {
   const resolution = pickSurfaceResolution(config.textureResolutions?.surface);
   const base = config.textures?.surface;
   return {
@@ -103,6 +120,31 @@ export function bodyVisual(config: CelestialBodyConfig): BodyVisual {
         ? NEUTRAL_FALLBACK
         : rgbFromHex(config.fallbackColor),
     emissive: config.kind === 'star',
+    ring: bodyRingVisual(config, bodyName),
+  };
+}
+
+/**
+ * L'anneau du corps, s'il en a un.
+ *
+ * Le chemin de la texture passe par `ringTexturePath`, comme la scène 3D — le nommage a une
+ * source unique et personne ne l'écrit à la main. La résolution suit la même règle que la
+ * surface : le profil radial d'un anneau est une image large et courte, la 2k y suffit
+ * largement pour 540 px de large.
+ */
+function bodyRingVisual(
+  config: CelestialBodyConfig,
+  bodyName: string
+): BodyRingVisual | null {
+  const ring = config.ring;
+  if (!ring) return null;
+  const resolution = pickSurfaceResolution(ring.textureResolutions);
+  if (!resolution) return null;
+  const base = ring.textures ?? ringTexturePath(bodyName);
+  return {
+    texture: `public/assets/textures/${base}_${resolution}.jpg`,
+    innerRadius: ring.innerRadius,
+    outerRadius: ring.outerRadius,
   };
 }
 
@@ -294,7 +336,7 @@ export function bodyLandingPages(
       // Décrit ce que l'image MONTRE, pas ce que la page raconte : c'est un texte alternatif,
       // lu à voix haute par un lecteur d'écran sur une carte de partage.
       imageAlt: `${displayName} rendered as a 3D sphere — Solar System 3D`,
-      visual: bodyVisual(cfg),
+      visual: bodyVisual(cfg, name),
     });
   }
   return pages.sort((a, b) => a.slug.localeCompare(b.slug));

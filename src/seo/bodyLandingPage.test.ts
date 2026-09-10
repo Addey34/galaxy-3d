@@ -14,7 +14,13 @@ import {
   renderSitemap,
   trimForMeta,
 } from './bodyLandingPage';
-import { CARD_HEIGHT, CARD_WIDTH } from './socialCard';
+import {
+  CARD_HEIGHT,
+  CARD_WIDTH,
+  RINGED_SPAN,
+  SPHERE_CENTER_X,
+  TEXT_LEFT,
+} from './socialCard';
 
 /**
  * Ces pages n'existent que pour une raison : l'application est une URL unique, donc un moteur
@@ -235,14 +241,44 @@ describe('vignette de partage', () => {
   });
 
   it('convertit la couleur du catalogue sans mélanger les canaux', () => {
-    const visual = bodyVisual({
-      kind: 'moon',
-      fallbackColor: 0x9b6a45,
-      textureResolutions: {},
-    } as unknown as Parameters<typeof bodyVisual>[0]);
+    const visual = bodyVisual(
+      {
+        kind: 'moon',
+        fallbackColor: 0x9b6a45,
+        textureResolutions: {},
+      } as unknown as Parameters<typeof bodyVisual>[0],
+      'titan'
+    );
     expect(visual.fallback).toEqual([0x9b, 0x6a, 0x45]);
     expect(visual.surface).toBe(null);
     expect(visual.emissive).toBe(false);
+    expect(visual.ring).toBe(null);
+  });
+
+  it('n’attribue un anneau qu’à Saturne, avec les rayons DU CATALOGUE', () => {
+    // Les rayons ne doivent jamais être écrits dans le code de la vignette : la scène 3D et
+    // l'image de partage doivent décrire le même objet. Si le catalogue change l'étendue de
+    // l'anneau, la vignette suit sans qu'on y touche.
+    const ringed = pages.filter((p) => p.visual.ring !== null);
+    expect(ringed.map((p) => p.slug)).toEqual(['saturn']);
+    const saturn = flattenBodies(CELESTIAL_CONFIG).get('saturn');
+    expect(ringed[0]?.visual.ring?.innerRadius).toBe(saturn?.ring?.innerRadius);
+    expect(ringed[0]?.visual.ring?.outerRadius).toBe(saturn?.ring?.outerRadius);
+    // Et le chemin passe par le nommage dérivé de la clé, comme partout ailleurs.
+    expect(ringed[0]?.visual.ring?.texture).toBe(
+      'public/assets/textures/saturn/saturn_ring_2k.jpg'
+    );
+    expect(
+      existsSync(resolve(process.cwd(), ringed[0]!.visual.ring!.texture))
+    ).toBe(true);
+  });
+
+  it('garde l’anneau dans le cadre, à gauche du texte', () => {
+    // L'anneau s'étend à 2,2 rayons : c'est le GLOBE qui rétrécit, pas la carte qui s'élargit.
+    // Si cette borne saute, l'anneau passe sous le nom du corps et la vignette est illisible.
+    expect(SPHERE_CENTER_X + RINGED_SPAN / 2).toBeLessThan(TEXT_LEFT);
+    expect(SPHERE_CENTER_X - RINGED_SPAN / 2).toBeGreaterThan(16);
+    expect(RINGED_SPAN).toBeLessThanOrEqual(CARD_HEIGHT);
   });
 });
 

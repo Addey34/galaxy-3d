@@ -34,6 +34,12 @@ const CARD_TEXTURE_WIDTH = 1024;
 const CARD_TEXTURE_HEIGHT = 512;
 
 /**
+ * Opacité de l'anneau, reprise de `createRingMaterial()` dans `src/config/layerConfig.ts`.
+ * La vignette doit ressembler à ce que l'application montre, pas à une seconde interprétation.
+ */
+const RING_OPACITY = 0.9;
+
+/**
  * Une page d'atterrissage statique par corps — `dist/jupiter/index.html` — plus le sitemap
  * complet. Le POURQUOI et les contraintes vivent dans `src/seo/bodyLandingPage.ts` ; ici on ne
  * fait que de l'entrée/sortie.
@@ -97,50 +103,81 @@ function bodyLandingPages() {
         const socialDir = resolve(dist, 'social');
         await mkdir(socialDir, { recursive: true });
         const domain = new URL(SITE_ORIGIN).host;
-        const sphereLeft = Math.round(
-          card.SPHERE_CENTER_X - card.SPHERE_SIZE / 2
-        );
-        const sphereTop = Math.round(
-          (card.CARD_HEIGHT - card.SPHERE_SIZE) / 2
-        );
+        /** Décode une image en pixels bruts pour `socialCard.ts`. */
+        const loadRaw = async (
+          path: string,
+          width?: number,
+          height?: number
+        ): Promise<import('./src/seo/socialCard').RawImage> => {
+          let pipeline = sharp(resolve(__dirname, path));
+          if (width && height)
+            pipeline = pipeline.resize(width, height, {
+              fit: 'fill',
+            });
+          const { data, info } = await pipeline
+            .removeAlpha()
+            .raw()
+            .toBuffer({ resolveWithObject: true });
+          return {
+            data,
+            width: info.width,
+            height: info.height,
+            channels: info.channels,
+          };
+        };
+
         for (const page of pages) {
-          let texture: import('./src/seo/socialCard').RawImage | null = null;
-          if (page.visual.surface) {
-            const source = resolve(__dirname, page.visual.surface);
-            const { data, info } = await sharp(source)
-              .resize(CARD_TEXTURE_WIDTH, CARD_TEXTURE_HEIGHT, { fit: 'fill' })
-              .removeAlpha()
-              .raw()
-              .toBuffer({ resolveWithObject: true });
-            texture = {
-              data,
-              width: info.width,
-              height: info.height,
-              channels: info.channels,
-            };
-          }
+          const visual = page.visual;
+          const texture = visual.surface
+            ? await loadRaw(
+                visual.surface,
+                CARD_TEXTURE_WIDTH,
+                CARD_TEXTURE_HEIGHT
+              )
+            : null;
+          // Le profil d'anneau est déjà une image large et courte (2048 × 125) : la relire
+          // telle quelle, la redimensionner écraserait justement les fines divisions.
+          const ring = visual.ring
+            ? {
+                texture: await loadRaw(visual.ring.texture),
+                innerRadius: visual.ring.innerRadius,
+                outerRadius: visual.ring.outerRadius,
+                opacity: RING_OPACITY,
+              }
+            : null;
+
+          // Un corps à anneaux est rendu au DOUBLE puis réduit : l'ellipse de l'anneau et sa
+          // découpe sur le globe sont des bords géométriques francs, très visiblement crénelés
+          // sinon. Le globe seul, lui, n'a qu'un bord circulaire, déjà lissé par `coverage` —
+          // d'où le rendu direct, qui garde les cinquante autres vignettes au bit près.
+          const span = ring ? card.RINGED_SPAN : card.SPHERE_SIZE;
+          const superSample = ring ? 2 : 1;
           const sphere = card.renderSphere(
             texture,
-            page.visual.fallback,
-            card.SPHERE_SIZE,
-            page.visual.emissive
+            visual.fallback,
+            span * superSample,
+            visual.emissive,
+            ring
           );
           const target = resolve(socialDir, `${page.slug}.jpg`);
+          let body = sharp(
+            Buffer.from(sphere.buffer, sphere.byteOffset, sphere.byteLength),
+            {
+              raw: {
+                width: span * superSample,
+                height: span * superSample,
+                channels: 4,
+              },
+            }
+          );
+          if (superSample > 1) body = body.resize(span, span);
+          const bodyPng = await body.png().toBuffer();
           await sharp(Buffer.from(card.cardBackgroundSvg(page.visual.emissive)))
             .composite([
               {
-                input: Buffer.from(
-                  sphere.buffer,
-                  sphere.byteOffset,
-                  sphere.byteLength
-                ),
-                raw: {
-                  width: card.SPHERE_SIZE,
-                  height: card.SPHERE_SIZE,
-                  channels: 4,
-                },
-                left: sphereLeft,
-                top: sphereTop,
+                input: bodyPng,
+                left: Math.round(card.SPHERE_CENTER_X - span / 2),
+                top: Math.round((card.CARD_HEIGHT - span) / 2),
               },
               {
                 input: Buffer.from(
