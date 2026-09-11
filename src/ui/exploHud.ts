@@ -343,16 +343,21 @@ export class ExploHud {
       ) {
         return;
       }
+      // Créé même si masqué ci-dessous : d'autres surfaces (recherche, tests) s'attendent à
+      // ce que le label existe dans le DOM dès qu'un corps est navigable, pas seulement une
+      // fois affiché — `.explo-label` est masqué par défaut en CSS (display: none).
+      //
+      // L'ORDRE COMPTE, et l'avoir inversé a coûté quatre tests e2e. Le filtre du panneau était
+      // d'abord placé AVANT cette ligne : les corps décochés n'obtenaient alors jamais leur
+      // élément, et la recherche ne pouvait plus les atteindre. Masquer n'est pas supprimer —
+      // tout ce qui suit décide de l'AFFICHAGE, jamais de l'existence.
+      const element = this._label(bodyName);
+
       // La cible SUIVIE garde toujours son libellé, même décochée dans le panneau. Sans cette
       // exception, choisir Titan dans la barre de navigation emmènerait la caméra vers un
       // corps anonyme — le panneau règle l'encombrement AMBIANT, pas ce que l'on vient de
       // demander explicitement.
       if (bodyName !== targetName && this._hiddenNames.has(bodyName)) return;
-
-      // Créé même si masqué ci-dessous : d'autres surfaces (recherche, tests) s'attendent à
-      // ce que le label existe dans le DOM dès qu'un corps est navigable, pas seulement une
-      // fois affiché — `.explo-label` est masqué par défaut en CSS (display: none).
-      const element = this._label(bodyName);
       if (isOverview && !MAJOR_BODIES.has(bodyName)) return;
       this._ndc.copy(worldPos).project(camera);
       const onScreen =

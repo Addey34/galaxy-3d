@@ -101,9 +101,15 @@ test('settings stay available in both modes and control label density', async ({
   await expect(settings).toBeHidden();
   await page.locator('#settings-trigger').click();
   await expect(settings).toBeVisible();
-  await expect(page.locator('#labels-visible')).toBeChecked();
-  // Seules les planètes ont leur orbite visible par défaut (les lunes/naines/petits corps
-  // sont en opt-in) : l'en-tête « Orbite » reflète cet état mixte, ni cochée ni décochée.
+  // Les deux en-têtes reflètent un état MIXTE, et pour la même raison : ni les libellés ni
+  // les orbites ne démarrent sur la totalité du catalogue. Seules les planètes ont leur
+  // orbite ; seuls le Soleil, les huit planètes et la Lune ont leur nom (cf. MAJOR_BODIES).
+  // Le libellé a rejoint cette retenue le 2026-09-11 — avant, les cinquante et quelques corps
+  // étaient nommés d'emblée et cet en-tête était pleinement coché.
+  await expect(page.locator('#labels-visible')).toHaveJSProperty(
+    'indeterminate',
+    true
+  );
   await expect(page.locator('#orbits-visible')).toHaveJSProperty(
     'indeterminate',
     true
@@ -113,6 +119,13 @@ test('settings stay available in both modes and control label density', async ({
   ).toBeVisible();
   await expect.poll(hasVisibleLabel).toBe(true);
 
+  // Depuis l'état MIXTE, l'en-tête se parcourt dans cet ordre : un clic coche tout, le
+  // suivant décoche tout. `uncheck()` seul serait un NO-OP silencieux — une case indéterminée
+  // porte déjà `checked === false`, donc Playwright considère l'état atteint et ne clique
+  // pas ; aucun événement `change` ne part et les libellés restent affichés. Le test tombait
+  // alors sur l'assertion SUIVANTE, en désignant la mauvaise ligne.
+  await page.locator('#labels-visible').check();
+  await expect.poll(hasVisibleLabel).toBe(true);
   await page.locator('#labels-visible').uncheck();
   await expect.poll(hasVisibleLabel).toBe(false);
   await expect(
