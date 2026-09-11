@@ -432,12 +432,34 @@ export class CameraSystem {
     }
   }
 
+  /**
+   * Exposition de RÉFÉRENCE, sur laquelle l'adaptation à l'éloignement vient se multiplier.
+   *
+   * C'était la constante de configuration, et c'était un défaut : le curseur de luminosité
+   * (`ui/renderExposure.ts`) écrivait bien son réglage dans `localStorage` et l'appliquait au
+   * démarrage, mais le premier recalcul adaptatif — changement de mode, de cible, fin d'un vol
+   * caméra — repartait de la constante et écrasait le choix de l'utilisateur. Vu de l'extérieur,
+   * le réglage « ne se sauvegardait pas » ; en réalité il était sauvegardé puis piétiné.
+   */
+  private _baseExposure = RENDER_SETTINGS.toneMappingExposure;
+
+  /** Fixe l'exposition de référence choisie par l'utilisateur et la ré-applique tout de suite. */
+  setBaseExposure(value: number): void {
+    this._baseExposure = value;
+    // Ré-application immédiate sur la cible courante : sans ça le curseur ne ferait effet
+    // qu'au prochain recalcul, donc « après coup », ce qui se lit comme un contrôle cassé.
+    this._setAdaptiveExposure(
+      this.currentTarget?.name ?? null,
+      this.currentTarget ? this.targetWorldPosition : undefined
+    );
+  }
+
   private _setAdaptiveExposure(
     bodyName: string | null,
     worldPosition?: THREE.Vector3
   ): void {
     if (!this.renderer) return;
-    let exposure = RENDER_SETTINGS.toneMappingExposure;
+    let exposure = this._baseExposure;
     if (
       this._scaleMode === 'explo' &&
       bodyName &&

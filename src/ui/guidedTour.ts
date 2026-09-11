@@ -58,12 +58,33 @@ const STEPS: Array<
     titleKey: 'tour.step.share.title',
     textKey: 'tour.step.share.text',
   },
+  // Ces deux-là manquaient : la visite s'arrêtait au partage, alors que la capture et le
+  // retour d'avis sont deux boutons visibles du dock. Une visite qui saute des commandes
+  // apprend au visiteur que le dock ne mérite pas d'être exploré.
+  {
+    target: '#capture-btn',
+    titleKey: 'tour.step.capture.title',
+    textKey: 'tour.step.capture.text',
+  },
+  {
+    target: '#feedback-btn',
+    titleKey: 'tour.step.feedback.title',
+    textKey: 'tour.step.feedback.text',
+  },
   {
     target: '#help-btn',
     titleKey: 'tour.step.help.title',
     textKey: 'tour.step.help.text',
   },
 ];
+
+/**
+ * Cibles visitées, exposées pour `guidedTourCoverage.test.ts` : il exige que chaque commande du
+ * dock soit visitée ou écartée avec sa raison, faute de quoi un bouton ajouté plus tard sort de
+ * la visite sans que personne ne le remarque. C'est exactement ce qui était arrivé à la capture
+ * d'image et au retour d'avis.
+ */
+export const TOUR_TARGETS: readonly string[] = STEPS.map((step) => step.target);
 
 export interface GuidedTour {
   start(): void;

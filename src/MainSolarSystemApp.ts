@@ -253,7 +253,7 @@ if (surfaceScrim) {
     exploHud.setMode('educ');
     exploHud.setActive(true);
     setupOrbitOptions(sceneSystem, exploHud, overlayCoordinator);
-    setupRenderExposure(sceneSystem);
+    setupRenderExposure(sceneSystem, cameraSystem);
     setupColorblindToggle(sceneSystem);
     setupUnitsToggle();
     setupQualitySection(sceneSystem);

@@ -193,7 +193,13 @@ export const messages: Record<Locale, Dict> = {
     'tour.step.share.title': '9. Share a view',
     'tour.step.share.text':
       'Set up a view, then share its link. Whoever opens it lands on the exact same scene.',
-    'tour.step.help.title': '10. Find help',
+    'tour.step.capture.title': '10. Take a picture',
+    'tour.step.capture.text':
+      'Hide every control and save the view as an image, with the date and the body written on it.',
+    'tour.step.feedback.title': '11. Send feedback',
+    'tour.step.feedback.text':
+      'Report a problem or suggest an idea. Suggestions are public, and you can vote on other people’s.',
+    'tour.step.help.title': '12. Find help',
     'tour.step.help.text': 'Check the help page for more information.',
 
     // ── Tours guidés scénarisés ──
@@ -540,7 +546,13 @@ export const messages: Record<Locale, Dict> = {
     'tour.step.share.title': '9. Partager une vue',
     'tour.step.share.text':
       'Réglez une vue, puis partagez son lien. Celui qui l’ouvre retrouve exactement la même scène.',
-    'tour.step.help.title': '10. Retrouver l’aide',
+    'tour.step.capture.title': '10. Prendre une image',
+    'tour.step.capture.text':
+      'Masque tous les contrôles et enregistre la vue en image, avec la date et le corps inscrits dessus.',
+    'tour.step.feedback.title': '11. Donner son avis',
+    'tour.step.feedback.text':
+      'Signalez un problème ou proposez une idée. Les suggestions sont publiques, et vous pouvez voter pour celles des autres.',
+    'tour.step.help.title': '12. Retrouver l’aide',
     'tour.step.help.text': "Consultez la page d'aide pour plus d'informations.",
 
     // ── Tours guidés scénarisés ──
