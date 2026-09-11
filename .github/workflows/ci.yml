@@ -51,6 +51,17 @@ jobs:
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: pnpm dlx firebase-tools deploy --only hosting --token ${{ secrets.FIREBASE_TOKEN }}
 
+      # « CI verte » ne dit rien de ce qui est EN LIGNE. Cette etape recupere l'index servi et
+      # compare le nom hache de l'entree applicative a celle qu'on vient de construire.
+      #
+      # Elle ne bloque rien : elle tourne APRES le deploiement, donc elle ne peut rien
+      # empecher. Elle transforme seulement une question qu'il fallait penser a se poser en
+      # une reponse qui s'affiche toute seule. Le 2026-09-11, faute de cette ligne, l'etat de
+      # la production a ete affirme faux deux fois de suite.
+      - name: Verify production serves this build
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: node scripts/check-deployed-bundle.mjs
+
   # Tests navigateur end-to-end : job SEPARE qui tourne en parallele. Il sert d'ALERTE
   # (un echec signale une regression de cablage) mais ne bloque pas le deploiement, car
   # le rendu WebGL en GPU logiciel CI est lent et parfois capricieux sur les scenarios lourds.
