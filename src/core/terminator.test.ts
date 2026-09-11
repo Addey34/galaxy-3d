@@ -12,7 +12,9 @@ import {
   terminatorDay,
   terminatorLight,
   terminatorNight,
+  TERMINATOR_WRAP_TWILIGHT_SKY,
   terminatorTwilight,
+  terminatorTwilightWarmth,
   sunlitColumnFraction,
   TWILIGHT_BAND_PEAK,
   twilightWrapAtAltitude,
@@ -256,10 +258,12 @@ describe('terminatorTwilight (bandeau crépusculaire)', () => {
     // pixel du disque) : 4 % de pixels au-dessus du plancher d'affichage à +0,6°, puis
     // 0 % de 0° à −2°. Le maximum de la lueur doit tomber DANS cet intervalle, sinon
     // elle éclaire à côté du trou.
+    // Balayé à la largeur que le matériau emploie VRAIMENT (celle de la coque, pas du sol) :
+    // c'est elle qui fixe `TWILIGHT_BAND_PEAK`, donc l'amplitude ancrée par continuité.
     let argmax = 0;
     let peak = 0;
     for (let raw = -0.3; raw <= 0.3; raw += 1e-4) {
-      const value = terminatorTwilight(raw, w);
+      const value = terminatorTwilight(raw, TERMINATOR_WRAP_TWILIGHT_SKY);
       if (value > peak) {
         peak = value;
         argmax = raw;
@@ -285,6 +289,89 @@ describe('terminatorTwilight (bandeau crépusculaire)', () => {
   });
 });
 
+describe('terminatorTwilightWarmth (couleur du bandeau)', () => {
+  const w = TERMINATOR_WRAP_ATMOSPHERE;
+  const bandPeak = TWILIGHT_BAND_PEAK;
+
+  it('reste bornée et vaut exactement 1 au terminateur', () => {
+    for (let raw = -1; raw <= 1; raw += 0.005) {
+      const warmth = terminatorTwilightWarmth(raw, w);
+      expect(warmth).toBeGreaterThanOrEqual(0);
+      expect(warmth).toBeLessThanOrEqual(1);
+    }
+    // Le cœur doré est posé sur le terminateur géométrique, pas à côté.
+    expect(terminatorTwilightWarmth(0, w)).toBeCloseTo(1, 6);
+  });
+
+  it('laisse le BLEU tomber sur une partie encore lumineuse de la bande', () => {
+    // LA propriété pour laquelle cette fonction existe, et la seule qui décrive le défaut
+    // corrigé. Quand la teinte était pilotée par `sunlitColumnFraction` — qui est aussi un
+    // facteur de la luminosité — la moitié bleue ne commençait que là où la bande s'était
+    // déjà éteinte : rendu, un bandeau brun-rouge uniforme. Il faut donc qu'il existe un
+    // endroit où la bande porte encore la MOITIÉ de son amplitude maximale ET où la teinte
+    // est franchement froide.
+    // Cherché SOUS l'horizon seulement : c'est là que le ciel bleu de crépuscule se voit. Le
+    // jour a son propre bleu, qui ne dit rien de ce défaut-ci.
+    let coldestWhereBright = 1;
+    let atDeg = 0;
+    for (let deg = 0; deg >= -14; deg -= 0.01) {
+      const raw = sinDeg(deg);
+      if (
+        terminatorTwilight(raw, TERMINATOR_WRAP_TWILIGHT_SKY) <
+        0.4 * bandPeak
+      )
+        continue;
+      const warmth = terminatorTwilightWarmth(raw, w);
+      if (warmth < coldestWhereBright) {
+        coldestWhereBright = warmth;
+        atDeg = deg;
+      }
+    }
+    expect(atDeg).toBeLessThan(-1);
+    expect(coldestWhereBright).toBeLessThan(0.2);
+    // Et l'ANCIEN pilote, au même endroit, était plusieurs fois plus chaud : c'est la mesure
+    // directe de ce que la séparation a changé, pas un seuil choisi après coup.
+    const oldDriver = sunlitColumnFraction(sinDeg(atDeg));
+    expect(oldDriver / Math.max(coldestWhereBright, 1e-6)).toBeGreaterThan(2.5);
+  });
+
+  it('ne teinte pas en or le ciel du plein jour', () => {
+    // `sunlitColumnFraction` vaut 1 sur TOUT l'hémisphère éclairé : à lui seul il tenait la
+    // teinte chaude à fond jusqu'à `+wrap`. Mesuré à l'écran, le sol à +2,9° de hauteur
+    // solaire sortait avec un rapport rouge/bleu de 3,5 — un lavis rouge en plein jour.
+    // À 3° de hauteur le ciel est bleu ; la chaudeur doit y être résiduelle.
+    expect(terminatorTwilightWarmth(sinDeg(3), w)).toBeLessThan(0.15);
+    expect(terminatorTwilightWarmth(sinDeg(5), w)).toBeLessThan(0.02);
+    // Et elle s'annule exactement là où la bande elle-même s'annule : aucune teinte ne
+    // survit à son propre support.
+    expect(terminatorTwilightWarmth(w, w)).toBe(0);
+    expect(terminatorTwilight(w, w)).toBe(0);
+  });
+
+  it('s’éteint en nuit profonde comme la bande qu’elle colore', () => {
+    // Aucune queue chaude ne doit traîner sous la bande : une teinte sans support est une
+    // couleur posée sur du noir, donc invisible au mieux, une frange au pire.
+    expect(terminatorTwilightWarmth(-sinDeg(5), w)).toBeLessThan(0.01);
+    expect(terminatorTwilightWarmth(-1, w)).toBeCloseTo(0, 9);
+  });
+
+  it('décroît de façon monotone des deux côtés du terminateur', () => {
+    // Une teinte non monotone se lit comme un liseré : une bande de couleur qui revient.
+    let previous = terminatorTwilightWarmth(sinDeg(-8), w);
+    for (let deg = -8; deg <= 0; deg += 0.02) {
+      const value = terminatorTwilightWarmth(sinDeg(deg), w);
+      expect(value).toBeGreaterThanOrEqual(previous - 1e-9);
+      previous = value;
+    }
+    previous = terminatorTwilightWarmth(0, w);
+    for (let deg = 0; deg <= 8; deg += 0.02) {
+      const value = terminatorTwilightWarmth(sinDeg(deg), w);
+      expect(value).toBeLessThanOrEqual(previous + 1e-9);
+      previous = value;
+    }
+  });
+});
+
 describe('GLSL mirror', () => {
   // Le GLSL ne peut pas être exécuté hors d'un contexte WebGL : la seule protection réelle
   // est l'adjacence dans le fichier. Ces assertions attrapent au moins une suppression ou
@@ -297,6 +384,7 @@ describe('GLSL mirror', () => {
       'float terminatorNight( float raw, float onset, float rampWidth )',
       'float terminatorSunlitColumn( float raw )',
       'float terminatorTwilight( float raw, float wrap )',
+      'float terminatorTwilightWarmth( float raw, float wrap )',
     ])
       expect(TERMINATOR_GLSL).toContain(signature);
   });
@@ -314,6 +402,14 @@ describe('GLSL mirror', () => {
     expect(TERMINATOR_GLSL).toContain('exp( - shadowTopKm / 8.0 )');
     expect(TERMINATOR_GLSL).toContain(
       'terminatorSunlitColumn( raw ) * ( 1.0 - terminatorDay( raw, wrap ) )'
+    );
+    // Le demi-seuil de la retombée côté jour et le carré de la colonne : les deux
+    // coefficients qui décident où la bande est dorée plutôt que bleue.
+    expect(TERMINATOR_GLSL).toContain(
+      '( 1.0 - terminatorDay( raw, wrap ) ) / 0.5'
+    );
+    expect(TERMINATOR_GLSL).toContain(
+      'column * column * terminatorSmootherstep01( nearHorizon )'
     );
   });
 });

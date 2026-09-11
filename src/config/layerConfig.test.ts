@@ -20,6 +20,7 @@ import {
   RELIEF_FADE_START,
   reliefFade,
   TERMINATOR_WRAP_ATMOSPHERE,
+  TERMINATOR_WRAP_TWILIGHT_SKY,
   TERMINATOR_WRAP_ATMOSPHERE_SHELL,
   TERMINATOR_WRAP_CLOUDS,
   TERMINATOR_WRAP_STORM,
@@ -330,13 +331,15 @@ describe('day/night terminator wiring', () => {
     expect(shader.fragmentShader).toContain(
       'float nightMask = terminatorNight('
     );
-    // `1.0 - terminatorDay(` subsiste UNE fois, dans la définition partagée de
-    // `terminatorTwilight` (core/terminator.ts), où il annule le bandeau crépusculaire du
-    // côté jour — un usage qui n'a rien d'un masque nocturne. Ce qui reste interdit, c'est
-    // qu'un masque de ce matériau le recalcule pour son compte.
+    // `1.0 - terminatorDay(` subsiste DEUX fois, et les deux sont dans les définitions
+    // partagées de `core/terminator.ts` : `terminatorTwilight`, où il annule le bandeau
+    // crépusculaire du côté jour, et `terminatorTwilightWarmth`, où il éteint la teinte
+    // chaude au-dessus de l'horizon. Ni l'un ni l'autre n'est un masque nocturne. Ce qui
+    // reste interdit, c'est qu'un masque de ce matériau le recalcule pour son compte —
+    // c'est l'assertion suivante qui le dit, celle-ci ne compte que les occurrences.
     expect(
       shader.fragmentShader.match(/1\.0 - terminatorDay\(/g)?.length ?? 0
-    ).toBe(1);
+    ).toBe(2);
     expect(shader.fragmentShader).not.toMatch(
       /(nightMask|moonFacing|moonGlow)[^;]*1\.0 - terminatorDay\(/
     );
@@ -388,7 +391,11 @@ describe('day/night terminator wiring', () => {
 
     for (let raw = 0; raw > -w; raw -= 0.0005) {
       const ground = terminatorLight(raw, w) / reference;
-      const sky = terminatorTwilight(raw, w) / TWILIGHT_BAND_PEAK;
+      // Largeur de la COQUE, comme le shader : normaliser une courbe par le pic d'une autre
+      // rendrait la garantie fausse d'un facteur, sans que rien ne le signale.
+      const sky =
+        terminatorTwilight(raw, TERMINATOR_WRAP_TWILIGHT_SKY) /
+        TWILIGHT_BAND_PEAK;
       const cities = terminatorNight(raw, threshold, smoothness);
       expect(ground + sky + cities).toBeGreaterThanOrEqual(1);
     }
@@ -433,10 +440,22 @@ describe('day/night terminator wiring', () => {
     // On vise le SITE D'APPEL, pas la définition : `TERMINATOR_GLSL` est injecté dans tous
     // les matériaux, donc la fonction existe partout — ce qui distingue les corps, c'est
     // qu'elle soit appelée ou non.
+    // La LARGEUR passée est celle de la coque atmosphérique, pas celle du sol : cette lueur
+    // est émise par l'air. Calée sur le sol, elle démarrait trop bas et laissait un creux
+    // sombre entre l'extinction du sol et son propre départ (cf. TERMINATOR_WRAP_TWILIGHT_SKY).
     expect(earthShader.fragmentShader).toContain(
-      'terminatorTwilight( twilightGraze, uTerminatorWrap )'
+      'terminatorTwilight( twilightGraze, uTwilightWrap )'
     );
     expect(earthShader.uniforms['uTwilightColor']).toBeDefined();
+    expect(earthShader.uniforms['uTwilightWrap']?.value).toBe(
+      TERMINATOR_WRAP_TWILIGHT_SKY
+    );
+    // La TEINTE, elle, reste calée sur le terminateur du SOL : c'est là qu'est le coucher de
+    // soleil. Les deux largeurs sont volontairement différentes, et c'est la séparation
+    // couleur/luminosité qui rend le dégradé or→bleu possible.
+    expect(earthShader.fragmentShader).toContain(
+      'terminatorTwilightWarmth( twilightGraze, uTerminatorWrap )'
+    );
     // La lueur suit la MÊME atténuation solaire que l'éclairage direct — c'est sur lui que
     // son amplitude est calée, les deux doivent s'éteindre ensemble (distance et éclipse).
     expect(earthShader.fragmentShader).toContain(

@@ -274,14 +274,74 @@ export function terminatorTwilight(raw: number, wrap: number): number {
 }
 
 /**
- * Maximum du profil ci-dessus pour la largeur du crépuscule au sol — la seule employée, la
- * bande à combler étant exactement celle où le sol s'éteint. Balayé plutôt qu'écrit en dur :
- * si la courbe change, la normalisation suit au lieu de mentir.
+ * CHAUDEUR du bandeau — où il est doré plutôt que bleu. Entre 0 (bleu de diffusion) et 1 (or).
+ *
+ * Séparé de `terminatorTwilight` exprès, et c'est tout l'objet de cette fonction. La première
+ * version pilotait la teinte avec `sunlitColumnFraction`, qui est AUSSI un facteur de la
+ * luminosité : la partie dorée couvrait donc exactement la partie visible du bandeau et le
+ * bleu n'arrivait que là où il ne restait plus rien à colorer. Mesuré à l'écran, rapport
+ * rouge/bleu 11,2 au terminateur et encore 3,5 à +2,9° — un bandeau brun-rouge à travers tout
+ * le disque, y compris sur le jour. Couleur et luminosité doivent avoir des pilotes distincts,
+ * sinon la première ne peut varier que là où la seconde a disparu.
+ *
+ * Deux facteurs, chacun avec sa raison :
+ *
+ *   - `sunlitColumnFraction²` — la rougeur vient de l'extinction de Rayleigh le long du trajet
+ *     rasant qui éclaire la colonne d'air. Cette extinction suit `exp(−τ_λ·s)` avec un τ bleu
+ *     environ 3 fois le τ rouge (loi en λ⁻⁴) : le rapport bleu/rouge s'effondre donc BEAUCOUP
+ *     plus vite que `s` lui-même. Le carré est le substitut bon marché de cet effondrement ;
+ *     ce n'est pas un transfert radiatif, et sa forme a été vérifiée à l'écran, pas supposée.
+ *   - la retombée CÔTÉ JOUR — `sunlitColumnFraction` vaut 1 sur tout l'hémisphère éclairé, donc
+ *     à lui seul il tient la teinte chaude à fond jusqu'à `+wrap`. Or à 3° de hauteur le ciel
+ *     est bleu, pas doré. `1 − terminatorDay` retombe, lui, exactement à `+wrap` : remis à
+ *     l'échelle de sa valeur ½ au terminateur, il éteint la chaudeur côté jour sans la toucher
+ *     côté nuit. Le `smoothstep` (et non un `min`) évite une cassure de pente pile sur le
+ *     terminateur, qui se lirait comme un trait.
+ *
+ * Résultat : or dans les deux degrés qui encadrent le terminateur, bleu de part et d'autre —
+ * ce que montrent les photographies du terminateur depuis l'orbite.
+ */
+export function terminatorTwilightWarmth(raw: number, wrap: number): number {
+  const column = sunlitColumnFraction(raw);
+  const nearHorizon = clamp01((1 - terminatorDay(raw, wrap)) / 0.5);
+  return column * column * smootherstep01(nearHorizon);
+}
+
+/**
+ * LARGEUR du bandeau crépusculaire — celle de la COQUE atmosphérique, pas celle du sol.
+ *
+ * Le bandeau a d'abord repris la largeur du sol (`TERMINATOR_WRAP_ATMOSPHERE`, 6°) au motif
+ * qu'il fallait « ne rien changer au côté éclairé ». Erreur de couche, et mesurable : le terme
+ * s'annule alors EXACTEMENT en +6° et, `terminatorDay` étant à pente nulle en ce point, il
+ * reste quasi nul bien en dessous. Or le sol, lui, s'est déjà effondré à cette hauteur. Il
+ * restait donc un CREUX entre l'extinction du sol et le démarrage de la lueur — mesuré sur le
+ * rendu, luminance moyenne 23 à +8°, 7,5 à +5°, puis 25 au terminateur : un facteur 3, qui se
+ * lit comme un trait sombre séparant le jour de sa propre lueur, et qui faisait paraître le
+ * bandeau posé par-dessus l'image plutôt qu'issu d'elle.
+ *
+ * La règle du projet dit où est la faute : la largeur est une propriété de la COUCHE. Cette
+ * lueur n'est pas émise par le sol, elle l'est par l'air au-dessus — la même coque de 50 km
+ * qui porte le halo au limbe. Elle prend donc la largeur de cette coque, qui est déjà dérivée
+ * de son altitude réelle et non d'un réglage.
+ *
+ * Côté NUIT cela ne déborde pas : c'est `sunlitColumnFraction` qui y décide de l'extinction,
+ * et elle est déjà sous 5 % à −5°, quelle que soit la largeur passée ici.
+ */
+export const TERMINATOR_WRAP_TWILIGHT_SKY = TERMINATOR_WRAP_ATMOSPHERE_SHELL;
+
+/**
+ * Maximum du profil ci-dessus, balayé À LA LARGEUR RÉELLEMENT EMPLOYÉE par le matériau.
+ * Balayé plutôt qu'écrit en dur : si la courbe change, la normalisation suit au lieu de
+ * mentir. Le balayer à une autre largeur que celle du shader décalerait silencieusement
+ * l'amplitude ancrée par continuité.
  */
 export const TWILIGHT_BAND_PEAK = ((): number => {
   let peak = 0;
   for (let raw = -0.4; raw <= 0.4; raw += 1e-4)
-    peak = Math.max(peak, terminatorTwilight(raw, TERMINATOR_WRAP_ATMOSPHERE));
+    peak = Math.max(
+      peak,
+      terminatorTwilight(raw, TERMINATOR_WRAP_TWILIGHT_SKY)
+    );
   return peak;
 })();
 
@@ -353,6 +413,11 @@ float terminatorSunlitColumn( float raw ) {
 }
 float terminatorTwilight( float raw, float wrap ) {
   return terminatorSunlitColumn( raw ) * ( 1.0 - terminatorDay( raw, wrap ) );
+}
+float terminatorTwilightWarmth( float raw, float wrap ) {
+  float column = terminatorSunlitColumn( raw );
+  float nearHorizon = clamp( ( 1.0 - terminatorDay( raw, wrap ) ) / 0.5, 0.0, 1.0 );
+  return column * column * terminatorSmootherstep01( nearHorizon );
 }
 float reliefFade( float raw ) {
   return terminatorDay( raw - ${RELIEF_FADE_CENTER.toFixed(4)}, ${RELIEF_FADE_HALF_WIDTH.toFixed(4)} );

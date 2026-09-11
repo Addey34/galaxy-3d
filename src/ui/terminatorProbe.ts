@@ -49,6 +49,14 @@ export interface TerminatorBin {
   litFraction: number;
   meanLuminance: number;
   maxLuminance: number;
+  /**
+   * Moyenne des trois canaux, 0–255. La luminance seule ne sait pas dire de quelle COULEUR
+   * est le crépuscule : un bandeau brun-rouge saturé et un dégradé or→bleu crédible peuvent
+   * rendre la même luminance tranche par tranche. C'est précisément la confusion qui a laissé
+   * passer un bandeau uniformément rouge après une mesure « continue, sans trou » — exacte, et
+   * aveugle à ce qui n'allait pas.
+   */
+  meanColor: [number, number, number];
 }
 
 export interface TerminatorProbe {
@@ -173,7 +181,15 @@ export function setupTerminatorProbe(api: PublicAPI): () => void {
     const toSun = new THREE.Vector3();
     const bins = new Map<
       number,
-      { pixels: number; lit: number; sum: number; max: number }
+      {
+        pixels: number;
+        lit: number;
+        sum: number;
+        max: number;
+        red: number;
+        green: number;
+        blue: number;
+      }
     >();
 
     for (let y = 0; y < canvas.height; y += step) {
@@ -197,21 +213,31 @@ export function setupTerminatorProbe(api: PublicAPI): () => void {
         toSun.subVectors(target.sun, hit).normalize();
         const raw = normal.dot(toSun);
         const index = (y * canvas.width + x) * 4;
-        const level = luminance(
-          pixels[index] ?? 0,
-          pixels[index + 1] ?? 0,
-          pixels[index + 2] ?? 0
-        );
+        const red = pixels[index] ?? 0;
+        const green = pixels[index + 1] ?? 0;
+        const blue = pixels[index + 2] ?? 0;
+        const level = luminance(red, green, blue);
         const key = Math.round(raw * 100) / 100;
         let bin = bins.get(key);
         if (!bin) {
-          bin = { pixels: 0, lit: 0, sum: 0, max: 0 };
+          bin = {
+            pixels: 0,
+            lit: 0,
+            sum: 0,
+            max: 0,
+            red: 0,
+            green: 0,
+            blue: 0,
+          };
           bins.set(key, bin);
         }
         bin.pixels++;
         if (level >= DISPLAY_FLOOR) bin.lit++;
         bin.sum += level;
         if (level > bin.max) bin.max = level;
+        bin.red += red;
+        bin.green += green;
+        bin.blue += blue;
       }
     }
 
@@ -223,6 +249,11 @@ export function setupTerminatorProbe(api: PublicAPI): () => void {
         litFraction: bin.lit / bin.pixels,
         meanLuminance: bin.sum / bin.pixels,
         maxLuminance: bin.max,
+        meanColor: [
+          bin.red / bin.pixels,
+          bin.green / bin.pixels,
+          bin.blue / bin.pixels,
+        ],
       }));
   };
 

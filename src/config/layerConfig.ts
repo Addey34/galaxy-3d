@@ -7,6 +7,7 @@ import * as THREE from 'three';
 import {
   TERMINATOR_GLSL,
   TERMINATOR_WRAP_ATMOSPHERE,
+  TERMINATOR_WRAP_TWILIGHT_SKY,
   TERMINATOR_WRAP_CLOUDS,
   TERMINATOR_WRAP_STORM,
   TERMINATOR_WRAP_VACUUM,
@@ -939,25 +940,55 @@ const TWILIGHT_REFERENCE_ALBEDO = 0.306;
  * largeur apparente du bandeau. Les composantes peuvent dépasser 1 : on est en linéaire HDR,
  * avant tone mapping.
  */
-function twilightTint(color: number): THREE.Color {
+function twilightTint(color: number, neutralShare = 0): THREE.Color {
   const tint = new THREE.Color(color);
   const luminance = 0.2126 * tint.r + 0.7152 * tint.g + 0.0722 * tint.b;
-  return tint.multiplyScalar(1 / Math.max(luminance, 1e-4));
+  tint.multiplyScalar(1 / Math.max(luminance, 1e-4));
+  // Le blanc a par définition une luminance de 1 : mélanger vers lui désature SANS toucher
+  // à la luminosité, donc la séparation teinte/amplitude ci-dessus tient toujours.
+  const k = 1 - neutralShare;
+  tint.setRGB(1 + k * (tint.r - 1), 1 + k * (tint.g - 1), 1 + k * (tint.b - 1));
+  return tint;
 }
 
 /**
- * Teinte CHAUDE du bord du bandeau, côté terminateur.
+ * Part NEUTRE ajoutée à la teinte froide du bandeau.
  *
- * C'est une couleur CHOISIE, pas dérivée d'un transfert radiatif — autant le dire. Elle
- * reproduit le bas du coin crépusculaire, là où la lumière rase les couches denses et arrive
- * rougie. Ce qui est physique, c'est l'ENDROIT où elle s'applique : le mélange est piloté par
- * la proportion de colonne d'air encore éclairée, donc la teinte suit la géométrie du
- * terminateur au lieu d'être posée à la main.
+ * La teinte froide n'est pas choisie pour cet usage : c'est `atmosphereColor` du catalogue,
+ * écrite pour le HALO AU LIMBE. Là-bas le regard traverse des centaines de kilomètres d'air
+ * en rasant, donc une couleur très saturée est juste. Ici on regarde le ciel au ZÉNITH d'un
+ * point du disque, où la lueur arrive après des diffusions multiples qui ramènent toutes les
+ * longueurs d'onde : le ciel crépusculaire y est gris-bleu, pas bleu pur. Même couleur, deux
+ * géométries, deux saturations.
+ *
+ * Sans cette correction la normalisation en luminance aggrave encore le problème — diviser un
+ * bleu sombre par sa faible luminance fait exploser son canal bleu. Mesuré à l'écran avec la
+ * teinte brute : rapport rouge/bleu de 0,06 à 2,9° sous l'horizon, c'est-à-dire un bleu de
+ * synthèse sans aucun rouge, et un voile bleu qui remontait jusque sur le sol encore éclairé.
+ */
+const TWILIGHT_SKY_NEUTRAL_SHARE = 0.7;
+
+/**
+ * Teinte CHAUDE du cœur du bandeau, au terminateur.
+ *
+ * C'est une couleur CHOISIE, pas dérivée d'un transfert radiatif — autant le dire. Ce qui est
+ * physique, c'est l'ENDROIT où elle s'applique (`terminatorTwilightWarmth`), pas sa valeur.
+ *
+ * La première valeur, `0xff9a52`, était trop SATURÉE d'un facteur 3 et c'est ce qui a fait
+ * rendre un bandeau brun-rouge. Un modèle de diffusion simple sature toujours : il ignore les
+ * trajets multiples, plus courts, qui ramènent du bleu. Le chiffre qui le dit : une fois
+ * convertie en linéaire, elle portait un rapport rouge/bleu de 11,6, quand un ciel de soleil
+ * rasant photographié depuis l'orbite se situe vers 3 à 4. Rendue, la bande mesurait 11,2 —
+ * le rapport de la teinte, transmis tel quel.
+ *
+ * `0xffc890` porte un rapport de 3,6, dans cette fourchette. La valeur reste choisie ; ce qui
+ * est vérifié, c'est le rapport qu'elle produit À L'ÉCRAN, mesuré canal par canal par la sonde
+ * de terminateur — la luminance seule ne pouvait pas voir ce défaut.
  *
  * Normalisée en luminance comme la froide : la teinte décide de la couleur, `TWILIGHT_STRENGTH`
  * de la luminosité, et l'une ne peut pas déborder sur l'autre.
  */
-const TWILIGHT_WARM_TINT = 0xff9a52;
+const TWILIGHT_WARM_TINT = 0xffc890;
 
 /**
  * Amplitude du bandeau crépusculaire, POSÉE PAR CONTINUITÉ et non réglée à l'œil.
@@ -1000,20 +1031,21 @@ const TWILIGHT_STRENGTH = TWILIGHT_PEAK_RADIANCE / TWILIGHT_BAND_PEAK;
 const twilightGlsl = (sunReach: string): string => `
         {
           float twilightGraze = dot( normalize( vMoonWorldNormal ), fragmentSunDir() );
-          float twilightBand = terminatorTwilight( twilightGraze, uTerminatorWrap );
-          // La TEINTE varie le long de la bande ; une couleur unique donnait un bandeau bleu
-          // uniforme, signalé comme irréaliste — et il l'était. Près du terminateur la colonne
-          // d'air éclairée descend jusqu'aux couches denses, la lumière y traverse un long
-          // trajet rasant et arrive rougie ; plus loin dans la nuit seule la haute atmosphère,
-          // ténue, reste éclairée, et le bleu de diffusion domine. terminatorSunlitColumn
-          // mesure exactement cette proportion de colonne éclairée : elle vaut 1 au
-          // terminateur et s'effondre vers la nuit, donc elle fait ce fondu sans nouveau
-          // réglage. Les deux teintes étant normalisées en luminance, le mélange ne peut pas
-          // changer la luminosité de la bande, seulement sa couleur.
+          // La LARGEUR vient de la coque atmosphérique (uTwilightWrap), pas du sol : cette
+          // lueur est émise par l'air, et la caler sur le sol laissait un creux sombre entre
+          // l'extinction du sol et son démarrage. Cf. TERMINATOR_WRAP_TWILIGHT_SKY.
+          float twilightBand = terminatorTwilight( twilightGraze, uTwilightWrap );
+          // La TEINTE a son propre pilote, distinct de celui de la LUMINOSITÉ — cf.
+          // terminatorTwilightWarmth. Les avoir confondus est ce qui a produit le bandeau
+          // brun-rouge mesuré (rapport rouge/bleu 11,2 au terminateur, encore 3,5 à +2,9°
+          // au-dessus de l'horizon) : la teinte chaude couvrait toute la partie visible de la
+          // bande et le bleu n'apparaissait que dans sa queue éteinte. Les deux teintes étant
+          // normalisées en luminance, le mélange ne peut changer que la couleur de la bande,
+          // jamais sa luminosité.
           vec3 twilightTint = mix(
             uTwilightColor,
             uTwilightWarmColor,
-            terminatorSunlitColumn( twilightGraze )
+            terminatorTwilightWarmth( twilightGraze, uTerminatorWrap )
           );
           outgoingLight += twilightTint * ( twilightBand * uTwilightStrength${sunReach} );
         }`;
@@ -1228,12 +1260,18 @@ export function createShadowAwareStandardMaterial(
     shader.uniforms['uTerminatorWrap'] = { value: terminatorWrap };
     if (twilight) {
       shader.uniforms['uTwilightColor'] = {
-        value: twilightTint(options.twilightColor as number),
+        value: twilightTint(
+          options.twilightColor as number,
+          TWILIGHT_SKY_NEUTRAL_SHARE
+        ),
       };
       shader.uniforms['uTwilightWarmColor'] = {
         value: twilightTint(TWILIGHT_WARM_TINT),
       };
       shader.uniforms['uTwilightStrength'] = { value: TWILIGHT_STRENGTH };
+      shader.uniforms['uTwilightWrap'] = {
+        value: TERMINATOR_WRAP_TWILIGHT_SKY,
+      };
     }
     if (cloudShadow) {
       shader.uniforms['uCloudShadowMap'] = cloudShadowUniforms.map;
@@ -1284,7 +1322,7 @@ export function createShadowAwareStandardMaterial(
             : '') +
           (moonlight ? '\nuniform vec3 uMoonSunPos;' : '') +
           (twilight
-            ? '\nuniform vec3 uTwilightColor;\nuniform vec3 uTwilightWarmColor;\nuniform float uTwilightStrength;'
+            ? '\nuniform vec3 uTwilightColor;\nuniform vec3 uTwilightWarmColor;\nuniform float uTwilightStrength;\nuniform float uTwilightWrap;'
             : '') +
           (needsWorldPosVarying
             ? '\nvarying vec3 vMoonWorldPos;\nvarying vec3 vMoonWorldNormal;'
@@ -1443,7 +1481,7 @@ export function createShadowAwareStandardMaterial(
   material.customProgramCacheKey = () =>
     `shadow-aware-standard-v3${invertRoughness ? '-invrough-v2' : ''}${
       cloudShadow ? '-cloudshadow' : ''
-    }${moonlight ? '-moonlight' : ''}${twilight ? '-twilight-v2' : ''}${
+    }${moonlight ? '-moonlight' : ''}${twilight ? '-twilight-v4' : ''}${
       varyOceanRoughness ? '-oceanrough-v1' : ''
     }${limitSpecular ? '-limitspec-v3-grazeocclusion' : ''}${noSpecular ? '-nospec' : ''}${
       eclipseShadow ? '-eclipseshadow' : ''
