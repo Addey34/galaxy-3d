@@ -57,6 +57,14 @@ export interface BodyVisual {
    * décrit la même représentation que la scène 3D, elle n'en invente pas une seconde.
    */
   ring: BodyRingVisual | null;
+  /**
+   * Modèle de forme (glTF binaire), chemin depuis la racine du dépôt, ou `null`.
+   *
+   * Prend le pas sur la sphère quand il existe : un petit corps n'a pas de mosaïque
+   * équirectangulaire publiée, donc sa vignette sphérique n'était qu'une bille de la teinte de
+   * repli. Ce qui l'identifie est sa SILHOUETTE, et elle est ici. Cf. `renderShape`.
+   */
+  model: string | null;
 }
 
 export interface BodyRingVisual {
@@ -122,6 +130,9 @@ export function bodyVisual(
         : rgbFromHex(config.fallbackColor),
     emissive: config.kind === 'star',
     ring: bodyRingVisual(config, bodyName),
+    // Le chemin du catalogue est une URL servie (`/assets/...`) ; ici il faut un chemin de
+    // DÉPÔT, parce que la vignette est fabriquée au build, avant qu'aucun serveur n'existe.
+    model: config.model ? `public${config.model.url}` : null,
   };
 }
 

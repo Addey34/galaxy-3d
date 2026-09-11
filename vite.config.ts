@@ -126,6 +126,89 @@ function bodyLandingPages() {
           };
         };
 
+        /**
+         * Lit positions et indices du premier maillage d'un glTF binaire.
+         *
+         * Écrit à la main plutôt que via `GLTFLoader` : ce dernier veut un contexte navigateur
+         * pour ses textures et ses matériaux, dont la vignette n'a que faire — elle ne lit que
+         * la géométrie. Le conteneur GLB est un en-tête de 12 octets suivi de segments
+         * longueur/type, c'est-à-dire moins de code que la mise en place du chargeur.
+         */
+        const loadShapeMesh = async (
+          path: string
+        ): Promise<import('./src/seo/socialCard').ShapeMesh> => {
+          const bytes = await readFile(resolve(__dirname, path));
+          const view = new DataView(
+            bytes.buffer,
+            bytes.byteOffset,
+            bytes.byteLength
+          );
+          if (view.getUint32(0, true) !== 0x46546c67)
+            throw new Error(`${path} : ce n'est pas un glTF binaire`);
+          let offset = 12;
+          let json: Record<string, never[]> | null = null;
+          let bin: Uint8Array | null = null;
+          while (offset + 8 <= bytes.byteLength) {
+            const length = view.getUint32(offset, true);
+            const type = view.getUint32(offset + 4, true);
+            const start = offset + 8;
+            if (type === 0x4e4f534a)
+              json = JSON.parse(
+                new TextDecoder().decode(bytes.subarray(start, start + length))
+              ) as Record<string, never[]>;
+            else if (type === 0x004e4942)
+              bin = bytes.subarray(start, start + length);
+            offset = start + length + ((4 - (length % 4)) % 4);
+          }
+          if (!json || !bin)
+            throw new Error(`${path} : segments GLB manquants`);
+          const gltf = json as unknown as {
+            meshes: {
+              primitives: {
+                attributes: { POSITION: number };
+                indices: number;
+              }[];
+            }[];
+            accessors: {
+              bufferView: number;
+              componentType: number;
+              count: number;
+              byteOffset?: number;
+            }[];
+            bufferViews: { byteOffset?: number; byteLength: number }[];
+          };
+          const primitive = gltf.meshes?.[0]?.primitives?.[0];
+          if (!primitive) throw new Error(`${path} : aucun maillage`);
+
+          const read = (accessorIndex: number): ArrayLike<number> => {
+            const accessor = gltf.accessors[accessorIndex]!;
+            const bufferView = gltf.bufferViews[accessor.bufferView]!;
+            const start =
+              (bufferView.byteOffset ?? 0) + (accessor.byteOffset ?? 0);
+            const at = bin!.byteOffset + start;
+            // 5126 float32, 5125 uint32, 5123 uint16 — les seuls types qu'un modèle de forme
+            // décimé par `scripts/decimate-shape-model.mjs` peut porter.
+            if (accessor.componentType === 5126)
+              return new Float32Array(bin!.buffer, at, accessor.count * 3);
+            if (accessor.componentType === 5125)
+              return new Uint32Array(bin!.buffer, at, accessor.count);
+            if (accessor.componentType === 5123)
+              return new Uint16Array(bin!.buffer, at, accessor.count);
+            throw new Error(
+              `${path} : type de composant ${accessor.componentType} non géré`
+            );
+          };
+
+          return {
+            positions: Float32Array.from(
+              read(primitive.attributes.POSITION) as ArrayLike<number>
+            ),
+            indices: Uint32Array.from(
+              read(primitive.indices) as ArrayLike<number>
+            ),
+          };
+        };
+
         for (const page of pages) {
           const visual = page.visual;
           const texture = visual.surface
@@ -150,15 +233,26 @@ function bodyLandingPages() {
           // découpe sur le globe sont des bords géométriques francs, très visiblement crénelés
           // sinon. Le globe seul, lui, n'a qu'un bord circulaire, déjà lissé par `coverage` —
           // d'où le rendu direct, qui garde les cinquante autres vignettes au bit près.
+          //
+          // Un corps porteur d'un MODÈLE DE FORME est rendu par sa géométrie, pas par une
+          // sphère : sans mosaïque publiée, sa vignette sphérique n'était qu'une bille de sa
+          // teinte de repli. Suréchantillonné comme l'anneau, et pour la même raison — une
+          // silhouette de maillage est un bord géométrique franc, crénelé sinon.
           const span = ring ? card.RINGED_SPAN : card.SPHERE_SIZE;
-          const superSample = ring ? 2 : 1;
-          const sphere = card.renderSphere(
-            texture,
-            visual.fallback,
-            span * superSample,
-            visual.emissive,
-            ring
-          );
+          const superSample = ring || visual.model ? 2 : 1;
+          const sphere = visual.model
+            ? card.renderShape(
+                await loadShapeMesh(visual.model),
+                visual.fallback,
+                span * superSample
+              )
+            : card.renderSphere(
+                texture,
+                visual.fallback,
+                span * superSample,
+                visual.emissive,
+                ring
+              );
           const target = resolve(socialDir, `${page.slug}.jpg`);
           let body = sharp(
             Buffer.from(sphere.buffer, sphere.byteOffset, sphere.byteLength),

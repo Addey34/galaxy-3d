@@ -389,3 +389,172 @@ export function cardTextSvg(
     '</svg>'
   );
 }
+
+/**
+ * Maillage de forme, tel que le greffon de build le lit depuis un fichier glTF binaire.
+ * Coordonnées dans l'unité du fichier — `renderShape` les recentre et les met à l'échelle
+ * lui-même, parce qu'un modèle publié n'a aucune raison d'arriver normalisé.
+ */
+export interface ShapeMesh {
+  /** Positions XYZ mises bout à bout, trois nombres par sommet. */
+  positions: Float32Array;
+  /** Indices de sommets, trois par triangle. */
+  indices: Uint32Array;
+}
+
+/**
+ * RENDU D'UN CORPS À PARTIR DE SA FORME RÉELLE, et non d'une sphère.
+ *
+ * Pourquoi ce second chemin existe. Un petit corps n'a pas de mosaïque équirectangulaire
+ * publiée — il n'y en a pas pour Bennu — donc `renderSphere` n'avait que la teinte de repli à
+ * étaler : sa vignette était une bille grise, qui ne disait rien de lui. Or ce qui identifie
+ * Bennu, ce n'est pas sa couleur, c'est sa SILHOUETTE : la toupie à bourrelet équatorial. Le
+ * modèle de forme est déjà dans le dépôt, vérifié conforme aux statistiques publiées
+ * (cf. `scripts/decimate-shape-model.mjs`) ; il ne manquait qu'un rendu capable de le lire.
+ *
+ * Projection ORTHOGRAPHIQUE et tampon de profondeur, comme `renderSphere` : les deux vignettes
+ * décrivent ainsi la même vue. Éclairage plat par triangle, avec la MÊME direction de lumière
+ * et le même ambiant que la sphère — une vignette qui s'éclairerait autrement se verrait
+ * immédiatement dans une galerie de partages.
+ *
+ * Le maillage est recentré sur son centre de gravité géométrique et mis à l'échelle sur son
+ * rayon maximal. Pas sur la boîte englobante : le piège déjà payé une fois sur ce modèle
+ * (`THREE.Box3.getBoundingSphere` circonscrit la BOÎTE, donc rend √3 de trop pour un corps
+ * rond — le modèle était sorti 42 % trop petit).
+ */
+export function renderShape(
+  mesh: ShapeMesh,
+  fallback: [number, number, number],
+  size: number
+): Uint8ClampedArray {
+  const out = new Uint8ClampedArray(size * size * 4);
+  const { positions, indices } = mesh;
+  const vertexCount = positions.length / 3;
+  if (vertexCount === 0 || indices.length < 3) return out;
+
+  // --- recentrage et échelle ---------------------------------------------------------
+  let cx = 0;
+  let cy = 0;
+  let cz = 0;
+  for (let i = 0; i < vertexCount; i++) {
+    cx += positions[i * 3]!;
+    cy += positions[i * 3 + 1]!;
+    cz += positions[i * 3 + 2]!;
+  }
+  cx /= vertexCount;
+  cy /= vertexCount;
+  cz /= vertexCount;
+
+  let maxRadius = 0;
+  for (let i = 0; i < vertexCount; i++) {
+    const dx = positions[i * 3]! - cx;
+    const dy = positions[i * 3 + 1]! - cy;
+    const dz = positions[i * 3 + 2]! - cz;
+    const r = Math.hypot(dx, dy, dz);
+    if (r > maxRadius) maxRadius = r;
+  }
+  if (maxRadius <= 0) return out;
+
+  const center = size / 2;
+  const scale = (size / 2 - 1) / maxRadius;
+  // Sommets projetés une seule fois : les triangles partagent leurs sommets, les reprojeter
+  // par triangle referait le même calcul six fois en moyenne.
+  const sx = new Float32Array(vertexCount);
+  const sy = new Float32Array(vertexCount);
+  const sz = new Float32Array(vertexCount);
+  for (let i = 0; i < vertexCount; i++) {
+    sx[i] = center + (positions[i * 3]! - cx) * scale;
+    // Y écran vers le bas, Y modèle vers le haut.
+    sy[i] = center - (positions[i * 3 + 1]! - cy) * scale;
+    sz[i] = (positions[i * 3 + 2]! - cz) * scale;
+  }
+
+  // --- rastérisation avec tampon de profondeur ---------------------------------------
+  const depth = new Float32Array(size * size).fill(-Infinity);
+  const shade = new Float32Array(size * size);
+  const covered = new Uint8Array(size * size);
+
+  for (let t = 0; t + 2 < indices.length; t += 3) {
+    const a = indices[t]!;
+    const b = indices[t + 1]!;
+    const c = indices[t + 2]!;
+    const ax = sx[a]!;
+    const ay = sy[a]!;
+    const bx = sx[b]!;
+    const by = sy[b]!;
+    const cxs = sx[c]!;
+    const cys = sy[c]!;
+
+    const area = (bx - ax) * (cys - ay) - (by - ay) * (cxs - ax);
+    if (area === 0) continue;
+
+    // Normale de la face, dans le repère du modèle recentré (l'échelle est uniforme, donc
+    // elle ne change pas les directions).
+    const ux = positions[b * 3]! - positions[a * 3]!;
+    const uy = positions[b * 3 + 1]! - positions[a * 3 + 1]!;
+    const uz = positions[b * 3 + 2]! - positions[a * 3 + 2]!;
+    const vx = positions[c * 3]! - positions[a * 3]!;
+    const vy = positions[c * 3 + 1]! - positions[a * 3 + 1]!;
+    const vz = positions[c * 3 + 2]! - positions[a * 3 + 2]!;
+    let nx = uy * vz - uz * vy;
+    let ny = uz * vx - ux * vz;
+    let nz = ux * vy - uy * vx;
+    const nLength = Math.hypot(nx, ny, nz);
+    if (nLength === 0) continue;
+    nx /= nLength;
+    ny /= nLength;
+    nz /= nLength;
+    // Faces arrière écartées sur la NORMALE DU MODÈLE, pas sur le sens de parcours à l'écran.
+    // La projection retourne l'axe Y (Y écran vers le bas), ce qui inverse le signe de l'aire :
+    // trier sur ce signe gardait exactement les faces qui tournent le dos, dont la normale
+    // pointe à l'opposé de la lumière — toute la forme sortait à l'ambiant seul, un aplat
+    // presque noir. La caméra regarde selon −Z, donc une face visible a `nz > 0`, et cet
+    // énoncé-là ne dépend d'aucune convention d'orientation d'écran.
+    if (nz <= 0) continue;
+    const light =
+      AMBIENT + Math.max(nx * LIGHT[0] + ny * LIGHT[1] + nz * LIGHT[2], 0);
+
+    const minX = Math.max(0, Math.floor(Math.min(ax, bx, cxs)));
+    const maxX = Math.min(size - 1, Math.ceil(Math.max(ax, bx, cxs)));
+    const minY = Math.max(0, Math.floor(Math.min(ay, by, cys)));
+    const maxY = Math.min(size - 1, Math.ceil(Math.max(ay, by, cys)));
+
+    for (let py = minY; py <= maxY; py++) {
+      for (let px = minX; px <= maxX; px++) {
+        const qx = px + 0.5;
+        const qy = py + 0.5;
+        // Coordonnées barycentriques par aires signées — le test d'appartenance et
+        // l'interpolation de profondeur en un seul calcul.
+        // Normalisées par le signe de l'aire : le sens de parcours à l'écran dépend de
+        // l'orientation du maillage source, dont ce rendu n'a pas à connaître la convention.
+        const w0 = ((bx - ax) * (qy - ay) - (by - ay) * (qx - ax)) / area;
+        const w1 = ((cxs - bx) * (qy - by) - (cys - by) * (qx - bx)) / area;
+        const w2 = ((ax - cxs) * (qy - cys) - (ay - cys) * (qx - cxs)) / area;
+        if (w0 < 0 || w1 < 0 || w2 < 0) continue;
+        const z = w1 * sz[a]! + w2 * sz[b]! + w0 * sz[c]!;
+        const index = py * size + px;
+        if (z <= depth[index]!) continue;
+        depth[index] = z;
+        shade[index] = light;
+        covered[index] = 1;
+      }
+    }
+  }
+
+  // --- report en pixels ---------------------------------------------------------------
+  const linear: [number, number, number] = [
+    toLinear(fallback[0]),
+    toLinear(fallback[1]),
+    toLinear(fallback[2]),
+  ];
+  for (let i = 0; i < size * size; i++) {
+    if (!covered[i]) continue;
+    const light = shade[i]!;
+    const offset = i * 4;
+    out[offset] = toSrgb(linear[0] * light);
+    out[offset + 1] = toSrgb(linear[1] * light);
+    out[offset + 2] = toSrgb(linear[2] * light);
+    out[offset + 3] = 255;
+  }
+  return out;
+}

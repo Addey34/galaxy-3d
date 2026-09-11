@@ -9,6 +9,7 @@ import {
   cardBackgroundSvg,
   cardTextSvg,
   renderSphere,
+  renderShape,
   type RawImage,
 } from './socialCard';
 
@@ -381,5 +382,189 @@ describe('anneau de la vignette', () => {
     const plain = renderSphere(null, GREY, 64, false);
     const explicitlyNone = renderSphere(null, GREY, 64, false, null);
     expect([...explicitlyNone]).toEqual([...plain]);
+  });
+});
+
+/**
+ * Icosaèdre subdivisé : une forme fermée, convexe, dont on connaît le rayon exact. Sert de
+ * corps de forme « connue » pour éprouver `renderShape` sans dépendre d'un fichier.
+ */
+function unitBall(subdivisions: number): {
+  positions: Float32Array;
+  indices: Uint32Array;
+} {
+  const phi = (1 + Math.sqrt(5)) / 2;
+  let verts: [number, number, number][] = [
+    [-1, phi, 0],
+    [1, phi, 0],
+    [-1, -phi, 0],
+    [1, -phi, 0],
+    [0, -1, phi],
+    [0, 1, phi],
+    [0, -1, -phi],
+    [0, 1, -phi],
+    [phi, 0, -1],
+    [phi, 0, 1],
+    [-phi, 0, -1],
+    [-phi, 0, 1],
+  ];
+  let faces: [number, number, number][] = [
+    [0, 11, 5],
+    [0, 5, 1],
+    [0, 1, 7],
+    [0, 7, 10],
+    [0, 10, 11],
+    [1, 5, 9],
+    [5, 11, 4],
+    [11, 10, 2],
+    [10, 7, 6],
+    [7, 1, 8],
+    [3, 9, 4],
+    [3, 4, 2],
+    [3, 2, 6],
+    [3, 6, 8],
+    [3, 8, 9],
+    [4, 9, 5],
+    [2, 4, 11],
+    [6, 2, 10],
+    [8, 6, 7],
+    [9, 8, 1],
+  ];
+  for (let s = 0; s < subdivisions; s++) {
+    const next: [number, number, number][] = [];
+    const middle = new Map<string, number>();
+    const midpoint = (i: number, j: number): number => {
+      const key = i < j ? `${i}_${j}` : `${j}_${i}`;
+      const found = middle.get(key);
+      if (found !== undefined) return found;
+      const a = verts[i]!;
+      const b = verts[j]!;
+      verts.push([(a[0] + b[0]) / 2, (a[1] + b[1]) / 2, (a[2] + b[2]) / 2]);
+      const index = verts.length - 1;
+      middle.set(key, index);
+      return index;
+    };
+    for (const [a, b, c] of faces) {
+      const ab = midpoint(a, b);
+      const bc = midpoint(b, c);
+      const ca = midpoint(c, a);
+      next.push([a, ab, ca], [b, bc, ab], [c, ca, bc], [ab, bc, ca]);
+    }
+    faces = next;
+  }
+  verts = verts.map(([x, y, z]) => {
+    const n = Math.hypot(x, y, z);
+    return [x / n, y / n, z / n];
+  });
+  return {
+    positions: Float32Array.from(verts.flat()),
+    indices: Uint32Array.from(faces.flat()),
+  };
+}
+
+describe('forme réelle de la vignette', () => {
+  const ball = unitBall(3);
+
+  it('éclaire un côté et laisse l’autre dans la nuit', () => {
+    // La même propriété que pour la sphère, et pour la même raison : sans elle la vignette
+    // est une pastille. C'est ici qu'elle a réellement manqué — le sens de parcours des
+    // triangles à l'écran est inversé par le retournement de l'axe Y, si bien qu'un tri sur
+    // ce sens gardait EXACTEMENT les faces arrière. Tout le corps sortait à l'ambiant seul :
+    // un aplat presque noir, de la bonne silhouette, que rien n'aurait signalé.
+    const shape = renderShape(ball, GREY, SIZE);
+    const centre = pixel(shape, SIZE, SIZE / 2, SIZE / 2);
+    expect(centre[3]).toBe(255);
+    expect(luminance(centre)).toBeGreaterThan(120);
+
+    // Et le côté opposé à la lumière est nettement plus sombre que le côté éclairé.
+    const towardsLight = LIGHT_DIRECTION[0] < 0 ? 0.25 : 0.75;
+    const lit = pixel(shape, SIZE, Math.round(SIZE * towardsLight), SIZE / 2);
+    const dark = pixel(
+      shape,
+      SIZE,
+      Math.round(SIZE * (1 - towardsLight)),
+      SIZE / 2
+    );
+    // Seuil exprimé en 8 BITS, c'est-à-dire après encodage sRGB, parce que c'est là que la
+    // propriété doit tenir. En linéaire l'écart vaut 1,47 ; la puissance 1/2,2 le ramène à
+    // 1,26, et un seuil posé sur la valeur linéaire échouerait sur un rendu pourtant correct.
+    // Avec les faces arrière les deux côtés tombaient à l'ambiant seul, donc à un rapport de
+    // 1,0 : c'est bien ce défaut-là que cette borne sépare.
+    expect(luminance(lit)).toBeGreaterThan(luminance(dark) * 1.15);
+  });
+
+  it('détoure le corps au lieu de remplir la case', () => {
+    const shape = renderShape(ball, GREY, SIZE);
+    for (const [x, y] of [
+      [1, 1],
+      [SIZE - 2, 1],
+      [1, SIZE - 2],
+      [SIZE - 2, SIZE - 2],
+    ])
+      expect(pixel(shape, SIZE, x!, y!)[3]).toBe(0);
+  });
+
+  it('remplit le cadre sans le déborder, quelle que soit l’échelle du modèle', () => {
+    // Un modèle publié n'arrive pas normalisé : celui de Bennu est en kilomètres, un autre
+    // pourrait être en mètres. La mise à l'échelle doit venir du modèle lui-même.
+    const big = {
+      positions: ball.positions.map((v) => v * 4200),
+      indices: ball.indices,
+    };
+    const small = {
+      positions: ball.positions.map((v) => v * 0.003),
+      indices: ball.indices,
+    };
+    const a = renderShape(big, GREY, SIZE);
+    const b = renderShape(small, GREY, SIZE);
+    expect(Array.from(a)).toEqual(Array.from(b));
+    // Et la boule touche bien les deux bords horizontaux à mi-hauteur.
+    expect(pixel(a, SIZE, 1, SIZE / 2)[3]).toBe(255);
+    expect(pixel(a, SIZE, SIZE - 2, SIZE / 2)[3]).toBe(255);
+  });
+
+  it('recentre le modèle sur lui-même', () => {
+    // Un modèle dont le centre n'est pas à l'origine sortirait décadré, voire hors champ.
+    const shifted = {
+      positions: ball.positions.map((v, i) => v + (i % 3 === 0 ? 17 : 0)),
+      indices: ball.indices,
+    };
+    expect(Array.from(renderShape(shifted, GREY, SIZE))).toEqual(
+      Array.from(renderShape(ball, GREY, SIZE))
+    );
+  });
+
+  it('montre la face AVANT, pas la face arrière', () => {
+    // Le défaut corrigé, énoncé sur la géométrie plutôt que sur la couleur : sur une boule
+    // convexe, le point le plus proche de la caméra est au centre de l'image. Si le tampon de
+    // profondeur gardait les faces arrière, la profondeur y serait négative — et l'image
+    // rendrait la silhouette correcte avec l'éclairage de l'autre côté du corps.
+    const shape = renderShape(ball, GREY, SIZE);
+    const centre = pixel(shape, SIZE, SIZE / 2, SIZE / 2);
+    // Face avant au centre : normale ≈ +Z, donc presque alignée avec la lumière, donc le
+    // pixel le plus clair de toute l'image se trouve du côté éclairé et non à l'opposé.
+    let brightestX = 0;
+    let best = -1;
+    for (let x = 0; x < SIZE; x++) {
+      const value = luminance(pixel(shape, SIZE, x, SIZE / 2));
+      if (value > best) {
+        best = value;
+        brightestX = x;
+      }
+    }
+    expect(best).toBeGreaterThan(luminance(centre) * 0.9);
+    // La lumière vient de la gauche (LIGHT_DIRECTION[0] < 0) : le maximum est donc dans la
+    // moitié gauche. Avec les faces arrière il basculait à droite.
+    expect(brightestX).toBeLessThan(SIZE / 2);
+  });
+
+  it('ne rend rien plutôt que de planter sur un maillage vide', () => {
+    const empty = renderShape(
+      { positions: new Float32Array(), indices: new Uint32Array() },
+      GREY,
+      SIZE
+    );
+    expect(empty.length).toBe(SIZE * SIZE * 4);
+    expect(Array.from(empty).every((v) => v === 0)).toBe(true);
   });
 });
