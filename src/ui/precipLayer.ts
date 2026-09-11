@@ -1,5 +1,5 @@
 /** Couche satellite NASA IMERG. Configuration fine de observedTextureLayer. */
-import { IS_MOBILE, PRECIP_SETTINGS } from '@/config/engine';
+import { PRECIP_SETTINGS } from '@/config/engine';
 import { resolvePrecipSources } from '@/core/layerSource';
 import { getEarth, type WeatherLayerHandle } from './earthLayer';
 import { setupObservedTextureLayer } from './observedTextureLayer';
@@ -13,7 +13,13 @@ export function setupPrecipLayer(api: PublicAPI): WeatherLayerHandle | null {
     labelKey: 'weather.precip',
     noteKey: 'weather.precip.note',
     enabled: settings.enabled,
-    initial: !IS_MOBILE && settings.enabled,
+    // ÉTEINTE au démarrage, sur desktop comme sur mobile. La pluie est une couche
+    // d'INSTRUMENT, pas l'apparence de la Terre (cf. la règle des couches dans
+    // CONTRIBUTING.md). Imposée d'entrée, elle s'empilait avec les nuages et le vent et
+    // noyait la surface : signalement d'un globe « délavé », puis « transparent », alors que
+    // la Terre était simplement enfouie sous trois nappes de données que personne n'avait
+    // demandées. Elle reste à un clic dans le panneau météo.
+    initial: false,
     earth: getEarth(api, 'PrecipLayer', settings.enabled),
     targetLayer: 'precip',
     resolveSources: (simDate, now) =>

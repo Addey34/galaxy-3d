@@ -1284,7 +1284,7 @@ export function createShadowAwareStandardMaterial(
             : '') +
           (moonlight ? '\nuniform vec3 uMoonSunPos;' : '') +
           (twilight
-            ? '\nuniform vec3 uTwilightColor;\nuniform float uTwilightStrength;'
+            ? '\nuniform vec3 uTwilightColor;\nuniform vec3 uTwilightWarmColor;\nuniform float uTwilightStrength;'
             : '') +
           (needsWorldPosVarying
             ? '\nvarying vec3 vMoonWorldPos;\nvarying vec3 vMoonWorldNormal;'

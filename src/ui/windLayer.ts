@@ -115,7 +115,10 @@ export function setupWindLayer(api: PublicAPI): WeatherLayerHandle | null {
     id: 'wind',
     labelKey: 'weather.wind',
     onLoadStateChange: loadState.subscribe,
-    initial: true, // présente → affichée par défaut (le panneau la masque au besoin)
+    // Éteinte au démarrage : le vent est un INSTRUMENT, pas l'apparence de la Terre.
+    // « Présente donc affichée » partait d'une bonne intention et donnait un globe couvert de
+    // données avant même que le visiteur ait demandé quoi que ce soit.
+    initial: false,
     noteKey: 'weather.wind.note',
     setVisible: (visible) => {
       particles.points.visible = visible;
