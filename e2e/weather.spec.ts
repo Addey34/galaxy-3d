@@ -25,6 +25,24 @@ function weatherRow(page: Page, label: string): Locator {
   return page.locator('#weather-layers .wl-item').filter({ hasText: label });
 }
 
+/**
+ * Ce que montre la Terre AVANT que personne n'ait rien coché.
+ *
+ * Une seule couche d'emblée, les nuages : ce sont eux qui font ressembler la Terre à la Terre.
+ * La pluie s'y empilait au démarrage et noyait la surface — d'où le signalement « pour moi
+ * surcharger » ; elle est à un clic depuis `bd06d0c`. Le vent aussi, mais lui pour une raison
+ * de règle et non de goût : c'est une couche d'INSTRUMENT au sens de CONTRIBUTING.md.
+ *
+ * **Ne pas justifier ces défauts par la règle des couches.** Elle range explicitement les
+ * précipitations AVEC les nuages, en apparence physique, et elle décide de la largeur du
+ * TERMINATEUR, pas de la visibilité au démarrage. `bd06d0c` l'a citée à tort, et ce commentaire
+ * a d'abord repris l'erreur. Le défaut ci-dessous est un choix de sobriété, assumé comme tel et
+ * réversible en une ligne (`initial:` dans `src/ui/precipLayer.ts`).
+ *
+ * Ce test a échoué trois runs de suite en CI avant d'être remis d'accord avec le code, parce que
+ * le job e2e ne bloque pas le déploiement. C'est le vrai enseignement : un test rouge est parti
+ * en production sans que rien ne s'y oppose.
+ */
 test('desktop weather defaults are explicit and satellite-first', async ({
   page,
 }) => {
@@ -39,7 +57,7 @@ test('desktop weather defaults are explicit and satellite-first', async ({
   ).not.toBeChecked();
   await expect(
     weatherRow(page, 'Rain (NASA IMERG)').locator('input')
-  ).toBeChecked();
+  ).not.toBeChecked();
   await expect(
     weatherRow(page, 'Rain (Open-Meteo)').locator('input')
   ).not.toBeChecked();

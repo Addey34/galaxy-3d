@@ -13,12 +13,17 @@ export function setupPrecipLayer(api: PublicAPI): WeatherLayerHandle | null {
     labelKey: 'weather.precip',
     noteKey: 'weather.precip.note',
     enabled: settings.enabled,
-    // ÉTEINTE au démarrage, sur desktop comme sur mobile. La pluie est une couche
-    // d'INSTRUMENT, pas l'apparence de la Terre (cf. la règle des couches dans
-    // CONTRIBUTING.md). Imposée d'entrée, elle s'empilait avec les nuages et le vent et
-    // noyait la surface : signalement d'un globe « délavé », puis « transparent », alors que
-    // la Terre était simplement enfouie sous trois nappes de données que personne n'avait
-    // demandées. Elle reste à un clic dans le panneau météo.
+    // ÉTEINTE au démarrage, sur desktop comme sur mobile. Imposée d'entrée, elle s'empilait
+    // avec les nuages et le vent et noyait la surface : signalement d'un globe « délavé »
+    // puis « transparent », alors que la Terre était simplement enfouie sous trois nappes de
+    // données que personne n'avait demandées. Elle reste à un clic dans le panneau météo.
+    //
+    // CHOIX DE SOBRIÉTÉ, pas une règle — et la nuance a déjà coûté une erreur. La règle des
+    // couches (CONTRIBUTING.md) range les précipitations AVEC les nuages, en apparence
+    // physique, et elle décide de la largeur du TERMINATEUR, pas de la visibilité au
+    // démarrage. L'invoquer ici serait s'autoriser une décision produit au nom d'un texte qui
+    // ne la porte pas. Le vent, lui, est bien une couche d'instrument à ce sens-là.
+    // Réversible en une ligne ; `e2e/weather.spec.ts` tient l'état attendu.
     initial: false,
     earth: getEarth(api, 'PrecipLayer', settings.enabled),
     targetLayer: 'precip',

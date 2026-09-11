@@ -68,6 +68,19 @@ test('IMERG keeps its native alpha mask and compiles the observed rain layer', a
   await page.goto('/?debug-meteo&body=earth');
   await expect(page.locator('#loader')).toBeHidden({ timeout: 30_000 });
 
+  // La pluie n'est plus active au démarrage (`bd06d0c` — choix de sobriété, cf. le commentaire
+  // de `e2e/weather.spec.ts`). Ce test attendait `ready ON` sans rien activer : il reposait donc
+  // sur un défaut D'AFFICHAGE plutôt que sur son propre sujet, et il est tombé dès que ce défaut
+  // a changé. Ce qu'il vérifie — le masque alpha natif d'IMERG et la COMPILATION du shader de
+  // pluie — ne dépend pas de qui allume la couche. L'activer ici le rend indépendant du réglage.
+  await page.locator('#weather-trigger').click();
+  await expect(page.locator('#weather-layers')).toBeVisible();
+  await page
+    .locator('#weather-layers .wl-item')
+    .filter({ hasText: 'Rain (NASA IMERG)' })
+    .locator('input')
+    .check();
+
   const debug = page.locator('#meteo-debug');
   await expect(debug).toContainText('precip [observed] ready ON', {
     timeout: 30_000,
