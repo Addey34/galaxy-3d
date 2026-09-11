@@ -263,15 +263,61 @@ solaire. Aucune couche ne doit re-dériver sa propre rampe.
      soleil, avec `H = 8 km` (hauteur d'échelle). Aucun paramètre libre : 1,00 au coucher, 0,89
      à 1°, 0,34 à 3°, 0,012 à 6°. La lueur s'éteint donc d'elle-même à la fin du crépuscule
      civil — la même borne que `TERMINATOR_WRAP_ATMOSPHERE`, sans qu'on l'ait imposée.
-   - `× (1 − terminatorDay(raw, wrap))` — nul **exactement** en `+wrap` : le côté éclairé garde
-     son rendu à l'identique, la lueur n'existe que là où le sol a cessé d'être éclairé.
+   - `× (1 − terminatorDay(raw, wrap))` — nul **exactement** en `+wrap`, ce qui borne la bande
+     côté jour.
+
+   **La largeur passée est celle de la COQUE atmosphérique (`TERMINATOR_WRAP_TWILIGHT_SKY`,
+   13,2°), pas celle du sol.** C'est une correction du 2026-09-11, et une erreur de couche :
+   calé sur le sol, le terme s'annulait en +6° avec une pente nulle, donc restait quasi nul bien
+   en dessous — alors que le sol, lui, s'était déjà effondré à cette hauteur. Il restait un
+   **creux** entre l'extinction du sol et le démarrage de la lueur : luminance moyenne 23 à +8°,
+   **7,5 à +5°**, 25 au terminateur. Ce facteur 3 se lit comme un trait sombre séparant le jour
+   de sa propre lueur, et faisait paraître le bandeau posé sur l'image plutôt qu'issu d'elle.
+   La règle du projet dit où est la faute : **la largeur est une propriété de la couche**, et
+   cette lueur est émise par l'air, pas par le sol. Après correction, 18,6 contre une épaule à
+   25. Côté nuit rien ne déborde : c'est `sunlitColumnFraction` qui y décide de l'extinction.
 
    Amplitude posée par **continuité**, pas à l'œil : le maximum vaut l'éclairement du sol au
    haut de la bande (`wrap × I × albédo / π`, albédo de Bond publié 0,306), donc la courbe
-   rendue prolonge la rampe du jour au lieu de tomber d'une falaise. La teinte vient de
-   `atmosphereColor` du catalogue, **normalisée en luminance** — elle choisit la couleur, jamais
-   la luminosité. Après correction, mesuré au même endroit : 100 % des pixels au-dessus du
-   plancher de +3,4° à −4,0°, 0 % dès −5,2° (les villes reprennent, contraste intact).
+   rendue prolonge la rampe du jour au lieu de tomber d'une falaise. Après correction, mesuré au
+   même endroit : 100 % des pixels au-dessus du plancher de +3,4° à −4,0°, 0 % dès −5,2° (les
+   villes reprennent, contraste intact).
+
+6. **La couleur doit avoir un pilote distinct de la luminosité.** Corollaire du point 5, et le
+   défaut qu'il a fallu livrer deux fois pour comprendre. Le bandeau passe du doré au bleu, et
+   ce fondu était piloté par `sunlitColumnFraction` — qui est **aussi** un facteur de son
+   amplitude. La partie dorée couvrait donc exactement la partie visible, et le bleu n'arrivait
+   que là où il ne restait plus rien à colorer. Mesuré tranche par tranche : rapport rouge/bleu
+   **11,2 au terminateur**, encore 3,5 à +2,9° au-dessus de l'horizon. Rendu, un bandeau
+   brun-rouge en travers de tout le disque, jour compris.
+
+   `terminatorTwilightWarmth(raw, wrap)` rejoint donc le contrat, avec ses propres facteurs :
+   `sunlitColumnFraction²` (le rapport bleu/rouge du trajet rasant s'effondre bien plus vite que
+   `s` lui-même, loi de Rayleigh en λ⁻⁴) et une retombée **côté jour** via `1 − terminatorDay`
+   remis à l'échelle de sa valeur ½ au terminateur — sans quoi la teinte chaude tiendrait à fond
+   jusqu'à `+wrap`, alors qu'à 3° de hauteur le ciel est bleu. Résultat : or dans les deux
+   degrés qui encadrent le terminateur, bleu de part et d'autre.
+
+7. **Une teinte normalisée en luminance n'est pas une teinte désaturée.** Les deux teintes du
+   bandeau étaient sursaturées d'un facteur ~3, chacune pour sa propre raison. La chaude était
+   choisie trop rouge (rapport rouge/bleu de 11,6 en linéaire, quand un ciel de soleil rasant
+   photographié depuis l'orbite se situe vers 3 à 4). La froide n'était **pas choisie pour cet
+   usage** : c'est `atmosphereColor` du catalogue, écrite pour le **halo au limbe**, où le
+   regard traverse des centaines de kilomètres d'air en rasant. Vue au zénith d'un point du
+   disque, après diffusions multiples, elle doit être gris-bleu — même couleur, deux géométries,
+   deux saturations. La normalisation en luminance **aggrave** le problème plutôt que de le
+   corriger : diviser un bleu sombre par sa faible luminance fait exploser son canal bleu
+   (rapport rendu 0,06 à 2,9° sous l'horizon, un bleu de synthèse sans aucun rouge).
+   `TWILIGHT_SKY_NEUTRAL_SHARE` mélange donc la teinte froide vers le blanc — qui a par
+   définition une luminance de 1, donc désature **sans** toucher à la luminosité, et la
+   séparation teinte/amplitude tient toujours.
+
+   Les deux rapports sont bornés par `src/config/twilightTint.test.ts`, qui lit les uniformes
+   réellement posés par le matériau. C'est le test qui manquait : toutes les garanties
+   existantes portaient sur la LUMINOSITÉ du bandeau et étaient vraies, or un bandeau brun-rouge
+   saturé et un coucher de soleil crédible rendent exactement la même luminance. La sonde de
+   terminateur (`?debug-terminator`) renvoie désormais aussi la moyenne des trois canaux par
+   tranche — sans elle, ce défaut n'était pas observable.
 
    Le bandeau est réservé aux corps qui ont **à la fois** une atmosphère et le socle `moonlight`
    dont il réutilise les varyings monde — aujourd'hui la Terre seule. L'étendre à Vénus ou Mars
@@ -383,6 +429,25 @@ plugin. La sphère est un vrai rendu — projection orthographique de la carte �
 corps, éclairage lambertien en linéaire, bord lissé, assombrissement centre-bord pour une étoile
 qui émet au lieu d'être éclairée. Calcul JavaScript pur, sans GPU ni navigateur, donc
 DÉTERMINISTE : même entrée, même image, en local comme sur le runner.
+
+**Deux chemins de rendu**, selon ce que le catalogue donne au corps. `renderSphere` projette une
+carte équirectangulaire ; `renderShape` rastérise un **modèle de forme** (glTF binaire) en
+projection orthographique avec tampon de profondeur. Un petit corps n'a pas de mosaïque publiée —
+il n'y en a pas pour Bennu — donc sa vignette sphérique n'était qu'une bille de sa teinte de
+repli. Or ce qui l'identifie n'est pas sa couleur mais sa **silhouette**. Les deux chemins
+partagent la même direction de lumière et le même ambiant : une vignette qui s'éclairerait
+autrement se verrait dans une galerie de partages.
+
+Deux pièges du rendu de forme, tous deux payés une fois :
+
+- **Trier les faces arrière sur le sens de parcours à l'écran est faux ici.** La projection
+  retourne l'axe Y, ce qui inverse le signe de l'aire : le tri gardait exactement les faces qui
+  tournent le dos, dont la normale pointe à l'opposé de la lumière. La bonne silhouette sortait
+  en **noir**, à l'ambiant seul. Le tri se fait sur la normale du MODÈLE (`nz > 0`), énoncé qui
+  ne dépend d'aucune convention d'orientation d'écran.
+- **L'échelle vient du rayon MAXIMAL, jamais de la boîte englobante.** `Box3.getBoundingSphere`
+  circonscrit la boîte, donc rend `√3` de trop pour un corps rond — déjà payé sur ce même modèle
+  dans la scène 3D, où il était sorti 42 % trop petit (cf. `core/modelFit.ts`).
 
 Trois règles à ne pas défaire :
 
