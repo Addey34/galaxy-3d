@@ -946,6 +946,20 @@ function twilightTint(color: number): THREE.Color {
 }
 
 /**
+ * Teinte CHAUDE du bord du bandeau, côté terminateur.
+ *
+ * C'est une couleur CHOISIE, pas dérivée d'un transfert radiatif — autant le dire. Elle
+ * reproduit le bas du coin crépusculaire, là où la lumière rase les couches denses et arrive
+ * rougie. Ce qui est physique, c'est l'ENDROIT où elle s'applique : le mélange est piloté par
+ * la proportion de colonne d'air encore éclairée, donc la teinte suit la géométrie du
+ * terminateur au lieu d'être posée à la main.
+ *
+ * Normalisée en luminance comme la froide : la teinte décide de la couleur, `TWILIGHT_STRENGTH`
+ * de la luminosité, et l'une ne peut pas déborder sur l'autre.
+ */
+const TWILIGHT_WARM_TINT = 0xff9a52;
+
+/**
  * Amplitude du bandeau crépusculaire, POSÉE PAR CONTINUITÉ et non réglée à l'œil.
  *
  * Au HAUT de la bande (`raw = +wrap`) le terme s'annule par construction, et le sol y émet
@@ -987,7 +1001,21 @@ const twilightGlsl = (sunReach: string): string => `
         {
           float twilightGraze = dot( normalize( vMoonWorldNormal ), fragmentSunDir() );
           float twilightBand = terminatorTwilight( twilightGraze, uTerminatorWrap );
-          outgoingLight += uTwilightColor * ( twilightBand * uTwilightStrength${sunReach} );
+          // La TEINTE varie le long de la bande ; une couleur unique donnait un bandeau bleu
+          // uniforme, signalé comme irréaliste — et il l'était. Près du terminateur la colonne
+          // d'air éclairée descend jusqu'aux couches denses, la lumière y traverse un long
+          // trajet rasant et arrive rougie ; plus loin dans la nuit seule la haute atmosphère,
+          // ténue, reste éclairée, et le bleu de diffusion domine. terminatorSunlitColumn
+          // mesure exactement cette proportion de colonne éclairée : elle vaut 1 au
+          // terminateur et s'effondre vers la nuit, donc elle fait ce fondu sans nouveau
+          // réglage. Les deux teintes étant normalisées en luminance, le mélange ne peut pas
+          // changer la luminosité de la bande, seulement sa couleur.
+          vec3 twilightTint = mix(
+            uTwilightColor,
+            uTwilightWarmColor,
+            terminatorSunlitColumn( twilightGraze )
+          );
+          outgoingLight += twilightTint * ( twilightBand * uTwilightStrength${sunReach} );
         }`;
 
 // Clair de Lune (réflecteur nocturne) injecté après le calcul d'outgoingLight.
@@ -1202,6 +1230,9 @@ export function createShadowAwareStandardMaterial(
       shader.uniforms['uTwilightColor'] = {
         value: twilightTint(options.twilightColor as number),
       };
+      shader.uniforms['uTwilightWarmColor'] = {
+        value: twilightTint(TWILIGHT_WARM_TINT),
+      };
       shader.uniforms['uTwilightStrength'] = { value: TWILIGHT_STRENGTH };
     }
     if (cloudShadow) {
@@ -1412,7 +1443,7 @@ export function createShadowAwareStandardMaterial(
   material.customProgramCacheKey = () =>
     `shadow-aware-standard-v3${invertRoughness ? '-invrough-v2' : ''}${
       cloudShadow ? '-cloudshadow' : ''
-    }${moonlight ? '-moonlight' : ''}${twilight ? '-twilight-v1' : ''}${
+    }${moonlight ? '-moonlight' : ''}${twilight ? '-twilight-v2' : ''}${
       varyOceanRoughness ? '-oceanrough-v1' : ''
     }${limitSpecular ? '-limitspec-v3-grazeocclusion' : ''}${noSpecular ? '-nospec' : ''}${
       eclipseShadow ? '-eclipseshadow' : ''
