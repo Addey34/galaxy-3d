@@ -30,7 +30,21 @@ function labelRgb(name: string): string {
   return bodyAccentTriplet(BODY_CONFIGS.get(name), name);
 }
 
-const MAJOR_BODIES = new Set([
+/**
+ * Les corps qu'un visiteur reconnaît et s'attend à voir nommés : l'étoile, les huit planètes,
+ * et la Lune — la seule que tout le monde nomme sans hésiter.
+ *
+ * Deux consommateurs, pour la même raison. Ici, la vue d'ensemble Explo, où tous les corps se
+ * projettent dans un même amas. Et, depuis `ui/orbitOptions`, l'état de départ des libellés en
+ * Éducatif : le catalogue compte plus de cinquante entrées, et les afficher toutes donnait
+ * vingt-quatre étiquettes empilées sur la vue initiale, dont Phobos, Hygie, Orcus et Bennu —
+ * des noms qui n'aident pas à commencer. Les orbites appliquaient déjà cette retenue ; les
+ * libellés ne l'avaient jamais reçue.
+ *
+ * C'est un état de DÉPART, pas une limite : le tableau de `#orbit-options` coche chaque corps
+ * individuellement, et l'en-tête de colonne les coche tous d'un coup.
+ */
+export const MAJOR_BODIES = new Set([
   'sun',
   'mercury',
   'venus',
@@ -329,7 +343,11 @@ export class ExploHud {
       ) {
         return;
       }
-      if (this._hiddenNames.has(bodyName)) return;
+      // La cible SUIVIE garde toujours son libellé, même décochée dans le panneau. Sans cette
+      // exception, choisir Titan dans la barre de navigation emmènerait la caméra vers un
+      // corps anonyme — le panneau règle l'encombrement AMBIANT, pas ce que l'on vient de
+      // demander explicitement.
+      if (bodyName !== targetName && this._hiddenNames.has(bodyName)) return;
 
       // Créé même si masqué ci-dessous : d'autres surfaces (recherche, tests) s'attendent à
       // ce que le label existe dans le DOM dès qu'un corps est navigable, pas seulement une

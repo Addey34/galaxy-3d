@@ -23,6 +23,14 @@ import type { TextureSystem } from './TextureSystem';
 import type CelestialObject from '@/components/celestial/CelestialObject';
 import { flattenBodies } from '@/config/catalog';
 import { bodyAccentColor, setColorblindEnabled } from '@/ui/bodyAccent';
+import { orbitLineOpacity } from '@/core/orbitFade';
+
+/**
+ * Opacité d'une ligne d'orbite loin de son corps. `orbitLineOpacity` la module à l'approche ;
+ * elle ne vit qu'ici pour que la création du matériau et l'atténuation par frame ne puissent
+ * pas diverger — le défaut classique étant de corriger l'une et d'oublier l'autre.
+ */
+const ORBIT_LINE_BASE_OPACITY = 0.25;
 
 /** Table nom → corps céleste, partagée entre les systèmes. */
 export type CelestialBodies = Record<string, CelestialObject>;
@@ -383,7 +391,7 @@ export class SceneSystem {
     const material = new THREE.LineBasicMaterial({
       color,
       transparent: true,
-      opacity: 0.25,
+      opacity: ORBIT_LINE_BASE_OPACITY,
       // The orbit must disappear behind opaque celestial surfaces.
       depthTest: true,
       depthWrite: false,
@@ -423,6 +431,32 @@ export class SceneSystem {
     if (visible) this._bodyHidden.delete(name);
     else this._bodyHidden.add(name);
     this._celestialBodies[name]?.setVisible(!this._bodyHidden.has(name));
+  }
+
+  /**
+   * Atténue chaque ligne d'orbite selon la proximité de la caméra AU CORPS QU'ELLE DÉCRIT.
+   *
+   * Appelé à chaque frame : la règle dépend de la pose de caméra, qui bouge en continu
+   * (tween de ciblage, molette, OrbitControls, morph éduc↔explo). Le coût est une distance et
+   * un polynôme par ligne visible, sur quelques dizaines de lignes.
+   *
+   * La RÈGLE elle-même est dans `core/orbitFade.ts`, pure et testée ; ici on ne fait que la
+   * nourrir et écrire le résultat dans le matériau.
+   */
+  updateOrbitFade(scaleMode: 'educ' | 'explo'): void {
+    if (!this._orbitsGloballyVisible) return;
+    for (const [name, line] of this._orbitLines) {
+      if (!line.visible) continue;
+      const body = this._celestialBodies[name];
+      if (!body?.group) continue;
+      body.group.getWorldPosition(this._tmpWorldPos);
+      const material = line.material as THREE.LineBasicMaterial;
+      material.opacity = orbitLineOpacity(
+        this.camera.position.distanceTo(this._tmpWorldPos),
+        body.getFrameRadius(scaleMode),
+        ORBIT_LINE_BASE_OPACITY
+      );
+    }
   }
 
   applyOrbitPoints(): void {

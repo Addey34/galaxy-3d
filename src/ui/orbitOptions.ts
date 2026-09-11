@@ -3,7 +3,7 @@ import { CELESTIAL_CONFIG } from '@/config/bodies';
 import { onLocaleChange, t } from '@/i18n';
 import { bodyDisplayName } from '@/i18n/bodyText';
 import type { SceneSystem } from '@/components/systems/SceneSystem';
-import type { ExploHud } from './exploHud';
+import { MAJOR_BODIES, type ExploHud } from './exploHud';
 import { bodyAccentColor, hexToRgbTriplet, onAccentChange } from './bodyAccent';
 import type { OverlayCoordinator } from './overlayCoordinator';
 
@@ -57,7 +57,12 @@ export function setupOrbitOptions(
       orbitNames.has(name) && cfg.kind !== 'skybox' && cfg.kind !== 'star'
   );
 
-  const hiddenLabelNames = new Set<string>();
+  // Libellés : même retenue de départ que les orbites juste en dessous, et pour la même
+  // raison. Tout afficher empilait vingt-quatre étiquettes sur la vue initiale. Cf.
+  // MAJOR_BODIES (ui/exploHud), qui porte déjà cette liste pour la vue d'ensemble Explo.
+  const hiddenLabelNames = new Set<string>(
+    bodies.filter(([name]) => !MAJOR_BODIES.has(name)).map(([name]) => name)
+  );
   const hiddenBodyNames = new Set<string>();
   // Seules les planètes majeures ont leur orbite visible au départ ; lunes, naines,
   // astéroïdes et comètes restent en opt-in (comportement historique inchangé).

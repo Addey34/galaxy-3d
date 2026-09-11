@@ -267,6 +267,15 @@ export class SolarSystemApp {
     // par défaut, ce qui casse le toggle master OFF→ON avant le premier changement de mode.
     this.systems.scene?.setOrbitLinesVisible(true);
 
+    // Les lignes d'orbite s'effacent à l'approche du corps qu'elles décrivent : de près, le
+    // trait passe DEVANT le globe et se lit comme un globe transparent (cf. core/orbitFade).
+    // Par frame et non au ciblage : la pose de caméra bouge en continu — molette, contrôles
+    // orbitaux, tween de vol, morph éduc↔explo — et aucun de ces mouvements ne passe par une
+    // sélection.
+    this.systems.animation.onFrame(() => {
+      this.systems.scene?.updateOrbitFade(this._orbitalMechanics!.scaleMode);
+    });
+
     progressCallback(98, t('loader.starting'));
     this.systems.animation.run();
   }
