@@ -966,7 +966,7 @@ function twilightTint(color: number, neutralShare = 0): THREE.Color {
  * teinte brute : rapport rouge/bleu de 0,06 à 2,9° sous l'horizon, c'est-à-dire un bleu de
  * synthèse sans aucun rouge, et un voile bleu qui remontait jusque sur le sol encore éclairé.
  */
-const TWILIGHT_SKY_NEUTRAL_SHARE = 0.7;
+const TWILIGHT_SKY_NEUTRAL_SHARE = 0.8;
 
 /**
  * Teinte CHAUDE du cœur du bandeau, au terminateur.
@@ -988,7 +988,7 @@ const TWILIGHT_SKY_NEUTRAL_SHARE = 0.7;
  * Normalisée en luminance comme la froide : la teinte décide de la couleur, `TWILIGHT_STRENGTH`
  * de la luminosité, et l'une ne peut pas déborder sur l'autre.
  */
-const TWILIGHT_WARM_TINT = 0xffc890;
+const TWILIGHT_WARM_TINT = 0xffd9b4;
 
 /**
  * Amplitude du bandeau crépusculaire, POSÉE PAR CONTINUITÉ et non réglée à l'œil.
@@ -1481,7 +1481,7 @@ export function createShadowAwareStandardMaterial(
   material.customProgramCacheKey = () =>
     `shadow-aware-standard-v3${invertRoughness ? '-invrough-v2' : ''}${
       cloudShadow ? '-cloudshadow' : ''
-    }${moonlight ? '-moonlight' : ''}${twilight ? '-twilight-v4' : ''}${
+    }${moonlight ? '-moonlight' : ''}${twilight ? '-twilight-v5' : ''}${
       varyOceanRoughness ? '-oceanrough-v1' : ''
     }${limitSpecular ? '-limitspec-v3-grazeocclusion' : ''}${noSpecular ? '-nospec' : ''}${
       eclipseShadow ? '-eclipseshadow' : ''

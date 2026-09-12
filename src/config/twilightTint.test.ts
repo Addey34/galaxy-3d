@@ -71,18 +71,18 @@ describe('teintes du bandeau crépusculaire', () => {
   });
 
   it('tient la teinte chaude dans la gamme d’un soleil rasant', () => {
-    expect(warm!.r / warm!.b).toBeGreaterThan(3);
-    expect(warm!.r / warm!.b).toBeLessThan(4.5);
+    expect(warm!.r / warm!.b).toBeGreaterThan(1.8);
+    expect(warm!.r / warm!.b).toBeLessThan(2.8);
   });
 
   it('désature le ciel crépusculaire, qui n’est pas un bleu pur', () => {
-    expect(cool!.r / cool!.b).toBeGreaterThan(0.4);
-    expect(cool!.r / cool!.b).toBeLessThan(0.7);
+    expect(cool!.r / cool!.b).toBeGreaterThan(0.55);
+    expect(cool!.r / cool!.b).toBeLessThan(0.8);
   });
 
   it('garde la chaude franchement plus chaude que la froide', () => {
     // L'ordre est ce qui fait exister le coucher de soleil : l'inverser rendrait un bandeau
     // bleu au terminateur et rouge en pleine nuit.
-    expect(warm!.r / warm!.b).toBeGreaterThan((cool!.r / cool!.b) * 4);
+    expect(warm!.r / warm!.b).toBeGreaterThan((cool!.r / cool!.b) * 2.5);
   });
 });
