@@ -369,6 +369,30 @@ test('keeps untextured catalog bodies available in both modes', async ({
   await expect(halley).toHaveCount(1);
 });
 
+test('un corps masqué par défaut devient bien la CIBLE quand on le sélectionne', async ({
+  page,
+}) => {
+  // Les libellés démarrent restreints aux corps majeurs (cf. MAJOR_BODIES) : Io en est exclu.
+  // Toutes les autres assertions `is-target` de la suite portent sur Jupiter, Mars ou la Terre,
+  // qui sont majeurs — aucune n'exerçait donc le passage d'un corps MASQUÉ au statut de cible.
+  //
+  // Sans l'exception correspondante dans `ExploHud.update`, un corps décoché n'atteint jamais le
+  // positionnement et n'obtient JAMAIS la classe `is-target` : mesuré en la retirant, l'élément
+  // `.explo-label.is-target` disparaît complètement. Le HUD, l'animation d'acquisition et
+  // plusieurs scénarios d'ici interrogent pourtant ce sélecteur.
+  //
+  // À ne pas confondre avec « la cible affiche son nom » : elle ne l'affiche PAS, le CSS masque
+  // volontairement texte et trait pour ne pas écrire par-dessus l'astre visé. C'est la fiche
+  // d'info qui le nomme, et c'est elle qu'on vérifie ici.
+  await boot(page);
+  await page.locator('#body-search-trigger').click();
+  await page.locator('#orbit-io').click();
+  await expect(page.locator('#body-info .bi-name')).toHaveText('Io');
+
+  const target = page.locator('.explo-label.is-target');
+  await expect(target).toHaveAttribute('aria-label', 'Io');
+});
+
 test('Galilean moons stay available around Jupiter in both display modes', async ({
   page,
 }) => {

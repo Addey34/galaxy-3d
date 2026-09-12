@@ -353,10 +353,19 @@ export class ExploHud {
       // tout ce qui suit décide de l'AFFICHAGE, jamais de l'existence.
       const element = this._label(bodyName);
 
-      // La cible SUIVIE garde toujours son libellé, même décochée dans le panneau. Sans cette
-      // exception, choisir Titan dans la barre de navigation emmènerait la caméra vers un
-      // corps anonyme — le panneau règle l'encombrement AMBIANT, pas ce que l'on vient de
-      // demander explicitement.
+      // La cible SUIVIE traverse toujours le filtre du panneau, même décochée.
+      //
+      // Attention à ce que cette ligne fait vraiment — je l'ai d'abord justifiée en écrivant
+      // qu'elle « garde son nom affiché », et c'est FAUX : le CSS masque délibérément le texte
+      // et le trait de la cible, et met son point à `opacity: 0`, pour ne pas écrire par-dessus
+      // l'astre qu'on regarde (cf. l'en-tête de ce module, et `.explo-label.is-target` dans
+      // styles.css). Un corps ciblé ne montre donc rien, exception ou pas ; il est nommé par la
+      // fiche d'info et par le relevé du HUD.
+      //
+      // Ce qu'elle garantit réellement, mesuré en la retirant : sans elle, un corps décoché puis
+      // sélectionné n'atteint jamais le positionnement, donc n'obtient JAMAIS la classe
+      // `is-target`. L'élément existe mais reste anonyme pour tout ce qui interroge
+      // `.explo-label.is-target` — le HUD, l'animation d'acquisition, et plusieurs scénarios e2e.
       if (bodyName !== targetName && this._hiddenNames.has(bodyName)) return;
       if (isOverview && !MAJOR_BODIES.has(bodyName)) return;
       this._ndc.copy(worldPos).project(camera);
