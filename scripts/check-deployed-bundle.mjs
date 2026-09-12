@@ -62,6 +62,35 @@ async function servedEntryName() {
   return match[1];
 }
 
+/**
+ * Une vignette de partage NE DOIT PAS être mise en cache comme un asset versionné.
+ *
+ * `firebase.json` pose un cache immuable d'UN AN sur `/assets/**`, ce qui est juste : leurs
+ * noms portent un hachage, donc un nouveau contenu a toujours un nouveau nom. Les vignettes,
+ * elles, ont un nom STABLE (`/social/bennu.jpg`) et des octets réécrits à chaque build. Les
+ * ranger sous `/assets/` — ou étendre la règle par inadvertance — figerait pendant un an une
+ * image qu'on ne pourrait plus corriger, chez tous ceux qui l'ont déjà vue.
+ *
+ * C'est exactement le genre d'invariant qu'on vérifie une fois à la main puis jamais plus.
+ */
+async function assertCardIsNotImmutable() {
+  const response = await fetch(`${ORIGIN}/social/earth.jpg`, {
+    cache: 'no-store',
+  });
+  if (!response.ok)
+    return `/social/earth.jpg répond ${response.status} — vignette absente ?`;
+  const cacheControl = response.headers.get('cache-control') ?? '';
+  if (/immutable/i.test(cacheControl) || /max-age=(\d{7,})/.test(cacheControl))
+    return (
+      `/social/earth.jpg est servie avec « ${cacheControl} ».\n` +
+      `  Son nom est STABLE et ses octets sont reecrits a chaque build : un cache long\n` +
+      `  fige une image qu'on ne pourra plus corriger. Verifier la regle /assets/** dans\n` +
+      `  firebase.json — les vignettes doivent rester en dehors.`
+    );
+  console.log(`OK — vignettes servies avec « ${cacheControl} », non figees`);
+  return null;
+}
+
 const expected = await localEntryName();
 let served = null;
 
@@ -87,6 +116,11 @@ for (let attempt = 1; attempt <= ATTEMPTS; attempt++) {
 // fait la toute première version de ce script. On laisse la boucle d'événements se vider.
 if (served === expected) {
   console.log(`OK — ${ORIGIN} sert bien ${expected}`);
+  const cacheProblem = await assertCardIsNotImmutable();
+  if (cacheProblem) {
+    console.error(`\nCACHE DES VIGNETTES : ${cacheProblem}\n`);
+    process.exitCode = 1;
+  }
 } else {
   console.error(
     `\nLA PRODUCTION NE SERT PAS CE BUILD.\n` +
