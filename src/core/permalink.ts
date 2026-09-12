@@ -77,6 +77,36 @@ export function bodyFromPathname(
     : undefined;
 }
 
+/**
+ * CHEMIN que l'URL doit porter pour un corps sélectionné — le pendant en écriture de
+ * `bodyFromPathname`.
+ *
+ * Jusqu'ici le chemin n'était que LU : ouvrir `/jupiter/` ciblait Jupiter, mais naviguer
+ * ensuite vers Titan écrivait `?body=titan` sur ce même chemin, et l'adresse finissait par
+ * décrire un corps qu'on ne regardait plus. En l'écrivant, chaque corps a l'adresse indexable
+ * qui lui appartient déjà, sans rechargement : `?body=` devient alors redondant et
+ * `serializePermalink` l'omet de lui-même.
+ *
+ * Deux choix qui méritent d'être dits :
+ *
+ *   - **Le slash final n'est pas décoratif.** Les pages sont servies en `/jupiter/` (c'est la
+ *     forme du sitemap) et `/jupiter` répond 301 vers elle — mesuré en production. Écrire la
+ *     forme sans slash ferait payer une redirection à chaque rechargement et à chaque partage.
+ *   - **La vue d'ensemble est `/`, pas `/all`.** `/` EST déjà la vue globale : c'est l'URL
+ *     canonique de `index.html` et la seule que le sitemap annonce. `/all` répondrait bien
+ *     (la réécriture SPA sert `index.html` pour tout chemin d'un segment) mais créerait une
+ *     seconde adresse pour un contenu identique — exactement ce que le canonique existe pour
+ *     éviter, et une URL qu'aucun sitemap ne mentionne.
+ */
+export function pathnameForBody(
+  body: string | null | undefined,
+  validBodies: ReadonlySet<string>
+): string {
+  if (!body) return '/';
+  const candidate = body.trim().toLowerCase();
+  return validBodies.has(candidate) ? `/${candidate}/` : '/';
+}
+
 export function parsePermalink(
   search: string,
   validBodies: ReadonlySet<string>,
@@ -137,10 +167,20 @@ export function serializePermalink(
   // `?body=` est REDONDANT quand le chemin nomme déjà ce corps : sans cette omission, ouvrir
   // `/jupiter` réécrivait aussitôt l'URL en `/jupiter?body=jupiter` — deux URL pour un même
   // contenu (ce que le canonique est censé éviter) et une adresse qui a l'air cassée.
-  if (
-    state.body &&
-    state.body !== bodyFromPathname(pathname, new Set([state.body]))
-  )
+  // `?body=overview` est redondant de la même façon dès que le chemin ne nomme aucun corps :
+  // la racine EST la vue d'ensemble. Sans cette omission, revenir au global depuis `/jupiter/`
+  // écrivait `/?body=overview`, soit une adresse qui affirme deux fois la même chose et qui
+  // n'est pas celle du sitemap.
+  const pathNamesABody =
+    state.body !== undefined &&
+    bodyFromPathname(pathname, new Set([state.body])) === state.body;
+  // Testé sur la RACINE elle-même, et non via `bodyFromPathname` : cette fonction demande la
+  // liste des corps valides, que la sérialisation n'a pas. Interrogée avec le seul `overview`,
+  // elle répond « aucun corps » pour `/jupiter/` aussi — ce qui aurait supprimé un `body=`
+  // parfaitement utile depuis une page de corps.
+  const isRootPath = pathname.trim() === '' || pathname.trim() === '/';
+  const overviewOnRoot = state.body === 'overview' && isRootPath;
+  if (state.body && !pathNamesABody && !overviewOnRoot)
     params.set('body', state.body);
   if (state.date) params.set('date', formatPermalinkDate(state.date));
   if (state.view) {

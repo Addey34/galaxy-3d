@@ -3,6 +3,7 @@ import {
   bodyFromPathname,
   formatPermalinkDate,
   parsePermalink,
+  pathnameForBody,
   serializePermalink,
 } from './permalink';
 
@@ -136,5 +137,88 @@ describe('permalink — corps nommé par le chemin', () => {
     );
     // Et sans chemin (la racine), rien ne change du comportement d'origine.
     expect(serializePermalink({ body: 'jupiter' }, '')).toBe('?body=jupiter');
+  });
+});
+
+describe('permalink — le chemin suit la sélection', () => {
+  const bodies = new Set(['jupiter', 'titan', 'earth']);
+
+  it('donne à chaque corps le chemin indexable qui lui appartient déjà', () => {
+    expect(pathnameForBody('jupiter', bodies)).toBe('/jupiter/');
+    expect(pathnameForBody('TITAN', bodies)).toBe('/titan/');
+    expect(pathnameForBody(' earth ', bodies)).toBe('/earth/');
+  });
+
+  it('garde le SLASH FINAL, qui n’est pas décoratif', () => {
+    // Les pages sont servies en `/jupiter/` — c'est la forme du sitemap — et `/jupiter`
+    // répond 301 vers elle, mesuré en production. Écrire la forme sans slash ferait payer une
+    // redirection à chaque rechargement et à chaque partage de l'adresse.
+    expect(pathnameForBody('jupiter', bodies).endsWith('/')).toBe(true);
+  });
+
+  it('ramène la vue d’ensemble à la racine, et pas à une seconde adresse', () => {
+    // `/` EST la vue globale : l'URL canonique d'index.html, et la seule que le sitemap
+    // annonce. Un `/all` répondrait (la réécriture SPA sert index.html pour tout chemin d'un
+    // segment) mais créerait une seconde adresse pour un contenu identique.
+    for (const nothing of [null, undefined, ''])
+      expect(pathnameForBody(nothing, bodies)).toBe('/');
+  });
+
+  it('ne fabrique jamais un chemin pour un corps inconnu', () => {
+    // Sinon une faute de frappe produirait une URL qui a l'air valide, se partage, et ne
+    // rouvre rien : la réécriture SPA rend 200 pour n'importe quel segment.
+    for (const unknown of ['jupitre', 'overview', 'privacy.html', '../etc'])
+      expect(pathnameForBody(unknown, bodies)).toBe('/');
+  });
+
+  it('rend `?body=` redondant, donc absent de la query', () => {
+    // LA propriété qui rend l'ensemble cohérent : le chemin nomme le corps, la query ne le
+    // répète pas. Sans cela, naviguer vers Titan produirait `/titan/?body=titan` — deux
+    // affirmations du même fait dans une seule adresse.
+    const path = pathnameForBody('titan', bodies);
+    expect(serializePermalink({ body: 'titan' }, '', path)).toBe('');
+    // Et le reste de l'état continue de s'écrire normalement.
+    expect(serializePermalink({ body: 'titan', mode: 'explo' }, '', path)).toBe(
+      '?mode=explo'
+    );
+  });
+
+  it('boucle : ce qui est écrit se relit à l’identique', () => {
+    // Le contrat complet, aller-retour. Une asymétrie ici signifierait qu'une URL partagée ne
+    // rouvre pas ce qu'elle décrit.
+    for (const body of [...bodies, null]) {
+      const path = pathnameForBody(body, bodies);
+      const search = serializePermalink({ body: body ?? undefined }, '', path);
+      expect(parsePermalink(search, bodies, path).body).toBe(body ?? undefined);
+    }
+  });
+});
+
+describe('permalink — la racine dit déjà « vue d’ensemble »', () => {
+  const bodies = new Set(['jupiter', 'titan']);
+
+  it('n’écrit pas `body=overview` sur la racine', () => {
+    // Revenir au global depuis `/jupiter/` écrivait `/?body=overview` : une adresse qui
+    // affirme deux fois la même chose, et qui n'est pas celle que le sitemap annonce.
+    expect(serializePermalink({ body: 'overview' }, '', '/')).toBe('');
+    expect(
+      serializePermalink({ body: 'overview', mode: 'educ' }, '', '/')
+    ).toBe('?mode=educ');
+  });
+
+  it('le garde là où il dit encore quelque chose', () => {
+    // Depuis un chemin qui nomme un corps, `body=overview` n'est PAS redondant : il dit que
+    // l'on a quitté ce corps sans quitter la page. Un lien partagé doit rouvrir la vue globale.
+    expect(serializePermalink({ body: 'overview' }, '', '/jupiter/')).toBe(
+      '?body=overview'
+    );
+    expect(parsePermalink('?body=overview', bodies, '/jupiter/').body).toBe(
+      'overview'
+    );
+  });
+
+  it('la racine nue se relit comme aucune sélection', () => {
+    // Et c'est exactement l'état de démarrage : pas de corps suivi, donc la vue d'ensemble.
+    expect(parsePermalink('', bodies, '/').body).toBeUndefined();
   });
 });

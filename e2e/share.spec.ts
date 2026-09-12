@@ -26,7 +26,11 @@ test('share button copies the current permalink and confirms with a toast', asyn
     navigator.clipboard.readText()
   );
   expect(clipboardText).toContain('mode=explo');
-  expect(clipboardText).toContain('body=mars');
+  // Le corps voyage désormais dans le CHEMIN et non plus dans la query : le lien copié est
+  // l'adresse canonique de Mars, celle que le sitemap annonce et qu'un aperçu de partage sait
+  // décorer avec la bonne vignette. `?body=mars` y serait une redite.
+  expect(clipboardText).toContain('/mars/');
+  expect(clipboardText).not.toContain('body=mars');
 });
 
 test('share captures the exact camera angle, and reopening the link restores it', async ({

@@ -1,5 +1,6 @@
 import {
   parsePermalink,
+  pathnameForBody,
   serializePermalink,
   type PermalinkViewAngles,
 } from '@/core/permalink';
@@ -57,6 +58,10 @@ export function setupPermalinks(
   const sync = (view?: PermalinkViewAngles): void => {
     if (applying || suspended) return;
     const selectedBody = navigation.getSelectedBody();
+    // Le CHEMIN suit la sélection, il n'est plus seulement lu. Chaque corps a déjà son adresse
+    // indexable ; la parcourir sans recharger, c'est la lui rendre. `serializePermalink` voit
+    // ce chemin et omet alors `?body=`, devenu redondant. Cf. `pathnameForBody`.
+    const nextPathname = pathnameForBody(selectedBody, validBodies);
     const nextSearch = serializePermalink(
       {
         mode: modeSwitcher.getMode(),
@@ -65,9 +70,9 @@ export function setupPermalinks(
         view,
       },
       window.location.search,
-      window.location.pathname
+      nextPathname
     );
-    const nextUrl = `${window.location.pathname}${nextSearch}${window.location.hash}`;
+    const nextUrl = `${nextPathname}${nextSearch}${window.location.hash}`;
     const currentUrl = `${window.location.pathname}${window.location.search}${window.location.hash}`;
     if (nextUrl !== currentUrl) window.history.replaceState(null, '', nextUrl);
   };
