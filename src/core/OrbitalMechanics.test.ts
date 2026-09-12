@@ -282,3 +282,86 @@ describe('OrbitalMechanics orbit sampling', () => {
     expect(nextNoonLongitude - noonLongitude).toBeCloseTo(-0.00094, 4);
   });
 });
+
+describe('fin de transition éduc↔explo : ordre des rappels', () => {
+  /**
+   * CE QUI REND SÛR UN PARAMÈTRE DÉLIBÉRÉMENT IGNORÉ.
+   *
+   * `onMorphPhase` est typé `(active: boolean) => void`, et `SolarSystemApp` l'implémente en
+   * IGNORANT ce paramètre : il masque les lignes d'orbite dans les deux cas. Lu seul, cela
+   * ressemble à un oubli, et « corriger » l'implémentation pour réafficher en fin de morph
+   * paraîtrait évident. Ce serait une régression : à cet instant les lignes décrivent encore
+   * la géométrie de l'ANCIEN mode, et on les montrerait une frame aux positions du nouveau.
+   *
+   * Ce qui rend l'ensemble correct est un ORDRE, pas une valeur : `onMorphPhase(false)` masque,
+   * puis `onOrbitsChanged` recalcule AVANT de réafficher. Inverser ces deux appels, ou rendre
+   * `onOrbitsChanged` différé, ferait disparaître les lignes d'orbite pour de bon après un
+   * changement de mode — une fonctionnalité entière perdue, sans erreur nulle part.
+   *
+   * Cet ordre n'était écrit nulle part et tenu par rien. Il l'est ici.
+   */
+  function makeMorphHarness(): {
+    mechanics: OrbitalMechanics;
+    calls: string[];
+  } {
+    const mechanics = Object.create(
+      OrbitalMechanics.prototype
+    ) as OrbitalMechanics;
+    const internals = mechanics as unknown as {
+      _morphActive: boolean;
+      _morphFrom: number;
+      _morphTo: number;
+      _morphElapsed: number;
+      _advanceMorph(realDelta: number): void;
+    };
+    internals._morphActive = true;
+    internals._morphFrom = 0;
+    internals._morphTo = 1;
+    internals._morphElapsed = 0;
+
+    const calls: string[] = [];
+    mechanics.onScaleMorph = (p) => calls.push(`scale:${p}`);
+    mechanics.onMorphPhase = (active) => calls.push(`phase:${active}`);
+    mechanics.onOrbitsChanged = () => calls.push('orbits');
+    return { mechanics, calls };
+  }
+
+  it('masque AVANT de recalculer, et ne recalcule qu’une fois arrivé', () => {
+    const { mechanics, calls } = makeMorphHarness();
+    const internals = mechanics as unknown as {
+      _advanceMorph(realDelta: number): void;
+    };
+
+    // Une frame à mi-parcours : la taille bouge, mais rien ne conclut.
+    internals._advanceMorph(0.6);
+    expect(calls.filter((c) => c === 'orbits')).toHaveLength(0);
+    expect(calls.filter((c) => c.startsWith('phase:'))).toHaveLength(0);
+
+    calls.length = 0;
+    // La frame qui franchit la durée totale.
+    internals._advanceMorph(1.0);
+
+    const phaseIndex = calls.indexOf('phase:false');
+    const orbitsIndex = calls.indexOf('orbits');
+    expect(phaseIndex, 'la fin de morph doit être annoncée').toBeGreaterThan(
+      -1
+    );
+    expect(orbitsIndex, 'les orbites doivent être recalculées').toBeGreaterThan(
+      -1
+    );
+    // L'ASSERTION qui porte tout : masquer précède recalculer-puis-réafficher.
+    expect(phaseIndex).toBeLessThan(orbitsIndex);
+  });
+
+  it('cale exactement la taille sur le mode cible avant de conclure', () => {
+    // Sans ce calage final, le morph s'arrête sur la valeur eased de la dernière frame —
+    // proche de 1 mais pas 1, donc des tailles durablement fausses d'une fraction de pour cent.
+    const { mechanics, calls } = makeMorphHarness();
+    (mechanics as unknown as { _advanceMorph(d: number): void })._advanceMorph(
+      99
+    );
+    expect(calls.at(-3)).toBe('scale:1');
+    expect(calls.at(-2)).toBe('phase:false');
+    expect(calls.at(-1)).toBe('orbits');
+  });
+});

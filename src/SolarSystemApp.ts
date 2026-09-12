@@ -249,6 +249,16 @@ export class SolarSystemApp {
         this.bodyCache?.[name]?.setScaleMorph(p);
       });
     };
+    // Le paramètre `active` est IGNORÉ VOLONTAIREMENT : on masque au début du morph comme à
+    // sa fin. Réafficher ici paraîtrait la correction évidente et serait une régression — à
+    // cet instant les lignes décrivent encore la géométrie de l'ANCIEN mode, et on les
+    // montrerait une frame aux positions du nouveau. Le réaffichage appartient à
+    // `onOrbitsChanged` ci-dessus, qui recalcule AVANT de montrer.
+    //
+    // Ce qui rend l'ensemble correct est donc un ORDRE, pas une valeur, et cet ordre est tenu
+    // par `src/core/OrbitalMechanics.test.ts` (« fin de transition éduc↔explo »). L'inverser
+    // ferait disparaître les lignes d'orbite pour de bon après un changement de mode, sans
+    // erreur nulle part.
     this._orbitalMechanics.onMorphPhase = () => {
       this.systems.scene?.setOrbitLinesVisible(false);
     };
