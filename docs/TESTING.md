@@ -29,6 +29,34 @@
 - **Falsifier chaque garde avant de le croire.** Remettre le défaut et vérifier que le test échoue
   vraiment, avec le bon message. Un test qui ne casse pas quand on réintroduit le bug ne garde rien
   — c'est la seule façon de distinguer un garde d'une décoration.
+- **Vérifier que la mutation s'est APPLIQUÉE avant de lire le résultat.** Une falsification qui
+  n'a pas eu lieu ressemble exactement à un test qui passe. Cas réel : une substitution `perl`
+  n'a rien matché (un `\n` dans une chaîne JavaScript est un antislash suivi d'un `n`, pas un
+  saut de ligne), la suite est restée verte, et ce vert a failli être noté comme une preuve.
+  Compter les occurrences après la mutation, pas seulement avant.
+- **Vérifier l'UNITÉ dans laquelle le seuil est exprimé.** Une borne de contraste écrite sur des
+  valeurs LINÉAIRES (1,47) échouait contre des pixels sRGB 8 bits (1,26) sur un rendu pourtant
+  correct. Même famille que la garantie du terminateur qui était vraie dans une unité que
+  personne n'avait comparée à un pixel.
+- **La suite e2e COMPLÈTE attrape ce que les runs ciblés manquent** — trois fois en deux jours :
+  deux tests météo rouges de façon déterministe depuis quatre jours, deux tests d'atterrissage
+  qui figeaient l'ancien contrat d'URL, et une régression où masquer un libellé supprimait son
+  élément DOM. Les 1000+ tests unitaires étaient verts pendant ce temps.
+- **Ne JAMAIS éditer de fichier pendant qu'une suite e2e tourne en arrière-plan.** Le serveur de
+  développement recharge à chaud et casse les tests en cours : un passage a rendu 24 échecs sans
+  aucune valeur, dont le test de démarrage le plus basique, qui passe seul en 1,3 minute.
+- **`uncheck()` sur une case INDÉTERMINÉE est un no-op silencieux.** Elle porte déjà
+  `checked === false`, donc Playwright considère l'état atteint, ne clique pas, et aucun
+  événement `change` ne part. L'échec tombe alors sur l'assertion SUIVANTE et désigne la
+  mauvaise ligne. Depuis un état mixte, cocher puis décocher.
+- **« Réaliste » se tranche contre une référence MESURÉE, pas contre un jugement.** Deux réglages
+  de saturation successifs, validés par l'œil, n'ont rien réglé — et trois valeurs essayées
+  rendaient des images mesurément indiscernables. Deux photographies NASA profilées pixel par
+  pixel ont réglé la question en une passe, en montrant que le défaut était géométrique.
+- **Un test ne doit pas mesurer son propre harnais.** La parité des titres ne peut pas se
+  vérifier en e2e : le serveur de développement ne génère pas les pages par corps, donc une
+  requête vers `/jupiter/` y renvoie l'app shell. Elle vit en unitaire. De même, le talon du
+  test d'uniformes ne doit nommer aucun uniforme, sinon il signale un défaut qu'il a écrit.
 
 `tsconfig.json` inclut `e2e` : les scénarios Playwright sont **typés par `pnpm typecheck`**, pas
 seulement lintés. Sans cela une erreur de type dans un spec n'apparaissait qu'à l'exécution — donc

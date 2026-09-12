@@ -31,7 +31,7 @@ requestAnimationFrame
 | `src/ui`                    | Contrôles DOM et overlays projetés                              | DOM, i18n et PublicAPI                 |
 | `src/i18n`                  | État de locale et traduction statique/dynamique                | DOM seulement dans `dom.ts`            |
 | `src/utils`                 | Helpers navigateur transverses et logging                       | Pas d'orchestration applicative        |
-| `src/seo`                   | Pages d'atterrissage par corps, sitemap, vignettes de partage   | Catalogue seulement — **jamais chargé par l'application** |
+| `src/seo`                   | Pages d'atterrissage par corps, sitemap, vignettes de partage   | Catalogue seulement — **jamais chargé par l'application**, tenu par `src/seo/buildOnly.test.ts` |
 | `scripts`                   | Génération d'assets réservée aux mainteneurs                   | Node.js et dépendances de dev          |
 
 ## Propriété des ressources
@@ -78,6 +78,26 @@ noreferrer`.
 
 Ces contrôles ne font pas d'un front public un coffre secret : clés API, identifiants et fichiers
 de compte de service restent hors du bundle client et sont ignorés par Git.
+
+**Ces en-têtes sont désormais TENUS, au commit et après déploiement.** Ils ne l'étaient pas :
+leur disparition ne casse rien, ne ralentit rien, et ne se voit qu'en interrogeant le site à la
+main — une en-tête retirée par inadvertance ne se manifeste que le jour où elle aurait servi.
+`src/config/hostingPayload.test.ts` exige les huit sur le bloc `**` et refuse une CSP qui
+passerait la liste sans rien protéger (`default-src *`), parce que vérifier la présence d'une clé
+ne dit rien de sa valeur.
+
+Le même test garde le **cache**, et celui-là est sans retour arrière : `/assets/**` porte un cache
+immuable d'un an, ce qui est juste puisque ces noms sont hachés, mais les vignettes de partage ont
+un nom STABLE et des octets réécrits à chaque build. Les faire tomber sous cette règle figerait
+une image fausse chez tous ceux qui l'ont déjà vue, et aucun redéploiement ne la corrigerait.
+Tout cache long déclaré hors de `/assets/` est donc refusé.
+
+Enfin, `scripts/check-deployed-bundle.mjs` tourne en CI **après** le déploiement : il récupère
+l'index servi et compare le nom haché de l'entrée applicative à celle qu'on vient de construire,
+puis vérifie l'en-tête de cache d'une vignette. Il ne bloque rien — il tourne après, il ne peut
+rien empêcher — mais il transforme une question qu'il fallait penser à se poser en une réponse
+qui s'affiche. « CI verte » ne dit rien de ce qui est en ligne, et lire la pastille globale d'un
+run au lieu du job qui déploie a produit deux affirmations fausses sur l'état de la production.
 
 ## Pipeline de contenu et d'assets
 
@@ -319,6 +339,33 @@ solaire. Aucune couche ne doit re-dériver sa propre rampe.
    terminateur (`?debug-terminator`) renvoie désormais aussi la moyenne des trois canaux par
    tranche — sans elle, ce défaut n'était pas observable.
 
+8. **L'or n'existe qu'en VUE RASANTE — et c'était une erreur de géométrie, pas de teinte.**
+   Le point 7 a été réglé deux fois, dans les deux sens, sans succès : bandeau signalé
+   « brun-rouge », désaturé, puis signalé « voile blanchâtre ». Trois saturations essayées
+   (rapports 3,59 / 3,01 / 2,19) rendent des images **mesurément indiscernables**. La
+   saturation n'était pas le levier.
+
+   Deux photographies NASA, mesurées pixel par pixel, donnent la réponse. Sur une vue ISS du
+   limbe au lever orbital, la coupe verticale à travers l'arc donne, en rapport rouge/bleu puis
+   luminance : bleu 0,30 / 109, blanc 1,00 / 252, or 1,84 / 175, orange 2,60 / 152, rouge
+   6,6 / 94. L'or est donc réel **et lumineux**. Sur une image Galileo de la Terre à moitié
+   éclairée — le terminateur traversant le disque exactement comme dans cette application — le
+   même rapport ne dépasse **jamais 0,75**.
+
+   Le rendu avait 2,05 à une luminance de 25 : la teinte de l'or réel au sixième de sa
+   luminosité, ce qui s'appelle du brun, et peinte là où la photographie n'en montre aucun.
+   Vers le limbe la ligne de visée traverse des centaines de kilomètres d'air et Rayleigh a
+   dépouillé le bleu ; vers le centre du disque elle traverse une seule masse d'air, et le ciel
+   crépusculaire y est gris-bleu.
+
+   `twilightWarmthViewFactor(viewCos) = (1 − |N·V|)²` borne donc la chaudeur par la géométrie du
+   regard. Le carré n'est pas un réglage : c'est la forme du `rim` du halo atmosphérique, qui
+   décrit déjà cette dépendance pour la même raison. Mesuré après correction, terminateur au
+   centre du disque : rapport entre 0,51 et 0,79 sur toute la bande, dans la fourchette de la
+   photographie. **Leçon de méthode** : « réaliste » se tranche contre une référence mesurée,
+   pas contre un jugement — deux réglages à l'aveugle n'avaient rien donné, une photographie a
+   réglé la question en une passe.
+
    Le bandeau est réservé aux corps qui ont **à la fois** une atmosphère et le socle `moonlight`
    dont il réutilise les varyings monde — aujourd'hui la Terre seule. L'étendre à Vénus ou Mars
    demande d'y activer ces varyings, pas de toucher au terme.
@@ -391,6 +438,41 @@ pixels y serait verte pour une mauvaise raison ; c'est pourquoi le test de ces c
 largeur de crépuscule annoncée par le matériau (`twilight=` dans `?debug-meteo`) plutôt que des
 pixels.
 
+## Ce que montre la première vue, avant tout réglage
+
+Deux retenues, énoncées ici parce qu'elles ont été incohérentes entre elles pendant longtemps et
+que c'est le genre de défaut qu'on ne voit plus à force de le regarder.
+
+- **Les ORBITES ne couvrent que les planètes** au démarrage ; lunes, naines et petits corps sont
+  en opt-in dans le tableau de `#orbit-options`.
+- **Les LIBELLÉS suivent la même liste** (`MAJOR_BODIES` dans `ui/exploHud` : l'étoile, les huit
+  planètes, la Lune). Ils ne l'ont reçue que le 2026-09-11 : le catalogue compte plus de
+  cinquante entrées et toutes les afficher donnait vingt-quatre étiquettes empilées sur la vue
+  initiale, Phobos, Hygie, Orcus et Bennu comprises. Les orbites appliquaient déjà cette
+  retenue, les libellés non — deux défauts par défaut divergents dans le même panneau, sur la
+  même liste de corps. Tenu par `ui/defaultDisplay.test.ts`.
+
+Deux exceptions qui ne se devinent pas :
+
+- **Masquer n'est pas SUPPRIMER.** `ExploHud.update` crée l'élément DOM du libellé AVANT
+  d'appliquer le filtre du panneau. L'ordre inverse a été livré une fois : les corps décochés
+  n'obtenaient plus d'élément, et Cérès, Vesta, Pallas, Halley et les quatre lunes galiléennes
+  devenaient **introuvables par la recherche**, pas seulement anonymes.
+- **La cible traverse toujours le filtre**, mais pas pour afficher son nom — le CSS masque
+  délibérément texte et trait d'une cible pour ne pas écrire par-dessus l'astre visé. Ce que
+  l'exception garantit, mesuré en la retirant, c'est la classe `is-target` : sans elle un corps
+  décoché puis sélectionné ne l'obtient jamais, et l'élément reste anonyme pour le HUD,
+  l'animation d'acquisition et plusieurs scénarios e2e.
+
+**Les lignes d'orbite s'effacent à l'approche** (`core/orbitFade.ts`). De près, le trait passe
+DEVANT le globe — géométriquement juste, puisque la caméra est à l'intérieur de l'orbite — et se
+lit comme un globe transparent. Le `depthTest` n'y peut rien, il est déjà actif et a raison : ce
+n'est pas un défaut de profondeur mais de PERTINENCE. La règle est énoncée en **rayons du corps**,
+seul cadrage valable pour Mercure comme pour Jupiter et invariant au changement d'échelle
+éduc↔explo : rien sous 15 rayons (≈ 3,8° de rayon apparent), ligne pleine au-delà de 60 (< 1°,
+environ la Lune vue de la Terre). Chaque ligne est jugée sur SON corps, donc celle d'un corps
+lointain reste pleine pendant que celle du corps approché s'efface.
+
 ## Pages d'atterrissage par corps et vignettes de partage
 
 L'application est une URL unique : `?body=jupiter` est un paramètre, pas une route. Un moteur de
@@ -413,6 +495,32 @@ c'est vérifiable en cherchant `renderSphere` dans `dist/assets/*.js`.
    d'injecter le corps courant par un `<script>` généré. C'est le CHEMIN qui porte l'information,
    relu par `core/permalink.ts::bodyFromPathname` — d'où `e2e/bodyLanding.spec.ts`, qui vérifie
    ce comportement côté APPLICATION, là où les tests unitaires ne voient que le HTML.
+
+   **Et le chemin est désormais ÉCRIT autant que lu** (`pathnameForBody`). Il ne l'était pas :
+   ouvrir `/jupiter/` ciblait Jupiter, mais naviguer ensuite vers Titan écrivait `?body=titan`
+   sur ce même chemin — une adresse qui nommait deux corps différents, et un lien partagé qui
+   montrait la vignette du mauvais. Chaque sélection remonte maintenant à l'adresse indexable
+   du corps par `history.replaceState`, donc **sans rechargement** : vérifié par un marqueur
+   JavaScript qui survit à toute la navigation et par zéro document HTML retéléchargé.
+   `serializePermalink` omettait déjà `?body=` quand le chemin nomme ce corps, donc l'omission
+   se déclenche d'elle-même et l'URL cesse d'affirmer deux fois la même chose.
+
+   Trois points qui ont demandé une décision :
+
+   - **La vue d'ensemble est `/`, pas `/all`.** `/` EST le global : l'URL canonique
+     d'`index.html`, et la seule que le sitemap annonce. `/all` répondrait (la réécriture SPA
+     sert `index.html` pour tout chemin d'un segment) mais créerait une seconde adresse pour un
+     contenu identique. `?body=overview` disparaît de la racine pour la même raison, tout en
+     restant écrit depuis une page de corps, où il dit encore quelque chose.
+   - **Le slash final n'est pas décoratif.** Les pages sont servies en `/jupiter/` et `/jupiter`
+     répond 301 vers elle — mesuré en production. Écrire la forme sans slash ferait payer une
+     redirection à chaque rechargement et à chaque partage.
+   - **Le TITRE du document doit suivre**, sinon l'adresse et l'onglet disent deux choses
+     différentes et un signet porte le mauvais nom. `ui/documentTitle` le remet à jour, localisé,
+     et `src/seo/titleParity.test.ts` vérifie que la version anglaise est mot pour mot celle de
+     la page statique sur TOUS les corps — sans quoi un rechargement ferait clignoter le titre.
+     La divergence française est assumée : la page statique est anglaise par référencement,
+     l'interface doit parler la langue du visiteur.
 3. **Du contenu réel.** Chaque page porte la description du catalogue et les données mesurées de
    ce corps. Cinquante coquilles identiques seraient du contenu dupliqué, exactement ce que
    l'opération existe pour éviter.
