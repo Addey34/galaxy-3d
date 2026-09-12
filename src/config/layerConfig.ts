@@ -1042,10 +1042,20 @@ const twilightGlsl = (sunReach: string): string => `
           // bande et le bleu n'apparaissait que dans sa queue éteinte. Les deux teintes étant
           // normalisées en luminance, le mélange ne peut changer que la couleur de la bande,
           // jamais sa luminosité.
+          // La chaudeur est encore bornée par la GÉOMÉTRIE DU REGARD : l'or n'existe qu'en vue
+          // rasante, quand la ligne de visée traverse l'atmosphère par la tranche. Mesuré sur
+          // photographies — cf. twilightWarmthViewFactor. Sans ce facteur, l'or était peint en
+          // travers du disque, là où une vraie image n'en montre aucun.
+          vec3 twilightViewDir = normalize( cameraPosition - vMoonWorldPos );
+          float twilightWarmth =
+            terminatorTwilightWarmth( twilightGraze, uTerminatorWrap ) *
+            twilightWarmthViewFactor(
+              dot( normalize( vMoonWorldNormal ), twilightViewDir )
+            );
           vec3 twilightTint = mix(
             uTwilightColor,
             uTwilightWarmColor,
-            terminatorTwilightWarmth( twilightGraze, uTerminatorWrap )
+            twilightWarmth
           );
           outgoingLight += twilightTint * ( twilightBand * uTwilightStrength${sunReach} );
         }`;
@@ -1481,7 +1491,7 @@ export function createShadowAwareStandardMaterial(
   material.customProgramCacheKey = () =>
     `shadow-aware-standard-v3${invertRoughness ? '-invrough-v2' : ''}${
       cloudShadow ? '-cloudshadow' : ''
-    }${moonlight ? '-moonlight' : ''}${twilight ? '-twilight-v5' : ''}${
+    }${moonlight ? '-moonlight' : ''}${twilight ? '-twilight-v6' : ''}${
       varyOceanRoughness ? '-oceanrough-v1' : ''
     }${limitSpecular ? '-limitspec-v3-grazeocclusion' : ''}${noSpecular ? '-nospec' : ''}${
       eclipseShadow ? '-eclipseshadow' : ''

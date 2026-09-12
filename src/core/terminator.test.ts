@@ -15,6 +15,7 @@ import {
   TERMINATOR_WRAP_TWILIGHT_SKY,
   terminatorTwilight,
   terminatorTwilightWarmth,
+  twilightWarmthViewFactor,
   sunlitColumnFraction,
   TWILIGHT_BAND_PEAK,
   twilightWrapAtAltitude,
@@ -385,6 +386,7 @@ describe('GLSL mirror', () => {
       'float terminatorSunlitColumn( float raw )',
       'float terminatorTwilight( float raw, float wrap )',
       'float terminatorTwilightWarmth( float raw, float wrap )',
+      'float twilightWarmthViewFactor( float viewCos )',
     ])
       expect(TERMINATOR_GLSL).toContain(signature);
   });
@@ -411,5 +413,56 @@ describe('GLSL mirror', () => {
     expect(TERMINATOR_GLSL).toContain(
       'column * column * terminatorSmootherstep01( nearHorizon )'
     );
+  });
+});
+
+describe('twilightWarmthViewFactor (l’or n’existe qu’en vue rasante)', () => {
+  it('ne met AUCUN or au centre du disque', () => {
+    // Mesuré sur une image Galileo de la Terre à moitié éclairée, où le terminateur traverse
+    // le disque comme dans cette application : le rapport rouge/bleu n'y dépasse jamais 0,75.
+    // Il n'y a pas d'or en travers du disque, et en peindre un était une erreur de géométrie.
+    expect(twilightWarmthViewFactor(1)).toBe(0);
+    expect(twilightWarmthViewFactor(-1)).toBe(0);
+    expect(twilightWarmthViewFactor(0.95)).toBeLessThan(0.01);
+  });
+
+  it('le donne pleinement au limbe, où le regard traverse par la tranche', () => {
+    // Mesuré sur une vue ISS du limbe au lever orbital : or à 1,84, orange à 2,60, rouge à
+    // 6,6 — et à des luminances de 175, 152 et 94. L'or y est réel ET lumineux.
+    expect(twilightWarmthViewFactor(0)).toBe(1);
+  });
+
+  it('monte de façon monotone vers le limbe', () => {
+    let previous = 0;
+    for (let viewCos = 1; viewCos >= 0; viewCos -= 0.01) {
+      const value = twilightWarmthViewFactor(viewCos);
+      expect(value).toBeGreaterThanOrEqual(previous - 1e-12);
+      expect(value).toBeLessThanOrEqual(1);
+      previous = value;
+    }
+  });
+
+  it('traite les deux faces de la même manière', () => {
+    // `dot` change de signe selon l'orientation ; la géométrie du regard, non.
+    for (const c of [0.2, 0.5, 0.8])
+      expect(twilightWarmthViewFactor(c)).toBeCloseTo(
+        twilightWarmthViewFactor(-c),
+        12
+      );
+  });
+
+  it('reste borné sur un produit scalaire hors domaine', () => {
+    // Une normale non normalisée peut donner un `dot` hors [-1, 1] ; la chaudeur ne doit ni
+    // devenir négative ni dépasser 1, sans quoi le mélange de teintes sortirait de sa plage.
+    //
+    // Le cas NaN n'est PAS testé, et c'est délibéré : `clamp` le propage, des deux côtés du
+    // miroir. Le rattraper en JavaScript seulement ferait diverger le GLSL, alors que
+    // l'adjacence des deux écritures est la seule protection qu'a ce fichier. Et un `dot` NaN
+    // supposerait une normale déjà NaN — tout aurait cassé bien avant d'arriver ici.
+    for (const c of [-3, 3, 1e9]) {
+      const value = twilightWarmthViewFactor(c);
+      expect(value).toBeGreaterThanOrEqual(0);
+      expect(value).toBeLessThanOrEqual(1);
+    }
   });
 });

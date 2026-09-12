@@ -301,6 +301,35 @@ export function terminatorTwilight(raw: number, wrap: number): number {
  * Résultat : or dans les deux degrés qui encadrent le terminateur, bleu de part et d'autre —
  * ce que montrent les photographies du terminateur depuis l'orbite.
  */
+/**
+ * L'OR DU COUCHANT N'EXISTE QU'EN VUE RASANTE — facteur de 0 (regard perpendiculaire) à 1
+ * (regard tangent au limbe). `viewCos` = |dot(normale monde, direction vers la caméra)|.
+ *
+ * Mesuré sur deux photographies, pas déduit. Sur une vue ISS du limbe au lever orbital, la
+ * séquence verticale à travers l'arc donne bleu 0,30 → blanc 1,00 → or 1,84 → orange 2,60 →
+ * rouge 6,6 (rapport rouge/bleu), avec des luminances de 109, 252, 175, 152 et 94. L'or est
+ * donc réel ET LUMINEUX. Sur une image Galileo de la Terre à moitié éclairée, où le
+ * terminateur traverse le disque exactement comme dans cette application, le même rapport ne
+ * dépasse JAMAIS 0,75 : il n'y a aucun or en travers du disque.
+ *
+ * La différence n'est pas la teinte, c'est la GÉOMÉTRIE du regard. Vers le limbe, la ligne de
+ * visée traverse des centaines de kilomètres d'air et la diffusion de Rayleigh a dépouillé le
+ * bleu. Vers le centre du disque, elle traverse une seule masse d'air : le ciel crépusculaire
+ * y est gris-bleu, et c'est ce que la photographie montre.
+ *
+ * Peindre l'or en travers du disque était donc une erreur de géométrie, et elle explique les
+ * deux signalements successifs — « bandeau brun » puis « voile blanchâtre ». Régler la
+ * saturation ne pouvait pas la corriger : trois valeurs essayées ont rendu des images
+ * mesurément indiscernables.
+ *
+ * Le carré n'est pas un réglage : c'est la même forme que le `rim` du halo atmosphérique
+ * (`AtmosphereShader`), qui décrit déjà cette dépendance au regard pour la même raison.
+ */
+export function twilightWarmthViewFactor(viewCos: number): number {
+  const grazing = clamp01(1 - Math.abs(viewCos));
+  return grazing * grazing;
+}
+
 export function terminatorTwilightWarmth(raw: number, wrap: number): number {
   const column = sunlitColumnFraction(raw);
   const nearHorizon = clamp01((1 - terminatorDay(raw, wrap)) / 0.5);
@@ -418,6 +447,10 @@ float terminatorTwilightWarmth( float raw, float wrap ) {
   float column = terminatorSunlitColumn( raw );
   float nearHorizon = clamp( ( 1.0 - terminatorDay( raw, wrap ) ) / 0.5, 0.0, 1.0 );
   return column * column * terminatorSmootherstep01( nearHorizon );
+}
+float twilightWarmthViewFactor( float viewCos ) {
+  float grazing = clamp( 1.0 - abs( viewCos ), 0.0, 1.0 );
+  return grazing * grazing;
 }
 float reliefFade( float raw ) {
   return terminatorDay( raw - ${RELIEF_FADE_CENTER.toFixed(4)}, ${RELIEF_FADE_HALF_WIDTH.toFixed(4)} );
