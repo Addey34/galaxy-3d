@@ -57,7 +57,7 @@ test('an explicit body in the query wins over the path', async ({ page }) => {
   await expect(page.locator('#body-info .bi-name')).toHaveText('Titan');
 });
 
-test('navigating away from a landing page writes the new body', async ({
+test('quitter une page d’atterrissage emmène l’adresse avec soi', async ({
   page,
 }) => {
   await openApp(page, '/jupiter/');
@@ -65,11 +65,16 @@ test('navigating away from a landing page writes the new body', async ({
   await page.locator('#body-search-trigger').click();
   await page.locator('#orbit-saturn').click();
   await expect(page.locator('#body-info .bi-name')).toHaveText('Saturn');
-  // Le chemin reste celui de la page d'atterrissage, mais la query dit désormais la vérité :
-  // c'est elle qui rend le lien partageable.
+
+  // Le CHEMIN suit désormais le corps regardé. Ce test disait l'inverse — « le chemin reste
+  // celui de la page d'atterrissage, mais la query dit la vérité » — et c'était le défaut
+  // signalé : depuis `/jupiter/`, regarder Saturne laissait une adresse qui nommait encore
+  // Jupiter dans son chemin, et deux corps différents dans une seule URL.
   await expect
-    .poll(() => new URL(page.url()).searchParams.get('body'))
-    .toBe('saturn');
+    .poll(() => new URL(page.url()).pathname, { timeout: 10_000 })
+    .toBe('/saturn/');
+  // Et le corps n'est plus répété en query : le chemin le dit déjà.
+  expect(new URL(page.url()).searchParams.get('body')).toBeNull();
 });
 
 test('an unknown path is ignored, not treated as a body', async ({ page }) => {

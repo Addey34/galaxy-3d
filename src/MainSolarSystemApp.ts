@@ -25,6 +25,7 @@ import { TOUR_SCRIPTS } from './config/tourScripts';
 import { setupLangSwitch } from './ui/langSwitch';
 import { setupPlanetControls } from './ui/planetNav';
 import { setupBodyInfo } from './ui/bodyInfo';
+import { setupDocumentTitle } from './ui/documentTitle';
 import { setupPlayback } from './ui/playback';
 import { setupQualitySection } from './ui/qualitySection';
 import { setupTimePanel } from './ui/timePanel';
@@ -202,12 +203,17 @@ if (surfaceScrim) {
     let syncPermalink = (): void => undefined;
     const bodyInfo = setupBodyInfo(overlayCoordinator);
     const exploScaleBadge = setupExploScaleBadge();
+    // Le titre de l'onglet suit la sélection, comme le chemin de l'URL : depuis que celui-ci
+    // change sans rechargement, un titre figé ferait dire deux choses différentes à l'adresse
+    // et à l'onglet (cf. ui/documentTitle).
+    const documentTitle = setupDocumentTitle();
     const planetNav = setupPlanetControls(
       cameraSystem,
       (name) => {
         if (name === 'overview') bodyInfo.hide();
         else bodyInfo.show(name);
         exploScaleBadge.setHasTarget(name !== 'overview');
+        documentTitle.setBody(name);
         syncPermalink();
       },
       overlayCoordinator

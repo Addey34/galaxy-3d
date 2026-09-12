@@ -88,3 +88,43 @@ test('le chemin suit la sélection, sans recharger la page', async ({
     )
   ).toBe('alive');
 });
+
+test('le titre de l’onglet suit le chemin, dans les deux langues', async ({
+  page,
+}) => {
+  // Contrepartie de l'écriture du chemin : l'adresse change sans rechargement, donc le titre
+  // du document doit changer avec elle. Sinon `/jupiter/` s'affiche sous un onglet qui annonce
+  // encore l'accueil, et un signet enregistré là porte le mauvais nom. Ce défaut est né AVEC
+  // le chemin mobile — avant, rien ne divergeait puisque rien ne bougeait.
+  await page.goto('/');
+  await expect(page.locator('#loader')).toBeHidden({ timeout: 30_000 });
+  await expect(page).toHaveTitle(/Solar System/i);
+
+  await page.locator('#body-search-trigger').click();
+  await page.locator('#palette-input').fill('Jupiter');
+  const jupiter = page.locator('#orbit-jupiter');
+  await expect(jupiter).toBeVisible();
+  await jupiter.click();
+  await expect(page).toHaveTitle('Jupiter in 3D — live position and orbit');
+  // Que ce titre anglais soit MOT POUR MOT celui de la page statique se vérifie en unitaire
+  // (`src/seo/titleParity.test.ts`) et non ici : le serveur de développement ne génère pas les
+  // pages par corps, elles sont produites par le greffon de build. Une requête vers
+  // `/jupiter/` renverrait donc l'app shell, et l'assertion mesurerait le harnais.
+
+  // Retour à la vue d'ensemble : le titre repart sur celui de l'accueil.
+  await page.locator('#body-search-trigger').click();
+  await page.locator('#orbit-overview').click();
+  await expect(page).toHaveTitle(/Solar System/i);
+
+  // Et il suit la LANGUE, même sans nouvelle sélection.
+  await page.locator('#body-search-trigger').click();
+  await page.locator('#palette-input').fill('Jupiter');
+  await page.locator('#orbit-jupiter').click();
+  await page.locator('#help-btn').click();
+  // Même sélecteur que `e2e/i18n.spec.ts` : les segments vivent dans `#lang-switch` et
+  // portent leur locale en attribut, il n'y a pas d'identifiant `#lang-fr`.
+  await page.locator('#lang-switch .lang-btn[data-locale="fr"]').click();
+  await expect(page).toHaveTitle(
+    'Jupiter en 3D — position et orbite en direct'
+  );
+});

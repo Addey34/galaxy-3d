@@ -60,7 +60,11 @@ test('opens upcoming astronomical events and jumps the simulation to one', async
   await expect(page.locator('#play-pause-btn')).toHaveClass(/is-paused/);
   // …et un corps observé doit être sélectionné : Lune/Terre pour les phases, éclipses,
   // saisons et apsides, ou la planète elle-même pour une opposition/conjonction.
-  expect(url.searchParams.get('body')).toMatch(
-    /^(moon|earth|mercury|venus|mars|jupiter|saturn|uranus|neptune)$/
+  //
+  // Le corps se lit dans le CHEMIN et non plus dans la query : l'adresse d'un corps regardé
+  // est désormais sa page indexable. `?body=` y serait une redite, et vaut donc `null`.
+  expect(url.pathname).toMatch(
+    /^\/(moon|earth|mercury|venus|mars|jupiter|saturn|uranus|neptune)\/$/
   );
+  expect(url.searchParams.get('body')).toBeNull();
 });

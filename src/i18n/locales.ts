@@ -17,6 +17,12 @@ type Dict = Record<string, string>;
 export const messages: Record<Locale, Dict> = {
   en: {
     // ── Écran de chargement ──
+    // Titre de l'onglet, tenu à jour pendant la navigation (cf. ui/documentTitle). La version
+    // anglaise reprend mot pour mot celle que `src/seo` écrit dans les pages statiques, pour
+    // qu'un rechargement ne change rien de visible.
+    'title.body': '{name} in 3D — live position and orbit',
+    'title.overview':
+      '3D Solar System: Real-Time Interactive Visualizer | Explore the Planets',
     'loader.title': 'Loading Solar System...',
     'loader.init': 'Initializing...',
     'loader.core': 'Loading core components…',
@@ -368,6 +374,9 @@ export const messages: Record<Locale, Dict> = {
 
   fr: {
     // ── Écran de chargement ──
+    'title.body': '{name} en 3D — position et orbite en direct',
+    'title.overview':
+      'Système solaire en 3D : visualiseur interactif en temps réel',
     'loader.title': 'Chargement du système solaire…',
     'loader.init': 'Initialisation…',
     'loader.core': 'Chargement des composants…',
