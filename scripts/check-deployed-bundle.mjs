@@ -128,7 +128,10 @@ if (served === expected) {
       `  en ligne  : ${served ?? '(illisible)'}\n\n` +
       `Le deploiement a echoue, n'a pas eu lieu, ou une ancienne version a ete restauree.\n` +
       `Ne pas se fier au resultat global du run : lire le job « Verify and build », c'est lui\n` +
-      `qui deploie (gh run view <id> --json jobs).\n`
+      `qui deploie (gh run view <id> --json jobs).\n\n` +
+      `EN LOCAL, la cause la plus probable est un dist/ PERIME, pas un deploiement rate :\n` +
+      `ce script compare la production au dernier build LOCAL. Lancer « pnpm build » d'abord.\n` +
+      `En CI la question ne se pose pas, l'etape suit immediatement le build.\n`
   );
   process.exitCode = 1;
 }
