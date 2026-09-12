@@ -46,3 +46,88 @@ describe('charge utile du déploiement', () => {
     expect(firebaseJson.hosting.public).toBe('dist');
   });
 });
+
+/**
+ * CE QUE CHAQUE RÉPONSE DOIT PORTER, ET CE QUI NE DOIT SURTOUT PAS ÊTRE FIGÉ.
+ *
+ * Ces deux familles de règles vivent dans le même fichier et n'étaient tenues par rien : leur
+ * disparition ne casse aucun test, ne ralentit rien, et ne se voit qu'en interrogeant le site
+ * déployé à la main. Une en-tête de sécurité retirée par inadvertance ne se manifeste que le
+ * jour où elle aurait servi.
+ *
+ * Le cache mérite la même attention, pour une raison différente et sans retour arrière : les
+ * vignettes de partage ont un nom STABLE et des octets réécrits à chaque build. Les faire
+ * tomber sous la règle immuable d'un an de `/assets/**` figerait une image fausse chez tous
+ * ceux qui l'ont déjà vue, et aucun redéploiement ne la corrigerait.
+ *
+ * Le pendant en ligne — ce que la production sert VRAIMENT — est vérifié après chaque
+ * déploiement par `scripts/check-deployed-bundle.mjs`. Ici on attrape la faute au commit.
+ */
+describe('en-têtes du site déployé', () => {
+  const config = JSON.parse(
+    readFileSync(resolve(__dirname, '../../firebase.json'), 'utf8')
+  ) as {
+    hosting: {
+      headers?: { source: string; headers: { key: string; value: string }[] }[];
+    };
+  };
+  const blocks = config.hosting.headers ?? [];
+  const catchAll = blocks.find((block) => block.source === '**');
+
+  it('applique un bloc de sécurité à TOUTES les réponses', () => {
+    expect(
+      catchAll,
+      'aucun bloc `**` : les en-têtes ne couvriraient qu’une partie du site'
+    ).toBeDefined();
+  });
+
+  it.each([
+    ['Content-Security-Policy'],
+    ['X-Content-Type-Options'],
+    ['X-Frame-Options'],
+    ['Referrer-Policy'],
+    ['Permissions-Policy'],
+    ['Cross-Origin-Opener-Policy'],
+    ['Cross-Origin-Resource-Policy'],
+    ['Strict-Transport-Security'],
+  ])('sert %s sur chaque réponse', (key) => {
+    const found = catchAll?.headers.find((header) => header.key === key);
+    expect(found?.value, `${key} absente du bloc \`**\``).toBeTruthy();
+  });
+
+  it('garde une CSP qui verrouille vraiment quelque chose', () => {
+    // Une CSP réduite à `default-src *` passerait le test précédent en ne protégeant rien.
+    const csp =
+      catchAll?.headers.find((h) => h.key === 'Content-Security-Policy')
+        ?.value ?? '';
+    expect(csp).toContain("default-src 'self'");
+    expect(csp).toContain("object-src 'none'");
+    expect(csp).not.toContain('default-src *');
+  });
+
+  it('ne fige JAMAIS les vignettes de partage', () => {
+    // Elles vivent hors de `/assets/**` exprès. Aucune règle ne doit les rattraper.
+    for (const block of blocks) {
+      const longLived = block.headers.some(
+        (header) =>
+          header.key === 'Cache-Control' &&
+          (/immutable/i.test(header.value) ||
+            /max-age=\d{7,}/.test(header.value))
+      );
+      if (!longLived) continue;
+      expect(
+        block.source.startsWith('/assets/'),
+        `« ${block.source} » porte un cache long ; seul /assets/** peut en avoir, ` +
+          `car ses noms sont hachés. Une vignette figée un an ne se corrige plus.`
+      ).toBe(true);
+    }
+  });
+
+  it('garde le cache long là où il est légitime', () => {
+    // L'autre moitié : sans lui, le bundle serait retéléchargé à chaque visite.
+    const assets = blocks.find((block) => block.source === '/assets/**');
+    expect(assets?.headers.find((h) => h.key === 'Cache-Control')?.value).toBe(
+      'public, max-age=31536000, immutable'
+    );
+  });
+});
