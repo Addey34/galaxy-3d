@@ -94,6 +94,41 @@ describe('libellés statiques de index.html', () => {
   }
 
   /**
+   * Même règle pour le TEXTE des éléments `data-i18n`, que les deux tests ci-dessus ne lisent
+   * pas (ils ne regardent que des attributs). C'est par ce trou qu'est passé
+   * `en['loader.stage.scene'] = 'Scène'` : le HTML disait « Scene », le dictionnaire anglais
+   * portait l'accent français, et un visiteur anglophone le lisait à chaque chargement.
+   */
+  it('garde le texte de chaque élément data-i18n identique à sa valeur anglaise', () => {
+    const decode = (text: string): string =>
+      text
+        .replace(/&nbsp;/g, ' ')
+        .replace(/&hellip;/g, '…')
+        .replace(/&amp;/g, '&')
+        .replace(/\s+/g, ' ')
+        .trim();
+    const elements = [
+      ...html.matchAll(
+        /<[a-z][a-z0-9]*\s[^>]*?\sdata-i18n="([^"]+)"[^>]*>([^<]*)</gi
+      ),
+    ];
+    // Un ensemble vide passerait en silence : on exige de voir les libellés du chargeur.
+    expect(elements.length).toBeGreaterThan(10);
+
+    const stale: string[] = [];
+    for (const [, key, raw] of elements) {
+      const text = decode(raw);
+      // Élément dont le texte vit dans des enfants : rien à comparer ici.
+      if (text === '') continue;
+      const english = messages.en[key];
+      if (english === undefined) stale.push(`clé inconnue "${key}"`);
+      else if (english !== text)
+        stale.push(`"${text}" ≠ en["${key}"] = "${english}"`);
+    }
+    expect(stale).toEqual([]);
+  });
+
+  /**
    * Sécurité des liens sortants, pas de l'i18n — mais c'est le seul endroit du dépôt qui lit
    * `index.html` en statique, et un lien externe sans `rel` est une vraie faille : la page
    * ouverte reçoit `window.opener` et peut remplacer l'onglet d'origine par une imitation

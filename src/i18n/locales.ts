@@ -23,7 +23,6 @@ export const messages: Record<Locale, Dict> = {
     'title.body': '{name} in 3D — live position and orbit',
     'title.overview':
       '3D Solar System: Real-Time Interactive Visualizer | Explore the Planets',
-    'loader.title': 'Loading Solar System...',
     'loader.init': 'Initializing...',
     'loader.core': 'Loading core components…',
     'loader.scene': 'Building scene…',
@@ -35,10 +34,9 @@ export const messages: Record<Locale, Dict> = {
     'loader.creatingBody': 'Creating {body}...',
     'loader.ephemerides': 'Ephemeris data loaded',
     'loader.ready': 'Ready for launch',
-    'loader.verified': 'verified loading',
     'loader.stage.core': 'Core',
     'loader.stage.data': 'Data',
-    'loader.stage.scene': 'Scène',
+    'loader.stage.scene': 'Scene',
     'loader.stage.bodies': 'Bodies',
     'loader.stage.orbit': 'Orbits',
     'loader.stage.ready': 'Ready',
@@ -118,11 +116,8 @@ export const messages: Record<Locale, Dict> = {
     'playback.playpause': 'Play / Pause',
     'playback.play': 'Resume simulation',
     'playback.pause': 'Pause simulation',
-    'speed.live': 'Live',
     'time.today': 'Back to now',
     'time.group': 'Time controls',
-    'time.inputTime': 'Simulation time',
-    'time.inputDate': 'Simulation date',
     'time.wheelTime': 'Wheel: ±1 h  ·  Click: pick the time',
     'time.wheelDate': 'Wheel: ±1 day  ·  Click: pick the date',
 
@@ -145,7 +140,6 @@ export const messages: Record<Locale, Dict> = {
     'webxr.btn.enter.aria': 'Enter virtual reality',
     'webxr.btn.exit.title': 'Exit VR',
     'webxr.btn.exit.aria': 'Exit virtual reality',
-    'webxr.btn.unavailable.title': 'VR not available',
     'help.dialog.aria': 'Help and credits',
     'help.title': 'Navigation',
     'help.tip.drag.key': 'Drag',
@@ -233,12 +227,7 @@ export const messages: Record<Locale, Dict> = {
       'Voyager 1, humanity’s farthest spacecraft, is already over 24 billion km from Earth.',
 
     // ── Panneau orbites (mode Éducatif) ──
-    'orbitOpts.title': 'Orbits',
-    'orbitOpts.all': 'All orbits',
-    'orbitOpts.collapse': 'Collapse panel',
-    'orbitOpts.expand': 'Orbit options',
     'settings.title': 'Settings',
-    'settings.orbits': 'Orbits',
     'settings.orbitsToggle': 'Show orbits',
     'settings.labelsToggle': 'Show body names and markers',
     'settings.bodiesToggle': 'Show celestial bodies',
@@ -317,25 +306,10 @@ export const messages: Record<Locale, Dict> = {
     'weather.thermal.note':
       'Air temperature near the surface (MERRA-2 monthly):',
 
-    // ── Barre de navigation planètes ──
-    'nav.collapse': 'Hide planet bar',
-    'nav.expand': 'Show planet bar',
-    'nav.scrollLeft': 'Scroll left',
-    'nav.scrollRight': 'Scroll right',
-    'nav.bodiesOpen': 'Show all bodies',
-    'nav.bodiesClose': 'Show nearby bodies',
-
-    // ── Horloge : repli complet/simplifié ──
-    'time.simplify': 'Simplified view',
-    'time.full': 'Full controls',
-
     // ── Divers ──
     'fullscreen.title': 'Fullscreen',
 
     // ── Fiche d'info (bodyInfo) ──
-    'bi.collapse.title': 'Collapse / expand',
-    'bi.collapse.aria': 'Collapse panel',
-    'bi.expand.aria': 'Expand panel',
     'bi.live.label': 'Distance from you',
     'bi.more': 'Learn more',
     'bi.fictional': 'Illustrative surface',
@@ -377,7 +351,6 @@ export const messages: Record<Locale, Dict> = {
     'title.body': '{name} en 3D — position et orbite en direct',
     'title.overview':
       'Système solaire en 3D : visualiseur interactif en temps réel',
-    'loader.title': 'Chargement du système solaire…',
     'loader.init': 'Initialisation…',
     'loader.core': 'Chargement des composants…',
     'loader.scene': 'Construction de la scène…',
@@ -389,7 +362,6 @@ export const messages: Record<Locale, Dict> = {
     'loader.creatingBody': 'Création de {body}...',
     'loader.ephemerides': 'Données éphémérides chargées',
     'loader.ready': 'Prêt au lancement',
-    'loader.verified': 'chargement vérifié',
     'loader.stage.core': 'Moteur',
     'loader.stage.data': 'Données',
     'loader.stage.scene': 'Scène',
@@ -473,10 +445,7 @@ export const messages: Record<Locale, Dict> = {
     'playback.playpause': 'Lecture / Pause',
     'playback.play': 'Reprendre la simulation',
     'playback.pause': 'Mettre la simulation en pause',
-    'speed.live': 'Direct',
     'time.group': 'Contrôles temporels',
-    'time.inputTime': 'Heure de simulation',
-    'time.inputDate': 'Date de simulation',
     'time.today': 'Revenir à maintenant',
     'time.wheelTime': 'Molette : ±1 h  ·  Clic : choisir l’heure',
     'time.wheelDate': 'Molette : ±1 jour  ·  Clic : choisir la date',
@@ -500,7 +469,6 @@ export const messages: Record<Locale, Dict> = {
     'webxr.btn.enter.aria': 'Entrer en réalité virtuelle',
     'webxr.btn.exit.title': 'Quitter la VR',
     'webxr.btn.exit.aria': 'Quitter la réalité virtuelle',
-    'webxr.btn.unavailable.title': 'VR non disponible',
     'help.dialog.aria': 'Aide et crédits',
     'help.title': 'Navigation',
     'help.tip.drag.key': 'Glisser',
@@ -592,12 +560,7 @@ export const messages: Record<Locale, Dict> = {
       'Voyager 1, la sonde la plus lointaine de l’humanité, est déjà à plus de 24 milliards de km de la Terre.',
 
     // ── Panneau orbites (mode Éducatif) ──
-    'orbitOpts.title': 'Orbites',
-    'orbitOpts.all': 'Toutes les orbites',
-    'orbitOpts.collapse': 'Replier le panneau',
-    'orbitOpts.expand': 'Options d’orbites',
     'settings.title': 'Paramètres',
-    'settings.orbits': 'Orbites',
     'settings.orbitsToggle': 'Afficher les orbites',
     'settings.labelsToggle': 'Afficher les noms et les points',
     'settings.bodiesToggle': 'Afficher les corps célestes',
@@ -676,25 +639,10 @@ export const messages: Record<Locale, Dict> = {
     'weather.thermal.note':
       'Température de l’air près du sol (MERRA-2 mensuel) :',
 
-    // ── Barre de navigation planètes ──
-    'nav.collapse': 'Masquer la barre',
-    'nav.expand': 'Afficher la barre',
-    'nav.scrollLeft': 'Défiler à gauche',
-    'nav.scrollRight': 'Défiler à droite',
-    'nav.bodiesOpen': 'Afficher tous les corps',
-    'nav.bodiesClose': 'Afficher les corps voisins',
-
-    // ── Horloge : repli complet/simplifié ──
-    'time.simplify': 'Vue simplifiée',
-    'time.full': 'Contrôles complets',
-
     // ── Divers ──
     'fullscreen.title': 'Plein écran',
 
     // ── Fiche d'info (bodyInfo) ──
-    'bi.collapse.title': 'Replier / déplier',
-    'bi.collapse.aria': 'Replier le panneau',
-    'bi.expand.aria': 'Déplier le panneau',
     'bi.more': 'En savoir plus',
     'bi.live.label': 'Distance depuis vous',
     'bi.fictional': 'Surface fictive',
