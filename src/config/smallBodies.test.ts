@@ -176,3 +176,183 @@ describe('SMALL_BODIES catalogue', () => {
     }
   );
 });
+
+/**
+ * Régression de position des astéroïdes de la vague A (Éros, Itokawa, Ryugu, Ida) contre les
+ * vecteurs d'état JPL Horizons, relevés en direct par `node scripts/derive-small-body-elements.mjs`
+ * à −10, −1, 0, +1 et +10 ans de l'époque des éléments (2026-01-01).
+ *
+ * Tolérances MESURÉES, pas choisies : écart ≤ 2,6e-3 UA à un an, ≤ 5,3e-2 UA à dix ans (Ryugu,
+ * frôlé par la Terre), d'où 0,005 et 0,08 UA. Une anomalie moyenne prise un seul jour trop tôt
+ * déplace Ryugu d'environ 0,013 UA et fait échouer la première borne.
+ */
+const WAVE_A_VECTORS: readonly (readonly [
+  string,
+  string,
+  number,
+  number,
+  number,
+])[] = [
+  [
+    'eros',
+    '2016-01-02T00:00:00.000Z',
+    -0.8059560868703679,
+    -1.265872466987505,
+    -0.2638594941419051,
+  ],
+  [
+    'eros',
+    '2025-01-01T00:00:00.000Z',
+    -0.01619866965564159,
+    -1.688559955842637,
+    -0.1844316998702361,
+  ],
+  [
+    'eros',
+    '2026-01-01T00:00:00.000Z',
+    0.1580941121361407,
+    1.167072662333513,
+    0.1506883375096972,
+  ],
+  [
+    'eros',
+    '2027-01-01T00:00:00.000Z',
+    0.9397261997129005,
+    -1.515300283938032,
+    -0.01465288108711664,
+  ],
+  [
+    'eros',
+    '2036-01-02T00:00:00.000Z',
+    1.468679317874745,
+    -0.91525630796997,
+    0.1338295459792221,
+  ],
+  [
+    'itokawa',
+    '2016-01-02T00:00:00.000Z',
+    0.2997992714222794,
+    1.59581692647044,
+    0.008202311113652272,
+  ],
+  [
+    'itokawa',
+    '2025-01-01T00:00:00.000Z',
+    0.8760300175658677,
+    1.445778958585235,
+    -0.008546486572643506,
+  ],
+  [
+    'itokawa',
+    '2026-01-01T00:00:00.000Z',
+    1.133923205317714,
+    -0.6006193039631518,
+    -0.03604197067781104,
+  ],
+  [
+    'itokawa',
+    '2027-01-01T00:00:00.000Z',
+    -0.9803860409731147,
+    0.7000250169432459,
+    0.03298822736323294,
+  ],
+  [
+    'itokawa',
+    '2036-01-02T00:00:00.000Z',
+    -0.5504280659014845,
+    1.298748557526961,
+    0.02776025049389191,
+  ],
+  [
+    'ryugu',
+    '2016-01-02T00:00:00.000Z',
+    -1.058306985911253,
+    0.1448393076229326,
+    -0.1081952985520941,
+  ],
+  [
+    'ryugu',
+    '2025-01-01T00:00:00.000Z',
+    -0.7523812149430513,
+    0.6441092508752658,
+    -0.09444993103516847,
+  ],
+  [
+    'ryugu',
+    '2026-01-01T00:00:00.000Z',
+    1.008596726970665,
+    0.4492306322012534,
+    0.08335188260817043,
+  ],
+  [
+    'ryugu',
+    '2027-01-01T00:00:00.000Z',
+    0.8836875561698768,
+    -1.056255479896267,
+    0.1208125561907056,
+  ],
+  [
+    'ryugu',
+    '2036-01-02T00:00:00.000Z',
+    0.4864436419616561,
+    -1.329697371994209,
+    0.09146724734620514,
+  ],
+  [
+    'ida',
+    '2016-01-02T00:00:00.000Z',
+    0.922677560489694,
+    2.583319695032431,
+    0.05202389927765255,
+  ],
+  [
+    'ida',
+    '2025-01-01T00:00:00.000Z',
+    2.696052005868261,
+    0.74064144636275,
+    0.04332831613638746,
+  ],
+  [
+    'ida',
+    '2026-01-01T00:00:00.000Z',
+    -0.2752245117051102,
+    2.724134910300779,
+    0.03999859252680889,
+  ],
+  [
+    'ida',
+    '2027-01-01T00:00:00.000Z',
+    -2.855181258129642,
+    0.3204479426479325,
+    -0.0283900306905861,
+  ],
+  [
+    'ida',
+    '2036-01-02T00:00:00.000Z',
+    -1.445289839963061,
+    2.373797785944518,
+    0.02029825611608795,
+  ],
+];
+
+describe('wave A asteroids vs live JPL Horizons state vectors', () => {
+  it.each(WAVE_A_VECTORS)('%s @ %s', (name, iso, x, y, z) => {
+    const elements = SMALL_BODIES[name]?.orbitalElements;
+    expect(elements, `${name}: missing orbitalElements`).toBeDefined();
+    const p = new OrbitalElementsService().getHeliocentricAU(
+      elements!,
+      new Date(iso)
+    );
+    // `getHeliocentricAU` rend le repère de la SCÈNE (X, Z, −Y de l'écliptique) : on revient
+    // à l'écliptique J2000 d'Horizons avant de comparer.
+    const error = Math.hypot(p.x - x, -p.z - y, p.y - z);
+    const years = Math.abs(
+      (new Date(iso).getTime() - elements!.epoch.getTime()) /
+        (365.25 * 86_400_000)
+    );
+    expect(
+      error,
+      `${name} @ ${iso}: ${error.toExponential(2)} AU off`
+    ).toBeLessThan(years <= 1.01 ? 0.005 : 0.08);
+  });
+});

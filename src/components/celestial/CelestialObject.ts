@@ -14,7 +14,7 @@ import * as THREE from 'three';
 import { buildLayers } from '@/components/celestial/celestialLayers';
 import { applyTexture } from '@/components/celestial/celestialTextures';
 import { KM_PER_AU, SQRT_K } from '@/core/ScaleService';
-import { boundingRadius, fitScale } from '@/core/modelFit';
+import { fitScale, meshVolume, volumeEquivalentRadius } from '@/core/modelFit';
 import {
   GEOMETRY_SEGMENTS_HI,
   createSphereGeometry,
@@ -1233,29 +1233,38 @@ export default class CelestialObject {
       if (meshes.length === 0)
         throw new Error('glTF sans maillage — on garde la sphère');
 
-      // Recentre puis met à l'échelle du rayon catalogue, quelle que soit l'unité du fichier.
-      const box = new THREE.Box3().setFromObject(gltf.scene);
-      const centre = box.getCenter(new THREE.Vector3());
-      // Rayon mesuré sur les SOMMETS — surtout pas via `Box3.getBoundingSphere`, qui
-      // circonscrit la BOÎTE et vaut √3 fois trop pour un corps rond. Le calcul vit dans
-      // `core/modelFit.ts`, où il est testé : il a déjà été faux une fois.
+      // Recentre sur le CENTRE DE MASSE (c'est lui que l'éphéméride positionne, pas le centre
+      // de la boîte) et met à l'échelle par le rayon ÉQUIVALENT-VOLUME, quelle que soit l'unité
+      // du fichier : c'est le « rayon moyen » du catalogue. Ajuster le sommet le plus lointain
+      // affichait Bennu 15 % trop petit et aurait affiché Éros deux fois trop petit. Le calcul
+      // vit dans `core/modelFit.ts`, où il est testé : il a déjà été faux deux fois.
       const world: number[] = [];
+      const indices: number[] = [];
       const vertex = new THREE.Vector3();
       for (const mesh of meshes) {
         const attribute = mesh.geometry.getAttribute('position');
         if (!attribute) continue;
         mesh.updateWorldMatrix(true, false);
+        const base = world.length / 3;
         for (let i = 0; i < attribute.count; i++) {
           vertex.fromBufferAttribute(attribute as THREE.BufferAttribute, i);
           mesh.localToWorld(vertex);
           world.push(vertex.x, vertex.y, vertex.z);
         }
+        const index = mesh.geometry.index;
+        if (index)
+          for (let i = 0; i < index.count; i++)
+            indices.push(base + index.getX(i));
+        else for (let i = 0; i < attribute.count; i++) indices.push(base + i);
       }
-      const measured = boundingRadius(world, [centre.x, centre.y, centre.z]);
-      const scale = fitScale(measured, this.config.radius);
+      const { volume, centroid } = meshVolume(world, indices);
+      const scale = fitScale(
+        volumeEquivalentRadius(volume),
+        this.config.radius
+      );
       if (scale === null)
-        throw new Error('modèle de rayon inexploitable — on garde la sphère');
-      gltf.scene.position.copy(centre).multiplyScalar(-1);
+        throw new Error('modèle de volume inexploitable — on garde la sphère');
+      gltf.scene.position.set(-centroid[0], -centroid[1], -centroid[2]);
       const root = new THREE.Group();
       root.name = `${this.name}_model`;
       root.add(gltf.scene);

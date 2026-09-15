@@ -114,6 +114,12 @@ vérifiés EXISTANTS sur disque : sinon le défaut n'apparaîtrait qu'au build, 
 tard, sans nommer le corps en cause. Ce que ces tests ne voient pas, c'est l'application ouverte
 sur un tel chemin — c'est le rôle d'`e2e/bodyLanding.spec.ts`.
 
+**Modèles de forme** (`src/config/shapeModels.test.ts`) : chaque GLB livré est relu octet par
+octet — son axe de plus grande inertie doit être Y (à 5° près ; mesuré 0,1 à 1,0°) et son volume
+doit retrouver le rayon moyen du catalogue à 3 % près. Les deux ont été falsifiés : l'ancien
+Bennu, pôle sur Z, fait échouer le premier (89,9°) ; un rayon saisi comme un diamètre, le second.
+`smallBodies.test.ts` compare Éros, Itokawa, Ryugu et Ida à des vecteurs Horizons de −10 à +10 ans.
+
 **Pages d'éclipse** : `src/core/eclipsePages.test.ts` tient la fenêtre (53 éclipses, un jour UTC
 chacune) et l'accord build/application sur les 53 (à la seconde — écart mesuré 1 ms, un premier
 test à la milliseconde l'a trouvé), plus les chemins refusés, dont `2026-02-31`, que `Date.parse`

@@ -393,6 +393,8 @@ les petits corps Ceres, Vesta, Pallas, Hygiea, Eris, Haumea, Makemake et Halley.
 textures presentes suivent le schema public/assets/textures/{body}/{body}_{layer}_{quality}.jpg
 (snake_case, chemin derive de la cle du corps). Le fallback colore reste disponible si un asset
 manque au chargement.
+Bennu, Eros, Itokawa, Ryugu et Ida portent leur vrai modele de forme de mission (OSIRIS-REx,
+NEAR, Hayabusa, Hayabusa2, Galileo), decime pour le web, a l'echelle de leur volume reel.
 Les lunes joviennes (Io couleur, Europe, Ganymede, Callisto) disposent de mosaiques USGS
 haute resolution jusqu'a 8k. Titan, Encelade, Rhea et Japet sont disponibles autour de Saturne
 avec des orbites relatives keplerienne et des mosaiques Cassini/Voyager validees par l'USGS.

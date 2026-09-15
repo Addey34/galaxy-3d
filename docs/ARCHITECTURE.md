@@ -592,9 +592,12 @@ Deux pièges du rendu de forme, tous deux payés une fois :
   tournent le dos, dont la normale pointe à l'opposé de la lumière. La bonne silhouette sortait
   en **noir**, à l'ambiant seul. Le tri se fait sur la normale du MODÈLE (`nz > 0`), énoncé qui
   ne dépend d'aucune convention d'orientation d'écran.
-- **L'échelle vient du rayon MAXIMAL, jamais de la boîte englobante.** `Box3.getBoundingSphere`
-  circonscrit la boîte, donc rend `√3` de trop pour un corps rond — déjà payé sur ce même modèle
-  dans la scène 3D, où il était sorti 42 % trop petit (cf. `core/modelFit.ts`).
+- **Dans la VIGNETTE, l'échelle vient du rayon MAXIMAL, jamais de la boîte englobante** : tout
+  le corps doit tenir dans le cadre. `Box3.getBoundingSphere` circonscrit la boîte, donc rend `√3`
+  de trop pour un corps rond. Dans la SCÈNE, c'est l'inverse : le modèle est mis à l'échelle par
+  son rayon **équivalent-volume**, celui que publient les catalogues. Le rayon maximal y affichait
+  Bennu 15 % trop petit et aurait affiché Éros deux fois trop petit (cf. `core/modelFit.ts` et
+  `docs/UNIVERSE_CATALOG.md` § Corps irréguliers).
 
 Trois règles à ne pas défaire :
 

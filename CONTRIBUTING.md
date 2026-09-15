@@ -127,6 +127,18 @@ indexable (`dist/<nom>/index.html`), son entrée de sitemap et sa vignette de pa
 - Le corps doit avoir une texture de surface OU un `fallbackColor`. Sans l'un des deux, sa
   vignette est une boule grise anonyme qui prétend le montrer. Un test le vérifie aussi.
 
+### 3 bis. Un modèle de forme (astéroïde, noyau cométaire)
+
+Uniquement un **vrai modèle de forme scientifique** (PDS, archive de mission) à la licence
+vérifiée — un maillage « publié par une agence » peut être une sphère bosselée. Passez-le par
+`scripts/decimate-shape-model.mjs <source> public/assets/models/<nom>/<nom>.glb [grille] --z-up`
+(il lit GLB, OBJ et les formats PDS ; `--z-up` ramène sur +Y le pôle des produits PDS, qui le
+portent sur Z). Le script imprime les statistiques de forme pondérées par l'aire et le rayon
+équivalent-volume avant/après : elles ne doivent pas bouger. `src/config/shapeModels.test.ts`
+refuse ensuite un modèle dont l'axe de plus grande inertie n'est pas Y ou dont le volume ne
+retrouve pas `radiusKm`. Pour un corps sans binaire Horizons, les éléments viennent de
+`scripts/derive-small-body-elements.mjs`, jamais d'une saisie.
+
 ### 4. Vérifier
 
 ```bash

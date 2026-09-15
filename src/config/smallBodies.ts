@@ -906,6 +906,206 @@ export const SMALL_BODY_ELEMENTS: readonly SmallBodyElements[] = [
       fr: 'https://fr.wikipedia.org/wiki/(101955)_Bennu',
     },
   },
+  // ── Vague A : astéroïdes visités, avec leur modèle de forme scientifique ──────────────────
+  // Même famille que Bennu : pas de binaire Horizons, la position dépend entièrement de ces
+  // éléments. Ils sont dérivés par `scripts/derive-small-body-elements.mjs` à l'époque
+  // 2026-01-01, et non J2000 : mesuré contre Horizons, des éléments J2000 placent aujourd'hui
+  // Itokawa, Ryugu et Ida à 0,11-0,13 UA de leur vraie position (6° pour Ryugu, près de la
+  // Terre), contre ≤ 0,003 UA à un an de 2026. Rayons = rayons équivalents-volume publiés, que
+  // le volume des modèles retrouve (cf. `shapeModels.test.ts`).
+  {
+    name: 'eros',
+    displayName: { en: 'Eros', fr: 'Éros' },
+    // Éléments osculateurs JPL Horizons EXACTEMENT à cette époque (COMMAND '433;',
+    // EPHEM_TYPE=ELEMENTS, TLIST=2461041.5).
+    a: 1.45819547852407,
+    e: 0.2228676636398718,
+    iDeg: 10.82863065156889,
+    omDeg: 304.2685688172245,
+    wDeg: 178.9239475110484,
+    maDeg: 333.5121645523216,
+    epoch: '2026-01-01T00:00:00.000Z',
+    // Diamètre équivalent 16,84 ± 0,06 km (SBDB, Yeomans et al. 2000).
+    radiusKm: 8.42,
+    kind: 'asteroid',
+    color: 0xe0a45c,
+    fallbackColor: 0xc9a27e,
+    model: {
+      url: '/assets/models/eros/eros.glb',
+      credit:
+        'NASA/JHU-APL NEAR Shoemaker — MSI shape model by R. Gaskell, NASA PDS NEAR-A-MSI-5-EROSSHAPE-V1.0 (q = 128), décimé pour le web.',
+    },
+    rotationHours: 5.27,
+    // DÉRIVÉE du pôle SBDB (RA 11,37°, Dec 17,22°, Yeomans et al. 2000) et de la normale
+    // orbitale : Éros tourne presque couché sur son orbite.
+    axialTiltDeg: 89.0,
+    // GM = 4,463e-4 km³/s² (SBDB) ÷ G.
+    massKg: 6.687e15,
+    moonCount: 0,
+    unknown: {
+      gravity: {
+        en: 'A 34-kilometre peanut: surface gravity varies strongly depending on where you stand, so a single value would mislead.',
+        fr: "Une cacahuète de 34 kilomètres : la gravité de surface varie fortement selon l'endroit, une valeur unique serait trompeuse.",
+      },
+      meanTempC: {
+        en: 'Surface temperature swings strongly over its 5.3-hour day and along its eccentric orbit: a mean would describe no real moment.',
+        fr: 'La température de surface varie fortement au fil de sa journée de 5,3 heures et le long de son orbite excentrique : une moyenne ne décrirait aucun instant réel.',
+      },
+    },
+    description: {
+      en: 'The first asteroid ever orbited and landed on: NASA’s NEAR Shoemaker circled it for a year and touched down on its surface in February 2001.',
+      fr: 'Le premier astéroïde jamais mis en orbite puis touché : la sonde NEAR Shoemaker de la NASA l’a survolé pendant un an et s’est posée à sa surface en février 2001.',
+    },
+    wiki: {
+      en: 'https://en.wikipedia.org/wiki/433_Eros',
+      fr: 'https://fr.wikipedia.org/wiki/(433)_%C3%89ros',
+    },
+  },
+  {
+    name: 'itokawa',
+    displayName: { en: 'Itokawa', fr: 'Itokawa' },
+    // Éléments osculateurs JPL Horizons EXACTEMENT à cette époque (COMMAND '25143;',
+    // EPHEM_TYPE=ELEMENTS, TLIST=2461041.5).
+    a: 1.324127117232954,
+    e: 0.2801540468526449,
+    iDeg: 1.620937434229415,
+    omDeg: 69.07544850295109,
+    wDeg: 162.8518643924063,
+    maDeg: 67.7838526010873,
+    epoch: '2026-01-01T00:00:00.000Z',
+    // Diamètre moyen 0,33 km (SBDB, Fujiwara et al. 2006) ; le volume du modèle Gaskell donne
+    // 0,162 km, à 2 % près.
+    radiusKm: 0.165,
+    kind: 'asteroid',
+    color: 0x7fb3c9,
+    fallbackColor: 0x9a8f86,
+    model: {
+      url: '/assets/models/itokawa/itokawa.glb',
+      credit:
+        'JAXA Hayabusa AMICA images — shape model by R. Gaskell (PSI), NASA PDS HAY-A-AMICA-5-ITOKAWASHAPE-V1.0 (q = 128), décimé pour le web.',
+    },
+    rotationHours: 12.132,
+    // DÉRIVÉE du pôle SBDB (RA 90,53°, Dec −66,30°, Demura et al. 2006) : rotation rétrograde.
+    axialTiltDeg: 178.7,
+    // GM = 2,1e-9 km³/s² (SBDB) ÷ G.
+    massKg: 3.15e10,
+    moonCount: 0,
+    unknown: {
+      gravity: {
+        en: 'About a hundred-thousandth of Earth’s, and it changes by a large factor between the two lobes: a single value would mislead.',
+        fr: "Environ un cent-millième de celle de la Terre, et elle change d'un facteur important d'un lobe à l'autre : une valeur unique serait trompeuse.",
+      },
+      meanTempC: {
+        en: 'Surface temperature swings strongly between day and night and along its orbit: a mean would describe no real moment.',
+        fr: 'La température de surface varie fortement entre le jour et la nuit et le long de son orbite : une moyenne ne décrirait aucun instant réel.',
+      },
+    },
+    description: {
+      en: 'A 535-metre rubble pile shaped like a sea otter. JAXA’s Hayabusa landed on it in 2005 and brought the first grains of an asteroid back to Earth in 2010.',
+      fr: 'Un amas de gravats de 535 mètres en forme de loutre de mer. La sonde japonaise Hayabusa s’y est posée en 2005 et a rapporté sur Terre, en 2010, les premiers grains d’un astéroïde.',
+    },
+    wiki: {
+      en: 'https://en.wikipedia.org/wiki/25143_Itokawa',
+      fr: 'https://fr.wikipedia.org/wiki/(25143)_Itokawa',
+    },
+  },
+  {
+    name: 'ryugu',
+    displayName: { en: 'Ryugu', fr: 'Ryugu' },
+    // Éléments osculateurs JPL Horizons EXACTEMENT à cette époque (COMMAND '162173;',
+    // EPHEM_TYPE=ELEMENTS, TLIST=2461041.5).
+    a: 1.190915530274858,
+    e: 0.191066697591621,
+    iDeg: 5.866565344845061,
+    omDeg: 251.2911945048745,
+    wDeg: 211.6188712177815,
+    maDeg: 301.7512745052471,
+    epoch: '2026-01-01T00:00:00.000Z',
+    // Diamètre équivalent 0,896 ± 0,004 km (SBDB, Watanabe et al. 2019).
+    radiusKm: 0.448,
+    kind: 'asteroid',
+    color: 0x9c6fd6,
+    fallbackColor: 0x3f3b39,
+    model: {
+      url: '/assets/models/ryugu/ryugu.glb',
+      credit:
+        'ISAS/JAXA Hayabusa2 — SfM shape model SHAPE_SFM_200k_v20180804 (Watanabe et al. 2019, DARTS), données modifiées : décimé pour le web, pôle ramené sur Y.',
+    },
+    rotationHours: 7.63262,
+    // DÉRIVÉE du pôle SBDB (RA 96,3956°, Dec −66,3937°, Preusker et al. 2019) : rétrograde.
+    axialTiltDeg: 171.7,
+    // GM = 3,00e-8 km³/s² (SBDB) ÷ G.
+    massKg: 4.495e11,
+    moonCount: 0,
+    unknown: {
+      gravity: {
+        en: 'About 0.1 mm/s², a hundred-thousandth of Earth’s, and about a fifth weaker on its equatorial ridge, where the spin works against it: a single value would mislead.',
+        fr: "Environ 0,1 mm/s², un cent-millième de celle de la Terre, et plus faible d'un cinquième environ sur son bourrelet équatorial, où la rotation s'y oppose : une valeur unique serait trompeuse.",
+      },
+      meanTempC: {
+        en: 'Surface temperature swings strongly over its 7.6-hour day: a mean would describe no real moment.',
+        fr: 'La température de surface varie fortement au fil de sa journée de 7,6 heures : une moyenne ne décrirait aucun instant réel.',
+      },
+    },
+    description: {
+      en: 'A dark, carbon-rich spinning top about 900 metres across. JAXA’s Hayabusa2 fired a projectile into it to dig a fresh crater and brought 5.4 grams of it back to Earth in December 2020.',
+      fr: 'Une toupie sombre et riche en carbone d’environ 900 mètres. La sonde japonaise Hayabusa2 y a tiré un projectile pour creuser un cratère frais et en a rapporté 5,4 grammes sur Terre en décembre 2020.',
+    },
+    wiki: {
+      en: 'https://en.wikipedia.org/wiki/162173_Ryugu',
+      fr: 'https://fr.wikipedia.org/wiki/(162173)_Ryugu',
+    },
+  },
+  {
+    name: 'ida',
+    displayName: { en: 'Ida', fr: 'Ida' },
+    // Éléments osculateurs JPL Horizons EXACTEMENT à cette époque (COMMAND '243;',
+    // EPHEM_TYPE=ELEMENTS, TLIST=2461041.5).
+    a: 2.862971354381273,
+    e: 0.04570747515204408,
+    iDeg: 1.13020036408425,
+    omDeg: 323.5426573297611,
+    wDeg: 113.7244045691694,
+    maDeg: 16.88744495932398,
+    epoch: '2026-01-01T00:00:00.000Z',
+    // Rayon moyen 15,7 km (Thomas et al. 1996, le même travail que le modèle de forme ; le
+    // « 32 km » de la SBDB est un diamètre antérieur, arrondi).
+    radiusKm: 15.7,
+    kind: 'asteroid',
+    color: 0xd6c16f,
+    fallbackColor: 0xb59a7a,
+    model: {
+      url: '/assets/models/ida/ida.glb',
+      credit:
+        'NASA Galileo SSI — shape model by P. Thomas et al. (1996), NASA PDS EAR-A-5-DDR-SHAPE-MODELS-V2.1, converti en maillage pour le web.',
+    },
+    rotationHours: 4.634,
+    // DÉRIVÉE du pôle PDS (Thomas et al. : RA 348,76°, Dec +87,10°, rotation RÉTROGRADE, donc
+    // moment cinétique vers RA 168,76°, Dec −87,10°) et de la normale orbitale.
+    axialTiltDeg: 156.0,
+    // GM = 0,00275 km³/s² (SBDB, Belton et al. 1996, mesuré grâce à Dactyle) ÷ G.
+    massKg: 4.12e16,
+    // Dactyle, découverte sur les images de Galileo — pas encore dans ce catalogue.
+    moonCount: 1,
+    unknown: {
+      gravity: {
+        en: 'A 60-kilometre elongated body spinning in 4.6 hours: surface gravity changes by a large factor from its ends to its middle, so a single value would mislead.',
+        fr: "Un corps allongé de 60 kilomètres qui tourne en 4,6 heures : la gravité de surface change d'un facteur important de ses extrémités à son centre, une valeur unique serait trompeuse.",
+      },
+      meanTempC: {
+        en: 'Surface temperature swings strongly over its 4.6-hour day: a mean would describe no real moment.',
+        fr: 'La température de surface varie fortement au fil de sa journée de 4,6 heures : une moyenne ne décrirait aucun instant réel.',
+      },
+    },
+    description: {
+      en: 'The first asteroid found to have its own moon: images taken by NASA’s Galileo probe in 1993 revealed tiny Dactyl orbiting this 60-kilometre main-belt asteroid.',
+      fr: 'Le premier astéroïde découvert avec sa propre lune : les images prises en 1993 par la sonde Galileo de la NASA ont révélé la petite Dactyle en orbite autour de cet astéroïde de 60 kilomètres de la ceinture principale.',
+    },
+    wiki: {
+      en: 'https://en.wikipedia.org/wiki/243_Ida',
+      fr: 'https://fr.wikipedia.org/wiki/(243)_Ida',
+    },
+  },
 ];
 
 /** Table nom → config des petits corps, fusionnée dans `CELESTIAL_CONFIG`. */

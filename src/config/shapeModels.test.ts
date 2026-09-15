@@ -1,9 +1,21 @@
-import { existsSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { CELESTIAL_CONFIG } from './bodies';
 import { flattenBodies } from './catalog';
 import type { CelestialBodyConfig } from '@/types';
+import {
+  maxInertiaAxis,
+  meshVolume,
+  volumeEquivalentRadius,
+} from '@/core/modelFit';
+
+/**
+ * Écart toléré entre l'axe de plus grande inertie d'un modèle et Y. Mesuré sur les cinq
+ * modèles livrés : 0,08° (Éros) à 0,97° (Itokawa). Le défaut qu'il attrape fait 90° — c'est ce
+ * que valait le Bennu livré avant la correction.
+ */
+const MAX_POLE_OFFSET_DEG = 5;
 
 /**
  * MODÈLES DE FORME — ce que le contrat doit garantir.
@@ -84,4 +96,92 @@ describe('modèles de forme 3D', () => {
         `${name} est de type ${cfg.kind}`
       ).toContain(cfg.kind);
   });
+});
+
+/**
+ * Lecteur glTF binaire minimal : la géométrie du PREMIER maillage, telle que le navigateur la
+ * recevra. Suffisant pour les fichiers que produit `scripts/decimate-shape-model.mjs`
+ * (positions flottantes, indices 16 ou 32 bits), et il échoue bruyamment sur le reste.
+ */
+function readGlbGeometry(path: string): {
+  positions: Float32Array;
+  index: Uint16Array | Uint32Array;
+} {
+  const bytes = readFileSync(path);
+  if (bytes.toString('ascii', 0, 4) !== 'glTF')
+    throw new Error(`${path} : pas un glTF binaire`);
+  const jsonLength = bytes.readUInt32LE(12);
+  const gltf = JSON.parse(bytes.toString('utf8', 20, 20 + jsonLength));
+  const binStart = 20 + jsonLength + 8;
+  const view = (accessorIndex: number) => {
+    const accessor = gltf.accessors[accessorIndex];
+    const bufferView = gltf.bufferViews[accessor.bufferView];
+    const offset = binStart + (bufferView.byteOffset ?? 0);
+    const slice = bytes.buffer.slice(
+      bytes.byteOffset + offset,
+      bytes.byteOffset + offset + bufferView.byteLength
+    );
+    return { accessor, slice };
+  };
+  const primitive = gltf.meshes[0].primitives[0];
+  const position = view(primitive.attributes.POSITION);
+  if (position.accessor.componentType !== 5126)
+    throw new Error(`${path} : positions non flottantes`);
+  const indices = view(primitive.indices);
+  const index =
+    indices.accessor.componentType === 5125
+      ? new Uint32Array(indices.slice)
+      : new Uint16Array(indices.slice);
+  return { positions: new Float32Array(position.slice), index };
+}
+
+describe('orientation des modèles livrés', () => {
+  /**
+   * La scène fait tourner chaque corps autour de son Y LOCAL. Un petit corps tourne, lui,
+   * autour de son axe de plus grande inertie. Les deux doivent coïncider, sinon le corps
+   * roule sur lui-même autour d'un axe équatorial — sans erreur, sans avertissement. C'est ce
+   * qui a été livré pour Bennu : son fichier portait le pôle sur Z, convention des produits
+   * PDS, et personne ne l'a vu parce qu'une toupie qui roule ressemble encore à une toupie.
+   */
+  it.each(withModel().map(([name]) => name))(
+    '%s : tourne autour de son axe de plus grande inertie (Y)',
+    (name) => {
+      const model = flattenBodies(CELESTIAL_CONFIG).get(name)!.model!;
+      const { positions, index } = readGlbGeometry(
+        join(PROJECT_ROOT, 'public', model.url)
+      );
+      const axis = maxInertiaAxis(positions, index);
+      const tiltDeg =
+        (Math.acos(Math.min(1, Math.abs(axis[1]))) * 180) / Math.PI;
+      expect(
+        tiltDeg,
+        `${name} : axe d'inertie maximale à ${tiltDeg.toFixed(1)}° de Y`
+      ).toBeLessThan(MAX_POLE_OFFSET_DEG);
+    }
+  );
+
+  /**
+   * Le modèle est mis à l'échelle par son rayon ÉQUIVALENT-VOLUME (cf. `core/modelFit.ts`).
+   * S'il est livré en km — c'est le cas de tous les produits scientifiques — ce rayon doit
+   * retrouver le rayon moyen publié du catalogue : c'est la preuve que le fichier décrit le
+   * bon corps, à la bonne taille, et que la décimation n'a pas mangé de volume.
+   */
+  it.each(withModel().map(([name]) => name))(
+    '%s : son volume retrouve le rayon moyen du catalogue',
+    (name) => {
+      const cfg = flattenBodies(CELESTIAL_CONFIG).get(name)!;
+      const { positions, index } = readGlbGeometry(
+        join(PROJECT_ROOT, 'public', cfg.model!.url)
+      );
+      const radius = volumeEquivalentRadius(
+        meshVolume(positions, index).volume
+      );
+      const published = cfg.realData?.radiusKm;
+      expect(published, `${name} : pas de rayon publié`).toBeGreaterThan(0);
+      expect(
+        Math.abs(radius / published! - 1),
+        `${name} : rayon équivalent ${radius.toFixed(4)} km pour ${published} km publié`
+      ).toBeLessThan(0.03);
+    }
+  );
 });

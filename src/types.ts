@@ -77,6 +77,12 @@ export interface TextureResolutions {
  * distingue Bennu, c'est sa forme de toupie, pas sa couleur. Le maillage vient d'un modèle de
  * forme scientifique décimé par `scripts/decimate-shape-model.mjs`.
  *
+ * Deux conventions que le fichier DOIT respecter, tenues par `config/shapeModels.test.ts` :
+ *   - **le pôle sur +Y** (la scène fait tourner chaque corps autour de son Y local ; les
+ *     produits PDS portent le pôle sur Z — `decimate-shape-model.mjs --z-up` le déplace) ;
+ *   - **un volume qui retrouve le rayon moyen du catalogue** : le modèle est mis à l'échelle par
+ *     son rayon ÉQUIVALENT-VOLUME et centré sur son centre de masse (`core/modelFit.ts`).
+ *
  * **La sphère reste construite** même quand un modèle est déclaré : elle est simplement masquée
  * quand le maillage arrive. Le repli n'est donc pas un cas particulier à écrire, c'est l'état
  * par défaut — réseau coupé, fichier absent, glTF illisible, appareil qui abandonne : le corps

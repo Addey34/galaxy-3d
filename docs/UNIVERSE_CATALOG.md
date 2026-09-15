@@ -71,6 +71,48 @@ un modele a bien de quoi s'afficher sans lui (texture ou `fallbackColor`).
   sortait 42 % trop petit sans que rien ne le signale. Le calcul vit maintenant dans
   `core/modelFit.ts`, pur et teste.
 
+**Deux autres pieges, payes avec la vague A (2026-09-15)** :
+
+- **Le rayon MAXIMAL n'est pas un rayon moyen.** Le modele etait ajuste en faisant coincider son
+  sommet le plus lointain avec le rayon du catalogue — qui est un rayon moyen (equivalent-volume).
+  Bennu sortait 15 % trop petit ; Eros et Ida, dont R_max / R_equivalent vaut 2,09 et 2,00,
+  seraient sortis deux fois trop petits, en violation directe de l'invariant Explo. L'echelle vient
+  maintenant du rayon equivalent-volume et le centrage du centre de masse (`core/modelFit.ts`).
+- **Le pole doit etre sur +Y.** La scene fait tourner chaque corps autour de son Y local ; les
+  produits PDS, et le fichier SVS de Bennu, portent le pole sur Z. Bennu tournait donc autour d'un
+  axe equatorial depuis sa livraison — axe de plus grande inertie mesure a 89,9° de Y. Un test
+  verifie maintenant, pour chaque modele livre, que cet axe est a moins de 5° de Y (mesure : 0,1 a
+  1,0°), et que son volume retrouve le rayon du catalogue a 3 % pres.
+
+**Mesurer la forme, pas l'echantillonnage.** Les statistiques par sommet (ecart-type du rayon,
+rapport equateur/poles) dependent de la repartition des sommets : la grille latitude/longitude
+d'Ida donne 0,94 par sommet et 2,3 pondere par l'aire. Le script imprime donc aussi la version
+PONDEREE PAR L'AIRE et le rayon equivalent-volume, et c'est sur elle que porte l'alerte de
+lissage. Sur les quatre corps de la vague A, decimation comprise : ecart-type a ±0,02 point,
+equateur/poles a ±0,001, rayon equivalent a 0,04 % pres.
+
+**Sources et licences retenues** : Eros, Itokawa et Ida viennent de la PDS Small Bodies Node
+(donnees NASA, sans restriction) ; Ryugu de JAXA DARTS (politique ISAS : usage libre, commercial
+compris, modification permise, credit « ISAS/JAXA » et mention des modifications). Le script lit
+directement les tables sommets/plaques et les grilles latitude/longitude de la PDS, et l'OBJ.
+
+**Sautes, et pourquoi** :
+
+- **Apophis** : le seul modele de forme mesure (radar Goldstone/Arecibo, Brozovic et al. 2018)
+  n'est pas diffuse — ni PDS3, ni PDS4, ni l'index des modeles radar de la SBN. Il existe des
+  modeles convexes par inversion de courbes de lumiere, mais une enveloppe convexe n'est pas une
+  forme mesuree : ce serait inventer.
+- **67P/Churyumov-Gerasimenko** : les modeles (SHAP5 OSIRIS, MTP019 NAVCAM) sont archives a l'ESA
+  sous CC BY-NC 3.0 IGO, dont les conditions visent tout usage « generant directement ou
+  indirectement un gain » — douteux avec le bouton de don du site. La version NAVCAM diffusee en
+  CC BY-SA IGO 3.0 en 2015 n'est plus en ligne (page d'archive disparue). A reprendre si l'ESA
+  confirme l'usage (data.licences@esa.int) ou si la version CC BY-SA reapparait.
+
+**Limite constatee, non corrigee** : en Explo, la camera ne descend pas sous
+`CAMERA_CONTROLS_SETTINGS.exploMinFloor` (0,00002 unite, soit 85 km). Bennu, Itokawa et Ryugu, de
+moins d'un kilometre, n'y sont donc qu'un point de quelques pixels : leur forme ne se voit qu'en
+Educatif. Abaisser ce plancher touche aux plans near/far de la camera, un chantier a part.
+
 **Poids.** Les modeles scientifiques publies sont hors de portee du web : celui de Bennu fait
 3,37 M de triangles et 60 Mo. `scripts/decimate-shape-model.mjs` le ramene a 22,8 k triangles et
 400 Kio par regroupement de sommets, en imprimant avant/apres les deux statistiques de forme —
@@ -107,7 +149,8 @@ Ils necessitent une trajectoire temporelle, un referentiel, une echelle physique
 - [x] Lunes mineures de Saturne, Uranus, Neptune et Pluton (Mimas, Tethys, Dione, Hyperion, Miranda, Ariel, Umbriel, Titania, Oberon, Protee, Nereide, Styx, Nix, Kerberos, Hydra) et Amalthee.
 - [x] Transneptuniens Orcus, Quaoar, Gonggong et Sedna (vague A ci-dessous, partiellement close : Salacia et Varuna restent).
 - [x] Vague C close : onze missions (Voyager 1 et 2, Parker Solar Probe, James Webb, New Horizons, Cassini, Juno, Rosetta, BepiColombo, OSIRIS-REx, Hayabusa2). Hubble exclu pour cause, voir la vague C ci-dessous.
-- [x] Contrat ModelConfig + premier corps a maillage reel : Bennu, modele de forme OSIRIS-REx decime (vague A, asteroides remarquables — Eros, Itokawa, Ryugu, Apophis, Ida restent).
+- [x] Contrat ModelConfig + premier corps a maillage reel : Bennu, modele de forme OSIRIS-REx decime.
+- [x] Vague A, asteroides remarquables : Eros (NEAR, Gaskell), Itokawa (Hayabusa, Gaskell), Ryugu (Hayabusa2, Watanabe et al. 2019) et Ida (Galileo, Thomas et al. 1996), chacun avec son modele de forme scientifique et ses elements Horizons a l'epoque 2026-01-01. **Apophis et 67P sautes, raisons ci-dessous** (§ Corps irreguliers).
 - [x] Population SBDB filtrable par categorie, en couche instrument 2D (amorce de la vague B pour la ceinture principale et Kuiper).
 - [x] Objets interstellaires 1I/ʻOumuamua, 2I/Borisov et 3I/ATLAS : solveur hyperbolique dans `core/kepler.ts`, elements Horizons a l'epoque de chaque solution (`scripts/derive-interstellar-elements.mjs`), trajectoire bornee a ±20 ans autour du perihelie, la plage verifiee contre les vecteurs Horizons. Les comètes hyperboliques de SBDB restent ecartees : SBDB arrondit `ma` au centieme de degre, ce qui laisse la date de perihelie d'une orbite quasi parabolique libre de centaines de jours.
 
@@ -122,7 +165,7 @@ Priorite haute, compatible avec les frontieres actuelles :
 - lunes galileennes : Io, Europe, Ganymede, Callisto (positions et textures 1k/2k integrees) ;
 - [x] Triton et Charon, avec textures USGS et vecteurs Horizons relatifs ;
 - [x] Phobos et Deimos, avec textures USGS/NASA et vecteurs Horizons relatifs ;
-- asteroides remarquables : Eros, Itokawa, Bennu, Ryugu, Apophis, Ida ;
+- [x] asteroides remarquables : Eros, Itokawa, Bennu, Ryugu, Ida (Apophis saute : aucun modele radar public) ;
 - cometes de missions : 67P/Churyumov-Gerasimenko, Tempel 1, Wild 2, Borrelly ;
 - objets transneptuniens : Orcus, Quaoar, Gonggong, Salacia, Varuna, Sedna.
 

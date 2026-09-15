@@ -3,7 +3,17 @@
  * Réduit un modèle de forme scientifique à une taille utilisable sur le web.
  *
  * Usage :
- *   node scripts/decimate-shape-model.mjs <entrée.glb> <sortie.glb> [grille]
+ *   node scripts/decimate-shape-model.mjs <entrée> <sortie.glb> [grille] [--z-up]
+ *
+ * Entrées lues : glTF binaire (.glb), Wavefront (.obj), et les deux formats de la PDS Small
+ * Bodies Node — table sommets/plaques (`ver128q.tab` : comptes, « id x y z », « id a b c ») et
+ * grille latitude/longitude/rayon (`243ida.tab`, planétocentrique, degrés et km).
+ *
+ * `--z-up` : le fichier porte le PÔLE sur Z, convention des produits PDS en repère lié au
+ * corps. La scène fait tourner chaque corps autour de son Y local (convention glTF) : sans
+ * cette rotation, le corps tournerait autour d'un axe équatorial. C'est exactement ce qui a été
+ * livré pour Bennu, dont le fichier SVS porte son pôle sur Z. `src/config/shapeModels.test.ts`
+ * vérifie désormais que l'axe de plus grande inertie de chaque modèle livré est Y.
  *
  * POURQUOI ce script existe. Les modèles de forme publiés par la NASA sont des produits
  * scientifiques : celui de Bennu fait 3,37 millions de triangles et 60 Mo. Inutilisable tel
@@ -40,27 +50,36 @@ const { GLTFLoader } = await import(
 /**
  * Statistiques de forme. `sdPct` mesure l'irrégularité, `equatorOverPolar` l'aplatissement
  * autour de l'axe de plus faible extension (l'axe de rotation d'une toupie).
+ *
+ * `weights` (optionnel) pondère chaque sommet. Sans poids, chaque sommet compte pour un — ce
+ * qui mesure AUSSI l'échantillonnage : une grille latitude/longitude, dont la densité croît
+ * comme 1/cos φ vers les pôles, sort avec un rapport équateur/pôles de 0,94 quand la même
+ * forme, rééchantillonnée uniformément, donne 2,0 (Ida, mesuré). Pondérés par l'aire
+ * (`vertexAreaWeights`), ces nombres décrivent la SURFACE et plus la façon dont on l'a tirée.
  */
-export function shapeStats(positions, count) {
+export function shapeStats(positions, count, weights = null) {
+  const w = (i) => (weights ? weights[i] : 1);
+  let total = 0;
   let cx = 0;
   let cy = 0;
   let cz = 0;
   for (let i = 0; i < count; i++) {
-    cx += positions[i * 3];
-    cy += positions[i * 3 + 1];
-    cz += positions[i * 3 + 2];
+    total += w(i);
+    cx += w(i) * positions[i * 3];
+    cy += w(i) * positions[i * 3 + 1];
+    cz += w(i) * positions[i * 3 + 2];
   }
-  cx /= count;
-  cy /= count;
-  cz /= count;
+  cx /= total;
+  cy /= total;
+  cz /= total;
 
   const spread = [0, 0, 0];
   for (let i = 0; i < count; i++) {
-    spread[0] += (positions[i * 3] - cx) ** 2;
-    spread[1] += (positions[i * 3 + 1] - cy) ** 2;
-    spread[2] += (positions[i * 3 + 2] - cz) ** 2;
+    spread[0] += w(i) * (positions[i * 3] - cx) ** 2;
+    spread[1] += w(i) * (positions[i * 3 + 1] - cy) ** 2;
+    spread[2] += w(i) * (positions[i * 3 + 2] - cz) ** 2;
   }
-  const sd3 = spread.map((s) => Math.sqrt(s / count));
+  const sd3 = spread.map((s) => Math.sqrt(s / total));
   const spin = sd3.indexOf(Math.min(...sd3));
 
   let sum = 0;
@@ -75,26 +94,151 @@ export function shapeStats(positions, count) {
     const dz = positions[i * 3 + 2] - cz;
     const r = Math.hypot(dx, dy, dz);
     radii[i] = r;
-    sum += r;
+    sum += w(i) * r;
     const lat = Math.abs(Math.asin([dx, dy, dz][spin] / r)) * (180 / Math.PI);
     if (lat < 15) {
-      equator += r;
-      equatorN++;
+      equator += w(i) * r;
+      equatorN += w(i);
     } else if (lat > 60) {
-      polar += r;
-      polarN++;
+      polar += w(i) * r;
+      polarN += w(i);
     }
   }
-  const mean = sum / count;
+  const mean = sum / total;
   let variance = 0;
-  for (let i = 0; i < count; i++) variance += (radii[i] - mean) ** 2;
+  for (let i = 0; i < count; i++) variance += w(i) * (radii[i] - mean) ** 2;
   return {
     count,
     mean,
-    sdPct: (Math.sqrt(variance / count) / mean) * 100,
+    sdPct: (Math.sqrt(variance / total) / mean) * 100,
     equatorOverPolar: equator / equatorN / (polar / polarN),
     spinAxis: 'XYZ'[spin],
   };
+}
+
+/**
+ * Charge un modèle de forme en tableaux bruts, quel que soit son format — cf. l'en-tête.
+ * Rend `{ pos, index }` (index `null` pour un glTF non indexé).
+ */
+async function loadShape(path) {
+  if (path.toLowerCase().endsWith('.glb')) {
+    const mesh = await loadFirstMesh(path);
+    return {
+      pos: mesh.geometry.attributes.position.array,
+      index: mesh.geometry.index ? mesh.geometry.index.array : null,
+    };
+  }
+  const lines = readFileSync(path, 'utf-8')
+    .split('\n')
+    .map((line) => line.trim())
+    .filter(Boolean);
+  if (path.toLowerCase().endsWith('.obj')) {
+    const pos = [];
+    const index = [];
+    for (const line of lines) {
+      const t = line.split(/\s+/);
+      if (t[0] === 'v') pos.push(Number(t[1]), Number(t[2]), Number(t[3]));
+      else if (t[0] === 'f') {
+        if (t.length !== 4) throw new Error(`${path} : face non triangulaire`);
+        index.push(...t.slice(1).map((v) => parseInt(v, 10) - 1));
+      }
+    }
+    return { pos: Float32Array.from(pos), index: Uint32Array.from(index) };
+  }
+  const first = lines[0].split(/\s+/).map(Number);
+  if (first.length === 2 && first.every(Number.isInteger)) {
+    // Table sommets/plaques PDS : indices 1-based, coordonnées en km.
+    const [vertices, plates] = first;
+    const pos = new Float32Array(vertices * 3);
+    for (let i = 0; i < vertices; i++) {
+      const t = lines[1 + i].split(/\s+/).map(Number);
+      pos[i * 3] = t[1];
+      pos[i * 3 + 1] = t[2];
+      pos[i * 3 + 2] = t[3];
+    }
+    const index = new Uint32Array(plates * 3);
+    for (let i = 0; i < plates; i++) {
+      const t = lines[1 + vertices + i].split(/\s+/).map(Number);
+      index[i * 3] = t[1] - 1;
+      index[i * 3 + 1] = t[2] - 1;
+      index[i * 3 + 2] = t[3] - 1;
+    }
+    return { pos, index };
+  }
+  // Grille latitude / longitude / rayon. La longitude 360 double la longitude 0 : elle est
+  // écartée, et la couture se referme par l'indice modulo.
+  const rows = lines.map((line) => line.split(/\s+/).map(Number));
+  if (rows.some((r) => r.length !== 3 || !r.every(Number.isFinite)))
+    throw new Error(`${path} : format de modèle de forme non reconnu`);
+  const lats = [...new Set(rows.map((r) => r[0]))];
+  const lons = [...new Set(rows.map((r) => r[1]))].filter((l) => l < 360);
+  const radius = new Map(rows.map((r) => [`${r[0]},${r[1] % 360}`, r[2]]));
+  const pos = new Float32Array(lats.length * lons.length * 3);
+  lats.forEach((lat, i) =>
+    lons.forEach((lon, j) => {
+      const r = radius.get(`${lat},${lon}`);
+      if (r === undefined)
+        throw new Error(`${path} : rayon manquant en ${lat}°, ${lon}°`);
+      const phi = (lat * Math.PI) / 180;
+      const lambda = (lon * Math.PI) / 180;
+      const k = (i * lons.length + j) * 3;
+      pos[k] = r * Math.cos(phi) * Math.cos(lambda);
+      pos[k + 1] = r * Math.cos(phi) * Math.sin(lambda);
+      pos[k + 2] = r * Math.sin(phi);
+    })
+  );
+  const index = [];
+  const at = (i, j) => i * lons.length + (j % lons.length);
+  // Orientation vers l'extérieur : latitudes décroissantes d'une ligne à l'autre.
+  for (let i = 0; i + 1 < lats.length; i++)
+    for (let j = 0; j < lons.length; j++)
+      index.push(
+        at(i, j),
+        at(i + 1, j),
+        at(i, j + 1),
+        at(i, j + 1),
+        at(i + 1, j),
+        at(i + 1, j + 1)
+      );
+  return { pos, index: Uint32Array.from(index) };
+}
+
+/** Volume d'un maillage fermé (divergence) — pour imprimer le rayon équivalent. */
+function meshVolume(pos, index, triangleCount) {
+  let volume = 0;
+  for (let t = 0; t < triangleCount; t++) {
+    const [a, b, c] = [0, 1, 2].map(
+      (k) => (index ? index[t * 3 + k] : t * 3 + k) * 3
+    );
+    volume +=
+      (pos[a] * (pos[b + 1] * pos[c + 2] - pos[b + 2] * pos[c + 1]) -
+        pos[a + 1] * (pos[b] * pos[c + 2] - pos[b + 2] * pos[c]) +
+        pos[a + 2] * (pos[b] * pos[c + 1] - pos[b + 1] * pos[c])) /
+      6;
+  }
+  return Math.abs(volume);
+}
+
+const equivalentRadius = (volume) => Math.cbrt((3 * volume) / (4 * Math.PI));
+
+/** Poids d'aire par sommet : un tiers de l'aire de chaque triangle adjacent. */
+function vertexAreaWeights(pos, index, triangleCount, vertexCount) {
+  const weights = new Float64Array(vertexCount);
+  for (let t = 0; t < triangleCount; t++) {
+    const [a, b, c] = [0, 1, 2].map((k) =>
+      index ? index[t * 3 + k] : t * 3 + k
+    );
+    const u = [0, 1, 2].map((k) => pos[b * 3 + k] - pos[a * 3 + k]);
+    const v = [0, 1, 2].map((k) => pos[c * 3 + k] - pos[a * 3 + k]);
+    const area =
+      Math.hypot(
+        u[1] * v[2] - u[2] * v[1],
+        u[2] * v[0] - u[0] * v[2],
+        u[0] * v[1] - u[1] * v[0]
+      ) / 2;
+    for (const k of [a, b, c]) weights[k] += area / 3;
+  }
+  return weights;
 }
 
 function loadFirstMesh(path) {
@@ -240,22 +384,41 @@ function writeGlb(path, positions, normals, indices, copyright, name) {
   return out.length;
 }
 
-const [, , input, output, gridArg] = process.argv;
+const args = process.argv.slice(2);
+const zUp = args.includes('--z-up');
+const [input, output, gridArg] = args.filter((a) => !a.startsWith('--'));
 if (!input || !output) {
   console.error(
-    'usage : node scripts/decimate-shape-model.mjs <entrée.glb> <sortie.glb> [grille]'
+    'usage : node scripts/decimate-shape-model.mjs <entrée> <sortie.glb> [grille] [--z-up]'
   );
   process.exit(1);
 }
 const GRID = Number(gridArg ?? 52);
 
-const mesh = await loadFirstMesh(input);
-const pos = mesh.geometry.attributes.position.array;
-const vertexCount = mesh.geometry.attributes.position.count;
-const index = mesh.geometry.index ? mesh.geometry.index.array : null;
+const shape = await loadShape(input);
+const pos = Float32Array.from(shape.pos);
+const index = shape.index;
+const vertexCount = pos.length / 3;
+if (zUp) {
+  // Pôle Z → Y : rotation de −90° autour de X, (x, y, z) → (x, z, −y). Déterminant +1 : c'est
+  // une rotation, pas un miroir — la chiralité du corps et l'orientation des faces survivent.
+  for (let i = 0; i < vertexCount; i++) {
+    const y = pos[i * 3 + 1];
+    pos[i * 3 + 1] = pos[i * 3 + 2];
+    pos[i * 3 + 2] = -y;
+  }
+}
 const triangleCount = index ? index.length / 3 : vertexCount / 3;
-console.log(`entrée : ${vertexCount} sommets, ${triangleCount} triangles`);
+console.log(
+  `entrée : ${vertexCount} sommets, ${triangleCount} triangles${zUp ? ' (pôle Z ramené sur Y)' : ''}`
+);
 const before = shapeStats(pos, vertexCount);
+const beforeArea = shapeStats(
+  pos,
+  vertexCount,
+  vertexAreaWeights(pos, index, triangleCount, vertexCount)
+);
+const volumeBefore = meshVolume(pos, index, triangleCount);
 
 const min = [Infinity, Infinity, Infinity];
 const max = [-Infinity, -Infinity, -Infinity];
@@ -341,6 +504,11 @@ for (let i = 0; i < keys.length; i++) {
 }
 
 const after = shapeStats(outPos, keys.length);
+const afterArea = shapeStats(
+  outPos,
+  keys.length,
+  vertexAreaWeights(outPos, outIdx, outIdx.length / 3, keys.length)
+);
 console.log(`sortie : ${keys.length} sommets, ${outIdx.length / 3} triangles`);
 console.log(
   `  écart-type du rayon  ${before.sdPct.toFixed(2)} %  →  ${after.sdPct.toFixed(2)} %`
@@ -351,7 +519,21 @@ console.log(
 console.log(
   `  rayon moyen          ${before.mean.toFixed(4)}  →  ${after.mean.toFixed(4)}`
 );
-if (Math.abs(after.sdPct - before.sdPct) > 1)
+const volumeAfter = meshVolume(outPos, outIdx, outIdx.length / 3);
+console.log(
+  `  rayon équiv.-volume  ${equivalentRadius(volumeBefore).toFixed(4)}  →  ${equivalentRadius(volumeAfter).toFixed(4)}`
+);
+console.log(`  axe de plus faible étendue : ${after.spinAxis}`);
+console.log('  pondéré par l’aire (indépendant de l’échantillonnage) :');
+console.log(
+  `    écart-type du rayon  ${beforeArea.sdPct.toFixed(2)} %  →  ${afterArea.sdPct.toFixed(2)} %`
+);
+console.log(
+  `    équateur / pôles     ${beforeArea.equatorOverPolar.toFixed(3)}  →  ${afterArea.equatorOverPolar.toFixed(3)}`
+);
+// Critère sur la version pondérée : la version par sommet s'alarme dès que l'échantillonnage
+// de la source est non uniforme (grille lat/lon, ICQ), même quand la forme est intacte.
+if (Math.abs(afterArea.sdPct - beforeArea.sdPct) > 1)
   console.warn(
     '  ATTENTION : la décimation a lissé la forme, grille trop grossière.'
   );
