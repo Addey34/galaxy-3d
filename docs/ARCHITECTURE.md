@@ -232,6 +232,14 @@ La couche est active dans les **deux** modes. En Éducatif chaque point subit la
 des planètes, et pendant la transition elle lit `OrbitalMechanics.scaleMorph`, le même facteur
 que les corps — sans quoi la trajectoire décrocherait d'eux pendant 1,2 s.
 
+**Coût de rendu, mesuré.** Active en Éducatif, elle repeint un canvas plein écran là où aucune
+couche 2D ne le faisait avant. Sa première version (pointillés `setLineDash`, tous segments
+tracés) a été attrapée par `e2e/perf-fps.spec.ts` dans la suite complète, puis mesurée A/B avec
+et sans la couche : 12 contre 50 fps en vue mobile sous CPU ×4. Un motif de tirets se calcule sur
+toute la longueur tracée, or une trajectoire de ±20 ans déborde de l'écran de milliers de pixels.
+Trait plein et segments hors écran écartés : parité (16 / 12,5 / 59 fps), même en forçant un
+redessin à chaque frame. Le saut de redessin quand rien ne bouge n'est qu'une économie de repos.
+
 **Pourquoi SBDB écarte toujours e ≥ 1** (`core/sbdb.ts`) : ce n'est plus faute de solveur.
 SBDB arrondit `ma` au centième de degré ; pour une comète quasi parabolique (a ≈ −2900 UA) cela
 laisse la date du périhélie libre de ±800 jours. Il faudrait `tp` et `q` pour les positionner.
