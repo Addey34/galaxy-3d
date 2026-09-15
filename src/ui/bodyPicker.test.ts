@@ -1,7 +1,6 @@
 import * as THREE from 'three';
 import { describe, expect, it, vi } from 'vitest';
 import { setupBodyPicker } from './bodyPicker';
-import { markForwardedControlEvent } from './controlEventForwarding';
 import type { PlanetNavigation } from './planetNav';
 
 const CANVAS_RECT = {
@@ -108,16 +107,6 @@ describe('setupBodyPicker', () => {
     canvas.dispatchEvent(
       pointerEvent('pointerdown', { x: 200, y: 100, isPrimary: false })
     );
-    canvas.dispatchEvent(pointerEvent('pointerup', { x: 200, y: 100 }));
-
-    expect(selectBody).not.toHaveBeenCalled();
-  });
-
-  it('ignore un geste retransmis au canvas par un contrôle superposé', () => {
-    const { canvas, selectBody } = createFixture();
-    const down = pointerEvent('pointerdown', { x: 200, y: 100 });
-
-    canvas.dispatchEvent(markForwardedControlEvent(down));
     canvas.dispatchEvent(pointerEvent('pointerup', { x: 200, y: 100 }));
 
     expect(selectBody).not.toHaveBeenCalled();

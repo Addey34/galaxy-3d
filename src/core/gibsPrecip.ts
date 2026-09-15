@@ -73,7 +73,7 @@ export function toImergTimeString(date: Date): string {
 
 /**
  * Dernier instant IMERG disponible pour un « maintenant » donné : now - latence, arrondi
- * à la demi-heure. Sert de fin de fenêtre pour la boucle d'animation.
+ * à la demi-heure. Borne haute de la frame affichée (cf. `imergEndForDate`).
  */
 export function imergLatestAvailable(options: ImergFrameOptions = {}): Date {
   const now = options.now ?? new Date();
@@ -96,26 +96,6 @@ export function imergEndForDate(
   const end = snapped.getTime() > latest.getTime() ? latest : snapped;
   if (end.getTime() < floor.getTime()) return null;
   return end;
-}
-
-/**
- * Génère `count` instants à 30 min se terminant à `end` (ordre chronologique croissant),
- * pour la boucle d'animation (étape B). Ne descend jamais sous la borne basse.
- */
-export function imergFrameTimes(
-  end: Date,
-  count: number,
-  options: ImergFrameOptions = {}
-): Date[] {
-  const minDate = options.minDate ?? IMERG_MIN_DATE;
-  const floor = new Date(`${minDate}T00:00:00Z`).getTime();
-  const endSnap = snapToHalfHour(end).getTime();
-  const frames: Date[] = [];
-  for (let i = count - 1; i >= 0; i--) {
-    const t = endSnap - i * HALF_HOUR_MS;
-    if (t >= floor) frames.push(new Date(t));
-  }
-  return frames;
 }
 
 /** URL WMS GetMap pour la couche pluie à un instant donné (BBOX global, EPSG:4326). */

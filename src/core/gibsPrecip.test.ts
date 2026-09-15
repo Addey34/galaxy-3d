@@ -4,7 +4,6 @@ import {
   IMERG_LAYER,
   IMERG_COVERAGE,
   imergEndForDate,
-  imergFrameTimes,
   imergLatestAvailable,
   imergUrl,
   snapToHalfHour,
@@ -66,30 +65,6 @@ describe('imergEndForDate', () => {
   it('returns null before the layer start date', () => {
     expect(imergEndForDate(new Date('1999-01-01T00:00:00Z'), { now })).toBe(
       null
-    );
-  });
-});
-
-describe('imergFrameTimes', () => {
-  it('produces count ascending frames 30 min apart ending at end', () => {
-    const end = new Date('2026-08-09T08:00:00Z');
-    const frames = imergFrameTimes(end, 4);
-    expect(frames.map((d) => d.toISOString())).toEqual([
-      '2026-08-09T06:30:00.000Z',
-      '2026-08-09T07:00:00.000Z',
-      '2026-08-09T07:30:00.000Z',
-      '2026-08-09T08:00:00.000Z',
-    ]);
-  });
-
-  it('drops frames below the minimum date', () => {
-    const frames = imergFrameTimes(new Date('2000-06-01T01:00:00Z'), 6);
-    // Toutes >= 2000-06-01T00:00Z ; les frames avant sont écartées.
-    expect(frames[0].getTime()).toBeGreaterThanOrEqual(
-      new Date('2000-06-01T00:00:00Z').getTime()
-    );
-    expect(frames[frames.length - 1].toISOString()).toBe(
-      '2000-06-01T01:00:00.000Z'
     );
   });
 });

@@ -290,7 +290,7 @@ rien : les deux états qui encadrent la date sont alors propagés le long de leu
 fondus, ce qui garde les échantillons exacts comme ancres. Hors couverture ou si les assets sont
 indisponibles, le moteur revient aux éléments képlériens du catalogue.
 
-SpkKernel lit les kernels DAF/SPK en types 2 et 3 (Chebyshev), SpkPositionReader convertit le J2000 equatorial en repere Galaxy, et SpkKernelWorkerClient deplace le chargement et le parsing hors du thread principal ; avec une URL configuree, le Worker lit d abord les tables DAF puis les segments requis par HTTP Range. L application continue d utiliser Horizons par defaut.
+SpkKernel lit les kernels DAF/SPK en types 2 et 3 (Chebyshev), SpkWorkerEphemerisProvider convertit le J2000 equatorial en repere Galaxy, et SpkKernelWorkerClient deplace le chargement et le parsing hors du thread principal ; avec une URL configuree, le Worker lit d abord les tables DAF puis les segments requis par HTTP Range. L application continue d utiliser Horizons par defaut.
 
 Pour activer le chemin SPK optionnel, definir `VITE_SPK_KERNEL_URL` vers un kernel same-origin avant le demarrage Vite. Le provider Worker se charge en tache de fond, utilise les vitesses pour une extrapolation courte et revient a Horizons ou Kepler en cas de manque.
 
@@ -302,7 +302,7 @@ Pour actualiser les solutions orbitales après une mise à jour JPL :
 pnpm ephemeris:generate
 ```
 
-Le moteur depend du contrat PreciseEphemerisProvider : Horizons reste la source embarquee par defaut, tandis que SpiceEphemerisService fournit le point d injection pour un lecteur SPK externe.
+Le moteur depend du contrat PreciseEphemerisProvider : Horizons reste la source embarquee par defaut ; quand le SPK est configure, FallbackPreciseEphemerisProvider interroge d abord le provider Worker et retombe sur Horizons pour tout corps ou toute date qu il ne couvre pas encore.
 
 ## Configuration
 

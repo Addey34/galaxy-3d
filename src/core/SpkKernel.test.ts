@@ -1,7 +1,6 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { equatorialToScene } from './frames';
 import {
   SpkKernel,
   etSecondsFromDate,
@@ -9,7 +8,6 @@ import {
   zeroState,
 } from './SpkKernel';
 import type { SpkState, SpkSegmentDescriptor } from './SpkKernel';
-import { SpkPositionReader } from './SpkPositionReader';
 
 function writeAscii(view: DataView, offset: number, value: string): void {
   for (let index = 0; index < value.length; index += 1)
@@ -83,28 +81,6 @@ describe('SpkKernel', () => {
 
     expect(state?.positionKm).toEqual([100, 200, 300]);
     expect(state?.velocityKmPerSecond).toEqual([0, 0, 0]);
-  });
-
-  it('converts J2000 equatorial kilometers into Galaxy AU scene coordinates', () => {
-    const reader = new SpkPositionReader(SpkKernel.parse(syntheticSpk(3)), {
-      triton: 801,
-      neptune: 899,
-    });
-    const result = reader.getPositionAU(
-      'triton',
-      'neptune',
-      new Date('2000-01-01T12:00:00Z')
-    );
-    const expected = equatorialToScene(
-      100 / 149_597_870.7,
-      200 / 149_597_870.7,
-      300 / 149_597_870.7
-    );
-
-    expect(result?.x).toBeCloseTo(expected.x, 15);
-    expect(result?.y).toBeCloseTo(expected.y, 15);
-    expect(result?.z).toBeCloseTo(expected.z, 15);
-    expect(reader.getPositionAU('unknown', 'neptune', new Date())).toBeNull();
   });
 
   it('returns a zero state when target equals center', () => {

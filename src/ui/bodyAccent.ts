@@ -14,10 +14,6 @@ export function onAccentChange(cb: () => void): () => void {
   return () => accentChangeListeners.delete(cb);
 }
 
-export function isColorblindEnabled(): boolean {
-  return colorblindEnabled;
-}
-
 /** Bascule la palette daltonienne (voir `core/colorblindPalette.ts`). No-op si déjà à cet état. */
 export function setColorblindEnabled(enabled: boolean): void {
   if (enabled === colorblindEnabled) return;

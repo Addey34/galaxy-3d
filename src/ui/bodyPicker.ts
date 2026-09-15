@@ -8,7 +8,6 @@
  * les rate presque toujours, et ce sont alors les labels qui prennent le relais — inoffensif.
  */
 import * as THREE from 'three';
-import { isForwardedControlEvent } from './controlEventForwarding';
 import type { PlanetNavigation } from './planetNav';
 
 /** Déplacement max (px) entre pointerdown et pointerup pour rester un « clic » (sinon glisser). */
@@ -64,15 +63,9 @@ export function setupBodyPicker(
   let pointerStart: PointerStart | null = null;
 
   const onPointerDown = (event: PointerEvent): void => {
-    // Les labels Explo réémettent leur pointerdown au canvas pour OrbitControls. Le picker
-    // l'ignore : sinon le pointerup capturé par le canvas sélectionnerait le mesh situé dessous.
-    if (
-      isForwardedControlEvent(event) ||
-      !event.isPrimary ||
-      event.button !== 0
-    ) {
-      return;
-    }
+    // Les labels Explo ne réémettent au canvas que la molette (zoom), jamais leurs gestes de
+    // pointeur : un clic sur un label n'atteint donc pas ce picker.
+    if (!event.isPrimary || event.button !== 0) return;
     pointerStart = {
       id: event.pointerId,
       x: event.clientX,

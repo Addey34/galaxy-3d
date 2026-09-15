@@ -100,7 +100,7 @@ Ils necessitent une trajectoire temporelle, un referentiel, une echelle physique
 - [x] Lune terrestre et quatre lunes galileennes avec positions astronomy-engine.
 - [x] Textures dediees 2k pour Io, Europe, Ganymede et Callisto.
 - [x] Titan, Encelade, Rhéa et Japet, avec vecteurs locaux Horizons issus de SAT441 et mosaïques Cassini/Voyager 1k.
-- [x] Contrat PreciseEphemerisProvider, adaptateur SpiceEphemerisService et lecteur DAF/SPK types 2/3.
+- [x] Contrat PreciseEphemerisProvider et lecteur DAF/SPK types 2/3 (l'adaptateur synchrone SpiceEphemerisService, jamais branché, a été retiré le 2026-09-14 au profit du seul chemin Worker).
 - [x] Worker SPK asynchrone pour charger et parser un kernel same-origin hors thread principal.
 - [x] Triton, Charon, Phobos et Deimos, avec vecteurs locaux Horizons relatifs au parent et textures USGS/NASA 1k.
 - [x] Lunes mineures de Saturne, Uranus, Neptune et Pluton (Mimas, Tethys, Dione, Hyperion, Miranda, Ariel, Umbriel, Titania, Oberon, Protee, Nereide, Styx, Nix, Kerberos, Hydra) et Amalthee.
