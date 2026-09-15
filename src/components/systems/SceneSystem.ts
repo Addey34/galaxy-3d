@@ -95,38 +95,35 @@ export class SceneSystem {
   }
 
   /**
-   * Chaîne de post-process : rendu de base → bloom (seuil élevé = seules les
-   * sources très lumineuses bavent : Soleil + lumières de ville) → OutputPass
-   * (tone mapping + conversion sRGB en fin de chaîne). Désactivé sur mobile.
+   * Chaîne de post-process : rendu de base → halo (`GlowPass` : seules les sources
+   * DÉCLARÉES rayonnent — Soleil, étoiles, lumières de ville, cf. `glowSelection.ts`) →
+   * OutputPass (tone mapping + conversion sRGB en fin de chaîne). Désactivé sur mobile.
    * Modules chargés à la demande (cf. l'import de type en tête de fichier) : les
-   * appareils au palier low/medium ne téléchargent jamais le code du bloom.
+   * appareils au palier low/medium ne téléchargent jamais le code du halo.
    */
   private async setupPostProcessing(): Promise<void> {
     if (!BLOOM_SETTINGS.enabled) return;
 
-    const [
-      { EffectComposer },
-      { RenderPass },
-      { UnrealBloomPass },
-      { OutputPass },
-    ] = await Promise.all([
-      import('three/examples/jsm/postprocessing/EffectComposer.js'),
-      import('three/examples/jsm/postprocessing/RenderPass.js'),
-      import('three/examples/jsm/postprocessing/UnrealBloomPass.js'),
-      import('three/examples/jsm/postprocessing/OutputPass.js'),
-    ]);
+    const [{ EffectComposer }, { RenderPass }, { GlowPass }, { OutputPass }] =
+      await Promise.all([
+        import('three/examples/jsm/postprocessing/EffectComposer.js'),
+        import('three/examples/jsm/postprocessing/RenderPass.js'),
+        import('./GlowPass'),
+        import('three/examples/jsm/postprocessing/OutputPass.js'),
+      ]);
 
     const composer = new EffectComposer(this.renderer);
     composer.addPass(new RenderPass(this.scene, this.camera));
 
-    const size = this.renderer.getSize(new THREE.Vector2());
-    const bloom = new UnrealBloomPass(
-      size,
-      BLOOM_SETTINGS.strength,
-      BLOOM_SETTINGS.radius,
-      BLOOM_SETTINGS.threshold
+    composer.addPass(
+      new GlowPass(this.scene, this.camera, {
+        strength: BLOOM_SETTINGS.strength,
+        radius: BLOOM_SETTINGS.radius,
+        levels: BLOOM_SETTINGS.levels,
+        threshold: BLOOM_SETTINGS.threshold,
+        knee: BLOOM_SETTINGS.knee,
+      })
     );
-    composer.addPass(bloom);
     // OutputPass reprend le tone mapping du renderer : sans lui, EffectComposer
     // shunte le tone mapping/sRGB câblé sur le renderer et l'image sort délavée.
     composer.addPass(new OutputPass());

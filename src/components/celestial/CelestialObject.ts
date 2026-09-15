@@ -15,6 +15,7 @@ import { buildLayers } from '@/components/celestial/celestialLayers';
 import { applyTexture } from '@/components/celestial/celestialTextures';
 import { KM_PER_AU, SQRT_K } from '@/core/ScaleService';
 import { fitScale, meshVolume, volumeEquivalentRadius } from '@/core/modelFit';
+import { markGlowOccluder } from '@/components/systems/glowSelection';
 import {
   GEOMETRY_SEGMENTS_HI,
   createSphereGeometry,
@@ -1270,6 +1271,8 @@ export default class CelestialObject {
       root.add(gltf.scene);
       root.scale.setScalar(scale);
 
+      // Un modèle de forme masque un halo comme la sphère qu'il remplace.
+      for (const mesh of meshes) markGlowOccluder(mesh);
       this._modelRoot = root;
       this._modelMeshes = meshes;
       this._meshGroup.add(root);

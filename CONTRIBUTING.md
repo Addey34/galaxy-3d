@@ -200,6 +200,20 @@ satellite et sa jumelle « modèle » représentent la même chose sur le même 
 traverser la nuit ensemble. Toute décision jour/nuit passe par `src/core/terminator.ts` —
 jamais une formule maison, jamais une constante réglée à l'œil.
 
+### Faire briller un élément (halo lumineux)
+
+Le halo ne choisit pas ses sources par luminance : il ne fait briller que ce qu'on lui
+DÉCLARE (`src/components/systems/glowSelection.ts`). Pour un nouvel élément lumineux :
+
+1. une entrée dans `GLOW_GAINS` (`src/config/engine.ts`), 1 étant la référence ;
+2. `markGlowSource(objet, GLOW_GAINS.votreEntree)` là où l'objet est créé ;
+3. `markGlowOccluder(objet)` sur tout nouvel objet OPAQUE qui doit pouvoir cacher un halo
+   (une surface, un modèle de forme) — sinon le halo passe à travers lui.
+
+Rien d'autre à toucher. Réglez le gain en MESURANT l'image (énergie d'une zone, avant/après),
+pas à l'œil, et ajoutez l'objet au test `GlowPass.test.ts` qui vérifie le marquage des vraies
+couches. Détails et chiffres : `docs/ARCHITECTURE.md` § « Halo lumineux ».
+
 ## Style de code
 
 - TypeScript strict, alias `@/` → `src/` pour les imports cross-module.

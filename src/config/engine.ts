@@ -367,12 +367,32 @@ export const BLOOM_SETTINGS = {
   // élevé sélectionne les sources très lumineuses (Soleil, villes) sans faire baver les
   // planètes. Levier ajustable à chaud (la passe est ajoutée/retirée du composer).
   enabled: BOOT_QUALITY_PROFILE.bloom,
-  // strength/radius relevés pour un halo de Soleil lisible (le réglage précédent
-  // restait imperceptible à distance) ; le seuil reste haut pour ne pas faire
-  // baver les planètes éclairées (elles plafonnent sous 0.85 après tone mapping).
-  strength: 0.85,
-  radius: 0.5,
-  threshold: 0.85,
+  // La sélection des SOURCES est déclarative (cf. components/systems/glowSelection.ts) : le
+  // fond de ciel et ses étoiles JPEG en blocs n'entrent plus dans le halo. Le seuil ne choisit
+  // donc plus QUI brille, seulement ce que chaque source déclarée garde de lumineux.
+  // strength : part du halo ajoutée à l'image. radius : écart des taps de la tente de
+  // remontée, en texels (1 = standard). levels : niveaux de mip, donc étendue du halo.
+  strength: 0.75,
+  radius: 1,
+  levels: 6,
+  threshold: 0.5,
+  knee: 0.25,
+};
+
+/**
+ * Intensité de halo PAR SOURCE (1 = référence) — lue par `markGlowSource` là où chaque
+ * source est créée. Un réglage global ne pouvait pas convenir à la fois au Soleil, grand
+ * disque très lumineux, et aux villes : réglé pour que les villes retrouvent leur lueur, il
+ * rendait le halo solaire 2,6 fois plus fort (mesuré). Ajouter une source qui brille : une
+ * entrée ici, un appel `markGlowSource(objet, GLOW_GAINS.xxx)` là où on la crée.
+ */
+export const GLOW_GAINS = {
+  /** Disque d'une étoile (le Soleil). */
+  star: 0.5,
+  /** Lumières de ville de la face nuit. */
+  cityLights: 1.6,
+  /** Étoiles ponctuelles du champ procédural. */
+  starfield: 1,
 };
 
 // Variation procédurale très faible de la rugosité océanique Earth. Elle agit uniquement

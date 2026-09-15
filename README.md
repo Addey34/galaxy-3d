@@ -9,6 +9,7 @@ Visualisateur interactif du système solaire en temps réel, développé en Type
 - Positions planetaires calculees via astronomy-engine, completees par des vecteurs NASA/JPL Horizons locaux pour Ceres, Eris, Haumea, Makemake, Saturne et ses lunes, Mars et ses lunes, Neptune/Triton et Pluto/Charon (1900-2100, interpolation position-vitesse)
 - Time travel : naviguer librement dans le temps passé et futur
 - Planètes multi-couches : surface PBR, nuages, atmosphère, lueurs nocturnes (shader GLSL)
+- Halo lumineux rond autour du Soleil, des étoiles et des lumières de ville (qualité haute), chaque source déclarée avec sa propre intensité
 - LOD automatique : résolution de texture adaptée à la distance caméra (1k → 8k)
 - HUD Exploration avec cible suivie, distance UA/km, temps-lumière et labels de corps
 - Responsive mobile avec qualité adaptative
@@ -166,6 +167,8 @@ src/
 │   │   ├── AnimationSystem.ts  # Boucle requestAnimationFrame, frustum culling, LOD
 │   │   ├── CameraSystem.ts     # OrbitControls + suivi de cible + tweens
 │   │   ├── SceneSystem.ts      # Scène Three.js, renderer, hiérarchie des corps
+│   │   ├── GlowPass.ts         # Halo lumineux (qualité haute) : sélection, flou par mips, composition
+│   │   ├── glowSelection.ts    # Qui brille et combien : markGlowSource / markGlowOccluder
 │   │   ├── LightingSystem.ts   # AmbientLight + PointLight solaire
 │   │   └── TextureSystem.ts    # Cache singleton + LOD textures
 │   └── celestial/

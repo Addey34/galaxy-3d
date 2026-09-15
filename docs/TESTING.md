@@ -127,6 +127,19 @@ normalise sur un vrai jour d'éclipse. `e2e/eclipseLanding.spec.ts` ouvre `/ecli
 arrivée au pic, en pause, sur la Terre, adresse et titre gardés, puis permalien daté dès qu'on
 regarde ailleurs. Chaque garde a été falsifié.
 
+**Halo lumineux** (`src/components/systems/GlowPass.test.ts`) : aucun test ne peut juger qu'un
+halo est « rond » sous le rendu logiciel des runners, donc la suite tient ce qui le rend rond
+PAR CONSTRUCTION et ce qui casserait en silence. Uniformes employés = déclarés = fournis pour les
+quatre shaders de la passe (un uniforme oublié rend noir sans erreur, déjà payé sur la Terre) ;
+les VRAIES couches de `buildLayers` portent le bon marquage (lumières de ville et Soleil sources,
+avec leur gain de `GLOW_GAINS` ; surfaces occultantes ; nuages et atmosphère ni l'un ni l'autre) ;
+un faux renderer enregistre chaque rendu — occulteurs en noir d'abord, puis une classe
+d'intensité par calque, jamais le fond de ciel (c'est lui qui dessinait les carrés), état de la
+scène restauré à l'identique, et **produit des remises à l'échelle égal au gain de chaque
+classe**, sans quoi une source brille trop ou pas assez sans rien lever. Douze mutations, toutes
+tombées. La forme du halo, elle, a été regardée à l'écran en Éduc et en Explo et mesurée (énergie
+de la face nuit, anneau solaire : `docs/ARCHITECTURE.md` § « Halo lumineux »).
+
 Il n’y a pas encore de seuil de couverture chiffré : la priorité est la couverture comportementale
 des invariants physiques et des frontières d’architecture.
 

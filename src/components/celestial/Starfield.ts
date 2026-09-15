@@ -12,6 +12,8 @@
  * (renderOrder très bas) pour rester un décor lointain, insensible aux corps.
  */
 import * as THREE from 'three';
+import { markGlowSource } from '@/components/systems/glowSelection';
+import { GLOW_GAINS } from '@/config/engine';
 
 const STAR_COUNT = 2500;
 // Rayon de la sphère céleste. Grand mais dans le far educ ; le depthWrite off +
@@ -99,6 +101,9 @@ export class Starfield {
 
     this.points = new THREE.Points(this.geometry, this.material);
     this.points.name = 'proceduralStarfield';
+    // Source de halo : ce sont elles, rondes par construction, qui rayonnent — et plus les
+    // étoiles du fond JPEG, que la compression découpe en blocs.
+    markGlowSource(this.points, GLOW_GAINS.starfield);
     // Décor lointain : rendu en tout premier, jamais occulté par erreur.
     this.points.renderOrder = -1;
     this.points.frustumCulled = false;

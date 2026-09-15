@@ -14,10 +14,14 @@ import {
   createThermalMaterial,
   RING_SEGMENTS,
 } from '@/config/layerConfig';
-import { RENDER_SETTINGS, SHADER_SETTINGS } from '@/config/engine';
+import { GLOW_GAINS, RENDER_SETTINGS, SHADER_SETTINGS } from '@/config/engine';
 import * as NightLightsShader from '@/shaders/NightLightsShader';
 import * as AtmosphereShader from '@/shaders/AtmosphereShader';
 import type { CelestialBodyConfig } from '@/types';
+import {
+  markGlowOccluder,
+  markGlowSource,
+} from '@/components/systems/glowSelection';
 
 /**
  * Crée toutes les couches applicables selon la config et les renvoie indexées par nom.
@@ -83,6 +87,10 @@ function createSurfaceLayer(
   mesh.name = `${name}_surface`;
   if (RENDER_SETTINGS.shadowMap.enabled && !isSun)
     configureShadows(mesh, true, true);
+  // Une étoile rayonne ; toute autre surface peut cacher un halo (le Soleil derrière la
+  // Lune, une étoile derrière une planète). Décidé sur `kind`, jamais sur le nom.
+  if (config.kind === 'star') markGlowSource(mesh, GLOW_GAINS.star);
+  else markGlowOccluder(mesh);
   return mesh;
 }
 
@@ -190,6 +198,8 @@ function createLightsLayer(
     material
   );
   mesh.name = `${name}_lights`;
+  // Les villes rayonnent : c'est leur halo qui, arrondi par GlowPass, remplace les boîtes.
+  markGlowSource(mesh, GLOW_GAINS.cityLights);
   mesh.renderOrder = 1;
   return mesh;
 }

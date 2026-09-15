@@ -512,6 +512,74 @@ seul cadrage valable pour Mercure comme pour Jupiter et invariant au changement 
 environ la Lune vue de la Terre). Chaque ligne est jugée sur SON corps, donc celle d'un corps
 lointain reste pleine pendant que celle du corps approché s'efface.
 
+## Halo lumineux — qui brille, et combien
+
+Le palier de qualité `high` ajoute un halo autour des sources de lumière (Soleil, étoiles
+ponctuelles, lumières de ville). Les paliers inférieurs n'en ont pas et rendent sans
+`EffectComposer`. Deux fichiers : `components/systems/glowSelection.ts` (le contrat) et
+`components/systems/GlowPass.ts` (la passe).
+
+**Pourquoi il a été réécrit (2026-09-16).** L'ancien `UnrealBloomPass` donnait des halos
+CARRÉS, pour deux raisons indépendantes : il choisissait ses sources par LUMINANCE (tout pixel
+au-dessus de 0,85), fond de ciel compris — un JPEG dont les étoiles sont des blocs de compression
+8×8, que le fond affiché à 1,4 faisait passer au-dessus du seuil ; et son flou (noyaux de 3 à
+11 taps sur 5 mips, remontés en bilinéaire) laissait des plateaux carrés autour de chaque point.
+Changer le seuil ou le rayon ne corrigeait ni l'un ni l'autre.
+
+**La sélection est déclarative, par calques Three.js** — jamais par luminance :
+
+- `markGlowSource(objet, gain)` : l'objet émet un halo, d'intensité `gain` (entrée de
+  `GLOW_GAINS` dans `config/engine.ts`) ;
+- `markGlowOccluder(objet)` : l'objet peut CACHER un halo — surfaces des corps, modèles de
+  forme. Sans lui, le Soleil rayonnerait à travers la Lune pendant une éclipse ;
+- le fond de ciel n'est sur aucun des deux : il ne brille plus, par construction.
+
+Les calques s'AJOUTENT au calque 0, l'objet reste rendu normalement.
+
+**La passe**, dans l'ordre :
+
+1. **Sélection**, en demi-résolution, fond retiré : les occulteurs en noir (matériau de
+   substitution) qui écrivent la profondeur, puis chaque classe d'intensité avec ses propres
+   matériaux. Tout l'état touché (fond, calques de la caméra, matériau de substitution, couleur de
+   fond, `autoClear`) est restauré à l'identique.
+2. **Descente** : 13 taps (5 boîtes pondérées, Jimenez 2014), moyenne de Karis et seuil
+   progressif (genou, UE4) au premier niveau seulement.
+3. **Remontée** : tente 3×3 ajoutée niveau par niveau. Un halo ainsi construit est rond : il ne
+   hérite d'aucune grille.
+4. **Composition** : `scène + halo × force / (1 + 4 × luminance de la source)`. Le halo va
+   AUTOUR de la source, pas dessus : sans ce facteur, le disque solaire blanchissait.
+
+**Une intensité par source, pas un réglage global.** Mesuré : régler une force unique pour que
+les villes retrouvent leur lueur rendait le halo solaire 2,6 fois plus fort. Chaque intensité
+distincte reçoit donc son calque de classe (3 à 31). Toutes les classes sont rendues dans la MÊME
+cible, par gain croissant ; après chaque classe, tout le tampon est multiplié (mélange
+multiplicatif, `SCALE_FRAGMENT`) par `gain courant / gain suivant`, et par le dernier gain à la
+fin. La contribution d'une classe subit toutes les remises à l'échelle qui la suivent, dont le
+produit vaut exactement son gain — sans cible supplémentaire, et sans redessiner les occulteurs.
+Les cibles sont en `HalfFloat` : un facteur > 1 n'y est pas écrêté.
+
+**Réglages mesurés, pas choisis à l'œil** (capture `high`, DPR 2, 2026-09-16T00:00Z) :
+énergie moyenne de la face nuit 5,19 avant la réécriture, 5,08 après ; anneau autour du disque
+solaire (95–160 px) 10,4 avant, 10,7 après — avec, désormais, des halos ronds et plus aucun carré
+dans le ciel.
+
+**Coût** (A/B `perf-fps`, rendu logiciel) : la sélection en pleine résolution coûtait ~15 %
+d'images par seconde, d'où la demi-résolution. Les classes d'intensité coûtent ensuite
+~0,4 image/s (bureau et CPU bridé), rien en viewport mobile : ce sont les remises à l'échelle en
+plein écran, que le rendu logiciel paie en remplissage. Chaque classe au gain différent de 1
+ajoute un rendu filtré de la scène et un quad plein écran en demi-résolution.
+
+**Faire briller un nouvel élément** : une entrée dans `GLOW_GAINS`, un appel
+`markGlowSource(objet, GLOW_GAINS.xxx)` là où l'objet est créé — et `markGlowOccluder` sur tout
+nouvel objet opaque qui doit pouvoir masquer un halo. Rien d'autre : ni seuil à régler, ni passe à
+toucher. Deux sources de même gain partagent une classe (29 intensités distinctes au plus).
+
+**Tenu par** `GlowPass.test.ts` : uniformes employés = déclarés = fournis pour les quatre
+shaders ; les vraies couches (`buildLayers`) portent le bon marquage et le bon gain ; un faux
+renderer vérifie l'ordre des rendus (occulteurs noirs, puis une classe par calque, jamais le
+fond), que le produit des remises à l'échelle vaut le gain de chaque classe, et que l'état est
+restauré. Chacun falsifié (douze mutations).
+
 ## Pages d'atterrissage par corps et vignettes de partage
 
 L'application est une URL unique : `?body=jupiter` est un paramètre, pas une route. Un moteur de
