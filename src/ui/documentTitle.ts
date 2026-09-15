@@ -18,18 +18,36 @@
  * une fraction de seconde puis cette fonction le remplace par sa version localisée — la
  * version anglaise reprend d'ailleurs mot pour mot celle du référencement.
  */
-import { onLocaleChange, t } from '@/i18n';
+import { getLocale, onLocaleChange, t } from '@/i18n';
 import { bodyDisplayName } from '@/i18n/bodyText';
+import {
+  eclipseTitleKey,
+  formatEclipseDate,
+  type EclipseEvent,
+} from '@/core/eclipsePages';
 
 export interface DocumentTitle {
   /** `null` ou `'overview'` = vue d'ensemble. */
   setBody(name: string | null): void;
+  /**
+   * Éclipse que l'ADRESSE nomme encore (`/eclipse/2026-08-12/`), ou `null`. Tant qu'elle est
+   * posée elle prime sur le corps : l'onglet doit dire la même chose que l'adresse, et sur une
+   * page d'éclipse l'adresse parle de l'éclipse. Posée par `ui/permalink` après chaque écriture.
+   */
+  setEclipse(event: EclipseEvent | null): void;
 }
 
 export function setupDocumentTitle(): DocumentTitle {
   let current: string | null = null;
+  let eclipse: EclipseEvent | null = null;
 
   const apply = (): void => {
+    if (eclipse) {
+      document.title = t(eclipseTitleKey(eclipse), {
+        date: formatEclipseDate(eclipse.date, getLocale()),
+      });
+      return;
+    }
     document.title =
       current === null || current === 'overview'
         ? t('title.overview')
@@ -42,6 +60,10 @@ export function setupDocumentTitle(): DocumentTitle {
   return {
     setBody: (name) => {
       current = name;
+      apply();
+    },
+    setEclipse: (event) => {
+      eclipse = event;
       apply();
     },
   };

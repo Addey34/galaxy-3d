@@ -112,6 +112,11 @@ Une seule entrée dans `CELESTIAL_CONFIG.bodies` (`src/config/bodies.ts`) :
 
 `assertUniqueBodyNames` rejette tout doublon de nom au chargement.
 
+**Pages d'éclipse.** Le build émet aussi une page par éclipse de 2024 à 2035
+(`/eclipse/2026-08-12/`), calculée par `findUpcomingAstronomicalEvents` : il n'y a rien à saisir.
+Leur titre vient des clés `title.eclipse.*` de `src/i18n/locales.ts` — une nouvelle combinaison
+type × astre exige sa clé dans les deux langues, et `src/core/eclipsePages.test.ts` le vérifie.
+
 **Ce que l'entrée déclenche ailleurs.** Le build en dérive aussi une page d'atterrissage
 indexable (`dist/<nom>/index.html`), son entrée de sitemap et sa vignette de partage
 (`dist/social/<nom>.jpg`). Deux conséquences concrètes :

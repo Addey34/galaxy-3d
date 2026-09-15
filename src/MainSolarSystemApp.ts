@@ -345,7 +345,11 @@ if (surfaceScrim) {
       planetNav,
       modeSwitcher,
       bodyNames,
-      cameraSystem
+      cameraSystem,
+      {
+        playback,
+        onEclipseAddress: (event) => documentTitle.setEclipse(event),
+      }
     );
     syncPermalink = permalink.sync;
     permalink.applyInitialState();

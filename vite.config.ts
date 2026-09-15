@@ -73,6 +73,9 @@ function bodyLandingPages() {
         const card = (await loader.ssrLoadModule(
           '/src/seo/socialCard.ts'
         )) as typeof import('./src/seo/socialCard');
+        const eclipseSeo = (await loader.ssrLoadModule(
+          '/src/seo/eclipseLandingPage.ts'
+        )) as typeof import('./src/seo/eclipseLandingPage');
 
         const dist = resolve(__dirname, 'dist');
         const baseHtml = await readFile(resolve(dist, 'index.html'), 'utf-8');
@@ -295,14 +298,38 @@ function bodyLandingPages() {
             throw new Error(`vignette de partage manquante : ${page.slug}.jpg`);
         }
 
+        // Une page par éclipse de la fenêtre fixe 2024-2035 — voir `src/seo/eclipseLandingPage.ts`.
+        // Même garde que pour les corps : la fenêtre en contient 53, et un calcul qui n'en rend
+        // presque aucune est une panne, pas un choix — qui effacerait des pages déjà indexées.
+        const eclipsePages = eclipseSeo.eclipseLandingPages(SITE_ORIGIN);
+        if (eclipsePages.length < 40)
+          throw new Error(
+            `génération des pages d'éclipse : ${eclipsePages.length} page(s) seulement`
+          );
+        for (const page of eclipsePages) {
+          // La vignette réutilisée doit exister : sinon la balise pointerait vers un 404.
+          const cardFile = resolve(socialDir, `${page.focusBody}.jpg`);
+          if (!(await stat(cardFile).catch(() => null)))
+            throw new Error(
+              `vignette absente pour l'éclipse ${page.slug} : ${page.focusBody}.jpg`
+            );
+          const dir = resolve(dist, 'eclipse', page.slug);
+          await mkdir(dir, { recursive: true });
+          await writeFile(
+            resolve(dir, 'index.html'),
+            eclipseSeo.renderEclipsePage(baseHtml, page),
+            'utf-8'
+          );
+        }
+
         const today = new Date().toISOString().slice(0, 10);
         await writeFile(
           resolve(dist, 'sitemap.xml'),
-          seo.renderSitemap(pages, SITE_ORIGIN, today),
+          seo.renderSitemap([...pages, ...eclipsePages], SITE_ORIGIN, today),
           'utf-8'
         );
         loader.config.logger.info(
-          `  ${pages.length} pages de corps + vignettes + sitemap générés`
+          `  ${pages.length} pages de corps + ${eclipsePages.length} pages d'éclipse + vignettes + sitemap générés`
         );
       } finally {
         await loader.close();

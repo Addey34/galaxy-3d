@@ -4,10 +4,18 @@ import {
   serializePermalink,
   type PermalinkViewAngles,
 } from '@/core/permalink';
+import {
+  eclipseFocusBody,
+  eclipseFromPathname,
+  eclipsePathname,
+  eclipseStillDescribed,
+  type EclipseEvent,
+} from '@/core/eclipsePages';
 import type { OrbitalMechanics } from '@/core/OrbitalMechanics';
 import type { CameraSystem } from '@/components/systems/CameraSystem';
 import type { PlanetNavigation } from './planetNav';
 import type { ModeSwitcher } from './modeSwitcher';
+import type { PlaybackControls } from './playback';
 
 const MS_PER_DAY = 86_400_000;
 // Garde-fou : n'attend jamais indéfiniment l'arrivée du vol caméra avant d'appliquer un
@@ -45,19 +53,54 @@ function afterCameraArrival(camera: CameraSystem, then: () => void): void {
   tick();
 }
 
+export interface PermalinkEclipseHooks {
+  /** Fige la lecture à l'arrivée sur une éclipse, comme le panneau d'événements. */
+  playback?: Pick<PlaybackControls, 'pause'>;
+  /** Éclipse que l'adresse nomme après chaque écriture (`null` dès qu'elle ne la nomme plus). */
+  onEclipseAddress?: (event: EclipseEvent | null) => void;
+}
+
 export function setupPermalinks(
   om: OrbitalMechanics,
   navigation: PlanetNavigation,
   modeSwitcher: ModeSwitcher,
   validBodies: ReadonlySet<string>,
-  camera: CameraSystem
+  camera: CameraSystem,
+  eclipseHooks: PermalinkEclipseHooks = {}
 ): PermalinkController {
   let applying = false;
   let suspended = false;
+  // Éclipse nommée par le chemin d'ENTRÉE (`/eclipse/2026-08-12/`). Recalculée une seule fois :
+  // tant que l'état la décrit, l'adresse la garde ; dès qu'il ne la décrit plus, elle est
+  // oubliée et l'adresse redevient le permalien ordinaire, sans retour possible.
+  let eclipse: EclipseEvent | null =
+    eclipseFromPathname(window.location.pathname) ?? null;
 
   const sync = (view?: PermalinkViewAngles): void => {
     if (applying || suspended) return;
     const selectedBody = navigation.getSelectedBody();
+    if (
+      eclipse &&
+      !view &&
+      eclipseStillDescribed(eclipse, selectedBody, om.simulationDate)
+    ) {
+      // L'état décrit encore l'éclipse : son adresse indexable reste la bonne. Ni `?date=` ni
+      // `?body=` — le chemin les porte, et deux URL pour un même contenu est précisément ce
+      // que le canonique existe pour éviter. Le mode, lui, n'est pas porté par le chemin.
+      const eclipseUrl = `${eclipsePathname(eclipse)}${serializePermalink(
+        { mode: modeSwitcher.getMode() },
+        window.location.search
+      )}${window.location.hash}`;
+      const currentUrl = `${window.location.pathname}${window.location.search}${window.location.hash}`;
+      if (eclipseUrl !== currentUrl)
+        window.history.replaceState(null, '', eclipseUrl);
+      eclipseHooks.onEclipseAddress?.(eclipse);
+      return;
+    }
+    if (eclipse) {
+      eclipse = null;
+      eclipseHooks.onEclipseAddress?.(null);
+    }
     // Le CHEMIN suit la sélection, il n'est plus seulement lu. Chaque corps a déjà son adresse
     // indexable ; la parcourir sans recharger, c'est la lui rendre. `serializePermalink` voit
     // ce chemin et omet alors `?body=`, devenu redondant. Cf. `pathnameForBody`.
@@ -83,6 +126,13 @@ export function setupPermalinks(
       validBodies,
       window.location.pathname
     );
+    // Une page d'éclipse porte sa date et son corps dans le CHEMIN (la CSP interdit de les
+    // transmettre par un script en ligne). La query, si quelqu'un en ajoute une, prime encore.
+    const pathEclipse = eclipseFromPathname(window.location.pathname);
+    if (pathEclipse) {
+      state.date ??= pathEclipse.date;
+      state.body ??= eclipseFocusBody(pathEclipse);
+    }
     if (!state.mode && !state.body && !state.date && !state.view) return;
 
     applying = true;
@@ -94,6 +144,9 @@ export function setupPermalinks(
         om.addTimeOffset(deltaDays);
       }
       if (state.body) navigation.selectBody(state.body);
+      // Au pic, et pas une seconde plus tard : sans pause, l'horloge repart en temps réel et
+      // l'état cesse de décrire l'éclipse avant même que le visiteur l'ait regardée.
+      if (pathEclipse) eclipseHooks.playback?.pause();
     } finally {
       applying = false;
     }

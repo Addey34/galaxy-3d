@@ -114,6 +114,13 @@ vérifiés EXISTANTS sur disque : sinon le défaut n'apparaîtrait qu'au build, 
 tard, sans nommer le corps en cause. Ce que ces tests ne voient pas, c'est l'application ouverte
 sur un tel chemin — c'est le rôle d'`e2e/bodyLanding.spec.ts`.
 
+**Pages d'éclipse** : `src/core/eclipsePages.test.ts` tient la fenêtre (53 éclipses, un jour UTC
+chacune) et l'accord build/application sur les 53 (à la seconde — écart mesuré 1 ms, un premier
+test à la milliseconde l'a trouvé), plus les chemins refusés, dont `2026-02-31`, que `Date.parse`
+normalise sur un vrai jour d'éclipse. `e2e/eclipseLanding.spec.ts` ouvre `/eclipse/2026-08-12/` :
+arrivée au pic, en pause, sur la Terre, adresse et titre gardés, puis permalien daté dès qu'on
+regarde ailleurs. Chaque garde a été falsifié.
+
 Il n’y a pas encore de seuil de couverture chiffré : la priorité est la couverture comportementale
 des invariants physiques et des frontières d’architecture.
 

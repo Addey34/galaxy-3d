@@ -31,7 +31,7 @@ requestAnimationFrame
 | `src/ui`                    | Contrôles DOM et overlays projetés                              | DOM, i18n et PublicAPI                 |
 | `src/i18n`                  | État de locale et traduction statique/dynamique                | DOM seulement dans `dom.ts`            |
 | `src/utils`                 | Helpers navigateur transverses et logging                       | Pas d'orchestration applicative        |
-| `src/seo`                   | Pages d'atterrissage par corps, sitemap, vignettes de partage   | Catalogue seulement — **jamais chargé par l'application**, tenu par `src/seo/buildOnly.test.ts` |
+| `src/seo`                   | Pages d'atterrissage par corps et par éclipse, sitemap, vignettes | Catalogue seulement — **jamais chargé par l'application**, tenu par `src/seo/buildOnly.test.ts` |
 | `scripts`                   | Génération d'assets réservée aux mainteneurs                   | Node.js et dépendances de dev          |
 
 ## Propriété des ressources
@@ -643,6 +643,44 @@ polices le sont —
 le runner rend le texte en DejaVu Sans, un poste Windows en Segoe UI. La mise en page et les
 chiffres suscrits tiennent dans les deux cas (vérifié à l'écran sur l'artefact déployé), mais ne
 pas s'attendre à une comparaison d'empreinte entre local et production.
+
+## Pages d'éclipse
+
+Une page par éclipse solaire ou lunaire de la fenêtre **fixe** 2024-2035 : 53 pages,
+`/eclipse/2026-08-12/`. Même contrat que les pages de corps ci-dessus (fichier statique, pas de
+script en ligne, contenu réel, repère absent = build cassé), avec un rendu commun,
+`renderLandingPage`. La factorisation a été vérifiée en comparant l'ancien et le nouveau rendu
+sur le vrai `dist/index.html` : 52 pages de corps sur 52 identiques octet pour octet.
+
+Les décisions, validées avant le code :
+
+- **Le chemin porte le JOUR UTC, rien d'autre.** Deux éclipses ne tombent jamais le même jour
+  (vérifié sur les 53). Pas le type : astronomy-engine pourrait reclasser une éclipse limite, et
+  une URL déjà indexée ne doit pas en dépendre.
+- **Fenêtre fixe, pas glissante.** Une fenêtre glissante sortirait chaque éclipse passée du
+  sitemap et laisserait son URL indexée en 404.
+- **La date du pic n'est écrite nulle part.** Le build parcourt la fenêtre avec
+  `findUpcomingAstronomicalEvents` ; l'application recalcule l'éclipse du jour lu dans son chemin
+  (`core/eclipsePages.ts::eclipseFromPathname`), par la même fonction. Écart mesuré entre les
+  deux : **1 ms au plus** — la recherche itérative ne converge pas au même bit selon son départ.
+- **L'adresse reste `/eclipse/…` tant que l'état décrit l'éclipse** (corps cadré, date à moins
+  d'une minute du pic, `eclipseStillDescribed`) ; au premier changement elle devient le
+  permalien ordinaire, `/jupiter/?mode=educ&date=2026-08-12T17:45:46Z`, qui porte la date réelle. La
+  lecture est mise en pause à l'arrivée, comme depuis le panneau d'événements, sinon l'horloge
+  ferait sortir l'état de l'éclipse d'elle-même. Le titre de l'onglet suit l'adresse.
+- **Le corps cadré** (Terre pour une éclipse solaire, Lune pour une lunaire) vient de
+  `eventFocusBody`, désormais dans `core/astronomicalEvents.ts` : panneau et pages appliquent la
+  même règle. La vignette de partage est celle de ce corps.
+
+**Piège trouvé en falsifiant** : `Date.parse` accepte `2026-02-31` et le reporte au 3 mars —
+jour d'une vraie éclipse totale de Lune. Le seul garde-fou est l'égalité finale entre le jour
+réécrit de l'éclipse trouvée et le segment lu ; une vérification par aller-retour ajoutée en plus
+était redondante et a été retirée quand sa mutation a survécu.
+
+**Limite visible, pas corrigée ici** : une page d'éclipse lunaire s'ouvre sur une Lune presque
+noire. L'atténuation d'éclipse existante éteint la Lune dans l'ombre ; une vraie Lune éclipsée est
+rouge cuivré (lumière réfractée par l'atmosphère terrestre). Le panneau d'événements montrait
+déjà la même chose.
 
 ## Architecture météo
 

@@ -211,6 +211,36 @@ function addPlanetaryAlignments(
   }
 }
 
+/**
+ * Corps sur lequel recadrer la caméra pour chaque type d'événement.
+ * Phases + éclipses lunaires → la Lune (l'astre observé) ; éclipses solaires, saisons et
+ * apsides → la Terre (l'observateur / l'ombre au sol). Opposition/conjonction n'ont pas
+ * d'entrée : le corps varie par événement, lu depuis `event.body`.
+ *
+ * Ici, et non dans le panneau, parce que DEUX surfaces l'appliquent : le panneau d'événements
+ * et les pages d'éclipse (`core/eclipsePages.ts`). Une même éclipse ne doit pas s'ouvrir sur la
+ * Terre depuis l'une et sur la Lune depuis l'autre.
+ */
+const FOCUS_BODY: Partial<Record<AstronomicalEventKind, string>> = {
+  'new-moon': 'moon',
+  'first-quarter': 'moon',
+  'full-moon': 'moon',
+  'third-quarter': 'moon',
+  'lunar-eclipse': 'moon',
+  'solar-eclipse': 'earth',
+  'march-equinox': 'earth',
+  'june-solstice': 'earth',
+  'september-equinox': 'earth',
+  'december-solstice': 'earth',
+  perihelion: 'earth',
+  aphelion: 'earth',
+};
+
+/** Corps sur lequel recadrer la caméra : `event.body` (opposition/conjonction) sinon FOCUS_BODY. */
+export function eventFocusBody(event: AstronomicalEvent): string {
+  return event.body ?? FOCUS_BODY[event.kind] ?? 'earth';
+}
+
 /** Retourne les prochains événements célestes dans une fenêtre déterministe. */
 export function findUpcomingAstronomicalEvents(
   startDate: Date,

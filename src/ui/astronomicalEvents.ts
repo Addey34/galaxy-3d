@@ -1,5 +1,6 @@
 import './astronomicalEvents.css';
 import {
+  eventFocusBody,
   findUpcomingAstronomicalEvents,
   type AstronomicalEvent,
 } from '@/core/astronomicalEvents';
@@ -40,33 +41,6 @@ const EVENT_KEYS: Record<AstronomicalEvent['kind'], string> = {
   opposition: 'events.opposition',
   conjunction: 'events.conjunction',
 };
-
-/**
- * Corps sur lequel recadrer la caméra pour chaque type d'événement.
- * Phases + éclipses lunaires → la Lune (l'astre observé) ; éclipses solaires,
- * saisons et apsides → la Terre (l'observateur / l'ombre au sol). Opposition/conjonction
- * n'ont pas d'entrée ici : le corps varie par événement, lu depuis `event.body` (cf.
- * `focusBody` ci-dessous).
- */
-const FOCUS_BODY: Partial<Record<AstronomicalEvent['kind'], string>> = {
-  'new-moon': 'moon',
-  'first-quarter': 'moon',
-  'full-moon': 'moon',
-  'third-quarter': 'moon',
-  'lunar-eclipse': 'moon',
-  'solar-eclipse': 'earth',
-  'march-equinox': 'earth',
-  'june-solstice': 'earth',
-  'september-equinox': 'earth',
-  'december-solstice': 'earth',
-  perihelion: 'earth',
-  aphelion: 'earth',
-};
-
-/** Corps sur lequel recadrer la caméra : `event.body` (opposition/conjonction) sinon FOCUS_BODY. */
-function focusBody(event: AstronomicalEvent): string {
-  return event.body ?? FOCUS_BODY[event.kind] ?? 'earth';
-}
 
 function eventLabel(event: AstronomicalEvent): string {
   const label = t(EVENT_KEYS[event.kind]);
@@ -225,7 +199,7 @@ export function setupAstronomicalEvents(
         om.addTimeOffset(deltaDays);
         onDateChange?.();
         // 3. Recadre la caméra sur le corps observé (Lune, Terre…).
-        navigation?.selectBody(focusBody(event));
+        navigation?.selectBody(eventFocusBody(event));
         setOpen(false);
       });
       list.append(row);

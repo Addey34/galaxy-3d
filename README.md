@@ -345,7 +345,7 @@ donner des raisons de revenir, enfin en faire une référence.
 Les trois étapes sont livrées : permaliens, événements astronomiques, zoom optique FOV, visite
 guidée, lunes majeures sur éphémérides réelles, mode hors-ligne (PWA), tours guidés scriptés,
 missions spatiales, filtres de petits corps, mode capture, WebXR, une page indexable par corps
-avec sa propre vignette de partage, et les trois objets interstellaires connus (1I/ʻOumuamua,
+avec sa propre vignette de partage, une page par éclipse de 2024 à 2035, et les trois objets interstellaires connus (1I/ʻOumuamua,
 2I/Borisov, 3I/ATLAS) sur leur vraie trajectoire hyperbolique. Ce qui reste demande du matériel ou un humain : confirmer le
 vol libre WebXR sur un vrai casque, une passe lecteur d'écran (NVDA/VoiceOver) et une mesure FPS
 sur GPU physique.
@@ -369,8 +369,9 @@ corps céleste (catalogue + textures + vérification), le workflow de PR et les 
 Le site public est hébergé sur Firebase Hosting (`galaxy-ag`). La CI GitHub vérifie le projet ; le déploiement est réalisé sur Firebase Hosting.
 
 Le build émet, en plus du bundle, une page statique indexable par corps (`dist/jupiter/index.html`),
-le sitemap complet et une vignette de partage par corps (`dist/social/jupiter.jpg`, rendue depuis
-la texture déjà versionnée du corps). Tout cela est dérivé du catalogue et régénéré à chaque
+une page par éclipse solaire ou lunaire de 2024 à 2035 (`dist/eclipse/2026-08-12/index.html`, qui
+ouvre l'application au pic de l'éclipse), le sitemap complet et une vignette de partage par corps
+(`dist/social/jupiter.jpg`, rendue depuis la texture déjà versionnée du corps). Tout cela est dérivé du catalogue et régénéré à chaque
 build : rien n'est committé. Voir `docs/ARCHITECTURE.md` § « Pages d'atterrissage par corps ».
 
 ```bash

@@ -160,13 +160,23 @@ function bodyRingVisual(
   };
 }
 
-export interface BodyPage {
-  /** Segment d'URL, en minuscules — `/jupiter`. */
-  slug: string;
-  displayName: string;
+/**
+ * Ce que toute page d'atterrissage réécrit dans `index.html` — corps ou éclipse. Le reste de
+ * chaque type de page (faits, vignette à peindre, événement) vit dans son propre module.
+ */
+export interface LandingPage {
   title: string;
   description: string;
   heading: string;
+  canonical: string;
+  image: string;
+  imageAlt: string;
+}
+
+export interface BodyPage extends LandingPage {
+  /** Segment d'URL, en minuscules — `/jupiter`. */
+  slug: string;
+  displayName: string;
   summary: string;
   facts: BodyFact[];
   canonical: string;
@@ -432,6 +442,39 @@ export function renderBodyPage(
   page: BodyPage,
   origin = new URL(page.canonical).origin
 ): string {
+  // Données structurées PROPRES à la page. Sans cela, cinquante et une pages annonceraient la
+  // même entité `WebApplication`, mots-clés compris — de la donnée structurée dupliquée, ce que
+  // ces pages existent précisément pour éviter. Ici chaque page se décrit elle-même et se
+  // rattache à l'application, ce qui est à la fois vrai et distinct.
+  return renderLandingPage(baseHtml, page, contentBlock(page), {
+    '@context': 'https://schema.org',
+    '@type': 'WebPage',
+    name: page.title,
+    description: page.description,
+    url: page.canonical,
+    inLanguage: 'en',
+    isPartOf: {
+      '@type': 'WebApplication',
+      name: 'Solar System 3D',
+      url: `${origin}/`,
+      applicationCategory: 'EducationalApplication',
+    },
+    about: { '@type': 'Thing', name: page.displayName },
+  });
+}
+
+/**
+ * Réécrit les balises de tête, les données structurées et le contenu textuel d'`index.html`.
+ * Partagé par les pages de corps et d'éclipse : les quatre contraintes de l'en-tête (fichier
+ * statique, pas de script en ligne, contenu réel, repère absent = build cassé) valent pour les
+ * deux, et une seule implémentation les tient.
+ */
+export function renderLandingPage(
+  baseHtml: string,
+  page: LandingPage,
+  block: string,
+  structuredData: object
+): string {
   let html = baseHtml;
   html = replaceBetween(html, '<title>', '</title>', escapeHtml(page.title));
   html = replaceAttrAfter(
@@ -483,32 +526,13 @@ export function renderBodyPage(
     page.description
   );
 
-  // Données structurées PROPRES à la page. Sans cela, cinquante et une pages annonceraient la
-  // même entité `WebApplication`, mots-clés compris — de la donnée structurée dupliquée, ce que
-  // ces pages existent précisément pour éviter. Ici chaque page se décrit elle-même et se
-  // rattache à l'application, ce qui est à la fois vrai et distinct.
   html = replaceBetween(
     html,
     '<script type="application/ld+json">',
     '</script>',
-    JSON.stringify({
-      '@context': 'https://schema.org',
-      '@type': 'WebPage',
-      name: page.title,
-      description: page.description,
-      url: page.canonical,
-      inLanguage: 'en',
-      isPartOf: {
-        '@type': 'WebApplication',
-        name: 'Solar System 3D',
-        url: `${origin}/`,
-        applicationCategory: 'EducationalApplication',
-      },
-      about: { '@type': 'Thing', name: page.displayName },
-    })
+    JSON.stringify(structuredData)
   );
 
-  const block = contentBlock(page);
   html = replaceBetween(
     html,
     '<h1 class="sr-only">',
@@ -532,9 +556,9 @@ export function renderBodyPage(
   return html;
 }
 
-/** Sitemap complet : accueil, confidentialité, puis un `url` par corps. */
+/** Sitemap complet : accueil, confidentialité, puis un `url` par page (corps, éclipses). */
 export function renderSitemap(
-  pages: BodyPage[],
+  pages: readonly Pick<LandingPage, 'canonical'>[],
   origin: string,
   lastmod: string
 ): string {

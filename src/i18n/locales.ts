@@ -21,6 +21,14 @@ export const messages: Record<Locale, Dict> = {
     // anglaise reprend mot pour mot celle que `src/seo` écrit dans les pages statiques, pour
     // qu'un rechargement ne change rien de visible.
     'title.body': '{name} in 3D — live position and orbit',
+    // Pages d'éclipse (`/eclipse/2026-08-12/`) : une clé par combinaison type × astre que le
+    // calcul produit réellement — `src/seo/titleParity.test.ts` le vérifie sur les 53 éclipses.
+    'title.eclipse.solar.total': 'Total solar eclipse of {date} in 3D',
+    'title.eclipse.solar.annular': 'Annular solar eclipse of {date} in 3D',
+    'title.eclipse.solar.partial': 'Partial solar eclipse of {date} in 3D',
+    'title.eclipse.lunar.total': 'Total lunar eclipse of {date} in 3D',
+    'title.eclipse.lunar.partial': 'Partial lunar eclipse of {date} in 3D',
+    'title.eclipse.lunar.penumbral': 'Penumbral lunar eclipse of {date} in 3D',
     'title.overview':
       '3D Solar System: Real-Time Interactive Visualizer | Explore the Planets',
     'loader.init': 'Initializing...',
@@ -349,6 +357,15 @@ export const messages: Record<Locale, Dict> = {
   fr: {
     // ── Écran de chargement ──
     'title.body': '{name} en 3D — position et orbite en direct',
+    'title.eclipse.solar.total': 'Éclipse totale de Soleil du {date} en 3D',
+    'title.eclipse.solar.annular':
+      'Éclipse annulaire de Soleil du {date} en 3D',
+    'title.eclipse.solar.partial':
+      'Éclipse partielle de Soleil du {date} en 3D',
+    'title.eclipse.lunar.total': 'Éclipse totale de Lune du {date} en 3D',
+    'title.eclipse.lunar.partial': 'Éclipse partielle de Lune du {date} en 3D',
+    'title.eclipse.lunar.penumbral':
+      'Éclipse de Lune par la pénombre du {date} en 3D',
     'title.overview':
       'Système solaire en 3D : visualiseur interactif en temps réel',
     'loader.init': 'Initialisation…',
