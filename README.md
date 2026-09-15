@@ -154,7 +154,7 @@ src/
 ├── core/
 │   ├── EphemerisService.ts   # Wrapper astronomy-engine → positions en UA (prend des enums Body)
 │   ├── frames.ts             # ⓟ Repères : équatorial J2000 → écliptique → Three.js
-│   ├── kepler.ts             # ⓟ Éléments orbitaux → position écliptique
+│   ├── kepler.ts             # ⓟ Éléments orbitaux → position écliptique (ellipse et hyperbole)
 │   ├── twoBodyPropagation.ts # ⓟ Propagation d'un état (position + vitesse) sur sa conique
 │   ├── SimulationClock.ts    # Horloge simulée avec time travel et vitesse variable
 │   ├── ScaleService.ts       # Conversion UA → unités Three.js (modes educ/explo)
@@ -344,8 +344,9 @@ donner des raisons de revenir, enfin en faire une référence.
 
 Les trois étapes sont livrées : permaliens, événements astronomiques, zoom optique FOV, visite
 guidée, lunes majeures sur éphémérides réelles, mode hors-ligne (PWA), tours guidés scriptés,
-missions spatiales, filtres de petits corps, mode capture, WebXR, et une page indexable par corps
-avec sa propre vignette de partage. Ce qui reste demande du matériel ou un humain : confirmer le
+missions spatiales, filtres de petits corps, mode capture, WebXR, une page indexable par corps
+avec sa propre vignette de partage, et les trois objets interstellaires connus (1I/ʻOumuamua,
+2I/Borisov, 3I/ATLAS) sur leur vraie trajectoire hyperbolique. Ce qui reste demande du matériel ou un humain : confirmer le
 vol libre WebXR sur un vrai casque, une passe lecteur d'écran (NVDA/VoiceOver) et une mesure FPS
 sur GPU physique.
 
@@ -397,6 +398,10 @@ avec des orbites relatives keplerienne et des mosaiques Cassini/Voyager validees
 Triton, Charon, Phobos et Deimos sont navigables avec des vecteurs locaux Horizons relatifs au
 parent et des textures USGS/NASA. Les provenances et licences sont tracees dans
 scripts/texture-sources.json (bloc `imported`).
+Les trois objets interstellaires (1I/ʻOumuamua, 2I/Borisov, 3I/ATLAS) sont traces en couche
+instrument 2D, en Educatif comme en Exploration, sur leur trajectoire hyperbolique : elements
+JPL Horizons a l'epoque de chaque solution (`pnpm ephemeris:interstellar`), positions verifiees
+contre les vecteurs Horizons sur ±20 ans autour du perihelie.
 
 La feuille de route complete distingue :
 

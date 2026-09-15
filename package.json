@@ -15,6 +15,7 @@
     "test:perf": "playwright test e2e/perf-fps.spec.ts",
     "ephemeris:generate": "node scripts/generate-horizons-ephemerides.mjs",
     "ephemeris:elements": "node scripts/derive-relative-elements.mjs",
+    "ephemeris:interstellar": "node scripts/derive-interstellar-elements.mjs",
     "spk:stage": "node scripts/stage-sat441.mjs",
     "spk:verify": "node scripts/verify-spk-range.mjs",
     "icons:generate": "node scripts/generate-icons.mjs",

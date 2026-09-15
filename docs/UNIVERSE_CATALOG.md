@@ -13,6 +13,7 @@ Ce document definit ce que Galaxy peut deja representer, ce qui peut etre ajoute
 | Petits corps               | Vesta, Pallas, Hygiea, Halley, Bennu (modele de forme 3D)      | Elements orbitaux Kepler, sans repli Horizons        | Spheres texturees et orbites            |
 | Collections instrumentales | Champ SBDB des petits corps, filtrable par categorie (NEO, cometes, TNO, ceinture principale) | Donnees chargees en couche UI  | Marqueurs 2D, pas de meshes physiques   |
 | Engins spatiaux            | 11 missions, de Voyager 1 a Hayabusa2                          | Binaires Horizons bornes a la couverture reelle de chaque mission | Marqueurs 2D en couche instrument, mode Exploration uniquement |
+| Objets interstellaires     | 1I/ʻOumuamua, 2I/Borisov, 3I/ATLAS                             | Elements hyperboliques Horizons (e > 1), fenetre ±20 ans autour du perihelie | Marqueur + trajectoire 2D en couche instrument, Educatif et Exploration |
 
 Les textures actuelles sont dans public/assets/textures/. Le chargeur supporte actuellement des fichiers JPEG nommes par corps, couche et resolution. Les fichiers ephemerides Horizons sont locaux dans public/assets/ephemerides/ : le rendu deploye ne depend pas d'un appel reseau au demarrage.
 
@@ -108,6 +109,7 @@ Ils necessitent une trajectoire temporelle, un referentiel, une echelle physique
 - [x] Vague C close : onze missions (Voyager 1 et 2, Parker Solar Probe, James Webb, New Horizons, Cassini, Juno, Rosetta, BepiColombo, OSIRIS-REx, Hayabusa2). Hubble exclu pour cause, voir la vague C ci-dessous.
 - [x] Contrat ModelConfig + premier corps a maillage reel : Bennu, modele de forme OSIRIS-REx decime (vague A, asteroides remarquables — Eros, Itokawa, Ryugu, Apophis, Ida restent).
 - [x] Population SBDB filtrable par categorie, en couche instrument 2D (amorce de la vague B pour la ceinture principale et Kuiper).
+- [x] Objets interstellaires 1I/ʻOumuamua, 2I/Borisov et 3I/ATLAS : solveur hyperbolique dans `core/kepler.ts`, elements Horizons a l'epoque de chaque solution (`scripts/derive-interstellar-elements.mjs`), trajectoire bornee a ±20 ans autour du perihelie, la plage verifiee contre les vecteurs Horizons. Les comètes hyperboliques de SBDB restent ecartees : SBDB arrondit `ma` au centieme de degre, ce qui laisse la date de perihelie d'une orbite quasi parabolique libre de centaines de jours.
 
 Le catalogue fait foi, pas cette liste, et **rien ne verifie qu'elle reste juste** : elle a deja
 derive une fois, en omettant quinze lunes, quatre transneptuniens et quatre missions deja livres.

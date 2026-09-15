@@ -207,6 +207,35 @@ une corde droite de 130° en travers du périhélie, et la courbe n'atteignait j
 minimale. Les points sont donc répartis uniformément en **anomalie excentrique** dès que
 e ≥ 0,2 — seule la répartition change, jamais la courbe.
 
+### Trajectoires ouvertes : les objets interstellaires
+
+1I/ʻOumuamua, 2I/Borisov et 3I/ATLAS suivent une hyperbole (e > 1). Ils ne passent **pas** par
+`OrbitalMechanics` ni par le catalogue : pas de mesh (quelques centaines de mètres, invisibles à
+vraie échelle), donc couche instrument 2D, `ui/interstellarOverlay.ts`. Quatre règles :
+
+- **Le solveur n'est pas celui de l'ellipse.** `solveHyperbolicKepler` résout
+  `M = e·sinh F − F` ; M n'est pas un angle et ne se réduit **jamais** modulo 2π (Horizons donne
+  818° pour 3I à son époque). `keplerianPositionEcliptic` aiguille sur e > 1 ; a est négatif,
+  convention Horizons.
+- **Les éléments viennent d'Horizons, à l'époque de sa propre solution**
+  (`scripts/derive-interstellar-elements.mjs`, `pnpm ephemeris:interstellar`, cible vérifiée par
+  son nom). Mesuré contre 21 vecteurs Horizons, accélérations non gravitationnelles comprises :
+  ≤ 0,1 % de la distance sur ±20 ans, 0,3 % au périhélie de 1I (0,26 UA).
+- **Une trajectoire ouverte n'a pas de tour complet : sa fenêtre est bornée**, à ±20 ans autour
+  du périhélie — exactement la plage vérifiée. Hors fenêtre, ni marqueur ni ligne. La ligne ne
+  dépend donc pas de la date : calculée une fois, seule sa projection change par frame.
+- **La ligne est répartie en anomalie hyperbolique F**, pas dans le temps. En temps uniforme,
+  1I franchissait 178,5° entre deux points consécutifs et ne descendait jamais sous 2,17 × q :
+  le défaut de Halley en pire. En F : 3,7° au pire, 1,0003 × q.
+
+La couche est active dans les **deux** modes. En Éducatif chaque point subit la compression √
+des planètes, et pendant la transition elle lit `OrbitalMechanics.scaleMorph`, le même facteur
+que les corps — sans quoi la trajectoire décrocherait d'eux pendant 1,2 s.
+
+**Pourquoi SBDB écarte toujours e ≥ 1** (`core/sbdb.ts`) : ce n'est plus faute de solveur.
+SBDB arrondit `ma` au centième de degré ; pour une comète quasi parabolique (a ≈ −2900 UA) cela
+laisse la date du périhélie libre de ±800 jours. Il faudrait `tp` et `q` pour les positionner.
+
 ### Tests qui verrouillent tout ça
 
 | Fichier | Ce qu'il garde |
@@ -216,6 +245,8 @@ e ≥ 0,2 — seule la répartition change, jamais la courbe.
 | `core/satelliteOrbitRate.test.ts` | la cadence du repli, sur la sortie observable |
 | `core/twoBodyPropagation.test.ts` | la propagation, jusqu'à 40 révolutions |
 | `core/orbitLineSampling.test.ts` | amplitude **et** régularité de la ligne, dans les deux modes |
+| `core/kepler.test.ts` | solveur hyperbolique (résidu, M non réduite, vis-viva, asymptote ν∞) |
+| `config/interstellar.test.ts` | 21 vecteurs Horizons de −20 à +20 ans, Tp dérivé, ligne répartie en F |
 | `core/ephemerisPlausibility.test.ts` | les deux bornes, sur 400 dates par fichier |
 | `components/celestial/spinDirection.test.ts` | sens de rotation des 52 corps, dans les deux sens du temps |
 

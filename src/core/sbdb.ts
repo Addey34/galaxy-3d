@@ -35,7 +35,8 @@ const REQUIRED_FIELDS = ['a', 'e', 'i', 'om', 'w', 'ma', 'epoch'] as const;
 /**
  * Convertit la réponse tabulaire SBDB (`fields` + `data`) en corps exploitables.
  * Robuste : ignore silencieusement les lignes aux éléments manquants/non finis ou
- * non elliptiques (a ≤ 0, e ≥ 1), et renvoie `[]` si un champ requis est absent.
+ * non elliptiques (a ≤ 0, e ≥ 1 — voir la raison dans la boucle), et renvoie `[]` si un
+ * champ requis est absent.
  *
  * Unités SBDB : a en UA ; i, om (Ω), w (ω), ma (M) en degrés ; epoch en JD.
  */
@@ -63,7 +64,14 @@ export function parseSbdbRows(
     const epochJd = Number(row[cols.epoch]);
 
     if (![a, e, i, om, w, ma, epochJd].every(Number.isFinite)) continue;
-    if (a <= 0 || e >= 1) continue; // orbites elliptiques uniquement
+    // Orbites elliptiques uniquement — et plus faute de solveur : `kepler.ts` résout les
+    // hyperboles. C'est la DONNÉE qui ne suffit pas. SBDB arrondit `ma` au centième de degré ;
+    // pour une comète quasi parabolique (C/1847 J1 : a = −2926 UA, e = 1,0007, ma = « -0.00 »),
+    // le mouvement moyen vaut 6e-6 °/jour, donc cet arrondi laisse la date du périhélie libre
+    // de ±800 jours. Les propager placerait ces comètes à des années près, sans erreur visible.
+    // Il faudrait `tp` et `q` pour les positionner ; les objets interstellaires, eux, viennent
+    // d'éléments Horizons à pleine précision (`config/interstellar.ts`).
+    if (a <= 0 || e >= 1) continue;
 
     const rawName = nameCol >= 0 ? row[nameCol] : `sb-${r}`;
     out.push({

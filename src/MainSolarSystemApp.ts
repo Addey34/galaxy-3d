@@ -37,6 +37,7 @@ import { setupAstronomicalEvents } from './ui/astronomicalEvents';
 import { setupOpticalZoom } from './ui/opticalZoom';
 import { ExploHud } from './ui/exploHud';
 import { SmallBodyOverlay } from './ui/smallBodyOverlay';
+import { InterstellarOverlay } from './ui/interstellarOverlay';
 import { setupSmallBodyFilters } from './ui/smallBodyFilters';
 import { SpacecraftOverlay } from './ui/spacecraftOverlay';
 import { SPACECRAFT_MISSIONS } from './config/spacecraft';
@@ -282,6 +283,12 @@ if (surfaceScrim) {
     const spacecraftOverlay = new SpacecraftOverlay(SPACECRAFT_MISSIONS);
     spacecraftOverlay.mount();
 
+    // Objets interstellaires — couche instrument 2D active dans les DEUX modes : leur
+    // trajectoire ouverte se lit justement dans la vue compressée (cf. interstellarOverlay.ts).
+    const interstellarOverlay = new InterstellarOverlay();
+    interstellarOverlay.mount();
+    interstellarOverlay.setActive(true);
+
     // Le bloc live de la fiche (distance réelle + temps-lumière) n'a de sens qu'en Explo,
     // pour la cible suivie ; en Éducatif ou en vue libre on passe `null` → bloc masqué.
     let currentMode: 'educ' | 'explo' = 'educ';
@@ -295,6 +302,11 @@ if (surfaceScrim) {
         cameraSystem.camera,
         orbitalMechanics.simulationDate,
         horizonsEphemeris
+      );
+      interstellarOverlay.update(
+        cameraSystem.camera,
+        orbitalMechanics.simulationDate,
+        orbitalMechanics.scaleMorph
       );
       bodyInfo.updateLive(
         currentMode === 'explo'

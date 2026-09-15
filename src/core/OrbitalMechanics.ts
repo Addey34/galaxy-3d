@@ -578,6 +578,14 @@ export class OrbitalMechanics {
   get scaleMode(): 'educ' | 'explo' {
     return this.scale.mode;
   }
+  /**
+   * Facteur d'échelle effectivement appliqué aux corps : 0 = Éducatif, 1 = Explo, entre les
+   * deux pendant la transition animée. Les couches qui dessinent hors du graphe de scène
+   * (instrument 2D) le lisent pour rester collées aux corps pendant le morph.
+   */
+  get scaleMorph(): number {
+    return this._morph;
+  }
   get simulationDate(): Date {
     return this.clock.date;
   }

@@ -1754,6 +1754,7 @@ body.is-capturing #surface-scrim,
 body.is-capturing #explo-labels,
 body.is-capturing #smallbody-overlay,
 body.is-capturing #spacecraft-overlay,
+body.is-capturing #interstellar-overlay,
 body.is-capturing #loader {
   display: none;
 }
@@ -2440,6 +2441,19 @@ body.is-capturing #loader {
   transition: opacity 0.3s ease;
 }
 #spacecraft-overlay.is-visible {
+  opacity: 1;
+}
+
+/* Objets interstellaires — même couche que les sondes, mais active en Éducatif ET Explo. */
+#interstellar-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 21;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+#interstellar-overlay.is-visible {
   opacity: 1;
 }
 

@@ -83,6 +83,14 @@ y a été vérifiée falsifiable : on réintroduit le défaut, on confirme que l
 Playwright couvre le boot, loader, navigation, sélection 3D, modes, labels, i18n, mobile, petits
 corps, permaliens, événements astronomiques, zoom optique, visite guidée et accessibilité.
 
+**Objets interstellaires** : `config/interstellar.test.ts` compare les positions à 21 vecteurs
+d'état Horizons relevés en direct, avant, au et après chaque périhélie, jusqu'aux bords de la
+fenêtre affichée. `e2e/interstellar.spec.ts` lit ce qu'une couche canvas a peint via deux
+attributs, `data-markers` et `data-tracks`. Le second existe pour une raison apprise en
+falsifiant : hors fenêtre les objets sont à plus de 116 UA, donc hors champ, et « zéro marqueur »
+restait vrai **sans** la borne. Un compte qui peut valoir zéro pour une autre raison que celle
+qu'on teste ne prouve rien ; il faut compter la chose elle-même.
+
 **Un cran au-dessus du câblage : `e2e/terminator.spec.ts` compte des PIXELS.** C'est la seule
 partie de la suite qui juge l'image et non la plomberie, et elle existe pour une raison précise :
 deux défauts de terminateur livrés de suite sont passés sous des tests unitaires verts. Les

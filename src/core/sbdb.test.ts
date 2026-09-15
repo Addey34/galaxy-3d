@@ -49,6 +49,18 @@ describe('parseSbdbRows', () => {
 
   it('skips non-elliptic and non-finite rows', () => {
     const rows = [
+      // a<0, e>1. Solvable depuis kepler.ts, mais le `ma` arrondi de SBDB ne date pas le
+      // périhélie d'une orbite quasi parabolique (cf. parseSbdbRows) : ligne réelle.
+      [
+        'C/1847 J1 (Colla)',
+        '-2926',
+        '1.0007',
+        '100.42',
+        '176.08',
+        '32.36',
+        '-0.00',
+        '2395800.5',
+      ],
       ['hyperbolic', '-3.2', '1.4', '10', '20', '30', '40', '2451545.0'], // a<0, e>1
       ['garbage', 'x', 'y', 'z', '0', '0', '0', '2451545.0'], // non-finite
       ['ok', '2.5', '0.1', '5', '10', '15', '20', '2451545.0'],

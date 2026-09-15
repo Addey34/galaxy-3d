@@ -34,12 +34,18 @@ codée en dur ailleurs.
 | une éphéméride `astronomy-engine` (planètes, Lune, lunes galiléennes) | `astroBody` (enum `Body`) directement                           |
 | une orbite bien connue mais pas d'éphéméride native                   | `HorizonsEphemerisService` — générer un binaire (voir plus bas) |
 | aucun des deux (petit corps, astéroïde, comète, TNO)                  | `config/smallBodies.ts` — éléments képlériens (`kepler.ts`)     |
+| une trajectoire ouverte (objet interstellaire, e > 1)                 | `config/interstellar.ts` — `pnpm ephemeris:interstellar`        |
 
 **N'inventez jamais de position.** Toute donnée orbitale doit venir de JPL Horizons ou d'une
 source publiée équivalente, vérifiée à l'époque exacte utilisée. Le projet a déjà eu plusieurs
 bugs réels de ce type (positions décalées silencieusement, aucune erreur, aucun log — cherchez
 « Horizons » dans l'historique git pour le détail). La leçon : toujours comparer la position
 calculée à un vecteur d'état JPL réel avant de committer.
+
+Une trajectoire hyperbolique ajoute deux pièges : son anomalie moyenne ne se réduit **jamais**
+modulo 360° (Horizons donne 818° pour 3I/ATLAS, et c'est juste), et elle n'a pas de période, donc
+sa ligne doit être bornée par une fenêtre et répartie en anomalie hyperbolique, pas dans le temps.
+Les deux sont tenus par `src/config/interstellar.test.ts`.
 
 #### Cas particulier : une lune
 

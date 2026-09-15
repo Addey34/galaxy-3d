@@ -7,9 +7,11 @@
  * Repère : héliocentrique écliptique J2000 (le repère des éléments JPL Small-Body Database
  * et du Minor Planet Center). Le mapping vers Three.js est délégué à `frames.eclipticToScene`.
  *
- * Modèle : orbite elliptique fixe (deux corps). Suffisant à l'échelle de la visualisation ;
- * les perturbations planétaires ne sont pas modélisées — rafraîchir les éléments (nouvelle
- * époque) pour la précision long terme, comme le font les catalogues.
+ * Modèle : conique fixe (deux corps) — ellipse (e < 1) ou hyperbole (e > 1, objets
+ * interstellaires). Suffisant à l'échelle de la visualisation ; les perturbations planétaires
+ * ne sont pas modélisées — rafraîchir les éléments (nouvelle époque) pour la précision long
+ * terme, comme le font les catalogues. La parabole exacte (e = 1) n'a pas de demi-grand axe
+ * fini et n'est pas prise en charge.
  */
 
 /**
@@ -17,9 +19,12 @@
  * Convention JPL/MPC (héliocentrique écliptique J2000).
  */
 export interface OrbitalElements {
-  /** Demi-grand axe (UA). Doit être > 0 (orbites elliptiques uniquement). */
+  /**
+   * Demi-grand axe (UA). > 0 pour une ellipse ; < 0 pour une hyperbole, convention JPL
+   * (a = q / (1 − e), celle que renvoie Horizons dans son champ `A`).
+   */
   semiMajorAxisAU: number;
-  /** Excentricité (0 = cercle, < 1 = ellipse). */
+  /** Excentricité (0 = cercle, < 1 = ellipse, > 1 = hyperbole). */
   eccentricity: number;
   /** Inclinaison sur l'écliptique (rad). */
   inclinationRad: number;
@@ -27,7 +32,11 @@ export interface OrbitalElements {
   ascendingNodeRad: number;
   /** Argument du périhélie ω (rad). */
   argPerihelionRad: number;
-  /** Anomalie moyenne à l'époque M₀ (rad). */
+  /**
+   * Anomalie moyenne à l'époque M₀ (rad). Pour une hyperbole elle n'est PAS périodique et ne
+   * se réduit jamais modulo 2π : Horizons donne 818° pour 3I/ATLAS à son époque, et c'est
+   * bien 818° qu'il faut propager.
+   */
   meanAnomalyAtEpochRad: number;
   /** Époque de référence des éléments (date à laquelle M = M₀). */
   epoch: Date;
@@ -67,18 +76,18 @@ function daysBetween(a: Date, b: Date): number {
  * par itération de Newton-Raphson. Converge en quelques itérations pour e < 1.
  *
  * @param meanAnomaly  anomalie moyenne M (rad), quelconque (non normalisée requise)
- * @param eccentricity excentricité e (0 ≤ e < 1) — une valeur ≥ 1 (parabolique/hyperbolique)
- *   n'est PAS supportée par cette forme elliptique : Newton-Raphson diverge ou converge vers
- *   un résultat faux sans le signaler. On avertit en dev et on clampe pour rester stable plutôt
- *   que de renvoyer une position silencieusement erronée (cf. handoff : jeu de données courant
- *   tout elliptique, mais un futur import SBDB en direct pourrait fournir e ≥ 1 sans le savoir).
+ * @param eccentricity excentricité e (0 ≤ e < 1) — une valeur ≥ 1 n'a pas de sens pour cette
+ *   forme elliptique : Newton-Raphson diverge ou converge vers un résultat faux sans le
+ *   signaler. On avertit en dev et on clampe pour rester stable plutôt que de renvoyer une
+ *   position silencieusement erronée. Une hyperbole passe par `solveHyperbolicKepler`
+ *   (`keplerianPositionEcliptic` aiguille selon e).
  */
 export function solveKepler(meanAnomaly: number, eccentricity: number): number {
   if (eccentricity >= 1 || eccentricity < 0) {
     if (import.meta.env?.DEV) {
       console.warn(
-        `[kepler] eccentricity ${eccentricity} is outside the supported elliptical range [0, 1) — clamping. ` +
-          'Parabolic/hyperbolic orbits need a dedicated solver (not implemented).'
+        `[kepler] eccentricity ${eccentricity} is outside the elliptical range [0, 1) — clamping. ` +
+          'Use solveHyperbolicKepler for e > 1; parabolic orbits (e = 1) are not supported.'
       );
     }
     eccentricity = Math.min(Math.max(eccentricity, 0), 0.999);
@@ -102,9 +111,80 @@ export function solveKepler(meanAnomaly: number, eccentricity: number): number {
 }
 
 /**
+ * Résout l'équation de Kepler HYPERBOLIQUE `M = e·sinh(F) − F` pour l'anomalie hyperbolique
+ * F (rad), par Newton-Raphson.
+ *
+ * Deux différences avec la forme elliptique, et chacune est un piège si on la recopie :
+ *   - M n'est pas un angle. Une trajectoire ouverte ne repasse jamais au même point, donc on
+ *     ne la réduit surtout pas modulo 2π (3I/ATLAS : M = 818° à son époque Horizons) ;
+ *   - F croît comme ln(M) : la graine M + e·sin(M) de l'ellipse n'a plus de sens. On part de
+ *     F₀ = signe(M)·ln(2|M|/e + 1,8) (Danby 1988), qui suit ce logarithme aux grands |M| et
+ *     vaut 0 en M = 0.
+ *
+ * Convergence garantie : f(F) = e·sinh F − F − M est convexe pour F > 0 (f'' = e·sinh F) et
+ * impaire en (F, M), donc Newton converge de manière monotone après au plus un dépassement.
+ *
+ * @param meanAnomaly  anomalie moyenne hyperbolique M (rad), non bornée
+ * @param eccentricity excentricité e > 1 — sinon RangeError : il n'existe aucune valeur
+ *   « proche » à renvoyer, et une position fausse silencieuse est le pire résultat possible.
+ */
+export function solveHyperbolicKepler(
+  meanAnomaly: number,
+  eccentricity: number
+): number {
+  if (!(eccentricity > 1)) {
+    throw new RangeError(
+      `[kepler] hyperbolic solver needs e > 1, got ${eccentricity}`
+    );
+  }
+  const m = meanAnomaly;
+  let f = Math.sign(m) * Math.log((2 * Math.abs(m)) / eccentricity + 1.8);
+  for (let i = 0; i < 50; i++) {
+    const residual = eccentricity * Math.sinh(f) - f - m;
+    const slope = eccentricity * Math.cosh(f) - 1;
+    const delta = residual / slope;
+    f -= delta;
+    if (Math.abs(delta) <= 1e-12 * Math.max(1, Math.abs(f))) break;
+  }
+  return f;
+}
+
+/** Mouvement moyen (rad/jour) : période explicite, sinon 3ᵉ loi de Kepler autour du Soleil. */
+function meanMotion(el: OrbitalElements): number {
+  if (el.periodDays && el.periodDays > 0) return (2 * Math.PI) / el.periodDays;
+  const a = Math.abs(el.semiMajorAxisAU);
+  return GAUSS_K / Math.sqrt(a * a * a);
+}
+
+/** Anomalie moyenne à une date (rad), non réduite. */
+function meanAnomalyAt(el: OrbitalElements, date: Date): number {
+  return (
+    el.meanAnomalyAtEpochRad + meanMotion(el) * daysBetween(date, el.epoch)
+  );
+}
+
+/**
+ * Position dans le plan orbital (repère périfocal : X vers le périhélie, Y à 90° dans le sens
+ * du mouvement) pour une anomalie hyperbolique F. |a| porte la géométrie, quel que soit le
+ * signe de la convention : r = |a|·(e·cosh F − 1), qui vaut bien q = |a|·(e − 1) en F = 0.
+ */
+function hyperbolicPerifocal(
+  el: OrbitalElements,
+  f: number
+): { xOrb: number; yOrb: number } {
+  const a = Math.abs(el.semiMajorAxisAU);
+  const e = el.eccentricity;
+  return {
+    xOrb: a * (e - Math.cosh(f)),
+    yOrb: a * Math.sqrt(e * e - 1) * Math.sinh(f),
+  };
+}
+
+/**
  * Position héliocentrique écliptique J2000 (UA) d'un corps à une date donnée, à partir de
  * ses éléments orbitaux. Retourne un triplet `{ x, y, z }` (x vers l'équinoxe vernal,
  * z vers le pôle nord écliptique) — passer à `frames.eclipticToScene` pour le repère Three.js.
+ * Aiguille sur la forme hyperbolique dès que e > 1.
  */
 export function keplerianPositionEcliptic(
   el: OrbitalElements,
@@ -113,13 +193,14 @@ export function keplerianPositionEcliptic(
   const a = el.semiMajorAxisAU;
   const e = el.eccentricity;
 
-  // Mouvement moyen (rad/jour) puis anomalie moyenne à la date. La période explicite prime :
-  // la loi de Gauss ci-dessous suppose le Soleil au foyer (cf. `periodDays`).
-  const n =
-    el.periodDays && el.periodDays > 0
-      ? (2 * Math.PI) / el.periodDays
-      : GAUSS_K / Math.sqrt(a * a * a);
-  const M = el.meanAnomalyAtEpochRad + n * daysBetween(date, el.epoch);
+  // Anomalie moyenne à la date. La période explicite prime : la loi de Gauss suppose le
+  // Soleil au foyer (cf. `periodDays`).
+  const M = meanAnomalyAt(el, date);
+
+  if (e > 1) {
+    const { xOrb, yOrb } = hyperbolicPerifocal(el, solveHyperbolicKepler(M, e));
+    return perifocalToEcliptic(el, xOrb, yOrb);
+  }
 
   const E = solveKepler(M, e);
 
@@ -128,8 +209,56 @@ export function keplerianPositionEcliptic(
   const sinE = Math.sin(E);
   const xOrb = a * (cosE - e);
   const yOrb = a * Math.sqrt(1 - e * e) * sinE;
+  return perifocalToEcliptic(el, xOrb, yOrb);
+}
 
-  // Rotation périfocal → écliptique : R_z(Ω) · R_x(i) · R_z(ω).
+/**
+ * Date du passage au périhélie d'une trajectoire hyperbolique (M = 0). Dérivée des éléments
+ * plutôt que stockée à côté : une seule source, donc pas deux valeurs qui pourraient diverger.
+ */
+export function hyperbolicPerihelionDate(el: OrbitalElements): Date {
+  const days = -el.meanAnomalyAtEpochRad / meanMotion(el);
+  return new Date(el.epoch.getTime() + days * MS_PER_DAY);
+}
+
+/**
+ * Points d'une trajectoire hyperbolique entre deux dates, pour tracer sa ligne.
+ *
+ * Une trajectoire ouverte n'a pas de période : il n'y a pas de « tour complet » à tracer, et
+ * la ligne doit être bornée par une fenêtre. Dans cette fenêtre, les points sont répartis
+ * uniformément en ANOMALIE HYPERBOLIQUE F, pas dans le temps. C'est le même défaut que celui
+ * de Halley (cf. `OrbitPathBuilder.orbitSampleDate`), en pire. Mesuré sur ±20 ans, 512 points :
+ * en temps uniforme, 1I/ʻOumuamua franchit 178,5° entre deux points consécutifs et la ligne ne
+ * descend jamais sous 2,17 × q — tout le virage du périhélie tient dans UNE corde droite (3I :
+ * 45°, 2I : 21°). En F uniforme : 3,7° au pire, et 1,0003 × q. La longueur d'arc
+ * |d(pos)/dF| = |a|·√(e²·cosh²F − 1) ne varie plus que comme la distance elle-même.
+ *
+ * `count` ≥ 2 points, extrémités incluses. Aucun point n'est projeté hors de la fenêtre.
+ */
+export function sampleHyperbolicTrajectory(
+  el: OrbitalElements,
+  from: Date,
+  to: Date,
+  count: number
+): { x: number; y: number; z: number }[] {
+  const e = el.eccentricity;
+  const fFrom = solveHyperbolicKepler(meanAnomalyAt(el, from), e);
+  const fTo = solveHyperbolicKepler(meanAnomalyAt(el, to), e);
+  const points: { x: number; y: number; z: number }[] = [];
+  for (let i = 0; i < count; i++) {
+    const f = fFrom + ((fTo - fFrom) * i) / (count - 1);
+    const { xOrb, yOrb } = hyperbolicPerifocal(el, f);
+    points.push(perifocalToEcliptic(el, xOrb, yOrb));
+  }
+  return points;
+}
+
+/** Rotation périfocal → écliptique : R_z(Ω) · R_x(i) · R_z(ω). */
+function perifocalToEcliptic(
+  el: OrbitalElements,
+  xOrb: number,
+  yOrb: number
+): { x: number; y: number; z: number } {
   const cosO = Math.cos(el.ascendingNodeRad);
   const sinO = Math.sin(el.ascendingNodeRad);
   const cosI = Math.cos(el.inclinationRad);
