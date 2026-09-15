@@ -672,6 +672,14 @@ Les décisions, validées avant le code :
   `eventFocusBody`, désormais dans `core/astronomicalEvents.ts` : panneau et pages appliquent la
   même règle. La vignette de partage est celle de ce corps.
 
+**Service worker, défaut livré puis corrigé** : les deux règles PWA qui protègent les pages de
+corps (`globIgnores`, `navigateFallbackDenylist`) étaient écrites pour UN segment de chemin. Les
+pages d'éclipse en ont deux : elles étaient précachées (installation hors ligne de 1,1 à 3,1 Mio)
+et, chez un visiteur déjà équipé du service worker, remplacées par l'`index.html` en cache — les
+balises de tête de l'accueil. Ni les tests, ni l'e2e, ni le build ne l'ont vu ; c'est la ligne
+`precache 80 entries` du build qui l'a trahi. Les règles vivent désormais dans
+`src/seo/pwaRouting.ts`, et `pwaRouting.test.ts` les confronte à TOUTES les pages générées.
+
 **Piège trouvé en falsifiant** : `Date.parse` accepte `2026-02-31` et le reporte au 3 mars —
 jour d'une vraie éclipse totale de Lune. Le seul garde-fou est l'égalité finale entre le jour
 réécrit de l'éclipse trouvée et le segment lu ; une vérification par aller-retour ajoutée en plus

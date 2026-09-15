@@ -2,6 +2,10 @@ import { fileURLToPath } from 'url';
 import { dirname, resolve } from 'path';
 import { defineConfig } from 'vitest/config';
 import { VitePWA } from 'vite-plugin-pwa';
+import {
+  LANDING_PAGE_GLOB_IGNORES,
+  NAVIGATE_FALLBACK_DENYLIST,
+} from './src/seo/pwaRouting';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -381,11 +385,11 @@ export default defineConfig({
         // Non, mais on relève la borne par sécurité pour ne jamais exclure un chunk.
         maximumFileSizeToCacheInBytes: 4 * 1024 * 1024,
         globPatterns: ['**/*.{js,css,html,ico,svg,woff2}'],
-        // Les 51 pages d'atterrissage sont des quasi-copies de `index.html` : les précacher
-        // triplait le poids de l'installation (1 019 → 2 941 Kio mesurés) pour du contenu que
-        // l'app shell couvre déjà. Elles restent servies par le réseau, ce que la denylist de
-        // `navigateFallback` impose de toute façon.
-        globIgnores: ['*/index.html'],
+        // Les pages d'atterrissage (corps ET éclipses) sont des quasi-copies de `index.html` :
+        // les précacher triplait le poids de l'installation pour du contenu que l'app shell
+        // couvre déjà. Règles et raisons dans `src/seo/pwaRouting.ts`, testées contre toutes
+        // les pages générées — la première version ignorait les pages à deux segments.
+        globIgnores: LANDING_PAGE_GLOB_IGNORES,
         // SPA : toute navigation retombe sur index.html (déjà rewrité côté Firebase).
         navigateFallback: '/index.html',
         // …sauf les pages statiques autonomes (confidentialité) : elles doivent être
@@ -397,7 +401,7 @@ export default defineConfig({
         // mauvais. Motif : un segment unique sans point — ce qui exclut `/`, `/assets/…` et les
         // fichiers. Contrepartie assumée : hors ligne, une URL d'un seul segment INCONNUE ne
         // retombe plus sur l'app ; en ligne la réécriture Firebase s'en charge comme avant.
-        navigateFallbackDenylist: [/^\/privacy\.html$/, /^\/[^/.]+\/?$/],
+        navigateFallbackDenylist: NAVIGATE_FALLBACK_DENYLIST,
         cleanupOutdatedCaches: true,
         runtimeCaching: [
           {
