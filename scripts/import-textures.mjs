@@ -398,6 +398,37 @@ const IMPORTS = [
  * fortement pour propager les couleurs voisines, et on ne substitue QUE là où l'original
  * est quasi noir. Simple, sans faux détail inventé — juste une continuité de teinte.
  */
+/**
+ * Met au NOIR les pixels entièrement transparents, et à eux seuls.
+ *
+ * Pourquoi. Un JPEG n'a pas d'alpha : on le jetait (`removeAlpha`). Quand sharp rééchantillonne
+ * vraiment, il gère l'alpha en interne et un pixel entièrement transparent ressort noir ; quand
+ * la taille demandée ÉGALE celle de la source, il ne rééchantillonne pas, et le RVB « caché »
+ * derrière un alpha nul — BLANC dans le PNG de l'anneau de Saturne — ressortait tel quel. Le 8k
+ * portait ainsi un bord intérieur blanc opaque (l'anneau lit ce JPEG comme alphaMap), dessiné en
+ * haute qualité comme une ellipse lumineuse autour de la planète ; 1k, 2k et 4k étaient justes.
+ *
+ * Pourquoi pas `flatten` sur le noir : il multiplie aussi la couleur des pixels SEMI-transparents
+ * par leur alpha. Mesuré contre l'alpha réel du PNG, la couleur non prémultipliée des niveaux
+ * livrés en est plus proche (écart moyen 0,315 contre 0,380), et c'est ce que montrent déjà les
+ * qualités moyenne et basse : on reproduit donc ce comportement-là, à toutes les tailles.
+ */
+async function blackenTransparent(pipeline, width, height) {
+  const meta = await pipeline.clone().metadata();
+  if (!meta.hasAlpha) return pipeline;
+  const { data, info } = await pipeline
+    .clone()
+    .ensureAlpha()
+    .raw()
+    .toBuffer({ resolveWithObject: true });
+  const ch = info.channels;
+  for (let i = 0; i < width * height; i++) {
+    const o = i * ch;
+    if (data[o + ch - 1] === 0) data[o] = data[o + 1] = data[o + 2] = 0;
+  }
+  return sharp(data, { raw: { width, height, channels: ch } });
+}
+
 async function fillBlackHoles(pipeline, width, height) {
   // RGB pur, sans alpha : ensureAlpha(0) rendrait tout transparent → noir au ré-encodage JPEG.
   const base = await pipeline
@@ -471,8 +502,9 @@ async function importOne(entry) {
     let pipe = sharp(entry.src, { limitInputPixels: false })
       .resize(width, height, { fit: 'fill', kernel: 'lanczos3' })
       .toColourspace('srgb');
-    // N&B → RGB (+ teinte optionnelle)
-    pipe = pipe.removeAlpha();
+    // N&B → RGB (+ teinte optionnelle). Les pixels ENTIÈREMENT transparents passent d'abord au
+    // noir : cf. `blackenTransparent`.
+    pipe = (await blackenTransparent(pipe, width, height)).removeAlpha();
     if (entry.tint) {
       pipe = pipe.tint({
         r: entry.tint[0],

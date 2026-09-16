@@ -138,6 +138,14 @@ et cette teinte en Éducatif ; `viewAngles.test.ts` fait l'aller-retour des angl
 matériau ET cadrage. Onze mutations tombées — dont une qui, sur une éclipse partielle, passait :
 la totale a été choisie parce qu'elle seule discrimine (rouge/bleu 4,1 contre 1,5).
 
+**Niveaux de texture** (`src/config/textureLevels.test.ts`) : chaque palier de qualité charge un
+fichier différent du même corps, donc un niveau faux ne se voit QUE sur la machine qui le charge.
+Le test réduit le niveau le plus fin et le plus grossier de chaque texture à la même taille et
+exige un écart moyen sous 8/255 (mesuré : 4,56 au plus sur les 34 textures, la normal map de la
+Terre). Il existe parce que le 8k de l'anneau de Saturne portait un bord intérieur blanc opaque,
+visible uniquement en qualité haute comme une ellipse lumineuse — il mesurait 17,05. Falsifié en
+remettant ce fichier.
+
 **Halo lumineux** (`src/components/systems/GlowPass.test.ts`) : aucun test ne peut juger qu'un
 halo est « rond » sous le rendu logiciel des runners, donc la suite tient ce qui le rend rond
 PAR CONSTRUCTION et ce qui casserait en silence. Uniformes employés = déclarés = fournis pour les
