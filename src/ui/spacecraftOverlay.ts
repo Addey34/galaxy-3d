@@ -9,7 +9,7 @@
  * sans erreur. Actif uniquement en mode Exploration, comme le champ de petits corps.
  */
 import * as THREE from 'three';
-import { SQRT_K } from '@/core/ScaleService';
+import { scaleToScene } from '@/core/overlayScale';
 import type { HorizonsEphemerisService } from '@/core/HorizonsEphemerisService';
 import { getLocale } from '@/i18n';
 import type { SpacecraftMission } from '@/config/spacecraft';
@@ -42,11 +42,16 @@ export class SpacecraftOverlay {
     if (!active) this._clear();
   }
 
-  /** À appeler chaque frame quand actif. `date` = date de simulation courante. */
+  /**
+   * À appeler chaque frame quand actif. `date` = date de simulation courante, `morph` = état de
+   * la transition Éduc↔Explo (cf. `core/overlayScale.ts`) : sans lui, les marqueurs sautaient à
+   * leur position Explo pendant que les planètes glissaient encore.
+   */
   update(
     camera: THREE.PerspectiveCamera,
     date: Date,
-    horizons: HorizonsEphemerisService
+    horizons: HorizonsEphemerisService,
+    morph = 1
   ): void {
     if (!this.active || !this.ctx || this.missions.length === 0) return;
 
@@ -59,8 +64,7 @@ export class SpacecraftOverlay {
       const posAU = horizons.getHeliocentricAU(mission.name, date);
       if (!posAU) continue; // avant le lancement, ou au-delà de la solution de trajectoire
 
-      this._p.copy(posAU).multiplyScalar(SQRT_K);
-      this._p.project(camera);
+      scaleToScene(this._p, posAU.x, posAU.y, posAU.z, morph).project(camera);
       if (
         this._p.z < -1 ||
         this._p.z > 1 ||

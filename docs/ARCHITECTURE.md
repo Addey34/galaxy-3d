@@ -512,6 +512,25 @@ seul cadrage valable pour Mercure comme pour Jupiter et invariant au changement 
 environ la Lune vue de la Terre). Chaque ligne est jugée sur SON corps, donc celle d'un corps
 lointain reste pleine pendant que celle du corps approché s'efface.
 
+## Couches d'instrument pendant le morph Éduc↔Explo
+
+Les corps 3D n'sautent pas d'un mode à l'autre : `OrbitalMechanics` interpole leur position
+pendant 1,2 s (`scaleMorph`). Une couche 2D qui dessine à l'échelle Explo pendant ce temps part
+aussitôt à sa position finale et se décolle des corps qu'elle annonce — c'est ce que faisaient
+les marqueurs de sondes et de petits corps. `core/overlayScale.ts` porte la règle
+(`morphedSceneRadius`, `scaleToScene`) : les positions Éduc et Explo étant colinéaires,
+interpoler le rayon revient exactement à interpoler la position.
+
+Leur VISIBILITÉ suit le morph elle aussi, pas le mode : elles apparaissent dès que la transition
+démarre et ne disparaissent qu'une fois revenu à l'Éducatif. Tenu par `core/overlayScale.test.ts`,
+qui compare les deux extrémités à `ScaleService` — la source d'échelle de la scène — plutôt qu'à
+une formule recopiée.
+
+**Ce que les tests ne voient pas** : la suite e2e tourne en `reducedMotion: 'reduce'`, donc le
+morph y est INSTANTANÉ ; aucun scénario ne peut observer un état intermédiaire. La vérification
+est la comparaison à l'écran, faite à 450 ms de transition : sans la correction, le marqueur de
+Juno quitte le champ pendant que Jupiter glisse encore ; avec, il reste collé à la planète.
+
 ## Halo lumineux — qui brille, et combien
 
 Le palier de qualité `high` ajoute un halo autour des sources de lumière (Soleil, étoiles

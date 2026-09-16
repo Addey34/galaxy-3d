@@ -292,16 +292,30 @@ if (surfaceScrim) {
     // Le bloc live de la fiche (distance réelle + temps-lumière) n'a de sens qu'en Explo,
     // pour la cible suivie ; en Éducatif ou en vue libre on passe `null` → bloc masqué.
     let currentMode: 'educ' | 'explo' = 'educ';
+    // Les couches d'instrument Explo suivent le MORPH, pas le mode : elles apparaissent dès que
+    // la transition démarre et glissent avec les corps jusqu'à leur position finale. Pilotées
+    // par le mode seul, leurs marqueurs sautaient à l'échelle Explo pendant que les planètes
+    // bougeaient encore, et disparaissaient d'un coup au retour vers l'Éducatif.
+    let exploOverlaysVisible = false;
     animationSystem.onFrame(() => {
+      const morph = orbitalMechanics.scaleMorph;
+      const wantOverlays = morph > 0;
+      if (wantOverlays !== exploOverlaysVisible) {
+        exploOverlaysVisible = wantOverlays;
+        smallBodyOverlay.setActive(wantOverlays);
+        spacecraftOverlay.setActive(wantOverlays);
+      }
       exploHud.update(cameraSystem.camera, cameraSystem, sceneSystem);
       smallBodyOverlay.update(
         cameraSystem.camera,
-        orbitalMechanics.simulationDate
+        orbitalMechanics.simulationDate,
+        morph
       );
       spacecraftOverlay.update(
         cameraSystem.camera,
         orbitalMechanics.simulationDate,
-        horizonsEphemeris
+        horizonsEphemeris,
+        morph
       );
       interstellarOverlay.update(
         cameraSystem.camera,
@@ -330,9 +344,9 @@ if (surfaceScrim) {
         currentMode = mode;
         opticalZoom.setMode(mode);
         exploHud.setMode(mode); // change le style des labels (éduc ↔ explo), reste actif
-        smallBodyOverlay.setActive(mode === 'explo');
+        // La VISIBILITÉ de ces deux couches suit le morph (voir la boucle de frame) ; seul le
+        // déclencheur de filtres, qui est du chrome, suit le mode.
         smallBodyFilters.setTriggerVisible(mode === 'explo');
-        spacecraftOverlay.setActive(mode === 'explo');
         webxr.setMode(mode);
         exploScaleBadge.setMode(mode);
         if (mode === 'explo') exploTourNudge.notifyExploEntered();

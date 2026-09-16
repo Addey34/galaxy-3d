@@ -19,7 +19,7 @@
  * Hors fenêtre, rien : ni marqueur ni ligne (cf. `INTERSTELLAR_WINDOW_YEARS`).
  */
 import * as THREE from 'three';
-import { SQRT_K } from '@/core/ScaleService';
+import { scaleToScene } from '@/core/overlayScale';
 import { eclipticToScene } from '@/core/frames';
 import {
   keplerianPositionEcliptic,
@@ -40,26 +40,6 @@ interface Track {
   /** Points de la trajectoire en UA, déjà dans le repère de la scène (x, y, z entrelacés). */
   pathAU: Float32Array;
   css: string;
-}
-
-/**
- * UA (repère scène) → unités scène, pour un facteur de morph donné (0 = Éducatif √,
- * 1 = Explo linéaire). Les deux positions sont colinéaires, donc interpoler les rayons
- * revient exactement à interpoler les positions comme le fait `OrbitalMechanics`.
- */
-function scaleToScene(
-  out: THREE.Vector3,
-  x: number,
-  y: number,
-  z: number,
-  morph: number
-): THREE.Vector3 {
-  const r = Math.hypot(x, y, z);
-  if (r < 1e-12) return out.set(0, 0, 0);
-  const educ = Math.sqrt(r) * SQRT_K;
-  const explo = r * SQRT_K;
-  const k = (educ + (explo - educ) * morph) / r;
-  return out.set(x * k, y * k, z * k);
 }
 
 /** Vrai si le point projeté (NDC) est devant la caméra, entre les plans near/far. */

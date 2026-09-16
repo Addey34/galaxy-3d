@@ -12,6 +12,7 @@
  */
 import * as THREE from 'three';
 import { SQRT_K } from '@/core/ScaleService';
+import { scaleToScene } from '@/core/overlayScale';
 import { keplerianPositionEcliptic } from '@/core/kepler';
 import { eclipticToScene } from '@/core/frames';
 import type { ParsedSmallBody, SmallBodyCategory } from '@/core/sbdb';
@@ -64,7 +65,8 @@ export class SmallBodyOverlay {
   }
 
   /** À appeler chaque frame quand actif. `date` = date de simulation courante. */
-  update(camera: THREE.PerspectiveCamera, date: Date): void {
+  /** `morph` : état de la transition Éduc↔Explo (cf. `core/overlayScale.ts`). */
+  update(camera: THREE.PerspectiveCamera, date: Date, morph = 1): void {
     if (!this.active || !this.ctx || this.bodies.length === 0) return;
 
     const w = window.innerWidth;
@@ -83,7 +85,8 @@ export class SmallBodyOverlay {
       const body = this.bodies[b];
       if (body.category && !this.visibleCategories.has(body.category)) continue;
       const pos = keplerianPositionEcliptic(body.elements, date);
-      this._p.copy(eclipticToScene(pos.x, pos.y, pos.z)).multiplyScalar(SQRT_K);
+      const scene = eclipticToScene(pos.x, pos.y, pos.z);
+      scaleToScene(this._p, scene.x, scene.y, scene.z, morph);
 
       if (cutoff > 0 && this._p.distanceToSquared(this._cam) > cutoff) continue;
 
