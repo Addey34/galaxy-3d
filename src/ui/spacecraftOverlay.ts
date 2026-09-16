@@ -10,9 +10,34 @@
  */
 import * as THREE from 'three';
 import { scaleToScene } from '@/core/overlayScale';
+import type { LabelBounds, LabelSpace } from '@/core/labelSpace';
 import type { HorizonsEphemerisService } from '@/core/HorizonsEphemerisService';
 import { getLocale } from '@/i18n';
 import type { SpacecraftMission } from '@/config/spacecraft';
+
+/**
+ * Décalages essayés pour poser un nom à côté de son marqueur : à droite d'abord (habitude de
+ * lecture), puis à gauche, puis dessus, puis dessous. Cf. `core/labelSpace.ts`.
+ */
+const LABEL_OFFSETS = [
+  [40, 0],
+  [-40, 0],
+  [0, -15],
+  [0, 15],
+  [40, -15],
+  [-40, -15],
+  [40, 15],
+  [-40, 15],
+] as const;
+
+/** Aire utile : sous le dock du haut, au-dessus du deck de commande, marges latérales. */
+const labelBounds = (width: number, height: number): LabelBounds => ({
+  width,
+  height,
+  top: 48,
+  bottom: 46,
+  side: 6,
+});
 
 export class SpacecraftOverlay {
   private readonly canvas: HTMLCanvasElement;
@@ -51,7 +76,8 @@ export class SpacecraftOverlay {
     camera: THREE.PerspectiveCamera,
     date: Date,
     horizons: HorizonsEphemerisService,
-    morph = 1
+    morph = 1,
+    space: LabelSpace | null = null
   ): void {
     if (!this.active || !this.ctx || this.missions.length === 0) return;
 
@@ -84,14 +110,27 @@ export class SpacecraftOverlay {
       this.ctx.beginPath();
       this.ctx.arc(x, y, 2.5, 0, Math.PI * 2);
       this.ctx.fill();
+      space?.add({ left: x - 4, right: x + 4, top: y - 4, bottom: y + 4 });
 
       this.ctx.font = '11px sans-serif';
+      const text = mission.displayName[locale] ?? mission.displayName.en;
+      const textWidth = this.ctx.measureText(text).width;
+      // Le nom ne s'écrit que s'il trouve une place libre : mieux vaut un marqueur seul que
+      // deux noms superposés, dont aucun ne se lit (cf. `core/labelSpace.ts`).
+      const placed = space
+        ? space.placeText(
+            x + textWidth / 2 + 6,
+            y,
+            textWidth,
+            13,
+            LABEL_OFFSETS,
+            labelBounds(w, h)
+          )
+        : { dx: 0, dy: 0, rect: null };
+      if (!placed) continue;
+      if (placed.rect) space?.add(placed.rect);
       this.ctx.fillStyle = 'rgba(225, 238, 255, 0.9)';
-      this.ctx.fillText(
-        mission.displayName[locale] ?? mission.displayName.en,
-        x + 6,
-        y + 4
-      );
+      this.ctx.fillText(text, x + 6 + placed.dx, y + 4 + placed.dy);
     }
   }
 

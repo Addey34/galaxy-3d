@@ -512,6 +512,29 @@ seul cadrage valable pour Mercure comme pour Jupiter et invariant au changement 
 environ la Lune vue de la Terre). Chaque ligne est jugée sur SON corps, donc celle d'un corps
 lointain reste pleine pendant que celle du corps approché s'efface.
 
+## Libellés : une seule place occupée pour toutes les couches
+
+Les noms projetés viennent de deux familles qui s'ignoraient : les libellés DOM de l'`ExploHud`,
+qui évitaient déjà les panneaux et leurs voisins, et les noms dessinés au canvas par les couches
+d'instrument (sondes, objets interstellaires), qui n'évitaient rien. Le 19 octobre 2017,
+« 1I/ʻOumuamua » s'imprimait par-dessus « Lune » et « OSIRIS-REx ».
+
+`core/labelSpace.ts` tient le compte commun — sans DOM, sans canvas, sans Three.js. Une image =
+un `reset()` (emprises des panneaux), puis chaque couche demande une place (`placeText`, huit
+positions candidates autour du marqueur) et déclare celle qu'elle prend (`add`), dans l'ordre où
+elle dessine. Quand rien ne tient, la couche dessine son marqueur SANS son nom : un marqueur seul
+reste lisible, deux noms superposés ne le sont ni l'un ni l'autre.
+
+Une subtilité qui se paie si on l'oublie : la couche interstellaire ne repeint que si la vue a
+changé. Sa décision inclut donc l'empreinte (`signature()`) de la place commune, sinon elle
+garderait un nom posé là où une autre couche vient d'écrire.
+
+**Honnêteté sur la vérification** : le mécanisme est tenu par `core/labelSpace.test.ts` (quatre
+mutations tombées, dont une qui a révélé que l'empreinte n'était pas testée), et l'écran montre
+des libellés séparés en Éduc comme en Explo. La scène EXACTE du rapport (1I par-dessus « Lune »)
+n'a pas pu être reproduite dans cette session : à cette date, ces marqueurs tombent hors des
+cadrages essayés. C'est donc vérifié structurellement, pas contre cette image-là.
+
 ## Couches d'instrument pendant le morph Éduc↔Explo
 
 Les corps 3D n'sautent pas d'un mode à l'autre : `OrbitalMechanics` interpole leur position

@@ -11,6 +11,7 @@
  *   - `ui/modeSwitcher` — bascule Éducatif ↔ Exploration.
  */
 import { SolarSystemApp } from './SolarSystemApp';
+import { LabelSpace } from '@/core/labelSpace';
 import { t } from './i18n';
 import { initStaticI18n } from './i18n/dom';
 import { updateProgress, hideLoader, showError } from './ui/loader';
@@ -297,8 +298,13 @@ if (surfaceScrim) {
     // par le mode seul, leurs marqueurs sautaient à l'échelle Explo pendant que les planètes
     // bougeaient encore, et disparaissaient d'un coup au retour vers l'Éducatif.
     let exploOverlaysVisible = false;
+    // Place occupée COMMUNE à toutes les couches de libellés, remise à zéro à chaque image :
+    // les libellés DOM du HUD et ceux dessinés au canvas s'ignoraient et se recouvraient.
+    const labelSpace = new LabelSpace();
+    exploHud.setLabelSpace(labelSpace);
     animationSystem.onFrame(() => {
       const morph = orbitalMechanics.scaleMorph;
+      labelSpace.reset();
       const wantOverlays = morph > 0;
       if (wantOverlays !== exploOverlaysVisible) {
         exploOverlaysVisible = wantOverlays;
@@ -315,12 +321,14 @@ if (surfaceScrim) {
         cameraSystem.camera,
         orbitalMechanics.simulationDate,
         horizonsEphemeris,
-        morph
+        morph,
+        labelSpace
       );
       interstellarOverlay.update(
         cameraSystem.camera,
         orbitalMechanics.simulationDate,
-        orbitalMechanics.scaleMorph
+        morph,
+        labelSpace
       );
       bodyInfo.updateLive(
         currentMode === 'explo'

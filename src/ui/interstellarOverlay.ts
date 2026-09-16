@@ -20,6 +20,7 @@
  */
 import * as THREE from 'three';
 import { scaleToScene } from '@/core/overlayScale';
+import type { LabelBounds, LabelSpace } from '@/core/labelSpace';
 import { eclipticToScene } from '@/core/frames';
 import {
   keplerianPositionEcliptic,
@@ -54,6 +55,30 @@ const REDRAW_DATE_STEP_MS = 10 * 60_000;
 
 /** Marge (px) hors de laquelle un segment dont les deux bouts sont du même côté est ignoré. */
 const OFFSCREEN_MARGIN_PX = 64;
+
+/**
+ * Décalages essayés pour poser un nom à côté de son marqueur : à droite d'abord (habitude de
+ * lecture), puis à gauche, puis dessus, puis dessous. Cf. `core/labelSpace.ts`.
+ */
+const LABEL_OFFSETS = [
+  [40, 0],
+  [-40, 0],
+  [0, -15],
+  [0, 15],
+  [40, -15],
+  [-40, -15],
+  [40, 15],
+  [-40, 15],
+] as const;
+
+/** Aire utile : sous le dock du haut, au-dessus du deck de commande, marges latérales. */
+const labelBounds = (width: number, height: number): LabelBounds => ({
+  width,
+  height,
+  top: 48,
+  bottom: 46,
+  side: 6,
+});
 
 export class InterstellarOverlay {
   private readonly canvas: HTMLCanvasElement;
@@ -119,8 +144,14 @@ export class InterstellarOverlay {
    * À appeler chaque frame. `morph` = facteur d'échelle courant d'`OrbitalMechanics`
    * (0 = Éducatif, 1 = Explo, intermédiaire pendant la transition).
    */
-  update(camera: THREE.PerspectiveCamera, date: Date, morph: number): void {
+  update(
+    camera: THREE.PerspectiveCamera,
+    date: Date,
+    morph: number,
+    space: LabelSpace | null = null
+  ): void {
     if (!this.active || !this.ctx) return;
+    this._space = space;
     const ctx = this.ctx;
     const w = window.innerWidth;
     const h = window.innerHeight;
@@ -154,9 +185,32 @@ export class InterstellarOverlay {
       ctx.beginPath();
       ctx.arc(x, y, 2.5, 0, Math.PI * 2);
       ctx.fill();
+      this._space?.add({
+        left: x - 4,
+        right: x + 4,
+        top: y - 4,
+        bottom: y + 4,
+      });
       ctx.font = '11px sans-serif';
-      ctx.fillStyle = 'rgba(225, 238, 255, 0.9)';
-      ctx.fillText(track.object.displayName[locale], x + 6, y + 4);
+      const text = track.object.displayName[locale];
+      const textWidth = ctx.measureText(text).width;
+      // Un nom ne s'écrit que s'il trouve sa place : le 19 octobre 2017, celui de 1I tombait
+      // exactement sur « Lune » et « OSIRIS-REx » (cf. `core/labelSpace.ts`).
+      const placed = this._space
+        ? this._space.placeText(
+            x + textWidth / 2 + 6,
+            y,
+            textWidth,
+            13,
+            LABEL_OFFSETS,
+            labelBounds(w, h)
+          )
+        : { dx: 0, dy: 0, rect: null };
+      if (placed) {
+        if (placed.rect) this._space?.add(placed.rect);
+        ctx.fillStyle = 'rgba(225, 238, 255, 0.9)';
+        ctx.fillText(text, x + 6 + placed.dx, y + 4 + placed.dy);
+      }
       markers++;
     }
     this._publish(markers, tracks);
@@ -170,6 +224,8 @@ export class InterstellarOverlay {
    * forçant un redessin à chaque frame, le tracé de `_drawPath` tient déjà la parité avec une
    * application sans cette couche. Le coût réel était ailleurs, cf. `_drawPath`.
    */
+  private _space: LabelSpace | null = null;
+
   private _viewChanged(
     camera: THREE.PerspectiveCamera,
     now: number,
@@ -184,6 +240,9 @@ export class InterstellarOverlay {
       ...camera.projectionMatrix.elements,
       Math.floor(now / REDRAW_DATE_STEP_MS),
       morph,
+      // Les libellés des autres couches font partie de la vue : s'ils bougent, la place
+      // disponible change et ce qui est déjà peint peut être devenu illisible.
+      this._space?.signature() ?? 0,
     ];
     let changed = !this._hasDrawn || this._lastLocale !== locale;
     changed ||= view[32] !== w || view[33] !== h;

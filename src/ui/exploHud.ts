@@ -23,6 +23,7 @@ import { onLocaleChange } from '@/i18n';
 import { bodyDisplayName } from '@/i18n/bodyText';
 import { bodyAccentTriplet, onAccentChange } from './bodyAccent';
 import { getSceneOverlayRects } from './sceneOverlay';
+import type { LabelSpace } from '@/core/labelSpace';
 import type { PlanetNavigation } from './planetNav';
 
 const BODY_CONFIGS = flattenBodies(CELESTIAL_CONFIG);
@@ -233,6 +234,13 @@ export class ExploHud {
   private _educFilter: ReadonlySet<string> | null = null;
   /** Corps exclus individuellement du panneau Réglages, dans les deux modes. */
   private _hiddenNames: ReadonlySet<string> = new Set();
+  /** Place occupée partagée avec les couches d'instrument (cf. `core/labelSpace.ts`). */
+  private _space: LabelSpace | null = null;
+
+  /** Déclare la place commune du frame ; sans elle, l'ExploHud se comporte comme avant. */
+  setLabelSpace(space: LabelSpace | null): void {
+    this._space = space;
+  }
 
   /**
    * @param nav             commande de navigation partagée (clic label → cible le corps)
@@ -396,7 +404,11 @@ export class ExploHud {
         a.z - b.z
     );
 
+    // La place occupée est PARTAGÉE avec les couches d'instrument quand l'appelant en fournit
+    // une : sans cela, chaque couche évitait ses propres libellés et écrivait sur ceux des
+    // autres (« 1I/ʻOumuamua » par-dessus « Lune », signalé le 2026-09-15).
     const occupied: LabelRect[] = getSceneOverlayRects();
+    for (const fixed of occupied) this._space?.add(fixed);
     for (const candidate of candidates) {
       const placement = this._placeLabel(candidate, occupied, width, height);
       if (!placement) continue;
@@ -431,6 +443,7 @@ export class ExploHud {
         window.setTimeout(() => element.classList.remove('is-acquiring'), 1800);
       }
       occupied.push(placement.rect);
+      this._space?.add(placement.rect);
     }
   }
 
