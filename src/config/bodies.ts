@@ -51,7 +51,6 @@ export const CELESTIAL_CONFIG: CelestialConfig = {
         massKg: 1.989e30,
         gravity: 274,
         meanTempC: 5505,
-        moonCount: 8,
         description: {
           en: 'The star at the heart of the Solar System. This ball of plasma holds 99.86% of all the mass orbiting it.',
           fr: 'L’étoile au cœur du Système solaire. Cette boule de plasma concentre 99,86 % de toute la masse en orbite autour d’elle.',

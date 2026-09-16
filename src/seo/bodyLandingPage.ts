@@ -29,6 +29,7 @@ import type {
   CelestialConfig,
   TextureQuality,
 } from '@/types';
+import { KM_PER_AU } from '@/core/ScaleService';
 import { distanceDecimals } from '@/core/units';
 import { CARD_HEIGHT, CARD_WIDTH } from './socialCard';
 
@@ -277,12 +278,22 @@ export function bodyFacts(
   );
   if (parentDisplayName)
     facts.push({ label: 'Orbits', value: parentDisplayName });
-  push(
-    'distanceAU',
-    'Distance from the Sun',
-    data.distanceAU,
-    (v) => `${v.toFixed(3)} AU`
-  );
+  // Demi-grand axe mesuré depuis le PARENT pour un satellite : la page de Titan annonçait
+  // « Distance from the Sun: 0.008 AU », soit sa distance à Saturne sous le mauvais libellé.
+  if (parentDisplayName)
+    push(
+      'distanceAU',
+      `Mean distance from ${parentDisplayName}`,
+      data.distanceAU,
+      (v) => `${formatNumber(v * KM_PER_AU)} km`
+    );
+  else
+    push(
+      'distanceAU',
+      'Mean distance from the Sun',
+      data.distanceAU,
+      (v) => `${v.toFixed(3)} AU`
+    );
   push(
     'orbitPeriodDays',
     'Orbital period',

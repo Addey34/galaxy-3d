@@ -43,11 +43,12 @@ const DOCUMENTED_FIELDS: UnknownableField[] = [
 /**
  * Champs qui n'ont structurellement pas de sens pour un `kind` donné. Une étoile centrale
  * n'orbite rien : lui réclamer une période ou une distance serait une erreur de modèle, pas
- * une donnée manquante.
+ * une donnée manquante. Elle n'a pas non plus de LUNES : le Soleil a longtemps porté
+ * `moonCount: 8` pour compter ses planètes, un autre concept sous le mauvais champ.
  */
 function notApplicable(cfg: CelestialBodyConfig): Set<UnknownableField> {
   return cfg.kind === 'star'
-    ? new Set<UnknownableField>(['orbitPeriodDays', 'distanceAU'])
+    ? new Set<UnknownableField>(['orbitPeriodDays', 'distanceAU', 'moonCount'])
     : new Set<UnknownableField>();
 }
 
@@ -101,6 +102,21 @@ describe('complétude documentaire du catalogue', () => {
       contradictions,
       'ces champs ont une valeur : retirer leur déclaration d’inconnue'
     ).toEqual([]);
+  });
+
+  /**
+   * Symétrique de l'exemption : un champ hors sujet ne doit pas non plus être RENSEIGNÉ. Sans ce
+   * cas, remettre `moonCount: 8` au Soleil passerait le test ci-dessus sans un bruit.
+   */
+  it('ne renseigne aucun champ hors sujet pour son kind', () => {
+    const misplaced: string[] = [];
+    for (const { name, cfg } of bodies) {
+      const realData = (cfg.realData ?? {}) as Record<string, unknown>;
+      for (const field of notApplicable(cfg)) {
+        if (realData[field] !== undefined) misplaced.push(`${name}.${field}`);
+      }
+    }
+    expect(misplaced).toEqual([]);
   });
 
   /**

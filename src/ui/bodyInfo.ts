@@ -7,7 +7,11 @@
  * Le contenu est dérivé du catalogue — ajouter un corps n'exige aucune édition ici.
  */
 import { CELESTIAL_CONFIG } from '@/config/bodies';
-import { flattenBodies, hasIllustrativeSurface } from '@/config/catalog';
+import {
+  allBodies,
+  flattenBodies,
+  hasIllustrativeSurface,
+} from '@/config/catalog';
 import { TEXTURE_SETTINGS } from '@/config/engine';
 import { KM_PER_AU, SQRT_K } from '@/core/ScaleService';
 import { RAD_TO_DEG as RAD2DEG } from '@/core/MathConstants';
@@ -27,6 +31,10 @@ import type { OverlayCoordinator } from './overlayCoordinator';
 const C_KM_PER_S = 299_792.458; // vitesse de la lumière
 
 const CONFIGS = flattenBodies(CELESTIAL_CONFIG);
+/** Parent réel de chaque satellite, lu dans l'imbrication du catalogue — jamais déduit du `kind`. */
+const PARENT_OF = new Map(
+  allBodies(CELESTIAL_CONFIG).map((e) => [e.name, e.parentName])
+);
 
 /** Rang de chaque planète (1 = Mercure) dérivé de l'ordre du catalogue, pour le sous-titre. */
 const PLANET_ORDINALS = ((): Map<string, number> => {
@@ -73,10 +81,15 @@ function formatMass(kg: number): string {
   return `${num(mantissa, 2)} × 10${superscript(exp)} kg`;
 }
 
-/** Durée du jour dérivée de la vitesse de rotation axiale (rad/s → h, puis j si très long). */
-function formatDay(rotationSpeed: number): string | null {
+/**
+ * Période de rotation SIDÉRALE dérivée de la vitesse de rotation axiale (rad/s → h, puis j si
+ * très long). Ce n'est pas le jour solaire : Mercure tourne en 58,6 j mais son jour solaire
+ * dure 176 j. Valeur absolue : le signe porte le sens (Triton rétrograde), pas la durée —
+ * sans elle Triton affichait « -142h 57m ».
+ */
+function formatSiderealRotation(rotationSpeed: number): string | null {
   if (!rotationSpeed) return null;
-  const hours = (2 * Math.PI) / (rotationSpeed * 3600);
+  const hours = (2 * Math.PI) / (Math.abs(rotationSpeed) * 3600);
   if (hours < 48) {
     const h = Math.floor(hours);
     const m = Math.round((hours - h) * 60);
@@ -137,7 +150,8 @@ interface Stat {
 /** Tiret cadratin : marque une valeur non publiee, distincte d'un zero ou d'une absence. */
 const UNKNOWN_MARK = '—';
 
-function buildStats(cfg: CelestialBodyConfig): Stat[] {
+/** Exportée pour les tests : les libellés sont une affirmation scientifique, pas une décoration. */
+export function bodyStats(name: string, cfg: CelestialBodyConfig): Stat[] {
   const d = cfg.realData;
   if (!d) return [];
   const stats: Stat[] = [];
@@ -173,14 +187,23 @@ function buildStats(cfg: CelestialBodyConfig): Stat[] {
       `${num(radius.value, distanceDecimals(radius.value))} ${radius.unit}`
     );
   }
+  // `distanceAU` est un demi-grand axe : mesuré depuis le PARENT pour un satellite (Titan →
+  // Saturne), depuis le Soleil sinon. L'ancien libellé disait « Distance (Terre) » pour toutes
+  // les lunes, donc faux pour chacune sauf la Lune.
+  const parent = PARENT_OF.get(name) ?? null;
   if (d.distanceAU !== undefined) {
-    const distFromParent = convertDistanceKm(d.distanceAU * KM_PER_AU);
-    push(
-      cfg.kind === 'moon' ? t('stat.distanceEarth') : t('stat.distanceSun'),
-      cfg.kind === 'moon'
-        ? `${num(distFromParent.value)} ${distFromParent.unit}`
-        : `${num(d.distanceAU, 2)} ${t('unit.au')}`
-    );
+    if (parent) {
+      const distFromParent = convertDistanceKm(d.distanceAU * KM_PER_AU);
+      push(
+        t('stat.meanDistanceFrom', { parent: bodyDisplayName(parent) }),
+        `${num(distFromParent.value)} ${distFromParent.unit}`
+      );
+    } else {
+      push(
+        t('stat.meanDistanceSun'),
+        `${num(d.distanceAU, 2)} ${t('unit.au')}`
+      );
+    }
   }
   if (d.massKg) push(t('stat.mass'), formatMass(d.massKg));
   else pushUnknown(t('stat.mass'), 'massKg');
@@ -188,21 +211,19 @@ function buildStats(cfg: CelestialBodyConfig): Stat[] {
   else pushUnknown(t('stat.gravity'), 'gravity');
   if (d.meanTempC !== undefined) {
     const temp = convertTemperatureC(d.meanTempC);
-    push(t('stat.temperature'), `${num(temp.value)} ${temp.unit}`);
+    push(t('stat.meanTemperature'), `${num(temp.value)} ${temp.unit}`);
   } else {
-    pushUnknown(t('stat.temperature'), 'meanTempC');
+    pushUnknown(t('stat.meanTemperature'), 'meanTempC');
   }
-  push(
-    cfg.kind === 'moon' ? t('stat.revolution') : t('stat.day'),
-    formatDay(cfg.rotationSpeed)
-  );
+  push(t('stat.siderealRotation'), formatSiderealRotation(cfg.rotationSpeed));
   if (d.orbitPeriodDays)
     push(
-      cfg.kind === 'moon' ? t('stat.orbit') : t('stat.year'),
+      parent ? t('stat.orbit') : t('stat.year'),
       formatPeriod(d.orbitPeriodDays)
     );
-  if (d.moonCount !== undefined) push(t('stat.moons'), num(d.moonCount));
-  else pushUnknown(t('stat.moons'), 'moonCount');
+  // Une étoile n'a pas de lunes : le Soleil portait `moonCount: 8` pour ses planètes.
+  if (d.moonCount !== undefined) push(t('stat.knownMoons'), num(d.moonCount));
+  else pushUnknown(t('stat.knownMoons'), 'moonCount');
   if (d.axialTilt !== undefined)
     push(t('stat.axialTilt'), `${num(d.axialTilt * RAD2DEG, 1)}°`);
   else pushUnknown(t('stat.axialTilt'), 'axialTilt');
@@ -342,7 +363,7 @@ export function setupBodyInfo(coordinator?: OverlayCoordinator): BodyInfoPanel {
     }
 
     statsEl.replaceChildren();
-    for (const { label, value, note } of buildStats(cfg)) {
+    for (const { label, value, note } of bodyStats(name, cfg)) {
       const dt = document.createElement('dt');
       dt.textContent = label;
       const dd = document.createElement('dd');

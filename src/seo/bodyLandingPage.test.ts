@@ -177,6 +177,24 @@ describe('faits affichés', () => {
     expect(checked).toBeGreaterThan(40);
   });
 
+  it('mesure la distance d’une lune depuis sa planète, pas depuis le Soleil', () => {
+    const titan = {
+      realData: { distanceAU: 0.008167897 },
+    } as CelestialBodyConfig;
+    const labels = bodyFacts(titan, 'Saturn').map((f) => f.label);
+    expect(labels).toContain('Mean distance from Saturn');
+    expect(labels.join(' ')).not.toMatch(/Sun/);
+    const value = bodyFacts(titan, 'Saturn').find((f) =>
+      f.label.startsWith('Mean distance')
+    )?.value;
+    // 0,008167897 UA = 1 221 870 km, le demi-grand axe publié de Titan.
+    expect(Number(value?.replace(/[^0-9]/g, ''))).toBeCloseTo(1_221_870, -2);
+    const earth = { realData: { distanceAU: 1 } } as CelestialBodyConfig;
+    expect(bodyFacts(earth).map((f) => f.label)).toContain(
+      'Mean distance from the Sun'
+    );
+  });
+
   it('situe une lune par rapport à sa planète', () => {
     const moon = { realData: { radiusKm: 1 } } as CelestialBodyConfig;
     expect(bodyFacts(moon, 'Jupiter')).toContainEqual({
