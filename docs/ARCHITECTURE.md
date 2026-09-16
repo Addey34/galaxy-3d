@@ -535,6 +535,23 @@ des libellés séparés en Éduc comme en Explo. La scène EXACTE du rapport (1I
 n'a pas pu être reproduite dans cette session : à cette date, ces marqueurs tombent hors des
 cadrages essayés. C'est donc vérifié structurellement, pas contre cette image-là.
 
+### Deux pièges des couches canvas
+
+- **Taille d'affichage.** `position: fixed; inset: 0` n'étire PAS un `<canvas>` : élément
+  remplacé, il garde la taille de son tampon (fenêtre × densité de pixels). À 125 % (réglage
+  Windows courant), sondes, petits corps et objets interstellaires étaient dessinés 1,25 fois trop
+  grands et glissaient loin des corps 3D. D'où `width/height: 100%` explicites, tenus par
+  `e2e/overlayCanvasSize.spec.ts` à densité 1,25 — le reste de la suite tourne à 1, où le défaut
+  est invisible.
+- **Écart marqueur-nom.** Il doit dépasser le rayon du point PLUS la marge de respiration :
+  à 6 px, la position collée était toujours « occupée » par le point lui-même, et chaque nom
+  partait à +40 px jusqu'à être coupé au bord. `markerLabelCandidates` calcule les positions sur
+  la largeur du texte, avec `MARKER_LABEL_GAP` = 8 px.
+
+**Trajectoires interstellaires : en option.** Une hyperbole ne se referme jamais ; tracées par
+défaut, les trois se lisaient comme des orbites cassées en travers de la vue d'ensemble. Marqueurs
+et noms restent affichés, le tracé est une case des Réglages (conservée).
+
 ## Couches d'instrument pendant le morph Éduc↔Explo
 
 Les corps 3D n'sautent pas d'un mode à l'autre : `OrbitalMechanics` interpole leur position

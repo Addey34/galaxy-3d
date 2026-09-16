@@ -13,7 +13,7 @@ Ce document definit ce que Galaxy peut deja representer, ce qui peut etre ajoute
 | Petits corps               | Vesta, Pallas, Hygiea, Halley, Bennu (modele de forme 3D)      | Elements orbitaux Kepler, sans repli Horizons        | Spheres texturees et orbites            |
 | Collections instrumentales | Champ SBDB des petits corps, filtrable par categorie (NEO, cometes, TNO, ceinture principale) | Donnees chargees en couche UI  | Marqueurs 2D, pas de meshes physiques   |
 | Engins spatiaux            | 11 missions, de Voyager 1 a Hayabusa2                          | Binaires Horizons bornes a la couverture reelle de chaque mission | Marqueurs 2D en couche instrument, mode Exploration uniquement |
-| Objets interstellaires     | 1I/ʻOumuamua, 2I/Borisov, 3I/ATLAS                             | Elements hyperboliques Horizons (e > 1), fenetre ±20 ans autour du perihelie | Marqueur + trajectoire 2D en couche instrument, Educatif et Exploration |
+| Objets interstellaires     | 1I/ʻOumuamua, 2I/Borisov, 3I/ATLAS                             | Elements hyperboliques Horizons (e > 1), fenetre ±20 ans autour du perihelie | Marqueur 2D en couche instrument, Educatif et Exploration ; trajectoire en option (Reglages) |
 
 Les textures actuelles sont dans public/assets/textures/. Le chargeur supporte actuellement des fichiers JPEG nommes par corps, couche et resolution. Les fichiers ephemerides Horizons sont locaux dans public/assets/ephemerides/ : le rendu deploye ne depend pas d'un appel reseau au demarrage.
 

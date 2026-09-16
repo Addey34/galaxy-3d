@@ -11,6 +11,10 @@ Visualisateur interactif du système solaire en temps réel, développé en Type
 - Planètes multi-couches : surface PBR, nuages, atmosphère, lueurs nocturnes (shader GLSL)
 - Halo lumineux rond autour du Soleil, des étoiles et des lumières de ville (qualité haute), chaque source déclarée avec sa propre intensité
 - LOD automatique : résolution de texture adaptée à la distance caméra (1k → 8k)
+- Pages d'éclipse 2024–2035 : l'application s'ouvre au maximum de chaque éclipse ; la Lune éclipsée est cuivrée, teinte mesurée sur des photographies NASA
+- Modèles de forme scientifiques de Bennu, Éros, Itokawa, Ryugu et Ida, approchables à la vraie échelle en Exploration
+- Objets interstellaires 1I/ʻOumuamua, 2I/Borisov et 3I/ATLAS sur leur vraie trajectoire hyperbolique (tracé en option)
+- Onze missions spatiales positionnées par NASA/JPL Horizons (Voyager, New Horizons, Juno, Parker Solar Probe…)
 - HUD Exploration avec cible suivie, distance UA/km, temps-lumière et labels de corps
 - Responsive mobile avec qualité adaptative
 
@@ -23,6 +27,9 @@ démarrage complètent les contrôles de navigation, de temps et les deux modes 
 - **Événements** : consulter les prochaines phases lunaires et éclipses.
 - **Zoom optique** : ajuster le champ de vision en Exploration sans modifier la physique.
 - **Visite guidée** : parcourir les commandes au clavier ou à la souris au premier démarrage.
+- **Réglages** : noms, corps et orbites par corps ; luminosité, palette daltonienne, unités, et
+  tracé des trajectoires interstellaires (désactivé par défaut : une hyperbole ne se referme
+  pas, et trois courbes ouvertes encombraient la vue d'ensemble).
 
 ## Stack
 
@@ -159,6 +166,10 @@ src/
 │   ├── twoBodyPropagation.ts # ⓟ Propagation d'un état (position + vitesse) sur sa conique
 │   ├── SimulationClock.ts    # Horloge simulée avec time travel et vitesse variable
 │   ├── ScaleService.ts       # Conversion UA → unités Three.js (modes educ/explo)
+│   ├── eclipse.ts            # ⓟ Occultation et ombre portée (cuivrée derrière une atmosphère)
+│   ├── overlayScale.ts       # ⓟ Échelle des couches 2D pendant la transition Éduc ↔ Explo
+│   ├── labelSpace.ts         # ⓟ Place occupée commune à toutes les couches de libellés
+│   ├── viewAngles.ts         # ⓟ Angles de caméra pour regarder une cible depuis une direction
 │   └── OrbitalMechanics.ts   # Pilote les positions planétaires chaque frame
 │   #  ⓟ = module pur sans état, testé unitairement (*.test.ts)
 │
@@ -187,6 +198,9 @@ src/
 │   ├── planetNav.ts, modeSwitcher.ts # Navigation et modes
 │   ├── playback.ts, timePanel.ts      # Lecture et voyage temporel
 │   ├── exploHud.ts                    # HUD et labels « Voyage spatial »
+│   ├── spacecraftOverlay.ts, interstellarOverlay.ts, smallBodyOverlay.ts
+│   │                                  # Couches instrument 2D (sondes, 1I/2I/3I, petits corps)
+│   ├── bodyInfo.ts                    # Fiche documentaire, crédit du modèle de forme inclus
 │   └── loader.ts, fullscreen.ts       # Contrôles transverses
 │
 ├── shaders/
