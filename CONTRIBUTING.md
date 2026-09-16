@@ -135,7 +135,13 @@ vérifiée — un maillage « publié par une agence » peut être une sphère b
 une fois par niveau : `1k` = 4000, `2k` = 15000, `4k` = 60000 triangles (il lit GLB, OBJ et les
 formats PDS ; `--z-up` ramène sur +Y le pôle des produits PDS, qui le portent sur Z). Le script
 REFUSE un niveau que la source ne peut pas atteindre : ne livrez alors que les niveaux obtenus,
-et déclarez-les dans `model.resolutions` (du plus fin au plus léger). Le chemin n'est jamais écrit
+et déclarez-les dans `model.resolutions` (du plus fin au plus léger). Puis donnez-lui sa vraie
+couleur : `node scripts/bake-shape-colour.mjs <nom> --albedo <pV publié> [--map carte.tif |
+--rgb rouge,vert,bleu] [--lon0 <longitude du bord gauche>]`, en déclarant `model.albedo`,
+`albedoSource` et `colourSource` (une carte de mission, ou `null` s'il n'en existe pas : couleur
+uniforme, rien d'inventé). Lisez la longitude du bord gauche dans les métadonnées de la carte —
+elle vaut 0° pour Bennu et Ryugu mais −180° pour Éros. `shapeModels.test.ts` vérifie que la
+luminance cuite correspond à l'albédo déclaré. Le chemin n'est jamais écrit
 à la main — `catalog.modelPath` le dérive, comme pour les textures, et l'application charge
 d'abord le niveau léger puis monte selon la distance et le palier de qualité. Le script imprime les statistiques de forme pondérées par l'aire et le rayon
 équivalent-volume avant/après : elles ne doivent pas bouger. `src/config/shapeModels.test.ts`

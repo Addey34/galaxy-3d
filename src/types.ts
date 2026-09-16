@@ -110,6 +110,19 @@ export interface ModelConfig {
    * l'écran devient noir sans la moindre erreur.
    */
   extentRatio: number;
+  /**
+   * Albédo géométrique PUBLIÉ (bande V), avec sa référence dans `albedoSource`. Il fixe la
+   * luminosité moyenne cuite dans le modèle par `scripts/bake-shape-colour.mjs`, à la convention
+   * d'affichage mesurée sur la texture lunaire — `shapeModels.test.ts` le vérifie sur chaque
+   * niveau livré.
+   */
+  albedo: number;
+  albedoSource: string;
+  /**
+   * Carte de mission d'où viennent les CONTRASTES et la couleur, ou `null` si aucune carte
+   * globale n'existe : le corps reçoit alors une couleur uniforme à son albédo, sans rien inventer.
+   */
+  colourSource: string | null;
 }
 
 export interface RingConfig {

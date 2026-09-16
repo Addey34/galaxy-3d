@@ -261,3 +261,75 @@ describe('débordement des modèles (extentRatio)', () => {
     expect(declared).toBeLessThan(measured * 1.08);
   });
 });
+
+/**
+ * LA COULEUR CUITE DANS CHAQUE NIVEAU EST CELLE QUE LE CATALOGUE DÉCLARE.
+ *
+ * `scripts/bake-shape-colour.mjs` ramène la luminance moyenne du modèle à l'albédo géométrique
+ * PUBLIÉ, converti à la convention d'affichage mesurée sur la texture lunaire (0,312 pour un
+ * albédo de 0,12). Si quelqu'un régénère un niveau sans repasser le script, il retombe au gris
+ * uniforme du décimateur — et Bennu, l'un des objets les plus sombres du système solaire,
+ * s'afficherait trois fois trop clair sans que rien ne casse. C'est ce que ce test empêche.
+ */
+const DISPLAY_PER_ALBEDO = 0.312 / 0.12;
+
+/** Luminance linéaire moyenne d'un niveau : couleurs par sommet si présentes, sinon matériau. */
+function meanLuminance(path: string): {
+  luminance: number;
+  perVertex: boolean;
+} {
+  const bytes = readFileSync(path);
+  const jsonLength = bytes.readUInt32LE(12);
+  const gltf = JSON.parse(bytes.toString('utf8', 20, 20 + jsonLength));
+  const primitive = gltf.meshes[0].primitives[0];
+  const colour = primitive.attributes.COLOR_0;
+  if (colour === undefined) {
+    const [r, g, b] = gltf.materials[primitive.material].pbrMetallicRoughness
+      .baseColorFactor as number[];
+    return {
+      luminance: 0.2126 * r! + 0.7152 * g! + 0.0722 * b!,
+      perVertex: false,
+    };
+  }
+  const accessor = gltf.accessors[colour];
+  const view = gltf.bufferViews[accessor.bufferView];
+  const start = bytes.byteOffset + 20 + jsonLength + 8 + (view.byteOffset ?? 0);
+  const values = new Uint16Array(
+    bytes.buffer.slice(start, start + accessor.count * 8)
+  );
+  let sum = 0;
+  for (let i = 0; i < accessor.count; i++)
+    sum +=
+      (0.2126 * values[i * 4]! +
+        0.7152 * values[i * 4 + 1]! +
+        0.0722 * values[i * 4 + 2]!) /
+      65535;
+  return { luminance: sum / accessor.count, perVertex: true };
+}
+
+describe('couleur réelle des modèles de forme', () => {
+  it('le script de cuisson utilise la même convention que ce test', () => {
+    const script = readFileSync(
+      join(PROJECT_ROOT, 'scripts/bake-shape-colour.mjs'),
+      'utf8'
+    );
+    expect(script).toContain('0.312 / 0.12');
+  });
+
+  it.each(levels())('%s %s', (name, _quality, onDisk) => {
+    const model = flattenBodies(CELESTIAL_CONFIG).get(name)!.model!;
+    expect(model.albedoSource.trim().length).toBeGreaterThan(10);
+    const { luminance, perVertex } = meanLuminance(onDisk);
+    const expected = model.albedo * DISPLAY_PER_ALBEDO;
+    // 3 % : les composantes écrêtées sur les zones les plus claires d'Éros tirent la moyenne
+    // un peu sous la cible ; un niveau jamais cuit s'en écarte de 60 % à 200 %.
+    expect(
+      Math.abs(luminance / expected - 1),
+      `${name} : luminance ${luminance.toFixed(3)} pour ${expected.toFixed(3)} attendue`
+    ).toBeLessThan(0.03);
+    // Une carte de mission ⇔ des couleurs par sommet ; sans carte, une couleur uniforme.
+    expect(perVertex, `${name} : couleurs par sommet`).toBe(
+      model.colourSource !== null
+    );
+  });
+});

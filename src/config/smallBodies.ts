@@ -875,11 +875,18 @@ export const SMALL_BODY_ELEMENTS: readonly SmallBodyElements[] = [
     color: 0x6b6560,
     // Pas de texture : la surface de Bennu n'a pas de mosaïque équirectangulaire publiée à
     // laquelle on puisse se fier. C'est la FORME qui la fait reconnaître, pas sa couleur.
-    fallbackColor: 0x59544f,
+    fallbackColor: 0x5e5e5e,
     model: {
       resolutions: ['4k', '2k', '1k'],
       // Mesuré sur le fichier : rayon max / rayon équivalent-volume.
       extentRatio: 1.18,
+      // Luminosité et couleur RÉELLES, cuites dans le modèle (bake-shape-colour.mjs) ; la sphère
+      // d'attente ci-dessus a la même couleur moyenne, pour ne pas changer d'aspect au chargement.
+      albedo: 0.044,
+      albedoSource:
+        'Hergenrother et al. 2019, Nat. Commun. 10, 1291 (JPL SBDB)',
+      colourSource:
+        'NASA/USGS — Bennu OSIRIS-REx OCAMS Global Albedo Mosaic (Golish et al. 2021), domaine public',
       credit:
         'NASA/Goddard Scientific Visualization Studio — OSIRIS-REx OLA v20 PTM global shape model (NASA/University of Arizona/CSA/York University/MDA), décimé pour le web.',
     },
@@ -934,11 +941,17 @@ export const SMALL_BODY_ELEMENTS: readonly SmallBodyElements[] = [
     radiusKm: 8.42,
     kind: 'asteroid',
     color: 0xe0a45c,
-    fallbackColor: 0xc9a27e,
+    fallbackColor: 0xe8cfb8,
     model: {
       resolutions: ['4k', '2k', '1k'],
       // Mesuré sur le fichier : rayon max / rayon équivalent-volume.
       extentRatio: 2.1,
+      // Luminosité et couleur RÉELLES, cuites dans le modèle (bake-shape-colour.mjs) ; la sphère
+      // d'attente ci-dessus a la même couleur moyenne, pour ne pas changer d'aspect au chargement.
+      albedo: 0.25,
+      albedoSource: 'Veverka et al. 2000, Science 289, 2088 (JPL SBDB)',
+      colourSource:
+        'NASA/USGS — Eros NEAR MSI Global Albedo Mosaics à 760, 550 et 450 nm (Golish et al. 2023, doi:10.17189/sv8w-5125), domaine public',
       credit:
         'NASA/JHU-APL NEAR Shoemaker — MSI shape model by R. Gaskell, NASA PDS NEAR-A-MSI-5-EROSSHAPE-V1.0 (q = 128), décimé pour le web.',
     },
@@ -985,11 +998,17 @@ export const SMALL_BODY_ELEMENTS: readonly SmallBodyElements[] = [
     radiusKm: 0.165,
     kind: 'asteroid',
     color: 0x7fb3c9,
-    fallbackColor: 0x9a8f86,
+    fallbackColor: 0xdadada,
     model: {
       resolutions: ['4k', '2k', '1k'],
       // Mesuré sur le fichier : rayon max / rayon équivalent-volume.
       extentRatio: 1.93,
+      // Luminosité et couleur RÉELLES, cuites dans le modèle (bake-shape-colour.mjs) ; la sphère
+      // d'attente ci-dessus a la même couleur moyenne, pour ne pas changer d'aspect au chargement.
+      albedo: 0.27,
+      albedoSource:
+        'Hayabusa AMICA, photométrie intégrée au voisinage de l’opposition (Icarus, 2018)',
+      colourSource: null,
       credit:
         'JAXA Hayabusa AMICA images — shape model by R. Gaskell (PSI), NASA PDS HAY-A-AMICA-5-ITOKAWASHAPE-V1.0 (q = 128), décimé pour le web.',
     },
@@ -1034,11 +1053,17 @@ export const SMALL_BODY_ELEMENTS: readonly SmallBodyElements[] = [
     radiusKm: 0.448,
     kind: 'asteroid',
     color: 0x9c6fd6,
-    fallbackColor: 0x3f3b39,
+    fallbackColor: 0x5f5f5f,
     model: {
       resolutions: ['4k', '2k', '1k'],
       // Mesuré sur le fichier : rayon max / rayon équivalent-volume.
       extentRatio: 1.18,
+      // Luminosité et couleur RÉELLES, cuites dans le modèle (bake-shape-colour.mjs) ; la sphère
+      // d'attente ci-dessus a la même couleur moyenne, pour ne pas changer d'aspect au chargement.
+      albedo: 0.045,
+      albedoSource: 'Sugita et al. 2019, Science 364, 6437 (JPL SBDB)',
+      colourSource:
+        'ISAS/JAXA — carte d’albédo normal en bande v de Ryugu, Hayabusa2 ONC (JAXA DARTS), données modifiées : échantillonnée par sommet',
       credit:
         'ISAS/JAXA Hayabusa2 — SfM shape model SHAPE_SFM_200k_v20180804 (Watanabe et al. 2019, DARTS), données modifiées : décimé pour le web, pôle ramené sur Y.',
     },
@@ -1084,11 +1109,16 @@ export const SMALL_BODY_ELEMENTS: readonly SmallBodyElements[] = [
     radiusKm: 15.7,
     kind: 'asteroid',
     color: 0xd6c16f,
-    fallbackColor: 0xb59a7a,
+    fallbackColor: 0xd8d8d8,
     model: {
       resolutions: ['2k', '1k'],
       // Mesuré sur le fichier : rayon max / rayon équivalent-volume.
       extentRatio: 2.0,
+      // Luminosité et couleur RÉELLES, cuites dans le modèle (bake-shape-colour.mjs) ; la sphère
+      // d'attente ci-dessus a la même couleur moyenne, pour ne pas changer d'aspect au chargement.
+      albedo: 0.262,
+      albedoSource: 'NEOWISE, Mainzer et al. 2012, ApJ 759 L8 (JPL SBDB)',
+      colourSource: null,
       credit:
         'NASA Galileo SSI — shape model by P. Thomas et al. (1996), NASA PDS EAR-A-5-DDR-SHAPE-MODELS-V2.1, converti en maillage pour le web.',
     },

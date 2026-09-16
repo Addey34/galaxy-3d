@@ -366,7 +366,11 @@ export function setupBodyInfo(coordinator?: OverlayCoordinator): BodyInfoPanel {
     // de citer la source (et les modifications) de tout usage de ses données.
     if (creditEl) {
       const credit = cfg.model?.credit;
-      creditEl.textContent = credit ? `${t('bi.modelCredit')} : ${credit}` : '';
+      const colour = cfg.model?.colourSource;
+      // La carte de couleur est une donnée tierce elle aussi : citée à côté de la forme.
+      creditEl.textContent = credit
+        ? `${t('bi.modelCredit')} : ${credit}${colour ? ` · ${t('bi.colourCredit')} : ${colour}` : ''}`
+        : '';
       creditEl.hidden = !credit;
     }
 

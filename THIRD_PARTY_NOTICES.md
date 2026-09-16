@@ -119,6 +119,21 @@ radius, and its maximum-inertia axis against +Y, by `src/config/shapeModels.test
 67P/Churyumov-Gerasimenko's archived models carry a non-commercial licence whose compatibility
 with the site's donation link is being asked to ESA before any use.
 
+**Surface colour baked into the models** (`scripts/bake-shape-colour.mjs`, per-vertex colour, no
+texture shipped). Mean brightness = the published geometric albedo converted to the app's display
+convention measured on the Moon texture; contrasts and colour ratios come from mission maps:
+
+- Bennu — NASA/USGS *Bennu OSIRIS-REx OCAMS Global Albedo Mosaic* (Golish et al. 2021), public
+  domain; albedo 0.044 (Hergenrother et al. 2019).
+- Eros — NASA/USGS *Eros NEAR MSI Global Albedo Mosaics* at 760, 550 and 450 nm (Golish et al.
+  2023, doi:10.17189/sv8w-5125), public domain; albedo 0.25 (Veverka et al. 2000).
+- Ryugu — ISAS/JAXA v-band normal albedo map from Hayabusa2 ONC (JAXA DARTS); **modification
+  stated as required**: resampled per vertex. Albedo 0.045 (Sugita et al. 2019).
+- Itokawa (albedo 0.27, Hayabusa AMICA) and Ida (albedo 0.262, NEOWISE): no global map is
+  published, so the colour is uniform at the published albedo — nothing is painted in.
+
+The source maps (hundreds of MB each) are not redistributed; only the sampled colours are.
+
 A mesh may not enter this repository without a source and a credit — `ModelConfig.credit` is
 required by the type, and a test rejects an empty or unattributed one. Note that "NASA-published"
 is not by itself a guarantee of scientific content: the only small-body mesh in the

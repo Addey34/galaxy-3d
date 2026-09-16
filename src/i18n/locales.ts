@@ -323,6 +323,7 @@ export const messages: Record<Locale, Dict> = {
     'bi.live.label': 'Distance from you',
     'bi.more': 'Learn more',
     'bi.modelCredit': '3D shape model',
+    'bi.colourCredit': 'Surface colour',
     'bi.fictional': 'Illustrative surface',
     'bi.fictional.hint':
       'No spacecraft has resolved this surface, so the texture is illustrative, not a scientific map.',
@@ -668,6 +669,7 @@ export const messages: Record<Locale, Dict> = {
     // ── Fiche d'info (bodyInfo) ──
     'bi.more': 'En savoir plus',
     'bi.modelCredit': 'Modèle de forme 3D',
+    'bi.colourCredit': 'Couleur de surface',
     'bi.live.label': 'Distance depuis vous',
     'bi.fictional': 'Surface fictive',
     'bi.fictional.hint':
