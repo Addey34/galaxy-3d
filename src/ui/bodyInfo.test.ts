@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it, vi } from 'vitest';
 import { CELESTIAL_CONFIG } from '@/config/bodies';
 import { flattenBodies } from '@/config/catalog';
 import { setLocale } from '@/i18n';
@@ -17,7 +17,14 @@ function stats(name: string): Map<string, string> {
 }
 
 describe('fiche d’information — libellés', () => {
-  setLocale('fr');
+  beforeAll(() => {
+    // `setLocale` écrit `<html lang>` ; l'environnement de test n'a pas de DOM. Passer par
+    // l'anglais d'abord : sur une machine française, la détection choisit déjà `fr` et
+    // `setLocale('fr')` ne fait rien — c'est ainsi que ce test passait en local et cassait en CI.
+    vi.stubGlobal('document', { documentElement: {} });
+    setLocale('en');
+    setLocale('fr');
+  });
 
   it('mesure la distance d’un satellite depuis son parent réel', () => {
     const titan = stats('titan');
