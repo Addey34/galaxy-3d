@@ -57,14 +57,21 @@ PolyForm license covers images, textures or fonts.
 
 ## 3D shape models
 
-`public/assets/models/bennu/bennu.glb` — asteroid (101955) Bennu.
+Every model below is shipped as **levels of detail**, `public/assets/models/{body}/{body}_shape_{1k,2k,4k}.glb`
+(budgets of ~4,000 / ~15,000 / ~60,000 triangles, produced from the original scientific product by
+`scripts/decimate-shape-model.mjs --target`). A level is only shipped if the source holds enough
+detail for it: Ida has no 4k level. The app loads the lightest level first and a finer one only
+when the camera comes close, capped by the graphics quality tier.
+
+`public/assets/models/bennu/bennu_shape_{1k,2k,4k}.glb` — asteroid (101955) Bennu. 4,113 / 15,633 /
+62,833 triangles (73 KiB / 274 KiB / 1.1 MiB).
 
 - **Source**: NASA/Goddard Scientific Visualization Studio, *Global Bennu 3D Model — OLA v20 PTM*
   (<https://svs.gsfc.nasa.gov/5069>).
 - **Data credit**: NASA / University of Arizona / CSA / York University / MDA, from the
   OSIRIS-REx laser altimeter (OLA). Public domain, as NASA-produced work.
-- **Modification**: reduced from 3,366,134 to 22,811 triangles by vertex clustering with
-  `scripts/decimate-shape-model.mjs`, so it can be served on the web (60.6 MB → 400 KiB). No
+- **Modification**: reduced from 3,366,134 triangles by vertex clustering with
+  `scripts/decimate-shape-model.mjs`, so it can be served on the web (60.6 MB source). No
   geometry was invented: the script reports the shape statistics before and after, and the two
   that characterise the body are unchanged (radius standard deviation 6.00 % → 6.03 %, equator
   to pole ratio 1.118 → 1.119). The credit above is also embedded in the file's glTF `asset.copyright`.
@@ -77,21 +84,21 @@ brought onto +Y where the source carried it on Z, and the credit embedded in eac
 `asset.copyright`. Each file's volume-equivalent radius is checked against the published mean
 radius, and its maximum-inertia axis against +Y, by `src/config/shapeModels.test.ts`.
 
-`public/assets/models/eros/eros.glb` — asteroid (433) Eros. 29,135 triangles, 512 KiB.
+`public/assets/models/eros/eros_shape_{1k,2k,4k}.glb` — asteroid (433) Eros. 3,751 / 15,499 / 61,652 triangles.
 
 - **Source**: NASA PDS Small Bodies Node, `NEAR-A-MSI-5-EROSSHAPE-V1.0` (q = 128).
 - **Data credit**: NASA / JHU-APL NEAR Shoemaker, Multi-Spectral Imager; shape model by
   R. Gaskell. Public domain (NASA-funded archive product, no restriction).
 - **Modification**: decimated for the web.
 
-`public/assets/models/itokawa/itokawa.glb` — asteroid (25143) Itokawa. 29,568 triangles, 520 KiB.
+`public/assets/models/itokawa/itokawa_shape_{1k,2k,4k}.glb` — asteroid (25143) Itokawa. 3,918 / 15,114 / 62,781 triangles.
 
 - **Source**: NASA PDS Small Bodies Node, `HAY-A-AMICA-5-ITOKAWASHAPE-V1.0` (q = 128).
 - **Data credit**: JAXA Hayabusa AMICA images; shape model by R. Gaskell (PSI). Distributed by
   NASA PDS without restriction.
 - **Modification**: decimated for the web.
 
-`public/assets/models/ryugu/ryugu.glb` — asteroid (162173) Ryugu. 26,503 triangles, 467 KiB.
+`public/assets/models/ryugu/ryugu_shape_{1k,2k,4k}.glb` — asteroid (162173) Ryugu. 4,196 / 15,368 / 62,727 triangles.
 
 - **Source**: JAXA DARTS, Hayabusa2 SfM shape model `SHAPE_SFM_200k_v20180804`
   (Watanabe et al. 2019, *Science* 364).
@@ -100,7 +107,7 @@ radius, and its maximum-inertia axis against +Y, by `src/config/shapeModels.test
 - **Modification (stated as required)**: decimated for the web and re-oriented so that the
   rotation pole lies on +Y.
 
-`public/assets/models/ida/ida.glb` — asteroid (243) Ida. 27,197 triangles, 479 KiB.
+`public/assets/models/ida/ida_shape_{1k,2k}.glb` — asteroid (243) Ida. 4,115 / 15,744 triangles. No 4k level: the 2° source grid holds ~32,400 triangles of real information, and a 60,000-triangle level would interpolate, not measure.
 
 - **Source**: NASA PDS Small Bodies Node, `EAR-A-5-DDR-SHAPE-MODELS-V2.1`.
 - **Data credit**: NASA Galileo Solid-State Imaging; shape model by P. Thomas et al. (1996).

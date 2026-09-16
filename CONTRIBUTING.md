@@ -131,9 +131,13 @@ indexable (`dist/<nom>/index.html`), son entrée de sitemap et sa vignette de pa
 
 Uniquement un **vrai modèle de forme scientifique** (PDS, archive de mission) à la licence
 vérifiée — un maillage « publié par une agence » peut être une sphère bosselée. Passez-le par
-`scripts/decimate-shape-model.mjs <source> public/assets/models/<nom>/<nom>.glb [grille] --z-up`
-(il lit GLB, OBJ et les formats PDS ; `--z-up` ramène sur +Y le pôle des produits PDS, qui le
-portent sur Z). Le script imprime les statistiques de forme pondérées par l'aire et le rayon
+`scripts/decimate-shape-model.mjs <source> public/assets/models/<nom>/<nom>_shape_<niveau>.glb --z-up --target <triangles>`,
+une fois par niveau : `1k` = 4000, `2k` = 15000, `4k` = 60000 triangles (il lit GLB, OBJ et les
+formats PDS ; `--z-up` ramène sur +Y le pôle des produits PDS, qui le portent sur Z). Le script
+REFUSE un niveau que la source ne peut pas atteindre : ne livrez alors que les niveaux obtenus,
+et déclarez-les dans `model.resolutions` (du plus fin au plus léger). Le chemin n'est jamais écrit
+à la main — `catalog.modelPath` le dérive, comme pour les textures, et l'application charge
+d'abord le niveau léger puis monte selon la distance et le palier de qualité. Le script imprime les statistiques de forme pondérées par l'aire et le rayon
 équivalent-volume avant/après : elles ne doivent pas bouger. `src/config/shapeModels.test.ts`
 refuse ensuite un modèle dont l'axe de plus grande inertie n'est pas Y ou dont le volume ne
 retrouve pas `radiusKm`. Déclarez aussi `model.extentRatio` : le rayon MAXIMAL du maillage

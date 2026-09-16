@@ -1,3 +1,4 @@
+import type { ModelQuality } from '@/core/modelLod';
 /**
  * Interfaces TypeScript partagées par toute l'application : configuration des corps
  * célestes, de leurs textures et de leurs anneaux, données astronomiques réelles, et le
@@ -89,8 +90,13 @@ export interface TextureResolutions {
  * reste visible et rond, jamais absent.
  */
 export interface ModelConfig {
-  /** Chemin du .glb depuis la racine du site (`/assets/models/{body}/{body}.glb`). */
-  url: string;
+  /**
+   * Niveaux de détail livrés, du plus fin au plus léger. Les chemins en DÉRIVENT
+   * (`catalog.modelPath`, `/assets/models/{corps}/{corps}_shape_{niveau}.glb`) : aucun chemin
+   * n'est écrit à la main, comme pour les textures. Un niveau n'est livré que si la source
+   * scientifique contient assez de détail pour lui (Ida : pas de 4k).
+   */
+  resolutions: readonly ModelQuality[];
   /**
    * Crédit à afficher. Obligatoire : un maillage tiers sans provenance ne doit pas entrer dans
    * le dépôt (`scripts/texture-sources.json` tient la même règle pour les textures).

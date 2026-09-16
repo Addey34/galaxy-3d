@@ -23,7 +23,7 @@
  * le plugin Vite (`vite.config.ts`), pour que tout ce qui décide quelque chose soit testable
  * sans build.
  */
-import { flattenBodies, ringTexturePath } from '@/config/catalog';
+import { flattenBodies, modelPath, ringTexturePath } from '@/config/catalog';
 import type {
   CelestialBodyConfig,
   CelestialConfig,
@@ -132,7 +132,9 @@ export function bodyVisual(
     ring: bodyRingVisual(config, bodyName),
     // Le chemin du catalogue est une URL servie (`/assets/...`) ; ici il faut un chemin de
     // DÉPÔT, parce que la vignette est fabriquée au build, avant qu'aucun serveur n'existe.
-    model: config.model ? `public${config.model.url}` : null,
+    model: config.model
+      ? `public${modelPath(bodyName, config.model.resolutions.includes('2k') ? '2k' : config.model.resolutions[0]!)}`
+      : null,
   };
 }
 

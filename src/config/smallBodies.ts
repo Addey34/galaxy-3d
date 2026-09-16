@@ -877,7 +877,7 @@ export const SMALL_BODY_ELEMENTS: readonly SmallBodyElements[] = [
     // laquelle on puisse se fier. C'est la FORME qui la fait reconnaître, pas sa couleur.
     fallbackColor: 0x59544f,
     model: {
-      url: '/assets/models/bennu/bennu.glb',
+      resolutions: ['4k', '2k', '1k'],
       // Mesuré sur le fichier : rayon max / rayon équivalent-volume.
       extentRatio: 1.18,
       credit:
@@ -936,7 +936,7 @@ export const SMALL_BODY_ELEMENTS: readonly SmallBodyElements[] = [
     color: 0xe0a45c,
     fallbackColor: 0xc9a27e,
     model: {
-      url: '/assets/models/eros/eros.glb',
+      resolutions: ['4k', '2k', '1k'],
       // Mesuré sur le fichier : rayon max / rayon équivalent-volume.
       extentRatio: 2.1,
       credit:
@@ -987,7 +987,7 @@ export const SMALL_BODY_ELEMENTS: readonly SmallBodyElements[] = [
     color: 0x7fb3c9,
     fallbackColor: 0x9a8f86,
     model: {
-      url: '/assets/models/itokawa/itokawa.glb',
+      resolutions: ['4k', '2k', '1k'],
       // Mesuré sur le fichier : rayon max / rayon équivalent-volume.
       extentRatio: 1.93,
       credit:
@@ -1036,7 +1036,7 @@ export const SMALL_BODY_ELEMENTS: readonly SmallBodyElements[] = [
     color: 0x9c6fd6,
     fallbackColor: 0x3f3b39,
     model: {
-      url: '/assets/models/ryugu/ryugu.glb',
+      resolutions: ['4k', '2k', '1k'],
       // Mesuré sur le fichier : rayon max / rayon équivalent-volume.
       extentRatio: 1.18,
       credit:
@@ -1086,7 +1086,7 @@ export const SMALL_BODY_ELEMENTS: readonly SmallBodyElements[] = [
     color: 0xd6c16f,
     fallbackColor: 0xb59a7a,
     model: {
-      url: '/assets/models/ida/ida.glb',
+      resolutions: ['2k', '1k'],
       // Mesuré sur le fichier : rayon max / rayon équivalent-volume.
       extentRatio: 2.0,
       credit:

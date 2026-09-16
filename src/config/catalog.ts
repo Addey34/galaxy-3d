@@ -60,6 +60,14 @@ function toSnake(s: string): string {
  * `{body}/{body}_{layer}` en snake_case (ex. `earth/earth_normal_map`).
  * Source unique du nommage — aucun chemin n'est écrit à la main dans le catalogue.
  */
+/**
+ * Chemin servi d'un niveau de modèle de forme : `/assets/models/{corps}/{corps}_shape_{niveau}.glb`.
+ * Même règle que `texturePath` : le nommage a une source unique, jamais un chemin saisi.
+ */
+export function modelPath(bodyName: string, quality: string): string {
+  return `/assets/models/${bodyName}/${bodyName}_shape_${quality}.glb`;
+}
+
 export function texturePath(bodyName: string, layer: string): string {
   return `${bodyName}/${bodyName}_${toSnake(layer)}`;
 }

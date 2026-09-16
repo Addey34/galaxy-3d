@@ -2,7 +2,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { CELESTIAL_CONFIG } from './bodies';
-import { flattenBodies } from './catalog';
+import { flattenBodies, modelPath } from './catalog';
 import type { CelestialBodyConfig } from '@/types';
 import {
   boundingRadius,
@@ -35,6 +35,30 @@ const withModel = (): [string, CelestialBodyConfig][] =>
     ([, cfg]) => cfg.model !== undefined
   );
 
+/** Tous les niveaux livrés : [corps, niveau, chemin disque]. */
+const levels = (): [string, string, string][] =>
+  withModel().flatMap(([name, cfg]) =>
+    cfg.model!.resolutions.map(
+      (q) =>
+        [name, q, join(PROJECT_ROOT, 'public', modelPath(name, q))] as [
+          string,
+          string,
+          string,
+        ]
+    )
+  );
+
+/**
+ * Budget de triangles par niveau (cf. `core/modelLod.ts`, produits par
+ * `decimate-shape-model.mjs --target`), marge de 5 %. C'est ce qui rend le chargement FLUIDE :
+ * le niveau léger qu'on charge d'abord pour chaque astéroïde ne peut pas grossir sans bruit.
+ */
+const TRIANGLE_BUDGET: Record<string, number> = {
+  '1k': 4000,
+  '2k': 15000,
+  '4k': 60000,
+};
+
 describe('modèles de forme 3D', () => {
   it('déclare au moins un corps modélisé', () => {
     // Sans cette borne, toutes les assertions ci-dessous passeraient sur un ensemble vide —
@@ -42,17 +66,45 @@ describe('modèles de forme 3D', () => {
     expect(withModel().length).toBeGreaterThan(0);
   });
 
-  it.each(withModel().map(([name]) => name))(
-    '%s : le fichier déclaré existe vraiment',
-    (name) => {
-      const model = flattenBodies(CELESTIAL_CONFIG).get(name)?.model;
-      expect(model).toBeDefined();
-      // Chemin absolu depuis la racine du site : c'est ce que le navigateur demandera.
-      expect(model!.url.startsWith('/assets/models/')).toBe(true);
-      const onDisk = join(PROJECT_ROOT, 'public', model!.url);
-      expect(existsSync(onDisk), `${name} : ${model!.url} introuvable`).toBe(
-        true
+  it.each(levels())(
+    '%s %s : le niveau déclaré existe vraiment',
+    (name, quality, onDisk) => {
+      // Chemin DÉRIVÉ du nom (catalog.modelPath), comme les textures : jamais saisi.
+      expect(modelPath(name, quality)).toBe(
+        `/assets/models/${name}/${name}_shape_${quality}.glb`
       );
+      expect(
+        existsSync(onDisk),
+        `${name} ${quality} : ${onDisk} introuvable`
+      ).toBe(true);
+    }
+  );
+
+  it.each(levels())(
+    '%s %s : tient son budget de triangles',
+    (name, quality, onDisk) => {
+      const triangles = readGlbGeometry(onDisk).index.length / 3;
+      expect(
+        triangles,
+        `${name} ${quality} : ${triangles} triangles`
+      ).toBeLessThanOrEqual(TRIANGLE_BUDGET[quality]! * 1.05);
+    }
+  );
+
+  it.each(withModel().map(([name]) => name))(
+    '%s : chaque niveau est plus détaillé que le précédent',
+    (name) => {
+      const cfg = flattenBodies(CELESTIAL_CONFIG).get(name)!;
+      const counts = ['1k', '2k', '4k']
+        .filter((q) => cfg.model!.resolutions.includes(q as '1k'))
+        .map(
+          (q) =>
+            readGlbGeometry(join(PROJECT_ROOT, 'public', modelPath(name, q)))
+              .index.length / 3
+        );
+      expect(counts.length).toBeGreaterThan(0);
+      for (let i = 1; i < counts.length; i++)
+        expect(counts[i]!).toBeGreaterThan(counts[i - 1]!);
     }
   );
 
@@ -144,13 +196,10 @@ describe('orientation des modèles livrés', () => {
    * qui a été livré pour Bennu : son fichier portait le pôle sur Z, convention des produits
    * PDS, et personne ne l'a vu parce qu'une toupie qui roule ressemble encore à une toupie.
    */
-  it.each(withModel().map(([name]) => name))(
-    '%s : tourne autour de son axe de plus grande inertie (Y)',
-    (name) => {
-      const model = flattenBodies(CELESTIAL_CONFIG).get(name)!.model!;
-      const { positions, index } = readGlbGeometry(
-        join(PROJECT_ROOT, 'public', model.url)
-      );
+  it.each(levels())(
+    '%s %s : tourne autour de son axe de plus grande inertie (Y)',
+    (name, _quality, onDisk) => {
+      const { positions, index } = readGlbGeometry(onDisk);
       const axis = maxInertiaAxis(positions, index);
       const tiltDeg =
         (Math.acos(Math.min(1, Math.abs(axis[1]))) * 180) / Math.PI;
@@ -167,13 +216,11 @@ describe('orientation des modèles livrés', () => {
    * retrouver le rayon moyen publié du catalogue : c'est la preuve que le fichier décrit le
    * bon corps, à la bonne taille, et que la décimation n'a pas mangé de volume.
    */
-  it.each(withModel().map(([name]) => name))(
-    '%s : son volume retrouve le rayon moyen du catalogue',
-    (name) => {
+  it.each(levels())(
+    '%s %s : son volume retrouve le rayon moyen du catalogue',
+    (name, _quality, onDisk) => {
       const cfg = flattenBodies(CELESTIAL_CONFIG).get(name)!;
-      const { positions, index } = readGlbGeometry(
-        join(PROJECT_ROOT, 'public', cfg.model!.url)
-      );
+      const { positions, index } = readGlbGeometry(onDisk);
       const radius = volumeEquivalentRadius(
         meshVolume(positions, index).volume
       );
@@ -198,11 +245,10 @@ describe('orientation des modèles livrés', () => {
  * sous-estimer. Une sur-estimation de quelques pour cent ne coûte qu'un peu de recul.
  */
 describe('débordement des modèles (extentRatio)', () => {
-  it.each(withModel().map(([name]) => name))('%s', (name) => {
+  // Un seul `extentRatio` par corps pour TOUS ses niveaux : il doit couvrir le plus saillant.
+  it.each(levels())('%s %s', (name, _quality, onDisk) => {
     const cfg = flattenBodies(CELESTIAL_CONFIG).get(name)!;
-    const { positions, index } = readGlbGeometry(
-      join(PROJECT_ROOT, 'public', cfg.model!.url)
-    );
+    const { positions, index } = readGlbGeometry(onDisk);
     const { volume, centroid } = meshVolume(positions, index);
     const measured =
       boundingRadius(positions, centroid) / volumeEquivalentRadius(volume);
@@ -211,7 +257,7 @@ describe('débordement des modèles (extentRatio)', () => {
       declared,
       `${name} : déclaré ${declared}, mesuré ${measured.toFixed(3)} — la caméra entrerait dans le maillage`
     ).toBeGreaterThanOrEqual(measured - 0.005);
-    // Et pas n'importe quelle grande valeur : elle doit décrire CE fichier.
-    expect(declared).toBeLessThan(measured * 1.05);
+    // Et pas n'importe quelle grande valeur : elle doit décrire ces fichiers.
+    expect(declared).toBeLessThan(measured * 1.08);
   });
 });

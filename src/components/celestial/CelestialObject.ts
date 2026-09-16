@@ -38,8 +38,17 @@ import {
   type MoonlightUniforms,
   type RingShadowUniforms,
 } from '@/config/layerConfig';
-import { PRECIP_SETTINGS, REALTIME_CLOUDS_SETTINGS } from '@/config/engine';
-import { ringTexturePath } from '@/config/catalog';
+import {
+  BOOT_QUALITY_PROFILE,
+  PRECIP_SETTINGS,
+  REALTIME_CLOUDS_SETTINGS,
+} from '@/config/engine';
+import { modelPath, ringTexturePath } from '@/config/catalog';
+import {
+  chooseModelQuality,
+  lightestModelQuality,
+  type ModelQuality,
+} from '@/core/modelLod';
 import type { CameraDistance, CelestialBodyConfig } from '@/types';
 import * as NightLightsShader from '@/shaders/NightLightsShader';
 import Logger from '@/utils/Logger';
@@ -118,6 +127,9 @@ export default class CelestialObject {
   // d'échelle), donc rien ne les libérerait sans cette référence. Disposés dans dispose().
   private _modelRoot: THREE.Group | null = null;
   private _modelMeshes: THREE.Mesh[] = [];
+  /** Niveau du modèle affiché, et celui en cours de chargement (un seul à la fois). */
+  private _modelQuality: ModelQuality | null = null;
+  private _modelLoading: ModelQuality | null = null;
   private readonly _ringWorldPos = new THREE.Vector3();
   // Uniforms de clair de Lune du matériau surface (Terre) : la face nuit reçoit
   // une lueur diffuse selon la position réelle de la Lune (réflecteur).
@@ -215,7 +227,12 @@ export default class CelestialObject {
     if (ring && !Array.isArray(ring.material))
       this._ringShadow = getRingShadowUniforms(ring.material);
     if (this.layers.has('ring')) void this._loadRingTexture();
-    if (this.config.model) void this._loadShapeModel();
+    // On commence par le niveau le plus léger : un astéroïde qu'on ne visite pas ne coûte que
+    // ~70 Kio. Le LOD (updateLODTextures) monte ensuite le niveau quand la caméra approche.
+    const firstModel = this.config.model
+      ? lightestModelQuality(this.config.model.resolutions)
+      : null;
+    if (firstModel) void this._loadShapeModel(firstModel);
 
     // Les corps sans loadPriority (astéroïdes/comètes du catalogue, hors couche instrument
     // 2D) ne sont pas sur le chemin critique du boot : repousser leur texture après la
@@ -1139,6 +1156,9 @@ export default class CelestialObject {
     maxNormalizedDistance = 250,
     threshold = 2
   ): Promise<void> {
+    // Le modèle de forme a son propre LOD, indépendant des textures : les corps modélisés n'en
+    // ont pas, et le garde ci-dessous les aurait privés de tout changement de niveau.
+    if (this.config.model && camera && this.group) this._updateModelLOD(camera);
     if (!this._hasTextures || !camera || !this.group) return;
 
     this.group.getWorldPosition(this._lodWorldPos);
@@ -1252,13 +1272,34 @@ export default class CelestialObject {
    * scène n'a pas à le savoir. C'est aussi ce qui garantit qu'un modèle mal exporté ne fasse
    * pas soudain mille fois la taille de sa planète.
    */
-  private async _loadShapeModel(): Promise<void> {
+  /** Monte ou descend le niveau du modèle selon la distance, sans empiler les chargements. */
+  private _updateModelLOD(camera: THREE.Camera): void {
     const model = this.config.model;
-    if (!model) return;
+    if (!model || this._modelLoading) return;
+    this.group.getWorldPosition(this._lodWorldPos);
+    const radius = Math.max(
+      (this.group.userData['radius'] as number | undefined) ??
+        this.config.radius * this._scaleFactor,
+      1e-12
+    );
+    const next = chooseModelQuality(
+      model.resolutions,
+      camera.position.distanceTo(this._lodWorldPos) / radius,
+      BOOT_QUALITY_PROFILE.maxModelQuality
+    );
+    if (next && next !== this._modelQuality) void this._loadShapeModel(next);
+  }
+
+  private async _loadShapeModel(quality: ModelQuality): Promise<void> {
+    const model = this.config.model;
+    if (!model || this._modelLoading) return;
+    this._modelLoading = quality;
     try {
       const { GLTFLoader } =
         await import('three/examples/jsm/loaders/GLTFLoader.js');
-      const gltf = await new GLTFLoader().loadAsync(model.url);
+      const gltf = await new GLTFLoader().loadAsync(
+        modelPath(this.name, quality)
+      );
       if (this._disposed) return;
 
       const meshes: THREE.Mesh[] = [];
@@ -1307,20 +1348,41 @@ export default class CelestialObject {
 
       // Un modèle de forme masque un halo comme la sphère qu'il remplace.
       for (const mesh of meshes) markGlowOccluder(mesh);
+      // Changement de niveau : le nouveau n'est accroché qu'une fois prêt, l'ancien libéré
+      // aussitôt après — jamais d'image sans corps, jamais deux maillages superposés.
+      this._disposeShapeModel();
       this._modelRoot = root;
       this._modelMeshes = meshes;
+      this._modelQuality = quality;
       this._meshGroup.add(root);
       const surface = this.layers.get('surface');
       if (surface) surface.visible = false;
       Logger.info(
-        `[CelestialObject] Shape model loaded for "${this.name}" (${meshes.length} mesh(es))`
+        `[CelestialObject] Shape model ${quality} loaded for "${this.name}" (${meshes.length} mesh(es))`
       );
     } catch (error) {
-      // Volontairement non fatal : la sphère est déjà là et reste affichée.
+      // Volontairement non fatal : la sphère (ou le niveau précédent) reste affichée.
       Logger.warn(
-        `[CelestialObject] Shape model failed for "${this.name}", keeping the sphere: ${String(error)}`
+        `[CelestialObject] Shape model ${quality} failed for "${this.name}", keeping what is shown: ${String(error)}`
       );
+    } finally {
+      this._modelLoading = null;
     }
+  }
+
+  /** Libère le maillage du modèle affiché (hors de `layers` : libéré ici et nulle part ailleurs). */
+  private _disposeShapeModel(): void {
+    for (const mesh of this._modelMeshes) {
+      mesh.geometry?.dispose();
+      const materials = Array.isArray(mesh.material)
+        ? mesh.material
+        : [mesh.material];
+      for (const material of materials) material?.dispose();
+    }
+    this._modelMeshes = [];
+    this._modelRoot?.removeFromParent();
+    this._modelRoot = null;
+    this._modelQuality = null;
   }
 
   // ============================================================================
@@ -1371,16 +1433,7 @@ export default class CelestialObject {
     this._surfaceGeoStd = null;
     this._surfaceGeoHi = null;
     // Modèle de forme : hors de `layers`, donc libéré ici et nulle part ailleurs.
-    for (const mesh of this._modelMeshes) {
-      mesh.geometry?.dispose();
-      const materials = Array.isArray(mesh.material)
-        ? mesh.material
-        : [mesh.material];
-      for (const material of materials) material?.dispose();
-    }
-    this._modelMeshes = [];
-    this._modelRoot?.removeFromParent();
-    this._modelRoot = null;
+    this._disposeShapeModel();
     Logger.warn(`[CelestialObject] Disposed "${this.name}"`);
   }
 }

@@ -3,7 +3,12 @@
  * Réduit un modèle de forme scientifique à une taille utilisable sur le web.
  *
  * Usage :
- *   node scripts/decimate-shape-model.mjs <entrée> <sortie.glb> [grille] [--z-up]
+ *   node scripts/decimate-shape-model.mjs <entrée> <sortie.glb> [grille] [--z-up] [--target N]
+ * `--target N` : cherche la grille dont le maillage produit approche N triangles (sans le
+ * dépasser de plus de 5 %). C'est ainsi que sont produits les niveaux de détail
+ * `{corps}_shape_{1k,2k,4k}.glb` : un budget de triangles par niveau, pas une grille réglée à la
+ * main corps par corps. Refuse un budget que la SOURCE ne peut pas atteindre — un niveau plus
+ * détaillé que sa source serait une interpolation présentée comme une mesure.
  *
  * Entrées lues : glTF binaire (.glb), Wavefront (.obj), et les deux formats de la PDS Small
  * Bodies Node — table sommets/plaques (`ver128q.tab` : comptes, « id x y z », « id a b c ») et
@@ -386,14 +391,18 @@ function writeGlb(path, positions, normals, indices, copyright, name) {
 
 const args = process.argv.slice(2);
 const zUp = args.includes('--z-up');
-const [input, output, gridArg] = args.filter((a) => !a.startsWith('--'));
+const targetAt = args.indexOf('--target');
+const TARGET = targetAt === -1 ? null : Number(args[targetAt + 1]);
+const [input, output, gridArg] = args
+  .filter((_a, i) => targetAt === -1 || (i !== targetAt && i !== targetAt + 1))
+  .filter((a) => !a.startsWith('--'));
 if (!input || !output) {
   console.error(
     'usage : node scripts/decimate-shape-model.mjs <entrée> <sortie.glb> [grille] [--z-up]'
   );
   process.exit(1);
 }
-const GRID = Number(gridArg ?? 52);
+let GRID = Number(gridArg ?? 52);
 
 const shape = await loadShape(input);
 const pos = Float32Array.from(shape.pos);
@@ -420,88 +429,113 @@ const beforeArea = shapeStats(
 );
 const volumeBefore = meshVolume(pos, index, triangleCount);
 
-const min = [Infinity, Infinity, Infinity];
-const max = [-Infinity, -Infinity, -Infinity];
-for (let i = 0; i < pos.length; i++) {
-  const k = i % 3;
-  if (pos[i] < min[k]) min[k] = pos[i];
-  if (pos[i] > max[k]) max[k] = pos[i];
-}
-const span = [0, 1, 2].map((k) => max[k] - min[k] || 1);
-const cellOf = (v) => {
-  let key = 0;
-  for (let k = 0; k < 3; k++)
-    key =
-      key * GRID +
-      Math.min(
-        GRID - 1,
-        Math.floor(((pos[v * 3 + k] - min[k]) / span[k]) * GRID)
-      );
-  return key;
-};
-
-const sums = new Map();
-for (let i = 0; i < vertexCount; i++) {
-  const key = cellOf(i);
-  let s = sums.get(key);
-  if (!s) sums.set(key, (s = [0, 0, 0, 0]));
-  s[0] += pos[i * 3];
-  s[1] += pos[i * 3 + 1];
-  s[2] += pos[i * 3 + 2];
-  s[3]++;
-}
-// Ordre stable : par indice de cellule, jamais par ordre d'insertion.
-const keys = [...sums.keys()].sort((a, b) => a - b);
-const remap = new Map();
-const outPos = new Float32Array(keys.length * 3);
-keys.forEach((key, n) => {
-  const s = sums.get(key);
-  outPos[n * 3] = s[0] / s[3];
-  outPos[n * 3 + 1] = s[1] / s[3];
-  outPos[n * 3 + 2] = s[2] / s[3];
-  remap.set(key, n);
-});
-
-const seen = new Set();
-const outIdx = [];
-for (let t = 0; t < triangleCount; t++) {
-  const a = remap.get(cellOf(index ? index[t * 3] : t * 3));
-  const b = remap.get(cellOf(index ? index[t * 3 + 1] : t * 3 + 1));
-  const c = remap.get(cellOf(index ? index[t * 3 + 2] : t * 3 + 2));
-  if (a === b || b === c || a === c) continue;
-  const lo = Math.min(a, b, c);
-  const hi = Math.max(a, b, c);
-  const sig = `${lo},${a + b + c - lo - hi},${hi}`;
-  if (seen.has(sig)) continue;
-  seen.add(sig);
-  outIdx.push(a, b, c);
-}
-
-const outNrm = new Float32Array(keys.length * 3);
-for (let i = 0; i < outIdx.length; i += 3) {
-  const [a, b, c] = [outIdx[i], outIdx[i + 1], outIdx[i + 2]];
-  const ux = outPos[b * 3] - outPos[a * 3];
-  const uy = outPos[b * 3 + 1] - outPos[a * 3 + 1];
-  const uz = outPos[b * 3 + 2] - outPos[a * 3 + 2];
-  const vx = outPos[c * 3] - outPos[a * 3];
-  const vy = outPos[c * 3 + 1] - outPos[a * 3 + 1];
-  const vz = outPos[c * 3 + 2] - outPos[a * 3 + 2];
-  const nx = uy * vz - uz * vy;
-  const ny = uz * vx - ux * vz;
-  const nz = ux * vy - uy * vx;
-  for (const k of [a, b, c]) {
-    outNrm[k * 3] += nx;
-    outNrm[k * 3 + 1] += ny;
-    outNrm[k * 3 + 2] += nz;
+function cluster(GRID) {
+  const min = [Infinity, Infinity, Infinity];
+  const max = [-Infinity, -Infinity, -Infinity];
+  for (let i = 0; i < pos.length; i++) {
+    const k = i % 3;
+    if (pos[i] < min[k]) min[k] = pos[i];
+    if (pos[i] > max[k]) max[k] = pos[i];
   }
+  const span = [0, 1, 2].map((k) => max[k] - min[k] || 1);
+  const cellOf = (v) => {
+    let key = 0;
+    for (let k = 0; k < 3; k++)
+      key =
+        key * GRID +
+        Math.min(
+          GRID - 1,
+          Math.floor(((pos[v * 3 + k] - min[k]) / span[k]) * GRID)
+        );
+    return key;
+  };
+
+  const sums = new Map();
+  for (let i = 0; i < vertexCount; i++) {
+    const key = cellOf(i);
+    let s = sums.get(key);
+    if (!s) sums.set(key, (s = [0, 0, 0, 0]));
+    s[0] += pos[i * 3];
+    s[1] += pos[i * 3 + 1];
+    s[2] += pos[i * 3 + 2];
+    s[3]++;
+  }
+  // Ordre stable : par indice de cellule, jamais par ordre d'insertion.
+  const keys = [...sums.keys()].sort((a, b) => a - b);
+  const remap = new Map();
+  const outPos = new Float32Array(keys.length * 3);
+  keys.forEach((key, n) => {
+    const s = sums.get(key);
+    outPos[n * 3] = s[0] / s[3];
+    outPos[n * 3 + 1] = s[1] / s[3];
+    outPos[n * 3 + 2] = s[2] / s[3];
+    remap.set(key, n);
+  });
+
+  const seen = new Set();
+  const outIdx = [];
+  for (let t = 0; t < triangleCount; t++) {
+    const a = remap.get(cellOf(index ? index[t * 3] : t * 3));
+    const b = remap.get(cellOf(index ? index[t * 3 + 1] : t * 3 + 1));
+    const c = remap.get(cellOf(index ? index[t * 3 + 2] : t * 3 + 2));
+    if (a === b || b === c || a === c) continue;
+    const lo = Math.min(a, b, c);
+    const hi = Math.max(a, b, c);
+    const sig = `${lo},${a + b + c - lo - hi},${hi}`;
+    if (seen.has(sig)) continue;
+    seen.add(sig);
+    outIdx.push(a, b, c);
+  }
+
+  const outNrm = new Float32Array(keys.length * 3);
+  for (let i = 0; i < outIdx.length; i += 3) {
+    const [a, b, c] = [outIdx[i], outIdx[i + 1], outIdx[i + 2]];
+    const ux = outPos[b * 3] - outPos[a * 3];
+    const uy = outPos[b * 3 + 1] - outPos[a * 3 + 1];
+    const uz = outPos[b * 3 + 2] - outPos[a * 3 + 2];
+    const vx = outPos[c * 3] - outPos[a * 3];
+    const vy = outPos[c * 3 + 1] - outPos[a * 3 + 1];
+    const vz = outPos[c * 3 + 2] - outPos[a * 3 + 2];
+    const nx = uy * vz - uz * vy;
+    const ny = uz * vx - ux * vz;
+    const nz = ux * vy - uy * vx;
+    for (const k of [a, b, c]) {
+      outNrm[k * 3] += nx;
+      outNrm[k * 3 + 1] += ny;
+      outNrm[k * 3 + 2] += nz;
+    }
+  }
+  for (let i = 0; i < keys.length; i++) {
+    const len =
+      Math.hypot(outNrm[i * 3], outNrm[i * 3 + 1], outNrm[i * 3 + 2]) || 1;
+    outNrm[i * 3] /= len;
+    outNrm[i * 3 + 1] /= len;
+    outNrm[i * 3 + 2] /= len;
+  }
+  return { keys, outPos, outIdx, outNrm };
 }
-for (let i = 0; i < keys.length; i++) {
-  const len =
-    Math.hypot(outNrm[i * 3], outNrm[i * 3 + 1], outNrm[i * 3 + 2]) || 1;
-  outNrm[i * 3] /= len;
-  outNrm[i * 3 + 1] /= len;
-  outNrm[i * 3 + 2] /= len;
+
+if (TARGET !== null) {
+  // La grille croît avec le nombre de triangles produits : recherche dichotomique.
+  if (triangleCount < TARGET * 0.95)
+    throw new Error(
+      `la source n'a que ${triangleCount} triangles : impossible d'en produire ${TARGET} sans inventer de géométrie`
+    );
+  let lo = 4;
+  let hi = 2048;
+  let best = null;
+  while (lo <= hi) {
+    const mid = (lo + hi) >> 1;
+    const produced = cluster(mid).outIdx.length / 3;
+    if (produced <= TARGET * 1.05) {
+      best = mid;
+      lo = mid + 1;
+    } else hi = mid - 1;
+  }
+  GRID = best ?? 4;
+  console.log(`grille retenue pour ~${TARGET} triangles : ${GRID}`);
 }
+const { keys, outPos, outIdx, outNrm } = cluster(GRID);
 
 const after = shapeStats(outPos, keys.length);
 const afterArea = shapeStats(

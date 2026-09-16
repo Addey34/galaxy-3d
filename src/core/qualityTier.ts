@@ -57,6 +57,8 @@ export interface QualityProfile {
   hiResSegments: number;
   /** Résolution de texture maximale servie par le LOD. Ajustable au prochain LOD. */
   maxTextureQuality: '2k' | '4k' | '8k';
+  /** Niveau de modèle de forme maximal (cf. `core/modelLod.ts`). */
+  maxModelQuality: '1k' | '2k' | '4k';
 }
 
 /** Table des profils par palier : la source unique des compromis qualité/perf. */
@@ -68,6 +70,7 @@ export const QUALITY_PROFILES: Record<QualityTier, QualityProfile> = {
     maxAnisotropy: 4,
     hiResSegments: 128,
     maxTextureQuality: '2k',
+    maxModelQuality: '1k',
   },
   medium: {
     maxPixelRatio: 1.5,
@@ -76,6 +79,7 @@ export const QUALITY_PROFILES: Record<QualityTier, QualityProfile> = {
     maxAnisotropy: 8,
     hiResSegments: 192,
     maxTextureQuality: '2k',
+    maxModelQuality: '2k',
   },
   high: {
     maxPixelRatio: 2.0,
@@ -84,6 +88,7 @@ export const QUALITY_PROFILES: Record<QualityTier, QualityProfile> = {
     maxAnisotropy: 16,
     hiResSegments: 256,
     maxTextureQuality: '8k',
+    maxModelQuality: '4k',
   },
 };
 
