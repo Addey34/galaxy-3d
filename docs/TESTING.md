@@ -118,6 +118,11 @@ sur un tel chemin — c'est le rôle d'`e2e/bodyLanding.spec.ts`.
 octet — son axe de plus grande inertie doit être Y (à 5° près ; mesuré 0,1 à 1,0°) et son volume
 doit retrouver le rayon moyen du catalogue à 3 % près. Les deux ont été falsifiés : l'ancien
 Bennu, pôle sur Z, fait échouer le premier (89,9°) ; un rayon saisi comme un diamètre, le second.
+Ces contrôles tournent sur CHAQUE niveau de détail, avec en plus le budget de triangles, un détail
+croissant d'un niveau à l'autre, et la luminance cuite comparée à l'albédo déclaré (un niveau de
+Bennu non cuit lit 0,334 pour 0,114 attendu ; une carte déclarée impose des couleurs par sommet —
+falsifiés). `e2e/modelLod.spec.ts` compte les `.glb` réellement demandés : que des `_shape_1k`
+en vue d'ensemble, jamais de 4k en qualité moyenne même collé à Bennu (falsifié trois façons).
 `smallBodies.test.ts` compare Éros, Itokawa, Ryugu, Ida et Bennu à des vecteurs Horizons de −10 à
 +10 ans. Bennu y est depuis le 2026-09-16 : il n'était tenu que par une DISTANCE au dixième d'UA à
 l'époque J2000 de ses éléments, test vert pendant qu'il dérivait de 0,47 UA à la date du jour.

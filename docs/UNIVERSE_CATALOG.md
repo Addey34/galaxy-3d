@@ -118,10 +118,28 @@ le fichier) et non sur le rayon moyen — Eros et Ida depassent le double de leu
 equivalente, et s'en approcher « a 1,15 rayon » mettait l'objectif DEDANS : ecran noir, sans erreur.
 
 **Poids.** Les modeles scientifiques publies sont hors de portee du web : celui de Bennu fait
-3,37 M de triangles et 60 Mo. `scripts/decimate-shape-model.mjs` le ramene a 22,8 k triangles et
-400 Kio par regroupement de sommets, en imprimant avant/apres les deux statistiques de forme —
+3,37 M de triangles et 60 Mo. `scripts/decimate-shape-model.mjs --target N` le ramene au budget
+voulu par regroupement de sommets, en imprimant avant/apres les deux statistiques de forme —
 sur Bennu 6,00 % → 6,03 % et 1,118 → 1,119, donc la signature du corps survit. Le fichier produit
 est deterministe.
+
+**Niveaux de detail (2026-09-16).** Chaque modele est livre en `{corps}/{corps}_shape_{1k,2k,4k}.glb`
+(~4 000 / 15 000 / 60 000 triangles), chemin derive par `catalog.modelPath`, niveaux declares dans
+`model.resolutions`. Le script REFUSE un niveau que la source ne contient pas : Ida (grille de 2°,
+~32 400 triangles d'information) n'a pas de 4k. `core/modelLod.ts` charge le plus leger, puis le
+plus fin que justifie la distance (≤ 12 rayons 4k, ≤ 60 rayons 2k), plafonne par le palier de
+qualite (bas 1k, moyen 2k, haut 4k). Mesure dans le navigateur : la vue d'ensemble ne telecharge
+que des 1k (`e2e/modelLod.spec.ts`). Aucun modele dans le precache PWA.
+
+**Couleur reelle (2026-09-16).** `scripts/bake-shape-colour.mjs` cuit une couleur par sommet dans
+chaque niveau. Luminosite moyenne = albedo geometrique PUBLIE × 2,6, convention d'affichage
+MESUREE sur la texture lunaire (0,312 pour un albedo de 0,12 ; les autres textures s'etalent de 1,6
+a 3,8, ecart assume). Contrastes et couleur tires des cartes de mission : mosaique d'albedo OCAMS
+de Bennu, albedo normal en bande v de Ryugu (DARTS), albedos NEAR MSI d'Eros a 760/550/450 nm.
+Itokawa et Ida n'ont aucune carte globale publiee : couleur uniforme a leur albedo, via le
+materiau. Longitude du bord gauche lue dans les etiquettes GeoTIFF (0° Bennu/Ryugu, −180° Eros).
+Deux pieges vus a l'ecran : normaliser chaque bande par sa moyenne effacait la couleur d'Eros ;
+un redimensionnement cubique melangeait le NoData (−3,4e38) aux pixels voisins.
 
 ### Anneaux, atmospheres et champs
 

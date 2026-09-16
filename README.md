@@ -12,7 +12,7 @@ Visualisateur interactif du système solaire en temps réel, développé en Type
 - Halo lumineux rond autour du Soleil, des étoiles et des lumières de ville (qualité haute), chaque source déclarée avec sa propre intensité
 - LOD automatique : résolution de texture adaptée à la distance caméra (1k → 8k)
 - Pages d'éclipse 2024–2035 : l'application s'ouvre au maximum de chaque éclipse ; la Lune éclipsée est cuivrée, teinte mesurée sur des photographies NASA
-- Modèles de forme scientifiques de Bennu, Éros, Itokawa, Ryugu et Ida, approchables à la vraie échelle en Exploration
+- Modèles de forme scientifiques de Bennu, Éros, Itokawa, Ryugu et Ida, à leur vraie couleur de surface, en niveaux de détail chargés selon la distance, approchables à la vraie échelle en Exploration
 - Objets interstellaires 1I/ʻOumuamua, 2I/Borisov et 3I/ATLAS sur leur vraie trajectoire hyperbolique (tracé en option)
 - Onze missions spatiales positionnées par NASA/JPL Horizons (Voyager, New Horizons, Juno, Parker Solar Probe…)
 - HUD Exploration avec cible suivie, distance UA/km, temps-lumière et labels de corps

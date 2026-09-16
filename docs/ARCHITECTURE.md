@@ -724,7 +724,9 @@ Deux pièges du rendu de forme, tous deux payés une fois :
   de trop pour un corps rond. Dans la SCÈNE, c'est l'inverse : le modèle est mis à l'échelle par
   son rayon **équivalent-volume**, celui que publient les catalogues. Le rayon maximal y affichait
   Bennu 15 % trop petit et aurait affiché Éros deux fois trop petit (cf. `core/modelFit.ts` et
-  `docs/UNIVERSE_CATALOG.md` § Corps irréguliers).
+  `docs/UNIVERSE_CATALOG.md` § Corps irréguliers). La vignette lit le niveau `2k` (chemin dérivé
+  par `catalog.modelPath`) et la teinte `fallbackColor`, qui vaut la couleur MOYENNE cuite dans le
+  modèle — la vignette reste unie, seule la scène porte les contrastes de surface.
 
 Trois règles à ne pas défaire :
 
