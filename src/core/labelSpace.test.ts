@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { LabelSpace, rectsCollide } from './labelSpace';
+import {
+  LabelSpace,
+  MARKER_LABEL_GAP,
+  MARKER_LABEL_HEIGHT,
+  markerLabelCandidates,
+  overlayLabelBounds,
+  rectsCollide,
+} from './labelSpace';
 import type { LabelBounds, LabelRect } from './labelSpace';
 
 const rect = (
@@ -104,5 +111,56 @@ describe('place occupée par les libellés', () => {
     expect(space.signature()).toBe(before);
     space.add(rect(300, 300));
     expect(space.signature()).not.toBe(before);
+  });
+
+  /**
+   * RÉGRESSION LIVRÉE : chaque nom était écarté de 40 px de son marqueur, jusqu'à sortir de
+   * l'écran. Deux causes : des décalages constants, et le marqueur réservé AVANT son propre nom,
+   * qui rendait la position naturelle toujours « occupée ». Le nom doit rester collé au point.
+   */
+  it('pose un nom collé à droite de son marqueur quand la place est libre', () => {
+    const space = new LabelSpace();
+    const textWidth = 52;
+    const placed = space.placeText(
+      700,
+      400,
+      textWidth,
+      MARKER_LABEL_HEIGHT,
+      markerLabelCandidates(textWidth),
+      overlayLabelBounds(1440, 900)
+    );
+    expect(placed!.rect.left).toBeCloseTo(700 + MARKER_LABEL_GAP, 9);
+    expect(placed!.dy).toBe(0);
+  });
+
+  it('passe à gauche du marqueur, collé aussi, contre le bord droit', () => {
+    const space = new LabelSpace();
+    const textWidth = 52;
+    const placed = space.placeText(
+      1400,
+      400,
+      textWidth,
+      MARKER_LABEL_HEIGHT,
+      markerLabelCandidates(textWidth),
+      overlayLabelBounds(1440, 900)
+    );
+    expect(placed!.rect.right).toBeCloseTo(1400 - MARKER_LABEL_GAP, 9);
+  });
+
+  it('ne se laisse pas repousser par son propre marqueur, même réservé avant', () => {
+    // Le point (±4 px) plus la marge de respiration (4 px) doivent rester EN DEÇÀ de l'écart
+    // marqueur-nom : sinon le point rend la position collée « occupée » et chasse son nom.
+    // C'est ce qui arrivait avec un écart de 6 px — l'ordre des appels n'y changeait rien.
+    const space = new LabelSpace();
+    space.add({ left: 696, right: 704, top: 396, bottom: 404 });
+    const placed = space.placeText(
+      700,
+      400,
+      52,
+      MARKER_LABEL_HEIGHT,
+      markerLabelCandidates(52),
+      overlayLabelBounds(1440, 900)
+    );
+    expect(placed!.rect.left).toBeCloseTo(700 + MARKER_LABEL_GAP, 9);
   });
 });

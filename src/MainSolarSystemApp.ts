@@ -46,6 +46,7 @@ import { setupBodyPicker } from './ui/bodyPicker';
 import { setupOrbitOptions } from './ui/orbitOptions';
 import { setupRenderExposure } from './ui/renderExposure';
 import { setupColorblindToggle } from './ui/colorblindToggle';
+import { setupInterstellarPathsToggle } from './ui/interstellarPathsToggle';
 import { setupUnitsToggle } from './ui/unitsToggle';
 import { setupRealtimeClouds } from './ui/realtimeClouds';
 import { setupCloudModelLayer } from './ui/cloudModelLayer';
@@ -289,6 +290,7 @@ if (surfaceScrim) {
     const interstellarOverlay = new InterstellarOverlay();
     interstellarOverlay.mount();
     interstellarOverlay.setActive(true);
+    setupInterstellarPathsToggle(interstellarOverlay);
 
     // Le bloc live de la fiche (distance réelle + temps-lumière) n'a de sens qu'en Explo,
     // pour la cible suivie ; en Éducatif ou en vue libre on passe `null` → bloc masqué.

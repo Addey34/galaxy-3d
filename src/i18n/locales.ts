@@ -251,6 +251,7 @@ export const messages: Record<Locale, Dict> = {
     'settings.row.orbit.aria': "Show {name}'s orbit",
     'settings.exposure': 'Brightness (exposure)',
     'settings.colorblind': 'Color-blind friendly orbit colors',
+    'settings.interstellarPaths': 'Show interstellar object trajectories',
     'settings.units': 'Imperial units (mi, °F)',
 
     // ── Filtres petits corps (NEO / comètes / TNO) ──
@@ -593,6 +594,8 @@ export const messages: Record<Locale, Dict> = {
     'settings.row.orbit.aria': 'Afficher l’orbite de {name}',
     'settings.exposure': 'Luminosité (exposition)',
     'settings.colorblind': 'Couleurs d’orbite adaptées au daltonisme',
+    'settings.interstellarPaths':
+      'Afficher les trajectoires des objets interstellaires',
     'settings.units': 'Unités impériales (mi, °F)',
 
     // ── Filtres petits corps (NEO / comètes / TNO) ──

@@ -116,3 +116,40 @@ export class LabelSpace {
     return null;
   }
 }
+
+/** Hauteur de ligne d'un nom dessiné au canvas (police 11 px). */
+export const MARKER_LABEL_HEIGHT = 13;
+/** Écart entre le marqueur et le bord de son nom : au-delà du rayon du point ET de la marge. */
+export const MARKER_LABEL_GAP = 8;
+
+/**
+ * Positions candidates du CENTRE d'un nom autour de son marqueur, par ordre de préférence :
+ * à droite, collé au point (habitude de lecture), puis à gauche, dessus, dessous, diagonales.
+ *
+ * Elles dépendent de la LARGEUR du texte : « à gauche » d'un nom de 90 px n'est pas au même
+ * endroit que d'un nom de 30 px. Des décalages constants avaient été livrés, avec un écart de
+ * 6 px : le point du marqueur (±4 px) et la marge de respiration (4 px) rendaient alors la
+ * position collée toujours « occupée », et chaque nom partait à +40 px, jusqu'à être coupé au
+ * bord de l'écran. `MARKER_LABEL_GAP` dépasse désormais point + marge.
+ */
+export function markerLabelCandidates(
+  textWidth: number
+): (readonly [number, number])[] {
+  const side = MARKER_LABEL_GAP + textWidth / 2;
+  const row = MARKER_LABEL_HEIGHT;
+  return [
+    [side, 0],
+    [-side, 0],
+    [0, -row],
+    [0, row],
+    [side, -row],
+    [-side, -row],
+    [side, row],
+    [-side, row],
+  ];
+}
+
+/** Aire utile des couches canvas : sous le dock du haut, au-dessus du deck de commande. */
+export function overlayLabelBounds(width: number, height: number): LabelBounds {
+  return { width, height, top: 48, bottom: 46, side: 6 };
+}

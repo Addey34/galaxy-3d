@@ -20,7 +20,12 @@
  */
 import * as THREE from 'three';
 import { scaleToScene } from '@/core/overlayScale';
-import type { LabelBounds, LabelSpace } from '@/core/labelSpace';
+import {
+  MARKER_LABEL_HEIGHT,
+  markerLabelCandidates,
+  overlayLabelBounds,
+} from '@/core/labelSpace';
+import type { LabelSpace } from '@/core/labelSpace';
 import { eclipticToScene } from '@/core/frames';
 import {
   keplerianPositionEcliptic,
@@ -56,34 +61,11 @@ const REDRAW_DATE_STEP_MS = 10 * 60_000;
 /** Marge (px) hors de laquelle un segment dont les deux bouts sont du même côté est ignoré. */
 const OFFSCREEN_MARGIN_PX = 64;
 
-/**
- * Décalages essayés pour poser un nom à côté de son marqueur : à droite d'abord (habitude de
- * lecture), puis à gauche, puis dessus, puis dessous. Cf. `core/labelSpace.ts`.
- */
-const LABEL_OFFSETS = [
-  [40, 0],
-  [-40, 0],
-  [0, -15],
-  [0, 15],
-  [40, -15],
-  [-40, -15],
-  [40, 15],
-  [-40, 15],
-] as const;
-
-/** Aire utile : sous le dock du haut, au-dessus du deck de commande, marges latérales. */
-const labelBounds = (width: number, height: number): LabelBounds => ({
-  width,
-  height,
-  top: 48,
-  bottom: 46,
-  side: 6,
-});
-
 export class InterstellarOverlay {
   private readonly canvas: HTMLCanvasElement;
   private readonly ctx: CanvasRenderingContext2D | null;
   private readonly tracks: Track[];
+  private showPaths = false;
   private active = false;
   private lastPublished = '';
   /** État de la dernière image peinte — sans changement, on ne redessine rien (cf. `update`). */
@@ -129,6 +111,18 @@ export class InterstellarOverlay {
     window.addEventListener('resize', this._resize, { passive: true });
   }
 
+  /**
+   * Trajectoires tracées ou non. DÉSACTIVÉES par défaut : une hyperbole ne se referme jamais, et
+   * trois courbes ouvertes traversant toute la vue d'ensemble se lisaient comme des orbites
+   * cassées (signalé à l'usage le 2026-09-16). Les marqueurs et leurs noms restent affichés ;
+   * la trajectoire est une option des Réglages, comme les orbites des lunes et des naines.
+   */
+  setTrajectoriesVisible(visible: boolean): void {
+    if (this.showPaths === visible) return;
+    this.showPaths = visible;
+    this._hasDrawn = false; // force le prochain dessin : la vue n'a pas bougé, le réglage oui
+  }
+
   /** Affiche/masque l'overlay. À l'extinction, efface le canvas. */
   setActive(active: boolean): void {
     this.active = active;
@@ -136,7 +130,7 @@ export class InterstellarOverlay {
     if (!active) {
       this._clear();
       this._hasDrawn = false;
-      this._publish(0, 0);
+      this._publish(0, 0, 0);
     }
   }
 
@@ -162,11 +156,15 @@ export class InterstellarOverlay {
 
     let markers = 0;
     let tracks = 0;
+    let paths = 0;
     for (const track of this.tracks) {
       if (now < track.fromMs || now > track.toMs) continue;
       tracks++;
 
-      this._drawPath(ctx, camera, track, morph, w, h);
+      if (this.showPaths) {
+        this._drawPath(ctx, camera, track, morph, w, h);
+        paths++;
+      }
 
       const pos = keplerianPositionEcliptic(track.object.elements, date);
       const s = eclipticToScene(pos.x, pos.y, pos.z);
@@ -185,12 +183,6 @@ export class InterstellarOverlay {
       ctx.beginPath();
       ctx.arc(x, y, 2.5, 0, Math.PI * 2);
       ctx.fill();
-      this._space?.add({
-        left: x - 4,
-        right: x + 4,
-        top: y - 4,
-        bottom: y + 4,
-      });
       ctx.font = '11px sans-serif';
       const text = track.object.displayName[locale];
       const textWidth = ctx.measureText(text).width;
@@ -198,22 +190,28 @@ export class InterstellarOverlay {
       // exactement sur « Lune » et « OSIRIS-REx » (cf. `core/labelSpace.ts`).
       const placed = this._space
         ? this._space.placeText(
-            x + textWidth / 2 + 6,
+            x,
             y,
             textWidth,
-            13,
-            LABEL_OFFSETS,
-            labelBounds(w, h)
+            MARKER_LABEL_HEIGHT,
+            markerLabelCandidates(textWidth),
+            overlayLabelBounds(w, h)
           )
-        : { dx: 0, dy: 0, rect: null };
+        : { dx: 8 + textWidth / 2, dy: 0, rect: null };
+      this._space?.add({
+        left: x - 4,
+        right: x + 4,
+        top: y - 4,
+        bottom: y + 4,
+      });
       if (placed) {
         if (placed.rect) this._space?.add(placed.rect);
         ctx.fillStyle = 'rgba(225, 238, 255, 0.9)';
-        ctx.fillText(text, x + 6 + placed.dx, y + 4 + placed.dy);
+        ctx.fillText(text, x + placed.dx - textWidth / 2, y + placed.dy + 4);
       }
       markers++;
     }
-    this._publish(markers, tracks);
+    this._publish(markers, tracks, paths);
   }
 
   /**
@@ -325,14 +323,16 @@ export class InterstellarOverlay {
    * `data-markers` (marqueurs dans le champ) et `data-tracks` (objets dans leur fenêtre,
    * trajectoire tracée). Le second ne dépend pas du cadrage : hors fenêtre, les trois objets
    * sont à plus de 116 UA, donc hors champ de toute façon, et compter les seuls marqueurs ne
-   * prouverait pas que la borne est appliquée. N'écrit que sur changement.
+   * prouverait pas que la borne est appliquée. `data-paths` compte les trajectoires RÉELLEMENT
+   * tracées : 0 par défaut, puisqu'elles sont en opt-in. N'écrit que sur changement.
    */
-  private _publish(markers: number, tracks: number): void {
-    const key = `${markers}/${tracks}`;
+  private _publish(markers: number, tracks: number, paths: number): void {
+    const key = `${markers}/${tracks}/${paths}`;
     if (key === this.lastPublished) return;
     this.lastPublished = key;
     this.canvas.dataset.markers = String(markers);
     this.canvas.dataset.tracks = String(tracks);
+    this.canvas.dataset.paths = String(paths);
   }
 
   private _clear(): void {

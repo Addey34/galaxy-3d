@@ -2418,6 +2418,19 @@ body.is-capturing #loader {
 /* La distance réelle + temps-lumière de la cible vivent désormais dans la fiche unique
    (#body-info, bloc .bi-live). Il ne reste ici que la couche de labels projetés. */
 
+/* Couches instrument dessinées au canvas (petits corps, sondes, objets interstellaires).
+   `inset: 0` ne SUFFIT PAS : un <canvas> est un élément remplacé, qui garde sa taille
+   intrinsèque — celle de son tampon, fenêtre × densité de pixels. À 125 % (réglage Windows
+   courant) il s'affichait 1,25 fois trop grand, à 200 % deux fois : marqueurs, noms et
+   trajectoires glissaient loin du coin haut-gauche et ne tombaient plus sur les corps 3D.
+   D'où la taille CSS explicite ci-dessous (tenu par e2e/overlayCanvasSize.spec.ts). */
+#smallbody-overlay,
+#spacecraft-overlay,
+#interstellar-overlay {
+  width: 100%;
+  height: 100%;
+}
+
 /* Champ des petits corps (SBDB) — canvas instrument sous les labels, non bloquant. */
 #smallbody-overlay {
   position: fixed;

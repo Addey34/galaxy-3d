@@ -34,6 +34,9 @@ test('interstellar overlay is active in educ AND explo, and draws 1I near Earth 
     .toBeGreaterThanOrEqual(1);
   // Les trois objets sont dans leur fenêtre (1I : +40 j, 2I : −2 ans, 3I : −8 ans du périhélie).
   await expect(overlay).toHaveAttribute('data-tracks', '3');
+  // …mais leurs trajectoires ne sont PAS tracées par défaut : trois hyperboles ouvertes
+  // traversant la vue d'ensemble se lisaient comme des orbites cassées. Opt-in (Réglages).
+  await expect(overlay).toHaveAttribute('data-paths', '0');
 
   await page.locator('.mode-btn[data-mode=explo]').click();
   await expect(overlay).toHaveClass(/is-visible/);
@@ -63,5 +66,34 @@ test('draws nothing outside the verified window around perihelion', async ({
   await expect(overlay).toHaveClass(/is-visible/);
   await expect(overlay).toHaveAttribute('data-tracks', '0');
   await expect(overlay).toHaveAttribute('data-markers', '0');
+  expect(errors, `Erreurs page : ${errors.join(' | ')}`).toEqual([]);
+});
+
+/**
+ * La trajectoire est un CHOIX de l'utilisateur, pris dans les Réglages et conservé : c'est la
+ * contrepartie du défaut discret. Sans ce test, la bascule pourrait ne rien tracer — ou oublier
+ * le choix au rechargement — sans qu'aucun autre scénario ne le voie.
+ */
+test('trajectories are opt-in from Settings and the choice survives a reload', async ({
+  page,
+}) => {
+  const errors: string[] = [];
+  page.on('pageerror', (err) => errors.push(err.message));
+
+  await page.goto('/?date=2017-10-19T00%3A00%3A00Z');
+  await expect(page.locator('#loader')).toBeHidden({ timeout: 30_000 });
+  const overlay = page.locator('#interstellar-overlay');
+  await expect(overlay).toHaveAttribute('data-paths', '0');
+
+  await page.locator('#settings-trigger').click();
+  const toggle = page.locator('#interstellar-paths-toggle');
+  await expect(toggle).not.toBeChecked();
+  await toggle.check();
+  await expect(overlay).toHaveAttribute('data-paths', '3');
+
+  await page.reload();
+  await expect(page.locator('#loader')).toBeHidden({ timeout: 30_000 });
+  await expect(overlay).toHaveAttribute('data-paths', '3');
+
   expect(errors, `Erreurs page : ${errors.join(' | ')}`).toEqual([]);
 });

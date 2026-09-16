@@ -24,6 +24,8 @@ export const STORAGE_KEYS = {
   colorblind: 'ssv-colorblind',
   /** Système d'unités préféré (métrique/impérial). */
   units: 'ssv-units',
+  /** Trajectoires des objets interstellaires affichées (opt-in). */
+  interstellarPaths: 'ssv-interstellar-paths',
 } as const;
 
 export type StorageKey = (typeof STORAGE_KEYS)[keyof typeof STORAGE_KEYS];
