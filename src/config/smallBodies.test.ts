@@ -159,9 +159,9 @@ describe('SMALL_BODIES catalogue', () => {
     ['pallas', new Date('2000-01-01T12:00:00Z'), 2.144],
     ['hygiea', new Date('2000-01-01T12:00:00Z'), 2.795],
     ['halley', new Date('1986-02-09T00:00:00Z'), 0.575],
-    // Bennu rejoint cette famille : géocroiseur sans binaire Horizons, donc entièrement
-    // dépendant de ces éléments. Référence = vecteur d'état Horizons à la même époque.
-    ['bennu', new Date('2000-01-01T12:00:00Z'), 0.9613],
+    // Bennu n'est plus ici : ce test ne compare qu'une DISTANCE au dixième d'UA, à l'époque
+    // même des éléments. Il était vert pendant que Bennu dérivait de 0,47 UA « aujourd'hui ».
+    // Bennu est désormais tenu par les vecteurs complets ci-dessous, sur ±10 ans.
   ] as const)(
     '%s heliocentric distance matches the real Horizons ephemeris within tolerance',
     (name, date, expectedAU) => {
@@ -178,7 +178,7 @@ describe('SMALL_BODIES catalogue', () => {
 });
 
 /**
- * Régression de position des astéroïdes de la vague A (Éros, Itokawa, Ryugu, Ida) contre les
+ * Régression de position des astéroïdes de la vague A (Éros, Itokawa, Ryugu, Ida) et de Bennu contre les
  * vecteurs d'état JPL Horizons, relevés en direct par `node scripts/derive-small-body-elements.mjs`
  * à −10, −1, 0, +1 et +10 ans de l'époque des éléments (2026-01-01).
  *
@@ -332,6 +332,41 @@ const WAVE_A_VECTORS: readonly (readonly [
     -1.445289839963061,
     2.373797785944518,
     0.02029825611608795,
+  ],
+  [
+    'bennu',
+    '2016-01-02T00:00:00.000Z',
+    -0.66351663150805,
+    -1.171966383013292,
+    -0.1213368243688913,
+  ],
+  [
+    'bennu',
+    '2025-01-01T00:00:00.000Z',
+    0.325886969881149,
+    0.8307071985188852,
+    0.08655093838729493,
+  ],
+  [
+    'bennu',
+    '2026-01-01T00:00:00.000Z',
+    1.020572806698367,
+    -0.2286943928921342,
+    -0.02786035919913888,
+  ],
+  [
+    'bennu',
+    '2027-01-01T00:00:00.000Z',
+    0.4851003027982377,
+    -1.160221343359038,
+    -0.1243056583360768,
+  ],
+  [
+    'bennu',
+    '2036-01-02T00:00:00.000Z',
+    -1.078151233624072,
+    0.262975562816726,
+    0.03159116224518278,
   ],
 ];
 

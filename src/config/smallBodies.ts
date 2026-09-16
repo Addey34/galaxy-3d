@@ -858,15 +858,17 @@ export const SMALL_BODY_ELEMENTS: readonly SmallBodyElements[] = [
     name: 'bennu',
     displayName: { en: 'Bennu', fr: 'Bennu' },
     // Éléments osculateurs JPL Horizons EXACTEMENT à cette époque (COMMAND '101955;',
-    // EPHEM_TYPE=ELEMENTS, TLIST=2451545.0). Vecteur d'état à la même date : 0,961301 UA —
-    // c'est ce que le test de régression compare, comme pour les quatre corps ci-dessus.
-    a: 1.12892336246788,
-    e: 0.2046521729007511,
-    iDeg: 6.025536314644479,
-    omDeg: 2.178544486232719,
-    wDeg: 65.67192633324575,
-    maDeg: 35.41801662915039,
-    epoch: '2000-01-01T12:00:00Z',
+    // EPHEM_TYPE=ELEMENTS, TLIST=2461041.5), par `pnpm ephemeris:small-body`. Ils étaient à
+    // l'époque J2000 : propagés en deux corps sur 26 ans, ils plaçaient Bennu à 0,47 UA de sa
+    // vraie position au 1er janvier 2026 (0,72 UA en 2036) — mesuré contre les vecteurs
+    // Horizons. Un géocroiseur frôle la Terre : les perturbations s'y accumulent vite.
+    a: 1.12599000686509,
+    e: 0.203694590837364,
+    iDeg: 6.032844145249296,
+    omDeg: 1.968709536577289,
+    wDeg: 66.41044379803537,
+    maDeg: 301.2865775321327,
+    epoch: '2026-01-01T00:00:00.000Z',
     // Diamètre 0,48444 km (JPL SBDB, ±0,0003) → rayon moyen.
     radiusKm: 0.24222,
     kind: 'asteroid',
@@ -881,9 +883,10 @@ export const SMALL_BODY_ELEMENTS: readonly SmallBodyElements[] = [
     },
     rotationHours: 4.296061,
     // Obliquité DÉRIVÉE, pas recopiée : pôle SBDB (RA 85,4522°, Dec −60,3678°) converti en
-    // écliptique puis comparé à la normale orbitale (i, Ω ci-dessus) → 177,6°. Bennu tourne
-    // donc à l'envers, ce qui est bien la valeur publiée — le calcul la retrouve.
-    axialTiltDeg: 177.6,
+    // écliptique puis comparé à la normale orbitale (i, Ω ci-dessus) → 177,5° (177,6° avec
+    // les éléments J2000 : le plan orbital a très légèrement tourné). Bennu tourne donc à
+    // l'envers, ce qui est bien la valeur publiée — le calcul la retrouve.
+    axialTiltDeg: 177.5,
     // GM = 4,8904e-9 km³/s² (SBDB) ÷ G → 7,33e10 kg.
     massKg: 7.33e10,
     moonCount: 0,

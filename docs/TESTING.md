@@ -118,7 +118,10 @@ sur un tel chemin — c'est le rôle d'`e2e/bodyLanding.spec.ts`.
 octet — son axe de plus grande inertie doit être Y (à 5° près ; mesuré 0,1 à 1,0°) et son volume
 doit retrouver le rayon moyen du catalogue à 3 % près. Les deux ont été falsifiés : l'ancien
 Bennu, pôle sur Z, fait échouer le premier (89,9°) ; un rayon saisi comme un diamètre, le second.
-`smallBodies.test.ts` compare Éros, Itokawa, Ryugu et Ida à des vecteurs Horizons de −10 à +10 ans.
+`smallBodies.test.ts` compare Éros, Itokawa, Ryugu, Ida et Bennu à des vecteurs Horizons de −10 à
++10 ans. Bennu y est depuis le 2026-09-16 : il n'était tenu que par une DISTANCE au dixième d'UA à
+l'époque J2000 de ses éléments, test vert pendant qu'il dérivait de 0,47 UA à la date du jour.
+Un test qui ne regarde qu'à l'époque des éléments ne voit aucune dérive.
 
 **Pages d'éclipse** : `src/core/eclipsePages.test.ts` tient la fenêtre (53 éclipses, un jour UTC
 chacune) et l'accord build/application sur les 53 (à la seconde — écart mesuré 1 ms, un premier
