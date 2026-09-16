@@ -1,0 +1,24 @@
+cff-version: 1.2.0
+message: >-
+  Si vous utilisez Galaxy dans un travail pédagogique ou scientifique, merci de le citer
+  ainsi. If you use Galaxy in teaching or research, please cite it as below.
+title: 'Galaxy — 3D Solar System'
+abstract: >-
+  Interactive real-time 3D solar system visualizer. Positions from astronomy-engine and
+  NASA/JPL Horizons ephemerides, Keplerian and hyperbolic propagation for small bodies and
+  interstellar objects, compressed and true-scale modes, time travel, scientific shape models.
+type: software
+authors:
+  - given-names: Adrian
+    family-names: Guichard
+repository-code: 'https://github.com/Addey34/galaxy-3d'
+url: 'https://galaxy.adrianguichard.dev/'
+license: PolyForm-Noncommercial-1.0.0
+version: 0.9.0
+keywords:
+  - solar system
+  - ephemeris
+  - JPL Horizons
+  - Three.js
+  - WebGL
+  - astronomy education

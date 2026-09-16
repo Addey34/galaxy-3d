@@ -30,7 +30,7 @@ export const messages: Record<Locale, Dict> = {
     'title.eclipse.lunar.partial': 'Partial lunar eclipse of {date} in 3D',
     'title.eclipse.lunar.penumbral': 'Penumbral lunar eclipse of {date} in 3D',
     'title.overview':
-      '3D Solar System: Real-Time Interactive Visualizer | Explore the Planets',
+      'Galaxy — 3D Solar System: Real-Time Interactive Visualizer',
     'loader.init': 'Initializing...',
     'loader.core': 'Loading core components…',
     'loader.scene': 'Building scene…',

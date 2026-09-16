@@ -1,6 +1,6 @@
-# Solar System 3D
+# Galaxy — Système solaire 3D
 
-**🌍 [Démo en ligne → galaxy-ag.web.app](https://galaxy-ag.web.app/)**
+**🌍 [Démo en ligne → galaxy.adrianguichard.dev](https://galaxy.adrianguichard.dev/)**
 
 Visualisateur interactif du système solaire en temps réel, développé en TypeScript avec Three.js. Deux modes d'affichage : **Éducatif** (distances compressées en √, tout visible d'un coup) et **Exploration** (vraie échelle astronomique, positions Kepler calculées par éphéméride). Le mode Exploration est actif avec l'expérience « Voyage spatial » : suivi caméra, distances réelles, temps-lumière et marqueurs projetés.
 
@@ -45,8 +45,8 @@ démarrage complètent les contrôles de navigation, de temps et les deux modes 
 
 ```bash
 # Cloner le dépôt
-git clone <url-du-repo>
-cd SolarSystem3d
+git clone https://github.com/Addey34/galaxy-3d.git
+cd galaxy-3d
 
 # Installer les dépendances (pnpm recommandé)
 pnpm install
@@ -71,7 +71,7 @@ pnpm textures:resize    # generate missing derived texture resolutions
 pnpm format     # Formater les fichiers TypeScript/CSS avec Prettier
 pnpm format:check # Vérifier le formatage sans réécrire
 pnpm lint       # eslint . (flat config) ; pnpm lint:fix pour corriger
-pnpm verify     # tsc --noEmit && eslint . && vitest run (gate local rapide)
+pnpm verify     # tsc --noEmit && eslint . && format:check && vitest run (gate local rapide)
 pnpm verify:all # verify + build + test:e2e (validation exhaustive)
 ```
 
@@ -338,7 +338,7 @@ Réglages moteur dans `src/config/engine.ts`, catalogue des corps dans `src/conf
 ## Dépendances de développement
 
 - **TypeScript strict** (`tsconfig.json`) : Vite sert/compile le TS via esbuild (pas de vérification de types en dev) ; `pnpm typecheck` ou `pnpm build` (qui lance `tsc --noEmit`) valide réellement les types
-- **Vitest** : tests unitaires des modules mathématiques purs (`src/**/*.test.ts`) ; `pnpm verify` = types + lint + tests
+- **Vitest** : tests unitaires des modules mathématiques purs (`src/**/*.test.ts`) ; `pnpm verify` = types + lint + formatage + tests
 - **ESLint** : `eslint.config.js` (flat config, typescript-eslint recommended non-type-checked) ; `pnpm lint` / `pnpm lint:fix`, intégré à `pnpm verify`
 - **Prettier** : règles dans `.prettierrc`, commandes `pnpm format` et `pnpm format:check` ; l'arbre entier est conforme
 - **Playwright** : suite de scénarios navigateur dans `e2e/` (boot, navigation, i18n, accessibilité, WebXR, météo, etc. — voir `pnpm exec playwright test --list` pour le compte à jour) ; le serveur Vite de test utilise le port réservé 5273
@@ -346,7 +346,7 @@ Réglages moteur dans `src/config/engine.ts`, catalogue des corps dans `src/conf
 
 ## Qualité et limites actuelles
 
-- `pnpm verify` passe (types + lint + tests unitaires) — voir `pnpm test` pour le compte à jour, ces chiffres évoluent trop souvent pour rester figés ici ;
+- `pnpm verify` passe (types + lint + formatage + tests unitaires) — voir `pnpm test` pour le compte à jour, ces chiffres évoluent trop souvent pour rester figés ici ;
 - `pnpm build` passe sans avertissement de taille : `three`, `astronomy-engine` et `tween` sont séparés du chunk applicatif, qui reste autour de 107 kB gzippés (345 kB avant compression — c'est le premier chiffre qui décrit ce qui transite réellement).
 - Le mode Exploration est actif. Les vols caméra concurrents sont annulés et la cible suivie reste centrée, y compris à vitesse accélérée.
 - `IS_MOBILE` reste figé pour les réglages créés à l'initialisation (anticrénelage, ombres, textures) ; seul le plafond de pixel ratio est recalculé au resize.
@@ -383,7 +383,7 @@ corps céleste (catalogue + textures + vérification), le workflow de PR et les 
 
 ## Déploiement
 
-Le site public est hébergé sur Firebase Hosting (`galaxy-ag`). La CI GitHub vérifie le projet ; le déploiement est réalisé sur Firebase Hosting.
+Le site public est servi sur [galaxy.adrianguichard.dev](https://galaxy.adrianguichard.dev/) par Firebase Hosting (projet `galaxy-ag`). Chaque push sur `main` est vérifié par la CI GitHub (`pnpm verify`, audit des dépendances, build) puis déployé automatiquement.
 
 Le build émet, en plus du bundle, une page statique indexable par corps (`dist/jupiter/index.html`),
 une page par éclipse solaire ou lunaire de 2024 à 2035 (`dist/eclipse/2026-08-12/index.html`, qui

@@ -379,7 +379,7 @@ export function bodyLandingPages(
       image: `${origin}/social/${slug}.jpg`,
       // Décrit ce que l'image MONTRE, pas ce que la page raconte : c'est un texte alternatif,
       // lu à voix haute par un lecteur d'écran sur une carte de partage.
-      imageAlt: `${displayName} rendered as a 3D sphere — Solar System 3D`,
+      imageAlt: `${displayName} rendered as a 3D sphere — Galaxy`,
       visual: bodyVisual(cfg, name),
     });
   }
@@ -468,7 +468,7 @@ export function renderBodyPage(
     inLanguage: 'en',
     isPartOf: {
       '@type': 'WebApplication',
-      name: 'Solar System 3D',
+      name: 'Galaxy',
       url: `${origin}/`,
       applicationCategory: 'EducationalApplication',
     },

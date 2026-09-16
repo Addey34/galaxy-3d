@@ -52,7 +52,7 @@ export function buildCartoucheText(
   return { title: bodyLabel, subtitle };
 }
 
-const SITE_NAME = '3D Solar System';
+const SITE_NAME = 'Galaxy';
 
 function drawCartouche(
   ctx: CanvasRenderingContext2D,

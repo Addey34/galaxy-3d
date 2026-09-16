@@ -142,7 +142,7 @@ export function eclipseLandingPages(origin: string): EclipsePage[] {
       canonical: `${origin}${eclipsePathname(event)}`,
       // La vignette du corps cadré : elle montre ce que la page ouvre (cf. en-tête).
       image: `${origin}/social/${focusBody}.jpg`,
-      imageAlt: `${focusName} rendered as a 3D sphere — Solar System 3D`,
+      imageAlt: `${focusName} rendered as a 3D sphere — Galaxy`,
     };
   });
 }
@@ -180,7 +180,7 @@ export function renderEclipsePage(
     inLanguage: 'en',
     isPartOf: {
       '@type': 'WebApplication',
-      name: 'Solar System 3D',
+      name: 'Galaxy',
       url: `${origin}/`,
       applicationCategory: 'EducationalApplication',
     },

@@ -1,10 +1,9 @@
 # Architecture — Solar System 3D
 
-> Vue d'ensemble, invariants et liste des modules : voir `CLAUDE.md` à la racine, qui est la
-> source unique tenue à jour à chaque session. Cette page ne documente que ce que `CLAUDE.md`
-> ne couvre pas : l'ordre exact de la boucle par frame, la propriété des ressources, la carte CSS,
-> le contrat de sécurité et le pipeline de contenu. Ne pas dupliquer ici la liste des modules ou
-> des invariants métier — la mettre à jour uniquement dans `CLAUDE.md`.
+> Vue d'ensemble et arborescence : [`README.md`](../README.md). Invariants à respecter et marche
+> à suivre pour contribuer : [`CONTRIBUTING.md`](../CONTRIBUTING.md). Cette page documente
+> l'ordre exact de la boucle par frame, la propriété des ressources, la carte CSS, le contrat de
+> sécurité et le pipeline de contenu.
 
 ## Boucle par frame
 

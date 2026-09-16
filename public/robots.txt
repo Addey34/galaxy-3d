@@ -1,4 +1,4 @@
-# 3D Solar System — https://galaxy.adrianguichard.dev
+# Galaxy — https://galaxy.adrianguichard.dev
 User-agent: *
 Allow: /
 

@@ -381,7 +381,7 @@ export function cardTextSvg(
     .join('');
   return (
     `<svg xmlns="http://www.w3.org/2000/svg" width="${CARD_WIDTH}" height="${CARD_HEIGHT}" font-family="${font}">` +
-    `<text x="${TEXT_LEFT}" y="205" font-size="22" letter-spacing="5" fill="#7fa7d9">SOLAR SYSTEM 3D</text>` +
+    `<text x="${TEXT_LEFT}" y="205" font-size="22" letter-spacing="5" fill="#7fa7d9">GALAXY · 3D SOLAR SYSTEM</text>` +
     `<text x="${TEXT_LEFT}" y="298" font-size="84" font-weight="700" fill="#ffffff">${clean(displayName)}</text>` +
     `<text x="${TEXT_LEFT}" y="352" font-size="30" fill="#c6d2e3">Live position and orbit, in 3D</text>` +
     lines +

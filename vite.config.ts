@@ -356,8 +356,8 @@ export default defineConfig({
       // Servi comme fichier statique : pas de précache, on n'auto-inclut donc pas index.html.
       includeAssets: ['favicon.ico', 'icon.svg', 'icons/apple-touch-icon.png'],
       manifest: {
-        name: '3D Solar System — Interactive Visualizer',
-        short_name: 'Solar System',
+        name: 'Galaxy — 3D Solar System',
+        short_name: 'Galaxy',
         description:
           'Explore the solar system in 3D with real NASA/JPL ephemeris positions. Educational and true-scale exploration modes, time travel, real distances and light-time.',
         lang: 'en-GB',
