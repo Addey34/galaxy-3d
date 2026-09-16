@@ -1042,6 +1042,16 @@ button {
 .bi-desc[hidden] {
   display: none;
 }
+.bi-credit {
+  margin: var(--sp-2) 0 0;
+  font-size: 0.7rem;
+  line-height: 1.45;
+  color: var(--ink-dim);
+  opacity: 0.85;
+}
+.bi-credit[hidden] {
+  display: none;
+}
 .bi-more {
   display: inline-flex;
   align-items: center;

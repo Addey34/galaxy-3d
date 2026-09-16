@@ -164,6 +164,7 @@ export const messages: Record<Locale, Dict> = {
     'credits.fictional': 'Illustrative surfaces',
     'credits.fictional.list':
       'No spacecraft has resolved these surfaces; their textures are illustrative, not scientific maps: Ceres, Eris, Haumea, Makemake, Pallas, Hygiea, Halley.',
+    'credits.models': '3D shape models',
     'credits.data': 'Data',
     'credits.privacy': 'Privacy',
     'lang.label': 'Language',
@@ -321,6 +322,7 @@ export const messages: Record<Locale, Dict> = {
     // ── Fiche d'info (bodyInfo) ──
     'bi.live.label': 'Distance from you',
     'bi.more': 'Learn more',
+    'bi.modelCredit': '3D shape model',
     'bi.fictional': 'Illustrative surface',
     'bi.fictional.hint':
       'No spacecraft has resolved this surface, so the texture is illustrative, not a scientific map.',
@@ -504,6 +506,7 @@ export const messages: Record<Locale, Dict> = {
     'credits.fictional': 'Surfaces fictives',
     'credits.fictional.list':
       'Aucune sonde n’a résolu ces surfaces ; leurs textures sont illustratives, pas des cartes scientifiques : Cérès, Éris, Hauméa, Makémaké, Pallas, Hygie, Halley.',
+    'credits.models': 'Modèles de forme 3D',
     'credits.data': 'Données',
     'credits.privacy': 'Confidentialité',
     'lang.label': 'Langue',
@@ -664,6 +667,7 @@ export const messages: Record<Locale, Dict> = {
 
     // ── Fiche d'info (bodyInfo) ──
     'bi.more': 'En savoir plus',
+    'bi.modelCredit': 'Modèle de forme 3D',
     'bi.live.label': 'Distance depuis vous',
     'bi.fictional': 'Surface fictive',
     'bi.fictional.hint':

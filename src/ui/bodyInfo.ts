@@ -271,6 +271,7 @@ export function setupBodyInfo(coordinator?: OverlayCoordinator): BodyInfoPanel {
   const fictionalEl = panel.querySelector<HTMLElement>('.bi-fictional-badge')!;
   const statsEl = panel.querySelector<HTMLElement>('.bi-stats')!;
   const descEl = panel.querySelector<HTMLElement>('.bi-desc')!;
+  const creditEl = panel.querySelector<HTMLElement>('.bi-credit');
   const closeBtn = panel.querySelector<HTMLButtonElement>('.bi-close')!;
   // Déclencheur d'accès (dock haut-droit) : réaffiche la fiche du corps courant après
   // fermeture, sans reprendre le vol caméra. Masqué tant qu'aucun corps n'est sélectionné.
@@ -359,6 +360,15 @@ export function setupBodyInfo(coordinator?: OverlayCoordinator): BodyInfoPanel {
     const desc = bodyDescription(cfg);
     descEl.textContent = desc;
     descEl.hidden = !desc;
+
+    // Crédit du modèle de forme affiché. Il n'existait que dans la configuration et dans le
+    // fichier glTF : nulle part où un visiteur le voit, alors que la politique ISAS/JAXA exige
+    // de citer la source (et les modifications) de tout usage de ses données.
+    if (creditEl) {
+      const credit = cfg.model?.credit;
+      creditEl.textContent = credit ? `${t('bi.modelCredit')} : ${credit}` : '';
+      creditEl.hidden = !credit;
+    }
 
     // Lien « En savoir plus » — article Wikipédia dans la langue courante (realData.wiki).
     const wiki = cfg.realData.wiki;
