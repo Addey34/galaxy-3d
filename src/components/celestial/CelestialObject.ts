@@ -1094,6 +1094,16 @@ export default class CelestialObject {
    * taille éducative encore affichée à cet instant, bien plus grosse que la taille physique
    * réelle — jusqu'à ~240× trop permissif sur le zoom arrière une fois le morph terminé.
    */
+  /**
+   * Rayon à ne pas franchir : celui du modèle de forme le plus saillant, pas le rayon moyen.
+   * Un corps irrégulier dépasse largement sa sphère équivalente (Éros : 2,1 fois), donc s'en
+   * approcher « à 1,15 rayon » plaçait la caméra à l'intérieur du maillage. Sans modèle, la
+   * sphère EST le corps et les deux rayons coïncident.
+   */
+  getClearanceRadius(mode: 'educ' | 'explo'): number {
+    return this.getFrameRadius(mode) * (this.config.model?.extentRatio ?? 1);
+  }
+
   getFrameRadius(mode: 'educ' | 'explo'): number {
     return mode === 'explo'
       ? this.config.radius * this._exploScaleFactor()

@@ -5,6 +5,7 @@ import { CELESTIAL_CONFIG } from './bodies';
 import { flattenBodies } from './catalog';
 import type { CelestialBodyConfig } from '@/types';
 import {
+  boundingRadius,
   maxInertiaAxis,
   meshVolume,
   volumeEquivalentRadius,
@@ -184,4 +185,33 @@ describe('orientation des modèles livrés', () => {
       ).toBeLessThan(0.03);
     }
   );
+});
+
+/**
+ * CE QUE LA CAMÉRA NE DOIT PAS TRAVERSER. Un corps irrégulier déborde largement de la sphère
+ * de même volume : Éros et Ida atteignent le double de leur rayon moyen. La caméra s'arrête à
+ * `rayon × extentRatio × 1,15` ; si la valeur déclarée est TROP PETITE, l'objectif entre dans
+ * le maillage et l'écran devient noir, sans erreur — c'est ce qui est arrivé sur Bennu dès que
+ * le plancher absolu de 85 km a été retiré.
+ *
+ * Le test compare donc la valeur déclarée au fichier lui-même, et refuse en particulier de la
+ * sous-estimer. Une sur-estimation de quelques pour cent ne coûte qu'un peu de recul.
+ */
+describe('débordement des modèles (extentRatio)', () => {
+  it.each(withModel().map(([name]) => name))('%s', (name) => {
+    const cfg = flattenBodies(CELESTIAL_CONFIG).get(name)!;
+    const { positions, index } = readGlbGeometry(
+      join(PROJECT_ROOT, 'public', cfg.model!.url)
+    );
+    const { volume, centroid } = meshVolume(positions, index);
+    const measured =
+      boundingRadius(positions, centroid) / volumeEquivalentRadius(volume);
+    const declared = cfg.model!.extentRatio;
+    expect(
+      declared,
+      `${name} : déclaré ${declared}, mesuré ${measured.toFixed(3)} — la caméra entrerait dans le maillage`
+    ).toBeGreaterThanOrEqual(measured - 0.005);
+    // Et pas n'importe quelle grande valeur : elle doit décrire CE fichier.
+    expect(declared).toBeLessThan(measured * 1.05);
+  });
 });

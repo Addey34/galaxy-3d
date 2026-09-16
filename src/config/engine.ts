@@ -264,6 +264,11 @@ export const CAMERA_SETTINGS = {
   // Mode Explo — near très petit (planètes réelles à 0.003-0.12u de la caméra)
   exploNear: 1e-6,
   exploFar: 3_000, // Neptune explo ≈ 1050u
+  // Suivi d'un corps en Explo : le near ne descend pas sous cette FRACTION de son rayon. Un
+  // plancher absolu (exploNear, 4 km) interdisait d'approcher un astéroïde de 500 m sans le
+  // couper ; relatif au rayon, il ne mord jamais pour une planète (au plus près, le near vaut
+  // déjà 7,5 % du rayon) et suit les plus petits corps jusqu'à leur surface.
+  exploFollowNearRadiusFraction: 0.01,
   // Vue d'ensemble Éducatif — légèrement inclinée (~35°) pour montrer la profondeur des orbites
   initialPosition: new THREE.Vector3(0, 160, 220),
   // Distance de visite fallback quand un corps ne définit pas cameraDistance.
@@ -284,7 +289,10 @@ export const CAMERA_CONTROLS_SETTINGS = {
   targetMaxRadiusFactor: 60, // au plus loin d'un corps suivi : 60× son rayon
   // Garde-fous absolus (le facteur ne doit pas descendre/monter hors de ces bornes par mode).
   educMinFloor: 0.05,
-  exploMinFloor: 0.00002,
+  // Simple garde-fou contre une distance nulle (4 m) : c'est `targetMinRadiusFactor` qui
+  // borne l'approche. Il valait 0,00002 (85 km), soit 350 rayons de Bennu : les modèles de
+  // forme de Bennu, Itokawa et Ryugu n'étaient qu'un point en Explo.
+  exploMinFloor: 1e-9,
   maxPolarAngle: Math.PI,
   minPolarAngle: 0,
   screenSpacePanning: false,

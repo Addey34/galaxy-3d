@@ -126,9 +126,14 @@ export class CameraSystem {
       this.celestialBodies[bodyName]?.getFrameRadius?.(this._scaleMode) ??
       (body.userData['radius'] as number | undefined) ??
       1;
+    // Ce qu'on ne doit pas traverser, c'est le point le plus SAILLANT du corps (cf.
+    // CelestialObject.getClearanceRadius), pas sa sphère moyenne.
+    const clearance =
+      this.celestialBodies[bodyName]?.getClearanceRadius?.(this._scaleMode) ??
+      radius;
     // Bornes de zoom proportionnelles au rayon visuel du corps ciblé : on peut approcher
     // chaque corps (petit ou gros) autant que sa taille le permet, sans traverser la surface.
-    this._applyTargetZoomBounds(radius);
+    this._applyTargetZoomBounds(clearance);
     const defaultDistance = this.getDefaultDistance(bodyName);
     const distance = Math.max(
       defaultDistance,
@@ -403,10 +408,21 @@ export class CameraSystem {
       const d = this._tgtDelta
         .subVectors(this.camera.position, this.controls.target)
         .length();
+      // Rayon de DÉGAGEMENT : le near doit rester devant le point le plus saillant, sinon un
+      // corps irrégulier approché de près est coupé en deux sans erreur.
       const r =
+        this.celestialBodies?.[this.currentTarget.name]?.getClearanceRadius?.(
+          'explo'
+        ) ??
         (this.currentTarget.group.userData['radius'] as number | undefined) ??
         0;
-      const near = Math.max((d - r) * 0.5, CAMERA_SETTINGS.exploNear);
+      // Plancher RELATIF au rayon : un plancher absolu coupait les corps sous-kilométriques.
+      const near = Math.max(
+        (d - r) * 0.5,
+        r > 0
+          ? r * CAMERA_SETTINGS.exploFollowNearRadiusFraction
+          : CAMERA_SETTINGS.exploNear
+      );
       const far = Math.min(
         CAMERA_SETTINGS.exploFar,
         Math.max(originDist * 2.5, d * 50) + r

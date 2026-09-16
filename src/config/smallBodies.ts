@@ -878,6 +878,8 @@ export const SMALL_BODY_ELEMENTS: readonly SmallBodyElements[] = [
     fallbackColor: 0x59544f,
     model: {
       url: '/assets/models/bennu/bennu.glb',
+      // Mesuré sur le fichier : rayon max / rayon équivalent-volume.
+      extentRatio: 1.18,
       credit:
         'NASA/Goddard Scientific Visualization Studio — OSIRIS-REx OLA v20 PTM global shape model (NASA/University of Arizona/CSA/York University/MDA), décimé pour le web.',
     },
@@ -935,6 +937,8 @@ export const SMALL_BODY_ELEMENTS: readonly SmallBodyElements[] = [
     fallbackColor: 0xc9a27e,
     model: {
       url: '/assets/models/eros/eros.glb',
+      // Mesuré sur le fichier : rayon max / rayon équivalent-volume.
+      extentRatio: 2.1,
       credit:
         'NASA/JHU-APL NEAR Shoemaker — MSI shape model by R. Gaskell, NASA PDS NEAR-A-MSI-5-EROSSHAPE-V1.0 (q = 128), décimé pour le web.',
     },
@@ -984,6 +988,8 @@ export const SMALL_BODY_ELEMENTS: readonly SmallBodyElements[] = [
     fallbackColor: 0x9a8f86,
     model: {
       url: '/assets/models/itokawa/itokawa.glb',
+      // Mesuré sur le fichier : rayon max / rayon équivalent-volume.
+      extentRatio: 1.93,
       credit:
         'JAXA Hayabusa AMICA images — shape model by R. Gaskell (PSI), NASA PDS HAY-A-AMICA-5-ITOKAWASHAPE-V1.0 (q = 128), décimé pour le web.',
     },
@@ -1031,6 +1037,8 @@ export const SMALL_BODY_ELEMENTS: readonly SmallBodyElements[] = [
     fallbackColor: 0x3f3b39,
     model: {
       url: '/assets/models/ryugu/ryugu.glb',
+      // Mesuré sur le fichier : rayon max / rayon équivalent-volume.
+      extentRatio: 1.18,
       credit:
         'ISAS/JAXA Hayabusa2 — SfM shape model SHAPE_SFM_200k_v20180804 (Watanabe et al. 2019, DARTS), données modifiées : décimé pour le web, pôle ramené sur Y.',
     },
@@ -1079,6 +1087,8 @@ export const SMALL_BODY_ELEMENTS: readonly SmallBodyElements[] = [
     fallbackColor: 0xb59a7a,
     model: {
       url: '/assets/models/ida/ida.glb',
+      // Mesuré sur le fichier : rayon max / rayon équivalent-volume.
+      extentRatio: 2.0,
       credit:
         'NASA Galileo SSI — shape model by P. Thomas et al. (1996), NASA PDS EAR-A-5-DDR-SHAPE-MODELS-V2.1, converti en maillage pour le web.',
     },

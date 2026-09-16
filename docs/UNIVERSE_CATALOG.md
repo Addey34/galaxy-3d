@@ -108,10 +108,14 @@ directement les tables sommets/plaques et les grilles latitude/longitude de la P
   CC BY-SA IGO 3.0 en 2015 n'est plus en ligne (page d'archive disparue). A reprendre si l'ESA
   confirme l'usage (data.licences@esa.int) ou si la version CC BY-SA reapparait.
 
-**Limite constatee, non corrigee** : en Explo, la camera ne descend pas sous
-`CAMERA_CONTROLS_SETTINGS.exploMinFloor` (0,00002 unite, soit 85 km). Bennu, Itokawa et Ryugu, de
-moins d'un kilometre, n'y sont donc qu'un point de quelques pixels : leur forme ne se voit qu'en
-Educatif. Abaisser ce plancher touche aux plans near/far de la camera, un chantier a part.
+**Limite levee le 2026-09-16** : en Explo, la camera s'arretait a 85 km
+(`CAMERA_CONTROLS_SETTINGS.exploMinFloor`, 0,00002 unite, soit 350 rayons de Bennu) et son plan
+near a 4 km, si bien que les corps sous-kilometriques n'y etaient qu'un point. Le plancher de zoom
+et le near sont desormais RELATIFS au corps vise ; on approche Bennu a 1 km et son maillage se
+lit. Deux pieges au passage : le near absolu coupait le corps des qu'on approchait, et surtout la
+borne d'approche doit se prendre sur le rayon MAXIMAL du maillage (`model.extentRatio`, mesure sur
+le fichier) et non sur le rayon moyen — Eros et Ida depassent le double de leur sphere
+equivalente, et s'en approcher « a 1,15 rayon » mettait l'objectif DEDANS : ecran noir, sans erreur.
 
 **Poids.** Les modeles scientifiques publies sont hors de portee du web : celui de Bennu fait
 3,37 M de triangles et 60 Mo. `scripts/decimate-shape-model.mjs` le ramene a 22,8 k triangles et

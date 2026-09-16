@@ -96,6 +96,14 @@ export interface ModelConfig {
    * le dépôt (`scripts/texture-sources.json` tient la même règle pour les textures).
    */
   credit: string;
+  /**
+   * Rayon MAXIMAL du maillage rapporté à son rayon équivalent-volume (celui du catalogue),
+   * mesuré sur le fichier livré et tenu par `shapeModels.test.ts`. Sert à la caméra : elle
+   * s'arrête à `rayon × extentRatio × facteur`, sinon approcher un corps irrégulier « à 1,15
+   * rayon » met l'objectif DEDANS — Éros et Ida dépassent le double de leur rayon moyen, et
+   * l'écran devient noir sans la moindre erreur.
+   */
+  extentRatio: number;
 }
 
 export interface RingConfig {

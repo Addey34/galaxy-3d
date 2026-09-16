@@ -136,7 +136,10 @@ vérifiée — un maillage « publié par une agence » peut être une sphère b
 portent sur Z). Le script imprime les statistiques de forme pondérées par l'aire et le rayon
 équivalent-volume avant/après : elles ne doivent pas bouger. `src/config/shapeModels.test.ts`
 refuse ensuite un modèle dont l'axe de plus grande inertie n'est pas Y ou dont le volume ne
-retrouve pas `radiusKm`. Pour un corps sans binaire Horizons, les éléments viennent de
+retrouve pas `radiusKm`. Déclarez aussi `model.extentRatio` : le rayon MAXIMAL du maillage
+rapporté à son rayon équivalent-volume (Éros 2,10 ; Bennu 1,18). C'est lui qui arrête la caméra,
+et le même test le compare au fichier — sous-estimé, l'objectif entre dans le maillage et l'écran
+devient noir sans aucune erreur. Pour un corps sans binaire Horizons, les éléments viennent de
 `scripts/derive-small-body-elements.mjs`, jamais d'une saisie.
 
 ### 4. Vérifier

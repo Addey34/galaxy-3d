@@ -120,3 +120,125 @@ it('clamps optical FOV in Educational mode too', () => {
   expect(cameraSystem.opticalFov).toBe(55);
   expect(cameraSystem.camera.fov).toBe(55);
 });
+
+/**
+ * APPROCHER UN ASTÉROÏDE DE 500 M EN EXPLO. Le plancher de zoom valait 85 km (350 rayons de
+ * Bennu) et le near 4 km : les modèles de forme n'étaient qu'un point. Ce qui doit tenir, et
+ * qui casserait en silence : on peut descendre à 1,15 rayon, et à cette distance le near reste
+ * DEVANT la surface — sinon le corps est coupé sans la moindre erreur.
+ */
+describe('Explo : approche des corps sous-kilométriques', () => {
+  const AU = 35;
+  const KM = AU / 149_597_870.7;
+
+  /**
+   * `meanKm` = rayon moyen du catalogue, `extentRatio` = débordement mesuré sur le maillage.
+   * Les DEUX doivent différer ici : sinon le test ne distingue pas lequel des deux la caméra
+   * lit, et une régression qui revient au rayon moyen passerait inaperçue.
+   */
+  function followAt(
+    meanKm: number,
+    extentRatio: number,
+    distanceRadii: number
+  ) {
+    const mean = meanKm * KM;
+    const r = mean * extentRatio;
+    const cameraSystem = new CameraSystem();
+    cameraSystem.camera = new THREE.PerspectiveCamera(65);
+    const body = new THREE.Group();
+    body.position.set(1.13 * AU, 0, 0);
+    body.userData['radius'] = mean;
+    cameraSystem.controls = {
+      target: body.position.clone(),
+      minDistance: 0,
+      maxDistance: 1,
+      update: () => {},
+    } as unknown as CameraSystem['controls'];
+    Reflect.set(cameraSystem, '_scaleMode', 'explo');
+    // Le corps expose son rayon de DÉGAGEMENT comme en production : c'est lui que la caméra
+    // doit lire, pas `userData.radius` (le rayon moyen, celui qui la laissait entrer dans le
+    // maillage d'Éros ou d'Ida).
+    Reflect.set(cameraSystem, 'celestialBodies', {
+      x: {
+        group: body,
+        getFrameRadius: () => mean,
+        getClearanceRadius: () => r,
+      },
+    });
+    Reflect.set(cameraSystem, 'currentTarget', {
+      name: 'x',
+      group: body,
+      distance: 0,
+    });
+    (
+      cameraSystem as unknown as { _applyTargetZoomBounds(r: number): void }
+    )._applyTargetZoomBounds(r);
+    cameraSystem.camera.position
+      .copy(body.position)
+      .add(new THREE.Vector3(0, 0, r * distanceRadii));
+    (
+      cameraSystem as unknown as { _updateExploClipPlanes(): void }
+    )._updateExploClipPlanes();
+    return { cameraSystem, r };
+  }
+
+  // Rayon moyen du catalogue ET débordement mesuré sur le fichier livré : approcher « à 1,15
+  // rayon MOYEN » mettait l'objectif dans le maillage d'Éros ou d'Ida, qui dépassent le double.
+  it.each([
+    ['Itokawa', 0.165, 1.93],
+    ['Bennu', 0.242, 1.18],
+    ['Ryugu', 0.448, 1.18],
+  ] as const)(
+    '%s : zoom jusqu’à la surface, sans la couper',
+    (_name, meanKm, ratio) => {
+      const { cameraSystem, r } = followAt(meanKm, ratio, 1.15);
+      expect(cameraSystem.controls.minDistance).toBeLessThanOrEqual(r * 1.1501);
+      // Au plus près, la surface la plus proche est à 0,15 rayon : le near doit être devant.
+      expect(cameraSystem.camera.near).toBeLessThan(r * 0.15);
+    }
+  );
+
+  it('ne change rien pour une planète : le plancher relatif n’y mord jamais', () => {
+    // La Terre au plus près : near = (d − r) / 2, exactement l'ancien calcul.
+    const { cameraSystem, r } = followAt(6371, 1, 1.15);
+    expect(cameraSystem.camera.near).toBeCloseTo(r * 0.075, 12);
+  });
+});
+
+/**
+ * Le CÂBLAGE, pas seulement le calcul : `setTarget` doit borner le zoom sur le rayon de
+ * DÉGAGEMENT du corps. Passer le rayon moyen laisse la caméra entrer dans un corps irrégulier,
+ * et aucun test de géométrie ne le verrait — c'est ici que ça se joue.
+ */
+it('borne le zoom sur le rayon de dégagement, pas sur le rayon moyen', () => {
+  const cameraSystem = new CameraSystem();
+  cameraSystem.camera = new THREE.PerspectiveCamera(65);
+  cameraSystem.camera.position.set(0, 0, 10);
+  cameraSystem.controls = {
+    target: new THREE.Vector3(),
+    enabled: true,
+    minDistance: 0,
+    maxDistance: 1000,
+    update: () => {},
+  } as unknown as CameraSystem['controls'];
+  cameraSystem.renderer = {
+    toneMappingExposure: 1,
+    xr: { isPresenting: false },
+  } as unknown as CameraSystem['renderer'];
+  cameraSystem.tweenGroup = new TweenGroup();
+  Reflect.set(cameraSystem, '_scaleMode', 'explo');
+  const body = bodyAt(35);
+  const mean = 0.001;
+  const clearance = mean * 2.1; // Éros : son maillage déborde du double de son rayon moyen.
+  Reflect.set(cameraSystem, 'celestialBodies', {
+    eros: {
+      ...body,
+      getFrameRadius: () => mean,
+      getClearanceRadius: () => clearance,
+    },
+  });
+
+  cameraSystem.setTarget('eros');
+
+  expect(cameraSystem.controls.minDistance).toBeCloseTo(clearance * 1.15, 9);
+});
