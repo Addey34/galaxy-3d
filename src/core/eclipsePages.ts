@@ -113,6 +113,16 @@ export function eclipseFocusBody(event: EclipseEvent): string {
 }
 
 /**
+ * Depuis quel corps regarder cette éclipse, ou `null` s'il n'y a rien à imposer. Une éclipse
+ * de Lune ne se voit QUE depuis la Terre : la face lunaire tournée vers nous est la seule que
+ * la lumière réfractée par notre atmosphère éclaire (cf. core/eclipse.ts). Cadrée d'ailleurs,
+ * la page ouvrait sur un disque noir — la nuit lunaire, pas l'ombre terrestre.
+ */
+export function eclipseViewFrom(event: EclipseEvent): string | null {
+  return event.kind === 'lunar-eclipse' ? 'earth' : null;
+}
+
+/**
  * L'état affiché décrit-il encore cette éclipse ? Tant que oui, l'adresse reste celle de la
  * page d'éclipse ; au premier changement de corps ou de date, elle bascule sur le permalien
  * ordinaire (`/earth/?date=…`), qui, lui, dit la vérité sur ce qu'on regarde.

@@ -3,6 +3,7 @@ import {
   ECLIPSE_PAGE_WINDOW,
   ECLIPSE_PEAK_TOLERANCE_MS,
   eclipseFocusBody,
+  eclipseViewFrom,
   eclipseForSlug,
   eclipseFromPathname,
   eclipsePathname,
@@ -115,6 +116,15 @@ describe('eclipseFocusBody', () => {
   it('opens a solar eclipse on the Earth and a lunar one on the Moon', () => {
     expect(eclipseFocusBody(bySlug('2026-08-12'))).toBe('earth');
     expect(eclipseFocusBody(bySlug('2026-08-28'))).toBe('moon');
+  });
+});
+
+describe('eclipseViewFrom — d’où la page regarde l’éclipse', () => {
+  it('impose la Terre pour une éclipse de Lune, rien pour une éclipse de Soleil', () => {
+    // Une Lune éclipsée n'est cuivrée que sur la face tournée vers nous : cadrée d'ailleurs,
+    // la page ouvrait sur un disque noir (la nuit lunaire, pas l'ombre terrestre).
+    expect(eclipseViewFrom(bySlug('2026-08-28'))).toBe('earth');
+    expect(eclipseViewFrom(bySlug('2026-08-12'))).toBeNull();
   });
 });
 

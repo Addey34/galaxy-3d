@@ -7,6 +7,7 @@ import {
 import {
   eclipseFocusBody,
   eclipseFromPathname,
+  eclipseViewFrom,
   eclipsePathname,
   eclipseStillDescribed,
   type EclipseEvent,
@@ -159,6 +160,16 @@ export function setupPermalinks(
         camera.applyViewAngles(view.azimuthDeg, view.polarDeg, view.distance);
         sync(view);
       });
+    } else if (pathEclipse && state.body) {
+      // Aucun angle demandé : on impose celui qui MONTRE l'éclipse (cf. eclipseViewFrom),
+      // une fois le vol terminé, sinon le tween écraserait la pose.
+      const from = eclipseViewFrom(pathEclipse);
+      if (from)
+        afterCameraArrival(camera, () => {
+          camera.viewFromBody(from);
+          sync();
+        });
+      else sync();
     } else {
       sync();
     }

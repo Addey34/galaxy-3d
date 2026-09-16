@@ -127,6 +127,14 @@ normalise sur un vrai jour d'éclipse. `e2e/eclipseLanding.spec.ts` ouvre `/ecli
 arrivée au pic, en pause, sur la Terre, adresse et titre gardés, puis permalien daté dès qu'on
 regarde ailleurs. Chaque garde a été falsifié.
 
+**Éclipse de Lune cuivrée** : `core/eclipse.test.ts` tient la teinte contre les cinq quintiles
+mesurés sur une photographie de totalité, sa normalisation en luminance et la profondeur
+géométrique ; `OrbitalMechanics.test.ts` vérifie qu'au 3 mars 2026 la Lune reçoit bien ce niveau
+et cette teinte en Éducatif ; `viewAngles.test.ts` fait l'aller-retour des angles de caméra.
+`e2e/eclipseLanding.spec.ts` lit les pixels de la page : il est le seul à traverser teinte,
+matériau ET cadrage. Onze mutations tombées — dont une qui, sur une éclipse partielle, passait :
+la totale a été choisie parce qu'elle seule discrimine (rouge/bleu 4,1 contre 1,5).
+
 **Halo lumineux** (`src/components/systems/GlowPass.test.ts`) : aucun test ne peut juger qu'un
 halo est « rond » sous le rendu logiciel des runners, donc la suite tient ce qui le rend rond
 PAR CONSTRUCTION et ce qui casserait en silence. Uniformes employés = déclarés = fournis pour les

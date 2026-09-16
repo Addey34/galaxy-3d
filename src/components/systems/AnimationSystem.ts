@@ -267,12 +267,20 @@ export class AnimationSystem {
         const occluderIndex = name === 'earth' ? moonIndex : earthIndex;
         const occluderSlot =
           occluderIndex >= 0 ? this._lightingSnapshot[occluderIndex] : null;
+        // Un occulteur qui a une ATMOSPHÈRE réfracte de la lumière dans son ombre : celle de
+        // la Terre sur la Lune est cuivrée, celle de la Lune sur la Terre reste neutre. Le
+        // critère vient des couches construites depuis le catalogue, pas d'un nom de corps.
+        const occluderBody =
+          occluderIndex >= 0 ? entries[occluderIndex]?.[1] : undefined;
         body.setEclipseShadowSource(
           sunWorldPosition,
           sunRadius,
           occluderSlot?.position ?? null,
-          occluderSlot?.radius ?? 0
+          occluderSlot?.radius ?? 0,
+          occluderBody?.refractsLight ?? false
         );
+        // En Explo l'ombre est calculée par fragment : aucune teinte CPU par-dessus.
+        body.setUmbraTint(null);
         body.setLightAttenuation(irradiance);
       } else {
         body.setLightAttenuation(eclipse * irradiance);
@@ -298,6 +306,9 @@ export class AnimationSystem {
     const eclipse = this.orbitalMechanics.getEarthMoonEclipse();
     earth?.setLightAttenuation(eclipse.earth);
     moon?.setLightAttenuation(eclipse.moon);
+    // L'ombre de la Terre est cuivrée : en Éducatif elle arrive par cette teinte, faute de
+    // pouvoir être calculée par fragment sur des positions comprimées.
+    moon?.setUmbraTint(eclipse.moonTint);
   }
 
   private _updateObjects(

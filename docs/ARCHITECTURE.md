@@ -756,10 +756,39 @@ jour d'une vraie éclipse totale de Lune. Le seul garde-fou est l'égalité fina
 réécrit de l'éclipse trouvée et le segment lu ; une vérification par aller-retour ajoutée en plus
 était redondante et a été retirée quand sa mutation a survécu.
 
-**Limite visible, pas corrigée ici** : une page d'éclipse lunaire s'ouvre sur une Lune presque
-noire. L'atténuation d'éclipse existante éteint la Lune dans l'ombre ; une vraie Lune éclipsée est
-rouge cuivré (lumière réfractée par l'atmosphère terrestre). Le panneau d'événements montrait
-déjà la même chose.
+### Une Lune éclipsée est cuivrée, et se regarde depuis la Terre (2026-09-16)
+
+Jusqu'à cette date, les 26 pages d'éclipse lunaire s'ouvraient sur un **disque noir**. Deux
+défauts indépendants, chacun suffisant à lui seul :
+
+1. **L'ombre était neutre.** Dans l'ombre d'un corps qui a une ATMOSPHÈRE, il reste la lumière
+   réfractée par cette atmosphère, débarrassée de son bleu. `core/eclipse.ts` la modélise :
+   `computeUmbralShadow` (CPU, mode Éducatif) et `eclipseShadowAt` (GPU, Explo) rendent un
+   facteur **RVB**, plus un scalaire. L'occulteur réfracte si sa couche `atmosphere` existe
+   (`CelestialObject.refractsLight`, lu depuis le catalogue) : la Terre sur la Lune est cuivrée,
+   la Lune sur la Terre reste neutre (`MIN_LIGHT_ATTENUATION`).
+2. **La caméra regardait la nuit lunaire.** Seule la face tournée vers la Terre est éclairée par
+   cette lumière. `eclipseViewFrom` (core/eclipsePages.ts) impose, sans angle explicite dans
+   l'adresse, de cadrer la Lune depuis la Terre (`CameraSystem.viewFromBody`, angles calculés par
+   `core/viewAngles.ts`, vérifiés par aller-retour contre la conversion de Three.js).
+
+**Teinte : mesurée, pas choisie.** Pixel par pixel sur une photographie NASA de totalité (3 mars
+2026, aucun pixel saturé), en LINÉAIRE et normalisée en luminance, par quintile de clarté :
+R/V passe de 1,8 au bord de l'ombre à 27 en son cœur. `umbralTint(profondeur)` ajuste ces cinq
+points (`UMBRA_TINT_FIT`, source unique : le shader lit les mêmes coefficients). La PROFONDEUR se
+prend sur la géométrie (`umbralDepth` : séparation rapportée au rayon angulaire de l'ombre), parce
+que la fraction occultée sature à 1 dans toute l'ombre et ne distingue plus le bord du cœur.
+
+**Niveau : choisi, mais borné par la mesure.** Physiquement, la Lune totalement éclipsée vaut
+~1/60 000 de la pleine Lune (−0,8 contre −12,7 en magnitude) : rendu à exposition unique, c'est
+noir. Sur la seule photographie en UNE exposition montrant le limbe éclairé ET l'ombre (ISS,
+7 septembre 2025), le limbe est saturé, donc le rapport y est ≤ 0,15. `UMBRA_REFRACTED_LIGHT` =
+0,10, et mesuré à l'écran : 0,091 entre la Lune éclipsée et la même Lune la veille.
+
+**Piège trouvé en falsifiant l'e2e** : sur une éclipse PARTIELLE (2026-08-28), le cadrage par
+défaut montre déjà la face éclairée — le test passait sans le cadrage imposé. Sur la totale du
+3 mars 2026, rouge/bleu mesure 4,1 avec, 1,5 sans ; c'est cette page que teste
+`e2e/eclipseLanding.spec.ts`.
 
 ## Architecture météo
 

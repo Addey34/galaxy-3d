@@ -85,6 +85,29 @@ export function computeLightAttenuation(
   sunRadius: number,
   occluders: readonly SphericalOccluder[]
 ): number {
+  const { occlusion } = deepestOcclusion(
+    bodyPosition,
+    sunPosition,
+    sunRadius,
+    occluders
+  );
+  // Courbe puissance : ombre resserrée sur les phases profondes (voir SHADOW_GAMMA).
+  const shaped = Math.pow(occlusion, SHADOW_GAMMA);
+  return THREE.MathUtils.lerp(1, MIN_LIGHT_ATTENUATION, shaped);
+}
+
+/**
+ * Occultation la plus forte subie par `bodyPosition`, et la PROFONDEUR dans l'ombre de
+ * l'occulteur qui la produit (cf. umbralDepth). Un seul parcours pour les deux : le scalaire
+ * seul ne distingue plus rien une fois le Soleil entièrement caché, or c'est là que la couleur
+ * de l'ombre se joue.
+ */
+function deepestOcclusion(
+  bodyPosition: THREE.Vector3,
+  sunPosition: THREE.Vector3,
+  sunRadius: number,
+  occluders: readonly SphericalOccluder[]
+): { occlusion: number; depth: number } {
   // Maths en scalaires plutôt qu'en THREE.Vector3 temporaires : cette fonction tourne dans
   // la boucle d'éclairage physique (AnimationSystem._updatePhysicalLighting, throttlée à 1
   // frame sur 6 mais pour CHAQUE corps × occulteur) — le reste de cette passe pool déjà tous
@@ -95,7 +118,8 @@ export function computeLightAttenuation(
   const sunDy = sunPosition.y - bodyPosition.y;
   const sunDz = sunPosition.z - bodyPosition.z;
   const sunDistance = Math.hypot(sunDx, sunDy, sunDz);
-  if (sunDistance <= EPSILON || sunRadius <= 0) return 1;
+  if (sunDistance <= EPSILON || sunRadius <= 0)
+    return { occlusion: 0, depth: 0 };
 
   const invSunDistance = 1 / sunDistance;
   const sunDirX = sunDx * invSunDistance;
@@ -103,6 +127,7 @@ export function computeLightAttenuation(
   const sunDirZ = sunDz * invSunDistance;
   const sunAngularRadius = angularRadius(sunRadius, sunDistance);
   let maxOccultation = 0;
+  let depth = 0;
 
   for (const occluder of occluders) {
     if (occluder.radius <= 0) continue;
@@ -124,16 +149,118 @@ export function computeLightAttenuation(
       occluderDistance
     );
 
-    maxOccultation = Math.max(
-      maxOccultation,
-      occultationFraction(sunAngularRadius, occluderAngularRadius, separation)
+    const occultation = occultationFraction(
+      sunAngularRadius,
+      occluderAngularRadius,
+      separation
     );
-    if (maxOccultation >= 1) break;
+    if (occultation >= maxOccultation) {
+      maxOccultation = occultation;
+      depth = umbralDepth(sunAngularRadius, occluderAngularRadius, separation);
+    }
   }
 
-  // Courbe puissance : ombre resserrée sur les phases profondes (voir SHADOW_GAMMA).
-  const shaped = Math.pow(maxOccultation, SHADOW_GAMMA);
-  return THREE.MathUtils.lerp(1, MIN_LIGHT_ATTENUATION, shaped);
+  return { occlusion: maxOccultation, depth };
+}
+
+/**
+ * Ombre portée, EN COULEUR : facteur RVB à appliquer à l'éclairage direct du corps. Sert au
+ * mode Éducatif, dont les positions compressées interdisent le calcul par fragment (le shader
+ * fait exactement le même calcul en Explo — `eclipseShadowAt`, config/layerConfig.ts).
+ * `refracts` = l'occulteur a une atmosphère ; sinon l'ombre reste neutre.
+ */
+export function computeUmbralShadow(
+  bodyPosition: THREE.Vector3,
+  sunPosition: THREE.Vector3,
+  sunRadius: number,
+  occluders: readonly SphericalOccluder[],
+  refracts: boolean
+): [number, number, number] {
+  const { occlusion, depth } = deepestOcclusion(
+    bodyPosition,
+    sunPosition,
+    sunRadius,
+    occluders
+  );
+  const shaped = Math.pow(occlusion, SHADOW_GAMMA);
+  const shadow = refracts
+    ? umbralTint(depth).map((channel) => channel * UMBRA_REFRACTED_LIGHT)
+    : [MIN_LIGHT_ATTENUATION, MIN_LIGHT_ATTENUATION, MIN_LIGHT_ATTENUATION];
+  return shadow.map((channel) => THREE.MathUtils.lerp(1, channel, shaped)) as [
+    number,
+    number,
+    number,
+  ];
+}
+
+/**
+ * OMBRE D'UN OCCULTEUR QUI A UNE ATMOSPHÈRE : elle n'est pas noire, elle est cuivrée.
+ *
+ * Dans l'ombre de la Terre, la Lune reçoit encore la lumière RÉFRACTÉE par l'atmosphère
+ * terrestre, débarrassée de son bleu par la diffusion — le « rayon vert » de tous les levers
+ * de soleil du monde à la fois. Sans ce terme, une éclipse totale de Lune s'affichait comme un
+ * disque strictement noir. Avec la Lune comme occulteur (éclipse de Soleil sur la Terre), il
+ * n'y a rien à réfracter : l'ombre reste neutre, `MIN_LIGHT_ATTENUATION`.
+ *
+ * NIVEAU — choix assumé, borné par la mesure. Physiquement, la Lune totalement éclipsée vaut
+ * environ −0,8 en magnitude visuelle contre −12,7 pleine, soit 1/60 000 : à exposition unique,
+ * cela rend NOIR, et aucune photographie ne montre les deux à la fois autrement qu'en brûlant
+ * l'une des deux. Sur la seule image en UNE exposition qui contienne le limbe éclairé ET
+ * l'ombre (ISS073-E-611649, phase partielle du 7 septembre 2025), le limbe est saturé : le
+ * rapport y est donc ≤ 0,15 en linéaire. On retient 0,10 — dans cette borne, et assez pour que
+ * le disque se lise.
+ */
+export const UMBRA_REFRACTED_LIGHT = 0.1;
+
+/**
+ * Teinte de l'ombre réfractée selon sa PROFONDEUR (0 = bord de l'ombre, 1 = axe), normalisée
+ * en luminance : la teinte ne change que la couleur, jamais la clarté (même discipline que le
+ * bandeau crépusculaire). Mesurée pixel par pixel sur une photographie NASA de totalité
+ * (3 mars 2026, aucun pixel saturé), en LINÉAIRE — en 8 bits sRGB le même rouge se lit deux
+ * fois moins rouge, piège déjà payé par ce projet. Les cinq quintiles de luminance donnent
+ * R/V de 1,58 au bord à 4,08 au cœur et V/… décroissant d'autant : l'ombre rougit avec la
+ * profondeur, parce que la lumière y a traversé plus d'atmosphère.
+ */
+export const UMBRA_TINT_FIT = {
+  /** Rouge : croît linéairement avec la profondeur (1,58 au bord → 4,08 au cœur). */
+  redBase: 1.58,
+  redSlope: 2.5,
+  /** Vert : décroît linéairement (0,86 → 0,15). */
+  greenBase: 0.86,
+  greenSlope: 0.71,
+  /** Bleu : s'effondre au bord puis stagne — d'où le cube plutôt qu'une droite. */
+  blueBase: 0.3,
+  blueEdge: 0.36,
+};
+
+export function umbralTint(depth: number): [number, number, number] {
+  const d = THREE.MathUtils.clamp(depth, 0, 1);
+  const rest = 1 - d;
+  // Ajustements des cinq quintiles mesurés (écart max 0,15 sur R, 0,02 sur V). Les
+  // coefficients vivent dans UMBRA_TINT_FIT : le shader les lit de LÀ, pas d'une copie.
+  const r = UMBRA_TINT_FIT.redBase + UMBRA_TINT_FIT.redSlope * d;
+  const g = UMBRA_TINT_FIT.greenBase - UMBRA_TINT_FIT.greenSlope * d;
+  const b =
+    UMBRA_TINT_FIT.blueBase + UMBRA_TINT_FIT.blueEdge * rest * rest * rest;
+  const luminance = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+  return [r / luminance, g / luminance, b / luminance];
+}
+
+/**
+ * Profondeur dans l'ombre (0 au bord de l'ombre, 1 sur l'axe). La fraction occultée sature à 1
+ * dès que le Soleil est entièrement caché : elle ne distingue plus le bord du cœur, alors que
+ * c'est exactement là que la couleur change. On la reprend donc de la géométrie : l'ombre
+ * proprement dite existe tant que la séparation reste sous `occulteur − Soleil` (en rayons
+ * angulaires), et la profondeur est la part parcourue vers l'axe.
+ */
+export function umbralDepth(
+  sunAngularRadius: number,
+  occluderAngularRadius: number,
+  separation: number
+): number {
+  const umbra = occluderAngularRadius - sunAngularRadius;
+  if (umbra <= EPSILON) return 0;
+  return THREE.MathUtils.clamp(1 - separation / umbra, 0, 1);
 }
 
 /** Intensité solaire relative à la Terre, bornée pour conserver une image exploitable. */

@@ -78,6 +78,63 @@ test('a lunar eclipse page opens on the Moon', async ({ page }) => {
   expect(new URL(page.url()).pathname).toBe('/eclipse/2026-08-28/');
 });
 
+/**
+ * ET LA LUNE Y EST CUIVRÉE — la seule vérification qui traverse toute la chaîne : ombre
+ * colorée (core/eclipse.ts), teinte transmise au matériau, ET cadrage depuis la Terre
+ * (core/viewAngles.ts, eclipseViewFrom). Cassé seul, chacun de ces maillons rend la page
+ * NOIRE sans qu'aucun test unitaire ne bouge : elle s'est ouverte ainsi jusqu'au 2026-09-16.
+ *
+ * Sur une éclipse TOTALE, mesuré des deux côtés de chaque mutation : rouge/bleu 4,1 contre
+ * 1,5 sans la teinte ou sans le cadrage, et quatre fois plus de pixels clairs. Les seuils sont
+ * posés entre les deux. Une éclipse partielle ne discrimine PAS (4,4 contre 3,5 : le cadrage
+ * par défaut y montre déjà la face éclairée) — c'est pourquoi cette page-ci est choisie, et
+ * c'est le genre de détail qu'on ne voit qu'en falsifiant.
+ */
+test('a total lunar eclipse page shows a coppery Moon, not a black disc', async ({
+  page,
+}) => {
+  await openApp(page, '/eclipse/2026-03-03/');
+  await expect(page.locator('#body-info .bi-name')).toHaveText('Moon');
+  // Le cadrage n'est posé qu'à l'ARRIVÉE du vol caméra : mesurer avant ne dirait rien.
+  await page.waitForTimeout(3000);
+
+  const disc = await page.evaluate(() => {
+    const canvas = document.querySelector('canvas');
+    if (!canvas) return null;
+    // Recopie la frame courante (le renderer garde son drawing buffer, cf. ui/capture.ts).
+    const copy = document.createElement('canvas');
+    copy.width = canvas.width;
+    copy.height = canvas.height;
+    const ctx = copy.getContext('2d');
+    if (!ctx) return null;
+    ctx.drawImage(canvas, 0, 0);
+    const half = Math.floor(Math.min(copy.width, copy.height) / 4);
+    const { data } = ctx.getImageData(
+      Math.floor(copy.width / 2) - half,
+      Math.floor(copy.height / 2) - half,
+      2 * half,
+      2 * half
+    );
+    let red = 0;
+    let blue = 0;
+    let bright = 0;
+    for (let i = 0; i < data.length; i += 4) {
+      const sum = data[i]! + data[i + 1]! + data[i + 2]!;
+      if (sum < 30) continue; // fond de ciel
+      red += data[i]!;
+      blue += data[i + 2]!;
+      if (sum > 90) bright++;
+    }
+    return { red, blue, bright, total: data.length / 4 };
+  });
+
+  expect(disc, 'aucun canvas lisible').not.toBeNull();
+  // Cuivré, pas gris : mesuré 4,1 ici, 1,5 dès que la teinte ou le cadrage saute.
+  expect(disc!.red / Math.max(disc!.blue, 1)).toBeGreaterThan(2.5);
+  // Et un vrai disque éclairé au centre, pas un liseré : 1,5 % contre 0,35 %.
+  expect(disc!.bright / disc!.total).toBeGreaterThan(0.008);
+});
+
 test('a day without eclipse is ignored, not guessed', async ({ page }) => {
   const errors: string[] = [];
   page.on('pageerror', (err) => errors.push(err.message));

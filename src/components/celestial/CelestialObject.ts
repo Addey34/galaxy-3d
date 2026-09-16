@@ -993,15 +993,39 @@ export default class CelestialObject {
    * `occluderRadius <= 0` désactive proprement le calcul pour cette frame (pas de Lune dans
    * la scène) : le shader renvoie alors un facteur neutre (1.0), voir `eclipseShadowAt`.
    */
+  /**
+   * Vrai si ce corps peut RÉFRACTER la lumière dans son ombre, c'est-à-dire s'il a une
+   * atmosphère : c'est ce qui rend cuivrée l'ombre de la Terre sur la Lune, et ce qui laisse
+   * neutre celle de la Lune sur la Terre. Lu sur les couches construites depuis le catalogue,
+   * jamais sur un nom de corps.
+   */
+  get refractsLight(): boolean {
+    return this.layers.has('atmosphere');
+  }
+
+  /**
+   * Teinte de l'ombre portée sur ce corps, calculée côté CPU. Sert au mode Éducatif : ses
+   * positions comprimées interdisent le calcul par fragment, alors qu'une éclipse de Lune y
+   * est justement l'un des deux phénomènes qu'on vient y voir. `null` = pas d'ombre colorée.
+   */
+  setUmbraTint(tint: readonly [number, number, number] | null): void {
+    if (!this._eclipseShadow) return;
+    const target = this._eclipseShadow.umbraTint.value;
+    if (tint) target.setRGB(tint[0], tint[1], tint[2]);
+    else target.setRGB(1, 1, 1);
+  }
+
   setEclipseShadowSource(
     sunPosition: THREE.Vector3,
     sunRadius: number,
     occluderPosition: THREE.Vector3 | null,
-    occluderRadius: number
+    occluderRadius: number,
+    occluderRefracts = false
   ): void {
     if (!this._eclipseShadow) return;
     this._eclipseShadow.sunPosition.value.copy(sunPosition);
     this._eclipseShadow.sunRadius.value = sunRadius;
+    this._eclipseShadow.occluderRefracts.value = occluderRefracts ? 1 : 0;
     if (occluderPosition && occluderRadius > 0) {
       this._eclipseShadow.occluderPosition.value.copy(occluderPosition);
       this._eclipseShadow.occluderRadius.value = occluderRadius;

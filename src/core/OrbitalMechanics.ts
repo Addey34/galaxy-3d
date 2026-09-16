@@ -22,7 +22,7 @@ import type { EphemerisService } from './EphemerisService';
 import type { OrbitalElementsService } from './OrbitalElementsService';
 import type { PreciseEphemerisProvider } from './PreciseEphemerisProvider';
 import { KM_PER_AU, ScaleService, SQRT_K } from './ScaleService';
-import { computeLightAttenuation } from './eclipse';
+import { computeLightAttenuation, computeUmbralShadow } from './eclipse';
 import { BodyPositionResolver } from './BodyPositionResolver';
 import { OrbitPathBuilder } from './orbitPath';
 import { educationalParentOrbitScale } from './educationalScale';
@@ -554,7 +554,11 @@ export class OrbitalMechanics {
    * Limité à ce seul triplet : les orbites educ sont trop plates/rapprochées pour
    * un calcul d'éclipse fiable sur les autres corps (fausses éclipses partout).
    */
-  getEarthMoonEclipse(): { earth: number; moon: number } {
+  getEarthMoonEclipse(): {
+    earth: number;
+    moon: number;
+    moonTint: [number, number, number];
+  } {
     const date = this.clock.date;
     const sunPos = new THREE.Vector3(0, 0, 0); // Soleil à l'origine héliocentrique.
     const earthPos = this.ephemeris.getHeliocentricAU(Body.Earth, date);
@@ -568,11 +572,24 @@ export class OrbitalMechanics {
     const earth = computeLightAttenuation(earthPos, sunPos, sunRadiusAU, [
       { position: moonPos, radius: moonRadiusAU },
     ]);
-    // Éclipse lunaire : la Lune entre dans l'ombre projetée par la Terre.
-    const moon = computeLightAttenuation(moonPos, sunPos, sunRadiusAU, [
-      { position: earthPos, radius: earthRadiusAU },
-    ]);
-    return { earth, moon };
+    // Éclipse lunaire : la Lune entre dans l'ombre projetée par la Terre — une ombre
+    // CUIVRÉE, puisque la Terre a une atmosphère qui réfracte (cf. computeUmbralShadow). On
+    // sépare la clarté (atténuation) de la couleur (teinte normalisée en luminance) parce que
+    // le matériau les porte dans deux uniformes distincts.
+    const shadow = computeUmbralShadow(
+      moonPos,
+      sunPos,
+      sunRadiusAU,
+      [{ position: earthPos, radius: earthRadiusAU }],
+      true
+    );
+    const moon = 0.2126 * shadow[0] + 0.7152 * shadow[1] + 0.0722 * shadow[2];
+    const moonTint: [number, number, number] = [
+      shadow[0] / moon,
+      shadow[1] / moon,
+      shadow[2] / moon,
+    ];
+    return { earth, moon, moonTint };
   }
 
   get scaleMode(): 'educ' | 'explo' {

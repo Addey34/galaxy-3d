@@ -9,6 +9,7 @@
  */
 import TWEEN, { Group as TweenGroup } from '@tweenjs/tween.js';
 import * as THREE from 'three';
+import { viewAnglesFromDirection } from '@/core/viewAngles';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import {
   CAMERA_CONTROLS_SETTINGS,
@@ -666,6 +667,27 @@ export class CameraSystem {
     this.camera.position.copy(this.controls.target).add(offset);
     this.cameraOffset.copy(offset);
     this.controls.update();
+  }
+
+  /**
+   * Replace la caméra, sans l'animer, du côté de `referenceBody` : la cible reste la même, on
+   * la regarde depuis là. Sert aux éclipses de Lune, dont la seule face colorée est celle
+   * tournée vers la Terre (cf. core/viewAngles.ts). Sans effet si le corps de référence est
+   * inconnu ou confondu avec la cible.
+   */
+  viewFromBody(referenceBody: string): void {
+    const reference = this.celestialBodies[referenceBody]?.group;
+    if (!reference || !this.controls) return;
+    const direction = reference
+      .getWorldPosition(new THREE.Vector3())
+      .sub(this.controls.target);
+    const angles = viewAnglesFromDirection(direction);
+    if (!angles) return;
+    this.applyViewAngles(
+      angles.azimuthDeg,
+      angles.polarDeg,
+      this.controls.getDistance()
+    );
   }
 
   private getDefaultDistance(bodyName: string): number {

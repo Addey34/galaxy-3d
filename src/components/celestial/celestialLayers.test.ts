@@ -36,3 +36,25 @@ describe('celestial atmosphere capability', () => {
     }
   });
 });
+
+/**
+ * QUI RÉFRACTE DANS SON OMBRE — le critère que lit `CelestialObject.refractsLight` pour
+ * décider si une ombre portée est cuivrée (la Terre sur la Lune) ou neutre (la Lune sur la
+ * Terre). Il vient de la couche atmosphère construite depuis le CATALOGUE, jamais d'un nom :
+ * ajouter un corps à atmosphère suffit, il n'y a pas de liste à tenir à jour ailleurs.
+ */
+describe('couche atmosphère = occulteur qui réfracte', () => {
+  it.each([
+    ['earth', CELESTIAL_CONFIG.bodies.earth, true],
+    ['venus', CELESTIAL_CONFIG.bodies.venus, true],
+    ['moon', CELESTIAL_CONFIG.bodies.earth.satellites!.moon!, false],
+    ['mercury', CELESTIAL_CONFIG.bodies.mercury, false],
+  ] as const)('%s', (name, config, refracts) => {
+    const layers = buildLayers(config, name);
+    expect(layers.has('atmosphere')).toBe(refracts);
+    for (const mesh of layers.values()) {
+      mesh.geometry.dispose();
+      (mesh.material as THREE.Material).dispose();
+    }
+  });
+});

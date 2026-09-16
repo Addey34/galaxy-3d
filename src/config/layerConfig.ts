@@ -20,7 +20,12 @@ import {
   REALTIME_CLOUDS_SETTINGS,
   SHADER_SETTINGS,
 } from './engine';
-import { MIN_LIGHT_ATTENUATION, SHADOW_GAMMA } from '@/core/eclipse';
+import {
+  MIN_LIGHT_ATTENUATION,
+  SHADOW_GAMMA,
+  UMBRA_REFRACTED_LIGHT,
+  UMBRA_TINT_FIT,
+} from '@/core/eclipse';
 
 const SHADOW_AWARE_UNIFORM_KEY = '__lightAttenuationUniform';
 
@@ -1096,6 +1101,12 @@ export interface EclipseShadowUniforms {
   /** 0 = pas d'occulteur connu cette frame (ex. Lune hors catalogue) : désactive
    *  proprement le calcul (eclipseShadowAt renvoie 1.0 sans occulteur valide). */
   occluderRadius: { value: number };
+  /** 1 = l'occulteur a une atmosphère, donc son ombre est cuivrée (la Terre sur la Lune) ;
+   *  0 = occulteur sans air, ombre neutre (la Lune sur la Terre). Cf. UMBRA_REFRACTED_LIGHT. */
+  occluderRefracts: { value: number };
+  /** Teinte de l'ombre calculée CÔTÉ CPU (mode Éducatif, où les positions comprimées
+   *  interdisent le calcul par fragment) ; blanc = rien à teinter. Cf. computeUmbralShadow. */
+  umbraTint: { value: THREE.Color };
 }
 
 /**
@@ -1122,19 +1133,40 @@ const ECLIPSE_OCCLUSION_GLSL = `
           float overlapArea = sunAngRad * sunAngRad * sunTerm + occAngRad * occAngRad * occTerm - lens * 0.5;
           return clamp( overlapArea / ( 3.14159265359 * sunAngRad * sunAngRad ), 0.0, 1.0 );
         }
-        float eclipseShadowAt( vec3 fragWorldPos, vec3 sunPos, float sunRad, vec3 occPos, float occRad ) {
+        // Teinte de l'ombre réfractée — traduction fidèle de umbralTint (core/eclipse.ts),
+        // ajustée sur une photographie de totalité, en linéaire et normalisée en luminance.
+        vec3 umbralTint( float depth ) {
+          float d = clamp( depth, 0.0, 1.0 );
+          float rest = 1.0 - d;
+          vec3 tint = vec3(
+            ${UMBRA_TINT_FIT.redBase} + ${UMBRA_TINT_FIT.redSlope} * d,
+            ${UMBRA_TINT_FIT.greenBase} - ${UMBRA_TINT_FIT.greenSlope} * d,
+            ${UMBRA_TINT_FIT.blueBase} + ${UMBRA_TINT_FIT.blueEdge} * rest * rest * rest
+          );
+          return tint / dot( tint, vec3( 0.2126, 0.7152, 0.0722 ) );
+        }
+        // vec3 et non float : dans l'ombre d'un corps qui a une atmosphère, ce qui reste n'est
+        // pas de la lumière solaire affaiblie mais de la lumière RÉFRACTÉE, donc colorée.
+        vec3 eclipseShadowAt( vec3 fragWorldPos, vec3 sunPos, float sunRad, vec3 occPos, float occRad, float occRefracts ) {
           vec3 toSun = sunPos - fragWorldPos;
           float sunDist = length( toSun );
-          if ( sunDist < 0.0001 || sunRad <= 0.0 ) return 1.0;
+          if ( sunDist < 0.0001 || sunRad <= 0.0 ) return vec3( 1.0 );
           vec3 toOcc = occPos - fragWorldPos;
           float occDist = length( toOcc );
-          if ( occDist < 0.0001 || occDist >= sunDist ) return 1.0;
+          if ( occDist < 0.0001 || occDist >= sunDist ) return vec3( 1.0 );
           float sunAngRad = asin( clamp( sunRad / sunDist, 0.0, 1.0 ) );
           float occAngRad = asin( clamp( occRad / occDist, 0.0, 1.0 ) );
           float separation = acos( clamp( dot( toSun, toOcc ) / ( sunDist * occDist ), -1.0, 1.0 ) );
           float occlusion = eclipseOcclusionFraction( sunAngRad, occAngRad, separation );
           float shaped = pow( occlusion, ${SHADOW_GAMMA.toFixed(2)} );
-          return mix( 1.0, ${MIN_LIGHT_ATTENUATION.toFixed(3)}, shaped );
+          float umbra = max( occAngRad - sunAngRad, 0.0 );
+          float depth = umbra > 0.0 ? clamp( 1.0 - separation / umbra, 0.0, 1.0 ) : 0.0;
+          vec3 shadow = mix(
+            vec3( ${MIN_LIGHT_ATTENUATION.toFixed(3)} ),
+            ${UMBRA_REFRACTED_LIGHT.toFixed(3)} * umbralTint( depth ),
+            occRefracts
+          );
+          return mix( vec3( 1.0 ), shadow, shaped );
         }`;
 
 /** Récupère les uniforms d'ombrage d'éclipse par fragment d'un matériau, s'il en a. */
@@ -1245,6 +1277,8 @@ export function createShadowAwareStandardMaterial(
     occluderPosition: { value: new THREE.Vector3() },
     // 0 = pas d'occulteur cette frame → eclipseShadowAt renvoie 1.0 (inerte).
     occluderRadius: { value: 0 },
+    occluderRefracts: { value: 0 },
+    umbraTint: { value: new THREE.Color(1, 1, 1) },
   };
 
   material.userData[SHADOW_AWARE_UNIFORM_KEY] = attenuationUniform;
@@ -1305,6 +1339,9 @@ export function createShadowAwareStandardMaterial(
         eclipseShadowUniforms.occluderPosition;
       shader.uniforms['uEclipseOccRadius'] =
         eclipseShadowUniforms.occluderRadius;
+      shader.uniforms['uEclipseOccRefracts'] =
+        eclipseShadowUniforms.occluderRefracts;
+      shader.uniforms['uEclipseUmbraTint'] = eclipseShadowUniforms.umbraTint;
     }
 
     // Position et normale monde du fragment : clair de Lune ET/OU ombre d'éclipse.
@@ -1339,7 +1376,7 @@ export function createShadowAwareStandardMaterial(
             : '') +
           (moonlight ? FRAGMENT_SUN_DIR_GLSL : '') +
           (eclipseShadow
-            ? '\nuniform vec3 uEclipseSunPos;\nuniform float uEclipseSunRadius;\nuniform vec3 uEclipseOccPos;\nuniform float uEclipseOccRadius;\n' +
+            ? '\nuniform vec3 uEclipseSunPos;\nuniform float uEclipseSunRadius;\nuniform vec3 uEclipseOccPos;\nuniform float uEclipseOccRadius;\nuniform float uEclipseOccRefracts;\nuniform vec3 uEclipseUmbraTint;\n' +
               ECLIPSE_OCCLUSION_GLSL
             : '')
       )
@@ -1390,7 +1427,7 @@ export function createShadowAwareStandardMaterial(
               'vec3 outgoingLight = (totalDiffuse + boundedSpecular) * uLightAttenuation'
             : 'vec3 outgoingLight = (totalDiffuse + totalSpecular) * uLightAttenuation') +
           (cloudShadow ? ' * cloudDirectFactor' : '') +
-          (eclipseShadow ? ' * eclipseShadowFactor' : '') +
+          (eclipseShadow ? ' * eclipseShadowFactor * uEclipseUmbraTint' : '') +
           ' + totalEmissiveRadiance;' +
           (moonlight ? MOONLIGHT_GLSL : '') +
           // La lueur suit la MÊME atténuation solaire que l'éclairage direct : c'est sur lui
@@ -1399,7 +1436,9 @@ export function createShadowAwareStandardMaterial(
           (twilight
             ? twilightGlsl(
                 ' * uLightAttenuation' +
-                  (eclipseShadow ? ' * eclipseShadowFactor' : '')
+                  (eclipseShadow
+                    ? ' * eclipseShadowFactor * uEclipseUmbraTint'
+                    : '')
               )
             : '')
       );
@@ -1482,8 +1521,9 @@ export function createShadowAwareStandardMaterial(
       shader.fragmentShader = shader.fragmentShader.replace(
         '#include <map_fragment>',
         `#include <map_fragment>
-        float eclipseShadowFactor = eclipseShadowAt(
-          vMoonWorldPos, uEclipseSunPos, uEclipseSunRadius, uEclipseOccPos, uEclipseOccRadius
+        vec3 eclipseShadowFactor = eclipseShadowAt(
+          vMoonWorldPos, uEclipseSunPos, uEclipseSunRadius, uEclipseOccPos, uEclipseOccRadius,
+          uEclipseOccRefracts
         );`
       );
     }
@@ -1494,7 +1534,7 @@ export function createShadowAwareStandardMaterial(
     }${moonlight ? '-moonlight' : ''}${twilight ? '-twilight-v6' : ''}${
       varyOceanRoughness ? '-oceanrough-v1' : ''
     }${limitSpecular ? '-limitspec-v3-grazeocclusion' : ''}${noSpecular ? '-nospec' : ''}${
-      eclipseShadow ? '-eclipseshadow' : ''
+      eclipseShadow ? '-eclipseshadow-v2-umbra' : ''
     }`;
 
   return material;

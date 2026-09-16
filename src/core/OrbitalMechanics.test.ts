@@ -7,6 +7,8 @@ import {
 import { educationalParentOrbitScale } from './educationalScale';
 import { SQRT_K } from './ScaleService';
 import { CELESTIAL_CONFIG } from '@/config/bodies';
+import { EphemerisService } from './EphemerisService';
+import { UMBRA_REFRACTED_LIGHT } from './eclipse';
 
 const DAY_MS = 86_400_000;
 
@@ -363,5 +365,47 @@ describe('fin de transition éduc↔explo : ordre des rappels', () => {
     expect(calls.at(-3)).toBe('scale:1');
     expect(calls.at(-2)).toBe('phase:false');
     expect(calls.at(-1)).toBe('orbits');
+  });
+});
+
+/**
+ * ÉCLIPSE DE LUNE EN ÉDUCATIF — la seule chose qui relie la mesure photométrique au pixel.
+ * Les positions de scène y sont √-comprimées : l'ombre ne peut pas être calculée par fragment,
+ * elle arrive par ce couple (clarté, teinte). Une éclipse totale de Lune s'y affichait
+ * strictement NOIRE avant ce garde-fou, sur une page d'atterrissage faite pour la montrer.
+ */
+describe('ombre de la Terre sur la Lune (mode Éducatif)', () => {
+  function eclipseAt(iso: string): {
+    earth: number;
+    moon: number;
+    moonTint: [number, number, number];
+  } {
+    const mechanics = Object.create(
+      OrbitalMechanics.prototype
+    ) as OrbitalMechanics;
+    Object.assign(mechanics, {
+      clock: { date: new Date(iso) },
+      ephemeris: new EphemerisService(),
+    });
+    return mechanics.getEarthMoonEclipse();
+  }
+
+  it('rend la Lune cuivrée au maximum d’une éclipse totale', () => {
+    // 3 mars 2026, totalité (la date même de la photographie qui a servi à mesurer la teinte).
+    const { moon, moonTint } = eclipseAt('2026-03-03T11:33:40Z');
+    expect(moon).toBeCloseTo(UMBRA_REFRACTED_LIGHT, 2);
+    // Cuivrée, pas grise : le rouge domine largement le bleu.
+    expect(moonTint[0] / moonTint[2]).toBeGreaterThan(3);
+    // La teinte ne porte que la couleur — la clarté est déjà dans `moon`.
+    expect(
+      0.2126 * moonTint[0] + 0.7152 * moonTint[1] + 0.0722 * moonTint[2]
+    ).toBeCloseTo(1, 6);
+  });
+
+  it('laisse la pleine Lune intacte et sans teinte hors éclipse', () => {
+    const { moon, moonTint } = eclipseAt('2026-03-10T11:33:40Z');
+    expect(moon).toBeCloseTo(1, 6);
+    expect(moonTint[0]).toBeCloseTo(1, 6);
+    expect(moonTint[2]).toBeCloseTo(1, 6);
   });
 });
