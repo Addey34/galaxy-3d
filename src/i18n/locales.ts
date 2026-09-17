@@ -309,13 +309,24 @@ export const messages: Record<Locale, Dict> = {
     'weather.source.prefix': 'Source:',
     'weather.source.approx': 'nearest available',
     'weather.loading': 'Loading…',
-    // Statut temporel honnête de la donnée (voir core/dataStatus.ts).
-    'weather.status.observed': 'observed',
-    'weather.status.analysis': 'analysis',
-    'weather.status.forecast': 'forecast',
-    'weather.status.forecast_uncertain': 'uncertain forecast',
-    'weather.status.climatology': 'climate average',
-    'weather.status.unavailable': 'unavailable',
+    // Catégorie temporelle d'une donnée affichée (voir core/temporal.ts).
+    'time.category.live': 'live',
+    'time.category.observed': 'observed',
+    'time.category.reconstructed': 'reconstructed (model)',
+    'time.category.predicted': 'predicted',
+    'time.category.extrapolated': 'extrapolated',
+    'time.category.unavailable': 'unavailable',
+    'time.confidence.reduced': 'low confidence',
+    'time.offset.scene': 'scene on {date}',
+    // Provenance de la position d'un corps (voir core/positionProvenance.ts).
+    'bi.position.label': 'Position at this date',
+    'position.source.horizons': 'JPL Horizons ephemeris (precomputed)',
+    'position.source.spk': 'JPL SPK kernel',
+    'position.source.astronomy-engine': 'Astronomy Engine',
+    'position.source.kepler': 'Keplerian orbital elements',
+    'position.error':
+      'Mean measured gap to JPL Horizons: {distance} ({from}–{to})',
+    'position.error.none': 'Gap to JPL Horizons not measured at this date',
     'weather.wind.note':
       'Wind flow (Open-Meteo): colour and speed follow wind strength.',
     'weather.thermal.note':
@@ -673,13 +684,24 @@ export const messages: Record<Locale, Dict> = {
     'weather.source.prefix': 'Source :',
     'weather.source.approx': 'date la plus proche',
     'weather.loading': 'Chargement…',
-    // Statut temporel honnête de la donnée (voir core/dataStatus.ts).
-    'weather.status.observed': 'observé',
-    'weather.status.analysis': 'analyse',
-    'weather.status.forecast': 'prévision',
-    'weather.status.forecast_uncertain': 'prévision incertaine',
-    'weather.status.climatology': 'moyenne climatique',
-    'weather.status.unavailable': 'indisponible',
+    // Catégorie temporelle d'une donnée affichée (voir core/temporal.ts).
+    'time.category.live': 'en direct',
+    'time.category.observed': 'observé',
+    'time.category.reconstructed': 'reconstruit (modèle)',
+    'time.category.predicted': 'prédit',
+    'time.category.extrapolated': 'extrapolé',
+    'time.category.unavailable': 'indisponible',
+    'time.confidence.reduced': 'confiance réduite',
+    'time.offset.scene': 'scène au {date}',
+    // Provenance de la position d'un corps (voir core/positionProvenance.ts).
+    'bi.position.label': 'Position à cette date',
+    'position.source.horizons': 'éphéméride JPL Horizons (précalculée)',
+    'position.source.spk': 'noyau SPK du JPL',
+    'position.source.astronomy-engine': 'Astronomy Engine',
+    'position.source.kepler': 'éléments orbitaux képlériens',
+    'position.error':
+      'Écart moyen mesuré à JPL Horizons : {distance} ({from}–{to})',
+    'position.error.none': 'Écart à JPL Horizons non mesuré à cette date',
     'weather.wind.note':
       'Flux du vent (Open-Meteo) : la couleur et la vitesse suivent la force du vent.',
     'weather.thermal.note':

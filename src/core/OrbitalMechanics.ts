@@ -30,7 +30,8 @@ import { OrbitPathBuilder } from './orbitPath';
 import { educationalParentOrbitScale } from './educationalScale';
 import { HOURS_TO_RAD } from './MathConstants';
 import { surfaceRotationForSubsolarLongitude } from './frames';
-import { forEachBody } from '@/config/catalog';
+import { flattenBodies, forEachBody } from '@/config/catalog';
+import type { PositionSource } from './positionProvenance';
 
 /** Corps sans mouvement orbital propre (skybox étoilée, étoile centrale à l'origine). */
 function hasOrbit(cfg: CelestialBodyConfig): boolean {
@@ -605,6 +606,20 @@ export class OrbitalMechanics {
   get scaleMorph(): number {
     return this._morph;
   }
+  /**
+   * Source qui place `name` à la date de la scène (binaire Horizons, SPK, astronomy-engine,
+   * éléments képlériens), ou `null`. Pour la provenance affichée d'UN corps : recalcule sa
+   * position, à ne pas appeler dans la boucle de rendu.
+   */
+  positionSourceOf(name: string): PositionSource | null {
+    this._configByName ??= flattenBodies(this.config);
+    const cfg = this._configByName.get(name);
+    return cfg
+      ? this._positions.resolveSource(name, cfg, this.clock.date)
+      : null;
+  }
+  private _configByName: Map<string, CelestialBodyConfig> | null = null;
+
   get simulationDate(): Date {
     return this.clock.date;
   }

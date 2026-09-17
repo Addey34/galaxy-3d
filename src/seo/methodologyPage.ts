@@ -30,6 +30,12 @@ import { SQRT_K } from '@/core/ScaleService';
 import { educationalParentOrbitScale } from '@/core/educationalScale';
 import { MIN_SAMPLES_PER_ORBIT_FOR_HERMITE } from '@/core/HorizonsEphemerisService';
 import { TT_MINUS_UTC } from '@/core/timeScale';
+import {
+  TEMPORAL_CATEGORIES,
+  temporalCategoryLabelKey,
+  type TemporalCategory,
+} from '@/core/temporal';
+import { messages } from '@/i18n/locales';
 import { escapeHtml } from './bodyLandingPage';
 import {
   type Bilingual,
@@ -647,6 +653,52 @@ function methodologyPage(input: MethodologyInput, locale: DocLocale): DocPage {
           }
         )}</p>` +
         detailTables
+    )
+  );
+
+  // 8b. Ce que dit une date
+  // Les LIBELLÉS viennent du dictionnaire de l'application : la page et la fiche ne peuvent pas
+  // diverger. Le type impose une explication par catégorie — en ajouter une sans l'expliquer ici
+  // ne compile pas.
+  const CATEGORY_NOTES: Record<TemporalCategory, Bilingual> = {
+    live: {
+      en: 'the scene is at the present moment, within five minutes, and the data describes it.',
+      fr: 'la scène est au présent, à cinq minutes près, et la donnée décrit ce présent.',
+    },
+    observed: {
+      en: 'a measurement of a past instant, such as a satellite image of that day.',
+      fr: 'une mesure d’un instant passé, par exemple l’image satellite de ce jour.',
+    },
+    reconstructed: {
+      en: 'a model of a past or present instant, such as a reanalysis (ERA5, MERRA-2) or a position computed for a date already behind us.',
+      fr: 'un modèle sur un instant passé ou présent, par exemple une réanalyse (ERA5, MERRA-2) ou une position calculée pour une date déjà derrière nous.',
+    },
+    predicted: {
+      en: 'a model of a future instant, inside the window where its source has been measured. A weather forecast beyond a week is marked as having low confidence.',
+      fr: 'un modèle sur un instant futur, dans la fenêtre où sa source a été mesurée. Une prévision météo au-delà d’une semaine est signalée en confiance réduite.',
+    },
+    extrapolated: {
+      en: 'a calculation outside every window where its gap to the reference was measured. It still draws something, and says that nothing establishes it.',
+      fr: 'un calcul hors de toute fenêtre où son écart à la référence a été mesuré. Il dessine quand même quelque chose, et le dit.',
+    },
+    unavailable: {
+      en: 'no data for that instant, so nothing is drawn rather than something borrowed from another date.',
+      fr: 'aucune donnée pour cet instant : rien n’est dessiné, plutôt qu’une donnée empruntée à une autre date.',
+    },
+  };
+  sections.push(
+    docSection(
+      'temporal',
+      L({ en: 'What a date says', fr: 'Ce que dit une date' }),
+      `<p>${L({
+        en: 'The scene shows one instant, but each piece of data describes an instant of its own, and they rarely coincide. Satellite imagery does not exist for a scene set in 2030, so the latest real image is shown and the gap to the scene is written next to it. Every dated element therefore carries its own label, and there is no single control saying the whole scene is accurate: the label says what the data is, the measured gap says how far it is.',
+        fr: 'La scène montre un instant, mais chaque donnée décrit le sien, et les deux coïncident rarement. L’imagerie satellite n’existe pas pour une scène en 2030 : la dernière image réelle est affichée, et l’écart à la scène est écrit à côté. Chaque élément daté porte donc son étiquette, et aucun réglage unique ne prétend que toute la scène est exacte : l’étiquette dit ce qu’est la donnée, l’écart mesuré dit de combien elle s’en écarte.',
+      })}</p><ul class="doc-list">${TEMPORAL_CATEGORIES.map(
+        (category) =>
+          `<li><strong>${escapeHtml(
+            messages[locale][temporalCategoryLabelKey(category)] ?? category
+          )}</strong>${L({ en: ':', fr: ' :' })} ${L(CATEGORY_NOTES[category])}</li>`
+      ).join('')}</ul>`
     )
   );
 

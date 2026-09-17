@@ -911,6 +911,16 @@
           <span class="bi-live-lt"></span>
         </div>
         <dl class="bi-stats"></dl>
+        <!-- Provenance temporelle de la position à la date de la scène : source, catégorie
+             (observé / reconstruit / prédit / extrapolé…) et écart mesuré à JPL Horizons.
+             Remplie par ui/positionProvenance.ts via ui/bodyInfo.ts. -->
+        <div class="bi-position" hidden>
+          <span class="bi-position-label" data-i18n="bi.position.label"
+            >Position at this date</span
+          >
+          <span class="bi-position-source"></span>
+          <span class="bi-position-error"></span>
+        </div>
         <!-- Sources des valeurs ci-dessus, numérotées comme les renvois. Remplies par
              ui/bodyInfo.ts depuis le registre config/factSources.ts. -->
         <details class="bi-sources" hidden>

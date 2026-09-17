@@ -27,6 +27,7 @@ interface CachedState {
  * jugeait absente n'était jamais demandée — le cas de toutes les lunes de SAT441.
  */
 export class SpkWorkerEphemerisProvider implements PreciseEphemerisProvider {
+  readonly source = 'spk' as const;
   private readonly cache = new Map<string, CachedState>();
   private readonly pending = new Set<string>();
   private segments: readonly SpkSegmentDescriptor[] = [];

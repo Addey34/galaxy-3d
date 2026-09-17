@@ -1009,7 +1009,7 @@ console.log(
 const SUMMARY_FILE = join(
   ROOT,
   'src',
-  'seo',
+  'config',
   'horizons-validation-summary.json'
 );
 if (

@@ -70,7 +70,10 @@ function sourceCandidate(
     label: (config.sourceLabel ?? defaultSourceLabel)(data),
     url: '',
     realDate: data.realDate,
-    approx: data.plan.status !== 'observed' && data.plan.status !== 'analysis',
+    // L'heure servie est celle demandée : une prévision n'est pas une « date approchée »,
+    // c'est sa catégorie temporelle (prédite) qui le dit.
+    approx: false,
+    product: data.plan.product,
   };
 }
 
@@ -85,6 +88,8 @@ export function setupMeteoModelLayer(
   const loadState = createLoadStateRelay();
   let currentTexture: THREE.DataTexture | null = null;
   let visible = config.initial ?? false;
+  /** Dernière demande hors de la plage du modèle : rien à montrer pour la date de la scène. */
+  let outOfRange = false;
   let lastSource: MeteoLayerDiagnostics['source'];
   let lastGrid: MeteoLayerDiagnostics['grid'];
   let phase: MeteoLayerDiagnostics['phase'] = 'idle';
@@ -93,7 +98,7 @@ export function setupMeteoModelLayer(
   const applyIfVisible = (): void => {
     if (!currentTexture) return;
     config.applyFallback?.(earth, currentTexture);
-    if (!visible) return;
+    if (!visible || outOfRange) return;
     earth.setDataOverlay(config.targetLayer, currentTexture, {
       opacity: config.opacity,
     });
@@ -122,7 +127,21 @@ export function setupMeteoModelLayer(
         loadState.push(next);
       },
       apply: (data) => {
-        if (data.grid) {
+        if (!data.grid) {
+          // Hors de la plage du modèle (avant 1940, au-delà de l'horizon de prévision) : la
+          // grille précédente décrit un AUTRE instant. La garder à l'écran sous l'étiquette de
+          // cette date serait afficher une donnée qui n'existe pas.
+          // La texture n'est pas libérée : elle peut rester branchée comme secours d'une
+          // observation (`applyFallback`). Limite connue : ce secours décrit alors la dernière
+          // heure chargée, pas forcément le jour de la tuile satellite qu'il complète.
+          outOfRange = true;
+          lastGrid = undefined;
+          if (visible) {
+            earth.restoreLayerMaterial(config.targetLayer);
+            earth.setLayerVisible(config.targetLayer, false);
+          }
+        } else {
+          outOfRange = false;
           const encoded = config.encodeGrid(data.grid);
           const nextTexture = createMeteoDataTexture(
             encoded.data,

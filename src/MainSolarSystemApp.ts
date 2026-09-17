@@ -26,6 +26,7 @@ import { TOUR_SCRIPTS } from './config/tourScripts';
 import { setupLangSwitch } from './ui/langSwitch';
 import { setupPlanetControls } from './ui/planetNav';
 import { setupBodyInfo } from './ui/bodyInfo';
+import { setupPositionProvenance } from './ui/positionProvenance';
 import { setupDocumentTitle } from './ui/documentTitle';
 import { setupPlayback } from './ui/playback';
 import { setupQualitySection } from './ui/qualitySection';
@@ -205,6 +206,7 @@ if (surfaceScrim) {
     // se ferme sur retour Vue Globale. Toutes les sources passent par planetNav.selectBody.
     let syncPermalink = (): void => undefined;
     const bodyInfo = setupBodyInfo(overlayCoordinator);
+    setupPositionProvenance(api, bodyInfo);
     const exploScaleBadge = setupExploScaleBadge();
     // Le titre de l'onglet suit la sélection, comme le chemin de l'URL : depuis que celui-ci
     // change sans rechargement, un titre figé ferait dire deux choses différentes à l'adresse

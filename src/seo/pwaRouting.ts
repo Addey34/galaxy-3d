@@ -24,11 +24,21 @@ const ECLIPSE_SEGMENT = 'eclipse';
 /** Préfixe des pages documentaires françaises (`/fr/methodology/`), cf. `documentPage.ts`. */
 const FRENCH_SEGMENT = 'fr';
 
+/**
+ * Morceau du résumé de validation Horizons (`config/horizons-validation-summary.json`), chargé
+ * à la demande par la fiche : 11 Kio compressés que personne ne doit payer à l'installation
+ * pour ouvrir une fiche qu'il n'ouvrira peut-être jamais. Conséquence assumée : hors ligne et
+ * avant tout chargement, la fiche masque son bloc « Position à cette date » plutôt que
+ * d'inventer un écart.
+ */
+const VALIDATION_SUMMARY_GLOB = 'assets/horizons-validation-summary-*.js';
+
 /** Fichiers générés à NE PAS précacher (motifs glob, relatifs à `dist/`). */
 export const LANDING_PAGE_GLOB_IGNORES: string[] = [
   '*/index.html',
   `${ECLIPSE_SEGMENT}/*/index.html`,
   `${FRENCH_SEGMENT}/*/index.html`,
+  VALIDATION_SUMMARY_GLOB,
 ];
 
 /** Navigations à NE PAS remplacer par l'app shell en cache. */

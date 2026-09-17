@@ -223,6 +223,24 @@ satellite et sa jumelle « modèle » représentent la même chose sur le même 
 traverser la nuit ensemble. Toute décision jour/nuit passe par `src/core/terminator.ts` —
 jamais une formule maison, jamais une constante réglée à l'œil.
 
+### Ajouter une donnée datée (couche, source de position, futur fournisseur)
+
+Toute donnée affichée qui dépend de la date de la scène déclare DEUX choses, et le reste se
+déduit (`src/core/temporal.ts`, contrat dans `docs/ARCHITECTURE.md` § « Modèle temporel ») :
+
+1. **sa nature** (`ProductKind`) — une mesure, une réanalyse, un run de prévision, un calcul de
+   position. C'est elle qui décide « observé » ou « reconstruit », et non la date : une réanalyse
+   passée est un MODÈLE, l'appeler une observation était un défaut livré ;
+2. **l'intervalle qu'elle décrit** (`validTime`) — le jour d'une tuile, le mois de MERRA-2,
+   l'instant d'une position. L'écart entre cet intervalle et la date de la scène est calculé et
+   AFFICHÉ dès qu'il dépasse le pas de la source.
+
+Deux règles qui vont avec, chacune payée par un défaut : une source qui répond à n'importe quelle
+date déclare la fenêtre où son écart a été MESURÉ, hors de laquelle elle est « extrapolée » ; et
+hors de sa plage, une couche n'affiche RIEN plutôt que la donnée d'une autre date (elle masquait
+la précédente sous l'étiquette de la date demandée). L'exactitude, elle, s'affiche à côté de la
+catégorie, jamais fondue dedans.
+
 ### Faire briller un élément (halo lumineux)
 
 Le halo ne choisit pas ses sources par luminance : il ne fait briller que ce qu'on lui

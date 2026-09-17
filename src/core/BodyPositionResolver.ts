@@ -3,7 +3,11 @@ import type { Body } from 'astronomy-engine';
 import type { CelestialBodyConfig } from '@/types';
 import type { EphemerisService } from './EphemerisService';
 import type { OrbitalElementsService } from './OrbitalElementsService';
-import type { PreciseEphemerisProvider } from './PreciseEphemerisProvider';
+import {
+  FallbackPreciseEphemerisProvider,
+  type PreciseEphemerisProvider,
+} from './PreciseEphemerisProvider';
+import type { PositionSource } from './positionProvenance';
 import {
   isPlausibleHeliocentricPosition,
   isPlausibleRelativePosition,
@@ -26,6 +30,9 @@ import {
  *   - `precise()`   — la source numérique seule (binaire Horizons/SPK), `null` hors couverture.
  *   - `elements()`  — les éléments képlériens seuls, de couverture INFINIE.
  *   - `resolve()`   — la règle de production : précis d'abord, repli ensuite.
+ *   - `resolveSource()` — QUI a répondu à `resolve()` pour ce corps à cette date, par la même
+ *     règle exécutée une seule fois (`_resolve`), pour la provenance affichée : un binaire
+ *     Horizons et un repli képlérien ne disent pas la même chose d'une date.
  *
  * Exposer les deux premières n'est pas une commodité de test : tracer une orbite entière exige
  * de savoir si la source précise couvre toute la courbe, sous peine d'épisser deux trajectoires
@@ -113,9 +120,60 @@ export class BodyPositionResolver {
     cfg: CelestialBodyConfig,
     date: Date
   ): THREE.Vector3 | null {
-    const precise = this.precise(name, cfg, date);
-    if (precise) return precise;
+    return this._resolve(name, cfg, date, null);
+  }
 
+  /**
+   * La source qui a produit `resolve(name, cfg, date)`, ou `null` si aucune ne sait placer ce
+   * corps. Recalcule la position : réservé à la provenance affichée (un corps, à la cadence
+   * de l'interface), jamais à la boucle de rendu.
+   */
+  resolveSource(
+    name: string,
+    cfg: CelestialBodyConfig,
+    date: Date
+  ): PositionSource | null {
+    const out: { source: PositionSource | null } = { source: null };
+    return this._resolve(name, cfg, date, out) ? out.source : null;
+  }
+
+  /** Nom de la source précise qui répond : le primaire d'un composite s'il couvre. */
+  private _preciseSource(
+    name: string,
+    cfg: CelestialBodyConfig,
+    date: Date
+  ): PositionSource {
+    const provider = this.horizons;
+    const answering =
+      provider instanceof FallbackPreciseEphemerisProvider
+        ? provider.answering(
+            name,
+            cfg.frame === 'parentRelative'
+              ? (this.parentName.get(name) ?? null)
+              : null,
+            date
+          )
+        : provider;
+    return answering?.source ?? 'horizons';
+  }
+
+  /**
+   * LA règle, une seule fois. `out` reçoit la source quand l'appelant la demande ; `null` dans
+   * la boucle de rendu, qui n'alloue rien.
+   */
+  private _resolve(
+    name: string,
+    cfg: CelestialBodyConfig,
+    date: Date,
+    out: { source: PositionSource | null } | null
+  ): THREE.Vector3 | null {
+    const precise = this.precise(name, cfg, date);
+    if (precise) {
+      if (out) out.source = this._preciseSource(name, cfg, date);
+      return precise;
+    }
+
+    if (out) out.source = 'astronomy-engine';
     if (cfg.relativeEphemeris?.kind === 'jupiterMoon') {
       // astronomy-engine fournit directement les vecteurs relatifs aux lunes galiléennes.
       return this.ephemeris.getJupiterMoonRelativeAU(
@@ -141,6 +199,7 @@ export class BodyPositionResolver {
       );
     }
 
+    if (out) out.source = 'kepler';
     return this.elementsOnly(cfg, date);
   }
 }

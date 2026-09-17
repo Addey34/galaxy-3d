@@ -117,6 +117,7 @@ function isManifestBody(value: unknown): value is HorizonsBodyManifest {
 }
 
 export class HorizonsEphemerisService implements PreciseEphemerisProvider {
+  readonly source = 'horizons' as const;
   private constructor(private readonly bodies: Map<string, LoadedBody>) {}
 
   /**

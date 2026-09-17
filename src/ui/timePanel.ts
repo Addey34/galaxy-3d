@@ -10,6 +10,7 @@
  */
 import { t } from '@/i18n';
 import type { OrbitalMechanics } from '@/core/OrbitalMechanics';
+import { LIVE_TOLERANCE_MS } from '@/core/positionProvenance';
 import type { PlaybackControls } from './playback';
 import type { OverlayCoordinator } from './overlayCoordinator';
 
@@ -22,7 +23,8 @@ const timeTodayBtn = document.getElementById('time-today')!;
 const timeInput = document.getElementById('time-input') as HTMLInputElement;
 const dateInput = document.getElementById('date-input') as HTMLInputElement;
 
-const LIVE_THRESHOLD_DAYS = 5 / (24 * 60); // ±5 min
+// Même seuil que la catégorie « en direct » d'une position (core/positionProvenance.ts).
+const LIVE_THRESHOLD_DAYS = LIVE_TOLERANCE_MS / 86_400_000;
 
 let _prevTime = '';
 let _prevDate = '';

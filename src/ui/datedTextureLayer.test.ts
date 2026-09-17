@@ -7,7 +7,7 @@ import type { PublicAPI } from '@/SolarSystemApp';
 
 /** Fabrique un candidat de test (url = id pour tracer les chargements). */
 function cand(id: string, approx = false): SourceCandidate {
-  return { id, label: id, url: id, realDate: id, approx };
+  return { id, label: id, url: id, realDate: id, approx, product: null };
 }
 
 /**

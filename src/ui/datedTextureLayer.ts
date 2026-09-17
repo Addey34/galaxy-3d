@@ -82,7 +82,15 @@ export function createDatedTextureLayer(
       if (key === null) return [];
       const url = config.urlForKey?.(key) ?? key;
       return [
-        { id: key, label: config.name, url, realDate: key, approx: false },
+        {
+          id: key,
+          label: config.name,
+          url,
+          realDate: key,
+          approx: false,
+          // Mode hérité : la config ne déclare pas la nature de sa donnée.
+          product: null,
+        },
       ];
     });
 
@@ -179,6 +187,7 @@ export function createDatedTextureLayer(
           url,
           realDate: k,
           approx: false,
+          product: null,
         }).catch(() => {});
       });
     }

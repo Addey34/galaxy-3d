@@ -380,7 +380,7 @@ function bodyLandingPages() {
           throw new Error('CITATION.cff : repository-code introuvable');
         const docPages = [
           ...methodologySeo.methodologyPages({
-            summary: await readJson('src/seo/horizons-validation-summary.json'),
+            summary: await readJson('src/config/horizons-validation-summary.json'),
             manifest,
             config: catalogue.CELESTIAL_CONFIG,
             origin: SITE_ORIGIN,
@@ -545,8 +545,8 @@ export default defineConfig({
           },
           {
             // Données temps réel (météo, GIBS, SBDB) : le frais d'abord, le cache en secours
-            // hors-ligne. Jamais présenté comme temps réel s'il vient du cache (statut honnête
-            // géré côté app via dataStatus.ts).
+            // hors-ligne. Jamais présenté comme temps réel s'il vient du cache (catégorie
+            // temporelle honnête gérée côté app via core/temporal.ts).
             urlPattern: ({ url }) =>
               [
                 'gibs.earthdata.nasa.gov',

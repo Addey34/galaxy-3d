@@ -1007,6 +1007,32 @@ button {
   color: var(--ink-dim);
   font-variant-numeric: tabular-nums;
 }
+.bi-position {
+  /* Séparée de la liste des faits : elle décrit la POSITION à la date de la scène, pas une
+     propriété du corps. */
+  margin: var(--sp-2) 0;
+  padding-top: var(--sp-2);
+  border-top: 1px solid rgba(var(--planet-rgb), 0.18);
+  display: grid;
+  gap: 0.1rem;
+}
+.bi-position[hidden] {
+  display: none;
+}
+.bi-position-label {
+  font-size: 0.58rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(var(--planet-rgb), 0.85);
+}
+.bi-position-source {
+  font-size: 0.75rem;
+  color: #eaf3ff;
+}
+.bi-position-error {
+  font-size: 0.7rem;
+  color: var(--ink-dim);
+}
 .bi-stats {
   display: grid;
   grid-template-columns: auto 1fr;

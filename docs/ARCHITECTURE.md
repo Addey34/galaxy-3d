@@ -157,7 +157,7 @@ distance à Saturne pendant des mois, sous un garde-fou censé attraper exacteme
 
 **Tout est mesuré contre JPL Horizons** par `pnpm ephemeris:validate`
 (`scripts/validate-against-horizons.mjs`, rapport dans `reports/`, non versionné, et un résumé
-versionné `src/seo/horizons-validation-summary.json` que publie `/methodology`) : erreur
+versionné `src/config/horizons-validation-summary.json` que publie `/methodology`) : erreur
 moyenne, médiane, p95, max par corps et par source, en km et en rayons.
 
 ### Une seule échelle de temps : `core/timeScale.ts`
@@ -943,6 +943,60 @@ fait foi) ; la colonne P de la table JPL des éléments moyens est anomalistique
 1,7691 j sidéraux), d'où les périodes lues dans les fiches NSSDCA des satellites ; le GM de la SBDB
 pour Itokawa ne correspond pas à la masse publiée que ses propres notes citent.
 
+## Modèle temporel : ce qu'une donnée dit du temps
+
+`src/core/temporal.ts` (pur) répond à une question que la scène pose partout : **la donnée
+affichée décrit-elle l'instant de la scène, et de quelle nature est-elle ?** Il remplace
+`core/dataStatus.ts`, qui ne classait que la météo, sur la seule date — et appelait donc
+« observée » une réanalyse ERA5 ou MERRA-2.
+
+**Quatre temps, jamais confondus** : `simulationTime` (l'instant que la scène représente, unique),
+`validTime` (l'INTERVALLE que décrit la donnée : un jour pour une tuile VIIRS, un mois pour
+MERRA-2, un instant pour une position), `observationTime` / `publicationTime` (quand la mesure a
+été prise, quand la source l'a publiée — pas encore portés par `DatedProduct`, aucune catégorie
+n'en dépend), et `now`, l'instant RÉEL, seul à séparer ce qui a pu être observé de ce qui ne peut
+être que prédit.
+
+**La source déclare une NATURE** (`ProductKind` : `measurement`, `reanalysis`, `forecastModel`,
+`ephemeris`) et `classifyTemporal` en tire une catégorie : `live`, `observed`, `reconstructed`,
+`predicted`, `extrapolated`, `unavailable`. La règle, dans cet ordre : hors de la fenêtre où
+l'écart de la source a été MESURÉ → `extrapolated` ; scène et donnée au présent, si la source
+l'autorise (`liveToleranceMs`) → `live` ; intervalle commençant avant `now` → `observed` pour une
+mesure, `reconstructed` pour un modèle ; sinon `predicted`, en confiance réduite au-delà de
+`reliableHorizonMs`.
+
+**Catégorie et exactitude sont deux axes.** Une éphéméride de Jupiter en 2050 et une prévision
+météo à 12 jours sont toutes deux « prédites » et n'ont rien de commun : l'écart mesuré s'affiche
+à côté, jamais fondu dans l'étiquette. « Mesuré » ne veut pas dire « exact » : Hygiea est mesurée
+sur 1900-2100, à 6e7 km.
+
+**L'écart à la scène est une donnée à part entière.** `validTime` s'éloigne de `simulationTime`
+dès qu'aucune donnée n'existe pour la date demandée : une scène en 2030 reçoit la dernière image
+satellite réelle. Le stamp porte alors `offset`, et la surface l'ÉCRIT (« scène au 2030-01-01 »).
+C'était le défaut : la tuile ramenée à J-2 s'affichait « observé », `approx: false`, sans rien
+dire de l'écart.
+
+**Position d'un corps** : `BodyPositionResolver.resolveSource` nomme la source qui a répondu, par
+la MÊME règle que `resolve` (une seule implémentation, `_resolve`, avec un paramètre de sortie
+facultatif — la boucle de rendu n'alloue rien). `core/positionProvenance.ts` en tire le produit
+daté et l'écart mesuré, lus dans `src/config/horizons-validation-summary.json` (chargé À LA
+DEMANDE par `ui/positionProvenance.ts`, morceau séparé : personne ne le télécharge sans ouvrir une
+fiche). Un binaire Horizons ou un noyau SPK ne peut pas être « extrapolé » : hors couverture il ne
+répond pas, une autre source prend le relais. astronomy-engine et les éléments képlériens, eux,
+répondent à toute date : hors des fenêtres mesurées, la fiche dit « extrapolé », et sans aucune
+mesure elle le dit partout. Les fenêtres d'un satellite sont RELATIVES à son parent (la Lune :
+11 km relatifs, 900 km en héliocentrique) et les deux repères ne se mélangent jamais.
+
+**Aucun réglage global de précision.** Chaque donnée porte son étiquette là où elle s'affiche :
+badge du panneau météo, bloc « Position à cette date » de la fiche. La page `/methodology` publie
+les catégories en lisant le dictionnaire de l'application, et `docPages.test.ts` refuse qu'une
+catégorie manque ou qu'un libellé se replie sur sa clé.
+
+**Rien n'est affiché à la place de rien** : hors de la plage d'un modèle, la couche masque son
+overlay (`meteoModelLayer`) et le vent masque ses particules plutôt que de garder la grille d'une
+autre date. L'ancienne étiquette « moyenne climatique » a disparu avec cette correction : aucune
+climatologie n'était servie.
+
 ## Pages `/methodology` et `/sources`
 
 Deux documents, chacun en anglais (`/methodology/`, `/sources/`) et en français
@@ -964,7 +1018,7 @@ crédits de l'aide (`data-i18n-href` : le lien suit la langue de l'interface).
 
 **Le résumé de validation est versionné, le rapport ne l'est pas.** `reports/` est ignoré par
 git, donc invisible du build de CI. `pnpm ephemeris:validate` écrit aussi
-`src/seo/horizons-validation-summary.json` (statistiques sans échantillons, 4 chiffres
+`src/config/horizons-validation-summary.json` (statistiques sans échantillons, 4 chiffres
 significatifs), mais **seulement** pour une mesure complète : `--only`, `--providers`,
 `--inject-*`, `--samples` non standard ou `--out` redirigé laissent le fichier intact. Une
 falsification ne peut donc pas finir publiée.

@@ -35,6 +35,12 @@ import {
   imergUrl,
   snapToHalfHour,
 } from './gibsPrecip';
+import {
+  spanInterval,
+  utcDayInterval,
+  utcMonthInterval,
+  type DatedProduct,
+} from './temporal';
 
 /** Un candidat de source pour une date : ce qu'on tente de charger et sa traçabilité. */
 export interface SourceCandidate {
@@ -48,6 +54,12 @@ export interface SourceCandidate {
   realDate: string;
   /** true si on s'est éloigné de la date demandée (date/source approchée) → badge « approché ». */
   approx: boolean;
+  /**
+   * Nature et intervalle décrit de la donnée, pour le modèle temporel (`core/temporal.ts`) :
+   * c'est ce qui distingue une mesure d'une réanalyse et rend visible l'écart à la scène quand
+   * la dernière image réelle est servie pour une date future. `null` : aucune donnée servie.
+   */
+  product: DatedProduct | null;
   /**
    * Domaine natif connu de la source. La politique native-alpha-no-extrapolation
    * conserve les pixels no-data transparents au lieu de les remplir.
@@ -67,6 +79,11 @@ export type LayerSourceResolver = (
 ) => SourceCandidate[];
 
 const HALF_HOUR_MS = 30 * 60 * 1000;
+
+/** Une tuile quotidienne de satellite décrit son jour UTC. */
+function dailyMeasurement(isoDay: string): DatedProduct {
+  return { kind: 'measurement', validTime: utcDayInterval(isoDay) };
+}
 
 /** true si la date `iso` (YYYY-MM-DD…) est >= la borne basse `min` (YYYY-MM-DD). */
 function isOnOrAfter(iso: string, min: string): boolean {
@@ -106,6 +123,7 @@ export function resolveCloudSources(
       url: gibsCloudUrl(date, { layer }),
       realDate: date,
       approx: false,
+      product: dailyMeasurement(date),
     });
   };
   add(GIBS_DEFAULT_LAYER, 'VIIRS', GIBS_MIN_DATE);
@@ -144,6 +162,7 @@ export function resolveCloudFractionDaySource(
     }),
     realDate: date,
     approx: false,
+    product: dailyMeasurement(date),
   };
 }
 
@@ -168,6 +187,7 @@ export function resolveCloudFractionNightSource(
     }),
     realDate: date,
     approx: false,
+    product: dailyMeasurement(date),
   };
 }
 export interface PrecipResolveOptions {
@@ -213,6 +233,10 @@ export function resolvePrecipSources(
       url: imergUrl(clamped, urlOpts),
       realDate: iso,
       approx: i > 0,
+      product: {
+        kind: 'measurement',
+        validTime: spanInterval(clamped.getTime(), HALF_HOUR_MS),
+      },
       coverage: IMERG_COVERAGE,
     });
   }
@@ -225,6 +249,7 @@ export function resolvePrecipSources(
     url: imergUrl(end, { ...urlOpts, layer: IMERG_DAILY_LAYER }),
     realDate: day,
     approx: true,
+    product: dailyMeasurement(day),
     coverage: IMERG_COVERAGE,
   });
   return out;
@@ -275,6 +300,8 @@ export function resolveThermalSources(
       // Le premier candidat (mois de base) correspond à la date demandée/clampée (exact) ;
       // les reculs de mois suivants sont marqués approché.
       approx: i > 0,
+      // MERRA-2 est une réanalyse (modèle qui assimile des observations), pas une mesure.
+      product: { kind: 'reanalysis', validTime: utcMonthInterval(date) },
     });
   }
   return out;

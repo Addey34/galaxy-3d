@@ -10,11 +10,12 @@
  * - `archive` ERA5 (archive-api.open-meteo.com) : réanalyse de 1940 jusqu'à ~5 j avant aujourd'hui.
  *   Fenêtre pilotée par `start_date` / `end_date`.
  *
- * Au-delà de l'horizon de prévision (futur lointain), aucune donnée fiable → statut `climatology`
- * (l'appelant peut choisir de ne rien afficher ou une moyenne) ; avant 1940 → `unavailable`.
+ * Au-delà de l'horizon de prévision (futur lointain) comme avant 1940, aucune donnée : le plan
+ * ne porte pas de produit et l'appelant n'affiche rien. Aucune moyenne climatique n'est servie
+ * à la place (l'ancienne étiquette « moyenne climatique » décrivait une donnée qui n'existait pas).
  * On ne présente JAMAIS une prévision lointaine comme une certitude (invariant produit).
  */
-import { dataStatusFor, type DataStatus } from './dataStatus';
+import { DAY_MS, type DatedProduct } from './temporal';
 
 /** Endpoint Open-Meteo à utiliser pour une date. */
 export type MeteoSource = 'forecast' | 'archive';
@@ -27,8 +28,10 @@ export interface MeteoTimePlanOptions {
    * ERA5. ERA5 s'arrête ~5 j avant le présent ; le forecast couvre cette zone via l'analyse. Défaut 5.
    */
   archiveCutoffDays?: number;
-  /** Horizon de prévision fiable au-delà du présent (jours). Défaut 16 (limite des modèles). */
+  /** Horizon de prévision au-delà du présent (jours). Défaut 16 (limite des modèles). */
   forecastHorizonDays?: number;
+  /** Au-delà de ce nombre de jours, la prévision est servie en confiance réduite. Défaut 7. */
+  reliableForecastDays?: number;
   /** Première date de la réanalyse ERA5. Défaut 1940-01-01. */
   archiveMinDate?: string;
 }
@@ -43,14 +46,17 @@ export interface MeteoTimePlan {
   date?: string;
   /**
    * true si la donnée modélisée n'existe pas pour cette date (futur au-delà de l'horizon, ou avant
-   * 1940) → l'appelant n'affiche rien / une climatologie. Les autres champs sont alors indicatifs.
+   * 1940) → l'appelant n'affiche rien. Les autres champs sont alors indicatifs.
    */
   outOfRange: boolean;
-  /** Statut temporel honnête de la donnée servie (observed/analysis/forecast/…). */
-  status: DataStatus;
+  /**
+   * Ce que sera la donnée servie, pour le modèle temporel (`core/temporal.ts`) : réanalyse ERA5
+   * ou run de prévision, valeur horaire de HH:00. `null` quand `outOfRange`.
+   */
+  product: DatedProduct | null;
 }
 
-const DAY_MS = 24 * 60 * 60 * 1000;
+const HOUR_MS = 60 * 60 * 1000;
 
 function isoDay(d: Date): string {
   return d.toISOString().slice(0, 10);
@@ -66,8 +72,8 @@ export function meteoHourKey(date: Date): string {
  *
  * - date < now − archiveCutoffDays → `archive` (ERA5), jour = date de simulation.
  * - sinon (zone récente + futur ≤ horizon) → `forecast`, fenêtre couvrant now → date.
- * - futur > horizon → `outOfRange`, statut `climatology`.
- * - avant archiveMinDate → `outOfRange`, statut `unavailable`.
+ * - futur > horizon → `outOfRange`, sans produit.
+ * - avant archiveMinDate → `outOfRange`, sans produit.
  */
 export function planMeteoRequest(
   simDate: Date,
@@ -80,22 +86,33 @@ export function planMeteoRequest(
     `${options.archiveMinDate ?? '1940-01-01'}T00:00:00Z`
   );
 
-  const status = dataStatusFor(simDate, {
-    now,
-    forecastDays: 7,
-    uncertainDays: forecastHorizonDays,
-  });
+  const reliableForecastDays = options.reliableForecastDays ?? 7;
+  // La valeur servie est celle de l'heure pleine (`meteoHourKey`) : un instant, avec une heure
+  // de tolérance avant de signaler l'écart à la scène.
+  const hourMs = Math.floor(simDate.getTime() / HOUR_MS) * HOUR_MS;
+  const validTime = { from: hourMs, to: hourMs };
+  const reanalysis: DatedProduct = {
+    kind: 'reanalysis',
+    validTime,
+    offsetToleranceMs: HOUR_MS,
+  };
+  const forecast: DatedProduct = {
+    kind: 'forecastModel',
+    validTime,
+    offsetToleranceMs: HOUR_MS,
+    reliableHorizonMs: reliableForecastDays * DAY_MS,
+  };
 
   // Avant la réanalyse → aucune donnée.
   if (simDate.getTime() < archiveMin.getTime()) {
-    return { source: 'archive', outOfRange: true, status: 'unavailable' };
+    return { source: 'archive', outOfRange: true, product: null };
   }
 
   const deltaDays = (simDate.getTime() - now.getTime()) / DAY_MS;
 
-  // Futur au-delà de l'horizon des modèles → climatologie (pas de prévision fiable).
+  // Futur au-delà de l'horizon des modèles → aucune donnée.
   if (deltaDays > forecastHorizonDays) {
-    return { source: 'forecast', outOfRange: true, status: 'climatology' };
+    return { source: 'forecast', outOfRange: true, product: null };
   }
 
   // Passé lointain → archive ERA5 (jour ciblé).
@@ -104,7 +121,7 @@ export function planMeteoRequest(
       source: 'archive',
       date: isoDay(simDate),
       outOfRange: false,
-      status,
+      product: reanalysis,
     };
   }
 
@@ -123,7 +140,7 @@ export function planMeteoRequest(
     pastDays,
     forecastDays,
     outOfRange: false,
-    status,
+    product: forecast,
   };
 }
 

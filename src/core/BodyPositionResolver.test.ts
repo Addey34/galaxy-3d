@@ -5,7 +5,10 @@ import type { CelestialBodyConfig } from '@/types';
 import { BodyPositionResolver } from './BodyPositionResolver';
 import type { EphemerisService } from './EphemerisService';
 import type { OrbitalElementsService } from './OrbitalElementsService';
-import type { PreciseEphemerisProvider } from './PreciseEphemerisProvider';
+import {
+  FallbackPreciseEphemerisProvider,
+  type PreciseEphemerisProvider,
+} from './PreciseEphemerisProvider';
 
 /**
  * ORDRE DE PRIORITÉ DES SOURCES DE POSITION.
@@ -201,5 +204,101 @@ describe('BodyPositionResolver', () => {
     } as CelestialBodyConfig;
 
     expect(resolver.resolve('inconnu', config, DATE)).toBeNull();
+    expect(resolver.resolveSource('inconnu', config, DATE)).toBeNull();
+  });
+
+  /**
+   * La provenance affichée dit QUI a répondu. Elle suit la même règle que `resolve`, exécutée
+   * une seule fois : une copie de la règle pourrait annoncer « Horizons » pendant que le repli
+   * képlérien place le corps (Encelade au-delà de 2101).
+   */
+  describe('resolveSource', () => {
+    const dwarf = {
+      kind: 'dwarf',
+      radius: 0.1,
+      textureResolutions: {},
+      textures: {},
+      realData: { distanceAU: 40 },
+      orbitalElements: elementsAt(40),
+    } as CelestialBodyConfig;
+
+    it('binaire Horizons quand il couvre, éléments képlériens sinon', () => {
+      const covered = makeResolver({
+        horizons: {
+          source: 'horizons',
+          getHeliocentricAU: () => new THREE.Vector3(40, 0, 0),
+        },
+        elements: { getHeliocentricAU: () => new THREE.Vector3(40, 0, 0) },
+      });
+      expect(covered.resolveSource('pluto', dwarf, DATE)).toBe('horizons');
+
+      const uncovered = makeResolver({
+        elements: { getHeliocentricAU: () => new THREE.Vector3(40, 0, 0) },
+      });
+      expect(uncovered.resolveSource('pluto', dwarf, DATE)).toBe('kepler');
+    });
+
+    it('une réponse précise IMPLAUSIBLE n’est pas créditée à la source précise', () => {
+      const resolver = makeResolver({
+        horizons: { getHeliocentricAU: () => new THREE.Vector3(4.6, 0, 0) },
+        elements: { getHeliocentricAU: () => new THREE.Vector3(1.524, 0, 0) },
+      });
+      const mars = {
+        ...dwarf,
+        kind: 'planet',
+        realData: { distanceAU: 1.524 },
+        orbitalElements: elementsAt(1.524),
+      } as CelestialBodyConfig;
+      expect(resolver.resolveSource('mars', mars, DATE)).toBe('kepler');
+    });
+
+    it('astronomy-engine pour un corps qui porte son enum', () => {
+      const resolver = makeResolver({
+        ephemeris: {
+          getHeliocentricAU: () => new THREE.Vector3(5.2, 0, 0),
+        },
+      });
+      const jupiter = {
+        ...dwarf,
+        orbitalElements: undefined,
+        astroBody: 'Jupiter' as Body,
+      } as CelestialBodyConfig;
+      expect(resolver.resolveSource('jupiter', jupiter, DATE)).toBe(
+        'astronomy-engine'
+      );
+    });
+
+    it('un composite SPK → Horizons nomme celui qui répond', () => {
+      const moon = {
+        kind: 'moon',
+        frame: 'parentRelative',
+        radius: 0.1,
+        textureResolutions: {},
+        textures: {},
+      } as CelestialBodyConfig;
+      const spk = {
+        source: 'spk' as const,
+        getHeliocentricAU: () => null,
+        getParentRelativeAU: (name: string) =>
+          name === 'titan' ? new THREE.Vector3(0.008, 0, 0) : null,
+      };
+      const horizons = {
+        source: 'horizons' as const,
+        getHeliocentricAU: () => null,
+        getParentRelativeAU: () => new THREE.Vector3(0.001, 0, 0),
+      };
+      const resolver = new BodyPositionResolver(
+        {} as EphemerisService,
+        {} as OrbitalElementsService,
+        new FallbackPreciseEphemerisProvider(spk, horizons),
+        new Map([
+          ['titan', 'saturn'],
+          ['phobos', 'mars'],
+        ]),
+        new Map()
+      );
+      expect(resolver.resolveSource('titan', moon, DATE)).toBe('spk');
+      expect(resolver.resolveSource('phobos', moon, DATE)).toBe('horizons');
+    });
   });
 });

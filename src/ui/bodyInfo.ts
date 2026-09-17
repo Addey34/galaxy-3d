@@ -33,6 +33,12 @@ import {
   onUnitSystemChange,
 } from '@/core/units';
 import { safeExternalUrl } from '@/utils/safeUrl';
+import type { MeasuredWindow, PositionSource } from '@/core/positionProvenance';
+import {
+  DAY_MS,
+  temporalCategoryLabelKey,
+  type TemporalStamp,
+} from '@/core/temporal';
 import type { OverlayCoordinator } from './overlayCoordinator';
 
 const C_KM_PER_S = 299_792.458; // vitesse de la lumière
@@ -143,6 +149,66 @@ export function formatLightTime(km: number): string {
   }
   const h = Math.floor(s / 3600);
   return `${h} h ${Math.round((s - h * 3600) / 60)} min ${light}`;
+}
+
+// ── Provenance temporelle de la position (source, catégorie, écart mesuré) ──
+
+/** Ce que la fiche affiche de la position du corps à la date de la scène. */
+export interface PositionProvenanceView {
+  source: PositionSource;
+  stamp: TemporalStamp;
+  /** Écart moyen mesuré à Horizons sur la fenêtre la plus étroite qui contient la date. */
+  error: MeasuredWindow | null;
+}
+
+/**
+ * Fenêtre mesurée affichée en ANNÉES. Le jour exact donnerait une précision que la fenêtre n'a
+ * pas (elles tombent à quelques jours d'un 1er janvier : 1900-01-02, 2035-12-31), et aucune des
+ * deux bornes ne doit annoncer plus que ce qui a été mesuré :
+ *   - début : année la PLUS PROCHE (2015-12-31 → 2016, et non 2015) ;
+ *   - fin : année du DERNIER JOUR mesuré (fin stockée exclusive), donc jamais arrondie vers le
+ *     haut (2100-12-29 → 2100, et non 2101).
+ */
+function windowYears(from: number, toExclusive: number): [string, string] {
+  const startYear = new Date(from).getUTCFullYear();
+  const nextYear = Date.UTC(startYear + 1, 0, 1);
+  const start =
+    from - Date.UTC(startYear, 0, 1) <= nextYear - from
+      ? startYear
+      : startYear + 1;
+  return [
+    String(start),
+    String(new Date(toExclusive - DAY_MS).getUTCFullYear()),
+  ];
+}
+
+/**
+ * Deux lignes : « source · catégorie (· confiance) » puis l'écart mesuré, ou le fait qu'il ne
+ * l'a pas été à cette date. La catégorie et l'écart sont deux axes : « prédit » ne dit rien de
+ * l'exactitude, le chiffre si.
+ */
+export function formatPositionProvenance(view: PositionProvenanceView): {
+  source: string;
+  error: string;
+} {
+  const parts = [
+    t(`position.source.${view.source}`),
+    t(temporalCategoryLabelKey(view.stamp.category)),
+  ];
+  if (view.stamp.confidence === 'reduced')
+    parts.push(t('time.confidence.reduced'));
+  if (!view.error)
+    return { source: parts.join(' · '), error: t('position.error.none') };
+  const { value, unit } = convertDistanceKm(view.error.meanKm);
+  const [from, to] = windowYears(view.error.from, view.error.to);
+  return {
+    source: parts.join(' · '),
+    error: t('position.error', {
+      distance: `${value.toLocaleString(intlLocale(), { maximumSignificantDigits: 2 })} ${unit}`,
+      from,
+      to,
+    }),
+  };
 }
 
 // ── Construction des lignes de la fiche depuis la config d'un corps ──
@@ -423,11 +489,25 @@ export interface BodyInfoPanel {
    * masque le bloc. Sans effet si la fiche est masquée.
    */
   updateLive(sceneDist: number | null): void;
+  /**
+   * Provenance temporelle de la position du corps affiché, recalculée par
+   * `ui/positionProvenance.ts` quand la date de la scène change. `null` masque le bloc.
+   */
+  updatePosition(view: PositionProvenanceView | null): void;
+  /** Corps dont la fiche est ouverte (ou repliée mais sélectionné), sinon `null`. */
+  currentBody(): string | null;
 }
 
 export function setupBodyInfo(coordinator?: OverlayCoordinator): BodyInfoPanel {
   const panel = document.getElementById('body-info');
-  if (!panel) return { show: () => {}, hide: () => {}, updateLive: () => {} };
+  if (!panel)
+    return {
+      show: () => {},
+      hide: () => {},
+      updateLive: () => {},
+      updatePosition: () => {},
+      currentBody: () => null,
+    };
 
   const dot = panel.querySelector<HTMLElement>('.bi-dot')!;
   const nameEl = panel.querySelector<HTMLElement>('.bi-name')!;
@@ -446,6 +526,13 @@ export function setupBodyInfo(coordinator?: OverlayCoordinator): BodyInfoPanel {
   const liveEl = panel.querySelector<HTMLElement>('.bi-live')!;
   const liveDist = panel.querySelector<HTMLElement>('.bi-live-dist')!;
   const liveLt = panel.querySelector<HTMLElement>('.bi-live-lt')!;
+  const positionEl = panel.querySelector<HTMLElement>('.bi-position');
+  const positionSource = positionEl?.querySelector<HTMLElement>(
+    '.bi-position-source'
+  );
+  const positionError =
+    positionEl?.querySelector<HTMLElement>('.bi-position-error');
+  let lastPosition: PositionProvenanceView | null = null;
 
   let visible = false;
 
@@ -643,8 +730,10 @@ export function setupBodyInfo(coordinator?: OverlayCoordinator): BodyInfoPanel {
     coordinator?.requestOpen('body-info');
     setVisible(true);
     // Neuf corps : on repart d'un bloc live masqué (updateLive le remplira à la frame
-    // suivante en Explo) pour ne pas laisser la distance du corps précédent.
+    // suivante en Explo) pour ne pas laisser la distance du corps précédent. Même règle pour
+    // la provenance de la position, qui décrivait l'autre corps.
     liveEl.hidden = true;
+    updatePosition(null);
   };
 
   // Changement de langue : re-rend la fiche du corps courant (noms, sous-titre, stats,
@@ -652,6 +741,7 @@ export function setupBodyInfo(coordinator?: OverlayCoordinator): BodyInfoPanel {
   // sa prochaine réouverture. Le bloc live se réactualise seul à la frame suivante.
   onLocaleChange(() => {
     if (currentName) render(currentName);
+    updatePosition(lastPosition);
   });
   // Mode daltonien basculé : recolore l'accent de la fiche du corps courant.
   onAccentChange(() => {
@@ -660,6 +750,7 @@ export function setupBodyInfo(coordinator?: OverlayCoordinator): BodyInfoPanel {
   // Système d'unités basculé (métrique/impérial) : reformate les stats affichées.
   onUnitSystemChange(() => {
     if (currentName) render(currentName);
+    updatePosition(lastPosition);
   });
 
   const updateLive = (sceneDist: number | null): void => {
@@ -673,5 +764,27 @@ export function setupBodyInfo(coordinator?: OverlayCoordinator): BodyInfoPanel {
     liveEl.hidden = false;
   };
 
-  return { show, hide, updateLive };
+  function updatePosition(view: PositionProvenanceView | null): void {
+    lastPosition = view;
+    if (!positionEl || !positionSource || !positionError) return;
+    if (!view) {
+      positionEl.hidden = true;
+      return;
+    }
+    const text = formatPositionProvenance(view);
+    // Écrire seulement ce qui change : appelé à la cadence de l'horloge de la scène.
+    if (positionSource.textContent !== text.source)
+      positionSource.textContent = text.source;
+    if (positionError.textContent !== text.error)
+      positionError.textContent = text.error;
+    positionEl.hidden = false;
+  }
+
+  return {
+    show,
+    hide,
+    updateLive,
+    updatePosition,
+    currentBody: () => currentName,
+  };
 }

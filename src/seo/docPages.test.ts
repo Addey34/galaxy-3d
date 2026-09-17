@@ -7,7 +7,8 @@ import { FACT_SOURCES } from '@/config/factSources';
 import { bodyFact } from '@/core/bodyFacts';
 import { SQRT_K } from '@/core/ScaleService';
 import { MIN_SAMPLES_PER_ORBIT_FOR_HERMITE } from '@/core/HorizonsEphemerisService';
-import summaryJson from './horizons-validation-summary.json';
+import summaryJson from '@/config/horizons-validation-summary.json';
+import { TEMPORAL_CATEGORIES, temporalCategoryLabelKey } from '@/core/temporal';
 import manifestJson from '../../public/assets/ephemerides/manifest.json';
 import textureSources from '../../scripts/texture-sources.json';
 import firebaseJson from '../../firebase.json';
@@ -393,6 +394,30 @@ describe('affirmations de /methodology confrontées au code', () => {
       const items = list.split('<li>').slice(1);
       expect(items[0]).toMatch(/SPK/);
       expect(items[1]).toMatch(/Horizons/);
+    }
+  });
+
+  it('publie exactement les catégories temporelles que l’application affiche', () => {
+    // La page et la fiche lisent le MÊME dictionnaire : une catégorie ajoutée au modèle
+    // temporel sans libellé (ou décrite ici avec un autre mot) casse ce test.
+    for (const [page, locale] of [
+      [en!, 'en'],
+      [fr!, 'fr'],
+    ] as const) {
+      const section = /id="temporal"[\s\S]*?<\/ul>/.exec(page.body)?.[0];
+      expect(section).toBeDefined();
+      for (const category of TEMPORAL_CATEGORIES) {
+        // Un libellé manquant se replierait sur la clé brute : la page publierait
+        // « time.category.predicted ». La fiche lit le même dictionnaire.
+        const label = messages[locale][temporalCategoryLabelKey(category)];
+        expect(label, `${locale}/${category}`).toBeDefined();
+        expect(label).not.toContain('time.category.');
+        expect(section).toContain(`<strong>${label}</strong>`);
+      }
+      // Aucune catégorie de plus, aucune de moins.
+      expect(section!.split('<li>').length - 1).toBe(
+        TEMPORAL_CATEGORIES.length
+      );
     }
   });
 

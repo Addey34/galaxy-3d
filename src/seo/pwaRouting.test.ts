@@ -50,6 +50,20 @@ describe('routage du service worker pour les pages d’atterrissage', () => {
     }
   });
 
+  it('ne précache pas le résumé de validation, chargé à la demande', () => {
+    // Nom réel produit par le build (hash Rollup). L'app shell, lui, reste précaché.
+    expect(
+      LANDING_PAGE_GLOB_IGNORES.some((glob) =>
+        matchesGlob('assets/horizons-validation-summary-BQPcL_Ww.js', glob)
+      )
+    ).toBe(true);
+    expect(
+      LANDING_PAGE_GLOB_IGNORES.some((glob) =>
+        matchesGlob('assets/SolarSystemApp-hlgQ0VPF.js', glob)
+      )
+    ).toBe(false);
+  });
+
   it('garde l’app shell pour la racine et les assets', () => {
     expect(
       LANDING_PAGE_GLOB_IGNORES.some((glob) => matchesGlob('index.html', glob))

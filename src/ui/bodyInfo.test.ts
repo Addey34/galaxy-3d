@@ -2,7 +2,7 @@ import { beforeAll, describe, expect, it, vi } from 'vitest';
 import { CELESTIAL_CONFIG } from '@/config/bodies';
 import { flattenBodies } from '@/config/catalog';
 import { setLocale } from '@/i18n';
-import { bodySources, bodyStats } from './bodyInfo';
+import { bodySources, bodyStats, formatPositionProvenance } from './bodyInfo';
 
 /**
  * Les libellés de la fiche sont des affirmations scientifiques. Chacun de ces cas a été livré
@@ -106,5 +106,68 @@ describe('fiche d’information : faits sourcés', () => {
   it('nomme la méthode dans la provenance', () => {
     expect(stat('titan', 'Masse')?.provenance).toMatch(/^valeur dérivée/);
     expect(stat('earth', 'Rayon')?.provenance).toMatch(/^valeur mesurée/);
+  });
+});
+
+/**
+ * Provenance temporelle de la position : la catégorie et l'écart mesuré sont DEUX axes. Les
+ * confondre ferait lire « prédit » comme « précis » — Hygiea est prédite à 6e7 km près.
+ */
+describe('fiche d’information — provenance de la position', () => {
+  const stamp = {
+    category: 'predicted' as const,
+    confidence: 'nominal' as const,
+    offsetMs: 0,
+    offset: false,
+  };
+
+  it('nomme la source, la catégorie et l’écart mesuré avec sa fenêtre', () => {
+    const text = formatPositionProvenance({
+      source: 'horizons',
+      stamp,
+      error: {
+        from: Date.parse('1900-01-02T00:00:00Z'),
+        to: Date.parse('2100-12-30T00:00:00Z'),
+        meanKm: 3.546,
+      },
+    });
+    expect(text.source).toBe('éphéméride JPL Horizons (précalculée) · prédit');
+    expect(text.error).toContain('3,5 km');
+    // Bornes arrondies à l'année la plus proche : 1900-01-02 et 2100-12-30 encadrent 1900-2100.
+    expect(text.error).toContain('(1900–2100)');
+  });
+
+  it('arrondit le début à l’année la plus proche et la fin vers le bas', () => {
+    // 2015-12-31 → 2016 au début ; fin exclusive 2036-01-01 → dernier jour mesuré en 2035.
+    const text = formatPositionProvenance({
+      source: 'kepler',
+      stamp,
+      error: {
+        from: Date.parse('2015-12-31T00:00:00Z'),
+        to: Date.parse('2036-01-01T00:00:00Z'),
+        meanKm: 2110,
+      },
+    });
+    expect(text.error).toContain('(2016–2035)');
+  });
+
+  it('dit qu’un écart n’a pas été mesuré plutôt que de n’en montrer aucun', () => {
+    const text = formatPositionProvenance({
+      source: 'kepler',
+      stamp: { ...stamp, category: 'extrapolated' },
+      error: null,
+    });
+    expect(text.source).toContain('éléments orbitaux képlériens');
+    expect(text.source).toContain('extrapolé');
+    expect(text.error).toBe('Écart à JPL Horizons non mesuré à cette date');
+  });
+
+  it('affiche la confiance réduite d’une prévision sans changer la catégorie', () => {
+    const text = formatPositionProvenance({
+      source: 'astronomy-engine',
+      stamp: { ...stamp, confidence: 'reduced' },
+      error: null,
+    });
+    expect(text.source).toContain('prédit · confiance réduite');
   });
 });

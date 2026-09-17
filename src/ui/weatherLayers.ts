@@ -11,25 +11,12 @@
  * déjà chargée — la donnée continue de se rafraîchir en fond quel que soit l'état du toggle.
  */
 import { t, onLocaleChange } from '@/i18n';
-import { dataStatusFor, dataStatusLabelKey } from '@/core/dataStatus';
+import type { SourceCandidate } from '@/core/layerSource';
 import type { MeteoLayerDiagnostics } from '@/core/meteoDiagnostics';
 import type { PublicAPI } from '@/SolarSystemApp';
 import type { WeatherLayerHandle } from './earthLayer';
 import type { OverlayCoordinator } from './overlayCoordinator';
-
-/**
- * Parse la date RÉELLE d'un candidat vers un Date UTC. Les couches exposent soit une date jour
- * `YYYY-MM-DD` (nuages, température), soit un instant ISO complet (pluie IMERG). Une date jour
- * seule est interprétée à midi UTC (évite les bascules de jour dues au fuseau). Renvoie null si
- * illisible → statut `unavailable`.
- */
-function parseRealDate(realDate: string): Date | null {
-  const iso = /^\d{4}-\d{2}-\d{2}$/.test(realDate)
-    ? `${realDate}T12:00:00Z`
-    : realDate;
-  const d = new Date(iso);
-  return Number.isNaN(d.getTime()) ? null : d;
-}
+import { sourceBadgeText } from './sourceBadge';
 
 export interface WeatherLayersDeps {
   /** Couches à exposer, dans l'ordre d'affichage (voir le registre dans MainSolarSystemApp). */
@@ -58,6 +45,33 @@ export function setupWeatherLayers(
   const loadState = new Map<string, MeteoLayerDiagnostics['phase']>(
     layers.map((l) => [l.id, 'idle'])
   );
+  // Badge de traçabilité par couche : la dernière source résolue et l'élément qui l'affiche.
+  // La catégorie temporelle et l'écart à la scène dépendent de la date de la SCÈNE : une tuile
+  // J-2 est « observée » et sans écart au présent, mais décalée pour une scène en 2030 sans
+  // qu'aucune nouvelle source ne soit résolue (le jour servi reste le même).
+  const badges = new Map<
+    string,
+    { el: HTMLElement | null; candidate: SourceCandidate | null }
+  >();
+  const renderBadge = (layerId: string): void => {
+    const badge = badges.get(layerId);
+    if (!badge?.el || !badge.candidate) return;
+    const text = sourceBadgeText(
+      badge.candidate,
+      api.orbitalMechanics.simulationDate,
+      new Date(),
+      t
+    );
+    if (badge.el.textContent !== text) badge.el.textContent = text;
+  };
+  let lastBadgeCheck = 0;
+  api.animationSystem.onFrame(() => {
+    const at = performance.now();
+    if (at - lastBadgeCheck < 500) return;
+    lastBadgeCheck = at;
+    for (const layerId of badges.keys()) renderBadge(layerId);
+  });
+
   const controls = new Map<
     string,
     { checkbox: HTMLInputElement; loading: HTMLElement }
@@ -200,18 +214,19 @@ export function setupWeatherLayers(
         detail.hidden = !checkbox.checked || detail.childElementCount === 0;
       };
 
-      // Badge de traçabilité (étape B) : source réelle · date chargée · STATUT temporel honnête
-      // (observé/analyse/prévision/…) · (approché). Mis à jour à chaque résolution du socle
-      // (fallback en chaîne). Absent si la couche n'expose rien.
+      // Badge de traçabilité : source réelle · date chargée · catégorie temporelle · écart à la
+      // scène · (approché). Mis à jour à chaque résolution du socle (fallback en chaîne) ET quand
+      // la scène change de date (`renderBadge`). Absent si la couche n'expose rien.
       if (layer.onResolved) {
         const badge = document.createElement('p');
         badge.className = 'wl-source';
+        const entry = badges.get(layer.id) ?? { el: null, candidate: null };
+        entry.el = badge;
+        badges.set(layer.id, entry);
+        renderBadge(layer.id);
         layer.onResolved((c) => {
-          const status = t(
-            dataStatusLabelKey(dataStatusFor(parseRealDate(c.realDate)))
-          );
-          const approx = c.approx ? ` · ${t('weather.source.approx')}` : '';
-          badge.textContent = `${t('weather.source.prefix')} ${c.label} · ${c.realDate.slice(0, 10)} · ${status}${approx}`;
+          entry.candidate = c;
+          renderBadge(layer.id);
           syncDetail();
         });
         detail.append(badge);

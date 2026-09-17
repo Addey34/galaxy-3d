@@ -56,26 +56,33 @@ export function setupWindLayer(api: PublicAPI): WeatherLayerHandle | null {
   earth.attachSpinningChild(particles.points);
 
   // Grille de vent courante (appliquée par le socle de données ; lue à chaque frame par
-  // l'advection). null tant qu'aucun fetch n'a abouti (repli : dérive minimale).
+  // l'advection). null tant qu'aucun fetch n'a abouti ou hors de la plage du modèle : les
+  // particules sont alors masquées (`syncPoints`).
   let grid: WindGrid | null = null;
   let gridDiagnostics: MeteoLayerDiagnostics['grid'];
   let phase: MeteoLayerDiagnostics['phase'] = 'idle';
   const loadState = createLoadStateRelay();
+  /** Choix du panneau ; l'affichage exige en plus une grille pour la date de la scène. */
+  let wanted = false;
+  const syncPoints = (): void => {
+    particles.points.visible = wanted && grid !== null;
+  };
 
   // Cycle de données délégué : clé = heure de simulation ; fetch = grille Open-Meteo GFS.
-  const stopData = createDatedDataLayer<WindGrid>(api, {
+  const stopData = createDatedDataLayer<WindGrid | null>(api, {
     name: 'WindLayer',
     enabled: true,
     keyForDate: meteoHourKey,
     fetchForKey: async (key) => {
       // VOYAGE TEMPS : la clé (YYYY-MM-DDTHH) porte la date de simulation. On route vers
       // l'archive ERA5 (passé lointain) ou le forecast GFS (zone récente + futur ≤ horizon)
-      // via le plan partagé. Hors plage (avant 1940 / futur au-delà de l'horizon) → pas de
-      // grille : le socle garde la dernière valide, sinon les particules dérivent (minDrift).
+      // via le plan partagé. Hors plage (avant 1940 / futur au-delà de l'horizon) → AUCUNE
+      // grille : garder la précédente ferait souffler, pour cette date, le vent d'une autre.
+      // Les particules sont masquées tant qu'aucune grille ne décrit la date de la scène. Ce
+      // n'est pas un échec réseau : pas d'erreur, pas de backoff.
       const simDate = new Date(`${key}:00:00Z`);
       const plan = planMeteoRequest(simDate);
-      if (plan.outOfRange)
-        throw new Error(`wind out of range (${plan.status})`);
+      if (plan.outOfRange) return null;
       const gridOptions = { step: settings.gridStep, maxLat: settings.maxLat };
       const url =
         plan.source === 'archive' && plan.date
@@ -95,7 +102,8 @@ export function setupWindLayer(api: PublicAPI): WeatherLayerHandle | null {
     },
     apply: (loaded) => {
       grid = loaded;
-      gridDiagnostics = describeMeteoGrid(loaded);
+      syncPoints();
+      gridDiagnostics = loaded ? describeMeteoGrid(loaded) : undefined;
       phase = 'ready';
     },
     // Réévaluation horaire (chaque seconde suffit ; le gating par clé évite les re-fetch).
@@ -121,13 +129,14 @@ export function setupWindLayer(api: PublicAPI): WeatherLayerHandle | null {
     initial: false,
     noteKey: 'weather.wind.note',
     setVisible: (visible) => {
-      particles.points.visible = visible;
+      wanted = visible;
+      syncPoints();
     },
     diagnostics: () => ({
       id: 'wind',
       family: 'vector',
       targetLayer: 'wind',
-      visible: particles.points.visible,
+      visible: wanted,
       phase,
       updatedAt: Date.now(),
       grid: gridDiagnostics,
