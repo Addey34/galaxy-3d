@@ -4,7 +4,7 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Les
 suivent [SemVer](https://semver.org/lang/fr/). L'historique détaillé reste celui de git : ce
 fichier résume ce qui change pour une personne qui utilise ou cite Galaxy.
 
-## [0.9.0] - non publiée (« Scientific Preview »)
+## [0.9.0] - 2026-09-18 (« Scientific Preview »)
 
 Première version numérotée. Elle regroupe tout ce qui a été livré avant la numérotation.
 
@@ -68,9 +68,30 @@ Première version numérotée. Elle regroupe tout ce qui a été livré avant la
   Styx, Kerberos, Néréide, Sedna, Orcus et Makémaké, et les obliquités non mesurées ne sont plus
   affichées : aucune source primaire ne les portait.
 
+### Ajouté (18 septembre 2026)
+
+- Modèle temporel : chaque donnée datée déclare ce qu'elle est (mesure, réanalyse, prévision,
+  calcul de position) et l'instant ou l'intervalle qu'elle décrit. L'interface en affiche la
+  catégorie là où la donnée s'affiche : en direct, observé, reconstruit, prédit, extrapolé ou
+  indisponible. Aucun réglage global ne prétend que toute la scène a la même précision.
+- Fiche d'un corps : bloc « Position à cette date » (source qui le place, catégorie, et écart
+  moyen mesuré contre NASA/JPL Horizons sur la fenêtre qui contient la date). Une même sélection
+  change de source selon la date, et le dit.
+- Page `/methodology` : section « Ce que dit une date », en anglais et en français.
+
+### Corrigé (18 septembre 2026)
+
+- Les réanalyses (ERA5, MERRA-2) ne sont plus présentées comme des observations : ce sont des
+  modèles, désormais étiquetés « reconstruit ».
+- Une scène placée dans le futur reçoit la dernière image satellite réelle, comme avant, mais
+  l'écart entre cette image et la date de la scène est maintenant écrit à côté de la source.
+- Au-delà de l'horizon des modèles météo, l'étiquette « moyenne climatique » décrivait une donnée
+  qui n'était jamais récupérée, pendant que la grille précédente restait affichée. La couche
+  masque désormais son rendu, et le vent ses particules, plutôt que de montrer une autre date.
+
 ### Modifié
 
 - Nom public unifié : **Galaxy** (le site mélangeait « 3D Solar System » et « Solar System 3D »).
 - Types `@types/three` alignés sur la version de `three` réellement utilisée (0.176).
 
-[0.9.0]: https://github.com/Addey34/galaxy-3d/commits/main
+[0.9.0]: https://github.com/Addey34/galaxy-3d/releases/tag/v0.9.0
