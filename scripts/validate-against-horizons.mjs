@@ -513,11 +513,13 @@ if (spkStatus.kernel && (!PROVIDERS || PROVIDERS.includes('spk'))) {
 
 const CORE = {
   id: '1900–2100',
+  kind: 'fixed',
   from: utc('1900-01-01T00:00:00Z'),
   to: utc('2100-12-31T00:00:00Z'),
 };
 const EXTENDED = {
   id: '1600–2400',
+  kind: 'fixed',
   from: utc('1600-01-01T00:00:00Z'),
   to: utc('2400-01-01T00:00:00Z'),
 };
@@ -525,6 +527,7 @@ const EXTENDED = {
 // 1750) : au-delà, la RÉFÉRENCE manque, pas la source. D'où une fenêtre étendue propre aux lunes.
 const MOON_EXTENDED = {
   id: '1800–2199',
+  kind: 'fixed',
   from: utc('1800-01-01T00:00:00Z'),
   to: utc('2199-12-01T00:00:00Z'),
 };
@@ -537,6 +540,7 @@ function binaryWindow(entry) {
   // Un jour de marge de chaque côté : l'écart TDB−UTC ne doit pas faire sortir un échantillon.
   return {
     id: `binaire ${iso(startMs).slice(0, 10)}→${iso(stopMs).slice(0, 10)}`,
+    kind: 'binary',
     from: startMs + MS_PER_DAY,
     to: stopMs - MS_PER_DAY,
   };
@@ -546,6 +550,7 @@ function epochWindow(epoch) {
   const e = epoch.getTime();
   return {
     id: `époque ${iso(e).slice(0, 10)} ±10 ans`,
+    kind: 'epoch',
     from: e - 10 * MS_PER_JULIAN_YEAR,
     to: e + 10 * MS_PER_JULIAN_YEAR,
   };
@@ -750,7 +755,12 @@ for (const object of INTERSTELLAR_OBJECTS) {
     provider: 'kepler',
     frame: 'héliocentrique (hyperbole)',
     center: 'sun',
-    window: { id: `périhélie ±20 ans`, from: from.getTime(), to: to.getTime() },
+    window: {
+      id: `périhélie ±20 ans`,
+      kind: 'perihelion',
+      from: from.getTime(),
+      to: to.getTime(),
+    },
     compute: (date) => {
       const p = keplerianPositionEcliptic(object.elements, date);
       return eclipticToScene(p.x, p.y, p.z);
@@ -807,6 +817,8 @@ for (const [index, c] of cases.entries()) {
     if (!(to > from) || (from === window.from && to === window.to)) break;
     window = {
       id: `${iso(from).slice(0, 10)}→${iso(to).slice(0, 10)} (recadré sur Horizons, demandé ${c.window.id})`,
+      kind: c.window.kind,
+      clipped: true,
       from,
       to,
     };
@@ -817,6 +829,12 @@ for (const [index, c] of cases.entries()) {
     provider: c.provider,
     frame: c.frame,
     window: window.id,
+    // Forme structurée de la fenêtre, pour ce qui publie ces chiffres (`/methodology`) : le
+    // libellé `id` est une phrase française, pas une donnée à ré-analyser.
+    windowKind: window.kind,
+    windowFrom: iso(window.from).slice(0, 10),
+    windowTo: iso(window.to).slice(0, 10),
+    windowClipped: window.clipped === true,
     center: CENTERS[c.center].id,
     radiusKm: bodyInfo.get(c.body)?.radiusKm ?? null,
     requested: dates.length,
@@ -982,4 +1000,66 @@ writeFileSync(
 console.log(
   `\nRapport : ${OUT}.md / ${OUT}.json (API ${apiCalls}, cache ${cacheHits})`
 );
+
+// Résumé VERSIONNÉ, lu au build par la page `/methodology` (`src/seo/methodologyPage.ts`).
+// `reports/` n'est pas versionné, donc le build de CI ne le voit pas ; ce fichier-ci l'est. Il
+// n'est réécrit QUE par une mesure complète et honnête : une injection de falsification, une
+// restriction `--only`/`--providers` ou une sortie redirigée publieraient sinon des chiffres
+// qui ne mesurent pas l'application, sans que rien ne le signale sur le site.
+const SUMMARY_FILE = join(
+  ROOT,
+  'src',
+  'seo',
+  'horizons-validation-summary.json'
+);
+if (
+  INJECTING ||
+  ONLY ||
+  PROVIDERS ||
+  SAMPLES !== 48 ||
+  OUT !== 'reports/horizons-validation'
+)
+  console.log(
+    `Résumé publié NON réécrit : mesure partielle, injectée ou redirigée.`
+  );
+else {
+  /** Quatre chiffres significatifs : assez pour la page, sans bruit de diff à chaque run. */
+  const round = (v) => (v == null ? null : Number(v.toPrecision(4)));
+  const roundStats = (o) =>
+    o
+      ? Object.fromEntries(Object.entries(o).map(([k, v]) => [k, round(v)]))
+      : null;
+  writeFileSync(
+    SUMMARY_FILE,
+    JSON.stringify(
+      {
+        generatedAt,
+        samplesPerCase: SAMPLES,
+        spk: spkStatus,
+        rows: results
+          .filter((r) => r.provider !== 'spk-worker-direct')
+          .map((r) => ({
+            body: r.body,
+            provider: r.provider,
+            windowKind: r.windowKind,
+            windowFrom: r.windowFrom,
+            windowTo: r.windowTo,
+            windowClipped: r.windowClipped,
+            relative: r.frame.startsWith('relatif'),
+            radiusKm: r.radiusKm,
+            n: r.samples.length,
+            uncovered: r.uncovered,
+            rejected: r.rejected,
+            sources: r.sources,
+            referenceError: r.referenceError ? true : undefined,
+            km: roundStats(r.km),
+            radii: roundStats(r.radii),
+          })),
+      },
+      null,
+      1
+    ) + '\n'
+  );
+  console.log(`Résumé publié : ${SUMMARY_FILE}`);
+}
 process.exitCode = 0;

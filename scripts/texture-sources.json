@@ -211,7 +211,16 @@
       "body": "earth",
       "layer": "normalMap",
       "license": "public-domain",
-      "credit": "NASA Visible Earth (topography)",
+      "credit": "NOAA NCEI ETOPO 2022 global relief model (60 arc-second surface elevation), normal map derived by scripts/generate-earth-normal.mjs",
+      "sourceUrl": "https://www.ncei.noaa.gov/products/etopo-global-relief-model",
+      "tier": "free"
+    },
+    {
+      "body": "earth",
+      "layer": "displacement",
+      "license": "public-domain",
+      "credit": "NOAA NCEI ETOPO 2022 global relief model (60 arc-second surface elevation), continental height map derived by scripts/generate-earth-height.mjs",
+      "sourceUrl": "https://www.ncei.noaa.gov/products/etopo-global-relief-model",
       "tier": "free"
     },
     {

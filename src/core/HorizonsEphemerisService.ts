@@ -39,7 +39,7 @@ const COMPONENTS_PER_SAMPLE = 6;
  * Le seuil ne concerne QUE le choix de l'interpolation : les echantillons, eux, restent les
  * memes dans les deux branches.
  */
-const MIN_SAMPLES_PER_ORBIT_FOR_HERMITE = 100;
+export const MIN_SAMPLES_PER_ORBIT_FOR_HERMITE = 100;
 
 // Vecteurs de travail : `_samplePosition` est appele par corps a chaque recalcul de
 // positions, on evite d'y allouer.

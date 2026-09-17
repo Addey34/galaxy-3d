@@ -32,7 +32,7 @@ const J2000_UT_MS = Date.UTC(2000, 0, 1, 12);
 const J2000_JD = 2_451_545;
 
 /** Dates d'effet et valeurs TT−UTC (TAI−UTC + 32,184 s). */
-const TT_MINUS_UTC: readonly [number, number][] = [
+export const TT_MINUS_UTC: readonly [number, number][] = [
   [Date.UTC(1972, 0, 1), 42.184],
   [Date.UTC(1972, 6, 1), 43.184],
   [Date.UTC(1973, 0, 1), 44.184],

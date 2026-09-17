@@ -46,6 +46,11 @@ const BOUND: { label: string; binding: string }[] = [
   { label: 'title', binding: 'data-i18n-title' },
 ];
 
+/** Liaisons dont on ne vérifie que le repli : un `href` sans clé est la norme, pas un oubli. */
+const FALLBACK_ONLY: { label: string; binding: string }[] = [
+  { label: 'href', binding: 'data-i18n-href' },
+];
+
 describe('libellés statiques de index.html', () => {
   it('couvre bien le document', () => {
     // Si le HTML est réorganisé au point que ce test ne voit plus rien, il doit le dire au
@@ -56,6 +61,16 @@ describe('libellés statiques de index.html', () => {
     );
     expect(labelled.length).toBeGreaterThan(20);
   });
+
+  for (const { label, binding } of FALLBACK_ONLY)
+    it(`garde chaque ${label} lié identique à sa valeur anglaise`, () => {
+      const bound = TAGS.filter((tag) => attribute(tag, binding) !== null);
+      expect(bound.length).toBeGreaterThan(0);
+      for (const tag of bound)
+        expect(attribute(tag, label), identify(tag)).toBe(
+          messages.en[attribute(tag, binding)!]
+        );
+    });
 
   for (const { label, binding } of BOUND) {
     it(`lie chaque ${label} à une clé de traduction`, () => {

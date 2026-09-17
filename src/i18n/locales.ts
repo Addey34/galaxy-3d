@@ -167,6 +167,10 @@ export const messages: Record<Locale, Dict> = {
     'credits.models': '3D shape models',
     'credits.data': 'Data',
     'credits.privacy': 'Privacy',
+    'credits.methodology': 'Methodology',
+    'credits.methodology.href': '/methodology/',
+    'credits.sources': 'Sources',
+    'credits.sources.href': '/sources/',
     'lang.label': 'Language',
     // ── Guided tour (first visit) ──
     'tour.start': 'Start quick tour',
@@ -509,6 +513,10 @@ export const messages: Record<Locale, Dict> = {
     'credits.models': 'Modèles de forme 3D',
     'credits.data': 'Données',
     'credits.privacy': 'Confidentialité',
+    'credits.methodology': 'Méthodologie',
+    'credits.methodology.href': '/fr/methodology/',
+    'credits.sources': 'Sources',
+    'credits.sources.href': '/fr/sources/',
     'lang.label': 'Langue',
     // ── Visite guidée (première visite) ──
     'tour.start': 'Lancer la visite rapide',

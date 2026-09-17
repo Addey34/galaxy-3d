@@ -30,7 +30,7 @@ requestAnimationFrame
 | `src/ui`                    | Contrôles DOM et overlays projetés                              | DOM, i18n et PublicAPI                 |
 | `src/i18n`                  | État de locale et traduction statique/dynamique                | DOM seulement dans `dom.ts`            |
 | `src/utils`                 | Helpers navigateur transverses et logging                       | Pas d'orchestration applicative        |
-| `src/seo`                   | Pages d'atterrissage par corps et par éclipse, sitemap, vignettes | Catalogue seulement — **jamais chargé par l'application**, tenu par `src/seo/buildOnly.test.ts` |
+| `src/seo`                   | Pages d'atterrissage par corps et par éclipse, pages `/methodology` et `/sources`, sitemap, vignettes | Catalogue seulement — **jamais chargé par l'application**, tenu par `src/seo/buildOnly.test.ts` |
 | `scripts`                   | Génération d'assets réservée aux mainteneurs                   | Node.js et dépendances de dev          |
 
 ## Propriété des ressources
@@ -156,7 +156,8 @@ n'est pas décorative : c'est son absence qui a laissé Encelade osciller d'un f
 distance à Saturne pendant des mois, sous un garde-fou censé attraper exactement ça.
 
 **Tout est mesuré contre JPL Horizons** par `pnpm ephemeris:validate`
-(`scripts/validate-against-horizons.mjs`, rapport dans `reports/`, non versionné) : erreur
+(`scripts/validate-against-horizons.mjs`, rapport dans `reports/`, non versionné, et un résumé
+versionné `src/seo/horizons-validation-summary.json` que publie `/methodology`) : erreur
 moyenne, médiane, p95, max par corps et par source, en km et en rayons.
 
 ### Une seule échelle de temps : `core/timeScale.ts`
@@ -902,6 +903,46 @@ noir. Sur la seule photographie en UNE exposition montrant le limbe éclairé ET
 défaut montre déjà la face éclairée — le test passait sans le cadrage imposé. Sur la totale du
 3 mars 2026, rouge/bleu mesure 4,1 avec, 1,5 sans ; c'est cette page que teste
 `e2e/eclipseLanding.spec.ts`.
+
+## Pages `/methodology` et `/sources`
+
+Deux documents, chacun en anglais (`/methodology/`, `/sources/`) et en français
+(`/fr/methodology/`, `/fr/sources/`), générés au build et ajoutés au sitemap. Liés depuis les
+crédits de l'aide (`data-i18n-href` : le lien suit la langue de l'interface).
+
+- **Documents autonomes, pas des copies d'`index.html`.** On y vient pour lire : même habillage
+  que `privacy.html` (`privacy.css` + `docs.css`), aucun script, aucune scène WebGL.
+- **Une URL par langue, reliées par `hreflang`**, plutôt qu'une page bilingue masquée par script
+  comme `privacy.html`, dont un moteur n'indexe correctement qu'une langue.
+- **Aucun nombre écrit à la main.** Le texte explique la méthode ; chaque valeur est lue au build
+  dans ce qui fait foi : erreurs mesurées (`horizons-validation-summary.json`), pas et couverture
+  des binaires (`manifest.json`), constantes importées du code qui les applique (`OBLIQUITY_RAD`,
+  `SQRT_K`, `MIN_SAMPLES_PER_ORBIT_FOR_HERMITE`, `TT_MINUS_UTC`, `INTERSTELLAR_WINDOW_YEARS`),
+  crédits de textures (`scripts/texture-sources.json`, bloc `imported`), crédits des modèles
+  (`ModelConfig`), éléments orbitaux (`smallBodies.ts`, `interstellar.ts`), versions et licences
+  des dépendances INSTALLÉES, et `THIRD_PARTY_NOTICES.md` rendu intégralement (`markdown.ts`,
+  sous-ensemble minimal, tout le reste échappé).
+
+**Le résumé de validation est versionné, le rapport ne l'est pas.** `reports/` est ignoré par
+git, donc invisible du build de CI. `pnpm ephemeris:validate` écrit aussi
+`src/seo/horizons-validation-summary.json` (statistiques sans échantillons, 4 chiffres
+significatifs), mais **seulement** pour une mesure complète : `--only`, `--providers`,
+`--inject-*`, `--samples` non standard ou `--out` redirigé laissent le fichier intact. Une
+falsification ne peut donc pas finir publiée.
+
+Trois refus bruyants plutôt qu'une page fausse :
+
+- `assertPublishableSummary` : moins de 20 lignes « production », ou une ligne sans mesure ;
+- `sourcesPages` : une couche de texture que le catalogue charge sans entrée de provenance. Ce
+  contrôle a trouvé à sa première exécution `earth/displacement` (ETOPO 2022) absent du bloc
+  `imported`, et la normal map de la Terre encore créditée à « NASA Visible Earth » alors
+  qu'elle est dérivée d'ETOPO 2022 depuis `8e7b5d5` ;
+- `docPages.test.ts` : chaque corps positionné du catalogue doit figurer dans le résumé. Ajouter
+  un corps oblige donc à relancer la validation, sinon le tableau de précision le tairait.
+
+Piège payé : `THIRD_PARTY_NOTICES.md` est en CRLF dans un checkout Windows, et `.` ne franchit
+pas le retour chariot (`\r`) en JavaScript. Le retrait du titre de premier niveau était un no-op silencieux ; le
+test le rejoue désormais en CRLF.
 
 ## Architecture météo
 

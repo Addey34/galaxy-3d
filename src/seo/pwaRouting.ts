@@ -21,10 +21,14 @@
 /** Segment des pages d'éclipse — le même que `core/eclipsePages.ts::ECLIPSE_PATH_SEGMENT`. */
 const ECLIPSE_SEGMENT = 'eclipse';
 
+/** Préfixe des pages documentaires françaises (`/fr/methodology/`), cf. `documentPage.ts`. */
+const FRENCH_SEGMENT = 'fr';
+
 /** Fichiers générés à NE PAS précacher (motifs glob, relatifs à `dist/`). */
 export const LANDING_PAGE_GLOB_IGNORES: string[] = [
   '*/index.html',
   `${ECLIPSE_SEGMENT}/*/index.html`,
+  `${FRENCH_SEGMENT}/*/index.html`,
 ];
 
 /** Navigations à NE PAS remplacer par l'app shell en cache. */
@@ -34,6 +38,8 @@ export const NAVIGATE_FALLBACK_DENYLIST: RegExp[] = [
   // fichiers.
   /^\/[^/.]+\/?$/,
   new RegExp(`^\\/${ECLIPSE_SEGMENT}\\/[^/.]+\\/?$`),
+  // Les pages documentaires anglaises (`/methodology/`) tombent déjà sous la règle à un segment.
+  new RegExp(`^\\/${FRENCH_SEGMENT}\\/[^/.]+\\/?$`),
 ];
 
 export const ECLIPSE_SEGMENT_FOR_TESTS = ECLIPSE_SEGMENT;

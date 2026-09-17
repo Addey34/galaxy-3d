@@ -1,8 +1,9 @@
 /**
  * Liaison des chaînes statiques du HTML aux traductions.
  *
- * Les éléments porteurs de `data-i18n` (texte), `data-i18n-title` (attribut `title`) ou
- * `data-i18n-aria` (attribut `aria-label`) sont remplis depuis le dictionnaire. `applyStaticI18n`
+ * Les éléments porteurs de `data-i18n` (texte), `data-i18n-title` (attribut `title`),
+ * `data-i18n-aria` (attribut `aria-label`) ou `data-i18n-href` (cible d'un lien) sont remplis
+ * depuis le dictionnaire. `applyStaticI18n`
  * est appelée au démarrage et à chaque changement de langue — la couche UI dynamique
  * (bodyInfo, loader…) se retraduit de son côté via `onLocaleChange`.
  */
@@ -18,6 +19,10 @@ export function applyStaticI18n(root: ParentNode = document): void {
   });
   root.querySelectorAll<HTMLElement>('[data-i18n-aria]').forEach((el) => {
     el.setAttribute('aria-label', t(el.dataset.i18nAria!));
+  });
+  // Lien vers une page qui existe en deux langues (`/methodology/`, `/fr/methodology/`).
+  root.querySelectorAll<HTMLAnchorElement>('[data-i18n-href]').forEach((el) => {
+    el.setAttribute('href', t(el.dataset.i18nHref!));
   });
   root
     .querySelectorAll<HTMLInputElement>('[data-i18n-placeholder]')

@@ -327,13 +327,98 @@ function bodyLandingPages() {
         }
 
         const today = new Date().toISOString().slice(0, 10);
+
+        // Pages documentaires `/methodology` et `/sources`, FR et EN — voir
+        // `src/seo/documentPage.ts`. Chaque fichier lu ici est la source qui fait foi ; les
+        // modules purs refusent un résumé de validation partiel et une texture sans provenance.
+        const docSeo = (await loader.ssrLoadModule(
+          '/src/seo/documentPage.ts'
+        )) as typeof import('./src/seo/documentPage');
+        const methodologySeo = (await loader.ssrLoadModule(
+          '/src/seo/methodologyPage.ts'
+        )) as typeof import('./src/seo/methodologyPage');
+        const sourcesSeo = (await loader.ssrLoadModule(
+          '/src/seo/sourcesPage.ts'
+        )) as typeof import('./src/seo/sourcesPage');
+        const readJson = async <T>(path: string): Promise<T> =>
+          JSON.parse(await readFile(resolve(__dirname, path), 'utf-8')) as T;
+        const manifest = await readJson<
+          import('./src/seo/methodologyPage').EphemerisManifest
+        >('public/assets/ephemerides/manifest.json');
+        const packageJson = await readJson<{
+          dependencies: Record<string, string>;
+        }>('package.json');
+        // Version et licence INSTALLÉES, pas la plage demandée dans package.json.
+        const dependencies = await Promise.all(
+          Object.keys(packageJson.dependencies).map(async (name) => {
+            const installed = await readJson<{
+              version: string;
+              license?: string;
+              homepage?: string;
+            }>(`node_modules/${name}/package.json`);
+            return {
+              name,
+              version: installed.version,
+              license: installed.license ?? 'see package',
+              homepage: installed.homepage?.startsWith('https://')
+                ? installed.homepage
+                : null,
+            };
+          })
+        );
+        const citation = await readFile(
+          resolve(__dirname, 'CITATION.cff'),
+          'utf-8'
+        );
+        const repository = /^repository-code:\s*'([^']+)'/m.exec(citation)?.[1];
+        if (!repository)
+          throw new Error('CITATION.cff : repository-code introuvable');
+        const docPages = [
+          ...methodologySeo.methodologyPages({
+            summary: await readJson('src/seo/horizons-validation-summary.json'),
+            manifest,
+            config: catalogue.CELESTIAL_CONFIG,
+            origin: SITE_ORIGIN,
+          }),
+          ...sourcesSeo.sourcesPages({
+            config: catalogue.CELESTIAL_CONFIG,
+            textures: (
+              await readJson<{
+                imported: import('./src/seo/sourcesPage').TextureProvenance[];
+              }>('scripts/texture-sources.json')
+            ).imported,
+            manifest,
+            dependencies,
+            notices: await readFile(
+              resolve(__dirname, 'THIRD_PARTY_NOTICES.md'),
+              'utf-8'
+            ),
+            repositoryBlobUrl: `${repository}/blob/main`,
+            updated: today,
+            origin: SITE_ORIGIN,
+          }),
+        ];
+        for (const page of docPages) {
+          const dir = resolve(dist, new URL(page.canonical).pathname.slice(1));
+          await mkdir(dir, { recursive: true });
+          await writeFile(
+            resolve(dir, 'index.html'),
+            docSeo.renderDocPage(page, SITE_ORIGIN),
+            'utf-8'
+          );
+        }
+
         await writeFile(
           resolve(dist, 'sitemap.xml'),
-          seo.renderSitemap([...pages, ...eclipsePages], SITE_ORIGIN, today),
+          seo.renderSitemap(
+            [...pages, ...eclipsePages, ...docPages],
+            SITE_ORIGIN,
+            today
+          ),
           'utf-8'
         );
         loader.config.logger.info(
-          `  ${pages.length} pages de corps + ${eclipsePages.length} pages d'éclipse + vignettes + sitemap générés`
+          `  ${pages.length} pages de corps + ${eclipsePages.length} pages d'éclipse + ${docPages.length} pages documentaires + vignettes + sitemap générés`
         );
       } finally {
         await loader.close();
