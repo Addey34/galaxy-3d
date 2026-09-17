@@ -7,15 +7,18 @@
  * les astronomes (JPL Small-Body Database, Minor Planet Center — degrés + UA) et un
  * convertisseur pur `smallBodyToConfig` vers le format catalogue.
  *
- * Les corps ci-dessous sont un socle curé de corps notables. Les éléments sont des valeurs
- * J2000 approximatives ; pour la précision long terme, les rafraîchir depuis JPL/MPC
- * (nouvelle époque). À l'échelle de milliers de corps, alimenter ce même convertisseur
- * depuis un JSON streamé (phase ultérieure) plutôt que des littéraux.
+ * Les corps ci-dessous sont un socle curé de corps notables. Chaque jeu d'éléments est
+ * l'osculateur JPL Horizons EXACTEMENT à son époque déclarée, dérivé par
+ * `pnpm ephemeris:small-body` et jamais recopié à la main : `smallBodies.test.ts` compare
+ * chacun à un vecteur d'état Horizons à cette époque. Loin de l'époque, un modèle à deux
+ * corps dérive (perturbations planétaires) : c'est une limite du modèle, pas des éléments.
+ * À l'échelle de milliers de corps, alimenter ce même convertisseur depuis un JSON streamé.
  */
 import { Body } from 'astronomy-engine';
 import type { CelestialBodyConfig, ModelConfig, TextureQuality } from '@/types';
 import { exploCameraDistance } from '@/core/ScaleService';
 import { DEG_TO_RAD as D2R } from '@/core/MathConstants';
+import { PLANETS_TO_SUN_MASS_RATIO } from '@/core/kepler';
 
 /** Éléments orbitaux d'un petit corps, dans les unités publiées (degrés, UA). */
 export interface SmallBodyElements {
@@ -38,6 +41,11 @@ export interface SmallBodyElements {
   maDeg: number;
   /** Époque de référence des éléments (ISO). */
   epoch: string;
+  /**
+   * Éléments rapportés au barycentre du Système solaire (Horizons `CENTER=500@0`) — choisi
+   * corps par corps sur mesure, cf. `OrbitalElements.barycentric`.
+   */
+  barycentric?: boolean;
   /** Rayon physique moyen (km). */
   radiusKm: number;
   /** Catégorie — défaut 'asteroid'. */
@@ -98,7 +106,10 @@ const DEFAULT_COLOR: Record<NonNullable<SmallBodyElements['kind']>, number> = {
  */
 export function smallBodyToConfig(el: SmallBodyElements): CelestialBodyConfig {
   const kind = el.kind ?? 'asteroid';
-  const periodDays = 365.256 * Math.pow(el.a, 1.5);
+  // Un corps barycentrique orbite le Soleil PLUS les planètes : même μ que la propagation.
+  const periodDays =
+    (365.256 * Math.pow(el.a, 1.5)) /
+    (el.barycentric ? Math.sqrt(1 + PLANETS_TO_SUN_MASS_RATIO) : 1);
   const inclinationRad = el.iDeg * D2R;
   const ascendingNodeRad = el.omDeg * D2R;
 
@@ -146,25 +157,29 @@ export function smallBodyToConfig(el: SmallBodyElements): CelestialBodyConfig {
       argPerihelionRad: el.wDeg * D2R,
       meanAnomalyAtEpochRad: el.maDeg * D2R,
       epoch: new Date(el.epoch),
+      ...(el.barycentric ? { barycentric: true } : {}),
     },
     cameraDistance: { educ: 2, explo: exploCameraDistance(el.radiusKm) },
   };
 }
 
 /**
- * Socle curé de petits corps notables (éléments J2000 approximatifs, époque 2451545.0).
+ * Socle curé de petits corps notables (éléments osculateurs Horizons à l'époque de chacun).
  * Halley est rétrograde (i > 90°) : la propagation képlérienne le gère nativement.
  */
 export const SMALL_BODY_ELEMENTS: readonly SmallBodyElements[] = [
   {
     name: 'ceres',
     displayName: { fr: 'Cérès' },
-    a: 2.7691,
-    e: 0.076,
-    iDeg: 10.594,
-    omDeg: 80.305,
-    wDeg: 73.597,
-    maDeg: 95.989,
+    // Éléments osculateurs JPL Horizons EXACTEMENT à cette époque (COMMAND '1;',
+    // EPHEM_TYPE=ELEMENTS, TLIST=2451545.0), par `pnpm ephemeris:small-body`. Les valeurs
+    // recopiées à la main plaçaient le corps loin de sa position dès l'époque (cf. test).
+    a: 2.766496019994375,
+    e: 0.0783756264716304,
+    iDeg: 10.58336045805628,
+    omDeg: 80.49435747295276,
+    wDeg: 73.92286274285223,
+    maDeg: 6.176654513180486,
     epoch: '2000-01-01T12:00:00Z',
     radiusKm: 473,
     kind: 'dwarf',
@@ -282,13 +297,20 @@ export const SMALL_BODY_ELEMENTS: readonly SmallBodyElements[] = [
   {
     name: 'pluto',
     displayName: { en: 'Pluto', fr: 'Pluton' },
-    a: 39.482,
-    e: 0.2488,
-    iDeg: 17.14,
-    omDeg: 110.299,
-    wDeg: 113.834,
-    maDeg: 14.53,
+    // Éléments osculateurs JPL Horizons BARYCENTRIQUES exactement à cette époque (COMMAND
+    // '9', CENTER=500@0, TLIST=2451545.0), par `pnpm ephemeris:small-body --center 500@0`.
+    // Barycentriques car mesuré meilleur au-delà de Neptune (cf. `OrbitalElements.barycentric`).
+    // Cible '9' = barycentre du système Pluton-Charon, pas le centre de Pluton, qui en fait
+    // le tour en 6,4 j : cette oscillation (~24 m/s) fausse l'osculateur comme le réflexe
+    // solaire (mesuré sur 1900-2100 : 5,5e7 km d'erreur moyenne avec '999', 4,7e5 avec '9').
+    a: 39.48741550384992,
+    e: 0.2489763560923634,
+    iDeg: 17.14055930776762,
+    omDeg: 110.3012538561415,
+    wDeg: 113.7774660018993,
+    maDeg: 14.84874908032896,
     epoch: '2000-01-01T12:00:00Z',
+    barycentric: true,
     radiusKm: 1188,
     kind: 'dwarf',
     color: 0xd8b894,
@@ -314,7 +336,7 @@ export const SMALL_BODY_ELEMENTS: readonly SmallBodyElements[] = [
         kind: 'moon',
         displayName: { en: 'Charon', fr: 'Charon' },
         radius: 0.1,
-        rotationSpeed: (Math.PI * 2) / (153.293328 * 3_600),
+        rotationSpeed: (Math.PI * 2) / (6.38722209972658 * 86_400),
         orbitalColor: 0xb9b3aa,
         fallbackColor: 0x8c8882,
         frame: 'parentRelative',
@@ -333,7 +355,7 @@ export const SMALL_BODY_ELEMENTS: readonly SmallBodyElements[] = [
         realData: {
           radiusKm: 606,
           distanceAU: 0.000131017908,
-          orbitPeriodDays: 6.387222,
+          orbitPeriodDays: 6.38722209972658,
           orbitalInclination: 0,
           ascendingNode: 0,
           axialTilt: 0,
@@ -400,7 +422,7 @@ export const SMALL_BODY_ELEMENTS: readonly SmallBodyElements[] = [
         realData: {
           radiusKm: 5.2,
           distanceAU: 2.8514e-4,
-          orbitPeriodDays: 20.16,
+          orbitPeriodDays: 20.16188738471113,
           orbitalInclination: 0,
           ascendingNode: 0,
           axialTilt: 0,
@@ -453,7 +475,7 @@ export const SMALL_BODY_ELEMENTS: readonly SmallBodyElements[] = [
         realData: {
           radiusKm: 18,
           distanceAU: 3.2551e-4,
-          orbitPeriodDays: 24.85,
+          orbitPeriodDays: 24.85465798523317,
           orbitalInclination: 0,
           ascendingNode: 0,
           axialTilt: 0,
@@ -506,7 +528,7 @@ export const SMALL_BODY_ELEMENTS: readonly SmallBodyElements[] = [
         realData: {
           radiusKm: 6,
           distanceAU: 3.8626e-4,
-          orbitPeriodDays: 32.17,
+          orbitPeriodDays: 32.16803411478301,
           orbitalInclination: 0,
           ascendingNode: 0,
           axialTilt: 0,
@@ -559,7 +581,7 @@ export const SMALL_BODY_ELEMENTS: readonly SmallBodyElements[] = [
         realData: {
           radiusKm: 18.5,
           distanceAU: 4.3277e-4,
-          orbitPeriodDays: 38.2,
+          orbitPeriodDays: 38.20192500649081,
           orbitalInclination: 0,
           ascendingNode: 0,
           axialTilt: 0,
@@ -584,13 +606,17 @@ export const SMALL_BODY_ELEMENTS: readonly SmallBodyElements[] = [
   {
     name: 'eris',
     displayName: { fr: 'Éris' },
-    a: 67.78,
-    e: 0.436,
-    iDeg: 44.04,
-    omDeg: 35.951,
-    wDeg: 151.639,
-    maDeg: 205.989,
+    // Éléments osculateurs JPL Horizons BARYCENTRIQUES exactement à cette époque (COMMAND
+    // '136199;', CENTER=500@0, TLIST=2451545.0), par `pnpm ephemeris:small-body --center 500@0`.
+    // Barycentriques car mesuré meilleur au-delà de Neptune (cf. `OrbitalElements.barycentric`).
+    a: 67.83513506437887,
+    e: 0.4384299959852953,
+    iDeg: 43.99285596415268,
+    omDeg: 35.9765290736987,
+    wDeg: 151.2211963180349,
+    maDeg: 193.8429965779992,
     epoch: '2000-01-01T12:00:00Z',
+    barycentric: true,
     radiusKm: 1163,
     kind: 'dwarf',
     color: 0x91bce6,
@@ -614,13 +640,17 @@ export const SMALL_BODY_ELEMENTS: readonly SmallBodyElements[] = [
   {
     name: 'haumea',
     displayName: { en: 'Haumea', fr: 'Hauméa' },
-    a: 43.218,
-    e: 0.1913,
-    iDeg: 28.19,
-    omDeg: 121.91,
-    wDeg: 239.04,
-    maDeg: 205.65,
+    // Éléments osculateurs JPL Horizons BARYCENTRIQUES exactement à cette époque (COMMAND
+    // '136108;', CENTER=500@0, TLIST=2451545.0), par `pnpm ephemeris:small-body --center 500@0`.
+    // Barycentriques car mesuré meilleur au-delà de Neptune (cf. `OrbitalElements.barycentric`).
+    a: 43.10286749752674,
+    e: 0.1950094391276499,
+    iDeg: 28.20492617114719,
+    omDeg: 121.9476444856607,
+    wDeg: 239.9472445347778,
+    maDeg: 190.4250671251033,
     epoch: '2000-01-01T12:00:00Z',
+    barycentric: true,
     radiusKm: 780,
     kind: 'dwarf',
     color: 0xe58f7a,
@@ -644,13 +674,17 @@ export const SMALL_BODY_ELEMENTS: readonly SmallBodyElements[] = [
   {
     name: 'makemake',
     displayName: { en: 'Makemake', fr: 'Makémaké' },
-    a: 45.715,
-    e: 0.1559,
-    iDeg: 28.98,
-    omDeg: 79.62,
-    wDeg: 294.83,
-    maDeg: 165.51,
+    // Éléments osculateurs JPL Horizons BARYCENTRIQUES exactement à cette époque (COMMAND
+    // '136472;', CENTER=500@0, TLIST=2451545.0), par `pnpm ephemeris:small-body --center 500@0`.
+    // Barycentriques car mesuré meilleur au-delà de Neptune (cf. `OrbitalElements.barycentric`).
+    a: 45.4988931027048,
+    e: 0.1603866278527415,
+    iDeg: 29.00199283692018,
+    omDeg: 79.44279338452822,
+    wDeg: 296.0688272466675,
+    maDeg: 140.1042105425099,
     epoch: '2000-01-01T12:00:00Z',
+    barycentric: true,
     radiusKm: 715,
     kind: 'dwarf',
     color: 0xd78352,
@@ -677,15 +711,17 @@ export const SMALL_BODY_ELEMENTS: readonly SmallBodyElements[] = [
   {
     name: 'orcus',
     displayName: { en: 'Orcus', fr: 'Orcus' },
-    // Éléments osculateurs JPL Horizons exactement à cette époque — même méthode que
-    // Vesta/Pallas/Hygiea/Halley ci-dessus (EPHEM_TYPE=ELEMENTS, TLIST=2451545.0).
-    a: 39.26252228984306,
-    e: 0.225751142405386,
-    iDeg: 20.53929449722906,
-    omDeg: 268.45724311407,
-    wDeg: 73.7509867753638,
-    maDeg: 150.0400595978003,
+    // Éléments osculateurs JPL Horizons BARYCENTRIQUES exactement à cette époque (COMMAND
+    // '90482;', CENTER=500@0, TLIST=2451545.0), par `pnpm ephemeris:small-body --center 500@0`.
+    // Barycentriques car mesuré meilleur au-delà de Neptune (cf. `OrbitalElements.barycentric`).
+    a: 39.2798751411889,
+    e: 0.2238491715385574,
+    iDeg: 20.56780730671753,
+    omDeg: 268.5849268277011,
+    wDeg: 73.02643860598275,
+    maDeg: 151.0542756150432,
     epoch: '2000-01-01T12:00:00Z',
+    barycentric: true,
     radiusKm: 458,
     kind: 'dwarf',
     color: 0xcbc7c0,
@@ -712,15 +748,17 @@ export const SMALL_BODY_ELEMENTS: readonly SmallBodyElements[] = [
   {
     name: 'quaoar',
     displayName: { en: 'Quaoar', fr: 'Quaoar' },
-    // Éléments osculateurs JPL Horizons exactement à cette époque — voir le commentaire sur
-    // Vesta ci-dessus (même méthode de vérification).
-    a: 43.13300737717343,
-    e: 0.0395100738360675,
-    iDeg: 8.005089469375157,
-    omDeg: 189.0799904468402,
-    wDeg: 163.785490698647,
-    maDeg: 258.9555093443548,
+    // Éléments osculateurs JPL Horizons BARYCENTRIQUES exactement à cette époque (COMMAND
+    // '50000;', CENTER=500@0, TLIST=2451545.0), par `pnpm ephemeris:small-body --center 500@0`.
+    // Barycentriques car mesuré meilleur au-delà de Neptune (cf. `OrbitalElements.barycentric`).
+    a: 43.33509246671098,
+    e: 0.03694225430757929,
+    iDeg: 7.990872930653528,
+    omDeg: 188.9142102666829,
+    wDeg: 157.5498851270579,
+    maDeg: 265.1482774560987,
     epoch: '2000-01-01T12:00:00Z',
+    barycentric: true,
     radiusKm: 549,
     kind: 'dwarf',
     color: 0x9c8873,
@@ -744,15 +782,17 @@ export const SMALL_BODY_ELEMENTS: readonly SmallBodyElements[] = [
   {
     name: 'gonggong',
     displayName: { en: 'Gonggong', fr: 'Gonggong' },
-    // Éléments osculateurs JPL Horizons exactement à cette époque — voir le commentaire sur
-    // Vesta ci-dessus (même méthode de vérification).
-    a: 67.05125643630976,
-    e: 0.4995734299445327,
-    iDeg: 30.71460943458106,
-    omDeg: 336.8754145198811,
-    wDeg: 206.9409316772891,
-    maDeg: 94.20389141650462,
+    // Éléments osculateurs JPL Horizons BARYCENTRIQUES exactement à cette époque (COMMAND
+    // '225088;', CENTER=500@0, TLIST=2451545.0), par `pnpm ephemeris:small-body --center 500@0`.
+    // Barycentriques car mesuré meilleur au-delà de Neptune (cf. `OrbitalElements.barycentric`).
+    a: 67.06649002606795,
+    e: 0.5034146432904725,
+    iDeg: 30.80268415463649,
+    omDeg: 336.8395088422051,
+    wDeg: 206.9906512032046,
+    maDeg: 93.65145846699514,
     epoch: '2000-01-01T12:00:00Z',
+    barycentric: true,
     radiusKm: 615,
     kind: 'dwarf',
     color: 0xc25a3f,
@@ -776,15 +816,17 @@ export const SMALL_BODY_ELEMENTS: readonly SmallBodyElements[] = [
   {
     name: 'sedna',
     displayName: { en: 'Sedna', fr: 'Sedna' },
-    // Éléments osculateurs JPL Horizons exactement à cette époque — voir le commentaire sur
-    // Vesta ci-dessus (même méthode de vérification).
-    a: 549.8732686054069,
-    e: 0.8609804671093849,
-    iDeg: 11.92524941582647,
-    omDeg: 144.3169286137796,
-    wDeg: 310.7328635633867,
-    maDeg: 357.9014766680082,
+    // Éléments osculateurs JPL Horizons BARYCENTRIQUES exactement à cette époque (COMMAND
+    // '90377;', CENTER=500@0, TLIST=2451545.0), par `pnpm ephemeris:small-body --center 500@0`.
+    // Barycentriques car mesuré meilleur au-delà de Neptune (cf. `OrbitalElements.barycentric`).
+    a: 506.4484207674334,
+    e: 0.8495572493958709,
+    iDeg: 11.92852404316633,
+    omDeg: 144.401716933437,
+    wDeg: 311.2846178310521,
+    maDeg: 357.5940836366447,
     epoch: '2000-01-01T12:00:00Z',
+    barycentric: true,
     radiusKm: 498,
     kind: 'dwarf',
     color: 0xb84a3a,

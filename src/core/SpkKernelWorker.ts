@@ -1,4 +1,9 @@
-import { SpkKernel, subtractStates, zeroState } from './SpkKernel';
+import {
+  planSpkSegments,
+  SpkKernel,
+  subtractStates,
+  zeroState,
+} from './SpkKernel';
 import type { SpkSegmentDescriptor, SpkState } from './SpkKernel';
 
 const RECORD_BYTES = 1024;
@@ -157,26 +162,6 @@ async function loadDirectory(url: string): Promise<RangeDirectory> {
   return { url, littleEndian, segments };
 }
 
-function findSegment(
-  directory: RangeDirectory,
-  target: number,
-  center: number,
-  etSeconds: number
-): SpkSegmentDescriptor | null {
-  for (let index = directory.segments.length - 1; index >= 0; index -= 1) {
-    const segment = directory.segments[index];
-    if (
-      segment.target === target &&
-      segment.center === center &&
-      etSeconds >= segment.startEtSeconds &&
-      etSeconds <= segment.endEtSeconds &&
-      (segment.type === 2 || segment.type === 3)
-    )
-      return segment;
-  }
-  return null;
-}
-
 function segmentKey(segment: SpkSegmentDescriptor): string {
   return `${segment.initialAddress}:${segment.finalAddress}`;
 }
@@ -209,25 +194,6 @@ async function loadSegment(
   return load;
 }
 
-/** Premier segment couvrant `target` (peu importe le centre) à `etSeconds`. */
-function findSegmentByTarget(
-  directory: RangeDirectory,
-  target: number,
-  etSeconds: number
-): SpkSegmentDescriptor | null {
-  for (let index = directory.segments.length - 1; index >= 0; index -= 1) {
-    const segment = directory.segments[index];
-    if (
-      segment.target === target &&
-      etSeconds >= segment.startEtSeconds &&
-      etSeconds <= segment.endEtSeconds &&
-      (segment.type === 2 || segment.type === 3)
-    )
-      return segment;
-  }
-  return null;
-}
-
 /**
  * État `target←center` en mode Range : tente un segment direct, sinon **compose via un
  * centre commun** (comme `SpkKernel.getState`, mais en chargeant chaque segment à la demande
@@ -241,26 +207,23 @@ async function resolveRangeState(
 ): Promise<SpkState | null> {
   if (target === center) return zeroState();
 
-  const directSeg = findSegment(directory, target, center, etSeconds);
-  if (directSeg) {
-    return (await loadSegment(directory, directSeg)).getState(
+  const plan = planSpkSegments(directory.segments, target, center, etSeconds);
+  if (!plan) return null;
+  if (plan.kind === 'direct') {
+    return (await loadSegment(directory, plan.segment)).getState(
       target,
       center,
       etSeconds
     );
   }
   // Composition : target←commun − center←commun (mêmes règles que SpkKernel.getState).
-  const targetSeg = findSegmentByTarget(directory, target, etSeconds);
-  const centerSeg = findSegmentByTarget(directory, center, etSeconds);
-  if (!targetSeg || !centerSeg || targetSeg.center !== centerSeg.center)
-    return null;
   const [targetKernel, centerKernel] = await Promise.all([
-    loadSegment(directory, targetSeg),
-    loadSegment(directory, centerSeg),
+    loadSegment(directory, plan.target),
+    loadSegment(directory, plan.center),
   ]);
   return subtractStates(
-    targetKernel.getState(target, targetSeg.center, etSeconds),
-    centerKernel.getState(center, centerSeg.center, etSeconds)
+    targetKernel.getState(target, plan.target.center, etSeconds),
+    centerKernel.getState(center, plan.center.center, etSeconds)
   );
 }
 

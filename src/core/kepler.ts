@@ -58,10 +58,34 @@ export interface OrbitalElements {
    * demanderait une table de masses à tenir à jour en plus.
    */
   periodDays?: number;
+  /**
+   * Éléments rapportés au BARYCENTRE du Système solaire plutôt qu'au Soleil. La position
+   * rendue par `keplerianPositionEcliptic` est alors barycentrique ; `OrbitalElementsService`
+   * y ajoute la position du barycentre vue du Soleil.
+   *
+   * Pourquoi. Au-delà de Neptune, l'osculateur héliocentrique contient le mouvement réflexe
+   * du Soleil autour du barycentre (~0,01 UA, période de Jupiter) : une vitesse parasite de
+   * ~13 m/s sur ~4 km/s, qui fausse le demi-grand axe donc la période. Mesuré contre
+   * Horizons sur 1900-2100 : Éris 2,5e7 km d'erreur moyenne en héliocentrique, 1,1e4 km en
+   * barycentrique ; Sedna 2,6e7 contre 1,3e4. Pour Cérès et Vesta c'est l'inverse (le Soleil
+   * domine, héliocentrique meilleur d'un facteur 10 à 100) : le choix est donc une donnée
+   * par corps, mesurée, jamais une règle de distance.
+   *
+   * Le corps central est alors le Soleil PLUS les planètes : μ = k²·(1 + Σ m_planètes / m☉).
+   */
+  barycentric?: boolean;
 }
 
 /** Constante gravitationnelle de Gauss (rad/jour) — mouvement moyen n = k / a^1.5. */
 const GAUSS_K = 0.017_202_098_95;
+
+/**
+ * Σ GM des planètes (systèmes, Lune incluse dans le barycentre Terre-Lune, Pluton compris) /
+ * GM du Soleil, valeurs DE440 (km³/s²) : 178 078 630 / 132 712 440 041. Sans ce facteur,
+ * une orbite barycentrique propagée au μ solaire dérive de 0,067 % par période : mesuré sur
+ * Éris, 2,6e6 km de moyenne sur 1900-2100 au lieu de 1,1e4.
+ */
+export const PLANETS_TO_SUN_MASS_RATIO = 1.341_839e-3;
 
 /** Jours juliens depuis l'epoch Unix, pour une date JavaScript. */
 const MS_PER_DAY = 86_400_000;
@@ -149,11 +173,17 @@ export function solveHyperbolicKepler(
   return f;
 }
 
-/** Mouvement moyen (rad/jour) : période explicite, sinon 3ᵉ loi de Kepler autour du Soleil. */
+/**
+ * Mouvement moyen (rad/jour) : période explicite, sinon 3ᵉ loi de Kepler autour du Soleil,
+ * ou du Soleil augmenté des planètes pour des éléments barycentriques.
+ */
 function meanMotion(el: OrbitalElements): number {
   if (el.periodDays && el.periodDays > 0) return (2 * Math.PI) / el.periodDays;
   const a = Math.abs(el.semiMajorAxisAU);
-  return GAUSS_K / Math.sqrt(a * a * a);
+  const k = el.barycentric
+    ? GAUSS_K * Math.sqrt(1 + PLANETS_TO_SUN_MASS_RATIO)
+    : GAUSS_K;
+  return k / Math.sqrt(a * a * a);
 }
 
 /** Anomalie moyenne à une date (rad), non réduite. */

@@ -12,6 +12,8 @@ import {
   Seasons,
   type EclipseKind,
 } from 'astronomy-engine';
+// Convention d'échelle de temps (ΔT) installée dans astronomy-engine : cf. timeScale.ts.
+import './timeScale';
 
 export type AstronomicalEventKind =
   | 'new-moon'

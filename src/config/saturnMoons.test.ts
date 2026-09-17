@@ -3,9 +3,9 @@ import { Body } from 'astronomy-engine';
 import { CELESTIAL_CONFIG } from './bodies';
 
 const SATURN_MOONS = [
-  ['enceladus', 'Enceladus', 0.00159360557, 1.370218],
-  ['rhea', 'Rhea', 0.00352411433, 4.517503],
-  ['iapetus', 'Iapetus', 0.02380849395, 79.331002],
+  ['enceladus', 'Enceladus', 0.00159360557, 1.3702181029145903],
+  ['rhea', 'Rhea', 0.00352411433, 4.517502711107901],
+  ['iapetus', 'Iapetus', 0.02380849395, 79.33010433489734],
 ] as const;
 
 /** Résolutions de surface réellement livrées (voir public/assets/textures). */

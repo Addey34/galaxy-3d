@@ -155,6 +155,86 @@ function elementsFromState(r, v, mu) {
   };
 }
 
+/**
+ * Mode MOUVEMENT MOYEN. La période qui fait tourner le repli (`realData.orbitPeriodDays`) doit
+ * être la période SIDÉRALE MOYENNE, pas la période osculatrice 2π·√(a³/μ) : autour d'une
+ * planète aplatie (J2), l'osculateur surestime a, donc la période. Mimas en portait
+ * 0,947471 j pour 0,942422 j réels (5 355 ppm) : sa phase devenait aléatoire en quelques
+ * semaines, et le repli le plaçait n'importe où sur son orbite.
+ *
+ * On mesure donc le taux moyen de l'angle dans le plan orbital, aux instants EXACTS des
+ * échantillons du binaire (aucune interpolation) : moindres carrés sur une fenêtre qui
+ * double à chaque passe, chaque passe déroulant l'angle avec le taux de la précédente,
+ * jusqu'à toute la couverture du fichier. Retrouve au chiffre près les périodes sidérales
+ * publiées par JPL (Téthys 1,887802 j, Obéron 13,463239 j).
+ *
+ * Refusé au-delà de e = 0,3 : l'angle vrai s'écarte alors de l'angle moyen de plus d'un
+ * demi-tour possible et le déroulement se trompe de révolution (Néréide, e = 0,75). Cette
+ * excentricité est mesurée sur les distances extrêmes du fichier, (r_max − r_min) /
+ * (r_max + r_min), pas sur l'osculateur : autour du centre de Pluton, qui tourne autour du
+ * barycentre, l'osculateur de Styx dépasse 0,3 alors que son orbite est quasi circulaire.
+ *
+ *   node scripts/derive-relative-elements.mjs --mean-motion [noms…]
+ */
+const asMeanMotion = process.argv.includes('--mean-motion');
+const MEAN_MOTION_MAX_ECCENTRICITY = 0.3;
+
+function meanMotionPeriodDays(name, mu) {
+  const entry = manifest.bodies[name];
+  const samples = new Float64Array(
+    readFileSync(join(EPHEMERIDES_DIR, entry.file)).buffer.slice(0)
+  );
+  const at = (index) => {
+    const i = index * COMPONENTS_PER_SAMPLE;
+    return {
+      r: [samples[i], samples[i + 1], samples[i + 2]],
+      v: [samples[i + 3], samples[i + 4], samples[i + 5]],
+    };
+  };
+  const jd = EPOCH.getTime() / MS_PER_DAY + UNIX_EPOCH_JD;
+  const center = Math.round((jd - entry.startJdTdb) / entry.stepDays);
+  const first = at(center);
+  let rMin = Infinity;
+  let rMax = 0;
+  for (let k = 0; k < 4096; k++) {
+    const length = norm(at(Math.floor((k * (entry.sampleCount - 1)) / 4095)).r);
+    rMin = Math.min(rMin, length);
+    rMax = Math.max(rMax, length);
+  }
+  if ((rMax - rMin) / (rMax + rMin) > MEAN_MOTION_MAX_ECCENTRICITY) return null;
+  const osculating = elementsFromState(first.r, first.v, mu);
+
+  // Repère du plan : direction de l'époque et moment cinétique à l'époque.
+  const h = cross(first.r, first.v);
+  const zHat = h.map((x) => x / norm(h));
+  const xHat = first.r.map((x) => x / norm(first.r));
+  const yHat = cross(zHat, xHat);
+  const angle = (index) => {
+    const { r } = at(index);
+    return Math.atan2(dot(r, yHat), dot(r, xHat));
+  };
+
+  let n = TWO_PI / osculating.periodDays;
+  const maxSpan = Math.max(center, entry.sampleCount - 1 - center);
+  for (let span = 1; ; span = Math.min(span * 2, maxSpan)) {
+    let sxx = 0;
+    let sxy = 0;
+    const stride = Math.max(1, Math.floor(span / 64));
+    for (let k = -span; k <= span; k += stride) {
+      const index = center + k;
+      if (index < 0 || index >= entry.sampleCount) continue;
+      const dt = k * entry.stepDays;
+      let theta = angle(index);
+      theta += TWO_PI * Math.round((n * dt - theta) / TWO_PI);
+      sxx += dt * dt;
+      sxy += dt * theta;
+    }
+    n = sxy / sxx;
+    if (span === maxSpan) break;
+  }
+  return TWO_PI / n;
+}
+
 const asJson = process.argv.includes('--json');
 /**
  * Mode ELEMENTS MOYENS. Les elements osculateurs supposent un centre fixe ; c'est faux pour un
@@ -237,7 +317,7 @@ const satellites = Object.entries(manifest.bodies)
   .filter((name) => requested.size === 0 || requested.has(name))
   .sort();
 
-if (!asJson) {
+if (!asJson && !asMeanMotion) {
   console.log(`// Époque de référence : ${EPOCH.toISOString()}`);
   console.log(
     `// Source : ${EPHEMERIDES_DIR}/*.bin (états exacts, écliptique J2000)`
@@ -245,6 +325,19 @@ if (!asJson) {
   console.log(
     `// Généré par scripts/derive-relative-elements.mjs — ne pas éditer à la main.\n`
   );
+}
+
+if (asMeanMotion) {
+  const periods = {};
+  for (const name of satellites) {
+    const state = stateAt(name, EPOCH);
+    const mass = state && PARENT_MASS_KG[state.center];
+    if (!state || mass === undefined) continue;
+    const period = meanMotionPeriodDays(name, G * mass);
+    periods[name] = period ?? `refusé : e > ${MEAN_MOTION_MAX_ECCENTRICITY}`;
+  }
+  console.log(JSON.stringify(periods, null, 2));
+  process.exit(0);
 }
 
 for (const name of satellites) {

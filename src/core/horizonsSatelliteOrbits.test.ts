@@ -106,7 +106,13 @@ describe('orbites des satellites sur les binaires Horizons livrés', () => {
       expect(
         radiusMax / radiusMin,
         `${name} : variation de rayon sur une orbite`
-      ).toBeLessThan(1.12);
+        // 1,13 et non plus 1,12 (lot 2b) : depuis que le ballant de Pluton est RESTITUÉ à la
+        // date demandée au lieu d'être lissé par l'interpolation, Styx montre le rapport
+        // physique. Autour du centre de Pluton il vaut (42 600 + 2 130) / (42 600 − 2 130) =
+        // 1,105, fois (1 + e) / (1 − e) ≈ 1,012, soit ~1,118 ; mesuré 1,1200, pour une erreur
+        // de 89 km en moyenne contre Horizons (514 km avant). Un repliement d'interpolation,
+        // lui, donnait des facteurs de 1,9 à 11.
+      ).toBeLessThan(1.13);
     });
   }
 });

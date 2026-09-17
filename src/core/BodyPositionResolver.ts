@@ -73,8 +73,15 @@ export class BodyPositionResolver {
    * Position issue des ÉLÉMENTS KÉPLÉRIENS du catalogue uniquement, ou `null` si le corps n'en
    * a pas. C'est la seule source de couverture infinie : elle vaut à n'importe quelle date, là
    * où un binaire s'arrête.
+   *
+   * `frameDate` : date à laquelle prendre le barycentre pour des éléments barycentriques
+   * (cf. `OrbitalElementsService.getHeliocentricAU`) — la date affichée pour une ligne.
    */
-  elementsOnly(cfg: CelestialBodyConfig, date: Date): THREE.Vector3 | null {
+  elementsOnly(
+    cfg: CelestialBodyConfig,
+    date: Date,
+    frameDate: Date = date
+  ): THREE.Vector3 | null {
     if (cfg.relativeOrbitalElements) {
       // Le corps central est la PLANÈTE, pas le Soleil : on fournit la période publiée du
       // catalogue, faute de quoi le mouvement moyen serait déduit du μ solaire (cf.
@@ -88,7 +95,11 @@ export class BodyPositionResolver {
       );
     }
     if (cfg.orbitalElements) {
-      return this.elements.getHeliocentricAU(cfg.orbitalElements, date);
+      return this.elements.getHeliocentricAU(
+        cfg.orbitalElements,
+        date,
+        frameDate
+      );
     }
     return null;
   }

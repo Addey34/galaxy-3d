@@ -151,7 +151,7 @@ export class OrbitPathBuilder {
         const phase = i / nPoints - 0.5;
         const sampleDate = this.orbitSampleDate(cfg, _date, phase, periodDays);
         const point = elementsOnly
-          ? this.positions.elementsOnly(cfg, sampleDate)
+          ? this.positions.elementsOnly(cfg, sampleDate, _date)
           : this.positions.resolve(_name, cfg, sampleDate);
         if (!point) return null;
         const i3 = i * 3;
@@ -173,7 +173,7 @@ export class OrbitPathBuilder {
       const phase = i / nPoints - 0.5;
       const sampleDate = this.orbitSampleDate(cfg, _date, phase, periodDays);
       const pointAU = elementsOnly
-        ? this.positions.elementsOnly(cfg, sampleDate)
+        ? this.positions.elementsOnly(cfg, sampleDate, _date)
         : this.positions.resolve(_name, cfg, sampleDate);
       if (!pointAU) return null;
       const parentName = this.parentName.get(_name);

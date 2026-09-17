@@ -120,6 +120,40 @@ describe('SpkWorkerEphemerisProvider', () => {
     expect(transport.requests).toHaveLength(0);
   });
 
+  /**
+   * SAT441 ne stocke les lunes et Saturne que par rapport au barycentre de Saturne (6). La
+   * façade n'indexait que les paires DIRECTES : aucune position de lune n'était jamais
+   * demandée au Worker, qui savait pourtant composer. Elle suit maintenant sa règle.
+   */
+  it('requests pairs the Worker composes through a common center', async () => {
+    const transport = new FakeTransport();
+    transport.segments = [segment(602, 6), segment(699, 6), segment(801, 8)];
+    const provider = new SpkWorkerEphemerisProvider(transport, {
+      sun: 10,
+      enceladus: 602,
+      saturn: 699,
+      triton: 801,
+    });
+    await provider.loadUrl('/assets/kernels/sat441l.bsp');
+    const date = new Date('2026-01-01T00:00:00Z');
+
+    expect(
+      provider.getParentRelativeAU('enceladus', 'saturn', date)
+    ).toBeNull();
+    expect(transport.requests.map((r) => r.slice(0, 2))).toEqual([[602, 699]]);
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(
+      provider.getParentRelativeAU('enceladus', 'saturn', date)
+    ).not.toBeNull();
+
+    // Centres communs différents (6 contre 8) : rien à composer, aucune requête.
+    expect(provider.getParentRelativeAU('triton', 'saturn', date)).toBeNull();
+    // Le Soleil (10) n'est pas dans le noyau : l'héliocentrique reste aux binaires.
+    expect(provider.getHeliocentricAU('enceladus', date)).toBeNull();
+    expect(transport.requests).toHaveLength(1);
+  });
+
   it('returns zero for a body centered on itself and ignores unsupported frames', async () => {
     const transport = new FakeTransport();
     const provider = new SpkWorkerEphemerisProvider(transport, {

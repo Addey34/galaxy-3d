@@ -27,7 +27,7 @@ describe('Titan catalogue entry', () => {
     expect(titan?.textureResolutions.surface).toEqual(['2k', '1k']);
     expect(titan?.fallbackColor).toBeTypeOf('number');
     expect(titan?.realData?.radiusKm).toBeCloseTo(2_574.76, 2);
-    expect(titan?.realData?.orbitPeriodDays).toBeCloseTo(15.945448, 6);
+    expect(titan?.realData?.orbitPeriodDays).toBeCloseTo(15.94546580124095, 6);
   });
 
   it('uses a synchronous rotation period', () => {

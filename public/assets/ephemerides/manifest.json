@@ -1,7 +1,7 @@
 {
   "version": 1,
   "source": "NASA/JPL Horizons",
-  "generatedAt": "2026-09-10T09:37:57.207Z",
+  "generatedAt": "2026-09-17T01:01:16.941Z",
   "frame": "ECLIPTIC_J2000",
   "center": "SUN",
   "units": "AU-D",
@@ -283,20 +283,20 @@
       "sampleCount": 11174
     },
     "parker-solar-probe": {
-      "file": "parker-solar-probe.4165c02ff801.bin",
+      "file": "parker-solar-probe.c5228796e86c.bin",
       "target": "-96",
       "center": "sun",
       "startJdTdb": 2458343.5,
-      "stepDays": 4,
-      "sampleCount": 1040
+      "stepDays": 1,
+      "sampleCount": 4159
     },
     "jwst": {
-      "file": "jwst.7a139f3d7ebd.bin",
+      "file": "jwst.caf968def492.bin",
       "target": "-170",
       "center": "sun",
       "startJdTdb": 2459574.5,
-      "stepDays": 4,
-      "sampleCount": 882
+      "stepDays": 1,
+      "sampleCount": 3528
     },
     "new-horizons": {
       "file": "new-horizons.dd654d07964b.bin",
@@ -307,20 +307,20 @@
       "sampleCount": 4013
     },
     "cassini": {
-      "file": "cassini.cdcadb90ab09.bin",
+      "file": "cassini.c7abd239001a.bin",
       "target": "-82",
       "center": "sun",
       "startJdTdb": 2450738.5,
-      "stepDays": 4,
-      "sampleCount": 1819
+      "stepDays": 1,
+      "sampleCount": 7273
     },
     "juno": {
-      "file": "juno.d2d8d5ada7f4.bin",
+      "file": "juno.00a4cd25af7c.bin",
       "target": "-61",
       "center": "sun",
       "startJdTdb": 2455780.5,
-      "stepDays": 4,
-      "sampleCount": 1566
+      "stepDays": 1,
+      "sampleCount": 6264
     },
     "rosetta": {
       "file": "rosetta.e0c02fc00d85.bin",
@@ -331,12 +331,12 @@
       "sampleCount": 1150
     },
     "bepicolombo": {
-      "file": "bepicolombo.6958cb2c4ebe.bin",
+      "file": "bepicolombo.461cb93be07a.bin",
       "target": "-121",
       "center": "sun",
       "startJdTdb": 2458413.5,
-      "stepDays": 4,
-      "sampleCount": 773
+      "stepDays": 1,
+      "sampleCount": 3092
     },
     "osiris-rex": {
       "file": "osiris-rex.f186c573d241.bin",
@@ -353,6 +353,22 @@
       "startJdTdb": 2456996.5,
       "stepDays": 4,
       "sampleCount": 1094
+    },
+    "jupiter": {
+      "file": "jupiter.45491bed4d65.bin",
+      "target": "599",
+      "center": "sun",
+      "startJdTdb": 2415020.5,
+      "stepDays": 4,
+      "sampleCount": 18354
+    },
+    "uranus": {
+      "file": "uranus.13c7a426032e.bin",
+      "target": "799",
+      "center": "sun",
+      "startJdTdb": 2415020.5,
+      "stepDays": 4,
+      "sampleCount": 18354
     }
   }
 }

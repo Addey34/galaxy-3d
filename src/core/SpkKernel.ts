@@ -1,4 +1,5 @@
-import { MakeTime } from 'astronomy-engine';
+// L'échelle ET vient de la convention unique de Galaxy (cf. `timeScale.ts`).
+export { etSecondsFromDate } from './timeScale';
 
 const RECORD_BYTES = 1024;
 const WORD_BYTES = 8;
@@ -44,6 +45,58 @@ export function subtractStates(
     ],
     frame: a.frame,
   };
+}
+
+/**
+ * Segments à lire pour l'état `target←center` à `etSeconds` : un segment DIRECT s'il existe,
+ * sinon deux segments rapportés à un CENTRE COMMUN (`target←c` et `center←c`), sinon `null`.
+ * Le dernier segment de l'annuaire qui couvre la date l'emporte, comme dans un noyau SPICE.
+ *
+ * Une seule implémentation, partagée par le Worker (qui lit les segments) et par la façade
+ * synchrone (qui décide s'il vaut la peine de demander). Elles en avaient chacune une : le
+ * Worker savait composer, la façade n'indexait que les paires directes. SAT441 ne stocke les
+ * lunes et Saturne que par rapport au barycentre de Saturne (602←6, 699←6), donc aucune
+ * position de lune n'était JAMAIS demandée, même avec le noyau activé — sans erreur.
+ */
+export type SpkSegmentPlan =
+  | { kind: 'direct'; segment: SpkSegmentDescriptor }
+  | {
+      kind: 'composed';
+      target: SpkSegmentDescriptor;
+      center: SpkSegmentDescriptor;
+    };
+
+export function planSpkSegments(
+  segments: readonly SpkSegmentDescriptor[],
+  target: number,
+  center: number,
+  etSeconds: number
+): SpkSegmentPlan | null {
+  const readable = (segment: SpkSegmentDescriptor): boolean =>
+    etSeconds >= segment.startEtSeconds &&
+    etSeconds <= segment.endEtSeconds &&
+    (segment.type === 2 || segment.type === 3);
+  const last = (
+    match: (segment: SpkSegmentDescriptor) => boolean
+  ): SpkSegmentDescriptor | null => {
+    for (let index = segments.length - 1; index >= 0; index -= 1) {
+      if (readable(segments[index]) && match(segments[index]))
+        return segments[index];
+    }
+    return null;
+  };
+
+  const direct = last((s) => s.target === target && s.center === center);
+  if (direct) return { kind: 'direct', segment: direct };
+  const targetSegment = last((s) => s.target === target);
+  const centerSegment = last((s) => s.target === center);
+  if (
+    !targetSegment ||
+    !centerSegment ||
+    targetSegment.center !== centerSegment.center
+  )
+    return null;
+  return { kind: 'composed', target: targetSegment, center: centerSegment };
 }
 
 /** État nul (target === center). */
@@ -230,32 +283,15 @@ export class SpkKernel {
     if (target === center)
       return zeroState(this._frameFor(target, etSeconds) ?? 1);
 
-    const direct = this._directState(target, center, etSeconds);
-    if (direct) return direct;
-
+    const plan = planSpkSegments(this.entries, target, center, etSeconds);
+    if (!plan) return null;
+    if (plan.kind === 'direct')
+      return this._directState(target, center, etSeconds);
     // Composition via le centre commun des deux segments (ex. barycentre 6 pour Saturne).
-    const targetCenter = this._centerOf(target, etSeconds);
-    const centerCenter = this._centerOf(center, etSeconds);
-    if (targetCenter === null || targetCenter !== centerCenter) return null;
     return subtractStates(
-      this._directState(target, targetCenter, etSeconds),
-      this._directState(center, centerCenter, etSeconds)
+      this._directState(target, plan.target.center, etSeconds),
+      this._directState(center, plan.center.center, etSeconds)
     );
-  }
-
-  /** Centre du segment couvrant `target` à `etSeconds` (le premier trouvé), sinon null. */
-  private _centerOf(target: number, etSeconds: number): number | null {
-    for (let index = this.entries.length - 1; index >= 0; index -= 1) {
-      const s = this.entries[index];
-      if (
-        s.target === target &&
-        etSeconds >= s.startEtSeconds &&
-        etSeconds <= s.endEtSeconds &&
-        (s.type === 2 || s.type === 3)
-      )
-        return s.center;
-    }
-    return null;
   }
 
   /** Référentiel du segment couvrant `target`, pour l'état nul (target === center). */
@@ -327,12 +363,4 @@ export class SpkKernel {
     }
     return null;
   }
-}
-
-export function etSecondsFromDate(date: Date): number {
-  const ttDays = MakeTime(date).tt;
-  const meanAnomaly = (357.53 + 0.985_600_3 * ttDays) * (Math.PI / 180);
-  const tdbMinusTtSeconds =
-    0.001_657 * Math.sin(meanAnomaly) + 0.000_022 * Math.sin(2 * meanAnomaly);
-  return ttDays * 86_400 + tdbMinusTtSeconds;
 }

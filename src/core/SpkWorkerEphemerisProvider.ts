@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { equatorialToScene } from './frames';
-import { etSecondsFromDate } from './SpkKernel';
+import { etSecondsFromDate, planSpkSegments } from './SpkKernel';
 import type { SpkSegmentDescriptor, SpkState } from './SpkKernel';
 import type { SpkKernelWorkerTransport } from './SpkKernelWorkerClient';
 import type { PreciseEphemerisProvider } from './PreciseEphemerisProvider';
@@ -14,11 +14,6 @@ interface CachedState {
   state: SpkState;
 }
 
-interface CoverageRange {
-  startEtSeconds: number;
-  endEtSeconds: number;
-}
-
 /**
  * Synchronous facade over the asynchronous SPK Worker.
  *
@@ -26,11 +21,15 @@ interface CoverageRange {
  * target/center pairs and out-of-coverage dates never generate a Worker call.
  * Between two replies, the latest position is advanced with the SPK velocity
  * for a short bounded interval.
+ *
+ * « Couvert » suit EXACTEMENT la règle du Worker (`planSpkSegments`) : segment direct ou
+ * composition via un centre commun. Une paire que le Worker sait composer mais que la façade
+ * jugeait absente n'était jamais demandée — le cas de toutes les lunes de SAT441.
  */
 export class SpkWorkerEphemerisProvider implements PreciseEphemerisProvider {
   private readonly cache = new Map<string, CachedState>();
   private readonly pending = new Set<string>();
-  private readonly coverage = new Map<string, CoverageRange[]>();
+  private segments: readonly SpkSegmentDescriptor[] = [];
   private loaded = false;
 
   constructor(
@@ -41,9 +40,8 @@ export class SpkWorkerEphemerisProvider implements PreciseEphemerisProvider {
   async loadUrl(url: string): Promise<void> {
     const segments = await this.transport.loadUrl(url);
     this.cache.clear();
-    this.coverage.clear();
-    for (const segment of segments) this.indexCoverage(segment);
-    this.compactCoverage();
+    // Seuls les segments en J2000 produisent une position utilisable par la scène.
+    this.segments = segments.filter((segment) => segment.frame === J2000_FRAME);
     this.loaded = true;
   }
 
@@ -62,7 +60,7 @@ export class SpkWorkerEphemerisProvider implements PreciseEphemerisProvider {
   dispose(): void {
     this.transport.dispose();
     this.cache.clear();
-    this.coverage.clear();
+    this.segments = [];
     this.pending.clear();
     this.loaded = false;
   }
@@ -81,7 +79,7 @@ export class SpkWorkerEphemerisProvider implements PreciseEphemerisProvider {
 
     const etSeconds = etSecondsFromDate(date);
     const key = this.pairKey(target, center);
-    if (!this.isCovered(key, etSeconds)) return null;
+    if (!planSpkSegments(this.segments, target, center, etSeconds)) return null;
 
     const cached = this.cache.get(key);
     if (cached) {
@@ -97,48 +95,6 @@ export class SpkWorkerEphemerisProvider implements PreciseEphemerisProvider {
 
     this.requestState(key, target, center, etSeconds);
     return null;
-  }
-
-  private indexCoverage(segment: SpkSegmentDescriptor): void {
-    if (segment.type !== 2 && segment.type !== 3) return;
-    if (segment.frame !== J2000_FRAME) return;
-    const key = this.pairKey(segment.target, segment.center);
-    const ranges = this.coverage.get(key) ?? [];
-    ranges.push({
-      startEtSeconds: segment.startEtSeconds,
-      endEtSeconds: segment.endEtSeconds,
-    });
-    this.coverage.set(key, ranges);
-  }
-
-  private compactCoverage(): void {
-    for (const [key, ranges] of this.coverage) {
-      ranges.sort((left, right) => left.startEtSeconds - right.startEtSeconds);
-      const compacted: CoverageRange[] = [];
-      for (const range of ranges) {
-        const previous = compacted[compacted.length - 1];
-        if (!previous || range.startEtSeconds > previous.endEtSeconds) {
-          compacted.push({ ...range });
-        } else {
-          previous.endEtSeconds = Math.max(
-            previous.endEtSeconds,
-            range.endEtSeconds
-          );
-        }
-      }
-      this.coverage.set(key, compacted);
-    }
-  }
-
-  private isCovered(key: string, etSeconds: number): boolean {
-    return (
-      this.coverage
-        .get(key)
-        ?.some(
-          (range) =>
-            etSeconds >= range.startEtSeconds && etSeconds <= range.endEtSeconds
-        ) ?? false
-    );
   }
 
   private pairKey(target: number, center: number): string {

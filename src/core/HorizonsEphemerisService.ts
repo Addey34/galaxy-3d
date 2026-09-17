@@ -7,47 +7,39 @@
  * reste continu et suit la trajectoire numérique Horizons sans requête réseau par frame.
  */
 import * as THREE from 'three';
-import { MakeTime } from 'astronomy-engine';
 import { eclipticToScene } from './frames';
+import { jdTdbFromDate } from './timeScale';
 import { propagateTwoBody } from './twoBodyPropagation';
 import type { BodyDynamics } from '@/config/gravity';
 import type { PreciseEphemerisProvider } from './PreciseEphemerisProvider';
 import Logger from '@/utils/Logger';
 
-const J2000_JD = 2_451_545;
-const UNIX_EPOCH_JD = 2_440_587.5;
-const MS_PER_DAY = 86_400_000;
 const COMPONENTS_PER_SAMPLE = 6;
 
 /**
- * En dessous de ce nombre d'echantillons par revolution, l'interpolation cubique n'est plus
- * fiable et on passe par la dynamique (cf. `_keplerianBetweenSamples`).
+ * En dessous de ce nombre d'echantillons par revolution, on interpole par la dynamique
+ * (cf. `_keplerianBetweenSamples`) plutot que par une cubique.
  *
- * Cinq, et la valeur vient d'une MESURE des deux branches sur les fichiers reellement
- * livres, pas d'une regle du pouce. Variation de rayon sur une orbite quasi circulaire
- * (1,000 = parfaitement ronde), Hermite puis dynamique :
+ * Seuil MESURE contre JPL Horizons (`pnpm ephemeris:validate`, erreur moyenne sur 1900-2100),
+ * en montant le seuil par paliers une fois retires les deux biais qui penalisaient la
+ * dynamique (ballant de Pluton autour du barycentre, periode osculatrice sous J2) :
  *
  *   ech/orbite   corps        Hermite   dynamique
- *      0,34      Encelade     11,376      1,006
- *      0,69      Dione         2,405      1,005
- *      1,47      Triton        2,750      1,000
- *      2,18      Titania       1,188      1,002
- *      3,37      Oberon        1,035      1,004
- *      3,99      Titan         1,076      1,059   <- 1,059 = son excentricite reelle
- *      5,04      Styx          1,117      1,169   <- la dynamique devient moins bonne
- *      9,55      Hydre         1,059      1,110
+ *      5,04      Styx          149 km      89 km
+ *      5,3       Hyperion    5 455 km      65 km
+ *      9,55      Hydre          16 km      11 km
+ *     19,8       Japet          47 km      39 km
+ *     90         Nereide        50 km      12 km   (max 668 -> 22 : son perihelie, e = 0,75)
+ *    172         Mars          2,93 km    3,05 km  <- la cubique repasse devant
  *
- * Le croisement se lit directement : la dynamique domine tant que la cubique n'a pas de
- * quoi decrire un tour, puis passe DERRIERE elle. La raison est physique et vaut la peine
- * d'etre notee — les quatre petites lunes de Pluton n'ont pas un mouvement a deux corps
- * autour du centre de Pluton : elles orbitent le barycentre Pluton-Charon, et Pluton
- * oscille de 2 100 km autour de lui. Une fois l'echantillonnage assez fin pour decrire
- * cette oscillation, la cubique la suit, la conique osculatrice ne le peut pas.
+ * D'ou 100. L'ancien seuil de 5 avait ete mesure alors que la dynamique portait encore ces
+ * deux biais : elle perdait sur Styx A CAUSE du ballant de Pluton, pas par nature. Les
+ * planetes et les sondes (periodes en annees ou absentes du catalogue) restent en Hermite.
  *
  * Le seuil ne concerne QUE le choix de l'interpolation : les echantillons, eux, restent les
  * memes dans les deux branches.
  */
-const MIN_SAMPLES_PER_ORBIT_FOR_HERMITE = 5;
+const MIN_SAMPLES_PER_ORBIT_FOR_HERMITE = 100;
 
 // Vecteurs de travail : `_samplePosition` est appele par corps a chaque recalcul de
 // positions, on evite d'y allouer.
@@ -55,38 +47,6 @@ const _stateR = new THREE.Vector3();
 const _stateV = new THREE.Vector3();
 const _forward = new THREE.Vector3();
 const _backward = new THREE.Vector3();
-
-/** Dates d'effet et valeurs TT−UTC (TAI−UTC + 32,184 s). */
-const TT_MINUS_UTC: readonly [number, number][] = [
-  [Date.UTC(1972, 0, 1), 42.184],
-  [Date.UTC(1972, 6, 1), 43.184],
-  [Date.UTC(1973, 0, 1), 44.184],
-  [Date.UTC(1974, 0, 1), 45.184],
-  [Date.UTC(1975, 0, 1), 46.184],
-  [Date.UTC(1976, 0, 1), 47.184],
-  [Date.UTC(1977, 0, 1), 48.184],
-  [Date.UTC(1978, 0, 1), 49.184],
-  [Date.UTC(1979, 0, 1), 50.184],
-  [Date.UTC(1980, 0, 1), 51.184],
-  [Date.UTC(1981, 6, 1), 52.184],
-  [Date.UTC(1982, 6, 1), 53.184],
-  [Date.UTC(1983, 6, 1), 54.184],
-  [Date.UTC(1985, 6, 1), 55.184],
-  [Date.UTC(1988, 0, 1), 56.184],
-  [Date.UTC(1990, 0, 1), 57.184],
-  [Date.UTC(1991, 0, 1), 58.184],
-  [Date.UTC(1992, 6, 1), 59.184],
-  [Date.UTC(1993, 6, 1), 60.184],
-  [Date.UTC(1994, 6, 1), 61.184],
-  [Date.UTC(1996, 0, 1), 62.184],
-  [Date.UTC(1997, 6, 1), 63.184],
-  [Date.UTC(1999, 0, 1), 64.184],
-  [Date.UTC(2006, 0, 1), 65.184],
-  [Date.UTC(2009, 0, 1), 66.184],
-  [Date.UTC(2012, 6, 1), 67.184],
-  [Date.UTC(2015, 6, 1), 68.184],
-  [Date.UTC(2017, 0, 1), 69.184],
-];
 
 interface HorizonsBodyManifest {
   file: string;
@@ -116,6 +76,10 @@ interface LoadedBody {
    * Absent = interpolation cubique seule, comme avant.
    */
   dynamics?: BodyDynamics;
+  /** Cf. `_meanMotionScale` — calculé au premier besoin, une fois par corps. */
+  meanMotionScale?: number;
+  /** Série sans le ballant du compagnon (cf. `BodyDynamics.reflex`), construite au besoin. */
+  withoutReflex?: LoadedBody | null;
 }
 
 function isManifest(value: unknown): value is HorizonsManifest {
@@ -150,26 +114,6 @@ function isManifestBody(value: unknown): value is HorizonsBodyManifest {
     Number.isInteger(sampleCount) &&
     sampleCount >= 2
   );
-}
-
-function dateToJdTdb(date: Date): number {
-  const utcMs = date.getTime();
-  // Avant l'introduction des secondes intercalaires, le modèle UT1→TT d'Astronomy Engine
-  // est plus approprié. Après 1972, on reproduit l'échelle UTC utilisée par Horizons.
-  if (utcMs < TT_MINUS_UTC[0][0]) return J2000_JD + MakeTime(date).tt;
-
-  let ttMinusUtcSeconds = TT_MINUS_UTC[0][1];
-  for (const [effectiveMs, offset] of TT_MINUS_UTC) {
-    if (utcMs < effectiveMs) break;
-    ttMinusUtcSeconds = offset;
-  }
-  const jdTt = utcMs / MS_PER_DAY + UNIX_EPOCH_JD + ttMinusUtcSeconds / 86_400;
-  // Approximation standard TDB−TT (amplitude < 1,7 ms), suffisante bien en dessous du km.
-  const meanAnomaly =
-    (357.53 + 0.985_600_3 * (jdTt - J2000_JD)) * (Math.PI / 180);
-  const tdbMinusTtSeconds =
-    0.001_657 * Math.sin(meanAnomaly) + 0.000_022 * Math.sin(2 * meanAnomaly);
-  return jdTt + tdbMinusTtSeconds / 86_400;
 }
 
 export class HorizonsEphemerisService implements PreciseEphemerisProvider {
@@ -274,8 +218,51 @@ export class HorizonsEphemerisService implements PreciseEphemerisProvider {
   }
 
   private _samplePosition(body: LoadedBody, date: Date): THREE.Vector3 | null {
+    const reflex = body.dynamics?.reflex;
+    if (reflex) {
+      const smooth = this._withoutReflex(body);
+      const companion = this.bodies.get(reflex.companion);
+      if (smooth && companion) {
+        const position = this._sampleGrid(smooth, date);
+        const wobble = this._sampleGrid(companion, date);
+        if (!position || !wobble) return null;
+        return position.addScaledVector(wobble, reflex.factor);
+      }
+    }
+    return this._sampleGrid(body, date);
+  }
+
+  /**
+   * Copie du corps dont les échantillons ont perdu le ballant du compagnon :
+   * X_lisse = X − facteur × compagnon, état par état (positions ET vitesses). `null` si le
+   * compagnon manque ou n'a pas exactement la même grille : on ne mélange pas deux pas.
+   */
+  private _withoutReflex(body: LoadedBody): LoadedBody | null {
+    if (body.withoutReflex !== undefined) return body.withoutReflex;
+    const reflex = body.dynamics!.reflex!;
+    const companion = this.bodies.get(reflex.companion);
+    const m = body.manifest;
+    const c = companion?.manifest;
+    let result: LoadedBody | null = null;
+    if (
+      companion &&
+      c &&
+      c.startJdTdb === m.startJdTdb &&
+      c.stepDays === m.stepDays &&
+      c.sampleCount === m.sampleCount
+    ) {
+      const samples = new Float64Array(body.samples.length);
+      for (let i = 0; i < samples.length; i++)
+        samples[i] = body.samples[i] - reflex.factor * companion.samples[i];
+      result = { manifest: m, samples, dynamics: body.dynamics };
+    }
+    body.withoutReflex = result;
+    return result;
+  }
+
+  private _sampleGrid(body: LoadedBody, date: Date): THREE.Vector3 | null {
     const { startJdTdb, stepDays, sampleCount } = body.manifest;
-    const samplePosition = (dateToJdTdb(date) - startJdTdb) / stepDays;
+    const samplePosition = (jdTdbFromDate(date) - startJdTdb) / stepDays;
     const index = Math.floor(samplePosition);
     if (index < 0 || index >= sampleCount - 1) return null;
 
@@ -324,6 +311,8 @@ export class HorizonsEphemerisService implements PreciseEphemerisProvider {
     }
 
     const mu = dynamics.mu;
+    // Avant de remplir `_stateR`/`_stateV` : le calcul du facteur s'en sert aussi.
+    const timeScale = this._meanMotionScale(body);
     const values = body.samples;
     const a = index * COMPONENTS_PER_SAMPLE;
     const b = a + COMPONENTS_PER_SAMPLE;
@@ -334,7 +323,7 @@ export class HorizonsEphemerisService implements PreciseEphemerisProvider {
     const forward = propagateTwoBody(
       _stateR,
       _stateV,
-      u * stepDays,
+      u * stepDays * timeScale,
       mu,
       _forward
     );
@@ -345,7 +334,7 @@ export class HorizonsEphemerisService implements PreciseEphemerisProvider {
     const backward = propagateTwoBody(
       _stateR,
       _stateV,
-      -(1 - u) * stepDays,
+      -(1 - u) * stepDays * timeScale,
       mu,
       _backward
     );
@@ -358,6 +347,46 @@ export class HorizonsEphemerisService implements PreciseEphemerisProvider {
     const y = forward.y + (backward.y - forward.y) * weight;
     const z = forward.z + (backward.z - forward.z) * weight;
     return eclipticToScene(x, y, z);
+  }
+
+  /**
+   * Facteur d'échelle du TEMPS de propagation : période osculatrice médiane du fichier /
+   * période sidérale moyenne du catalogue, pour les corps qui le déclarent
+   * (`BodyDynamics.meanMotionPropagation`, cf. `config/gravity.ts`). 1 sinon.
+   *
+   * Autour d'une planète aplatie (J2), l'état osculateur surestime le demi-grand axe, donc la
+   * période : la conique propagée parcourt la bonne ellipse au mauvais rythme (Mimas : 5 355
+   * ppm, ~4° de phase au milieu d'un intervalle de 4 jours). On la fait avancer au rythme
+   * moyen, sans toucher à sa géométrie. Un facteur CONSTANT, la médiane du fichier : le
+   * rapport état par état corrige aussi le bruit à courte période et dégradait tout le monde.
+   */
+  private _meanMotionScale(body: LoadedBody): number {
+    if (body.meanMotionScale !== undefined) return body.meanMotionScale;
+    const dynamics = body.dynamics;
+    let scale = 1;
+    if (dynamics?.meanMotionPropagation && dynamics.periodDays !== undefined) {
+      const values = body.samples;
+      const count = body.manifest.sampleCount;
+      const r = new THREE.Vector3();
+      const v = new THREE.Vector3();
+      const ratios: number[] = [];
+      for (let k = 0; k < 257; k++) {
+        const i = Math.floor((k * (count - 1)) / 256) * COMPONENTS_PER_SAMPLE;
+        r.set(values[i], values[i + 1], values[i + 2]);
+        v.set(values[i + 3], values[i + 4], values[i + 5]);
+        const energy = v.lengthSq() / 2 - dynamics.mu / r.length();
+        if (!(energy < 0)) continue;
+        const a = -dynamics.mu / (2 * energy);
+        ratios.push(
+          (2 * Math.PI * Math.sqrt((a * a * a) / dynamics.mu)) /
+            dynamics.periodDays
+        );
+      }
+      ratios.sort((x, y) => x - y);
+      if (ratios.length > 0) scale = ratios[Math.floor(ratios.length / 2)];
+    }
+    body.meanMotionScale = scale;
+    return scale;
   }
 
   /** Interpolation cubique de Hermite sur l'etat (position + vitesse) — cas general. */

@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { SMALL_BODIES, smallBodyToConfig } from './smallBodies';
+import {
+  SMALL_BODIES,
+  SMALL_BODY_ELEMENTS,
+  smallBodyToConfig,
+} from './smallBodies';
 import { OrbitalElementsService } from '@/core/OrbitalElementsService';
+import { keplerianPositionEcliptic } from '@/core/kepler';
 
 const D2R = Math.PI / 180;
 
@@ -389,5 +394,139 @@ describe('wave A asteroids vs live JPL Horizons state vectors', () => {
       error,
       `${name} @ ${iso}: ${error.toExponential(2)} AU off`
     ).toBeLessThan(years <= 1.01 ? 0.005 : 0.08);
+  });
+});
+
+/**
+ * Chaque jeu d'éléments du catalogue contre le vecteur d'état Horizons À SON ÉPOQUE.
+ *
+ * À t = époque, la position képlérienne ne dépend d'aucune constante gravitationnelle ni
+ * d'aucune perturbation : un écart y prouve un élément faux, sans excuse de modèle. C'est
+ * exactement ce qui était passé inaperçu pour Cérès, Éris, Hauméa, Makémaké et Pluton, dont
+ * les éléments recopiés à la main étaient faux dès l'époque (Cérès : maDeg 95,989 au lieu de
+ * 6,177, soit 5,8e8 km ; Éris 1,5e9 km). Les vecteurs viennent de
+ * `pnpm ephemeris:small-body` (TLIST = l'époque exacte, écliptique J2000), centre Soleil, ou
+ * barycentre (`--center 500@0`) pour les corps marqués `barycentric`.
+ *
+ * Tolérance mesurée : ≤ 6e-11 UA (≈ 9 m, arrondi des éléments imprimés par Horizons) sur les
+ * 18 corps, d'où 1e-8 UA (1,5 km). Une anomalie moyenne décalée de 0,001° déplace Cérès de
+ * ~7 000 km, et la copie périmée de Gonggong (solution Horizons raffinée) était à 980 km.
+ */
+const EPOCH_VECTORS: Readonly<
+  Record<string, readonly [number, number, number]>
+> = {
+  ceres: [-2.37932770592631, 0.7954860388627658, 0.4630055715910533],
+  vesta: [-1.353580437607153, -1.673136657862151, 0.2149018113721361],
+  pallas: [-0.8411384433388419, 1.653739426955205, -1.073889494800965],
+  hygiea: [-2.374062486038638, -1.463570769967126, -0.1781685951459966],
+  pluto: [-9.882489409085188, -27.96159262368592, 5.85065221499273],
+  eris: [88.38620474858071, 30.76244939161869, -26.09418397664761],
+  haumea: [-45.99689134174453, -5.1232782829825, 22.3858335370208],
+  makemake: [-43.5856155057084, 11.47554873390271, 24.91842194014122],
+  orcus: [-35.14633139166833, 28.6988609358787, -13.45001985012707],
+  quaoar: [-16.77365953461673, -39.83450325846727, 5.159494394035222],
+  gonggong: [70.2594106747693, -44.22918312798285, -7.768874824268009],
+  sedna: [61.94364088892283, 63.87353158363543, -18.58900929914583],
+  halley: [-17.38599346385816, 16.9791761108223, -7.577986613535686],
+};
+
+describe('every small-body element set vs its Horizons state vector at its epoch', () => {
+  it.each(SMALL_BODY_ELEMENTS.map((el) => [el.name, el.epoch] as const))(
+    '%s @ %s',
+    (name, epochIso) => {
+      const epoch = new Date(epochIso);
+      const waveA = WAVE_A_VECTORS.find(
+        ([n, iso]) => n === name && new Date(iso).getTime() === epoch.getTime()
+      );
+      const truth =
+        EPOCH_VECTORS[name] ?? (waveA ? [waveA[2], waveA[3], waveA[4]] : null);
+      // Un corps ajouté sans vecteur à son époque échoue ici : le garde couvre TOUT le socle.
+      expect(
+        truth,
+        `${name}: no Horizons vector at ${epochIso}`
+      ).not.toBeNull();
+      // Dans le repère PROPRE des éléments (Soleil, ou barycentre pour `barycentric`) : le
+      // décalage barycentre→Soleil a son propre test ci-dessous.
+      const p = keplerianPositionEcliptic(
+        SMALL_BODIES[name]!.orbitalElements!,
+        epoch
+      );
+      const [x, y, z] = truth!;
+      const error = Math.hypot(p.x - x, p.y - y, p.z - z);
+      expect(
+        error,
+        `${name} @ ${epochIso}: ${error.toExponential(2)} AU off`
+      ).toBeLessThan(1e-8);
+    }
+  );
+});
+
+/**
+ * Les éléments `barycentric` jusqu'à la position HÉLIOCENTRIQUE servie à la scène, contre les
+ * vecteurs Horizons centre Soleil (500@10), à l'époque et à ±10 ans. Deux choses tenues :
+ *   - le décalage barycentre→Soleil (sans lui, Éris est à 7,1e-3 UA en 2000, la distance
+ *     Soleil-barycentre) ;
+ *   - le μ augmenté des planètes (sans lui, l'anomalie moyenne dérive de 0,067 % par tour).
+ * Mesuré : ≤ 6,9e-6 UA à l'époque (précision du barycentre d'astronomy-engine, ~1 000 km),
+ * ≤ 3,3e-5 UA à ±10 ans (Makémaké, perturbations) ; d'où 1e-4 UA (15 000 km).
+ */
+const BARYCENTRIC_HELIO_VECTORS = [
+  [
+    'eris',
+    '2000-01-01T12:00:00Z',
+    88.39334192770119,
+    30.76524538912099,
+    -26.09439027514957,
+  ],
+  [
+    'eris',
+    '1990-01-01T00:00:00Z',
+    88.92053794815993,
+    27.16242392556952,
+    -29.20933663427215,
+  ],
+  [
+    'eris',
+    '2010-01-01T00:00:00Z',
+    87.47527749300113,
+    34.22668165530747,
+    -22.8665462816253,
+  ],
+  [
+    'sedna',
+    '2000-01-01T12:00:00Z',
+    61.95077806808445,
+    63.87632758113101,
+    -18.58921559765201,
+  ],
+  [
+    'makemake',
+    '1990-01-01T00:00:00Z',
+    -40.38933430845128,
+    18.99240153522257,
+    23.94040602597005,
+  ],
+  [
+    'makemake',
+    '2010-01-01T00:00:00Z',
+    -45.51817598040682,
+    3.622240614329881,
+    25.17628937170614,
+  ],
+] as const;
+
+describe('barycentric elements are served heliocentric', () => {
+  it.each(BARYCENTRIC_HELIO_VECTORS)('%s @ %s', (name, iso, x, y, z) => {
+    const elements = SMALL_BODIES[name]!.orbitalElements!;
+    expect(elements.barycentric).toBe(true);
+    const p = new OrbitalElementsService().getHeliocentricAU(
+      elements,
+      new Date(iso)
+    );
+    const error = Math.hypot(p.x - x, -p.z - y, p.y - z);
+    expect(
+      error,
+      `${name} @ ${iso}: ${error.toExponential(2)} AU off`
+    ).toBeLessThan(1e-4);
   });
 });

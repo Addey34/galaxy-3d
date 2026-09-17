@@ -16,6 +16,8 @@ import {
   JupiterMoons,
   RotationAxis,
 } from 'astronomy-engine';
+// Convention d'échelle de temps (ΔT) installée dans astronomy-engine : cf. timeScale.ts.
+import './timeScale';
 import * as THREE from 'three';
 import type { JupiterMoonKey } from '@/types';
 import { equatorialToScene } from './frames';

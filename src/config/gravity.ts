@@ -31,7 +31,59 @@ export interface BodyDynamics {
    * faisant basculer le choix d'interpolation en cours de trajectoire.
    */
   periodDays?: number;
+  /**
+   * Propager entre deux échantillons au rythme de la période MOYENNE plutôt qu'osculatrice
+   * (cf. `HorizonsEphemerisService._meanMotionScale`). Déclaré corps par corps dans
+   * `MEAN_MOTION_PROPAGATION`, jamais déduit.
+   */
+  meanMotionPropagation?: boolean;
+  /**
+   * Ballant autour d'un barycentre imposé par un compagnon massif. Le fichier du corps est
+   * alors interpolé une fois ce ballant retiré (série lisse), puis `factor × compagnon(t)`
+   * est rajouté, le compagnon venant de son propre binaire. Cf. `REFLEX_MIN_MASS_RATIO`.
+   */
+  reflex?: { companion: string; factor: number };
 }
+
+/**
+ * Un satellite pesant au moins 5 % de sa planète fait tourner celle-ci autour d'un barycentre
+ * hors d'elle. Seul Charon franchit le seuil (12,2 % de Pluton ; la Lune fait 1,2 %). Pluton
+ * décrit alors un cercle de ~2 100 km en 6,39 jours, que des échantillons tous les 4 jours ne
+ * peuvent pas suivre : mesuré contre Horizons, Pluton était à 579 km en moyenne et ses quatre
+ * petites lunes, stockées par rapport au CENTRE de Pluton, à 460-570 km.
+ *
+ * Les échantillons étant des états exacts, le barycentre l'est aussi à chaque échantillon :
+ * B = Pluton + q·Charon, avec q = m_C / (m_P + m_C). On interpole cette série lisse, puis on
+ * rajoute le ballant à la date demandée depuis le binaire de Charon (1,5 km d'erreur) :
+ *   - Pluton (héliocentrique)          : P(t) = B(t) − q·C(t)    -> facteur −q ;
+ *   - Styx, Nix… (relatifs à Pluton)   : S(t) = S_B(t) + q·C(t)  -> facteur +q.
+ * Aucun octet d'asset en plus ; un pas de 0,5 jour aurait coûté 7 Mo pour Pluton seul.
+ */
+export const REFLEX_MIN_MASS_RATIO = 0.05;
+
+/**
+ * Satellites dont l'interpolation dynamique avance au rythme moyen. Choix MESURÉ contre JPL
+ * Horizons (`pnpm ephemeris:validate`, 48 dates sur 1900-2100, erreur moyenne en km, avant ->
+ * après) et retenu seulement au-delà de 15 % de gain :
+ *
+ *   Phobos 39 -> 13     Amalthée 4 418 -> 1 089    Encelade 954 -> 555
+ *   Mimas 1 653 -> 798  Téthys 654 -> 554          Miranda 69 -> 49     Protée 109 -> 54
+ *
+ * Ce sont les lunes proches d'une planète très aplatie, où l'écart osculateur/moyen est un
+ * biais de J2. Ailleurs il n'en est pas un et la correction dégrade (Titan 19 -> 33, Rhéa
+ * 190 -> 282, Triton 40 -> 55) : d'où une liste et non une règle. Un critère « auto-ajusté »
+ * sur les échantillons du fichier a été essayé et rejeté, mesures à l'appui : sur un pas
+ * double il choisit un facteur faux (Titan 19 -> 927 km).
+ */
+export const MEAN_MOTION_PROPAGATION: ReadonlySet<string> = new Set([
+  'phobos',
+  'amalthea',
+  'enceladus',
+  'mimas',
+  'tethys',
+  'miranda',
+  'proteus',
+]);
 
 /**
  * μ (UA³/jour²) par nom de corps.
@@ -74,6 +126,18 @@ export function bodyDynamics(
     if (satellites.length === 0) continue;
 
     const parentMass = body.realData?.massKg ?? 0;
+    const heavy = satellites.find(
+      ([, satellite]) =>
+        parentMass > 0 &&
+        (satellite.realData?.massKg ?? 0) / parentMass >= REFLEX_MIN_MASS_RATIO
+    );
+    const heavyName = heavy?.[0];
+    const q = heavy
+      ? heavy[1].realData!.massKg! / (parentMass + heavy[1].realData!.massKg!)
+      : 0;
+    if (heavyName)
+      parameters[name].reflex = { companion: heavyName, factor: -q };
+
     for (const [satelliteName, satellite] of satellites) {
       const ownDistance = satellite.realData?.distanceAU;
       let interiorMass = parentMass;
@@ -92,6 +156,12 @@ export function bodyDynamics(
       parameters[satelliteName] = {
         mu: gravitationalParameter(interiorMass),
         periodDays: satellite.realData?.orbitPeriodDays,
+        ...(MEAN_MOTION_PROPAGATION.has(satelliteName)
+          ? { meanMotionPropagation: true }
+          : {}),
+        ...(heavyName && satelliteName !== heavyName
+          ? { reflex: { companion: heavyName, factor: q } }
+          : {}),
       };
     }
   }

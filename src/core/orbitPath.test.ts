@@ -114,4 +114,49 @@ describe('OrbitPathBuilder', () => {
       builder.computeOrbitPoints('test', config, new Date(), 8)
     ).toBeNull();
   });
+
+  /**
+   * Éléments barycentriques : le décalage barycentre→Soleil se prend à la date AFFICHÉE pour
+   * tous les points de la ligne, pas à la date de chaque point. Sinon 4 096 appels
+   * astronomy-engine (~17 ms par corps), et la ligne ne passerait plus exactement par le
+   * corps, dont la position prend le barycentre à cette même date.
+   */
+  it.each(['educ', 'explo'] as const)(
+    'prend le repère des éléments à la date affichée (%s)',
+    (mode) => {
+      const frameDates = new Set<number>();
+      const resolver = {
+        resolve: () => new THREE.Vector3(1, 0, 0),
+        precise: () => null,
+        elementsOnly: (_cfg: CelestialBodyConfig, _d: Date, frame: Date) => {
+          frameDates.add(frame.getTime());
+          return new THREE.Vector3(1, 0, 0);
+        },
+      } as unknown as BodyPositionResolver;
+      const builder = new OrbitPathBuilder(
+        resolver,
+        { mode } as ScaleService,
+        { bodies: {} } as CelestialConfig,
+        new Map()
+      );
+      const config = {
+        realData: { orbitPeriodDays: 200_000 },
+        orbitalElements: {
+          semiMajorAxisAU: 68,
+          eccentricity: 0.44,
+          inclinationRad: 0,
+          ascendingNodeRad: 0,
+          argPerihelionRad: 0,
+          meanAnomalyAtEpochRad: 0,
+          epoch: new Date('2000-01-01T12:00:00Z'),
+          barycentric: true,
+        },
+      } as CelestialBodyConfig;
+      const date = new Date('2026-08-02T00:00:00Z');
+      expect(
+        builder.computeOrbitPoints('eris', config, date, 16)
+      ).not.toBeNull();
+      expect([...frameDates]).toEqual([date.getTime()]);
+    }
+  );
 });

@@ -15,7 +15,13 @@
  * normale orbitale (i, Ω). Au-delà de 90°, le corps tourne à rebours de son orbite.
  *
  *   node scripts/derive-small-body-elements.mjs "433;" "433 Eros (A898 PA)" \
- *     --epoch 2461041.5 --pole 11.37/17.22 [--years -10,-1,0,1,10]
+ *     --epoch 2461041.5 --pole 11.37/17.22 [--years -10,-1,0,1,10] [--center 500@0]
+ *
+ * `--center 500@0` : éléments et vecteurs BARYCENTRIQUES (barycentre du Système solaire). À
+ * retenir au-delà de Neptune, où l'osculateur héliocentrique porte le mouvement réflexe du
+ * Soleil (période ~12 ans, celle de Jupiter) et diverge en quelques décennies : mesuré sur
+ * Éris, 2,5e7 km d'erreur moyenne sur 1900-2100 en héliocentrique contre 1,1e4 km en
+ * barycentrique. Le catalogue marque alors le corps `barycentric: true`.
  *
  * Le `;` final est VOULU ici : ce sont des numéros de petits corps (cf. CLAUDE.md, piège
  * « 699; »). La cible est vérifiée par son nom exact et le script échoue sinon.
@@ -33,9 +39,10 @@ const option = (flag) => {
 const epochJd = Number(option('--epoch') ?? 2451545.0);
 const pole = option('--pole')?.split('/').map(Number);
 const years = (option('--years') ?? '-10,-1,0,1,10').split(',').map(Number);
+const center = option('--center') ?? '500@10';
 if (!command || !expectedName) {
   console.error(
-    'usage : node scripts/derive-small-body-elements.mjs <COMMAND> <nom attendu> [--epoch JD] [--pole RA/Dec] [--years a,b,c]'
+    'usage : node scripts/derive-small-body-elements.mjs <COMMAND> <nom attendu> [--epoch JD] [--pole RA/Dec] [--years a,b,c] [--center 500@0]'
   );
   process.exit(1);
 }
@@ -46,7 +53,7 @@ async function horizons(params) {
     COMMAND: `'${command}'`,
     OBJ_DATA: 'NO',
     MAKE_EPHEM: 'YES',
-    CENTER: "'500@10'",
+    CENTER: `'${center}'`,
     REF_PLANE: 'ECLIPTIC',
     REF_SYSTEM: 'J2000',
     OUT_UNITS: 'AU-D',
@@ -102,7 +109,8 @@ if (!(elements.e < 1 && elements.a > 0))
 console.log(
   `    // Éléments osculateurs JPL Horizons EXACTEMENT à cette époque (COMMAND '${command}',`
 );
-console.log(`    // EPHEM_TYPE=ELEMENTS, TLIST=${epochJd}).`);
+console.log(`    // EPHEM_TYPE=ELEMENTS, TLIST=${epochJd}, CENTER=${center}).`);
+if (center === '500@0') console.log('    barycentric: true,');
 for (const [key, value] of Object.entries(elements))
   console.log(`    ${key}: ${value},`);
 console.log(`    epoch: '${jdToIso(epochJd)}',`);
@@ -138,16 +146,25 @@ if (pole) {
 }
 
 // Vecteurs d'état de référence autour de l'époque — la vérité du test de régression.
-const jds = years.map((y) =>
-  (Math.round(epochJd + y * 365.25 - 0.5) + 0.5).toFixed(1)
-);
+// L'époque EXACTE est toujours incluse : à t = époque, la position ne dépend d'aucune
+// constante gravitationnelle, un écart y signe donc un élément faux, pas une perturbation.
+const jds = [
+  ...new Set([
+    epochJd.toFixed(4),
+    ...years.map((y) =>
+      (Math.round(epochJd + y * 365.25 - 0.5) + 0.5).toFixed(4)
+    ),
+  ]),
+];
 const vectors = await horizons({
   EPHEM_TYPE: 'VECTORS',
   VEC_TABLE: '1',
   TLIST: jds.map((jd) => `'${jd}'`).join(' '),
 });
 assertTarget(vectors);
-console.log(`  // Vecteurs Horizons ${command} (UA, écliptique J2000) :`);
+console.log(
+  `  // Vecteurs Horizons ${command} (UA, écliptique J2000, centre ${center}) :`
+);
 for (const [, jd, x, y, z] of block(vectors).matchAll(
   /(\d+\.\d+) = [^\n]*\n\s*X =\s*([-+0-9.E]+) Y =\s*([-+0-9.E]+) Z =\s*([-+0-9.E]+)/g
 ))

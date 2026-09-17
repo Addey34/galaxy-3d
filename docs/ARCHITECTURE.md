@@ -144,7 +144,8 @@ ici, et chacune est verrouillée par un test nommé.
 
 | Source | Pour qui | Remarque |
 | --- | --- | --- |
-| Binaire Horizons (`HorizonsEphemerisService`) | planètes, naines, satellites, sondes | états exacts tous les 4 jours |
+| Binaire Horizons (`HorizonsEphemerisService`) | planètes (dont Jupiter et Uranus depuis le lot 2b), naines, satellites, sondes | états exacts tous les 4 jours, 1 jour pour 5 sondes |
+| Noyau SPK (optionnel, `VITE_SPK_KERNEL_URL`) | lunes de Saturne de SAT441 | prime sur les binaires quand il est actif |
 | `JupiterMoons()` d'astronomy-engine | Io, Europe, Ganymède, Callisto | vecteurs jovicentriques directs |
 | Éphéméride astronomy-engine (`astroBody`) | planètes, Lune, Soleil | théorie planétaire |
 | Éléments képlériens du catalogue | petits corps, et **repli** de tout satellite | cf. « le repli » ci-dessous |
@@ -154,10 +155,26 @@ Une position issue d'un binaire passe d'abord `isPlausibleRelativePosition` /
 n'est pas décorative : c'est son absence qui a laissé Encelade osciller d'un facteur 11,4 en
 distance à Saturne pendant des mois, sous un garde-fou censé attraper exactement ça.
 
+**Tout est mesuré contre JPL Horizons** par `pnpm ephemeris:validate`
+(`scripts/validate-against-horizons.mjs`, rapport dans `reports/`, non versionné) : erreur
+moyenne, médiane, p95, max par corps et par source, en km et en rayons.
+
+### Une seule échelle de temps : `core/timeScale.ts`
+
+Une `Date` est lue en UTC ; TT = UTC + table des secondes intercalaires depuis 1972, **figée à
+69,184 s après 2017** (ce que fait Horizons pour `TIME_TYPE=UT`, et l'hypothèse défendable
+depuis l'abandon des secondes intercalaires voté en 2022) ; avant 1972, UT1 et le ΔT historique
+d'Espenak-Meeus. Le module installe cette convention dans astronomy-engine
+(`SetDeltaTFunction`) à son import, et fournit la seule conversion vers TDB (binaires, SPK).
+Trois chemins avaient chacun la leur : le SPK et astronomy-engine extrapolaient ΔT (383 s en
+2175), d'où Titan à 1 733 km en 2175 pour une erreur de noyau de quelques km, et Mercure à
+51 000 km en 2400. `timeScale.test.ts` exige l'import dans tout module qui passe une date à
+astronomy-engine.
+
 ### Interpolation entre deux échantillons : jamais une cubique seule
 
 Un fichier Horizons est échantillonné à pas fixe. L'interpolation de Hermite entre deux états
-suppose un mouvement **lisse sur l'intervalle** — hypothèse fausse dès que le corps y fait
+suppose un mouvement **lisse sur l'intervalle**, hypothèse fausse dès que le corps y fait
 plusieurs tours. Avec le pas de 4 jours livré, 22 des 24 satellites du catalogue ont une période
 plus courte que ce pas, et la cubique ne reconstruisait alors plus rien : Phobos balayait 2° au
 lieu de 360° sur une période.
@@ -166,22 +183,39 @@ lieu de 360° sur une période.
 révolution, calculé sur la période **catalogue** (stable) et non sur la période osculatrice de
 l'état courant (erratique dès que le mouvement n'est pas à deux corps) :
 
-- **≥ 5 échantillons/orbite** → Hermite cubique, comme avant.
-- **< 5** → `twoBodyPropagation.ts` : les deux états qui encadrent la date sont propagés le long
+- **≥ 100 échantillons/orbite** → Hermite cubique (planètes, sondes).
+- **< 100** → `twoBodyPropagation.ts` : les deux états qui encadrent la date sont propagés le long
   de leur conique, l'un vers l'avant l'autre vers l'arrière, puis fondus en smoothstep. Chaque
   ancre reste exacte à l'échantillon (poids 0 puis 1, dérivée nulle aux deux bouts → raccord C¹),
   donc les perturbations réelles restent portées par les données. **On ne remplace pas les
   données par un modèle, on les relie par la bonne courbe.**
 
-Le seuil de 5 vient d'une mesure des deux branches corps par corps, pas d'une règle du pouce : la
-dynamique domine tant que la cubique n'a pas de quoi décrire un tour, puis passe *derrière* elle
-(les petites lunes de Pluton n'ont pas de mouvement à deux corps autour du centre de Pluton —
-elles orbitent le barycentre Pluton-Charon, que la cubique suit et qu'une conique ignore).
+Le seuil a longtemps valu 5, mesuré alors que la dynamique portait encore les deux biais
+ci-dessous ; remesuré ensuite palier par palier contre Horizons : Hypérion 5 455 → 65 km,
+Néréide 50 → 12, Japet 47 → 39, et Mars (172 éch./orbite), où la cubique repasse devant.
+
+Deux biais retirés, parce qu'ils faisaient perdre la dynamique pour de mauvaises raisons :
+
+- **Le ballant autour d'un barycentre** (`BodyDynamics.reflex`, `config/gravity.ts`). Un
+  satellite de plus de 5 % de sa planète la fait tourner hors d'elle : Charon promène Pluton sur
+  ~2 100 km en 6,39 jours, que 4 jours ne résolvent pas (Pluton 579 km d'erreur, ses petites
+  lunes 460 à 570). Les échantillons étant exacts, le barycentre l'est aussi à chaque
+  échantillon (B = P + q·C) : on interpole la série lisse et on rajoute le ballant à la date
+  depuis le binaire de Charon. Pluton 579 → 1,9 km, sans un octet d'asset.
+- **La période osculatrice sous J2** (`MEAN_MOTION_PROPAGATION`). Près d'une planète aplatie,
+  l'état osculateur surestime a, donc la période (Mimas 5 355 ppm) : la conique est parcourue au
+  rythme moyen, facteur constant par fichier. Liste déclarée et non règle, parce que mesurée
+  corps par corps : ailleurs la correction dégrade (Titan 19 → 33 km).
 
 La propagation a besoin d'un μ : `config/gravity.ts` le dérive des masses du catalogue, avec la
-règle du problème à deux corps relatif — **la masse du parent plus tout ce qui orbite à
+règle du problème à deux corps relatif : **la masse du parent plus tout ce qui orbite à
 l'intérieur de l'orbite du corps, lui compris**. Charon pèse 12,2 % de Pluton : l'ignorer donnait
 13° d'erreur de phase par pas.
+
+**SPK** : la façade synchrone (`SpkWorkerEphemerisProvider`) et le Worker choisissent leurs
+segments par la même fonction, `planSpkSegments` (segment direct, sinon centre commun). La façade
+n'indexait que les paires directes ; SAT441 ne stockant les lunes que par rapport au barycentre
+de Saturne, aucune position n'était jamais demandée, même noyau activé.
 
 ### Le repli képlérien
 
@@ -191,12 +225,28 @@ Deux règles :
 
 - **Le corps central n'est pas le Soleil.** `kepler.ts` déduit sinon le mouvement moyen de la
   constante de Gauss, soit μ☉ : un satellite tournait de 32× à 11 661× trop vite. Passer
-  `periodDays` (la période publiée du catalogue) est obligatoire pour tout `relativeOrbitalElements`.
+  `periodDays` est obligatoire pour tout `relativeOrbitalElements`.
+- **Cette période est la période SIDÉRALE MOYENNE, pas l'osculatrice.** Mimas, Téthys, Dioné,
+  Hypérion, les lunes d'Uranus, Protée, Amalthée et Phobos portaient 2π√(a³/μ) de leur état,
+  faux de 47 à 6 957 ppm : phase aléatoire en quelques semaines. Elle vient de
+  `derive-relative-elements.mjs --mean-motion` (taux moyen mesuré sur 200 ans de binaire, qui
+  retrouve les périodes publiées par JPL), et la rotation des lunes synchrones la reprend au
+  chiffre près (`bodies.test.ts`). Horizon de validité mesuré et tenu par
+  `relativeElements.test.ts` : ≤ 12 % du rayon orbital à 10 ans, sauf Mimas (résonance avec
+  Téthys), Hypérion (chaotique) et Miranda (plan qui précesse). Le repli n'est pas coupé au-delà :
+  `null` gèlerait le corps en Éduc et le cacherait dans sa planète en Explo.
 - **Les angles sont ÉCLIPTIQUES.** Les valeurs publiées le sont souvent par rapport à l'équateur
-  de la planète, et rien ne distingue les deux dans un fichier de config — 8 jeux sur 20 étaient
+  de la planète, et rien ne distingue les deux dans un fichier de config : 8 jeux sur 20 étaient
   dans le mauvais repère. Ne pas les saisir à la main : `scripts/derive-relative-elements.mjs`
-  (`pnpm ephemeris:elements`) les dérive des états exacts des binaires, donc du bon repère par
-  construction.
+  (`pnpm ephemeris:elements`) les dérive des états exacts des binaires.
+
+Pour les petits corps héliocentriques (`config/smallBodies.ts`), chaque jeu est l'osculateur
+Horizons **exactement** à son époque (`pnpm ephemeris:small-body`), comparé à un vecteur
+Horizons à cette époque par `smallBodies.test.ts` (Cérès, Éris, Hauméa, Makémaké et Pluton
+étaient faux dès l'époque : Cérès à 5,8e8 km). Au-delà de Neptune ils sont **barycentriques**
+(`barycentric: true`, `--center 500@0`, μ augmenté des planètes, barycentre ajouté par
+astronomy-engine) : l'osculateur héliocentrique y porte le réflexe solaire de 12 ans (Éris
+2,5e7 km sur 1900-2100 en héliocentrique, 1,1e4 en barycentrique ; l'inverse pour Cérès).
 
 ### Ligne d'orbite : répartir les points, pas le temps
 
@@ -255,6 +305,9 @@ laisse la date du périhélie libre de ±800 jours. Il faudrait `tp` et `q` pour
 | `core/kepler.test.ts` | solveur hyperbolique (résidu, M non réduite, vis-viva, asymptote ν∞) |
 | `config/interstellar.test.ts` | 21 vecteurs Horizons de −20 à +20 ans, Tp dérivé, ligne répartie en F |
 | `core/ephemerisPlausibility.test.ts` | les deux bornes, sur 400 dates par fichier |
+| `core/horizonsInterpolation.test.ts` | vecteurs Horizons ENTRE échantillons : rythme moyen, ballant de Pluton, seuil 100, binaires de Jupiter et d'Uranus |
+| `core/timeScale.test.ts` | convention TT/TDB unique, installée dans astronomy-engine, importée partout |
+| `config/smallBodies.test.ts` | chaque jeu d'éléments contre Horizons à son époque ; décalage barycentrique |
 | `components/celestial/spinDirection.test.ts` | sens de rotation des 52 corps, dans les deux sens du temps |
 
 ## Terminateur jour/nuit — contrat partagé entre couches

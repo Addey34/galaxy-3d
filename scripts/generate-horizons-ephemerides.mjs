@@ -1,6 +1,6 @@
 /* global Buffer, URLSearchParams, fetch, process */
 /** Génère les vecteurs binaires NASA/JPL Horizons consommés par l'application. */
-import { mkdir, readdir, unlink, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, readdir, unlink, writeFile } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -11,6 +11,15 @@ const API_URL = 'https://ssd.jpl.nasa.gov/api/horizons.api';
 const START_TIME = '1900-01-01';
 const STOP_TIME = '2101-01-01';
 const STEP_DAYS = 4;
+/**
+ * Pas plus fin pour les sondes dont la trajectoire a des événements rapides que 4 jours ne
+ * résolvent pas : périhélie de Parker (190 km/s), périjoves de Juno et orbites saturniennes de
+ * Cassini, arrivée de BepiColombo à Mercure, mise en route de JWST. Mesuré contre Horizons
+ * (`pnpm ephemeris:validate`) avant le changement : erreur max 4,3e5 km (Parker), 1,56e6
+ * (Juno), 4,1e5 (Cassini), 1,5e5 (BepiColombo), 1,5e4 (JWST). Ces fichiers pèsent 36 à
+ * 85 Ko à 4 jours : le pas ciblé coûte peu, un pas global aurait quadruplé 29 Mo.
+ */
+const PROBE_EVENT_STEP_DAYS = 1;
 const CENTER_IDS = {
   sun: '10',
   mars: '499',
@@ -37,6 +46,10 @@ const BODIES = [
     expectedName: 'makemake',
     center: 'sun',
   },
+  // Jupiter et Uranus (lot 2b) : astronomy-engine y faisait 23 000 et 111 000 km d'erreur
+  // moyenne contre Horizons sur 1900-2100, héritée telle quelle par toutes leurs lunes.
+  { name: 'jupiter', target: '599', expectedName: 'jupiter', center: 'sun' },
+  { name: 'uranus', target: '799', expectedName: 'uranus', center: 'sun' },
   { name: 'saturn', target: '699', expectedName: 'saturn', center: 'sun' },
   {
     name: 'enceladus',
@@ -166,6 +179,7 @@ const BODIES = [
     center: 'sun',
     startTime: '2018-08-13',
     stopTime: '2029-12-31',
+    stepDays: PROBE_EVENT_STEP_DAYS,
   },
   {
     name: 'jwst',
@@ -175,6 +189,7 @@ const BODIES = [
     center: 'sun',
     startTime: '2021-12-26',
     stopTime: '2031-08-23',
+    stepDays: PROBE_EVENT_STEP_DAYS,
   },
   // Vague C du catalogue (`docs/UNIVERSE_CATALOG.md`). Chaque fenêtre ci-dessous a été LUE
   // dans la réponse de Horizons, pas devinée : demander une fenêtre trop large fait répondre
@@ -204,6 +219,7 @@ const BODIES = [
     // c'est le comportement voulu, une sonde détruite ne doit pas continuer de voler.
     startTime: '1997-10-17',
     stopTime: '2017-09-14',
+    stepDays: PROBE_EVENT_STEP_DAYS,
   },
   {
     name: 'juno',
@@ -212,6 +228,7 @@ const BODIES = [
     center: 'sun',
     startTime: '2011-08-07',
     stopTime: '2028-09-29',
+    stepDays: PROBE_EVENT_STEP_DAYS,
   },
   {
     name: 'rosetta',
@@ -229,6 +246,7 @@ const BODIES = [
     center: 'sun',
     startTime: '2018-10-22',
     stopTime: '2027-04-09',
+    stepDays: PROBE_EVENT_STEP_DAYS,
   },
   {
     name: 'osiris-rex',
@@ -253,7 +271,8 @@ function buildUrl(
   target,
   center,
   startTime = START_TIME,
-  stopTime = STOP_TIME
+  stopTime = STOP_TIME,
+  stepDays = STEP_DAYS
 ) {
   const params = new URLSearchParams({
     format: 'json',
@@ -264,7 +283,10 @@ function buildUrl(
     CENTER: `500@${CENTER_IDS[center]}`,
     START_TIME: `'${startTime}'`,
     STOP_TIME: `'${stopTime}'`,
-    STEP_SIZE: `'${STEP_DAYS} d'`,
+    // Horizons n'accepte qu'un entier d'unités : un pas fractionnaire passe en heures.
+    STEP_SIZE: Number.isInteger(stepDays)
+      ? `'${stepDays} d'`
+      : `'${Math.round(stepDays * 24)} h'`,
     REF_PLANE: 'ECLIPTIC',
     REF_SYSTEM: 'ICRF',
     OUT_UNITS: 'AU-D',
@@ -338,7 +360,13 @@ function assertResolvedTarget(result, body) {
 async function fetchBody(body) {
   process.stdout.write(`Fetching ${body.name}... `);
   const response = await fetch(
-    buildUrl(body.target, body.center, body.startTime, body.stopTime),
+    buildUrl(
+      body.target,
+      body.center,
+      body.startTime,
+      body.stopTime,
+      body.stepDays
+    ),
     { headers: { 'User-Agent': 'Galaxy-Ephemeris-Generator/1.0' } }
   );
   if (!response.ok) throw new Error(`${body.name}: HTTP ${response.status}`);
@@ -364,30 +392,67 @@ async function fetchBody(body) {
 }
 
 await mkdir(OUTPUT_DIR, { recursive: true });
-const manifest = {
-  version: 1,
-  source: 'NASA/JPL Horizons',
-  generatedAt: new Date().toISOString(),
-  frame: 'ECLIPTIC_J2000',
-  center: 'SUN',
-  units: 'AU-D',
-  coverage: { start: START_TIME, stop: STOP_TIME },
-  bodies: {},
-};
 
-for (const body of BODIES) manifest.bodies[body.name] = await fetchBody(body);
-
-const activeFiles = new Set(
-  Object.values(manifest.bodies).map((body) => body.file)
-);
-for (const file of await readdir(OUTPUT_DIR)) {
-  if (file.endsWith('.bin') && !activeFiles.has(file))
-    await unlink(resolve(OUTPUT_DIR, file));
+/**
+ * `--only a,b` : ne régénère QUE ces corps et garde les autres entrées du manifeste telles
+ * quelles. Un `generate` complet refetcherait tout, et chaque solution Horizons raffinée
+ * depuis changerait des fichiers sans rapport avec la modification voulue.
+ */
+const onlyIndex = process.argv.indexOf('--only');
+const only =
+  onlyIndex === -1 ? null : new Set(process.argv[onlyIndex + 1].split(','));
+if (only) {
+  const manifest = JSON.parse(
+    await readFile(resolve(OUTPUT_DIR, 'manifest.json'), 'utf8')
+  );
+  for (const name of only) {
+    const body = BODIES.find((entry) => entry.name === name);
+    if (!body) throw new Error(`--only : corps inconnu « ${name} »`);
+    const previous = manifest.bodies[name]?.file;
+    manifest.bodies[name] = await fetchBody(body);
+    if (previous && previous !== manifest.bodies[name].file)
+      await unlink(resolve(OUTPUT_DIR, previous));
+  }
+  manifest.generatedAt = new Date().toISOString();
+  await writeFile(
+    resolve(OUTPUT_DIR, 'manifest.json'),
+    `${JSON.stringify(manifest, null, 2)}\n`,
+    'utf8'
+  );
+  process.stdout.write(`Updated ${[...only].join(', ')}\n`);
+  process.exitCode = 0;
+  // Pas de process.exit() pendant qu'un fetch peut garder une connexion ouverte (plantage
+  // libuv sous Windows, cf. check-deployed-bundle.mjs) : on sort par le chemin normal.
 }
 
-await writeFile(
-  resolve(OUTPUT_DIR, 'manifest.json'),
-  `${JSON.stringify(manifest, null, 2)}\n`,
-  'utf8'
-);
-process.stdout.write(`Wrote ${OUTPUT_DIR}\n`);
+async function generateAll() {
+  const manifest = {
+    version: 1,
+    source: 'NASA/JPL Horizons',
+    generatedAt: new Date().toISOString(),
+    frame: 'ECLIPTIC_J2000',
+    center: 'SUN',
+    units: 'AU-D',
+    coverage: { start: START_TIME, stop: STOP_TIME },
+    bodies: {},
+  };
+
+  for (const body of BODIES) manifest.bodies[body.name] = await fetchBody(body);
+
+  const activeFiles = new Set(
+    Object.values(manifest.bodies).map((body) => body.file)
+  );
+  for (const file of await readdir(OUTPUT_DIR)) {
+    if (file.endsWith('.bin') && !activeFiles.has(file))
+      await unlink(resolve(OUTPUT_DIR, file));
+  }
+
+  await writeFile(
+    resolve(OUTPUT_DIR, 'manifest.json'),
+    `${JSON.stringify(manifest, null, 2)}\n`,
+    'utf8'
+  );
+  process.stdout.write(`Wrote ${OUTPUT_DIR}\n`);
+}
+
+if (!only) await generateAll();

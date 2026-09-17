@@ -908,7 +908,7 @@ const PROVIDER_TITLES = {
   kepler: 'Éléments képlériens (catalogue, interstellaires)',
   spk: 'SPK SAT441 via la façade de production (`SpkWorkerEphemerisProvider` → Worker)',
   'spk-worker-direct':
-    'SPK SAT441, Worker interrogé directement (hors façade, chemin NON atteint en production)',
+    'SPK SAT441, Worker interrogé directement (hors façade : sépare un défaut du noyau d’un refus de la façade)',
   production:
     'Production : règle de priorité de `BodyPositionResolver`, parent composé',
 };

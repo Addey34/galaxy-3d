@@ -180,6 +180,63 @@ describe('repli képlérien confronté aux binaires Horizons', () => {
    * par des éléments figés). On ne l'interdit pas — on vérifie qu'il reste borné, pour que
    * le repli reste un repli utilisable et non une trajectoire fantaisiste.
    */
+  /**
+   * PHASE, pas seulement rayon. Le test du rayon ci-dessous est aveugle à la phase : un
+   * satellite peut rester à la bonne distance de sa planète en étant de l'autre côté. C'est
+   * exactement ce qui était livré — les périodes du catalogue de Mimas, Téthys, Dioné,
+   * Hypérion, des lunes d'Uranus, de Protée, d'Amalthée et de Phobos étaient des périodes
+   * OSCULATRICES 2π√(a³/μ), fausses de 47 à 6 957 ppm autour d'une planète aplatie : leur
+   * phase devenait aléatoire en quelques semaines (Mimas à 194 % de son rayon orbital à
+   * 100 jours). Elles viennent maintenant de `derive-relative-elements.mjs --mean-motion`.
+   *
+   * Distance à la vérité rapportée au demi-grand axe, pire cas sur 24 dates à ±1 an et
+   * ±10 ans. Mesuré : ≤ 8 % pour 21 satellites (Nix 8 %, dont ~5 % de ballant de Pluton
+   * autour du barycentre ; Phobos 7 %), d'où 12 %. Au-delà, la limite est physique et
+   * déclarée corps par corps plutôt que noyée dans une tolérance commune :
+   *   - Mimas (9 % / 38 %) : résonance 4:2 avec Téthys, libration de 70 ans, ±44° ;
+   *   - Hypérion (22 % / 54 %) : résonance 4:3 avec Titan, orbite chaotique ;
+   *   - Miranda (3 % / 15 %) : orbite inclinée de 4,3° sur l'équateur d'Uranus, dont le
+   *     nœud précesse ; des éléments figés gardent le plan de l'époque.
+   * Hors de la couverture des binaires (avant 1900, après 2100), le repli est donc sur la
+   * bonne orbite mais sa phase n'est garantie que dans ces bornes. On ne le coupe pas :
+   * `null` gèlerait le corps en Éduc et le cacherait au centre de sa planète en Explo, ce
+   * qui n'est pas plus vrai. Afficher cette incertitude relève du modèle temporel (lot 6).
+   */
+  const PHASE_BOUNDS: Record<string, readonly [number, number]> = {
+    mimas: [0.12, 0.55],
+    hyperion: [0.32, 0.8],
+    miranda: [0.12, 0.22],
+  };
+  const DEFAULT_PHASE_BOUNDS = [0.12, 0.12] as const;
+
+  for (const { name, parent, elements, period } of satellites) {
+    it(`${name} garde sa phase à 1 et 10 ans de l’époque`, () => {
+      const [oneYear, tenYears] = PHASE_BOUNDS[name] ?? DEFAULT_PHASE_BOUNDS;
+      const worst = (years: number): number => {
+        let max = 0;
+        for (let k = 0; k < 24; k++) {
+          const u = 0.3 + (0.7 * k) / 23;
+          const date = new Date(
+            EPOCH.getTime() + (k % 2 ? 1 : -1) * u * years * 365.25 * 86_400_000
+          );
+          const truth = horizons.getParentRelativeAU(name, parent, date);
+          if (!truth) continue;
+          const model = elementsService.getHeliocentricAU(
+            { ...elements, periodDays: period },
+            date
+          );
+          max = Math.max(
+            max,
+            model.distanceTo(truth) / elements.semiMajorAxisAU
+          );
+        }
+        return max;
+      };
+      expect(worst(1), `${name} : phase à 1 an`).toBeLessThan(oneYear);
+      expect(worst(10), `${name} : phase à 10 ans`).toBeLessThan(tenYears);
+    });
+  }
+
   it('reste sur la bonne orbite un an après l’époque', () => {
     for (const { name, parent, elements, period } of satellites) {
       const { maxRadiusRatio } = compare(name, parent, elements, period, 365);

@@ -15,6 +15,8 @@
  */
 import * as THREE from 'three';
 import { Body, Equator, Observer, SiderealTime } from 'astronomy-engine';
+// Convention d'échelle de temps (ΔT) installée dans astronomy-engine : cf. timeScale.ts.
+import './timeScale';
 import type { CelestialBodyConfig, CelestialConfig } from '@/types';
 import type { CelestialBodies } from '@/components/systems/SceneSystem';
 import type { SimulationClock } from './SimulationClock';

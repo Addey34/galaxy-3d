@@ -3,10 +3,17 @@ import { Body } from 'astronomy-engine';
 import { CELESTIAL_CONFIG } from './bodies';
 
 const NEXT_MOONS = [
-  ['phobos', 'Phobos', 'mars', Body.Mars, 0.0000626680043, 0.3187],
-  ['deimos', 'Deimos', 'mars', Body.Mars, 0.00015680036, 1.2625],
-  ['triton', 'Triton', 'neptune', Body.Neptune, 0.00237169151, 5.876994],
-  ['charon', 'Charon', 'pluto', undefined, 0.000131017908, 6.387222],
+  ['phobos', 'Phobos', 'mars', Body.Mars, 0.0000626680043, 0.31891012704801625],
+  ['deimos', 'Deimos', 'mars', Body.Mars, 0.00015680036, 1.2624407921255993],
+  [
+    'triton',
+    'Triton',
+    'neptune',
+    Body.Neptune,
+    0.00237169151,
+    5.876844606364144,
+  ],
+  ['charon', 'Charon', 'pluto', undefined, 0.000131017908, 6.38722209972658],
 ] as const;
 
 /** Résolutions de surface réellement livrées par corps (voir public/assets/textures). */
