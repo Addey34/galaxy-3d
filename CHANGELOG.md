@@ -4,7 +4,7 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Les
 suivent [SemVer](https://semver.org/lang/fr/). L'historique détaillé reste celui de git : ce
 fichier résume ce qui change pour une personne qui utilise ou cite Galaxy.
 
-## [0.9.0] — non publiée (« Scientific Preview »)
+## [0.9.0] - non publiée (« Scientific Preview »)
 
 Première version numérotée. Elle regroupe tout ce qui a été livré avant la numérotation.
 

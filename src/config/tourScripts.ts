@@ -31,13 +31,13 @@ const eclipseIntro: LocalizedText = {
   fr: 'Une éclipse solaire totale se produit quand la Lune passe exactement entre le Soleil et la Terre, projetant son ombre sur notre planète. On vient de sauter à une vraie date d’éclipse à venir.',
 };
 const eclipseMoon: LocalizedText = {
-  en: 'From the Moon, you can see the shadow it casts on Earth — the same eclipse shadow rendering used for the real-time view.',
-  fr: 'Depuis la Lune, on voit l’ombre qu’elle projette sur la Terre — le même rendu d’ombre d’éclipse qu’en vue temps réel.',
+  en: 'From the Moon, you can see the shadow it casts on Earth, with the same eclipse shadow rendering used for the real-time view.',
+  fr: 'Depuis la Lune, on voit l’ombre qu’elle projette sur la Terre, avec le même rendu d’ombre d’éclipse qu’en vue temps réel.',
 };
 
 const galileanIntro: LocalizedText = {
-  en: 'Jupiter and its four largest moons — Io, Europa, Ganymede and Callisto — discovered by Galileo in 1610. Time is now sped up so you can watch them orbit.',
-  fr: 'Jupiter et ses quatre plus grandes lunes — Io, Europe, Ganymède et Callisto — découvertes par Galilée en 1610. Le temps est accéléré pour observer leur ronde.',
+  en: 'Jupiter and its four largest moons (Io, Europa, Ganymede and Callisto), discovered by Galileo in 1610. Time is now sped up so you can watch them orbit.',
+  fr: 'Jupiter et ses quatre plus grandes lunes (Io, Europe, Ganymède et Callisto), découvertes par Galilée en 1610. Le temps est accéléré pour observer leur ronde.',
 };
 
 const kuiperIntro: LocalizedText = {
@@ -49,8 +49,8 @@ const kuiperPluto: LocalizedText = {
   fr: 'Pluton, le premier objet de la ceinture de Kuiper découvert (1930), avec sa grande lune Charon.',
 };
 const kuiperEris: LocalizedText = {
-  en: 'Eris, almost as massive as Pluto — its discovery in 2005 triggered the debate that redefined "planet".',
-  fr: 'Éris, presque aussi massive que Pluton — sa découverte en 2005 a déclenché le débat qui a redéfini le mot « planète ».',
+  en: 'Eris, almost as massive as Pluto: its discovery in 2005 triggered the debate that redefined "planet".',
+  fr: 'Éris, presque aussi massive que Pluton : sa découverte en 2005 a déclenché le débat qui a redéfini le mot « planète ».',
 };
 const kuiperHaumea: LocalizedText = {
   en: 'Haumea, an elongated dwarf planet spinning so fast (under 4 hours) it’s shaped like a rugby ball.',

@@ -22,7 +22,7 @@ test('la fiche affiche une donnée non publiée au lieu de masquer la ligne', as
     localStorage.setItem('ssv-locale', 'fr');
   });
 
-  // Ganymède : masse et gravité connues (dérivées du GM publié par JPL), température non —
+  // Ganymède : masse et gravité connues (dérivées du GM publié par JPL), température non :
   // la NASA n'en publie qu'une plage.
   await page.goto('/?body=ganymede');
   await expect(page.locator('#loader')).toBeHidden({ timeout: 30_000 });
@@ -32,16 +32,32 @@ test('la fiche affiche une donnée non publiée au lieu de masquer la ligne', as
 
   const unknown = panel.locator('dd.is-unknown');
   await expect(unknown).toHaveCount(1);
-  // Un tiret cadratin, pas un zéro ni une chaîne vide : les deux se liraient comme une mesure.
-  await expect(unknown).toHaveText('\u2014');
+  // Une marque traduite (« n.d. »), pas un zéro ni une chaîne vide : les deux se liraient comme
+  // une mesure. Plus de tiret cadratin : aucun texte affiché n'en emploie
+  // (`src/seo/publishedText.test.ts`).
+  await expect(unknown).toHaveText('n.d.');
 
-  // La raison doit accompagner le tiret, sinon il n'informe de rien.
+  // La raison doit accompagner la marque, sinon elle n'informe de rien.
   const reason = await unknown.getAttribute('title');
   expect(reason).toContain('Donnée non publiée');
   expect(reason!.length).toBeGreaterThan(40);
-  // Et elle doit être annoncée : un tiret seul ne dit rien à un lecteur d'écran.
+  // Et elle doit être annoncée : une abréviation seule ne dit rien à un lecteur d'écran.
   expect(await unknown.getAttribute('aria-label')).toBe(reason);
 
   // Les valeurs réellement connues restent affichées normalement, elles.
   await expect(panel.getByText('1,43 m/s²')).toBeVisible();
+});
+
+test('la marque de donnée non publiée suit la langue', async ({ page }) => {
+  await blockExternalNetwork(page);
+  await page.addInitScript(() => {
+    localStorage.setItem('ssv-guided-tour-v1', '1');
+    localStorage.setItem('ssv-explo-tour-nudge-v1', '1');
+    localStorage.setItem('ssv-locale', 'en');
+  });
+  await page.goto('/?body=ganymede');
+  await expect(page.locator('#loader')).toBeHidden({ timeout: 30_000 });
+  const unknown = page.locator('#body-info dd.is-unknown');
+  await expect(unknown).toHaveText('n/a');
+  expect(await unknown.getAttribute('title')).toContain('No published value');
 });

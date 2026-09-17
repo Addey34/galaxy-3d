@@ -360,14 +360,14 @@ export function bodyLandingPages(
       // était déjà en tête, donc la coupe mangeait le nom du site plutôt que le sujet — mais
       // une ellipse en fin de titre reste du bruit. Google ajoute lui-même le nom du site quand
       // il le juge utile ; le budget est mieux dépensé sur ce qui distingue la page.
-      title: `${displayName} in 3D — live position and orbit`,
+      title: `${displayName} in 3D: live position and orbit`,
       // La phrase d'appel est ajoutée APRÈS la troncature : sinon c'est elle qui se fait
       // couper en plein milieu dans les résultats de recherche, ce qui est exactement
       // l'endroit où elle doit être lisible.
       description: description
         ? `${trimForMeta(description, 92)} See ${displayName} in 3D, at its real position right now.`
         : `${displayName} in an interactive 3D solar system, at its real position right now, from NASA/JPL ephemeris data.`,
-      heading: `${displayName} in 3D — live position and orbit`,
+      heading: `${displayName} in 3D: live position and orbit`,
       summary: description,
       facts: bodyFacts(cfg, parent ? displayOf(parent) : undefined),
       // Barre finale VOULUE. La page est `dist/<slug>/index.html` : Firebase sert un index de
@@ -379,7 +379,7 @@ export function bodyLandingPages(
       image: `${origin}/social/${slug}.jpg`,
       // Décrit ce que l'image MONTRE, pas ce que la page raconte : c'est un texte alternatif,
       // lu à voix haute par un lecteur d'écran sur une carte de partage.
-      imageAlt: `${displayName} rendered as a 3D sphere — Galaxy`,
+      imageAlt: `${displayName} rendered as a 3D sphere by Galaxy`,
       visual: bodyVisual(cfg, name),
     });
   }

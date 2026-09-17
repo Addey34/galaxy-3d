@@ -1,4 +1,4 @@
-# Galaxy — Système solaire 3D
+# Galaxy : système solaire 3D
 
 **🌍 [Démo en ligne → galaxy.adrianguichard.dev](https://galaxy.adrianguichard.dev/)**
 
@@ -6,7 +6,7 @@ Visualisateur interactif du système solaire en temps réel, développé en Type
 
 ## Aperçu
 
-- Positions planetaires calculees via astronomy-engine, completees par des vecteurs NASA/JPL Horizons locaux pour Ceres, Eris, Haumea, Makemake, Saturne et ses lunes, Mars et ses lunes, Neptune/Triton et Pluto/Charon (1900-2100, interpolation position-vitesse)
+- Positions réelles : fichiers NASA/JPL Horizons embarqués (planètes, planètes naines, lunes et sondes), astronomy-engine et éléments képlériens ; la source et l'erreur mesurée de chaque corps sont publiées sur [/methodology](https://galaxy.adrianguichard.dev/methodology/)
 - Time travel : naviguer librement dans le temps passé et futur
 - Planètes multi-couches : surface PBR, nuages, atmosphère, lueurs nocturnes (shader GLSL)
 - Halo lumineux rond autour du Soleil, des étoiles et des lumières de ville (qualité haute), chaque source déclarée avec sa propre intensité
@@ -346,13 +346,13 @@ Réglages moteur dans `src/config/engine.ts`, catalogue des corps dans `src/conf
 - **Vitest** : tests unitaires des modules mathématiques purs (`src/**/*.test.ts`) ; `pnpm verify` = types + lint + formatage + tests
 - **ESLint** : `eslint.config.js` (flat config, typescript-eslint recommended non-type-checked) ; `pnpm lint` / `pnpm lint:fix`, intégré à `pnpm verify`
 - **Prettier** : règles dans `.prettierrc`, commandes `pnpm format` et `pnpm format:check` ; l'arbre entier est conforme
-- **Playwright** : suite de scénarios navigateur dans `e2e/` (boot, navigation, i18n, accessibilité, WebXR, météo, etc. — voir `pnpm exec playwright test --list` pour le compte à jour) ; le serveur Vite de test utilise le port réservé 5273
+- **Playwright** : suite de scénarios navigateur dans `e2e/` (boot, navigation, i18n, accessibilité, WebXR, météo, etc. ; voir `pnpm exec playwright test --list` pour le compte à jour) ; le serveur Vite de test utilise le port réservé 5273
 - Aucun seuil de couverture configuré
 
 ## Qualité et limites actuelles
 
-- `pnpm verify` passe (types + lint + formatage + tests unitaires) — voir `pnpm test` pour le compte à jour, ces chiffres évoluent trop souvent pour rester figés ici ;
-- `pnpm build` passe sans avertissement de taille : `three`, `astronomy-engine` et `tween` sont séparés du chunk applicatif, qui reste autour de 107 kB gzippés (345 kB avant compression — c'est le premier chiffre qui décrit ce qui transite réellement).
+- `pnpm verify` passe (types + lint + formatage + tests unitaires) ; voir `pnpm test` pour le compte à jour, ces chiffres évoluent trop souvent pour rester figés ici ;
+- `pnpm build` passe sans avertissement de taille : `three`, `astronomy-engine` et `tween` sont séparés du chunk applicatif, qui reste autour de 107 kB gzippés (345 kB avant compression ; c'est le premier chiffre qui décrit ce qui transite réellement).
 - Le mode Exploration est actif. Les vols caméra concurrents sont annulés et la cible suivie reste centrée, y compris à vitesse accélérée.
 - `IS_MOBILE` reste figé pour les réglages créés à l'initialisation (anticrénelage, ombres, textures) ; seul le plafond de pixel ratio est recalculé au resize.
 - `frame: 'parentRelative'` calcule `helio(corps) − helio(parent)`. Les lunes joviennes viennent d'Astronomy Engine ; les lunes saturniennes utilisent les vecteurs locaux NASA/JPL Horizons issus de SAT441.
@@ -382,7 +382,7 @@ sur GPU physique.
 
 ## Contribuer
 
-Voir [`CONTRIBUTING.md`](CONTRIBUTING.md) — en particulier la marche à suivre pour ajouter un
+Voir [`CONTRIBUTING.md`](CONTRIBUTING.md), en particulier la marche à suivre pour ajouter un
 corps céleste (catalogue + textures + vérification), le workflow de PR et les gabarits d'issues
 (`.github/ISSUE_TEMPLATE/`).
 

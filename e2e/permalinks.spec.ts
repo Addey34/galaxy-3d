@@ -105,7 +105,7 @@ test('le titre de l’onglet suit le chemin, dans les deux langues', async ({
   const jupiter = page.locator('#orbit-jupiter');
   await expect(jupiter).toBeVisible();
   await jupiter.click();
-  await expect(page).toHaveTitle('Jupiter in 3D — live position and orbit');
+  await expect(page).toHaveTitle('Jupiter in 3D: live position and orbit');
   // Que ce titre anglais soit MOT POUR MOT celui de la page statique se vérifie en unitaire
   // (`src/seo/titleParity.test.ts`) et non ici : le serveur de développement ne génère pas les
   // pages par corps, elles sont produites par le greffon de build. Une requête vers
@@ -125,6 +125,6 @@ test('le titre de l’onglet suit le chemin, dans les deux langues', async ({
   // portent leur locale en attribut, il n'y a pas d'identifiant `#lang-fr`.
   await page.locator('#lang-switch .lang-btn[data-locale="fr"]').click();
   await expect(page).toHaveTitle(
-    'Jupiter en 3D — position et orbite en direct'
+    'Jupiter en 3D : position et orbite en direct'
   );
 });

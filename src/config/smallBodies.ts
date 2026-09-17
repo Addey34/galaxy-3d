@@ -771,8 +771,8 @@ export const SMALL_BODY_ELEMENTS: readonly SmallBodyElements[] = [
     meanTempC: -229,
     moonCount: 1,
     description: {
-      en: 'A large Kuiper Belt object that surprised astronomers in 2023 with a system of rings orbiting far beyond the distance where rings should be stable — its moon Weywot may be responsible for keeping them from collapsing.',
-      fr: 'Un grand objet de la ceinture de Kuiper qui a surpris les astronomes en 2023 : un système d’anneaux en orbite bien au-delà de la distance où des anneaux sont censés rester stables — sa lune Weywot pourrait les empêcher de s’effondrer.',
+      en: 'A large Kuiper Belt object that surprised astronomers in 2023 with a system of rings orbiting far beyond the distance where rings should be stable; its moon Weywot may be responsible for keeping them from collapsing.',
+      fr: 'Un grand objet de la ceinture de Kuiper qui a surpris les astronomes en 2023 : un système d’anneaux en orbite bien au-delà de la distance où des anneaux sont censés rester stables ; sa lune Weywot pourrait les empêcher de s’effondrer.',
     },
     wiki: {
       en: 'https://en.wikipedia.org/wiki/Quaoar',

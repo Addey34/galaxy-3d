@@ -2,7 +2,7 @@ cff-version: 1.2.0
 message: >-
   Si vous utilisez Galaxy dans un travail pédagogique ou scientifique, merci de le citer
   ainsi. If you use Galaxy in teaching or research, please cite it as below.
-title: 'Galaxy — 3D Solar System'
+title: 'Galaxy: 3D Solar System'
 abstract: >-
   Interactive real-time 3D solar system visualizer. Positions from astronomy-engine and
   NASA/JPL Horizons ephemerides, Keplerian and hyperbolic propagation for small bodies and

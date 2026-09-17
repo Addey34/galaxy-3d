@@ -20,7 +20,7 @@ export const messages: Record<Locale, Dict> = {
     // Titre de l'onglet, tenu à jour pendant la navigation (cf. ui/documentTitle). La version
     // anglaise reprend mot pour mot celle que `src/seo` écrit dans les pages statiques, pour
     // qu'un rechargement ne change rien de visible.
-    'title.body': '{name} in 3D — live position and orbit',
+    'title.body': '{name} in 3D: live position and orbit',
     // Pages d'éclipse (`/eclipse/2026-08-12/`) : une clé par combinaison type × astre que le
     // calcul produit réellement — `src/seo/titleParity.test.ts` le vérifie sur les 53 éclipses.
     'title.eclipse.solar.total': 'Total solar eclipse of {date} in 3D',
@@ -29,8 +29,7 @@ export const messages: Record<Locale, Dict> = {
     'title.eclipse.lunar.total': 'Total lunar eclipse of {date} in 3D',
     'title.eclipse.lunar.partial': 'Partial lunar eclipse of {date} in 3D',
     'title.eclipse.lunar.penumbral': 'Penumbral lunar eclipse of {date} in 3D',
-    'title.overview':
-      'Galaxy — 3D Solar System: Real-Time Interactive Visualizer',
+    'title.overview': 'Galaxy: Real-Time Interactive 3D Solar System',
     'loader.init': 'Initializing...',
     'loader.core': 'Loading core components…',
     'loader.scene': 'Building scene…',
@@ -284,7 +283,7 @@ export const messages: Record<Locale, Dict> = {
     'weather.clouds.note':
       "Real cloud cover from NASA satellite imagery (day's snapshot).",
     'weather.cloudsModel.note':
-      'Modelled cloud cover (Open-Meteo): gap-free worldwide, supports past and forecast — pick this for live/time-travel.',
+      'Modelled cloud cover (Open-Meteo): gap-free worldwide, supports past and forecast; pick this for live view and time travel.',
     'weather.precip.note':
       'Observed NASA IMERG V07 rain: its native alpha mask is preserved; no polar extrapolation is added.',
     'weather.precip.legendLo': 'Light',
@@ -345,6 +344,7 @@ export const messages: Record<Locale, Dict> = {
     'stat.knownMoons': 'Known moons',
     'stat.axialTilt': 'Axial tilt',
     'stat.unknown': 'No published value',
+    'stat.unknown.value': 'n/a',
     'subtitle.star': 'Star of the Solar System',
     'subtitle.moon': 'Natural satellite',
     'subtitle.dwarf': 'Dwarf planet',
@@ -365,7 +365,7 @@ export const messages: Record<Locale, Dict> = {
 
   fr: {
     // ── Écran de chargement ──
-    'title.body': '{name} en 3D — position et orbite en direct',
+    'title.body': '{name} en 3D : position et orbite en direct',
     'title.eclipse.solar.total': 'Éclipse totale de Soleil du {date} en 3D',
     'title.eclipse.solar.annular':
       'Éclipse annulaire de Soleil du {date} en 3D',
@@ -375,8 +375,7 @@ export const messages: Record<Locale, Dict> = {
     'title.eclipse.lunar.partial': 'Éclipse partielle de Lune du {date} en 3D',
     'title.eclipse.lunar.penumbral':
       'Éclipse de Lune par la pénombre du {date} en 3D',
-    'title.overview':
-      'Système solaire en 3D : visualiseur interactif en temps réel',
+    'title.overview': 'Galaxy : système solaire 3D interactif en temps réel',
     'loader.init': 'Initialisation…',
     'loader.core': 'Chargement des composants…',
     'loader.scene': 'Construction de la scène…',
@@ -636,7 +635,7 @@ export const messages: Record<Locale, Dict> = {
     'weather.clouds.note':
       'Couverture nuageuse réelle, imagerie satellite NASA (image du jour).',
     'weather.cloudsModel.note':
-      'Couverture nuageuse modélisée (Open-Meteo) : mondiale sans trou, gère passé et prévision — à choisir pour le direct / voyage dans le temps.',
+      'Couverture nuageuse modélisée (Open-Meteo) : mondiale sans trou, gère passé et prévision ; à choisir pour le direct et le voyage dans le temps.',
     'weather.precip.note':
       'Pluie observée NASA IMERG V07 : son masque alpha natif est conservé ; aucune extrapolation polaire.',
     'weather.precip.legendLo': 'Faible',
@@ -697,6 +696,7 @@ export const messages: Record<Locale, Dict> = {
     'stat.knownMoons': 'Lunes connues',
     'stat.axialTilt': 'Inclinaison axiale',
     'stat.unknown': 'Donnée non publiée',
+    'stat.unknown.value': 'n.d.',
     'subtitle.star': 'Étoile du Système solaire',
     'subtitle.moon': 'Satellite naturel',
     'subtitle.dwarf': 'Planète naine',

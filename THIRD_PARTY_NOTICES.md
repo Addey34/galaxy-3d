@@ -68,7 +68,7 @@ when the camera comes close, capped by the graphics quality tier.
 `public/assets/models/bennu/bennu_shape_{1k,2k,4k}.glb`: asteroid (101955) Bennu. 4,113 / 15,633 /
 62,833 triangles (73 KiB / 274 KiB / 1.1 MiB).
 
-- **Source**: NASA/Goddard Scientific Visualization Studio, *Global Bennu 3D Model — OLA v20 PTM*
+- **Source**: NASA/Goddard Scientific Visualization Studio, *Global Bennu 3D Model, OLA v20 PTM*
   (<https://svs.gsfc.nasa.gov/5069>).
 - **Data credit**: NASA / University of Arizona / CSA / York University / MDA, from the
   OSIRIS-REx laser altimeter (OLA). Public domain, as NASA-produced work.

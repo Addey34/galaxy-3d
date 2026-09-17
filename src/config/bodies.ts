@@ -983,8 +983,8 @@ export const CELESTIAL_CONFIG: CelestialConfig = {
             meanTempC: -180,
             moonCount: 0,
             description: {
-              en: 'A spongy, porous outer moon tumbling chaotically through space — its rotation never settles into a fixed period.',
-              fr: 'Une lune extérieure spongieuse et poreuse, qui bascule de façon chaotique dans l’espace — sa rotation ne se stabilise jamais sur une période fixe.',
+              en: 'A spongy, porous outer moon tumbling chaotically through space: its rotation never settles into a fixed period.',
+              fr: 'Une lune extérieure spongieuse et poreuse, qui bascule de façon chaotique dans l’espace : sa rotation ne se stabilise jamais sur une période fixe.',
             },
             wiki: {
               en: 'https://en.wikipedia.org/wiki/Hyperion_(moon)',

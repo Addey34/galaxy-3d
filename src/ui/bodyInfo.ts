@@ -147,8 +147,11 @@ interface Stat {
   note?: string;
 }
 
-/** Tiret cadratin : marque une valeur non publiee, distincte d'un zero ou d'une absence. */
-const UNKNOWN_MARK = '—';
+/**
+ * Marque une valeur non publiée, distincte d'un zéro ou d'une absence. Traduite (« n/a »,
+ * « n.d. ») plutôt qu'un tiret cadratin, qu'aucun texte affiché n'emploie.
+ */
+const unknownMark = (): string => t('stat.unknown.value');
 
 /** Exportée pour les tests : les libellés sont une affirmation scientifique, pas une décoration. */
 export function bodyStats(name: string, cfg: CelestialBodyConfig): Stat[] {
@@ -169,8 +172,8 @@ export function bodyStats(name: string, cfg: CelestialBodyConfig): Stat[] {
     if (!reason) return false;
     stats.push({
       label,
-      value: UNKNOWN_MARK,
-      note: `${t('stat.unknown')} — ${reason[getLocale() === 'fr' ? 'fr' : 'en']}`,
+      value: unknownMark(),
+      note: `${t('stat.unknown')} : ${reason[getLocale() === 'fr' ? 'fr' : 'en']}`,
     });
     return true;
   };

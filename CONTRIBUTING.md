@@ -263,7 +263,9 @@ projet autant qu'un calcul. Avant de la proposer :
   la page dérivée (`/methodology`, `/sources`) plutôt que de figer une liste.
 - **Lisez les licences à la source**, datez la lecture, et vérifiez que l'attribution exigée
   s'affiche réellement dans l'application.
-- **Relisez le rendu dans les deux langues**, sans tiret cadratin.
+- **Relisez le rendu dans les deux langues**, sans tiret cadratin (« — ») ni demi-cadratin
+  entouré d'espaces : deux-points, virgule, parenthèses ou point. `src/seo/publishedText.test.ts`
+  le vérifie sur les chaînes de l'application, les pages HTML et les fichiers publics du dépôt.
 - **Pour un changement visible**, lancez axe (`pnpm test:a11y`), regardez la page à 390 px de
   large, et lancez la suite e2e complète (`pnpm test:e2e`).
 
