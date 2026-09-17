@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { CELESTIAL_CONFIG } from '@/config/bodies';
@@ -8,19 +8,27 @@ import { MIN_SAMPLES_PER_ORBIT_FOR_HERMITE } from '@/core/HorizonsEphemerisServi
 import summaryJson from './horizons-validation-summary.json';
 import manifestJson from '../../public/assets/ephemerides/manifest.json';
 import textureSources from '../../scripts/texture-sources.json';
+import firebaseJson from '../../firebase.json';
+import { ILLUSTRATIVE_SURFACES } from '@/config/catalog';
+import { OBLIQUITY_RAD } from '@/core/frames';
 import {
   DOC_SLUGS,
   docPath,
   formatQuantity,
   renderDocPage,
+  socialImageFromHtml,
 } from './documentPage';
 import {
   assertPublishableSummary,
   methodologyPages,
+  synchronousSpinDrifts,
   type EphemerisManifest,
   type ValidationSummary,
 } from './methodologyPage';
 import {
+  connectHostsFromFirebase,
+  LIVE_DATA_SERVICES,
+  liveServiceMismatch,
   missingTextureProvenance,
   shippedTextureLayers,
   sourcesPages,
@@ -44,6 +52,9 @@ import { messages } from '@/i18n/locales';
 const ORIGIN = 'https://example.test';
 const ROOT = resolve(import.meta.dirname, '..', '..');
 const summary = summaryJson as unknown as ValidationSummary;
+const indexHtml = readFileSync(resolve(ROOT, 'index.html'), 'utf-8');
+const socialImage = socialImageFromHtml(indexHtml);
+const connectHosts = connectHostsFromFirebase(firebaseJson);
 const manifest = manifestJson as unknown as EphemerisManifest;
 const textures = (textureSources as { imported: TextureProvenance[] }).imported;
 
@@ -65,6 +76,7 @@ const sourcesInput: SourcesInput = {
   repositoryBlobUrl: 'https://github.com/example/repo/blob/main',
   updated: '2026-09-17',
   origin: ORIGIN,
+  connectHosts,
 };
 const sources = sourcesPages(sourcesInput);
 const allPages = [...methodology, ...sources];
@@ -127,12 +139,12 @@ describe('page /methodology', () => {
       config: CELESTIAL_CONFIG,
       origin: ORIGIN,
     });
-    expect(en!.body).toContain('every 7 days for natural bodies');
+    expect(en!.body).toContain('every 7 days, from');
     expect(methodology[0]!.body).not.toContain('every 7 days');
     expect(en!.body).toContain(`K = ${SQRT_K}`);
     expect(en!.body).toContain('TT − UTC = 69.184 s');
     expect(en!.body).toContain(
-      `from ${MIN_SAMPLES_PER_ORBIT_FOR_HERMITE} samples per orbit`
+      `From ${MIN_SAMPLES_PER_ORBIT_FOR_HERMITE} samples per orbit upwards`
     );
   });
 
@@ -171,10 +183,16 @@ describe('page /sources', () => {
       (cfg) => cfg.model
     );
     expect(models.length).toBeGreaterThanOrEqual(5);
-    for (const cfg of models)
-      expect(en!.body).toContain(
-        cfg.model!.credit.replace(/&/g, '&amp;').replace(/"/g, '&quot;')
-      );
+    const [, fr] = sources;
+    for (const cfg of models) {
+      // Chaque langue affiche SON crédit : la page anglaise ne cite pas le texte français.
+      const escape = (text: string): string =>
+        text.replace(/&/g, '&amp;').replace(/"/g, '&quot;');
+      expect(en!.body).toContain(escape(cfg.model!.credit.en));
+      expect(fr!.body).toContain(escape(cfg.model!.credit.fr));
+      if (cfg.model!.credit.en !== cfg.model!.credit.fr)
+        expect(en!.body).not.toContain(escape(cfg.model!.credit.fr));
+    }
   });
 
   it('liste chaque fichier d’éphémérides avec sa cible Horizons', () => {
@@ -251,7 +269,14 @@ describe('documents et routage', () => {
       '/sources/',
     ]);
     for (const page of allPages) {
-      const html = renderDocPage(page, ORIGIN);
+      const html = renderDocPage(page, ORIGIN, socialImage);
+      // Image de partage : celle du site, lue dans index.html, jamais recopiée.
+      expect(html).toContain(
+        `<meta property="og:image" content="${socialImage.url}" />`
+      );
+      expect(html).toContain(
+        '<meta name="twitter:card" content="summary_large_image" />'
+      );
       expect(html).toContain(`<html lang="${page.locale}">`);
       expect(html).toContain(
         `<link rel="canonical" href="${page.canonical}" />`
@@ -317,5 +342,150 @@ describe('documents et routage', () => {
           path
         ).toBe(true);
     }
+  });
+});
+
+describe('affirmations de /methodology confrontées au code', () => {
+  const [en, fr] = methodology;
+
+  it('met le SPK AVANT les fichiers Horizons, comme la production', () => {
+    // La première version de la page disait l'inverse. L'ordre réel est celui des arguments de
+    // `FallbackPreciseEphemerisProvider(primaire, repli)` dans `SolarSystemApp.ts`.
+    const app = readFileSync(resolve(ROOT, 'src/SolarSystemApp.ts'), 'utf-8');
+    expect(app).toMatch(
+      /new FallbackPreciseEphemerisProvider\(\s*this\._spkProvider,\s*this\._horizonsEphemeris/
+    );
+    for (const page of [en!, fr!]) {
+      const list = /<ol class="doc-list">(.*?)<\/ol>/s.exec(page.body)![1]!;
+      const items = list.split('<li>').slice(1);
+      expect(items[0]).toMatch(/SPK/);
+      expect(items[1]).toMatch(/Horizons/);
+    }
+  });
+
+  it('publie l’obliquité qui définit l’écliptique d’Horizons', () => {
+    expect((OBLIQUITY_RAD * 180 * 3600) / Math.PI).toBeCloseTo(84381.448, 6);
+    expect(en!.body).toContain('84381.448″');
+    expect(fr!.body).toContain('84381,448″');
+  });
+
+  it('ne dit pas que le mode Éducatif conserve les tailles', () => {
+    expect(en!.body).toContain('enlarged teaching sizes');
+    expect(fr!.body).toContain('tailles pédagogiques agrandies');
+  });
+
+  it('calcule la dérive de rotation des lunes presque synchrones', () => {
+    const drifts = synchronousSpinDrifts(CELESTIAL_CONFIG);
+    const names = drifts.map((d) => d.body);
+    // Les lunes verrouillées exactement (bodies.test.ts) n'y sont pas ; celles qui dérivent, si.
+    expect(names).toContain('io');
+    expect(names).not.toContain('titan');
+    for (const drift of drifts) {
+      expect(drift.degreesPerYear).toBeGreaterThan(0);
+      expect(en!.body).toContain(formatQuantity(drift.degreesPerYear, 'en'));
+    }
+  });
+
+  it('dit que la Terre est au barycentre Terre-Lune, comme le catalogue', () => {
+    const earth = flattenBodies(CELESTIAL_CONFIG).get('earth')!;
+    expect(earth.positionBody).toBeDefined();
+    expect(en!.body).toContain('Earth-Moon barycentre');
+  });
+
+  it('publie TOUTES les lignes du rapport dans les tableaux détaillés', () => {
+    const details = [...en!.body.matchAll(/<details[^>]*>(.*?)<\/details>/gs)]
+      .map((m) => m[1]!.match(/<tr><th scope="row">/g)?.length ?? 0)
+      .reduce((a, b) => a + b, 0);
+    const spacecraft = new Set(
+      summary.rows
+        .filter((r) => r.provider === 'horizons-binary' && r.radiusKm === null)
+        .map((r) => r.body)
+    );
+    const expected = summary.rows.filter(
+      (r) =>
+        r.provider !== 'production' &&
+        !(r.provider === 'spk' && r.n === 0) &&
+        !(r.provider === 'horizons-binary' && spacecraft.has(r.body))
+    ).length;
+    expect(expected).toBeGreaterThan(100);
+    expect(details).toBe(expected);
+  });
+});
+
+describe('cohérence des sources publiées', () => {
+  it('décrit exactement les hôtes que la CSP autorise', () => {
+    expect(connectHosts.length).toBeGreaterThanOrEqual(4);
+    expect(liveServiceMismatch(connectHosts)).toEqual({
+      undescribed: [],
+      unused: [],
+    });
+    expect(() =>
+      sourcesPages({
+        ...sourcesInput,
+        connectHosts: [...connectHosts, 'new.example'],
+      })
+    ).toThrow('new.example');
+    expect(
+      LIVE_DATA_SERVICES.some((s) => s.name.startsWith('Open-Meteo'))
+    ).toBe(true);
+  });
+
+  it('range chaque corps des mentions sous la licence de son entrée de provenance', () => {
+    // THIRD_PARTY_NOTICES.md (prose) et texture-sources.json (données) décrivent les mêmes
+    // textures : un corps déplacé d'une licence à l'autre dans l'un doit l'être dans l'autre.
+    const notices = sourcesInput.notices.replace(/\r/g, '');
+    const groups = notices
+      .split(/\n(?=\d\. \*\*)/)
+      .filter((block) => /^\d\. \*\*/.test(block))
+      .map((block) => block.split(/\n\n/)[0]!);
+    expect(groups.length).toBe(4);
+    const surface = (body: string): TextureProvenance | undefined =>
+      textures.find((t) => t.body === body && t.layer === 'surface');
+    const expectations: ((t: TextureProvenance) => boolean)[] = [
+      (t) => t.license === 'public-domain' && !t.illustrative,
+      (t) => t.license === 'CC BY 4.0' && !t.illustrative,
+      (t) => t.illustrative === true && t.license !== 'generated',
+      (t) => t.license === 'generated' && t.illustrative === true,
+    ];
+    groups.forEach((group, index) => {
+      const bodies = [...group.matchAll(/`([a-z]+)`/g)].map((m) => m[1]!);
+      expect(bodies.length).toBeGreaterThan(3);
+      for (const body of bodies) {
+        // Le groupe 2 cite `earth` pour dire qu'elle n'en fait PAS partie.
+        if (index === 1 && body === 'earth') continue;
+        const entry = surface(body);
+        expect(entry, `${body} sans provenance`).toBeDefined();
+        expect(
+          expectations[index]!(entry!),
+          `${body} dans le groupe ${index + 1}`
+        ).toBe(true);
+      }
+    });
+  });
+
+  it('marque illustratives exactement les surfaces que l’application signale', () => {
+    const illustrative = textures
+      .filter((t) => t.layer === 'surface' && t.illustrative)
+      .map((t) => t.body)
+      .sort();
+    expect(illustrative).toEqual([...ILLUSTRATIVE_SURFACES].sort());
+  });
+
+  it('ne lie que des fichiers qui existent dans le dépôt', () => {
+    const targets = [
+      ...sourcesInput.notices.matchAll(/\]\((?!https?:)([^)]+)\)/g),
+    ].map((m) => m[1]!);
+    expect(targets.length).toBeGreaterThan(0);
+    for (const target of targets)
+      expect(existsSync(resolve(ROOT, target)), target).toBe(true);
+  });
+
+  it('lit l’image de partage dans index.html et refuse son absence', () => {
+    expect(socialImage.url).toMatch(/^https:\/\//);
+    expect(() =>
+      socialImageFromHtml(
+        indexHtml.replace('property="og:image"', 'property="x"')
+      )
+    ).toThrow('og:image');
   });
 });

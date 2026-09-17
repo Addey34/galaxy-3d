@@ -9,9 +9,7 @@
          verrou canvas-only ci-dessus suffit à éviter le « coincé zoomé » que ce blocage
          global visait à l'origine. -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>
-      Galaxy — 3D Solar System: Real-Time Interactive Visualizer
-    </title>
+    <title>Galaxy — 3D Solar System: Real-Time Interactive Visualizer</title>
     <meta
       name="description"
       content="Explore the solar system in 3D with real NASA/JPL ephemeris positions. Two modes: educational overview and true-scale space voyage. Time travel, real distances and light-time. Free, in your browser."
@@ -153,14 +151,13 @@
          indexable même si un crawler n'exécute pas le script (budget de rendu dépassé, etc.). -->
     <noscript>
       <p>
-        Galaxy is an interactive, real-time visualizer of the solar
-        system built with WebGL, using real NASA/JPL ephemeris positions. It
-        needs JavaScript and a WebGL-capable browser to run. Explore the Sun,
-        Mercury, Venus, Earth, the Moon, Mars, Jupiter and its Galilean
-        moons, Saturn and its rings, Uranus, Neptune, the dwarf planets
-        (Pluto, Ceres, Eris, Haumea, Makemake) and other small bodies in an
-        educational compressed-scale view or a true-scale space voyage, with
-        time travel.
+        Galaxy is an interactive, real-time visualizer of the solar system built
+        with WebGL, using real NASA/JPL ephemeris positions. It needs JavaScript
+        and a WebGL-capable browser to run. Explore the Sun, Mercury, Venus,
+        Earth, the Moon, Mars, Jupiter and its Galilean moons, Saturn and its
+        rings, Uranus, Neptune, the dwarf planets (Pluto, Ceres, Eris, Haumea,
+        Makemake) and other small bodies in an educational compressed-scale view
+        or a true-scale space voyage, with time travel.
       </p>
     </noscript>
     <!-- ─── Loading screen ─────────────────────────────────────────────────── -->
@@ -1090,6 +1087,27 @@
         <div class="wl-body">
           <!-- populated by ui/weatherLayers.ts -->
         </div>
+        <!-- Attribution exigée par la licence CC BY 4.0 d'Open-Meteo, « à côté de tout endroit
+             où ses données sont affichées », et citation demandée par NASA et Copernicus. -->
+        <p class="wl-note wl-attribution">
+          <span data-i18n="weather.attribution.prefix">Weather data:</span>
+          NASA GIBS (EOSDIS) ·
+          <a
+            href="https://open-meteo.com/"
+            target="_blank"
+            rel="noopener noreferrer"
+            >Open-Meteo.com</a
+          >
+          (<a
+            href="https://creativecommons.org/licenses/by/4.0/"
+            target="_blank"
+            rel="noopener noreferrer"
+            >CC BY 4.0</a
+          >,
+          <span data-i18n="weather.attribution.modified"
+            >resampled into map textures</span
+          >) · ERA5, Copernicus Climate Change Service (ECMWF).
+        </p>
       </div>
     </aside>
 
@@ -1197,21 +1215,35 @@
             <dt data-i18n="credits.textures">Textures</dt>
             <dd>
               USGS Astrogeology / NASA-JPL (public domain) · Solar System Scope
-              (CC BY 4.0) · Halley : Philip Stooke / NASA PDS.
+              (CC BY 4.0) · NOAA ETOPO 2022 · Halley: Philip Stooke / NASA PDS.
             </dd>
             <dt data-i18n="credits.fictional">Illustrative surfaces</dt>
             <dd data-i18n="credits.fictional.list">
-              No spacecraft has resolved these surfaces; their textures are
-              illustrative, not scientific maps: Ceres, Eris, Haumea, Makemake,
-              Pallas, Hygiea, Halley.
+              Bodies never mapped globally have an illustrative texture, not a
+              scientific map; the body card says so, and Sources lists them.
             </dd>
             <dt data-i18n="credits.models">3D shape models</dt>
             <dd>
-              NASA PDS — NEAR (Eros), Hayabusa (Itokawa), Galileo (Ida) · ISAS/JAXA —
-              Hayabusa2 (Ryugu) · NASA/Goddard SVS — OSIRIS-REx (Bennu)
+              NASA PDS: NEAR (Eros), Hayabusa (Itokawa), Galileo (Ida) ·
+              ISAS/JAXA: Hayabusa2 (Ryugu) · NASA/Goddard SVS: OSIRIS-REx
+              (Bennu)
             </dd>
             <dt data-i18n="credits.data">Data</dt>
-            <dd>Astronomy Engine · NASA/JPL Horizons · JPL SBDB</dd>
+            <dd>
+              Astronomy Engine · NASA/JPL Horizons · JPL SBDB · NASA GIBS ·
+              <a
+                href="https://open-meteo.com/"
+                target="_blank"
+                rel="noopener noreferrer"
+                >Open-Meteo.com</a
+              >
+              (<a
+                href="https://creativecommons.org/licenses/by/4.0/"
+                target="_blank"
+                rel="noopener noreferrer"
+                >CC BY 4.0</a
+              >) · ERA5, Copernicus Climate Change Service (ECMWF)
+            </dd>
           </dl>
         </div>
       </div>

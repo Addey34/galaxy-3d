@@ -66,8 +66,41 @@ const CHROME = {
   },
 };
 
+/** Image de partage du site, telle que la déclare l'`index.html` construit. */
+export interface SocialImage {
+  url: string;
+  width: string;
+  height: string;
+  alt: string;
+}
+
+/**
+ * Lit l'image de partage dans l'`index.html` construit, sans la recopier. Échoue si une balise
+ * manque : une page partagée sans image s'afficherait comme un lien nu, sans que rien ne le dise.
+ */
+export function socialImageFromHtml(html: string): SocialImage {
+  const read = (property: string): string => {
+    const tag = new RegExp(`<meta[^>]*property="${property}"[^>]*>`).exec(
+      html
+    )?.[0];
+    const value = tag ? /content="([^"]*)"/.exec(tag)?.[1] : undefined;
+    if (!value) throw new Error(`index.html : balise ${property} introuvable`);
+    return value;
+  };
+  return {
+    url: read('og:image'),
+    width: read('og:image:width'),
+    height: read('og:image:height'),
+    alt: read('og:image:alt'),
+  };
+}
+
 /** Document HTML complet d'une page documentaire. */
-export function renderDocPage(page: DocPage, origin: string): string {
+export function renderDocPage(
+  page: DocPage,
+  origin: string,
+  image: SocialImage
+): string {
   const { locale, slug } = page;
   const other: DocLocale = locale === 'en' ? 'fr' : 'en';
   const url = (s: DocSlug, l: DocLocale): string => `${origin}${docPath(s, l)}`;
@@ -111,6 +144,16 @@ export function renderDocPage(page: DocPage, origin: string): string {
     <meta property="og:title" content="${escapeHtml(page.title)}" />
     <meta property="og:description" content="${escapeHtml(page.description)}" />
     <meta property="og:url" content="${escapeHtml(page.canonical)}" />
+    <meta property="og:site_name" content="Galaxy" />
+    <meta property="og:locale" content="${locale === 'fr' ? 'fr_FR' : 'en_GB'}" />
+    <meta property="og:image" content="${escapeHtml(image.url)}" />
+    <meta property="og:image:width" content="${escapeHtml(image.width)}" />
+    <meta property="og:image:height" content="${escapeHtml(image.height)}" />
+    <meta property="og:image:alt" content="${escapeHtml(image.alt)}" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="${escapeHtml(page.title)}" />
+    <meta name="twitter:description" content="${escapeHtml(page.description)}" />
+    <meta name="twitter:image" content="${escapeHtml(image.url)}" />
     <link rel="icon" href="/favicon.ico" type="image/x-icon" />
     <link rel="icon" href="/icon.svg" type="image/svg+xml" />
     <link rel="stylesheet" href="/privacy.css" />
@@ -172,7 +215,9 @@ export function docTable(
           .join('')}</tr>`
     )
     .join('');
-  return `<div class="table-scroll"><table><caption>${escapeHtml(caption)}</caption><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table></div>`;
+  // Zone défilante atteignable au clavier (règle axe « scrollable-region-focusable ») : sans
+  // tabindex, un tableau plus large que l'écran ne peut pas défiler sans souris.
+  return `<div class="table-scroll" tabindex="0" role="region" aria-label="${escapeHtml(caption)}"><table><caption>${escapeHtml(caption)}</caption><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table></div>`;
 }
 
 const SUPERSCRIPTS = '⁰¹²³⁴⁵⁶⁷⁸⁹⁻';

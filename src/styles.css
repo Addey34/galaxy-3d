@@ -1303,6 +1303,33 @@ button {
   line-height: 1.35;
   color: var(--text-dim, rgba(255, 255, 255, 0.62));
 }
+/* Attribution des sources météo, sous la liste des couches (licence CC BY 4.0 d'Open-Meteo).
+   Le panneau reste à UN seul défileur (`e2e/modes.spec.ts`) : la liste prend la place restante
+   et défile seule, l'attribution reste fixe dessous. Sans ce flex, sur mobile (panneau borné à
+   46vh), la liste ET le corps du panneau défilaient tous les deux. */
+#weather-layers > .surface-body {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+#weather-layers .wl-body {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+.wl-attribution {
+  flex: none;
+  margin-top: var(--sp-3, 0.75rem);
+  padding-top: var(--sp-2, 0.5rem);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+.wl-attribution a {
+  color: rgba(var(--accent), 0.95);
+  text-decoration: none;
+}
+.wl-attribution a:hover {
+  text-decoration: underline;
+}
 /* Badge de traçabilité (étape B) : source · date réelle · approché. Discret, monospace léger. */
 .wl-source {
   margin: 0;

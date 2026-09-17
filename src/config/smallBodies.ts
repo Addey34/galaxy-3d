@@ -927,10 +927,14 @@ export const SMALL_BODY_ELEMENTS: readonly SmallBodyElements[] = [
       albedo: 0.044,
       albedoSource:
         'Hergenrother et al. 2019, Nat. Commun. 10, 1291 (JPL SBDB)',
-      colourSource:
-        'NASA/USGS — Bennu OSIRIS-REx OCAMS Global Albedo Mosaic (Golish et al. 2021), domaine public',
-      credit:
-        'NASA/Goddard Scientific Visualization Studio — OSIRIS-REx OLA v20 PTM global shape model (NASA/University of Arizona/CSA/York University/MDA), décimé pour le web.',
+      colourSource: {
+        en: 'NASA/USGS, Bennu OSIRIS-REx OCAMS Global Albedo Mosaic (Golish et al. 2021), public domain',
+        fr: 'NASA/USGS, Bennu OSIRIS-REx OCAMS Global Albedo Mosaic (Golish et al. 2021), domaine public',
+      },
+      credit: {
+        en: 'NASA/Goddard Scientific Visualization Studio, OSIRIS-REx OLA v20 PTM global shape model (NASA/University of Arizona/CSA/York University/MDA), decimated for the web.',
+        fr: 'NASA/Goddard Scientific Visualization Studio, modèle de forme global OSIRIS-REx OLA v20 PTM (NASA/University of Arizona/CSA/York University/MDA), décimé pour le web.',
+      },
     },
     rotationHours: 4.296061,
     // Obliquité DÉRIVÉE, pas recopiée : pôle SBDB (RA 85,4522°, Dec −60,3678°) converti en
@@ -992,10 +996,14 @@ export const SMALL_BODY_ELEMENTS: readonly SmallBodyElements[] = [
       // d'attente ci-dessus a la même couleur moyenne, pour ne pas changer d'aspect au chargement.
       albedo: 0.25,
       albedoSource: 'Veverka et al. 2000, Science 289, 2088 (JPL SBDB)',
-      colourSource:
-        'NASA/USGS — Eros NEAR MSI Global Albedo Mosaics à 760, 550 et 450 nm (Golish et al. 2023, doi:10.17189/sv8w-5125), domaine public',
-      credit:
-        'NASA/JHU-APL NEAR Shoemaker — MSI shape model by R. Gaskell, NASA PDS NEAR-A-MSI-5-EROSSHAPE-V1.0 (q = 128), décimé pour le web.',
+      colourSource: {
+        en: 'NASA/USGS, Eros NEAR MSI Global Albedo Mosaics at 760, 550 and 450 nm (Golish et al. 2023, doi:10.17189/sv8w-5125), public domain',
+        fr: 'NASA/USGS, Eros NEAR MSI Global Albedo Mosaics à 760, 550 et 450 nm (Golish et al. 2023, doi:10.17189/sv8w-5125), domaine public',
+      },
+      credit: {
+        en: 'NASA/JHU-APL NEAR Shoemaker, MSI shape model by R. Gaskell, NASA PDS NEAR-A-MSI-5-EROSSHAPE-V1.0 (q = 128), decimated for the web.',
+        fr: 'NASA/JHU-APL NEAR Shoemaker, modèle de forme MSI de R. Gaskell, NASA PDS NEAR-A-MSI-5-EROSSHAPE-V1.0 (q = 128), décimé pour le web.',
+      },
     },
     rotationHours: 5.27,
     // DÉRIVÉE du pôle SBDB (RA 11,37°, Dec 17,22°, Yeomans et al. 2000) et de la normale
@@ -1049,10 +1057,12 @@ export const SMALL_BODY_ELEMENTS: readonly SmallBodyElements[] = [
       // d'attente ci-dessus a la même couleur moyenne, pour ne pas changer d'aspect au chargement.
       albedo: 0.27,
       albedoSource:
-        'Hayabusa AMICA, photométrie intégrée au voisinage de l’opposition (Icarus, 2018)',
+        'Hayabusa AMICA disk-integrated photometry near opposition (Icarus, 2018)',
       colourSource: null,
-      credit:
-        'JAXA Hayabusa AMICA images — shape model by R. Gaskell (PSI), NASA PDS HAY-A-AMICA-5-ITOKAWASHAPE-V1.0 (q = 128), décimé pour le web.',
+      credit: {
+        en: 'JAXA Hayabusa AMICA images, shape model by R. Gaskell (PSI), NASA PDS HAY-A-AMICA-5-ITOKAWASHAPE-V1.0 (q = 128), decimated for the web.',
+        fr: 'Images JAXA Hayabusa AMICA, modèle de forme de R. Gaskell (PSI), NASA PDS HAY-A-AMICA-5-ITOKAWASHAPE-V1.0 (q = 128), décimé pour le web.',
+      },
     },
     rotationHours: 12.132,
     // DÉRIVÉE du pôle SBDB (RA 90,53°, Dec −66,30°, Demura et al. 2006) : rotation rétrograde.
@@ -1104,10 +1114,14 @@ export const SMALL_BODY_ELEMENTS: readonly SmallBodyElements[] = [
       // d'attente ci-dessus a la même couleur moyenne, pour ne pas changer d'aspect au chargement.
       albedo: 0.045,
       albedoSource: 'Sugita et al. 2019, Science 364, 6437 (JPL SBDB)',
-      colourSource:
-        'ISAS/JAXA — carte d’albédo normal en bande v de Ryugu, Hayabusa2 ONC (JAXA DARTS), données modifiées : échantillonnée par sommet',
-      credit:
-        'ISAS/JAXA Hayabusa2 — SfM shape model SHAPE_SFM_200k_v20180804 (Watanabe et al. 2019, DARTS), données modifiées : décimé pour le web, pôle ramené sur Y.',
+      colourSource: {
+        en: 'ISAS/JAXA, Ryugu v-band normal albedo map, Hayabusa2 ONC (JAXA DARTS); data modified: sampled per vertex',
+        fr: 'ISAS/JAXA, carte d’albédo normal en bande v de Ryugu, Hayabusa2 ONC (JAXA DARTS) ; données modifiées : échantillonnée par sommet',
+      },
+      credit: {
+        en: 'ISAS/JAXA Hayabusa2, SfM shape model SHAPE_SFM_200k_v20180804 (Watanabe et al. 2019, DARTS); data modified: decimated for the web, pole brought onto Y.',
+        fr: 'ISAS/JAXA Hayabusa2, modèle de forme SfM SHAPE_SFM_200k_v20180804 (Watanabe et al. 2019, DARTS) ; données modifiées : décimé pour le web, pôle ramené sur Y.',
+      },
     },
     rotationHours: 7.63262,
     // DÉRIVÉE du pôle SBDB (RA 96,3956°, Dec −66,3937°, Preusker et al. 2019) : rétrograde.
@@ -1161,8 +1175,10 @@ export const SMALL_BODY_ELEMENTS: readonly SmallBodyElements[] = [
       albedo: 0.262,
       albedoSource: 'NEOWISE, Mainzer et al. 2012, ApJ 759 L8 (JPL SBDB)',
       colourSource: null,
-      credit:
-        'NASA Galileo SSI — shape model by P. Thomas et al. (1996), NASA PDS EAR-A-5-DDR-SHAPE-MODELS-V2.1, converti en maillage pour le web.',
+      credit: {
+        en: 'NASA Galileo SSI, shape model by P. Thomas et al. (1996), NASA PDS EAR-A-5-DDR-SHAPE-MODELS-V2.1, converted to a mesh for the web.',
+        fr: 'NASA Galileo SSI, modèle de forme de P. Thomas et al. (1996), NASA PDS EAR-A-5-DDR-SHAPE-MODELS-V2.1, converti en maillage pour le web.',
+      },
     },
     rotationHours: 4.634,
     // DÉRIVÉE du pôle PDS (Thomas et al. : RA 348,76°, Dec +87,10°, rotation RÉTROGRADE, donc

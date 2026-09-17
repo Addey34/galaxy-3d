@@ -38,6 +38,25 @@ Première version numérotée. Elle regroupe tout ce qui a été livré avant la
 - « Température moyenne », « Distance moyenne », « Lunes connues » ; le Soleil n'affiche plus
   « 8 lunes ».
 
+### Ajouté (17 septembre 2026)
+
+- Pages `/methodology` et `/sources`, en anglais et en français, générées au build : méthode de
+  calcul des positions, précision mesurée contre NASA/JPL Horizons pour chaque corps et chaque
+  source, limites connues, et provenance de chaque texture, modèle, éphéméride, élément orbital,
+  service de données et bibliothèque. Liées depuis l'aide.
+
+### Corrigé (17 septembre 2026)
+
+- Attribution des données météo : Open-Meteo (CC BY 4.0), ERA5 (Copernicus) et NASA GIBS sont
+  désormais cités, avec lien et licence, dans le panneau météo et dans les crédits.
+- Repère écliptique : les positions d'astronomy-engine tournent de l'obliquité J2000 d'Horizons
+  (84 381,448″) au lieu d'une valeur arrondie ; toutes les sources partagent un même repère.
+- Crédits des modèles de forme affichés dans la langue de l'interface.
+- Provenance des textures de la Terre : relief (normal map et carte de hauteur) crédité à NOAA
+  ETOPO 2022, et non à NASA Visible Earth.
+- Aide : la liste des surfaces illustratives était incomplète et affirmait à tort qu'aucune sonde
+  n'avait photographié ces corps.
+
 ### Modifié
 
 - Nom public unifié : **Galaxy** (le site mélangeait « 3D Solar System » et « Solar System 3D »).

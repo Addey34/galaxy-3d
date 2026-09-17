@@ -37,3 +37,14 @@ test('un corps sans modèle n’affiche aucun crédit de modèle', async ({
   await expect(page.locator('#body-info')).toBeVisible();
   await expect(page.locator('#body-info .bi-credit')).toBeHidden();
 });
+
+test('le crédit suit la langue de l’interface', async ({ page }) => {
+  // Les crédits étaient des chaînes françaises uniques : un visiteur anglophone lisait
+  // « décimé pour le web ». Ils sont désormais bilingues, et la fiche prend la langue active.
+  await page.addInitScript(() => localStorage.setItem('ssv-locale', 'en'));
+  await page.goto('/?body=ryugu');
+  await expect(page.locator('#loader')).toBeHidden({ timeout: 30_000 });
+  const credit = page.locator('#body-info .bi-credit');
+  await expect(credit).toContainText('data modified');
+  await expect(credit).not.toContainText('modifiées');
+});

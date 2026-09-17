@@ -119,3 +119,29 @@
     width: 100%;
   }
 }
+
+/* Rapport complet par source : replié par défaut, un tableau par source. */
+.doc-details {
+  margin: 0.6rem 0;
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-md);
+  padding: 0 0.8rem;
+}
+.doc-details summary {
+  cursor: pointer;
+  padding: 0.6rem 0;
+  font-weight: 600;
+  color: var(--ink);
+}
+.doc-details[open] summary {
+  border-bottom: 1px solid var(--hairline);
+}
+
+/* Une longue URL dans le texte ne doit jamais élargir la page sur mobile. */
+.doc main a {
+  overflow-wrap: anywhere;
+}
+.table-scroll:focus-visible {
+  outline: 2px solid rgb(var(--accent));
+  outline-offset: 2px;
+}

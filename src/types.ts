@@ -101,7 +101,7 @@ export interface ModelConfig {
    * Crédit à afficher. Obligatoire : un maillage tiers sans provenance ne doit pas entrer dans
    * le dépôt (`scripts/texture-sources.json` tient la même règle pour les textures).
    */
-  credit: string;
+  credit: LocalizedText;
   /**
    * Rayon MAXIMAL du maillage rapporté à son rayon équivalent-volume (celui du catalogue),
    * mesuré sur le fichier livré et tenu par `shapeModels.test.ts`. Sert à la caméra : elle
@@ -122,7 +122,7 @@ export interface ModelConfig {
    * Carte de mission d'où viennent les CONTRASTES et la couleur, ou `null` si aucune carte
    * globale n'existe : le corps reçoit alors une couleur uniforme à son albédo, sans rien inventer.
    */
-  colourSource: string | null;
+  colourSource: LocalizedText | null;
 }
 
 export interface RingConfig {

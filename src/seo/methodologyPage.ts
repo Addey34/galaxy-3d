@@ -13,7 +13,11 @@
  * Module PUR : données en entrée, pages en sortie.
  */
 import type { CelestialConfig } from '@/types';
-import { flattenBodies, ILLUSTRATIVE_SURFACES } from '@/config/catalog';
+import {
+  flattenBodies,
+  forEachBody,
+  ILLUSTRATIVE_SURFACES,
+} from '@/config/catalog';
 import { SPACECRAFT_MISSIONS } from '@/config/spacecraft';
 import {
   INTERSTELLAR_OBJECTS,
@@ -21,6 +25,7 @@ import {
 } from '@/config/interstellar';
 import { SMALL_BODY_ELEMENTS } from '@/config/smallBodies';
 import { OBLIQUITY_RAD } from '@/core/frames';
+import { ORBIT_SAMPLE_WARP_MIN_ECCENTRICITY } from '@/core/orbitPath';
 import { SQRT_K } from '@/core/ScaleService';
 import { MIN_SAMPLES_PER_ORBIT_FOR_HERMITE } from '@/core/HorizonsEphemerisService';
 import { TT_MINUS_UTC } from '@/core/timeScale';
@@ -141,6 +146,40 @@ const year = (iso: string): string => iso.slice(0, 4);
 const exact = (value: number, locale: DocLocale): string =>
   locale === 'fr' ? String(value).replace('.', ',') : String(value);
 
+// ─────────────────────────── dérivés du catalogue ───────────────────────────
+
+/** Écart relatif sous lequel une lune est tenue pour verrouillée (cf. `bodies.test.ts`). */
+const SYNCHRONOUS_TOLERANCE = 0.01;
+/** Écart relatif sous lequel le verrouillage est EXACT au sens de `bodies.test.ts`. */
+const SYNCHRONOUS_EXACT = 1e-9;
+
+export interface SpinDrift {
+  body: string;
+  /** Dérive de la face tournée vers la planète, en degrés par an. */
+  degreesPerYear: number;
+}
+
+/**
+ * Lunes synchrones dont la période de rotation ne coïncide pas EXACTEMENT avec la période
+ * orbitale du catalogue : leur face visible dérive. La rotation est l'intégrale de
+ * `rotationSpeed`, donc un écart relatif ε la fait tourner de 360°·ε par révolution.
+ */
+export function synchronousSpinDrifts(config: CelestialConfig): SpinDrift[] {
+  const drifts: SpinDrift[] = [];
+  forEachBody(config, ({ name, config: cfg, parentName }) => {
+    const orbitDays = cfg.realData?.orbitPeriodDays;
+    if (!parentName || !orbitDays || !cfg.rotationSpeed) return;
+    const spinDays = (2 * Math.PI) / Math.abs(cfg.rotationSpeed) / 86_400;
+    const epsilon = Math.abs(spinDays / orbitDays - 1);
+    if (epsilon >= SYNCHRONOUS_TOLERANCE || epsilon < SYNCHRONOUS_EXACT) return;
+    drifts.push({
+      body: name,
+      degreesPerYear: (360 * epsilon * 365.25) / orbitDays,
+    });
+  });
+  return drifts;
+}
+
 // ─────────────────────────── contenu ───────────────────────────
 
 const T = {
@@ -185,6 +224,28 @@ export function methodologyPages(input: MethodologyInput): DocPage[] {
   return DOC_LOCALES.map((locale) => methodologyPage(input, locale));
 }
 
+const PROVIDER_TITLES: Record<
+  Exclude<ValidationRow['provider'], 'production'>,
+  Bilingual
+> = {
+  'astronomy-engine': {
+    en: 'astronomy-engine (VSOP87 and analytic models)',
+    fr: 'astronomy-engine (VSOP87 et modèles analytiques)',
+  },
+  'horizons-binary': {
+    en: 'Precomputed JPL Horizons files',
+    fr: 'Fichiers JPL Horizons précalculés',
+  },
+  kepler: {
+    en: 'Keplerian elements (catalogue, moon fallbacks, interstellar objects)',
+    fr: 'Éléments képlériens (catalogue, replis des lunes, objets interstellaires)',
+  },
+  spk: {
+    en: 'SPK kernel SAT441 (measured locally, not enabled on this site)',
+    fr: 'Noyau SPK SAT441 (mesuré localement, non activé sur ce site)',
+  },
+};
+
 function methodologyPage(input: MethodologyInput, locale: DocLocale): DocPage {
   const { summary, manifest, config, origin } = input;
   const L = (text: Bilingual): string => text[locale];
@@ -192,32 +253,70 @@ function methodologyPage(input: MethodologyInput, locale: DocLocale): DocPage {
   const rows = summary.rows;
   const production = rows.filter((r) => r.provider === 'production');
   const spacecraftNames = new Set(SPACECRAFT_MISSIONS.map((m) => m.name));
+  const productionOf = (body: string): ValidationRow | undefined =>
+    production.find((r) => r.body === body);
 
   // ── Constantes lues dans le code qui les applique ──
-  const obliquityDeg = ((OBLIQUITY_RAD * 180) / Math.PI).toFixed(4);
+  const obliquityArcsec = (((OBLIQUITY_RAD * 180) / Math.PI) * 3600).toFixed(3);
+  const obliquityDeg = ((OBLIQUITY_RAD * 180) / Math.PI).toFixed(7);
   const [lastLeapMs, lastTtMinusUtc] = TT_MINUS_UTC[TT_MINUS_UTC.length - 1]!;
-  const lastLeapYear = new Date(lastLeapMs).getUTCFullYear();
+  const lastLeapDate = new Date(lastLeapMs).toISOString().slice(0, 10);
 
   // ── Manifest des éphémérides ──
   const binaries = Object.entries(manifest.bodies);
   const binarySpacecraft = binaries.filter(([n]) => spacecraftNames.has(n));
   const binaryNatural = binaries.filter(([n]) => !spacecraftNames.has(n));
-  const naturalSteps = [
-    ...new Set(binaryNatural.map(([, e]) => e.stepDays)),
-  ].sort((a, b) => a - b);
-  const spacecraftSteps = [
-    ...new Set(binarySpacecraft.map(([, e]) => e.stepDays)),
-  ].sort((a, b) => a - b);
+  const stepsOf = (entries: typeof binaries): number[] =>
+    [...new Set(entries.map(([, e]) => e.stepDays))].sort((a, b) => a - b);
+  const naturalSteps = stepsOf(binaryNatural);
+  const spacecraftSteps = stepsOf(binarySpacecraft);
+  const finestSpacecraft = binarySpacecraft
+    .filter(([, e]) => e.stepDays === spacecraftSteps[0])
+    .map(([n]) => n);
   const listNames = (names: readonly string[]): string =>
     names.map((n) => escapeHtml(name(n, locale))).join(', ');
   const days = (values: readonly number[]): string =>
     values.map((v) => exact(v, locale)).join(locale === 'fr' ? ' ou ' : ' or ');
+  const num = (v: number | null | undefined): string => q(v, locale);
 
-  // ── Petits corps et objets interstellaires ──
+  // ── Petits corps, objets interstellaires, lunes ──
   const barycentric = SMALL_BODY_ELEMENTS.filter((el) => el.barycentric).length;
   const keplerOnly = production.filter(
     (r) => Object.keys(r.sources).length === 1 && r.sources.kepler
   );
+  const moonFallbacks = [...flattenBodies(config).values()].filter(
+    (cfg) => cfg.relativeOrbitalElements
+  ).length;
+  const drifts = synchronousSpinDrifts(config);
+
+  /** Libellé d'une fenêtre de mesure, dans la langue de la page. */
+  const windowLabel = (r: ValidationRow): string => {
+    const span = `${year(r.windowFrom)}–${year(r.windowTo)}`;
+    const clipped = r.windowClipped
+      ? L({
+          en: ' (limited to Horizons coverage)',
+          fr: ' (limitée à la couverture Horizons)',
+        })
+      : '';
+    switch (r.windowKind) {
+      case 'binary':
+        return `${escapeHtml(r.windowFrom)} → ${escapeHtml(r.windowTo)}`;
+      case 'epoch':
+        return (
+          L({ en: 'epoch ±10 yr', fr: 'époque ±10 ans' }) +
+          ` (${span})${clipped}`
+        );
+      case 'perihelion':
+        return (
+          L({
+            en: `perihelion ±${INTERSTELLAR_WINDOW_YEARS} yr`,
+            fr: `périhélie ±${INTERSTELLAR_WINDOW_YEARS} ans`,
+          }) + ` (${span})${clipped}`
+        );
+      default:
+        return `${span}${clipped}`;
+    }
+  };
 
   const sections: string[] = [];
 
@@ -227,11 +326,11 @@ function methodologyPage(input: MethodologyInput, locale: DocLocale): DocPage {
       'frames',
       L({ en: 'Reference frames', fr: 'Repères' }),
       `<p>${L({
-        en: `Every position is a <strong>geometric</strong> position (no light-time or aberration correction): where a body is at that instant, not where it appears from Earth. Planetary theories and JPL files are expressed in the J2000 frame (ICRF); Galaxy works in the <strong>J2000 ecliptic</strong>, obtained from the equatorial frame by a rotation of the obliquity ε = ${exact(Number(obliquityDeg), locale)}° about the vernal equinox axis.`,
-        fr: `Chaque position est une position <strong>géométrique</strong> (sans correction de temps de lumière ni d’aberration) : où se trouve le corps à cet instant, pas où il paraît depuis la Terre. Théories planétaires et fichiers JPL sont exprimés dans le repère J2000 (ICRF) ; Galaxy travaille dans l’<strong>écliptique J2000</strong>, obtenu du repère équatorial par une rotation de l’obliquité ε = ${exact(Number(obliquityDeg), locale)}° autour de l’axe de l’équinoxe vernal.`,
+        en: `Every position is a <strong>geometric</strong> position, with no light-time or aberration correction: where a body is at that instant, not where it appears from Earth. Galaxy works in the <strong>J2000 ecliptic</strong> frame, the frame of the JPL Horizons files and of the orbital elements. astronomy-engine returns J2000 equatorial vectors (ICRF axes); they are rotated into the ecliptic by the J2000 obliquity, ε = ${exact(Number(obliquityArcsec), locale)}″ (${exact(Number(obliquityDeg), locale)}°), the IAU 1976 value that defines the Horizons ecliptic, so that every source shares one frame.`,
+        fr: `Chaque position est une position <strong>géométrique</strong>, sans correction de temps de lumière ni d’aberration : où se trouve le corps à cet instant, pas où il paraît depuis la Terre. Galaxy travaille dans l’<strong>écliptique J2000</strong>, le repère des fichiers JPL Horizons et des éléments orbitaux. astronomy-engine fournit des vecteurs équatoriaux J2000 (axes ICRF) ; ils sont tournés vers l’écliptique d’un angle égal à l’obliquité J2000, ε = ${exact(Number(obliquityArcsec), locale)}″ (${exact(Number(obliquityDeg), locale)}°), la valeur IAU 1976 qui définit l’écliptique d’Horizons, pour que toutes les sources partagent un même repère.`,
       })}</p><p>${L({
-        en: 'The 3D scene then maps the ecliptic onto its horizontal plane: scene X = ecliptic x, scene Y = ecliptic z (towards the north ecliptic pole), scene Z = −ecliptic y. This is a proper rotation (determinant +1), not a mirror, so orbits keep their true direction of travel.',
-        fr: 'La scène 3D place ensuite l’écliptique dans son plan horizontal : X scène = x écliptique, Y scène = z écliptique (vers le pôle nord de l’écliptique), Z scène = −y écliptique. C’est une rotation propre (déterminant +1), pas un miroir : les orbites gardent leur vrai sens de parcours.',
+        en: 'The Sun is fixed at the origin: positions are heliocentric. The 3D scene maps the ecliptic onto its horizontal plane: scene X = ecliptic x, scene Y = ecliptic z (towards the north ecliptic pole), scene Z = −ecliptic y. This is a proper rotation (determinant +1), not a mirror, so orbits keep their true direction of travel.',
+        fr: 'Le Soleil est fixé à l’origine : les positions sont héliocentriques. La scène 3D place l’écliptique dans son plan horizontal : X scène = x écliptique, Y scène = z écliptique (vers le pôle nord de l’écliptique), Z scène = −y écliptique. C’est une rotation propre (déterminant +1), pas un miroir : les orbites gardent leur vrai sens de parcours.',
       })}</p>`
     )
   );
@@ -242,8 +341,8 @@ function methodologyPage(input: MethodologyInput, locale: DocLocale): DocPage {
       'time',
       L({ en: 'Time scale', fr: 'Échelle de temps' }),
       `<p>${L({
-        en: `The date you choose is read as UTC. It is converted to Terrestrial Time with the table of leap seconds since 1972, held constant after the last one (${lastLeapYear}, TT − UTC = ${exact(lastTtMinusUtc, locale)} s), which is the convention JPL Horizons applies. Before 1972 the date is read as UT1 and ΔT follows the Espenak and Meeus model. A single module performs this conversion for every source, so two sources never disagree about which instant is meant.`,
-        fr: `La date choisie est lue en UTC. Elle est convertie en Temps terrestre par la table des secondes intercalaires depuis 1972, maintenue constante après la dernière (${lastLeapYear}, TT − UTC = ${exact(lastTtMinusUtc, locale)} s), ce qui est la convention appliquée par JPL Horizons. Avant 1972, la date est lue comme UT1 et ΔT suit le modèle d’Espenak et Meeus. Un seul module fait cette conversion pour toutes les sources : deux sources ne peuvent pas désigner deux instants différents.`,
+        en: `The date you choose is read as UTC. From 1972 onwards it is converted to Terrestrial Time with the table of leap seconds, held constant after the last one (TT − UTC = ${exact(lastTtMinusUtc, locale)} s since ${lastLeapDate}), which is the convention JPL Horizons applies to dates given in UT. Before 1972 the date is read as UT1 and ΔT = TT − UT1 follows the Espenak and Meeus model. A single module performs this conversion for every source, and installs it into astronomy-engine, so two sources never disagree about which instant is meant.`,
+        fr: `La date choisie est lue en UTC. À partir de 1972, elle est convertie en Temps terrestre par la table des secondes intercalaires, maintenue constante après la dernière (TT − UTC = ${exact(lastTtMinusUtc, locale)} s depuis le ${lastLeapDate}), ce qui est la convention appliquée par JPL Horizons aux dates données en UT. Avant 1972, la date est lue comme UT1 et ΔT = TT − UT1 suit le modèle d’Espenak et Meeus. Un seul module fait cette conversion pour toutes les sources, et l’installe dans astronomy-engine : deux sources ne peuvent pas désigner deux instants différents.`,
       })}</p>`
     )
   );
@@ -257,25 +356,28 @@ function methodologyPage(input: MethodologyInput, locale: DocLocale): DocPage {
         fr: 'D’où vient chaque position',
       }),
       `<p>${L({
-        en: 'For each body, Galaxy tries the following sources in order and keeps the first that answers:',
-        fr: 'Pour chaque corps, Galaxy essaie les sources suivantes dans cet ordre et garde la première qui répond :',
+        en: 'For a planet, a moon or a small body, Galaxy tries the following sources in order and keeps the first that answers:',
+        fr: 'Pour une planète, une lune ou un petit corps, Galaxy essaie les sources suivantes dans cet ordre et garde la première qui répond :',
       })}</p><ol class="doc-list">` +
         `<li>${L({
-          en: `<strong>Precomputed NASA/JPL Horizons files</strong> for ${binaryNatural.length} natural bodies and ${binarySpacecraft.length} spacecraft: exact position and velocity states in the ${escapeHtml(manifest.frame)} frame, every ${days(naturalSteps)} days for natural bodies and ${days(spacecraftSteps)} days for spacecraft, from ${escapeHtml(manifest.coverage.start)} to ${escapeHtml(manifest.coverage.stop)} (spacecraft: over each mission’s own span). A value from a file must pass a plausibility test that bounds its distance on both sides, otherwise the next source takes over.`,
-          fr: `<strong>Fichiers NASA/JPL Horizons précalculés</strong> pour ${binaryNatural.length} corps naturels et ${binarySpacecraft.length} sondes : états exacts de position et de vitesse dans le repère ${escapeHtml(manifest.frame)}, tous les ${days(naturalSteps)} jours pour les corps naturels et ${days(spacecraftSteps)} jours pour les sondes, du ${escapeHtml(manifest.coverage.start)} au ${escapeHtml(manifest.coverage.stop)} (sondes : sur la durée propre de chaque mission). Une valeur issue d’un fichier doit passer un test de plausibilité qui borne sa distance des deux côtés, sinon la source suivante prend le relais.`,
+          en: `<strong>A JPL SPK kernel</strong> (SAT441, Saturn’s moons), when the site is configured to serve one. It then takes precedence over the Horizons files. ${summary.spk.enabledInProduction ? 'It is <strong>enabled</strong> on this site.' : 'It is <strong>not enabled</strong> on this site.'}`,
+          fr: `<strong>Un noyau SPK du JPL</strong> (SAT441, lunes de Saturne), quand le site est configuré pour en servir un. Il passe alors avant les fichiers Horizons. ${summary.spk.enabledInProduction ? 'Il est <strong>activé</strong> sur ce site.' : 'Il n’est <strong>pas activé</strong> sur ce site.'}`,
         })}</li>` +
         `<li>${L({
-          en: '<strong>An optional JPL SPK kernel</strong> (SAT441, Saturn’s moons), used only when the site is configured to serve it.',
-          fr: '<strong>Un noyau SPK du JPL optionnel</strong> (SAT441, lunes de Saturne), utilisé seulement si le site est configuré pour le servir.',
+          en: `<strong>Precomputed NASA/JPL Horizons files</strong> for ${binaryNatural.length} natural bodies: exact position and velocity states in the ${escapeHtml(manifest.frame)} frame, every ${days(naturalSteps)} days, from ${escapeHtml(manifest.coverage.start)} to ${escapeHtml(manifest.coverage.stop)}. A value from a file is compared with the body’s catalogue orbit and rejected if its distance is implausibly large or small; the next source then takes over.`,
+          fr: `<strong>Fichiers NASA/JPL Horizons précalculés</strong> pour ${binaryNatural.length} corps naturels : états exacts de position et de vitesse dans le repère ${escapeHtml(manifest.frame)}, tous les ${days(naturalSteps)} jours, du ${escapeHtml(manifest.coverage.start)} au ${escapeHtml(manifest.coverage.stop)}. Une valeur issue d’un fichier est confrontée à l’orbite du corps dans le catalogue et rejetée si sa distance est trop grande ou trop petite pour être plausible ; la source suivante prend alors le relais.`,
         })}</li>` +
         `<li>${L({
-          en: '<strong>astronomy-engine</strong>, an open-source library implementing VSOP87 for the planets and analytic models for the Moon and the four Galilean moons.',
-          fr: '<strong>astronomy-engine</strong>, une bibliothèque libre qui implémente VSOP87 pour les planètes et des modèles analytiques pour la Lune et les quatre lunes galiléennes.',
+          en: '<strong>astronomy-engine</strong>, an open-source library: VSOP87 for the planets, and analytic models for the Moon and the four Galilean moons.',
+          fr: '<strong>astronomy-engine</strong>, une bibliothèque libre : VSOP87 pour les planètes, et des modèles analytiques pour la Lune et les quatre lunes galiléennes.',
         })}</li>` +
         `<li>${L({
-          en: `<strong>Keplerian orbital elements</strong>: ${SMALL_BODY_ELEMENTS.length} small bodies (${barycentric} of them referred to the Solar System barycentre, beyond Neptune, where the heliocentric orbit carries the Sun’s own reflex motion), the ${INTERSTELLAR_OBJECTS.length} interstellar objects, and a fallback for every moon when its file is missing. Every element set comes from Horizons at a stated epoch and is checked by a test against a Horizons position at that epoch.`,
-          fr: `<strong>Éléments orbitaux képlériens</strong> : ${SMALL_BODY_ELEMENTS.length} petits corps (dont ${barycentric} rapportés au barycentre du Système solaire, au-delà de Neptune, où l’orbite héliocentrique porte le mouvement réflexe du Soleil lui-même), les ${INTERSTELLAR_OBJECTS.length} objets interstellaires, et un repli pour chaque lune dont le fichier manque. Chaque jeu d’éléments vient d’Horizons à une époque déclarée et un test le confronte à une position Horizons à cette époque.`,
-        })}</li></ol>`
+          en: `<strong>Keplerian orbital elements</strong>: ${SMALL_BODY_ELEMENTS.length} small bodies, whose osculating elements come from Horizons at a stated epoch and are checked by a test against a Horizons position at that epoch (${barycentric} of them are referred to the Solar System barycentre: beyond Neptune, a heliocentric orbit carries the Sun’s own reflex motion); and a fallback for ${moonFallbacks} moons, derived by script from their Horizons files, used only when a file is missing, out of range or rejected.`,
+          fr: `<strong>Éléments orbitaux képlériens</strong> : ${SMALL_BODY_ELEMENTS.length} petits corps, dont les éléments osculateurs viennent d’Horizons à une époque déclarée et qu’un test confronte à une position Horizons à cette époque (${barycentric} d’entre eux sont rapportés au barycentre du Système solaire : au-delà de Neptune, une orbite héliocentrique porte le mouvement réflexe du Soleil lui-même) ; et un repli pour ${moonFallbacks} lunes, dérivé par script de leurs fichiers Horizons, utilisé seulement quand un fichier manque, sort de sa couverture ou est rejeté.`,
+        })}</li></ol><p>${L({
+          en: `The ${binarySpacecraft.length} spacecraft and the ${INTERSTELLAR_OBJECTS.length} interstellar objects follow their own rule. A spacecraft is positioned only by its Horizons file, sampled at a step of ${days(spacecraftSteps)} days (${exact(spacecraftSteps[0]!, locale)} for: ${listNames(finestSpacecraft)}), and is not drawn outside the file’s coverage. An interstellar object is positioned by its hyperbolic elements and drawn only within ±${INTERSTELLAR_WINDOW_YEARS} years of perihelion, the range over which they were checked against Horizons.`,
+          fr: `Les ${binarySpacecraft.length} sondes et les ${INTERSTELLAR_OBJECTS.length} objets interstellaires suivent leur propre règle. Une sonde est positionnée uniquement par son fichier Horizons, échantillonné à un pas de ${days(spacecraftSteps)} jours (${exact(spacecraftSteps[0]!, locale)} jour pour : ${listNames(finestSpacecraft)}), et n’est pas dessinée hors de la couverture de ce fichier. Un objet interstellaire est positionné par ses éléments hyperboliques et dessiné seulement à ±${INTERSTELLAR_WINDOW_YEARS} ans de son périhélie, la plage sur laquelle ils ont été vérifiés contre Horizons.`,
+        })}</p>`
     )
   );
 
@@ -288,11 +390,11 @@ function methodologyPage(input: MethodologyInput, locale: DocLocale): DocPage {
         fr: 'Entre deux échantillons : interpolation conditionnelle',
       }),
       `<p>${L({
-        en: `A Horizons file holds exact states at a fixed step. Between two of them, a cubic (Hermite) curve is only valid if the body moves smoothly over the interval. Galaxy therefore counts how many samples one revolution spans, using the catalogue’s mean period: from ${MIN_SAMPLES_PER_ORBIT_FOR_HERMITE} samples per orbit upwards it uses the cubic; below that, it propagates each of the two surrounding states along its own two-body orbit and blends them smoothly, so both ends stay exactly on the data.`,
-        fr: `Un fichier Horizons contient des états exacts à pas fixe. Entre deux d’entre eux, une courbe cubique (Hermite) n’est valable que si le corps se déplace régulièrement sur l’intervalle. Galaxy compte donc combien d’échantillons couvre une révolution, d’après la période moyenne du catalogue : à partir de ${MIN_SAMPLES_PER_ORBIT_FOR_HERMITE} échantillons par orbite, il emploie la cubique ; en dessous, il propage chacun des deux états qui encadrent la date le long de sa propre orbite à deux corps, puis les fond progressivement, si bien que chaque extrémité reste exactement sur les données.`,
+        en: `A Horizons file holds exact states at a fixed step. Between two of them, a cubic (Hermite) curve is only valid if the body moves smoothly over the interval, which is false as soon as it completes several turns within one step. Galaxy therefore counts how many samples one revolution spans, using the catalogue’s mean period. From ${MIN_SAMPLES_PER_ORBIT_FOR_HERMITE} samples per orbit upwards it uses the cubic. Below that, it propagates each of the two surrounding states along its own two-body orbit and blends them smoothly, so both ends stay exactly on the data.`,
+        fr: `Un fichier Horizons contient des états exacts à pas fixe. Entre deux d’entre eux, une courbe cubique (Hermite) n’est valable que si le corps se déplace régulièrement sur l’intervalle, ce qui est faux dès qu’il fait plusieurs tours en un pas. Galaxy compte donc combien d’échantillons couvre une révolution, d’après la période moyenne du catalogue. À partir de ${MIN_SAMPLES_PER_ORBIT_FOR_HERMITE} échantillons par orbite, il emploie la cubique. En dessous, il propage chacun des deux états qui encadrent la date le long de sa propre orbite à deux corps, puis les fond progressivement : chaque extrémité reste exactement sur les données.`,
       })}</p><p>${L({
-        en: 'Two refinements follow the same rule of keeping the data and linking it with the right curve: when a moon is massive enough to pull its planet around a shared barycentre (Charon and Pluto), that wobble is removed before interpolation and added back at the requested date; and for moons close to a flattened planet, the conic is travelled at the measured mean rate rather than the instantaneous one.',
-        fr: 'Deux raffinements suivent la même règle, garder les données et les relier par la bonne courbe : quand une lune est assez massive pour faire tourner sa planète autour d’un barycentre commun (Charon et Pluton), ce ballant est retiré avant l’interpolation puis rajouté à la date demandée ; et pour les lunes proches d’une planète aplatie, la conique est parcourue au rythme moyen mesuré plutôt qu’au rythme instantané.',
+        en: 'Two refinements follow the same rule, keeping the data and linking it with the right curve. When a moon is massive enough to pull its planet around a shared barycentre (Charon and Pluto), that wobble is removed before interpolation and added back at the requested date. For a declared list of moons close to a flattened planet, the conic is travelled at the measured mean rate rather than the instantaneous one.',
+        fr: 'Deux raffinements suivent la même règle, garder les données et les relier par la bonne courbe. Quand une lune est assez massive pour faire tourner sa planète autour d’un barycentre commun (Charon et Pluton), ce ballant est retiré avant l’interpolation puis rajouté à la date demandée. Pour une liste déclarée de lunes proches d’une planète aplatie, la conique est parcourue au rythme moyen mesuré plutôt qu’au rythme instantané.',
       })}</p>`
     )
   );
@@ -309,8 +411,8 @@ function methodologyPage(input: MethodologyInput, locale: DocLocale): DocPage {
         en: 'For a closed orbit (eccentricity below 1), Kepler’s equation M = E − e sin E is solved for the eccentric anomaly. For an open orbit (eccentricity above 1, the interstellar objects), the hyperbolic form M = e sinh F − F is solved instead; the mean anomaly is then not an angle and is never reduced modulo 360°.',
         fr: 'Pour une orbite fermée (excentricité inférieure à 1), l’équation de Kepler M = E − e sin E est résolue pour l’anomalie excentrique. Pour une orbite ouverte (excentricité supérieure à 1, les objets interstellaires), c’est la forme hyperbolique M = e sinh F − F qui est résolue ; l’anomalie moyenne n’est alors pas un angle et n’est jamais ramenée modulo 360°.',
       })}</p><p>${L({
-        en: `A moon’s elements are referred to its planet, whose mass sets the rate of motion; the period used is the measured mean sidereal period, not the one implied by an instantaneous state. An open trajectory has no full turn, so each interstellar object is only drawn within ±${INTERSTELLAR_WINDOW_YEARS} years of its perihelion. Orbit lines are sampled evenly in eccentric (or hyperbolic) anomaly rather than in time, so that very eccentric orbits reach their true closest point to the Sun.`,
-        fr: `Les éléments d’une lune sont rapportés à sa planète, dont la masse fixe la vitesse de parcours ; la période employée est la période sidérale moyenne mesurée, pas celle qu’implique un état instantané. Une trajectoire ouverte n’a pas de tour complet : chaque objet interstellaire n’est dessiné qu’à ±${INTERSTELLAR_WINDOW_YEARS} ans de son périhélie. Les lignes d’orbite sont échantillonnées régulièrement en anomalie excentrique (ou hyperbolique) plutôt que dans le temps, pour que les orbites très excentriques atteignent leur vrai point le plus proche du Soleil.`,
+        en: `A small body orbiting the Sun moves at the rate set by the Sun’s gravitational parameter. A moon’s elements are referred to its planet, and its rate comes from its measured mean sidereal period, not from the Sun, nor from the instantaneous state the elements were taken from. Orbit lines of orbits with an eccentricity of ${exact(ORBIT_SAMPLE_WARP_MIN_ECCENTRICITY, locale)} or more are sampled evenly in eccentric anomaly rather than in time, so that they reach their true closest point; hyperbolic trajectories are sampled evenly in hyperbolic anomaly.`,
+        fr: `Un petit corps en orbite autour du Soleil se déplace au rythme fixé par le paramètre gravitationnel du Soleil. Les éléments d’une lune sont rapportés à sa planète, et son rythme vient de sa période sidérale moyenne mesurée, et non du Soleil ni de l’état instantané d’où les éléments ont été tirés. Les lignes des orbites d’excentricité ${exact(ORBIT_SAMPLE_WARP_MIN_ECCENTRICITY, locale)} ou plus sont échantillonnées régulièrement en anomalie excentrique plutôt que dans le temps, pour atteindre leur vrai point le plus proche ; les trajectoires hyperboliques le sont en anomalie hyperbolique.`,
       })}</p>`
     )
   );
@@ -324,14 +426,24 @@ function methodologyPage(input: MethodologyInput, locale: DocLocale): DocPage {
       'spk',
       L({ en: 'SPK kernel', fr: 'Noyau SPK' }),
       `<p>${L({
-        en: `SPK is JPL’s binary format for high-precision ephemerides. Galaxy can read the SAT441 kernel for Saturn’s moons in a background worker, by HTTP range requests, composing segments through their common centre when the kernel stores no direct pair. ${summary.spk.enabledInProduction ? 'It is <strong>enabled</strong> on this site.' : 'It is <strong>not enabled</strong> on this site, so Saturn’s moons use the Horizons files above.'}`,
-        fr: `SPK est le format binaire du JPL pour les éphémérides de haute précision. Galaxy sait lire le noyau SAT441 des lunes de Saturne dans un worker en arrière-plan, par requêtes HTTP partielles, en composant les segments par leur centre commun quand le noyau ne stocke pas la paire directe. ${summary.spk.enabledInProduction ? 'Il est <strong>activé</strong> sur ce site.' : 'Il n’est <strong>pas activé</strong> sur ce site : les lunes de Saturne utilisent donc les fichiers Horizons ci-dessus.'}`,
-      })}</p>` +
+        en: 'SPK is JPL’s binary format for high-precision ephemerides. Galaxy can read the SAT441 kernel for Saturn’s moons in a background worker, by HTTP range requests, composing segments through their common centre when the kernel stores no direct pair.',
+        fr: 'SPK est le format binaire du JPL pour les éphémérides de haute précision. Galaxy sait lire le noyau SAT441 des lunes de Saturne dans un worker en arrière-plan, par requêtes HTTP partielles, en composant les segments par leur centre commun quand le noyau ne stocke pas la paire directe.',
+      })} ${L(
+        summary.spk.enabledInProduction
+          ? {
+              en: 'It is <strong>enabled</strong> on this site.',
+              fr: 'Il est <strong>activé</strong> sur ce site.',
+            }
+          : {
+              en: 'It is <strong>not enabled</strong> on this site, so Saturn’s moons use the Horizons files; the figures below were measured locally with the kernel.',
+              fr: 'Il n’est <strong>pas activé</strong> sur ce site : les lunes de Saturne utilisent donc les fichiers Horizons ; les chiffres ci-dessous ont été mesurés localement avec le noyau.',
+            }
+      )}</p>` +
         (spkRows.length > 0
           ? docTable(
               L({
-                en: 'SPK path measured locally against Horizons, position relative to Saturn',
-                fr: 'Chemin SPK mesuré localement contre Horizons, position relative à Saturne',
+                en: 'SPK path against Horizons, position relative to Saturn',
+                fr: 'Chemin SPK contre Horizons, position relative à Saturne',
               }),
               [
                 L({ en: 'Moon', fr: 'Lune' }),
@@ -341,9 +453,9 @@ function methodologyPage(input: MethodologyInput, locale: DocLocale): DocPage {
               ],
               spkRows.map((r) => [
                 escapeHtml(name(r.body, locale)),
-                `${year(r.windowFrom)}–${year(r.windowTo)}`,
-                q(r.km?.mean, locale),
-                q(r.km?.max, locale),
+                windowLabel(r),
+                num(r.km?.mean),
+                num(r.km?.max),
               ]),
               2
             )
@@ -360,43 +472,50 @@ function methodologyPage(input: MethodologyInput, locale: DocLocale): DocPage {
         fr: 'Échelles Éducative et Exploration',
       }),
       `<p>${L({
-        en: `Positions are computed in astronomical units (AU), then placed in the scene with a single constant K = ${SQRT_K} scene units, so that the Earth, at 1 AU, sits at ${SQRT_K} units in both modes.`,
-        fr: `Les positions sont calculées en unités astronomiques (UA), puis placées dans la scène avec une seule constante K = ${SQRT_K} unités de scène : la Terre, à 1 UA, est à ${SQRT_K} unités dans les deux modes.`,
+        en: `Positions are computed in astronomical units (AU), then placed in the scene with a single constant K = ${SQRT_K} scene units, so that the Earth, at 1 AU, sits at ${SQRT_K} units in both modes. Only the display changes between the two modes; the computed position is the same.`,
+        fr: `Les positions sont calculées en unités astronomiques (UA), puis placées dans la scène avec une seule constante K = ${SQRT_K} unités de scène : la Terre, à 1 UA, est à ${SQRT_K} unités dans les deux modes. Seul l’affichage change entre les deux modes ; la position calculée est la même.`,
       })}</p><ul class="doc-list"><li>${L({
-        en: `<strong>Explore</strong> is true scale: distance = AU × ${SQRT_K}, with physical radii. A distant body can be too small to see, exactly as in space; navigation aids are drawn as labels, never by enlarging the body, and the optical zoom changes the camera’s field of view only.`,
-        fr: `<strong>Exploration</strong> est à l’échelle réelle : distance = UA × ${SQRT_K}, avec les rayons physiques. Un corps lointain peut être trop petit pour être vu, exactement comme dans l’espace ; les aides à la navigation sont des étiquettes, jamais un corps agrandi, et le zoom optique ne change que le champ de la caméra.`,
+        en: `<strong>Explore</strong> is true scale: distance = AU × ${SQRT_K}, and every body has its physical radius. A distant body can be too small to see, exactly as in space; navigation aids are drawn as labels, never by enlarging a body, and the optical zoom changes only the camera’s field of view.`,
+        fr: `<strong>Exploration</strong> est à l’échelle réelle : distance = UA × ${SQRT_K}, et chaque corps a son rayon physique. Un corps lointain peut être trop petit pour être vu, exactement comme dans l’espace ; les aides à la navigation sont des étiquettes, jamais un corps agrandi, et le zoom optique ne change que le champ de la caméra.`,
       })}</li><li>${L({
-        en: `<strong>Educational</strong> compresses distances only: distance = √AU × ${SQRT_K}, along the true direction. Eccentric orbits keep their shape, but the gaps between planets are not to scale.`,
-        fr: `<strong>Éducatif</strong> ne compresse que les distances : distance = √UA × ${SQRT_K}, dans la vraie direction. Les orbites excentriques gardent leur forme, mais les écarts entre planètes ne sont pas à l’échelle.`,
+        en: `<strong>Educational</strong> is not to scale: distances are compressed to √AU × ${SQRT_K} along the true direction, and bodies are drawn at enlarged teaching sizes so that all of them stay visible. Eccentric orbits keep their shape.`,
+        fr: `<strong>Éducatif</strong> n’est pas à l’échelle : les distances sont compressées en √UA × ${SQRT_K} dans la vraie direction, et les corps sont dessinés à des tailles pédagogiques agrandies pour rester tous visibles. Les orbites excentriques gardent leur forme.`,
       })}</li></ul>`
     )
   );
 
   // 8. Validation
   const method = `<p>${L({
-    en: `Every source is compared with the NASA/JPL Horizons API (geometric vectors, ecliptic plane, time in UT) at ${summary.samplesPerCase} dates per row, spread over the window with a reproducible pseudo-random time of day. The error is the distance between Galaxy’s position and Horizons’ position. Horizons is the reference here, not absolute truth: its own uncertainty is not included. Measured on ${escapeHtml(summary.generatedAt.slice(0, 10))} by the script <code>scripts/validate-against-horizons.mjs</code>.`,
-    fr: `Chaque source est comparée à l’API NASA/JPL Horizons (vecteurs géométriques, plan de l’écliptique, temps UT) à ${summary.samplesPerCase} dates par ligne, réparties sur la fenêtre avec une heure pseudo-aléatoire reproductible. L’erreur est la distance entre la position de Galaxy et celle d’Horizons. Horizons est ici la référence, pas la vérité absolue : sa propre incertitude n’est pas incluse. Mesuré le ${escapeHtml(summary.generatedAt.slice(0, 10))} par le script <code>scripts/validate-against-horizons.mjs</code>.`,
+    en: `Every source is compared with the NASA/JPL Horizons API (geometric state vectors, J2000 ecliptic, time in UT) at ${summary.samplesPerCase} dates per row, spread over the window with a reproducible pseudo-random time of day. The error is the distance between Galaxy’s position and Horizons’ position, in kilometres and in radii of the body. Horizons is the reference here, not absolute truth: its own uncertainty is not included. Measured on ${escapeHtml(summary.generatedAt.slice(0, 10))} by <code>scripts/validate-against-horizons.mjs</code>, whose Horizons answers are cached so that the measurement can be replayed.`,
+    fr: `Chaque source est comparée à l’API NASA/JPL Horizons (vecteurs d’état géométriques, écliptique J2000, temps UT) à ${summary.samplesPerCase} dates par ligne, réparties sur la fenêtre avec une heure pseudo-aléatoire reproductible. L’erreur est la distance entre la position de Galaxy et celle d’Horizons, en kilomètres et en rayons du corps. Horizons est ici la référence, pas la vérité absolue : sa propre incertitude n’est pas incluse. Mesuré le ${escapeHtml(summary.generatedAt.slice(0, 10))} par <code>scripts/validate-against-horizons.mjs</code>, dont les réponses Horizons sont mises en cache pour que la mesure puisse être rejouée.`,
   })}</p>`;
+  const kmHeaders = [
+    L({ en: 'Mean (km)', fr: 'Moyenne (km)' }),
+    L({ en: '95th pct (km)', fr: '95ᵉ centile (km)' }),
+    L({ en: 'Max (km)', fr: 'Max (km)' }),
+  ];
+  const radiiHeader = L({
+    en: 'Mean (body radii)',
+    fr: 'Moyenne (rayons du corps)',
+  });
   const productionTable = docTable(
     L({
-      en: `What the app shows: heliocentric position as the scene composes it (a moon includes its planet’s error), ${year(production[0]!.windowFrom)}–${year(production[0]!.windowTo)}`,
-      fr: `Ce que montre l’application : position héliocentrique telle que la scène la compose (une lune inclut l’erreur de sa planète), ${year(production[0]!.windowFrom)}–${year(production[0]!.windowTo)}`,
+      en: `What the app shows, ${year(production[0]!.windowFrom)}–${year(production[0]!.windowTo)}: heliocentric position as the scene composes it (a moon includes its planet’s error)`,
+      fr: `Ce que montre l’application, ${year(production[0]!.windowFrom)}–${year(production[0]!.windowTo)} : position héliocentrique telle que la scène la compose (une lune inclut l’erreur de sa planète)`,
     }),
     [
       L({ en: 'Body', fr: 'Corps' }),
       L({ en: 'Source used', fr: 'Source retenue' }),
-      L({ en: 'Mean (km)', fr: 'Moyenne (km)' }),
-      L({ en: '95th pct (km)', fr: '95e centile (km)' }),
-      L({ en: 'Max (km)', fr: 'Max (km)' }),
-      L({ en: 'Mean (body radii)', fr: 'Moyenne (rayons du corps)' }),
+      ...kmHeaders,
+      radiiHeader,
     ],
     production.map((r) => [
       escapeHtml(name(r.body, locale)),
       sourceLabel(r, locale),
-      q(r.km?.mean, locale),
-      q(r.km?.p95, locale),
-      q(r.km?.max, locale),
-      q(r.radii?.mean, locale),
+      num(r.km?.mean),
+      num(r.km?.p95),
+      num(r.km?.max),
+      num(r.radii?.mean),
     ]),
     2
   );
@@ -411,22 +530,20 @@ function methodologyPage(input: MethodologyInput, locale: DocLocale): DocPage {
   );
   const epochTable = docTable(
     L({
-      en: 'Keplerian bodies close to their elements’ epoch (interstellar objects: over their drawn window)',
-      fr: 'Corps képlériens près de l’époque de leurs éléments (objets interstellaires : sur leur fenêtre dessinée)',
+      en: 'Keplerian bodies close to their elements’ epoch; interstellar objects over their drawn window',
+      fr: 'Corps képlériens près de l’époque de leurs éléments ; objets interstellaires sur leur fenêtre dessinée',
     }),
     [
       L({ en: 'Body', fr: 'Corps' }),
       L({ en: 'Window', fr: 'Fenêtre' }),
-      L({ en: 'Mean (km)', fr: 'Moyenne (km)' }),
-      L({ en: '95th pct (km)', fr: '95e centile (km)' }),
-      L({ en: 'Max (km)', fr: 'Max (km)' }),
+      ...kmHeaders,
     ],
     nearEpoch.map((r) => [
       escapeHtml(name(r.body, locale)),
-      `${escapeHtml(r.windowFrom)} → ${escapeHtml(r.windowTo)}`,
-      q(r.km?.mean, locale),
-      q(r.km?.p95, locale),
-      q(r.km?.max, locale),
+      windowLabel(r),
+      num(r.km?.mean),
+      num(r.km?.p95),
+      num(r.km?.max),
     ]),
     2
   );
@@ -444,18 +561,62 @@ function methodologyPage(input: MethodologyInput, locale: DocLocale): DocPage {
       L({ en: 'Mission', fr: 'Mission' }),
       L({ en: 'Coverage', fr: 'Couverture' }),
       L({ en: 'Median (km)', fr: 'Médiane (km)' }),
-      L({ en: '95th pct (km)', fr: '95e centile (km)' }),
+      L({ en: '95th pct (km)', fr: '95ᵉ centile (km)' }),
       L({ en: 'Max (km)', fr: 'Max (km)' }),
     ],
     spacecraftRows.map((r) => [
       escapeHtml(name(r.body, locale)),
-      `${escapeHtml(r.windowFrom)} → ${escapeHtml(r.windowTo)}`,
-      q(r.km?.median, locale),
-      q(r.km?.p95, locale),
-      q(r.km?.max, locale),
+      windowLabel(r),
+      num(r.km?.median),
+      num(r.km?.p95),
+      num(r.km?.max),
     ]),
     2
   );
+
+  // Rapport complet par source : chaque ligne du résumé, repliée par défaut.
+  const detailTables = (
+    Object.keys(PROVIDER_TITLES) as (keyof typeof PROVIDER_TITLES)[]
+  )
+    .map((provider) => {
+      const providerRows = rows.filter(
+        (r) =>
+          r.provider === provider &&
+          !(provider === 'horizons-binary' && spacecraftNames.has(r.body)) &&
+          !(provider === 'spk' && r.n === 0)
+      );
+      if (providerRows.length === 0) return '';
+      const table = docTable(
+        L(PROVIDER_TITLES[provider]),
+        [
+          L({ en: 'Body', fr: 'Corps' }),
+          L({ en: 'Frame', fr: 'Repère' }),
+          L({ en: 'Window', fr: 'Fenêtre' }),
+          L({ en: 'Dates', fr: 'Dates' }),
+          L({ en: 'Mean (km)', fr: 'Moyenne (km)' }),
+          L({ en: 'Median (km)', fr: 'Médiane (km)' }),
+          L({ en: '95th pct (km)', fr: '95ᵉ centile (km)' }),
+          L({ en: 'Max (km)', fr: 'Max (km)' }),
+          radiiHeader,
+        ],
+        providerRows.map((r) => [
+          escapeHtml(name(r.body, locale)),
+          r.relative
+            ? L({ en: 'relative to planet', fr: 'relatif à la planète' })
+            : L({ en: 'heliocentric', fr: 'héliocentrique' }),
+          windowLabel(r),
+          String(r.n),
+          num(r.km?.mean),
+          num(r.km?.median),
+          num(r.km?.p95),
+          num(r.km?.max),
+          num(r.radii?.mean),
+        ]),
+        3
+      );
+      return `<details class="doc-details"><summary>${escapeHtml(L(PROVIDER_TITLES[provider]))} (${providerRows.length})</summary>${table}</details>`;
+    })
+    .join('');
 
   sections.push(
     docSection(
@@ -469,38 +630,50 @@ function methodologyPage(input: MethodologyInput, locale: DocLocale): DocPage {
         })}</p>` +
         epochTable +
         `<p>${L({
-          en: 'For spacecraft the median is the meaningful figure: files are sampled at a fixed step of a day or a few days, and errors peak briefly around close flybys and perihelia, where the trajectory bends faster than that step can resolve.',
-          fr: 'Pour les sondes, la médiane est le chiffre parlant : les fichiers sont échantillonnés à pas fixe d’un ou quelques jours, et l’erreur culmine brièvement autour des survols rapprochés et des périhélies, où la trajectoire se courbe plus vite que ce pas ne peut le résoudre.',
+          en: 'For spacecraft the median is the meaningful figure: errors peak briefly around close flybys and perihelia, where the trajectory bends faster than the file’s step can resolve.',
+          fr: 'Pour les sondes, la médiane est le chiffre parlant : l’erreur culmine brièvement autour des survols rapprochés et des périhélies, où la trajectoire se courbe plus vite que le pas du fichier ne peut le résoudre.',
         })}</p>` +
-        spacecraftTable
+        spacecraftTable +
+        `<h3>${L({ en: 'Full measurements, by source', fr: 'Mesures complètes, par source' })}</h3><p>${L(
+          {
+            en: 'Each source measured on its own, over its own windows, including those the app only uses as a fallback. “Dates” is the number of dates at which the source gave a position.',
+            fr: 'Chaque source mesurée seule, sur ses propres fenêtres, y compris celles que l’application n’emploie qu’en repli. « Dates » est le nombre de dates auxquelles la source a donné une position.',
+          }
+        )}</p>` +
+        detailTables
     )
   );
 
   // 9. Limites connues
+  const earth = productionOf('earth');
   const limits: Bilingual[] = [
     {
-      en: `Bodies positioned by Keplerian elements alone (${listNames(keplerOnly.map((r) => r.body))}) drift away from their true position far from their epoch: the two-body model ignores planetary perturbations. See the tables above for the size of that drift.`,
-      fr: `Les corps positionnés par leurs seuls éléments képlériens (${listNames(keplerOnly.map((r) => r.body))}) s’écartent de leur vraie position loin de leur époque : le modèle à deux corps ignore les perturbations des planètes. Les tableaux ci-dessus donnent l’ampleur de cette dérive.`,
+      en: `The Earth is drawn at the Earth-Moon barycentre, not at its own centre, to avoid a monthly wobble that would show as a zigzag at true scale and high speed; the Moon is placed correctly relative to that point. This offset is what the Earth row of the accuracy table measures${earth ? ` (${num(earth.km?.mean)} km on average)` : ''}.`,
+      fr: `La Terre est dessinée au barycentre Terre-Lune, pas en son propre centre, pour éviter un ballant mensuel qui se verrait comme un zigzag à vraie échelle et à grande vitesse ; la Lune est placée correctement par rapport à ce point. Ce décalage est ce que mesure la ligne Terre du tableau de précision${earth ? ` (${num(earth.km?.mean)} km en moyenne)` : ''}.`,
     },
     {
-      en: `Outside ${escapeHtml(year(manifest.coverage.start))}–${escapeHtml(year(manifest.coverage.stop))}, the Horizons files do not apply and every body falls back to astronomy-engine or Keplerian elements. The accuracy table covers that period only.`,
-      fr: `Hors de ${escapeHtml(year(manifest.coverage.start))}–${escapeHtml(year(manifest.coverage.stop))}, les fichiers Horizons ne s’appliquent pas et chaque corps retombe sur astronomy-engine ou sur ses éléments képlériens. Le tableau de précision ne couvre que cette période.`,
+      en: `Bodies positioned by Keplerian elements alone (${listNames(keplerOnly.map((r) => r.body))}) drift away from their true position far from their epoch, because the two-body model ignores planetary perturbations. The tables above give the size of that drift.`,
+      fr: `Les corps positionnés par leurs seuls éléments képlériens (${listNames(keplerOnly.map((r) => r.body))}) s’écartent de leur vraie position loin de leur époque, parce que le modèle à deux corps ignore les perturbations des planètes. Les tableaux ci-dessus donnent l’ampleur de cette dérive.`,
     },
     {
-      en: 'The Galilean moons and the Earth’s Moon come from astronomy-engine’s analytic models rather than from JPL files; their measured error is in the table above.',
-      fr: 'Les lunes galiléennes et la Lune viennent des modèles analytiques d’astronomy-engine et non de fichiers JPL ; leur erreur mesurée figure dans le tableau ci-dessus.',
+      en: `Outside ${escapeHtml(manifest.coverage.start)} to ${escapeHtml(manifest.coverage.stop)}, the Horizons files do not apply: planets fall back to astronomy-engine, other bodies to their Keplerian elements. The production table covers ${year(production[0]!.windowFrom)}–${year(production[0]!.windowTo)} only; the full measurements show the sources over wider windows.`,
+      fr: `Hors de la période du ${escapeHtml(manifest.coverage.start)} au ${escapeHtml(manifest.coverage.stop)}, les fichiers Horizons ne s’appliquent pas : les planètes retombent sur astronomy-engine, les autres corps sur leurs éléments képlériens. Le tableau de production ne couvre que ${year(production[0]!.windowFrom)}–${year(production[0]!.windowTo)} ; les mesures complètes montrent les sources sur des fenêtres plus larges.`,
     },
     {
-      en: 'The rotation of synchronous moons is driven by rounded published periods, so the face they turn towards their planet can slowly drift over years.',
-      fr: 'La rotation des lunes synchrones suit des périodes publiées arrondies : la face qu’elles tournent vers leur planète peut dériver lentement au fil des années.',
+      en: 'The asteroids and comets of the optional small-body layer, up to several thousand, come live from the JPL Small-Body Database and are propagated from its elements. They are not part of this measurement.',
+      fr: 'Les astéroïdes et comètes de la couche optionnelle des petits corps, jusqu’à plusieurs milliers, viennent en direct de la JPL Small-Body Database et sont propagés depuis ses éléments. Ils ne font pas partie de cette mesure.',
     },
+    ...(drifts.length > 0
+      ? [
+          {
+            en: `Some synchronous moons do not spin exactly at their orbital period in the catalogue, so the face they turn towards their planet slowly drifts: ${drifts.map((d) => `${escapeHtml(name(d.body, 'en'))} ${formatQuantity(d.degreesPerYear, 'en')}° per year`).join(', ')}. The other synchronous moons are locked exactly.`,
+            fr: `Certaines lunes synchrones ne tournent pas exactement à leur période orbitale dans le catalogue : la face qu’elles tournent vers leur planète dérive lentement, ${drifts.map((d) => `${escapeHtml(name(d.body, 'fr'))} ${formatQuantity(d.degreesPerYear, 'fr')}° par an`).join(', ')}. Les autres lunes synchrones sont verrouillées exactement.`,
+          },
+        ]
+      : []),
     {
-      en: `${ILLUSTRATIVE_SURFACES.size} bodies have never been imaged well enough for a global map: their surfaces are illustrative, not scientific. The <a href="${docPath('sources', locale)}">sources page</a> lists which ones and why.`,
-      fr: `${ILLUSTRATIVE_SURFACES.size} corps n’ont jamais été photographiés assez bien pour une carte globale : leur surface est illustrative, pas scientifique. La <a href="${docPath('sources', locale)}">page des sources</a> dit lesquels et pourquoi.`,
-    },
-    {
-      en: 'In Educational mode distances are compressed and body sizes are not to scale with them; only Explore mode is a true-scale view.',
-      fr: 'En mode Éducatif, les distances sont compressées et les tailles ne sont pas à la même échelle qu’elles ; seul le mode Exploration est une vue à l’échelle réelle.',
+      en: `${ILLUSTRATIVE_SURFACES.size} bodies have never been mapped globally: their surfaces are illustrative, not scientific. The <a href="${docPath('sources', locale)}">sources page</a> lists them.`,
+      fr: `${ILLUSTRATIVE_SURFACES.size} corps n’ont jamais été cartographiés globalement : leur surface est illustrative, pas scientifique. La <a href="${docPath('sources', locale)}">page des sources</a> les énumère.`,
     },
   ];
   sections.push(

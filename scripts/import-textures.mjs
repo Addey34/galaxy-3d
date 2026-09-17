@@ -79,7 +79,8 @@ const SSS = {
 };
 const SSS_FICT = {
   ...SSS,
-  credit: 'Solar System Scope — illustratif (CC BY 4.0)',
+  credit: 'Solar System Scope (solarsystemscope.com)',
+  illustrative: true,
 };
 const BM = {
   license: 'public-domain',

@@ -28,7 +28,7 @@ export const EXPLO_ORBIT_SAMPLE_COUNT = 4096;
 const MS_PER_DAY = 86_400_000;
 
 /** Excentricite a partir de laquelle la ligne est echantillonnee en anomalie excentrique. */
-const ORBIT_SAMPLE_WARP_MIN_ECCENTRICITY = 0.2;
+export const ORBIT_SAMPLE_WARP_MIN_ECCENTRICITY = 0.2;
 
 export class OrbitPathBuilder {
   constructor(

@@ -115,8 +115,11 @@ describe('modèles de forme 3D', () => {
       // pour les textures (`scripts/texture-sources.json`). Le champ est obligatoire dans le
       // type, ce test interdit en plus de le remplir avec du vide.
       const credit = flattenBodies(CELESTIAL_CONFIG).get(name)?.model?.credit;
-      expect(credit?.trim().length ?? 0).toBeGreaterThan(20);
-      expect(credit).toMatch(/NASA|ESA|JAXA|USGS|DLR/);
+      // Dans les DEUX langues : la fiche l'affiche dans la langue de l'interface.
+      for (const text of [credit?.en, credit?.fr]) {
+        expect(text?.trim().length ?? 0).toBeGreaterThan(20);
+        expect(text).toMatch(/NASA|ESA|JAXA|USGS|DLR/);
+      }
     }
   );
 

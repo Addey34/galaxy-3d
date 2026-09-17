@@ -8,8 +8,17 @@
  */
 import * as THREE from 'three';
 
-/** Obliquité de l'écliptique (inclinaison de l'axe terrestre) — 23.4394°. */
-export const OBLIQUITY_RAD = 23.4394 * (Math.PI / 180);
+/**
+ * Obliquité de l'écliptique J2000 : 84 381,448″ (IAU 1976), soit 23,4392911°.
+ *
+ * C'est l'obliquité qui DÉFINIT le repère « Ecliptic of J2000.0 » des fichiers JPL Horizons et
+ * des éléments orbitaux du catalogue (l'en-tête de chaque réponse Horizons l'écrit : « IAU76
+ * obliquity of 84381.448 arcseconds wrt ICRF X-Y plane »). Les vecteurs d'astronomy-engine,
+ * équatoriaux, doivent tourner de CETTE valeur pour tomber dans le même repère que les autres
+ * sources de la scène. L'ancienne valeur arrondie, 23,4394°, en différait de 0,39″ : environ
+ * 280 km à 1 UA entre une planète d'astronomy-engine et une planète issue d'un fichier.
+ */
+export const OBLIQUITY_RAD = (84_381.448 / 3600) * (Math.PI / 180);
 const COS_OBL = Math.cos(OBLIQUITY_RAD);
 const SIN_OBL = Math.sin(OBLIQUITY_RAD);
 

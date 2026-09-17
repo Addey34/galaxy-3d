@@ -58,6 +58,133 @@ export interface SourcesInput {
   /** Date ISO affichée comme date des données (celle du build). */
   updated: string;
   origin: string;
+  /**
+   * Hôtes que la CSP de production autorise en `connect-src` (`firebase.json`), hors `'self'`.
+   * C'est la liste AUTORITAIRE des services que le navigateur d'un visiteur peut contacter :
+   * chacun doit être décrit ci-dessous, et chaque description doit correspondre à un hôte.
+   */
+  connectHosts: readonly string[];
+}
+
+export interface LiveDataService {
+  host: string;
+  name: string;
+  url: string;
+  use: Bilingual;
+  terms: Bilingual;
+}
+
+/**
+ * Services contactés À L'EXÉCUTION, avec leur usage et leurs conditions.
+ *
+ * Les conditions ont été lues à la source le 2026-09-17 : Open-Meteo (README du dépôt
+ * open-meteo et page « Terms » : données CC BY 4.0, API gratuite réservée à l'usage non
+ * commercial, lien d'attribution demandé), citation ERA5 (page « Historical Weather API »),
+ * NASA Earthdata « Data Use Guidance » (données EOSDIS sans restriction, citation demandée).
+ * Cloudflare Web Analytics n'est pas une source de données : il est décrit dans la politique de
+ * confidentialité, et déclaré ici comme tel pour que la liste reste égale à la CSP.
+ */
+export const LIVE_DATA_SERVICES: readonly LiveDataService[] = [
+  {
+    host: 'gibs.earthdata.nasa.gov',
+    name: 'NASA GIBS (EOSDIS)',
+    url: 'https://www.earthdata.nasa.gov/engage/open-data-services-software/earthdata-developer-portal/gibs-api',
+    use: {
+      en: 'Earth weather layers from satellites and reanalysis: VIIRS and MODIS (Terra, Aqua) clouds, IMERG precipitation, MERRA-2 surface air temperature.',
+      fr: 'Couches météo terrestres issues de satellites et de réanalyse : nuages VIIRS et MODIS (Terra, Aqua), précipitations IMERG, température de l’air en surface MERRA-2.',
+    },
+    terms: {
+      en: 'NASA EOSDIS data, no restriction on use; NASA is acknowledged as the source.',
+      fr: 'Données NASA EOSDIS, sans restriction d’usage ; la NASA est citée comme source.',
+    },
+  },
+  {
+    host: 'api.open-meteo.com',
+    name: 'Open-Meteo',
+    url: 'https://open-meteo.com/',
+    use: {
+      en: 'Model weather layers (forecast and recent days): clouds, precipitation, wind, temperature, pressure, humidity.',
+      fr: 'Couches météo de modèle (prévision et jours récents) : nuages, précipitations, vent, température, pression, humidité.',
+    },
+    terms: {
+      en: 'Weather data by Open-Meteo.com, licensed under CC BY 4.0; values are resampled into map textures. Free API used under its non-commercial terms.',
+      fr: 'Données météo par Open-Meteo.com, sous licence CC BY 4.0 ; les valeurs sont rééchantillonnées en textures de carte. API gratuite utilisée selon ses conditions non commerciales.',
+    },
+  },
+  {
+    host: 'archive-api.open-meteo.com',
+    name: 'Open-Meteo Historical Weather API (ERA5)',
+    url: 'https://open-meteo.com/en/docs/historical-weather-api',
+    use: {
+      en: 'The same model layers for past dates, from the ERA5 reanalysis.',
+      fr: 'Les mêmes couches de modèle pour les dates passées, d’après la réanalyse ERA5.',
+    },
+    terms: {
+      en: 'CC BY 4.0 through Open-Meteo. Hersbach, H. et al. (2023), ERA5 hourly data on single levels from 1940 to present, ECMWF, doi:10.24381/cds.adbb2d47. Generated using Copernicus Climate Change Service information.',
+      fr: 'CC BY 4.0 via Open-Meteo. Hersbach, H. et al. (2023), ERA5 hourly data on single levels from 1940 to present, ECMWF, doi:10.24381/cds.adbb2d47. Generated using Copernicus Climate Change Service information.',
+    },
+  },
+  {
+    host: 'ssd-api.jpl.nasa.gov',
+    name: 'NASA/JPL Small-Body Database',
+    url: 'https://ssd-api.jpl.nasa.gov/doc/sbdb_query.html',
+    use: {
+      en: 'Orbital elements of the asteroids and comets shown by the optional small-body layer.',
+      fr: 'Éléments orbitaux des astéroïdes et comètes de la couche optionnelle des petits corps.',
+    },
+    terms: {
+      en: 'Public NASA/JPL service, cited as the source.',
+      fr: 'Service public NASA/JPL, cité comme source.',
+    },
+  },
+  {
+    host: 'cloudflareinsights.com',
+    name: 'Cloudflare Web Analytics',
+    url: '/privacy.html',
+    use: {
+      en: 'Not a data source: cookieless visit counting, described in the privacy policy.',
+      fr: 'Pas une source de données : comptage de visites sans cookie, décrit dans la politique de confidentialité.',
+    },
+    terms: {
+      en: 'See the privacy policy.',
+      fr: 'Voir la politique de confidentialité.',
+    },
+  },
+];
+
+/** Forme minimale de `firebase.json` lue pour la CSP. */
+export interface FirebaseHostingConfig {
+  hosting: { headers: { headers: { key: string; value: string }[] }[] };
+}
+
+/** Hôtes HTTPS de la directive `connect-src` de la CSP servie par Firebase. */
+export function connectHostsFromFirebase(
+  config: FirebaseHostingConfig
+): string[] {
+  const csp = config.hosting.headers
+    .flatMap((rule) => rule.headers)
+    .find((header) => header.key === 'Content-Security-Policy')?.value;
+  const connectSrc = /(?:^|;)\s*connect-src ([^;]+)/.exec(csp ?? '')?.[1];
+  if (!connectSrc)
+    throw new Error('firebase.json : connect-src introuvable dans la CSP');
+  return connectSrc
+    .trim()
+    .split(/\s+/)
+    .filter((source) => source.startsWith('https://'))
+    .map((source) => new URL(source).host);
+}
+
+/** Hôtes de la CSP sans description, et descriptions sans hôte : les deux doivent être vides. */
+export function liveServiceMismatch(connectHosts: readonly string[]): {
+  undescribed: string[];
+  unused: string[];
+} {
+  const described = new Set(LIVE_DATA_SERVICES.map((s) => s.host));
+  const allowed = new Set(connectHosts);
+  return {
+    undescribed: connectHosts.filter((h) => !described.has(h)),
+    unused: [...described].filter((h) => !allowed.has(h)),
+  };
 }
 
 /** Une couche de texture livrée par le catalogue : ce que la page doit sourcer. */
@@ -129,6 +256,11 @@ export function sourcesPages(input: SourcesInput): DocPage[] {
     );
   if (input.dependencies.length === 0)
     throw new Error('page /sources : aucune dépendance lue dans package.json');
+  const services = liveServiceMismatch(input.connectHosts);
+  if (services.undescribed.length > 0 || services.unused.length > 0)
+    throw new Error(
+      `page /sources : services en direct non alignés sur la CSP (non décrits : ${services.undescribed.join(', ') || 'aucun'} ; décrits mais absents : ${services.unused.join(', ') || 'aucun'})`
+    );
   return DOC_LOCALES.map((locale) => sourcesPage(input, locale));
 }
 
@@ -161,9 +293,16 @@ function sourcesPage(input: SourcesInput, locale: DocLocale): DocPage {
       escapeHtml(name(t.body, locale)),
       escapeHtml(LAYER_LABELS[t.layer]?.[locale] ?? t.layer),
       escapeHtml(LICENSE_LABELS[t.license]?.[locale] ?? t.license),
-      t.sourceUrl
-        ? link(t.sourceUrl, escapeHtml(t.credit))
-        : escapeHtml(t.credit),
+      // Une texture générée n'a pas de tiers à créditer : on le dit dans la langue de la page
+      // plutôt que de citer la note technique du fichier de provenance.
+      t.license === 'generated'
+        ? L({
+            en: 'Procedural texture, no third-party material',
+            fr: 'Texture procédurale, aucun contenu tiers',
+          })
+        : t.sourceUrl
+          ? link(t.sourceUrl, escapeHtml(t.credit))
+          : escapeHtml(t.credit),
       t.illustrative
         ? L({ en: 'illustrative', fr: 'illustrative' })
         : L({
@@ -203,9 +342,9 @@ function sourcesPage(input: SourcesInput, locale: DocLocale): DocPage {
       const model = cfg.model!;
       return [
         escapeHtml(name(body, locale)),
-        escapeHtml(model.credit),
+        escapeHtml(model.credit[locale]),
         escapeHtml(
-          model.colourSource ??
+          model.colourSource?.[locale] ??
             L({
               en: 'No global map published: uniform colour at the published albedo',
               fr: 'Aucune carte globale publiée : couleur uniforme à l’albédo publié',
@@ -306,6 +445,34 @@ function sourcesPage(input: SourcesInput, locale: DocLocale): DocPage {
             L({ en: 'Centre', fr: 'Centre' }),
           ],
           elementRows
+        )
+    )
+  );
+
+  // ── Services en direct ──
+  sections.push(
+    docSection(
+      'live-data',
+      L({ en: 'Live data services', fr: 'Services de données en direct' }),
+      `<p>${L({
+        en: 'Your browser contacts these services while the app runs, for the layers that use them. The list is checked at build time against the hosts that the site’s security policy allows.',
+        fr: 'Votre navigateur contacte ces services pendant l’utilisation de l’application, pour les couches qui s’en servent. La liste est vérifiée au build contre les hôtes qu’autorise la politique de sécurité du site.',
+      })}</p>` +
+        docTable(
+          L({
+            en: 'Services contacted at runtime',
+            fr: 'Services contactés à l’exécution',
+          }),
+          [
+            L({ en: 'Service', fr: 'Service' }),
+            L({ en: 'Used for', fr: 'Usage' }),
+            L({ en: 'Terms and credit', fr: 'Conditions et crédit' }),
+          ],
+          LIVE_DATA_SERVICES.map((service) => [
+            link(service.url, escapeHtml(service.name)),
+            escapeHtml(L(service.use)),
+            escapeHtml(L(service.terms)),
+          ])
         )
     )
   );

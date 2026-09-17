@@ -366,6 +366,11 @@ function bodyLandingPages() {
             };
           })
         );
+        // Hôtes que la CSP de production autorise : la page /sources doit décrire exactement
+        // ceux-là (voir `LIVE_DATA_SERVICES`).
+        const connectHosts = sourcesSeo.connectHostsFromFirebase(
+          await readJson('firebase.json')
+        );
         const citation = await readFile(
           resolve(__dirname, 'CITATION.cff'),
           'utf-8'
@@ -394,6 +399,7 @@ function bodyLandingPages() {
               'utf-8'
             ),
             repositoryBlobUrl: `${repository}/blob/main`,
+            connectHosts,
             updated: today,
             origin: SITE_ORIGIN,
           }),
@@ -403,7 +409,11 @@ function bodyLandingPages() {
           await mkdir(dir, { recursive: true });
           await writeFile(
             resolve(dir, 'index.html'),
-            docSeo.renderDocPage(page, SITE_ORIGIN),
+            docSeo.renderDocPage(
+              page,
+              SITE_ORIGIN,
+              docSeo.socialImageFromHtml(baseHtml)
+            ),
             'utf-8'
           );
         }

@@ -163,7 +163,9 @@ export const messages: Record<Locale, Dict> = {
     'credits.textures': 'Textures',
     'credits.fictional': 'Illustrative surfaces',
     'credits.fictional.list':
-      'No spacecraft has resolved these surfaces; their textures are illustrative, not scientific maps: Ceres, Eris, Haumea, Makemake, Pallas, Hygiea, Halley.',
+      'Bodies never mapped globally have an illustrative texture, not a scientific map; the body card says so, and Sources lists them.',
+    'weather.attribution.prefix': 'Weather data:',
+    'weather.attribution.modified': 'resampled into map textures',
     'credits.models': '3D shape models',
     'credits.data': 'Data',
     'credits.privacy': 'Privacy',
@@ -509,7 +511,9 @@ export const messages: Record<Locale, Dict> = {
     'credits.textures': 'Textures',
     'credits.fictional': 'Surfaces fictives',
     'credits.fictional.list':
-      'Aucune sonde n’a résolu ces surfaces ; leurs textures sont illustratives, pas des cartes scientifiques : Cérès, Éris, Hauméa, Makémaké, Pallas, Hygie, Halley.',
+      'Les corps jamais cartographiés globalement ont une texture illustrative, pas une carte scientifique ; la fiche du corps le signale, et Sources les énumère.',
+    'weather.attribution.prefix': 'Données météo :',
+    'weather.attribution.modified': 'rééchantillonnées en textures de carte',
     'credits.models': 'Modèles de forme 3D',
     'credits.data': 'Données',
     'credits.privacy': 'Confidentialité',

@@ -937,8 +937,41 @@ Trois refus bruyants plutôt qu'une page fausse :
   contrôle a trouvé à sa première exécution `earth/displacement` (ETOPO 2022) absent du bloc
   `imported`, et la normal map de la Terre encore créditée à « NASA Visible Earth » alors
   qu'elle est dérivée d'ETOPO 2022 depuis `8e7b5d5` ;
+- `sourcesPages` encore : chaque hôte `connect-src` de la CSP (`firebase.json`) doit être décrit
+  dans `LIVE_DATA_SERVICES`, et réciproquement ;
 - `docPages.test.ts` : chaque corps positionné du catalogue doit figurer dans le résumé. Ajouter
   un corps oblige donc à relancer la validation, sinon le tableau de précision le tairait.
+
+**Chaque phrase de la page est confrontée au code, pas seulement ses chiffres.** La relecture du
+lot 3 contre le code a trouvé cinq affirmations fausses dans la première version, toutes
+désormais tenues par un test de `docPages.test.ts` :
+
+- l'ordre des sources : le SPK, quand il est actif, passe AVANT les fichiers Horizons
+  (`FallbackPreciseEphemerisProvider(spk, horizons)` dans `SolarSystemApp.ts`) ;
+- le mode Éducatif n'est pas « distances seules » : les corps y ont des tailles pédagogiques ;
+- la dérive de rotation ne concerne que les lunes presque synchrones, calculée corps par corps
+  (`synchronousSpinDrifts`) ; les 18 autres sont verrouillées à 1e-9 ;
+- la Terre est dessinée au barycentre Terre-Lune (`positionBody: Body.EMB`), ce que mesure sa
+  ligne du tableau (4 823 km en moyenne) ;
+- « contacté seulement quand la couche est utilisée » était faux : SBDB est interrogé au
+  démarrage, et la couche de nuages satellite (active par défaut sur ordinateur) comble ses
+  trous avec Open-Meteo.
+
+**Obliquité corrigée, trouvée par cette relecture.** `frames.ts` tournait les vecteurs
+d'astronomy-engine de 23,4394°, alors que l'écliptique J2000 des fichiers Horizons et des
+éléments est défini par l'obliquité IAU 1976, 84 381,448″ (23,4392911°, écrit dans l'en-tête de
+chaque réponse Horizons). Deux sources de la même scène étaient donc dans deux repères décalés
+de 0,39″, environ 280 km à 1 UA. Remesuré hors ligne : Vénus 1 451 → 1 428 km, Mars
+(astronomy-engine) 2 992 → 2 891, Jupiter 22 990 → 22 820 ; Uranus 111 200 → 112 200, dans le
+bruit de VSOP87 et sans effet en production (fichier Horizons).
+
+**Attribution des données météo, manquante avant le lot 3.** Open-Meteo diffuse sous CC BY 4.0 et
+demande un lien d'attribution près des données affichées ; ERA5 demande sa citation Copernicus.
+Rien de cela n'apparaissait : le badge affichait « Open-Meteo » sans lien ni licence. Ajouté en
+pied du panneau météo et dans les crédits de l'aide ; conditions lues à la source le 2026-09-17
+(README et « Terms » d'Open-Meteo, page « Historical Weather API », « Data Use Guidance » de NASA
+Earthdata). L'usage gratuit d'Open-Meteo est réservé au non commercial ; Galaxy (gratuit, sans
+abonnement ni publicité) entre dans leurs exemples d'usage non commercial.
 
 Piège payé : `THIRD_PARTY_NOTICES.md` est en CRLF dans un checkout Windows, et `.` ne franchit
 pas le retour chariot (`\r`) en JavaScript. Le retrait du titre de premier niveau était un no-op silencieux ; le

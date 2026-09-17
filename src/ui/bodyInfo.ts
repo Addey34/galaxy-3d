@@ -386,8 +386,9 @@ export function setupBodyInfo(coordinator?: OverlayCoordinator): BodyInfoPanel {
     // fichier glTF : nulle part où un visiteur le voit, alors que la politique ISAS/JAXA exige
     // de citer la source (et les modifications) de tout usage de ses données.
     if (creditEl) {
-      const credit = cfg.model?.credit;
-      const colour = cfg.model?.colourSource;
+      const locale = getLocale() === 'fr' ? 'fr' : 'en';
+      const credit = cfg.model?.credit[locale];
+      const colour = cfg.model?.colourSource?.[locale];
       // La carte de couleur est une donnée tierce elle aussi : citée à côté de la forme.
       creditEl.textContent = credit
         ? `${t('bi.modelCredit')} : ${credit}${colour ? ` · ${t('bi.colourCredit')} : ${colour}` : ''}`
