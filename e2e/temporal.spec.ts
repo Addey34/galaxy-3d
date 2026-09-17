@@ -66,8 +66,13 @@ test('the weather badge says when the tile is older than the scene', async ({
   await page.route('**gibs.earthdata.nasa.gov/wms/**', (route) =>
     route.fulfill({ path: 'public/assets/textures/earth/earth_clouds_1k.jpg' })
   );
-  await openAt(page, 'earth', '2030-01-01T00:00:00Z');
-  await page.locator('#weather-trigger').click();
+  // Vue globale, pas de vol vers la Terre : la couche nuages se charge de la même façon, et on
+  // ne clique pas pendant que le runner décode la normal map 8k. Cette version échouait aux
+  // trois tentatives en CI (GPU logiciel), jamais en local : 15 s d'actionnabilité ne suffisent
+  // pas à travers un à-coup de décodage.
+  await page.goto('/?date=2030-01-01T00%3A00%3A00Z');
+  await expect(page.locator('#loader')).toBeHidden({ timeout: 60_000 });
+  await page.locator('#weather-trigger').click({ timeout: 30_000 });
   const badge = page
     .locator('#weather-layers .wl-item')
     .filter({ hasText: 'Clouds (NASA)' })
