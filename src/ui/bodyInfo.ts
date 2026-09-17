@@ -17,7 +17,14 @@ import { KM_PER_AU, SQRT_K } from '@/core/ScaleService';
 import { RAD_TO_DEG as RAD2DEG } from '@/core/MathConstants';
 import { t, intlLocale, getLocale, onLocaleChange } from '@/i18n';
 import { bodyDisplayName, bodyDescription } from '@/i18n/bodyText';
-import type { CelestialBodyConfig, UnknownableField } from '@/types';
+import type { CelestialBodyConfig, FactField } from '@/types';
+import {
+  bodyFact,
+  citationOrder,
+  displayedUncertainty,
+  type FactEntry,
+} from '@/core/bodyFacts';
+import { FACT_SOURCE_HOSTS, factSource } from '@/config/factSources';
 import { bodyAccentColor, hexToRgbTriplet, onAccentChange } from './bodyAccent';
 import {
   convertDistanceKm,
@@ -82,14 +89,12 @@ function formatMass(kg: number): string {
 }
 
 /**
- * Période de rotation SIDÉRALE dérivée de la vitesse de rotation axiale (rad/s → h, puis j si
- * très long). Ce n'est pas le jour solaire : Mercure tourne en 58,6 j mais son jour solaire
- * dure 176 j. Valeur absolue : le signe porte le sens (Triton rétrograde), pas la durée —
- * sans elle Triton affichait « -142h 57m ».
+ * Période de rotation SIDÉRALE, en heures (puis en jours si très longue), telle que la lit
+ * `core/bodyFacts.factValue` dans la vitesse de rotation axiale. Ce n'est pas le jour solaire :
+ * Mercure tourne en 58,6 j mais son jour solaire dure 176 j. La valeur est déjà absolue : le
+ * signe porte le sens (Triton rétrograde), pas la durée ; sans cela Triton affichait « -142h 57m ».
  */
-function formatSiderealRotation(rotationSpeed: number): string | null {
-  if (!rotationSpeed) return null;
-  const hours = (2 * Math.PI) / (Math.abs(rotationSpeed) * 3600);
+function formatSiderealRotation(hours: number): string {
   if (hours < 48) {
     const h = Math.floor(hours);
     const m = Math.round((hours - h) * 60);
@@ -99,6 +104,8 @@ function formatSiderealRotation(rotationSpeed: number): string | null {
 }
 
 function formatPeriod(days: number): string {
+  // Deux décimales sous dix jours : Protée (1,12 j) s'affichait « 1 j ».
+  if (days < 10) return `${num(days, 2)} ${t('unit.day.short')}`;
   return days < 400
     ? `${num(days)} ${t('unit.day.short')}`
     : `${num(days / 365.25, 1)} ${t('unit.year.short')}`;
@@ -140,98 +147,231 @@ export function formatLightTime(km: number): string {
 
 // ── Construction des lignes de la fiche depuis la config d'un corps ──
 
-interface Stat {
+export interface Stat {
   label: string;
   value: string;
-  /** Raison, quand la valeur est absente parce qu'aucune n'est publiee. */
+  /** Raison, quand la valeur n'est pas affichée (non publiée, ou pas encore sourcée). */
   note?: string;
+  /** Numéro de la source dans la liste « Sources » de la fiche. */
+  sourceIndex?: number;
+  /** Date de validité mise en forme, pour un fait qui évolue (« août 2026 »). */
+  asOf?: string;
+  /** Méthode, précision et source, lisibles en infobulle et par un lecteur d'écran. */
+  provenance?: string;
 }
 
 /**
- * Marque une valeur non publiée, distincte d'un zéro ou d'une absence. Traduite (« n/a »,
+ * Marque une valeur non affichée, distincte d'un zéro ou d'une absence. Traduite (« n/a »,
  * « n.d. ») plutôt qu'un tiret cadratin, qu'aucun texte affiché n'emploie.
  */
 const unknownMark = (): string => t('stat.unknown.value');
 
-/** Exportée pour les tests : les libellés sont une affirmation scientifique, pas une décoration. */
-export function bodyStats(name: string, cfg: CelestialBodyConfig): Stat[] {
-  const d = cfg.realData;
-  if (!d) return [];
-  const stats: Stat[] = [];
-  const push = (label: string, value: string | null): void => {
-    if (value !== null) stats.push({ label, value });
-  };
+const localeKey = (): 'en' | 'fr' => (getLocale() === 'fr' ? 'fr' : 'en');
 
-  /**
-   * Affiche un champ declare sans valeur publiee (cf. `RealData.unknown`) plutot que de
-   * faire disparaitre la ligne. Une ligne absente est ambigue : l'utilisateur ne peut pas
-   * distinguer « la science ne donne pas ce chiffre » de « le catalogue l'a oublie ».
-   */
-  const pushUnknown = (label: string, field: UnknownableField): boolean => {
-    const reason = d.unknown?.[field];
-    if (!reason) return false;
+/** `2026-08` ou `2026-08-17` → « August 2026 » / « août 2026 » dans la langue courante. */
+function formatAsOf(asOf: string): string {
+  const [year, month] = asOf.split('-').map(Number);
+  if (!month) return String(year);
+  return new Date(Date.UTC(year, month - 1, 1)).toLocaleDateString(
+    intlLocale(),
+    { month: 'long', year: 'numeric', timeZone: 'UTC' }
+  );
+}
+
+function formatDay(iso: string): string {
+  const [year, month, day] = iso.split('-').map(Number);
+  return new Date(Date.UTC(year, month - 1, day)).toLocaleDateString(
+    intlLocale(),
+    { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' }
+  );
+}
+
+/** Valeur mise en forme d'un fait, dans l'unité choisie par l'utilisateur. */
+function formatFact(name: string, field: FactField, value: number): string {
+  switch (field) {
+    case 'radiusKm': {
+      const radius = convertDistanceKm(value);
+      // Décimales selon l'ordre de grandeur. Sans ça un corps sous le kilomètre s'affichait
+      // « 0 km » : Bennu, 242 mètres de rayon, annonçait donc zéro. L'arrondi par défaut
+      // convient aux planètes parce qu'elles se comptent en milliers de kilomètres, pas parce
+      // qu'il serait correct en général.
+      return `${num(radius.value, distanceDecimals(radius.value))} ${radius.unit}`;
+    }
+    case 'distanceAU': {
+      // Demi-grand axe mesuré depuis le PARENT pour un satellite (Titan → Saturne).
+      if (PARENT_OF.get(name)) {
+        const fromParent = convertDistanceKm(value * KM_PER_AU);
+        return `${num(fromParent.value)} ${fromParent.unit}`;
+      }
+      return `${num(value, 2)} ${t('unit.au')}`;
+    }
+    case 'massKg':
+      return formatMass(value);
+    case 'gravity':
+      // Deux décimales effaçaient la gravité des petites lunes : Phobos (0,0057) lisait « 0,01 ».
+      return `${num(value, value < 0.1 ? 4 : 2)} m/s²`;
+    case 'meanTempC': {
+      const temp = convertTemperatureC(value);
+      return `${num(temp.value)} ${temp.unit}`;
+    }
+    case 'rotationPeriod':
+      return formatSiderealRotation(value);
+    case 'orbitPeriodDays':
+      return formatPeriod(value);
+    case 'moonCount':
+      return num(value);
+    case 'axialTilt':
+      return `${num(value * RAD2DEG, 1)}°`;
+  }
+}
+
+function factLabel(name: string, field: FactField): string {
+  const parent = PARENT_OF.get(name) ?? null;
+  switch (field) {
+    case 'radiusKm':
+      return t('stat.radius');
+    case 'distanceAU':
+      // L'ancien libellé disait « Distance (Terre) » pour toutes les lunes, faux sauf pour la Lune.
+      return parent
+        ? t('stat.meanDistanceFrom', { parent: bodyDisplayName(parent) })
+        : t('stat.meanDistanceSun');
+    case 'massKg':
+      return t('stat.mass');
+    case 'gravity':
+      return t('stat.gravity');
+    case 'meanTempC':
+      return t('stat.meanTemperature');
+    case 'rotationPeriod':
+      return t('stat.siderealRotation');
+    case 'orbitPeriodDays':
+      return parent ? t('stat.orbit') : t('stat.year');
+    case 'moonCount':
+      return t('stat.knownMoons');
+    case 'axialTilt':
+      return t('stat.axialTilt');
+  }
+}
+
+/** Ordre des lignes de la fiche. */
+export const CARD_FACT_ORDER: readonly FactField[] = [
+  'radiusKm',
+  'distanceAU',
+  'massKg',
+  'gravity',
+  'meanTempC',
+  'rotationPeriod',
+  'orbitPeriodDays',
+  'moonCount',
+  'axialTilt',
+];
+
+const cardEntries = (cfg: CelestialBodyConfig): FactEntry[] =>
+  CARD_FACT_ORDER.map((field) => bodyFact(cfg, field));
+
+/**
+ * Lignes de la fiche. La décision de ce qui s'affiche comme un fait appartient à
+ * `core/bodyFacts.ts`, partagée avec la page publique du corps ; ce module ne fait que
+ * mettre en forme. Exportée pour les tests : les libellés sont une affirmation scientifique.
+ */
+export function bodyStats(name: string, cfg: CelestialBodyConfig): Stat[] {
+  if (!cfg.realData) return [];
+  const entries = cardEntries(cfg);
+  const citations = citationOrder(entries);
+  const stats: Stat[] = [];
+  for (const entry of entries) {
+    if (entry.status === 'absent') continue;
+    const label = factLabel(name, entry.field);
+    if (entry.status === 'unknown') {
+      // La ligne reste, avec sa raison : une ligne absente est ambiguë, l'utilisateur ne peut
+      // pas distinguer « la science ne donne pas ce chiffre » de « le catalogue l'a oublié ».
+      const prefix = entry.reason.unsourced
+        ? t('stat.unsourced')
+        : t('stat.unknown');
+      stats.push({
+        label,
+        value: unknownMark(),
+        note: `${prefix} : ${entry.reason[localeKey()]}`,
+      });
+      continue;
+    }
+    const { provenance } = entry;
+    const formatted = formatFact(name, entry.field, entry.value);
+    const uncertainty = displayedUncertainty(entry);
+    const source = factSource(provenance.source);
     stats.push({
       label,
-      value: unknownMark(),
-      note: `${t('stat.unknown')} : ${reason[getLocale() === 'fr' ? 'fr' : 'en']}`,
+      value:
+        uncertainty === null
+          ? formatted
+          : // Insécables : « (± 94 %) » ne doit jamais se couper entre ses signes.
+            `${formatted} (±\u00a0${num(uncertainty * 100)}\u00a0%)`,
+      sourceIndex: citations.get(provenance.source),
+      ...(provenance.asOf ? { asOf: formatAsOf(provenance.asOf) } : {}),
+      provenance: [
+        t(`fact.method.${provenance.method}`),
+        provenance.detail?.[localeKey()],
+        provenance.citation,
+        source ? `${source.publisher}, ${source.title}` : undefined,
+      ]
+        .filter(Boolean)
+        .join(' · '),
     });
-    return true;
-  };
-
-  if (d.radiusKm) {
-    const radius = convertDistanceKm(d.radiusKm);
-    // Décimales selon l'ordre de grandeur. Sans ça un corps sous le kilomètre s'affichait
-    // « 0 km » : Bennu, 242 mètres de rayon, annonçait donc zéro — faux, et faux d'une façon
-    // qui a l'air d'un bug de données alors que la donnée est juste. L'arrondi par défaut
-    // convient aux planètes parce qu'elles se comptent en milliers de kilomètres, pas parce
-    // qu'il serait correct en général.
-    push(
-      t('stat.radius'),
-      `${num(radius.value, distanceDecimals(radius.value))} ${radius.unit}`
-    );
   }
-  // `distanceAU` est un demi-grand axe : mesuré depuis le PARENT pour un satellite (Titan →
-  // Saturne), depuis le Soleil sinon. L'ancien libellé disait « Distance (Terre) » pour toutes
-  // les lunes, donc faux pour chacune sauf la Lune.
-  const parent = PARENT_OF.get(name) ?? null;
-  if (d.distanceAU !== undefined) {
-    if (parent) {
-      const distFromParent = convertDistanceKm(d.distanceAU * KM_PER_AU);
-      push(
-        t('stat.meanDistanceFrom', { parent: bodyDisplayName(parent) }),
-        `${num(distFromParent.value)} ${distFromParent.unit}`
-      );
-    } else {
-      push(
-        t('stat.meanDistanceSun'),
-        `${num(d.distanceAU, 2)} ${t('unit.au')}`
-      );
-    }
-  }
-  if (d.massKg) push(t('stat.mass'), formatMass(d.massKg));
-  else pushUnknown(t('stat.mass'), 'massKg');
-  if (d.gravity) push(t('stat.gravity'), `${num(d.gravity, 2)} m/s²`);
-  else pushUnknown(t('stat.gravity'), 'gravity');
-  if (d.meanTempC !== undefined) {
-    const temp = convertTemperatureC(d.meanTempC);
-    push(t('stat.meanTemperature'), `${num(temp.value)} ${temp.unit}`);
-  } else {
-    pushUnknown(t('stat.meanTemperature'), 'meanTempC');
-  }
-  push(t('stat.siderealRotation'), formatSiderealRotation(cfg.rotationSpeed));
-  if (d.orbitPeriodDays)
-    push(
-      parent ? t('stat.orbit') : t('stat.year'),
-      formatPeriod(d.orbitPeriodDays)
-    );
-  // Une étoile n'a pas de lunes : le Soleil portait `moonCount: 8` pour ses planètes.
-  if (d.moonCount !== undefined) push(t('stat.knownMoons'), num(d.moonCount));
-  else pushUnknown(t('stat.knownMoons'), 'moonCount');
-  if (d.axialTilt !== undefined)
-    push(t('stat.axialTilt'), `${num(d.axialTilt * RAD2DEG, 1)}°`);
-  else pushUnknown(t('stat.axialTilt'), 'axialTilt');
-
   return stats;
+}
+
+export interface SourceItem {
+  index: number;
+  publisher: string;
+  title: string;
+  url: string;
+  /** Revue ou prépublication, année, date de consultation. */
+  reference: string;
+  /** Champs appuyés par cette source, avec leur méthode (« Rayon : mesuré »). */
+  supports: string;
+}
+
+/** Sources citées par la fiche d'un corps, dans l'ordre de leurs numéros. */
+export function bodySources(
+  name: string,
+  cfg: CelestialBodyConfig
+): SourceItem[] {
+  if (!cfg.realData) return [];
+  const entries = cardEntries(cfg);
+  const items: SourceItem[] = [];
+  for (const [id, index] of citationOrder(entries)) {
+    const source = factSource(id);
+    if (!source) continue;
+    // Regroupé par méthode : « Valeurs mesurées : rayon, masse · Valeurs dérivées : gravité ».
+    const byMethod = new Map<string, string[]>();
+    for (const e of entries)
+      if (e.status === 'value' && e.provenance.source === id) {
+        const labels = byMethod.get(e.provenance.method) ?? [];
+        labels.push(factLabel(name, e.field));
+        byMethod.set(e.provenance.method, labels);
+      }
+    const supports = [...byMethod]
+      .map(
+        ([method, labels]) =>
+          `${t(`fact.methods.${method}`)} : ${labels.join(', ')}`
+      )
+      .join(' · ');
+    items.push({
+      index,
+      publisher: source.publisher,
+      title: source.title,
+      url: source.url,
+      reference: [
+        source.kind === 'preprint' ? t('fact.kind.preprint') : source.journal,
+        source.published?.slice(0, 4),
+        t('fact.accessed', { date: formatDay(source.accessed) }),
+      ]
+        .filter(Boolean)
+        .join(', '),
+      supports,
+    });
+  }
+  return items;
 }
 
 /**
@@ -296,6 +436,8 @@ export function setupBodyInfo(coordinator?: OverlayCoordinator): BodyInfoPanel {
   const statsEl = panel.querySelector<HTMLElement>('.bi-stats')!;
   const descEl = panel.querySelector<HTMLElement>('.bi-desc')!;
   const creditEl = panel.querySelector<HTMLElement>('.bi-credit');
+  const sourcesEl = panel.querySelector<HTMLDetailsElement>('.bi-sources');
+  const sourcesList = sourcesEl?.querySelector<HTMLOListElement>('ol');
   const closeBtn = panel.querySelector<HTMLButtonElement>('.bi-close')!;
   // Déclencheur d'accès (dock haut-droit) : réaffiche la fiche du corps courant après
   // fermeture, sans reprendre le vol caméra. Masqué tant qu'aucun corps n'est sélectionné.
@@ -366,19 +508,72 @@ export function setupBodyInfo(coordinator?: OverlayCoordinator): BodyInfoPanel {
     }
 
     statsEl.replaceChildren();
-    for (const { label, value, note } of bodyStats(name, cfg)) {
+    for (const stat of bodyStats(name, cfg)) {
       const dt = document.createElement('dt');
-      dt.textContent = label;
+      dt.textContent = stat.label;
       const dd = document.createElement('dd');
-      dd.textContent = value;
-      if (note) {
-        // `title` pour la souris, `aria-label` pour un lecteur d'ecran : un tiret seul
+      dd.textContent = stat.value;
+      if (stat.note) {
+        // `title` pour la souris, `aria-label` pour un lecteur d'ecran : une marque seule
         // n'annonce rien d'utile sans la raison qui l'accompagne.
-        dd.title = note;
-        dd.setAttribute('aria-label', note);
+        dd.title = stat.note;
+        dd.setAttribute('aria-label', stat.note);
         dd.classList.add('is-unknown');
       }
+      if (stat.asOf) {
+        // Un fait qui évolue n'est vrai qu'à une date : elle se lit à côté du chiffre.
+        const asOf = document.createElement('span');
+        asOf.className = 'bi-asof';
+        asOf.textContent = t('fact.asOf', { date: stat.asOf });
+        dd.append(' ', asOf);
+      }
+      if (stat.sourceIndex !== undefined) {
+        // Renvoi numéroté vers la liste des sources, comme une note de bas de page. La méthode
+        // et la source complète sont dans l'infobulle et annoncées au lecteur d'écran.
+        const ref = document.createElement('sup');
+        ref.className = 'bi-ref';
+        ref.textContent = String(stat.sourceIndex);
+        dd.append(ref);
+        if (stat.provenance) {
+          dd.title = stat.provenance;
+          const spoken = stat.asOf
+            ? `${stat.value} ${t('fact.asOf', { date: stat.asOf })}`
+            : stat.value;
+          dd.setAttribute(
+            'aria-label',
+            `${spoken} (${t('bi.source')} ${stat.sourceIndex} : ${stat.provenance})`
+          );
+        }
+      }
       statsEl.append(dt, dd);
+    }
+
+    // Sources citées : repliées par défaut pour garder la fiche compacte, toujours présentes.
+    if (sourcesEl && sourcesList) {
+      const items = bodySources(name, cfg);
+      sourcesList.replaceChildren(
+        ...items.map((item) => {
+          const li = document.createElement('li');
+          li.value = item.index;
+          const link = document.createElement('a');
+          const url = safeExternalUrl(item.url, FACT_SOURCE_HOSTS);
+          if (url) {
+            link.href = url;
+            link.target = '_blank';
+            link.rel = 'noopener noreferrer';
+          }
+          link.textContent = `${item.publisher}, ${item.title}`;
+          const reference = document.createElement('span');
+          reference.className = 'bi-source-ref';
+          reference.textContent = item.reference;
+          const supports = document.createElement('span');
+          supports.className = 'bi-source-supports';
+          supports.textContent = item.supports;
+          li.append(link, reference, supports);
+          return li;
+        })
+      );
+      sourcesEl.hidden = items.length === 0;
     }
 
     const desc = bodyDescription(cfg);

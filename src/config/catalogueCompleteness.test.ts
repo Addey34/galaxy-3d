@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { CELESTIAL_CONFIG } from './bodies';
 import { forEachBody } from './catalog';
 import type { CelestialBodyConfig, UnknownableField } from '@/types';
+import { notApplicableFacts } from '@/core/bodyFacts';
 
 /**
  * COMPLÉTUDE DU CATALOGUE — chaque corps porte-t-il ce que l'application promet d'afficher ?
@@ -41,16 +42,12 @@ const DOCUMENTED_FIELDS: UnknownableField[] = [
 ];
 
 /**
- * Champs qui n'ont structurellement pas de sens pour un `kind` donné. Une étoile centrale
- * n'orbite rien : lui réclamer une période ou une distance serait une erreur de modèle, pas
- * une donnée manquante. Elle n'a pas non plus de LUNES : le Soleil a longtemps porté
- * `moonCount: 8` pour compter ses planètes, un autre concept sous le mauvais champ.
+ * Champs structurellement hors sujet pour un `kind` : la règle vit dans `core/bodyFacts.ts`,
+ * partagée avec la fiche et les pages publiques. Une étoile centrale n'orbite rien et n'a pas de
+ * lunes ; une lune n'a pas de lune connue (« Lunes connues : 0 » sur Titan ne se source nulle part).
  */
-function notApplicable(cfg: CelestialBodyConfig): Set<UnknownableField> {
-  return cfg.kind === 'star'
-    ? new Set<UnknownableField>(['orbitPeriodDays', 'distanceAU', 'moonCount'])
-    : new Set<UnknownableField>();
-}
+const notApplicable = (cfg: CelestialBodyConfig): Set<UnknownableField> =>
+  notApplicableFacts(cfg);
 
 const bodies: { name: string; cfg: CelestialBodyConfig }[] = [];
 forEachBody(CELESTIAL_CONFIG, ({ name, config }) => {
@@ -93,8 +90,12 @@ describe('complétude documentaire du catalogue', () => {
     const contradictions: string[] = [];
     for (const { name, cfg } of bodies) {
       const realData = (cfg.realData ?? {}) as Record<string, unknown>;
-      for (const field of Object.keys(cfg.realData?.unknown ?? {})) {
-        if (realData[field] !== undefined)
+      for (const [field, reason] of Object.entries(
+        cfg.realData?.unknown ?? {}
+      )) {
+        // Exception unique : « pas encore sourcée ». La simulation peut avoir besoin d'une valeur
+        // (obliquité 0 d'une lune synchrone, rayon de rendu) qu'aucune source ne publie encore.
+        if (realData[field] !== undefined && !reason.unsourced)
           contradictions.push(`${name}.${field}`);
       }
     }

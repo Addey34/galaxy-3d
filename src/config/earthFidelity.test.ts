@@ -30,10 +30,10 @@ describe('Earth scientific fidelity guardrails', () => {
 
     expect(data?.radiusKm).toBeCloseTo(6371, 0);
     expect(data?.distanceAU).toBeCloseTo(1, 6);
-    expect(data?.orbitPeriodDays).toBeCloseTo(365.25, 2);
+    expect(data?.orbitPeriodDays).toBeCloseTo(365.256, 3);
     expect(data?.axialTilt).toBeCloseTo((23.44 * Math.PI) / 180, 5);
-    expect(data?.massKg).toBeCloseTo(5.972e24, -20);
-    expect(data?.gravity).toBeCloseTo(9.81, 2);
+    expect(data?.massKg).toBeCloseTo(5.9722e24, -20);
+    expect(data?.gravity).toBeCloseTo(9.82, 2);
 
     const siderealRotationHours =
       (2 * Math.PI) / Math.abs(earth.rotationSpeed) / 3600;

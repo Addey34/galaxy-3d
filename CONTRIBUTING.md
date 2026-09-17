@@ -56,7 +56,7 @@ travaille aux dates courantes sous les yeux de l'utilisateur.
 
 Deux pièges, tous deux déjà livrés en production :
 
-1. **Les angles doivent être ÉCLIPTIQUES.** Les valeurs publiées (Wikipédia, fiches JPL) sont le
+1. **Les angles doivent être ÉCLIPTIQUES.** Les valeurs publiées (fiches JPL, articles) sont le
    plus souvent données par rapport à l'ÉQUATEUR de la planète, et rien ne distingue les deux
    dans un fichier de config. 8 jeux sur 20 étaient dans le mauvais repère : Charon était à i = 0°
    au lieu de 112,9°, soit 145° d'écart de position dès que le repli prenait la main.
@@ -106,6 +106,16 @@ Une seule entrée dans `CELESTIAL_CONFIG.bodies` (`src/config/bodies.ts`) :
 - `cameraDistance: { educ, explo }` : distances de visite caméra dans les deux modes
 - `loadPriority` (optionnel) : rang de préchargement
 - `realData.orbitPeriodDays` : période orbitale, pour tracer la ligne d'orbite
+- `realData.sources` : la PROVENANCE de chaque valeur affichée sur la fiche et la page du corps
+  (rayon, masse, gravité, température moyenne, distance, période, rotation, obliquité, lunes
+  connues). Chaque entrée nomme une source du registre `src/config/factSources.ts` (agence, base
+  de données d'agence, article ; jamais Wikipédia), la méthode (`measured` ou `derived`) et, pour
+  le nombre de lunes, la date `asOf`. Une valeur que la simulation utilise mais que vous ne pouvez
+  pas sourcer se déclare `unknown: { champ: NOT_YET_SOURCED }` : elle n'est pas affichée.
+  `src/config/factProvenance.test.ts` refuse une valeur affichable sans source et compare chaque
+  valeur citée à sa source telle que `pnpm facts:snapshot` l'a relevée
+  (`src/config/factSources.snapshot.json`) ; une nouvelle table ou un nouvel article s'ajoute au
+  script et au test, pas en recopiant un chiffre.
 - `textureResolutions` : couches/résolutions disponibles — le chemin est **dérivé de la clé**,
   ne l'écrivez jamais à la main
 - Pour une lune : `frame: 'parentRelative'`, imbriquée dans `satellites` du parent

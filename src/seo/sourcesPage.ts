@@ -5,6 +5,8 @@
  *   - textures : `scripts/texture-sources.json` (bloc `imported`), croisé avec les couches que le
  *     catalogue livre réellement. Une couche SANS provenance fait échouer le build : une page qui
  *     la tairait mentirait par omission, et un contrôle qui l'ignorerait ne contrôlerait rien ;
+ *   - données physiques : le registre `config/factSources.ts`, croisé avec les provenances que le
+ *     catalogue déclare champ par champ (`realData.sources`) et ses valeurs non publiées ;
  *   - modèles de forme : le `ModelConfig` du catalogue (crédit, carte de couleur, albédo) ;
  *   - éphémérides : `public/assets/ephemerides/manifest.json` ;
  *   - éléments orbitaux : `config/smallBodies.ts` et `config/interstellar.ts` ;
@@ -15,6 +17,9 @@
  */
 import type { CelestialConfig } from '@/types';
 import { flattenBodies } from '@/config/catalog';
+import { FACT_SOURCES } from '@/config/factSources';
+import { bodyFact } from '@/core/bodyFacts';
+import type { FactField, FactMethod } from '@/types';
 import { SMALL_BODY_ELEMENTS } from '@/config/smallBodies';
 import { INTERSTELLAR_OBJECTS } from '@/config/interstellar';
 import { escapeHtml } from './bodyLandingPage';
@@ -276,6 +281,121 @@ function sourcesPage(input: SourcesInput, locale: DocLocale): DocPage {
       en: `Every table below is read at build time from the file that is authoritative for it, so this page cannot fall out of date with what the app actually ships. How positions are computed, and how accurate they are, is explained on the <a href="${docPath('methodology', locale)}">methodology page</a>.`,
       fr: `Chaque tableau ci-dessous est lu au build dans le fichier qui fait foi : cette page ne peut pas se désynchroniser de ce que l’application livre réellement. La façon dont les positions sont calculées, et leur précision, est expliquée sur la <a href="${docPath('methodology', locale)}">page de méthodologie</a>.`,
     })}</p></section>`
+  );
+
+  // ── Données physiques ──
+  // Tout est COMPTÉ dans le catalogue, avec la même règle que la fiche et les pages de corps
+  // (`core/bodyFacts.ts`) : ce qui s'affiche, ce qui est dérivé, ce qui attend encore sa source.
+  const FACT_FIELDS: FactField[] = [
+    'radiusKm',
+    'massKg',
+    'gravity',
+    'meanTempC',
+    'moonCount',
+    'axialTilt',
+    'distanceAU',
+    'orbitPeriodDays',
+    'rotationPeriod',
+  ];
+  const FIELD_LABELS: Record<FactField, Bilingual> = {
+    radiusKm: { en: 'radius', fr: 'rayon' },
+    massKg: { en: 'mass', fr: 'masse' },
+    gravity: { en: 'gravity', fr: 'gravité' },
+    meanTempC: { en: 'mean temperature', fr: 'température moyenne' },
+    moonCount: { en: 'known moons', fr: 'lunes connues' },
+    axialTilt: { en: 'axial tilt', fr: 'obliquité' },
+    distanceAU: { en: 'mean distance', fr: 'distance moyenne' },
+    orbitPeriodDays: { en: 'orbital period', fr: 'période orbitale' },
+    rotationPeriod: { en: 'sidereal rotation', fr: 'rotation sidérale' },
+  };
+  const perSource = new Map<
+    string,
+    { bodies: Set<string>; fields: Set<FactField>; methods: Set<FactMethod> }
+  >();
+  let shownFacts = 0;
+  let derivedFacts = 0;
+  let unsourcedFacts = 0;
+  let unpublishedFacts = 0;
+  for (const [body, cfg] of flat) {
+    if (cfg.kind === 'skybox') continue;
+    for (const field of FACT_FIELDS) {
+      const entry = bodyFact(cfg, field);
+      if (entry.status === 'unknown') {
+        if (entry.reason.unsourced) unsourcedFacts++;
+        else unpublishedFacts++;
+      }
+      if (entry.status !== 'value') continue;
+      shownFacts++;
+      if (entry.provenance.method === 'derived') derivedFacts++;
+      const row = perSource.get(entry.provenance.source) ?? {
+        bodies: new Set(),
+        fields: new Set(),
+        methods: new Set(),
+      };
+      row.bodies.add(body);
+      row.fields.add(field);
+      row.methods.add(entry.provenance.method);
+      perSource.set(entry.provenance.source, row);
+    }
+  }
+  const METHOD_LABELS: Record<FactMethod, Bilingual> = {
+    measured: { en: 'measured', fr: 'mesurée' },
+    derived: { en: 'derived', fr: 'dérivée' },
+    illustrative: { en: 'illustrative', fr: 'illustrative' },
+  };
+  const factRows = Object.entries(FACT_SOURCES)
+    .filter(([id]) => perSource.has(id))
+    .map(([id, source]) => {
+      const row = perSource.get(id)!;
+      const reference = [
+        source.kind === 'preprint'
+          ? L({ en: 'preprint', fr: 'prépublication' })
+          : 'journal' in source
+            ? source.journal
+            : undefined,
+        'published' in source ? source.published.slice(0, 4) : undefined,
+      ]
+        .filter(Boolean)
+        .join(', ');
+      return [
+        link(source.url, escapeHtml(`${source.publisher}, ${source.title}`)) +
+          (reference ? ` (${escapeHtml(reference)})` : ''),
+        escapeHtml(
+          [...row.bodies]
+            .map((b) => name(b, locale))
+            .sort((a, b) => a.localeCompare(b, locale))
+            .join(', ')
+        ),
+        escapeHtml(
+          FACT_FIELDS.filter((f) => row.fields.has(f))
+            .map((f) => L(FIELD_LABELS[f]))
+            .join(', ')
+        ),
+        escapeHtml([...row.methods].map((m) => L(METHOD_LABELS[m])).join(', ')),
+      ];
+    });
+  sections.push(
+    docSection(
+      'physical-data',
+      L({ en: 'Physical data', fr: 'Données physiques' }),
+      `<p>${L({
+        en: `Each value on a body’s information card and public page cites a primary source: a space agency, an agency database, or a published article, never an encyclopaedia. A <strong>derived</strong> value is computed from published ones (a mass from the published GM, a radius from a diameter), and the card says how. ${shownFacts} values are shown, ${derivedFacts} of them derived. ${unsourcedFacts} values the simulation uses are not shown because they are not yet traced to a primary source, and ${unpublishedFacts} have no single value to publish (a range, an upper limit, or a quantity that varies too much across the body or its orbit for one number): the card says why instead of showing a number.`,
+        fr: `Chaque valeur de la fiche d’un corps et de sa page publique cite une source primaire : une agence spatiale, une base de données d’agence ou un article publié, jamais une encyclopédie. Une valeur <strong>dérivée</strong> est calculée à partir de valeurs publiées (une masse depuis le GM publié, un rayon depuis un diamètre), et la fiche dit comment. ${shownFacts} valeurs sont affichées, dont ${derivedFacts} dérivées. ${unsourcedFacts} valeurs utilisées par la simulation ne sont pas affichées faute de source primaire rattachée, et ${unpublishedFacts} n’ont pas de valeur unique à publier (une plage, une limite supérieure, ou une grandeur qui varie trop sur le corps ou son orbite pour un seul chiffre) : la fiche dit pourquoi au lieu d’afficher un chiffre.`,
+      })}</p>` +
+        docTable(
+          L({
+            en: 'Primary sources of the physical data',
+            fr: 'Sources primaires des données physiques',
+          }),
+          [
+            L({ en: 'Source', fr: 'Source' }),
+            L({ en: 'Bodies', fr: 'Corps' }),
+            L({ en: 'Values', fr: 'Valeurs' }),
+            L({ en: 'Method', fr: 'Méthode' }),
+          ],
+          factRows
+        )
+    )
   );
 
   // ── Textures ──

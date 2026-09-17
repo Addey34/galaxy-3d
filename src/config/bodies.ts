@@ -20,6 +20,15 @@ import {
   ringTexturePath,
 } from './catalog';
 import { assertValidCelestialCatalog } from './catalogValidation';
+import {
+  DETAIL,
+  NOT_YET_SOURCED,
+  derived,
+  gravityFromGM,
+  kmToAu,
+  massFromGM,
+  measured,
+} from './factSources';
 import { SMALL_BODIES } from './smallBodies';
 
 // Vitesse de rotation axiale — rad / seconde de simulation.
@@ -42,15 +51,31 @@ export const CELESTIAL_CONFIG: CelestialConfig = {
       // Rayon éducatif volontairement tempéré : le Soleil reste dominant sans saturer la vue.
       // En Explo, le rayon physique de realData.radiusKm reprend entièrement la main.
       radius: 7,
-      rotationSpeed: _R(609.6),
+      rotationSpeed: _R(609.12),
       orbitalColor: 0x000000,
       textureResolutions: { surface: ['4k', '2k', '1k'] },
       realData: {
+        sources: {
+          radiusKm: measured('nssdca-fact-sheets'),
+          massKg: measured('nssdca-fact-sheets'),
+          gravity: measured('nssdca-fact-sheets', {
+            detail: DETAIL.equatorialGravity,
+          }),
+          meanTempC: derived('nssdca-fact-sheets', {
+            detail: DETAIL.effectiveTemperature,
+          }),
+          rotationPeriod: measured('nssdca-fact-sheets', {
+            detail: DETAIL.solarRotationAt16Degrees,
+          }),
+          axialTilt: measured('nssdca-fact-sheets', {
+            detail: DETAIL.obliquityToEcliptic,
+          }),
+        },
         radiusKm: 695_700,
         axialTilt: 7.25 * D2R,
-        massKg: 1.989e30,
+        massKg: 1.9884e30,
         gravity: 274,
-        meanTempC: 5505,
+        meanTempC: 5772 - 273.15,
         description: {
           en: 'The star at the heart of the Solar System. This ball of plasma holds 99.86% of all the mass orbiting it.',
           fr: 'L’étoile au cœur du Système solaire. Cette boule de plasma concentre 99,86 % de toute la masse en orbite autour d’elle.',
@@ -73,9 +98,20 @@ export const CELESTIAL_CONFIG: CelestialConfig = {
       orbitalColor: 0xb8b0a5,
       textureResolutions: { surface: ['8k', '4k', '2k', '1k'] },
       realData: {
-        radiusKm: 2_440,
-        distanceAU: 0.387,
-        orbitPeriodDays: 87.97,
+        sources: {
+          radiusKm: measured('nssdca-fact-sheets'),
+          distanceAU: measured('nssdca-fact-sheets'),
+          orbitPeriodDays: measured('nssdca-fact-sheets'),
+          massKg: measured('nssdca-fact-sheets'),
+          gravity: measured('nssdca-fact-sheets'),
+          meanTempC: measured('nssdca-fact-sheets'),
+          rotationPeriod: measured('nssdca-fact-sheets'),
+          moonCount: measured('nssdca-fact-sheets', { asOf: '2024-01-11' }),
+          axialTilt: measured('nssdca-fact-sheets'),
+        },
+        radiusKm: 2_439.7,
+        distanceAU: 0.38709893,
+        orbitPeriodDays: 87.969,
         orbitalInclination: 7.005 * D2R,
         ascendingNode: 48.331 * D2R,
         axialTilt: 0.034 * D2R,
@@ -111,13 +147,24 @@ export const CELESTIAL_CONFIG: CelestialConfig = {
       },
       atmosphereColor: 0xd9b26a,
       realData: {
-        radiusKm: 6_052,
-        distanceAU: 0.723,
-        orbitPeriodDays: 224.7,
+        sources: {
+          radiusKm: measured('nssdca-fact-sheets'),
+          distanceAU: measured('nssdca-fact-sheets'),
+          orbitPeriodDays: measured('nssdca-fact-sheets'),
+          massKg: measured('nssdca-fact-sheets'),
+          gravity: measured('nssdca-fact-sheets'),
+          meanTempC: measured('nssdca-fact-sheets'),
+          rotationPeriod: measured('nssdca-fact-sheets'),
+          moonCount: measured('nssdca-fact-sheets', { asOf: '2024-01-11' }),
+          axialTilt: measured('nssdca-fact-sheets'),
+        },
+        radiusKm: 6_051.8,
+        distanceAU: 0.72333199,
+        orbitPeriodDays: 224.701,
         orbitalInclination: 3.395 * D2R,
         ascendingNode: 76.68 * D2R,
         axialTilt: 177.36 * D2R,
-        massKg: 4.867e24,
+        massKg: 4.8673e24,
         gravity: 8.87,
         meanTempC: 464,
         moonCount: 0,
@@ -153,14 +200,25 @@ export const CELESTIAL_CONFIG: CelestialConfig = {
       // ne nécessite pas une texture bitmap supplémentaire.
       atmosphereColor: 0x4a90e0,
       realData: {
+        sources: {
+          radiusKm: measured('nssdca-fact-sheets'),
+          distanceAU: measured('nssdca-fact-sheets'),
+          orbitPeriodDays: measured('nssdca-fact-sheets'),
+          massKg: measured('nssdca-fact-sheets'),
+          gravity: measured('nssdca-fact-sheets'),
+          meanTempC: measured('nssdca-fact-sheets'),
+          rotationPeriod: measured('nssdca-fact-sheets'),
+          moonCount: measured('nssdca-fact-sheets', { asOf: '2024-11-15' }),
+          axialTilt: measured('nssdca-fact-sheets'),
+        },
         radiusKm: 6_371,
-        distanceAU: 1.0,
-        orbitPeriodDays: 365.25,
+        distanceAU: 1.00000011,
+        orbitPeriodDays: 365.256,
         orbitalInclination: 0,
         ascendingNode: 0,
         axialTilt: 23.44 * D2R,
-        massKg: 5.972e24,
-        gravity: 9.81,
+        massKg: 5.9722e24,
+        gravity: 9.82,
         meanTempC: 15,
         moonCount: 1,
         description: {
@@ -191,16 +249,25 @@ export const CELESTIAL_CONFIG: CelestialConfig = {
             surface: ['8k', '4k', '2k', '1k'],
           },
           realData: {
-            radiusKm: 1_737,
-            distanceAU: 0.00257,
-            orbitPeriodDays: 27.32,
+            sources: {
+              radiusKm: measured('nssdca-fact-sheets'),
+              distanceAU: measured('nssdca-fact-sheets'),
+              orbitPeriodDays: measured('nssdca-fact-sheets'),
+              massKg: measured('nssdca-fact-sheets'),
+              gravity: measured('nssdca-fact-sheets'),
+              meanTempC: measured('nssdca-fact-sheets'),
+              rotationPeriod: measured('nssdca-fact-sheets'),
+              axialTilt: measured('nssdca-fact-sheets'),
+            },
+            radiusKm: 1_737.4,
+            distanceAU: kmToAu(384_400),
+            orbitPeriodDays: 27.3217,
             orbitalInclination: 5.145 * D2R,
             ascendingNode: 0,
             axialTilt: 6.68 * D2R,
-            massKg: 7.342e22,
+            massKg: 7.346e22,
             gravity: 1.62,
             meanTempC: -20,
-            moonCount: 0,
             description: {
               en: "Earth's only natural satellite. It always shows the same face and stabilises our planet's axial tilt.",
               fr: 'Le seul satellite naturel de la Terre. Elle montre toujours la même face et stabilise l’inclinaison de l’axe de notre planète.',
@@ -226,15 +293,28 @@ export const CELESTIAL_CONFIG: CelestialConfig = {
         surface: ['8k', '4k', '2k', '1k'],
       },
       realData: {
-        radiusKm: 3_390,
-        distanceAU: 1.524,
-        orbitPeriodDays: 686.97,
+        sources: {
+          radiusKm: measured('nssdca-fact-sheets'),
+          distanceAU: measured('nssdca-fact-sheets'),
+          orbitPeriodDays: measured('nssdca-fact-sheets'),
+          massKg: measured('nssdca-fact-sheets'),
+          gravity: measured('nssdca-fact-sheets'),
+          meanTempC: measured('nssdca-fact-sheets'),
+          rotationPeriod: measured('nssdca-fact-sheets'),
+          moonCount: measured('nasa-science-mars-moons', {
+            asOf: '2026-09-17',
+          }),
+          axialTilt: measured('nssdca-fact-sheets'),
+        },
+        radiusKm: 3_389.5,
+        distanceAU: 1.52366231,
+        orbitPeriodDays: 686.98,
         orbitalInclination: 1.85 * D2R,
         ascendingNode: 49.579 * D2R,
         axialTilt: 25.19 * D2R,
-        massKg: 6.417e23,
-        gravity: 3.71,
-        meanTempC: -63,
+        massKg: 6.4169e23,
+        gravity: 3.73,
+        meanTempC: -65,
         moonCount: 2,
         description: {
           en: 'The red planet, tinted by iron oxide. It hosts Olympus Mons, the tallest volcano in the Solar System (~22 km).',
@@ -270,16 +350,35 @@ export const CELESTIAL_CONFIG: CelestialConfig = {
           },
           textureResolutions: { surface: ['8k', '4k', '2k', '1k'] },
           realData: {
+            sources: {
+              radiusKm: measured('jpl-ssd-satellite-physical-parameters', {
+                uncertainty: 0.04,
+              }),
+              distanceAU: measured('nssdca-fact-sheets'),
+              orbitPeriodDays: measured('nssdca-fact-sheets'),
+              massKg: derived('jpl-ssd-satellite-physical-parameters', {
+                detail: DETAIL.massFromGM,
+                uncertainty: massFromGM(0.0000006),
+              }),
+              gravity: derived('jpl-ssd-satellite-physical-parameters', {
+                detail: DETAIL.gravityFromGM,
+              }),
+              rotationPeriod: derived('nssdca-fact-sheets', {
+                detail: DETAIL.synchronousRotation,
+              }),
+            },
+            unknown: {
+              meanTempC: NOT_YET_SOURCED,
+              axialTilt: NOT_YET_SOURCED,
+            },
             radiusKm: 11.08,
-            distanceAU: 0.0000626680043,
+            distanceAU: kmToAu(9_378),
             orbitPeriodDays: 0.31891012704801625,
             orbitalInclination: 1.1 * D2R,
             ascendingNode: 169.2 * D2R,
             axialTilt: 0,
-            massKg: 1.0659e16,
-            gravity: 0.0057,
-            meanTempC: -40,
-            moonCount: 0,
+            massKg: massFromGM(0.0007087),
+            gravity: gravityFromGM(0.0007087, 11.08),
             description: {
               en: "The larger and faster-orbiting of Mars' two small moons, shaped by ancient impacts.",
               fr: 'La plus grande et la plus rapide des deux petites lunes de Mars, façonnée par les impacts anciens.',
@@ -313,16 +412,35 @@ export const CELESTIAL_CONFIG: CelestialConfig = {
           },
           textureResolutions: { surface: ['1k'] },
           realData: {
+            sources: {
+              radiusKm: measured('jpl-ssd-satellite-physical-parameters', {
+                uncertainty: 0.24,
+              }),
+              distanceAU: measured('nssdca-fact-sheets'),
+              orbitPeriodDays: measured('nssdca-fact-sheets'),
+              massKg: derived('jpl-ssd-satellite-physical-parameters', {
+                detail: DETAIL.massFromGM,
+                uncertainty: massFromGM(0.0000028),
+              }),
+              gravity: derived('jpl-ssd-satellite-physical-parameters', {
+                detail: DETAIL.gravityFromGM,
+              }),
+              rotationPeriod: derived('nssdca-fact-sheets', {
+                detail: DETAIL.synchronousRotation,
+              }),
+            },
+            unknown: {
+              meanTempC: NOT_YET_SOURCED,
+              axialTilt: NOT_YET_SOURCED,
+            },
             radiusKm: 6.2,
-            distanceAU: 0.00015680036,
+            distanceAU: kmToAu(23_459),
             orbitPeriodDays: 1.2624407921255993,
             orbitalInclination: 1.8 * D2R,
             ascendingNode: 54.3 * D2R,
             axialTilt: 0.9 * D2R,
-            massKg: 1.4762e15,
-            gravity: 0.003,
-            meanTempC: -40,
-            moonCount: 0,
+            massKg: massFromGM(0.0000962),
+            gravity: gravityFromGM(0.0000962, 6.2),
             description: {
               en: "Mars' smaller outer moon, a dark irregular body with a slow synchronous orbit.",
               fr: 'La plus petite lune extérieure de Mars, un corps sombre et irrégulier en orbite synchrone lente.',
@@ -341,22 +459,41 @@ export const CELESTIAL_CONFIG: CelestialConfig = {
     jupiter: {
       kind: 'planet',
       radius: 4,
-      rotationSpeed: _R(9.9259),
+      rotationSpeed: _R(9.925),
       orbitalColor: 0xd89a5b,
       textureResolutions: { surface: ['4k', '2k', '1k'] },
       realData: {
+        sources: {
+          radiusKm: measured('nssdca-fact-sheets', {
+            detail: DETAIL.equatorialRadius1Bar,
+          }),
+          distanceAU: measured('nssdca-fact-sheets'),
+          orbitPeriodDays: measured('nssdca-fact-sheets'),
+          massKg: measured('nssdca-fact-sheets'),
+          gravity: measured('nssdca-fact-sheets', {
+            detail: DETAIL.meanGravity1Bar,
+          }),
+          meanTempC: measured('nssdca-fact-sheets', {
+            detail: DETAIL.temperature1Bar,
+          }),
+          rotationPeriod: measured('nssdca-fact-sheets'),
+          moonCount: measured('nasa-science-jupiter-moons', {
+            asOf: '2026-08',
+          }),
+          axialTilt: measured('nssdca-fact-sheets'),
+        },
         radiusKm: 71_492,
-        distanceAU: 5.203,
-        orbitPeriodDays: 4332.59,
+        distanceAU: 5.20336301,
+        orbitPeriodDays: 4332.589,
         orbitalInclination: 1.304 * D2R,
         ascendingNode: 100.464 * D2R,
         axialTilt: 3.13 * D2R,
-        massKg: 1.898e27,
-        gravity: 24.79,
-        meanTempC: -108,
-        // Compte de lunes confirmées : chiffre datant, mis à jour vers la valeur courante
-        // (source JPL via l'infobox Wikipedia, 2026) — les lots de nouvelles lunes confirmées
-        // par l'UAI rendent ce chiffre daté en quelques années, pas figé une fois pour toutes.
+        massKg: 1.89813e27,
+        gravity: 25.92,
+        meanTempC: -110,
+        // Chiffre DATÉ (`sources.moonCount.asOf`) : NASA Science l'annonce « as of August 2026 »,
+        // alors que la fiche NSSDCA en était encore à 95. Les lots de lunes confirmées par l'UAI
+        // le périment en quelques années ; `pnpm facts:snapshot` relit la page.
         moonCount: 115,
         description: {
           en: 'The giant of the Solar System, more massive than all the other planets combined. Its Great Red Spot is a storm centuries old.',
@@ -398,16 +535,35 @@ export const CELESTIAL_CONFIG: CelestialConfig = {
           // en direct (2026-08-26). Texture procédurale générée (voir texture-sources.json).
           textureResolutions: { surface: ['2k'] },
           realData: {
+            sources: {
+              radiusKm: measured('jpl-ssd-satellite-physical-parameters', {
+                uncertainty: 3,
+              }),
+              distanceAU: measured('nssdca-fact-sheets'),
+              orbitPeriodDays: measured('nssdca-fact-sheets'),
+              massKg: derived('jpl-ssd-satellite-physical-parameters', {
+                detail: DETAIL.massFromGM,
+                uncertainty: massFromGM(0.00867),
+              }),
+              gravity: derived('jpl-ssd-satellite-physical-parameters', {
+                detail: DETAIL.gravityFromGM,
+              }),
+              rotationPeriod: derived('nssdca-fact-sheets', {
+                detail: DETAIL.synchronousRotation,
+              }),
+            },
+            unknown: {
+              meanTempC: NOT_YET_SOURCED,
+              axialTilt: NOT_YET_SOURCED,
+            },
             radiusKm: 83.5,
-            distanceAU: 0.0012165730245027,
+            distanceAU: kmToAu(181_400),
             orbitPeriodDays: 0.49817907177492277,
             orbitalInclination: 2.442089133637652 * D2R,
             ascendingNode: 330.4106584847095 * D2R,
             axialTilt: 0,
-            massKg: 2.4655e18,
-            gravity: 0.0236,
-            meanTempC: -108,
-            moonCount: 0,
+            massKg: massFromGM(0.16456),
+            gravity: gravityFromGM(0.16456, 83.5),
             description: {
               en: "Jupiter's reddest moon, tidally locked with its long axis always pointing at the planet, likely stained by sulfur from Io.",
               fr: 'La lune la plus rouge de Jupiter, verrouillée par effet de marée avec son grand axe toujours pointé vers la planète, probablement teintée par le soufre en provenance d’Io.',
@@ -432,24 +588,41 @@ export const CELESTIAL_CONFIG: CelestialConfig = {
           fallbackColor: 0xffc857,
           textureResolutions: { surface: ['8k', '4k', '2k', '1k'] },
           realData: {
+            sources: {
+              radiusKm: measured('jpl-ssd-satellite-physical-parameters', {
+                uncertainty: 0.5,
+              }),
+              distanceAU: measured('nssdca-fact-sheets'),
+              orbitPeriodDays: measured('nssdca-fact-sheets'),
+              massKg: derived('jpl-ssd-satellite-physical-parameters', {
+                detail: DETAIL.massFromGM,
+                uncertainty: massFromGM(0.00135),
+              }),
+              gravity: derived('jpl-ssd-satellite-physical-parameters', {
+                detail: DETAIL.gravityFromGM,
+              }),
+              rotationPeriod: derived('nssdca-fact-sheets', {
+                detail: DETAIL.synchronousRotation,
+              }),
+            },
             unknown: {
+              axialTilt: NOT_YET_SOURCED,
               meanTempC: {
                 en: 'NASA publishes a range, not a mean: about 80-85 K at night, 420-620 K over volcanic regions.',
                 fr: 'La NASA publie une plage, pas une moyenne : environ 80-85 K la nuit, 420-620 K sur les zones volcaniques.',
               },
             },
-            radiusKm: 1_821.6,
+            radiusKm: 1_821.49,
             // Masse et gravite derivees du GM publie par JPL SSD (ephemeride JUP365,
             // https://ssd.jpl.nasa.gov/sats/phys_par/) : m = GM/G, g = GM/R^2. Ni l'un ni
             // l'autre n'est saisi a la main.
-            massKg: 8.9296e22,
-            gravity: 1.796,
-            distanceAU: 0.002819,
+            massKg: massFromGM(5959.91547),
+            gravity: gravityFromGM(5959.91547, 1_821.49),
+            distanceAU: kmToAu(421_800),
             orbitPeriodDays: 1.769,
             orbitalInclination: 0,
             ascendingNode: 0,
             axialTilt: 0,
-            moonCount: 0,
             description: {
               en: 'The innermost Galilean moon, shaped by intense volcanic activity driven by Jupiter tides.',
               fr: 'La plus proche des lunes galiléennes, modelée par une activité volcanique intense entretenue par les marées de Jupiter.',
@@ -474,7 +647,25 @@ export const CELESTIAL_CONFIG: CelestialConfig = {
           fallbackColor: 0xd9c7a4,
           textureResolutions: { surface: ['8k', '4k', '2k', '1k'] },
           realData: {
+            sources: {
+              radiusKm: measured('jpl-ssd-satellite-physical-parameters', {
+                uncertainty: 0.3,
+              }),
+              distanceAU: measured('nssdca-fact-sheets'),
+              orbitPeriodDays: measured('nssdca-fact-sheets'),
+              massKg: derived('jpl-ssd-satellite-physical-parameters', {
+                detail: DETAIL.massFromGM,
+                uncertainty: massFromGM(0.00181),
+              }),
+              gravity: derived('jpl-ssd-satellite-physical-parameters', {
+                detail: DETAIL.gravityFromGM,
+              }),
+              rotationPeriod: derived('nssdca-fact-sheets', {
+                detail: DETAIL.synchronousRotation,
+              }),
+            },
             unknown: {
+              axialTilt: NOT_YET_SOURCED,
               meanTempC: {
                 en: 'Published range runs from about 50 K at the poles to about 140 K at the equator; no official mean exists.',
                 fr: "Plage publiée d'environ 50 K aux pôles à environ 140 K à l'équateur ; aucune moyenne officielle n'existe.",
@@ -484,14 +675,13 @@ export const CELESTIAL_CONFIG: CelestialConfig = {
             // Masse et gravite derivees du GM publie par JPL SSD (ephemeride JUP365,
             // https://ssd.jpl.nasa.gov/sats/phys_par/) : m = GM/G, g = GM/R^2. Ni l'un ni
             // l'autre n'est saisi a la main.
-            massKg: 4.7986e22,
-            gravity: 1.315,
-            distanceAU: 0.004486,
+            massKg: massFromGM(3202.7121),
+            gravity: gravityFromGM(3202.7121, 1_560.8),
+            distanceAU: kmToAu(671_100),
             orbitPeriodDays: 3.551,
             orbitalInclination: 0,
             ascendingNode: 0,
             axialTilt: 0,
-            moonCount: 0,
             description: {
               en: 'An icy moon with a smooth surface and strong evidence for a global subsurface ocean.',
               fr: 'Une lune glacée à la surface lisse, avec de fortes preuves de l’existence d’un océan souterrain global.',
@@ -516,7 +706,25 @@ export const CELESTIAL_CONFIG: CelestialConfig = {
           fallbackColor: 0x9c8b78,
           textureResolutions: { surface: ['8k', '4k', '2k', '1k'] },
           realData: {
+            sources: {
+              radiusKm: measured('jpl-ssd-satellite-physical-parameters', {
+                uncertainty: 1.7,
+              }),
+              distanceAU: measured('nssdca-fact-sheets'),
+              orbitPeriodDays: measured('nssdca-fact-sheets'),
+              massKg: derived('jpl-ssd-satellite-physical-parameters', {
+                detail: DETAIL.massFromGM,
+                uncertainty: massFromGM(0.00247),
+              }),
+              gravity: derived('jpl-ssd-satellite-physical-parameters', {
+                detail: DETAIL.gravityFromGM,
+              }),
+              rotationPeriod: derived('nssdca-fact-sheets', {
+                detail: DETAIL.synchronousRotation,
+              }),
+            },
             unknown: {
+              axialTilt: NOT_YET_SOURCED,
               meanTempC: {
                 en: 'The NASA fact sheet gives "90 to 160 Kelvin" for daytime, without a mean.',
                 fr: 'La fiche NASA donne « 90 to 160 Kelvin » en journée, sans moyenne.',
@@ -526,14 +734,13 @@ export const CELESTIAL_CONFIG: CelestialConfig = {
             // Masse et gravite derivees du GM publie par JPL SSD (ephemeride JUP365,
             // https://ssd.jpl.nasa.gov/sats/phys_par/) : m = GM/G, g = GM/R^2. Ni l'un ni
             // l'autre n'est saisi a la main.
-            massKg: 1.4815e23,
-            gravity: 1.428,
-            distanceAU: 0.007155,
+            massKg: massFromGM(9887.83275),
+            gravity: gravityFromGM(9887.83275, 2_631.2),
+            distanceAU: kmToAu(1_070_400),
             orbitPeriodDays: 7.155,
             orbitalInclination: 0,
             ascendingNode: 0,
             axialTilt: 0,
-            moonCount: 0,
             description: {
               en: 'The largest moon in the Solar System, larger than Mercury, with its own intrinsic magnetic field.',
               fr: 'La plus grande lune du Système solaire, plus grande que Mercure, et dotée de son propre champ magnétique.',
@@ -558,7 +765,25 @@ export const CELESTIAL_CONFIG: CelestialConfig = {
           fallbackColor: 0x7c746f,
           textureResolutions: { surface: ['8k', '4k', '2k', '1k'] },
           realData: {
+            sources: {
+              radiusKm: measured('jpl-ssd-satellite-physical-parameters', {
+                uncertainty: 1.5,
+              }),
+              distanceAU: measured('nssdca-fact-sheets'),
+              orbitPeriodDays: measured('nssdca-fact-sheets'),
+              massKg: derived('jpl-ssd-satellite-physical-parameters', {
+                detail: DETAIL.massFromGM,
+                uncertainty: massFromGM(0.00324),
+              }),
+              gravity: derived('jpl-ssd-satellite-physical-parameters', {
+                detail: DETAIL.gravityFromGM,
+              }),
+              rotationPeriod: derived('nssdca-fact-sheets', {
+                detail: DETAIL.synchronousRotation,
+              }),
+            },
             unknown: {
+              axialTilt: NOT_YET_SOURCED,
               meanTempC: {
                 en: 'Same as its neighbours: a published range, no single mean surface temperature.',
                 fr: 'Même situation que ses voisines : une plage publiée, pas de température moyenne unique.',
@@ -568,14 +793,13 @@ export const CELESTIAL_CONFIG: CelestialConfig = {
             // Masse et gravite derivees du GM publie par JPL SSD (ephemeride JUP365,
             // https://ssd.jpl.nasa.gov/sats/phys_par/) : m = GM/G, g = GM/R^2. Ni l'un ni
             // l'autre n'est saisi a la main.
-            massKg: 1.0757e23,
-            gravity: 1.236,
-            distanceAU: 0.012585,
+            massKg: massFromGM(7179.2834),
+            gravity: gravityFromGM(7179.2834, 2_410.3),
+            distanceAU: kmToAu(1_882_700),
             orbitPeriodDays: 16.689,
             orbitalInclination: 0,
             ascendingNode: 0,
             axialTilt: 0,
-            moonCount: 0,
             description: {
               en: 'The outermost Galilean moon, heavily cratered and likely hiding a deep salty ocean.',
               fr: 'La plus éloignée des lunes galiléennes, fortement cratérisée et susceptible d’abriter un océan salé profond.',
@@ -605,18 +829,35 @@ export const CELESTIAL_CONFIG: CelestialConfig = {
       },
       textureResolutions: { surface: ['4k', '2k', '1k'] },
       realData: {
+        sources: {
+          radiusKm: measured('nssdca-fact-sheets', {
+            detail: DETAIL.equatorialRadius1Bar,
+          }),
+          distanceAU: measured('nssdca-fact-sheets'),
+          orbitPeriodDays: measured('nssdca-fact-sheets'),
+          massKg: measured('nssdca-fact-sheets'),
+          gravity: measured('nssdca-fact-sheets', {
+            detail: DETAIL.meanGravity1Bar,
+          }),
+          meanTempC: measured('nssdca-fact-sheets', {
+            detail: DETAIL.temperature1Bar,
+          }),
+          rotationPeriod: measured('nssdca-fact-sheets'),
+          moonCount: measured('nasa-science-saturn-moons', { asOf: '2026-08' }),
+          axialTilt: measured('nssdca-fact-sheets'),
+        },
         radiusKm: 60_268,
-        distanceAU: 9.537,
-        orbitPeriodDays: 10759.22,
+        distanceAU: 9.53707032,
+        orbitPeriodDays: 10755.699,
         orbitalInclination: 2.485 * D2R,
         ascendingNode: 113.665 * D2R,
         axialTilt: 26.73 * D2R,
-        massKg: 5.683e26,
-        gravity: 10.44,
-        meanTempC: -139,
-        // Voir le commentaire équivalent sur Jupiter : chiffre daté, mis à jour (source JPL
-        // via l'infobox Wikipedia, 2026) — un gros lot de lunes irrégulières confirmées par
-        // l'UAI en 2023 a fait plus que doubler ce chiffre en quelques années.
+        massKg: 5.6832e26,
+        gravity: 11.19,
+        meanTempC: -140,
+        // Chiffre DATÉ, voir Jupiter. La page NASA Science porte encore « 274 » dans ses
+        // métadonnées et « 293 … as of August 2026 » dans son texte : c'est la phrase datée qui
+        // fait foi (`scripts/snapshot-fact-sources.mjs`).
         moonCount: 293,
         description: {
           en: 'Famous for its spectacular rings, made of billions of chunks of ice and rock. So low in density it would float on water.',
@@ -653,16 +894,35 @@ export const CELESTIAL_CONFIG: CelestialConfig = {
           },
           textureResolutions: { surface: ['1k'] },
           realData: {
+            sources: {
+              radiusKm: measured('jpl-ssd-satellite-physical-parameters', {
+                uncertainty: 0.2,
+              }),
+              distanceAU: measured('nssdca-fact-sheets'),
+              orbitPeriodDays: measured('nssdca-fact-sheets'),
+              massKg: derived('jpl-ssd-satellite-physical-parameters', {
+                detail: DETAIL.massFromGM,
+                uncertainty: massFromGM(0.00009),
+              }),
+              gravity: derived('jpl-ssd-satellite-physical-parameters', {
+                detail: DETAIL.gravityFromGM,
+              }),
+              rotationPeriod: derived('nssdca-fact-sheets', {
+                detail: DETAIL.synchronousRotation,
+              }),
+            },
+            unknown: {
+              meanTempC: NOT_YET_SOURCED,
+              axialTilt: NOT_YET_SOURCED,
+            },
             radiusKm: 252.1,
-            distanceAU: 0.00159360557,
+            distanceAU: kmToAu(238_020),
             orbitPeriodDays: 1.3702181029145903,
             orbitalInclination: 0,
             ascendingNode: 0,
             axialTilt: 0,
-            massKg: 1.08022e20,
-            gravity: 0.113,
-            meanTempC: -201,
-            moonCount: 0,
+            massKg: massFromGM(7.21037),
+            gravity: gravityFromGM(7.21037, 252.1),
             description: {
               en: 'A bright icy moon with an active south-polar plume and a subsurface ocean.',
               fr: 'Une lune glacée très brillante, avec un panache actif au pôle sud et un océan souterrain.',
@@ -697,16 +957,35 @@ export const CELESTIAL_CONFIG: CelestialConfig = {
           },
           textureResolutions: { surface: ['1k'] },
           realData: {
+            sources: {
+              radiusKm: measured('jpl-ssd-satellite-physical-parameters', {
+                uncertainty: 0.6,
+              }),
+              distanceAU: measured('nssdca-fact-sheets'),
+              orbitPeriodDays: measured('nssdca-fact-sheets'),
+              massKg: derived('jpl-ssd-satellite-physical-parameters', {
+                detail: DETAIL.massFromGM,
+                uncertainty: massFromGM(0.00041),
+              }),
+              gravity: derived('jpl-ssd-satellite-physical-parameters', {
+                detail: DETAIL.gravityFromGM,
+              }),
+              rotationPeriod: derived('nssdca-fact-sheets', {
+                detail: DETAIL.synchronousRotation,
+              }),
+            },
+            unknown: {
+              meanTempC: NOT_YET_SOURCED,
+              axialTilt: NOT_YET_SOURCED,
+            },
             radiusKm: 763.5,
-            distanceAU: 0.00352411433,
+            distanceAU: kmToAu(527_040),
             orbitPeriodDays: 4.517502711107901,
             orbitalInclination: 0.3 * D2R,
             ascendingNode: 133.7 * D2R,
             axialTilt: 0,
-            massKg: 2.3065e21,
-            gravity: 0.264,
-            meanTempC: -174,
-            moonCount: 0,
+            massKg: massFromGM(153.94175),
+            gravity: gravityFromGM(153.94175, 763.5),
             description: {
               en: "Saturn's second-largest moon, a heavily cratered world of bright water ice.",
               fr: "La deuxième plus grande lune de Saturne, un monde de glace d'eau très cratérisé.",
@@ -741,16 +1020,35 @@ export const CELESTIAL_CONFIG: CelestialConfig = {
           },
           textureResolutions: { surface: ['4k', '2k', '1k'] },
           realData: {
+            sources: {
+              radiusKm: measured('jpl-ssd-satellite-physical-parameters', {
+                uncertainty: 2.8,
+              }),
+              distanceAU: measured('nssdca-fact-sheets'),
+              orbitPeriodDays: measured('nssdca-fact-sheets'),
+              massKg: derived('jpl-ssd-satellite-physical-parameters', {
+                detail: DETAIL.massFromGM,
+                uncertainty: massFromGM(0.00242),
+              }),
+              gravity: derived('jpl-ssd-satellite-physical-parameters', {
+                detail: DETAIL.gravityFromGM,
+              }),
+              rotationPeriod: derived('nssdca-fact-sheets', {
+                detail: DETAIL.synchronousRotation,
+              }),
+            },
+            unknown: {
+              meanTempC: NOT_YET_SOURCED,
+              axialTilt: NOT_YET_SOURCED,
+            },
             radiusKm: 734.3,
-            distanceAU: 0.02380849395,
+            distanceAU: kmToAu(3_560_850),
             orbitPeriodDays: 79.33010433489734,
             orbitalInclination: 7.6 * D2R,
             ascendingNode: 86.5 * D2R,
             axialTilt: 0,
-            massKg: 1.805e21,
-            gravity: 0.223,
-            meanTempC: -143,
-            moonCount: 0,
+            massKg: massFromGM(120.51511),
+            gravity: gravityFromGM(120.51511, 734.3),
             description: {
               en: 'A two-toned outer moon known for its dark leading hemisphere and equatorial ridge.',
               fr: 'Une lune extérieure bicolore, connue pour son hémisphère avant sombre et sa crête équatoriale.',
@@ -785,16 +1083,35 @@ export const CELESTIAL_CONFIG: CelestialConfig = {
           },
           textureResolutions: { surface: ['2k', '1k'] },
           realData: {
+            sources: {
+              radiusKm: measured('jpl-ssd-satellite-physical-parameters', {
+                uncertainty: 0.02,
+              }),
+              distanceAU: measured('nssdca-fact-sheets'),
+              orbitPeriodDays: measured('nssdca-fact-sheets'),
+              massKg: derived('jpl-ssd-satellite-physical-parameters', {
+                detail: DETAIL.massFromGM,
+                uncertainty: massFromGM(0.00025),
+              }),
+              gravity: derived('jpl-ssd-satellite-physical-parameters', {
+                detail: DETAIL.gravityFromGM,
+              }),
+              rotationPeriod: derived('nssdca-fact-sheets', {
+                detail: DETAIL.synchronousRotation,
+              }),
+            },
+            unknown: {
+              meanTempC: NOT_YET_SOURCED,
+              axialTilt: NOT_YET_SOURCED,
+            },
             radiusKm: 2_574.76,
-            distanceAU: 0.008167897,
+            distanceAU: kmToAu(1_221_870),
             orbitPeriodDays: 15.94546580124095,
             orbitalInclination: 0.3 * D2R,
             ascendingNode: 78.6 * D2R,
             axialTilt: 26.7 * D2R,
-            massKg: 1.3452e23,
-            gravity: 1.352,
-            meanTempC: -179,
-            moonCount: 0,
+            massKg: massFromGM(8978.1371),
+            gravity: gravityFromGM(8978.1371, 2_574.76),
             description: {
               en: "Saturn's largest moon, with a dense atmosphere and rivers, lakes, and seas of methane and ethane.",
               fr: "La plus grande lune de Saturne, avec une atmosphere dense et des rivieres, lacs et mers de methane et d'ethane.",
@@ -834,16 +1151,35 @@ export const CELESTIAL_CONFIG: CelestialConfig = {
           // paramétrée sur le cratère Herschel réel (~1/3 du diamètre, pic central).
           textureResolutions: { surface: ['2k'] },
           realData: {
+            sources: {
+              radiusKm: measured('jpl-ssd-satellite-physical-parameters', {
+                uncertainty: 0.4,
+              }),
+              distanceAU: measured('nssdca-fact-sheets'),
+              orbitPeriodDays: measured('nssdca-fact-sheets'),
+              massKg: derived('jpl-ssd-satellite-physical-parameters', {
+                detail: DETAIL.massFromGM,
+                uncertainty: massFromGM(0.00014),
+              }),
+              gravity: derived('jpl-ssd-satellite-physical-parameters', {
+                detail: DETAIL.gravityFromGM,
+              }),
+              rotationPeriod: derived('nssdca-fact-sheets', {
+                detail: DETAIL.synchronousRotation,
+              }),
+            },
+            unknown: {
+              meanTempC: NOT_YET_SOURCED,
+              axialTilt: NOT_YET_SOURCED,
+            },
             radiusKm: 198.2,
-            distanceAU: 0.001243579347218559,
+            distanceAU: kmToAu(185_520),
             orbitPeriodDays: 0.9424243752169399,
             orbitalInclination: 27.00265761372071 * D2R,
             ascendingNode: 172.0569449519339 * D2R,
             axialTilt: 0,
-            massKg: 3.75e19,
-            gravity: 0.0637,
-            meanTempC: -200,
-            moonCount: 0,
+            massKg: massFromGM(2.50349),
+            gravity: gravityFromGM(2.50349, 198.2),
             description: {
               en: "Saturn's closest major moon, dominated by the giant Herschel crater that gives it a Death-Star silhouette.",
               fr: 'La lune majeure la plus proche de Saturne, dominée par le cratère géant Herschel qui lui donne une silhouette d’Étoile Noire.',
@@ -877,16 +1213,35 @@ export const CELESTIAL_CONFIG: CelestialConfig = {
           },
           textureResolutions: { surface: ['1k'] },
           realData: {
+            sources: {
+              radiusKm: measured('jpl-ssd-satellite-physical-parameters', {
+                uncertainty: 0.6,
+              }),
+              distanceAU: measured('nssdca-fact-sheets'),
+              orbitPeriodDays: measured('nssdca-fact-sheets'),
+              massKg: derived('jpl-ssd-satellite-physical-parameters', {
+                detail: DETAIL.massFromGM,
+                uncertainty: massFromGM(0.00031),
+              }),
+              gravity: derived('jpl-ssd-satellite-physical-parameters', {
+                detail: DETAIL.gravityFromGM,
+              }),
+              rotationPeriod: derived('nssdca-fact-sheets', {
+                detail: DETAIL.synchronousRotation,
+              }),
+            },
+            unknown: {
+              meanTempC: NOT_YET_SOURCED,
+              axialTilt: NOT_YET_SOURCED,
+            },
             radiusKm: 531.1,
-            distanceAU: 0.001971821201097222,
+            distanceAU: kmToAu(294_660),
             orbitPeriodDays: 1.8878020501022104,
             orbitalInclination: 27.22072909012297 * D2R,
             ascendingNode: 167.9977256763769 * D2R,
             axialTilt: 0,
-            massKg: 6.175e20,
-            gravity: 0.1462,
-            meanTempC: -187,
-            moonCount: 0,
+            massKg: massFromGM(41.21353),
+            gravity: gravityFromGM(41.21353, 531.1),
             description: {
               en: 'An icy moon almost as bright as fresh snow, scarred by the vast Ithaca Chasma canyon and the Odysseus impact basin.',
               fr: 'Une lune glacée presque aussi brillante que de la neige fraîche, marquée par le vaste canyon Ithaca Chasma et le bassin d’impact Odysseus.',
@@ -920,16 +1275,35 @@ export const CELESTIAL_CONFIG: CelestialConfig = {
           },
           textureResolutions: { surface: ['1k'] },
           realData: {
+            sources: {
+              radiusKm: measured('jpl-ssd-satellite-physical-parameters', {
+                uncertainty: 0.4,
+              }),
+              distanceAU: measured('nssdca-fact-sheets'),
+              orbitPeriodDays: measured('nssdca-fact-sheets'),
+              massKg: derived('jpl-ssd-satellite-physical-parameters', {
+                detail: DETAIL.massFromGM,
+                uncertainty: massFromGM(0.00005),
+              }),
+              gravity: derived('jpl-ssd-satellite-physical-parameters', {
+                detail: DETAIL.gravityFromGM,
+              }),
+              rotationPeriod: derived('nssdca-fact-sheets', {
+                detail: DETAIL.synchronousRotation,
+              }),
+            },
+            unknown: {
+              meanTempC: NOT_YET_SOURCED,
+              axialTilt: NOT_YET_SOURCED,
+            },
             radiusKm: 561.4,
-            distanceAU: 0.002524448888976435,
+            distanceAU: kmToAu(377_400),
             orbitPeriodDays: 2.7369155124886273,
             orbitalInclination: 28.04139510566285 * D2R,
             ascendingNode: 169.470196786071 * D2R,
             axialTilt: 0,
-            massKg: 1.0955e21,
-            gravity: 0.232,
-            meanTempC: -186,
-            moonCount: 0,
+            massKg: massFromGM(73.11607),
+            gravity: gravityFromGM(73.11607, 561.4),
             description: {
               en: 'A dense icy moon with bright wispy fractures cutting across its darker, cratered trailing hemisphere.',
               fr: 'Une lune glacée dense, striée de fractures brillantes qui traversent son hémisphère arrière plus sombre et cratérisé.',
@@ -972,16 +1346,36 @@ export const CELESTIAL_CONFIG: CelestialConfig = {
           // paramétrée sur son aspect "éponge" réel (cratères denses, sans bourrelet d'éjecta).
           textureResolutions: { surface: ['2k'] },
           realData: {
+            sources: {
+              radiusKm: measured('jpl-ssd-satellite-physical-parameters', {
+                uncertainty: 4,
+              }),
+              distanceAU: measured('nssdca-fact-sheets'),
+              orbitPeriodDays: measured('nssdca-fact-sheets'),
+              massKg: derived('jpl-ssd-satellite-physical-parameters', {
+                detail: DETAIL.massFromGM,
+                uncertainty: massFromGM(0.00005),
+              }),
+              gravity: derived('jpl-ssd-satellite-physical-parameters', {
+                detail: DETAIL.gravityFromGM,
+              }),
+            },
+            unknown: {
+              meanTempC: NOT_YET_SOURCED,
+              axialTilt: NOT_YET_SOURCED,
+              rotationPeriod: {
+                en: 'NASA NSSDCA lists Hyperion’s rotation as chaotic: it tumbles without a fixed period.',
+                fr: 'La NASA (NSSDCA) classe la rotation d’Hypérion comme chaotique : elle bascule sans période fixe.',
+              },
+            },
             radiusKm: 135,
-            distanceAU: 0.00992701740709883,
+            distanceAU: kmToAu(1_500_930),
             orbitPeriodDays: 21.27677790839671,
             orbitalInclination: 27.20902903280515 * D2R,
             ascendingNode: 168.305013991762 * D2R,
             axialTilt: 0,
-            massKg: 5.62e18,
-            gravity: 0.0206,
-            meanTempC: -180,
-            moonCount: 0,
+            massKg: massFromGM(0.37049),
+            gravity: gravityFromGM(0.37049, 135),
             description: {
               en: 'A spongy, porous outer moon tumbling chaotically through space: its rotation never settles into a fixed period.',
               fr: 'Une lune extérieure spongieuse et poreuse, qui bascule de façon chaotique dans l’espace : sa rotation ne se stabilise jamais sur une période fixe.',
@@ -1003,16 +1397,33 @@ export const CELESTIAL_CONFIG: CelestialConfig = {
       orbitalColor: 0x69d6d3,
       textureResolutions: { surface: ['2k', '1k'] },
       realData: {
+        sources: {
+          radiusKm: measured('nssdca-fact-sheets', {
+            detail: DETAIL.equatorialRadius1Bar,
+          }),
+          distanceAU: measured('nssdca-fact-sheets'),
+          orbitPeriodDays: measured('nssdca-fact-sheets'),
+          massKg: measured('nssdca-fact-sheets'),
+          gravity: measured('nssdca-fact-sheets', {
+            detail: DETAIL.meanGravity1Bar,
+          }),
+          meanTempC: measured('nssdca-fact-sheets', {
+            detail: DETAIL.temperature1Bar,
+          }),
+          rotationPeriod: measured('nssdca-fact-sheets'),
+          moonCount: measured('nasa-science-uranus-moons', { asOf: '2026-08' }),
+          axialTilt: measured('nssdca-fact-sheets'),
+        },
         radiusKm: 25_559,
-        distanceAU: 19.191,
-        orbitPeriodDays: 30688.5,
+        distanceAU: 19.19126393,
+        orbitPeriodDays: 30685.4,
         orbitalInclination: 0.773 * D2R,
         ascendingNode: 74.006 * D2R,
         axialTilt: 97.77 * D2R,
-        massKg: 8.681e25,
-        gravity: 8.69,
-        meanTempC: -197,
-        moonCount: 29, // 29ᵉ lune confirmée en 2023 (S/2023 U1) ; 28 était daté.
+        massKg: 8.6811e25,
+        gravity: 9.01,
+        meanTempC: -195,
+        moonCount: 29,
         description: {
           en: 'The ice giant tipped on its side, with an axis leaning at 98°, so it rolls along its orbit. Each season lasts 21 years.',
           fr: 'La géante de glace couchée sur le côté, avec un axe penché à 98°, si bien qu’elle roule le long de son orbite. Chaque saison dure 21 ans.',
@@ -1056,16 +1467,35 @@ export const CELESTIAL_CONFIG: CelestialConfig = {
           // terrain distinct approximant ses coronae réelles (Inverness/Arden/Elsinore).
           textureResolutions: { surface: ['2k'] },
           realData: {
+            sources: {
+              radiusKm: measured('jpl-ssd-satellite-physical-parameters', {
+                uncertainty: 0.7,
+              }),
+              distanceAU: measured('nssdca-fact-sheets'),
+              orbitPeriodDays: measured('nssdca-fact-sheets'),
+              massKg: derived('jpl-ssd-satellite-physical-parameters', {
+                detail: DETAIL.massFromGM,
+                uncertainty: massFromGM(0.2),
+              }),
+              gravity: derived('jpl-ssd-satellite-physical-parameters', {
+                detail: DETAIL.gravityFromGM,
+              }),
+              rotationPeriod: derived('nssdca-fact-sheets', {
+                detail: DETAIL.synchronousRotation,
+              }),
+            },
+            unknown: {
+              meanTempC: NOT_YET_SOURCED,
+              axialTilt: NOT_YET_SOURCED,
+            },
             radiusKm: 235.8,
-            distanceAU: 0.0008681390616993154,
+            distanceAU: kmToAu(129_900),
             orbitPeriodDays: 1.4134794388946823,
             orbitalInclination: 97.25415391960598 * D2R,
             ascendingNode: 172.0875833032825 * D2R,
             axialTilt: 0,
-            massKg: 6.4e19,
-            gravity: 0.0768,
-            meanTempC: -213,
-            moonCount: 0,
+            massKg: massFromGM(4.3),
+            gravity: gravityFromGM(4.3, 235.8),
             description: {
               en: "Uranus's smallest major moon, a bizarre patchwork of giant fault canyons and terraced 'racetrack' features up to 20 km deep.",
               fr: 'La plus petite grande lune d’Uranus, un patchwork étrange de canyons de faille géants et de formations en terrasses profondes de jusqu’à 20 km.',
@@ -1102,16 +1532,35 @@ export const CELESTIAL_CONFIG: CelestialConfig = {
           // grands cratères + beaucoup de petits (Voyager 2 imaging science, 1986).
           textureResolutions: { surface: ['2k'] },
           realData: {
+            sources: {
+              radiusKm: measured('jpl-ssd-satellite-physical-parameters', {
+                uncertainty: 0.6,
+              }),
+              distanceAU: measured('nssdca-fact-sheets'),
+              orbitPeriodDays: measured('nssdca-fact-sheets'),
+              massKg: derived('jpl-ssd-satellite-physical-parameters', {
+                detail: DETAIL.massFromGM,
+                uncertainty: massFromGM(1.4),
+              }),
+              gravity: derived('jpl-ssd-satellite-physical-parameters', {
+                detail: DETAIL.gravityFromGM,
+              }),
+              rotationPeriod: derived('nssdca-fact-sheets', {
+                detail: DETAIL.synchronousRotation,
+              }),
+            },
+            unknown: {
+              meanTempC: NOT_YET_SOURCED,
+              axialTilt: NOT_YET_SOURCED,
+            },
             radiusKm: 578.9,
-            distanceAU: 0.001276364069125674,
+            distanceAU: kmToAu(190_900),
             orbitPeriodDays: 2.520379095408933,
             orbitalInclination: 97.719319228073 * D2R,
             ascendingNode: 167.6455486422633 * D2R,
             axialTilt: 0,
-            massKg: 1.251e21,
-            gravity: 0.2492,
-            meanTempC: -213,
-            moonCount: 0,
+            massKg: massFromGM(83.5),
+            gravity: gravityFromGM(83.5, 578.9),
             description: {
               en: "The brightest of Uranus's major moons, with the youngest surface and long canyons that may hold traces of past cryovolcanic flows.",
               fr: 'La plus brillante des grandes lunes d’Uranus, avec la surface la plus jeune et de longs canyons qui pourraient garder la trace d’anciens écoulements cryovolcaniques.',
@@ -1149,16 +1598,35 @@ export const CELESTIAL_CONFIG: CelestialConfig = {
           // pôle nord).
           textureResolutions: { surface: ['2k'] },
           realData: {
+            sources: {
+              radiusKm: measured('jpl-ssd-satellite-physical-parameters', {
+                uncertainty: 2.8,
+              }),
+              distanceAU: measured('nssdca-fact-sheets'),
+              orbitPeriodDays: measured('nssdca-fact-sheets'),
+              massKg: derived('jpl-ssd-satellite-physical-parameters', {
+                detail: DETAIL.massFromGM,
+                uncertainty: massFromGM(1.9),
+              }),
+              gravity: derived('jpl-ssd-satellite-physical-parameters', {
+                detail: DETAIL.gravityFromGM,
+              }),
+              rotationPeriod: derived('nssdca-fact-sheets', {
+                detail: DETAIL.synchronousRotation,
+              }),
+            },
+            unknown: {
+              meanTempC: NOT_YET_SOURCED,
+              axialTilt: NOT_YET_SOURCED,
+            },
             radiusKm: 584.7,
-            distanceAU: 0.001778181651275977,
+            distanceAU: kmToAu(266_000),
             orbitPeriodDays: 4.1441774518183285,
             orbitalInclination: 97.66606723745439 * D2R,
             ascendingNode: 167.6381821495947 * D2R,
             axialTilt: 0,
-            massKg: 1.275e21,
-            gravity: 0.2489,
-            meanTempC: -213,
-            moonCount: 0,
+            massKg: massFromGM(85.1),
+            gravity: gravityFromGM(85.1, 584.7),
             description: {
               en: 'The darkest of the five major Uranian moons, heavily cratered with almost no sign of resurfacing since it formed.',
               fr: 'La plus sombre des cinq grandes lunes d’Uranus, fortement cratérisée et presque sans trace de resurfaçage depuis sa formation.',
@@ -1197,16 +1665,35 @@ export const CELESTIAL_CONFIG: CelestialConfig = {
           // scripts/generate-procedural-textures.mjs).
           textureResolutions: { surface: ['2k'] },
           realData: {
-            radiusKm: 788.4,
-            distanceAU: 0.002916436400823477,
+            sources: {
+              radiusKm: measured('jpl-ssd-satellite-physical-parameters', {
+                uncertainty: 1.8,
+              }),
+              distanceAU: measured('nssdca-fact-sheets'),
+              orbitPeriodDays: measured('nssdca-fact-sheets'),
+              massKg: derived('jpl-ssd-satellite-physical-parameters', {
+                detail: DETAIL.massFromGM,
+                uncertainty: massFromGM(4.1),
+              }),
+              gravity: derived('jpl-ssd-satellite-physical-parameters', {
+                detail: DETAIL.gravityFromGM,
+              }),
+              rotationPeriod: derived('nssdca-fact-sheets', {
+                detail: DETAIL.synchronousRotation,
+              }),
+            },
+            unknown: {
+              meanTempC: NOT_YET_SOURCED,
+              axialTilt: NOT_YET_SOURCED,
+            },
+            radiusKm: 788.9,
+            distanceAU: kmToAu(436_300),
             orbitPeriodDays: 8.705870132517225,
             orbitalInclination: 97.818368383812 * D2R,
             ascendingNode: 167.6178145945835 * D2R,
             axialTilt: 0,
-            massKg: 3.4e21,
-            gravity: 0.3651,
-            meanTempC: -213,
-            moonCount: 0,
+            massKg: massFromGM(226.9),
+            gravity: gravityFromGM(226.9, 788.9),
             description: {
               en: "Uranus's largest moon, featuring one of the solar system's biggest known fault canyons, Messina Chasma.",
               fr: 'La plus grande lune d’Uranus, avec l’un des plus grands canyons de faille connus du système solaire, Messina Chasma.',
@@ -1243,16 +1730,35 @@ export const CELESTIAL_CONFIG: CelestialConfig = {
           // surface sombre, cratérisation dense avec quelques grands bassins à pic central.
           textureResolutions: { surface: ['2k'] },
           realData: {
+            sources: {
+              radiusKm: measured('jpl-ssd-satellite-physical-parameters', {
+                uncertainty: 2.6,
+              }),
+              distanceAU: measured('nssdca-fact-sheets'),
+              orbitPeriodDays: measured('nssdca-fact-sheets'),
+              massKg: derived('jpl-ssd-satellite-physical-parameters', {
+                detail: DETAIL.massFromGM,
+                uncertainty: massFromGM(5.8),
+              }),
+              gravity: derived('jpl-ssd-satellite-physical-parameters', {
+                detail: DETAIL.gravityFromGM,
+              }),
+              rotationPeriod: derived('nssdca-fact-sheets', {
+                detail: DETAIL.synchronousRotation,
+              }),
+            },
+            unknown: {
+              meanTempC: NOT_YET_SOURCED,
+              axialTilt: NOT_YET_SOURCED,
+            },
             radiusKm: 761.4,
-            distanceAU: 0.003900790441203894,
+            distanceAU: kmToAu(583_500),
             orbitPeriodDays: 13.46323932743319,
             orbitalInclination: 97.87585296035932 * D2R,
             ascendingNode: 167.7555265636234 * D2R,
             axialTilt: 0,
-            massKg: 3.076e21,
-            gravity: 0.3542,
-            meanTempC: -213,
-            moonCount: 0,
+            massKg: massFromGM(205.3),
+            gravity: gravityFromGM(205.3, 761.4),
             description: {
               en: "The outermost of Uranus's major moons, its heavily cratered, reddish surface scarred by one of the tallest known mountains in the solar system.",
               fr: 'La plus extérieure des grandes lunes d’Uranus, à la surface rougeâtre fortement cratérisée, marquée par l’une des plus hautes montagnes connues du système solaire.',
@@ -1275,15 +1781,34 @@ export const CELESTIAL_CONFIG: CelestialConfig = {
       orbitalColor: 0x647cff,
       textureResolutions: { surface: ['2k', '1k'] },
       realData: {
+        sources: {
+          radiusKm: measured('nssdca-fact-sheets', {
+            detail: DETAIL.equatorialRadius1Bar,
+          }),
+          distanceAU: measured('nssdca-fact-sheets'),
+          orbitPeriodDays: measured('nssdca-fact-sheets'),
+          massKg: measured('nssdca-fact-sheets'),
+          gravity: measured('nssdca-fact-sheets', {
+            detail: DETAIL.meanGravity1Bar,
+          }),
+          meanTempC: measured('nssdca-fact-sheets', {
+            detail: DETAIL.temperature1Bar,
+          }),
+          rotationPeriod: measured('nssdca-fact-sheets'),
+          moonCount: measured('nasa-science-neptune-moons', {
+            asOf: '2026-09-17',
+          }),
+          axialTilt: measured('nssdca-fact-sheets'),
+        },
         radiusKm: 24_764,
-        distanceAU: 30.069,
-        orbitPeriodDays: 60182.0,
+        distanceAU: 30.06896348,
+        orbitPeriodDays: 60189.018,
         orbitalInclination: 1.77 * D2R,
         ascendingNode: 131.784 * D2R,
         axialTilt: 28.32 * D2R,
-        massKg: 1.024e26,
-        gravity: 11.15,
-        meanTempC: -201,
+        massKg: 1.02409e26,
+        gravity: 11.27,
+        meanTempC: -200,
         moonCount: 16,
         description: {
           en: 'The most distant planet, invisible to the naked eye and found by calculation. Its winds reach 2,000 km/h, the fiercest in the Solar System.',
@@ -1319,16 +1844,35 @@ export const CELESTIAL_CONFIG: CelestialConfig = {
           },
           textureResolutions: { surface: ['8k', '4k', '2k', '1k'] },
           realData: {
+            sources: {
+              radiusKm: measured('jpl-ssd-satellite-physical-parameters', {
+                uncertainty: 2.4,
+              }),
+              distanceAU: measured('nssdca-fact-sheets'),
+              orbitPeriodDays: measured('nssdca-fact-sheets'),
+              massKg: derived('jpl-ssd-satellite-physical-parameters', {
+                detail: DETAIL.massFromGM,
+                uncertainty: massFromGM(0.61603),
+              }),
+              gravity: derived('jpl-ssd-satellite-physical-parameters', {
+                detail: DETAIL.gravityFromGM,
+              }),
+              rotationPeriod: derived('nssdca-fact-sheets', {
+                detail: DETAIL.synchronousRotation,
+              }),
+            },
+            unknown: {
+              meanTempC: NOT_YET_SOURCED,
+              axialTilt: NOT_YET_SOURCED,
+            },
             radiusKm: 1_352.6,
-            distanceAU: 0.00237169151,
+            distanceAU: kmToAu(354_760),
             orbitPeriodDays: 5.876844606364144,
             orbitalInclination: 157.3 * D2R,
             ascendingNode: 178.1 * D2R,
             axialTilt: 0.4 * D2R,
-            massKg: 2.14e22,
-            gravity: 0.779,
-            meanTempC: -235,
-            moonCount: 0,
+            massKg: massFromGM(1428.49546),
+            gravity: gravityFromGM(1428.49546, 1_352.6),
             description: {
               en: "Neptune's largest moon and the Solar System's only major retrograde satellite, with nitrogen geysers.",
               fr: "La plus grande lune de Neptune et la seule grande lune rétrograde du Système solaire, avec des geysers d'azote.",
@@ -1368,16 +1912,33 @@ export const CELESTIAL_CONFIG: CelestialConfig = {
           // Pharos réel (~250 km, plus de la moitié du diamètre de Protée, dôme central).
           textureResolutions: { surface: ['2k'] },
           realData: {
+            sources: {
+              radiusKm: measured('jpl-ssd-satellite-physical-parameters', {
+                uncertainty: 8,
+              }),
+              distanceAU: measured('nssdca-fact-sheets'),
+              orbitPeriodDays: measured('nssdca-fact-sheets'),
+              massKg: derived('jpl-ssd-satellite-physical-parameters', {
+                detail: DETAIL.massFromGM,
+                uncertainty: massFromGM(2.4207),
+              }),
+              gravity: derived('jpl-ssd-satellite-physical-parameters', {
+                detail: DETAIL.gravityFromGM,
+              }),
+            },
+            unknown: {
+              meanTempC: NOT_YET_SOURCED,
+              axialTilt: NOT_YET_SOURCED,
+              rotationPeriod: NOT_YET_SOURCED,
+            },
             radiusKm: 208,
-            distanceAU: 0.0007866074366734613,
+            distanceAU: kmToAu(117_647),
             orbitPeriodDays: 1.1223147385935797,
             orbitalInclination: 28.99163681179519 * D2R,
             ascendingNode: 48.27950205867285 * D2R,
             axialTilt: 0,
-            massKg: 3.871e19,
-            gravity: 0.0597,
-            meanTempC: -222,
-            moonCount: 0,
+            massKg: massFromGM(2.58342),
+            gravity: gravityFromGM(2.58342, 208),
             description: {
               en: "Neptune's second-largest moon, an irregularly shaped, tidally locked body near the size limit a body of its density can hold without becoming round.",
               fr: 'La deuxième plus grande lune de Neptune, un corps de forme irrégulière verrouillé par effet de marée, proche de la taille limite qu’un corps de sa densité peut atteindre sans devenir sphérique.',
@@ -1419,16 +1980,30 @@ export const CELESTIAL_CONFIG: CelestialConfig = {
           // photométrique (Schaefer & Schaefer 2000).
           textureResolutions: { surface: ['2k'] },
           realData: {
+            sources: {
+              radiusKm: measured('jpl-ssd-satellite-physical-parameters', {
+                uncertainty: 25,
+              }),
+              distanceAU: measured('nssdca-fact-sheets'),
+              orbitPeriodDays: measured('nssdca-fact-sheets'),
+              rotationPeriod: measured('kiss-2016-nereid', {
+                uncertainty: 0.017,
+              }),
+            },
+            unknown: {
+              massKg: NOT_YET_SOURCED,
+              gravity: NOT_YET_SOURCED,
+              meanTempC: NOT_YET_SOURCED,
+              axialTilt: NOT_YET_SOURCED,
+            },
             radiusKm: 170,
-            distanceAU: 0.03683979459947609,
+            distanceAU: kmToAu(5_513_400),
             orbitPeriodDays: 359.879914569329,
             orbitalInclination: 5.060553241702044 * D2R,
             ascendingNode: 319.5912156886533 * D2R,
             axialTilt: 0,
             massKg: 3.1e19,
             gravity: 0.0716,
-            meanTempC: -218,
-            moonCount: 0,
             description: {
               en: 'A small, distant moon with the second-most eccentric orbit of any known moon, likely a captured object rather than one formed alongside Neptune.',
               fr: 'Une petite lune lointaine dotée de l’orbite la plus excentrique parmi les lunes connues après une autre, probablement un objet capturé plutôt que formé avec Neptune.',

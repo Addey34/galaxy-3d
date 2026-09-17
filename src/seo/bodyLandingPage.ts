@@ -27,8 +27,16 @@ import { flattenBodies, modelPath, ringTexturePath } from '@/config/catalog';
 import type {
   CelestialBodyConfig,
   CelestialConfig,
+  FactField,
+  FactMethod,
   TextureQuality,
 } from '@/types';
+import {
+  bodyFact,
+  citationOrder,
+  displayedUncertainty,
+} from '@/core/bodyFacts';
+import { factSource } from '@/config/factSources';
 import { KM_PER_AU } from '@/core/ScaleService';
 import { distanceDecimals } from '@/core/units';
 import { CARD_HEIGHT, CARD_WIDTH } from './socialCard';
@@ -36,6 +44,16 @@ import { CARD_HEIGHT, CARD_WIDTH } from './socialCard';
 export interface BodyFact {
   label: string;
   value: string;
+  /** Numéro de la source dans la liste de la page (absent pour « Orbits »). */
+  source?: number;
+  method?: FactMethod;
+}
+
+/** Une source citée par la page, numérotée comme les renvois des faits. */
+export interface BodySource {
+  index: number;
+  text: string;
+  url: string;
 }
 
 /**
@@ -182,6 +200,8 @@ export interface BodyPage extends LandingPage {
   displayName: string;
   summary: string;
   facts: BodyFact[];
+  /** Sources primaires des faits, dans l'ordre de leurs numéros. */
+  sources: BodySource[];
   canonical: string;
   /**
    * Vignette de partage PROPRE à ce corps. Les cinquante et une pages partageaient jusqu'ici
@@ -230,79 +250,153 @@ function formatMass(kilograms: number): string {
   return `${mantissa.toFixed(2)} × 10${digits} kg`;
 }
 
+/** Ordre des faits sur la page publique d'un corps. */
+const PAGE_FACT_ORDER: readonly FactField[] = [
+  'radiusKm',
+  'massKg',
+  'gravity',
+  'meanTempC',
+  'distanceAU',
+  'orbitPeriodDays',
+  'rotationPeriod',
+  'axialTilt',
+  'moonCount',
+];
+
+const MONTHS = [
+  'January',
+  'February',
+  'March',
+  'April',
+  'May',
+  'June',
+  'July',
+  'August',
+  'September',
+  'October',
+  'November',
+  'December',
+];
+
+/** `2026-08` → « August 2026 », en dur : la page est statique et servie en anglais. */
+function formatAsOf(asOf: string): string {
+  const [year, month] = asOf.split('-').map(Number);
+  return month ? `${MONTHS[month - 1]} ${year}` : String(year);
+}
+
+function formatRotation(hours: number): string {
+  return hours < 48
+    ? `${formatNumber(hours, 2)} hours`
+    : `${formatNumber(hours / 24, hours / 24 < 10 ? 2 : 0)} days`;
+}
+
 /**
- * Faits mesurés de ce corps. Un champ ABSENT est simplement omis — et un champ déclaré
- * inconnu (`realData.unknown`) l'est aussi : une page statique qui aligne des tirets n'apprend
- * rien, alors que la fiche de l'application, elle, affiche la raison publiée.
+ * Faits sourcés de ce corps. La décision de ce qui s'affiche vient de `core/bodyFacts.ts`,
+ * partagée avec la fiche de l'application. Un champ non affichable (déclaré inconnu, pas encore
+ * sourcé, hors sujet) est simplement OMIS : une page statique qui aligne des marques « n/a »
+ * n'apprend rien, alors que la fiche de l'application, elle, affiche la raison.
  */
 export function bodyFacts(
   config: CelestialBodyConfig,
   parentDisplayName?: string
 ): BodyFact[] {
-  const data = config.realData;
-  const facts: BodyFact[] = [];
-  if (!data) return facts;
-  const unknown = data.unknown ?? {};
-  const push = (
-    key: keyof typeof unknown,
-    label: string,
-    value: number | undefined,
-    render: (v: number) => string
-  ): void => {
-    if (value === undefined || unknown[key] !== undefined) return;
-    facts.push({ label, value: render(value) });
-  };
+  return bodyFactsWithSources(config, parentDisplayName).facts;
+}
 
-  // Décimales selon l'ordre de grandeur — même règle que la fiche de l'application. Sans elle
-  // Bennu, 242 mètres de rayon, annonçait « 0 km » sur sa page ET sur sa vignette de partage.
-  // La correction avait été faite dans `ui/bodyInfo.ts` seulement : ce chemin-ci a son propre
-  // formateur, et le défaut y a survécu jusqu'à ce qu'on regarde l'image déployée.
-  push(
-    'radiusKm',
-    'Radius',
-    data.radiusKm,
-    (v) => `${formatNumber(v, distanceDecimals(v))} km`
-  );
-  push('massKg', 'Mass', data.massKg, formatMass);
-  push(
-    'gravity',
-    'Surface gravity',
-    data.gravity,
-    (v) => `${v.toFixed(2)} m/s²`
-  );
-  push(
-    'meanTempC',
-    'Mean temperature',
-    data.meanTempC,
-    (v) => `${formatNumber(v)} °C`
-  );
+export function bodyFactsWithSources(
+  config: CelestialBodyConfig,
+  parentDisplayName?: string
+): { facts: BodyFact[]; sources: BodySource[] } {
+  const facts: BodyFact[] = [];
+  if (!config.realData) return { facts, sources: [] };
+  const entries = PAGE_FACT_ORDER.map((field) => bodyFact(config, field));
+  const citations = citationOrder(entries);
+
   if (parentDisplayName)
     facts.push({ label: 'Orbits', value: parentDisplayName });
-  // Demi-grand axe mesuré depuis le PARENT pour un satellite : la page de Titan annonçait
-  // « Distance from the Sun: 0.008 AU », soit sa distance à Saturne sous le mauvais libellé.
-  if (parentDisplayName)
-    push(
-      'distanceAU',
-      `Mean distance from ${parentDisplayName}`,
-      data.distanceAU,
-      (v) => `${formatNumber(v * KM_PER_AU)} km`
-    );
-  else
-    push(
-      'distanceAU',
-      'Mean distance from the Sun',
-      data.distanceAU,
-      (v) => `${v.toFixed(3)} AU`
-    );
-  push(
-    'orbitPeriodDays',
-    'Orbital period',
-    data.orbitPeriodDays,
-    (v) => `${formatNumber(v, v < 10 ? 2 : 0)} days`
-  );
-  push('axialTilt', 'Axial tilt', data.axialTilt, (v) => `${v.toFixed(1)}°`);
-  push('moonCount', 'Known moons', data.moonCount, (v) => formatNumber(v));
-  return facts;
+  for (const entry of entries) {
+    if (entry.status !== 'value') continue;
+    const v = entry.value;
+    let label: string;
+    let value: string;
+    switch (entry.field) {
+      case 'radiusKm':
+        // Décimales selon l'ordre de grandeur, même règle que la fiche de l'application. Sans
+        // elle Bennu, 242 mètres de rayon, annonçait « 0 km » sur sa page ET sur sa vignette.
+        label = 'Radius';
+        value = `${formatNumber(v, distanceDecimals(v))} km`;
+        break;
+      case 'massKg':
+        label = 'Mass';
+        value = formatMass(v);
+        break;
+      case 'gravity':
+        label = 'Surface gravity';
+        value = `${v.toFixed(v < 0.1 ? 4 : 2)} m/s²`;
+        break;
+      case 'meanTempC':
+        label = 'Mean temperature';
+        value = `${formatNumber(v)} °C`;
+        break;
+      case 'distanceAU':
+        // Demi-grand axe mesuré depuis le PARENT pour un satellite : la page de Titan annonçait
+        // « Distance from the Sun: 0.008 AU », soit sa distance à Saturne sous le mauvais libellé.
+        if (parentDisplayName) {
+          label = `Mean distance from ${parentDisplayName}`;
+          value = `${formatNumber(v * KM_PER_AU)} km`;
+        } else {
+          label = 'Mean distance from the Sun';
+          value = `${v.toFixed(3)} AU`;
+        }
+        break;
+      case 'orbitPeriodDays':
+        label = 'Orbital period';
+        value = `${formatNumber(v, v < 10 ? 2 : 0)} days`;
+        break;
+      case 'rotationPeriod':
+        label = 'Sidereal rotation';
+        value = formatRotation(v);
+        break;
+      case 'axialTilt':
+        label = 'Axial tilt';
+        value = `${((v * 180) / Math.PI).toFixed(1)}°`;
+        break;
+      case 'moonCount':
+        label = 'Known moons';
+        value = formatNumber(v);
+        break;
+    }
+    const uncertainty = displayedUncertainty(entry);
+    if (uncertainty !== null)
+      value += ` (± ${formatNumber(uncertainty * 100)} %)`;
+    if (entry.provenance.asOf)
+      value += ` (as of ${formatAsOf(entry.provenance.asOf)})`;
+    facts.push({
+      label,
+      value,
+      source: citations.get(entry.provenance.source),
+      method: entry.provenance.method,
+    });
+  }
+
+  const sources: BodySource[] = [];
+  for (const [id, index] of citations) {
+    const source = factSource(id);
+    if (!source) throw new Error(`source inconnue du registre : ${id}`);
+    sources.push({
+      index,
+      text: [
+        `${source.publisher}, ${source.title}`,
+        source.kind === 'preprint' ? 'preprint' : source.journal,
+        source.published?.slice(0, 4),
+        `read ${source.accessed}`,
+      ]
+        .filter(Boolean)
+        .join('. '),
+      url: source.url,
+    });
+  }
+  return { facts, sources };
 }
 
 /**
@@ -351,6 +445,10 @@ export function bodyLandingPages(
     const displayName = displayOf(name);
     const parent = parentOf.get(name);
     const description = cfg.realData?.description?.en ?? '';
+    const { facts, sources } = bodyFactsWithSources(
+      cfg,
+      parent ? displayOf(parent) : undefined
+    );
     pages.push({
       slug,
       displayName,
@@ -369,7 +467,8 @@ export function bodyLandingPages(
         : `${displayName} in an interactive 3D solar system, at its real position right now, from NASA/JPL ephemeris data.`,
       heading: `${displayName} in 3D: live position and orbit`,
       summary: description,
-      facts: bodyFacts(cfg, parent ? displayOf(parent) : undefined),
+      facts,
+      sources,
       // Barre finale VOULUE. La page est `dist/<slug>/index.html` : Firebase sert un index de
       // répertoire et redirige `/jupiter` (301) vers `/jupiter/`. Un canonique sans barre
       // désignerait donc une URL qui redirige — le canonique doit nommer l'adresse finale.
@@ -431,16 +530,33 @@ function contentBlock(page: BodyPage): string {
   const facts = page.facts
     .map(
       (fact) =>
-        `<dt>${escapeHtml(fact.label)}</dt><dd>${escapeHtml(fact.value)}</dd>`
+        `<dt>${escapeHtml(fact.label)}</dt><dd>${escapeHtml(fact.value)}` +
+        (fact.source === undefined
+          ? ''
+          : `<sup><a href="#source-${fact.source}">${fact.source}</a></sup>` +
+            (fact.method === 'measured' ? '' : ` (${fact.method} value)`)) +
+        '</dd>'
     )
     .join('');
+  // Chaque valeur renvoie à sa source primaire : c'est ce qui distingue ces pages d'une copie
+  // d'encyclopédie, et ce qu'un enseignant vérifie en premier.
+  const sources = page.sources.length
+    ? `<h2>Sources</h2><ol>${page.sources
+        .map(
+          (source) =>
+            `<li id="source-${source.index}" value="${source.index}">${escapeHtml(source.text)}. ` +
+            `<a href="${escapeHtml(source.url)}" rel="noopener noreferrer">${escapeHtml(source.url)}</a></li>`
+        )
+        .join('')}</ol>`
+    : '';
   const summary = page.summary ? `<p>${escapeHtml(page.summary)}</p>` : '';
   return (
     summary +
     `<p>${escapeHtml(page.displayName)} is shown at its real position, computed from NASA/JPL ephemeris data. ` +
     `The view opens on ${escapeHtml(page.displayName)}; you can travel in time, switch between the educational ` +
     `overview and the true-scale voyage, and compare it with every other body of the solar system.</p>` +
-    (facts ? `<dl>${facts}</dl>` : '')
+    (facts ? `<dl>${facts}</dl>` : '') +
+    sources
   );
 }
 

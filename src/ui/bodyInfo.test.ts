@@ -2,7 +2,7 @@ import { beforeAll, describe, expect, it, vi } from 'vitest';
 import { CELESTIAL_CONFIG } from '@/config/bodies';
 import { flattenBodies } from '@/config/catalog';
 import { setLocale } from '@/i18n';
-import { bodyStats } from './bodyInfo';
+import { bodySources, bodyStats } from './bodyInfo';
 
 /**
  * Les libellés de la fiche sont des affirmations scientifiques. Chacun de ces cas a été livré
@@ -48,5 +48,63 @@ describe('fiche d’information — libellés', () => {
   it('ne compte pas de lunes au Soleil', () => {
     expect(stats('sun').has('Lunes connues')).toBe(false);
     expect(stats('earth').get('Lunes connues')).toBe('1');
+  });
+});
+
+describe('fiche d’information : faits sourcés', () => {
+  beforeAll(() => {
+    vi.stubGlobal('document', { documentElement: {} });
+    setLocale('en');
+    setLocale('fr');
+  });
+
+  const statsOf = (name: string) => bodyStats(name, CONFIGS.get(name)!);
+  const stat = (name: string, label: string) =>
+    statsOf(name).find((s) => s.label === label);
+
+  it('renvoie chaque valeur à une source numérotée de la liste', () => {
+    const jupiter = statsOf('jupiter');
+    const sources = bodySources('jupiter', CONFIGS.get('jupiter')!);
+    const indexes = new Set(sources.map((s) => s.index));
+    for (const s of jupiter) {
+      expect(s.sourceIndex, s.label).toBeDefined();
+      expect(indexes.has(s.sourceIndex!), s.label).toBe(true);
+    }
+    expect(sources.map((s) => s.publisher)).toEqual([
+      'NASA NSSDCA',
+      'NASA Science',
+    ]);
+  });
+
+  it('date un fait qui évolue', () => {
+    // 115 lunes n'est vrai qu'à une date : NASA Science l'annonce « as of August 2026 ».
+    const moons = stat('jupiter', 'Lunes connues');
+    expect(moons?.value).toBe('115');
+    expect(moons?.asOf).toBe('août 2026');
+  });
+
+  it('dit « pas encore sourcée » plutôt que d’afficher un chiffre sans source', () => {
+    // Titan portait « -179 °C » : une mesure locale de Huygens présentée comme une moyenne.
+    const temperature = stat('titan', 'Température moyenne');
+    expect(temperature?.value).toBe('n.d.');
+    expect(temperature?.note).toMatch(/^Pas encore sourcée : /);
+    expect(temperature?.sourceIndex).toBeUndefined();
+  });
+
+  it('distingue une donnée non publiée d’une donnée pas encore sourcée', () => {
+    expect(stat('ganymede', 'Température moyenne')?.note).toMatch(
+      /^Donnée non publiée : /
+    );
+  });
+
+  it('montre une incertitude qui change la lecture du chiffre', () => {
+    // Masse de Protée : GM 2,58 ± 2,42 km³/s² (JPL SSD).
+    expect(stat('proteus', 'Masse')?.value).toMatch(/\(±\u00a094\u00a0%\)$/);
+    expect(stat('titan', 'Masse')?.value).not.toMatch(/±/);
+  });
+
+  it('nomme la méthode dans la provenance', () => {
+    expect(stat('titan', 'Masse')?.provenance).toMatch(/^valeur dérivée/);
+    expect(stat('earth', 'Rayon')?.provenance).toMatch(/^valeur mesurée/);
   });
 });

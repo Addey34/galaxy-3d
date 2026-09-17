@@ -245,12 +245,29 @@ export interface RealData {
   wiki?: LocalizedText;
 
   /**
-   * Champs dont il n'existe PAS de valeur publiée unique, avec la raison, localisée.
+   * PROVENANCE de chaque fait affiché : source primaire, méthode, date de validité. La valeur
+   * reste dans son champ historique (`radiusKm`…), que la simulation lit ; la provenance vit à
+   * côté, champ par champ, pour que la migration se fasse corps par corps sans rien casser.
+   *
+   * Un fait affiché SANS provenance n'est pas affiché comme un fait : `core/bodyFacts.ts` le
+   * rend « pas encore sourcé », et `config/factProvenance.test.ts` refuse le catalogue qui en
+   * contient un. Détail et exemples dans `config/factSources.ts`.
+   */
+  sources?: Partial<Record<FactField, FactProvenance>>;
+
+  /**
+   * Champs dont on n'AFFICHE pas de valeur, avec la raison, localisée.
    *
    * Un champ simplement absent est ambigu : l'utilisateur ne peut pas distinguer « la science
    * ne donne pas ce chiffre » de « le catalogue l'a oublié ». La fiche d'information affiche
-   * donc ces champs avec un tiret cadratin et la raison en infobulle, plutôt que de faire
+   * donc ces champs avec une marque « n/a » et la raison en infobulle, plutôt que de faire
    * disparaître la ligne.
+   *
+   * Deux cas, distingués par `unsourced` :
+   *   - absent : aucune valeur publiée unique n'existe (une plage, une limite supérieure) ;
+   *   - `unsourced: true` : une valeur existe peut-être, mais Galaxy ne l'a pas encore rattachée
+   *     à une source primaire. Le champ peut alors garder la valeur dont la SIMULATION a besoin
+   *     (obliquité 0 d'une lune synchrone, rayon de rendu) : elle n'est simplement pas publiée.
    *
    * Ne PAS confondre avec une donnée non applicable : le Soleil n'a pas de période orbitale
    * parce qu'il est l'origine du repère, ce n'est pas une inconnue. Ce cas-là se déduit du
@@ -259,11 +276,20 @@ export interface RealData {
    * Renseigner une moyenne inventee pour combler une case serait pire que la case vide :
    * rien ne distinguerait alors une valeur mesuree d'une valeur fabriquee.
    */
-  unknown?: Partial<Record<UnknownableField, LocalizedText>>;
+  unknown?: Partial<Record<UnknownableField, UnknownReason>>;
 }
 
-/** Champs documentaires qui peuvent legitimement n'avoir aucune valeur publiee. */
-export type UnknownableField =
+/** Raison d'une valeur non affichée — voir `RealData.unknown`. */
+export interface UnknownReason extends LocalizedText {
+  /** Vrai : la valeur n'est pas encore rattachée à une source primaire (≠ non publiée). */
+  unsourced?: boolean;
+}
+
+/**
+ * Faits documentaires qu'affichent la fiche d'un corps et sa page publique. `rotationPeriod`
+ * n'a pas de champ dans `RealData` : il se lit dans `rotationSpeed`, que la simulation utilise.
+ */
+export type FactField =
   | 'radiusKm'
   | 'massKg'
   | 'gravity'
@@ -271,7 +297,38 @@ export type UnknownableField =
   | 'moonCount'
   | 'axialTilt'
   | 'distanceAU'
-  | 'orbitPeriodDays';
+  | 'orbitPeriodDays'
+  | 'rotationPeriod';
+
+/** Champs documentaires qui peuvent n'avoir aucune valeur affichée (cf. `RealData.unknown`). */
+export type UnknownableField = FactField;
+
+/**
+ * Comment la valeur a été obtenue :
+ *   - `measured` : la valeur est celle que la source publie, à l'arrondi près ;
+ *   - `derived` : calculée à partir de valeurs publiées par la source (masse = GM/G, gravité
+ *     = GM/R², rayon = diamètre/2, obliquité depuis le pôle publié…) ;
+ *   - `illustrative` : valeur de présentation, jamais une mesure. Affichée comme telle.
+ */
+export type FactMethod = 'measured' | 'derived' | 'illustrative';
+
+/** Provenance d'un fait affiché. */
+export interface FactProvenance {
+  /** Identifiant dans le registre `FACT_SOURCES` (`config/factSources.ts`). */
+  source: string;
+  method: FactMethod;
+  /**
+   * Date à laquelle la valeur est valable, `AAAA-MM` ou `AAAA-MM-JJ`. OBLIGATOIRE pour un fait
+   * qui évolue (nombre de lunes connues) : « 115 lunes » n'est vrai qu'à une date.
+   */
+  asOf?: string;
+  /** Incertitude à 1 σ publiée par la source, dans l'unité du champ (radians pour `axialTilt`). */
+  uncertainty?: number;
+  /** Ce que la source mesure exactement, quand le libellé affiché est plus large. */
+  detail?: LocalizedText;
+  /** Référence originale citée par une base de données (SBDB : « Park et al. 2025 »…). */
+  citation?: string;
+}
 
 /**
  * Contrat partagé entre AnimationSystem et tous les objets mis à jour chaque frame.

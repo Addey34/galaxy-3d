@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { CELESTIAL_CONFIG } from '@/config/bodies';
 import { bodyFromPathname } from '@/core/permalink';
 import { flattenBodies } from '@/config/catalog';
+import { measured } from '@/config/factSources';
 import type { CelestialBodyConfig } from '@/types';
 import { existsSync } from 'fs';
 import { resolve } from 'path';
@@ -133,13 +134,18 @@ describe('faits affichés', () => {
   it('omet un champ déclaré inconnu plutôt que d’aligner un tiret', () => {
     // La raison publiée vit dans la fiche de l'application ; une page statique qui affiche « — »
     // n'apprend rien à un lecteur ni à un moteur.
+    const sources = {
+      radiusKm: measured('jpl-sbdb'),
+      massKg: measured('jpl-sbdb'),
+    };
     const withValue = {
-      realData: { radiusKm: 100, massKg: 5e20 },
+      realData: { radiusKm: 100, massKg: 5e20, sources },
     } as CelestialBodyConfig;
     const declaredUnknown = {
       realData: {
         radiusKm: 100,
         massKg: 5e20,
+        sources: { radiusKm: sources.radiusKm },
         unknown: { massKg: { en: 'no published value', fr: 'non publiée' } },
       },
     } as CelestialBodyConfig;
@@ -179,7 +185,10 @@ describe('faits affichés', () => {
 
   it('mesure la distance d’une lune depuis sa planète, pas depuis le Soleil', () => {
     const titan = {
-      realData: { distanceAU: 0.008167897 },
+      realData: {
+        distanceAU: 0.008167897,
+        sources: { distanceAU: measured('nssdca-fact-sheets') },
+      },
     } as CelestialBodyConfig;
     const labels = bodyFacts(titan, 'Saturn').map((f) => f.label);
     expect(labels).toContain('Mean distance from Saturn');
@@ -189,7 +198,12 @@ describe('faits affichés', () => {
     )?.value;
     // 0,008167897 UA = 1 221 870 km, le demi-grand axe publié de Titan.
     expect(Number(value?.replace(/[^0-9]/g, ''))).toBeCloseTo(1_221_870, -2);
-    const earth = { realData: { distanceAU: 1 } } as CelestialBodyConfig;
+    const earth = {
+      realData: {
+        distanceAU: 1,
+        sources: { distanceAU: measured('nssdca-fact-sheets') },
+      },
+    } as CelestialBodyConfig;
     expect(bodyFacts(earth).map((f) => f.label)).toContain(
       'Mean distance from the Sun'
     );
@@ -201,6 +215,41 @@ describe('faits affichés', () => {
       label: 'Orbits',
       value: 'Jupiter',
     });
+  });
+});
+
+describe('faits sourcés sur la page publique', () => {
+  it('renvoie chaque fait à une source listée sur la page', () => {
+    let checked = 0;
+    for (const page of pages) {
+      const listed = new Set(page.sources.map((s) => s.index));
+      for (const fact of page.facts) {
+        if (fact.label === 'Orbits') continue;
+        checked++;
+        expect(fact.source, `${page.slug} : ${fact.label}`).toBeDefined();
+        expect(listed.has(fact.source!), `${page.slug} : ${fact.label}`).toBe(
+          true
+        );
+      }
+    }
+    expect(checked).toBeGreaterThan(300);
+  });
+
+  it('écrit la liste des sources et les renvois dans le HTML', () => {
+    const jupiter = pages.find((p) => p.slug === 'jupiter')!;
+    const html = renderBodyPage(BASE_HTML, jupiter);
+    expect(html).toContain('<h2>Sources</h2>');
+    expect(html).toContain('<li id="source-1" value="1">NASA NSSDCA');
+    expect(html).toContain('href="https://science.nasa.gov/jupiter/moons/"');
+    expect(html).toMatch(
+      /115 \(as of August 2026\)<sup><a href="#source-2">2<\/a><\/sup>/
+    );
+  });
+
+  it('omet un chiffre que le catalogue ne rattache à aucune source', () => {
+    // Titan portait « -179 °C » sans source : la page ne doit plus le publier.
+    const titan = pages.find((p) => p.slug === 'titan')!;
+    expect(titan.facts.map((f) => f.label)).not.toContain('Mean temperature');
   });
 });
 

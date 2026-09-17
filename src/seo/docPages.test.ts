@@ -3,6 +3,8 @@ import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { CELESTIAL_CONFIG } from '@/config/bodies';
 import { flattenBodies } from '@/config/catalog';
+import { FACT_SOURCES } from '@/config/factSources';
+import { bodyFact } from '@/core/bodyFacts';
 import { SQRT_K } from '@/core/ScaleService';
 import { MIN_SAMPLES_PER_ORBIT_FOR_HERMITE } from '@/core/HorizonsEphemerisService';
 import summaryJson from './horizons-validation-summary.json';
@@ -164,6 +166,36 @@ describe('page /methodology', () => {
 });
 
 describe('page /sources', () => {
+  it('liste chaque source primaire des données physiques et compte depuis le catalogue', () => {
+    for (const page of sources) {
+      for (const source of Object.values(FACT_SOURCES))
+        expect(page.body, `${page.locale} : ${source.url}`).toContain(
+          `href="${source.url}"`
+        );
+      // Le nombre publié est celui que la règle d'affichage produit, pas une constante.
+      let shown = 0;
+      for (const [, cfg] of flattenBodies(CELESTIAL_CONFIG))
+        for (const field of [
+          'radiusKm',
+          'massKg',
+          'gravity',
+          'meanTempC',
+          'moonCount',
+          'axialTilt',
+          'distanceAU',
+          'orbitPeriodDays',
+          'rotationPeriod',
+        ] as const)
+          if (cfg.kind !== 'skybox' && bodyFact(cfg, field).status === 'value')
+            shown++;
+      expect(page.body).toMatch(
+        page.locale === 'fr'
+          ? new RegExp(`${shown} valeurs sont affichées`)
+          : new RegExp(`${shown} values are shown`)
+      );
+    }
+  });
+
   it('trouve une provenance pour CHAQUE couche de texture livrée', () => {
     expect(shippedTextureLayers(CELESTIAL_CONFIG).length).toBeGreaterThan(40);
     expect(missingTextureProvenance(CELESTIAL_CONFIG, textures)).toEqual([]);

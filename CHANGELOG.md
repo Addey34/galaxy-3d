@@ -27,6 +27,10 @@ Première version numérotée. Elle regroupe tout ce qui a été livré avant la
   vent) avec badge de source, date réelle et statut temporel honnête.
 - Une page indexable et une vignette de partage par corps ; interface FR/EN ; tours guidés ;
   mode capture ; WebXR expérimental ; PWA hors ligne.
+- Faits sourcés : chaque valeur de la fiche d'un corps et de sa page publique cite sa source
+  primaire (NASA, JPL, article), sa méthode (mesurée ou dérivée), sa date quand elle évolue et son
+  incertitude quand elle est grande. Les valeurs sans source primaire ne sont plus affichées. Liste
+  des sources et décompte sur la page `/sources`.
 
 ### Corrigé (16 septembre 2026)
 
@@ -56,6 +60,13 @@ Première version numérotée. Elle regroupe tout ce qui a été livré avant la
   ETOPO 2022, et non à NASA Visible Earth.
 - Aide : la liste des surfaces illustratives était incomplète et affirmait à tort qu'aucune sonde
   n'avait photographié ces corps.
+- Valeurs physiques confrontées à leurs sources : gravité des géantes (moyenne à 1 bar publiée
+  par la NASA, et non un calcul au rayon équatorial), masse d'Itokawa (3,51e10 kg publiés),
+  rayons de Cérès, Hygie, Titania, Makémaké, Quaoar et Sedna, obliquité de Vesta, rotations du
+  Soleil, de Jupiter, d'Éris (synchrone avec Dysnomia) et d'Orcus, températures moyennes des
+  planètes (table NASA), comptes de lunes datés. Les températures des satellites, les masses de
+  Styx, Kerberos, Néréide, Sedna, Orcus et Makémaké, et les obliquités non mesurées ne sont plus
+  affichées : aucune source primaire ne les portait.
 
 ### Modifié
 

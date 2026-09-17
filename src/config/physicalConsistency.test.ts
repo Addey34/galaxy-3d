@@ -12,17 +12,15 @@ const G = 6.6743e-11;
  * les chiffres affichés dans la fiche corps. Corrigé en recalculant `gravity` depuis massKg et
  * radiusKm — les trois champs doivent maintenant rester cohérents entre eux.
  *
- * Deimos et Uranus ont un écart réel mais PHYSIQUEMENT JUSTIFIÉ, pas une erreur de saisie :
- * Deimos est un corps minuscule et très irrégulier où « la » gravité de surface n'est de toute
- * façon qu'une approximation à 1 chiffre significatif ; Uranus a un écart cohérent avec l'effet
- * réel d'aplatissement/rotation rapide sur la gravité équatoriale déclarée. Tolérance élargie
- * explicitement pour ces deux-là, stricte pour tous les autres.
+ * Depuis les faits sourcés (lot 4), la règle ne porte que sur les gravités DÉRIVÉES
+ * (`sources.gravity.method === 'derived'`). Une gravité MESURÉE est la valeur de sa source et
+ * `factProvenance.test.ts` la confronte à celle-ci : pour une géante, la fiche NASA donne la
+ * gravité MOYENNE au niveau de 1 bar (aplatissement et rotation compris) alors que `radiusKm` est
+ * le rayon équatorial, et G·M/R² n'a aucune raison de la retrouver (Jupiter : 25,92 publiés contre
+ * 24,79 calculés). Exiger l'accord aurait forcé à publier le calcul plutôt que la mesure.
  */
-const WIDER_TOLERANCE: Record<string, number> = {
-  deimos: 0.16,
-  uranus: 0.03,
-};
 const DEFAULT_TOLERANCE = 0.02;
+const WIDER_TOLERANCE: Record<string, number> = {};
 
 describe('physical consistency: gravity = G·mass/radius²', () => {
   const all = [
@@ -32,7 +30,8 @@ describe('physical consistency: gravity = G·mass/radius²', () => {
     ({ config }) =>
       config.realData?.massKg &&
       config.realData?.radiusKm &&
-      config.realData?.gravity
+      config.realData?.gravity &&
+      config.realData.sources?.gravity?.method === 'derived'
   );
 
   it('has bodies with mass/radius/gravity to check', () => {

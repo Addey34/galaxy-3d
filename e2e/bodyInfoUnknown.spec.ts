@@ -30,8 +30,15 @@ test('la fiche affiche une donnée non publiée au lieu de masquer la ligne', as
   const panel = page.locator('#body-info');
   await expect(panel).toBeVisible();
 
-  const unknown = panel.locator('dd.is-unknown');
+  // Deux lignes non affichées sur Ganymède, pour deux raisons que la fiche DISTINGUE : la
+  // température n'a pas de valeur publiée unique ; l'obliquité n'est pas encore rattachée à une
+  // source primaire (la scène utilise 0°, qui n'est pas une mesure).
+  await expect(panel.locator('dd.is-unknown')).toHaveCount(2);
+  const unknown = panel.locator('dd.is-unknown[title^="Donnée non publiée"]');
   await expect(unknown).toHaveCount(1);
+  await expect(
+    panel.locator('dd.is-unknown[title^="Pas encore sourcée"]')
+  ).toHaveCount(1);
   // Une marque traduite (« n.d. »), pas un zéro ni une chaîne vide : les deux se liraient comme
   // une mesure. Plus de tiret cadratin : aucun texte affiché n'en emploie
   // (`src/seo/publishedText.test.ts`).
@@ -44,8 +51,21 @@ test('la fiche affiche une donnée non publiée au lieu de masquer la ligne', as
   // Et elle doit être annoncée : une abréviation seule ne dit rien à un lecteur d'écran.
   expect(await unknown.getAttribute('aria-label')).toBe(reason);
 
-  // Les valeurs réellement connues restent affichées normalement, elles.
-  await expect(panel.getByText('1,43 m/s²')).toBeVisible();
+  // Les valeurs réellement connues restent affichées normalement, avec leur renvoi de source.
+  const gravity = panel.locator('dd', { hasText: '1,43 m/s²' });
+  await expect(gravity).toBeVisible();
+  await expect(gravity.locator('sup.bi-ref')).toHaveText(/^\d+$/);
+  expect(await gravity.getAttribute('title')).toContain('valeur dérivée');
+
+  // La liste des sources nomme la table JPL d'où viennent GM et rayon.
+  const sources = panel.locator('.bi-sources');
+  await expect(sources).toBeVisible();
+  await sources.locator('summary').click();
+  await expect(
+    sources.getByRole('link', {
+      name: /Planetary Satellite Physical Parameters/,
+    })
+  ).toHaveAttribute('href', 'https://ssd.jpl.nasa.gov/sats/phys_par/');
 });
 
 test('la marque de donnée non publiée suit la langue', async ({ page }) => {
@@ -57,7 +77,11 @@ test('la marque de donnée non publiée suit la langue', async ({ page }) => {
   });
   await page.goto('/?body=ganymede');
   await expect(page.locator('#loader')).toBeHidden({ timeout: 30_000 });
-  const unknown = page.locator('#body-info dd.is-unknown');
+  const unknown = page.locator(
+    '#body-info dd.is-unknown[title^="No published value"]'
+  );
   await expect(unknown).toHaveText('n/a');
-  expect(await unknown.getAttribute('title')).toContain('No published value');
+  await expect(
+    page.locator('#body-info dd.is-unknown[title^="Not yet sourced"]')
+  ).toHaveText('n/a');
 });

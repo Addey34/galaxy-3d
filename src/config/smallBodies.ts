@@ -19,6 +19,17 @@ import type { CelestialBodyConfig, ModelConfig, TextureQuality } from '@/types';
 import { exploCameraDistance } from '@/core/ScaleService';
 import { DEG_TO_RAD as D2R } from '@/core/MathConstants';
 import { PLANETS_TO_SUN_MASS_RATIO } from '@/core/kepler';
+import {
+  DETAIL,
+  NOT_YET_SOURCED,
+  derived,
+  gravityFromGM,
+  gravityFromMass,
+  kmToAu,
+  massFromDensity,
+  massFromGM,
+  measured,
+} from './factSources';
 
 /** Éléments orbitaux d'un petit corps, dans les unités publiées (degrés, UA). */
 export interface SmallBodyElements {
@@ -87,6 +98,12 @@ export interface SmallBodyElements {
   description?: { en: string; fr: string };
   /** Champs sans valeur publiée unique, avec leur raison (cf. `RealData.unknown`). */
   unknown?: NonNullable<CelestialBodyConfig['realData']>['unknown'];
+  /**
+   * Provenance des faits affichés (cf. `RealData.sources`). Distance et période n'y figurent
+   * pas : `smallBodyToConfig` les dérive des éléments Horizons ci-dessus et déclare cette
+   * provenance lui-même.
+   */
+  sources?: NonNullable<CelestialBodyConfig['realData']>['sources'];
   /** Lien « En savoir plus » par langue (article Wikipédia dédié). */
   wiki?: { en: string; fr: string };
   satellites?: Record<string, CelestialBodyConfig>;
@@ -140,7 +157,29 @@ export function smallBodyToConfig(el: SmallBodyElements): CelestialBodyConfig {
       orbitalInclination: inclinationRad,
       ascendingNode: ascendingNodeRad,
       axialTilt: (el.axialTiltDeg ?? 0) * D2R,
-      ...(el.unknown ? { unknown: el.unknown } : {}),
+      // Distance et période sont DÉRIVÉES des éléments osculateurs Horizons de ce même objet :
+      // la provenance se déclare ici, une fois, plutôt que corps par corps.
+      sources: {
+        distanceAU: derived('jpl-horizons', {
+          detail: DETAIL.osculatingSemiMajorAxis,
+        }),
+        orbitPeriodDays: derived('jpl-horizons', {
+          detail: DETAIL.keplerPeriod,
+        }),
+        ...el.sources,
+      },
+      // Sans obliquité déclarée, la scène tourne le corps autour d'un axe droit (0°) : une
+      // commodité de rendu, jamais un fait à publier.
+      ...(el.unknown || el.axialTiltDeg === undefined
+        ? {
+            unknown: {
+              ...(el.axialTiltDeg === undefined
+                ? { axialTilt: NOT_YET_SOURCED }
+                : {}),
+              ...el.unknown,
+            },
+          }
+        : {}),
       // Champs documentaires optionnels — transmis tels quels à la fiche d'info.
       ...(el.massKg !== undefined ? { massKg: el.massKg } : {}),
       ...(el.gravity !== undefined ? { gravity: el.gravity } : {}),
@@ -181,17 +220,46 @@ export const SMALL_BODY_ELEMENTS: readonly SmallBodyElements[] = [
     wDeg: 73.92286274285223,
     maDeg: 6.176654513180486,
     epoch: '2000-01-01T12:00:00Z',
-    radiusKm: 473,
+    radiusKm: 939.4 / 2,
     kind: 'dwarf',
     color: 0xc5a46d,
     surfaceResolutions: ['4k', '2k', '1k'],
     visualRadius: 0.1,
-    rotationHours: 9.074,
-    axialTiltDeg: 4,
-    massKg: 9.39e20,
-    gravity: 0.28,
-    meanTempC: -105,
+    rotationHours: 9.07417,
+    axialTiltDeg: 4.0,
+    massKg: massFromGM(62.6284),
+    gravity: gravityFromGM(62.6284, 939.4 / 2),
     moonCount: 0,
+    sources: {
+      radiusKm: derived('jpl-sbdb', {
+        detail: DETAIL.radiusFromDiameter,
+        citation: 'Nature vol. 537, pp515-517 (22 September 2016)',
+        uncertainty: 0.1,
+      }),
+      massKg: derived('jpl-sbdb', {
+        detail: DETAIL.massFromGM,
+        citation: 'Nature vol. 537, pp515-517 (22 September 2016)',
+        uncertainty: massFromGM(0.0009),
+      }),
+      gravity: derived('jpl-sbdb', {
+        detail: DETAIL.gravityFromGM,
+        citation: 'Nature vol. 537, pp515-517 (22 September 2016)',
+      }),
+      rotationPeriod: measured('jpl-sbdb', {
+        citation: 'Nature vol. 537, pp515-517 (22 September 2016)',
+      }),
+      axialTilt: derived('jpl-sbdb', {
+        detail: DETAIL.obliquityFromPole,
+        citation: 'Nature vol. 537, pp515-517 (22 September 2016)',
+      }),
+      moonCount: measured('jpl-sbdb', {
+        detail: DETAIL.confirmedSatellites,
+        asOf: '2026-09-17',
+      }),
+    },
+    unknown: {
+      meanTempC: NOT_YET_SOURCED,
+    },
     description: {
       en: 'The largest body of the asteroid belt and the only dwarf planet of the inner Solar System. NASA’s Dawn probe revealed bright salt deposits there, traces of a briny subsurface ocean.',
       fr: 'Le plus gros corps de la ceinture d’astéroïdes et la seule planète naine du Système solaire interne. La sonde Dawn y a révélé des dépôts de sel brillants, traces d’un océan souterrain saumâtre.',
@@ -214,15 +282,49 @@ export const SMALL_BODY_ELEMENTS: readonly SmallBodyElements[] = [
     wDeg: 149.5866679599199,
     maDeg: 341.0238343838706,
     epoch: '2000-01-01T12:00:00Z',
-    radiusKm: 262,
+    radiusKm: 522.77 / 2,
     color: 0xc8795d,
     surfaceResolutions: ['8k', '4k', '2k', '1k'],
-    rotationHours: 5.342,
-    axialTiltDeg: 29,
-    massKg: 2.59e20,
-    gravity: 0.25,
-    meanTempC: -108,
+    rotationHours: 5.3421276322,
+    axialTiltDeg: 27.5,
+    massKg: massFromGM(17.2882844),
+    gravity: gravityFromGM(17.2882844, 522.77 / 2),
     moonCount: 0,
+    sources: {
+      radiusKm: derived('jpl-sbdb', {
+        detail: DETAIL.radiusFromDiameter,
+        citation:
+          'Park, R.S. et al. 2025, Nat Astron, DOI: 10.1038/s41550-025-02533-7',
+        uncertainty: 0.05,
+      }),
+      massKg: derived('jpl-sbdb', {
+        detail: DETAIL.massFromGM,
+        citation:
+          'Park, R.S. et al. 2025, Nat Astron, DOI: 10.1038/s41550-025-02533-7',
+        uncertainty: massFromGM(3e-6),
+      }),
+      gravity: derived('jpl-sbdb', {
+        detail: DETAIL.gravityFromGM,
+        citation:
+          'Park, R.S. et al. 2025, Nat Astron, DOI: 10.1038/s41550-025-02533-7',
+      }),
+      rotationPeriod: measured('jpl-sbdb', {
+        citation:
+          'Park, R.S. et al. 2025, Nat Astron, DOI: 10.1038/s41550-025-02533-7',
+      }),
+      axialTilt: derived('jpl-sbdb', {
+        detail: DETAIL.obliquityFromPole,
+        citation:
+          'Park, R.S. et al. 2025, Nat Astron, DOI: 10.1038/s41550-025-02533-7',
+      }),
+      moonCount: measured('jpl-sbdb', {
+        detail: DETAIL.confirmedSatellites,
+        asOf: '2026-09-17',
+      }),
+    },
+    unknown: {
+      meanTempC: NOT_YET_SOURCED,
+    },
     description: {
       en: 'The brightest asteroid, and the only one occasionally visible to the naked eye. A giant impact blasted away its south pole, and fragments of that crater rain down on Earth as some of our meteorites.',
       fr: 'L’astéroïde le plus brillant, et le seul parfois visible à l’œil nu. Un impact géant a arraché son pôle sud, et des fragments de ce cratère tombent sur Terre sous forme de certaines de nos météorites.',
@@ -244,15 +346,44 @@ export const SMALL_BODY_ELEMENTS: readonly SmallBodyElements[] = [
     wDeg: 310.2656379003444,
     maDeg: 352.9602856167207,
     epoch: '2000-01-01T12:00:00Z',
-    radiusKm: 256,
+    radiusKm: 513 / 2,
     color: 0x9b82d1,
     surfaceResolutions: ['2k'],
-    rotationHours: 7.813,
-    axialTiltDeg: 84,
-    massKg: 2.04e20,
-    gravity: 0.21,
-    meanTempC: -109,
+    rotationHours: 7.8132214,
+    axialTiltDeg: 83.6,
+    massKg: massFromGM(13.63),
+    gravity: gravityFromGM(13.63, 513 / 2),
     moonCount: 0,
+    sources: {
+      radiusKm: derived('jpl-sbdb', {
+        detail: DETAIL.radiusFromDiameter,
+        citation: 'Marsset et al., Nature Astronomy 4, 569-576 (2020)',
+        uncertainty: 3,
+      }),
+      massKg: derived('jpl-sbdb', {
+        detail: DETAIL.massFromGM,
+        citation: 'Vernazza et al., A&A 654, A56 (2021)',
+        uncertainty: massFromGM(0.18),
+      }),
+      gravity: derived('jpl-sbdb', {
+        detail: DETAIL.gravityFromGM,
+        citation: 'Vernazza et al., A&A 654, A56 (2021)',
+      }),
+      rotationPeriod: measured('jpl-sbdb', {
+        citation: 'Carry et al., Icarus 205, 460-472 (2010)',
+      }),
+      axialTilt: derived('jpl-sbdb', {
+        detail: DETAIL.obliquityFromPole,
+        citation: 'Carry et al., Icarus 205, 460-472 (2010)',
+      }),
+      moonCount: measured('jpl-sbdb', {
+        detail: DETAIL.confirmedSatellites,
+        asOf: '2026-09-17',
+      }),
+    },
+    unknown: {
+      meanTempC: NOT_YET_SOURCED,
+    },
     description: {
       en: 'The third-largest asteroid, and the very first to be discovered after Ceres, in 1802. Its steeply tilted orbit is so inclined that no spacecraft has ever visited it.',
       fr: 'Le troisième plus gros astéroïde, et le tout premier découvert après Cérès, en 1802. Son orbite fortement inclinée est si penchée qu’aucune sonde ne l’a jamais visité.',
@@ -274,17 +405,40 @@ export const SMALL_BODY_ELEMENTS: readonly SmallBodyElements[] = [
     wDeg: 314.3682343023398,
     maDeg: 339.2148139451292,
     epoch: '2000-01-01T12:00:00Z',
-    radiusKm: 217,
+    radiusKm: 407.12 / 2,
     color: 0x6fbf8a,
     surfaceResolutions: ['2k'],
-    rotationHours: 13.83,
-    axialTiltDeg: 0,
-    massKg: 8.74e19,
-    // g = GM/r² à partir de massKg/radiusKm ci-dessus (0,09 était ~27 % trop bas et
-    // incohérent avec ces deux valeurs).
-    gravity: 0.124,
-    meanTempC: -109,
+    rotationHours: 13.828,
+    massKg: massFromGM(7),
+    // Valeurs de la SBDB, qui cite encore IRAS pour le diamètre et Scholl et al. (1987) pour
+    // GM, sans incertitude : la fiche nomme donc ces références d'origine.
+    gravity: gravityFromGM(7, 407.12 / 2),
     moonCount: 0,
+    sources: {
+      radiusKm: derived('jpl-sbdb', {
+        detail: DETAIL.radiusFromDiameter,
+        citation: 'IRAS-A-FPA-3-RDR-IMPS-V6.0',
+        uncertainty: 3.4,
+      }),
+      massKg: derived('jpl-sbdb', {
+        detail: DETAIL.massFromGM,
+        citation: 'Scholl et al., A&A, v.179, p.311, 1987',
+      }),
+      gravity: derived('jpl-sbdb', {
+        detail: DETAIL.gravityFromGM,
+        citation: 'Scholl et al., A&A, v.179, p.311, 1987',
+      }),
+      rotationPeriod: measured('jpl-sbdb', {
+        citation: 'LCDB (Rev. 2023-October); Warner et al., 2009',
+      }),
+      moonCount: measured('jpl-sbdb', {
+        detail: DETAIL.confirmedSatellites,
+        asOf: '2026-09-17',
+      }),
+    },
+    unknown: {
+      meanTempC: NOT_YET_SOURCED,
+    },
     description: {
       en: 'The fourth-largest asteroid. In 2019 it was found to be nearly spherical, so round it may qualify as the smallest dwarf planet in the Solar System.',
       fr: 'Le quatrième plus gros astéroïde. En 2019, on l’a découvert quasi sphérique, si rond qu’il pourrait être la plus petite planète naine du Système solaire.',
@@ -316,13 +470,22 @@ export const SMALL_BODY_ELEMENTS: readonly SmallBodyElements[] = [
     color: 0xd8b894,
     surfaceResolutions: ['8k', '4k', '2k', '1k'],
     visualRadius: 0.188,
-    rotationHours: 153.3,
-    axialTiltDeg: 119.6,
+    rotationHours: 153.2928,
+    axialTiltDeg: 119.51,
     rotationBody: Body.Pluto,
     massKg: 1.303e22,
     gravity: 0.62,
-    meanTempC: -229,
+    meanTempC: -225,
     moonCount: 5,
+    sources: {
+      radiusKm: measured('nssdca-fact-sheets'),
+      massKg: measured('nssdca-fact-sheets'),
+      gravity: measured('nssdca-fact-sheets'),
+      meanTempC: measured('nssdca-fact-sheets'),
+      rotationPeriod: measured('nssdca-fact-sheets'),
+      axialTilt: measured('nssdca-fact-sheets'),
+      moonCount: measured('nssdca-fact-sheets', { asOf: '2024-01-11' }),
+    },
     description: {
       en: 'Demoted from planet to dwarf planet in 2006, it hosts a heart-shaped nitrogen glacier photographed by New Horizons in 2015. Its moon Charon is so large that the two form a double system.',
       fr: 'Rétrogradée de planète à planète naine en 2006, elle abrite un glacier d’azote en forme de cœur photographié par New Horizons en 2015. Sa lune Charon est si grande que les deux forment un système double.',
@@ -353,16 +516,33 @@ export const SMALL_BODY_ELEMENTS: readonly SmallBodyElements[] = [
         },
         textureResolutions: { surface: ['8k', '4k', '2k', '1k'] },
         realData: {
+          sources: {
+            radiusKm: measured('jpl-ssd-satellite-physical-parameters', {
+              uncertainty: 0.5,
+            }),
+            distanceAU: measured('jpl-ssd-satellite-mean-elements'),
+            orbitPeriodDays: measured('nssdca-fact-sheets'),
+            massKg: derived('jpl-ssd-satellite-physical-parameters', {
+              detail: DETAIL.massFromGM,
+              uncertainty: massFromGM(0.3),
+            }),
+            gravity: derived('jpl-ssd-satellite-physical-parameters', {
+              detail: DETAIL.gravityFromGM,
+            }),
+            rotationPeriod: measured('nssdca-fact-sheets'),
+          },
+          unknown: {
+            meanTempC: NOT_YET_SOURCED,
+            axialTilt: NOT_YET_SOURCED,
+          },
           radiusKm: 606,
-          distanceAU: 0.000131017908,
+          distanceAU: kmToAu(19_600),
           orbitPeriodDays: 6.38722209972658,
           orbitalInclination: 0,
           ascendingNode: 0,
           axialTilt: 0,
-          massKg: 1.586e21,
-          gravity: 0.288,
-          meanTempC: -220,
-          moonCount: 0,
+          massKg: massFromGM(106.1),
+          gravity: gravityFromGM(106.1, 606),
           description: {
             en: "Pluto's largest moon, so massive that Pluto and Charon orbit a common barycenter.",
             fr: "La plus grande lune de Pluton, si massive que Pluton et Charon orbitent autour d'un barycentre commun.",
@@ -385,8 +565,8 @@ export const SMALL_BODY_ELEMENTS: readonly SmallBodyElements[] = [
       // Sans cet élément, `OrbitalMechanics` retombe sur `null` (corps non affiché) plutôt que
       // sur une position erronée si jamais le binaire `horizonsParentRelative` venait à manquer
       // — préférable à une fausse précision. Les champs `distanceAU`/`orbitPeriodDays` de
-      // `realData` ci-dessous utilisent donc les valeurs moyennes réelles publiées (Showalter &
-      // Hamilton 2015 / Porter et al. 2023), pas les éléments osculateurs Horizons.
+      // `realData` ci-dessous utilisent donc les valeurs MOYENNES de la table JPL SSD des éléments
+      // de satellites (`sources`), pas les éléments osculateurs Horizons.
       styx: {
         kind: 'moon',
         displayName: { en: 'Styx', fr: 'Styx' },
@@ -420,16 +600,32 @@ export const SMALL_BODY_ELEMENTS: readonly SmallBodyElements[] = [
         // cohérente avec l'albédo élevé (>50 %) mesuré pour les 4 petites lunes de Pluton.
         textureResolutions: { surface: ['2k'] },
         realData: {
+          sources: {
+            radiusKm: measured('jpl-ssd-satellite-physical-parameters', {
+              uncertainty: 1,
+            }),
+            distanceAU: measured('jpl-ssd-satellite-mean-elements'),
+            orbitPeriodDays: measured('jpl-ssd-satellite-mean-elements'),
+          },
+          unknown: {
+            meanTempC: NOT_YET_SOURCED,
+            axialTilt: NOT_YET_SOURCED,
+            rotationPeriod: NOT_YET_SOURCED,
+            massKg: {
+              en: 'Only an upper limit to its mass has been published (Porter et al. 2023, from Hubble and New Horizons astrometry), not a measured value.',
+              fr: 'Seule une limite supérieure de sa masse a été publiée (Porter et al. 2023, astrométrie Hubble et New Horizons), pas une valeur mesurée.',
+            },
+            gravity: {
+              en: 'No measured mass has been published, only an upper limit (Porter et al. 2023), so no surface gravity can be derived.',
+              fr: 'Aucune masse mesurée n’a été publiée, seulement une limite supérieure (Porter et al. 2023) : aucune gravité de surface ne peut en être dérivée.',
+            },
+          },
           radiusKm: 5.2,
-          distanceAU: 2.8514e-4,
+          distanceAU: kmToAu(43_200),
           orbitPeriodDays: 20.16188738471113,
           orbitalInclination: 0,
           ascendingNode: 0,
           axialTilt: 0,
-          massKg: 4.494e15,
-          gravity: 0.0111,
-          meanTempC: -232,
-          moonCount: 0,
           description: {
             en: 'The smallest and innermost of Pluto’s four small moons, tumbling chaotically under the combined pull of Pluto and Charon.',
             fr: 'La plus petite et la plus proche des quatre petites lunes de Pluton, en rotation chaotique sous l’attraction combinée de Pluton et Charon.',
@@ -473,16 +669,33 @@ export const SMALL_BODY_ELEMENTS: readonly SmallBodyElements[] = [
         // (Showalter et al. 2015 — voir texture-sources.json).
         textureResolutions: { surface: ['2k'] },
         realData: {
+          sources: {
+            radiusKm: measured('jpl-ssd-satellite-physical-parameters', {
+              uncertainty: 1,
+            }),
+            distanceAU: measured('jpl-ssd-satellite-mean-elements'),
+            orbitPeriodDays: measured('jpl-ssd-satellite-mean-elements'),
+            massKg: derived('jpl-ssd-satellite-physical-parameters', {
+              detail: DETAIL.massFromGM,
+              uncertainty: massFromGM(0.0005),
+            }),
+            gravity: derived('jpl-ssd-satellite-physical-parameters', {
+              detail: DETAIL.gravityFromGM,
+            }),
+          },
+          unknown: {
+            meanTempC: NOT_YET_SOURCED,
+            axialTilt: NOT_YET_SOURCED,
+            rotationPeriod: NOT_YET_SOURCED,
+          },
           radiusKm: 18,
-          distanceAU: 3.2551e-4,
+          distanceAU: kmToAu(49_300),
           orbitPeriodDays: 24.85465798523317,
           orbitalInclination: 0,
           ascendingNode: 0,
           axialTilt: 0,
-          massKg: 2.247e16,
-          gravity: 0.00463,
-          meanTempC: -232,
-          moonCount: 0,
+          massKg: massFromGM(0.0015),
+          gravity: gravityFromGM(0.0015, 18),
           description: {
             en: 'A moon with a reddish crater on an otherwise bright icy surface, rotating chaotically and retrograde relative to its own orbit.',
             fr: 'Une lune marquée d’un cratère rougeâtre sur une surface glacée par ailleurs brillante, en rotation chaotique et rétrograde par rapport à sa propre orbite.',
@@ -526,16 +739,32 @@ export const SMALL_BODY_ELEMENTS: readonly SmallBodyElements[] = [
         // lunes sœurs (base claire, peu de cratères).
         textureResolutions: { surface: ['2k'] },
         realData: {
+          sources: {
+            radiusKm: measured('jpl-ssd-satellite-physical-parameters', {
+              uncertainty: 1,
+            }),
+            distanceAU: measured('jpl-ssd-satellite-mean-elements'),
+            orbitPeriodDays: measured('jpl-ssd-satellite-mean-elements'),
+          },
+          unknown: {
+            meanTempC: NOT_YET_SOURCED,
+            axialTilt: NOT_YET_SOURCED,
+            rotationPeriod: NOT_YET_SOURCED,
+            massKg: {
+              en: 'Only an upper limit to its mass has been published (Porter et al. 2023, from Hubble and New Horizons astrometry), not a measured value.',
+              fr: 'Seule une limite supérieure de sa masse a été publiée (Porter et al. 2023, astrométrie Hubble et New Horizons), pas une valeur mesurée.',
+            },
+            gravity: {
+              en: 'No measured mass has been published, only an upper limit (Porter et al. 2023), so no surface gravity can be derived.',
+              fr: 'Aucune masse mesurée n’a été publiée, seulement une limite supérieure (Porter et al. 2023) : aucune gravité de surface ne peut en être dérivée.',
+            },
+          },
           radiusKm: 6,
-          distanceAU: 3.8626e-4,
+          distanceAU: kmToAu(58_300),
           orbitPeriodDays: 32.16803411478301,
           orbitalInclination: 0,
           ascendingNode: 0,
           axialTilt: 0,
-          massKg: 2.996e15,
-          gravity: 0.00556,
-          meanTempC: -232,
-          moonCount: 0,
           description: {
             en: 'A double-lobed moon, likely the fusion of two smaller bodies, rotating chaotically in the Pluto-Charon system.',
             fr: 'Une lune à double lobe, probablement issue de la fusion de deux corps plus petits, en rotation chaotique dans le système Pluton-Charon.',
@@ -579,16 +808,33 @@ export const SMALL_BODY_ELEMENTS: readonly SmallBodyElements[] = [
         // lunes sœurs (base claire, peu de cratères).
         textureResolutions: { surface: ['2k'] },
         realData: {
+          sources: {
+            radiusKm: measured('jpl-ssd-satellite-physical-parameters', {
+              uncertainty: 1,
+            }),
+            distanceAU: measured('jpl-ssd-satellite-mean-elements'),
+            orbitPeriodDays: measured('jpl-ssd-satellite-mean-elements'),
+            massKg: derived('jpl-ssd-satellite-physical-parameters', {
+              detail: DETAIL.massFromGM,
+              uncertainty: massFromGM(0.0003),
+            }),
+            gravity: derived('jpl-ssd-satellite-physical-parameters', {
+              detail: DETAIL.gravityFromGM,
+            }),
+          },
+          unknown: {
+            meanTempC: NOT_YET_SOURCED,
+            axialTilt: NOT_YET_SOURCED,
+            rotationPeriod: NOT_YET_SOURCED,
+          },
           radiusKm: 18.5,
-          distanceAU: 4.3277e-4,
+          distanceAU: kmToAu(65_200),
           orbitPeriodDays: 38.20192500649081,
           orbitalInclination: 0,
           ascendingNode: 0,
           axialTilt: 0,
-          massKg: 2.996e16,
-          gravity: 0.00584,
-          meanTempC: -250,
-          moonCount: 0,
+          massKg: massFromGM(0.002),
+          gravity: gravityFromGM(0.002, 18.5),
           description: {
             en: "Pluto's outermost known moon, the fastest tumbler of the small moons, spinning once roughly every 10 hours.",
             fr: 'La plus lointaine lune connue de Pluton, celle qui tourne le plus vite parmi les petites lunes, bouclant un tour environ toutes les 10 heures.',
@@ -622,12 +868,27 @@ export const SMALL_BODY_ELEMENTS: readonly SmallBodyElements[] = [
     color: 0x91bce6,
     surfaceResolutions: ['4k', '2k', '1k'],
     visualRadius: 0.183,
-    rotationHours: 25.9,
+    rotationHours: 15.8 * 24,
     axialTiltDeg: 78,
-    massKg: 1.66e22,
-    gravity: 0.82,
-    meanTempC: -231,
+    massKg: massFromDensity(2.52, 1163),
+    gravity: gravityFromMass(massFromDensity(2.52, 1163), 1163),
     moonCount: 1,
+    sources: {
+      radiusKm: measured('sicardy-2011-eris', { uncertainty: 6 }),
+      massKg: derived('sicardy-2011-eris', { detail: DETAIL.massFromDensity }),
+      gravity: derived('sicardy-2011-eris', { detail: DETAIL.gravityFromMass }),
+      rotationPeriod: measured('szakats-2023-eris', {
+        detail: DETAIL.synchronousRotation,
+      }),
+      moonCount: measured('jpl-sbdb', {
+        detail: DETAIL.confirmedSatellites,
+        asOf: '2026-09-17',
+      }),
+    },
+    unknown: {
+      meanTempC: NOT_YET_SOURCED,
+      axialTilt: NOT_YET_SOURCED,
+    },
     description: {
       en: 'More massive than Pluto. Its discovery in 2005 forced astronomers to define what a planet is, and cost Pluto its status. It roams up to three times farther from the Sun than Pluto.',
       fr: 'Plus massive que Pluton. Sa découverte en 2005 a forcé les astronomes à définir ce qu’est une planète, et a coûté son statut à Pluton. Elle s’éloigne jusqu’à trois fois plus loin du Soleil que Pluton.',
@@ -656,12 +917,27 @@ export const SMALL_BODY_ELEMENTS: readonly SmallBodyElements[] = [
     color: 0xe58f7a,
     surfaceResolutions: ['4k', '2k', '1k'],
     visualRadius: 0.123,
-    rotationHours: 3.9155,
+    rotationHours: 3.9154,
     axialTiltDeg: 126,
     massKg: 4.006e21,
     gravity: 0.44,
-    meanTempC: -241,
     moonCount: 2,
+    sources: {
+      massKg: measured('ragozzine-brown-2009-haumea', { uncertainty: 0.04e21 }),
+      rotationPeriod: measured('jpl-sbdb', {
+        citation: 'LCDB (Rev. 2023-October); Warner et al., 2009',
+      }),
+      moonCount: measured('jpl-sbdb', {
+        detail: DETAIL.confirmedSatellites,
+        asOf: '2026-09-17',
+      }),
+    },
+    unknown: {
+      radiusKm: NOT_YET_SOURCED,
+      gravity: NOT_YET_SOURCED,
+      meanTempC: NOT_YET_SOURCED,
+      axialTilt: NOT_YET_SOURCED,
+    },
     description: {
       en: 'It spins in under 4 hours, the fastest of any large body in the Solar System, which has stretched it into an egg shape. In 2017 it became the first trans-Neptunian object found to have a ring.',
       fr: 'Elle tourne sur elle-même en moins de 4 heures, un record parmi les grands corps du Système solaire, ce qui l’a étirée en forme d’œuf. En 2017, elle est devenue le premier objet transneptunien doté d’un anneau connu.',
@@ -685,20 +961,37 @@ export const SMALL_BODY_ELEMENTS: readonly SmallBodyElements[] = [
     maDeg: 140.1042105425099,
     epoch: '2000-01-01T12:00:00Z',
     barycentric: true,
-    radiusKm: 715,
+    radiusKm: 1434 / 2,
     kind: 'dwarf',
     color: 0xd78352,
     surfaceResolutions: ['4k', '2k', '1k'],
     visualRadius: 0.112,
-    rotationHours: 22.826,
-    axialTiltDeg: 0,
+    rotationHours: 22.8266,
     massKg: 3.1e21,
-    // g = GM/r² à partir de massKg/radiusKm ci-dessus (0,5 était incohérent : ~24 % trop haut,
-    // vraisemblablement une estimation de masse pré-découverte de la lune MK2 en 2016, jamais
-    // reconciliée avec la masse mise à jour).
+    // Masse et gravité gardées pour la simulation mais NON publiées (`unknown`) : aucune source
+    // primaire rattachée. L'orbite préliminaire de MK2 (Bamberger 2025, prépublication à un seul
+    // auteur) donnerait ~2,7e21 kg, pas 3,1e21 : raison de plus pour ne rien afficher.
     gravity: 0.405,
-    meanTempC: -239,
     moonCount: 1,
+    sources: {
+      radiusKm: derived('brown-2013-makemake', {
+        detail: DETAIL.equatorialRadiusFromDiameter,
+        uncertainty: 7,
+      }),
+      rotationPeriod: measured('jpl-sbdb', {
+        detail: DETAIL.partialLightcurve,
+        citation: 'LCDB (Rev. 2023-October); Warner et al., 2009',
+      }),
+      moonCount: measured('jpl-sbdb', {
+        detail: DETAIL.confirmedSatellites,
+        asOf: '2026-09-17',
+      }),
+    },
+    unknown: {
+      massKg: NOT_YET_SOURCED,
+      gravity: NOT_YET_SOURCED,
+      meanTempC: NOT_YET_SOURCED,
+    },
     description: {
       en: 'Discovered just after Easter 2005 and nicknamed “Easterbunny”, it was later named after the creator god of Rapa Nui (Easter Island). Its reddish surface is coated in frozen methane.',
       fr: 'Découverte juste après Pâques 2005 et surnommée « Easterbunny », elle fut ensuite nommée d’après le dieu créateur de Rapa Nui (île de Pâques). Sa surface rougeâtre est couverte de méthane gelé.',
@@ -728,14 +1021,29 @@ export const SMALL_BODY_ELEMENTS: readonly SmallBodyElements[] = [
     surfaceResolutions: ['2k'],
     fallbackColor: 0xcbc7c0,
     visualRadius: 0.072,
-    // Rotation possiblement verrouillée sur l'orbite de sa lune Vanth (9,5393 j) — les études
-    // photométriques directes sont non concluantes (Orcus est vu quasi pôle-sur, ce qui aplatit
-    // sa courbe de lumière) mais l'hypothèse de synchronisation mutuelle est la mieux étayée.
-    rotationHours: 9.5393 * 24,
+    // Période de la base LCDB citée par la SBDB, que la source signale comme fondée sur une
+    // couverture incomplète. Le catalogue portait 9,5393 j (synchronisation supposée avec
+    // Vanth) : une hypothèse, pas une mesure publiée, remplacée par la valeur sourcée.
+    rotationHours: 13.188,
     massKg: 5.478e20,
     gravity: 0.174,
-    meanTempC: -228,
     moonCount: 1,
+    sources: {
+      rotationPeriod: measured('jpl-sbdb', {
+        detail: DETAIL.partialLightcurve,
+        citation: 'LCDB (Rev. 2023-October); Warner et al., 2009',
+      }),
+      moonCount: measured('jpl-sbdb', {
+        detail: DETAIL.confirmedSatellites,
+        asOf: '2026-09-17',
+      }),
+    },
+    unknown: {
+      radiusKm: NOT_YET_SOURCED,
+      massKg: NOT_YET_SOURCED,
+      gravity: NOT_YET_SOURCED,
+      meanTempC: NOT_YET_SOURCED,
+    },
     description: {
       en: 'Sometimes nicknamed the "anti-Pluto" for an orbit that mirrors Pluto\'s own 2:3 resonance with Neptune, timed so the two are never close together. Its large moon Vanth may be tidally locked to it, much like Charon is to Pluto.',
       fr: 'Parfois surnommée « anti-Pluton » pour une orbite qui reflète la même résonance 2:3 avec Neptune que Pluton, mais synchronisée pour que les deux ne soient jamais proches. Sa grande lune Vanth serait verrouillée gravitationnellement, un peu comme Charon l’est à Pluton.',
@@ -759,17 +1067,36 @@ export const SMALL_BODY_ELEMENTS: readonly SmallBodyElements[] = [
     maDeg: 265.1482774560987,
     epoch: '2000-01-01T12:00:00Z',
     barycentric: true,
-    radiusKm: 549,
+    radiusKm: 1094.4 / 2,
     kind: 'dwarf',
     color: 0x9c8873,
     surfaceResolutions: ['2k'],
     fallbackColor: 0x9c8873,
     visualRadius: 0.086,
-    rotationHours: 8.84,
-    massKg: 1.212e21,
-    gravity: 0.27,
-    meanTempC: -229,
+    rotationHours: 8.8394,
+    massKg: massFromDensity(1.76, 1094.4 / 2),
+    gravity: gravityFromMass(massFromDensity(1.76, 1094.4 / 2), 1094.4 / 2),
     moonCount: 1,
+    sources: {
+      radiusKm: derived('margoti-2026-quaoar', {
+        detail: DETAIL.volumetricRadiusFromDiameter,
+        uncertainty: 2.3,
+      }),
+      massKg: derived('margoti-2026-quaoar', {
+        detail: DETAIL.massFromDensity,
+      }),
+      gravity: derived('margoti-2026-quaoar', {
+        detail: DETAIL.gravityFromMass,
+      }),
+      rotationPeriod: measured('margoti-2026-quaoar', { uncertainty: 0.0002 }),
+      moonCount: measured('jpl-sbdb', {
+        detail: DETAIL.confirmedSatellites,
+        asOf: '2026-09-17',
+      }),
+    },
+    unknown: {
+      meanTempC: NOT_YET_SOURCED,
+    },
     description: {
       en: 'A large Kuiper Belt object that surprised astronomers in 2023 with a system of rings orbiting far beyond the distance where rings should be stable; its moon Weywot may be responsible for keeping them from collapsing.',
       fr: 'Un grand objet de la ceinture de Kuiper qui a surpris les astronomes en 2023 : un système d’anneaux en orbite bien au-delà de la distance où des anneaux sont censés rester stables ; sa lune Weywot pourrait les empêcher de s’effondrer.',
@@ -793,7 +1120,7 @@ export const SMALL_BODY_ELEMENTS: readonly SmallBodyElements[] = [
     maDeg: 93.65145846699514,
     epoch: '2000-01-01T12:00:00Z',
     barycentric: true,
-    radiusKm: 615,
+    radiusKm: 1230 / 2,
     kind: 'dwarf',
     color: 0xc25a3f,
     surfaceResolutions: ['2k'],
@@ -801,9 +1128,29 @@ export const SMALL_BODY_ELEMENTS: readonly SmallBodyElements[] = [
     visualRadius: 0.097,
     rotationHours: 22.4,
     massKg: 1.75e21,
-    gravity: 0.31,
-    meanTempC: -235,
+    gravity: gravityFromMass(1.75e21, 1230 / 2),
     moonCount: 1,
+    sources: {
+      radiusKm: derived('kiss-2019-gonggong', {
+        detail: DETAIL.radiusFromDiameter,
+        uncertainty: 25,
+      }),
+      massKg: measured('kiss-2019-gonggong', { detail: DETAIL.systemMass }),
+      gravity: derived('kiss-2019-gonggong', {
+        detail: DETAIL.gravityFromSystemMass,
+      }),
+      rotationPeriod: measured('jpl-sbdb', {
+        detail: DETAIL.partialLightcurve,
+        citation: 'LCDB (Rev. 2023-October); Warner et al., 2009',
+      }),
+      moonCount: measured('jpl-sbdb', {
+        detail: DETAIL.confirmedSatellites,
+        asOf: '2026-09-17',
+      }),
+    },
+    unknown: {
+      meanTempC: NOT_YET_SOURCED,
+    },
     description: {
       en: 'Named after the Chinese god of water and chaos, this reddish, methane-frosted world spins nearly on its side and shares a steeply tilted, eccentric orbit with its lone moon Xiangliu.',
       fr: 'Nommée d’après le dieu chinois de l’eau et du chaos, ce monde rougeâtre couvert de givre de méthane tourne presque couché sur le côté et partage une orbite très inclinée et excentrique avec son unique lune Xiangliu.',
@@ -827,19 +1174,33 @@ export const SMALL_BODY_ELEMENTS: readonly SmallBodyElements[] = [
     maDeg: 357.5940836366447,
     epoch: '2000-01-01T12:00:00Z',
     barycentric: true,
-    radiusKm: 498,
+    radiusKm: 995 / 2,
     kind: 'dwarf',
     color: 0xb84a3a,
     surfaceResolutions: ['2k'],
     fallbackColor: 0xb84a3a,
     visualRadius: 0.078,
     rotationHours: 10.273,
-    // Masse estimée à partir de sa taille et d'une densité type objet glacé — sans lune connue,
-    // sa masse ne peut pas être mesurée directement (aucune sonde ne l'a visitée).
-    massKg: 8.3e20,
-    gravity: 0.22,
-    meanTempC: -240,
     moonCount: 0,
+    sources: {
+      radiusKm: derived('pal-2012-sedna', {
+        detail: DETAIL.radiusFromDiameter,
+        uncertainty: 40,
+      }),
+      rotationPeriod: measured('jpl-sbdb', {
+        detail: DETAIL.partialLightcurve,
+        citation: 'LCDB (Rev. 2023-October); Warner et al., 2009',
+      }),
+      moonCount: measured('jpl-sbdb', {
+        detail: DETAIL.confirmedSatellites,
+        asOf: '2026-09-17',
+      }),
+    },
+    unknown: {
+      massKg: NOT_YET_SOURCED,
+      gravity: NOT_YET_SOURCED,
+      meanTempC: NOT_YET_SOURCED,
+    },
     description: {
       en: 'One of the most distant and coldest known objects in the Solar System, journeying on an extremely elongated, multi-millennial orbit that carries it beyond the Kuiper Belt toward the inner edge of the hypothesized Oort Cloud.',
       fr: 'L’un des objets connus les plus lointains et les plus froids du Système solaire, parcourant une orbite extrêmement allongée, longue de plusieurs millénaires, qui l’entraîne au-delà de la ceinture de Kuiper vers les abords du nuage d’Oort hypothétique.',
@@ -862,7 +1223,7 @@ export const SMALL_BODY_ELEMENTS: readonly SmallBodyElements[] = [
     wDeg: 112.449622028568,
     maDeg: 65.84890057257185,
     epoch: '2000-01-01T12:00:00Z',
-    radiusKm: 5.5,
+    radiusKm: 11.0 / 2,
     // Periode de rotation mesuree par Vega 1/2 : 53,5 +/- 1 h, confirmee par les images
     // Giotto. A prendre pour ce qu'elle est : le noyau est en PRECESSION LIBRE (rotation
     // hors axe principal), et la litterature en tire deux periodicites, ~2,2 j et ~7,4 j.
@@ -871,6 +1232,7 @@ export const SMALL_BODY_ELEMENTS: readonly SmallBodyElements[] = [
     rotationHours: 53.5,
     moonCount: 0,
     unknown: {
+      rotationPeriod: NOT_YET_SOURCED,
       massKg: {
         en: 'No direct measurement: the nucleus mass is inferred from a density that is itself poorly constrained ("no more than a quarter that of ice").',
         fr: "Aucune mesure directe : la masse du noyau se déduit d'une densité elle-même mal contrainte (« pas plus du quart de celle de la glace »).",
@@ -887,6 +1249,17 @@ export const SMALL_BODY_ELEMENTS: readonly SmallBodyElements[] = [
     color: 0xf08ac6,
     surfaceResolutions: ['4k', '2k'],
     kind: 'comet',
+    sources: {
+      radiusKm: derived('jpl-sbdb', {
+        detail: DETAIL.radiusFromDiameter,
+        citation:
+          'Lamy,P.L.;Toth,I.;Fernandez,Y.R.;Weaver,H.A. (2004) Comets II, pp. 223-264',
+      }),
+      moonCount: measured('jpl-sbdb', {
+        detail: DETAIL.confirmedSatellites,
+        asOf: '2026-09-17',
+      }),
+    },
     description: {
       en: 'The most famous comet, visible from Earth about every 76 years, with its next return in 2061. It orbits backwards, against the flow of the planets.',
       fr: 'La plus célèbre des comètes, visible depuis la Terre tous les 76 ans environ, avec un prochain retour en 2061. Elle orbite à rebours, à contre-courant des planètes.',
@@ -912,7 +1285,7 @@ export const SMALL_BODY_ELEMENTS: readonly SmallBodyElements[] = [
     maDeg: 301.2865775321327,
     epoch: '2026-01-01T00:00:00.000Z',
     // Diamètre 0,48444 km (JPL SBDB, ±0,0003) → rayon moyen.
-    radiusKm: 0.24222,
+    radiusKm: 0.48444 / 2,
     kind: 'asteroid',
     color: 0x6b6560,
     // Pas de texture : la surface de Bennu n'a pas de mosaïque équirectangulaire publiée à
@@ -943,7 +1316,7 @@ export const SMALL_BODY_ELEMENTS: readonly SmallBodyElements[] = [
     // l'envers, ce qui est bien la valeur publiée — le calcul la retrouve.
     axialTiltDeg: 177.5,
     // GM = 4,8904e-9 km³/s² (SBDB) ÷ G → 7,33e10 kg.
-    massKg: 7.33e10,
+    massKg: massFromGM(4.8904e-9),
     moonCount: 0,
     unknown: {
       gravity: {
@@ -954,6 +1327,31 @@ export const SMALL_BODY_ELEMENTS: readonly SmallBodyElements[] = [
         en: 'Surface temperature swings by more than 100 C over its 4.3-hour day: a mean would describe no real moment.',
         fr: 'La température de surface varie de plus de 100 C au fil de sa journée de 4,3 heures : une moyenne ne décrirait aucun instant réel.',
       },
+    },
+    sources: {
+      radiusKm: derived('jpl-sbdb', {
+        detail: DETAIL.radiusFromDiameter,
+        citation: 'Daly, M.G., et al., Sci. Adv. 6, eabd3649 (2020)',
+        uncertainty: 0.00015,
+      }),
+      massKg: derived('jpl-sbdb', {
+        detail: DETAIL.massFromGM,
+        citation:
+          'Chesley, S.R., et al., J. Geophys. Res. (Planets) 125, e06363 (2020)',
+        uncertainty: massFromGM(0.0009e-9),
+      }),
+      rotationPeriod: measured('jpl-sbdb', {
+        citation: 'Hergenrother, M.C., et al., Nat. Commun. 10, 1291 (2019)',
+        uncertainty: 0.000002,
+      }),
+      axialTilt: derived('jpl-sbdb', {
+        detail: DETAIL.obliquityFromPole,
+        citation: 'Daly, M.G., et al., Sci. Adv. 6, eabd3649 (2020)',
+      }),
+      moonCount: measured('jpl-sbdb', {
+        detail: DETAIL.confirmedSatellites,
+        asOf: '2026-09-17',
+      }),
     },
     description: {
       en: 'A 500-metre rubble pile shaped like a spinning top, visited by OSIRIS-REx, which brought a sample of it back to Earth in 2023.',
@@ -984,7 +1382,7 @@ export const SMALL_BODY_ELEMENTS: readonly SmallBodyElements[] = [
     maDeg: 333.5121645523216,
     epoch: '2026-01-01T00:00:00.000Z',
     // Diamètre équivalent 16,84 ± 0,06 km (SBDB, Yeomans et al. 2000).
-    radiusKm: 8.42,
+    radiusKm: 16.84 / 2,
     kind: 'asteroid',
     color: 0xe0a45c,
     fallbackColor: 0xe8cfb8,
@@ -1010,7 +1408,7 @@ export const SMALL_BODY_ELEMENTS: readonly SmallBodyElements[] = [
     // orbitale : Éros tourne presque couché sur son orbite.
     axialTiltDeg: 89.0,
     // GM = 4,463e-4 km³/s² (SBDB) ÷ G.
-    massKg: 6.687e15,
+    massKg: massFromGM(4.463e-4),
     moonCount: 0,
     unknown: {
       gravity: {
@@ -1021,6 +1419,29 @@ export const SMALL_BODY_ELEMENTS: readonly SmallBodyElements[] = [
         en: 'Surface temperature swings strongly over its 5.3-hour day and along its eccentric orbit: a mean would describe no real moment.',
         fr: 'La température de surface varie fortement au fil de sa journée de 5,3 heures et le long de son orbite excentrique : une moyenne ne décrirait aucun instant réel.',
       },
+    },
+    sources: {
+      radiusKm: derived('jpl-sbdb', {
+        detail: DETAIL.radiusFromDiameter,
+        citation: 'Yeomans et al. (2000) Science v.289,pp.2085-2088',
+        uncertainty: 0.03,
+      }),
+      massKg: derived('jpl-sbdb', {
+        detail: DETAIL.massFromGM,
+        citation: 'Yeomans et al. (2000) Science v.289,pp.2085-2088',
+        uncertainty: massFromGM(0.001e-4),
+      }),
+      rotationPeriod: measured('jpl-sbdb', {
+        citation: 'LCDB (Rev. 2023-October); Warner et al., 2009',
+      }),
+      axialTilt: derived('jpl-sbdb', {
+        detail: DETAIL.obliquityFromPole,
+        citation: 'Yeomans et al. (2000) Science v.289,pp.2085-2088',
+      }),
+      moonCount: measured('jpl-sbdb', {
+        detail: DETAIL.confirmedSatellites,
+        asOf: '2026-09-17',
+      }),
     },
     description: {
       en: 'The first asteroid ever orbited and landed on: NASA’s NEAR Shoemaker circled it for a year and touched down on its surface in February 2001.',
@@ -1045,7 +1466,7 @@ export const SMALL_BODY_ELEMENTS: readonly SmallBodyElements[] = [
     epoch: '2026-01-01T00:00:00.000Z',
     // Diamètre moyen 0,33 km (SBDB, Fujiwara et al. 2006) ; le volume du modèle Gaskell donne
     // 0,162 km, à 2 % près.
-    radiusKm: 0.165,
+    radiusKm: 0.33 / 2,
     kind: 'asteroid',
     color: 0x7fb3c9,
     fallbackColor: 0xdadada,
@@ -1067,8 +1488,10 @@ export const SMALL_BODY_ELEMENTS: readonly SmallBodyElements[] = [
     rotationHours: 12.132,
     // DÉRIVÉE du pôle SBDB (RA 90,53°, Dec −66,30°, Demura et al. 2006) : rotation rétrograde.
     axialTiltDeg: 178.7,
-    // GM = 2,1e-9 km³/s² (SBDB) ÷ G.
-    massKg: 3.15e10,
+    // Masse PUBLIÉE (3,51e10 kg ± 3 %, Fujiwara et al. 2006), citée dans les notes de la SBDB.
+    // Le GM de la même fiche (2,1e-9 km³/s²) ne lui correspond pas : 2,1e-9 / G = 3,15e10 kg,
+    // la valeur que ce catalogue affichait jusqu'ici.
+    massKg: 3.51e10,
     moonCount: 0,
     unknown: {
       gravity: {
@@ -1079,6 +1502,28 @@ export const SMALL_BODY_ELEMENTS: readonly SmallBodyElements[] = [
         en: 'Surface temperature swings strongly between day and night and along its orbit: a mean would describe no real moment.',
         fr: 'La température de surface varie fortement entre le jour et la nuit et le long de son orbite : une moyenne ne décrirait aucun instant réel.',
       },
+    },
+    sources: {
+      radiusKm: derived('jpl-sbdb', {
+        detail: DETAIL.radiusFromDiameter,
+        citation: 'Science 312:1330-1334',
+      }),
+      massKg: measured('jpl-sbdb', {
+        detail: DETAIL.itokawaPublishedMass,
+        citation: 'Science 312:1330-1334',
+        uncertainty: 0.03 * 3.51e10,
+      }),
+      rotationPeriod: measured('jpl-sbdb', {
+        citation: 'LCDB (Rev. 2023-October); Warner et al., 2009',
+      }),
+      axialTilt: derived('jpl-sbdb', {
+        detail: DETAIL.obliquityFromPole,
+        citation: 'Demura, H., et al., Science, 312, 1347 (2006)',
+      }),
+      moonCount: measured('jpl-sbdb', {
+        detail: DETAIL.confirmedSatellites,
+        asOf: '2026-09-17',
+      }),
     },
     description: {
       en: 'A 535-metre rubble pile shaped like a sea otter. JAXA’s Hayabusa landed on it in 2005 and brought the first grains of an asteroid back to Earth in 2010.',
@@ -1102,7 +1547,7 @@ export const SMALL_BODY_ELEMENTS: readonly SmallBodyElements[] = [
     maDeg: 301.7512745052471,
     epoch: '2026-01-01T00:00:00.000Z',
     // Diamètre équivalent 0,896 ± 0,004 km (SBDB, Watanabe et al. 2019).
-    radiusKm: 0.448,
+    radiusKm: 0.896 / 2,
     kind: 'asteroid',
     color: 0x9c6fd6,
     fallbackColor: 0x5f5f5f,
@@ -1127,7 +1572,7 @@ export const SMALL_BODY_ELEMENTS: readonly SmallBodyElements[] = [
     // DÉRIVÉE du pôle SBDB (RA 96,3956°, Dec −66,3937°, Preusker et al. 2019) : rétrograde.
     axialTiltDeg: 171.7,
     // GM = 3,00e-8 km³/s² (SBDB) ÷ G.
-    massKg: 4.495e11,
+    massKg: massFromGM(3.0e-8),
     moonCount: 0,
     unknown: {
       gravity: {
@@ -1138,6 +1583,34 @@ export const SMALL_BODY_ELEMENTS: readonly SmallBodyElements[] = [
         en: 'Surface temperature swings strongly over its 7.6-hour day: a mean would describe no real moment.',
         fr: 'La température de surface varie fortement au fil de sa journée de 7,6 heures : une moyenne ne décrirait aucun instant réel.',
       },
+    },
+    sources: {
+      radiusKm: derived('jpl-sbdb', {
+        detail: DETAIL.radiusFromDiameter,
+        citation:
+          'Watanabe, S.; Hirabayashi, M.; Hirata, N.; Hirata, Na.; et al. (2019) Science 364, 267-272.',
+        uncertainty: 0.002,
+      }),
+      massKg: derived('jpl-sbdb', {
+        detail: DETAIL.massFromGM,
+        citation:
+          'Watanabe, S.; Hirabayashi, M.; Hirata, N.; Hirata, Na.; et al. (2019) Science 364, 267-272.',
+        uncertainty: massFromGM(0.04e-8),
+      }),
+      rotationPeriod: measured('jpl-sbdb', {
+        citation:
+          'Watanabe, S.; Hirabayashi, M.; Hirata, N.; Hirata, Na.; et al. (2019) Science 364, 267-272.',
+        uncertainty: 0.00002,
+      }),
+      axialTilt: derived('jpl-sbdb', {
+        detail: DETAIL.obliquityFromPole,
+        citation:
+          'Preusker, F.; Scholten, F.; Elgner, S.; Matz, K. D.; et al. (2019) A&A 632 L4.',
+      }),
+      moonCount: measured('jpl-sbdb', {
+        detail: DETAIL.confirmedSatellites,
+        asOf: '2026-09-17',
+      }),
     },
     description: {
       en: 'A dark, carbon-rich spinning top about 900 metres across. JAXA’s Hayabusa2 fired a projectile into it to dig a fresh crater and brought 5.4 grams of it back to Earth in December 2020.',
@@ -1162,7 +1635,7 @@ export const SMALL_BODY_ELEMENTS: readonly SmallBodyElements[] = [
     epoch: '2026-01-01T00:00:00.000Z',
     // Rayon moyen 15,7 km (Thomas et al. 1996, le même travail que le modèle de forme ; le
     // « 32 km » de la SBDB est un diamètre antérieur, arrondi).
-    radiusKm: 15.7,
+    radiusKm: 32 / 2,
     kind: 'asteroid',
     color: 0xd6c16f,
     fallbackColor: 0xd8d8d8,
@@ -1185,10 +1658,11 @@ export const SMALL_BODY_ELEMENTS: readonly SmallBodyElements[] = [
     // moment cinétique vers RA 168,76°, Dec −87,10°) et de la normale orbitale.
     axialTiltDeg: 156.0,
     // GM = 0,00275 km³/s² (SBDB, Belton et al. 1996, mesuré grâce à Dactyle) ÷ G.
-    massKg: 4.12e16,
+    massKg: massFromGM(0.00275),
     // Dactyle, découverte sur les images de Galileo — pas encore dans ce catalogue.
     moonCount: 1,
     unknown: {
+      axialTilt: NOT_YET_SOURCED,
       gravity: {
         en: 'A 60-kilometre elongated body spinning in 4.6 hours: surface gravity changes by a large factor from its ends to its middle, so a single value would mislead.',
         fr: "Un corps allongé de 60 kilomètres qui tourne en 4,6 heures : la gravité de surface change d'un facteur important de ses extrémités à son centre, une valeur unique serait trompeuse.",
@@ -1197,6 +1671,24 @@ export const SMALL_BODY_ELEMENTS: readonly SmallBodyElements[] = [
         en: 'Surface temperature swings strongly over its 4.6-hour day: a mean would describe no real moment.',
         fr: 'La température de surface varie fortement au fil de sa journée de 4,6 heures : une moyenne ne décrirait aucun instant réel.',
       },
+    },
+    sources: {
+      radiusKm: derived('jpl-sbdb', {
+        detail: DETAIL.radiusFromDiameter,
+        citation: 'Belton et al. (1995)',
+      }),
+      massKg: derived('jpl-sbdb', {
+        detail: DETAIL.massFromGM,
+        citation: 'Belton et al. (1996) Icarus v.120, pp.185-199',
+        uncertainty: massFromGM(0.00035),
+      }),
+      rotationPeriod: measured('jpl-sbdb', {
+        citation: 'LCDB (Rev. 2023-October); Warner et al., 2009',
+      }),
+      moonCount: measured('jpl-sbdb', {
+        detail: DETAIL.confirmedSatellites,
+        asOf: '2026-09-17',
+      }),
     },
     description: {
       en: 'The first asteroid found to have its own moon: images taken by NASA’s Galileo probe in 1993 revealed tiny Dactyl orbiting this 60-kilometre main-belt asteroid.',

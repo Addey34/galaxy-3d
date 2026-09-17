@@ -1042,6 +1042,45 @@ button {
 .bi-desc[hidden] {
   display: none;
 }
+/* Renvoi numéroté vers la source, date de validité d'un fait qui évolue. */
+.bi-stats .bi-ref {
+  margin-left: 0.15em;
+  font-size: 0.62em;
+  color: var(--ink-faint);
+}
+.bi-stats .bi-asof {
+  font-size: 0.85em;
+  color: var(--ink-faint);
+}
+.bi-sources {
+  margin: var(--sp-2) 0 0;
+  font-size: 0.7rem;
+  line-height: 1.45;
+  color: var(--ink-dim);
+}
+.bi-sources[hidden] {
+  display: none;
+}
+.bi-sources summary {
+  cursor: pointer;
+  color: var(--ink-faint);
+}
+.bi-sources ol {
+  margin: var(--sp-1) 0 0;
+  padding-left: 1.4em;
+}
+.bi-sources li + li {
+  margin-top: var(--sp-1);
+}
+.bi-sources a {
+  color: rgba(var(--planet-rgb), 0.95);
+  overflow-wrap: anywhere;
+}
+.bi-source-ref,
+.bi-source-supports {
+  display: block;
+  color: var(--ink-faint);
+}
 .bi-credit {
   margin: var(--sp-2) 0 0;
   font-size: 0.7rem;

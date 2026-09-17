@@ -904,6 +904,45 @@ défaut montre déjà la face éclairée — le test passait sans le cadrage imp
 3 mars 2026, rouge/bleu mesure 4,1 avec, 1,5 sans ; c'est cette page que teste
 `e2e/eclipseLanding.spec.ts`.
 
+## Faits sourcés : ce que la fiche et la page d'un corps affichent
+
+Rayon, masse, gravité, température moyenne, distance, périodes, rotation, obliquité et nombre de
+lunes sont des affirmations scientifiques. Chacune porte une provenance dans le catalogue, à côté
+de la valeur que la simulation lit (`realData.sources[champ]`, type `FactProvenance`) :
+
+- **source** : identifiant du registre `src/config/factSources.ts` (fiches NASA NSSDCA, tables
+  JPL SSD des satellites, JPL SBDB, Horizons, pages NASA Science, articles et prépublications
+  nommées comme telles). Jamais Wikipédia, qui reste seulement le lien « En savoir plus » ;
+- **méthode** : `measured` (valeur de la source) ou `derived` (masse = GM/G avec G CODATA 2018,
+  gravité = GM/R², rayon = diamètre/2, obliquité depuis le pôle publié, distance et période des
+  petits corps depuis leurs éléments Horizons) ; `detail` dit ce que la source mesure exactement
+  (rayon équatorial à 1 bar, période de courbe de lumière incomplète…) ;
+- **asOf** pour un fait qui évolue (nombre de lunes), **uncertainty** quand la source la publie
+  (affichée à partir de 5 % relatifs), **citation** pour la référence d'origine d'une base.
+
+**Une seule règle d'affichage**, `src/core/bodyFacts.ts`, partagée par `ui/bodyInfo.ts` et
+`seo/bodyLandingPage.ts` : hors sujet pour le `kind` (étoile : distance, période, lunes ; lune :
+lunes) → absent ; déclaré `unknown` → marque « n/a » avec la raison, et cette déclaration prime sur
+la valeur de simulation ; valeur sans provenance → jamais publiée, « pas encore sourcée ». Deux
+raisons distinctes : aucune valeur publiée unique (une plage, une limite supérieure) ou
+`NOT_YET_SOURCED` (Galaxy n'a pas encore rattaché de source). La fiche numérote les sources comme
+des notes et les liste dans un bloc repliable ; la page publique omet les champs non affichés et
+liste ses sources ; `/sources` compte depuis le catalogue ce qui est affiché, dérivé ou en attente.
+
+**Confrontation aux sources.** `scripts/snapshot-fact-sources.mjs` (`pnpm facts:snapshot`, cache
+dans `.cache/fact-sources/`, `--offline`) lit les tables elles-mêmes et écrit
+`src/config/factSources.snapshot.json`, importé par les tests seulement. Pour un article, il
+vérifie que chaque phrase citée figure MOT POUR MOT dans le texte publié (résumé arXiv, page
+d'éditeur lue par curl car Nature sert un défi JavaScript au `fetch` de Node, tableau d'un PDF par
+pdftotext). `src/config/factProvenance.test.ts` compare ensuite chaque valeur citée à sa ligne,
+refuse une valeur affichable sans provenance, une source hors registre ou orpheline, un fait
+évolutif non daté, une provenance sur une valeur non affichée et une citation SBDB différente de
+la référence de la base. Pièges trouvés en la construisant : la page NASA Science de Saturne
+porte « 274 » dans ses métadonnées et « 293 … as of August 2026 » dans son texte (la phrase datée
+fait foi) ; la colonne P de la table JPL des éléments moyens est anomalistique (Io 1,7627 j contre
+1,7691 j sidéraux), d'où les périodes lues dans les fiches NSSDCA des satellites ; le GM de la SBDB
+pour Itokawa ne correspond pas à la masse publiée que ses propres notes citent.
+
 ## Pages `/methodology` et `/sources`
 
 Deux documents, chacun en anglais (`/methodology/`, `/sources/`) et en français

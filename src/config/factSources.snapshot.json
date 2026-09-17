@@ -1,0 +1,1206 @@
+{
+  "generatedBy": "scripts/snapshot-fact-sources.mjs",
+  "retrieved": "2026-09-17",
+  "nssdca": {
+    "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/",
+    "mainTableUpdated": "2025-03-18",
+    "bodies": {
+      "mercury": {
+        "updated": "2024-01-11",
+        "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/mercuryfact.html",
+        "mass1e24Kg": 0.3301,
+        "equatorialRadiusKm": 2440.5,
+        "volumetricMeanRadiusKm": 2439.7,
+        "meanGravity": 3.7,
+        "siderealRotationHours": 1407.6,
+        "siderealOrbitDays": 87.969,
+        "obliquityDeg": 0.034,
+        "semiMajorAxisAU": 0.38709893,
+        "moonCount": 0,
+        "meanTemperatureC": 167
+      },
+      "venus": {
+        "updated": "2024-01-11",
+        "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/venusfact.html",
+        "mass1e24Kg": 4.8673,
+        "equatorialRadiusKm": 6051.8,
+        "volumetricMeanRadiusKm": 6051.8,
+        "meanGravity": 8.87,
+        "siderealRotationHours": -5832.6,
+        "siderealOrbitDays": 224.701,
+        "obliquityDeg": 177.36,
+        "semiMajorAxisAU": 0.72333199,
+        "moonCount": 0,
+        "meanTemperatureC": 464
+      },
+      "earth": {
+        "updated": "2024-11-15",
+        "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/earthfact.html",
+        "mass1e24Kg": 5.9722,
+        "equatorialRadiusKm": 6378.137,
+        "volumetricMeanRadiusKm": 6371,
+        "meanGravity": 9.82,
+        "siderealRotationHours": 23.9345,
+        "siderealOrbitDays": 365.256,
+        "obliquityDeg": 23.44,
+        "semiMajorAxisAU": 1.00000011,
+        "moonCount": 1,
+        "meanTemperatureC": 15
+      },
+      "mars": {
+        "updated": "2025-05-19",
+        "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/marsfact.html",
+        "mass1e24Kg": 0.64169,
+        "equatorialRadiusKm": 3396.2,
+        "volumetricMeanRadiusKm": 3389.5,
+        "meanGravity": 3.73,
+        "siderealRotationHours": 24.6229,
+        "siderealOrbitDays": 686.98,
+        "obliquityDeg": 25.19,
+        "semiMajorAxisAU": 1.52366231,
+        "moonCount": 2,
+        "meanTemperatureC": -65
+      },
+      "jupiter": {
+        "updated": "2024-10-02",
+        "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/jupiterfact.html",
+        "mass1e24Kg": 1898.13,
+        "equatorialRadiusKm": 71492,
+        "volumetricMeanRadiusKm": 69911,
+        "meanGravity": 25.92,
+        "siderealRotationHours": 9.925,
+        "siderealOrbitDays": 4332.589,
+        "obliquityDeg": 3.13,
+        "semiMajorAxisAU": 5.20336301,
+        "moonCount": 95,
+        "meanTemperatureC": -110
+      },
+      "saturn": {
+        "updated": "2025-03-18",
+        "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/saturnfact.html",
+        "mass1e24Kg": 568.32,
+        "equatorialRadiusKm": 60268,
+        "volumetricMeanRadiusKm": 58232,
+        "meanGravity": 11.19,
+        "siderealRotationHours": 10.656,
+        "siderealOrbitDays": 10755.699,
+        "obliquityDeg": 26.73,
+        "semiMajorAxisAU": 9.53707032,
+        "moonCount": 274,
+        "meanTemperatureC": -140
+      },
+      "uranus": {
+        "updated": "2024-10-02",
+        "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/uranusfact.html",
+        "mass1e24Kg": 86.811,
+        "equatorialRadiusKm": 25559,
+        "volumetricMeanRadiusKm": 25362,
+        "meanGravity": 9.01,
+        "siderealRotationHours": -17.24,
+        "siderealOrbitDays": 30685.4,
+        "obliquityDeg": 97.77,
+        "semiMajorAxisAU": 19.19126393,
+        "moonCount": 28,
+        "meanTemperatureC": -195
+      },
+      "neptune": {
+        "updated": "2024-10-03",
+        "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/neptunefact.html",
+        "mass1e24Kg": 102.409,
+        "equatorialRadiusKm": 24764,
+        "volumetricMeanRadiusKm": 24622,
+        "meanGravity": 11.27,
+        "siderealRotationHours": 16.11,
+        "siderealOrbitDays": 60189.018,
+        "obliquityDeg": 28.32,
+        "semiMajorAxisAU": 30.06896348,
+        "moonCount": 16,
+        "meanTemperatureC": -200
+      },
+      "pluto": {
+        "updated": "2024-01-11",
+        "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/plutofact.html",
+        "mass1e24Kg": 0.01303,
+        "equatorialRadiusKm": 1188,
+        "volumetricMeanRadiusKm": 1188,
+        "meanGravity": 0.62,
+        "siderealRotationHours": -153.2928,
+        "siderealOrbitDays": 90560,
+        "obliquityDeg": 119.51,
+        "semiMajorAxisAU": 39.48168677,
+        "moonCount": 5,
+        "meanTemperatureC": -225
+      },
+      "charon": {
+        "updated": "2024-01-11",
+        "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/plutofact.html",
+        "mass1e21Kg": 1.586,
+        "equatorialRadiusKm": 606,
+        "surfaceGravity": 0.29,
+        "siderealOrbitDays": 6.3872,
+        "siderealRotationDays": 6.3872
+      },
+      "moon": {
+        "updated": "2024-01-11",
+        "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/moonfact.html",
+        "mass1e24Kg": 0.07346,
+        "volumetricMeanRadiusKm": 1737.4,
+        "surfaceGravity": 1.62,
+        "semiMajorAxis1e6Km": 0.3844,
+        "siderealOrbitDays": 27.3217,
+        "siderealRotationHours": 655.72,
+        "obliquityDeg": 6.68,
+        "meanTemperatureC": -20
+      },
+      "sun": {
+        "updated": "2024-05-09",
+        "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/sunfact.html",
+        "mass1e24Kg": 1988400,
+        "volumetricMeanRadiusKm": 695700,
+        "surfaceGravityEq": 274,
+        "siderealRotationHours": 609.12,
+        "obliquityDeg": 7.25,
+        "effectiveTemperatureK": 5772
+      }
+    }
+  },
+  "nssdcaSatellites": {
+    "amalthea": {
+      "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/joviansatfact.html",
+      "updated": "2023-12-06",
+      "semiMajorAxisKm": 181400,
+      "siderealOrbitDays": 0.498179,
+      "rotation": "S"
+    },
+    "io": {
+      "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/joviansatfact.html",
+      "updated": "2023-12-06",
+      "semiMajorAxisKm": 421800,
+      "siderealOrbitDays": 1.769138,
+      "rotation": "S"
+    },
+    "europa": {
+      "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/joviansatfact.html",
+      "updated": "2023-12-06",
+      "semiMajorAxisKm": 671100,
+      "siderealOrbitDays": 3.551181,
+      "rotation": "S"
+    },
+    "ganymede": {
+      "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/joviansatfact.html",
+      "updated": "2023-12-06",
+      "semiMajorAxisKm": 1070400,
+      "siderealOrbitDays": 7.154553,
+      "rotation": "S"
+    },
+    "callisto": {
+      "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/joviansatfact.html",
+      "updated": "2023-12-06",
+      "semiMajorAxisKm": 1882700,
+      "siderealOrbitDays": 16.689017,
+      "rotation": "S"
+    },
+    "mimas": {
+      "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/saturniansatfact.html",
+      "updated": "2025-07-22",
+      "semiMajorAxisKm": 185520,
+      "siderealOrbitDays": 0.9424218,
+      "rotation": "S"
+    },
+    "enceladus": {
+      "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/saturniansatfact.html",
+      "updated": "2025-07-22",
+      "semiMajorAxisKm": 238020,
+      "siderealOrbitDays": 1.370218,
+      "rotation": "S"
+    },
+    "tethys": {
+      "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/saturniansatfact.html",
+      "updated": "2025-07-22",
+      "semiMajorAxisKm": 294660,
+      "siderealOrbitDays": 1.887802,
+      "rotation": "S"
+    },
+    "dione": {
+      "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/saturniansatfact.html",
+      "updated": "2025-07-22",
+      "semiMajorAxisKm": 377400,
+      "siderealOrbitDays": 2.736915,
+      "rotation": "S"
+    },
+    "rhea": {
+      "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/saturniansatfact.html",
+      "updated": "2025-07-22",
+      "semiMajorAxisKm": 527040,
+      "siderealOrbitDays": 4.5175,
+      "rotation": "S"
+    },
+    "titan": {
+      "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/saturniansatfact.html",
+      "updated": "2025-07-22",
+      "semiMajorAxisKm": 1221870,
+      "siderealOrbitDays": 15.945421,
+      "rotation": "S"
+    },
+    "hyperion": {
+      "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/saturniansatfact.html",
+      "updated": "2025-07-22",
+      "semiMajorAxisKm": 1500930,
+      "siderealOrbitDays": 21.276609,
+      "rotation": "C"
+    },
+    "iapetus": {
+      "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/saturniansatfact.html",
+      "updated": "2025-07-22",
+      "semiMajorAxisKm": 3560850,
+      "siderealOrbitDays": 79.330183,
+      "rotation": "S"
+    },
+    "miranda": {
+      "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/uraniansatfact.html",
+      "updated": "2023-03-11",
+      "semiMajorAxisKm": 129900,
+      "siderealOrbitDays": 1.413479,
+      "rotation": "S"
+    },
+    "ariel": {
+      "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/uraniansatfact.html",
+      "updated": "2023-03-11",
+      "semiMajorAxisKm": 190900,
+      "siderealOrbitDays": 2.520379,
+      "rotation": "S"
+    },
+    "umbriel": {
+      "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/uraniansatfact.html",
+      "updated": "2023-03-11",
+      "semiMajorAxisKm": 266000,
+      "siderealOrbitDays": 4.144176,
+      "rotation": "S"
+    },
+    "titania": {
+      "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/uraniansatfact.html",
+      "updated": "2023-03-11",
+      "semiMajorAxisKm": 436300,
+      "siderealOrbitDays": 8.705867,
+      "rotation": "S"
+    },
+    "oberon": {
+      "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/uraniansatfact.html",
+      "updated": "2023-03-11",
+      "semiMajorAxisKm": 583500,
+      "siderealOrbitDays": 13.463234,
+      "rotation": "S"
+    },
+    "triton": {
+      "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/neptuniansatfact.html",
+      "updated": "2024-03-11",
+      "semiMajorAxisKm": 354760,
+      "siderealOrbitDays": 5.876854,
+      "rotation": "S"
+    },
+    "proteus": {
+      "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/neptuniansatfact.html",
+      "updated": "2024-03-11",
+      "semiMajorAxisKm": 117647,
+      "siderealOrbitDays": 1.122315,
+      "rotation": null
+    },
+    "nereid": {
+      "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/neptuniansatfact.html",
+      "updated": "2024-03-11",
+      "semiMajorAxisKm": 5513400,
+      "siderealOrbitDays": 360.13619,
+      "rotation": null
+    },
+    "phobos": {
+      "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/marsfact.html",
+      "updated": "2025-05-19",
+      "semiMajorAxisKm": 9378,
+      "siderealOrbitDays": 0.31891,
+      "rotation": "S"
+    },
+    "deimos": {
+      "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/marsfact.html",
+      "updated": "2025-05-19",
+      "semiMajorAxisKm": 23459,
+      "siderealOrbitDays": 1.26244,
+      "rotation": "S"
+    }
+  },
+  "jplSatellites": {
+    "physicalParameters": {
+      "url": "https://ssd.jpl.nasa.gov/sats/phys_par/",
+      "bodies": {
+        "moon": {
+          "gmKm3s2": 4902.8,
+          "gmSigma": 0.001,
+          "meanRadiusKm": 1737.4,
+          "meanRadiusSigma": 0.1,
+          "ephemeris": "DE440"
+        },
+        "phobos": {
+          "gmKm3s2": 0.0007087,
+          "gmSigma": 6e-7,
+          "meanRadiusKm": 11.08,
+          "meanRadiusSigma": 0.04,
+          "ephemeris": "MAR097"
+        },
+        "deimos": {
+          "gmKm3s2": 0.0000962,
+          "gmSigma": 0.0000028,
+          "meanRadiusKm": 6.2,
+          "meanRadiusSigma": 0.24,
+          "ephemeris": "MAR097"
+        },
+        "io": {
+          "gmKm3s2": 5959.91547,
+          "gmSigma": 0.00135,
+          "meanRadiusKm": 1821.49,
+          "meanRadiusSigma": 0.5,
+          "ephemeris": "JUP365"
+        },
+        "europa": {
+          "gmKm3s2": 3202.7121,
+          "gmSigma": 0.00181,
+          "meanRadiusKm": 1560.8,
+          "meanRadiusSigma": 0.3,
+          "ephemeris": "JUP365"
+        },
+        "ganymede": {
+          "gmKm3s2": 9887.83275,
+          "gmSigma": 0.00247,
+          "meanRadiusKm": 2631.2,
+          "meanRadiusSigma": 1.7,
+          "ephemeris": "JUP365"
+        },
+        "callisto": {
+          "gmKm3s2": 7179.2834,
+          "gmSigma": 0.00324,
+          "meanRadiusKm": 2410.3,
+          "meanRadiusSigma": 1.5,
+          "ephemeris": "JUP365"
+        },
+        "amalthea": {
+          "gmKm3s2": 0.16456,
+          "gmSigma": 0.00867,
+          "meanRadiusKm": 83.5,
+          "meanRadiusSigma": 3,
+          "ephemeris": "JUP365"
+        },
+        "mimas": {
+          "gmKm3s2": 2.50349,
+          "gmSigma": 0.00014,
+          "meanRadiusKm": 198.2,
+          "meanRadiusSigma": 0.4,
+          "ephemeris": "SAT441"
+        },
+        "enceladus": {
+          "gmKm3s2": 7.21037,
+          "gmSigma": 0.00009,
+          "meanRadiusKm": 252.1,
+          "meanRadiusSigma": 0.2,
+          "ephemeris": "SAT441"
+        },
+        "tethys": {
+          "gmKm3s2": 41.21353,
+          "gmSigma": 0.00031,
+          "meanRadiusKm": 531.1,
+          "meanRadiusSigma": 0.6,
+          "ephemeris": "SAT441"
+        },
+        "dione": {
+          "gmKm3s2": 73.11607,
+          "gmSigma": 0.00005,
+          "meanRadiusKm": 561.4,
+          "meanRadiusSigma": 0.4,
+          "ephemeris": "SAT441"
+        },
+        "rhea": {
+          "gmKm3s2": 153.94175,
+          "gmSigma": 0.00041,
+          "meanRadiusKm": 763.5,
+          "meanRadiusSigma": 0.6,
+          "ephemeris": "SAT441"
+        },
+        "titan": {
+          "gmKm3s2": 8978.1371,
+          "gmSigma": 0.00025,
+          "meanRadiusKm": 2574.76,
+          "meanRadiusSigma": 0.02,
+          "ephemeris": "SAT441"
+        },
+        "hyperion": {
+          "gmKm3s2": 0.37049,
+          "gmSigma": 0.00005,
+          "meanRadiusKm": 135,
+          "meanRadiusSigma": 4,
+          "ephemeris": "SAT441"
+        },
+        "iapetus": {
+          "gmKm3s2": 120.51511,
+          "gmSigma": 0.00242,
+          "meanRadiusKm": 734.3,
+          "meanRadiusSigma": 2.8,
+          "ephemeris": "SAT441"
+        },
+        "ariel": {
+          "gmKm3s2": 83.5,
+          "gmSigma": 1.4,
+          "meanRadiusKm": 578.9,
+          "meanRadiusSigma": 0.6,
+          "ephemeris": "URA111"
+        },
+        "umbriel": {
+          "gmKm3s2": 85.1,
+          "gmSigma": 1.9,
+          "meanRadiusKm": 584.7,
+          "meanRadiusSigma": 2.8,
+          "ephemeris": "URA111"
+        },
+        "titania": {
+          "gmKm3s2": 226.9,
+          "gmSigma": 4.1,
+          "meanRadiusKm": 788.9,
+          "meanRadiusSigma": 1.8,
+          "ephemeris": "URA111"
+        },
+        "oberon": {
+          "gmKm3s2": 205.3,
+          "gmSigma": 5.8,
+          "meanRadiusKm": 761.4,
+          "meanRadiusSigma": 2.6,
+          "ephemeris": "URA111"
+        },
+        "miranda": {
+          "gmKm3s2": 4.3,
+          "gmSigma": 0.2,
+          "meanRadiusKm": 235.8,
+          "meanRadiusSigma": 0.7,
+          "ephemeris": "URA111"
+        },
+        "triton": {
+          "gmKm3s2": 1428.49546,
+          "gmSigma": 0.61603,
+          "meanRadiusKm": 1352.6,
+          "meanRadiusSigma": 2.4,
+          "ephemeris": "NEP097"
+        },
+        "nereid": {
+          "gmKm3s2": 0,
+          "gmSigma": 0,
+          "meanRadiusKm": 170,
+          "meanRadiusSigma": 25,
+          "ephemeris": "NEP101"
+        },
+        "proteus": {
+          "gmKm3s2": 2.58342,
+          "gmSigma": 2.4207,
+          "meanRadiusKm": 208,
+          "meanRadiusSigma": 8,
+          "ephemeris": "NEP097"
+        },
+        "charon": {
+          "gmKm3s2": 106.1,
+          "gmSigma": 0.3,
+          "meanRadiusKm": 606,
+          "meanRadiusSigma": 0.5,
+          "ephemeris": "PLU060"
+        },
+        "nix": {
+          "gmKm3s2": 0.0015,
+          "gmSigma": 0.0005,
+          "meanRadiusKm": 18,
+          "meanRadiusSigma": 1,
+          "ephemeris": "PLU060"
+        },
+        "hydra": {
+          "gmKm3s2": 0.002,
+          "gmSigma": 0.0003,
+          "meanRadiusKm": 18.5,
+          "meanRadiusSigma": 1,
+          "ephemeris": "PLU060"
+        },
+        "kerberos": {
+          "gmKm3s2": null,
+          "gmSigma": null,
+          "meanRadiusKm": 6,
+          "meanRadiusSigma": 1,
+          "ephemeris": "PLU060"
+        },
+        "styx": {
+          "gmKm3s2": null,
+          "gmSigma": null,
+          "meanRadiusKm": 5.2,
+          "meanRadiusSigma": 1,
+          "ephemeris": "PLU060"
+        }
+      }
+    },
+    "meanElements": {
+      "url": "https://ssd.jpl.nasa.gov/sats/elem/",
+      "bodies": {
+        "moon": {
+          "frame": "ecliptic",
+          "epoch": "2000-01-01.5",
+          "semiMajorAxisKm": 384400,
+          "periodDays": 27.322
+        },
+        "phobos": {
+          "frame": "Laplace",
+          "epoch": "2000-01-01.5",
+          "semiMajorAxisKm": 9375,
+          "periodDays": 0.3187
+        },
+        "deimos": {
+          "frame": "Laplace",
+          "epoch": "2000-01-01.5",
+          "semiMajorAxisKm": 23457,
+          "periodDays": 1.2625
+        },
+        "io": {
+          "frame": "Laplace",
+          "epoch": "2000-01-01.5",
+          "semiMajorAxisKm": 421800,
+          "periodDays": 1.762732
+        },
+        "europa": {
+          "frame": "Laplace",
+          "epoch": "2000-01-01.5",
+          "semiMajorAxisKm": 671100,
+          "periodDays": 3.525463
+        },
+        "ganymede": {
+          "frame": "Laplace",
+          "epoch": "2000-01-01.5",
+          "semiMajorAxisKm": 1070400,
+          "periodDays": 7.155588
+        },
+        "callisto": {
+          "frame": "Laplace",
+          "epoch": "2000-01-01.5",
+          "semiMajorAxisKm": 1882700,
+          "periodDays": 16.69044
+        },
+        "amalthea": {
+          "frame": "Laplace",
+          "epoch": "2000-01-01.5",
+          "semiMajorAxisKm": 181400,
+          "periodDays": 0.499918
+        },
+        "mimas": {
+          "frame": "Laplace",
+          "epoch": "2000-01-01.5",
+          "semiMajorAxisKm": 186000,
+          "periodDays": 0.942422
+        },
+        "enceladus": {
+          "frame": "Laplace",
+          "epoch": "2000-01-01.5",
+          "semiMajorAxisKm": 238400,
+          "periodDays": 1.370218
+        },
+        "tethys": {
+          "frame": "Laplace",
+          "epoch": "2000-01-01.5",
+          "semiMajorAxisKm": 295000,
+          "periodDays": 1.887802
+        },
+        "dione": {
+          "frame": "Laplace",
+          "epoch": "2000-01-01.5",
+          "semiMajorAxisKm": 377700,
+          "periodDays": 2.736916
+        },
+        "rhea": {
+          "frame": "Laplace",
+          "epoch": "2000-01-01.5",
+          "semiMajorAxisKm": 527200,
+          "periodDays": 4.517503
+        },
+        "titan": {
+          "frame": "Laplace",
+          "epoch": "2000-01-01.5",
+          "semiMajorAxisKm": 1221900,
+          "periodDays": 15.945448
+        },
+        "hyperion": {
+          "frame": "Laplace",
+          "epoch": "2000-01-01.5",
+          "semiMajorAxisKm": 1481500,
+          "periodDays": 21.276658
+        },
+        "iapetus": {
+          "frame": "Laplace",
+          "epoch": "2000-01-01.5",
+          "semiMajorAxisKm": 3561700,
+          "periodDays": 79.331002
+        },
+        "ariel": {
+          "frame": "equatorial",
+          "epoch": "2000-01-01.5",
+          "semiMajorAxisKm": 190929,
+          "periodDays": 2.520379
+        },
+        "umbriel": {
+          "frame": "equatorial",
+          "epoch": "2000-01-01.5",
+          "semiMajorAxisKm": 265986,
+          "periodDays": 4.144177
+        },
+        "titania": {
+          "frame": "equatorial",
+          "epoch": "2000-01-01.5",
+          "semiMajorAxisKm": 436298,
+          "periodDays": 8.705869
+        },
+        "oberon": {
+          "frame": "equatorial",
+          "epoch": "2000-01-01.5",
+          "semiMajorAxisKm": 583511,
+          "periodDays": 13.463237
+        },
+        "miranda": {
+          "frame": "equatorial",
+          "epoch": "2000-01-01.5",
+          "semiMajorAxisKm": 129846,
+          "periodDays": 1.413479
+        },
+        "triton": {
+          "frame": "Laplace",
+          "epoch": "2000-01-01.5",
+          "semiMajorAxisKm": 354800,
+          "periodDays": 5.876994
+        },
+        "proteus": {
+          "frame": "Laplace",
+          "epoch": "2000-01-01.5",
+          "semiMajorAxisKm": 117600,
+          "periodDays": 1.122315
+        },
+        "nereid": {
+          "frame": "ecliptic",
+          "epoch": "2020-01-01.0",
+          "semiMajorAxisKm": 5513900,
+          "periodDays": 360.133039
+        },
+        "charon": {
+          "frame": "equatorial",
+          "epoch": "2000-01-01.5",
+          "semiMajorAxisKm": 19600,
+          "periodDays": 6.387222
+        },
+        "styx": {
+          "frame": "equatorial",
+          "epoch": "2000-01-01.5",
+          "semiMajorAxisKm": 43200,
+          "periodDays": 20.16
+        },
+        "nix": {
+          "frame": "equatorial",
+          "epoch": "2000-01-01.5",
+          "semiMajorAxisKm": 49300,
+          "periodDays": 24.85
+        },
+        "kerberos": {
+          "frame": "equatorial",
+          "epoch": "2000-01-01.5",
+          "semiMajorAxisKm": 58300,
+          "periodDays": 32.17
+        },
+        "hydra": {
+          "frame": "equatorial",
+          "epoch": "2000-01-01.5",
+          "semiMajorAxisKm": 65200,
+          "periodDays": 38.2
+        }
+      }
+    }
+  },
+  "nasaMoonCounts": {
+    "jupiter": {
+      "url": "https://science.nasa.gov/jupiter/moons/",
+      "moonCount": 115,
+      "asOf": "2026-08",
+      "sentence": "has 115 moons that have been officially recognized by the International Astronomical Union, as of August 2026"
+    },
+    "saturn": {
+      "url": "https://science.nasa.gov/saturn/moons/",
+      "moonCount": 293,
+      "asOf": "2026-08",
+      "sentence": "has 293 confirmed moons in its orbit as of August 2026"
+    },
+    "uranus": {
+      "url": "https://science.nasa.gov/uranus/moons/",
+      "moonCount": 29,
+      "asOf": "2026-08",
+      "sentence": "has 29 known moons, as of August 2026"
+    },
+    "neptune": {
+      "url": "https://science.nasa.gov/neptune/moons/",
+      "moonCount": 16,
+      "asOf": null,
+      "sentence": "has 16 known moons"
+    },
+    "mars": {
+      "url": "https://science.nasa.gov/mars/moons/",
+      "moonCount": 2,
+      "asOf": null,
+      "sentence": "has two moons"
+    }
+  },
+  "sbdb": {
+    "ceres": {
+      "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=1",
+      "fullname": "1 Ceres (A801 AA)",
+      "diameterKm": {
+        "value": 939.4,
+        "sigma": 0.2,
+        "ref": "Nature vol. 537, pp515-517 (22 September 2016)",
+        "notes": null
+      },
+      "gmKm3s2": {
+        "value": 62.6284,
+        "sigma": 0.0009,
+        "ref": "Nature vol. 537, pp515-517 (22 September 2016)",
+        "notes": null
+      },
+      "rotationHours": {
+        "value": 9.07417,
+        "sigma": 0.000001,
+        "ref": "Nature vol. 537, pp515-517 (22 September 2016)",
+        "notes": "derived from published value: 952.1532 +/- 0.0001 deg./day"
+      },
+      "pole": {
+        "value": [
+          291.421,
+          66.758
+        ],
+        "sigma": "0.007/0.002",
+        "ref": "Nature vol. 537, pp515-517 (22 September 2016)",
+        "notes": null
+      },
+      "confirmedSatellites": 0
+    },
+    "pallas": {
+      "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=2",
+      "fullname": "2 Pallas (A802 FA)",
+      "diameterKm": {
+        "value": 513,
+        "sigma": 6,
+        "ref": "Marsset et al., Nature Astronomy 4, 569-576 (2020)",
+        "notes": null
+      },
+      "gmKm3s2": {
+        "value": 13.63,
+        "sigma": 0.18,
+        "ref": "Vernazza et al., A&A 654, A56 (2021)",
+        "notes": null
+      },
+      "rotationHours": {
+        "value": 7.8132214,
+        "sigma": 0.000002,
+        "ref": "Carry et al., Icarus 205, 460-472 (2010)",
+        "notes": null
+      },
+      "pole": {
+        "value": [
+          33,
+          -3
+        ],
+        "sigma": "5",
+        "ref": "Carry et al., Icarus 205, 460-472 (2010)",
+        "notes": null
+      },
+      "confirmedSatellites": 0
+    },
+    "vesta": {
+      "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=4",
+      "fullname": "4 Vesta (A807 FA)",
+      "diameterKm": {
+        "value": 522.77,
+        "sigma": 0.1,
+        "ref": "Park, R.S. et al. 2025, Nat Astron, DOI: 10.1038/s41550-025-02533-7",
+        "notes": null
+      },
+      "gmKm3s2": {
+        "value": 17.2882844,
+        "sigma": 0.000003,
+        "ref": "Park, R.S. et al. 2025, Nat Astron, DOI: 10.1038/s41550-025-02533-7",
+        "notes": null
+      },
+      "rotationHours": {
+        "value": 5.3421276322,
+        "sigma": 4e-10,
+        "ref": "Park, R.S. et al. 2025, Nat Astron, DOI: 10.1038/s41550-025-02533-7",
+        "notes": "Rotation rate (deg/day): 1617.33312922 +/- 0.00000013"
+      },
+      "pole": {
+        "value": [
+          309.0611,
+          42.232386
+        ],
+        "sigma": "0.00031/0.000068",
+        "ref": "Park, R.S. et al. 2025, Nat Astron, DOI: 10.1038/s41550-025-02533-7",
+        "notes": "values in degrees"
+      },
+      "confirmedSatellites": 0
+    },
+    "hygiea": {
+      "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=10",
+      "fullname": "10 Hygiea (A849 GA)",
+      "diameterKm": {
+        "value": 407.12,
+        "sigma": 6.8,
+        "ref": "IRAS-A-FPA-3-RDR-IMPS-V6.0",
+        "notes": "IRAS observations used: 22"
+      },
+      "gmKm3s2": {
+        "value": 7,
+        "sigma": null,
+        "ref": "Scholl et al., A&A, v.179, p.311, 1987",
+        "notes": null
+      },
+      "rotationHours": {
+        "value": 13.828,
+        "sigma": null,
+        "ref": "LCDB (Rev. 2023-October); Warner et al., 2009",
+        "notes": "REFERENCE LIST:[Pilcher, F. (2020) Minor Planet Bull. 47, 133-135.], [Vernazza, P.; Jorda, L.; Sevecek, P.; Broz, M.; et al. (2020) Nature Astronomy 4, 136-141.], [Ferrais, M.; Jehin, E.; Vernazza, P.; Jorda, L.; et al. (2021) Minor Planet Bull. 48, 166-167.], [Vernazza, P.; Ferrais, M.; Jorda, L.; Hanus, J.; et al. (2021) Astron. Astrophys 654, id. A56.]"
+      },
+      "pole": null,
+      "confirmedSatellites": 0
+    },
+    "ida": {
+      "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=243",
+      "fullname": "243 Ida (A884 SB)",
+      "diameterKm": {
+        "value": 32,
+        "sigma": null,
+        "ref": "Belton et al. (1995)",
+        "notes": "Yeomans E-mail 2001-Apr-04"
+      },
+      "gmKm3s2": {
+        "value": 0.00275,
+        "sigma": 0.00035,
+        "ref": "Belton et al. (1996) Icarus v.120, pp.185-199",
+        "notes": "0.0024 < GM < 0.0031"
+      },
+      "rotationHours": {
+        "value": 4.634,
+        "sigma": null,
+        "ref": "LCDB (Rev. 2023-October); Warner et al., 2009",
+        "notes": "REFERENCE LIST:[Binzel, R.P. (1987) Icarus 72, 135-208.], [Binzel, R.P.; Slivan, S.M.; Magnusson, P.; Wisniewski, W.Z.; et al. (1993) Icarus 105, 310-325.], [Davies, M.E.; Colvin, T.R.; Belton, M.J.S.; Veverka, J.; Thomas, P.C. (1996) Icarus 120, 33-37.], [Cieza, L.A.; Ciliberti, L.N.; Iserte, J.A. (1999) IAPPP Comm. #74, 12-23.], [Kaasalainen, M.; Torppa, J.; Muinonen, K. (2001) Icarus 153, 37-51.], [Behrend, R. (2004) Observatoire de Geneve web site, http://obswww.unige.ch/~behrend/page_cou.html], [Proyecto ECLA (Silvia Alonso Perez) (2011) http://www.geocities.com/proyectoecla/], [Hanus, J.; Broz, M.; Durech, J.; Warner, B.D.; et al. (2013) Astron. Astrophys. 559, A134.], [Polakis, T. (2020) Minor Planet Bull. 47, 13-17.], [Behrend, R. (2021) Observatoire de Geneve web site, http://obswww.unige.ch/~behrend/page_cou.html], [Wilkin, F.P.; AlMassri, F.P.; Bowles, P.; Pargiello, M.; et al. (2022) Minor Planet Bull. 49, 267-268.]"
+      },
+      "pole": null,
+      "confirmedSatellites": 1
+    },
+    "eros": {
+      "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=433",
+      "fullname": "433 Eros (A898 PA)",
+      "diameterKm": {
+        "value": 16.84,
+        "sigma": 0.06,
+        "ref": "Yeomans et al. (2000) Science v.289,pp.2085-2088",
+        "notes": "sphere having the measured volume of 2503 +/- 25 km^3"
+      },
+      "gmKm3s2": {
+        "value": 0.0004463,
+        "sigma": 1e-7,
+        "ref": "Yeomans et al. (2000) Science v.289,pp.2085-2088",
+        "notes": null
+      },
+      "rotationHours": {
+        "value": 5.27,
+        "sigma": null,
+        "ref": "LCDB (Rev. 2023-October); Warner et al., 2009",
+        "notes": "REFERENCE LIST:[Campa, M. (1938) Mem. Soc. Astron. Ital. 11, 285-301.], [Beyer, M. (1953) Astron. Nachr. 281, 121-130.], [Cailliate, C. (1956) Publ. Observ. Lyon 3, fasc. 28.], [Cristescu, C. (1976) Icarus 28, 39-42.], [Dunlap, J.L. (1976) Icarus 28, 69-78.], [Millis, R.L.; Bowell, E.; Thompson, D.T. (1976) Icarus 28, 53-67.], [Scaltriti, F.; Zappala, V. (1976) Icarus 28, 29-35.], [Taylor, R.C. (1985) Icarus 61, 3, 490-496.], [Hicks, M.; Buratti, B.J.; Rabinowitz, D.L.; Genevier, G. (1999) Icarus 141, 411-414.], [Yeomans, D.K.; Antreasian, P.G.; Bariiot, J.-P.; Chesley, S.R.; et al. (2000) Science 289, 2085-2087.], [Kaasalainen, M.; Torppa, J.; Muinonen, K. (2001) Icarus 153, 37-51.], [Miller, J.K.; Konopliv, A.S.; Antreasian, P.G.; Bordi, J.J.; et al. (2002) Icarus 155, 3-17.], [Wolters, S.D.; Green, S.F.; McBride, N.; Davies, J.K. (2008) Icarus 193, 535-552.], [Behrend, R. (2009) Observatoire de Geneve web site, http://obswww.unige.ch/~behrend/page_cou.html], [Koehn, B.W.; Bowell, E.L.G.; Skiff, B.A.; Sanborn, J.J.; et al. (2014) Minor Planet Bull. 41, 286-300.], [Warner, B.D. (2017) Minor Planet Bull. 44, 22-36.], [Aznar, A.M.; Predatu, M.; Vaduvescu, O.; Oey, J. (2018) arXiv:1801.09420. Romanian J. Phys. 62, 904 (2017).], [Hasegawa, S.; Kuroda, D.; Kitazato, K.; Kasuga, T.; et al. (2018) Pub. Astron. Soc. Japan 70, A114.], [Skiff, B.A.; McLelland, K.P.; Sanborn, J.J.; Pravec, P.; Koehn, B.W. (2019) Minor Planet Bull. 46, 238-265.], [Warner, B.D.; Stephens, R.D. (2019) Minor Planet Bull. 46, 27-40.]"
+      },
+      "pole": {
+        "value": [
+          11.37,
+          17.22
+        ],
+        "sigma": "0.05",
+        "ref": "Yeomans et al. (2000) Science v.289,pp.2085-2088",
+        "notes": null
+      },
+      "confirmedSatellites": 0
+    },
+    "itokawa": {
+      "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=25143",
+      "fullname": "25143 Itokawa (1998 SF36)",
+      "diameterKm": {
+        "value": 0.33,
+        "sigma": null,
+        "ref": "Science 312:1330-1334",
+        "notes": "based on a spheroid of equivalent volume: 1.84e7 m^3"
+      },
+      "gmKm3s2": {
+        "value": 2.1e-9,
+        "sigma": 6.3e-11,
+        "ref": "Science 312:1330-1334",
+        "notes": "derived from published mass of 3.51e10 kg +/- 3%"
+      },
+      "rotationHours": {
+        "value": 12.132,
+        "sigma": null,
+        "ref": "LCDB (Rev. 2023-October); Warner et al., 2009",
+        "notes": "REFERENCE LIST:[Lambert, J.S.; Tholen, D.J. (2001) Bull. Amer. Astron. Soc. 33, 1402.], [Lowry, S.C.; Weissman, P.R.; Hicks, M.D. (2001) Bull. Amer. Astron. Soc. 33, 1150.], [Dermawan, B.; Nakamura, T.; Fukushima, H.; Sato, H.; et al. (2002) Pub. Astron. Soc. Japan 54, 635-640.], [Kaasalainen, M.; et al. (2003) Astron. Astrophys. 405, L29-L32.], [Ohba, Y.; Abe, M.; Hasagawa, S.; Ishiguro, M.; et al. (2005) Earth Planets Space 55, 341-347.], [Warner, B.D. (2004) Minor Planet Bull. 31, 67-70.], [Lowry, S.; Weissman, P.R.; Hicks, M.D.; Whiteley, R.J.; Larson, S. (2005) Icarus 176, 408-417.], [Nishihara, S.; Abe, M.; Hasagawa, S.; Ishiguro, M.; et al. (2005) Lunar & Planetary Sci. XXXVI, 1833.], [Durech, J.; Vokrouhlicky, D.; Kaasalainen, M.; Weissman, P.; et al. (2008) Astron. Astrophys. 488, 345-350.], [Higgins, D.J. (2011) http://www.david-higgins.com/Astronomy/asteroid/lightcurves.htm], [Nishihara, S.; Kitzato, K.; Abe, M.; Hasegawa, S.; et al. (2018) ArXiv:2018.80202742.]"
+      },
+      "pole": {
+        "value": [
+          90.53,
+          -66.3
+        ],
+        "sigma": "3.9",
+        "ref": "Demura, H., et al., Science, 312, 1347 (2006)",
+        "notes": null
+      },
+      "confirmedSatellites": 0
+    },
+    "ryugu": {
+      "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=162173",
+      "fullname": "162173 Ryugu (1999 JU3)",
+      "diameterKm": {
+        "value": 0.896,
+        "sigma": 0.004,
+        "ref": "Watanabe, S.; Hirabayashi, M.; Hirata, N.; Hirata, Na.; et al. (2019) Science 364, 267-272.",
+        "notes": null
+      },
+      "gmKm3s2": {
+        "value": 3e-8,
+        "sigma": 4e-10,
+        "ref": "Watanabe, S.; Hirabayashi, M.; Hirata, N.; Hirata, Na.; et al. (2019) Science 364, 267-272.",
+        "notes": null
+      },
+      "rotationHours": {
+        "value": 7.63262,
+        "sigma": 0.00002,
+        "ref": "Watanabe, S.; Hirabayashi, M.; Hirata, N.; Hirata, Na.; et al. (2019) Science 364, 267-272.",
+        "notes": null
+      },
+      "pole": {
+        "value": [
+          96.3956,
+          -66.3937
+        ],
+        "sigma": "0.0082/0.006",
+        "ref": "Preusker, F.; Scholten, F.; Elgner, S.; Matz, K. D.; et al. (2019) A&A 632 L4.",
+        "notes": null
+      },
+      "confirmedSatellites": 0
+    },
+    "bennu": {
+      "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=101955",
+      "fullname": "101955 Bennu (1999 RQ36)",
+      "diameterKm": {
+        "value": 0.48444,
+        "sigma": 0.0003,
+        "ref": "Daly, M.G., et al., Sci. Adv. 6, eabd3649 (2020)",
+        "notes": null
+      },
+      "gmKm3s2": {
+        "value": 4.8904e-9,
+        "sigma": 9e-13,
+        "ref": "Chesley, S.R., et al., J. Geophys. Res. (Planets) 125, e06363 (2020)",
+        "notes": null
+      },
+      "rotationHours": {
+        "value": 4.296061,
+        "sigma": 0.000002,
+        "ref": "Hergenrother, M.C., et al., Nat. Commun. 10, 1291 (2019)",
+        "notes": "J2000 epoch"
+      },
+      "pole": {
+        "value": [
+          85.4522,
+          -60.3678
+        ],
+        "sigma": "0.0003/0.0001",
+        "ref": "Daly, M.G., et al., Sci. Adv. 6, eabd3649 (2020)",
+        "notes": null
+      },
+      "confirmedSatellites": 0
+    },
+    "halley": {
+      "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=1P",
+      "fullname": "1P/Halley",
+      "diameterKm": {
+        "value": 11,
+        "sigma": null,
+        "ref": "Lamy,P.L.;Toth,I.;Fernandez,Y.R.;Weaver,H.A. (2004) Comets II, pp. 223-264",
+        "notes": null
+      },
+      "gmKm3s2": null,
+      "rotationHours": null,
+      "pole": null,
+      "confirmedSatellites": 0
+    },
+    "pluto": {
+      "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=134340",
+      "fullname": "134340 Pluto (1930 BM)",
+      "diameterKm": null,
+      "gmKm3s2": null,
+      "rotationHours": {
+        "value": 153.2935,
+        "sigma": null,
+        "ref": "LCDB (Rev. 2023-October); Warner et al., 2009",
+        "notes": "REFERENCE LIST:[Walker, M.F.; Hardie, R. (1955) Pub. Ast. Soc. Pacific 67, 224.], [Tholen, D.J.; Buie, M.W. (1997) in Pluto and Charon (S.A. Stern and D.J. Tholen, eds.) pp 193-219. Univ. Arizon Press, Tucson.]"
+      },
+      "pole": null,
+      "confirmedSatellites": 5
+    },
+    "eris": {
+      "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=136199",
+      "fullname": "136199 Eris (2003 UB313)",
+      "diameterKm": null,
+      "gmKm3s2": null,
+      "rotationHours": {
+        "value": 25.9,
+        "sigma": null,
+        "ref": "LCDB (Rev. 2023-October); Warner et al., 2009",
+        "notes": "[Result based on less than full coverage, so that the period may be wrong by 30 percent or so.]  REFERENCE LIST:[Roe, H. G.; Pike, R.E.; Brown, M.E. (2008) Icarus 198, 459-464.]"
+      },
+      "pole": null,
+      "confirmedSatellites": 1
+    },
+    "haumea": {
+      "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=136108",
+      "fullname": "136108 Haumea (2003 EL61)",
+      "diameterKm": null,
+      "gmKm3s2": null,
+      "rotationHours": {
+        "value": 3.9154,
+        "sigma": null,
+        "ref": "LCDB (Rev. 2023-October); Warner et al., 2009",
+        "notes": "REFERENCE LIST:[Rabinowitz, D.L.; Barkume, K.; Brown, M.E.; Roe, H.; et al. (2006) Astrophys. J. 639, 1238-1251.], [Rabinowitz, D.L.; Schaefer, B.E.; Tourtellotte, S.W. (2007) Astron. J. 133, 26-43.], [Lellouch, E.; Kiss, C.; Santos-Sanz, P.; Muller, T.G.; et al. (2010) Astron. Astrophys. 518, L147.], [Thirouin, A.; Ortiz, J.L.; Duffard, R.; Santos-Sanz, P.; et al. (2010) Astron. Astrophys. 522, A93.], [Behrend, R. (2011) Observatoire de Geneve web site, http://obswww.unige.ch/~behrend/page_cou.html], [Behrend, R. (2014) Observatoire de Geneve web site, http://obswww.unige.ch/~behrend/page_cou.html], [Lockwood, A.C.; Brown, M.E.; Stansberry, J. (2014) Earth, Moon, and Planets 111, 127-37.], [Clark, M. (2016) Minor Planet Bull. 43, 2-5.], [Behrend, R. (2017) Observatoire de Geneve web site, http://obswww.unige.ch/~behrend/page_cou.html], [Ortiz, J.L.; Santos-Sanz, P.; Sicardy, B.; Benedetti-Rossi, G.; et al. (2017) Nature 550, 219-223.]"
+      },
+      "pole": null,
+      "confirmedSatellites": 2
+    },
+    "makemake": {
+      "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=136472",
+      "fullname": "136472 Makemake (2005 FY9)",
+      "diameterKm": null,
+      "gmKm3s2": null,
+      "rotationHours": {
+        "value": 22.8266,
+        "sigma": null,
+        "ref": "LCDB (Rev. 2023-October); Warner et al., 2009",
+        "notes": "[Result based on less than full coverage, so that the period may be wrong by 30 percent or so.]  REFERENCE LIST:[Hromakina, T.A.; Belskaya, I.N.; Krugly, Yu.N.; Shevchenko, V.G.; et al. (2019) Astron. Astrophys. 625, A46.]"
+      },
+      "pole": null,
+      "confirmedSatellites": 1
+    },
+    "orcus": {
+      "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=90482",
+      "fullname": "90482 Orcus (2004 DW)",
+      "diameterKm": null,
+      "gmKm3s2": null,
+      "rotationHours": {
+        "value": 13.188,
+        "sigma": null,
+        "ref": "LCDB (Rev. 2023-October); Warner et al., 2009",
+        "notes": "[Result based on less than full coverage, so that the period may be wrong by 30 percent or so.]  REFERENCE LIST:[Rabinowitz, D.L.; Schaefer, B.E.; Tourtellotte, S.W. (2007) Astron. J. 133, 26-43.]"
+      },
+      "pole": null,
+      "confirmedSatellites": 1
+    },
+    "quaoar": {
+      "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=50000",
+      "fullname": "50000 Quaoar (2002 LM60)",
+      "diameterKm": null,
+      "gmKm3s2": null,
+      "rotationHours": {
+        "value": 8.84,
+        "sigma": null,
+        "ref": "LCDB (Rev. 2023-October); Warner et al., 2009",
+        "notes": "[Result based on less than full coverage, so that the period may be wrong by 30 percent or so.]  REFERENCE LIST:[Rabinowitz, D.L.; Schaefer, B.E.; Tourtellotte, S.W. (2007) Astron. J. 133, 26-43.]"
+      },
+      "pole": null,
+      "confirmedSatellites": 1
+    },
+    "gonggong": {
+      "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=225088",
+      "fullname": "225088 Gonggong (2007 OR10)",
+      "diameterKm": null,
+      "gmKm3s2": null,
+      "rotationHours": {
+        "value": 22.4,
+        "sigma": null,
+        "ref": "LCDB (Rev. 2023-October); Warner et al., 2009",
+        "notes": "[Result based on less than full coverage, so that the period may be wrong by 30 percent or so.]  REFERENCE LIST:[Pal, A.; Csaba, K.; Muller, T.G.; Molnar, L.; et al. (2016) Astron. J. 151, A117.]"
+      },
+      "pole": null,
+      "confirmedSatellites": 1
+    },
+    "sedna": {
+      "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=90377",
+      "fullname": "90377 Sedna (2003 VB12)",
+      "diameterKm": null,
+      "gmKm3s2": null,
+      "rotationHours": {
+        "value": 10.273,
+        "sigma": null,
+        "ref": "LCDB (Rev. 2023-October); Warner et al., 2009",
+        "notes": "[Result based on less than full coverage, so that the period may be wrong by 30 percent or so.]  REFERENCE LIST:[Gaudi, B.S.; Stanek, K.Z.; Hartman, J.D.; Holman, M.J.; McLeod, B.A. (2005) Astrophys. J. Let. 629, L49-L52.]"
+      },
+      "pole": null,
+      "confirmedSatellites": 0
+    }
+  },
+  "articles": {
+    "sicardy-2011-eris": {
+      "url": "https://www.nature.com/articles/nature10550",
+      "verifiedQuotes": [
+        "radius 1,163 ± 6 kilometres",
+        "density 2.52 ± 0.05 grams per cm3"
+      ]
+    },
+    "szakats-2023-eris": {
+      "url": "https://arxiv.org/abs/2211.07987",
+      "verifiedQuotes": [
+        "P = 15.8 d",
+        "the rotation of Eris is tidally locked"
+      ]
+    },
+    "ragozzine-brown-2009-haumea": {
+      "url": "https://arxiv.org/abs/0903.4213",
+      "verifiedQuotes": [
+        "Haumea Mass 4.006 ± 0.040 1021 kg"
+      ]
+    },
+    "brown-2013-makemake": {
+      "url": "https://arxiv.org/abs/1304.1041",
+      "verifiedQuotes": [
+        "measured equatorial diameter of 1434 +/- 14 km"
+      ]
+    },
+    "kiss-2019-gonggong": {
+      "url": "https://arxiv.org/abs/1903.05439",
+      "verifiedQuotes": [
+        "system mass of 1.75x10$^{21}$ kg",
+        "a size of 1230$\\pm$50 km"
+      ]
+    },
+    "margoti-2026-quaoar": {
+      "url": "https://arxiv.org/abs/2607.06450",
+      "verifiedQuotes": [
+        "equivalent volumetric diameter of 1094.4 +/- 4.6 km",
+        "density of 1.760 +/- 0.109 g/cm3",
+        "8.8394 +/- 0.0002 hours"
+      ]
+    },
+    "pal-2012-sedna": {
+      "url": "https://arxiv.org/abs/1204.0899",
+      "verifiedQuotes": [
+        "995 +/- 80 km"
+      ]
+    },
+    "kiss-2016-nereid": {
+      "url": "https://arxiv.org/abs/1601.02395",
+      "verifiedQuotes": [
+        "rotation period of P=11.594(+/-)0.017 h"
+      ]
+    }
+  }
+}
