@@ -102,6 +102,15 @@ au-dessus du plancher d'affichage. Quand une propriété se voit à l'écran et 
 c'est le niveau à viser — mais seulement là : une assertion en pixels coûte cher et se casse pour
 des raisons d'environnement (cf. la limite `DataTexture` documentée dans ce fichier même).
 
+**Pages documentaires** (`src/seo/docPages.test.ts`) : `/methodology` et `/sources` publient
+des chiffres, des crédits et des phrases sur le comportement de l'application. Le test tient les
+trois : chaque valeur vient de sa source (la changer change la page), chaque couche livrée a sa
+provenance, la liste des services en direct est égale aux hôtes `connect-src` de la CSP, les
+groupes de licence de `THIRD_PARTY_NOTICES.md` concordent avec `texture-sources.json`, et les
+affirmations sur le comportement sont confrontées au code qui l'implémente (ordre SPK / Horizons,
+obliquité, tailles en Éducatif, lunes écartées, Terre au barycentre). Voir la règle « Tout texte
+publié est une affirmation à confronter au code », détaillée dans `CONTRIBUTING.md` § « Écrire un texte public ».
+
 **Pages d'atterrissage et vignettes de partage** (`src/seo/*.test.ts`) : ces artefacts ne
 naissent qu'au build et personne ne les regarde pendant le développement — une vignette ne
 s'affiche que dans une conversation, chez quelqu'un d'autre, une fois déployée. Les tests tiennent

@@ -27,6 +27,7 @@ import { SMALL_BODY_ELEMENTS } from '@/config/smallBodies';
 import { OBLIQUITY_RAD } from '@/core/frames';
 import { ORBIT_SAMPLE_WARP_MIN_ECCENTRICITY } from '@/core/orbitPath';
 import { SQRT_K } from '@/core/ScaleService';
+import { educationalParentOrbitScale } from '@/core/educationalScale';
 import { MIN_SAMPLES_PER_ORBIT_FOR_HERMITE } from '@/core/HorizonsEphemerisService';
 import { TT_MINUS_UTC } from '@/core/timeScale';
 import { escapeHtml } from './bodyLandingPage';
@@ -288,6 +289,11 @@ function methodologyPage(input: MethodologyInput, locale: DocLocale): DocPage {
     (cfg) => cfg.relativeOrbitalElements
   ).length;
   const drifts = synchronousSpinDrifts(config);
+  // Planètes dont les lunes sont écartées en Éducatif (facteur > 1), lu dans le module qui
+  // l'applique à la position ET à la ligne d'orbite.
+  const spreadParents = Object.entries(config.bodies)
+    .filter(([, cfg]) => educationalParentOrbitScale(cfg) > 1)
+    .map(([parentName]) => parentName);
 
   /** Libellé d'une fenêtre de mesure, dans la langue de la page. */
   const windowLabel = (r: ValidationRow): string => {
@@ -478,8 +484,8 @@ function methodologyPage(input: MethodologyInput, locale: DocLocale): DocPage {
         en: `<strong>Explore</strong> is true scale: distance = AU × ${SQRT_K}, and every body has its physical radius. A distant body can be too small to see, exactly as in space; navigation aids are drawn as labels, never by enlarging a body, and the optical zoom changes only the camera’s field of view.`,
         fr: `<strong>Exploration</strong> est à l’échelle réelle : distance = UA × ${SQRT_K}, et chaque corps a son rayon physique. Un corps lointain peut être trop petit pour être vu, exactement comme dans l’espace ; les aides à la navigation sont des étiquettes, jamais un corps agrandi, et le zoom optique ne change que le champ de la caméra.`,
       })}</li><li>${L({
-        en: `<strong>Educational</strong> is not to scale: distances are compressed to √AU × ${SQRT_K} along the true direction, and bodies are drawn at enlarged teaching sizes so that all of them stay visible. Eccentric orbits keep their shape.`,
-        fr: `<strong>Éducatif</strong> n’est pas à l’échelle : les distances sont compressées en √UA × ${SQRT_K} dans la vraie direction, et les corps sont dessinés à des tailles pédagogiques agrandies pour rester tous visibles. Les orbites excentriques gardent leur forme.`,
+        en: `<strong>Educational</strong> is not to scale: distances are compressed to √AU × ${SQRT_K} along the true direction, and bodies are drawn at enlarged teaching sizes so that all of them stay visible. Around ${listNames(spreadParents)}, the moons’ distances are then multiplied by one common factor per planet, the smallest that keeps every moon outside its enlarged planet, so their order of distance is preserved. Eccentric orbits keep their shape.`,
+        fr: `<strong>Éducatif</strong> n’est pas à l’échelle : les distances sont compressées en √UA × ${SQRT_K} dans la vraie direction, et les corps sont dessinés à des tailles pédagogiques agrandies pour rester tous visibles. Autour de ${listNames(spreadParents)}, les distances des lunes sont ensuite multipliées par un facteur commun à chaque planète, le plus petit qui garde chaque lune hors de sa planète agrandie : leur ordre de distance est conservé. Les orbites excentriques gardent leur forme.`,
       })}</li></ul>`
     )
   );

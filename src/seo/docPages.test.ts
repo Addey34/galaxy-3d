@@ -11,6 +11,7 @@ import textureSources from '../../scripts/texture-sources.json';
 import firebaseJson from '../../firebase.json';
 import { ILLUSTRATIVE_SURFACES } from '@/config/catalog';
 import { OBLIQUITY_RAD } from '@/core/frames';
+import { educationalParentOrbitScale } from '@/core/educationalScale';
 import {
   DOC_SLUGS,
   docPath,
@@ -372,6 +373,23 @@ describe('affirmations de /methodology confrontées au code', () => {
   it('ne dit pas que le mode Éducatif conserve les tailles', () => {
     expect(en!.body).toContain('enlarged teaching sizes');
     expect(fr!.body).toContain('tailles pédagogiques agrandies');
+  });
+
+  it('nomme les planètes dont les lunes sont écartées en Éducatif', () => {
+    // Lu dans `educationalParentOrbitScale`, le module qui l'applique : une planète dont les
+    // lunes sont écartées doit être nommée, une qui ne l'est pas ne doit pas l'être.
+    const scaled = Object.entries(CELESTIAL_CONFIG.bodies).filter(
+      ([, cfg]) => educationalParentOrbitScale(cfg) > 1
+    );
+    expect(scaled.length).toBeGreaterThan(0);
+    const sentence = /Around (.*?), the moons’ distances/.exec(en!.body)![1]!;
+    for (const [name, cfg] of Object.entries(CELESTIAL_CONFIG.bodies)) {
+      const label =
+        cfg.displayName?.en ?? name.charAt(0).toUpperCase() + name.slice(1);
+      expect(sentence.includes(label), name).toBe(
+        educationalParentOrbitScale(cfg) > 1
+      );
+    }
   });
 
   it('calcule la dérive de rotation des lunes presque synchrones', () => {

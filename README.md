@@ -2,7 +2,7 @@
 
 **🌍 [Démo en ligne → galaxy.adrianguichard.dev](https://galaxy.adrianguichard.dev/)**
 
-Visualisateur interactif du système solaire en temps réel, développé en TypeScript avec Three.js. Deux modes d'affichage : **Éducatif** (distances compressées en √, tout visible d'un coup) et **Exploration** (vraie échelle astronomique, positions Kepler calculées par éphéméride). Le mode Exploration est actif avec l'expérience « Voyage spatial » : suivi caméra, distances réelles, temps-lumière et marqueurs projetés.
+Visualisateur interactif du système solaire en temps réel, développé en TypeScript avec Three.js. Deux modes d'affichage : **Éducatif** (distances compressées en √, tout visible d'un coup) et **Exploration** (vraie échelle astronomique). Les positions viennent de fichiers NASA/JPL Horizons, d'astronomy-engine et d'éléments képlériens, chacune mesurée contre Horizons : méthode et précision sur [/methodology](https://galaxy.adrianguichard.dev/methodology/). Le mode Exploration est actif avec l'expérience « Voyage spatial » : suivi caméra, distances réelles, temps-lumière et marqueurs projetés.
 
 ## Aperçu
 
@@ -266,12 +266,14 @@ Terre (1 AU) → 35 unités dans les deux modes (point de calibration commun)
 ```
 astronomy-engine retourne des vecteurs en équatorial J2000 (UA)
          ↓
-Rotation de 23.4394° (obliquité de l'écliptique)
+Rotation de l'obliquité J2000 ε = 84 381,448″ (IAU 1976, celle qui définit
+l'écliptique des fichiers Horizons ; `OBLIQUITY_RAD` dans src/core/frames.ts)
          ↓
-Repère écliptique → Three.js XZ-plane
-  Three.X = equatorial X
-  Three.Z = equatorial Y × cos(ε) + Z × sin(ε)   (plan écliptique)
-  Three.Y = -equatorial Y × sin(ε) + Z × cos(ε)  (≈ 0 pour les planètes)
+Écliptique (x, y, z) → Three.js, plan XZ = écliptique, +Y = nord écliptique
+  ex = X
+  ey =  Y × cos(ε) + Z × sin(ε)
+  ez = -Y × sin(ε) + Z × cos(ε)   (≈ 0 pour les planètes)
+  Three.X = ex,  Three.Y = ez,  Three.Z = -ey   (rotation propre, pas un miroir)
 ```
 
 ## Ajouter un corps céleste
@@ -296,18 +298,21 @@ Aucune édition de `index.html`, `EphemerisService` ni des distances caméra n'e
 
 ### Éphémérides précises Horizons
 
-Les fichiers binaires de `public/assets/ephemerides/` contiennent les états héliocentriques
-JPL en écliptique J2000, avec positions en UA et vitesses en UA/jour. Ils couvrent 1900–2101
-avec un pas de quatre jours.
+Les fichiers binaires de `public/assets/ephemerides/` contiennent des états JPL en écliptique
+J2000 (positions en UA, vitesses en UA/jour), héliocentriques pour les planètes, les planètes
+naines et les sondes, relatifs à leur corps parent pour les lunes (Charon et les petites lunes
+de Pluton compris). Centre, pas et couverture de
+chaque fichier sont déclarés dans `manifest.json` et publiés sur
+[/sources](https://galaxy.adrianguichard.dev/sources/).
 
-`HorizonsEphemerisService` choisit son interpolation selon ce que ce pas résout. Au-delà de cinq
-échantillons par révolution, une cubique de Hermite suffit. En dessous — le cas de la plupart des
-satellites, dont la période est plus courte que quatre jours — une cubique ne reconstruit plus
-rien : les deux états qui encadrent la date sont alors propagés le long de leur conique puis
-fondus, ce qui garde les échantillons exacts comme ancres. Hors couverture ou si les assets sont
-indisponibles, le moteur revient aux éléments képlériens du catalogue.
+`HorizonsEphemerisService` choisit son interpolation selon ce que le pas résout : une cubique de
+Hermite à partir de `MIN_SAMPLES_PER_ORBIT_FOR_HERMITE` échantillons par révolution, sinon les
+deux états qui encadrent la date sont propagés le long de leur conique puis fondus, ce qui garde
+les échantillons exacts comme ancres. Hors couverture, ou si une valeur échoue au test de
+plausibilité, les planètes retombent sur astronomy-engine, les lunes et petits corps sur leurs
+éléments képlériens, et une sonde n'est simplement pas dessinée. Le contrat complet est dans `docs/ARCHITECTURE.md` § « Position d'un corps ».
 
-SpkKernel lit les kernels DAF/SPK en types 2 et 3 (Chebyshev), SpkWorkerEphemerisProvider convertit le J2000 equatorial en repere Galaxy, et SpkKernelWorkerClient deplace le chargement et le parsing hors du thread principal ; avec une URL configuree, le Worker lit d abord les tables DAF puis les segments requis par HTTP Range. L application continue d utiliser Horizons par defaut.
+SpkKernel lit les kernels DAF/SPK en types 2 et 3 (Chebyshev), SpkWorkerEphemerisProvider convertit le J2000 equatorial en repere Galaxy, et SpkKernelWorkerClient deplace le chargement et le parsing hors du thread principal ; avec une URL configuree, le Worker lit d abord les tables DAF puis les segments requis par HTTP Range. L'application utilise les fichiers Horizons par défaut ; quand un noyau SPK est configuré, il passe AVANT eux.
 
 Pour activer le chemin SPK optionnel, definir `VITE_SPK_KERNEL_URL` vers un kernel same-origin avant le demarrage Vite. Le provider Worker se charge en tache de fond, utilise les vitesses pour une extrapolation courte et revient a Horizons ou Kepler en cas de manque.
 
@@ -387,7 +392,7 @@ Le site public est servi sur [galaxy.adrianguichard.dev](https://galaxy.adriangu
 
 Le build émet, en plus du bundle, une page statique indexable par corps (`dist/jupiter/index.html`),
 une page par éclipse solaire ou lunaire de 2024 à 2035 (`dist/eclipse/2026-08-12/index.html`, qui
-ouvre l'application au pic de l'éclipse), le sitemap complet et une vignette de partage par corps
+ouvre l'application au pic de l'éclipse), les pages `/methodology` et `/sources` en anglais et en français, le sitemap complet et une vignette de partage par corps
 (`dist/social/jupiter.jpg`, rendue depuis la texture déjà versionnée du corps). Tout cela est dérivé du catalogue et régénéré à chaque
 build : rien n'est committé. Voir `docs/ARCHITECTURE.md` § « Pages d'atterrissage par corps ».
 
@@ -400,24 +405,25 @@ firebase deploy --only hosting:galaxy
 
 Code sous **PolyForm Noncommercial License 1.0.0** : consultation, étude et usage
 non commercial autorisés ; l'usage commercial est réservé à l'auteur. Voir
-[`LICENSE.md`](LICENSE.md). Les textures planétaires restent soumises à leurs
-licences d'origine (Solar System Scope, NASA).
+[`LICENSE.md`](LICENSE.md). Les textures, modèles de forme, éphémérides et données météo restent
+soumis à leurs licences d'origine (notamment NASA, USGS, NOAA, JAXA, Solar System Scope en
+CC BY 4.0, Open-Meteo en CC BY 4.0, ERA5 / Copernicus). Le détail fait foi dans
+[`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md) et, corps par corps, sur
+[/sources](https://galaxy.adrianguichard.dev/sources/).
 
 ## Catalogue de l'univers
 
-Le catalogue actuel couvre le Soleil, les huit planetes, la Lune, Io, Europe, Ganymede et Callisto, cinq planetes naines et
-les petits corps Ceres, Vesta, Pallas, Hygiea, Eris, Haumea, Makemake et Halley. Les
-textures presentes suivent le schema public/assets/textures/{body}/{body}_{layer}_{quality}.jpg
-(snake_case, chemin derive de la cle du corps). Le fallback colore reste disponible si un asset
-manque au chargement.
-Bennu, Eros, Itokawa, Ryugu et Ida portent leur vrai modele de forme de mission (OSIRIS-REx,
-NEAR, Hayabusa, Hayabusa2, Galileo), decime pour le web, a l'echelle de leur volume reel.
-Les lunes joviennes (Io couleur, Europe, Ganymede, Callisto) disposent de mosaiques USGS
-haute resolution jusqu'a 8k. Titan, Encelade, Rhea et Japet sont disponibles autour de Saturne
-avec des orbites relatives keplerienne et des mosaiques Cassini/Voyager validees par l'USGS.
-Triton, Charon, Phobos et Deimos sont navigables avec des vecteurs locaux Horizons relatifs au
-parent et des textures USGS/NASA. Les provenances et licences sont tracees dans
-scripts/texture-sources.json (bloc `imported`).
+Le catalogue (`src/config/bodies.ts`, `smallBodies.ts`) couvre le Soleil, les planètes, leurs
+principales lunes, des planètes naines, des astéroïdes et des comètes. La liste ne se recopie
+pas ici : elle périmerait. Chaque corps a sa page (`/{corps}/`), et
+[/sources](https://galaxy.adrianguichard.dev/sources/) donne, lu dans le dépôt au build, la
+provenance de chaque texture et modèle, la source de position de chaque corps et son erreur
+mesurée. Les textures suivent le schéma `public/assets/textures/{body}/{body}_{layer}_{quality}.jpg`
+(snake_case, chemin dérivé de la clé du corps) ; le repli coloré reste disponible si un asset
+manque au chargement. Les provenances sont tracées dans `scripts/texture-sources.json`
+(bloc `imported`).
+Bennu, Éros, Itokawa, Ryugu et Ida portent leur vrai modèle de forme de mission, décimé pour le
+web, à l'échelle de leur volume réel.
 Les trois objets interstellaires (1I/ʻOumuamua, 2I/Borisov, 3I/ATLAS) sont traces en couche
 instrument 2D, en Educatif comme en Exploration, sur leur trajectoire hyperbolique : elements
 JPL Horizons a l'epoque de chaque solution (`pnpm ephemeris:interstellar`), positions verifiees

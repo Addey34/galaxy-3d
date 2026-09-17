@@ -250,6 +250,23 @@ et pas théoriques :
   valeur de référence est elle-même sous le plancher d'affichage. Une propriété qui se juge à
   l'œil se mesure en pixels (`?debug-terminator`), pas en ratios d'une grandeur invisible.
 
+## Écrire un texte public (docs, pages, crédits)
+
+**Tout texte publié est une affirmation à confronter au code.** Une phrase publiée engage le
+projet autant qu'un calcul. Avant de la proposer :
+
+- **Vérifiez-la dans le code qui l'implémente**, pas dans une autre doc : l'ordre des sources de
+  position, une valeur par défaut, ce qui est chargé au démarrage. La première version de la
+  page `/methodology` affirmait l'inverse du code sur l'ordre SPK / Horizons.
+- **Ne recopiez ni nombre ni liste** : dans les pages générées, lisez-les dans la source
+  (constante exportée, manifest, catalogue, résumé de mesure) ; dans le Markdown, renvoyez vers
+  la page dérivée (`/methodology`, `/sources`) plutôt que de figer une liste.
+- **Lisez les licences à la source**, datez la lecture, et vérifiez que l'attribution exigée
+  s'affiche réellement dans l'application.
+- **Relisez le rendu dans les deux langues**, sans tiret cadratin.
+- **Pour un changement visible**, lancez axe (`pnpm test:a11y`), regardez la page à 390 px de
+  large, et lancez la suite e2e complète (`pnpm test:e2e`).
+
 ## Pull requests
 
 1. Une branche par changement, `pnpm verify` (au minimum) vert avant d'ouvrir la PR.
