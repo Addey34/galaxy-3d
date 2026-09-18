@@ -188,11 +188,14 @@ src/
 │       └── Starfield.ts              # Skybox étoilée
 │
 ├── config/
-│   ├── bodies.ts      # Catalogue des corps célestes (CELESTIAL_CONFIG) : SOURCE UNIQUE
+│   ├── bodies.ts      # CELESTIAL_CONFIG : dérivé du registre (code seul, plus de donnée)
 │   ├── engine.ts      # Réglages moteur : rendu, perf/LOD, caméra, éclairage, shaders, textures
 │   #  (imports via l'alias @/ → src/ ; ex. @/config/engine, @/core/frames)
 │   ├── catalog.ts     # Itération/résolution du catalogue (forEachBody, flattenBodies)
 │   └── layerConfig.ts # Géométries et matériaux Three.js
+│
+│   # Le catalogue lui-même est de la donnée : une fiche JSON par corps dans
+│   # src/registry/entities/ (ordre dans order.json), reconstruit par src/registry/load.ts.
 │
 ├── ui/
 │   ├── planetNav.ts, modeSwitcher.ts # Navigation et modes
@@ -278,23 +281,12 @@ l'écliptique des fichiers Horizons ; `OBLIQUITY_RAD` dans src/core/frames.ts)
 
 ## Ajouter un corps céleste
 
-Le catalogue (`src/config/bodies.ts`) est la **source unique** : boutons de navigation, préchargement des textures, éphéméride et hiérarchie de scène s'en dérivent automatiquement.
-
-1. Déposer les textures dans `public/assets/textures/{nom}/` au format
-   `{nom}_{couche}_{résolution}.jpg` (snake_case). Le pipeline `scripts/import-textures.mjs`
-   génère les variantes de résolution depuis une source brute (TIF/JPG/PNG) sans jamais
-   agrandir au-delà de la source.
-2. Ajouter **une seule entrée** dans `CELESTIAL_CONFIG.bodies` (`src/config/bodies.ts`) :
-   - `kind` : `'planet'` (ou `'moon'`, `'star'`, `'skybox'`)
-   - `astroBody` : l'enum `Body` d'astronomy-engine (positions réelles)
-   - `cameraDistance: { educ, explo }` : distances de visite caméra
-   - `loadPriority` : rang de préchargement (croissant), optionnel
-   - `realData.orbitPeriodDays` : période orbitale documentaire
-   - `textureResolutions` : les couches et résolutions disponibles (le **chemin** est
-     dérivé de la clé, pas à écrire à la main)
-   - Pour une lune : `frame: 'parentRelative'` et l'imbriquer dans `satellites` du parent
-
-Aucune édition de `index.html`, `EphemerisService` ni des distances caméra n'est nécessaire.
+Le catalogue est le registre `src/registry/entities/` (une fiche JSON par corps, ordre dans
+`order.json`) : `src/registry/load.ts` en dérive le `CelestialConfig` que lit toute
+l'application, et boutons de navigation, préchargement des textures, éphéméride et hiérarchie de
+scène s'en dérivent automatiquement. La marche à suivre complète (fiche, formes déclarées, faits
+sourcés, régénération des artefacts) vit dans [`CONTRIBUTING.md`](CONTRIBUTING.md) ; corps
+d'épreuve livré : 16 Psyché, ajoutée sans toucher une ligne de TypeScript.
 
 ### Éphémérides précises Horizons
 
@@ -328,7 +320,7 @@ Le moteur depend du contrat PreciseEphemerisProvider : Horizons reste la source 
 
 ## Configuration
 
-Réglages moteur dans `src/config/engine.ts`, catalogue des corps dans `src/config/bodies.ts` :
+Réglages moteur dans `src/config/engine.ts`, catalogue des corps dans `src/registry/entities/` (fiches JSON, assemblées par `src/registry/load.ts` en le `CelestialConfig` que `src/config/bodies.ts` expose) :
 
 | Constante                                   | Fichier     | Rôle                                             |
 | ------------------------------------------- | ----------- | ------------------------------------------------ |
@@ -413,7 +405,7 @@ CC BY 4.0, Open-Meteo en CC BY 4.0, ERA5 / Copernicus). Le détail fait foi dans
 
 ## Catalogue de l'univers
 
-Le catalogue (`src/config/bodies.ts`, `smallBodies.ts`) couvre le Soleil, les planètes, leurs
+Le catalogue (`src/registry/entities/`, fiche JSON par corps) couvre le Soleil, les planètes, leurs
 principales lunes, des planètes naines, des astéroïdes et des comètes. La liste ne se recopie
 pas ici : elle périmerait. Chaque corps a sa page (`/{corps}/`), et
 [/sources](https://galaxy.adrianguichard.dev/sources/) donne, lu dans le dépôt au build, la

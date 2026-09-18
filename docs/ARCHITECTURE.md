@@ -112,8 +112,8 @@ l'ordre de premier niveau est `order.json` et les satellites sont la liste de le
 `src/registry/load.ts` reconstruit le `CelestialConfig` à l'identité de bits près, et
 `config/bodies.ts` ne garde que du code : dérivation des chemins de texture et contrôles
 structurels. Ajouter un corps = ajouter une fiche et régénérer les artefacts de relevé
-(`pnpm facts:snapshot`, `pnpm ephemeris:validate`) ; la preuve est la phase 5 de
-`docs/private/REGISTRES_LOT7.md` § 10 (16 Psyché ajoutée sans toucher une ligne de TypeScript).
+(`pnpm facts:snapshot`, `pnpm ephemeris:validate`) — corps d'épreuve livré : 16 Psyché, ajoutée
+sans toucher une ligne de TypeScript, fiche et artefacts régénérés par script uniquement.
 
 Les corps naturels sont ajoutés au catalogue avant leurs assets. Les textures JPEG suivent
 `public/assets/textures/{body}/{body}_{layer}_{quality}.jpg` (snake_case ; le chemin est dérivé de
@@ -1085,8 +1085,8 @@ test le rejoue désormais en CRLF.
 
 ## Architecture météo
 
-Trois frontières simples (résumées ici ; le plan directeur complet avec l'historique des décisions
-et des tranches T1–T6 est dans `docs/private/WEATHER_ARCHITECTURE.md`) :
+Trois frontières simples (le plan directeur complet avec l'historique des décisions et des
+tranches T1–T6 vit hors dépôt, dans la documentation privée du projet) :
 
 - `src/core/` décide la source, la date, le fallback, la grille et la conversion en données
   testables sans DOM ni Three.js.
@@ -1104,5 +1104,5 @@ partagent un mesh.
 Règle produit : une donnée absente, en attente ou hors couverture reste absente à l'écran — aucun
 modèle ou remplissage synthétique n'est présenté comme une observation officielle. Chaque couche
 porte un statut (`observed`/`analysis`/`forecast`/`forecast_uncertain`/`climatology`/
-`unavailable`) affiché dans son badge. Voir `docs/private/METEOROLOGY_CODE_MAP.md` pour la carte
-de repérage fichier par fichier utile en debug.
+`unavailable`) affiché dans son badge (la carte de repérage fichier par fichier utile en debug
+vit hors dépôt, dans la documentation privée du projet).

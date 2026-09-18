@@ -22,19 +22,24 @@ touchez au rendu, à la caméra ou à une surface UI.
 
 ## Ajouter un corps céleste
 
-Le catalogue est la **source unique de vérité** : boutons de navigation, préchargement des
-textures, éphéméride et hiérarchie de scène en dérivent tous automatiquement. Il n'y a **aucune
-autre édition à faire** — pas de `index.html`, pas de `EphemerisService`, pas de distance caméra
-codée en dur ailleurs.
+Le catalogue est la **source unique de vérité**, et depuis le lot 7 (phase 4) c'est de la
+donnée : chaque corps est une fiche `src/registry/entities/{nom}.json`, l'ordre de premier niveau
+vit dans `src/registry/entities/order.json`, et `src/registry/load.ts` reconstruit le
+`CelestialConfig` que lit toute l'application. `src/config/bodies.ts` ne contient plus que du
+code (dérivation des chemins de texture, contrôles structurels). Boutons de navigation,
+préchargement des textures, éphéméride et hiérarchie de scène en dérivent tous automatiquement ;
+il n'y a **aucune autre édition à faire** — pas de `index.html`, pas de `EphemerisService`, pas de
+distance caméra codée en dur ailleurs. Corps d'épreuve réel : 16 Psyché, ajoutée avec zéro `.ts`
+touché — fiche JSON, ordre, vecteurs de référence et artefacts régénérés par script.
 
 ### 1. Choisir la source de position
 
-| Le corps a...                                                         | Utiliser                                                        |
-| --------------------------------------------------------------------- | --------------------------------------------------------------- |
-| une éphéméride `astronomy-engine` (planètes, Lune, lunes galiléennes) | `astroBody` (enum `Body`) directement                           |
-| une orbite bien connue mais pas d'éphéméride native                   | `HorizonsEphemerisService` — générer un binaire (voir plus bas) |
-| aucun des deux (petit corps, astéroïde, comète, TNO)                  | `config/smallBodies.ts` — éléments képlériens (`kepler.ts`)     |
-| une trajectoire ouverte (objet interstellaire, e > 1)                 | `config/interstellar.ts` — `pnpm ephemeris:interstellar`        |
+| Le corps a...                                                         | Utiliser                                                            |
+| --------------------------------------------------------------------- | ------------------------------------------------------------------- |
+| une éphéméride `astronomy-engine` (planètes, Lune, lunes galiléennes) | champ `astroBody` (enum `Body` en chaîne) dans la fiche             |
+| une orbite bien connue mais pas d'éphéméride native                   | `HorizonsEphemerisService` — générer un binaire (voir plus bas)     |
+| aucun des deux (petit corps, astéroïde, comète, TNO)                  | fiche `"source": "small-body"` — éléments képlériens (`kepler.ts`)  |
+| une trajectoire ouverte (objet interstellaire, e > 1)                 | `config/interstellar.ts` — `pnpm ephemeris:interstellar` (overlays hors `CelestialConfig`, pas encore de fiche registre) |
 
 **N'inventez jamais de position.** Toute donnée orbitale doit venir de JPL Horizons ou d'une
 source publiée équivalente, vérifiée à l'époque exacte utilisée. Le projet a déjà eu plusieurs
@@ -97,30 +102,41 @@ Dans les deux cas, ajoutez le nom du corps à `ILLUSTRATIVE_SURFACES` dans `src/
 — c'est ce qui affiche le badge « surface fictive » sur sa fiche d'info. C'est un piège connu du
 projet : les tests passent sans lui, seule une vérification visuelle de la fiche le révèle.
 
-### 3. Ajouter l'entrée au catalogue
+### 3. Ajouter la fiche au registre
 
-Une seule entrée dans `CELESTIAL_CONFIG.bodies` (`src/config/bodies.ts`) :
+Une fiche `src/registry/entities/{nom}.json` (le schéma Zod est la seule déclaration,
+`src/registry/schema/entity.ts`), plus l'id dans `order.json` (et dans la liste `satellites` de la
+fiche parent pour une lune). Trois blocs :
 
-- `kind` : `'planet'` / `'moon'` / `'star'` / `'skybox'`
-- `astroBody` si applicable (étape 1)
-- `cameraDistance: { educ, explo }` : distances de visite caméra dans les deux modes
-- `loadPriority` (optionnel) : rang de préchargement
-- `realData.orbitPeriodDays` : période orbitale, pour tracer la ligne d'orbite
-- `realData.sources` : la PROVENANCE de chaque valeur affichée sur la fiche et la page du corps
-  (rayon, masse, gravité, température moyenne, distance, période, rotation, obliquité, lunes
-  connues). Chaque entrée nomme une source du registre `src/registry/providers/` (agence, base
-  de données d'agence, article ; jamais Wikipédia), la méthode (`measured` ou `derived`) et, pour
-  le nombre de lunes, la date `asOf`. Une valeur que la simulation utilise mais que vous ne pouvez
-  pas sourcer se déclare `unknown: { champ: NOT_YET_SOURCED }` : elle n'est pas affichée.
-  `src/config/factProvenance.test.ts` refuse une valeur affichable sans source et compare chaque
-  valeur citée à sa source telle que `pnpm facts:snapshot` l'a relevée
-  (`src/config/factSources.snapshot.json`) ; une nouvelle table ou un nouvel article s'ajoute au
-  script et au test, pas en recopiant un chiffre.
-- `textureResolutions` : couches/résolutions disponibles — le chemin est **dérivé de la clé**,
-  ne l'écrivez jamais à la main
-- Pour une lune : `frame: 'parentRelative'`, imbriquée dans `satellites` du parent
+- `config` : ce que le catalogue portait — `kind`, `astroBody` si applicable (étape 1),
+  `cameraDistance` se déclare `{"$cameraFromRadiusKm": …}` (dérivé comme le littéral d'origine,
+  égalité de bits garantie), `realData.orbitPeriodDays` pour la ligne d'orbite, `frame:
+  'parentRelative'` pour une lune, `textureResolutions` (le chemin reste **dérivé de la clé**, ne
+  l'écrivez jamais à la main). Un calcul ne s'écrit PAS : il se déclare par une forme nommée sur
+  l'ensemble fermé de `src/registry/load.ts` (`{"$deg": …}`, `{"$gm": …}`, `{"$rotationHours":
+  …}`…) — une forme inconnue est une erreur au chargement, jamais un repli.
+- `elements` (petits corps, `"source": "small-body"`) : les éléments publiés en degrés/UA à leur
+  époque exacte, relevés par `node scripts/derive-small-body-elements.mjs "16;" "16 Psyche (A852
+  FA)" --epoch …` — jamais saisis ni recopiés ; le script imprime aussi le vecteur d'état à
+  l'époque, à reporter dans `src/config/smallBodyReferenceVectors.json` (la garde refuse un corps
+  sans vecteur).
+- `facts` : un seul objet par fait — `value` (ou une forme dérivée), `source` (id du registre
+  `src/registry/providers/`, jamais Wikipédia), `method` (`measured`/`derived`), `asOf` pour le
+  nombre de lunes, `uncertainty`, `citation` — ou `published: false` + `reason` pour une valeur que
+  la simulation utilise sans pouvoir la publier. `src/config/factProvenance.test.ts` refuse une
+  valeur affichable sans source et compare chaque valeur citée à sa source telle que
+  `pnpm facts:snapshot` l'a relevée (`src/config/factSources.snapshot.json`) : ajoutez la
+  désignation SBDB du corps à `scripts/fact-source-targets.json` puis relancez le relevé, n'importez
+  jamais un chiffre de mémoire.
 
-`assertUniqueBodyNames` rejette tout doublon de nom au chargement.
+Puis régénérez les artefacts dérivés, jamais édités à la main : `pnpm facts:snapshot`,
+`pnpm ephemeris:validate` (désignation Horizons du corps dans
+`scripts/validation-targets.json` au préalable — avec `expect`, la vérification de cible attrape un
+numéro résolvant le mauvais corps), `pnpm build` puis `pnpm fingerprint:generated --write` (une
+page et une vignette s'ajoutent : l'empreinte est la preuve que rien d'autre n'a bougé).
+
+`assertUniqueBodyNames` rejette tout doublon de nom au chargement, et le chargeur refuse une fiche
+que l'arbre (`order.json` + listes `satellites`) n'atteint pas.
 
 **Pages d'éclipse.** Le build émet aussi une page par éclipse de 2024 à 2035
 (`/eclipse/2026-08-12/`), calculée par `findUpcomingAstronomicalEvents` : il n'y a rien à saisir.
