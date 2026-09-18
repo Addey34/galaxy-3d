@@ -17,7 +17,13 @@
  */
 import ts from 'typescript';
 import { Body } from 'astronomy-engine';
-import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import {
+  mkdirSync,
+  readdirSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs';
 import { resolve } from 'node:path';
 
 const ROOT = process.cwd();
@@ -677,8 +683,12 @@ if (commentsFiled !== commentsSeen)
     `commentaires : ${commentsSeen} vus, ${commentsFiled} rangés. Aucun ne doit se perdre.`
   );
 
-rmSync(OUT, { recursive: true, force: true });
+// Ne supprime que les fiches JSON : le dossier contient aussi `index.ts` et
+// `entities.test.ts`. Un premier `rmSync` du dossier entier les a effacés, et le commit est
+// parti sans eux (rectifié dans le commit suivant) : ne jamais revenir à cette forme.
 mkdirSync(OUT, { recursive: true });
+for (const name of readdirSync(OUT))
+  if (name.endsWith('.json')) rmSync(resolve(OUT, name));
 for (const e of entities)
   writeFileSync(
     resolve(OUT, `${e.id}.json`),
