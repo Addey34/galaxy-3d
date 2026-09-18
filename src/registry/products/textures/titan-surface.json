@@ -1,0 +1,47 @@
+{
+  "$schema": "../../schema/product.schema.json",
+  "id": "titan-surface",
+  "type": "texture",
+  "body": "titan",
+  "layer": "surface",
+  "shipped": true,
+  "license": "other",
+  "rights": "public-domain",
+  "links": [
+    {
+      "rel": "license",
+      "href": "https://www.usgs.gov/information-policies-and-instructions/copyrights-and-credits"
+    }
+  ],
+  "providers": [
+    {
+      "name": "USGS Astrogeology / NASA-JPL-Caltech / SSI (Cassini ISS 4005m)",
+      "roles": [
+        "producer"
+      ]
+    }
+  ],
+  "tier": "free",
+  "filled": true,
+  "lineage": {
+    "status": "ready",
+    "downloadUrl": "https://astrogeology.usgs.gov/ckan/dataset/8ee17e4e-26c6-4e22-9c23-bc9a4c7ed35e/resource/c3f3006c-3174-4716-920f-44f5dc749a4a/download/titan_iss_p19658_mosaic_global_1024.jpg",
+    "sourcePage": "https://astrogeology.usgs.gov/search/map/titan_cassini_iss_global_mosaic_4005m",
+    "projection": "equirectangular",
+    "sourceResolution": "4.005 km/pixel; official 1024 px JPEG sample",
+    "maxQuality": "1k",
+    "outputBase": "titan/titanSurface",
+    "license": "public-domain",
+    "credit": "USGS Astrogeology Science Center, NASA/JPL-Caltech/SSI"
+  },
+  "review": {
+    "status": "ready",
+    "processing": "direct-jpeg-sample",
+    "downloadUrl": "https://astrogeology.usgs.gov/ckan/dataset/8ee17e4e-26c6-4e22-9c23-bc9a4c7ed35e/resource/c3f3006c-3174-4716-920f-44f5dc749a4a/download/titan_iss_p19658_mosaic_global_1024.jpg",
+    "sourcePage": "https://astrogeology.usgs.gov/search/map/titan_cassini_iss_global_mosaic_4005m",
+    "sourceResolution": "4.005 km/pixel global mosaic; 1024 px viewer sample",
+    "projection": "equirectangular",
+    "qualityClass": "derived",
+    "note": "Official Cassini ISS methane-window global mosaic. The northern mid-latitudes contain documented coverage gaps; the 1k sample is used without artificial upscaling."
+  }
+}

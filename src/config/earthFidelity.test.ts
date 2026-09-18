@@ -3,7 +3,7 @@ import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import sharp from 'sharp';
 import { describe, expect, it } from 'vitest';
-import sourceManifest from '../../scripts/texture-sources.json';
+import { textureReviews } from '@/registry/products';
 import { CELESTIAL_CONFIG } from './bodies';
 
 const PROJECT_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
@@ -50,7 +50,7 @@ describe('Earth scientific fidelity guardrails', () => {
   });
 
   it('keeps complete provenance for all configured Earth texture layers', () => {
-    const earthReviews = sourceManifest.reviews.filter(
+    const earthReviews = textureReviews().filter(
       (review) => review.body === 'earth'
     );
     const expectedLayers = [

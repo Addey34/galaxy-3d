@@ -1,0 +1,35 @@
+{
+  "$schema": "../../schema/product.schema.json",
+  "id": "phobos-surface",
+  "type": "texture",
+  "body": "phobos",
+  "layer": "surface",
+  "shipped": true,
+  "license": "other",
+  "rights": "public-domain",
+  "links": [
+    {
+      "rel": "license",
+      "href": "https://www.usgs.gov/information-policies-and-instructions/copyrights-and-credits"
+    }
+  ],
+  "providers": [
+    {
+      "name": "USGS Astrogeology / ESA Mars Express (DLR control)",
+      "roles": [
+        "producer"
+      ]
+    }
+  ],
+  "tier": "free",
+  "review": {
+    "status": "ready",
+    "processing": "direct-jpeg-sample",
+    "downloadUrl": "https://astrogeology.usgs.gov/ckan/dataset/ca781f2d-0e29-4560-a14e-1b41269c74a9/resource/6c47165c-4094-4ff5-8a21-065deb4319d6/download/phobos_me_src_mosaic_global_1024.jpg",
+    "sourcePage": "https://astrogeology.usgs.gov/search/map/phobos_mars_express_src_global_mosaic_12m",
+    "sourceResolution": "12 m/pixel global mosaic; official 1024 px viewer sample",
+    "projection": "simple cylindrical",
+    "qualityClass": "derived",
+    "note": "Official Mars Express SRC global mosaic preview from USGS; kept at its native preview size without artificial upscaling."
+  }
+}

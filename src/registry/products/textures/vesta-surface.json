@@ -1,0 +1,37 @@
+{
+  "$schema": "../../schema/product.schema.json",
+  "id": "vesta-surface",
+  "type": "texture",
+  "body": "vesta",
+  "layer": "surface",
+  "shipped": true,
+  "license": "other",
+  "rights": "public-domain",
+  "links": [
+    {
+      "rel": "license",
+      "href": "https://www.usgs.gov/information-policies-and-instructions/copyrights-and-credits"
+    }
+  ],
+  "providers": [
+    {
+      "name": "USGS Astrogeology / NASA Dawn FC HAMO",
+      "roles": [
+        "producer"
+      ]
+    }
+  ],
+  "tier": "free",
+  "review": {
+    "status": "manual",
+    "sourcePage": "https://astrogeology.usgs.gov/search/map/vesta_dawn_fc_hamo_global_mosaic_60m",
+    "sourceResolution": "60 m/pixel",
+    "projection": "equirectangular",
+    "qualityClass": "native-candidate",
+    "note": "Best global Dawn HAMO mosaic currently identified.",
+    "license": "public-domain-if-usgs",
+    "credit": "USGS Astrogeology / NASA Dawn (if sourced from the mosaic above)",
+    "attributionNeeded": true,
+    "provenanceNote": "USGS Dawn mosaic is public domain, but the shipped 2048x1024 file predates the validated pipeline. Confirm the delivered file derives from the USGS source above, otherwise treat as unconfirmed."
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "$schema": "../../schema/product.schema.json",
+  "id": "stars-surface",
+  "type": "texture",
+  "body": "stars",
+  "layer": "surface",
+  "shipped": true,
+  "license": "CC-BY-4.0",
+  "links": [
+    {
+      "rel": "license",
+      "href": "https://creativecommons.org/licenses/by/4.0/"
+    }
+  ],
+  "providers": [
+    {
+      "name": "Solar System Scope (solarsystemscope.com)",
+      "roles": [
+        "licensor",
+        "producer"
+      ]
+    }
+  ],
+  "tier": "free",
+  "review": {
+    "status": "not-applicable",
+    "sourcePage": "https://maps.jpl.nasa.gov/tmaps/",
+    "sourceResolution": "background starfield, not a surface map",
+    "projection": "skybox",
+    "qualityClass": "illustrative",
+    "note": "Sky background; no physical planetary surface texture."
+  }
+}

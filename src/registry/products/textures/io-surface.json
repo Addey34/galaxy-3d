@@ -1,0 +1,45 @@
+{
+  "$schema": "../../schema/product.schema.json",
+  "id": "io-surface",
+  "type": "texture",
+  "body": "io",
+  "layer": "surface",
+  "shipped": true,
+  "license": "other",
+  "rights": "public-domain",
+  "links": [
+    {
+      "rel": "license",
+      "href": "https://www.usgs.gov/information-policies-and-instructions/copyrights-and-credits"
+    }
+  ],
+  "providers": [
+    {
+      "name": "USGS Astrogeology / NASA Galileo SSI & Voyager (ClrMerge)",
+      "roles": [
+        "producer"
+      ]
+    }
+  ],
+  "tier": "free",
+  "filled": true,
+  "lineage": {
+    "status": "ready",
+    "downloadUrl": "https://planetarymaps.usgs.gov/mosaic/Io_GalileoSSI-Voyager_Global_Mosaic_1km.tif",
+    "sourcePage": "https://astrogeology.usgs.gov/search/map/io_galileo_ssi_voyager_color_merged_global_mosaic_1km",
+    "projection": "equirectangular",
+    "sourceResolution": "1 km/pixel",
+    "maxQuality": "2k",
+    "outputBase": "io/ioSurface",
+    "license": "public-domain",
+    "credit": "USGS Astrogeology Science Center, Galileo SSI and Voyager"
+  },
+  "review": {
+    "status": "verified-ready",
+    "sourcePage": "https://astrogeology.usgs.gov/search/map/io_galileo_ssi_voyager_color_merged_global_mosaic_1km",
+    "sourceResolution": "1 km/pixel",
+    "projection": "equirectangular",
+    "qualityClass": "native",
+    "note": "Imported through the validated fetch pipeline."
+  }
+}

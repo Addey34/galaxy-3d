@@ -5,7 +5,7 @@
  * d'une même chose finissent par diverger : ce dépôt l'a payé plusieurs fois.
  *
  * ZOD N'EST PAS LIVRÉ. Il est en `devDependency` et n'est importé que par les tests et
- * `scripts/generate-provider-schema.mjs`. Le registre lui-même (`providers/index.ts`) n'en prend
+ * `scripts/generate-registry-schemas.mjs`. Le registre lui-même (`providers/index.ts`) n'en prend
  * que le TYPE, par `import type`, qui s'efface à la compilation :
  * `src/registry/schema/bundleIsolation.test.ts` refuse un import de valeur depuis `src/`, et
  * vérifie l'absence de zod dans `dist/assets/*.js` quand un build existe.
@@ -129,7 +129,7 @@ export type PositionSourceProvider = z.infer<typeof positionSourceProvider>;
 
 /**
  * Le JSON Schema COMMITÉ, généré depuis le schéma Zod ci-dessus. Une seule fonction, appelée par
- * `scripts/generate-provider-schema.mjs` (qui écrit) et par `provider.schema.test.ts` (qui
+ * `scripts/generate-registry-schemas.mjs` (qui écrit) et par `provider.schema.test.ts` (qui
  * compare) : le fichier ne peut donc pas dériver du schéma qui fait foi.
  */
 export function providerJsonSchema(): unknown {

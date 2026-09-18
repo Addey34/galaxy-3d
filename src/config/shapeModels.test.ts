@@ -112,7 +112,7 @@ describe('modèles de forme 3D', () => {
     '%s : le modèle est crédité',
     (name) => {
       // Un maillage tiers sans provenance ne doit pas entrer dans le dépôt — même règle que
-      // pour les textures (`scripts/texture-sources.json`). Le champ est obligatoire dans le
+      // pour les textures (`src/registry/products/textures/`). Le champ est obligatoire dans le
       // type, ce test interdit en plus de le remplir avec du vide.
       const credit = flattenBodies(CELESTIAL_CONFIG).get(name)?.model?.credit;
       // Dans les DEUX langues : la fiche l'affiche dans la langue de l'interface.

@@ -1,0 +1,36 @@
+{
+  "$schema": "../../schema/product.schema.json",
+  "id": "earth-normal-map",
+  "type": "texture",
+  "body": "earth",
+  "layer": "normalMap",
+  "shipped": true,
+  "license": "other",
+  "rights": "public-domain",
+  "links": [
+    {
+      "rel": "license",
+      "href": "https://www.ncei.noaa.gov/products/etopo-global-relief-model"
+    }
+  ],
+  "providers": [
+    {
+      "name": "NOAA NCEI ETOPO 2022 global relief model (60 arc-second)",
+      "roles": [
+        "producer"
+      ]
+    }
+  ],
+  "tier": "free",
+  "sourceUrl": "https://www.ncei.noaa.gov/products/etopo-global-relief-model",
+  "review": {
+    "status": "derived",
+    "sourcePage": "https://www.ncei.noaa.gov/products/etopo-global-relief-model",
+    "downloadUrl": "https://www.ngdc.noaa.gov/mgg/global/relief/ETOPO2022/data/60s/60s_surface_elev_gtif/ETOPO_2022_v1_60s_N90W180_surface.tif",
+    "sourceResolution": "60 arc-second global ETOPO 2022 surface elevation GeoTIFF",
+    "projection": "equirectangular",
+    "qualityClass": "derived-candidate",
+    "processing": "generate-earth-normal.mjs: physical DEM gradients in meters with latitude-aware spacing; display NORMAL_STRENGTH=24",
+    "note": "Derived tangent-space normal from NOAA ETOPO 2022 surface elevation; display-scaled normal, not raw altitude."
+  }
+}

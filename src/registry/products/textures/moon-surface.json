@@ -1,0 +1,35 @@
+{
+  "$schema": "../../schema/product.schema.json",
+  "id": "moon-surface",
+  "type": "texture",
+  "body": "moon",
+  "layer": "surface",
+  "shipped": true,
+  "license": "CC-BY-4.0",
+  "links": [
+    {
+      "rel": "license",
+      "href": "https://creativecommons.org/licenses/by/4.0/"
+    }
+  ],
+  "providers": [
+    {
+      "name": "Solar System Scope (solarsystemscope.com)",
+      "roles": [
+        "licensor",
+        "producer"
+      ]
+    }
+  ],
+  "tier": "free",
+  "review": {
+    "status": "manual",
+    "downloadUrl": "https://planetarymaps.usgs.gov/mosaic/Lunar_LRO_LROC-WAC_Mosaic_global_100m_June2013.tif",
+    "processing": "gdal-required",
+    "sourcePage": "https://astrogeology.usgs.gov/search/map/moon_lro_lroc_wac_global_morphology_mosaic_100m",
+    "sourceResolution": "100 m/pixel",
+    "projection": "equirectangular",
+    "qualityClass": "native-candidate",
+    "note": "Best global optical morphology candidate; source is very large."
+  }
+}

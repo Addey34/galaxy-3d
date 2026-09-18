@@ -2,7 +2,7 @@
  * `/sources` : d'où vient chaque donnée et chaque image que Galaxy livre, et sous quelle licence.
  *
  * Rien ici n'est une copie : chaque tableau est lu au build dans le fichier qui fait foi.
- *   - textures : `scripts/texture-sources.json` (bloc `imported`), croisé avec les couches que le
+ *   - textures : le registre `src/registry/products/` (couches livrées), croisé avec les couches que le
  *     catalogue livre réellement. Une couche SANS provenance fait échouer le build : une page qui
  *     la tairait mentirait par omission, et un contrôle qui l'ignorerait ne contrôlerait rien ;
  *   - données physiques : le registre `config/factSources.ts`, croisé avec les provenances que le
@@ -257,7 +257,7 @@ export function sourcesPages(input: SourcesInput): DocPage[] {
   const missing = missingTextureProvenance(input.config, input.textures);
   if (missing.length > 0)
     throw new Error(
-      `page /sources : couche(s) de texture livrée(s) sans provenance dans texture-sources.json : ${missing.map((m) => `${m.body}/${m.layer}`).join(', ')}`
+      `page /sources : couche(s) de texture livrée(s) sans fiche livrée dans src/registry/products/ : ${missing.map((m) => `${m.body}/${m.layer}`).join(', ')}`
     );
   if (input.dependencies.length === 0)
     throw new Error('page /sources : aucune dépendance lue dans package.json');

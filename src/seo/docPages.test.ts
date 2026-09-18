@@ -10,7 +10,7 @@ import { MIN_SAMPLES_PER_ORBIT_FOR_HERMITE } from '@/core/HorizonsEphemerisServi
 import summaryJson from '@/config/horizons-validation-summary.json';
 import { TEMPORAL_CATEGORIES, temporalCategoryLabelKey } from '@/core/temporal';
 import manifestJson from '../../public/assets/ephemerides/manifest.json';
-import textureSources from '../../scripts/texture-sources.json';
+import { shippedTextures } from '@/registry/products';
 import firebaseJson from '../../firebase.json';
 import { ILLUSTRATIVE_SURFACES } from '@/config/catalog';
 import { OBLIQUITY_RAD } from '@/core/frames';
@@ -60,7 +60,7 @@ const indexHtml = readFileSync(resolve(ROOT, 'index.html'), 'utf-8');
 const socialImage = socialImageFromHtml(indexHtml);
 const connectHosts = connectHostsFromFirebase(firebaseJson);
 const manifest = manifestJson as unknown as EphemerisManifest;
-const textures = (textureSources as { imported: TextureProvenance[] }).imported;
+const textures: TextureProvenance[] = shippedTextures();
 
 const methodology = methodologyPages({
   summary,
@@ -506,7 +506,7 @@ describe('cohérence des sources publiées', () => {
   });
 
   it('range chaque corps des mentions sous la licence de son entrée de provenance', () => {
-    // THIRD_PARTY_NOTICES.md (prose) et texture-sources.json (données) décrivent les mêmes
+    // THIRD_PARTY_NOTICES.md (prose) et le registre products/ (données) décrivent les mêmes
     // textures : un corps déplacé d'une licence à l'autre dans l'un doit l'être dans l'autre.
     const notices = sourcesInput.notices.replace(/\r/g, '');
     const groups = notices

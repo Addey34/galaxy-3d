@@ -13,7 +13,7 @@
  *   node scripts/import-textures.mjs --only callisto   # filtre par corps
  *
  * Chaque entrée d'IMPORTS documente aussi source/licence/crédit → à recopier dans
- * scripts/texture-sources.json une fois validée.
+ * src/registry/products/textures/ une fois validée.
  *
  * ⚠️ Après import, aligner `textureResolutions` dans src/config/bodies.ts sur les résos
  *    réellement générées (le LOD ne demande que les paliers déclarés).
@@ -64,7 +64,7 @@ function baseName(body, layer) {
  *  - fillHoles  : true = comble les zones noires (zones non imagées) par extension des bords.
  *  - tint       : [r,g,b] optionnel pour teinter une source N&B (ex. Callisto brun-gris).
  *  - license/credit/tier : provenance, affichée en fin d'import et recopiée dans
- *                 texture-sources.json (bloc `imported`).
+ *                 sa fiche src/registry/products/textures/.
  */
 // Raccourcis licence.
 const USGS = {
@@ -533,5 +533,5 @@ for (const entry of IMPORTS) {
 console.log(
   DRY_RUN
     ? '\nDry-run terminé.'
-    : '\nImport terminé. Aligne `textureResolutions` (bodies.ts) et recopie la provenance dans texture-sources.json.'
+    : '\nImport terminé. Aligne `textureResolutions` (bodies.ts) et recopie la provenance dans sa fiche src/registry/products/textures/.'
 );

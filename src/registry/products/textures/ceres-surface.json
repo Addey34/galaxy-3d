@@ -1,0 +1,38 @@
+{
+  "$schema": "../../schema/product.schema.json",
+  "id": "ceres-surface",
+  "type": "texture",
+  "body": "ceres",
+  "layer": "surface",
+  "shipped": true,
+  "license": "CC-BY-4.0",
+  "links": [
+    {
+      "rel": "license",
+      "href": "https://creativecommons.org/licenses/by/4.0/"
+    }
+  ],
+  "providers": [
+    {
+      "name": "Solar System Scope (solarsystemscope.com)",
+      "roles": [
+        "licensor",
+        "producer"
+      ]
+    }
+  ],
+  "tier": "free",
+  "illustrative": true,
+  "review": {
+    "status": "manual",
+    "sourcePage": "https://astrogeology.usgs.gov/search/map/ceres_dawn_fc_global_mosaic_140m",
+    "sourceResolution": "140 m/pixel global, 35 m/pixel local LAMO products",
+    "projection": "equirectangular",
+    "qualityClass": "native-candidate",
+    "note": "Use the global controlled Dawn mosaic; local 35 m data must not be stretched into fake global coverage.",
+    "license": "public-domain-if-usgs",
+    "credit": "USGS Astrogeology / NASA Dawn (if sourced from the mosaic above)",
+    "attributionNeeded": true,
+    "provenanceNote": "USGS Dawn mosaic is public domain, but the shipped 4096x2048 file predates the validated pipeline. Confirm the delivered file derives from the USGS source above, otherwise treat as unconfirmed."
+  }
+}

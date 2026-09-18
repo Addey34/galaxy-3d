@@ -1,0 +1,36 @@
+{
+  "$schema": "../../schema/product.schema.json",
+  "id": "tethys-surface",
+  "type": "texture",
+  "body": "tethys",
+  "layer": "surface",
+  "shipped": true,
+  "license": "other",
+  "rights": "public-domain",
+  "links": [
+    {
+      "rel": "license",
+      "href": "https://www.usgs.gov/information-policies-and-instructions/copyrights-and-credits"
+    }
+  ],
+  "providers": [
+    {
+      "name": "USGS Astrogeology / NASA-JPL-Caltech (Cassini/Voyager mosaic 293m)",
+      "roles": [
+        "producer"
+      ]
+    }
+  ],
+  "tier": "free",
+  "filled": true,
+  "review": {
+    "status": "ready",
+    "processing": "direct-jpeg-sample",
+    "downloadUrl": "https://astrogeology.usgs.gov/ckan/dataset/e40296c1-b4bf-46d8-86af-4b6cf0301b0c/resource/36d40203-d9b3-447e-9004-c3dc100bde04/download/full.jpg",
+    "sourcePage": "https://astrogeology.usgs.gov/search/map/tethys_cassini_global_mosaic_293m",
+    "sourceResolution": "293 m/pixel global mosaic; 1024x512 equirectangular sample",
+    "projection": "equirectangular",
+    "qualityClass": "derived",
+    "note": "Real controlled global Cassini/Voyager mosaic; verified via a live USGS fetch (2026-08-26), not assumed from naming convention."
+  }
+}

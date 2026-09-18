@@ -1,0 +1,33 @@
+{
+  "$schema": "../../schema/product.schema.json",
+  "id": "earth-clouds",
+  "type": "texture",
+  "body": "earth",
+  "layer": "clouds",
+  "shipped": true,
+  "license": "other",
+  "rights": "public-domain",
+  "links": [
+    {
+      "rel": "license",
+      "href": "https://www.nasa.gov/nasa-brand-center/images-and-media/"
+    }
+  ],
+  "providers": [
+    {
+      "name": "NASA Visible Earth / Blue Marble",
+      "roles": [
+        "producer"
+      ]
+    }
+  ],
+  "tier": "free",
+  "review": {
+    "status": "reference",
+    "sourcePage": "https://science.nasa.gov/earth/earth-observatory/global-maps/cloud-fraction/",
+    "sourceResolution": "monthly MODIS cloud fraction",
+    "projection": "global map",
+    "qualityClass": "dynamic",
+    "note": "Cloud fraction is scientific coverage data; visible cloud albedo and alpha need a dedicated compositing step."
+  }
+}

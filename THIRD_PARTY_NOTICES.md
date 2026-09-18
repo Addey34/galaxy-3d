@@ -7,7 +7,8 @@ see [`LICENSE.md`](LICENSE.md). The following components are not relicensed by t
 
 The visual assets under `public/assets/textures/` are third-party or derived assets and must
 retain their original attribution and usage terms. They fall into four groups; the machine-readable
-provenance (source URL, resolution, licence) is in [`scripts/texture-sources.json`](scripts/texture-sources.json).
+provenance (source URL, resolution, licence) is in one file per texture layer under
+[`src/registry/products/textures/`](src/registry/products/textures/).
 
 1. **Public domain: USGS Astrogeology / NASA-JPL / ESA spacecraft mosaics, NASA and NOAA Earth data.** Derived from
    official global mosaics, no copyright restriction. Bodies: `io`, `europa`, `ganymede`,
@@ -30,7 +31,7 @@ provenance (source URL, resolution, licence) is in [`scripts/texture-sources.jso
 3. **Confirmed licence, explicitly illustrative.** The licence and source are known and recorded,
    but the map itself is not a validated scientific global mosaic (either no spacecraft imaged the
    body, or, for `halley`, flyby images were never assembled into one): `ceres`, `eris`,
-   `haumea`, `makemake` (CC BY 4.0, Solar System Scope, illustrative per `texture-sources.json`),
+   `haumea`, `makemake` (CC BY 4.0, Solar System Scope, illustrative per their provenance files),
    `halley` (public domain, Philip Stooke / NASA PDS Giotto/Vega, credited).
    The app's own credits list (`index.html`) already discloses these as illustrative, not
    scientific maps. No action required beyond keeping that disclosure current.
@@ -43,7 +44,7 @@ provenance (source URL, resolution, licence) is in [`scripts/texture-sources.jso
    Scope's illustrative set), `mimas`, `hyperion`, `miranda`, `ariel`, `umbriel`, `titania`,
    `oberon`, `amalthea`, `proteus`, `nereid`, `styx`, `nix`, `kerberos`, `hydra` (imaged by
    Voyager 2 / Galileo / New Horizons, but only partially or at too low a resolution for a
-   controlled global mosaic; see each body's entry in `texture-sources.json` for the specific
+   controlled global mosaic; see each body's provenance file for the specific
    coverage limit), plus `pallas` and `hygiea` (2026-08-27: replaced their previous asset, whose
    community-sourced licence was unconfirmed and likely CC BY-NC-SA, incompatible with
    commercial use, with this generated one). Fully covered by this project's own `LICENSE.md`;
@@ -54,7 +55,7 @@ The social preview image is a project asset and should be replaced only with mat
 redistribution rights are known.
 
 Before adding or replacing an asset, record its source, license and attribution in
-`texture-sources.json` (and here if it introduces a new licence class). Do not assume that the
+its file under `src/registry/products/textures/` (and here if it introduces a new licence class). Do not assume that the
 PolyForm license covers images, textures or fonts.
 
 ## 3D shape models

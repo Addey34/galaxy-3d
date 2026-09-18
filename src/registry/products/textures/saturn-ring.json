@@ -1,0 +1,33 @@
+{
+  "$schema": "../../schema/product.schema.json",
+  "id": "saturn-ring",
+  "type": "texture",
+  "body": "saturn",
+  "layer": "ring",
+  "shipped": true,
+  "license": "CC-BY-4.0",
+  "links": [
+    {
+      "rel": "license",
+      "href": "https://creativecommons.org/licenses/by/4.0/"
+    }
+  ],
+  "providers": [
+    {
+      "name": "Solar System Scope (solarsystemscope.com)",
+      "roles": [
+        "licensor",
+        "producer"
+      ]
+    }
+  ],
+  "tier": "free",
+  "review": {
+    "status": "reference",
+    "sourcePage": "https://www.nasa.gov/news-release/nasa-cassini-spacecraft-provides-new-view-of-saturn-and-earth/",
+    "sourceResolution": "Cassini natural-color ring imagery",
+    "projection": "radial",
+    "qualityClass": "native-candidate",
+    "note": "Ring texture needs a dedicated radial photometric map, not a planetary surface map."
+  }
+}

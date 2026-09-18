@@ -1,0 +1,33 @@
+{
+  "$schema": "../../schema/product.schema.json",
+  "id": "earth-lights",
+  "type": "texture",
+  "body": "earth",
+  "layer": "lights",
+  "shipped": true,
+  "license": "other",
+  "rights": "public-domain",
+  "links": [
+    {
+      "rel": "license",
+      "href": "https://www.nasa.gov/nasa-brand-center/images-and-media/"
+    }
+  ],
+  "providers": [
+    {
+      "name": "NASA Earth Observatory / Black Marble",
+      "roles": [
+        "producer"
+      ]
+    }
+  ],
+  "tier": "free",
+  "review": {
+    "status": "reference",
+    "sourcePage": "https://science.nasa.gov/earth/earth-observatory/earth-at-night/maps/",
+    "sourceResolution": "500 m/pixel tiled Black Marble product",
+    "projection": "equirectangular",
+    "qualityClass": "native-candidate",
+    "note": "NASA VIIRS Black Marble; global 500 m product is tiled and needs mosaicking."
+  }
+}

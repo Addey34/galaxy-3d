@@ -1,0 +1,27 @@
+{
+  "$schema": "../schema/product.schema.json",
+  "id": "horizons-ephemerides",
+  "type": "ephemeris-collection",
+  "manifest": "assets/ephemerides/manifest.json",
+  "providerId": "horizons-binary",
+  "license": "other",
+  "rights": "unreviewed",
+  "links": [
+    {
+      "rel": "via",
+      "href": "https://ssd.jpl.nasa.gov/horizons/"
+    }
+  ],
+  "providers": [
+    {
+      "name": "NASA JPL Solar System Dynamics (Horizons System)",
+      "roles": ["producer", "host"],
+      "url": "https://ssd.jpl.nasa.gov/horizons/"
+    },
+    {
+      "name": "Galaxy",
+      "roles": ["processor"]
+    }
+  ],
+  "generatedBy": "scripts/generate-horizons-ephemerides.mjs"
+}

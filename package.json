@@ -20,7 +20,7 @@
     "ephemeris:validate": "node scripts/validate-against-horizons.mjs",
     "facts:snapshot": "node scripts/snapshot-fact-sources.mjs",
     "fingerprint:generated": "node scripts/fingerprint-generated.mjs",
-    "schema:generate": "node scripts/generate-provider-schema.mjs",
+    "schema:generate": "node scripts/generate-registry-schemas.mjs",
     "spk:stage": "node scripts/stage-sat441.mjs",
     "spk:verify": "node scripts/verify-spk-range.mjs",
     "icons:generate": "node scripts/generate-icons.mjs",

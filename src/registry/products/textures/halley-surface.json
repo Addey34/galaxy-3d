@@ -1,0 +1,38 @@
+{
+  "$schema": "../../schema/product.schema.json",
+  "id": "halley-surface",
+  "type": "texture",
+  "body": "halley",
+  "layer": "surface",
+  "shipped": true,
+  "license": "other",
+  "rights": "public-domain",
+  "links": [
+    {
+      "rel": "license",
+      "href": "https://www.nasa.gov/nasa-brand-center/images-and-media/"
+    }
+  ],
+  "providers": [
+    {
+      "name": "Philip Stooke / NASA PDS (Giotto/Vega)",
+      "roles": [
+        "producer"
+      ]
+    }
+  ],
+  "tier": "free",
+  "illustrative": true,
+  "review": {
+    "status": "manual",
+    "sourcePage": "https://pds-smallbodies.astro.umd.edu/data_sb/comet_type.shtml",
+    "sourceResolution": "Giotto/Vega observations and shape model, no global photometric mosaic",
+    "projection": "shape-model dependent",
+    "qualityClass": "illustrative-candidate",
+    "note": "A true surface map requires projecting flyby images onto the Stooke shape model; current flat texture is not a scientific global map.",
+    "license": "unconfirmed",
+    "credit": "unconfirmed",
+    "attributionNeeded": true,
+    "provenanceNote": "Non-standard 3674x1837 dimensions suggest a third-party crop, not a USGS pipeline output. Record exact source + licence or replace before commercial reuse."
+  }
+}

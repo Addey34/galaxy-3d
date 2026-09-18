@@ -1,0 +1,40 @@
+{
+  "$schema": "../../schema/product.schema.json",
+  "id": "pluto-surface",
+  "type": "texture",
+  "body": "pluto",
+  "layer": "surface",
+  "shipped": true,
+  "license": "other",
+  "rights": "public-domain",
+  "links": [
+    {
+      "rel": "license",
+      "href": "https://www.usgs.gov/information-policies-and-instructions/copyrights-and-credits"
+    }
+  ],
+  "providers": [
+    {
+      "name": "USGS Astrogeology / NASA New Horizons",
+      "roles": [
+        "producer"
+      ]
+    }
+  ],
+  "tier": "free",
+  "filled": true,
+  "review": {
+    "status": "manual",
+    "processing": "gdal-required",
+    "sourcePage": "https://astrogeology.usgs.gov/search/map/pluto_new_horizons_lorri_mvic_global_mosaic_300m",
+    "downloadUrl": "https://planetarymaps.usgs.gov/mosaic/Pluto_NewHorizons_Global_Mosaic_300m_Jul2017_8bit.tif",
+    "sourceResolution": "300 m/pixel",
+    "projection": "equirectangular",
+    "qualityClass": "native-candidate",
+    "note": "Best comprehensive global New Horizons mosaic currently identified.",
+    "license": "public-domain-if-usgs",
+    "credit": "USGS Astrogeology / NASA New Horizons (if sourced from the mosaic above)",
+    "attributionNeeded": true,
+    "provenanceNote": "USGS New Horizons mosaic is public domain, but the shipped 4096x2048 file predates the validated pipeline. Confirm the delivered file derives from the USGS source above, otherwise treat as unconfirmed."
+  }
+}

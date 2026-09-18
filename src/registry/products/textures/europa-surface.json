@@ -1,0 +1,45 @@
+{
+  "$schema": "../../schema/product.schema.json",
+  "id": "europa-surface",
+  "type": "texture",
+  "body": "europa",
+  "layer": "surface",
+  "shipped": true,
+  "license": "other",
+  "rights": "public-domain",
+  "links": [
+    {
+      "rel": "license",
+      "href": "https://www.usgs.gov/information-policies-and-instructions/copyrights-and-credits"
+    }
+  ],
+  "providers": [
+    {
+      "name": "USGS Astrogeology / NASA Voyager & Galileo",
+      "roles": [
+        "producer"
+      ]
+    }
+  ],
+  "tier": "free",
+  "filled": true,
+  "lineage": {
+    "status": "ready",
+    "downloadUrl": "https://planetarymaps.usgs.gov/mosaic/Europa_Voyager_GalileoSSI_global_mosaic_500m.tif",
+    "sourcePage": "https://astrogeology.usgs.gov/search/map/europa_voyager_galileo_ssi_global_mosaic_500m",
+    "projection": "equirectangular",
+    "sourceResolution": "500 m/pixel",
+    "maxQuality": "2k",
+    "outputBase": "europa/europaSurface",
+    "license": "public-domain",
+    "credit": "USGS Astrogeology Science Center, Galileo SSI and Voyager"
+  },
+  "review": {
+    "status": "verified-ready",
+    "sourcePage": "https://astrogeology.usgs.gov/search/map/europa_voyager_galileo_ssi_global_mosaic_500m",
+    "sourceResolution": "500 m/pixel",
+    "projection": "equirectangular",
+    "qualityClass": "native",
+    "note": "Imported through the validated fetch pipeline."
+  }
+}

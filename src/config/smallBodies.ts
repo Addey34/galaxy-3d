@@ -596,7 +596,7 @@ export const SMALL_BODY_ELEMENTS: readonly SmallBodyElements[] = [
         },
         relativeEphemeris: { kind: 'horizonsParentRelative' },
         // Résolution New Horizons trop faible pour une vraie mosaïque (quelques pixels — voir
-        // texture-sources.json). Texture procédurale générée : base claire, peu de cratères,
+        // registry/products/textures). Texture procédurale générée : base claire, peu de cratères,
         // cohérente avec l'albédo élevé (>50 %) mesuré pour les 4 petites lunes de Pluton.
         textureResolutions: { surface: ['2k'] },
         realData: {
@@ -666,7 +666,7 @@ export const SMALL_BODY_ELEMENTS: readonly SmallBodyElements[] = [
         relativeEphemeris: { kind: 'horizonsParentRelative' },
         // Texture procédurale générée : base claire + une tache rougeâtre isolée, paramétrée
         // sur la vraie tache rouge autour d'un cratère d'impact repérée par New Horizons
-        // (Showalter et al. 2015 — voir texture-sources.json).
+        // (Showalter et al. 2015 — voir registry/products/textures).
         textureResolutions: { surface: ['2k'] },
         realData: {
           sources: {
@@ -735,7 +735,7 @@ export const SMALL_BODY_ELEMENTS: readonly SmallBodyElements[] = [
         },
         relativeEphemeris: { kind: 'horizonsParentRelative' },
         // Résolution New Horizons trop faible pour une vraie mosaïque (voir
-        // texture-sources.json). Texture procédurale générée, même traitement que ses 3
+        // registry/products/textures). Texture procédurale générée, même traitement que ses 3
         // lunes sœurs (base claire, peu de cratères).
         textureResolutions: { surface: ['2k'] },
         realData: {
@@ -804,7 +804,7 @@ export const SMALL_BODY_ELEMENTS: readonly SmallBodyElements[] = [
         },
         relativeEphemeris: { kind: 'horizonsParentRelative' },
         // Résolution New Horizons trop faible pour une vraie mosaïque (voir
-        // texture-sources.json). Texture procédurale générée, même traitement que ses 3
+        // registry/products/textures). Texture procédurale générée, même traitement que ses 3
         // lunes sœurs (base claire, peu de cratères).
         textureResolutions: { surface: ['2k'] },
         realData: {

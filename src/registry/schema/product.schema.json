@@ -1,0 +1,425 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "anyOf": [
+    {
+      "type": "object",
+      "properties": {
+        "$schema": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+        },
+        "type": {
+          "type": "string",
+          "const": "texture"
+        },
+        "body": {
+          "type": "string",
+          "pattern": "^[a-z0-9]+$"
+        },
+        "layer": {
+          "type": "string",
+          "pattern": "^[a-z][A-Za-z0-9]*$"
+        },
+        "shipped": {
+          "type": "boolean",
+          "const": true
+        },
+        "license": {
+          "type": "string",
+          "pattern": "^(other|[A-Za-z0-9.+-]+(\\s+(AND|OR|WITH)\\s+[A-Za-z0-9.+-]+)*)$"
+        },
+        "rights": {
+          "type": "string",
+          "enum": [
+            "public-domain",
+            "generated"
+          ]
+        },
+        "links": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "rel": {
+                "type": "string",
+                "enum": [
+                  "license",
+                  "via",
+                  "describedby"
+                ]
+              },
+              "href": {
+                "type": "string",
+                "pattern": "^https:\\/\\/[^\\s\"']+$"
+              }
+            },
+            "required": [
+              "rel",
+              "href"
+            ]
+          }
+        },
+        "providers": {
+          "minItems": 1,
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "minLength": 1
+              },
+              "roles": {
+                "minItems": 1,
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "licensor",
+                    "producer",
+                    "processor",
+                    "host"
+                  ]
+                }
+              },
+              "url": {
+                "type": "string",
+                "pattern": "^https:\\/\\/[^\\s\"']+$"
+              }
+            },
+            "required": [
+              "name",
+              "roles"
+            ]
+          }
+        },
+        "tier": {
+          "type": "string",
+          "const": "free"
+        },
+        "illustrative": {
+          "type": "boolean"
+        },
+        "filled": {
+          "type": "boolean"
+        },
+        "sourceUrl": {
+          "type": "string",
+          "pattern": "^https:\\/\\/[^\\s\"']+$"
+        },
+        "postProcess": {
+          "type": "string"
+        },
+        "lineage": {
+          "type": "object",
+          "properties": {
+            "status": {
+              "type": "string"
+            },
+            "downloadUrl": {
+              "type": "string",
+              "pattern": "^https:\\/\\/[^\\s\"']+$"
+            },
+            "sourcePage": {
+              "type": "string",
+              "pattern": "^https:\\/\\/[^\\s\"']+$"
+            },
+            "projection": {
+              "type": "string"
+            },
+            "sourceResolution": {
+              "type": "string"
+            },
+            "maxQuality": {
+              "type": "string"
+            },
+            "outputBase": {
+              "type": "string"
+            },
+            "license": {
+              "type": "string"
+            },
+            "credit": {
+              "type": "string"
+            },
+            "tier": {
+              "type": "string"
+            },
+            "importNote": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "status",
+            "downloadUrl",
+            "sourcePage",
+            "projection",
+            "sourceResolution",
+            "maxQuality",
+            "outputBase",
+            "license",
+            "credit"
+          ],
+          "additionalProperties": false
+        },
+        "review": {
+          "type": "object",
+          "properties": {
+            "status": {
+              "type": "string"
+            },
+            "sourcePage": {
+              "type": "string",
+              "pattern": "^(https:\\/\\/[^\\s\"']+|scripts\\/[a-z0-9-]+\\.mjs)$"
+            },
+            "sourceResolution": {
+              "type": "string"
+            },
+            "projection": {
+              "type": "string"
+            },
+            "qualityClass": {
+              "type": "string"
+            },
+            "note": {
+              "type": "string"
+            },
+            "processing": {
+              "type": "string"
+            },
+            "downloadUrl": {
+              "type": "string",
+              "pattern": "^https:\\/\\/[^\\s\"']+$"
+            },
+            "license": {
+              "type": "string"
+            },
+            "credit": {
+              "type": "string"
+            },
+            "attributionNeeded": {
+              "type": "boolean"
+            },
+            "provenanceNote": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "status"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "id",
+        "type",
+        "body",
+        "layer",
+        "shipped",
+        "license",
+        "providers",
+        "tier",
+        "review"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "$schema": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+        },
+        "type": {
+          "type": "string",
+          "const": "texture"
+        },
+        "body": {
+          "type": "string",
+          "pattern": "^[a-z0-9]+$"
+        },
+        "layer": {
+          "type": "string",
+          "pattern": "^[a-z][A-Za-z0-9]*$"
+        },
+        "shipped": {
+          "type": "boolean",
+          "const": false
+        },
+        "review": {
+          "type": "object",
+          "properties": {
+            "status": {
+              "type": "string"
+            },
+            "sourcePage": {
+              "type": "string",
+              "pattern": "^(https:\\/\\/[^\\s\"']+|scripts\\/[a-z0-9-]+\\.mjs)$"
+            },
+            "sourceResolution": {
+              "type": "string"
+            },
+            "projection": {
+              "type": "string"
+            },
+            "qualityClass": {
+              "type": "string"
+            },
+            "note": {
+              "type": "string"
+            },
+            "processing": {
+              "type": "string"
+            },
+            "downloadUrl": {
+              "type": "string",
+              "pattern": "^https:\\/\\/[^\\s\"']+$"
+            },
+            "license": {
+              "type": "string"
+            },
+            "credit": {
+              "type": "string"
+            },
+            "attributionNeeded": {
+              "type": "boolean"
+            },
+            "provenanceNote": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "status"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "id",
+        "type",
+        "body",
+        "layer",
+        "shipped",
+        "review"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "$schema": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+        },
+        "type": {
+          "type": "string",
+          "const": "ephemeris-collection"
+        },
+        "manifest": {
+          "type": "string",
+          "pattern": "^assets\\/[a-z0-9/._-]+\\.json$"
+        },
+        "providerId": {
+          "type": "string",
+          "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+        },
+        "license": {
+          "type": "string",
+          "pattern": "^(other|[A-Za-z0-9.+-]+(\\s+(AND|OR|WITH)\\s+[A-Za-z0-9.+-]+)*)$"
+        },
+        "rights": {
+          "type": "string",
+          "enum": [
+            "public-domain",
+            "generated",
+            "unreviewed"
+          ]
+        },
+        "links": {
+          "minItems": 1,
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "rel": {
+                "type": "string",
+                "enum": [
+                  "license",
+                  "via",
+                  "describedby"
+                ]
+              },
+              "href": {
+                "type": "string",
+                "pattern": "^https:\\/\\/[^\\s\"']+$"
+              }
+            },
+            "required": [
+              "rel",
+              "href"
+            ]
+          }
+        },
+        "providers": {
+          "minItems": 1,
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "minLength": 1
+              },
+              "roles": {
+                "minItems": 1,
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "licensor",
+                    "producer",
+                    "processor",
+                    "host"
+                  ]
+                }
+              },
+              "url": {
+                "type": "string",
+                "pattern": "^https:\\/\\/[^\\s\"']+$"
+              }
+            },
+            "required": [
+              "name",
+              "roles"
+            ]
+          }
+        },
+        "generatedBy": {
+          "type": "string",
+          "pattern": "^scripts\\/[a-z0-9-]+\\.mjs$"
+        }
+      },
+      "required": [
+        "id",
+        "type",
+        "manifest",
+        "providerId",
+        "license",
+        "rights",
+        "links",
+        "providers",
+        "generatedBy"
+      ],
+      "additionalProperties": false
+    }
+  ]
+}

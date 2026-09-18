@@ -1,0 +1,38 @@
+{
+  "$schema": "../../schema/product.schema.json",
+  "id": "haumea-surface",
+  "type": "texture",
+  "body": "haumea",
+  "layer": "surface",
+  "shipped": true,
+  "license": "CC-BY-4.0",
+  "links": [
+    {
+      "rel": "license",
+      "href": "https://creativecommons.org/licenses/by/4.0/"
+    }
+  ],
+  "providers": [
+    {
+      "name": "Solar System Scope (solarsystemscope.com)",
+      "roles": [
+        "licensor",
+        "producer"
+      ]
+    }
+  ],
+  "tier": "free",
+  "illustrative": true,
+  "review": {
+    "status": "unresolved",
+    "sourcePage": "https://fdp.astrogeology.usgs.gov/fdp/smallbodies/",
+    "sourceResolution": "no resolved global surface map",
+    "projection": "unknown",
+    "qualityClass": "illustrative",
+    "note": "Distant rapidly rotating body; current map is illustrative.",
+    "license": "unconfirmed",
+    "credit": "unconfirmed",
+    "attributionNeeded": true,
+    "provenanceNote": "No spacecraft map exists — texture is necessarily fictional. Likely community source (e.g. planet-texture-map.fandom.com, CC BY-NC-SA). Record exact author + licence or replace before commercial reuse."
+  }
+}

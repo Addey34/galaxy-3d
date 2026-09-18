@@ -340,6 +340,12 @@ function bodyLandingPages() {
         const sourcesSeo = (await loader.ssrLoadModule(
           '/src/seo/sourcesPage.ts'
         )) as typeof import('./src/seo/sourcesPage');
+        // Provenance des textures : le registre `src/registry/products/` (lot 7, phase 2), qui
+        // a absorbé l'ancien `scripts/texture-sources.json`. Chargé comme le reste, jamais
+        // recopié.
+        const productRegistry = (await loader.ssrLoadModule(
+          '/src/registry/products/index.ts'
+        )) as typeof import('./src/registry/products/index');
         const readJson = async <T>(path: string): Promise<T> =>
           JSON.parse(await readFile(resolve(__dirname, path), 'utf-8')) as T;
         const manifest = await readJson<
@@ -380,18 +386,16 @@ function bodyLandingPages() {
           throw new Error('CITATION.cff : repository-code introuvable');
         const docPages = [
           ...methodologySeo.methodologyPages({
-            summary: await readJson('src/config/horizons-validation-summary.json'),
+            summary: await readJson(
+              'src/config/horizons-validation-summary.json'
+            ),
             manifest,
             config: catalogue.CELESTIAL_CONFIG,
             origin: SITE_ORIGIN,
           }),
           ...sourcesSeo.sourcesPages({
             config: catalogue.CELESTIAL_CONFIG,
-            textures: (
-              await readJson<{
-                imported: import('./src/seo/sourcesPage').TextureProvenance[];
-              }>('scripts/texture-sources.json')
-            ).imported,
+            textures: productRegistry.shippedTextures(),
             manifest,
             dependencies,
             notices: await readFile(

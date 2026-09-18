@@ -99,7 +99,7 @@ export interface ModelConfig {
   resolutions: readonly ModelQuality[];
   /**
    * Crédit à afficher. Obligatoire : un maillage tiers sans provenance ne doit pas entrer dans
-   * le dépôt (`scripts/texture-sources.json` tient la même règle pour les textures).
+   * le dépôt (le registre `src/registry/products/` tient la même règle pour les textures).
    */
   credit: LocalizedText;
   /**

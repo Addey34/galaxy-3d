@@ -1,0 +1,35 @@
+{
+  "$schema": "../../schema/product.schema.json",
+  "id": "mercury-surface",
+  "type": "texture",
+  "body": "mercury",
+  "layer": "surface",
+  "shipped": true,
+  "license": "CC-BY-4.0",
+  "links": [
+    {
+      "rel": "license",
+      "href": "https://creativecommons.org/licenses/by/4.0/"
+    }
+  ],
+  "providers": [
+    {
+      "name": "Solar System Scope (solarsystemscope.com)",
+      "roles": [
+        "licensor",
+        "producer"
+      ]
+    }
+  ],
+  "tier": "free",
+  "review": {
+    "status": "manual",
+    "processing": "gdal-required",
+    "sourcePage": "https://astrogeology.usgs.gov/search/map/mercury_messenger_mdis_global_basemap_bdr_166m",
+    "downloadUrl": "https://planetarymaps.usgs.gov/mosaic/Mercury_MESSENGER_MDIS_Basemap_BDR_Mosaic_Global_166m.tif",
+    "sourceResolution": "166 m/pixel",
+    "projection": "equirectangular",
+    "qualityClass": "native-candidate",
+    "note": "Best global monochrome MESSENGER basemap; 4 GB source, requires offline conversion."
+  }
+}

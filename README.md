@@ -420,8 +420,8 @@ pas ici : elle périmerait. Chaque corps a sa page (`/{corps}/`), et
 provenance de chaque texture et modèle, la source de position de chaque corps et son erreur
 mesurée. Les textures suivent le schéma `public/assets/textures/{body}/{body}_{layer}_{quality}.jpg`
 (snake_case, chemin dérivé de la clé du corps) ; le repli coloré reste disponible si un asset
-manque au chargement. Les provenances sont tracées dans `scripts/texture-sources.json`
-(bloc `imported`).
+manque au chargement. Les provenances sont tracées dans `src/registry/products/textures/`
+(une fiche par couche).
 Bennu, Éros, Itokawa, Ryugu et Ida portent leur vrai modèle de forme de mission, décimé pour le
 web, à l'échelle de leur volume réel.
 Les trois objets interstellaires (1I/ʻOumuamua, 2I/Borisov, 3I/ATLAS) sont traces en couche

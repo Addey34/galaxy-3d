@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest';
 import { allBodies, ringTexturePath } from './catalog';
 import { CELESTIAL_CONFIG } from './bodies';
 import type { TextureQuality, TextureResolutions } from '@/types';
-import sourceManifest from '../../scripts/texture-sources.json';
+import { textureReviews } from '@/registry/products';
 
 const PROJECT_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
 const TEXTURE_ROOT = join(PROJECT_ROOT, 'public/assets/textures');
@@ -39,9 +39,9 @@ function assertQualityChain(
 }
 
 const REVIEW_KEYS = new Set(
-  sourceManifest.reviews.map((review) => `${review.body}/${review.layer}`)
+  textureReviews().map((review) => `${review.body}/${review.layer}`)
 );
-const PROCESSABLE_REVIEWS = sourceManifest.reviews.filter(
+const PROCESSABLE_REVIEWS = textureReviews().filter(
   (review) => review.processing !== undefined
 );
 

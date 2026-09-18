@@ -1,0 +1,33 @@
+{
+  "$schema": "../../schema/product.schema.json",
+  "id": "sun-surface",
+  "type": "texture",
+  "body": "sun",
+  "layer": "surface",
+  "shipped": true,
+  "license": "CC-BY-4.0",
+  "links": [
+    {
+      "rel": "license",
+      "href": "https://creativecommons.org/licenses/by/4.0/"
+    }
+  ],
+  "providers": [
+    {
+      "name": "Solar System Scope (solarsystemscope.com)",
+      "roles": [
+        "licensor",
+        "producer"
+      ]
+    }
+  ],
+  "tier": "free",
+  "review": {
+    "status": "reference",
+    "sourcePage": "https://sdo.gsfc.nasa.gov/data/",
+    "sourceResolution": "dynamic solar imagery, no fixed global albedo map",
+    "projection": "not-applicable",
+    "qualityClass": "dynamic",
+    "note": "The photosphere changes; use a scientific solar visualization rather than a static surface claim."
+  }
+}

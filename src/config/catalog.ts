@@ -15,7 +15,7 @@ import type {
  * Corps dont la texture de surface est **illustrative**, pas une mosaïque scientifique fidèle
  * (aucune image de sonde résolue n'existe, ou noyau irrégulier approximé en sphère). Source de
  * vérité côté app pour le badge « surface fictive » de la fiche d'info et les crédits. Doit
- * rester aligné avec les entrées `illustrative: true` de `scripts/texture-sources.json`.
+ * rester aligné avec les entrées `illustrative: true` du registre `src/registry/products/`.
  */
 export const ILLUSTRATIVE_SURFACES: ReadonlySet<string> = new Set([
   'ceres',

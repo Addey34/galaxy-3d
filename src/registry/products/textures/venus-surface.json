@@ -1,0 +1,35 @@
+{
+  "$schema": "../../schema/product.schema.json",
+  "id": "venus-surface",
+  "type": "texture",
+  "body": "venus",
+  "layer": "surface",
+  "shipped": true,
+  "license": "CC-BY-4.0",
+  "links": [
+    {
+      "rel": "license",
+      "href": "https://creativecommons.org/licenses/by/4.0/"
+    }
+  ],
+  "providers": [
+    {
+      "name": "Solar System Scope (solarsystemscope.com)",
+      "roles": [
+        "licensor",
+        "producer"
+      ]
+    }
+  ],
+  "tier": "free",
+  "review": {
+    "status": "manual",
+    "processing": "gdal-required",
+    "sourcePage": "https://astrogeology.usgs.gov/search/map/venus_magellan_sar_fmap_left_look_global_mosaic_75m",
+    "downloadUrl": "https://asc-pds-services.s3.us-west-2.amazonaws.com/mosaic/Venus_Magellan_LeftLook_mosaic_global_75m.tif",
+    "sourceResolution": "75 m/pixel",
+    "projection": "equirectangular",
+    "qualityClass": "native-candidate",
+    "note": "Highest-resolution global radar mosaic, about 92% coverage; not optical true color and 109 GB source."
+  }
+}

@@ -532,7 +532,7 @@ export const CELESTIAL_CONFIG: CelestialConfig = {
           },
           // Aucune mosaïque photo globale contrôlée n'existe côté USGS pour Amalthea (imagée
           // partiellement par Galileo, jamais assemblée en carte globale contrôlée) — vérifié
-          // en direct (2026-08-26). Texture procédurale générée (voir texture-sources.json).
+          // en direct (2026-08-26). Texture procédurale générée (voir registry/products/textures).
           textureResolutions: { surface: ['2k'] },
           realData: {
             sources: {
@@ -1147,7 +1147,7 @@ export const CELESTIAL_CONFIG: CelestialConfig = {
           },
           // Aucune mosaïque photo globale contrôlée n'existe côté USGS pour Mimas (seulement
           // relief ombré et carte picturale, pas une texture réelle) — vérifié en direct
-          // (2026-08-26, voir scripts/texture-sources.json). Texture procédurale générée,
+          // (2026-08-26, voir src/registry/products/textures/). Texture procédurale générée,
           // paramétrée sur le cratère Herschel réel (~1/3 du diamètre, pic central).
           textureResolutions: { surface: ['2k'] },
           realData: {
@@ -1342,7 +1342,7 @@ export const CELESTIAL_CONFIG: CelestialConfig = {
           },
           // Aucune mosaïque globale : Hyperion est trop irrégulier (éponge poreuse
           // ~180×133×103 km) pour qu'une "carte globale" ait vraiment un sens — vérifié en
-          // direct (2026-08-26, voir texture-sources.json). Texture procédurale générée,
+          // direct (2026-08-26, voir registry/products/textures). Texture procédurale générée,
           // paramétrée sur son aspect "éponge" réel (cratères denses, sans bourrelet d'éjecta).
           textureResolutions: { surface: ['2k'] },
           realData: {
@@ -1463,7 +1463,7 @@ export const CELESTIAL_CONFIG: CelestialConfig = {
           },
           // Aucune mosaïque globale contrôlée : Voyager 2 (survol unique, 1986) n'a imagé en
           // détail qu'environ la moitié de Miranda — vérifié en direct (2026-08-26, voir
-          // texture-sources.json). Texture procédurale générée, avec de larges plages de
+          // registry/products/textures). Texture procédurale générée, avec de larges plages de
           // terrain distinct approximant ses coronae réelles (Inverness/Arden/Elsinore).
           textureResolutions: { surface: ['2k'] },
           realData: {
@@ -1528,7 +1528,7 @@ export const CELESTIAL_CONFIG: CelestialConfig = {
             epoch: new Date('2025-12-31T00:00:00.000Z'),
           },
           // Aucune mosaïque globale contrôlée n'existe côté USGS pour Ariel — vérifié en direct
-          // (2026-08-26, voir texture-sources.json). Texture procédurale générée : peu de
+          // (2026-08-26, voir registry/products/textures). Texture procédurale générée : peu de
           // grands cratères + beaucoup de petits (Voyager 2 imaging science, 1986).
           textureResolutions: { surface: ['2k'] },
           realData: {
@@ -1593,7 +1593,7 @@ export const CELESTIAL_CONFIG: CelestialConfig = {
             epoch: new Date('2025-12-31T00:00:00.000Z'),
           },
           // Aucune mosaïque globale contrôlée n'existe côté USGS pour Umbriel — vérifié en
-          // direct (2026-08-26, voir texture-sources.json). Texture procédurale générée, avec
+          // direct (2026-08-26, voir registry/products/textures). Texture procédurale générée, avec
           // un unique point clair approximant le cratère Wunda réel (plancher/parois clairs,
           // pôle nord).
           textureResolutions: { surface: ['2k'] },
@@ -1659,7 +1659,7 @@ export const CELESTIAL_CONFIG: CelestialConfig = {
             epoch: new Date('2025-12-31T00:00:00.000Z'),
           },
           // Aucune mosaïque globale contrôlée n'existe côté USGS pour Titania — vérifié en
-          // direct (2026-08-26, voir texture-sources.json). Texture procédurale générée
+          // direct (2026-08-26, voir registry/products/textures). Texture procédurale générée
           // (cratérisation modérée seule — le générateur ne modélise pas les réseaux de
           // canyons comme Messina Chasma, voir le commentaire sur cette limite dans
           // scripts/generate-procedural-textures.mjs).
@@ -1726,7 +1726,7 @@ export const CELESTIAL_CONFIG: CelestialConfig = {
             epoch: new Date('2025-12-31T00:00:00.000Z'),
           },
           // Aucune mosaïque globale contrôlée n'existe côté USGS pour Obéron — vérifié en
-          // direct (2026-08-26, voir texture-sources.json). Texture procédurale générée :
+          // direct (2026-08-26, voir registry/products/textures). Texture procédurale générée :
           // surface sombre, cratérisation dense avec quelques grands bassins à pic central.
           textureResolutions: { surface: ['2k'] },
           realData: {

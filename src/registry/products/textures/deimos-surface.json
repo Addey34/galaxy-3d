@@ -1,0 +1,35 @@
+{
+  "$schema": "../../schema/product.schema.json",
+  "id": "deimos-surface",
+  "type": "texture",
+  "body": "deimos",
+  "layer": "surface",
+  "shipped": true,
+  "license": "other",
+  "rights": "public-domain",
+  "links": [
+    {
+      "rel": "license",
+      "href": "https://www.nasa.gov/nasa-brand-center/images-and-media/"
+    }
+  ],
+  "providers": [
+    {
+      "name": "NASA 3D Resources (Viking-derived)",
+      "roles": [
+        "producer"
+      ]
+    }
+  ],
+  "tier": "free",
+  "review": {
+    "status": "ready",
+    "processing": "direct-jpeg-sample",
+    "downloadUrl": "https://assets.science.nasa.gov/content/dam/science/cds/3d/resources/image/mars---deimos/Mars%20-%20Deimos.jpg",
+    "sourcePage": "https://science.nasa.gov/3d-resources/mars-deimos/",
+    "sourceResolution": "NASA Viking-derived JPEG texture",
+    "projection": "equirectangular",
+    "qualityClass": "derived",
+    "note": "NASA-published Deimos texture used at its native resolution; no artificial upscaling."
+  }
+}

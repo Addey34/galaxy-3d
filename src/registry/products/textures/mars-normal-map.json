@@ -1,0 +1,16 @@
+{
+  "$schema": "../../schema/product.schema.json",
+  "id": "mars-normal-map",
+  "type": "texture",
+  "body": "mars",
+  "layer": "normalMap",
+  "shipped": false,
+  "review": {
+    "status": "reference",
+    "sourcePage": "https://astrogeology.usgs.gov/search",
+    "sourceResolution": "MOLA/mission DEM products",
+    "projection": "equirectangular",
+    "qualityClass": "derived-candidate",
+    "note": "Needs a validated global elevation source and a linear height-to-normal conversion."
+  }
+}

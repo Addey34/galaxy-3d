@@ -1,0 +1,33 @@
+{
+  "$schema": "../../schema/product.schema.json",
+  "id": "saturn-surface",
+  "type": "texture",
+  "body": "saturn",
+  "layer": "surface",
+  "shipped": true,
+  "license": "CC-BY-4.0",
+  "links": [
+    {
+      "rel": "license",
+      "href": "https://creativecommons.org/licenses/by/4.0/"
+    }
+  ],
+  "providers": [
+    {
+      "name": "Solar System Scope (solarsystemscope.com)",
+      "roles": [
+        "licensor",
+        "producer"
+      ]
+    }
+  ],
+  "tier": "free",
+  "review": {
+    "status": "reference",
+    "sourcePage": "https://maps.jpl.nasa.gov/tmaps/",
+    "sourceResolution": "representative atmospheric map",
+    "projection": "equirectangular",
+    "qualityClass": "dynamic",
+    "note": "JPL explicitly treats gas-giant maps as representative, not scientific static surfaces."
+  }
+}

@@ -85,7 +85,7 @@ la meilleure résolution **réellement disponible dans la source** — jamais un
 présentée comme native, `pnpm textures:audit` le détecte).
 
 **Recherche de licence obligatoire avant tout import** : documentez la source dans
-`scripts/texture-sources.json` (provenance, licence, lien). Si aucune mosaïque photo réelle
+`src/registry/products/textures/` (une fiche par couche : provenance, licence, lien). Si aucune mosaïque photo réelle
 n'existe pour ce corps (fréquent pour les petites lunes/astéroïdes), deux options honnêtes :
 
 - `fallbackColor` (une couleur unie, pas d'invention de relief) ; ou

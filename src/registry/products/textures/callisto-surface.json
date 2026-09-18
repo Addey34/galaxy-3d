@@ -1,0 +1,47 @@
+{
+  "$schema": "../../schema/product.schema.json",
+  "id": "callisto-surface",
+  "type": "texture",
+  "body": "callisto",
+  "layer": "surface",
+  "shipped": true,
+  "license": "other",
+  "rights": "public-domain",
+  "links": [
+    {
+      "rel": "license",
+      "href": "https://www.usgs.gov/information-policies-and-instructions/copyrights-and-credits"
+    }
+  ],
+  "providers": [
+    {
+      "name": "USGS Astrogeology / NASA Galileo SSI & Voyager",
+      "roles": [
+        "producer"
+      ]
+    }
+  ],
+  "tier": "free",
+  "filled": true,
+  "lineage": {
+    "status": "ready",
+    "downloadUrl": "https://planetarymaps.usgs.gov/mosaic/Callisto_Voyager_GalileoSSI_global_mosaic_1km.tif",
+    "sourcePage": "https://astrogeology.usgs.gov/search/map/callisto_galileo_voyager_global_mosaic_1km",
+    "projection": "equirectangular",
+    "sourceResolution": "1 km/pixel; TIFF source 15138x7569 (V1)",
+    "maxQuality": "8k",
+    "outputBase": "callisto/callistoSurface",
+    "license": "public-domain",
+    "credit": "USGS Astrogeology Science Center, Galileo SSI and Voyager",
+    "tier": "free",
+    "importNote": "Importé depuis le TIFF USGS via scripts/import-textures.mjs (8k/4k/2k/1k). Trou non-imagé au pôle sud (~3.5%) conservé; option fillHoles disponible. Version fictive Askaniy (CC BY-NC, 1920px) écartée: plus basse résolution que le réel."
+  },
+  "review": {
+    "status": "verified-ready",
+    "sourcePage": "https://astrogeology.usgs.gov/search/map/callisto_galileo_voyager_global_mosaic_1km",
+    "sourceResolution": "1 km/pixel",
+    "projection": "equirectangular",
+    "qualityClass": "native",
+    "note": "Imported through the validated fetch pipeline."
+  }
+}

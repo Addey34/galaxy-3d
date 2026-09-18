@@ -287,7 +287,7 @@ La qualite est classee ainsi :
 - approximative : largeur historique proche d'un palier (par exemple 3674 px ou 4000 px), conservee sans upscale ;
 - a verifier : provenance ou projection non documentee.
 
-Une texture ne doit pas etre remplacee par la premiere image trouvee sur le Web. Le manifeste `scripts/texture-sources.json` doit contenir la page officielle, le telechargement, la projection, la resolution native, la licence et le credit. Les mosaïques USGS/NASA sont privilegiees ; les sources trop volumineuses ou non equirectangulaires doivent etre reprojetees et traitees hors du pipeline avant import.
+Une texture ne doit pas etre remplacee par la premiere image trouvee sur le Web. La fiche de la couche dans `src/registry/products/textures/` doit contenir la page officielle, le telechargement, la projection, la resolution native, la licence et le credit. Les mosaïques USGS/NASA sont privilegiees ; les sources trop volumineuses ou non equirectangulaires doivent etre reprojetees et traitees hors du pipeline avant import.
 
 ## 7. Sources volumineuses et import local
 

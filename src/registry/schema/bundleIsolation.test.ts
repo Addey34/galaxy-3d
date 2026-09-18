@@ -38,6 +38,14 @@ const VALUE_IMPORT_SCHEMA =
   /(?:^|[\s;}])import\s+(?!type\s)[^;]*?from\s*['"](?:@\/registry\/schema\/|\.{1,2}\/(?:\.\.\/)*schema\/)|import\s*\(\s*['"](?:@\/registry\/schema\/|\.{1,2}\/(?:\.\.\/)*schema\/)/;
 
 /**
+ * Import du registre des PRODUITS. Il lit ses 63 fiches par un glob et ne sert qu'au build et aux
+ * tests (`seo/sourcesPage.ts` par `vite.config.ts`) : importé par l'application, il embarquerait
+ * les journaux d'audit de toutes les textures chez chaque visiteur.
+ */
+const APP_IMPORT_PRODUCTS =
+  /(?:^|[\s;}])import\s+(?!type\s)[^;]*?from\s*['"](?:@\/registry\/products|\.{1,2}\/(?:\.\.\/)*products)(?:\/index)?['"]|import\s*\(\s*['"](?:@\/registry\/products|\.{1,2}\/(?:\.\.\/)*products)/;
+
+/**
  * Les commentaires sont retirés AVANT l'analyse. Sans cela, le mot « import » écrit dans une
  * phrase de documentation servait d'amorce et le motif enjambait jusqu'à l'`import type` suivant :
  * `providers/index.ts` était accusé à tort, alors qu'il fait exactement ce qu'il faut. Trouvé en
@@ -90,6 +98,11 @@ describe('isolation de zod', () => {
         guilty.push(`${relative(SRC, file)} (zod)`);
       if (VALUE_IMPORT_SCHEMA.test(source))
         guilty.push(`${relative(SRC, file)} (registry/schema)`);
+      if (
+        !file.includes(join('registry', 'products')) &&
+        APP_IMPORT_PRODUCTS.test(source)
+      )
+        guilty.push(`${relative(SRC, file)} (registry/products)`);
     }
     expect(
       guilty,
@@ -105,9 +118,12 @@ describe('isolation de zod', () => {
       `const { z } = await import('zod');`,
       `import { providerSchema } from '../schema/provider';`,
       `import { providerSchema } from '@/registry/schema/provider';`,
+      `import { shippedTextures } from '@/registry/products';`,
     ]) {
       expect(
-        VALUE_IMPORT_ZOD.test(line) || VALUE_IMPORT_SCHEMA.test(line),
+        VALUE_IMPORT_ZOD.test(line) ||
+          VALUE_IMPORT_SCHEMA.test(line) ||
+          APP_IMPORT_PRODUCTS.test(line),
         `non détecté : ${line}`
       ).toBe(true);
     }

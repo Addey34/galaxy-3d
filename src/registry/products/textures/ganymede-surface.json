@@ -1,0 +1,45 @@
+{
+  "$schema": "../../schema/product.schema.json",
+  "id": "ganymede-surface",
+  "type": "texture",
+  "body": "ganymede",
+  "layer": "surface",
+  "shipped": true,
+  "license": "other",
+  "rights": "public-domain",
+  "links": [
+    {
+      "rel": "license",
+      "href": "https://www.usgs.gov/information-policies-and-instructions/copyrights-and-credits"
+    }
+  ],
+  "providers": [
+    {
+      "name": "USGS Astrogeology / NASA Voyager & Galileo",
+      "roles": [
+        "producer"
+      ]
+    }
+  ],
+  "tier": "free",
+  "filled": true,
+  "lineage": {
+    "status": "ready",
+    "downloadUrl": "https://planetarymaps.usgs.gov/mosaic/Ganymede_Voyager_GalileoSSI_global_mosaic_1km.tif",
+    "sourcePage": "https://astrogeology.usgs.gov/search/map/ganymede_voyager_galileo_global_mosaic_mercator",
+    "projection": "equirectangular",
+    "sourceResolution": "2 km/pixel",
+    "maxQuality": "2k",
+    "outputBase": "ganymede/ganymedeSurface",
+    "license": "public-domain",
+    "credit": "USGS Astrogeology Science Center, Galileo SSI and Voyager"
+  },
+  "review": {
+    "status": "verified-ready",
+    "sourcePage": "https://astrogeology.usgs.gov/search/map/ganymede_voyager_galileo_global_mosaic_mercator",
+    "sourceResolution": "1 km/pixel",
+    "projection": "equirectangular",
+    "qualityClass": "native",
+    "note": "Imported through the validated fetch pipeline."
+  }
+}

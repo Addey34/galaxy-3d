@@ -1,0 +1,36 @@
+{
+  "$schema": "../../schema/product.schema.json",
+  "id": "triton-surface",
+  "type": "texture",
+  "body": "triton",
+  "layer": "surface",
+  "shipped": true,
+  "license": "other",
+  "rights": "public-domain",
+  "links": [
+    {
+      "rel": "license",
+      "href": "https://www.usgs.gov/information-policies-and-instructions/copyrights-and-credits"
+    }
+  ],
+  "providers": [
+    {
+      "name": "USGS Astrogeology / NASA Voyager 2 (ClrMosaic)",
+      "roles": [
+        "producer"
+      ]
+    }
+  ],
+  "tier": "free",
+  "filled": true,
+  "review": {
+    "status": "ready",
+    "processing": "direct-jpeg-sample",
+    "downloadUrl": "https://astrogeology.usgs.gov/ckan/dataset/445b4c39-e87a-4e4d-88a8-e48d8e755c5c/resource/de0ba9f1-3034-4e5f-a99a-3201fba9a764/download/triton_voyager2_clrmosaic_1024.jpg",
+    "sourcePage": "https://astrogeology.usgs.gov/search/map/triton_voyager_2_global_color_mosaic_600m",
+    "sourceResolution": "600 m/pixel global mosaic; official 1024 px viewer sample",
+    "projection": "equirectangular",
+    "qualityClass": "derived",
+    "note": "Official Voyager 2 global color mosaic preview from USGS; kept at its native preview size without artificial upscaling."
+  }
+}

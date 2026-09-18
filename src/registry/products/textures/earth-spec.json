@@ -1,0 +1,33 @@
+{
+  "$schema": "../../schema/product.schema.json",
+  "id": "earth-spec",
+  "type": "texture",
+  "body": "earth",
+  "layer": "spec",
+  "shipped": true,
+  "license": "other",
+  "rights": "public-domain",
+  "links": [
+    {
+      "rel": "license",
+      "href": "https://www.nasa.gov/nasa-brand-center/images-and-media/"
+    }
+  ],
+  "providers": [
+    {
+      "name": "NASA Visible Earth (land/ocean mask)",
+      "roles": [
+        "producer"
+      ]
+    }
+  ],
+  "tier": "free",
+  "review": {
+    "status": "derived",
+    "sourcePage": "https://visibleearth.nasa.gov/images/57723/the-blue-marble",
+    "sourceResolution": "land/ocean mask derived from authoritative surface data",
+    "projection": "equirectangular",
+    "qualityClass": "derived",
+    "note": "Specular response is a rendering mask, not a spacecraft texture."
+  }
+}

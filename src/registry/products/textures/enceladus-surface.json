@@ -1,0 +1,46 @@
+{
+  "$schema": "../../schema/product.schema.json",
+  "id": "enceladus-surface",
+  "type": "texture",
+  "body": "enceladus",
+  "layer": "surface",
+  "shipped": true,
+  "license": "other",
+  "rights": "public-domain",
+  "links": [
+    {
+      "rel": "license",
+      "href": "https://www.usgs.gov/information-policies-and-instructions/copyrights-and-credits"
+    }
+  ],
+  "providers": [
+    {
+      "name": "USGS Astrogeology / NASA Cassini",
+      "roles": [
+        "producer"
+      ]
+    }
+  ],
+  "tier": "free",
+  "lineage": {
+    "status": "ready",
+    "downloadUrl": "https://astrogeology.usgs.gov/ckan/dataset/30bff65e-56bb-4fd1-bd04-edd9bc2e77d0/resource/19ba2e14-9ceb-45e6-8cc8-e784e36ed4f0/download/full.jpg",
+    "sourcePage": "https://astrogeology.usgs.gov/search/map/enceladus_cassini_global_mosaic_110m",
+    "projection": "equirectangular",
+    "sourceResolution": "110 m/pixel; official JPEG preview",
+    "maxQuality": "1k",
+    "outputBase": "enceladus/enceladusSurface",
+    "license": "public-domain",
+    "credit": "USGS Astrogeology Science Center, Cassini/JPL/SSI"
+  },
+  "review": {
+    "status": "ready",
+    "processing": "direct-jpeg-sample",
+    "downloadUrl": "https://astrogeology.usgs.gov/ckan/dataset/30bff65e-56bb-4fd1-bd04-edd9bc2e77d0/resource/19ba2e14-9ceb-45e6-8cc8-e784e36ed4f0/download/full.jpg",
+    "sourcePage": "https://astrogeology.usgs.gov/search/map/enceladus_cassini_global_mosaic_110m",
+    "sourceResolution": "110 m/pixel global mosaic; official JPEG preview",
+    "projection": "equirectangular",
+    "qualityClass": "derived",
+    "note": "Official Cassini global mosaic preview from USGS; kept at its native preview size without artificial upscaling."
+  }
+}

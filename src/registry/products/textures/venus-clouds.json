@@ -1,0 +1,33 @@
+{
+  "$schema": "../../schema/product.schema.json",
+  "id": "venus-clouds",
+  "type": "texture",
+  "body": "venus",
+  "layer": "clouds",
+  "shipped": true,
+  "license": "CC-BY-4.0",
+  "links": [
+    {
+      "rel": "license",
+      "href": "https://creativecommons.org/licenses/by/4.0/"
+    }
+  ],
+  "providers": [
+    {
+      "name": "Solar System Scope (solarsystemscope.com)",
+      "roles": [
+        "licensor",
+        "producer"
+      ]
+    }
+  ],
+  "tier": "free",
+  "review": {
+    "status": "reference",
+    "sourcePage": "https://www.jpl.nasa.gov/images/pia00271-magellan-mission-to-venus/",
+    "sourceResolution": "dynamic cloud/atmosphere imagery",
+    "projection": "not-confirmed",
+    "qualityClass": "dynamic",
+    "note": "Atmosphere should be represented as a cloud/haze layer, not confused with surface radar."
+  }
+}

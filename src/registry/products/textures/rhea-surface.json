@@ -1,0 +1,46 @@
+{
+  "$schema": "../../schema/product.schema.json",
+  "id": "rhea-surface",
+  "type": "texture",
+  "body": "rhea",
+  "layer": "surface",
+  "shipped": true,
+  "license": "other",
+  "rights": "public-domain",
+  "links": [
+    {
+      "rel": "license",
+      "href": "https://www.usgs.gov/information-policies-and-instructions/copyrights-and-credits"
+    }
+  ],
+  "providers": [
+    {
+      "name": "USGS Astrogeology / NASA Cassini & Voyager",
+      "roles": [
+        "producer"
+      ]
+    }
+  ],
+  "tier": "free",
+  "lineage": {
+    "status": "ready",
+    "downloadUrl": "https://astrogeology.usgs.gov/ckan/dataset/22bc1015-d9c9-4212-86c3-e42061b204d4/resource/77fa77f8-6d6b-4072-9360-17138caa6e7d/download/full.jpg",
+    "sourcePage": "https://astrogeology.usgs.gov/search/map/rhea_cassini_voyager_global_mosaic_417m",
+    "projection": "equirectangular",
+    "sourceResolution": "417 m/pixel; official JPEG preview",
+    "maxQuality": "1k",
+    "outputBase": "rhea/rheaSurface",
+    "license": "public-domain",
+    "credit": "USGS Astrogeology Science Center, Cassini and Voyager"
+  },
+  "review": {
+    "status": "ready",
+    "processing": "direct-jpeg-sample",
+    "downloadUrl": "https://astrogeology.usgs.gov/ckan/dataset/22bc1015-d9c9-4212-86c3-e42061b204d4/resource/77fa77f8-6d6b-4072-9360-17138caa6e7d/download/full.jpg",
+    "sourcePage": "https://astrogeology.usgs.gov/search/map/rhea_cassini_voyager_global_mosaic_417m",
+    "sourceResolution": "417 m/pixel global mosaic; official JPEG preview",
+    "projection": "equirectangular",
+    "qualityClass": "derived",
+    "note": "Official Cassini/Voyager global mosaic preview from USGS; kept at its native preview size without artificial upscaling."
+  }
+}

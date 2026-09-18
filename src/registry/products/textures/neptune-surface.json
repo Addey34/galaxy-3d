@@ -1,0 +1,33 @@
+{
+  "$schema": "../../schema/product.schema.json",
+  "id": "neptune-surface",
+  "type": "texture",
+  "body": "neptune",
+  "layer": "surface",
+  "shipped": true,
+  "license": "CC-BY-4.0",
+  "links": [
+    {
+      "rel": "license",
+      "href": "https://creativecommons.org/licenses/by/4.0/"
+    }
+  ],
+  "providers": [
+    {
+      "name": "Solar System Scope (solarsystemscope.com)",
+      "roles": [
+        "licensor",
+        "producer"
+      ]
+    }
+  ],
+  "tier": "free",
+  "review": {
+    "status": "reference",
+    "sourcePage": "https://science.nasa.gov/asset/hubble/full-color-neptune-global-map-from-hubbles-opal-program-dark-spot-and-companion-clouds-closeup/",
+    "sourceResolution": "Hubble global atmospheric map",
+    "projection": "equirectangular",
+    "qualityClass": "dynamic",
+    "note": "Atmospheric snapshot, not a permanent surface."
+  }
+}

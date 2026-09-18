@@ -1,0 +1,47 @@
+{
+  "$schema": "../../schema/product.schema.json",
+  "id": "iapetus-surface",
+  "type": "texture",
+  "body": "iapetus",
+  "layer": "surface",
+  "shipped": true,
+  "license": "other",
+  "rights": "public-domain",
+  "links": [
+    {
+      "rel": "license",
+      "href": "https://www.usgs.gov/information-policies-and-instructions/copyrights-and-credits"
+    }
+  ],
+  "providers": [
+    {
+      "name": "USGS Astrogeology / NASA Cassini & Voyager",
+      "roles": [
+        "producer"
+      ]
+    }
+  ],
+  "tier": "free",
+  "filled": true,
+  "lineage": {
+    "status": "ready",
+    "downloadUrl": "https://astrogeology.usgs.gov/ckan/dataset/6ac8ecfb-36e7-4113-8d16-c92ba857c3d7/resource/141c2d1e-aa01-4e2f-969a-e46a581db4b9/download/full.jpg",
+    "sourcePage": "https://astrogeology.usgs.gov/search/map/iapetus_cassini_voyager_global_mosaic_803m",
+    "projection": "equirectangular",
+    "sourceResolution": "803 m/pixel; official JPEG preview",
+    "maxQuality": "1k",
+    "outputBase": "iapetus/iapetusSurface",
+    "license": "public-domain",
+    "credit": "USGS Astrogeology Science Center, Cassini/JPL and Voyager"
+  },
+  "review": {
+    "status": "ready",
+    "processing": "direct-jpeg-sample",
+    "downloadUrl": "https://astrogeology.usgs.gov/ckan/dataset/6ac8ecfb-36e7-4113-8d16-c92ba857c3d7/resource/141c2d1e-aa01-4e2f-969a-e46a581db4b9/download/full.jpg",
+    "sourcePage": "https://astrogeology.usgs.gov/search/map/iapetus_cassini_voyager_global_mosaic_803m",
+    "sourceResolution": "803 m/pixel global mosaic; official JPEG preview",
+    "projection": "equirectangular",
+    "qualityClass": "derived",
+    "note": "Official Cassini/Voyager global mosaic preview from USGS; kept at its native preview size without artificial upscaling."
+  }
+}

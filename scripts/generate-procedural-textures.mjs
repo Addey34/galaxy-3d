@@ -395,7 +395,7 @@ const BODIES = [
   },
 
   // ── Lunes sans mosaïque photo réelle (aucun bassin/tache n'est une vraie position — voir
-  //    scripts/texture-sources.json pour la limite de couverture de chaque survol). ──
+  //    src/registry/products/textures/ pour la limite de couverture de chaque survol). ──
 
   // "Death Star" — le cratère Herschel fait ~1/3 du diamètre de Mimas, parois hautes, pic
   // central de ~6 km (comparable à l'Everest) ; cratérisation dense par ailleurs.
@@ -540,7 +540,7 @@ const BODIES = [
   // ── Les 4 petites lunes de Pluton (New Horizons 2015) : albédo élevé (>50 %, exceptionnel pour
   //    un objet de la ceinture de Kuiper), composition dominée par la glace d'eau, couleur
   //    globalement neutre — base claire commune, peu de cratères vu la résolution d'imagerie
-  //    limitée à quelques pixels par corps (voir texture-sources.json pour le détail). ──
+  //    limitée à quelques pixels par corps (voir registry/products/textures pour le détail). ──
 
   {
     name: 'styx',

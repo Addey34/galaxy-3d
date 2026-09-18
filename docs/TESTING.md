@@ -113,7 +113,7 @@ des raisons d'environnement (cf. la limite `DataTexture` documentée dans ce fic
 des chiffres, des crédits et des phrases sur le comportement de l'application. Le test tient les
 trois : chaque valeur vient de sa source (la changer change la page), chaque couche livrée a sa
 provenance, la liste des services en direct est égale aux hôtes `connect-src` de la CSP, les
-groupes de licence de `THIRD_PARTY_NOTICES.md` concordent avec `texture-sources.json`, et les
+groupes de licence de `THIRD_PARTY_NOTICES.md` concordent avec le registre `src/registry/products/`, et les
 affirmations sur le comportement sont confrontées au code qui l'implémente (ordre SPK / Horizons,
 obliquité, tailles en Éducatif, lunes écartées, Terre au barycentre). Voir la règle « Tout texte
 publié est une affirmation à confronter au code », détaillée dans `CONTRIBUTING.md` § « Écrire un texte public ».

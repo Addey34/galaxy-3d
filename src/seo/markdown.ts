@@ -14,7 +14,7 @@ import { escapeHtml } from './bodyLandingPage';
 
 export interface MarkdownOptions {
   /**
-   * Base à laquelle rattacher un lien RELATIF (`LICENSE.md`, `scripts/texture-sources.json`) :
+   * Base à laquelle rattacher un lien RELATIF (`LICENSE.md`, `src/registry/products/textures/`) :
    * sur le site, ces chemins n'existent pas, ils existent dans le dépôt public.
    */
   repositoryBlobUrl: string;

@@ -1,0 +1,34 @@
+{
+  "$schema": "../../schema/product.schema.json",
+  "id": "jupiter-surface",
+  "type": "texture",
+  "body": "jupiter",
+  "layer": "surface",
+  "shipped": true,
+  "license": "CC-BY-4.0",
+  "links": [
+    {
+      "rel": "license",
+      "href": "https://creativecommons.org/licenses/by/4.0/"
+    }
+  ],
+  "providers": [
+    {
+      "name": "Solar System Scope (solarsystemscope.com)",
+      "roles": [
+        "licensor",
+        "producer"
+      ]
+    }
+  ],
+  "tier": "free",
+  "review": {
+    "status": "reference",
+    "downloadUrl": "https://assets.science.nasa.gov/content/dam/science/psd/photojournal/pia/pia19/pia19643/PIA19643.tif",
+    "sourcePage": "https://science.nasa.gov/photojournal/spinning-jupiter-and-global-map/",
+    "sourceResolution": "global Hubble map, dynamic atmosphere",
+    "projection": "equirectangular",
+    "qualityClass": "dynamic",
+    "note": "Jupiter has no permanent surface; texture is an atmospheric snapshot and must be date-labelled."
+  }
+}
