@@ -11,7 +11,7 @@ import { eclipseLandingPages } from './eclipseLandingPage';
  *
  * Décision de l'utilisateur (2026-09-16) : le tiret cadratin « — », et le demi-cadratin entouré
  * d'espaces « – », donnent l'allure d'un texte généré. On emploie deux-points, virgule,
- * parenthèses ou point. La règle existait, et le titre du site, les titres des 52 pages de corps,
+ * parenthèses ou point. La règle existait, et le titre du site, les titres des pages de corps,
  * les textes alternatifs de leurs vignettes, trois descriptions du catalogue, trois étapes de
  * visite guidée, la page de confidentialité et le marqueur de valeur inconnue de la fiche la
  * violaient encore le 2026-09-17 : une règle que rien ne vérifie finit ignorée.

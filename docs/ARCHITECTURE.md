@@ -104,6 +104,17 @@ Le catalogue est organisé en trois niveaux : données (position, époque, réf�
 orientation, source, incertitude), représentation (sphère, couche texturée, anneau, particules ou
 futur modèle 3D), présentation (labels, fiche, couleur, filtres, aides de navigation).
 
+**Depuis le lot 7 (phase 4), le catalogue est de la donnée, pas du TypeScript.** Chaque corps est
+une fiche JSON dans `src/registry/entities/` (un fait = un seul objet : valeur, unité, source,
+méthode, `asOf`, incertitude, ou `published: false` + raison ; un calcul se DÉCLARE par une forme
+nommée sur un ensemble fermé, `{"$deg": 7.25}`, `{"$gm": …}`, connu de `src/registry/load.ts`),
+l'ordre de premier niveau est `order.json` et les satellites sont la liste de leur fiche parente.
+`src/registry/load.ts` reconstruit le `CelestialConfig` à l'identité de bits près, et
+`config/bodies.ts` ne garde que du code : dérivation des chemins de texture et contrôles
+structurels. Ajouter un corps = ajouter une fiche et régénérer les artefacts de relevé
+(`pnpm facts:snapshot`, `pnpm ephemeris:validate`) ; la preuve est la phase 5 de
+`docs/private/REGISTRES_LOT7.md` § 10 (16 Psyché ajoutée sans toucher une ligne de TypeScript).
+
 Les corps naturels sont ajoutés au catalogue avant leurs assets. Les textures JPEG suivent
 `public/assets/textures/{body}/{body}_{layer}_{quality}.jpg` (snake_case ; le chemin est dérivé de
 la clé du corps par `catalog.texturePath`, jamais écrit à la main). Modèles GLB, missions,
@@ -309,7 +320,7 @@ laisse la date du périhélie libre de ±800 jours. Il faudrait `tp` et `q` pour
 | `core/horizonsInterpolation.test.ts` | vecteurs Horizons ENTRE échantillons : rythme moyen, ballant de Pluton, seuil 100, binaires de Jupiter et d'Uranus |
 | `core/timeScale.test.ts` | convention TT/TDB unique, installée dans astronomy-engine, importée partout |
 | `config/smallBodies.test.ts` | chaque jeu d'éléments contre Horizons à son époque ; décalage barycentrique |
-| `components/celestial/spinDirection.test.ts` | sens de rotation des 52 corps, dans les deux sens du temps |
+| `components/celestial/spinDirection.test.ts` | sens de rotation des corps du catalogue, dans les deux sens du temps |
 
 ## Terminateur jour/nuit — contrat partagé entre couches
 
@@ -835,7 +846,7 @@ Une page par éclipse solaire ou lunaire de la fenêtre **fixe** 2024-2035 : 53 
 `/eclipse/2026-08-12/`. Même contrat que les pages de corps ci-dessus (fichier statique, pas de
 script en ligne, contenu réel, repère absent = build cassé), avec un rendu commun,
 `renderLandingPage`. La factorisation a été vérifiée en comparant l'ancien et le nouveau rendu
-sur le vrai `dist/index.html` : 52 pages de corps sur 52 identiques octet pour octet.
+sur le vrai `dist/index.html` : les pages de corps, autant que de corps, identiques octet pour octet.
 
 Les décisions, validées avant le code :
 

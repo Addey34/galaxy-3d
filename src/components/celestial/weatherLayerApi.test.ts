@@ -25,7 +25,7 @@ import { getOverlaySunUniform } from '@/config/layerConfig';
  *      fondu court doit finaliser le précédent, sinon la carte reste figée quand les frames
  *      arrivent plus vite que le fondu.
  *
- * Et une propriété de sûreté qui vaut pour les 52 corps : ces méthodes sont appelées sur le
+ * Et une propriété de sûreté qui vaut pour tous les corps : ces méthodes sont appelées sur le
  * corps que l'interface croit être la Terre. Sur un corps sans la couche visée, elles doivent
  * être des NO-OP silencieuses, jamais une exception — Mars n'a qu'une couche `surface`.
  */

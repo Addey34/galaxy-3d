@@ -18,7 +18,7 @@ import type { CelestialBodyConfig } from '@/types';
  * simulation (`rotation.y += rotationSpeed * delta`) : elle est donc la seule à dépendre du
  * SIGNE de ce pas. La timebar étant bidirectionnelle, chaque corps doit tourner à l'envers
  * quand le temps recule — défaut réellement livré : le pas était publié en valeur absolue,
- * si bien que les 52 corps continuaient de tourner vers l'avant pendant que les orbites
+ * si bien que tous les corps continuaient de tourner vers l'avant pendant que les orbites
  * reculaient. Seule la Terre y échappait, sa phase étant DÉRIVÉE de la date
  * (`syncEarthSurfaceRotation`) et non intégrée — ce qui rendait le défaut invisible sur le
  * corps que l'on regarde le plus.
@@ -73,7 +73,7 @@ const spinning = [...catalogue].filter(
 );
 
 /**
- * Construit la scène des 52 corps et leur applique le VRAI pipeline d'axe
+ * Construit la scène de tous les corps du catalogue et leur applique le VRAI pipeline d'axe
  * (`OrbitalMechanics.syncAxesFromEphemeris`) plutôt qu'une copie locale de sa règle : c'est
  * lui qui décide du retournement rétrograde, donc lui qu'il faut mettre à l'épreuve. Le
  * constructeur d'`OrbitalMechanics` tirant des services lourds, on n'instancie que l'état
@@ -157,7 +157,7 @@ describe('sens de rotation propre du catalogue', () => {
    * Couche 1 — SYMÉTRIE TEMPORELLE. Un pas en avant puis le pas opposé doivent ramener le
    * corps exactement à son orientation de départ. C'est la formulation la plus stricte du
    * défaut corrigé : avec un pas en valeur absolue, le second pas ajoute au lieu de retirer
-   * et l'écart vaut 2 × l'angle, pour les 52 corps à la fois.
+   * et l'écart vaut 2 × l'angle, pour tous les corps à la fois.
    */
   it('revient exactement à son orientation quand le temps repart en arrière', () => {
     const bodies = buildScene();
