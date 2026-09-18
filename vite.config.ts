@@ -465,6 +465,7 @@ function bodyLandingPages() {
 }
 
 export default defineConfig({
+  json: { stringify: true },
   plugins: [
     stripRegistryNotes(),
     stripProductionHtmlComments(),

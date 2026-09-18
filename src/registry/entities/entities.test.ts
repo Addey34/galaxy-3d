@@ -1,117 +1,164 @@
 import { describe, expect, it } from 'vitest';
-import { loadEntityCatalogue, loadSmallBodyElements } from './index';
+import { ENTITY_ORDER, ENTITY_RECORDS } from './index';
+import { decode, loadCatalogue, type EntityRecord } from '../load';
 import { CELESTIAL_CONFIG } from '@/config/bodies';
-import { SMALL_BODY_ELEMENTS } from '@/config/smallBodies';
-import { deriveTextures, forEachBody, ringTexturePath } from '@/config/catalog';
-import type { CelestialConfig } from '@/types';
+import { allBodies } from '@/config/catalog';
 
 /**
- * ÉGALITÉ STRICTE entre le registre et le catalogue TypeScript, pendant toute la migration
- * (`docs/private/REGISTRES_LOT7.md` § 7) : le littéral fait foi, et le registre doit le
- * reproduire À L'IDENTITÉ DE BITS PRÈS.
+ * LE REGISTRE DES ENTITÉS, APRÈS LA BASCULE (lot 7, phase 4).
  *
- *   - chaque nombre est comparé par `Object.is`, JAMAIS avec une tolérance : un dernier bit
- *     différent déplacerait l'empreinte des pages sans qu'aucun test d'arrondi ne le voie ;
- *   - l'ORDRE des clés est comparé partout où il est lu (corps, satellites, couches de texture) :
- *     il pilote la navigation, le sitemap et les pages. Seul `realData` est comparé comme un
- *     ensemble, parce que personne ne parcourt ses clés dans l'ordre ;
- *   - les dates par leur instant.
+ * Pendant la migration, ce fichier comparait le registre au littéral TypeScript, bit à bit et
+ * ordre des clés compris. Depuis la bascule, `CELESTIAL_CONFIG` EST le registre : cette
+ * comparaison serait une tautologie, et une tautologie verte ne prouve rien (le dépôt en a déjà
+ * payé une, `SUMMARY_PROVIDER`, au lot 7 phase 1). La bascule elle-même a été prouvée une fois,
+ * au moment de la faire : le catalogue entier, sérialisé canoniquement avant et après, est
+ * identique octet pour octet (`docs/private/REGISTRES_LOT7.md` § 10). Ce qui garde la suite :
+ * l'empreinte des documents générés, les tests de fond (Horizons, sources relevées), et ici les
+ * gardes du chargeur, chacune vue en train de refuser.
  */
 
-type Diff = string[];
+const catalogueRecord = (
+  id: string,
+  config: Record<string, unknown>,
+  facts?: EntityRecord['facts']
+): EntityRecord =>
+  ({
+    id,
+    targetClass: 'planet',
+    source: 'catalogue',
+    config: {
+      kind: 'planet',
+      radius: 1,
+      rotationSpeed: 0,
+      orbitalColor: '0x112233',
+      textureResolutions: {},
+      ...config,
+    },
+    ...(facts ? { facts } : {}),
+  }) as EntityRecord;
 
-function compare(
-  a: unknown,
-  b: unknown,
-  path: string,
-  inRealData: boolean,
-  out: Diff
-): void {
-  if (out.length > 20) return;
-  if (a instanceof Date || b instanceof Date) {
-    if (
-      !(a instanceof Date) ||
-      !(b instanceof Date) ||
-      !Object.is(a.getTime(), b.getTime())
-    )
-      out.push(`${path} : date ${String(a)} ≠ ${String(b)}`);
-    return;
-  }
-  if (Array.isArray(a) || Array.isArray(b)) {
-    if (!Array.isArray(a) || !Array.isArray(b) || a.length !== b.length) {
-      out.push(`${path} : tableau ${JSON.stringify(a)} ≠ ${JSON.stringify(b)}`);
-      return;
-    }
-    a.forEach((v, i) => compare(v, b[i], `${path}[${i}]`, inRealData, out));
-    return;
-  }
-  if (a && b && typeof a === 'object' && typeof b === 'object') {
-    const ka = Object.keys(a);
-    const kb = Object.keys(b);
-    const same = inRealData
-      ? [...ka].sort().join() === [...kb].sort().join()
-      : ka.join() === kb.join();
-    if (!same) {
-      out.push(`${path} : clés [${ka.join(', ')}] ≠ [${kb.join(', ')}]`);
-      return;
-    }
-    for (const k of ka)
-      compare(
-        (a as Record<string, unknown>)[k],
-        (b as Record<string, unknown>)[k],
-        `${path}.${k}`,
-        inRealData || k === 'realData',
-        out
-      );
-    return;
-  }
-  if (!Object.is(a, b)) out.push(`${path} : ${String(a)} ≠ ${String(b)}`);
-}
-
-/** Même post-traitement que `bodies.ts` : chemins de texture dérivés de la clé du corps. */
-function withDerivedTextures(
-  bodies: CelestialConfig['bodies']
-): CelestialConfig {
-  const config: CelestialConfig = { bodies };
-  forEachBody(config, ({ name, config: body }) => {
-    body.textures = deriveTextures(name, body);
-    if (body.ring && !body.ring.textures)
-      body.ring.textures = ringTexturePath(name);
-  });
-  return config;
-}
-
-describe('registre des entités contre le catalogue TypeScript', () => {
-  const loaded = withDerivedTextures(loadEntityCatalogue());
-
-  it('reproduit le catalogue à l’identité de bits près', () => {
-    const diff: Diff = [];
-    compare(loaded.bodies, CELESTIAL_CONFIG.bodies, 'bodies', false, diff);
-    expect(diff).toEqual([]);
+describe('arbre du catalogue', () => {
+  it('place chaque fiche une fois, dans l’ordre déclaré', () => {
+    expect(Object.keys(CELESTIAL_CONFIG.bodies)).toEqual([...ENTITY_ORDER]);
+    const placed = allBodies(CELESTIAL_CONFIG).map(({ name }) => name);
+    expect(placed.sort()).toEqual(ENTITY_RECORDS.map((r) => r.id).sort());
   });
 
-  it('reproduit les éléments publiés des petits corps', () => {
-    // Comparés comme des ENSEMBLES de clés : `smallBodyToConfig` impose son propre ordre à la
-    // config (vérifié bit à bit ci-dessus), et les lecteurs des éléments (`smallBodies.test.ts`,
-    // `/methodology`) les lisent par nom. Les valeurs, elles, sont comparées par `Object.is`.
-    //
-    // `bodies.ts` MUTE les satellites des petits corps (il y dérive `textures`), et ces objets
-    // sont partagés avec `SMALL_BODY_ELEMENTS` : on applique la même dérivation avant de comparer.
-    const elements = loadSmallBodyElements();
-    for (const el of elements)
-      if (el.satellites) withDerivedTextures(el.satellites);
-    const diff: Diff = [];
-    compare(elements, SMALL_BODY_ELEMENTS, 'elements', true, diff);
-    expect(diff).toEqual([]);
+  it('donne à chaque corps la classe EPNCore qui correspond à son rôle de rendu', () => {
+    const expected: Record<string, string> = {
+      star: 'star',
+      planet: 'planet',
+      moon: 'satellite',
+      skybox: 'sky',
+      dwarf: 'dwarf_planet',
+      asteroid: 'asteroid',
+      comet: 'comet',
+    };
+    const byId = new Map(ENTITY_RECORDS.map((r) => [r.id, r]));
+    for (const { name, config } of allBodies(CELESTIAL_CONFIG))
+      expect(byId.get(name)!.targetClass, name).toBe(expected[config.kind]);
+  });
+});
+
+describe('le chargeur refuse', () => {
+  it('une fiche que l’arbre n’atteint pas', () => {
+    expect(() =>
+      loadCatalogue([catalogueRecord('a', {}), catalogueRecord('b', {})], ['a'])
+    ).toThrow('jamais placées');
   });
 
-  it('voit vraiment une différence d’un bit', () => {
-    // Falsification intégrée : un comparateur qui ne voit rien rendrait le premier test vert.
-    const diff: Diff = [];
-    compare({ x: 0.1 + 0.2 }, { x: 0.3 }, 'x', false, diff);
-    compare({ a: 1, b: 2 }, { b: 2, a: 1 }, 'ordre', false, diff);
-    compare({ a: 1, b: 2 }, { b: 2, a: 1 }, 'realData', true, diff);
-    compare(0, -0, 'zéro', false, diff);
-    expect(diff).toHaveLength(3);
+  it('une fiche placée deux fois', () => {
+    expect(() =>
+      loadCatalogue(
+        [catalogueRecord('a', { satellites: ['b'] }), catalogueRecord('b', {})],
+        ['a', 'b']
+      )
+    ).toThrow('deux fois');
+  });
+
+  it('un satellite qui n’existe pas', () => {
+    expect(() =>
+      loadCatalogue([catalogueRecord('a', { satellites: ['x'] })], ['a'])
+    ).toThrow('inconnue');
+  });
+
+  it('une forme de calcul hors de l’ensemble fermé', () => {
+    expect(() => decode({ $cube: 3 }, 'test')).toThrow(
+      'forme déclarée inconnue'
+    );
+  });
+
+  it('une couleur mal écrite', () => {
+    expect(() => decode('#112233', 'test', 'orbitalColor')).toThrow('0xRRGGBB');
+  });
+
+  it('des faits sans emplacement realData', () => {
+    expect(() =>
+      loadCatalogue(
+        [
+          catalogueRecord(
+            'a',
+            {},
+            {
+              radiusKm: { value: 1, source: 's', method: 'measured' },
+            }
+          ),
+        ],
+        ['a']
+      )
+    ).toThrow('realData');
+  });
+
+  it('une valeur de rotation dans un fait du catalogue (elle vit dans rotationSpeed)', () => {
+    expect(() =>
+      loadCatalogue(
+        [
+          catalogueRecord(
+            'a',
+            { realData: {} },
+            {
+              rotationPeriod: { value: 24, source: 's', method: 'measured' },
+            }
+          ),
+        ],
+        ['a']
+      )
+    ).toThrow('ne porte pas de valeur');
+  });
+
+  it('une précision qui n’existe pas dans DETAIL', () => {
+    expect(() =>
+      loadCatalogue(
+        [
+          catalogueRecord(
+            'a',
+            { realData: {} },
+            {
+              radiusKm: {
+                value: 1,
+                source: 's',
+                method: 'measured',
+                detail: 'inventee',
+              },
+            }
+          ),
+        ],
+        ['a']
+      )
+    ).toThrow('précision inconnue');
+  });
+
+  it('et évalue une forme exactement comme le littéral qu’elle remplace', () => {
+    // Même opération, même ordre : `7.25 * D2R`, `_R(609.12)`, `5772 - 273.15`.
+    expect(Object.is(decode({ $deg: 7.25 }, 't'), 7.25 * (Math.PI / 180))).toBe(
+      true
+    );
+    expect(
+      Object.is(
+        decode({ $rotationHours: 609.12 }, 't'),
+        (Math.PI * 2) / (609.12 * 3_600)
+      )
+    ).toBe(true);
+    expect(Object.is(decode({ $kelvin: 5772 }, 't'), 5772 - 273.15)).toBe(true);
   });
 });
