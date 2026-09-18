@@ -1,0 +1,21 @@
+{
+  "$schema": "../schema/entity.schema.json",
+  "id": "stars",
+  "targetClass": "sky",
+  "source": "catalogue",
+  "config": {
+    "kind": "skybox",
+    "radius": 0,
+    "rotationSpeed": 0,
+    "orbitalColor": "0x000000",
+    "textureResolutions": {
+      "surface": [
+        "8k",
+        "4k",
+        "2k",
+        "1k"
+      ]
+    },
+    "loadPriority": 0
+  }
+}

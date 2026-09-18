@@ -1,0 +1,97 @@
+{
+  "$schema": "../schema/entity.schema.json",
+  "id": "vesta",
+  "targetClass": "asteroid",
+  "source": "small-body",
+  "elements": {
+    "displayName": {
+      "en": "Vesta",
+      "fr": "Vesta"
+    },
+    "a": 2.361534934739072,
+    "e": 0.09002244561937413,
+    "iDeg": 7.133935828421654,
+    "omDeg": 103.9514370845001,
+    "wDeg": 149.5866679599199,
+    "maDeg": 341.0238343838706,
+    "epoch": "2000-01-01T12:00:00Z",
+    "color": "0xc8795d",
+    "surfaceResolutions": [
+      "8k",
+      "4k",
+      "2k",
+      "1k"
+    ],
+    "description": {
+      "en": "The brightest asteroid, and the only one occasionally visible to the naked eye. A giant impact blasted away its south pole, and fragments of that crater rain down on Earth as some of our meteorites.",
+      "fr": "L’astéroïde le plus brillant, et le seul parfois visible à l’œil nu. Un impact géant a arraché son pôle sud, et des fragments de ce cratère tombent sur Terre sous forme de certaines de nos météorites."
+    },
+    "wiki": {
+      "en": "https://en.wikipedia.org/wiki/4_Vesta",
+      "fr": "https://fr.wikipedia.org/wiki/(4)_Vesta"
+    }
+  },
+  "facts": {
+    "radiusKm": {
+      "value": {
+        "$diameterKm": 522.77
+      },
+      "source": "jpl-sbdb",
+      "method": "derived",
+      "uncertainty": 0.05,
+      "detail": "radiusFromDiameter",
+      "citation": "Park, R.S. et al. 2025, Nat Astron, DOI: 10.1038/s41550-025-02533-7"
+    },
+    "massKg": {
+      "value": {
+        "$gm": 17.2882844
+      },
+      "source": "jpl-sbdb",
+      "method": "derived",
+      "uncertainty": {
+        "$gm": 0.000003
+      },
+      "detail": "massFromGM",
+      "citation": "Park, R.S. et al. 2025, Nat Astron, DOI: 10.1038/s41550-025-02533-7"
+    },
+    "gravity": {
+      "value": {
+        "$gm": 17.2882844,
+        "$radiusKm": {
+          "$diameterKm": 522.77
+        }
+      },
+      "source": "jpl-sbdb",
+      "method": "derived",
+      "detail": "gravityFromGM",
+      "citation": "Park, R.S. et al. 2025, Nat Astron, DOI: 10.1038/s41550-025-02533-7"
+    },
+    "meanTempC": {
+      "published": false,
+      "reason": "not-yet-sourced"
+    },
+    "moonCount": {
+      "value": 0,
+      "source": "jpl-sbdb",
+      "method": "measured",
+      "asOf": "2026-09-17",
+      "detail": "confirmedSatellites"
+    },
+    "axialTilt": {
+      "value": 27.5,
+      "source": "jpl-sbdb",
+      "method": "derived",
+      "detail": "obliquityFromPole",
+      "citation": "Park, R.S. et al. 2025, Nat Astron, DOI: 10.1038/s41550-025-02533-7"
+    },
+    "rotationPeriod": {
+      "value": 5.3421276322,
+      "source": "jpl-sbdb",
+      "method": "measured",
+      "citation": "Park, R.S. et al. 2025, Nat Astron, DOI: 10.1038/s41550-025-02533-7"
+    }
+  },
+  "notes": {
+    "a": "Éléments osculateurs JPL Horizons EXACTEMENT à cette époque (EPHEM_TYPE=ELEMENTS, TLIST=2451545.0) — les anciennes valeurs plaçaient Vesta ~0.9 UA de sa vraie position à cette date (vérifié contre le vecteur d'état Horizons réel)."
+  }
+}

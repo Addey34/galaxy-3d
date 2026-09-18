@@ -1,0 +1,133 @@
+{
+  "$schema": "../schema/entity.schema.json",
+  "id": "triton",
+  "targetClass": "satellite",
+  "source": "catalogue",
+  "config": {
+    "kind": "moon",
+    "displayName": {
+      "en": "Triton",
+      "fr": "Triton"
+    },
+    "radius": 0.28,
+    "rotationSpeed": {
+      "$rotationHours": {
+        "$days": 5.876844606364144
+      },
+      "$retrograde": true
+    },
+    "orbitalColor": "0x9dc4cf",
+    "fallbackColor": "0x7796a2",
+    "frame": "parentRelative",
+    "rotationBody": "Neptune",
+    "relativeEphemeris": {
+      "kind": "horizonsParentRelative"
+    },
+    "relativeOrbitalElements": {
+      "semiMajorAxisAU": 0.002372182357,
+      "eccentricity": 0.000278328,
+      "inclinationRad": {
+        "$deg": 129.148
+      },
+      "ascendingNodeRad": {
+        "$deg": 222.6618
+      },
+      "argPerihelionRad": {
+        "$deg": 11.0207
+      },
+      "meanAnomalyAtEpochRad": {
+        "$deg": 337.3679
+      },
+      "epoch": {
+        "$date": "2025-12-31T00:00:00.000Z"
+      }
+    },
+    "textureResolutions": {
+      "surface": [
+        "8k",
+        "4k",
+        "2k",
+        "1k"
+      ]
+    },
+    "realData": {
+      "orbitalInclination": {
+        "$deg": 157.3
+      },
+      "ascendingNode": {
+        "$deg": 178.1
+      },
+      "description": {
+        "en": "Neptune's largest moon and the Solar System's only major retrograde satellite, with nitrogen geysers.",
+        "fr": "La plus grande lune de Neptune et la seule grande lune rétrograde du Système solaire, avec des geysers d'azote."
+      },
+      "wiki": {
+        "en": "https://en.wikipedia.org/wiki/Triton_(moon)",
+        "fr": "https://fr.wikipedia.org/wiki/Triton_(lune)"
+      }
+    },
+    "cameraDistance": {
+      "educ": 1.5,
+      "explo": {
+        "$cameraFromRadiusKm": 1352.6
+      }
+    },
+    "loadPriority": 12
+  },
+  "facts": {
+    "radiusKm": {
+      "value": 1352.6,
+      "source": "jpl-ssd-satellite-physical-parameters",
+      "method": "measured",
+      "uncertainty": 2.4
+    },
+    "massKg": {
+      "value": {
+        "$gm": 1428.49546
+      },
+      "source": "jpl-ssd-satellite-physical-parameters",
+      "method": "derived",
+      "uncertainty": {
+        "$gm": 0.61603
+      },
+      "detail": "massFromGM"
+    },
+    "gravity": {
+      "value": {
+        "$gm": 1428.49546,
+        "$radiusKm": 1352.6
+      },
+      "source": "jpl-ssd-satellite-physical-parameters",
+      "method": "derived",
+      "detail": "gravityFromGM"
+    },
+    "meanTempC": {
+      "published": false,
+      "reason": "not-yet-sourced"
+    },
+    "axialTilt": {
+      "value": {
+        "$deg": 0.4
+      },
+      "published": false,
+      "reason": "not-yet-sourced"
+    },
+    "distanceAU": {
+      "value": {
+        "$km": 354760
+      },
+      "source": "nssdca-fact-sheets",
+      "method": "measured"
+    },
+    "orbitPeriodDays": {
+      "value": 5.876844606364144,
+      "source": "nssdca-fact-sheets",
+      "method": "measured"
+    },
+    "rotationPeriod": {
+      "source": "nssdca-fact-sheets",
+      "method": "derived",
+      "detail": "synchronousRotation"
+    }
+  }
+}

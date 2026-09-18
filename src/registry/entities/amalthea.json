@@ -1,0 +1,131 @@
+{
+  "$schema": "../schema/entity.schema.json",
+  "id": "amalthea",
+  "targetClass": "satellite",
+  "source": "catalogue",
+  "config": {
+    "kind": "moon",
+    "displayName": {
+      "en": "Amalthea",
+      "fr": "Amalthée"
+    },
+    "frame": "parentRelative",
+    "rotationBody": "Jupiter",
+    "radius": 0.06,
+    "rotationSpeed": {
+      "$rotationHours": {
+        "$days": 0.49817907177492277
+      }
+    },
+    "orbitalColor": "0xa8544a",
+    "fallbackColor": "0x9c4a3c",
+    "relativeEphemeris": {
+      "kind": "horizonsParentRelative"
+    },
+    "relativeOrbitalElements": {
+      "semiMajorAxisAU": 0.001216649081,
+      "eccentricity": 0.00679747,
+      "inclinationRad": {
+        "$deg": 2.2995
+      },
+      "ascendingNodeRad": {
+        "$deg": 328.503
+      },
+      "argPerihelionRad": {
+        "$deg": 235.7284
+      },
+      "meanAnomalyAtEpochRad": {
+        "$deg": 357.0786
+      },
+      "epoch": {
+        "$date": "2025-12-31T00:00:00.000Z"
+      }
+    },
+    "textureResolutions": {
+      "surface": [
+        "2k"
+      ]
+    },
+    "realData": {
+      "orbitalInclination": {
+        "$deg": 2.442089133637652
+      },
+      "ascendingNode": {
+        "$deg": 330.4106584847095
+      },
+      "description": {
+        "en": "Jupiter's reddest moon, tidally locked with its long axis always pointing at the planet, likely stained by sulfur from Io.",
+        "fr": "La lune la plus rouge de Jupiter, verrouillée par effet de marée avec son grand axe toujours pointé vers la planète, probablement teintée par le soufre en provenance d’Io."
+      },
+      "wiki": {
+        "en": "https://en.wikipedia.org/wiki/Amalthea_(moon)",
+        "fr": "https://fr.wikipedia.org/wiki/Amalth%C3%A9e_(lune)"
+      }
+    },
+    "cameraDistance": {
+      "educ": 0.5,
+      "explo": {
+        "$cameraFromRadiusKm": 83.5
+      }
+    },
+    "loadPriority": 10
+  },
+  "facts": {
+    "radiusKm": {
+      "value": 83.5,
+      "source": "jpl-ssd-satellite-physical-parameters",
+      "method": "measured",
+      "uncertainty": 3
+    },
+    "massKg": {
+      "value": {
+        "$gm": 0.16456
+      },
+      "source": "jpl-ssd-satellite-physical-parameters",
+      "method": "derived",
+      "uncertainty": {
+        "$gm": 0.00867
+      },
+      "detail": "massFromGM"
+    },
+    "gravity": {
+      "value": {
+        "$gm": 0.16456,
+        "$radiusKm": 83.5
+      },
+      "source": "jpl-ssd-satellite-physical-parameters",
+      "method": "derived",
+      "detail": "gravityFromGM"
+    },
+    "meanTempC": {
+      "published": false,
+      "reason": "not-yet-sourced"
+    },
+    "axialTilt": {
+      "value": 0,
+      "published": false,
+      "reason": "not-yet-sourced"
+    },
+    "distanceAU": {
+      "value": {
+        "$km": 181400
+      },
+      "source": "nssdca-fact-sheets",
+      "method": "measured"
+    },
+    "orbitPeriodDays": {
+      "value": 0.49817907177492277,
+      "source": "nssdca-fact-sheets",
+      "method": "measured"
+    },
+    "rotationPeriod": {
+      "source": "nssdca-fact-sheets",
+      "method": "derived",
+      "detail": "synchronousRotation"
+    }
+  },
+  "notes": {
+    "relativeOrbitalElements": "JPL Horizons osculating elements, epoch 2000-01-01.5 TDB (EPHEM_TYPE=ELEMENTS, TLIST=2451545.0) — même méthode que les autres lunes de ce fichier. Vérifiée cohérente avec la période réelle publiée (0.498 j).",
+    "textureResolutions": "Aucune mosaïque photo globale contrôlée n'existe côté USGS pour Amalthea (imagée partiellement par Galileo, jamais assemblée en carte globale contrôlée) — vérifié en direct (2026-08-26). Texture procédurale générée (voir registry/products/textures)."
+  }
+}

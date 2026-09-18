@@ -1,0 +1,74 @@
+{
+  "$schema": "../schema/entity.schema.json",
+  "id": "orcus",
+  "targetClass": "dwarf_planet",
+  "source": "small-body",
+  "elements": {
+    "displayName": {
+      "en": "Orcus",
+      "fr": "Orcus"
+    },
+    "a": 39.2798751411889,
+    "e": 0.2238491715385574,
+    "iDeg": 20.56780730671753,
+    "omDeg": 268.5849268277011,
+    "wDeg": 73.02643860598275,
+    "maDeg": 151.0542756150432,
+    "epoch": "2000-01-01T12:00:00Z",
+    "barycentric": true,
+    "kind": "dwarf",
+    "color": "0xcbc7c0",
+    "surfaceResolutions": [
+      "2k"
+    ],
+    "fallbackColor": "0xcbc7c0",
+    "visualRadius": 0.072,
+    "description": {
+      "en": "Sometimes nicknamed the \"anti-Pluto\" for an orbit that mirrors Pluto's own 2:3 resonance with Neptune, timed so the two are never close together. Its large moon Vanth may be tidally locked to it, much like Charon is to Pluto.",
+      "fr": "Parfois surnommée « anti-Pluton » pour une orbite qui reflète la même résonance 2:3 avec Neptune que Pluton, mais synchronisée pour que les deux ne soient jamais proches. Sa grande lune Vanth serait verrouillée gravitationnellement, un peu comme Charon l’est à Pluton."
+    },
+    "wiki": {
+      "en": "https://en.wikipedia.org/wiki/Orcus_(dwarf_planet)",
+      "fr": "https://fr.wikipedia.org/wiki/(90482)_Orcus"
+    }
+  },
+  "facts": {
+    "radiusKm": {
+      "value": 458,
+      "published": false,
+      "reason": "not-yet-sourced"
+    },
+    "massKg": {
+      "value": 547800000000000000000,
+      "published": false,
+      "reason": "not-yet-sourced"
+    },
+    "gravity": {
+      "value": 0.174,
+      "published": false,
+      "reason": "not-yet-sourced"
+    },
+    "meanTempC": {
+      "published": false,
+      "reason": "not-yet-sourced"
+    },
+    "moonCount": {
+      "value": 1,
+      "source": "jpl-sbdb",
+      "method": "measured",
+      "asOf": "2026-09-17",
+      "detail": "confirmedSatellites"
+    },
+    "rotationPeriod": {
+      "value": 13.188,
+      "source": "jpl-sbdb",
+      "method": "measured",
+      "detail": "partialLightcurve",
+      "citation": "LCDB (Rev. 2023-October); Warner et al., 2009"
+    }
+  },
+  "notes": {
+    "a": "Éléments osculateurs JPL Horizons BARYCENTRIQUES exactement à cette époque (COMMAND '90482;', CENTER=500@0, TLIST=2451545.0), par `pnpm ephemeris:small-body --center 500@0`. Barycentriques car mesuré meilleur au-delà de Neptune (cf. `OrbitalElements.barycentric`).",
+    "facts.rotationPeriod": "Période de la base LCDB citée par la SBDB, que la source signale comme fondée sur une couverture incomplète. Le catalogue portait 9,5393 j (synchronisation supposée avec Vanth) : une hypothèse, pas une mesure publiée, remplacée par la valeur sourcée."
+  }
+}

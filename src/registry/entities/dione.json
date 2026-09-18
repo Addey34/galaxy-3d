@@ -1,0 +1,127 @@
+{
+  "$schema": "../schema/entity.schema.json",
+  "id": "dione",
+  "targetClass": "satellite",
+  "source": "catalogue",
+  "config": {
+    "kind": "moon",
+    "displayName": {
+      "en": "Dione",
+      "fr": "Dioné"
+    },
+    "radius": 0.17,
+    "rotationSpeed": {
+      "$rotationHours": {
+        "$days": 2.7369155124886273
+      }
+    },
+    "orbitalColor": "0xcac7bd",
+    "fallbackColor": "0xc9c7bf",
+    "frame": "parentRelative",
+    "rotationBody": "Saturn",
+    "relativeEphemeris": {
+      "kind": "horizonsParentRelative"
+    },
+    "relativeOrbitalElements": {
+      "semiMajorAxisAU": 0.002524502777,
+      "eccentricity": 0.00278575,
+      "inclinationRad": {
+        "$deg": 28.0246
+      },
+      "ascendingNodeRad": {
+        "$deg": 169.5295
+      },
+      "argPerihelionRad": {
+        "$deg": 259.2396
+      },
+      "meanAnomalyAtEpochRad": {
+        "$deg": 27.6597
+      },
+      "epoch": {
+        "$date": "2025-12-31T00:00:00.000Z"
+      }
+    },
+    "textureResolutions": {
+      "surface": [
+        "1k"
+      ]
+    },
+    "realData": {
+      "orbitalInclination": {
+        "$deg": 28.04139510566285
+      },
+      "ascendingNode": {
+        "$deg": 169.470196786071
+      },
+      "description": {
+        "en": "A dense icy moon with bright wispy fractures cutting across its darker, cratered trailing hemisphere.",
+        "fr": "Une lune glacée dense, striée de fractures brillantes qui traversent son hémisphère arrière plus sombre et cratérisé."
+      },
+      "wiki": {
+        "en": "https://en.wikipedia.org/wiki/Dione_(moon)",
+        "fr": "https://fr.wikipedia.org/wiki/Dion%C3%A9_(lune)"
+      }
+    },
+    "cameraDistance": {
+      "educ": 1,
+      "explo": {
+        "$cameraFromRadiusKm": 561.4
+      }
+    },
+    "loadPriority": 22
+  },
+  "facts": {
+    "radiusKm": {
+      "value": 561.4,
+      "source": "jpl-ssd-satellite-physical-parameters",
+      "method": "measured",
+      "uncertainty": 0.4
+    },
+    "massKg": {
+      "value": {
+        "$gm": 73.11607
+      },
+      "source": "jpl-ssd-satellite-physical-parameters",
+      "method": "derived",
+      "uncertainty": {
+        "$gm": 0.00005
+      },
+      "detail": "massFromGM"
+    },
+    "gravity": {
+      "value": {
+        "$gm": 73.11607,
+        "$radiusKm": 561.4
+      },
+      "source": "jpl-ssd-satellite-physical-parameters",
+      "method": "derived",
+      "detail": "gravityFromGM"
+    },
+    "meanTempC": {
+      "published": false,
+      "reason": "not-yet-sourced"
+    },
+    "axialTilt": {
+      "value": 0,
+      "published": false,
+      "reason": "not-yet-sourced"
+    },
+    "distanceAU": {
+      "value": {
+        "$km": 377400
+      },
+      "source": "nssdca-fact-sheets",
+      "method": "measured"
+    },
+    "orbitPeriodDays": {
+      "value": 2.7369155124886273,
+      "source": "nssdca-fact-sheets",
+      "method": "measured"
+    },
+    "rotationPeriod": {
+      "source": "nssdca-fact-sheets",
+      "method": "derived",
+      "detail": "synchronousRotation"
+    }
+  }
+}

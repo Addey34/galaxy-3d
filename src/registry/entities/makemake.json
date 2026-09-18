@@ -1,0 +1,79 @@
+{
+  "$schema": "../schema/entity.schema.json",
+  "id": "makemake",
+  "targetClass": "dwarf_planet",
+  "source": "small-body",
+  "elements": {
+    "displayName": {
+      "en": "Makemake",
+      "fr": "Makémaké"
+    },
+    "a": 45.4988931027048,
+    "e": 0.1603866278527415,
+    "iDeg": 29.00199283692018,
+    "omDeg": 79.44279338452822,
+    "wDeg": 296.0688272466675,
+    "maDeg": 140.1042105425099,
+    "epoch": "2000-01-01T12:00:00Z",
+    "barycentric": true,
+    "kind": "dwarf",
+    "color": "0xd78352",
+    "surfaceResolutions": [
+      "4k",
+      "2k",
+      "1k"
+    ],
+    "visualRadius": 0.112,
+    "description": {
+      "en": "Discovered just after Easter 2005 and nicknamed “Easterbunny”, it was later named after the creator god of Rapa Nui (Easter Island). Its reddish surface is coated in frozen methane.",
+      "fr": "Découverte juste après Pâques 2005 et surnommée « Easterbunny », elle fut ensuite nommée d’après le dieu créateur de Rapa Nui (île de Pâques). Sa surface rougeâtre est couverte de méthane gelé."
+    },
+    "wiki": {
+      "en": "https://en.wikipedia.org/wiki/Makemake",
+      "fr": "https://fr.wikipedia.org/wiki/(136472)_Mak%C3%A9mak%C3%A9"
+    }
+  },
+  "facts": {
+    "radiusKm": {
+      "value": {
+        "$diameterKm": 1434
+      },
+      "source": "brown-2013-makemake",
+      "method": "derived",
+      "uncertainty": 7,
+      "detail": "equatorialRadiusFromDiameter"
+    },
+    "massKg": {
+      "value": 3.1e+21,
+      "published": false,
+      "reason": "not-yet-sourced"
+    },
+    "gravity": {
+      "value": 0.405,
+      "published": false,
+      "reason": "not-yet-sourced"
+    },
+    "meanTempC": {
+      "published": false,
+      "reason": "not-yet-sourced"
+    },
+    "moonCount": {
+      "value": 1,
+      "source": "jpl-sbdb",
+      "method": "measured",
+      "asOf": "2026-09-17",
+      "detail": "confirmedSatellites"
+    },
+    "rotationPeriod": {
+      "value": 22.8266,
+      "source": "jpl-sbdb",
+      "method": "measured",
+      "detail": "partialLightcurve",
+      "citation": "LCDB (Rev. 2023-October); Warner et al., 2009"
+    }
+  },
+  "notes": {
+    "a": "Éléments osculateurs JPL Horizons BARYCENTRIQUES exactement à cette époque (COMMAND '136472;', CENTER=500@0, TLIST=2451545.0), par `pnpm ephemeris:small-body --center 500@0`. Barycentriques car mesuré meilleur au-delà de Neptune (cf. `OrbitalElements.barycentric`).",
+    "facts.gravity": "Masse et gravité gardées pour la simulation mais NON publiées (`unknown`) : aucune source primaire rattachée. L'orbite préliminaire de MK2 (Bamberger 2025, prépublication à un seul auteur) donnerait ~2,7e21 kg, pas 3,1e21 : raison de plus pour ne rien afficher."
+  }
+}

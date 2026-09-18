@@ -1,0 +1,131 @@
+{
+  "$schema": "../schema/entity.schema.json",
+  "id": "miranda",
+  "targetClass": "satellite",
+  "source": "catalogue",
+  "config": {
+    "kind": "moon",
+    "displayName": {
+      "en": "Miranda",
+      "fr": "Miranda"
+    },
+    "radius": 0.1,
+    "rotationSpeed": {
+      "$rotationHours": {
+        "$days": 1.4134794388946823
+      }
+    },
+    "orbitalColor": "0xb7b5ae",
+    "fallbackColor": "0xa8a6a0",
+    "frame": "parentRelative",
+    "rotationBody": "Uranus",
+    "relativeEphemeris": {
+      "kind": "horizonsParentRelative"
+    },
+    "relativeOrbitalElements": {
+      "semiMajorAxisAU": 0.0008681342197,
+      "eccentricity": 0.0011455,
+      "inclinationRad": {
+        "$deg": 99.1894
+      },
+      "ascendingNodeRad": {
+        "$deg": 163.4238
+      },
+      "argPerihelionRad": {
+        "$deg": 40.5448
+      },
+      "meanAnomalyAtEpochRad": {
+        "$deg": 217.1554
+      },
+      "epoch": {
+        "$date": "2025-12-31T00:00:00.000Z"
+      }
+    },
+    "textureResolutions": {
+      "surface": [
+        "2k"
+      ]
+    },
+    "realData": {
+      "orbitalInclination": {
+        "$deg": 97.25415391960598
+      },
+      "ascendingNode": {
+        "$deg": 172.0875833032825
+      },
+      "description": {
+        "en": "Uranus's smallest major moon, a bizarre patchwork of giant fault canyons and terraced 'racetrack' features up to 20 km deep.",
+        "fr": "La plus petite grande lune d’Uranus, un patchwork étrange de canyons de faille géants et de formations en terrasses profondes de jusqu’à 20 km."
+      },
+      "wiki": {
+        "en": "https://en.wikipedia.org/wiki/Miranda_(moon)",
+        "fr": "https://fr.wikipedia.org/wiki/Miranda_(lune)"
+      }
+    },
+    "cameraDistance": {
+      "educ": 0.7,
+      "explo": {
+        "$cameraFromRadiusKm": 235.8
+      }
+    },
+    "loadPriority": 24
+  },
+  "facts": {
+    "radiusKm": {
+      "value": 235.8,
+      "source": "jpl-ssd-satellite-physical-parameters",
+      "method": "measured",
+      "uncertainty": 0.7
+    },
+    "massKg": {
+      "value": {
+        "$gm": 4.3
+      },
+      "source": "jpl-ssd-satellite-physical-parameters",
+      "method": "derived",
+      "uncertainty": {
+        "$gm": 0.2
+      },
+      "detail": "massFromGM"
+    },
+    "gravity": {
+      "value": {
+        "$gm": 4.3,
+        "$radiusKm": 235.8
+      },
+      "source": "jpl-ssd-satellite-physical-parameters",
+      "method": "derived",
+      "detail": "gravityFromGM"
+    },
+    "meanTempC": {
+      "published": false,
+      "reason": "not-yet-sourced"
+    },
+    "axialTilt": {
+      "value": 0,
+      "published": false,
+      "reason": "not-yet-sourced"
+    },
+    "distanceAU": {
+      "value": {
+        "$km": 129900
+      },
+      "source": "nssdca-fact-sheets",
+      "method": "measured"
+    },
+    "orbitPeriodDays": {
+      "value": 1.4134794388946823,
+      "source": "nssdca-fact-sheets",
+      "method": "measured"
+    },
+    "rotationPeriod": {
+      "source": "nssdca-fact-sheets",
+      "method": "derived",
+      "detail": "synchronousRotation"
+    }
+  },
+  "notes": {
+    "relativeOrbitalElements": "JPL Horizons osculating elements, epoch 2000-01-01.5 TDB (EPHEM_TYPE=ELEMENTS, TLIST=2451545.0), même méthode que les lunes de Saturne. L'inclinaison ~97° n'est pas une orbite rétrograde : c'est l'écliptique qui est très inclinée par rapport au plan équatorial d'Uranus (axe couché à 97,77°, voir realData.axialTilt d'Uranus) — ces lunes orbitent normalement dans ce plan équatorial.",
+    "textureResolutions": "Aucune mosaïque globale contrôlée : Voyager 2 (survol unique, 1986) n'a imagé en détail qu'environ la moitié de Miranda — vérifié en direct (2026-08-26, voir registry/products/textures). Texture procédurale générée, avec de larges plages de terrain distinct approximant ses coronae réelles (Inverness/Arden/Elsinore)."
+  }
+}

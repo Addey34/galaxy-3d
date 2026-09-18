@@ -1,0 +1,133 @@
+{
+  "$schema": "../schema/entity.schema.json",
+  "id": "hyperion",
+  "targetClass": "satellite",
+  "source": "catalogue",
+  "config": {
+    "kind": "moon",
+    "displayName": {
+      "en": "Hyperion",
+      "fr": "Hypérion"
+    },
+    "radius": 0.08,
+    "rotationSpeed": {
+      "$rotationHours": {
+        "$days": 13
+      }
+    },
+    "orbitalColor": "0xa08670",
+    "fallbackColor": "0x8a7060",
+    "frame": "parentRelative",
+    "rotationBody": "Saturn",
+    "relativeEphemeris": {
+      "kind": "horizonsParentRelative"
+    },
+    "relativeOrbitalElements": {
+      "semiMajorAxisAU": 0.009868051277,
+      "eccentricity": 0.0947541,
+      "inclinationRad": {
+        "$deg": 27.0526
+      },
+      "ascendingNodeRad": {
+        "$deg": 169.4913
+      },
+      "argPerihelionRad": {
+        "$deg": 81.9189
+      },
+      "meanAnomalyAtEpochRad": {
+        "$deg": 276.1022
+      },
+      "epoch": {
+        "$date": "2025-12-31T00:00:00.000Z"
+      }
+    },
+    "textureResolutions": {
+      "surface": [
+        "2k"
+      ]
+    },
+    "realData": {
+      "orbitalInclination": {
+        "$deg": 27.20902903280515
+      },
+      "ascendingNode": {
+        "$deg": 168.305013991762
+      },
+      "description": {
+        "en": "A spongy, porous outer moon tumbling chaotically through space: its rotation never settles into a fixed period.",
+        "fr": "Une lune extérieure spongieuse et poreuse, qui bascule de façon chaotique dans l’espace : sa rotation ne se stabilise jamais sur une période fixe."
+      },
+      "wiki": {
+        "en": "https://en.wikipedia.org/wiki/Hyperion_(moon)",
+        "fr": "https://fr.wikipedia.org/wiki/Hyp%C3%A9rion_(lune)"
+      }
+    },
+    "cameraDistance": {
+      "educ": 0.6,
+      "explo": {
+        "$cameraFromRadiusKm": 135
+      }
+    },
+    "loadPriority": 23
+  },
+  "facts": {
+    "radiusKm": {
+      "value": 135,
+      "source": "jpl-ssd-satellite-physical-parameters",
+      "method": "measured",
+      "uncertainty": 4
+    },
+    "massKg": {
+      "value": {
+        "$gm": 0.37049
+      },
+      "source": "jpl-ssd-satellite-physical-parameters",
+      "method": "derived",
+      "uncertainty": {
+        "$gm": 0.00005
+      },
+      "detail": "massFromGM"
+    },
+    "gravity": {
+      "value": {
+        "$gm": 0.37049,
+        "$radiusKm": 135
+      },
+      "source": "jpl-ssd-satellite-physical-parameters",
+      "method": "derived",
+      "detail": "gravityFromGM"
+    },
+    "meanTempC": {
+      "published": false,
+      "reason": "not-yet-sourced"
+    },
+    "axialTilt": {
+      "value": 0,
+      "published": false,
+      "reason": "not-yet-sourced"
+    },
+    "distanceAU": {
+      "value": {
+        "$km": 1500930
+      },
+      "source": "nssdca-fact-sheets",
+      "method": "measured"
+    },
+    "orbitPeriodDays": {
+      "value": 21.27677790839671,
+      "source": "nssdca-fact-sheets",
+      "method": "measured"
+    },
+    "rotationPeriod": {
+      "published": false,
+      "reason": {
+        "en": "NASA NSSDCA lists Hyperion’s rotation as chaotic: it tumbles without a fixed period.",
+        "fr": "La NASA (NSSDCA) classe la rotation d’Hypérion comme chaotique : elle bascule sans période fixe."
+      }
+    }
+  },
+  "notes": {
+    "rotationSpeed": "Rotation CHAOTIQUE, pas synchrone (résonance orbitale 4:3 avec Titan + forme très irrégulière) — contrairement à toutes les autres lunes de ce fichier, il n'y a pas de \"vraie\" période de rotation fixe. Valeur approximative (période moyenne observée), documentée comme telle plutôt que présentée comme une synchronisation réelle.",
+    "textureResolutions": "Aucune mosaïque globale : Hyperion est trop irrégulier (éponge poreuse ~180×133×103 km) pour qu'une \"carte globale\" ait vraiment un sens — vérifié en direct (2026-08-26, voir registry/products/textures). Texture procédurale générée, paramétrée sur son aspect \"éponge\" réel (cratères denses, sans bourrelet d'éjecta)."
+  }
+}

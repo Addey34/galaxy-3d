@@ -1,0 +1,97 @@
+{
+  "$schema": "../schema/entity.schema.json",
+  "id": "ceres",
+  "targetClass": "dwarf_planet",
+  "source": "small-body",
+  "elements": {
+    "displayName": {
+      "fr": "Cérès"
+    },
+    "a": 2.766496019994375,
+    "e": 0.0783756264716304,
+    "iDeg": 10.58336045805628,
+    "omDeg": 80.49435747295276,
+    "wDeg": 73.92286274285223,
+    "maDeg": 6.176654513180486,
+    "epoch": "2000-01-01T12:00:00Z",
+    "kind": "dwarf",
+    "color": "0xc5a46d",
+    "surfaceResolutions": [
+      "4k",
+      "2k",
+      "1k"
+    ],
+    "visualRadius": 0.1,
+    "description": {
+      "en": "The largest body of the asteroid belt and the only dwarf planet of the inner Solar System. NASA’s Dawn probe revealed bright salt deposits there, traces of a briny subsurface ocean.",
+      "fr": "Le plus gros corps de la ceinture d’astéroïdes et la seule planète naine du Système solaire interne. La sonde Dawn y a révélé des dépôts de sel brillants, traces d’un océan souterrain saumâtre."
+    },
+    "wiki": {
+      "en": "https://en.wikipedia.org/wiki/Ceres_(dwarf_planet)",
+      "fr": "https://fr.wikipedia.org/wiki/(1)_C%C3%A9r%C3%A8s"
+    }
+  },
+  "facts": {
+    "radiusKm": {
+      "value": {
+        "$diameterKm": 939.4
+      },
+      "source": "jpl-sbdb",
+      "method": "derived",
+      "uncertainty": 0.1,
+      "detail": "radiusFromDiameter",
+      "citation": "Nature vol. 537, pp515-517 (22 September 2016)"
+    },
+    "massKg": {
+      "value": {
+        "$gm": 62.6284
+      },
+      "source": "jpl-sbdb",
+      "method": "derived",
+      "uncertainty": {
+        "$gm": 0.0009
+      },
+      "detail": "massFromGM",
+      "citation": "Nature vol. 537, pp515-517 (22 September 2016)"
+    },
+    "gravity": {
+      "value": {
+        "$gm": 62.6284,
+        "$radiusKm": {
+          "$diameterKm": 939.4
+        }
+      },
+      "source": "jpl-sbdb",
+      "method": "derived",
+      "detail": "gravityFromGM",
+      "citation": "Nature vol. 537, pp515-517 (22 September 2016)"
+    },
+    "meanTempC": {
+      "published": false,
+      "reason": "not-yet-sourced"
+    },
+    "moonCount": {
+      "value": 0,
+      "source": "jpl-sbdb",
+      "method": "measured",
+      "asOf": "2026-09-17",
+      "detail": "confirmedSatellites"
+    },
+    "axialTilt": {
+      "value": 4,
+      "source": "jpl-sbdb",
+      "method": "derived",
+      "detail": "obliquityFromPole",
+      "citation": "Nature vol. 537, pp515-517 (22 September 2016)"
+    },
+    "rotationPeriod": {
+      "value": 9.07417,
+      "source": "jpl-sbdb",
+      "method": "measured",
+      "citation": "Nature vol. 537, pp515-517 (22 September 2016)"
+    }
+  },
+  "notes": {
+    "a": "Éléments osculateurs JPL Horizons EXACTEMENT à cette époque (COMMAND '1;', EPHEM_TYPE=ELEMENTS, TLIST=2451545.0), par `pnpm ephemeris:small-body`. Les valeurs recopiées à la main plaçaient le corps loin de sa position dès l'époque (cf. test)."
+  }
+}

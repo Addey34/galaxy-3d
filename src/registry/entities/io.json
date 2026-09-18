@@ -1,0 +1,111 @@
+{
+  "$schema": "../schema/entity.schema.json",
+  "id": "io",
+  "targetClass": "satellite",
+  "source": "catalogue",
+  "config": {
+    "kind": "moon",
+    "displayName": {
+      "fr": "Io"
+    },
+    "frame": "parentRelative",
+    "relativeEphemeris": {
+      "kind": "jupiterMoon",
+      "moon": "io"
+    },
+    "rotationBody": "Jupiter",
+    "radius": 0.13,
+    "rotationSpeed": {
+      "$rotationHours": 42.46
+    },
+    "orbitalColor": "0xffc857",
+    "fallbackColor": "0xffc857",
+    "textureResolutions": {
+      "surface": [
+        "8k",
+        "4k",
+        "2k",
+        "1k"
+      ]
+    },
+    "realData": {
+      "orbitalInclination": 0,
+      "ascendingNode": 0,
+      "description": {
+        "en": "The innermost Galilean moon, shaped by intense volcanic activity driven by Jupiter tides.",
+        "fr": "La plus proche des lunes galiléennes, modelée par une activité volcanique intense entretenue par les marées de Jupiter."
+      },
+      "wiki": {
+        "en": "https://en.wikipedia.org/wiki/Io_(moon)",
+        "fr": "https://fr.wikipedia.org/wiki/Io_(lune)"
+      }
+    },
+    "cameraDistance": {
+      "educ": 1.2,
+      "explo": {
+        "$cameraFromRadiusKm": 1821.6
+      }
+    },
+    "loadPriority": 11
+  },
+  "facts": {
+    "radiusKm": {
+      "value": 1821.49,
+      "source": "jpl-ssd-satellite-physical-parameters",
+      "method": "measured",
+      "uncertainty": 0.5
+    },
+    "massKg": {
+      "value": {
+        "$gm": 5959.91547
+      },
+      "source": "jpl-ssd-satellite-physical-parameters",
+      "method": "derived",
+      "uncertainty": {
+        "$gm": 0.00135
+      },
+      "detail": "massFromGM"
+    },
+    "gravity": {
+      "value": {
+        "$gm": 5959.91547,
+        "$radiusKm": 1821.49
+      },
+      "source": "jpl-ssd-satellite-physical-parameters",
+      "method": "derived",
+      "detail": "gravityFromGM"
+    },
+    "meanTempC": {
+      "published": false,
+      "reason": {
+        "en": "NASA publishes a range, not a mean: about 80-85 K at night, 420-620 K over volcanic regions.",
+        "fr": "La NASA publie une plage, pas une moyenne : environ 80-85 K la nuit, 420-620 K sur les zones volcaniques."
+      }
+    },
+    "axialTilt": {
+      "value": 0,
+      "published": false,
+      "reason": "not-yet-sourced"
+    },
+    "distanceAU": {
+      "value": {
+        "$km": 421800
+      },
+      "source": "nssdca-fact-sheets",
+      "method": "measured"
+    },
+    "orbitPeriodDays": {
+      "value": 1.769,
+      "source": "nssdca-fact-sheets",
+      "method": "measured"
+    },
+    "rotationPeriod": {
+      "source": "nssdca-fact-sheets",
+      "method": "derived",
+      "detail": "synchronousRotation"
+    }
+  },
+  "notes": {
+    "facts.massKg": "Masse et gravite derivees du GM publie par JPL SSD (ephemeride JUP365, https://ssd.jpl.nasa.gov/sats/phys_par/) : m = GM/G, g = GM/R^2. Ni l'un ni l'autre n'est saisi a la main."
+  }
+}

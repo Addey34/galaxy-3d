@@ -1,0 +1,129 @@
+{
+  "$schema": "../schema/entity.schema.json",
+  "id": "deimos",
+  "targetClass": "satellite",
+  "source": "catalogue",
+  "config": {
+    "kind": "moon",
+    "displayName": {
+      "en": "Deimos",
+      "fr": "Déimos"
+    },
+    "radius": 0.06,
+    "rotationSpeed": {
+      "$rotationHours": {
+        "$days": 1.2624407921255993
+      }
+    },
+    "orbitalColor": "0xc1aa91",
+    "fallbackColor": "0x927d68",
+    "frame": "parentRelative",
+    "rotationBody": "Mars",
+    "relativeEphemeris": {
+      "kind": "horizonsParentRelative"
+    },
+    "relativeOrbitalElements": {
+      "semiMajorAxisAU": 0.0001568163438,
+      "eccentricity": 0.000312172,
+      "inclinationRad": {
+        "$deg": 24.1734
+      },
+      "ascendingNodeRad": {
+        "$deg": 81.2256
+      },
+      "argPerihelionRad": {
+        "$deg": 32.0428
+      },
+      "meanAnomalyAtEpochRad": {
+        "$deg": 22.0077
+      },
+      "epoch": {
+        "$date": "2025-12-31T00:00:00.000Z"
+      }
+    },
+    "textureResolutions": {
+      "surface": [
+        "1k"
+      ]
+    },
+    "realData": {
+      "orbitalInclination": {
+        "$deg": 1.8
+      },
+      "ascendingNode": {
+        "$deg": 54.3
+      },
+      "description": {
+        "en": "Mars' smaller outer moon, a dark irregular body with a slow synchronous orbit.",
+        "fr": "La plus petite lune extérieure de Mars, un corps sombre et irrégulier en orbite synchrone lente."
+      },
+      "wiki": {
+        "en": "https://en.wikipedia.org/wiki/Deimos_(moon)",
+        "fr": "https://fr.wikipedia.org/wiki/D%C3%A9imos_(lune)"
+      }
+    },
+    "cameraDistance": {
+      "educ": 0.3,
+      "explo": {
+        "$cameraFromRadiusKm": 6.2
+      }
+    },
+    "loadPriority": 11
+  },
+  "facts": {
+    "radiusKm": {
+      "value": 6.2,
+      "source": "jpl-ssd-satellite-physical-parameters",
+      "method": "measured",
+      "uncertainty": 0.24
+    },
+    "massKg": {
+      "value": {
+        "$gm": 0.0000962
+      },
+      "source": "jpl-ssd-satellite-physical-parameters",
+      "method": "derived",
+      "uncertainty": {
+        "$gm": 0.0000028
+      },
+      "detail": "massFromGM"
+    },
+    "gravity": {
+      "value": {
+        "$gm": 0.0000962,
+        "$radiusKm": 6.2
+      },
+      "source": "jpl-ssd-satellite-physical-parameters",
+      "method": "derived",
+      "detail": "gravityFromGM"
+    },
+    "meanTempC": {
+      "published": false,
+      "reason": "not-yet-sourced"
+    },
+    "axialTilt": {
+      "value": {
+        "$deg": 0.9
+      },
+      "published": false,
+      "reason": "not-yet-sourced"
+    },
+    "distanceAU": {
+      "value": {
+        "$km": 23459
+      },
+      "source": "nssdca-fact-sheets",
+      "method": "measured"
+    },
+    "orbitPeriodDays": {
+      "value": 1.2624407921255993,
+      "source": "nssdca-fact-sheets",
+      "method": "measured"
+    },
+    "rotationPeriod": {
+      "source": "nssdca-fact-sheets",
+      "method": "derived",
+      "detail": "synchronousRotation"
+    }
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "$comment": "Petits corps (astéroïdes, comètes, planètes naines) — positionnés par éléments orbitaux képlériens, définis dans `smallBodies.ts`. Fusionnés ici pour dériver comme les autres corps (position instantanée, label Explo). Les corps disposant d'une texture locale ont aussi un mesh et deviennent navigables dans les deux modes.",
+  "order": [
+    "stars",
+    "sun",
+    "mercury",
+    "venus",
+    "earth",
+    "mars",
+    "jupiter",
+    "saturn",
+    "uranus",
+    "neptune",
+    "ceres",
+    "vesta",
+    "pallas",
+    "hygiea",
+    "pluto",
+    "eris",
+    "haumea",
+    "makemake",
+    "orcus",
+    "quaoar",
+    "gonggong",
+    "sedna",
+    "halley",
+    "bennu",
+    "eros",
+    "itokawa",
+    "ryugu",
+    "ida"
+  ]
+}

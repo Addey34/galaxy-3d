@@ -1,0 +1,103 @@
+{
+  "$schema": "../schema/entity.schema.json",
+  "id": "uranus",
+  "targetClass": "planet",
+  "source": "catalogue",
+  "config": {
+    "kind": "planet",
+    "radius": 2,
+    "rotationSpeed": {
+      "$rotationHours": 17.24
+    },
+    "orbitalColor": "0x69d6d3",
+    "textureResolutions": {
+      "surface": [
+        "2k",
+        "1k"
+      ]
+    },
+    "realData": {
+      "orbitalInclination": {
+        "$deg": 0.773
+      },
+      "ascendingNode": {
+        "$deg": 74.006
+      },
+      "description": {
+        "en": "The ice giant tipped on its side, with an axis leaning at 98°, so it rolls along its orbit. Each season lasts 21 years.",
+        "fr": "La géante de glace couchée sur le côté, avec un axe penché à 98°, si bien qu’elle roule le long de son orbite. Chaque saison dure 21 ans."
+      },
+      "wiki": {
+        "en": "https://en.wikipedia.org/wiki/Uranus",
+        "fr": "https://fr.wikipedia.org/wiki/Uranus_(plan%C3%A8te)"
+      }
+    },
+    "astroBody": "Uranus",
+    "cameraDistance": {
+      "educ": 10,
+      "explo": {
+        "$cameraFromRadiusKm": 25559
+      }
+    },
+    "loadPriority": 9,
+    "satellites": [
+      "miranda",
+      "ariel",
+      "umbriel",
+      "titania",
+      "oberon"
+    ]
+  },
+  "facts": {
+    "radiusKm": {
+      "value": 25559,
+      "source": "nssdca-fact-sheets",
+      "method": "measured",
+      "detail": "equatorialRadius1Bar"
+    },
+    "massKg": {
+      "value": 8.6811e+25,
+      "source": "nssdca-fact-sheets",
+      "method": "measured"
+    },
+    "gravity": {
+      "value": 9.01,
+      "source": "nssdca-fact-sheets",
+      "method": "measured",
+      "detail": "meanGravity1Bar"
+    },
+    "meanTempC": {
+      "value": -195,
+      "source": "nssdca-fact-sheets",
+      "method": "measured",
+      "detail": "temperature1Bar"
+    },
+    "moonCount": {
+      "value": 29,
+      "source": "nasa-science-uranus-moons",
+      "method": "measured",
+      "asOf": "2026-08"
+    },
+    "axialTilt": {
+      "value": {
+        "$deg": 97.77
+      },
+      "source": "nssdca-fact-sheets",
+      "method": "measured"
+    },
+    "distanceAU": {
+      "value": 19.19126393,
+      "source": "nssdca-fact-sheets",
+      "method": "measured"
+    },
+    "orbitPeriodDays": {
+      "value": 30685.4,
+      "source": "nssdca-fact-sheets",
+      "method": "measured"
+    },
+    "rotationPeriod": {
+      "source": "nssdca-fact-sheets",
+      "method": "measured"
+    }
+  }
+}

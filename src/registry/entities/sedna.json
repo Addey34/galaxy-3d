@@ -1,0 +1,75 @@
+{
+  "$schema": "../schema/entity.schema.json",
+  "id": "sedna",
+  "targetClass": "dwarf_planet",
+  "source": "small-body",
+  "elements": {
+    "displayName": {
+      "en": "Sedna",
+      "fr": "Sedna"
+    },
+    "a": 506.4484207674334,
+    "e": 0.8495572493958709,
+    "iDeg": 11.92852404316633,
+    "omDeg": 144.401716933437,
+    "wDeg": 311.2846178310521,
+    "maDeg": 357.5940836366447,
+    "epoch": "2000-01-01T12:00:00Z",
+    "barycentric": true,
+    "kind": "dwarf",
+    "color": "0xb84a3a",
+    "surfaceResolutions": [
+      "2k"
+    ],
+    "fallbackColor": "0xb84a3a",
+    "visualRadius": 0.078,
+    "description": {
+      "en": "One of the most distant and coldest known objects in the Solar System, journeying on an extremely elongated, multi-millennial orbit that carries it beyond the Kuiper Belt toward the inner edge of the hypothesized Oort Cloud.",
+      "fr": "L’un des objets connus les plus lointains et les plus froids du Système solaire, parcourant une orbite extrêmement allongée, longue de plusieurs millénaires, qui l’entraîne au-delà de la ceinture de Kuiper vers les abords du nuage d’Oort hypothétique."
+    },
+    "wiki": {
+      "en": "https://en.wikipedia.org/wiki/Sedna_(dwarf_planet)",
+      "fr": "https://fr.wikipedia.org/wiki/(90377)_Sedna"
+    }
+  },
+  "facts": {
+    "radiusKm": {
+      "value": {
+        "$diameterKm": 995
+      },
+      "source": "pal-2012-sedna",
+      "method": "derived",
+      "uncertainty": 40,
+      "detail": "radiusFromDiameter"
+    },
+    "massKg": {
+      "published": false,
+      "reason": "not-yet-sourced"
+    },
+    "gravity": {
+      "published": false,
+      "reason": "not-yet-sourced"
+    },
+    "meanTempC": {
+      "published": false,
+      "reason": "not-yet-sourced"
+    },
+    "moonCount": {
+      "value": 0,
+      "source": "jpl-sbdb",
+      "method": "measured",
+      "asOf": "2026-09-17",
+      "detail": "confirmedSatellites"
+    },
+    "rotationPeriod": {
+      "value": 10.273,
+      "source": "jpl-sbdb",
+      "method": "measured",
+      "detail": "partialLightcurve",
+      "citation": "LCDB (Rev. 2023-October); Warner et al., 2009"
+    }
+  },
+  "notes": {
+    "a": "Éléments osculateurs JPL Horizons BARYCENTRIQUES exactement à cette époque (COMMAND '90377;', CENTER=500@0, TLIST=2451545.0), par `pnpm ephemeris:small-body --center 500@0`. Barycentriques car mesuré meilleur au-delà de Neptune (cf. `OrbitalElements.barycentric`)."
+  }
+}

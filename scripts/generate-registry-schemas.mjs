@@ -24,6 +24,7 @@ import { createServer } from 'vite';
 const SCHEMAS = [
   ['provider.ts', 'providerJsonSchemaText', 'provider.schema.json'],
   ['product.ts', 'productJsonSchemaText', 'product.schema.json'],
+  ['entity.ts', 'entityJsonSchemaText', 'entity.schema.json'],
 ];
 
 const DIR = resolve(process.cwd(), 'src/registry/schema');

@@ -1,0 +1,91 @@
+{
+  "$schema": "../schema/entity.schema.json",
+  "id": "eris",
+  "targetClass": "dwarf_planet",
+  "source": "small-body",
+  "elements": {
+    "displayName": {
+      "fr": "Éris"
+    },
+    "a": 67.83513506437887,
+    "e": 0.4384299959852953,
+    "iDeg": 43.99285596415268,
+    "omDeg": 35.9765290736987,
+    "wDeg": 151.2211963180349,
+    "maDeg": 193.8429965779992,
+    "epoch": "2000-01-01T12:00:00Z",
+    "barycentric": true,
+    "kind": "dwarf",
+    "color": "0x91bce6",
+    "surfaceResolutions": [
+      "4k",
+      "2k",
+      "1k"
+    ],
+    "visualRadius": 0.183,
+    "description": {
+      "en": "More massive than Pluto. Its discovery in 2005 forced astronomers to define what a planet is, and cost Pluto its status. It roams up to three times farther from the Sun than Pluto.",
+      "fr": "Plus massive que Pluton. Sa découverte en 2005 a forcé les astronomes à définir ce qu’est une planète, et a coûté son statut à Pluton. Elle s’éloigne jusqu’à trois fois plus loin du Soleil que Pluton."
+    },
+    "wiki": {
+      "en": "https://en.wikipedia.org/wiki/Eris_(dwarf_planet)",
+      "fr": "https://fr.wikipedia.org/wiki/(136199)_%C3%89ris"
+    }
+  },
+  "facts": {
+    "radiusKm": {
+      "value": 1163,
+      "source": "sicardy-2011-eris",
+      "method": "measured",
+      "uncertainty": 6
+    },
+    "massKg": {
+      "value": {
+        "$density": 2.52,
+        "$radiusKm": 1163
+      },
+      "source": "sicardy-2011-eris",
+      "method": "derived",
+      "detail": "massFromDensity"
+    },
+    "gravity": {
+      "value": {
+        "$massKg": {
+          "$density": 2.52,
+          "$radiusKm": 1163
+        },
+        "$radiusKm": 1163
+      },
+      "source": "sicardy-2011-eris",
+      "method": "derived",
+      "detail": "gravityFromMass"
+    },
+    "meanTempC": {
+      "published": false,
+      "reason": "not-yet-sourced"
+    },
+    "moonCount": {
+      "value": 1,
+      "source": "jpl-sbdb",
+      "method": "measured",
+      "asOf": "2026-09-17",
+      "detail": "confirmedSatellites"
+    },
+    "axialTilt": {
+      "value": 78,
+      "published": false,
+      "reason": "not-yet-sourced"
+    },
+    "rotationPeriod": {
+      "value": {
+        "$days": 15.8
+      },
+      "source": "szakats-2023-eris",
+      "method": "measured",
+      "detail": "synchronousRotation"
+    }
+  },
+  "notes": {
+    "a": "Éléments osculateurs JPL Horizons BARYCENTRIQUES exactement à cette époque (COMMAND '136199;', CENTER=500@0, TLIST=2451545.0), par `pnpm ephemeris:small-body --center 500@0`. Barycentriques car mesuré meilleur au-delà de Neptune (cf. `OrbitalElements.barycentric`)."
+  }
+}

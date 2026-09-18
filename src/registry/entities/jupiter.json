@@ -1,0 +1,107 @@
+{
+  "$schema": "../schema/entity.schema.json",
+  "id": "jupiter",
+  "targetClass": "planet",
+  "source": "catalogue",
+  "config": {
+    "kind": "planet",
+    "radius": 4,
+    "rotationSpeed": {
+      "$rotationHours": 9.925
+    },
+    "orbitalColor": "0xd89a5b",
+    "textureResolutions": {
+      "surface": [
+        "4k",
+        "2k",
+        "1k"
+      ]
+    },
+    "realData": {
+      "orbitalInclination": {
+        "$deg": 1.304
+      },
+      "ascendingNode": {
+        "$deg": 100.464
+      },
+      "description": {
+        "en": "The giant of the Solar System, more massive than all the other planets combined. Its Great Red Spot is a storm centuries old.",
+        "fr": "La géante du Système solaire, plus massive que toutes les autres planètes réunies. Sa Grande Tache rouge est une tempête vieille de plusieurs siècles."
+      },
+      "wiki": {
+        "en": "https://en.wikipedia.org/wiki/Jupiter",
+        "fr": "https://fr.wikipedia.org/wiki/Jupiter_(plan%C3%A8te)"
+      }
+    },
+    "astroBody": "Jupiter",
+    "cameraDistance": {
+      "educ": 25,
+      "explo": {
+        "$cameraFromRadiusKm": 71492
+      }
+    },
+    "loadPriority": 5,
+    "satellites": [
+      "amalthea",
+      "io",
+      "europa",
+      "ganymede",
+      "callisto"
+    ]
+  },
+  "facts": {
+    "radiusKm": {
+      "value": 71492,
+      "source": "nssdca-fact-sheets",
+      "method": "measured",
+      "detail": "equatorialRadius1Bar"
+    },
+    "massKg": {
+      "value": 1.89813e+27,
+      "source": "nssdca-fact-sheets",
+      "method": "measured"
+    },
+    "gravity": {
+      "value": 25.92,
+      "source": "nssdca-fact-sheets",
+      "method": "measured",
+      "detail": "meanGravity1Bar"
+    },
+    "meanTempC": {
+      "value": -110,
+      "source": "nssdca-fact-sheets",
+      "method": "measured",
+      "detail": "temperature1Bar"
+    },
+    "moonCount": {
+      "value": 115,
+      "source": "nasa-science-jupiter-moons",
+      "method": "measured",
+      "asOf": "2026-08"
+    },
+    "axialTilt": {
+      "value": {
+        "$deg": 3.13
+      },
+      "source": "nssdca-fact-sheets",
+      "method": "measured"
+    },
+    "distanceAU": {
+      "value": 5.20336301,
+      "source": "nssdca-fact-sheets",
+      "method": "measured"
+    },
+    "orbitPeriodDays": {
+      "value": 4332.589,
+      "source": "nssdca-fact-sheets",
+      "method": "measured"
+    },
+    "rotationPeriod": {
+      "source": "nssdca-fact-sheets",
+      "method": "measured"
+    }
+  },
+  "notes": {
+    "facts.moonCount": "Chiffre DATÉ (`sources.moonCount.asOf`) : NASA Science l'annonce « as of August 2026 », alors que la fiche NSSDCA en était encore à 95. Les lots de lunes confirmées par l'UAI le périment en quelques années ; `pnpm facts:snapshot` relit la page."
+  }
+}

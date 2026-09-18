@@ -1,0 +1,115 @@
+{
+  "$schema": "../schema/entity.schema.json",
+  "id": "ryugu",
+  "targetClass": "asteroid",
+  "source": "small-body",
+  "elements": {
+    "displayName": {
+      "en": "Ryugu",
+      "fr": "Ryugu"
+    },
+    "a": 1.190915530274858,
+    "e": 0.191066697591621,
+    "iDeg": 5.866565344845061,
+    "omDeg": 251.2911945048745,
+    "wDeg": 211.6188712177815,
+    "maDeg": 301.7512745052471,
+    "epoch": "2026-01-01T00:00:00.000Z",
+    "kind": "asteroid",
+    "color": "0x9c6fd6",
+    "fallbackColor": "0x5f5f5f",
+    "model": {
+      "resolutions": [
+        "4k",
+        "2k",
+        "1k"
+      ],
+      "extentRatio": 1.18,
+      "albedo": 0.045,
+      "albedoSource": "Sugita et al. 2019, Science 364, 6437 (JPL SBDB)",
+      "colourSource": {
+        "en": "ISAS/JAXA, Ryugu v-band normal albedo map, Hayabusa2 ONC (JAXA DARTS); data modified: sampled per vertex",
+        "fr": "ISAS/JAXA, carte d’albédo normal en bande v de Ryugu, Hayabusa2 ONC (JAXA DARTS) ; données modifiées : échantillonnée par sommet"
+      },
+      "credit": {
+        "en": "ISAS/JAXA Hayabusa2, SfM shape model SHAPE_SFM_200k_v20180804 (Watanabe et al. 2019, DARTS); data modified: decimated for the web, pole brought onto Y.",
+        "fr": "ISAS/JAXA Hayabusa2, modèle de forme SfM SHAPE_SFM_200k_v20180804 (Watanabe et al. 2019, DARTS) ; données modifiées : décimé pour le web, pôle ramené sur Y."
+      }
+    },
+    "description": {
+      "en": "A dark, carbon-rich spinning top about 900 metres across. JAXA’s Hayabusa2 fired a projectile into it to dig a fresh crater and brought 5.4 grams of it back to Earth in December 2020.",
+      "fr": "Une toupie sombre et riche en carbone d’environ 900 mètres. La sonde japonaise Hayabusa2 y a tiré un projectile pour creuser un cratère frais et en a rapporté 5,4 grammes sur Terre en décembre 2020."
+    },
+    "wiki": {
+      "en": "https://en.wikipedia.org/wiki/162173_Ryugu",
+      "fr": "https://fr.wikipedia.org/wiki/(162173)_Ryugu"
+    }
+  },
+  "facts": {
+    "radiusKm": {
+      "value": {
+        "$diameterKm": 0.896
+      },
+      "source": "jpl-sbdb",
+      "method": "derived",
+      "uncertainty": 0.002,
+      "detail": "radiusFromDiameter",
+      "citation": "Watanabe, S.; Hirabayashi, M.; Hirata, N.; Hirata, Na.; et al. (2019) Science 364, 267-272."
+    },
+    "massKg": {
+      "value": {
+        "$gm": 3e-8
+      },
+      "source": "jpl-sbdb",
+      "method": "derived",
+      "uncertainty": {
+        "$gm": 4e-10
+      },
+      "detail": "massFromGM",
+      "citation": "Watanabe, S.; Hirabayashi, M.; Hirata, N.; Hirata, Na.; et al. (2019) Science 364, 267-272."
+    },
+    "gravity": {
+      "published": false,
+      "reason": {
+        "en": "About 0.1 mm/s², a hundred-thousandth of Earth’s, and about a fifth weaker on its equatorial ridge, where the spin works against it: a single value would mislead.",
+        "fr": "Environ 0,1 mm/s², un cent-millième de celle de la Terre, et plus faible d'un cinquième environ sur son bourrelet équatorial, où la rotation s'y oppose : une valeur unique serait trompeuse."
+      }
+    },
+    "meanTempC": {
+      "published": false,
+      "reason": {
+        "en": "Surface temperature swings strongly over its 7.6-hour day: a mean would describe no real moment.",
+        "fr": "La température de surface varie fortement au fil de sa journée de 7,6 heures : une moyenne ne décrirait aucun instant réel."
+      }
+    },
+    "moonCount": {
+      "value": 0,
+      "source": "jpl-sbdb",
+      "method": "measured",
+      "asOf": "2026-09-17",
+      "detail": "confirmedSatellites"
+    },
+    "axialTilt": {
+      "value": 171.7,
+      "source": "jpl-sbdb",
+      "method": "derived",
+      "detail": "obliquityFromPole",
+      "citation": "Preusker, F.; Scholten, F.; Elgner, S.; Matz, K. D.; et al. (2019) A&A 632 L4."
+    },
+    "rotationPeriod": {
+      "value": 7.63262,
+      "source": "jpl-sbdb",
+      "method": "measured",
+      "uncertainty": 0.00002,
+      "citation": "Watanabe, S.; Hirabayashi, M.; Hirata, N.; Hirata, Na.; et al. (2019) Science 364, 267-272."
+    }
+  },
+  "notes": {
+    "a": "Éléments osculateurs JPL Horizons EXACTEMENT à cette époque (COMMAND '162173;', EPHEM_TYPE=ELEMENTS, TLIST=2461041.5).",
+    "facts.radiusKm": "Diamètre équivalent 0,896 ± 0,004 km (SBDB, Watanabe et al. 2019).",
+    "facts.axialTilt": "DÉRIVÉE du pôle SBDB (RA 96,3956°, Dec −66,3937°, Preusker et al. 2019) : rétrograde.",
+    "facts.massKg": "GM = 3,00e-8 km³/s² (SBDB) ÷ G.",
+    "model.extentRatio": "Mesuré sur le fichier : rayon max / rayon équivalent-volume.",
+    "model.albedo": "Luminosité et couleur RÉELLES, cuites dans le modèle (bake-shape-colour.mjs) ; la sphère d'attente ci-dessus a la même couleur moyenne, pour ne pas changer d'aspect au chargement."
+  }
+}

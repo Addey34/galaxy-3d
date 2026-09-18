@@ -1,0 +1,86 @@
+{
+  "$schema": "../schema/entity.schema.json",
+  "id": "pluto",
+  "targetClass": "dwarf_planet",
+  "source": "small-body",
+  "elements": {
+    "displayName": {
+      "en": "Pluto",
+      "fr": "Pluton"
+    },
+    "a": 39.48741550384992,
+    "e": 0.2489763560923634,
+    "iDeg": 17.14055930776762,
+    "omDeg": 110.3012538561415,
+    "wDeg": 113.7774660018993,
+    "maDeg": 14.84874908032896,
+    "epoch": "2000-01-01T12:00:00Z",
+    "barycentric": true,
+    "kind": "dwarf",
+    "color": "0xd8b894",
+    "surfaceResolutions": [
+      "8k",
+      "4k",
+      "2k",
+      "1k"
+    ],
+    "visualRadius": 0.188,
+    "rotationBody": "Pluto",
+    "description": {
+      "en": "Demoted from planet to dwarf planet in 2006, it hosts a heart-shaped nitrogen glacier photographed by New Horizons in 2015. Its moon Charon is so large that the two form a double system.",
+      "fr": "Rétrogradée de planète à planète naine en 2006, elle abrite un glacier d’azote en forme de cœur photographié par New Horizons en 2015. Sa lune Charon est si grande que les deux forment un système double."
+    },
+    "wiki": {
+      "en": "https://en.wikipedia.org/wiki/Pluto",
+      "fr": "https://fr.wikipedia.org/wiki/Pluton_(plan%C3%A8te_naine)"
+    },
+    "satellites": [
+      "charon",
+      "styx",
+      "nix",
+      "kerberos",
+      "hydra"
+    ]
+  },
+  "facts": {
+    "radiusKm": {
+      "value": 1188,
+      "source": "nssdca-fact-sheets",
+      "method": "measured"
+    },
+    "massKg": {
+      "value": 1.303e+22,
+      "source": "nssdca-fact-sheets",
+      "method": "measured"
+    },
+    "gravity": {
+      "value": 0.62,
+      "source": "nssdca-fact-sheets",
+      "method": "measured"
+    },
+    "meanTempC": {
+      "value": -225,
+      "source": "nssdca-fact-sheets",
+      "method": "measured"
+    },
+    "moonCount": {
+      "value": 5,
+      "source": "nssdca-fact-sheets",
+      "method": "measured",
+      "asOf": "2024-01-11"
+    },
+    "axialTilt": {
+      "value": 119.51,
+      "source": "nssdca-fact-sheets",
+      "method": "measured"
+    },
+    "rotationPeriod": {
+      "value": 153.2928,
+      "source": "nssdca-fact-sheets",
+      "method": "measured"
+    }
+  },
+  "notes": {
+    "a": "Éléments osculateurs JPL Horizons BARYCENTRIQUES exactement à cette époque (COMMAND '9', CENTER=500@0, TLIST=2451545.0), par `pnpm ephemeris:small-body --center 500@0`. Barycentriques car mesuré meilleur au-delà de Neptune (cf. `OrbitalElements.barycentric`). Cible '9' = barycentre du système Pluton-Charon, pas le centre de Pluton, qui en fait le tour en 6,4 j : cette oscillation (~24 m/s) fausse l'osculateur comme le réflexe solaire (mesuré sur 1900-2100 : 5,5e7 km d'erreur moyenne avec '999', 4,7e5 avec '9')."
+  }
+}

@@ -1,0 +1,115 @@
+{
+  "$schema": "../schema/entity.schema.json",
+  "id": "eros",
+  "targetClass": "asteroid",
+  "source": "small-body",
+  "elements": {
+    "displayName": {
+      "en": "Eros",
+      "fr": "Éros"
+    },
+    "a": 1.45819547852407,
+    "e": 0.2228676636398718,
+    "iDeg": 10.82863065156889,
+    "omDeg": 304.2685688172245,
+    "wDeg": 178.9239475110484,
+    "maDeg": 333.5121645523216,
+    "epoch": "2026-01-01T00:00:00.000Z",
+    "kind": "asteroid",
+    "color": "0xe0a45c",
+    "fallbackColor": "0xe8cfb8",
+    "model": {
+      "resolutions": [
+        "4k",
+        "2k",
+        "1k"
+      ],
+      "extentRatio": 2.1,
+      "albedo": 0.25,
+      "albedoSource": "Veverka et al. 2000, Science 289, 2088 (JPL SBDB)",
+      "colourSource": {
+        "en": "NASA/USGS, Eros NEAR MSI Global Albedo Mosaics at 760, 550 and 450 nm (Golish et al. 2023, doi:10.17189/sv8w-5125), public domain",
+        "fr": "NASA/USGS, Eros NEAR MSI Global Albedo Mosaics à 760, 550 et 450 nm (Golish et al. 2023, doi:10.17189/sv8w-5125), domaine public"
+      },
+      "credit": {
+        "en": "NASA/JHU-APL NEAR Shoemaker, MSI shape model by R. Gaskell, NASA PDS NEAR-A-MSI-5-EROSSHAPE-V1.0 (q = 128), decimated for the web.",
+        "fr": "NASA/JHU-APL NEAR Shoemaker, modèle de forme MSI de R. Gaskell, NASA PDS NEAR-A-MSI-5-EROSSHAPE-V1.0 (q = 128), décimé pour le web."
+      }
+    },
+    "description": {
+      "en": "The first asteroid ever orbited and landed on: NASA’s NEAR Shoemaker circled it for a year and touched down on its surface in February 2001.",
+      "fr": "Le premier astéroïde jamais mis en orbite puis touché : la sonde NEAR Shoemaker de la NASA l’a survolé pendant un an et s’est posée à sa surface en février 2001."
+    },
+    "wiki": {
+      "en": "https://en.wikipedia.org/wiki/433_Eros",
+      "fr": "https://fr.wikipedia.org/wiki/(433)_%C3%89ros"
+    }
+  },
+  "facts": {
+    "radiusKm": {
+      "value": {
+        "$diameterKm": 16.84
+      },
+      "source": "jpl-sbdb",
+      "method": "derived",
+      "uncertainty": 0.03,
+      "detail": "radiusFromDiameter",
+      "citation": "Yeomans et al. (2000) Science v.289,pp.2085-2088"
+    },
+    "massKg": {
+      "value": {
+        "$gm": 0.0004463
+      },
+      "source": "jpl-sbdb",
+      "method": "derived",
+      "uncertainty": {
+        "$gm": 1e-7
+      },
+      "detail": "massFromGM",
+      "citation": "Yeomans et al. (2000) Science v.289,pp.2085-2088"
+    },
+    "gravity": {
+      "published": false,
+      "reason": {
+        "en": "A 34-kilometre peanut: surface gravity varies strongly depending on where you stand, so a single value would mislead.",
+        "fr": "Une cacahuète de 34 kilomètres : la gravité de surface varie fortement selon l'endroit, une valeur unique serait trompeuse."
+      }
+    },
+    "meanTempC": {
+      "published": false,
+      "reason": {
+        "en": "Surface temperature swings strongly over its 5.3-hour day and along its eccentric orbit: a mean would describe no real moment.",
+        "fr": "La température de surface varie fortement au fil de sa journée de 5,3 heures et le long de son orbite excentrique : une moyenne ne décrirait aucun instant réel."
+      }
+    },
+    "moonCount": {
+      "value": 0,
+      "source": "jpl-sbdb",
+      "method": "measured",
+      "asOf": "2026-09-17",
+      "detail": "confirmedSatellites"
+    },
+    "axialTilt": {
+      "value": 89,
+      "source": "jpl-sbdb",
+      "method": "derived",
+      "detail": "obliquityFromPole",
+      "citation": "Yeomans et al. (2000) Science v.289,pp.2085-2088"
+    },
+    "rotationPeriod": {
+      "value": 5.27,
+      "source": "jpl-sbdb",
+      "method": "measured",
+      "citation": "LCDB (Rev. 2023-October); Warner et al., 2009"
+    }
+  },
+  "notes": {
+    "": "── Vague A : astéroïdes visités, avec leur modèle de forme scientifique ────────────────── Même famille que Bennu : pas de binaire Horizons, la position dépend entièrement de ces éléments. Ils sont dérivés par `scripts/derive-small-body-elements.mjs` à l'époque 2026-01-01, et non J2000 : mesuré contre Horizons, des éléments J2000 placent aujourd'hui Itokawa, Ryugu et Ida à 0,11-0,13 UA de leur vraie position (6° pour Ryugu, près de la Terre), contre ≤ 0,003 UA à un an de 2026. Rayons = rayons équivalents-volume publiés, que le volume des modèles retrouve (cf. `shapeModels.test.ts`).",
+    "a": "Éléments osculateurs JPL Horizons EXACTEMENT à cette époque (COMMAND '433;', EPHEM_TYPE=ELEMENTS, TLIST=2461041.5).",
+    "facts.radiusKm": "Diamètre équivalent 16,84 ± 0,06 km (SBDB, Yeomans et al. 2000).",
+    "facts.axialTilt": "DÉRIVÉE du pôle SBDB (RA 11,37°, Dec 17,22°, Yeomans et al. 2000) et de la normale orbitale : Éros tourne presque couché sur son orbite.",
+    "facts.massKg": "GM = 4,463e-4 km³/s² (SBDB) ÷ G.",
+    "model.extentRatio": "Mesuré sur le fichier : rayon max / rayon équivalent-volume.",
+    "model.albedo": "Luminosité et couleur RÉELLES, cuites dans le modèle (bake-shape-colour.mjs) ; la sphère d'attente ci-dessus a la même couleur moyenne, pour ne pas changer d'aspect au chargement."
+  }
+}

@@ -1,0 +1,130 @@
+{
+  "$schema": "../schema/entity.schema.json",
+  "id": "titania",
+  "targetClass": "satellite",
+  "source": "catalogue",
+  "config": {
+    "kind": "moon",
+    "displayName": {
+      "en": "Titania",
+      "fr": "Titania"
+    },
+    "radius": 0.21,
+    "rotationSpeed": {
+      "$rotationHours": {
+        "$days": 8.705870132517225
+      }
+    },
+    "orbitalColor": "0xaba89f",
+    "fallbackColor": "0x9a9893",
+    "frame": "parentRelative",
+    "rotationBody": "Uranus",
+    "relativeEphemeris": {
+      "kind": "horizonsParentRelative"
+    },
+    "relativeOrbitalElements": {
+      "semiMajorAxisAU": 0.002916024747,
+      "eccentricity": 0.00242536,
+      "inclinationRad": {
+        "$deg": 97.7633
+      },
+      "ascendingNodeRad": {
+        "$deg": 167.6422
+      },
+      "argPerihelionRad": {
+        "$deg": 263.5451
+      },
+      "meanAnomalyAtEpochRad": {
+        "$deg": 265.2945
+      },
+      "epoch": {
+        "$date": "2025-12-31T00:00:00.000Z"
+      }
+    },
+    "textureResolutions": {
+      "surface": [
+        "2k"
+      ]
+    },
+    "realData": {
+      "orbitalInclination": {
+        "$deg": 97.818368383812
+      },
+      "ascendingNode": {
+        "$deg": 167.6178145945835
+      },
+      "description": {
+        "en": "Uranus's largest moon, featuring one of the solar system's biggest known fault canyons, Messina Chasma.",
+        "fr": "La plus grande lune d’Uranus, avec l’un des plus grands canyons de faille connus du système solaire, Messina Chasma."
+      },
+      "wiki": {
+        "en": "https://en.wikipedia.org/wiki/Titania_(moon)",
+        "fr": "https://fr.wikipedia.org/wiki/Titania_(lune)"
+      }
+    },
+    "cameraDistance": {
+      "educ": 1.2,
+      "explo": {
+        "$cameraFromRadiusKm": 788.4
+      }
+    },
+    "loadPriority": 27
+  },
+  "facts": {
+    "radiusKm": {
+      "value": 788.9,
+      "source": "jpl-ssd-satellite-physical-parameters",
+      "method": "measured",
+      "uncertainty": 1.8
+    },
+    "massKg": {
+      "value": {
+        "$gm": 226.9
+      },
+      "source": "jpl-ssd-satellite-physical-parameters",
+      "method": "derived",
+      "uncertainty": {
+        "$gm": 4.1
+      },
+      "detail": "massFromGM"
+    },
+    "gravity": {
+      "value": {
+        "$gm": 226.9,
+        "$radiusKm": 788.9
+      },
+      "source": "jpl-ssd-satellite-physical-parameters",
+      "method": "derived",
+      "detail": "gravityFromGM"
+    },
+    "meanTempC": {
+      "published": false,
+      "reason": "not-yet-sourced"
+    },
+    "axialTilt": {
+      "value": 0,
+      "published": false,
+      "reason": "not-yet-sourced"
+    },
+    "distanceAU": {
+      "value": {
+        "$km": 436300
+      },
+      "source": "nssdca-fact-sheets",
+      "method": "measured"
+    },
+    "orbitPeriodDays": {
+      "value": 8.705870132517225,
+      "source": "nssdca-fact-sheets",
+      "method": "measured"
+    },
+    "rotationPeriod": {
+      "source": "nssdca-fact-sheets",
+      "method": "derived",
+      "detail": "synchronousRotation"
+    }
+  },
+  "notes": {
+    "textureResolutions": "Aucune mosaïque globale contrôlée n'existe côté USGS pour Titania — vérifié en direct (2026-08-26, voir registry/products/textures). Texture procédurale générée (cratérisation modérée seule — le générateur ne modélise pas les réseaux de canyons comme Messina Chasma, voir le commentaire sur cette limite dans scripts/generate-procedural-textures.mjs)."
+  }
+}

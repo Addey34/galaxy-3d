@@ -1,0 +1,79 @@
+{
+  "$schema": "../schema/entity.schema.json",
+  "id": "haumea",
+  "targetClass": "dwarf_planet",
+  "source": "small-body",
+  "elements": {
+    "displayName": {
+      "en": "Haumea",
+      "fr": "Hauméa"
+    },
+    "a": 43.10286749752674,
+    "e": 0.1950094391276499,
+    "iDeg": 28.20492617114719,
+    "omDeg": 121.9476444856607,
+    "wDeg": 239.9472445347778,
+    "maDeg": 190.4250671251033,
+    "epoch": "2000-01-01T12:00:00Z",
+    "barycentric": true,
+    "kind": "dwarf",
+    "color": "0xe58f7a",
+    "surfaceResolutions": [
+      "4k",
+      "2k",
+      "1k"
+    ],
+    "visualRadius": 0.123,
+    "description": {
+      "en": "It spins in under 4 hours, the fastest of any large body in the Solar System, which has stretched it into an egg shape. In 2017 it became the first trans-Neptunian object found to have a ring.",
+      "fr": "Elle tourne sur elle-même en moins de 4 heures, un record parmi les grands corps du Système solaire, ce qui l’a étirée en forme d’œuf. En 2017, elle est devenue le premier objet transneptunien doté d’un anneau connu."
+    },
+    "wiki": {
+      "en": "https://en.wikipedia.org/wiki/Haumea",
+      "fr": "https://fr.wikipedia.org/wiki/(136108)_Haum%C3%A9a"
+    }
+  },
+  "facts": {
+    "radiusKm": {
+      "value": 780,
+      "published": false,
+      "reason": "not-yet-sourced"
+    },
+    "massKg": {
+      "value": 4.006e+21,
+      "source": "ragozzine-brown-2009-haumea",
+      "method": "measured",
+      "uncertainty": 40000000000000000000
+    },
+    "gravity": {
+      "value": 0.44,
+      "published": false,
+      "reason": "not-yet-sourced"
+    },
+    "meanTempC": {
+      "published": false,
+      "reason": "not-yet-sourced"
+    },
+    "moonCount": {
+      "value": 2,
+      "source": "jpl-sbdb",
+      "method": "measured",
+      "asOf": "2026-09-17",
+      "detail": "confirmedSatellites"
+    },
+    "axialTilt": {
+      "value": 126,
+      "published": false,
+      "reason": "not-yet-sourced"
+    },
+    "rotationPeriod": {
+      "value": 3.9154,
+      "source": "jpl-sbdb",
+      "method": "measured",
+      "citation": "LCDB (Rev. 2023-October); Warner et al., 2009"
+    }
+  },
+  "notes": {
+    "a": "Éléments osculateurs JPL Horizons BARYCENTRIQUES exactement à cette époque (COMMAND '136108;', CENTER=500@0, TLIST=2451545.0), par `pnpm ephemeris:small-body --center 500@0`. Barycentriques car mesuré meilleur au-delà de Neptune (cf. `OrbitalElements.barycentric`)."
+  }
+}

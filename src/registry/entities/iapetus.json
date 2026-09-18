@@ -1,0 +1,132 @@
+{
+  "$schema": "../schema/entity.schema.json",
+  "id": "iapetus",
+  "targetClass": "satellite",
+  "source": "catalogue",
+  "config": {
+    "kind": "moon",
+    "displayName": {
+      "en": "Iapetus",
+      "fr": "Japet"
+    },
+    "radius": 0.18,
+    "rotationSpeed": {
+      "$rotationHours": {
+        "$days": 79.33010433489734
+      }
+    },
+    "orbitalColor": "0x9b8d79",
+    "fallbackColor": "0x756e62",
+    "frame": "parentRelative",
+    "relativeEphemeris": {
+      "kind": "horizonsParentRelative"
+    },
+    "rotationBody": "Saturn",
+    "relativeOrbitalElements": {
+      "semiMajorAxisAU": 0.02378693598,
+      "eccentricity": 0.0289728,
+      "inclinationRad": {
+        "$deg": 16.9971
+      },
+      "ascendingNodeRad": {
+        "$deg": 138.8929
+      },
+      "argPerihelionRad": {
+        "$deg": 230.7372
+      },
+      "meanAnomalyAtEpochRad": {
+        "$deg": 97.8466
+      },
+      "epoch": {
+        "$date": "2025-12-31T00:00:00.000Z"
+      }
+    },
+    "textureResolutions": {
+      "surface": [
+        "4k",
+        "2k",
+        "1k"
+      ]
+    },
+    "realData": {
+      "orbitalInclination": {
+        "$deg": 7.6
+      },
+      "ascendingNode": {
+        "$deg": 86.5
+      },
+      "description": {
+        "en": "A two-toned outer moon known for its dark leading hemisphere and equatorial ridge.",
+        "fr": "Une lune extérieure bicolore, connue pour son hémisphère avant sombre et sa crête équatoriale."
+      },
+      "wiki": {
+        "en": "https://en.wikipedia.org/wiki/Iapetus_(moon)",
+        "fr": "https://fr.wikipedia.org/wiki/Japet_(lune)"
+      }
+    },
+    "cameraDistance": {
+      "educ": 1.2,
+      "explo": {
+        "$cameraFromRadiusKm": 734.3
+      }
+    },
+    "loadPriority": 8
+  },
+  "facts": {
+    "radiusKm": {
+      "value": 734.3,
+      "source": "jpl-ssd-satellite-physical-parameters",
+      "method": "measured",
+      "uncertainty": 2.8
+    },
+    "massKg": {
+      "value": {
+        "$gm": 120.51511
+      },
+      "source": "jpl-ssd-satellite-physical-parameters",
+      "method": "derived",
+      "uncertainty": {
+        "$gm": 0.00242
+      },
+      "detail": "massFromGM"
+    },
+    "gravity": {
+      "value": {
+        "$gm": 120.51511,
+        "$radiusKm": 734.3
+      },
+      "source": "jpl-ssd-satellite-physical-parameters",
+      "method": "derived",
+      "detail": "gravityFromGM"
+    },
+    "meanTempC": {
+      "published": false,
+      "reason": "not-yet-sourced"
+    },
+    "axialTilt": {
+      "value": 0,
+      "published": false,
+      "reason": "not-yet-sourced"
+    },
+    "distanceAU": {
+      "value": {
+        "$km": 3560850
+      },
+      "source": "nssdca-fact-sheets",
+      "method": "measured"
+    },
+    "orbitPeriodDays": {
+      "value": 79.33010433489734,
+      "source": "nssdca-fact-sheets",
+      "method": "measured"
+    },
+    "rotationPeriod": {
+      "source": "nssdca-fact-sheets",
+      "method": "derived",
+      "detail": "synchronousRotation"
+    }
+  },
+  "notes": {
+    "relativeOrbitalElements": "JPL SAT441 mean elements, epoch 2000-01-01.5 TDB."
+  }
+}

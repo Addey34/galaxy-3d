@@ -1,0 +1,94 @@
+{
+  "$schema": "../schema/entity.schema.json",
+  "id": "pallas",
+  "targetClass": "asteroid",
+  "source": "small-body",
+  "elements": {
+    "displayName": {
+      "en": "Pallas",
+      "fr": "Pallas"
+    },
+    "a": 2.772322475089011,
+    "e": 0.2296435321697976,
+    "iDeg": 34.84614003622473,
+    "omDeg": 173.1977991340821,
+    "wDeg": 310.2656379003444,
+    "maDeg": 352.9602856167207,
+    "epoch": "2000-01-01T12:00:00Z",
+    "color": "0x9b82d1",
+    "surfaceResolutions": [
+      "2k"
+    ],
+    "description": {
+      "en": "The third-largest asteroid, and the very first to be discovered after Ceres, in 1802. Its steeply tilted orbit is so inclined that no spacecraft has ever visited it.",
+      "fr": "Le troisième plus gros astéroïde, et le tout premier découvert après Cérès, en 1802. Son orbite fortement inclinée est si penchée qu’aucune sonde ne l’a jamais visité."
+    },
+    "wiki": {
+      "en": "https://en.wikipedia.org/wiki/2_Pallas",
+      "fr": "https://fr.wikipedia.org/wiki/(2)_Pallas"
+    }
+  },
+  "facts": {
+    "radiusKm": {
+      "value": {
+        "$diameterKm": 513
+      },
+      "source": "jpl-sbdb",
+      "method": "derived",
+      "uncertainty": 3,
+      "detail": "radiusFromDiameter",
+      "citation": "Marsset et al., Nature Astronomy 4, 569-576 (2020)"
+    },
+    "massKg": {
+      "value": {
+        "$gm": 13.63
+      },
+      "source": "jpl-sbdb",
+      "method": "derived",
+      "uncertainty": {
+        "$gm": 0.18
+      },
+      "detail": "massFromGM",
+      "citation": "Vernazza et al., A&A 654, A56 (2021)"
+    },
+    "gravity": {
+      "value": {
+        "$gm": 13.63,
+        "$radiusKm": {
+          "$diameterKm": 513
+        }
+      },
+      "source": "jpl-sbdb",
+      "method": "derived",
+      "detail": "gravityFromGM",
+      "citation": "Vernazza et al., A&A 654, A56 (2021)"
+    },
+    "meanTempC": {
+      "published": false,
+      "reason": "not-yet-sourced"
+    },
+    "moonCount": {
+      "value": 0,
+      "source": "jpl-sbdb",
+      "method": "measured",
+      "asOf": "2026-09-17",
+      "detail": "confirmedSatellites"
+    },
+    "axialTilt": {
+      "value": 83.6,
+      "source": "jpl-sbdb",
+      "method": "derived",
+      "detail": "obliquityFromPole",
+      "citation": "Carry et al., Icarus 205, 460-472 (2010)"
+    },
+    "rotationPeriod": {
+      "value": 7.8132214,
+      "source": "jpl-sbdb",
+      "method": "measured",
+      "citation": "Carry et al., Icarus 205, 460-472 (2010)"
+    }
+  },
+  "notes": {
+    "a": "Éléments osculateurs JPL Horizons exactement à cette époque — voir le commentaire sur Vesta ci-dessus (même correction, même méthode de vérification)."
+  }
+}

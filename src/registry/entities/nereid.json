@@ -1,0 +1,119 @@
+{
+  "$schema": "../schema/entity.schema.json",
+  "id": "nereid",
+  "targetClass": "satellite",
+  "source": "catalogue",
+  "config": {
+    "kind": "moon",
+    "displayName": {
+      "en": "Nereid",
+      "fr": "Néréide"
+    },
+    "radius": 0.11,
+    "rotationSpeed": {
+      "$rotationHours": 11.594
+    },
+    "orbitalColor": "0x8c8c8c",
+    "fallbackColor": "0x8c8c8c",
+    "frame": "parentRelative",
+    "rotationBody": "Neptune",
+    "relativeEphemeris": {
+      "kind": "horizonsParentRelative"
+    },
+    "relativeOrbitalElements": {
+      "semiMajorAxisAU": 0.03683832723,
+      "eccentricity": 0.74552,
+      "inclinationRad": {
+        "$deg": 5.0266
+      },
+      "ascendingNodeRad": {
+        "$deg": 319.233
+      },
+      "argPerihelionRad": {
+        "$deg": 296.8466
+      },
+      "meanAnomalyAtEpochRad": {
+        "$deg": 349.0552
+      },
+      "epoch": {
+        "$date": "2025-12-31T00:00:00.000Z"
+      }
+    },
+    "textureResolutions": {
+      "surface": [
+        "2k"
+      ]
+    },
+    "realData": {
+      "orbitalInclination": {
+        "$deg": 5.060553241702044
+      },
+      "ascendingNode": {
+        "$deg": 319.5912156886533
+      },
+      "description": {
+        "en": "A small, distant moon with the second-most eccentric orbit of any known moon, likely a captured object rather than one formed alongside Neptune.",
+        "fr": "Une petite lune lointaine dotée de l’orbite la plus excentrique parmi les lunes connues après une autre, probablement un objet capturé plutôt que formé avec Neptune."
+      },
+      "wiki": {
+        "en": "https://en.wikipedia.org/wiki/Nereid_(moon)",
+        "fr": "https://fr.wikipedia.org/wiki/N%C3%A9r%C3%A9ide_(lune)"
+      }
+    },
+    "cameraDistance": {
+      "educ": 1.2,
+      "explo": {
+        "$cameraFromRadiusKm": 170
+      }
+    },
+    "loadPriority": 14
+  },
+  "facts": {
+    "radiusKm": {
+      "value": 170,
+      "source": "jpl-ssd-satellite-physical-parameters",
+      "method": "measured",
+      "uncertainty": 25
+    },
+    "massKg": {
+      "value": 31000000000000000000,
+      "published": false,
+      "reason": "not-yet-sourced"
+    },
+    "gravity": {
+      "value": 0.0716,
+      "published": false,
+      "reason": "not-yet-sourced"
+    },
+    "meanTempC": {
+      "published": false,
+      "reason": "not-yet-sourced"
+    },
+    "axialTilt": {
+      "value": 0,
+      "published": false,
+      "reason": "not-yet-sourced"
+    },
+    "distanceAU": {
+      "value": {
+        "$km": 5513400
+      },
+      "source": "nssdca-fact-sheets",
+      "method": "measured"
+    },
+    "orbitPeriodDays": {
+      "value": 359.879914569329,
+      "source": "nssdca-fact-sheets",
+      "method": "measured"
+    },
+    "rotationPeriod": {
+      "source": "kiss-2016-nereid",
+      "method": "measured",
+      "uncertainty": 0.017
+    }
+  },
+  "notes": {
+    "relativeOrbitalElements": "JPL Horizons osculating elements, epoch 2000-01-01.5 TDB — cohérents avec la période réelle publiée (~360.13 j). Rotation NON verrouillée : 11.594 h, mesure bien déterminée par Kepler (2016) — sans lien avec sa période orbitale.",
+    "textureResolutions": "Aucune mosaïque photo globale contrôlée n'existe côté USGS pour Néréide (résolution Voyager 2 de ~43 km/pixel seulement — insuffisant pour une carte globale) — vérifié en direct (2026-08-26). Texture procédurale générée, avec un contraste hémisphérique doux approximant l'hémisphère sombre réel évoqué pour expliquer sa variabilité photométrique (Schaefer & Schaefer 2000)."
+  }
+}

@@ -1,0 +1,130 @@
+{
+  "$schema": "../schema/entity.schema.json",
+  "id": "proteus",
+  "targetClass": "satellite",
+  "source": "catalogue",
+  "config": {
+    "kind": "moon",
+    "displayName": {
+      "en": "Proteus",
+      "fr": "Protée"
+    },
+    "radius": 0.12,
+    "rotationSpeed": {
+      "$rotationHours": {
+        "$days": 1.1223147385935797
+      }
+    },
+    "orbitalColor": "0x6a6a6a",
+    "fallbackColor": "0x4a4a4a",
+    "frame": "parentRelative",
+    "rotationBody": "Neptune",
+    "relativeEphemeris": {
+      "kind": "horizonsParentRelative"
+    },
+    "relativeOrbitalElements": {
+      "semiMajorAxisAU": 0.0007866692793,
+      "eccentricity": 0.000438469,
+      "inclinationRad": {
+        "$deg": 29.0597
+      },
+      "ascendingNodeRad": {
+        "$deg": 48.7125
+      },
+      "argPerihelionRad": {
+        "$deg": 43.5662
+      },
+      "meanAnomalyAtEpochRad": {
+        "$deg": 76.5645
+      },
+      "epoch": {
+        "$date": "2025-12-31T00:00:00.000Z"
+      }
+    },
+    "textureResolutions": {
+      "surface": [
+        "2k"
+      ]
+    },
+    "realData": {
+      "orbitalInclination": {
+        "$deg": 28.99163681179519
+      },
+      "ascendingNode": {
+        "$deg": 48.27950205867285
+      },
+      "description": {
+        "en": "Neptune's second-largest moon, an irregularly shaped, tidally locked body near the size limit a body of its density can hold without becoming round.",
+        "fr": "La deuxième plus grande lune de Neptune, un corps de forme irrégulière verrouillé par effet de marée, proche de la taille limite qu’un corps de sa densité peut atteindre sans devenir sphérique."
+      },
+      "wiki": {
+        "en": "https://en.wikipedia.org/wiki/Proteus_(moon)",
+        "fr": "https://fr.wikipedia.org/wiki/Prot%C3%A9e_(lune)"
+      }
+    },
+    "cameraDistance": {
+      "educ": 1.2,
+      "explo": {
+        "$cameraFromRadiusKm": 208
+      }
+    },
+    "loadPriority": 13
+  },
+  "facts": {
+    "radiusKm": {
+      "value": 208,
+      "source": "jpl-ssd-satellite-physical-parameters",
+      "method": "measured",
+      "uncertainty": 8
+    },
+    "massKg": {
+      "value": {
+        "$gm": 2.58342
+      },
+      "source": "jpl-ssd-satellite-physical-parameters",
+      "method": "derived",
+      "uncertainty": {
+        "$gm": 2.4207
+      },
+      "detail": "massFromGM"
+    },
+    "gravity": {
+      "value": {
+        "$gm": 2.58342,
+        "$radiusKm": 208
+      },
+      "source": "jpl-ssd-satellite-physical-parameters",
+      "method": "derived",
+      "detail": "gravityFromGM"
+    },
+    "meanTempC": {
+      "published": false,
+      "reason": "not-yet-sourced"
+    },
+    "axialTilt": {
+      "value": 0,
+      "published": false,
+      "reason": "not-yet-sourced"
+    },
+    "distanceAU": {
+      "value": {
+        "$km": 117647
+      },
+      "source": "nssdca-fact-sheets",
+      "method": "measured"
+    },
+    "orbitPeriodDays": {
+      "value": 1.1223147385935797,
+      "source": "nssdca-fact-sheets",
+      "method": "measured"
+    },
+    "rotationPeriod": {
+      "published": false,
+      "reason": "not-yet-sourced"
+    }
+  },
+  "notes": {
+    "relativeOrbitalElements": "JPL Horizons osculating elements, epoch 2000-01-01.5 TDB — cohérents avec la période réelle publiée (1.122 j).",
+    "textureResolutions": "Aucune mosaïque photo globale contrôlée n'existe côté USGS pour Protée (une seule face imagée par Voyager 2, jamais assemblée en carte globale contrôlée) — vérifié en direct (2026-08-26). Texture procédurale générée, paramétrée sur le cratère Pharos réel (~250 km, plus de la moitié du diamètre de Protée, dôme central)."
+  }
+}

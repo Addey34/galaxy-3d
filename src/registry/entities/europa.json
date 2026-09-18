@@ -1,0 +1,111 @@
+{
+  "$schema": "../schema/entity.schema.json",
+  "id": "europa",
+  "targetClass": "satellite",
+  "source": "catalogue",
+  "config": {
+    "kind": "moon",
+    "displayName": {
+      "fr": "Europe"
+    },
+    "frame": "parentRelative",
+    "relativeEphemeris": {
+      "kind": "jupiterMoon",
+      "moon": "europa"
+    },
+    "rotationBody": "Jupiter",
+    "radius": 0.12,
+    "rotationSpeed": {
+      "$rotationHours": 85.22
+    },
+    "orbitalColor": "0xd9c7a4",
+    "fallbackColor": "0xd9c7a4",
+    "textureResolutions": {
+      "surface": [
+        "8k",
+        "4k",
+        "2k",
+        "1k"
+      ]
+    },
+    "realData": {
+      "orbitalInclination": 0,
+      "ascendingNode": 0,
+      "description": {
+        "en": "An icy moon with a smooth surface and strong evidence for a global subsurface ocean.",
+        "fr": "Une lune glacée à la surface lisse, avec de fortes preuves de l’existence d’un océan souterrain global."
+      },
+      "wiki": {
+        "en": "https://en.wikipedia.org/wiki/Europa_(moon)",
+        "fr": "https://fr.wikipedia.org/wiki/Europe_(lune)"
+      }
+    },
+    "cameraDistance": {
+      "educ": 1.2,
+      "explo": {
+        "$cameraFromRadiusKm": 1560.8
+      }
+    },
+    "loadPriority": 12
+  },
+  "facts": {
+    "radiusKm": {
+      "value": 1560.8,
+      "source": "jpl-ssd-satellite-physical-parameters",
+      "method": "measured",
+      "uncertainty": 0.3
+    },
+    "massKg": {
+      "value": {
+        "$gm": 3202.7121
+      },
+      "source": "jpl-ssd-satellite-physical-parameters",
+      "method": "derived",
+      "uncertainty": {
+        "$gm": 0.00181
+      },
+      "detail": "massFromGM"
+    },
+    "gravity": {
+      "value": {
+        "$gm": 3202.7121,
+        "$radiusKm": 1560.8
+      },
+      "source": "jpl-ssd-satellite-physical-parameters",
+      "method": "derived",
+      "detail": "gravityFromGM"
+    },
+    "meanTempC": {
+      "published": false,
+      "reason": {
+        "en": "Published range runs from about 50 K at the poles to about 140 K at the equator; no official mean exists.",
+        "fr": "Plage publiée d'environ 50 K aux pôles à environ 140 K à l'équateur ; aucune moyenne officielle n'existe."
+      }
+    },
+    "axialTilt": {
+      "value": 0,
+      "published": false,
+      "reason": "not-yet-sourced"
+    },
+    "distanceAU": {
+      "value": {
+        "$km": 671100
+      },
+      "source": "nssdca-fact-sheets",
+      "method": "measured"
+    },
+    "orbitPeriodDays": {
+      "value": 3.551,
+      "source": "nssdca-fact-sheets",
+      "method": "measured"
+    },
+    "rotationPeriod": {
+      "source": "nssdca-fact-sheets",
+      "method": "derived",
+      "detail": "synchronousRotation"
+    }
+  },
+  "notes": {
+    "facts.massKg": "Masse et gravite derivees du GM publie par JPL SSD (ephemeride JUP365, https://ssd.jpl.nasa.gov/sats/phys_par/) : m = GM/G, g = GM/R^2. Ni l'un ni l'autre n'est saisi a la main."
+  }
+}

@@ -1,0 +1,84 @@
+{
+  "$schema": "../schema/entity.schema.json",
+  "id": "gonggong",
+  "targetClass": "dwarf_planet",
+  "source": "small-body",
+  "elements": {
+    "displayName": {
+      "en": "Gonggong",
+      "fr": "Gonggong"
+    },
+    "a": 67.06649002606795,
+    "e": 0.5034146432904725,
+    "iDeg": 30.80268415463649,
+    "omDeg": 336.8395088422051,
+    "wDeg": 206.9906512032046,
+    "maDeg": 93.65145846699514,
+    "epoch": "2000-01-01T12:00:00Z",
+    "barycentric": true,
+    "kind": "dwarf",
+    "color": "0xc25a3f",
+    "surfaceResolutions": [
+      "2k"
+    ],
+    "fallbackColor": "0xc25a3f",
+    "visualRadius": 0.097,
+    "description": {
+      "en": "Named after the Chinese god of water and chaos, this reddish, methane-frosted world spins nearly on its side and shares a steeply tilted, eccentric orbit with its lone moon Xiangliu.",
+      "fr": "Nommée d’après le dieu chinois de l’eau et du chaos, ce monde rougeâtre couvert de givre de méthane tourne presque couché sur le côté et partage une orbite très inclinée et excentrique avec son unique lune Xiangliu."
+    },
+    "wiki": {
+      "en": "https://en.wikipedia.org/wiki/Gonggong_(dwarf_planet)",
+      "fr": "https://fr.wikipedia.org/wiki/(225088)_Gonggong"
+    }
+  },
+  "facts": {
+    "radiusKm": {
+      "value": {
+        "$diameterKm": 1230
+      },
+      "source": "kiss-2019-gonggong",
+      "method": "derived",
+      "uncertainty": 25,
+      "detail": "radiusFromDiameter"
+    },
+    "massKg": {
+      "value": 1.75e+21,
+      "source": "kiss-2019-gonggong",
+      "method": "measured",
+      "detail": "systemMass"
+    },
+    "gravity": {
+      "value": {
+        "$massKg": 1.75e+21,
+        "$radiusKm": {
+          "$diameterKm": 1230
+        }
+      },
+      "source": "kiss-2019-gonggong",
+      "method": "derived",
+      "detail": "gravityFromSystemMass"
+    },
+    "meanTempC": {
+      "published": false,
+      "reason": "not-yet-sourced"
+    },
+    "moonCount": {
+      "value": 1,
+      "source": "jpl-sbdb",
+      "method": "measured",
+      "asOf": "2026-09-17",
+      "detail": "confirmedSatellites"
+    },
+    "rotationPeriod": {
+      "value": 22.4,
+      "source": "jpl-sbdb",
+      "method": "measured",
+      "detail": "partialLightcurve",
+      "citation": "LCDB (Rev. 2023-October); Warner et al., 2009"
+    }
+  },
+  "notes": {
+    "a": "Éléments osculateurs JPL Horizons BARYCENTRIQUES exactement à cette époque (COMMAND '225088;', CENTER=500@0, TLIST=2451545.0), par `pnpm ephemeris:small-body --center 500@0`. Barycentriques car mesuré meilleur au-delà de Neptune (cf. `OrbitalElements.barycentric`)."
+  }
+}

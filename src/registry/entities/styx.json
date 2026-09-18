@@ -1,0 +1,120 @@
+{
+  "$schema": "../schema/entity.schema.json",
+  "id": "styx",
+  "targetClass": "satellite",
+  "source": "catalogue",
+  "config": {
+    "kind": "moon",
+    "displayName": {
+      "en": "Styx",
+      "fr": "Styx"
+    },
+    "radius": 0.04,
+    "rotationSpeed": {
+      "$rotationHours": {
+        "$days": 3.24
+      }
+    },
+    "orbitalColor": "0xcfd6d6",
+    "fallbackColor": "0xc4cbcb",
+    "frame": "parentRelative",
+    "rotationBody": "Pluto",
+    "relativeOrbitalElements": {
+      "semiMajorAxisAU": 0.0002837055114,
+      "eccentricity": 0,
+      "inclinationRad": {
+        "$deg": 112.8548
+      },
+      "ascendingNodeRad": {
+        "$deg": 227.3768
+      },
+      "argPerihelionRad": 0,
+      "meanAnomalyAtEpochRad": {
+        "$deg": 194.2283
+      },
+      "epoch": {
+        "$date": "2025-12-31T00:00:00.000Z"
+      }
+    },
+    "relativeEphemeris": {
+      "kind": "horizonsParentRelative"
+    },
+    "textureResolutions": {
+      "surface": [
+        "2k"
+      ]
+    },
+    "realData": {
+      "orbitalInclination": 0,
+      "ascendingNode": 0,
+      "description": {
+        "en": "The smallest and innermost of Pluto’s four small moons, tumbling chaotically under the combined pull of Pluto and Charon.",
+        "fr": "La plus petite et la plus proche des quatre petites lunes de Pluton, en rotation chaotique sous l’attraction combinée de Pluton et Charon."
+      },
+      "wiki": {
+        "en": "https://en.wikipedia.org/wiki/Styx_(moon)",
+        "fr": "https://fr.wikipedia.org/wiki/Styx_(lune)"
+      }
+    },
+    "cameraDistance": {
+      "educ": 0.5,
+      "explo": {
+        "$cameraFromRadiusKm": 5.2
+      }
+    },
+    "loadPriority": 13
+  },
+  "facts": {
+    "radiusKm": {
+      "value": 5.2,
+      "source": "jpl-ssd-satellite-physical-parameters",
+      "method": "measured",
+      "uncertainty": 1
+    },
+    "massKg": {
+      "published": false,
+      "reason": {
+        "en": "Only an upper limit to its mass has been published (Porter et al. 2023, from Hubble and New Horizons astrometry), not a measured value.",
+        "fr": "Seule une limite supérieure de sa masse a été publiée (Porter et al. 2023, astrométrie Hubble et New Horizons), pas une valeur mesurée."
+      }
+    },
+    "gravity": {
+      "published": false,
+      "reason": {
+        "en": "No measured mass has been published, only an upper limit (Porter et al. 2023), so no surface gravity can be derived.",
+        "fr": "Aucune masse mesurée n’a été publiée, seulement une limite supérieure (Porter et al. 2023) : aucune gravité de surface ne peut en être dérivée."
+      }
+    },
+    "meanTempC": {
+      "published": false,
+      "reason": "not-yet-sourced"
+    },
+    "axialTilt": {
+      "value": 0,
+      "published": false,
+      "reason": "not-yet-sourced"
+    },
+    "distanceAU": {
+      "value": {
+        "$km": 43200
+      },
+      "source": "jpl-ssd-satellite-mean-elements",
+      "method": "measured"
+    },
+    "orbitPeriodDays": {
+      "value": 20.16188738471113,
+      "source": "jpl-ssd-satellite-mean-elements",
+      "method": "measured"
+    },
+    "rotationPeriod": {
+      "published": false,
+      "reason": "not-yet-sourced"
+    }
+  },
+  "notes": {
+    "": "Styx, Nix, Kerberos et Hydra n'ont volontairement PAS de `relativeOrbitalElements` : un ajustement képlérien à deux corps sur une seule époque (JPL Horizons EPHEM_TYPE=ELEMENTS, TLIST=2451545.0) donne pour ces quatre lunes des résultats incohérents avec leurs périodes réelles publiées (écarts jusqu'à ×3.7 pour Kerberos) — conséquence directe des forts couples gravitationnels du système binaire Pluton-Charon qui rendent l'orbite osculatrice à un instant donné non représentative de l'orbite moyenne réelle. Les propager en avant produirait une position silencieusement fausse. Sans cet élément, `OrbitalMechanics` retombe sur `null` (corps non affiché) plutôt que sur une position erronée si jamais le binaire `horizonsParentRelative` venait à manquer — préférable à une fausse précision. Les champs `distanceAU`/`orbitPeriodDays` de `realData` ci-dessous utilisent donc les valeurs MOYENNES de la table JPL SSD des éléments de satellites (`sources`), pas les éléments osculateurs Horizons.",
+    "rotationSpeed": "Rotation chaotique confirmée (pas de verrouillage marémoteur) — période instantanée publiée à titre indicatif seulement, non un cycle fixe réel.",
+    "relativeOrbitalElements": "Elements MOYENS, mesures sur le binaire (cf. scripts/derive-relative-elements.mjs --mean). Les elements OSCULATEURS sont ici aberrants : cette lune orbite le barycentre Pluton-Charon, et Pluton oscille de 2 100 km autour de ce point, si bien que l'etat instantane decrit une conique qui n'existe pas (Styx : periode osculatrice 47 j pour 20,2 j reels). Le plan et le rayon sont donc moyennes sur 400 jours, ou le ballant se compense ; la periode vient du catalogue. Precision attendue : de l'ordre du ballant residuel, quelques pour cent.",
+    "textureResolutions": "Résolution New Horizons trop faible pour une vraie mosaïque (quelques pixels — voir registry/products/textures). Texture procédurale générée : base claire, peu de cratères, cohérente avec l'albédo élevé (>50 %) mesuré pour les 4 petites lunes de Pluton."
+  }
+}

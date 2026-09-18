@@ -1,0 +1,101 @@
+{
+  "$schema": "../schema/entity.schema.json",
+  "id": "neptune",
+  "targetClass": "planet",
+  "source": "catalogue",
+  "config": {
+    "kind": "planet",
+    "radius": 1.9,
+    "rotationSpeed": {
+      "$rotationHours": 16.11
+    },
+    "orbitalColor": "0x647cff",
+    "textureResolutions": {
+      "surface": [
+        "2k",
+        "1k"
+      ]
+    },
+    "realData": {
+      "orbitalInclination": {
+        "$deg": 1.77
+      },
+      "ascendingNode": {
+        "$deg": 131.784
+      },
+      "description": {
+        "en": "The most distant planet, invisible to the naked eye and found by calculation. Its winds reach 2,000 km/h, the fiercest in the Solar System.",
+        "fr": "La planète la plus lointaine, invisible à l’œil nu et découverte par le calcul. Ses vents atteignent 2 000 km/h, les plus violents du Système solaire."
+      },
+      "wiki": {
+        "en": "https://en.wikipedia.org/wiki/Neptune",
+        "fr": "https://fr.wikipedia.org/wiki/Neptune_(plan%C3%A8te)"
+      }
+    },
+    "astroBody": "Neptune",
+    "cameraDistance": {
+      "educ": 10,
+      "explo": {
+        "$cameraFromRadiusKm": 24764
+      }
+    },
+    "loadPriority": 10,
+    "satellites": [
+      "triton",
+      "proteus",
+      "nereid"
+    ]
+  },
+  "facts": {
+    "radiusKm": {
+      "value": 24764,
+      "source": "nssdca-fact-sheets",
+      "method": "measured",
+      "detail": "equatorialRadius1Bar"
+    },
+    "massKg": {
+      "value": 1.02409e+26,
+      "source": "nssdca-fact-sheets",
+      "method": "measured"
+    },
+    "gravity": {
+      "value": 11.27,
+      "source": "nssdca-fact-sheets",
+      "method": "measured",
+      "detail": "meanGravity1Bar"
+    },
+    "meanTempC": {
+      "value": -200,
+      "source": "nssdca-fact-sheets",
+      "method": "measured",
+      "detail": "temperature1Bar"
+    },
+    "moonCount": {
+      "value": 16,
+      "source": "nasa-science-neptune-moons",
+      "method": "measured",
+      "asOf": "2026-09-17"
+    },
+    "axialTilt": {
+      "value": {
+        "$deg": 28.32
+      },
+      "source": "nssdca-fact-sheets",
+      "method": "measured"
+    },
+    "distanceAU": {
+      "value": 30.06896348,
+      "source": "nssdca-fact-sheets",
+      "method": "measured"
+    },
+    "orbitPeriodDays": {
+      "value": 60189.018,
+      "source": "nssdca-fact-sheets",
+      "method": "measured"
+    },
+    "rotationPeriod": {
+      "source": "nssdca-fact-sheets",
+      "method": "measured"
+    }
+  }
+}

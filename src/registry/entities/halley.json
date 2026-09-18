@@ -1,0 +1,77 @@
+{
+  "$schema": "../schema/entity.schema.json",
+  "id": "halley",
+  "targetClass": "comet",
+  "source": "small-body",
+  "elements": {
+    "a": 17.9215074123436,
+    "e": 0.967270202449048,
+    "iDeg": 162.1960426230816,
+    "omDeg": 59.5078653556394,
+    "wDeg": 112.449622028568,
+    "maDeg": 65.84890057257185,
+    "epoch": "2000-01-01T12:00:00Z",
+    "color": "0xf08ac6",
+    "surfaceResolutions": [
+      "4k",
+      "2k"
+    ],
+    "kind": "comet",
+    "description": {
+      "en": "The most famous comet, visible from Earth about every 76 years, with its next return in 2061. It orbits backwards, against the flow of the planets.",
+      "fr": "La plus célèbre des comètes, visible depuis la Terre tous les 76 ans environ, avec un prochain retour en 2061. Elle orbite à rebours, à contre-courant des planètes."
+    },
+    "wiki": {
+      "en": "https://en.wikipedia.org/wiki/Halley%27s_Comet",
+      "fr": "https://fr.wikipedia.org/wiki/Com%C3%A8te_de_Halley"
+    }
+  },
+  "facts": {
+    "radiusKm": {
+      "value": {
+        "$diameterKm": 11
+      },
+      "source": "jpl-sbdb",
+      "method": "derived",
+      "detail": "radiusFromDiameter",
+      "citation": "Lamy,P.L.;Toth,I.;Fernandez,Y.R.;Weaver,H.A. (2004) Comets II, pp. 223-264"
+    },
+    "massKg": {
+      "published": false,
+      "reason": {
+        "en": "No direct measurement: the nucleus mass is inferred from a density that is itself poorly constrained (\"no more than a quarter that of ice\").",
+        "fr": "Aucune mesure directe : la masse du noyau se déduit d'une densité elle-même mal contrainte (« pas plus du quart de celle de la glace »)."
+      }
+    },
+    "gravity": {
+      "published": false,
+      "reason": {
+        "en": "Irregular nucleus of about 15 x 8 km: surface gravity varies by a large factor depending on where you stand, so a single value would mislead.",
+        "fr": "Noyau irrégulier d'environ 15 x 8 km : la gravité de surface varie d'un facteur important selon l'endroit, une valeur unique serait trompeuse."
+      }
+    },
+    "meanTempC": {
+      "published": false,
+      "reason": {
+        "en": "Temperature sweeps about 340 K along the orbit, from below -250 C at aphelion to tens of degrees C at perihelion: a mean would describe no real moment.",
+        "fr": "La température parcourt environ 340 K le long de l'orbite, de moins de -250 C à l'aphélie à plusieurs dizaines de degrés au périhélie : une moyenne ne décrirait aucun instant réel."
+      }
+    },
+    "moonCount": {
+      "value": 0,
+      "source": "jpl-sbdb",
+      "method": "measured",
+      "asOf": "2026-09-17",
+      "detail": "confirmedSatellites"
+    },
+    "rotationPeriod": {
+      "value": 53.5,
+      "published": false,
+      "reason": "not-yet-sourced"
+    }
+  },
+  "notes": {
+    "a": "Éléments osculateurs JPL Horizons EXACTEMENT à cette époque (record 90000030, apparition 1986 ; EPHEM_TYPE=ELEMENTS, TLIST=2451545.0). L'ancienne maDeg=38.38° était fausse pour cette époque : vérifié en propageant jusqu'à la vraie date de périhélie 1986-02-09, ce qui plaçait la comète à ~15.5 UA du Soleil au lieu de ~0.575 UA (son q réel).",
+    "facts.rotationPeriod": "Periode de rotation mesuree par Vega 1/2 : 53,5 +/- 1 h, confirmee par les images Giotto. A prendre pour ce qu'elle est : le noyau est en PRECESSION LIBRE (rotation hors axe principal), et la litterature en tire deux periodicites, ~2,2 j et ~7,4 j. Il n'existe donc pas de cycle fixe unique, comme pour Hyperion et Styx ailleurs dans ce fichier ; on retient la valeur observee plutot que de laisser le corps fige."
+  }
+}

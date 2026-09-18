@@ -1,0 +1,111 @@
+{
+  "$schema": "../schema/entity.schema.json",
+  "id": "ganymede",
+  "targetClass": "satellite",
+  "source": "catalogue",
+  "config": {
+    "kind": "moon",
+    "displayName": {
+      "fr": "Ganymède"
+    },
+    "frame": "parentRelative",
+    "relativeEphemeris": {
+      "kind": "jupiterMoon",
+      "moon": "ganymede"
+    },
+    "rotationBody": "Jupiter",
+    "radius": 0.2,
+    "rotationSpeed": {
+      "$rotationHours": 171.7
+    },
+    "orbitalColor": "0x9c8b78",
+    "fallbackColor": "0x9c8b78",
+    "textureResolutions": {
+      "surface": [
+        "8k",
+        "4k",
+        "2k",
+        "1k"
+      ]
+    },
+    "realData": {
+      "orbitalInclination": 0,
+      "ascendingNode": 0,
+      "description": {
+        "en": "The largest moon in the Solar System, larger than Mercury, with its own intrinsic magnetic field.",
+        "fr": "La plus grande lune du Système solaire, plus grande que Mercure, et dotée de son propre champ magnétique."
+      },
+      "wiki": {
+        "en": "https://en.wikipedia.org/wiki/Ganymede_(moon)",
+        "fr": "https://fr.wikipedia.org/wiki/Ganym%C3%A8de_(lune)"
+      }
+    },
+    "cameraDistance": {
+      "educ": 1.5,
+      "explo": {
+        "$cameraFromRadiusKm": 2634.1
+      }
+    },
+    "loadPriority": 13
+  },
+  "facts": {
+    "radiusKm": {
+      "value": 2631.2,
+      "source": "jpl-ssd-satellite-physical-parameters",
+      "method": "measured",
+      "uncertainty": 1.7
+    },
+    "massKg": {
+      "value": {
+        "$gm": 9887.83275
+      },
+      "source": "jpl-ssd-satellite-physical-parameters",
+      "method": "derived",
+      "uncertainty": {
+        "$gm": 0.00247
+      },
+      "detail": "massFromGM"
+    },
+    "gravity": {
+      "value": {
+        "$gm": 9887.83275,
+        "$radiusKm": 2631.2
+      },
+      "source": "jpl-ssd-satellite-physical-parameters",
+      "method": "derived",
+      "detail": "gravityFromGM"
+    },
+    "meanTempC": {
+      "published": false,
+      "reason": {
+        "en": "The NASA fact sheet gives \"90 to 160 Kelvin\" for daytime, without a mean.",
+        "fr": "La fiche NASA donne « 90 to 160 Kelvin » en journée, sans moyenne."
+      }
+    },
+    "axialTilt": {
+      "value": 0,
+      "published": false,
+      "reason": "not-yet-sourced"
+    },
+    "distanceAU": {
+      "value": {
+        "$km": 1070400
+      },
+      "source": "nssdca-fact-sheets",
+      "method": "measured"
+    },
+    "orbitPeriodDays": {
+      "value": 7.155,
+      "source": "nssdca-fact-sheets",
+      "method": "measured"
+    },
+    "rotationPeriod": {
+      "source": "nssdca-fact-sheets",
+      "method": "derived",
+      "detail": "synchronousRotation"
+    }
+  },
+  "notes": {
+    "facts.massKg": "Masse et gravite derivees du GM publie par JPL SSD (ephemeride JUP365, https://ssd.jpl.nasa.gov/sats/phys_par/) : m = GM/G, g = GM/R^2. Ni l'un ni l'autre n'est saisi a la main."
+  }
+}

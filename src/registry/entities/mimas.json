@@ -1,0 +1,131 @@
+{
+  "$schema": "../schema/entity.schema.json",
+  "id": "mimas",
+  "targetClass": "satellite",
+  "source": "catalogue",
+  "config": {
+    "kind": "moon",
+    "displayName": {
+      "en": "Mimas",
+      "fr": "Mimas"
+    },
+    "radius": 0.09,
+    "rotationSpeed": {
+      "$rotationHours": {
+        "$days": 0.9424243752169399
+      }
+    },
+    "orbitalColor": "0xd9d6cd",
+    "fallbackColor": "0xcac8c2",
+    "frame": "parentRelative",
+    "rotationBody": "Saturn",
+    "relativeEphemeris": {
+      "kind": "horizonsParentRelative"
+    },
+    "relativeOrbitalElements": {
+      "semiMajorAxisAU": 0.001243567234,
+      "eccentricity": 0.0212823,
+      "inclinationRad": {
+        "$deg": 29.6251
+      },
+      "ascendingNodeRad": {
+        "$deg": 169.6602
+      },
+      "argPerihelionRad": {
+        "$deg": 256.0964
+      },
+      "meanAnomalyAtEpochRad": {
+        "$deg": 50.0846
+      },
+      "epoch": {
+        "$date": "2025-12-31T00:00:00.000Z"
+      }
+    },
+    "textureResolutions": {
+      "surface": [
+        "2k"
+      ]
+    },
+    "realData": {
+      "orbitalInclination": {
+        "$deg": 27.00265761372071
+      },
+      "ascendingNode": {
+        "$deg": 172.0569449519339
+      },
+      "description": {
+        "en": "Saturn's closest major moon, dominated by the giant Herschel crater that gives it a Death-Star silhouette.",
+        "fr": "La lune majeure la plus proche de Saturne, dominée par le cratère géant Herschel qui lui donne une silhouette d’Étoile Noire."
+      },
+      "wiki": {
+        "en": "https://en.wikipedia.org/wiki/Mimas_(moon)",
+        "fr": "https://fr.wikipedia.org/wiki/Mimas_(lune)"
+      }
+    },
+    "cameraDistance": {
+      "educ": 0.6,
+      "explo": {
+        "$cameraFromRadiusKm": 198.2
+      }
+    },
+    "loadPriority": 20
+  },
+  "facts": {
+    "radiusKm": {
+      "value": 198.2,
+      "source": "jpl-ssd-satellite-physical-parameters",
+      "method": "measured",
+      "uncertainty": 0.4
+    },
+    "massKg": {
+      "value": {
+        "$gm": 2.50349
+      },
+      "source": "jpl-ssd-satellite-physical-parameters",
+      "method": "derived",
+      "uncertainty": {
+        "$gm": 0.00014
+      },
+      "detail": "massFromGM"
+    },
+    "gravity": {
+      "value": {
+        "$gm": 2.50349,
+        "$radiusKm": 198.2
+      },
+      "source": "jpl-ssd-satellite-physical-parameters",
+      "method": "derived",
+      "detail": "gravityFromGM"
+    },
+    "meanTempC": {
+      "published": false,
+      "reason": "not-yet-sourced"
+    },
+    "axialTilt": {
+      "value": 0,
+      "published": false,
+      "reason": "not-yet-sourced"
+    },
+    "distanceAU": {
+      "value": {
+        "$km": 185520
+      },
+      "source": "nssdca-fact-sheets",
+      "method": "measured"
+    },
+    "orbitPeriodDays": {
+      "value": 0.9424243752169399,
+      "source": "nssdca-fact-sheets",
+      "method": "measured"
+    },
+    "rotationPeriod": {
+      "source": "nssdca-fact-sheets",
+      "method": "derived",
+      "detail": "synchronousRotation"
+    }
+  },
+  "notes": {
+    "relativeOrbitalElements": "JPL Horizons osculating elements, epoch 2000-01-01.5 TDB (EPHEM_TYPE=ELEMENTS, TLIST=2451545.0) — même méthode que pour les autres lunes de ce fichier.",
+    "textureResolutions": "Aucune mosaïque photo globale contrôlée n'existe côté USGS pour Mimas (seulement relief ombré et carte picturale, pas une texture réelle) — vérifié en direct (2026-08-26, voir src/registry/products/textures/). Texture procédurale générée, paramétrée sur le cratère Herschel réel (~1/3 du diamètre, pic central)."
+  }
+}

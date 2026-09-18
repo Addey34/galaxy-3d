@@ -1,0 +1,130 @@
+{
+  "$schema": "../schema/entity.schema.json",
+  "id": "ariel",
+  "targetClass": "satellite",
+  "source": "catalogue",
+  "config": {
+    "kind": "moon",
+    "displayName": {
+      "en": "Ariel",
+      "fr": "Ariel"
+    },
+    "radius": 0.17,
+    "rotationSpeed": {
+      "$rotationHours": {
+        "$days": 2.520379095408933
+      }
+    },
+    "orbitalColor": "0xc7c5bd",
+    "fallbackColor": "0xb9b8b2",
+    "frame": "parentRelative",
+    "rotationBody": "Uranus",
+    "relativeEphemeris": {
+      "kind": "horizonsParentRelative"
+    },
+    "relativeOrbitalElements": {
+      "semiMajorAxisAU": 0.001276431879,
+      "eccentricity": 0.000467748,
+      "inclinationRad": {
+        "$deg": 97.7152
+      },
+      "ascendingNodeRad": {
+        "$deg": 167.6645
+      },
+      "argPerihelionRad": {
+        "$deg": 247.4797
+      },
+      "meanAnomalyAtEpochRad": {
+        "$deg": 126.517
+      },
+      "epoch": {
+        "$date": "2025-12-31T00:00:00.000Z"
+      }
+    },
+    "textureResolutions": {
+      "surface": [
+        "2k"
+      ]
+    },
+    "realData": {
+      "orbitalInclination": {
+        "$deg": 97.719319228073
+      },
+      "ascendingNode": {
+        "$deg": 167.6455486422633
+      },
+      "description": {
+        "en": "The brightest of Uranus's major moons, with the youngest surface and long canyons that may hold traces of past cryovolcanic flows.",
+        "fr": "La plus brillante des grandes lunes d’Uranus, avec la surface la plus jeune et de longs canyons qui pourraient garder la trace d’anciens écoulements cryovolcaniques."
+      },
+      "wiki": {
+        "en": "https://en.wikipedia.org/wiki/Ariel_(moon)",
+        "fr": "https://fr.wikipedia.org/wiki/Ariel_(lune)"
+      }
+    },
+    "cameraDistance": {
+      "educ": 1,
+      "explo": {
+        "$cameraFromRadiusKm": 578.9
+      }
+    },
+    "loadPriority": 25
+  },
+  "facts": {
+    "radiusKm": {
+      "value": 578.9,
+      "source": "jpl-ssd-satellite-physical-parameters",
+      "method": "measured",
+      "uncertainty": 0.6
+    },
+    "massKg": {
+      "value": {
+        "$gm": 83.5
+      },
+      "source": "jpl-ssd-satellite-physical-parameters",
+      "method": "derived",
+      "uncertainty": {
+        "$gm": 1.4
+      },
+      "detail": "massFromGM"
+    },
+    "gravity": {
+      "value": {
+        "$gm": 83.5,
+        "$radiusKm": 578.9
+      },
+      "source": "jpl-ssd-satellite-physical-parameters",
+      "method": "derived",
+      "detail": "gravityFromGM"
+    },
+    "meanTempC": {
+      "published": false,
+      "reason": "not-yet-sourced"
+    },
+    "axialTilt": {
+      "value": 0,
+      "published": false,
+      "reason": "not-yet-sourced"
+    },
+    "distanceAU": {
+      "value": {
+        "$km": 190900
+      },
+      "source": "nssdca-fact-sheets",
+      "method": "measured"
+    },
+    "orbitPeriodDays": {
+      "value": 2.520379095408933,
+      "source": "nssdca-fact-sheets",
+      "method": "measured"
+    },
+    "rotationPeriod": {
+      "source": "nssdca-fact-sheets",
+      "method": "derived",
+      "detail": "synchronousRotation"
+    }
+  },
+  "notes": {
+    "textureResolutions": "Aucune mosaïque globale contrôlée n'existe côté USGS pour Ariel — vérifié en direct (2026-08-26, voir registry/products/textures). Texture procédurale générée : peu de grands cratères + beaucoup de petits (Voyager 2 imaging science, 1986)."
+  }
+}

@@ -1,0 +1,109 @@
+{
+  "$schema": "../schema/entity.schema.json",
+  "id": "itokawa",
+  "targetClass": "asteroid",
+  "source": "small-body",
+  "elements": {
+    "displayName": {
+      "en": "Itokawa",
+      "fr": "Itokawa"
+    },
+    "a": 1.324127117232954,
+    "e": 0.2801540468526449,
+    "iDeg": 1.620937434229415,
+    "omDeg": 69.07544850295109,
+    "wDeg": 162.8518643924063,
+    "maDeg": 67.7838526010873,
+    "epoch": "2026-01-01T00:00:00.000Z",
+    "kind": "asteroid",
+    "color": "0x7fb3c9",
+    "fallbackColor": "0xdadada",
+    "model": {
+      "resolutions": [
+        "4k",
+        "2k",
+        "1k"
+      ],
+      "extentRatio": 1.93,
+      "albedo": 0.27,
+      "albedoSource": "Hayabusa AMICA disk-integrated photometry near opposition (Icarus, 2018)",
+      "colourSource": null,
+      "credit": {
+        "en": "JAXA Hayabusa AMICA images, shape model by R. Gaskell (PSI), NASA PDS HAY-A-AMICA-5-ITOKAWASHAPE-V1.0 (q = 128), decimated for the web.",
+        "fr": "Images JAXA Hayabusa AMICA, modèle de forme de R. Gaskell (PSI), NASA PDS HAY-A-AMICA-5-ITOKAWASHAPE-V1.0 (q = 128), décimé pour le web."
+      }
+    },
+    "description": {
+      "en": "A 535-metre rubble pile shaped like a sea otter. JAXA’s Hayabusa landed on it in 2005 and brought the first grains of an asteroid back to Earth in 2010.",
+      "fr": "Un amas de gravats de 535 mètres en forme de loutre de mer. La sonde japonaise Hayabusa s’y est posée en 2005 et a rapporté sur Terre, en 2010, les premiers grains d’un astéroïde."
+    },
+    "wiki": {
+      "en": "https://en.wikipedia.org/wiki/25143_Itokawa",
+      "fr": "https://fr.wikipedia.org/wiki/(25143)_Itokawa"
+    }
+  },
+  "facts": {
+    "radiusKm": {
+      "value": {
+        "$diameterKm": 0.33
+      },
+      "source": "jpl-sbdb",
+      "method": "derived",
+      "detail": "radiusFromDiameter",
+      "citation": "Science 312:1330-1334"
+    },
+    "massKg": {
+      "value": 35100000000,
+      "source": "jpl-sbdb",
+      "method": "measured",
+      "uncertainty": {
+        "$fraction": 0.03,
+        "$of": 35100000000
+      },
+      "detail": "itokawaPublishedMass",
+      "citation": "Science 312:1330-1334"
+    },
+    "gravity": {
+      "published": false,
+      "reason": {
+        "en": "About a hundred-thousandth of Earth’s, and it changes by a large factor between the two lobes: a single value would mislead.",
+        "fr": "Environ un cent-millième de celle de la Terre, et elle change d'un facteur important d'un lobe à l'autre : une valeur unique serait trompeuse."
+      }
+    },
+    "meanTempC": {
+      "published": false,
+      "reason": {
+        "en": "Surface temperature swings strongly between day and night and along its orbit: a mean would describe no real moment.",
+        "fr": "La température de surface varie fortement entre le jour et la nuit et le long de son orbite : une moyenne ne décrirait aucun instant réel."
+      }
+    },
+    "moonCount": {
+      "value": 0,
+      "source": "jpl-sbdb",
+      "method": "measured",
+      "asOf": "2026-09-17",
+      "detail": "confirmedSatellites"
+    },
+    "axialTilt": {
+      "value": 178.7,
+      "source": "jpl-sbdb",
+      "method": "derived",
+      "detail": "obliquityFromPole",
+      "citation": "Demura, H., et al., Science, 312, 1347 (2006)"
+    },
+    "rotationPeriod": {
+      "value": 12.132,
+      "source": "jpl-sbdb",
+      "method": "measured",
+      "citation": "LCDB (Rev. 2023-October); Warner et al., 2009"
+    }
+  },
+  "notes": {
+    "a": "Éléments osculateurs JPL Horizons EXACTEMENT à cette époque (COMMAND '25143;', EPHEM_TYPE=ELEMENTS, TLIST=2461041.5).",
+    "facts.radiusKm": "Diamètre moyen 0,33 km (SBDB, Fujiwara et al. 2006) ; le volume du modèle Gaskell donne 0,162 km, à 2 % près.",
+    "facts.axialTilt": "DÉRIVÉE du pôle SBDB (RA 90,53°, Dec −66,30°, Demura et al. 2006) : rotation rétrograde.",
+    "facts.massKg": "Masse PUBLIÉE (3,51e10 kg ± 3 %, Fujiwara et al. 2006), citée dans les notes de la SBDB. Le GM de la même fiche (2,1e-9 km³/s²) ne lui correspond pas : 2,1e-9 / G = 3,15e10 kg, la valeur que ce catalogue affichait jusqu'ici.",
+    "model.extentRatio": "Mesuré sur le fichier : rayon max / rayon équivalent-volume.",
+    "model.albedo": "Luminosité et couleur RÉELLES, cuites dans le modèle (bake-shape-colour.mjs) ; la sphère d'attente ci-dessus a la même couleur moyenne, pour ne pas changer d'aspect au chargement."
+  }
+}

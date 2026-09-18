@@ -1,0 +1,108 @@
+{
+  "$schema": "../schema/entity.schema.json",
+  "id": "ida",
+  "targetClass": "asteroid",
+  "source": "small-body",
+  "elements": {
+    "displayName": {
+      "en": "Ida",
+      "fr": "Ida"
+    },
+    "a": 2.862971354381273,
+    "e": 0.04570747515204408,
+    "iDeg": 1.13020036408425,
+    "omDeg": 323.5426573297611,
+    "wDeg": 113.7244045691694,
+    "maDeg": 16.88744495932398,
+    "epoch": "2026-01-01T00:00:00.000Z",
+    "kind": "asteroid",
+    "color": "0xd6c16f",
+    "fallbackColor": "0xd8d8d8",
+    "model": {
+      "resolutions": [
+        "2k",
+        "1k"
+      ],
+      "extentRatio": 2,
+      "albedo": 0.262,
+      "albedoSource": "NEOWISE, Mainzer et al. 2012, ApJ 759 L8 (JPL SBDB)",
+      "colourSource": null,
+      "credit": {
+        "en": "NASA Galileo SSI, shape model by P. Thomas et al. (1996), NASA PDS EAR-A-5-DDR-SHAPE-MODELS-V2.1, converted to a mesh for the web.",
+        "fr": "NASA Galileo SSI, modèle de forme de P. Thomas et al. (1996), NASA PDS EAR-A-5-DDR-SHAPE-MODELS-V2.1, converti en maillage pour le web."
+      }
+    },
+    "description": {
+      "en": "The first asteroid found to have its own moon: images taken by NASA’s Galileo probe in 1993 revealed tiny Dactyl orbiting this 60-kilometre main-belt asteroid.",
+      "fr": "Le premier astéroïde découvert avec sa propre lune : les images prises en 1993 par la sonde Galileo de la NASA ont révélé la petite Dactyle en orbite autour de cet astéroïde de 60 kilomètres de la ceinture principale."
+    },
+    "wiki": {
+      "en": "https://en.wikipedia.org/wiki/243_Ida",
+      "fr": "https://fr.wikipedia.org/wiki/(243)_Ida"
+    }
+  },
+  "facts": {
+    "radiusKm": {
+      "value": {
+        "$diameterKm": 32
+      },
+      "source": "jpl-sbdb",
+      "method": "derived",
+      "detail": "radiusFromDiameter",
+      "citation": "Belton et al. (1995)"
+    },
+    "massKg": {
+      "value": {
+        "$gm": 0.00275
+      },
+      "source": "jpl-sbdb",
+      "method": "derived",
+      "uncertainty": {
+        "$gm": 0.00035
+      },
+      "detail": "massFromGM",
+      "citation": "Belton et al. (1996) Icarus v.120, pp.185-199"
+    },
+    "gravity": {
+      "published": false,
+      "reason": {
+        "en": "A 60-kilometre elongated body spinning in 4.6 hours: surface gravity changes by a large factor from its ends to its middle, so a single value would mislead.",
+        "fr": "Un corps allongé de 60 kilomètres qui tourne en 4,6 heures : la gravité de surface change d'un facteur important de ses extrémités à son centre, une valeur unique serait trompeuse."
+      }
+    },
+    "meanTempC": {
+      "published": false,
+      "reason": {
+        "en": "Surface temperature swings strongly over its 4.6-hour day: a mean would describe no real moment.",
+        "fr": "La température de surface varie fortement au fil de sa journée de 4,6 heures : une moyenne ne décrirait aucun instant réel."
+      }
+    },
+    "moonCount": {
+      "value": 1,
+      "source": "jpl-sbdb",
+      "method": "measured",
+      "asOf": "2026-09-17",
+      "detail": "confirmedSatellites"
+    },
+    "axialTilt": {
+      "value": 156,
+      "published": false,
+      "reason": "not-yet-sourced"
+    },
+    "rotationPeriod": {
+      "value": 4.634,
+      "source": "jpl-sbdb",
+      "method": "measured",
+      "citation": "LCDB (Rev. 2023-October); Warner et al., 2009"
+    }
+  },
+  "notes": {
+    "a": "Éléments osculateurs JPL Horizons EXACTEMENT à cette époque (COMMAND '243;', EPHEM_TYPE=ELEMENTS, TLIST=2461041.5).",
+    "facts.radiusKm": "Rayon moyen 15,7 km (Thomas et al. 1996, le même travail que le modèle de forme ; le « 32 km » de la SBDB est un diamètre antérieur, arrondi).",
+    "facts.axialTilt": "DÉRIVÉE du pôle PDS (Thomas et al. : RA 348,76°, Dec +87,10°, rotation RÉTROGRADE, donc moment cinétique vers RA 168,76°, Dec −87,10°) et de la normale orbitale.",
+    "facts.massKg": "GM = 0,00275 km³/s² (SBDB, Belton et al. 1996, mesuré grâce à Dactyle) ÷ G.",
+    "facts.moonCount": "Dactyle, découverte sur les images de Galileo — pas encore dans ce catalogue.",
+    "model.extentRatio": "Mesuré sur le fichier : rayon max / rayon équivalent-volume.",
+    "model.albedo": "Luminosité et couleur RÉELLES, cuites dans le modèle (bake-shape-colour.mjs) ; la sphère d'attente ci-dessus a la même couleur moyenne, pour ne pas changer d'aspect au chargement."
+  }
+}

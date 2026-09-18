@@ -1,0 +1,122 @@
+{
+  "$schema": "../schema/entity.schema.json",
+  "id": "nix",
+  "targetClass": "satellite",
+  "source": "catalogue",
+  "config": {
+    "kind": "moon",
+    "displayName": {
+      "en": "Nix",
+      "fr": "Nix"
+    },
+    "radius": 0.06,
+    "rotationSpeed": {
+      "$rotationHours": 43.9
+    },
+    "orbitalColor": "0xd8d3c9",
+    "fallbackColor": "0xcfc9bd",
+    "frame": "parentRelative",
+    "rotationBody": "Pluto",
+    "relativeOrbitalElements": {
+      "semiMajorAxisAU": 0.0003256427173,
+      "eccentricity": 0,
+      "inclinationRad": {
+        "$deg": 112.8719
+      },
+      "ascendingNodeRad": {
+        "$deg": 227.3803
+      },
+      "argPerihelionRad": 0,
+      "meanAnomalyAtEpochRad": {
+        "$deg": 125.705
+      },
+      "epoch": {
+        "$date": "2025-12-31T00:00:00.000Z"
+      }
+    },
+    "relativeEphemeris": {
+      "kind": "horizonsParentRelative"
+    },
+    "textureResolutions": {
+      "surface": [
+        "2k"
+      ]
+    },
+    "realData": {
+      "orbitalInclination": 0,
+      "ascendingNode": 0,
+      "description": {
+        "en": "A moon with a reddish crater on an otherwise bright icy surface, rotating chaotically and retrograde relative to its own orbit.",
+        "fr": "Une lune marquée d’un cratère rougeâtre sur une surface glacée par ailleurs brillante, en rotation chaotique et rétrograde par rapport à sa propre orbite."
+      },
+      "wiki": {
+        "en": "https://en.wikipedia.org/wiki/Nix_(moon)",
+        "fr": "https://fr.wikipedia.org/wiki/Nix_(lune)"
+      }
+    },
+    "cameraDistance": {
+      "educ": 0.5,
+      "explo": {
+        "$cameraFromRadiusKm": 18
+      }
+    },
+    "loadPriority": 14
+  },
+  "facts": {
+    "radiusKm": {
+      "value": 18,
+      "source": "jpl-ssd-satellite-physical-parameters",
+      "method": "measured",
+      "uncertainty": 1
+    },
+    "massKg": {
+      "value": {
+        "$gm": 0.0015
+      },
+      "source": "jpl-ssd-satellite-physical-parameters",
+      "method": "derived",
+      "uncertainty": {
+        "$gm": 0.0005
+      },
+      "detail": "massFromGM"
+    },
+    "gravity": {
+      "value": {
+        "$gm": 0.0015,
+        "$radiusKm": 18
+      },
+      "source": "jpl-ssd-satellite-physical-parameters",
+      "method": "derived",
+      "detail": "gravityFromGM"
+    },
+    "meanTempC": {
+      "published": false,
+      "reason": "not-yet-sourced"
+    },
+    "axialTilt": {
+      "value": 0,
+      "published": false,
+      "reason": "not-yet-sourced"
+    },
+    "distanceAU": {
+      "value": {
+        "$km": 49300
+      },
+      "source": "jpl-ssd-satellite-mean-elements",
+      "method": "measured"
+    },
+    "orbitPeriodDays": {
+      "value": 24.85465798523317,
+      "source": "jpl-ssd-satellite-mean-elements",
+      "method": "measured"
+    },
+    "rotationPeriod": {
+      "published": false,
+      "reason": "not-yet-sourced"
+    }
+  },
+  "notes": {
+    "relativeOrbitalElements": "Elements MOYENS, mesures sur le binaire (cf. scripts/derive-relative-elements.mjs --mean). Les elements OSCULATEURS sont ici aberrants : cette lune orbite le barycentre Pluton-Charon, et Pluton oscille de 2 100 km autour de ce point, si bien que l'etat instantane decrit une conique qui n'existe pas (Styx : periode osculatrice 47 j pour 20,2 j reels). Le plan et le rayon sont donc moyennes sur 400 jours, ou le ballant se compense ; la periode vient du catalogue. Precision attendue : de l'ordre du ballant residuel, quelques pour cent.",
+    "textureResolutions": "Texture procédurale générée : base claire + une tache rougeâtre isolée, paramétrée sur la vraie tache rouge autour d'un cratère d'impact repérée par New Horizons (Showalter et al. 2015 — voir registry/products/textures)."
+  }
+}

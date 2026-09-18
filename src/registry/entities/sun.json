@@ -1,0 +1,84 @@
+{
+  "$schema": "../schema/entity.schema.json",
+  "id": "sun",
+  "targetClass": "star",
+  "source": "catalogue",
+  "config": {
+    "kind": "star",
+    "displayName": {
+      "fr": "Soleil"
+    },
+    "radius": 7,
+    "rotationSpeed": {
+      "$rotationHours": 609.12
+    },
+    "orbitalColor": "0x000000",
+    "textureResolutions": {
+      "surface": [
+        "4k",
+        "2k",
+        "1k"
+      ]
+    },
+    "realData": {
+      "description": {
+        "en": "The star at the heart of the Solar System. This ball of plasma holds 99.86% of all the mass orbiting it.",
+        "fr": "L’étoile au cœur du Système solaire. Cette boule de plasma concentre 99,86 % de toute la masse en orbite autour d’elle."
+      },
+      "wiki": {
+        "en": "https://en.wikipedia.org/wiki/Sun",
+        "fr": "https://fr.wikipedia.org/wiki/Soleil"
+      }
+    },
+    "astroBody": "Sun",
+    "cameraDistance": {
+      "educ": 50,
+      "explo": {
+        "$cameraFromRadiusKm": 695700
+      }
+    },
+    "loadPriority": 1
+  },
+  "facts": {
+    "radiusKm": {
+      "value": 695700,
+      "source": "nssdca-fact-sheets",
+      "method": "measured"
+    },
+    "massKg": {
+      "value": 1.9884e+30,
+      "source": "nssdca-fact-sheets",
+      "method": "measured"
+    },
+    "gravity": {
+      "value": 274,
+      "source": "nssdca-fact-sheets",
+      "method": "measured",
+      "detail": "equatorialGravity"
+    },
+    "meanTempC": {
+      "value": {
+        "$kelvin": 5772
+      },
+      "source": "nssdca-fact-sheets",
+      "method": "derived",
+      "detail": "effectiveTemperature"
+    },
+    "axialTilt": {
+      "value": {
+        "$deg": 7.25
+      },
+      "source": "nssdca-fact-sheets",
+      "method": "measured",
+      "detail": "obliquityToEcliptic"
+    },
+    "rotationPeriod": {
+      "source": "nssdca-fact-sheets",
+      "method": "measured",
+      "detail": "solarRotationAt16Degrees"
+    }
+  },
+  "notes": {
+    "radius": "Rayon éducatif volontairement tempéré : le Soleil reste dominant sans saturer la vue. En Explo, le rayon physique de realData.radiusKm reprend entièrement la main."
+  }
+}

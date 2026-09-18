@@ -1,0 +1,107 @@
+{
+  "$schema": "../schema/entity.schema.json",
+  "id": "venus",
+  "targetClass": "planet",
+  "source": "catalogue",
+  "config": {
+    "kind": "planet",
+    "displayName": {
+      "fr": "Vénus"
+    },
+    "radius": 0.95,
+    "rotationSpeed": {
+      "$rotationHours": 5832.6
+    },
+    "orbitalColor": "0xe9a13b",
+    "textureResolutions": {
+      "surface": [
+        "8k",
+        "4k",
+        "2k",
+        "1k"
+      ],
+      "clouds": [
+        "4k",
+        "2k",
+        "1k"
+      ]
+    },
+    "atmosphereColor": "0xd9b26a",
+    "realData": {
+      "orbitalInclination": {
+        "$deg": 3.395
+      },
+      "ascendingNode": {
+        "$deg": 76.68
+      },
+      "description": {
+        "en": "The hottest planet. Its thick CO₂ atmosphere traps heat through a runaway greenhouse effect, and it spins backwards, very slowly.",
+        "fr": "La planète la plus chaude. Son épaisse atmosphère de CO₂ piège la chaleur par un effet de serre emballé, et elle tourne à l’envers, très lentement."
+      },
+      "wiki": {
+        "en": "https://en.wikipedia.org/wiki/Venus",
+        "fr": "https://fr.wikipedia.org/wiki/V%C3%A9nus_(plan%C3%A8te)"
+      }
+    },
+    "astroBody": "Venus",
+    "cameraDistance": {
+      "educ": 5,
+      "explo": {
+        "$cameraFromRadiusKm": 6052
+      }
+    },
+    "loadPriority": 7
+  },
+  "facts": {
+    "radiusKm": {
+      "value": 6051.8,
+      "source": "nssdca-fact-sheets",
+      "method": "measured"
+    },
+    "massKg": {
+      "value": 4.8673e+24,
+      "source": "nssdca-fact-sheets",
+      "method": "measured"
+    },
+    "gravity": {
+      "value": 8.87,
+      "source": "nssdca-fact-sheets",
+      "method": "measured"
+    },
+    "meanTempC": {
+      "value": 464,
+      "source": "nssdca-fact-sheets",
+      "method": "measured"
+    },
+    "moonCount": {
+      "value": 0,
+      "source": "nssdca-fact-sheets",
+      "method": "measured",
+      "asOf": "2024-01-11"
+    },
+    "axialTilt": {
+      "value": {
+        "$deg": 177.36
+      },
+      "source": "nssdca-fact-sheets",
+      "method": "measured"
+    },
+    "distanceAU": {
+      "value": 0.72333199,
+      "source": "nssdca-fact-sheets",
+      "method": "measured"
+    },
+    "orbitPeriodDays": {
+      "value": 224.701,
+      "source": "nssdca-fact-sheets",
+      "method": "measured"
+    },
+    "rotationPeriod": {
+      "source": "nssdca-fact-sheets",
+      "method": "measured"
+    }
+  },
+  "notes": {
+    "textureResolutions.clouds": "Le voile nuageux opaque de Vénus est rendu comme couche `clouds` (sphère texturée), le halo atmosphérique Fresnel s'ajoutant au limbe."
+  }
+}

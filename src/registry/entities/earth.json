@@ -1,0 +1,131 @@
+{
+  "$schema": "../schema/entity.schema.json",
+  "id": "earth",
+  "targetClass": "planet",
+  "source": "catalogue",
+  "config": {
+    "kind": "planet",
+    "displayName": {
+      "fr": "Terre"
+    },
+    "radius": 1,
+    "rotationSpeed": {
+      "$rotationHours": 23.9345
+    },
+    "orbitalColor": "0x2f9dff",
+    "textureResolutions": {
+      "surface": [
+        "8k",
+        "4k",
+        "2k",
+        "1k"
+      ],
+      "normalMap": [
+        "8k",
+        "4k",
+        "2k",
+        "1k"
+      ],
+      "displacement": [
+        "2k",
+        "1k"
+      ],
+      "clouds": [
+        "8k",
+        "4k",
+        "2k",
+        "1k"
+      ],
+      "spec": [
+        "8k",
+        "4k",
+        "2k",
+        "1k"
+      ],
+      "lights": [
+        "8k",
+        "4k",
+        "2k",
+        "1k"
+      ]
+    },
+    "atmosphereColor": "0x4a90e0",
+    "realData": {
+      "orbitalInclination": 0,
+      "ascendingNode": 0,
+      "description": {
+        "en": "The only known planet to harbour life. Liquid water covers 71% of its surface, and its atmosphere shields it from solar radiation.",
+        "fr": "La seule planète connue à abriter la vie. L’eau liquide couvre 71 % de sa surface, et son atmosphère la protège du rayonnement solaire."
+      },
+      "wiki": {
+        "en": "https://en.wikipedia.org/wiki/Earth",
+        "fr": "https://fr.wikipedia.org/wiki/Terre"
+      }
+    },
+    "astroBody": "Earth",
+    "positionBody": "EMB",
+    "cameraDistance": {
+      "educ": 5,
+      "explo": {
+        "$cameraFromRadiusKm": 6371
+      }
+    },
+    "loadPriority": 2,
+    "satellites": [
+      "moon"
+    ]
+  },
+  "facts": {
+    "radiusKm": {
+      "value": 6371,
+      "source": "nssdca-fact-sheets",
+      "method": "measured"
+    },
+    "massKg": {
+      "value": 5.9722e+24,
+      "source": "nssdca-fact-sheets",
+      "method": "measured"
+    },
+    "gravity": {
+      "value": 9.82,
+      "source": "nssdca-fact-sheets",
+      "method": "measured"
+    },
+    "meanTempC": {
+      "value": 15,
+      "source": "nssdca-fact-sheets",
+      "method": "measured"
+    },
+    "moonCount": {
+      "value": 1,
+      "source": "nssdca-fact-sheets",
+      "method": "measured",
+      "asOf": "2024-11-15"
+    },
+    "axialTilt": {
+      "value": {
+        "$deg": 23.44
+      },
+      "source": "nssdca-fact-sheets",
+      "method": "measured"
+    },
+    "distanceAU": {
+      "value": 1.00000011,
+      "source": "nssdca-fact-sheets",
+      "method": "measured"
+    },
+    "orbitPeriodDays": {
+      "value": 365.256,
+      "source": "nssdca-fact-sheets",
+      "method": "measured"
+    },
+    "rotationPeriod": {
+      "source": "nssdca-fact-sheets",
+      "method": "measured"
+    }
+  },
+  "notes": {
+    "atmosphereColor": "L'atmosphère terrestre est un phénomène de diffusion rendu par shader ; elle ne nécessite pas une texture bitmap supplémentaire.",
+    "positionBody": "Position au barycentre Terre-Lune : évite le ballant lunaire réel (~4700 km, ~27 j) qui se voit comme un zigzag à vraie échelle et vitesse max. L'axe/jour-nuit reste sur Body.Earth. La Lune (parentRelative) est alors référencée à l'EMB, restant à sa vraie position."
+  }
+}

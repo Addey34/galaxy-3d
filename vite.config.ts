@@ -23,6 +23,29 @@ function stripProductionHtmlComments() {
   };
 }
 
+/**
+ * Retire des fiches du registre (`src/registry/**.json`) ce qui ne sert qu'au dépôt : `$schema`
+ * (pour l'éditeur), `notes` (les commentaires du catalogue d'origine, qui portent la provenance
+ * et les pièges) et `coverageNote`. Aucun chargeur ne les lit ; sans ce retrait, chaque visiteur
+ * téléchargerait les commentaires de tout le catalogue.
+ *
+ * `enforce: 'pre'` : passe AVANT le plugin JSON de Vite, qui reçoit donc une fiche déjà allégée.
+ * Les tests de schéma lisent les fichiers sur le disque, pas par import : ils voient tout.
+ */
+function stripRegistryNotes() {
+  const DEV_ONLY = ['$schema', 'notes', 'coverageNote'];
+  return {
+    name: 'strip-registry-notes',
+    enforce: 'pre' as const,
+    transform(code: string, id: string): string | null {
+      if (!/[\\/]src[\\/]registry[\\/].+\.json$/.test(id)) return null;
+      const data = JSON.parse(code) as Record<string, unknown>;
+      for (const key of DEV_ONLY) delete data[key];
+      return JSON.stringify(data);
+    },
+  };
+}
+
 const SITE_ORIGIN = 'https://galaxy.adrianguichard.dev';
 
 /**
@@ -443,6 +466,7 @@ function bodyLandingPages() {
 
 export default defineConfig({
   plugins: [
+    stripRegistryNotes(),
     stripProductionHtmlComments(),
     bodyLandingPages(),
     // PWA installable + hors-ligne. Pensé pour l'usage en classe (wifi d'école saturé) :

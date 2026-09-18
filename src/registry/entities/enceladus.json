@@ -1,0 +1,126 @@
+{
+  "$schema": "../schema/entity.schema.json",
+  "id": "enceladus",
+  "targetClass": "satellite",
+  "source": "catalogue",
+  "config": {
+    "kind": "moon",
+    "displayName": {
+      "en": "Enceladus",
+      "fr": "Encelade"
+    },
+    "radius": 0.12,
+    "rotationSpeed": {
+      "$rotationHours": {
+        "$days": 1.3702181029145903
+      }
+    },
+    "orbitalColor": "0xdedbd4",
+    "fallbackColor": "0xc7c8c9",
+    "frame": "parentRelative",
+    "rotationBody": "Saturn",
+    "relativeEphemeris": {
+      "kind": "horizonsParentRelative"
+    },
+    "relativeOrbitalElements": {
+      "semiMajorAxisAU": 0.001593781246,
+      "eccentricity": 0.00623192,
+      "inclinationRad": {
+        "$deg": 28.0528
+      },
+      "ascendingNodeRad": {
+        "$deg": 169.5148
+      },
+      "argPerihelionRad": {
+        "$deg": 103.893
+      },
+      "meanAnomalyAtEpochRad": {
+        "$deg": 8.9737
+      },
+      "epoch": {
+        "$date": "2025-12-31T00:00:00.000Z"
+      }
+    },
+    "textureResolutions": {
+      "surface": [
+        "1k"
+      ]
+    },
+    "realData": {
+      "orbitalInclination": 0,
+      "ascendingNode": 0,
+      "description": {
+        "en": "A bright icy moon with an active south-polar plume and a subsurface ocean.",
+        "fr": "Une lune glacée très brillante, avec un panache actif au pôle sud et un océan souterrain."
+      },
+      "wiki": {
+        "en": "https://en.wikipedia.org/wiki/Enceladus",
+        "fr": "https://fr.wikipedia.org/wiki/Encelade_(lune)"
+      }
+    },
+    "cameraDistance": {
+      "educ": 0.8,
+      "explo": {
+        "$cameraFromRadiusKm": 252.1
+      }
+    },
+    "loadPriority": 8
+  },
+  "facts": {
+    "radiusKm": {
+      "value": 252.1,
+      "source": "jpl-ssd-satellite-physical-parameters",
+      "method": "measured",
+      "uncertainty": 0.2
+    },
+    "massKg": {
+      "value": {
+        "$gm": 7.21037
+      },
+      "source": "jpl-ssd-satellite-physical-parameters",
+      "method": "derived",
+      "uncertainty": {
+        "$gm": 0.00009
+      },
+      "detail": "massFromGM"
+    },
+    "gravity": {
+      "value": {
+        "$gm": 7.21037,
+        "$radiusKm": 252.1
+      },
+      "source": "jpl-ssd-satellite-physical-parameters",
+      "method": "derived",
+      "detail": "gravityFromGM"
+    },
+    "meanTempC": {
+      "published": false,
+      "reason": "not-yet-sourced"
+    },
+    "axialTilt": {
+      "value": 0,
+      "published": false,
+      "reason": "not-yet-sourced"
+    },
+    "distanceAU": {
+      "value": {
+        "$km": 238020
+      },
+      "source": "nssdca-fact-sheets",
+      "method": "measured"
+    },
+    "orbitPeriodDays": {
+      "value": 1.3702181029145903,
+      "source": "nssdca-fact-sheets",
+      "method": "measured"
+    },
+    "rotationPeriod": {
+      "source": "nssdca-fact-sheets",
+      "method": "derived",
+      "detail": "synchronousRotation"
+    }
+  },
+  "notes": {
+    "relativeEphemeris": "JPL SAT441 mean elements, epoch 2000-01-01.5 TDB."
+  }
+}

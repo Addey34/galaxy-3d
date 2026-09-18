@@ -1,0 +1,118 @@
+{
+  "$schema": "../schema/entity.schema.json",
+  "id": "kerberos",
+  "targetClass": "satellite",
+  "source": "catalogue",
+  "config": {
+    "kind": "moon",
+    "displayName": {
+      "en": "Kerberos",
+      "fr": "Cerbère"
+    },
+    "radius": 0.04,
+    "rotationSpeed": {
+      "$rotationHours": {
+        "$days": 5.31
+      }
+    },
+    "orbitalColor": "0xbfc4c4",
+    "fallbackColor": "0xb4baba",
+    "frame": "parentRelative",
+    "rotationBody": "Pluto",
+    "relativeOrbitalElements": {
+      "semiMajorAxisAU": 0.0003860530818,
+      "eccentricity": 0,
+      "inclinationRad": {
+        "$deg": 113.2981
+      },
+      "ascendingNodeRad": {
+        "$deg": 227.3586
+      },
+      "argPerihelionRad": 0,
+      "meanAnomalyAtEpochRad": {
+        "$deg": 350.4908
+      },
+      "epoch": {
+        "$date": "2025-12-31T00:00:00.000Z"
+      }
+    },
+    "relativeEphemeris": {
+      "kind": "horizonsParentRelative"
+    },
+    "textureResolutions": {
+      "surface": [
+        "2k"
+      ]
+    },
+    "realData": {
+      "orbitalInclination": 0,
+      "ascendingNode": 0,
+      "description": {
+        "en": "A double-lobed moon, likely the fusion of two smaller bodies, rotating chaotically in the Pluto-Charon system.",
+        "fr": "Une lune à double lobe, probablement issue de la fusion de deux corps plus petits, en rotation chaotique dans le système Pluton-Charon."
+      },
+      "wiki": {
+        "en": "https://en.wikipedia.org/wiki/Kerberos_(moon)",
+        "fr": "https://fr.wikipedia.org/wiki/Kerb%C3%A8ros_(lune)"
+      }
+    },
+    "cameraDistance": {
+      "educ": 0.5,
+      "explo": {
+        "$cameraFromRadiusKm": 6
+      }
+    },
+    "loadPriority": 15
+  },
+  "facts": {
+    "radiusKm": {
+      "value": 6,
+      "source": "jpl-ssd-satellite-physical-parameters",
+      "method": "measured",
+      "uncertainty": 1
+    },
+    "massKg": {
+      "published": false,
+      "reason": {
+        "en": "Only an upper limit to its mass has been published (Porter et al. 2023, from Hubble and New Horizons astrometry), not a measured value.",
+        "fr": "Seule une limite supérieure de sa masse a été publiée (Porter et al. 2023, astrométrie Hubble et New Horizons), pas une valeur mesurée."
+      }
+    },
+    "gravity": {
+      "published": false,
+      "reason": {
+        "en": "No measured mass has been published, only an upper limit (Porter et al. 2023), so no surface gravity can be derived.",
+        "fr": "Aucune masse mesurée n’a été publiée, seulement une limite supérieure (Porter et al. 2023) : aucune gravité de surface ne peut en être dérivée."
+      }
+    },
+    "meanTempC": {
+      "published": false,
+      "reason": "not-yet-sourced"
+    },
+    "axialTilt": {
+      "value": 0,
+      "published": false,
+      "reason": "not-yet-sourced"
+    },
+    "distanceAU": {
+      "value": {
+        "$km": 58300
+      },
+      "source": "jpl-ssd-satellite-mean-elements",
+      "method": "measured"
+    },
+    "orbitPeriodDays": {
+      "value": 32.16803411478301,
+      "source": "jpl-ssd-satellite-mean-elements",
+      "method": "measured"
+    },
+    "rotationPeriod": {
+      "published": false,
+      "reason": "not-yet-sourced"
+    }
+  },
+  "notes": {
+    "relativeOrbitalElements": "Elements MOYENS, mesures sur le binaire (cf. scripts/derive-relative-elements.mjs --mean). Les elements OSCULATEURS sont ici aberrants : cette lune orbite le barycentre Pluton-Charon, et Pluton oscille de 2 100 km autour de ce point, si bien que l'etat instantane decrit une conique qui n'existe pas (Styx : periode osculatrice 47 j pour 20,2 j reels). Le plan et le rayon sont donc moyennes sur 400 jours, ou le ballant se compense ; la periode vient du catalogue. Precision attendue : de l'ordre du ballant residuel, quelques pour cent.",
+    "textureResolutions": "Résolution New Horizons trop faible pour une vraie mosaïque (voir registry/products/textures). Texture procédurale générée, même traitement que ses 3 lunes sœurs (base claire, peu de cratères)."
+  }
+}

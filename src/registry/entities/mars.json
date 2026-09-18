@@ -1,0 +1,99 @@
+{
+  "$schema": "../schema/entity.schema.json",
+  "id": "mars",
+  "targetClass": "planet",
+  "source": "catalogue",
+  "config": {
+    "kind": "planet",
+    "radius": 0.53,
+    "rotationSpeed": {
+      "$rotationHours": 24.6229
+    },
+    "orbitalColor": "0xe85d3f",
+    "textureResolutions": {
+      "surface": [
+        "8k",
+        "4k",
+        "2k",
+        "1k"
+      ]
+    },
+    "realData": {
+      "orbitalInclination": {
+        "$deg": 1.85
+      },
+      "ascendingNode": {
+        "$deg": 49.579
+      },
+      "description": {
+        "en": "The red planet, tinted by iron oxide. It hosts Olympus Mons, the tallest volcano in the Solar System (~22 km).",
+        "fr": "La planète rouge, teintée par l’oxyde de fer. Elle abrite Olympus Mons, le plus haut volcan du Système solaire (~22 km)."
+      },
+      "wiki": {
+        "en": "https://en.wikipedia.org/wiki/Mars",
+        "fr": "https://fr.wikipedia.org/wiki/Mars_(plan%C3%A8te)"
+      }
+    },
+    "astroBody": "Mars",
+    "cameraDistance": {
+      "educ": 3,
+      "explo": {
+        "$cameraFromRadiusKm": 3390
+      }
+    },
+    "loadPriority": 4,
+    "satellites": [
+      "phobos",
+      "deimos"
+    ]
+  },
+  "facts": {
+    "radiusKm": {
+      "value": 3389.5,
+      "source": "nssdca-fact-sheets",
+      "method": "measured"
+    },
+    "massKg": {
+      "value": 6.4169e+23,
+      "source": "nssdca-fact-sheets",
+      "method": "measured"
+    },
+    "gravity": {
+      "value": 3.73,
+      "source": "nssdca-fact-sheets",
+      "method": "measured"
+    },
+    "meanTempC": {
+      "value": -65,
+      "source": "nssdca-fact-sheets",
+      "method": "measured"
+    },
+    "moonCount": {
+      "value": 2,
+      "source": "nasa-science-mars-moons",
+      "method": "measured",
+      "asOf": "2026-09-17"
+    },
+    "axialTilt": {
+      "value": {
+        "$deg": 25.19
+      },
+      "source": "nssdca-fact-sheets",
+      "method": "measured"
+    },
+    "distanceAU": {
+      "value": 1.52366231,
+      "source": "nssdca-fact-sheets",
+      "method": "measured"
+    },
+    "orbitPeriodDays": {
+      "value": 686.98,
+      "source": "nssdca-fact-sheets",
+      "method": "measured"
+    },
+    "rotationPeriod": {
+      "source": "nssdca-fact-sheets",
+      "method": "measured"
+    }
+  }
+}

@@ -1,0 +1,93 @@
+{
+  "$schema": "../schema/entity.schema.json",
+  "id": "quaoar",
+  "targetClass": "dwarf_planet",
+  "source": "small-body",
+  "elements": {
+    "displayName": {
+      "en": "Quaoar",
+      "fr": "Quaoar"
+    },
+    "a": 43.33509246671098,
+    "e": 0.03694225430757929,
+    "iDeg": 7.990872930653528,
+    "omDeg": 188.9142102666829,
+    "wDeg": 157.5498851270579,
+    "maDeg": 265.1482774560987,
+    "epoch": "2000-01-01T12:00:00Z",
+    "barycentric": true,
+    "kind": "dwarf",
+    "color": "0x9c8873",
+    "surfaceResolutions": [
+      "2k"
+    ],
+    "fallbackColor": "0x9c8873",
+    "visualRadius": 0.086,
+    "description": {
+      "en": "A large Kuiper Belt object that surprised astronomers in 2023 with a system of rings orbiting far beyond the distance where rings should be stable; its moon Weywot may be responsible for keeping them from collapsing.",
+      "fr": "Un grand objet de la ceinture de Kuiper qui a surpris les astronomes en 2023 : un système d’anneaux en orbite bien au-delà de la distance où des anneaux sont censés rester stables ; sa lune Weywot pourrait les empêcher de s’effondrer."
+    },
+    "wiki": {
+      "en": "https://en.wikipedia.org/wiki/Quaoar",
+      "fr": "https://fr.wikipedia.org/wiki/(50000)_Quaoar"
+    }
+  },
+  "facts": {
+    "radiusKm": {
+      "value": {
+        "$diameterKm": 1094.4
+      },
+      "source": "margoti-2026-quaoar",
+      "method": "derived",
+      "uncertainty": 2.3,
+      "detail": "volumetricRadiusFromDiameter"
+    },
+    "massKg": {
+      "value": {
+        "$density": 1.76,
+        "$radiusKm": {
+          "$diameterKm": 1094.4
+        }
+      },
+      "source": "margoti-2026-quaoar",
+      "method": "derived",
+      "detail": "massFromDensity"
+    },
+    "gravity": {
+      "value": {
+        "$massKg": {
+          "$density": 1.76,
+          "$radiusKm": {
+            "$diameterKm": 1094.4
+          }
+        },
+        "$radiusKm": {
+          "$diameterKm": 1094.4
+        }
+      },
+      "source": "margoti-2026-quaoar",
+      "method": "derived",
+      "detail": "gravityFromMass"
+    },
+    "meanTempC": {
+      "published": false,
+      "reason": "not-yet-sourced"
+    },
+    "moonCount": {
+      "value": 1,
+      "source": "jpl-sbdb",
+      "method": "measured",
+      "asOf": "2026-09-17",
+      "detail": "confirmedSatellites"
+    },
+    "rotationPeriod": {
+      "value": 8.8394,
+      "source": "margoti-2026-quaoar",
+      "method": "measured",
+      "uncertainty": 0.0002
+    }
+  },
+  "notes": {
+    "a": "Éléments osculateurs JPL Horizons BARYCENTRIQUES exactement à cette époque (COMMAND '50000;', CENTER=500@0, TLIST=2451545.0), par `pnpm ephemeris:small-body --center 500@0`. Barycentriques car mesuré meilleur au-delà de Neptune (cf. `OrbitalElements.barycentric`)."
+  }
+}

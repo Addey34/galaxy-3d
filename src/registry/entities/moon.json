@@ -1,0 +1,93 @@
+{
+  "$schema": "../schema/entity.schema.json",
+  "id": "moon",
+  "targetClass": "satellite",
+  "source": "catalogue",
+  "config": {
+    "kind": "moon",
+    "displayName": {
+      "fr": "Lune"
+    },
+    "frame": "parentRelative",
+    "radius": 0.27,
+    "rotationSpeed": {
+      "$rotationHours": 655.72
+    },
+    "orbitalColor": "0x8f98a5",
+    "textureResolutions": {
+      "surface": [
+        "8k",
+        "4k",
+        "2k",
+        "1k"
+      ]
+    },
+    "realData": {
+      "orbitalInclination": {
+        "$deg": 5.145
+      },
+      "ascendingNode": 0,
+      "description": {
+        "en": "Earth's only natural satellite. It always shows the same face and stabilises our planet's axial tilt.",
+        "fr": "Le seul satellite naturel de la Terre. Elle montre toujours la même face et stabilise l’inclinaison de l’axe de notre planète."
+      },
+      "wiki": {
+        "en": "https://en.wikipedia.org/wiki/Moon",
+        "fr": "https://fr.wikipedia.org/wiki/Lune"
+      }
+    },
+    "astroBody": "Moon",
+    "cameraDistance": {
+      "educ": 2,
+      "explo": {
+        "$cameraFromRadiusKm": 1737
+      }
+    },
+    "loadPriority": 3
+  },
+  "facts": {
+    "radiusKm": {
+      "value": 1737.4,
+      "source": "nssdca-fact-sheets",
+      "method": "measured"
+    },
+    "massKg": {
+      "value": 7.346e+22,
+      "source": "nssdca-fact-sheets",
+      "method": "measured"
+    },
+    "gravity": {
+      "value": 1.62,
+      "source": "nssdca-fact-sheets",
+      "method": "measured"
+    },
+    "meanTempC": {
+      "value": -20,
+      "source": "nssdca-fact-sheets",
+      "method": "measured"
+    },
+    "axialTilt": {
+      "value": {
+        "$deg": 6.68
+      },
+      "source": "nssdca-fact-sheets",
+      "method": "measured"
+    },
+    "distanceAU": {
+      "value": {
+        "$km": 384400
+      },
+      "source": "nssdca-fact-sheets",
+      "method": "measured"
+    },
+    "orbitPeriodDays": {
+      "value": 27.3217,
+      "source": "nssdca-fact-sheets",
+      "method": "measured"
+    },
+    "rotationPeriod": {
+      "source": "nssdca-fact-sheets",
+      "method": "measured"
+    }
+  }
+}

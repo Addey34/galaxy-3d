@@ -1,0 +1,116 @@
+{
+  "$schema": "../schema/entity.schema.json",
+  "id": "bennu",
+  "targetClass": "asteroid",
+  "source": "small-body",
+  "elements": {
+    "displayName": {
+      "en": "Bennu",
+      "fr": "Bennu"
+    },
+    "a": 1.12599000686509,
+    "e": 0.203694590837364,
+    "iDeg": 6.032844145249296,
+    "omDeg": 1.968709536577289,
+    "wDeg": 66.41044379803537,
+    "maDeg": 301.2865775321327,
+    "epoch": "2026-01-01T00:00:00.000Z",
+    "kind": "asteroid",
+    "color": "0x6b6560",
+    "fallbackColor": "0x5e5e5e",
+    "model": {
+      "resolutions": [
+        "4k",
+        "2k",
+        "1k"
+      ],
+      "extentRatio": 1.18,
+      "albedo": 0.044,
+      "albedoSource": "Hergenrother et al. 2019, Nat. Commun. 10, 1291 (JPL SBDB)",
+      "colourSource": {
+        "en": "NASA/USGS, Bennu OSIRIS-REx OCAMS Global Albedo Mosaic (Golish et al. 2021), public domain",
+        "fr": "NASA/USGS, Bennu OSIRIS-REx OCAMS Global Albedo Mosaic (Golish et al. 2021), domaine public"
+      },
+      "credit": {
+        "en": "NASA/Goddard Scientific Visualization Studio, OSIRIS-REx OLA v20 PTM global shape model (NASA/University of Arizona/CSA/York University/MDA), decimated for the web.",
+        "fr": "NASA/Goddard Scientific Visualization Studio, modèle de forme global OSIRIS-REx OLA v20 PTM (NASA/University of Arizona/CSA/York University/MDA), décimé pour le web."
+      }
+    },
+    "description": {
+      "en": "A 500-metre rubble pile shaped like a spinning top, visited by OSIRIS-REx, which brought a sample of it back to Earth in 2023.",
+      "fr": "Un amas de gravats de 500 mètres en forme de toupie, visité par OSIRIS-REx, qui en a rapporté un échantillon sur Terre en 2023."
+    },
+    "wiki": {
+      "en": "https://en.wikipedia.org/wiki/101955_Bennu",
+      "fr": "https://fr.wikipedia.org/wiki/(101955)_Bennu"
+    }
+  },
+  "facts": {
+    "radiusKm": {
+      "value": {
+        "$diameterKm": 0.48444
+      },
+      "source": "jpl-sbdb",
+      "method": "derived",
+      "uncertainty": 0.00015,
+      "detail": "radiusFromDiameter",
+      "citation": "Daly, M.G., et al., Sci. Adv. 6, eabd3649 (2020)"
+    },
+    "massKg": {
+      "value": {
+        "$gm": 4.8904e-9
+      },
+      "source": "jpl-sbdb",
+      "method": "derived",
+      "uncertainty": {
+        "$gm": 9e-13
+      },
+      "detail": "massFromGM",
+      "citation": "Chesley, S.R., et al., J. Geophys. Res. (Planets) 125, e06363 (2020)"
+    },
+    "gravity": {
+      "published": false,
+      "reason": {
+        "en": "About 8e-5 m/s2, a hundred-thousandth of Earth: a walking pace would put you into orbit, and the usual two-decimal figure would read as zero.",
+        "fr": "Environ 8e-5 m/s2, cent-millième de celle de la Terre : marcher vite suffirait à se mettre en orbite, et l'affichage habituel à deux décimales lirait zéro."
+      }
+    },
+    "meanTempC": {
+      "published": false,
+      "reason": {
+        "en": "Surface temperature swings by more than 100 C over its 4.3-hour day: a mean would describe no real moment.",
+        "fr": "La température de surface varie de plus de 100 C au fil de sa journée de 4,3 heures : une moyenne ne décrirait aucun instant réel."
+      }
+    },
+    "moonCount": {
+      "value": 0,
+      "source": "jpl-sbdb",
+      "method": "measured",
+      "asOf": "2026-09-17",
+      "detail": "confirmedSatellites"
+    },
+    "axialTilt": {
+      "value": 177.5,
+      "source": "jpl-sbdb",
+      "method": "derived",
+      "detail": "obliquityFromPole",
+      "citation": "Daly, M.G., et al., Sci. Adv. 6, eabd3649 (2020)"
+    },
+    "rotationPeriod": {
+      "value": 4.296061,
+      "source": "jpl-sbdb",
+      "method": "measured",
+      "uncertainty": 0.000002,
+      "citation": "Hergenrother, M.C., et al., Nat. Commun. 10, 1291 (2019)"
+    }
+  },
+  "notes": {
+    "a": "Éléments osculateurs JPL Horizons EXACTEMENT à cette époque (COMMAND '101955;', EPHEM_TYPE=ELEMENTS, TLIST=2461041.5), par `pnpm ephemeris:small-body`. Ils étaient à l'époque J2000 : propagés en deux corps sur 26 ans, ils plaçaient Bennu à 0,47 UA de sa vraie position au 1er janvier 2026 (0,72 UA en 2036) — mesuré contre les vecteurs Horizons. Un géocroiseur frôle la Terre : les perturbations s'y accumulent vite.",
+    "facts.radiusKm": "Diamètre 0,48444 km (JPL SBDB, ±0,0003) → rayon moyen.",
+    "fallbackColor": "Pas de texture : la surface de Bennu n'a pas de mosaïque équirectangulaire publiée à laquelle on puisse se fier. C'est la FORME qui la fait reconnaître, pas sa couleur.",
+    "facts.axialTilt": "Obliquité DÉRIVÉE, pas recopiée : pôle SBDB (RA 85,4522°, Dec −60,3678°) converti en écliptique puis comparé à la normale orbitale (i, Ω ci-dessus) → 177,5° (177,6° avec les éléments J2000 : le plan orbital a très légèrement tourné). Bennu tourne donc à l'envers, ce qui est bien la valeur publiée — le calcul la retrouve.",
+    "facts.massKg": "GM = 4,8904e-9 km³/s² (SBDB) ÷ G → 7,33e10 kg.",
+    "model.extentRatio": "Mesuré sur le fichier : rayon max / rayon équivalent-volume.",
+    "model.albedo": "Luminosité et couleur RÉELLES, cuites dans le modèle (bake-shape-colour.mjs) ; la sphère d'attente ci-dessus a la même couleur moyenne, pour ne pas changer d'aspect au chargement."
+  }
+}
