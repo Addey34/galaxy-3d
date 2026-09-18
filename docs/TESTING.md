@@ -12,6 +12,13 @@
 | `pnpm test:e2e`   | scénarios Playwright Chromium/WebGL     | long              |
 | `pnpm verify:all` | verify + build + e2e                    | gate complet      |
 
+**Après un `pnpm build`**, `pnpm fingerprint:generated` compare les 171 documents produits
+(pages par corps, pages d'éclipse, pages documentaires, vignettes, sitemap) à la référence
+commitée `src/seo/generated-fingerprint.json`. Il répond à une question que `pnpm verify` ne pose
+pas : le build publie-t-il encore exactement les mêmes documents ? `--write` réécrit la référence
+(à commiter à part), `--portable` exclut les vignettes, qui ne sont pas comparables d'une machine
+à l'autre parce que leur texte dépend des polices du système.
+
 ## Règles
 
 - Toute logique mathématique, catalogue, horloge ou état déterministe reçoit un test Vitest voisin.
