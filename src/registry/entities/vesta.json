@@ -49,7 +49,7 @@
       "source": "jpl-sbdb",
       "method": "derived",
       "uncertainty": {
-        "$gm": 0.000003
+        "$gm": 3e-06
       },
       "detail": "massFromGM",
       "citation": "Park, R.S. et al. 2025, Nat Astron, DOI: 10.1038/s41550-025-02533-7"
@@ -74,7 +74,7 @@
       "value": 0,
       "source": "jpl-sbdb",
       "method": "measured",
-      "asOf": "2026-09-17",
+      "asOf": "2026-09-18",
       "detail": "confirmedSatellites"
     },
     "axialTilt": {

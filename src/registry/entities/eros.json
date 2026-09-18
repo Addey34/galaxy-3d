@@ -63,7 +63,7 @@
       "source": "jpl-sbdb",
       "method": "derived",
       "uncertainty": {
-        "$gm": 1e-7
+        "$gm": 1e-07
       },
       "detail": "massFromGM",
       "citation": "Yeomans et al. (2000) Science v.289,pp.2085-2088"
@@ -86,7 +86,7 @@
       "value": 0,
       "source": "jpl-sbdb",
       "method": "measured",
-      "asOf": "2026-09-17",
+      "asOf": "2026-09-18",
       "detail": "confirmedSatellites"
     },
     "axialTilt": {

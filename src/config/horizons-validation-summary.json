@@ -1,5 +1,5 @@
 {
- "generatedAt": "2026-09-17T01:39:30.091Z",
+ "generatedAt": "2026-09-18T14:26:47.905Z",
  "samplesPerCase": 48,
  "spk": {
   "kernel": true,
@@ -14,7 +14,7 @@
    "windowTo": "2100-12-31",
    "windowClipped": false,
    "relative": false,
-   "radiusKm": 2440,
+   "radiusKm": 2439.7,
    "n": 48,
    "uncovered": 0,
    "rejected": 0,
@@ -27,9 +27,9 @@
    },
    "radii": {
     "mean": 1.081,
-    "median": 0.9738,
+    "median": 0.974,
     "p95": 1.968,
-    "max": 2.053
+    "max": 2.054
    }
   },
   {
@@ -40,7 +40,7 @@
    "windowTo": "2400-01-01",
    "windowClipped": false,
    "relative": false,
-   "radiusKm": 2440,
+   "radiusKm": 2439.7,
    "n": 48,
    "uncovered": 0,
    "rejected": 0,
@@ -66,7 +66,7 @@
    "windowTo": "2199-12-01",
    "windowClipped": false,
    "relative": false,
-   "radiusKm": 2440,
+   "radiusKm": 2439.7,
    "n": 0,
    "uncovered": 48,
    "rejected": 0,
@@ -92,7 +92,7 @@
    "windowTo": "2100-12-31",
    "windowClipped": false,
    "relative": false,
-   "radiusKm": 2440,
+   "radiusKm": 2439.7,
    "n": 48,
    "uncovered": 0,
    "rejected": 0,
@@ -107,9 +107,9 @@
    },
    "radii": {
     "mean": 1.081,
-    "median": 0.9738,
+    "median": 0.974,
     "p95": 1.968,
-    "max": 2.053
+    "max": 2.054
    }
   },
   {
@@ -120,7 +120,7 @@
    "windowTo": "2100-12-31",
    "windowClipped": false,
    "relative": false,
-   "radiusKm": 6052,
+   "radiusKm": 6051.8,
    "n": 48,
    "uncovered": 0,
    "rejected": 0,
@@ -134,8 +134,8 @@
    "radii": {
     "mean": 0.236,
     "median": 0.2215,
-    "p95": 0.4201,
-    "max": 0.517
+    "p95": 0.4202,
+    "max": 0.5171
    }
   },
   {
@@ -146,7 +146,7 @@
    "windowTo": "2400-01-01",
    "windowClipped": false,
    "relative": false,
-   "radiusKm": 6052,
+   "radiusKm": 6051.8,
    "n": 48,
    "uncovered": 0,
    "rejected": 0,
@@ -161,7 +161,7 @@
     "mean": 0.3109,
     "median": 0.2801,
     "p95": 0.5048,
-    "max": 0.7834
+    "max": 0.7835
    }
   },
   {
@@ -172,7 +172,7 @@
    "windowTo": "2199-12-01",
    "windowClipped": false,
    "relative": false,
-   "radiusKm": 6052,
+   "radiusKm": 6051.8,
    "n": 0,
    "uncovered": 48,
    "rejected": 0,
@@ -198,7 +198,7 @@
    "windowTo": "2100-12-31",
    "windowClipped": false,
    "relative": false,
-   "radiusKm": 6052,
+   "radiusKm": 6051.8,
    "n": 48,
    "uncovered": 0,
    "rejected": 0,
@@ -214,8 +214,8 @@
    "radii": {
     "mean": 0.236,
     "median": 0.2215,
-    "p95": 0.4201,
-    "max": 0.517
+    "p95": 0.4202,
+    "max": 0.5171
    }
   },
   {
@@ -332,7 +332,7 @@
    "windowTo": "2100-12-31",
    "windowClipped": false,
    "relative": true,
-   "radiusKm": 1737,
+   "radiusKm": 1737.4,
    "n": 48,
    "uncovered": 0,
    "rejected": 0,
@@ -344,10 +344,10 @@
     "max": 13.2
    },
    "radii": {
-    "mean": 0.00622,
-    "median": 0.006187,
-    "p95": 0.007319,
-    "max": 0.007598
+    "mean": 0.006219,
+    "median": 0.006186,
+    "p95": 0.007317,
+    "max": 0.007596
    }
   },
   {
@@ -358,7 +358,7 @@
    "windowTo": "2199-12-01",
    "windowClipped": false,
    "relative": true,
-   "radiusKm": 1737,
+   "radiusKm": 1737.4,
    "n": 48,
    "uncovered": 0,
    "rejected": 0,
@@ -370,10 +370,10 @@
     "max": 14.84
    },
    "radii": {
-    "mean": 0.006339,
-    "median": 0.006224,
-    "p95": 0.008211,
-    "max": 0.008541
+    "mean": 0.006338,
+    "median": 0.006222,
+    "p95": 0.008209,
+    "max": 0.008539
    }
   },
   {
@@ -384,7 +384,7 @@
    "windowTo": "2199-12-01",
    "windowClipped": false,
    "relative": true,
-   "radiusKm": 1737,
+   "radiusKm": 1737.4,
    "n": 0,
    "uncovered": 48,
    "rejected": 0,
@@ -410,7 +410,7 @@
    "windowTo": "2199-12-01",
    "windowClipped": false,
    "relative": false,
-   "radiusKm": 1737,
+   "radiusKm": 1737.4,
    "n": 0,
    "uncovered": 48,
    "rejected": 0,
@@ -436,7 +436,7 @@
    "windowTo": "2100-12-31",
    "windowClipped": false,
    "relative": false,
-   "radiusKm": 1737,
+   "radiusKm": 1737.4,
    "n": 48,
    "uncovered": 0,
    "rejected": 0,
@@ -450,9 +450,9 @@
     "max": 2048
    },
    "radii": {
-    "mean": 0.5236,
-    "median": 0.4901,
-    "p95": 0.9612,
+    "mean": 0.5235,
+    "median": 0.49,
+    "p95": 0.961,
     "max": 1.179
    }
   },
@@ -464,7 +464,7 @@
    "windowTo": "2100-12-31",
    "windowClipped": false,
    "relative": false,
-   "radiusKm": 3390,
+   "radiusKm": 3389.5,
    "n": 48,
    "uncovered": 0,
    "rejected": 0,
@@ -476,8 +476,8 @@
     "max": 6665
    },
    "radii": {
-    "mean": 0.8527,
-    "median": 0.8142,
+    "mean": 0.8528,
+    "median": 0.8143,
     "p95": 1.558,
     "max": 1.966
    }
@@ -490,7 +490,7 @@
    "windowTo": "2400-01-01",
    "windowClipped": false,
    "relative": false,
-   "radiusKm": 3390,
+   "radiusKm": 3389.5,
    "n": 48,
    "uncovered": 0,
    "rejected": 0,
@@ -502,8 +502,8 @@
     "max": 7630
    },
    "radii": {
-    "mean": 0.9297,
-    "median": 0.8009,
+    "mean": 0.9298,
+    "median": 0.801,
     "p95": 1.647,
     "max": 2.251
    }
@@ -516,7 +516,7 @@
    "windowTo": "2100-12-29",
    "windowClipped": false,
    "relative": false,
-   "radiusKm": 3390,
+   "radiusKm": 3389.5,
    "n": 48,
    "uncovered": 0,
    "rejected": 0,
@@ -528,10 +528,10 @@
     "max": 30.27
    },
    "radii": {
-    "mean": 0.000864,
+    "mean": 0.0008642,
     "median": 0.0002604,
     "p95": 0.00474,
-    "max": 0.008929
+    "max": 0.00893
    }
   },
   {
@@ -542,7 +542,7 @@
    "windowTo": "2199-12-01",
    "windowClipped": false,
    "relative": false,
-   "radiusKm": 3390,
+   "radiusKm": 3389.5,
    "n": 0,
    "uncovered": 48,
    "rejected": 0,
@@ -568,7 +568,7 @@
    "windowTo": "2100-12-31",
    "windowClipped": false,
    "relative": false,
-   "radiusKm": 3390,
+   "radiusKm": 3389.5,
    "n": 48,
    "uncovered": 0,
    "rejected": 0,
@@ -582,10 +582,10 @@
     "max": 31.65
    },
    "radii": {
-    "mean": 0.0009033,
-    "median": 0.0003143,
+    "mean": 0.0009035,
+    "median": 0.0003144,
     "p95": 0.004703,
-    "max": 0.009336
+    "max": 0.009337
    }
   },
   {
@@ -602,16 +602,16 @@
    "rejected": 0,
    "sources": {},
    "km": {
-    "mean": 12.92,
-    "median": 10.61,
-    "p95": 26.52,
-    "max": 31.21
+    "mean": 12.98,
+    "median": 10.42,
+    "p95": 26.54,
+    "max": 31.44
    },
    "radii": {
-    "mean": 1.166,
-    "median": 0.9576,
-    "p95": 2.393,
-    "max": 2.817
+    "mean": 1.172,
+    "median": 0.9402,
+    "p95": 2.395,
+    "max": 2.837
    }
   },
   {
@@ -760,16 +760,16 @@
     "binaire": 48
    },
    "km": {
-    "mean": 14.23,
-    "median": 12.3,
-    "p95": 29.88,
-    "max": 34.17
+    "mean": 14.35,
+    "median": 12.42,
+    "p95": 29.83,
+    "max": 34.35
    },
    "radii": {
-    "mean": 1.284,
-    "median": 1.11,
-    "p95": 2.697,
-    "max": 3.084
+    "mean": 1.295,
+    "median": 1.121,
+    "p95": 2.692,
+    "max": 3.1
    }
   },
   {
@@ -786,16 +786,16 @@
    "rejected": 0,
    "sources": {},
    "km": {
-    "mean": 6.227,
-    "median": 4.751,
-    "p95": 15.78,
-    "max": 16.26
+    "mean": 6.769,
+    "median": 4.943,
+    "p95": 15.81,
+    "max": 16.35
    },
    "radii": {
-    "mean": 1.004,
-    "median": 0.7663,
-    "p95": 2.545,
-    "max": 2.622
+    "mean": 1.092,
+    "median": 0.7973,
+    "p95": 2.55,
+    "max": 2.638
    }
   },
   {
@@ -944,16 +944,16 @@
     "binaire": 48
    },
    "km": {
-    "mean": 7.023,
-    "median": 4.406,
-    "p95": 18.82,
-    "max": 31.15
+    "mean": 7.694,
+    "median": 5.009,
+    "p95": 18.89,
+    "max": 29.95
    },
    "radii": {
-    "mean": 1.133,
-    "median": 0.7106,
-    "p95": 3.035,
-    "max": 5.025
+    "mean": 1.241,
+    "median": 0.8078,
+    "p95": 3.046,
+    "max": 4.83
    }
   },
   {
@@ -1102,16 +1102,16 @@
    "rejected": 0,
    "sources": {},
    "km": {
-    "mean": 1089,
-    "median": 1288,
-    "p95": 1481,
-    "max": 1504
+    "mean": 1068,
+    "median": 1263,
+    "p95": 1452,
+    "max": 1475
    },
    "radii": {
-    "mean": 13.04,
-    "median": 15.43,
-    "p95": 17.73,
-    "max": 18.01
+    "mean": 12.79,
+    "median": 15.13,
+    "p95": 17.39,
+    "max": 17.66
    }
   },
   {
@@ -1208,16 +1208,16 @@
     "binaire": 48
    },
    "km": {
-    "mean": 1046,
-    "median": 1282,
-    "p95": 1522,
-    "max": 1596
+    "mean": 1025,
+    "median": 1256,
+    "p95": 1492,
+    "max": 1567
    },
    "radii": {
-    "mean": 12.53,
-    "median": 15.35,
-    "p95": 18.22,
-    "max": 19.11
+    "mean": 12.28,
+    "median": 15.04,
+    "p95": 17.87,
+    "max": 18.77
    }
   },
   {
@@ -1228,7 +1228,7 @@
    "windowTo": "2100-12-31",
    "windowClipped": false,
    "relative": true,
-   "radiusKm": 1821.6,
+   "radiusKm": 1821.49,
    "n": 48,
    "uncovered": 0,
    "rejected": 0,
@@ -1243,7 +1243,7 @@
     "mean": 0.1194,
     "median": 0.1228,
     "p95": 0.2296,
-    "max": 0.2408
+    "max": 0.2409
    }
   },
   {
@@ -1254,7 +1254,7 @@
    "windowTo": "2199-12-01",
    "windowClipped": false,
    "relative": true,
-   "radiusKm": 1821.6,
+   "radiusKm": 1821.49,
    "n": 48,
    "uncovered": 0,
    "rejected": 0,
@@ -1267,7 +1267,7 @@
    },
    "radii": {
     "mean": 0.2262,
-    "median": 0.2233,
+    "median": 0.2234,
     "p95": 0.4095,
     "max": 0.447
    }
@@ -1280,7 +1280,7 @@
    "windowTo": "2199-12-01",
    "windowClipped": false,
    "relative": true,
-   "radiusKm": 1821.6,
+   "radiusKm": 1821.49,
    "n": 0,
    "uncovered": 48,
    "rejected": 0,
@@ -1306,7 +1306,7 @@
    "windowTo": "2199-12-01",
    "windowClipped": false,
    "relative": false,
-   "radiusKm": 1821.6,
+   "radiusKm": 1821.49,
    "n": 0,
    "uncovered": 48,
    "rejected": 0,
@@ -1332,7 +1332,7 @@
    "windowTo": "2100-12-31",
    "windowClipped": false,
    "relative": false,
-   "radiusKm": 1821.6,
+   "radiusKm": 1821.49,
    "n": 48,
    "uncovered": 0,
    "rejected": 0,
@@ -1349,7 +1349,7 @@
     "mean": 0.1225,
     "median": 0.1173,
     "p95": 0.2375,
-    "max": 0.2732
+    "max": 0.2733
    }
   },
   {
@@ -1894,16 +1894,16 @@
    "rejected": 0,
    "sources": {},
    "km": {
-    "mean": 555.5,
-    "median": 687.2,
-    "p95": 864.9,
-    "max": 877.6
+    "mean": 543.2,
+    "median": 672,
+    "p95": 845.7,
+    "max": 858.3
    },
    "radii": {
-    "mean": 2.203,
-    "median": 2.726,
-    "p95": 3.431,
-    "max": 3.481
+    "mean": 2.155,
+    "median": 2.666,
+    "p95": 3.355,
+    "max": 3.404
    }
   },
   {
@@ -2052,16 +2052,16 @@
     "binaire": 48
    },
    "km": {
-    "mean": 641.3,
-    "median": 766.5,
-    "p95": 877.8,
-    "max": 899.7
+    "mean": 627.2,
+    "median": 749.9,
+    "p95": 858.5,
+    "max": 880.4
    },
    "radii": {
-    "mean": 2.544,
-    "median": 3.041,
-    "p95": 3.482,
-    "max": 3.569
+    "mean": 2.488,
+    "median": 2.975,
+    "p95": 3.406,
+    "max": 3.492
    }
   },
   {
@@ -2078,16 +2078,16 @@
    "rejected": 0,
    "sources": {},
    "km": {
-    "mean": 190.4,
-    "median": 202.6,
-    "p95": 355.2,
-    "max": 369.6
+    "mean": 171,
+    "median": 182.4,
+    "p95": 320.8,
+    "max": 334.6
    },
    "radii": {
-    "mean": 0.2494,
-    "median": 0.2654,
-    "p95": 0.4652,
-    "max": 0.4841
+    "mean": 0.224,
+    "median": 0.2389,
+    "p95": 0.4202,
+    "max": 0.4382
    }
   },
   {
@@ -2236,16 +2236,16 @@
     "binaire": 48
    },
    "km": {
-    "mean": 220.6,
-    "median": 262.6,
-    "p95": 392.1,
-    "max": 395.6
+    "mean": 198.7,
+    "median": 232.1,
+    "p95": 357.1,
+    "max": 361.5
    },
    "radii": {
-    "mean": 0.2889,
-    "median": 0.3439,
-    "p95": 0.5135,
-    "max": 0.5181
+    "mean": 0.2602,
+    "median": 0.3041,
+    "p95": 0.4677,
+    "max": 0.4735
    }
   },
   {
@@ -2262,16 +2262,16 @@
    "rejected": 0,
    "sources": {},
    "km": {
-    "mean": 38.67,
-    "median": 38.21,
-    "p95": 77.09,
-    "max": 82.21
+    "mean": 38.47,
+    "median": 38.2,
+    "p95": 76.46,
+    "max": 80.77
    },
    "radii": {
-    "mean": 0.05267,
-    "median": 0.05203,
-    "p95": 0.105,
-    "max": 0.112
+    "mean": 0.05239,
+    "median": 0.05202,
+    "p95": 0.1041,
+    "max": 0.11
    }
   },
   {
@@ -2420,16 +2420,16 @@
     "binaire": 48
    },
    "km": {
-    "mean": 42.59,
-    "median": 43.08,
-    "p95": 82.24,
-    "max": 85.49
+    "mean": 42.48,
+    "median": 42.8,
+    "p95": 80.76,
+    "max": 84.11
    },
    "radii": {
-    "mean": 0.058,
-    "median": 0.05867,
-    "p95": 0.112,
-    "max": 0.1164
+    "mean": 0.05785,
+    "median": 0.05829,
+    "p95": 0.11,
+    "max": 0.1145
    }
   },
   {
@@ -2446,16 +2446,16 @@
    "rejected": 0,
    "sources": {},
    "km": {
-    "mean": 19,
-    "median": 18.87,
-    "p95": 37.45,
-    "max": 39.52
+    "mean": 11.79,
+    "median": 10.66,
+    "p95": 25.65,
+    "max": 26.77
    },
    "radii": {
-    "mean": 0.007378,
-    "median": 0.007328,
-    "p95": 0.01455,
-    "max": 0.01535
+    "mean": 0.004579,
+    "median": 0.004139,
+    "p95": 0.009964,
+    "max": 0.0104
    }
   },
   {
@@ -2604,16 +2604,16 @@
     "binaire": 48
    },
    "km": {
-    "mean": 20.56,
-    "median": 22.12,
-    "p95": 38.56,
-    "max": 40.26
+    "mean": 13.84,
+    "median": 14.7,
+    "p95": 25.44,
+    "max": 27.72
    },
    "radii": {
-    "mean": 0.007984,
-    "median": 0.008589,
-    "p95": 0.01498,
-    "max": 0.01564
+    "mean": 0.005375,
+    "median": 0.00571,
+    "p95": 0.009881,
+    "max": 0.01077
    }
   },
   {
@@ -2630,16 +2630,16 @@
    "rejected": 0,
    "sources": {},
    "km": {
-    "mean": 798.3,
-    "median": 857,
-    "p95": 1080,
-    "max": 1168
+    "mean": 787.5,
+    "median": 845.9,
+    "p95": 1066,
+    "max": 1151
    },
    "radii": {
-    "mean": 4.028,
-    "median": 4.324,
-    "p95": 5.451,
-    "max": 5.891
+    "mean": 3.973,
+    "median": 4.268,
+    "p95": 5.378,
+    "max": 5.809
    }
   },
   {
@@ -2788,16 +2788,16 @@
     "binaire": 48
    },
    "km": {
-    "mean": 777.4,
-    "median": 862.7,
-    "p95": 1120,
-    "max": 1170
+    "mean": 767,
+    "median": 851.3,
+    "p95": 1105,
+    "max": 1154
    },
    "radii": {
-    "mean": 3.922,
-    "median": 4.352,
-    "p95": 5.652,
-    "max": 5.903
+    "mean": 3.87,
+    "median": 4.295,
+    "p95": 5.575,
+    "max": 5.822
    }
   },
   {
@@ -2814,16 +2814,16 @@
    "rejected": 0,
    "sources": {},
    "km": {
-    "mean": 553.7,
-    "median": 627.7,
-    "p95": 708,
-    "max": 708.2
+    "mean": 535.1,
+    "median": 606.9,
+    "p95": 684.3,
+    "max": 684.5
    },
    "radii": {
-    "mean": 1.043,
-    "median": 1.182,
-    "p95": 1.333,
-    "max": 1.333
+    "mean": 1.008,
+    "median": 1.143,
+    "p95": 1.288,
+    "max": 1.289
    }
   },
   {
@@ -2972,16 +2972,16 @@
     "binaire": 48
    },
    "km": {
-    "mean": 559.2,
-    "median": 636.1,
-    "p95": 705.8,
-    "max": 709.1
+    "mean": 540.4,
+    "median": 613.1,
+    "p95": 682.1,
+    "max": 685.3
    },
    "radii": {
-    "mean": 1.053,
-    "median": 1.198,
-    "p95": 1.329,
-    "max": 1.335
+    "mean": 1.017,
+    "median": 1.154,
+    "p95": 1.284,
+    "max": 1.29
    }
   },
   {
@@ -2998,16 +2998,16 @@
    "rejected": 0,
    "sources": {},
    "km": {
-    "mean": 255.1,
-    "median": 274.7,
-    "p95": 483.2,
-    "max": 498.4
+    "mean": 241.8,
+    "median": 260.4,
+    "p95": 459.3,
+    "max": 474.2
    },
    "radii": {
-    "mean": 0.4545,
-    "median": 0.4894,
-    "p95": 0.8607,
-    "max": 0.8878
+    "mean": 0.4308,
+    "median": 0.4638,
+    "p95": 0.8182,
+    "max": 0.8447
    }
   },
   {
@@ -3156,16 +3156,16 @@
     "binaire": 48
    },
    "km": {
-    "mean": 253.9,
-    "median": 282.1,
-    "p95": 490.6,
-    "max": 515.5
+    "mean": 240.5,
+    "median": 267.5,
+    "p95": 467.2,
+    "max": 491.4
    },
    "radii": {
-    "mean": 0.4522,
-    "median": 0.5026,
-    "p95": 0.8739,
-    "max": 0.9183
+    "mean": 0.4285,
+    "median": 0.4765,
+    "p95": 0.8322,
+    "max": 0.8752
    }
   },
   {
@@ -3182,16 +3182,16 @@
    "rejected": 0,
    "sources": {},
    "km": {
-    "mean": 65.09,
-    "median": 32.78,
-    "p95": 130.9,
-    "max": 638.6
+    "mean": 65.73,
+    "median": 34.51,
+    "p95": 126.1,
+    "max": 630.8
    },
    "radii": {
-    "mean": 0.4821,
-    "median": 0.2428,
-    "p95": 0.9695,
-    "max": 4.73
+    "mean": 0.4869,
+    "median": 0.2557,
+    "p95": 0.9338,
+    "max": 4.672
    }
   },
   {
@@ -3340,16 +3340,16 @@
     "binaire": 48
    },
    "km": {
-    "mean": 81.42,
-    "median": 47.69,
-    "p95": 465.7,
-    "max": 558.7
+    "mean": 80.97,
+    "median": 46.92,
+    "p95": 459.8,
+    "max": 552.1
    },
    "radii": {
-    "mean": 0.6031,
-    "median": 0.3533,
-    "p95": 3.45,
-    "max": 4.138
+    "mean": 0.5997,
+    "median": 0.3475,
+    "p95": 3.406,
+    "max": 4.09
    }
   },
   {
@@ -3498,16 +3498,16 @@
    "rejected": 0,
    "sources": {},
    "km": {
-    "mean": 49.11,
-    "median": 46.58,
-    "p95": 81.13,
-    "max": 117.7
+    "mean": 47.01,
+    "median": 43.69,
+    "p95": 80.39,
+    "max": 114.7
    },
    "radii": {
-    "mean": 0.2083,
-    "median": 0.1975,
-    "p95": 0.344,
-    "max": 0.4991
+    "mean": 0.1994,
+    "median": 0.1853,
+    "p95": 0.3409,
+    "max": 0.4865
    }
   },
   {
@@ -3604,16 +3604,16 @@
     "binaire": 48
    },
    "km": {
-    "mean": 43.6,
-    "median": 48.15,
-    "p95": 78.15,
-    "max": 130.3
+    "mean": 41.48,
+    "median": 45.22,
+    "p95": 75.15,
+    "max": 127.2
    },
    "radii": {
-    "mean": 0.1849,
-    "median": 0.2042,
-    "p95": 0.3314,
-    "max": 0.5525
+    "mean": 0.1759,
+    "median": 0.1918,
+    "p95": 0.3187,
+    "max": 0.5396
    }
   },
   {
@@ -3630,16 +3630,16 @@
    "rejected": 0,
    "sources": {},
    "km": {
-    "mean": 27.57,
-    "median": 18.01,
-    "p95": 73.17,
-    "max": 98.86
+    "mean": 26.53,
+    "median": 15.83,
+    "p95": 68.19,
+    "max": 94.11
    },
    "radii": {
-    "mean": 0.04762,
-    "median": 0.0311,
-    "p95": 0.1264,
-    "max": 0.1708
+    "mean": 0.04584,
+    "median": 0.02734,
+    "p95": 0.1178,
+    "max": 0.1626
    }
   },
   {
@@ -3736,16 +3736,16 @@
     "binaire": 48
    },
    "km": {
-    "mean": 34.21,
-    "median": 23.83,
-    "p95": 89.57,
-    "max": 107.6
+    "mean": 32.52,
+    "median": 21.5,
+    "p95": 91.73,
+    "max": 107
    },
    "radii": {
-    "mean": 0.05909,
-    "median": 0.04116,
-    "p95": 0.1547,
-    "max": 0.1859
+    "mean": 0.05617,
+    "median": 0.03714,
+    "p95": 0.1585,
+    "max": 0.1848
    }
   },
   {
@@ -3762,16 +3762,16 @@
    "rejected": 0,
    "sources": {},
    "km": {
-    "mean": 43.25,
-    "median": 29,
-    "p95": 105.3,
-    "max": 165.5
+    "mean": 41.62,
+    "median": 26.01,
+    "p95": 102.9,
+    "max": 166
    },
    "radii": {
-    "mean": 0.07397,
-    "median": 0.0496,
-    "p95": 0.18,
-    "max": 0.2831
+    "mean": 0.07119,
+    "median": 0.04449,
+    "p95": 0.176,
+    "max": 0.2839
    }
   },
   {
@@ -3868,16 +3868,16 @@
     "binaire": 48
    },
    "km": {
-    "mean": 38.99,
-    "median": 31.69,
-    "p95": 130.4,
-    "max": 151.8
+    "mean": 36.83,
+    "median": 27.32,
+    "p95": 129.8,
+    "max": 149.4
    },
    "radii": {
-    "mean": 0.06668,
-    "median": 0.05419,
-    "p95": 0.223,
-    "max": 0.2596
+    "mean": 0.06298,
+    "median": 0.04673,
+    "p95": 0.2219,
+    "max": 0.2555
    }
   },
   {
@@ -3888,22 +3888,22 @@
    "windowTo": "2100-12-29",
    "windowClipped": false,
    "relative": true,
-   "radiusKm": 788.4,
+   "radiusKm": 788.9,
    "n": 48,
    "uncovered": 0,
    "rejected": 0,
    "sources": {},
    "km": {
-    "mean": 21.05,
-    "median": 12.08,
-    "p95": 76.62,
-    "max": 85.76
+    "mean": 20.82,
+    "median": 12.1,
+    "p95": 75.97,
+    "max": 87.99
    },
    "radii": {
-    "mean": 0.02671,
-    "median": 0.01532,
-    "p95": 0.09718,
-    "max": 0.1088
+    "mean": 0.0264,
+    "median": 0.01534,
+    "p95": 0.09629,
+    "max": 0.1115
    }
   },
   {
@@ -3914,7 +3914,7 @@
    "windowTo": "2035-12-31",
    "windowClipped": false,
    "relative": true,
-   "radiusKm": 788.4,
+   "radiusKm": 788.9,
    "n": 48,
    "uncovered": 0,
    "rejected": 0,
@@ -3926,10 +3926,10 @@
     "max": 1774
    },
    "radii": {
-    "mean": 0.9382,
-    "median": 0.8762,
-    "p95": 2.128,
-    "max": 2.251
+    "mean": 0.9376,
+    "median": 0.8756,
+    "p95": 2.127,
+    "max": 2.249
    }
   },
   {
@@ -3940,7 +3940,7 @@
    "windowTo": "2100-12-31",
    "windowClipped": false,
    "relative": true,
-   "radiusKm": 788.4,
+   "radiusKm": 788.9,
    "n": 48,
    "uncovered": 0,
    "rejected": 0,
@@ -3952,10 +3952,10 @@
     "max": 4420
    },
    "radii": {
-    "mean": 2.332,
-    "median": 2.075,
-    "p95": 5.353,
-    "max": 5.606
+    "mean": 2.331,
+    "median": 2.074,
+    "p95": 5.349,
+    "max": 5.603
    }
   },
   {
@@ -3966,7 +3966,7 @@
    "windowTo": "2199-12-01",
    "windowClipped": false,
    "relative": true,
-   "radiusKm": 788.4,
+   "radiusKm": 788.9,
    "n": 48,
    "uncovered": 0,
    "rejected": 0,
@@ -3978,10 +3978,10 @@
     "max": 5261
    },
    "radii": {
-    "mean": 2.462,
-    "median": 2.033,
-    "p95": 5.012,
-    "max": 6.673
+    "mean": 2.46,
+    "median": 2.031,
+    "p95": 5.009,
+    "max": 6.669
    }
   },
   {
@@ -3992,7 +3992,7 @@
    "windowTo": "2100-12-31",
    "windowClipped": false,
    "relative": false,
-   "radiusKm": 788.4,
+   "radiusKm": 788.9,
    "n": 48,
    "uncovered": 0,
    "rejected": 0,
@@ -4000,16 +4000,16 @@
     "binaire": 48
    },
    "km": {
-    "mean": 19.4,
-    "median": 13.55,
-    "p95": 62.23,
-    "max": 80.28
+    "mean": 18.33,
+    "median": 13.98,
+    "p95": 65.34,
+    "max": 82.17
    },
    "radii": {
-    "mean": 0.02461,
-    "median": 0.01719,
-    "p95": 0.07894,
-    "max": 0.1018
+    "mean": 0.02324,
+    "median": 0.01773,
+    "p95": 0.08283,
+    "max": 0.1042
    }
   },
   {
@@ -4026,16 +4026,16 @@
    "rejected": 0,
    "sources": {},
    "km": {
-    "mean": 16.91,
-    "median": 8.236,
-    "p95": 73.7,
-    "max": 87.68
+    "mean": 16.8,
+    "median": 7.429,
+    "p95": 71.04,
+    "max": 85.12
    },
    "radii": {
-    "mean": 0.02221,
-    "median": 0.01082,
-    "p95": 0.0968,
-    "max": 0.1152
+    "mean": 0.02206,
+    "median": 0.009758,
+    "p95": 0.09331,
+    "max": 0.1118
    }
   },
   {
@@ -4132,16 +4132,16 @@
     "binaire": 48
    },
    "km": {
-    "mean": 9.118,
-    "median": 5.724,
-    "p95": 28.82,
-    "max": 62.65
+    "mean": 9.248,
+    "median": 6.098,
+    "p95": 27.82,
+    "max": 60.83
    },
    "radii": {
-    "mean": 0.01198,
-    "median": 0.007517,
-    "p95": 0.03785,
-    "max": 0.08228
+    "mean": 0.01215,
+    "median": 0.008009,
+    "p95": 0.03654,
+    "max": 0.0799
    }
   },
   {
@@ -4290,16 +4290,16 @@
    "rejected": 0,
    "sources": {},
    "km": {
-    "mean": 39.88,
-    "median": 47.04,
-    "p95": 60.93,
-    "max": 61.14
+    "mean": 8.363,
+    "median": 10.05,
+    "p95": 13.7,
+    "max": 15.34
    },
    "radii": {
-    "mean": 0.02948,
-    "median": 0.03478,
-    "p95": 0.04505,
-    "max": 0.0452
+    "mean": 0.006183,
+    "median": 0.007432,
+    "p95": 0.01013,
+    "max": 0.01134
    }
   },
   {
@@ -4448,16 +4448,16 @@
     "binaire": 48
    },
    "km": {
-    "mean": 55.69,
-    "median": 50.99,
-    "p95": 106.6,
-    "max": 108.3
+    "mean": 29.66,
+    "median": 25.93,
+    "p95": 59.09,
+    "max": 60.39
    },
    "radii": {
-    "mean": 0.04117,
-    "median": 0.0377,
-    "p95": 0.07878,
-    "max": 0.08006
+    "mean": 0.02193,
+    "median": 0.01917,
+    "p95": 0.04369,
+    "max": 0.04465
    }
   },
   {
@@ -4474,16 +4474,16 @@
    "rejected": 0,
    "sources": {},
    "km": {
-    "mean": 53.96,
-    "median": 53,
-    "p95": 86.82,
-    "max": 89.79
+    "mean": 40.03,
+    "median": 40.01,
+    "p95": 66.75,
+    "max": 68.35
    },
    "radii": {
-    "mean": 0.2594,
-    "median": 0.2548,
-    "p95": 0.4174,
-    "max": 0.4317
+    "mean": 0.1924,
+    "median": 0.1924,
+    "p95": 0.3209,
+    "max": 0.3286
    }
   },
   {
@@ -4580,16 +4580,16 @@
     "binaire": 48
    },
    "km": {
-    "mean": 63.26,
-    "median": 72.97,
-    "p95": 86.15,
-    "max": 91.26
+    "mean": 48.67,
+    "median": 56.57,
+    "p95": 66.94,
+    "max": 76.65
    },
    "radii": {
-    "mean": 0.3041,
-    "median": 0.3508,
-    "p95": 0.4142,
-    "max": 0.4387
+    "mean": 0.234,
+    "median": 0.272,
+    "p95": 0.3218,
+    "max": 0.3685
    }
   },
   {
@@ -4606,16 +4606,16 @@
    "rejected": 0,
    "sources": {},
    "km": {
-    "mean": 12.23,
-    "median": 14.8,
-    "p95": 19.92,
-    "max": 22.34
+    "mean": 12.24,
+    "median": 14.74,
+    "p95": 19.93,
+    "max": 21.46
    },
    "radii": {
-    "mean": 0.07194,
-    "median": 0.08706,
+    "mean": 0.07199,
+    "median": 0.08671,
     "p95": 0.1172,
-    "max": 0.1314
+    "max": 0.1262
    }
   },
   {
@@ -4712,15 +4712,15 @@
     "binaire": 48
    },
    "km": {
-    "mean": 32.65,
-    "median": 30.93,
-    "p95": 63.76,
+    "mean": 32.61,
+    "median": 30.91,
+    "p95": 63.93,
     "max": 66.4
    },
    "radii": {
-    "mean": 0.192,
-    "median": 0.182,
-    "p95": 0.375,
+    "mean": 0.1918,
+    "median": 0.1818,
+    "p95": 0.3761,
     "max": 0.3906
    }
   },
@@ -4732,7 +4732,7 @@
    "windowTo": "2100-12-29",
    "windowClipped": false,
    "relative": false,
-   "radiusKm": 473,
+   "radiusKm": 469.7,
    "n": 48,
    "uncovered": 0,
    "rejected": 0,
@@ -4744,10 +4744,10 @@
     "max": 21.17
    },
    "radii": {
-    "mean": 0.004953,
-    "median": 0.0003528,
-    "p95": 0.0263,
-    "max": 0.04476
+    "mean": 0.004988,
+    "median": 0.0003553,
+    "p95": 0.02649,
+    "max": 0.04507
    }
   },
   {
@@ -4758,7 +4758,7 @@
    "windowTo": "2010-01-01",
    "windowClipped": false,
    "relative": false,
-   "radiusKm": 473,
+   "radiusKm": 469.7,
    "n": 48,
    "uncovered": 0,
    "rejected": 0,
@@ -4770,10 +4770,10 @@
     "max": 7515000
    },
    "radii": {
-    "mean": 3574,
-    "median": 1871,
-    "p95": 12740,
-    "max": 15890
+    "mean": 3599,
+    "median": 1884,
+    "p95": 12830,
+    "max": 16000
    }
   },
   {
@@ -4784,7 +4784,7 @@
    "windowTo": "2100-12-31",
    "windowClipped": false,
    "relative": false,
-   "radiusKm": 473,
+   "radiusKm": 469.7,
    "n": 48,
    "uncovered": 0,
    "rejected": 0,
@@ -4796,10 +4796,10 @@
     "max": 29020000
    },
    "radii": {
-    "mean": 28900,
-    "median": 29170,
-    "p95": 53420,
-    "max": 61350
+    "mean": 29100,
+    "median": 29370,
+    "p95": 53800,
+    "max": 61780
    }
   },
   {
@@ -4810,7 +4810,7 @@
    "windowTo": "2400-01-01",
    "windowClipped": false,
    "relative": false,
-   "radiusKm": 473,
+   "radiusKm": 469.7,
    "n": 48,
    "uncovered": 0,
    "rejected": 0,
@@ -4822,10 +4822,10 @@
     "max": 118300000
    },
    "radii": {
-    "mean": 120100,
-    "median": 121100,
-    "p95": 225100,
-    "max": 250200
+    "mean": 121000,
+    "median": 121900,
+    "p95": 226700,
+    "max": 251900
    }
   },
   {
@@ -4836,7 +4836,7 @@
    "windowTo": "2100-12-31",
    "windowClipped": false,
    "relative": false,
-   "radiusKm": 473,
+   "radiusKm": 469.7,
    "n": 48,
    "uncovered": 0,
    "rejected": 0,
@@ -4850,10 +4850,10 @@
     "max": 19.59
    },
    "radii": {
-    "mean": 0.005094,
-    "median": 0.0009943,
-    "p95": 0.02589,
-    "max": 0.04142
+    "mean": 0.00513,
+    "median": 0.001001,
+    "p95": 0.02607,
+    "max": 0.04171
    }
   },
   {
@@ -4864,7 +4864,7 @@
    "windowTo": "2010-01-01",
    "windowClipped": false,
    "relative": false,
-   "radiusKm": 262,
+   "radiusKm": 261.385,
    "n": 48,
    "uncovered": 0,
    "rejected": 0,
@@ -4876,10 +4876,10 @@
     "max": 1562000
    },
    "radii": {
-    "mean": 2120,
-    "median": 1637,
-    "p95": 5418,
-    "max": 5961
+    "mean": 2125,
+    "median": 1641,
+    "p95": 5431,
+    "max": 5975
    }
   },
   {
@@ -4890,7 +4890,7 @@
    "windowTo": "2100-12-31",
    "windowClipped": false,
    "relative": false,
-   "radiusKm": 262,
+   "radiusKm": 261.385,
    "n": 48,
    "uncovered": 0,
    "rejected": 0,
@@ -4902,10 +4902,10 @@
     "max": 8441000
    },
    "radii": {
-    "mean": 10420,
-    "median": 8560,
-    "p95": 28150,
-    "max": 32220
+    "mean": 10450,
+    "median": 8581,
+    "p95": 28220,
+    "max": 32290
    }
   },
   {
@@ -4916,7 +4916,7 @@
    "windowTo": "2400-01-01",
    "windowClipped": false,
    "relative": false,
-   "radiusKm": 262,
+   "radiusKm": 261.385,
    "n": 48,
    "uncovered": 0,
    "rejected": 0,
@@ -4928,10 +4928,10 @@
     "max": 23440000
    },
    "radii": {
-    "mean": 38940,
-    "median": 38340,
-    "p95": 76700,
-    "max": 89480
+    "mean": 39030,
+    "median": 38430,
+    "p95": 76880,
+    "max": 89690
    }
   },
   {
@@ -4942,7 +4942,7 @@
    "windowTo": "2100-12-31",
    "windowClipped": false,
    "relative": false,
-   "radiusKm": 262,
+   "radiusKm": 261.385,
    "n": 48,
    "uncovered": 0,
    "rejected": 0,
@@ -4956,10 +4956,10 @@
     "max": 8441000
    },
    "radii": {
-    "mean": 10420,
-    "median": 8560,
-    "p95": 28150,
-    "max": 32220
+    "mean": 10450,
+    "median": 8581,
+    "p95": 28220,
+    "max": 32290
    }
   },
   {
@@ -4970,7 +4970,7 @@
    "windowTo": "2010-01-01",
    "windowClipped": false,
    "relative": false,
-   "radiusKm": 256,
+   "radiusKm": 256.5,
    "n": 48,
    "uncovered": 0,
    "rejected": 0,
@@ -4982,10 +4982,10 @@
     "max": 6658000
    },
    "radii": {
-    "mean": 8227,
-    "median": 7498,
-    "p95": 23020,
-    "max": 26010
+    "mean": 8211,
+    "median": 7484,
+    "p95": 22980,
+    "max": 25960
    }
   },
   {
@@ -4996,7 +4996,7 @@
    "windowTo": "2100-12-31",
    "windowClipped": false,
    "relative": false,
-   "radiusKm": 256,
+   "radiusKm": 256.5,
    "n": 48,
    "uncovered": 0,
    "rejected": 0,
@@ -5008,10 +5008,10 @@
     "max": 38410000
    },
    "radii": {
-    "mean": 65510,
-    "median": 73530,
-    "p95": 142300,
-    "max": 150000
+    "mean": 65380,
+    "median": 73390,
+    "p95": 142000,
+    "max": 149700
    }
   },
   {
@@ -5022,7 +5022,7 @@
    "windowTo": "2400-01-01",
    "windowClipped": false,
    "relative": false,
-   "radiusKm": 256,
+   "radiusKm": 256.5,
    "n": 48,
    "uncovered": 0,
    "rejected": 0,
@@ -5034,10 +5034,10 @@
     "max": 189400000
    },
    "radii": {
-    "mean": 264200,
-    "median": 251900,
-    "p95": 517200,
-    "max": 740000
+    "mean": 263600,
+    "median": 251400,
+    "p95": 516200,
+    "max": 738500
    }
   },
   {
@@ -5048,7 +5048,7 @@
    "windowTo": "2100-12-31",
    "windowClipped": false,
    "relative": false,
-   "radiusKm": 256,
+   "radiusKm": 256.5,
    "n": 48,
    "uncovered": 0,
    "rejected": 0,
@@ -5062,10 +5062,10 @@
     "max": 38410000
    },
    "radii": {
-    "mean": 65510,
-    "median": 73530,
-    "p95": 142300,
-    "max": 150000
+    "mean": 65380,
+    "median": 73390,
+    "p95": 142000,
+    "max": 149700
    }
   },
   {
@@ -5076,7 +5076,7 @@
    "windowTo": "2010-01-01",
    "windowClipped": false,
    "relative": false,
-   "radiusKm": 217,
+   "radiusKm": 203.56,
    "n": 48,
    "uncovered": 0,
    "rejected": 0,
@@ -5088,10 +5088,10 @@
     "max": 5470000
    },
    "radii": {
-    "mean": 8544,
-    "median": 5882,
-    "p95": 23030,
-    "max": 25210
+    "mean": 9108,
+    "median": 6270,
+    "p95": 24550,
+    "max": 26870
    }
   },
   {
@@ -5102,7 +5102,7 @@
    "windowTo": "2100-12-31",
    "windowClipped": false,
    "relative": false,
-   "radiusKm": 217,
+   "radiusKm": 203.56,
    "n": 48,
    "uncovered": 0,
    "rejected": 0,
@@ -5114,10 +5114,10 @@
     "max": 140900000
    },
    "radii": {
-    "mean": 275600,
-    "median": 275000,
-    "p95": 597100,
-    "max": 649300
+    "mean": 293800,
+    "median": 293100,
+    "p95": 636500,
+    "max": 692200
    }
   },
   {
@@ -5128,7 +5128,7 @@
    "windowTo": "2400-01-01",
    "windowClipped": false,
    "relative": false,
-   "radiusKm": 217,
+   "radiusKm": 203.56,
    "n": 48,
    "uncovered": 0,
    "rejected": 0,
@@ -5140,10 +5140,10 @@
     "max": 464000000
    },
    "radii": {
-    "mean": 997800,
-    "median": 981700,
-    "p95": 1907000,
-    "max": 2138000
+    "mean": 1064000,
+    "median": 1047000,
+    "p95": 2033000,
+    "max": 2279000
    }
   },
   {
@@ -5154,7 +5154,7 @@
    "windowTo": "2100-12-31",
    "windowClipped": false,
    "relative": false,
-   "radiusKm": 217,
+   "radiusKm": 203.56,
    "n": 48,
    "uncovered": 0,
    "rejected": 0,
@@ -5168,10 +5168,116 @@
     "max": 140900000
    },
    "radii": {
-    "mean": 275600,
-    "median": 275000,
-    "p95": 597100,
-    "max": 649300
+    "mean": 293800,
+    "median": 293100,
+    "p95": 636500,
+    "max": 692200
+   }
+  },
+  {
+   "body": "psyche",
+   "provider": "kepler",
+   "windowKind": "epoch",
+   "windowFrom": "2016-01-01",
+   "windowTo": "2036-01-01",
+   "windowClipped": false,
+   "relative": false,
+   "radiusKm": 111,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 2052000,
+    "median": 1527000,
+    "p95": 6152000,
+    "max": 9617000
+   },
+   "radii": {
+    "mean": 18490,
+    "median": 13760,
+    "p95": 55430,
+    "max": 86640
+   }
+  },
+  {
+   "body": "psyche",
+   "provider": "kepler",
+   "windowKind": "fixed",
+   "windowFrom": "1900-01-01",
+   "windowTo": "2100-12-31",
+   "windowClipped": false,
+   "relative": false,
+   "radiusKm": 111,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 17170000,
+    "median": 16250000,
+    "p95": 34950000,
+    "max": 40630000
+   },
+   "radii": {
+    "mean": 154700,
+    "median": 146400,
+    "p95": 314800,
+    "max": 366100
+   }
+  },
+  {
+   "body": "psyche",
+   "provider": "kepler",
+   "windowKind": "fixed",
+   "windowFrom": "1600-01-01",
+   "windowTo": "2400-01-01",
+   "windowClipped": false,
+   "relative": false,
+   "radiusKm": 111,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 63490000,
+    "median": 64030000,
+    "p95": 126000000,
+    "max": 130700000
+   },
+   "radii": {
+    "mean": 572000,
+    "median": 576800,
+    "p95": 1135000,
+    "max": 1178000
+   }
+  },
+  {
+   "body": "psyche",
+   "provider": "production",
+   "windowKind": "fixed",
+   "windowFrom": "1900-01-01",
+   "windowTo": "2100-12-31",
+   "windowClipped": false,
+   "relative": false,
+   "radiusKm": 111,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {
+    "kepler": 48
+   },
+   "km": {
+    "mean": 17170000,
+    "median": 16250000,
+    "p95": 34950000,
+    "max": 40630000
+   },
+   "radii": {
+    "mean": 154700,
+    "median": 146400,
+    "p95": 314800,
+    "max": 366100
    }
   },
   {
@@ -5188,16 +5294,16 @@
    "rejected": 0,
    "sources": {},
    "km": {
-    "mean": 1.908,
-    "median": 1.77,
-    "p95": 3.87,
-    "max": 5.548
+    "mean": 1.222,
+    "median": 1.052,
+    "p95": 3.166,
+    "max": 5.243
    },
    "radii": {
-    "mean": 0.001606,
-    "median": 0.00149,
-    "p95": 0.003258,
-    "max": 0.00467
+    "mean": 0.001029,
+    "median": 0.0008854,
+    "p95": 0.002665,
+    "max": 0.004413
    }
   },
   {
@@ -5320,16 +5426,16 @@
     "binaire": 48
    },
    "km": {
-    "mean": 1.673,
-    "median": 1.777,
-    "p95": 3.144,
-    "max": 4.492
+    "mean": 1.105,
+    "median": 1.062,
+    "p95": 3.219,
+    "max": 4.491
    },
    "radii": {
-    "mean": 0.001408,
-    "median": 0.001495,
-    "p95": 0.002647,
-    "max": 0.003781
+    "mean": 0.0009298,
+    "median": 0.0008935,
+    "p95": 0.002709,
+    "max": 0.00378
    }
   },
   {
@@ -5346,16 +5452,16 @@
    "rejected": 0,
    "sources": {},
    "km": {
-    "mean": 1.447,
-    "median": 1.469,
-    "p95": 2.455,
-    "max": 2.464
+    "mean": 5.468,
+    "median": 5.538,
+    "p95": 9.281,
+    "max": 9.308
    },
    "radii": {
-    "mean": 0.002388,
-    "median": 0.002424,
-    "p95": 0.004051,
-    "max": 0.004065
+    "mean": 0.009024,
+    "median": 0.009139,
+    "p95": 0.01532,
+    "max": 0.01536
    }
   },
   {
@@ -5504,16 +5610,16 @@
     "binaire": 48
    },
    "km": {
-    "mean": 0.6319,
-    "median": 0.149,
-    "p95": 3.763,
-    "max": 5.097
+    "mean": 5.149,
+    "median": 5.749,
+    "p95": 7.935,
+    "max": 8.572
    },
    "radii": {
-    "mean": 0.001043,
-    "median": 0.0002458,
-    "p95": 0.00621,
-    "max": 0.00841
+    "mean": 0.008497,
+    "median": 0.009487,
+    "p95": 0.01309,
+    "max": 0.01415
    }
   },
   {
@@ -5530,16 +5636,16 @@
    "rejected": 0,
    "sources": {},
    "km": {
-    "mean": 89.31,
-    "median": 85.56,
-    "p95": 202.3,
-    "max": 320.1
+    "mean": 88.92,
+    "median": 83.83,
+    "p95": 201.7,
+    "max": 316.5
    },
    "radii": {
-    "mean": 17.17,
-    "median": 16.45,
-    "p95": 38.9,
-    "max": 61.56
+    "mean": 17.1,
+    "median": 16.12,
+    "p95": 38.78,
+    "max": 60.87
    }
   },
   {
@@ -5636,16 +5742,16 @@
     "binaire": 48
    },
    "km": {
-    "mean": 69.15,
-    "median": 46.08,
-    "p95": 193.5,
-    "max": 292.6
+    "mean": 68.69,
+    "median": 44.62,
+    "p95": 189,
+    "max": 289.9
    },
    "radii": {
-    "mean": 13.3,
-    "median": 8.862,
-    "p95": 37.22,
-    "max": 56.27
+    "mean": 13.21,
+    "median": 8.58,
+    "p95": 36.35,
+    "max": 55.76
    }
   },
   {
@@ -5662,16 +5768,16 @@
    "rejected": 0,
    "sources": {},
    "km": {
-    "mean": 42.44,
-    "median": 33.23,
-    "p95": 130.6,
-    "max": 164.8
+    "mean": 41.82,
+    "median": 33.15,
+    "p95": 130.1,
+    "max": 161.6
    },
    "radii": {
-    "mean": 2.358,
-    "median": 1.846,
-    "p95": 7.258,
-    "max": 9.153
+    "mean": 2.323,
+    "median": 1.841,
+    "p95": 7.229,
+    "max": 8.98
    }
   },
   {
@@ -5768,16 +5874,16 @@
     "binaire": 48
    },
    "km": {
-    "mean": 47.29,
-    "median": 35.69,
-    "p95": 126.7,
-    "max": 172.5
+    "mean": 46.56,
+    "median": 35.87,
+    "p95": 125.6,
+    "max": 170.1
    },
    "radii": {
-    "mean": 2.627,
-    "median": 1.983,
-    "p95": 7.04,
-    "max": 9.585
+    "mean": 2.586,
+    "median": 1.993,
+    "p95": 6.98,
+    "max": 9.449
    }
   },
   {
@@ -5794,16 +5900,16 @@
    "rejected": 0,
    "sources": {},
    "km": {
-    "mean": 24.96,
-    "median": 10.64,
-    "p95": 75.72,
-    "max": 84.3
+    "mean": 24.81,
+    "median": 11.15,
+    "p95": 73.64,
+    "max": 83.35
    },
    "radii": {
-    "mean": 4.16,
-    "median": 1.773,
-    "p95": 12.62,
-    "max": 14.05
+    "mean": 4.135,
+    "median": 1.859,
+    "p95": 12.27,
+    "max": 13.89
    }
   },
   {
@@ -5900,16 +6006,16 @@
     "binaire": 48
    },
    "km": {
-    "mean": 19.65,
-    "median": 8.859,
-    "p95": 61.33,
-    "max": 80.78
+    "mean": 19.75,
+    "median": 10.16,
+    "p95": 62.14,
+    "max": 79.81
    },
    "radii": {
-    "mean": 3.275,
-    "median": 1.477,
-    "p95": 10.22,
-    "max": 13.46
+    "mean": 3.291,
+    "median": 1.693,
+    "p95": 10.36,
+    "max": 13.3
    }
   },
   {
@@ -5926,16 +6032,16 @@
    "rejected": 0,
    "sources": {},
    "km": {
-    "mean": 10.53,
-    "median": 4.125,
-    "p95": 43.89,
-    "max": 53.14
+    "mean": 10.67,
+    "median": 4.749,
+    "p95": 40.74,
+    "max": 51.4
    },
    "radii": {
-    "mean": 0.5689,
-    "median": 0.223,
-    "p95": 2.373,
-    "max": 2.872
+    "mean": 0.5766,
+    "median": 0.2567,
+    "p95": 2.202,
+    "max": 2.779
    }
   },
   {
@@ -6032,16 +6138,16 @@
     "binaire": 48
    },
    "km": {
-    "mean": 12.62,
-    "median": 4.963,
-    "p95": 45.42,
-    "max": 51.71
+    "mean": 12.44,
+    "median": 5.008,
+    "p95": 42.73,
+    "max": 49.56
    },
    "radii": {
-    "mean": 0.6823,
-    "median": 0.2683,
-    "p95": 2.455,
-    "max": 2.795
+    "mean": 0.6722,
+    "median": 0.2707,
+    "p95": 2.31,
+    "max": 2.679
    }
   },
   {
@@ -6316,7 +6422,7 @@
    "windowTo": "2100-12-29",
    "windowClipped": false,
    "relative": false,
-   "radiusKm": 715,
+   "radiusKm": 717,
    "n": 48,
    "uncovered": 0,
    "rejected": 0,
@@ -6328,10 +6434,10 @@
     "max": 5.882
    },
    "radii": {
-    "mean": 0.001111,
-    "median": 0.0006131,
-    "p95": 0.004817,
-    "max": 0.008226
+    "mean": 0.001108,
+    "median": 0.0006114,
+    "p95": 0.004803,
+    "max": 0.008204
    }
   },
   {
@@ -6342,7 +6448,7 @@
    "windowTo": "2010-01-01",
    "windowClipped": false,
    "relative": false,
-   "radiusKm": 715,
+   "radiusKm": 717,
    "n": 48,
    "uncovered": 0,
    "rejected": 0,
@@ -6354,10 +6460,10 @@
     "max": 4381
    },
    "radii": {
-    "mean": 2.19,
-    "median": 1.705,
-    "p95": 4.82,
-    "max": 6.127
+    "mean": 2.184,
+    "median": 1.701,
+    "p95": 4.807,
+    "max": 6.11
    }
   },
   {
@@ -6368,7 +6474,7 @@
    "windowTo": "2100-12-31",
    "windowClipped": false,
    "relative": false,
-   "radiusKm": 715,
+   "radiusKm": 717,
    "n": 48,
    "uncovered": 0,
    "rejected": 0,
@@ -6380,10 +6486,10 @@
     "max": 453000
    },
    "radii": {
-    "mean": 177.5,
-    "median": 124.1,
-    "p95": 530.7,
-    "max": 633.6
+    "mean": 177,
+    "median": 123.7,
+    "p95": 529.2,
+    "max": 631.8
    }
   },
   {
@@ -6394,7 +6500,7 @@
    "windowTo": "2400-01-01",
    "windowClipped": false,
    "relative": false,
-   "radiusKm": 715,
+   "radiusKm": 717,
    "n": 48,
    "uncovered": 0,
    "rejected": 0,
@@ -6406,10 +6512,10 @@
     "max": 22300000
    },
    "radii": {
-    "mean": 7885,
-    "median": 1896,
-    "p95": 24970,
-    "max": 31180
+    "mean": 7863,
+    "median": 1891,
+    "p95": 24900,
+    "max": 31100
    }
   },
   {
@@ -6420,7 +6526,7 @@
    "windowTo": "2100-12-31",
    "windowClipped": false,
    "relative": false,
-   "radiusKm": 715,
+   "radiusKm": 717,
    "n": 48,
    "uncovered": 0,
    "rejected": 0,
@@ -6434,10 +6540,10 @@
     "max": 6.145
    },
    "radii": {
-    "mean": 0.0008949,
-    "median": 0.0002668,
-    "p95": 0.005789,
-    "max": 0.008594
+    "mean": 0.0008924,
+    "median": 0.000266,
+    "p95": 0.005773,
+    "max": 0.00857
    }
   },
   {
@@ -6554,7 +6660,7 @@
    "windowTo": "2010-01-01",
    "windowClipped": false,
    "relative": false,
-   "radiusKm": 549,
+   "radiusKm": 547.2,
    "n": 48,
    "uncovered": 0,
    "rejected": 0,
@@ -6566,10 +6672,10 @@
     "max": 6533
    },
    "radii": {
-    "mean": 3.313,
-    "median": 2.515,
-    "p95": 8.616,
-    "max": 11.9
+    "mean": 3.324,
+    "median": 2.523,
+    "p95": 8.644,
+    "max": 11.94
    }
   },
   {
@@ -6580,7 +6686,7 @@
    "windowTo": "2100-12-31",
    "windowClipped": false,
    "relative": false,
-   "radiusKm": 549,
+   "radiusKm": 547.2,
    "n": 48,
    "uncovered": 0,
    "rejected": 0,
@@ -6592,10 +6698,10 @@
     "max": 3048000
    },
    "radii": {
-    "mean": 769.8,
-    "median": 215.4,
-    "p95": 3973,
-    "max": 5552
+    "mean": 772.3,
+    "median": 216.1,
+    "p95": 3987,
+    "max": 5571
    }
   },
   {
@@ -6606,7 +6712,7 @@
    "windowTo": "2400-01-01",
    "windowClipped": false,
    "relative": false,
-   "radiusKm": 549,
+   "radiusKm": 547.2,
    "n": 48,
    "uncovered": 0,
    "rejected": 0,
@@ -6618,10 +6724,10 @@
     "max": 13140000
    },
    "radii": {
-    "mean": 11150,
-    "median": 13370,
-    "p95": 23510,
-    "max": 23930
+    "mean": 11190,
+    "median": 13410,
+    "p95": 23580,
+    "max": 24010
    }
   },
   {
@@ -6632,7 +6738,7 @@
    "windowTo": "2100-12-31",
    "windowClipped": false,
    "relative": false,
-   "radiusKm": 549,
+   "radiusKm": 547.2,
    "n": 48,
    "uncovered": 0,
    "rejected": 0,
@@ -6646,10 +6752,10 @@
     "max": 3048000
    },
    "radii": {
-    "mean": 769.8,
-    "median": 215.4,
-    "p95": 3973,
-    "max": 5552
+    "mean": 772.3,
+    "median": 216.1,
+    "p95": 3987,
+    "max": 5571
    }
   },
   {
@@ -6766,7 +6872,7 @@
    "windowTo": "2010-01-01",
    "windowClipped": false,
    "relative": false,
-   "radiusKm": 498,
+   "radiusKm": 497.5,
    "n": 48,
    "uncovered": 0,
    "rejected": 0,
@@ -6778,10 +6884,10 @@
     "max": 1750
    },
    "radii": {
-    "mean": 1.769,
-    "median": 1.743,
-    "p95": 3.084,
-    "max": 3.513
+    "mean": 1.771,
+    "median": 1.745,
+    "p95": 3.087,
+    "max": 3.517
    }
   },
   {
@@ -6792,7 +6898,7 @@
    "windowTo": "2100-12-31",
    "windowClipped": false,
    "relative": false,
-   "radiusKm": 498,
+   "radiusKm": 497.5,
    "n": 48,
    "uncovered": 0,
    "rejected": 0,
@@ -6804,10 +6910,10 @@
     "max": 79680
    },
    "radii": {
-    "mean": 28.14,
-    "median": 10.51,
-    "p95": 118,
-    "max": 160
+    "mean": 28.17,
+    "median": 10.52,
+    "p95": 118.2,
+    "max": 160.2
    }
   },
   {
@@ -6818,7 +6924,7 @@
    "windowTo": "2400-01-01",
    "windowClipped": false,
    "relative": false,
-   "radiusKm": 498,
+   "radiusKm": 497.5,
    "n": 48,
    "uncovered": 0,
    "rejected": 0,
@@ -6830,10 +6936,10 @@
     "max": 928100
    },
    "radii": {
-    "mean": 480,
-    "median": 261.8,
-    "p95": 1622,
-    "max": 1864
+    "mean": 480.5,
+    "median": 262.1,
+    "p95": 1624,
+    "max": 1865
    }
   },
   {
@@ -6844,7 +6950,7 @@
    "windowTo": "2100-12-31",
    "windowClipped": false,
    "relative": false,
-   "radiusKm": 498,
+   "radiusKm": 497.5,
    "n": 48,
    "uncovered": 0,
    "rejected": 0,
@@ -6858,10 +6964,10 @@
     "max": 79680
    },
    "radii": {
-    "mean": 28.14,
-    "median": 10.51,
-    "p95": 118,
-    "max": 160
+    "mean": 28.17,
+    "median": 10.52,
+    "p95": 118.2,
+    "max": 160.2
    }
   },
   {
@@ -7402,7 +7508,7 @@
    "windowTo": "2036-01-01",
    "windowClipped": false,
    "relative": false,
-   "radiusKm": 15.7,
+   "radiusKm": 16,
    "n": 48,
    "uncovered": 0,
    "rejected": 0,
@@ -7414,10 +7520,10 @@
     "max": 6581000
    },
    "radii": {
-    "mean": 155500,
-    "median": 139100,
-    "p95": 371200,
-    "max": 419100
+    "mean": 152600,
+    "median": 136500,
+    "p95": 364200,
+    "max": 411300
    }
   },
   {
@@ -7428,7 +7534,7 @@
    "windowTo": "2100-12-31",
    "windowClipped": false,
    "relative": false,
-   "radiusKm": 15.7,
+   "radiusKm": 16,
    "n": 48,
    "uncovered": 0,
    "rejected": 0,
@@ -7440,10 +7546,10 @@
     "max": 33050000
    },
    "radii": {
-    "mean": 920100,
-    "median": 796300,
-    "p95": 1993000,
-    "max": 2105000
+    "mean": 902800,
+    "median": 781400,
+    "p95": 1956000,
+    "max": 2066000
    }
   },
   {
@@ -7454,7 +7560,7 @@
    "windowTo": "2400-01-01",
    "windowClipped": false,
    "relative": false,
-   "radiusKm": 15.7,
+   "radiusKm": 16,
    "n": 48,
    "uncovered": 0,
    "rejected": 0,
@@ -7466,10 +7572,10 @@
     "max": 110000000
    },
    "radii": {
-    "mean": 3402000,
-    "median": 3241000,
-    "p95": 6773000,
-    "max": 7004000
+    "mean": 3338000,
+    "median": 3180000,
+    "p95": 6646000,
+    "max": 6872000
    }
   },
   {
@@ -7480,7 +7586,7 @@
    "windowTo": "2100-12-31",
    "windowClipped": false,
    "relative": false,
-   "radiusKm": 15.7,
+   "radiusKm": 16,
    "n": 48,
    "uncovered": 0,
    "rejected": 0,
@@ -7494,10 +7600,10 @@
     "max": 33050000
    },
    "radii": {
-    "mean": 920100,
-    "median": 796300,
-    "p95": 1993000,
-    "max": 2105000
+    "mean": 902800,
+    "median": 781400,
+    "p95": 1956000,
+    "max": 2066000
    }
   },
   {

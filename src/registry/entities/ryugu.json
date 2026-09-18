@@ -58,7 +58,7 @@
     },
     "massKg": {
       "value": {
-        "$gm": 3e-8
+        "$gm": 3e-08
       },
       "source": "jpl-sbdb",
       "method": "derived",
@@ -86,7 +86,7 @@
       "value": 0,
       "source": "jpl-sbdb",
       "method": "measured",
-      "asOf": "2026-09-17",
+      "asOf": "2026-09-18",
       "detail": "confirmedSatellites"
     },
     "axialTilt": {
@@ -100,7 +100,7 @@
       "value": 7.63262,
       "source": "jpl-sbdb",
       "method": "measured",
-      "uncertainty": 0.00002,
+      "uncertainty": 2e-05,
       "citation": "Watanabe, S.; Hirabayashi, M.; Hirata, N.; Hirata, Na.; et al. (2019) Science 364, 267-272."
     }
   },

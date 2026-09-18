@@ -222,6 +222,10 @@
     "atlas": {
       "command": "3I",
       "expect": "atlas"
+    },
+    "psyche": {
+      "command": "16;",
+      "expect": "psyche"
     }
   },
   "centers": {

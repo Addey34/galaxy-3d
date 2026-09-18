@@ -1,0 +1,91 @@
+{
+  "$schema": "../schema/entity.schema.json",
+  "id": "psyche",
+  "targetClass": "asteroid",
+  "source": "small-body",
+  "elements": {
+    "displayName": {
+      "en": "Psyche",
+      "fr": "Psyché"
+    },
+    "a": 2.923760758884039,
+    "e": 0.1344462426389801,
+    "iDeg": 3.097375301303736,
+    "omDeg": 150.0048050429018,
+    "wDeg": 229.7991851903295,
+    "maDeg": 48.67987371539505,
+    "epoch": "2026-01-01T00:00:00.000Z",
+    "color": "0xa8763e",
+    "fallbackColor": "0x9a8f85",
+    "description": {
+      "en": "A metal-rich asteroid about 220 kilometres across, in the main belt between Mars and Jupiter. It is the target of NASA’s Psyche mission, launched in 2023 and due to arrive in 2029: the first mission to a metal-rich world.",
+      "fr": "Un astéroïde riche en métaux d’environ 220 kilomètres de diamètre, dans la ceinture principale entre Mars et Jupiter. Il est la cible de la mission Psyche de la NASA, lancée en 2023 et prévue pour y arriver en 2029 : la première mission vers un monde riche en métaux."
+    },
+    "wiki": {
+      "en": "https://en.wikipedia.org/wiki/16_Psyche",
+      "fr": "https://fr.wikipedia.org/wiki/(16)_Psyché"
+    }
+  },
+  "facts": {
+    "radiusKm": {
+      "value": {
+        "$diameterKm": 222
+      },
+      "source": "jpl-sbdb",
+      "method": "derived",
+      "detail": "radiusFromDiameter",
+      "citation": "Shepard et al. (2021), The Planetary Science Journal 2, 125"
+    },
+    "massKg": {
+      "value": {
+        "$gm": 1.601
+      },
+      "source": "jpl-sbdb",
+      "method": "derived",
+      "uncertainty": {
+        "$gm": 0.017
+      },
+      "detail": "massFromGM",
+      "citation": "Farnocchia et al. (2024), AJ 168, 21"
+    },
+    "gravity": {
+      "value": {
+        "$gm": 1.601,
+        "$radiusKm": {
+          "$diameterKm": 222
+        }
+      },
+      "source": "jpl-sbdb",
+      "method": "derived",
+      "detail": "gravityFromGM",
+      "citation": "Farnocchia et al. (2024), AJ 168, 21"
+    },
+    "meanTempC": {
+      "published": false,
+      "reason": "not-yet-sourced"
+    },
+    "moonCount": {
+      "value": 0,
+      "source": "jpl-sbdb",
+      "method": "measured",
+      "asOf": "2026-09-18",
+      "detail": "confirmedSatellites"
+    },
+    "axialTilt": {
+      "published": false,
+      "reason": "not-yet-sourced"
+    },
+    "rotationPeriod": {
+      "value": 4.196,
+      "source": "jpl-sbdb",
+      "method": "measured",
+      "citation": "LCDB (Rev. 2023-October); Warner et al., 2009"
+    }
+  },
+  "notes": {
+    "a": "Éléments osculateurs JPL Horizons EXACTEMENT à cette époque (COMMAND '16;', EPHEM_TYPE=ELEMENTS, TLIST=2461041.5), relevés par `pnpm ephemeris:small-body` le 2026-09-18. Corps d'épreuve de la phase 5 du lot 7 : ajouté sans toucher une ligne de TypeScript.",
+    "facts.radiusKm": "Diamètre moyen 222 km, +4/−1 km (Shepard et al. 2021, relevé SBDB du 2026-09-18). Incertitude asymétrique : le schéma de fait ne la porte pas, elle est donc dans la citation plutôt que dépareillée.",
+    "facts.massKg": "GM = 1,601 ± 0,017 km³/s² (Farnocchia et al. 2024, solution de la mission : la sonde Psyche orbite le corps).",
+    "facts.axialTilt": "La SBDB ne publie pas de pôle pour Psyché : pas d'obliquité publiée, plutôt qu'une valeur retenue de mémoire."
+  }
+}

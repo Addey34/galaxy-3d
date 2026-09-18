@@ -61,7 +61,7 @@
       "value": 0,
       "source": "jpl-sbdb",
       "method": "measured",
-      "asOf": "2026-09-17",
+      "asOf": "2026-09-18",
       "detail": "confirmedSatellites"
     },
     "rotationPeriod": {
