@@ -20,6 +20,7 @@
  * millions de km. C'est pourquoi l'écart est affiché à côté de la catégorie, jamais caché dedans.
  */
 import { DAY_MS, type DatedProduct, type OpenInterval } from './temporal';
+import { POSITION_PROVIDERS, answersAnyDate } from '@/registry/providers';
 
 /** Source qui a effectivement produit une position (règle de `BodyPositionResolver`). */
 export type PositionSource = 'horizons' | 'spk' | 'astronomy-engine' | 'kepler';
@@ -41,12 +42,18 @@ export interface AccuracyRow {
   km: { mean: number | null } | null;
 }
 
-/** Nom de chaque source dans le résumé écrit par `scripts/validate-against-horizons.mjs`. */
+/**
+ * Nom de chaque source dans le résumé écrit par `scripts/validate-against-horizons.mjs`, LU
+ * dans le registre des fournisseurs (`src/registry/providers/*.json`, champ
+ * `validationProviderId`) : une seule table, deux lecteurs. Le type impose les quatre clés, donc
+ * une source de position sans fiche ne compile pas.
+ */
 export const SUMMARY_PROVIDER: Record<PositionSource, string> = {
-  horizons: 'horizons-binary',
-  spk: 'spk',
-  'astronomy-engine': 'astronomy-engine',
-  kepler: 'kepler',
+  horizons: POSITION_PROVIDERS.horizons.validationProviderId,
+  spk: POSITION_PROVIDERS.spk.validationProviderId,
+  'astronomy-engine':
+    POSITION_PROVIDERS['astronomy-engine'].validationProviderId,
+  kepler: POSITION_PROVIDERS.kepler.validationProviderId,
 };
 
 /** Fenêtre où l'écart d'une source à Horizons a été mesuré, et son écart moyen. */
@@ -91,9 +98,14 @@ const NEVER_MEASURED: OpenInterval = {
   to: Number.NEGATIVE_INFINITY,
 };
 
-/** Sources qui répondent à toute date, donc qui peuvent sortir de leur fenêtre mesurée. */
+/**
+ * Sources qui répondent à toute date, donc qui peuvent sortir de leur fenêtre mesurée. Lu dans la
+ * couverture déclarée par la fiche du fournisseur : au sens STAC, des bornes nulles des deux côtés
+ * veulent dire « pas de borne ». Une fiche sans couverture déclarée (le noyau SPK, dont chaque
+ * segment porte la sienne) n'est pas illimitée pour autant.
+ */
 function computesAnyDate(source: PositionSource): boolean {
-  return source === 'astronomy-engine' || source === 'kepler';
+  return answersAnyDate(POSITION_PROVIDERS[source]);
 }
 
 /** La donnée « position de ce corps à cette date », pour `classifyTemporal`. */

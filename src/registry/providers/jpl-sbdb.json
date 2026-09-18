@@ -1,0 +1,10 @@
+{
+  "$schema": "../schema/provider.schema.json",
+  "id": "jpl-sbdb",
+  "role": "fact-source",
+  "publisher": "NASA JPL Solar System Dynamics",
+  "title": "Small-Body Database",
+  "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html",
+  "kind": "database",
+  "accessed": "2026-09-17"
+}

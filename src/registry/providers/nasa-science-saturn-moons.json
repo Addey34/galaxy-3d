@@ -1,0 +1,10 @@
+{
+  "$schema": "../schema/provider.schema.json",
+  "id": "nasa-science-saturn-moons",
+  "role": "fact-source",
+  "publisher": "NASA Science",
+  "title": "Saturn Moons",
+  "url": "https://science.nasa.gov/saturn/moons/",
+  "kind": "agency",
+  "accessed": "2026-09-17"
+}

@@ -1,0 +1,17 @@
+{
+  "$schema": "../schema/provider.schema.json",
+  "id": "kepler",
+  "role": "position-source",
+  "publisher": "Galaxy",
+  "title": "Keplerian propagation of published orbital elements",
+  "url": "https://galaxy.adrianguichard.dev/methodology/",
+  "kind": "ephemeris",
+  "positionSource": "kepler",
+  "validationProviderId": "kepler",
+  "extent": {
+    "temporal": {
+      "interval": [[null, null]]
+    }
+  },
+  "coverageNote": "Bornes nulles au sens STAC : un probleme a deux corps se propage a n'importe quelle date. Les elements viennent de config/smallBodies.ts et des elements de repli des satellites ; leur exactitude, elle, est mesuree fenetre par fenetre par pnpm ephemeris:validate."
+}

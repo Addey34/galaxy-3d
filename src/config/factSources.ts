@@ -1,6 +1,13 @@
 /**
  * Registre des SOURCES PRIMAIRES des faits affichés (fiche d'un corps, pages par corps).
  *
+ * **Depuis le lot 7 (phase 1), la DONNÉE n'est plus ici** : les 18 sources vivent dans
+ * `src/registry/providers/*.json`, validées par le schéma Zod de `src/registry/schema/`.
+ * Ce module reste la façade que lisent `ui/bodyInfo.ts`, `seo/sourcesPage.ts`,
+ * `utils/safeUrl.ts` et `factProvenance.test.ts` : `FACT_SOURCES` est maintenant DÉRIVÉ du
+ * registre, dans l'ordre que celui-ci déclare, et les helpers de dérivation et de provenance
+ * (`measured`, `derived`, `massFromGM`…) restent ici, car ce sont du code, pas de la donnée.
+ *
  * Chaque valeur que Galaxy présente comme un fait (rayon, masse, gravité, température moyenne,
  * distance, période, rotation, obliquité, nombre de lunes) porte dans le catalogue une
  * provenance (`realData.sources[champ]`) qui nomme une entrée de ce registre, la méthode
@@ -19,6 +26,7 @@
  */
 import type { FactProvenance, UnknownReason } from '@/types';
 import { KM_PER_AU } from '@/core/ScaleService';
+import { FACT_SOURCE_PROVIDERS } from '@/registry/providers';
 
 export type FactSourceKind = 'agency' | 'database' | 'article' | 'preprint';
 
@@ -37,165 +45,15 @@ export interface FactSource {
   accessed: string;
 }
 
-/** Date de relevé des sources de ce registre (celle de `factSources.snapshot.json`). */
-const ACCESSED = '2026-09-17';
-
-export const FACT_SOURCES = {
-  'nssdca-fact-sheets': {
-    publisher: 'NASA NSSDCA',
-    title: 'Planetary and Satellite Fact Sheets',
-    url: 'https://nssdc.gsfc.nasa.gov/planetary/planetfact.html',
-    kind: 'agency',
-    accessed: ACCESSED,
-  },
-  'jpl-ssd-satellite-physical-parameters': {
-    publisher: 'NASA JPL Solar System Dynamics',
-    title: 'Planetary Satellite Physical Parameters',
-    url: 'https://ssd.jpl.nasa.gov/sats/phys_par/',
-    kind: 'database',
-    accessed: ACCESSED,
-  },
-  'jpl-ssd-satellite-mean-elements': {
-    publisher: 'NASA JPL Solar System Dynamics',
-    title: 'Planetary Satellite Mean Elements',
-    url: 'https://ssd.jpl.nasa.gov/sats/elem/',
-    kind: 'database',
-    accessed: ACCESSED,
-  },
-  'jpl-sbdb': {
-    publisher: 'NASA JPL Solar System Dynamics',
-    title: 'Small-Body Database',
-    url: 'https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html',
-    kind: 'database',
-    accessed: ACCESSED,
-  },
-  'jpl-horizons': {
-    publisher: 'NASA JPL Solar System Dynamics',
-    title: 'Horizons System (osculating orbital elements)',
-    url: 'https://ssd.jpl.nasa.gov/horizons/',
-    kind: 'database',
-    accessed: ACCESSED,
-  },
-  'nasa-science-jupiter-moons': {
-    publisher: 'NASA Science',
-    title: 'Jupiter Moons',
-    url: 'https://science.nasa.gov/jupiter/moons/',
-    kind: 'agency',
-    accessed: ACCESSED,
-  },
-  'nasa-science-saturn-moons': {
-    publisher: 'NASA Science',
-    title: 'Saturn Moons',
-    url: 'https://science.nasa.gov/saturn/moons/',
-    kind: 'agency',
-    accessed: ACCESSED,
-  },
-  'nasa-science-uranus-moons': {
-    publisher: 'NASA Science',
-    title: 'Uranus Moons',
-    url: 'https://science.nasa.gov/uranus/moons/',
-    kind: 'agency',
-    accessed: ACCESSED,
-  },
-  'nasa-science-neptune-moons': {
-    publisher: 'NASA Science',
-    title: 'Neptune Moons',
-    url: 'https://science.nasa.gov/neptune/moons/',
-    kind: 'agency',
-    accessed: ACCESSED,
-  },
-  'nasa-science-mars-moons': {
-    publisher: 'NASA Science',
-    title: 'Mars Moons',
-    url: 'https://science.nasa.gov/mars/moons/',
-    kind: 'agency',
-    accessed: ACCESSED,
-  },
-  'sicardy-2011-eris': {
-    publisher: 'Sicardy et al.',
-    title:
-      'A Pluto-like radius and a high albedo for the dwarf planet Eris from an occultation',
-    url: 'https://www.nature.com/articles/nature10550',
-    kind: 'article',
-    journal: 'Nature 478, 493',
-    published: '2011',
-    doi: '10.1038/nature10550',
-    accessed: ACCESSED,
-  },
-  'szakats-2023-eris': {
-    publisher: 'Szakáts et al.',
-    title:
-      'Tidally locked rotation of the dwarf planet (136199) Eris discovered from long-term ground based and space photometry',
-    url: 'https://arxiv.org/abs/2211.07987',
-    kind: 'article',
-    journal: 'Astronomy & Astrophysics 669, L3',
-    published: '2023',
-    doi: '10.1051/0004-6361/202245234',
-    accessed: ACCESSED,
-  },
-  'ragozzine-brown-2009-haumea': {
-    publisher: 'Ragozzine & Brown',
-    title:
-      'Orbits and Masses of the Satellites of the Dwarf Planet Haumea = 2003 EL61',
-    url: 'https://arxiv.org/abs/0903.4213',
-    kind: 'article',
-    journal: 'The Astronomical Journal 137, 4766-4776',
-    published: '2009',
-    doi: '10.1088/0004-6256/137/6/4766',
-    accessed: ACCESSED,
-  },
-  'brown-2013-makemake': {
-    publisher: 'Brown',
-    title: 'On the size, shape, and density of dwarf planet Makemake',
-    url: 'https://arxiv.org/abs/1304.1041',
-    kind: 'article',
-    journal: 'The Astrophysical Journal Letters 767, L7',
-    published: '2013',
-    doi: '10.1088/2041-8205/767/1/L7',
-    accessed: ACCESSED,
-  },
-  'kiss-2019-gonggong': {
-    publisher: 'Kiss et al.',
-    title: 'The mass and density of the dwarf planet (225088) 2007 OR10',
-    url: 'https://arxiv.org/abs/1903.05439',
-    kind: 'article',
-    journal: 'Icarus',
-    published: '2019',
-    doi: '10.1016/j.icarus.2019.03.013',
-    accessed: ACCESSED,
-  },
-  'margoti-2026-quaoar': {
-    publisher: 'Margoti et al.',
-    title:
-      'Size, shape, density, and atmospheric limit of (50000) Quaoar revealed from 14 years of stellar occultation',
-    url: 'https://arxiv.org/abs/2607.06450',
-    kind: 'preprint',
-    published: '2026-07-07',
-    accessed: ACCESSED,
-  },
-  'pal-2012-sedna': {
-    publisher: 'Pál et al.',
-    title:
-      '"TNOs are Cool": A survey of the trans-Neptunian region, VII. Size and surface characteristics of (90377) Sedna and 2010 EK139',
-    url: 'https://arxiv.org/abs/1204.0899',
-    kind: 'article',
-    journal: 'Astronomy & Astrophysics',
-    published: '2012',
-    doi: '10.1051/0004-6361/201218874',
-    accessed: ACCESSED,
-  },
-  'kiss-2016-nereid': {
-    publisher: 'Kiss et al.',
-    title:
-      'Nereid from space: Rotation, size and shape analysis from Kepler/K2, Herschel and Spitzer observations',
-    url: 'https://arxiv.org/abs/1601.02395',
-    kind: 'article',
-    journal: 'Monthly Notices of the Royal Astronomical Society',
-    published: '2016',
-    doi: '10.1093/mnras/stw081',
-    accessed: ACCESSED,
-  },
-} as const satisfies Record<string, FactSource>;
+/**
+ * Sources primaires des faits, DÉRIVÉES du registre `src/registry/providers/`, dans l'ordre
+ * qu'il déclare. Cet ordre est une donnée publiée : `seo/sourcesPage.ts` écrit le tableau des
+ * sources primaires de `/sources` en parcourant cet objet.
+ */
+export const FACT_SOURCES = FACT_SOURCE_PROVIDERS satisfies Record<
+  string,
+  FactSource
+>;
 
 export type FactSourceId = keyof typeof FACT_SOURCES;
 

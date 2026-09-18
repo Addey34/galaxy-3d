@@ -1,0 +1,10 @@
+{
+  "$schema": "../schema/provider.schema.json",
+  "id": "jpl-horizons",
+  "role": "fact-source",
+  "publisher": "NASA JPL Solar System Dynamics",
+  "title": "Horizons System (osculating orbital elements)",
+  "url": "https://ssd.jpl.nasa.gov/horizons/",
+  "kind": "database",
+  "accessed": "2026-09-17"
+}

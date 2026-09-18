@@ -1,0 +1,10 @@
+{
+  "$schema": "../schema/provider.schema.json",
+  "id": "jpl-ssd-satellite-physical-parameters",
+  "role": "fact-source",
+  "publisher": "NASA JPL Solar System Dynamics",
+  "title": "Planetary Satellite Physical Parameters",
+  "url": "https://ssd.jpl.nasa.gov/sats/phys_par/",
+  "kind": "database",
+  "accessed": "2026-09-17"
+}

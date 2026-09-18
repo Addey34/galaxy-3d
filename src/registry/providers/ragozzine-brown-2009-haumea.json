@@ -1,0 +1,13 @@
+{
+  "$schema": "../schema/provider.schema.json",
+  "id": "ragozzine-brown-2009-haumea",
+  "role": "fact-source",
+  "publisher": "Ragozzine & Brown",
+  "title": "Orbits and Masses of the Satellites of the Dwarf Planet Haumea = 2003 EL61",
+  "url": "https://arxiv.org/abs/0903.4213",
+  "kind": "article",
+  "journal": "The Astronomical Journal 137, 4766-4776",
+  "published": "2009",
+  "doi": "10.1088/0004-6256/137/6/4766",
+  "accessed": "2026-09-17"
+}

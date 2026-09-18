@@ -1,0 +1,13 @@
+{
+  "$schema": "../schema/provider.schema.json",
+  "id": "sicardy-2011-eris",
+  "role": "fact-source",
+  "publisher": "Sicardy et al.",
+  "title": "A Pluto-like radius and a high albedo for the dwarf planet Eris from an occultation",
+  "url": "https://www.nature.com/articles/nature10550",
+  "kind": "article",
+  "journal": "Nature 478, 493",
+  "published": "2011",
+  "doi": "10.1038/nature10550",
+  "accessed": "2026-09-17"
+}

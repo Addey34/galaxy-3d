@@ -1,0 +1,10 @@
+{
+  "$schema": "../schema/provider.schema.json",
+  "id": "jpl-ssd-satellite-mean-elements",
+  "role": "fact-source",
+  "publisher": "NASA JPL Solar System Dynamics",
+  "title": "Planetary Satellite Mean Elements",
+  "url": "https://ssd.jpl.nasa.gov/sats/elem/",
+  "kind": "database",
+  "accessed": "2026-09-17"
+}

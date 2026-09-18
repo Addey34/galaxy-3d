@@ -1,0 +1,10 @@
+{
+  "$schema": "../schema/provider.schema.json",
+  "id": "nssdca-fact-sheets",
+  "role": "fact-source",
+  "publisher": "NASA NSSDCA",
+  "title": "Planetary and Satellite Fact Sheets",
+  "url": "https://nssdc.gsfc.nasa.gov/planetary/planetfact.html",
+  "kind": "agency",
+  "accessed": "2026-09-17"
+}

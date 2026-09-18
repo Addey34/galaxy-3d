@@ -1,0 +1,12 @@
+{
+  "$schema": "../schema/provider.schema.json",
+  "id": "spk",
+  "role": "position-source",
+  "publisher": "NASA NAIF",
+  "title": "SPICE SPK kernel (SAT441 satellite ephemerides)",
+  "url": "https://naif.jpl.nasa.gov/naif/data.html",
+  "kind": "ephemeris",
+  "positionSource": "spk",
+  "validationProviderId": "spk",
+  "coverageNote": "Aucun extent declare : la couverture d'un noyau SPK est portee par chaque segment DANS le fichier, lue par core/SpkKernel.ts, et le noyau lui-meme est optionnel et exclu du deploiement. Une borne nulle voudrait dire « repond a toute date », ce qui serait faux."
+}

@@ -1,0 +1,17 @@
+{
+  "$schema": "../schema/provider.schema.json",
+  "id": "astronomy-engine",
+  "role": "position-source",
+  "publisher": "Don Cross",
+  "title": "Astronomy Engine (VSOP87 and ELP/MPP02 based ephemerides)",
+  "url": "https://github.com/cosinekitty/astronomy",
+  "kind": "ephemeris",
+  "positionSource": "astronomy-engine",
+  "validationProviderId": "astronomy-engine",
+  "extent": {
+    "temporal": {
+      "interval": [[null, null]]
+    }
+  },
+  "coverageNote": "Bornes nulles au sens STAC : la theorie analytique repond a N'IMPORTE QUELLE date. C'est precisement ce qui rend l'etiquette « extrapole » necessaire hors des fenetres ou son ecart a Horizons a ete mesure (core/positionProvenance.ts)."
+}

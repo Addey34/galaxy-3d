@@ -1,0 +1,13 @@
+{
+  "$schema": "../schema/provider.schema.json",
+  "id": "kiss-2019-gonggong",
+  "role": "fact-source",
+  "publisher": "Kiss et al.",
+  "title": "The mass and density of the dwarf planet (225088) 2007 OR10",
+  "url": "https://arxiv.org/abs/1903.05439",
+  "kind": "article",
+  "journal": "Icarus",
+  "published": "2019",
+  "doi": "10.1016/j.icarus.2019.03.013",
+  "accessed": "2026-09-17"
+}

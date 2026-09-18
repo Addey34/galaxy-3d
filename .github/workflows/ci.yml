@@ -35,6 +35,23 @@ jobs:
       - run: pnpm audit:prod
       - run: pnpm build
 
+      # EMPREINTE DES DOCUMENTS GENERES. Le build derive 114 pages, le sitemap et 56 vignettes
+      # du catalogue. Une migration qui change une valeur, un ordre de cles ou un arrondi ne
+      # casse aucun test et ne produit aucune erreur : elle change silencieusement ce qui est
+      # indexe. Le lot 7 sort precisement le catalogue du TypeScript, d'ou ce filet.
+      #
+      # `--portable` exclut les vignettes, et ce n'est pas un adoucissement : leur texte est un
+      # SVG rendu par sharp avec la pile `Segoe UI, Helvetica, Arial, DejaVu Sans`, donc ce
+      # runner Linux sert DejaVu Sans la ou la reference a ete ecrite sous Windows avec Segoe UI.
+      # Memes donnees, octets differents. Les 115 documents restants (pages + sitemap) sont, eux,
+      # du texte produit par le meme code : ils doivent etre identiques d'une machine a l'autre.
+      #
+      # BLOQUANT, et c'est voulu : tant que ce controle etait une commande a lancer a la main, il
+      # n'etait pas un controle. Un changement VOULU se rattrape en relancant
+      # `pnpm fingerprint:generated --write` et en committant la reference a part.
+      - name: Verify generated documents are unchanged
+        run: node scripts/fingerprint-generated.mjs --portable
+
       # Mesure INFORMATIVE de la charge utile reelle (exclusions de firebase.json appliquees),
       # pour qu'un poids inattendu se voie dans le journal du deploiement.
       #

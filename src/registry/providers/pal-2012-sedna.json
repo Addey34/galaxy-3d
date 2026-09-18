@@ -1,0 +1,13 @@
+{
+  "$schema": "../schema/provider.schema.json",
+  "id": "pal-2012-sedna",
+  "role": "fact-source",
+  "publisher": "Pál et al.",
+  "title": "\"TNOs are Cool\": A survey of the trans-Neptunian region, VII. Size and surface characteristics of (90377) Sedna and 2010 EK139",
+  "url": "https://arxiv.org/abs/1204.0899",
+  "kind": "article",
+  "journal": "Astronomy & Astrophysics",
+  "published": "2012",
+  "doi": "10.1051/0004-6361/201218874",
+  "accessed": "2026-09-17"
+}

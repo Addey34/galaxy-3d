@@ -1,0 +1,13 @@
+{
+  "$schema": "../schema/provider.schema.json",
+  "id": "szakats-2023-eris",
+  "role": "fact-source",
+  "publisher": "Szakáts et al.",
+  "title": "Tidally locked rotation of the dwarf planet (136199) Eris discovered from long-term ground based and space photometry",
+  "url": "https://arxiv.org/abs/2211.07987",
+  "kind": "article",
+  "journal": "Astronomy & Astrophysics 669, L3",
+  "published": "2023",
+  "doi": "10.1051/0004-6361/202245234",
+  "accessed": "2026-09-17"
+}

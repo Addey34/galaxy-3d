@@ -1,0 +1,10 @@
+{
+  "$schema": "../schema/provider.schema.json",
+  "id": "nasa-science-uranus-moons",
+  "role": "fact-source",
+  "publisher": "NASA Science",
+  "title": "Uranus Moons",
+  "url": "https://science.nasa.gov/uranus/moons/",
+  "kind": "agency",
+  "accessed": "2026-09-17"
+}

@@ -1,0 +1,11 @@
+{
+  "$schema": "../schema/provider.schema.json",
+  "id": "margoti-2026-quaoar",
+  "role": "fact-source",
+  "publisher": "Margoti et al.",
+  "title": "Size, shape, density, and atmospheric limit of (50000) Quaoar revealed from 14 years of stellar occultation",
+  "url": "https://arxiv.org/abs/2607.06450",
+  "kind": "preprint",
+  "published": "2026-07-07",
+  "accessed": "2026-09-17"
+}

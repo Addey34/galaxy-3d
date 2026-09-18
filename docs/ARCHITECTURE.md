@@ -910,7 +910,9 @@ Rayon, masse, gravité, température moyenne, distance, périodes, rotation, obl
 lunes sont des affirmations scientifiques. Chacune porte une provenance dans le catalogue, à côté
 de la valeur que la simulation lit (`realData.sources[champ]`, type `FactProvenance`) :
 
-- **source** : identifiant du registre `src/config/factSources.ts` (fiches NASA NSSDCA, tables
+- **source** : identifiant du registre `src/registry/providers/` (une fiche JSON par fournisseur
+  depuis le lot 7 phase 1 ; `src/config/factSources.ts` en reste la façade et dérive
+  `FACT_SOURCES`) : fiches NASA NSSDCA, tables
   JPL SSD des satellites, JPL SBDB, Horizons, pages NASA Science, articles et prépublications
   nommées comme telles). Jamais Wikipédia, qui reste seulement le lien « En savoir plus » ;
 - **méthode** : `measured` (valeur de la source) ou `derived` (masse = GM/G avec G CODATA 2018,

@@ -108,7 +108,7 @@ Une seule entrée dans `CELESTIAL_CONFIG.bodies` (`src/config/bodies.ts`) :
 - `realData.orbitPeriodDays` : période orbitale, pour tracer la ligne d'orbite
 - `realData.sources` : la PROVENANCE de chaque valeur affichée sur la fiche et la page du corps
   (rayon, masse, gravité, température moyenne, distance, période, rotation, obliquité, lunes
-  connues). Chaque entrée nomme une source du registre `src/config/factSources.ts` (agence, base
+  connues). Chaque entrée nomme une source du registre `src/registry/providers/` (agence, base
   de données d'agence, article ; jamais Wikipédia), la méthode (`measured` ou `derived`) et, pour
   le nombre de lunes, la date `asOf`. Une valeur que la simulation utilise mais que vous ne pouvez
   pas sourcer se déclare `unknown: { champ: NOT_YET_SOURCED }` : elle n'est pas affichée.

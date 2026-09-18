@@ -1,0 +1,10 @@
+{
+  "$schema": "../schema/provider.schema.json",
+  "id": "nasa-science-neptune-moons",
+  "role": "fact-source",
+  "publisher": "NASA Science",
+  "title": "Neptune Moons",
+  "url": "https://science.nasa.gov/neptune/moons/",
+  "kind": "agency",
+  "accessed": "2026-09-17"
+}
