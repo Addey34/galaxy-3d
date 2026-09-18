@@ -97,92 +97,18 @@ const INJECTING = INJECT_KM !== 0 || INJECT_SECONDS !== 0;
 // Horizons doit contenir, vérifié à chaque réponse — une cible mal résolue produit sinon une
 // « erreur » parfaitement plausible.
 
-const TARGETS = {
-  mercury: { command: '199' },
-  venus: { command: '299' },
-  earth: { command: '399' },
-  moon: { command: '301' },
-  mars: { command: '499' },
-  phobos: { command: '401' },
-  deimos: { command: '402' },
-  jupiter: { command: '599' },
-  io: { command: '501' },
-  europa: { command: '502' },
-  ganymede: { command: '503' },
-  callisto: { command: '504' },
-  amalthea: { command: '505' },
-  saturn: { command: '699' },
-  mimas: { command: '601' },
-  enceladus: { command: '602' },
-  tethys: { command: '603' },
-  dione: { command: '604' },
-  rhea: { command: '605' },
-  titan: { command: '606' },
-  hyperion: { command: '607' },
-  iapetus: { command: '608' },
-  uranus: { command: '799' },
-  ariel: { command: '701' },
-  umbriel: { command: '702' },
-  titania: { command: '703' },
-  oberon: { command: '704' },
-  miranda: { command: '705' },
-  neptune: { command: '899' },
-  triton: { command: '801' },
-  nereid: { command: '802' },
-  proteus: { command: '808' },
-  pluto: { command: '999' },
-  charon: { command: '901' },
-  nix: { command: '902' },
-  hydra: { command: '903' },
-  kerberos: { command: '904' },
-  styx: { command: '905' },
-  ceres: { command: '1;' },
-  pallas: { command: '2;' },
-  vesta: { command: '4;' },
-  hygiea: { command: '10;' },
-  ida: { command: '243;' },
-  eros: { command: '433;' },
-  itokawa: { command: '25143;' },
-  quaoar: { command: '50000;' },
-  orcus: { command: '90482;' },
-  sedna: { command: '90377;' },
-  bennu: { command: '101955;' },
-  haumea: { command: '136108;' },
-  eris: { command: '136199;' },
-  makemake: { command: '136472;' },
-  ryugu: { command: '162173;' },
-  gonggong: { command: '225088;' },
-  // Record de la solution d'où viennent les éléments du catalogue (apparition 1986).
-  halley: { command: '90000030;', expect: 'halley' },
-  voyager1: { command: '-31', expect: 'voyager 1' },
-  voyager2: { command: '-32', expect: 'voyager 2' },
-  'parker-solar-probe': { command: '-96', expect: 'parker solar probe' },
-  jwst: { command: '-170', expect: 'james webb' },
-  'new-horizons': { command: '-98', expect: 'new horizons' },
-  cassini: { command: '-82', expect: 'cassini' },
-  juno: { command: '-61', expect: 'juno' },
-  rosetta: { command: '-226', expect: 'rosetta' },
-  bepicolombo: { command: '-121', expect: 'bepicolombo' },
-  'osiris-rex': { command: '-64', expect: 'osiris-rex' },
-  hayabusa2: { command: '-37', expect: 'hayabusa 2' },
-  oumuamua: { command: '1I', expect: 'oumuamua' },
-  borisov: { command: '2I', expect: 'borisov' },
-  atlas: { command: '3I', expect: 'atlas' },
-};
+// DONNÉE, pas du code : la table vit dans `validation-targets.json`, à côté de ce
+// script. Ajouter un corps au catalogue n'exige plus de toucher ce fichier.
+const TARGETS = JSON.parse(
+  readFileSync(new URL('./validation-targets.json', import.meta.url), 'utf8')
+).targets;
 
 /** Centre Horizons (corps, pas barycentre) pour un parent du catalogue. */
-const CENTERS = {
-  sun: { id: '10', expect: 'sun' },
-  earth: { id: '399', expect: 'earth' },
-  // La Lune est relative à l'EMB côté astronomy-engine (`positionBody` de la Terre).
-  emb: { id: '3', expect: 'earth-moon barycenter' },
-  mars: { id: '499', expect: 'mars' },
-  jupiter: { id: '599', expect: 'jupiter' },
-  saturn: { id: '699', expect: 'saturn' },
-  uranus: { id: '799', expect: 'uranus' },
-  neptune: { id: '899', expect: 'neptune' },
-  pluto: { id: '999', expect: 'pluto' },
-};
+// DONNÉE, pas du code : la table vit dans `validation-targets.json`, à côté de ce
+// script. Ajouter un corps au catalogue n'exige plus de toucher ce fichier.
+const CENTERS = JSON.parse(
+  readFileSync(new URL('./validation-targets.json', import.meta.url), 'utf8')
+).centers;
 
 /** Enum astronomy-engine → clé de `CENTERS`. */
 const ASTRO_CENTER = {

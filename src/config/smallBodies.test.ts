@@ -6,6 +6,14 @@ import {
 } from './smallBodies';
 import { OrbitalElementsService } from '@/core/OrbitalElementsService';
 import { keplerianPositionEcliptic } from '@/core/kepler';
+import referenceVectorsUntyped from './smallBodyReferenceVectors.json';
+
+// L'import JSON élargit les tuples : on redonne au fixture le type exact qu'il porte.
+interface ReferenceVectors {
+  waveA: readonly (readonly [string, string, number, number, number])[];
+  epoch: Readonly<Record<string, readonly [number, number, number]>>;
+}
+const referenceVectors = referenceVectorsUntyped as unknown as ReferenceVectors;
 
 const D2R = Math.PI / 180;
 
@@ -191,189 +199,15 @@ describe('SMALL_BODIES catalogue', () => {
  * frôlé par la Terre), d'où 0,005 et 0,08 UA. Une anomalie moyenne prise un seul jour trop tôt
  * déplace Ryugu d'environ 0,013 UA et fait échouer la première borne.
  */
+// La donnée vit dans `smallBodyReferenceVectors.json` (relevés Horizons, jamais saisis
+// ici) : ajouter un corps n'exige plus de toucher à ce fichier.
 const WAVE_A_VECTORS: readonly (readonly [
   string,
   string,
   number,
   number,
   number,
-])[] = [
-  [
-    'eros',
-    '2016-01-02T00:00:00.000Z',
-    -0.8059560868703679,
-    -1.265872466987505,
-    -0.2638594941419051,
-  ],
-  [
-    'eros',
-    '2025-01-01T00:00:00.000Z',
-    -0.01619866965564159,
-    -1.688559955842637,
-    -0.1844316998702361,
-  ],
-  [
-    'eros',
-    '2026-01-01T00:00:00.000Z',
-    0.1580941121361407,
-    1.167072662333513,
-    0.1506883375096972,
-  ],
-  [
-    'eros',
-    '2027-01-01T00:00:00.000Z',
-    0.9397261997129005,
-    -1.515300283938032,
-    -0.01465288108711664,
-  ],
-  [
-    'eros',
-    '2036-01-02T00:00:00.000Z',
-    1.468679317874745,
-    -0.91525630796997,
-    0.1338295459792221,
-  ],
-  [
-    'itokawa',
-    '2016-01-02T00:00:00.000Z',
-    0.2997992714222794,
-    1.59581692647044,
-    0.008202311113652272,
-  ],
-  [
-    'itokawa',
-    '2025-01-01T00:00:00.000Z',
-    0.8760300175658677,
-    1.445778958585235,
-    -0.008546486572643506,
-  ],
-  [
-    'itokawa',
-    '2026-01-01T00:00:00.000Z',
-    1.133923205317714,
-    -0.6006193039631518,
-    -0.03604197067781104,
-  ],
-  [
-    'itokawa',
-    '2027-01-01T00:00:00.000Z',
-    -0.9803860409731147,
-    0.7000250169432459,
-    0.03298822736323294,
-  ],
-  [
-    'itokawa',
-    '2036-01-02T00:00:00.000Z',
-    -0.5504280659014845,
-    1.298748557526961,
-    0.02776025049389191,
-  ],
-  [
-    'ryugu',
-    '2016-01-02T00:00:00.000Z',
-    -1.058306985911253,
-    0.1448393076229326,
-    -0.1081952985520941,
-  ],
-  [
-    'ryugu',
-    '2025-01-01T00:00:00.000Z',
-    -0.7523812149430513,
-    0.6441092508752658,
-    -0.09444993103516847,
-  ],
-  [
-    'ryugu',
-    '2026-01-01T00:00:00.000Z',
-    1.008596726970665,
-    0.4492306322012534,
-    0.08335188260817043,
-  ],
-  [
-    'ryugu',
-    '2027-01-01T00:00:00.000Z',
-    0.8836875561698768,
-    -1.056255479896267,
-    0.1208125561907056,
-  ],
-  [
-    'ryugu',
-    '2036-01-02T00:00:00.000Z',
-    0.4864436419616561,
-    -1.329697371994209,
-    0.09146724734620514,
-  ],
-  [
-    'ida',
-    '2016-01-02T00:00:00.000Z',
-    0.922677560489694,
-    2.583319695032431,
-    0.05202389927765255,
-  ],
-  [
-    'ida',
-    '2025-01-01T00:00:00.000Z',
-    2.696052005868261,
-    0.74064144636275,
-    0.04332831613638746,
-  ],
-  [
-    'ida',
-    '2026-01-01T00:00:00.000Z',
-    -0.2752245117051102,
-    2.724134910300779,
-    0.03999859252680889,
-  ],
-  [
-    'ida',
-    '2027-01-01T00:00:00.000Z',
-    -2.855181258129642,
-    0.3204479426479325,
-    -0.0283900306905861,
-  ],
-  [
-    'ida',
-    '2036-01-02T00:00:00.000Z',
-    -1.445289839963061,
-    2.373797785944518,
-    0.02029825611608795,
-  ],
-  [
-    'bennu',
-    '2016-01-02T00:00:00.000Z',
-    -0.66351663150805,
-    -1.171966383013292,
-    -0.1213368243688913,
-  ],
-  [
-    'bennu',
-    '2025-01-01T00:00:00.000Z',
-    0.325886969881149,
-    0.8307071985188852,
-    0.08655093838729493,
-  ],
-  [
-    'bennu',
-    '2026-01-01T00:00:00.000Z',
-    1.020572806698367,
-    -0.2286943928921342,
-    -0.02786035919913888,
-  ],
-  [
-    'bennu',
-    '2027-01-01T00:00:00.000Z',
-    0.4851003027982377,
-    -1.160221343359038,
-    -0.1243056583360768,
-  ],
-  [
-    'bennu',
-    '2036-01-02T00:00:00.000Z',
-    -1.078151233624072,
-    0.262975562816726,
-    0.03159116224518278,
-  ],
-];
+])[] = referenceVectors.waveA;
 
 describe('wave A asteroids vs live JPL Horizons state vectors', () => {
   it.each(WAVE_A_VECTORS)('%s @ %s', (name, iso, x, y, z) => {
@@ -412,23 +246,10 @@ describe('wave A asteroids vs live JPL Horizons state vectors', () => {
  * 18 corps, d'où 1e-8 UA (1,5 km). Une anomalie moyenne décalée de 0,001° déplace Cérès de
  * ~7 000 km, et la copie périmée de Gonggong (solution Horizons raffinée) était à 980 km.
  */
+// Même donnée, même fichier : le vecteur À l'époque de chaque corps.
 const EPOCH_VECTORS: Readonly<
   Record<string, readonly [number, number, number]>
-> = {
-  ceres: [-2.37932770592631, 0.7954860388627658, 0.4630055715910533],
-  vesta: [-1.353580437607153, -1.673136657862151, 0.2149018113721361],
-  pallas: [-0.8411384433388419, 1.653739426955205, -1.073889494800965],
-  hygiea: [-2.374062486038638, -1.463570769967126, -0.1781685951459966],
-  pluto: [-9.882489409085188, -27.96159262368592, 5.85065221499273],
-  eris: [88.38620474858071, 30.76244939161869, -26.09418397664761],
-  haumea: [-45.99689134174453, -5.1232782829825, 22.3858335370208],
-  makemake: [-43.5856155057084, 11.47554873390271, 24.91842194014122],
-  orcus: [-35.14633139166833, 28.6988609358787, -13.45001985012707],
-  quaoar: [-16.77365953461673, -39.83450325846727, 5.159494394035222],
-  gonggong: [70.2594106747693, -44.22918312798285, -7.768874824268009],
-  sedna: [61.94364088892283, 63.87353158363543, -18.58900929914583],
-  halley: [-17.38599346385816, 16.9791761108223, -7.577986613535686],
-};
+> = referenceVectors.epoch;
 
 describe('every small-body element set vs its Horizons state vector at its epoch', () => {
   it.each(SMALL_BODY_ELEMENTS.map((el) => [el.name, el.epoch] as const))(

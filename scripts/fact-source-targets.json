@@ -1,0 +1,23 @@
+{
+  "$comment": "Cibles de relevé des sources de faits — DONNÉE lue par snapshot-fact-sources.mjs. sbdb : clé du catalogue → désignation SBDB. Ajouter un petit corps au catalogue = l'ajouter ici (puis relancer `pnpm facts:snapshot`), sans toucher au script.",
+  "sbdb": {
+    "ceres": "1",
+    "pallas": "2",
+    "vesta": "4",
+    "hygiea": "10",
+    "ida": "243",
+    "eros": "433",
+    "itokawa": "25143",
+    "ryugu": "162173",
+    "bennu": "101955",
+    "halley": "1P",
+    "pluto": "134340",
+    "eris": "136199",
+    "haumea": "136108",
+    "makemake": "136472",
+    "orcus": "90482",
+    "quaoar": "50000",
+    "gonggong": "225088",
+    "sedna": "90377"
+  }
+}

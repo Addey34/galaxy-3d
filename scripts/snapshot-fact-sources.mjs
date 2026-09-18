@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/* global console, process, fetch, Buffer */
+/* global console, process, fetch, Buffer, URL */
 /**
  * Instantané des SOURCES PRIMAIRES des faits affichés (fiche d'un corps, pages par corps).
  *
@@ -446,26 +446,11 @@ async function nasaMoonCounts() {
 
 // ── JPL SBDB : petits corps ──────────────────────────────────────────────────────────────────
 
-const SBDB_TARGET = {
-  ceres: '1',
-  pallas: '2',
-  vesta: '4',
-  hygiea: '10',
-  ida: '243',
-  eros: '433',
-  itokawa: '25143',
-  ryugu: '162173',
-  bennu: '101955',
-  halley: '1P',
-  pluto: '134340',
-  eris: '136199',
-  haumea: '136108',
-  makemake: '136472',
-  orcus: '90482',
-  quaoar: '50000',
-  gonggong: '225088',
-  sedna: '90377',
-};
+// DONNÉE, pas du code : la liste vit dans `fact-source-targets.json`, à côté de ce
+// script. Ajouter un corps au catalogue n'exige plus de toucher ce fichier.
+const SBDB_TARGET = JSON.parse(
+  readFileSync(new URL('./fact-source-targets.json', import.meta.url), 'utf8')
+).sbdb;
 
 async function sbdb() {
   const out = {};
@@ -483,8 +468,17 @@ async function sbdb() {
         notes: p.notes ?? null,
       };
     };
+    // Sigma asymétrique SBDB (« -1/+4 ») : conservée telle quelle, la déparer mentirait.
     const numeric = (p) =>
-      p && { ...p, value: number(p.value), sigma: p.sigma && number(p.sigma) };
+      p && {
+        ...p,
+        value: number(p.value),
+        sigma:
+          p.sigma &&
+          (Number.isFinite(Number(String(p.sigma).replace(/,/g, '')))
+            ? Number(String(p.sigma).replace(/,/g, ''))
+            : String(p.sigma)),
+      };
     const pole = par('pole');
     out[body] = {
       url: `https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=${encodeURIComponent(sstr)}`,

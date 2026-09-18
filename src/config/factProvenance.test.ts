@@ -164,10 +164,16 @@ const elem = snapshot.jplSatellites.meanElements.bodies as Record<
 const sbdb = snapshot.sbdb as Record<
   string,
   {
-    diameterKm: { value: number; sigma: number | null; ref: string } | null;
+    // `sigma` peut être une chaîne : la SBDB publie des incertitudes asymétriques
+    // (« -1/+4 » pour le diamètre de 16 Psyché), conservées telles quelles.
+    diameterKm: {
+      value: number;
+      sigma: number | string | null;
+      ref: string;
+    } | null;
     gmKm3s2: {
       value: number;
-      sigma: number | null;
+      sigma: number | string | null;
       ref: string;
       notes: string | null;
     } | null;
