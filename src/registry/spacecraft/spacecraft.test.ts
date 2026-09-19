@@ -2,7 +2,7 @@ import { readFileSync, readdirSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { SPACECRAFT_MISSIONS } from '@/config/spacecraft';
-import { SPACECRAFT_ORDER, SPACECRAFT_RECORDS } from './index';
+import { SPACECRAFT_ORDER, SPACECRAFT_RECORDS, loadSpacecraft } from './index';
 
 const manifest = JSON.parse(
   readFileSync(
@@ -26,6 +26,15 @@ const manifest = JSON.parse(
 };
 
 describe('sondes du registre', () => {
+  it('refuse un ordre qui duplique une clé et en oublie une autre', () => {
+    const records = SPACECRAFT_RECORDS;
+    const order = [...SPACECRAFT_ORDER];
+    order[order.length - 1] = order[0]!;
+    expect(() => loadSpacecraft(records, order)).toThrow(
+      'registre des sondes'
+    );
+  });
+
   it('déclare exactement les fiches présentes', () => {
     const files = readdirSync(import.meta.dirname)
       .filter((name) => name.endsWith('.json') && name !== 'order.json')
