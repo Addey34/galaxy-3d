@@ -29,9 +29,7 @@ describe('sondes du registre', () => {
     const records = SPACECRAFT_RECORDS;
     const order = [...SPACECRAFT_ORDER];
     order[order.length - 1] = order[0]!;
-    expect(() => loadSpacecraft(records, order)).toThrow(
-      'registre des sondes'
-    );
+    expect(() => loadSpacecraft(records, order)).toThrow('registre des sondes');
   });
 
   it('déclare exactement les fiches présentes', () => {
