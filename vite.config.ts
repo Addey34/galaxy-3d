@@ -557,8 +557,29 @@ export default defineConfig({
             },
           },
           {
-            // Textures + éphémérides : immutables (hash dans le nom), cache à la demande.
-            // Plafonné pour ne pas saturer le disque d'un poste partagé.
+            // Textures et modèles ont des NOMS STABLES (ex. earth_surface_1k.jpg,
+            // bennu_shape_2k.glb) : une correction peut réécrire les mêmes URLs. Réseau
+            // d'abord pour prendre une nouvelle release, cache en secours hors-ligne.
+            // Cette règle DOIT rester avant le CacheFirst générique ci-dessous.
+            urlPattern: ({ url }) =>
+              url.pathname.startsWith('/assets/textures/') ||
+              url.pathname.startsWith('/assets/models/'),
+            handler: 'NetworkFirst',
+            options: {
+              cacheName: 'ssv-stable-visual-assets',
+              networkTimeoutSeconds: 4,
+              expiration: {
+                maxEntries: 200,
+                maxAgeSeconds: 60 * 60 * 24 * 7,
+                purgeOnQuotaError: true,
+              },
+              cacheableResponse: { statuses: [0, 200] },
+            },
+          },
+          {
+            // Assets réellement versionnés par leur nom (chunks Vite, binaires d'éphémérides
+            // hashés, etc.) : cache à la demande. Les préfixes à noms stables sont interceptés
+            // par les règles spécifiques ci-dessus.
             urlPattern: ({ url }) => url.pathname.startsWith('/assets/'),
             handler: 'CacheFirst',
             options: {
