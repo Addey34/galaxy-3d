@@ -65,9 +65,10 @@ async function servedEntryName() {
 /**
  * Une vignette de partage NE DOIT PAS être mise en cache comme un asset versionné.
  *
- * `firebase.json` pose un cache immuable d'UN AN sur `/assets/**`, ce qui est juste : leurs
- * noms portent un hachage, donc un nouveau contenu a toujours un nouveau nom. Les vignettes,
- * elles, ont un nom STABLE (`/social/bennu.jpg`) et des octets réécrits à chaque build. Les
+ * `firebase.json` garde un cache immuable d'UN AN sur les assets réellement versionnés, mais
+ * les préfixes à nom STABLE (`/assets/textures/**`, `/assets/models/**`) le réécrasent avec
+ * une politique de revalidation. Les vignettes ont elles aussi un nom STABLE
+ * (`/social/bennu.jpg`) et des octets réécrits à chaque build. Les
  * ranger sous `/assets/` — ou étendre la règle par inadvertance — figerait pendant un an une
  * image qu'on ne pourrait plus corriger, chez tous ceux qui l'ont déjà vue.
  *
@@ -88,6 +89,27 @@ async function assertCardIsNotImmutable() {
       `  firebase.json — les vignettes doivent rester en dehors.`
     );
   console.log(`OK — vignettes servies avec « ${cacheControl} », non figees`);
+  return null;
+}
+
+
+/** Les URLs stables qui peuvent changer entre deux releases doivent se revalider rapidement. */
+async function assertStableAssetsRevalidate() {
+  const paths = [
+    '/assets/ephemerides/manifest.json',
+    '/assets/textures/earth/earth_surface_1k.jpg',
+  ];
+  for (const path of paths) {
+    const response = await fetch(`${ORIGIN}${path}`, {
+      method: 'HEAD',
+      cache: 'no-store',
+    });
+    if (!response.ok) return `${path} répond ${response.status}`;
+    const cacheControl = response.headers.get('cache-control') ?? '';
+    if (/immutable/i.test(cacheControl) || /max-age=(\\d{7,})/.test(cacheControl))
+      return `${path} a un nom stable mais est servi avec « ${cacheControl} »`;
+    console.log(`OK — ${path} se revalide avec « ${cacheControl} »`);
+  }
   return null;
 }
 
@@ -117,8 +139,13 @@ for (let attempt = 1; attempt <= ATTEMPTS; attempt++) {
 if (served === expected) {
   console.log(`OK — ${ORIGIN} sert bien ${expected}`);
   const cacheProblem = await assertCardIsNotImmutable();
+  const stableAssetProblem = await assertStableAssetsRevalidate();
   if (cacheProblem) {
     console.error(`\nCACHE DES VIGNETTES : ${cacheProblem}\n`);
+    process.exitCode = 1;
+  }
+  if (stableAssetProblem) {
+    console.error(`\nCACHE DES ASSETS STABLES : ${stableAssetProblem}\n`);
     process.exitCode = 1;
   }
 } else {
