@@ -44,10 +44,11 @@ describe('fetchTileWithContentCheck', () => {
     expect(fetchImpl).toHaveBeenCalledWith('u');
   });
 
-
   it('closes the ImageBitmap when the texture is disposed', async () => {
     const close = vi.fn();
-    const createImageBitmapMock = vi.fn(async () => ({ close }) as unknown as ImageBitmap);
+    const createImageBitmapMock = vi.fn(
+      async () => ({ close }) as unknown as ImageBitmap
+    );
     vi.stubGlobal('createImageBitmap', createImageBitmapMock);
 
     const fetchImpl = vi.fn(async () => fakeResponse(90_000));
