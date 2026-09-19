@@ -57,6 +57,24 @@
         ]
       },
       {
+        "source": "/assets/textures/**",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "public, max-age=3600, must-revalidate"
+          }
+        ]
+      },
+      {
+        "source": "/assets/models/**",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "public, max-age=3600, must-revalidate"
+          }
+        ]
+      },
+      {
         "source": "/assets/**",
         "headers": [
           {
