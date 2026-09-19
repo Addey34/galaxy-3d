@@ -70,7 +70,7 @@ export function parseSbdbRows(
     // le mouvement moyen vaut 6e-6 °/jour, donc cet arrondi laisse la date du périhélie libre
     // de ±800 jours. Les propager placerait ces comètes à des années près, sans erreur visible.
     // Il faudrait `tp` et `q` pour les positionner ; les objets interstellaires, eux, viennent
-    // d'éléments Horizons à pleine précision (`config/interstellar.ts`).
+    // d'éléments Horizons à pleine précision (`registry/interstellar/`).
     if (a <= 0 || e >= 1) continue;
 
     const rawName = nameCol >= 0 ? row[nameCol] : `sb-${r}`;
