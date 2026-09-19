@@ -110,7 +110,10 @@ function consumeSharedRequest(
         request.controller.abort();
       }
     };
-    const finish = (callback: (value: unknown) => void, value: unknown): void => {
+    const finish = (
+      callback: (value: unknown) => void,
+      value: unknown
+    ): void => {
       if (finished) return;
       finished = true;
       signal?.removeEventListener('abort', onAbort);
@@ -206,7 +209,9 @@ async function fetchJson(
 /** Vide le cache mémoire du client, notamment entre deux scénarios de test. */
 export function clearMeteoClientCache(): void {
   responseCache.clear();
-  [...inFlightRequests.values()].forEach(({ controller }) => controller.abort());
+  [...inFlightRequests.values()].forEach(({ controller }) =>
+    controller.abort()
+  );
   inFlightRequests.clear();
 }
 
