@@ -15,7 +15,7 @@
  */
 import { z } from 'zod';
 import { Body } from 'astronomy-engine';
-import { EXPRESSION_FORMS } from '../load';
+import { decode, EXPRESSION_FORMS } from '../load';
 
 const kebabId = z.string().regex(/^[a-z0-9]+(-[a-z0-9]+)*$/);
 
@@ -111,6 +111,46 @@ const fact = z
       ctx.addIssue({ code: 'custom', message: 'une source sans méthode' });
     if (f.method !== undefined && f.source === undefined)
       ctx.addIssue({ code: 'custom', message: 'une méthode sans source' });
+    if (
+      f.source === undefined &&
+      (f.asOf !== undefined ||
+        f.uncertainty !== undefined ||
+        f.detail !== undefined ||
+        f.citation !== undefined)
+    )
+      ctx.addIssue({
+        code: 'custom',
+        message: 'les métadonnées de provenance exigent une source',
+      });
+    if (f.asOf !== undefined) {
+      const match = /^(\d{4})-(\d{2})(?:-(\d{2}))?$/.exec(f.asOf);
+      const year = Number(match?.[1]);
+      const month = Number(match?.[2]);
+      const day = match?.[3] === undefined ? undefined : Number(match[3]);
+      const validMonth = month >= 1 && month <= 12;
+      const lastDay =
+        day === undefined || !validMonth
+          ? 31
+          : new Date(Date.UTC(year, month, 0)).getUTCDate();
+      if (!validMonth || (day !== undefined && (day < 1 || day > lastDay)))
+        ctx.addIssue({ code: 'custom', message: 'date asOf impossible' });
+    }
+    if (f.uncertainty !== undefined) {
+      try {
+        const uncertainty = decode(f.uncertainty, 'facts.uncertainty');
+        if (
+          typeof uncertainty !== 'number' ||
+          !Number.isFinite(uncertainty) ||
+          uncertainty < 0
+        )
+          throw new Error('invalid');
+      } catch {
+        ctx.addIssue({
+          code: 'custom',
+          message: 'uncertainty doit être un nombre fini positif ou nul',
+        });
+      }
+    }
     if (f.published === false && f.reason === undefined)
       ctx.addIssue({ code: 'custom', message: 'non publié sans raison' });
     if (f.reason !== undefined && f.published !== false)

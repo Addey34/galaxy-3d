@@ -95,6 +95,11 @@ describe('le schéma des entités refuse', () => {
     ['une couleur qui n’est pas 0xRRGGBB', withConfig({ orbitalColor: '#112233' })], // prettier-ignore
     ['une classe de cible hors EPNCore', { ...valid, targetClass: 'interstellar_object' }], // prettier-ignore
     ['un fait cité sans méthode', withFact({ value: 1, source: 'nssdca-fact-sheets' })], // prettier-ignore
+    ['une incertitude négative', withFact({ value: 1, source: 'nssdca-fact-sheets', method: 'measured', uncertainty: -1 })], // prettier-ignore
+    ['une incertitude non numérique', withFact({ value: 1, source: 'nssdca-fact-sheets', method: 'measured', uncertainty: 'large' })], // prettier-ignore
+    ['une incertitude qui dérive vers Infinity', withFact({ value: 1, source: 'nssdca-fact-sheets', method: 'measured', uncertainty: { $rotationHours: 0 } })], // prettier-ignore
+    ['des métadonnées de provenance sans source', withFact({ value: 1, uncertainty: 0.1 })], // prettier-ignore
+    ['une date asOf impossible', withFact({ value: 1, source: 'nssdca-fact-sheets', method: 'measured', asOf: '2026-02-31' })], // prettier-ignore
     [
       'un fait non publié sans raison',
       withFact({ value: 1, published: false }),

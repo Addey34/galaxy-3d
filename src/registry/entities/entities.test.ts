@@ -92,6 +92,32 @@ describe('le chargeur refuse', () => {
     expect(() => decode('#112233', 'test', 'orbitalColor')).toThrow('0xRRGGBB');
   });
 
+  it('une forme numérique qui produit Infinity', () => {
+    expect(() => decode({ $rotationHours: 0 }, 'test')).toThrow('non fini');
+  });
+
+  it('une incertitude négative ou non numérique', () => {
+    const record = (uncertainty: unknown) =>
+      catalogueRecord(
+        'a',
+        { realData: {} },
+        {
+          radiusKm: {
+            value: 1,
+            source: 's',
+            method: 'measured',
+            uncertainty: uncertainty as never,
+          },
+        }
+      );
+    expect(() => loadCatalogue([record(-1)], ['a'])).toThrow(
+      'nombre fini positif ou nul'
+    );
+    expect(() => loadCatalogue([record('large')], ['a'])).toThrow(
+      'nombre fini positif ou nul'
+    );
+  });
+
   it('des faits sans emplacement realData', () => {
     expect(() =>
       loadCatalogue(
