@@ -115,6 +115,96 @@ describe('fetchMeteoGrid', () => {
     expect(fetchMock).toHaveBeenCalledTimes(2);
   });
 
+  it('aborte le fetch réseau quand son seul consommateur est annulé', async () => {
+    const controller = new AbortController();
+    const networkSignals: AbortSignal[] = [];
+    const fetchMock = vi.fn(
+      (_input: RequestInfo | URL, init?: RequestInit) =>
+        new Promise<Response>((_resolve, reject) => {
+          const signal = init?.signal;
+          if (!(signal instanceof AbortSignal))
+            throw new Error('signal réseau manquant');
+          networkSignals.push(signal);
+          signal.addEventListener(
+            'abort',
+            () => reject(new DOMException('aborted', 'AbortError')),
+            { once: true }
+          );
+        })
+    );
+    vi.stubGlobal('fetch', fetchMock);
+
+    const request = fetchMeteoGrid(new Date('2026-08-14T12:00:00Z'), {
+      variable: 'cloud_cover',
+      forecastGrid: grid,
+      archiveGrid: grid,
+      now,
+      signal: controller.signal,
+    });
+    await Promise.resolve();
+    controller.abort();
+
+    await expect(request).rejects.toMatchObject({ name: 'AbortError' });
+    expect(networkSignals.length).toBeGreaterThan(0);
+    expect(networkSignals.every((signal) => signal.aborted)).toBe(true);
+  });
+
+  it('garde un fetch partagé vivant tant qu’un autre consommateur l’attend', async () => {
+    const firstController = new AbortController();
+    const secondController = new AbortController();
+    const networkSignals: AbortSignal[] = [];
+    const resolvers: Array<(response: Response) => void> = [];
+    const fetchMock = vi.fn(
+      (_input: RequestInfo | URL, init?: RequestInit) =>
+        new Promise<Response>((resolve) => {
+          const signal = init?.signal;
+          if (!(signal instanceof AbortSignal))
+            throw new Error('signal réseau manquant');
+          networkSignals.push(signal);
+          resolvers.push(resolve);
+        })
+    );
+    vi.stubGlobal('fetch', fetchMock);
+
+    const baseOptions = {
+      variable: 'cloud_cover',
+      forecastGrid: grid,
+      archiveGrid: grid,
+      now,
+      network: { cacheTtlMs: 0 },
+    };
+    const first = fetchMeteoGrid(new Date('2026-08-14T12:00:00Z'), {
+      ...baseOptions,
+      signal: firstController.signal,
+    });
+    await Promise.resolve();
+    await Promise.resolve();
+    const networkCallCount = fetchMock.mock.calls.length;
+
+    const second = fetchMeteoGrid(new Date('2026-08-14T12:00:00Z'), {
+      ...baseOptions,
+      signal: secondController.signal,
+    });
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(fetchMock).toHaveBeenCalledTimes(networkCallCount);
+    firstController.abort();
+    await expect(first).rejects.toMatchObject({ name: 'AbortError' });
+    expect(networkSignals.every((signal) => !signal.aborted)).toBe(true);
+
+    for (const resolve of resolvers)
+      resolve(
+        new Response(JSON.stringify(responseFor('cloud_cover')), {
+          status: 200,
+        })
+      );
+
+    await expect(second).resolves.toMatchObject({
+      plan: { source: 'forecast' },
+    });
+  });
+
   it('déduplique une réponse réussie encore en cache', async () => {
     const fetchMock = vi.fn().mockResolvedValue(
       new Response(JSON.stringify(responseFor('relative_humidity_2m')), {
