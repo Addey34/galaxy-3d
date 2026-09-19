@@ -138,7 +138,6 @@ export function createDatedTextureLayer(
     if (parentSignal?.aborted) abortFromParent();
     else parentSignal?.addEventListener('abort', abortFromParent, { once: true });
 
-    let request!: InFlightRequest;
     const promise = Promise.resolve()
       .then(() => loadTexture(cand.url, controller.signal))
       .then((texture) => {
@@ -153,10 +152,10 @@ export function createDatedTextureLayer(
       })
       .finally(() => {
         parentSignal?.removeEventListener('abort', abortFromParent);
-        if (inFlight.get(cand.id) === request) inFlight.delete(cand.id);
+        if (inFlight.get(cand.id)?.promise === promise) inFlight.delete(cand.id);
       });
 
-    request = { promise, controller };
+    const request: InFlightRequest = { promise, controller };
     inFlight.set(cand.id, request);
 
     // Supprime immédiatement une requête annulée du dédup afin qu'une nouvelle demande du
@@ -164,7 +163,7 @@ export function createDatedTextureLayer(
     controller.signal.addEventListener(
       'abort',
       () => {
-        if (inFlight.get(cand.id) === request) inFlight.delete(cand.id);
+        if (inFlight.get(cand.id)?.promise === promise) inFlight.delete(cand.id);
       },
       { once: true }
     );
