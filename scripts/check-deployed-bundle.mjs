@@ -92,7 +92,6 @@ async function assertCardIsNotImmutable() {
   return null;
 }
 
-
 /** Les URLs stables qui peuvent changer entre deux releases doivent se revalider rapidement. */
 async function assertStableAssetsRevalidate() {
   const paths = [
@@ -106,7 +105,10 @@ async function assertStableAssetsRevalidate() {
     });
     if (!response.ok) return `${path} répond ${response.status}`;
     const cacheControl = response.headers.get('cache-control') ?? '';
-    if (/immutable/i.test(cacheControl) || /max-age=(\\d{7,})/.test(cacheControl))
+    if (
+      /immutable/i.test(cacheControl) ||
+      /max-age=(\\d{7,})/.test(cacheControl)
+    )
       return `${path} a un nom stable mais est servi avec « ${cacheControl} »`;
     console.log(`OK — ${path} se revalide avec « ${cacheControl} »`);
   }
