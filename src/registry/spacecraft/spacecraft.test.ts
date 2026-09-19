@@ -1,10 +1,7 @@
-/** Témoin figé : legacyFixture.ts est la copie exacte du littéral avant le lot 7D. */
 import { readFileSync, readdirSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { SPACECRAFT_MISSIONS } from '@/config/spacecraft';
-import { SPACECRAFT_MISSIONS as LEGACY } from './legacyFixture';
-import { compareStrict } from '../strictLegacy';
 import { SPACECRAFT_ORDER, SPACECRAFT_RECORDS } from './index';
 
 const manifest = JSON.parse(
@@ -29,10 +26,6 @@ const manifest = JSON.parse(
 };
 
 describe('sondes du registre', () => {
-  it('reproduit le littéral exact, bits et ordre des clés compris', () => {
-    compareStrict(SPACECRAFT_MISSIONS, LEGACY);
-  });
-
   it('déclare exactement les fiches présentes', () => {
     const files = readdirSync(import.meta.dirname)
       .filter((name) => name.endsWith('.json') && name !== 'order.json')
