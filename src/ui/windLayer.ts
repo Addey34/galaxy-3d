@@ -73,7 +73,7 @@ export function setupWindLayer(api: PublicAPI): WeatherLayerHandle | null {
     name: 'WindLayer',
     enabled: true,
     keyForDate: meteoHourKey,
-    fetchForKey: async (key) => {
+    fetchForKey: async (key, signal) => {
       // VOYAGE TEMPS : la clé (YYYY-MM-DDTHH) porte la date de simulation. On route vers
       // l'archive ERA5 (passé lointain) ou le forecast GFS (zone récente + futur ≤ horizon)
       // via le plan partagé. Hors plage (avant 1940 / futur au-delà de l'horizon) → AUCUNE
@@ -88,7 +88,7 @@ export function setupWindLayer(api: PublicAPI): WeatherLayerHandle | null {
         plan.source === 'archive' && plan.date
           ? buildWindArchiveUrl(plan.date, gridOptions)
           : buildWindGridUrl(gridOptions);
-      const res = await fetch(url);
+      const res = signal ? await fetch(url, { signal }) : await fetch(url);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const json = (await res.json()) as unknown;
       // L'index horaire sélectionne l'heure du jour : forecast_days:1 comme archive (24 h/jour)
