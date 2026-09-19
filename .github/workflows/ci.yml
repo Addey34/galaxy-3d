@@ -18,15 +18,17 @@ jobs:
   # test e2e navigateur capricieux (GPU logiciel CI).
   verify:
     name: Verify and build
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     # Ce gate conditionne le deploiement : un blocage ne doit jamais l'immobiliser des heures.
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4, resolved 2026-09-19
         with:
-          version: 10
-      - uses: actions/setup-node@v4
+          persist-credentials: false
+      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4, resolved 2026-09-19
+        with:
+          version: 10.34.5
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4, resolved 2026-09-19
         with:
           node-version: 22
           cache: pnpm
@@ -66,7 +68,7 @@ jobs:
       # attendre l'e2e). Requiert le secret FIREBASE_TOKEN.
       - name: Deploy to Firebase Hosting
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        run: pnpm dlx firebase-tools deploy --only hosting --token ${{ secrets.FIREBASE_TOKEN }}
+        run: pnpm dlx firebase-tools@15.30.2 deploy --only hosting --token ${{ secrets.FIREBASE_TOKEN }}
 
       # « CI verte » ne dit rien de ce qui est EN LIGNE. Cette etape recupere l'index servi et
       # compare le nom hache de l'entree applicative a celle qu'on vient de construire.
@@ -84,7 +86,7 @@ jobs:
   # le rendu WebGL en GPU logiciel CI est lent et parfois capricieux sur les scenarios lourds.
   e2e:
     name: Browser tests (e2e ${{ matrix.shard }}/4)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     # SHARDING. La suite entiere ne tenait PAS dans le budget : mesure du 2026-09-08, elle
     # atteignait 69 tests sur 88 en 35 min avec ZERO echec, puis se faisait couper. C'est la
     # cause des 22 runs annules de l'historique, longtemps prise pour de l'instabilite.
@@ -108,11 +110,13 @@ jobs:
     # des heures et polluer le statut global. Large marge sur les ~11-16 min attendus par shard.
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4, resolved 2026-09-19
         with:
-          version: 10
-      - uses: actions/setup-node@v4
+          persist-credentials: false
+      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4, resolved 2026-09-19
+        with:
+          version: 10.34.5
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4, resolved 2026-09-19
         with:
           node-version: 22
           cache: pnpm
@@ -123,7 +127,7 @@ jobs:
       - run: pnpm exec playwright test --shard=${{ matrix.shard }}/4
       - name: Upload Playwright diagnostics
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4, resolved 2026-09-19
         with:
           name: playwright-diagnostics-${{ github.run_id }}-${{ matrix.shard }}
           path: |
