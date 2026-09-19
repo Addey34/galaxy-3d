@@ -53,7 +53,10 @@ describe('schéma des interstellaires', () => {
       'date de solution',
       {
         ...valid,
-        solution: { ...(valid.solution as object), solutionDate: '2018-Foo-99' },
+        solution: {
+          ...(valid.solution as object),
+          solutionDate: '2018-Foo-99',
+        },
       },
     ],
     [
