@@ -50,6 +50,11 @@ export interface DatedTextureLayerConfig {
   /** Réglages du backoff exponentiel après échec réseau (défauts de createBackoff). */
   retry?: BackoffOptions;
   /**
+   * Nombre maximal de textures datées gardées en mémoire. Les deux dernières appliquées restent
+   * protégées pour le fondu pluie map→mapB. Défaut 8, minimum effectif 2.
+   */
+  maxCachedTextures?: number;
+  /**
    * Chargeur de texture injectable (tests). Reçoit l'URL et un signal d'annulation, résout
    * une THREE.Texture, rejette (échec réseau) ou rejette `EmptyTileError` (tuile vide →
    * candidat suivant).
@@ -98,8 +103,44 @@ export function createDatedTextureLayer(
       ];
     });
 
-  // Cache par id de candidat (image réutilisée entre visites) + dédup des requêtes en vol.
+  // Cache LRU par id de candidat (image réutilisée entre visites) + dédup des requêtes en vol.
+  // Deux textures appliquées sont protégées : la pluie peut référencer simultanément l'ancienne
+  // frame dans `map` et la nouvelle dans `mapB` pendant son fondu.
   const cache = new Map<string, THREE.Texture>();
+  const maxCachedTextures = Math.max(
+    2,
+    Math.floor(config.maxCachedTextures ?? 8)
+  );
+  const recentAppliedCandidateIds: string[] = [];
+
+  function touchCachedTexture(id: string): THREE.Texture | undefined {
+    const texture = cache.get(id);
+    if (!texture) return undefined;
+    cache.delete(id);
+    cache.set(id, texture);
+    return texture;
+  }
+
+  function trimCache(extraProtectedId?: string): void {
+    const protectedIds = new Set(recentAppliedCandidateIds);
+    if (extraProtectedId) protectedIds.add(extraProtectedId);
+    for (const [id, texture] of cache) {
+      if (cache.size <= maxCachedTextures) break;
+      if (protectedIds.has(id)) continue;
+      cache.delete(id);
+      texture.dispose();
+    }
+  }
+
+  function rememberAppliedCandidate(id: string): void {
+    const existingIndex = recentAppliedCandidateIds.indexOf(id);
+    if (existingIndex >= 0) recentAppliedCandidateIds.splice(existingIndex, 1);
+    recentAppliedCandidateIds.push(id);
+    while (recentAppliedCandidateIds.length > 2)
+      recentAppliedCandidateIds.shift();
+    trimCache();
+  }
+
   type InFlightRequest = {
     promise: Promise<THREE.Texture>;
     controller: AbortController;
@@ -127,11 +168,28 @@ export function createDatedTextureLayer(
     cand: SourceCandidate,
     parentSignal?: AbortSignal
   ): Promise<THREE.Texture> {
-    const cached = cache.get(cand.id);
+    const cached = touchCachedTexture(cand.id);
     if (cached) return Promise.resolve(cached);
 
     const existing = inFlight.get(cand.id);
-    if (existing) return existing.promise;
+    if (existing) {
+      // Un préchargement peut devenir la demande principale. Dans ce cas, rattacher son fetch
+      // au signal de la demande pour qu'un nouveau time-travel puisse réellement l'annuler.
+      if (parentSignal) {
+        const abortExisting = (): void =>
+          existing.controller.abort(parentSignal.reason);
+        if (parentSignal.aborted) abortExisting();
+        else {
+          parentSignal.addEventListener('abort', abortExisting, { once: true });
+          void existing.promise
+            .finally(() =>
+              parentSignal.removeEventListener('abort', abortExisting)
+            )
+            .catch(() => {});
+        }
+      }
+      return existing.promise;
+    }
 
     const controller = new AbortController();
     const abortFromParent = (): void => controller.abort(parentSignal?.reason);
@@ -148,7 +206,11 @@ export function createDatedTextureLayer(
           texture.dispose();
           throw abortError();
         }
+        cache.delete(cand.id);
         cache.set(cand.id, texture);
+        // Protéger la texture fraîche le temps qu'elle soit appliquée : avec une limite de 2,
+        // les deux textures du crossfade précédent peuvent encore être référencées.
+        trimCache(cand.id);
         return texture;
       })
       .finally(() => {
@@ -257,6 +319,7 @@ export function createDatedTextureLayer(
           return;
         if (requestKey === appliedRequestKey) return;
         config.apply(texture);
+        rememberAppliedCandidate(candidate.id);
         config.onResolved?.(candidate);
         config.onStateChange?.('ready');
         appliedRequestKey = requestKey;
