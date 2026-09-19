@@ -33,6 +33,13 @@ jobs:
           node-version: 22
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      - name: Diagnose meteo client formatting
+        run: |
+          pnpm exec prettier --write src/core/meteoClient.ts
+          echo '---METEO START---'
+          cat src/core/meteoClient.ts
+          echo '---METEO END---'
+          git checkout -- src/core/meteoClient.ts
       - run: pnpm verify
       - run: pnpm audit:prod
       - run: pnpm build
