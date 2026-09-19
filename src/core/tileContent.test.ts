@@ -65,6 +65,19 @@ describe('fetchTileWithContentCheck', () => {
     vi.unstubAllGlobals();
   });
 
+  it('forwards an AbortSignal to fetch', async () => {
+    const controller = new AbortController();
+    const fetchImpl = vi.fn(async () => fakeResponse(90_000));
+    await fetchTileWithContentCheck('u', {
+      fetchImpl: fetchImpl as unknown as typeof fetch,
+      makeTexture,
+      signal: controller.signal,
+    });
+    expect(fetchImpl).toHaveBeenCalledWith('u', {
+      signal: controller.signal,
+    });
+  });
+
   it('throws EmptyTileError for an empty tile (below threshold)', async () => {
     const fetchImpl = vi.fn(async () => fakeResponse(3_000));
     await expect(
