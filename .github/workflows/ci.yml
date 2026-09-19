@@ -36,6 +36,13 @@ jobs:
       - run: pnpm verify
       - run: pnpm audit:prod
       - run: pnpm build
+      - name: Diagnose generated fingerprint baseline
+        run: |
+          node scripts/fingerprint-generated.mjs --write
+          echo '---FINGERPRINT START---'
+          cat src/seo/generated-fingerprint.json
+          echo '---FINGERPRINT END---'
+          git checkout -- src/seo/generated-fingerprint.json
 
       # EMPREINTE DES DOCUMENTS GENERES. Le build derive 114 pages, le sitemap et 56 vignettes
       # du catalogue. Une migration qui change une valeur, un ordre de cles ou un arrondi ne
