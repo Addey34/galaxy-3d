@@ -25,6 +25,8 @@ export interface MeteoGridFetchOptions {
   forecastGrid: MeteoGridOptions;
   archiveGrid: MeteoGridOptions;
   now?: Date;
+  /** Annule ce consommateur ; le fetch partagé n'est aborté que si aucun autre ne l'attend. */
+  signal?: AbortSignal;
   /** Réglages réseau facultatifs, principalement utiles aux tests déterministes. */
   network?: MeteoNetworkOptions;
 }
@@ -55,7 +57,15 @@ const DEFAULT_NETWORK: Required<Omit<MeteoNetworkOptions, 'sleep'>> = {
 };
 
 const responseCache = new Map<string, { expiresAt: number; value: unknown }>();
-const inFlightRequests = new Map<string, Promise<unknown>>();
+
+interface SharedRequest {
+  promise: Promise<unknown>;
+  controller: AbortController;
+  consumers: number;
+  settled: boolean;
+}
+
+const inFlightRequests = new Map<string, SharedRequest>();
 
 function requestKey(endpoint: string, body: object): string {
   return endpoint + '|' + JSON.stringify(body);
@@ -76,10 +86,55 @@ function wait(delayMs: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, delayMs));
 }
 
+function abortReason(signal?: AbortSignal): Error {
+  return signal?.reason instanceof Error
+    ? signal.reason
+    : new DOMException('Requête annulée', 'AbortError');
+}
+
+function consumeSharedRequest(
+  request: SharedRequest,
+  signal?: AbortSignal
+): Promise<unknown> {
+  request.consumers++;
+
+  return new Promise((resolve, reject) => {
+    let finished = false;
+
+    const release = (): void => {
+      request.consumers = Math.max(0, request.consumers - 1);
+      if (request.consumers === 0 && !request.settled)
+        request.controller.abort();
+    };
+    const finish = (
+      callback: (value: unknown) => void,
+      value: unknown
+    ): void => {
+      if (finished) return;
+      finished = true;
+      signal?.removeEventListener('abort', onAbort);
+      release();
+      callback(value);
+    };
+    const onAbort = (): void => finish(reject, abortReason(signal));
+
+    if (signal?.aborted) {
+      onAbort();
+      return;
+    }
+    signal?.addEventListener('abort', onAbort, { once: true });
+    void request.promise.then(
+      (value) => finish(resolve, value),
+      (error) => finish(reject, error)
+    );
+  });
+}
+
 async function fetchJson(
   endpoint: string,
   body: object,
-  options: MeteoNetworkOptions = {}
+  options: MeteoNetworkOptions = {},
+  signal?: AbortSignal
 ): Promise<unknown> {
   const network = { ...DEFAULT_NETWORK, ...options };
   const key = requestKey(endpoint, body);
@@ -88,9 +143,10 @@ async function fetchJson(
   if (cached) responseCache.delete(key);
 
   const pending = inFlightRequests.get(key);
-  if (pending) return pending;
+  if (pending) return consumeSharedRequest(pending, signal);
 
-  const request = (async (): Promise<unknown> => {
+  const controller = new AbortController();
+  const requestPromise = (async (): Promise<unknown> => {
     for (
       let attempt = 0;
       attempt < Math.max(1, network.maxAttempts);
@@ -100,6 +156,7 @@ async function fetchJson(
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
+        signal: controller.signal,
       });
       if (response.ok) {
         const value = (await response.json()) as unknown;
@@ -122,21 +179,32 @@ async function fetchJson(
       );
       const delay = retryAfterMs(response) ?? exponential;
       await (network.sleep ?? wait)(Math.max(0, delay));
+      if (controller.signal.aborted) throw abortReason(controller.signal);
     }
     throw new Error('Open-Meteo request exhausted retries');
   })();
 
+  const request: SharedRequest = {
+    promise: requestPromise,
+    controller,
+    consumers: 0,
+    settled: false,
+  };
   inFlightRequests.set(key, request);
-  try {
-    return await request;
-  } finally {
-    inFlightRequests.delete(key);
-  }
+  void requestPromise
+    .finally(() => {
+      request.settled = true;
+      if (inFlightRequests.get(key) === request) inFlightRequests.delete(key);
+    })
+    .catch(() => {});
+
+  return consumeSharedRequest(request, signal);
 }
 
 /** Vide le cache mémoire du client, notamment entre deux scénarios de test. */
 export function clearMeteoClientCache(): void {
   responseCache.clear();
+  [...inFlightRequests.values()].forEach(({ controller }) => controller.abort());
   inFlightRequests.clear();
 }
 
@@ -161,7 +229,9 @@ export async function fetchMeteoGrid(
       : { pastDays: plan.pastDays, forecastDays: plan.forecastDays }),
   });
   const responses = await Promise.all(
-    payloads.map((body) => fetchJson(endpoint, body, options.network))
+    payloads.map((body) =>
+      fetchJson(endpoint, body, options.network, options.signal)
+    )
   );
   const hour = isArchive
     ? archiveHourIndex(simDate)
