@@ -10,9 +10,20 @@ const localized = z
   .strict();
 
 const MONTHS = new Map(
-  ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'].map(
-    (month, index) => [month, index]
-  )
+  [
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'May',
+    'Jun',
+    'Jul',
+    'Aug',
+    'Sep',
+    'Oct',
+    'Nov',
+    'Dec',
+  ].map((month, index) => [month, index])
 );
 const UNIX_EPOCH_JD = 2_440_587.5;
 const MS_PER_DAY = 86_400_000;
