@@ -42,6 +42,8 @@ export interface FetchTileOptions {
   minBytes?: number;
   /** `fetch` injectable (tests). Défaut : le fetch global. */
   fetchImpl?: typeof fetch;
+  /** Signal d'annulation de la requête réseau. */
+  signal?: AbortSignal;
   /** Fabrique de texture depuis un blob (injectable pour les tests hors DOM). */
   makeTexture?: (blob: Blob) => Promise<THREE.Texture>;
 }
@@ -83,7 +85,9 @@ export async function fetchTileWithContentCheck(
   const doFetch = options.fetchImpl ?? fetch;
   const makeTexture = options.makeTexture ?? defaultMakeTexture;
 
-  const res = await doFetch(url);
+  const res = options.signal
+    ? await doFetch(url, { signal: options.signal })
+    : await doFetch(url);
   if (!res.ok) throw new Error(`HTTP ${res.status} : ${url}`);
   const blob = await res.blob();
   if (isLikelyEmptyBySize(blob.size, minBytes)) {
