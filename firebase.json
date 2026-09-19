@@ -31,6 +31,15 @@
         ]
       },
       {
+        "source": "/assets/**",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "public, max-age=31536000, immutable"
+          }
+        ]
+      },
+      {
         "source": "/assets/kernels/**",
         "headers": [
           {
@@ -57,11 +66,20 @@
         ]
       },
       {
-        "source": "/assets/**",
+        "source": "/assets/textures/**",
         "headers": [
           {
             "key": "Cache-Control",
-            "value": "public, max-age=31536000, immutable"
+            "value": "public, max-age=3600, must-revalidate"
+          }
+        ]
+      },
+      {
+        "source": "/assets/models/**",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "public, max-age=3600, must-revalidate"
           }
         ]
       },
