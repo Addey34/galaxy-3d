@@ -257,10 +257,7 @@ function provenanceOf(entry: FactEntry, where: string): FactProvenance | null {
   if (entry.citation !== undefined) provenance.citation = entry.citation;
   if (entry.asOf !== undefined) provenance.asOf = entry.asOf;
   if (entry.uncertainty !== undefined) {
-    const uncertainty = decode(
-      entry.uncertainty,
-      `${where}.uncertainty`
-    );
+    const uncertainty = decode(entry.uncertainty, `${where}.uncertainty`);
     if (
       typeof uncertainty !== 'number' ||
       !Number.isFinite(uncertainty) ||
