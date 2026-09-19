@@ -2,7 +2,8 @@
 /* global console, process, fetch, URLSearchParams */
 /**
  * Dérive les éléments hyperboliques des objets interstellaires DEPUIS l'API JPL Horizons en
- * direct, et les imprime prêts à coller dans `src/config/interstellar.ts`.
+ * direct, et imprime pour chaque objet le fragment `solution + elements` prêt à reporter dans
+ * `src/registry/interstellar/<id>.json`.
  *
  * Pourquoi un script plutôt qu'une saisie. Les éléments d'une trajectoire ouverte se
  * trouvent partout, à des époques différentes et souvent arrondis ; or une anomalie moyenne
@@ -99,24 +100,32 @@ for (const object of OBJECTS) {
     throw new Error(`${object.key} : e=${e}, a=${a} — pas une hyperbole`);
   }
 
+  if (!record || !solution)
+    throw new Error(`${object.key} : métadonnées de solution Horizons absentes`);
+
+  const registryFragment = {
+    solution: {
+      horizonsRec: Number(record),
+      solutionDate: solution,
+      epochJd,
+    },
+    elements: {
+      semiMajorAxisAU: a,
+      eccentricity: e,
+      inclinationRad: { $deg: field(el, 'IN') },
+      ascendingNodeRad: { $deg: field(el, 'OM') },
+      argPerihelionRad: { $deg: field(el, 'W') },
+      meanAnomalyAtEpochRad: { $deg: field(el, 'MA') },
+      epoch: { $date: jdToIso(epochJd) },
+    },
+  };
   console.log(
-    `  // Horizons rec #${record}, solution ${solution}, ${object.expectedName}.`
+    `// ${object.key} → src/registry/interstellar/${object.key}.json`
   );
+  console.log(JSON.stringify(registryFragment, null, 2));
   console.log(
-    `  // Éléments osculateurs à l'époque de la solution (JD ${epochJd}).`
+    `// Tp Horizons (contrôle, non stocké) : JD ${field(el, 'Tp')}`
   );
-  console.log(`  ${object.key}: {`);
-  console.log(`    a: ${a},`);
-  console.log(`    e: ${e},`);
-  console.log(`    iDeg: ${field(el, 'IN')},`);
-  console.log(`    omDeg: ${field(el, 'OM')},`);
-  console.log(`    wDeg: ${field(el, 'W')},`);
-  console.log(`    maDeg: ${field(el, 'MA')},`);
-  console.log(`    epoch: '${jdToIso(epochJd)}',`);
-  console.log(
-    `    // Tp Horizons (contrôle, non stocké) : JD ${field(el, 'Tp')}`
-  );
-  console.log('  },');
 
   if (!withVectors) continue;
 
