@@ -92,7 +92,6 @@ describe('le chargeur refuse', () => {
     expect(() => decode('#112233', 'test', 'orbitalColor')).toThrow('0xRRGGBB');
   });
 
-
   it('une forme numérique qui produit Infinity', () => {
     expect(() => decode({ $rotationHours: 0 }, 'test')).toThrow('non fini');
   });
