@@ -1,0 +1,28 @@
+{
+  "$schema": "../schema/spacecraft.schema.json",
+  "id": "parker-solar-probe",
+  "targetClass": "spacecraft",
+  "displayName": {
+    "en": "Parker Solar Probe",
+    "fr": "Sonde solaire Parker"
+  },
+  "description": {
+    "en": "Launched in 2018, repeatedly diving closer to the Sun than any spacecraft before it.",
+    "fr": "Lancée en 2018, elle plonge à répétition plus près du Soleil qu’aucune sonde avant elle."
+  },
+  "launchDate": "2018-08-12",
+  "color": "0xff5555",
+  "identifiers": {
+    "naif": -96
+  },
+  "coverage": {
+    "temporal": {
+      "interval": [
+        [
+          "2018-08-13T00:00:00Z",
+          "2029-12-31T00:00:00Z"
+        ]
+      ]
+    }
+  }
+}

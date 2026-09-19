@@ -1,7 +1,7 @@
 /**
  * Objets interstellaires — couche instrument 2D (`src/ui/interstellarOverlay.ts`).
  *
- * Données dérivées du registre `src/registry/interstellar/` : ces corps n'ont pas de mesh
+ * Contenu uniquement, séparé du catalogue comme `spacecraft.ts` : ces corps n'ont pas de mesh
  * (quelques centaines de mètres à quelques kilomètres, invisibles à vraie échelle — l'invariant
  * Explo interdit de leur donner une taille apparente plancher) et pas d'orbite FERMÉE : ils
  * traversent le Système solaire une seule fois, sur une hyperbole (e > 1).
@@ -17,7 +17,7 @@
  */
 import type { LocalizedText } from '@/types';
 import { hyperbolicPerihelionDate, type OrbitalElements } from '@/core/kepler';
-import { loadInterstellarObjects } from '@/registry/interstellar';
+import { DEG_TO_RAD as D2R } from '@/core/MathConstants';
 
 export interface InterstellarObject {
   /** Clé stable (minuscule, sans espace). */
@@ -46,8 +46,79 @@ export const INTERSTELLAR_TRAJECTORY_SAMPLES = 512;
 
 const MS_PER_JULIAN_YEAR = 365.25 * 86_400_000;
 
-export const INTERSTELLAR_OBJECTS: readonly InterstellarObject[] =
-  loadInterstellarObjects();
+interface RawElements {
+  a: number;
+  e: number;
+  iDeg: number;
+  omDeg: number;
+  wDeg: number;
+  maDeg: number;
+  epoch: string;
+}
+
+function toElements(raw: RawElements): OrbitalElements {
+  return {
+    semiMajorAxisAU: raw.a,
+    eccentricity: raw.e,
+    inclinationRad: raw.iDeg * D2R,
+    ascendingNodeRad: raw.omDeg * D2R,
+    argPerihelionRad: raw.wDeg * D2R,
+    meanAnomalyAtEpochRad: raw.maDeg * D2R,
+    epoch: new Date(raw.epoch),
+  };
+}
+
+export const INTERSTELLAR_OBJECTS: readonly InterstellarObject[] = [
+  {
+    name: 'oumuamua',
+    displayName: { en: '1I/ʻOumuamua', fr: '1I/ʻOumuamua' },
+    designation: '1I/2017 U1',
+    // Horizons rec #50322080, solution 2018-Jun-26 (Micheli et al. 2018, accélération
+    // non gravitationnelle comprise). Époque de la solution : JD 2458080.5.
+    elements: toElements({
+      a: -1.272345007428079,
+      e: 1.201133796102373,
+      iDeg: 122.7417062847287,
+      omDeg: 24.59690955523243,
+      wDeg: 241.8105360304899,
+      maDeg: 51.15761979385638,
+      epoch: '2017-11-23T00:00:00.000Z',
+    }),
+    color: 0x8ef5a0,
+  },
+  {
+    name: 'borisov',
+    displayName: { en: '2I/Borisov', fr: '2I/Borisov' },
+    designation: 'C/2019 Q4',
+    // Horizons rec #90004568, solution 2024-Jun-24. Époque de la solution : JD 2458853.5.
+    elements: toElements({
+      a: -0.8514922551937883,
+      e: 3.356475782676598,
+      iDeg: 44.05264247909137,
+      omDeg: 308.1477292269942,
+      wDeg: 209.1236864378081,
+      maDeg: 34.42947030729184,
+      epoch: '2020-01-05T00:00:00.000Z',
+    }),
+    color: 0x4fd6d0,
+  },
+  {
+    name: 'atlas',
+    displayName: { en: '3I/ATLAS', fr: '3I/ATLAS' },
+    designation: 'C/2025 N1',
+    // Horizons rec #90004935, solution 2026-Feb-19. Époque de la solution : JD 2461090.5.
+    elements: toElements({
+      a: -0.2638374502507929,
+      e: 6.14135144931763,
+      iDeg: 175.1164570850441,
+      omDeg: 322.1696089290779,
+      wDeg: 128.0228697185195,
+      maDeg: 818.2202457999964,
+      epoch: '2026-02-19T00:00:00.000Z',
+    }),
+    color: 0xd9f26b,
+  },
+];
 
 /** Fenêtre affichée d'un objet : ±`INTERSTELLAR_WINDOW_YEARS` autour de son périhélie. */
 export function interstellarWindow(object: InterstellarObject): {

@@ -1,0 +1,28 @@
+{
+  "$schema": "../schema/spacecraft.schema.json",
+  "id": "new-horizons",
+  "targetClass": "spacecraft",
+  "displayName": {
+    "en": "New Horizons",
+    "fr": "New Horizons"
+  },
+  "description": {
+    "en": "Launched in 2006, flew past Pluto in 2015 and the Kuiper belt object Arrokoth in 2019.",
+    "fr": "Lancée en 2006, elle a survolé Pluton en 2015 puis l’objet de la ceinture de Kuiper Arrokoth en 2019."
+  },
+  "launchDate": "2006-01-19",
+  "color": "0xc9a0ff",
+  "identifiers": {
+    "naif": -98
+  },
+  "coverage": {
+    "temporal": {
+      "interval": [
+        [
+          "2006-01-21T00:00:00Z",
+          "2049-12-29T00:00:00Z"
+        ]
+      ]
+    }
+  }
+}

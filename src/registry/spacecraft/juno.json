@@ -1,0 +1,28 @@
+{
+  "$schema": "../schema/spacecraft.schema.json",
+  "id": "juno",
+  "targetClass": "spacecraft",
+  "displayName": {
+    "en": "Juno",
+    "fr": "Juno"
+  },
+  "description": {
+    "en": "Launched in 2011, orbiting Jupiter since 2016 on a long polar orbit.",
+    "fr": "Lancée en 2011, en orbite polaire très allongée autour de Jupiter depuis 2016."
+  },
+  "launchDate": "2011-08-05",
+  "color": "0xff92c2",
+  "identifiers": {
+    "naif": -61
+  },
+  "coverage": {
+    "temporal": {
+      "interval": [
+        [
+          "2011-08-07T00:00:00Z",
+          "2028-09-29T00:00:00Z"
+        ]
+      ]
+    }
+  }
+}

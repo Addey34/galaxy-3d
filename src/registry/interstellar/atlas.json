@@ -1,0 +1,39 @@
+{
+  "$schema": "../schema/interstellar.schema.json",
+  "id": "atlas",
+  "targetClass": "comet",
+  "population": "interstellar",
+  "displayName": {
+    "en": "3I/ATLAS",
+    "fr": "3I/ATLAS"
+  },
+  "designation": "C/2025 N1",
+  "solution": {
+    "horizonsRec": 90004935,
+    "solutionDate": "2026-Feb-19",
+    "epochJd": 2461090.5
+  },
+  "elements": {
+    "semiMajorAxisAU": -0.2638374502507929,
+    "eccentricity": 6.14135144931763,
+    "inclinationRad": {
+      "$deg": 175.1164570850441
+    },
+    "ascendingNodeRad": {
+      "$deg": 322.1696089290779
+    },
+    "argPerihelionRad": {
+      "$deg": 128.0228697185195
+    },
+    "meanAnomalyAtEpochRad": {
+      "$deg": 818.2202457999964
+    },
+    "epoch": {
+      "$date": "2026-02-19T00:00:00.000Z"
+    }
+  },
+  "color": "0xd9f26b",
+  "notes": {
+    "solution": "Horizons rec #90004935, solution 2026-Feb-19, époque JD 2461090.5."
+  }
+}

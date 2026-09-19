@@ -1,0 +1,28 @@
+{
+  "$schema": "../schema/spacecraft.schema.json",
+  "id": "rosetta",
+  "targetClass": "spacecraft",
+  "displayName": {
+    "en": "Rosetta",
+    "fr": "Rosetta"
+  },
+  "description": {
+    "en": "Launched in 2004, the first mission to orbit a comet, and to land on one with Philae in 2014.",
+    "fr": "Lancée en 2004, première mission à se mettre en orbite autour d’une comète et à s’y poser avec Philae en 2014."
+  },
+  "launchDate": "2004-03-02",
+  "color": "0x9ee87a",
+  "identifiers": {
+    "naif": -226
+  },
+  "coverage": {
+    "temporal": {
+      "interval": [
+        [
+          "2004-03-04T00:00:00Z",
+          "2016-10-03T00:00:00Z"
+        ]
+      ]
+    }
+  }
+}

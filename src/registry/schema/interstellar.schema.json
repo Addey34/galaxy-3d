@@ -1,0 +1,187 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "const": "../schema/interstellar.schema.json"
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+    },
+    "targetClass": {
+      "type": "string",
+      "enum": [
+        "asteroid",
+        "comet"
+      ]
+    },
+    "population": {
+      "type": "string",
+      "const": "interstellar"
+    },
+    "displayName": {
+      "type": "object",
+      "properties": {
+        "en": {
+          "type": "string",
+          "minLength": 1
+        },
+        "fr": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "en",
+        "fr"
+      ],
+      "additionalProperties": false
+    },
+    "designation": {
+      "type": "string",
+      "minLength": 1
+    },
+    "solution": {
+      "type": "object",
+      "properties": {
+        "horizonsRec": {
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991
+        },
+        "solutionDate": {
+          "type": "string",
+          "minLength": 1
+        },
+        "epochJd": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        }
+      },
+      "required": [
+        "horizonsRec",
+        "solutionDate",
+        "epochJd"
+      ],
+      "additionalProperties": false
+    },
+    "elements": {
+      "type": "object",
+      "properties": {
+        "semiMajorAxisAU": {
+          "type": "number",
+          "exclusiveMaximum": 0
+        },
+        "eccentricity": {
+          "type": "number",
+          "exclusiveMinimum": 1
+        },
+        "inclinationRad": {
+          "type": "object",
+          "properties": {
+            "$deg": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "$deg"
+          ],
+          "additionalProperties": false
+        },
+        "ascendingNodeRad": {
+          "type": "object",
+          "properties": {
+            "$deg": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "$deg"
+          ],
+          "additionalProperties": false
+        },
+        "argPerihelionRad": {
+          "type": "object",
+          "properties": {
+            "$deg": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "$deg"
+          ],
+          "additionalProperties": false
+        },
+        "meanAnomalyAtEpochRad": {
+          "type": "object",
+          "properties": {
+            "$deg": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "$deg"
+          ],
+          "additionalProperties": false
+        },
+        "epoch": {
+          "type": "object",
+          "properties": {
+            "$date": {
+              "type": "string",
+              "allOf": [
+                {
+                  "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                },
+                {
+                  "pattern": "Z$"
+                }
+              ]
+            }
+          },
+          "required": [
+            "$date"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "semiMajorAxisAU",
+        "eccentricity",
+        "inclinationRad",
+        "ascendingNodeRad",
+        "argPerihelionRad",
+        "meanAnomalyAtEpochRad",
+        "epoch"
+      ],
+      "additionalProperties": false
+    },
+    "color": {
+      "type": "string",
+      "pattern": "^0x[0-9a-fA-F]{6}$"
+    },
+    "notes": {
+      "type": "object",
+      "propertyNames": {
+        "type": "string"
+      },
+      "additionalProperties": {
+        "type": "string"
+      }
+    }
+  },
+  "required": [
+    "$schema",
+    "id",
+    "targetClass",
+    "population",
+    "displayName",
+    "designation",
+    "solution",
+    "elements",
+    "color"
+  ],
+  "additionalProperties": false
+}
