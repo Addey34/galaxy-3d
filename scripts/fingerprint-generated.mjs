@@ -61,10 +61,6 @@ const HASHED_ASSET = /\/assets\/([A-Za-z0-9._-]+?)-[A-Za-z0-9_-]{8}\.(js|css)/g;
 const BUILD_STAMPS = [
   [/<lastmod>\d{4}-\d{2}-\d{2}<\/lastmod>/g, '<lastmod>BUILD-DATE</lastmod>'],
   [/"dateModified":"\d{4}-\d{2}-\d{2}"/g, '"dateModified":"BUILD-DATE"'],
-  [
-    /(<p class="updated">(?:Data as of |Données au ))\d{4}-\d{2}-\d{2}(<\/p>)/g,
-    '$1BUILD-DATE$2',
-  ],
 ];
 
 /** Les documents que le build DÉRIVE du catalogue, à l'exclusion du reste de `dist/`. */
