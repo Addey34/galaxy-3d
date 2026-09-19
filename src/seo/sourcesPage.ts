@@ -9,7 +9,7 @@
  *     catalogue déclare champ par champ (`realData.sources`) et ses valeurs non publiées ;
  *   - modèles de forme : le `ModelConfig` du catalogue (crédit, carte de couleur, albédo) ;
  *   - éphémérides : `public/assets/ephemerides/manifest.json` ;
- *   - éléments orbitaux : `config/smallBodies.ts` et `config/interstellar.ts` ;
+ *   - éléments orbitaux : registres `src/registry/entities/` et `src/registry/interstellar/`, exposés par les façades `config/` ;
  *   - bibliothèques : `package.json` et le `package.json` de chaque dépendance installée ;
  *   - le texte juridique complet : `THIRD_PARTY_NOTICES.md`, rendu tel quel.
  *
