@@ -59,6 +59,7 @@ const DEFAULT_NETWORK: Required<Omit<MeteoNetworkOptions, 'sleep'>> = {
 const responseCache = new Map<string, { expiresAt: number; value: unknown }>();
 
 interface SharedRequest {
+  key: string;
   promise: Promise<unknown>;
   controller: AbortController;
   consumers: number;
@@ -103,8 +104,11 @@ function consumeSharedRequest(
 
     const release = (): void => {
       request.consumers = Math.max(0, request.consumers - 1);
-      if (request.consumers === 0 && !request.settled)
+      if (request.consumers === 0 && !request.settled) {
+        if (inFlightRequests.get(request.key) === request)
+          inFlightRequests.delete(request.key);
         request.controller.abort();
+      }
     };
     const finish = (
       callback: (value: unknown) => void,
@@ -185,6 +189,7 @@ async function fetchJson(
   })();
 
   const request: SharedRequest = {
+    key,
     promise: requestPromise,
     controller,
     consumers: 0,
