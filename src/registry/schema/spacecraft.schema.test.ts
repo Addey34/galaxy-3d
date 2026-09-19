@@ -22,8 +22,8 @@ describe('schéma des sondes', () => {
     expect(text).toContain('interval');
   });
   it('valide chaque fichier, son nom et sa référence de schéma', () => {
-    const files = readdirSync(directory).filter((name) =>
-      name.endsWith('.json')
+    const files = readdirSync(directory).filter(
+      (name) => name.endsWith('.json') && name !== 'order.json'
     );
     expect(files).toHaveLength(11);
     for (const name of files) {
@@ -56,6 +56,29 @@ describe('schéma des sondes', () => {
         ...valid,
         coverage: {
           temporal: { interval: [['1977-09-05', '2020-01-01T00:00:00Z']] },
+        },
+      },
+    ],
+    ['date impossible', { ...valid, launchDate: '2026-02-31' }],
+    [
+      'couverture inversée',
+      {
+        ...valid,
+        coverage: {
+          temporal: {
+            interval: [['2020-01-02T00:00:00Z', '2020-01-01T00:00:00Z']],
+          },
+        },
+      },
+    ],
+    [
+      'couverture avant lancement',
+      {
+        ...valid,
+        coverage: {
+          temporal: {
+            interval: [['1977-09-04T00:00:00Z', '2020-01-01T00:00:00Z']],
+          },
         },
       },
     ],
