@@ -558,8 +558,8 @@ export default defineConfig({
           },
           {
             // Textures et modèles ont des NOMS STABLES (ex. earth_surface_1k.jpg,
-            // bennu_shape_2k.glb) : une correction peut réécrire les mêmes URLs. Réseau
-            // d'abord pour prendre une nouvelle release, cache en secours hors-ligne.
+            // bennu_shape_2k.glb) : une release peut réécrire les mêmes URLs. Réseau d'abord
+            // pour récupérer la version courante, cache en secours hors-ligne.
             // Cette règle DOIT rester avant le CacheFirst générique ci-dessous.
             urlPattern: ({ url }) =>
               url.pathname.startsWith('/assets/textures/') ||
