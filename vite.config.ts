@@ -349,8 +349,6 @@ function bodyLandingPages() {
           );
         }
 
-        const today = new Date().toISOString().slice(0, 10);
-
         // Pages documentaires `/methodology` et `/sources`, FR et EN — voir
         // `src/seo/documentPage.ts`. Chaque fichier lu ici est la source qui fait foi ; les
         // modules purs refusent un résumé de validation partiel et une texture sans provenance.
@@ -374,6 +372,20 @@ function bodyLandingPages() {
         const manifest = await readJson<
           import('./src/seo/methodologyPage').EphemerisManifest
         >('public/assets/ephemerides/manifest.json');
+        const validationSummary = await readJson<
+          import('./src/seo/methodologyPage').ValidationSummary
+        >('src/config/horizons-validation-summary.json');
+        const factSnapshot = await readJson<{ retrieved: string }>(
+          'src/config/factSources.snapshot.json'
+        );
+        // Date DÉTERMINISTE des données publiées. Utiliser la date du build rendrait
+        // /sources différent chaque jour sans qu'aucune donnée n'ait changé, et ferait
+        // échouer le fingerprint généré par construction.
+        const sourcesUpdated = [
+          manifest.generatedAt.slice(0, 10),
+          validationSummary.generatedAt.slice(0, 10),
+          factSnapshot.retrieved,
+        ].sort().at(-1)!;
         const packageJson = await readJson<{
           dependencies: Record<string, string>;
         }>('package.json');
@@ -409,9 +421,7 @@ function bodyLandingPages() {
           throw new Error('CITATION.cff : repository-code introuvable');
         const docPages = [
           ...methodologySeo.methodologyPages({
-            summary: await readJson(
-              'src/config/horizons-validation-summary.json'
-            ),
+            summary: validationSummary,
             manifest,
             config: catalogue.CELESTIAL_CONFIG,
             origin: SITE_ORIGIN,
@@ -427,7 +437,7 @@ function bodyLandingPages() {
             ),
             repositoryBlobUrl: `${repository}/blob/main`,
             connectHosts,
-            updated: today,
+            updated: sourcesUpdated,
             origin: SITE_ORIGIN,
           }),
         ];
