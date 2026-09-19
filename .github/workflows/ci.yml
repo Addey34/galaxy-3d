@@ -36,6 +36,11 @@ jobs:
       - run: pnpm verify
       - run: pnpm audit:prod
       - run: pnpm build
+      - name: Diagnose intended sources fingerprint change
+        run: |
+          node scripts/fingerprint-generated.mjs --write
+          node -e "const f=require('./src/seo/generated-fingerprint.json'); console.log(JSON.stringify({sources:f.documents['sources/index.html'],frSources:f.documents['fr/sources/index.html']}))"
+          git checkout -- src/seo/generated-fingerprint.json
 
       # EMPREINTE DES DOCUMENTS GENERES. Le build derive 114 pages, le sitemap et 56 vignettes
       # du catalogue. Une migration qui change une valeur, un ordre de cles ou un arrondi ne
