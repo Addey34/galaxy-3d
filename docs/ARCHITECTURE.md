@@ -1025,7 +1025,7 @@ crédits de l'aide (`data-i18n-href` : le lien suit la langue de l'interface).
   des binaires (`manifest.json`), constantes importées du code qui les applique (`OBLIQUITY_RAD`,
   `SQRT_K`, `MIN_SAMPLES_PER_ORBIT_FOR_HERMITE`, `TT_MINUS_UTC`, `INTERSTELLAR_WINDOW_YEARS`),
   crédits de textures (registre `src/registry/products/`, couches livrées), crédits des modèles
-  (`ModelConfig`), éléments orbitaux (`smallBodies.ts`, `interstellar.ts`), versions et licences
+  (`ModelConfig`), éléments orbitaux (registres `src/registry/entities/` et `src/registry/interstellar/`, exposés par les façades `config/`), versions et licences
   des dépendances INSTALLÉES, et `THIRD_PARTY_NOTICES.md` rendu intégralement (`markdown.ts`,
   sous-ensemble minimal, tout le reste échappé).
 
