@@ -1,0 +1,8 @@
+{
+  "$comment": "Ordre d'affichage des objets interstellaires. Ajouter un objet = ajouter sa fiche JSON puis sa clé ici, sans modifier le chargeur TypeScript.",
+  "order": [
+    "oumuamua",
+    "borisov",
+    "atlas"
+  ]
+}
