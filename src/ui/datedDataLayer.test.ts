@@ -63,7 +63,10 @@ describe('createDatedDataLayer', () => {
       checkIntervalMs: 0,
     });
     await flush();
-    expect(fetchForKey).toHaveBeenCalledWith('2026-08-09T10');
+    expect(fetchForKey).toHaveBeenCalledWith(
+      '2026-08-09T10',
+      expect.any(AbortSignal)
+    );
     expect(apply).toHaveBeenCalledWith('data:2026-08-09T10');
     cleanup();
   });
@@ -172,6 +175,119 @@ describe('createDatedDataLayer', () => {
     await flush();
     expect(apply).toHaveBeenCalledTimes(1);
     cleanup();
+  });
+
+  it('aborts the obsolete request when the simulation key changes', async () => {
+    const ctrl = makeApi(new Date('2026-08-09T10:00:00Z'));
+    const apply = vi.fn();
+    let firstSignal: AbortSignal | undefined;
+
+    const fetchForKey = vi.fn((key: string, signal?: AbortSignal) => {
+      if (key === '2026-08-09T10') {
+        firstSignal = signal;
+        return new Promise<string>((_resolve, reject) => {
+          signal?.addEventListener(
+            'abort',
+            () => reject(new DOMException('aborted', 'AbortError')),
+            { once: true }
+          );
+        });
+      }
+      return Promise.resolve('new');
+    });
+
+    const cleanup = createDatedDataLayer(ctrl.api, {
+      name: 'Test',
+      enabled: true,
+      keyForDate: (d) => d.toISOString().slice(0, 13),
+      fetchForKey,
+      apply,
+      checkIntervalMs: 0,
+    });
+
+    await flush();
+    ctrl.setDate(new Date('2021-01-15T08:00:00Z'));
+    ctrl.tick();
+    await flush();
+
+    expect(firstSignal?.aborted).toBe(true);
+    expect(apply).toHaveBeenCalledTimes(1);
+    expect(apply).toHaveBeenCalledWith('new');
+    cleanup();
+  });
+
+  it('ignores a stale rejection from a loader that does not honor AbortSignal', async () => {
+    const ctrl = makeApi(new Date('2026-08-09T10:00:00Z'));
+    const apply = vi.fn();
+    const onStateChange = vi.fn();
+    let rejectFirst!: (error: Error) => void;
+
+    const fetchForKey = vi.fn((key: string) => {
+      if (key === '2026-08-09T10')
+        return new Promise<string>((_resolve, reject) => {
+          rejectFirst = reject;
+        });
+      return Promise.resolve('new');
+    });
+
+    const cleanup = createDatedDataLayer(ctrl.api, {
+      name: 'Test',
+      enabled: true,
+      keyForDate: (d) => d.toISOString().slice(0, 13),
+      fetchForKey,
+      apply,
+      onStateChange,
+      checkIntervalMs: 0,
+    });
+
+    await flush();
+    ctrl.setDate(new Date('2021-01-15T08:00:00Z'));
+    ctrl.tick();
+    await flush();
+    rejectFirst(new Error('old request failed'));
+    await flush();
+
+    expect(apply).toHaveBeenCalledTimes(1);
+    expect(apply).toHaveBeenCalledWith('new');
+    expect(onStateChange).toHaveBeenLastCalledWith('ready');
+    cleanup();
+  });
+
+  it('cleanup aborts in-flight work and suppresses late callbacks', async () => {
+    const ctrl = makeApi(new Date('2026-08-09T10:00:00Z'));
+    const apply = vi.fn();
+    const onStateChange = vi.fn();
+    let signal: AbortSignal | undefined;
+    let resolveLate!: (value: number) => void;
+
+    const fetchForKey = vi.fn((_key: string, requestSignal?: AbortSignal) => {
+      signal = requestSignal;
+      return new Promise<number>((resolve) => {
+        resolveLate = resolve;
+      });
+    });
+
+    const cleanup = createDatedDataLayer(ctrl.api, {
+      name: 'Test',
+      enabled: true,
+      keyForDate: (d) => d.toISOString().slice(0, 13),
+      fetchForKey,
+      apply,
+      onStateChange,
+      checkIntervalMs: 0,
+    });
+
+    await flush();
+    cleanup();
+    resolveLate(42);
+    await flush();
+
+    expect(signal?.aborted).toBe(true);
+    expect(apply).not.toHaveBeenCalled();
+    expect(onStateChange).toHaveBeenCalledWith('loading');
+    expect(onStateChange).not.toHaveBeenCalledWith('ready');
+    expect(onStateChange).not.toHaveBeenCalledWith('error');
+    expect(ctrl.frameCount()).toBe(0);
   });
 
   it('cleanup unsubscribes from the frame loop', async () => {
