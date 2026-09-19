@@ -44,6 +44,27 @@ describe('fetchTileWithContentCheck', () => {
     expect(fetchImpl).toHaveBeenCalledWith('u');
   });
 
+  it('closes the ImageBitmap when the texture is disposed', async () => {
+    const close = vi.fn();
+    const createImageBitmapMock = vi.fn(
+      async () => ({ close }) as unknown as ImageBitmap
+    );
+    vi.stubGlobal('createImageBitmap', createImageBitmapMock);
+
+    const fetchImpl = vi.fn(async () => fakeResponse(90_000));
+    const tex = await fetchTileWithContentCheck('u', {
+      minBytes: 20_000,
+      fetchImpl: fetchImpl as unknown as typeof fetch,
+    });
+
+    expect(createImageBitmapMock).toHaveBeenCalledTimes(1);
+    tex.dispose();
+    tex.dispose();
+    expect(close).toHaveBeenCalledTimes(1);
+
+    vi.unstubAllGlobals();
+  });
+
   it('throws EmptyTileError for an empty tile (below threshold)', async () => {
     const fetchImpl = vi.fn(async () => fakeResponse(3_000));
     await expect(
