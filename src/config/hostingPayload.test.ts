@@ -56,9 +56,10 @@ describe('charge utile du déploiement', () => {
  * jour où elle aurait servi.
  *
  * Le cache mérite la même attention, pour une raison différente et sans retour arrière : les
- * vignettes de partage ont un nom STABLE et des octets réécrits à chaque build. Les faire
- * tomber sous la règle immuable d'un an de `/assets/**` figerait une image fausse chez tous
- * ceux qui l'ont déjà vue, et aucun redéploiement ne la corrigerait.
+ * vignettes de partage, textures et modèles ont des noms STABLES. Les faire tomber sous la
+ * règle immuable d'un an de `/assets/**` figerait un ancien contenu chez les visiteurs qui
+ * l'ont déjà reçu. Les règles spécifiques doivent donc venir APRÈS le wildcard : Firebase
+ * applique toutes les règles d'en-têtes correspondantes et la dernière valeur d'une même clé gagne.
  *
  * Le pendant en ligne — ce que la production sert VRAIMENT — est vérifié après chaque
  * déploiement par `scripts/check-deployed-bundle.mjs`. Ici on attrape la faute au commit.
@@ -124,10 +125,30 @@ describe('en-têtes du site déployé', () => {
   });
 
   it('garde le cache long là où il est légitime', () => {
-    // L'autre moitié : sans lui, le bundle serait retéléchargé à chaque visite.
+    // L'autre moitié : sans lui, les chunks réellement versionnés seraient retéléchargés.
     const assets = blocks.find((block) => block.source === '/assets/**');
     expect(assets?.headers.find((h) => h.key === 'Cache-Control')?.value).toBe(
       'public, max-age=31536000, immutable'
     );
+  });
+
+  it('laisse les assets à nom stable et le manifeste écraser le wildcard immuable', () => {
+    const genericIndex = blocks.findIndex((b) => b.source === '/assets/**');
+    expect(genericIndex).toBeGreaterThanOrEqual(0);
+
+    for (const source of [
+      '/assets/ephemerides/manifest.json',
+      '/assets/textures/**',
+      '/assets/models/**',
+    ]) {
+      const index = blocks.findIndex((b) => b.source === source);
+      expect(index, `${source} : règle absente`).toBeGreaterThan(genericIndex);
+      const cacheControl = blocks[index]?.headers.find(
+        (h) => h.key === 'Cache-Control'
+      )?.value;
+      expect(cacheControl, source).toBe(
+        'public, max-age=3600, must-revalidate'
+      );
+    }
   });
 });
