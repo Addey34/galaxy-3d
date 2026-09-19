@@ -31,6 +31,13 @@ jobs:
           node-version: 22
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      - name: Diagnose dated texture formatting
+        run: |
+          pnpm exec prettier --write src/ui/datedTextureLayer.ts
+          echo '---FORMATTED START---'
+          cat src/ui/datedTextureLayer.ts
+          echo '---FORMATTED END---'
+          git checkout -- src/ui/datedTextureLayer.ts
       - run: pnpm verify
       - run: pnpm audit:prod
       - run: pnpm build
