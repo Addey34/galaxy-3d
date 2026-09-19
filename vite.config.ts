@@ -455,6 +455,7 @@ function bodyLandingPages() {
           );
         }
 
+        const today = new Date().toISOString().slice(0, 10);
         await writeFile(
           resolve(dist, 'sitemap.xml'),
           seo.renderSitemap(
