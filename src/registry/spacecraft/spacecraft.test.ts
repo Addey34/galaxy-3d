@@ -35,7 +35,7 @@ describe('sondes du registre', () => {
 
   it('déclare exactement les fiches présentes', () => {
     const files = readdirSync(import.meta.dirname)
-      .filter((name) => name.endsWith('.json'))
+      .filter((name) => name.endsWith('.json') && name !== 'order.json')
       .map((name) => name.slice(0, -5))
       .sort();
     expect(files).toEqual([...SPACECRAFT_ORDER].sort());
