@@ -33,6 +33,13 @@ jobs:
           node-version: 22
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      - name: Diagnose interstellar derivation formatting
+        run: |
+          pnpm exec prettier --write scripts/derive-interstellar-elements.mjs
+          echo '---DERIVE START---'
+          cat scripts/derive-interstellar-elements.mjs
+          echo '---DERIVE END---'
+          git checkout -- scripts/derive-interstellar-elements.mjs
       - run: pnpm verify
       - run: pnpm audit:prod
       - run: pnpm build
