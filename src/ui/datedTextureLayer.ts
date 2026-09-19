@@ -136,7 +136,8 @@ export function createDatedTextureLayer(
     const controller = new AbortController();
     const abortFromParent = (): void => controller.abort(parentSignal?.reason);
     if (parentSignal?.aborted) abortFromParent();
-    else parentSignal?.addEventListener('abort', abortFromParent, { once: true });
+    else
+      parentSignal?.addEventListener('abort', abortFromParent, { once: true });
 
     const promise = Promise.resolve()
       .then(() => loadTexture(cand.url, controller.signal))
@@ -152,7 +153,8 @@ export function createDatedTextureLayer(
       })
       .finally(() => {
         parentSignal?.removeEventListener('abort', abortFromParent);
-        if (inFlight.get(cand.id)?.promise === promise) inFlight.delete(cand.id);
+        if (inFlight.get(cand.id)?.promise === promise)
+          inFlight.delete(cand.id);
       });
 
     const request: InFlightRequest = { promise, controller };
@@ -163,7 +165,8 @@ export function createDatedTextureLayer(
     controller.signal.addEventListener(
       'abort',
       () => {
-        if (inFlight.get(cand.id)?.promise === promise) inFlight.delete(cand.id);
+        if (inFlight.get(cand.id)?.promise === promise)
+          inFlight.delete(cand.id);
       },
       { once: true }
     );
