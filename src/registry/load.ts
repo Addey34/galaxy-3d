@@ -204,7 +204,12 @@ function evaluate(value: { [key: string]: Encoded }, where: string): unknown {
         throw new Error(`${where}.${k} : nombre attendu`);
       args[k] = decoded;
     }
-    return form.evaluate(args);
+    const result = form.evaluate(args);
+    if (!Number.isFinite(result))
+      throw new Error(
+        `${where} : la forme déclarée produit un nombre non fini`
+      );
+    return result;
   }
   throw new Error(
     `${where} : forme déclarée inconnue ${JSON.stringify(Object.keys(value))}. L'ensemble des formes est fermé (registry/load.ts).`
@@ -251,11 +256,21 @@ function provenanceOf(entry: FactEntry, where: string): FactProvenance | null {
   }
   if (entry.citation !== undefined) provenance.citation = entry.citation;
   if (entry.asOf !== undefined) provenance.asOf = entry.asOf;
-  if (entry.uncertainty !== undefined)
-    provenance.uncertainty = decode(
+  if (entry.uncertainty !== undefined) {
+    const uncertainty = decode(
       entry.uncertainty,
       `${where}.uncertainty`
-    ) as number;
+    );
+    if (
+      typeof uncertainty !== 'number' ||
+      !Number.isFinite(uncertainty) ||
+      uncertainty < 0
+    )
+      throw new Error(
+        `${where}.uncertainty : nombre fini positif ou nul attendu`
+      );
+    provenance.uncertainty = uncertainty;
+  }
   return provenance;
 }
 
