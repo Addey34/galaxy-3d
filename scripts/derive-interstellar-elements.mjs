@@ -101,7 +101,9 @@ for (const object of OBJECTS) {
   }
 
   if (!record || !solution)
-    throw new Error(`${object.key} : métadonnées de solution Horizons absentes`);
+    throw new Error(
+      `${object.key} : métadonnées de solution Horizons absentes`
+    );
 
   const registryFragment = {
     solution: {
@@ -123,9 +125,7 @@ for (const object of OBJECTS) {
     `// ${object.key} → src/registry/interstellar/${object.key}.json`
   );
   console.log(JSON.stringify(registryFragment, null, 2));
-  console.log(
-    `// Tp Horizons (contrôle, non stocké) : JD ${field(el, 'Tp')}`
-  );
+  console.log(`// Tp Horizons (contrôle, non stocké) : JD ${field(el, 'Tp')}`);
 
   if (!withVectors) continue;
 
