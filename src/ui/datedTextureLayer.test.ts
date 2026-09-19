@@ -75,7 +75,10 @@ describe('createDatedTextureLayer', () => {
       checkIntervalMs: 0,
     });
     await flush();
-    expect(load).toHaveBeenCalledWith('https://x/2026-08-09');
+    expect(load).toHaveBeenCalledWith(
+      'https://x/2026-08-09',
+      expect.any(AbortSignal)
+    );
     expect(apply).toHaveBeenCalledTimes(1);
     cleanup();
   });
@@ -241,6 +244,122 @@ describe('createDatedTextureLayer', () => {
     expect(loaded).toContain('A');
     expect(loaded).toContain('B');
     cleanup();
+  });
+
+  it('aborts an obsolete request when the simulation date changes', async () => {
+    const ctrl = makeApi(new Date('2026-08-09T10:00:00Z'));
+    const apply = vi.fn();
+    const firstSignals: AbortSignal[] = [];
+    const secondTexture = new THREE.Texture();
+
+    const load = vi.fn((url: string, signal?: AbortSignal) => {
+      if (url === '2026-08-09') {
+        if (!signal) throw new Error('signal manquant');
+        firstSignals.push(signal);
+        return new Promise<THREE.Texture>((_resolve, reject) => {
+          signal.addEventListener(
+            'abort',
+            () => reject(new DOMException('aborted', 'AbortError')),
+            { once: true }
+          );
+        });
+      }
+      return Promise.resolve(secondTexture);
+    });
+
+    const cleanup = createDatedTextureLayer(ctrl.api, {
+      name: 'Test',
+      enabled: true,
+      keyForDate: (d) => d.toISOString().slice(0, 10),
+      urlForKey: (k) => k,
+      apply,
+      loadTexture: load,
+      checkIntervalMs: 0,
+    });
+
+    await flush();
+    ctrl.setDate(new Date('2021-01-15T10:00:00Z'));
+    ctrl.tick();
+    await flush();
+
+    expect(firstSignals).toHaveLength(1);
+    expect(firstSignals[0]?.aborted).toBe(true);
+    expect(apply).toHaveBeenCalledTimes(1);
+    expect(apply).toHaveBeenCalledWith(secondTexture);
+    cleanup();
+  });
+
+  it('cleanup aborts an in-flight request without reporting an error', async () => {
+    const ctrl = makeApi(new Date('2026-08-09T10:00:00Z'));
+    const apply = vi.fn();
+    const onStateChange = vi.fn();
+    let requestSignal: AbortSignal | undefined;
+
+    const load = vi.fn((_url: string, signal?: AbortSignal) => {
+      requestSignal = signal;
+      return new Promise<THREE.Texture>((_resolve, reject) => {
+        signal?.addEventListener(
+          'abort',
+          () => reject(new DOMException('aborted', 'AbortError')),
+          { once: true }
+        );
+      });
+    });
+
+    const cleanup = createDatedTextureLayer(ctrl.api, {
+      name: 'Test',
+      enabled: true,
+      keyForDate: () => 'A',
+      urlForKey: (k) => k,
+      apply,
+      onStateChange,
+      loadTexture: load,
+      checkIntervalMs: 0,
+    });
+
+    await flush();
+    cleanup();
+    await flush();
+
+    expect(requestSignal?.aborted).toBe(true);
+    expect(apply).not.toHaveBeenCalled();
+    expect(onStateChange).toHaveBeenCalledWith('loading');
+    expect(onStateChange).not.toHaveBeenCalledWith('error');
+    expect(ctrl.frameCount()).toBe(0);
+  });
+
+  it('disposes a late texture when an injected loader ignores abort after cleanup', async () => {
+    const ctrl = makeApi(new Date('2026-08-09T10:00:00Z'));
+    const apply = vi.fn();
+    const texture = new THREE.Texture();
+    const dispose = vi.spyOn(texture, 'dispose');
+    let resolveLoad!: (texture: THREE.Texture) => void;
+
+    const load = vi.fn(
+      () =>
+        new Promise<THREE.Texture>((resolve) => {
+          resolveLoad = resolve;
+        })
+    );
+
+    const cleanup = createDatedTextureLayer(ctrl.api, {
+      name: 'Test',
+      enabled: true,
+      keyForDate: () => 'A',
+      urlForKey: (k) => k,
+      apply,
+      loadTexture: load,
+      checkIntervalMs: 0,
+    });
+
+    await flush();
+    cleanup();
+    resolveLoad(texture);
+    await flush();
+
+    expect(dispose).toHaveBeenCalledTimes(1);
+    expect(apply).not.toHaveBeenCalled();
+    expect(ctrl.frameCount()).toBe(0);
   });
 
   it('cleanup disposes cached textures and unsubscribes', async () => {
