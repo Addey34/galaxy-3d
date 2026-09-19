@@ -39,7 +39,7 @@ touché — fiche JSON, ordre, vecteurs de référence et artefacts régénéré
 | une éphéméride `astronomy-engine` (planètes, Lune, lunes galiléennes) | champ `astroBody` (enum `Body` en chaîne) dans la fiche             |
 | une orbite bien connue mais pas d'éphéméride native                   | `HorizonsEphemerisService` — générer un binaire (voir plus bas)     |
 | aucun des deux (petit corps, astéroïde, comète, TNO)                  | fiche `"source": "small-body"` — éléments képlériens (`kepler.ts`)  |
-| une trajectoire ouverte (objet interstellaire, e > 1)                 | `config/interstellar.ts` — `pnpm ephemeris:interstellar` (overlays hors `CelestialConfig`, pas encore de fiche registre) |
+| une trajectoire ouverte (objet interstellaire, e > 1)                 | fiche `src/registry/interstellar/{nom}.json` — `pnpm ephemeris:interstellar` (overlay hors `CelestialConfig`) |
 
 **N'inventez jamais de position.** Toute donnée orbitale doit venir de JPL Horizons ou d'une
 source publiée équivalente, vérifiée à l'époque exacte utilisée. Le projet a déjà eu plusieurs
