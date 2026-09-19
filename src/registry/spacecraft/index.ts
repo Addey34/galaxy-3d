@@ -2,23 +2,12 @@
 import type { SpacecraftMission } from '@/config/spacecraft';
 import type { SpacecraftRecord } from '../schema/spacecraft';
 import { decode } from '../load';
+import orderFile from './order.json';
 
-export const SPACECRAFT_ORDER = [
-  'voyager1',
-  'voyager2',
-  'parker-solar-probe',
-  'jwst',
-  'new-horizons',
-  'cassini',
-  'juno',
-  'rosetta',
-  'bepicolombo',
-  'osiris-rex',
-  'hayabusa2',
-] as const;
+export const SPACECRAFT_ORDER: readonly string[] = orderFile.order;
 
 export const SPACECRAFT_RECORDS = Object.values(
-  import.meta.glob('./*.json', {
+  import.meta.glob(['./*.json', '!./order.json'], {
     eager: true,
     import: 'default',
   })
