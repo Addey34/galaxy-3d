@@ -1,0 +1,28 @@
+{
+  "$schema": "../schema/spacecraft.schema.json",
+  "id": "jwst",
+  "targetClass": "spacecraft",
+  "displayName": {
+    "en": "James Webb Space Telescope",
+    "fr": "Télescope spatial James Webb"
+  },
+  "description": {
+    "en": "Launched in 2021, orbiting the Sun-Earth L2 point about 1.5 million km from Earth.",
+    "fr": "Lancé en 2021, en orbite autour du point de Lagrange L2, à environ 1,5 million de km de la Terre."
+  },
+  "launchDate": "2021-12-25",
+  "color": "0x88ddff",
+  "identifiers": {
+    "naif": -170
+  },
+  "coverage": {
+    "temporal": {
+      "interval": [
+        [
+          "2021-12-26T00:00:00Z",
+          "2031-08-23T00:00:00Z"
+        ]
+      ]
+    }
+  }
+}

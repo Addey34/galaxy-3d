@@ -1,0 +1,28 @@
+{
+  "$schema": "../schema/spacecraft.schema.json",
+  "id": "osiris-rex",
+  "targetClass": "spacecraft",
+  "displayName": {
+    "en": "OSIRIS-REx",
+    "fr": "OSIRIS-REx"
+  },
+  "description": {
+    "en": "Launched in 2016, collected a sample from asteroid Bennu and returned it to Earth in 2023.",
+    "fr": "Lancée en 2016, elle a prélevé un échantillon de l’astéroïde Bennu et l’a rapporté sur Terre en 2023."
+  },
+  "launchDate": "2016-09-08",
+  "color": "0xe8d44d",
+  "identifiers": {
+    "naif": -64
+  },
+  "coverage": {
+    "temporal": {
+      "interval": [
+        [
+          "2016-09-10T00:00:00Z",
+          "2030-03-17T00:00:00Z"
+        ]
+      ]
+    }
+  }
+}

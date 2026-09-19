@@ -1,0 +1,39 @@
+{
+  "$schema": "../schema/interstellar.schema.json",
+  "id": "oumuamua",
+  "targetClass": "asteroid",
+  "population": "interstellar",
+  "displayName": {
+    "en": "1I/ʻOumuamua",
+    "fr": "1I/ʻOumuamua"
+  },
+  "designation": "1I/2017 U1",
+  "solution": {
+    "horizonsRec": 50322080,
+    "solutionDate": "2018-Jun-26",
+    "epochJd": 2458080.5
+  },
+  "elements": {
+    "semiMajorAxisAU": -1.272345007428079,
+    "eccentricity": 1.201133796102373,
+    "inclinationRad": {
+      "$deg": 122.7417062847287
+    },
+    "ascendingNodeRad": {
+      "$deg": 24.59690955523243
+    },
+    "argPerihelionRad": {
+      "$deg": 241.8105360304899
+    },
+    "meanAnomalyAtEpochRad": {
+      "$deg": 51.15761979385638
+    },
+    "epoch": {
+      "$date": "2017-11-23T00:00:00.000Z"
+    }
+  },
+  "color": "0x8ef5a0",
+  "notes": {
+    "solution": "Horizons rec #50322080, solution 2018-Jun-26, époque JD 2458080.5 ; accélération non gravitationnelle de Micheli et al. 2018 comprise."
+  }
+}

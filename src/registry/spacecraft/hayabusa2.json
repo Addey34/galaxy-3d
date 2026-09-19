@@ -1,0 +1,28 @@
+{
+  "$schema": "../schema/spacecraft.schema.json",
+  "id": "hayabusa2",
+  "targetClass": "spacecraft",
+  "displayName": {
+    "en": "Hayabusa2",
+    "fr": "Hayabusa2"
+  },
+  "description": {
+    "en": "Launched in 2014, sampled asteroid Ryugu and returned the capsule to Earth in 2020.",
+    "fr": "Lancée en 2014, elle a prélevé l’astéroïde Ryugu et rapporté sa capsule sur Terre en 2020."
+  },
+  "launchDate": "2014-12-03",
+  "color": "0xff8a4d",
+  "identifiers": {
+    "naif": -37
+  },
+  "coverage": {
+    "temporal": {
+      "interval": [
+        [
+          "2014-12-05T00:00:00Z",
+          "2026-11-24T00:00:00Z"
+        ]
+      ]
+    }
+  }
+}

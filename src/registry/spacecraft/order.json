@@ -1,0 +1,16 @@
+{
+  "$comment": "Ordre d'affichage des sondes. Ajouter une sonde = ajouter sa fiche JSON puis sa clé ici, sans modifier le chargeur TypeScript.",
+  "order": [
+    "voyager1",
+    "voyager2",
+    "parker-solar-probe",
+    "jwst",
+    "new-horizons",
+    "cassini",
+    "juno",
+    "rosetta",
+    "bepicolombo",
+    "osiris-rex",
+    "hayabusa2"
+  ]
+}

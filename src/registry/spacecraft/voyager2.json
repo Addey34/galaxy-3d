@@ -1,0 +1,28 @@
+{
+  "$schema": "../schema/spacecraft.schema.json",
+  "id": "voyager2",
+  "targetClass": "spacecraft",
+  "displayName": {
+    "en": "Voyager 2",
+    "fr": "Voyager 2"
+  },
+  "description": {
+    "en": "Launched in 1977, the only spacecraft to have visited Uranus and Neptune.",
+    "fr": "Lancée en 1977, la seule sonde à avoir visité Uranus et Neptune."
+  },
+  "launchDate": "1977-08-20",
+  "color": "0xffaa44",
+  "identifiers": {
+    "naif": -32
+  },
+  "coverage": {
+    "temporal": {
+      "interval": [
+        [
+          "1977-08-21T00:00:00Z",
+          "2099-12-31T00:00:00Z"
+        ]
+      ]
+    }
+  }
+}

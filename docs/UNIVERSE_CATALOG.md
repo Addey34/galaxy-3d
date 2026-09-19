@@ -208,7 +208,7 @@ Ces ensembles sont des representations de population. Ils ne doivent pas etre co
 
 **Close, a une exclusion motivee pres.** Onze missions sont livrees : Voyager 1 et 2, Parker
 Solar Probe, James Webb, New Horizons, Cassini, Juno, Rosetta, BepiColombo, OSIRIS-REx et
-Hayabusa2 (`src/config/spacecraft.ts`, marqueurs 2D en couche instrument, mode Exploration).
+Hayabusa2 (`src/registry/spacecraft/`, exposes via `src/config/spacecraft.ts`, marqueurs 2D en couche instrument, mode Exploration).
 
 **Hubble est exclu deliberement**, ce n'est pas un oubli : il orbite a 540 km en 95 minutes. A
 l'echelle du Systeme solaire son marqueur se superposerait exactement a celui de la Terre, et

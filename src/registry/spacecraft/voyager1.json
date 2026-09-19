@@ -1,0 +1,28 @@
+{
+  "$schema": "../schema/spacecraft.schema.json",
+  "id": "voyager1",
+  "targetClass": "spacecraft",
+  "displayName": {
+    "en": "Voyager 1",
+    "fr": "Voyager 1"
+  },
+  "description": {
+    "en": "Launched in 1977, the most distant human-made object, now in interstellar space.",
+    "fr": "Lancée en 1977, l’objet humain le plus lointain, aujourd’hui dans l’espace interstellaire."
+  },
+  "launchDate": "1977-09-05",
+  "color": "0xffcc66",
+  "identifiers": {
+    "naif": -31
+  },
+  "coverage": {
+    "temporal": {
+      "interval": [
+        [
+          "1977-09-06T00:00:00Z",
+          "2099-12-31T00:00:00Z"
+        ]
+      ]
+    }
+  }
+}

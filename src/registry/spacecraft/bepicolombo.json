@@ -1,0 +1,28 @@
+{
+  "$schema": "../schema/spacecraft.schema.json",
+  "id": "bepicolombo",
+  "targetClass": "spacecraft",
+  "displayName": {
+    "en": "BepiColombo",
+    "fr": "BepiColombo"
+  },
+  "description": {
+    "en": "Launched in 2018, on its way to Mercury through a long series of planetary flybys.",
+    "fr": "Lancée en 2018, en route vers Mercure via une longue série de survols planétaires."
+  },
+  "launchDate": "2018-10-20",
+  "color": "0x7aa7ff",
+  "identifiers": {
+    "naif": -121
+  },
+  "coverage": {
+    "temporal": {
+      "interval": [
+        [
+          "2018-10-22T00:00:00Z",
+          "2027-04-09T00:00:00Z"
+        ]
+      ]
+    }
+  }
+}
