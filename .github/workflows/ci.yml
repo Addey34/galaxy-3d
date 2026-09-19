@@ -33,16 +33,6 @@ jobs:
           node-version: 22
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - name: Diagnose registry formatting
-        run: |
-          pnpm exec prettier --write src/registry/load.ts src/registry/entities/entities.test.ts
-          echo '---LOAD START---'
-          cat src/registry/load.ts
-          echo '---LOAD END---'
-          echo '---TEST START---'
-          cat src/registry/entities/entities.test.ts
-          echo '---TEST END---'
-          git checkout -- src/registry/load.ts src/registry/entities/entities.test.ts
       - run: pnpm verify
       - run: pnpm audit:prod
       - run: pnpm build
