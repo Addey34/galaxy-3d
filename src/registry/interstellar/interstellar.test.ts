@@ -1,6 +1,10 @@
 import { readdirSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { INTERSTELLAR_ORDER, INTERSTELLAR_RECORDS, loadInterstellar } from './index';
+import {
+  INTERSTELLAR_ORDER,
+  INTERSTELLAR_RECORDS,
+  loadInterstellar,
+} from './index';
 
 describe('interstellaires du registre', () => {
   it('refuse un ordre qui duplique une clé et en oublie une autre', () => {
