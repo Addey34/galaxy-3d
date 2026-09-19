@@ -1,7 +1,6 @@
 import { readFileSync, readdirSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { SPACECRAFT_MISSIONS } from '@/config/spacecraft';
 import { SPACECRAFT_ORDER, SPACECRAFT_RECORDS, loadSpacecraft } from './index';
 
 const manifest = JSON.parse(
