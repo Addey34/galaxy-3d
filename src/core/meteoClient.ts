@@ -110,10 +110,7 @@ function consumeSharedRequest(
         request.controller.abort();
       }
     };
-    const finish = (
-      callback: (value: unknown) => void,
-      value: unknown
-    ): void => {
+    const finish = (callback: (value: unknown) => void, value: unknown): void => {
       if (finished) return;
       finished = true;
       signal?.removeEventListener('abort', onAbort);
