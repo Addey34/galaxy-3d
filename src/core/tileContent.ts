@@ -57,6 +57,16 @@ async function defaultMakeTexture(blob: Blob): Promise<THREE.Texture> {
   texture.flipY = false;
   texture.colorSpace = THREE.SRGBColorSpace;
   texture.needsUpdate = true;
+
+  // THREE.Texture.dispose() libère les ressources WebGL, mais pas l'ImageBitmap natif
+  // utilisé comme source. Les couches météo remplacent régulièrement ces textures :
+  // fermer explicitement le bitmap évite une croissance mémoire sur les sessions longues.
+  const closeBitmap = (): void => {
+    bitmap.close();
+    texture.removeEventListener('dispose', closeBitmap);
+  };
+  texture.addEventListener('dispose', closeBitmap);
+
   return texture;
 }
 
