@@ -23,8 +23,8 @@ describe('schéma des interstellaires', () => {
     expect(text).toContain('$deg');
   });
   it('valide chaque fichier, son nom et sa référence de schéma', () => {
-    const files = readdirSync(directory).filter((name) =>
-      name.endsWith('.json')
+    const files = readdirSync(directory).filter(
+      (name) => name.endsWith('.json') && name !== 'order.json'
     );
     expect(files).toHaveLength(3);
     for (const name of files) {
@@ -48,6 +48,20 @@ describe('schéma des interstellaires', () => {
     [
       'forme',
       { ...valid, elements: { ...elements, inclinationRad: { $radians: 1 } } },
+    ],
+    [
+      'date de solution',
+      {
+        ...valid,
+        solution: { ...(valid.solution as object), solutionDate: '2018-Foo-99' },
+      },
+    ],
+    [
+      'époque JD incohérente',
+      {
+        ...valid,
+        solution: { ...(valid.solution as object), epochJd: 2458081.5 },
+      },
     ],
     ['classe', { ...valid, targetClass: 'spacecraft' }],
     ['population', { ...valid, population: undefined }],
