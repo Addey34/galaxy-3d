@@ -289,6 +289,99 @@ describe('createDatedTextureLayer', () => {
     cleanup();
   });
 
+  it('bounds the cache without disposing either texture used by the current crossfade', async () => {
+    const ctrl = makeApi(new Date('2026-08-01T10:00:00Z'));
+    const records = new Map<
+      string,
+      { texture: THREE.Texture; dispose: ReturnType<typeof vi.spyOn> }
+    >();
+    const apply = vi.fn();
+    const load = vi.fn(async (url: string) => {
+      const texture = new THREE.Texture();
+      const dispose = vi.spyOn(texture, 'dispose');
+      records.set(url, { texture, dispose });
+      return texture;
+    });
+
+    const cleanup = createDatedTextureLayer(ctrl.api, {
+      name: 'Test',
+      enabled: true,
+      keyForDate: (d) => d.toISOString().slice(0, 10),
+      urlForKey: (k) => k,
+      apply,
+      loadTexture: load,
+      maxCachedTextures: 2,
+      checkIntervalMs: 0,
+    });
+
+    await flush();
+    for (const day of ['02', '03', '04']) {
+      ctrl.setDate(new Date(`2026-08-${day}T10:00:00Z`));
+      ctrl.tick();
+      await flush();
+    }
+
+    expect(records.get('2026-08-01')?.dispose).toHaveBeenCalledTimes(1);
+    expect(records.get('2026-08-02')?.dispose).toHaveBeenCalledTimes(1);
+    expect(records.get('2026-08-03')?.dispose).not.toHaveBeenCalled();
+    expect(records.get('2026-08-04')?.dispose).not.toHaveBeenCalled();
+    expect(apply).toHaveBeenCalledTimes(4);
+
+    cleanup();
+    expect(records.get('2026-08-03')?.dispose).toHaveBeenCalledTimes(1);
+    expect(records.get('2026-08-04')?.dispose).toHaveBeenCalledTimes(1);
+  });
+
+  it('aborts a prefetched request when it becomes the obsolete foreground request', async () => {
+    const ctrl = makeApi(new Date('2026-08-01T10:00:00Z'));
+    const apply = vi.fn();
+    const textureA = new THREE.Texture();
+    const textureC = new THREE.Texture();
+    let prefetchedSignal: AbortSignal | undefined;
+
+    const load = vi.fn((url: string, signal?: AbortSignal) => {
+      if (url === 'B') {
+        prefetchedSignal = signal;
+        return new Promise<THREE.Texture>((_resolve, reject) => {
+          signal?.addEventListener(
+            'abort',
+            () => reject(new DOMException('aborted', 'AbortError')),
+            { once: true }
+          );
+        });
+      }
+      return Promise.resolve(url === 'A' ? textureA : textureC);
+    });
+
+    const cleanup = createDatedTextureLayer(ctrl.api, {
+      name: 'Test',
+      enabled: true,
+      keyForDate: (d) => {
+        const day = d.toISOString().slice(8, 10);
+        return day === '01' ? 'A' : day === '02' ? 'B' : 'C';
+      },
+      urlForKey: (k) => k,
+      prefetchKeys: (key) => (key === 'A' ? ['B'] : []),
+      apply,
+      loadTexture: load,
+      checkIntervalMs: 0,
+    });
+
+    await flush();
+    expect(prefetchedSignal?.aborted).toBe(false);
+
+    ctrl.setDate(new Date('2026-08-02T10:00:00Z'));
+    ctrl.tick();
+    ctrl.setDate(new Date('2026-08-03T10:00:00Z'));
+    ctrl.tick();
+    await flush();
+
+    expect(prefetchedSignal?.aborted).toBe(true);
+    expect(apply).toHaveBeenCalledWith(textureA);
+    expect(apply).toHaveBeenLastCalledWith(textureC);
+    cleanup();
+  });
+
   it('cleanup aborts an in-flight request without reporting an error', async () => {
     const ctrl = makeApi(new Date('2026-08-09T10:00:00Z'));
     const apply = vi.fn();
