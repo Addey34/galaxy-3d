@@ -2,10 +2,11 @@
 import type { InterstellarObject } from '@/config/interstellar';
 import type { InterstellarRecord } from '../schema/interstellar';
 import { decode } from '../load';
+import orderFile from './order.json';
 
-export const INTERSTELLAR_ORDER = ['oumuamua', 'borisov', 'atlas'] as const;
+export const INTERSTELLAR_ORDER: readonly string[] = orderFile.order;
 export const INTERSTELLAR_RECORDS = Object.values(
-  import.meta.glob('./*.json', {
+  import.meta.glob(['./*.json', '!./order.json'], {
     eager: true,
     import: 'default',
   })
