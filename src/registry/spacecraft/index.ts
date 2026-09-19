@@ -21,6 +21,7 @@ export function loadSpacecraft(
   if (
     byId.size !== records.length ||
     order.length !== records.length ||
+    new Set(order).size !== order.length ||
     order.some((id) => !byId.has(id))
   )
     throw new Error('registre des sondes : ordre, doublon ou fiche manquante');
