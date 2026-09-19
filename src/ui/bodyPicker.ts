@@ -51,12 +51,24 @@ export function raycastTargets(scene: THREE.Scene): THREE.Object3D[] {
   return targets;
 }
 
+/**
+ * Test de proximité contre les marqueurs 2D peints à la dernière image, en coordonnées
+ * fenêtre. Une sonde ou un objet interstellaire n'a AUCUN mesh : le rayon ne peut pas les
+ * toucher, et sans ce test ils seraient les seuls objets nommés à l'écran qu'on ne puisse
+ * pas cliquer. Renvoie le nom touché, sinon `null`.
+ */
+export type OverlayHitTest = (
+  clientX: number,
+  clientY: number
+) => string | null;
+
 export function setupBodyPicker(
   scene: THREE.Scene,
   camera: THREE.Camera,
   domElement: HTMLElement,
   nav: PlanetNavigation,
-  validNames: ReadonlySet<string>
+  validNames: ReadonlySet<string>,
+  overlayHits: readonly OverlayHitTest[] = []
 ): () => void {
   const raycaster = new THREE.Raycaster();
   const ndc = new THREE.Vector2();
@@ -85,6 +97,16 @@ export function setupBodyPicker(
       CLICK_MOVE_TOLERANCE
     ) {
       return;
+    }
+
+    // Les marqueurs d'instrument d'ABORD : ils sont peints PAR-DESSUS la scène, donc ce qui
+    // est sous le pointeur est le marqueur, pas ce que le rayon trouverait derrière lui.
+    for (const hit of overlayHits) {
+      const name = hit(event.clientX, event.clientY);
+      if (name) {
+        nav.selectBody(name);
+        return;
+      }
     }
 
     const rect = domElement.getBoundingClientRect();

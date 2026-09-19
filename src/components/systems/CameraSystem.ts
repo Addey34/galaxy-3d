@@ -20,7 +20,20 @@ import { solarIrradianceFactor } from '@/core/eclipse';
 import { SQRT_K } from '@/core/ScaleService';
 import Logger from '@/utils/Logger';
 import { prefersReducedMotion } from '@/utils/reducedMotion';
+import type { CameraDistance } from '@/types';
 import type { CelestialBodies } from './SceneSystem';
+
+/**
+ * Ce que la caméra demande d'une cible : un objet à suivre, éventuellement une distance de
+ * visite et les deux rayons qui bornent le zoom. Un `CelestialObject` le satisfait sans rien
+ * déclarer ; une ancre d'objet d'instrument aussi, avec beaucoup moins.
+ */
+export interface CameraTarget {
+  group: THREE.Group;
+  cameraDistance?: CameraDistance;
+  getFrameRadius?(mode: 'educ' | 'explo'): number;
+  getClearanceRadius?(mode: 'educ' | 'explo'): number;
+}
 
 // Bornes de durée du vol caméra (ms). La durée réelle est proportionnelle à la distance
 // parcourue, resserrée entre ces bornes : un court saut reste vif, un long voyage posé.
@@ -35,6 +48,14 @@ export class CameraSystem {
   tweenGroup!: TweenGroup;
 
   private celestialBodies!: CelestialBodies;
+  /**
+   * Cibles qui ne sont pas des corps du catalogue : sondes et objets interstellaires, dont
+   * l'ancre est un `THREE.Group` vide (cf. `ui/navigableAnchors.ts`). Elles vivent dans une
+   * table à part plutôt que dans `celestialBodies`, qui est la table des `CelestialObject`
+   * de la scène ; ce que la caméra demande d'une cible est plus petit que cela, et c'est
+   * exactement ce que décrit `CameraTarget`.
+   */
+  private externalTargets: Record<string, CameraTarget> = {};
   private isAnimating = false;
   private currentTarget: {
     name: string;
@@ -87,11 +108,24 @@ export class CameraSystem {
   }
 
   /**
+   * Déclare des cibles hors catalogue (sondes, objets interstellaires). Appelé une fois au
+   * démarrage ; les positions, elles, sont écrites chaque frame dans leurs ancres.
+   */
+  registerTargets(targets: Record<string, CameraTarget>): void {
+    this.externalTargets = { ...this.externalTargets, ...targets };
+  }
+
+  /** La cible portant ce nom, corps du catalogue d'abord, objet d'instrument ensuite. */
+  private _target(bodyName: string): CameraTarget | undefined {
+    return this.celestialBodies?.[bodyName] ?? this.externalTargets[bodyName];
+  }
+
+  /**
    * Cible un corps : calcule une distance de visite confortable (selon son rayon et le
    * mode) et lance un vol animé de la caméra vers lui. Le corps sera ensuite suivi.
    */
   setTarget(bodyName: string): void {
-    const body = this.celestialBodies[bodyName]?.group;
+    const body = this._target(bodyName)?.group;
     if (!body) {
       Logger.warn(`[CameraSystem] Body "${bodyName}" not found`);
       return;
@@ -123,14 +157,13 @@ export class CameraSystem {
     // Éduc↔Explo au moment précis de cette sélection — cf. CelestialObject.getFrameRadius) :
     // les bornes de zoom doivent refléter la taille FINALE, pas une valeur transitoire.
     const radius =
-      this.celestialBodies[bodyName]?.getFrameRadius?.(this._scaleMode) ??
+      this._target(bodyName)?.getFrameRadius?.(this._scaleMode) ??
       (body.userData['radius'] as number | undefined) ??
       1;
     // Ce qu'on ne doit pas traverser, c'est le point le plus SAILLANT du corps (cf.
     // CelestialObject.getClearanceRadius), pas sa sphère moyenne.
     const clearance =
-      this.celestialBodies[bodyName]?.getClearanceRadius?.(this._scaleMode) ??
-      radius;
+      this._target(bodyName)?.getClearanceRadius?.(this._scaleMode) ?? radius;
     // Bornes de zoom proportionnelles au rayon visuel du corps ciblé : on peut approcher
     // chaque corps (petit ou gros) autant que sa taille le permet, sans traverser la surface.
     this._applyTargetZoomBounds(clearance);
@@ -411,9 +444,7 @@ export class CameraSystem {
       // Rayon de DÉGAGEMENT : le near doit rester devant le point le plus saillant, sinon un
       // corps irrégulier approché de près est coupé en deux sans erreur.
       const r =
-        this.celestialBodies?.[this.currentTarget.name]?.getClearanceRadius?.(
-          'explo'
-        ) ??
+        this._target(this.currentTarget.name)?.getClearanceRadius?.('explo') ??
         (this.currentTarget.group.userData['radius'] as number | undefined) ??
         0;
       // Plancher RELATIF au rayon : un plancher absolu coupait les corps sous-kilométriques.
@@ -707,7 +738,7 @@ export class CameraSystem {
   }
 
   private getDefaultDistance(bodyName: string): number {
-    const cd = this.celestialBodies[bodyName]?.cameraDistance;
+    const cd = this._target(bodyName)?.cameraDistance;
     if (!cd) return CAMERA_SETTINGS.defaultBodyDistance;
     return this._scaleMode === 'explo' ? cd.explo : cd.educ;
   }

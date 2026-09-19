@@ -815,6 +815,24 @@ button {
   background: rgba(var(--accent), 0.16);
   color: rgb(var(--accent));
 }
+/* Objet sans position à la date courante : une sonde avant son lancement ou après la fin de
+   sa solution de trajectoire, un objet interstellaire hors de sa fenêtre. L'entrée reste
+   listée, lisible et annoncée (aria-disabled, pas disabled) : son absence dit quelque chose
+   de la DATE affichée. Le contraste du nom reste au-dessus du seuil AA. */
+.palette-item[aria-disabled='true'] {
+  cursor: default;
+}
+.palette-item[aria-disabled='true'] .palette-item-name,
+.palette-item[aria-disabled='true'] .palette-item-kind {
+  color: var(--ink-faint);
+}
+.palette-item[aria-disabled='true'] .palette-item-dot {
+  opacity: 0.35;
+  box-shadow: none;
+}
+.palette-item[aria-disabled='true']:hover {
+  background: transparent;
+}
 .palette-item-dot {
   flex: 0 0 auto;
   width: 0.6rem;

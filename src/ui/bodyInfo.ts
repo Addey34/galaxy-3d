@@ -7,16 +7,13 @@
  * Le contenu est dérivé du catalogue — ajouter un corps n'exige aucune édition ici.
  */
 import { CELESTIAL_CONFIG } from '@/config/bodies';
-import {
-  allBodies,
-  flattenBodies,
-  hasIllustrativeSurface,
-} from '@/config/catalog';
+import { allBodies, hasIllustrativeSurface } from '@/config/catalog';
 import { TEXTURE_SETTINGS } from '@/config/engine';
 import { KM_PER_AU, SQRT_K } from '@/core/ScaleService';
 import { RAD_TO_DEG as RAD2DEG } from '@/core/MathConstants';
 import { t, intlLocale, getLocale, onLocaleChange } from '@/i18n';
 import { bodyDisplayName, bodyDescription } from '@/i18n/bodyText';
+import { NAVIGABLE_BODIES } from '@/config/navigable';
 import type { CelestialBodyConfig, FactField } from '@/types';
 import {
   bodyFact,
@@ -43,7 +40,11 @@ import type { OverlayCoordinator } from './overlayCoordinator';
 
 const C_KM_PER_S = 299_792.458; // vitesse de la lumière
 
-const CONFIGS = flattenBodies(CELESTIAL_CONFIG);
+// Corps du catalogue ET objets d'instrument : une sonde sélectionnée ouvre la même fiche que
+// n'importe quel corps (cf. `config/navigable.ts`). Elle n'affiche que ce qui existe pour
+// elle — nom, catégorie, description — parce qu'aucun FAIT chiffré la concernant n'est encore
+// sourcé, et qu'un fait sans provenance ne s'affiche pas.
+const CONFIGS = NAVIGABLE_BODIES;
 /** Parent réel de chaque satellite, lu dans l'imbrication du catalogue — jamais déduit du `kind`. */
 const PARENT_OF = new Map(
   allBodies(CELESTIAL_CONFIG).map((e) => [e.name, e.parentName])
@@ -468,6 +469,10 @@ function subtitle(name: string, cfg: CelestialBodyConfig): string {
       return t('subtitle.asteroid');
     case 'comet':
       return t('subtitle.comet');
+    case 'spacecraft':
+      return t('subtitle.spacecraft');
+    case 'interstellar':
+      return t('subtitle.interstellar');
     case 'planet': {
       const n = PLANET_ORDINALS.get(name);
       if (!n) return t('subtitle.planet');

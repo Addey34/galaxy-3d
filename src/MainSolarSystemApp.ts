@@ -42,6 +42,8 @@ import { SmallBodyOverlay } from './ui/smallBodyOverlay';
 import { InterstellarOverlay } from './ui/interstellarOverlay';
 import { setupSmallBodyFilters } from './ui/smallBodyFilters';
 import { SpacecraftOverlay } from './ui/spacecraftOverlay';
+import { createNavigableAnchors } from './ui/navigableAnchors';
+import { NAVIGABLE_TARGETS } from './config/navigable';
 import { SPACECRAFT_MISSIONS } from './config/spacecraft';
 import { setupBodyPicker } from './ui/bodyPicker';
 import { setupOrbitOptions } from './ui/orbitOptions';
@@ -240,13 +242,8 @@ if (surfaceScrim) {
         .filter(([, cfg]) => cfg.kind !== 'skybox')
         .map(([name]) => name)
     );
-    setupBodyPicker(
-      sceneSystem.scene,
-      cameraSystem.camera,
-      cameraSystem.renderer.domElement,
-      planetNav,
-      bodyNames
-    );
+    // Le clic 3D est câblé plus bas, après les couches instrument : le picker consulte leurs
+    // marqueurs avant de lancer un rayon (cf. `ui/bodyPicker.ts`).
 
     // HUD de labels projetés — actif en Éducatif ET Exploration.
     // En Éducatif : labels texte au-dessus de chaque corps avec mesh.
@@ -263,7 +260,6 @@ if (surfaceScrim) {
     );
     exploHud.setMode('educ');
     exploHud.setActive(true);
-    setupOrbitOptions(sceneSystem, exploHud, overlayCoordinator);
     setupRenderExposure(sceneSystem, cameraSystem);
     setupColorblindToggle(sceneSystem);
     setupUnitsToggle();
@@ -286,6 +282,10 @@ if (surfaceScrim) {
     // couverture, cf. spacecraftOverlay.ts).
     const spacecraftOverlay = new SpacecraftOverlay(SPACECRAFT_MISSIONS);
     spacecraftOverlay.mount();
+    // Actives dans les DEUX modes depuis que les sondes sont ciblables : sélectionner une sonde
+    // en Éducatif ouvrait sinon une vue sur un point que rien ne dessinait. Les objets
+    // interstellaires suivaient déjà cette règle, pour une raison voisine.
+    spacecraftOverlay.setActive(true);
 
     // Objets interstellaires — couche instrument 2D active dans les DEUX modes : leur
     // trajectoire ouverte se lit justement dans la vue compressée (cf. interstellarOverlay.ts).
@@ -293,6 +293,44 @@ if (surfaceScrim) {
     interstellarOverlay.mount();
     interstellarOverlay.setActive(true);
     setupInterstellarPathsToggle(interstellarOverlay);
+
+    // Ancres invisibles des sondes et des interstellaires : ce qui les rend CIBLABLES par la
+    // commande de navigation partagée, sans leur donner le moindre pixel (cf.
+    // `ui/navigableAnchors.ts`). Elles se placent par la même fonction que les marqueurs.
+    const navigableAnchors = createNavigableAnchors(
+      sceneSystem.scene,
+      horizonsEphemeris
+    );
+    cameraSystem.registerTargets(navigableAnchors.targets);
+    // Une sonde n'existe pas à toute date. La palette grise ce qui n'a pas de position à la
+    // date courante plutôt que d'emmener la caméra sur la dernière position connue.
+    const instrumentNames = [...NAVIGABLE_TARGETS.keys()];
+    navigableAnchors.onAvailabilityChange((available) =>
+      planetNav.setUnavailable(
+        new Set(instrumentNames.filter((name) => !available.has(name)))
+      )
+    );
+
+    setupBodyPicker(
+      sceneSystem.scene,
+      cameraSystem.camera,
+      cameraSystem.renderer.domElement,
+      planetNav,
+      bodyNames,
+      [
+        (x, y) => spacecraftOverlay.markerAt(x, y),
+        (x, y) => interstellarOverlay.markerAt(x, y),
+      ]
+    );
+
+    // Réglages : appelé ICI, après les couches instrument, parce que son tableau pilote
+    // désormais leurs marqueurs et leurs noms autant que les corps de la scène.
+    setupOrbitOptions(
+      sceneSystem,
+      exploHud,
+      [spacecraftOverlay, interstellarOverlay],
+      overlayCoordinator
+    );
 
     // Le bloc live de la fiche (distance réelle + temps-lumière) n'a de sens qu'en Explo,
     // pour la cible suivie ; en Éducatif ou en vue libre on passe `null` → bloc masqué.
@@ -313,8 +351,10 @@ if (surfaceScrim) {
       if (wantOverlays !== exploOverlaysVisible) {
         exploOverlaysVisible = wantOverlays;
         smallBodyOverlay.setActive(wantOverlays);
-        spacecraftOverlay.setActive(wantOverlays);
       }
+      // AVANT les couches 2D et la caméra : les ancres et les marqueurs doivent décrire la
+      // même position à la même frame.
+      navigableAnchors.update(orbitalMechanics.simulationDate, morph);
       exploHud.update(cameraSystem.camera, cameraSystem, sceneSystem);
       smallBodyOverlay.update(
         cameraSystem.camera,

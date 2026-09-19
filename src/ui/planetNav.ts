@@ -20,6 +20,11 @@ export interface PlanetNavigation {
   selectBody(name: string): void;
   /** Corps actuellement sélectionné, `overview` pour la vue globale. */
   getSelectedBody(): string | null;
+  /**
+   * Objets qu'on ne peut pas cibler à la date courante (sonde hors couverture, objet
+   * interstellaire hors fenêtre). Transmis tel quel à la palette : c'est elle qui l'affiche.
+   */
+  setUnavailable(names: ReadonlySet<string>): void;
 }
 
 export function setupPlanetControls(
@@ -53,5 +58,6 @@ export function setupPlanetControls(
   return {
     selectBody,
     getSelectedBody: () => selectedBody,
+    setUnavailable: (names) => palette.setUnavailable(names),
   };
 }
