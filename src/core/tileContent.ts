@@ -61,8 +61,8 @@ async function defaultMakeTexture(blob: Blob): Promise<THREE.Texture> {
   texture.needsUpdate = true;
 
   // THREE.Texture.dispose() libère les ressources WebGL, mais pas l'ImageBitmap natif
-  // utilisé comme source. Les couches météo remplacent régulièrement ces textures :
-  // fermer explicitement le bitmap évite une croissance mémoire sur les sessions longues.
+  // utilisé comme source. Le listener `dispose` ferme donc explicitement le bitmap quand les
+  // couches météo remplacent leur texture, sans laisser croître la mémoire native.
   const closeBitmap = (): void => {
     bitmap.close();
     texture.removeEventListener('dispose', closeBitmap);
