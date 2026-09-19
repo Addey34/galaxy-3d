@@ -1,5 +1,6 @@
 import { flattenBodies } from '@/config/catalog';
 import { CELESTIAL_CONFIG } from '@/config/bodies';
+import { NAVIGABLE_TARGETS } from '@/config/navigable';
 import { onLocaleChange, t } from '@/i18n';
 import { bodyDisplayName } from '@/i18n/bodyText';
 import type { SceneSystem } from '@/components/systems/SceneSystem';
@@ -10,7 +11,18 @@ import type { OverlayCoordinator } from './overlayCoordinator';
 interface RowCheckboxes {
   label: HTMLInputElement;
   body: HTMLInputElement;
-  orbit: HTMLInputElement;
+  /** Absente pour un objet d'instrument : une sonde n'a pas d'orbite fermée à tracer. */
+  orbit?: HTMLInputElement;
+}
+
+/**
+ * Ce que le tableau pilote sur la couche instrument. Les deux overlays (sondes, objets
+ * interstellaires) l'implémentent et ignorent chacun les noms qui ne sont pas les siens : le
+ * tableau n'a donc pas à savoir à qui appartient une ligne.
+ */
+export interface InstrumentVisibility {
+  setHiddenNames(names: ReadonlySet<string>): void;
+  setHiddenLabelNames(names: ReadonlySet<string>): void;
 }
 
 /** Une <td> avec sa case à cocher — la brique répétée trois fois par ligne du tableau. */
@@ -36,6 +48,7 @@ function buildToggleCell(
 export function setupOrbitOptions(
   sceneSystem: SceneSystem,
   exploHud: Pick<ExploHud, 'setHiddenNames'>,
+  instrument: readonly InstrumentVisibility[] = [],
   coordinator?: OverlayCoordinator
 ): void {
   const panel = document.getElementById('orbit-options');
@@ -56,6 +69,11 @@ export function setupOrbitOptions(
     ([name, cfg]) =>
       orbitNames.has(name) && cfg.kind !== 'skybox' && cfg.kind !== 'star'
   );
+  // Objets de la couche instrument : deux colonnes sur trois. Ils étaient nommés à l'écran
+  // et réglables nulle part, seule surface où le panneau ne disait pas tout ce qui s'affiche.
+  const instrumentRows = [...NAVIGABLE_TARGETS.entries()];
+  /** Toutes les lignes du tableau : ce qui a un libellé et un marqueur ou un mesh. */
+  const visualRows = [...bodies, ...instrumentRows];
 
   // Libellés : même retenue de départ que les orbites juste en dessous, et pour la même
   // raison. Tout afficher empilait vingt-quatre étiquettes sur la vue initiale. Cf.
@@ -82,8 +100,17 @@ export function setupOrbitOptions(
   const isOrbitVisible = (name: string): boolean =>
     orbitState.get(name) ?? false;
 
-  const applyHiddenLabelNames = (): void =>
-    exploHud.setHiddenNames(new Set(hiddenLabelNames));
+  // Les deux destinataires reçoivent le MÊME ensemble : chacun ignore les noms qui ne le
+  // concernent pas. C'est ce qui évite au tableau d'avoir à savoir qui dessine quoi.
+  const applyHiddenLabelNames = (): void => {
+    const names = new Set(hiddenLabelNames);
+    exploHud.setHiddenNames(names);
+    for (const layer of instrument) layer.setHiddenLabelNames(names);
+  };
+  const applyHiddenBodyNames = (): void => {
+    const names = new Set(hiddenBodyNames);
+    for (const layer of instrument) layer.setHiddenNames(names);
+  };
 
   // Références aux cases de chaque ligne — permet à l'en-tête de colonne (tout cocher/décocher)
   // de mettre à jour les cases déjà rendues sans reconstruire tout le tableau (perd le focus/
@@ -97,10 +124,11 @@ export function setupOrbitOptions(
    */
   function syncHeader(
     header: HTMLInputElement,
-    isChecked: (name: string) => boolean
+    isChecked: (name: string) => boolean,
+    list: readonly (readonly [string, unknown])[] = visualRows
   ): void {
-    const total = bodies.length;
-    const checkedCount = bodies.filter(([name]) => isChecked(name)).length;
+    const total = list.length;
+    const checkedCount = list.filter(([name]) => isChecked(name)).length;
     header.checked = checkedCount === total;
     header.indeterminate = checkedCount > 0 && checkedCount < total;
   }
@@ -108,7 +136,7 @@ export function setupOrbitOptions(
   // ── En-tête « Nom » : coche/décoche tous les corps, jamais un simple interrupteur caché ──
   labelsToggle.addEventListener('change', () => {
     const checked = labelsToggle.checked;
-    for (const [name] of bodies) {
+    for (const [name] of visualRows) {
       if (checked) hiddenLabelNames.delete(name);
       else hiddenLabelNames.add(name);
       const row = rows.get(name);
@@ -121,13 +149,15 @@ export function setupOrbitOptions(
   // ── En-tête « Corps » ─────────────────────────────────────────────────────
   bodiesToggle.addEventListener('change', () => {
     const checked = bodiesToggle.checked;
-    for (const [name] of bodies) {
+    for (const [name] of visualRows) {
       if (checked) hiddenBodyNames.delete(name);
       else hiddenBodyNames.add(name);
-      sceneSystem.setBodyVisible(name, checked);
+      if (!NAVIGABLE_TARGETS.has(name))
+        sceneSystem.setBodyVisible(name, checked);
       const row = rows.get(name);
       if (row) row.body.checked = checked;
     }
+    applyHiddenBodyNames();
     bodiesToggle.indeterminate = false;
   });
 
@@ -138,17 +168,19 @@ export function setupOrbitOptions(
       orbitState.set(name, checked);
       sceneSystem.setBodyOrbitVisible(name, checked);
       const row = rows.get(name);
-      if (row) row.orbit.checked = checked;
+      if (row?.orbit) row.orbit.checked = checked;
     }
     orbitsToggle.indeterminate = false;
   });
 
   applyHiddenLabelNames();
+  applyHiddenBodyNames();
 
   function buildTableRows(): void {
     tableBodyEl!.replaceChildren();
     rows.clear();
-    for (const [name, cfg] of bodies) {
+    for (const [name, cfg] of visualRows) {
+      const isInstrument = NAVIGABLE_TARGETS.has(name);
       const display = bodyDisplayName(name);
       const row = document.createElement('tr');
       row.className = 'oo-tr';
@@ -184,25 +216,39 @@ export function setupOrbitOptions(
         (checked) => {
           if (checked) hiddenBodyNames.delete(name);
           else hiddenBodyNames.add(name);
-          sceneSystem.setBodyVisible(name, checked);
+          if (isInstrument) applyHiddenBodyNames();
+          else sceneSystem.setBodyVisible(name, checked);
           syncHeader(bodiesToggle!, isBodyVisible);
         }
       );
 
-      const { cell: orbitCell, checkbox: orbitCheckbox } = buildToggleCell(
-        isOrbitVisible(name),
-        t('settings.row.orbit.aria', { name: display }),
-        (checked) => {
-          orbitState.set(name, checked);
-          sceneSystem.setBodyOrbitVisible(name, checked);
-          syncHeader(orbitsToggle!, isOrbitVisible);
-        }
-      );
+      // Une sonde n'a pas d'orbite fermée (assistances gravitationnelles, halo L2) et une
+      // trajectoire interstellaire ne se referme jamais : la cellule reste VIDE plutôt que
+      // de porter une case sans effet. Les trois trajectoires hyperboliques ont leur propre
+      // réglage dans ce même panneau.
+      let orbitCell: HTMLTableCellElement;
+      let orbitCheckbox: HTMLInputElement | undefined;
+      if (isInstrument) {
+        orbitCell = document.createElement('td');
+        orbitCell.className = 'oo-td oo-td-toggle';
+      } else {
+        const built = buildToggleCell(
+          isOrbitVisible(name),
+          t('settings.row.orbit.aria', { name: display }),
+          (checked) => {
+            orbitState.set(name, checked);
+            sceneSystem.setBodyOrbitVisible(name, checked);
+            syncHeader(orbitsToggle!, isOrbitVisible, bodies);
+          }
+        );
+        orbitCell = built.cell;
+        orbitCheckbox = built.checkbox;
+      }
 
       rows.set(name, {
         label: labelCheckbox,
         body: bodyCheckbox,
-        orbit: orbitCheckbox,
+        ...(orbitCheckbox ? { orbit: orbitCheckbox } : {}),
       });
 
       row.append(nameCell, labelCell, bodyCell, orbitCell);
@@ -210,7 +256,7 @@ export function setupOrbitOptions(
     }
     syncHeader(labelsToggle!, isLabelVisible);
     syncHeader(bodiesToggle!, isBodyVisible);
-    syncHeader(orbitsToggle!, isOrbitVisible);
+    syncHeader(orbitsToggle!, isOrbitVisible, bodies);
   }
   buildTableRows();
   onLocaleChange(buildTableRows);

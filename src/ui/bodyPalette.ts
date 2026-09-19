@@ -8,14 +8,15 @@
  * ajouter un corps n'exige aucune édition HTML.
  */
 import { CELESTIAL_CONFIG } from '@/config/bodies';
-import { forEachBody, flattenBodies } from '@/config/catalog';
-import { SMALL_BODY_KINDS, type BodyKind } from '@/types';
+import { forEachBody } from '@/config/catalog';
+import { NAVIGABLE_BODIES, NAVIGABLE_TARGETS } from '@/config/navigable';
+import type { BodyKind, CelestialConfig } from '@/types';
 import { bodyDisplayName } from '@/i18n/bodyText';
 import { onLocaleChange, t } from '@/i18n';
 import { bodyAccentColor, hexToRgbTriplet, onAccentChange } from './bodyAccent';
 import type { OverlayCoordinator } from './overlayCoordinator';
 
-const BODY_CONFIGS = flattenBodies(CELESTIAL_CONFIG);
+const BODY_CONFIGS = NAVIGABLE_BODIES;
 
 interface PaletteEntry {
   name: string;
@@ -35,21 +36,61 @@ const GROUPS: Array<{ key: string; kinds: ReadonlySet<BodyKind> }> = [
     key: 'nav.group.other',
     kinds: new Set<BodyKind>(['asteroid', 'comet']),
   },
+  // Couche instrument : nommée à l'écran depuis toujours, cherchable depuis seulement
+  // maintenant (cf. `config/navigable.ts`).
+  { key: 'nav.group.spacecraft', kinds: new Set<BodyKind>(['spacecraft']) },
+  {
+    key: 'nav.group.interstellar',
+    kinds: new Set<BodyKind>(['interstellar']),
+  },
 ];
 
 export interface BodyPalette {
   /** Reflète la sélection courante (état actif + libellé du déclencheur). */
   setActive(name: string | null): void;
+  /**
+   * Entrées que l'on ne peut PAS cibler à la date courante : une sonde hors de la couverture
+   * de son fichier Horizons (avant son lancement, au-delà de sa solution de trajectoire), un
+   * objet interstellaire hors de sa fenêtre. Elles restent listées et cherchables — leur
+   * absence est une information sur la DATE, pas sur l'objet — mais ne se sélectionnent pas :
+   * il n'y a aucune position à aller voir, et suivre la dernière connue serait un mensonge.
+   */
+  setUnavailable(names: ReadonlySet<string>): void;
   close(): void;
 }
 
-/** Corps éligibles à la palette : mêmes règles que l'ancienne barre. */
+/**
+ * Noms des corps du catalogue qui méritent une entrée de palette : TOUS, sauf le fond étoilé
+ * qui n'est pas un corps.
+ *
+ * Il y avait ici une seconde exclusion — les petits corps sans texture de surface — au motif
+ * qu'ils seraient « naviguables uniquement par leurs labels Explo ». Elle était fausse sur les
+ * deux plans. Ces six corps (Psyché, Bennu, Éros, Itokawa, Ryugu, Ida) ont un `CelestialObject`,
+ * une ligne d'orbite, une ligne dans le tableau Réglages, une fiche d'info et une page
+ * d'atterrissage ; cinq d'entre eux ont même un MODÈLE DE FORME 3D, pas une sphère de repli.
+ * Ils étaient donc déjà cliquables en 3D et déjà réglables — mais introuvables à la recherche,
+ * seule surface où le catalogue n'était pas la source unique. Un corps du catalogue se cherche.
+ *
+ * Exporté et pur pour que le test confronte la liste au catalogue plutôt qu'au DOM.
+ */
+export function paletteBodyNames(
+  config: CelestialConfig = CELESTIAL_CONFIG
+): string[] {
+  const names: string[] = [];
+  forEachBody(config, ({ name, config: cfg }) => {
+    if (cfg.kind !== 'skybox') names.push(name);
+  });
+  // Sondes et objets interstellaires, dans l'ordre de leurs registres.
+  names.push(...NAVIGABLE_TARGETS.keys());
+  return names;
+}
+
+/** Corps éligibles à la palette, avec leur bouton `#orbit-{nom}`. */
 function collectEntries(): PaletteEntry[] {
   const entries: PaletteEntry[] = [];
-  forEachBody(CELESTIAL_CONFIG, ({ name, config: cfg }) => {
-    if (cfg.kind === 'skybox') return;
-    // Petits corps sans texture surface : naviguables uniquement par leurs labels Explo.
-    if (SMALL_BODY_KINDS.has(cfg.kind) && !cfg.textures?.surface) return;
+  for (const name of paletteBodyNames()) {
+    const cfg = BODY_CONFIGS.get(name);
+    if (!cfg) continue;
 
     const label = bodyDisplayName(name);
     const accent = hexToRgbTriplet(bodyAccentColor(cfg, name));
@@ -62,13 +103,15 @@ function collectEntries(): PaletteEntry[] {
     button.setAttribute('aria-selected', 'false');
     button.style.setProperty('--body-rgb', accent);
     entries.push({ name, label, kind: cfg.kind, accent, button });
-  });
+  }
   return entries;
 }
 
 function kindTag(kind: BodyKind): string {
   if (kind === 'moon') return t('nav.kind.moon');
   if (kind === 'dwarf') return t('nav.kind.dwarf');
+  if (kind === 'spacecraft') return t('nav.kind.spacecraft');
+  if (kind === 'interstellar') return t('nav.kind.interstellar');
   return '';
 }
 
@@ -112,7 +155,7 @@ export function setupBodyPalette(
   );
 
   if (!panel || !trigger || !input || !results) {
-    return { setActive: () => {}, close: () => {} };
+    return { setActive: () => {}, setUnavailable: () => {}, close: () => {} };
   }
 
   const entries = collectEntries();
@@ -216,7 +259,7 @@ export function setupBodyPalette(
     } else if (event.key === 'Enter') {
       event.preventDefault();
       const entry = lastVisible[highlighted] ?? lastVisible[0];
-      if (entry) onSelect(entry.name);
+      if (entry && !unavailable.has(entry.name)) onSelect(entry.name);
     } else if (event.key === 'Escape') {
       event.preventDefault();
       setOpen(false);
@@ -224,12 +267,30 @@ export function setupBodyPalette(
     }
   });
 
+  let unavailable: ReadonlySet<string> = new Set();
+
+  const setUnavailable = (names: ReadonlySet<string>): void => {
+    unavailable = new Set(names);
+    for (const entry of entries) {
+      const off = unavailable.has(entry.name);
+      entry.button.classList.toggle('is-unavailable', off);
+      // `aria-disabled` plutôt que `disabled` : l'entrée reste atteignable au clavier et
+      // annoncée, ce qui est le but — on apprend que l'objet n'existe pas à cette date.
+      entry.button.setAttribute('aria-disabled', String(off));
+      if (off) entry.button.title = t('nav.unavailable');
+      else entry.button.removeAttribute('title');
+    }
+  };
+
   // Clic sur une entrée : commande de navigation partagée.
   results.addEventListener('click', (event) => {
     const button = (event.target as HTMLElement).closest<HTMLButtonElement>(
       '.palette-item'
     );
-    if (button) onSelect(button.id.replace('orbit-', ''));
+    if (!button) return;
+    const name = button.id.replace('orbit-', '');
+    if (unavailable.has(name)) return;
+    onSelect(name);
   });
 
   overviewBtn?.addEventListener('click', () => onSelect('overview'));
@@ -279,6 +340,7 @@ export function setupBodyPalette(
 
   return {
     setActive,
+    setUnavailable,
     close: () => setOpen(false),
   };
 }

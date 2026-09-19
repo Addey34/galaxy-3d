@@ -6,7 +6,14 @@
  * réelles JPL Horizons (`HorizonsEphemerisService`, mêmes binaires que planètes/lunes/planètes
  * naines) — `getHeliocentricAU` renvoie `null` hors de sa fenêtre de couverture (avant le
  * lancement, ou au-delà de la solution de trajectoire) : on saute alors simplement cette sonde,
- * sans erreur. Actif uniquement en mode Exploration, comme le champ de petits corps.
+ * sans erreur.
+ *
+ * Actif dans les DEUX modes depuis que les sondes sont cherchables et ciblables : la restreindre
+ * à l'Exploration, comme le champ de petits corps, ouvrait en Éducatif une vue sur un point que
+ * rien ne dessinait. Deux réglages la pilotent par objet, colonnes « Nom » et « Corps » du
+ * tableau Réglages (`setHiddenLabelNames`, `setHiddenNames`), et `markerAt` rend chaque marqueur
+ * cliquable — sans lui, une sonde serait le seul objet nommé à l'écran qu'un clic ne peut pas
+ * atteindre, puisqu'elle n'a aucun mesh que le rayon puisse toucher.
  */
 import * as THREE from 'three';
 import { scaleToScene } from '@/core/overlayScale';
@@ -25,6 +32,16 @@ export class SpacecraftOverlay {
   private readonly ctx: CanvasRenderingContext2D | null;
   private readonly missions: SpacecraftMission[];
   private active = false;
+  /** Marqueurs masqués par le tableau Réglages (colonne « Corps »). */
+  private hidden: ReadonlySet<string> = new Set();
+  /** Objets dont le NOM est masqué (colonne « Libellé »), marqueur conservé. */
+  private hiddenLabels: ReadonlySet<string> = new Set();
+  /**
+   * Où chaque marqueur a été peint à la dernière image, en pixels écran. C'est ce qui rend une
+   * sonde CLIQUABLE : elle n'a pas de mesh, donc le raycast ne peut pas la toucher — le clic
+   * est résolu contre ces positions (cf. `ui/bodyPicker.ts`).
+   */
+  private readonly _markers: { name: string; x: number; y: number }[] = [];
   private readonly _p = new THREE.Vector3();
 
   constructor(missions: SpacecraftMission[]) {
@@ -45,7 +62,38 @@ export class SpacecraftOverlay {
   setActive(active: boolean): void {
     this.active = active;
     this.canvas.classList.toggle('is-visible', active);
-    if (!active) this._clear();
+    if (!active) {
+      this._clear();
+      // Plus rien n'est peint : plus rien n'est cliquable (cf. `markerAt`).
+      this._markers.length = 0;
+    }
+  }
+
+  /** Marqueurs à ne pas peindre (colonne « Corps » du tableau Réglages). */
+  setHiddenNames(names: ReadonlySet<string>): void {
+    this.hidden = new Set(names);
+  }
+
+  /** Noms à ne pas écrire (colonne « Libellé »), les marqueurs restent. */
+  setHiddenLabelNames(names: ReadonlySet<string>): void {
+    this.hiddenLabels = new Set(names);
+  }
+
+  /**
+   * Nom de la sonde dont le marqueur a été peint sous ce point d'écran, sinon `null`.
+   * `radius` est la tolérance en pixels : un point de 2,5 px se vise mal au doigt près.
+   */
+  markerAt(x: number, y: number, radius = 12): string | null {
+    let best: string | null = null;
+    let bestDistance = radius;
+    for (const marker of this._markers) {
+      const d = Math.hypot(marker.x - x, marker.y - y);
+      if (d <= bestDistance) {
+        bestDistance = d;
+        best = marker.name;
+      }
+    }
+    return best;
   }
 
   /**
@@ -65,9 +113,11 @@ export class SpacecraftOverlay {
     const w = window.innerWidth;
     const h = window.innerHeight;
     this._clear();
+    this._markers.length = 0;
     const locale = getLocale();
 
     for (const mission of this.missions) {
+      if (this.hidden.has(mission.name)) continue;
       const posAU = horizons.getHeliocentricAU(mission.name, date);
       if (!posAU) continue; // avant le lancement, ou au-delà de la solution de trajectoire
 
@@ -91,7 +141,9 @@ export class SpacecraftOverlay {
       this.ctx.beginPath();
       this.ctx.arc(x, y, 2.5, 0, Math.PI * 2);
       this.ctx.fill();
+      this._markers.push({ name: mission.name, x, y });
 
+      if (this.hiddenLabels.has(mission.name)) continue;
       this.ctx.font = '11px sans-serif';
       const text = mission.displayName[locale] ?? mission.displayName.en;
       const textWidth = this.ctx.measureText(text).width;

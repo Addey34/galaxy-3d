@@ -625,15 +625,70 @@ les marqueurs de sondes et de petits corps. `core/overlayScale.ts` porte la règ
 (`morphedSceneRadius`, `scaleToScene`) : les positions Éduc et Explo étant colinéaires,
 interpoler le rayon revient exactement à interpoler la position.
 
-Leur VISIBILITÉ suit le morph elle aussi, pas le mode : elles apparaissent dès que la transition
-démarre et ne disparaissent qu'une fois revenu à l'Éducatif. Tenu par `core/overlayScale.test.ts`,
-qui compare les deux extrémités à `ScaleService` — la source d'échelle de la scène — plutôt qu'à
-une formule recopiée.
+L'ÉCHELLE de toutes ces couches suit le morph. Leur VISIBILITÉ, elle, ne se décide plus de la
+même façon pour toutes. Le champ de petits corps SBDB (`smallBodyOverlay`) suit toujours le
+morph : il apparaît dès que la transition démarre et ne disparaît qu'une fois revenu à
+l'Éducatif. Les sondes et les objets interstellaires sont, eux, actifs dans les DEUX modes
+depuis qu'ils sont sélectionnables (§ « Objets d'instrument navigables » ci-dessous) — les
+restreindre à un mode ouvrait une vue sur un point que rien ne dessinait. L'échelle reste tenue
+par `core/overlayScale.test.ts`, qui compare les deux extrémités à `ScaleService` — la source
+d'échelle de la scène — plutôt qu'à une formule recopiée.
 
 **Ce que les tests ne voient pas** : la suite e2e tourne en `reducedMotion: 'reduce'`, donc le
 morph y est INSTANTANÉ ; aucun scénario ne peut observer un état intermédiaire. La vérification
 est la comparaison à l'écran, faite à 450 ms de transition : sans la correction, le marqueur de
 Juno quitte le champ pendant que Jupiter glisse encore ; avec, il reste collé à la planète.
+
+## Objets d'instrument navigables — sondes et interstellaires
+
+Onze sondes (`src/registry/spacecraft/`) et trois objets interstellaires
+(`src/registry/interstellar/`) sont peints par une couche 2D. Ils portaient un nom à l'écran et
+n'existaient nulle part ailleurs : introuvables à la recherche, impossibles à cliquer, absents
+du tableau Réglages, sans fiche. C'était la seule catégorie d'objets nommés dans cette
+situation.
+
+**Ils n'entrent PAS dans `CELESTIAL_CONFIG`, et c'est le choix central.** Ce catalogue décrit ce
+que la scène fabrique : un mesh, des textures à précharger, une ligne d'orbite fermée, une page
+d'atterrissage, une vignette de partage, une fiche de faits sourcés. Une sonde n'a rien de tout
+cela, et l'invariant Explo lui interdit même une taille apparente plancher. L'y faire entrer
+aurait demandé une exception dans `CelestialObjectFactory`, dans `TextureSystem`, dans
+`catalogValidation`, dans `OrbitalMechanics` et dans les quatre générateurs de pages — cinq
+exceptions pour partager quatre champs. `src/config/navigable.ts` ne partage donc que ce qui est
+réellement commun : un nom, une catégorie, une couleur, une description, et le droit d'être
+cherché, ciblé et réglé. `NAVIGABLE_BODIES` est la table que consulte la couche UI là où elle
+lisait `flattenBodies(CELESTIAL_CONFIG)` ; la scène, elle, ne connaît toujours que le catalogue.
+`src/config/navigable.test.ts` tient les deux moitiés du contrat, dont l'absence du catalogue.
+
+**L'ancre.** La caméra a besoin d'un `Object3D` à suivre. `ui/navigableAnchors.ts` en crée un
+par objet : un `THREE.Group` VIDE, sans géométrie ni matériau, qui ne dessine aucun pixel. Ce
+n'est pas une sphère mandataire déguisée — rien ne la rend visible, et le marqueur affiché reste
+celui de la couche 2D. Elle est placée par `scaleToScene`, exactement la fonction dont les deux
+couches se servent pour projeter leur marqueur : la caméra regarde donc le point où le marqueur
+est peint, dans les deux modes et pendant toute la transition. `CameraSystem` les reçoit par
+`registerTargets` ; ce qu'il demande d'une cible est décrit par `CameraTarget`, bien plus petit
+qu'un `CelestialObject`.
+
+**La disponibilité est MESURÉE, jamais déduite.** Un corps du catalogue existe à toute date ;
+une sonde, non. Hors de la couverture de son fichier Horizons — avant le lancement, au-delà de
+la solution de trajectoire — la source ne répond pas, et un objet interstellaire n'est dessiné
+que dans sa fenêtre autour du périhélie. L'ancre retient donc « la source a répondu », pas une
+date écrite à côté d'elle. L'entrée de palette reste listée et cherchable, mais `aria-disabled`
+et inerte : son absence dit quelque chose de la DATE affichée, pas de l'objet. Mesuré au
+2026-09-19 : Cassini (mission finie en 2017) et Rosetta (2016) sont grisées ; en 1970 les
+quatorze le sont.
+
+**Le clic.** Les canvas d'instrument sont en `pointer-events: none`. Le picker du canvas WebGL
+consulte donc leurs marqueurs AVANT de lancer son rayon (`ui/bodyPicker.ts`, `OverlayHitTest`) —
+dans cet ordre, parce qu'ils sont peints par-dessus la scène : ce qui est sous le pointeur est
+le marqueur, pas ce que le rayon trouverait derrière lui. Falsifié en inversant l'ordre.
+
+**Ce qu'ils n'ont pas, et pourquoi.** Pas de ligne dans la colonne « Orbite » du tableau
+Réglages : une sonde n'a pas d'orbite fermée (assistances gravitationnelles, halo L2) et une
+hyperbole ne se referme jamais ; la cellule reste vide plutôt que de porter une case sans effet,
+et les trois trajectoires interstellaires gardent leur réglage dédié. Pas de fait chiffré dans
+leur fiche non plus : leurs registres portent une date de lancement et une désignation, mais
+sans champ `source`, et un fait sans provenance ne s'affiche pas (§ « Faits sourcés »). Les
+sourcer est le travail qui rendrait leur fiche comparable à celle d'un corps.
 
 ## Halo lumineux — qui brille, et combien
 

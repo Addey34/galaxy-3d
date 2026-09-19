@@ -5,12 +5,14 @@
  * Nom : `displayName[locale]` sinon la clé capitalisée (correcte en anglais pour tous les
  * corps actuels). Description : `description[locale]` sinon repli anglais, sinon vide.
  */
-import { CELESTIAL_CONFIG } from '@/config/bodies';
-import { flattenBodies } from '@/config/catalog';
+import { NAVIGABLE_BODIES } from '@/config/navigable';
 import type { CelestialBodyConfig } from '@/types';
 import { getLocale } from './index';
 
-const CONFIGS = flattenBodies(CELESTIAL_CONFIG);
+// Corps du catalogue ET objets d'instrument (sondes, interstellaires) : un nom s'affiche de
+// la même façon des deux côtés, sinon une sonde sélectionnée n'aurait pas de nom (cf.
+// `config/navigable.ts`).
+const CONFIGS = NAVIGABLE_BODIES;
 
 function capitalize(s: string): string {
   return s.charAt(0).toUpperCase() + s.slice(1);

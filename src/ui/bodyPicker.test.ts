@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { describe, expect, it, vi } from 'vitest';
-import { setupBodyPicker } from './bodyPicker';
+import { setupBodyPicker, type OverlayHitTest } from './bodyPicker';
 import type { PlanetNavigation } from './planetNav';
 
 const CANVAS_RECT = {
@@ -42,7 +42,7 @@ function pointerEvent(
   return event;
 }
 
-function createFixture(): {
+function createFixture(overlayHits: OverlayHitTest[] = []): {
   canvas: HTMLElement;
   selectBody: ReturnType<typeof vi.fn>;
 } {
@@ -70,8 +70,9 @@ function createFixture(): {
   const nav: PlanetNavigation = {
     selectBody,
     getSelectedBody: () => null,
+    setUnavailable: () => {},
   };
-  setupBodyPicker(scene, camera, canvas, nav, new Set(['earth']));
+  setupBodyPicker(scene, camera, canvas, nav, new Set(['earth']), overlayHits);
 
   return { canvas, selectBody };
 }
@@ -110,5 +111,36 @@ describe('setupBodyPicker', () => {
     canvas.dispatchEvent(pointerEvent('pointerup', { x: 200, y: 100 }));
 
     expect(selectBody).not.toHaveBeenCalled();
+  });
+
+  /**
+   * UNE SONDE N'A PAS DE MESH, DONC LE RAYON NE PEUT PAS LA TOUCHER.
+   *
+   * Onze sondes et trois objets interstellaires sont peints par une couche 2D : ils sont
+   * nommés à l'écran, et ils étaient les seuls objets nommés qu'un clic ne pouvait pas
+   * atteindre. Le picker consulte donc les marqueurs AVANT de lancer son rayon — et dans cet
+   * ordre, parce qu'ils sont dessinés par-dessus la scène : ce qui est sous le pointeur est
+   * le marqueur, pas ce que le rayon trouverait derrière lui.
+   */
+  it('sélectionne un marqueur d’instrument avant de lancer le rayon', () => {
+    // Le pointeur tombe sur la Terre : sans la couche, ce clic sélectionne « earth ».
+    const { canvas, selectBody } = createFixture([
+      (x, y) => (x === 200 && y === 100 ? 'voyager1' : null),
+    ]);
+
+    canvas.dispatchEvent(pointerEvent('pointerdown', { x: 200, y: 100 }));
+    canvas.dispatchEvent(pointerEvent('pointerup', { x: 200, y: 100 }));
+
+    expect(selectBody).toHaveBeenCalledWith('voyager1');
+    expect(selectBody).toHaveBeenCalledTimes(1);
+  });
+
+  it('retombe sur le rayon quand aucun marqueur n’est touché', () => {
+    const { canvas, selectBody } = createFixture([() => null]);
+
+    canvas.dispatchEvent(pointerEvent('pointerdown', { x: 200, y: 100 }));
+    canvas.dispatchEvent(pointerEvent('pointerup', { x: 200, y: 100 }));
+
+    expect(selectBody).toHaveBeenCalledWith('earth');
   });
 });

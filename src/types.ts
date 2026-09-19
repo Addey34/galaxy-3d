@@ -20,7 +20,27 @@ export type TextureQuality = '1k' | '2k' | '4k' | '8k';
  * des marqueurs, conformément à l'invariant de vraie taille du mode Exploration.
  */
 export type BodyKind =
-  'star' | 'planet' | 'moon' | 'skybox' | 'asteroid' | 'comet' | 'dwarf';
+  | 'star'
+  | 'planet'
+  | 'moon'
+  | 'skybox'
+  | 'asteroid'
+  | 'comet'
+  | 'dwarf'
+  /**
+   * Objets de la COUCHE INSTRUMENT : sondes et objets interstellaires. Ils ne vivent pas dans
+   * `CELESTIAL_CONFIG` (cf. `config/navigable.ts`) — aucun mesh, aucune orbite fermée, aucune
+   * page — mais portent une catégorie pour que l'interface les groupe et les nomme sans tester
+   * leur nom, comme pour tous les autres corps.
+   */
+  | 'spacecraft'
+  | 'interstellar';
+
+/** Catégories portées par la couche instrument, jamais par le catalogue de la scène. */
+export const INSTRUMENT_KINDS: ReadonlySet<BodyKind> = new Set<BodyKind>([
+  'spacecraft',
+  'interstellar',
+]);
 
 /** Catégories de petits corps — positionnés par éléments orbitaux, hors barre de navigation. */
 export const SMALL_BODY_KINDS: ReadonlySet<BodyKind> = new Set<BodyKind>([

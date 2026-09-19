@@ -67,6 +67,12 @@ export class InterstellarOverlay {
   private readonly tracks: Track[];
   private showPaths = false;
   private active = false;
+  /** Marqueurs masqués par le tableau Réglages (colonne « Corps »). */
+  private hidden: ReadonlySet<string> = new Set();
+  /** Objets dont le NOM est masqué (colonne « Libellé »), marqueur conservé. */
+  private hiddenLabels: ReadonlySet<string> = new Set();
+  /** Où chaque marqueur a été peint (pixels écran) — ce qui le rend cliquable. */
+  private readonly _markers: { name: string; x: number; y: number }[] = [];
   private lastPublished = '';
   /** État de la dernière image peinte — sans changement, on ne redessine rien (cf. `update`). */
   private readonly _lastView = new Float64Array(34);
@@ -123,6 +129,32 @@ export class InterstellarOverlay {
     this._hasDrawn = false; // force le prochain dessin : la vue n'a pas bougé, le réglage oui
   }
 
+  /** Marqueurs à ne pas peindre (colonne « Corps » du tableau Réglages). */
+  setHiddenNames(names: ReadonlySet<string>): void {
+    this.hidden = new Set(names);
+    this._hasDrawn = false; // la vue n'a pas bougé, le réglage oui
+  }
+
+  /** Noms à ne pas écrire (colonne « Libellé »), les marqueurs restent. */
+  setHiddenLabelNames(names: ReadonlySet<string>): void {
+    this.hiddenLabels = new Set(names);
+    this._hasDrawn = false;
+  }
+
+  /** Nom de l'objet dont le marqueur a été peint sous ce point d'écran, sinon `null`. */
+  markerAt(x: number, y: number, radius = 12): string | null {
+    let best: string | null = null;
+    let bestDistance = radius;
+    for (const marker of this._markers) {
+      const d = Math.hypot(marker.x - x, marker.y - y);
+      if (d <= bestDistance) {
+        bestDistance = d;
+        best = marker.name;
+      }
+    }
+    return best;
+  }
+
   /** Affiche/masque l'overlay. À l'extinction, efface le canvas. */
   setActive(active: boolean): void {
     this.active = active;
@@ -130,6 +162,8 @@ export class InterstellarOverlay {
     if (!active) {
       this._clear();
       this._hasDrawn = false;
+      // Plus rien n'est peint : plus rien n'est cliquable (cf. `markerAt`).
+      this._markers.length = 0;
       this._publish(0, 0, 0);
     }
   }
@@ -153,6 +187,7 @@ export class InterstellarOverlay {
     const locale = getLocale();
     if (!this._viewChanged(camera, now, morph, w, h, locale)) return;
     this._clear();
+    this._markers.length = 0;
 
     let markers = 0;
     let tracks = 0;
@@ -160,6 +195,7 @@ export class InterstellarOverlay {
     for (const track of this.tracks) {
       if (now < track.fromMs || now > track.toMs) continue;
       tracks++;
+      if (this.hidden.has(track.object.name)) continue;
 
       if (this.showPaths) {
         this._drawPath(ctx, camera, track, morph, w, h);
@@ -183,6 +219,9 @@ export class InterstellarOverlay {
       ctx.beginPath();
       ctx.arc(x, y, 2.5, 0, Math.PI * 2);
       ctx.fill();
+      this._markers.push({ name: track.object.name, x, y });
+      markers++;
+      if (this.hiddenLabels.has(track.object.name)) continue;
       ctx.font = '11px sans-serif';
       const text = track.object.displayName[locale];
       const textWidth = ctx.measureText(text).width;
@@ -209,7 +248,6 @@ export class InterstellarOverlay {
         ctx.fillStyle = 'rgba(225, 238, 255, 0.9)';
         ctx.fillText(text, x + placed.dx - textWidth / 2, y + placed.dy + 4);
       }
-      markers++;
     }
     this._publish(markers, tracks, paths);
   }
