@@ -114,12 +114,13 @@ export function setupMeteoModelLayer(
       name: config.id + 'Layer',
       enabled: true,
       keyForDate: meteoHourKey,
-      fetchForKey: async (key) => {
+      fetchForKey: async (key, signal) => {
         const simDate = new Date(key + ':00:00Z');
         return fetchMeteoGrid(simDate, {
           variable: config.variable,
           forecastGrid: config.forecastGrid,
           archiveGrid: config.archiveGrid,
+          signal,
         });
       },
       onStateChange: (next) => {
