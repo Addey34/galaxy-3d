@@ -24,7 +24,7 @@ export interface DatedDataLayerConfig<T> {
   /** Date de simulation → clé stable (heure/instant) ou null si hors plage. Pur (core/). */
   keyForDate: (date: Date) => string | null;
   /** Clé → promesse de donnée (fetch + parse). Rejette sur échec réseau/parse. */
-  fetchForKey: (key: string) => Promise<T>;
+  fetchForKey: (key: string, signal?: AbortSignal) => Promise<T>;
   /** Applique la donnée chargée (stocke la grille de vent courante, etc.). */
   apply: (data: T) => void;
   /** Notifie l'état observable du chargement au panneau. */
@@ -47,7 +47,12 @@ export function createDatedDataLayer<T>(
 
   // Dédup des requêtes en vol (pas de cache par clé : la donnée est volatile, on garde
   // seulement la plus récente appliquée).
-  const inFlight = new Map<string, Promise<T>>();
+  type InFlightRequest = {
+    promise: Promise<T>;
+    controller: AbortController;
+  };
+  const inFlight = new Map<string, InFlightRequest>();
+  let disposed = false;
 
   // Backoff sur échec : après un échec réseau, on ne réessaie pas la même clé dès la frame
   // suivante (Open-Meteo rate-limite en 429 ; le time-travel rapide aggrave la cascade).
@@ -56,28 +61,43 @@ export function createDatedDataLayer<T>(
   let appliedKey: string | null = null;
   let lastRequestedKey: string | null = null;
   let failedKey: string | null = null;
+  let activeRequest: InFlightRequest | null = null;
 
-  function fetchForKey(key: string): Promise<T> {
+  const isAbortError = (error: unknown): boolean =>
+    error instanceof DOMException && error.name === 'AbortError';
+
+  function fetchForKey(key: string): InFlightRequest {
     const existing = inFlight.get(key);
     if (existing) return existing;
-    const promise = config
-      .fetchForKey(key)
-      .then((data) => {
-        inFlight.delete(key);
-        return data;
-      })
-      .catch((err) => {
-        inFlight.delete(key);
-        throw err;
+
+    const controller = new AbortController();
+    const promise = Promise.resolve()
+      .then(() => config.fetchForKey(key, controller.signal))
+      .finally(() => {
+        if (inFlight.get(key)?.promise === promise) inFlight.delete(key);
       });
-    inFlight.set(key, promise);
-    return promise;
+    const request = { promise, controller };
+    inFlight.set(key, request);
+
+    // Une requête annulée ne doit pas bloquer un futur retour vers la même clé si le chargeur
+    // injecté ignore AbortSignal et met du temps à se résoudre.
+    controller.signal.addEventListener(
+      'abort',
+      () => {
+        if (inFlight.get(key)?.promise === promise) inFlight.delete(key);
+      },
+      { once: true }
+    );
+
+    return request;
   }
 
   function applyForSimulationDate(simDate: Date): void {
     const key = config.keyForDate(simDate);
     // Hors plage : on ne touche à rien (l'état précédent reste).
     if (key === null) {
+      activeRequest?.controller.abort();
+      activeRequest = null;
       lastRequestedKey = null;
       return;
     }
@@ -86,27 +106,45 @@ export function createDatedDataLayer<T>(
     // Ré-essai de la MÊME clé qui vient d'échouer → throttlé par le backoff. Une AUTRE clé
     // (time-travel) passe toujours immédiatement.
     if (key === failedKey && !backoff.shouldRetry(performance.now())) return;
+    activeRequest?.controller.abort();
+    const request = fetchForKey(key);
+    activeRequest = request;
     lastRequestedKey = key;
     config.onStateChange?.('loading');
 
-    void fetchForKey(key)
+    void request.promise
       .then((data) => {
         // Une demande plus récente a pu changer la cible : n'appliquer que si toujours
         // la dernière, et pas déjà appliquée.
-        if (key !== lastRequestedKey) return;
+        if (
+          disposed ||
+          request.controller.signal.aborted ||
+          key !== lastRequestedKey
+        )
+          return;
         if (key === appliedKey) return;
         config.apply(data);
         config.onStateChange?.('ready');
         appliedKey = key;
         failedKey = null;
+        if (activeRequest === request) activeRequest = null;
         backoff.noteSuccess();
         Logger.success(`[${config.name}] Donnée appliquée (${key}).`);
       })
       .catch((err) => {
+        // Annulation ou résultat d'une ancienne demande : aucun backoff et aucun état d'erreur.
+        if (
+          disposed ||
+          request.controller.signal.aborted ||
+          isAbortError(err) ||
+          key !== lastRequestedKey
+        )
+          return;
         // Repli silencieux + backoff : ré-essai autorisé plus tard (réaligne lastRequested
         // sur ce qui est réellement appliqué), le ré-essai de CETTE clé est différé.
         lastRequestedKey = appliedKey;
         failedKey = key;
+        if (activeRequest === request) activeRequest = null;
         backoff.noteFailure(performance.now());
         config.onStateChange?.('error');
         Logger.warn(`[${config.name}] Échec du chargement (${key}).`, err);
@@ -126,7 +164,12 @@ export function createDatedDataLayer<T>(
   });
 
   return () => {
+    if (disposed) return;
+    disposed = true;
     unsubscribe();
+    activeRequest?.controller.abort();
+    activeRequest = null;
+    [...inFlight.values()].forEach(({ controller }) => controller.abort());
     inFlight.clear();
   };
 }
