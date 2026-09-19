@@ -1,6 +1,5 @@
 import { readdirSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { INTERSTELLAR_OBJECTS } from '@/config/interstellar';
 import { INTERSTELLAR_ORDER, INTERSTELLAR_RECORDS, loadInterstellar } from './index';
 
 describe('interstellaires du registre', () => {
