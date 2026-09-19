@@ -50,10 +50,11 @@ export interface DatedTextureLayerConfig {
   /** Réglages du backoff exponentiel après échec réseau (défauts de createBackoff). */
   retry?: BackoffOptions;
   /**
-   * Chargeur de texture injectable (tests). Reçoit l'URL, résout une THREE.Texture, rejette
-   * (échec réseau) ou rejette `EmptyTileError` (tuile vide → candidat suivant).
+   * Chargeur de texture injectable (tests). Reçoit l'URL et un signal d'annulation, résout
+   * une THREE.Texture, rejette (échec réseau) ou rejette `EmptyTileError` (tuile vide →
+   * candidat suivant).
    */
-  loadTexture?: (url: string) => Promise<THREE.Texture>;
+  loadTexture?: (url: string, signal?: AbortSignal) => Promise<THREE.Texture>;
 }
 
 /**
@@ -71,8 +72,11 @@ export function createDatedTextureLayer(
   // pour une tuile vide, Error pour un échec réseau).
   const loadTexture =
     config.loadTexture ??
-    ((url: string) =>
-      fetchTileWithContentCheck(url, { minBytes: config.minTileBytes }));
+    ((url: string, signal?: AbortSignal) =>
+      fetchTileWithContentCheck(url, {
+        minBytes: config.minTileBytes,
+        signal,
+      }));
 
   // Adaptateur du mode hérité (keyForDate/urlForKey) vers un resolver à un seul candidat.
   const resolveSources: LayerSourceResolver =
@@ -96,7 +100,12 @@ export function createDatedTextureLayer(
 
   // Cache par id de candidat (image réutilisée entre visites) + dédup des requêtes en vol.
   const cache = new Map<string, THREE.Texture>();
-  const inFlight = new Map<string, Promise<THREE.Texture>>();
+  type InFlightRequest = {
+    promise: Promise<THREE.Texture>;
+    controller: AbortController;
+  };
+  const inFlight = new Map<string, InFlightRequest>();
+  let disposed = false;
 
   // Backoff sur échec : après un échec réseau, on ne réessaie pas la même cible dès la frame
   // suivante (cascade de requêtes qui échouent, surtout hors-ligne) mais après un délai croissant.
@@ -107,23 +116,59 @@ export function createDatedTextureLayer(
   let appliedRequestKey: string | null = null;
   let lastRequestedKey: string | null = null;
   let failedRequestKey: string | null = null;
+  let activeRequestController: AbortController | null = null;
 
-  function loadCandidate(cand: SourceCandidate): Promise<THREE.Texture> {
+  const abortError = (): DOMException =>
+    new DOMException('Requête annulée', 'AbortError');
+  const isAbortError = (error: unknown): boolean =>
+    error instanceof DOMException && error.name === 'AbortError';
+
+  function loadCandidate(
+    cand: SourceCandidate,
+    parentSignal?: AbortSignal
+  ): Promise<THREE.Texture> {
     const cached = cache.get(cand.id);
     if (cached) return Promise.resolve(cached);
+
     const existing = inFlight.get(cand.id);
-    if (existing) return existing;
-    const promise = loadTexture(cand.url)
+    if (existing) return existing.promise;
+
+    const controller = new AbortController();
+    const abortFromParent = (): void => controller.abort(parentSignal?.reason);
+    if (parentSignal?.aborted) abortFromParent();
+    else parentSignal?.addEventListener('abort', abortFromParent, { once: true });
+
+    let request!: InFlightRequest;
+    const promise = Promise.resolve()
+      .then(() => loadTexture(cand.url, controller.signal))
       .then((texture) => {
+        // Un chargeur injecté peut ignorer AbortSignal. Dans ce cas, ne jamais remettre
+        // une texture obsolète dans le cache après changement de date ou destruction.
+        if (disposed || controller.signal.aborted) {
+          texture.dispose();
+          throw abortError();
+        }
         cache.set(cand.id, texture);
-        inFlight.delete(cand.id);
         return texture;
       })
-      .catch((err) => {
-        inFlight.delete(cand.id);
-        throw err;
+      .finally(() => {
+        parentSignal?.removeEventListener('abort', abortFromParent);
+        if (inFlight.get(cand.id) === request) inFlight.delete(cand.id);
       });
-    inFlight.set(cand.id, promise);
+
+    request = { promise, controller };
+    inFlight.set(cand.id, request);
+
+    // Supprime immédiatement une requête annulée du dédup afin qu'une nouvelle demande du
+    // même candidat puisse repartir sans attendre la résolution du chargeur précédent.
+    controller.signal.addEventListener(
+      'abort',
+      () => {
+        if (inFlight.get(cand.id) === request) inFlight.delete(cand.id);
+      },
+      { once: true }
+    );
+
     return promise;
   }
 
@@ -132,14 +177,16 @@ export function createDatedTextureLayer(
    * (EmptyTileError) ou un échec réseau → candidat suivant. Rejette si tous échouent.
    */
   async function loadFirstAvailable(
-    candidates: SourceCandidate[]
+    candidates: SourceCandidate[],
+    signal?: AbortSignal
   ): Promise<{ texture: THREE.Texture; candidate: SourceCandidate }> {
     let lastErr: unknown;
     for (const cand of candidates) {
       try {
-        const texture = await loadCandidate(cand);
+        const texture = await loadCandidate(cand, signal);
         return { texture, candidate: cand };
       } catch (err) {
+        if (isAbortError(err) || signal?.aborted) throw err;
         lastErr = err;
         if (err instanceof EmptyTileError) {
           Logger.info(
@@ -161,6 +208,8 @@ export function createDatedTextureLayer(
     const candidates = resolveSources(simDate, new Date());
     // Hors plage (aucun candidat) : on ne touche à rien (l'état précédent reste).
     if (candidates.length === 0) {
+      activeRequestController?.abort();
+      activeRequestController = null;
       lastRequestedKey = null;
       return;
     }
@@ -174,6 +223,9 @@ export function createDatedTextureLayer(
       !backoff.shouldRetry(performance.now())
     )
       return;
+    activeRequestController?.abort();
+    const requestController = new AbortController();
+    activeRequestController = requestController;
     lastRequestedKey = requestKey;
     config.onStateChange?.('loading');
 
@@ -192,26 +244,44 @@ export function createDatedTextureLayer(
       });
     }
 
-    void loadFirstAvailable(candidates)
+    void loadFirstAvailable(candidates, requestController.signal)
       .then(({ texture, candidate }) => {
         // Une demande plus récente a pu changer la cible : n'appliquer que si toujours la dernière.
-        if (requestKey !== lastRequestedKey) return;
+        if (
+          disposed ||
+          requestController.signal.aborted ||
+          requestKey !== lastRequestedKey
+        )
+          return;
         if (requestKey === appliedRequestKey) return;
         config.apply(texture);
         config.onResolved?.(candidate);
         config.onStateChange?.('ready');
         appliedRequestKey = requestKey;
         failedRequestKey = null;
+        if (activeRequestController === requestController)
+          activeRequestController = null;
         backoff.noteSuccess();
         Logger.success(
           `[${config.name}] Image appliquée (${candidate.label} ${candidate.realDate}).`
         );
       })
       .catch((err) => {
+        // Une annulation est un changement d'intention, pas une panne : pas de backoff,
+        // pas d'état d'erreur et surtout aucun callback après cleanup().
+        if (
+          disposed ||
+          requestController.signal.aborted ||
+          isAbortError(err) ||
+          requestKey !== lastRequestedKey
+        )
+          return;
         // Repli silencieux + backoff : ré-essai autorisé plus tard (réaligne lastRequested sur
         // ce qui est réellement appliqué), le ré-essai de CETTE demande est différé.
         lastRequestedKey = appliedRequestKey;
         failedRequestKey = requestKey;
+        if (activeRequestController === requestController)
+          activeRequestController = null;
         backoff.noteFailure(performance.now());
         config.onStateChange?.('error');
         Logger.warn(
@@ -234,9 +304,14 @@ export function createDatedTextureLayer(
   });
 
   return () => {
+    if (disposed) return;
+    disposed = true;
     unsubscribe();
+    activeRequestController?.abort();
+    activeRequestController = null;
+    [...inFlight.values()].forEach(({ controller }) => controller.abort());
+    inFlight.clear();
     cache.forEach((t) => t.dispose());
     cache.clear();
-    inFlight.clear();
   };
 }
