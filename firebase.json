@@ -8,25 +8,19 @@
       "**/node_modules/**",
       "assets/kernels/**"
     ],
-    "rewrites": [{ "source": "**", "destination": "/index.html" }],
+    "rewrites": [
+      {
+        "source": "**",
+        "destination": "/index.html"
+      }
+    ],
     "headers": [
       {
-        "source": "/sw.js",
+        "source": "/assets/**",
         "headers": [
           {
             "key": "Cache-Control",
-            "value": "no-cache, no-store, must-revalidate"
-          },
-          { "key": "Service-Worker-Allowed", "value": "/" }
-        ]
-      },
-      {
-        "source": "/manifest.webmanifest",
-        "headers": [
-          { "key": "Content-Type", "value": "application/manifest+json" },
-          {
-            "key": "Cache-Control",
-            "value": "public, max-age=3600, must-revalidate"
+            "value": "public, max-age=31536000, immutable"
           }
         ]
       },
@@ -75,11 +69,28 @@
         ]
       },
       {
-        "source": "/assets/**",
+        "source": "/sw.js",
         "headers": [
           {
             "key": "Cache-Control",
-            "value": "public, max-age=31536000, immutable"
+            "value": "no-cache, no-store, must-revalidate"
+          },
+          {
+            "key": "Service-Worker-Allowed",
+            "value": "/"
+          }
+        ]
+      },
+      {
+        "source": "/manifest.webmanifest",
+        "headers": [
+          {
+            "key": "Content-Type",
+            "value": "application/manifest+json"
+          },
+          {
+            "key": "Cache-Control",
+            "value": "public, max-age=3600, must-revalidate"
           }
         ]
       },
@@ -90,8 +101,14 @@
             "key": "Content-Security-Policy",
             "value": "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; script-src 'self' https://static.cloudflareinsights.com; style-src 'self'; img-src 'self' data: blob:; connect-src 'self' https://gibs.earthdata.nasa.gov https://api.open-meteo.com https://archive-api.open-meteo.com https://ssd-api.jpl.nasa.gov https://cloudflareinsights.com; worker-src 'self' blob:; font-src 'self'; media-src 'self'; upgrade-insecure-requests"
           },
-          { "key": "X-Content-Type-Options", "value": "nosniff" },
-          { "key": "X-Frame-Options", "value": "DENY" },
+          {
+            "key": "X-Content-Type-Options",
+            "value": "nosniff"
+          },
+          {
+            "key": "X-Frame-Options",
+            "value": "DENY"
+          },
           {
             "key": "Referrer-Policy",
             "value": "strict-origin-when-cross-origin"
