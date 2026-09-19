@@ -6,6 +6,14 @@ const localized = z
   .object({ en: z.string().min(1), fr: z.string().min(1) })
   .strict();
 
+function isCalendarDate(value: string): boolean {
+  const date = new Date(`${value}T00:00:00Z`);
+  return (
+    Number.isFinite(date.getTime()) &&
+    date.toISOString().slice(0, 10) === value
+  );
+}
+
 export const spacecraftSchema = z
   .object({
     $schema: z.literal('../schema/spacecraft.schema.json'),
@@ -25,7 +33,33 @@ export const spacecraftSchema = z
       .strict(),
     notes: z.record(z.string(), z.string()).optional(),
   })
-  .strict();
+  .strict()
+  .superRefine((record, ctx) => {
+    if (!isCalendarDate(record.launchDate))
+      ctx.addIssue({
+        code: 'custom',
+        path: ['launchDate'],
+        message: 'date de lancement impossible',
+      });
+    const [from, to] = record.coverage.temporal.interval[0]!;
+    const fromMs = Date.parse(from);
+    const toMs = Date.parse(to);
+    if (!(fromMs < toMs))
+      ctx.addIssue({
+        code: 'custom',
+        path: ['coverage', 'temporal', 'interval'],
+        message: 'couverture temporelle inversée ou vide',
+      });
+    if (
+      isCalendarDate(record.launchDate) &&
+      fromMs < Date.parse(`${record.launchDate}T00:00:00Z`)
+    )
+      ctx.addIssue({
+        code: 'custom',
+        path: ['coverage', 'temporal', 'interval'],
+        message: 'la couverture ne peut pas précéder le lancement',
+      });
+  });
 
 export type SpacecraftRecord = z.infer<typeof spacecraftSchema>;
 export function spacecraftJsonSchemaText(): string {
