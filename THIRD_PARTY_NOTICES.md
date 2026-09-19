@@ -164,7 +164,7 @@ external service and is not bundled as application data.
   data on single levels from 1940 to present*, ECMWF, doi:10.24381/cds.adbb2d47. Generated using
   Copernicus Climate Change Service information.
 
-Orbital elements in `src/config/smallBodies.ts` and `src/config/interstellar.ts` (including
+Orbital elements in the entity registry (`src/registry/entities/`) and interstellar registry (`src/registry/interstellar/`) (including
 1I/ʻOumuamua, 2I/Borisov and 3I/ATLAS) are derived from the live NASA/JPL Horizons API at a
 stated epoch by the scripts in `scripts/`; they are data values, not copied from a third-party
 compilation.
