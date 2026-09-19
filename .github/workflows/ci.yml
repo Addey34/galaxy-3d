@@ -33,15 +33,6 @@ jobs:
           node-version: 22
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - name: Diagnose Lot 7D formatting
-        run: |
-          pnpm exec prettier --write src/registry/interstellar/interstellar.test.ts src/registry/schema/interstellar.schema.test.ts src/registry/schema/interstellar.ts src/registry/schema/spacecraft.ts src/registry/spacecraft/spacecraft.test.ts
-          for f in src/registry/interstellar/interstellar.test.ts src/registry/schema/interstellar.schema.test.ts src/registry/schema/interstellar.ts src/registry/schema/spacecraft.ts src/registry/spacecraft/spacecraft.test.ts; do
-            echo "---FILE START:$f---"
-            cat "$f"
-            echo "---FILE END:$f---"
-          done
-          git checkout -- src/registry/interstellar/interstellar.test.ts src/registry/schema/interstellar.schema.test.ts src/registry/schema/interstellar.ts src/registry/schema/spacecraft.ts src/registry/spacecraft/spacecraft.test.ts
       - run: pnpm verify
       - run: pnpm audit:prod
       - run: pnpm build
