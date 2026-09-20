@@ -75,6 +75,13 @@ après vingt minutes de suite, ou jamais si la branche fautive n'était pas empr
 2. Vérifier `test-results/` et la console navigateur.
 3. Distinguer un conflit de couche UI d’un vrai échec WebGL : un overlay cliquable peut recouvrir le canvas.
 4. Ne pas augmenter les timeouts avant d’avoir reproduit le scénario isolé.
+5. Un clic qui expire sur un élément déjà « visible, enabled and stable » n'est pas un timeout
+   à rallonger : c'est presque toujours un clic lancé PENDANT le boot. Le dock est dans
+   `index.html` dès le premier octet, donc `toBeVisible()` est vrai avant que l'application
+   existe, et sous GPU logiciel le décodage des textures bloque le thread principal par
+   à-coups. **Tout scénario attend `#loader` caché avant sa première interaction** ; le lot 8
+   a coûté un shard de CI rouge, trois tentatives sur trois, pour l'avoir oublié dans un seul
+   fichier sur quarante.
 
 ## Couverture actuelle
 
