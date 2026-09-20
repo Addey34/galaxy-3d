@@ -23,14 +23,21 @@
 
 /** Ce qu'est le produit, déclaré par la source : c'est lui qui décide mesure ou modèle. */
 export type ProductKind =
-  /** Capteur à l'instant décrit (imagerie satellite, IMERG). */
+  /** Capteur à l'instant décrit (imagerie satellite, IMERG, solution d'origine d'un séisme). */
   | 'measurement'
   /** Modèle qui assimile des observations sur le passé (ERA5, MERRA-2). */
   | 'reanalysis'
   /** Run de prévision : analyse sur le présent, prévision au-delà. */
   | 'forecastModel'
   /** Position calculée (éphéméride numérique, théorie analytique, éléments képlériens). */
-  | 'ephemeris';
+  | 'ephemeris'
+  /**
+   * Événement RAPPORTÉ, agrégé depuis des sources tierces (NASA EONET). Ce n'est ni une
+   * mesure ni un modèle : personne ne l'a instrumenté pour Galaxy, et la source elle-même
+   * refuse d'endosser l'exactitude de son emprise. Une actualité ne se confond donc jamais
+   * avec une mesure, même dessinée sur la même sphère.
+   */
+  | 'report';
 
 /** Catégories visibles, de la plus directe à l'absence de donnée. */
 export type TemporalCategory =
@@ -40,6 +47,8 @@ export type TemporalCategory =
   | 'observed'
   /** Modèle ajusté aux observations, sur un instant passé ou présent. */
   | 'reconstructed'
+  /** Événement rapporté par un tiers, pas mesuré par l'application ni par sa source. */
+  | 'reported'
   /** Modèle sur un instant futur, dans la couverture où sa source fait foi. */
   | 'predicted'
   /** Calcul hors de toute fenêtre où son écart à une référence a été mesuré. */
@@ -50,6 +59,7 @@ export type TemporalCategory =
 export const TEMPORAL_CATEGORIES: readonly TemporalCategory[] = [
   'live',
   'observed',
+  'reported',
   'reconstructed',
   'predicted',
   'extrapolated',
@@ -94,6 +104,16 @@ export interface DatedProduct {
    * source. Défaut 0 (tout écart hors de l'intervalle décrit est signalé).
    */
   offsetToleranceMs?: number;
+  /**
+   * L'intervalle n'a PAS de fin déclarée : la source dit que la chose n'est pas terminée
+   * (EONET `closed: null`). `validTime.to` porte alors le dernier instant CONNU, et rien
+   * d'autre — surtout pas une fin inventée pour boucher le trou.
+   *
+   * La classification prolonge l'intervalle jusqu'à `now` et pas au-delà : personne ne sait
+   * ce qui est encore en cours après l'instant réel. Une scène plus tardive garde donc un
+   * écart, qui s'affiche.
+   */
+  openEnded?: boolean;
 }
 
 export interface TemporalStamp {
@@ -107,6 +127,8 @@ export interface TemporalStamp {
   offsetMs: number;
   /** true si |offsetMs| dépasse la tolérance de la source : l'écart doit être affiché. */
   offset: boolean;
+  /** La source n'a déclaré aucune fin : « en cours ». C'est une information, pas un manque. */
+  ongoing: boolean;
 }
 
 /**
@@ -137,9 +159,13 @@ function outside(interval: TimeInterval, window: OpenInterval): boolean {
  *     en répondrait ;
  *  2. `live` si la source l'autorise et que scène et donnée sont au présent ;
  *  3. passé/futur par rapport à `now` : l'intervalle décrit commence-t-il avant maintenant ?
- *     Oui : une mesure est `observed`, un modèle `reconstructed`. Non : `predicted` (une
- *     mesure future n'existe pas ; l'appelant ne la construit pas, et si elle arrive quand
- *     même elle est traitée comme un modèle, jamais comme une observation).
+ *     Oui : une mesure est `observed`, un événement rapporté `reported`, un modèle
+ *     `reconstructed`. Non : `predicted` (ni une mesure ni un rapport n'existent au futur ;
+ *     l'appelant ne les construit pas, et si l'un arrive quand même il est traité comme un
+ *     modèle, jamais comme une observation).
+ *
+ * Un intervalle OUVERT (`openEnded`) est prolongé jusqu'à `now`, jamais au-delà : la source
+ * dit que la chose n'est pas finie, elle ne dit pas qu'elle durera.
  */
 export function classifyTemporal(
   product: DatedProduct,
@@ -148,15 +174,21 @@ export function classifyTemporal(
 ): TemporalStamp {
   const nowMs = now.getTime();
   const simMs = simulationTime.getTime();
-  const { validTime } = product;
+  const validTime = product.openEnded
+    ? {
+        from: product.validTime.from,
+        to: Math.max(product.validTime.to, nowMs),
+      }
+    : product.validTime;
 
   const offsetMs = signedDistanceToInterval(simMs, validTime);
   const offset = Math.abs(offsetMs) > (product.offsetToleranceMs ?? 0);
+  const ongoing = product.openEnded === true;
 
   const stamp = (
     category: TemporalCategory,
     confidence: TemporalStamp['confidence'] = 'nominal'
-  ): TemporalStamp => ({ category, confidence, offsetMs, offset });
+  ): TemporalStamp => ({ category, confidence, offsetMs, offset, ongoing });
 
   if (product.measured && outside(validTime, product.measured)) {
     return stamp('extrapolated');
@@ -172,7 +204,9 @@ export function classifyTemporal(
   }
 
   if (validTime.from <= nowMs) {
-    return stamp(product.kind === 'measurement' ? 'observed' : 'reconstructed');
+    if (product.kind === 'measurement') return stamp('observed');
+    if (product.kind === 'report') return stamp('reported');
+    return stamp('reconstructed');
   }
 
   const reduced =
@@ -215,6 +249,7 @@ export const UNAVAILABLE_STAMP: TemporalStamp = {
   confidence: 'nominal',
   offsetMs: 0,
   offset: false,
+  ongoing: false,
 };
 
 /** Clé i18n du libellé d'une catégorie (résolue côté UI via `t()`). */

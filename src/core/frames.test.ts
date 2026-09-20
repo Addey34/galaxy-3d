@@ -4,6 +4,7 @@ import {
   equatorialToScene,
   localDirectionToGeographic,
   OBLIQUITY_RAD,
+  geographicToLocalDirection,
   surfaceRotationForSubsolarLongitude,
 } from './frames';
 
@@ -106,6 +107,34 @@ describe('localDirectionToGeographic', () => {
     expect(
       localDirectionToGeographic(new THREE.Vector3(0, 1, 0)).latitudeDeg
     ).toBeCloseTo(90, 9);
+  });
+});
+
+describe('geographicToLocalDirection', () => {
+  it('est la réciproque exacte de localDirectionToGeographic', () => {
+    // C'est la propriété dont dépend la position d'un marqueur d'événement : un aller-retour
+    // qui dérive déplacerait chaque épicentre d'autant, sans rien déformer d'autre.
+    for (const latitudeDeg of [-89, -45.7, -0.3, 0, 12.34, 60, 89])
+      for (const longitudeDeg of [
+        -179.5, -122.55, -0.1, 0, 95.982, 142.373, 179,
+      ]) {
+        const back = localDirectionToGeographic(
+          geographicToLocalDirection(latitudeDeg, longitudeDeg)
+        );
+        expect(back.latitudeDeg).toBeCloseTo(latitudeDeg, 9);
+        expect(back.longitudeDeg).toBeCloseTo(longitudeDeg, 9);
+      }
+  });
+
+  it('rend une direction unitaire et place les repères connus', () => {
+    const greenwich = geographicToLocalDirection(0, 0);
+    expect(greenwich.length()).toBeCloseTo(1, 12);
+    // Longitude 0 sur l'équateur : +X local (phi = π), la convention de la paramétrisation
+    // de `THREE.SphereGeometry` que `localDirectionToGeographic` inverse.
+    expect(greenwich.x).toBeCloseTo(1, 12);
+    expect(greenwich.y).toBeCloseTo(0, 12);
+    expect(geographicToLocalDirection(90, 37).y).toBeCloseTo(1, 12);
+    expect(geographicToLocalDirection(-90, -12).y).toBeCloseTo(-1, 12);
   });
 });
 

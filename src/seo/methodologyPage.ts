@@ -669,6 +669,10 @@ function methodologyPage(input: MethodologyInput, locale: DocLocale): DocPage {
       en: 'a measurement of a past instant, such as a satellite image of that day.',
       fr: 'une mesure d’un instant passé, par exemple l’image satellite de ce jour.',
     },
+    reported: {
+      en: 'an event a third party reported and another party gathered, such as a wildfire or a storm listed by NASA EONET. It is neither a measurement nor a model, and EONET itself asks that its extents not be taken as official. An event with no declared end is shown as ongoing rather than given an invented end date.',
+      fr: 'un événement rapporté par un tiers et agrégé par un autre, par exemple un incendie ou une tempête listés par NASA EONET. Ce n’est ni une mesure ni un modèle, et EONET demande lui-même que ses emprises ne soient pas tenues pour officielles. Un événement sans fin déclarée est affiché « en cours » plutôt que doté d’une date de fin inventée.',
+    },
     reconstructed: {
       en: 'a model of a past or present instant, such as a reanalysis (ERA5, MERRA-2) or a position computed for a date already behind us.',
       fr: 'un modèle sur un instant passé ou présent, par exemple une réanalyse (ERA5, MERRA-2) ou une position calculée pour une date déjà derrière nous.',

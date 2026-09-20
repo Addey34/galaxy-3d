@@ -3,6 +3,7 @@ export type SecondaryOverlayId =
   | 'body-info'
   | 'orbit-options'
   | 'weather-layers'
+  | 'earth-events'
   | 'events'
   | 'help'
   | 'small-body-filters';
@@ -18,7 +19,7 @@ export interface OverlayCoordinator {
 /**
  * Coordonne les surfaces contextuelles : une seule ouverte à la fois. Les deux ancres
  * persistantes (recherche de corps dans le dock, contrôles de temps) restent toujours là ;
- * palette, fiche d'info, réglages, événements et aide se partagent un unique emplacement
+ * palette, fiche d'info, réglages, événements (célestes et terrestres) et aide se partagent un unique emplacement
  * contextuel. Émet `null` quand tout est refermé, pour que le scrim et les états `aria`
  * des déclencheurs se resynchronisent.
  */

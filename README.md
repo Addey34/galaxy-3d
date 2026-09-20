@@ -15,6 +15,7 @@ Visualisateur interactif du système solaire en temps réel, développé en Type
 - Modèles de forme scientifiques de Bennu, Éros, Itokawa, Ryugu et Ida, à leur vraie couleur de surface, en niveaux de détail chargés selon la distance, approchables à la vraie échelle en Exploration
 - Objets interstellaires 1I/ʻOumuamua, 2I/Borisov et 3I/ATLAS sur leur vraie trajectoire hyperbolique (tracé en option)
 - Onze missions spatiales positionnées par NASA/JPL Horizons (Voyager, New Horizons, Juno, Parker Solar Probe…)
+- Événements terrestres en option : séismes du catalogue USGS et événements naturels rapportés par NASA EONET, posés sur la Terre à la date de la scène ; chaque événement porte sa nature (mesure ou rapport), et un événement sans fin déclarée est dit « en cours »
 - HUD Exploration avec cible suivie, distance UA/km, temps-lumière et labels de corps
 - Responsive mobile avec qualité adaptative
 
@@ -399,7 +400,9 @@ Code sous **PolyForm Noncommercial License 1.0.0** : consultation, étude et usa
 non commercial autorisés ; l'usage commercial est réservé à l'auteur. Voir
 [`LICENSE.md`](LICENSE.md). Les textures, modèles de forme, éphémérides et données météo restent
 soumis à leurs licences d'origine (notamment NASA, USGS, NOAA, JAXA, Solar System Scope en
-CC BY 4.0, Open-Meteo en CC BY 4.0, ERA5 / Copernicus). Le détail fait foi dans
+CC BY 4.0, Open-Meteo en CC BY 4.0, ERA5 / Copernicus), de même que les événements
+terrestres (catalogue USGS dans le domaine public des États-Unis, NASA EONET). Le détail
+fait foi dans
 [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md) et, corps par corps, sur
 [/sources](https://galaxy.adrianguichard.dev/sources/).
 

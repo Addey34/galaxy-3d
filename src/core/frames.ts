@@ -102,6 +102,36 @@ export function localDirectionToGeographic(direction: THREE.Vector3): {
 }
 
 /**
+ * RÉCIPROQUE EXACTE de `localDirectionToGeographic` : un point géographique (degrés) → la
+ * direction unitaire correspondante dans le repère LOCAL du mesh sphérique.
+ *
+ * C'est ce qui permet de poser une donnée terrestre — l'épicentre d'un séisme, un incendie
+ * rapporté — là où elle s'est réellement produite : sur la sphère telle qu'elle est TOURNÉE à
+ * l'instant de la scène, donc derrière la même phase de rotation que le point subsolaire. Une
+ * erreur ici ne déforme rien et ne se voit pas sur une capture isolée ; elle décale le marqueur
+ * par rapport aux continents, exactement comme une erreur de phase décale les continents par
+ * rapport au terminateur.
+ *
+ * Même paramétrisation que sa réciproque, donc la même que `THREE.SphereGeometry` et qu'une
+ * texture équirectangulaire standard : `phi = longitude + π`, `x = -cos(phi)·cos(lat)`,
+ * `y = sin(lat)`, `z = sin(phi)·cos(lat)`.
+ */
+export function geographicToLocalDirection(
+  latitudeDeg: number,
+  longitudeDeg: number,
+  out = new THREE.Vector3()
+): THREE.Vector3 {
+  const lat = latitudeDeg * (Math.PI / 180);
+  const phi = longitudeDeg * (Math.PI / 180) + Math.PI;
+  const cosLat = Math.cos(lat);
+  return out.set(
+    -Math.cos(phi) * cosLat,
+    Math.sin(lat),
+    Math.sin(phi) * cosLat
+  );
+}
+
+/**
  * Angle de rotation propre (`_meshGroup.rotation.y`) qui amène le point subsolaire sur la
  * longitude géographique voulue.
  *

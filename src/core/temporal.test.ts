@@ -190,6 +190,55 @@ describe('classifyTemporal', () => {
     expect(within.offsetMs).toBe(-40 * 60_000);
   });
 
+  it('un événement rapporté n’est ni une mesure ni un modèle', () => {
+    // La distinction est le point du lot : un séisme mesuré et un incendie rapporté par un
+    // tiers se dessinent sur la même sphère et ne disent pas la même chose.
+    const report: DatedProduct = {
+      kind: 'report',
+      validTime: {
+        from: at('2026-08-01T00:00:00Z').getTime(),
+        to: at('2026-08-05T00:00:00Z').getTime(),
+      },
+    };
+    expect(
+      classifyTemporal(report, at('2026-08-03T00:00:00Z'), now).category
+    ).toBe('reported');
+    const measurement: DatedProduct = {
+      kind: 'measurement',
+      validTime: report.validTime,
+    };
+    expect(
+      classifyTemporal(measurement, at('2026-08-03T00:00:00Z'), now).category
+    ).toBe('observed');
+  });
+
+  it('un intervalle OUVERT va jusqu’à maintenant, et pas au-delà', () => {
+    // « Pas de fin déclarée » ne veut pas dire « sans fin » : personne ne sait ce qui est
+    // encore en cours après l'instant réel, donc une scène plus tardive garde son écart.
+    const ongoing: DatedProduct = {
+      kind: 'report',
+      validTime: {
+        from: at('2026-08-01T00:00:00Z').getTime(),
+        to: at('2026-08-05T00:00:00Z').getTime(),
+      },
+      openEnded: true,
+    };
+    const atNow = classifyTemporal(ongoing, now, now);
+    expect(atNow.ongoing).toBe(true);
+    expect(atNow.offset).toBe(false);
+    expect(atNow.offsetMs).toBe(0);
+
+    const later = classifyTemporal(ongoing, at('2030-01-01T00:00:00Z'), now);
+    expect(later.ongoing).toBe(true);
+    expect(later.offset).toBe(true);
+    expect(later.offsetMs).toBeLessThan(0);
+
+    // Sans le drapeau, la même donnée s'arrête à son dernier relevé.
+    const closed = classifyTemporal({ ...ongoing, openEnded: false }, now, now);
+    expect(closed.ongoing).toBe(false);
+    expect(closed.offset).toBe(true);
+  });
+
   it('une clé i18n par catégorie', () => {
     expect(TEMPORAL_CATEGORIES.map(temporalCategoryLabelKey)).toContain(
       'time.category.extrapolated'

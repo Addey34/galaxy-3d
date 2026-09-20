@@ -4,6 +4,16 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Les
 suivent [SemVer](https://semver.org/lang/fr/). L'historique détaillé reste celui de git : ce
 fichier résume ce qui change pour une personne qui utilise ou cite Galaxy.
 
+## [Non publié]
+
+### Ajouté
+
+- Événements terrestres, en option et éteints par défaut : séismes du catalogue USGS et
+  événements naturels rapportés par NASA EONET, posés à leurs vraies coordonnées sur la Terre
+  à la date de la scène. Chaque événement porte sa nature, une mesure sismologique et un
+  événement rapporté n'étant pas la même chose, et un événement sans fin déclarée est affiché
+  « en cours » plutôt que doté d'une date de fin inventée.
+
 ## [0.9.0] - 2026-09-18 (« Scientific Preview »)
 
 Première version numérotée. Elle regroupe tout ce qui a été livré avant la numérotation.

@@ -1,0 +1,32 @@
+{
+  "$schema": "../schema/provider.schema.json",
+  "id": "nasa-eonet",
+  "role": "event-source",
+  "publisher": "NASA Earth Observatory",
+  "title": "EONET v3 (Earth Observatory Natural Event Tracker)",
+  "url": "https://eonet.gsfc.nasa.gov/docs/v3",
+  "kind": "report",
+  "host": "eonet.gsfc.nasa.gov",
+  "license": "other",
+  "rights": "public-domain",
+  "licenseUrl": "https://www.earthdata.nasa.gov/engage/open-data-services-software/data-information-policy",
+  "attribution": "NASA Earth Observatory (EONET)",
+  "accessed": "2026-09-20",
+  "extent": {
+    "temporal": {
+      "interval": [["2000-01-01T00:00:00Z", null]]
+    }
+  },
+  "samplingStepSeconds": {
+    "min": 86400,
+    "max": 86400
+  },
+  "use": {
+    "en": "Curated natural events (wildfires, volcanoes, storms, floods, ice) drawn by the optional Earth events layer, each at the position reported for the date of the scene.",
+    "fr": "Événements naturels agrégés (incendies, volcans, tempêtes, inondations, glaces) dessinés par la couche optionnelle des événements terrestres, chacun à la position rapportée pour la date de la scène."
+  },
+  "terms": {
+    "en": "NASA Earthdata information policy: full and open sharing of NASA Earth science data, with no exclusive access period. EONET adds its own disclaimer, quoted verbatim in the layer: its metadata and services are intended for visualization and general information only, and should not be construed as official with regard to spatial or temporal extent. Read at the source on 2026-09-20.",
+    "fr": "Politique d’information NASA Earthdata : partage plein et ouvert des données d’observation de la Terre de la NASA, sans période d’accès exclusif. EONET ajoute son propre avertissement, repris mot pour mot dans la couche : ses métadonnées et services sont destinés à la visualisation et à l’information générale seulement, et ne doivent pas être tenus pour officiels quant à l’emprise spatiale ou temporelle. Conditions lues à la source le 2026-09-20."
+  }
+}
