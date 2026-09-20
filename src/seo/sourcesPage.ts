@@ -19,10 +19,11 @@ import type { CelestialConfig } from '@/types';
 import { flattenBodies } from '@/config/catalog';
 import { FACT_SOURCES } from '@/config/factSources';
 import { EVENT_PROVIDERS } from '@/registry/providers/events';
-import { bodyFact } from '@/core/bodyFacts';
+import { ALL_FACT_FIELDS, bodyFact } from '@/core/bodyFacts';
 import type { FactField, FactMethod } from '@/types';
 import { SMALL_BODY_ELEMENTS } from '@/config/smallBodies';
 import { INTERSTELLAR_OBJECTS } from '@/config/interstellar';
+import { NAVIGABLE_TARGETS } from '@/config/navigable';
 import { escapeHtml } from './bodyLandingPage';
 import {
   type Bilingual,
@@ -63,6 +64,11 @@ export interface SourcesInput {
   repositoryBlobUrl: string;
   /** Date ISO affichée comme date des données (celle du build). */
   updated: string;
+  /**
+   * Instantané des petits corps livré avec le build, LU dans
+   * `public/assets/small-bodies/dataset.json` : ni la date ni le compte ne se retapent ici.
+   */
+  smallBodies: { retrieved: string; count: number };
   origin: string;
   /**
    * Hôtes que la CSP de production autorise en `connect-src` (`firebase.json`), hors `'self'`.
@@ -133,19 +139,6 @@ export const LIVE_DATA_SERVICES: readonly LiveDataService[] = [
     terms: {
       en: 'CC BY 4.0 through Open-Meteo. Hersbach, H. et al. (2023), ERA5 hourly data on single levels from 1940 to present, ECMWF, doi:10.24381/cds.adbb2d47. Generated using Copernicus Climate Change Service information.',
       fr: 'CC BY 4.0 via Open-Meteo. Hersbach, H. et al. (2023), ERA5 hourly data on single levels from 1940 to present, ECMWF, doi:10.24381/cds.adbb2d47. Generated using Copernicus Climate Change Service information.',
-    },
-  },
-  {
-    host: 'ssd-api.jpl.nasa.gov',
-    name: 'NASA/JPL Small-Body Database',
-    url: 'https://ssd-api.jpl.nasa.gov/doc/sbdb_query.html',
-    use: {
-      en: 'Orbital elements of the asteroids and comets shown by the optional small-body layer.',
-      fr: 'Éléments orbitaux des astéroïdes et comètes de la couche optionnelle des petits corps.',
-    },
-    terms: {
-      en: 'Public NASA/JPL service, cited as the source.',
-      fr: 'Service public NASA/JPL, cité comme source.',
     },
   },
   ...Object.values(EVENT_PROVIDERS).map((provider): LiveDataService => ({
@@ -285,7 +278,8 @@ export function sourcesPages(input: SourcesInput): DocPage[] {
 }
 
 function sourcesPage(input: SourcesInput, locale: DocLocale): DocPage {
-  const { config, textures, manifest, dependencies, origin } = input;
+  const { config, textures, manifest, dependencies, origin, smallBodies } =
+    input;
   const L = (text: Bilingual): string => text[locale];
   const name = displayNameResolver(config);
   const flat = flattenBodies(config);
@@ -301,17 +295,7 @@ function sourcesPage(input: SourcesInput, locale: DocLocale): DocPage {
   // ── Données physiques ──
   // Tout est COMPTÉ dans le catalogue, avec la même règle que la fiche et les pages de corps
   // (`core/bodyFacts.ts`) : ce qui s'affiche, ce qui est dérivé, ce qui attend encore sa source.
-  const FACT_FIELDS: FactField[] = [
-    'radiusKm',
-    'massKg',
-    'gravity',
-    'meanTempC',
-    'moonCount',
-    'axialTilt',
-    'distanceAU',
-    'orbitPeriodDays',
-    'rotationPeriod',
-  ];
+  const FACT_FIELDS: FactField[] = [...ALL_FACT_FIELDS];
   const FIELD_LABELS: Record<FactField, Bilingual> = {
     radiusKm: { en: 'radius', fr: 'rayon' },
     massKg: { en: 'mass', fr: 'masse' },
@@ -322,6 +306,10 @@ function sourcesPage(input: SourcesInput, locale: DocLocale): DocPage {
     distanceAU: { en: 'mean distance', fr: 'distance moyenne' },
     orbitPeriodDays: { en: 'orbital period', fr: 'période orbitale' },
     rotationPeriod: { en: 'sidereal rotation', fr: 'rotation sidérale' },
+    launchDate: { en: 'launch date', fr: 'date de lancement' },
+    firstObservation: { en: 'first observation', fr: 'première observation' },
+    eccentricity: { en: 'eccentricity', fr: 'excentricité' },
+    perihelionAU: { en: 'perihelion distance', fr: 'distance de périhélie' },
   };
   const perSource = new Map<
     string,
@@ -331,7 +319,10 @@ function sourcesPage(input: SourcesInput, locale: DocLocale): DocPage {
   let derivedFacts = 0;
   let unsourcedFacts = 0;
   let unpublishedFacts = 0;
-  for (const [body, cfg] of flat) {
+  // Les onze sondes et les trois interstellaires comptent ici comme n'importe quel corps : ils
+  // ont une fiche, et depuis le lot 8b des faits sourcés. Ils n'ont en revanche ni texture ni
+  // modèle 3D, donc ils n'entrent pas dans les tableaux qui suivent.
+  for (const [body, cfg] of [...flat, ...NAVIGABLE_TARGETS]) {
     if (cfg.kind === 'skybox') continue;
     for (const field of FACT_FIELDS) {
       const entry = bodyFact(cfg, field);
@@ -528,8 +519,8 @@ function sourcesPage(input: SourcesInput, locale: DocLocale): DocPage {
       'ephemerides',
       L({ en: 'Ephemerides', fr: 'Éphémérides' }),
       `<p>${L({
-        en: `Precomputed position files come from ${escapeHtml(manifest.source)} (state vectors, frame ${escapeHtml(manifest.frame)}), generated on ${escapeHtml(manifest.generatedAt.slice(0, 10))}. The Horizons target identifier is given so that anyone can request the same data. Planets, the Moon and the Galilean moons otherwise come from ${link('https://github.com/cosinekitty/astronomy', 'astronomy-engine')}; the optional small-body layer queries the ${link('https://ssd-api.jpl.nasa.gov/doc/sbdb_query.html', 'JPL Small-Body Database')} at runtime.`,
-        fr: `Les fichiers de positions précalculées viennent de ${escapeHtml(manifest.source)} (vecteurs d’état, repère ${escapeHtml(manifest.frame)}), générés le ${escapeHtml(manifest.generatedAt.slice(0, 10))}. L’identifiant de cible Horizons est donné pour que chacun puisse demander les mêmes données. Planètes, Lune et lunes galiléennes viennent sinon d’${link('https://github.com/cosinekitty/astronomy', 'astronomy-engine')} ; la couche optionnelle des petits corps interroge la ${link('https://ssd-api.jpl.nasa.gov/doc/sbdb_query.html', 'JPL Small-Body Database')} à l’exécution.`,
+        en: `Precomputed position files come from ${escapeHtml(manifest.source)} (state vectors, frame ${escapeHtml(manifest.frame)}), generated on ${escapeHtml(manifest.generatedAt.slice(0, 10))}. The Horizons target identifier is given so that anyone can request the same data. Planets, the Moon and the Galilean moons otherwise come from ${link('https://github.com/cosinekitty/astronomy', 'astronomy-engine')}; the optional small-body layer reads a snapshot of ${escapeHtml(String(smallBodies.count))} orbits taken from the ${link('https://ssd-api.jpl.nasa.gov/doc/sbdb_query.html', 'JPL Small-Body Database')} on ${escapeHtml(smallBodies.retrieved)} and shipped with the build: queried from a browser, that service replies without the cross-origin header a browser needs in order to accept the reply, so nothing ever reached the page.`,
+        fr: `Les fichiers de positions précalculées viennent de ${escapeHtml(manifest.source)} (vecteurs d’état, repère ${escapeHtml(manifest.frame)}), générés le ${escapeHtml(manifest.generatedAt.slice(0, 10))}. L’identifiant de cible Horizons est donné pour que chacun puisse demander les mêmes données. Planètes, Lune et lunes galiléennes viennent sinon d’${link('https://github.com/cosinekitty/astronomy', 'astronomy-engine')} ; la couche optionnelle des petits corps lit un instantané de ${escapeHtml(String(smallBodies.count))} orbites relevé le ${escapeHtml(smallBodies.retrieved)} dans la ${link('https://ssd-api.jpl.nasa.gov/doc/sbdb_query.html', 'JPL Small-Body Database')} et livré avec le build : interrogé depuis un navigateur, ce service répond sans l’en-tête d’origine croisée qu’il faut à celui-ci pour accepter la réponse, et rien n’arrivait donc jamais jusqu’à la page.`,
       })}</p>` +
         docTable(
           L({ en: 'JPL Horizons files', fr: 'Fichiers JPL Horizons' }),

@@ -1,11 +1,19 @@
 /**
- * Client du JPL Small-Body Database Query API — source de masse des petits corps.
+ * Petits corps : éléments osculateurs de milliers d'astéroïdes et de comètes, issus du JPL
+ * Small-Body Database. Ils alimentent la couche instrument 2D (`SmallBodyField`) — jamais des
+ * meshes : leur taille physique réelle resterait invisible, conformément à l'invariant du mode
+ * Exploration.
  *
- * L'API renvoie des éléments orbitaux osculateurs pour des milliers d'astéroïdes/comètes.
- * Le parsing (fonction pure `parseSbdbRows`) est séparé du réseau (`fetchSmallBodies`) pour
- * rester testable hors ligne. Les corps ainsi chargés alimentent la couche instrument 2D
- * (`SmallBodyField`) — jamais des meshes : leur taille physique réelle resterait invisible,
- * conformément à l'invariant du mode Exploration.
+ * **L'APPLICATION NE CONTACTE PLUS JPL.** Elle l'a fait jusqu'au lot 8b, et cela n'a jamais
+ * fonctionné en production : `ssd-api.jpl.nasa.gov` répond HTTP 200 sans en-tête
+ * `Access-Control-Allow-Origin` (mesuré quatre fois le 2026-09-20 avec l'`Origin` du site), le
+ * navigateur jette donc la réponse et la couche restait vide, en silence, alors qu'elle se
+ * remplissait en développement. La CSP n'y était pour rien : elle autorisait l'hôte.
+ *
+ * Les quatre requêtes sont désormais tirées AU BUILD par
+ * `scripts/generate-small-body-dataset.mjs`, qui écrit `public/assets/small-bodies/dataset.json`
+ * dans la forme même de l'API. `parseSbdbRows` la lit sans conversion. La donnée est un
+ * INSTANTANÉ DATÉ, et le panneau le dit : `loadSmallBodies` renvoie la date avec les corps.
  *
  * Réf. : https://ssd-api.jpl.nasa.gov/doc/sbdb_query.html
  */
@@ -91,78 +99,67 @@ export function parseSbdbRows(
 }
 
 /**
- * URL de requête SBDB pour une catégorie. Paramètres vérifiés en direct contre l'API réelle :
- * `sb-group` n'accepte que 'neo'/'pha' (pas de valeur TNO dédiée — dérivé via `sb-cdata` sur le
- * demi-grand axe, même mécanisme que le filtre ceinture principale) ; `sb-kind` n'accepte que
- * 'a'/'c'. `main-belt` reproduit exactement l'URL historique (limite le volume, comportement par
- * défaut inchangé).
+ * La CONSTRUCTION des quatre requêtes vit maintenant dans
+ * `scripts/generate-small-body-dataset.mjs`, avec le reste de ce qui parle à JPL. Elle était
+ * ici tant que le navigateur interrogeait l'API ; l'y laisser aurait livré à chaque visiteur
+ * du code que plus rien n'appelle, pour une URL que plus rien ne demande.
  */
-export function sbdbQueryUrl(
-  category: SmallBodyCategory = 'main-belt',
-  limit = 2000
-): string {
-  const params = new URLSearchParams({
-    fields: 'full_name,a,e,i,om,w,ma,epoch',
-  });
-  switch (category) {
-    case 'main-belt':
-      params.set('sb-kind', 'a'); // a = astéroïdes
-      params.set('sb-cdata', '{"AND":["a|LT|4.5"]}'); // ceinture principale interne
-      break;
-    case 'neo':
-      params.set('sb-group', 'neo');
-      break;
-    case 'comet':
-      params.set('sb-kind', 'c'); // c = comètes
-      break;
-    case 'tno':
-      params.set('sb-kind', 'a');
-      params.set('sb-cdata', '{"AND":["a|GT|30"]}'); // ceinture de Kuiper / au-delà
-      break;
-  }
-  params.set('limit', String(limit));
-  return `https://ssd-api.jpl.nasa.gov/sbdb_query.api?${params.toString()}`;
-}
 
-/**
- * Récupère un lot de petits corps depuis SBDB. Dégradation propre : toute erreur réseau
- * ou réponse malformée renvoie `[]` (l'application fonctionne sans le champ de masse).
- */
-export async function fetchSmallBodies(
-  url = sbdbQueryUrl(),
-  fetchImpl: typeof fetch = fetch
-): Promise<ParsedSmallBody[]> {
-  try {
-    const res = await fetchImpl(url);
-    if (!res.ok) return [];
-    const json = (await res.json()) as { fields?: string[]; data?: string[][] };
-    if (!json.fields || !json.data) return [];
-    return parseSbdbRows(json.fields, json.data);
-  } catch {
-    return [];
-  }
-}
-
-const ALL_CATEGORIES: readonly SmallBodyCategory[] = [
+export const ALL_SMALL_BODY_CATEGORIES: readonly SmallBodyCategory[] = [
   'main-belt',
   'neo',
   'comet',
   'tno',
 ];
 
+/** Où le build dépose l'instantané ; nom STABLE, donc servi « réseau d'abord » par le SW. */
+export const SMALL_BODY_DATASET_URL = '/assets/small-bodies/dataset.json';
+
+/** Forme du fichier commité : celle de l'API, une entrée par catégorie. */
+export interface SmallBodyDatasetFile {
+  retrieved: string;
+  limitPerCategory: number;
+  categories: Partial<
+    Record<SmallBodyCategory, { fields: string[]; data: string[][] }>
+  >;
+}
+
+/** Ce que l'application obtient : les corps, et la DATE de leur relevé. */
+export interface SmallBodyDataset {
+  retrieved: string | null;
+  bodies: ParsedSmallBody[];
+}
+
+/** Instantané vide : aucune donnée, aucune date à afficher. Jamais une exception. */
+const EMPTY_DATASET: SmallBodyDataset = { retrieved: null, bodies: [] };
+
+/** Conversion PURE du fichier en corps tagués de leur catégorie. */
+export function parseSmallBodyDataset(
+  file: SmallBodyDatasetFile
+): SmallBodyDataset {
+  const bodies: ParsedSmallBody[] = [];
+  for (const category of ALL_SMALL_BODY_CATEGORIES) {
+    const table = file.categories?.[category];
+    if (!table?.fields || !table.data) continue;
+    for (const body of parseSbdbRows(table.fields, table.data))
+      bodies.push({ ...body, category });
+  }
+  return { retrieved: file.retrieved ?? null, bodies };
+}
+
 /**
- * Récupère les 4 catégories en parallèle et fusionne, chaque corps tagué de sa catégorie.
- * `fetchSmallBodies` ne rejette jamais (dégrade déjà à `[]`) : l'échec d'une catégorie n'empêche
- * donc pas les 3 autres de charger normalement — pas besoin d'`allSettled`.
+ * Charge l'instantané livré. Dégradation propre, comme l'ancien appel réseau : toute erreur
+ * rend un lot vide plutôt qu'une exception, et l'application démarre sans la couche.
  */
-export async function fetchAllSmallBodies(
-  fetchImpl: typeof fetch = fetch
-): Promise<ParsedSmallBody[]> {
-  const results = await Promise.all(
-    ALL_CATEGORIES.map(async (category) => {
-      const bodies = await fetchSmallBodies(sbdbQueryUrl(category), fetchImpl);
-      return bodies.map((b) => ({ ...b, category }));
-    })
-  );
-  return results.flat();
+export async function loadSmallBodies(
+  fetchImpl: typeof fetch = fetch,
+  url: string = SMALL_BODY_DATASET_URL
+): Promise<SmallBodyDataset> {
+  try {
+    const res = await fetchImpl(url);
+    if (!res.ok) return EMPTY_DATASET;
+    return parseSmallBodyDataset((await res.json()) as SmallBodyDatasetFile);
+  } catch {
+    return EMPTY_DATASET;
+  }
 }

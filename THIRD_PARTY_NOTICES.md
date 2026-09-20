@@ -149,8 +149,12 @@ The binary ephemerides under `public/assets/ephemerides/` are generated from NAS
 The source metadata and generation range are recorded in `manifest.json`; regenerated files must
 preserve that provenance.
 
-The optional small-body lookup uses the public JPL Small-Body Database API at runtime. It is an
-external service and is not bundled as application data.
+The optional small-body layer reads `public/assets/small-bodies/dataset.json`, a dated snapshot
+of four category queries to the public JPL Small-Body Database, taken at build time by
+`scripts/generate-small-body-dataset.mjs`. It IS bundled as application data, and the layer
+names its source and the date of the snapshot. The application makes no request to that service
+at runtime: it answers a browser without the cross-origin header a browser needs to accept the
+reply, so the layer was empty in production for as long as it queried the service directly.
 
 **Earth weather layers** are fetched at runtime and are not bundled either:
 

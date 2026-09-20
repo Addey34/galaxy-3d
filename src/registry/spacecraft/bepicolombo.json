@@ -15,6 +15,20 @@
   "identifiers": {
     "naif": -121
   },
+  "facts": {
+    "launchDate": {
+      "source": "nssdca-master-catalog",
+      "method": "measured",
+      "citation": "NSSDCA/COSPAR 2018-080A"
+    },
+    "massKg": {
+      "published": false,
+      "reason": {
+        "en": "The NSSDCA master catalog lists 365 kg, but its own page attributes that figure to the dry mass of the propulsion module alone, and gives a launch mass of 1229 kg for the MPO stack. No single published mass describes the object this marker follows, so none is shown.",
+        "fr": "Le catalogue NSSDCA annonce 365 kg, mais sa propre page attribue ce chiffre à la seule masse sèche du module de propulsion, et donne 1229 kg de masse au lancement pour la pile du MPO. Aucune masse publiée ne décrit d’un seul chiffre l’objet que suit ce marqueur : aucune n’est donc affichée."
+      }
+    }
+  },
   "coverage": {
     "temporal": {
       "interval": [

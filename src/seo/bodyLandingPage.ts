@@ -316,7 +316,11 @@ export function bodyFactsWithSources(
     facts.push({ label: 'Orbits', value: parentDisplayName });
   for (const entry of entries) {
     if (entry.status !== 'value') continue;
-    const v = entry.value;
+    // Les pages publiques ne décrivent que des corps du catalogue, dont tous les faits sont
+    // numériques : les faits DATÉS n'existent que pour la couche instrument, qui n'a pas de
+    // page (cf. `config/navigable.ts`). Le filtre est explicite plutôt que supposé.
+    if (entry.value.kind !== 'number') continue;
+    const v = entry.value.value;
     let label: string;
     let value: string;
     switch (entry.field) {
@@ -365,6 +369,9 @@ export function bodyFactsWithSources(
         label = 'Known moons';
         value = formatNumber(v);
         break;
+      default:
+        // Faits propres à la couche instrument : jamais dans `PAGE_FACT_ORDER`, donc jamais ici.
+        continue;
     }
     const uncertainty = displayedUncertainty(entry);
     if (uncertainty !== null)

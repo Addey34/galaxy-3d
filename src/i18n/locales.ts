@@ -273,6 +273,8 @@ export const messages: Record<Locale, Dict> = {
     'smallBodies.neo': 'Near-Earth objects',
     'smallBodies.comet': 'Comets',
     'smallBodies.tno': 'Trans-Neptunian objects',
+    'smallBodies.source':
+      '{count} objects, JPL Small-Body Database, snapshot of {date}.',
 
     // ── Couches météo ──
     'weather.title': 'Weather layers',
@@ -374,6 +376,10 @@ export const messages: Record<Locale, Dict> = {
     'stat.orbit': 'Orbit',
     'stat.knownMoons': 'Known moons',
     'stat.axialTilt': 'Axial tilt',
+    'stat.launchDate': 'Launch date',
+    'stat.eccentricity': 'Eccentricity',
+    'stat.perihelion': 'Perihelion distance',
+    'stat.firstObservation': 'First observation',
     'stat.unknown': 'No published value',
     'stat.unsourced': 'Not yet sourced',
     'stat.unknown.value': 'n/a',
@@ -670,6 +676,8 @@ export const messages: Record<Locale, Dict> = {
     'smallBodies.neo': 'Géocroiseurs',
     'smallBodies.comet': 'Comètes',
     'smallBodies.tno': 'Objets transneptuniens',
+    'smallBodies.source':
+      '{count} objets, JPL Small-Body Database, relevé du {date}.',
 
     // ── Couches météo ──
     'weather.title': 'Couches météo',
@@ -771,6 +779,10 @@ export const messages: Record<Locale, Dict> = {
     'stat.orbit': 'Orbite',
     'stat.knownMoons': 'Lunes connues',
     'stat.axialTilt': 'Inclinaison axiale',
+    'stat.launchDate': 'Date de lancement',
+    'stat.eccentricity': 'Excentricité',
+    'stat.perihelion': 'Distance de périhélie',
+    'stat.firstObservation': 'Première observation',
     'stat.unknown': 'Donnée non publiée',
     'stat.unsourced': 'Pas encore sourcée',
     'stat.unknown.value': 'n.d.',

@@ -1,5 +1,6 @@
 /** Schéma des sondes ; Zod sert aux tests et à la génération, jamais au bundle client. */
 import { z } from 'zod';
+import { fact } from './entity';
 
 const instant = z.string().datetime({ offset: false }).regex(/Z$/);
 const localized = z
@@ -23,6 +24,16 @@ export const spacecraftSchema = z
     launchDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
     color: z.string().regex(/^0x[0-9a-fA-F]{6}$/),
     identifiers: z.object({ naif: z.number().int().negative() }).strict(),
+    /**
+     * Faits affichés par la fiche. `launchDate` ne porte pas de valeur ici : elle vit déjà
+     * au-dessus, seule sa PROVENANCE manquait, et un fait sans provenance ne s'affiche pas.
+     * La liste est celle que `core/bodyFacts.INSTRUMENT_FACTS` déclare applicable à une sonde.
+     */
+    facts: z
+      .object({ launchDate: fact, massKg: fact })
+      .partial()
+      .strict()
+      .optional(),
     coverage: z
       .object({
         temporal: z

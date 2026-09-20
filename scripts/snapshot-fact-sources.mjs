@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/* global console, process, fetch, Buffer, URL */
+/* global console, process, fetch, Buffer, URL, setTimeout */
 /**
  * Instantané des SOURCES PRIMAIRES des faits affichés (fiche d'un corps, pages par corps).
  *
@@ -18,7 +18,9 @@
  * Sources lues : fiches NASA NSSDCA (Sun, planètes, Lune, Pluton et Charon), tables JPL SSD
  * des satellites (paramètres physiques, éléments moyens), pages NASA Science des lunes
  * (nombre de lunes « as of »), API JPL SBDB (petits corps : diamètre, GM, rotation, pôle,
- * satellites confirmés). Un libellé introuvable fait ÉCHOUER le script : une table qui change
+ * satellites confirmés), fiches du NSSDCA Master Catalog des onze sondes (date de lancement,
+ * masse, lanceur), API SBDB des trois interstellaires (excentricité, périhélie, arc d'observation).
+ * Un libellé introuvable fait ÉCHOUER le script : une table qui change
  * de forme ne doit pas produire un instantané silencieusement vide.
  */
 import { mkdirSync, readFileSync, writeFileSync, existsSync } from 'node:fs';
@@ -34,10 +36,18 @@ async function get(url) {
   const path = `${CACHE_DIR}/${key}.txt`;
   if (existsSync(path)) return readFileSync(path, 'utf8');
   if (OFFLINE) throw new Error(`absent du cache (--offline) : ${url}`);
-  // Certains éditeurs (Nature) servent une page d'interstitiel sans en-tête de navigateur.
-  const response = await fetch(url, {
-    headers: { 'User-Agent': 'Mozilla/5.0 (galaxy fact-source snapshot)' },
-  });
+  // L'API SSD de JPL répond 502 par intermittence (mesuré : environ une requête sur trois le
+  // 2026-09-20, indépendamment de l'en-tête `Origin`). Une erreur de SERVEUR se retente, avec
+  // une attente qui double ; une réponse 4xx est définitive et fait échouer le relevé.
+  let response;
+  for (let attempt = 0; ; attempt++) {
+    // Certains éditeurs (Nature) servent une page d'interstitiel sans en-tête de navigateur.
+    response = await fetch(url, {
+      headers: { 'User-Agent': 'Mozilla/5.0 (galaxy fact-source snapshot)' },
+    });
+    if (response.ok || response.status < 500 || attempt >= 4) break;
+    await new Promise((resolve) => setTimeout(resolve, 500 * 2 ** attempt));
+  }
   if (!response.ok) throw new Error(`HTTP ${response.status} : ${url}`);
   const text = await response.text();
   writeFileSync(path, text);
@@ -628,6 +638,155 @@ async function articles() {
   return out;
 }
 
+// ── NASA NSSDCA Master Catalog : sondes ──────────────────────────────────────────────────────
+
+/**
+ * Fiche d'une sonde au Master Catalog, repérée par son identifiant NSSDCA/COSPAR. Le nom de la
+ * page est CONFRONTÉ au nom attendu, comme `fetchBody()` confronte `Target body name:` côté
+ * Horizons : un identifiant faux ne renvoie pas d'erreur, il renvoie une AUTRE mission.
+ *
+ * Le bloc « Facts in Brief » porte un champ `Mass` dont le sens VARIE d'une fiche à l'autre : à
+ * masse au lancement pour OSIRIS-REx (1528 contre « Launch mass including propellant is 1529 kg »
+ * dans le corps de la page), masse sèche pour New Horizons (385 contre 465 kg au lancement), et
+ * pour BepiColombo la masse sèche du seul module de propulsion (365 kg, que le corps de la page
+ * attribue au SEPM quand la pile au lancement pesait 1229 kg pour le MPO). Les phrases du corps
+ * de page qui parlent de « launch mass » sont donc relevées À CÔTÉ de la valeur : c'est sur elles
+ * que se décide, fiche par fiche, si la valeur se publie et sous quel libellé.
+ */
+const NSSDCA_MASTER_TARGET = JSON.parse(
+  readFileSync(new URL('./fact-source-targets.json', import.meta.url), 'utf8')
+).nssdcaMasterCatalog;
+
+const NSSDCA_MASTER_BASE =
+  'https://nssdc.gsfc.nasa.gov/nmc/spacecraft/display.action?id=';
+
+/** Libellés du bloc « Facts in Brief » : liste FERMÉE, elle borne chaque valeur. */
+const FACTS_IN_BRIEF_LABELS = [
+  'Launch Date',
+  'Launch Vehicle',
+  'Launch Site',
+  'Mass',
+  'Nominal Power',
+];
+
+async function nssdcaMasterCatalog() {
+  const out = {};
+  for (const [body, target] of Object.entries(NSSDCA_MASTER_TARGET)) {
+    const url = `${NSSDCA_MASTER_BASE}${target.id}`;
+    const flat = decode(
+      (await get(url)).replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ')
+    );
+    const head = flat.indexOf('NSSDCA/COSPAR ID');
+    if (head < 0) throw new Error(`page NSSDCA sans identifiant : ${url}`);
+    // Le nom est le dernier segment avant l'identifiant, après la date du jour servie par le site.
+    const name = flat
+      .slice(0, head)
+      .trim()
+      .replace(/^.*\d{4}\s+/, '')
+      .trim();
+    if (name !== target.expect)
+      throw new Error(
+        `NSSDCA ${target.id} : « ${name} » au lieu de « ${target.expect} »`
+      );
+    const id = flat.slice(head).match(/NSSDCA\/COSPAR ID:\s*(\S+)/)?.[1];
+    if (id !== target.id)
+      throw new Error(`NSSDCA : la page ${url} annonce l'identifiant ${id}`);
+    const facts = flat.match(
+      /Facts in Brief\s+(.*?)\s+(?:Funding Agenc|Discipline)/
+    )?.[1];
+    if (!facts) throw new Error(`bloc « Facts in Brief » introuvable : ${url}`);
+    // Un champ court jusqu'au libellé SUIVANT, et ce libellé se prend dans une liste fermée :
+    // les valeurs sont du texte libre contenant des majuscules (« Cape Canaveral, United
+    // States »), donc « un mot capitalisé suivi d'un deux-points » arrêtait le site au premier
+    // mot — relevé « Cape Canaveral, » pour les huit fiches américaines.
+    const NEXT = `(?=\\s+(?:${FACTS_IN_BRIEF_LABELS.join('|')}):|$)`;
+    const field = (label, pattern) => {
+      const match = facts.match(new RegExp(`${label}:\\s*(${pattern})${NEXT}`));
+      return match ? match[1].trim() : null;
+    };
+    const mass = field('Mass', '[\\d.]+ kg');
+    if (!mass)
+      throw new Error(`masse introuvable dans « Facts in Brief » : ${url}`);
+    const launchDate = field('Launch Date', '\\d{4}-\\d{2}-\\d{2}');
+    if (!launchDate) throw new Error(`date de lancement introuvable : ${url}`);
+    const power = field('Nominal Power', '[\\d.]+ W');
+    out[body] = {
+      url,
+      cosparId: target.id,
+      name,
+      launchDate,
+      launchVehicle: field('Launch Vehicle', '.+?'),
+      launchSite: field('Launch Site', '.+?'),
+      massKg: number(mass.replace(' kg', '')),
+      nominalPowerW: power ? number(power.replace(' W', '')) : null,
+      // Ce que le corps de la page dit d'une masse au lancement, quand il en dit quelque chose.
+      launchMassMentions: [
+        ...flat
+          .slice(0, flat.indexOf('Facts in Brief'))
+          .matchAll(/[^.]*launch mass[^.]*\./gi),
+      ].map((m) => m[0].trim()),
+    };
+  }
+  return out;
+}
+
+// ── JPL SBDB : objets interstellaires ────────────────────────────────────────────────────────
+
+/**
+ * Les trois interstellaires ne passent pas par `sbdb()` : ce qui les décrit n'est pas un
+ * diamètre ni un GM, mais leur ORBITE (excentricité franchement supérieure à 1, périhélie) et
+ * l'arc d'observation qui l'a contrainte. `full-prec=1` est indispensable : sans lui l'API
+ * arrondit e à 1,2 pour ʻOumuamua, ce qui ne se compare plus aux éléments du registre.
+ */
+const SBDB_INTERSTELLAR_TARGET = JSON.parse(
+  readFileSync(new URL('./fact-source-targets.json', import.meta.url), 'utf8')
+).sbdbInterstellar;
+
+async function sbdbInterstellar() {
+  const out = {};
+  for (const [body, target] of Object.entries(SBDB_INTERSTELLAR_TARGET)) {
+    const api = `https://ssd-api.jpl.nasa.gov/sbdb.api?sstr=${encodeURIComponent(target.sstr)}&phys-par=1&full-prec=1`;
+    const json = JSON.parse(await get(api));
+    if (!json.object) throw new Error(`SBDB : ${target.sstr} introuvable`);
+    if (json.object.fullname !== target.expect)
+      throw new Error(
+        `SBDB ${target.sstr} : « ${json.object.fullname} » au lieu de « ${target.expect} »`
+      );
+    const element = (name) => {
+      const el = (json.orbit?.elements ?? []).find((e) => e.name === name);
+      if (!el) throw new Error(`SBDB ${target.sstr} : élément ${name} absent`);
+      return {
+        value: number(el.value),
+        sigma: el.sigma ? number(el.sigma) : null,
+      };
+    };
+    const phys = (name) => {
+      const p = (json.phys_par ?? []).find((x) => x.name === name);
+      return p
+        ? { value: number(p.value), sigma: p.sigma ? number(p.sigma) : null }
+        : null;
+    };
+    out[body] = {
+      url: `https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=${encodeURIComponent(target.sstr)}`,
+      fullname: json.object.fullname,
+      orbitClass: json.object.orbit_class?.name ?? null,
+      eccentricity: element('e'),
+      perihelionAU: element('q'),
+      inclinationDeg: element('i'),
+      absoluteMagnitude: phys('H'),
+      firstObservation: json.orbit?.first_obs ?? null,
+      lastObservation: json.orbit?.last_obs ?? null,
+      observationsUsed: json.orbit?.n_obs_used ?? null,
+      solutionDate: json.orbit?.soln_date ?? null,
+    };
+    if (!out[body].firstObservation)
+      throw new Error(
+        `SBDB ${target.sstr} : date de première observation absente`
+      );
+  }
+  return out;
+}
+
 const snapshot = {
   generatedBy: 'scripts/snapshot-fact-sources.mjs',
   retrieved: new Date().toISOString().slice(0, 10),
@@ -636,6 +795,8 @@ const snapshot = {
   jplSatellites: await jplSatellites(),
   nasaMoonCounts: await nasaMoonCounts(),
   sbdb: await sbdb(),
+  sbdbInterstellar: await sbdbInterstellar(),
+  nssdcaMasterCatalog: await nssdcaMasterCatalog(),
   articles: await articles(),
 };
 // La date de relevé n'a de sens qu'en ligne : hors ligne, garder celle du cache existant pour

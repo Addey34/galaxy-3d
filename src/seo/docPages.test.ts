@@ -4,7 +4,9 @@ import { describe, expect, it } from 'vitest';
 import { CELESTIAL_CONFIG } from '@/config/bodies';
 import { flattenBodies } from '@/config/catalog';
 import { FACT_SOURCES } from '@/config/factSources';
-import { bodyFact } from '@/core/bodyFacts';
+import { ALL_FACT_FIELDS, bodyFact } from '@/core/bodyFacts';
+import { NAVIGABLE_TARGETS } from '@/config/navigable';
+import { parseSmallBodyDataset, type SmallBodyDatasetFile } from '@/core/sbdb';
 import { SQRT_K } from '@/core/ScaleService';
 import { MIN_SAMPLES_PER_ORBIT_FOR_HERMITE } from '@/core/HorizonsEphemerisService';
 import summaryJson from '@/config/horizons-validation-summary.json';
@@ -70,6 +72,23 @@ const methodology = methodologyPages({
   origin: ORIGIN,
 });
 
+/**
+ * Date et compte de l'instantané des petits corps, obtenus par la MÊME règle que
+ * l'application (`parseSmallBodyDataset`) sur le fichier que le build livre : un compte de
+ * lignes brutes dirait 8000 quand le panneau en affiche 6965.
+ */
+function smallBodySnapshot(): { retrieved: string; count: number } {
+  const dataset = parseSmallBodyDataset(
+    JSON.parse(
+      readFileSync(
+        resolve(ROOT, 'public/assets/small-bodies/dataset.json'),
+        'utf-8'
+      )
+    ) as SmallBodyDatasetFile
+  );
+  return { retrieved: dataset.retrieved!, count: dataset.bodies.length };
+}
+
 const sourcesInput: SourcesInput = {
   config: CELESTIAL_CONFIG,
   textures,
@@ -82,6 +101,9 @@ const sourcesInput: SourcesInput = {
   updated: '2026-09-17',
   origin: ORIGIN,
   connectHosts,
+  // Lu dans le fichier livré, comme le fait le plugin Vite : la page cite sa date, et une
+  // valeur retapée ici ne prouverait rien de ce qui est publié.
+  smallBodies: smallBodySnapshot(),
 };
 const sources = sourcesPages(sourcesInput);
 const allPages = [...methodology, ...sources];
@@ -174,20 +196,14 @@ describe('page /sources', () => {
         expect(page.body, `${page.locale} : ${source.url}`).toContain(
           `href="${source.url}"`
         );
-      // Le nombre publié est celui que la règle d'affichage produit, pas une constante.
+      // Le nombre publié est celui que la règle d'affichage produit, pas une constante. Les
+      // objets d'instrument comptent : ils ont une fiche, donc des faits affichés.
       let shown = 0;
-      for (const [, cfg] of flattenBodies(CELESTIAL_CONFIG))
-        for (const field of [
-          'radiusKm',
-          'massKg',
-          'gravity',
-          'meanTempC',
-          'moonCount',
-          'axialTilt',
-          'distanceAU',
-          'orbitPeriodDays',
-          'rotationPeriod',
-        ] as const)
+      for (const [, cfg] of [
+        ...flattenBodies(CELESTIAL_CONFIG),
+        ...NAVIGABLE_TARGETS,
+      ])
+        for (const field of ALL_FACT_FIELDS)
           if (cfg.kind !== 'skybox' && bodyFact(cfg, field).status === 'value')
             shown++;
       expect(page.body).toMatch(

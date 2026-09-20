@@ -36,7 +36,7 @@ export interface MeteoModelLayerConfig {
   id: string;
   labelKey: string;
   noteKey?: string;
-  legendGradient?: { css: string; loKey: string; hiKey: string };
+  legendGradient?: WeatherLayerHandle['legendGradient'];
   variable: string;
   forecastGrid: MeteoGridOptions;
   archiveGrid: MeteoGridOptions;

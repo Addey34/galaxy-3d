@@ -7,7 +7,7 @@
  * (`HorizonsEphemerisService`, mêmes binaires que les planètes/lunes/planètes naines).
  * `name` est la clé de jointure exacte avec `manifest.json` / `scripts/generate-horizons-ephemerides.mjs`.
  */
-import type { LocalizedText } from '@/types';
+import type { LocalizedText, RealData } from '@/types';
 import { loadSpacecraftMissions } from '@/registry/spacecraft';
 
 export interface SpacecraftMission {
@@ -18,6 +18,12 @@ export interface SpacecraftMission {
   launchDate: string;
   /** Couleur du marqueur/label, 0xRRGGBB. */
   color: number;
+  /**
+   * Faits sourcés de la mission, prêts à être versés dans le `realData` de la fiche par
+   * `config/navigable.ts` : valeurs, provenances et raisons de non-publication, redéployées
+   * par le chargeur du registre comme pour n'importe quel corps du catalogue.
+   */
+  facts: Partial<RealData>;
 }
 
 export const SPACECRAFT_MISSIONS: SpacecraftMission[] =

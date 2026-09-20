@@ -47,7 +47,7 @@ describe('registre des fournisseurs', () => {
       declared,
       'une fiche présente sur le disque mais absente de providers/index.ts ne serait lue par personne'
     ).toEqual(fileIds);
-    expect(fileIds.length).toBe(24);
+    expect(fileIds.length).toBe(25);
   });
 
   it('garde les fiches d’événements HORS du bundle de l’application', () => {
@@ -97,17 +97,17 @@ describe('registre des fournisseurs', () => {
       expect(provider.role, provider.id).toBe('position-source');
     for (const provider of Object.values(EVENT_PROVIDERS))
       expect(provider.role, provider.id).toBe('event-source');
-    expect(ALL_PROVIDERS.length + Object.keys(EVENT_PROVIDERS).length).toBe(24);
+    expect(ALL_PROVIDERS.length + Object.keys(EVENT_PROVIDERS).length).toBe(25);
   });
 });
 
 describe('FACT_SOURCES dérivé du registre', () => {
-  it('expose les 18 sources de faits, dans l’ordre du registre', () => {
+  it('expose les 19 sources de faits, dans l’ordre du registre', () => {
     // L'ordre est publié : `/sources` écrit son tableau en parcourant cet objet.
     expect(Object.keys(FACT_SOURCES)).toEqual(
       Object.keys(FACT_SOURCE_PROVIDERS)
     );
-    expect(Object.keys(FACT_SOURCES).length).toBe(18);
+    expect(Object.keys(FACT_SOURCES).length).toBe(19);
   });
 
   it('n’expose AUCUNE source de position comme source de fait', () => {

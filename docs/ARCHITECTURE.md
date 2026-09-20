@@ -1011,6 +1011,102 @@ fait foi) ; la colonne P de la table JPL des éléments moyens est anomalistique
 1,7691 j sidéraux), d'où les périodes lues dans les fiches NSSDCA des satellites ; le GM de la SBDB
 pour Itokawa ne correspond pas à la masse publiée que ses propres notes citent.
 
+### Les objets d'instrument : deux familles de faits, et une date
+
+Les onze sondes et les trois objets interstellaires portent une fiche comme n'importe quel
+corps, mais pas les mêmes grandeurs. `core/bodyFacts.ts` le DÉCLARE au lieu de le déduire de
+l'absence de valeur : une sonde a une date de lancement et une masse, un interstellaire une
+excentricité, une périhélie et une première observation, et aucune des deux familles n'a de
+rayon, de gravité, de lune ni d'orbite fermée. `notApplicableFacts` soustrait donc l'ensemble
+complet des champs, et la réciproque vaut pour le catalogue. Le piège est dans l'union : la
+masse d'une sonde est la MÊME grandeur que celle d'une planète, et la déclarer propre à la
+couche instrument l'efface de tout le catalogue — 40 valeurs disparues d'un coup, attrapé par
+`factProvenance.test.ts`.
+
+**Un fait peut être une DATE.** `FactValue` est une union fermée de deux natures, nombre ou
+date de calendrier. Encoder une date en nombre aurait rendu la fiche JSON illisible et laissé
+`displayedUncertainty` calculer une incertitude relative sur un instant. Les pages publiques,
+elles, ne décrivent que des corps du catalogue, dont tous les faits sont numériques : elles
+écartent explicitement les faits datés au lieu de le supposer.
+
+**Aucune valeur n'est écrite deux fois.** La date de lancement vit en tête de fiche de sonde et
+son fait ne porte que la provenance ; l'excentricité d'un interstellaire EST son élément
+orbital, et la périhélie s'en dérive par q = a(1 − e). `spreadFacts` refuse une valeur répétée
+dans un fait dont la valeur vit ailleurs : c'est la garde qui empêche deux vérités pour un même
+nombre dans un même fichier.
+
+**Le champ « Mass » du NSSDCA Master Catalog n'a pas le même sens d'une mission à l'autre**, et
+c'est le défaut le plus intéressant du lot. Pour OSIRIS-REx il vaut 1528 kg quand la page écrit
+« Launch mass including propellant is 1529 kg » ; pour New Horizons 385 kg, soit exactement la
+masse sèche (« The 465 kg launch mass includes 80 kg of propellant ») ; pour BepiColombo 365 kg,
+que la page attribue au SEUL module de propulsion, la pile du MPO pesant 1229 kg au lancement.
+La valeur publiée dit donc ce qu'elle est (`DETAIL.nssdcaFactsInBrief` nomme le champ lu, et la
+`citation` porte l'identifiant COSPAR, seul moyen de retrouver la fiche) ; **BepiColombo ne
+publie aucune masse**, avec sa raison, parce qu'une ligne « 365 kg » serait fausse pour un
+lecteur. Le relevé conserve à côté de chaque valeur les phrases de la page qui parlent d'une
+masse au lancement, et le test EXIGE une précision dès que ces phrases existent.
+
+**L'identité de la fiche lue est vérifiée**, comme l'est `Target body name:` côté Horizons : un
+identifiant COSPAR faux ne renvoie pas d'erreur, il renvoie une autre mission. Falsifié :
+`2011-029A` au lieu de `2011-040A` sort « ORS 1 au lieu de Juno ».
+
+**Ce qui n'est pas publié, délibérément** : le lanceur et le site de lancement (du texte libre,
+et le modèle de faits reste fermé à deux natures) ; la puissance nominale (absente de 4 fiches
+sur 11) ; la magnitude absolue d'un interstellaire (la SBDB publie H pour 1I mais M1, une autre
+grandeur, pour les deux comètes) ; la rotation de 1I, parce que la scène ne fait tourner aucun
+de ces objets et qu'on ne publie pas une période que la simulation ne montre pas.
+
+## Petits corps : un instantané livré, pas un flux
+
+`ssd-api.jpl.nasa.gov` répond **HTTP 200 sans en-tête `Access-Control-Allow-Origin`** (mesuré au
+curl avec l'`Origin` du site, quatre fois, le 2026-09-20) : un navigateur jette la réponse, et la
+couche des petits corps était **vide en production depuis toujours**, en silence, alors qu'elle
+se remplissait en développement derrière un serveur de dev de même origine. Ce n'était pas la
+CSP, qui autorisait l'hôte en `connect-src`.
+
+Les quatre requêtes sont donc tirées AU BUILD par `scripts/generate-small-body-dataset.mjs`
+(`pnpm smallbodies:generate`), qui écrit `public/assets/small-bodies/dataset.json` **dans la
+forme même de l'API** (`fields` + `data` par catégorie) : `parseSbdbRows` la lit sans une ligne
+de conversion, et le fichier commité reste comparable à sa source. Conséquences :
+
+- l'application ne contacte plus JPL du tout : l'hôte est retiré de la CSP, de
+  `LIVE_DATA_SERVICES` et de `public/privacy.html` dans les deux langues ;
+- la donnée est un **instantané daté**, et le panneau le dit (« 6965 objets, JPL Small-Body
+  Database, relevé du … »). Une donnée figée qui se présenterait comme vivante serait le défaut,
+  pas la correction ;
+- le nombre publié est celui que l'APPLICATION obtient, pas le nombre de lignes du fichier :
+  `parseSbdbRows` écarte les orbites non elliptiques et les lignes incomplètes, soit 8000 lignes
+  pour 6965 orbites. `/sources` passe donc par `parseSmallBodyDataset`, comme le panneau ;
+- la couche marche enfin **hors ligne** : le nom du fichier est stable, donc le service worker le
+  sert « réseau d'abord, cache en secours », comme les textures ;
+- **ce même nom stable lui interdit le cache immuable d'un an** que `firebase.json` applique à
+  tout `/assets/**` : sans règle explicite, une régénération n'atteindrait jamais un visiteur
+  déjà venu. Le piège est le même que pour les vignettes de partage, et il a failli repasser.
+  `src/config/stableAssetCaching.test.ts` croise désormais les familles « réseau d'abord » du
+  service worker avec les règles de cache de Firebase : en déclarer une d'un seul côté échoue.
+
+Mesuré en e2e : la couche PEINT (pixels non transparents comptés sur son canevas) et n'émet
+AUCUNE requête vers `jpl.nasa.gov`. Les deux moitiés comptent : la première seule repasserait au
+vert si on rebranchait l'API depuis une machine où elle répond, la seconde seule passerait sur
+une couche morte.
+
+## Légende d'une couche satellite : la rampe de la NASA, rendue par nous
+
+La légende de la couche « température satellite » était un `<img src>` vers
+`gibs.earthdata.nasa.gov/legends/….svg`, que **notre propre CSP** interdit
+(`img-src 'self' data: blob:`). Elle n'est jamais apparue en production, et une image bloquée ne
+se plaint pas. Le SVG pèse par ailleurs 324 ko et embarque un `<script>`.
+
+GIBS publie le même barème sous forme lisible par une machine
+(`/colormaps/v1.3/<couche>.xml`). `scripts/import-gibs-colormap.mjs` (`pnpm gibs:colormap`) en
+tire `src/config/gibsColormap.json` — couleurs, bornes, unité, source et date de lecture — et
+`core/gibsLegend.ts` en fait un dégradé CSS et deux bornes en degrés Celsius (220 K → 310 K,
+soit −53 °C → +37 °C). **Les couleurs restent celles de la NASA** : ce n'est pas une palette de
+remplacement. `legendUrl` a été SUPPRIMÉ du modèle de couche plutôt que laissé inutilisé : une
+légende distante n'est plus exprimable, ce qui vaut mieux qu'un test qui l'interdirait. Deux
+gardes restent, croisées avec `firebase.json` : `img-src` n'autorise aucun hôte tiers, et aucun
+module d'interface ne construit une source d'image absolue.
+
 ## Modèle temporel : ce qu'une donnée dit du temps
 
 `src/core/temporal.ts` (pur) répond à une question que la scène pose partout : **la donnée
@@ -1114,9 +1210,11 @@ désormais tenues par un test de `docPages.test.ts` :
   (`synchronousSpinDrifts`) ; les 18 autres sont verrouillées à 1e-9 ;
 - la Terre est dessinée au barycentre Terre-Lune (`positionBody: Body.EMB`), ce que mesure sa
   ligne du tableau (4 823 km en moyenne) ;
-- « contacté seulement quand la couche est utilisée » était faux : SBDB est interrogé au
+- « contacté seulement quand la couche est utilisée » était faux : SBDB était interrogé au
   démarrage, et la couche de nuages satellite (active par défaut sur ordinateur) comble ses
-  trous avec Open-Meteo.
+  trous avec Open-Meteo. **Depuis le lot 8b, SBDB n'est plus contacté du tout** : les petits
+  corps viennent d'un instantané livré (§ « Petits corps : un instantané livré, pas un flux »).
+  Le second point, lui, tient toujours.
 
 **Obliquité corrigée, trouvée par cette relecture.** `frames.ts` tournait les vecteurs
 d'astronomy-engine de 23,4394°, alors que l'écliptique J2000 des fichiers Horizons et des

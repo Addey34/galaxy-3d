@@ -35,6 +35,7 @@ import { setupModeSwitcher } from './ui/modeSwitcher';
 import { setupExploTourNudge } from './ui/exploTourNudge';
 import { setupExploScaleBadge } from './ui/exploScaleBadge';
 import { setupPermalinks } from './ui/permalink';
+import { NAVIGABLE_BODIES } from './config/navigable';
 import { setupAstronomicalEvents } from './ui/astronomicalEvents';
 import { setupOpticalZoom } from './ui/opticalZoom';
 import { ExploHud } from './ui/exploHud';
@@ -75,7 +76,7 @@ import { setupGeoDebug } from './ui/geoDebug';
 import { setupTerminatorProbe } from './ui/terminatorProbe';
 import { setupEarthDebug } from './ui/earthDebug';
 import { setupMeteoDebug } from './ui/meteoDebug';
-import { fetchAllSmallBodies } from './core/sbdb';
+import { loadSmallBodies } from './core/sbdb';
 import { CELESTIAL_CONFIG } from './config/bodies';
 import { flattenBodies } from './config/catalog';
 
@@ -274,17 +275,21 @@ if (surfaceScrim) {
     setupUnitsToggle();
     setupQualitySection(sceneSystem);
 
-    // Champ de masse des petits corps (SBDB) — couche instrument 2D, chargée en tâche de
-    // fond. Dégradation propre : si le fetch échoue (offline), l'overlay reste vide.
+    // Champ de masse des petits corps — couche instrument 2D, chargée en tâche de fond depuis
+    // l'INSTANTANÉ livré (`/assets/small-bodies/dataset.json`, relevé au build). L'application
+    // ne contacte plus JPL : son API répond sans en-tête CORS, et la couche était donc vide en
+    // production (cf. `core/sbdb.ts`). Dégradation propre : si le chargement échoue, l'overlay
+    // reste vide et le panneau n'annonce aucune date.
     const smallBodyOverlay = new SmallBodyOverlay();
     smallBodyOverlay.mount();
-    void fetchAllSmallBodies().then((bodies) =>
-      smallBodyOverlay.setBodies(bodies)
-    );
     const smallBodyFilters = setupSmallBodyFilters(
       smallBodyOverlay,
       overlayCoordinator
     );
+    void loadSmallBodies().then((dataset) => {
+      smallBodyOverlay.setBodies(dataset.bodies);
+      smallBodyFilters.setDataset(dataset.retrieved, dataset.bodies.length);
+    });
 
     // Événements terrestres (séismes USGS, événements rapportés NASA EONET) — couche
     // instrument 2D posée sur la surface RENDUE de la Terre, donc derrière sa phase de
@@ -446,7 +451,13 @@ if (surfaceScrim) {
       {
         playback,
         onEclipseAddress: (event) => documentTitle.setEclipse(event),
-      }
+      },
+      // Même exclusion de la skybox que `bodyNames` : elle n'est pas une destination.
+      new Set(
+        [...NAVIGABLE_BODIES.entries()]
+          .filter(([, cfg]) => cfg.kind !== 'skybox')
+          .map(([name]) => name)
+      )
     );
     syncPermalink = permalink.sync;
     permalink.applyInitialState();

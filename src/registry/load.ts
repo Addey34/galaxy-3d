@@ -313,8 +313,15 @@ const SMALL_BODY_VALUE_FIELD: Partial<Record<FactField, string>> = {
   rotationPeriod: 'rotationHours',
 };
 
-/** Redéploie les faits : valeurs dans `target`, provenances et raisons dans deux tables. */
-function spreadFacts(
+/**
+ * Redéploie les faits : valeurs dans `target`, provenances et raisons dans deux tables.
+ *
+ * Exportée pour les registres des sondes et des interstellaires, qui ont la même règle et la
+ * même garde : un fait dont la valeur vit AILLEURS dans la fiche (la date de lancement, en
+ * tête) ne se répète pas ici, et `valueField` le refuse explicitement plutôt que de laisser
+ * deux copies diverger.
+ */
+export function spreadFacts(
   facts: Partial<Record<FactField, FactEntry>>,
   target: Record<string, unknown>,
   valueField: Partial<Record<FactField, string>>,

@@ -5,6 +5,7 @@ import {
   bodyFact,
   citationOrder,
   displayedUncertainty,
+  factNumber,
   factValue,
 } from './bodyFacts';
 
@@ -25,7 +26,10 @@ describe('bodyFact : ce qui s’affiche comme un fait', () => {
       body({ radiusKm: 100, sources: { radiusKm: measured('jpl-sbdb') } }),
       'radiusKm'
     );
-    expect(entry).toMatchObject({ status: 'value', value: 100 });
+    expect(entry).toMatchObject({
+      status: 'value',
+      value: { kind: 'number', value: 100 },
+    });
   });
 
   it('ne publie JAMAIS une valeur sans provenance, même si le catalogue la porte', () => {
@@ -71,7 +75,7 @@ describe('bodyFact : ce qui s’affiche comme un fait', () => {
 
   it('lit la rotation dans la vitesse que la scène applique, en valeur absolue', () => {
     const triton = body({}, { rotationSpeed: -(2 * Math.PI) / (141 * 3600) });
-    expect(factValue(triton, 'rotationPeriod')).toBeCloseTo(141, 9);
+    expect(factNumber(triton, 'rotationPeriod')).toBeCloseTo(141, 9);
     expect(factValue(body({}), 'rotationPeriod')).toBeUndefined();
   });
 });

@@ -17,27 +17,107 @@ import type {
   UnknownReason,
 } from '@/types';
 
+/**
+ * Valeur d'un fait. Deux natures, et deux seulement : un NOMBRE dans l'unité du catalogue, ou
+ * une DATE de calendrier. La date est arrivée avec les objets d'instrument (lancement d'une
+ * sonde, première observation d'un interstellaire) : l'encoder en nombre aurait rendu le champ
+ * illisible dans la fiche JSON et permis à `displayedUncertainty` de calculer une incertitude
+ * relative sur un instant, ce qui n'a aucun sens. L'ensemble reste FERMÉ, comme les formes
+ * déclarées du registre : pas de fait en texte libre.
+ */
+export type FactValue =
+  { kind: 'number'; value: number } | { kind: 'date'; iso: string };
+
 export type FactEntry =
   | {
       field: FactField;
       status: 'value';
-      value: number;
+      value: FactValue;
       provenance: FactProvenance;
     }
   | { field: FactField; status: 'unknown'; reason: UnknownReason }
   | { field: FactField; status: 'absent' };
 
 /**
+ * Tous les champs de faits, en un seul endroit : `notApplicableFacts` a besoin de l'ensemble
+ * complet pour le soustraire, et un `FactField` oublié ici ferait apparaître une ligne muette
+ * sur une fiche d'objet d'instrument. Le test `bodyFacts.test.ts` le confronte aux deux ordres
+ * d'affichage.
+ */
+const FACT_LABEL_ORDER: Record<FactField, true> = {
+  radiusKm: true,
+  massKg: true,
+  gravity: true,
+  meanTempC: true,
+  moonCount: true,
+  axialTilt: true,
+  distanceAU: true,
+  orbitPeriodDays: true,
+  rotationPeriod: true,
+  launchDate: true,
+  firstObservation: true,
+  eccentricity: true,
+  perihelionAU: true,
+};
+
+/** Tous les champs de faits connus, dans l'ordre de leur déclaration. */
+export const ALL_FACT_FIELDS: readonly FactField[] = Object.keys(
+  FACT_LABEL_ORDER
+) as FactField[];
+
+/** Faits dont la valeur est une date de calendrier plutôt qu'un nombre. */
+export const DATE_FACTS: ReadonlySet<FactField> = new Set<FactField>([
+  'launchDate',
+  'firstObservation',
+]);
+
+/**
+ * Faits que SEULE la couche instrument porte (`config/navigable.ts`), par `kind`. Un objet
+ * d'instrument n'a en retour aucun des faits du catalogue, sauf sa masse pour une sonde : il
+ * n'a ni rayon publié, ni gravité, ni température, ni lune, ni orbite fermée.
+ */
+const INSTRUMENT_FACTS: Readonly<Record<string, readonly FactField[]>> = {
+  spacecraft: ['launchDate', 'massKg'],
+  interstellar: ['eccentricity', 'perihelionAU', 'firstObservation'],
+};
+
+/**
+ * Faits que SEULE la couche instrument peut porter. Ce n'est PAS l'union des listes ci-dessus :
+ * la masse d'une sonde est la même grandeur que celle d'une planète, et l'inclure ici l'aurait
+ * effacée de tout le catalogue (défaut attrapé par `factProvenance.test.ts`, 40 valeurs
+ * disparues d'un coup).
+ */
+const INSTRUMENT_ONLY_FACTS: ReadonlySet<FactField> = new Set<FactField>([
+  'launchDate',
+  'firstObservation',
+  'eccentricity',
+  'perihelionAU',
+]);
+
+/**
  * Champs structurellement hors sujet pour un `kind`. Une étoile centrale n'orbite rien et n'a
  * pas de lunes (le Soleil a longtemps porté `moonCount: 8` pour ses planètes). Une lune n'a pas
  * de lune connue : « Lunes connues : 0 » sur la fiche de Titan n'apprend rien et ne se source
- * nulle part.
+ * nulle part. Un objet d'instrument, symétriquement, n'a que les faits de sa famille : la règle
+ * est déclarée, pas déduite de l'absence de valeur, pour qu'une valeur ajoutée par erreur à une
+ * fiche n'ouvre pas une ligne qui n'a pas de sens.
  */
 export function notApplicableFacts(cfg: CelestialBodyConfig): Set<FactField> {
+  const instrument = INSTRUMENT_FACTS[cfg.kind];
+  if (instrument) {
+    const applicable = new Set<FactField>(instrument);
+    return new Set(
+      (Object.keys(FACT_LABEL_ORDER) as FactField[]).filter(
+        (field) => !applicable.has(field)
+      )
+    );
+  }
+  const out = new Set<FactField>(INSTRUMENT_ONLY_FACTS);
   if (cfg.kind === 'star')
-    return new Set(['orbitPeriodDays', 'distanceAU', 'moonCount']);
-  if (cfg.kind === 'moon') return new Set(['moonCount']);
-  return new Set();
+    for (const field of ['orbitPeriodDays', 'distanceAU', 'moonCount'] as const)
+      out.add(field);
+  if (cfg.kind === 'moon') out.add('moonCount');
+  return out;
 }
 
 /** Faits qui évoluent avec les découvertes : leur provenance DOIT porter `asOf`. */
@@ -54,13 +134,27 @@ export const TIME_VARYING_FACTS: ReadonlySet<FactField> = new Set([
 export function factValue(
   cfg: CelestialBodyConfig,
   field: FactField
-): number | undefined {
+): FactValue | undefined {
   if (field === 'rotationPeriod')
     return cfg.rotationSpeed
-      ? (2 * Math.PI) / (Math.abs(cfg.rotationSpeed) * 3600)
+      ? {
+          kind: 'number',
+          value: (2 * Math.PI) / (Math.abs(cfg.rotationSpeed) * 3600),
+        }
       : undefined;
   const value = cfg.realData?.[field];
-  return typeof value === 'number' ? value : undefined;
+  if (DATE_FACTS.has(field))
+    return typeof value === 'string' ? { kind: 'date', iso: value } : undefined;
+  return typeof value === 'number' ? { kind: 'number', value } : undefined;
+}
+
+/** Valeur numérique d'un fait, ou `undefined` si ce fait est une date ou n'existe pas. */
+export function factNumber(
+  cfg: CelestialBodyConfig,
+  field: FactField
+): number | undefined {
+  const value = factValue(cfg, field);
+  return value?.kind === 'number' ? value.value : undefined;
 }
 
 /**
@@ -97,8 +191,10 @@ export const UNCERTAINTY_DISPLAY_THRESHOLD = 0.05;
 export function displayedUncertainty(entry: FactEntry): number | null {
   if (entry.status !== 'value' || entry.provenance.uncertainty === undefined)
     return null;
-  if (entry.value === 0) return null;
-  const relative = Math.abs(entry.provenance.uncertainty / entry.value);
+  // Une incertitude RELATIVE n'a pas de sens sur une date : « le 5 septembre 1977 ± 3 % » ne
+  // veut rien dire, et le seul fait daté qui en porterait une resterait à écrire.
+  if (entry.value.kind !== 'number' || entry.value.value === 0) return null;
+  const relative = Math.abs(entry.provenance.uncertainty / entry.value.value);
   return relative >= UNCERTAINTY_DISPLAY_THRESHOLD ? relative : null;
 }
 

@@ -1,5 +1,5 @@
 {
-  "$comment": "Cibles de relevé des sources de faits — DONNÉE lue par snapshot-fact-sources.mjs. sbdb : clé du catalogue → désignation SBDB. Ajouter un petit corps au catalogue = l'ajouter ici (puis relancer `pnpm facts:snapshot`), sans toucher au script.",
+  "$comment": "Cibles de relevé des sources de faits — DONNÉE lue par snapshot-fact-sources.mjs. sbdb : clé du catalogue → désignation SBDB. nssdcaMasterCatalog : clé du registre des sondes → identifiant NSSDCA/COSPAR et nom ATTENDU sur la page (un identifiant faux résout une AUTRE mission en silence, comme un « ; » de trop côté Horizons). sbdbInterstellar : clé du registre des interstellaires → désignation SBDB et nom attendu. Ajouter un objet = l'ajouter ici (puis relancer `pnpm facts:snapshot`), sans toucher au script.",
   "sbdb": {
     "ceres": "1",
     "pallas": "2",
@@ -20,5 +20,65 @@
     "gonggong": "225088",
     "sedna": "90377",
     "psyche": "16"
+  },
+  "nssdcaMasterCatalog": {
+    "voyager1": {
+      "id": "1977-084A",
+      "expect": "Voyager 1"
+    },
+    "voyager2": {
+      "id": "1977-076A",
+      "expect": "Voyager 2"
+    },
+    "parker-solar-probe": {
+      "id": "2018-065A",
+      "expect": "Parker Solar Probe"
+    },
+    "jwst": {
+      "id": "2021-130A",
+      "expect": "James Webb Space Telescope"
+    },
+    "new-horizons": {
+      "id": "2006-001A",
+      "expect": "New Horizons Pluto Kuiper Belt Flyby"
+    },
+    "cassini": {
+      "id": "1997-061A",
+      "expect": "Cassini"
+    },
+    "juno": {
+      "id": "2011-040A",
+      "expect": "Juno"
+    },
+    "rosetta": {
+      "id": "2004-006A",
+      "expect": "Rosetta"
+    },
+    "bepicolombo": {
+      "id": "2018-080A",
+      "expect": "BepiColombo"
+    },
+    "osiris-rex": {
+      "id": "2016-055A",
+      "expect": "OSIRIS-REx"
+    },
+    "hayabusa2": {
+      "id": "2014-076A",
+      "expect": "Hayabusa2"
+    }
+  },
+  "sbdbInterstellar": {
+    "oumuamua": {
+      "sstr": "1I/2017 U1",
+      "expect": "'Oumuamua (A/2017 U1)"
+    },
+    "borisov": {
+      "sstr": "C/2019 Q4",
+      "expect": "C/2019 Q4 (Borisov)"
+    },
+    "atlas": {
+      "sstr": "C/2025 N1",
+      "expect": "C/2025 N1 (ATLAS)"
+    }
   }
 }

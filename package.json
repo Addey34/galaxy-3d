@@ -19,6 +19,8 @@
     "ephemeris:small-body": "node scripts/derive-small-body-elements.mjs",
     "ephemeris:validate": "node scripts/validate-against-horizons.mjs",
     "facts:snapshot": "node scripts/snapshot-fact-sources.mjs",
+    "smallbodies:generate": "node scripts/generate-small-body-dataset.mjs",
+    "gibs:colormap": "node scripts/import-gibs-colormap.mjs",
     "fingerprint:generated": "node scripts/fingerprint-generated.mjs",
     "schema:generate": "node scripts/generate-registry-schemas.mjs",
     "spk:stage": "node scripts/stage-sat441.mjs",

@@ -67,7 +67,15 @@ export function setupPermalinks(
   modeSwitcher: ModeSwitcher,
   validBodies: ReadonlySet<string>,
   camera: CameraSystem,
-  eclipseHooks: PermalinkEclipseHooks = {}
+  eclipseHooks: PermalinkEclipseHooks = {},
+  /**
+   * Tout ce qui peut être SÉLECTIONNÉ, y compris les objets d'instrument. Distinct de
+   * `validBodies`, qui ne contient que les corps AYANT UNE PAGE : un chemin `/voyager1/`
+   * n'existe pas et ne doit pas être écrit, alors que `?body=voyager1` doit être relu.
+   * Sans cette distinction, l'application écrivait une adresse qu'elle refusait ensuite de
+   * rouvrir : sélectionner une sonde, partager le lien, et le lien ramenait à la vue d'ensemble.
+   */
+  selectableBodies: ReadonlySet<string> = validBodies
 ): PermalinkController {
   let applying = false;
   let suspended = false;
@@ -124,7 +132,7 @@ export function setupPermalinks(
   const applyInitialState = (): void => {
     const state = parsePermalink(
       window.location.search,
-      validBodies,
+      selectableBodies,
       window.location.pathname
     );
     // Une page d'éclipse porte sa date et son corps dans le CHEMIN (la CSP interdit de les

@@ -407,6 +407,28 @@ function bodyLandingPages() {
             };
           })
         );
+        // Instantané des petits corps livré : la page en cite la DATE et le nombre d'orbites,
+        // lus dans le fichier lui-même. Il n'est plus tiré à l'exécution (cf. `core/sbdb.ts`).
+        const sbdb = (await loader.ssrLoadModule(
+          '/src/core/sbdb.ts'
+        )) as typeof import('./src/core/sbdb');
+        const smallBodyDatasetFile = await readJson<unknown>(
+          'public/assets/small-bodies/dataset.json'
+        );
+        // Le nombre publié est celui que l'APPLICATION obtient, pas le nombre de lignes du
+        // fichier : `parseSbdbRows` écarte les orbites non elliptiques et les lignes
+        // incomplètes. Deux comptes pour une même chose, c'est une page qui contredit le
+        // panneau — 8000 d'un côté, 6965 de l'autre.
+        const smallBodySnapshot = (() => {
+          const dataset = sbdb.parseSmallBodyDataset(
+            smallBodyDatasetFile as Parameters<
+              typeof sbdb.parseSmallBodyDataset
+            >[0]
+          );
+          if (!dataset.retrieved || dataset.bodies.length === 0)
+            throw new Error('instantané des petits corps vide ou sans date');
+          return { retrieved: dataset.retrieved, count: dataset.bodies.length };
+        })();
         // Hôtes que la CSP de production autorise : la page /sources doit décrire exactement
         // ceux-là (voir `LIVE_DATA_SERVICES`).
         const connectHosts = sourcesSeo.connectHostsFromFirebase(
@@ -439,6 +461,7 @@ function bodyLandingPages() {
             connectHosts,
             updated: sourcesUpdated,
             origin: SITE_ORIGIN,
+            smallBodies: smallBodySnapshot,
           }),
         ];
         for (const page of docPages) {
@@ -568,13 +591,16 @@ export default defineConfig({
             },
           },
           {
-            // Textures et modèles ont des NOMS STABLES (ex. earth_surface_1k.jpg,
-            // bennu_shape_2k.glb) : une release peut réécrire les mêmes URLs. Réseau d'abord
-            // pour récupérer la version courante, cache en secours hors-ligne.
+            // Textures, modèles et instantané des petits corps ont des NOMS STABLES (ex.
+            // earth_surface_1k.jpg, bennu_shape_2k.glb, small-bodies/dataset.json) : une
+            // release peut réécrire les mêmes URLs. Réseau d'abord pour récupérer la version
+            // courante, cache en secours hors-ligne — c'est ce qui donne aux petits corps un
+            // mode hors ligne qu'ils n'ont jamais eu, du temps où ils venaient de JPL.
             // Cette règle DOIT rester avant le CacheFirst générique ci-dessous.
             urlPattern: ({ url }) =>
               url.pathname.startsWith('/assets/textures/') ||
-              url.pathname.startsWith('/assets/models/'),
+              url.pathname.startsWith('/assets/models/') ||
+              url.pathname.startsWith('/assets/small-bodies/'),
             handler: 'NetworkFirst',
             options: {
               cacheName: 'ssv-stable-visual-assets',

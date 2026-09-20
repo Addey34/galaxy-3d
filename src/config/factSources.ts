@@ -207,6 +207,31 @@ export const DETAIL = {
     en: 'number of confirmed satellites listed by the database',
     fr: 'nombre de satellites confirmés listés par la base',
   },
+  /**
+   * Le champ « Mass » du bloc « Facts in Brief » du NSSDCA Master Catalog n'a pas le même sens
+   * d'une mission à l'autre : masse sèche pour New Horizons (385 kg, quand sa propre page écrit
+   * « The 465 kg launch mass includes 80 kg of propellant »), masse au lancement pour OSIRIS-REx
+   * (1528 kg contre « Launch mass including propellant is 1529 kg »). La précision affichée ne
+   * prétend donc PAS trancher : elle nomme le champ lu, et l'identifiant COSPAR cité permet de
+   * retrouver la fiche. BepiColombo, dont ce champ décrit le seul module de propulsion, ne
+   * publie pas de masse du tout.
+   */
+  nssdcaFactsInBrief: {
+    en: 'mass as listed in the catalogue’s “Facts in Brief” for this spacecraft',
+    fr: 'masse telle que listée dans les « Facts in Brief » du catalogue pour cette sonde',
+  },
+  firstObservationUsed: {
+    en: 'first observation used by the published orbit solution',
+    fr: 'première observation retenue par la solution d’orbite publiée',
+  },
+  osculatingEccentricity: {
+    en: 'osculating eccentricity of the published orbit solution; above 1, the orbit is open and the object leaves the Solar System',
+    fr: 'excentricité osculatrice de la solution d’orbite publiée ; au-dessus de 1 l’orbite est ouverte et l’objet quitte le Système solaire',
+  },
+  perihelionFromElements: {
+    en: 'q = a (1 − e), from the published osculating elements',
+    fr: 'q = a (1 − e), d’après les éléments osculateurs publiés',
+  },
 } as const;
 
 /**

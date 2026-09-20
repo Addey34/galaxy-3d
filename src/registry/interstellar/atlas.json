@@ -33,6 +33,29 @@
     }
   },
   "color": "0xd9f26b",
+  "facts": {
+    "eccentricity": {
+      "source": "jpl-sbdb",
+      "method": "measured",
+      "uncertainty": 2.469e-05,
+      "detail": "osculatingEccentricity",
+      "citation": "orbit solution 2026-02-19, 782 observations"
+    },
+    "perihelionAU": {
+      "source": "jpl-sbdb",
+      "method": "derived",
+      "uncertainty": 3.7743e-06,
+      "detail": "perihelionFromElements",
+      "citation": "orbit solution 2026-02-19, 782 observations"
+    },
+    "firstObservation": {
+      "value": "2025-05-15",
+      "source": "jpl-sbdb",
+      "method": "measured",
+      "detail": "firstObservationUsed",
+      "citation": "orbit solution 2026-02-19, 782 observations"
+    }
+  },
   "notes": {
     "solution": "Horizons rec #90004935, solution 2026-Feb-19, époque JD 2461090.5."
   }
