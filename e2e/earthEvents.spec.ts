@@ -103,7 +103,13 @@ test('a layer that is off asks its service for nothing', async ({ page }) => {
 
   // Et il tire dès qu'on l'allume : sans cette moitié, le test passerait aussi si la couche
   // ne demandait JAMAIS rien.
-  await page.locator('#earth-events-trigger').click();
+  // Et le clic lui-même garde de la marge : le loader parti, la Terre vue de près DENSIFIE sa
+  // géométrie et décode ses textures 8k sur le thread principal (c'est ce que mesure
+  // `earth-visual.spec.ts`, qui flanche pour la même raison). Les 15 s d'`actionTimeout` de la
+  // config suffisent partout ailleurs, pas sur un boot cadré sur la Terre : mesuré, une
+  // tentative rouge à 15 s puis verte à la reprise. Ça ne masque aucune régression, un câblage
+  // cassé échouant aux trois tentatives quel que soit le budget.
+  await page.locator('#earth-events-trigger').click({ timeout: 60_000 });
   await page.locator('#earth-events .ee-row input').first().check();
   await expect.poll(() => calls.length, { timeout: 15_000 }).toBeGreaterThan(0);
   expect(new URL(calls[0]).host).toBe('earthquake.usgs.gov');
@@ -182,7 +188,13 @@ test('a measurement and a report never get the same label', async ({
   await expect(page.locator('#earth-events-trigger')).toBeVisible({
     timeout: 40_000,
   });
-  await page.locator('#earth-events-trigger').click();
+  // Et le clic lui-même garde de la marge : le loader parti, la Terre vue de près DENSIFIE sa
+  // géométrie et décode ses textures 8k sur le thread principal (c'est ce que mesure
+  // `earth-visual.spec.ts`, qui flanche pour la même raison). Les 15 s d'`actionTimeout` de la
+  // config suffisent partout ailleurs, pas sur un boot cadré sur la Terre : mesuré, une
+  // tentative rouge à 15 s puis verte à la reprise. Ça ne masque aucune régression, un câblage
+  // cassé échouant aux trois tentatives quel que soit le budget.
+  await page.locator('#earth-events-trigger').click({ timeout: 60_000 });
 
   const rows = page.locator('#earth-events .ee-item');
   await rows.nth(0).locator('input').check();
