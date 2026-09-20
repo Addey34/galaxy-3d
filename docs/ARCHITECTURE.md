@@ -1138,6 +1138,99 @@ Piège payé : `THIRD_PARTY_NOTICES.md` est en CRLF dans un checkout Windows, et
 pas le retour chariot (`\r`) en JavaScript. Le retrait du titre de premier niveau était un no-op silencieux ; le
 test le rejoue désormais en CRLF.
 
+## Événements terrestres — séismes USGS et événements rapportés EONET
+
+La Terre porte deux couches d'événements optionnelles, éteintes au départ : les séismes du
+catalogue USGS et les événements naturels agrégés par NASA EONET. Elles répondent à la date de
+la scène comme les couches météo, mais ce ne sont ni des images ni des grilles : ce sont des
+POINTS datés, posés à leurs coordonnées réelles.
+
+**Deux fournisseurs, et pas un de plus.** L'USGS a été écrit d'abord, sans aucune abstraction
+(`core/usgsEarthquakes.ts`), EONET ensuite (`core/nasaEonet.ts`). `core/earthEvents.ts` n'existe
+que parce que les deux étaient là : il ne porte que ce qu'ils partagent RÉELLEMENT — une clé
+tirée de la date, une fenêtre bornée par `now`, des points datés portant chacun son
+`DatedProduct`, et un lot qui porte sa traçabilité sous la forme du `SourceCandidate` que le
+badge météo sait déjà écrire. Ce qu'ils ne partagent pas est resté chez eux : longueur de
+fenêtre, paramètres de requête, forme de la géométrie, taxonomie des catégories, et le fait
+qu'un intervalle puisse rester ouvert. Copernicus/STAC et le trafic aérien sont hors de ce lot
+(authentification openEO d'un côté, accord écrit exigé de l'autre).
+
+**Le marqueur tombe sur sa VRAIE longitude, et c'est le point technique du lot.** Un épicentre
+est posé par `CelestialObject.surfacePointToWorld`, qui compose la translation du corps, le
+quaternion du vrai pôle IAU et la rotation propre du `_meshGroup` — celle que
+`OrbitalMechanics.syncEarthSurfaceRotation` recale sur la date À CHAQUE IMAGE. Recalculer la
+position ailleurs, depuis le rayon et l'axe, donnerait une phase indépendante de celle qui est
+RENDUE : les marqueurs glisseraient par rapport aux continents sans rien déformer, donc sans se
+voir sur une capture isolée. `core/frames.ts::geographicToLocalDirection` est la réciproque
+exacte de `localDirectionToGeographic`, qui servait déjà au point subsolaire.
+
+`e2e/earthEvents.spec.ts` le MESURE, à six dates réparties sur l'année et sur la journée. Pour
+quatre épicentres PUBLIÉS par l'USGS (Tōhoku 2011, Maule 2010, Sumatra 2004, San Francisco
+1906), `?debug-geo` compare la direction du Soleil vue depuis ce point sur la scène rendue à
+celle qu'astronomy-engine calcule pour un observateur aux mêmes coordonnées. Les deux chemins
+n'ont en commun que l'éphéméride du Soleil : le premier passe par le graphe de scène, le second
+par le temps sidéral. Écart mesuré : 0,002 à 0,006°, résidu attendu (aberration 0,006°,
+barycentre Terre-Lune 0,002°, parallaxe 0,002°) ; seuil 0,05°, le même que le point subsolaire.
+Falsifié deux fois : 0,1° de longitude injecté, les six dates rougissent ; la phase diurne
+ignorée (`_tiltGroup` au lieu de `_meshGroup`), rouge aussi. **Sensibilité assumée** : une
+erreur de phase déplace un site de δ·cos(latitude), donc le seuil de 0,05° attrape à partir
+d'environ 0,05° de phase, soit 5,6 km au sol à l'équateur, et pas moins.
+
+**Une mesure et un rapport ne portent jamais la même étiquette.** `core/temporal.ts` gagne un
+`ProductKind` `report` et une catégorie visible `reported`. Une solution d'origine sismologique
+est une mesure d'un instant (`observed`) ; un événement EONET est agrégé depuis des sources
+tierces, et EONET demande lui-même que ses emprises ne soient pas tenues pour officielles. Un
+événement qu'EONET n'a pas clos (`closed: null`) porte `openEnded` : son intervalle va jusqu'à
+`now` et pas au-delà, la liste du panneau écrit « en cours », et aucune date de fin n'est
+fabriquée. `validTime.to` garde le dernier relevé CONNU.
+
+**Trois pièges de format, chacun payé en lisant la documentation des services :**
+
+- EONET sans `status=all` ne rend que les événements OUVERTS : une scène en 2011 recevrait les
+  incendies d'aujourd'hui et rien de 2011 ;
+- la géométrie EONET est une SUITE de relevés datés ; le relevé retenu est le dernier qui
+  précède la scène, sinon une tempête serait peinte là où elle a fini ;
+- `Number(null)` vaut 0 : une entrée GeoJSON sans instant devenait le 1er janvier 1970 et un
+  couple de coordonnées manquant le point (0, 0). D'où `utils/jsonNumber.ts`, trouvé en
+  écrivant le test, pas en relisant le code.
+
+**Ce que la couche déclare, et où.** Zoom sémantique (`minEarthRadiusPx`, sous lequel rien
+n'est peint : vue depuis Saturne, la Terre fait moins d'un pixel), priorité de dessin et
+plafond de marqueurs vivent dans `EarthEventLayer`. Couverture temporelle STAC, cadence
+EPNCore, licence SPDX, conditions et date de leur lecture vivent dans la fiche du fournisseur
+(`src/registry/providers/`, rôle `event-source`, troisième rôle du registre). Les lignes de
+`/sources` sont DÉRIVÉES de ces fiches, pas recopiées, et `docPages.test.ts` croise l'hôte de
+chaque fiche avec le `connect-src` de `firebase.json`.
+
+Ces deux fiches vivent dans `providers/events.ts`, que `providers/index.ts` ne réexporte
+PAS. L'application importe `index.ts` : avec les fiches dedans, la prose bilingue de leurs
+conditions partait dans le bundle de chaque visiteur alors que rien à l'exécution ne les lit —
+une couche ne connaît de son fournisseur que son identifiant. Trouvé en cherchant la chaîne
+dans le bundle construit, pas en relisant le code ; `providers.test.ts` tient la règle en
+lisant la source, et la garde a été falsifiée.
+
+**Une couche éteinte ne demande RIEN.** Le socle daté n'est créé qu'à la première activation et
+détruit à l'extinction — différent du panneau météo, qui garde ses couches vivantes en fond.
+Un service public interrogé pour un affichage que personne n'a demandé n'est pas un bon voisin.
+Mesuré par e2e (comptage de requêtes), et falsifié en démarrant les couches au boot.
+
+**Conditions lues à la source le 2026-09-20.** USGS : « USGS authored or produced data and
+information are considered to be in the U.S. Public Domain », avec demande de crédit. NASA
+Earthdata : partage plein et ouvert, sans période d'accès exclusif. Les deux crédits sont
+AFFICHÉS sous le panneau, pas seulement déclarés — la leçon d'Open-Meteo, dont la mention
+CC BY 4.0 n'apparaissait nulle part pendant des mois.
+
+**`public/privacy.html` énumère les services contactés**, et l'ajout de deux hôtes l'a trouvée
+incomplète : elle en citait trois quand la CSP en autorisait six. Les deux nouveaux y sont
+désormais dans les deux langues, avec la mention qu'ils ne sont interrogés que si la couche est
+allumée, et `config/privacyDisclosure.test.ts` croise chaque hôte `connect-src` avec la page.
+La comparaison se fait par SUFFIXE : citer « open-meteo.com » décrit honnêtement
+`api.open-meteo.com` et `archive-api.open-meteo.com`.
+
+**Pas fait, délibérément** : un marqueur d'événement ne se clique pas (il n'est la cible d'aucune
+commande de navigation, contrairement aux sondes), et aucun réglage n'est persisté, donc aucune
+clé `STORAGE_KEYS` nouvelle à déclarer.
+
 ## Architecture météo
 
 Trois frontières simples (le plan directeur complet avec l'historique des décisions et des

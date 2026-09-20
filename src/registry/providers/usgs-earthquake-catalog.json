@@ -1,0 +1,32 @@
+{
+  "$schema": "../schema/provider.schema.json",
+  "id": "usgs-earthquake-catalog",
+  "role": "event-source",
+  "publisher": "U.S. Geological Survey",
+  "title": "ANSS Comprehensive Earthquake Catalog (FDSNWS event service)",
+  "url": "https://earthquake.usgs.gov/fdsnws/event/1/",
+  "kind": "measurement",
+  "host": "earthquake.usgs.gov",
+  "license": "other",
+  "rights": "public-domain",
+  "licenseUrl": "https://www.usgs.gov/information-policies-and-instructions/copyrights-and-credits",
+  "attribution": "U.S. Geological Survey",
+  "accessed": "2026-09-20",
+  "extent": {
+    "temporal": {
+      "interval": [["1900-01-01T00:00:00Z", null]]
+    }
+  },
+  "samplingStepSeconds": {
+    "min": 86400,
+    "max": 86400
+  },
+  "use": {
+    "en": "Epicentre, magnitude and origin time of the earthquakes drawn by the optional Earth events layer.",
+    "fr": "Épicentre, magnitude et instant d’origine des séismes dessinés par la couche optionnelle des événements terrestres."
+  },
+  "terms": {
+    "en": "USGS authored or produced data and information are in the U.S. public domain; the USGS asks that proper credit be given. Read at the source on 2026-09-20.",
+    "fr": "Les données et informations produites par l’USGS sont dans le domaine public des États-Unis ; l’USGS demande que le crédit lui soit donné. Conditions lues à la source le 2026-09-20."
+  }
+}

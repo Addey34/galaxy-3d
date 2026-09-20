@@ -18,6 +18,7 @@
 import type { CelestialConfig } from '@/types';
 import { flattenBodies } from '@/config/catalog';
 import { FACT_SOURCES } from '@/config/factSources';
+import { EVENT_PROVIDERS } from '@/registry/providers/events';
 import { bodyFact } from '@/core/bodyFacts';
 import type { FactField, FactMethod } from '@/types';
 import { SMALL_BODY_ELEMENTS } from '@/config/smallBodies';
@@ -82,6 +83,11 @@ export interface LiveDataService {
 /**
  * Services contactés À L'EXÉCUTION, avec leur usage et leurs conditions.
  *
+ * Les deux DERNIERS ne sont pas écrits ici : ils sont DÉRIVÉS des fiches d'événements du
+ * registre (`src/registry/providers/`), qui portent déjà leur hôte, leur licence, la date de
+ * lecture de leurs conditions et leur texte bilingue. Deux déclarations de la même chose
+ * finissent par diverger, et c'est une page publiée.
+ *
  * Les conditions ont été lues à la source le 2026-09-17 : Open-Meteo (README du dépôt
  * open-meteo et page « Terms » : données CC BY 4.0, API gratuite réservée à l'usage non
  * commercial, lien d'attribution demandé), citation ERA5 (page « Historical Weather API »),
@@ -142,6 +148,15 @@ export const LIVE_DATA_SERVICES: readonly LiveDataService[] = [
       fr: 'Service public NASA/JPL, cité comme source.',
     },
   },
+  ...Object.values(EVENT_PROVIDERS).map((provider): LiveDataService => ({
+    host: provider.host,
+    // Virgule et non deux-points : le tableau est rendu dans les deux langues, et le
+    // français demande une espace avant le deux-points. La virgule évite la règle.
+    name: `${provider.publisher}, ${provider.title}`,
+    url: provider.url,
+    use: provider.use,
+    terms: provider.terms,
+  })),
   {
     host: 'cloudflareinsights.com',
     name: 'Cloudflare Web Analytics',

@@ -16,6 +16,11 @@
  * publiées. Un fichier par fiche ne porte aucun ordre, il est donc déclaré explicitement dans le
  * littéral ci-dessous, et `providers.test.ts` vérifie qu'aucune fiche n'y manque.
  *
+ * **Les fiches d'ÉVÉNEMENTS TERRESTRES vivent à part**, dans `./events.ts`, et ce module ne les
+ * réexporte pas : l'application importe celui-ci, et tout ce qu'il importe part dans le bundle
+ * de chaque visiteur. Rien à l'exécution ne lit ces deux fiches — une couche ne connaît que
+ * l'identifiant de son fournisseur — et leur prose bilingue s'y retrouvait mot pour mot.
+ *
  * **Pourquoi un littéral plutôt qu'une boucle sur un glob.** Chaque import JSON garde le type
  * exact de son contenu (`journal` est présent ou absent, jamais « optionnel »), celui-là même que
  * `seo/sourcesPage.ts` teste par `'journal' in source`. Une projection générique le remplacerait

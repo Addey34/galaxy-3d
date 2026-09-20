@@ -118,14 +118,63 @@ const positionSourceProvider = z.object({
   coverageNote: z.string().min(1).optional(),
 });
 
+const localized = z
+  .object({ en: z.string().min(1), fr: z.string().min(1) })
+  .strict();
+
+/**
+ * Service d'ÉVÉNEMENTS TERRESTRES interrogé depuis le navigateur du visiteur (séismes USGS,
+ * événements naturels NASA EONET). Troisième rôle du registre, et le premier dont la fiche
+ * décrit un service CONTACTÉ À L'EXÉCUTION plutôt qu'une table consultée à la main : d'où
+ * `host`, qui doit apparaître dans le `connect-src` de la CSP, et `terms`, que `/sources`
+ * publie.
+ *
+ * `license` suit la même règle que `products/` (STAC 1.1.0) : identifiant SPDX, ou `other`
+ * accompagné d'un lien de licence et d'un `rights` qui dit pourquoi. Aucune donnée d'agence
+ * n'est supposée libre : la date de `accessed` est celle où les conditions ont été LUES.
+ */
+const eventSourceProvider = z.object({
+  ...identity,
+  role: z.literal('event-source'),
+  /** `ProductKind` de `core/temporal.ts` : une mesure ou un événement rapporté, jamais les deux. */
+  kind: z.enum(['measurement', 'report']),
+  /** Hôte autorisé en `connect-src` par `firebase.json`, sans schéma ni chemin. */
+  host: z.string().regex(/^[a-z0-9.-]+$/, 'hôte sans schéma ni chemin'),
+  license: z
+    .string()
+    .regex(
+      /^(other|[A-Za-z0-9.+-]+(\s+(AND|OR|WITH)\s+[A-Za-z0-9.+-]+)*)$/,
+      'identifiant SPDX ou « other »'
+    ),
+  /** Pourquoi la licence est `other`. SPDX n'a pas d'identifiant générique de domaine public. */
+  rights: z.enum(['public-domain']).optional(),
+  /** Page des conditions, obligatoire : `other` sans lien voudrait dire « aucun droit accordé ». */
+  licenseUrl: httpsUrl,
+  /** Crédit à AFFICHER, tel que la source le demande. */
+  attribution: z.string().min(1),
+  /** Date à laquelle les conditions ont été lues à la source. */
+  accessed: isoDay,
+  /** Couverture temporelle déclarée, au format STAC (bornes `null` autorisées). */
+  extent: z.object({ temporal: temporalExtent }),
+  /** Cadence d'échantillonnage, en secondes (EPNCore `time_sampling_step_min/max`). */
+  samplingStepSeconds: z
+    .object({ min: z.number().positive(), max: z.number().positive() })
+    .optional(),
+  /** Ce que Galaxy en fait, et sous quelles conditions : publié tel quel par `/sources`. */
+  use: localized,
+  terms: localized,
+});
+
 export const providerSchema = z.discriminatedUnion('role', [
   factSourceProvider,
   positionSourceProvider,
+  eventSourceProvider,
 ]);
 
 export type ProviderRecord = z.infer<typeof providerSchema>;
 export type FactSourceProvider = z.infer<typeof factSourceProvider>;
 export type PositionSourceProvider = z.infer<typeof positionSourceProvider>;
+export type EventSourceProvider = z.infer<typeof eventSourceProvider>;
 
 /**
  * Le JSON Schema COMMITÉ, généré depuis le schéma Zod ci-dessus. Une seule fonction, appelée par

@@ -119,6 +119,7 @@ describe('fiche d’information — provenance de la position', () => {
     confidence: 'nominal' as const,
     offsetMs: 0,
     offset: false,
+    ongoing: false,
   };
 
   it('nomme la source, la catégorie et l’écart mesuré avec sa fenêtre', () => {

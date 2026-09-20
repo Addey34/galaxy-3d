@@ -44,6 +44,7 @@ import {
   REALTIME_CLOUDS_SETTINGS,
 } from '@/config/engine';
 import { modelPath, ringTexturePath } from '@/config/catalog';
+import { geographicToLocalDirection } from '@/core/frames';
 import {
   chooseModelQuality,
   lightestModelQuality,
@@ -516,6 +517,30 @@ export default class CelestialObject {
   /** Rayon local des couches (espace du _meshGroup), avant scaleFactor de scène. */
   get layerRadius(): number {
     return this.config.radius;
+  }
+
+  /**
+   * Position MONDE d'un point géographique de la surface (degrés, altitude 0).
+   *
+   * Passe par `_meshGroup.localToWorld`, donc par la chaîne EXACTE qui oriente la surface :
+   * translation du `group`, quaternion du `_tiltGroup` (vrai pôle IAU) puis rotation propre du
+   * `_meshGroup` — celle que `setSurfaceRotation` recale sur la date à chaque frame. Un
+   * marqueur posé ici tombe donc sur la même longitude que les continents de la texture et
+   * que le point subsolaire, dans les deux modes d'échelle et pendant le morph.
+   *
+   * Recalculer ce produit ailleurs, à partir du rayon et de l'axe, redonnerait une phase
+   * indépendante de celle qui est RENDUE : c'est précisément la faute que
+   * `e2e/subsolar.spec.ts` décrit pour le terminateur.
+   */
+  surfacePointToWorld(
+    latitudeDeg: number,
+    longitudeDeg: number,
+    out = new THREE.Vector3()
+  ): THREE.Vector3 {
+    geographicToLocalDirection(latitudeDeg, longitudeDeg, out).multiplyScalar(
+      this.config.radius
+    );
+    return this._meshGroup.localToWorld(out);
   }
 
   private static _configurePrecipTex(texture: THREE.Texture): void {

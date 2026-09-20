@@ -98,6 +98,25 @@ test('weather layers panel has no automatically detectable a11y violations', asy
   ).toEqual([]);
 });
 
+test('earth events panel has no automatically detectable a11y violations', async ({
+  page,
+}) => {
+  await boot(page);
+  await page.locator('#earth-events-trigger').click();
+  await expect(page.locator('#earth-events')).toBeVisible();
+  // Les deux couches allumées : la liste des événements, le badge et la note sont alors
+  // rendus. Le réseau est coupé par `blockExternalNetwork`, donc les listes restent vides et
+  // le panneau montre son état « aucun événement », qui doit lui aussi être lisible.
+  const rows = page.locator('#earth-events .ee-item');
+  await rows.nth(0).locator('input').check();
+  await rows.nth(1).locator('input').check();
+  const results = await runAxe(page);
+  expect(
+    results.violations,
+    JSON.stringify(results.violations, null, 2)
+  ).toEqual([]);
+});
+
 test('astronomical events panel has no automatically detectable a11y violations', async ({
   page,
 }) => {

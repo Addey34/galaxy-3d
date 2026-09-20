@@ -1421,6 +1421,90 @@ button {
   color: var(--text-dim, rgba(255, 255, 255, 0.5));
   font-variant-numeric: tabular-nums;
 }
+
+/* ÉVÉNEMENTS TERRESTRES — même habillage que le panneau météo, dont il reprend la structure
+   (interrupteur, note, badge de traçabilité). Seule la liste des événements est nouvelle. */
+.ee-body {
+  max-height: min(42vh, 16rem);
+  padding: 0.35rem 0.45rem 0.45rem;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+.ee-item {
+  display: flex;
+  flex-direction: column;
+}
+.ee-detail {
+  padding: 0.15rem 0.2rem 0.5rem 1.65rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+.ee-detail[hidden] {
+  display: none;
+}
+.ee-note {
+  margin: 0;
+  font-size: 0.72rem;
+  line-height: 1.35;
+  color: var(--text-dim, rgba(255, 255, 255, 0.62));
+}
+.ee-note[hidden] {
+  display: none;
+}
+.ee-source {
+  margin: 0;
+  font-size: 0.66rem;
+  line-height: 1.3;
+  color: var(--text-dim, rgba(255, 255, 255, 0.5));
+  font-variant-numeric: tabular-nums;
+}
+.ee-loading {
+  flex: 0 0 auto;
+  color: var(--ink-faint);
+  font-size: 0.64rem;
+  white-space: nowrap;
+}
+.ee-list {
+  margin: 0;
+  padding-left: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  font-size: 0.68rem;
+  line-height: 1.3;
+  color: var(--text-dim, rgba(255, 255, 255, 0.58));
+  font-variant-numeric: tabular-nums;
+}
+/* Un seul défileur, comme pour la météo : la liste prend la place restante, l'attribution
+   reste fixe dessous (cf. la régression de double défilement corrigée au lot 3). */
+#earth-events > .surface-body {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+#earth-events .ee-body {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+.ee-attribution {
+  flex: none;
+  margin-top: var(--sp-3, 0.75rem);
+  padding-top: var(--sp-2, 0.5rem);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+.ee-attribution a {
+  color: rgba(var(--accent), 0.95);
+  text-decoration: none;
+}
+.ee-attribution a:hover {
+  text-decoration: underline;
+}
 .oo-row {
   display: flex;
   align-items: center;
@@ -1875,6 +1959,7 @@ body.is-capturing #explo-labels,
 body.is-capturing #smallbody-overlay,
 body.is-capturing #spacecraft-overlay,
 body.is-capturing #interstellar-overlay,
+body.is-capturing #earth-events-overlay,
 body.is-capturing #loader {
   display: none;
 }
@@ -2546,7 +2631,8 @@ body.is-capturing #loader {
    D'où la taille CSS explicite ci-dessous (tenu par e2e/overlayCanvasSize.spec.ts). */
 #smallbody-overlay,
 #spacecraft-overlay,
-#interstellar-overlay {
+#interstellar-overlay,
+#earth-events-overlay {
   width: 100%;
   height: 100%;
 }
@@ -2587,6 +2673,19 @@ body.is-capturing #loader {
   transition: opacity 0.3s ease;
 }
 #interstellar-overlay.is-visible {
+  opacity: 1;
+}
+
+/* Événements terrestres — au-dessus des corps, sous les libellés du HUD comme les sondes. */
+#earth-events-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 21;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+#earth-events-overlay.is-visible {
   opacity: 1;
 }
 

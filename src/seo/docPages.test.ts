@@ -9,6 +9,7 @@ import { SQRT_K } from '@/core/ScaleService';
 import { MIN_SAMPLES_PER_ORBIT_FOR_HERMITE } from '@/core/HorizonsEphemerisService';
 import summaryJson from '@/config/horizons-validation-summary.json';
 import { TEMPORAL_CATEGORIES, temporalCategoryLabelKey } from '@/core/temporal';
+import { EVENT_PROVIDERS } from '@/registry/providers/events';
 import manifestJson from '../../public/assets/ephemerides/manifest.json';
 import { shippedTextures } from '@/registry/products';
 import firebaseJson from '../../firebase.json';
@@ -503,6 +504,36 @@ describe('cohérence des sources publiées', () => {
     expect(
       LIVE_DATA_SERVICES.some((s) => s.name.startsWith('Open-Meteo'))
     ).toBe(true);
+  });
+
+  it('publie les fournisseurs d’événements depuis leur fiche, pas depuis une copie', () => {
+    // La ligne de `/sources` est DÉRIVÉE de `src/registry/providers/` : la fiche porte l'hôte
+    // déclaré dans la CSP, le texte bilingue et la date de lecture des conditions. Une copie
+    // à la main dans `sourcesPage.ts` aurait fini par diverger de la fiche, sur une page
+    // publiée dans deux langues.
+    for (const provider of Object.values(EVENT_PROVIDERS)) {
+      expect(connectHosts, provider.id).toContain(provider.host);
+      const service = LIVE_DATA_SERVICES.find((s) => s.host === provider.host);
+      expect(service, provider.id).toBeDefined();
+      expect(service!.use).toBe(provider.use);
+      expect(service!.terms).toBe(provider.terms);
+      // La date de lecture est DANS le texte publié : une condition non datée ne se vérifie pas.
+      for (const locale of ['en', 'fr'] as const)
+        expect(service!.terms[locale], provider.id).toContain(
+          provider.accessed
+        );
+      // `other` sans lien de licence voudrait dire « aucun droit accordé » (STAC 1.1.0).
+      if (provider.license === 'other')
+        expect(provider.licenseUrl, provider.id).toMatch(/^https:\/\//);
+    }
+
+    // Et les deux fiches arrivent bien jusqu'au texte rendu, dans les deux langues.
+    for (const page of sourcesPages(sourcesInput)) {
+      for (const provider of Object.values(EVENT_PROVIDERS))
+        expect(page.body, `${provider.id} en ${page.locale}`).toContain(
+          provider.host
+        );
+    }
   });
 
   it('range chaque corps des mentions sous la licence de son entrée de provenance', () => {

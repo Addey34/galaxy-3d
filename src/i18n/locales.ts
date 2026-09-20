@@ -314,9 +314,24 @@ export const messages: Record<Locale, Dict> = {
     'weather.source.prefix': 'Source:',
     'weather.source.approx': 'nearest available',
     'weather.loading': 'Loading…',
+    // Couche des événements terrestres (voir ui/earthEvents.ts).
+    'earthEvents.title': 'Earth events',
+    'earthEvents.dialog.aria': 'Earth events',
+    'earthEvents.trigger.aria': 'Open Earth events',
+    'earthEvents.quakes.label': 'Earthquakes (USGS)',
+    'earthEvents.quakes.note':
+      'Origin solutions of magnitude {magnitude} and above over the {days} days before the scene date, measured by seismometer networks. No earthquake exists in the future: a later scene gets the latest real window, and the gap is written below.',
+    'earthEvents.natural.label': 'Natural events (NASA EONET)',
+    'earthEvents.natural.note':
+      'Reported events such as wildfires, volcanoes, storms, floods and ice over the {days} days before the scene date. EONET states that its metadata are intended for visualization and general information only, and should not be construed as official with regard to spatial or temporal extent: these are reports, not measurements.',
+    'earthEvents.empty': 'No event in this window.',
+    'earthEvents.ongoing': 'ongoing',
+    'earthEvents.loading': 'Loading…',
+    'earthEvents.attribution.prefix': 'Event data:',
     // Catégorie temporelle d'une donnée affichée (voir core/temporal.ts).
     'time.category.live': 'live',
     'time.category.observed': 'observed',
+    'time.category.reported': 'reported',
     'time.category.reconstructed': 'reconstructed (model)',
     'time.category.predicted': 'predicted',
     'time.category.extrapolated': 'extrapolated',
@@ -696,9 +711,24 @@ export const messages: Record<Locale, Dict> = {
     'weather.source.prefix': 'Source :',
     'weather.source.approx': 'date la plus proche',
     'weather.loading': 'Chargement…',
+    // Couche des événements terrestres (voir ui/earthEvents.ts).
+    'earthEvents.title': 'Événements terrestres',
+    'earthEvents.dialog.aria': 'Événements terrestres',
+    'earthEvents.trigger.aria': 'Ouvrir les événements terrestres',
+    'earthEvents.quakes.label': 'Séismes (USGS)',
+    'earthEvents.quakes.note':
+      'Solutions d’origine de magnitude {magnitude} et plus sur les {days} jours qui précèdent la date de la scène, mesurées par les réseaux de sismomètres. Aucun séisme n’existe au futur : une scène plus tardive reçoit la dernière fenêtre réelle, et l’écart est écrit ci-dessous.',
+    'earthEvents.natural.label': 'Événements naturels (NASA EONET)',
+    'earthEvents.natural.note':
+      'Événements rapportés (incendies, volcans, tempêtes, inondations, glaces, entre autres) sur les {days} jours qui précèdent la date de la scène. EONET déclare que ses métadonnées sont destinées à la visualisation et à l’information générale seulement, et ne doivent pas être tenues pour officielles quant à l’emprise spatiale ou temporelle : ce sont des rapports, pas des mesures.',
+    'earthEvents.empty': 'Aucun événement sur cette fenêtre.',
+    'earthEvents.ongoing': 'en cours',
+    'earthEvents.loading': 'Chargement…',
+    'earthEvents.attribution.prefix': 'Données d’événements :',
     // Catégorie temporelle d'une donnée affichée (voir core/temporal.ts).
     'time.category.live': 'en direct',
     'time.category.observed': 'observé',
+    'time.category.reported': 'rapporté',
     'time.category.reconstructed': 'reconstruit (modèle)',
     'time.category.predicted': 'prédit',
     'time.category.extrapolated': 'extrapolé',

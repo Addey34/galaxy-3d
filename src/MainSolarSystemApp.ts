@@ -41,6 +41,9 @@ import { ExploHud } from './ui/exploHud';
 import { SmallBodyOverlay } from './ui/smallBodyOverlay';
 import { InterstellarOverlay } from './ui/interstellarOverlay';
 import { setupSmallBodyFilters } from './ui/smallBodyFilters';
+import { EarthEventsOverlay } from './ui/earthEventsOverlay';
+import { setupEarthEvents } from './ui/earthEvents';
+import { earthquakeLayer, naturalEventLayer } from './core/earthEventLayers';
 import { SpacecraftOverlay } from './ui/spacecraftOverlay';
 import { createNavigableAnchors } from './ui/navigableAnchors';
 import { NAVIGABLE_TARGETS } from './config/navigable';
@@ -68,6 +71,7 @@ import {
 } from './ui/overlayCoordinator';
 import { setupContextRecovery } from './ui/contextRecovery';
 import { setupSolarDebug } from './ui/solarDebug';
+import { setupGeoDebug } from './ui/geoDebug';
 import { setupTerminatorProbe } from './ui/terminatorProbe';
 import { setupEarthDebug } from './ui/earthDebug';
 import { setupMeteoDebug } from './ui/meteoDebug';
@@ -89,6 +93,10 @@ const CONTEXTUAL_SURFACE_ANCHORS: Partial<
   'body-info': { trigger: '#info-trigger', panel: '#body-info' },
   'orbit-options': { trigger: '#settings-trigger', panel: '#orbit-options' },
   'weather-layers': { trigger: '#weather-trigger', panel: '#weather-layers' },
+  'earth-events': {
+    trigger: '#earth-events-trigger',
+    panel: '#earth-events',
+  },
   'small-body-filters': {
     trigger: '#smallbody-filters-trigger',
     panel: '#smallbody-filters',
@@ -161,6 +169,7 @@ if (surfaceScrim) {
       horizonsEphemeris,
     } = api;
     setupSolarDebug(api);
+    setupGeoDebug(api);
     setupEarthDebug(api);
     setupTerminatorProbe(api);
     setupContextRecovery(sceneSystem);
@@ -277,6 +286,20 @@ if (surfaceScrim) {
       overlayCoordinator
     );
 
+    // Événements terrestres (séismes USGS, événements rapportés NASA EONET) — couche
+    // instrument 2D posée sur la surface RENDUE de la Terre, donc derrière sa phase de
+    // rotation. Les deux couches sont éteintes au départ et ne demandent RIEN tant qu'on ne
+    // les allume pas : le socle daté n'est créé qu'à l'activation (cf. `ui/earthEvents.ts`).
+    const earthEventLayers = [earthquakeLayer(), naturalEventLayer()];
+    const earthEventsOverlay = new EarthEventsOverlay(earthEventLayers);
+    earthEventsOverlay.mount();
+    setupEarthEvents(
+      api,
+      earthEventLayers,
+      earthEventsOverlay,
+      overlayCoordinator
+    );
+
     // Couche instrument 2D des sondes spatiales — positions réelles Horizons (mêmes binaires
     // que planètes/lunes), jamais avant leur lancement (getHeliocentricAU renvoie null hors
     // couverture, cf. spacecraftOverlay.ts).
@@ -372,6 +395,14 @@ if (surfaceScrim) {
         cameraSystem.camera,
         orbitalMechanics.simulationDate,
         morph,
+        labelSpace
+      );
+      // APRÈS les couches globales : leurs libellés sont prioritaires dans la place commune,
+      // et les événements terrestres ne se peignent de toute façon qu'une fois la Terre assez
+      // grande à l'écran (zoom sémantique, cf. `EarthEventLayer.minEarthRadiusPx`).
+      earthEventsOverlay.update(
+        cameraSystem.camera,
+        sceneSystem.getBody('earth') ?? null,
         labelSpace
       );
       bodyInfo.updateLive(
