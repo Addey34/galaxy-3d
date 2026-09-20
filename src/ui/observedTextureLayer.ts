@@ -28,8 +28,7 @@ export interface ObservedTextureLayerConfig {
   targetLayer: string;
   resolveSources: LayerSourceResolver;
   minTileBytes?: number;
-  legendUrl?: string;
-  legendGradient?: { css: string; loKey: string; hiKey: string };
+  legendGradient?: WeatherLayerHandle['legendGradient'];
   apply: (earth: CelestialObject, texture: THREE.Texture) => void;
 }
 
@@ -83,7 +82,6 @@ export function setupObservedTextureLayer(
     labelKey: config.labelKey,
     initial: config.initial,
     noteKey: config.noteKey,
-    legendUrl: config.legendUrl,
     legendGradient: config.legendGradient,
     setVisible: (next) => {
       visible = next;

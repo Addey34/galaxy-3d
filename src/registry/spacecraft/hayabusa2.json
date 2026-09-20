@@ -15,6 +15,20 @@
   "identifiers": {
     "naif": -37
   },
+  "facts": {
+    "launchDate": {
+      "source": "nssdca-master-catalog",
+      "method": "measured",
+      "citation": "NSSDCA/COSPAR 2014-076A"
+    },
+    "massKg": {
+      "value": 600,
+      "source": "nssdca-master-catalog",
+      "method": "measured",
+      "detail": "nssdcaFactsInBrief",
+      "citation": "NSSDCA/COSPAR 2014-076A"
+    }
+  },
   "coverage": {
     "temporal": {
       "interval": [

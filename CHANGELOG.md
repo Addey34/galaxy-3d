@@ -13,6 +13,25 @@ fichier résume ce qui change pour une personne qui utilise ou cite Galaxy.
   à la date de la scène. Chaque événement porte sa nature, une mesure sismologique et un
   événement rapporté n'étant pas la même chose, et un événement sans fin déclarée est affiché
   « en cours » plutôt que doté d'une date de fin inventée.
+- Les onze sondes et les trois objets interstellaires affichent enfin des chiffres : date de
+  lancement et masse pour les sondes (catalogue NASA NSSDCA), excentricité, distance de
+  périhélie et première observation pour les interstellaires (base des petits corps du JPL).
+  Chaque valeur cite sa source ; quand la source publiée ne décrit pas l'objet, la fiche le
+  dit au lieu d'afficher un chiffre trompeur.
+
+### Corrigé
+
+- La couche des petits corps était **vide en ligne**, en silence : le service de la NASA/JPL
+  qu'elle interrogeait répond à un navigateur sans l'en-tête d'origine croisée qu'il lui faut
+  pour accepter la réponse. Ses milliers d'astéroïdes et de comètes sont désormais livrés avec
+  l'application, sous forme d'instantané daté que le panneau affiche, et la couche fonctionne
+  hors ligne.
+- La légende de la couche de température satellite n'apparaissait jamais : l'image venait d'un
+  autre domaine, que la politique de sécurité du site interdit. Elle est maintenant dessinée
+  par l'application, avec le barème de couleurs que la NASA publie pour cette couche.
+- L'adresse d'une sonde ou d'un objet interstellaire (`?body=voyager1`) ne rouvrait pas sa
+  fiche : l'application écrivait un lien qu'elle refusait ensuite de relire.
+- La masse d'une sonde s'affichait en puissance de dix (« 7,22 × 10² kg » pour 721,9 kg).
 
 ## [0.9.0] - 2026-09-18 (« Scientific Preview »)
 

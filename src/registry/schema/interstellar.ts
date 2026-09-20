@@ -1,5 +1,6 @@
 /** Schéma des objets interstellaires ; éléments déclarés, calculés par le chargeur pur. */
 import { z } from 'zod';
+import { fact } from './entity';
 
 const deg = z.object({ $deg: z.number() }).strict();
 const date = z
@@ -70,6 +71,20 @@ export const interstellarSchema = z
       })
       .strict(),
     color: z.string().regex(/^0x[0-9a-fA-F]{6}$/),
+    /**
+     * Faits affichés par la fiche. Ni `eccentricity` ni `perihelionAU` ne portent de valeur :
+     * la première EST `elements.eccentricity`, la seconde s'en dérive par q = a(1 − e). Seule
+     * la première observation apporte une valeur, que les éléments ne contiennent pas.
+     */
+    facts: z
+      .object({
+        eccentricity: fact,
+        perihelionAU: fact,
+        firstObservation: fact,
+      })
+      .partial()
+      .strict()
+      .optional(),
     notes: z.record(z.string(), z.string()).optional(),
   })
   .strict()

@@ -1,0 +1,10 @@
+{
+  "$schema": "../schema/provider.schema.json",
+  "id": "nssdca-master-catalog",
+  "role": "fact-source",
+  "publisher": "NASA NSSDCA",
+  "title": "Master Catalog",
+  "url": "https://nssdc.gsfc.nasa.gov/nmc/",
+  "kind": "database",
+  "accessed": "2026-09-20"
+}

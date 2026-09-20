@@ -5,7 +5,6 @@ import {
   GIBS_WMS_ENDPOINT,
   gibsCloudDateFor,
   gibsCloudUrl,
-  gibsLegendUrl,
   gibsMonthlyDateFor,
   toGibsDateString,
 } from './gibsClouds';
@@ -72,20 +71,6 @@ describe('gibsCloudDateFor', () => {
         minDate: '2019-01-01',
       })
     ).toBe('2019-06-01');
-  });
-});
-
-describe('gibsLegendUrl', () => {
-  it('builds the official GIBS SVG legend URL (horizontal by default)', () => {
-    expect(gibsLegendUrl('MERRA2_2m_Air_Temperature_Monthly')).toBe(
-      'https://gibs.earthdata.nasa.gov/legends/MERRA2_2m_Air_Temperature_Monthly_H.svg'
-    );
-  });
-
-  it('supports the vertical orientation', () => {
-    expect(gibsLegendUrl('MERRA2_2m_Air_Temperature_Monthly', 'V')).toBe(
-      'https://gibs.earthdata.nasa.gov/legends/MERRA2_2m_Air_Temperature_Monthly_V.svg'
-    );
   });
 });
 

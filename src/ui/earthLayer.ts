@@ -37,7 +37,7 @@ export function getEarth(
 /**
  * Contrat commun d'une couche météo, tel que consommé par le registre et le panneau.
  * `setVisible`/`dispose` sont toujours présents (handle inerte si la couche est désactivée) ;
- * `legendUrl`/`noteKey` alimentent le détail replié sous le toggle dans le panneau.
+ * `legendGradient`/`noteKey` alimentent le détail replié sous le toggle dans le panneau.
  */
 export function createLoadStateRelay(): {
   push: (state: MeteoLayerDiagnostics['phase']) => void;
@@ -72,13 +72,22 @@ export interface WeatherLayerHandle {
   /** Arrête la couche et libère ses ressources (cleanup global). */
   dispose(): void;
   /** URL d'une légende image (SVG GIBS) affichée sous le toggle quand la couche est active. */
-  legendUrl?: string;
+
   /**
    * Légende en barre de dégradé CSS (pour les couches dont on maîtrise la palette, ex. la
    * pluie remappée en bleu). `css` = valeur de `background` ; `loKey`/`hiKey` = clés i18n des
-   * libellés min/max sous la barre. Alternative sans dépendance réseau à `legendUrl`.
+   * libellés min/max sous la barre. C'est la SEULE forme de légende : une légende en image
+   * distante était bloquée par notre propre `img-src` et n'a jamais été visible en production.
+   * Les bornes se donnent par clé de traduction, ou en texte déjà rendu quand elles sont
+   * DÉRIVÉES d'une donnée (barème GIBS) plutôt qu'écrites dans le dictionnaire.
    */
-  legendGradient?: { css: string; loKey: string; hiKey: string };
+  legendGradient?: {
+    css: string;
+    loKey?: string;
+    hiKey?: string;
+    loText?: string;
+    hiText?: string;
+  };
   /** Clé i18n d'un texte explicatif (couleurs arbitraires) sous le toggle. */
   noteKey?: string;
   /**

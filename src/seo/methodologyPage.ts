@@ -722,8 +722,8 @@ function methodologyPage(input: MethodologyInput, locale: DocLocale): DocPage {
       fr: `Hors de la période du ${escapeHtml(manifest.coverage.start)} au ${escapeHtml(manifest.coverage.stop)}, les fichiers Horizons ne s’appliquent pas : les planètes retombent sur astronomy-engine, les autres corps sur leurs éléments képlériens. Le tableau de production ne couvre que ${year(production[0]!.windowFrom)}–${year(production[0]!.windowTo)} ; les mesures complètes montrent les sources sur des fenêtres plus larges.`,
     },
     {
-      en: 'The asteroids and comets of the optional small-body layer, up to several thousand, come live from the JPL Small-Body Database and are propagated from its elements. They are not part of this measurement.',
-      fr: 'Les astéroïdes et comètes de la couche optionnelle des petits corps, jusqu’à plusieurs milliers, viennent en direct de la JPL Small-Body Database et sont propagés depuis ses éléments. Ils ne font pas partie de cette mesure.',
+      en: 'The asteroids and comets of the optional small-body layer, several thousand of them, come from a dated snapshot of the JPL Small-Body Database shipped with the build, and are propagated from its elements. They are not part of this measurement.',
+      fr: 'Les astéroïdes et comètes de la couche optionnelle des petits corps, plusieurs milliers, viennent d’un instantané daté de la JPL Small-Body Database livré avec le build, et sont propagés depuis ses éléments. Ils ne font pas partie de cette mesure.',
     },
     ...(drifts.length > 0
       ? [

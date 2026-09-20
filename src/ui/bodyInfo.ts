@@ -20,6 +20,7 @@ import {
   citationOrder,
   displayedUncertainty,
   type FactEntry,
+  type FactValue,
 } from '@/core/bodyFacts';
 import { FACT_SOURCE_HOSTS, factSource } from '@/config/factSources';
 import { bodyAccentColor, hexToRgbTriplet, onAccentChange } from './bodyAccent';
@@ -89,7 +90,18 @@ function superscript(n: number): string {
     .join('');
 }
 
+/**
+ * Seuil au-dessus duquel la masse s'écrit en puissance de dix. La notation scientifique est
+ * indispensable pour un corps (1,9 × 10²⁷ kg) et absurde pour une sonde : Voyager 1 a d'abord
+ * affiché « 7,22 × 10² kg » là où sa source publie 721,9 kg. Vu à l'écran, pas déduit.
+ */
+const SCIENTIFIC_MASS_KG = 1e6;
+
 function formatMass(kg: number): string {
+  // Sous le seuil, l'arrondi entier effaçait la précision PUBLIÉE : la NASA donne 721,9 kg
+  // pour Voyager 1, et la fiche affichait « 722 kg ». Une décimale suffit, et elle ne
+  // s'affiche que si la source en porte une (6500 kg reste « 6500 kg »).
+  if (kg < SCIENTIFIC_MASS_KG) return `${num(kg, 1)} kg`;
   const exp = Math.floor(Math.log10(kg));
   const mantissa = kg / 10 ** exp;
   return `${num(mantissa, 2)} × 10${superscript(exp)} kg`;
@@ -254,7 +266,16 @@ function formatDay(iso: string): string {
 }
 
 /** Valeur mise en forme d'un fait, dans l'unité choisie par l'utilisateur. */
-function formatFact(name: string, field: FactField, value: number): string {
+function formatFact(name: string, field: FactField, value: FactValue): string {
+  if (value.kind === 'date') return formatDay(value.iso);
+  return formatNumericFact(name, field, value.value);
+}
+
+function formatNumericFact(
+  name: string,
+  field: FactField,
+  value: number
+): string {
   switch (field) {
     case 'radiusKm': {
       const radius = convertDistanceKm(value);
@@ -289,6 +310,16 @@ function formatFact(name: string, field: FactField, value: number): string {
       return num(value);
     case 'axialTilt':
       return `${num(value * RAD2DEG, 1)}°`;
+    case 'eccentricity':
+      // Sans unité, et ce sont les décimales qui portent l'information : 1,2011 pour
+      // ʻOumuamua dit « à peine hyperbolique », 6,141 pour 3I/ATLAS dit tout autre chose.
+      return num(value, 4);
+    case 'perihelionAU':
+      return `${num(value, 3)} ${t('unit.au')}`;
+    case 'launchDate':
+    case 'firstObservation':
+      // Les faits datés passent par `formatFact`, qui n'arrive jamais ici avec un nombre.
+      throw new Error(`fait daté formaté comme un nombre : ${field}`);
   }
 }
 
@@ -316,10 +347,22 @@ function factLabel(name: string, field: FactField): string {
       return t('stat.knownMoons');
     case 'axialTilt':
       return t('stat.axialTilt');
+    case 'launchDate':
+      return t('stat.launchDate');
+    case 'firstObservation':
+      return t('stat.firstObservation');
+    case 'eccentricity':
+      return t('stat.eccentricity');
+    case 'perihelionAU':
+      return t('stat.perihelion');
   }
 }
 
-/** Ordre des lignes de la fiche. */
+/**
+ * Ordre des lignes de la fiche. Les quatre derniers faits ne concernent que la couche
+ * instrument : `core/bodyFacts.notApplicableFacts` les déclare hors sujet pour tout corps du
+ * catalogue, et réciproquement, de sorte qu'un seul ordre serve les deux familles.
+ */
 export const CARD_FACT_ORDER: readonly FactField[] = [
   'radiusKm',
   'distanceAU',
@@ -330,6 +373,10 @@ export const CARD_FACT_ORDER: readonly FactField[] = [
   'orbitPeriodDays',
   'moonCount',
   'axialTilt',
+  'launchDate',
+  'eccentricity',
+  'perihelionAU',
+  'firstObservation',
 ];
 
 const cardEntries = (cfg: CelestialBodyConfig): FactEntry[] =>

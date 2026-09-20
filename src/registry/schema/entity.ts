@@ -83,8 +83,15 @@ const displayName = z
 const astroBody = z.enum(Object.values(Body) as [string, ...string[]]);
 const color = z.string().regex(/^0x[0-9a-f]{6}$/);
 
-/** Un fait : sa valeur, sa provenance, ou la raison de ne pas le publier. */
-const fact = z
+/**
+ * Un fait : sa valeur, sa provenance, ou la raison de ne pas le publier.
+ *
+ * Exporté parce que les fiches de sondes et d'objets interstellaires portent EXACTEMENT la
+ * même forme de fait (`schema/spacecraft.ts`, `schema/interstellar.ts`) : ce qui diffère entre
+ * les trois familles, c'est la LISTE des champs, pas ce qu'est un fait. Le dupliquer aurait
+ * laissé deux définitions dériver, et c'est précisément ce que le lot 7 a supprimé ailleurs.
+ */
+export const fact = z
   .object({
     value: encoded.optional(),
     source: kebabId.optional(),

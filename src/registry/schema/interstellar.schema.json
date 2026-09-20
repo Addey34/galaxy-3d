@@ -162,6 +162,285 @@
       "type": "string",
       "pattern": "^0x[0-9a-fA-F]{6}$"
     },
+    "facts": {
+      "type": "object",
+      "properties": {
+        "eccentricity": {
+          "type": "object",
+          "properties": {
+            "value": {
+              "$ref": "#/$defs/__schema0"
+            },
+            "source": {
+              "type": "string",
+              "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+            },
+            "method": {
+              "type": "string",
+              "enum": [
+                "measured",
+                "derived",
+                "illustrative"
+              ]
+            },
+            "asOf": {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d{2}(-\\d{2})?$"
+            },
+            "uncertainty": {
+              "$ref": "#/$defs/__schema0"
+            },
+            "detail": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "pattern": "^[a-zA-Z0-9]+$"
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "en": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "fr": {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  },
+                  "required": [
+                    "en",
+                    "fr"
+                  ],
+                  "additionalProperties": false
+                }
+              ]
+            },
+            "citation": {
+              "type": "string",
+              "minLength": 1
+            },
+            "published": {
+              "type": "boolean",
+              "const": false
+            },
+            "reason": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "const": "not-yet-sourced"
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "en": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "fr": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "unsourced": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "en",
+                    "fr"
+                  ],
+                  "additionalProperties": false
+                }
+              ]
+            }
+          },
+          "additionalProperties": false
+        },
+        "perihelionAU": {
+          "type": "object",
+          "properties": {
+            "value": {
+              "$ref": "#/$defs/__schema0"
+            },
+            "source": {
+              "type": "string",
+              "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+            },
+            "method": {
+              "type": "string",
+              "enum": [
+                "measured",
+                "derived",
+                "illustrative"
+              ]
+            },
+            "asOf": {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d{2}(-\\d{2})?$"
+            },
+            "uncertainty": {
+              "$ref": "#/$defs/__schema0"
+            },
+            "detail": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "pattern": "^[a-zA-Z0-9]+$"
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "en": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "fr": {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  },
+                  "required": [
+                    "en",
+                    "fr"
+                  ],
+                  "additionalProperties": false
+                }
+              ]
+            },
+            "citation": {
+              "type": "string",
+              "minLength": 1
+            },
+            "published": {
+              "type": "boolean",
+              "const": false
+            },
+            "reason": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "const": "not-yet-sourced"
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "en": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "fr": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "unsourced": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "en",
+                    "fr"
+                  ],
+                  "additionalProperties": false
+                }
+              ]
+            }
+          },
+          "additionalProperties": false
+        },
+        "firstObservation": {
+          "type": "object",
+          "properties": {
+            "value": {
+              "$ref": "#/$defs/__schema0"
+            },
+            "source": {
+              "type": "string",
+              "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+            },
+            "method": {
+              "type": "string",
+              "enum": [
+                "measured",
+                "derived",
+                "illustrative"
+              ]
+            },
+            "asOf": {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d{2}(-\\d{2})?$"
+            },
+            "uncertainty": {
+              "$ref": "#/$defs/__schema0"
+            },
+            "detail": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "pattern": "^[a-zA-Z0-9]+$"
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "en": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "fr": {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  },
+                  "required": [
+                    "en",
+                    "fr"
+                  ],
+                  "additionalProperties": false
+                }
+              ]
+            },
+            "citation": {
+              "type": "string",
+              "minLength": 1
+            },
+            "published": {
+              "type": "boolean",
+              "const": false
+            },
+            "reason": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "const": "not-yet-sourced"
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "en": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "fr": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "unsourced": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "en",
+                    "fr"
+                  ],
+                  "additionalProperties": false
+                }
+              ]
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
     "notes": {
       "type": "object",
       "propertyNames": {
@@ -183,5 +462,245 @@
     "elements",
     "color"
   ],
-  "additionalProperties": false
+  "additionalProperties": false,
+  "$defs": {
+    "__schema0": {
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "number"
+        },
+        {
+          "type": "string"
+        },
+        {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/__schema0"
+          }
+        },
+        {
+          "anyOf": [
+            {
+              "type": "object",
+              "properties": {
+                "$deg": {
+                  "$ref": "#/$defs/__schema0"
+                }
+              },
+              "required": [
+                "$deg"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "$rotationHours": {
+                  "$ref": "#/$defs/__schema0"
+                }
+              },
+              "required": [
+                "$rotationHours"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "$rotationHours": {
+                  "$ref": "#/$defs/__schema0"
+                },
+                "$retrograde": {
+                  "type": "boolean",
+                  "const": true
+                }
+              },
+              "required": [
+                "$rotationHours",
+                "$retrograde"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "$spinPeriodDays": {
+                  "$ref": "#/$defs/__schema0"
+                }
+              },
+              "required": [
+                "$spinPeriodDays"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "$days": {
+                  "$ref": "#/$defs/__schema0"
+                }
+              },
+              "required": [
+                "$days"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "$km": {
+                  "$ref": "#/$defs/__schema0"
+                }
+              },
+              "required": [
+                "$km"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "$gm": {
+                  "$ref": "#/$defs/__schema0"
+                }
+              },
+              "required": [
+                "$gm"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "$gm": {
+                  "$ref": "#/$defs/__schema0"
+                },
+                "$radiusKm": {
+                  "$ref": "#/$defs/__schema0"
+                }
+              },
+              "required": [
+                "$gm",
+                "$radiusKm"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "$density": {
+                  "$ref": "#/$defs/__schema0"
+                },
+                "$radiusKm": {
+                  "$ref": "#/$defs/__schema0"
+                }
+              },
+              "required": [
+                "$density",
+                "$radiusKm"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "$massKg": {
+                  "$ref": "#/$defs/__schema0"
+                },
+                "$radiusKm": {
+                  "$ref": "#/$defs/__schema0"
+                }
+              },
+              "required": [
+                "$massKg",
+                "$radiusKm"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "$diameterKm": {
+                  "$ref": "#/$defs/__schema0"
+                }
+              },
+              "required": [
+                "$diameterKm"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "$kelvin": {
+                  "$ref": "#/$defs/__schema0"
+                }
+              },
+              "required": [
+                "$kelvin"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "$fraction": {
+                  "$ref": "#/$defs/__schema0"
+                },
+                "$of": {
+                  "$ref": "#/$defs/__schema0"
+                }
+              },
+              "required": [
+                "$fraction",
+                "$of"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "$cameraFromRadiusKm": {
+                  "$ref": "#/$defs/__schema0"
+                }
+              },
+              "required": [
+                "$cameraFromRadiusKm"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "$date": {
+                  "type": "string",
+                  "pattern": "^\\d{4}-\\d{2}-\\d{2}T[\\d:.]+Z$"
+                }
+              },
+              "required": [
+                "$date"
+              ],
+              "additionalProperties": false
+            }
+          ]
+        },
+        {
+          "type": "object",
+          "propertyNames": {
+            "type": "string",
+            "pattern": "^[^$]"
+          },
+          "additionalProperties": {
+            "$ref": "#/$defs/__schema0"
+          }
+        }
+      ]
+    }
+  }
 }

@@ -96,8 +96,25 @@ describe('poids visuel', () => {
   });
 });
 
+/**
+ * Un test unitaire ne parle À PERSONNE. Ces deux couches étaient construites avec le `fetch`
+ * par défaut, c'est-à-dire le vrai : `pnpm verify` interrogeait donc réellement l'USGS et
+ * EONET, et le test tombait en dépassement de délai environ une fois sur trois (mesuré, huit
+ * exécutions). La réponse est vide À DESSEIN : ce qui est vérifié ici, c'est la classification
+ * temporelle du lot, pas son contenu.
+ */
+const emptyResponse = (body: unknown): typeof fetch =>
+  (async () =>
+    new Response(JSON.stringify(body), {
+      status: 200,
+      headers: { 'content-type': 'application/json' },
+    })) as unknown as typeof fetch;
+
 describe('déclaration des deux couches', () => {
-  const layers = [earthquakeLayer(), naturalEventLayer()];
+  const layers = [
+    earthquakeLayer(emptyResponse({ type: 'FeatureCollection', features: [] })),
+    naturalEventLayer(emptyResponse({ events: [] })),
+  ];
 
   it('cite une fiche de fournisseur qui existe', () => {
     for (const layer of layers) {

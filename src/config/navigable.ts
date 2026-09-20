@@ -23,6 +23,7 @@ import type {
   CelestialBodyConfig,
   CelestialConfig,
   LocalizedText,
+  RealData,
 } from '@/types';
 import { CELESTIAL_CONFIG } from './bodies';
 import { flattenBodies } from './catalog';
@@ -50,7 +51,8 @@ function markerConfig(
   kind: 'spacecraft' | 'interstellar',
   displayName: LocalizedText,
   description: LocalizedText,
-  color: number
+  color: number,
+  facts: Partial<RealData> = {}
 ): CelestialBodyConfig {
   return {
     kind,
@@ -61,7 +63,10 @@ function markerConfig(
     // Ni texture ni couleur de repli : `buildLayers` ne crée alors AUCUNE couche. C'est ce qui
     // garantit qu'aucun mesh, sprite ou sphère mandataire n'apparaît — l'invariant Explo.
     textureResolutions: {},
-    realData: { description },
+    // Les faits viennent du registre avec leur provenance ; la description reste le texte du
+    // catalogue. `core/bodyFacts.ts` décide seul lesquels s'affichent, exactement comme pour
+    // un corps : une valeur sans source ne se montre pas plus ici qu'ailleurs.
+    realData: { description, ...facts },
     cameraDistance: MARKER_CAMERA_DISTANCE,
   };
 }
@@ -76,7 +81,13 @@ export const NAVIGABLE_TARGETS: ReadonlyMap<string, CelestialBodyConfig> =
       (m) =>
         [
           m.name,
-          markerConfig('spacecraft', m.displayName, m.description, m.color),
+          markerConfig(
+            'spacecraft',
+            m.displayName,
+            m.description,
+            m.color,
+            m.facts
+          ),
         ] as const
     ),
     ...INTERSTELLAR_OBJECTS.map(
@@ -89,7 +100,8 @@ export const NAVIGABLE_TARGETS: ReadonlyMap<string, CelestialBodyConfig> =
             // Un objet interstellaire n'a pas de description rédigée dans son registre : sa
             // désignation MPC est ce qui l'identifie, et c'est elle qu'Horizons affiche.
             { en: o.designation, fr: o.designation },
-            o.color
+            o.color,
+            o.facts
           ),
         ] as const
     ),

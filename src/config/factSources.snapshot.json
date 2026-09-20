@@ -1,6 +1,6 @@
 {
   "generatedBy": "scripts/snapshot-fact-sources.mjs",
-  "retrieved": "2026-09-18",
+  "retrieved": "2026-09-20",
   "nssdca": {
     "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/",
     "mainTableUpdated": "2025-03-18",
@@ -1170,6 +1170,209 @@
       },
       "pole": null,
       "confirmedSatellites": 0
+    }
+  },
+  "sbdbInterstellar": {
+    "oumuamua": {
+      "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=1I%2F2017%20U1",
+      "fullname": "'Oumuamua (A/2017 U1)",
+      "orbitClass": "Hyperbolic Asteroid",
+      "eccentricity": {
+        "value": 1.201133796102373,
+        "sigma": 0.000021064
+      },
+      "perihelionAU": {
+        "value": 0.2559115812959116,
+        "sigma": 0.0000066635
+      },
+      "inclinationDeg": {
+        "value": 122.7417062847286,
+        "sigma": 0.00028826
+      },
+      "absoluteMagnitude": {
+        "value": 22.08,
+        "sigma": 0.44525
+      },
+      "firstObservation": "2017-10-14",
+      "lastObservation": "2018-01-02",
+      "observationsUsed": 207,
+      "solutionDate": "2018-06-26 12:17:57"
+    },
+    "borisov": {
+      "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=C%2F2019%20Q4",
+      "fullname": "C/2019 Q4 (Borisov)",
+      "orbitClass": "Hyperbolic Comet",
+      "eccentricity": {
+        "value": 3.356475782676596,
+        "sigma": 0.000019039
+      },
+      "perihelionAU": {
+        "value": 2.006520878500843,
+        "sigma": 0.0000032904
+      },
+      "inclinationDeg": {
+        "value": 44.05264247909138,
+        "sigma": 0.000016673
+      },
+      "absoluteMagnitude": null,
+      "firstObservation": "2019-02-24",
+      "lastObservation": "2020-09-30",
+      "observationsUsed": 964,
+      "solutionDate": "2024-06-24 15:49:04"
+    },
+    "atlas": {
+      "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=C%2F2025%20N1",
+      "fullname": "C/2025 N1 (ATLAS)",
+      "orbitClass": "Hyperbolic Comet",
+      "eccentricity": {
+        "value": 6.141351449317625,
+        "sigma": 0.00002469
+      },
+      "perihelionAU": {
+        "value": 1.356481057231181,
+        "sigma": 0.0000037743
+      },
+      "inclinationDeg": {
+        "value": 175.1164570850441,
+        "sigma": 0.000019023
+      },
+      "absoluteMagnitude": null,
+      "firstObservation": "2025-05-15",
+      "lastObservation": "2026-02-19",
+      "observationsUsed": 782,
+      "solutionDate": "2026-02-19 09:10:47"
+    }
+  },
+  "nssdcaMasterCatalog": {
+    "voyager1": {
+      "url": "https://nssdc.gsfc.nasa.gov/nmc/spacecraft/display.action?id=1977-084A",
+      "cosparId": "1977-084A",
+      "name": "Voyager 1",
+      "launchDate": "1977-09-05",
+      "launchVehicle": "Titan IIIE-Centaur",
+      "launchSite": "Cape Canaveral, United States",
+      "massKg": 721.9,
+      "nominalPowerW": 420,
+      "launchMassMentions": []
+    },
+    "voyager2": {
+      "url": "https://nssdc.gsfc.nasa.gov/nmc/spacecraft/display.action?id=1977-076A",
+      "cosparId": "1977-076A",
+      "name": "Voyager 2",
+      "launchDate": "1977-08-20",
+      "launchVehicle": "Titan IIIE-Centaur",
+      "launchSite": "Cape Canaveral, United States",
+      "massKg": 721.9,
+      "nominalPowerW": 420,
+      "launchMassMentions": []
+    },
+    "parker-solar-probe": {
+      "url": "https://nssdc.gsfc.nasa.gov/nmc/spacecraft/display.action?id=2018-065A",
+      "cosparId": "2018-065A",
+      "name": "Parker Solar Probe",
+      "launchDate": "2018-08-12",
+      "launchVehicle": "Delta IV",
+      "launchSite": "Cape Canaveral, United States",
+      "massKg": 685,
+      "nominalPowerW": null,
+      "launchMassMentions": []
+    },
+    "jwst": {
+      "url": "https://nssdc.gsfc.nasa.gov/nmc/spacecraft/display.action?id=2021-130A",
+      "cosparId": "2021-130A",
+      "name": "James Webb Space Telescope",
+      "launchDate": "2021-12-25",
+      "launchVehicle": "Ariane 5",
+      "launchSite": "Kourou, French Guiana",
+      "massKg": 6500,
+      "nominalPowerW": null,
+      "launchMassMentions": []
+    },
+    "new-horizons": {
+      "url": "https://nssdc.gsfc.nasa.gov/nmc/spacecraft/display.action?id=2006-001A",
+      "cosparId": "2006-001A",
+      "name": "New Horizons Pluto Kuiper Belt Flyby",
+      "launchDate": "2006-01-19",
+      "launchVehicle": "Atlas V",
+      "launchSite": "Cape Canaveral, United States",
+      "massKg": 385,
+      "nominalPowerW": 228,
+      "launchMassMentions": [
+        "The 465 kg launch mass includes 80 kg of propellant."
+      ]
+    },
+    "cassini": {
+      "url": "https://nssdc.gsfc.nasa.gov/nmc/spacecraft/display.action?id=1997-061A",
+      "cosparId": "1997-061A",
+      "name": "Cassini",
+      "launchDate": "1997-10-15",
+      "launchVehicle": "Titan IV-Centaur",
+      "launchSite": "Cape Canaveral, United States",
+      "massKg": 2523,
+      "nominalPowerW": 640,
+      "launchMassMentions": []
+    },
+    "juno": {
+      "url": "https://nssdc.gsfc.nasa.gov/nmc/spacecraft/display.action?id=2011-040A",
+      "cosparId": "2011-040A",
+      "name": "Juno",
+      "launchDate": "2011-08-05",
+      "launchVehicle": "Atlas V",
+      "launchSite": "Cape Canaveral, United States",
+      "massKg": 1500,
+      "nominalPowerW": 400,
+      "launchMassMentions": []
+    },
+    "rosetta": {
+      "url": "https://nssdc.gsfc.nasa.gov/nmc/spacecraft/display.action?id=2004-006A",
+      "cosparId": "2004-006A",
+      "name": "Rosetta",
+      "launchDate": "2004-03-02",
+      "launchVehicle": "Ariane 5",
+      "launchSite": "Kourou, French Guiana",
+      "massKg": 1200,
+      "nominalPowerW": 850,
+      "launchMassMentions": [
+        "Total launch mass is 3000 kg including the 100 kg lander and 165 kg of scientific instruments.",
+        "The launch mass of the craft including fuel is 2900 kg."
+      ]
+    },
+    "bepicolombo": {
+      "url": "https://nssdc.gsfc.nasa.gov/nmc/spacecraft/display.action?id=2018-080A",
+      "cosparId": "2018-080A",
+      "name": "BepiColombo",
+      "launchDate": "2018-10-20",
+      "launchVehicle": "Ariane 5",
+      "launchSite": "Kourou, French Guiana",
+      "massKg": 365,
+      "nominalPowerW": null,
+      "launchMassMentions": [
+        "The total launch mass of the entire MPO system will be 1229 kg and for MMO about 1200 kg."
+      ]
+    },
+    "osiris-rex": {
+      "url": "https://nssdc.gsfc.nasa.gov/nmc/spacecraft/display.action?id=2016-055A",
+      "cosparId": "2016-055A",
+      "name": "OSIRIS-REx",
+      "launchDate": "2016-09-08",
+      "launchVehicle": "Atlas V",
+      "launchSite": "Cape Canaveral, United States",
+      "massKg": 1528,
+      "nominalPowerW": null,
+      "launchMassMentions": [
+        "Launch mass including propellant is 1529 kg."
+      ]
+    },
+    "hayabusa2": {
+      "url": "https://nssdc.gsfc.nasa.gov/nmc/spacecraft/display.action?id=2014-076A",
+      "cosparId": "2014-076A",
+      "name": "Hayabusa2",
+      "launchDate": "2014-12-03",
+      "launchVehicle": "H-2A",
+      "launchSite": "Tanegashima, Japan",
+      "massKg": 600,
+      "nominalPowerW": null,
+      "launchMassMentions": []
     }
   },
   "articles": {

@@ -1,10 +1,13 @@
 import { describe, expect, it } from 'vitest';
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import {
-  fetchAllSmallBodies,
-  fetchSmallBodies,
+  ALL_SMALL_BODY_CATEGORIES,
   julianDateToDate,
+  loadSmallBodies,
   parseSbdbRows,
-  sbdbQueryUrl,
+  parseSmallBodyDataset,
+  type SmallBodyDatasetFile,
 } from './sbdb';
 
 const D2R = Math.PI / 180;
@@ -77,126 +80,162 @@ describe('parseSbdbRows', () => {
   });
 });
 
-describe('sbdbQueryUrl', () => {
-  it('defaults to the historical main-belt query (non-regression)', () => {
-    const url = new URL(sbdbQueryUrl());
-    expect(url.searchParams.get('fields')).toBe(
-      'full_name,a,e,i,om,w,ma,epoch'
+/**
+ * L'INSTANTANÉ LIVRÉ. Ce fichier est la donnée que voit un visiteur : jusqu'au lot 8b
+ * l'application interrogeait JPL depuis le navigateur, ce qui n'a jamais marché en production
+ * (réponse 200 sans en-tête CORS, donc jetée). Le test lit le fichier COMMITÉ, pas un double.
+ */
+describe('instantané des petits corps livré', () => {
+  const file = JSON.parse(
+    readFileSync(
+      resolve(
+        import.meta.dirname,
+        '../../public/assets/small-bodies/dataset.json'
+      ),
+      'utf-8'
+    )
+  ) as SmallBodyDatasetFile;
+
+  it('porte les quatre catégories, et aucune autre', () => {
+    expect(Object.keys(file.categories).sort()).toEqual(
+      [...ALL_SMALL_BODY_CATEGORIES].sort()
     );
-    expect(url.searchParams.get('sb-kind')).toBe('a');
-    expect(url.searchParams.get('sb-cdata')).toBe('{"AND":["a|LT|4.5"]}');
-    expect(url.searchParams.get('sb-group')).toBeNull();
-    expect(url.searchParams.get('limit')).toBe('2000');
   });
 
-  it('queries NEOs via sb-group, without sb-kind', () => {
-    const url = new URL(sbdbQueryUrl('neo'));
-    expect(url.searchParams.get('sb-group')).toBe('neo');
-    expect(url.searchParams.get('sb-kind')).toBeNull();
+  it('porte une date de relevé lisible', () => {
+    expect(file.retrieved).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    expect(Number.isFinite(Date.parse(file.retrieved))).toBe(true);
   });
 
-  it('queries comets via sb-kind=c', () => {
-    const url = new URL(sbdbQueryUrl('comet'));
-    expect(url.searchParams.get('sb-kind')).toBe('c');
+  it('se propage réellement : chaque catégorie rend des orbites exploitables', () => {
+    const dataset = parseSmallBodyDataset(file);
+    expect(dataset.retrieved).toBe(file.retrieved);
+    for (const category of ALL_SMALL_BODY_CATEGORIES) {
+      const count = dataset.bodies.filter(
+        (b) => b.category === category
+      ).length;
+      // Une catégorie vide dégraderait en silence : c'est exactement le défaut corrigé ici.
+      expect(count, category).toBeGreaterThan(100);
+    }
+    expect(dataset.bodies.length).toBeGreaterThan(5000);
   });
 
-  it('queries TNOs via sb-kind=a with a semi-major-axis floor', () => {
-    const url = new URL(sbdbQueryUrl('tno'));
-    expect(url.searchParams.get('sb-kind')).toBe('a');
-    expect(url.searchParams.get('sb-cdata')).toContain('a|GT|30');
-  });
-});
-
-describe('fetchAllSmallBodies', () => {
-  function rowFor(name: string): string[] {
-    return [name, '2.5', '0.1', '5', '10', '15', '20', '2451545.0'];
-  }
-
-  it('merges the 4 categories and tags each body with its category', async () => {
-    const fetchImpl = (async (input: string | URL) => {
-      const url = new URL(input.toString());
-      const category = url.searchParams.has('sb-group')
-        ? 'neo'
-        : url.searchParams.get('sb-kind') === 'c'
-          ? 'comet'
-          : (url.searchParams.get('sb-cdata') ?? '').includes('GT')
-            ? 'tno'
-            : 'main-belt';
-      return {
-        ok: true,
-        json: async () => ({
-          fields: FIELDS,
-          data: [rowFor(category)],
-        }),
-      };
-    }) as unknown as typeof fetch;
-
-    const bodies = await fetchAllSmallBodies(fetchImpl);
-    expect(bodies).toHaveLength(4);
-    const byCategory = new Map(bodies.map((b) => [b.category, b.name]));
-    expect(byCategory.get('main-belt')).toBe('main-belt');
-    expect(byCategory.get('neo')).toBe('neo');
-    expect(byCategory.get('comet')).toBe('comet');
-    expect(byCategory.get('tno')).toBe('tno');
-  });
-
-  it('keeps the other 3 categories when one fails', async () => {
-    const fetchImpl = (async (input: string | URL) => {
-      const url = new URL(input.toString());
-      if (url.searchParams.get('sb-kind') === 'c') {
-        return { ok: false, json: async () => ({}) };
-      }
-      return {
-        ok: true,
-        json: async () => ({ fields: FIELDS, data: [rowFor('x')] }),
-      };
-    }) as unknown as typeof fetch;
-
-    const bodies = await fetchAllSmallBodies(fetchImpl);
-    expect(bodies).toHaveLength(3);
-    expect(bodies.some((b) => b.category === 'comet')).toBe(false);
+  it('donne des éléments finis et elliptiques', () => {
+    const { bodies } = parseSmallBodyDataset(file);
+    for (const body of bodies.slice(0, 500)) {
+      expect(body.name.length, body.name).toBeGreaterThan(0);
+      expect(Number.isFinite(body.elements.semiMajorAxisAU)).toBe(true);
+      expect(body.elements.eccentricity).toBeLessThan(1);
+      expect(Number.isFinite(body.elements.epoch.getTime())).toBe(true);
+    }
   });
 });
 
-describe('fetchSmallBodies', () => {
-  it('degrades to [] on a network error', async () => {
+describe('parseSmallBodyDataset', () => {
+  const table = (name: string) => ({
+    fields: FIELDS,
+    data: [[name, '2.5', '0.1', '5', '10', '15', '20', '2451545.0']],
+  });
+
+  it('fusionne les catégories et tague chaque corps', () => {
+    const dataset = parseSmallBodyDataset({
+      retrieved: '2026-09-20',
+      limitPerCategory: 2000,
+      categories: {
+        'main-belt': table('main-belt'),
+        neo: table('neo'),
+        comet: table('comet'),
+        tno: table('tno'),
+      },
+    });
+    expect(dataset.bodies).toHaveLength(4);
+    expect(new Map(dataset.bodies.map((b) => [b.category, b.name]))).toEqual(
+      new Map([
+        ['main-belt', 'main-belt'],
+        ['neo', 'neo'],
+        ['comet', 'comet'],
+        ['tno', 'tno'],
+      ])
+    );
+  });
+
+  it('garde les autres catégories quand une manque', () => {
+    const dataset = parseSmallBodyDataset({
+      retrieved: '2026-09-20',
+      limitPerCategory: 2000,
+      categories: { neo: table('neo'), comet: table('comet') },
+    });
+    expect(dataset.bodies).toHaveLength(2);
+    expect(dataset.bodies.some((b) => b.category === 'tno')).toBe(false);
+  });
+});
+
+describe('loadSmallBodies', () => {
+  it('dégrade à un lot vide et sans date sur erreur réseau', async () => {
     const failing = (() =>
       Promise.reject(new Error('offline'))) as unknown as typeof fetch;
-    expect(await fetchSmallBodies('http://x', failing)).toEqual([]);
+    expect(await loadSmallBodies(failing)).toEqual({
+      retrieved: null,
+      bodies: [],
+    });
   });
 
-  it('degrades to [] on a non-ok response', async () => {
+  it('dégrade à un lot vide sur réponse non ok', async () => {
     const notOk = (() =>
       Promise.resolve({
         ok: false,
         json: () => Promise.resolve({}),
       })) as unknown as typeof fetch;
-    expect(await fetchSmallBodies('http://x', notOk)).toEqual([]);
+    expect((await loadSmallBodies(notOk)).bodies).toEqual([]);
   });
 
-  it('parses a well-formed response', async () => {
+  it('dégrade à un lot vide quand le serveur répond 200 avec autre chose', async () => {
+    // Cas RÉEL, pas théorique : la réécriture SPA de Firebase sert `index.html` avec un code
+    // 200 pour tout chemin inconnu (vérifié en production le 2026-09-20 sur ce chemin même,
+    // avant le déploiement de l'actif). `res.ok` est donc vrai et ne protège de rien ; seule
+    // l'analyse du corps échoue, et elle doit rendre un lot vide, pas casser le démarrage.
+    const html = (() =>
+      Promise.resolve({
+        ok: true,
+        json: () => Promise.reject(new SyntaxError('Unexpected token <')),
+      })) as unknown as typeof fetch;
+    expect(await loadSmallBodies(html)).toEqual({
+      retrieved: null,
+      bodies: [],
+    });
+  });
+
+  it('lit un instantané bien formé', async () => {
     const ok = (() =>
       Promise.resolve({
         ok: true,
         json: () =>
           Promise.resolve({
-            fields: FIELDS,
-            data: [
-              [
-                '2 Pallas',
-                '2.77',
-                '0.23',
-                '34.8',
-                '173',
-                '310',
-                '40',
-                '2451545.0',
-              ],
-            ],
+            retrieved: '2026-09-20',
+            limitPerCategory: 2000,
+            categories: {
+              'main-belt': {
+                fields: FIELDS,
+                data: [
+                  [
+                    '2 Pallas',
+                    '2.77',
+                    '0.23',
+                    '34.8',
+                    '173',
+                    '310',
+                    '40',
+                    '2451545.0',
+                  ],
+                ],
+              },
+            },
           }),
       })) as unknown as typeof fetch;
-    const parsed = await fetchSmallBodies('http://x', ok);
-    expect(parsed).toHaveLength(1);
-    expect(parsed[0].name).toBe('2 Pallas');
+    const dataset = await loadSmallBodies(ok);
+    expect(dataset.retrieved).toBe('2026-09-20');
+    expect(dataset.bodies).toHaveLength(1);
+    expect(dataset.bodies[0]!.name).toBe('2 Pallas');
+    expect(dataset.bodies[0]!.category).toBe('main-belt');
   });
 });

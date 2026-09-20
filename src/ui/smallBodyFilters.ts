@@ -3,10 +3,14 @@
  * comètes, objets transneptuniens (TNO). Calqué sur `orbitOptions.ts` (même structure de
  * surface contextuelle, mêmes classes CSS `.oo-body`/`.oo-row`/`.oo-name`/`.oo-checkbox`,
  * déjà génériques — aucun nouveau style nécessaire). Ne pilote que la VISIBILITÉ : les données
- * des 4 catégories sont chargées une fois pour toutes par `fetchAllSmallBodies` ; décocher une
+ * des 4 catégories sont chargées une fois pour toutes par `loadSmallBodies` ; décocher une
  * catégorie ne refait aucune requête, `SmallBodyOverlay.setVisibleCategories` filtre au dessin.
+ *
+ * Le panneau porte aussi la PROVENANCE de ces corps : depuis le lot 8b la donnée n'est plus un
+ * flux mais un instantané daté, livré avec le build (`core/sbdb.ts` dit pourquoi). Une donnée
+ * figée qui se présenterait comme vivante serait le défaut que ce lot corrige, pas sa solution.
  */
-import { t, onLocaleChange } from '@/i18n';
+import { t, intlLocale, onLocaleChange } from '@/i18n';
 import type { SmallBodyCategory } from '@/core/sbdb';
 import type { SmallBodyOverlay } from './smallBodyOverlay';
 import type { OverlayCoordinator } from './overlayCoordinator';
@@ -21,6 +25,11 @@ const CATEGORIES: { id: SmallBodyCategory; labelKey: string }[] = [
 export interface SmallBodyFiltersPanel {
   /** Affiche/masque le bouton déclencheur (l'overlay qu'il pilote n'a de sens qu'en Explo). */
   setTriggerVisible(visible: boolean): void;
+  /**
+   * Date du relevé et nombre de corps chargés. `null` tant que rien n'est chargé, et si le
+   * chargement échoue : le panneau n'annonce alors AUCUNE date plutôt qu'une date fausse.
+   */
+  setDataset(retrieved: string | null, count: number): void;
 }
 
 export function setupSmallBodyFilters(
@@ -28,9 +37,11 @@ export function setupSmallBodyFilters(
   coordinator?: OverlayCoordinator
 ): SmallBodyFiltersPanel {
   const panel = document.getElementById('smallbody-filters');
-  if (!panel) return { setTriggerVisible: () => {} };
+  const noop = { setTriggerVisible: () => {}, setDataset: () => {} };
+  if (!panel) return noop;
   const bodyEl = panel.querySelector<HTMLElement>('.oo-body');
-  if (!bodyEl) return { setTriggerVisible: () => {} };
+  if (!bodyEl) return noop;
+  const noteEl = panel.querySelector<HTMLElement>('.sb-source');
 
   const state = new Set<SmallBodyCategory>(CATEGORIES.map((c) => c.id));
   const applyState = (): void => overlay.setVisibleCategories(new Set(state));
@@ -61,7 +72,36 @@ export function setupSmallBodyFilters(
     }
   }
   buildRows();
-  onLocaleChange(buildRows);
+
+  // Provenance affichée : « 6965 objets, JPL Small-Body Database, relevé du 20 septembre
+  // 2026 ». Le compte est celui des orbites EXPLOITABLES, pas des lignes du fichier.
+  let dataset: { retrieved: string | null; count: number } = {
+    retrieved: null,
+    count: 0,
+  };
+  function renderNote(): void {
+    if (!noteEl) return;
+    if (!dataset.retrieved || dataset.count === 0) {
+      noteEl.textContent = '';
+      noteEl.hidden = true;
+      return;
+    }
+    const [year, month, day] = dataset.retrieved.split('-').map(Number);
+    noteEl.textContent = t('smallBodies.source', {
+      count: String(dataset.count),
+      date: new Date(Date.UTC(year!, month! - 1, day!)).toLocaleDateString(
+        intlLocale(),
+        { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' }
+      ),
+    });
+    noteEl.hidden = false;
+  }
+  renderNote();
+
+  onLocaleChange(() => {
+    buildRows();
+    renderNote();
+  });
 
   // Surface contextuelle : ouverte par le déclencheur du dock, fermée par sa croix, le scrim
   // ou une autre surface (coordinateur). Démarre masquée.
@@ -95,6 +135,10 @@ export function setupSmallBodyFilters(
     setTriggerVisible: (visible: boolean) => {
       if (triggerBtn) triggerBtn.hidden = !visible;
       if (!visible) setOpen(false);
+    },
+    setDataset: (retrieved: string | null, count: number) => {
+      dataset = { retrieved, count };
+      renderNote();
     },
   };
 }

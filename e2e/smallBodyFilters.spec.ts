@@ -1,8 +1,9 @@
 import { expect, test } from '@playwright/test';
 import { blockExternalNetwork } from './netBlock';
 
-// Déterminisme : réseau JPL SBDB bloqué (l'overlay dégrade proprement en champ vide, suffisant
-// pour ces scénarios — on teste le panneau, pas le rendu des marqueurs). Tour d'accueil neutralisé
+// Déterminisme : réseau externe coupé. Depuis le lot 8b cela ne vide plus l'overlay, qui lit un
+// instantané livré avec l'application ; ces scénarios testent de toute façon le panneau, pas le
+// rendu des marqueurs (`e2e/smallBodyDataset.spec.ts` s'en charge). Tour d'accueil neutralisé
 // (son backdrop intercepterait les clics sur les boutons de mode).
 test.beforeEach(async ({ page }) => {
   await blockExternalNetwork(page);

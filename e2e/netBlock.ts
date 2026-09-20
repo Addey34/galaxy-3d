@@ -3,6 +3,10 @@ import type { Page } from '@playwright/test';
 /**
  * Coupe les appels réseau EXTERNES (NASA GIBS/Earthdata, Open-Meteo, JPL SBDB, USGS, EONET).
  *
+ * La route SBDB ne sert PLUS à rien depuis le lot 8b (les petits corps viennent d'un instantané
+ * livré, cf. `core/sbdb.ts`) : elle reste comme filet, pour qu'un appel réintroduit par erreur
+ * soit coupé ici plutôt que de rendre la suite dépendante d'un service tiers.
+ *
  * Pourquoi : les tests de câblage n'ont pas besoin des données réelles, et en CI ces services
  * sont lents, soumis à quota (429 Open-Meteo) ou indisponibles — leur latence/échec déstabilise
  * les scénarios lourds (boot WebGL + décodage texture). Les couches météo/petit-corps dégradent

@@ -6,7 +6,7 @@
  * le TYPE, par `import type`, qui s'efface à la compilation.
  *
  * Ce module ABSORBE deux tables qui vivaient ailleurs, sans qu'aucun de leurs lecteurs change :
- *   - les 18 entrées de `config/factSources.ts`, qui continue d'exporter `FACT_SOURCES`,
+ *   - les 19 entrées de `config/factSources.ts`, qui continue d'exporter `FACT_SOURCES`,
  *     `FACT_SOURCE_HOSTS` et `factSource()` en les DÉRIVANT d'ici ;
  *   - `SUMMARY_PROVIDER` de `core/positionProvenance.ts`, devenue le champ
  *     `validationProviderId` de la fiche de chaque source de position.
@@ -32,6 +32,7 @@ import type {
 } from '../schema/provider';
 
 import nssdcaFactSheets from './nssdca-fact-sheets.json';
+import nssdcaMasterCatalog from './nssdca-master-catalog.json';
 import jplSsdSatellitePhysicalParameters from './jpl-ssd-satellite-physical-parameters.json';
 import jplSsdSatelliteMeanElements from './jpl-ssd-satellite-mean-elements.json';
 import jplSbdb from './jpl-sbdb.json';
@@ -90,6 +91,7 @@ const asPositionSource = <
  */
 export const FACT_SOURCE_PROVIDERS = {
   'nssdca-fact-sheets': asFactSource(nssdcaFactSheets),
+  'nssdca-master-catalog': asFactSource(nssdcaMasterCatalog),
   'jpl-ssd-satellite-physical-parameters': asFactSource(
     jplSsdSatellitePhysicalParameters
   ),

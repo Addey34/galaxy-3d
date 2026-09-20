@@ -259,6 +259,21 @@ export interface RealData {
   meanTempC?: number;
   /** Nombre de satellites naturels connus. */
   moonCount?: number;
+  // ── Objets de la couche instrument (`config/navigable.ts`) ────────────────────────────────
+  // Ces quatre champs ne décrivent AUCUN corps du catalogue : une planète n'a pas de date de
+  // lancement, et l'excentricité d'une orbite fermée n'est pas une grandeur que Galaxy publie.
+  // Ils vivent ici parce qu'une sonde et un objet interstellaire portent le même
+  // `CelestialBodyConfig` que le reste (voir `config/navigable.ts`), et `core/bodyFacts.ts`
+  // déclare lesquels s'appliquent à quel `kind`.
+  /** Date de lancement d'une sonde, `AAAA-MM-JJ`. */
+  launchDate?: string;
+  /** Première observation retenue par la solution d'orbite, `AAAA-MM-JJ`. */
+  firstObservation?: string;
+  /** Excentricité de l'orbite — publiée pour les seuls interstellaires, où elle dépasse 1. */
+  eccentricity?: number;
+  /** Distance de périhélie en UA. */
+  perihelionAU?: number;
+
   /** Courte description grand public, localisée (FR/EN). Affichée par `ui/bodyInfo`. */
   description?: LocalizedText;
   /** Lien « En savoir plus » par langue (article Wikipédia dédié). Affiché par `ui/bodyInfo`. */
@@ -308,6 +323,10 @@ export interface UnknownReason extends LocalizedText {
 /**
  * Faits documentaires qu'affichent la fiche d'un corps et sa page publique. `rotationPeriod`
  * n'a pas de champ dans `RealData` : il se lit dans `rotationSpeed`, que la simulation utilise.
+ *
+ * Les quatre derniers ne concernent QUE la couche instrument (sondes, interstellaires) ;
+ * `core/bodyFacts.notApplicableFacts` dit lesquels s'appliquent à quel `kind`, de sorte
+ * qu'aucune fiche ne montre une ligne vide pour un fait qui n'a pas de sens chez elle.
  */
 export type FactField =
   | 'radiusKm'
@@ -318,7 +337,11 @@ export type FactField =
   | 'axialTilt'
   | 'distanceAU'
   | 'orbitPeriodDays'
-  | 'rotationPeriod';
+  | 'rotationPeriod'
+  | 'launchDate'
+  | 'firstObservation'
+  | 'eccentricity'
+  | 'perihelionAU';
 
 /** Champs documentaires qui peuvent n'avoir aucune valeur affichée (cf. `RealData.unknown`). */
 export type UnknownableField = FactField;

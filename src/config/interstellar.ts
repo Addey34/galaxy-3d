@@ -15,7 +15,7 @@
  * compris) : ≤ 0,1 % de la distance sur ±20 ans autour du périhélie, 0,3 % au périhélie
  * même de 1I, qui passe à 0,26 UA du Soleil — cf. `interstellar.test.ts`.
  */
-import type { LocalizedText } from '@/types';
+import type { LocalizedText, RealData } from '@/types';
 import { hyperbolicPerihelionDate, type OrbitalElements } from '@/core/kepler';
 import { loadInterstellarObjects } from '@/registry/interstellar';
 
@@ -28,6 +28,12 @@ export interface InterstellarObject {
   elements: OrbitalElements;
   /** Couleur du marqueur, de l'étiquette et de la trajectoire (0xRRGGBB). */
   color: number;
+  /**
+   * Faits sourcés, prêts à être versés dans le `realData` de la fiche par
+   * `config/navigable.ts` : excentricité et périhélie tirées des éléments ci-dessus, première
+   * observation de la solution d'orbite, avec leurs provenances.
+   */
+  facts: Partial<RealData>;
 }
 
 /**

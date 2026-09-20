@@ -15,20 +15,13 @@
 export const GIBS_WMS_ENDPOINT =
   'https://gibs.earthdata.nasa.gov/wms/epsg4326/best/wms.cgi';
 
-/** Base des légendes SVG officielles GIBS (barre de couleur + graduations en unités). */
-export const GIBS_LEGEND_BASE = 'https://gibs.earthdata.nasa.gov/legends';
-
-/**
- * URL de la légende SVG officielle d'une couche GIBS (`{layer}_H.svg` horizontale par défaut,
- * `_V` verticale). Rendue via `<img>` : le SVG s'affiche statiquement (le script interne ne
- * s'exécute pas), on ne récupère que la barre de couleur graduée. CORS ouvert.
+/*
+ * Les légendes SVG officielles de GIBS ne sont plus demandées : notre CSP vaut
+ * `img-src 'self' data: blob:`, donc le navigateur les bloquait et la légende de la couche
+ * température n'est jamais apparue en production. Le barème est désormais importé une fois
+ * (`scripts/import-gibs-colormap.mjs`) et rendu en CSS par `core/gibsLegend.ts`, avec les
+ * couleurs de la NASA et sans requête.
  */
-export function gibsLegendUrl(
-  layer: string,
-  orientation: 'H' | 'V' = 'H'
-): string {
-  return `${GIBS_LEGEND_BASE}/${layer}_${orientation}.svg`;
-}
 
 /** Couche par défaut : nuages « vrais » quotidiens, fauchée large (VIIRS SNPP). */
 export const GIBS_DEFAULT_LAYER = 'VIIRS_SNPP_CorrectedReflectance_TrueColor';

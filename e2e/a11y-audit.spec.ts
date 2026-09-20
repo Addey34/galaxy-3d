@@ -98,6 +98,23 @@ test('weather layers panel has no automatically detectable a11y violations', asy
   ).toEqual([]);
 });
 
+test('small-body panel has no automatically detectable a11y violations', async ({
+  page,
+}) => {
+  // Le déclencheur n'existe qu'en Explo, et le panneau porte depuis le lot 8b une mention de
+  // provenance datée : un texte publié de plus à passer à axe.
+  await boot(page);
+  await page.locator('.mode-btn[data-mode=explo]').click();
+  await page.locator('#smallbody-filters-trigger').click();
+  await expect(page.locator('#smallbody-filters')).toBeVisible();
+  await expect(page.locator('#smallbody-filters .sb-source')).toBeVisible();
+  const results = await runAxe(page);
+  expect(
+    results.violations,
+    JSON.stringify(results.violations, null, 2)
+  ).toEqual([]);
+});
+
 test('earth events panel has no automatically detectable a11y violations', async ({
   page,
 }) => {

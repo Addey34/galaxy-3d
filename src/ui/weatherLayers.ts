@@ -176,15 +176,6 @@ export function setupWeatherLayers(
       const detail = document.createElement('div');
       detail.className = 'wl-detail';
 
-      if (layer.legendUrl) {
-        // Fond clair : la légende SVG GIBS a un texte sombre (conçu pour fond blanc).
-        const legend = document.createElement('img');
-        legend.className = 'wl-legend';
-        legend.src = layer.legendUrl;
-        legend.alt = t(layer.labelKey);
-        legend.loading = 'lazy';
-        detail.append(legend);
-      }
       if (layer.legendGradient) {
         // Barre de dégradé CSS (couche dont on maîtrise la palette) + libellés min/max.
         const grad = layer.legendGradient;
@@ -196,9 +187,11 @@ export function setupWeatherLayers(
         const labels = document.createElement('div');
         labels.className = 'wl-legend-labels';
         const lo = document.createElement('span');
-        lo.textContent = t(grad.loKey);
+        // Une borne DÉRIVÉE d'une donnée (barème GIBS) arrive en texte déjà rendu ; une borne
+        // rédigée vit dans le dictionnaire. Jamais les deux pour la même légende.
+        lo.textContent = grad.loText ?? (grad.loKey ? t(grad.loKey) : '');
         const hi = document.createElement('span');
-        hi.textContent = t(grad.hiKey);
+        hi.textContent = grad.hiText ?? (grad.hiKey ? t(grad.hiKey) : '');
         labels.append(lo, hi);
         wrap.append(bar, labels);
         detail.append(wrap);

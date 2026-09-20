@@ -10,7 +10,15 @@ import {
   massFromGM,
 } from './factSources';
 import snapshot from './factSources.snapshot.json';
-import { TIME_VARYING_FACTS, bodyFact, factValue } from '@/core/bodyFacts';
+import {
+  ALL_FACT_FIELDS,
+  DATE_FACTS,
+  TIME_VARYING_FACTS,
+  bodyFact,
+  factValue,
+} from '@/core/bodyFacts';
+import { NAVIGABLE_TARGETS } from './navigable';
+import { SPACECRAFT_MISSIONS } from './spacecraft';
 import { KM_PER_AU } from '@/core/ScaleService';
 import { PLANETS_TO_SUN_MASS_RATIO } from '@/core/kepler';
 import { DEG_TO_RAD as D2R, RAD_TO_DEG } from '@/core/MathConstants';
@@ -28,22 +36,19 @@ import type { CelestialBodyConfig, FactField, FactProvenance } from '@/types';
  *      (gravité de Jupiter 24,79 m/s², Titanie 788,4 km, masse de Kerberos dix fois trop faible).
  */
 
-const FIELDS: FactField[] = [
-  'radiusKm',
-  'massKg',
-  'gravity',
-  'meanTempC',
-  'moonCount',
-  'axialTilt',
-  'distanceAU',
-  'orbitPeriodDays',
-  'rotationPeriod',
-];
+const FIELDS: FactField[] = [...ALL_FACT_FIELDS];
 
+/**
+ * Tout ce qui porte une fiche, catalogue ET couche instrument : les onze sondes et les trois
+ * objets interstellaires affichent leurs faits par la même règle (`core/bodyFacts.ts`) et dans
+ * la même fiche (`ui/bodyInfo.ts`). Les laisser hors de ce fichier, c'est exactement ce qui a
+ * permis à leur date de lancement de vivre des mois sans source.
+ */
 const bodies: { name: string; cfg: CelestialBodyConfig }[] = [];
 forEachBody(CELESTIAL_CONFIG, ({ name, config }) => {
   if (config.kind !== 'skybox') bodies.push({ name, cfg: config });
 });
+for (const [name, cfg] of NAVIGABLE_TARGETS) bodies.push({ name, cfg });
 
 const relativeError = (actual: number, expected: number): number =>
   expected === 0
@@ -160,6 +165,27 @@ const phys = snapshot.jplSatellites.physicalParameters.bodies as Record<
 const elem = snapshot.jplSatellites.meanElements.bodies as Record<
   string,
   { semiMajorAxisKm: number; periodDays: number }
+>;
+const nssdcaMaster = snapshot.nssdcaMasterCatalog as Record<
+  string,
+  {
+    cosparId: string;
+    name: string;
+    launchDate: string;
+    massKg: number;
+    launchMassMentions: string[];
+  }
+>;
+const sbdbInterstellar = snapshot.sbdbInterstellar as Record<
+  string,
+  {
+    fullname: string;
+    eccentricity: { value: number; sigma: number | null };
+    perihelionAU: { value: number; sigma: number | null };
+    firstObservation: string;
+    observationsUsed: number;
+    solutionDate: string;
+  }
 >;
 const sbdb = snapshot.sbdb as Record<
   string,
@@ -429,13 +455,46 @@ function expected(
         return { values: [row.periodDays], tolerance: MEASURED };
       break;
     }
+    case 'nssdca-master-catalog': {
+      const row = nssdcaMaster[name] ?? fail('sonde absente du relevé NSSDCA');
+      if (p.citation !== `NSSDCA/COSPAR ${row.cosparId}`)
+        fail(`citation « ${p.citation} » ≠ identifiant ${row.cosparId}`);
+      if (field === 'massKg') {
+        // Le champ « Mass » du catalogue n'a pas le même sens partout : quand la fiche elle-même
+        // parle d'une masse au lancement, la valeur publiée doit le DIRE (`detail`).
+        if (row.launchMassMentions.length > 0 && !p.detail)
+          fail(
+            'la page cite une masse au lancement différente : la fiche doit préciser ce qu’elle publie'
+          );
+        return { values: [row.massKg], tolerance: 0 };
+      }
+      break;
+    }
     case 'jpl-sbdb': {
-      const row = sbdb[name] ?? fail('corps absent de la SBDB');
+      // Un interstellaire n'est pas dans le relevé `sbdb` (diamètre, GM, rotation) : ses deux
+      // faits sont traités d'abord, avant que l'absence de ligne ne fasse échouer.
+      const row = sbdbInterstellar[name]
+        ? ({} as (typeof sbdb)[string])
+        : (sbdb[name] ?? fail('corps absent de la SBDB'));
       const cite = (ref: string | undefined): void => {
         if (p.citation !== ref)
           fail(`citation « ${p.citation} » ≠ référence SBDB « ${ref} »`);
       };
       switch (field) {
+        case 'eccentricity':
+        case 'perihelionAU': {
+          const inter =
+            sbdbInterstellar[name] ?? fail('objet absent du relevé SBDB');
+          const reference = `orbit solution ${inter.solutionDate.slice(0, 10)}, ${inter.observationsUsed} observations`;
+          if (p.citation !== reference)
+            fail(`citation « ${p.citation} » ≠ solution « ${reference} »`);
+          const published = inter[field];
+          if (p.uncertainty !== (published.sigma ?? undefined))
+            fail(
+              `incertitude ${p.uncertainty} ≠ sigma publié ${published.sigma}`
+            );
+          return { values: [published.value], tolerance: 1e-12 };
+        }
         case 'radiusKm':
           cite(row.diameterKm?.ref);
           return { values: [row.diameterKm!.value / 2], tolerance: 1e-9 };
@@ -538,7 +597,10 @@ describe('faits affichés : confrontés à leur source', () => {
   for (const { name, cfg } of bodies)
     for (const [field, provenance] of Object.entries(
       cfg.realData?.sources ?? {}
-    ))
+    )) {
+      // Les faits DATÉS ont leur propre confrontation, juste en dessous : une date ne se
+      // compare pas à une tolérance relative.
+      if (DATE_FACTS.has(field as FactField)) continue;
       cases.push([
         `${name}.${field}`,
         name,
@@ -546,13 +608,20 @@ describe('faits affichés : confrontés à leur source', () => {
         field as FactField,
         provenance,
       ]);
+    }
 
   it('confronte un nombre substantiel de faits', () => {
     expect(cases.length).toBeGreaterThan(300);
   });
 
   it.each(cases)('%s', (_label, name, cfg, field, provenance) => {
-    const value = factValue(cfg, field)!;
+    const factual = factValue(cfg, field)!;
+    // Cette confrontation-ci est NUMÉRIQUE ; les faits datés ont la leur, plus bas.
+    if (factual.kind !== 'number')
+      throw new Error(
+        `${name}.${field} : fait daté dans la confrontation numérique`
+      );
+    const value = factual.value;
     const { values, tolerance, absolute } = expected(
       name,
       cfg,
@@ -572,5 +641,53 @@ describe('faits affichés : confrontés à leur source', () => {
       throw new Error(
         `${name}.${field} : valeur conforme à une définition secondaire sans « detail »`
       );
+  });
+});
+
+/**
+ * FAITS DATÉS. Une date de lancement ou une première observation ne se compare pas avec une
+ * tolérance : c'est la date de la source, ou ce n'en est pas une. Le relevé porte l'identifiant
+ * COSPAR ou la solution d'orbite, et la fiche doit citer exactement celui-là : c'est ce qui
+ * rend la valeur retrouvable par un lecteur, puisque le registre ne porte qu'une URL de base.
+ */
+describe('faits datés : confrontés à leur source', () => {
+  const cases: [string, string, CelestialBodyConfig, FactField][] = [];
+  for (const { name, cfg } of bodies)
+    for (const field of DATE_FACTS)
+      if (cfg.realData?.sources?.[field])
+        cases.push([`${name}.${field}`, name, cfg, field]);
+
+  it('couvre les onze sondes et les trois interstellaires', () => {
+    expect(cases.length).toBe(14);
+  });
+
+  it.each(cases)('%s', (_label, name, cfg, field) => {
+    const factual = factValue(cfg, field)!;
+    expect(factual.kind, `${name}.${field}`).toBe('date');
+    const iso = factual.kind === 'date' ? factual.iso : '';
+    const provenance = cfg.realData!.sources![field]!;
+    if (field === 'launchDate') {
+      const row = nssdcaMaster[name];
+      expect(row, `${name} absente du relevé NSSDCA`).toBeDefined();
+      expect(provenance.source).toBe('nssdca-master-catalog');
+      expect(provenance.citation).toBe(`NSSDCA/COSPAR ${row.cosparId}`);
+      expect(iso, `${name}.launchDate`).toBe(row.launchDate);
+      return;
+    }
+    const row = sbdbInterstellar[name];
+    expect(row, `${name} absent du relevé SBDB`).toBeDefined();
+    expect(provenance.source).toBe('jpl-sbdb');
+    expect(iso, `${name}.firstObservation`).toBe(row.firstObservation);
+  });
+
+  it('cite la couverture Horizons qui commence après le lancement publié', () => {
+    // Deux chemins indépendants pour la même date : le relevé NSSDCA d'un côté, la borne basse
+    // du manifeste d'éphémérides de l'autre. Une erreur d'identifiant COSPAR ferait diverger
+    // les deux, même si la page lue existait bel et bien.
+    for (const mission of SPACECRAFT_MISSIONS) {
+      const row = nssdcaMaster[mission.name];
+      expect(row, mission.name).toBeDefined();
+      expect(mission.launchDate, mission.name).toBe(row.launchDate);
+    }
   });
 });

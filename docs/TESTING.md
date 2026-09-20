@@ -33,6 +33,14 @@ pas : le build publie-t-il encore exactement les mêmes documents ? `--write` r�
   intervalle ouvert — et `0,5 % + 0,5 %` passait l'assertion en s'affichant noir à l'écran. Le test
   existait, était vert, et n'a rien vu pendant que le défaut était visible. Il énonce désormais le
   vrai invariant : la somme normalisée des deux contributions ne redescend jamais sous 1.
+- **Un test unitaire ne parle À PERSONNE.** Une fabrique qui accepte un `fetch` injectable a
+  presque toujours le vrai `fetch` par défaut : l'appeler sans argument dans un test le branche
+  sur le réseau. Cas réel : `src/core/earthEventLayers.test.ts` construisait ses deux couches
+  sans injecter de double, donc `pnpm verify` interrogeait réellement l'USGS et NASA EONET et
+  tombait en dépassement de délai environ une fois sur trois (mesuré sur huit exécutions) ;
+  2,4 s de suite contre 0,24 s une fois la réponse simulée. Un test rouge par intermittence use
+  la confiance dans la porte bien plus vite qu'il ne protège de quoi que ce soit. Les scénarios
+  e2e, eux, coupent l'extérieur par `e2e/netBlock.ts`.
 - **Falsifier chaque garde avant de le croire.** Remettre le défaut et vérifier que le test échoue
   vraiment, avec le bon message. Un test qui ne casse pas quand on réintroduit le bug ne garde rien
   — c'est la seule façon de distinguer un garde d'une décoration.

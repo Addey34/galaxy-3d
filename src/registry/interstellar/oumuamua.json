@@ -33,6 +33,29 @@
     }
   },
   "color": "0x8ef5a0",
+  "facts": {
+    "eccentricity": {
+      "source": "jpl-sbdb",
+      "method": "measured",
+      "uncertainty": 2.1064e-05,
+      "detail": "osculatingEccentricity",
+      "citation": "orbit solution 2018-06-26, 207 observations"
+    },
+    "perihelionAU": {
+      "source": "jpl-sbdb",
+      "method": "derived",
+      "uncertainty": 6.6635e-06,
+      "detail": "perihelionFromElements",
+      "citation": "orbit solution 2018-06-26, 207 observations"
+    },
+    "firstObservation": {
+      "value": "2017-10-14",
+      "source": "jpl-sbdb",
+      "method": "measured",
+      "detail": "firstObservationUsed",
+      "citation": "orbit solution 2018-06-26, 207 observations"
+    }
+  },
   "notes": {
     "solution": "Horizons rec #50322080, solution 2018-Jun-26, époque JD 2458080.5 ; accélération non gravitationnelle de Micheli et al. 2018 comprise."
   }

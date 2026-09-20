@@ -1352,16 +1352,9 @@ button {
 .wl-detail[hidden] {
   display: none;
 }
-/* Légende SVG GIBS : texte sombre conçu pour fond clair → pastille blanche arrondie. */
-.wl-legend {
-  width: 100%;
-  max-width: 12rem;
-  height: auto;
-  border-radius: 6px;
-  background: #f6f6f0;
-  padding: 3px 5px;
-}
-/* Légende en barre de dégradé (couche pluie) : barre colorée + libellés min/max. */
+/* Légende en barre de dégradé : barre colorée + libellés min/max. C'est la SEULE forme de
+   légende depuis le lot 8b ; la règle `.wl-legend`, qui habillait une image SVG distante que
+   notre propre `img-src` bloquait, est partie avec elle. */
 .wl-legend-grad {
   width: 100%;
   max-width: 12rem;
@@ -1416,6 +1409,17 @@ button {
 /* Badge de traçabilité (étape B) : source · date réelle · approché. Discret, monospace léger. */
 .wl-source {
   margin: 0;
+  font-size: 0.66rem;
+  line-height: 1.3;
+  color: var(--text-dim, rgba(255, 255, 255, 0.5));
+  font-variant-numeric: tabular-nums;
+}
+
+/* PETITS CORPS — provenance et date du relevé, sous les quatre catégories. Même discrétion
+   que le badge de traçabilité météo : c'est une mention, pas un réglage. */
+.sb-source {
+  margin: 0;
+  padding: 0.45rem 0.55rem 0.15rem;
   font-size: 0.66rem;
   line-height: 1.3;
   color: var(--text-dim, rgba(255, 255, 255, 0.5));
