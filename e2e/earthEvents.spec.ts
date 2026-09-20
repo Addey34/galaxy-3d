@@ -86,6 +86,13 @@ test('a layer that is off asks its service for nothing', async ({ page }) => {
   });
 
   await page.goto('/?body=earth');
+  // Le boot doit être TERMINÉ avant de cliquer. Le déclencheur est dans le document dès le
+  // premier octet : « visible » ne dit donc rien de l'état de l'application. Sous GPU logiciel,
+  // le décodage des textures de la Terre bloque le thread principal par à-coups, et un clic
+  // lancé pendant ce temps dépasse les 15 s d'actionnabilité — mesuré, shard 1 de la CI rouge
+  // aux trois tentatives. Attendre `#loader` caché est la convention de toute la suite, que ce
+  // fichier était seul à ignorer.
+  await expect(page.locator('#loader')).toBeHidden({ timeout: 60_000 });
   await expect(page.locator('#earth-events-trigger')).toBeVisible({
     timeout: 40_000,
   });
@@ -165,6 +172,13 @@ test('a measurement and a report never get the same label', async ({
   );
 
   await page.goto('/?body=earth&date=2011-03-11T12%3A00%3A00Z');
+  // Le boot doit être TERMINÉ avant de cliquer. Le déclencheur est dans le document dès le
+  // premier octet : « visible » ne dit donc rien de l'état de l'application. Sous GPU logiciel,
+  // le décodage des textures de la Terre bloque le thread principal par à-coups, et un clic
+  // lancé pendant ce temps dépasse les 15 s d'actionnabilité — mesuré, shard 1 de la CI rouge
+  // aux trois tentatives. Attendre `#loader` caché est la convention de toute la suite, que ce
+  // fichier était seul à ignorer.
+  await expect(page.locator('#loader')).toBeHidden({ timeout: 60_000 });
   await expect(page.locator('#earth-events-trigger')).toBeVisible({
     timeout: 40_000,
   });
