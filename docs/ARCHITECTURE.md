@@ -815,7 +815,10 @@ dépasse la finesse publiée (le niveau 8 de Trek vaut 364,09 pixels par degré 
 soit 1,20). Une mosaïque est une MESURE sur l'intervalle de sa campagne : elle est servie telle
 quelle quelle que soit la date de la scène, et se classe donc `observed` aussi bien pour une
 scène en 1610 que pour une scène en 2050. Le bandeau n'apparaît que si un carreau est peint : une
-provenance sans image serait un mensonge.
+provenance sans image serait un mensonge. Il se place juste au-dessus du dock du bas d'après la position MESURÉE de
+ce dock, et non d'une hauteur recopiée en CSS : sous 768 px le sélecteur Éduc/Explo s'empile en
+colonne, et, vu en production à 390 px, il recouvrait la ligne de crédit que les conditions de la
+NASA demandent d'afficher.
 
 **Ce que le moteur ne fait pas.** Il ne demande rien au démarrage ni au-dessus de 6 rayons
 apparents (mesuré par comptage de requêtes) ; il annule par `AbortController` tout carreau qui

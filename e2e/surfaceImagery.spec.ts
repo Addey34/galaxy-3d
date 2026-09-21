@@ -182,10 +182,46 @@ test('paints tiles on the Moon, says what it serves, and lowers the floor', asyn
     .analyze();
   expect(wide.violations, JSON.stringify(wide.violations, null, 2)).toEqual([]);
 
-  // Puis à 390 px, où le bandeau passe pleine largeur : c'est là qu'un débordement ou un
-  // contraste insuffisant se voit.
+  expect(errors, `Erreurs page : ${errors.join(' | ')}`).toEqual([]);
+});
+
+/**
+ * UN TÉLÉPHONE OUVERT DIRECTEMENT À 390 PX, et pas une fenêtre de bureau rétrécie après coup.
+ *
+ * La première forme de cette garde redimensionnait la page de 1280 à 390 px une fois le
+ * bandeau affiché : le dock s'y plaçait autrement que sur un vrai téléphone, et la garde
+ * restait verte avec le défaut réintroduit (falsifié). Vu en production à 390 px d'emblée :
+ * le sélecteur Éduc/Explo, empilé en colonne, cachait la ligne de crédit du bandeau.
+ */
+test('the provenance badge fits a phone screen and hides nothing', async ({
+  page,
+}) => {
   await page.setViewportSize({ width: 390, height: 844 });
-  await expect(badge).toBeVisible();
+  await serveTiles(page);
+  await boot(page, '?debug-surface&mode=explo&body=moon');
+  await expect(page.locator('#surface-probe')).toContainText('moon', {
+    timeout: 30_000,
+  });
+  await zoomIn(page);
+  const badge = page.locator('#surface-imagery');
+  await expect(badge).toBeVisible({ timeout: 30_000 });
+
+  // Le bandeau ne doit rien recouvrir, ni rien laisser le recouvrir. axe ne voit pas un
+  // chevauchement ; seule une mesure des deux rectangles le voit.
+  await expect
+    .poll(async () => {
+      const a = await badge.boundingBox();
+      const b = await page.locator('#mode-controls').boundingBox();
+      if (!a || !b) return 'rectangle absent';
+      const overlap =
+        a.x < b.x + b.width &&
+        b.x < a.x + a.width &&
+        a.y < b.y + b.height &&
+        b.y < a.y + a.height;
+      return overlap ? 'chevauchement' : 'libre';
+    })
+    .toBe('libre');
+
   const narrow = await new AxeBuilder({ page })
     .withTags(['wcag2a', 'wcag2aa', 'wcag21aa'])
     .analyze();
@@ -200,8 +236,6 @@ test('paints tiles on the Moon, says what it serves, and lowers the floor', asyn
     ),
     'débordement horizontal à 390 px'
   ).toBe(0);
-
-  expect(errors, `Erreurs page : ${errors.join(' | ')}`).toEqual([]);
 });
 
 test('asks for nothing at all when the setting is off', async ({ page }) => {
