@@ -36,12 +36,11 @@ async function descendToFloor(
   const box = await canvas.boundingBox();
   if (!box) throw new Error('canvas absent');
   await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
-  // Largement plus de crans qu'il n'en faut : c'est le plancher qui arrête la descente,
-  // et l'assertion porte sur la valeur où elle s'arrête.
-  for (let i = 0; i < 60; i++) {
-    await page.mouse.wheel(0, -120);
-    await page.waitForTimeout(30);
-  }
+  // UN seul événement, très ample : OrbitControls met la distance à l'échelle
+  // `0,95 ^ (zoomSpeed × |deltaY| / 100)`, donc ce cran divise la distance par plus de
+  // soixante et la descente bute forcément sur `minDistance`. Une rafale de petits crans
+  // faisait la même chose en cent fois plus de temps, et dépassait le budget d'un test en CI.
+  await page.mouse.wheel(0, -12_000);
   await page.waitForTimeout(1500);
 
   const text = (await probe.textContent()) ?? '';
@@ -75,34 +74,36 @@ async function paintedFraction(
   });
 }
 
+/**
+ * Un corps par test, donc un seul démarrage par test : chacun en coûte de trente à soixante
+ * secondes sur le GPU logiciel de la CI, et deux descentes dans le même test dépassaient son
+ * budget de 120 s (mesuré sur le shard 4, trois tentatives rouges).
+ */
 test('the approach floor follows the resolution of the body it shows', async ({
-  page,
-}) => {
-  // Surface 8k : un texel vaut 1,33 km sur la Lune, donc on descend bas. 1,0737 rayon.
-  const moon = await descendToFloor(page, 'moon');
-  expect(moon.radii).toBeGreaterThan(1.06);
-  expect(moon.radii).toBeLessThan(1.09);
-
-  // Surface 1k : quatre fois moins fine, donc on s'arrête plus haut. 1,589 rayon.
-  // Une constante unique pour tout le catalogue rendrait ici la MÊME valeur que ci-dessus,
-  // et c'est exactement le défaut que ce test tient.
-  const enceladus = await descendToFloor(page, 'enceladus');
-  expect(enceladus.radii).toBeGreaterThan(1.55);
-  expect(enceladus.radii).toBeLessThan(1.63);
-});
-
-test('the body is still drawn at the bottom of the descent', async ({
   page,
 }) => {
   const errors: string[] = [];
   page.on('pageerror', (err) => errors.push(err.message));
 
+  // Surface 8k : un texel vaut 1,33 km sur la Lune, donc on descend bas. 1,0737 rayon.
   const moon = await descendToFloor(page, 'moon');
-  expect(moon.clipped, 'le plan proche passe devant la surface').toBe(false);
+  expect(moon.radii).toBeGreaterThan(1.06);
+  expect(moon.radii).toBeLessThan(1.09);
 
-  // Au plancher, la Lune remplit la vue : une valeur basse signifierait un ciel vide, ce
-  // que donnait le plan proche fautif (mesuré : 0 pixel de Lune à 11,8 km d'altitude).
+  // En bas de la descente, le corps est encore DESSINÉ : le plan proche reste derrière la
+  // surface, et la Lune remplit la vue. Une fraction basse voudrait dire un ciel vide, ce que
+  // donnait le plan proche fautif (mesuré : zéro pixel de Lune à 11,8 km d'altitude).
+  expect(moon.clipped, 'le plan proche passe devant la surface').toBe(false);
   expect(await paintedFraction(page)).toBeGreaterThan(0.8);
 
   expect(errors, `Erreurs page : ${errors.join(' | ')}`).toEqual([]);
+});
+
+test('a coarser texture stops the descent higher', async ({ page }) => {
+  // Surface 1k : quatre fois moins fine que celle de la Lune, donc on s'arrête plus haut,
+  // à 1,589 rayon. Une constante unique pour tout le catalogue rendrait ici la MÊME valeur
+  // que pour la Lune, et c'est exactement le défaut que ce test tient.
+  const enceladus = await descendToFloor(page, 'enceladus');
+  expect(enceladus.radii).toBeGreaterThan(1.55);
+  expect(enceladus.radii).toBeLessThan(1.63);
 });
