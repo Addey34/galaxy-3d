@@ -26,6 +26,8 @@ export const STORAGE_KEYS = {
   units: 'ssv-units',
   /** Trajectoires des objets interstellaires affichées (opt-in). */
   interstellarPaths: 'ssv-interstellar-paths',
+  /** Imagerie de surface streamée à l'approche (activée par défaut, opt-out). */
+  surfaceImagery: 'ssv-surface-imagery',
 } as const;
 
 export type StorageKey = (typeof STORAGE_KEYS)[keyof typeof STORAGE_KEYS];

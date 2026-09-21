@@ -23,4 +23,9 @@ export async function blockExternalNetwork(page: Page): Promise<void> {
   // ces deux routes couvrent le cas où un test les allume sans vouloir de réseau réel.
   await page.route('**earthquake.usgs.gov/**', (route) => route.abort());
   await page.route('**eonet.gsfc.nasa.gov/**', (route) => route.abort());
+  // Tuiles d'imagerie de surface (lot 9, phase 9C) : coupées par défaut comme le reste. Le
+  // spec qui les exerce les SERT lui-même (`e2e/surfaceImagery.spec.ts`), pour que la mesure
+  // ne dépende ni du réseau ni de la disponibilité de Trek. Sans cette ligne, descendre vers
+  // la Lune dans n'importe quel autre spec émettrait de vraies requêtes.
+  await page.route('**trek.nasa.gov/**', (route) => route.abort());
 }

@@ -54,6 +54,7 @@ import { setupOrbitOptions } from './ui/orbitOptions';
 import { setupRenderExposure } from './ui/renderExposure';
 import { setupColorblindToggle } from './ui/colorblindToggle';
 import { setupInterstellarPathsToggle } from './ui/interstellarPathsToggle';
+import { setupSurfacePanel } from './ui/surfacePanel';
 import { setupUnitsToggle } from './ui/unitsToggle';
 import { setupRealtimeClouds } from './ui/realtimeClouds';
 import { setupCloudModelLayer } from './ui/cloudModelLayer';
@@ -323,6 +324,11 @@ if (surfaceScrim) {
     interstellarOverlay.mount();
     interstellarOverlay.setActive(true);
     setupInterstellarPathsToggle(interstellarOverlay);
+
+    // Imagerie de surface streamée (lot 9, phase 9C) : une bascule de réglage, un bandeau de
+    // provenance, et un `import()` dynamique du moteur à l'approche. Rien n'est demandé au
+    // démarrage, ni tant qu'aucun corps n'est approché de près.
+    setupSurfacePanel(api);
 
     // Ancres invisibles des sondes et des interstellaires : ce qui les rend CIBLABLES par la
     // commande de navigation partagée, sans leur donner le moindre pixel (cf.

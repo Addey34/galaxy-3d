@@ -741,13 +741,102 @@ logarithmique, aucune passe de rendu séparée n'est justifié aujourd'hui : le 
 est énorme (5,9e6 sur la Lune) mais c'est le terme `1/n` qui domine, et il est petit parce que
 le `near` suit la surface.
 
-**Ce que la descente ne corrige pas, et qui attend le lot 9C.** La silhouette reste une sphère de
-64 segments, soit 2,09 km d'écart à la vraie surface sur la Lune — invisible tant que le limbe
-n'entre pas dans le champ, ce qui n'arrive pas au ras du sol (moins d'un pixel à ces distances).
-Les couches d'instrument 2D (petits corps, sondes, interstellaires) continuent de peindre leurs
-marqueurs par-dessus le sol, sans zoom sémantique, contrairement aux événements terrestres. Et
-l'approche d'un corps se termine souvent du côté NUIT (mesuré sur Mars : noir dès 3 100 km
-d'altitude, donc déjà à l'ancien plancher), parce que la direction d'approche vise le terminateur.
+**Ce que la descente ne corrige pas.** La silhouette reste une sphère de 64 segments, soit
+2,09 km d'écart à la vraie surface sur la Lune — invisible tant que le limbe n'entre pas dans le
+champ, ce qui n'arrive pas au ras du sol (moins d'un pixel à ces distances). Les couches
+d'instrument 2D (petits corps, sondes, interstellaires) continuent de peindre leurs marqueurs
+par-dessus le sol, sans zoom sémantique, contrairement aux événements terrestres. Et l'approche
+d'un corps se termine souvent du côté NUIT (mesuré sur Mars : noir dès 3 100 km d'altitude, donc
+déjà à l'ancien plancher), parce que la direction d'approche vise le terminateur. Aucun de ces
+trois points n'a changé au lot 9C (2026-09-21), qui n'a touché ni la géométrie de la sphère, ni
+les couches d'instrument, ni la direction d'approche ; le § suivant dit ce qu'il a changé.
+
+## Imagerie de surface streamée — une mosaïque publiée, posée sur la sphère
+
+Depuis le 2026-09-21 (lot 9, phase 9C), un corps peut déclarer un JEU DE TUILES : une mosaïque
+publiée, servie à la demande par un service WMTS, posée sur la sphère existante à l'approche.
+Aucune hauteur n'est ajoutée — le relief est la phase suivante, et le plan du lot interdit
+d'employer une image de relief comme géométrie.
+
+**Tout vient d'une fiche, et rien d'un nom de corps.** `src/registry/products/tilesets/*.json`
+(type `tileset`) porte le gabarit, le jeu de matrices, les niveaux, la finesse publiée, la
+campagne d'acquisition, la licence et les fournisseurs STAC. `config/surfaceTilesets.ts` est la
+façade d'exécution, sur le modèle de `config/factSources.ts`. Le moteur
+(`components/surface/PlanetarySurfaceEngine.ts`) ne connaît aucun corps : ajouter Mars doit être
+une fiche de plus, et c'est ce que la phase 9E vérifiera.
+
+**Un carreau est un enfant du groupe qui tourne** (`CelestialObject.attachSpinningChild`), à la
+même paramétrisation que la couche `surface` : `phi = longitude + π`, `theta = 90° − latitude`,
+c'est-à-dire celle de `frames.geographicToLocalDirection`, mesurée au lot 8 contre quatre
+épicentres publiés. Une tuile WMTS a sa ligne 0 au NORD et sa colonne 0 à −180° : ces deux
+conventions se recouvrent sans conversion. Aucun décalage radial n'est appliqué — `polygonOffset`
+décale la profondeur écrite, jamais la géométrie, parce qu'un décalage radial serait une altitude
+inventée.
+
+**Le niveau servi est celui que l'écran mérite, borné par un budget déclaré par profil de
+qualité.** On vise un pixel d'écran par pixel de mosaïque (`core/tilePyramid.ts`), puis on
+redescend d'un niveau tant que la couverture dépasse le budget — mais seulement tant que
+descendre RÉDUIT vraiment le nombre de carreaux. Une fenêtre de couverture vaut (2n+1)² et n vaut
+au minimum 2, donc **25 carreaux est un plancher, jamais un réglage** : un budget inférieur ne
+permet aucun niveau. Mesuré à l'écran le 2026-09-21 avec un budget de 24 à 390 px de large : la
+Lune était servie à 5,3 km/px au lieu de 83 m/px, soit 540 pixels d'écran par texel, sans que
+rien ne le dise.
+
+**Jamais plus grossier que la texture livrée.** Loin du corps, le budget fait retomber le niveau
+sous la finesse de la texture du catalogue ; peindre ces carreaux DÉGRADE la vue. Mesuré à
+1 541 km d'altitude sur la Lune : niveau 3 servi, 2,67 km/px, contre 1,33 km/px pour la texture 8k.
+Le moteur refuse donc de peindre tant que `pyramidWidthPx(niveau) ≤ largeur de la texture servie`
+(`CelestialObject.shippedSurfaceWidthPx`). Sur la Lune, c'est ce qui fait que rien n'est peint à
+1 541 km ni à 432 km d'altitude, alors que le niveau 6 l'est à 142 km : le seuil est celui où le
+budget permet enfin un niveau plus fin que la texture livrée, et il est mesuré, pas choisi.
+
+**Le plancher d'approche suit, une fois un carreau PEINT.** Le § précédent dérive ce plancher de
+la finesse de l'image affichée ; l'imagerie streamée devient cette image. La finesse déclarée au
+corps est celle du niveau MAXIMAL de la fiche — pas celle du niveau courant — et elle est
+verrouillée dès le premier carreau posé, jusqu'au détachement. Les deux règles ont été payées :
+
+- prendre le niveau COURANT crée une boucle de rétroaction. Les carreaux arrivent, le plancher
+  descend, la caméra descend, le niveau monte, les carreaux du niveau précédent sont jetés, la
+  finesse retombe à zéro, le plancher remonte et repousse la caméra. Mesuré : altitude alternant
+  entre 128,0 et 32,0 km à chaque image, et 47 tuiles redemandées par seconde, indéfiniment ;
+- l'ouvrir dès l'attachement, sur la foi de la fiche, laisserait un visiteur hors ligne descendre
+  seize fois plus bas que ce que son écran peut montrer : à 8 km d'altitude, la texture 8k livrée
+  vaut 1 024 pixels d'écran par texel, c'est-à-dire du gris uniforme (relevé de la phase 9B).
+
+Sur la Lune, le plancher passe donc de 128,0 km (texture 8k) à **8,0 km** (niveau 8, 83 m/px), et
+`?debug-surface` lit **8,00 px/texel** en bas, exactement comme avant : ce n'est pas la netteté
+apparente qui change, c'est l'altitude à laquelle on l'obtient. À altitude égale, la différence
+est entière — mesuré à 142 km sur la Lune, 333 m/px contre 1,33 km/px.
+
+**Le bandeau dit ce qui est servi, pas ce qui est espéré.** `ui/surfacePanel.ts` affiche la
+mosaïque, la résolution du niveau réellement peint, la campagne d'acquisition, la catégorie
+temporelle tirée de `core/temporal.ts`, et le facteur de sur-échantillonnage quand le niveau
+dépasse la finesse publiée (le niveau 8 de Trek vaut 364,09 pixels par degré contre 303 publiés,
+soit 1,20). Une mosaïque est une MESURE sur l'intervalle de sa campagne : elle est servie telle
+quelle quelle que soit la date de la scène, et se classe donc `observed` aussi bien pour une
+scène en 1610 que pour une scène en 2050. Le bandeau n'apparaît que si un carreau est peint : une
+provenance sans image serait un mensonge.
+
+**Ce que le moteur ne fait pas.** Il ne demande rien au démarrage ni au-dessus de 6 rayons
+apparents (mesuré par comptage de requêtes) ; il annule par `AbortController` tout carreau qui
+sort du champ ou dont la cible change ; il retient un échec plutôt que de redemander la même
+tuile à chaque image ; et il ne remplace jamais la surface du corps, il la recouvre localement.
+Le réglage « imagerie de surface » est actif par défaut et, éteint, n'émet aucune requête.
+
+**Un hôte de tuiles se déclare en quatre endroits**, et `img-src` en fait partie — c'est le mur
+exact sur lequel la légende GIBS s'est cassée au lot 8b : `firebase.json` (`connect-src` ET
+`img-src`), `LIVE_DATA_SERVICES`, une fiche `tile-source` dans `src/registry/providers/`, et
+`public/privacy.html` dans les deux langues. Le service worker sert ces tuiles en CACHE D'ABORD,
+contrairement aux données temps réel : une adresse de tuile désigne un niveau, une ligne et une
+colonne d'une version PUBLIÉE et figée de la mosaïque, dont les octets ne changent jamais.
+
+**Le piège qui coûte le plus cher, et il est mesuré** : une tuile hors bornes fait répondre Trek
+404 SANS en-tête `Access-Control-Allow-Origin`. Le navigateur rapporte alors ce qui ressemble mot
+pour mot à un refus CORS, pour un simple calcul de ligne faux. `core/tileUrl.ts` refuse donc avant
+d'émettre, en nommant la borne franchie. Second piège, silencieux celui-là : Three.js IGNORE
+`Texture.flipY` pour un `ImageBitmap`, l'orientation doit être décidée à la création
+(`imageOrientation: 'flipY'`) — sans quoi le carreau affiche le mauvais hémisphère sans aucune
+erreur.
 
 ## Halo lumineux — qui brille, et combien
 

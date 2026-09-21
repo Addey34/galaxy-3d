@@ -1,0 +1,60 @@
+{
+  "$schema": "../../schema/product.schema.json",
+  "id": "moon-lroc-wac-global-303ppd-v02",
+  "type": "tileset",
+  "body": "moon",
+  "title": "LRO WAC Mosaic v2 (LRO_WAC_Mosaic_Global_303ppd_v02)",
+  "providerId": "nasa-trek",
+  "mission": "Lunar Reconnaissance Orbiter",
+  "instrument": "Wide Angle Camera",
+  "service": {
+    "template": "https://trek.nasa.gov/tiles/Moon/EQ/LRO_WAC_Mosaic_Global_303ppd_v02/1.0.0//{Style}/{TileMatrixSet}/{TileMatrix}/{TileRow}/{TileCol}.jpg",
+    "style": "default",
+    "tileMatrixSet": "default028mm",
+    "format": "image/jpeg",
+    "matrix": {
+      "columnsAtLevelZero": 2,
+      "rowsAtLevelZero": 1,
+      "tileSizePx": 256
+    },
+    "minLevel": 2,
+    "maxLevel": 8
+  },
+  "publishedPixelsPerDegree": 303,
+  "acquired": {
+    "interval": [["2009-11-01T00:00:00Z", "2011-02-28T00:00:00Z"]]
+  },
+  "license": "other",
+  "rights": "public-domain",
+  "links": [
+    {
+      "rel": "license",
+      "href": "https://www.nasa.gov/nasa-brand-center/images-and-media/"
+    },
+    {
+      "rel": "describedby",
+      "href": "https://trek.nasa.gov/tiles/Moon/EQ/LRO_WAC_Mosaic_Global_303ppd_v02/1.0.0/WMTSCapabilities.xml"
+    },
+    {
+      "rel": "via",
+      "href": "https://astrogeology.usgs.gov/search/map/moon_lro_lroc_wac_global_morphology_mosaic_100m"
+    }
+  ],
+  "providers": [
+    {
+      "name": "NASA Solar System Treks",
+      "roles": ["host"],
+      "url": "https://trek.nasa.gov/moon/"
+    },
+    {
+      "name": "LROC Team, Arizona State University",
+      "roles": ["producer"]
+    },
+    {
+      "name": "USGS Astrogeology Science Center",
+      "roles": ["processor"],
+      "url": "https://astrogeology.usgs.gov/search/map/moon_lro_lroc_wac_global_morphology_mosaic_100m"
+    }
+  ],
+  "verified": "2026-09-21"
+}

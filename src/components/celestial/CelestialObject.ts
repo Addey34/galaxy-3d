@@ -11,7 +11,10 @@
  * Éducatif ↔ Explo (taille de base vs vraie taille physique via radiusKm).
  */
 import * as THREE from 'three';
-import { buildLayers } from '@/components/celestial/celestialLayers';
+import {
+  buildLayers,
+  createSurfaceLayerMaterial,
+} from '@/components/celestial/celestialLayers';
 import { applyTexture } from '@/components/celestial/celestialTextures';
 import { KM_PER_AU, SQRT_K } from '@/core/ScaleService';
 import { fitScale, meshVolume, volumeEquivalentRadius } from '@/core/modelFit';
@@ -45,7 +48,10 @@ import {
 } from '@/config/engine';
 import { approachFloorRadiusFactor } from '@/core/surfaceApproach';
 import { modelPath, ringTexturePath } from '@/config/catalog';
-import { geographicToLocalDirection } from '@/core/frames';
+import {
+  geographicToLocalDirection,
+  localDirectionToGeographic,
+} from '@/core/frames';
 import {
   chooseModelQuality,
   lightestModelQuality,
@@ -90,6 +96,14 @@ export default class CelestialObject {
   readonly group: THREE.Group;
   // _tiltGroup : porte l'obliquité (fixe dans l'espace car group ne fait que translater).
   // _meshGroup : enfant de _tiltGroup, tourne sur l'axe penché (rotation diurne).
+  /**
+   * Matériaux POSÉS SUR la surface par un moteur extérieur (carreaux d'imagerie streamée).
+   * Ils ne sont pas des couches du corps — leur cycle de vie appartient au moteur — mais ils
+   * doivent recevoir la même irradiance et la même occultation à chaque frame.
+   */
+  private readonly _overlayMaterials = new Set<THREE.Material>();
+  /** Finesse de l'imagerie streamée qui recouvre la surface, en px sur 360° (0 = aucune). */
+  private _streamedImageryWidthPx = 0;
   private readonly _tiltGroup: THREE.Group;
   private readonly _meshGroup: THREE.Group;
   private readonly layers: Map<string, THREE.Mesh>;
@@ -514,6 +528,42 @@ export default class CelestialObject {
    */
   attachSpinningChild(object: THREE.Object3D): void {
     this._meshGroup.add(object);
+  }
+
+  /**
+   * Matériau d'une couche POSÉE SUR la surface (carreau d'imagerie streamée, lot 9 phase 9C),
+   * construit avec exactement les paramètres de la surface de ce corps.
+   *
+   * Il est enregistré pour recevoir, comme les couches du corps, l'irradiance et l'occultation
+   * de chaque frame : sans cela un carreau resterait à pleine lumière pendant que la sphère
+   * qu'il recouvre s'assombrit, et la différence se verrait d'abord à l'éclipse.
+   */
+  createSurfaceOverlayMaterial(): THREE.Material {
+    const material = createSurfaceLayerMaterial(this.config, this.name);
+    this._overlayMaterials.add(material);
+    return material;
+  }
+
+  /** Oublie un matériau de recouvrement (l'appelant reste responsable de son `dispose`). */
+  releaseSurfaceOverlayMaterial(material: THREE.Material): void {
+    this._overlayMaterials.delete(material);
+  }
+
+  /**
+   * RÉCIPROQUE de `surfacePointToWorld` : la latitude et la longitude du point de surface que
+   * vise un point du monde (typiquement la caméra), sur la sphère telle qu'elle est TOURNÉE à
+   * l'instant de la scène.
+   *
+   * Passe par `_meshGroup.worldToLocal`, donc par la chaîne exacte qui oriente la surface. Un
+   * second chemin — reconstruire la phase depuis l'axe et la date — redonnerait une longitude
+   * indépendante de celle qui est RENDUE, et les carreaux se poseraient à côté des continents.
+   */
+  worldPointToGeographic(worldPoint: THREE.Vector3): {
+    latitudeDeg: number;
+    longitudeDeg: number;
+  } {
+    const local = this._meshGroup.worldToLocal(worldPoint.clone());
+    return localDirectionToGeographic(local);
   }
 
   /** Rayon local des couches (espace du _meshGroup), avant scaleFactor de scène. */
@@ -1029,6 +1079,9 @@ export default class CelestialObject {
         setMaterialLightAttenuation(material, bounded)
       );
     });
+    this._overlayMaterials.forEach((material) =>
+      setMaterialLightAttenuation(material, bounded)
+    );
   }
 
   /**
@@ -1163,10 +1216,42 @@ export default class CelestialObject {
    * déclaration aurait laissé un téléphone agrandir quatre fois au-delà de son image
    * (mesuré le 2026-09-20 : 33,8 pixels par texel à 390 px de large avant cette correction).
    */
-  getApproachFloorFactor(): number | undefined {
+  /**
+   * Finesse de la texture LIVRÉE de ce corps, en pixels sur 360° de longitude, telle qu'elle
+   * est réellement SERVIE au plus près (le profil mobile plafonne à 2k). 0 s'il n'affiche pas
+   * de surface texturée.
+   *
+   * Le moteur d'imagerie streamée s'en sert pour ne JAMAIS recouvrir la surface d'un niveau
+   * plus grossier qu'elle : mesuré le 2026-09-21 à 1 541 km d'altitude, le niveau choisi
+   * valait 2,67 km/px contre 1,33 pour la texture 8k, et la vue était donc DÉGRADÉE par des
+   * carreaux censés l'améliorer.
+   */
+  shippedSurfaceWidthPx(): number {
     const served = this.textureSystem.resolveSurfaceQuality(this.name, 0);
-    const widthPx = served ? TEXTURE_QUALITY_PIXELS[served] : undefined;
-    return widthPx ? approachFloorRadiusFactor(widthPx) : undefined;
+    return (served ? TEXTURE_QUALITY_PIXELS[served] : 0) ?? 0;
+  }
+
+  getApproachFloorFactor(): number | undefined {
+    const textureWidth = this.shippedSurfaceWidthPx();
+    // L'imagerie streamée, quand elle peint, EST la finesse servie : au niveau 8 la mosaïque
+    // lunaire vaut 131 072 px sur 360°, soit seize fois une texture 8k, et le plancher tombe
+    // de 128 à environ 8 km par la même formule, sans la changer (lot 9, phase 9C).
+    const widthPx = Math.max(textureWidth, this._streamedImageryWidthPx);
+    return widthPx > 0 ? approachFloorRadiusFactor(widthPx) : undefined;
+  }
+
+  /**
+   * Déclare la finesse de l'imagerie STREAMÉE qui recouvre effectivement la surface, en pixels
+   * sur 360° de longitude. 0 remet le corps sur sa seule texture livrée.
+   *
+   * Renvoie `true` quand la valeur a changé : l'appelant sait alors qu'il doit demander à
+   * `CameraSystem` de recalculer ses bornes d'approche, qui ne sont posées qu'à la sélection.
+   */
+  setStreamedImageryWidth(widthPx: number): boolean {
+    const next = Number.isFinite(widthPx) ? Math.max(0, widthPx) : 0;
+    if (next === this._streamedImageryWidthPx) return false;
+    this._streamedImageryWidthPx = next;
+    return true;
   }
 
   getFrameRadius(mode: 'educ' | 'explo'): number {

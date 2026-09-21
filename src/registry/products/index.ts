@@ -18,6 +18,7 @@
  */
 import type {
   EphemerisCollectionProduct,
+  ImageryTilesetProduct,
   ReviewedOnlyTextureProduct,
   ShippedTextureProduct,
 } from '../schema/product';
@@ -36,6 +37,15 @@ export const TEXTURE_PRODUCTS: readonly TextureProduct[] = Object.values(
 
 export const EPHEMERIS_COLLECTION =
   ephemerisCollection as EphemerisCollectionProduct;
+
+/**
+ * Les jeux de tuiles d'imagerie streamée (lot 9, phase 9C). Lus ICI par les tests et le build
+ * (`/sources`) ; l'APPLICATION les lit par `config/surfaceTilesets.ts`, qui importe les mêmes
+ * fichiers depuis le morceau chargé à l'approche — ce module-ci n'entre jamais dans un bundle.
+ */
+export const TILESET_PRODUCTS: readonly ImageryTilesetProduct[] = Object.values(
+  import.meta.glob('./tilesets/*.json', { eager: true, import: 'default' })
+) as ImageryTilesetProduct[];
 
 /**
  * Le libellé de licence que `/sources` affiche (`seo/sourcesPage.ts`, `LICENSE_LABELS`). Il vient

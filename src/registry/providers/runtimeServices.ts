@@ -1,6 +1,9 @@
 /**
- * FOURNISSEURS D'ÉVÉNEMENTS TERRESTRES — fiches lues AU BUILD et par les tests, jamais par
- * l'application.
+ * FOURNISSEURS DE SERVICES CONTACTÉS À L'EXÉCUTION — fiches lues AU BUILD et par les tests,
+ * jamais par l'application. Deux familles à ce jour : les événements terrestres (lot 8) et les
+ * tuiles d'imagerie de surface (lot 9). Le fichier s'appelait `events.ts` tant qu'il n'y avait
+ * qu'une famille ; il a été renommé quand la seconde est arrivée, plutôt que d'y ranger un
+ * fournisseur de tuiles sous un nom qui ment.
  *
  * Pourquoi ce module existe à part de `./index.ts`, et ce n'est pas une préférence de rangement.
  * L'application importe `index.ts` (par la façade `config/factSources.ts`), donc tout ce qu'il
@@ -12,10 +15,14 @@
  *
  * `providers.test.ts` refuse qu'un module de `src/` hors `seo/` importe ce fichier.
  */
-import type { EventSourceProvider } from '../schema/provider';
+import type {
+  EventSourceProvider,
+  TileSourceProvider,
+} from '../schema/provider';
 
 import usgsEarthquakeCatalog from './usgs-earthquake-catalog.json';
 import nasaEonet from './nasa-eonet.json';
+import nasaTrek from './nasa-trek.json';
 
 /**
  * Même raison que les deux fonctions d'assertion d'`index.ts` : un import JSON élargit
@@ -41,4 +48,20 @@ const asEventSource = <
 export const EVENT_PROVIDERS = {
   'usgs-earthquake-catalog': asEventSource(usgsEarthquakeCatalog),
   'nasa-eonet': asEventSource(nasaEonet),
+};
+
+/** Même règle pour les services de TUILES. Leur hôte doit aussi figurer dans `img-src`. */
+const asTileSource = <
+  T extends Omit<TileSourceProvider, 'kind' | 'role' | 'rights'> & {
+    kind: string;
+    role: string;
+    rights?: string;
+  },
+>(
+  record: T
+): T & Pick<TileSourceProvider, 'kind' | 'role' | 'rights'> =>
+  record as T & Pick<TileSourceProvider, 'kind' | 'role' | 'rights'>;
+
+export const TILE_PROVIDERS = {
+  'nasa-trek': asTileSource(nasaTrek),
 };

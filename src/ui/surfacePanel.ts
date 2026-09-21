@@ -1,0 +1,272 @@
+/**
+ * IMAGERIE DE SURFACE : ce que l'utilisateur règle, et ce que le bandeau lui dit
+ * (lot 9, phase 9C).
+ *
+ * Ce module vit dans le bundle de démarrage et pèse le strict nécessaire : une bascule de
+ * réglage, un bandeau, et un `import()` DYNAMIQUE du moteur. Le moteur, les fiches de jeux de
+ * tuiles et la géométrie des carreaux partent donc dans leur propre morceau, chargé à
+ * l'approche d'un corps et jamais au démarrage — mesuré par comptage de requêtes en e2e.
+ *
+ * Le bandeau DIT ce qui est servi, pas ce qui est espéré : la résolution du niveau réellement
+ * peint, le fait que ce niveau sur-échantillonne la mosaïque publiée quand c'est le cas, la
+ * campagne qui a produit les images et la catégorie temporelle que `core/temporal.ts` en tire.
+ * Une mosaïque ne décrit pas la date de la scène mais la surface : elle est servie telle quelle
+ * quelle que soit la date, et c'est cela qu'il faut lire, pas un écart à combler.
+ */
+import type { PublicAPI } from '@/SolarSystemApp';
+import { CELESTIAL_CONFIG } from '@/config/bodies';
+import { flattenBodies } from '@/config/catalog';
+import { STORAGE_KEYS } from '@/config/storageKeys';
+import { BOOT_QUALITY_PROFILE } from '@/config/engine';
+import { classifyTemporal, temporalCategoryLabelKey } from '@/core/temporal';
+import { intlLocale, onLocaleChange, t } from '@/i18n';
+import Logger from '@/utils/Logger';
+import type {
+  PlanetarySurfaceEngine,
+  SurfaceImageryState,
+} from '@/components/surface/PlanetarySurfaceEngine';
+
+/** Rayons apparents sous lesquels on daigne CHARGER le moteur. Au-delà : rien n'est demandé. */
+const ENGINE_LOAD_RADII = 8;
+
+function readStored(): boolean {
+  try {
+    // Par défaut ACTIVÉE : c'est la fonctionnalité. Éteinte, elle ne demande rien du tout.
+    return localStorage.getItem(STORAGE_KEYS.surfaceImagery) !== '0';
+  } catch {
+    return true;
+  }
+}
+
+function writeStored(enabled: boolean): void {
+  try {
+    localStorage.setItem(STORAGE_KEYS.surfaceImagery, enabled ? '1' : '0');
+  } catch {
+    // Stockage plein/refusé (mode privé) : le réglage reste actif pour la session.
+  }
+}
+
+export function setupSurfacePanel(api: PublicAPI): () => void {
+  const radiiKm = new Map<string, number>();
+  for (const [name, cfg] of flattenBodies(CELESTIAL_CONFIG)) {
+    const km = cfg.realData?.radiusKm;
+    if (km) radiiKm.set(name, km);
+  }
+
+  // ── Réglage ────────────────────────────────────────────────────────────────────────────
+  const wrapper = document.createElement('label');
+  wrapper.id = 'surface-imagery-toggle-wrapper';
+  wrapper.className = 'settings-switch';
+  const checkbox = document.createElement('input');
+  checkbox.id = 'surface-imagery-toggle';
+  checkbox.type = 'checkbox';
+  checkbox.className = 'oo-checkbox settings-checkbox';
+  const switchLabel = document.createElement('span');
+  switchLabel.className = 'settings-switch-label';
+  wrapper.append(checkbox, switchLabel);
+  (
+    document.querySelector('#orbit-options .surface-body') ?? document.body
+  ).append(wrapper);
+
+  // ── Bandeau de provenance ──────────────────────────────────────────────────────────────
+  const badge = document.createElement('div');
+  badge.id = 'surface-imagery';
+  badge.className = 'surface-imagery-badge';
+  badge.hidden = true;
+  const headline = document.createElement('span');
+  headline.className = 'si-headline';
+  const detail = document.createElement('span');
+  detail.className = 'si-detail';
+  const credit = document.createElement('span');
+  credit.className = 'si-credit';
+  badge.append(headline, detail, credit);
+  document.body.append(badge);
+
+  let enabled = readStored();
+  checkbox.checked = enabled;
+
+  let engine: PlanetarySurfaceEngine | null = null;
+  let loading = false;
+  let engineUnavailable = false;
+  let state: SurfaceImageryState | null = null;
+
+  const renderLabels = (): void => {
+    switchLabel.textContent = t('settings.surfaceImagery');
+    checkbox.setAttribute('aria-label', t('settings.surfaceImagery'));
+    renderBadge();
+  };
+
+  function renderBadge(): void {
+    if (!state || state.painted === 0) {
+      badge.hidden = true;
+      badge.removeAttribute('data-level');
+      badge.removeAttribute('data-painted');
+      badge.removeAttribute('data-width');
+      return;
+    }
+    const stamp = classifyTemporal(
+      { kind: 'measurement', validTime: state.acquired },
+      api.orbitalMechanics.simulationDate,
+      new Date()
+    );
+    headline.textContent = t('surface.imagery.headline', {
+      title: state.title,
+      resolution: formatResolution(state.groundResolutionM),
+    });
+    const parts = [
+      t('surface.imagery.acquired', {
+        from: formatMonth(state.acquired.from),
+        to: formatMonth(state.acquired.to),
+      }),
+      t(temporalCategoryLabelKey(stamp.category)),
+    ];
+    if (state.oversampling > 1) {
+      parts.push(
+        t('surface.imagery.oversampled', {
+          factor: decimals(state.oversampling, 2),
+          published: String(state.publishedPixelsPerDegree),
+        })
+      );
+    }
+    detail.textContent = parts.join(' · ');
+    credit.textContent = state.credit;
+    badge.dataset['level'] = String(state.level);
+    badge.dataset['painted'] = String(state.painted);
+    // Lu par `?debug-surface` et par l'e2e : la finesse SERVIE, en pixels sur 360°.
+    badge.dataset['width'] = String(state.widthPx);
+    badge.hidden = false;
+  }
+
+  const onState = (next: SurfaceImageryState | null): void => {
+    state = next;
+    renderBadge();
+  };
+
+  const disable = (): void => {
+    engine?.detach();
+    state = null;
+    renderBadge();
+  };
+
+  const tick = (): void => {
+    const name = api.cameraSystem.targetName;
+    const distance = api.cameraSystem.getDistanceToTargetSceneUnits();
+    if (!enabled || !name || distance === null) {
+      if (engine?.attachedBody) disable();
+      return;
+    }
+    const body = api.sceneSystem.getBody(name);
+    const radiusKm = radiiKm.get(name);
+    if (!body || !radiusKm) {
+      if (engine?.attachedBody) disable();
+      return;
+    }
+    const renderedRadius =
+      (body.group.userData['radius'] as number | undefined) ?? 0;
+    if (renderedRadius <= 0) return;
+    // Rien n'est chargé, et surtout rien n'est DEMANDÉ, tant que le corps n'occupe pas
+    // l'écran : survoler Jupiter de loin ne doit coûter aucune requête.
+    if (distance / renderedRadius > ENGINE_LOAD_RADII) {
+      if (engine?.attachedBody) disable();
+      return;
+    }
+
+    if (!engine) {
+      // Un seul essai de chargement : ce bloc tourne à chaque image, et un échec (hors ligne
+      // au premier passage, morceau absent) aurait sinon relancé un `import()` soixante fois
+      // par seconde. Sans le moteur, l'application se contente de sa texture livrée.
+      if (loading || engineUnavailable) return;
+      loading = true;
+      void loadEngine()
+        .catch((error: unknown) => {
+          engineUnavailable = true;
+          Logger.warn(
+            `[Surface] moteur d'imagerie indisponible : ${String(error)}`
+          );
+        })
+        .finally(() => {
+          loading = false;
+        });
+      return;
+    }
+
+    const tileset = tilesets?.get(name);
+    if (!tileset) {
+      if (engine.attachedBody) disable();
+      return;
+    }
+    engine.attach(body, tileset, radiusKm);
+    engine.update(
+      api.cameraSystem.camera,
+      api.sceneSystem.renderer.domElement.clientHeight
+    );
+  };
+
+  let tilesets: ReadonlyMap<
+    string,
+    import('@/config/surfaceTilesets').SurfaceTileset
+  > | null = null;
+
+  async function loadEngine(): Promise<void> {
+    const [{ PlanetarySurfaceEngine }, { SURFACE_TILESETS }] =
+      await Promise.all([
+        import('@/components/surface/PlanetarySurfaceEngine'),
+        import('@/config/surfaceTilesets'),
+      ]);
+    tilesets = SURFACE_TILESETS;
+    engine = new PlanetarySurfaceEngine({
+      budget: BOOT_QUALITY_PROFILE.surfaceTiles,
+      onState,
+      // La finesse servie a changé : `CameraSystem` ne repose ses bornes d'approche qu'à la
+      // sélection, il faut donc le lui dire, sinon la descente reste plafonnée par la
+      // texture livrée.
+      onImageryWidthChanged: () => api.cameraSystem.refreshApproachBounds(),
+    });
+  }
+
+  checkbox.addEventListener('change', () => {
+    enabled = checkbox.checked;
+    writeStored(enabled);
+    if (!enabled) disable();
+  });
+
+  renderLabels();
+  onLocaleChange(renderLabels);
+  const unsubscribe = api.animationSystem.onFrame(tick);
+
+  return () => {
+    unsubscribe();
+    engine?.dispose();
+    engine = null;
+    badge.remove();
+    wrapper.remove();
+  };
+}
+
+/**
+ * Un nombre décimal dans la langue de la page. Le séparateur n'est pas le même des deux côtés :
+ * `toFixed` écrivait « 1.20 fois plus grande » en français, où la virgule est de rigueur.
+ */
+function decimals(value: number, digits: number): string {
+  return new Intl.NumberFormat(intlLocale(), {
+    minimumFractionDigits: digits,
+    maximumFractionDigits: digits,
+  }).format(value);
+}
+
+/** Mois et année de l'intervalle décrit : la campagne, pas un jour précis qu'elle n'a pas. */
+function formatMonth(ms: number): string {
+  return new Date(ms).toLocaleDateString(intlLocale(), {
+    year: 'numeric',
+    month: 'long',
+    timeZone: 'UTC',
+  });
+}
+
+/** Mètres tant que c'est lisible, kilomètres au-delà : 83 m/px et 1,3 km/px se lisent mal ensemble. */
+function formatResolution(metres: number): string {
+  if (!Number.isFinite(metres)) return 'n/a';
+  return metres >= 1000
+    ? `${decimals(metres / 1000, metres >= 10000 ? 0 : 1)} km`
+    : `${Math.round(metres)} m`;
+}

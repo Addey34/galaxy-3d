@@ -123,22 +123,19 @@ const localized = z
   .strict();
 
 /**
- * Service d'ÉVÉNEMENTS TERRESTRES interrogé depuis le navigateur du visiteur (séismes USGS,
- * événements naturels NASA EONET). Troisième rôle du registre, et le premier dont la fiche
- * décrit un service CONTACTÉ À L'EXÉCUTION plutôt qu'une table consultée à la main : d'où
- * `host`, qui doit apparaître dans le `connect-src` de la CSP, et `terms`, que `/sources`
- * publie.
+ * Ce que partagent les fiches des services CONTACTÉS À L'EXÉCUTION, depuis le navigateur du
+ * visiteur : d'où `host`, qui doit apparaître dans la CSP de `firebase.json`, et `terms`, que
+ * `/sources` publie. Ce bloc n'a été extrait qu'au DEUXIÈME cas réel (les tuiles de surface du
+ * lot 9, après les deux fournisseurs d'événements du lot 8) : c'est la règle du dépôt, on ne
+ * généralise pas sur un seul exemple.
  *
  * `license` suit la même règle que `products/` (STAC 1.1.0) : identifiant SPDX, ou `other`
  * accompagné d'un lien de licence et d'un `rights` qui dit pourquoi. Aucune donnée d'agence
  * n'est supposée libre : la date de `accessed` est celle où les conditions ont été LUES.
  */
-const eventSourceProvider = z.object({
+const runtimeService = {
   ...identity,
-  role: z.literal('event-source'),
-  /** `ProductKind` de `core/temporal.ts` : une mesure ou un événement rapporté, jamais les deux. */
-  kind: z.enum(['measurement', 'report']),
-  /** Hôte autorisé en `connect-src` par `firebase.json`, sans schéma ni chemin. */
+  /** Hôte autorisé par la CSP de `firebase.json`, sans schéma ni chemin. */
   host: z.string().regex(/^[a-z0-9.-]+$/, 'hôte sans schéma ni chemin'),
   license: z
     .string()
@@ -163,18 +160,50 @@ const eventSourceProvider = z.object({
   /** Ce que Galaxy en fait, et sous quelles conditions : publié tel quel par `/sources`. */
   use: localized,
   terms: localized,
+};
+
+/**
+ * Service d'ÉVÉNEMENTS TERRESTRES interrogé depuis le navigateur du visiteur (séismes USGS,
+ * événements naturels NASA EONET). Troisième rôle du registre, et le premier dont la fiche
+ * décrit un service contacté à l'exécution.
+ */
+const eventSourceProvider = z.object({
+  ...runtimeService,
+  role: z.literal('event-source'),
+  /** `ProductKind` de `core/temporal.ts` : une mesure ou un événement rapporté, jamais les deux. */
+  kind: z.enum(['measurement', 'report']),
+});
+
+/**
+ * Service de TUILES d'imagerie planétaire streamées à l'approche d'une surface (NASA Trek).
+ * Quatrième rôle. Sa particularité vis-à-vis d'`event-source` : ses réponses sont des IMAGES,
+ * donc son hôte doit figurer à la fois dans `connect-src` ET dans `img-src` — c'est le mur
+ * exact sur lequel la légende GIBS s'est cassée au lot 8b, alors que sa couleur était déjà
+ * autorisée en `connect-src`.
+ *
+ * `terms` dit aussi ce qui N'A PAS été trouvé : Trek ne publie pas de conditions propres à son
+ * service de tuiles, et une dépendance non contractualisée se déclare comme telle plutôt que
+ * d'être supposée libre parce que le contenu l'est.
+ */
+const tileSourceProvider = z.object({
+  ...runtimeService,
+  role: z.literal('tile-source'),
+  /** `ProductKind` de `core/temporal.ts` : une mosaïque d'imagerie est une mesure. */
+  kind: z.literal('measurement'),
 });
 
 export const providerSchema = z.discriminatedUnion('role', [
   factSourceProvider,
   positionSourceProvider,
   eventSourceProvider,
+  tileSourceProvider,
 ]);
 
 export type ProviderRecord = z.infer<typeof providerSchema>;
 export type FactSourceProvider = z.infer<typeof factSourceProvider>;
 export type PositionSourceProvider = z.infer<typeof positionSourceProvider>;
 export type EventSourceProvider = z.infer<typeof eventSourceProvider>;
+export type TileSourceProvider = z.infer<typeof tileSourceProvider>;
 
 /**
  * Le JSON Schema COMMITÉ, généré depuis le schéma Zod ci-dessus. Une seule fonction, appelée par

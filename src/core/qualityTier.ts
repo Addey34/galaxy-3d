@@ -59,6 +59,22 @@ export interface QualityProfile {
   maxTextureQuality: '2k' | '4k' | '8k';
   /** Niveau de modèle de forme maximal (cf. `core/modelLod.ts`). */
   maxModelQuality: '1k' | '2k' | '4k';
+  /**
+   * Budget de l'imagerie de surface streamée (lot 9, phase 9C) : carreaux affichés au plus, et
+   * requêtes simultanées. Déclaré par PROFIL, parce que « ne pas charger » vaut mieux que
+   * « charger puis optimiser », et parce que le service de tuiles ne publie aucune limite de
+   * débit — le plafond est donc le nôtre.
+   *
+   * **25 est un PLANCHER, pas un réglage.** Une fenêtre de couverture vaut (2n+1)² carreaux et
+   * n vaut au minimum 2 : il faut le carreau qui porte le point visé, plus une couronne, plus
+   * une seconde couronne parce que ce point peut tomber au bord de son carreau. Un budget
+   * inférieur à 25 ne permet donc AUCUN niveau, et le moteur retombe au plus grossier.
+   * Mesuré à l'écran le 2026-09-21, à 390 px de large et avec un budget de 24 : la Lune était
+   * servie à 5,3 km/px (niveau 2) au lieu de 83 m/px, soit 540 pixels d'écran par texel, et
+   * rien ne le disait. Les trois profils partent donc de 25 et se distinguent par ce qu'ils
+   * ajoutent au-dessus. 64 permet la fenêtre 7 x 7 (49) d'un grand écran.
+   */
+  surfaceTiles: { maxTiles: number; maxConcurrentLoads: number };
 }
 
 /** Table des profils par palier : la source unique des compromis qualité/perf. */
@@ -71,6 +87,7 @@ export const QUALITY_PROFILES: Record<QualityTier, QualityProfile> = {
     hiResSegments: 128,
     maxTextureQuality: '2k',
     maxModelQuality: '1k',
+    surfaceTiles: { maxTiles: 25, maxConcurrentLoads: 2 },
   },
   medium: {
     maxPixelRatio: 1.5,
@@ -80,6 +97,7 @@ export const QUALITY_PROFILES: Record<QualityTier, QualityProfile> = {
     hiResSegments: 192,
     maxTextureQuality: '2k',
     maxModelQuality: '2k',
+    surfaceTiles: { maxTiles: 25, maxConcurrentLoads: 3 },
   },
   high: {
     maxPixelRatio: 2.0,
@@ -89,6 +107,7 @@ export const QUALITY_PROFILES: Record<QualityTier, QualityProfile> = {
     hiResSegments: 256,
     maxTextureQuality: '8k',
     maxModelQuality: '4k',
+    surfaceTiles: { maxTiles: 64, maxConcurrentLoads: 6 },
   },
 };
 

@@ -204,16 +204,117 @@ const ephemerisCollection = z
       });
   });
 
+/**
+ * Un JEU DE TUILES d'imagerie planétaire, streamé à l'approche d'une surface (lot 9, phase 9C).
+ *
+ * C'est la fiche qui doit suffire à ajouter un corps : le moteur ne connaît aucun nom de corps,
+ * aucun gabarit et aucun niveau. `service.template` est RECOPIÉ des capacités WMTS pointées par
+ * le lien `describedby` — celui de Trek contient un double `/` après `1.0.0` et l'ordre
+ * `{TileMatrix}/{TileRow}/{TileCol}`, que réécrire de mémoire donnerait des adresses valides
+ * montrant un autre endroit du corps.
+ *
+ * `publishedPixelsPerDegree` est la finesse de la MOSAÏQUE, pas celle de la pyramide : Trek sert
+ * la WAC jusqu'à 364 pixels par degré alors qu'elle est publiée à 303, et l'application doit le
+ * dire plutôt qu'afficher une finesse que la source n'a pas (`tilePyramid.oversamplingFactor`).
+ *
+ * `acquired` est l'intervalle que la mosaïque DÉCRIT, au format STAC, et c'est lui que
+ * `core/temporal.ts` classe : une mosaïque est une mesure sur la campagne qui l'a produite, pas
+ * une image sans date.
+ */
+const imageryTileset = z
+  .object({
+    $schema: z.string().optional(),
+    id: kebabId,
+    type: z.literal('tileset'),
+    /** Corps du catalogue que ce jeu recouvre. */
+    body: z.string().regex(/^[a-z0-9]+$/),
+    /** Titre publié par la source, affiché dans le bandeau de provenance. */
+    title: z.string().min(1),
+    /** Fiche `providers/` du service contacté (rôle `tile-source`). */
+    providerId: kebabId,
+    mission: z.string().min(1),
+    instrument: z.string().min(1),
+    service: z
+      .object({
+        template: httpsUrl,
+        style: z.string().min(1),
+        tileMatrixSet: z.string().min(1),
+        format: z.enum(['image/jpeg', 'image/png']),
+        matrix: z
+          .object({
+            columnsAtLevelZero: z.number().int().positive(),
+            rowsAtLevelZero: z.number().int().positive(),
+            tileSizePx: z.number().int().positive(),
+          })
+          .strict(),
+        minLevel: z.number().int().min(0),
+        maxLevel: z.number().int().min(0),
+      })
+      .strict()
+      .refine((s) => s.maxLevel >= s.minLevel, 'maxLevel < minLevel'),
+    /** Finesse de la mosaïque publiée, en pixels par degré. */
+    publishedPixelsPerDegree: z.number().positive(),
+    /** Intervalle décrit par la mosaïque (STAC ; bornes `null` interdites ici : une campagne finie). */
+    acquired: z
+      .object({
+        interval: z
+          .array(
+            z
+              .array(
+                z
+                  .string()
+                  .regex(
+                    /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/,
+                    'instant ISO UTC'
+                  )
+              )
+              .length(2)
+          )
+          .min(1),
+      })
+      .strict(),
+    license: spdxOrOther,
+    rights: z.enum(['public-domain']).optional(),
+    links: z.array(link).min(1),
+    providers: z.array(provider).min(1),
+    /** Date à laquelle la fiche a été confrontée au service (gabarit, niveaux, CORS). */
+    verified: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'date ISO AAAA-MM-JJ'),
+  })
+  .strict()
+  .superRefine((product, ctx) => {
+    if (product.license === 'other') {
+      if (!product.rights)
+        ctx.addIssue({
+          code: 'custom',
+          message: '« other » doit dire pourquoi (`rights`)',
+        });
+      if (!product.links.some((l) => l.rel === 'license'))
+        ctx.addIssue({
+          code: 'custom',
+          message: '« other » exige un lien rel=license',
+        });
+    }
+    // Le gabarit est recopié d'un document de capacités : il doit être cité.
+    if (!product.links.some((l) => l.rel === 'describedby'))
+      ctx.addIssue({
+        code: 'custom',
+        message:
+          'un jeu de tuiles cite les capacités WMTS dont son gabarit est recopié (rel=describedby)',
+      });
+  });
+
 export const productSchema = z.union([
   shippedTexture,
   reviewedOnlyTexture,
   ephemerisCollection,
+  imageryTileset,
 ]);
 
 export type ProductRecord = z.infer<typeof productSchema>;
 export type ShippedTextureProduct = z.infer<typeof shippedTexture>;
 export type ReviewedOnlyTextureProduct = z.infer<typeof reviewedOnlyTexture>;
 export type EphemerisCollectionProduct = z.infer<typeof ephemerisCollection>;
+export type ImageryTilesetProduct = z.infer<typeof imageryTileset>;
 
 /** Le JSON Schema COMMITÉ, généré depuis le schéma Zod ci-dessus. */
 export function productJsonSchema(): unknown {

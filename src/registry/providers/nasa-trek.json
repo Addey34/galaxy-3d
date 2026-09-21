@@ -1,0 +1,28 @@
+{
+  "$schema": "../schema/provider.schema.json",
+  "id": "nasa-trek",
+  "role": "tile-source",
+  "publisher": "NASA Solar System Treks",
+  "title": "NASA Trek WMTS tile services",
+  "url": "https://trek.nasa.gov/moon/",
+  "kind": "measurement",
+  "host": "trek.nasa.gov",
+  "license": "other",
+  "rights": "public-domain",
+  "licenseUrl": "https://www.nasa.gov/nasa-brand-center/images-and-media/",
+  "attribution": "NASA / Solar System Treks; LROC WAC mosaic by NASA, GSFC, Arizona State University",
+  "accessed": "2026-09-21",
+  "extent": {
+    "temporal": {
+      "interval": [["2009-11-01T00:00:00Z", "2011-02-28T00:00:00Z"]]
+    }
+  },
+  "use": {
+    "en": "Published mosaic tiles streamed on approach to a surface, only while the camera is close to a body that declares a tile set, and only for the patch of ground actually in view.",
+    "fr": "Tuiles d’une mosaïque publiée, streamées à l’approche d’une surface, seulement quand la caméra est proche d’un corps qui déclare un jeu de tuiles, et seulement pour la portion de sol réellement visible."
+  },
+  "terms": {
+    "en": "NASA Images and Media Usage Guidelines: NASA content generally is not subject to copyright in the United States, may be used for educational or informational purposes, must not imply endorsement, and NASA should be acknowledged as the source. Read at the source on 2026-09-21. Those guidelines cover the CONTENT; NASA Trek publishes no terms of its own for the tile service (https://trek.nasa.gov/moon/documents/ answered 404 on 2026-09-20 and on 2026-09-21), and no rate limit is published, so Galaxy treats the service as an uncontracted dependency and keeps its request count low by design.",
+    "fr": "Conditions d’usage des images et médias de la NASA : son contenu n’est généralement pas soumis au droit d’auteur aux États-Unis, peut servir à des fins éducatives ou informatives, ne doit pas laisser entendre un soutien, et la NASA doit être citée comme source. Lues à la source le 2026-09-21. Ces conditions couvrent le CONTENU ; NASA Trek ne publie aucune condition propre à son service de tuiles (https://trek.nasa.gov/moon/documents/ a répondu 404 les 2026-09-20 et 2026-09-21) et aucune limite de débit, si bien que Galaxy traite ce service comme une dépendance non contractualisée et limite ses requêtes par construction."
+  }
+}
