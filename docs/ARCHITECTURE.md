@@ -762,8 +762,31 @@ d'employer une image de relief comme géométrie.
 (type `tileset`) porte le gabarit, le jeu de matrices, les niveaux, la finesse publiée, la
 campagne d'acquisition, la licence et les fournisseurs STAC. `config/surfaceTilesets.ts` est la
 façade d'exécution, sur le modèle de `config/factSources.ts`. Le moteur
-(`components/surface/PlanetarySurfaceEngine.ts`) ne connaît aucun corps : ajouter Mars doit être
-une fiche de plus, et c'est ce que la phase 9E vérifiera.
+(`components/surface/PlanetarySurfaceEngine.ts`) ne connaît aucun corps, et ce n'est plus une
+intention : **Mars a été ajoutée le 2026-09-21 par une fiche et rien d'autre** (phase 9E), sans
+qu'un fichier de `src/components/surface/`, de `src/core/tile*.ts` ni `src/ui/surfacePanel.ts`
+ne change.
+
+**Deux jeux déclarés, et ils ne se ressemblent pas** — c'est ce qui rend la preuve utile :
+
+| | Lune | Mars |
+|---|---|---|
+| Mosaïque | LRO WAC (LROC, ASU) | Viking MDIM 2.1 colorisée (USGS, NASA Ames) |
+| Campagne | novembre 2009 à février 2011 | juin 1976 à août 1980 |
+| Niveaux publiés par Trek | 0 à 8 | 0 à 7 (le niveau 8 répond 404, mesuré) |
+| Finesse servie au maximum | 83 m/px | 325 m/px |
+| Texture livrée du catalogue | 8k, 1,33 km/px | 8k, 2,60 km/px |
+| Rapport à la texture livrée | 16x | 8x |
+| Finesse publiée de la source | 303 px/degré | 256 px/degré |
+| Niveau maximal vis-à-vis d'elle | l'agrandit de 1,20 | reste à 0,71, donc plus grossier |
+| Plancher d'approche | 128,0 → 8,0 km | 249,7 → 31,2 km |
+
+La dernière ligne du tableau est ce que le bandeau fait de différent : il n'annonce un
+sur-échantillonnage que lorsqu'il y en a un, donc il se tait sur Mars. Et sur un poste, où la
+texture servie est la 8k, le premier niveau que le moteur accepte de peindre y est le 5 : le
+niveau 4 vaut exactement 8 192 px, comme la texture, et le refus porte sur une ÉGALITÉ. Sur un
+téléphone, où la texture servie plafonne à 2k (10,4 km/px), le niveau 4 l'améliore déjà : mesuré
+à 390 px, il est peint dès le premier arrêt, à 998,8 km d'altitude.
 
 **Un carreau est un enfant du groupe qui tourne** (`CelestialObject.attachSpinningChild`), à la
 même paramétrisation que la couche `surface` : `phi = longitude + π`, `theta = 90° − latitude`,

@@ -11,11 +11,26 @@ import { tileServiceHost, tileUrl } from '@/core/tileUrl';
 import {
   groundResolutionKm,
   oversamplingFactor,
+  pyramidWidthPx,
   tileIndexAt,
 } from '@/core/tilePyramid';
 import { classifyTemporal } from '@/core/temporal';
+import { approachFloorRadiusFactor } from '@/core/surfaceApproach';
+import { TEXTURE_QUALITY_PIXELS } from '@/components/systems/TextureSystem';
 
 const ROOT = resolve(import.meta.dirname, '../..');
+
+/**
+ * Finesse de la texture de surface LIVRÉE d'un corps, en pixels sur 360°, au meilleur palier
+ * que le catalogue déclare. C'est la forme la plus EXIGEANTE de la comparaison : à l'exécution
+ * le profil mobile plafonne à 2k (`CelestialObject.shippedSurfaceWidthPx`), donc un jeu de
+ * tuiles qui bat le palier maximal bat aussi tous les autres.
+ */
+function shippedSurfaceWidthPx(body: string): number {
+  const cfg = new Map([...flattenBodies(CELESTIAL_CONFIG)]).get(body);
+  const tiers = cfg?.textureResolutions?.surface ?? [];
+  return Math.max(0, ...tiers.map((tier) => TEXTURE_QUALITY_PIXELS[tier] ?? 0));
+}
 
 /**
  * LA FICHE DOIT SUFFIRE, ET ELLE DOIT ÊTRE VRAIE.
@@ -45,6 +60,25 @@ describe('fiches de jeux de tuiles', () => {
       expect(radii.has(body), `${body} absent du catalogue`).toBe(true);
       // Sans rayon publié, le moteur ne saurait convertir ni altitude ni résolution au sol.
       expect(radii.get(body), `${body} sans rayon publié`).toBeGreaterThan(0);
+    }
+  });
+
+  it('sert, à son niveau maximal, plus fin que la texture livrée du corps', () => {
+    // LA RAISON D'ÊTRE D'UNE FICHE, et elle se vérifie ici plutôt qu'à l'écran. Le moteur
+    // refuse de peindre un niveau plus grossier que la texture du catalogue (défaut 3 de la
+    // phase 9C, mesuré à 1 541 km sur la Lune) : une fiche dont le niveau MAXIMAL n'améliore
+    // rien ne peindrait donc jamais rien, sans erreur et sans un mot. C'est exactement le
+    // piège qu'un corps ajouté par une fiche seule doit rencontrer ici, et pas en production.
+    for (const [body, tileset] of SURFACE_TILESETS) {
+      const shippedPx = shippedSurfaceWidthPx(body);
+      expect(
+        shippedPx,
+        `${body} sans texture de surface livrée`
+      ).toBeGreaterThan(0);
+      expect(
+        pyramidWidthPx(tileset.maxLevel, tileset.matrix),
+        `${body} : le niveau maximal n’améliore pas la texture livrée`
+      ).toBeGreaterThan(shippedPx);
     }
   });
 
@@ -160,6 +194,86 @@ describe('ce que la fiche fait produire au moteur', () => {
         iso
       ).toBe('observed');
     }
+  });
+});
+
+/**
+ * MARS : LA PREUVE DE GÉNÉRICITÉ (lot 9, phase 9E).
+ *
+ * Ce corps a été ajouté par une FICHE et rien d'autre : aucun fichier de
+ * `src/components/surface/`, de `src/core/tile*.ts` ni `src/ui/surfacePanel.ts` n'a changé. Ce
+ * bloc confronte donc la fiche aux chiffres que le moteur en dérivera, et il dit surtout ce qui
+ * DIFFÈRE de la Lune, parce que c'est là qu'un moteur trop accommodant se serait trahi :
+ * la matrice s'arrête au niveau 7 et non 8, et le niveau servi reste PLUS GROSSIER que la
+ * mosaïque publiée, là où la Lune l'agrandit de 1,20.
+ */
+describe('ce que la fiche de Mars fait produire au moteur', () => {
+  const mars = SURFACE_TILESETS.get('mars');
+  /** Rayon PUBLIÉ lu dans le catalogue, comme `ui/surfacePanel.ts` le lit pour le moteur. */
+  const radiusKm = new Map([...flattenBodies(CELESTIAL_CONFIG)]).get('mars')!
+    .realData!.radiusKm!;
+
+  it('sert 325 m/px au niveau maximal, contre 2,6 km/px pour la texture livrée', () => {
+    expect(mars).toBeTruthy();
+    expect(mars!.maxLevel).toBe(7);
+    const servedM = groundResolutionKm(mars!.maxLevel, radiusKm, mars!.matrix) * 1000; // prettier-ignore
+    expect(servedM).toBeCloseTo(324.96, 2);
+    // La texture 8k du catalogue, par la même identité `2πr / W`.
+    const shippedM = ((2 * Math.PI * radiusKm) / 8192) * 1000;
+    expect(shippedM).toBeCloseTo(2599.7, 1);
+    expect(shippedM / servedM).toBeCloseTo(8, 2);
+  });
+
+  it('ne sur-échantillonne PAS la mosaïque publiée, contrairement à la Lune', () => {
+    // 182,04 px/degré servis au niveau 7 contre 256 publiés : le niveau maximal de Trek reste
+    // en deçà de la source. Le bandeau se tait alors, et c'est le comportement attendu — il ne
+    // parle d'agrandissement que lorsqu'il y en a un (`ui/surfacePanel.ts`, `oversampling > 1`).
+    const factor = oversamplingFactor(
+      mars!.maxLevel,
+      mars!.publishedPixelsPerDegree,
+      mars!.matrix
+    );
+    expect(factor).toBeCloseTo(0.711, 3);
+    expect(factor).toBeLessThan(1);
+    expect(
+      oversamplingFactor(
+        SURFACE_TILESETS.get('moon')!.maxLevel,
+        SURFACE_TILESETS.get('moon')!.publishedPixelsPerDegree,
+        SURFACE_TILESETS.get('moon')!.matrix
+      ),
+      'la Lune, elle, agrandit sa mosaïque'
+    ).toBeGreaterThan(1);
+  });
+
+  it('fait tomber le plancher d’approche de 249,7 à 31,2 km', () => {
+    // Même formule qu'en 9B, inchangée : `1 + budget × 2π / largeur`. La fiche ne fait que lui
+    // donner une largeur huit fois plus grande, et c'est tout ce que 9E ajoute au moteur.
+    const withTexture = approachFloorRadiusFactor(8192);
+    const withTiles = approachFloorRadiusFactor(
+      pyramidWidthPx(mars!.maxLevel, mars!.matrix)
+    );
+    expect(radiusKm * (withTexture - 1)).toBeCloseTo(249.7, 1);
+    expect(radiusKm * (withTiles - 1)).toBeCloseTo(31.2, 1);
+  });
+
+  it('ne peint qu’à partir du niveau 5, le 4 valant exactement la texture livrée', () => {
+    // Le refus du moteur est `largeur <= texture livrée`, donc une ÉGALITÉ est refusée : au
+    // niveau 4 la mosaïque vaut 8 192 px comme la texture 8k, et la recouvrir n'apporterait
+    // rien. C'est la borne basse réelle de cette fiche, mesurable sans lancer le moteur.
+    expect(pyramidWidthPx(4, mars!.matrix)).toBe(8192);
+    expect(pyramidWidthPx(5, mars!.matrix)).toBe(16384);
+    expect(groundResolutionKm(5, radiusKm, mars!.matrix)).toBeCloseTo(1.3, 3);
+  });
+
+  it('adresse une tuile réelle au niveau maximal, et refuse la ligne d’après', () => {
+    // La matrice du niveau 7 a 128 lignes (Trek en publie 256 pour la Lune, qui va au 8) :
+    // la ligne 128 répond 404 SANS en-tête CORS, donc `tileUrl` doit refuser avant d'émettre.
+    expect(() =>
+      tileUrl(mars!.service, { level: 7, row: 127, column: 255 })
+    ).not.toThrow();
+    expect(() =>
+      tileUrl(mars!.service, { level: 7, row: 128, column: 0 })
+    ).toThrow(/hors matrice/);
   });
 });
 
