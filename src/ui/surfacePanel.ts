@@ -135,6 +135,25 @@ export function setupSurfacePanel(api: PublicAPI): () => void {
     // Lu par `?debug-surface` et par l'e2e : la finesse SERVIE, en pixels sur 360°.
     badge.dataset['width'] = String(state.widthPx);
     badge.hidden = false;
+    placeBadge();
+  }
+
+  /**
+   * Pose le bandeau juste AU-DESSUS du dock du bas, mesuré, pas supposé.
+   *
+   * La règle CSS le plaçait à une hauteur de contrôle du bas, ce qui est juste sur un grand
+   * écran. Sous 768 px, le sélecteur Éduc/Explo s'empile en colonne et monte deux fois plus
+   * haut : vu en production à 390 px, il recouvrait la ligne de crédit du bandeau, celle que
+   * les conditions de la NASA demandent d'afficher. Recopier sa hauteur ici aurait été une
+   * seconde source de la même mise en page ; on lit donc sa position réelle.
+   */
+  function placeBadge(): void {
+    if (badge.hidden) return;
+    const dock = document.querySelector('.dock--bottom');
+    if (!dock) return;
+    const gapPx = 8;
+    const top = dock.getBoundingClientRect().top;
+    badge.style.bottom = `${Math.max(0, window.innerHeight - top + gapPx)}px`;
   }
 
   const onState = (next: SurfaceImageryState | null): void => {
@@ -232,10 +251,12 @@ export function setupSurfacePanel(api: PublicAPI): () => void {
 
   renderLabels();
   onLocaleChange(renderLabels);
+  window.addEventListener('resize', placeBadge);
   const unsubscribe = api.animationSystem.onFrame(tick);
 
   return () => {
     unsubscribe();
+    window.removeEventListener('resize', placeBadge);
     engine?.dispose();
     engine = null;
     badge.remove();
