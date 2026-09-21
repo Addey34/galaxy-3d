@@ -268,11 +268,6 @@ export const CAMERA_SETTINGS = {
   // Mode Explo — near très petit (planètes réelles à 0.003-0.12u de la caméra)
   exploNear: 1e-6,
   exploFar: 3_000, // Neptune explo ≈ 1050u
-  // Suivi d'un corps en Explo : le near ne descend pas sous cette FRACTION de son rayon. Un
-  // plancher absolu (exploNear, 4 km) interdisait d'approcher un astéroïde de 500 m sans le
-  // couper ; relatif au rayon, il ne mord jamais pour une planète (au plus près, le near vaut
-  // déjà 7,5 % du rayon) et suit les plus petits corps jusqu'à leur surface.
-  exploFollowNearRadiusFraction: 0.01,
   // Vue d'ensemble Éducatif — légèrement inclinée (~35°) pour montrer la profondeur des orbites
   initialPosition: new THREE.Vector3(0, 160, 220),
   // Distance de visite fallback quand un corps ne définit pas cameraDistance.
@@ -289,7 +284,14 @@ export const CAMERA_CONTROLS_SETTINGS = {
   // ── Bornes de zoom ADAPTÉES AU CORPS ciblé (multiples de son rayon visuel courant) ──
   // Recalculées à chaque sélection : un petit corps se zoome autant qu'un gros,
   // proportionnellement à sa taille, sans jamais traverser la surface.
-  targetMinRadiusFactor: 1.15, // au plus près : on frôle la surface (1.15× le rayon)
+  // Plancher d'approche des cibles qui n'affichent AUCUNE surface : ancres de sondes,
+  // d'objets interstellaires, petits corps sans texture. Les corps du catalogue, eux, le
+  // dérivent de la finesse de leur image (`CelestialObject.getApproachFloorFactor`), parce
+  // qu'une constante unique ne peut pas être juste pour du 8k et du 1k à la fois : mesuré
+  // le 2026-09-20, 1,15 rayon agrandit un texel à 4 pixels sur un corps 8k et à 33 sur un
+  // corps 1k. La valeur reste 1,15 : c'est aussi, à 0,2 % près, ce que la règle dérivée
+  // rend pour une texture 4k.
+  targetMinRadiusFactor: 1.15,
   targetMaxRadiusFactor: 60, // au plus loin d'un corps suivi : 60× son rayon
   // Garde-fous absolus (le facteur ne doit pas descendre/monter hors de ces bornes par mode).
   educMinFloor: 0.05,

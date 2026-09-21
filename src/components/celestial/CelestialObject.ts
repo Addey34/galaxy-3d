@@ -43,6 +43,7 @@ import {
   PRECIP_SETTINGS,
   REALTIME_CLOUDS_SETTINGS,
 } from '@/config/engine';
+import { approachFloorRadiusFactor } from '@/core/surfaceApproach';
 import { modelPath, ringTexturePath } from '@/config/catalog';
 import { geographicToLocalDirection } from '@/core/frames';
 import {
@@ -54,6 +55,7 @@ import type { CameraDistance, CelestialBodyConfig } from '@/types';
 import * as NightLightsShader from '@/shaders/NightLightsShader';
 import Logger from '@/utils/Logger';
 import type { AnimationSystem } from '@/components/systems/AnimationSystem';
+import { TEXTURE_QUALITY_PIXELS } from '@/components/systems/TextureSystem';
 import type { TextureSystem } from '@/components/systems/TextureSystem';
 import type { MeteoRenderDiagnostics } from '@/core/meteoDiagnostics';
 import { whenIdle } from '@/utils/idleCallback';
@@ -1144,6 +1146,27 @@ export default class CelestialObject {
    */
   getClearanceRadius(mode: 'educ' | 'explo'): number {
     return this.getFrameRadius(mode) * (this.config.model?.extentRatio ?? 1);
+  }
+
+  /**
+   * Jusqu'où la caméra peut descendre, en multiples du rayon, d'après la FINESSE de l'image
+   * que ce corps affiche — et non d'après une constante unique pour tout le catalogue.
+   *
+   * Le corps est le seul à savoir ce qu'il montre. La règle et ses chiffres vivent dans
+   * `core/surfaceApproach.ts` ; la largeur en pixels d'un palier vient de la table de
+   * `TextureSystem`, jamais d'une copie. Un corps sans texture de surface (modèle de forme,
+   * couleur pleine) ne répond RIEN, et c'est l'appelant qui garde son plancher par défaut :
+   * sa finesse n'est pas celle d'une image, et ce n'est pas au corps de le savoir.
+   *
+   * On demande la qualité RÉELLEMENT SERVIE au plus près (distance 0), pas la meilleure que
+   * le catalogue déclare : le profil mobile plafonne à 2k et un GPU peut refuser le 8k. La
+   * déclaration aurait laissé un téléphone agrandir quatre fois au-delà de son image
+   * (mesuré le 2026-09-20 : 33,8 pixels par texel à 390 px de large avant cette correction).
+   */
+  getApproachFloorFactor(): number | undefined {
+    const served = this.textureSystem.resolveSurfaceQuality(this.name, 0);
+    const widthPx = served ? TEXTURE_QUALITY_PIXELS[served] : undefined;
+    return widthPx ? approachFloorRadiusFactor(widthPx) : undefined;
   }
 
   getFrameRadius(mode: 'educ' | 'explo'): number {
