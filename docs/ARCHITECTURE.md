@@ -690,6 +690,65 @@ leur fiche non plus : leurs registres portent une date de lancement et une dési
 sans champ `source`, et un fait sans provenance ne s'affiche pas (§ « Faits sourcés »). Les
 sourcer est le travail qui rendrait leur fiche comparable à celle d'un corps.
 
+## Descendre vers une surface — ce qui borne l'approche
+
+Deux grandeurs décident de ce qu'on voit en s'approchant d'un corps, et les deux étaient, jusqu'au
+2026-09-21, des constantes uniques pour tout le catalogue. Le calcul vit dans
+`core/surfaceApproach.ts` (pur, testé) ; `CameraSystem` et `CelestialObject` ne font que
+l'appliquer, et `?debug-surface` (`ui/surfaceProbe.ts`) affiche les chiffres en direct.
+
+**Le plancher d'approche est une propriété du CORPS, pas du système.** `controls.minDistance` vaut
+`rayon de dégagement × facteur`, sans jamais passer sous le garde-fou du mode, et ce facteur est
+désormais dérivé de la finesse de l'image que le corps affiche : altitude = budget × taille d'un
+texel au sol, donc facteur = 1 + budget × 2π / largeur de la texture. Le rayon disparaît de l'expression, ce qui n'est pas une approximation mais une
+identité — un texel d'équirectangulaire mesure `2πr / W`, donc les deux termes portent le même `r`.
+Le budget (96,1 texels) vient d'un écran de RÉFÉRENCE déclaré une fois (hauteur 800 px, champ de
+visite 55°, celui de `focusFov` — l'écran sur lequel la lisibilité a été regardée était
+1280 × 800) et d'un agrandissement maximal accepté de 8 pixels par texel : au-delà,
+l'écran montre l'image grossie, jamais du détail que la source possède. C'est l'invariant
+d'exploration appliqué à la résolution, comme il l'est déjà aux tailles et aux distances.
+
+La constante unique de 1,15 rayon n'était juste que pour une texture 4k, pour laquelle la règle
+dérivée rend 1,1473. Mesuré le 2026-09-20, à 1280 × 800 : elle agrandissait un texel à 4 pixels
+sur un corps 8k (on s'arrêtait deux fois trop haut) et à 31 sur un corps 1k (on descendait quatre
+fois trop bas). Les planchers qui en résultent : Lune 260,6 → 128,0 km, Mars 508,4 → 249,7 km,
+Terre 955,6 → 469,3 km, Encelade 37,8 → 148,6 km, Titan 386,2 → 758,7 km.
+
+Deux points qui ne se devinent pas :
+
+- **la qualité prise en compte est celle qui est SERVIE, pas celle que le catalogue déclare**
+  (`TextureSystem.resolveSurfaceQuality(nom, 0)`) : le profil mobile plafonne à 2k et un GPU peut
+  refuser le 8k. Mesuré avant correction : un viewport de 390 px atteignait 33,8 pixels par texel
+  alors que la règle en visait 8. Le plancher de la Lune y vaut donc 512 km, pas 128 ;
+- **une cible sans surface garde `targetMinRadiusFactor`** : les ancres de sondes et d'objets
+  interstellaires, les petits corps sans texture. Elles n'affichent aucune image, donc rien ne les
+  rend plus ou moins approchables ; leur finesse est celle d'un maillage, une autre question.
+
+**Le plan proche vaut la MOITIÉ DE L'ALTITUDE, et rien ne doit le relever.** Un plancher exprimé
+en fraction du rayon (il valait 1 %) passe devant la surface dès qu'on descend sous cette
+fraction, et le corps entier disparaît : pas d'erreur, pas de trace, une caméra correctement
+placée, une distance juste dans la fiche, et un ciel vide. Mesuré le 2026-09-20 en abaissant le
+plancher d'approche : Lune invisible sous 17,4 km d'altitude, Terre sous 63,7 km, Mars sous
+33,9 km. Le défaut était présent depuis que ce plancher existe et restait invisible parce que
+l'approche s'arrêtait quinze fois plus haut. Le minimum qui subsiste (`exploMinFloor`) ne sert
+qu'à rester strictement positif si la caméra touche la sphère de dégagement ; il n'a pas à
+protéger la précision de profondeur, que le `far` adaptatif borne déjà.
+
+**Ce que la profondeur coûte réellement, mesuré plutôt que redouté.** Avec ce `near` serré, un
+tampon de 24 bits distingue 1,5 cm au sol à 128 km au-dessus de la Lune et 5,6 cm à 469 km
+au-dessus de la Terre (`depthResolutionKm`, `Δz = z² (1/n − 1/f) / (2^B − 1)`). Aucun tampon
+logarithmique, aucune passe de rendu séparée n'est justifié aujourd'hui : le rapport `far/near`
+est énorme (5,9e6 sur la Lune) mais c'est le terme `1/n` qui domine, et il est petit parce que
+le `near` suit la surface.
+
+**Ce que la descente ne corrige pas, et qui attend le lot 9C.** La silhouette reste une sphère de
+64 segments, soit 2,09 km d'écart à la vraie surface sur la Lune — invisible tant que le limbe
+n'entre pas dans le champ, ce qui n'arrive pas au ras du sol (moins d'un pixel à ces distances).
+Les couches d'instrument 2D (petits corps, sondes, interstellaires) continuent de peindre leurs
+marqueurs par-dessus le sol, sans zoom sémantique, contrairement aux événements terrestres. Et
+l'approche d'un corps se termine souvent du côté NUIT (mesuré sur Mars : noir dès 3 100 km
+d'altitude, donc déjà à l'ancien plancher), parce que la direction d'approche vise le terminateur.
+
 ## Halo lumineux — qui brille, et combien
 
 Le palier de qualité `high` ajoute un halo autour des sources de lumière (Soleil, étoiles

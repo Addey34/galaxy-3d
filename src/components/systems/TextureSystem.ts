@@ -26,8 +26,14 @@ export interface TextureQualityThreshold {
   quality: string;
 }
 
-/** Pixel size represented by the quality suffix used by the local texture assets. */
-const TEXTURE_QUALITY_PIXELS: Readonly<Record<string, number>> = {
+/**
+ * Pixel size represented by the quality suffix used by the local texture assets.
+ *
+ * Exportée parce que le plancher d'approche (`core/surfaceApproach.ts`) se dérive de la
+ * finesse de l'image affichée : cette table est la seule à savoir ce que vaut un suffixe,
+ * et une seconde copie ailleurs serait la divergence habituelle.
+ */
+export const TEXTURE_QUALITY_PIXELS: Readonly<Record<string, number>> = {
   '1k': 1024,
   '2k': 2048,
   '4k': 4096,

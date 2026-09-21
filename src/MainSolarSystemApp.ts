@@ -75,6 +75,7 @@ import { setupSolarDebug } from './ui/solarDebug';
 import { setupGeoDebug } from './ui/geoDebug';
 import { setupTerminatorProbe } from './ui/terminatorProbe';
 import { setupEarthDebug } from './ui/earthDebug';
+import { setupSurfaceProbe } from './ui/surfaceProbe';
 import { setupMeteoDebug } from './ui/meteoDebug';
 import { loadSmallBodies } from './core/sbdb';
 import { CELESTIAL_CONFIG } from './config/bodies';
@@ -173,6 +174,7 @@ if (surfaceScrim) {
     setupGeoDebug(api);
     setupEarthDebug(api);
     setupTerminatorProbe(api);
+    setupSurfaceProbe(api);
     setupContextRecovery(sceneSystem);
 
     // Registre des COUCHES MÉTÉO de la Terre. Chaque `setup*` monte sa couche (données

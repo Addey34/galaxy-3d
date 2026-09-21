@@ -17,6 +17,7 @@ import {
   RENDER_SETTINGS,
 } from '@/config/engine';
 import { solarIrradianceFactor } from '@/core/eclipse';
+import { followNearPlane } from '@/core/surfaceApproach';
 import { SQRT_K } from '@/core/ScaleService';
 import Logger from '@/utils/Logger';
 import { prefersReducedMotion } from '@/utils/reducedMotion';
@@ -33,6 +34,12 @@ export interface CameraTarget {
   cameraDistance?: CameraDistance;
   getFrameRadius?(mode: 'educ' | 'explo'): number;
   getClearanceRadius?(mode: 'educ' | 'explo'): number;
+  /**
+   * Plancher d'approche propre à cette cible, en multiples de son rayon, ou rien si elle
+   * n'affiche aucune surface — une ancre d'objet d'instrument, un petit corps sans texture.
+   * Sans réponse, `targetMinRadiusFactor` s'applique.
+   */
+  getApproachFloorFactor?(): number | undefined;
 }
 
 // Bornes de durée du vol caméra (ms). La durée réelle est proportionnelle à la distance
@@ -166,7 +173,11 @@ export class CameraSystem {
       this._target(bodyName)?.getClearanceRadius?.(this._scaleMode) ?? radius;
     // Bornes de zoom proportionnelles au rayon visuel du corps ciblé : on peut approcher
     // chaque corps (petit ou gros) autant que sa taille le permet, sans traverser la surface.
-    this._applyTargetZoomBounds(clearance);
+    this._applyTargetZoomBounds(
+      clearance,
+      this._target(bodyName)?.getApproachFloorFactor?.() ??
+        CAMERA_CONTROLS_SETTINGS.targetMinRadiusFactor
+    );
     const defaultDistance = this.getDefaultDistance(bodyName);
     const distance = Math.max(
       defaultDistance,
@@ -447,12 +458,12 @@ export class CameraSystem {
         this._target(this.currentTarget.name)?.getClearanceRadius?.('explo') ??
         (this.currentTarget.group.userData['radius'] as number | undefined) ??
         0;
-      // Plancher RELATIF au rayon : un plancher absolu coupait les corps sous-kilométriques.
-      const near = Math.max(
-        (d - r) * 0.5,
-        r > 0
-          ? r * CAMERA_SETTINGS.exploFollowNearRadiusFraction
-          : CAMERA_SETTINGS.exploNear
+      // Moitié de l'altitude, et rien ne doit le relever : la règle et ce qu'elle a coûté
+      // vivent dans `core/surfaceApproach.ts`, avec les mesures qui l'ont établie.
+      const near = followNearPlane(
+        d,
+        r,
+        CAMERA_CONTROLS_SETTINGS.exploMinFloor
       );
       const far = Math.min(
         CAMERA_SETTINGS.exploFar,
@@ -578,8 +589,15 @@ export class CameraSystem {
    * multiples de son rayon visuel courant. Un petit corps peut donc être approché autant
    * qu'un gros (proportionnellement), et le zoom max reste borné à un cadrage utile plutôt
    * qu'à une constante globale. Sans corps ciblé (vue d'ensemble), on garde les bornes du mode.
+   *
+   * `minFactor` est le plancher d'approche DÉCLARÉ PAR LA CIBLE : il vaut ce que la finesse
+   * de son image autorise (cf. `CelestialObject.getApproachFloorFactor`), et retombe sur
+   * `targetMinRadiusFactor` pour une cible qui n'affiche pas de surface.
    */
-  private _applyTargetZoomBounds(radius: number): void {
+  private _applyTargetZoomBounds(
+    radius: number,
+    minFactor: number = CAMERA_CONTROLS_SETTINGS.targetMinRadiusFactor
+  ): void {
     const explo = this._scaleMode === 'explo';
     const minFloor = explo
       ? CAMERA_CONTROLS_SETTINGS.exploMinFloor
@@ -589,10 +607,7 @@ export class CameraSystem {
       : CAMERA_CONTROLS_SETTINGS.educMaxDistance;
 
     // Min : on frôle la surface (facteur × rayon), jamais sous le garde-fou du mode.
-    this.controls.minDistance = Math.max(
-      minFloor,
-      radius * CAMERA_CONTROLS_SETTINGS.targetMinRadiusFactor
-    );
+    this.controls.minDistance = Math.max(minFloor, radius * minFactor);
     // Max : cadrage large du corps (facteur × rayon), plafonné par le max global du mode
     // pour ne jamais permettre de sortir du système.
     this.controls.maxDistance = Math.min(
