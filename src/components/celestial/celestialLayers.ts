@@ -54,16 +54,25 @@ export function buildLayers(
   return layers;
 }
 
-function createSurfaceLayer(
+/**
+ * Matériau de la couche `surface` d'un corps.
+ *
+ * Exporté parce qu'un carreau d'imagerie streamée (lot 9, phase 9C) se pose SUR cette surface
+ * et doit s'éclairer exactement comme elle : même largeur de terminateur, même ombre d'éclipse,
+ * même spéculaire. Deux appels séparés à `createSurfaceMaterial` auraient fini par diverger,
+ * et la couture se serait vue au terminateur, précisément là où ce dépôt a déjà payé quatre
+ * défauts.
+ */
+export function createSurfaceLayerMaterial(
   config: CelestialBodyConfig,
   name: string
-): THREE.Mesh {
+): THREE.MeshBasicMaterial | THREE.MeshStandardMaterial {
   const isSun = name === 'sun';
   const isMoon = name === 'moon';
   // Clair de Lune activé pour les corps à lumières nocturnes (Terre) : sa face
   // nuit peut être partiellement éclairée par la Lune (réflecteur).
   const hasNightLights = Boolean(config.textures?.lights);
-  const material = createSurfaceMaterial(
+  return createSurfaceMaterial(
     isSun,
     config.textures?.surface ? undefined : config.fallbackColor,
     hasNightLights,
@@ -80,6 +89,14 @@ function createSurfaceLayer(
     // Couleur du ciel de ce corps : le bandeau crépusculaire en hérite (cf. layerConfig).
     config.atmosphereColor
   );
+}
+
+function createSurfaceLayer(
+  config: CelestialBodyConfig,
+  name: string
+): THREE.Mesh {
+  const isSun = name === 'sun';
+  const material = createSurfaceLayerMaterial(config, name);
   const mesh = new THREE.Mesh(
     createSphereGeometry(config.radius, 'surface'),
     material

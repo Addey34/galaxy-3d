@@ -631,6 +631,28 @@ export default defineConfig({
             },
           },
           {
+            // Tuiles d'imagerie planétaire (NASA Trek) : le CACHE d'abord, contrairement aux
+            // données temps réel. Une adresse de tuile désigne un niveau, une ligne et une
+            // colonne d'une VERSION PUBLIÉE et figée de la mosaïque (`…_303ppd_v02`) : ses
+            // octets ne changent jamais, et une nouvelle version aurait une autre adresse.
+            // Le « réseau d'abord » du plan de conception aurait donc payé un aller-retour, et
+            // jusqu'à six secondes d'attente, par tuile et par survol, pour re-télécharger des
+            // octets identiques — et aurait sollicité d'autant plus un service dont NASA Trek
+            // ne publie aucune limite de débit. Cette règle doit rester AVANT la règle temps
+            // réel, qui ne connaît pas cet hôte.
+            urlPattern: ({ url }) => url.hostname === 'trek.nasa.gov',
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'ssv-surface-tiles',
+              expiration: {
+                maxEntries: 300,
+                maxAgeSeconds: 60 * 60 * 24 * 30,
+                purgeOnQuotaError: true,
+              },
+              cacheableResponse: { statuses: [0, 200] },
+            },
+          },
+          {
             // Données temps réel (météo, GIBS, SBDB) : le frais d'abord, le cache en secours
             // hors-ligne. Jamais présenté comme temps réel s'il vient du cache (catégorie
             // temporelle honnête gérée côté app via core/temporal.ts).

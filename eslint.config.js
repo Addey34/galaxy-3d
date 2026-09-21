@@ -13,6 +13,11 @@ export default tseslint.config(
       'node_modules/**',
       'playwright-report/**',
       'test-results/**',
+      // Relevés locaux et scripts de mesure jetables : `reports/` est dans `.gitignore`, donc
+      // son contenu varie d'une machine à l'autre et n'est jamais livré. Le linter y trouvait
+      // des erreurs sur des fichiers que la CI, elle, ne voit pas — `pnpm verify` rougissait
+      // donc en local et nulle part ailleurs.
+      'reports/**',
       // Harnais de capture d'écran jetable (contexte navigateur Playwright).
       'scripts/ui-audit.mjs',
     ],

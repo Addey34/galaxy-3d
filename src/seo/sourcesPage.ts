@@ -18,7 +18,10 @@
 import type { CelestialConfig } from '@/types';
 import { flattenBodies } from '@/config/catalog';
 import { FACT_SOURCES } from '@/config/factSources';
-import { EVENT_PROVIDERS } from '@/registry/providers/events';
+import {
+  EVENT_PROVIDERS,
+  TILE_PROVIDERS,
+} from '@/registry/providers/runtimeServices';
 import { ALL_FACT_FIELDS, bodyFact } from '@/core/bodyFacts';
 import type { FactField, FactMethod } from '@/types';
 import { SMALL_BODY_ELEMENTS } from '@/config/smallBodies';
@@ -141,15 +144,17 @@ export const LIVE_DATA_SERVICES: readonly LiveDataService[] = [
       fr: 'CC BY 4.0 via Open-Meteo. Hersbach, H. et al. (2023), ERA5 hourly data on single levels from 1940 to present, ECMWF, doi:10.24381/cds.adbb2d47. Generated using Copernicus Climate Change Service information.',
     },
   },
-  ...Object.values(EVENT_PROVIDERS).map((provider): LiveDataService => ({
-    host: provider.host,
-    // Virgule et non deux-points : le tableau est rendu dans les deux langues, et le
-    // français demande une espace avant le deux-points. La virgule évite la règle.
-    name: `${provider.publisher}, ${provider.title}`,
-    url: provider.url,
-    use: provider.use,
-    terms: provider.terms,
-  })),
+  ...[...Object.values(EVENT_PROVIDERS), ...Object.values(TILE_PROVIDERS)].map(
+    (provider): LiveDataService => ({
+      host: provider.host,
+      // Virgule et non deux-points : le tableau est rendu dans les deux langues, et le
+      // français demande une espace avant le deux-points. La virgule évite la règle.
+      name: `${provider.publisher}, ${provider.title}`,
+      url: provider.url,
+      use: provider.use,
+      terms: provider.terms,
+    })
+  ),
   {
     host: 'cloudflareinsights.com',
     name: 'Cloudflare Web Analytics',

@@ -616,6 +616,31 @@ export class CameraSystem {
     );
   }
 
+  /**
+   * Repose les bornes d'approche de la cible COURANTE, sans la déplacer.
+   *
+   * `setTarget` ne les calcule qu'à la sélection : elles y figent la finesse de l'image du
+   * moment. L'imagerie streamée du lot 9 fait varier cette finesse APRÈS la sélection (un
+   * carreau de niveau 8 vaut seize fois une texture 8k), et sans ce rappel le plancher
+   * resterait celui de la texture livrée — la descente s'arrêterait quinze fois trop haut,
+   * silencieusement.
+   */
+  refreshApproachBounds(): void {
+    const name = this.currentTarget?.name;
+    if (!name) return;
+    const target = this._target(name);
+    const radius =
+      target?.getFrameRadius?.(this._scaleMode) ??
+      (this.currentTarget?.group.userData['radius'] as number | undefined) ??
+      1;
+    const clearance = target?.getClearanceRadius?.(this._scaleMode) ?? radius;
+    this._applyTargetZoomBounds(
+      clearance,
+      target?.getApproachFloorFactor?.() ??
+        CAMERA_CONTROLS_SETTINGS.targetMinRadiusFactor
+    );
+  }
+
   /** Bornes de zoom globales du mode courant (vue d'ensemble, sans corps ciblé). */
   private _applyGlobalZoomBounds(): void {
     const explo = this._scaleMode === 'explo';

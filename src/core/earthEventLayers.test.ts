@@ -7,7 +7,7 @@ import {
 } from './earthEventLayers';
 import { topEvents } from './earthEvents';
 import { classifyTemporal } from './temporal';
-import { EVENT_PROVIDERS } from '@/registry/providers/events';
+import { EVENT_PROVIDERS } from '@/registry/providers/runtimeServices';
 import { messages } from '@/i18n/locales';
 
 const NOW = new Date('2026-09-20T12:00:00Z');

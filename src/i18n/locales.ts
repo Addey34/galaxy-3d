@@ -263,6 +263,11 @@ export const messages: Record<Locale, Dict> = {
     'settings.exposure': 'Brightness (exposure)',
     'settings.colorblind': 'Color-blind friendly orbit colors',
     'settings.interstellarPaths': 'Show interstellar object trajectories',
+    'settings.surfaceImagery': 'Stream high-resolution surface imagery',
+    'surface.imagery.headline': '{title} at {resolution}/pixel',
+    'surface.imagery.acquired': 'images from {from} to {to}',
+    'surface.imagery.oversampled':
+      'shown {factor}x larger than the published mosaic ({published} px/degree)',
     'settings.units': 'Imperial units (mi, °F)',
 
     // ── Filtres petits corps (NEO / comètes / TNO) ──
@@ -666,6 +671,12 @@ export const messages: Record<Locale, Dict> = {
     'settings.colorblind': 'Couleurs d’orbite adaptées au daltonisme',
     'settings.interstellarPaths':
       'Afficher les trajectoires des objets interstellaires',
+    'settings.surfaceImagery':
+      'Streamer l’imagerie de surface haute résolution',
+    'surface.imagery.headline': '{title} à {resolution}/pixel',
+    'surface.imagery.acquired': 'images de {from} à {to}',
+    'surface.imagery.oversampled':
+      'affichée {factor} fois plus grande que la mosaïque publiée ({published} px/degré)',
     'settings.units': 'Unités impériales (mi, °F)',
 
     // ── Filtres petits corps (NEO / comètes / TNO) ──

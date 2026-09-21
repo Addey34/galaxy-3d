@@ -11,7 +11,7 @@ import { SQRT_K } from '@/core/ScaleService';
 import { MIN_SAMPLES_PER_ORBIT_FOR_HERMITE } from '@/core/HorizonsEphemerisService';
 import summaryJson from '@/config/horizons-validation-summary.json';
 import { TEMPORAL_CATEGORIES, temporalCategoryLabelKey } from '@/core/temporal';
-import { EVENT_PROVIDERS } from '@/registry/providers/events';
+import { EVENT_PROVIDERS } from '@/registry/providers/runtimeServices';
 import manifestJson from '../../public/assets/ephemerides/manifest.json';
 import { shippedTextures } from '@/registry/products';
 import firebaseJson from '../../firebase.json';

@@ -8,6 +8,12 @@ fichier résume ce qui change pour une personne qui utilise ou cite Galaxy.
 
 ### Ajouté
 
+- **Imagerie de surface haute résolution sur la Lune**, chargée seulement quand on s'en
+  approche : la mosaïque du Lunar Reconnaissance Orbiter publiée par NASA Trek, à 83 mètres par
+  pixel au sol, contre 1,3 kilomètre pour l'image livrée avec l'application. Un bandeau dit
+  toujours quelle mosaïque est affichée, à quelle finesse, et sur quelle période ses images ont
+  été prises (novembre 2009 à février 2011). Le réglage peut être désactivé, et rien n'est alors
+  demandé au réseau. La descente s'arrête désormais à 8 kilomètres du sol lunaire au lieu de 128.
 - Événements terrestres, en option et éteints par défaut : séismes du catalogue USGS et
   événements naturels rapportés par NASA EONET, posés à leurs vraies coordonnées sur la Terre
   à la date de la scène. Chaque événement porte sa nature, une mesure sismologique et un
@@ -21,6 +27,13 @@ fichier résume ce qui change pour une personne qui utilise ou cite Galaxy.
 
 ### Corrigé
 
+- En s'approchant très près d'un corps, celui-ci **disparaissait entièrement** : le plan de coupe
+  de la caméra passait devant sa surface, sans erreur ni message. Le seuil dépendait du corps
+  (17 km d'altitude sur la Lune, 64 sur la Terre, 34 sur Mars).
+- La distance d'approche minimale était la même pour tous les corps, quelle que soit la finesse
+  de leur image : on s'arrêtait deux fois trop haut au-dessus des corps les mieux cartographiés
+  et quatre fois trop bas au-dessus des autres. Elle se déduit maintenant de l'image réellement
+  affichée.
 - La couche des petits corps était **vide en ligne**, en silence : le service de la NASA/JPL
   qu'elle interrogeait répond à un navigateur sans l'en-tête d'origine croisée qu'il lui faut
   pour accepter la réponse. Ses milliers d'astéroïdes et de comètes sont désormais livrés avec

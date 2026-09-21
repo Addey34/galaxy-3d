@@ -7,7 +7,7 @@ import {
   POSITION_PROVIDERS,
   answersAnyDate,
 } from './index';
-import { EVENT_PROVIDERS } from './events';
+import { EVENT_PROVIDERS, TILE_PROVIDERS } from './runtimeServices';
 import { FACT_SOURCES, factSource } from '@/config/factSources';
 import {
   SUMMARY_PROVIDER,
@@ -42,15 +42,16 @@ describe('registre des fournisseurs', () => {
       ...Object.keys(FACT_SOURCE_PROVIDERS),
       ...Object.values(POSITION_PROVIDERS).map((p) => p.id),
       ...Object.keys(EVENT_PROVIDERS),
+      ...Object.keys(TILE_PROVIDERS),
     ].sort();
     expect(
       declared,
       'une fiche présente sur le disque mais absente de providers/index.ts ne serait lue par personne'
     ).toEqual(fileIds);
-    expect(fileIds.length).toBe(25);
+    expect(fileIds.length).toBe(26);
   });
 
-  it('garde les fiches d’événements HORS du bundle de l’application', () => {
+  it('garde les fiches de services HORS du bundle de l’application', () => {
     // Mesuré avant d'être une règle : avec ces deux fiches dans `index.ts`, la prose bilingue
     // de leurs conditions se retrouvait mot pour mot dans `dist/assets/SolarSystemApp-*.js`,
     // alors que rien à l'exécution ne les lit. Le test lit la SOURCE plutôt que le bundle, pour
@@ -68,7 +69,11 @@ describe('registre des fournisseurs', () => {
         }
         if (!entry.endsWith('.ts') || entry.endsWith('.test.ts')) continue;
         const source = readFileSync(full, 'utf-8');
-        if (/from '(\.\/events|@\/registry\/providers\/events)'/.test(source))
+        if (
+          /from '(\.\/runtimeServices|@\/registry\/providers\/runtimeServices)'/.test(
+            source
+          )
+        )
           offenders.push(full.slice(src.length + 1));
       }
     };
@@ -84,20 +89,28 @@ describe('registre des fournisseurs', () => {
       expect(provider.id, `clé ${key}`).toBe(key);
     for (const [key, provider] of Object.entries(EVENT_PROVIDERS))
       expect(provider.id, `clé ${key}`).toBe(key);
+    for (const [key, provider] of Object.entries(TILE_PROVIDERS))
+      expect(provider.id, `clé ${key}`).toBe(key);
     // Les sources de position sont indexées par la clé que renvoie `BodyPositionResolver`, pas
     // par leur identifiant de fiche : c'est `positionSource` qui doit correspondre.
     for (const [key, provider] of Object.entries(POSITION_PROVIDERS))
       expect(provider.positionSource, `clé ${key}`).toBe(key);
   });
 
-  it('sépare les trois rôles sans recouvrement', () => {
+  it('sépare les quatre rôles sans recouvrement', () => {
     for (const provider of Object.values(FACT_SOURCE_PROVIDERS))
       expect(provider.role, provider.id).toBe('fact-source');
     for (const provider of Object.values(POSITION_PROVIDERS))
       expect(provider.role, provider.id).toBe('position-source');
     for (const provider of Object.values(EVENT_PROVIDERS))
       expect(provider.role, provider.id).toBe('event-source');
-    expect(ALL_PROVIDERS.length + Object.keys(EVENT_PROVIDERS).length).toBe(25);
+    for (const provider of Object.values(TILE_PROVIDERS))
+      expect(provider.role, provider.id).toBe('tile-source');
+    expect(
+      ALL_PROVIDERS.length +
+        Object.keys(EVENT_PROVIDERS).length +
+        Object.keys(TILE_PROVIDERS).length
+    ).toBe(26);
   });
 });
 

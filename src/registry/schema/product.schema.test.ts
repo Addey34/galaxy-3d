@@ -13,20 +13,26 @@ import {
  * Mêmes trois promesses que `provider.schema.test.ts` : le fichier commité est ce que Zod produit
  * aujourd'hui, chaque fiche passe le schéma, et le schéma refuse ce qu'il doit refuser. La
  * quatrième est propre aux produits : la règle STAC lue à la source, « `other` sans lien de
- * licence vaut données privées », est tenue ici. Sans elle, les 24 textures du domaine public
+ * licence vaut données privées », est tenue ici. Sans elle, les textures du domaine public
  * seraient publiées dans un format qui dit le contraire.
  */
 
 const PRODUCTS = resolve(import.meta.dirname, '../products');
 
-function productFiles(): string[] {
-  const top = readdirSync(PRODUCTS)
-    .filter((n) => n.endsWith('.json'))
-    .map((n) => join(PRODUCTS, n));
-  const textures = readdirSync(join(PRODUCTS, 'textures'))
-    .filter((n) => n.endsWith('.json'))
-    .map((n) => join(PRODUCTS, 'textures', n));
-  return [...top, ...textures];
+/**
+ * PARCOURS RÉCURSIF, et ce n'est pas un raffinement gratuit : la première version nommait les
+ * deux dossiers connus (`.` et `textures/`). Le dossier `tilesets/` ajouté au lot 9 phase 9C
+ * n'aurait donc été validé par PERSONNE, en silence, alors que c'est exactement le type de
+ * fiche dont une erreur (un gabarit, un niveau maximal) part directement en requêtes réseau.
+ */
+function productFiles(dir: string = PRODUCTS): string[] {
+  const files: string[] = [];
+  for (const entry of readdirSync(dir, { withFileTypes: true })) {
+    const full = join(dir, entry.name);
+    if (entry.isDirectory()) files.push(...productFiles(full));
+    else if (entry.name.endsWith('.json')) files.push(full);
+  }
+  return files;
 }
 
 describe('JSON Schema des produits généré depuis Zod', () => {
@@ -38,10 +44,11 @@ describe('JSON Schema des produits généré depuis Zod', () => {
     ).toBe(productJsonSchemaText());
   });
 
-  it('décrit bien les trois formes', () => {
+  it('décrit bien les quatre formes', () => {
     const schema = JSON.stringify(productJsonSchema());
     expect(schema).toContain('"texture"');
     expect(schema).toContain('"ephemeris-collection"');
+    expect(schema).toContain('"tileset"');
     expect(schema).toContain('lineage');
   });
 });
@@ -50,7 +57,7 @@ describe('chaque fiche produit passe le schéma', () => {
   const files = productFiles();
 
   it('trouve bien les fiches', () => {
-    expect(files.length).toBe(64);
+    expect(files.length).toBe(65);
   });
 
   it.each(files.map((f) => [f.slice(PRODUCTS.length + 1), f]))(

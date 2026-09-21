@@ -420,6 +420,228 @@
         "generatedBy"
       ],
       "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "$schema": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+        },
+        "type": {
+          "type": "string",
+          "const": "tileset"
+        },
+        "body": {
+          "type": "string",
+          "pattern": "^[a-z0-9]+$"
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1
+        },
+        "providerId": {
+          "type": "string",
+          "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+        },
+        "mission": {
+          "type": "string",
+          "minLength": 1
+        },
+        "instrument": {
+          "type": "string",
+          "minLength": 1
+        },
+        "service": {
+          "type": "object",
+          "properties": {
+            "template": {
+              "type": "string",
+              "pattern": "^https:\\/\\/[^\\s\"']+$"
+            },
+            "style": {
+              "type": "string",
+              "minLength": 1
+            },
+            "tileMatrixSet": {
+              "type": "string",
+              "minLength": 1
+            },
+            "format": {
+              "type": "string",
+              "enum": [
+                "image/jpeg",
+                "image/png"
+              ]
+            },
+            "matrix": {
+              "type": "object",
+              "properties": {
+                "columnsAtLevelZero": {
+                  "type": "integer",
+                  "exclusiveMinimum": 0,
+                  "maximum": 9007199254740991
+                },
+                "rowsAtLevelZero": {
+                  "type": "integer",
+                  "exclusiveMinimum": 0,
+                  "maximum": 9007199254740991
+                },
+                "tileSizePx": {
+                  "type": "integer",
+                  "exclusiveMinimum": 0,
+                  "maximum": 9007199254740991
+                }
+              },
+              "required": [
+                "columnsAtLevelZero",
+                "rowsAtLevelZero",
+                "tileSizePx"
+              ],
+              "additionalProperties": false
+            },
+            "minLevel": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "maxLevel": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            }
+          },
+          "required": [
+            "template",
+            "style",
+            "tileMatrixSet",
+            "format",
+            "matrix",
+            "minLevel",
+            "maxLevel"
+          ],
+          "additionalProperties": false
+        },
+        "publishedPixelsPerDegree": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "acquired": {
+          "type": "object",
+          "properties": {
+            "interval": {
+              "minItems": 1,
+              "type": "array",
+              "items": {
+                "minItems": 2,
+                "maxItems": 2,
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z$"
+                }
+              }
+            }
+          },
+          "required": [
+            "interval"
+          ],
+          "additionalProperties": false
+        },
+        "license": {
+          "type": "string",
+          "pattern": "^(other|[A-Za-z0-9.+-]+(\\s+(AND|OR|WITH)\\s+[A-Za-z0-9.+-]+)*)$"
+        },
+        "rights": {
+          "type": "string",
+          "enum": [
+            "public-domain"
+          ]
+        },
+        "links": {
+          "minItems": 1,
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "rel": {
+                "type": "string",
+                "enum": [
+                  "license",
+                  "via",
+                  "describedby"
+                ]
+              },
+              "href": {
+                "type": "string",
+                "pattern": "^https:\\/\\/[^\\s\"']+$"
+              }
+            },
+            "required": [
+              "rel",
+              "href"
+            ]
+          }
+        },
+        "providers": {
+          "minItems": 1,
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "minLength": 1
+              },
+              "roles": {
+                "minItems": 1,
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "licensor",
+                    "producer",
+                    "processor",
+                    "host"
+                  ]
+                }
+              },
+              "url": {
+                "type": "string",
+                "pattern": "^https:\\/\\/[^\\s\"']+$"
+              }
+            },
+            "required": [
+              "name",
+              "roles"
+            ]
+          }
+        },
+        "verified": {
+          "type": "string",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+        }
+      },
+      "required": [
+        "id",
+        "type",
+        "body",
+        "title",
+        "providerId",
+        "mission",
+        "instrument",
+        "service",
+        "publishedPixelsPerDegree",
+        "acquired",
+        "license",
+        "links",
+        "providers",
+        "verified"
+      ],
+      "additionalProperties": false
     }
   ]
 }

@@ -111,7 +111,14 @@ export function setupSurfaceProbe(api: PublicAPI): () => void {
     const viewportHeightPx = api.sceneSystem.renderer.domElement.clientHeight;
 
     const surface = body?.getLayerDiagnostics('surface');
-    const textureWidthPx = surface?.map?.width ?? 0;
+    // Finesse RÉELLEMENT servie : l'imagerie tuilée, quand elle peint, remplace la texture
+    // livrée dans ce calcul, exactement comme elle le fait pour le plancher d'approche
+    // (cf. `CelestialObject.getApproachFloorFactor`). Lire la seule texture ici donnerait un
+    // agrandissement seize fois trop grand pendant que les carreaux sont à l'écran.
+    const tilesWidthPx = Number(
+      document.getElementById('surface-imagery')?.dataset['width'] ?? 0
+    );
+    const textureWidthPx = Math.max(surface?.map?.width ?? 0, tilesWidthPx);
     const vertexCount = surface?.geometry?.vertexCount ?? 0;
     // (segments + 1)² sommets pour une SphereGeometry : on remonte à la densité réelle
     // du mesh plutôt qu'à la constante de configuration, qui peut mentir après un swap.
