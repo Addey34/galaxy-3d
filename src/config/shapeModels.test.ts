@@ -311,6 +311,34 @@ describe('orientation des modèles livrés', () => {
  * Le test compare donc la valeur déclarée au fichier lui-même, et refuse en particulier de la
  * sous-estimer. Une sur-estimation de quelques pour cent ne coûte qu'un peu de recul.
  */
+/**
+ * FACES VERS L'EXTÉRIEUR. Un maillage retourné s'éclaire à l'envers et laisse voir son intérieur
+ * par transparence de la face arrière. Le risque est réel depuis que le décimateur relit des
+ * grilles en longitudes Ouest (`--west`) : inverser les longitudes inverse le sens des faces si
+ * l'ordre de la grille n'est pas imposé. Volume signé positif = normales sortantes.
+ */
+describe('sens des faces des modèles livrés', () => {
+  it.each(levels())('%s %s', (_name, _quality, onDisk) => {
+    const { positions, index } = readGlbGeometry(onDisk);
+    let signed = 0;
+    for (let t = 0; t < index.length; t += 3) {
+      const [a, b, c] = [index[t]! * 3, index[t + 1]! * 3, index[t + 2]! * 3];
+      signed +=
+        (positions[a]! *
+          (positions[b + 1]! * positions[c + 2]! -
+            positions[b + 2]! * positions[c + 1]!) -
+          positions[a + 1]! *
+            (positions[b]! * positions[c + 2]! -
+              positions[b + 2]! * positions[c]!) +
+          positions[a + 2]! *
+            (positions[b]! * positions[c + 1]! -
+              positions[b + 1]! * positions[c]!)) /
+        6;
+    }
+    expect(signed).toBeGreaterThan(0);
+  });
+});
+
 describe('débordement des modèles (extentRatio)', () => {
   // Un seul `extentRatio` par corps pour TOUS ses niveaux : il doit couvrir le plus saillant.
   it.each(levels())('%s %s', (name, _quality, onDisk) => {
