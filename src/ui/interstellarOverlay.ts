@@ -65,11 +65,14 @@ export class InterstellarOverlay {
   private readonly canvas: HTMLCanvasElement;
   private readonly ctx: CanvasRenderingContext2D | null;
   private readonly tracks: Track[];
-  private showPaths = false;
+  /** Objets dont la trajectoire est tracée (colonne « Orbite » du tableau Réglages). */
+  private pathNames: ReadonlySet<string> = new Set();
+  /** Objet sélectionné : toujours peint et nommé, quels que soient les réglages. */
+  private target: string | null = null;
   private active = false;
-  /** Marqueurs masqués par le tableau Réglages (colonne « Corps »). */
+  /** Marqueurs masqués par le tableau Réglages (colonne « Objet »). */
   private hidden: ReadonlySet<string> = new Set();
-  /** Objets dont le NOM est masqué (colonne « Libellé »), marqueur conservé. */
+  /** Objets dont le NOM est masqué (colonne « Étiquette »), marqueur conservé. */
   private hiddenLabels: ReadonlySet<string> = new Set();
   /** Où chaque marqueur a été peint (pixels écran) — ce qui le rend cliquable. */
   private readonly _markers: { name: string; x: number; y: number }[] = [];
@@ -118,24 +121,30 @@ export class InterstellarOverlay {
   }
 
   /**
-   * Trajectoires tracées ou non. DÉSACTIVÉES par défaut : une hyperbole ne se referme jamais, et
-   * trois courbes ouvertes traversant toute la vue d'ensemble se lisaient comme des orbites
-   * cassées (signalé à l'usage le 2026-09-16). Les marqueurs et leurs noms restent affichés ;
-   * la trajectoire est une option des Réglages, comme les orbites des lunes et des naines.
+   * Trajectoires à tracer, objet par objet : la colonne « Orbite » du tableau Réglages, où une
+   * hyperbole tient la place d'une orbite. AUCUNE par défaut : une hyperbole ne se referme
+   * jamais, et trois courbes ouvertes traversant toute la vue d'ensemble se lisaient comme des
+   * orbites cassées (signalé à l'usage le 2026-09-16) ; même retenue que les orbites des lunes.
    */
-  setTrajectoriesVisible(visible: boolean): void {
-    if (this.showPaths === visible) return;
-    this.showPaths = visible;
+  setTrajectoryNames(names: ReadonlySet<string>): void {
+    this.pathNames = new Set(names);
     this._hasDrawn = false; // force le prochain dessin : la vue n'a pas bougé, le réglage oui
   }
 
-  /** Marqueurs à ne pas peindre (colonne « Corps » du tableau Réglages). */
+  /** Objet sélectionné, toujours peint et nommé (cf. `SpacecraftOverlay.setTarget`). */
+  setTarget(name: string | null): void {
+    if (this.target === name) return;
+    this.target = name;
+    this._hasDrawn = false;
+  }
+
+  /** Marqueurs à ne pas peindre (colonne « Objet » du tableau Réglages). */
   setHiddenNames(names: ReadonlySet<string>): void {
     this.hidden = new Set(names);
     this._hasDrawn = false; // la vue n'a pas bougé, le réglage oui
   }
 
-  /** Noms à ne pas écrire (colonne « Libellé »), les marqueurs restent. */
+  /** Noms à ne pas écrire (colonne « Étiquette »), les marqueurs restent. */
   setHiddenLabelNames(names: ReadonlySet<string>): void {
     this.hiddenLabels = new Set(names);
     this._hasDrawn = false;
@@ -195,12 +204,14 @@ export class InterstellarOverlay {
     for (const track of this.tracks) {
       if (now < track.fromMs || now > track.toMs) continue;
       tracks++;
-      if (this.hidden.has(track.object.name)) continue;
-
-      if (this.showPaths) {
+      // La trajectoire est un réglage à part, comme l'orbite d'un corps masqué : elle se
+      // trace même quand le marqueur ne l'est pas.
+      if (this.pathNames.has(track.object.name)) {
         this._drawPath(ctx, camera, track, morph, w, h);
         paths++;
       }
+      const isTarget = track.object.name === this.target;
+      if (!isTarget && this.hidden.has(track.object.name)) continue;
 
       const pos = keplerianPositionEcliptic(track.object.elements, date);
       const s = eclipticToScene(pos.x, pos.y, pos.z);
@@ -221,7 +232,7 @@ export class InterstellarOverlay {
       ctx.fill();
       this._markers.push({ name: track.object.name, x, y });
       markers++;
-      if (this.hiddenLabels.has(track.object.name)) continue;
+      if (!isTarget && this.hiddenLabels.has(track.object.name)) continue;
       ctx.font = '11px sans-serif';
       const text = track.object.displayName[locale];
       const textWidth = ctx.measureText(text).width;

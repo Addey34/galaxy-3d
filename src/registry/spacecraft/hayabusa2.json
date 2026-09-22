@@ -41,6 +41,13 @@
       "citation": "NSSDCA/COSPAR 2014-076A"
     }
   },
+  "satelliteOf": [
+    {
+      "body": "ryugu",
+      "from": "2018-06-22T00:00:00Z",
+      "to": "2019-11-20T00:00:00Z"
+    }
+  ],
   "coverage": {
     "temporal": {
       "interval": [

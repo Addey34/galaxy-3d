@@ -78,8 +78,8 @@ export const messages: Record<Locale, Dict> = {
     'bi.trigger.aria': 'Body information',
     'settings.trigger.aria': 'Display settings',
     'time.expand': 'Time settings',
-    'events.title': 'Upcoming events',
-    'events.open': 'Open astronomical events',
+    'events.title': 'Astronomical events',
+    'events.open': 'Astronomical events',
     'events.close': 'Close astronomical events',
     'events.empty': 'No upcoming event found',
     'events.newMoon': 'New Moon',
@@ -202,7 +202,7 @@ export const messages: Record<Locale, Dict> = {
       'After selecting a body, open its information panel from the target button.',
     'tour.step.settings.title': '6. Adjust display',
     'tour.step.settings.text':
-      'Open display settings to show or hide orbits, names, markers, or even individual bodies.',
+      'Open display settings to show or hide labels, objects and orbits, group by group or one object at a time.',
     'tour.step.weather.title': '7. Explore weather',
     'tour.step.weather.text':
       'Open weather layers to see clouds, rain, wind and surface data on Earth.',
@@ -245,24 +245,32 @@ export const messages: Record<Locale, Dict> = {
     'exploScale.fact.voyager':
       'Voyager 1, humanity’s farthest spacecraft, is already over 24 billion km from Earth.',
 
-    // ── Panneau orbites (mode Éducatif) ──
-    'settings.title': 'Settings',
-    'settings.orbitsToggle': 'Show orbits',
-    'settings.labelsToggle': 'Show body names and markers',
-    'settings.bodiesToggle': 'Show celestial bodies',
+    // ── Surface « Réglages d'affichage » : un vocabulaire, trois colonnes (étiquette, objet,
+    //    orbite), les mêmes mots dans le tableau, ses en-têtes et ses lignes de groupe ──
+    'settings.title': 'Display settings',
+    'settings.section.scene': 'In the scene',
+    'settings.section.rendering': 'Rendering',
+    'settings.section.reading': 'Accessibility and units',
+    'settings.section.view': 'View',
+    'settings.labelsToggle': 'Show every label',
+    'settings.bodiesToggle': 'Show every object',
+    'settings.orbitsToggle': 'Show every orbit and trajectory',
     'settings.tableHint':
-      'Column header toggles the whole column; each row controls one body.',
-    'settings.tableCaption': 'Per-body display settings',
-    'settings.col.bodyName': 'Celestial body',
-    'settings.col.names': 'Name',
-    'settings.col.bodies': 'Body',
+      'A column header sets the whole column, a group row its group, a row one object. Spacecraft and interstellar objects start hidden.',
+    'settings.tableCaption': 'What the scene shows, object by object',
+    'settings.col.bodyName': 'Object',
+    'settings.col.names': 'Label',
+    'settings.col.bodies': 'Object',
     'settings.col.orbits': 'Orbit',
-    'settings.row.name.aria': "Show {name}'s name",
+    'settings.row.name.aria': "Show {name}'s label",
     'settings.row.body.aria': 'Show {name}',
     'settings.row.orbit.aria': "Show {name}'s orbit",
+    'settings.row.trajectory.aria': "Show {name}'s trajectory",
+    'settings.group.name.aria': 'Show every label in {group}',
+    'settings.group.body.aria': 'Show every object in {group}',
+    'settings.group.orbit.aria': 'Show every orbit in {group}',
     'settings.exposure': 'Brightness (exposure)',
     'settings.colorblind': 'Color-blind friendly orbit colors',
-    'settings.interstellarPaths': 'Show interstellar object trajectories',
     'settings.surfaceImagery': 'Stream high-resolution surface imagery',
     'surface.imagery.headline': '{title} at {resolution}/pixel',
     'surface.imagery.acquired': 'images from {from} to {to}',
@@ -273,10 +281,10 @@ export const messages: Record<Locale, Dict> = {
     'surface.relief.acquired': 'altimetry from {from} to {to}',
     'settings.units': 'Imperial units (mi, °F)',
 
-    // ── Filtres petits corps (NEO / comètes / TNO) ──
-    'smallBodies.trigger.aria': 'Small-body filters',
-    'smallBodies.dialog.aria': 'Small-body filters',
-    'smallBodies.title': 'Small bodies',
+    // ── Champ d'astéroïdes et de comètes (NEO / comètes / TNO), section des Réglages ──
+    'smallBodies.title': 'Asteroid and comet field',
+    'smallBodies.exploOnly':
+      'Drawn in Exploration mode, one dot per known orbit.',
     'smallBodies.mainBelt': 'Main belt',
     'smallBodies.neo': 'Near-Earth objects',
     'smallBodies.comet': 'Comets',
@@ -329,7 +337,7 @@ export const messages: Record<Locale, Dict> = {
     // Couche des événements terrestres (voir ui/earthEvents.ts).
     'earthEvents.title': 'Earth events',
     'earthEvents.dialog.aria': 'Earth events',
-    'earthEvents.trigger.aria': 'Open Earth events',
+    'earthEvents.trigger.aria': 'Earth events',
     'earthEvents.quakes.label': 'Earthquakes (USGS)',
     'earthEvents.quakes.note':
       'Origin solutions of magnitude {magnitude} and above over the {days} days before the scene date, measured by seismometer networks. No earthquake exists in the future: a later scene gets the latest real window, and the gap is written below.',
@@ -488,8 +496,8 @@ export const messages: Record<Locale, Dict> = {
     'bi.trigger.aria': 'Informations du corps',
     'settings.trigger.aria': "Réglages d'affichage",
     'time.expand': 'Réglages du temps',
-    'events.title': 'Événements à venir',
-    'events.open': 'Ouvrir les événements astronomiques',
+    'events.title': 'Événements astronomiques',
+    'events.open': 'Événements astronomiques',
     'events.close': 'Fermer les événements astronomiques',
     'events.empty': 'Aucun événement à venir',
     'events.newMoon': 'Nouvelle Lune',
@@ -614,7 +622,7 @@ export const messages: Record<Locale, Dict> = {
       'Après avoir sélectionné un corps, ouvrez sa fiche avec le bouton d’information de la cible.',
     'tour.step.settings.title': '6. Régler l’affichage',
     'tour.step.settings.text':
-      'Ouvrez les réglages d’affichage pour afficher ou masquer les orbites, les noms, les points, ou même certains corps individuellement.',
+      'Ouvrez les réglages d’affichage pour montrer ou masquer les étiquettes, les objets et les orbites, groupe par groupe ou objet par objet.',
     'tour.step.weather.title': '7. Explorer la météo',
     'tour.step.weather.text':
       'Ouvrez les couches météo pour voir les nuages, la pluie, le vent et les données de surface sur Terre.',
@@ -660,25 +668,31 @@ export const messages: Record<Locale, Dict> = {
     'exploScale.fact.voyager':
       'Voyager 1, la sonde la plus lointaine de l’humanité, est déjà à plus de 24 milliards de km de la Terre.',
 
-    // ── Panneau orbites (mode Éducatif) ──
-    'settings.title': 'Paramètres',
-    'settings.orbitsToggle': 'Afficher les orbites',
-    'settings.labelsToggle': 'Afficher les noms et les points',
-    'settings.bodiesToggle': 'Afficher les corps célestes',
+    // ── Surface « Réglages d'affichage » (cf. le bloc anglais) ──
+    'settings.title': 'Réglages d’affichage',
+    'settings.section.scene': 'Dans la scène',
+    'settings.section.rendering': 'Rendu',
+    'settings.section.reading': 'Accessibilité et unités',
+    'settings.section.view': 'Vue',
+    'settings.labelsToggle': 'Afficher toutes les étiquettes',
+    'settings.bodiesToggle': 'Afficher tous les objets',
+    'settings.orbitsToggle': 'Afficher toutes les orbites et trajectoires',
     'settings.tableHint':
-      'L’en-tête bascule toute la colonne ; chaque ligne règle un seul corps.',
-    'settings.tableCaption': 'Réglages d’affichage par corps',
-    'settings.col.bodyName': 'Corps céleste',
-    'settings.col.names': 'Nom',
-    'settings.col.bodies': 'Corps',
+      'L’en-tête règle toute la colonne, une ligne de groupe tout son groupe, une ligne un seul objet. Les sondes et les objets interstellaires sont masqués au départ.',
+    'settings.tableCaption': 'Ce que montre la scène, objet par objet',
+    'settings.col.bodyName': 'Objet',
+    'settings.col.names': 'Étiquette',
+    'settings.col.bodies': 'Objet',
     'settings.col.orbits': 'Orbite',
-    'settings.row.name.aria': 'Afficher le nom de {name}',
+    'settings.row.name.aria': 'Afficher l’étiquette de {name}',
     'settings.row.body.aria': 'Afficher {name}',
     'settings.row.orbit.aria': 'Afficher l’orbite de {name}',
+    'settings.row.trajectory.aria': 'Afficher la trajectoire de {name}',
+    'settings.group.name.aria': 'Afficher toutes les étiquettes : {group}',
+    'settings.group.body.aria': 'Afficher tous les objets : {group}',
+    'settings.group.orbit.aria': 'Afficher toutes les orbites : {group}',
     'settings.exposure': 'Luminosité (exposition)',
     'settings.colorblind': 'Couleurs d’orbite adaptées au daltonisme',
-    'settings.interstellarPaths':
-      'Afficher les trajectoires des objets interstellaires',
     'settings.surfaceImagery':
       'Streamer l’imagerie de surface haute résolution',
     'surface.imagery.headline': '{title} à {resolution}/pixel',
@@ -690,10 +704,10 @@ export const messages: Record<Locale, Dict> = {
     'surface.relief.acquired': 'altimétrie de {from} à {to}',
     'settings.units': 'Unités impériales (mi, °F)',
 
-    // ── Filtres petits corps (NEO / comètes / TNO) ──
-    'smallBodies.trigger.aria': 'Filtres petits corps',
-    'smallBodies.dialog.aria': 'Filtres petits corps',
-    'smallBodies.title': 'Petits corps',
+    // ── Champ d'astéroïdes et de comètes, section des Réglages ──
+    'smallBodies.title': 'Champ d’astéroïdes et de comètes',
+    'smallBodies.exploOnly':
+      'Dessiné en mode Exploration, un point par orbite connue.',
     'smallBodies.mainBelt': 'Ceinture principale',
     'smallBodies.neo': 'Géocroiseurs',
     'smallBodies.comet': 'Comètes',
@@ -746,7 +760,7 @@ export const messages: Record<Locale, Dict> = {
     // Couche des événements terrestres (voir ui/earthEvents.ts).
     'earthEvents.title': 'Événements terrestres',
     'earthEvents.dialog.aria': 'Événements terrestres',
-    'earthEvents.trigger.aria': 'Ouvrir les événements terrestres',
+    'earthEvents.trigger.aria': 'Événements terrestres',
     'earthEvents.quakes.label': 'Séismes (USGS)',
     'earthEvents.quakes.note':
       'Solutions d’origine de magnitude {magnitude} et plus sur les {days} jours qui précèdent la date de la scène, mesurées par les réseaux de sismomètres. Aucun séisme n’existe au futur : une scène plus tardive reçoit la dernière fenêtre réelle, et l’écart est écrit ci-dessous.',

@@ -58,8 +58,7 @@ test('the small-body panel names its source and the date of the snapshot', async
 }) => {
   await page.goto('/');
   await expect(page.locator('#loader')).toBeHidden({ timeout: 30_000 });
-  await page.locator('.mode-btn[data-mode=explo]').click();
-  await page.locator('#smallbody-filters-trigger').click();
+  await page.locator('#settings-trigger').click();
 
   // Une donnée figée qui se présenterait comme vivante serait le défaut, pas la correction :
   // le panneau porte le nombre d'objets chargés, la base et la DATE du relevé.
@@ -80,8 +79,7 @@ test('past its declared age, the panel says the snapshot is old', async ({
   await page.clock.setFixedTime(new Date('2027-05-25T12:00:00Z'));
   await page.goto('/');
   await expect(page.locator('#loader')).toBeHidden({ timeout: 30_000 });
-  await page.locator('.mode-btn[data-mode=explo]').click();
-  await page.locator('#smallbody-filters-trigger').click();
+  await page.locator('#settings-trigger').click();
 
   const note = page.locator('#smallbody-filters .sb-source');
   await expect(note).toBeVisible();

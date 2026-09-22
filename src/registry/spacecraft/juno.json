@@ -41,6 +41,13 @@
       "citation": "NSSDCA/COSPAR 2011-040A"
     }
   },
+  "satelliteOf": [
+    {
+      "body": "jupiter",
+      "from": "2016-07-05T00:00:00Z",
+      "to": "2028-09-28T00:00:00Z"
+    }
+  ],
   "coverage": {
     "temporal": {
       "interval": [

@@ -39,6 +39,22 @@ export const spacecraftSchema = z
       .partial()
       .strict()
       .optional(),
+    /**
+     * Phases où la sonde est le SATELLITE d'un corps du catalogue, qui la place alors comme une
+     * lune en Éducatif (cf. `core/satellitePhases.ts`). DÉRIVÉES des fichiers Horizons, jamais
+     * saisies : `pnpm spacecraft:phases` les réécrit, et un test les confronte à la dérivation.
+     */
+    satelliteOf: z
+      .array(
+        z
+          .object({
+            body: z.string().regex(/^[a-z0-9]+(-[a-z0-9]+)*$/),
+            from: instant,
+            to: instant,
+          })
+          .strict()
+      )
+      .optional(),
     coverage: z
       .object({
         temporal: z
@@ -74,6 +90,24 @@ export const spacecraftSchema = z
         path: ['coverage', 'temporal', 'interval'],
         message: 'la couverture ne peut pas précéder le lancement',
       });
+    let previousTo = -Infinity;
+    for (const [i, phase] of (record.satelliteOf ?? []).entries()) {
+      const phaseFrom = Date.parse(phase.from);
+      const phaseTo = Date.parse(phase.to);
+      if (!(phaseFrom <= phaseTo) || phaseFrom <= previousTo)
+        ctx.addIssue({
+          code: 'custom',
+          path: ['satelliteOf', i],
+          message: 'phase inversée, ou qui chevauche ou précède la précédente',
+        });
+      if (phaseFrom < fromMs || phaseTo > toMs)
+        ctx.addIssue({
+          code: 'custom',
+          path: ['satelliteOf', i],
+          message: 'phase hors de la couverture du fichier Horizons',
+        });
+      previousTo = phaseTo;
+    }
   });
 
 export type SpacecraftRecord = z.infer<typeof spacecraftSchema>;

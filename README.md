@@ -14,8 +14,8 @@ Visualisateur interactif du système solaire en temps réel, développé en Type
 - Pages d'éclipse 2024–2035 : l'application s'ouvre au maximum de chaque éclipse ; la Lune éclipsée est cuivrée, teinte mesurée sur des photographies NASA
 - Modèles de forme scientifiques de Bennu, Éros, Itokawa, Ryugu et Ida, à leur vraie couleur de surface, en niveaux de détail chargés selon la distance, approchables à la vraie échelle en Exploration
 - Imagerie de surface streamée à l'approche de la Lune et de Mars (mosaïques publiées par NASA Trek), et relief mesuré sur la Lune : le sol est déplacé par les altitudes du modèle LOLA, avec trois lieux cuits plus finement (Tycho, Rima Hadley, Statio Tranquillitatis)
-- Objets interstellaires 1I/ʻOumuamua, 2I/Borisov et 3I/ATLAS sur leur vraie trajectoire hyperbolique (tracé en option)
-- Onze missions spatiales positionnées par NASA/JPL Horizons (Voyager, New Horizons, Juno, Parker Solar Probe…)
+- Objets interstellaires 1I/ʻOumuamua, 2I/Borisov et 3I/ATLAS sur leur vraie trajectoire hyperbolique (affichage en option)
+- Onze missions spatiales positionnées par NASA/JPL Horizons (Voyager, New Horizons, Juno, Parker Solar Probe…) ; en mode Éducatif, une sonde en orbite autour d'un corps est écartée de lui comme le sont ses lunes
 - Événements terrestres en option : séismes du catalogue USGS et événements naturels rapportés par NASA EONET, posés sur la Terre à la date de la scène ; chaque événement porte sa nature (mesure ou rapport), et un événement sans fin déclarée est dit « en cours »
 - HUD Exploration avec cible suivie, distance UA/km, temps-lumière et labels de corps
 - Responsive mobile avec qualité adaptative
@@ -29,9 +29,13 @@ démarrage complètent les contrôles de navigation, de temps et les deux modes 
 - **Événements** : consulter les prochaines phases lunaires et éclipses.
 - **Zoom optique** : ajuster le champ de vision en Exploration sans modifier la physique.
 - **Visite guidée** : parcourir les commandes au clavier ou à la souris au premier démarrage.
-- **Réglages** : noms, corps et orbites par corps ; luminosité, palette daltonienne, unités, et
-  tracé des trajectoires interstellaires (désactivé par défaut : une hyperbole ne se referme
-  pas, et trois courbes ouvertes encombraient la vue d'ensemble).
+- **Réglages d'affichage** : une surface en cinq sections. Un tableau par objet, groupé comme la
+  recherche, avec trois colonnes (étiquette, objet, orbite) ; le champ d'astéroïdes et de
+  comètes ; le rendu (luminosité, qualité, imagerie de surface) ; l'accessibilité et les unités ;
+  la vue. Au premier chargement : le Soleil, les huit planètes et la Lune nommés, les orbites des
+  planètes, et les sondes comme les objets interstellaires en option. La trajectoire d'un objet
+  interstellaire est la colonne « orbite » de sa ligne (une hyperbole ne se referme pas, et trois
+  courbes ouvertes encombraient la vue d'ensemble).
 
 ## Stack
 

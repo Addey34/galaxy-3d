@@ -10,9 +10,27 @@ test.beforeEach(async ({ page }) => {
   });
 });
 
+/** Ouvre les Réglages et coche une colonne pour tout le groupe des objets interstellaires. */
+async function checkInterstellarGroup(
+  page: import('@playwright/test').Page,
+  column: 1 | 2 | 3
+): Promise<void> {
+  await page.locator('#settings-trigger').click();
+  await page
+    .locator(
+      `.oo-group[data-group="nav.group.interstellar"] .oo-group-row td:nth-child(${column + 1}) .oo-checkbox`
+    )
+    .check();
+  await page.keyboard.press('Escape');
+}
+
 /**
  * `data-markers` / `data-tracks` : marqueurs peints dans le champ / objets dans leur fenêtre à
  * la dernière frame — la seule trace DOM de ce que la couche a dessiné (cf. interstellarOverlay).
+ *
+ * Les objets interstellaires sont en OPTION au premier chargement, comme les sondes (cf.
+ * `ui/defaultDisplay.ts`) : la couche est active, les trois objets sont dans leur fenêtre, mais
+ * rien n'est peint tant que la colonne « Objet » ne les montre pas.
  */
 test('interstellar overlay is active in educ AND explo, and draws 1I near Earth at its discovery', async ({
   page,
@@ -29,6 +47,10 @@ test('interstellar overlay is active in educ AND explo, and draws 1I near Earth 
   await expect(overlay).toHaveCount(1);
   await expect(overlay).toHaveClass(/is-visible/);
   await expect(overlay).toHaveCSS('pointer-events', 'none');
+  await expect(overlay).toHaveAttribute('data-tracks', '3');
+  await expect(overlay).toHaveAttribute('data-markers', '0');
+
+  await checkInterstellarGroup(page, 2);
   await expect
     .poll(async () => Number(await overlay.getAttribute('data-markers')))
     .toBeGreaterThanOrEqual(1);
@@ -70,30 +92,41 @@ test('draws nothing outside the verified window around perihelion', async ({
 });
 
 /**
- * La trajectoire est un CHOIX de l'utilisateur, pris dans les Réglages et conservé : c'est la
- * contrepartie du défaut discret. Sans ce test, la bascule pourrait ne rien tracer — ou oublier
- * le choix au rechargement — sans qu'aucun autre scénario ne le voie.
+ * La trajectoire est la colonne « Orbite » de la ligne de l'objet : une hyperbole tient la
+ * place d'une orbite, avec les mêmes mots et les mêmes cases. Elle se règle objet par objet,
+ * et, comme tout le contenu de la scène, elle ne se conserve pas d'une visite à l'autre (seules
+ * les préférences de rendu et de lecture le sont) ; l'ancienne clé de stockage est effacée.
  */
-test('trajectories are opt-in from Settings and the choice survives a reload', async ({
+test('trajectories are the Orbit column of the interstellar rows, one object at a time', async ({
   page,
 }) => {
   const errors: string[] = [];
   page.on('pageerror', (err) => errors.push(err.message));
 
+  await page.addInitScript(() =>
+    localStorage.setItem('ssv-interstellar-paths', '1')
+  );
   await page.goto('/?date=2017-10-19T00%3A00%3A00Z');
   await expect(page.locator('#loader')).toBeHidden({ timeout: 30_000 });
   const overlay = page.locator('#interstellar-overlay');
+  // L'ancien réglage conservé ne rallume rien, et il est effacé du navigateur.
   await expect(overlay).toHaveAttribute('data-paths', '0');
+  expect(
+    await page.evaluate(() => localStorage.getItem('ssv-interstellar-paths'))
+  ).toBeNull();
 
   await page.locator('#settings-trigger').click();
-  const toggle = page.locator('#interstellar-paths-toggle');
-  await expect(toggle).not.toBeChecked();
-  await toggle.check();
-  await expect(overlay).toHaveAttribute('data-paths', '3');
-
-  await page.reload();
-  await expect(page.locator('#loader')).toBeHidden({ timeout: 30_000 });
-  await expect(overlay).toHaveAttribute('data-paths', '3');
+  await page
+    .locator('.oo-group[data-group="nav.group.interstellar"] .oo-group-toggle')
+    .click();
+  const row = page.locator('#settings-table .oo-tr', { hasText: 'Borisov' });
+  const trajectory = row.locator('td:nth-child(4) .oo-checkbox');
+  await expect(trajectory).toHaveAttribute('aria-label', /trajectory/);
+  await expect(trajectory).not.toBeChecked();
+  await trajectory.check();
+  await expect(overlay).toHaveAttribute('data-paths', '1');
+  // Tracée sans que le marqueur soit montré, comme l'orbite d'un corps masqué.
+  await expect(overlay).toHaveAttribute('data-markers', '0');
 
   expect(errors, `Erreurs page : ${errors.join(' | ')}`).toEqual([]);
 });

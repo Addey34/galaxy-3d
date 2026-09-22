@@ -8,6 +8,7 @@
  * `name` est la clé de jointure exacte avec `manifest.json` / `scripts/generate-horizons-ephemerides.mjs`.
  */
 import type { LocalizedText, RealData } from '@/types';
+import type { SatellitePhase } from '@/core/satellitePhases';
 import { loadSpacecraftMissions } from '@/registry/spacecraft';
 
 export interface SpacecraftMission {
@@ -24,6 +25,11 @@ export interface SpacecraftMission {
    * par le chargeur du registre comme pour n'importe quel corps du catalogue.
    */
   facts: Partial<RealData>;
+  /**
+   * Phases où la sonde est le satellite d'un corps du catalogue, dans l'ordre du temps (cf.
+   * `core/satellitePhases.ts`). Vide pour une sonde qui n'a jamais orbité un corps du catalogue.
+   */
+  satelliteOf: readonly SatellitePhase[];
 }
 
 export const SPACECRAFT_MISSIONS: SpacecraftMission[] =

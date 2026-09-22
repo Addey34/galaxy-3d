@@ -55,6 +55,11 @@ export function loadSpacecraft(
       launchDate: record.launchDate,
       color: decode(record.color, `spacecraft/${id}.color`, 'color') as number,
       facts,
+      satelliteOf: (record.satelliteOf ?? []).map((phase) => ({
+        body: phase.body,
+        fromMs: Date.parse(phase.from),
+        toMs: Date.parse(phase.to),
+      })),
     };
   });
 }

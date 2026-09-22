@@ -39,9 +39,9 @@ export function setupOpticalZoom(camera: CameraSystem): OpticalZoomControl {
   range.step = '1';
   group.append(label, range);
 
-  // Rangé dans la surface Réglages, sous les options d'affichage.
+  // Seul occupant de la section « Vue » des Réglages, qui se montre et se masque avec lui.
   const host =
-    document.querySelector('#orbit-options .surface-body') ?? document.body;
+    document.getElementById('settings-section-view') ?? document.body;
   host.append(group);
 
   const refresh = (): void => {
@@ -68,6 +68,8 @@ export function setupOpticalZoom(camera: CameraSystem): OpticalZoomControl {
     // FOV n'a de sens qu'en Explo (vraie échelle). Masqué en Éducatif.
     setMode: (mode) => {
       group.hidden = mode !== 'explo';
+      const section = group.closest<HTMLElement>('.settings-section');
+      if (section) section.hidden = group.hidden;
       camera.setOpticalFov(camera.opticalFov);
       refresh();
     },

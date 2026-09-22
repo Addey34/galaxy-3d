@@ -633,19 +633,31 @@ pixels.
 
 ## Ce que montre la première vue, avant tout réglage
 
-Deux retenues, énoncées ici parce qu'elles ont été incohérentes entre elles pendant longtemps et
-que c'est le genre de défaut qu'on ne voit plus à force de le regarder.
+UNE règle, écrite une fois dans `ui/defaultDisplay.ts` et lue par le tableau des Réglages, parce
+que chaque couche décidait jusque-là de son propre défaut et que c'est le genre d'incohérence
+qu'on ne voit plus à force de la regarder :
 
-- **Les ORBITES ne couvrent que les planètes** au démarrage ; lunes, naines et petits corps sont
-  en opt-in dans le tableau de `#orbit-options`.
-- **Les LIBELLÉS suivent la même liste** (`MAJOR_BODIES` dans `ui/exploHud` : l'étoile, les huit
-  planètes, la Lune). Ils ne l'ont reçue que le 2026-09-11 : le catalogue compte plus de
-  cinquante entrées et toutes les afficher donnait vingt-quatre étiquettes empilées sur la vue
-  initiale, Phobos, Hygie, Orcus et Bennu comprises. Les orbites appliquaient déjà cette
-  retenue, les libellés non — deux défauts par défaut divergents dans le même panneau, sur la
-  même liste de corps. Tenu par `ui/defaultDisplay.test.ts`.
+- **Les ÉTIQUETTES** : le Soleil, les huit planètes et la Lune (`MAJOR_BODIES` dans
+  `ui/exploHud`). Reçue le 2026-09-11 : toutes les afficher donnait vingt-quatre étiquettes
+  empilées sur la vue initiale, Phobos, Hygie, Orcus et Bennu comprises.
+- **Les OBJETS** : tout le catalogue est dessiné, puisque c'est la scène elle-même.
+- **Les ORBITES** : celles des planètes seules ; lunes, naines et petits corps en option.
+- **Les OBJETS D'INSTRUMENT** (sondes, objets interstellaires) : ni point ni étiquette, en option
+  comme les orbites des petits corps (lot 14, 2026-09-22). Mesuré avant : BepiColombo,
+  OSIRIS-REx, Parker Solar Probe, Juno et 3I/ATLAS nommés dès le chargement, le nom
+  d'OSIRIS-REx sur celui de Vénus. Ce sont des aides de navigation peintes par-dessus la scène,
+  pas des corps qu'elle contient.
 
-Deux exceptions qui ne se devinent pas :
+Tenu par `ui/defaultDisplay.test.ts` (chaque ligne du tableau confrontée à la règle) et par
+`e2e/spacecraft.spec.ts` et `e2e/interstellar.spec.ts` (`data-markers` à 0 au chargement).
+
+Trois exceptions qui ne se devinent pas :
+
+- **L'objet SÉLECTIONNÉ est toujours peint et nommé**, dans toutes les couches
+  (`SpacecraftOverlay.setTarget`, `InterstellarOverlay.setTarget`, et le filtre de l'`ExploHud`
+  ci-dessous). Sans elle, choisir Juno dans la palette, sondes masquées, ouvrirait une vue sur un
+  point que rien ne dessine : le défaut même qui avait rendu les sondes actives dans les deux
+  modes. Falsifié : `?body=juno` doit peindre exactement un marqueur.
 
 - **Masquer n'est pas SUPPRIMER.** `ExploHud.update` crée l'élément DOM du libellé AVANT
   d'appliquer le filtre du panneau. L'ordre inverse a été livré une fois : les corps décochés
@@ -703,8 +715,10 @@ cadrages essayés. C'est donc vérifié structurellement, pas contre cette image
   la largeur du texte, avec `MARKER_LABEL_GAP` = 8 px.
 
 **Trajectoires interstellaires : en option.** Une hyperbole ne se referme jamais ; tracées par
-défaut, les trois se lisaient comme des orbites cassées en travers de la vue d'ensemble. Marqueurs
-et noms restent affichés, le tracé est une case des Réglages (conservée).
+défaut, les trois se lisaient comme des orbites cassées en travers de la vue d'ensemble. Depuis le
+lot 14, le tracé est la colonne « Orbite » de la ligne de chaque objet (une hyperbole y tient la
+place d'une orbite), et il ne se conserve pas d'une visite à l'autre, comme tout le contenu de la
+scène (cf. « La surface Réglages d'affichage »).
 
 ## Couches d'instrument pendant le morph Éduc↔Explo
 
@@ -752,9 +766,10 @@ lisait `flattenBodies(CELESTIAL_CONFIG)` ; la scène, elle, ne connaît toujours
 **L'ancre.** La caméra a besoin d'un `Object3D` à suivre. `ui/navigableAnchors.ts` en crée un
 par objet : un `THREE.Group` VIDE, sans géométrie ni matériau, qui ne dessine aucun pixel. Ce
 n'est pas une sphère mandataire déguisée — rien ne la rend visible, et le marqueur affiché reste
-celui de la couche 2D. Elle est placée par `scaleToScene`, exactement la fonction dont les deux
-couches se servent pour projeter leur marqueur : la caméra regarde donc le point où le marqueur
-est peint, dans les deux modes et pendant toute la transition. `CameraSystem` les reçoit par
+celui de la couche 2D. Elle est placée par le placeur que reçoit aussi la couche des sondes
+(`core/instrumentPlacement.ts`) : la caméra regarde donc le point où le marqueur est peint, dans
+les deux modes, pendant toute la transition, et quand une sonde en orbite est posée dans le
+système de son corps (§ suivant). `CameraSystem` les reçoit par
 `registerTargets` ; ce qu'il demande d'une cible est décrit par `CameraTarget`, bien plus petit
 qu'un `CelestialObject`.
 
@@ -772,13 +787,91 @@ consulte donc leurs marqueurs AVANT de lancer son rayon (`ui/bodyPicker.ts`, `Ov
 dans cet ordre, parce qu'ils sont peints par-dessus la scène : ce qui est sous le pointeur est
 le marqueur, pas ce que le rayon trouverait derrière lui. Falsifié en inversant l'ordre.
 
-**Ce qu'ils n'ont pas, et pourquoi.** Pas de ligne dans la colonne « Orbite » du tableau
-Réglages : une sonde n'a pas d'orbite fermée (assistances gravitationnelles, halo L2) et une
-hyperbole ne se referme jamais ; la cellule reste vide plutôt que de porter une case sans effet,
-et les trois trajectoires interstellaires gardent leur réglage dédié. Pas de fait chiffré dans
+**Ce qu'ils n'ont pas, et pourquoi.** Pas de case dans la colonne « Orbite » du tableau
+Réglages pour une sonde : elle n'a pas d'orbite fermée (assistances gravitationnelles, halo L2),
+et sa trajectoire n'est pas dessinée ; la cellule reste vide plutôt que de porter une case sans
+effet. Un objet interstellaire, lui, y a sa trajectoire hyperbolique. Pas de fait chiffré dans
 leur fiche non plus : leurs registres portent une date de lancement et une désignation, mais
 sans champ `source`, et un fait sans provenance ne s'affiche pas (§ « Faits sourcés »). Les
 sourcer est le travail qui rendrait leur fiche comparable à celle d'un corps.
+
+## Une sonde en orbite se pose comme une lune (lot 14)
+
+**Le défaut, mesuré.** Les couches d'instrument plaçaient chaque objet par `scaleToScene`, la
+compression radiale √r du Soleil. Or l'Éducatif agrandit les corps et écarte les lunes de leur
+planète (`educationalParentOrbitScale`) : une sonde en orbite, comprimée comme un objet
+héliocentrique, tombait au centre de la sphère agrandie. Au 2026-09-22 : JWST à 0,16 unité du
+centre de la Terre (rayon 1), Juno à 0,56 du centre de Jupiter (rayon 4), BepiColombo à 0,19 de
+celui de Mercure (rayon 0,38). Sur la couverture de leurs fichiers, Cassini dans Saturne 68 % du
+temps, Juno dans Jupiter 72 %, JWST dans la Terre 100 %. Aucun objet n'est jamais dans un corps
+à vraie échelle : l'Explo n'était pas en cause.
+
+**La règle.** Le catalogue DÉCLARE le repère d'une lune (`frame: 'parentRelative'`) ; une sonde
+déclare les PHASES où elle est le satellite d'un corps (`satelliteOf` dans sa fiche
+`src/registry/spacecraft/*.json`). Pendant une phase, `core/instrumentPlacement.ts` la place
+comme une lune : la position Éducatif du corps, plus le vecteur relatif réel compressé par
+`educationalSatelliteDistance`, qui est la règle des lunes appliquée à un satellite sans rayon
+(même facteur commun, puis au moins la surface agrandie plus l'écart, là où la sphère Éducatif
+a déjà cessé d'être à l'échelle). L'ordre avec les lunes est conservé : Juno à l'apojove
+(0,054 UA) est tracée au-delà de Callisto (0,0126 UA), à 28 unités de Jupiter contre 13,5. La
+position du corps vient de `OrbitalMechanics.heliocentricAU`, la règle même qui le dessine.
+**L'Explo reste la vraie position, sans exception** (tenu par `core/instrumentPlacement.test.ts`),
+et le morph interpole les deux comme pour un corps.
+
+**Les phases sont DÉRIVÉES, jamais saisies** (`core/satellitePhases.ts`, `pnpm spacecraft:phases`),
+et `src/config/satellitePhases.test.ts` les confronte aux fichiers livrés. Critère, jour par
+jour : énergie à deux corps négative et dans la sphère de Hill ; pour un corps dont toute la
+sphère de Hill tombe sur la surface agrandie (`educationalSurfaceClampAU`, Bennu et Ryugu, aucune
+planète), la présence dans la sphère suffit, puisque l'énergie d'un astéroïde est sous le bruit.
+Une phase va du premier au dernier jour retenu, s'il y en a au moins 30. Résultat : JWST et la
+Terre dès le 2021-12-27, lendemain du début de son fichier, jusqu'à sa fin, Juno et Jupiter depuis le 2016-07-05, jour où s'achève son
+insertion en orbite (la NASA la publie au 4 juillet, heure de Californie : la combustion s'est
+terminée à 03 h 53 UTC le 5), Cassini et Saturne du 2004-07-01 au 2017-09-13, BepiColombo et Mercure dès le 2026-10-13
+(fichier prédit), OSIRIS-REx et Bennu du 2018-12-01 au 2021-04-15, Hayabusa2 et Ryugu du
+2018-06-22 au 2019-11-20. Aucune pour les Voyager, New Horizons, Parker, Rosetta (67P n'est pas
+au catalogue).
+
+**Pourquoi un survol reste héliocentrique.** La règle des lunes étire √d : à la frontière de la
+sphère de Hill de Jupiter elle poserait l'objet à 35 × 3,43 × √0,355 ≈ 49 unités de la planète,
+l'orbite de Saturne à l'écran, et un fondu entre les deux repères le ferait jaillir puis revenir.
+3I/ATLAS, passé à 1,01 rayon de Hill de Jupiter en mars 2026, sortirait ainsi de sa propre
+trajectoire tracée. Un passage qui n'est pas une mise en orbite garde donc la compression
+héliocentrique, et peut traverser la sphère agrandie d'une planète : c'est la conséquence des
+tailles Éducatif.
+
+**Ce qui reste, mesuré tous les deux jours sur toutes les couvertures** : 16 350 jours-sonde dans
+une sphère Éducatif avant, **1 972 après** (−88 %), tous des approches, départs et survols
+(Voyager 2 à Jupiter 140 jours, Hayabusa2 à l'approche de Ryugu 226, BepiColombo à Mercure
+jusqu'au 2026-10-11, dont la date du 2026-09-22 : écrit dans le test plutôt qu'omis). Le
+changement de repère fait sauter l'objet une fois à l'entrée et à la sortie d'une phase : au plus
+3,69 rayons Éducatif du corps, depuis le centre de la sphère où il était caché.
+
+## La surface Réglages d'affichage : un rangement, un vocabulaire
+
+Les réglages avaient été ajoutés au fil des lots, chacun s'accrochant à la fin du panneau dans
+l'ordre des appels (les trajectoires interstellaires tombaient sous les quatre boutons de qualité
+graphique), et le champ d'astéroïdes avait son propre bouton, visible en Exploration seulement,
+qui faisait changer la rangée du haut d'un mode à l'autre. Depuis le lot 14 :
+
+- **Une surface, cinq sections titrées, dans un ordre fixe** : Dans la scène (le tableau), Champ
+  d'astéroïdes et de comètes, Rendu (luminosité, qualité, imagerie de surface), Accessibilité et
+  unités, Vue (le zoom optique, en Explo seulement). Chaque module se range dans SA section par
+  son id (`#settings-section-…`). Les couches de la Terre (météo, événements terrestres) et les
+  événements astronomiques gardent leur bouton : ce sont des données à consulter, pas des
+  réglages d'affichage.
+- **Trois colonnes, les mêmes mots partout** : Étiquette, Objet, Orbite (Label, Object, Orbit),
+  dans l'en-tête, dans les lignes de groupe et dans le nom accessible de chaque case. Les groupes
+  sont ceux de la palette de recherche (`ui/bodyGroups.ts`), sous les mêmes noms ; une ligne de
+  groupe règle tout son groupe et le déplie. Les planètes seules sont dépliées au départ.
+- **Les mêmes puces** : pastille de couleur, nom, case, pour une ligne de corps comme pour une
+  catégorie du champ d'astéroïdes.
+- **Un seul défileur** : le tableau n'a plus sa propre boîte qui défile dans le panneau qui
+  défile (huit lignes visibles sur un téléphone). Tenu par `e2e/modes.spec.ts`.
+- **Ce qui se conserve** : les préférences de rendu et de lecture (qualité, luminosité, imagerie
+  de surface, palette daltonienne, unités). Le contenu de la scène (le tableau, le champ) ne se
+  conserve pas : la première vue reste celle de la règle ci-dessus. La clé
+  `ssv-interstellar-paths` est retirée et effacée au démarrage (`RETIRED_STORAGE_KEYS`), pour que
+  `public/privacy.html` ne liste que ce qui est enregistré.
 
 ## Descendre vers une surface — ce qui borne l'approche
 

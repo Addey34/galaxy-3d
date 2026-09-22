@@ -33,8 +33,6 @@ const DELIBERATELY_SKIPPED: Record<string, string> = {
     'lien de don : une visite de découverte n’est pas un tunnel de paiement',
   'webxr-btn':
     'masqué tant qu’aucun runtime VR ne répond, donc absent pour la quasi-totalité des visiteurs',
-  'smallbody-filters-trigger':
-    'réservé au mode Exploration, alors que la visite se déroule en Éducatif',
 };
 
 describe('couverture de la visite guidée', () => {
