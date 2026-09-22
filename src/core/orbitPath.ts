@@ -1,9 +1,14 @@
+import * as THREE from 'three';
 import type { CelestialBodyConfig, CelestialConfig } from '@/types';
 import type { BodyPositionResolver } from './BodyPositionResolver';
 import type { ScaleService } from './ScaleService';
 import { SQRT_K } from './ScaleService';
 import { solveKepler } from './kepler';
 import { educationalParentOrbitScale } from './educationalScale';
+import {
+  MU_SUN_AU3_PER_DAY2,
+  osculatingOrbitPoints,
+} from './twoBodyPropagation';
 
 /**
  * TRACE d'une ligne d'orbite — une polyligne fermee, distincte de la POSITION d'un corps.
@@ -27,8 +32,31 @@ export const EXPLO_ORBIT_SAMPLE_COUNT = 4096;
 
 const MS_PER_DAY = 86_400_000;
 
+/**
+ * Demi-intervalle (jours) de la différence centrée qui estime la vitesse d'un corps depuis sa
+ * source précise, pour tracer sa conique osculatrice. Assez court pour Halley au périhélie
+ * (0,054 rad/jour : erreur relative de vitesse ~(0,1 × 0,054)² / 6 ≈ 5e-6).
+ */
+const OSCULATING_VELOCITY_STEP_DAYS = 0.1;
+
 /** Excentricite a partir de laquelle la ligne est echantillonnee en anomalie excentrique. */
 export const ORBIT_SAMPLE_WARP_MIN_ECCENTRICITY = 0.2;
+
+/**
+ * L'orbite qui décide OÙ tombent les points d'une ligne (cf. `orbitSampleDate`) : excentricité,
+ * anomalie excentrique à la date affichée, mouvement moyen (rad/jour). `null` = temps uniforme.
+ */
+interface SamplingAnomaly {
+  eccentricity: number;
+  eccentricNow: number;
+  meanMotion: number;
+}
+
+/** Position et vitesse (UA, UA/jour) d'un corps, tirées de sa source précise. */
+interface PreciseState {
+  position: THREE.Vector3;
+  velocity: THREE.Vector3;
+}
 
 export class OrbitPathBuilder {
   constructor(
@@ -60,14 +88,128 @@ export class OrbitPathBuilder {
     name: string,
     cfg: CelestialBodyConfig,
     date: Date,
-    periodDays: number
+    periodDays: number,
+    anomaly: SamplingAnomaly | null
   ): boolean {
     if (!cfg.orbitalElements && !cfg.relativeOrbitalElements) return false;
     for (const phase of [-0.5, 0.5]) {
-      const at = this.orbitSampleDate(cfg, date, phase, periodDays);
+      const at = this.orbitSampleDate(date, phase, periodDays, anomaly);
       if (this.positions.precise(name, cfg, at) === null) return true;
     }
     return false;
+  }
+
+  /**
+   * État d'un corps HÉLIOCENTRIQUE à la date, par sa source précise : la position, et la vitesse
+   * par différence centrée. `null` pour un satellite, ou si la source ne répond pas.
+   */
+  private preciseState(
+    name: string,
+    cfg: CelestialBodyConfig,
+    date: Date
+  ): PreciseState | null {
+    if (cfg.frame === 'parentRelative') return null;
+    const stepMs = OSCULATING_VELOCITY_STEP_DAYS * MS_PER_DAY;
+    const position = this.positions.precise(name, cfg, date);
+    const before = this.positions.precise(
+      name,
+      cfg,
+      new Date(date.getTime() - stepMs)
+    );
+    const after = this.positions.precise(
+      name,
+      cfg,
+      new Date(date.getTime() + stepMs)
+    );
+    if (!position || !before || !after) return null;
+    const velocity = after
+      .clone()
+      .sub(before)
+      .divideScalar(2 * OSCULATING_VELOCITY_STEP_DAYS);
+    return { position, velocity };
+  }
+
+  /**
+   * L'orbite qui répartit les points : celle des ÉLÉMENTS pour une ligne tirée des éléments,
+   * celle de l'ÉTAT osculateur pour une ligne tirée de la source précise d'un corps
+   * héliocentrique. Ce n'est pas un détail : les points se resserrent là où cette orbite place
+   * le périhélie, et si ce n'est pas là que la source le place, la courbe s'y ouvre. Mesuré au
+   * lot 11 sur Halley en Éducatif (512 points), ligne tirée de son binaire mais répartie par
+   * ses éléments : 24° de trou au périhélie de 2061.
+   */
+  private samplingAnomaly(
+    cfg: CelestialBodyConfig,
+    date: Date,
+    periodDays: number,
+    state: PreciseState | null
+  ): SamplingAnomaly | null {
+    const elements = cfg.orbitalElements ?? cfg.relativeOrbitalElements;
+    if (!elements || elements.eccentricity < ORBIT_SAMPLE_WARP_MIN_ECCENTRICITY)
+      return null;
+
+    if (state) {
+      const { position, velocity } = state;
+      const mu = MU_SUN_AU3_PER_DAY2;
+      const r = position.length();
+      const energy = velocity.lengthSq() / 2 - mu / r;
+      if (energy < 0) {
+        const a = -mu / (2 * energy);
+        const eSinE = position.dot(velocity) / Math.sqrt(mu * a);
+        const eCosE = 1 - r / a;
+        const eccentricity = Math.hypot(eCosE, eSinE);
+        if (eccentricity < 1)
+          return {
+            eccentricity,
+            eccentricNow: Math.atan2(eSinE, eCosE),
+            meanMotion: Math.sqrt(mu / (a * a * a)),
+          };
+      }
+    }
+
+    // Anomalies a la date courante, sur les elements eux-memes.
+    const meanMotion = (2 * Math.PI) / periodDays;
+    const daysSinceEpoch =
+      (date.getTime() - elements.epoch.getTime()) / MS_PER_DAY;
+    return {
+      eccentricity: elements.eccentricity,
+      eccentricNow: solveKepler(
+        elements.meanAnomalyAtEpochRad + meanMotion * daysSinceEpoch,
+        elements.eccentricity
+      ),
+      meanMotion,
+    };
+  }
+
+  /**
+   * Ligne tirée de la conique OSCULATRICE de la source précise à la date affichée, quand
+   * `needsElementsOnly` écarte la source précise pour le tracé mais qu'elle répond pour le corps.
+   *
+   * Sans elle, le corps (placé par son binaire) et sa ligne (tracée depuis les éléments) ne
+   * viennent plus de la même source, et l'écart entre les deux devient l'écart entre le corps et
+   * sa propre orbite. Mesuré au lot 11, quand Halley a reçu son binaire : jusqu'à 1,5e8 km de
+   * 1900 à 1938 et de 2063 à 2100, là où ses 76 ans ne tiennent plus dans les 201 ans du
+   * fichier ; 7e5 à 3e6 km pour les astéroïdes pendant leur première et leur dernière
+   * demi-période, Cérès comprise, dont le binaire est plus ancien que ce lot. La conique osculatrice passe exactement par le corps, reste une seule courbe
+   * fermée, et s'écarte de la trajectoire réelle d'autant moins qu'on est près du corps.
+   *
+   * Pas pour des éléments BARYCENTRIQUES (les objets transneptuniens) : leur état héliocentrique
+   * porte le ballant du Soleil autour du barycentre, et sa conique osculatrice n'a pas la forme
+   * de leur orbite. Leurs éléments, eux, s'en écartent de 2,4e6 km au plus (Quaoar en 1900, à
+   * 43 UA : 0,02°). Ni pour un satellite, dont la ligne suit d'autres règles.
+   */
+  private osculatingLine(
+    cfg: CelestialBodyConfig,
+    state: PreciseState | null,
+    count: number
+  ): THREE.Vector3[] | null {
+    if (!state || !cfg.orbitalElements || cfg.orbitalElements.barycentric)
+      return null;
+    return osculatingOrbitPoints(
+      state.position,
+      state.velocity,
+      MU_SUN_AU3_PER_DAY2,
+      count
+    );
   }
 
   /**
@@ -93,25 +235,22 @@ export class OrbitPathBuilder {
    * (fichier Horizons). Au-dessus, l'excentricite est justement ce qu'on veut montrer.
    */
   private orbitSampleDate(
-    cfg: CelestialBodyConfig,
     date: Date,
     phase: number,
-    periodDays: number
+    periodDays: number,
+    anomaly: SamplingAnomaly | null
   ): Date {
-    const uniform = new Date(date.getTime() + phase * periodDays * MS_PER_DAY);
-    const elements = cfg.orbitalElements ?? cfg.relativeOrbitalElements;
-    const eccentricity = elements?.eccentricity ?? 0;
-    if (!elements || eccentricity < ORBIT_SAMPLE_WARP_MIN_ECCENTRICITY) {
-      return uniform;
-    }
-
-    // Anomalies a la date courante, sur les elements eux-memes.
-    const meanMotion = (2 * Math.PI) / periodDays;
-    const daysSinceEpoch =
-      (date.getTime() - elements.epoch.getTime()) / MS_PER_DAY;
-    const meanNow =
-      elements.meanAnomalyAtEpochRad + meanMotion * daysSinceEpoch;
-    const eccentricNow = solveKepler(meanNow, eccentricity);
+    if (!anomaly)
+      return new Date(date.getTime() + phase * periodDays * MS_PER_DAY);
+    const { eccentricity, eccentricNow, meanMotion } = anomaly;
+    // L'anomalie moyenne courante est RECALCULÉE depuis l'anomalie excentrique, et non reprise
+    // des éléments : `solveKepler` ramène M dans [-π ; π], donc la valeur brute, qui compte les
+    // tours depuis l'époque, n'est pas sur le même tour que `eccentricNow`. Leur différence
+    // décalait chaque date de la ligne d'un nombre ENTIER de périodes : invisible tant que la
+    // ligne venait des éléments (même ellipse à chaque tour), faux dès qu'elle vient d'une
+    // éphéméride. Mesuré au lot 11 : pour Halley en 2026, « phase = 0 » tombait en 1950 et la
+    // ligne, tracée sur la révolution précédente, passait à 2e7 km du corps.
+    const meanNow = eccentricNow - eccentricity * Math.sin(eccentricNow);
 
     // Un tour complet d'anomalie excentrique centre sur la position courante : la couture
     // reste a l'oppose du corps affiche, et phase = 0 retombe exactement sur lui.
@@ -120,6 +259,40 @@ export class OrbitPathBuilder {
     return new Date(
       date.getTime() + ((mean - meanNow) / meanMotion) * MS_PER_DAY
     );
+  }
+
+  /**
+   * D'où vient la ligne, décidé une fois pour toute la courbe : la source précise (répartie par
+   * l'orbite osculatrice de son état), sa conique osculatrice (la source répond à la date mais
+   * pas sur toute la période), ou les éléments (répartis par eux-mêmes).
+   */
+  private lineSource(
+    name: string,
+    cfg: CelestialBodyConfig,
+    date: Date,
+    periodDays: number,
+    count: number
+  ): {
+    elementsOnly: boolean;
+    osculating: THREE.Vector3[] | null;
+    anomaly: SamplingAnomaly | null;
+  } {
+    const state = this.preciseState(name, cfg, date);
+    const preciseAnomaly = this.samplingAnomaly(cfg, date, periodDays, state);
+    const elementsOnly = this.needsElementsOnly(
+      name,
+      cfg,
+      date,
+      periodDays,
+      preciseAnomaly
+    );
+    if (!elementsOnly)
+      return { elementsOnly, osculating: null, anomaly: preciseAnomaly };
+    return {
+      elementsOnly,
+      osculating: this.osculatingLine(cfg, state, count),
+      anomaly: this.samplingAnomaly(cfg, date, periodDays, null),
+    };
   }
 
   /** Calcule la trajectoire orbitale adaptée au mode courant. */
@@ -138,21 +311,29 @@ export class OrbitPathBuilder {
       const points = new Float32Array((nPoints + 1) * 3);
       const first = this.positions.resolve(_name, cfg, _date);
       if (!first) return null;
-      const elementsOnly = this.needsElementsOnly(
+      const { elementsOnly, osculating, anomaly } = this.lineSource(
         _name,
         cfg,
         _date,
-        periodDays
+        periodDays,
+        nPoints
       );
 
       // Center the sampled period on the current date. The seam is then opposite
       // the currently displayed body instead of moving through it as time advances.
       for (let i = 0; i < nPoints; i++) {
         const phase = i / nPoints - 0.5;
-        const sampleDate = this.orbitSampleDate(cfg, _date, phase, periodDays);
-        const point = elementsOnly
-          ? this.positions.elementsOnly(cfg, sampleDate, _date)
-          : this.positions.resolve(_name, cfg, sampleDate);
+        const sampleDate = this.orbitSampleDate(
+          _date,
+          phase,
+          periodDays,
+          anomaly
+        );
+        const point = osculating
+          ? osculating[i]!
+          : elementsOnly
+            ? this.positions.elementsOnly(cfg, sampleDate, _date)
+            : this.positions.resolve(_name, cfg, sampleDate);
         if (!point) return null;
         const i3 = i * 3;
         points[i3] = point.x * SQRT_K;
@@ -168,13 +349,26 @@ export class OrbitPathBuilder {
     const periodDays = cfg.realData?.orbitPeriodDays;
     if (!periodDays || periodDays <= 0) return null;
     const points = new Float32Array((nPoints + 1) * 3);
-    const elementsOnly = this.needsElementsOnly(_name, cfg, _date, periodDays);
+    const { elementsOnly, osculating, anomaly } = this.lineSource(
+      _name,
+      cfg,
+      _date,
+      periodDays,
+      nPoints
+    );
     for (let i = 0; i < nPoints; i++) {
       const phase = i / nPoints - 0.5;
-      const sampleDate = this.orbitSampleDate(cfg, _date, phase, periodDays);
-      const pointAU = elementsOnly
-        ? this.positions.elementsOnly(cfg, sampleDate, _date)
-        : this.positions.resolve(_name, cfg, sampleDate);
+      const sampleDate = this.orbitSampleDate(
+        _date,
+        phase,
+        periodDays,
+        anomaly
+      );
+      const pointAU = osculating
+        ? osculating[i]!
+        : elementsOnly
+          ? this.positions.elementsOnly(cfg, sampleDate, _date)
+          : this.positions.resolve(_name, cfg, sampleDate);
       if (!pointAU) return null;
       const parentName = this.parentName.get(_name);
       const parentScale = educationalParentOrbitScale(

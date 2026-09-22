@@ -7,12 +7,12 @@ Ce document definit ce que Galaxy peut deja representer, ce qui peut etre ajoute
 | Famille                    | Catalogue actuel                                               | Donnees de position                                  | Representation actuelle                 |
 | -------------------------- | -------------------------------------------------------------- | ---------------------------------------------------- | --------------------------------------- |
 | Etoiles et fond            | Soleil, fond etoile                                            | astronomy-engine pour le Soleil, skybox pour le fond | Sphere emettrice, starfield             |
-| Planetes                   | Mercure, Venus, Terre, Mars, Jupiter, Saturne, Uranus, Neptune | astronomy-engine                                     | Spheres texturees, couches optionnelles |
-| Satellites                 | 29 lunes, de la Lune aux quatre petites lunes de Pluton         | astronomy-engine (Lune, galileennes), sinon binaires Horizons relatifs au parent, repli keplerien | Spheres texturees, bump pour la Lune    |
+| Planetes                   | Mercure, Venus, Terre, Mars, Jupiter, Saturne, Uranus, Neptune | Binaires Horizons locaux (la Terre au barycentre Terre-Lune) depuis le lot 12, astronomy-engine hors couverture | Spheres texturees, couches optionnelles |
+| Satellites                 | 29 lunes, de la Lune aux quatre petites lunes de Pluton         | astronomy-engine (Lune, Io, Europe : plus precis que leurs fichiers, mesure au lot 12), sinon binaires Horizons relatifs au parent, repli keplerien | Spheres texturees, bump pour la Lune    |
 | Planetes naines            | Ceres, Pluton, Eris, Haumea, Makemake, Orcus, Quaoar, Gonggong, Sedna | Horizons local puis Kepler                     | Spheres texturees                       |
-| Petits corps               | Vesta, Pallas, Hygiea, Halley, Bennu (modele de forme 3D)      | Elements orbitaux Kepler, sans repli Horizons        | Spheres texturees et orbites            |
+| Petits corps               | Asteroides et comete du catalogue (liste : `/sources`, tableau des fichiers Horizons ; Bennu et d'autres ont un modele de forme 3D) | Binaires Horizons locaux depuis le lot 11 (2026-09-22), repli Kepler hors de leur couverture | Spheres texturees ou modeles de forme, et orbites |
 | Collections instrumentales | Champ SBDB des petits corps, filtrable par categorie (NEO, cometes, TNO, ceinture principale) | Donnees chargees en couche UI  | Marqueurs 2D, pas de meshes physiques   |
-| Engins spatiaux            | 11 missions, de Voyager 1 a Hayabusa2                          | Binaires Horizons bornes a la couverture reelle de chaque mission | Marqueurs 2D en couche instrument, mode Exploration uniquement |
+| Engins spatiaux            | 11 missions, de Voyager 1 a Hayabusa2                          | Binaires Horizons bornes a la couverture reelle de chaque mission | Marqueurs 2D en couche instrument, Educatif et Exploration (Exploration seule jusqu'au 2026-09-19) |
 | Objets interstellaires     | 1I/ʻOumuamua, 2I/Borisov, 3I/ATLAS                             | Elements hyperboliques Horizons (e > 1), fenetre ±20 ans autour du perihelie | Marqueur 2D en couche instrument, Educatif et Exploration ; trajectoire en option (Reglages) |
 
 Les textures actuelles sont dans public/assets/textures/. Le chargeur supporte actuellement des fichiers JPEG nommes par corps, couche et resolution. Les fichiers ephemerides Horizons sont locaux dans public/assets/ephemerides/ : le rendu deploye ne depend pas d'un appel reseau au demarrage.
@@ -162,7 +162,7 @@ Ils necessitent une trajectoire temporelle, un referentiel, une echelle physique
 
 ### Etat d'avancement
 
-- [x] Lune terrestre et quatre lunes galileennes avec positions astronomy-engine.
+- [x] Lune terrestre et quatre lunes galileennes avec positions astronomy-engine (Ganymede et Callisto passees sur binaires Horizons au lot 12).
 - [x] Textures dediees 2k pour Io, Europe, Ganymede et Callisto.
 - [x] Titan, Encelade, Rhéa et Japet, avec vecteurs locaux Horizons issus de SAT441 et mosaïques Cassini/Voyager 1k.
 - [x] Contrat PreciseEphemerisProvider et lecteur DAF/SPK types 2/3 (l'adaptateur synchrone SpiceEphemerisService, jamais branché, a été retiré le 2026-09-14 au profit du seul chemin Worker).

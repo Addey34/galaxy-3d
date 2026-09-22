@@ -37,18 +37,239 @@ const CENTER_IDS = {
 // au lieu de Saturne — un bug réel qui a affecté cette liste (voir fetchBody : la vérification
 // du nom de cible sert de garde-fou définitif contre toute régression de ce type).
 const BODIES = [
-  { name: 'ceres', target: '1;', expectedName: 'ceres', center: 'sun' },
-  { name: 'eris', target: '136199;', expectedName: 'eris', center: 'sun' },
-  { name: 'haumea', target: '136108;', expectedName: 'haumea', center: 'sun' },
+  // Coupés à l'époque depuis le lot 11b (cf. `requestSplitAtSolutionEpoch`) : leurs fichiers
+  // précédents, d'une seule requête 1900-2101, s'écartaient de 0,5 à 1 km de plus de la
+  // référence corrigée que ceux des quatorze corps coupés.
+  // Pas mesurés au lot 12, par la règle du lot 11 (le plus grossier sous 20 km d'écart maximal,
+  // décimation des fichiers livrés et interpolation par le code du service) : Cérès 16 jours
+  // (14,7 km), Éris, Hauméa, Makémaké 64 jours (18,8 km).
+  {
+    name: 'ceres',
+    target: '1;',
+    expectedName: 'ceres',
+    center: 'sun',
+    splitAtSolutionEpoch: true,
+    stepDays: 16,
+  },
+  {
+    name: 'eris',
+    target: '136199;',
+    expectedName: 'eris',
+    center: 'sun',
+    splitAtSolutionEpoch: true,
+    stepDays: 64,
+  },
+  {
+    name: 'haumea',
+    target: '136108;',
+    expectedName: 'haumea',
+    center: 'sun',
+    splitAtSolutionEpoch: true,
+    stepDays: 64,
+  },
   {
     name: 'makemake',
     target: '136472;',
     expectedName: 'makemake',
     center: 'sun',
+    splitAtSolutionEpoch: true,
+    stepDays: 64,
+  },
+  // Lot 11 : les corps que seuls leurs éléments képlériens plaçaient (erreur moyenne sur
+  // 1900-2100 de 1,4e4 km pour Sedna à 1,7e8 km pour Bennu). Mêmes COMMAND que
+  // `scripts/validation-targets.json` : le binaire et sa validation lisent la même solution.
+  //
+  // Le pas n'est PAS celui des autres fichiers partout : c'est le plus grossier dont
+  // l'interpolation, par le chemin même du service, reste sous 20 km d'écart MAXIMAL à des
+  // vecteurs Horizons au pas d'un jour sur toute la plage (l'écart maximal déjà accepté du
+  // fichier de Cérès, 19,6 km), et jamais plus fin que les 4 jours de tous les autres fichiers.
+  // Mesuré par décimation de ces vecteurs d'un jour, écart moyen / maximal en km :
+  //
+  //   corps                    4 j            8 j           16 j          64 j
+  //   Orcus, Quaoar, Gonggong,  0,002/0,006    0,004/0,017   0,043/0,215   5,2/19,3
+  //   Sedna (identiques : c'est le ballant du Soleil autour du barycentre qui domine)
+  //   Hygie                     0,025/0,077    0,336/1,2     5,0/19,3      572/8 160
+  //   Ida                       0,034/0,068    0,456/1,06    6,8/17        486/3 910
+  //   Vesta                     0,095/0,244    1,3/3,9       24/173
+  //   Pallas                    0,074/0,361    1,0/5,8       15/92
+  //   Psyché                    0,039/0,125    0,52/2,0      7,8/32
+  //   Éros                      1,8/7,8        4,0/47
+  //   Itokawa                   3,8/103        6,4/3 700
+  //   Ryugu                     4,2/58         5,5/5 000
+  //   Bennu                     5,9/1 150      8,2/13 400
+  //   Halley                    0,6/485        8,1/6 670
+  //
+  // Les cinq derniers restent à 4 jours sans tenir les 20 km : leur écart maximal vient des
+  // passages près de la Terre (Bennu, Itokawa, Ryugu) ou du périhélie (Halley), et il est de
+  // cinq ordres de grandeur sous l'erreur des éléments qu'il remplace. Poids total 6,4 Mo, contre
+  // 12,3 Mo au pas uniforme de 4 jours.
+  //
+  // `splitAtSolutionEpoch` : cf. `requestSplitAtSolutionEpoch`. Posé sur les quatorze, pas
+  // seulement sur Itokawa et Ryugu où l'écart a été mesuré : partir de l'époque n'est jamais
+  // moins juste, et c'est la seule manière de ne pas découvrir le prochain corps chaotique au
+  // hasard d'une validation.
+  {
+    name: 'vesta',
+    target: '4;',
+    expectedName: 'vesta',
+    center: 'sun',
+    splitAtSolutionEpoch: true,
+    stepDays: 8,
+  },
+  {
+    name: 'pallas',
+    target: '2;',
+    expectedName: 'pallas',
+    center: 'sun',
+    splitAtSolutionEpoch: true,
+    stepDays: 8,
+  },
+  {
+    name: 'hygiea',
+    target: '10;',
+    expectedName: 'hygiea',
+    center: 'sun',
+    splitAtSolutionEpoch: true,
+    stepDays: 16,
+  },
+  {
+    name: 'psyche',
+    target: '16;',
+    expectedName: 'psyche',
+    center: 'sun',
+    splitAtSolutionEpoch: true,
+    stepDays: 8,
+  },
+  {
+    name: 'ida',
+    target: '243;',
+    expectedName: 'ida',
+    center: 'sun',
+    splitAtSolutionEpoch: true,
+    stepDays: 16,
+  },
+  {
+    name: 'eros',
+    target: '433;',
+    expectedName: 'eros',
+    center: 'sun',
+    splitAtSolutionEpoch: true,
+  },
+  {
+    name: 'itokawa',
+    target: '25143;',
+    expectedName: 'itokawa',
+    center: 'sun',
+    splitAtSolutionEpoch: true,
+  },
+  {
+    name: 'ryugu',
+    target: '162173;',
+    expectedName: 'ryugu',
+    center: 'sun',
+    splitAtSolutionEpoch: true,
+  },
+  {
+    name: 'bennu',
+    target: '101955;',
+    expectedName: 'bennu',
+    center: 'sun',
+    // PAS de coupure : Horizons ne l'intègre pas, il le lit dans le fichier de trajectoire de la
+    // mission OSIRIS-REx (en-tête « {source: ORX_merged_DE424} », sans ligne EPOCH), et la
+    // requête longue coïncide avec une requête par liste de dates à 0,0 km (mesuré, lot 11).
+    // Lu dans la réponse : « No ephemeris for target "101955 Bennu" prior to 1900-JAN-02 ».
+    startTime: '1900-01-03',
+  },
+  // Numéro d'enregistrement de la solution de Horizons, le même que `validation-targets.json`.
+  {
+    name: 'halley',
+    target: '90000030;',
+    expectedName: 'halley',
+    center: 'sun',
+    splitAtSolutionEpoch: true,
+  },
+  {
+    name: 'orcus',
+    target: '90482;',
+    expectedName: 'orcus',
+    center: 'sun',
+    splitAtSolutionEpoch: true,
+    stepDays: 64,
+  },
+  {
+    name: 'quaoar',
+    target: '50000;',
+    expectedName: 'quaoar',
+    center: 'sun',
+    splitAtSolutionEpoch: true,
+    stepDays: 64,
+  },
+  {
+    name: 'gonggong',
+    target: '225088;',
+    expectedName: 'gonggong',
+    center: 'sun',
+    splitAtSolutionEpoch: true,
+    stepDays: 64,
+  },
+  {
+    name: 'sedna',
+    target: '90377;',
+    expectedName: 'sedna',
+    center: 'sun',
+    splitAtSolutionEpoch: true,
+    stepDays: 64,
   },
   // Jupiter et Uranus (lot 2b) : astronomy-engine y faisait 23 000 et 111 000 km d'erreur
   // moyenne contre Horizons sur 1900-2100, héritée telle quelle par toutes leurs lunes.
   { name: 'jupiter', target: '599', expectedName: 'jupiter', center: 'sun' },
+  // Lot 12, parité : les corps qu'astronomy-engine plaçait seul reçoivent un fichier QUAND il
+  // fait mieux, mesuré contre des vecteurs Horizons à un jour, dans le même repère. Mercure,
+  // Vénus et le barycentre Terre-Lune à 8 jours (14,8 / 18,3 / 16,8 km d'écart maximal, contre
+  // 2 637 / 1 428 km d'écart moyen pour astronomy-engine). Ganymède à 2 jours (80 km moyen
+  // contre 170) et Callisto à 4 (120 contre 386), relatifs à Jupiter.
+  //
+  // PAS de fichier pour la Lune, Io et Europe, et c'est mesuré : leur interpolation entre deux
+  // échantillons ne descend pas sous ce que fait astronomy-engine à un pas abordable (Lune 86 km
+  // au pas de 2 jours contre 10,8 ; Io 362 au mieux contre 218 ; Europe 250 contre 119). Rapides
+  // et fortement perturbées, elles feraient plusieurs dizaines de fois le poids pour y arriver.
+  {
+    name: 'mercury',
+    target: '199',
+    expectedName: 'mercury',
+    center: 'sun',
+    stepDays: 8,
+  },
+  {
+    name: 'venus',
+    target: '299',
+    expectedName: 'venus',
+    center: 'sun',
+    stepDays: 8,
+  },
+  // La Terre est DESSINÉE au barycentre Terre-Lune (`positionBody`, cf. docs/ARCHITECTURE.md) :
+  // son fichier est donc celui du barycentre (cible 3), et la Lune reste placée par rapport à
+  // ce point par astronomy-engine.
+  {
+    name: 'earth',
+    target: '3',
+    expectedName: 'earth-moon barycenter',
+    center: 'sun',
+    stepDays: 8,
+  },
+  {
+    name: 'ganymede',
+    target: '503',
+    expectedName: 'ganymede',
+    center: 'jupiter',
+    stepDays: 2,
+  },
+  {
+    name: 'callisto',
+    target: '504',
+    expectedName: 'callisto',
+    center: 'jupiter',
+  },
   { name: 'uranus', target: '799', expectedName: 'uranus', center: 'sun' },
   { name: 'saturn', target: '699', expectedName: 'saturn', center: 'sun' },
   {
@@ -65,15 +286,31 @@ const BODIES = [
     expectedName: 'iapetus',
     center: 'saturn',
   },
-  { name: 'mars', target: '499', expectedName: 'mars', center: 'sun' },
+  // Mars et Déimos à 8 jours, mesurés au lot 12 (16,4 et 7,6 km d'écart maximal) ; Phobos
+  // reste à 4 (90 km au double du pas).
+  {
+    name: 'mars',
+    target: '499',
+    expectedName: 'mars',
+    center: 'sun',
+    stepDays: 8,
+  },
   { name: 'phobos', target: '401', expectedName: 'phobos', center: 'mars' },
-  { name: 'deimos', target: '402', expectedName: 'deimos', center: 'mars' },
+  {
+    name: 'deimos',
+    target: '402',
+    expectedName: 'deimos',
+    center: 'mars',
+    stepDays: 8,
+  },
   { name: 'neptune', target: '899', expectedName: 'neptune', center: 'sun' },
   {
     name: 'triton',
     target: '801',
     expectedName: 'triton',
     center: 'neptune',
+    // Lot 12 : 17,4 km d'écart maximal au double du pas.
+    stepDays: 8,
   },
   { name: 'pluto', target: '999', expectedName: 'pluto', center: 'sun' },
   { name: 'charon', target: '901', expectedName: 'charon', center: 'pluto' },
@@ -357,16 +594,9 @@ function assertResolvedTarget(result, body) {
   }
 }
 
-async function fetchBody(body) {
-  process.stdout.write(`Fetching ${body.name}... `);
+async function requestVectors(body, startTime, stopTime) {
   const response = await fetch(
-    buildUrl(
-      body.target,
-      body.center,
-      body.startTime,
-      body.stopTime,
-      body.stepDays
-    ),
+    buildUrl(body.target, body.center, startTime, stopTime, body.stepDays),
     { headers: { 'User-Agent': 'Galaxy-Ephemeris-Generator/1.0' } }
   );
   if (!response.ok) throw new Error(`${body.name}: HTTP ${response.status}`);
@@ -374,8 +604,68 @@ async function fetchBody(body) {
   if (typeof payload.result !== 'string')
     throw new Error(`${body.name}: invalid Horizons response`);
   assertResolvedTarget(payload.result, body);
+  return payload.result;
+}
 
-  const { rows, stepDays } = parseVectors(payload.result, body.name);
+/**
+ * Deux requêtes, coupées à l'ÉPOQUE de la solution orbitale lue dans l'en-tête, au lieu d'une.
+ *
+ * Pour un petit corps, la réponse d'une requête 1900-2101 dépend de son étendue : comparée au
+ * même instant TDB à une requête par liste de dates (lot 11), elle coïncide au début de la plage
+ * et s'en écarte ensuite de plus en plus, comme une intégration partie de la première date
+ * demandée qui accumulerait l'erreur de chaque rencontre planétaire. Itokawa, qui croise souvent
+ * la Terre, s'écarte de 894 km en 2050 et de 14 663 km en 2098 ; Ryugu de 104 km en 2098. Coupé à
+ * l'époque (2004 pour Itokawa), l'écart tombe sous 3 km sur toute la plage. Les deux moitiés
+ * partent de l'époque, arrondie à un nœud de la grille pour que le pas reste uniforme, et
+ * l'échantillon commun n'est gardé qu'une fois.
+ */
+async function requestSplitAtSolutionEpoch(body, startTime, stopTime) {
+  const whole = await requestVectors(body, startTime, stopTime);
+  const epoch = Number(whole.match(/EPOCH=\s*([\d.]+)/)?.[1]);
+  if (!Number.isFinite(epoch))
+    throw new Error(`${body.name}: no solution EPOCH in the Horizons header`);
+  const { rows, stepDays } = parseVectors(whole, body.name);
+  const first = rows[0].jd;
+  const last = rows[rows.length - 1].jd;
+  const node = first + Math.round((epoch - first) / stepDays) * stepDays;
+  if (node <= first || node >= last) return whole;
+  const before = await requestVectors(body, startTime, `JD ${node}`);
+  const after = await requestVectors(body, `JD ${node}`, stopTime);
+  return { before, after, node };
+}
+
+async function fetchBody(body) {
+  process.stdout.write(`Fetching ${body.name}... `);
+  let rows;
+  let stepDays;
+  if (body.splitAtSolutionEpoch) {
+    const split = await requestSplitAtSolutionEpoch(
+      body,
+      body.startTime,
+      body.stopTime
+    );
+    if (typeof split === 'string') {
+      ({ rows, stepDays } = parseVectors(split, body.name));
+    } else {
+      const before = parseVectors(split.before, body.name);
+      const after = parseVectors(split.after, body.name);
+      if (
+        before.rows[before.rows.length - 1].jd !== split.node ||
+        after.rows[0].jd !== split.node
+      )
+        throw new Error(`${body.name}: halves do not meet at JD ${split.node}`);
+      rows = [...before.rows, ...after.rows.slice(1)];
+      stepDays = before.stepDays;
+      for (let i = 1; i < rows.length; i++) {
+        if (Math.abs(rows[i].jd - rows[i - 1].jd - stepDays) > 1e-9)
+          throw new Error(`${body.name}: non-uniform step at ${i}`);
+      }
+      process.stdout.write(`split at JD ${split.node}, `);
+    }
+  } else {
+    const result = await requestVectors(body, body.startTime, body.stopTime);
+    ({ rows, stepDays } = parseVectors(result, body.name));
+  }
   const binary = encodeBinary(rows);
   const hash = createHash('sha256').update(binary).digest('hex').slice(0, 12);
   const file = `${body.name}.${hash}.bin`;
@@ -405,13 +695,14 @@ if (only) {
   const manifest = JSON.parse(
     await readFile(resolve(OUTPUT_DIR, 'manifest.json'), 'utf8')
   );
+  const replaced = [];
   for (const name of only) {
     const body = BODIES.find((entry) => entry.name === name);
     if (!body) throw new Error(`--only : corps inconnu « ${name} »`);
     const previous = manifest.bodies[name]?.file;
     manifest.bodies[name] = await fetchBody(body);
     if (previous && previous !== manifest.bodies[name].file)
-      await unlink(resolve(OUTPUT_DIR, previous));
+      replaced.push(previous);
   }
   manifest.generatedAt = new Date().toISOString();
   await writeFile(
@@ -419,6 +710,10 @@ if (only) {
     `${JSON.stringify(manifest, null, 2)}\n`,
     'utf8'
   );
+  // Les anciens fichiers ne partent qu'APRÈS l'écriture du manifeste. Une requête qui échouait
+  // au milieu de la liste laissait sinon, sur disque, un manifeste désignant des fichiers déjà
+  // supprimés (arrivé au lot 11, sur une réponse Horizons sans ligne EPOCH).
+  for (const file of replaced) await unlink(resolve(OUTPUT_DIR, file));
   process.stdout.write(`Updated ${[...only].join(', ')}\n`);
   process.exitCode = 0;
   // Pas de process.exit() pendant qu'un fetch peut garder une connexion ouverte (plantage

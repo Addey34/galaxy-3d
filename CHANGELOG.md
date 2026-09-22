@@ -8,6 +8,12 @@ fichier résume ce qui change pour une personne qui utilise ou cite Galaxy.
 
 ### Ajouté
 
+- **Relief lunaire mesuré** : en s'approchant, le sol de la Lune n'est plus une sphère lisse mais
+  la forme que l'altimètre laser du Lunar Reconnaissance Orbiter a relevée. Un socle couvre le
+  corps entier à 1,3 kilomètre par point, et trois lieux sont cuits seize fois plus finement, à
+  83 mètres : le cratère Tycho, Rima Hadley (site d'Apollo 15) et Statio Tranquillitatis (site
+  d'Apollo 11). Le bandeau dit d'où viennent ces altitudes et sur quelle période elles ont été
+  relevées. Aucun détail n'est inventé entre deux mesures.
 - **Imagerie de surface haute résolution sur la Lune**, chargée seulement quand on s'en
   approche : la mosaïque du Lunar Reconnaissance Orbiter publiée par NASA Trek, à 83 mètres par
   pixel au sol, contre 1,3 kilomètre pour l'image livrée avec l'application. Un bandeau dit

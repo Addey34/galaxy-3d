@@ -437,6 +437,97 @@
             }
           },
           "additionalProperties": false
+        },
+        "absoluteMagnitude": {
+          "type": "object",
+          "properties": {
+            "value": {
+              "$ref": "#/$defs/__schema0"
+            },
+            "source": {
+              "type": "string",
+              "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+            },
+            "method": {
+              "type": "string",
+              "enum": [
+                "measured",
+                "derived",
+                "illustrative"
+              ]
+            },
+            "asOf": {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d{2}(-\\d{2})?$"
+            },
+            "uncertainty": {
+              "$ref": "#/$defs/__schema0"
+            },
+            "detail": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "pattern": "^[a-zA-Z0-9]+$"
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "en": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "fr": {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  },
+                  "required": [
+                    "en",
+                    "fr"
+                  ],
+                  "additionalProperties": false
+                }
+              ]
+            },
+            "citation": {
+              "type": "string",
+              "minLength": 1
+            },
+            "published": {
+              "type": "boolean",
+              "const": false
+            },
+            "reason": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "const": "not-yet-sourced"
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "en": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "fr": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "unsourced": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "en",
+                    "fr"
+                  ],
+                  "additionalProperties": false
+                }
+              ]
+            }
+          },
+          "additionalProperties": false
         }
       },
       "additionalProperties": false

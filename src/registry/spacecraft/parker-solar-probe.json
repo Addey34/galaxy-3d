@@ -21,6 +21,18 @@
       "method": "measured",
       "citation": "NSSDCA/COSPAR 2018-065A"
     },
+    "launchVehicle": {
+      "value": "Delta IV",
+      "source": "nssdca-master-catalog",
+      "method": "measured",
+      "citation": "NSSDCA/COSPAR 2018-065A"
+    },
+    "launchSite": {
+      "value": "Cape Canaveral, United States",
+      "source": "nssdca-master-catalog",
+      "method": "measured",
+      "citation": "NSSDCA/COSPAR 2018-065A"
+    },
     "massKg": {
       "value": 685,
       "source": "nssdca-master-catalog",

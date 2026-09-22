@@ -21,6 +21,18 @@
       "method": "measured",
       "citation": "NSSDCA/COSPAR 2021-130A"
     },
+    "launchVehicle": {
+      "value": "Ariane 5",
+      "source": "nssdca-master-catalog",
+      "method": "measured",
+      "citation": "NSSDCA/COSPAR 2021-130A"
+    },
+    "launchSite": {
+      "value": "Kourou, French Guiana",
+      "source": "nssdca-master-catalog",
+      "method": "measured",
+      "citation": "NSSDCA/COSPAR 2021-130A"
+    },
     "massKg": {
       "value": 6500,
       "source": "nssdca-master-catalog",

@@ -1,0 +1,39 @@
+name: Data freshness
+
+# L'instantane des petits corps (public/assets/small-bodies/dataset.json) est releve au build,
+# pas a l'execution : il vieillit donc en silence. Ce workflow le compare chaque semaine a l'age
+# declare dans src/core/snapshotAge.ts. Un echec d'un workflow planifie est notifie par GitHub
+# au proprietaire du depot : un releve perime devient visible sans que personne y pense.
+#
+# Il ne conditionne RIEN, et c'est voulu : un controle date dans le gate `verify` bloquerait un
+# deploiement sans rapport le jour ou le calendrier franchit le seuil.
+#
+# Limite connue : GitHub suspend les workflows planifies d'un depot public apres 60 jours sans
+# activite. Le panneau des petits corps, qui lit la meme regle, le dit alors au visiteur.
+
+on:
+  schedule:
+    - cron: '17 6 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  small-bodies:
+    name: Small-body snapshot age
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1, resolved 2026-09-19
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@26f6d4f2c533a43e6b5da0b4a5dd983f98f7b49a # v6.0.4, resolved 2026-09-19
+        with:
+          version: 10.34.5
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0, resolved 2026-09-19
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm smallbodies:age

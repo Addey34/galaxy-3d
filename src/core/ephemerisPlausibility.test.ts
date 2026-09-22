@@ -61,8 +61,13 @@ describe('committed Horizons ephemerides stay within plausible bounds', () => {
       })
     );
 
+    // Même table de dynamique qu'en production. Sans elle, un satellite plus rapide que le pas est
+    // interpolé par une cubique, qui ne signifie rien : au lot 12, Déimos (1,26 jour) au pas de
+    // 8 jours ressortait à 215 000 km de Mars à la date testée, alors que le chemin réel le place
+    // à 10 km de Horizons. Au pas de 4 jours, la même erreur passait par hasard.
     const service = await HorizonsEphemerisService.load(
-      'https://example.test/assets/ephemerides/manifest.json'
+      'https://example.test/assets/ephemerides/manifest.json',
+      bodyDynamics(CELESTIAL_CONFIG)
     );
 
     const manifest = JSON.parse(
@@ -242,5 +247,114 @@ describe('borne basse de plausibilite relative', () => {
       }
     }
     expect(checked).toBeGreaterThan(5_000);
+  });
+});
+
+/**
+ * Même question pour la borne HÉLIOCENTRIQUE, qui n'était vérifiée qu'à la date du milieu de
+ * chaque fichier. Elle bornait la distance par le demi-grand axe seul, ce qui ne vaut que
+ * pour une orbite presque circulaire : un binaire exact de Sedna aurait été refusé à toutes
+ * les dates, un de Halley autour de chaque périhélie (lot 11, mesuré sur les vecteurs Horizons
+ * à un jour), et le corps renvoyé en silence sur ses éléments képlériens.
+ */
+describe('borne héliocentrique de plausibilité', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  const catalogue = new Map(
+    allBodies(CELESTIAL_CONFIG).map((b) => [b.name, b.config] as const)
+  );
+
+  it('borne un corps excentrique par son périhélie et son aphélie', () => {
+    const halley = catalogue.get('halley')!;
+    const sedna = catalogue.get('sedna')!;
+    const q = (cfg: typeof halley) =>
+      cfg.orbitalElements!.semiMajorAxisAU *
+      (1 - cfg.orbitalElements!.eccentricity);
+
+    // Au périhélie, et à la distance où se trouve Sedna au XXIe siècle.
+    expect(
+      isPlausibleHeliocentricPosition(
+        new THREE.Vector3(q(halley), 0, 0),
+        halley
+      )
+    ).toBe(true);
+    expect(
+      isPlausibleHeliocentricPosition(new THREE.Vector3(85, 0, 0), sedna)
+    ).toBe(true);
+    // Un dixième du périhélie reste refusé : la borne s'élargit, elle ne disparaît pas.
+    expect(
+      isPlausibleHeliocentricPosition(
+        new THREE.Vector3(q(halley) / 10, 0, 0),
+        halley
+      )
+    ).toBe(false);
+  });
+
+  it('accepte toutes les positions réelles des binaires héliocentriques', async () => {
+    vi.stubGlobal('window', {
+      location: {
+        href: 'https://example.test/assets/ephemerides/manifest.json',
+        origin: 'https://example.test',
+      },
+    });
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (url: string | URL) => {
+        const path = new URL(url.toString()).pathname.split('/').pop()!;
+        const bytes = readFileSync(join(EPHEMERIS_DIR, path));
+        if (path.endsWith('.json')) {
+          return {
+            ok: true,
+            json: async () => JSON.parse(bytes.toString('utf8')),
+          };
+        }
+        const buffer = bytes.buffer.slice(
+          bytes.byteOffset,
+          bytes.byteOffset + bytes.byteLength
+        );
+        return { ok: true, arrayBuffer: async () => buffer };
+      })
+    );
+    const service = await HorizonsEphemerisService.load(
+      'https://example.test/assets/ephemerides/manifest.json',
+      bodyDynamics(CELESTIAL_CONFIG)
+    );
+    const manifest = JSON.parse(
+      readFileSync(join(EPHEMERIS_DIR, 'manifest.json'), 'utf8')
+    ) as {
+      bodies: Record<
+        string,
+        { startJdTdb: number; stepDays: number; sampleCount: number }
+      >;
+    };
+
+    const JD_TO_MS = 86_400_000;
+    const JD_UNIX_EPOCH = 2_440_587.5;
+    const bodies = new Set<string>();
+    for (const [name, body] of Object.entries(manifest.bodies)) {
+      const config = catalogue.get(name);
+      if (!config || config.frame === 'parentRelative') continue;
+      bodies.add(name);
+      // Pas plus fin qu'un pas de Halley près du périhélie : 2 000 dates sur la couverture.
+      for (let i = 1; i < 2_000; i++) {
+        const jd =
+          body.startJdTdb +
+          (body.stepDays * (body.sampleCount - 2) * i) / 2_000;
+        const helio = service.getHeliocentricAU(
+          name,
+          new Date((jd - JD_UNIX_EPOCH) * JD_TO_MS)
+        );
+        expect(helio, `${name}: pas d'échantillon`).not.toBeNull();
+        expect(
+          isPlausibleHeliocentricPosition(helio!, config),
+          `${name}: ${helio!.length().toFixed(3)} UA refusé à JD ${jd.toFixed(1)}`
+        ).toBe(true);
+      }
+    }
+    // Les corps qui ont motivé la garde doivent y passer, sinon elle ne dit rien.
+    expect(bodies).toContain('sedna');
+    expect(bodies).toContain('halley');
   });
 });

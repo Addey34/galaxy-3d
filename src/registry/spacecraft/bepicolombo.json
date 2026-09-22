@@ -21,6 +21,18 @@
       "method": "measured",
       "citation": "NSSDCA/COSPAR 2018-080A"
     },
+    "launchVehicle": {
+      "value": "Ariane 5",
+      "source": "nssdca-master-catalog",
+      "method": "measured",
+      "citation": "NSSDCA/COSPAR 2018-080A"
+    },
+    "launchSite": {
+      "value": "Kourou, French Guiana",
+      "source": "nssdca-master-catalog",
+      "method": "measured",
+      "citation": "NSSDCA/COSPAR 2018-080A"
+    },
     "massKg": {
       "published": false,
       "reason": {

@@ -23,6 +23,7 @@ import {
   TILE_PROVIDERS,
 } from '@/registry/providers/runtimeServices';
 import { ALL_FACT_FIELDS, bodyFact } from '@/core/bodyFacts';
+import { groundResolutionKm } from '@/core/tilePyramid';
 import type { FactField, FactMethod } from '@/types';
 import { SMALL_BODY_ELEMENTS } from '@/config/smallBodies';
 import { INTERSTELLAR_OBJECTS } from '@/config/interstellar';
@@ -56,9 +57,31 @@ export interface DependencyNotice {
   homepage: string | null;
 }
 
+/**
+ * Un jeu de hauteurs livré (lot 9, phase 9D), tel que `/sources` le publie : ce que la fiche
+ * déclare, et ce que le manifeste du cuiseur MESURE. La page ne recopie ni l'un ni l'autre, elle
+ * les reçoit.
+ */
+export interface HeightfieldProvenance {
+  body: string;
+  title: string;
+  mission: string;
+  instrument: string;
+  credit: string;
+  sourceUrl: string;
+  /** Niveau du socle global de la pyramide de tuiles. */
+  baseLevel: number;
+  /** Aires nommées cuites plus finement, avec le niveau atteint. */
+  areas: readonly { name: string; level: number }[];
+  tiles: number;
+  bytes: number;
+}
+
 export interface SourcesInput {
   config: CelestialConfig;
   textures: readonly TextureProvenance[];
+  /** Jeux de hauteurs livrés, avec les mesures de leur manifeste. */
+  heightfields: readonly HeightfieldProvenance[];
   manifest: EphemerisManifest;
   dependencies: readonly DependencyNotice[];
   /** Contenu de `THIRD_PARTY_NOTICES.md`. */
@@ -315,6 +338,9 @@ function sourcesPage(input: SourcesInput, locale: DocLocale): DocPage {
     firstObservation: { en: 'first observation', fr: 'première observation' },
     eccentricity: { en: 'eccentricity', fr: 'excentricité' },
     perihelionAU: { en: 'perihelion distance', fr: 'distance de périhélie' },
+    launchVehicle: { en: 'launch vehicle', fr: 'lanceur' },
+    launchSite: { en: 'launch site', fr: 'site de lancement' },
+    absoluteMagnitude: { en: 'absolute magnitude', fr: 'magnitude absolue' },
   };
   const perSource = new Map<
     string,
@@ -390,8 +416,8 @@ function sourcesPage(input: SourcesInput, locale: DocLocale): DocPage {
       'physical-data',
       L({ en: 'Physical data', fr: 'Données physiques' }),
       `<p>${L({
-        en: `Each value on a body’s information card and public page cites a primary source: a space agency, an agency database, or a published article, never an encyclopaedia. A <strong>derived</strong> value is computed from published ones (a mass from the published GM, a radius from a diameter), and the card says how. ${shownFacts} values are shown, ${derivedFacts} of them derived. ${unsourcedFacts} values the simulation uses are not shown because they are not yet traced to a primary source, and ${unpublishedFacts} have no single value to publish (a range, an upper limit, or a quantity that varies too much across the body or its orbit for one number): the card says why instead of showing a number.`,
-        fr: `Chaque valeur de la fiche d’un corps et de sa page publique cite une source primaire : une agence spatiale, une base de données d’agence ou un article publié, jamais une encyclopédie. Une valeur <strong>dérivée</strong> est calculée à partir de valeurs publiées (une masse depuis le GM publié, un rayon depuis un diamètre), et la fiche dit comment. ${shownFacts} valeurs sont affichées, dont ${derivedFacts} dérivées. ${unsourcedFacts} valeurs utilisées par la simulation ne sont pas affichées faute de source primaire rattachée, et ${unpublishedFacts} n’ont pas de valeur unique à publier (une plage, une limite supérieure, ou une grandeur qui varie trop sur le corps ou son orbite pour un seul chiffre) : la fiche dit pourquoi au lieu d’afficher un chiffre.`,
+        en: `Each value on a body’s information card and public page cites a primary source: a space agency, an agency database, or a published article, never an encyclopaedia. A <strong>derived</strong> value is computed from published ones (a mass from the published GM, a radius from a diameter), and the card says how. ${shownFacts} values are shown, ${derivedFacts} of them derived. ${unsourcedFacts} values the simulation uses are not shown because they are not yet traced to a primary source, and ${unpublishedFacts} have no single value to publish (a range, an upper limit, a quantity that varies too much across the body or its orbit for one number, or a published figure that describes a different quantity): the card says why instead of showing a number.`,
+        fr: `Chaque valeur de la fiche d’un corps et de sa page publique cite une source primaire : une agence spatiale, une base de données d’agence ou un article publié, jamais une encyclopédie. Une valeur <strong>dérivée</strong> est calculée à partir de valeurs publiées (une masse depuis le GM publié, un rayon depuis un diamètre), et la fiche dit comment. ${shownFacts} valeurs sont affichées, dont ${derivedFacts} dérivées. ${unsourcedFacts} valeurs utilisées par la simulation ne sont pas affichées faute de source primaire rattachée, et ${unpublishedFacts} n’ont pas de valeur unique à publier (une plage, une limite supérieure, une grandeur qui varie trop sur le corps ou son orbite pour un seul chiffre, ou un chiffre publié qui décrit une autre grandeur) : la fiche dit pourquoi au lieu d’afficher un chiffre.`,
       })}</p>` +
         docTable(
           L({
@@ -506,6 +532,63 @@ function sourcesPage(input: SourcesInput, locale: DocLocale): DocPage {
         )
     )
   );
+
+  // ── Relief ──
+  if (input.heightfields.length > 0) {
+    const metres = (body: string, level: number): string => {
+      const radiusKm = flat.get(body)?.realData?.radiusKm ?? 0;
+      const value = groundResolutionKm(level, radiusKm) * 1000;
+      return value >= 1000
+        ? `${(value / 1000).toFixed(2).replace('.', locale === 'fr' ? ',' : '.')} km`
+        : `${Math.round(value)} m`;
+    };
+    const reliefRows = input.heightfields.map((set) => [
+      escapeHtml(name(set.body, locale)),
+      set.sourceUrl
+        ? link(set.sourceUrl, escapeHtml(set.title))
+        : escapeHtml(set.title),
+      escapeHtml(metres(set.body, set.baseLevel)),
+      set.areas.length === 0
+        ? L({ en: 'none', fr: 'aucune' })
+        : escapeHtml(
+            set.areas
+              .map((area) => `${area.name} (${metres(set.body, area.level)})`)
+              .join(', ')
+          ),
+      escapeHtml(
+        `${set.tiles} · ${(set.bytes / 1e6)
+          .toFixed(1)
+          .replace(
+            '.',
+            locale === 'fr' ? ',' : '.'
+          )} ${L({ en: 'MB', fr: 'Mo' })}`
+      ),
+    ]);
+    sections.push(
+      docSection(
+        'relief',
+        L({ en: 'Relief', fr: 'Relief' }),
+        `<p>${L({
+          en: 'On approach, the ground is displaced by measured altitudes, never by invented detail: no fractal relief, and no shaded-relief image used as geometry. The tiles are cooked offline from a published elevation model, because no tiled height source is served with the cross-origin header a browser needs. A global base covers the whole body; a few named areas, framed on their published feature, are cooked finer.',
+          fr: 'À l’approche, le sol est déplacé par des altitudes mesurées, jamais par du détail inventé : aucun relief fractal, et aucune image d’ombrage employée comme géométrie. Les tuiles sont cuites hors ligne depuis un modèle d’élévation publié, faute de source de hauteurs tuilée servie avec l’en-tête d’origine croisée qu’exige un navigateur. Un socle global couvre le corps entier ; quelques aires nommées, cadrées sur leur entité publiée, sont cuites plus finement.',
+        })}</p>` +
+          docTable(
+            L({
+              en: 'Height tile sets shipped',
+              fr: 'Jeux de tuiles de hauteurs livrés',
+            }),
+            [
+              L({ en: 'Body', fr: 'Corps' }),
+              L({ en: 'Elevation model', fr: 'Modèle d’élévation' }),
+              L({ en: 'Global base', fr: 'Socle global' }),
+              L({ en: 'Named areas', fr: 'Aires nommées' }),
+              L({ en: 'Tiles shipped', fr: 'Tuiles livrées' }),
+            ],
+            reliefRows
+          )
+      )
+    );
+  }
 
   // ── Éphémérides ──
   const ephemerisRows = Object.entries(manifest.bodies).map(([body, e]) => [

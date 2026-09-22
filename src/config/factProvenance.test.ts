@@ -13,6 +13,7 @@ import snapshot from './factSources.snapshot.json';
 import {
   ALL_FACT_FIELDS,
   DATE_FACTS,
+  NAME_FACTS,
   TIME_VARYING_FACTS,
   bodyFact,
   factValue,
@@ -172,6 +173,8 @@ const nssdcaMaster = snapshot.nssdcaMasterCatalog as Record<
     cosparId: string;
     name: string;
     launchDate: string;
+    launchVehicle: string | null;
+    launchSite: string | null;
     massKg: number;
     launchMassMentions: string[];
   }
@@ -182,6 +185,8 @@ const sbdbInterstellar = snapshot.sbdbInterstellar as Record<
     fullname: string;
     eccentricity: { value: number; sigma: number | null };
     perihelionAU: { value: number; sigma: number | null };
+    absoluteMagnitude: { value: number; sigma: number | null } | null;
+    cometTotalMagnitude: { value: number; sigma: number | null } | null;
     firstObservation: string;
     observationsUsed: number;
     solutionDate: string;
@@ -482,13 +487,16 @@ function expected(
       };
       switch (field) {
         case 'eccentricity':
-        case 'perihelionAU': {
+        case 'perihelionAU':
+        case 'absoluteMagnitude': {
           const inter =
             sbdbInterstellar[name] ?? fail('objet absent du relevé SBDB');
           const reference = `orbit solution ${inter.solutionDate.slice(0, 10)}, ${inter.observationsUsed} observations`;
           if (p.citation !== reference)
             fail(`citation « ${p.citation} » ≠ solution « ${reference} »`);
-          const published = inter[field];
+          const published =
+            inter[field] ??
+            fail(`la SBDB ne publie pas ${field} pour cet objet`);
           if (p.uncertainty !== (published.sigma ?? undefined))
             fail(
               `incertitude ${p.uncertainty} ≠ sigma publié ${published.sigma}`
@@ -601,6 +609,7 @@ describe('faits affichés : confrontés à leur source', () => {
       // Les faits DATÉS ont leur propre confrontation, juste en dessous : une date ne se
       // compare pas à une tolérance relative.
       if (DATE_FACTS.has(field as FactField)) continue;
+      if (NAME_FACTS.has(field as FactField)) continue;
       cases.push([
         `${name}.${field}`,
         name,
@@ -690,4 +699,73 @@ describe('faits datés : confrontés à leur source', () => {
       expect(mission.launchDate, mission.name).toBe(row.launchDate);
     }
   });
+});
+
+/**
+ * FAITS NOMMÉS. Un lanceur ou un site de lancement est la chaîne que la source écrit, recopiée
+ * à l'identique : c'est la seule raison pour laquelle `FactValue` admet un nom (voir
+ * `core/bodyFacts.ts`). Aucune tolérance, aucune normalisation, pas même de la casse : une
+ * chaîne réécrite par nous, traduite ou « corrigée », doit échouer ici.
+ */
+describe('faits nommés : recopiés de leur source', () => {
+  const cases: [string, string, CelestialBodyConfig, FactField][] = [];
+  for (const { name, cfg } of bodies)
+    for (const field of NAME_FACTS)
+      if (cfg.realData?.sources?.[field])
+        cases.push([`${name}.${field}`, name, cfg, field]);
+
+  it('couvre le lanceur et le site des onze sondes', () => {
+    expect(cases.length).toBe(22);
+  });
+
+  it.each(cases)('%s', (_label, name, cfg, field) => {
+    const factual = factValue(cfg, field)!;
+    expect(factual.kind, `${name}.${field}`).toBe('name');
+    const text = factual.kind === 'name' ? factual.text : '';
+    const provenance = cfg.realData!.sources![field]!;
+    const row = nssdcaMaster[name];
+    expect(row, `${name} absente du relevé NSSDCA`).toBeDefined();
+    expect(provenance.source).toBe('nssdca-master-catalog');
+    expect(provenance.citation).toBe(`NSSDCA/COSPAR ${row.cosparId}`);
+    expect(text, `${name}.${field}`).toBe(
+      field === 'launchVehicle' ? row.launchVehicle : row.launchSite
+    );
+  });
+});
+
+/**
+ * MAGNITUDE ABSOLUE. La raison affichée pour les deux comètes AFFIRME quelque chose de la
+ * source : qu'elle ne publie pas H, et qu'elle publie M1 à la place. Les deux moitiés sont
+ * confrontées au relevé, et dans l'autre sens aussi : un objet pour lequel la SBDB publie H
+ * doit l'afficher, pas une raison.
+ */
+describe('magnitude absolue des interstellaires : H affichée, ou la raison vérifiée', () => {
+  const interstellar = bodies.filter(({ cfg }) => cfg.kind === 'interstellar');
+
+  it('couvre les trois interstellaires', () => {
+    expect(interstellar.length).toBe(3);
+  });
+
+  it.each(interstellar.map(({ name, cfg }) => [name, cfg] as const))(
+    '%s',
+    (name, cfg) => {
+      const row = sbdbInterstellar[name];
+      expect(row, `${name} absent du relevé SBDB`).toBeDefined();
+      const reason = cfg.realData?.unknown?.absoluteMagnitude;
+      if (row.absoluteMagnitude) {
+        expect(reason, `${name} : la SBDB publie H`).toBeUndefined();
+        expect(cfg.realData?.sources?.absoluteMagnitude?.source).toBe(
+          'jpl-sbdb'
+        );
+        return;
+      }
+      expect(reason, `${name} : ni H ni raison`).toBeDefined();
+      expect(reason!.unsourced).toBeUndefined();
+      expect(row.cometTotalMagnitude, `${name} : la raison cite M1`).not.toBe(
+        null
+      );
+      expect(reason!.en).toMatch(/\bM1\b/);
+      expect(reason!.fr).toMatch(/\bM1\b/);
+    }
+  );
 });

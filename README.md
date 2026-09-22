@@ -6,13 +6,14 @@ Visualisateur interactif du système solaire en temps réel, développé en Type
 
 ## Aperçu
 
-- Positions réelles : fichiers NASA/JPL Horizons embarqués (planètes, planètes naines, lunes et sondes), astronomy-engine et éléments képlériens ; la source et l'erreur mesurée de chaque corps sont publiées sur [/methodology](https://galaxy.adrianguichard.dev/methodology/)
+- Positions réelles : fichiers NASA/JPL Horizons embarqués (planètes, planètes naines, lunes, astéroïdes, comète de Halley et sondes), astronomy-engine et éléments képlériens ; la source et l'erreur mesurée de chaque corps sont publiées sur [/methodology](https://galaxy.adrianguichard.dev/methodology/)
 - Time travel : naviguer librement dans le temps passé et futur
 - Planètes multi-couches : surface PBR, nuages, atmosphère, lueurs nocturnes (shader GLSL)
 - Halo lumineux rond autour du Soleil, des étoiles et des lumières de ville (qualité haute), chaque source déclarée avec sa propre intensité
 - LOD automatique : résolution de texture adaptée à la distance caméra (1k → 8k)
 - Pages d'éclipse 2024–2035 : l'application s'ouvre au maximum de chaque éclipse ; la Lune éclipsée est cuivrée, teinte mesurée sur des photographies NASA
 - Modèles de forme scientifiques de Bennu, Éros, Itokawa, Ryugu et Ida, à leur vraie couleur de surface, en niveaux de détail chargés selon la distance, approchables à la vraie échelle en Exploration
+- Imagerie de surface streamée à l'approche de la Lune et de Mars (mosaïques publiées par NASA Trek), et relief mesuré sur la Lune : le sol est déplacé par les altitudes du modèle LOLA, avec trois lieux cuits plus finement (Tycho, Rima Hadley, Statio Tranquillitatis)
 - Objets interstellaires 1I/ʻOumuamua, 2I/Borisov et 3I/ATLAS sur leur vraie trajectoire hyperbolique (tracé en option)
 - Onze missions spatiales positionnées par NASA/JPL Horizons (Voyager, New Horizons, Juno, Parker Solar Probe…)
 - Événements terrestres en option : séismes du catalogue USGS et événements naturels rapportés par NASA EONET, posés sur la Terre à la date de la scène ; chaque événement porte sa nature (mesure ou rapport), et un événement sans fin déclarée est dit « en cours »
@@ -293,7 +294,7 @@ d'épreuve livré : 16 Psyché, ajoutée sans toucher une ligne de TypeScript.
 
 Les fichiers binaires de `public/assets/ephemerides/` contiennent des états JPL en écliptique
 J2000 (positions en UA, vitesses en UA/jour), héliocentriques pour les planètes, les planètes
-naines et les sondes, relatifs à leur corps parent pour les lunes (Charon et les petites lunes
+naines, les astéroïdes, la comète de Halley et les sondes, relatifs à leur corps parent pour les lunes (Charon et les petites lunes
 de Pluton compris). Centre, pas et couverture de
 chaque fichier sont déclarés dans `manifest.json` et publiés sur
 [/sources](https://galaxy.adrianguichard.dev/sources/).

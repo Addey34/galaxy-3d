@@ -1,0 +1,60 @@
+{
+  "$schema": "../../schema/product.schema.json",
+  "id": "mars-viking-mdim21-clrmosaic-global-232m",
+  "type": "tileset",
+  "body": "mars",
+  "title": "Viking Colorized Global Mosaic (Mars_Viking_MDIM21_ClrMosaic_global_232m)",
+  "providerId": "nasa-trek",
+  "mission": "Viking Orbiter 1 and 2",
+  "instrument": "Visual Imaging Subsystem (VIS)",
+  "service": {
+    "template": "https://trek.nasa.gov/tiles/Mars/EQ/Mars_Viking_MDIM21_ClrMosaic_global_232m/1.0.0//{Style}/{TileMatrixSet}/{TileMatrix}/{TileRow}/{TileCol}.jpg",
+    "style": "default",
+    "tileMatrixSet": "default028mm",
+    "format": "image/jpeg",
+    "matrix": {
+      "columnsAtLevelZero": 2,
+      "rowsAtLevelZero": 1,
+      "tileSizePx": 256
+    },
+    "minLevel": 2,
+    "maxLevel": 7
+  },
+  "publishedPixelsPerDegree": 256,
+  "acquired": {
+    "interval": [["1976-06-19T00:00:00Z", "1980-08-17T00:00:00Z"]]
+  },
+  "license": "other",
+  "rights": "public-domain",
+  "links": [
+    {
+      "rel": "license",
+      "href": "https://www.nasa.gov/nasa-brand-center/images-and-media/"
+    },
+    {
+      "rel": "describedby",
+      "href": "https://trek.nasa.gov/tiles/Mars/EQ/Mars_Viking_MDIM21_ClrMosaic_global_232m/1.0.0/WMTSCapabilities.xml"
+    },
+    {
+      "rel": "via",
+      "href": "https://astrogeology.usgs.gov/search/map/mars_viking_colorized_global_mosaic_232m"
+    }
+  ],
+  "providers": [
+    {
+      "name": "NASA Solar System Treks",
+      "roles": ["host"],
+      "url": "https://trek.nasa.gov/mars/"
+    },
+    {
+      "name": "NASA Ames Research Center",
+      "roles": ["producer"]
+    },
+    {
+      "name": "USGS Astrogeology Science Center",
+      "roles": ["processor"],
+      "url": "https://astrogeology.usgs.gov/search/map/mars_viking_colorized_global_mosaic_232m"
+    }
+  ],
+  "verified": "2026-09-21"
+}

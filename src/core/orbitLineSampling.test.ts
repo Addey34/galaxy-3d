@@ -213,3 +213,96 @@ describe('répartition des points sur la ligne d’orbite', () => {
     });
   }
 });
+
+/**
+ * Le CORPS est-il sur sa propre ligne ? Deux défauts trouvés au lot 11, quand les corps
+ * képlériens ont reçu leur binaire Horizons, et invisibles tant que corps et ligne venaient
+ * des mêmes éléments :
+ *
+ *   - `orbitSampleDate` décalait chaque date de la ligne d'un nombre ENTIER de périodes (son
+ *     anomalie moyenne n'était pas ramenée au tour de l'anomalie excentrique résolue) : Halley
+ *     en 2026 était à 2e7 km de sa ligne, tracée sur la révolution précédente ;
+ *   - près des bords de la couverture, la ligne retombait sur les éléments quand le corps
+ *     restait sur son binaire : 1,5e8 km pour Halley en 2099, 1,6e6 km pour Cérès en 1900.
+ *
+ * Mesuré sur les binaires livrés, aux dates des deux bords et du milieu. Les objets à éléments
+ * BARYCENTRIQUES sont exclus à dessein (cf. `OrbitPathBuilder.osculatingLine`).
+ */
+describe('le corps est sur sa ligne d’orbite', () => {
+  const DATES = [
+    '1900-06-01',
+    '1910-04-20',
+    '1986-02-09',
+    '2026-01-01',
+    '2075-01-01',
+    '2099-06-01',
+    '2100-10-01',
+  ];
+  const AU_KM = 149_597_870.7;
+  const precise = horizonsServiceFromDisk();
+
+  for (const mode of ['explo', 'educ'] as const) {
+    it(`à moins de 1 000 km, héliocentriques non barycentriques (${mode})`, () => {
+      const mechanics = makeMechanics(mode, precise);
+      const positions = (
+        mechanics as unknown as {
+          _positions: {
+            resolve: (
+              n: string,
+              c: CelestialBodyConfig,
+              d: Date
+            ) => THREE.Vector3 | null;
+          };
+        }
+      )._positions;
+      const checked = new Set<string>();
+      const worst: string[] = [];
+      forEachBody(CELESTIAL_CONFIG, ({ name, config, parentName }) => {
+        const elements = config.orbitalElements;
+        if (parentName !== null || !elements || elements.barycentric) return;
+        for (const iso of DATES) {
+          const date = new Date(`${iso}T00:00:00Z`);
+          if (!precise.getHeliocentricAU(name, date)) continue;
+          const points = mechanics.computeOrbitPoints(name, config, date);
+          const bodyAU = positions.resolve(name, config, date);
+          expect(points, `${name} ${iso}`).not.toBeNull();
+          // La ligne est dans les unités de la scène, le corps en UA : même conversion que
+          // `computeOrbitPoints` (linéaire en Explo, √ en Éducatif).
+          const body =
+            mode === 'explo'
+              ? bodyAU!.clone().multiplyScalar(35)
+              : bodyAU!
+                  .clone()
+                  .normalize()
+                  .multiplyScalar(Math.sqrt(bodyAU!.length()) * 35);
+          const a = new THREE.Vector3();
+          const b = new THREE.Vector3();
+          const segment = new THREE.Line3();
+          const closest = new THREE.Vector3();
+          let best = Infinity;
+          for (let i = 0; i + 5 < points!.length; i += 3) {
+            a.set(points![i], points![i + 1], points![i + 2]);
+            b.set(points![i + 3], points![i + 4], points![i + 5]);
+            segment.set(a, b).closestPointToPoint(body, true, closest);
+            best = Math.min(best, closest.distanceTo(body));
+          }
+          // En Éducatif la distance radiale est compressée : on compare dans l'espace de la
+          // scène, ramené en km à la distance du corps (dérivée de √r : ×2√r).
+          const km =
+            mode === 'explo'
+              ? (best / 35) * AU_KM
+              : (best / 35) * 2 * Math.sqrt(bodyAU!.length()) * AU_KM;
+          checked.add(name);
+          if (km > 1_000)
+            worst.push(`${name} ${iso} : ${km.toExponential(2)} km`);
+        }
+      });
+      expect(worst).toEqual([]);
+      // Les corps qui ont motivé la garde : Halley (période plus longue que la moitié de la
+      // couverture) et un astéroïde proche de la Terre.
+      expect(checked).toContain('halley');
+      expect(checked).toContain('bennu');
+      expect(checked.size).toBeGreaterThanOrEqual(10);
+    });
+  }
+});

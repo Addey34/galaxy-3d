@@ -155,16 +155,24 @@ ici, et chacune est verrouillée par un test nommé.
 
 | Source | Pour qui | Remarque |
 | --- | --- | --- |
-| Binaire Horizons (`HorizonsEphemerisService`) | planètes (dont Jupiter et Uranus depuis le lot 2b), naines, satellites, sondes | états exacts tous les 4 jours, 1 jour pour 5 sondes |
+| Binaire Horizons (`HorizonsEphemerisService`) | planètes (dont Jupiter et Uranus depuis le lot 2b), naines, satellites, sondes, et depuis le lot 11 tous les petits corps du catalogue | états exacts à pas fixe par fichier (4 jours en général, 1 jour pour 5 sondes, 4 à 64 jours pour les petits corps : cf. « Binaires des petits corps ») |
 | Noyau SPK (optionnel, `VITE_SPK_KERNEL_URL`) | lunes de Saturne de SAT441 | prime sur les binaires quand il est actif |
-| `JupiterMoons()` d'astronomy-engine | Io, Europe, Ganymède, Callisto | vecteurs jovicentriques directs |
-| Éphéméride astronomy-engine (`astroBody`) | planètes, Lune, Soleil | théorie planétaire |
-| Éléments képlériens du catalogue | petits corps, et **repli** de tout satellite | cf. « le repli » ci-dessous |
+| `JupiterMoons()` d'astronomy-engine | Io et Europe ; Ganymède et Callisto hors de la couverture de leur fichier | vecteurs jovicentriques directs |
+| Éphéméride astronomy-engine (`astroBody`) | la Lune, Io et Europe (plus précis que tout fichier abordable, mesuré au lot 12), le Soleil, et le repli des planètes hors de la couverture de leur fichier | théorie planétaire |
+| Éléments képlériens du catalogue | **repli** d'un petit corps hors de la couverture de son binaire, et de tout satellite | cf. « le repli » ci-dessous |
 
 Une position issue d'un binaire passe d'abord `isPlausibleRelativePosition` /
 `isPlausibleHeliocentricPosition`, qui bornent la distance **des deux côtés**. La borne basse
 n'est pas décorative : c'est son absence qui a laissé Encelade osciller d'un facteur 11,4 en
 distance à Saturne pendant des mois, sous un garde-fou censé attraper exactement ça.
+
+La borne héliocentrique d'un corps qui a des éléments est **[q/2 ; 2Q]** (périhélie, aphélie),
+comme la borne relative, et non plus [a/2 ; 2a]. Celle-ci ne vaut que pour une orbite presque
+circulaire : mesurée au lot 11 sur les vecteurs Horizons à un jour de 1900 à 2100, elle aurait
+refusé Sedna **tous les jours** (a = 506 UA, le corps entre 76 et 132 UA) et Halley 5 284 jours
+autour de ses périhélies. Un binaire exact aurait été écarté en silence au profit des éléments.
+`ephemerisPlausibility.test.ts` balaie désormais 2 000 dates de chaque binaire héliocentrique
+(il ne regardait que la date du milieu, où Halley passait).
 
 **Tout est mesuré contre JPL Horizons** par `pnpm ephemeris:validate`
 (`scripts/validate-against-horizons.mjs`, rapport dans `reports/`, non versionné, et un résumé
@@ -229,6 +237,67 @@ segments par la même fonction, `planSpkSegments` (segment direct, sinon centre 
 n'indexait que les paires directes ; SAT441 ne stockant les lunes que par rapport au barycentre
 de Saturne, aucune position n'était jamais demandée, même noyau activé.
 
+### Binaires des petits corps (lot 11)
+
+Les quatorze corps que seuls leurs éléments plaçaient (erreur moyenne de 1,4e4 km pour Sedna à
+1,7e8 km pour Bennu sur 1900-2100) ont un binaire, produit par
+`scripts/generate-horizons-ephemerides.mjs --only …`. L'écart mesuré en production tombe à
+quelques km pour chacun ; les chiffres font foi sur `/methodology`, pas ici. Trois décisions :
+
+- **Le pas est choisi par corps, et mesuré.** C'est le plus grossier dont l'interpolation, par
+  le chemin même du service, reste sous 20 km d'écart MAXIMAL à des vecteurs Horizons au pas
+  d'un jour sur toute la plage (l'écart maximal déjà accepté du fichier de Cérès), jamais plus
+  fin que 4 jours. Transneptuniens à 64 jours, astéroïdes de la ceinture à 8 ou 16, géocroiseurs
+  et Halley à 4 (leur écart maximal vient des rencontres avec la Terre ou du périhélie). Le
+  tableau de mesure est en commentaire dans le générateur. Coût : 6,4 Mo, contre 12,3 au pas
+  uniforme de 4 jours.
+- **La requête est coupée à l'époque de la solution** (`splitAtSolutionEpoch`). Pour un petit
+  corps qu'il intègre, Horizons rend une position qui dépend de l'ÉTENDUE de la requête : une
+  requête 1900-2101 coïncide avec une requête courte au début de la plage et s'en écarte ensuite,
+  comme une intégration partie de la première date. Itokawa, qui croise souvent la Terre,
+  s'écartait ainsi de 14 663 km en 2098. Coupée à l'époque (lue dans la ligne `EPOCH=` de
+  l'en-tête), chaque moitié part de la solution et l'écart tombe sous 3 km. Bennu est l'exception
+  déclarée : Horizons le lit dans le fichier de trajectoire de la mission OSIRIS-REx, sans ligne
+  EPOCH, et la requête longue n'y dérive pas (0,0 km).
+- **La validation a le même défaut, et il est corrigé au même endroit.** Une liste de 48 dates
+  étalée sur deux siècles se comporte comme la requête longue : le binaire d'Itokawa s'en
+  écartait de 775 km en moyenne, et de 3,7 km de requêtes courtes, une par date. La référence
+  mesurait sa propre dérive. `validate-against-horizons.mjs` coupe donc ses listes à l'époque
+  pour tout corps qui en a une. La référence corrigée mesurait Cérès, Éris, Hauméa et Makémaké,
+  dont les binaires étaient antérieurs à la coupure, 0,5 à 1 km plus loin ; régénérés coupés
+  (lot 11b), ils passent sous leurs valeurs d'avant (Éris 0,32 km en moyenne).
+
+**Chargés au démarrage, comme les autres, par décision mesurée.** Un chargement à la demande
+aurait placé le corps sur ses éléments jusqu'à l'arrivée du fichier, puis l'aurait fait sauter
+(jusqu'à 1,7e8 km pour Bennu), ou exigé un état « position en attente » qui n'existe nulle part.
+Mesuré A/B sur le même build, ancien manifeste servi contre nouveau (`page.route`, réseau bridé
+par CDP) : +6,4 Mo servis (32,57 → 38,96 Mo d'éphémérides), aucun écart sans bridage, +1,0 s à
+50 Mbit/s (16,1 → 17,0 s jusqu'au loader caché), +5,4 s à 10 Mbit/s (36,7 → 42,1 s). **Les
+éphémérides pèsent désormais environ les trois quarts des octets du démarrage** : les charger
+toutes à la demande est un chantier à part entière, qui demanderait sa conversation de
+conception.
+
+### Pas optimisé pour tous les fichiers, et parité (lot 12)
+
+La règle du lot 11 (le pas le plus grossier sous 20 km d'écart maximal d'interpolation, mesuré
+par le code même du service) s'applique à **tous** les fichiers, pas seulement aux nouveaux.
+Mesuré en décimant chaque fichier livré contre ses propres échantillons : Cérès passe à 16 jours,
+Éris, Hauméa et Makémaké à 64, Mars, Déimos et Triton à 8. Rien d'autre ne tient : Pluton
+tiendrait 32 jours, mais son ballant se lit sur Charon à la même grille, et les petites lunes de
+Pluton ne tiennent pas plus de 4 jours ; les géantes, les autres lunes et les sondes dépassent
+20 km dès le double du pas.
+
+Parité : un corps qu'astronomy-engine plaçait seul reçoit un fichier **quand il fait mieux**,
+mesuré contre des vecteurs Horizons à un jour, dans le même repère. Mercure, Vénus et le
+barycentre Terre-Lune (où la Terre est dessinée) à 8 jours, Ganymède à 2, Callisto à 4. La Lune,
+Io et Europe n'en ont pas, et c'est mesuré : à un pas abordable leur interpolation reste au-dessus
+d'astronomy-engine (Lune 86 km au pas de 2 jours contre 10,8 ; Io 362 au mieux contre 218 ;
+Europe 250 contre 119). Pour eux, la parité est la position mesurée contre Horizons, qu'ils ont.
+Les chiffres de production font foi sur `/methodology`. Poids, en octets exacts du manifeste :
+4,46 Mo économisés sur les fichiers existants, 3,96 Mo ajoutés (dont Ganymède, 1,76 Mo au pas de
+2 jours), soit 38,94 → 38,45 Mo pour cinq fichiers de plus ; démarrage inchangé à la mesure
+(16,9 s à 50 Mbit/s, 41,5 s à 10).
+
 ### Le repli képlérien
 
 Il sert quand un binaire manque, sort de sa couverture ou échoue au test de plausibilité —
@@ -267,6 +336,26 @@ de Kepler place presque tous les points près de l'aphélie : Halley (e = 0,967)
 une corde droite de 130° en travers du périhélie, et la courbe n'atteignait jamais sa distance
 minimale. Les points sont donc répartis uniformément en **anomalie excentrique** dès que
 e ≥ 0,2 — seule la répartition change, jamais la courbe.
+
+Trois règles de plus, trouvées au lot 11 quand les corps excentriques ont reçu un binaire, et
+toutes invisibles tant que corps et ligne venaient des mêmes éléments :
+
+- **La phase 0 tombe sur la date affichée.** L'anomalie moyenne courante est recalculée depuis
+  l'anomalie excentrique résolue : `solveKepler` ramène M dans [-π ; π], et la valeur brute,
+  qui compte les tours depuis l'époque, décalait chaque date de la ligne d'un nombre entier de
+  périodes. Halley en 2026 était tracé sur sa révolution de 1950, à 2e7 km du corps.
+- **L'orbite qui répartit les points est celle de la source qui les fournit.** Ligne tirée d'un
+  binaire héliocentrique : orbite osculatrice de son état à la date (vitesse par différence
+  centrée). Ligne tirée des éléments : les éléments. Répartie par les éléments alors qu'elle
+  venait du binaire, la ligne de Halley s'ouvrait de 24° à son périhélie de 2061 en Éducatif.
+- **Quand le binaire répond à la date sans couvrir toute la période, la ligne est la conique
+  osculatrice de son état** (`osculatingOrbitPoints`), et non plus les éléments. Sinon le corps
+  (binaire) et sa ligne (éléments) venaient de deux sources, et leur écart devenait l'écart
+  entre le corps et sa propre orbite : 1,5e8 km pour Halley de 1900 à 1938 et de 2063 à 2100,
+  jusqu'à 3e6 km pour les astéroïdes dans leur première et leur dernière demi-période, Cérès
+  comprise. Pas pour les éléments **barycentriques** (transneptuniens) : leur état
+  héliocentrique porte le ballant du Soleil, et leurs éléments ne s'écartent du corps que de
+  2,4e6 km au plus (Quaoar en 1900, à 43 UA : 0,02°).
 
 ### Trajectoires ouvertes : les objets interstellaires
 
@@ -313,10 +402,11 @@ laisse la date du périhélie libre de ±800 jours. Il faudrait `tp` et `q` pour
 | `core/relativeElements.test.ts` | le repli décrit la même orbite que le binaire (deux sources sans code commun) |
 | `core/satelliteOrbitRate.test.ts` | la cadence du repli, sur la sortie observable |
 | `core/twoBodyPropagation.test.ts` | la propagation, jusqu'à 40 révolutions |
-| `core/orbitLineSampling.test.ts` | amplitude **et** régularité de la ligne, dans les deux modes |
+| `core/orbitLineSampling.test.ts` | amplitude **et** régularité de la ligne, dans les deux modes ; le corps à moins de 1 000 km de sa ligne, aux bords de la couverture et au milieu |
+| `core/orbitPath.test.ts` | la phase 0 de la ligne tombe sur la date affichée, pas une période avant |
 | `core/kepler.test.ts` | solveur hyperbolique (résidu, M non réduite, vis-viva, asymptote ν∞) |
 | `config/interstellar.test.ts` | 21 vecteurs Horizons de −20 à +20 ans, Tp dérivé, ligne répartie en F |
-| `core/ephemerisPlausibility.test.ts` | les deux bornes, sur 400 dates par fichier |
+| `core/ephemerisPlausibility.test.ts` | les deux bornes, sur 400 dates par fichier relatif et 2 000 par fichier héliocentrique ; Sedna et Halley acceptés |
 | `core/horizonsInterpolation.test.ts` | vecteurs Horizons ENTRE échantillons : rythme moyen, ballant de Pluton, seuil 100, binaires de Jupiter et d'Uranus |
 | `core/timeScale.test.ts` | convention TT/TDB unique, installée dans astronomy-engine, importée partout |
 | `config/smallBodies.test.ts` | chaque jeu d'éléments contre Horizons à son époque ; décalage barycentrique |
@@ -762,16 +852,40 @@ d'employer une image de relief comme géométrie.
 (type `tileset`) porte le gabarit, le jeu de matrices, les niveaux, la finesse publiée, la
 campagne d'acquisition, la licence et les fournisseurs STAC. `config/surfaceTilesets.ts` est la
 façade d'exécution, sur le modèle de `config/factSources.ts`. Le moteur
-(`components/surface/PlanetarySurfaceEngine.ts`) ne connaît aucun corps : ajouter Mars doit être
-une fiche de plus, et c'est ce que la phase 9E vérifiera.
+(`components/surface/PlanetarySurfaceEngine.ts`) ne connaît aucun corps, et ce n'est plus une
+intention : **Mars a été ajoutée le 2026-09-21 par une fiche et rien d'autre** (phase 9E), sans
+qu'un fichier de `src/components/surface/`, de `src/core/tile*.ts` ni `src/ui/surfacePanel.ts`
+ne change.
+
+**Deux jeux déclarés, et ils ne se ressemblent pas** — c'est ce qui rend la preuve utile :
+
+| | Lune | Mars |
+|---|---|---|
+| Mosaïque | LRO WAC (LROC, ASU) | Viking MDIM 2.1 colorisée (USGS, NASA Ames) |
+| Campagne | novembre 2009 à février 2011 | juin 1976 à août 1980 |
+| Niveaux publiés par Trek | 0 à 8 | 0 à 7 (le niveau 8 répond 404, mesuré) |
+| Finesse servie au maximum | 83 m/px | 325 m/px |
+| Texture livrée du catalogue | 8k, 1,33 km/px | 8k, 2,60 km/px |
+| Rapport à la texture livrée | 16x | 8x |
+| Finesse publiée de la source | 303 px/degré | 256 px/degré |
+| Niveau maximal vis-à-vis d'elle | l'agrandit de 1,20 | reste à 0,71, donc plus grossier |
+| Plancher d'approche | 128,0 → 8,0 km | 249,7 → 31,2 km |
+
+La dernière ligne du tableau est ce que le bandeau fait de différent : il n'annonce un
+sur-échantillonnage que lorsqu'il y en a un, donc il se tait sur Mars. Et sur un poste, où la
+texture servie est la 8k, le premier niveau que le moteur accepte de peindre y est le 5 : le
+niveau 4 vaut exactement 8 192 px, comme la texture, et le refus porte sur une ÉGALITÉ. Sur un
+téléphone, où la texture servie plafonne à 2k (10,4 km/px), le niveau 4 l'améliore déjà : mesuré
+à 390 px, il est peint dès le premier arrêt, à 998,8 km d'altitude.
 
 **Un carreau est un enfant du groupe qui tourne** (`CelestialObject.attachSpinningChild`), à la
 même paramétrisation que la couche `surface` : `phi = longitude + π`, `theta = 90° − latitude`,
 c'est-à-dire celle de `frames.geographicToLocalDirection`, mesurée au lot 8 contre quatre
 épicentres publiés. Une tuile WMTS a sa ligne 0 au NORD et sa colonne 0 à −180° : ces deux
-conventions se recouvrent sans conversion. Aucun décalage radial n'est appliqué — `polygonOffset`
-décale la profondeur écrite, jamais la géométrie, parce qu'un décalage radial serait une altitude
-inventée.
+conventions se recouvrent sans conversion. SANS hauteurs, aucun décalage radial n'est appliqué —
+`polygonOffset` décale la profondeur écrite, jamais la géométrie, parce qu'un décalage sans mesure
+serait une altitude inventée. AVEC des hauteurs (§ suivant), les sommets sont déplacés par des
+altitudes MESURÉES et `polygonOffset` est retiré.
 
 **Le niveau servi est celui que l'écran mérite, borné par un budget déclaré par profil de
 qualité.** On vise un pixel d'écran par pixel de mosaïque (`core/tilePyramid.ts`), puis on
@@ -823,7 +937,8 @@ NASA demandent d'afficher.
 **Ce que le moteur ne fait pas.** Il ne demande rien au démarrage ni au-dessus de 6 rayons
 apparents (mesuré par comptage de requêtes) ; il annule par `AbortController` tout carreau qui
 sort du champ ou dont la cible change ; il retient un échec plutôt que de redemander la même
-tuile à chaque image ; et il ne remplace jamais la surface du corps, il la recouvre localement.
+tuile à chaque image ; et il ne remplace jamais la surface du corps, il la recouvre localement
+(quand il pose du relief, il descend cette surface SOUS le relief au lieu de l'effacer, § suivant).
 Le réglage « imagerie de surface » est actif par défaut et, éteint, n'émet aucune requête.
 
 **Un hôte de tuiles se déclare en quatre endroits**, et `img-src` en fait partie — c'est le mur
@@ -840,6 +955,111 @@ d'émettre, en nommant la borne franchie. Second piège, silencieux celui-là : 
 `Texture.flipY` pour un `ImageBitmap`, l'orientation doit être décidée à la création
 (`imageOrientation: 'flipY'`) — sans quoi le carreau affiche le mauvais hémisphère sans aucune
 erreur.
+
+## Relief mesuré — des hauteurs cuites hors ligne, jamais devinées
+
+Depuis le 2026-09-21 (lot 9, phase 9D), un corps peut déclarer un JEU DE HAUTEURS
+(`src/registry/products/heightfields/*.json`, type `heightfield`) : les carreaux d'imagerie sont
+alors DÉPLACÉS radialement par des altitudes mesurées, avec une jupe et des normales calculées.
+Le relief n'est pas une image : c'est de la donnée, et elle se cite.
+
+**Pourquoi nous les cuisons, au lieu de les streamer comme l'imagerie.** Il n'existe aucune
+source de hauteurs tuilée servie avec l'en-tête d'origine croisée qu'un navigateur exige. La
+seule couche de NASA Trek qui s'appelle « DEM » est une IMAGE 8 bits : en-tête PNG `bitDepth 8`,
+`colorType 4`, une trentaine de gris distincts par tuile et un alpha constant à 255, soit environ
+78 m par pas sur la Lune. Mesuré le 2026-09-20, REMESURÉ le 2026-09-21 avant d'écrire la première
+ligne du cuiseur. L'employer comme géométrie terrasserait le corps.
+
+`pnpm surface:tiles` (`scripts/bake-surface-height-tiles.mjs`) lit donc un modèle d'élévation
+PDS3 publié et écrit nos propres tuiles, dans la MÊME pyramide que l'imagerie. Ses cibles sont de
+la donnée (`scripts/surface-height-targets.json`), et trois règles y sont tenues :
+
+- **le quantum vient de l'étiquette PDS** (`SCALING_FACTOR`) et il est RÉÉCRIT, avec l'offset de
+  nos tuiles, dans l'en-tête de chacune : `core/heightTile.ts` ne devine rien. Le rayon de
+  référence, que l'étiquette donne DEUX fois (`OFFSET` en mètres, `A_AXIS_RADIUS` en kilomètres),
+  est lu des deux côtés et confronté, puis déclaré dans le manifeste ;
+- **la géométrie déclarée est vérifiée** : lignes et colonnes doivent concorder avec l'emprise et
+  la résolution de l'étiquette, sinon la cuisson s'arrête ;
+- **rien n'est inventé entre deux échantillons** : rééchantillonnage bilinéaire de la grille
+  publiée (registre PIXEL) vers nos tuiles (registre GRILLE), et rien d'autre.
+
+**Un socle global, et des aires NOMMÉES.** Un globe de hauteurs 16 bits pèse 67 Mo au niveau 4 et
+1,07 Go au niveau 6, PAR VERSION RETENUE sur un hébergement dont le quota de 10 Go a déjà sauté
+une fois (`src/config/hostingPayload.test.ts`). Le jeu lunaire livré est donc un socle global au
+niveau 4 (1 333 m/échantillon, depuis `LDEM_64`) plus trois aires cuites aux niveaux 7 et 8
+(83 m/échantillon, depuis les fichiers régionaux `LDEM_1024`), chacune cadrée sur une entité du
+répertoire de nomenclature de l'UAI : Tycho, Rima Hadley (site d'Apollo 15) et Statio
+Tranquillitatis (site d'Apollo 11). 637 tuiles, 84,2 Mo.
+
+| | Socle global | Aires nommées |
+|---|---|---|
+| Niveau | 4 | 7 et 8 |
+| Finesse | 1 333 m/échantillon | 83 m/échantillon |
+| Source | LOLA `LDEM_64` (64 px/degré) | LOLA `LDEM_1024` (1 024 px/degré) |
+| Emprise | le corps entier | le carré dérivé du diamètre publié de l'entité |
+
+**Ce que la fiche porte, et ce que le manifeste porte.** La fiche déclare l'identité, la mission,
+l'instrument, la licence, les fournisseurs et l'intervalle d'acquisition. Tout ce qui se MESURE —
+quantum, offset, rayon de référence, couverture, altitudes extrêmes, nombre de tuiles, poids,
+répertoire — vit dans `manifest.json`, écrit par le cuiseur et lu à l'approche. C'est la
+séparation déjà appliquée à la collection d'éphémérides, et un test confronte les deux.
+
+**Ce que le relief demande, et quand.** Rien au démarrage. Le manifeste (2 Ko, sur notre propre
+origine) est lu quand le corps passe sous huit rayons apparents, en même temps que le moteur
+lui-même ; les tuiles ne sont demandées qu'avec les carreaux qu'elles déplacent, une tuile de
+socle servant jusqu'à 256 carreaux du niveau 8. Le cache en mémoire est borné à 32 tuiles, soit
+environ 4 Mo : sans cela, une session qui approche vingt fois le même corps finirait par garder
+le socle entier.
+
+**Les adresses sont HACHÉES par le contenu** (`assets/height-tiles/moon/<hachage>/…`), comme les
+binaires d'éphémérides : les octets d'une adresse ne changent jamais, donc le cache immuable d'un
+an de `/assets/**` leur convient et le service worker les sert en cache d'abord. Seul
+`manifest.json` porte un nom stable : il reçoit donc une règle Firebase qui revalide et une règle
+« réseau d'abord » dans le service worker, et un test croise les deux — servi depuis un cache, il
+désignerait un répertoire supprimé, c'est-à-dire un relief absent sans la moindre erreur.
+
+**La sphère livrée descend sous le relief.** Les altitudes d'un modèle d'élévation sont rapportées
+à un rayon de référence, et **61 % de la surface lunaire est SOUS ce rayon** (mesuré sur les tuiles
+livrées, pondéré par la surface ; les mers descendent à 2 ou 3 km en dessous et le minimum vaut
+9 105 m). Laissée à sa taille, la sphère du catalogue masquerait tous
+les fonds. `CelestialObject.setSurfaceShellScale` la met donc au minimum MESURÉ du jeu tant que
+des carreaux de relief sont posés, et la rétablit ensuite : elle reste une borne inférieure de la
+surface réelle et ne montre rien que la donnée ne porte pas.
+
+**Deux carreaux voisins se touchent par construction.** Les tuiles de hauteurs sont à registre
+GRILLE (257 échantillons par côté, soit 256 intervalles), donc le bord d'une tuile EST la première
+colonne de sa voisine, et un carreau d'imagerie plus fin lit un sous-rectangle ALIGNÉ de sa tuile
+ancêtre, sans interpolation. Un test rejoue ce chemin complet sur les octets livrés et mesure
+l'écart entre deux carreaux voisins : moins d'un mètre au sol.
+
+**Trois défauts trouvés à l'écran, aucun à la relecture** (2026-09-21) :
+
+1. **la jupe descendait jusqu'à la sphère abaissée.** C'était l'idée d'origine — ne jamais voir à
+   travers — et cela fait des murs de dix kilomètres sous CHAQUE carreau : le bord de chacun se
+   dessinait en noir, et le sol ressemblait à un carrelage. La jupe vaut désormais le DÉNIVELÉ du
+   carreau, qui borne la seule fissure qu'elle ait à boucher, celle entre deux niveaux voisins ;
+2. **`polygonOffset` tirait la jupe vers la caméra**, ce qui redessinait la même ligne en plus
+   fin. Un carreau qui porte du relief n'en a plus besoin, puisque la sphère est descendue : le
+   décalage est retiré dès qu'il y a des hauteurs ;
+3. **la couronne d'un carreau de bord était bornée à sa tuile**, donc la pente y était fausse et
+   l'éclairage traçait une ligne à chaque frontière de tuile de socle. Le moteur traverse
+   désormais la frontière : les colonnes s'enroulent, les lignes non, et les voisines nécessaires
+   sont attendues avant de construire le carreau.
+
+**Confronté à des altitudes publiées, pas seulement à lui-même.** L'équipe LROC publie, pour
+Tycho, un plancher « about 4700 m below the rim » et un pic central « 2 km above the crater
+floor » (M. Robinson, 29 juin 2011). Mesuré sur les tuiles livrées, avec des définitions écrites
+dans le test : **4 502 m** du rempart moyen au plancher médian, et **2 217 m** de pic au-dessus de
+ce plancher. L'étiquette de la source publie par ailleurs ses propres extrêmes (−9 125,5 m et
++10 773 m) ; nos tuiles, rééchantillonnées au niveau 4, rendent −9 105,5 et +10 747,5 m.
+
+**Ce que le relief ne fait PAS.** Aucun relief fractal, aucun détail synthétisé sous la résolution
+de la source, aucune carte d'ombrage employée comme géométrie (un ombrage fige un Soleil, et la
+scène fait bouger le Soleil). Le plancher d'approche reste une altitude au-dessus du RAYON DE
+RÉFÉRENCE, pas au-dessus du sol : au-dessus d'un massif, la caméra s'approche donc davantage du
+sol que le plancher ne le laisse croire, et `?debug-surface` affiche l'altitude MESURÉE du sol
+sous la caméra pour qu'on puisse le voir. Aucune aire fine n'est déclarée ailleurs que sur la
+Lune, et Mars garde donc son imagerie sans relief.
 
 ## Halo lumineux — qui brille, et combien
 
@@ -1166,19 +1386,36 @@ pour Itokawa ne correspond pas à la masse publiée que ses propres notes citent
 
 Les onze sondes et les trois objets interstellaires portent une fiche comme n'importe quel
 corps, mais pas les mêmes grandeurs. `core/bodyFacts.ts` le DÉCLARE au lieu de le déduire de
-l'absence de valeur : une sonde a une date de lancement et une masse, un interstellaire une
-excentricité, une périhélie et une première observation, et aucune des deux familles n'a de
+l'absence de valeur : une sonde a une date de lancement, un lanceur, un site de lancement et une
+masse, un interstellaire une excentricité, une périhélie, une première observation et une
+magnitude absolue, et aucune des deux familles n'a de
 rayon, de gravité, de lune ni d'orbite fermée. `notApplicableFacts` soustrait donc l'ensemble
 complet des champs, et la réciproque vaut pour le catalogue. Le piège est dans l'union : la
 masse d'une sonde est la MÊME grandeur que celle d'une planète, et la déclarer propre à la
 couche instrument l'efface de tout le catalogue — 40 valeurs disparues d'un coup, attrapé par
 `factProvenance.test.ts`.
 
-**Un fait peut être une DATE.** `FactValue` est une union fermée de deux natures, nombre ou
-date de calendrier. Encoder une date en nombre aurait rendu la fiche JSON illisible et laissé
-`displayedUncertainty` calculer une incertitude relative sur un instant. Les pages publiques,
-elles, ne décrivent que des corps du catalogue, dont tous les faits sont numériques : elles
-écartent explicitement les faits datés au lieu de le supposer.
+**Un fait peut être une DATE, ou un NOM.** `FactValue` est une union fermée de trois natures :
+nombre, date de calendrier, nom propre. Encoder une date en nombre aurait rendu la fiche JSON
+illisible et laissé `displayedUncertainty` calculer une incertitude relative sur un instant. Les
+pages publiques, elles, ne décrivent que des corps du catalogue, dont tous les faits sont
+numériques : elles écartent explicitement les autres natures au lieu de le supposer.
+
+La troisième nature est arrivée au lot 10 (2026-09-22), et c'était une décision de modèle, pas
+une corvée. Le lanceur et le site de lancement ne sont pas des nombres, et le modèle avait été
+fermé pour refuser le texte libre. Deux voies s'offraient. Publier une raison de non-publication
+aurait été FAUX : le NSSDCA publie ces deux champs. Ouvrir le modèle au texte libre aurait défait
+ce que la fermeture protégeait. La nature `name` se tient entre les deux : c'est **la chaîne que
+la source écrit, recopiée à l'identique**, jamais traduite ni composée (« Titan IIIE-Centaur »,
+« Kourou, French Guiana », y compris dans l'interface française), et `factProvenance.test.ts` la
+compare caractère pour caractère au relevé, sans tolérance ni normalisation. Une phrase écrite
+par nous ne passerait pas cette garde. Falsifié : un tiret retiré d'un lanceur, un site traduit
+en français, tous deux rouges.
+
+**Une magnitude porte son incertitude en valeur absolue.** La SBDB publie H = 22,08 ± 0,445 pour
+ʻOumuamua. En relatif, cela ferait 2 %, sous le seuil d'affichage de 5 %, donc on le tairait ;
+or 0,45 magnitude est un facteur 1,5 sur la brillance. `ABSOLUTE_UNCERTAINTY_FACTS` soustrait la
+magnitude à la règle relative, et la fiche écrit « 22,08 (± 0,45) ».
 
 **Aucune valeur n'est écrite deux fois.** La date de lancement vit en tête de fiche de sonde et
 son fait ne porte que la provenance ; l'excentricité d'un interstellaire EST son élément
@@ -1201,11 +1438,21 @@ masse au lancement, et le test EXIGE une précision dès que ces phrases existen
 identifiant COSPAR faux ne renvoie pas d'erreur, il renvoie une autre mission. Falsifié :
 `2011-029A` au lieu de `2011-040A` sort « ORS 1 au lieu de Juno ».
 
-**Ce qui n'est pas publié, délibérément** : le lanceur et le site de lancement (du texte libre,
-et le modèle de faits reste fermé à deux natures) ; la puissance nominale (absente de 4 fiches
-sur 11) ; la magnitude absolue d'un interstellaire (la SBDB publie H pour 1I mais M1, une autre
-grandeur, pour les deux comètes) ; la rotation de 1I, parce que la scène ne fait tourner aucun
-de ces objets et qu'on ne publie pas une période que la simulation ne montre pas.
+**La magnitude des deux comètes est refusée, avec sa raison, et cette raison est vérifiée.** La
+SBDB ne publie pas H pour 2I/Borisov et 3I/ATLAS, mais M1, la magnitude TOTALE de la loi de
+brillance cométaire, chevelure comprise : une autre grandeur, qu'on n'affiche pas sous le même
+libellé. Le relevé conserve M1 (`cometTotalMagnitude`) précisément pour que le test confronte la
+raison à la source dans les deux sens : un objet dont la SBDB publie H doit l'afficher, et une
+raison qui cite M1 exige que M1 existe au relevé.
+
+**Ce qui n'est pas publié, délibérément** : la puissance nominale. Le champ « Nominal Power » du
+NSSDCA ne dit pas à QUELLE date il vaut, alors que la grandeur varie beaucoup : la puissance d'un
+générateur à radio-isotope décroît d'année en année (celle des Voyager a fondu depuis 1977), et
+celle d'un panneau solaire dépend de la distance au Soleil. La scène étant datée, un chiffre
+unique se lirait comme la puissance à la date affichée, ce qui serait faux ; et 4 fiches sur 11
+ne le donnent pas. Ce n'est donc pas un fait applicable, et aucune ligne ne l'annonce. La
+rotation de 1I non plus, parce que la scène ne fait tourner aucun de ces objets et qu'on ne
+publie pas une période que la simulation ne montre pas.
 
 ## Petits corps : un instantané livré, pas un flux
 
@@ -1235,6 +1482,27 @@ de conversion, et le fichier commité reste comparable à sa source. Conséquenc
   déjà venu. Le piège est le même que pour les vignettes de partage, et il a failli repasser.
   `src/config/stableAssetCaching.test.ts` croise désormais les familles « réseau d'abord » du
   service worker avec les règles de cache de Firebase : en déclarer une d'un seul côté échoue.
+
+**Un instantané se périme en silence, donc son âge est surveillé** (lot 10, 2026-09-22). Rien ne
+change dans l'application quand le relevé vieillit : les orbites sont affinées à chaque nuit
+d'observation et de nouveaux objets entrent dans les catégories, sans que la couche le sache.
+`core/snapshotAge.ts` déclare un âge maximal, `SMALL_BODY_SNAPSHOT_MAX_AGE_DAYS` (180 jours).
+C'est une politique, la cadence de relevé à laquelle on s'engage, et non une grandeur physique :
+aucune date de la source ne dit qu'un relevé cesse d'être juste. Deux lecteurs de la même règle :
+
+- le **panneau** le dit au visiteur au-delà de cet âge (« Ce relevé date de 8 mois : les orbites
+  affinées depuis, et les objets catalogués depuis, peuvent y manquer »), d'après l'horloge du
+  visiteur et non la date de la scène ;
+- un **workflow GitHub planifié** (`.github/workflows/data-freshness.yml`, chaque lundi) lance
+  `pnpm smallbodies:age`, qui échoue au-delà du même âge ; GitHub notifie alors le propriétaire
+  du dépôt, sans que personne ait à y penser.
+
+Écarté : un test daté dans `pnpm verify`. Une porte qui rougit parce que le calendrier a tourné
+n'est plus reproductible, et elle bloquerait un déploiement sans rapport. Le contrôle daté vit
+donc dans `snapshotAge.test.ts`, éteint sauf si `GALAXY_SNAPSHOT_AGE_CHECK=1`. Limite connue :
+GitHub suspend les workflows planifiés d'un dépôt public après 60 jours sans activité, et c'est
+alors le panneau qui reste. Falsifié : un relevé daté du 2026-03-20 fait sortir
+`pnpm smallbodies:age` en code 1, et un seuil porté à 400 jours fait rougir le scénario e2e.
 
 Mesuré en e2e : la couche PEINT (pixels non transparents comptés sur son canevas) et n'émet
 AUCUNE requête vers `jpl.nasa.gov`. Les deux moitiés comptent : la première seule repasserait au
@@ -1282,8 +1550,9 @@ mesure, `reconstructed` pour un modèle ; sinon `predicted`, en confiance rédui
 
 **Catégorie et exactitude sont deux axes.** Une éphéméride de Jupiter en 2050 et une prévision
 météo à 12 jours sont toutes deux « prédites » et n'ont rien de commun : l'écart mesuré s'affiche
-à côté, jamais fondu dans l'étiquette. « Mesuré » ne veut pas dire « exact » : Hygiea est mesurée
-sur 1900-2100, à 6e7 km.
+à côté, jamais fondu dans l'étiquette. « Mesuré » ne veut pas dire « exact » : les éléments képlériens
+d'Hygie sont mesurés sur 1900-2100, à 6e7 km (depuis le lot 11 ils ne servent plus qu'en repli
+hors de la couverture de son binaire).
 
 **L'écart à la scène est une donnée à part entière.** `validTime` s'éloigne de `simulationTime`
 dès qu'aucune donnée n'existe pour la date demandée : une scène en 2030 reçoit la dernière image
@@ -1360,7 +1629,8 @@ désormais tenues par un test de `docPages.test.ts` :
 - la dérive de rotation ne concerne que les lunes presque synchrones, calculée corps par corps
   (`synchronousSpinDrifts`) ; les 18 autres sont verrouillées à 1e-9 ;
 - la Terre est dessinée au barycentre Terre-Lune (`positionBody: Body.EMB`), ce que mesure sa
-  ligne du tableau (4 823 km en moyenne) ;
+  ligne du tableau (4 823 km en moyenne ; 4 683 depuis que le barycentre vient d'un fichier
+  Horizons, lot 12) ;
 - « contacté seulement quand la couche est utilisée » était faux : SBDB était interrogé au
   démarrage, et la couche de nuages satellite (active par défaut sur ordinateur) comble ses
   trous avec Open-Meteo. **Depuis le lot 8b, SBDB n'est plus contacté du tout** : les petits

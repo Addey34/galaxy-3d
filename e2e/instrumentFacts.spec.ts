@@ -39,6 +39,39 @@ test('a probe card shows its launch date and mass, each citing a source', async 
 
   // Chaque valeur renvoie à une source numérotée, et la source est bien le catalogue NSSDCA.
   await expect(card.locator('.bi-sources')).toContainText('NSSDCA');
+
+  // Lot 10 : le lanceur et le site, recopiés tels que le catalogue NSSDCA les écrit.
+  const vehicle = card.locator('.bi-stats dt', { hasText: 'Launch vehicle' });
+  await expect(vehicle).toHaveCount(1);
+  await expect(vehicle.locator('+ dd')).toContainText('Titan IIIE-Centaur');
+  const site = card.locator('.bi-stats dt', { hasText: 'Launch site' });
+  await expect(site.locator('+ dd')).toContainText(
+    'Cape Canaveral, United States'
+  );
+});
+
+test('an interstellar asteroid shows its absolute magnitude, a comet says why it cannot', async ({
+  page,
+}) => {
+  // La SBDB publie H pour ʻOumuamua, et M1 (magnitude totale, chevelure comprise) pour les
+  // deux comètes : une autre grandeur, donc une raison au lieu d'un chiffre.
+  await page.goto('/?body=oumuamua');
+  await expect(page.locator('#loader')).toBeHidden({ timeout: 30_000 });
+  const card = page.locator('#body-info');
+  await expect(card).toBeVisible();
+  const magnitude = card.locator('.bi-stats dt', {
+    hasText: 'Absolute magnitude',
+  });
+  await expect(magnitude.locator('+ dd')).toContainText('22.08 (± 0.45)');
+
+  await page.goto('/?body=borisov');
+  await expect(page.locator('#loader')).toBeHidden({ timeout: 30_000 });
+  await expect(card).toBeVisible();
+  const refused = card
+    .locator('.bi-stats dt', { hasText: 'Absolute magnitude' })
+    .locator('+ dd');
+  await expect(refused).toHaveClass(/is-unknown/);
+  await expect(refused).toHaveAttribute('title', /M1/);
 });
 
 test('a value the source does not describe is refused, with its reason', async ({

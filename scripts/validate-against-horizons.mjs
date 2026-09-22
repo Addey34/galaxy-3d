@@ -182,8 +182,38 @@ let cacheHits = 0;
  * Vecteurs Horizons (km, km/s, écliptique ICRF, géométriques) de `command` vu depuis `center`
  * aux instants `datesMs` (UT). Renvoie `{ rows }` ou `{ error }` — une plage refusée par
  * Horizons est une information du rapport, pas une panne du script.
+ *
+ * Pour un petit corps dont Horizons INTÈGRE la solution (ligne `EPOCH=` de l'en-tête), la liste
+ * est coupée à l'époque et demandée en deux fois. Une liste unique étalée sur deux siècles se
+ * comporte comme une intégration partie de sa première date : mesuré au lot 11 sur Itokawa (qui
+ * croise souvent la Terre), aux 48 dates de 1900-2100, le binaire livré s'écartait de 775 km en
+ * moyenne de la liste unique, et de 3,7 km de requêtes courtes, une par date. La référence
+ * mesurait donc sa propre dérive, pas l'erreur de l'application. Les deux moitiés partent de
+ * l'époque et coïncident avec les requêtes courtes (0,00 à 0,18 km, mesuré sur Itokawa).
  */
 async function horizonsVectors(targetKey, centerKey, datesMs) {
+  const whole = await horizonsVectorsOnce(targetKey, centerKey, datesMs);
+  if (whole.error || !(whole.epochJd > 0)) return whole;
+  const before = [];
+  const after = [];
+  datesMs.forEach((ms, i) =>
+    (jdOf(ms) < whole.epochJd ? before : after).push(i)
+  );
+  if (before.length === 0 || after.length === 0) return whole;
+  const rows = new Array(datesMs.length);
+  for (const indices of [before, after]) {
+    const part = await horizonsVectorsOnce(
+      targetKey,
+      centerKey,
+      indices.map((i) => datesMs[i])
+    );
+    if (part.error) return part;
+    indices.forEach((i, k) => (rows[i] = part.rows[k]));
+  }
+  return { ...whole, rows };
+}
+
+async function horizonsVectorsOnce(targetKey, centerKey, datesMs) {
   const target = TARGETS[targetKey];
   const center = CENTERS[centerKey];
   if (!target)
@@ -309,7 +339,10 @@ async function horizonsVectors(targetKey, centerKey, datesMs) {
     if (row.position.some((v) => !Number.isFinite(v)))
       throw new Error(`${targetKey}@${centerKey} : ligne ${i} non numérique`);
   });
-  return { rows, targetName, centerName };
+  // Époque de la solution intégrée, absente pour un corps que Horizons lit dans un fichier
+  // (planète, satellite, Bennu servi par le fichier de la mission OSIRIS-REx).
+  const epochJd = Number(text.match(/EPOCH=\s*([\d.]+)/)?.[1]);
+  return { rows, targetName, centerName, epochJd };
 }
 
 // ───────────────────── chargement du code de l'application ─────────────────────

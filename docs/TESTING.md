@@ -90,6 +90,13 @@ après vingt minutes de suite, ou jamais si la branche fautive n'était pas empr
    à-coups. **Tout scénario attend `#loader` caché avant sa première interaction** ; le lot 8
    a coûté un shard de CI rouge, trois tentatives sur trois, pour l'avoir oublié dans un seul
    fichier sur quarante.
+6. **Un glisser qui part du CENTRE de l'écran ne tourne pas la caméra.** Quand un corps est
+   suivi, son point d'étiquette Explo occupe ce centre, et il garde ses gestes de pointeur par
+   conception (seule la molette est réémise vers le canevas). Un scénario qui veut tourner
+   autour d'un corps part donc d'un point dont `document.elementFromPoint` rend bien le
+   `CANVAS`. Et un glisser de moins d'une dizaine de pixels est lu comme un CLIC : il
+   resélectionne le corps et RECADRE la caméra à sept rayons, ce qui ressemble à un zoom qui
+   part à l'envers. Les deux ont coûté une heure de mesures fausses au lot 9, phase 9D.
 
 ## Couverture actuelle
 

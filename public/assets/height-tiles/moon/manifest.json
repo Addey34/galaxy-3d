@@ -1,0 +1,105 @@
+{
+  "$comment": "Écrit par pnpm surface:tiles. Ne pas éditer à la main : les tuiles portent le même quantum et le même offset dans leur propre en-tête.",
+  "id": "moon-lola-ldem",
+  "body": "moon",
+  "directory": "assets/height-tiles/moon/04fada1dc0a5",
+  "format": {
+    "magic": "GXHT",
+    "version": 1,
+    "samples": 257
+  },
+  "quantumMetres": 0.5,
+  "offsetMetres": 0,
+  "datumRadiusKm": 1737.4,
+  "coordinateSystem": "MEAN EARTH/POLAR AXIS OF DE421",
+  "baseLevel": 4,
+  "coverage": [
+    {
+      "level": 4,
+      "global": true,
+      "sourcePixelsPerDegree": 64,
+      "sourceProductId": "LDEM_64"
+    },
+    {
+      "level": 8,
+      "levels": [
+        7,
+        8
+      ],
+      "area": {
+        "id": "tycho",
+        "name": "Tycho",
+        "gazetteerFeatureId": 6163,
+        "centre": {
+          "latitudeDeg": -43.3,
+          "longitudeDeg": -11.22
+        },
+        "diameterKm": 85.29
+      },
+      "bounds": {
+        "west": -14.0625,
+        "east": -8.4375,
+        "south": -45,
+        "north": -41.484375
+      },
+      "sourcePixelsPerDegree": 1024,
+      "sourceProductId": "LDEM_1024_45S_30S_330_360"
+    },
+    {
+      "level": 8,
+      "levels": [
+        7,
+        8
+      ],
+      "area": {
+        "id": "rima-hadley",
+        "name": "Rima Hadley",
+        "gazetteerFeatureId": 5064,
+        "centre": {
+          "latitudeDeg": 25.72,
+          "longitudeDeg": 3.15
+        },
+        "diameterKm": 116.09
+      },
+      "bounds": {
+        "west": 0.703125,
+        "east": 5.625,
+        "south": 23.203125,
+        "north": 28.125
+      },
+      "sourcePixelsPerDegree": 1024,
+      "sourceProductId": "LDEM_1024_15N_30N_000_030"
+    },
+    {
+      "level": 8,
+      "levels": [
+        7,
+        8
+      ],
+      "area": {
+        "id": "statio-tranquillitatis",
+        "name": "Statio Tranquillitatis",
+        "gazetteerFeatureId": 5684,
+        "centre": {
+          "latitudeDeg": 0.67,
+          "longitudeDeg": 23.47
+        },
+        "diameterKm": 0.01
+      },
+      "bounds": {
+        "west": 22.5,
+        "east": 24.609375,
+        "south": 0,
+        "north": 1.40625
+      },
+      "sourcePixelsPerDegree": 1024,
+      "sourceProductId": "LDEM_1024_00N_15N_000_030"
+    }
+  ],
+  "elevationMetres": {
+    "minimum": -9105.5,
+    "maximum": 10747.5
+  },
+  "tiles": 637,
+  "bytes": 84166810
+}

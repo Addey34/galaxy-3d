@@ -260,7 +260,7 @@ export interface RealData {
   /** Nombre de satellites naturels connus. */
   moonCount?: number;
   // ── Objets de la couche instrument (`config/navigable.ts`) ────────────────────────────────
-  // Ces quatre champs ne décrivent AUCUN corps du catalogue : une planète n'a pas de date de
+  // Ces champs ne décrivent AUCUN corps du catalogue : une planète n'a pas de date de
   // lancement, et l'excentricité d'une orbite fermée n'est pas une grandeur que Galaxy publie.
   // Ils vivent ici parce qu'une sonde et un objet interstellaire portent le même
   // `CelestialBodyConfig` que le reste (voir `config/navigable.ts`), et `core/bodyFacts.ts`
@@ -273,6 +273,12 @@ export interface RealData {
   eccentricity?: number;
   /** Distance de périhélie en UA. */
   perihelionAU?: number;
+  /** Lanceur d'une sonde, nom propre recopié tel que la source l'écrit. */
+  launchVehicle?: string;
+  /** Site de lancement d'une sonde, nom propre recopié tel que la source l'écrit. */
+  launchSite?: string;
+  /** Magnitude absolue H d'un interstellaire (pas M1, la magnitude totale d'une comète). */
+  absoluteMagnitude?: number;
 
   /** Courte description grand public, localisée (FR/EN). Affichée par `ui/bodyInfo`. */
   description?: LocalizedText;
@@ -324,7 +330,7 @@ export interface UnknownReason extends LocalizedText {
  * Faits documentaires qu'affichent la fiche d'un corps et sa page publique. `rotationPeriod`
  * n'a pas de champ dans `RealData` : il se lit dans `rotationSpeed`, que la simulation utilise.
  *
- * Les quatre derniers ne concernent QUE la couche instrument (sondes, interstellaires) ;
+ * Les sept derniers ne concernent QUE la couche instrument (sondes, interstellaires) ;
  * `core/bodyFacts.notApplicableFacts` dit lesquels s'appliquent à quel `kind`, de sorte
  * qu'aucune fiche ne montre une ligne vide pour un fait qui n'a pas de sens chez elle.
  */
@@ -341,7 +347,10 @@ export type FactField =
   | 'launchDate'
   | 'firstObservation'
   | 'eccentricity'
-  | 'perihelionAU';
+  | 'perihelionAU'
+  | 'launchVehicle'
+  | 'launchSite'
+  | 'absoluteMagnitude';
 
 /** Champs documentaires qui peuvent n'avoir aucune valeur affichée (cf. `RealData.unknown`). */
 export type UnknownableField = FactField;

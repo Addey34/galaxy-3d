@@ -30,7 +30,12 @@ export const spacecraftSchema = z
      * La liste est celle que `core/bodyFacts.INSTRUMENT_FACTS` déclare applicable à une sonde.
      */
     facts: z
-      .object({ launchDate: fact, massKg: fact })
+      .object({
+        launchDate: fact,
+        launchVehicle: fact,
+        launchSite: fact,
+        massKg: fact,
+      })
       .partial()
       .strict()
       .optional(),

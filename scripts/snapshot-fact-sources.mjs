@@ -774,6 +774,10 @@ async function sbdbInterstellar() {
       perihelionAU: element('q'),
       inclinationDeg: element('i'),
       absoluteMagnitude: phys('H'),
+      // Une comète ne porte pas H mais M1, la magnitude TOTALE (noyau et chevelure) de la loi
+      // de brillance cométaire : une autre grandeur, relevée pour que la raison de ne pas
+      // afficher de magnitude absolue soit confrontée à ce que la source publie vraiment.
+      cometTotalMagnitude: phys('M1'),
       firstObservation: json.orbit?.first_obs ?? null,
       lastObservation: json.orbit?.last_obs ?? null,
       observationsUsed: json.orbit?.n_obs_used ?? null,

@@ -1,3 +1,6 @@
+import { readFileSync } from 'node:fs';
+import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { expect, test, type Page, type Request } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 import { blockExternalNetwork } from './netBlock';
@@ -29,6 +32,9 @@ import { blockExternalNetwork } from './netBlock';
  * « InvalidStateError: The source image could not be decoded » et aucun carreau ne se
  * posait, sans qu'aucune erreur de page ne le dise.
  */
+/** Racine du dépôt vue depuis ce fichier : les specs sont des modules ES, sans `__dirname`. */
+const HERE = dirname(fileURLToPath(import.meta.url));
+
 const TILE_JPEG = Buffer.from(
   '/9j/2wBDAA0JCgsKCA0LCgsODg0PEyAVExISEyccHhcgLikxMC4pLSwzOko+MzZGNywtQFdBRk' +
     'xOUlNSMj5aYVpQYEpRUk//2wBDAQ4ODhMREyYVFSZPNS01T09PT09PT09PT09PT09PT09PT09P' +
@@ -186,6 +192,74 @@ test('paints tiles on the Moon, says what it serves, and lowers the floor', asyn
 });
 
 /**
+ * MARS, AJOUTÉE PAR UNE FICHE ET RIEN D'AUTRE (lot 9, phase 9E).
+ *
+ * C'est la preuve de généricité du moteur : aucun fichier de `src/components/surface/`, de
+ * `src/core/tile*.ts` ni `src/ui/surfacePanel.ts` n'a changé pour ce corps. Ce que ce scénario
+ * ajoute à celui de la Lune, c'est tout ce qui DIFFÈRE, parce qu'un moteur qui aurait la Lune
+ * câblée quelque part s'y trahirait : une autre couche, un autre hôte de chemin, un niveau
+ * maximal de 7 et non 8, et un niveau qui reste PLUS GROSSIER que la mosaïque publiée, donc un
+ * bandeau qui se tait sur l'agrandissement au lieu de l'annoncer.
+ */
+test('paints Mars from a tile set record alone, with no engine change', async ({
+  page,
+}) => {
+  const errors: string[] = [];
+  page.on('pageerror', (err) => errors.push(err.message));
+  const seen = await serveTiles(page);
+
+  await boot(page, '?debug-surface&mode=explo&body=mars');
+  const probe = page.locator('#surface-probe');
+  await expect(probe).toContainText('mars', { timeout: 30_000 });
+
+  await zoomIn(page);
+  const badge = page.locator('#surface-imagery');
+  await expect(badge).toBeVisible({ timeout: 30_000 });
+  expect(seen.length, 'aucune tuile demandée en approche').toBeGreaterThan(0);
+
+  for (const request of seen) {
+    expect(request.url()).toContain(
+      '/tiles/Mars/EQ/Mars_Viking_MDIM21_ClrMosaic_global_232m/1.0.0//default/default028mm/'
+    );
+    expect(request.url()).toMatch(/\/\d+\/\d+\/\d+\.jpg$/);
+  }
+
+  await zoomIn(page);
+  await page.waitForTimeout(3000);
+
+  // Niveau 7, soit 65 536 px sur 360° : huit fois la texture 8k livrée, et le maximum que Trek
+  // publie pour CETTE couche (le niveau 8 y répond 404, mesuré le 2026-09-21).
+  await expect(badge).toHaveAttribute('data-width', '65536', {
+    timeout: 30_000,
+  });
+  await expect(badge.locator('.si-headline')).toContainText(
+    'Viking Colorized Global Mosaic'
+  );
+  await expect(badge.locator('.si-headline')).toContainText('325 m/pixel');
+  await expect(badge.locator('.si-detail')).toContainText(
+    'images from June 1976 to August 1980'
+  );
+  await expect(badge.locator('.si-detail')).toContainText('observed');
+  // LA DIFFÉRENCE AVEC LA LUNE : 182 px/degré servis contre 256 publiés. Le bandeau ne parle
+  // d'agrandissement que lorsqu'il y en a un, sans quoi il annoncerait une finesse absente.
+  await expect(badge.locator('.si-detail')).not.toContainText('larger than');
+  await expect(badge.locator('.si-credit')).toContainText('NASA');
+
+  // Le plancher a suivi : 1,0092 rayon, soit 31,2 km, contre 1,0737 (249,7 km) avec la seule
+  // texture livrée. La formule de 9B n'a pas changé, seule sa largeur d'entrée a changé.
+  const text = (await probe.textContent()) ?? '';
+  const radii = Number(/\(([\d.]+) R\)/.exec(text)?.[1]);
+  expect(
+    radii,
+    'le plancher n’a pas suivi la finesse des carreaux'
+  ).toBeLessThan(1.011);
+  expect(radii).toBeGreaterThan(1.005);
+  expect(text).not.toContain('COUPE LE CORPS');
+
+  expect(errors, `Erreurs page : ${errors.join(' | ')}`).toEqual([]);
+});
+
+/**
  * UN TÉLÉPHONE OUVERT DIRECTEMENT À 390 PX, et pas une fenêtre de bureau rétrécie après coup.
  *
  * La première forme de cette garde redimensionnait la page de 1280 à 390 px une fois le
@@ -256,4 +330,96 @@ test('asks for nothing at all when the setting is off', async ({ page }) => {
   // La moitié inverse de l'affirmation : le réglage EXISTE et il est bien décoché, sinon ce
   // test passerait à vide le jour où la bascule disparaîtrait.
   await expect(page.locator('#surface-imagery-toggle')).not.toBeChecked();
+});
+
+/**
+ * LE RELIEF MESURÉ (lot 9, phase 9D).
+ *
+ * Ce scénario confronte ce que l'écran montre aux OCTETS LIVRÉS : la tuile de hauteurs est
+ * relue ici, dans le test, et l'altitude qu'elle porte sous le point visé doit être exactement
+ * celle que l'application annonce. C'est la même forme de preuve que les quatre épicentres du
+ * lot 8 : deux chemins indépendants pour une même grandeur, et non une capture d'écran.
+ *
+ * Les tuiles de hauteurs viennent de NOTRE origine, donc elles ne sont ni simulées ni bloquées
+ * (`e2e/netBlock.ts` ne coupe que les hôtes tiers) : ce qui est mesuré est bien le fichier que
+ * le dépôt livre.
+ */
+test('displaces the ground with measured altitudes, and says where they come from', async ({
+  page,
+}) => {
+  const errors: string[] = [];
+  page.on('pageerror', (err) => errors.push(err.message));
+  await serveTiles(page);
+  const heightRequests: string[] = [];
+  page.on('request', (request) => {
+    if (request.url().includes('/height-tiles/'))
+      heightRequests.push(request.url());
+  });
+
+  await boot(page, '?debug-surface&mode=explo&body=moon');
+  const probe = page.locator('#surface-probe');
+  await expect(probe).toContainText('moon', { timeout: 30_000 });
+  await zoomIn(page);
+
+  const badge = page.locator('#surface-imagery');
+  await expect(badge).toBeVisible({ timeout: 30_000 });
+  // Le relief n'est annoncé qu'une fois posé, et il nomme sa propre source, qui n'est pas
+  // celle de l'imagerie.
+  await expect(badge).toHaveAttribute('data-relief', /\d+/, {
+    timeout: 30_000,
+  });
+  await expect(badge.locator('.si-relief')).toContainText('LOLA');
+  await expect(badge.locator('.si-relief')).toContainText('altimetry from');
+  await expect(badge.locator('.si-credit')).toContainText('PDS Geosciences');
+  expect(
+    heightRequests.filter((url) => url.endsWith('.hgt')).length,
+    'aucune tuile de hauteurs demandée'
+  ).toBeGreaterThan(0);
+
+  // ── La confrontation : l'altitude annoncée est-elle celle du fichier livré ? ──
+  await expect(probe).toContainText('au-dessus du sol', { timeout: 30_000 });
+  const text = (await probe.textContent()) ?? '';
+  const aim = /visée\s+(-?[\d.]+)°, (-?[\d.]+)°/.exec(text);
+  const shown = /sol\s+(-?\d+) m/.exec(text);
+  expect(aim, 'le relevé ne donne pas le point visé').toBeTruthy();
+  expect(shown, 'le relevé ne donne pas l’altitude du sol').toBeTruthy();
+
+  const manifest = JSON.parse(
+    readFileSync(
+      resolve(HERE, '../public/assets/height-tiles/moon/manifest.json'),
+      'utf-8'
+    )
+  ) as {
+    directory: string;
+    baseLevel: number;
+    quantumMetres: number;
+    offsetMetres: number;
+    format: { samples: number };
+  };
+  const latitude = Number(aim![1]);
+  const longitude = Number(aim![2]);
+  const level = manifest.baseLevel;
+  const columns = 2 * 2 ** level;
+  const rows = 2 ** level;
+  const column = Math.floor(((longitude + 180) / 360) * columns);
+  const row = Math.floor(((90 - latitude) / 180) * rows);
+  const bytes = readFileSync(
+    resolve(
+      HERE,
+      `../public/${manifest.directory}/${level}/${row}/${column}.hgt`
+    )
+  );
+  const samples = manifest.format.samples;
+  const west = -180 + (column * 360) / columns;
+  const north = 90 - (row * 180) / rows;
+  const x = Math.round(((longitude - west) / (360 / columns)) * (samples - 1));
+  const y = Math.round(((north - latitude) / (180 / rows)) * (samples - 1));
+  const dn = bytes.readInt16LE(32 + (y * samples + x) * 2);
+  const expected = manifest.offsetMetres + dn * manifest.quantumMetres;
+
+  // Un mètre de tolérance : l'application arrondit à l'entier ce que le fichier donne au
+  // demi-mètre. Une convention de longitude inversée, elle, se compterait en kilomètres.
+  expect(Math.abs(Number(shown![1]) - expected)).toBeLessThan(1);
+
+  expect(errors, `Erreurs page : ${errors.join(' | ')}`).toEqual([]);
 });

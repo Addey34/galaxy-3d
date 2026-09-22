@@ -1,5 +1,5 @@
 {
- "generatedAt": "2026-09-18T14:26:47.905Z",
+ "generatedAt": "2026-09-22T12:35:46.192Z",
  "samplesPerCase": 48,
  "spk": {
   "kernel": true,
@@ -60,6 +60,32 @@
   },
   {
    "body": "mercury",
+   "provider": "horizons-binary",
+   "windowKind": "binary",
+   "windowFrom": "1900-01-02",
+   "windowTo": "2100-12-25",
+   "windowClipped": false,
+   "relative": false,
+   "radiusKm": 2439.7,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 7.309,
+    "median": 2.053,
+    "p95": 39.8,
+    "max": 61.99
+   },
+   "radii": {
+    "mean": 0.002996,
+    "median": 0.0008414,
+    "p95": 0.01631,
+    "max": 0.02541
+   }
+  },
+  {
+   "body": "mercury",
    "provider": "spk",
    "windowKind": "fixed",
    "windowFrom": "1800-01-01",
@@ -97,19 +123,19 @@
    "uncovered": 0,
    "rejected": 0,
    "sources": {
-    "astronomy-engine": 48
+    "binaire": 48
    },
    "km": {
-    "mean": 2637,
-    "median": 2376,
-    "p95": 4801,
-    "max": 5010
+    "mean": 7.318,
+    "median": 2.267,
+    "p95": 35.35,
+    "max": 51.06
    },
    "radii": {
-    "mean": 1.081,
-    "median": 0.974,
-    "p95": 1.968,
-    "max": 2.054
+    "mean": 0.002999,
+    "median": 0.0009294,
+    "p95": 0.01449,
+    "max": 0.02093
    }
   },
   {
@@ -166,6 +192,32 @@
   },
   {
    "body": "venus",
+   "provider": "horizons-binary",
+   "windowKind": "binary",
+   "windowFrom": "1900-01-02",
+   "windowTo": "2100-12-25",
+   "windowClipped": false,
+   "relative": false,
+   "radiusKm": 6051.8,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 5.911,
+    "median": 2.129,
+    "p95": 27.63,
+    "max": 43.64
+   },
+   "radii": {
+    "mean": 0.0009767,
+    "median": 0.0003518,
+    "p95": 0.004566,
+    "max": 0.007212
+   }
+  },
+  {
+   "body": "venus",
    "provider": "spk",
    "windowKind": "fixed",
    "windowFrom": "1800-01-01",
@@ -203,19 +255,19 @@
    "uncovered": 0,
    "rejected": 0,
    "sources": {
-    "astronomy-engine": 48
+    "binaire": 48
    },
    "km": {
-    "mean": 1428,
-    "median": 1341,
-    "p95": 2543,
-    "max": 3129
+    "mean": 5.434,
+    "median": 2.387,
+    "p95": 22.87,
+    "max": 38.69
    },
    "radii": {
-    "mean": 0.236,
-    "median": 0.2215,
-    "p95": 0.4202,
-    "max": 0.5171
+    "mean": 0.0008979,
+    "median": 0.0003944,
+    "p95": 0.003779,
+    "max": 0.006394
    }
   },
   {
@@ -272,6 +324,32 @@
   },
   {
    "body": "earth",
+   "provider": "horizons-binary",
+   "windowKind": "binary",
+   "windowFrom": "1900-01-02",
+   "windowTo": "2100-12-25",
+   "windowClipped": false,
+   "relative": false,
+   "radiusKm": 6371,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 4680,
+    "median": 4671,
+    "p95": 4930,
+    "max": 4944
+   },
+   "radii": {
+    "mean": 0.7346,
+    "median": 0.7332,
+    "p95": 0.7738,
+    "max": 0.776
+   }
+  },
+  {
+   "body": "earth",
    "provider": "spk",
    "windowKind": "fixed",
    "windowFrom": "1800-01-01",
@@ -309,19 +387,19 @@
    "uncovered": 0,
    "rejected": 0,
    "sources": {
-    "astronomy-engine": 48
+    "binaire": 48
    },
    "km": {
-    "mean": 4823,
-    "median": 4723,
-    "p95": 5853,
-    "max": 6373
+    "mean": 4683,
+    "median": 4706,
+    "p95": 4935,
+    "max": 4942
    },
    "radii": {
-    "mean": 0.7571,
-    "median": 0.7414,
-    "p95": 0.9188,
-    "max": 1
+    "mean": 0.735,
+    "median": 0.7387,
+    "p95": 0.7746,
+    "max": 0.7758
    }
   },
   {
@@ -444,16 +522,16 @@
     "astronomy-engine": 48
    },
    "km": {
-    "mean": 909.5,
-    "median": 851.4,
-    "p95": 1670,
-    "max": 2048
+    "mean": 12.63,
+    "median": 11.24,
+    "p95": 24.79,
+    "max": 36.14
    },
    "radii": {
-    "mean": 0.5235,
-    "median": 0.49,
-    "p95": 0.961,
-    "max": 1.179
+    "mean": 0.007269,
+    "median": 0.006471,
+    "p95": 0.01427,
+    "max": 0.0208
    }
   },
   {
@@ -513,7 +591,7 @@
    "provider": "horizons-binary",
    "windowKind": "binary",
    "windowFrom": "1900-01-02",
-   "windowTo": "2100-12-29",
+   "windowTo": "2100-12-25",
    "windowClipped": false,
    "relative": false,
    "radiusKm": 3389.5,
@@ -522,16 +600,16 @@
    "rejected": 0,
    "sources": {},
    "km": {
-    "mean": 2.929,
-    "median": 0.8827,
-    "p95": 16.07,
-    "max": 30.27
+    "mean": 5.872,
+    "median": 3.541,
+    "p95": 21.03,
+    "max": 28.28
    },
    "radii": {
-    "mean": 0.0008642,
-    "median": 0.0002604,
-    "p95": 0.00474,
-    "max": 0.00893
+    "mean": 0.001732,
+    "median": 0.001045,
+    "p95": 0.006204,
+    "max": 0.008343
    }
   },
   {
@@ -576,15 +654,15 @@
     "binaire": 48
    },
    "km": {
-    "mean": 3.062,
-    "median": 1.066,
-    "p95": 15.94,
+    "mean": 4.945,
+    "median": 2.993,
+    "p95": 20.9,
     "max": 31.65
    },
    "radii": {
-    "mean": 0.0009035,
-    "median": 0.0003144,
-    "p95": 0.004703,
+    "mean": 0.001459,
+    "median": 0.000883,
+    "p95": 0.006166,
     "max": 0.009337
    }
   },
@@ -760,16 +838,16 @@
     "binaire": 48
    },
    "km": {
-    "mean": 14.35,
-    "median": 12.42,
-    "p95": 29.83,
-    "max": 34.35
+    "mean": 15.15,
+    "median": 13.16,
+    "p95": 29.87,
+    "max": 36.79
    },
    "radii": {
-    "mean": 1.295,
-    "median": 1.121,
-    "p95": 2.692,
-    "max": 3.1
+    "mean": 1.367,
+    "median": 1.188,
+    "p95": 2.696,
+    "max": 3.32
    }
   },
   {
@@ -777,7 +855,7 @@
    "provider": "horizons-binary",
    "windowKind": "binary",
    "windowFrom": "1900-01-02",
-   "windowTo": "2100-12-29",
+   "windowTo": "2100-12-25",
    "windowClipped": false,
    "relative": true,
    "radiusKm": 6.2,
@@ -786,16 +864,16 @@
    "rejected": 0,
    "sources": {},
    "km": {
-    "mean": 6.769,
-    "median": 4.943,
-    "p95": 15.81,
-    "max": 16.35
+    "mean": 7.863,
+    "median": 7.101,
+    "p95": 17.16,
+    "max": 20.35
    },
    "radii": {
-    "mean": 1.092,
-    "median": 0.7973,
-    "p95": 2.55,
-    "max": 2.638
+    "mean": 1.268,
+    "median": 1.145,
+    "p95": 2.768,
+    "max": 3.282
    }
   },
   {
@@ -944,16 +1022,16 @@
     "binaire": 48
    },
    "km": {
-    "mean": 7.694,
-    "median": 5.009,
-    "p95": 18.89,
-    "max": 29.95
+    "mean": 10.04,
+    "median": 8.034,
+    "p95": 23.66,
+    "max": 26.19
    },
    "radii": {
-    "mean": 1.241,
-    "median": 0.8078,
-    "p95": 3.046,
-    "max": 4.83
+    "mean": 1.62,
+    "median": 1.296,
+    "p95": 3.816,
+    "max": 4.223
    }
   },
   {
@@ -1538,6 +1616,32 @@
   },
   {
    "body": "ganymede",
+   "provider": "horizons-binary",
+   "windowKind": "binary",
+   "windowFrom": "1900-01-02",
+   "windowTo": "2100-12-31",
+   "windowClipped": false,
+   "relative": true,
+   "radiusKm": 2631.2,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 39.94,
+    "median": 32.39,
+    "p95": 125.8,
+    "max": 148
+   },
+   "radii": {
+    "mean": 0.01518,
+    "median": 0.01231,
+    "p95": 0.0478,
+    "max": 0.05625
+   }
+  },
+  {
+   "body": "ganymede",
    "provider": "spk",
    "windowKind": "fixed",
    "windowFrom": "1800-01-01",
@@ -1601,19 +1705,19 @@
    "uncovered": 0,
    "rejected": 0,
    "sources": {
-    "astronomy-engine": 48
+    "binaire": 48
    },
    "km": {
-    "mean": 181.5,
-    "median": 194.5,
-    "p95": 251,
-    "max": 279.3
+    "mean": 51.09,
+    "median": 46.06,
+    "p95": 95.2,
+    "max": 111
    },
    "radii": {
-    "mean": 0.06899,
-    "median": 0.0739,
-    "p95": 0.09539,
-    "max": 0.1061
+    "mean": 0.01942,
+    "median": 0.01751,
+    "p95": 0.03618,
+    "max": 0.04219
    }
   },
   {
@@ -1670,6 +1774,32 @@
   },
   {
    "body": "callisto",
+   "provider": "horizons-binary",
+   "windowKind": "binary",
+   "windowFrom": "1900-01-02",
+   "windowTo": "2100-12-29",
+   "windowClipped": false,
+   "relative": true,
+   "radiusKm": 2410.3,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 84.36,
+    "median": 62.87,
+    "p95": 203.6,
+    "max": 279.8
+   },
+   "radii": {
+    "mean": 0.035,
+    "median": 0.02609,
+    "p95": 0.08447,
+    "max": 0.1161
+   }
+  },
+  {
+   "body": "callisto",
    "provider": "spk",
    "windowKind": "fixed",
    "windowFrom": "1800-01-01",
@@ -1733,19 +1863,19 @@
    "uncovered": 0,
    "rejected": 0,
    "sources": {
-    "astronomy-engine": 48
+    "binaire": 48
    },
    "km": {
-    "mean": 370.9,
-    "median": 369.7,
-    "p95": 578.6,
-    "max": 610.7
+    "mean": 62.17,
+    "median": 52.52,
+    "p95": 193.5,
+    "max": 228.1
    },
    "radii": {
-    "mean": 0.1539,
-    "median": 0.1534,
-    "p95": 0.24,
-    "max": 0.2534
+    "mean": 0.0258,
+    "median": 0.02179,
+    "p95": 0.08027,
+    "max": 0.09466
    }
   },
   {
@@ -4281,7 +4411,7 @@
    "provider": "horizons-binary",
    "windowKind": "binary",
    "windowFrom": "1900-01-02",
-   "windowTo": "2100-12-29",
+   "windowTo": "2100-12-25",
    "windowClipped": false,
    "relative": true,
    "radiusKm": 1352.6,
@@ -4290,16 +4420,16 @@
    "rejected": 0,
    "sources": {},
    "km": {
-    "mean": 8.363,
-    "median": 10.05,
-    "p95": 13.7,
-    "max": 15.34
+    "mean": 8.688,
+    "median": 9.645,
+    "p95": 15.13,
+    "max": 18.18
    },
    "radii": {
-    "mean": 0.006183,
-    "median": 0.007432,
-    "p95": 0.01013,
-    "max": 0.01134
+    "mean": 0.006423,
+    "median": 0.00713,
+    "p95": 0.01119,
+    "max": 0.01344
    }
   },
   {
@@ -4448,16 +4578,16 @@
     "binaire": 48
    },
    "km": {
-    "mean": 29.66,
-    "median": 25.93,
-    "p95": 59.09,
-    "max": 60.39
+    "mean": 31.85,
+    "median": 28.9,
+    "p95": 57.42,
+    "max": 58.01
    },
    "radii": {
-    "mean": 0.02193,
-    "median": 0.01917,
-    "p95": 0.04369,
-    "max": 0.04465
+    "mean": 0.02355,
+    "median": 0.02137,
+    "p95": 0.04245,
+    "max": 0.04289
    }
   },
   {
@@ -4729,7 +4859,7 @@
    "provider": "horizons-binary",
    "windowKind": "binary",
    "windowFrom": "1900-01-02",
-   "windowTo": "2100-12-29",
+   "windowTo": "2100-12-25",
    "windowClipped": false,
    "relative": false,
    "radiusKm": 469.7,
@@ -4738,16 +4868,16 @@
    "rejected": 0,
    "sources": {},
    "km": {
-    "mean": 2.343,
-    "median": 0.1669,
-    "p95": 12.44,
-    "max": 21.17
+    "mean": 10.4,
+    "median": 8.101,
+    "p95": 22.88,
+    "max": 24.77
    },
    "radii": {
-    "mean": 0.004988,
-    "median": 0.0003553,
-    "p95": 0.02649,
-    "max": 0.04507
+    "mean": 0.02214,
+    "median": 0.01725,
+    "p95": 0.04871,
+    "max": 0.05274
    }
   },
   {
@@ -4844,16 +4974,42 @@
     "binaire": 48
    },
    "km": {
-    "mean": 2.409,
-    "median": 0.4703,
-    "p95": 12.25,
-    "max": 19.59
+    "mean": 7.761,
+    "median": 6.747,
+    "p95": 18.87,
+    "max": 24.38
    },
    "radii": {
-    "mean": 0.00513,
-    "median": 0.001001,
-    "p95": 0.02607,
-    "max": 0.04171
+    "mean": 0.01652,
+    "median": 0.01436,
+    "p95": 0.04017,
+    "max": 0.05191
+   }
+  },
+  {
+   "body": "vesta",
+   "provider": "horizons-binary",
+   "windowKind": "binary",
+   "windowFrom": "1900-01-02",
+   "windowTo": "2100-12-25",
+   "windowClipped": false,
+   "relative": false,
+   "radiusKm": 261.385,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 2.805,
+    "median": 1.116,
+    "p95": 12.49,
+    "max": 20.1
+   },
+   "radii": {
+    "mean": 0.01073,
+    "median": 0.004269,
+    "p95": 0.04778,
+    "max": 0.0769
    }
   },
   {
@@ -4947,19 +5103,45 @@
    "uncovered": 0,
    "rejected": 0,
    "sources": {
-    "kepler": 48
+    "binaire": 48
    },
    "km": {
-    "mean": 2731000,
-    "median": 2243000,
-    "p95": 7375000,
-    "max": 8441000
+    "mean": 2.956,
+    "median": 0.9413,
+    "p95": 17.61,
+    "max": 19.33
    },
    "radii": {
-    "mean": 10450,
-    "median": 8581,
-    "p95": 28220,
-    "max": 32290
+    "mean": 0.01131,
+    "median": 0.003601,
+    "p95": 0.06737,
+    "max": 0.07396
+   }
+  },
+  {
+   "body": "pallas",
+   "provider": "horizons-binary",
+   "windowKind": "binary",
+   "windowFrom": "1900-01-02",
+   "windowTo": "2100-12-25",
+   "windowClipped": false,
+   "relative": false,
+   "radiusKm": 256.5,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 3.626,
+    "median": 1.97,
+    "p95": 12.23,
+    "max": 21.27
+   },
+   "radii": {
+    "mean": 0.01414,
+    "median": 0.007679,
+    "p95": 0.04768,
+    "max": 0.08293
    }
   },
   {
@@ -5053,19 +5235,45 @@
    "uncovered": 0,
    "rejected": 0,
    "sources": {
-    "kepler": 48
+    "binaire": 48
    },
    "km": {
-    "mean": 16770000,
-    "median": 18820000,
-    "p95": 36430000,
-    "max": 38410000
+    "mean": 3.374,
+    "median": 1.798,
+    "p95": 13.99,
+    "max": 20.71
    },
    "radii": {
-    "mean": 65380,
-    "median": 73390,
-    "p95": 142000,
-    "max": 149700
+    "mean": 0.01315,
+    "median": 0.007012,
+    "p95": 0.05455,
+    "max": 0.08073
+   }
+  },
+  {
+   "body": "hygiea",
+   "provider": "horizons-binary",
+   "windowKind": "binary",
+   "windowFrom": "1900-01-02",
+   "windowTo": "2100-12-25",
+   "windowClipped": false,
+   "relative": false,
+   "radiusKm": 203.56,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 5.676,
+    "median": 3.729,
+    "p95": 14.7,
+    "max": 32.58
+   },
+   "radii": {
+    "mean": 0.02788,
+    "median": 0.01832,
+    "p95": 0.07221,
+    "max": 0.16
    }
   },
   {
@@ -5159,19 +5367,45 @@
    "uncovered": 0,
    "rejected": 0,
    "sources": {
-    "kepler": 48
+    "binaire": 48
    },
    "km": {
-    "mean": 59820000,
-    "median": 59670000,
-    "p95": 129600000,
-    "max": 140900000
+    "mean": 6.736,
+    "median": 5.243,
+    "p95": 16.19,
+    "max": 25
    },
    "radii": {
-    "mean": 293800,
-    "median": 293100,
-    "p95": 636500,
-    "max": 692200
+    "mean": 0.03309,
+    "median": 0.02576,
+    "p95": 0.07956,
+    "max": 0.1228
+   }
+  },
+  {
+   "body": "psyche",
+   "provider": "horizons-binary",
+   "windowKind": "binary",
+   "windowFrom": "1900-01-02",
+   "windowTo": "2100-12-25",
+   "windowClipped": false,
+   "relative": false,
+   "radiusKm": 111,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 2.048,
+    "median": 0.5163,
+    "p95": 12.09,
+    "max": 23.17
+   },
+   "radii": {
+    "mean": 0.01845,
+    "median": 0.004651,
+    "p95": 0.1089,
+    "max": 0.2087
    }
   },
   {
@@ -5265,19 +5499,19 @@
    "uncovered": 0,
    "rejected": 0,
    "sources": {
-    "kepler": 48
+    "binaire": 48
    },
    "km": {
-    "mean": 17170000,
-    "median": 16250000,
-    "p95": 34950000,
-    "max": 40630000
+    "mean": 2.661,
+    "median": 0.7025,
+    "p95": 11.95,
+    "max": 23.66
    },
    "radii": {
-    "mean": 154700,
-    "median": 146400,
-    "p95": 314800,
-    "max": 366100
+    "mean": 0.02397,
+    "median": 0.006329,
+    "p95": 0.1077,
+    "max": 0.2132
    }
   },
   {
@@ -6155,7 +6389,7 @@
    "provider": "horizons-binary",
    "windowKind": "binary",
    "windowFrom": "1900-01-02",
-   "windowTo": "2100-12-29",
+   "windowTo": "2100-12-25",
    "windowClipped": false,
    "relative": false,
    "radiusKm": 1163,
@@ -6164,16 +6398,16 @@
    "rejected": 0,
    "sources": {},
    "km": {
-    "mean": 0.5504,
-    "median": 0.4257,
-    "p95": 1.648,
-    "max": 2.832
+    "mean": 3.95,
+    "median": 2.724,
+    "p95": 12.82,
+    "max": 15.93
    },
    "radii": {
-    "mean": 0.0004733,
-    "median": 0.000366,
-    "p95": 0.001417,
-    "max": 0.002435
+    "mean": 0.003396,
+    "median": 0.002342,
+    "p95": 0.01102,
+    "max": 0.0137
    }
   },
   {
@@ -6222,9 +6456,9 @@
     "max": 42680
    },
    "radii": {
-    "mean": 9.517,
+    "mean": 9.516,
     "median": 5.072,
-    "p95": 33.35,
+    "p95": 33.34,
     "max": 36.7
    }
   },
@@ -6270,16 +6504,16 @@
     "binaire": 48
    },
    "km": {
-    "mean": 0.5153,
-    "median": 0.371,
-    "p95": 2.25,
-    "max": 2.576
+    "mean": 4.595,
+    "median": 2.612,
+    "p95": 14.56,
+    "max": 15.27
    },
    "radii": {
-    "mean": 0.0004431,
-    "median": 0.000319,
-    "p95": 0.001935,
-    "max": 0.002215
+    "mean": 0.003951,
+    "median": 0.002246,
+    "p95": 0.01252,
+    "max": 0.01313
    }
   },
   {
@@ -6287,7 +6521,7 @@
    "provider": "horizons-binary",
    "windowKind": "binary",
    "windowFrom": "1900-01-02",
-   "windowTo": "2100-12-29",
+   "windowTo": "2100-12-25",
    "windowClipped": false,
    "relative": false,
    "radiusKm": 780,
@@ -6296,16 +6530,16 @@
    "rejected": 0,
    "sources": {},
    "km": {
-    "mean": 0.7494,
-    "median": 0.3575,
-    "p95": 3.792,
-    "max": 5.284
+    "mean": 6.224,
+    "median": 5.8,
+    "p95": 13.1,
+    "max": 16.71
    },
    "radii": {
-    "mean": 0.0009608,
-    "median": 0.0004583,
-    "p95": 0.004861,
-    "max": 0.006775
+    "mean": 0.007979,
+    "median": 0.007436,
+    "p95": 0.0168,
+    "max": 0.02143
    }
   },
   {
@@ -6355,7 +6589,7 @@
    },
    "radii": {
     "mean": 172.5,
-    "median": 88.88,
+    "median": 88.89,
     "p95": 657.9,
     "max": 949.2
    }
@@ -6402,16 +6636,16 @@
     "binaire": 48
    },
    "km": {
-    "mean": 1.48,
-    "median": 0.988,
-    "p95": 4.348,
-    "max": 5.69
+    "mean": 5.262,
+    "median": 4.532,
+    "p95": 13.83,
+    "max": 16.61
    },
    "radii": {
-    "mean": 0.001897,
-    "median": 0.001267,
-    "p95": 0.005574,
-    "max": 0.007295
+    "mean": 0.006746,
+    "median": 0.00581,
+    "p95": 0.01773,
+    "max": 0.02129
    }
   },
   {
@@ -6419,7 +6653,7 @@
    "provider": "horizons-binary",
    "windowKind": "binary",
    "windowFrom": "1900-01-02",
-   "windowTo": "2100-12-29",
+   "windowTo": "2100-12-25",
    "windowClipped": false,
    "relative": false,
    "radiusKm": 717,
@@ -6428,16 +6662,16 @@
    "rejected": 0,
    "sources": {},
    "km": {
-    "mean": 0.7941,
-    "median": 0.4384,
-    "p95": 3.444,
-    "max": 5.882
+    "mean": 5.413,
+    "median": 4.345,
+    "p95": 15.41,
+    "max": 17.12
    },
    "radii": {
-    "mean": 0.001108,
-    "median": 0.0006114,
-    "p95": 0.004803,
-    "max": 0.008204
+    "mean": 0.007549,
+    "median": 0.00606,
+    "p95": 0.0215,
+    "max": 0.02388
    }
   },
   {
@@ -6481,7 +6715,7 @@
    "sources": {},
    "km": {
     "mean": 126900,
-    "median": 88700,
+    "median": 88710,
     "p95": 379400,
     "max": 453000
    },
@@ -6534,16 +6768,42 @@
     "binaire": 48
    },
    "km": {
-    "mean": 0.6398,
-    "median": 0.1907,
-    "p95": 4.139,
-    "max": 6.145
+    "mean": 4.699,
+    "median": 4.067,
+    "p95": 11.98,
+    "max": 13.62
    },
    "radii": {
-    "mean": 0.0008924,
-    "median": 0.000266,
-    "p95": 0.005773,
-    "max": 0.00857
+    "mean": 0.006553,
+    "median": 0.005672,
+    "p95": 0.01671,
+    "max": 0.01899
+   }
+  },
+  {
+   "body": "orcus",
+   "provider": "horizons-binary",
+   "windowKind": "binary",
+   "windowFrom": "1900-01-02",
+   "windowTo": "2100-12-25",
+   "windowClipped": false,
+   "relative": false,
+   "radiusKm": 458,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 5.544,
+    "median": 5.638,
+    "p95": 12.98,
+    "max": 17.71
+   },
+   "radii": {
+    "mean": 0.01211,
+    "median": 0.01231,
+    "p95": 0.02835,
+    "max": 0.03866
    }
   },
   {
@@ -6637,19 +6897,45 @@
    "uncovered": 0,
    "rejected": 0,
    "sources": {
-    "kepler": 48
+    "binaire": 48
    },
    "km": {
-    "mean": 254800,
-    "median": 172600,
-    "p95": 694300,
-    "max": 737200
+    "mean": 4.916,
+    "median": 3.946,
+    "p95": 11.11,
+    "max": 18.28
    },
    "radii": {
-    "mean": 556.4,
-    "median": 376.9,
-    "p95": 1516,
-    "max": 1610
+    "mean": 0.01073,
+    "median": 0.008615,
+    "p95": 0.02425,
+    "max": 0.0399
+   }
+  },
+  {
+   "body": "quaoar",
+   "provider": "horizons-binary",
+   "windowKind": "binary",
+   "windowFrom": "1900-01-02",
+   "windowTo": "2100-12-25",
+   "windowClipped": false,
+   "relative": false,
+   "radiusKm": 547.2,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 4.895,
+    "median": 4.3,
+    "p95": 11.44,
+    "max": 16.16
+   },
+   "radii": {
+    "mean": 0.008946,
+    "median": 0.007858,
+    "p95": 0.0209,
+    "max": 0.02953
    }
   },
   {
@@ -6743,19 +7029,45 @@
    "uncovered": 0,
    "rejected": 0,
    "sources": {
-    "kepler": 48
+    "binaire": 48
    },
    "km": {
-    "mean": 422600,
-    "median": 118300,
-    "p95": 2181000,
-    "max": 3048000
+    "mean": 5.887,
+    "median": 5.16,
+    "p95": 13.27,
+    "max": 15.48
    },
    "radii": {
-    "mean": 772.3,
-    "median": 216.1,
-    "p95": 3987,
-    "max": 5571
+    "mean": 0.01076,
+    "median": 0.009431,
+    "p95": 0.02425,
+    "max": 0.02829
+   }
+  },
+  {
+   "body": "gonggong",
+   "provider": "horizons-binary",
+   "windowKind": "binary",
+   "windowFrom": "1900-01-02",
+   "windowTo": "2100-12-25",
+   "windowClipped": false,
+   "relative": false,
+   "radiusKm": 615,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 5.915,
+    "median": 5.147,
+    "p95": 15.22,
+    "max": 16.1
+   },
+   "radii": {
+    "mean": 0.009618,
+    "median": 0.008369,
+    "p95": 0.02475,
+    "max": 0.02618
    }
   },
   {
@@ -6849,19 +7161,45 @@
    "uncovered": 0,
    "rejected": 0,
    "sources": {
-    "kepler": 48
+    "binaire": 48
    },
    "km": {
-    "mean": 26010,
-    "median": 18290,
-    "p95": 71110,
-    "max": 80940
+    "mean": 5.291,
+    "median": 3.713,
+    "p95": 15.4,
+    "max": 16.52
    },
    "radii": {
-    "mean": 42.3,
-    "median": 29.74,
-    "p95": 115.6,
-    "max": 131.6
+    "mean": 0.008604,
+    "median": 0.006037,
+    "p95": 0.02504,
+    "max": 0.02686
+   }
+  },
+  {
+   "body": "sedna",
+   "provider": "horizons-binary",
+   "windowKind": "binary",
+   "windowFrom": "1900-01-02",
+   "windowTo": "2100-12-25",
+   "windowClipped": false,
+   "relative": false,
+   "radiusKm": 497.5,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 4.201,
+    "median": 2.786,
+    "p95": 12.94,
+    "max": 15.23
+   },
+   "radii": {
+    "mean": 0.008444,
+    "median": 0.0056,
+    "p95": 0.026,
+    "max": 0.03061
    }
   },
   {
@@ -6930,7 +7268,7 @@
    "rejected": 0,
    "sources": {},
    "km": {
-    "mean": 239000,
+    "mean": 239100,
     "median": 130400,
     "p95": 807800,
     "max": 928100
@@ -6939,7 +7277,7 @@
     "mean": 480.5,
     "median": 262.1,
     "p95": 1624,
-    "max": 1865
+    "max": 1866
    }
   },
   {
@@ -6955,19 +7293,45 @@
    "uncovered": 0,
    "rejected": 0,
    "sources": {
-    "kepler": 48
+    "binaire": 48
    },
    "km": {
-    "mean": 14010,
-    "median": 5233,
-    "p95": 58790,
-    "max": 79680
+    "mean": 5.744,
+    "median": 4.866,
+    "p95": 15.01,
+    "max": 16.24
    },
    "radii": {
-    "mean": 28.17,
-    "median": 10.52,
-    "p95": 118.2,
-    "max": 160.2
+    "mean": 0.01155,
+    "median": 0.009781,
+    "p95": 0.03017,
+    "max": 0.03265
+   }
+  },
+  {
+   "body": "halley",
+   "provider": "horizons-binary",
+   "windowKind": "binary",
+   "windowFrom": "1900-01-02",
+   "windowTo": "2100-12-29",
+   "windowClipped": false,
+   "relative": false,
+   "radiusKm": 5.5,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 0.9706,
+    "median": 0.0004159,
+    "p95": 4.439,
+    "max": 13.59
+   },
+   "radii": {
+    "mean": 0.1765,
+    "median": 0.00007563,
+    "p95": 0.8071,
+    "max": 2.47
    }
   },
   {
@@ -7061,19 +7425,45 @@
    "uncovered": 0,
    "rejected": 0,
    "sources": {
-    "kepler": 48
+    "binaire": 48
    },
    "km": {
-    "mean": 35760000,
-    "median": 12040000,
-    "p95": 161600000,
-    "max": 221000000
+    "mean": 0.7892,
+    "median": 0.0004113,
+    "p95": 4.135,
+    "max": 13.17
    },
    "radii": {
-    "mean": 6502000,
-    "median": 2189000,
-    "p95": 29390000,
-    "max": 40170000
+    "mean": 0.1435,
+    "median": 0.00007479,
+    "p95": 0.7518,
+    "max": 2.395
+   }
+  },
+  {
+   "body": "bennu",
+   "provider": "horizons-binary",
+   "windowKind": "binary",
+   "windowFrom": "1900-01-04",
+   "windowTo": "2100-12-31",
+   "windowClipped": false,
+   "relative": false,
+   "radiusKm": 0.24222,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 6.553,
+    "median": 3.105,
+    "p95": 21.95,
+    "max": 37.36
+   },
+   "radii": {
+    "mean": 27.05,
+    "median": 12.82,
+    "p95": 90.6,
+    "max": 154.3
    }
   },
   {
@@ -7167,19 +7557,45 @@
    "uncovered": 0,
    "rejected": 0,
    "sources": {
-    "kepler": 48
+    "binaire": 48
    },
    "km": {
-    "mean": 170500000,
-    "median": 186900000,
-    "p95": 336500000,
-    "max": 336700000
+    "mean": 5.193,
+    "median": 2.574,
+    "p95": 23.78,
+    "max": 34.83
    },
    "radii": {
-    "mean": 704000000,
-    "median": 771400000,
-    "p95": 1389000000,
-    "max": 1390000000
+    "mean": 21.44,
+    "median": 10.63,
+    "p95": 98.16,
+    "max": 143.8
+   }
+  },
+  {
+   "body": "eros",
+   "provider": "horizons-binary",
+   "windowKind": "binary",
+   "windowFrom": "1900-01-02",
+   "windowTo": "2100-12-29",
+   "windowClipped": false,
+   "relative": false,
+   "radiusKm": 8.42,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 3.731,
+    "median": 1.369,
+    "p95": 21.87,
+    "max": 24.23
+   },
+   "radii": {
+    "mean": 0.4431,
+    "median": 0.1626,
+    "p95": 2.597,
+    "max": 2.878
    }
   },
   {
@@ -7273,19 +7689,45 @@
    "uncovered": 0,
    "rejected": 0,
    "sources": {
-    "kepler": 48
+    "binaire": 48
    },
    "km": {
-    "mean": 1263000,
-    "median": 1033000,
-    "p95": 3103000,
-    "max": 3394000
+    "mean": 3.711,
+    "median": 1.336,
+    "p95": 18.07,
+    "max": 30.75
    },
    "radii": {
-    "mean": 150000,
-    "median": 122600,
-    "p95": 368500,
-    "max": 403100
+    "mean": 0.4408,
+    "median": 0.1587,
+    "p95": 2.146,
+    "max": 3.652
+   }
+  },
+  {
+   "body": "itokawa",
+   "provider": "horizons-binary",
+   "windowKind": "binary",
+   "windowFrom": "1900-01-02",
+   "windowTo": "2100-12-29",
+   "windowClipped": false,
+   "relative": false,
+   "radiusKm": 0.165,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 4.687,
+    "median": 1.59,
+    "p95": 19.84,
+    "max": 24.92
+   },
+   "radii": {
+    "mean": 28.4,
+    "median": 9.634,
+    "p95": 120.2,
+    "max": 151
    }
   },
   {
@@ -7336,7 +7778,7 @@
    "radii": {
     "mean": 145300000,
     "median": 100700000,
-    "p95": 398300000,
+    "p95": 398400000,
     "max": 498200000
    }
   },
@@ -7354,14 +7796,14 @@
    "rejected": 0,
    "sources": {},
    "km": {
-    "mean": 195000000,
-    "median": 165800000,
-    "p95": 380900000,
+    "mean": 135500000,
+    "median": 92450000,
+    "p95": 380800000,
     "max": 385000000
    },
    "radii": {
-    "mean": 1182000000,
-    "median": 1005000000,
+    "mean": 821300000,
+    "median": 560300000,
     "p95": 2308000000,
     "max": 2333000000
    }
@@ -7379,19 +7821,45 @@
    "uncovered": 0,
    "rejected": 0,
    "sources": {
-    "kepler": 48
+    "binaire": 48
    },
    "km": {
-    "mean": 23970000,
-    "median": 16620000,
-    "p95": 65730000,
-    "max": 82200000
+    "mean": 5.537,
+    "median": 2.366,
+    "p95": 22.25,
+    "max": 30.5
    },
    "radii": {
-    "mean": 145300000,
-    "median": 100700000,
-    "p95": 398300000,
-    "max": 498200000
+    "mean": 33.56,
+    "median": 14.34,
+    "p95": 134.9,
+    "max": 184.8
+   }
+  },
+  {
+   "body": "ryugu",
+   "provider": "horizons-binary",
+   "windowKind": "binary",
+   "windowFrom": "1900-01-02",
+   "windowTo": "2100-12-29",
+   "windowClipped": false,
+   "relative": false,
+   "radiusKm": 0.448,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 7.271,
+    "median": 6.352,
+    "p95": 21.17,
+    "max": 30.42
+   },
+   "radii": {
+    "mean": 16.23,
+    "median": 14.18,
+    "p95": 47.26,
+    "max": 67.9
    }
   },
   {
@@ -7485,19 +7953,45 @@
    "uncovered": 0,
    "rejected": 0,
    "sources": {
-    "kepler": 48
+    "binaire": 48
    },
    "km": {
-    "mean": 46210000,
-    "median": 20410000,
-    "p95": 183600000,
-    "max": 269900000
+    "mean": 4.86,
+    "median": 2.808,
+    "p95": 20.82,
+    "max": 25.63
    },
    "radii": {
-    "mean": 103100000,
-    "median": 45560000,
-    "p95": 409900000,
-    "max": 602400000
+    "mean": 10.85,
+    "median": 6.268,
+    "p95": 46.48,
+    "max": 57.21
+   }
+  },
+  {
+   "body": "ida",
+   "provider": "horizons-binary",
+   "windowKind": "binary",
+   "windowFrom": "1900-01-02",
+   "windowTo": "2100-12-25",
+   "windowClipped": false,
+   "relative": false,
+   "radiusKm": 16,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 6.879,
+    "median": 5.2,
+    "p95": 16.42,
+    "max": 22.56
+   },
+   "radii": {
+    "mean": 0.4299,
+    "median": 0.325,
+    "p95": 1.026,
+    "max": 1.41
    }
   },
   {
@@ -7591,19 +8085,19 @@
    "uncovered": 0,
    "rejected": 0,
    "sources": {
-    "kepler": 48
+    "binaire": 48
    },
    "km": {
-    "mean": 14450000,
-    "median": 12500000,
-    "p95": 31290000,
-    "max": 33050000
+    "mean": 7.563,
+    "median": 7.367,
+    "p95": 16.59,
+    "max": 21.87
    },
    "radii": {
-    "mean": 902800,
-    "median": 781400,
-    "p95": 1956000,
-    "max": 2066000
+    "mean": 0.4727,
+    "median": 0.4605,
+    "p95": 1.037,
+    "max": 1.367
    }
   },
   {

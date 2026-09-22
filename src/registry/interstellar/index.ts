@@ -12,6 +12,7 @@ import orderFile from './order.json';
  */
 const INTERSTELLAR_VALUE_FIELD = {
   firstObservation: 'firstObservation',
+  absoluteMagnitude: 'absoluteMagnitude',
 } as const;
 
 export const INTERSTELLAR_ORDER: readonly string[] = orderFile.order;
