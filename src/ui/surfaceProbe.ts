@@ -115,9 +115,16 @@ export function setupSurfaceProbe(api: PublicAPI): () => void {
     // livrée dans ce calcul, exactement comme elle le fait pour le plancher d'approche
     // (cf. `CelestialObject.getApproachFloorFactor`). Lire la seule texture ici donnerait un
     // agrandissement seize fois trop grand pendant que les carreaux sont à l'écran.
-    const tilesWidthPx = Number(
-      document.getElementById('surface-imagery')?.dataset['width'] ?? 0
-    );
+    const badge = document.getElementById('surface-imagery');
+    const tilesWidthPx = Number(badge?.dataset['width'] ?? 0);
+    // Relief SERVI, lu là où le bandeau l'annonce : niveau de hauteurs et pas d'échantillon au
+    // sol. « aucun » veut dire que les carreaux posés sont plats, ce qui est le cas partout où
+    // aucun jeu de hauteurs n'est livré.
+    const reliefLevel = badge?.dataset['relief'];
+    const reliefMetres = badge?.dataset['reliefM'];
+    const groundM = badge?.dataset['ground'];
+    const painted = badge?.dataset['painted'];
+    const attached = badge?.dataset['attached'];
     const textureWidthPx = Math.max(surface?.map?.width ?? 0, tilesWidthPx);
     const vertexCount = surface?.geometry?.vertexCount ?? 0;
     // (segments + 1)² sommets pour une SphereGeometry : on remonte à la densité réelle
@@ -159,6 +166,32 @@ export function setupSurfaceProbe(api: PublicAPI): () => void {
         }),
         2
       )} px/texel`,
+      // Point VISÉ à la surface, par la même transformée que les carreaux et les marqueurs
+      // d'événements terrestres : sans lui, on ne sait pas de quel endroit du corps on parle.
+      `visée           ${
+        body
+          ? (() => {
+              const point = body.worldPointToGeographic(camera.position);
+              return `${round(point.latitudeDeg, 3)}°, ${round(point.longitudeDeg, 3)}°`;
+            })()
+          : 'n/a'
+      }`,
+      `carreaux        ${painted ?? 0} au niveau servi, ${attached ?? 0} posés`,
+      `relief          ${
+        reliefLevel
+          ? `niveau ${reliefLevel} · ${round(Number(reliefMetres), 0)} m/échantillon`
+          : 'aucun'
+      }`,
+      // L'altitude ci-dessus est celle du RAYON DE RÉFÉRENCE ; au-dessus d'un massif, le sol
+      // est bien plus haut, et c'est cette ligne qui le dit.
+      `sol            ${
+        groundM === undefined
+          ? ' n/a'
+          : ` ${round(Number(groundM), 0)} m → ${round(
+              altitudeKm - Number(groundM) / 1000,
+              3
+            )} km au-dessus du sol`
+      }`,
       `fov             ${round(camera.fov, 1)}° (base ${CAMERA_SETTINGS.fov}°)`,
       `fps             ${round(fps, 1)}`
     );

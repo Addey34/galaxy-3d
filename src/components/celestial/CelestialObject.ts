@@ -531,6 +531,26 @@ export default class CelestialObject {
   }
 
   /**
+   * Met la sphère de SURFACE à une fraction de son rayon, ou la rétablit (facteur 1).
+   *
+   * Employé par le moteur de surface quand il pose du relief mesuré (lot 9, phase 9D) : les
+   * altitudes d'un modèle d'élévation sont rapportées à un rayon de référence, et une bonne
+   * moitié d'un corps est SOUS ce rayon — les mers lunaires descendent à 2 ou 3 km en dessous.
+   * Laissée à sa taille, la sphère livrée masquerait tous les fonds, c'est-à-dire précisément
+   * ce que le relief apporte.
+   *
+   * Elle est donc descendue au minimum MESURÉ du jeu de hauteurs : elle reste une borne
+   * inférieure de la surface réelle et ne montre rien que la donnée ne porte pas. Seule la
+   * couche `surface` bouge ; nuages, atmosphère et anneaux gardent leur rayon, qui n'a rien à
+   * voir avec le relief.
+   */
+  setSurfaceShellScale(factor: number): void {
+    const surface = this.layers.get('surface');
+    if (!surface || !(factor > 0)) return;
+    surface.scale.setScalar(factor);
+  }
+
+  /**
    * Matériau d'une couche POSÉE SUR la surface (carreau d'imagerie streamée, lot 9 phase 9C),
    * construit avec exactement les paramètres de la surface de ce corps.
    *

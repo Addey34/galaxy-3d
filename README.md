@@ -13,6 +13,7 @@ Visualisateur interactif du système solaire en temps réel, développé en Type
 - LOD automatique : résolution de texture adaptée à la distance caméra (1k → 8k)
 - Pages d'éclipse 2024–2035 : l'application s'ouvre au maximum de chaque éclipse ; la Lune éclipsée est cuivrée, teinte mesurée sur des photographies NASA
 - Modèles de forme scientifiques de Bennu, Éros, Itokawa, Ryugu et Ida, à leur vraie couleur de surface, en niveaux de détail chargés selon la distance, approchables à la vraie échelle en Exploration
+- Imagerie de surface streamée à l'approche de la Lune et de Mars (mosaïques publiées par NASA Trek), et relief mesuré sur la Lune : le sol est déplacé par les altitudes du modèle LOLA, avec trois lieux cuits plus finement (Tycho, Rima Hadley, Statio Tranquillitatis)
 - Objets interstellaires 1I/ʻOumuamua, 2I/Borisov et 3I/ATLAS sur leur vraie trajectoire hyperbolique (tracé en option)
 - Onze missions spatiales positionnées par NASA/JPL Horizons (Voyager, New Horizons, Juno, Parker Solar Probe…)
 - Événements terrestres en option : séismes du catalogue USGS et événements naturels rapportés par NASA EONET, posés sur la Terre à la date de la scène ; chaque événement porte sa nature (mesure ou rapport), et un événement sans fin déclarée est dit « en cours »

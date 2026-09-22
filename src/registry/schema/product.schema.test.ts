@@ -44,11 +44,12 @@ describe('JSON Schema des produits généré depuis Zod', () => {
     ).toBe(productJsonSchemaText());
   });
 
-  it('décrit bien les quatre formes', () => {
+  it('décrit bien les cinq formes', () => {
     const schema = JSON.stringify(productJsonSchema());
     expect(schema).toContain('"texture"');
     expect(schema).toContain('"ephemeris-collection"');
     expect(schema).toContain('"tileset"');
+    expect(schema).toContain('"heightfield"');
     expect(schema).toContain('lineage');
   });
 });
@@ -57,7 +58,7 @@ describe('chaque fiche produit passe le schéma', () => {
   const files = productFiles();
 
   it('trouve bien les fiches', () => {
-    expect(files.length).toBe(66);
+    expect(files.length).toBe(67);
   });
 
   it.each(files.map((f) => [f.slice(PRODUCTS.length + 1), f]))(

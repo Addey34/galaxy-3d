@@ -18,6 +18,7 @@
  */
 import type {
   EphemerisCollectionProduct,
+  HeightfieldSetProduct,
   ImageryTilesetProduct,
   ReviewedOnlyTextureProduct,
   ShippedTextureProduct,
@@ -46,6 +47,19 @@ export const EPHEMERIS_COLLECTION =
 export const TILESET_PRODUCTS: readonly ImageryTilesetProduct[] = Object.values(
   import.meta.glob('./tilesets/*.json', { eager: true, import: 'default' })
 ) as ImageryTilesetProduct[];
+
+/**
+ * Les jeux de tuiles de HAUTEURS cuits par `pnpm surface:tiles` (lot 9, phase 9D). Mêmes
+ * lecteurs que ci-dessus : les tests et le build (`/sources`). L'application les lit par
+ * `config/surfaceHeights.ts`, depuis le morceau chargé à l'approche.
+ */
+export const HEIGHTFIELD_PRODUCTS: readonly HeightfieldSetProduct[] =
+  Object.values(
+    import.meta.glob('./heightfields/*.json', {
+      eager: true,
+      import: 'default',
+    })
+  ) as HeightfieldSetProduct[];
 
 /**
  * Le libellé de licence que `/sources` affiche (`seo/sourcesPage.ts`, `LICENSE_LABELS`). Il vient

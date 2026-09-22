@@ -77,9 +77,14 @@ export function setupSurfacePanel(api: PublicAPI): () => void {
   headline.className = 'si-headline';
   const detail = document.createElement('span');
   detail.className = 'si-detail';
+  // Ligne du RELIEF : elle n'existe que quand des hauteurs mesurées sont réellement posées
+  // sous les carreaux, et elle nomme sa propre source, qui n'est pas celle de l'imagerie.
+  const relief = document.createElement('span');
+  relief.className = 'si-relief';
+  relief.hidden = true;
   const credit = document.createElement('span');
   credit.className = 'si-credit';
-  badge.append(headline, detail, credit);
+  badge.append(headline, detail, relief, credit);
   document.body.append(badge);
 
   let enabled = readStored();
@@ -101,7 +106,14 @@ export function setupSurfacePanel(api: PublicAPI): () => void {
       badge.hidden = true;
       badge.removeAttribute('data-level');
       badge.removeAttribute('data-painted');
+      badge.removeAttribute('data-attached');
       badge.removeAttribute('data-width');
+      // Et le relief avec : ces attributs sont lus par `?debug-surface`, et les laisser
+      // derrière annonçait un relief là où plus aucun carreau n'est posé (vu en mesurant, à
+      // 10 000 km d'altitude, où le bandeau était pourtant caché).
+      badge.removeAttribute('data-relief');
+      badge.removeAttribute('data-relief-m');
+      badge.removeAttribute('data-ground');
       return;
     }
     const stamp = classifyTemporal(
@@ -129,9 +141,47 @@ export function setupSurfacePanel(api: PublicAPI): () => void {
       );
     }
     detail.textContent = parts.join(' · ');
-    credit.textContent = state.credit;
+
+    const reliefState = state.relief;
+    relief.hidden = reliefState === null;
+    if (reliefState) {
+      const reliefParts = [
+        t('surface.relief.headline', {
+          title: reliefState.title,
+          resolution: formatResolution(reliefState.groundResolutionM),
+        }),
+      ];
+      if (reliefState.areaName)
+        reliefParts.push(
+          t('surface.relief.area', { name: reliefState.areaName })
+        );
+      reliefParts.push(
+        t('surface.relief.acquired', {
+          from: formatMonth(reliefState.acquired.from),
+          to: formatMonth(reliefState.acquired.to),
+        })
+      );
+      relief.textContent = reliefParts.join(' · ');
+      badge.dataset['relief'] = String(reliefState.level);
+      badge.dataset['reliefM'] = reliefState.groundResolutionM.toFixed(1);
+      // Lu par `?debug-surface` : l'altitude du sol, qui n'est pas celle du rayon de référence.
+      if (reliefState.groundElevationM !== null)
+        badge.dataset['ground'] = reliefState.groundElevationM.toFixed(0);
+      else delete badge.dataset['ground'];
+    } else {
+      delete badge.dataset['relief'];
+      delete badge.dataset['reliefM'];
+      delete badge.dataset['ground'];
+    }
+    // Les conditions de la NASA demandent de citer la source : quand le relief vient d'ailleurs
+    // que l'imagerie, les DEUX crédits sont affichés.
+    credit.textContent =
+      reliefState && reliefState.credit !== state.credit
+        ? `${state.credit} · ${reliefState.credit}`
+        : state.credit;
     badge.dataset['level'] = String(state.level);
     badge.dataset['painted'] = String(state.painted);
+    badge.dataset['attached'] = String(state.attached);
     // Lu par `?debug-surface` et par l'e2e : la finesse SERVIE, en pixels sur 360°.
     badge.dataset['width'] = String(state.widthPx);
     badge.hidden = false;
@@ -214,7 +264,9 @@ export function setupSurfacePanel(api: PublicAPI): () => void {
       if (engine.attachedBody) disable();
       return;
     }
-    engine.attach(body, tileset, radiusKm);
+    // Le relief n'arrive qu'avec son manifeste, chargé une fois par corps.
+    if (ensureHeights(name) === 'pending') return;
+    engine.attach(body, tileset, radiusKm, heights.get(name) ?? null);
     engine.update(
       api.cameraSystem.camera,
       api.sceneSystem.renderer.domElement.clientHeight
@@ -225,14 +277,66 @@ export function setupSurfacePanel(api: PublicAPI): () => void {
     string,
     import('@/config/surfaceTilesets').SurfaceTileset
   > | null = null;
+  let heightSets: ReadonlyMap<
+    string,
+    import('@/config/surfaceHeights').SurfaceHeightSet
+  > | null = null;
+  let parseManifest:
+    typeof import('@/config/surfaceHeights').parseHeightManifest | null = null;
+  /** Manifeste de hauteurs par corps : `undefined` = en cours, `null` = pas de relief. */
+  const heights = new Map<
+    string,
+    import('@/components/surface/PlanetarySurfaceEngine').AttachedHeights | null
+  >();
+  const heightsLoading = new Set<string>();
+
+  /**
+   * Charge le manifeste de hauteurs d'un corps, une fois.
+   *
+   * Tant qu'il n'a pas répondu, le moteur n'attache rien : sans cela le premier attachement se
+   * ferait sans relief, le second avec, et le détachement intermédiaire remettrait le plancher
+   * d'approche à la finesse de la texture livrée — la caméra remonterait toute seule.
+   */
+  function ensureHeights(body: string): 'pending' | 'ready' {
+    if (heights.has(body)) return 'ready';
+    const set = heightSets?.get(body);
+    if (!set || !parseManifest) {
+      heights.set(body, null);
+      return 'ready';
+    }
+    if (heightsLoading.has(body)) return 'pending';
+    heightsLoading.add(body);
+    const parse = parseManifest;
+    void fetch(`/${set.manifestPath}`, { credentials: 'omit' })
+      .then((response) => {
+        if (!response.ok) throw new Error(`manifeste ${response.status}`);
+        return response.json();
+      })
+      .then((raw: unknown) => {
+        heights.set(body, { set, manifest: parse(raw) });
+      })
+      .catch((error: unknown) => {
+        // Sans manifeste, les carreaux restent plats : dégradation honnête, jamais d'attente.
+        heights.set(body, null);
+        Logger.warn(`[Surface] relief indisponible : ${String(error)}`);
+      })
+      .finally(() => heightsLoading.delete(body));
+    return 'pending';
+  }
 
   async function loadEngine(): Promise<void> {
-    const [{ PlanetarySurfaceEngine }, { SURFACE_TILESETS }] =
-      await Promise.all([
-        import('@/components/surface/PlanetarySurfaceEngine'),
-        import('@/config/surfaceTilesets'),
-      ]);
+    const [
+      { PlanetarySurfaceEngine },
+      { SURFACE_TILESETS },
+      { SURFACE_HEIGHT_SETS, parseHeightManifest },
+    ] = await Promise.all([
+      import('@/components/surface/PlanetarySurfaceEngine'),
+      import('@/config/surfaceTilesets'),
+      import('@/config/surfaceHeights'),
+    ]);
     tilesets = SURFACE_TILESETS;
+    heightSets = SURFACE_HEIGHT_SETS;
+    parseManifest = parseHeightManifest;
     engine = new PlanetarySurfaceEngine({
       budget: BOOT_QUALITY_PROFILE.surfaceTiles,
       onState,
