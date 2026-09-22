@@ -38,35 +38,35 @@ jobs:
       - run: pnpm audit:prod
       - run: pnpm build
 
-      # EMPREINTE DES DOCUMENTS GENERES. Le build derive 114 pages, le sitemap et 56 vignettes
-      # du catalogue. Une migration qui change une valeur, un ordre de cles ou un arrondi ne
-      # casse aucun test et ne produit aucune erreur : elle change silencieusement ce qui est
-      # indexe. Le lot 7 sort precisement le catalogue du TypeScript, d'ou ce filet.
+      # GENERATED DOCUMENT FINGERPRINT. The build derives 114 pages, the sitemap, and 56
+      # thumbnails from the catalog. A migration that changes a value, key ordering, or rounding
+      # can pass every test while silently changing indexed content. Batch 7 moves the catalog
+      # out of TypeScript, which is why this guard exists.
       #
-      # `--portable` exclut les vignettes, et ce n'est pas un adoucissement : leur texte est un
-      # SVG rendu par sharp avec la pile `Segoe UI, Helvetica, Arial, DejaVu Sans`, donc ce
-      # runner Linux sert DejaVu Sans la ou la reference a ete ecrite sous Windows avec Segoe UI.
-      # Memes donnees, octets differents. Les 115 documents restants (pages + sitemap) sont, eux,
-      # du texte produit par le meme code : ils doivent etre identiques d'une machine a l'autre.
+      # `--portable` excludes thumbnails. This is not a weaker check: their SVG text is rendered
+      # by sharp with the `Segoe UI, Helvetica, Arial, DejaVu Sans` stack, so this Linux runner
+      # uses DejaVu Sans where the Windows reference used Segoe UI. Identical data therefore
+      # produces different bytes. The remaining 115 documents (pages + sitemap) are text emitted
+      # by the same code and must be identical across machines.
       #
-      # BLOQUANT, et c'est voulu : tant que ce controle etait une commande a lancer a la main, il
-      # n'etait pas un controle. Un changement VOULU se rattrape en relancant
-      # `pnpm fingerprint:generated --write` et en committant la reference a part.
+      # This is intentionally blocking. When this check was manual, it was not an enforceable
+      # control. For an intentional change, run `pnpm fingerprint:generated --write` and commit
+      # the updated reference separately.
       - name: Verify generated documents are unchanged
         run: node scripts/fingerprint-generated.mjs --portable
 
-      # Mesure INFORMATIVE de la charge utile reelle (exclusions de firebase.json appliquees),
-      # pour qu'un poids inattendu se voie dans le journal du deploiement.
+      # Informational measurement of the actual deploy payload after firebase.json exclusions,
+      # so unexpected growth remains visible in deployment logs.
       #
-      # Ne bloque volontairement RIEN : un plafond finirait par refuser un ajout de textures
-      # parfaitement legitime, et un garde-fou qui gene le projet se fait desactiver. Ce qui
-      # empeche le retour du noyau SPK de 638 Mo, c'est son exclusion dans firebase.json,
-      # verrouillee par src/config/hostingPayload.test.ts.
+      # This intentionally blocks nothing. A hard limit would eventually reject legitimate
+      # texture additions and encourage disabling the guard. The 638 MB SPK kernel is prevented
+      # from returning by its firebase.json exclusion, enforced by
+      # src/config/hostingPayload.test.ts.
       - name: Report deploy payload size
         run: node scripts/check-deploy-size.mjs
 
-      # Deploiement Firebase Hosting sur push main, des que verify+build passent (sans
-      # attendre l'e2e). Requiert le secret FIREBASE_TOKEN.
+      # Deploy to Firebase Hosting on pushes to main after verify+build pass, without waiting
+      # for E2E. Requires the FIREBASE_TOKEN secret.
       - name: Deploy to Firebase Hosting
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: pnpm dlx firebase-tools@15.30.2 deploy --only hosting --token ${{ secrets.FIREBASE_TOKEN }}
