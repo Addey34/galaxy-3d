@@ -45,6 +45,40 @@ describe('actifs au nom stable : cache Firebase et service worker d’accord', (
     expect(networkFirstPrefixes().length).toBeGreaterThanOrEqual(3);
   });
 
+  /**
+   * LE MANIFESTE DES TUILES DE HAUTEURS suit la même règle, par un autre chemin (lot 9, 9D).
+   *
+   * Les tuiles, elles, portent un répertoire nommé par le HACHAGE de leur contenu : leur
+   * adresse ne désigne qu'un seul contenu possible, donc l'`immutable` d'un an leur convient et
+   * un aller-retour réseau par carreau serait du gaspillage. C'est le manifeste — nom stable,
+   * octets réécrits à chaque cuisson, et qui pointe le répertoire haché — qui doit revalider :
+   * servi depuis un cache, il désignerait des tuiles supprimées, donc un relief absent sans la
+   * moindre erreur.
+   */
+  it('fait revalider le manifeste des hauteurs des DEUX côtés', () => {
+    const rule = /cacheName: 'ssv-height-manifest'/.exec(viteConfig);
+    expect(rule, 'règle « ssv-height-manifest » introuvable').toBeTruthy();
+    const before = viteConfig.slice(0, rule!.index);
+    const start = before.lastIndexOf('urlPattern:');
+    const pattern = before.slice(start);
+    expect(pattern).toContain("startsWith('/assets/height-tiles/')");
+    expect(pattern).toContain("endsWith('/manifest.json')");
+    expect(before.slice(start)).toContain('NetworkFirst');
+
+    const firebaseRule = firebase.hosting.headers.find(
+      (entry) => entry.source === '/assets/height-tiles/**/manifest.json'
+    );
+    expect(
+      firebaseRule,
+      'sans règle Firebase, le manifeste retomberait sur l’« immutable » d’un an de /assets/**'
+    ).toBeTruthy();
+    const value = firebaseRule?.headers.find(
+      (header) => header.key === 'Cache-Control'
+    )?.value;
+    expect(value).toContain('must-revalidate');
+    expect(value).not.toContain('immutable');
+  });
+
   it('donne à chacun une règle Firebase qui revalide', () => {
     const rules = new Map(
       firebase.hosting.headers.map((entry) => [

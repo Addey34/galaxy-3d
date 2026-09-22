@@ -792,9 +792,10 @@ téléphone, où la texture servie plafonne à 2k (10,4 km/px), le niveau 4 l'am
 même paramétrisation que la couche `surface` : `phi = longitude + π`, `theta = 90° − latitude`,
 c'est-à-dire celle de `frames.geographicToLocalDirection`, mesurée au lot 8 contre quatre
 épicentres publiés. Une tuile WMTS a sa ligne 0 au NORD et sa colonne 0 à −180° : ces deux
-conventions se recouvrent sans conversion. Aucun décalage radial n'est appliqué — `polygonOffset`
-décale la profondeur écrite, jamais la géométrie, parce qu'un décalage radial serait une altitude
-inventée.
+conventions se recouvrent sans conversion. SANS hauteurs, aucun décalage radial n'est appliqué —
+`polygonOffset` décale la profondeur écrite, jamais la géométrie, parce qu'un décalage sans mesure
+serait une altitude inventée. AVEC des hauteurs (§ suivant), les sommets sont déplacés par des
+altitudes MESURÉES et `polygonOffset` est retiré.
 
 **Le niveau servi est celui que l'écran mérite, borné par un budget déclaré par profil de
 qualité.** On vise un pixel d'écran par pixel de mosaïque (`core/tilePyramid.ts`), puis on
@@ -846,7 +847,8 @@ NASA demandent d'afficher.
 **Ce que le moteur ne fait pas.** Il ne demande rien au démarrage ni au-dessus de 6 rayons
 apparents (mesuré par comptage de requêtes) ; il annule par `AbortController` tout carreau qui
 sort du champ ou dont la cible change ; il retient un échec plutôt que de redemander la même
-tuile à chaque image ; et il ne remplace jamais la surface du corps, il la recouvre localement.
+tuile à chaque image ; et il ne remplace jamais la surface du corps, il la recouvre localement
+(quand il pose du relief, il descend cette surface SOUS le relief au lieu de l'effacer, § suivant).
 Le réglage « imagerie de surface » est actif par défaut et, éteint, n'émet aucune requête.
 
 **Un hôte de tuiles se déclare en quatre endroits**, et `img-src` en fait partie — c'est le mur
@@ -863,6 +865,111 @@ d'émettre, en nommant la borne franchie. Second piège, silencieux celui-là : 
 `Texture.flipY` pour un `ImageBitmap`, l'orientation doit être décidée à la création
 (`imageOrientation: 'flipY'`) — sans quoi le carreau affiche le mauvais hémisphère sans aucune
 erreur.
+
+## Relief mesuré — des hauteurs cuites hors ligne, jamais devinées
+
+Depuis le 2026-09-21 (lot 9, phase 9D), un corps peut déclarer un JEU DE HAUTEURS
+(`src/registry/products/heightfields/*.json`, type `heightfield`) : les carreaux d'imagerie sont
+alors DÉPLACÉS radialement par des altitudes mesurées, avec une jupe et des normales calculées.
+Le relief n'est pas une image : c'est de la donnée, et elle se cite.
+
+**Pourquoi nous les cuisons, au lieu de les streamer comme l'imagerie.** Il n'existe aucune
+source de hauteurs tuilée servie avec l'en-tête d'origine croisée qu'un navigateur exige. La
+seule couche de NASA Trek qui s'appelle « DEM » est une IMAGE 8 bits : en-tête PNG `bitDepth 8`,
+`colorType 4`, une trentaine de gris distincts par tuile et un alpha constant à 255, soit environ
+78 m par pas sur la Lune. Mesuré le 2026-09-20, REMESURÉ le 2026-09-21 avant d'écrire la première
+ligne du cuiseur. L'employer comme géométrie terrasserait le corps.
+
+`pnpm surface:tiles` (`scripts/bake-surface-height-tiles.mjs`) lit donc un modèle d'élévation
+PDS3 publié et écrit nos propres tuiles, dans la MÊME pyramide que l'imagerie. Ses cibles sont de
+la donnée (`scripts/surface-height-targets.json`), et trois règles y sont tenues :
+
+- **le quantum vient de l'étiquette PDS** (`SCALING_FACTOR`) et il est RÉÉCRIT, avec l'offset de
+  nos tuiles, dans l'en-tête de chacune : `core/heightTile.ts` ne devine rien. Le rayon de
+  référence, que l'étiquette donne DEUX fois (`OFFSET` en mètres, `A_AXIS_RADIUS` en kilomètres),
+  est lu des deux côtés et confronté, puis déclaré dans le manifeste ;
+- **la géométrie déclarée est vérifiée** : lignes et colonnes doivent concorder avec l'emprise et
+  la résolution de l'étiquette, sinon la cuisson s'arrête ;
+- **rien n'est inventé entre deux échantillons** : rééchantillonnage bilinéaire de la grille
+  publiée (registre PIXEL) vers nos tuiles (registre GRILLE), et rien d'autre.
+
+**Un socle global, et des aires NOMMÉES.** Un globe de hauteurs 16 bits pèse 67 Mo au niveau 4 et
+1,07 Go au niveau 6, PAR VERSION RETENUE sur un hébergement dont le quota de 10 Go a déjà sauté
+une fois (`src/config/hostingPayload.test.ts`). Le jeu lunaire livré est donc un socle global au
+niveau 4 (1 333 m/échantillon, depuis `LDEM_64`) plus trois aires cuites aux niveaux 7 et 8
+(83 m/échantillon, depuis les fichiers régionaux `LDEM_1024`), chacune cadrée sur une entité du
+répertoire de nomenclature de l'UAI : Tycho, Rima Hadley (site d'Apollo 15) et Statio
+Tranquillitatis (site d'Apollo 11). 637 tuiles, 84,2 Mo.
+
+| | Socle global | Aires nommées |
+|---|---|---|
+| Niveau | 4 | 7 et 8 |
+| Finesse | 1 333 m/échantillon | 83 m/échantillon |
+| Source | LOLA `LDEM_64` (64 px/degré) | LOLA `LDEM_1024` (1 024 px/degré) |
+| Emprise | le corps entier | le carré dérivé du diamètre publié de l'entité |
+
+**Ce que la fiche porte, et ce que le manifeste porte.** La fiche déclare l'identité, la mission,
+l'instrument, la licence, les fournisseurs et l'intervalle d'acquisition. Tout ce qui se MESURE —
+quantum, offset, rayon de référence, couverture, altitudes extrêmes, nombre de tuiles, poids,
+répertoire — vit dans `manifest.json`, écrit par le cuiseur et lu à l'approche. C'est la
+séparation déjà appliquée à la collection d'éphémérides, et un test confronte les deux.
+
+**Ce que le relief demande, et quand.** Rien au démarrage. Le manifeste (2 Ko, sur notre propre
+origine) est lu quand le corps passe sous huit rayons apparents, en même temps que le moteur
+lui-même ; les tuiles ne sont demandées qu'avec les carreaux qu'elles déplacent, une tuile de
+socle servant jusqu'à 256 carreaux du niveau 8. Le cache en mémoire est borné à 32 tuiles, soit
+environ 4 Mo : sans cela, une session qui approche vingt fois le même corps finirait par garder
+le socle entier.
+
+**Les adresses sont HACHÉES par le contenu** (`assets/height-tiles/moon/<hachage>/…`), comme les
+binaires d'éphémérides : les octets d'une adresse ne changent jamais, donc le cache immuable d'un
+an de `/assets/**` leur convient et le service worker les sert en cache d'abord. Seul
+`manifest.json` porte un nom stable : il reçoit donc une règle Firebase qui revalide et une règle
+« réseau d'abord » dans le service worker, et un test croise les deux — servi depuis un cache, il
+désignerait un répertoire supprimé, c'est-à-dire un relief absent sans la moindre erreur.
+
+**La sphère livrée descend sous le relief.** Les altitudes d'un modèle d'élévation sont rapportées
+à un rayon de référence, et **61 % de la surface lunaire est SOUS ce rayon** (mesuré sur les tuiles
+livrées, pondéré par la surface ; les mers descendent à 2 ou 3 km en dessous et le minimum vaut
+9 105 m). Laissée à sa taille, la sphère du catalogue masquerait tous
+les fonds. `CelestialObject.setSurfaceShellScale` la met donc au minimum MESURÉ du jeu tant que
+des carreaux de relief sont posés, et la rétablit ensuite : elle reste une borne inférieure de la
+surface réelle et ne montre rien que la donnée ne porte pas.
+
+**Deux carreaux voisins se touchent par construction.** Les tuiles de hauteurs sont à registre
+GRILLE (257 échantillons par côté, soit 256 intervalles), donc le bord d'une tuile EST la première
+colonne de sa voisine, et un carreau d'imagerie plus fin lit un sous-rectangle ALIGNÉ de sa tuile
+ancêtre, sans interpolation. Un test rejoue ce chemin complet sur les octets livrés et mesure
+l'écart entre deux carreaux voisins : moins d'un mètre au sol.
+
+**Trois défauts trouvés à l'écran, aucun à la relecture** (2026-09-21) :
+
+1. **la jupe descendait jusqu'à la sphère abaissée.** C'était l'idée d'origine — ne jamais voir à
+   travers — et cela fait des murs de dix kilomètres sous CHAQUE carreau : le bord de chacun se
+   dessinait en noir, et le sol ressemblait à un carrelage. La jupe vaut désormais le DÉNIVELÉ du
+   carreau, qui borne la seule fissure qu'elle ait à boucher, celle entre deux niveaux voisins ;
+2. **`polygonOffset` tirait la jupe vers la caméra**, ce qui redessinait la même ligne en plus
+   fin. Un carreau qui porte du relief n'en a plus besoin, puisque la sphère est descendue : le
+   décalage est retiré dès qu'il y a des hauteurs ;
+3. **la couronne d'un carreau de bord était bornée à sa tuile**, donc la pente y était fausse et
+   l'éclairage traçait une ligne à chaque frontière de tuile de socle. Le moteur traverse
+   désormais la frontière : les colonnes s'enroulent, les lignes non, et les voisines nécessaires
+   sont attendues avant de construire le carreau.
+
+**Confronté à des altitudes publiées, pas seulement à lui-même.** L'équipe LROC publie, pour
+Tycho, un plancher « about 4700 m below the rim » et un pic central « 2 km above the crater
+floor » (M. Robinson, 29 juin 2011). Mesuré sur les tuiles livrées, avec des définitions écrites
+dans le test : **4 502 m** du rempart moyen au plancher médian, et **2 217 m** de pic au-dessus de
+ce plancher. L'étiquette de la source publie par ailleurs ses propres extrêmes (−9 125,5 m et
++10 773 m) ; nos tuiles, rééchantillonnées au niveau 4, rendent −9 105,5 et +10 747,5 m.
+
+**Ce que le relief ne fait PAS.** Aucun relief fractal, aucun détail synthétisé sous la résolution
+de la source, aucune carte d'ombrage employée comme géométrie (un ombrage fige un Soleil, et la
+scène fait bouger le Soleil). Le plancher d'approche reste une altitude au-dessus du RAYON DE
+RÉFÉRENCE, pas au-dessus du sol : au-dessus d'un massif, la caméra s'approche donc davantage du
+sol que le plancher ne le laisse croire, et `?debug-surface` affiche l'altitude MESURÉE du sol
+sous la caméra pour qu'on puisse le voir. Aucune aire fine n'est déclarée ailleurs que sur la
+Lune, et Mars garde donc son imagerie sans relief.
 
 ## Halo lumineux — qui brille, et combien
 

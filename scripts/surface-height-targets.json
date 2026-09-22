@@ -1,0 +1,47 @@
+{
+  "$comment": "Cibles du cuiseur de tuiles de hauteurs (pnpm surface:tiles) — DONNÉE lue par bake-surface-height-tiles.mjs, jamais du code. Un corps = un jeu : un socle GLOBAL au niveau déclaré, plus des aires NOMMÉES plus fines. Le quantum et l'offset ne sont PAS ici : ils sont lus dans l'étiquette PDS de la source (SCALING_FACTOR, OFFSET) et réécrits dans chaque fichier produit. Les aires sont nommées d'après le répertoire de nomenclature de l'UAI (planetarynames.wr.usgs.gov) : centre et diamètre publiés, jamais un cadrage inventé.",
+  "sets": [
+    {
+      "id": "moon-lola-ldem",
+      "body": "moon",
+      "output": "public/assets/height-tiles/moon",
+      "base": {
+        "level": 4,
+        "label": "https://pds-geosciences.wustl.edu/lro/lro-l-lola-3-rdr-v1/lrolol_1xxx/data/lola_gdr/cylindrical/img/ldem_64.lbl",
+        "image": "https://pds-geosciences.wustl.edu/lro/lro-l-lola-3-rdr-v1/lrolol_1xxx/data/lola_gdr/cylindrical/img/ldem_64.img"
+      },
+      "areas": [
+        {
+          "id": "tycho",
+          "name": "Tycho",
+          "gazetteerFeatureId": 6163,
+          "centre": { "latitudeDeg": -43.3, "longitudeDeg": -11.22 },
+          "diameterKm": 85.29,
+          "levels": [7, 8],
+          "label": "https://pds-geosciences.wustl.edu/lro/lro-l-lola-3-rdr-v1/lrolol_1xxx/data/lola_gdr/cylindrical/img/ldem_1024_45s_30s_330_360.lbl",
+          "image": "https://pds-geosciences.wustl.edu/lro/lro-l-lola-3-rdr-v1/lrolol_1xxx/data/lola_gdr/cylindrical/img/ldem_1024_45s_30s_330_360.img"
+        },
+        {
+          "id": "rima-hadley",
+          "name": "Rima Hadley",
+          "gazetteerFeatureId": 5064,
+          "centre": { "latitudeDeg": 25.72, "longitudeDeg": 3.15 },
+          "diameterKm": 116.09,
+          "levels": [7, 8],
+          "label": "https://pds-geosciences.wustl.edu/lro/lro-l-lola-3-rdr-v1/lrolol_1xxx/data/lola_gdr/cylindrical/img/ldem_1024_15n_30n_000_030.lbl",
+          "image": "https://pds-geosciences.wustl.edu/lro/lro-l-lola-3-rdr-v1/lrolol_1xxx/data/lola_gdr/cylindrical/img/ldem_1024_15n_30n_000_030.img"
+        },
+        {
+          "id": "statio-tranquillitatis",
+          "name": "Statio Tranquillitatis",
+          "gazetteerFeatureId": 5684,
+          "centre": { "latitudeDeg": 0.67, "longitudeDeg": 23.47 },
+          "diameterKm": 0.01,
+          "levels": [7, 8],
+          "label": "https://pds-geosciences.wustl.edu/lro/lro-l-lola-3-rdr-v1/lrolol_1xxx/data/lola_gdr/cylindrical/img/ldem_1024_00n_15n_000_030.lbl",
+          "image": "https://pds-geosciences.wustl.edu/lro/lro-l-lola-3-rdr-v1/lrolol_1xxx/data/lola_gdr/cylindrical/img/ldem_1024_00n_15n_000_030.img"
+        }
+      ]
+    }
+  ]
+}

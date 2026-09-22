@@ -429,6 +429,42 @@ function bodyLandingPages() {
             throw new Error('instantané des petits corps vide ou sans date');
           return { retrieved: dataset.retrieved, count: dataset.bodies.length };
         })();
+        // Jeux de hauteurs livrés : la fiche du registre donne l'identité et les droits, le
+        // manifeste écrit par `pnpm surface:tiles` donne les MESURES (niveaux cuits, aires
+        // nommées, nombre de tuiles, poids). La page n'en recopie aucune.
+        const heightfields = await Promise.all(
+          productRegistry.HEIGHTFIELD_PRODUCTS.map(async (product) => {
+            const manifest = await readJson<{
+              baseLevel: number;
+              tiles: number;
+              bytes: number;
+              coverage: {
+                level: number;
+                levels?: number[];
+                area?: { name: string };
+              }[];
+            }>(`public/${product.manifest}`);
+            return {
+              body: product.body,
+              title: product.title,
+              mission: product.mission,
+              instrument: product.instrument,
+              credit: product.providers.map((p) => p.name).join(' · '),
+              sourceUrl:
+                product.links.find((l) => l.rel === 'via')?.href ??
+                product.links.find((l) => l.rel === 'describedby')!.href,
+              baseLevel: manifest.baseLevel,
+              areas: manifest.coverage
+                .filter((entry) => entry.area)
+                .map((entry) => ({
+                  name: entry.area!.name,
+                  level: Math.max(...(entry.levels ?? [entry.level])),
+                })),
+              tiles: manifest.tiles,
+              bytes: manifest.bytes,
+            };
+          })
+        );
         // Hôtes que la CSP de production autorise : la page /sources doit décrire exactement
         // ceux-là (voir `LIVE_DATA_SERVICES`).
         const connectHosts = sourcesSeo.connectHostsFromFirebase(
@@ -462,6 +498,7 @@ function bodyLandingPages() {
             updated: sourcesUpdated,
             origin: SITE_ORIGIN,
             smallBodies: smallBodySnapshot,
+            heightfields,
           }),
         ];
         for (const page of docPages) {
@@ -584,6 +621,29 @@ export default defineConfig({
               networkTimeoutSeconds: 4,
               expiration: {
                 maxEntries: 1,
+                maxAgeSeconds: 60 * 60,
+                purgeOnQuotaError: true,
+              },
+              cacheableResponse: { statuses: [0, 200] },
+            },
+          },
+          {
+            // Même raisonnement pour le manifeste des tuiles de hauteurs (lot 9, phase 9D) :
+            // il porte un nom STABLE et pointe un répertoire nommé par le HACHAGE de son
+            // contenu. Une recuisson le réécrit en place et supprime l'ancien répertoire ; un
+            // manifeste servi depuis le cache pointerait donc des tuiles qui n'existent plus,
+            // c'est-à-dire un relief absent sans la moindre erreur. Les tuiles elles-mêmes,
+            // dont l'adresse ne désigne qu'un seul contenu possible, passent par le CacheFirst
+            // générique — et c'est ce qui évite un aller-retour réseau par carreau.
+            urlPattern: ({ url }) =>
+              url.pathname.startsWith('/assets/height-tiles/') &&
+              url.pathname.endsWith('/manifest.json'),
+            handler: 'NetworkFirst',
+            options: {
+              cacheName: 'ssv-height-manifest',
+              networkTimeoutSeconds: 4,
+              expiration: {
+                maxEntries: 4,
                 maxAgeSeconds: 60 * 60,
                 purgeOnQuotaError: true,
               },

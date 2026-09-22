@@ -268,6 +268,9 @@ export const messages: Record<Locale, Dict> = {
     'surface.imagery.acquired': 'images from {from} to {to}',
     'surface.imagery.oversampled':
       'shown {factor}x larger than the published mosaic ({published} px/degree)',
+    'surface.relief.headline': 'Relief {title} at {resolution}/pixel',
+    'surface.relief.area': 'named area {name}',
+    'surface.relief.acquired': 'altimetry from {from} to {to}',
     'settings.units': 'Imperial units (mi, °F)',
 
     // ── Filtres petits corps (NEO / comètes / TNO) ──
@@ -677,6 +680,9 @@ export const messages: Record<Locale, Dict> = {
     'surface.imagery.acquired': 'images de {from} à {to}',
     'surface.imagery.oversampled':
       'affichée {factor} fois plus grande que la mosaïque publiée ({published} px/degré)',
+    'surface.relief.headline': 'Relief {title} à {resolution}/pixel',
+    'surface.relief.area': 'aire nommée {name}',
+    'surface.relief.acquired': 'altimétrie de {from} à {to}',
     'settings.units': 'Unités impériales (mi, °F)',
 
     // ── Filtres petits corps (NEO / comètes / TNO) ──

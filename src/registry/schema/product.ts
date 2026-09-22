@@ -303,11 +303,89 @@ const imageryTileset = z
       });
   });
 
+/**
+ * UN JEU DE TUILES DE HAUTEURS, cuit hors ligne depuis un modèle d'élévation publié (lot 9,
+ * phase 9D).
+ *
+ * Il diffère d'un jeu d'imagerie sur un point qui décide de tout le reste : **il n'est servi par
+ * personne**. Aucune source de hauteurs tuilée n'est publiée en CORS (la seule couche « DEM » de
+ * Trek est une image 8 bits), donc `pnpm surface:tiles` lit un DEM PDS3 et écrit nos propres
+ * tuiles, qui sont livrées avec le site.
+ *
+ * Le détail — quantum, offset, rayon de référence, couverture, altitudes extrêmes, répertoire
+ * haché — vit dans le MANIFESTE écrit par ce script, jamais recopié ici : deux déclarations
+ * d'une même mesure finissent par diverger, et c'est la règle déjà appliquée à la collection
+ * d'éphémérides. Un test confronte cette fiche au manifeste.
+ */
+const heightfieldSet = z
+  .object({
+    $schema: z.string().optional(),
+    id: kebabId,
+    type: z.literal('heightfield'),
+    body: z.string().regex(/^[a-z0-9]+$/),
+    title: z.string().min(1),
+    mission: z.string().min(1),
+    instrument: z.string().min(1),
+    /** Chemin publié du manifeste, relatif à la racine du site. */
+    manifest: z.string().regex(/^assets\/[a-z0-9/._-]+\.json$/),
+    /** Script qui cuit les tuiles (lignée, au sens de `processing:lineage`). */
+    generatedBy: z.string().regex(/^scripts\/[a-z0-9-]+\.mjs$/),
+    /** Intervalle d'acquisition déclaré par l'étiquette de la source. */
+    acquired: z
+      .object({
+        interval: z
+          .array(
+            z
+              .array(
+                z
+                  .string()
+                  .regex(
+                    /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/,
+                    'instant ISO UTC'
+                  )
+              )
+              .length(2)
+          )
+          .min(1),
+      })
+      .strict(),
+    license: spdxOrOther,
+    rights: z.enum(['public-domain']).optional(),
+    links: z.array(link).min(1),
+    providers: z.array(provider).min(1),
+    /** Date à laquelle la fiche a été confrontée à la source (étiquette, emprise, quantum). */
+    verified: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'date ISO AAAA-MM-JJ'),
+  })
+  .strict()
+  .superRefine((product, ctx) => {
+    if (product.license === 'other') {
+      if (!product.rights)
+        ctx.addIssue({
+          code: 'custom',
+          message: '« other » doit dire pourquoi (`rights`)',
+        });
+      if (!product.links.some((l) => l.rel === 'license'))
+        ctx.addIssue({
+          code: 'custom',
+          message: '« other » exige un lien rel=license',
+        });
+    }
+    // L'étiquette PDS lue par le cuiseur est le document qui porte le quantum et l'emprise :
+    // elle doit être citée, comme les capacités WMTS le sont pour une imagerie.
+    if (!product.links.some((l) => l.rel === 'describedby'))
+      ctx.addIssue({
+        code: 'custom',
+        message:
+          'un jeu de hauteurs cite l’étiquette du modèle d’élévation dont il est cuit (rel=describedby)',
+      });
+  });
+
 export const productSchema = z.union([
   shippedTexture,
   reviewedOnlyTexture,
   ephemerisCollection,
   imageryTileset,
+  heightfieldSet,
 ]);
 
 export type ProductRecord = z.infer<typeof productSchema>;
@@ -315,6 +393,7 @@ export type ShippedTextureProduct = z.infer<typeof shippedTexture>;
 export type ReviewedOnlyTextureProduct = z.infer<typeof reviewedOnlyTexture>;
 export type EphemerisCollectionProduct = z.infer<typeof ephemerisCollection>;
 export type ImageryTilesetProduct = z.infer<typeof imageryTileset>;
+export type HeightfieldSetProduct = z.infer<typeof heightfieldSet>;
 
 /** Le JSON Schema COMMITÉ, généré depuis le schéma Zod ci-dessus. */
 export function productJsonSchema(): unknown {

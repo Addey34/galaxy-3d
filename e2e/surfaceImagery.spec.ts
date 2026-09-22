@@ -1,3 +1,6 @@
+import { readFileSync } from 'node:fs';
+import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { expect, test, type Page, type Request } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 import { blockExternalNetwork } from './netBlock';
@@ -29,6 +32,9 @@ import { blockExternalNetwork } from './netBlock';
  * « InvalidStateError: The source image could not be decoded » et aucun carreau ne se
  * posait, sans qu'aucune erreur de page ne le dise.
  */
+/** Racine du dépôt vue depuis ce fichier : les specs sont des modules ES, sans `__dirname`. */
+const HERE = dirname(fileURLToPath(import.meta.url));
+
 const TILE_JPEG = Buffer.from(
   '/9j/2wBDAA0JCgsKCA0LCgsODg0PEyAVExISEyccHhcgLikxMC4pLSwzOko+MzZGNywtQFdBRk' +
     'xOUlNSMj5aYVpQYEpRUk//2wBDAQ4ODhMREyYVFSZPNS01T09PT09PT09PT09PT09PT09PT09P' +
@@ -324,4 +330,96 @@ test('asks for nothing at all when the setting is off', async ({ page }) => {
   // La moitié inverse de l'affirmation : le réglage EXISTE et il est bien décoché, sinon ce
   // test passerait à vide le jour où la bascule disparaîtrait.
   await expect(page.locator('#surface-imagery-toggle')).not.toBeChecked();
+});
+
+/**
+ * LE RELIEF MESURÉ (lot 9, phase 9D).
+ *
+ * Ce scénario confronte ce que l'écran montre aux OCTETS LIVRÉS : la tuile de hauteurs est
+ * relue ici, dans le test, et l'altitude qu'elle porte sous le point visé doit être exactement
+ * celle que l'application annonce. C'est la même forme de preuve que les quatre épicentres du
+ * lot 8 : deux chemins indépendants pour une même grandeur, et non une capture d'écran.
+ *
+ * Les tuiles de hauteurs viennent de NOTRE origine, donc elles ne sont ni simulées ni bloquées
+ * (`e2e/netBlock.ts` ne coupe que les hôtes tiers) : ce qui est mesuré est bien le fichier que
+ * le dépôt livre.
+ */
+test('displaces the ground with measured altitudes, and says where they come from', async ({
+  page,
+}) => {
+  const errors: string[] = [];
+  page.on('pageerror', (err) => errors.push(err.message));
+  await serveTiles(page);
+  const heightRequests: string[] = [];
+  page.on('request', (request) => {
+    if (request.url().includes('/height-tiles/'))
+      heightRequests.push(request.url());
+  });
+
+  await boot(page, '?debug-surface&mode=explo&body=moon');
+  const probe = page.locator('#surface-probe');
+  await expect(probe).toContainText('moon', { timeout: 30_000 });
+  await zoomIn(page);
+
+  const badge = page.locator('#surface-imagery');
+  await expect(badge).toBeVisible({ timeout: 30_000 });
+  // Le relief n'est annoncé qu'une fois posé, et il nomme sa propre source, qui n'est pas
+  // celle de l'imagerie.
+  await expect(badge).toHaveAttribute('data-relief', /\d+/, {
+    timeout: 30_000,
+  });
+  await expect(badge.locator('.si-relief')).toContainText('LOLA');
+  await expect(badge.locator('.si-relief')).toContainText('altimetry from');
+  await expect(badge.locator('.si-credit')).toContainText('PDS Geosciences');
+  expect(
+    heightRequests.filter((url) => url.endsWith('.hgt')).length,
+    'aucune tuile de hauteurs demandée'
+  ).toBeGreaterThan(0);
+
+  // ── La confrontation : l'altitude annoncée est-elle celle du fichier livré ? ──
+  await expect(probe).toContainText('au-dessus du sol', { timeout: 30_000 });
+  const text = (await probe.textContent()) ?? '';
+  const aim = /visée\s+(-?[\d.]+)°, (-?[\d.]+)°/.exec(text);
+  const shown = /sol\s+(-?\d+) m/.exec(text);
+  expect(aim, 'le relevé ne donne pas le point visé').toBeTruthy();
+  expect(shown, 'le relevé ne donne pas l’altitude du sol').toBeTruthy();
+
+  const manifest = JSON.parse(
+    readFileSync(
+      resolve(HERE, '../public/assets/height-tiles/moon/manifest.json'),
+      'utf-8'
+    )
+  ) as {
+    directory: string;
+    baseLevel: number;
+    quantumMetres: number;
+    offsetMetres: number;
+    format: { samples: number };
+  };
+  const latitude = Number(aim![1]);
+  const longitude = Number(aim![2]);
+  const level = manifest.baseLevel;
+  const columns = 2 * 2 ** level;
+  const rows = 2 ** level;
+  const column = Math.floor(((longitude + 180) / 360) * columns);
+  const row = Math.floor(((90 - latitude) / 180) * rows);
+  const bytes = readFileSync(
+    resolve(
+      HERE,
+      `../public/${manifest.directory}/${level}/${row}/${column}.hgt`
+    )
+  );
+  const samples = manifest.format.samples;
+  const west = -180 + (column * 360) / columns;
+  const north = 90 - (row * 180) / rows;
+  const x = Math.round(((longitude - west) / (360 / columns)) * (samples - 1));
+  const y = Math.round(((north - latitude) / (180 / rows)) * (samples - 1));
+  const dn = bytes.readInt16LE(32 + (y * samples + x) * 2);
+  const expected = manifest.offsetMetres + dn * manifest.quantumMetres;
+
+  // Un mètre de tolérance : l'application arrondit à l'entier ce que le fichier donne au
+  // demi-mètre. Une convention de longitude inversée, elle, se compterait en kilomètres.
+  expect(Math.abs(Number(shown![1]) - expected)).toBeLessThan(1);
+
+  expect(errors, `Erreurs page : ${errors.join(' | ')}`).toEqual([]);
 });

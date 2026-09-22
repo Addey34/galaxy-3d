@@ -113,6 +113,42 @@ describe('géométrie d’un carreau', () => {
     expect(tile.mesh.visible).toBe(true);
   });
 
+  it('DÉPLACE ses sommets quand on lui donne des hauteurs, et retire le décalage de profondeur', () => {
+    // Les deux moitiés de la même décision (lot 9, phase 9D) : un carreau qui porte du relief
+    // n'est plus sur la sphère, donc il n'a plus à se disputer son plan de profondeur — et le
+    // décalage, qui s'applique aussi à la jupe, dessinait une ligne sombre le long de chaque
+    // carreau. Mesuré à l'écran, invisible à la relecture.
+    const segments = 4;
+    const apron = segments + 3;
+    const heights = {
+      values: new Float32Array(apron * apron).fill(0.01),
+      segments,
+    };
+    const tile = new SurfaceTile({
+      index: { level: 6, row: 30, column: 90 },
+      radius: RADIUS,
+      shape: WMTS_EQUIRECTANGULAR_2x1,
+      material: new THREE.MeshBasicMaterial(),
+      heights,
+      skirtDepth: 0.002,
+    });
+    expect(tile.hasHeights).toBe(true);
+    const position = tile.mesh.geometry.getAttribute('position');
+    const vertex = new THREE.Vector3();
+    let deepest = Number.POSITIVE_INFINITY;
+    let highest = 0;
+    for (let i = 0; i < position.count; i += 1) {
+      vertex.fromBufferAttribute(position, i);
+      deepest = Math.min(deepest, vertex.length());
+      highest = Math.max(highest, vertex.length());
+    }
+    expect(highest).toBeCloseTo(RADIUS + 0.01, 6);
+    // La jupe descend de la profondeur demandée, et de rien de plus : une jupe qui rejoindrait
+    // la sphère livrée ferait des murs de dix kilomètres sous chaque carreau.
+    expect(deepest).toBeCloseTo(RADIUS + 0.01 - 0.002, 6);
+    expect((tile.mesh.material as THREE.Material).polygonOffset).toBe(false);
+  });
+
   it('décale la PROFONDEUR, jamais la géométrie', () => {
     // Un décalage radial serait une altitude inventée, ce que l'invariant du lot interdit :
     // les sommets doivent rester exactement sur la sphère de rayon `radius`.

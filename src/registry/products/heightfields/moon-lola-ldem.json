@@ -1,0 +1,42 @@
+{
+  "$schema": "../../schema/product.schema.json",
+  "id": "moon-lola-ldem",
+  "type": "heightfield",
+  "body": "moon",
+  "title": "LOLA Gridded Data Record (LDEM_64, LDEM_1024)",
+  "mission": "Lunar Reconnaissance Orbiter",
+  "instrument": "Lunar Orbiter Laser Altimeter",
+  "manifest": "assets/height-tiles/moon/manifest.json",
+  "generatedBy": "scripts/bake-surface-height-tiles.mjs",
+  "acquired": {
+    "interval": [["2009-07-13T17:33:17Z", "2016-11-29T05:48:19Z"]]
+  },
+  "license": "other",
+  "rights": "public-domain",
+  "links": [
+    {
+      "rel": "license",
+      "href": "https://www.nasa.gov/nasa-brand-center/images-and-media/"
+    },
+    {
+      "rel": "describedby",
+      "href": "https://pds-geosciences.wustl.edu/lro/lro-l-lola-3-rdr-v1/lrolol_1xxx/data/lola_gdr/cylindrical/img/ldem_64.lbl"
+    },
+    {
+      "rel": "via",
+      "href": "https://pds-geosciences.wustl.edu/missions/lro/lola.htm"
+    }
+  ],
+  "providers": [
+    {
+      "name": "LOLA Science Team, NASA Goddard Space Flight Center",
+      "roles": ["producer"]
+    },
+    {
+      "name": "PDS Geosciences Node, Washington University in St. Louis",
+      "roles": ["host"],
+      "url": "https://pds-geosciences.wustl.edu/missions/lro/lola.htm"
+    }
+  ],
+  "verified": "2026-09-21"
+}

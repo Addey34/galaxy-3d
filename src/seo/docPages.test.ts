@@ -13,7 +13,7 @@ import summaryJson from '@/config/horizons-validation-summary.json';
 import { TEMPORAL_CATEGORIES, temporalCategoryLabelKey } from '@/core/temporal';
 import { EVENT_PROVIDERS } from '@/registry/providers/runtimeServices';
 import manifestJson from '../../public/assets/ephemerides/manifest.json';
-import { shippedTextures } from '@/registry/products';
+import { HEIGHTFIELD_PRODUCTS, shippedTextures } from '@/registry/products';
 import firebaseJson from '../../firebase.json';
 import { ILLUSTRATIVE_SURFACES } from '@/config/catalog';
 import { OBLIQUITY_RAD } from '@/core/frames';
@@ -89,6 +89,43 @@ function smallBodySnapshot(): { retrieved: string; count: number } {
   return { retrieved: dataset.retrieved!, count: dataset.bodies.length };
 }
 
+/**
+ * Jeux de hauteurs livrés, lus comme le plugin Vite les lit : la fiche pour l'identité, le
+ * manifeste du cuiseur pour les mesures. Rien n'est retapé ici, sinon la page serait comparée
+ * à une copie d'elle-même.
+ */
+function shippedHeightfields() {
+  return HEIGHTFIELD_PRODUCTS.map((product) => {
+    const manifest = JSON.parse(
+      readFileSync(resolve(ROOT, 'public', product.manifest), 'utf-8')
+    ) as {
+      baseLevel: number;
+      tiles: number;
+      bytes: number;
+      coverage: { level: number; levels?: number[]; area?: { name: string } }[];
+    };
+    return {
+      body: product.body,
+      title: product.title,
+      mission: product.mission,
+      instrument: product.instrument,
+      credit: product.providers.map((p) => p.name).join(' · '),
+      sourceUrl:
+        product.links.find((l) => l.rel === 'via')?.href ??
+        product.links.find((l) => l.rel === 'describedby')!.href,
+      baseLevel: manifest.baseLevel,
+      areas: manifest.coverage
+        .filter((entry) => entry.area)
+        .map((entry) => ({
+          name: entry.area!.name,
+          level: Math.max(...(entry.levels ?? [entry.level])),
+        })),
+      tiles: manifest.tiles,
+      bytes: manifest.bytes,
+    };
+  });
+}
+
 const sourcesInput: SourcesInput = {
   config: CELESTIAL_CONFIG,
   textures,
@@ -104,6 +141,7 @@ const sourcesInput: SourcesInput = {
   // Lu dans le fichier livré, comme le fait le plugin Vite : la page cite sa date, et une
   // valeur retapée ici ne prouverait rien de ce qui est publié.
   smallBodies: smallBodySnapshot(),
+  heightfields: shippedHeightfields(),
 };
 const sources = sourcesPages(sourcesInput);
 const allPages = [...methodology, ...sources];
