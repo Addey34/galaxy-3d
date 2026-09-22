@@ -41,6 +41,16 @@
         "$date": "2025-12-31T00:00:00.000Z"
       }
     },
+    "model": {
+      "resolutions": [
+        "1k"
+      ],
+      "extentRatio": 1.16,
+      "credit": {
+        "en": "Voyager 2 images, shape model by P. Stooke, NASA PDS Stooke Small Body Shape Models (EAR-A-5-DDR-STOOKE-SHAPE-MODELS-V2.0), decimated for the web.",
+        "fr": "Images de Voyager 2, modèle de forme de P. Stooke, NASA PDS Stooke Small Body Shape Models (EAR-A-5-DDR-STOOKE-SHAPE-MODELS-V2.0), décimé pour le web."
+      }
+    },
     "textureResolutions": {
       "surface": [
         "2k"

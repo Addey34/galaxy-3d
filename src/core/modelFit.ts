@@ -131,6 +131,29 @@ export function maxInertiaAxis(
   positions: ArrayLike<number>,
   index: ArrayLike<number> | null
 ): [number, number, number] {
+  return principalInertia(positions, index).axes[2];
+}
+
+/**
+ * Les trois moments principaux d'inertie (à un facteur constant près : seuls leurs RAPPORTS
+ * servent), du plus petit au plus grand, et leurs axes unitaires dans le même ordre.
+ *
+ * Utile quand `maxInertiaAxis` ne suffit pas : l'axe de plus grande inertie n'est DÉFINI que si
+ * le plus grand moment domine le moyen. Pour un corps allongé en cigare (Halley) les deux
+ * grands moments sont presque égaux, et tout axe perpendiculaire au grand axe convient ; pour
+ * un corps presque sphérique (Protée) aucun axe ne se distingue.
+ */
+export function principalInertia(
+  positions: ArrayLike<number>,
+  index: ArrayLike<number> | null
+): {
+  moments: [number, number, number];
+  axes: [
+    [number, number, number],
+    [number, number, number],
+    [number, number, number],
+  ];
+} {
   const { centroid } = meshVolume(positions, index);
   const count = index ? index.length : positions.length / 3;
   const at = (k: number): number => (index ? index[k]! : k) * 3;
@@ -158,8 +181,18 @@ export function maxInertiaAxis(
   }
   if (total < 0) for (let i = 0; i < 9; i++) cov[i] = -cov[i]!;
   const { values, vectors } = jacobiEigen3(cov);
-  const k = values.indexOf(Math.min(...values));
-  return [vectors[k * 3]!, vectors[k * 3 + 1]!, vectors[k * 3 + 2]!];
+  // Moment autour d'un axe = trace de la covariance moins sa valeur propre sur cet axe.
+  const trace = values[0]! + values[1]! + values[2]!;
+  const order = [0, 1, 2].sort((a, b) => values[b]! - values[a]!);
+  const axis = (k: number): [number, number, number] => [
+    vectors[k * 3]!,
+    vectors[k * 3 + 1]!,
+    vectors[k * 3 + 2]!,
+  ];
+  return {
+    moments: order.map((k) => trace - values[k]!) as [number, number, number],
+    axes: [axis(order[0]!), axis(order[1]!), axis(order[2]!)],
+  };
 }
 
 /** Valeurs et vecteurs propres d'une matrice symétrique 3×3 (rotations de Jacobi). */

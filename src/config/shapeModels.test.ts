@@ -6,7 +6,7 @@ import { flattenBodies, modelPath } from './catalog';
 import type { CelestialBodyConfig } from '@/types';
 import {
   boundingRadius,
-  maxInertiaAxis,
+  principalInertia,
   meshVolume,
   volumeEquivalentRadius,
 } from '@/core/modelFit';
@@ -16,7 +16,17 @@ import {
  * modèles livrés : 0,08° (Éros) à 0,97° (Itokawa). Le défaut qu'il attrape fait 90° — c'est ce
  * que valait le Bennu livré avant la correction.
  */
-const MAX_POLE_OFFSET_DEG = 5;
+const MAX_POLE_OFFSET_DEG = 10;
+
+/**
+ * Rapport du plus grand moment d'inertie au moyen à partir duquel l'axe de plus grande inertie
+ * est DÉFINI. En dessous (Protée 1,004, Halley 1,01), la mesure de son orientation est du bruit.
+ *
+ * Seuil porté de 5 à 10° au lot parité (2026-09-22) : les modèles des satellites viennent dans
+ * le repère de leur pôle IAU MESURÉ, et un modèle en grille de 5° s'en écarte de 5,3° (Amalthée)
+ * à 5,5° (Déimos) sans que ce soit une erreur d'axe. Le défaut visé fait 90°.
+ */
+const DEFINED_AXIS_RATIO = 1.03;
 
 /**
  * MODÈLES DE FORME — ce que le contrat doit garantir.
@@ -231,13 +241,25 @@ describe('orientation des modèles livrés', () => {
     '%s %s : tourne autour de son axe de plus grande inertie (Y)',
     (name, _quality, onDisk) => {
       const { positions, index } = readGlbGeometry(onDisk);
-      const axis = maxInertiaAxis(positions, index);
-      const tiltDeg =
+      const { moments, axes } = principalInertia(positions, index);
+      const angleToY = (axis: [number, number, number]) =>
         (Math.acos(Math.min(1, Math.abs(axis[1]))) * 180) / Math.PI;
-      expect(
-        tiltDeg,
-        `${name} : axe d'inertie maximale à ${tiltDeg.toFixed(1)}° de Y`
-      ).toBeLessThan(MAX_POLE_OFFSET_DEG);
+      if (moments[2] / moments[1] >= DEFINED_AXIS_RATIO) {
+        const tiltDeg = angleToY(axes[2]);
+        expect(
+          tiltDeg,
+          `${name} : axe d'inertie maximale à ${tiltDeg.toFixed(1)}° de Y`
+        ).toBeLessThan(MAX_POLE_OFFSET_DEG);
+      } else {
+        // Axe maximal indéfini (corps en cigare ou presque rond) : Y doit seulement être
+        // PERPENDICULAIRE au grand axe, l'axe de plus petite inertie, autour duquel une
+        // rotation serait instable. C'est l'erreur qu'avait Hypérion passé par `--z-up`.
+        const alongLongAxis = angleToY(axes[0]);
+        expect(
+          alongLongAxis,
+          `${name} : Y à ${alongLongAxis.toFixed(1)}° de l'axe de plus petite inertie`
+        ).toBeGreaterThan(90 - MAX_POLE_OFFSET_DEG);
+      }
     }
   );
 
@@ -257,10 +279,24 @@ describe('orientation des modèles livrés', () => {
       );
       const published = cfg.realData?.radiusKm;
       expect(published, `${name} : pas de rayon publié`).toBeGreaterThan(0);
-      expect(
-        Math.abs(radius / published! - 1),
-        `${name} : rayon équivalent ${radius.toFixed(4)} km pour ${published} km publié`
-      ).toBeLessThan(0.03);
+      // 3 %, ou l'incertitude publiée si elle est plus large (Protée : 208 ± 8 km, modèle de
+      // Stooke à 201). Un écart au-delà n'est admis que DÉCLARÉ avec sa raison, et borné.
+      const uncertainty = cfg.realData?.sources?.radiusKm?.uncertainty ?? 0;
+      const tolerance = Math.max(0.03, uncertainty / published!);
+      const declared = cfg.model!.radiusMismatch;
+      const gap = Math.abs(radius / published! - 1);
+      const message = `${name} : rayon équivalent ${radius.toFixed(4)} km pour ${published} km publié`;
+      if (declared) {
+        expect(
+          declared.trim().length,
+          `${name} : raison trop courte`
+        ).toBeGreaterThan(40);
+        expect(gap, message).toBeLessThan(0.25);
+        // Une déclaration inutile serait un faux signal : l'écart doit la justifier.
+        expect(gap, `${name} : écart déclaré sans nécessité`).toBeGreaterThan(
+          tolerance
+        );
+      } else expect(gap, message).toBeLessThan(tolerance);
     }
   );
 });

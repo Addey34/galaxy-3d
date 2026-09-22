@@ -14,6 +14,13 @@
  * Bodies Node — table sommets/plaques (`ver128q.tab` : comptes, « id x y z », « id a b c ») et
  * grille latitude/longitude/rayon (`243ida.tab`, planétocentrique, degrés et km).
  *
+ * `--principal` : tourne le maillage dans ses axes principaux d'inertie (cf.
+ * `alignToPrincipalAxes`), pour un corps dont le repère publié n'est pas celui de sa rotation.
+ *
+ * `--lon-lat` et `--west` (grilles seulement) : colonnes longitude puis latitude, et longitudes
+ * comptées vers l'Ouest. Lire l'ÉTIQUETTE PDS avant de choisir : un sens de longitude inversé
+ * donne un corps en miroir, que rien ne signale.
+ *
  * `--z-up` : le fichier porte le PÔLE sur Z, convention des produits PDS en repère lié au
  * corps. La scène fait tourner chaque corps autour de son Y local (convention glTF) : sans
  * cette rotation, le corps tournerait autour d'un axe équatorial. C'est exactement ce qui a été
@@ -152,31 +159,51 @@ async function loadShape(path) {
   }
   const first = lines[0].split(/\s+/).map(Number);
   if (first.length === 2 && first.every(Number.isInteger)) {
-    // Table sommets/plaques PDS : indices 1-based, coordonnées en km.
+    // Table sommets/plaques PDS, coordonnées en km. Deux variantes publiées, reconnues au nombre
+    // de champs : PDS3 (`ver128q.tab`) numérote chaque ligne et indexe les plaques à partir de 1 ;
+    // PDS4 (petites lunes de Saturne, `hyperion_30k_plt.tab`) écrit x y z seuls et indexe à partir
+    // de 0, ce que dit son étiquette XML (trois champs par enregistrement).
     const [vertices, plates] = first;
+    const numbered = lines[1].split(/\s+/).length === 4;
     const pos = new Float32Array(vertices * 3);
     for (let i = 0; i < vertices; i++) {
       const t = lines[1 + i].split(/\s+/).map(Number);
-      pos[i * 3] = t[1];
-      pos[i * 3 + 1] = t[2];
-      pos[i * 3 + 2] = t[3];
+      const o = numbered ? 1 : 0;
+      pos[i * 3] = t[o];
+      pos[i * 3 + 1] = t[o + 1];
+      pos[i * 3 + 2] = t[o + 2];
     }
     const index = new Uint32Array(plates * 3);
     for (let i = 0; i < plates; i++) {
       const t = lines[1 + vertices + i].split(/\s+/).map(Number);
-      index[i * 3] = t[1] - 1;
-      index[i * 3 + 1] = t[2] - 1;
-      index[i * 3 + 2] = t[3] - 1;
+      const [a, b, c] = t.length === 4 ? [t[1] - 1, t[2] - 1, t[3] - 1] : t;
+      index[i * 3] = a;
+      index[i * 3 + 1] = b;
+      index[i * 3 + 2] = c;
     }
+    if (index.some((k) => !(k >= 0 && k < vertices)))
+      throw new Error(
+        `${path} : indice de plaque hors des ${vertices} sommets`
+      );
     return { pos, index };
   }
   // Grille latitude / longitude / rayon. La longitude 360 double la longitude 0 : elle est
   // écartée, et la couture se referme par l'indice modulo.
-  const rows = lines.map((line) => line.split(/\s+/).map(Number));
-  if (rows.some((r) => r.length !== 3 || !r.every(Number.isFinite)))
+  const raw = lines.map((line) => line.split(/\s+/).map(Number));
+  if (raw.some((r) => r.length !== 3 || !r.every(Number.isFinite)))
     throw new Error(`${path} : format de modèle de forme non reconnu`);
-  const lats = [...new Set(rows.map((r) => r[0]))];
-  const lons = [...new Set(rows.map((r) => r[1]))].filter((l) => l < 360);
+  // `--lon-lat` : colonnes longitude puis latitude (modèles de Stooke). `--west` : longitudes
+  // comptées vers l'OUEST, convention des satellites chez Thomas et Stooke (vérifié sur le
+  // Phobos de Thomas, dont Stickney tombe à 50 pour 49,7° O publié) ; ramenées vers l'Est, sans
+  // quoi le corps sortirait en MIROIR sans la moindre erreur.
+  const rows = raw.map(([a, b, r]) => {
+    const [lat, lon] = lonLat ? [b, a] : [a, b];
+    return [lat, west ? (360 - (lon % 360)) % 360 : lon, r];
+  });
+  // Ordre IMPOSÉ, plus supposé du fichier : latitudes décroissantes, longitudes croissantes. C'est
+  // lui qui oriente les faces vers l'extérieur ; inverser les longitudes les retournerait.
+  const lats = [...new Set(rows.map((r) => r[0]))].sort((x, y) => y - x);
+  const lons = [...new Set(rows.map((r) => r[1] % 360))].sort((x, y) => x - y);
   const radius = new Map(rows.map((r) => [`${r[0]},${r[1] % 360}`, r[2]]));
   const pos = new Float32Array(lats.length * lons.length * 3);
   lats.forEach((lat, i) =>
@@ -391,6 +418,118 @@ function writeGlb(path, positions, normals, indices, copyright, name) {
 
 const args = process.argv.slice(2);
 const zUp = args.includes('--z-up');
+const lonLat = args.includes('--lon-lat');
+const west = args.includes('--west');
+const principal = args.includes('--principal');
+
+/**
+ * `--principal` : tourne le maillage dans ses AXES PRINCIPAUX d'inertie (solide homogène) :
+ * plus grande inertie sur Y (l'axe de rotation de la scène), plus petite sur X (le grand axe),
+ * du côté de l'ancien +X pour garder le méridien 0 du fichier, et Z tel que la rotation soit
+ * PROPRE (déterminant +1, jamais un miroir). Pour un corps dont le repère publié n'est pas
+ * celui de sa rotation, ou pas défini : Hypérion (rotation chaotique), Halley (repère du modèle,
+ * nord le long du grand axe), Protée (presque rond, repère de Voyager). Pas pour un corps dont
+ * la texture est posée dans le repère IAU : ce repère-là doit rester celui du fichier.
+ */
+function alignToPrincipalAxes(pos, index, triangles) {
+  const at = (t, k) => (index ? index[t * 3 + k] : t * 3 + k) * 3;
+  let vol = 0;
+  const c = [0, 0, 0];
+  for (let t = 0; t < triangles; t++) {
+    const [a, b, d] = [0, 1, 2].map((k) => at(t, k));
+    const v =
+      (pos[a] * (pos[b + 1] * pos[d + 2] - pos[b + 2] * pos[d + 1]) -
+        pos[a + 1] * (pos[b] * pos[d + 2] - pos[b + 2] * pos[d]) +
+        pos[a + 2] * (pos[b] * pos[d + 1] - pos[b + 1] * pos[d])) /
+      6;
+    vol += v;
+    for (let k = 0; k < 3; k++)
+      c[k] += (v * (pos[a + k] + pos[b + k] + pos[d + k])) / 4;
+  }
+  for (let k = 0; k < 3; k++) c[k] /= vol;
+  const cov = new Array(9).fill(0);
+  for (let t = 0; t < triangles; t++) {
+    const p = [0, 1, 2].map((k) => {
+      const o = at(t, k);
+      return [pos[o] - c[0], pos[o + 1] - c[1], pos[o + 2] - c[2]];
+    });
+    const [a, b, d] = p;
+    const v =
+      (a[0] * (b[1] * d[2] - b[2] * d[1]) -
+        a[1] * (b[0] * d[2] - b[2] * d[0]) +
+        a[2] * (b[0] * d[1] - b[1] * d[0])) /
+      6;
+    const sum = [0, 1, 2].map((k) => a[k] + b[k] + d[k]);
+    for (let i = 0; i < 3; i++)
+      for (let j = 0; j < 3; j++)
+        cov[i * 3 + j] +=
+          (v / 20) *
+          (a[i] * a[j] + b[i] * b[j] + d[i] * d[j] + sum[i] * sum[j]);
+  }
+  // Jacobi 3×3 : vecteurs propres de la covariance. Plus GRANDE valeur propre = plus PETITE
+  // inertie (grand axe), et inversement.
+  const m = [...cov];
+  const V = [1, 0, 0, 0, 1, 0, 0, 0, 1];
+  for (let sweep = 0; sweep < 60; sweep++) {
+    for (const [pp, q] of [
+      [0, 1],
+      [0, 2],
+      [1, 2],
+    ]) {
+      const apq = m[pp * 3 + q];
+      if (Math.abs(apq) < 1e-300) continue;
+      const theta = (m[q * 3 + q] - m[pp * 3 + pp]) / (2 * apq);
+      const tt =
+        Math.sign(theta || 1) /
+        (Math.abs(theta) + Math.sqrt(theta * theta + 1));
+      const cs = 1 / Math.sqrt(tt * tt + 1);
+      const sn = tt * cs;
+      for (let k = 0; k < 3; k++) {
+        const kp = m[k * 3 + pp],
+          kq = m[k * 3 + q];
+        m[k * 3 + pp] = cs * kp - sn * kq;
+        m[k * 3 + q] = sn * kp + cs * kq;
+      }
+      for (let k = 0; k < 3; k++) {
+        const pk = m[pp * 3 + k],
+          qk = m[q * 3 + k];
+        m[pp * 3 + k] = cs * pk - sn * qk;
+        m[q * 3 + k] = sn * pk + cs * qk;
+      }
+      for (let k = 0; k < 3; k++) {
+        const kp = V[k * 3 + pp],
+          kq = V[k * 3 + q];
+        V[k * 3 + pp] = cs * kp - sn * kq;
+        V[k * 3 + q] = sn * kp + cs * kq;
+      }
+    }
+  }
+  const values = [m[0], m[4], m[8]];
+  const col = (k) => [V[k], V[3 + k], V[6 + k]];
+  const order = [0, 1, 2].sort((x, y) => values[y] - values[x]);
+  let ex = col(order[0]); // grand axe
+  let ey = col(order[2]); // plus grande inertie
+  if (ex[0] < 0) ex = ex.map((v) => -v);
+  if (ey[1] < 0) ey = ey.map((v) => -v);
+  const ez = [
+    ex[1] * ey[2] - ex[2] * ey[1],
+    ex[2] * ey[0] - ex[0] * ey[2],
+    ex[0] * ey[1] - ex[1] * ey[0],
+  ];
+  for (let i = 0; i < pos.length; i += 3) {
+    const x = pos[i] - c[0],
+      y = pos[i + 1] - c[1],
+      z = pos[i + 2] - c[2];
+    pos[i] = ex[0] * x + ex[1] * y + ex[2] * z + c[0];
+    pos[i + 1] = ey[0] * x + ey[1] * y + ey[2] * z + c[1];
+    pos[i + 2] = ez[0] * x + ez[1] * y + ez[2] * z + c[2];
+  }
+  const tilt =
+    (Math.acos(Math.min(1, Math.abs(col(order[2])[1]))) * 180) / Math.PI;
+  console.log(
+    `axes principaux : inertie maximale ramenée sur Y (elle était à ${tilt.toFixed(1)}°)`
+  );
+}
 const targetAt = args.indexOf('--target');
 const TARGET = targetAt === -1 ? null : Number(args[targetAt + 1]);
 const [input, output, gridArg] = args
@@ -418,6 +557,7 @@ if (zUp) {
   }
 }
 const triangleCount = index ? index.length / 3 : vertexCount / 3;
+if (principal) alignToPrincipalAxes(pos, index, triangleCount);
 console.log(
   `entrée : ${vertexCount} sommets, ${triangleCount} triangles${zUp ? ' (pôle Z ramené sur Y)' : ''}`
 );

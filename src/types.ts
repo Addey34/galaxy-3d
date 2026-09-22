@@ -148,6 +148,13 @@ export interface ModelConfig {
    * Absent pour un modèle drapé, comme `albedo`.
    */
   colourSource?: LocalizedText | null;
+  /**
+   * Raison ÉCRITE pour laquelle le rayon équivalent-volume du maillage s'écarte du rayon publié
+   * au-delà de son incertitude. Réservé au cas où les deux sont des grandeurs publiées DIFFÉRENTES
+   * (Halley : diamètre « effectif » de la SBDB contre volume du modèle de Belton), jamais à
+   * masquer un fichier faux ; `shapeModels.test.ts` borne l'écart même déclaré.
+   */
+  radiusMismatch?: string;
 }
 
 export interface RingConfig {

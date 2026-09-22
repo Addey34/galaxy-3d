@@ -12,6 +12,17 @@
     "maDeg": 65.84890057257185,
     "epoch": "2000-01-01T12:00:00Z",
     "color": "0xf08ac6",
+    "model": {
+      "resolutions": [
+        "1k"
+      ],
+      "extentRatio": 1.85,
+      "credit": {
+        "en": "Giotto and Vega images, shape model by P. Stooke with pointing by A. Abergel, which its author calls extremely uncertain (500 to 1,000 m), NASA PDS Stooke Small Body Shape Models (EAR-A-5-DDR-STOOKE-SHAPE-MODELS-V2.0), decimated for the web.",
+        "fr": "Images de Giotto et Vega, modèle de forme de P. Stooke, pointage d'A. Abergel, que son auteur dit extrêmement incertain (500 à 1 000 m), NASA PDS Stooke Small Body Shape Models (EAR-A-5-DDR-STOOKE-SHAPE-MODELS-V2.0), décimé pour le web."
+      },
+      "radiusMismatch": "Le rayon affiché, 5,5 km, vient du diamètre EFFECTIF de 11 km de la SBDB (Lamy et al. 2004). Le noyau est allongé (15,1 x 7,6 x 7,5 km, mesurés sur le modèle de Stooke), dont le rayon équivalent-volume vaut 4,58 km. Deux grandeurs publiées différentes ; la forme vient du modèle, la taille du catalogue."
+    },
     "surfaceResolutions": [
       "4k",
       "2k"
