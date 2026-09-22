@@ -73,14 +73,16 @@ export const interstellarSchema = z
     color: z.string().regex(/^0x[0-9a-fA-F]{6}$/),
     /**
      * Faits affichés par la fiche. Ni `eccentricity` ni `perihelionAU` ne portent de valeur :
-     * la première EST `elements.eccentricity`, la seconde s'en dérive par q = a(1 − e). Seule
-     * la première observation apporte une valeur, que les éléments ne contiennent pas.
+     * la première EST `elements.eccentricity`, la seconde s'en dérive par q = a(1 − e). La
+     * première observation et la magnitude absolue apportent une valeur, que les éléments ne
+     * contiennent pas.
      */
     facts: z
       .object({
         eccentricity: fact,
         perihelionAU: fact,
         firstObservation: fact,
+        absoluteMagnitude: fact,
       })
       .partial()
       .strict()

@@ -54,6 +54,14 @@
       "method": "measured",
       "detail": "firstObservationUsed",
       "citation": "orbit solution 2018-06-26, 207 observations"
+    },
+    "absoluteMagnitude": {
+      "value": 22.08,
+      "source": "jpl-sbdb",
+      "method": "measured",
+      "uncertainty": 0.44525,
+      "detail": "absoluteMagnitudeH",
+      "citation": "orbit solution 2018-06-26, 207 observations"
     }
   },
   "notes": {

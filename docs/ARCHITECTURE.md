@@ -1296,19 +1296,36 @@ pour Itokawa ne correspond pas à la masse publiée que ses propres notes citent
 
 Les onze sondes et les trois objets interstellaires portent une fiche comme n'importe quel
 corps, mais pas les mêmes grandeurs. `core/bodyFacts.ts` le DÉCLARE au lieu de le déduire de
-l'absence de valeur : une sonde a une date de lancement et une masse, un interstellaire une
-excentricité, une périhélie et une première observation, et aucune des deux familles n'a de
+l'absence de valeur : une sonde a une date de lancement, un lanceur, un site de lancement et une
+masse, un interstellaire une excentricité, une périhélie, une première observation et une
+magnitude absolue, et aucune des deux familles n'a de
 rayon, de gravité, de lune ni d'orbite fermée. `notApplicableFacts` soustrait donc l'ensemble
 complet des champs, et la réciproque vaut pour le catalogue. Le piège est dans l'union : la
 masse d'une sonde est la MÊME grandeur que celle d'une planète, et la déclarer propre à la
 couche instrument l'efface de tout le catalogue — 40 valeurs disparues d'un coup, attrapé par
 `factProvenance.test.ts`.
 
-**Un fait peut être une DATE.** `FactValue` est une union fermée de deux natures, nombre ou
-date de calendrier. Encoder une date en nombre aurait rendu la fiche JSON illisible et laissé
-`displayedUncertainty` calculer une incertitude relative sur un instant. Les pages publiques,
-elles, ne décrivent que des corps du catalogue, dont tous les faits sont numériques : elles
-écartent explicitement les faits datés au lieu de le supposer.
+**Un fait peut être une DATE, ou un NOM.** `FactValue` est une union fermée de trois natures :
+nombre, date de calendrier, nom propre. Encoder une date en nombre aurait rendu la fiche JSON
+illisible et laissé `displayedUncertainty` calculer une incertitude relative sur un instant. Les
+pages publiques, elles, ne décrivent que des corps du catalogue, dont tous les faits sont
+numériques : elles écartent explicitement les autres natures au lieu de le supposer.
+
+La troisième nature est arrivée au lot 10 (2026-09-22), et c'était une décision de modèle, pas
+une corvée. Le lanceur et le site de lancement ne sont pas des nombres, et le modèle avait été
+fermé pour refuser le texte libre. Deux voies s'offraient. Publier une raison de non-publication
+aurait été FAUX : le NSSDCA publie ces deux champs. Ouvrir le modèle au texte libre aurait défait
+ce que la fermeture protégeait. La nature `name` se tient entre les deux : c'est **la chaîne que
+la source écrit, recopiée à l'identique**, jamais traduite ni composée (« Titan IIIE-Centaur »,
+« Kourou, French Guiana », y compris dans l'interface française), et `factProvenance.test.ts` la
+compare caractère pour caractère au relevé, sans tolérance ni normalisation. Une phrase écrite
+par nous ne passerait pas cette garde. Falsifié : un tiret retiré d'un lanceur, un site traduit
+en français, tous deux rouges.
+
+**Une magnitude porte son incertitude en valeur absolue.** La SBDB publie H = 22,08 ± 0,445 pour
+ʻOumuamua. En relatif, cela ferait 2 %, sous le seuil d'affichage de 5 %, donc on le tairait ;
+or 0,45 magnitude est un facteur 1,5 sur la brillance. `ABSOLUTE_UNCERTAINTY_FACTS` soustrait la
+magnitude à la règle relative, et la fiche écrit « 22,08 (± 0,45) ».
 
 **Aucune valeur n'est écrite deux fois.** La date de lancement vit en tête de fiche de sonde et
 son fait ne porte que la provenance ; l'excentricité d'un interstellaire EST son élément
@@ -1331,11 +1348,21 @@ masse au lancement, et le test EXIGE une précision dès que ces phrases existen
 identifiant COSPAR faux ne renvoie pas d'erreur, il renvoie une autre mission. Falsifié :
 `2011-029A` au lieu de `2011-040A` sort « ORS 1 au lieu de Juno ».
 
-**Ce qui n'est pas publié, délibérément** : le lanceur et le site de lancement (du texte libre,
-et le modèle de faits reste fermé à deux natures) ; la puissance nominale (absente de 4 fiches
-sur 11) ; la magnitude absolue d'un interstellaire (la SBDB publie H pour 1I mais M1, une autre
-grandeur, pour les deux comètes) ; la rotation de 1I, parce que la scène ne fait tourner aucun
-de ces objets et qu'on ne publie pas une période que la simulation ne montre pas.
+**La magnitude des deux comètes est refusée, avec sa raison, et cette raison est vérifiée.** La
+SBDB ne publie pas H pour 2I/Borisov et 3I/ATLAS, mais M1, la magnitude TOTALE de la loi de
+brillance cométaire, chevelure comprise : une autre grandeur, qu'on n'affiche pas sous le même
+libellé. Le relevé conserve M1 (`cometTotalMagnitude`) précisément pour que le test confronte la
+raison à la source dans les deux sens : un objet dont la SBDB publie H doit l'afficher, et une
+raison qui cite M1 exige que M1 existe au relevé.
+
+**Ce qui n'est pas publié, délibérément** : la puissance nominale. Le champ « Nominal Power » du
+NSSDCA ne dit pas à QUELLE date il vaut, alors que la grandeur varie beaucoup : la puissance d'un
+générateur à radio-isotope décroît d'année en année (celle des Voyager a fondu depuis 1977), et
+celle d'un panneau solaire dépend de la distance au Soleil. La scène étant datée, un chiffre
+unique se lirait comme la puissance à la date affichée, ce qui serait faux ; et 4 fiches sur 11
+ne le donnent pas. Ce n'est donc pas un fait applicable, et aucune ligne ne l'annonce. La
+rotation de 1I non plus, parce que la scène ne fait tourner aucun de ces objets et qu'on ne
+publie pas une période que la simulation ne montre pas.
 
 ## Petits corps : un instantané livré, pas un flux
 
@@ -1365,6 +1392,27 @@ de conversion, et le fichier commité reste comparable à sa source. Conséquenc
   déjà venu. Le piège est le même que pour les vignettes de partage, et il a failli repasser.
   `src/config/stableAssetCaching.test.ts` croise désormais les familles « réseau d'abord » du
   service worker avec les règles de cache de Firebase : en déclarer une d'un seul côté échoue.
+
+**Un instantané se périme en silence, donc son âge est surveillé** (lot 10, 2026-09-22). Rien ne
+change dans l'application quand le relevé vieillit : les orbites sont affinées à chaque nuit
+d'observation et de nouveaux objets entrent dans les catégories, sans que la couche le sache.
+`core/snapshotAge.ts` déclare un âge maximal, `SMALL_BODY_SNAPSHOT_MAX_AGE_DAYS` (180 jours).
+C'est une politique, la cadence de relevé à laquelle on s'engage, et non une grandeur physique :
+aucune date de la source ne dit qu'un relevé cesse d'être juste. Deux lecteurs de la même règle :
+
+- le **panneau** le dit au visiteur au-delà de cet âge (« Ce relevé date de 8 mois : les orbites
+  affinées depuis, et les objets catalogués depuis, peuvent y manquer »), d'après l'horloge du
+  visiteur et non la date de la scène ;
+- un **workflow GitHub planifié** (`.github/workflows/data-freshness.yml`, chaque lundi) lance
+  `pnpm smallbodies:age`, qui échoue au-delà du même âge ; GitHub notifie alors le propriétaire
+  du dépôt, sans que personne ait à y penser.
+
+Écarté : un test daté dans `pnpm verify`. Une porte qui rougit parce que le calendrier a tourné
+n'est plus reproductible, et elle bloquerait un déploiement sans rapport. Le contrôle daté vit
+donc dans `snapshotAge.test.ts`, éteint sauf si `GALAXY_SNAPSHOT_AGE_CHECK=1`. Limite connue :
+GitHub suspend les workflows planifiés d'un dépôt public après 60 jours sans activité, et c'est
+alors le panneau qui reste. Falsifié : un relevé daté du 2026-03-20 fait sortir
+`pnpm smallbodies:age` en code 1, et un seuil porté à 400 jours fait rougir le scénario e2e.
 
 Mesuré en e2e : la couche PEINT (pixels non transparents comptés sur son canevas) et n'émet
 AUCUNE requête vers `jpl.nasa.gov`. Les deux moitiés comptent : la première seule repasserait au

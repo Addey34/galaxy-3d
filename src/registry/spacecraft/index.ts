@@ -10,7 +10,11 @@ import orderFile from './order.json';
  * fiche, et `spreadFacts` refuse alors une valeur répétée dans le fait — c'est la garde qui
  * empêche deux dates de lancement de diverger dans le même fichier.
  */
-const SPACECRAFT_VALUE_FIELD = { massKg: 'massKg' } as const;
+const SPACECRAFT_VALUE_FIELD = {
+  massKg: 'massKg',
+  launchVehicle: 'launchVehicle',
+  launchSite: 'launchSite',
+} as const;
 
 export const SPACECRAFT_ORDER: readonly string[] = orderFile.order;
 

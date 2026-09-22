@@ -21,6 +21,18 @@
       "method": "measured",
       "citation": "NSSDCA/COSPAR 2011-040A"
     },
+    "launchVehicle": {
+      "value": "Atlas V",
+      "source": "nssdca-master-catalog",
+      "method": "measured",
+      "citation": "NSSDCA/COSPAR 2011-040A"
+    },
+    "launchSite": {
+      "value": "Cape Canaveral, United States",
+      "source": "nssdca-master-catalog",
+      "method": "measured",
+      "citation": "NSSDCA/COSPAR 2011-040A"
+    },
     "massKg": {
       "value": 1500,
       "source": "nssdca-master-catalog",

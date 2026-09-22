@@ -11,6 +11,7 @@
  * figée qui se présenterait comme vivante serait le défaut que ce lot corrige, pas sa solution.
  */
 import { t, intlLocale, onLocaleChange } from '@/i18n';
+import { isSnapshotStale, snapshotAgeMonths } from '@/core/snapshotAge';
 import type { SmallBodyCategory } from '@/core/sbdb';
 import type { SmallBodyOverlay } from './smallBodyOverlay';
 import type { OverlayCoordinator } from './overlayCoordinator';
@@ -87,13 +88,23 @@ export function setupSmallBodyFilters(
       return;
     }
     const [year, month, day] = dataset.retrieved.split('-').map(Number);
-    noteEl.textContent = t('smallBodies.source', {
-      count: String(dataset.count),
-      date: new Date(Date.UTC(year!, month! - 1, day!)).toLocaleDateString(
-        intlLocale(),
-        { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' }
-      ),
-    });
+    // Au-delà de l'âge déclaré (`core/snapshotAge.ts`), la phrase le DIT : un relevé périmé
+    // ne doit pas se lire comme un relevé du jour. C'est l'horloge du visiteur qui compte, pas
+    // la date de la scène : l'âge est celui du relevé, pas celui des positions affichées.
+    const now = new Date();
+    const months = snapshotAgeMonths(dataset.retrieved, now);
+    const stale = months !== null && isSnapshotStale(dataset.retrieved, now);
+    noteEl.textContent = t(
+      stale ? 'smallBodies.sourceStale' : 'smallBodies.source',
+      {
+        count: String(dataset.count),
+        months: String(months),
+        date: new Date(Date.UTC(year!, month! - 1, day!)).toLocaleDateString(
+          intlLocale(),
+          { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' }
+        ),
+      }
+    );
     noteEl.hidden = false;
   }
   renderNote();

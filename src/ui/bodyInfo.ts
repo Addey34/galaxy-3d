@@ -18,6 +18,7 @@ import type { CelestialBodyConfig, FactField } from '@/types';
 import {
   bodyFact,
   citationOrder,
+  displayedAbsoluteUncertainty,
   displayedUncertainty,
   type FactEntry,
   type FactValue,
@@ -268,6 +269,9 @@ function formatDay(iso: string): string {
 /** Valeur mise en forme d'un fait, dans l'unité choisie par l'utilisateur. */
 function formatFact(name: string, field: FactField, value: FactValue): string {
   if (value.kind === 'date') return formatDay(value.iso);
+  // Un nom se montre tel que la source l'écrit, dans les deux langues : le traduire, ce serait
+  // publier une chaîne que la garde de `factProvenance.test.ts` ne peut plus confronter.
+  if (value.kind === 'name') return value.text;
   return formatNumericFact(name, field, value.value);
 }
 
@@ -316,10 +320,15 @@ function formatNumericFact(
       return num(value, 4);
     case 'perihelionAU':
       return `${num(value, 3)} ${t('unit.au')}`;
+    case 'absoluteMagnitude':
+      // Deux décimales, celles que la SBDB publie ; l'incertitude suit en valeur absolue.
+      return num(value, 2);
     case 'launchDate':
     case 'firstObservation':
-      // Les faits datés passent par `formatFact`, qui n'arrive jamais ici avec un nombre.
-      throw new Error(`fait daté formaté comme un nombre : ${field}`);
+    case 'launchVehicle':
+    case 'launchSite':
+      // Dates et noms passent par `formatFact`, qui n'arrive jamais ici avec un nombre.
+      throw new Error(`fait non numérique formaté comme un nombre : ${field}`);
   }
 }
 
@@ -355,11 +364,17 @@ function factLabel(name: string, field: FactField): string {
       return t('stat.eccentricity');
     case 'perihelionAU':
       return t('stat.perihelion');
+    case 'launchVehicle':
+      return t('stat.launchVehicle');
+    case 'launchSite':
+      return t('stat.launchSite');
+    case 'absoluteMagnitude':
+      return t('stat.absoluteMagnitude');
   }
 }
 
 /**
- * Ordre des lignes de la fiche. Les quatre derniers faits ne concernent que la couche
+ * Ordre des lignes de la fiche. Les sept derniers faits ne concernent que la couche
  * instrument : `core/bodyFacts.notApplicableFacts` les déclare hors sujet pour tout corps du
  * catalogue, et réciproquement, de sorte qu'un seul ordre serve les deux familles.
  */
@@ -374,9 +389,12 @@ export const CARD_FACT_ORDER: readonly FactField[] = [
   'moonCount',
   'axialTilt',
   'launchDate',
+  'launchVehicle',
+  'launchSite',
   'eccentricity',
   'perihelionAU',
   'firstObservation',
+  'absoluteMagnitude',
 ];
 
 const cardEntries = (cfg: CelestialBodyConfig): FactEntry[] =>
@@ -411,14 +429,17 @@ export function bodyStats(name: string, cfg: CelestialBodyConfig): Stat[] {
     const { provenance } = entry;
     const formatted = formatFact(name, entry.field, entry.value);
     const uncertainty = displayedUncertainty(entry);
+    const absolute = displayedAbsoluteUncertainty(entry);
     const source = factSource(provenance.source);
     stats.push({
       label,
       value:
-        uncertainty === null
-          ? formatted
-          : // Insécables : « (± 94 %) » ne doit jamais se couper entre ses signes.
-            `${formatted} (±\u00a0${num(uncertainty * 100)}\u00a0%)`,
+        absolute !== null
+          ? `${formatted} (±\u00a0${num(absolute, 2)})`
+          : uncertainty === null
+            ? formatted
+            : // Insécables : « (± 94 %) » ne doit jamais se couper entre ses signes.
+              `${formatted} (±\u00a0${num(uncertainty * 100)}\u00a0%)`,
       sourceIndex: citations.get(provenance.source),
       ...(provenance.asOf ? { asOf: formatAsOf(provenance.asOf) } : {}),
       provenance: [

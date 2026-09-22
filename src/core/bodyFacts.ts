@@ -18,15 +18,25 @@ import type {
 } from '@/types';
 
 /**
- * Valeur d'un fait. Deux natures, et deux seulement : un NOMBRE dans l'unité du catalogue, ou
- * une DATE de calendrier. La date est arrivée avec les objets d'instrument (lancement d'une
- * sonde, première observation d'un interstellaire) : l'encoder en nombre aurait rendu le champ
- * illisible dans la fiche JSON et permis à `displayedUncertainty` de calculer une incertitude
- * relative sur un instant, ce qui n'a aucun sens. L'ensemble reste FERMÉ, comme les formes
- * déclarées du registre : pas de fait en texte libre.
+ * Valeur d'un fait. Trois natures, et trois seulement : un NOMBRE dans l'unité du catalogue,
+ * une DATE de calendrier, ou un NOM propre.
+ *
+ * La date est arrivée avec les objets d'instrument (lancement d'une sonde, première
+ * observation d'un interstellaire) : l'encoder en nombre aurait rendu le champ illisible dans
+ * la fiche JSON et permis à `displayedUncertainty` de calculer une incertitude relative sur un
+ * instant, ce qui n'a aucun sens.
+ *
+ * Le nom est arrivé au lot 10 avec le lanceur et le site de lancement d'une sonde. Ce n'est
+ * PAS du texte libre, et c'est ce qui justifie de l'admettre : c'est la chaîne que la source
+ * écrit, recopiée à l'identique, jamais traduite ni composée (« Titan IIIE-Centaur », « Kourou,
+ * French Guiana »), et `config/factProvenance.test.ts` la compare caractère pour caractère au
+ * relevé. Une phrase écrite par nous ne passerait pas cette garde, et c'est l'invariant que la
+ * fermeture protégeait. L'ensemble reste FERMÉ, comme les formes déclarées du registre.
  */
 export type FactValue =
-  { kind: 'number'; value: number } | { kind: 'date'; iso: string };
+  | { kind: 'number'; value: number }
+  | { kind: 'date'; iso: string }
+  | { kind: 'name'; text: string };
 
 export type FactEntry =
   | {
@@ -58,6 +68,9 @@ const FACT_LABEL_ORDER: Record<FactField, true> = {
   firstObservation: true,
   eccentricity: true,
   perihelionAU: true,
+  launchVehicle: true,
+  launchSite: true,
+  absoluteMagnitude: true,
 };
 
 /** Tous les champs de faits connus, dans l'ordre de leur déclaration. */
@@ -71,14 +84,33 @@ export const DATE_FACTS: ReadonlySet<FactField> = new Set<FactField>([
   'firstObservation',
 ]);
 
+/** Faits dont la valeur est un nom propre recopié de la source (voir `FactValue`). */
+export const NAME_FACTS: ReadonlySet<FactField> = new Set<FactField>([
+  'launchVehicle',
+  'launchSite',
+]);
+
+/**
+ * Faits sur une échelle LOGARITHMIQUE, dont l'incertitude se lit en valeur absolue. Une
+ * magnitude de 22,08 ± 0,45 n'est pas « à 2 % près » : 0,45 magnitude, c'est un facteur 1,5 sur
+ * la brillance, donc de l'ordre de 20 % sur le diamètre qu'on en déduit.
+ */
+export const ABSOLUTE_UNCERTAINTY_FACTS: ReadonlySet<FactField> =
+  new Set<FactField>(['absoluteMagnitude']);
+
 /**
  * Faits que SEULE la couche instrument porte (`config/navigable.ts`), par `kind`. Un objet
  * d'instrument n'a en retour aucun des faits du catalogue, sauf sa masse pour une sonde : il
  * n'a ni rayon publié, ni gravité, ni température, ni lune, ni orbite fermée.
  */
 const INSTRUMENT_FACTS: Readonly<Record<string, readonly FactField[]>> = {
-  spacecraft: ['launchDate', 'massKg'],
-  interstellar: ['eccentricity', 'perihelionAU', 'firstObservation'],
+  spacecraft: ['launchDate', 'launchVehicle', 'launchSite', 'massKg'],
+  interstellar: [
+    'eccentricity',
+    'perihelionAU',
+    'firstObservation',
+    'absoluteMagnitude',
+  ],
 };
 
 /**
@@ -92,6 +124,9 @@ const INSTRUMENT_ONLY_FACTS: ReadonlySet<FactField> = new Set<FactField>([
   'firstObservation',
   'eccentricity',
   'perihelionAU',
+  'launchVehicle',
+  'launchSite',
+  'absoluteMagnitude',
 ]);
 
 /**
@@ -145,10 +180,14 @@ export function factValue(
   const value = cfg.realData?.[field];
   if (DATE_FACTS.has(field))
     return typeof value === 'string' ? { kind: 'date', iso: value } : undefined;
+  if (NAME_FACTS.has(field))
+    return typeof value === 'string' && value.length > 0
+      ? { kind: 'name', text: value }
+      : undefined;
   return typeof value === 'number' ? { kind: 'number', value } : undefined;
 }
 
-/** Valeur numérique d'un fait, ou `undefined` si ce fait est une date ou n'existe pas. */
+/** Valeur numérique d'un fait, ou `undefined` si ce fait n'est pas un nombre ou n'existe pas. */
 export function factNumber(
   cfg: CelestialBodyConfig,
   field: FactField
@@ -192,10 +231,23 @@ export function displayedUncertainty(entry: FactEntry): number | null {
   if (entry.status !== 'value' || entry.provenance.uncertainty === undefined)
     return null;
   // Une incertitude RELATIVE n'a pas de sens sur une date : « le 5 septembre 1977 ± 3 % » ne
-  // veut rien dire, et le seul fait daté qui en porterait une resterait à écrire.
+  // veut rien dire, et le seul fait daté qui en porterait une resterait à écrire. Ni sur une
+  // magnitude, qui a sa propre règle (`displayedAbsoluteUncertainty`).
+  if (ABSOLUTE_UNCERTAINTY_FACTS.has(entry.field)) return null;
   if (entry.value.kind !== 'number' || entry.value.value === 0) return null;
   const relative = Math.abs(entry.provenance.uncertainty / entry.value.value);
   return relative >= UNCERTAINTY_DISPLAY_THRESHOLD ? relative : null;
+}
+
+/**
+ * Incertitude ABSOLUE à afficher, dans l'unité du fait, pour un fait d'échelle logarithmique ;
+ * `null` pour tout autre fait. Toujours affichée quand elle est publiée : aucun seuil relatif
+ * ne s'applique à une magnitude, voir `ABSOLUTE_UNCERTAINTY_FACTS`.
+ */
+export function displayedAbsoluteUncertainty(entry: FactEntry): number | null {
+  if (entry.status !== 'value' || !ABSOLUTE_UNCERTAINTY_FACTS.has(entry.field))
+    return null;
+  return entry.provenance.uncertainty ?? null;
 }
 
 /**

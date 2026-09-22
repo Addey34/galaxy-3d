@@ -54,6 +54,13 @@
       "method": "measured",
       "detail": "firstObservationUsed",
       "citation": "orbit solution 2026-02-19, 782 observations"
+    },
+    "absoluteMagnitude": {
+      "published": false,
+      "reason": {
+        "en": "The JPL Small-Body Database gives no absolute magnitude H for this comet. It publishes M1 instead, the total magnitude of the cometary brightness law, which includes the glow of the coma around the nucleus: a different quantity, not shown under the same label.",
+        "fr": "La JPL Small-Body Database ne donne pas de magnitude absolue H pour cette comète. Elle publie à la place M1, la magnitude totale de la loi de brillance cométaire, qui inclut l’éclat de la chevelure autour du noyau : une autre grandeur, qu’on n’affiche pas sous le même libellé."
+      }
     }
   },
   "notes": {
