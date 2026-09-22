@@ -41,6 +41,17 @@
         "$date": "2025-12-31T00:00:00.000Z"
       }
     },
+    "model": {
+      "resolutions": [
+        "2k",
+        "1k"
+      ],
+      "extentRatio": 1.36,
+      "credit": {
+        "en": "Cassini ISS images, shape model by P. Thomas, J. Joseph and T. Ansty, NASA PDS Saturn Small Moon Shape Models V1.0 (doi:10.26033/ewy3-jy61), decimated for the web.",
+        "fr": "Images Cassini ISS, modèle de forme de P. Thomas, J. Joseph et T. Ansty, NASA PDS Saturn Small Moon Shape Models V1.0 (doi:10.26033/ewy3-jy61), décimé pour le web."
+      }
+    },
     "textureResolutions": {
       "surface": [
         "2k"

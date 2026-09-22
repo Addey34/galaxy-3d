@@ -135,14 +135,26 @@ export interface ModelConfig {
    * luminosité moyenne cuite dans le modèle par `scripts/bake-shape-colour.mjs`, à la convention
    * d'affichage mesurée sur la texture lunaire — `shapeModels.test.ts` le vérifie sur chaque
    * niveau livré.
+   *
+   * ABSENT pour un corps qui a une texture de surface : son modèle est alors DRAPÉ de cette
+   * texture (`core/modelUv.ts`), et c'est elle qui porte sa couleur et sa luminosité. Le test
+   * exige l'un ou l'autre, jamais les deux.
    */
-  albedo: number;
-  albedoSource: string;
+  albedo?: number;
+  albedoSource?: string;
   /**
    * Carte de mission d'où viennent les CONTRASTES et la couleur, ou `null` si aucune carte
    * globale n'existe : le corps reçoit alors une couleur uniforme à son albédo, sans rien inventer.
+   * Absent pour un modèle drapé, comme `albedo`.
    */
-  colourSource: LocalizedText | null;
+  colourSource?: LocalizedText | null;
+  /**
+   * Raison ÉCRITE pour laquelle le rayon équivalent-volume du maillage s'écarte du rayon publié
+   * au-delà de son incertitude. Réservé au cas où les deux sont des grandeurs publiées DIFFÉRENTES
+   * (Halley : diamètre « effectif » de la SBDB contre volume du modèle de Belton), jamais à
+   * masquer un fichier faux ; `shapeModels.test.ts` borne l'écart même déclaré.
+   */
+  radiusMismatch?: string;
 }
 
 export interface RingConfig {

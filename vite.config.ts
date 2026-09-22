@@ -274,7 +274,9 @@ function bodyLandingPages() {
             ? card.renderShape(
                 await loadShapeMesh(visual.model),
                 visual.fallback,
-                span * superSample
+                span * superSample,
+                // Un corps qui a une texture la garde sur sa forme, comme dans l'application.
+                texture
               )
             : card.renderSphere(
                 texture,
@@ -385,7 +387,9 @@ function bodyLandingPages() {
           manifest.generatedAt.slice(0, 10),
           validationSummary.generatedAt.slice(0, 10),
           factSnapshot.retrieved,
-        ].sort().at(-1)!;
+        ]
+          .sort()
+          .at(-1)!;
         const packageJson = await readJson<{
           dependencies: Record<string, string>;
         }>('package.json');

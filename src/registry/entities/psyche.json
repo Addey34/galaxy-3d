@@ -17,6 +17,19 @@
     "epoch": "2026-01-01T00:00:00.000Z",
     "color": "0xa8763e",
     "fallbackColor": "0x9a8f85",
+    "model": {
+      "resolutions": [
+        "1k"
+      ],
+      "extentRatio": 1.32,
+      "albedo": 0.1203,
+      "albedoSource": "IRAS-A-FPA-3-RDR-IMPS-V6.0 (JPL SBDB), 0.1203 +/- 0.004",
+      "colourSource": null,
+      "credit": {
+        "en": "Adaptive-optics images and light curves, ADAM shape model by Viikinkoski et al. 2018 (A&A 619, L3), DAMIT model 1806 (CC BY 4.0), used at its full 1,352 facets.",
+        "fr": "Images d'optique adaptative et courbes de lumière, modèle de forme ADAM de Viikinkoski et al. 2018 (A&A 619, L3), modèle DAMIT 1806 (CC BY 4.0), employé avec ses 1 352 facettes."
+      }
+    },
     "description": {
       "en": "A metal-rich asteroid about 220 kilometres across, in the main belt between Mars and Jupiter. It is the target of NASA’s Psyche mission, launched in 2023 and due to arrive in 2029: the first mission to a metal-rich world.",
       "fr": "Un astéroïde riche en métaux d’environ 220 kilomètres de diamètre, dans la ceinture principale entre Mars et Jupiter. Il est la cible de la mission Psyche de la NASA, lancée en 2023 et prévue pour y arriver en 2029 : la première mission vers un monde riche en métaux."

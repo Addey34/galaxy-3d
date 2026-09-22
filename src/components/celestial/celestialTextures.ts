@@ -66,6 +66,9 @@ function applySurfaceTexture(
 
   switch (textureKey) {
     case 'surface':
+      // Répétition horizontale : un modèle de forme DRAPÉ (cf. `core/modelUv.ts`) lit u > 1 sur
+      // les triangles de sa couture. Sans effet sur la sphère, dont u reste dans [0 ; 1].
+      texture.wrapS = THREE.RepeatWrapping;
       mat.map = texture;
       break;
     case 'normalMap': {

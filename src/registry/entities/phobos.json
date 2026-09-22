@@ -41,6 +41,18 @@
         "$date": "2025-12-31T00:00:00.000Z"
       }
     },
+    "model": {
+      "resolutions": [
+        "4k",
+        "2k",
+        "1k"
+      ],
+      "extentRatio": 1.26,
+      "credit": {
+        "en": "Viking Orbiter 1 and Phobos 2 images, shape model by R. W. Gaskell, NASA PDS Gaskell Phobos Shape Model V1.0 (q = 512, doi:10.26033/xzv5-bw95), decimated for the web.",
+        "fr": "Images de Viking Orbiter 1 et Phobos 2, modèle de forme de R. W. Gaskell, NASA PDS Gaskell Phobos Shape Model V1.0 (q = 512, doi:10.26033/xzv5-bw95), décimé pour le web."
+      }
+    },
     "textureResolutions": {
       "surface": [
         "8k",

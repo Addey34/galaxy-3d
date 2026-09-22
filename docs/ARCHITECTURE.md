@@ -1061,6 +1061,46 @@ sol que le plancher ne le laisse croire, et `?debug-surface` affiche l'altitude 
 sous la caméra pour qu'on puisse le voir. Aucune aire fine n'est déclarée ailleurs que sur la
 Lune, et Mars garde donc son imagerie sans relief.
 
+## Modèles de forme : la vraie forme, et la texture du corps drapée dessus
+
+Un corps irrégulier dont un modèle de forme scientifique est publié l'affiche, au lieu d'une
+sphère (règle de parité de l'utilisateur, 2026-09-22). Quinze corps en ont un ; la liste fait foi
+dans les fiches (`model`) et dans `THIRD_PARTY_NOTICES.md`, qu'un test confronte l'une à l'autre.
+La sphère n'est jamais supprimée, seulement masquée : un modèle qui ne se charge pas laisse le
+corps affiché.
+
+- **La couleur.** Sans texture, la couleur est cuite par sommet à l'albédo publié
+  (`scripts/bake-shape-colour.mjs`, Bennu, Éros, Psyché…). Avec une texture, le modèle est
+  **drapé** de cette texture (`core/modelUv.ts`) : coordonnées tirées de la longitude et de la
+  latitude de chaque sommet dans le repère du fichier, géométrie dépliée pour la couture à ±180°
+  et les pôles, et le **même matériau** que la sphère, donc mêmes niveaux de détail, ombres et
+  éclipses. ~30 000 sommets de couleur cuite ne gardent qu'une carte de 256 px ; la texture en
+  garde des milliers. Un test confronte les coordonnées à celles de `THREE.SphereGeometry`.
+- **Le repère.** Un drapé n'est juste que si le fichier et la carte partagent leur système de
+  longitudes. Vérifié par corps : Phobos (le creux local le plus profond du modèle tombe sur le
+  cratère Stickney, garde permanente sur le fichier livré, falsifiée en omettant `--z-up`) ;
+  Vesta (relief Dawn et mosaïque USGS dans le même système Claudia double prime, texture livrée
+  corrélée à 0,971 à l'aperçu USGS sans décalage). Thomas et Stooke comptent les longitudes des
+  satellites vers l'**Ouest** (mesuré sur le Phobos de Thomas : Stickney à 50 pour 49,7° O) :
+  `decimate-shape-model.mjs --west`, faute de quoi le corps sort en miroir sans erreur.
+- **L'orientation.** La scène fait tourner le corps autour de son Y local. Le test exige l'axe de
+  plus grande inertie à moins de 10° de Y quand le plus grand moment domine (plus de 3 %), sinon
+  Y perpendiculaire au grand axe (corps en cigare comme Halley, presque ronds comme Protée). Les
+  corps sans repère de rotation publié utile passent par `--principal` (axes principaux
+  d'inertie) : Hypérion (rotation chaotique, grand axe sur le Z du fichier), Halley (« nord » le
+  long du grand axe dans son modèle), Protée.
+- **La taille.** Le maillage est mis à l'échelle du rayon du catalogue par son rayon
+  équivalent-volume. Le test exige l'accord à 3 % ou à l'incertitude publiée ; un écart au-delà
+  n'est admis que déclaré (`model.radiusMismatch`) quand les deux sont des grandeurs publiées
+  différentes : Halley (diamètre effectif de la SBDB contre volume du modèle de Stooke, 4,58 km
+  pour 5,5) et Hygie (diamètre IRAS de la SBDB contre modèle de Vernazza et al. 2020, 216,9 km pour
+  203,6).
+- **Les niveaux.** Un niveau n'est livré que si la source en contient le détail : les grilles de
+  5° (Déimos, Amalthée, Protée, Halley) et les modèles DAMIT (Pallas, Hygie, Psyché) n'ont qu'un
+  niveau léger, Hypérion n'a pas de 4k.
+- **Les faces** pointent vers l'extérieur (volume signé positif), garde ajoutée quand le lecteur de
+  grille a appris à inverser les longitudes.
+
 ## Halo lumineux — qui brille, et combien
 
 Le palier de qualité `high` ajoute un halo autour des sources de lumière (Soleil, étoiles
@@ -1200,7 +1240,10 @@ projection orthographique avec tampon de profondeur. Un petit corps n'a pas de m
 il n'y en a pas pour Bennu — donc sa vignette sphérique n'était qu'une bille de sa teinte de
 repli. Or ce qui l'identifie n'est pas sa couleur mais sa **silhouette**. Les deux chemins
 partagent la même direction de lumière et le même ambiant : une vignette qui s'éclairerait
-autrement se verrait dans une galerie de partages.
+autrement se verrait dans une galerie de partages. Depuis le lot parité, `renderShape` lit aussi
+la carte équirectangulaire du corps quand il en a une, triangle par triangle, à la longitude et
+latitude de son centre dans le repère du fichier : Phobos et Vesta gardent leur texture sur leur
+forme, comme dans l'application.
 
 Deux pièges du rendu de forme, tous deux payés une fois :
 

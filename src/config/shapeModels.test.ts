@@ -6,7 +6,7 @@ import { flattenBodies, modelPath } from './catalog';
 import type { CelestialBodyConfig } from '@/types';
 import {
   boundingRadius,
-  maxInertiaAxis,
+  principalInertia,
   meshVolume,
   volumeEquivalentRadius,
 } from '@/core/modelFit';
@@ -16,7 +16,17 @@ import {
  * modèles livrés : 0,08° (Éros) à 0,97° (Itokawa). Le défaut qu'il attrape fait 90° — c'est ce
  * que valait le Bennu livré avant la correction.
  */
-const MAX_POLE_OFFSET_DEG = 5;
+const MAX_POLE_OFFSET_DEG = 10;
+
+/**
+ * Rapport du plus grand moment d'inertie au moyen à partir duquel l'axe de plus grande inertie
+ * est DÉFINI. En dessous (Protée 1,004, Halley 1,01), la mesure de son orientation est du bruit.
+ *
+ * Seuil porté de 5 à 10° au lot parité (2026-09-22) : les modèles des satellites viennent dans
+ * le repère de leur pôle IAU MESURÉ, et un modèle en grille de 5° s'en écarte de 5,3° (Amalthée)
+ * à 5,5° (Déimos) sans que ce soit une erreur d'axe. Le défaut visé fait 90°.
+ */
+const DEFINED_AXIS_RATIO = 1.03;
 
 /**
  * MODÈLES DE FORME — ce que le contrat doit garantir.
@@ -118,7 +128,8 @@ describe('modèles de forme 3D', () => {
       // Dans les DEUX langues : la fiche l'affiche dans la langue de l'interface.
       for (const text of [credit?.en, credit?.fr]) {
         expect(text?.trim().length ?? 0).toBeGreaterThan(20);
-        expect(text).toMatch(/NASA|ESA|JAXA|USGS|DLR/);
+        // ESO : les modèles de Pallas et Hygie viennent de l'imagerie VLT/SPHERE (lot parité).
+        expect(text).toMatch(/NASA|ESA|ESO|JAXA|USGS|DLR|DAMIT/);
       }
     }
   );
@@ -146,12 +157,40 @@ describe('modèles de forme 3D', () => {
   it('n’attribue un modèle qu’aux corps irréguliers', () => {
     // Une planète ou une lune sphérique n'a rien à gagner à un maillage : la sphère texturée
     // est plus fidèle ET moins chère. Le contrat existe pour les corps que la sphère trahit.
+    // Le critère est MESURÉ sur la forme, pas tiré du type : Phobos est une lune, et une patate
+    // (lot parité, 2026-09-22). `extentRatio` est lui-même confronté au fichier plus bas.
     for (const [name, cfg] of withModel())
       expect(
-        ['asteroid', 'comet'],
-        `${name} est de type ${cfg.kind}`
-      ).toContain(cfg.kind);
+        cfg.model!.extentRatio,
+        `${name} : extentRatio ${cfg.model!.extentRatio}, une sphère ferait l'affaire`
+      ).toBeGreaterThanOrEqual(1.05);
   });
+
+  it.each(withModel().map(([name]) => name))(
+    '%s : drapé de sa texture si et seulement s’il en a une',
+    (name) => {
+      // Un corps qui a une vraie texture la garde sur sa forme (`core/modelUv.ts`) : l'albédo
+      // cuit n'a alors pas d'objet. Sans texture, la couleur cuite est la seule mesure de sa
+      // surface, et elle doit être déclarée avec sa source.
+      const cfg = flattenBodies(CELESTIAL_CONFIG).get(name)!;
+      const draped = cfg.textures?.surface !== undefined;
+      const model = cfg.model!;
+      if (draped) {
+        expect(
+          model.albedo,
+          `${name} : drapé, pas d'albédo cuit`
+        ).toBeUndefined();
+        expect(model.colourSource).toBeUndefined();
+      } else {
+        expect(
+          model.albedo,
+          `${name} : sans texture, l'albédo cuit est obligatoire`
+        ).toBeGreaterThan(0);
+        expect(model.albedoSource?.trim().length ?? 0).toBeGreaterThan(10);
+        expect(model.colourSource).not.toBeUndefined();
+      }
+    }
+  );
 });
 
 /**
@@ -203,13 +242,25 @@ describe('orientation des modèles livrés', () => {
     '%s %s : tourne autour de son axe de plus grande inertie (Y)',
     (name, _quality, onDisk) => {
       const { positions, index } = readGlbGeometry(onDisk);
-      const axis = maxInertiaAxis(positions, index);
-      const tiltDeg =
+      const { moments, axes } = principalInertia(positions, index);
+      const angleToY = (axis: [number, number, number]) =>
         (Math.acos(Math.min(1, Math.abs(axis[1]))) * 180) / Math.PI;
-      expect(
-        tiltDeg,
-        `${name} : axe d'inertie maximale à ${tiltDeg.toFixed(1)}° de Y`
-      ).toBeLessThan(MAX_POLE_OFFSET_DEG);
+      if (moments[2] / moments[1] >= DEFINED_AXIS_RATIO) {
+        const tiltDeg = angleToY(axes[2]);
+        expect(
+          tiltDeg,
+          `${name} : axe d'inertie maximale à ${tiltDeg.toFixed(1)}° de Y`
+        ).toBeLessThan(MAX_POLE_OFFSET_DEG);
+      } else {
+        // Axe maximal indéfini (corps en cigare ou presque rond) : Y doit seulement être
+        // PERPENDICULAIRE au grand axe, l'axe de plus petite inertie, autour duquel une
+        // rotation serait instable. C'est l'erreur qu'avait Hypérion passé par `--z-up`.
+        const alongLongAxis = angleToY(axes[0]);
+        expect(
+          alongLongAxis,
+          `${name} : Y à ${alongLongAxis.toFixed(1)}° de l'axe de plus petite inertie`
+        ).toBeGreaterThan(90 - MAX_POLE_OFFSET_DEG);
+      }
     }
   );
 
@@ -229,10 +280,24 @@ describe('orientation des modèles livrés', () => {
       );
       const published = cfg.realData?.radiusKm;
       expect(published, `${name} : pas de rayon publié`).toBeGreaterThan(0);
-      expect(
-        Math.abs(radius / published! - 1),
-        `${name} : rayon équivalent ${radius.toFixed(4)} km pour ${published} km publié`
-      ).toBeLessThan(0.03);
+      // 3 %, ou l'incertitude publiée si elle est plus large (Protée : 208 ± 8 km, modèle de
+      // Stooke à 201). Un écart au-delà n'est admis que DÉCLARÉ avec sa raison, et borné.
+      const uncertainty = cfg.realData?.sources?.radiusKm?.uncertainty ?? 0;
+      const tolerance = Math.max(0.03, uncertainty / published!);
+      const declared = cfg.model!.radiusMismatch;
+      const gap = Math.abs(radius / published! - 1);
+      const message = `${name} : rayon équivalent ${radius.toFixed(4)} km pour ${published} km publié`;
+      if (declared) {
+        expect(
+          declared.trim().length,
+          `${name} : raison trop courte`
+        ).toBeGreaterThan(40);
+        expect(gap, message).toBeLessThan(0.25);
+        // Une déclaration inutile serait un faux signal : l'écart doit la justifier.
+        expect(gap, `${name} : écart déclaré sans nécessité`).toBeGreaterThan(
+          tolerance
+        );
+      } else expect(gap, message).toBeLessThan(tolerance);
     }
   );
 });
@@ -247,6 +312,34 @@ describe('orientation des modèles livrés', () => {
  * Le test compare donc la valeur déclarée au fichier lui-même, et refuse en particulier de la
  * sous-estimer. Une sur-estimation de quelques pour cent ne coûte qu'un peu de recul.
  */
+/**
+ * FACES VERS L'EXTÉRIEUR. Un maillage retourné s'éclaire à l'envers et laisse voir son intérieur
+ * par transparence de la face arrière. Le risque est réel depuis que le décimateur relit des
+ * grilles en longitudes Ouest (`--west`) : inverser les longitudes inverse le sens des faces si
+ * l'ordre de la grille n'est pas imposé. Volume signé positif = normales sortantes.
+ */
+describe('sens des faces des modèles livrés', () => {
+  it.each(levels())('%s %s', (_name, _quality, onDisk) => {
+    const { positions, index } = readGlbGeometry(onDisk);
+    let signed = 0;
+    for (let t = 0; t < index.length; t += 3) {
+      const [a, b, c] = [index[t]! * 3, index[t + 1]! * 3, index[t + 2]! * 3];
+      signed +=
+        (positions[a]! *
+          (positions[b + 1]! * positions[c + 2]! -
+            positions[b + 2]! * positions[c + 1]!) -
+          positions[a + 1]! *
+            (positions[b]! * positions[c + 2]! -
+              positions[b + 2]! * positions[c]!) +
+          positions[a + 2]! *
+            (positions[b]! * positions[c + 1]! -
+              positions[b + 1]! * positions[c]!)) /
+        6;
+    }
+    expect(signed).toBeGreaterThan(0);
+  });
+});
+
 describe('débordement des modèles (extentRatio)', () => {
   // Un seul `extentRatio` par corps pour TOUS ses niveaux : il doit couvrir le plus saillant.
   it.each(levels())('%s %s', (name, _quality, onDisk) => {
@@ -319,11 +412,20 @@ describe('couleur réelle des modèles de forme', () => {
     expect(script).toContain('0.312 / 0.12');
   });
 
-  it.each(levels())('%s %s', (name, _quality, onDisk) => {
+  // Les modèles DRAPÉS n'ont pas de couleur cuite : leur couleur est celle de la texture.
+  const baked = levels().filter(
+    ([name]) =>
+      flattenBodies(CELESTIAL_CONFIG).get(name)!.textures?.surface === undefined
+  );
+  it('garde des modèles à couleur cuite à vérifier', () => {
+    expect(baked.length).toBeGreaterThan(0);
+  });
+
+  it.each(baked)('%s %s', (name, _quality, onDisk) => {
     const model = flattenBodies(CELESTIAL_CONFIG).get(name)!.model!;
-    expect(model.albedoSource.trim().length).toBeGreaterThan(10);
+    expect(model.albedoSource!.trim().length).toBeGreaterThan(10);
     const { luminance, perVertex } = meanLuminance(onDisk);
-    const expected = model.albedo * DISPLAY_PER_ALBEDO;
+    const expected = model.albedo! * DISPLAY_PER_ALBEDO;
     // 3 % : les composantes écrêtées sur les zones les plus claires d'Éros tirent la moyenne
     // un peu sous la cible ; un niveau jamais cuit s'en écarte de 60 % à 200 %.
     expect(
@@ -334,5 +436,86 @@ describe('couleur réelle des modèles de forme', () => {
     expect(perVertex, `${name} : couleurs par sommet`).toBe(
       model.colourSource !== null
     );
+  });
+});
+
+/**
+ * UN MODÈLE DRAPÉ DOIT ÊTRE DANS LE REPÈRE DE SA CARTE. La carte équirectangulaire est posée par
+ * longitude et latitude (`core/modelUv.ts`) ; si le fichier était tourné, miroir, ou compté en
+ * longitudes ouest, le relief et l'image se décaleraient sans aucune erreur. On vérifie donc
+ * qu'un repère PUBLIÉ du corps tombe au bon endroit du maillage livré.
+ *
+ * Phobos : le cratère Stickney, 1,0° S et 49,7° O (Nomenclature planétaire de l'UAI), est le
+ * creux local le plus profond du modèle de Gaskell. Mesuré sur la source (q = 512) au lot
+ * parité : 50° O, 0°, 1,24 km sous son voisinage.
+ */
+describe('repère des modèles drapés', () => {
+  it('phobos : Stickney est le creux le plus profond, à sa longitude publiée', () => {
+    const { positions } = readGlbGeometry(
+      join(PROJECT_ROOT, 'public', modelPath('phobos', '4k'))
+    );
+    // Repère de l'application : pôle sur +Y, longitude Est vers −Z (cf. `core/modelUv.ts`).
+    const cells = new Map<string, { sum: number; n: number }>();
+    for (let i = 0; i < positions.length; i += 3) {
+      const [x, y, z] = [positions[i]!, positions[i + 1]!, positions[i + 2]!];
+      const r = Math.hypot(x, y, z);
+      const lon = (Math.atan2(-z, x) * 180) / Math.PI;
+      const lat = (Math.asin(y / r) * 180) / Math.PI;
+      const key = `${Math.floor((lat + 90) / 5)},${Math.floor((lon + 180) / 5)}`;
+      const cell = cells.get(key) ?? { sum: 0, n: 0 };
+      cell.sum += r;
+      cell.n++;
+      cells.set(key, cell);
+    }
+    const list = [...cells.entries()].map(([key, c]) => {
+      const [i, j] = key.split(',').map(Number);
+      return { lat: i! * 5 - 87.5, lon: j! * 5 - 177.5, r: c.sum / c.n };
+    });
+    const rad = Math.PI / 180;
+    const angle = (
+      p: { lat: number; lon: number },
+      q: { lat: number; lon: number }
+    ) =>
+      Math.acos(
+        Math.min(
+          1,
+          Math.sin(p.lat * rad) * Math.sin(q.lat * rad) +
+            Math.cos(p.lat * rad) *
+              Math.cos(q.lat * rad) *
+              Math.cos((p.lon - q.lon) * rad)
+        )
+      ) / rad;
+    const deepest = list
+      .filter((p) => Math.abs(p.lat) < 60)
+      .map((p) => {
+        const ring = list.filter((q) => {
+          const a = angle(p, q);
+          return a > 12 && a < 25;
+        });
+        return {
+          ...p,
+          depth: p.r - ring.reduce((s, q) => s + q.r, 0) / ring.length,
+        };
+      })
+      .sort((a, b) => a.depth - b.depth)[0]!;
+    expect(
+      angle(deepest, { lat: -1.0, lon: -49.7 }),
+      `creux le plus profond à ${deepest.lon}°, ${deepest.lat}°`
+    ).toBeLessThan(8);
+  });
+});
+
+/**
+ * Chaque modèle livré est déclaré dans `THIRD_PARTY_NOTICES.md`, avec sa source et son crédit :
+ * c'est là que l'attribution exigée par une licence (DAMIT, CC BY 4.0) se lit en entier. Le lot
+ * parité en a ajouté dix d'un coup ; un onzième ajouté sans notice doit échouer ici.
+ */
+describe('notices des modèles de forme', () => {
+  const notices = readFileSync(
+    join(PROJECT_ROOT, 'THIRD_PARTY_NOTICES.md'),
+    'utf8'
+  );
+  it.each(withModel().map(([name]) => name))('%s', (name) => {
+    expect(notices).toContain(`public/assets/models/${name}/${name}_shape_`);
   });
 });

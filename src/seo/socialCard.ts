@@ -425,7 +425,14 @@ export interface ShapeMesh {
 export function renderShape(
   mesh: ShapeMesh,
   fallback: [number, number, number],
-  size: number
+  size: number,
+  /**
+   * Carte équirectangulaire du corps quand il en a une (Phobos, Vesta) : chaque triangle prend
+   * la couleur de la carte à la longitude et latitude de son centre, lues dans le repère du
+   * FICHIER, exactement comme l'application drape sa texture (`core/modelUv.ts`). Sans carte,
+   * l'aplat de repli, comme avant.
+   */
+  texture: RawImage | null = null
 ): Uint8ClampedArray {
   const out = new Uint8ClampedArray(size * size * 4);
   const { positions, indices } = mesh;
@@ -473,6 +480,12 @@ export function renderShape(
   const depth = new Float32Array(size * size).fill(-Infinity);
   const shade = new Float32Array(size * size);
   const covered = new Uint8Array(size * size);
+  const colour = texture ? new Float32Array(size * size * 3) : null;
+  const linear: [number, number, number] = [
+    toLinear(fallback[0]),
+    toLinear(fallback[1]),
+    toLinear(fallback[2]),
+  ];
 
   for (let t = 0; t + 2 < indices.length; t += 3) {
     const a = indices[t]!;
@@ -513,6 +526,25 @@ export function renderShape(
     if (nz <= 0) continue;
     const light =
       AMBIENT + Math.max(nx * LIGHT[0] + ny * LIGHT[1] + nz * LIGHT[2], 0);
+    let faceColour = linear;
+    if (texture) {
+      // Centre du triangle dans le repère du fichier (non recentré) : c'est là que la carte
+      // a été projetée. Mêmes conventions que `drapeEquirectangular`.
+      const fx = positions[a * 3]! + positions[b * 3]! + positions[c * 3]!;
+      const fy =
+        positions[a * 3 + 1]! + positions[b * 3 + 1]! + positions[c * 3 + 1]!;
+      const fz =
+        positions[a * 3 + 2]! + positions[b * 3 + 2]! + positions[c * 3 + 2]!;
+      const r = Math.hypot(fx, fy, fz);
+      if (r > 0) {
+        const rgb = sampleBilinear(
+          texture,
+          0.5 + Math.atan2(-fz, fx) / (2 * Math.PI),
+          0.5 - Math.asin(Math.min(Math.max(fy / r, -1), 1)) / Math.PI
+        );
+        faceColour = [toLinear(rgb[0]), toLinear(rgb[1]), toLinear(rgb[2])];
+      }
+    }
 
     const minX = Math.max(0, Math.floor(Math.min(ax, bx, cxs)));
     const maxX = Math.min(size - 1, Math.ceil(Math.max(ax, bx, cxs)));
@@ -537,23 +569,22 @@ export function renderShape(
         depth[index] = z;
         shade[index] = light;
         covered[index] = 1;
+        if (colour) colour.set(faceColour, index * 3);
       }
     }
   }
 
   // --- report en pixels ---------------------------------------------------------------
-  const linear: [number, number, number] = [
-    toLinear(fallback[0]),
-    toLinear(fallback[1]),
-    toLinear(fallback[2]),
-  ];
   for (let i = 0; i < size * size; i++) {
     if (!covered[i]) continue;
     const light = shade[i]!;
     const offset = i * 4;
-    out[offset] = toSrgb(linear[0] * light);
-    out[offset + 1] = toSrgb(linear[1] * light);
-    out[offset + 2] = toSrgb(linear[2] * light);
+    const r = colour ? colour[i * 3]! : linear[0];
+    const g = colour ? colour[i * 3 + 1]! : linear[1];
+    const b = colour ? colour[i * 3 + 2]! : linear[2];
+    out[offset] = toSrgb(r * light);
+    out[offset + 1] = toSrgb(g * light);
+    out[offset + 2] = toSrgb(b * light);
     out[offset + 3] = 255;
   }
   return out;

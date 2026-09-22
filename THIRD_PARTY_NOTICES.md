@@ -85,7 +85,9 @@ The four wave-A models below follow the same pipeline: decimated by
 `scripts/decimate-shape-model.mjs` (deterministic vertex clustering, no geometry invented), pole
 brought onto +Y where the source carried it on Z, and the credit embedded in each file's glTF
 `asset.copyright`. Each file's volume-equivalent radius is checked against the published mean
-radius, and its maximum-inertia axis against +Y, by `src/config/shapeModels.test.ts`.
+radius, and its orientation by `src/config/shapeModels.test.ts`: the maximum-inertia axis
+within 10° of +Y when the largest moment clearly dominates, otherwise +Y perpendicular to the
+body's long axis. Every level must also have its faces pointing outwards.
 
 `public/assets/models/eros/eros_shape_{1k,2k,4k}.glb`: asteroid (433) Eros. 3,751 / 15,499 / 61,652 triangles.
 
@@ -119,8 +121,81 @@ radius, and its maximum-inertia axis against +Y, by `src/config/shapeModels.test
   decimated for the web.
 
 **Skipped on purpose, not forgotten**: (99942) Apophis has no published measured shape model;
-67P/Churyumov-Gerasimenko's archived models carry a non-commercial licence whose compatibility
-with the site's donation link is being asked to ESA before any use.
+67P/Churyumov-Gerasimenko is not in the catalogue, and its archived models carry a
+non-commercial licence.
+
+### Moons, a comet and main-belt asteroids (parity pass, 2026-09-22)
+
+Same pipeline. Where a body already has a real surface texture, the model carries no baked colour:
+the app **drapes the body's own texture** on it (`src/core/modelUv.ts`), so the texture credit
+below in this file applies unchanged. Longitudes are read as each source label states them: the
+Thomas and Stooke satellite models count longitudes **west**, which was checked on Thomas's Phobos
+(the Stickney crater falls at 50 for a published 49.7° W) and converted to east before meshing.
+
+`public/assets/models/phobos/phobos_shape_{1k,2k,4k}.glb`: Phobos. 3,934 / 15,029 / 62,078 triangles.
+
+- **Source**: NASA PDS Small Bodies Node, *Gaskell Phobos Shape Model V1.0* (q = 512,
+  doi:10.26033/xzv5-bw95).
+- **Data credit**: Viking Orbiter 1 and Phobos 2 images; shape model by R. W. Gaskell. Distributed by NASA PDS without restriction.
+- **Modification**: decimated for the web. Its deepest local depression lies at the published
+  position of the Stickney crater, which a test holds on the shipped file.
+
+`public/assets/models/deimos/deimos_shape_1k.glb`: Deimos. 4,188 triangles.
+
+- **Source**: NASA PDS Small Bodies Node, `EAR-A-5-DDR-SHAPE-MODELS-V2.1` (P. C. Thomas).
+- **Data credit**: Viking Orbiter images; shape model by P. C. Thomas. Distributed by NASA PDS without restriction.
+- **Modification**: 5° latitude/longitude grid converted to a mesh, longitudes turned from west to
+  east. One level only: the grid holds no more.
+
+`public/assets/models/amalthea/amalthea_shape_1k.glb` (4,196 triangles) and
+`public/assets/models/proteus/proteus_shape_1k.glb` (4,128 triangles): Amalthea and Proteus.
+
+- **Source**: NASA PDS Small Bodies Node, `EAR-A-5-DDR-STOOKE-SHAPE-MODELS-V2.0` (P. Stooke).
+- **Data credit**: Voyager 1 and 2 images (Amalthea), Voyager 2 images (Proteus); shape models by
+  P. Stooke. Distributed by NASA PDS without restriction.
+- **Modification**: 5° grids converted to meshes, longitudes turned from west to east. Proteus,
+  nearly round and without a usable rotation frame in its source, is also rotated into its
+  principal axes of inertia.
+
+`public/assets/models/hyperion/hyperion_shape_{1k,2k}.glb`: Hyperion. 3,992 / 15,503 triangles.
+
+- **Source**: NASA PDS, *Saturn Small Moon Shape Models V1.0* (P. Thomas, J. Joseph and T. Ansty,
+  2018, doi:10.26033/ewy3-jy61).
+- **Data credit**: Cassini ISS images. Distributed by NASA PDS without restriction.
+- **Modification**: rotated into its principal axes of inertia (Hyperion rotates chaotically, and
+  its file's Z axis is its long axis), then decimated. No 4k level: the source has 29,268 facets.
+
+`public/assets/models/halley/halley_shape_1k.glb`: comet 1P/Halley. 4,196 triangles.
+
+- **Source**: NASA PDS Small Bodies Node, `EAR-A-5-DDR-STOOKE-SHAPE-MODELS-V2.0`.
+- **Data credit**: Giotto and Vega images; shape model by P. Stooke, with pointing by A. Abergel,
+  as the label asks both to be credited. Its author calls the model extremely uncertain (500 to
+  1,000 m). Distributed by NASA PDS without restriction.
+- **Modification**: 5° grid converted to a mesh and rotated into its principal axes of inertia
+  (the model's "north" runs along the long axis).
+
+`public/assets/models/vesta/vesta_shape_{1k,2k,4k}.glb`: asteroid (4) Vesta. 3,945 / 15,588 / 62,456 triangles.
+
+- **Source**: NASA PDS, `DAWN-A-FC2-5-VESTADTMSPG-V1.0` (Preusker, Scholten, Matz, Roatsch,
+  Jaumann, Raymond and Russell, DLR, 2016).
+- **Data credit**: Dawn Framing Camera. Distributed by NASA PDS without restriction.
+- **Modification**: the global 64 pixel-per-degree terrain model resampled to a 0.5° grid, then
+  meshed and decimated. Same Claudia double-prime longitude system as the USGS mosaic the shipped
+  texture comes from.
+
+`public/assets/models/pallas/pallas_shape_1k.glb` (3,200 triangles), `public/assets/models/hygiea/hygiea_shape_1k.glb`
+(3,200 triangles) and `public/assets/models/psyche/psyche_shape_1k.glb` (1,352 triangles): asteroids
+(2) Pallas, (10) Hygiea and (16) Psyche.
+
+- **Source**: DAMIT, Database of Asteroid Models from Inversion Techniques (Charles University,
+  Prague), models 4395, 4392 and 1806. **Licence: CC BY 4.0**, with the attribution displayed in
+  the app's info card.
+- **Data credit**: Pallas, Marsset et al. 2020, *Nature Astronomy* 4, 569 (ESO VLT/SPHERE);
+  Hygiea, Vernazza et al. 2020, *Nature Astronomy* 4, 136 (ESO VLT/SPHERE); Psyche,
+  Viikinkoski et al. 2018, *A&A* 619, L3.
+- **Modification**: converted to glTF at their full resolution, with the pole brought onto +Y;
+  nothing decimated, since each holds fewer triangles than the lightest level's budget. Psyche,
+  which has no texture, carries a uniform colour at its published albedo, 0.1203 (IRAS, JPL SBDB).
 
 **Surface colour baked into the models** (`scripts/bake-shape-colour.mjs`, per-vertex colour, no
 texture shipped). Mean brightness = the published geometric albedo converted to the app's display
@@ -132,8 +207,10 @@ convention measured on the Moon texture; contrasts and colour ratios come from m
   2023, doi:10.17189/sv8w-5125), public domain; albedo 0.25 (Veverka et al. 2000).
 - Ryugu: ISAS/JAXA v-band normal albedo map from Hayabusa2 ONC (JAXA DARTS); **modification
   stated as required**: resampled per vertex. Albedo 0.045 (Sugita et al. 2019).
-- Itokawa (albedo 0.27, Hayabusa AMICA) and Ida (albedo 0.262, NEOWISE): no global map is
-  published, so the colour is uniform at the published albedo; nothing is painted in.
+- Itokawa (albedo 0.27, Hayabusa AMICA), Ida (albedo 0.262, NEOWISE) and Psyche (albedo 0.1203,
+  IRAS): no global map is published, so the colour is uniform at the published albedo; nothing is
+  painted in. Bodies that have a real surface texture carry no baked colour: the app drapes the
+  texture on the model instead.
 
 The source maps (hundreds of MB each) are not redistributed; only the sampled colours are.
 

@@ -41,6 +41,16 @@
         "$date": "2025-12-31T00:00:00.000Z"
       }
     },
+    "model": {
+      "resolutions": [
+        "1k"
+      ],
+      "extentRatio": 1.42,
+      "credit": {
+        "en": "Viking Orbiter images, shape model by P. C. Thomas, NASA PDS Small Body Optical Shape Models (EAR-A-5-DDR-SHAPE-MODELS-V2.1), decimated for the web.",
+        "fr": "Images de Viking Orbiter, modèle de forme de P. C. Thomas, NASA PDS Small Body Optical Shape Models (EAR-A-5-DDR-SHAPE-MODELS-V2.1), décimé pour le web."
+      }
+    },
     "textureResolutions": {
       "surface": [
         "1k"

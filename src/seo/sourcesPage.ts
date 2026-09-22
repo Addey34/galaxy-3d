@@ -501,13 +501,20 @@ function sourcesPage(input: SourcesInput, locale: DocLocale): DocPage {
         escapeHtml(name(body, locale)),
         escapeHtml(model.credit[locale]),
         escapeHtml(
-          model.colourSource?.[locale] ??
-            L({
-              en: 'No global map published: uniform colour at the published albedo',
-              fr: 'Aucune carte globale publiée : couleur uniforme à l’albédo publié',
-            })
+          model.albedo === undefined
+            ? L({
+                en: 'Draped with the body’s own surface texture, credited in the texture table',
+                fr: 'Drapé de la texture de surface du corps, créditée dans le tableau des textures',
+              })
+            : (model.colourSource?.[locale] ??
+                L({
+                  en: 'No global map published: uniform colour at the published albedo',
+                  fr: 'Aucune carte globale publiée : couleur uniforme à l’albédo publié',
+                }))
         ),
-        `${model.albedo.toString().replace('.', locale === 'fr' ? ',' : '.')} (${escapeHtml(model.albedoSource)})`,
+        model.albedo === undefined
+          ? L({ en: 'not used', fr: 'sans objet' })
+          : `${model.albedo.toString().replace('.', locale === 'fr' ? ',' : '.')} (${escapeHtml(model.albedoSource ?? '')})`,
         escapeHtml(model.resolutions.join(', ')),
       ];
     });

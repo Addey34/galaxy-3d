@@ -16,6 +16,17 @@
     "maDeg": 339.2148139451292,
     "epoch": "2000-01-01T12:00:00Z",
     "color": "0x6fbf8a",
+    "model": {
+      "resolutions": [
+        "1k"
+      ],
+      "extentRatio": 1.07,
+      "credit": {
+        "en": "ESO VLT/SPHERE adaptive-optics images and light curves, shape model by Vernazza et al. 2020 (Nature Astronomy 4, 136), DAMIT model 4392 (CC BY 4.0), used at its full 3,200 facets.",
+        "fr": "Images d'optique adaptative ESO VLT/SPHERE et courbes de lumière, modèle de forme de Vernazza et al. 2020 (Nature Astronomy 4, 136), modèle DAMIT 4392 (CC BY 4.0), employé avec ses 3 200 facettes."
+      },
+      "radiusMismatch": "Le rayon affiché, 203,56 km, vient du diamètre IRAS de 407,12 km que la SBDB publie encore (IRAS-A-FPA-3-RDR-IMPS-V6.0). Le modèle de Vernazza et al. 2020 a un rayon équivalent-volume de 216,9 km, cohérent avec les 434 +/- 14 km de diamètre que DAMIT publie pour lui. Deux mesures publiées différentes."
+    },
     "surfaceResolutions": [
       "2k"
     ],

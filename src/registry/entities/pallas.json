@@ -16,6 +16,16 @@
     "maDeg": 352.9602856167207,
     "epoch": "2000-01-01T12:00:00Z",
     "color": "0x9b82d1",
+    "model": {
+      "resolutions": [
+        "1k"
+      ],
+      "extentRatio": 1.14,
+      "credit": {
+        "en": "ESO VLT/SPHERE adaptive-optics images and light curves, ADAM shape model by Marsset et al. 2020 (Nature Astronomy 4, 569), DAMIT model 4395 (CC BY 4.0), used at its full 3,200 facets.",
+        "fr": "Images d'optique adaptative ESO VLT/SPHERE et courbes de lumière, modèle de forme ADAM de Marsset et al. 2020 (Nature Astronomy 4, 569), modèle DAMIT 4395 (CC BY 4.0), employé avec ses 3 200 facettes."
+      }
+    },
     "surfaceResolutions": [
       "2k"
     ],
