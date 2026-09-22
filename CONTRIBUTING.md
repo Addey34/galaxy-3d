@@ -158,10 +158,16 @@ indexable (`dist/<nom>/index.html`), son entrée de sitemap et sa vignette de pa
 Uniquement un **vrai modèle de forme scientifique** (PDS, archive de mission) à la licence
 vérifiée — un maillage « publié par une agence » peut être une sphère bosselée. Passez-le par
 `scripts/decimate-shape-model.mjs <source> public/assets/models/<nom>/<nom>_shape_<niveau>.glb --z-up --target <triangles>`,
-une fois par niveau : `1k` = 4000, `2k` = 15000, `4k` = 60000 triangles (il lit GLB, OBJ et les
-formats PDS ; `--z-up` ramène sur +Y le pôle des produits PDS, qui le portent sur Z). Le script
+une fois par niveau : `1k` = 4000, `2k` = 15000, `4k` = 60000 triangles (il lit GLB, OBJ, les
+formats PDS3 et PDS4 et les fichiers DAMIT ; `--z-up` ramène sur +Y le pôle des produits PDS, qui
+le portent sur Z ; `--lon-lat` et `--west` lisent une grille aux colonnes inversées ou aux
+longitudes Ouest, ce que dit l'ÉTIQUETTE, jamais une supposition ; `--principal` tourne le
+maillage dans ses axes principaux d'inertie pour un corps sans repère de rotation publié utile). Le script
 REFUSE un niveau que la source ne peut pas atteindre : ne livrez alors que les niveaux obtenus,
-et déclarez-les dans `model.resolutions` (du plus fin au plus léger). Puis donnez-lui sa vraie
+et déclarez-les dans `model.resolutions` (du plus fin au plus léger). **Si le corps a déjà une
+texture de surface**, ne cuisez rien : l'application la drape sur le modèle (`core/modelUv.ts`),
+et `albedo`, `albedoSource` et `colourSource` restent absents ; vérifiez alors que le fichier et
+la carte partagent leur système de longitudes. Sinon, donnez-lui sa vraie
 couleur : `node scripts/bake-shape-colour.mjs <nom> --albedo <pV publié> [--map carte.tif |
 --rgb rouge,vert,bleu] [--lon0 <longitude du bord gauche>]`, en déclarant `model.albedo`,
 `albedoSource` et `colourSource` (une carte de mission, ou `null` s'il n'en existe pas : couleur

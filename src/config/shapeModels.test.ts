@@ -128,7 +128,8 @@ describe('modèles de forme 3D', () => {
       // Dans les DEUX langues : la fiche l'affiche dans la langue de l'interface.
       for (const text of [credit?.en, credit?.fr]) {
         expect(text?.trim().length ?? 0).toBeGreaterThan(20);
-        expect(text).toMatch(/NASA|ESA|JAXA|USGS|DLR/);
+        // ESO : les modèles de Pallas et Hygie viennent de l'imagerie VLT/SPHERE (lot parité).
+        expect(text).toMatch(/NASA|ESA|ESO|JAXA|USGS|DLR|DAMIT/);
       }
     }
   );
@@ -501,5 +502,20 @@ describe('repère des modèles drapés', () => {
       angle(deepest, { lat: -1.0, lon: -49.7 }),
       `creux le plus profond à ${deepest.lon}°, ${deepest.lat}°`
     ).toBeLessThan(8);
+  });
+});
+
+/**
+ * Chaque modèle livré est déclaré dans `THIRD_PARTY_NOTICES.md`, avec sa source et son crédit :
+ * c'est là que l'attribution exigée par une licence (DAMIT, CC BY 4.0) se lit en entier. Le lot
+ * parité en a ajouté dix d'un coup ; un onzième ajouté sans notice doit échouer ici.
+ */
+describe('notices des modèles de forme', () => {
+  const notices = readFileSync(
+    join(PROJECT_ROOT, 'THIRD_PARTY_NOTICES.md'),
+    'utf8'
+  );
+  it.each(withModel().map(([name]) => name))('%s', (name) => {
+    expect(notices).toContain(`public/assets/models/${name}/${name}_shape_`);
   });
 });

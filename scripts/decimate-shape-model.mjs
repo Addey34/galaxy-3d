@@ -173,14 +173,24 @@ async function loadShape(path) {
       pos[i * 3 + 1] = t[o + 1];
       pos[i * 3 + 2] = t[o + 2];
     }
-    const index = new Uint32Array(plates * 3);
+    // Base des indices LUE dans les données, jamais supposée d'après le nombre de colonnes :
+    // PDS3 numérote les plaques depuis 1 (« id a b c »), les petites lunes de Saturne (PDS4)
+    // depuis 0, et DAMIT depuis 1 SANS numéro de ligne (« a b c »). Plus petit indice 0 ou 1.
+    const raw = new Array(plates * 3);
     for (let i = 0; i < plates; i++) {
       const t = lines[1 + vertices + i].split(/\s+/).map(Number);
-      const [a, b, c] = t.length === 4 ? [t[1] - 1, t[2] - 1, t[3] - 1] : t;
-      index[i * 3] = a;
-      index[i * 3 + 1] = b;
-      index[i * 3 + 2] = c;
+      const abc = t.length === 4 ? t.slice(1) : t;
+      raw[i * 3] = abc[0];
+      raw[i * 3 + 1] = abc[1];
+      raw[i * 3 + 2] = abc[2];
     }
+    let base = Infinity;
+    for (const k of raw) if (k < base) base = k;
+    if (base !== 0 && base !== 1)
+      throw new Error(
+        `${path} : plus petit indice de plaque ${base}, ni 0 ni 1`
+      );
+    const index = Uint32Array.from(raw, (k) => k - base);
     if (index.some((k) => !(k >= 0 && k < vertices)))
       throw new Error(
         `${path} : indice de plaque hors des ${vertices} sommets`
