@@ -61,8 +61,13 @@ describe('committed Horizons ephemerides stay within plausible bounds', () => {
       })
     );
 
+    // Même table de dynamique qu'en production. Sans elle, un satellite plus rapide que le pas est
+    // interpolé par une cubique, qui ne signifie rien : au lot 12, Déimos (1,26 jour) au pas de
+    // 8 jours ressortait à 215 000 km de Mars à la date testée, alors que le chemin réel le place
+    // à 10 km de Horizons. Au pas de 4 jours, la même erreur passait par hasard.
     const service = await HorizonsEphemerisService.load(
-      'https://example.test/assets/ephemerides/manifest.json'
+      'https://example.test/assets/ephemerides/manifest.json',
+      bodyDynamics(CELESTIAL_CONFIG)
     );
 
     const manifest = JSON.parse(

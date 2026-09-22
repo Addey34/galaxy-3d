@@ -48,7 +48,10 @@ describe('measuredWindows', () => {
     const binary = measuredWindows(ROWS, 'ceres', 'horizons', false);
     const kepler = measuredWindows(ROWS, 'ceres', 'kepler', false);
     expect(binary).toHaveLength(1);
-    expect(binary[0].meanKm).toBeLessThan(10);
+    // 100 et non 10 : depuis le lot 12, le fichier de Cérès est au pas de 16 jours (mesuré sous
+    // 20 km d'écart maximal d'interpolation) et sa moyenne vaut 10,4 km. Ce test ne porte que sur
+    // la SÉPARATION des deux sources, qui reste de quatre ordres de grandeur.
+    expect(binary[0].meanKm).toBeLessThan(100);
     expect(Math.min(...kepler.map((w) => w.meanKm))).toBeGreaterThan(1e5);
   });
 });

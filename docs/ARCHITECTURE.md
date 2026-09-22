@@ -157,8 +157,8 @@ ici, et chacune est verrouillée par un test nommé.
 | --- | --- | --- |
 | Binaire Horizons (`HorizonsEphemerisService`) | planètes (dont Jupiter et Uranus depuis le lot 2b), naines, satellites, sondes, et depuis le lot 11 tous les petits corps du catalogue | états exacts à pas fixe par fichier (4 jours en général, 1 jour pour 5 sondes, 4 à 64 jours pour les petits corps : cf. « Binaires des petits corps ») |
 | Noyau SPK (optionnel, `VITE_SPK_KERNEL_URL`) | lunes de Saturne de SAT441 | prime sur les binaires quand il est actif |
-| `JupiterMoons()` d'astronomy-engine | Io, Europe, Ganymède, Callisto | vecteurs jovicentriques directs |
-| Éphéméride astronomy-engine (`astroBody`) | planètes, Lune, Soleil | théorie planétaire |
+| `JupiterMoons()` d'astronomy-engine | Io et Europe ; Ganymède et Callisto hors de la couverture de leur fichier | vecteurs jovicentriques directs |
+| Éphéméride astronomy-engine (`astroBody`) | la Lune, Io et Europe (plus précis que tout fichier abordable, mesuré au lot 12), le Soleil, et le repli des planètes hors de la couverture de leur fichier | théorie planétaire |
 | Éléments képlériens du catalogue | **repli** d'un petit corps hors de la couverture de son binaire, et de tout satellite | cf. « le repli » ci-dessous |
 
 Une position issue d'un binaire passe d'abord `isPlausibleRelativePosition` /
@@ -276,6 +276,27 @@ par CDP) : +6,4 Mo servis (32,57 → 38,96 Mo d'éphémérides), aucun écart sa
 éphémérides pèsent désormais environ les trois quarts des octets du démarrage** : les charger
 toutes à la demande est un chantier à part entière, qui demanderait sa conversation de
 conception.
+
+### Pas optimisé pour tous les fichiers, et parité (lot 12)
+
+La règle du lot 11 (le pas le plus grossier sous 20 km d'écart maximal d'interpolation, mesuré
+par le code même du service) s'applique à **tous** les fichiers, pas seulement aux nouveaux.
+Mesuré en décimant chaque fichier livré contre ses propres échantillons : Cérès passe à 16 jours,
+Éris, Hauméa et Makémaké à 64, Mars, Déimos et Triton à 8. Rien d'autre ne tient : Pluton
+tiendrait 32 jours, mais son ballant se lit sur Charon à la même grille, et les petites lunes de
+Pluton ne tiennent pas plus de 4 jours ; les géantes, les autres lunes et les sondes dépassent
+20 km dès le double du pas.
+
+Parité : un corps qu'astronomy-engine plaçait seul reçoit un fichier **quand il fait mieux**,
+mesuré contre des vecteurs Horizons à un jour, dans le même repère. Mercure, Vénus et le
+barycentre Terre-Lune (où la Terre est dessinée) à 8 jours, Ganymède à 2, Callisto à 4. La Lune,
+Io et Europe n'en ont pas, et c'est mesuré : à un pas abordable leur interpolation reste au-dessus
+d'astronomy-engine (Lune 86 km au pas de 2 jours contre 10,8 ; Io 362 au mieux contre 218 ;
+Europe 250 contre 119). Pour eux, la parité est la position mesurée contre Horizons, qu'ils ont.
+Les chiffres de production font foi sur `/methodology`. Poids, en octets exacts du manifeste :
+4,46 Mo économisés sur les fichiers existants, 3,96 Mo ajoutés (dont Ganymède, 1,76 Mo au pas de
+2 jours), soit 38,94 → 38,45 Mo pour cinq fichiers de plus ; démarrage inchangé à la mesure
+(16,9 s à 50 Mbit/s, 41,5 s à 10).
 
 ### Le repli képlérien
 
@@ -1608,7 +1629,8 @@ désormais tenues par un test de `docPages.test.ts` :
 - la dérive de rotation ne concerne que les lunes presque synchrones, calculée corps par corps
   (`synchronousSpinDrifts`) ; les 18 autres sont verrouillées à 1e-9 ;
 - la Terre est dessinée au barycentre Terre-Lune (`positionBody: Body.EMB`), ce que mesure sa
-  ligne du tableau (4 823 km en moyenne) ;
+  ligne du tableau (4 823 km en moyenne ; 4 683 depuis que le barycentre vient d'un fichier
+  Horizons, lot 12) ;
 - « contacté seulement quand la couche est utilisée » était faux : SBDB était interrogé au
   démarrage, et la couche de nuages satellite (active par défaut sur ordinateur) comble ses
   trous avec Open-Meteo. **Depuis le lot 8b, SBDB n'est plus contacté du tout** : les petits

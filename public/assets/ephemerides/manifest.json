@@ -1,7 +1,7 @@
 {
   "version": 1,
   "source": "NASA/JPL Horizons",
-  "generatedAt": "2026-09-22T11:37:49.508Z",
+  "generatedAt": "2026-09-22T12:34:10.958Z",
   "frame": "ECLIPTIC_J2000",
   "center": "SUN",
   "units": "AU-D",
@@ -11,36 +11,36 @@
   },
   "bodies": {
     "ceres": {
-      "file": "ceres.ed3af48a8da8.bin",
+      "file": "ceres.765cf11d98c0.bin",
       "target": "1;",
       "center": "sun",
       "startJdTdb": 2415020.5,
-      "stepDays": 4,
-      "sampleCount": 18354
+      "stepDays": 16,
+      "sampleCount": 4589
     },
     "eris": {
-      "file": "eris.eee70b9b31ec.bin",
+      "file": "eris.33a6e623b447.bin",
       "target": "136199;",
       "center": "sun",
       "startJdTdb": 2415020.5,
-      "stepDays": 4,
-      "sampleCount": 18354
+      "stepDays": 64,
+      "sampleCount": 1148
     },
     "haumea": {
-      "file": "haumea.76092a312371.bin",
+      "file": "haumea.94de282d3bc2.bin",
       "target": "136108;",
       "center": "sun",
       "startJdTdb": 2415020.5,
-      "stepDays": 4,
-      "sampleCount": 18354
+      "stepDays": 64,
+      "sampleCount": 1148
     },
     "makemake": {
-      "file": "makemake.480ab0ae595b.bin",
+      "file": "makemake.b9944659825a.bin",
       "target": "136472;",
       "center": "sun",
       "startJdTdb": 2415020.5,
-      "stepDays": 4,
-      "sampleCount": 18354
+      "stepDays": 64,
+      "sampleCount": 1148
     },
     "saturn": {
       "file": "saturn.904754c328fb.bin",
@@ -83,12 +83,12 @@
       "sampleCount": 18354
     },
     "mars": {
-      "file": "mars.efe789ac4b40.bin",
+      "file": "mars.637d83fe982f.bin",
       "target": "499",
       "center": "sun",
       "startJdTdb": 2415020.5,
-      "stepDays": 4,
-      "sampleCount": 18354
+      "stepDays": 8,
+      "sampleCount": 9177
     },
     "phobos": {
       "file": "phobos.6f5cce9878ec.bin",
@@ -99,12 +99,12 @@
       "sampleCount": 18354
     },
     "deimos": {
-      "file": "deimos.ac2ece9e1bff.bin",
+      "file": "deimos.18d3ba55b755.bin",
       "target": "402",
       "center": "mars",
       "startJdTdb": 2415020.5,
-      "stepDays": 4,
-      "sampleCount": 18354
+      "stepDays": 8,
+      "sampleCount": 9177
     },
     "neptune": {
       "file": "neptune.4c62c1ab3e7b.bin",
@@ -115,12 +115,12 @@
       "sampleCount": 18354
     },
     "triton": {
-      "file": "triton.2887d97bc06a.bin",
+      "file": "triton.2d2fdac66dd8.bin",
       "target": "801",
       "center": "neptune",
       "startJdTdb": 2415020.5,
-      "stepDays": 4,
-      "sampleCount": 18354
+      "stepDays": 8,
+      "sampleCount": 9177
     },
     "pluto": {
       "file": "pluto.3ab698bb4e22.bin",
@@ -481,6 +481,46 @@
       "startJdTdb": 2415020.5,
       "stepDays": 64,
       "sampleCount": 1148
+    },
+    "mercury": {
+      "file": "mercury.ac5d5b6267d2.bin",
+      "target": "199",
+      "center": "sun",
+      "startJdTdb": 2415020.5,
+      "stepDays": 8,
+      "sampleCount": 9177
+    },
+    "venus": {
+      "file": "venus.4ba713238ffd.bin",
+      "target": "299",
+      "center": "sun",
+      "startJdTdb": 2415020.5,
+      "stepDays": 8,
+      "sampleCount": 9177
+    },
+    "earth": {
+      "file": "earth.425172abf3de.bin",
+      "target": "3",
+      "center": "sun",
+      "startJdTdb": 2415020.5,
+      "stepDays": 8,
+      "sampleCount": 9177
+    },
+    "ganymede": {
+      "file": "ganymede.713d28a71de3.bin",
+      "target": "503",
+      "center": "jupiter",
+      "startJdTdb": 2415020.5,
+      "stepDays": 2,
+      "sampleCount": 36708
+    },
+    "callisto": {
+      "file": "callisto.fdd0debc7a31.bin",
+      "target": "504",
+      "center": "jupiter",
+      "startJdTdb": 2415020.5,
+      "stepDays": 4,
+      "sampleCount": 18354
     }
   }
 }

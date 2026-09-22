@@ -40,12 +40,16 @@ const BODIES = [
   // Coupés à l'époque depuis le lot 11b (cf. `requestSplitAtSolutionEpoch`) : leurs fichiers
   // précédents, d'une seule requête 1900-2101, s'écartaient de 0,5 à 1 km de plus de la
   // référence corrigée que ceux des quatorze corps coupés.
+  // Pas mesurés au lot 12, par la règle du lot 11 (le plus grossier sous 20 km d'écart maximal,
+  // décimation des fichiers livrés et interpolation par le code du service) : Cérès 16 jours
+  // (14,7 km), Éris, Hauméa, Makémaké 64 jours (18,8 km).
   {
     name: 'ceres',
     target: '1;',
     expectedName: 'ceres',
     center: 'sun',
     splitAtSolutionEpoch: true,
+    stepDays: 16,
   },
   {
     name: 'eris',
@@ -53,6 +57,7 @@ const BODIES = [
     expectedName: 'eris',
     center: 'sun',
     splitAtSolutionEpoch: true,
+    stepDays: 64,
   },
   {
     name: 'haumea',
@@ -60,6 +65,7 @@ const BODIES = [
     expectedName: 'haumea',
     center: 'sun',
     splitAtSolutionEpoch: true,
+    stepDays: 64,
   },
   {
     name: 'makemake',
@@ -67,6 +73,7 @@ const BODIES = [
     expectedName: 'makemake',
     center: 'sun',
     splitAtSolutionEpoch: true,
+    stepDays: 64,
   },
   // Lot 11 : les corps que seuls leurs éléments képlériens plaçaient (erreur moyenne sur
   // 1900-2100 de 1,4e4 km pour Sedna à 1,7e8 km pour Bennu). Mêmes COMMAND que
@@ -216,6 +223,53 @@ const BODIES = [
   // Jupiter et Uranus (lot 2b) : astronomy-engine y faisait 23 000 et 111 000 km d'erreur
   // moyenne contre Horizons sur 1900-2100, héritée telle quelle par toutes leurs lunes.
   { name: 'jupiter', target: '599', expectedName: 'jupiter', center: 'sun' },
+  // Lot 12, parité : les corps qu'astronomy-engine plaçait seul reçoivent un fichier QUAND il
+  // fait mieux, mesuré contre des vecteurs Horizons à un jour, dans le même repère. Mercure,
+  // Vénus et le barycentre Terre-Lune à 8 jours (14,8 / 18,3 / 16,8 km d'écart maximal, contre
+  // 2 637 / 1 428 km d'écart moyen pour astronomy-engine). Ganymède à 2 jours (80 km moyen
+  // contre 170) et Callisto à 4 (120 contre 386), relatifs à Jupiter.
+  //
+  // PAS de fichier pour la Lune, Io et Europe, et c'est mesuré : leur interpolation entre deux
+  // échantillons ne descend pas sous ce que fait astronomy-engine à un pas abordable (Lune 86 km
+  // au pas de 2 jours contre 10,8 ; Io 362 au mieux contre 218 ; Europe 250 contre 119). Rapides
+  // et fortement perturbées, elles feraient plusieurs dizaines de fois le poids pour y arriver.
+  {
+    name: 'mercury',
+    target: '199',
+    expectedName: 'mercury',
+    center: 'sun',
+    stepDays: 8,
+  },
+  {
+    name: 'venus',
+    target: '299',
+    expectedName: 'venus',
+    center: 'sun',
+    stepDays: 8,
+  },
+  // La Terre est DESSINÉE au barycentre Terre-Lune (`positionBody`, cf. docs/ARCHITECTURE.md) :
+  // son fichier est donc celui du barycentre (cible 3), et la Lune reste placée par rapport à
+  // ce point par astronomy-engine.
+  {
+    name: 'earth',
+    target: '3',
+    expectedName: 'earth-moon barycenter',
+    center: 'sun',
+    stepDays: 8,
+  },
+  {
+    name: 'ganymede',
+    target: '503',
+    expectedName: 'ganymede',
+    center: 'jupiter',
+    stepDays: 2,
+  },
+  {
+    name: 'callisto',
+    target: '504',
+    expectedName: 'callisto',
+    center: 'jupiter',
+  },
   { name: 'uranus', target: '799', expectedName: 'uranus', center: 'sun' },
   { name: 'saturn', target: '699', expectedName: 'saturn', center: 'sun' },
   {
@@ -232,15 +286,31 @@ const BODIES = [
     expectedName: 'iapetus',
     center: 'saturn',
   },
-  { name: 'mars', target: '499', expectedName: 'mars', center: 'sun' },
+  // Mars et Déimos à 8 jours, mesurés au lot 12 (16,4 et 7,6 km d'écart maximal) ; Phobos
+  // reste à 4 (90 km au double du pas).
+  {
+    name: 'mars',
+    target: '499',
+    expectedName: 'mars',
+    center: 'sun',
+    stepDays: 8,
+  },
   { name: 'phobos', target: '401', expectedName: 'phobos', center: 'mars' },
-  { name: 'deimos', target: '402', expectedName: 'deimos', center: 'mars' },
+  {
+    name: 'deimos',
+    target: '402',
+    expectedName: 'deimos',
+    center: 'mars',
+    stepDays: 8,
+  },
   { name: 'neptune', target: '899', expectedName: 'neptune', center: 'sun' },
   {
     name: 'triton',
     target: '801',
     expectedName: 'triton',
     center: 'neptune',
+    // Lot 12 : 17,4 km d'écart maximal au double du pas.
+    stepDays: 8,
   },
   { name: 'pluto', target: '999', expectedName: 'pluto', center: 'sun' },
   { name: 'charon', target: '901', expectedName: 'charon', center: 'pluto' },
