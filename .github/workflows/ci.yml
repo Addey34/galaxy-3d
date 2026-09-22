@@ -4,12 +4,13 @@ on:
   push:
     branches: [main]
   pull_request:
+  workflow_dispatch:
 
 permissions:
   contents: read
 
 concurrency:
-  group: ci-${{ github.ref }}
+  group: ci-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -37,35 +38,35 @@ jobs:
       - run: pnpm audit:prod
       - run: pnpm build
 
-      # EMPREINTE DES DOCUMENTS GENERES. Le build derive 114 pages, le sitemap et 56 vignettes
-      # du catalogue. Une migration qui change une valeur, un ordre de cles ou un arrondi ne
-      # casse aucun test et ne produit aucune erreur : elle change silencieusement ce qui est
-      # indexe. Le lot 7 sort precisement le catalogue du TypeScript, d'ou ce filet.
+      # GENERATED DOCUMENT FINGERPRINT. The build derives 114 pages, the sitemap, and 56
+      # thumbnails from the catalog. A migration that changes a value, key ordering, or rounding
+      # can pass every test while silently changing indexed content. Batch 7 moves the catalog
+      # out of TypeScript, which is why this guard exists.
       #
-      # `--portable` exclut les vignettes, et ce n'est pas un adoucissement : leur texte est un
-      # SVG rendu par sharp avec la pile `Segoe UI, Helvetica, Arial, DejaVu Sans`, donc ce
-      # runner Linux sert DejaVu Sans la ou la reference a ete ecrite sous Windows avec Segoe UI.
-      # Memes donnees, octets differents. Les 115 documents restants (pages + sitemap) sont, eux,
-      # du texte produit par le meme code : ils doivent etre identiques d'une machine a l'autre.
+      # `--portable` excludes thumbnails. This is not a weaker check: their SVG text is rendered
+      # by sharp with the `Segoe UI, Helvetica, Arial, DejaVu Sans` stack, so this Linux runner
+      # uses DejaVu Sans where the Windows reference used Segoe UI. Identical data therefore
+      # produces different bytes. The remaining 115 documents (pages + sitemap) are text emitted
+      # by the same code and must be identical across machines.
       #
-      # BLOQUANT, et c'est voulu : tant que ce controle etait une commande a lancer a la main, il
-      # n'etait pas un controle. Un changement VOULU se rattrape en relancant
-      # `pnpm fingerprint:generated --write` et en committant la reference a part.
+      # This is intentionally blocking. When this check was manual, it was not an enforceable
+      # control. For an intentional change, run `pnpm fingerprint:generated --write` and commit
+      # the updated reference separately.
       - name: Verify generated documents are unchanged
         run: node scripts/fingerprint-generated.mjs --portable
 
-      # Mesure INFORMATIVE de la charge utile reelle (exclusions de firebase.json appliquees),
-      # pour qu'un poids inattendu se voie dans le journal du deploiement.
+      # Informational measurement of the actual deploy payload after firebase.json exclusions,
+      # so unexpected growth remains visible in deployment logs.
       #
-      # Ne bloque volontairement RIEN : un plafond finirait par refuser un ajout de textures
-      # parfaitement legitime, et un garde-fou qui gene le projet se fait desactiver. Ce qui
-      # empeche le retour du noyau SPK de 638 Mo, c'est son exclusion dans firebase.json,
-      # verrouillee par src/config/hostingPayload.test.ts.
+      # This intentionally blocks nothing. A hard limit would eventually reject legitimate
+      # texture additions and encourage disabling the guard. The 638 MB SPK kernel is prevented
+      # from returning by its firebase.json exclusion, enforced by
+      # src/config/hostingPayload.test.ts.
       - name: Report deploy payload size
         run: node scripts/check-deploy-size.mjs
 
-      # Deploiement Firebase Hosting sur push main, des que verify+build passent (sans
-      # attendre l'e2e). Requiert le secret FIREBASE_TOKEN.
+      # Deploy to Firebase Hosting on pushes to main after verify+build pass, without waiting
+      # for E2E. Requires the FIREBASE_TOKEN secret.
       - name: Deploy to Firebase Hosting
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: pnpm dlx firebase-tools@15.30.2 deploy --only hosting --token ${{ secrets.FIREBASE_TOKEN }}
@@ -81,11 +82,58 @@ jobs:
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: node scripts/check-deployed-bundle.mjs
 
+  secret-scan:
+    name: Secret scan
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1, resolved 2026-09-19
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: gitleaks/gitleaks-action@ff98106e4c7b2bc287b24eaf42907196329070c7 # v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # Une PR valide d'abord le cablage essentiel dans un seul navigateur. La suite complete
+  # reste executee sur main et a la demande ci-dessous : elle n'est donc ni supprimee ni
+  # reduite, mais elle n'est plus payee deux fois pour le meme changement.
+  e2e-smoke:
+    name: Browser smoke test
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1, resolved 2026-09-19
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@26f6d4f2c533a43e6b5da0b4a5dd983f98f7b49a # v6.0.4, resolved 2026-09-19
+        with:
+          version: 10.34.5
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0, resolved 2026-09-19
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm exec playwright test e2e/smoke.spec.ts
+      - name: Upload Playwright diagnostics
+        if: failure()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1, resolved 2026-09-20
+        with:
+          name: playwright-smoke-diagnostics-${{ github.run_id }}
+          path: |
+            playwright-report/
+            test-results/
+          if-no-files-found: ignore
+          retention-days: 7
+
   # Tests navigateur end-to-end : job SEPARE qui tourne en parallele. Il sert d'ALERTE
   # (un echec signale une regression de cablage) mais ne bloque pas le deploiement, car
   # le rendu WebGL en GPU logiciel CI est lent et parfois capricieux sur les scenarios lourds.
-  e2e:
+  e2e-full:
     name: Browser tests (e2e ${{ matrix.shard }}/4)
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-24.04
     # SHARDING. La suite entiere ne tenait PAS dans le budget : mesure du 2026-09-08, elle
     # atteignait 69 tests sur 88 en 35 min avec ZERO echec, puis se faisait couper. C'est la
@@ -134,3 +182,4 @@ jobs:
             playwright-report/
             test-results/
           if-no-files-found: ignore
+          retention-days: 7
