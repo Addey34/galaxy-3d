@@ -2178,9 +2178,13 @@ body.is-capturing #loader {
   .surface--settings,
   .surface--events,
   .surface--help {
-    top: var(
-      --surface-anchor-top,
-      calc(var(--edge) + var(--control-h) + var(--sp-2))
+    /* Jamais plus haut que la DEUXIÈME place de la colonne d'outils, donc sous la rangée
+       « Vue globale / recherche » : ancrée au bouton ⓘ, tout en haut, la fiche recouvrait ces
+       deux boutons sur un téléphone. La borne suit l'écart de la colonne (`--sp-1`) pour que
+       toute autre surface reste alignée sur son propre bouton. */
+    top: max(
+      var(--surface-anchor-top, 0px),
+      calc(var(--edge) + var(--control-h) + var(--sp-1))
     ) !important;
     right: var(
       --surface-anchor-right,
@@ -2189,7 +2193,11 @@ body.is-capturing #loader {
     bottom: auto !important;
     left: auto !important;
     width: min(18rem, calc(100vw - 4rem)) !important;
-    max-height: min(46vh, 26rem) !important;
+    max-height: min(
+      46vh,
+      26rem,
+      var(--surface-anchor-max-height, 100vh)
+    ) !important;
     overflow: hidden;
     animation: surface-in 0.16s ease-out;
   }
@@ -2198,6 +2206,19 @@ body.is-capturing #loader {
   .surface--events .surface-body,
   .surface--help .surface-body {
     min-height: 0;
+  }
+}
+
+/* Palette des corps sur téléphone : une feuille qui tombe SOUS le bouton de recherche qui
+   l'ouvre, et qui s'arrête avant la colonne d'outils de droite. En pleine largeur, elle
+   glissait sous cette colonne (ses icônes transparaissaient à travers la liste) et flottait
+   au milieu de l'écran. Déclarée après le bloc 768 px, qui fixe cette colonne. */
+@media (max-width: 640px) {
+  .surface--palette {
+    top: calc(var(--edge) + var(--control-h) + var(--sp-2)) !important;
+    right: calc(var(--edge-x) + var(--control-h) + var(--sp-2)) !important;
+    bottom: calc(var(--edge-b) + 10rem) !important;
+    max-height: none !important;
   }
 }
 

@@ -126,6 +126,28 @@ function positionContextualSurface(id: SecondaryOverlayId): void {
     '--surface-anchor-right',
     `${Math.max(8, Math.round(window.innerWidth - triggerRect.left + gap))}px`
   );
+  // Hauteur réellement disponible entre le haut de la surface et le dock du bas. Sur un
+  // téléphone étroit, l'aide (ancrée bas dans la colonne) descendait jusqu'au sélecteur
+  // Éduc/Explo. Le haut reprend la borne de la feuille de style (sous la rangée « Vue globale /
+  // recherche », à l'écart de la colonne d'outils) : 4 px, soit `--sp-1`.
+  const topRow = document.querySelector<HTMLElement>('.dock--top-left');
+  const bottomDock = document.querySelector<HTMLElement>('.dock--bottom');
+  const top = Math.max(
+    triggerRect.top,
+    topRow ? topRow.getBoundingClientRect().bottom + 4 : 0
+  );
+  let floor = bottomDock
+    ? bottomDock.getBoundingClientRect().top - gap
+    : window.innerHeight - gap;
+  // La fiche décrit le corps SUIVI, que la caméra centre à l'écran : elle ne descend pas sous
+  // le milieu, sinon elle cache ce qu'elle décrit et prend pour elle les gestes du centre de
+  // la scène (défaut attrapé par `touch.spec.ts` et `surfaceImagery.spec.ts`).
+  if (id === 'body-info')
+    floor = Math.min(floor, Math.round(window.innerHeight / 2) - gap);
+  panel.style.setProperty(
+    '--surface-anchor-max-height',
+    `${Math.max(160, Math.round(floor - top))}px`
+  );
 }
 
 // Fermeture au clic extérieur d'une surface contextuelle.
