@@ -263,8 +263,9 @@ quelques km pour chacun ; les chiffres font foi sur `/methodology`, pas ici. Tro
   étalée sur deux siècles se comporte comme la requête longue : le binaire d'Itokawa s'en
   écartait de 775 km en moyenne, et de 3,7 km de requêtes courtes, une par date. La référence
   mesurait sa propre dérive. `validate-against-horizons.mjs` coupe donc ses listes à l'époque
-  pour tout corps qui en a une. Effet de bord honnête : Cérès, Éris, Hauméa et Makémaké, dont les
-  binaires sont antérieurs à la coupure, remontent de 0,5 à 1 km.
+  pour tout corps qui en a une. La référence corrigée mesurait Cérès, Éris, Hauméa et Makémaké,
+  dont les binaires étaient antérieurs à la coupure, 0,5 à 1 km plus loin ; régénérés coupés
+  (lot 11b), ils passent sous leurs valeurs d'avant (Éris 0,32 km en moyenne).
 
 **Chargés au démarrage, comme les autres, par décision mesurée.** Un chargement à la demande
 aurait placé le corps sur ses éléments jusqu'à l'arrivée du fichier, puis l'aurait fait sauter

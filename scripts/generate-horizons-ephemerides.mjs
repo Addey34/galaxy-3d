@@ -37,14 +37,36 @@ const CENTER_IDS = {
 // au lieu de Saturne — un bug réel qui a affecté cette liste (voir fetchBody : la vérification
 // du nom de cible sert de garde-fou définitif contre toute régression de ce type).
 const BODIES = [
-  { name: 'ceres', target: '1;', expectedName: 'ceres', center: 'sun' },
-  { name: 'eris', target: '136199;', expectedName: 'eris', center: 'sun' },
-  { name: 'haumea', target: '136108;', expectedName: 'haumea', center: 'sun' },
+  // Coupés à l'époque depuis le lot 11b (cf. `requestSplitAtSolutionEpoch`) : leurs fichiers
+  // précédents, d'une seule requête 1900-2101, s'écartaient de 0,5 à 1 km de plus de la
+  // référence corrigée que ceux des quatorze corps coupés.
+  {
+    name: 'ceres',
+    target: '1;',
+    expectedName: 'ceres',
+    center: 'sun',
+    splitAtSolutionEpoch: true,
+  },
+  {
+    name: 'eris',
+    target: '136199;',
+    expectedName: 'eris',
+    center: 'sun',
+    splitAtSolutionEpoch: true,
+  },
+  {
+    name: 'haumea',
+    target: '136108;',
+    expectedName: 'haumea',
+    center: 'sun',
+    splitAtSolutionEpoch: true,
+  },
   {
     name: 'makemake',
     target: '136472;',
     expectedName: 'makemake',
     center: 'sun',
+    splitAtSolutionEpoch: true,
   },
   // Lot 11 : les corps que seuls leurs éléments képlériens plaçaient (erreur moyenne sur
   // 1900-2100 de 1,4e4 km pour Sedna à 1,7e8 km pour Bennu). Mêmes COMMAND que
