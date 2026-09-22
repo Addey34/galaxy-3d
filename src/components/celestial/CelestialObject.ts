@@ -18,6 +18,7 @@ import {
 import { applyTexture } from '@/components/celestial/celestialTextures';
 import { KM_PER_AU, SQRT_K } from '@/core/ScaleService';
 import { fitScale, meshVolume, volumeEquivalentRadius } from '@/core/modelFit';
+import { drapeEquirectangular } from '@/core/modelUv';
 import { markGlowOccluder } from '@/components/systems/glowSelection';
 import {
   GEOMETRY_SEGMENTS_HI,
@@ -144,6 +145,8 @@ export default class CelestialObject {
   // d'échelle), donc rien ne les libérerait sans cette référence. Disposés dans dispose().
   private _modelRoot: THREE.Group | null = null;
   private _modelMeshes: THREE.Mesh[] = [];
+  /** Vrai quand les maillages du modèle portent le matériau PARTAGÉ de la sphère (drapé). */
+  private _modelDraped = false;
   /** Niveau du modèle affiché, et celui en cours de chargement (un seul à la fois). */
   private _modelQuality: ModelQuality | null = null;
   private _modelLoading: ModelQuality | null = null;
@@ -1499,6 +1502,10 @@ export default class CelestialObject {
       root.add(gltf.scene);
       root.scale.setScalar(scale);
 
+      // Un corps qui a une vraie texture la garde sur sa vraie forme (cf. `core/modelUv.ts`) :
+      // même matériau que la sphère, donc mêmes niveaux de texture, ombres et éclipses.
+      const draped = this._drapeSurface(meshes);
+
       // Un modèle de forme masque un halo comme la sphère qu'il remplace.
       for (const mesh of meshes) markGlowOccluder(mesh);
       // Changement de niveau : le nouveau n'est accroché qu'une fois prêt, l'ancien libéré
@@ -1506,6 +1513,7 @@ export default class CelestialObject {
       this._disposeShapeModel();
       this._modelRoot = root;
       this._modelMeshes = meshes;
+      this._modelDraped = draped;
       this._modelQuality = quality;
       this._meshGroup.add(root);
       const surface = this.layers.get('surface');
@@ -1523,15 +1531,72 @@ export default class CelestialObject {
     }
   }
 
+  /**
+   * Donne aux maillages du modèle les coordonnées de la carte équirectangulaire du corps et le
+   * matériau de sa sphère. `false` sans texture de surface déclarée : le modèle garde alors la
+   * couleur cuite dans ses sommets (Bennu, Éros…), la seule mesure de sa surface qui existe.
+   */
+  private _drapeSurface(meshes: THREE.Mesh[]): boolean {
+    const surface = this.layers.get('surface');
+    if (!this.config.textures?.surface || !surface) return false;
+    const material = surface.material;
+    for (const mesh of meshes) {
+      const source = mesh.geometry;
+      const position = source.getAttribute('position');
+      if (!position) continue;
+      const indices = source.index
+        ? Array.from(source.index.array)
+        : Array.from({ length: position.count }, (_, i) => i);
+      // Normales LISSES calculées sur le maillage indexé, avant de le déplier : déplié, chaque
+      // triangle aurait les siennes et le corps paraîtrait taillé en facettes.
+      if (!source.getAttribute('normal')) source.computeVertexNormals();
+      const normal = source.getAttribute('normal');
+      const draped = drapeEquirectangular(
+        position.array as ArrayLike<number>,
+        indices
+      );
+      const normals = new Float32Array(indices.length * 3);
+      indices.forEach((vertex, k) => {
+        normals[k * 3] = normal.getX(vertex);
+        normals[k * 3 + 1] = normal.getY(vertex);
+        normals[k * 3 + 2] = normal.getZ(vertex);
+      });
+      const geometry = new THREE.BufferGeometry();
+      geometry.setAttribute(
+        'position',
+        new THREE.BufferAttribute(draped.positions, 3)
+      );
+      geometry.setAttribute('uv', new THREE.BufferAttribute(draped.uv, 2));
+      geometry.setAttribute('normal', new THREE.BufferAttribute(normals, 3));
+      source.dispose();
+      const own = Array.isArray(mesh.material)
+        ? mesh.material
+        : [mesh.material];
+      for (const m of own) m?.dispose();
+      mesh.geometry = geometry;
+      mesh.material = material;
+    }
+    // Les triangles de la couture lisent u > 1 : la carte doit se répéter horizontalement.
+    const map = (material as THREE.MeshStandardMaterial).map;
+    if (map && map.wrapS !== THREE.RepeatWrapping) {
+      map.wrapS = THREE.RepeatWrapping;
+      map.needsUpdate = true;
+    }
+    return true;
+  }
+
   /** Libère le maillage du modèle affiché (hors de `layers` : libéré ici et nulle part ailleurs). */
   private _disposeShapeModel(): void {
     for (const mesh of this._modelMeshes) {
       mesh.geometry?.dispose();
+      // Drapé, le maillage porte le matériau de la sphère : il appartient à `layers`.
+      if (this._modelDraped) continue;
       const materials = Array.isArray(mesh.material)
         ? mesh.material
         : [mesh.material];
       for (const material of materials) material?.dispose();
     }
+    this._modelDraped = false;
     this._modelMeshes = [];
     this._modelRoot?.removeFromParent();
     this._modelRoot = null;

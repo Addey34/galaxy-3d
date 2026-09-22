@@ -146,12 +146,40 @@ describe('modèles de forme 3D', () => {
   it('n’attribue un modèle qu’aux corps irréguliers', () => {
     // Une planète ou une lune sphérique n'a rien à gagner à un maillage : la sphère texturée
     // est plus fidèle ET moins chère. Le contrat existe pour les corps que la sphère trahit.
+    // Le critère est MESURÉ sur la forme, pas tiré du type : Phobos est une lune, et une patate
+    // (lot parité, 2026-09-22). `extentRatio` est lui-même confronté au fichier plus bas.
     for (const [name, cfg] of withModel())
       expect(
-        ['asteroid', 'comet'],
-        `${name} est de type ${cfg.kind}`
-      ).toContain(cfg.kind);
+        cfg.model!.extentRatio,
+        `${name} : extentRatio ${cfg.model!.extentRatio}, une sphère ferait l'affaire`
+      ).toBeGreaterThanOrEqual(1.05);
   });
+
+  it.each(withModel().map(([name]) => name))(
+    '%s : drapé de sa texture si et seulement s’il en a une',
+    (name) => {
+      // Un corps qui a une vraie texture la garde sur sa forme (`core/modelUv.ts`) : l'albédo
+      // cuit n'a alors pas d'objet. Sans texture, la couleur cuite est la seule mesure de sa
+      // surface, et elle doit être déclarée avec sa source.
+      const cfg = flattenBodies(CELESTIAL_CONFIG).get(name)!;
+      const draped = cfg.textures?.surface !== undefined;
+      const model = cfg.model!;
+      if (draped) {
+        expect(
+          model.albedo,
+          `${name} : drapé, pas d'albédo cuit`
+        ).toBeUndefined();
+        expect(model.colourSource).toBeUndefined();
+      } else {
+        expect(
+          model.albedo,
+          `${name} : sans texture, l'albédo cuit est obligatoire`
+        ).toBeGreaterThan(0);
+        expect(model.albedoSource?.trim().length ?? 0).toBeGreaterThan(10);
+        expect(model.colourSource).not.toBeUndefined();
+      }
+    }
+  );
 });
 
 /**
@@ -319,11 +347,20 @@ describe('couleur réelle des modèles de forme', () => {
     expect(script).toContain('0.312 / 0.12');
   });
 
-  it.each(levels())('%s %s', (name, _quality, onDisk) => {
+  // Les modèles DRAPÉS n'ont pas de couleur cuite : leur couleur est celle de la texture.
+  const baked = levels().filter(
+    ([name]) =>
+      flattenBodies(CELESTIAL_CONFIG).get(name)!.textures?.surface === undefined
+  );
+  it('garde des modèles à couleur cuite à vérifier', () => {
+    expect(baked.length).toBeGreaterThan(0);
+  });
+
+  it.each(baked)('%s %s', (name, _quality, onDisk) => {
     const model = flattenBodies(CELESTIAL_CONFIG).get(name)!.model!;
-    expect(model.albedoSource.trim().length).toBeGreaterThan(10);
+    expect(model.albedoSource!.trim().length).toBeGreaterThan(10);
     const { luminance, perVertex } = meanLuminance(onDisk);
-    const expected = model.albedo * DISPLAY_PER_ALBEDO;
+    const expected = model.albedo! * DISPLAY_PER_ALBEDO;
     // 3 % : les composantes écrêtées sur les zones les plus claires d'Éros tirent la moyenne
     // un peu sous la cible ; un niveau jamais cuit s'en écarte de 60 % à 200 %.
     expect(
@@ -334,5 +371,71 @@ describe('couleur réelle des modèles de forme', () => {
     expect(perVertex, `${name} : couleurs par sommet`).toBe(
       model.colourSource !== null
     );
+  });
+});
+
+/**
+ * UN MODÈLE DRAPÉ DOIT ÊTRE DANS LE REPÈRE DE SA CARTE. La carte équirectangulaire est posée par
+ * longitude et latitude (`core/modelUv.ts`) ; si le fichier était tourné, miroir, ou compté en
+ * longitudes ouest, le relief et l'image se décaleraient sans aucune erreur. On vérifie donc
+ * qu'un repère PUBLIÉ du corps tombe au bon endroit du maillage livré.
+ *
+ * Phobos : le cratère Stickney, 1,0° S et 49,7° O (Nomenclature planétaire de l'UAI), est le
+ * creux local le plus profond du modèle de Gaskell. Mesuré sur la source (q = 512) au lot
+ * parité : 50° O, 0°, 1,24 km sous son voisinage.
+ */
+describe('repère des modèles drapés', () => {
+  it('phobos : Stickney est le creux le plus profond, à sa longitude publiée', () => {
+    const { positions } = readGlbGeometry(
+      join(PROJECT_ROOT, 'public', modelPath('phobos', '4k'))
+    );
+    // Repère de l'application : pôle sur +Y, longitude Est vers −Z (cf. `core/modelUv.ts`).
+    const cells = new Map<string, { sum: number; n: number }>();
+    for (let i = 0; i < positions.length; i += 3) {
+      const [x, y, z] = [positions[i]!, positions[i + 1]!, positions[i + 2]!];
+      const r = Math.hypot(x, y, z);
+      const lon = (Math.atan2(-z, x) * 180) / Math.PI;
+      const lat = (Math.asin(y / r) * 180) / Math.PI;
+      const key = `${Math.floor((lat + 90) / 5)},${Math.floor((lon + 180) / 5)}`;
+      const cell = cells.get(key) ?? { sum: 0, n: 0 };
+      cell.sum += r;
+      cell.n++;
+      cells.set(key, cell);
+    }
+    const list = [...cells.entries()].map(([key, c]) => {
+      const [i, j] = key.split(',').map(Number);
+      return { lat: i! * 5 - 87.5, lon: j! * 5 - 177.5, r: c.sum / c.n };
+    });
+    const rad = Math.PI / 180;
+    const angle = (
+      p: { lat: number; lon: number },
+      q: { lat: number; lon: number }
+    ) =>
+      Math.acos(
+        Math.min(
+          1,
+          Math.sin(p.lat * rad) * Math.sin(q.lat * rad) +
+            Math.cos(p.lat * rad) *
+              Math.cos(q.lat * rad) *
+              Math.cos((p.lon - q.lon) * rad)
+        )
+      ) / rad;
+    const deepest = list
+      .filter((p) => Math.abs(p.lat) < 60)
+      .map((p) => {
+        const ring = list.filter((q) => {
+          const a = angle(p, q);
+          return a > 12 && a < 25;
+        });
+        return {
+          ...p,
+          depth: p.r - ring.reduce((s, q) => s + q.r, 0) / ring.length,
+        };
+      })
+      .sort((a, b) => a.depth - b.depth)[0]!;
+    expect(
+      angle(deepest, { lat: -1.0, lon: -49.7 }),
+      `creux le plus profond à ${deepest.lon}°, ${deepest.lat}°`
+    ).toBeLessThan(8);
   });
 });
