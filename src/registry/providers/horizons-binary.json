@@ -10,12 +10,12 @@
   "validationProviderId": "horizons-binary",
   "extent": {
     "temporal": {
-      "interval": [["1900-01-01T00:00:00Z", "2100-12-30T00:00:00Z"]]
+      "interval": [["1900-01-01T00:00:00Z", "2101-01-01T00:00:00Z"]]
     }
   },
   "samplingStepSeconds": {
     "min": 86400,
-    "max": 345600
+    "max": 5529600
   },
   "coverageNote": "Enveloppe de public/assets/ephemerides/manifest.json : chaque binaire porte sa propre couverture, et providers.test.ts refuse une entree du manifeste qui sortirait de cet intervalle."
 }

@@ -6,7 +6,7 @@ Visualisateur interactif du système solaire en temps réel, développé en Type
 
 ## Aperçu
 
-- Positions réelles : fichiers NASA/JPL Horizons embarqués (planètes, planètes naines, lunes et sondes), astronomy-engine et éléments képlériens ; la source et l'erreur mesurée de chaque corps sont publiées sur [/methodology](https://galaxy.adrianguichard.dev/methodology/)
+- Positions réelles : fichiers NASA/JPL Horizons embarqués (planètes, planètes naines, lunes, astéroïdes, comète de Halley et sondes), astronomy-engine et éléments képlériens ; la source et l'erreur mesurée de chaque corps sont publiées sur [/methodology](https://galaxy.adrianguichard.dev/methodology/)
 - Time travel : naviguer librement dans le temps passé et futur
 - Planètes multi-couches : surface PBR, nuages, atmosphère, lueurs nocturnes (shader GLSL)
 - Halo lumineux rond autour du Soleil, des étoiles et des lumières de ville (qualité haute), chaque source déclarée avec sa propre intensité
@@ -294,7 +294,7 @@ d'épreuve livré : 16 Psyché, ajoutée sans toucher une ligne de TypeScript.
 
 Les fichiers binaires de `public/assets/ephemerides/` contiennent des états JPL en écliptique
 J2000 (positions en UA, vitesses en UA/jour), héliocentriques pour les planètes, les planètes
-naines et les sondes, relatifs à leur corps parent pour les lunes (Charon et les petites lunes
+naines, les astéroïdes, la comète de Halley et les sondes, relatifs à leur corps parent pour les lunes (Charon et les petites lunes
 de Pluton compris). Centre, pas et couverture de
 chaque fichier sont déclarés dans `manifest.json` et publiés sur
 [/sources](https://galaxy.adrianguichard.dev/sources/).

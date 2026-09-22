@@ -51,12 +51,30 @@ export function isPlausibleRelativePosition(
  * Horizons optionnels peuvent être absents, obsolètes ou avoir été générés avec un mauvais
  * centre ; dans ce cas, Astronomy Engine/Kepler fournit une trajectoire cohérente plutôt
  * qu'une orbite visuelle épaissie par des points provenant de plusieurs rayons.
+ *
+ * Un corps qui a des éléments orbitaux est borné par son PÉRIHÉLIE et son APHÉLIE, comme un
+ * satellite l'est par `isPlausibleRelativePosition`, et non par le demi-grand axe seul. La
+ * borne `distanceAU` × [0,5 ; 2] ne vaut que pour une orbite presque circulaire ; mesuré sur
+ * les vecteurs Horizons à un jour de 1900 à 2100 (lot 11), elle refusait Sedna TOUS les jours
+ * (a = 506 UA, mais le corps reste entre 76 et 132 UA sur ces deux siècles) et Halley
+ * 5 284 jours autour de ses périhélies (q = 0,59 UA). Un binaire exact aurait été écarté en
+ * silence au profit des éléments, qui s'en écartent de dizaines de millions de km.
  */
 /** Exportée pour être réutilisée par un test offline sur les fichiers Horizons committés. */
 export function isPlausibleHeliocentricPosition(
   position: THREE.Vector3,
   cfg: CelestialBodyConfig
 ): boolean {
+  const elements = cfg.orbitalElements;
+  if (elements && elements.eccentricity < 1) {
+    const distanceAU = position.length();
+    const apoapsisAU = elements.semiMajorAxisAU * (1 + elements.eccentricity);
+    const periapsisAU = elements.semiMajorAxisAU * (1 - elements.eccentricity);
+    return (
+      distanceAU >= periapsisAU * HELIOCENTRIC_DISTANCE_MIN_FACTOR &&
+      distanceAU <= apoapsisAU * HELIOCENTRIC_DISTANCE_MAX_FACTOR
+    );
+  }
   const expectedDistanceAU = cfg.realData?.distanceAU;
   if (!expectedDistanceAU || expectedDistanceAU <= 0) return true;
   const distanceAU = position.length();

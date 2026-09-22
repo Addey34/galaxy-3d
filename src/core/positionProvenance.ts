@@ -16,8 +16,8 @@
  *     Horizons a été mesuré (`pnpm ephemeris:validate`), la position est `extrapolated`.
  *     Aucune ligne mesurée : extrapolée partout, car rien n'établit son exactitude.
  *
- * « Mesuré » ne veut pas dire « exact » : Hygiea sur 1900-2100 est mesurée, à des dizaines de
- * millions de km. C'est pourquoi l'écart est affiché à côté de la catégorie, jamais caché dedans.
+ * « Mesuré » ne veut pas dire « exact » : les éléments képlériens d'Hygie sur 1900-2100 sont
+ * mesurés, à des dizaines de millions de km (ils ne servent plus qu'en repli depuis le lot 11). C'est pourquoi l'écart est affiché à côté de la catégorie, jamais caché dedans.
  */
 import { DAY_MS, type DatedProduct, type OpenInterval } from './temporal';
 import { POSITION_PROVIDERS, answersAnyDate } from '@/registry/providers';

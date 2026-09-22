@@ -3,6 +3,7 @@ import * as THREE from 'three';
 import {
   gravitationalParameter,
   MU_SUN_AU3_PER_DAY2,
+  osculatingOrbitPoints,
   propagateTwoBody,
 } from './twoBodyPropagation';
 
@@ -185,5 +186,86 @@ describe('propagateTwoBody', () => {
   it('dérive un μ cohérent avec la constante de Gauss pour la masse du Soleil', () => {
     const muFromMass = gravitationalParameter(1.989e30);
     expect(muFromMass / MU_SUN_AU3_PER_DAY2).toBeCloseTo(1, 2);
+  });
+});
+
+describe('osculatingOrbitPoints', () => {
+  /** Un état au périhélie d'une orbite très excentrique (e = 0,967, celle de Halley). */
+  function halleyLikeState(): {
+    position: THREE.Vector3;
+    velocity: THREE.Vector3;
+    a: number;
+    e: number;
+  } {
+    const a = 17.8;
+    const e = 0.967;
+    const q = a * (1 - e);
+    const speed = Math.sqrt((MU_SUN_AU3_PER_DAY2 * (1 + e)) / q);
+    return {
+      position: new THREE.Vector3(q, 0, 0),
+      velocity: new THREE.Vector3(0, 0, -speed),
+      a,
+      e,
+    };
+  }
+
+  it('met le corps au milieu de la liste et la couture à l’opposé', () => {
+    const { position, velocity, a, e } = halleyLikeState();
+    const points = osculatingOrbitPoints(
+      position,
+      velocity,
+      MU_SUN_AU3_PER_DAY2,
+      512
+    )!;
+    expect(points).toHaveLength(512);
+    expect(points[256]!.distanceTo(position)).toBeLessThan(1e-9);
+    // Parti du périhélie, le premier point est l'aphélie.
+    expect(points[0]!.length()).toBeCloseTo(a * (1 + e), 6);
+  });
+
+  it('reste sur une seule conique : même énergie, même plan', () => {
+    const { position, velocity, a } = halleyLikeState();
+    const points = osculatingOrbitPoints(
+      position,
+      velocity,
+      MU_SUN_AU3_PER_DAY2,
+      64
+    )!;
+    const normal = position.clone().cross(velocity).normalize();
+    for (const point of points) {
+      expect(Math.abs(point.dot(normal))).toBeLessThan(1e-9);
+      expect(point.length()).toBeLessThanOrEqual(2 * a + 1e-9);
+    }
+  });
+
+  it('répartit les points en anomalie excentrique, pas en temps', () => {
+    // En temps, 512 points sur 76 ans laissaient 130° de trou au périhélie de Halley.
+    const { position, velocity } = halleyLikeState();
+    const points = osculatingOrbitPoints(
+      position,
+      velocity,
+      MU_SUN_AU3_PER_DAY2,
+      512
+    )!;
+    let maxGapDeg = 0;
+    for (let i = 1; i < points.length; i++)
+      maxGapDeg = Math.max(
+        maxGapDeg,
+        (points[i - 1]!.angleTo(points[i]!) * 180) / Math.PI
+      );
+    expect(maxGapDeg).toBeLessThan(10);
+  });
+
+  it('refuse un état non elliptique', () => {
+    const position = new THREE.Vector3(1, 0, 0);
+    const escape = Math.sqrt(2 * MU_SUN_AU3_PER_DAY2) * 1.01;
+    expect(
+      osculatingOrbitPoints(
+        position,
+        new THREE.Vector3(0, escape, 0),
+        MU_SUN_AU3_PER_DAY2,
+        16
+      )
+    ).toBeNull();
   });
 });
