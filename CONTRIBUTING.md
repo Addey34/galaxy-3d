@@ -175,8 +175,13 @@ refuse ensuite un modèle dont l'axe de plus grande inertie n'est pas Y ou dont 
 retrouve pas `radiusKm`. Déclarez aussi `model.extentRatio` : le rayon MAXIMAL du maillage
 rapporté à son rayon équivalent-volume (Éros 2,10 ; Bennu 1,18). C'est lui qui arrête la caméra,
 et le même test le compare au fichier — sous-estimé, l'objectif entre dans le maillage et l'écran
-devient noir sans aucune erreur. Pour un corps sans binaire Horizons, les éléments viennent de
-`scripts/derive-small-body-elements.mjs`, jamais d'une saisie.
+devient noir sans aucune erreur. Les éléments d'un petit corps (sa position hors de la couverture
+de son binaire Horizons, et sa seule source s'il n'en a pas) viennent de
+`scripts/derive-small-body-elements.mjs`, jamais d'une saisie. Son binaire s'ajoute à `BODIES`
+dans `scripts/generate-horizons-ephemerides.mjs`, avec le pas le plus grossier qui tient la règle
+écrite en tête de ce groupe (mesurée, pas supposée), `splitAtSolutionEpoch` s'il a une ligne
+EPOCH, puis `node scripts/generate-horizons-ephemerides.mjs --only <nom>` et
+`pnpm ephemeris:validate`.
 
 ### 4. Vérifier
 

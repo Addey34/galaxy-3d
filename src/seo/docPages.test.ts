@@ -204,8 +204,25 @@ describe('page /methodology', () => {
       config: CELESTIAL_CONFIG,
       origin: ORIGIN,
     });
-    expect(en!.body).toContain('every 7 days, from');
+    expect(en!.body).toContain('every 7 days depending on the body, between');
     expect(methodology[0]!.body).not.toContain('every 7 days');
+    // Les pas réels, lus dans le manifeste et joints comme une phrase (lot 11 : quatre pas).
+    const spacecraft = new Set(
+      summary.rows
+        .filter((r) => r.provider === 'horizons-binary' && r.radiusKm === null)
+        .map((r) => r.body)
+    );
+    const steps = [
+      ...new Set(
+        Object.entries(manifest.bodies)
+          .filter(([name]) => !spacecraft.has(name))
+          .map(([, e]) => e.stepDays)
+      ),
+    ].sort((a, b) => a - b);
+    expect(steps.length).toBeGreaterThan(2);
+    expect(methodology[0]!.body).toContain(
+      `every ${steps.slice(0, -1).join(', ')} or ${steps.at(-1)} days depending on the body`
+    );
     expect(en!.body).toContain(`K = ${SQRT_K}`);
     expect(en!.body).toContain('TT − UTC = 69.184 s');
     expect(en!.body).toContain(
@@ -514,6 +531,47 @@ describe('affirmations de /methodology confrontées au code', () => {
       expect(drift.degreesPerYear).toBeGreaterThan(0);
       expect(en!.body).toContain(formatQuantity(drift.degreesPerYear, 'en'));
     }
+  });
+
+  it('ne publie la liste des corps képlériens seuls que si le résumé en contient', () => {
+    // Lot 11 : chaque corps du catalogue a désormais un fichier Horizons sur la période de
+    // production. Écrite pour une liste non vide, la phrase aurait publié « () ».
+    const keplerOnly = summary.rows.filter(
+      (r) =>
+        r.provider === 'production' &&
+        Object.keys(r.sources).length === 1 &&
+        r.sources.kepler
+    );
+    expect(keplerOnly).toEqual([]);
+    for (const page of [en!, fr!]) {
+      expect(page.body).not.toMatch(/\(\s*\)/);
+      expect(page.body).not.toMatch(
+        /Keplerian bodies close to|Corps képlériens près/
+      );
+    }
+    expect(en!.body).toContain(
+      'No body in the production table (1900–2100) is positioned by them alone'
+    );
+    expect(fr!.body).toContain(
+      'Aucun corps du tableau de production (1900–2100) n’est positionné par eux seuls'
+    );
+
+    // Un corps qui perdrait son fichier y reviendrait, nommé.
+    const mutated = cloneSummary();
+    const vesta = mutated.rows.find(
+      (r) => r.provider === 'production' && r.body === 'vesta'
+    )!;
+    vesta.sources = { kepler: vesta.n };
+    const [enMutated] = methodologyPages({
+      summary: mutated,
+      manifest,
+      config: CELESTIAL_CONFIG,
+      origin: ORIGIN,
+    });
+    expect(enMutated!.body).toContain(
+      'Bodies positioned by Keplerian elements alone (Vesta)'
+    );
+    expect(enMutated!.body).toContain('Keplerian bodies close to');
   });
 
   it('dit que la Terre est au barycentre Terre-Lune, comme le catalogue', () => {

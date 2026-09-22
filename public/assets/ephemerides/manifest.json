@@ -1,7 +1,7 @@
 {
   "version": 1,
   "source": "NASA/JPL Horizons",
-  "generatedAt": "2026-09-17T01:01:16.941Z",
+  "generatedAt": "2026-09-22T06:37:38.999Z",
   "frame": "ECLIPTIC_J2000",
   "center": "SUN",
   "units": "AU-D",
@@ -369,6 +369,118 @@
       "startJdTdb": 2415020.5,
       "stepDays": 4,
       "sampleCount": 18354
+    },
+    "vesta": {
+      "file": "vesta.92479d3cb61c.bin",
+      "target": "4;",
+      "center": "sun",
+      "startJdTdb": 2415020.5,
+      "stepDays": 8,
+      "sampleCount": 9177
+    },
+    "pallas": {
+      "file": "pallas.92fd794974cb.bin",
+      "target": "2;",
+      "center": "sun",
+      "startJdTdb": 2415020.5,
+      "stepDays": 8,
+      "sampleCount": 9177
+    },
+    "hygiea": {
+      "file": "hygiea.9aacbe2900a9.bin",
+      "target": "10;",
+      "center": "sun",
+      "startJdTdb": 2415020.5,
+      "stepDays": 16,
+      "sampleCount": 4589
+    },
+    "psyche": {
+      "file": "psyche.072ca0fdf55a.bin",
+      "target": "16;",
+      "center": "sun",
+      "startJdTdb": 2415020.5,
+      "stepDays": 8,
+      "sampleCount": 9177
+    },
+    "ida": {
+      "file": "ida.e91d9ebe9de4.bin",
+      "target": "243;",
+      "center": "sun",
+      "startJdTdb": 2415020.5,
+      "stepDays": 16,
+      "sampleCount": 4589
+    },
+    "eros": {
+      "file": "eros.969720ab7cb9.bin",
+      "target": "433;",
+      "center": "sun",
+      "startJdTdb": 2415020.5,
+      "stepDays": 4,
+      "sampleCount": 18354
+    },
+    "itokawa": {
+      "file": "itokawa.006ad33f83db.bin",
+      "target": "25143;",
+      "center": "sun",
+      "startJdTdb": 2415020.5,
+      "stepDays": 4,
+      "sampleCount": 18354
+    },
+    "ryugu": {
+      "file": "ryugu.6aa28e8043a4.bin",
+      "target": "162173;",
+      "center": "sun",
+      "startJdTdb": 2415020.5,
+      "stepDays": 4,
+      "sampleCount": 18354
+    },
+    "bennu": {
+      "file": "bennu.cd6ceec32a03.bin",
+      "target": "101955;",
+      "center": "sun",
+      "startJdTdb": 2415022.5,
+      "stepDays": 4,
+      "sampleCount": 18354
+    },
+    "halley": {
+      "file": "halley.7ec709bd3095.bin",
+      "target": "90000030;",
+      "center": "sun",
+      "startJdTdb": 2415020.5,
+      "stepDays": 4,
+      "sampleCount": 18354
+    },
+    "orcus": {
+      "file": "orcus.a40c3a145cb7.bin",
+      "target": "90482;",
+      "center": "sun",
+      "startJdTdb": 2415020.5,
+      "stepDays": 64,
+      "sampleCount": 1148
+    },
+    "quaoar": {
+      "file": "quaoar.7e30bc713a91.bin",
+      "target": "50000;",
+      "center": "sun",
+      "startJdTdb": 2415020.5,
+      "stepDays": 64,
+      "sampleCount": 1148
+    },
+    "gonggong": {
+      "file": "gonggong.5b78492c5c34.bin",
+      "target": "225088;",
+      "center": "sun",
+      "startJdTdb": 2415020.5,
+      "stepDays": 64,
+      "sampleCount": 1148
+    },
+    "sedna": {
+      "file": "sedna.3be45ed384f4.bin",
+      "target": "90377;",
+      "center": "sun",
+      "startJdTdb": 2415020.5,
+      "stepDays": 64,
+      "sampleCount": 1148
     }
   }
 }

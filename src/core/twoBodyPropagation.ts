@@ -116,3 +116,50 @@ export function propagateTwoBody(
 
   return out.copy(position).multiplyScalar(f).addScaledVector(velocity, g);
 }
+
+/**
+ * `count` points de la conique osculatrice d'un état, répartis uniformément en ANOMALIE
+ * EXCENTRIQUE sur un tour complet centré sur l'état lui-même : le point `count / 2` EST la
+ * position de départ, et la couture tombe à l'opposé. `null` pour un état non elliptique.
+ *
+ * Sert à tracer la ligne d'orbite d'un corps dont la source précise répond à la date affichée
+ * sans couvrir toute sa période (cf. `OrbitPathBuilder`) : la ligne passe alors par le corps
+ * au lieu de venir d'éléments qui s'en écartent. Anomalie excentrique et non temps, pour la
+ * même raison que les lignes tirées des éléments : un échantillonnage uniforme dans le temps
+ * vide la région du périhélie d'une orbite excentrique.
+ */
+export function osculatingOrbitPoints(
+  position: THREE.Vector3,
+  velocity: THREE.Vector3,
+  mu: number,
+  count: number
+): THREE.Vector3[] | null {
+  const r0 = position.length();
+  if (!(r0 > 0) || !(mu > 0) || count < 3) return null;
+  const energy = velocity.lengthSq() / 2 - mu / r0;
+  if (energy >= 0) return null;
+  const a = -mu / (2 * energy);
+  const sqrtMuA = Math.sqrt(mu * a);
+  const eSinE = position.dot(velocity) / sqrtMuA;
+  const eCosE = 1 - r0 / a;
+  const eccentricity = Math.hypot(eCosE, eSinE);
+  if (!(eccentricity < 1)) return null;
+  const eccentricNow = Math.atan2(eSinE, eCosE);
+  const meanNow = eccentricNow - eccentricity * Math.sin(eccentricNow);
+  const meanMotion = Math.sqrt(mu / (a * a * a));
+
+  const points: THREE.Vector3[] = [];
+  for (let i = 0; i < count; i++) {
+    const eccentric = eccentricNow + 2 * Math.PI * (i / count - 0.5);
+    const mean = eccentric - eccentricity * Math.sin(eccentric);
+    const point = propagateTwoBody(
+      position,
+      velocity,
+      (mean - meanNow) / meanMotion,
+      mu
+    );
+    if (!point) return null;
+    points.push(point);
+  }
+  return points;
+}

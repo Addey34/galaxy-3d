@@ -155,16 +155,24 @@ ici, et chacune est verrouillée par un test nommé.
 
 | Source | Pour qui | Remarque |
 | --- | --- | --- |
-| Binaire Horizons (`HorizonsEphemerisService`) | planètes (dont Jupiter et Uranus depuis le lot 2b), naines, satellites, sondes | états exacts tous les 4 jours, 1 jour pour 5 sondes |
+| Binaire Horizons (`HorizonsEphemerisService`) | planètes (dont Jupiter et Uranus depuis le lot 2b), naines, satellites, sondes, et depuis le lot 11 tous les petits corps du catalogue | états exacts à pas fixe par fichier (4 jours en général, 1 jour pour 5 sondes, 4 à 64 jours pour les petits corps : cf. « Binaires des petits corps ») |
 | Noyau SPK (optionnel, `VITE_SPK_KERNEL_URL`) | lunes de Saturne de SAT441 | prime sur les binaires quand il est actif |
 | `JupiterMoons()` d'astronomy-engine | Io, Europe, Ganymède, Callisto | vecteurs jovicentriques directs |
 | Éphéméride astronomy-engine (`astroBody`) | planètes, Lune, Soleil | théorie planétaire |
-| Éléments képlériens du catalogue | petits corps, et **repli** de tout satellite | cf. « le repli » ci-dessous |
+| Éléments képlériens du catalogue | **repli** d'un petit corps hors de la couverture de son binaire, et de tout satellite | cf. « le repli » ci-dessous |
 
 Une position issue d'un binaire passe d'abord `isPlausibleRelativePosition` /
 `isPlausibleHeliocentricPosition`, qui bornent la distance **des deux côtés**. La borne basse
 n'est pas décorative : c'est son absence qui a laissé Encelade osciller d'un facteur 11,4 en
 distance à Saturne pendant des mois, sous un garde-fou censé attraper exactement ça.
+
+La borne héliocentrique d'un corps qui a des éléments est **[q/2 ; 2Q]** (périhélie, aphélie),
+comme la borne relative, et non plus [a/2 ; 2a]. Celle-ci ne vaut que pour une orbite presque
+circulaire : mesurée au lot 11 sur les vecteurs Horizons à un jour de 1900 à 2100, elle aurait
+refusé Sedna **tous les jours** (a = 506 UA, le corps entre 76 et 132 UA) et Halley 5 284 jours
+autour de ses périhélies. Un binaire exact aurait été écarté en silence au profit des éléments.
+`ephemerisPlausibility.test.ts` balaie désormais 2 000 dates de chaque binaire héliocentrique
+(il ne regardait que la date du milieu, où Halley passait).
 
 **Tout est mesuré contre JPL Horizons** par `pnpm ephemeris:validate`
 (`scripts/validate-against-horizons.mjs`, rapport dans `reports/`, non versionné, et un résumé
@@ -229,6 +237,45 @@ segments par la même fonction, `planSpkSegments` (segment direct, sinon centre 
 n'indexait que les paires directes ; SAT441 ne stockant les lunes que par rapport au barycentre
 de Saturne, aucune position n'était jamais demandée, même noyau activé.
 
+### Binaires des petits corps (lot 11)
+
+Les quatorze corps que seuls leurs éléments plaçaient (erreur moyenne de 1,4e4 km pour Sedna à
+1,7e8 km pour Bennu sur 1900-2100) ont un binaire, produit par
+`scripts/generate-horizons-ephemerides.mjs --only …`. L'écart mesuré en production tombe à
+quelques km pour chacun ; les chiffres font foi sur `/methodology`, pas ici. Trois décisions :
+
+- **Le pas est choisi par corps, et mesuré.** C'est le plus grossier dont l'interpolation, par
+  le chemin même du service, reste sous 20 km d'écart MAXIMAL à des vecteurs Horizons au pas
+  d'un jour sur toute la plage (l'écart maximal déjà accepté du fichier de Cérès), jamais plus
+  fin que 4 jours. Transneptuniens à 64 jours, astéroïdes de la ceinture à 8 ou 16, géocroiseurs
+  et Halley à 4 (leur écart maximal vient des rencontres avec la Terre ou du périhélie). Le
+  tableau de mesure est en commentaire dans le générateur. Coût : 6,4 Mo, contre 12,3 au pas
+  uniforme de 4 jours.
+- **La requête est coupée à l'époque de la solution** (`splitAtSolutionEpoch`). Pour un petit
+  corps qu'il intègre, Horizons rend une position qui dépend de l'ÉTENDUE de la requête : une
+  requête 1900-2101 coïncide avec une requête courte au début de la plage et s'en écarte ensuite,
+  comme une intégration partie de la première date. Itokawa, qui croise souvent la Terre,
+  s'écartait ainsi de 14 663 km en 2098. Coupée à l'époque (lue dans la ligne `EPOCH=` de
+  l'en-tête), chaque moitié part de la solution et l'écart tombe sous 3 km. Bennu est l'exception
+  déclarée : Horizons le lit dans le fichier de trajectoire de la mission OSIRIS-REx, sans ligne
+  EPOCH, et la requête longue n'y dérive pas (0,0 km).
+- **La validation a le même défaut, et il est corrigé au même endroit.** Une liste de 48 dates
+  étalée sur deux siècles se comporte comme la requête longue : le binaire d'Itokawa s'en
+  écartait de 775 km en moyenne, et de 3,7 km de requêtes courtes, une par date. La référence
+  mesurait sa propre dérive. `validate-against-horizons.mjs` coupe donc ses listes à l'époque
+  pour tout corps qui en a une. Effet de bord honnête : Cérès, Éris, Hauméa et Makémaké, dont les
+  binaires sont antérieurs à la coupure, remontent de 0,5 à 1 km.
+
+**Chargés au démarrage, comme les autres, par décision mesurée.** Un chargement à la demande
+aurait placé le corps sur ses éléments jusqu'à l'arrivée du fichier, puis l'aurait fait sauter
+(jusqu'à 1,7e8 km pour Bennu), ou exigé un état « position en attente » qui n'existe nulle part.
+Mesuré A/B sur le même build, ancien manifeste servi contre nouveau (`page.route`, réseau bridé
+par CDP) : +6,4 Mo servis (32,57 → 38,96 Mo d'éphémérides), aucun écart sans bridage, +1,0 s à
+50 Mbit/s (16,1 → 17,0 s jusqu'au loader caché), +5,4 s à 10 Mbit/s (36,7 → 42,1 s). **Les
+éphémérides pèsent désormais environ les trois quarts des octets du démarrage** : les charger
+toutes à la demande est un chantier à part entière, qui demanderait sa conversation de
+conception.
+
 ### Le repli képlérien
 
 Il sert quand un binaire manque, sort de sa couverture ou échoue au test de plausibilité —
@@ -267,6 +314,26 @@ de Kepler place presque tous les points près de l'aphélie : Halley (e = 0,967)
 une corde droite de 130° en travers du périhélie, et la courbe n'atteignait jamais sa distance
 minimale. Les points sont donc répartis uniformément en **anomalie excentrique** dès que
 e ≥ 0,2 — seule la répartition change, jamais la courbe.
+
+Trois règles de plus, trouvées au lot 11 quand les corps excentriques ont reçu un binaire, et
+toutes invisibles tant que corps et ligne venaient des mêmes éléments :
+
+- **La phase 0 tombe sur la date affichée.** L'anomalie moyenne courante est recalculée depuis
+  l'anomalie excentrique résolue : `solveKepler` ramène M dans [-π ; π], et la valeur brute,
+  qui compte les tours depuis l'époque, décalait chaque date de la ligne d'un nombre entier de
+  périodes. Halley en 2026 était tracé sur sa révolution de 1950, à 2e7 km du corps.
+- **L'orbite qui répartit les points est celle de la source qui les fournit.** Ligne tirée d'un
+  binaire héliocentrique : orbite osculatrice de son état à la date (vitesse par différence
+  centrée). Ligne tirée des éléments : les éléments. Répartie par les éléments alors qu'elle
+  venait du binaire, la ligne de Halley s'ouvrait de 24° à son périhélie de 2061 en Éducatif.
+- **Quand le binaire répond à la date sans couvrir toute la période, la ligne est la conique
+  osculatrice de son état** (`osculatingOrbitPoints`), et non plus les éléments. Sinon le corps
+  (binaire) et sa ligne (éléments) venaient de deux sources, et leur écart devenait l'écart
+  entre le corps et sa propre orbite : 1,5e8 km pour Halley de 1900 à 1938 et de 2063 à 2100,
+  jusqu'à 3e6 km pour les astéroïdes dans leur première et leur dernière demi-période, Cérès
+  comprise. Pas pour les éléments **barycentriques** (transneptuniens) : leur état
+  héliocentrique porte le ballant du Soleil, et leurs éléments ne s'écartent du corps que de
+  2,4e6 km au plus (Quaoar en 1900, à 43 UA : 0,02°).
 
 ### Trajectoires ouvertes : les objets interstellaires
 
@@ -313,10 +380,11 @@ laisse la date du périhélie libre de ±800 jours. Il faudrait `tp` et `q` pour
 | `core/relativeElements.test.ts` | le repli décrit la même orbite que le binaire (deux sources sans code commun) |
 | `core/satelliteOrbitRate.test.ts` | la cadence du repli, sur la sortie observable |
 | `core/twoBodyPropagation.test.ts` | la propagation, jusqu'à 40 révolutions |
-| `core/orbitLineSampling.test.ts` | amplitude **et** régularité de la ligne, dans les deux modes |
+| `core/orbitLineSampling.test.ts` | amplitude **et** régularité de la ligne, dans les deux modes ; le corps à moins de 1 000 km de sa ligne, aux bords de la couverture et au milieu |
+| `core/orbitPath.test.ts` | la phase 0 de la ligne tombe sur la date affichée, pas une période avant |
 | `core/kepler.test.ts` | solveur hyperbolique (résidu, M non réduite, vis-viva, asymptote ν∞) |
 | `config/interstellar.test.ts` | 21 vecteurs Horizons de −20 à +20 ans, Tp dérivé, ligne répartie en F |
-| `core/ephemerisPlausibility.test.ts` | les deux bornes, sur 400 dates par fichier |
+| `core/ephemerisPlausibility.test.ts` | les deux bornes, sur 400 dates par fichier relatif et 2 000 par fichier héliocentrique ; Sedna et Halley acceptés |
 | `core/horizonsInterpolation.test.ts` | vecteurs Horizons ENTRE échantillons : rythme moyen, ballant de Pluton, seuil 100, binaires de Jupiter et d'Uranus |
 | `core/timeScale.test.ts` | convention TT/TDB unique, installée dans astronomy-engine, importée partout |
 | `config/smallBodies.test.ts` | chaque jeu d'éléments contre Horizons à son époque ; décalage barycentrique |
@@ -1460,8 +1528,9 @@ mesure, `reconstructed` pour un modèle ; sinon `predicted`, en confiance rédui
 
 **Catégorie et exactitude sont deux axes.** Une éphéméride de Jupiter en 2050 et une prévision
 météo à 12 jours sont toutes deux « prédites » et n'ont rien de commun : l'écart mesuré s'affiche
-à côté, jamais fondu dans l'étiquette. « Mesuré » ne veut pas dire « exact » : Hygiea est mesurée
-sur 1900-2100, à 6e7 km.
+à côté, jamais fondu dans l'étiquette. « Mesuré » ne veut pas dire « exact » : les éléments képlériens
+d'Hygie sont mesurés sur 1900-2100, à 6e7 km (depuis le lot 11 ils ne servent plus qu'en repli
+hors de la couverture de son binaire).
 
 **L'écart à la scène est une donnée à part entière.** `validTime` s'éloigne de `simulationTime`
 dès qu'aucune donnée n'existe pour la date demandée : une scène en 2030 reçoit la dernière image

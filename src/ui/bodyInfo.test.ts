@@ -112,7 +112,7 @@ describe('fiche d’information : faits sourcés', () => {
 
 /**
  * Provenance temporelle de la position : la catégorie et l'écart mesuré sont DEUX axes. Les
- * confondre ferait lire « prédit » comme « précis » — Hygiea est prédite à 6e7 km près.
+ * confondre ferait lire « prédit » comme « précis » — les éléments d'Hygie, mesurés, s'écartent de 6e7 km.
  */
 describe('fiche d’information — provenance de la position', () => {
   const stamp = {

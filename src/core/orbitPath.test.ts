@@ -45,6 +45,54 @@ function makeBuilder(
 
 describe('OrbitPathBuilder', () => {
   /**
+   * « phase = 0 retombe exactement sur lui » : vrai seulement si l'anomalie moyenne courante
+   * est ramenée au même tour que l'anomalie excentrique résolue. Elle ne l'était pas, et chaque
+   * date de la ligne d'un corps excentrique glissait d'un nombre entier de périodes (lot 11 :
+   * Halley en 2026 tracé sur sa révolution de 1950). Invisible avec des éléments, qui dessinent
+   * la même ellipse à chaque tour ; ici la position est une fonction de la DATE, donc un tour
+   * de décalage se voit.
+   */
+  it('échantillonne un corps excentrique autour de la date affichée, pas une période avant', () => {
+    const builder = makeBuilder(
+      'explo',
+      (date) => new THREE.Vector3(date.getTime() / DAY_MS, 0, 0)
+    );
+    const config = {
+      kind: 'asteroid',
+      radius: 0.1,
+      rotationSpeed: 0,
+      orbitalColor: 0xffffff,
+      textureResolutions: {},
+      textures: {},
+      realData: { distanceAU: 2, orbitPeriodDays: 100 },
+      orbitalElements: {
+        semiMajorAxisAU: 2,
+        eccentricity: 0.6,
+        inclinationRad: 0,
+        ascendingNodeRad: 0,
+        argPerihelionRad: 0,
+        meanAnomalyAtEpochRad: 0.3,
+        epoch: new Date('2000-01-01T00:00:00Z'),
+      },
+    } as CelestialBodyConfig;
+    // 26 ans après l'époque : près de 95 révolutions de 100 jours.
+    const date = new Date('2026-01-01T00:00:00Z');
+
+    const points = builder.computeOrbitPoints('test', config, date, 64)!;
+    const middle = points[32 * 3]! / 35;
+    expect(middle).toBeCloseTo(date.getTime() / DAY_MS, 6);
+    // Et toute la ligne tient dans UNE période qui contient la date. Pas symétrique : la
+    // répartition est uniforme en anomalie EXCENTRIQUE, pas en temps.
+    const days = Array.from(
+      { length: 64 },
+      (_, i) => points[i * 3]! / 35 - date.getTime() / DAY_MS
+    );
+    expect(Math.max(...days) - Math.min(...days)).toBeLessThanOrEqual(100);
+    expect(Math.min(...days)).toBeLessThan(0);
+    expect(Math.max(...days)).toBeGreaterThan(0);
+  });
+
+  /**
    * La couture d'une courbe fermée doit tomber à l'OPPOSÉ du corps affiché, pas sur lui :
    * sinon elle traverse le corps que l'utilisateur regarde et se déplace avec le temps.
    * D'où l'échantillonnage centré sur la date courante, de −½ à +½ période.

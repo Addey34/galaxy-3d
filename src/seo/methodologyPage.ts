@@ -282,8 +282,14 @@ function methodologyPage(input: MethodologyInput, locale: DocLocale): DocPage {
     .map(([n]) => n);
   const listNames = (names: readonly string[]): string =>
     names.map((n) => escapeHtml(name(n, locale))).join(', ');
-  const days = (values: readonly number[]): string =>
-    values.map((v) => exact(v, locale)).join(locale === 'fr' ? ' ou ' : ' or ');
+  // « 4, 8, 16 ou 64 » : depuis le lot 11 les pas des fichiers naturels sont quatre, et une
+  // jonction par « ou » seul écrivait « 4 ou 8 ou 16 ou 64 ».
+  const days = (values: readonly number[]): string => {
+    const text = values.map((v) => exact(v, locale));
+    const last = text.pop();
+    if (text.length === 0) return last ?? '';
+    return `${text.join(', ')}${locale === 'fr' ? ' ou ' : ' or '}${last}`;
+  };
   const num = (v: number | null | undefined): string => q(v, locale);
 
   // ── Petits corps, objets interstellaires, lunes ──
@@ -376,8 +382,8 @@ function methodologyPage(input: MethodologyInput, locale: DocLocale): DocPage {
           fr: `<strong>Un noyau SPK du JPL</strong> (SAT441, lunes de Saturne), quand le site est configuré pour en servir un. Il passe alors avant les fichiers Horizons. ${summary.spk.enabledInProduction ? 'Il est <strong>activé</strong> sur ce site.' : 'Il n’est <strong>pas activé</strong> sur ce site.'}`,
         })}</li>` +
         `<li>${L({
-          en: `<strong>Precomputed NASA/JPL Horizons files</strong> for ${binaryNatural.length} natural bodies: exact position and velocity states in the ${escapeHtml(manifest.frame)} frame, every ${days(naturalSteps)} days, from ${escapeHtml(manifest.coverage.start)} to ${escapeHtml(manifest.coverage.stop)}. A value from a file is compared with the body’s catalogue orbit and rejected if its distance is implausibly large or small; the next source then takes over.`,
-          fr: `<strong>Fichiers NASA/JPL Horizons précalculés</strong> pour ${binaryNatural.length} corps naturels : états exacts de position et de vitesse dans le repère ${escapeHtml(manifest.frame)}, tous les ${days(naturalSteps)} jours, du ${escapeHtml(manifest.coverage.start)} au ${escapeHtml(manifest.coverage.stop)}. Une valeur issue d’un fichier est confrontée à l’orbite du corps dans le catalogue et rejetée si sa distance est trop grande ou trop petite pour être plausible ; la source suivante prend alors le relais.`,
+          en: `<strong>Precomputed NASA/JPL Horizons files</strong> for ${binaryNatural.length} natural bodies: exact position and velocity states in the ${escapeHtml(manifest.frame)} frame, every ${days(naturalSteps)} days depending on the body, between ${escapeHtml(manifest.coverage.start)} and ${escapeHtml(manifest.coverage.stop)}; the <a href="${docPath('sources', locale)}">sources page</a> gives each file’s step and exact range. A value from a file is compared with the body’s catalogue orbit and rejected if its distance is implausibly large or small; the next source then takes over.`,
+          fr: `<strong>Fichiers NASA/JPL Horizons précalculés</strong> pour ${binaryNatural.length} corps naturels : états exacts de position et de vitesse dans le repère ${escapeHtml(manifest.frame)}, tous les ${days(naturalSteps)} jours selon le corps, entre le ${escapeHtml(manifest.coverage.start)} et le ${escapeHtml(manifest.coverage.stop)} ; la <a href="${docPath('sources', locale)}">page des sources</a> donne le pas et la plage exacte de chaque fichier. Une valeur issue d’un fichier est confrontée à l’orbite du corps dans le catalogue et rejetée si sa distance est trop grande ou trop petite pour être plausible ; la source suivante prend alors le relais.`,
         })}</li>` +
         `<li>${L({
           en: '<strong>astronomy-engine</strong>, an open-source library: VSOP87 for the planets, and analytic models for the Moon and the four Galilean moons.',
@@ -540,11 +546,24 @@ function methodologyPage(input: MethodologyInput, locale: DocLocale): DocPage {
       ((r.windowKind === 'epoch' && keplerNames.has(r.body)) ||
         r.windowKind === 'perihelion')
   );
+  // Depuis le lot 11, chaque corps du catalogue a un fichier Horizons sur la période du tableau
+  // de production : la liste des corps « képlériens seuls » y est VIDE, et les phrases écrites
+  // pour elle (une liste entre parenthèses, un tableau titré pour eux) diraient faux. Les deux
+  // formes restent, choisies par le résumé : un corps qui perdrait son fichier y reviendrait.
+  const hasKeplerOnly = keplerOnly.length > 0;
+  const productionSpan = `${year(production[0]!.windowFrom)}–${year(production[0]!.windowTo)}`;
   const epochTable = docTable(
-    L({
-      en: 'Keplerian bodies close to their elements’ epoch; interstellar objects over their drawn window',
-      fr: 'Corps képlériens près de l’époque de leurs éléments ; objets interstellaires sur leur fenêtre dessinée',
-    }),
+    L(
+      hasKeplerOnly
+        ? {
+            en: 'Keplerian bodies close to their elements’ epoch; interstellar objects over their drawn window',
+            fr: 'Corps képlériens près de l’époque de leurs éléments ; objets interstellaires sur leur fenêtre dessinée',
+          }
+        : {
+            en: 'Interstellar objects over their drawn window',
+            fr: 'Objets interstellaires sur leur fenêtre dessinée',
+          }
+    ),
     [
       L({ en: 'Body', fr: 'Corps' }),
       L({ en: 'Window', fr: 'Fenêtre' }),
@@ -636,10 +655,17 @@ function methodologyPage(input: MethodologyInput, locale: DocLocale): DocPage {
       L({ en: 'Measured accuracy', fr: 'Précision mesurée' }),
       method +
         productionTable +
-        `<p>${L({
-          en: 'Keplerian elements describe an orbit without the pull of the planets, so their error grows with the distance in time from their epoch. Over two centuries it is large; near the epoch it is much smaller:',
-          fr: 'Des éléments képlériens décrivent une orbite sans l’attraction des planètes : leur erreur croît avec l’écart en temps à leur époque. Sur deux siècles elle est grande ; près de l’époque elle est bien plus petite :',
-        })}</p>` +
+        `<p>${L(
+          hasKeplerOnly
+            ? {
+                en: 'Keplerian elements describe an orbit without the pull of the planets, so their error grows with the distance in time from their epoch. Over two centuries it is large; near the epoch it is much smaller:',
+                fr: 'Des éléments képlériens décrivent une orbite sans l’attraction des planètes : leur erreur croît avec l’écart en temps à leur époque. Sur deux siècles elle est grande ; près de l’époque elle est bien plus petite :',
+              }
+            : {
+                en: `Keplerian elements describe an orbit without the pull of the planets, so their error grows with the distance in time from their epoch. No body in the production table (${productionSpan}) is positioned by them alone. They remain the fallback outside the coverage of the Horizons files (full measurements below), and the only source for the interstellar objects, measured over their drawn window:`,
+                fr: `Des éléments képlériens décrivent une orbite sans l’attraction des planètes : leur erreur croît avec l’écart en temps à leur époque. Aucun corps du tableau de production (${productionSpan}) n’est positionné par eux seuls. Ils restent le repli hors de la couverture des fichiers Horizons (mesures complètes ci-dessous), et la seule source des objets interstellaires, mesurés sur leur fenêtre dessinée :`,
+              }
+        )}</p>` +
         epochTable +
         `<p>${L({
           en: 'For spacecraft the median is the meaningful figure: errors peak briefly around close flybys and perihelia, where the trajectory bends faster than the file’s step can resolve.',
@@ -713,10 +739,15 @@ function methodologyPage(input: MethodologyInput, locale: DocLocale): DocPage {
       en: `The Earth is drawn at the Earth-Moon barycentre, not at its own centre, to avoid a monthly wobble that would show as a zigzag at true scale and high speed; the Moon is placed correctly relative to that point. This offset is what the Earth row of the accuracy table measures${earth ? ` (${num(earth.km?.mean)} km on average)` : ''}.`,
       fr: `La Terre est dessinée au barycentre Terre-Lune, pas en son propre centre, pour éviter un ballant mensuel qui se verrait comme un zigzag à vraie échelle et à grande vitesse ; la Lune est placée correctement par rapport à ce point. Ce décalage est ce que mesure la ligne Terre du tableau de précision${earth ? ` (${num(earth.km?.mean)} km en moyenne)` : ''}.`,
     },
-    {
-      en: `Bodies positioned by Keplerian elements alone (${listNames(keplerOnly.map((r) => r.body))}) drift away from their true position far from their epoch, because the two-body model ignores planetary perturbations. The tables above give the size of that drift.`,
-      fr: `Les corps positionnés par leurs seuls éléments képlériens (${listNames(keplerOnly.map((r) => r.body))}) s’écartent de leur vraie position loin de leur époque, parce que le modèle à deux corps ignore les perturbations des planètes. Les tableaux ci-dessus donnent l’ampleur de cette dérive.`,
-    },
+    hasKeplerOnly
+      ? {
+          en: `Bodies positioned by Keplerian elements alone (${listNames(keplerOnly.map((r) => r.body))}) drift away from their true position far from their epoch, because the two-body model ignores planetary perturbations. The tables above give the size of that drift.`,
+          fr: `Les corps positionnés par leurs seuls éléments képlériens (${listNames(keplerOnly.map((r) => r.body))}) s’écartent de leur vraie position loin de leur époque, parce que le modèle à deux corps ignore les perturbations des planètes. Les tableaux ci-dessus donnent l’ampleur de cette dérive.`,
+        }
+      : {
+          en: `Keplerian elements drift away from the true position far from their epoch, because the two-body model ignores planetary perturbations. No body in the production table (${productionSpan}) depends on them alone; outside the coverage of the Horizons files they are the fallback described in the next point, and the full measurements give the size of that drift.`,
+          fr: `Des éléments képlériens s’écartent de la vraie position loin de leur époque, parce que le modèle à deux corps ignore les perturbations des planètes. Aucun corps du tableau de production (${productionSpan}) n’en dépend seul ; hors de la couverture des fichiers Horizons, ils sont le repli décrit au point suivant, et les mesures complètes donnent l’ampleur de cette dérive.`,
+        },
     {
       en: `Outside ${escapeHtml(manifest.coverage.start)} to ${escapeHtml(manifest.coverage.stop)}, the Horizons files do not apply: planets fall back to astronomy-engine, other bodies to their Keplerian elements. The production table covers ${year(production[0]!.windowFrom)}–${year(production[0]!.windowTo)} only; the full measurements show the sources over wider windows.`,
       fr: `Hors de la période du ${escapeHtml(manifest.coverage.start)} au ${escapeHtml(manifest.coverage.stop)}, les fichiers Horizons ne s’appliquent pas : les planètes retombent sur astronomy-engine, les autres corps sur leurs éléments képlériens. Le tableau de production ne couvre que ${year(production[0]!.windowFrom)}–${year(production[0]!.windowTo)} ; les mesures complètes montrent les sources sur des fenêtres plus larges.`,
