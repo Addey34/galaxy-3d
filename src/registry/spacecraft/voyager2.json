@@ -21,6 +21,18 @@
       "method": "measured",
       "citation": "NSSDCA/COSPAR 1977-076A"
     },
+    "launchVehicle": {
+      "value": "Titan IIIE-Centaur",
+      "source": "nssdca-master-catalog",
+      "method": "measured",
+      "citation": "NSSDCA/COSPAR 1977-076A"
+    },
+    "launchSite": {
+      "value": "Cape Canaveral, United States",
+      "source": "nssdca-master-catalog",
+      "method": "measured",
+      "citation": "NSSDCA/COSPAR 1977-076A"
+    },
     "massKg": {
       "value": 721.9,
       "source": "nssdca-master-catalog",

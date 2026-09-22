@@ -1,6 +1,7 @@
 import { beforeAll, describe, expect, it, vi } from 'vitest';
 import { CELESTIAL_CONFIG } from '@/config/bodies';
 import { flattenBodies } from '@/config/catalog';
+import { NAVIGABLE_TARGETS } from '@/config/navigable';
 import { setLocale } from '@/i18n';
 import { bodySources, bodyStats, formatPositionProvenance } from './bodyInfo';
 
@@ -170,5 +171,44 @@ describe('fiche d’information — provenance de la position', () => {
       error: null,
     });
     expect(text.source).toContain('prédit · confiance réduite');
+  });
+});
+
+/**
+ * Lot 10 : le lanceur et le site d'une sonde sont des NOMS recopiés de la source, jamais
+ * traduits ; la magnitude absolue porte son incertitude en valeur absolue, pas en pourcentage.
+ */
+describe('fiche d’information : faits nommés et magnitude', () => {
+  beforeAll(() => {
+    vi.stubGlobal('document', { documentElement: {} });
+    setLocale('en');
+    setLocale('fr');
+  });
+
+  const statOf = (name: string, label: string) =>
+    bodyStats(name, NAVIGABLE_TARGETS.get(name)!).find(
+      (s) => s.label === label
+    );
+
+  it('montre le lanceur et le site tels que la source les écrit, même en français', () => {
+    expect(statOf('voyager1', 'Lanceur')?.value).toBe('Titan IIIE-Centaur');
+    expect(statOf('voyager1', 'Site de lancement')?.value).toBe(
+      'Cape Canaveral, United States'
+    );
+    expect(statOf('hayabusa2', 'Lanceur')?.sourceIndex).toBeDefined();
+  });
+
+  it('écrit l’incertitude d’une magnitude en magnitudes, pas en pour cent', () => {
+    // 0,445 sur 22,08 ferait « 2 % », sous le seuil, donc tu : or 0,45 magnitude est un
+    // facteur 1,5 sur la brillance.
+    expect(statOf('oumuamua', 'Magnitude absolue')?.value).toBe(
+      '22,08 (±\u00a00,45)'
+    );
+  });
+
+  it('refuse la magnitude d’une comète interstellaire, avec la raison', () => {
+    const atlas = statOf('atlas', 'Magnitude absolue');
+    expect(atlas?.note).toMatch(/M1/);
+    expect(atlas?.sourceIndex).toBeUndefined();
   });
 });

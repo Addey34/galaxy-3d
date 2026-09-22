@@ -1193,6 +1193,7 @@
         "value": 22.08,
         "sigma": 0.44525
       },
+      "cometTotalMagnitude": null,
       "firstObservation": "2017-10-14",
       "lastObservation": "2018-01-02",
       "observationsUsed": 207,
@@ -1215,6 +1216,10 @@
         "sigma": 0.000016673
       },
       "absoluteMagnitude": null,
+      "cometTotalMagnitude": {
+        "value": 13.8,
+        "sigma": 0.8
+      },
       "firstObservation": "2019-02-24",
       "lastObservation": "2020-09-30",
       "observationsUsed": 964,
@@ -1237,6 +1242,10 @@
         "sigma": 0.000019023
       },
       "absoluteMagnitude": null,
+      "cometTotalMagnitude": {
+        "value": 12.5,
+        "sigma": 0.9
+      },
       "firstObservation": "2025-05-15",
       "lastObservation": "2026-02-19",
       "observationsUsed": 782,

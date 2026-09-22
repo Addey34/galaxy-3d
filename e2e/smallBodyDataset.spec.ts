@@ -70,3 +70,20 @@ test('the small-body panel names its source and the date of the snapshot', async
   const count = Number(/^(\d+)/.exec((await note.innerText()).trim())?.[1]);
   expect(count).toBeGreaterThan(1000);
 });
+
+test('past its declared age, the panel says the snapshot is old', async ({
+  page,
+}) => {
+  // Un relevé périmé ne doit pas se lire comme un relevé du jour. L'horloge du NAVIGATEUR est
+  // avancée à huit mois après le relevé commité (2026-09-20), au-delà des 180 jours déclarés
+  // dans `core/snapshotAge.ts` ; les minuteries continuent de tourner.
+  await page.clock.setFixedTime(new Date('2027-05-25T12:00:00Z'));
+  await page.goto('/');
+  await expect(page.locator('#loader')).toBeHidden({ timeout: 30_000 });
+  await page.locator('.mode-btn[data-mode=explo]').click();
+  await page.locator('#smallbody-filters-trigger').click();
+
+  const note = page.locator('#smallbody-filters .sb-source');
+  await expect(note).toBeVisible();
+  await expect(note).toContainText('This snapshot is 8 months old');
+});

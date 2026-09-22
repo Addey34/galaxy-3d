@@ -228,6 +228,15 @@ export const DETAIL = {
     en: 'osculating eccentricity of the published orbit solution; above 1, the orbit is open and the object leaves the Solar System',
     fr: 'excentricité osculatrice de la solution d’orbite publiée ; au-dessus de 1 l’orbite est ouverte et l’objet quitte le Système solaire',
   },
+  /**
+   * La SBDB publie H pour ʻOumuamua, classé « Hyperbolic Asteroid », et M1 pour les deux
+   * comètes : M1 est la magnitude TOTALE de la loi de brillance cométaire, chevelure comprise,
+   * donc une autre grandeur, qui ne s'affiche pas sous le même libellé.
+   */
+  absoluteMagnitudeH: {
+    en: 'absolute magnitude H: the brightness the object would have 1 AU from both the Sun and the observer, at zero phase angle',
+    fr: 'magnitude absolue H : l’éclat qu’aurait l’objet à 1 UA du Soleil et de l’observateur, sous un angle de phase nul',
+  },
   perihelionFromElements: {
     en: 'q = a (1 − e), from the published osculating elements',
     fr: 'q = a (1 − e), d’après les éléments osculateurs publiés',

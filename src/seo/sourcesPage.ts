@@ -338,6 +338,9 @@ function sourcesPage(input: SourcesInput, locale: DocLocale): DocPage {
     firstObservation: { en: 'first observation', fr: 'première observation' },
     eccentricity: { en: 'eccentricity', fr: 'excentricité' },
     perihelionAU: { en: 'perihelion distance', fr: 'distance de périhélie' },
+    launchVehicle: { en: 'launch vehicle', fr: 'lanceur' },
+    launchSite: { en: 'launch site', fr: 'site de lancement' },
+    absoluteMagnitude: { en: 'absolute magnitude', fr: 'magnitude absolue' },
   };
   const perSource = new Map<
     string,
@@ -413,8 +416,8 @@ function sourcesPage(input: SourcesInput, locale: DocLocale): DocPage {
       'physical-data',
       L({ en: 'Physical data', fr: 'Données physiques' }),
       `<p>${L({
-        en: `Each value on a body’s information card and public page cites a primary source: a space agency, an agency database, or a published article, never an encyclopaedia. A <strong>derived</strong> value is computed from published ones (a mass from the published GM, a radius from a diameter), and the card says how. ${shownFacts} values are shown, ${derivedFacts} of them derived. ${unsourcedFacts} values the simulation uses are not shown because they are not yet traced to a primary source, and ${unpublishedFacts} have no single value to publish (a range, an upper limit, or a quantity that varies too much across the body or its orbit for one number): the card says why instead of showing a number.`,
-        fr: `Chaque valeur de la fiche d’un corps et de sa page publique cite une source primaire : une agence spatiale, une base de données d’agence ou un article publié, jamais une encyclopédie. Une valeur <strong>dérivée</strong> est calculée à partir de valeurs publiées (une masse depuis le GM publié, un rayon depuis un diamètre), et la fiche dit comment. ${shownFacts} valeurs sont affichées, dont ${derivedFacts} dérivées. ${unsourcedFacts} valeurs utilisées par la simulation ne sont pas affichées faute de source primaire rattachée, et ${unpublishedFacts} n’ont pas de valeur unique à publier (une plage, une limite supérieure, ou une grandeur qui varie trop sur le corps ou son orbite pour un seul chiffre) : la fiche dit pourquoi au lieu d’afficher un chiffre.`,
+        en: `Each value on a body’s information card and public page cites a primary source: a space agency, an agency database, or a published article, never an encyclopaedia. A <strong>derived</strong> value is computed from published ones (a mass from the published GM, a radius from a diameter), and the card says how. ${shownFacts} values are shown, ${derivedFacts} of them derived. ${unsourcedFacts} values the simulation uses are not shown because they are not yet traced to a primary source, and ${unpublishedFacts} have no single value to publish (a range, an upper limit, a quantity that varies too much across the body or its orbit for one number, or a published figure that describes a different quantity): the card says why instead of showing a number.`,
+        fr: `Chaque valeur de la fiche d’un corps et de sa page publique cite une source primaire : une agence spatiale, une base de données d’agence ou un article publié, jamais une encyclopédie. Une valeur <strong>dérivée</strong> est calculée à partir de valeurs publiées (une masse depuis le GM publié, un rayon depuis un diamètre), et la fiche dit comment. ${shownFacts} valeurs sont affichées, dont ${derivedFacts} dérivées. ${unsourcedFacts} valeurs utilisées par la simulation ne sont pas affichées faute de source primaire rattachée, et ${unpublishedFacts} n’ont pas de valeur unique à publier (une plage, une limite supérieure, une grandeur qui varie trop sur le corps ou son orbite pour un seul chiffre, ou un chiffre publié qui décrit une autre grandeur) : la fiche dit pourquoi au lieu d’afficher un chiffre.`,
       })}</p>` +
         docTable(
           L({
