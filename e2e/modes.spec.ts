@@ -114,9 +114,7 @@ test('settings stay available in both modes and control label density', async ({
     'indeterminate',
     true
   );
-  await expect(
-    page.locator('#settings-table-body .oo-tr').first()
-  ).toBeVisible();
+  await expect(page.locator('#settings-table .oo-tr').first()).toBeVisible();
   await expect.poll(hasVisibleLabel).toBe(true);
 
   // Depuis l'état MIXTE, l'en-tête se parcourt dans cet ordre : un clic coche tout, le
@@ -152,17 +150,23 @@ test('settings column header reflects mixed row state and bulk-toggles all rows'
   await page.locator('#settings-trigger').click();
 
   const bodyToggle = page.locator('#bodies-visible');
-  const marsRow = page.locator('#settings-table-body tr', {
+  const marsRow = page.locator('#settings-table tr.oo-tr', {
     hasText: 'Mars',
   });
   const marsBodyCheckbox = marsRow.locator('td:nth-child(3) .oo-checkbox');
+  const planets = page.locator(
+    '.oo-group[data-group="nav.group.planet"] .oo-group-row td:nth-child(3) .oo-checkbox'
+  );
 
-  // Tout est coché au démarrage : l'en-tête « Corps » doit être pleinement cochée, pas
-  // seulement visuellement — decocher UNE ligne doit la faire passer à indéterminée
-  // (ancien bug : l'en-tête restait un interrupteur figé, déconnecté des lignes).
-  await expect(bodyToggle).toBeChecked();
-  await marsBodyCheckbox.uncheck();
+  // Au démarrage, l'en-tête « Objet » est MIXTE : tout le catalogue est dessiné, les objets
+  // d'instrument (sondes, interstellaires) ne le sont pas (cf. `ui/defaultDisplay.ts`). La
+  // ligne du groupe « Planètes », elle, est pleinement cochée, et décocher UNE planète doit la
+  // faire passer à indéterminée (ancien bug : l'en-tête restait un interrupteur figé,
+  // déconnecté des lignes).
   await expect(bodyToggle).toHaveJSProperty('indeterminate', true);
+  await expect(planets).toBeChecked();
+  await marsBodyCheckbox.uncheck();
+  await expect(planets).toHaveJSProperty('indeterminate', true);
 
   // Cliquer l'en-tête (même indéterminée) coche TOUTES les lignes, Mars y compris —
   // une vraie action « tout cocher », pas un interrupteur caché indépendant des lignes.
@@ -302,6 +306,10 @@ test('mobile contextual surfaces are mutually exclusive and keep the time bar', 
     );
     expect(metrics.outerCanScroll && metrics.nestedCanScroll).toBe(false);
   };
+
+  // Le tableau des Réglages ne défile plus dans le panneau qui défile : huit lignes visibles
+  // sur un téléphone, et une molette qui ne savait pas laquelle des deux boîtes faire bouger.
+  await expectSingleScrollOwner('#orbit-options', '#settings-table');
 
   await page.locator('#weather-trigger').click();
   await expect(page.locator('#weather-layers')).toBeVisible();

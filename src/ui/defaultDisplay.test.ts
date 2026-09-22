@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { MAJOR_BODIES } from './exploHud';
+import { defaultDisplay, INSTRUMENT_KINDS } from './defaultDisplay';
 import { CELESTIAL_CONFIG } from '@/config/bodies';
 import { flattenBodies } from '@/config/catalog';
+import { NAVIGABLE_TARGETS } from '@/config/navigable';
 
 /**
  * CE QUE MONTRE LA PREMIÈRE VUE, SANS QUE PERSONNE N'AIT RIEN RÉGLÉ.
@@ -81,5 +83,31 @@ describe('affichage par défaut', () => {
     // Un nom mal orthographié ici ne casse rien et ne se voit pas : le corps reste
     // simplement anonyme pour toujours.
     for (const name of MAJOR_BODIES) expect(catalogue.has(name)).toBe(true);
+  });
+
+  it('ne dessine ni ne nomme aucun objet d’instrument au premier chargement', () => {
+    // Le défaut mesuré au 2026-09-22 : BepiColombo, OSIRIS-REx, Parker Solar Probe, Juno et
+    // 3I/ATLAS nommés dès le chargement, le nom d'OSIRIS-REx sur celui de Vénus. Les sondes
+    // et les objets interstellaires sont des aides de navigation, en option comme les orbites
+    // des petits corps ; l'objet sélectionné, lui, reste toujours peint (cf. les overlays).
+    expect(NAVIGABLE_TARGETS.size).toBe(14);
+    for (const [name, cfg] of NAVIGABLE_TARGETS) {
+      expect(INSTRUMENT_KINDS.has(cfg.kind)).toBe(true);
+      expect(defaultDisplay(name, cfg.kind)).toEqual({
+        label: false,
+        object: false,
+        orbit: false,
+      });
+    }
+  });
+
+  it('dessine tout le catalogue, et ne trace que les orbites des planètes', () => {
+    for (const [name, cfg] of catalogue) {
+      if (cfg.kind === 'skybox') continue;
+      const d = defaultDisplay(name, cfg.kind);
+      expect(d.object, name).toBe(true);
+      expect(d.orbit, name).toBe(cfg.kind === 'planet');
+      expect(d.label, name).toBe(MAJOR_BODIES.has(name));
+    }
   });
 });

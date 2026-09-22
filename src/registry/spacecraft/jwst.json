@@ -41,6 +41,13 @@
       "citation": "NSSDCA/COSPAR 2021-130A"
     }
   },
+  "satelliteOf": [
+    {
+      "body": "earth",
+      "from": "2021-12-27T00:00:00Z",
+      "to": "2031-08-22T00:00:00Z"
+    }
+  ],
   "coverage": {
     "temporal": {
       "interval": [

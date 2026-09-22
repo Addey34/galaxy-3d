@@ -10,13 +10,13 @@
  *
  * Actif dans les DEUX modes depuis que les sondes sont cherchables et ciblables : la restreindre
  * à l'Exploration, comme le champ de petits corps, ouvrait en Éducatif une vue sur un point que
- * rien ne dessinait. Deux réglages la pilotent par objet, colonnes « Nom » et « Corps » du
+ * rien ne dessinait. Deux réglages la pilotent par objet, colonnes « Étiquette » et « Objet » du
  * tableau Réglages (`setHiddenLabelNames`, `setHiddenNames`), et `markerAt` rend chaque marqueur
  * cliquable — sans lui, une sonde serait le seul objet nommé à l'écran qu'un clic ne peut pas
  * atteindre, puisqu'elle n'a aucun mesh que le rayon puisse toucher.
  */
 import * as THREE from 'three';
-import { scaleToScene } from '@/core/overlayScale';
+import type { InstrumentPlacer } from '@/core/instrumentPlacement';
 import {
   MARKER_LABEL_HEIGHT,
   markerLabelCandidates,
@@ -32,10 +32,12 @@ export class SpacecraftOverlay {
   private readonly ctx: CanvasRenderingContext2D | null;
   private readonly missions: SpacecraftMission[];
   private active = false;
-  /** Marqueurs masqués par le tableau Réglages (colonne « Corps »). */
+  /** Marqueurs masqués par le tableau Réglages (colonne « Objet »). */
   private hidden: ReadonlySet<string> = new Set();
-  /** Objets dont le NOM est masqué (colonne « Libellé »), marqueur conservé. */
+  /** Objets dont le NOM est masqué (colonne « Étiquette »), marqueur conservé. */
   private hiddenLabels: ReadonlySet<string> = new Set();
+  /** Objet sélectionné : toujours peint et nommé, quels que soient les réglages. */
+  private target: string | null = null;
   /**
    * Où chaque marqueur a été peint à la dernière image, en pixels écran. C'est ce qui rend une
    * sonde CLIQUABLE : elle n'a pas de mesh, donc le raycast ne peut pas la toucher — le clic
@@ -66,17 +68,27 @@ export class SpacecraftOverlay {
       this._clear();
       // Plus rien n'est peint : plus rien n'est cliquable (cf. `markerAt`).
       this._markers.length = 0;
+      this._publish();
     }
   }
 
-  /** Marqueurs à ne pas peindre (colonne « Corps » du tableau Réglages). */
+  /** Marqueurs à ne pas peindre (colonne « Objet » du tableau Réglages). */
   setHiddenNames(names: ReadonlySet<string>): void {
     this.hidden = new Set(names);
   }
 
-  /** Noms à ne pas écrire (colonne « Libellé »), les marqueurs restent. */
+  /** Noms à ne pas écrire (colonne « Étiquette »), les marqueurs restent. */
   setHiddenLabelNames(names: ReadonlySet<string>): void {
     this.hiddenLabels = new Set(names);
+  }
+
+  /**
+   * Objet sélectionné par la commande de navigation partagée. Il est toujours peint et nommé :
+   * les sondes sont masquées au premier chargement (cf. `defaultDisplay.ts`), et choisir Juno
+   * dans la palette ne doit pas ouvrir une vue sur un point que rien ne dessine.
+   */
+  setTarget(name: string | null): void {
+    this.target = name;
   }
 
   /**
@@ -99,12 +111,15 @@ export class SpacecraftOverlay {
   /**
    * À appeler chaque frame quand actif. `date` = date de simulation courante, `morph` = état de
    * la transition Éduc↔Explo (cf. `core/overlayScale.ts`) : sans lui, les marqueurs sautaient à
-   * leur position Explo pendant que les planètes glissaient encore.
+   * leur position Explo pendant que les planètes glissaient encore. `place` est le placeur
+   * partagé avec les ancres caméra : une sonde en orbite autour d'un corps s'y pose comme une
+   * lune en Éducatif (cf. `core/instrumentPlacement.ts`), et l'ancre regarde le même point.
    */
   update(
     camera: THREE.PerspectiveCamera,
     date: Date,
     horizons: HorizonsEphemerisService,
+    place: InstrumentPlacer,
     morph = 1,
     space: LabelSpace | null = null
   ): void {
@@ -117,11 +132,12 @@ export class SpacecraftOverlay {
     const locale = getLocale();
 
     for (const mission of this.missions) {
-      if (this.hidden.has(mission.name)) continue;
+      const isTarget = mission.name === this.target;
+      if (!isTarget && this.hidden.has(mission.name)) continue;
       const posAU = horizons.getHeliocentricAU(mission.name, date);
       if (!posAU) continue; // avant le lancement, ou au-delà de la solution de trajectoire
 
-      scaleToScene(this._p, posAU.x, posAU.y, posAU.z, morph).project(camera);
+      place(this._p, mission.name, posAU, date, morph).project(camera);
       if (
         this._p.z < -1 ||
         this._p.z > 1 ||
@@ -143,7 +159,7 @@ export class SpacecraftOverlay {
       this.ctx.fill();
       this._markers.push({ name: mission.name, x, y });
 
-      if (this.hiddenLabels.has(mission.name)) continue;
+      if (!isTarget && this.hiddenLabels.has(mission.name)) continue;
       this.ctx.font = '11px sans-serif';
       const text = mission.displayName[locale] ?? mission.displayName.en;
       const textWidth = this.ctx.measureText(text).width;
@@ -165,6 +181,18 @@ export class SpacecraftOverlay {
       this.ctx.fillStyle = 'rgba(225, 238, 255, 0.9)';
       this.ctx.fillText(text, x + placed.dx - textWidth / 2, y + placed.dy + 4);
     }
+    this._publish();
+  }
+
+  /**
+   * `data-markers` : nombre de marqueurs peints à la dernière image, la seule trace DOM de ce
+   * que la couche a dessiné (même contrat que `interstellarOverlay`). Écrit seulement quand il
+   * change : un attribut réécrit à chaque image serait une mutation DOM par image.
+   */
+  private _publish(): void {
+    const value = String(this._markers.length);
+    if (this.canvas.dataset['markers'] !== value)
+      this.canvas.dataset['markers'] = value;
   }
 
   private _clear(): void {

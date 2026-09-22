@@ -1,20 +1,26 @@
 /**
- * Panneau de filtres du champ de petits corps — ceinture principale, géocroiseurs (NEO),
- * comètes, objets transneptuniens (TNO). Calqué sur `orbitOptions.ts` (même structure de
- * surface contextuelle, mêmes classes CSS `.oo-body`/`.oo-row`/`.oo-name`/`.oo-checkbox`,
- * déjà génériques — aucun nouveau style nécessaire). Ne pilote que la VISIBILITÉ : les données
- * des 4 catégories sont chargées une fois pour toutes par `loadSmallBodies` ; décocher une
- * catégorie ne refait aucune requête, `SmallBodyOverlay.setVisibleCategories` filtre au dessin.
+ * Filtres du champ d'astéroïdes et de comètes : ceinture principale, géocroiseurs (NEO),
+ * comètes, objets transneptuniens (TNO). Une SECTION de la surface Réglages d'affichage
+ * (`#smallbody-filters`), avec les mêmes lignes que le tableau des corps (pastille, nom, case) :
+ * le champ avait son propre bouton dans le dock, qui n'apparaissait qu'en Exploration et
+ * faisait donc changer la rangée de boutons d'un mode à l'autre. La section reste visible dans
+ * les deux modes et dit que le champ ne se dessine qu'en Exploration.
  *
- * Le panneau porte aussi la PROVENANCE de ces corps : depuis le lot 8b la donnée n'est plus un
+ * Ne pilote que la VISIBILITÉ : les données des 4 catégories sont chargées une fois pour
+ * toutes par `loadSmallBodies` ; décocher une catégorie ne refait aucune requête,
+ * `SmallBodyOverlay.setVisibleCategories` filtre au dessin.
+ *
+ * La section porte aussi la PROVENANCE de ces corps : depuis le lot 8b la donnée n'est plus un
  * flux mais un instantané daté, livré avec le build (`core/sbdb.ts` dit pourquoi). Une donnée
  * figée qui se présenterait comme vivante serait le défaut que ce lot corrige, pas sa solution.
  */
 import { t, intlLocale, onLocaleChange } from '@/i18n';
 import { isSnapshotStale, snapshotAgeMonths } from '@/core/snapshotAge';
 import type { SmallBodyCategory } from '@/core/sbdb';
-import type { SmallBodyOverlay } from './smallBodyOverlay';
-import type { OverlayCoordinator } from './overlayCoordinator';
+import {
+  SMALL_BODY_MARKER_RGB,
+  type SmallBodyOverlay,
+} from './smallBodyOverlay';
 
 const CATEGORIES: { id: SmallBodyCategory; labelKey: string }[] = [
   { id: 'main-belt', labelKey: 'smallBodies.mainBelt' },
@@ -24,21 +30,18 @@ const CATEGORIES: { id: SmallBodyCategory; labelKey: string }[] = [
 ];
 
 export interface SmallBodyFiltersPanel {
-  /** Affiche/masque le bouton déclencheur (l'overlay qu'il pilote n'a de sens qu'en Explo). */
-  setTriggerVisible(visible: boolean): void;
   /**
    * Date du relevé et nombre de corps chargés. `null` tant que rien n'est chargé, et si le
-   * chargement échoue : le panneau n'annonce alors AUCUNE date plutôt qu'une date fausse.
+   * chargement échoue : la section n'annonce alors AUCUNE date plutôt qu'une date fausse.
    */
   setDataset(retrieved: string | null, count: number): void;
 }
 
 export function setupSmallBodyFilters(
-  overlay: SmallBodyOverlay,
-  coordinator?: OverlayCoordinator
+  overlay: SmallBodyOverlay
 ): SmallBodyFiltersPanel {
   const panel = document.getElementById('smallbody-filters');
-  const noop = { setTriggerVisible: () => {}, setDataset: () => {} };
+  const noop = { setDataset: () => {} };
   if (!panel) return noop;
   const bodyEl = panel.querySelector<HTMLElement>('.oo-body');
   if (!bodyEl) return noop;
@@ -54,6 +57,11 @@ export function setupSmallBodyFilters(
       const row = document.createElement('label');
       row.className = 'oo-row';
 
+      // La même pastille que le tableau des corps, de la couleur des points du champ.
+      const dot = document.createElement('span');
+      dot.className = 'oo-dot';
+      dot.style.setProperty('--orbit-rgb', SMALL_BODY_MARKER_RGB);
+
       const nameEl = document.createElement('span');
       nameEl.className = 'oo-name';
       nameEl.textContent = t(cat.labelKey);
@@ -68,12 +76,11 @@ export function setupSmallBodyFilters(
         applyState();
       });
 
-      row.append(nameEl, checkbox);
+      row.append(dot, nameEl, checkbox);
       bodyEl!.append(row);
     }
   }
   buildRows();
-
   // Provenance affichée : « 6965 objets, JPL Small-Body Database, relevé du 20 septembre
   // 2026 ». Le compte est celui des orbites EXPLOITABLES, pas des lignes du fichier.
   let dataset: { retrieved: string | null; count: number } = {
@@ -114,39 +121,7 @@ export function setupSmallBodyFilters(
     renderNote();
   });
 
-  // Surface contextuelle : ouverte par le déclencheur du dock, fermée par sa croix, le scrim
-  // ou une autre surface (coordinateur). Démarre masquée.
-  const triggerBtn = document.querySelector<HTMLButtonElement>(
-    '#smallbody-filters-trigger'
-  );
-  const closeBtn = panel.querySelector<HTMLButtonElement>('.surface-close');
-  let open = false;
-
-  const setOpen = (next: boolean): void => {
-    open = next;
-    if (open) coordinator?.requestOpen('small-body-filters');
-    panel.hidden = !open;
-    triggerBtn?.setAttribute('aria-expanded', String(open));
-  };
-  coordinator?.register('small-body-filters', () => setOpen(false));
-
-  triggerBtn?.addEventListener('click', () => setOpen(!open));
-  closeBtn?.addEventListener('click', () => setOpen(false));
-  panel.addEventListener('keydown', (event) => {
-    if (event.key === 'Escape') {
-      event.preventDefault();
-      setOpen(false);
-      triggerBtn?.focus();
-    }
-  });
-
-  setOpen(false);
-
   return {
-    setTriggerVisible: (visible: boolean) => {
-      if (triggerBtn) triggerBtn.hidden = !visible;
-      if (!visible) setOpen(false);
-    },
     setDataset: (retrieved: string | null, count: number) => {
       dataset = { retrieved, count };
       renderNote();

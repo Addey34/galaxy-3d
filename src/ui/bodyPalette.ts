@@ -15,6 +15,7 @@ import { bodyDisplayName } from '@/i18n/bodyText';
 import { onLocaleChange, t } from '@/i18n';
 import { bodyAccentColor, hexToRgbTriplet, onAccentChange } from './bodyAccent';
 import type { OverlayCoordinator } from './overlayCoordinator';
+import { BODY_GROUPS } from './bodyGroups';
 
 const BODY_CONFIGS = NAVIGABLE_BODIES;
 
@@ -26,24 +27,8 @@ interface PaletteEntry {
   button: HTMLButtonElement;
 }
 
-/** Ordre et libellé des groupes affichés dans la palette. */
-const GROUPS: Array<{ key: string; kinds: ReadonlySet<BodyKind> }> = [
-  { key: 'nav.group.star', kinds: new Set<BodyKind>(['star']) },
-  { key: 'nav.group.planet', kinds: new Set<BodyKind>(['planet']) },
-  { key: 'nav.group.moon', kinds: new Set<BodyKind>(['moon']) },
-  { key: 'nav.group.dwarf', kinds: new Set<BodyKind>(['dwarf']) },
-  {
-    key: 'nav.group.other',
-    kinds: new Set<BodyKind>(['asteroid', 'comet']),
-  },
-  // Couche instrument : nommée à l'écran depuis toujours, cherchable depuis seulement
-  // maintenant (cf. `config/navigable.ts`).
-  { key: 'nav.group.spacecraft', kinds: new Set<BodyKind>(['spacecraft']) },
-  {
-    key: 'nav.group.interstellar',
-    kinds: new Set<BodyKind>(['interstellar']),
-  },
-];
+/** Ordre et libellé des groupes : ceux du tableau des Réglages (cf. `bodyGroups.ts`). */
+const GROUPS = BODY_GROUPS;
 
 export interface BodyPalette {
   /** Reflète la sélection courante (état actif + libellé du déclencheur). */

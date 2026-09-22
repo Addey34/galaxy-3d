@@ -21,6 +21,7 @@
     "facts:snapshot": "node scripts/snapshot-fact-sources.mjs",
     "smallbodies:generate": "node scripts/generate-small-body-dataset.mjs",
     "smallbodies:age": "node scripts/check-small-body-snapshot-age.mjs",
+    "spacecraft:phases": "node scripts/derive-spacecraft-phases.mjs",
     "surface:tiles": "node --max-old-space-size=4096 scripts/bake-surface-height-tiles.mjs",
     "gibs:colormap": "node scripts/import-gibs-colormap.mjs",
     "fingerprint:generated": "node scripts/fingerprint-generated.mjs",

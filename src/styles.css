@@ -710,10 +710,8 @@ button {
   max-height: calc(100vh - var(--control-h) - 4 * var(--edge));
 }
 
-/* Trois bascules + leurs dépliants (noms, corps, orbites) : le corps du panneau peut
-   dépasser sur les viewports bas. Chaque `.oo-body` garde sa propre limite/défilement
-   interne ; le scroll ici ne s'active qu'en secours si l'ensemble dépasse la hauteur
-   du panneau (évite un contenu tronqué et invisible plutôt qu'un double scroll gênant). */
+/* Le corps de la surface Réglages est son SEUL défileur (cf. `.oo-table`) : ses sections
+   s'empilent dans le flux et il défile quand l'ensemble dépasse la hauteur du panneau. */
 .surface--settings > .surface-body {
   min-height: 0;
   overflow-y: auto;
@@ -1259,24 +1257,107 @@ button {
   line-height: 1.35;
   color: var(--ink-faint);
 }
-.oo-table-scroll {
-  max-height: min(52vh, 22rem);
-  overflow-y: auto;
-  border: 1px solid var(--hairline);
-  border-radius: var(--r-sm);
-  scrollbar-width: thin;
-  scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
-}
+/* Le tableau n'a plus son propre défilement : c'est le corps de la surface qui défile, seul.
+   Deux défileurs imbriqués (la boîte du tableau dans le panneau) laissaient huit lignes
+   visibles sur un téléphone et une molette qui ne savait pas lequel faire bouger. Les groupes
+   repliés gardent le tableau court ; l'en-tête reste collé en haut du corps qui défile. */
 .oo-table {
   width: 100%;
   border-collapse: collapse;
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-sm);
+}
+/* Ligne de groupe : son nom déplie le groupe, ses cases règlent tout le groupe. */
+.oo-group-row > * {
+  padding: 0.3rem 0.3rem;
+  background: rgba(255, 255, 255, 0.03);
+  border-top: 1px solid var(--hairline);
+}
+.oo-group-name {
+  text-align: left;
+}
+.oo-group-toggle {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  width: 100%;
+  padding: 0.1rem 0;
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+}
+.oo-group-toggle::before {
+  content: '';
+  flex: 0 0 auto;
+  width: 0.4rem;
+  height: 0.4rem;
+  border-right: 1.5px solid currentColor;
+  border-bottom: 1.5px solid currentColor;
+  transform: rotate(-45deg);
+  transition: transform 0.15s;
+  opacity: 0.7;
+}
+.oo-group-toggle[aria-expanded='true']::before {
+  transform: rotate(45deg);
+}
+.oo-group-toggle:hover {
+  color: rgb(var(--accent));
+}
+.oo-group-count {
+  color: var(--ink-dim);
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+.oo-tr[hidden] {
+  display: none;
+}
+
+/* Sections de la surface Réglages d'affichage : un titre, puis ses réglages. Les blocs qu'on
+   y range (exposition, qualité, zoom optique) perdent leur propre séparateur : c'est la
+   section qui sépare, une seule fois. */
+.settings-section + .settings-section {
+  margin-top: var(--sp-3);
+  padding-top: var(--sp-3);
+  border-top: 1px solid var(--hairline);
+}
+.settings-section[hidden] {
+  display: none;
+}
+.settings-section-title {
+  margin: 0 0 var(--sp-2);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink);
+}
+.settings-section .render-exposure,
+.settings-section .quality-group,
+.settings-section .optical-zoom {
+  margin-top: 0;
+  margin-bottom: var(--sp-2);
+  padding-top: 0;
+  border-top: 0;
+}
+.settings-section .oo-body {
+  max-height: none;
+  overflow: visible;
+  padding: 0;
+  border-top: 0;
 }
 .oo-table thead th {
   position: sticky;
   top: 0;
   z-index: 1;
   padding: 0.4rem 0.3rem;
-  background: var(--surface-solid);
+  /* Opaque : collé en haut du corps qui défile, un fond à 96 % laissait lire les lignes
+     passées dessous. */
+  background: rgb(9, 13, 26);
   border-bottom: 1px solid var(--hairline);
   font-weight: 600;
   text-align: center;
@@ -1296,10 +1377,12 @@ button {
   font-size: 0.6rem;
   letter-spacing: 0.03em;
   text-transform: uppercase;
-  color: var(--ink-faint);
+  /* `--ink-dim` et non `--ink-faint` : sur le fond désormais opaque de l'en-tête collé, le
+     second tombait à 3,02:1 (axe), sous les 4,5:1 exigés pour un texte de cette taille. */
+  color: var(--ink-dim);
 }
 .oo-th-toggle label:hover {
-  color: var(--ink-dim);
+  color: var(--ink);
 }
 .oo-tr td {
   padding: 0.28rem 0.3rem;

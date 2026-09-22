@@ -43,6 +43,40 @@ test('spacecraft overlay is present and visible in both display modes', async ({
   expect(errors, `Erreurs page : ${errors.join(' | ')}`).toEqual([]);
 });
 
+/**
+ * CE QUE MONTRE LA PREMIÈRE VUE : les sondes sont en OPTION (cf. `ui/defaultDisplay.ts`).
+ *
+ * Défaut mesuré au 2026-09-22 : BepiColombo, OSIRIS-REx, Parker Solar Probe et Juno nommés dès
+ * le chargement, le nom d'OSIRIS-REx sur celui de Vénus. Mais l'objet SÉLECTIONNÉ est toujours
+ * peint : choisir Juno ne doit pas ouvrir une vue sur un point que rien ne dessine.
+ */
+test('no probe is painted on first load, except the selected one', async ({
+  page,
+}) => {
+  const overlay = page.locator('#spacecraft-overlay');
+  await page.goto('/?date=2026-09-22T00%3A00%3A00Z');
+  await expect(page.locator('#loader')).toBeHidden({ timeout: 30_000 });
+  await expect(overlay).toHaveClass(/is-visible/);
+  // Plusieurs sondes sont dans le champ de la vue d'ensemble à cette date : c'est le réglage,
+  // et non leur position, qui les tait.
+  await expect(overlay).toHaveAttribute('data-markers', '0');
+
+  await page.locator('#settings-trigger').click();
+  await page
+    .locator(
+      '.oo-group[data-group="nav.group.spacecraft"] .oo-group-row td:nth-child(3) .oo-checkbox'
+    )
+    .check();
+  await expect
+    .poll(async () => Number(await overlay.getAttribute('data-markers')))
+    .toBeGreaterThanOrEqual(3);
+
+  await page.goto('/?body=juno&date=2026-09-22T00%3A00%3A00Z');
+  await expect(page.locator('#loader')).toBeHidden({ timeout: 30_000 });
+  await expect(page.locator('#body-info .bi-name')).toHaveText('Juno');
+  await expect(overlay).toHaveAttribute('data-markers', '1');
+});
+
 test('mounts without error at a date before every mission launch', async ({
   page,
 }) => {
@@ -89,7 +123,7 @@ test('a probe is searchable, selectable and listed in the settings table', async
   await page.keyboard.press('Escape');
   await page.locator('#settings-trigger').click();
   const row = page
-    .locator('#settings-table-body .oo-tr')
+    .locator('#settings-table .oo-tr')
     .filter({ hasText: 'Juno' })
     .first();
   await expect(row.locator('.oo-checkbox')).toHaveCount(2);

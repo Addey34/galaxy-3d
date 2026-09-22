@@ -66,7 +66,7 @@ export function setupQualitySection(scene: SceneSystem): void {
   group.append(note);
 
   const host =
-    document.querySelector('#orbit-options .surface-body') ?? document.body;
+    document.getElementById('settings-section-rendering') ?? document.body;
   host.append(group);
 
   const currentMode = (): QualityMode => readQualityMode();

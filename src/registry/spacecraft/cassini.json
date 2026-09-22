@@ -41,6 +41,13 @@
       "citation": "NSSDCA/COSPAR 1997-061A"
     }
   },
+  "satelliteOf": [
+    {
+      "body": "saturn",
+      "from": "2004-07-01T00:00:00Z",
+      "to": "2017-09-13T00:00:00Z"
+    }
+  ],
   "coverage": {
     "temporal": {
       "interval": [

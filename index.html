@@ -339,11 +339,12 @@
           />
         </svg>
       </button>
-      <!-- Ordre logique du dock : réglages d'affichage (settings — la qualité graphique y est
-           fusionnée, plus de bouton dédié → filtres petits corps → météo), contenu/découverte
-           (événements), actions sur la vue (partage → capture → VR), méta (aide → retour
-           utilisateur), puis
-           soutien (Ko-fi) tout à la fin — jamais au milieu des outils de travail. -->
+      <!-- Ordre logique du dock : réglages d'affichage (UNE surface : contenu de la scène,
+           champ d'astéroïdes, rendu, lecture, vue ; le champ avait son propre bouton, qui
+           n'apparaissait qu'en Explo) → couches de la Terre (météo, événements terrestres) →
+           événements astronomiques, actions sur la vue (partage → capture → VR), méta (aide →
+           retour utilisateur), puis soutien (Ko-fi) tout à la fin, jamais au milieu des outils
+           de travail. -->
       <button
         id="settings-trigger"
         class="tool"
@@ -366,27 +367,6 @@
           <circle cx="6" cy="4.5" r="1.5" fill="currentColor" />
           <circle cx="10.5" cy="8" r="1.5" fill="currentColor" />
           <circle cx="7.5" cy="11.5" r="1.5" fill="currentColor" />
-        </svg>
-      </button>
-      <button
-        id="smallbody-filters-trigger"
-        class="tool"
-        type="button"
-        title="Small-body filters"
-        aria-label="Small-body filters"
-        aria-expanded="false"
-        aria-controls="smallbody-filters"
-        data-i18n-title="smallBodies.trigger.aria"
-        data-i18n-aria="smallBodies.trigger.aria"
-        hidden
-      >
-        <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
-          <circle cx="8" cy="8" r="1.3" fill="currentColor" />
-          <circle cx="3" cy="5" r="1" fill="currentColor" />
-          <circle cx="13" cy="4.5" r="0.9" fill="currentColor" />
-          <circle cx="12.5" cy="11.5" r="1.1" fill="currentColor" />
-          <circle cx="4" cy="12" r="0.8" fill="currentColor" />
-          <circle cx="2.5" cy="9.5" r="0.7" fill="currentColor" />
         </svg>
       </button>
       <button
@@ -421,8 +401,8 @@
         id="earth-events-trigger"
         class="tool"
         type="button"
-        title="Open Earth events"
-        aria-label="Open Earth events"
+        title="Earth events"
+        aria-label="Earth events"
         aria-expanded="false"
         aria-controls="earth-events"
         data-i18n-title="earthEvents.trigger.aria"
@@ -457,8 +437,8 @@
         id="events-trigger"
         class="tool"
         type="button"
-        title="Open astronomical events"
-        aria-label="Open astronomical events"
+        title="Astronomical events"
+        aria-label="Astronomical events"
         aria-expanded="false"
         aria-controls="astronomical-events"
         data-i18n-title="events.open"
@@ -981,7 +961,7 @@
       hidden
     >
       <header class="surface-header">
-        <h3 class="surface-title" data-i18n="settings.title">Settings</h3>
+        <h3 class="surface-title" data-i18n="settings.title">Display settings</h3>
         <button
           class="surface-close"
           type="button"
@@ -1000,24 +980,39 @@
         </button>
       </header>
       <div class="surface-body">
-        <!-- Tableau unifié : un corps par ligne, une colonne par bascule (nom, corps,
-             orbite). L'en-tête de colonne bascule toute la colonne d'un coup (comportement
-             des anciens interrupteurs maîtres) ; chaque case règle un seul corps — tout est
-             visible en un coup d'œil au lieu de 3 listes séparées répétant les mêmes noms.
-             Lignes construites par ui/orbitOptions.ts. -->
-        <p class="oo-table-hint" data-i18n="settings.tableHint">
-          Column header toggles the whole column; each row controls one body.
-        </p>
-        <div class="oo-table-scroll">
-          <table class="oo-table">
+        <!-- UNE surface pour tout ce qui règle l'affichage, en sections titrées dans un ordre
+             fixe (contenu de la scène, champ d'astéroïdes, rendu, lecture, vue). Chaque module
+             se range dans SA section par son id, au lieu de s'ajouter à la fin dans l'ordre
+             des appels : c'est ce qui avait rangé les trajectoires interstellaires sous les
+             quatre boutons de qualité graphique. -->
+        <section
+          class="settings-section"
+          aria-labelledby="settings-section-scene-title"
+        >
+          <h4
+            id="settings-section-scene-title"
+            class="settings-section-title"
+            data-i18n="settings.section.scene"
+          >
+            In the scene
+          </h4>
+          <!-- Tableau unifié : un objet par ligne, rangé par groupe (les mêmes que la
+               palette de recherche), une colonne par bascule (étiquette, objet, orbite).
+               L'en-tête de colonne bascule toute la colonne, la ligne de groupe tout le
+               groupe, chaque case un seul objet. Lignes construites par ui/orbitOptions.ts. -->
+          <p class="oo-table-hint" data-i18n="settings.tableHint">
+            A column header sets the whole column, a group row its group, a
+            row one object. Spacecraft and interstellar objects start hidden.
+          </p>
+          <table class="oo-table" id="settings-table">
             <caption class="sr-only" data-i18n="settings.tableCaption">
-              Per-body display settings
+              What the scene shows, object by object
             </caption>
             <thead>
               <tr>
                 <th scope="col" class="oo-th oo-th-name">
                   <span class="sr-only" data-i18n="settings.col.bodyName"
-                    >Celestial body</span
+                    >Object</span
                   >
                 </th>
                 <th scope="col" class="oo-th oo-th-toggle">
@@ -1027,10 +1022,10 @@
                       class="oo-checkbox"
                       type="checkbox"
                       checked
-                      aria-label="Show body names and markers"
+                      aria-label="Show every label"
                       data-i18n-aria="settings.labelsToggle"
                     />
-                    <span data-i18n="settings.col.names">Name</span>
+                    <span data-i18n="settings.col.names">Label</span>
                   </label>
                 </th>
                 <th scope="col" class="oo-th oo-th-toggle">
@@ -1040,10 +1035,10 @@
                       class="oo-checkbox"
                       type="checkbox"
                       checked
-                      aria-label="Show celestial bodies"
+                      aria-label="Show every object"
                       data-i18n-aria="settings.bodiesToggle"
                     />
-                    <span data-i18n="settings.col.bodies">Body</span>
+                    <span data-i18n="settings.col.bodies">Object</span>
                   </label>
                 </th>
                 <th scope="col" class="oo-th oo-th-toggle">
@@ -1053,7 +1048,7 @@
                       class="oo-checkbox"
                       type="checkbox"
                       checked
-                      aria-label="Show orbits"
+                      aria-label="Show every orbit and trajectory"
                       data-i18n-aria="settings.orbitsToggle"
                     />
                     <span data-i18n="settings.col.orbits">Orbit</span>
@@ -1061,50 +1056,70 @@
                 </th>
               </tr>
             </thead>
-            <tbody id="settings-table-body">
-              <!-- populated by ui/orbitOptions.ts -->
-            </tbody>
+            <!-- un <tbody> par groupe, construit par ui/orbitOptions.ts -->
           </table>
-        </div>
-      </div>
-    </aside>
-
-    <!-- ─── Filtres petits corps (NEO / comètes / TNO) ───────────────────────── -->
-    <aside
-      id="smallbody-filters"
-      class="surface surface--settings"
-      role="dialog"
-      aria-label="Small-body filters"
-      data-i18n-aria="smallBodies.dialog.aria"
-      hidden
-    >
-      <header class="surface-header">
-        <h3 class="surface-title" data-i18n="smallBodies.title">
-          Small bodies
-        </h3>
-        <button
-          class="surface-close"
-          type="button"
-          aria-label="Close"
-          data-i18n-aria="surface.close"
+        </section>
+        <section
+          id="smallbody-filters"
+          class="settings-section"
+          aria-labelledby="settings-section-field-title"
         >
-          <svg viewBox="0 0 14 14" width="13" height="13" aria-hidden="true">
-            <path
-              d="M3.5 3.5l7 7M10.5 3.5l-7 7"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="1.6"
-              stroke-linecap="round"
-            />
-          </svg>
-        </button>
-      </header>
-      <div class="surface-body">
-        <div class="oo-body">
-          <!-- populated by ui/smallBodyFilters.ts -->
-        </div>
-        <!-- Provenance et DATE du relevé, remplies par ui/smallBodyFilters.ts. -->
-        <p class="sb-source" hidden></p>
+          <h4
+            id="settings-section-field-title"
+            class="settings-section-title"
+            data-i18n="smallBodies.title"
+          >
+            Asteroid and comet field
+          </h4>
+          <p class="oo-table-hint" data-i18n="smallBodies.exploOnly">
+            Drawn in Exploration mode, one dot per known orbit.
+          </p>
+          <div class="oo-body">
+            <!-- populated by ui/smallBodyFilters.ts -->
+          </div>
+          <!-- Provenance et DATE du relevé, remplies par ui/smallBodyFilters.ts. -->
+          <p class="sb-source" hidden></p>
+        </section>
+        <section
+          id="settings-section-rendering"
+          class="settings-section"
+          aria-labelledby="settings-section-rendering-title"
+        >
+          <h4
+            id="settings-section-rendering-title"
+            class="settings-section-title"
+            data-i18n="settings.section.rendering"
+          >
+            Rendering
+          </h4>
+        </section>
+        <section
+          id="settings-section-reading"
+          class="settings-section"
+          aria-labelledby="settings-section-reading-title"
+        >
+          <h4
+            id="settings-section-reading-title"
+            class="settings-section-title"
+            data-i18n="settings.section.reading"
+          >
+            Accessibility and units
+          </h4>
+        </section>
+        <section
+          id="settings-section-view"
+          class="settings-section"
+          aria-labelledby="settings-section-view-title"
+          hidden
+        >
+          <h4
+            id="settings-section-view-title"
+            class="settings-section-title"
+            data-i18n="settings.section.view"
+          >
+            View
+          </h4>
+        </section>
       </div>
     </aside>
 

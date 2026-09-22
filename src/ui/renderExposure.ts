@@ -61,7 +61,7 @@ export function setupRenderExposure(
 
   // Rangé dans la surface Réglages, sous les autres contrôles (FOV inclus).
   const host =
-    document.querySelector('#orbit-options .surface-body') ?? document.body;
+    document.getElementById('settings-section-rendering') ?? document.body;
   host.append(group);
 
   const refresh = (): void => {

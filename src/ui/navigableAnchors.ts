@@ -8,9 +8,10 @@
  * déguisée — rien ne la rend visible, et le marqueur affiché reste celui que la couche 2D
  * peint (`spacecraftOverlay`, `interstellarOverlay`).
  *
- * L'ancre est placée par `scaleToScene`, exactement la fonction dont les deux couches se
- * servent pour projeter leur marqueur : la caméra regarde donc précisément le point où le
- * marqueur est peint, dans les deux modes et pendant toute la transition Éduc↔Explo.
+ * L'ancre est placée par le placeur que la couche des sondes reçoit aussi (cf.
+ * `core/instrumentPlacement.ts`) : la caméra regarde donc précisément le point où le marqueur
+ * est peint, dans les deux modes, pendant toute la transition Éduc↔Explo, et quand une sonde
+ * en orbite est posée dans le système de son corps.
  *
  * DISPONIBILITÉ. Un corps du catalogue existe à toute date ; une sonde, non. Hors de la
  * couverture de son fichier Horizons (avant le lancement, au-delà de la solution de
@@ -22,7 +23,7 @@
 import * as THREE from 'three';
 import { eclipticToScene } from '@/core/frames';
 import { keplerianPositionEcliptic } from '@/core/kepler';
-import { scaleToScene } from '@/core/overlayScale';
+import type { InstrumentPlacer } from '@/core/instrumentPlacement';
 import type { HorizonsEphemerisService } from '@/core/HorizonsEphemerisService';
 import type { CameraTarget } from '@/components/systems/CameraSystem';
 import { SPACECRAFT_MISSIONS } from '@/config/spacecraft';
@@ -63,7 +64,8 @@ export interface NavigableAnchors {
  */
 export function createNavigableAnchors(
   scene: THREE.Scene,
-  horizons: HorizonsEphemerisService
+  horizons: HorizonsEphemerisService,
+  place: InstrumentPlacer
 ): NavigableAnchors {
   const anchors: Anchor[] = [];
   const targets: Record<string, CameraTarget> = {};
@@ -113,7 +115,7 @@ export function createNavigableAnchors(
       const posAU = anchor.positionAU(date);
       anchor.available = posAU !== null;
       if (posAU) {
-        scaleToScene(scratch, posAU.x, posAU.y, posAU.z, morph);
+        place(scratch, anchor.name, posAU, date, morph);
         anchor.group.position.copy(scratch);
         key += anchor.name + ';';
       }

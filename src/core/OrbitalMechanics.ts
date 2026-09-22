@@ -620,6 +620,20 @@ export class OrbitalMechanics {
   }
   private _configByName: Map<string, CelestialBodyConfig> | null = null;
 
+  /**
+   * Position héliocentrique (UA, repère scène) d'un corps HÉLIOCENTRIQUE du catalogue, par la
+   * même règle que celle qui le place à l'écran, ou `null`. Les couches d'instrument s'en
+   * servent pour poser une sonde dans le système de son corps sans qu'elle s'en décolle : une
+   * autre source (astronomy-engine là où le fichier Horizons répond) la décalerait du corps
+   * dessiné de l'écart entre les deux.
+   */
+  heliocentricAU(name: string, date: Date): THREE.Vector3 | null {
+    this._configByName ??= flattenBodies(this.config);
+    const cfg = this._configByName.get(name);
+    if (!cfg || cfg.frame === 'parentRelative') return null;
+    return this._positions.resolve(name, cfg, date);
+  }
+
   get simulationDate(): Date {
     return this.clock.date;
   }

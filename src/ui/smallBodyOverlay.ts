@@ -20,6 +20,9 @@ import type { ParsedSmallBody, SmallBodyCategory } from '@/core/sbdb';
 /** Nombre maximal de marqueurs dessinés par frame (LOD : les plus proches d'abord). */
 const MAX_MARKERS = 1500;
 
+/** Couleur des points du champ, reprise par la pastille des filtres (cf. `smallBodyFilters.ts`). */
+export const SMALL_BODY_MARKER_RGB = '180, 200, 235';
+
 export class SmallBodyOverlay {
   private readonly canvas: HTMLCanvasElement;
   private readonly ctx: CanvasRenderingContext2D | null;
@@ -79,7 +82,7 @@ export class SmallBodyOverlay {
     // distance adaptatif appliqué à la volée (voir _distanceCutoff).
     const cutoff = this._distanceCutoff();
 
-    this.ctx.fillStyle = 'rgba(180, 200, 235, 0.75)';
+    this.ctx.fillStyle = `rgba(${SMALL_BODY_MARKER_RGB}, 0.75)`;
     let drawn = 0;
     for (let b = 0; b < this.bodies.length && drawn < MAX_MARKERS; b++) {
       const body = this.bodies[b];

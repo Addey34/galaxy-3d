@@ -41,6 +41,13 @@
       }
     }
   },
+  "satelliteOf": [
+    {
+      "body": "mercury",
+      "from": "2026-10-13T00:00:00Z",
+      "to": "2027-04-08T00:00:00Z"
+    }
+  ],
   "coverage": {
     "temporal": {
       "interval": [

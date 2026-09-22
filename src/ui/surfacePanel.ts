@@ -65,7 +65,7 @@ export function setupSurfacePanel(api: PublicAPI): () => void {
   switchLabel.className = 'settings-switch-label';
   wrapper.append(checkbox, switchLabel);
   (
-    document.querySelector('#orbit-options .surface-body') ?? document.body
+    document.getElementById('settings-section-rendering') ?? document.body
   ).append(wrapper);
 
   // ── Bandeau de provenance ──────────────────────────────────────────────────────────────

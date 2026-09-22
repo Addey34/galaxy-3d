@@ -47,13 +47,13 @@ import { setupEarthEvents } from './ui/earthEvents';
 import { earthquakeLayer, naturalEventLayer } from './core/earthEventLayers';
 import { SpacecraftOverlay } from './ui/spacecraftOverlay';
 import { createNavigableAnchors } from './ui/navigableAnchors';
+import { spacecraftPlacer } from './core/instrumentPlacement';
 import { NAVIGABLE_TARGETS } from './config/navigable';
 import { SPACECRAFT_MISSIONS } from './config/spacecraft';
 import { setupBodyPicker } from './ui/bodyPicker';
 import { setupOrbitOptions } from './ui/orbitOptions';
 import { setupRenderExposure } from './ui/renderExposure';
 import { setupColorblindToggle } from './ui/colorblindToggle';
-import { setupInterstellarPathsToggle } from './ui/interstellarPathsToggle';
 import { setupSurfacePanel } from './ui/surfacePanel';
 import { setupUnitsToggle } from './ui/unitsToggle';
 import { setupRealtimeClouds } from './ui/realtimeClouds';
@@ -81,11 +81,13 @@ import { setupMeteoDebug } from './ui/meteoDebug';
 import { loadSmallBodies } from './core/sbdb';
 import { CELESTIAL_CONFIG } from './config/bodies';
 import { flattenBodies } from './config/catalog';
+import { clearRetiredStorage } from './config/storageKeys';
 
 // Traduit les chaînes statiques du HTML avant tout et synchronise <html lang> ; les modules
 // dynamiques (loader, bodyInfo…) se retraduisent ensuite via leurs propres abonnements.
 initStaticI18n();
 setupLangSwitch();
+clearRetiredStorage();
 setupFullscreen();
 const overlayCoordinator = setupOverlayCoordinator();
 setupHelp(overlayCoordinator);
@@ -99,10 +101,6 @@ const CONTEXTUAL_SURFACE_ANCHORS: Partial<
   'earth-events': {
     trigger: '#earth-events-trigger',
     panel: '#earth-events',
-  },
-  'small-body-filters': {
-    trigger: '#smallbody-filters-trigger',
-    panel: '#smallbody-filters',
   },
   events: { trigger: '#events-trigger', panel: '#astronomical-events' },
   help: { trigger: '#help-btn', panel: '#help-popover' },
@@ -307,10 +305,7 @@ if (surfaceScrim) {
     // reste vide et le panneau n'annonce aucune date.
     const smallBodyOverlay = new SmallBodyOverlay();
     smallBodyOverlay.mount();
-    const smallBodyFilters = setupSmallBodyFilters(
-      smallBodyOverlay,
-      overlayCoordinator
-    );
+    const smallBodyFilters = setupSmallBodyFilters(smallBodyOverlay);
     void loadSmallBodies().then((dataset) => {
       smallBodyOverlay.setBodies(dataset.bodies);
       smallBodyFilters.setDataset(dataset.retrieved, dataset.bodies.length);
@@ -345,7 +340,6 @@ if (surfaceScrim) {
     const interstellarOverlay = new InterstellarOverlay();
     interstellarOverlay.mount();
     interstellarOverlay.setActive(true);
-    setupInterstellarPathsToggle(interstellarOverlay);
 
     // Imagerie de surface streamée (lot 9, phase 9C) : une bascule de réglage, un bandeau de
     // provenance, et un `import()` dynamique du moteur à l'approche. Rien n'est demandé au
@@ -355,9 +349,17 @@ if (surfaceScrim) {
     // Ancres invisibles des sondes et des interstellaires : ce qui les rend CIBLABLES par la
     // commande de navigation partagée, sans leur donner le moindre pixel (cf.
     // `ui/navigableAnchors.ts`). Elles se placent par la même fonction que les marqueurs.
+    // Une sonde en orbite autour d'un corps s'y pose comme une lune en Éducatif ; la position du
+    // corps vient de la règle même qui le dessine (cf. `core/instrumentPlacement.ts`).
+    const placeInstrument = spacecraftPlacer(
+      SPACECRAFT_MISSIONS,
+      CELESTIAL_CONFIG.bodies,
+      (name, date) => orbitalMechanics.heliocentricAU(name, date)
+    );
     const navigableAnchors = createNavigableAnchors(
       sceneSystem.scene,
-      horizonsEphemeris
+      horizonsEphemeris,
+      placeInstrument
     );
     cameraSystem.registerTargets(navigableAnchors.targets);
     // Une sonde n'existe pas à toute date. La palette grise ce qui n'a pas de position à la
@@ -414,6 +416,10 @@ if (surfaceScrim) {
       // même position à la même frame.
       navigableAnchors.update(orbitalMechanics.simulationDate, morph);
       exploHud.update(cameraSystem.camera, cameraSystem, sceneSystem);
+      // L'objet sélectionné est toujours peint et nommé, même quand le tableau le masque
+      // (cf. `ui/defaultDisplay.ts`) : le HUD applique déjà cette exception aux corps.
+      spacecraftOverlay.setTarget(cameraSystem.targetName);
+      interstellarOverlay.setTarget(cameraSystem.targetName);
       smallBodyOverlay.update(
         cameraSystem.camera,
         orbitalMechanics.simulationDate,
@@ -423,6 +429,7 @@ if (surfaceScrim) {
         cameraSystem.camera,
         orbitalMechanics.simulationDate,
         horizonsEphemeris,
+        placeInstrument,
         morph,
         labelSpace
       );
@@ -462,9 +469,7 @@ if (surfaceScrim) {
         currentMode = mode;
         opticalZoom.setMode(mode);
         exploHud.setMode(mode); // change le style des labels (éduc ↔ explo), reste actif
-        // La VISIBILITÉ de ces deux couches suit le morph (voir la boucle de frame) ; seul le
-        // déclencheur de filtres, qui est du chrome, suit le mode.
-        smallBodyFilters.setTriggerVisible(mode === 'explo');
+        // La VISIBILITÉ des couches d'instrument suit le morph (voir la boucle de frame).
         webxr.setMode(mode);
         exploScaleBadge.setMode(mode);
         if (mode === 'explo') exploTourNudge.notifyExploEntered();

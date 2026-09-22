@@ -5,8 +5,7 @@ export type SecondaryOverlayId =
   | 'weather-layers'
   | 'earth-events'
   | 'events'
-  | 'help'
-  | 'small-body-filters';
+  | 'help';
 
 export interface OverlayCoordinator {
   register(id: SecondaryOverlayId, close: () => void): () => void;

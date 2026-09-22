@@ -21,7 +21,7 @@ export function setupUnitsToggle(): void {
   wrapper.append(checkbox, text);
 
   const host =
-    document.querySelector('#orbit-options .surface-body') ?? document.body;
+    document.getElementById('settings-section-reading') ?? document.body;
   host.append(wrapper);
 
   const refresh = (): void => {

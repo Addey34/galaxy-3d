@@ -98,14 +98,21 @@ test('weather layers panel has no automatically detectable a11y violations', asy
   ).toEqual([]);
 });
 
-test('small-body panel has no automatically detectable a11y violations', async ({
+test('display settings, every group unfolded, has no automatically detectable a11y violations', async ({
   page,
 }) => {
-  // Le déclencheur n'existe qu'en Explo, et le panneau porte depuis le lot 8b une mention de
-  // provenance datée : un texte publié de plus à passer à axe.
+  // Tous les groupes dépliés : les lignes de groupe (un bouton dans un <th scope=rowgroup>,
+  // trois cases) et les lignes repliées au départ passent aussi à axe. La section du champ
+  // d'astéroïdes porte depuis le lot 8b une mention de provenance datée.
   await boot(page);
-  await page.locator('.mode-btn[data-mode=explo]').click();
-  await page.locator('#smallbody-filters-trigger').click();
+  await page.locator('#settings-trigger').click();
+  const toggles = page.locator('#settings-table .oo-group-toggle');
+  for (const toggle of await toggles.all())
+    if ((await toggle.getAttribute('aria-expanded')) === 'false')
+      await toggle.click();
+  await expect(page.locator('#settings-table .oo-tr:visible')).toHaveCount(
+    await page.locator('#settings-table .oo-tr').count()
+  );
   await expect(page.locator('#smallbody-filters')).toBeVisible();
   await expect(page.locator('#smallbody-filters .sb-source')).toBeVisible();
   const results = await runAxe(page);
