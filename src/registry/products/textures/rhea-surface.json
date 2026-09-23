@@ -35,13 +35,13 @@
   },
   "review": {
     "status": "ready",
-    "processing": "direct-jpeg-sample",
+    "processing": "import-textures",
     "downloadUrl": "https://astrogeology.usgs.gov/ckan/dataset/22bc1015-d9c9-4212-86c3-e42061b204d4/resource/77fa77f8-6d6b-4072-9360-17138caa6e7d/download/full.jpg",
     "sourcePage": "https://astrogeology.usgs.gov/search/map/rhea_cassini_voyager_global_mosaic_417m",
     "sourceResolution": "417 m/pixel global mosaic; official JPEG preview",
     "projection": "equirectangular",
-    "qualityClass": "derived",
-    "note": "Official Cassini/Voyager global mosaic preview from USGS; kept at its native preview size without artificial upscaling.",
+    "qualityClass": "native",
+    "note": "Reimporte au lot 16 depuis la mosaique COMPLETE, dont la largeur est lue a son etiquette PDS3 (LINE_SAMPLES = 11520). Jusque-la cette fiche decrivait un APERCU de 1024 px, et c'est bien l'apercu qui avait ete importe : le corps etait donc borne a un seul palier. Detail mesure du palier 2k apres reimport : 21,83 % de variance de plus que son propre demi-palier.",
     "sourcePixelWidth": 11520
   }
 }
