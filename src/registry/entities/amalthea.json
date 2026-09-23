@@ -53,7 +53,8 @@
     },
     "textureResolutions": {
       "surface": [
-        "2k"
+        "2k",
+        "1k"
       ]
     },
     "realData": {

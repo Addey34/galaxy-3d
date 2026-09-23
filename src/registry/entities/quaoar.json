@@ -19,7 +19,8 @@
     "kind": "dwarf",
     "color": "0x9c8873",
     "surfaceResolutions": [
-      "2k"
+      "2k",
+      "1k"
     ],
     "fallbackColor": "0x9c8873",
     "visualRadius": 0.086,

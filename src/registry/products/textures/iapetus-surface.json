@@ -39,9 +39,9 @@
     "processing": "direct-jpeg-sample",
     "downloadUrl": "https://astrogeology.usgs.gov/ckan/dataset/6ac8ecfb-36e7-4113-8d16-c92ba857c3d7/resource/141c2d1e-aa01-4e2f-969a-e46a581db4b9/download/full.jpg",
     "sourcePage": "https://astrogeology.usgs.gov/search/map/iapetus_cassini_voyager_global_mosaic_803m",
-    "sourceResolution": "803 m/pixel global mosaic; official JPEG preview",
+    "sourceResolution": "803 m/pixel global Cassini/Voyager mosaic",
     "projection": "equirectangular",
     "qualityClass": "derived",
-    "note": "Official Cassini/Voyager global mosaic preview from USGS; kept at its native preview size without artificial upscaling."
+    "note": "La fiche disait « apercu JPEG officiel, garde a sa taille d'apercu » : c'est faux. Mesure au lot 16, le palier 2k porte 14,83 % de variance de plus que son demi-palier et le 4k 5,23 %, ce qu'un apercu de 1024 px ne peut pas contenir. La largeur exacte de la source n'a PAS ete relue a une etiquette ici, donc aucune n'est declaree."
   }
 }

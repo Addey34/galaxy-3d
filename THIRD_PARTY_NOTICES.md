@@ -13,11 +13,15 @@ provenance (source URL, resolution, licence) is in one file per texture layer un
 1. **Public domain: USGS Astrogeology / NASA-JPL / ESA spacecraft mosaics, NASA and NOAA Earth data.** Derived from
    official global mosaics, no copyright restriction. Bodies: `io`, `europa`, `ganymede`,
    `callisto`, `titan`, `enceladus`, `rhea`, `iapetus`, `triton`, `charon`, `phobos`, `deimos`,
-   `vesta`, `pluto`, `tethys`, `dione` (USGS Astrogeology Cassini/Voyager global mosaics, 293m
+   `vesta`, `pluto`, `tethys`, `dione`, `ceres`, `bennu` (USGS Astrogeology Cassini/Voyager global mosaics, 293m
    and 154m/pixel respectively; `deimos` is NASA's Viking-derived map from NASA 3D Resources),
    `earth` (surface, clouds, night lights and land/ocean mask from NASA Earth Observatory /
    Visible Earth Blue Marble and Black Marble; relief normal and height maps derived from the
-   NOAA NCEI ETOPO 2022 global relief model). Attribution is courteous but not legally required.
+   NOAA NCEI ETOPO 2022 global relief model). `ceres` joined this group in lot 16, leaving the
+   illustrative group below: it carried a procedural surface although the published Dawn
+   Framing Camera mosaic exists. `bennu` had no surface texture at all before lot 16 and now
+   carries the OSIRIS-REx OCAMS global mosaic (Golish et al. 2021), draped on its OLA shape
+   model. Attribution is courteous but not legally required.
 
 2. **CC BY 4.0: Solar System Scope.** Requires attribution; compatible with non-commercial and
    donation-supported use. Bodies (surface / cloud / normal / spec / lights / ring layers, incl.
@@ -30,7 +34,7 @@ provenance (source URL, resolution, licence) is in one file per texture layer un
 
 3. **Confirmed licence, explicitly illustrative.** The licence and source are known and recorded,
    but the map itself is not a validated scientific global mosaic (either no spacecraft imaged the
-   body, or, for `halley`, flyby images were never assembled into one): `ceres`, `eris`,
+   body, or, for `halley`, flyby images were never assembled into one): `eris`,
    `haumea`, `makemake` (CC BY 4.0, Solar System Scope, illustrative per their provenance files),
    `halley` (public domain, Philip Stooke / NASA PDS Giotto/Vega, credited).
    The app's own credits list (`index.html`) already discloses these as illustrative, not

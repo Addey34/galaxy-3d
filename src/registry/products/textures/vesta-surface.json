@@ -23,15 +23,13 @@
   ],
   "tier": "free",
   "review": {
-    "status": "manual",
+    "status": "ready",
     "sourcePage": "https://astrogeology.usgs.gov/search/map/vesta_dawn_fc_hamo_global_mosaic_60m",
     "sourceResolution": "60 m/pixel",
+    "sourcePixelWidth": 26704,
     "projection": "equirectangular",
     "qualityClass": "native-candidate",
-    "note": "Best global Dawn HAMO mosaic currently identified.",
-    "license": "public-domain-if-usgs",
-    "credit": "USGS Astrogeology / NASA Dawn (if sourced from the mosaic above)",
-    "attributionNeeded": true,
-    "provenanceNote": "USGS Dawn mosaic is public domain, but the shipped 2048x1024 file predates the validated pipeline. Confirm the delivered file derives from the USGS source above, otherwise treat as unconfirmed."
+    "note": "Largeur lue a l'etiquette PDS3 (LINE_SAMPLES = 26704). Provenance CONFIRMEE au lot 16 : reimporter cette mosaique reproduit les quatre paliers livres octet pour octet. Le lot 13 ne l'avait etablie que par correlation (0,971) et sa fiche la disait « non confirmee ».",
+    "downloadUrl": "https://asc-pds-services.s3.us-west-2.amazonaws.com/mosaic/Vesta_Dawn_FC_HAMO_Mosaic_Global_74ppd.tif"
   }
 }

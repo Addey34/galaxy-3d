@@ -29,7 +29,7 @@
     "sourceResolution": "Giotto/Vega observations and shape model, no global photometric mosaic",
     "projection": "shape-model dependent",
     "qualityClass": "illustrative-candidate",
-    "note": "A true surface map requires projecting flyby images onto the Stooke shape model; current flat texture is not a scientific global map.",
+    "note": "A true surface map requires projecting flyby images onto the Stooke shape model; current flat texture is not a scientific global map. Lot 16, mesure du constat d'audit du lot 13 : cette surface illustrative a une moyenne de 96,9/255 (0,380) alors que l'albedo publie du noyau est 0,04. Le rapport n'est pas lisible seul, car aucune texture du depot n'est une reflectance litterale (la Lune, albedo 0,12, sort a 0,591). La comparaison qui tient est relative : Bennu, albedo 0,044, vraie mosaique OSIRIS-REx, sort a 0,296. Halley est donc environ deux fois trop claire pour son albedo, compare a un corps sombre reellement image. NON CORRIGE ici : assombrir une texture illustrative sans source a laquelle se caler remplacerait une erreur par une autre, et risquerait de rendre le noyau invisible. Le chiffre est ecrit pour que le choix soit pris en connaissance de cause.",
     "license": "unconfirmed",
     "credit": "unconfirmed",
     "attributionNeeded": true,

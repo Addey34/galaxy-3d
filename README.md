@@ -116,6 +116,13 @@ chemin n'est écrit à la main dans le catalogue. Couches : `surface`, `clouds`,
 `lights`, `normal_map`, `spec`, `ring`. Résolutions : `1k`, `2k`, `4k`, `8k` (la plus haute
 selon le corps ; voir `src/config/engine.ts` pour les seuils de LOD).
 
+**Jusqu'où un corps monte n'est pas un choix libre** : il livre les paliers que sa source
+publiée porte réellement, et un palier ne se livre que s'il montre ce que le palier du
+dessous ne montre pas. La règle est dans `src/core/textureLadder.ts`, le relevé mesuré dans
+`src/config/textureLadder.json` (`pnpm textures:ladder`), et le contrat complet dans
+`docs/ARCHITECTURE.md` § « L'échelle de résolutions d'une texture ». Un corps servi en 2k
+n'est donc pas un corps négligé, c'est un corps dont la carte publiée s'arrête là.
+
 ## Fonctionnalités
 
 ### Modes d'affichage

@@ -84,6 +84,15 @@ const review = z
       .regex(/^(https:\/\/[^\s"']+|scripts\/[a-z0-9-]+\.mjs)$/)
       .optional(),
     sourceResolution: z.string().optional(),
+    /**
+     * Largeur en PIXELS de la source réellement importée, LUE à son étiquette (`LINE_SAMPLES`
+     * d'une étiquette PDS3, `Samples` d'un cube ISIS, ou les dimensions du fichier publié) —
+     * jamais déduite d'un « m/pixel » ni du nom du produit. C'est le plafond de provenance de
+     * l'échelle de résolutions (`core/textureLadder.ts`) : on ne livre jamais plus large que
+     * ce que la source contient. Absente quand la source n'est pas conservée, ou qu'il n'y en
+     * a pas (texture procédurale) : le plancher de détail mesuré arbitre alors seul.
+     */
+    sourcePixelWidth: z.number().int().positive().optional(),
     projection: z.string().optional(),
     qualityClass: z.string().optional(),
     note: z.string().optional(),

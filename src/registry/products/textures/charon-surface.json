@@ -28,9 +28,10 @@
     "processing": "direct-jpeg-sample",
     "downloadUrl": "https://astrogeology.usgs.gov/ckan/dataset/93827f6c-8feb-42b6-98e6-b0ce57c7d2c8/resource/1abf318c-3290-4aa0-932e-a34f32d7f6ad/download/charon_newhorizons_global_mosaic_300m_jul2017_1024.jpg",
     "sourcePage": "https://astrogeology.usgs.gov/search/map/charon_new_horizons_lorri_mvic_global_mosaic_300m",
-    "sourceResolution": "300 m/pixel global mosaic; official 1024 px viewer sample",
+    "sourceResolution": "300 m/pixel global New Horizons LORRI/MVIC mosaic",
+    "sourcePixelWidth": 12693,
     "projection": "equirectangular",
-    "qualityClass": "derived",
-    "note": "Official New Horizons LORRI/MVIC global mosaic preview from USGS; kept at its native preview size without artificial upscaling."
+    "qualityClass": "native",
+    "note": "La fiche citait un APERCU de 1024 px, mais le fichier livre ne vient pas de lui : reimporter la mosaique complete (LINE_SAMPLES = 12693 a l'etiquette PDS3) reproduit les paliers livres OCTET POUR OCTET, verifie au lot 16. C'est la prose qui etait fausse, pas les octets."
   }
 }

@@ -25,12 +25,13 @@
   "filled": true,
   "review": {
     "status": "ready",
-    "processing": "direct-jpeg-sample",
+    "processing": "import-textures",
     "downloadUrl": "https://astrogeology.usgs.gov/ckan/dataset/e40296c1-b4bf-46d8-86af-4b6cf0301b0c/resource/36d40203-d9b3-447e-9004-c3dc100bde04/download/full.jpg",
     "sourcePage": "https://astrogeology.usgs.gov/search/map/tethys_cassini_global_mosaic_293m",
     "sourceResolution": "293 m/pixel global mosaic; 1024x512 equirectangular sample",
+    "sourcePixelWidth": 11520,
     "projection": "equirectangular",
-    "qualityClass": "derived",
-    "note": "Real controlled global Cassini/Voyager mosaic; verified via a live USGS fetch (2026-08-26), not assumed from naming convention."
+    "qualityClass": "native",
+    "note": "Reimporte au lot 16 depuis la mosaique COMPLETE, dont la largeur est lue a son etiquette PDS3 (LINE_SAMPLES = 11520). Jusque-la cette fiche decrivait un APERCU de 1024 px, et c'est bien l'apercu qui avait ete importe : le corps etait donc borne a un seul palier. Detail mesure du palier 2k apres reimport : 33,13 % de variance de plus que son propre demi-palier."
   }
 }

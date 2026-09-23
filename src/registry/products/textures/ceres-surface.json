@@ -5,34 +5,32 @@
   "body": "ceres",
   "layer": "surface",
   "shipped": true,
-  "license": "CC-BY-4.0",
+  "license": "other",
   "links": [
     {
       "rel": "license",
-      "href": "https://creativecommons.org/licenses/by/4.0/"
+      "href": "https://www.usgs.gov/information-policies-and-instructions/copyrights-and-credits"
     }
   ],
   "providers": [
     {
-      "name": "Solar System Scope (solarsystemscope.com)",
+      "name": "USGS Astrogeology / NASA Dawn Framing Camera (DLR)",
       "roles": [
-        "licensor",
         "producer"
       ]
     }
   ],
   "tier": "free",
-  "illustrative": true,
   "review": {
-    "status": "manual",
+    "status": "ready",
     "sourcePage": "https://astrogeology.usgs.gov/search/map/ceres_dawn_fc_global_mosaic_140m",
-    "sourceResolution": "140 m/pixel global, 35 m/pixel local LAMO products",
+    "sourceResolution": "400 m/pixel global Dawn FC mosaic (20.5 pixels/degree)",
+    "sourcePixelWidth": 7383,
     "projection": "equirectangular",
     "qualityClass": "native-candidate",
-    "note": "Use the global controlled Dawn mosaic; local 35 m data must not be stretched into fake global coverage.",
-    "license": "public-domain-if-usgs",
-    "credit": "USGS Astrogeology / NASA Dawn (if sourced from the mosaic above)",
-    "attributionNeeded": true,
-    "provenanceNote": "USGS Dawn mosaic is public domain, but the shipped 4096x2048 file predates the validated pipeline. Confirm the delivered file derives from the USGS source above, otherwise treat as unconfirmed."
-  }
+    "note": "Largeur lue a l'etiquette PDS3 (LINE_SAMPLES = 7383), d'ou le plafond a 4k. Jusqu'au lot 16 Ceres portait une surface PROCEDURALE et figurait parmi les surfaces illustratives, alors que cette mosaique Dawn publiee existe. Le produit a 140 m/pixel que cite la page USGS n'est servi qu'en cube ISIS ; le TIFF telechargeable est celui-ci.",
+    "processing": "import-textures",
+    "downloadUrl": "https://asc-pds-services.s3.us-west-2.amazonaws.com/mosaic/Ceres_Dawn_FC_DLR_global_20ppd_Oct2015.tif"
+  },
+  "rights": "public-domain"
 }

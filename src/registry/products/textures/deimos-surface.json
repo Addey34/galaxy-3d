@@ -27,9 +27,10 @@
     "processing": "direct-jpeg-sample",
     "downloadUrl": "https://assets.science.nasa.gov/content/dam/science/cds/3d/resources/image/mars---deimos/Mars%20-%20Deimos.jpg",
     "sourcePage": "https://science.nasa.gov/3d-resources/mars-deimos/",
-    "sourceResolution": "NASA Viking-derived JPEG texture",
+    "sourceResolution": "NASA 3D Resources Viking-derived global map, 1440 x 720",
     "projection": "equirectangular",
     "qualityClass": "derived",
-    "note": "NASA-published Deimos texture used at its native resolution; no artificial upscaling."
+    "note": "NASA-published Deimos texture used at its native resolution; no artificial upscaling. Lot 16 : largeur LUE sur le fichier publie (1440 x 720), d'ou le plafond a 1k. Deimos ne reste donc pas a 1k par negligence : aucune mosaique globale controlee de Deimos n'est publiee par le service de mosaiques de l'USGS (verifie sur son inventaire complet), et la carte NASA 3D Resources est la source disponible. Livrer un 2k serait un agrandissement.",
+    "sourcePixelWidth": 1440
   }
 }

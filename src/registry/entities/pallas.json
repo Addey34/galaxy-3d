@@ -27,7 +27,8 @@
       }
     },
     "surfaceResolutions": [
-      "2k"
+      "2k",
+      "1k"
     ],
     "description": {
       "en": "The third-largest asteroid, and the very first to be discovered after Ceres, in 1802. Its steeply tilted orbit is so inclined that no spacecraft has ever visited it.",

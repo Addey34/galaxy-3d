@@ -40,6 +40,7 @@
     "sourceResolution": "1 km/pixel",
     "projection": "equirectangular",
     "qualityClass": "native",
-    "note": "Imported through the validated fetch pipeline."
+    "note": "Imported through the validated fetch pipeline.",
+    "sourcePixelWidth": 11445
   }
 }

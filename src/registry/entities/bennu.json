@@ -25,12 +25,6 @@
         "1k"
       ],
       "extentRatio": 1.18,
-      "albedo": 0.044,
-      "albedoSource": "Hergenrother et al. 2019, Nat. Commun. 10, 1291 (JPL SBDB)",
-      "colourSource": {
-        "en": "NASA/USGS, Bennu OSIRIS-REx OCAMS Global Albedo Mosaic (Golish et al. 2021), public domain",
-        "fr": "NASA/USGS, Bennu OSIRIS-REx OCAMS Global Albedo Mosaic (Golish et al. 2021), domaine public"
-      },
       "credit": {
         "en": "NASA/Goddard Scientific Visualization Studio, OSIRIS-REx OLA v20 PTM global shape model (NASA/University of Arizona/CSA/York University/MDA), decimated for the web.",
         "fr": "NASA/Goddard Scientific Visualization Studio, modèle de forme global OSIRIS-REx OLA v20 PTM (NASA/University of Arizona/CSA/York University/MDA), décimé pour le web."
@@ -43,7 +37,13 @@
     "wiki": {
       "en": "https://en.wikipedia.org/wiki/101955_Bennu",
       "fr": "https://fr.wikipedia.org/wiki/(101955)_Bennu"
-    }
+    },
+    "surfaceResolutions": [
+      "8k",
+      "4k",
+      "2k",
+      "1k"
+    ]
   },
   "facts": {
     "radiusKm": {
