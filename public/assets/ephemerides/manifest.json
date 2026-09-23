@@ -56,7 +56,8 @@
       "center": "saturn",
       "startJdTdb": 2415020.5,
       "stepDays": 4,
-      "sampleCount": 18354
+      "sampleCount": 18354,
+      "meanMotionScale": 1.003146467698231
     },
     "rhea": {
       "file": "rhea.8f7a60168a57.bin",
@@ -96,7 +97,8 @@
       "center": "mars",
       "startJdTdb": 2415020.5,
       "stepDays": 4,
-      "sampleCount": 18354
+      "sampleCount": 18354,
+      "meanMotionScale": 1.0007722094978526
     },
     "deimos": {
       "file": "deimos.18d3ba55b755.bin",
@@ -144,7 +146,8 @@
       "center": "saturn",
       "startJdTdb": 2415020.5,
       "stepDays": 4,
-      "sampleCount": 18354
+      "sampleCount": 18354,
+      "meanMotionScale": 1.0051971614630248
     },
     "tethys": {
       "file": "tethys.578a9de823d6.bin",
@@ -152,7 +155,8 @@
       "center": "saturn",
       "startJdTdb": 2415020.5,
       "stepDays": 4,
-      "sampleCount": 18354
+      "sampleCount": 18354,
+      "meanMotionScale": 1.00203607347809
     },
     "dione": {
       "file": "dione.bb770b5f9ac9.bin",
@@ -176,7 +180,8 @@
       "center": "uranus",
       "startJdTdb": 2415020.5,
       "stepDays": 4,
-      "sampleCount": 18354
+      "sampleCount": 18354,
+      "meanMotionScale": 1.000360717458097
     },
     "ariel": {
       "file": "ariel.63d67542c91d.bin",
@@ -216,7 +221,8 @@
       "center": "jupiter",
       "startJdTdb": 2415020.5,
       "stepDays": 4,
-      "sampleCount": 18354
+      "sampleCount": 18354,
+      "meanMotionScale": 1.0069219448262556
     },
     "proteus": {
       "file": "proteus.f9beb51c0eb6.bin",
@@ -224,7 +230,8 @@
       "center": "neptune",
       "startJdTdb": 2415020.5,
       "stepDays": 4,
-      "sampleCount": 18354
+      "sampleCount": 18354,
+      "meanMotionScale": 1.0004695660785945
     },
     "nereid": {
       "file": "nereid.f7e812a7c081.bin",

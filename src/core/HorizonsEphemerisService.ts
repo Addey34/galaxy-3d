@@ -13,6 +13,7 @@ import { propagateTwoBody } from './twoBodyPropagation';
 import type { BodyDynamics } from '@/config/gravity';
 import type { PreciseEphemerisProvider } from './PreciseEphemerisProvider';
 import { mapWithConcurrency } from '@/utils/concurrency';
+import { medianMeanMotionScale } from './meanMotionScale';
 import Logger from '@/utils/Logger';
 
 const COMPONENTS_PER_SAMPLE = 6;
@@ -147,6 +148,14 @@ interface HorizonsBodyManifest {
   startJdTdb: number;
   stepDays: number;
   sampleCount: number;
+  /**
+   * Facteur d'échelle du temps de propagation, PUBLIÉ parce qu'il se calcule sur le fichier
+   * entier (cf. `core/meanMotionScale.ts` et la décision D5 du lot 17). Absent pour les corps
+   * qui ne déclarent pas `meanMotionPropagation`, et absent d'un manifeste antérieur au
+   * lot 17 : on retombe alors sur le calcul depuis les échantillons tenus, qui n'est juste
+   * que si on tient le fichier entier.
+   */
+  meanMotionScale?: number;
 }
 
 interface HorizonsManifest {
@@ -203,7 +212,11 @@ function isManifestBody(value: unknown): value is HorizonsBodyManifest {
     stepDays > 0 &&
     typeof sampleCount === 'number' &&
     Number.isInteger(sampleCount) &&
-    sampleCount >= 2
+    sampleCount >= 2 &&
+    (body.meanMotionScale === undefined ||
+      (typeof body.meanMotionScale === 'number' &&
+        Number.isFinite(body.meanMotionScale) &&
+        body.meanMotionScale > 0))
   );
 }
 
@@ -596,25 +609,19 @@ export class HorizonsEphemerisService implements PreciseEphemerisProvider {
     const dynamics = body.dynamics;
     let scale = 1;
     if (dynamics?.meanMotionPropagation && dynamics.periodDays !== undefined) {
-      const values = body.samples;
-      const count = body.manifest.sampleCount;
-      const r = new THREE.Vector3();
-      const v = new THREE.Vector3();
-      const ratios: number[] = [];
-      for (let k = 0; k < 257; k++) {
-        const i = Math.floor((k * (count - 1)) / 256) * COMPONENTS_PER_SAMPLE;
-        r.set(values[i], values[i + 1], values[i + 2]);
-        v.set(values[i + 3], values[i + 4], values[i + 5]);
-        const energy = v.lengthSq() / 2 - dynamics.mu / r.length();
-        if (!(energy < 0)) continue;
-        const a = -dynamics.mu / (2 * energy);
-        ratios.push(
-          (2 * Math.PI * Math.sqrt((a * a * a) / dynamics.mu)) /
-            dynamics.periodDays
+      // La valeur PUBLIÉE d'abord : elle est calculée sur le fichier entier, donc elle reste
+      // juste quand le service ne tient qu'une fenêtre (lot 17, décision D5). Le calcul local
+      // ne subsiste que pour un manifeste antérieur, et il n'est exact que sur un fichier
+      // complet — sur une fenêtre il donnerait un autre facteur, donc une autre position
+      // (mesuré sur Encelade : 27 m).
+      scale =
+        body.manifest.meanMotionScale ??
+        medianMeanMotionScale(
+          body.samples,
+          body.manifest.sampleCount,
+          dynamics.mu,
+          dynamics.periodDays
         );
-      }
-      ratios.sort((x, y) => x - y);
-      if (ratios.length > 0) scale = ratios[Math.floor(ratios.length / 2)];
     }
     body.meanMotionScale = scale;
     return scale;
