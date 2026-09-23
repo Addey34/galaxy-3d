@@ -471,8 +471,9 @@ elle mesure un chargement complet en croyant l'avoir coupé (58 fichiers passés
 
 ### Une position ne coûte pas un fichier (lot 17, phases 17A et 17B)
 
-Les binaires couvrent 1900-2100 ; la scène, elle, affiche un instant. **Placer les 64 corps à
-une date coûte 5 952 octets, soit 96 par corps** : `HorizonsEphemerisService._sampleGrid` lit
+Les binaires couvrent 1900-2100 ; la scène, elle, affiche un instant. **Placer un corps coûte
+96 octets**, et les 62 corps que la couverture contient au 2026-09-23 en coûtent donc **5 952**
+(les deux autres n'ont aucune position à cette date, et ne demandent rien) : `HorizonsEphemerisService._sampleGrid` lit
 l'échantillon qui encadre la date et le suivant, rien d'autre. `core/ephemerisWindow.ts` (pur)
 traduit cela en un PLAN : date vers index, index vers plage d'octets, et le contrat d'une
 réponse partielle.

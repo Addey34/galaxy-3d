@@ -5,9 +5,10 @@
  * Module PUR : aucune requête, aucun état, aucun DOM. Il rend un PLAN ; c'est le service qui
  * l'exécute (phase 17C). Plan complet, mesures et pièges dans `docs/private/EPHEMERIDES_LOT17.md`.
  *
- * Le fait qui fonde ce module, mesuré le 2026-09-23 : placer les 64 corps à une date coûte
- * **5 952 octets** (96 par corps), et la première vue complète, lignes d'orbite des planètes
- * comprises, **563 472 octets, soit 1,47 %** des 38 445 024 livrés aujourd'hui.
+ * Le fait qui fonde ce module, mesuré le 2026-09-23 : placer un corps coûte **96 octets**, donc
+ * **5 952** pour les 62 corps que la couverture contient à cette date (les deux autres ne
+ * demandent rien) ; et la première vue complète, lignes d'orbite des planètes comprises,
+ * **563 472 octets, soit 1,47 %** des 38 445 024 livrés aujourd'hui.
  *
  * DEUX consommateurs, et ils ne demandent pas la même chose :
  *
