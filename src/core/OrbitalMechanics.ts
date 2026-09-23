@@ -519,6 +519,17 @@ export class OrbitalMechanics {
     this.onOrbitsChanged?.();
   }
 
+  /**
+   * À appeler quand une SOURCE de position change en cours de session, sans que la date bouge
+   * — aujourd'hui le seul cas est la reprise des éphémérides manquantes (lot 15) : un corps
+   * passe de son repli à son binaire. Les positions sont recalculées à chaque image, mais les
+   * lignes d'orbite, elles, sont mémorisées : sans ce rappel, un corps repris se placerait à
+   * côté d'une ligne tracée depuis son ancienne source, jusqu'au prochain saut de date.
+   */
+  refreshPositionSources(): void {
+    this._afterTimeTravel();
+  }
+
   addTimeOffset(days: number): void {
     this.clock.addDays(days);
     this._afterTimeTravel();

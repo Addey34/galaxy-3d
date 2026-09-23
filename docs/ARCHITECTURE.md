@@ -394,6 +394,81 @@ redessin à chaque frame. Le saut de redessin quand rien ne bouge n'est qu'une �
 SBDB arrondit `ma` au centième de degré ; pour une comète quasi parabolique (a ≈ −2900 UA) cela
 laisse la date du périhélie libre de ±800 jours. Il faudrait `tp` et `q` pour les positionner.
 
+### Un chargement partiel se garde, se reprend, et se dit (lot 15)
+
+Les 64 binaires étaient demandés par un `Promise.all` enveloppé dans un `catch` : **une seule
+rejection rendait un service VIDE**, et rien ne le disait, `Logger.warn` étant muet hors debug.
+Mesuré en production le 2026-09-22 depuis un lien à 24 ko/s, en rejouant le pipeline du service
+dans la page : **25 fetchs sur 64 aboutissent, 39 échouent en « TypeError: Failed to fetch » après
+706 s**. Conséquence à l'écran, remesurée depuis sur deux builds du même arbre, cinq fichiers
+servis et les 59 autres coupés :
+
+| | avant | après |
+| --- | --- | --- |
+| Mercure, dont le fichier ÉTAIT arrivé | Astronomy Engine, 2 600 km | binaire Horizons, 7,3 km |
+| Juno, dont le fichier ÉTAIT arrivé | entrée `aria-disabled`, inerte | sélectionnable |
+| ce que l'écran en dit | rien | le bandeau `#ephemeris-notice` |
+
+Trois décisions, prises avant d'écrire, chacune tenue par une garde falsifiée.
+
+**(1) Ce qui arrive est gardé.** Un passage tolère l'échec fichier par fichier, et le service
+sert ce qu'il a. Refuser en bloc jetterait les 25 fichiers arrivés pour punir les 39 perdus,
+alors que le modèle de position est DÉJÀ par corps et par source (`BodyPositionResolver`) : un
+corps sans binaire retombe sur astronomy-engine ou ses éléments, ce qui est une situation
+normale et nommée, pas une avarie. Un binaire n'est jamais servi à moitié : la taille exacte est
+vérifiée avant de le retenir.
+
+**(2) Ce qui manque est DIT, sans ouvrir une fiche.** `ui/ephemerisNotice` n'existe dans le DOM
+que si un fichier manque vraiment — le silence est l'information. Il compte ce qui est arrivé
+sur ce qui est déclaré, distingue les corps (placés par une source moins précise, nommée dans
+leur fiche) des **sondes**, qui n'ont aucun repli et restent donc sans position, et propose la
+reprise. Le projet avait déjà refusé deux fois de dégrader en silence (modèle temporel et
+provenance, lot 6) : un `allSettled` posé à la place du `all` aurait corrigé la perte sans
+corriger le mensonge.
+
+**(3) La reprise est bornée, et porte sur le PASSAGE.** Deux reprises, 1 s puis 4 s, plus une
+reprise manuelle depuis le bandeau, qui remplit le service en place et rafraîchit les lignes
+d'orbite (`OrbitalMechanics.refreshPositionSources`) : un corps repris passe alors de son repli à
+son binaire EN COURS DE SESSION, ce qui le déplace d'autant. C'est un gain, il est demandé, et sa
+fiche nomme la source. Ce qui ne se reprend pas : un 404, une origine étrangère, une taille
+fausse — des défauts de déploiement, que réessayer ne ferait que payer sur le lien du visiteur.
+Une absence définitive sort donc des passages suivants tout en restant NOMMÉE dans le rapport :
+ne plus la redemander n'est pas l'oublier (écrit après avoir relu le diff, où un 404 mêlé à des
+pannes de lien repartait à chaque passage). Un seul chargement court à la fois, pour qu'un
+double clic sur la reprise ne double pas les requêtes.
+**Défaut trouvé en mesurant** : la première forme reprenait chaque FICHIER, donc 64 / 6 × 5 s,
+soit 53 s d'attente pure ajoutées au démarrage (85 s jusqu'au loader masqué, contre 24 s par
+passage).
+
+**La cause, et pas seulement le symptôme : six requêtes à la fois.** 64 requêtes ouvertes
+ensemble partagent une connexion HTTP/2 et la bande passante : chacune reste ouverte aussi
+longtemps que le TOTAL, et c'est cette durée qui expirait. Mesuré sur le build, mêmes octets,
+bridage à 500 ko/s, page statique de la même origine (la page d'accueil fausserait la mesure avec
+ses propres requêtes) :
+
+| requêtes simultanées | total | requête médiane | requête la plus longue |
+| --- | --- | --- | --- |
+| 64 | 77,1 s | 50,1 s | 77,1 s |
+| 12 | 77,1 s | 12,9 s | 21,2 s |
+| **6** | **77,1 s** | **10,2 s** | **10,6 s** |
+
+Le total ne bouge pas, la bande passante le fixe ; la requête la plus longue est divisée par
+7,3. Démarrage complet mesuré sur deux builds du même arbre, actifs identiques au SHA-256 :
+18,2 → 16,9 s à 50 Mbit/s, 47,9 → 47,0 s à 10 Mbit/s. Aucune régression.
+
+Le service worker met `/assets/**` en CACHE D'ABORD : dès qu'il contrôle la page, un binaire
+déjà obtenu revient de son cache, et seul ce qui manque repart sur le réseau. Ce que cela vaut
+pour la TOUTE première visite n'est pas établi ici, le service worker s'installant pendant ce
+chargement-là. **Piège de mesure** : ce même service worker relaie les requêtes hors de `page.route`,
+donc une garde Playwright qui coupe des `.bin` sur le build doit bloquer le service worker, sinon
+elle mesure un chargement complet en croyant l'avoir coupé (58 fichiers passés, 6 coupés).
+
+| Garde | Ce qu'elle tient |
+| --- | --- |
+| `core/HorizonsEphemerisService.test.ts` | tolérance par fichier, raison et reprenabilité de chaque absence, calendrier par passage, 404 et taille fausse jamais repris même au milieu d'échecs reprenables, reprise qui ne redemande pas ce qu'elle a, un seul chargement à la fois, borne de simultanéité |
+| `utils/concurrency.test.ts` | la borne elle-même, et l'ordre des résultats |
+| `e2e/ephemerisDegraded.spec.ts` | ce qui est arrivé sert, ce qui manque est écrit avec ses comptes, la reprise répare sans recharger, un chargement complet ne dit rien, et à 390 px le bandeau ne recouvre aucun dock |
+
 ### Tests qui verrouillent tout ça
 
 | Fichier | Ce qu'il garde |

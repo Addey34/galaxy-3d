@@ -12,6 +12,7 @@ import { jdTdbFromDate } from './timeScale';
 import { propagateTwoBody } from './twoBodyPropagation';
 import type { BodyDynamics } from '@/config/gravity';
 import type { PreciseEphemerisProvider } from './PreciseEphemerisProvider';
+import { mapWithConcurrency } from '@/utils/concurrency';
 import Logger from '@/utils/Logger';
 
 const COMPONENTS_PER_SAMPLE = 6;
@@ -47,6 +48,96 @@ const _stateR = new THREE.Vector3();
 const _stateV = new THREE.Vector3();
 const _forward = new THREE.Vector3();
 const _backward = new THREE.Vector3();
+
+/**
+ * CE QU'UN CHARGEMENT A RÉELLEMENT OBTENU — la donnée qui permet de le DIRE à l'écran.
+ *
+ * Contrat dans `docs/ARCHITECTURE.md` § « Un chargement partiel se garde, se reprend et se
+ * dit ». En deux mots : ce qui arrive est gardé, ce qui manque est nommé, et l'interface
+ * l'annonce au lieu de dégrader en silence.
+ */
+export interface EphemerisLoadReport {
+  /** Corps déclarés par le manifeste. 0 quand le manifeste lui-même n'est pas arrivé. */
+  readonly declared: number;
+  /** Le manifeste n'est pas arrivé : on ne sait même pas ce qui manque. */
+  readonly manifestFailed: boolean;
+  /** Corps dont le fichier est arrivé, a la bonne taille et sert les positions. */
+  readonly loaded: readonly string[];
+  /** Corps dont le fichier manque, chacun avec la raison MESURÉE de son absence. */
+  readonly missing: readonly EphemerisLoadFailure[];
+  /** true dès qu'au moins un échec vaut la peine d'être repris (cf. `retryable`). */
+  readonly retryable: boolean;
+}
+
+/** Pourquoi un fichier manque, et si le reprendre a un sens. */
+export interface EphemerisLoadFailure {
+  readonly body: string;
+  readonly reason: string;
+  /**
+   * Une panne de lien (rejet de `fetch`, 5xx, 408, 429) se reprend : le fichier existe et
+   * c'est le transport qui a lâché. Un 404, une origine étrangère ou une taille fausse sont
+   * des défauts de DÉPLOIEMENT : les reprendre ne ferait que brûler le lien de l'utilisateur.
+   */
+  readonly retryable: boolean;
+}
+
+/** Réglages du chargement. Les tests les resserrent ; la production garde les défauts. */
+export interface EphemerisLoadOptions {
+  /** Requêtes simultanées. Cf. `utils/concurrency` pour la raison mesurée de cette borne. */
+  concurrency?: number;
+  /** Attentes entre deux essais d'un MÊME fichier. Vide = un seul essai. */
+  retryDelaysMs?: readonly number[];
+  /** Horloge injectée, pour qu'un test n'attende pas réellement. */
+  wait?: (ms: number) => Promise<void>;
+}
+
+/**
+ * Six requêtes à la fois. La borne ne change pas le temps TOTAL du chargement (la bande
+ * passante le fixe) : elle borne la durée de CHAQUE requête, qui est ce qui expirait. Six
+ * garde assez de parallélisme pour masquer la latence sur un lien rapide — mesuré sans
+ * régression de démarrage à 50 et 10 Mbit/s.
+ */
+const DEFAULT_CONCURRENCY = 6;
+
+/**
+ * Deux reprises, à 1 s puis 4 s. Bornées parce qu'un chargement qui insiste indéfiniment est
+ * une autre façon de ne rien dire : au bout de ces essais, l'absence est un FAIT qu'on affiche.
+ */
+const DEFAULT_RETRY_DELAYS_MS: readonly number[] = [1_000, 4_000];
+
+const sleep = (ms: number): Promise<void> =>
+  new Promise((resolve) => setTimeout(resolve, ms));
+
+/** Échec de chargement d'une ressource, porteur de sa reprenabilité. */
+class LoadFailure extends Error {
+  constructor(
+    message: string,
+    readonly retryable: boolean
+  ) {
+    super(message);
+    this.name = 'LoadFailure';
+  }
+}
+
+/** Un statut HTTP qui peut changer au prochain essai, contre un qui ne changera pas. */
+function isRetryableStatus(status: number): boolean {
+  return status >= 500 || status === 408 || status === 429;
+}
+
+/**
+ * Un rejet de `fetch` (« TypeError: Failed to fetch ») est un incident de TRANSPORT : c'est
+ * exactement ce qu'on a mesuré en production, et c'est reprenable. Seul un `LoadFailure`
+ * déclare explicitement le contraire.
+ */
+function isRetryableError(error: unknown): boolean {
+  return error instanceof LoadFailure ? error.retryable : true;
+}
+
+interface LoadPolicy {
+  concurrency: number;
+  retryDelaysMs: readonly number[];
+  wait: (ms: number) => Promise<void>;
+}
 
 interface HorizonsBodyManifest {
   file: string;
@@ -118,11 +209,49 @@ function isManifestBody(value: unknown): value is HorizonsBodyManifest {
 
 export class HorizonsEphemerisService implements PreciseEphemerisProvider {
   readonly source = 'horizons' as const;
-  private constructor(private readonly bodies: Map<string, LoadedBody>) {}
+
+  /** Ce que la reprise a besoin de savoir : où sont les fichiers, et avec quelle dynamique. */
+  private _pending: {
+    manifestUrl: string;
+    bodyMu: Readonly<Record<string, BodyDynamics>>;
+    policy: LoadPolicy;
+    /** Le manifeste, quand il est arrivé. `null` : il reste à demander. */
+    manifest: {
+      entries: [string, HorizonsBodyManifest][];
+      baseUrl: URL;
+    } | null;
+  } | null = null;
+
+  private _report: EphemerisLoadReport;
+  private readonly _listeners: ((report: EphemerisLoadReport) => void)[] = [];
+  /** Absences DÉFINITIVES (404, origine étrangère, taille fausse) : plus jamais redemandées. */
+  private readonly _permanent = new Map<string, EphemerisLoadFailure>();
+  /** Un seul chargement à la fois : un double clic sur « reprendre » ne doit pas doubler. */
+  private _loading: Promise<void> | null = null;
+
+  private constructor(
+    private readonly bodies: Map<string, LoadedBody>,
+    report?: EphemerisLoadReport
+  ) {
+    // Un service construit depuis le disque (fixture de test) est complet par construction.
+    this._report = report ?? {
+      declared: bodies.size,
+      manifestFailed: false,
+      loaded: [...bodies.keys()],
+      missing: [],
+      retryable: false,
+    };
+  }
 
   /**
-   * Charge le manifeste et les fichiers binaires. Une panne ou un asset absent ne bloque
-   * jamais le boot : le service vide laisse OrbitalMechanics utiliser son fallback képlérien.
+   * Charge le manifeste et les fichiers binaires. NE REJETTE JAMAIS : ce qui arrive est gardé,
+   * ce qui manque est nommé dans `report`, et l'interface l'annonce (`ui/ephemerisNotice`).
+   *
+   * Jusqu'au lot 15 c'était un `Promise.all` tout-ou-rien enveloppé dans un `catch` : une
+   * seule rejection rendait un service VIDE, donc TOUS les corps repartaient sur une source de
+   * repli, sans un mot. Mesuré en production le 2026-09-22 sur un lien à 24 ko/s : 25 fichiers
+   * sur 64 arrivés, 39 perdus, Mercure à 2 600 km au lieu de 7,3, et les 11 sondes sans
+   * aucune position.
    */
   static async load(
     manifestUrl: string,
@@ -132,64 +261,165 @@ export class HorizonsEphemerisService implements PreciseEphemerisProvider {
      * connait que son manifeste et ses binaires, et reste testable sans le catalogue. Un
      * corps absent de la table retombe sur l'interpolation cubique.
      */
-    bodyMu: Readonly<Record<string, BodyDynamics>> = {}
+    bodyMu: Readonly<Record<string, BodyDynamics>> = {},
+    options: EphemerisLoadOptions = {}
   ): Promise<HorizonsEphemerisService> {
-    try {
-      const response = await fetch(manifestUrl);
-      if (!response.ok) throw new Error(`manifest HTTP ${response.status}`);
+    const policy: LoadPolicy = {
+      concurrency: options.concurrency ?? DEFAULT_CONCURRENCY,
+      retryDelaysMs: options.retryDelaysMs ?? DEFAULT_RETRY_DELAYS_MS,
+      wait: options.wait ?? sleep,
+    };
+    const service = new HorizonsEphemerisService(new Map(), {
+      declared: 0,
+      manifestFailed: true,
+      loaded: [],
+      missing: [],
+      retryable: true,
+    });
+    service._pending = { manifestUrl, bodyMu, policy, manifest: null };
+    await service._load();
+    return service;
+  }
 
-      const raw: unknown = await response.json();
-      if (!isManifest(raw)) throw new Error('invalid manifest schema');
+  /** Ce que le chargement a obtenu, et ce qui manque. */
+  get report(): EphemerisLoadReport {
+    return this._report;
+  }
 
-      const manifestAbsoluteUrl = new URL(manifestUrl, window.location.href);
-      if (manifestAbsoluteUrl.origin !== window.location.origin) {
-        throw new Error('manifest must use the application origin');
-      }
-      const baseUrl = new URL('.', manifestAbsoluteUrl);
-      const loaded = await Promise.all(
-        Object.entries(raw.bodies).map(async ([name, body]) => {
-          const binaryUrl = new URL(body.file, baseUrl);
-          if (binaryUrl.origin !== baseUrl.origin) {
-            throw new Error(
-              `${name}: binary asset must use the application origin`
-            );
-          }
-          const binaryResponse = await fetch(binaryUrl);
-          if (!binaryResponse.ok)
-            throw new Error(`${name} HTTP ${binaryResponse.status}`);
-          const buffer = await binaryResponse.arrayBuffer();
-          const expectedBytes =
-            body.sampleCount *
-            COMPONENTS_PER_SAMPLE *
-            Float64Array.BYTES_PER_ELEMENT;
-          if (buffer.byteLength !== expectedBytes) {
-            throw new Error(
-              `${name}: ${buffer.byteLength} bytes, expected ${expectedBytes}`
-            );
-          }
-          const dynamics = bodyMu[name];
-          return [
-            name,
-            {
-              manifest: body,
-              samples: new Float64Array(buffer),
-              ...(dynamics ? { dynamics } : {}),
-            },
-          ] as const;
-        })
-      );
+  /** Prévient à chaque changement de rapport (chargement initial, puis reprises). */
+  onReportChange(listener: (report: EphemerisLoadReport) => void): void {
+    this._listeners.push(listener);
+  }
 
-      Logger.success(
-        `[HorizonsEphemerisService] Loaded ${loaded.length} precise ephemerides`
-      );
-      return new HorizonsEphemerisService(new Map(loaded));
-    } catch (error) {
-      Logger.warn(
-        '[HorizonsEphemerisService] Precise data unavailable; using Kepler fallback',
-        error
-      );
-      return new HorizonsEphemerisService(new Map());
+  /**
+   * Redemande ce qui manque, sans rien jeter de ce qui est déjà là. Un corps repris change
+   * alors de source EN COURS DE SESSION, de son repli vers son binaire, et se déplace
+   * d'autant : c'est un gain de précision, il est demandé par l'utilisateur, et la fiche du
+   * corps nomme déjà la source qui le place. L'appelant rafraîchit positions et lignes.
+   */
+  async retryMissing(): Promise<EphemerisLoadReport> {
+    if (!this._pending) return this._report;
+    await this._load();
+    return this._report;
+  }
+
+  /**
+   * Le chargement complet : un premier passage, puis un passage par reprise déclarée, tant
+   * qu'il reste quelque chose de reprenable.
+   *
+   * La reprise porte sur le PASSAGE, pas sur chaque fichier, et ce n'est pas un détail : une
+   * attente par fichier coûterait le calendrier entier (5 s) multiplié par le nombre de
+   * fichiers divisé par la concurrence. Mesuré sur les 64 binaires tous coupés, avant cette
+   * forme : 53 s d'attente pure ajoutées au démarrage. Par passage, c'est 5 s, quel que soit
+   * le nombre de fichiers manquants.
+   */
+  private _load(): Promise<void> {
+    this._loading ??= this._loadPasses().finally(() => {
+      this._loading = null;
+    });
+    return this._loading;
+  }
+
+  private async _loadPasses(): Promise<void> {
+    const policy = this._pending?.policy;
+    if (!policy) return;
+    for (let attempt = 0; ; attempt++) {
+      await this._fill();
+      if (!this._report.retryable) return;
+      if (attempt >= policy.retryDelaysMs.length) return;
+      await policy.wait(policy.retryDelaysMs[attempt]);
     }
+  }
+
+  /**
+   * Un passage de chargement : le manifeste s'il manque, puis tous les corps encore absents.
+   * Chaque fichier vit sa propre vie — l'échec de l'un n'annule aucun autre.
+   */
+  private async _fill(): Promise<void> {
+    const pending = this._pending;
+    if (!pending) return;
+    const { policy } = pending;
+
+    if (!pending.manifest) {
+      try {
+        pending.manifest = await fetchManifest(pending.manifestUrl);
+      } catch (error) {
+        Logger.warn(
+          '[HorizonsEphemerisService] manifest unavailable; every body falls back',
+          error
+        );
+        this._publish({
+          declared: 0,
+          manifestFailed: true,
+          loaded: [],
+          missing: [],
+          retryable: isRetryableError(error),
+        });
+        return;
+      }
+    }
+
+    const { entries, baseUrl } = pending.manifest;
+    // Ce qu'on redemande : ni ce qu'on a déjà, ni ce dont l'absence est DÉFINITIVE. Sans cette
+    // seconde condition, un 404 au milieu d'échecs de transport serait redemandé à chaque
+    // passage alors que le contrat dit qu'on ne le reprend jamais : le passage, lui, continue
+    // tant qu'un seul échec reprenable subsiste.
+    const wanted = entries.filter(
+      ([name]) =>
+        !this.bodies.has(name) && this._permanent.get(name) === undefined
+    );
+    const failures = await mapWithConcurrency(
+      wanted,
+      policy.concurrency,
+      async ([name, body]): Promise<EphemerisLoadFailure | null> => {
+        try {
+          this.bodies.set(
+            name,
+            await fetchBody(name, body, baseUrl, pending.bodyMu)
+          );
+          return null;
+        } catch (error) {
+          const failure: EphemerisLoadFailure = {
+            body: name,
+            reason: error instanceof Error ? error.message : String(error),
+            retryable: isRetryableError(error),
+          };
+          if (!failure.retryable) this._permanent.set(name, failure);
+          return failure;
+        }
+      }
+    );
+
+    const missing = entries
+      .map(
+        ([name]) =>
+          this._permanent.get(name) ??
+          failures.find((failure) => failure?.body === name) ??
+          null
+      )
+      .filter((failure): failure is EphemerisLoadFailure => failure !== null);
+    if (missing.length > 0) {
+      Logger.warn(
+        `[HorizonsEphemerisService] ${missing.length}/${entries.length} ephemerides missing`,
+        missing
+      );
+    } else {
+      Logger.success(
+        `[HorizonsEphemerisService] Loaded ${this.bodies.size} precise ephemerides`
+      );
+    }
+    this._publish({
+      declared: entries.length,
+      manifestFailed: false,
+      loaded: [...this.bodies.keys()],
+      missing,
+      retryable: missing.some((failure) => failure.retryable),
+    });
+  }
+
+  private _publish(report: EphemerisLoadReport): void {
+    this._report = report;
+    for (const listener of this._listeners) listener(report);
   }
 
   /**
@@ -414,4 +644,67 @@ export class HorizonsEphemerisService implements PreciseEphemerisProvider {
 
     return eclipticToScene(interpolate(0), interpolate(1), interpolate(2));
   }
+}
+
+/** Demande le manifeste, et en vérifie le schéma ET l'origine. */
+async function fetchManifest(
+  manifestUrl: string
+): Promise<{ entries: [string, HorizonsBodyManifest][]; baseUrl: URL }> {
+  const response = await fetch(manifestUrl);
+  if (!response.ok)
+    throw new LoadFailure(
+      `manifest HTTP ${response.status}`,
+      isRetryableStatus(response.status)
+    );
+
+  const raw: unknown = await response.json();
+  // Un manifeste illisible ne se répare pas en le redemandant.
+  if (!isManifest(raw)) throw new LoadFailure('invalid manifest schema', false);
+
+  const manifestAbsoluteUrl = new URL(manifestUrl, window.location.href);
+  if (manifestAbsoluteUrl.origin !== window.location.origin) {
+    throw new LoadFailure('manifest must use the application origin', false);
+  }
+  return {
+    entries: Object.entries(raw.bodies),
+    baseUrl: new URL('.', manifestAbsoluteUrl),
+  };
+}
+
+/** Demande un binaire, en vérifie l'origine et la taille exacte, et le prépare. */
+async function fetchBody(
+  name: string,
+  body: HorizonsBodyManifest,
+  baseUrl: URL,
+  bodyMu: Readonly<Record<string, BodyDynamics>>
+): Promise<LoadedBody> {
+  const binaryUrl = new URL(body.file, baseUrl);
+  if (binaryUrl.origin !== baseUrl.origin) {
+    throw new LoadFailure(
+      `${name}: binary asset must use the application origin`,
+      false
+    );
+  }
+  const binaryResponse = await fetch(binaryUrl);
+  if (!binaryResponse.ok)
+    throw new LoadFailure(
+      `${name} HTTP ${binaryResponse.status}`,
+      isRetryableStatus(binaryResponse.status)
+    );
+  const buffer = await binaryResponse.arrayBuffer();
+  const expectedBytes =
+    body.sampleCount * COMPONENTS_PER_SAMPLE * Float64Array.BYTES_PER_ELEMENT;
+  // Des octets servis à la mauvaise taille sont un défaut de déploiement, pas de transport.
+  if (buffer.byteLength !== expectedBytes) {
+    throw new LoadFailure(
+      `${name}: ${buffer.byteLength} bytes, expected ${expectedBytes}`,
+      false
+    );
+  }
+  const dynamics = bodyMu[name];
+  return {
+    manifest: body,
+    samples: new Float64Array(buffer),
+    ...(dynamics ? { dynamics } : {}),
+  };
 }

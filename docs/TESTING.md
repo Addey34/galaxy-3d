@@ -97,6 +97,14 @@ après vingt minutes de suite, ou jamais si la branche fautive n'était pas empr
    `CANVAS`. Et un glisser de moins d'une dizaine de pixels est lu comme un CLIC : il
    resélectionne le corps et RECADRE la caméra à sept rayons, ce qui ressemble à un zoom qui
    part à l'envers. Les deux ont coûté une heure de mesures fausses au lot 9, phase 9D.
+7. **Une route qui coupe un asset ne coupe rien quand un service worker est actif.** Sur le
+   BUILD (`vite preview`, `dist`), le service worker intercepte la requête et en émet une
+   autre, que `page.route` ne voit pas : mesuré au lot 15 en coupant les 64 binaires
+   d'éphémérides, 6 coupures vues sur 64 et un chargement en réalité COMPLET, donc une garde
+   verte pour la mauvaise raison. Ouvrir le contexte avec `serviceWorkers: 'block'` dès qu'un
+   scénario coupe ou substitue un asset servi depuis `/assets/`. La suite `pnpm test:e2e`
+   tourne sur le serveur de dev, où le service worker n'est pas enregistré : le piège ne se
+   manifeste que dans une mesure faite à la main sur `dist`.
 
 ## Couverture actuelle
 
@@ -111,6 +119,18 @@ défauts qui ne lèvent aucune erreur — une position fausse reste une position
 y a été vérifiée falsifiable : on réintroduit le défaut, on confirme que le test tombe.
 Playwright couvre le boot, loader, navigation, sélection 3D, modes, labels, i18n, mobile, petits
 corps, permaliens, événements astronomiques, zoom optique, visite guidée et accessibilité.
+
+**Chargement dégradé des éphémérides** (lot 15) : `core/HorizonsEphemerisService.test.ts` simule
+des `fetch` qui échouent (le manifeste et les binaires sont fabriqués, pas lus sur le disque,
+pour pouvoir choisir qui tombe) et garde la tolérance fichier par fichier, la raison écrite de
+chaque absence, le calendrier de reprise par PASSAGE, et le refus de reprendre un 404 ou des
+octets à la mauvaise taille. `ui/ephemerisNotice.test.ts` tient, sans DOM, la distinction qui
+porte tout le message : un corps du catalogue a un repli, donc une position moins précise, une
+sonde n'en a aucun et reste sans position. `e2e/ephemerisDegraded.spec.ts` coupe une partie des
+`.bin` par `page.route` et vérifie CE QUI EST DIT à l'écran : un corps dont le fichier est arrivé
+reste sur Horizons, le bandeau compte les reçues sur les déclarées, la reprise répare sans
+recharger, et un chargement complet ne crée aucun bandeau. Cette dernière moitié compte : sans
+elle, un bandeau affiché en permanence passerait toutes les autres.
 
 **Objets interstellaires** : `config/interstellar.test.ts` compare les positions à 21 vecteurs
 d'état Horizons relevés en direct, avant, au et après chaque périhélie, jusqu'aux bords de la
