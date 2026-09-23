@@ -613,6 +613,22 @@ le service worker (`cacheableResponse: statuses [0, 200]`, vérifié dans le `sw
 les éphémérides ne sont donc plus disponibles hors ligne. C'est ce que la phase **17E** rend, par
 un bouton « préparer le hors-ligne » qui télécharge les 38,45 Mo explicitement.
 
+**Et le même fait a une seconde face, mesurée, qui n'était pas dans le plan : la visite de
+RETOUR.** Une plage n'est servie ni par le cache du navigateur ni par le service worker, donc un
+visiteur qui revient redemande sa fenêtre à chaque visite : **987 168 octets au lieu de zéro**,
+mesuré sur trois chargements successifs dans le même navigateur (62 requêtes à chaque fois). La
+première visite gagne énormément (186,5 → 32 s à 2 Mbit/s), la suivante perd un peu. **17E doit
+donc couvrir ce cas, et pas seulement le hors-ligne.**
+
+**Conséquence sur le SERVEUR DE DEV, et sur lui seul.** Il parle HTTP/1.1, six connexions par
+hôte : les 62 plages occupent les connexions et retardent les ressources du document, celles
+qu'attend l'événement `load`. Mesuré, contexte neuf : `load` tombe exactement quand la dernière
+plage arrive (17,0 s à froid, 4,7 s à chaud, contre 3,4 s avec les fichiers entiers servis par le
+cache). Ce n'est pas le serveur qui coûte, il sert une plage PLUS VITE qu'un fichier entier
+(1,1 ms contre 1,9 ms, curl) ; et en production, où l'hôte parle HTTP/2, l'A/B sur le même build
+ne montre aucun écart (12,5 s contre 12,8 s). C'est pour cette raison, et avec cette mesure écrite
+à côté du chiffre, que le budget local de `playwright.config.ts` rejoint celui de la CI.
+
 | Garde | Ce qu'elle tient |
 | --- | --- |
 | `core/ephemerisWindowLoad.test.ts` | contre les binaires RÉELLEMENT livrés : une fenêtre place chaque corps au bit près comme le fichier entier (Mercure, Uranus, Encelade, Mimas, Pluton, Nix, Bennu, Voyager 1), moins de 3 % des octets, aucune requête pour un corps hors couverture, le compagnon du ballant couvre TOUTE sa famille, un hôte sans plages est absorbé, une fenêtre perdue est nommée et comptée par le bandeau, et un corps hors couverture n'entre dans AUCUN des deux comptes |
