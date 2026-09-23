@@ -19,7 +19,15 @@
  *     courbe repart des éléments ou de la conique osculatrice. Une fenêtre trop courte d'un
  *     seul échantillon ne dégrade donc pas un peu la ligne : elle la change entièrement, sans
  *     aucune erreur (piège 5 du plan).
+ *
+ * La date est convertie par `core/timeScale`, comme le lecteur : la grille d'un binaire
+ * Horizons est en jours juliens TDB, et une conversion naïve depuis l'heure UTC se trompe de
+ * ΔT, environ 69 s aujourd'hui. L'écart est petit devant un pas de 4 jours, mais il suffit à
+ * faire diverger le planificateur du lecteur AU BORD de la couverture : l'un demanderait des
+ * octets que l'autre n'emploierait pas, ou l'inverse. Défaut trouvé en relisant ce fichier.
  */
+
+import { jdTdbFromDate } from './timeScale';
 
 /** Composantes d'un état Horizons : position (x, y, z) puis vitesse (vx, vy, vz). */
 export const COMPONENTS_PER_SAMPLE = 6;
@@ -40,9 +48,6 @@ export const BYTES_PER_SAMPLE =
  * exactement le saut que ce lot interdit.
  */
 export const WINDOW_MARGIN_SAMPLES = 2;
-
-/** Jours juliens : l'origine Unix, pour convertir une date sans dépendre du service. */
-const JD_UNIX_EPOCH = 2440587.5;
 
 const MS_PER_DAY = 86_400_000;
 
@@ -86,18 +91,14 @@ export function fileByteLength(grid: SampleGrid): number {
   return grid.sampleCount * BYTES_PER_SAMPLE;
 }
 
-/** Jour julien TDB d'une date, par la même origine que `core/timeScale`. */
-function julianDay(date: Date): number {
-  return date.getTime() / MS_PER_DAY + JD_UNIX_EPOCH;
-}
-
 /**
  * Position FRACTIONNAIRE de la date sur la grille : `0` au premier échantillon, `1` au
- * deuxième. C'est exactement le `samplePosition` de `HorizonsEphemerisService._sampleGrid`,
- * recalculé ici pour que le planificateur et le lecteur ne puissent pas diverger.
+ * deuxième. C'est la MÊME expression que le `samplePosition` de
+ * `HorizonsEphemerisService._sampleGrid`, conversion de date COMPRISE : planificateur et lecteur
+ * doivent tomber sur le même échantillon, sinon l'un demande ce que l'autre n'emploie pas.
  */
 export function samplePositionForDate(grid: SampleGrid, date: Date): number {
-  return (julianDay(date) - grid.startJdTdb) / grid.stepDays;
+  return (jdTdbFromDate(date) - grid.startJdTdb) / grid.stepDays;
 }
 
 /**

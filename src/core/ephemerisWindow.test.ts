@@ -27,9 +27,22 @@ import {
   type SampleGrid,
   type SampleWindow,
 } from './ephemerisWindow';
+import { jdTdbFromDate } from './timeScale';
 
 const MS_PER_DAY = 86_400_000;
 const SCENE_DATE = new Date('2026-09-23T00:00:00Z');
+
+/**
+ * Instant dont le jour julien TDB vaut exactement `jd`. L'inverse naïve (origine Unix) se
+ * tromperait de ΔT, environ 69 s, et c'est précisément l'écart que ce fichier doit interdire
+ * entre le planificateur et le lecteur : un test qui l'ignore ne mesure pas la bonne chose.
+ */
+const at = (jd: number): Date => {
+  let ms = (jd - 2440587.5) * MS_PER_DAY;
+  for (let i = 0; i < 4; i++)
+    ms -= (jdTdbFromDate(new Date(ms)) - jd) * MS_PER_DAY;
+  return new Date(ms);
+};
 
 const gridOf = (name: string): SampleGrid => {
   const entry = horizonsManifest.bodies[name];
@@ -135,15 +148,38 @@ describe('adressage d’une fenêtre d’éphéméride', () => {
 describe('quel échantillon encadre la date', () => {
   it('suit la MÊME règle que le lecteur : le dernier échantillon n’encadre rien', () => {
     const grid: SampleGrid = { startJdTdb: 1000, stepDays: 4, sampleCount: 10 };
-    const at = (jd: number) => new Date((jd - 2440587.5) * MS_PER_DAY);
     expect(coveringIndex(grid, at(999))).toBeNull();
     expect(coveringIndex(grid, at(1000))).toBe(0);
     expect(coveringIndex(grid, at(1003.9))).toBe(0);
-    expect(coveringIndex(grid, at(1004))).toBe(1);
+    // Un epsilon après la frontière : exactement dessus, le flottant peut tomber d'un côté
+    // comme de l'autre, et ce test ne porte pas sur l'arrondi. 1e-6 jour vaut 86 ms, donc
+    // représentable par `Date` — 1e-9 jour (86 microsecondes) ne l'était pas et s'arrondissait.
+    expect(coveringIndex(grid, at(1004 + 1e-6))).toBe(1);
     // Dernier échantillon = index 9 : il n'a pas de suivant, donc il n'encadre rien.
     expect(coveringIndex(grid, at(1000 + 8 * 4))).toBe(8);
     expect(coveringIndex(grid, at(1000 + 9 * 4))).toBeNull();
-    expect(samplePositionForDate(grid, at(1002))).toBeCloseTo(0.5, 12);
+    // La tolérance est celle de `Date` : une milliseconde vaut 2,9e-9 pas sur un pas de
+    // 4 jours, donc l'inverse de l'échelle de temps ne peut pas faire mieux.
+    expect(samplePositionForDate(grid, at(1002))).toBeCloseTo(0.5, 8);
+  });
+
+  it('convertit la date par l’échelle de temps du projet, pas depuis l’heure UTC', () => {
+    // Défaut trouvé en relisant ce module : la grille est en jours juliens TDB, et une
+    // conversion naïve se trompe de ΔT (environ 69 s). PILE sur une frontière d'échantillon,
+    // cet écart change l'index, donc le planificateur demanderait un autre échantillon que
+    // celui que le lecteur emploie.
+    const grid = gridOf('mercury');
+    // Un epsilon après la frontière (1e-6 jour, 0,086 s) : très en dessous de ΔT, donc la
+    // conversion naïve reste du mauvais côté, mais loin de l'ambiguïté du flottant.
+    const boundary = grid.startJdTdb + 1000 * grid.stepDays + 1e-6;
+    const date = at(boundary);
+    expect(samplePositionForDate(grid, date)).toBeCloseTo(1000, 6);
+    expect(coveringIndex(grid, date)).toBe(1000);
+    // Le même instant lu par une conversion naïve tombe AVANT la frontière.
+    const naive =
+      (date.getTime() / MS_PER_DAY + 2440587.5 - grid.startJdTdb) /
+      grid.stepDays;
+    expect(Math.floor(naive)).toBe(999);
   });
 
   it('accorde « le service répond » et « le planificateur demande », corps par corps', () => {
@@ -189,7 +225,6 @@ describe('le plan d’un corps', () => {
 
   it('borne la fenêtre au fichier, sans jamais sortir', () => {
     const grid: SampleGrid = { startJdTdb: 1000, stepDays: 4, sampleCount: 10 };
-    const at = (jd: number) => new Date((jd - 2440587.5) * MS_PER_DAY);
     const first = planBodyWindow(grid, { date: at(1000) })!;
     expect(first.firstIndex).toBe(0);
     const last = planBodyWindow(grid, { date: at(1000 + 8 * 4) })!;
