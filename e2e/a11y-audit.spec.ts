@@ -23,7 +23,38 @@ async function boot(page: import('@playwright/test').Page): Promise<void> {
   await expect(page.locator('#loader')).toBeHidden({ timeout: 30_000 });
 }
 
+/**
+ * Attend la fin des animations d'OUVERTURE avant de mesurer.
+ *
+ * Les surfaces s'ouvrent par `animation: surface-in 0.16s` de `opacity: 0` à `1`
+ * (`src/styles.css`), et `toBeVisible()` est satisfait dès le premier pixel : axe pouvait donc
+ * échantillonner EN COURS de fondu et lire des couleurs délavées. Mesuré le 2026-09-23 sur les
+ * en-têtes du tableau de réglages : contraste 3,14 au lieu des 4,5 exigés, avec un alpha de
+ * 0,40 là où le CSS déclare 0,62 (`--ink-dim`), soit un parent à environ 64,5 % d'opacité.
+ * Ce n'était donc PAS un défaut d'accessibilité mais un défaut de MESURE, et il rendait la
+ * porte non reproductible : la même page passait ou échouait selon la charge de la machine.
+ *
+ * Les animations INFINIES sont exclues (`tb-pulse`, `loader-orbit`, `context-recovery-spin`…) :
+ * les attendre ne finirait jamais. Et l'attente est bornée, pour qu'une animation pathologique
+ * fasse au pire une mesure imparfaite, jamais une suite suspendue.
+ */
+async function settleAnimations(
+  page: import('@playwright/test').Page
+): Promise<void> {
+  await page.evaluate(async () => {
+    const finite = document.getAnimations().filter((animation) => {
+      const iterations = animation.effect?.getTiming().iterations;
+      return iterations !== Infinity;
+    });
+    await Promise.race([
+      Promise.all(finite.map((a) => a.finished.catch(() => undefined))),
+      new Promise((resolve) => setTimeout(resolve, 2000)),
+    ]);
+  });
+}
+
 async function runAxe(page: import('@playwright/test').Page) {
+  await settleAnimations(page);
   return (
     new AxeBuilder({ page })
       // wcag2a/wcag2aa/wcag21aa : le socle normatif standard. Pas de disable de règle — si axe
