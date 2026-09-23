@@ -99,11 +99,38 @@ test('the approach floor follows the resolution of the body it shows', async ({
   expect(errors, `Erreurs page : ${errors.join(' | ')}`).toEqual([]);
 });
 
-test('a coarser texture stops the descent higher', async ({ page }) => {
-  // Surface 1k : quatre fois moins fine que celle de la Lune, donc on s'arrête plus haut,
-  // à 1,589 rayon. Une constante unique pour tout le catalogue rendrait ici la MÊME valeur
-  // que pour la Lune, et c'est exactement le défaut que ce test tient.
-  const enceladus = await descendToFloor(page, 'enceladus');
-  expect(enceladus.radii).toBeGreaterThan(1.55);
-  expect(enceladus.radii).toBeLessThan(1.63);
+/**
+ * Le corps témoin de ces deux tests était Encelade, choisie au lot 9B parce qu'elle ne livrait
+ * qu'un 1k. Le lot 16 l'a portée à 8k depuis la vraie mosaïque Cassini, et son plancher est
+ * tombé à 1,0737 rayon, c'est-à-dire EXACTEMENT celui de la Lune : le test ne comparait plus
+ * rien. Deux témoins l'ont remplacée, et le cas 2k est le durable des deux.
+ *
+ * ⚠️ Déimos, qui ne livre pourtant qu'un 1k, serait un mauvais témoin : mesuré à 2,2569 rayon
+ * et non 1,589, son plancher est fixé par autre chose que la finesse de son image (son modèle
+ * de forme l'écarte davantage). Il aurait donné un test VERT qui ne mesure pas la règle.
+ */
+test('a 2k texture stops the descent higher than an 8k one', async ({
+  page,
+}) => {
+  // Titan est le témoin DURABLE du lot : son plafond de 2k n'est pas un choix, c'est la
+  // largeur de sa mosaïque ISS publiée, 4040 px, lue à son étiquette PDS3. Aucune texture plus
+  // fine ne peut donc le faire descendre plus bas, et ce test ne se périmera pas.
+  const titan = await descendToFloor(page, 'titan');
+  expect(titan.radii).toBeGreaterThan(1.27);
+  expect(titan.radii).toBeLessThan(1.32);
+  // La relation, qui est l'affirmation réelle : plus grossier s'arrête PLUS HAUT. Une
+  // constante unique pour tout le catalogue rendrait ici la valeur 8k de la Lune (1,0737).
+  expect(
+    titan.radii,
+    'un 2k doit rester au-dessus du plancher 8k'
+  ).toBeGreaterThan(1.09);
+});
+
+test('a 1k texture stops the descent higher still', async ({ page }) => {
+  // Uranus ne livre qu'un 1k parce que son 2k ne portait que 0,04 % de variance de plus
+  // (lot 16). C'est donc un témoin de TRIM : si une vraie carte d'Uranus est un jour importée,
+  // ce test devra changer de corps, contrairement à celui de Titan ci-dessus.
+  const uranus = await descendToFloor(page, 'uranus');
+  expect(uranus.radii).toBeGreaterThan(1.55);
+  expect(uranus.radii).toBeLessThan(1.63);
 });
