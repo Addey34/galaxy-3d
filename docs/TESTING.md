@@ -132,6 +132,18 @@ reste sur Horizons, le bandeau compte les reçues sur les déclarées, la repris
 recharger, et un chargement complet ne crée aucun bandeau. Cette dernière moitié compte : sans
 elle, un bandeau affiché en permanence passerait toutes les autres.
 
+**Fenêtres d'éphémérides (lot 17C)** : `core/ephemerisWindowLoad.test.ts` fait tourner le chemin
+de production — `load`, son `fetch`, son en-tête `Range`, son interprétation de la réponse —
+contre les BINAIRES RÉELLEMENT LIVRÉS, découpés par un serveur simulé comme un hôte le ferait.
+Il tient la seule chose qui compte vraiment : **une fenêtre place chaque corps au bit près comme
+le fichier entier**, familles du ballant comprises. Fabriquer des échantillons n'aurait rien dit
+du risque réel, qui est de lire un autre instant. `core/ephemerisClockGate.test.ts` tient
+l'horloge : elle se fige quand les octets manquent, repart exactement où elle s'était arrêtée,
+et n'est JAMAIS prise en otage par un lien mort. `e2e/ephemerisWindow.spec.ts` vérifie dans un
+vrai navigateur que chaque demande porte un `Range`, que la fiche dit toujours « JPL Horizons »
+après un saut de cinquante ans, et qu'une fenêtre qui échoue EN COURS DE SESSION fait apparaître
+le bandeau — un cas qui n'existait pas quand tout était chargé au démarrage.
+
 **Objets interstellaires** : `config/interstellar.test.ts` compare les positions à 21 vecteurs
 d'état Horizons relevés en direct, avant, au et après chaque périhélie, jusqu'aux bords de la
 fenêtre affichée. `e2e/interstellar.spec.ts` lit ce qu'une couche canvas a peint via deux

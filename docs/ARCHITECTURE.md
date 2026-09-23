@@ -518,6 +518,88 @@ comportement d'avant sur un hôte sans plages.
 | `core/meanMotionScale.test.ts` | le facteur est publié pour les corps qui le déclarent et pour eux seuls, il vaut exactement ce que le binaire donne, et forcer 1 déplace le corps (il n'est pas décoratif) |
 | `pnpm ephemeris:meanmotion --check` | le manifeste committé n'a pas dérivé des binaires |
 
+### Le service charge des fenêtres, et l'horloge les attend (lot 17, phase 17C)
+
+Le service ne demande plus des FICHIERS, il demande des PLAGES, et l'horloge n'avance que sur
+des octets arrivés. Mesuré contre le build livré, service worker bloqué, même build des deux
+côtés (un seul drapeau du serveur décide s'il honore `Range`, ce qui reproduit exactement le
+comportement d'avant) :
+
+| | A : fichiers entiers | B : fenêtres | |
+| --- | --- | --- | --- |
+| éphémérides au démarrage | 38 040 720 o, 62 requêtes | **987 168 o**, 62 plages | **38,5 fois moins** |
+| octets servis jusqu'au loader masqué, lien non bridé | 48 111 453 o | **11 057 901 o** | 4,4 fois moins |
+| démarrage complet, lien non bridé | 12,84 / 12,67 s | 12,49 / 13,47 s | aucun gain |
+| démarrage, 10 Mbit/s | 47,17 / 55,46 s | 28,65 / 17,58 s | ~2 fois |
+| démarrage, 2 Mbit/s | 186,48 / 180,70 s | **36,80 / 28,00 s** | ~5,7 fois |
+
+Annoncer « 38 fois plus léger » serait vrai en octets et trompeur en secondes : sur un lien
+rapide il n'y a rien à gagner, ce sont les allers-retours et le décodage qui dominent. Le gain
+est celui d'un vrai visiteur mal connecté, et c'est tout l'objet de la série « accès ».
+
+**Ce que la scène demande.** `SceneWindowRequest` porte la date affichée, l'avance de lecture
+que réclame la vitesse, et la période de révolution des corps dont une ligne d'orbite sera
+tracée. La couche de composition (`SolarSystemApp`) la construit, puisqu'elle seule connaît à
+la fois le service et le catalogue. Sans cette demande, le service charge les fichiers entiers
+comme avant : c'est ce que font les tests de fixture, le validateur et tout ce qui lit ces
+binaires hors du navigateur.
+
+**Un corps que la date ne concerne pas ne coûte RIEN.** Sa couverture se lit au manifeste, et il
+n'est pas pour autant « manquant » : il ne répondrait pas davantage avec son fichier entier, donc
+le bandeau reste muet. Onze corps sur 64 sont dans ce cas au 1969-07-20.
+
+**L'horloge n'avance que sur des données arrivées (décision D3).** `OrbitalMechanics` interroge
+`EphemerisWindows.ready` avant de laisser la date bouger ; sinon elle revient où elle était
+(`SimulationClock.holdAt`, qui ré-ancre l'offset pour qu'aucune dette ne soit rattrapée à la
+reprise) et la fenêtre est redemandée. Un saut de date ne s'applique pas tant que ses octets ne
+sont pas là — et il demande les positions ET les lignes en une seule fois, un saut redessinant
+toute la scène. Écarté explicitement : afficher la position de repli en attendant, qui est mot
+pour mot « une position fausse en attendant » (Mercure à 2 600 km au lieu de 7,3, lot 15).
+
+**Rien ne fige la scène pour toujours.** Après deux demandes revenues sans les octets, la date
+avance quand même : les corps concernés repassent sur leur repli et le bandeau du lot 15 les
+NOMME. Une attente infinie serait une autre façon de se taire, et redemander sans fin brûlerait
+le lien de l'utilisateur.
+
+**L'avance de lecture (décision D4) est mesurée, pas choisie.** Dix secondes de lecture au
+curseur maximal (un an simulé par seconde réelle) :
+
+| avance | 10 Mbit/s | 2 Mbit/s |
+| --- | --- | --- |
+| 2 s | 3,97 ans parcourus, 1,16 Mbit/s | 2,07 ans, 0,71 Mbit/s |
+| **4 s (livré)** | **5,10 ans, 2,01 Mbit/s** | **2,75 ans, 0,84 Mbit/s** |
+| 12 s | 6,35 ans, 4,34 Mbit/s | **la date n'avance plus du tout** |
+
+La dernière ligne est le contre-intuitif du lot : un plus gros tampon d'avance n'aide pas un lien
+pauvre, il l'achève, chaque demande portant alors plus de trois mégaoctets.
+
+**Ce que ça coûte, et il faut l'écrire.** Un saut de date passe de **1,2 s à 3,2 s** (10 Mbit/s,
+284 352 octets demandés), et la lecture au curseur maximal parcourt **5,1 ans par dix secondes au
+lieu de 9,6** : la date ralentit pour rester exacte. C'est la question laissée ouverte au § 9b du
+plan — ralentir, ou avancer en disant que les positions sont en retard — et la phase 17D la
+tranche en connaissance de cause, maintenant qu'elle est chiffrée.
+
+**Les lignes d'orbite ont UNE porte, `OrbitalMechanics._emitOrbitsChanged`.** Tant que les octets
+d'une période entière ne sont pas là, la couche app n'est pas prévenue : la ligne précédente
+reste à l'écran et personne ne trace une courbe qui épisserait deux sources. Toutes les raisons
+de redessiner (saut, changement de mode, fin de morph, reprise des éphémérides) passent par là.
+
+**Un hôte sans plages continue de marcher (décision D7).** Un `200` avec tout le fichier est
+gardé, et le service cesse alors d'en demander pour tout le monde — sinon il redemanderait une
+plage par corps et par saut pour se faire rendre le fichier entier à chaque fois.
+
+**Ce que ce lot RETIRE, et il faut le dire.** Les réponses `206` ne sont pas mises en cache par
+le service worker (`cacheableResponse: statuses [0, 200]`, vérifié dans le `sw.js` construit) :
+les éphémérides ne sont donc plus disponibles hors ligne. C'est ce que la phase **17E** rend, par
+un bouton « préparer le hors-ligne » qui télécharge les 38,45 Mo explicitement.
+
+| Garde | Ce qu'elle tient |
+| --- | --- |
+| `core/ephemerisWindowLoad.test.ts` | contre les binaires RÉELLEMENT livrés : une fenêtre place chaque corps au bit près comme le fichier entier (Mercure, Uranus, Encelade, Mimas, Pluton, Nix, Bennu, Voyager 1), moins de 3 % des octets, aucune requête pour un corps hors couverture, le compagnon du ballant couvre TOUTE sa famille, un hôte sans plages est absorbé, une fenêtre perdue est nommée et comptée par le bandeau |
+| `core/ephemerisClockGate.test.ts` | la date se fige et est redemandée, elle repart exactement où elle s'était arrêtée, un saut atterrit exactement sur sa cible, deux clics pendant l'attente comptent deux, l'avance suit la vitesse et son signe, et rien ne fige la scène pour toujours |
+| `core/SimulationClock.test.ts` | `holdAt` ne laisse aucune dette : la reprise ne rattrape pas l'attente |
+| `e2e/ephemerisWindow.spec.ts` | dans un vrai navigateur : chaque demande porte un `Range`, moins d'un vingtième des octets, la fiche dit toujours « JPL Horizons », un saut de cinquante ans garde cette source, et une fenêtre qui échoue EN COURS DE SESSION fait apparaître le bandeau |
+
 ### Tests qui verrouillent tout ça
 
 | Fichier | Ce qu'il garde |
