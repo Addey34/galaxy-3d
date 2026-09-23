@@ -15,11 +15,18 @@
  *   - la POSITION d'un corps (`HorizonsEphemerisService._sampleGrid`) lit l'échantillon qui
  *     encadre la date ET LE SUIVANT : deux états, 96 octets ;
  *   - la LIGNE D'ORBITE (`core/orbitPath.ts`) échantillonne la source précise sur une PÉRIODE
- *     entière centrée sur la date, et elle est TOUT OU RIEN : `needsElementsOnly` sonde les
- *     deux extrémités de la courbe, et si la source ne répond pas à l'une des deux, toute la
- *     courbe repart des éléments ou de la conique osculatrice. Une fenêtre trop courte d'un
- *     seul échantillon ne dégrade donc pas un peu la ligne : elle la change entièrement, sans
- *     aucune erreur (piège 5 du plan).
+ *     entière centrée sur la date. Une fenêtre trop courte d'un seul échantillon ne dégrade
+ *     donc pas un peu la ligne, et ce qu'elle lui fait dépend du corps :
+ *       - corps AVEC éléments képlériens (petits corps, satellites) : `needsElementsOnly` sonde
+ *         les deux extrémités, et si la source ne répond pas à l'une des deux, TOUTE la courbe
+ *         repart des éléments ou de la conique osculatrice ;
+ *       - corps SANS éléments, c'est-à-dire **les huit planètes**, dont l'orbite est justement
+ *         la seule tracée par défaut : `needsElementsOnly` sort immédiatement et la ligne est
+ *         échantillonnée par `resolve`, qui retombe sur astronomy-engine point par point. La
+ *         courbe ÉPISSE alors deux sources, ce que `orbitPath.ts` rejette par principe. Sur
+ *         Uranus, les deux sources s'écartaient de 111 196 km avant que son binaire n'existe
+ *         (lot 12).
+ *     Dans les deux cas, rien n'est journalisé : d'où les gardes de `planBodyWindow`.
  *
  * La date est convertie par `core/timeScale`, comme le lecteur : la grille d'un binaire
  * Horizons est en jours juliens TDB, et une conversion naïve depuis l'heure UTC se trompe de

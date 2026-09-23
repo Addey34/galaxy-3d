@@ -252,6 +252,42 @@ describe('le plan d’un corps', () => {
     }
   });
 
+  it('couvre la période ENTIÈRE des huit planètes, les seules dont l’orbite est tracée', () => {
+    // Elles n'ont AUCUN élément képlérien (vérifié : aucune fiche d'entité n'en déclare), donc
+    // `needsElementsOnly` sort immédiatement et la ligne est échantillonnée par `resolve`, qui
+    // retombe sur astronomy-engine point par point. Une fenêtre trop courte n'y bascule donc
+    // pas toute la courbe sur une conique : elle ÉPISSE deux sources le long du tracé, en
+    // silence. Uranus en donne l'ordre de grandeur : 111 196 km entre les deux avant son
+    // binaire (lot 12).
+    const bodies = flattenBodies(CELESTIAL_CONFIG);
+    let widened = 0;
+    for (const [name, cfg] of bodies) {
+      if (cfg.kind !== 'planet' || !horizonsManifest.bodies[name]) continue;
+      expect(cfg.orbitalElements, `${name} a des éléments`).toBeUndefined();
+      const grid = gridOf(name);
+      const period = cfg.realData?.orbitPeriodDays;
+      expect(period, name).toBeDefined();
+      const window = planBodyWindow(grid, {
+        date: SCENE_DATE,
+        orbitPeriodDays: period,
+      })!;
+      const lo = coveringIndex(
+        grid,
+        new Date(SCENE_DATE.getTime() - (period! * MS_PER_DAY) / 2)
+      );
+      const hi = coveringIndex(
+        grid,
+        new Date(SCENE_DATE.getTime() + (period! * MS_PER_DAY) / 2)
+      );
+      if (lo === null || hi === null) continue; // Neptune : hors couverture, cf. test suivant.
+      widened++;
+      expect(window.firstIndex, name).toBeLessThanOrEqual(lo);
+      expect(window.lastIndex, name).toBeGreaterThanOrEqual(hi + 1);
+    }
+    // Sept des huit : Neptune est la seule dont la demi-période sort de la couverture.
+    expect(widened).toBe(7);
+  });
+
   it('n’élargit PAS quand la période ne tient pas dans la couverture', () => {
     // Neptune : sa demi-période atteint 2108, au-delà du fichier. La ligne repart donc de
     // toute façon de sa conique, et demander ces octets serait les payer pour rien.

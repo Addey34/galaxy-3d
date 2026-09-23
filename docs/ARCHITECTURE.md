@@ -480,10 +480,14 @@ réponse partielle.
 
 **Deux consommateurs, et ils ne demandent pas la même chose.** La position lit deux états ; la
 LIGNE D'ORBITE (`core/orbitPath.ts`) échantillonne la source précise sur une période entière
-centrée sur la date, et elle est **tout ou rien** : `needsElementsOnly` sonde les deux
-extrémités de la courbe, et si la source ne répond pas à l'une des deux, toute la courbe repart
-des éléments ou de la conique osculatrice. Une fenêtre trop courte d'un seul échantillon ne
-dégrade donc pas un peu le tracé : elle le change entièrement, sans aucune erreur. Le
+centrée sur la date. Une fenêtre trop courte d'un seul échantillon ne dégrade donc pas un peu le
+tracé, et ce qu'elle lui fait dépend du corps. Pour un corps qui a des éléments képlériens,
+`needsElementsOnly` sonde les deux extrémités et bascule TOUTE la courbe sur les éléments ou sur
+la conique osculatrice. Pour un corps qui n'en a pas, et **les huit planètes sont exactement
+dans ce cas alors que leur orbite est la seule tracée par défaut**, la ligne est échantillonnée
+par `resolve`, qui retombe sur astronomy-engine point par point : la courbe ÉPISSE alors deux
+sources, ce que ce module rejette par principe ailleurs. Avant que le binaire d'Uranus n'existe,
+les deux sources s'écartaient de 111 196 km (lot 12). Dans les deux cas, rien n'est journalisé. Le
 planificateur n'élargit à la période que si elle tient dans la couverture — sinon ces octets
 seraient payés pour rien, ce qui est déjà le cas de Neptune, dont la demi-période atteint 2108.
 
