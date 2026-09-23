@@ -10,6 +10,7 @@ import { SimulationClock } from './core/SimulationClock';
 import { EphemerisService } from './core/EphemerisService';
 import { OrbitalElementsService } from './core/OrbitalElementsService';
 import { OrbitalMechanics } from './core/OrbitalMechanics';
+import type { EphemerisWindows } from './core/OrbitalMechanics';
 import { HorizonsEphemerisService } from './core/HorizonsEphemerisService';
 import { FallbackPreciseEphemerisProvider } from './core/PreciseEphemerisProvider';
 import { SpkKernelWorkerClient } from './core/SpkKernelWorkerClient';
@@ -17,11 +18,29 @@ import { SpkWorkerEphemerisProvider } from './core/SpkWorkerEphemerisProvider';
 import { APP_SETTINGS, SPK_SETTINGS, TEXTURE_SETTINGS } from './config/engine';
 import { CELESTIAL_CONFIG } from './config/bodies';
 import { bodyDynamics } from './config/gravity';
-import { forEachBody } from './config/catalog';
+import { flattenBodies, forEachBody } from './config/catalog';
 import { t } from './i18n';
 import Logger from './utils/Logger';
 
 type ProgressCallback = (percent: number, message: string) => void;
+
+/**
+ * Période de révolution de chaque corps du catalogue qui en a une.
+ *
+ * C'est ce que coûte une LIGNE d'orbite en octets d'éphéméride : `orbitPath` échantillonne
+ * une période ENTIÈRE centrée sur la date, et il le fait pour tous les corps tracés, la
+ * visibilité d'une ligne étant décidée plus tard, dans la scène. Mesuré le 2026-09-23 :
+ * 563 472 octets pour la première vue, 572 640 avec toutes les orbites allumées, soit 1,5 %
+ * des 38 445 024 livrés.
+ */
+function orbitPeriodsByBody(): Record<string, number> {
+  const periods: Record<string, number> = {};
+  for (const [name, cfg] of flattenBodies(CELESTIAL_CONFIG)) {
+    const period = cfg.realData?.orbitPeriodDays;
+    if (period !== undefined && period > 0) periods[name] = period;
+  }
+  return periods;
+}
 
 function reportProgress(
   progressCallback: ProgressCallback,
@@ -125,9 +144,16 @@ export class SolarSystemApp {
     // Les masses du catalogue disent au service autour de quoi chaque fichier est centre :
     // il en a besoin pour interpoler par la dynamique les satellites que son pas
     // d'echantillonnage ne resout pas (cf. HorizonsEphemerisService).
+    //
+    // Et depuis le lot 17, ce que la SCÈNE demande : le loader n'attend plus les 38,4 Mo de
+    // deux siècles de trajectoires, mais les octets de la première vue — la position de
+    // chaque corps à cette date, et la période entière de ceux dont une ligne d'orbite sera
+    // tracée. Mesuré en production : 45,81 Mo et 15,3 s de démarrage, dont 77,5 % pour les
+    // seules éphémérides ; la première vue en demande 1,47 %.
     const horizonsPromise = HorizonsEphemerisService.load(
       manifestUrl,
-      bodyDynamics(CELESTIAL_CONFIG)
+      bodyDynamics(CELESTIAL_CONFIG),
+      { scene: { date: new Date(), orbitPeriodDays: orbitPeriodsByBody() } }
     ).then((horizons) => {
       ephemeridesReady = true;
       reportResourceProgress(t('loader.ephemerides'));
@@ -138,6 +164,32 @@ export class SolarSystemApp {
 
     const [, horizons] = await Promise.all([texturePromise, horizonsPromise]);
     this._horizonsEphemeris = horizons;
+  }
+
+  /**
+   * Le contrat que l'horloge interroge avant d'avancer (cf. `EphemerisWindows`). Cette couche
+   * est la seule à connaître à la fois le service et le catalogue : le moteur de mouvement
+   * ignore d'où viennent les octets, et le service ignore quelles lignes sont tracées.
+   */
+  private _ephemerisWindows(): EphemerisWindows {
+    const service = this._horizonsEphemeris!;
+    const periods = orbitPeriodsByBody();
+    const request = (
+      date: Date,
+      leadDays: number,
+      lines: boolean
+    ): Parameters<typeof service.hasCoverageFor>[0] => ({
+      date,
+      leadDays,
+      ...(lines ? { orbitPeriodDays: periods } : {}),
+    });
+    return {
+      ready: (date, leadDays, lines) =>
+        service.hasCoverageFor(request(date, leadDays, lines)),
+      ensure: async (date, leadDays, lines) => {
+        await service.ensureCoverage(request(date, leadDays, lines));
+      },
+    };
   }
 
   private _startOptionalSpk(): void {
@@ -235,6 +287,8 @@ export class SolarSystemApp {
       bodies
     );
 
+    this._orbitalMechanics.setEphemerisWindows(this._ephemerisWindows());
+
     // Transition animée Éduc↔Explo : la taille visuelle de chaque corps morphe avec sa
     // position. Les lignes éducatives sont masquées dès que l'Exploration devient active.
     this._orbitalMechanics.onOrbitsChanged = () => {
@@ -290,7 +344,13 @@ export class SolarSystemApp {
     this.systems.animation.run();
   }
 
-  /** Recalcule le cercle éducatif ou la trajectoire réelle du mode courant. */
+  /**
+   * Recalcule le cercle éducatif ou la trajectoire réelle du mode courant.
+   *
+   * Appelé au démarrage, et par `onOrbitsChanged` — que le moteur n'émet QUE lorsque les
+   * octets d'une période entière sont là (cf. `OrbitalMechanics._emitOrbitsChanged`) : une
+   * ligne tracée sur une fenêtre trop courte épisserait deux sources.
+   */
   private _recomputeOrbits(): void {
     const om = this._orbitalMechanics!;
     const scene = this.systems.scene!;

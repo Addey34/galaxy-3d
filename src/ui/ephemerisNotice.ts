@@ -70,114 +70,147 @@ export function isComplete(report: EphemerisLoadReport): boolean {
 
 export function setupEphemerisNotice(api: PublicAPI): void {
   const service = api.horizonsEphemeris;
-  if (isComplete(service.report)) {
-    // Cas nominal : aucun élément n'est créé, donc rien à masquer, rien à traduire, rien à
-    // placer. Une reprise ne peut pas se produire puisqu'il n'y a rien à reprendre.
-    return;
-  }
+  let banner: HTMLElement | null = null;
+  let render = (): void => {};
+  let place = (): void => {};
 
-  const banner = document.createElement('aside');
-  banner.id = 'ephemeris-notice';
-  banner.setAttribute('role', 'status');
-  banner.setAttribute('aria-live', 'polite');
-
-  const title = document.createElement('p');
-  title.className = 'en-title';
-
-  const detail = document.createElement('p');
-  detail.className = 'en-detail';
-
-  const actions = document.createElement('div');
-  actions.className = 'en-actions';
-
-  const retry = document.createElement('button');
-  retry.type = 'button';
-  retry.className = 'en-retry';
-
-  const dismiss = document.createElement('button');
-  dismiss.type = 'button';
-  dismiss.className = 'en-dismiss';
-
-  actions.append(retry, dismiss);
-  banner.append(title, detail, actions);
-  document.body.append(banner);
-
-  let busy = false;
-  let recovered = false;
-
-  const render = (): void => {
-    const report = service.report;
-    banner.setAttribute('aria-label', t('ephemeris.notice.aria'));
-    dismiss.textContent = t('ephemeris.notice.dismiss');
-    retry.textContent = busy
-      ? t('ephemeris.notice.retrying')
-      : t('ephemeris.notice.retry');
-    retry.disabled = busy;
-
-    if (recovered) {
-      title.textContent = t('ephemeris.notice.recovered');
-      detail.textContent = '';
-      detail.hidden = true;
-      retry.hidden = true;
-      banner.dataset['state'] = 'recovered';
-      return;
-    }
-
-    title.textContent = t('ephemeris.notice.title');
-    detail.textContent = noticeText(report).join(' ');
-    detail.hidden = false;
-    // Une reprise n'a de sens que si au moins un échec est de transport : un 404 ou des
-    // octets faux ne changeront pas au prochain essai (cf. `EphemerisLoadFailure.retryable`).
-    retry.hidden = !report.retryable;
-    banner.dataset['state'] = 'degraded';
-    // Sans le manifeste on ne sait même pas COMBIEN de fichiers existent : publier un nombre
-    // serait inventer. L'attribut disparaît, et le texte dit « aucune éphéméride précise ».
-    if (report.manifestFailed) delete banner.dataset['missing'];
-    else banner.dataset['missing'] = String(report.missing.length);
+  /**
+   * Le bandeau n'existe dans le DOM que si un fichier manque VRAIMENT, et depuis le lot 17
+   * cela peut arriver en cours de session : le service ne charge plus des fichiers entiers au
+   * démarrage mais des FENÊTRES, et une fenêtre demandée à un saut de date peut échouer là où
+   * celle du démarrage était arrivée. Le bandeau est donc construit à la demande, au premier
+   * rapport dégradé, et pas seulement à l'ouverture.
+   */
+  const ensureBanner = (): void => {
+    if (banner) return;
+    banner = build();
   };
 
-  /** Le bandeau se pose au-dessus du dock du bas, mesuré, jamais supposé. */
-  const place = (): void => {
-    const dock = document.querySelector('.dock--bottom');
-    if (!dock) return;
-    const top = dock.getBoundingClientRect().top;
-    banner.style.bottom = `${Math.max(0, window.innerHeight - top + 8)}px`;
-    // Le bandeau d'imagerie de surface partage cette bande et se pose AU-DESSUS du nôtre.
-    // Il lit notre rectangle réel (une seule source, le DOM) ; ce signal lui dit seulement
-    // QUAND relire, sans qu'aucun des deux modules n'importe l'autre.
-    window.dispatchEvent(new Event(NOTICE_CHANGED));
-  };
-
-  const close = (): void => {
+  const removeBanner = (): void => {
+    if (!banner) return;
     banner.remove();
+    banner = null;
     window.removeEventListener('resize', place);
     window.dispatchEvent(new Event(NOTICE_CHANGED));
   };
 
-  dismiss.addEventListener('click', close);
+  /** Une reprise DEMANDÉE laisse sa ligne de confirmation ; une guérison seule, non. */
+  let asked = false;
 
-  retry.addEventListener('click', () => {
-    if (busy) return;
-    busy = true;
-    render();
-    void service.retryMissing().then(() => {
-      busy = false;
-      // Les positions se recalculent à chaque image, mais les lignes d'orbite sont
-      // mémorisées : un corps repris doit retrouver SA ligne, pas celle de son ancienne
-      // source (cf. `OrbitalMechanics.refreshPositionSources`).
-      api.orbitalMechanics.refreshPositionSources();
-      recovered = isComplete(service.report);
-      render();
-      place();
-    });
-  });
-
-  onLocaleChange(() => {
+  service.onReportChange(() => {
+    if (isComplete(service.report) && !asked) {
+      removeBanner();
+      return;
+    }
+    ensureBanner();
     render();
     place();
   });
-  window.addEventListener('resize', place);
 
-  render();
-  place();
+  if (!isComplete(service.report)) {
+    ensureBanner();
+    render();
+    place();
+  }
+
+  function build(): HTMLElement {
+    const banner = document.createElement('aside');
+    banner.id = 'ephemeris-notice';
+    banner.setAttribute('role', 'status');
+    banner.setAttribute('aria-live', 'polite');
+
+    const title = document.createElement('p');
+    title.className = 'en-title';
+
+    const detail = document.createElement('p');
+    detail.className = 'en-detail';
+
+    const actions = document.createElement('div');
+    actions.className = 'en-actions';
+
+    const retry = document.createElement('button');
+    retry.type = 'button';
+    retry.className = 'en-retry';
+
+    const dismiss = document.createElement('button');
+    dismiss.type = 'button';
+    dismiss.className = 'en-dismiss';
+
+    actions.append(retry, dismiss);
+    banner.append(title, detail, actions);
+    document.body.append(banner);
+
+    let busy = false;
+    let recovered = false;
+
+    render = (): void => {
+      const report = service.report;
+      banner.setAttribute('aria-label', t('ephemeris.notice.aria'));
+      dismiss.textContent = t('ephemeris.notice.dismiss');
+      retry.textContent = busy
+        ? t('ephemeris.notice.retrying')
+        : t('ephemeris.notice.retry');
+      retry.disabled = busy;
+
+      if (recovered) {
+        title.textContent = t('ephemeris.notice.recovered');
+        detail.textContent = '';
+        detail.hidden = true;
+        retry.hidden = true;
+        banner.dataset['state'] = 'recovered';
+        return;
+      }
+
+      title.textContent = t('ephemeris.notice.title');
+      detail.textContent = noticeText(report).join(' ');
+      detail.hidden = false;
+      // Une reprise n'a de sens que si au moins un échec est de transport : un 404 ou des
+      // octets faux ne changeront pas au prochain essai (cf. `EphemerisLoadFailure.retryable`).
+      retry.hidden = !report.retryable;
+      banner.dataset['state'] = 'degraded';
+      // Sans le manifeste on ne sait même pas COMBIEN de fichiers existent : publier un nombre
+      // serait inventer. L'attribut disparaît, et le texte dit « aucune éphéméride précise ».
+      if (report.manifestFailed) delete banner.dataset['missing'];
+      else banner.dataset['missing'] = String(report.missing.length);
+    };
+
+    /** Le bandeau se pose au-dessus du dock du bas, mesuré, jamais supposé. */
+    place = (): void => {
+      const dock = document.querySelector('.dock--bottom');
+      if (!dock) return;
+      const top = dock.getBoundingClientRect().top;
+      banner.style.bottom = `${Math.max(0, window.innerHeight - top + 8)}px`;
+      // Le bandeau d'imagerie de surface partage cette bande et se pose AU-DESSUS du nôtre.
+      // Il lit notre rectangle réel (une seule source, le DOM) ; ce signal lui dit seulement
+      // QUAND relire, sans qu'aucun des deux modules n'importe l'autre.
+      window.dispatchEvent(new Event(NOTICE_CHANGED));
+    };
+
+    dismiss.addEventListener('click', removeBanner);
+
+    retry.addEventListener('click', () => {
+      if (busy) return;
+      busy = true;
+      asked = true;
+      render();
+      void service.retryMissing().then(() => {
+        busy = false;
+        // Les positions se recalculent à chaque image, mais les lignes d'orbite sont
+        // mémorisées : un corps repris doit retrouver SA ligne, pas celle de son ancienne
+        // source (cf. `OrbitalMechanics.refreshPositionSources`).
+        api.orbitalMechanics.refreshPositionSources();
+        recovered = isComplete(service.report);
+        render();
+        place();
+      });
+    });
+
+    onLocaleChange(() => {
+      render();
+      place();
+    });
+    window.addEventListener('resize', place);
+
+    return banner;
+  }
 }

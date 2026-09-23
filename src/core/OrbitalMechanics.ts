@@ -32,6 +32,31 @@ import { HOURS_TO_RAD } from './MathConstants';
 import { surfaceRotationForSubsolarLongitude } from './frames';
 import { flattenBodies, forEachBody } from '@/config/catalog';
 import type { PositionSource } from './positionProvenance';
+import { readAheadDays } from './ephemerisWindow';
+
+/**
+ * CE QUE L'HORLOGE DEMANDE AUX ÉPHÉMÉRIDES AVANT D'AVANCER (lot 17, décisions D3 et D4).
+ *
+ * Depuis le lot 17 le service ne tient qu'une FENÊTRE de chaque binaire : quelques dizaines
+ * d'octets par corps plutôt que deux siècles de trajectoire. Une date qui sort de ces fenêtres
+ * n'est donc pas une date sans données, c'est une date dont les données ne sont PAS ENCORE
+ * arrivées — et les deux ne se traitent pas pareil. Sans ce contrat, un corps repasserait
+ * silencieusement sur sa source de repli le temps du chargement : Mercure à 2 600 km au lieu
+ * de 7,3, mesuré au lot 15, présenté cette fois comme une fonctionnalité.
+ *
+ * L'implémentation vit dans la couche de composition (`SolarSystemApp`), qui seule connaît à
+ * la fois le service et le catalogue : ce moteur ne sait pas d'où viennent les octets.
+ */
+export interface EphemerisWindows {
+  /**
+   * Tout ce qu'il faut pour afficher cette date est-il déjà là ? `lines` distingue les deux
+   * consommateurs mesurés au § 3 du plan : une POSITION coûte 96 octets, une LIGNE d'orbite
+   * demande une période entière (jusqu'à 41,8 % du fichier d'Uranus).
+   */
+  ready(date: Date, leadDays: number, lines: boolean): boolean;
+  /** Les demander. Résolue quand les octets sont là, ou que leur absence est actée. */
+  ensure(date: Date, leadDays: number, lines: boolean): Promise<void>;
+}
 
 /** Corps sans mouvement orbital propre (skybox étoilée, étoile centrale à l'origine). */
 function hasOrbit(cfg: CelestialBodyConfig): boolean {
@@ -44,6 +69,25 @@ const MS_PER_DAY = 86_400_000;
 
 /** Durée (secondes) de la transition animée des positions et tailles Éduc↔Explo. */
 const MORPH_DURATION_S = 1.2;
+
+/**
+ * Secondes de lecture prises d'avance sur l'horloge (lot 17, décision D4).
+ *
+ * QUATRE, et c'est mesuré, pas choisi par symétrie. Lecture de dix secondes au curseur
+ * maximal (un an simulé par seconde réelle), contre le build livré, service worker bloqué :
+ *
+ *   avance    10 Mbit/s              2 Mbit/s
+ *    2 s      3,97 ans / 1,16 Mbit/s  2,07 ans / 0,71 Mbit/s
+ *    4 s      5,10 ans / 2,01 Mbit/s  2,75 ans / 0,84 Mbit/s
+ *   12 s      6,35 ans / 4,34 Mbit/s  AUCUNE avancée de la date
+ *
+ * Le contre-intuitif est la dernière ligne : un plus gros tampon d'avance NE SAUVE PAS un lien
+ * pauvre, il l'achève. Chaque demande porte alors douze ans de grille, soit plus de trois
+ * mégaoctets, qui mettent plus de dix secondes à arriver — et l'horloge, qui n'avance que sur
+ * des données arrivées, ne bouge plus du tout. Quatre secondes est le meilleur des trois sur
+ * LES DEUX liens.
+ */
+const EPHEMERIS_READ_AHEAD_SECONDS = 4;
 
 /** Cubic InOut — même courbe que les vols caméra (TWEEN.Easing.Cubic.InOut). */
 function easeInOutCubic(t: number): number {
@@ -103,6 +147,22 @@ export class OrbitalMechanics {
   private _paths!: OrbitPathBuilder;
   private _prevPaused = false;
   private _simDeltaSeconds = 0;
+
+  // ── Fenêtres d'éphémérides (lot 17) ──
+  /** Absent = rien à attendre (tests, service chargé depuis le disque). */
+  private _windows: EphemerisWindows | null = null;
+  /** Une demande en vol à la fois : une image de plus ne doit pas doubler les requêtes. */
+  private _windowRequest: Promise<void> | null = null;
+  /** Saut demandé, pas encore appliqué : ses octets ne sont pas là (cf. `jumpToDate`). */
+  private _pendingJump: Date | null = null;
+  /**
+   * Demandes revenues SANS ce qu'on attendait, d'affilée. Au-delà de la borne ci-dessous, la
+   * scène avance quand même : une fenêtre qui ne vient pas est une absence, et une absence se
+   * DIT (le bandeau du lot 15 la nomme) au lieu de figer l'horloge pour toujours et de
+   * redemander sans fin, ce qui brûlerait le lien de l'utilisateur.
+   */
+  private _unmetAsks = 0;
+  private static readonly _MAX_UNMET_ASKS = 2;
 
   // ── Throttle du recalcul d'éphéméride ──
   // HelioVector (astronomy-engine) est un calcul de séries coûteux, exécuté par corps et par
@@ -213,6 +273,11 @@ export class OrbitalMechanics {
   // ============================================================================
 
   update(simDelta: number, realDelta: number = simDelta): void {
+    // AVANT de mesurer le delta : un saut dont les octets viennent d'arriver s'applique ici,
+    // pas au milieu de l'image. Sinon la rotation propre des corps intégrerait le saut entier
+    // (`_simDeltaSeconds` ci-dessous), ce qui ferait tourner la Terre de plusieurs tours.
+    this._applyPendingJump();
+
     const prevMs = this.clock.date.getTime();
     const isPaused = simDelta === 0;
 
@@ -221,6 +286,7 @@ export class OrbitalMechanics {
       // pour que la date simulée reparte d'où elle était (sans saut en avant).
       if (this._prevPaused) this.clock.setTimeScale(this.clock.timeScale);
       this.clock.syncToRealTime();
+      this._holdOnMissingWindows(prevMs);
     }
     this._prevPaused = isPaused;
 
@@ -267,6 +333,137 @@ export class OrbitalMechanics {
     this.syncEarthSurfaceRotation(date);
   }
 
+  /**
+   * Branche les fenêtres d'éphémérides. Appelé par la couche de composition ; sans lui, le
+   * moteur se comporte comme avant le lot 17 et n'attend jamais rien.
+   */
+  setEphemerisWindows(windows: EphemerisWindows | null): void {
+    this._windows = windows;
+  }
+
+  /** Avance de lecture que la vitesse courante réclame (signée, cf. `readAheadDays`). */
+  private _leadDays(): number {
+    return readAheadDays(this.clock.timeScale, EPHEMERIS_READ_AHEAD_SECONDS);
+  }
+
+  /**
+   * Une demande à la fois : appelée par image, elle ne doit pas empiler les requêtes.
+   *
+   * `unmet` compte les demandes faites parce qu'il MANQUAIT quelque chose, pour borner
+   * l'attente ; une simple prise d'avance n'en fait pas partie.
+   */
+  private _requestWindows(
+    date: Date,
+    leadDays: number,
+    lines: boolean,
+    unmet = false
+  ): void {
+    const windows = this._windows;
+    if (!windows || this._windowRequest) return;
+    if (unmet) this._unmetAsks++;
+    const request = windows
+      .ensure(new Date(date), leadDays, lines)
+      .finally(() => {
+        this._windowRequest = null;
+        this._applyPendingJump();
+      });
+    this._windowRequest = request;
+  }
+
+  /**
+   * L'HORLOGE N'AVANCE QUE SUR DES DONNÉES ARRIVÉES (décision D3).
+   *
+   * Quand la fenêtre manque, la date est remise là où elle était et redemandée, avec l'avance
+   * que réclame la vitesse courante. La scène se fige une fraction de seconde (0,89 s pour
+   * TOUTE la première vue à 10 Mbit/s, mesuré) au lieu de replacer les corps par une source
+   * moins précise sans le dire.
+   *
+   * Le retour en arrière précède le calcul de `_simDeltaSeconds` : la rotation propre des
+   * corps s'arrête donc avec la date, au lieu de continuer sur une date qui n'avance plus.
+   *
+   * Coût de la question, posée à chaque image et donc mesuré plutôt que supposé : **28,5 µs**
+   * par appel sur les 64 corps (plan de fenêtre par corps, périodes d'orbite comprises), soit
+   * 0,17 % d'une image à 60 par seconde.
+   */
+  private _holdOnMissingWindows(prevMs: number): void {
+    const windows = this._windows;
+    if (!windows) return;
+    const lead = this._leadDays();
+    if (!windows.ready(this.clock.date, 0, false)) {
+      // Deux demandes sans réponse : on laisse la date AVANCER plutôt que de prendre la scène
+      // en otage. Les corps concernés repassent alors sur leur source de repli, et le bandeau
+      // dit lesquels — c'est le contrat du lot 15, pas une dégradation silencieuse.
+      //
+      // Renoncer à ATTENDRE n'est pas renoncer à DEMANDER, et c'est un défaut que j'ai écrit
+      // puis trouvé en relisant ce fichier : sans la demande qui suit, une coupure passagère
+      // pendant une lecture accélérée arrêtait le chargement des fenêtres pour le reste de la
+      // session. Une seule demande est en vol à la fois, donc la bande passante reste bornée.
+      if (this._unmetAsks < OrbitalMechanics._MAX_UNMET_ASKS)
+        this.clock.holdAt(new Date(prevMs));
+      this._requestWindows(this.clock.date, lead, false, true);
+      return;
+    }
+    this._unmetAsks = 0;
+    // Lecture accélérée : on prend de l'avance AVANT d'en avoir besoin, sinon l'horloge
+    // buterait sur le bord de sa fenêtre à chaque pas de la grille.
+    if (lead !== 0 && !windows.ready(this.clock.date, lead, false))
+      this._requestWindows(this.clock.date, lead, false);
+  }
+
+  /**
+   * PRÉVIENT LA COUCHE APP DE REDESSINER LES LIGNES, une fois leurs octets là.
+   *
+   * Une ligne d'orbite ne se contente pas de la position du jour : `orbitPath` échantillonne
+   * une PÉRIODE entière. Tracée sur une fenêtre trop courte, elle ne se dégrade pas un peu —
+   * un corps qui a des éléments repart d'eux, et les huit planètes, qui n'en ont pas et sont
+   * les seules tracées par défaut, voient leur courbe ÉPISSER Horizons et astronomy-engine
+   * point par point (111 196 km d'écart sur Uranus avant que son binaire n'existe, lot 12),
+   * ce que `orbitPath.ts` rejette par principe ailleurs.
+   *
+   * On garde donc la ligne précédente le temps que les octets arrivent, et on prévient
+   * ensuite : rien de faux n'est montré, et rien ne disparaît.
+   */
+  private _emitOrbitsChanged(): void {
+    const windows = this._windows;
+    const listener = this.onOrbitsChanged;
+    if (!listener) return;
+    if (!windows || windows.ready(this.clock.date, 0, true)) {
+      listener();
+      return;
+    }
+    const at = this.clock.date.getTime();
+    void windows.ensure(new Date(at), 0, true).then(() => {
+      // Une date qui a rebougé depuis aura son propre recalcul : celui-ci n'a plus lieu.
+      if (this.clock.date.getTime() === at) this.onOrbitsChanged?.();
+    });
+  }
+
+  /** Applique le saut en attente dès que ses octets sont là. */
+  private _applyPendingJump(): void {
+    const target = this._pendingJump;
+    if (!target) return;
+    const windows = this._windows;
+    if (
+      windows &&
+      !windows.ready(target, 0, true) &&
+      this._unmetAsks < OrbitalMechanics._MAX_UNMET_ASKS
+    ) {
+      this._requestWindows(target, this._leadDays(), true, true);
+      return;
+    }
+    this._pendingJump = null;
+    this._unmetAsks = 0;
+    this._jumpNow(target);
+  }
+
+  /** Le saut lui-même, une fois ses données là. */
+  private _jumpNow(target: Date): void {
+    this.clock.addDays(
+      (target.getTime() - this.clock.date.getTime()) / MS_PER_DAY
+    );
+    this._afterTimeTravel();
+  }
+
   /** Fait progresser la transition animée et notifie la couche app (taille visuelle). */
   private _advanceMorph(realDelta: number): void {
     if (!this._morphActive) return;
@@ -282,7 +479,7 @@ export class OrbitalMechanics {
       this._morph = this._morphTo;
       this.onScaleMorph?.(this._morph);
       this.onMorphPhase?.(false);
-      this.onOrbitsChanged?.();
+      this._emitOrbitsChanged();
     }
   }
 
@@ -396,7 +593,7 @@ export class OrbitalMechanics {
       // mémorisées ne sont plus valides → force un recalcul à la prochaine frame.
       this._lastPositionMs = null;
       this.onScaleMorph?.(targetMorph);
-      this.onOrbitsChanged?.();
+      this._emitOrbitsChanged();
       return;
     }
 
@@ -516,7 +713,7 @@ export class OrbitalMechanics {
     // mémorisées sont obsolètes (sinon les corps resteraient figés jusqu'au prochain seuil).
     this._lastPositionMs = null;
     this.syncAnglesFromEphemeris(this.clock.date);
-    this.onOrbitsChanged?.();
+    this._emitOrbitsChanged();
   }
 
   /**
@@ -531,20 +728,49 @@ export class OrbitalMechanics {
   }
 
   addTimeOffset(days: number): void {
-    this.clock.addDays(days);
-    this._afterTimeTravel();
+    this.jumpToDate(new Date(this._jumpOrigin().getTime() + days * MS_PER_DAY));
   }
 
   addTimeOffsetHours(hours: number): void {
-    this.clock.addHours(hours);
-    this._afterTimeTravel();
+    this.jumpToDate(new Date(this._jumpOrigin().getTime() + hours * 3_600_000));
   }
 
-  /** Saute à une date absolue (delta calculé depuis la date simulée courante). */
+  /**
+   * D'où compte un déplacement relatif : de la cible EN ATTENTE s'il y en a une, sinon de la
+   * date affichée. Deux clics sur « +1 jour » pendant qu'une fenêtre arrive valent donc deux
+   * jours, et non un.
+   */
+  private _jumpOrigin(): Date {
+    return this._pendingJump ?? this.clock.date;
+  }
+
+  /**
+   * Saute à une date absolue. Le saut NE S'APPLIQUE QUE sur des données arrivées (décision
+   * D3) : tant que la fenêtre n'est pas là, la scène reste où elle est plutôt que de montrer
+   * des positions de repli sans le dire. Les octets en jeu sont mesurés : 96 par corps pour
+   * les positions, 0,89 s pour toute la première vue à 10 Mbit/s.
+   */
   jumpToDate(target: Date): void {
-    this.addTimeOffset(
-      (target.getTime() - this.simulationDate.getTime()) / 86_400_000
-    );
+    const windows = this._windows;
+    // Un saut attend les positions ET les lignes d'orbite : il redessine toute la scène, et
+    // deux attentes successives coûteraient deux allers-retours là où une seule demande
+    // suffit (0,89 s pour toute la première vue à 10 Mbit/s, mesuré).
+    if (windows && !windows.ready(target, 0, true)) {
+      // Cible neuve : l'attente repart de zéro, même si la précédente n'a rien donné.
+      if (this._pendingJump?.getTime() !== target.getTime())
+        this._unmetAsks = 0;
+      this._pendingJump = new Date(target);
+      this._requestWindows(target, this._leadDays(), true, true);
+      return;
+    }
+    this._pendingJump = null;
+    this._unmetAsks = 0;
+    this._jumpNow(target);
+  }
+
+  /** Une date demandée dont les octets ne sont pas encore là, s'il y en a une. */
+  get pendingJumpDate(): Date | null {
+    return this._pendingJump ? new Date(this._pendingJump) : null;
   }
 
   setSimulationSpeed(scale: number): void {
@@ -555,7 +781,7 @@ export class OrbitalMechanics {
     this.clock.resetOffset();
     this._lastPositionMs = null;
     this.syncAnglesFromEphemeris(this.clock.date);
-    this.onOrbitsChanged?.();
+    this._emitOrbitsChanged();
   }
 
   /**
