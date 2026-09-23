@@ -34,7 +34,12 @@ try {
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const TEX_DIR = resolve(ROOT, 'public/assets/textures');
-const V1 = 'C:/Users/adria/Documents/Dev/Projets/Treejs/V1';
+// Racine des sources BRUTES (hors dépôt : ce sont des centaines de Mo de mosaïques publiées).
+// `GALAXY_TEXTURE_SOURCES` la déplace — le dossier V1 historique n'existe plus sur cette machine,
+// et chaque entrée ci-dessous dit d'où sa source se retélécharge.
+const V1 = process.env.GALAXY_TEXTURE_SOURCES
+  ? process.env.GALAXY_TEXTURE_SOURCES.replaceAll('\\', '/')
+  : 'C:/Users/adria/Documents/Dev/Projets/Treejs/V1';
 
 const DRY_RUN = process.argv.includes('--dry-run');
 const onlyIdx = process.argv.indexOf('--only');
@@ -173,16 +178,55 @@ const IMPORTS = [
   {
     body: 'enceladus',
     layer: 'surface',
-    src: `${V1}/enceladus/enceladus_cassini_mosaic_global_100m_schenk2024_1024.jpg`,
-    resolutions: ['1k'],
-    fillHoles: false,
+    // Mosaïque globale Cassini, 14401 px à l'étiquette PDS3 (et non l'aperçu 1024 px importé
+    // jusqu'au lot 16, qui bornait Encelade à un seul palier).
+    src: `${V1}/enceladus/Enceladus_Cassini_mosaic_global_110m.tif`,
+    resolutions: ['8k', '4k', '2k', '1k'],
+    fillHoles: true,
     ...USGS,
   },
   {
     body: 'rhea',
     layer: 'surface',
-    src: `${V1}/rhea/rhea.jpg`,
-    resolutions: ['1k'],
+    // 11520 px à l'étiquette. ⚠ le bouton « Download » de la page USGS pointe sur l'ANCIEN
+    // produit Voyager 833 m ; c'est le `^IMAGE` de l'étiquette PDS3 qui nomme celui-ci.
+    src: `${V1}/rhea/Rhea_Cassini_Voyager_mosaic_global_417m.tif`,
+    resolutions: ['8k', '4k', '2k', '1k'],
+    fillHoles: true,
+    ...USGS,
+  },
+  {
+    body: 'dione',
+    layer: 'surface',
+    src: `${V1}/dione/Dione_Cassini_Voyager_mosaic_global_154m.tif`,
+    resolutions: ['8k', '4k', '2k', '1k'],
+    fillHoles: true,
+    ...USGS,
+  },
+  {
+    body: 'tethys',
+    layer: 'surface',
+    src: `${V1}/tethys/Tethys_Cassini_mosaic_global_293m.tif`,
+    resolutions: ['8k', '4k', '2k', '1k'],
+    fillHoles: true,
+    ...USGS,
+  },
+  {
+    body: 'ceres',
+    layer: 'surface',
+    // Vraie imagerie Dawn FC : Cérès était la seule planète naine à porter une surface
+    // PROCÉDURALE alors qu'une mosaïque publiée existe. 7383 px à l'étiquette, donc 4k.
+    src: `${V1}/ceres/Ceres_Dawn_FC_DLR_global_20ppd_Oct2015.tif`,
+    resolutions: ['4k', '2k', '1k'],
+    fillHoles: true,
+    ...USGS,
+  },
+  {
+    body: 'bennu',
+    layer: 'surface',
+    // Mosaïque globale OSIRIS-REx OCAMS, 31417 px à l'étiquette ISIS, 5 cm/pixel.
+    src: `${V1}/bennu/Bennu_global_FB34_FB56_ShapeV28_GndControl_MinnaertPhase30_PAN_8bit.tif`,
+    resolutions: ['8k', '4k', '2k', '1k'],
     fillHoles: false,
     ...USGS,
   },

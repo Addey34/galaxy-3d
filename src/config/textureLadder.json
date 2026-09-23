@@ -1,0 +1,826 @@
+{
+  "$comment": "Relevé écrit par `pnpm textures:ladder --write`. Ne pas éditer à la main. `detail` = part de variance (pondérée cos lat) que le palier porte en plus de son aller-retour en demi-résolution.",
+  "measuredAt": "2026-09-23",
+  "rows": [
+    {
+      "body": "amalthea",
+      "layer": "surface",
+      "shipped": [
+        "1k",
+        "2k"
+      ],
+      "detail": {
+        "2k": 0.17512
+      },
+      "bytes": 260672
+    },
+    {
+      "body": "ariel",
+      "layer": "surface",
+      "shipped": [
+        "1k",
+        "2k"
+      ],
+      "detail": {
+        "2k": 0.5071
+      },
+      "bytes": 533956
+    },
+    {
+      "body": "bennu",
+      "layer": "surface",
+      "shipped": [
+        "1k",
+        "2k",
+        "4k",
+        "8k"
+      ],
+      "detail": {
+        "2k": 0.39696,
+        "4k": 0.36464,
+        "8k": 0.3022
+      },
+      "bytes": 19858914
+    },
+    {
+      "body": "callisto",
+      "layer": "surface",
+      "shipped": [
+        "1k",
+        "2k",
+        "4k",
+        "8k"
+      ],
+      "detail": {
+        "2k": 0.08041,
+        "4k": 0.08227,
+        "8k": 0.05425
+      },
+      "bytes": 7262752
+    },
+    {
+      "body": "ceres",
+      "layer": "surface",
+      "shipped": [
+        "1k",
+        "2k",
+        "4k"
+      ],
+      "detail": {
+        "2k": 0.21312,
+        "4k": 0.11477
+      },
+      "bytes": 3180261
+    },
+    {
+      "body": "charon",
+      "layer": "surface",
+      "shipped": [
+        "1k",
+        "2k",
+        "4k",
+        "8k"
+      ],
+      "detail": {
+        "2k": 0.0181,
+        "4k": 0.01291,
+        "8k": 0.00654
+      },
+      "bytes": 4496585
+    },
+    {
+      "body": "deimos",
+      "layer": "surface",
+      "shipped": [
+        "1k"
+      ],
+      "detail": {},
+      "bytes": 64648
+    },
+    {
+      "body": "dione",
+      "layer": "surface",
+      "shipped": [
+        "1k",
+        "2k",
+        "4k",
+        "8k"
+      ],
+      "detail": {
+        "2k": 0.39355,
+        "4k": 0.18728,
+        "8k": 0.06556
+      },
+      "bytes": 10277445
+    },
+    {
+      "body": "earth",
+      "layer": "clouds",
+      "shipped": [
+        "1k",
+        "2k",
+        "4k",
+        "8k"
+      ],
+      "detail": {
+        "2k": 0.07084,
+        "4k": 0.07784,
+        "8k": 0.06351
+      },
+      "bytes": 12939294
+    },
+    {
+      "body": "earth",
+      "layer": "displacement",
+      "shipped": [
+        "1k",
+        "2k"
+      ],
+      "detail": {
+        "2k": 0.01127
+      },
+      "bytes": 418110
+    },
+    {
+      "body": "earth",
+      "layer": "lights",
+      "shipped": [
+        "1k",
+        "2k",
+        "4k",
+        "8k"
+      ],
+      "detail": {
+        "2k": 0.37841,
+        "4k": 0.3492,
+        "8k": 0.26016
+      },
+      "bytes": 2278533
+    },
+    {
+      "body": "earth",
+      "layer": "normal_map",
+      "shipped": [
+        "1k",
+        "2k",
+        "4k",
+        "8k"
+      ],
+      "detail": {
+        "2k": 0.30322,
+        "4k": 0.32636,
+        "8k": 0.24991
+      },
+      "bytes": 13928370
+    },
+    {
+      "body": "earth",
+      "layer": "spec",
+      "shipped": [
+        "1k",
+        "2k",
+        "4k",
+        "8k"
+      ],
+      "detail": {
+        "2k": 0.01329,
+        "4k": 0.00895,
+        "8k": 0.00624
+      },
+      "bytes": 1968768
+    },
+    {
+      "body": "earth",
+      "layer": "surface",
+      "shipped": [
+        "1k",
+        "2k",
+        "4k",
+        "8k"
+      ],
+      "detail": {
+        "2k": 0.01878,
+        "4k": 0.01716,
+        "8k": 0.01993
+      },
+      "bytes": 4779014
+    },
+    {
+      "body": "enceladus",
+      "layer": "surface",
+      "shipped": [
+        "1k",
+        "2k",
+        "4k",
+        "8k"
+      ],
+      "detail": {
+        "2k": 0.49148,
+        "4k": 0.24708,
+        "8k": 0.08047
+      },
+      "bytes": 10198079
+    },
+    {
+      "body": "eris",
+      "layer": "surface",
+      "shipped": [
+        "1k",
+        "2k",
+        "4k"
+      ],
+      "detail": {
+        "2k": 0.14883,
+        "4k": 0.1288
+      },
+      "bytes": 2761017
+    },
+    {
+      "body": "europa",
+      "layer": "surface",
+      "shipped": [
+        "1k",
+        "2k",
+        "4k",
+        "8k"
+      ],
+      "detail": {
+        "2k": 0.12943,
+        "4k": 0.11019,
+        "8k": 0.0626
+      },
+      "bytes": 7929760
+    },
+    {
+      "body": "ganymede",
+      "layer": "surface",
+      "shipped": [
+        "1k",
+        "2k",
+        "4k",
+        "8k"
+      ],
+      "detail": {
+        "2k": 0.0582,
+        "4k": 0.06666,
+        "8k": 0.05225
+      },
+      "bytes": 7426963
+    },
+    {
+      "body": "gonggong",
+      "layer": "surface",
+      "shipped": [
+        "1k",
+        "2k"
+      ],
+      "detail": {
+        "2k": 0.08414
+      },
+      "bytes": 345272
+    },
+    {
+      "body": "halley",
+      "layer": "surface",
+      "shipped": [
+        "1k",
+        "2k",
+        "4k"
+      ],
+      "detail": {
+        "2k": 0.03184,
+        "4k": 0.02455
+      },
+      "bytes": 880493
+    },
+    {
+      "body": "haumea",
+      "layer": "surface",
+      "shipped": [
+        "1k",
+        "2k",
+        "4k"
+      ],
+      "detail": {
+        "2k": 0.08132,
+        "4k": 0.05126
+      },
+      "bytes": 2355269
+    },
+    {
+      "body": "hydra",
+      "layer": "surface",
+      "shipped": [
+        "1k",
+        "2k"
+      ],
+      "detail": {
+        "2k": 0.61145
+      },
+      "bytes": 575544
+    },
+    {
+      "body": "hygiea",
+      "layer": "surface",
+      "shipped": [
+        "1k",
+        "2k"
+      ],
+      "detail": {
+        "2k": 0.38672
+      },
+      "bytes": 228673
+    },
+    {
+      "body": "hyperion",
+      "layer": "surface",
+      "shipped": [
+        "1k",
+        "2k"
+      ],
+      "detail": {
+        "2k": 0.2297
+      },
+      "bytes": 450298
+    },
+    {
+      "body": "iapetus",
+      "layer": "surface",
+      "shipped": [
+        "1k",
+        "2k",
+        "4k"
+      ],
+      "detail": {
+        "2k": 0.14829,
+        "4k": 0.05233
+      },
+      "bytes": 2450257
+    },
+    {
+      "body": "io",
+      "layer": "surface",
+      "shipped": [
+        "1k",
+        "2k",
+        "4k",
+        "8k"
+      ],
+      "detail": {
+        "2k": 0.032,
+        "4k": 0.01483,
+        "8k": 0.00586
+      },
+      "bytes": 4724268
+    },
+    {
+      "body": "jupiter",
+      "layer": "surface",
+      "shipped": [
+        "1k",
+        "2k",
+        "4k"
+      ],
+      "detail": {
+        "2k": 0.0122,
+        "4k": 0.00486
+      },
+      "bytes": 1292933
+    },
+    {
+      "body": "kerberos",
+      "layer": "surface",
+      "shipped": [
+        "1k",
+        "2k"
+      ],
+      "detail": {
+        "2k": 0.61583
+      },
+      "bytes": 553053
+    },
+    {
+      "body": "makemake",
+      "layer": "surface",
+      "shipped": [
+        "1k",
+        "2k",
+        "4k"
+      ],
+      "detail": {
+        "2k": 0.10403,
+        "4k": 0.07943
+      },
+      "bytes": 2702886
+    },
+    {
+      "body": "mars",
+      "layer": "surface",
+      "shipped": [
+        "1k",
+        "2k",
+        "4k",
+        "8k"
+      ],
+      "detail": {
+        "2k": 0.02114,
+        "4k": 0.02144,
+        "8k": 0.0301
+      },
+      "bytes": 7836845
+    },
+    {
+      "body": "mercury",
+      "layer": "surface",
+      "shipped": [
+        "1k",
+        "2k",
+        "4k",
+        "8k"
+      ],
+      "detail": {
+        "2k": 0.1531,
+        "4k": 0.21892,
+        "8k": 0.35552
+      },
+      "bytes": 15180629
+    },
+    {
+      "body": "mimas",
+      "layer": "surface",
+      "shipped": [
+        "1k",
+        "2k"
+      ],
+      "detail": {
+        "2k": 0.1263
+      },
+      "bytes": 585955
+    },
+    {
+      "body": "miranda",
+      "layer": "surface",
+      "shipped": [
+        "1k",
+        "2k"
+      ],
+      "detail": {
+        "2k": 0.49981
+      },
+      "bytes": 544451
+    },
+    {
+      "body": "moon",
+      "layer": "surface",
+      "shipped": [
+        "1k",
+        "2k",
+        "4k",
+        "8k"
+      ],
+      "detail": {
+        "2k": 0.09452,
+        "4k": 0.12282,
+        "8k": 0.12994
+      },
+      "bytes": 15542303
+    },
+    {
+      "body": "neptune",
+      "layer": "surface",
+      "shipped": [
+        "1k"
+      ],
+      "detail": {},
+      "bytes": 21991
+    },
+    {
+      "body": "nereid",
+      "layer": "surface",
+      "shipped": [
+        "1k",
+        "2k"
+      ],
+      "detail": {
+        "2k": 0.06208
+      },
+      "bytes": 481466
+    },
+    {
+      "body": "nix",
+      "layer": "surface",
+      "shipped": [
+        "1k",
+        "2k"
+      ],
+      "detail": {
+        "2k": 0.62203
+      },
+      "bytes": 566151
+    },
+    {
+      "body": "oberon",
+      "layer": "surface",
+      "shipped": [
+        "1k",
+        "2k"
+      ],
+      "detail": {
+        "2k": 0.21515
+      },
+      "bytes": 314475
+    },
+    {
+      "body": "orcus",
+      "layer": "surface",
+      "shipped": [
+        "1k",
+        "2k"
+      ],
+      "detail": {
+        "2k": 0.41371
+      },
+      "bytes": 539009
+    },
+    {
+      "body": "pallas",
+      "layer": "surface",
+      "shipped": [
+        "1k",
+        "2k"
+      ],
+      "detail": {
+        "2k": 0.09689
+      },
+      "bytes": 409791
+    },
+    {
+      "body": "phobos",
+      "layer": "surface",
+      "shipped": [
+        "1k",
+        "2k",
+        "4k",
+        "8k"
+      ],
+      "detail": {
+        "2k": 0.08727,
+        "4k": 0.05545,
+        "8k": 0.03607
+      },
+      "bytes": 8196923
+    },
+    {
+      "body": "pluto",
+      "layer": "surface",
+      "shipped": [
+        "1k",
+        "2k",
+        "4k",
+        "8k"
+      ],
+      "detail": {
+        "2k": 0.04113,
+        "4k": 0.04242,
+        "8k": 0.03747
+      },
+      "bytes": 5600311
+    },
+    {
+      "body": "proteus",
+      "layer": "surface",
+      "shipped": [
+        "1k",
+        "2k"
+      ],
+      "detail": {
+        "2k": 0.10785
+      },
+      "bytes": 345398
+    },
+    {
+      "body": "quaoar",
+      "layer": "surface",
+      "shipped": [
+        "1k",
+        "2k"
+      ],
+      "detail": {
+        "2k": 0.2788
+      },
+      "bytes": 398966
+    },
+    {
+      "body": "rhea",
+      "layer": "surface",
+      "shipped": [
+        "1k",
+        "2k",
+        "4k",
+        "8k"
+      ],
+      "detail": {
+        "2k": 0.21828,
+        "4k": 0.09304,
+        "8k": 0.02737
+      },
+      "bytes": 6497147
+    },
+    {
+      "body": "saturn",
+      "layer": "ring",
+      "shipped": [
+        "1k",
+        "2k"
+      ],
+      "detail": {
+        "2k": 0.00277
+      },
+      "bytes": 24874
+    },
+    {
+      "body": "saturn",
+      "layer": "surface",
+      "shipped": [
+        "1k"
+      ],
+      "detail": {},
+      "bytes": 37328
+    },
+    {
+      "body": "sedna",
+      "layer": "surface",
+      "shipped": [
+        "1k",
+        "2k"
+      ],
+      "detail": {
+        "2k": 0.50253
+      },
+      "bytes": 286272
+    },
+    {
+      "body": "stars",
+      "layer": "surface",
+      "shipped": [
+        "1k",
+        "2k",
+        "4k",
+        "8k"
+      ],
+      "detail": {
+        "2k": 0.24867,
+        "4k": 0.36274,
+        "8k": 0.45153
+      },
+      "bytes": 1379921
+    },
+    {
+      "body": "styx",
+      "layer": "surface",
+      "shipped": [
+        "1k",
+        "2k"
+      ],
+      "detail": {
+        "2k": 0.6057
+      },
+      "bytes": 571293
+    },
+    {
+      "body": "sun",
+      "layer": "surface",
+      "shipped": [
+        "1k",
+        "2k",
+        "4k"
+      ],
+      "detail": {
+        "2k": 0.00756,
+        "4k": 0.00255
+      },
+      "bytes": 1680187
+    },
+    {
+      "body": "tethys",
+      "layer": "surface",
+      "shipped": [
+        "1k",
+        "2k",
+        "4k",
+        "8k"
+      ],
+      "detail": {
+        "2k": 0.33127,
+        "4k": 0.14041,
+        "8k": 0.04768
+      },
+      "bytes": 8509182
+    },
+    {
+      "body": "titan",
+      "layer": "surface",
+      "shipped": [
+        "1k",
+        "2k"
+      ],
+      "detail": {
+        "2k": 0.00875
+      },
+      "bytes": 452847
+    },
+    {
+      "body": "titania",
+      "layer": "surface",
+      "shipped": [
+        "1k",
+        "2k"
+      ],
+      "detail": {
+        "2k": 0.28677
+      },
+      "bytes": 450222
+    },
+    {
+      "body": "triton",
+      "layer": "surface",
+      "shipped": [
+        "1k",
+        "2k",
+        "4k"
+      ],
+      "detail": {
+        "2k": 0.0041,
+        "4k": 0.0031
+      },
+      "bytes": 1083365
+    },
+    {
+      "body": "umbriel",
+      "layer": "surface",
+      "shipped": [
+        "1k",
+        "2k"
+      ],
+      "detail": {
+        "2k": 0.24384
+      },
+      "bytes": 298439
+    },
+    {
+      "body": "uranus",
+      "layer": "surface",
+      "shipped": [
+        "1k"
+      ],
+      "detail": {},
+      "bytes": 11230
+    },
+    {
+      "body": "venus",
+      "layer": "clouds",
+      "shipped": [
+        "1k",
+        "2k",
+        "4k"
+      ],
+      "detail": {
+        "2k": 0.00417,
+        "4k": 0.00647
+      },
+      "bytes": 692445
+    },
+    {
+      "body": "venus",
+      "layer": "surface",
+      "shipped": [
+        "1k",
+        "2k",
+        "4k",
+        "8k"
+      ],
+      "detail": {
+        "2k": 0.04265,
+        "4k": 0.04568,
+        "8k": 0.05561
+      },
+      "bytes": 11265410
+    },
+    {
+      "body": "vesta",
+      "layer": "surface",
+      "shipped": [
+        "1k",
+        "2k",
+        "4k",
+        "8k"
+      ],
+      "detail": {
+        "2k": 0.05266,
+        "4k": 0.0299,
+        "8k": 0.0171
+      },
+      "bytes": 6791007
+    }
+  ]
+}

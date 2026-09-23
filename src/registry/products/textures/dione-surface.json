@@ -29,6 +29,7 @@
     "downloadUrl": "https://astrogeology.usgs.gov/ckan/dataset/acb98ae6-ec50-42df-9a74-142d177bbe6d/resource/8a6a8ada-42e1-4b92-b13e-c63493133efc/download/full.jpg",
     "sourcePage": "https://astrogeology.usgs.gov/search/map/dione_cassini_voyager_global_mosaic_154m",
     "sourceResolution": "154 m/pixel global mosaic; 1024x512 equirectangular sample",
+    "sourcePixelWidth": 23040,
     "projection": "equirectangular",
     "qualityClass": "derived",
     "note": "Real controlled global Cassini/Voyager mosaic; verified via a live USGS fetch (2026-08-26), not assumed from naming convention."

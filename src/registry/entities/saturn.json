@@ -18,16 +18,12 @@
       "innerRadius": 1.5,
       "outerRadius": 2.2,
       "textureResolutions": [
-        "8k",
-        "4k",
         "2k",
         "1k"
       ]
     },
     "textureResolutions": {
       "surface": [
-        "4k",
-        "2k",
         "1k"
       ]
     },

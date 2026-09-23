@@ -25,7 +25,8 @@
     },
     "surfaceResolutions": [
       "4k",
-      "2k"
+      "2k",
+      "1k"
     ],
     "kind": "comet",
     "description": {

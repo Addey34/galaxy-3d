@@ -12,6 +12,7 @@
  *
  * Module PUR : données en entrée, pages en sortie.
  */
+import textureLadder from '@/config/textureLadder.json';
 import type { CelestialConfig } from '@/types';
 import {
   flattenBodies,
@@ -117,6 +118,9 @@ export function displayNameResolver(
   return (name, locale) =>
     names.get(name)?.[locale] ?? name.charAt(0).toUpperCase() + name.slice(1);
 }
+
+/** Nombre de jeux de textures mesures : LU dans le releve, jamais saisi. */
+const TEXTURE_LADDER_ROWS = textureLadder.rows.length;
 
 const SOURCE_LABELS: Record<string, Bilingual> = {
   binaire: { en: 'JPL Horizons file', fr: 'fichier JPL Horizons' },
@@ -764,6 +768,10 @@ function methodologyPage(input: MethodologyInput, locale: DocLocale): DocPage {
           },
         ]
       : []),
+    {
+      en: `A body ships the texture sizes its source actually supports, never more: we do not enlarge a published map, and a size is only shipped when it carries detail the size below does not. So a body served at 2k is not a body we neglected, it is a body whose published map stops there. ${TEXTURE_LADDER_ROWS} texture sets are measured this way at every build.`,
+      fr: `Un corps livre les tailles de texture que sa source porte réellement, jamais plus : on n’agrandit pas une carte publiée, et une taille n’est livrée que si elle porte du détail que la taille du dessous ne porte pas. Un corps servi en 2k n’est donc pas un corps négligé, c’est un corps dont la carte publiée s’arrête là. ${TEXTURE_LADDER_ROWS} jeux de textures sont mesurés ainsi à chaque build.`,
+    },
     {
       en: `${ILLUSTRATIVE_SURFACES.size} bodies have never been mapped globally: their surfaces are illustrative, not scientific. The <a href="${docPath('sources', locale)}">sources page</a> lists them.`,
       fr: `${ILLUSTRATIVE_SURFACES.size} corps n’ont jamais été cartographiés globalement : leur surface est illustrative, pas scientifique. La <a href="${docPath('sources', locale)}">page des sources</a> les énumère.`,

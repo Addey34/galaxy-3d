@@ -44,7 +44,6 @@
     },
     "textureResolutions": {
       "surface": [
-        "8k",
         "4k",
         "2k",
         "1k"

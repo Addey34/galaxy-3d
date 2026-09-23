@@ -28,7 +28,8 @@
       "radiusMismatch": "Le rayon affiché, 203,56 km, vient du diamètre IRAS de 407,12 km que la SBDB publie encore (IRAS-A-FPA-3-RDR-IMPS-V6.0). Le modèle de Vernazza et al. 2020 a un rayon équivalent-volume de 216,9 km, cohérent avec les 434 +/- 14 km de diamètre que DAMIT publie pour lui. Deux mesures publiées différentes."
     },
     "surfaceResolutions": [
-      "2k"
+      "2k",
+      "1k"
     ],
     "description": {
       "en": "The fourth-largest asteroid. In 2019 it was found to be nearly spherical, so round it may qualify as the smallest dwarf planet in the Solar System.",

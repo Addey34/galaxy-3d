@@ -125,7 +125,9 @@ describe('SMALL_BODIES catalogue', () => {
       eris: ['4k', '2k', '1k'],
       haumea: ['4k', '2k', '1k'],
       makemake: ['4k', '2k', '1k'],
-      halley: ['4k', '2k'],
+      halley: ['4k', '2k', '1k'],
+      // Bennu n'avait aucune texture avant le lot 16 : mosaique OSIRIS-REx, 31417 px.
+      bennu: ['8k', '4k', '2k', '1k'],
     };
     for (const [name, res] of Object.entries(expected)) {
       expect(SMALL_BODIES[name]?.textureResolutions.surface).toEqual(res);

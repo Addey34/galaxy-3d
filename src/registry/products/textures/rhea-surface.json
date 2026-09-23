@@ -41,6 +41,7 @@
     "sourceResolution": "417 m/pixel global mosaic; official JPEG preview",
     "projection": "equirectangular",
     "qualityClass": "derived",
-    "note": "Official Cassini/Voyager global mosaic preview from USGS; kept at its native preview size without artificial upscaling."
+    "note": "Official Cassini/Voyager global mosaic preview from USGS; kept at its native preview size without artificial upscaling.",
+    "sourcePixelWidth": 11520
   }
 }

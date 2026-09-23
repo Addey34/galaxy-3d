@@ -20,7 +20,10 @@ const NEXT_MOONS = [
 const MOON_SURFACE_RES: Record<string, string[]> = {
   phobos: ['8k', '4k', '2k', '1k'],
   deimos: ['1k'],
-  triton: ['8k', '4k', '2k', '1k'],
+  // Triton s'arrete a 4k : son 8k n'ajoutait que 0,15 % de variance sur son propre
+  // aller-retour en demi-resolution, indistinguable a l'oeil (lot 16). La mosaique Voyager 2
+  // fait pourtant 14138 px : une source large n'est pas une source fine.
+  triton: ['4k', '2k', '1k'],
   charon: ['8k', '4k', '2k', '1k'],
 };
 

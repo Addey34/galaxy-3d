@@ -1,0 +1,36 @@
+{
+  "$schema": "../../schema/product.schema.json",
+  "id": "bennu-surface",
+  "type": "texture",
+  "body": "bennu",
+  "layer": "surface",
+  "shipped": true,
+  "license": "other",
+  "rights": "public-domain",
+  "links": [
+    {
+      "rel": "license",
+      "href": "https://www.usgs.gov/information-policies-and-instructions/copyrights-and-credits"
+    }
+  ],
+  "providers": [
+    {
+      "name": "USGS Astrogeology / NASA OSIRIS-REx OCAMS (Golish et al. 2021)",
+      "roles": [
+        "producer"
+      ]
+    }
+  ],
+  "tier": "free",
+  "review": {
+    "status": "ready",
+    "processing": "import-textures",
+    "downloadUrl": "https://asc-pds-services.s3.us-west-2.amazonaws.com/mosaic/Bennu/Bennu_global_FB34_FB56_ShapeV28_GndControl_MinnaertPhase30_PAN_8bit.tif",
+    "sourcePage": "https://astrogeology.usgs.gov/search/map/bennu-osiris-rex-global-products",
+    "sourceResolution": "5 cm/pixel global OCAMS mosaic, panchromatic",
+    "sourcePixelWidth": 31417,
+    "projection": "equirectangular",
+    "qualityClass": "native-candidate",
+    "note": "Largeur lue au bloc Dimensions/Samples de l'étiquette ISIS du produit (31417 x 15709). Bennu n'avait AUCUNE texture avant le lot 16 : sa forme portait un albédo cuit. La mosaïque est panchromatique, donc la surface est monochrome, ce qui est la donnée publiée."
+  }
+}

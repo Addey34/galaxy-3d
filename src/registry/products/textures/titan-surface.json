@@ -37,11 +37,12 @@
   "review": {
     "status": "ready",
     "processing": "direct-jpeg-sample",
-    "downloadUrl": "https://astrogeology.usgs.gov/ckan/dataset/8ee17e4e-26c6-4e22-9c23-bc9a4c7ed35e/resource/c3f3006c-3174-4716-920f-44f5dc749a4a/download/titan_iss_p19658_mosaic_global_1024.jpg",
+    "downloadUrl": "https://asc-pds-services.s3.us-west-2.amazonaws.com/mosaic/Titan_ISS_P19658_Mosaic_Global_4km.tif",
     "sourcePage": "https://astrogeology.usgs.gov/search/map/titan_cassini_iss_global_mosaic_4005m",
-    "sourceResolution": "4.005 km/pixel global mosaic; 1024 px viewer sample",
+    "sourceResolution": "4.005 km/pixel global Cassini ISS mosaic",
     "projection": "equirectangular",
     "qualityClass": "derived",
-    "note": "Official Cassini ISS methane-window global mosaic. The northern mid-latitudes contain documented coverage gaps; the 1k sample is used without artificial upscaling."
+    "note": "Official Cassini ISS methane-window global mosaic. The northern mid-latitudes contain documented coverage gaps; the 1k sample is used without artificial upscaling. Lot 16 : largeur lue a l'etiquette PDS3 (LINE_SAMPLES = 4040), d'ou le plafond a 2k, ou Titan est deja. La fiche citait un apercu de 1024 px, mais le 2k livre porte bien du detail que son 1k n'a pas : l'import venait de la mosaique complete. Les produits Cassini plus fins existent mais ne conviennent pas : le globe ISS a 450 m/pixel ne couvre que 65 S a 45 N, et les mosaiques SAR sont du radar, pas une carte optique.",
+    "sourcePixelWidth": 4040
   }
 }

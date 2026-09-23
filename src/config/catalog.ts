@@ -18,7 +18,8 @@ import type {
  * rester aligné avec les entrées `illustrative: true` du registre `src/registry/products/`.
  */
 export const ILLUSTRATIVE_SURFACES: ReadonlySet<string> = new Set([
-  'ceres',
+  // Cérès en est SORTIE au lot 16 : elle portait une surface procédurale alors que la
+  // mosaïque Dawn FC publiée existe (7383 px, lue à son étiquette PDS3).
   'eris',
   'haumea',
   'makemake',

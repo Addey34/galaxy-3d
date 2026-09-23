@@ -1229,6 +1229,62 @@ sol que le plancher ne le laisse croire, et `?debug-surface` affiche l'altitude 
 sous la caméra pour qu'on puisse le voir. Aucune aire fine n'est déclarée ailleurs que sur la
 Lune, et Mars garde donc son imagerie sans relief.
 
+## L'échelle de résolutions d'une texture : jusqu'où on livre, et pourquoi (lot 16)
+
+« Chaque corps a tout ce qu'ont les autres » (règle de parité de l'utilisateur) ne veut **pas**
+dire « agrandir jusqu'à 8k ». Livrer des octets qui ne montrent rien coûte au visiteur sans rien
+lui apprendre. Une texture livre donc les paliers 1k, 2k, 4k, 8k jusqu'à son **plafond**, qui est
+le plus bas de deux plafonds mesurés, tous deux nécessaires.
+
+- **Plafond de provenance.** On ne livre jamais plus large que la source réellement importée,
+  dont la largeur est **lue à son étiquette** (`LINE_SAMPLES` d'une étiquette PDS3, `Samples` d'un
+  cube ISIS, ou les dimensions du fichier publié), jamais déduite d'un « m/pixel » ni du nom du
+  produit. Elle vit dans `review.sourcePixelWidth` de la fiche du produit. `scripts/import-textures.mjs`
+  refuse déjà tout agrandissement : le plafond est donc tenu à l'import, et la fiche le publie.
+- **Plancher de détail.** Un palier au-dessus de 1k ne se livre que s'il porte du détail que le
+  palier du dessous ne porte pas : la variance (pondérée par cos(latitude), parce qu'une
+  équirectangulaire sur-échantillonne les pôles) de l'écart entre le fichier et son propre
+  aller-retour en demi-résolution doit valoir au moins **0,25 %** de sa variance totale.
+
+Les deux sont nécessaires, et c'est le point le moins évident du lot : **une source large n'est
+pas une source fine.** La mosaïque Voyager 2 de Triton fait 14 138 px, donc le plafond de
+provenance autorise le 8k — mais ce 8k n'ajoute que 0,15 % de variance, et il est indistinguable à
+l'œil de son 4k agrandi. Le fichier n'est pourtant pas un agrandissement : le réimporter depuis la
+mosaïque publiée reproduit le fichier livré **octet pour octet**. C'est la SOURCE qui est lisse
+(imagerie Voyager, et un remplissage synthétique pour les zones jamais imagées).
+
+Le plancher est une **politique**, pas une grandeur physique, comme
+`SMALL_BODY_SNAPSHOT_MAX_AGE_DAYS`. Il est posé dans un écart mesuré, puis **regardé à l'écran**
+au rapport 1:1 : Triton 8k (0,15 %), Saturne 2k (0,15 %) et Uranus 2k (0,04 %) sont
+indistinguables de leur palier du dessous agrandi ; Triton 4k (0,31 %) est déjà plus net et
+Triton 2k (0,44 %) nettement. 0,25 % tombe dans le facteur deux qui sépare les deux groupes.
+
+**Une texture sans source mesurée** (surface illustrative, générée par
+`scripts/generate-procedural-textures.mjs`) s'arrête à **2k, déclaré** : ses pixels sont inventés,
+il n'y a rien à résoudre, et le plancher de détail ne sait pas l'arbitrer puisqu'un bruit
+procédural est haute fréquence par construction : les 24 surfaces illustratives du dépôt
+mesurent de 3,2 % à 62,2 % à leur palier 2k, quand Mars, vraie mosaïque, en mesure 2,1 %.
+
+**L'échelle est contiguë et commence toujours à 1k.** Le LOD descend de palier en palier : un trou
+au milieu lui ferait demander un fichier absent. Et 1k est le niveau de démarrage — vingt et un
+corps n'en avaient aucun avant le lot 16 et chargeaient donc leur 2k à toute distance.
+
+### Qui détient quoi
+
+| | |
+|---|---|
+| La règle | `src/core/textureLadder.ts` (pur, testé) |
+| Le relevé mesuré, palier par palier | `src/config/textureLadder.json`, écrit par `pnpm textures:ladder --write` |
+| La largeur de la source, lue à son étiquette | `review.sourcePixelWidth` des fiches `src/registry/products/textures/*.json` |
+| L'échelle déclarée au catalogue | `textureResolutions` (fiches d'entité), `surfaceResolutions` (petits corps) |
+| La confrontation des quatre | `src/config/textureLadder.test.ts` |
+
+Le relevé est **volontairement hors de `pnpm verify`** : il décode les 172 JPEG livrés, dont 23 jeux montant à 8k,
+ce qui dure des minutes. La porte rapide est le test, qui lit le relevé committé, relit les
+dimensions dans l'en-tête SOF de chaque JPEG (quelques kilo-octets, pas un décodage) et vérifie que
+les poids relevés sont ceux des fichiers sur disque. Un fichier ajouté, retiré ou redimensionné
+sans relancer `pnpm textures:ladder --write` fait rougir la porte.
+
 ## Modèles de forme : la vraie forme, et la texture du corps drapée dessus
 
 Un corps irrégulier dont un modèle de forme scientifique est publié l'affiche, au lieu d'une

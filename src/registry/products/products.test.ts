@@ -25,7 +25,7 @@ const ROOT = resolve(import.meta.dirname, '..', '..', '..');
 describe('fiches de textures', () => {
   it('une fiche par couche, identifiants uniques', () => {
     const ids = TEXTURE_PRODUCTS.map((p) => p.id);
-    expect(ids.length).toBe(63);
+    expect(ids.length).toBe(64);
     expect(new Set(ids).size).toBe(ids.length);
     const keys = TEXTURE_PRODUCTS.map((p) => `${p.body}/${p.layer}`);
     expect(new Set(keys).size).toBe(keys.length);

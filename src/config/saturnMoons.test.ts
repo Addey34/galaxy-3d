@@ -10,8 +10,10 @@ const SATURN_MOONS = [
 
 /** Résolutions de surface réellement livrées (voir public/assets/textures). */
 const SATURN_MOON_RES: Record<string, string[]> = {
-  enceladus: ['1k'],
-  rhea: ['1k'],
+  // Encelade et Rhea etaient bornees a 1k parce que l'import d'origine avait pris un APERCU
+  // de 1024 px ; les mosaiques publiees font 14401 et 11520 px (lot 16).
+  enceladus: ['8k', '4k', '2k', '1k'],
+  rhea: ['8k', '4k', '2k', '1k'],
   iapetus: ['4k', '2k', '1k'],
 };
 
