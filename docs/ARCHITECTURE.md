@@ -469,6 +469,50 @@ elle mesure un chargement complet en croyant l'avoir coupé (58 fichiers passés
 | `utils/concurrency.test.ts` | la borne elle-même, et l'ordre des résultats |
 | `e2e/ephemerisDegraded.spec.ts` | ce qui est arrivé sert, ce qui manque est écrit avec ses comptes, la reprise répare sans recharger, un chargement complet ne dit rien, et à 390 px le bandeau ne recouvre aucun dock |
 
+### Une position ne coûte pas un fichier (lot 17, phases 17A et 17B)
+
+Les binaires couvrent 1900-2100 ; la scène, elle, affiche un instant. **Placer les 64 corps à
+une date coûte 5 952 octets, soit 96 par corps** : `HorizonsEphemerisService._sampleGrid` lit
+l'échantillon qui encadre la date et le suivant, rien d'autre. `core/ephemerisWindow.ts` (pur)
+traduit cela en un PLAN : date vers index, index vers plage d'octets, et le contrat d'une
+réponse partielle.
+
+**Deux consommateurs, et ils ne demandent pas la même chose.** La position lit deux états ; la
+LIGNE D'ORBITE (`core/orbitPath.ts`) échantillonne la source précise sur une période entière
+centrée sur la date, et elle est **tout ou rien** : `needsElementsOnly` sonde les deux
+extrémités de la courbe, et si la source ne répond pas à l'une des deux, toute la courbe repart
+des éléments ou de la conique osculatrice. Une fenêtre trop courte d'un seul échantillon ne
+dégrade donc pas un peu le tracé : elle le change entièrement, sans aucune erreur. Le
+planificateur n'élargit à la période que si elle tient dans la couverture — sinon ces octets
+seraient payés pour rien, ce qui est déjà le cas de Neptune, dont la demi-période atteint 2108.
+
+**Deux choses ne se déduisent pas d'une fenêtre, et c'est un test rouge qui l'a montré**, pas
+une relecture :
+
+| | ce qu'une fenêtre changeait | comment le contrat le règle |
+| --- | --- | --- |
+| facteur d'échelle du temps de propagation | 28,2 m sur Encelade, jusqu'à 202,4 m sur Mimas | il est **publié au manifeste** (`meanMotionScale`), calculé une fois depuis le fichier entier |
+| ballant de Pluton et de ses petites lunes | position visiblement autre | le compagnon (Charon) se charge sur le **même intervalle d'index** : `_withoutReflex` soustrait état par état et exige une grille identique |
+
+Le facteur est la médiane, sur le fichier ENTIER, du rapport période osculatrice sur période du
+catalogue : il échantillonne de l'index 0 à l'index `count - 1`, donc aucune fenêtre ne peut le
+reconstituer. La formule vit dans `core/meanMotionScale.ts` et **nulle part ailleurs** : le
+service la lit, `pnpm ephemeris:meanmotion` la lit pour remplir le manifeste, et le test la lit
+pour confronter le manifeste au binaire. Trois copies auraient dérivé sans que rien ne le dise.
+
+**Ce qu'une réponse partielle doit prouver.** Un `206` est accepté seulement si sa taille ET son
+`Content-Range` correspondent à ce qui a été demandé, total du fichier compris. Sans cette
+confrontation, une plage prise dans le flux COMPRESSÉ passerait : son total annonce alors la
+longueur brotli et ses octets ne sont pas ceux du fichier. Un `200` signifie que le serveur a
+ignoré la plage et rendu tout le fichier : on le GARDE, ce qui dégrade proprement vers le
+comportement d'avant sur un hôte sans plages.
+
+| Garde | Ce qu'elle tient |
+| --- | --- |
+| `core/ephemerisWindow.test.ts` | la plage désigne bien ces octets-là dans le fichier livré, l'échantillon suivant est toujours inclus, rien n'est demandé hors couverture, la fenêtre couvre les deux extrémités d'une ligne d'orbite, et **une fenêtre place chaque corps au bit près comme le fichier entier** |
+| `core/meanMotionScale.test.ts` | le facteur est publié pour les corps qui le déclarent et pour eux seuls, il vaut exactement ce que le binaire donne, et forcer 1 déplace le corps (il n'est pas décoratif) |
+| `pnpm ephemeris:meanmotion --check` | le manifeste committé n'a pas dérivé des binaires |
+
 ### Tests qui verrouillent tout ça
 
 | Fichier | Ce qu'il garde |
