@@ -70,7 +70,18 @@ const _backward = new THREE.Vector3();
  * l'annonce au lieu de dégrader en silence.
  */
 export interface EphemerisLoadReport {
-  /** Corps déclarés par le manifeste. 0 quand le manifeste lui-même n'est pas arrivé. */
+  /**
+   * Corps dont la scène a BESOIN à cette date, c'est-à-dire ceux dont un fichier doit être lu.
+   *
+   * Depuis le lot 17C ce n'est plus le compte du manifeste : un corps que la date ne concerne
+   * pas (Cassini en 2026, Rosetta) n'a aucun fichier à recevoir, donc il n'est ni « reçu » ni
+   * « manquant ». Le compter parmi les reçus ferait dire au bandeau « 3 sur 64 » là où un seul
+   * fichier est vraiment arrivé — mesuré par `e2e/ephemerisDegraded.spec.ts`, et c'est
+   * exactement le genre de phrase que le lot 15 existe pour empêcher. Sans demande de scène,
+   * tous les corps sont demandés et ce compte redevient celui du manifeste.
+   *
+   * 0 quand le manifeste lui-même n'est pas arrivé.
+   */
   readonly declared: number;
   /** Le manifeste n'est pas arrivé : on ne sait même pas ce qui manque. */
   readonly manifestFailed: boolean;
@@ -669,7 +680,12 @@ export class HorizonsEphemerisService implements PreciseEphemerisProvider {
     // fenêtre qui vient d'arriver les périme toutes (cf. `_withoutReflex`).
     for (const body of this.bodies.values()) delete body.withoutReflex;
 
-    const missing = entries
+    // Ce que la scène demande vraiment à cette date : les corps hors couverture n'ont rien à
+    // recevoir et sortent donc des DEUX comptes (cf. `EphemerisLoadReport.declared`).
+    const needed = entries.filter(
+      ([name]) => (plans.get(name) ?? null) !== null
+    );
+    const missing = needed
       .map(
         ([name]) =>
           this._permanent.get(name) ??
@@ -680,7 +696,7 @@ export class HorizonsEphemerisService implements PreciseEphemerisProvider {
     const missingNames = new Set(missing.map((failure) => failure.body));
     if (missing.length > 0) {
       Logger.warn(
-        `[HorizonsEphemerisService] ${missing.length}/${entries.length} ephemerides missing`,
+        `[HorizonsEphemerisService] ${missing.length}/${needed.length} ephemerides missing`,
         missing
       );
     } else {
@@ -689,11 +705,13 @@ export class HorizonsEphemerisService implements PreciseEphemerisProvider {
       );
     }
     this._publish({
-      declared: entries.length,
+      declared: needed.length,
       manifestFailed: false,
       // Un corps dont la fenêtre courante a échoué n'est pas « reçu », même s'il tient encore
       // celle d'avant : c'est ce que le bandeau compte, et il compte ce qui répond ICI.
-      loaded: [...this.bodies.keys()].filter((name) => !missingNames.has(name)),
+      loaded: needed
+        .map(([name]) => name)
+        .filter((name) => this.bodies.has(name) && !missingNames.has(name)),
       missing,
       retryable: missing.some((failure) => failure.retryable),
     });

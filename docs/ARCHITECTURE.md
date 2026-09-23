@@ -544,6 +544,13 @@ la fois le service et le catalogue. Sans cette demande, le service charge les fi
 comme avant : c'est ce que font les tests de fixture, le validateur et tout ce qui lit ces
 binaires hors du navigateur.
 
+**Le bandeau compte ce que la scène DEMANDE, pas ce que le manifeste déclare.** Un corps hors
+couverture n'a aucun fichier à recevoir : il n'est donc ni « reçu » ni « manquant », et
+`report.declared` vaut le nombre de corps dont un fichier doit être lu à cette date. Sans cette
+règle, le bandeau annonçait « 3 sur 64 » alors qu'UN SEUL fichier était arrivé, les deux missions
+closes (Cassini 2017, Rosetta 2016) étant comptées comme reçues. Identité tenue par un test :
+reçus + manquants = demandés.
+
 **Un corps que la date ne concerne pas ne coûte RIEN.** Sa couverture se lit au manifeste, et il
 n'est pas pour autant « manquant » : il ne répondrait pas davantage avec son fichier entier, donc
 le bandeau reste muet. Onze corps sur 64 sont dans ce cas au 1969-07-20. La règle vaut AUSSI
@@ -608,7 +615,7 @@ un bouton « préparer le hors-ligne » qui télécharge les 38,45 Mo explicitem
 
 | Garde | Ce qu'elle tient |
 | --- | --- |
-| `core/ephemerisWindowLoad.test.ts` | contre les binaires RÉELLEMENT livrés : une fenêtre place chaque corps au bit près comme le fichier entier (Mercure, Uranus, Encelade, Mimas, Pluton, Nix, Bennu, Voyager 1), moins de 3 % des octets, aucune requête pour un corps hors couverture, le compagnon du ballant couvre TOUTE sa famille, un hôte sans plages est absorbé, une fenêtre perdue est nommée et comptée par le bandeau |
+| `core/ephemerisWindowLoad.test.ts` | contre les binaires RÉELLEMENT livrés : une fenêtre place chaque corps au bit près comme le fichier entier (Mercure, Uranus, Encelade, Mimas, Pluton, Nix, Bennu, Voyager 1), moins de 3 % des octets, aucune requête pour un corps hors couverture, le compagnon du ballant couvre TOUTE sa famille, un hôte sans plages est absorbé, une fenêtre perdue est nommée et comptée par le bandeau, et un corps hors couverture n'entre dans AUCUN des deux comptes |
 | `core/ephemerisClockGate.test.ts` | la date se fige et est redemandée, elle repart exactement où elle s'était arrêtée, un saut atterrit exactement sur sa cible, deux clics pendant l'attente comptent deux, l'avance suit la vitesse et son signe, et rien ne fige la scène pour toujours |
 | `core/SimulationClock.test.ts` | `holdAt` ne laisse aucune dette : la reprise ne rattrape pas l'attente |
 | `e2e/ephemerisWindow.spec.ts` | dans un vrai navigateur : chaque demande porte un `Range`, moins d'un vingtième des octets, la fiche dit toujours « JPL Horizons », un saut de cinquante ans garde cette source, un lien daté démarre à sa date SANS seconde fenêtre, et une fenêtre qui échoue EN COURS DE SESSION fait apparaître le bandeau |

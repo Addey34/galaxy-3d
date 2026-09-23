@@ -234,7 +234,12 @@ describe('le service charge des fenêtres (lot 17C)', () => {
     expect(served).toBeLessThan(shipped * 0.03);
     expect(served).toBeGreaterThan(900_000);
     expect(service.report.missing).toEqual([]);
-    expect(service.report.declared).toBe(64);
+    // Le compte annoncé est celui des corps RÉELLEMENT demandés, pas celui du manifeste : les
+    // deux missions closes n'ont rien à recevoir à cette date (cf. `declared`).
+    expect(service.report.declared).toBe(log.length);
+    expect(service.report.declared).toBeLessThan(
+      Object.keys(horizonsManifest.bodies).length
+    );
   });
 
   it('ne demande AUCUN octet d’un corps que la date ne concerne pas', async () => {
@@ -393,10 +398,39 @@ describe('une fenêtre qui manque, et ce qu’on en dit (lot 17C)', () => {
     expect(report.missing.map((failure) => failure.body)).toEqual(['mercury']);
     expect(report.loaded).not.toContain('mercury');
     expect(report.retryable).toBe(true);
-    expect(noticeText(report)[0]).toContain('63');
+    // Un seul corps manque, donc le bandeau annonce « tous sauf un » — le compte étant celui
+    // de ce que la scène demande à CETTE date, pas celui du manifeste.
+    expect(report.loaded.length).toBe(report.declared - 1);
+    expect(noticeText(report)[0]).toContain(String(report.declared));
     // Et la scène peut avancer : on a demandé, on a dit, on ne fige pas l'horloge pour
     // toujours (cf. `hasCoverageFor`).
     expect(service.hasCoverageFor(sceneRequest(far, false))).toBe(true);
+  });
+
+  it('ne compte ni comme reçu ni comme manquant un corps que la date ne concerne pas', async () => {
+    const log: Served[] = [];
+    // Tout le lien tombe : le seul compte honnête est « 0 sur ce que la scène demande ».
+    const fail = Object.fromEntries(
+      Object.keys(horizonsManifest.bodies).map((name) => [name, 0])
+    );
+    const service = await loadWindowed(log, { fail });
+    const report = service.report;
+    const inManifest = Object.keys(horizonsManifest.bodies).length;
+
+    // L'identité qui porte tout le bandeau : reçus + manquants = ce que la scène demande.
+    expect(report.loaded).toEqual([]);
+    expect(report.declared).toBe(report.loaded.length + report.missing.length);
+    // Et ce compte est INFÉRIEUR au manifeste : Cassini et Rosetta, missions closes en 2017 et
+    // 2016, n'ont aucun fichier à recevoir au 2026-09-23. Les compter parmi les reçus ferait
+    // annoncer « 2 sur 64 » alors que pas un octet n'est arrivé.
+    expect(report.declared).toBeLessThan(inManifest);
+    for (const closed of ['cassini', 'rosetta']) {
+      expect(report.loaded).not.toContain(closed);
+      expect(report.missing.map((failure) => failure.body)).not.toContain(
+        closed
+      );
+    }
+    expect(noticeText(report)[0]).toContain(String(report.declared));
   });
 
   it('charge le fichier ENTIER d’un corps dont le facteur n’est pas publié', async () => {
