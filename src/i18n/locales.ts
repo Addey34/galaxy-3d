@@ -54,6 +54,23 @@ export const messages: Record<Locale, Dict> = {
     'error.contextLostTimeout':
       'The 3D view could not reconnect. Reload the page.',
 
+    // ── Éphémérides manquantes (lot 15) ──
+    // Le bandeau n'existe que lorsqu'un fichier manque VRAIMENT : rien à l'écran veut dire
+    // que les 64 sont arrivés. Les nombres sont écrits sans accord de pluriel (« 63 sur 64 »),
+    // le compte pouvant valoir 1 et le dictionnaire n'ayant pas de formes plurielles.
+    'ephemeris.notice.title': 'Reduced precision',
+    'ephemeris.notice.partial':
+      'Precise ephemerides received: {loaded} of {declared}. The other bodies are placed by a less precise source, named on the info card of each body.',
+    'ephemeris.notice.none':
+      'No precise ephemeris could be loaded. Every body is placed by a less precise source, named on its info card.',
+    'ephemeris.notice.spacecraft':
+      'Spacecraft left without any position: {count}.',
+    'ephemeris.notice.retry': 'Load the missing files',
+    'ephemeris.notice.retrying': 'Loading the missing files…',
+    'ephemeris.notice.recovered': 'All ephemerides are loaded.',
+    'ephemeris.notice.dismiss': 'Dismiss this message',
+    'ephemeris.notice.aria': 'Ephemeris loading',
+
     // ── Navigation ──
     'nav.overview': 'Overview',
     'nav.bodies': 'Bodies',
@@ -471,6 +488,20 @@ export const messages: Record<Locale, Dict> = {
     'error.contextLost': 'Reconnexion de la vue 3D…',
     'error.contextLostTimeout':
       'La vue 3D n’a pas pu se reconnecter. Rechargez la page.',
+
+    // ── Éphémérides manquantes (lot 15) ──
+    'ephemeris.notice.title': 'Précision réduite',
+    'ephemeris.notice.partial':
+      'Éphémérides précises reçues : {loaded} sur {declared}. Les autres corps sont placés par une source moins précise, nommée dans leur fiche.',
+    'ephemeris.notice.none':
+      'Aucune éphéméride précise n’a pu être chargée. Tous les corps sont placés par une source moins précise, nommée dans leur fiche.',
+    'ephemeris.notice.spacecraft':
+      'Sondes laissées sans aucune position : {count}.',
+    'ephemeris.notice.retry': 'Charger les fichiers manquants',
+    'ephemeris.notice.retrying': 'Chargement des fichiers manquants…',
+    'ephemeris.notice.recovered': 'Toutes les éphémérides sont chargées.',
+    'ephemeris.notice.dismiss': 'Fermer ce message',
+    'ephemeris.notice.aria': 'Chargement des éphémérides',
 
     // ── Navigation ──
     'nav.overview': 'Vue globale',

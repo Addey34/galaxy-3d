@@ -21,6 +21,7 @@ import { BOOT_QUALITY_PROFILE } from '@/config/engine';
 import { classifyTemporal, temporalCategoryLabelKey } from '@/core/temporal';
 import { intlLocale, onLocaleChange, t } from '@/i18n';
 import Logger from '@/utils/Logger';
+import { NOTICE_CHANGED } from './ephemerisNotice';
 import type {
   PlanetarySurfaceEngine,
   SurfaceImageryState,
@@ -202,8 +203,15 @@ export function setupSurfacePanel(api: PublicAPI): () => void {
     const dock = document.querySelector('.dock--bottom');
     if (!dock) return;
     const gapPx = 8;
+    // Le bandeau des éphémérides manquantes (lot 15) occupe la même bande quand il existe :
+    // on s'empile au-dessus de sa hauteur MESURÉE plutôt que de se recouvrir sur un écran
+    // étroit, où les deux prennent toute la largeur.
+    const notice = document.querySelector('#ephemeris-notice');
+    const noticeHeight = notice
+      ? notice.getBoundingClientRect().height + gapPx
+      : 0;
     const top = dock.getBoundingClientRect().top;
-    badge.style.bottom = `${Math.max(0, window.innerHeight - top + gapPx)}px`;
+    badge.style.bottom = `${Math.max(0, window.innerHeight - top + gapPx + noticeHeight)}px`;
   }
 
   const onState = (next: SurfaceImageryState | null): void => {
@@ -356,6 +364,9 @@ export function setupSurfacePanel(api: PublicAPI): () => void {
   renderLabels();
   onLocaleChange(renderLabels);
   window.addEventListener('resize', placeBadge);
+  // Le bandeau des éphémérides manquantes occupe la même bande : quand il paraît, change de
+  // taille ou disparaît, on relit sa position réelle (cf. `ui/ephemerisNotice`).
+  window.addEventListener(NOTICE_CHANGED, placeBadge);
   const unsubscribe = api.animationSystem.onFrame(tick);
 
   return () => {

@@ -2616,6 +2616,89 @@ body.is-capturing #loader {
   font: inherit;
 }
 
+/* Bandeau des éphémérides manquantes (lot 15) — il n'existe dans le DOM que lorsqu'un fichier
+   manque vraiment, donc aucune règle `[hidden]` n'est nécessaire ici. Il se pose au-dessus du
+   dock du bas, par mesure (cf. `ui/ephemerisNotice`), et le bandeau d'imagerie de surface
+   s'empile au-dessus de lui. Gauche, jamais centré : au centre il recouvrirait la barre de
+   temps sur un écran étroit. */
+#ephemeris-notice {
+  position: fixed;
+  left: var(--edge-x);
+  bottom: calc(var(--edge-b) + var(--control-h) + var(--sp-2));
+  z-index: 6;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+  max-width: min(26rem, calc(100vw - 2 * var(--edge-x)));
+  padding: var(--sp-2);
+  border-radius: var(--r-md, 0.5rem);
+  border: 1px solid rgba(255, 196, 120, 0.35);
+  background: var(--surface-solid);
+  backdrop-filter: var(--blur);
+  color: var(--ink-dim);
+  font-size: 0.75rem;
+  line-height: 1.35;
+}
+
+#ephemeris-notice .en-title {
+  margin: 0;
+  color: rgb(255, 208, 150);
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+#ephemeris-notice .en-detail {
+  margin: 0;
+}
+
+#ephemeris-notice .en-detail[hidden] {
+  display: none;
+}
+
+#ephemeris-notice .en-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-1);
+}
+
+#ephemeris-notice button {
+  padding: 0.3rem 0.6rem;
+  border: 1px solid var(--hairline-strong);
+  border-radius: var(--r-sm, 0.4rem);
+  background: var(--control-bg);
+  color: var(--ink);
+  cursor: pointer;
+  font: inherit;
+}
+
+#ephemeris-notice button:hover:not(:disabled) {
+  background: var(--control-bg-hover);
+}
+
+#ephemeris-notice button:disabled {
+  cursor: default;
+  opacity: 0.6;
+}
+
+#ephemeris-notice button[hidden] {
+  display: none;
+}
+
+#ephemeris-notice[data-state='recovered'] {
+  border-color: rgba(74, 210, 140, 0.4);
+}
+
+#ephemeris-notice[data-state='recovered'] .en-title {
+  color: rgb(var(--explo));
+}
+
+@media (max-width: 40rem) {
+  #ephemeris-notice {
+    right: var(--edge-x);
+    max-width: none;
+  }
+}
+
 /* Bannière de reconnexion WebGL (perte/restauration de contexte GPU) — non bloquante,
    contrairement à l'écran d'erreur de démarrage, car la restauration est le cas courant. */
 #context-recovery-banner[hidden] {

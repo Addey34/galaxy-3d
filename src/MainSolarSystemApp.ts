@@ -72,6 +72,7 @@ import {
   type SecondaryOverlayId,
 } from './ui/overlayCoordinator';
 import { setupContextRecovery } from './ui/contextRecovery';
+import { setupEphemerisNotice } from './ui/ephemerisNotice';
 import { setupSolarDebug } from './ui/solarDebug';
 import { setupGeoDebug } from './ui/geoDebug';
 import { setupTerminatorProbe } from './ui/terminatorProbe';
@@ -197,6 +198,8 @@ if (surfaceScrim) {
     setupTerminatorProbe(api);
     setupSurfaceProbe(api);
     setupContextRecovery(sceneSystem);
+    // Dit à l’écran, sans ouvrir de fiche, quand des éphémérides ne sont pas arrivées.
+    setupEphemerisNotice(api);
 
     // Registre des COUCHES MÉTÉO de la Terre. Chaque `setup*` monte sa couche (données
     // GIBS/Open-Meteo synchronisées sur la date de simulation, repli statique hors-ligne)
