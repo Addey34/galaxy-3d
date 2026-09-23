@@ -129,6 +129,14 @@ export function setupPermalinks(
     if (nextUrl !== currentUrl) window.history.replaceState(null, '', nextUrl);
   };
 
+  /**
+   * Un saut de date peut ATTENDRE ses octets depuis le lot 17C : l'adresse se resynchronise
+   * donc quand il s'applique, et pas seulement quand l'interface le demande. Sans cela,
+   * `?date=2080-03-01` était réécrit avec la date du démarrage, et l'adresse décrivait un
+   * instant que la scène n'affichait plus (mesuré sur le build).
+   */
+  om.onDateSettled(() => sync());
+
   const applyInitialState = (): void => {
     const state = parsePermalink(
       window.location.search,

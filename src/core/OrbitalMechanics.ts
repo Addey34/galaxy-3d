@@ -163,6 +163,15 @@ export class OrbitalMechanics {
    */
   private _unmetAsks = 0;
   private static readonly _MAX_UNMET_ASKS = 2;
+  /**
+   * Prévenus quand un saut s'applique, DIFFÉRÉ compris.
+   *
+   * Sans eux, l'adresse ment : le permalien se resynchronise juste après avoir demandé la
+   * date, donc avant qu'elle ne s'applique, et il réécrit alors l'URL avec la date du
+   * DÉMARRAGE pendant que la scène finit par afficher celle qui était demandée. Mesuré sur le
+   * build, `?date=2080-03-01` : l'adresse restait au 2026-09-23 et la scène au 2080.
+   */
+  private readonly _dateSettledListeners: (() => void)[] = [];
 
   // ── Throttle du recalcul d'éphéméride ──
   // HelioVector (astronomy-engine) est un calcul de séries coûteux, exécuté par corps et par
@@ -456,12 +465,21 @@ export class OrbitalMechanics {
     this._jumpNow(target);
   }
 
+  /**
+   * Prévient à chaque saut de date appliqué, y compris un saut qui a ATTENDU ses octets.
+   * C'est ce qui permet à l'adresse de décrire la scène plutôt que l'instant de la demande.
+   */
+  onDateSettled(listener: () => void): void {
+    this._dateSettledListeners.push(listener);
+  }
+
   /** Le saut lui-même, une fois ses données là. */
   private _jumpNow(target: Date): void {
     this.clock.addDays(
       (target.getTime() - this.clock.date.getTime()) / MS_PER_DAY
     );
     this._afterTimeTravel();
+    for (const listener of this._dateSettledListeners) listener();
   }
 
   /** Fait progresser la transition animée et notifie la couche app (taille visuelle). */

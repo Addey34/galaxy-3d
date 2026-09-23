@@ -104,6 +104,9 @@ function makeGateHarness(): Harness {
     _windowRequest: null,
     _pendingJump: null,
     _minRecomputeThresholdMs: 1,
+    // `Object.create` n'exécute pas les initialiseurs de champs : la liste des écouteurs doit
+    // être posée ici, sinon `onDateSettled` lit `undefined`.
+    _dateSettledListeners: [],
   }))
     Object.defineProperty(mechanics, key, { value, writable: true });
   Object.defineProperty(mechanics, 'clock', { value: clock });
@@ -312,6 +315,28 @@ describe('un saut n’a lieu que sur des données arrivées (D3)', () => {
     windows.ready = () => true;
     await h.deliver();
     expect(h.orbitsChanged).toHaveBeenCalledTimes(1);
+  });
+
+  it('prévient quand un saut DIFFÉRÉ a fini par s’appliquer', async () => {
+    const h = makeGateHarness();
+    h.setDate(0);
+    h.mechanics.update(1);
+
+    const settled: number[] = [];
+    h.mechanics.onDateSettled(() => settled.push(h.dateMs()));
+
+    h.setReady((ms) => ms <= 0);
+    const target = new Date(365 * DAY_MS);
+    h.mechanics.jumpToDate(target);
+    expect(settled).toEqual([]);
+
+    h.setReady(() => true);
+    await h.deliver();
+
+    // Sans ce signal, l'adresse reste sur la date du DÉMARRAGE pendant que la scène affiche
+    // celle qui était demandée : le permalien se resynchronise juste après avoir demandé le
+    // saut, donc avant qu'il ne s'applique (mesuré sur le build, `?date=2080-03-01`).
+    expect(settled).toEqual([target.getTime()]);
   });
 
   it('compte un déplacement relatif depuis la cible EN ATTENTE, pas depuis l’écran', async () => {
