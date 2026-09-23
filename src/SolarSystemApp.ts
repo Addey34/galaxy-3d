@@ -88,7 +88,21 @@ export class SolarSystemApp {
   private _horizonsEphemeris: HorizonsEphemerisService | null = null;
   private _spkProvider: SpkWorkerEphemerisProvider | null = null;
 
-  async init(progressCallback: ProgressCallback): Promise<PublicAPI> {
+  /**
+   * Date à laquelle la scène doit DÉMARRER, quand l'adresse en demande une.
+   *
+   * La couche de composition la lit (`core/permalink.requestedSceneDate`) et la passe : cette
+   * façade ne touche pas au DOM. Sans elle, une page d'éclipse ou un lien daté chargeait la
+   * fenêtre d'éphéméride d'aujourd'hui, puis celle de la date demandée, la seconde arrivant
+   * pendant la première image (8,4 s mesurées avant correction).
+   */
+  private _startDate: Date | null = null;
+
+  async init(
+    progressCallback: ProgressCallback,
+    startDate: Date | null = null
+  ): Promise<PublicAPI> {
+    this._startDate = startDate;
     if (this.initialized) {
       Logger.warn('[SolarSystemApp] init() called twice — ignored.');
       return this._publicAPI();
@@ -153,7 +167,12 @@ export class SolarSystemApp {
     const horizonsPromise = HorizonsEphemerisService.load(
       manifestUrl,
       bodyDynamics(CELESTIAL_CONFIG),
-      { scene: { date: new Date(), orbitPeriodDays: orbitPeriodsByBody() } }
+      {
+        scene: {
+          date: this._startDate ?? new Date(),
+          orbitPeriodDays: orbitPeriodsByBody(),
+        },
+      }
     ).then((horizons) => {
       ephemeridesReady = true;
       reportResourceProgress(t('loader.ephemerides'));
@@ -273,8 +292,24 @@ export class SolarSystemApp {
 
     // Créer les systèmes astronomiques
     this._ephemerisService = new EphemerisService();
+    const clock = new SimulationClock();
+    // L'horloge part à la date demandée par l'adresse, et pas à aujourd'hui : c'est la même
+    // date que celle dont les éphémérides ont été chargées quelques secondes plus tôt, donc
+    // la première image est déjà la bonne et aucun saut n'a lieu.
+    //
+    // Honnêteté sur cette ligne : la suite e2e ne la distingue PAS, et c'est mesuré (la
+    // retirer laisse le scénario vert). La raison est que `ui/permalink` applique la date
+    // dans la même tâche que ce démarrage, avant la première image, donc la fenêtre déjà
+    // chargée suffit. Ce qu'elle apporte est le DÉTERMINISME : sans elle, tout dépend de cette
+    // course, et une image rendue avant l'application de l'adresse verrait la scène à
+    // aujourd'hui avec les octets de la date demandée — donc des positions de repli, une
+    // ligne d'orbite épissée, et une seconde fenêtre chargée pour rien.
+    if (this._startDate)
+      clock.addDays(
+        (this._startDate.getTime() - clock.date.getTime()) / 86_400_000
+      );
     this._orbitalMechanics = new OrbitalMechanics(
-      new SimulationClock(),
+      clock,
       this._ephemerisService,
       new OrbitalElementsService(),
       this._spkProvider

@@ -110,6 +110,35 @@ test('un saut de date garde la source précise', async ({ page }) => {
   await expect(page.locator('#ephemeris-notice')).toHaveCount(0);
 });
 
+test('un lien daté démarre À SA date, sans seconde fenêtre', async ({
+  page,
+}) => {
+  test.setTimeout(180_000);
+  const traffic = watchBinaries(page);
+
+  await page.goto('/?body=mercury&date=2080-03-01T00%3A00%3A00Z');
+  await expect(page.locator('#loader')).toBeVisible();
+  await expect(page.locator('#loader')).toBeHidden({ timeout: 90_000 });
+  const atLoader = traffic.requests;
+
+  // La date est là dès la première image, et l'adresse la dit : la fenêtre chargée au
+  // démarrage EST la bonne.
+  await expect(page.locator('#date-input')).toHaveValue('2080-03-01');
+  await expect(page.locator('.bi-position-source')).toContainText(
+    'JPL Horizons',
+    { timeout: 30_000 }
+  );
+
+  // Et surtout : plus AUCUNE requête après le démarrage. Démarrer à aujourd'hui puis sauter en
+  // chargeait une seconde, qui arrivait pendant la première image — 8,4 s mesurées sur une
+  // page d'éclipse avant correction, par vagues de six requêtes entre deux images.
+  await page.waitForTimeout(3_000);
+  expect(traffic.requests).toBe(atLoader);
+  expect(new URL(page.url()).searchParams.get('date')).toBe(
+    '2080-03-01T00:00:00Z'
+  );
+});
+
 test('une fenêtre qui échoue EN COURS DE SESSION se dit à l’écran', async ({
   page,
 }) => {

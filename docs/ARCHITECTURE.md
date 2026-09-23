@@ -546,7 +546,10 @@ binaires hors du navigateur.
 
 **Un corps que la date ne concerne pas ne coûte RIEN.** Sa couverture se lit au manifeste, et il
 n'est pas pour autant « manquant » : il ne répondrait pas davantage avec son fichier entier, donc
-le bandeau reste muet. Onze corps sur 64 sont dans ce cas au 1969-07-20.
+le bandeau reste muet. Onze corps sur 64 sont dans ce cas au 1969-07-20. La règle vaut AUSSI
+sans plages, et le contrôle est arithmétique : les 38 040 720 octets de la colonne A ci-dessus
+sont les 38 445 024 livrés moins 404 304, c'est-à-dire exactement Cassini (349 104) et Rosetta
+(55 200), dont les missions sont closes depuis 2017 et 2016.
 
 **L'horloge n'avance que sur des données arrivées (décision D3).** `OrbitalMechanics` interroge
 `EphemerisWindows.ready` avant de laisser la date bouger ; sinon elle revient où elle était
@@ -579,6 +582,16 @@ lieu de 9,6** : la date ralentit pour rester exacte. C'est la question laissée 
 plan — ralentir, ou avancer en disant que les positions sont en retard — et la phase 17D la
 tranche en connaissance de cause, maintenant qu'elle est chiffrée.
 
+**Un lien daté démarre À SA date.** `core/permalink.requestedSceneDate` (pure) lit la date que
+l'adresse demande — la query, ou le CHEMIN d'une page d'éclipse — et la couche de composition la
+passe à `SolarSystemApp.init`, qui en fait la demande de scène ET la date de départ de
+l'horloge. Sans cela, l'application chargeait la fenêtre d'aujourd'hui, puis celle du lien, la
+seconde arrivant pendant que la première image se rend : **8,4 secondes** mesurées sur
+`/eclipse/2026-08-12/` avant la correction, par vagues de six requêtes entre deux images, contre
+**zéro requête après le démarrage** ensuite. L'adresse de la page d'éclipse y survit aussi : le
+permalien ne se resynchronise pas tant qu'un saut attend ses octets, sinon il effaçait l'adresse
+`/eclipse/…` au profit de `/earth/?date=…` au moment même où la page atteignait son pic.
+
 **Les lignes d'orbite ont UNE porte, `OrbitalMechanics._emitOrbitsChanged`.** Tant que les octets
 d'une période entière ne sont pas là, la couche app n'est pas prévenue : la ligne précédente
 reste à l'écran et personne ne trace une courbe qui épisserait deux sources. Toutes les raisons
@@ -598,7 +611,8 @@ un bouton « préparer le hors-ligne » qui télécharge les 38,45 Mo explicitem
 | `core/ephemerisWindowLoad.test.ts` | contre les binaires RÉELLEMENT livrés : une fenêtre place chaque corps au bit près comme le fichier entier (Mercure, Uranus, Encelade, Mimas, Pluton, Nix, Bennu, Voyager 1), moins de 3 % des octets, aucune requête pour un corps hors couverture, le compagnon du ballant couvre TOUTE sa famille, un hôte sans plages est absorbé, une fenêtre perdue est nommée et comptée par le bandeau |
 | `core/ephemerisClockGate.test.ts` | la date se fige et est redemandée, elle repart exactement où elle s'était arrêtée, un saut atterrit exactement sur sa cible, deux clics pendant l'attente comptent deux, l'avance suit la vitesse et son signe, et rien ne fige la scène pour toujours |
 | `core/SimulationClock.test.ts` | `holdAt` ne laisse aucune dette : la reprise ne rattrape pas l'attente |
-| `e2e/ephemerisWindow.spec.ts` | dans un vrai navigateur : chaque demande porte un `Range`, moins d'un vingtième des octets, la fiche dit toujours « JPL Horizons », un saut de cinquante ans garde cette source, et une fenêtre qui échoue EN COURS DE SESSION fait apparaître le bandeau |
+| `e2e/ephemerisWindow.spec.ts` | dans un vrai navigateur : chaque demande porte un `Range`, moins d'un vingtième des octets, la fiche dit toujours « JPL Horizons », un saut de cinquante ans garde cette source, un lien daté démarre à sa date SANS seconde fenêtre, et une fenêtre qui échoue EN COURS DE SESSION fait apparaître le bandeau |
+| `core/permalink.test.ts` | la date demandée se lit dans la query puis dans le chemin d'éclipse, la query prime, et une date illisible ne devient pas une date |
 
 ### Tests qui verrouillent tout ça
 

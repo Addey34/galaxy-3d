@@ -86,7 +86,11 @@ export function setupPermalinks(
     eclipseFromPathname(window.location.pathname) ?? null;
 
   const sync = (view?: PermalinkViewAngles): void => {
-    if (applying || suspended) return;
+    // Un saut qui ATTEND ses octets (lot 17C) n'est pas encore la scène : écrire l'adresse
+    // maintenant la ferait décrire l'instant d'avant, et pire, `eclipse` serait effacé alors
+    // que la page d'éclipse est justement en train d'atteindre son pic. `onDateSettled`
+    // rappelle cette fonction dès que le saut s'applique.
+    if (applying || suspended || om.pendingJumpDate !== null) return;
     const selectedBody = navigation.getSelectedBody();
     if (
       eclipse &&
