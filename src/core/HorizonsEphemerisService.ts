@@ -14,6 +14,18 @@ import type { BodyDynamics } from '@/config/gravity';
 import type { PreciseEphemerisProvider } from './PreciseEphemerisProvider';
 import { mapWithConcurrency } from '@/utils/concurrency';
 import { medianMeanMotionScale } from './meanMotionScale';
+import {
+  byteRangeForIndices,
+  covers,
+  fileByteLength,
+  interpretRangeResponse,
+  mergeWindows,
+  planBodyWindow,
+  rangeHeader,
+  windowContains,
+  type SampleGrid,
+  type SampleWindow,
+} from './ephemerisWindow';
 import Logger from '@/utils/Logger';
 
 const COMPONENTS_PER_SAMPLE = 6;
@@ -82,8 +94,30 @@ export interface EphemerisLoadFailure {
   readonly retryable: boolean;
 }
 
+/**
+ * Ce que la SCÈNE demande aux éphémérides à un instant : une date, l'avance que sa vitesse de
+ * lecture réclame, et la période de révolution des corps dont la ligne d'orbite est tracée.
+ *
+ * C'est la seule chose qui fait passer le service du fichier ENTIER à une FENÊTRE. Absente, il
+ * charge les 64 fichiers comme avant le lot 17 : les tests de fixture, le validateur et tout ce
+ * qui lit ces binaires hors du navigateur continuent donc de les lire entiers.
+ */
+export interface SceneWindowRequest {
+  /** Date affichée par la scène. */
+  readonly date: Date;
+  /** Jours de lecture pris d'avance, signés (cf. `core/ephemerisWindow.readAheadDays`). */
+  readonly leadDays?: number;
+  /**
+   * Période de révolution, par corps, pour ceux dont la ligne d'orbite est tracée. C'est ce
+   * qui coûte : une position vaut 96 octets, une ligne demande une période ENTIÈRE.
+   */
+  readonly orbitPeriodDays?: Readonly<Record<string, number>>;
+}
+
 /** Réglages du chargement. Les tests les resserrent ; la production garde les défauts. */
 export interface EphemerisLoadOptions {
+  /** Ce que la scène demande. Absent = les fichiers entiers, comme avant le lot 17. */
+  scene?: SceneWindowRequest;
   /** Requêtes simultanées. Cf. `utils/concurrency` pour la raison mesurée de cette borne. */
   concurrency?: number;
   /** Attentes entre deux essais d'un MÊME fichier. Vide = un seul essai. */
@@ -170,7 +204,14 @@ interface HorizonsManifest {
 
 interface LoadedBody {
   manifest: HorizonsBodyManifest;
+  /**
+   * Les échantillons TENUS, qui ne sont plus forcément tout le fichier depuis le lot 17 :
+   * ils commencent à `firstIndex` dans la grille du manifeste, qui elle décrit toujours le
+   * fichier ENTIER. Confondre les deux, c'est lire un autre instant.
+   */
   samples: Float64Array;
+  /** Index, dans la grille du fichier, du premier échantillon tenu. Absent = 0. */
+  firstIndex?: number;
   /**
    * Masse centrale et periode de ce corps, quand le catalogue les connait.
    * Absent = interpolation cubique seule, comme avant.
@@ -180,6 +221,35 @@ interface LoadedBody {
   meanMotionScale?: number;
   /** Série sans le ballant du compagnon (cf. `BodyDynamics.reflex`), construite au besoin. */
   withoutReflex?: LoadedBody | null;
+}
+
+/** Premier échantillon tenu, dans la grille du FICHIER. */
+function heldFirstIndex(body: LoadedBody): number {
+  return body.firstIndex ?? 0;
+}
+
+/** Nombre d'échantillons tenus, qui vaut `manifest.sampleCount` quand le fichier est entier. */
+function heldSampleCount(body: LoadedBody): number {
+  return body.samples.length / COMPONENTS_PER_SAMPLE;
+}
+
+/** La fenêtre tenue, exprimée comme un plan l'exprime. */
+function heldWindow(body: LoadedBody): SampleWindow | null {
+  const count = heldSampleCount(body);
+  if (count < 1) return null;
+  const firstIndex = heldFirstIndex(body);
+  const lastIndex = firstIndex + count - 1;
+  return {
+    firstIndex,
+    lastIndex,
+    ...byteRangeForIndices(firstIndex, lastIndex),
+  };
+}
+
+/** Le corps tient-il déjà tout ce que ce plan demande ? */
+function holdsWindow(body: LoadedBody, wanted: SampleWindow): boolean {
+  const held = heldWindow(body);
+  return held !== null && windowContains(held, wanted);
 }
 
 function isManifest(value: unknown): value is HorizonsManifest {
@@ -228,6 +298,8 @@ export class HorizonsEphemerisService implements PreciseEphemerisProvider {
     manifestUrl: string;
     bodyMu: Readonly<Record<string, BodyDynamics>>;
     policy: LoadPolicy;
+    /** La dernière demande de scène. `null` : on charge les fichiers entiers. */
+    scene: SceneWindowRequest | null;
     /** Le manifeste, quand il est arrivé. `null` : il reste à demander. */
     manifest: {
       entries: [string, HorizonsBodyManifest][];
@@ -239,6 +311,19 @@ export class HorizonsEphemerisService implements PreciseEphemerisProvider {
   private readonly _listeners: ((report: EphemerisLoadReport) => void)[] = [];
   /** Absences DÉFINITIVES (404, origine étrangère, taille fausse) : plus jamais redemandées. */
   private readonly _permanent = new Map<string, EphemerisLoadFailure>();
+  /**
+   * Dernière fenêtre DEMANDÉE pour chaque corps, qu'elle soit arrivée ou non. Sans cette
+   * mémoire, une fenêtre qui n'arrive jamais figerait l'horloge pour toujours : on la demande,
+   * on dit qu'elle manque (lot 15), et on laisse la scène continuer avec la source de repli.
+   */
+  private readonly _attempted = new Map<string, SampleWindow | 'full'>();
+  /**
+   * L'hôte a ignoré une plage (200 avec tout le fichier) ou répondu quelque chose qui ne
+   * décrit pas ce fichier : on repasse aux fichiers entiers pour tout le monde. C'est la
+   * décision D7 du lot 17 — sur un hébergement sans plages, l'application marche comme avant,
+   * au prix d'aujourd'hui, plutôt que de ne pas marcher.
+   */
+  private _rangesRefused = false;
   /** Un seul chargement à la fois : un double clic sur « reprendre » ne doit pas doubler. */
   private _loading: Promise<void> | null = null;
 
@@ -289,7 +374,13 @@ export class HorizonsEphemerisService implements PreciseEphemerisProvider {
       missing: [],
       retryable: true,
     });
-    service._pending = { manifestUrl, bodyMu, policy, manifest: null };
+    service._pending = {
+      manifestUrl,
+      bodyMu,
+      policy,
+      scene: options.scene ?? null,
+      manifest: null,
+    };
     await service._load();
     return service;
   }
@@ -314,6 +405,166 @@ export class HorizonsEphemerisService implements PreciseEphemerisProvider {
     if (!this._pending) return this._report;
     await this._load();
     return this._report;
+  }
+
+  /**
+   * Les octets qu'il faut pour cette demande sont-ils DÉJÀ là ? Question synchrone, posée par
+   * l'horloge avant de laisser la date avancer (lot 17, décision D3 : « la date n'avance que
+   * sur des données arrivées »). Répondre `true` à tort, c'est afficher une position de repli
+   * en se taisant, exactement ce que le lot 15 a corrigé.
+   *
+   * Trois cas rendent `true` sans que rien n'ait été chargé, et chacun est une INFORMATION :
+   * le corps n'est pas couvert à cette date (il ne répondrait pas davantage avec son fichier
+   * entier), son absence est définitive (404 : rien ne viendra), ou sa fenêtre a déjà été
+   * demandée sans revenir et aucun chargement n'est en cours — le bandeau le dit, et on ne
+   * fige pas la scène pour toujours.
+   */
+  hasCoverageFor(request: SceneWindowRequest): boolean {
+    const pending = this._pending;
+    // Pas de manifeste : soit il n'est pas arrivé (le bandeau le dit déjà), soit ce service
+    // vient du disque et tient tout. Dans les deux cas, il n'y a rien à attendre.
+    if (!pending?.manifest) return true;
+    const plans = this._planAll(
+      pending.manifest.entries,
+      request,
+      pending.bodyMu
+    );
+    for (const [name, plan] of plans) {
+      if (plan === null) continue;
+      if (this._holds(name, plan)) continue;
+      if (this._permanent.has(name)) continue;
+      if (this._loading === null && this._attemptCovers(name, plan)) continue;
+      return false;
+    }
+    return true;
+  }
+
+  /**
+   * Demande les fenêtres manquantes pour cette scène et résout quand elles sont là — ou quand
+   * leur absence est ACTÉE, ce qui est la même chose du point de vue de l'appelant : dans les
+   * deux cas il peut avancer, et le rapport dit lequel des deux s'est produit.
+   */
+  async ensureCoverage(
+    request: SceneWindowRequest
+  ): Promise<EphemerisLoadReport> {
+    const pending = this._pending;
+    if (!pending) return this._report;
+    pending.scene = request;
+    await this._load();
+    // La demande a pu changer PENDANT un chargement déjà en cours, qui a alors rendu la main
+    // sur l'ancienne : un second passage lit la nouvelle.
+    if (!this.hasCoverageFor(request)) await this._load();
+    return this._report;
+  }
+
+  /** Ce corps tient-il déjà ce plan ? */
+  private _holds(name: string, plan: SampleWindow | 'full'): boolean {
+    const held = this.bodies.get(name);
+    if (!held) return false;
+    return plan === 'full'
+      ? heldSampleCount(held) === held.manifest.sampleCount
+      : holdsWindow(held, plan);
+  }
+
+  /** Ce plan a-t-il déjà été demandé, sans revenir ? */
+  private _attemptCovers(name: string, plan: SampleWindow | 'full'): boolean {
+    const attempted = this._attempted.get(name);
+    if (attempted === undefined) return false;
+    if (attempted === 'full') return true;
+    return plan !== 'full' && windowContains(attempted, plan);
+  }
+
+  /** La grille du fichier, telle que le manifeste la déclare. */
+  private static _grid(entry: HorizonsBodyManifest): SampleGrid {
+    return {
+      startJdTdb: entry.startJdTdb,
+      stepDays: entry.stepDays,
+      sampleCount: entry.sampleCount,
+    };
+  }
+
+  /**
+   * Ce qu'un corps doit tenir : une fenêtre, le fichier ENTIER, ou rien.
+   *
+   * Deux raisons de charger un fichier entier malgré une demande de scène, et toutes deux
+   * sont des FAITS, pas des précautions : l'hôte a refusé les plages (D7), ou le facteur
+   * d'échelle du temps de propagation n'est pas publié au manifeste, auquel cas il se calcule
+   * sur le fichier entier et une fenêtre en donnerait un autre, donc une autre position
+   * (mesuré au lot 17B : jusqu'à 202 m sur Mimas). La phase 17B l'a publié pour les sept corps
+   * concernés ; ce chemin ne sert plus qu'à un manifeste antérieur.
+   */
+  private _planBody(
+    name: string,
+    entry: HorizonsBodyManifest,
+    scene: SceneWindowRequest | null,
+    bodyMu: Readonly<Record<string, BodyDynamics>>
+  ): SampleWindow | 'full' | null {
+    if (!scene) return 'full';
+    const dynamics = bodyMu[name];
+    const wholeFile =
+      this._rangesRefused ||
+      (dynamics?.meanMotionPropagation && entry.meanMotionScale === undefined);
+    if (wholeFile) {
+      // Même sans plages, un corps que la date ne concerne pas ne demande RIEN : la
+      // couverture se lit au manifeste, pas dans les octets. Onze corps sur 64 sont dans ce
+      // cas au 1969-07-20 (mesuré), et leur fichier entier serait payé pour un `null`.
+      return covers(HorizonsEphemerisService._grid(entry), scene.date)
+        ? 'full'
+        : null;
+    }
+    return planBodyWindow(HorizonsEphemerisService._grid(entry), {
+      date: scene.date,
+      ...(scene.leadDays !== undefined ? { leadDays: scene.leadDays } : {}),
+      ...(scene.orbitPeriodDays?.[name] !== undefined
+        ? { orbitPeriodDays: scene.orbitPeriodDays[name] }
+        : {}),
+    });
+  }
+
+  /**
+   * Le plan de TOUS les corps, familles du ballant comprises.
+   *
+   * Un corps qui subit le ballant d'un compagnon (Pluton et ses quatre petites lunes) exige
+   * que ce compagnon soit tenu sur le MÊME intervalle d'index, sinon on soustrait deux
+   * instants différents (piège 7 du plan, trouvé par un test rouge en 17A). La fenêtre du
+   * compagnon est donc la RÉUNION de la sienne et de celles qui en dépendent.
+   */
+  private _planAll(
+    entries: readonly [string, HorizonsBodyManifest][],
+    scene: SceneWindowRequest | null,
+    bodyMu: Readonly<Record<string, BodyDynamics>>
+  ): Map<string, SampleWindow | 'full' | null> {
+    const plans = new Map<string, SampleWindow | 'full' | null>();
+    const byName = new Map(entries);
+    for (const [name, entry] of entries)
+      plans.set(name, this._planBody(name, entry, scene, bodyMu));
+
+    for (const [name, entry] of entries) {
+      const companionName = bodyMu[name]?.reflex?.companion;
+      if (companionName === undefined) continue;
+      const companion = byName.get(companionName);
+      // Grilles différentes : `_withoutReflex` refuse déjà de mélanger deux pas, et élargir
+      // la fenêtre du compagnon n'y changerait rien — ce serait payer des octets pour rien.
+      if (
+        !companion ||
+        companion.startJdTdb !== entry.startJdTdb ||
+        companion.stepDays !== entry.stepDays ||
+        companion.sampleCount !== entry.sampleCount
+      )
+        continue;
+      const plan = plans.get(name);
+      if (plan === null || plan === undefined) continue;
+      const companionPlan = plans.get(companionName) ?? null;
+      if (plan === 'full' || companionPlan === 'full') {
+        plans.set(companionName, 'full');
+        continue;
+      }
+      plans.set(
+        companionName,
+        companionPlan === null ? plan : mergeWindows(companionPlan, plan)
+      );
+    }
+    return plans;
   }
 
   /**
@@ -373,22 +624,33 @@ export class HorizonsEphemerisService implements PreciseEphemerisProvider {
     }
 
     const { entries, baseUrl } = pending.manifest;
-    // Ce qu'on redemande : ni ce qu'on a déjà, ni ce dont l'absence est DÉFINITIVE. Sans cette
-    // seconde condition, un 404 au milieu d'échecs de transport serait redemandé à chaque
-    // passage alors que le contrat dit qu'on ne le reprend jamais : le passage, lui, continue
-    // tant qu'un seul échec reprenable subsiste.
-    const wanted = entries.filter(
-      ([name]) =>
-        !this.bodies.has(name) && this._permanent.get(name) === undefined
-    );
+    const plans = this._planAll(entries, pending.scene, pending.bodyMu);
+    // Ce qu'on demande : ni ce qu'on tient déjà, ni ce dont l'absence est DÉFINITIVE. Sans
+    // cette seconde condition, un 404 au milieu d'échecs de transport serait redemandé à
+    // chaque passage alors que le contrat dit qu'on ne le reprend jamais : le passage, lui,
+    // continue tant qu'un seul échec reprenable subsiste.
+    //
+    // « Ce qu'on tient » est devenu une question de FENÊTRE au lot 17 : un corps déjà chargé
+    // peut avoir besoin d'octets qu'il n'a pas, et un corps hors couverture n'a besoin de
+    // rien du tout — il est alors inscrit sans la moindre requête.
+    const wanted = entries.filter(([name]) => {
+      if (this._permanent.has(name)) return false;
+      const plan = plans.get(name) ?? null;
+      if (plan === null) return !this.bodies.has(name);
+      return !this._holds(name, plan);
+    });
     const failures = await mapWithConcurrency(
       wanted,
       policy.concurrency,
       async ([name, body]): Promise<EphemerisLoadFailure | null> => {
+        const plan = plans.get(name) ?? null;
+        if (plan !== null) this._attempted.set(name, plan);
         try {
           this.bodies.set(
             name,
-            await fetchBody(name, body, baseUrl, pending.bodyMu)
+            await fetchBody(name, body, baseUrl, pending.bodyMu, plan, () => {
+              this._rangesRefused = true;
+            })
           );
           return null;
         } catch (error) {
@@ -403,6 +665,10 @@ export class HorizonsEphemerisService implements PreciseEphemerisProvider {
       }
     );
 
+    // Les séries sans ballant sont construites sur l'INTERSECTION de deux fenêtres : une
+    // fenêtre qui vient d'arriver les périme toutes (cf. `_withoutReflex`).
+    for (const body of this.bodies.values()) delete body.withoutReflex;
+
     const missing = entries
       .map(
         ([name]) =>
@@ -411,6 +677,7 @@ export class HorizonsEphemerisService implements PreciseEphemerisProvider {
           null
       )
       .filter((failure): failure is EphemerisLoadFailure => failure !== null);
+    const missingNames = new Set(missing.map((failure) => failure.body));
     if (missing.length > 0) {
       Logger.warn(
         `[HorizonsEphemerisService] ${missing.length}/${entries.length} ephemerides missing`,
@@ -424,7 +691,9 @@ export class HorizonsEphemerisService implements PreciseEphemerisProvider {
     this._publish({
       declared: entries.length,
       manifestFailed: false,
-      loaded: [...this.bodies.keys()],
+      // Un corps dont la fenêtre courante a échoué n'est pas « reçu », même s'il tient encore
+      // celle d'avant : c'est ce que le bandeau compte, et il compte ce qui répond ICI.
+      loaded: [...this.bodies.keys()].filter((name) => !missingNames.has(name)),
       missing,
       retryable: missing.some((failure) => failure.retryable),
     });
@@ -480,6 +749,13 @@ export class HorizonsEphemerisService implements PreciseEphemerisProvider {
    * Copie du corps dont les échantillons ont perdu le ballant du compagnon :
    * X_lisse = X − facteur × compagnon, état par état (positions ET vitesses). `null` si le
    * compagnon manque ou n'a pas exactement la même grille : on ne mélange pas deux pas.
+   *
+   * La soustraction se fait sur l'INTERSECTION des deux fenêtres tenues (lot 17). Sans cette
+   * précaution, deux fenêtres décalées d'un seul échantillon retireraient le ballant d'un
+   * autre instant, et Pluton comme ses quatre petites lunes se placeraient ailleurs sans la
+   * moindre erreur — c'est le piège 7 du plan, devenu rouge dans `ephemerisWindow.test.ts`
+   * avant d'être une contrainte de ce code. La planification demande donc au compagnon au
+   * moins la fenêtre du corps (cf. `_planAll`) ; ceci en est la dernière garde.
    */
   private _withoutReflex(body: LoadedBody): LoadedBody | null {
     if (body.withoutReflex !== undefined) return body.withoutReflex;
@@ -495,10 +771,29 @@ export class HorizonsEphemerisService implements PreciseEphemerisProvider {
       c.stepDays === m.stepDays &&
       c.sampleCount === m.sampleCount
     ) {
-      const samples = new Float64Array(body.samples.length);
-      for (let i = 0; i < samples.length; i++)
-        samples[i] = body.samples[i] - reflex.factor * companion.samples[i];
-      result = { manifest: m, samples, dynamics: body.dynamics };
+      const firstIndex = Math.max(
+        heldFirstIndex(body),
+        heldFirstIndex(companion)
+      );
+      const lastIndex = Math.min(
+        heldFirstIndex(body) + heldSampleCount(body) - 1,
+        heldFirstIndex(companion) + heldSampleCount(companion) - 1
+      );
+      // Un seul échantillon commun n'interpole rien : `_sampleGrid` a besoin de l'index ET
+      // du suivant.
+      if (lastIndex - firstIndex >= 1) {
+        const count = lastIndex - firstIndex + 1;
+        const samples = new Float64Array(count * COMPONENTS_PER_SAMPLE);
+        const bodyOffset =
+          (firstIndex - heldFirstIndex(body)) * COMPONENTS_PER_SAMPLE;
+        const companionOffset =
+          (firstIndex - heldFirstIndex(companion)) * COMPONENTS_PER_SAMPLE;
+        for (let i = 0; i < samples.length; i++)
+          samples[i] =
+            body.samples[bodyOffset + i] -
+            reflex.factor * companion.samples[companionOffset + i];
+        result = { manifest: m, samples, firstIndex, dynamics: body.dynamics };
+      }
     }
     body.withoutReflex = result;
     return result;
@@ -510,10 +805,18 @@ export class HorizonsEphemerisService implements PreciseEphemerisProvider {
     const index = Math.floor(samplePosition);
     if (index < 0 || index >= sampleCount - 1) return null;
 
+    // Le FICHIER couvre la date ; reste à savoir si les octets tenus la portent. Depuis le
+    // lot 17 le service n'en charge qu'une fenêtre, et l'index du fichier n'est pas l'index
+    // du tampon : les confondre lirait un autre instant, sans aucune erreur. Hors fenêtre on
+    // répond `null` comme hors couverture — c'est l'horloge (`OrbitalMechanics`) qui a la
+    // charge de ne pas y aller, et non ce lecteur de deviner.
+    const local = index - heldFirstIndex(body);
+    if (local < 0 || local + 1 >= heldSampleCount(body)) return null;
+
     const u = samplePosition - index;
     return (
-      this._keplerianBetweenSamples(body, index, u) ??
-      this._hermiteBetweenSamples(body, index, u)
+      this._keplerianBetweenSamples(body, local, u) ??
+      this._hermiteBetweenSamples(body, local, u)
     );
   }
 
@@ -537,6 +840,7 @@ export class HorizonsEphemerisService implements PreciseEphemerisProvider {
    */
   private _keplerianBetweenSamples(
     body: LoadedBody,
+    /** Index dans les échantillons TENUS, pas dans la grille du fichier (cf. `_sampleGrid`). */
     index: number,
     u: number
   ): THREE.Vector3 | null {
@@ -618,7 +922,7 @@ export class HorizonsEphemerisService implements PreciseEphemerisProvider {
         body.manifest.meanMotionScale ??
         medianMeanMotionScale(
           body.samples,
-          body.manifest.sampleCount,
+          heldSampleCount(body),
           dynamics.mu,
           dynamics.periodDays
         );
@@ -630,6 +934,7 @@ export class HorizonsEphemerisService implements PreciseEphemerisProvider {
   /** Interpolation cubique de Hermite sur l'etat (position + vitesse) — cas general. */
   private _hermiteBetweenSamples(
     body: LoadedBody,
+    /** Index dans les échantillons TENUS, pas dans la grille du fichier (cf. `_sampleGrid`). */
     index: number,
     u: number
   ): THREE.Vector3 {
@@ -678,13 +983,30 @@ async function fetchManifest(
   };
 }
 
-/** Demande un binaire, en vérifie l'origine et la taille exacte, et le prépare. */
+/**
+ * Demande un binaire — tout entier, une FENÊTRE, ou rien — en vérifie l'origine et la taille,
+ * et le prépare.
+ *
+ * `plan === null` n'est pas un échec : le fichier ne couvre pas la date affichée, il ne
+ * répondrait pas davantage en entier, et le corps est donc inscrit SANS la moindre requête.
+ * Onze corps sur 64 sont dans ce cas au 1969-07-20 (mesuré en écrivant le plan du lot 17).
+ */
 async function fetchBody(
   name: string,
   body: HorizonsBodyManifest,
   baseUrl: URL,
-  bodyMu: Readonly<Record<string, BodyDynamics>>
+  bodyMu: Readonly<Record<string, BodyDynamics>>,
+  plan: SampleWindow | 'full' | null,
+  onRangesRefused: () => void
 ): Promise<LoadedBody> {
+  const dynamics = bodyMu[name];
+  const base = {
+    manifest: body,
+    ...(dynamics ? { dynamics } : {}),
+  };
+  if (plan === null)
+    return { ...base, samples: new Float64Array(0), firstIndex: 0 };
+
   const binaryUrl = new URL(body.file, baseUrl);
   if (binaryUrl.origin !== baseUrl.origin) {
     throw new LoadFailure(
@@ -692,26 +1014,63 @@ async function fetchBody(
       false
     );
   }
-  const binaryResponse = await fetch(binaryUrl);
-  if (!binaryResponse.ok)
-    throw new LoadFailure(
-      `${name} HTTP ${binaryResponse.status}`,
-      isRetryableStatus(binaryResponse.status)
-    );
-  const buffer = await binaryResponse.arrayBuffer();
-  const expectedBytes =
-    body.sampleCount * COMPONENTS_PER_SAMPLE * Float64Array.BYTES_PER_ELEMENT;
-  // Des octets servis à la mauvaise taille sont un défaut de déploiement, pas de transport.
-  if (buffer.byteLength !== expectedBytes) {
-    throw new LoadFailure(
-      `${name}: ${buffer.byteLength} bytes, expected ${expectedBytes}`,
-      false
-    );
+  const grid = {
+    startJdTdb: body.startJdTdb,
+    stepDays: body.stepDays,
+    sampleCount: body.sampleCount,
+  };
+  const expectedBytes = fileByteLength(grid);
+
+  if (plan === 'full') {
+    const binaryResponse = await fetch(binaryUrl);
+    if (!binaryResponse.ok)
+      throw new LoadFailure(
+        `${name} HTTP ${binaryResponse.status}`,
+        isRetryableStatus(binaryResponse.status)
+      );
+    const buffer = await binaryResponse.arrayBuffer();
+    // Des octets servis à la mauvaise taille sont un défaut de déploiement, pas de transport.
+    if (buffer.byteLength !== expectedBytes) {
+      throw new LoadFailure(
+        `${name}: ${buffer.byteLength} bytes, expected ${expectedBytes}`,
+        false
+      );
+    }
+    return { ...base, samples: new Float64Array(buffer), firstIndex: 0 };
   }
-  const dynamics = bodyMu[name];
+
+  const rangeResponse = await fetch(binaryUrl, {
+    headers: { Range: rangeHeader(plan) },
+  });
+  if (!rangeResponse.ok)
+    throw new LoadFailure(
+      `${name} HTTP ${rangeResponse.status}`,
+      isRetryableStatus(rangeResponse.status)
+    );
+  const buffer = await rangeResponse.arrayBuffer();
+  const outcome = interpretRangeResponse(
+    rangeResponse.status,
+    rangeResponse.headers?.get('Content-Range') ?? null,
+    buffer.byteLength,
+    plan,
+    grid
+  );
+  if (outcome.kind === 'invalid') {
+    // L'hôte rend quelque chose qui ne décrit pas ce fichier : on renonce aux plages pour
+    // TOUT le monde, et le passage suivant redemande les fichiers entiers (décision D7).
+    // Reprenable, donc : c'est bien ce passage-là qui est perdu, pas le corps.
+    onRangesRefused();
+    throw new LoadFailure(`${name}: ${outcome.reason}`, true);
+  }
+  if (outcome.kind === 'full') {
+    // La plage a été ignorée et l'hôte a rendu tout le fichier : on le GARDE (on l'a payé),
+    // et on cesse de demander des plages.
+    onRangesRefused();
+    return { ...base, samples: new Float64Array(buffer), firstIndex: 0 };
+  }
   return {
-    manifest: body,
+    ...base,
     samples: new Float64Array(buffer),
-    ...(dynamics ? { dynamics } : {}),
+    firstIndex: plan.firstIndex,
   };
 }

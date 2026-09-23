@@ -92,6 +92,17 @@ export interface BodyWindowRequest {
    * tracée. Absente = la ligne n'est pas dessinée, et seule la position est lue.
    */
   readonly orbitPeriodDays?: number;
+  /**
+   * Jours de lecture pris d'AVANCE, SIGNÉS : positif quand l'horloge avance, négatif quand
+   * elle recule. C'est ce qui fait qu'une lecture accélérée ne bute pas sur le bord de sa
+   * fenêtre à chaque pas de la grille (cf. `readAheadDays`).
+   *
+   * Contrairement à la période d'orbite, l'avance est BORNÉE À LA COUVERTURE au lieu d'être
+   * tout ou rien : au bout du fichier, le corps cesse de répondre de toute façon, et refuser
+   * d'élargir la fenêtre pour cette raison la laisserait à deux échantillons juste là où
+   * l'horloge va le plus vite.
+   */
+  readonly leadDays?: number;
 }
 
 /** Taille totale du fichier décrit par cette grille. */
@@ -160,6 +171,33 @@ function windowFromIndices(
 }
 
 /**
+ * Index de l'échantillon encadrant, BORNÉ à la couverture au lieu d'être refusé hors d'elle.
+ * Réservé à l'avance de lecture : une avance qui dépasse le fichier doit s'arrêter à son
+ * dernier échantillon utile, pas annuler l'élargissement.
+ */
+function clampedCoveringIndex(grid: SampleGrid, date: Date): number | null {
+  const position = samplePositionForDate(grid, date);
+  if (!Number.isFinite(position)) return null;
+  return Math.min(grid.sampleCount - 2, Math.max(0, Math.floor(position)));
+}
+
+/**
+ * Avance de lecture, en jours, pour une vitesse de simulation donnée.
+ *
+ * `timeScale` est le nombre de secondes simulées par seconde réelle (`SimulationClock`), et il
+ * est SIGNÉ : la timebar est bidirectionnelle. On demande donc les octets que l'horloge aura
+ * atteints dans `seconds` secondes réelles, du bon côté de la date courante.
+ *
+ * Ordre de grandeur, mesuré le 2026-09-23 et écrit ici pour qu'il soit remesurable : à la
+ * vitesse maximale (`MAX_SIMULATION_SCALE = 31 557 600`, un an simulé par seconde réelle),
+ * suivre l'horloge sur les 64 corps coûte 2,34 Mbit/s, qu'un lien à 10 Mbit/s absorbe.
+ */
+export function readAheadDays(timeScale: number, seconds: number): number {
+  if (!Number.isFinite(timeScale) || !Number.isFinite(seconds)) return 0;
+  return (timeScale * seconds) / 86_400;
+}
+
+/**
  * La fenêtre qu'un corps demande, ou `null` s'il n'a RIEN à demander.
  *
  * `null` veut dire « aucune requête », et c'est un résultat normal, pas une erreur : hors
@@ -181,21 +219,33 @@ export function planBodyWindow(
   const index = coveringIndex(grid, request.date);
   if (index === null) return null;
 
+  let lowIndex = index;
+  let highIndex = index;
+
+  const lead = request.leadDays;
+  if (lead !== undefined && lead !== 0) {
+    const ahead = clampedCoveringIndex(
+      grid,
+      new Date(request.date.getTime() + lead * MS_PER_DAY)
+    );
+    if (ahead !== null) {
+      lowIndex = Math.min(lowIndex, ahead);
+      highIndex = Math.max(highIndex, ahead);
+    }
+  }
+
   const period = request.orbitPeriodDays;
   if (period !== undefined && period > 0) {
     const half = (period / 2) * MS_PER_DAY;
     const from = new Date(request.date.getTime() - half);
     const to = new Date(request.date.getTime() + half);
     if (covers(grid, from) && covers(grid, to)) {
-      return windowFromIndices(
-        grid,
-        coveringIndex(grid, from)!,
-        coveringIndex(grid, to)!,
-        marginSamples
-      );
+      lowIndex = Math.min(lowIndex, coveringIndex(grid, from)!);
+      highIndex = Math.max(highIndex, coveringIndex(grid, to)!);
     }
   }
-  return windowFromIndices(grid, index, index, marginSamples);
+
+  return windowFromIndices(grid, lowIndex, highIndex, marginSamples);
 }
 
 /** Une fenêtre contient-elle déjà tout ce qu'une autre demande ? */

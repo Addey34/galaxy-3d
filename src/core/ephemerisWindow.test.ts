@@ -317,6 +317,67 @@ describe('le plan d’un corps', () => {
   });
 });
 
+describe('l’avance de lecture élargit la fenêtre (lot 17C)', () => {
+  it('va chercher les octets DEVANT l’horloge, et derrière quand elle recule', () => {
+    const grid = gridOf('mercury');
+    const here = planBodyWindow(grid, { date: SCENE_DATE })!;
+    const ahead = planBodyWindow(grid, { date: SCENE_DATE, leadDays: 60 })!;
+    const behind = planBodyWindow(grid, { date: SCENE_DATE, leadDays: -60 })!;
+
+    expect(ahead.firstIndex).toBe(here.firstIndex);
+    expect(ahead.lastIndex).toBeGreaterThan(here.lastIndex);
+    expect(behind.lastIndex).toBe(here.lastIndex);
+    expect(behind.firstIndex).toBeLessThan(here.firstIndex);
+    // L'élargissement vaut l'avance divisée par le pas du fichier, lu au manifeste et non
+    // tapé ici : un pas qui changerait à la prochaine génération ne doit pas rendre cette
+    // garde fausse sans que personne ne le voie.
+    const steps = 60 / grid.stepDays;
+    expect(ahead.lastIndex - here.lastIndex).toBeGreaterThanOrEqual(
+      Math.floor(steps) - 1
+    );
+    expect(ahead.lastIndex - here.lastIndex).toBeLessThanOrEqual(
+      Math.ceil(steps) + 1
+    );
+  });
+
+  it('s’arrête au bout du fichier au lieu de refuser d’élargir', () => {
+    // Contrairement à la période d'orbite, qui est tout ou rien : au bout de la couverture le
+    // corps cesse de répondre de toute façon, et garder deux échantillons juste là où
+    // l'horloge va le plus vite serait le pire endroit pour le faire.
+    const grid = gridOf('mercury');
+    const huge = planBodyWindow(grid, { date: SCENE_DATE, leadDays: 400_000 })!;
+    expect(huge.lastIndex).toBe(grid.sampleCount - 1);
+    expect(huge.byteEnd).toBe(fileByteLength(grid) - 1);
+  });
+
+  it('ne ressuscite PAS un corps que la date ne concerne pas', () => {
+    // Une avance de dix ans traverse la couverture de Cassini, close en 2017. Le corps n'a
+    // pourtant rien à demander : c'est la DATE AFFICHÉE qui décide, pas l'avance.
+    expect(
+      planBodyWindow(gridOf('cassini'), {
+        date: SCENE_DATE,
+        leadDays: -3650,
+      })
+    ).toBeNull();
+  });
+
+  it('se combine avec la période d’orbite au lieu de la remplacer', () => {
+    const grid = gridOf('earth');
+    const period = periodOf('earth')!;
+    const line = planBodyWindow(grid, {
+      date: SCENE_DATE,
+      orbitPeriodDays: period,
+    })!;
+    const both = planBodyWindow(grid, {
+      date: SCENE_DATE,
+      orbitPeriodDays: period,
+      leadDays: 4_000,
+    })!;
+    expect(both.firstIndex).toBe(line.firstIndex);
+    expect(both.lastIndex).toBeGreaterThan(line.lastIndex);
+  });
+});
+
 describe('une fenêtre place le corps EXACTEMENT comme le fichier entier', () => {
   // C'est la garde centrale de la phase : si elle tombe, le lot déplace des corps.
   const full = horizonsServiceFromDisk();
