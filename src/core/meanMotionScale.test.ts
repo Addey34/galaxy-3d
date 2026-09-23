@@ -114,8 +114,8 @@ describe('facteur d’échelle du temps de propagation, publié au manifeste', (
   });
 
   it('rend la fenêtre et le fichier entier IDENTIQUES sur ces sept corps', () => {
-    // La raison d'être de la phase : avant la publication du facteur, Encelade sortait à
-    // 27 mètres de sa vraie position dès que le service ne tenait qu'une fenêtre.
+    // La raison d'être de la phase : avant la publication du facteur, une fenêtre plaçait
+    // Encelade à 28,2 m et Mimas à 202,4 m de leur vraie position, sans aucune erreur.
     const full = horizonsServiceFromDisk();
     for (const name of MEAN_MOTION_PROPAGATION) {
       const entry = entryOf(name);

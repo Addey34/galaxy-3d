@@ -613,7 +613,7 @@ export class HorizonsEphemerisService implements PreciseEphemerisProvider {
       // juste quand le service ne tient qu'une fenêtre (lot 17, décision D5). Le calcul local
       // ne subsiste que pour un manifeste antérieur, et il n'est exact que sur un fichier
       // complet — sur une fenêtre il donnerait un autre facteur, donc une autre position
-      // (mesuré sur Encelade : 27 m).
+      // (mesuré : 28,2 m sur Encelade, jusqu'à 202,4 m sur Mimas).
       scale =
         body.manifest.meanMotionScale ??
         medianMeanMotionScale(

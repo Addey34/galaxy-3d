@@ -3,17 +3,18 @@
  * fenêtre.
  *
  * Autour d'une planète aplatie (J2), l'état osculateur surestime le demi-grand axe, donc la
- * période : la conique propagée parcourt la bonne ellipse au mauvais rythme (Mimas : 5 355 ppm,
- * environ 4 degrés de phase au milieu d'un intervalle de 4 jours). On la fait avancer au rythme
+ * période : la conique propagée parcourt la bonne ellipse au mauvais rythme. Mesuré sur les
+ * binaires livrés le 2026-09-23 : Amalthée 6 922 ppm, Mimas 5 197, Encelade 3 146. (Le commentaire
+ * d'origine du service citait 5 355 ppm pour Mimas ; son fichier a été régénéré depuis, au lot 12.) On la fait avancer au rythme
  * moyen sans toucher à sa géométrie, par un facteur CONSTANT : la MÉDIANE, sur tout le fichier,
  * du rapport période osculatrice sur période sidérale du catalogue. Le rapport état par état
  * corrige aussi le bruit à courte période et dégradait tout le monde, d'où la médiane.
  *
  * Ce module n'existe que parce que ce facteur est une propriété du FICHIER ENTIER : il
  * échantillonne de l'index 0 à l'index `count - 1`. Un service qui ne tient qu'une fenêtre en
- * calculerait un autre, et placerait donc le corps ailleurs — mesuré sur Encelade au 2026-09-23,
- * en construisant le même service sur sa fenêtre et sur son fichier : **27 mètres d'écart**,
- * silencieux. C'est la décision D5 du plan `docs/private/EPHEMERIDES_LOT17.md` : le facteur est
+ * calculerait un autre, et placerait donc le corps ailleurs — mesuré le 2026-09-23 en construisant
+ * le même service sur la fenêtre et sur le fichier : **28,2 m sur Encelade, jusqu'à 202,4 m sur
+ * Mimas**, sans la moindre erreur. C'est la décision D5 du plan `docs/private/EPHEMERIDES_LOT17.md` : le facteur est
  * calculé une fois hors ligne et PUBLIÉ au manifeste, pour que le lecteur n'ait plus besoin du
  * fichier entier.
  *
