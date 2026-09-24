@@ -94,6 +94,10 @@ async function visit(
       now: () => (clock += 10),
     }
   );
+  // Les écritures du magasin sont volontairement HORS du chemin de chargement (cf.
+  // `_store`) : une garde qui enchaînerait deux visites sans les attendre mesurerait une
+  // course, pas le magasin.
+  await service.whenStored();
   return { log, service };
 }
 
@@ -126,6 +130,37 @@ describe('la visite de retour', () => {
       expect(after).not.toBeNull();
       expect(after!.distanceTo(before!)).toBe(0);
     }
+  });
+
+  it('ne fait JAMAIS attendre le chargement sur une écriture du magasin', async () => {
+    // Défaut trouvé par la CI, DEUX fois, et invisible sur cette machine : l'écriture était
+    // attendue entre deux téléchargements. Or `OrbitalMechanics._requestWindows` ne garde
+    // qu'UNE demande en vol, donc un passage prolongé retarde la fenêtre suivante et
+    // l'horloge cale pendant une lecture accélérée. Rien ne dépend de la fin d'une écriture :
+    // les octets sont déjà en mémoire.
+    //
+    // Une écriture qui ne finit JAMAIS est la formulation exacte de cette règle.
+    const store = new EphemerisStore({
+      ...fakeCache(),
+      put: () => new Promise<void>(() => {}),
+    });
+    const log: Served[] = [];
+    stubBrowser(serveRealEphemerides(log));
+
+    const issue = HorizonsEphemerisService.load(
+      MANIFEST_URL,
+      bodyDynamics(CELESTIAL_CONFIG),
+      { scene: sceneRequest(SCENE_DATE), retryDelaysMs: [], store }
+    ).then(() => 'chargé' as const);
+    const verdict = await Promise.race([
+      issue,
+      new Promise<'figé'>((resolve) =>
+        setTimeout(() => resolve('figé'), 3_000)
+      ),
+    ]);
+
+    expect(verdict).toBe('chargé');
+    expect(log.length).toBeGreaterThan(50);
   });
 
   it('redemande ce que le magasin ne contient pas, et lui seul', async () => {

@@ -29,6 +29,7 @@ import {
 import {
   EphemerisStore,
   spanSatisfies,
+  type HeldSpan,
   type StoreInventory,
 } from './ephemerisStore';
 import { TransferRateMeter } from './transferRate';
@@ -455,6 +456,12 @@ export class HorizonsEphemerisService implements PreciseEphemerisProvider {
   private _loading: Promise<void> | null = null;
 
   /**
+   * Les écritures du magasin encore en vol. Elles ne sont attendues QUE par ce qui a besoin
+   * d'un état exact (`offlineState`, et les gardes), jamais par le chargement.
+   */
+  private _storing: Promise<unknown> = Promise.resolve();
+
+  /**
    * Ce que le magasin de l'appareil tenait au dernier passage. Mémorisé parce que `budgetGrids`
    * est SYNCHRONE (l'horloge l'interroge à chaque image) alors que lire un cache ne l'est pas.
    * Périmé d'au plus un passage, ce qui est sans conséquence : un fichier rangé entre deux
@@ -575,6 +582,43 @@ export class HorizonsEphemerisService implements PreciseEphemerisProvider {
     return grids;
   }
 
+  /**
+   * RANGE une tranche SANS jamais faire attendre le chargement.
+   *
+   * Défaut TROUVÉ PAR LA CI, deux fois de suite, et invisible sur cette machine : l'écriture
+   * était `await`ée entre deux téléchargements. Or `OrbitalMechanics._requestWindows` ne garde
+   * QU'UNE demande en vol, donc une écriture qui prolonge le passage retarde la demande
+   * suivante. Pendant un rembobinage au curseur maximal, l'horloge calait à chaque pas de
+   * fenêtre et `smoke.spec` « rembobine la date » échouait : la date ne reculait pas d'un seul
+   * jour en dix secondes, trois essais de suite.
+   *
+   * Rien ne dépend de la fin d'une écriture : les octets sont DÉJÀ en mémoire, le magasin ne
+   * sert qu'à la visite suivante. Les écritures sont donc enchaînées entre elles (une à la
+   * fois, pour ne pas noyer le disque) et poussées hors du chemin de chargement.
+   *
+   * `whenStored()` les attend, pour qui a besoin d'un état exact.
+   */
+  private _store(
+    store: EphemerisStore,
+    file: string,
+    span: HeldSpan,
+    bytes: ArrayBuffer,
+    held: HeldSpan | null
+  ): void {
+    this._storing = this._storing.then(() =>
+      store.write(file, span, bytes, held).catch(() => false)
+    );
+  }
+
+  /**
+   * Résout quand toutes les écritures en vol sont rangées. Attendue par `offlineState` (un
+   * état qui ignorerait une écriture en cours serait faux) et par les gardes, jamais par le
+   * chargement.
+   */
+  async whenStored(): Promise<void> {
+    await this._storing;
+  }
+
   /** L'appareil tient-il ce fichier ENTIER ? Lu dans l'inventaire du dernier passage. */
   private _holdsWholeFile(manifest: HorizonsBodyManifest): boolean {
     const span = this._inventory?.spans.get(manifest.file);
@@ -595,6 +639,7 @@ export class HorizonsEphemerisService implements PreciseEphemerisProvider {
    * qui a oublié ses fichiers.
    */
   async offlineState(): Promise<OfflineState> {
+    await this.whenStored();
     const pending = this._pending;
     const entries = pending?.manifest?.entries ?? [];
     const declaredBytes = entries.reduce(
@@ -927,10 +972,24 @@ export class HorizonsEphemerisService implements PreciseEphemerisProvider {
 
     if (!pending.manifest) {
       try {
-        pending.manifest = await fetchManifest(
-          pending.manifestUrl,
-          pending.store
-        );
+        const fetched = await fetchManifest(pending.manifestUrl, pending.store);
+        pending.manifest = fetched;
+        // Entretien du magasin, HORS du chemin de chargement : ranger la copie hors ligne du
+        // manifeste, puis retirer ce qu'il ne nomme plus (les binaires portent le hachage de
+        // leur contenu, donc une régénération laisse des entrées jamais relues).
+        const store = pending.store;
+        if (store && fetched.housekeeping && isManifest(fetched.raw)) {
+          const keep = new Set(
+            Object.values(fetched.raw.bodies).map((body) => body.file)
+          );
+          const raw = fetched.raw;
+          this._storing = this._storing.then(() =>
+            store
+              .writeManifest(raw)
+              .then(() => store.prune(keep))
+              .catch(() => 0)
+          );
+        }
       } catch (error) {
         Logger.warn(
           '[HorizonsEphemerisService] manifest unavailable; every body falls back',
@@ -1013,8 +1072,11 @@ export class HorizonsEphemerisService implements PreciseEphemerisProvider {
           );
           this.bodies.set(name, fetched.body);
           this._rate.end(policy.now(), fetched.body.samples.byteLength);
+          // RANGER N'EST PAS CHARGER : l'écriture part en tâche de fond et n'est JAMAIS
+          // attendue ici. Cf. `_store` pour ce que cet `await` a coûté.
           if (pending.store)
-            await pending.store.write(
+            this._store(
+              pending.store,
               body.file,
               {
                 firstIndex: fetched.stored.firstIndex,
@@ -1357,6 +1419,8 @@ async function fetchManifest(
   entries: [string, HorizonsBodyManifest][];
   baseUrl: URL;
   raw: unknown;
+  /** Le manifeste vient du RÉSEAU : il y a une copie à ranger et des orphelins à purger. */
+  housekeeping: boolean;
 }> {
   const manifestAbsoluteUrl = new URL(manifestUrl, window.location.href);
   if (manifestAbsoluteUrl.origin !== window.location.origin) {
@@ -1384,19 +1448,14 @@ async function fetchManifest(
   // Un manifeste illisible ne se répare pas en le redemandant.
   if (!isManifest(raw)) throw new LoadFailure('invalid manifest schema', false);
 
-  if (fromNetwork && store) {
-    await store.writeManifest(raw);
-    // Le manifeste qui vient d'arriver est la seule vérité sur ce qui existe : ce que le
-    // magasin tient d'autre ne sera plus jamais relu et occuperait la place jusqu'au quota.
-    await store.prune(
-      new Set(Object.values(raw.bodies).map((body) => body.file))
-    );
-  }
-
   return {
     entries: Object.entries(raw.bodies),
     baseUrl: new URL('.', manifestAbsoluteUrl),
     raw,
+    // Le rangement du manifeste et la purge sont de l'ENTRETIEN, pas du chargement : ils
+    // partent en tâche de fond (cf. `_store`). Les attendre ici figeait le démarrage sur une
+    // écriture de cache, ce qu'une garde a fini par dire tout haut.
+    housekeeping: fromNetwork,
   };
 }
 

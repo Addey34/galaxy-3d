@@ -765,6 +765,20 @@ s'arrêtait entre les deux. Un arrêt entre les deux laisse donc deux entrées p
 l'inventaire choisit alors la plus large, qui répond à tout ce que l'autre répondait, et la purge
 du démarrage suivant retire la perdante au lieu de la laisser occuper la place jusqu'au quota.
 
+**RANGER N'EST PAS CHARGER : aucune écriture du magasin ne se trouve dans le chemin de
+chargement.** Les écritures partent en tâche de fond, enchaînées une à la fois, et le rangement
+de la copie du manifeste comme la purge des orphelins avec elles. La raison est mesurée et elle
+a coûté deux passages de CI : `OrbitalMechanics._requestWindows` ne garde QU'UNE demande de
+fenêtre en vol, donc une écriture attendue entre deux téléchargements retarde la demande
+suivante, et pendant une lecture accélérée l'horloge cale à chaque pas. Rien ne dépend de la fin
+d'une écriture, les octets étant déjà en mémoire.
+
+**Ce que cela implique, et qui doit être dit** : le magasin finit de se remplir PEU APRÈS que la
+page soit utilisable. Un visiteur qui ferme l'onglet une seconde après le chargement peut n'avoir
+rangé qu'une partie de ses fenêtres ; la visite suivante redemande simplement ce qui manque.
+Mesuré : avec huit secondes de présence, les visites de retour ne demandent plus AUCUN binaire ;
+avec six, un dernier fichier n'était pas encore rangé.
+
 **Toute lecture est CONFRONTÉE à la tranche que sa clé annonce**, comme le chemin HTTP confronte
 son `Content-Range` : une entrée tronquée (quota atteint pendant l'écriture) serait sinon lue
 comme si elle commençait au bon échantillon, et placerait le corps à une autre date sans que rien
