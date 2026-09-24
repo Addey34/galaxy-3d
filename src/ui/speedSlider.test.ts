@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import {
   applyCeiling,
+  formatQuantity,
+  speedLabel,
   MAX_SIMULATION_SCALE,
   scaleFromSlider,
   sliderFromMagnitude,
@@ -116,5 +118,36 @@ describe('applyCeiling', () => {
     expect(applyCeiling(SPEED_SLIDER_MAX, 0).limited).toBe(false);
     expect(applyCeiling(SPEED_SLIDER_MAX, -5).limited).toBe(false);
     expect(applyCeiling(SPEED_SLIDER_MAX, Number.NaN).limited).toBe(false);
+  });
+});
+
+/**
+ * LE LIBELLÉ EST DU TEXTE PUBLIÉ, DONC IL SE RELIT DANS LES DEUX LANGUES.
+ *
+ * Défaut trouvé le 2026-09-24 en relisant le rendu français à 1280 et 390 px : `toFixed` écrit
+ * un POINT, donc l'interface française annonçait « 5.5 mois/s ». Antérieur à la phase 17D, mais
+ * le plafond de vitesse rend une valeur décimale systématique, donc il se voyait désormais à
+ * chaque lien lent.
+ */
+describe('le libellé de vitesse', () => {
+  it('écrit la décimale avec la virgule en français, le point en anglais', () => {
+    expect(formatQuantity(5.5, 'fr')).toBe('5,5');
+    expect(speedLabel(2_592_000 * 5.5, 'fr')).toContain('5,5 mois/s');
+    expect(formatQuantity(5.5, 'en')).toBe('5.5');
+    expect(speedLabel(2_592_000 * 5.5, 'en')).toContain('5.5 mo/s');
+  });
+
+  it("n'écrit aucune décimale au-dessus de dix, dans les deux langues", () => {
+    for (const locale of ['fr', 'en'] as const) {
+      expect(formatQuantity(42.4, locale)).toBe('42');
+      expect(formatQuantity(1234, locale)).toBe('1230');
+      expect(formatQuantity(3, locale)).toBe('3');
+    }
+  });
+
+  it('dit le temps réel et le sens du temps', () => {
+    expect(speedLabel(1, 'fr')).toContain('1:1');
+    expect(speedLabel(-86_400, 'fr')).toContain('(passé)');
+    expect(speedLabel(-86_400, 'en')).toContain('(past)');
   });
 });

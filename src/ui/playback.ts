@@ -14,17 +14,8 @@
  */
 import type { AnimationSystem } from '@/components/systems/AnimationSystem';
 import type { OrbitalMechanics } from '@/core/OrbitalMechanics';
-import { getLocale, onLocaleChange, t } from '@/i18n';
-import { applyCeiling, SPEED_SLIDER_CENTER } from './speedSlider';
-
-const SPEED_UNITS = [
-  { scale: 31_557_600, fr: 'an', en: 'y' },
-  { scale: 2_592_000, fr: 'mois', en: 'mo' },
-  { scale: 604_800, fr: 'sem', en: 'wk' },
-  { scale: 86_400, fr: 'j', en: 'd' },
-  { scale: 3_600, fr: 'h', en: 'h' },
-  { scale: 60, fr: 'min', en: 'min' },
-] as const;
+import { onLocaleChange, t } from '@/i18n';
+import { applyCeiling, speedLabel, SPEED_SLIDER_CENTER } from './speedSlider';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
 
@@ -78,31 +69,6 @@ export type PlaybackCeiling = () => number | null;
 const playPauseBtn = document.getElementById('play-pause-btn')!;
 const speedRange = document.getElementById('speed-range') as HTMLInputElement;
 const speedValue = document.getElementById('speed-value')!;
-function formatQuantity(value: number): string {
-  if (value < 10) return value.toFixed(1).replace(/\.0$/, '');
-  if (value < 100) return String(Math.round(value));
-  return String(Math.round(value / 10) * 10);
-}
-
-function speedLabel(scale: number): string {
-  if (scale === 1)
-    return getLocale() === 'fr'
-      ? '1:1 · Échelle réelle Terre'
-      : '1:1 · Earth real time';
-
-  // Vitesse signée : magnitude commune, préfixe directionnel pour le passé (temps qui recule).
-  const magnitude = Math.abs(scale);
-  const reversed = scale < 0;
-  const unit = SPEED_UNITS.find((candidate) => magnitude >= candidate.scale);
-  const body = unit
-    ? `${formatQuantity(magnitude / unit.scale)} ${
-        getLocale() === 'fr' ? unit.fr : unit.en
-      }/s`
-    : `× ${formatQuantity(magnitude)}`;
-  if (!reversed) return body;
-  // Préfixe « ◀ » + mention passé : on remonte le temps.
-  return getLocale() === 'fr' ? `◀ ${body} (passé)` : `◀ ${body} (past)`;
-}
 
 /**
  * Applique une position de curseur, PLAFONNÉE à ce que la connexion soutient.

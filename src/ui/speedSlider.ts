@@ -11,6 +11,8 @@
  * demi-course est exponentielle, de ±1 au centre à ±`MAX_SIMULATION_SCALE` au bord.
  */
 
+import { getLocale, type Locale } from '@/i18n';
+
 /** Un an simulé par seconde réelle. C'est la course maximale du curseur, pas une limite physique. */
 export const MAX_SIMULATION_SCALE = 31_557_600;
 
@@ -94,4 +96,52 @@ export function applyCeiling(
     sliderValue: SPEED_SLIDER_CENTER + sign * sliderFromMagnitude(magnitude),
     limited: true,
   };
+}
+
+const SPEED_UNITS = [
+  { scale: 31_557_600, fr: 'an', en: 'y' },
+  { scale: 2_592_000, fr: 'mois', en: 'mo' },
+  { scale: 604_800, fr: 'sem', en: 'wk' },
+  { scale: 86_400, fr: 'j', en: 'd' },
+  { scale: 3_600, fr: 'h', en: 'h' },
+  { scale: 60, fr: 'min', en: 'min' },
+] as const;
+
+/**
+ * Quantité affichée sur le curseur, AVEC LE SÉPARATEUR DÉCIMAL DE LA LANGUE.
+ *
+ * Défaut trouvé le 2026-09-24 en relisant le rendu français, comme la règle du texte publié
+ * l'exige : `toFixed` écrit un POINT, donc l'interface française annonçait « 5.5 mois/s ». Il est
+ * antérieur à la phase 17D, mais le plafond de vitesse rend une valeur décimale systématique
+ * (une vitesse soutenable n'a aucune raison de tomber sur un compte rond), donc il se voyait
+ * désormais à chaque lien lent.
+ */
+export function formatQuantity(value: number, locale: Locale): string {
+  if (value >= 100) return String(Math.round(value / 10) * 10);
+  if (value >= 10) return String(Math.round(value));
+  const one = value.toFixed(1).replace(/\.0$/, '');
+  return locale === 'fr' ? one.replace('.', ',') : one;
+}
+
+export function speedLabel(
+  scale: number,
+  locale: Locale = getLocale()
+): string {
+  if (scale === 1)
+    return locale === 'fr'
+      ? '1:1 · Échelle réelle Terre'
+      : '1:1 · Earth real time';
+
+  // Vitesse signée : magnitude commune, préfixe directionnel pour le passé (temps qui recule).
+  const magnitude = Math.abs(scale);
+  const reversed = scale < 0;
+  const unit = SPEED_UNITS.find((candidate) => magnitude >= candidate.scale);
+  const body = unit
+    ? `${formatQuantity(magnitude / unit.scale, locale)} ${
+        locale === 'fr' ? unit.fr : unit.en
+      }/s`
+    : `× ${formatQuantity(magnitude, locale)}`;
+  if (!reversed) return body;
+  // Préfixe « ◀ » + mention passé : on remonte le temps.
+  return locale === 'fr' ? `◀ ${body} (passé)` : `◀ ${body} (past)`;
 }
