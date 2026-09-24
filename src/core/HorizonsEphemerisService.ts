@@ -26,6 +26,11 @@ import {
   type SampleGrid,
   type SampleWindow,
 } from './ephemerisWindow';
+import {
+  EphemerisStore,
+  spanSatisfies,
+  type StoreInventory,
+} from './ephemerisStore';
 import { TransferRateMeter } from './transferRate';
 import Logger from '@/utils/Logger';
 
@@ -126,6 +131,39 @@ export interface SceneWindowRequest {
   readonly orbitPeriodDays?: Readonly<Record<string, number>>;
 }
 
+/**
+ * CE QUE CET APPAREIL TIENT, pour que l'interface le DISE au lieu de le supposer.
+ *
+ * Tous les nombres sont LUS : `completeFiles` vient des clés réellement présentes dans le
+ * magasin, pas d'un « préparation réussie » mémorisé qui survivrait à une purge de quota.
+ */
+export interface OfflineState {
+  /** Ce navigateur a un magasin (cf. `EphemerisStore.open`). */
+  readonly available: boolean;
+  /** Fichiers que le manifeste déclare. 0 tant qu'il n'est pas arrivé. */
+  readonly declaredFiles: number;
+  /** Ce que ces fichiers pèsent en tout, octets bruts. */
+  readonly declaredBytes: number;
+  /** Fichiers tenus ENTIERS. C'est le seul état qui permet n'importe quelle date hors ligne. */
+  readonly completeFiles: number;
+  /** Octets rangés, fenêtres partielles comprises. */
+  readonly storedBytes: number;
+  /**
+   * Ce qu'une préparation téléchargerait MAINTENANT : les fichiers pas encore tenus entiers.
+   * Distinct de `declaredBytes`, et c'est ce que l'interface annonce — promettre 38,4 Mo à
+   * quelqu'un qui en tient déjà la moitié serait faux dans le sens qui décourage.
+   */
+  readonly remainingBytes: number;
+}
+
+/** Réglages d'une préparation hors ligne. */
+export interface PrepareOfflineOptions {
+  /** Appelé après chaque fichier, pour que l'écran avance au rythme du téléchargement. */
+  onProgress?: (progress: { done: number; total: number }) => void;
+  /** Annulation par l'utilisateur : 38 Mo, c'est long, et il doit pouvoir s'arrêter. */
+  signal?: AbortSignal;
+}
+
 /** Réglages du chargement. Les tests les resserrent ; la production garde les défauts. */
 export interface EphemerisLoadOptions {
   /** Ce que la scène demande. Absent = les fichiers entiers, comme avant le lot 17. */
@@ -141,6 +179,11 @@ export interface EphemerisLoadOptions {
    * pour qu'un test mesure un débit exact au lieu de dépendre de la machine.
    */
   now?: () => number;
+  /**
+   * Le magasin de cet appareil (lot 17E). `undefined` : on l'ouvre si le navigateur en a un.
+   * `null` : on n'en veut pas, ce que demandent les tests qui mesurent le RÉSEAU.
+   */
+  store?: EphemerisStore | null;
 }
 
 /**
@@ -250,6 +293,51 @@ interface LoadedBody {
   withoutReflex?: LoadedBody | null;
 }
 
+/** Ce qu'un corps chargé tient du manifeste et du catalogue, avant ses octets. */
+function bodyBase(
+  manifest: HorizonsBodyManifest,
+  dynamics: BodyDynamics | undefined
+): Pick<LoadedBody, 'manifest' | 'dynamics'> {
+  return { manifest, ...(dynamics ? { dynamics } : {}) };
+}
+
+/**
+ * Les octets que le magasin de l'appareil tient pour ce plan, ou `null`.
+ *
+ * L'inventaire est celui du passage courant, lu une seule fois : interroger le cache corps par
+ * corps relirait 62 fois la même liste de clés.
+ */
+async function readHeld(
+  store: EphemerisStore | null,
+  inventory: StoreInventory | null,
+  manifest: HorizonsBodyManifest,
+  plan: SampleWindow | 'full'
+): Promise<{ bytes: ArrayBuffer; firstIndex: number } | null> {
+  if (!store || !inventory) return null;
+  const span = inventory.spans.get(manifest.file);
+  if (!span || !spanSatisfies(span, plan, manifest.sampleCount)) return null;
+  return store.readSpan(manifest.file, span);
+}
+
+/**
+ * Le résultat d'un `fetchBody` : le corps, et les octets bruts à ranger dans le magasin.
+ *
+ * Cette distinction n'est pas décorative : des octets relus du magasin ne mesurent RIEN du
+ * lien, et les faire passer par le même chemin que le réseau ferait voir au compteur de débit
+ * plusieurs gigabits par seconde, donc AUCUN plafond de vitesse à afficher (lot 17D) — puis la
+ * date se remettrait à attendre en silence dès la première fenêtre réellement manquante.
+ * Défaut vu en écrivant cette phase, pas en la relisant : c'est pourquoi la lecture du magasin
+ * se fait avant `TransferRateMeter.begin`, et non à l'intérieur de `fetchBody`.
+ */
+interface FetchedBody {
+  readonly body: LoadedBody;
+  readonly stored: {
+    readonly firstIndex: number;
+    readonly lastIndex: number;
+    readonly bytes: ArrayBuffer;
+  };
+}
+
 /** Premier échantillon tenu, dans la grille du FICHIER. */
 function heldFirstIndex(body: LoadedBody): number {
   return body.firstIndex ?? 0;
@@ -331,7 +419,11 @@ export class HorizonsEphemerisService implements PreciseEphemerisProvider {
     manifest: {
       entries: [string, HorizonsBodyManifest][];
       baseUrl: URL;
+      /** Le manifeste TEL QUEL, pour que le magasin en range une copie hors ligne. */
+      raw: unknown;
     } | null;
+    /** Le magasin de cet appareil, ou `null` quand il n'y en a pas (cf. `EphemerisStore`). */
+    store: EphemerisStore | null;
   } | null = null;
 
   private _report: EphemerisLoadReport;
@@ -361,6 +453,14 @@ export class HorizonsEphemerisService implements PreciseEphemerisProvider {
 
   /** Un seul chargement à la fois : un double clic sur « reprendre » ne doit pas doubler. */
   private _loading: Promise<void> | null = null;
+
+  /**
+   * Ce que le magasin de l'appareil tenait au dernier passage. Mémorisé parce que `budgetGrids`
+   * est SYNCHRONE (l'horloge l'interroge à chaque image) alors que lire un cache ne l'est pas.
+   * Périmé d'au plus un passage, ce qui est sans conséquence : un fichier rangé entre deux
+   * passages fait seulement garder un plafond de vitesse une image de trop.
+   */
+  private _inventory: StoreInventory | null = null;
 
   private constructor(
     private readonly bodies: Map<string, LoadedBody>,
@@ -410,12 +510,17 @@ export class HorizonsEphemerisService implements PreciseEphemerisProvider {
       missing: [],
       retryable: true,
     });
+    // `undefined` veut dire « ouvre-le si ce navigateur en a un » ; `null`, « n'en ouvre pas »,
+    // ce que demandent les tests et les mesures qui comptent le RÉSEAU.
+    const store =
+      options.store === undefined ? await EphemerisStore.open() : options.store;
     service._pending = {
       manifestUrl,
       bodyMu,
       policy,
       scene: options.scene ?? null,
       manifest: null,
+      store,
     };
     await service._load();
     return service;
@@ -459,11 +564,155 @@ export class HorizonsEphemerisService implements PreciseEphemerisProvider {
         stepDays: manifest.stepDays,
         sampleCount: manifest.sampleCount,
       };
+      // Un corps dont l'appareil tient le fichier ENTIER (lot 17E, « préparer le hors-ligne »)
+      // ne demandera plus un octet, quelle que soit la date : le compter dans le budget
+      // plafonnerait la lecture au nom d'un trafic qui n'aura pas lieu.
+      if (this._holdsWholeFile(manifest)) return;
       if (covers(grid, date)) grids.push(grid);
     };
     if (manifests) for (const [, manifest] of manifests) push(manifest);
     else for (const body of this.bodies.values()) push(body.manifest);
     return grids;
+  }
+
+  /** L'appareil tient-il ce fichier ENTIER ? Lu dans l'inventaire du dernier passage. */
+  private _holdsWholeFile(manifest: HorizonsBodyManifest): boolean {
+    const span = this._inventory?.spans.get(manifest.file);
+    return (
+      span !== undefined &&
+      span.firstIndex === 0 &&
+      span.lastIndex === manifest.sampleCount - 1
+    );
+  }
+
+  /**
+   * CE QUE CET APPAREIL TIENT VRAIMENT, relu du magasin — jamais un drapeau qu'on aurait
+   * posé après un téléchargement.
+   *
+   * C'est la règle que le projet applique déjà à la disponibilité des sondes depuis le lot 7e :
+   * un état MESURÉ, ou rien. Un « c'est prêt » mémorisé survivrait à un cache vidé par le
+   * navigateur sous la pression du quota, et l'utilisateur emporterait en classe un appareil
+   * qui a oublié ses fichiers.
+   */
+  async offlineState(): Promise<OfflineState> {
+    const pending = this._pending;
+    const entries = pending?.manifest?.entries ?? [];
+    const declaredBytes = entries.reduce(
+      (total, [, manifest]) =>
+        total + fileByteLength(HorizonsEphemerisService._grid(manifest)),
+      0
+    );
+    if (!pending?.store)
+      return {
+        available: false,
+        declaredFiles: entries.length,
+        declaredBytes,
+        completeFiles: 0,
+        storedBytes: 0,
+        remainingBytes: declaredBytes,
+      };
+    const inventory = await pending.store.inventory();
+    this._inventory = inventory;
+    let completeFiles = 0;
+    let remainingBytes = 0;
+    for (const [, manifest] of entries) {
+      const span = inventory.spans.get(manifest.file);
+      if (
+        span &&
+        span.firstIndex === 0 &&
+        span.lastIndex === manifest.sampleCount - 1
+      )
+        completeFiles++;
+      else
+        remainingBytes += fileByteLength(
+          HorizonsEphemerisService._grid(manifest)
+        );
+    }
+    return {
+      available: true,
+      declaredFiles: entries.length,
+      declaredBytes,
+      completeFiles,
+      storedBytes: inventory.bytes,
+      remainingBytes,
+    };
+  }
+
+  /**
+   * Télécharge les fichiers ENTIERS que cet appareil n'a pas encore, pour qu'il sache placer
+   * les corps sans réseau, à n'importe quelle date de la couverture.
+   *
+   * Option (a2), tranchée par l'utilisateur le 2026-09-23 : le hors-ligne est DEMANDÉ, pas
+   * subi. Un téléchargement automatique de 38 Mo serait pris sur le forfait de quelqu'un sans
+   * qu'il l'ait voulu ; « je prépare chez moi, j'enseigne sans réseau » est une fonctionnalité.
+   *
+   * Le débit N'EST PAS mesuré ici, et c'est un choix : ce transfert n'est pas celui que
+   * l'horloge demandera ensuite (une fois préparés, ces corps ne demandent plus rien, cf.
+   * `budgetGrids`), donc le plafond de vitesse de lecture n'a aucune raison d'en dépendre.
+   */
+  async prepareOffline(
+    options: PrepareOfflineOptions = {}
+  ): Promise<OfflineState> {
+    const pending = this._pending;
+    if (!pending?.store || !pending.manifest) return this.offlineState();
+    const { store, manifest, policy } = pending;
+    const { baseUrl, entries, raw } = manifest;
+    await store.writeManifest(raw);
+
+    const inventory = await store.inventory();
+    const wanted = entries.filter(([, body]) => {
+      const span = inventory.spans.get(body.file);
+      return !(
+        span &&
+        span.firstIndex === 0 &&
+        span.lastIndex === body.sampleCount - 1
+      );
+    });
+
+    let done = entries.length - wanted.length;
+    options.onProgress?.({ done, total: entries.length });
+
+    await mapWithConcurrency(
+      wanted,
+      policy.concurrency,
+      async ([, body]): Promise<void> => {
+        if (options.signal?.aborted) return;
+        try {
+          const url = new URL(body.file, baseUrl);
+          if (url.origin !== baseUrl.origin) return;
+          const response = await fetch(
+            url,
+            options.signal ? { signal: options.signal } : {}
+          );
+          if (!response.ok) return;
+          const buffer = await response.arrayBuffer();
+          // Des octets servis à la mauvaise taille ne seront jamais lisibles, et ranger un
+          // fichier tronqué ferait croire l'appareil prêt. C'est le MAGASIN qui refuse, pas
+          // ici : il confronte déjà toute écriture à la tranche annoncée, et une seconde
+          // vérification au même endroit du code n'aurait pas d'existence falsifiable.
+          await store.write(
+            body.file,
+            { firstIndex: 0, lastIndex: body.sampleCount - 1 },
+            buffer
+          );
+        } catch {
+          /* Le lien a lâché : l'état relu dira exactement où en est l'appareil. */
+        } finally {
+          done++;
+          options.onProgress?.({ done, total: entries.length });
+        }
+      }
+    );
+
+    return this.offlineState();
+  }
+
+  /** Rend la place. L'utilisateur reprendra ses 38 Mo quand il le décidera. */
+  async forgetOffline(): Promise<OfflineState> {
+    const store = this._pending?.store;
+    if (store) await store.clear();
+    this._inventory = null;
+    return this.offlineState();
   }
 
   /**
@@ -677,7 +926,10 @@ export class HorizonsEphemerisService implements PreciseEphemerisProvider {
 
     if (!pending.manifest) {
       try {
-        pending.manifest = await fetchManifest(pending.manifestUrl);
+        pending.manifest = await fetchManifest(
+          pending.manifestUrl,
+          pending.store
+        );
       } catch (error) {
         Logger.warn(
           '[HorizonsEphemerisService] manifest unavailable; every body falls back',
@@ -696,6 +948,10 @@ export class HorizonsEphemerisService implements PreciseEphemerisProvider {
 
     const { entries, baseUrl } = pending.manifest;
     const plans = this._planAll(entries, pending.scene, pending.bodyMu);
+    // L'inventaire du magasin se lit UNE fois par passage : `cache.keys()` par corps ferait
+    // 62 relectures du cache entier pour la même réponse.
+    const inventory = pending.store ? await pending.store.inventory() : null;
+    this._inventory = inventory;
     // Ce qu'on demande : ni ce qu'on tient déjà, ni ce dont l'absence est DÉFINITIVE. Sans
     // cette seconde condition, un 404 au milieu d'échecs de transport serait redemandé à
     // chaque passage alors que le contrat dit qu'on ne le reprend jamais : le passage, lui,
@@ -716,12 +972,35 @@ export class HorizonsEphemerisService implements PreciseEphemerisProvider {
       async ([name, body]): Promise<EphemerisLoadFailure | null> => {
         const plan = plans.get(name) ?? null;
         if (plan !== null) this._attempted.set(name, plan);
-        // Un plan `null` ne fait AUCUNE requête : le mesurer ajouterait du temps occupé sans
-        // un octet et ferait passer le lien pour lent (11 corps sur 64 au 1969-07-20).
-        const metered = plan !== null;
-        if (metered) this._rate.begin(policy.now());
+        const base = bodyBase(body, pending.bodyMu[name]);
+        // Un corps hors couverture ne fait AUCUNE requête : le mesurer ajouterait du temps
+        // occupé sans un octet et ferait passer le lien pour lent (11 corps sur 64 au
+        // 1969-07-20).
+        if (plan === null) {
+          this.bodies.set(name, {
+            ...base,
+            samples: new Float64Array(0),
+            firstIndex: 0,
+          });
+          return null;
+        }
+
+        // Ce que l'appareil tient déjà ne se redemande pas, et ne mesure RIEN du lien : c'est
+        // ici que la visite de retour devient gratuite et que le hors-ligne existe (lot 17E).
+        // La question posée au magasin est la MÊME que celle posée à la mémoire.
+        const held = await readHeld(pending.store, inventory, body, plan);
+        if (held) {
+          this.bodies.set(name, {
+            ...base,
+            samples: new Float64Array(held.bytes),
+            firstIndex: held.firstIndex,
+          });
+          return null;
+        }
+
+        this._rate.begin(policy.now());
         try {
-          const loaded = await fetchBody(
+          const fetched = await fetchBody(
             name,
             body,
             baseUrl,
@@ -731,11 +1010,20 @@ export class HorizonsEphemerisService implements PreciseEphemerisProvider {
               this._rangesRefused = true;
             }
           );
-          this.bodies.set(name, loaded);
-          if (metered) this._rate.end(policy.now(), loaded.samples.byteLength);
+          this.bodies.set(name, fetched.body);
+          this._rate.end(policy.now(), fetched.body.samples.byteLength);
+          if (pending.store)
+            await pending.store.write(
+              body.file,
+              {
+                firstIndex: fetched.stored.firstIndex,
+                lastIndex: fetched.stored.lastIndex,
+              },
+              fetched.stored.bytes
+            );
           return null;
         } catch (error) {
-          if (metered) this._rate.end(policy.now(), 0);
+          this._rate.end(policy.now(), 0);
           const failure: EphemerisLoadFailure = {
             body: name,
             reason: error instanceof Error ? error.message : String(error),
@@ -1047,55 +1335,94 @@ export class HorizonsEphemerisService implements PreciseEphemerisProvider {
   }
 }
 
-/** Demande le manifeste, et en vérifie le schéma ET l'origine. */
+/**
+ * Demande le manifeste, et en vérifie le schéma ET l'origine.
+ *
+ * Depuis le lot 17E, une copie en est rangée dans le magasin de l'appareil, et c'est elle qui
+ * répond quand le réseau ne répond pas. Sans cela, « préparer le hors-ligne » ne tiendrait pas
+ * sa promesse plus d'une heure : le manifeste est servi en `NetworkFirst` avec une péremption
+ * d'une heure (`ssv-ephemeris-manifest` dans `vite.config.ts`), donc passé ce délai un appareil
+ * portant ses 64 fichiers afficherait quand même « aucune éphéméride précise ».
+ *
+ * L'ordre reste le réseau d'abord : le manifeste est le SEUL fichier mutable de cette famille,
+ * il pointe des binaires nommés par le hachage de leur contenu, et une copie périmée pointerait
+ * des fichiers que le déploiement suivant a supprimés.
+ */
 async function fetchManifest(
-  manifestUrl: string
-): Promise<{ entries: [string, HorizonsBodyManifest][]; baseUrl: URL }> {
-  const response = await fetch(manifestUrl);
-  if (!response.ok)
-    throw new LoadFailure(
-      `manifest HTTP ${response.status}`,
-      isRetryableStatus(response.status)
-    );
-
-  const raw: unknown = await response.json();
-  // Un manifeste illisible ne se répare pas en le redemandant.
-  if (!isManifest(raw)) throw new LoadFailure('invalid manifest schema', false);
-
+  manifestUrl: string,
+  store: EphemerisStore | null
+): Promise<{
+  entries: [string, HorizonsBodyManifest][];
+  baseUrl: URL;
+  raw: unknown;
+}> {
   const manifestAbsoluteUrl = new URL(manifestUrl, window.location.href);
   if (manifestAbsoluteUrl.origin !== window.location.origin) {
     throw new LoadFailure('manifest must use the application origin', false);
   }
+
+  let raw: unknown;
+  let fromNetwork = false;
+  try {
+    const response = await fetch(manifestUrl);
+    if (!response.ok)
+      throw new LoadFailure(
+        `manifest HTTP ${response.status}`,
+        isRetryableStatus(response.status)
+      );
+    raw = await response.json();
+    fromNetwork = true;
+  } catch (networkError) {
+    const stored = store ? await store.readManifest() : null;
+    // Pas de copie : l'échec du réseau est l'échec, avec sa reprenabilité d'origine.
+    if (stored === null) throw networkError;
+    raw = stored;
+  }
+
+  // Un manifeste illisible ne se répare pas en le redemandant.
+  if (!isManifest(raw)) throw new LoadFailure('invalid manifest schema', false);
+
+  if (fromNetwork && store) {
+    await store.writeManifest(raw);
+    // Le manifeste qui vient d'arriver est la seule vérité sur ce qui existe : ce que le
+    // magasin tient d'autre ne sera plus jamais relu et occuperait la place jusqu'au quota.
+    await store.prune(
+      new Set(Object.values(raw.bodies).map((body) => body.file))
+    );
+  }
+
   return {
     entries: Object.entries(raw.bodies),
     baseUrl: new URL('.', manifestAbsoluteUrl),
+    raw,
   };
 }
 
 /**
- * Demande un binaire — tout entier, une FENÊTRE, ou rien — en vérifie l'origine et la taille,
- * et le prépare.
+ * DEMANDE un binaire au réseau — tout entier ou une FENÊTRE — en vérifie l'origine et la
+ * taille, et le prépare.
  *
- * `plan === null` n'est pas un échec : le fichier ne couvre pas la date affichée, il ne
- * répondrait pas davantage en entier, et le corps est donc inscrit SANS la moindre requête.
- * Onze corps sur 64 sont dans ce cas au 1969-07-20 (mesuré en écrivant le plan du lot 17).
+ * Cette fonction ne connaît QUE le réseau, et depuis le lot 17E c'est délibéré : ce que
+ * l'appareil tient déjà est lu avant elle (`_heldBody`), justement pour que la mesure de débit
+ * n'encadre que des octets qui ont vraiment traversé le lien.
+ *
+ * Deux cas ne l'atteignent jamais : un corps hors couverture, qui est inscrit SANS la moindre
+ * requête (onze corps sur 64 au 1969-07-20, mesuré en écrivant le plan du lot 17), et un corps
+ * dont le magasin tient déjà la fenêtre.
  */
 async function fetchBody(
   name: string,
   body: HorizonsBodyManifest,
   baseUrl: URL,
   bodyMu: Readonly<Record<string, BodyDynamics>>,
-  plan: SampleWindow | 'full' | null,
+  plan: SampleWindow | 'full',
   onRangesRefused: () => void
-): Promise<LoadedBody> {
+): Promise<FetchedBody> {
   const dynamics = bodyMu[name];
   const base = {
     manifest: body,
     ...(dynamics ? { dynamics } : {}),
   };
-  if (plan === null)
-    return { ...base, samples: new Float64Array(0), firstIndex: 0 };
-
   const binaryUrl = new URL(body.file, baseUrl);
   if (binaryUrl.origin !== baseUrl.origin) {
     throw new LoadFailure(
@@ -1125,7 +1452,10 @@ async function fetchBody(
         false
       );
     }
-    return { ...base, samples: new Float64Array(buffer), firstIndex: 0 };
+    return {
+      body: { ...base, samples: new Float64Array(buffer), firstIndex: 0 },
+      stored: { firstIndex: 0, lastIndex: body.sampleCount - 1, bytes: buffer },
+    };
   }
 
   const rangeResponse = await fetch(binaryUrl, {
@@ -1155,11 +1485,21 @@ async function fetchBody(
     // La plage a été ignorée et l'hôte a rendu tout le fichier : on le GARDE (on l'a payé),
     // et on cesse de demander des plages.
     onRangesRefused();
-    return { ...base, samples: new Float64Array(buffer), firstIndex: 0 };
+    return {
+      body: { ...base, samples: new Float64Array(buffer), firstIndex: 0 },
+      stored: { firstIndex: 0, lastIndex: body.sampleCount - 1, bytes: buffer },
+    };
   }
   return {
-    ...base,
-    samples: new Float64Array(buffer),
-    firstIndex: plan.firstIndex,
+    body: {
+      ...base,
+      samples: new Float64Array(buffer),
+      firstIndex: plan.firstIndex,
+    },
+    stored: {
+      firstIndex: plan.firstIndex,
+      lastIndex: plan.lastIndex,
+      bytes: buffer,
+    },
   };
 }
