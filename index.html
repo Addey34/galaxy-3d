@@ -1120,6 +1120,27 @@
             View
           </h4>
         </section>
+        <!-- Hors ligne (lot 17E) : la seule section qui parle de DONNÉES et non d'affichage.
+             Elle est ici parce que c'est la seule surface de réglages de l'application, celle
+             qui porte déjà la qualité graphique et les unités. Son contenu est rempli par
+             ui/offlineData.ts, et tout ce qu'il affiche est LU dans le magasin. -->
+        <section
+          id="settings-section-offline"
+          class="settings-section"
+          aria-labelledby="settings-section-offline-title"
+        >
+          <h4
+            id="settings-section-offline-title"
+            class="settings-section-title"
+            data-i18n="settings.section.offline"
+          >
+            Offline use
+          </h4>
+          <p class="oo-table-hint" data-i18n="offline.hint">
+            Download every ephemeris file so the app can place the bodies at
+            any date without a network. Nothing is downloaded until you ask.
+          </p>
+        </section>
       </div>
     </aside>
 

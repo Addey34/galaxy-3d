@@ -58,6 +58,7 @@ import { setupRenderExposure } from './ui/renderExposure';
 import { setupColorblindToggle } from './ui/colorblindToggle';
 import { setupSurfacePanel } from './ui/surfacePanel';
 import { setupUnitsToggle } from './ui/unitsToggle';
+import { setupOfflineData } from './ui/offlineData';
 import { setupRealtimeClouds } from './ui/realtimeClouds';
 import { setupCloudModelLayer } from './ui/cloudModelLayer';
 import { setupPrecipLayer } from './ui/precipLayer';
@@ -345,6 +346,10 @@ if (surfaceScrim) {
     setupColorblindToggle(sceneSystem);
     setupUnitsToggle();
     setupQualitySection(sceneSystem);
+    // « Préparer le hors-ligne » (lot 17E) : depuis 17C les fenêtres sont servies en 206, que
+    // ni le cache du navigateur ni le service worker ne gardent. Cette section rend le
+    // hors-ligne, à la DEMANDE, et dit ce que l'appareil tient déjà.
+    setupOfflineData(api.horizonsEphemeris);
 
     // Champ de masse des petits corps — couche instrument 2D, chargée en tâche de fond depuis
     // l'INSTANTANÉ livré (`/assets/small-bodies/dataset.json`, relevé au build). L'application

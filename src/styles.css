@@ -1344,6 +1344,50 @@ button {
   padding-top: 0;
   border-top: 0;
 }
+/* Section « Utilisation hors ligne » (lot 17E). Elle ne règle rien : elle DIT ce que
+   l'appareil tient et porte l'action qui le complète. Les boutons reprennent la géométrie de
+   ceux du bandeau d'éphémérides, pas un nouveau style. */
+.offline-status {
+  margin: 0 0 var(--sp-2);
+  color: var(--ink-dim);
+  font-size: 0.72rem;
+  line-height: 1.35;
+}
+
+.offline-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-1);
+}
+
+.offline-btn {
+  padding: 0.3rem 0.6rem;
+  border: 1px solid var(--hairline-strong);
+  border-radius: var(--r-sm, 0.4rem);
+  background: var(--control-bg);
+  color: var(--ink);
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.72rem;
+}
+
+.offline-btn:hover:not(:disabled) {
+  background: var(--control-bg-hover);
+}
+
+.offline-btn:disabled {
+  cursor: default;
+  opacity: 0.6;
+}
+
+.offline-btn[hidden] {
+  display: none;
+}
+
+.offline-btn--quiet {
+  color: var(--ink-dim);
+}
+
 .settings-section .oo-body {
   max-height: none;
   overflow: visible;
