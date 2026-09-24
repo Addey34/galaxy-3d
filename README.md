@@ -370,8 +370,8 @@ En résumé : d'abord rendre le projet visible (déploiement public, CI, SEO) et
 donner des raisons de revenir, enfin en faire une référence.
 
 Les trois étapes sont livrées : permaliens, événements astronomiques, zoom optique FOV, visite
-guidée, lunes majeures sur éphémérides réelles, mode hors-ligne (PWA ; les positions précises, elles,
-demandent le réseau depuis que les éphémérides sont lues par plages), tours guidés scriptés,
+guidée, lunes majeures sur éphémérides réelles, mode hors-ligne (PWA ; les positions précises se
+préparent à la demande, par le réglage « Utilisation hors ligne »), tours guidés scriptés,
 missions spatiales, filtres de petits corps, mode capture, WebXR, une page indexable par corps
 avec sa propre vignette de partage, une page par éclipse de 2024 à 2035, et les trois objets interstellaires connus (1I/ʻOumuamua,
 2I/Borisov, 3I/ATLAS) sur leur vraie trajectoire hyperbolique. Ce qui reste demande du matériel ou un humain : confirmer le

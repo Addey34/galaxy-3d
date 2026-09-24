@@ -610,15 +610,16 @@ plage par corps et par saut pour se faire rendre le fichier entier à chaque foi
 
 **Ce que ce lot RETIRE, et il faut le dire.** Les réponses `206` ne sont pas mises en cache par
 le service worker (`cacheableResponse: statuses [0, 200]`, vérifié dans le `sw.js` construit) :
-les éphémérides ne sont donc plus disponibles hors ligne. C'est ce que la phase **17E** rend, par
-un bouton « préparer le hors-ligne » qui télécharge les 38,45 Mo explicitement.
+les éphémérides ne sont donc plus disponibles hors ligne. **La phase 17E le rend**, et autrement
+que ce paragraphe l'annonçait : non par une règle de service worker mais par un magasin que
+l'application tient elle-même, décrit au § « Ce que l'appareil tient » ci-dessous.
 
 **Et le même fait a une seconde face, mesurée, qui n'était pas dans le plan : la visite de
 RETOUR.** Une plage n'est servie ni par le cache du navigateur ni par le service worker, donc un
 visiteur qui revient redemande sa fenêtre à chaque visite : **987 168 octets au lieu de zéro**,
 mesuré sur trois chargements successifs dans le même navigateur (62 requêtes à chaque fois). La
-première visite gagne énormément (186,5 → 32 s à 2 Mbit/s), la suivante perd un peu. **17E doit
-donc couvrir ce cas, et pas seulement le hors-ligne.**
+première visite gagne énormément (186,5 → 32 s à 2 Mbit/s), la suivante perd un peu. **17E
+couvre ce cas, et par le même mécanisme que le hors-ligne** (§ « Ce que l'appareil tient »).
 
 **Conséquence sur le SERVEUR DE DEV, et sur lui seul.** Il parle HTTP/1.1, six connexions par
 hôte : les 62 plages occupent les connexions et retardent les ressources du document, celles
@@ -711,6 +712,119 @@ saut, et l'annoncer ferait clignoter un bandeau à chaque clic dans le panneau d
 | `ui/ephemerisNotice.test.ts` | un fichier manquant PRIME sur une attente, le seuil de 1,5 s se tait juste en dessous, et une reprise réussie garde sa ligne |
 | `core/ephemerisClockGate.test.ts` | l'attente se compte en temps RÉEL, se remet à zéro dès que la date repart, et cesse d'être une attente quand on renonce à attendre |
 | `e2e/playbackCeiling.spec.ts` | dans un vrai navigateur : sur un lien lent le curseur affiche la vitesse soutenable et sa raison, la poignée y revient, la fiche dit toujours « JPL Horizons » ; quand les octets ne viennent pas le bandeau dit que la date attend, sans le mot « precision » et sans reprise ; et à 390 px il ne couvre aucun dock, passe axe et ne déborde pas |
+
+### Ce que l'appareil tient, et qui ne se redemande pas (lot 17, phase 17E)
+
+La phase 17C a rendu le démarrage 38,5 fois plus léger en lisant des PLAGES. Une réponse `206`
+n'est mise en cache ni par le navigateur ni par le service worker, et cela a deux conséquences
+qu'il a fallu MESURER pour les voir, le 2026-09-24, sur le build livré de 17D, octets comptés
+côté SERVEUR (le trafic du service worker n'apparaît pas dans le CDP de la page), service worker
+actif, trois chargements successifs dans le même navigateur :
+
+| | visite 1, à froid | visite 2 | visite 3 |
+| --- | --- | --- | --- |
+| total servi | 11 310 743 o, 173 requêtes | **987 168 o, 62 requêtes** | 991 799 o, 63 requêtes |
+| dont éphémérides | 987 168 o (62 plages) | 987 168 o | 987 168 o |
+| part des éphémérides | 8,7 % | **100 %** | 99,5 % |
+| entrées `.bin` en cache | 0 | 0 | 0 |
+
+**La visite de retour était donc de l'éphéméride et RIEN d'autre** : textures, modèles,
+JavaScript et page venaient tous du service worker, et seuls les 987 168 octets de fenêtres se
+repayaient. Et le cache `ssv-assets` ne contenait **aucun `.bin`** (il n'était même pas créé)
+là où il en tenait 64 avant 17C, d'où la perte du hors-ligne.
+
+**Un seul mécanisme traite les deux : un magasin que l'application tient elle-même**
+(`core/ephemerisStore.ts`), un `Cache` nommé `ssv-ephemerides-v1` où chaque fichier a UNE entrée,
+la tranche d'échantillons contiguë qu'on en tient. La question posée au magasin avant toute
+requête est celle que 17A avait déjà écrite et testée, `windowContains` : « ce que je tiens
+contient-il ce que je veux ? ». Elle répond aussi bien à une fenêtre qu'à un fichier entier, donc
+au retour comme au hors-ligne.
+
+**L'option (a3) du plan, une règle de service worker rangeant les fenêtres sous une clé
+synthétique, est écartée par ce qu'elle ne sait pas faire**, et pas seulement pour son coût en
+code : une clé par plage ne répond que si la plage demandée est EXACTEMENT celle d'avant, et elle
+ignore le cas du bouton « préparer le hors-ligne », qui range des fichiers entiers dont toute
+fenêtre est ensuite un sous-ensemble.
+
+**La clé n'est PAS l'adresse du binaire**, elle vit sous un chemin qui n'a jamais existé sur le
+serveur (`/__ephemeris-store/<fichier>?samples=<premier>-<dernier>`). Une clé ressemblant à
+`/assets/ephemerides/…` pourrait être servie par la règle `CacheFirst` du service worker à une
+requête réelle, avec des octets partiels présentés comme le fichier entier.
+
+**UNE entrée par fichier, et la règle est celle de l'inclusion.** Une tranche déjà contenue dans
+ce qu'on tient ne s'écrit pas : sans quoi la première fenêtre de 96 octets venue remplacerait le
+fichier entier qu'une préparation hors ligne vient de ranger ; une tranche plus large ou disjointe
+remplace l'ancienne. Deux tranches disjointes ne se fusionnent JAMAIS : les octets du trou n'ont
+jamais été téléchargés, et inventer une tranche qu'on ne tient pas ferait lire n'importe quoi.
+Sans cette borne, un lecteur qui se promène dans le temps accumulerait une entrée par date
+visitée, jusqu'au quota du navigateur.
+
+**Et un doublon se guérit tout seul.** L'écriture range la nouvelle tranche PUIS retire
+l'ancienne, et cet ordre est le bon : l'inverse perdrait des octets déjà payés si le navigateur
+s'arrêtait entre les deux. Un arrêt entre les deux laisse donc deux entrées pour un fichier ;
+l'inventaire choisit alors la plus large, qui répond à tout ce que l'autre répondait, et la purge
+du démarrage suivant retire la perdante au lieu de la laisser occuper la place jusqu'au quota.
+
+**RANGER N'EST PAS CHARGER : aucune écriture du magasin ne se trouve dans le chemin de
+chargement.** Les écritures partent en tâche de fond, enchaînées une à la fois, et le rangement
+de la copie du manifeste comme la purge des orphelins avec elles. La raison est mesurée et elle
+a coûté deux passages de CI : `OrbitalMechanics._requestWindows` ne garde QU'UNE demande de
+fenêtre en vol, donc une écriture attendue entre deux téléchargements retarde la demande
+suivante, et pendant une lecture accélérée l'horloge cale à chaque pas. Rien ne dépend de la fin
+d'une écriture, les octets étant déjà en mémoire.
+
+**Ce que cela implique, et qui doit être dit** : le magasin finit de se remplir PEU APRÈS que la
+page soit utilisable. Un visiteur qui ferme l'onglet une seconde après le chargement peut n'avoir
+rangé qu'une partie de ses fenêtres ; la visite suivante redemande simplement ce qui manque.
+Mesuré : avec huit secondes de présence, les visites de retour ne demandent plus AUCUN binaire ;
+avec six, un dernier fichier n'était pas encore rangé.
+
+**Toute lecture est CONFRONTÉE à la tranche que sa clé annonce**, comme le chemin HTTP confronte
+son `Content-Range` : une entrée tronquée (quota atteint pendant l'écriture) serait sinon lue
+comme si elle commençait au bon échantillon, et placerait le corps à une autre date sans que rien
+ne le dise. Une entrée fausse est SUPPRIMÉE, pas seulement ignorée.
+
+**Le manifeste a sa copie, et sans elle le hors-ligne ne tiendrait pas une heure.** Il est servi
+en `NetworkFirst` avec une péremption d'une heure (`ssv-ephemeris-manifest`), donc un appareil
+préparé le matin afficherait l'après-midi « aucune éphéméride précise » alors que ses 64 fichiers
+sont là. L'ordre reste le réseau d'abord : le manifeste est le seul fichier MUTABLE de cette
+famille et il pointe des binaires nommés par le hachage de leur contenu. Quand il arrive, il
+purge du magasin ce qu'il ne nomme plus, et c'est la cohérence que ce magasin doit tenir lui-même,
+le coût annoncé au § 9a du plan.
+
+**Le bouton « préparer le hors-ligne » (option (a2), tranchée par l'utilisateur le 2026-09-23)**
+vit dans une sixième section de la surface de réglages, `#settings-section-offline`. Il télécharge
+les fichiers ENTIERS que l'appareil n'a pas, six à la fois, annulable. Ce n'est pas un pis-aller :
+une école à connexion pauvre est la cible du projet, et « je prépare chez moi, j'enseigne sans
+réseau » est une fonctionnalité. Rien n'est téléchargé sans demande : 38 Mo pris d'office sur le
+forfait de quelqu'un seraient une décision prise à sa place.
+
+**Ce que la section affiche est LU, jamais mémorisé.** `offlineState()` recompte les entrées
+réellement présentes à chaque lecture. Un « c'est prêt » enregistré après un téléchargement
+survivrait à une purge de quota, et l'appareil partirait en classe en ayant oublié ses fichiers.
+C'est la règle que le projet applique à la disponibilité des sondes depuis le lot 7e.
+
+**Une lecture du magasin ne mesure RIEN du lien, et c'est un défaut vu en écrivant la phase.**
+Des octets relus localement, passés au compteur de débit de 17D, donneraient un débit de plusieurs
+gigabits, donc aucun plafond de vitesse, puis la date se remettrait à attendre EN SILENCE à la
+première fenêtre réellement manquante, ce que 17D existe pour supprimer. La lecture du magasin se
+fait donc AVANT `TransferRateMeter.begin`, et `fetchBody` ne connaît plus que le réseau.
+
+**Et la conséquence vraie de la préparation est écrite, elle aussi** : un corps dont l'appareil
+tient le fichier entier sort du budget de `budgetGrids`. Il ne demandera plus un octet à aucune
+date, donc le compter plafonnerait la lecture au nom d'un trafic qui n'aura pas lieu. Une fois
+les 64 fichiers préparés, le curseur de vitesse n'a plus de plafond du tout.
+
+**Ce que la phase ne fait pas, et le dit.** Elle ne remet pas les éphémérides dans le précache du
+service worker : `sw.js` continue de ne garder que l'app shell, et les 38 Mo restent une décision
+de l'utilisateur. Un navigateur sans `Cache` (navigation privée stricte) n'a pas de magasin du
+tout : la section le DIT, et l'application redemande ses fenêtres comme avant cette phase.
+
+| Garde | Ce qu'elle tient |
+| --- | --- |
+| `core/ephemerisStore.test.ts` | l'aller-retour d'une clé, le refus d'une clé étrangère ou d'une tranche inversée, l'inclusion exigée à un échantillon près, « fichier entier » qui n'accepte que le fichier entier, une tranche contenue qui n'écrase jamais la plus large, UNE entrée par fichier, un doublon laissé par un arrêt en cours d'écriture qui se résout sans hésiter puis se purge, une entrée tronquée SUPPRIMÉE au lieu d'être lue, la purge qui épargne le manifeste, et l'absence de magasin qui ne lève pas |
+| `core/ephemerisOffline.test.ts` | chemin de production contre les binaires livrés : une visite de retour ne fait AUCUNE requête et place les corps au bit près, une date éloignée redemande ce qui manque et lui seul, une lecture du magasin n'entre pas dans le débit observé, la préparation rend un état LU, une visite entière sans le moindre octet à n'importe quelle date, des octets tronqués qui ne sont pas rangés, et un manifeste injoignable qui reste un échec quand le magasin est vide |
+| `e2e/ephemerisOffline.spec.ts` | dans un vrai navigateur, avec le vrai `Cache` : la visite de retour ne demande plus un seul octet d'éphéméride, la section dit ce que l'appareil tient et rend la place, et une fois préparé l'appareil place les corps à une date jamais visitée avec TOUT `/assets/ephemerides/**` coupé |
 
 ### Tests qui verrouillent tout ça
 

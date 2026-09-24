@@ -83,6 +83,25 @@ export const messages: Record<Locale, Dict> = {
     'ephemeris.notice.waitingTitle': 'The date is waiting for its data',
     'ephemeris.notice.waiting':
       'Your connection is slower than the requested playback speed. Nothing wrong is shown: the date advances as the bytes arrive.',
+    // Hors ligne (lot 17, phase 17E). Chaque nombre affiché est LU dans le magasin de
+    // l'appareil, jamais mémorisé après un téléchargement : un cache peut être purgé par le
+    // navigateur sous la pression du quota, et l'appareil partirait en classe en ayant oublié.
+    'offline.hint':
+      'Download every ephemeris file so the app can place the bodies at any date without a network. Nothing is downloaded until you ask.',
+    'offline.reading': 'Checking what this device already holds…',
+    'offline.unavailable':
+      'This browser keeps no storage for the app, so offline use cannot be prepared here.',
+    'offline.noManifest':
+      'The ephemeris index has not arrived, so there is nothing to prepare yet.',
+    'offline.partial':
+      'This device holds {files} of {total} files. Preparing the rest downloads about {size} MB.',
+    'offline.ready':
+      'All {files} files are on this device ({size} MB). Dates work without a network.',
+    'offline.prepare': 'Prepare offline use',
+    'offline.cancel': 'Stop the download',
+    'offline.progress': 'Downloading: {done} of {total} files.',
+    'offline.started': 'Offline preparation started.',
+    'offline.forget': 'Free {size} MB',
     'nav.searchPlaceholder': 'Search a body…',
     'nav.paletteAria': 'Search and select a body',
     'nav.group.star': 'Star',
@@ -275,6 +294,7 @@ export const messages: Record<Locale, Dict> = {
     'settings.section.rendering': 'Rendering',
     'settings.section.reading': 'Accessibility and units',
     'settings.section.view': 'View',
+    'settings.section.offline': 'Offline use',
     'settings.labelsToggle': 'Show every label',
     'settings.bodiesToggle': 'Show every object',
     'settings.orbitsToggle': 'Show every orbit and trajectory',
@@ -519,6 +539,22 @@ export const messages: Record<Locale, Dict> = {
     'ephemeris.notice.waitingTitle': 'La date attend ses données',
     'ephemeris.notice.waiting':
       'Votre connexion est plus lente que la vitesse de lecture demandée. Rien de faux n’est affiché : la date avance au rythme des octets.',
+    'offline.hint':
+      'Téléchargez tous les fichiers d’éphémérides pour que l’application place les corps à n’importe quelle date sans réseau. Rien n’est téléchargé tant que vous ne le demandez pas.',
+    'offline.reading': 'Lecture de ce que cet appareil tient déjà…',
+    'offline.unavailable':
+      'Ce navigateur ne garde aucun stockage pour l’application : le hors-ligne ne peut pas être préparé ici.',
+    'offline.noManifest':
+      'L’index des éphémérides n’est pas arrivé : il n’y a encore rien à préparer.',
+    'offline.partial':
+      'Cet appareil tient {files} des {total} fichiers. Préparer le reste télécharge environ {size} Mo.',
+    'offline.ready':
+      'Les {files} fichiers sont sur cet appareil ({size} Mo). Les dates fonctionnent sans réseau.',
+    'offline.prepare': 'Préparer le hors-ligne',
+    'offline.cancel': 'Arrêter le téléchargement',
+    'offline.progress': 'Téléchargement : {done} fichiers sur {total}.',
+    'offline.started': 'Préparation du hors-ligne lancée.',
+    'offline.forget': 'Libérer {size} Mo',
     'nav.searchPlaceholder': 'Rechercher un corps…',
     'nav.paletteAria': 'Rechercher et sélectionner un corps',
     'nav.group.star': 'Étoile',
@@ -715,6 +751,7 @@ export const messages: Record<Locale, Dict> = {
     'settings.section.rendering': 'Rendu',
     'settings.section.reading': 'Accessibilité et unités',
     'settings.section.view': 'Vue',
+    'settings.section.offline': 'Utilisation hors ligne',
     'settings.labelsToggle': 'Afficher toutes les étiquettes',
     'settings.bodiesToggle': 'Afficher tous les objets',
     'settings.orbitsToggle': 'Afficher toutes les orbites et trajectoires',

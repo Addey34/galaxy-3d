@@ -144,6 +144,20 @@ vrai navigateur que chaque demande porte un `Range`, que la fiche dit toujours �
 après un saut de cinquante ans, et qu'une fenêtre qui échoue EN COURS DE SESSION fait apparaître
 le bandeau — un cas qui n'existait pas quand tout était chargé au démarrage.
 
+**Le magasin de l'appareil (lot 17E)** : `core/ephemerisStore.test.ts` vise les BORDS, parce que
+ce module décide de NE PAS demander des octets : une erreur d'inclusion placerait un corps à un
+autre instant, en silence. Il tient l'inclusion à un échantillon près, le refus d'une clé
+étrangère ou d'une tranche inversée, l'entrée tronquée SUPPRIMÉE au lieu d'être lue, et la règle
+qui empêche une fenêtre de 96 octets d'écraser un fichier entier. Une de ses gardes était
+TAUTOLOGIQUE (le refus d'une tranche inversée était vérifié sur un nom qui n'était pas celui
+d'un fichier du manifeste, donc le refus venait du nom), et c'est sa propre falsification qui
+l'a dit. `core/ephemerisOffline.test.ts` mesure la seule chose que l'utilisateur constate :
+**aucune requête ne part**. Il vérifie aussi qu'une lecture locale n'entre PAS dans le débit
+observé, avec une horloge INJECTÉE : sous une horloge réelle, 62 lectures locales occupent
+quelques millisecondes et le compteur se tairait par son seuil de bruit, donc pour la mauvaise
+raison. `e2e/ephemerisOffline.spec.ts` le refait dans un vrai navigateur, avec le vrai `Cache`,
+et coupe TOUT `/assets/ephemerides/**` sur une date jamais visitée.
+
 **Objets interstellaires** : `config/interstellar.test.ts` compare les positions à 21 vecteurs
 d'état Horizons relevés en direct, avant, au et après chaque périhélie, jusqu'aux bords de la
 fenêtre affichée. `e2e/interstellar.spec.ts` lit ce qu'une couche canvas a peint via deux
