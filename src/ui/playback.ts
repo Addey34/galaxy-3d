@@ -1,24 +1,22 @@
 /**
  * Contrôles de lecture : play/pause et vitesse de simulation (#play-pause-btn, #speed-range).
  *
- * Toujours en mode Kepler/temps-réel :
- *   om.setSimulationSpeed(scale) → scale = ratio vs temps réel
- *   1 = temps réel, 3 600 = 1h/s, 10 800 = 3h/s, 21 600 = 6h/s
+ * `om.setSimulationSpeed(scale)` prend un ratio SIGNÉ par rapport au temps réel. Le curseur est
+ * bidirectionnel et exponentiel, du 1:1 au centre à un an simulé par seconde réelle au bord,
+ * dans les deux sens (cf. `ui/speedSlider`, qui porte toute l'arithmétique).
+ *
+ * La liste discrète que ce bandeau citait jusqu'au 2026-09-24 (« 3 600, 10 800, 21 600 ») est
+ * SUPERSEDED depuis longtemps : budgéter pour 21 600x se tromperait d'un facteur 1 461, ce qui
+ * compte pour tout ce qui charge de la donnée contre l'horloge.
+ *
+ * Depuis la phase 17D la vitesse est PLAFONNÉE à ce que la connexion soutient, et le plafond est
+ * dit à l'écran : la date reste exacte plutôt que d'attendre des octets en silence.
  */
 import type { AnimationSystem } from '@/components/systems/AnimationSystem';
 import type { OrbitalMechanics } from '@/core/OrbitalMechanics';
 import { getLocale, onLocaleChange, t } from '@/i18n';
+import { applyCeiling, SPEED_SLIDER_CENTER } from './speedSlider';
 
-// Réel = 1:1, 1h/s = 3600, 3h/s = 10 800, 6h/s = 21 600
-export const MAX_SIMULATION_SCALE = 31_557_600;
-
-const SPEED_SLIDER_MAX = 100;
-// Slider BIDIRECTIONNEL : centre = temps réel 1:1, droite = futur accéléré, gauche = passé
-// accéléré (le moteur d'horloge accepte un timeScale négatif → le temps recule). La demi-course
-// de chaque côté est mappée exponentiellement de ±1 (au centre) à ±MAX_SIMULATION_SCALE (au bord).
-const SPEED_SLIDER_CENTER = 50;
-// Petite zone morte autour du centre : facilite le retour exact au 1:1 sans viser au pixel.
-const SPEED_CENTER_DEADZONE = 2;
 const SPEED_UNITS = [
   { scale: 31_557_600, fr: 'an', en: 'y' },
   { scale: 2_592_000, fr: 'mois', en: 'mo' },
@@ -61,31 +59,25 @@ export interface PlaybackControls {
   selectRealtime(): void;
   /** Met la simulation en pause et synchronise le bouton lecture/pause. */
   pause(): void;
+  /**
+   * Relit le plafond de vitesse mesuré et réapplique la vitesse s'il a bougé.
+   *
+   * Appelée à chaque image par la composition : au démarrage aucun débit n'est encore mesuré,
+   * donc le plafond n'existe pas, et il apparaît quand les premières fenêtres sont arrivées.
+   * Le calcul complet n'a lieu que si le débit ou le jour affiché a changé.
+   */
+  syncCeiling(): void;
 }
+
+/**
+ * Ce que la connexion soutient, en secondes simulées par seconde réelle, ou `null` s'il n'y a
+ * rien à plafonner. Fourni par la composition, qui seule connaît le service d'éphémérides.
+ */
+export type PlaybackCeiling = () => number | null;
 
 const playPauseBtn = document.getElementById('play-pause-btn')!;
 const speedRange = document.getElementById('speed-range') as HTMLInputElement;
 const speedValue = document.getElementById('speed-value')!;
-/**
- * Slider → vitesse SIGNÉE. Centre (50) = +1 (temps réel). Écart au centre normalisé dans
- * [0, 1] → magnitude exponentielle de 1 à MAX_SIMULATION_SCALE. Le SIGNE suit le côté :
- * droite du centre = futur (+), gauche = passé (−). Zone morte centrale → exactement +1.
- */
-function scaleFromSlider(value: number): number {
-  const clamped = Math.max(0, Math.min(SPEED_SLIDER_MAX, value));
-  const offset = clamped - SPEED_SLIDER_CENTER; // <0 passé, >0 futur
-  if (Math.abs(offset) <= SPEED_CENTER_DEADZONE) return 1;
-  const halfCourse = SPEED_SLIDER_MAX - SPEED_SLIDER_CENTER; // 50
-  const magnitudeNorm =
-    (Math.abs(offset) - SPEED_CENTER_DEADZONE) /
-    (halfCourse - SPEED_CENTER_DEADZONE);
-  const magnitude = Math.max(
-    1,
-    Math.round(Math.exp(magnitudeNorm * Math.log(MAX_SIMULATION_SCALE)))
-  );
-  return offset < 0 ? -magnitude : magnitude;
-}
-
 function formatQuantity(value: number): string {
   if (value < 10) return value.toFixed(1).replace(/\.0$/, '');
   if (value < 100) return String(Math.round(value));
@@ -112,20 +104,51 @@ function speedLabel(scale: number): string {
   return getLocale() === 'fr' ? `◀ ${body} (passé)` : `◀ ${body} (past)`;
 }
 
-function applySpeed(sliderValue: number, om: OrbitalMechanics): void {
-  const safeValue = Math.max(0, Math.min(SPEED_SLIDER_MAX, sliderValue));
-  const scale = scaleFromSlider(safeValue);
-  const label = speedLabel(scale);
+/**
+ * Applique une position de curseur, PLAFONNÉE à ce que la connexion soutient.
+ *
+ * Décision du § 9b du plan du lot 17, prise le 2026-09-24 : la date reste exacte (D3), et c'est
+ * le curseur qui renonce, en le disant. Le plafond est mesuré (`core/playbackBudget` sur le
+ * débit de `core/transferRate`) ; l'arithmétique vit dans `ui/speedSlider`, ce module ne fait
+ * que la câbler au DOM.
+ */
+function applySpeed(
+  sliderValue: number,
+  om: OrbitalMechanics,
+  ceiling: number | null
+): void {
+  const {
+    scale,
+    sliderValue: value,
+    limited,
+  } = applyCeiling(sliderValue, ceiling);
+  const label = limited
+    ? `${speedLabel(scale)} · ${t('speed.limited')}`
+    : speedLabel(scale);
   om.setSimulationSpeed(scale);
-  speedRange.value = String(safeValue);
+  speedRange.value = String(value);
   speedRange.setAttribute('aria-valuetext', label);
   speedValue.textContent = label;
+  // Lu par la garde e2e : un plafond ANNONCÉ doit être celui qui a servi.
+  if (limited) speedRange.dataset['capped'] = String(Math.abs(scale));
+  else delete speedRange.dataset['capped'];
 }
 
 export function setupPlayback(
   anim: AnimationSystem,
-  om: OrbitalMechanics
+  om: OrbitalMechanics,
+  ceiling: PlaybackCeiling = () => null
 ): PlaybackControls {
+  let cap: number | null = null;
+  /**
+   * La position que l'utilisateur a DEMANDÉE, distincte de celle qu'on affiche.
+   *
+   * Défaut trouvé en relisant ce fichier : sans cette mémoire, un plafonnement passager était
+   * définitif. La poignée revenant sur le plafond, la valeur du curseur DEVENAIT la vitesse
+   * plafonnée, et une amélioration du lien ne rendait plus la vitesse demandée : un creux de
+   * connexion de trois secondes aurait brimé la lecture pour le reste de la session.
+   */
+  let askedValue = SPEED_SLIDER_CENTER;
   // Synchronise l'icône, les classes et l'ARIA du bouton sur l'état de pause donné.
   const syncPauseButton = (paused: boolean): void => {
     playPauseBtn.replaceChildren(createPlaybackIcon(paused));
@@ -142,14 +165,15 @@ export function setupPlayback(
   });
 
   speedRange.addEventListener('input', () => {
-    applySpeed(Number(speedRange.value), om);
+    askedValue = Number(speedRange.value);
+    applySpeed(askedValue, om, cap);
   });
 
   // Démarrage au CENTRE = temps réel 1:1.
-  applySpeed(SPEED_SLIDER_CENTER, om);
+  applySpeed(askedValue, om, cap);
   playPauseBtn.setAttribute('aria-label', t('playback.pause'));
   onLocaleChange(() => {
-    applySpeed(Number(speedRange.value), om);
+    applySpeed(askedValue, om, cap);
     playPauseBtn.setAttribute(
       'aria-label',
       playPauseBtn.classList.contains('is-paused')
@@ -159,10 +183,20 @@ export function setupPlayback(
   });
 
   return {
-    selectRealtime: () => applySpeed(SPEED_SLIDER_CENTER, om),
+    selectRealtime: () => {
+      askedValue = SPEED_SLIDER_CENTER;
+      applySpeed(askedValue, om, cap);
+    },
     pause: () => {
       anim.setPaused(true);
       syncPauseButton(true);
+    },
+    syncCeiling: () => {
+      const next = ceiling();
+      if (next === cap) return;
+      cap = next;
+      // Depuis la position DEMANDÉE : un plafond qui se relâche rend la vitesse demandée.
+      applySpeed(askedValue, om, cap);
     },
   };
 }

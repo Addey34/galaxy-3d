@@ -77,6 +77,12 @@ export const messages: Record<Locale, Dict> = {
     'nav.search': 'Search a body',
     'dock.tools.aria': 'Tools',
     'speed.aria': 'Simulation speed',
+    // Plafond de vitesse mesuré (lot 17, phase 17D) : la date reste exacte, et c'est le curseur
+    // qui renonce. La note n'apparaît que lorsque le lien ne soutient PAS la vitesse demandée.
+    'speed.limited': 'limited by your connection',
+    'ephemeris.notice.waitingTitle': 'The date is waiting for its data',
+    'ephemeris.notice.waiting':
+      'Your connection is slower than the requested playback speed. Nothing wrong is shown: the date advances as the bytes arrive.',
     'nav.searchPlaceholder': 'Search a body…',
     'nav.paletteAria': 'Search and select a body',
     'nav.group.star': 'Star',
@@ -509,6 +515,10 @@ export const messages: Record<Locale, Dict> = {
     'nav.search': 'Rechercher un corps',
     'dock.tools.aria': 'Outils',
     'speed.aria': 'Vitesse de simulation',
+    'speed.limited': 'limité par votre connexion',
+    'ephemeris.notice.waitingTitle': 'La date attend ses données',
+    'ephemeris.notice.waiting':
+      'Votre connexion est plus lente que la vitesse de lecture demandée. Rien de faux n’est affiché : la date avance au rythme des octets.',
     'nav.searchPlaceholder': 'Rechercher un corps…',
     'nav.paletteAria': 'Rechercher et sélectionner un corps',
     'nav.group.star': 'Étoile',

@@ -29,6 +29,7 @@ import { setupBodyInfo } from './ui/bodyInfo';
 import { setupPositionProvenance } from './ui/positionProvenance';
 import { setupDocumentTitle } from './ui/documentTitle';
 import { setupPlayback } from './ui/playback';
+import { MAX_SIMULATION_SCALE } from './ui/speedSlider';
 import { setupQualitySection } from './ui/qualitySection';
 import { setupTimePanel } from './ui/timePanel';
 import { setupModeSwitcher } from './ui/modeSwitcher';
@@ -74,6 +75,10 @@ import {
 } from './ui/overlayCoordinator';
 import { setupContextRecovery } from './ui/contextRecovery';
 import { setupEphemerisNotice } from './ui/ephemerisNotice';
+import {
+  bytesPerSimulatedDay,
+  sustainableTimeScale,
+} from '@/core/playbackBudget';
 import { setupSolarDebug } from './ui/solarDebug';
 import { setupGeoDebug } from './ui/geoDebug';
 import { setupTerminatorProbe } from './ui/terminatorProbe';
@@ -206,8 +211,9 @@ if (surfaceScrim) {
     setupTerminatorProbe(api);
     setupSurfaceProbe(api);
     setupContextRecovery(sceneSystem);
-    // Dit à l’écran, sans ouvrir de fiche, quand des éphémérides ne sont pas arrivées.
-    setupEphemerisNotice(api);
+    // Dit à l’écran, sans ouvrir de fiche, quand des éphémérides ne sont pas arrivées, et
+    // depuis la phase 17D quand la date ATTEND ses octets, ce qui n'est pas la même chose.
+    const ephemerisNotice = setupEphemerisNotice(api);
 
     // Registre des COUCHES MÉTÉO de la Terre. Chaque `setup*` monte sa couche (données
     // GIBS/Open-Meteo synchronisées sur la date de simulation, repli statique hors-ligne)
@@ -269,7 +275,38 @@ if (surfaceScrim) {
       },
       overlayCoordinator
     );
-    const playback = setupPlayback(animationSystem, orbitalMechanics);
+    /**
+     * Ce que la connexion soutient comme vitesse de lecture (§ 9b du plan du lot 17, option (c)
+     * tranchée le 2026-09-24). La composition est le seul endroit qui connaisse À LA FOIS le
+     * service d'éphémérides et le curseur : le calcul, lui, est pur (`core/playbackBudget`).
+     *
+     * Appelée à chaque image, donc gardée : la somme sur les corps couverts ne se refait que si
+     * le débit mesuré ou le JOUR affiché a changé. Le débit ne bouge qu'à la fin d'une requête.
+     */
+    let lastRate: number | null = null;
+    let lastDay = Number.NaN;
+    let lastCeiling: number | null = null;
+    const playbackCeiling = (): number | null => {
+      const rate = horizonsEphemeris.observedBytesPerSecond;
+      const date = orbitalMechanics.simulationDate;
+      const day = Math.floor(date.getTime() / 86_400_000);
+      if (rate === lastRate && day === lastDay) return lastCeiling;
+      lastRate = rate;
+      lastDay = day;
+      const grids = horizonsEphemeris.budgetGrids(date);
+      lastCeiling = sustainableTimeScale({
+        bytesPerSecond: rate,
+        perSimulatedDay: bytesPerSimulatedDay(grids),
+        bodyCount: grids.length,
+        maxTimeScale: MAX_SIMULATION_SCALE,
+      });
+      return lastCeiling;
+    };
+    const playback = setupPlayback(
+      animationSystem,
+      orbitalMechanics,
+      playbackCeiling
+    );
     setupTimePanel(
       orbitalMechanics,
       playback,
@@ -417,6 +454,10 @@ if (surfaceScrim) {
     exploHud.setLabelSpace(labelSpace);
     animationSystem.onFrame(() => {
       const morph = orbitalMechanics.scaleMorph;
+      // Phase 17D : le curseur se plafonne à ce que le lien soutient, et la date qui attend le
+      // DIT. Les deux sont relus par image mais ne recalculent que sur changement.
+      playback.syncCeiling();
+      ephemerisNotice.setWaiting(orbitalMechanics.waitingForDataSeconds);
       labelSpace.reset();
       const wantOverlays = morph > 0;
       if (wantOverlays !== exploOverlaysVisible) {
