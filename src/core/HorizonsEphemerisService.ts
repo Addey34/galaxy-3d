@@ -693,7 +693,8 @@ export class HorizonsEphemerisService implements PreciseEphemerisProvider {
           await store.write(
             body.file,
             { firstIndex: 0, lastIndex: body.sampleCount - 1 },
-            buffer
+            buffer,
+            inventory.spans.get(body.file) ?? null
           );
         } catch {
           /* Le lien a lâché : l'état relu dira exactement où en est l'appareil. */
@@ -1019,7 +1020,8 @@ export class HorizonsEphemerisService implements PreciseEphemerisProvider {
                 firstIndex: fetched.stored.firstIndex,
                 lastIndex: fetched.stored.lastIndex,
               },
-              fetched.stored.bytes
+              fetched.stored.bytes,
+              inventory?.spans.get(body.file) ?? null
             );
           return null;
         } catch (error) {

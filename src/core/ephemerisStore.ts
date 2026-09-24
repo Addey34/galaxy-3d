@@ -248,17 +248,25 @@ export class EphemerisStore {
   /**
    * Range une tranche, et rend `true` si le magasin a changé.
    *
+   * `held` est ce que l'inventaire du passage courant annonce pour ce fichier, et c'est un
+   * PARAMÈTRE et non une relecture, pour une raison MESURÉE : relire l'inventaire ici coûtait
+   * un `cache.keys()` par corps, soit **62 appels par passage de chargement, mesurés à
+   * 12 184 ms** dans un vrai navigateur sur un magasin de 56 entrées (contre 3 725 ms pour les
+   * 62 écritures elles-mêmes). Ces douze secondes tombaient en plein dans le chemin des
+   * éphémérides : pendant une lecture accélérée, chaque glissement de fenêtre les repayait et
+   * la date n'avançait plus. C'est la CI qui l'a attrapé, pas la suite locale, et c'est la même
+   * règle que pour les lectures — l'inventaire se lit UNE fois par passage.
+   *
    * Un quota atteint n'est pas une panne : le chargement suivant redemandera ses octets, comme
    * avant cette phase. On le rend donc comme un `false`, pas comme une exception.
    */
   async write(
     file: string,
     span: HeldSpan,
-    bytes: ArrayBuffer
+    bytes: ArrayBuffer,
+    held: HeldSpan | null
   ): Promise<boolean> {
     if (bytes.byteLength !== spanByteLength(span)) return false;
-    const { spans } = await this.inventory();
-    const held = spans.get(file) ?? null;
     if (!shouldReplace(held, span)) return false;
     try {
       await this.cache.put(storeKey(file, span), new Response(bytes));

@@ -8,6 +8,7 @@ import {
   spanSatisfies,
   storeKey,
   type EphemerisCacheLike,
+  type HeldSpan,
 } from './ephemerisStore';
 import { BYTES_PER_SAMPLE, byteRangeForIndices } from './ephemerisWindow';
 
@@ -143,9 +144,23 @@ describe('EphemerisStore', () => {
     store = new EphemerisStore(cache);
   });
 
+  /**
+   * Écrit comme le SERVICE écrit : l'inventaire se lit d'abord, une seule fois, et la tranche
+   * tenue est PASSÉE à `write`. Le test exerce ainsi le vrai patron d'appel ; écrire `null` en
+   * dur ne dirait rien de la règle d'inclusion, qui est justement ce que ces gardes tiennent.
+   */
+  const writeLikeService = async (
+    file: string,
+    span: HeldSpan,
+    bytes: ArrayBuffer
+  ): Promise<boolean> => {
+    const { spans } = await store.inventory();
+    return store.write(file, span, bytes, spans.get(file) ?? null);
+  };
+
   it('range une tranche et la relit', async () => {
     const span = { firstIndex: 4, lastIndex: 9 };
-    expect(await store.write(FILE, span, bytesFor(span))).toBe(true);
+    expect(await writeLikeService(FILE, span, bytesFor(span))).toBe(true);
 
     const inventory = await store.inventory();
     expect(inventory.spans.get(FILE)).toEqual(span);
@@ -160,7 +175,7 @@ describe('EphemerisStore', () => {
     // Des octets à la mauvaise taille sont un défaut de déploiement, pas de transport : les
     // ranger ferait croire l'appareil prêt alors qu'il lirait un autre instant.
     const span = { firstIndex: 0, lastIndex: 9 };
-    expect(await store.write(FILE, span, new ArrayBuffer(8))).toBe(false);
+    expect(await writeLikeService(FILE, span, new ArrayBuffer(8))).toBe(false);
     expect((await store.inventory()).spans.size).toBe(0);
   });
 
@@ -174,21 +189,21 @@ describe('EphemerisStore', () => {
   it('ne garde qu’UNE entrée par fichier', async () => {
     const small = { firstIndex: 10, lastIndex: 12 };
     const wide = { firstIndex: 0, lastIndex: 99 };
-    await store.write(FILE, small, bytesFor(small));
-    await store.write(FILE, wide, bytesFor(wide));
+    await writeLikeService(FILE, small, bytesFor(small));
+    await writeLikeService(FILE, wide, bytesFor(wide));
     expect(cache.size()).toBe(1);
     expect((await store.inventory()).spans.get(FILE)).toEqual(wide);
 
     // …et une tranche déjà contenue n'écrit rien du tout.
-    expect(await store.write(FILE, small, bytesFor(small))).toBe(false);
+    expect(await writeLikeService(FILE, small, bytesFor(small))).toBe(false);
     expect((await store.inventory()).spans.get(FILE)).toEqual(wide);
   });
 
   it('retire ce que le manifeste courant ne nomme plus, et garde le reste', async () => {
     const other = 'mercury.ac5d5b6267d2.bin';
     const span = { firstIndex: 0, lastIndex: 1 };
-    await store.write(FILE, span, bytesFor(span));
-    await store.write(other, span, bytesFor(span));
+    await writeLikeService(FILE, span, bytesFor(span));
+    await writeLikeService(other, span, bytesFor(span));
     await store.writeManifest({ hello: 'world' });
 
     expect(await store.prune(new Set([FILE]))).toBe(1);
@@ -226,7 +241,7 @@ describe('EphemerisStore', () => {
 
   it('se vide entièrement quand on lui rend la place', async () => {
     const span = { firstIndex: 0, lastIndex: 1 };
-    await store.write(FILE, span, bytesFor(span));
+    await writeLikeService(FILE, span, bytesFor(span));
     await store.writeManifest({ hello: 'world' });
     expect(await store.clear()).toBe(2);
     expect(cache.size()).toBe(0);
