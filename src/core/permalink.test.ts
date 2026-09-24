@@ -5,6 +5,7 @@ import {
   parsePermalink,
   pathnameForBody,
   serializePermalink,
+  requestedSceneDate,
 } from './permalink';
 
 const validBodies = new Set(['earth', 'mars']);
@@ -91,6 +92,31 @@ describe('permalink state', () => {
  * script en ligne pour l'injecter est exclu — la CSP du projet est `script-src 'self'` sans
  * `unsafe-inline`. Le chemin doit donc être lu comme un état à part entière.
  */
+describe('la date que l’adresse demande, avant tout démarrage (lot 17C)', () => {
+  it('lit la query, puis le chemin d’une page d’éclipse, sinon rien', () => {
+    expect(
+      requestedSceneDate('/', '?date=2080-03-01T00:00:00Z')?.toISOString()
+    ).toBe('2080-03-01T00:00:00.000Z');
+    // La page la plus partagée du site porte sa date dans le CHEMIN.
+    const eclipse = requestedSceneDate('/eclipse/2026-08-12/', '');
+    expect(eclipse).not.toBeNull();
+    expect(eclipse!.toISOString().slice(0, 10)).toBe('2026-08-12');
+    expect(requestedSceneDate('/mercury/', '?mode=explo')).toBeNull();
+    // La query prime sur le chemin, comme partout ailleurs dans ce module.
+    expect(
+      requestedSceneDate(
+        '/eclipse/2026-08-12/',
+        '?date=2080-03-01T00:00:00Z'
+      )?.toISOString()
+    ).toBe('2080-03-01T00:00:00.000Z');
+  });
+
+  it('refuse une date illisible plutôt que d’en inventer une', () => {
+    expect(requestedSceneDate('/', '?date=demain')).toBeNull();
+    expect(requestedSceneDate('/eclipse/pas-une-date/', '')).toBeNull();
+  });
+});
+
 describe('permalink — corps nommé par le chemin', () => {
   const bodies = new Set(['jupiter', 'titan', 'earth']);
 

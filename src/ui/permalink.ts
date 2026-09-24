@@ -86,7 +86,11 @@ export function setupPermalinks(
     eclipseFromPathname(window.location.pathname) ?? null;
 
   const sync = (view?: PermalinkViewAngles): void => {
-    if (applying || suspended) return;
+    // Un saut qui ATTEND ses octets (lot 17C) n'est pas encore la scène : écrire l'adresse
+    // maintenant la ferait décrire l'instant d'avant, et pire, `eclipse` serait effacé alors
+    // que la page d'éclipse est justement en train d'atteindre son pic. `onDateSettled`
+    // rappelle cette fonction dès que le saut s'applique.
+    if (applying || suspended || om.pendingJumpDate !== null) return;
     const selectedBody = navigation.getSelectedBody();
     if (
       eclipse &&
@@ -128,6 +132,14 @@ export function setupPermalinks(
     const currentUrl = `${window.location.pathname}${window.location.search}${window.location.hash}`;
     if (nextUrl !== currentUrl) window.history.replaceState(null, '', nextUrl);
   };
+
+  /**
+   * Un saut de date peut ATTENDRE ses octets depuis le lot 17C : l'adresse se resynchronise
+   * donc quand il s'applique, et pas seulement quand l'interface le demande. Sans cela,
+   * `?date=2080-03-01` était réécrit avec la date du démarrage, et l'adresse décrivait un
+   * instant que la scène n'affichait plus (mesuré sur le build).
+   */
+  om.onDateSettled(() => sync());
 
   const applyInitialState = (): void => {
     const state = parsePermalink(

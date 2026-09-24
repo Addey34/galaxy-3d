@@ -45,6 +45,20 @@ export class SimulationClock {
     this.syncToRealTime();
   }
 
+  /**
+   * Fige la date simulée sur cette valeur, sans dette.
+   *
+   * Sert à une seule chose, et c'est la décision D3 du lot 17 : l'horloge n'avance pas sur des
+   * données qui ne sont pas arrivées. Le ré-ancrage (même mécanique que `setTimeScale`, qui
+   * préserve la date en recalculant l'offset) est ce qui empêche la reprise de rattraper d'un
+   * coup le temps réel écoulé pendant l'attente — sinon attendre une fenêtre produirait
+   * exactement le saut que ce lot interdit.
+   */
+  holdAt(date: Date): void {
+    this._date = new Date(date);
+    this.setTimeScale(this._timeScale);
+  }
+
   // ── Navigation temporelle ─────────────────────────────────────────────────
 
   /** Déplace la date simulée vers une cible en recalculant l'offset. */

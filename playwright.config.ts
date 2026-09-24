@@ -33,7 +33,17 @@ export default defineConfig({
   // resolution (dont la normal map 8k) est bien plus lent → on double le budget en CI pour les
   // scenarios lourds (titan, solarDebug), sans masquer un vrai bug (qui echoue quand meme aux 3
   // tentatives).
-  timeout: process.env.CI ? 120_000 : 60_000,
+  //
+  // Depuis le lot 17C, un boot coûte plus cher SUR LE SERVEUR DE DEV, et la raison est mesurée :
+  // les éphémérides sont lues par PLAGES, une réponse 206 n'est jamais servie par le cache du
+  // navigateur, et le serveur de dev parle HTTP/1.1 (six connexions par hôte). Les 62 plages
+  // occupent donc les connexions et retardent les ressources du document, celles qu'attend
+  // l'événement `load` : mesuré, `load` tombe exactement quand la dernière plage arrive
+  // (17,0 s à froid, 4,7 s à chaud, contre 3,4 s avec les fichiers entiers servis par le cache).
+  // C'est un artefact du serveur de DEV : en production l'hôte parle HTTP/2 et l'A/B ne montre
+  // aucun écart (12,5 s contre 12,8 s, lien non bridé). Le budget local rejoint donc celui de
+  // la CI au lieu de faire échouer la porte sur une machine chargée.
+  timeout: 120_000,
   expect: {
     // Assertions jouées pendant/juste après le boot (thread encore sous à-coups de décodage).
     timeout: process.env.CI ? 30_000 : 15_000,
@@ -45,7 +55,10 @@ export default defineConfig({
     // Un clic peut tomber pendant une pause de décodage de texture : on laisse de la marge
     // à l'actionnabilité au lieu de subir le défaut de 30 s pile sur un à-coup.
     actionTimeout: 15_000,
-    navigationTimeout: 45_000,
+    // 60 s et non 45 : cf. la note du budget par test ci-dessus, un boot de dev paie désormais
+    // ses 62 plages à chaque fois. Une navigation VRAIMENT cassée échoue quand même, elle
+    // n'aboutit jamais.
+    navigationTimeout: 60_000,
     // Transition Éduc↔Explo instantanée en test (le morph de positions/tailles respecte
     // prefers-reduced-motion) : rend les scénarios déterministes, sans attendre le « dolly zoom ».
     reducedMotion: 'reduce',

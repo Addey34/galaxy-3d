@@ -126,7 +126,11 @@ test('textured dwarf planets are navigable and other small bodies stay label-onl
   // Le manifeste + les éphémérides des planètes naines texturées sont chargés (le nombre
   // total dépend des lunes/corps ajoutés par ailleurs, on ne le fige donc pas).
   expect(ephemerisResponses.length).toBeGreaterThanOrEqual(5);
-  expect(ephemerisResponses.every(({ status }) => status === 200)).toBe(true);
+  // Le manifeste arrive ENTIER ; les binaires, eux, sont lus par PLAGES depuis le lot 17C,
+  // donc l'hôte répond 206. Distinguer les deux dit plus que l'ancien « tout à 200 », qui
+  // resterait vrai le jour où le fenêtrage cesserait de fonctionner.
+  for (const { file, status } of ephemerisResponses)
+    expect(status, file).toBe(file.endsWith('.json') ? 200 : 206);
   expect(ephemerisResponses.map(({ file }) => file)).toEqual(
     expect.arrayContaining([
       'manifest.json',

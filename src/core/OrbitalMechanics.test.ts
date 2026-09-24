@@ -93,6 +93,12 @@ function makeThrottleHarness(thresholdMs: number): {
     value: thresholdMs,
     writable: true,
   });
+  // `Object.create` n'exécute pas les initialiseurs de champs de classe : ce qu'un saut
+  // parcourt doit être posé ici (cf. `onDateSettled`, lot 17C).
+  Object.defineProperty(mechanics, '_dateSettledListeners', {
+    value: [],
+    writable: true,
+  });
 
   return {
     mechanics,

@@ -1,3 +1,5 @@
+import { eclipseFromPathname } from './eclipsePages';
+
 /** Etat partageable de l'application, encode dans la query string. */
 export type PermalinkMode = 'educ' | 'explo';
 
@@ -130,6 +132,30 @@ export function parsePermalink(
     date: parseDate(params.get('date')),
     view: parseView(params),
   };
+}
+
+/**
+ * LA DATE QUE L'ADRESSE DEMANDE, AVANT MÊME QUE LA SCÈNE N'EXISTE.
+ *
+ * Depuis le lot 17C, le service ne charge que la fenêtre d'éphéméride dont la scène a besoin :
+ * démarrer à aujourd'hui puis sauter à la date du lien ferait donc charger DEUX fenêtres, et
+ * la seconde arrive pendant que la première image se rend, c'est-à-dire au pire moment.
+ * Mesuré sur le build avant correction, page d'éclipse `/eclipse/2026-08-12/` : **8,4 secondes**
+ * après la disparition du loader avant que la date demandée ne s'applique, les requêtes
+ * partant par vagues de six entre deux images chargées. En démarrant à la bonne date, il n'y a
+ * plus de saut du tout.
+ *
+ * Pure : elle lit deux chaînes, jamais `window`. La couche de composition la lui passe.
+ */
+export function requestedSceneDate(
+  pathname: string,
+  search: string
+): Date | null {
+  const fromQuery = parseDate(new URLSearchParams(search).get('date'));
+  if (fromQuery) return fromQuery;
+  // Une page d'éclipse porte sa date dans le CHEMIN (la CSP interdit de la transmettre par un
+  // script en ligne), et c'est le lien le plus partagé du site.
+  return eclipseFromPathname(pathname)?.date ?? null;
 }
 
 export function formatPermalinkDate(date: Date): string {

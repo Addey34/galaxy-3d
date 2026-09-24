@@ -44,10 +44,40 @@ async function cutMostBinaries(page: Page): Promise<() => void> {
   };
 }
 
+/** La date de la scène : elle décide QUELS fichiers sont nécessaires (lot 17C). */
+const SCENE_DATE = '2026-06-01T00:00:00Z';
+
 const openBody = async (page: Page, body: string): Promise<void> => {
-  await page.goto(`/?body=${body}&date=2026-06-01T00%3A00%3A00Z`);
+  await page.goto(`/?body=${body}&date=${encodeURIComponent(SCENE_DATE)}`);
   await expect(page.locator('#loader')).toBeHidden({ timeout: 90_000 });
 };
+
+/**
+ * Combien de corps la scène a BESOIN de lire à cette date, lu au manifeste servi et jamais
+ * écrit à la main.
+ *
+ * Ce n'est pas le compte du manifeste depuis le lot 17C : Cassini (mission close en 2017) et
+ * Rosetta (2016) n'ont aucun fichier à recevoir au 2026-06-01, donc ils ne sont ni reçus ni
+ * manquants. Les compter parmi les reçus ferait annoncer « 3 sur 64 » avec UN seul fichier
+ * arrivé. La conversion de date reste naïve ici, et c'est sans effet : ces corps sont hors
+ * couverture depuis des ANNÉES, pas de quelques secondes.
+ */
+async function neededBodies(page: Page): Promise<number> {
+  return page.evaluate(async (iso: string) => {
+    const response = await fetch('/assets/ephemerides/manifest.json');
+    const manifest = (await response.json()) as {
+      bodies: Record<
+        string,
+        { startJdTdb: number; stepDays: number; sampleCount: number }
+      >;
+    };
+    const jd = new Date(iso).getTime() / 86_400_000 + 2_440_587.5;
+    return Object.values(manifest.bodies).filter((entry) => {
+      const index = Math.floor((jd - entry.startJdTdb) / entry.stepDays);
+      return index >= 0 && index < entry.sampleCount - 1;
+    }).length;
+  }, SCENE_DATE);
+}
 
 test('what arrived still serves, and what is missing is said on screen', async ({
   page,
@@ -67,15 +97,19 @@ test('what arrived still serves, and what is missing is said on screen', async (
   await expect(notice).toHaveAttribute('data-state', 'degraded');
   await expect(notice).toContainText('Reduced precision');
   // Les comptes sont ceux du manifeste servi, pas un nombre écrit à la main.
-  const declared = await page.evaluate(async () => {
+  const declared = await neededBodies(page);
+  await expect(notice).toContainText(`1 of ${declared}`);
+  await expect(notice).toHaveAttribute('data-missing', String(declared - 1));
+  // Et le compte a bien un sens : il est inférieur au manifeste, parce que deux missions
+  // closes n'ont rien à recevoir à cette date.
+  const inManifest = await page.evaluate(async () => {
     const response = await fetch('/assets/ephemerides/manifest.json');
     const manifest = (await response.json()) as {
       bodies: Record<string, unknown>;
     };
     return Object.keys(manifest.bodies).length;
   });
-  await expect(notice).toContainText(`1 of ${declared}`);
-  await expect(notice).toHaveAttribute('data-missing', String(declared - 1));
+  expect(declared).toBeLessThan(inManifest);
   // Une sonde n'a aucun repli képlérien : son fichier manquant la laisse SANS position, ce
   // qui n'est pas la même chose qu'une position moins précise, et le bandeau le distingue.
   await expect(notice).toContainText('without any position');

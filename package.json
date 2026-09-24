@@ -15,6 +15,7 @@
     "test:perf": "playwright test e2e/perf-fps.spec.ts",
     "ephemeris:generate": "node scripts/generate-horizons-ephemerides.mjs",
     "ephemeris:elements": "node scripts/derive-relative-elements.mjs",
+    "ephemeris:meanmotion": "node scripts/compute-mean-motion-scale.mjs",
     "ephemeris:interstellar": "node scripts/derive-interstellar-elements.mjs",
     "ephemeris:small-body": "node scripts/derive-small-body-elements.mjs",
     "ephemeris:validate": "node scripts/validate-against-horizons.mjs",

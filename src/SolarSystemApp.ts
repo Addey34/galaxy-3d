@@ -10,6 +10,7 @@ import { SimulationClock } from './core/SimulationClock';
 import { EphemerisService } from './core/EphemerisService';
 import { OrbitalElementsService } from './core/OrbitalElementsService';
 import { OrbitalMechanics } from './core/OrbitalMechanics';
+import type { EphemerisWindows } from './core/OrbitalMechanics';
 import { HorizonsEphemerisService } from './core/HorizonsEphemerisService';
 import { FallbackPreciseEphemerisProvider } from './core/PreciseEphemerisProvider';
 import { SpkKernelWorkerClient } from './core/SpkKernelWorkerClient';
@@ -17,11 +18,29 @@ import { SpkWorkerEphemerisProvider } from './core/SpkWorkerEphemerisProvider';
 import { APP_SETTINGS, SPK_SETTINGS, TEXTURE_SETTINGS } from './config/engine';
 import { CELESTIAL_CONFIG } from './config/bodies';
 import { bodyDynamics } from './config/gravity';
-import { forEachBody } from './config/catalog';
+import { flattenBodies, forEachBody } from './config/catalog';
 import { t } from './i18n';
 import Logger from './utils/Logger';
 
 type ProgressCallback = (percent: number, message: string) => void;
+
+/**
+ * Période de révolution de chaque corps du catalogue qui en a une.
+ *
+ * C'est ce que coûte une LIGNE d'orbite en octets d'éphéméride : `orbitPath` échantillonne
+ * une période ENTIÈRE centrée sur la date, et il le fait pour tous les corps tracés, la
+ * visibilité d'une ligne étant décidée plus tard, dans la scène. Mesuré le 2026-09-23 :
+ * 563 472 octets pour la première vue, 572 640 avec toutes les orbites allumées, soit 1,5 %
+ * des 38 445 024 livrés.
+ */
+function orbitPeriodsByBody(): Record<string, number> {
+  const periods: Record<string, number> = {};
+  for (const [name, cfg] of flattenBodies(CELESTIAL_CONFIG)) {
+    const period = cfg.realData?.orbitPeriodDays;
+    if (period !== undefined && period > 0) periods[name] = period;
+  }
+  return periods;
+}
 
 function reportProgress(
   progressCallback: ProgressCallback,
@@ -69,7 +88,21 @@ export class SolarSystemApp {
   private _horizonsEphemeris: HorizonsEphemerisService | null = null;
   private _spkProvider: SpkWorkerEphemerisProvider | null = null;
 
-  async init(progressCallback: ProgressCallback): Promise<PublicAPI> {
+  /**
+   * Date à laquelle la scène doit DÉMARRER, quand l'adresse en demande une.
+   *
+   * La couche de composition la lit (`core/permalink.requestedSceneDate`) et la passe : cette
+   * façade ne touche pas au DOM. Sans elle, une page d'éclipse ou un lien daté chargeait la
+   * fenêtre d'éphéméride d'aujourd'hui, puis celle de la date demandée, la seconde arrivant
+   * pendant la première image (8,4 s mesurées avant correction).
+   */
+  private _startDate: Date | null = null;
+
+  async init(
+    progressCallback: ProgressCallback,
+    startDate: Date | null = null
+  ): Promise<PublicAPI> {
+    this._startDate = startDate;
     if (this.initialized) {
       Logger.warn('[SolarSystemApp] init() called twice — ignored.');
       return this._publicAPI();
@@ -125,9 +158,21 @@ export class SolarSystemApp {
     // Les masses du catalogue disent au service autour de quoi chaque fichier est centre :
     // il en a besoin pour interpoler par la dynamique les satellites que son pas
     // d'echantillonnage ne resout pas (cf. HorizonsEphemerisService).
+    //
+    // Et depuis le lot 17, ce que la SCÈNE demande : le loader n'attend plus les 38,4 Mo de
+    // deux siècles de trajectoires, mais les octets de la première vue — la position de
+    // chaque corps à cette date, et la période entière de ceux dont une ligne d'orbite sera
+    // tracée. Mesuré en production : 45,81 Mo et 15,3 s de démarrage, dont 77,5 % pour les
+    // seules éphémérides ; la première vue en demande 1,47 %.
     const horizonsPromise = HorizonsEphemerisService.load(
       manifestUrl,
-      bodyDynamics(CELESTIAL_CONFIG)
+      bodyDynamics(CELESTIAL_CONFIG),
+      {
+        scene: {
+          date: this._startDate ?? new Date(),
+          orbitPeriodDays: orbitPeriodsByBody(),
+        },
+      }
     ).then((horizons) => {
       ephemeridesReady = true;
       reportResourceProgress(t('loader.ephemerides'));
@@ -138,6 +183,32 @@ export class SolarSystemApp {
 
     const [, horizons] = await Promise.all([texturePromise, horizonsPromise]);
     this._horizonsEphemeris = horizons;
+  }
+
+  /**
+   * Le contrat que l'horloge interroge avant d'avancer (cf. `EphemerisWindows`). Cette couche
+   * est la seule à connaître à la fois le service et le catalogue : le moteur de mouvement
+   * ignore d'où viennent les octets, et le service ignore quelles lignes sont tracées.
+   */
+  private _ephemerisWindows(): EphemerisWindows {
+    const service = this._horizonsEphemeris!;
+    const periods = orbitPeriodsByBody();
+    const request = (
+      date: Date,
+      leadDays: number,
+      lines: boolean
+    ): Parameters<typeof service.hasCoverageFor>[0] => ({
+      date,
+      leadDays,
+      ...(lines ? { orbitPeriodDays: periods } : {}),
+    });
+    return {
+      ready: (date, leadDays, lines) =>
+        service.hasCoverageFor(request(date, leadDays, lines)),
+      ensure: async (date, leadDays, lines) => {
+        await service.ensureCoverage(request(date, leadDays, lines));
+      },
+    };
   }
 
   private _startOptionalSpk(): void {
@@ -221,8 +292,24 @@ export class SolarSystemApp {
 
     // Créer les systèmes astronomiques
     this._ephemerisService = new EphemerisService();
+    const clock = new SimulationClock();
+    // L'horloge part à la date demandée par l'adresse, et pas à aujourd'hui : c'est la même
+    // date que celle dont les éphémérides ont été chargées quelques secondes plus tôt, donc
+    // la première image est déjà la bonne et aucun saut n'a lieu.
+    //
+    // Honnêteté sur cette ligne : la suite e2e ne la distingue PAS, et c'est mesuré (la
+    // retirer laisse le scénario vert). La raison est que `ui/permalink` applique la date
+    // dans la même tâche que ce démarrage, avant la première image, donc la fenêtre déjà
+    // chargée suffit. Ce qu'elle apporte est le DÉTERMINISME : sans elle, tout dépend de cette
+    // course, et une image rendue avant l'application de l'adresse verrait la scène à
+    // aujourd'hui avec les octets de la date demandée — donc des positions de repli, une
+    // ligne d'orbite épissée, et une seconde fenêtre chargée pour rien.
+    if (this._startDate)
+      clock.addDays(
+        (this._startDate.getTime() - clock.date.getTime()) / 86_400_000
+      );
     this._orbitalMechanics = new OrbitalMechanics(
-      new SimulationClock(),
+      clock,
       this._ephemerisService,
       new OrbitalElementsService(),
       this._spkProvider
@@ -234,6 +321,8 @@ export class SolarSystemApp {
       CELESTIAL_CONFIG,
       bodies
     );
+
+    this._orbitalMechanics.setEphemerisWindows(this._ephemerisWindows());
 
     // Transition animée Éduc↔Explo : la taille visuelle de chaque corps morphe avec sa
     // position. Les lignes éducatives sont masquées dès que l'Exploration devient active.
@@ -290,7 +379,13 @@ export class SolarSystemApp {
     this.systems.animation.run();
   }
 
-  /** Recalcule le cercle éducatif ou la trajectoire réelle du mode courant. */
+  /**
+   * Recalcule le cercle éducatif ou la trajectoire réelle du mode courant.
+   *
+   * Appelé au démarrage, et par `onOrbitsChanged` — que le moteur n'émet QUE lorsque les
+   * octets d'une période entière sont là (cf. `OrbitalMechanics._emitOrbitsChanged`) : une
+   * ligne tracée sur une fenêtre trop courte épisserait deux sources.
+   */
   private _recomputeOrbits(): void {
     const om = this._orbitalMechanics!;
     const scene = this.systems.scene!;

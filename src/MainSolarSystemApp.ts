@@ -35,6 +35,7 @@ import { setupModeSwitcher } from './ui/modeSwitcher';
 import { setupExploTourNudge } from './ui/exploTourNudge';
 import { setupExploScaleBadge } from './ui/exploScaleBadge';
 import { setupPermalinks } from './ui/permalink';
+import { requestedSceneDate } from './core/permalink';
 import { NAVIGABLE_BODIES } from './config/navigable';
 import { setupAstronomicalEvents } from './ui/astronomicalEvents';
 import { setupOpticalZoom } from './ui/opticalZoom';
@@ -184,7 +185,14 @@ if (surfaceScrim) {
     updateProgress(0, t('loader.init'));
 
     const app = new SolarSystemApp();
-    const api = await app.init(updateProgress);
+    // La date que l'adresse demande est connue AVANT le démarrage, et elle décide quelle
+    // fenêtre d'éphéméride charger (lot 17C). Démarrer à aujourd'hui pour sauter ensuite en
+    // chargeait deux, la seconde pendant la première image : 8,4 s mesurées sur une page
+    // d'éclipse avant correction.
+    const api = await app.init(
+      updateProgress,
+      requestedSceneDate(window.location.pathname, window.location.search)
+    );
     const {
       cameraSystem,
       animationSystem,
