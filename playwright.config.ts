@@ -43,6 +43,17 @@ export default defineConfig({
   // C'est un artefact du serveur de DEV : en production l'hôte parle HTTP/2 et l'A/B ne montre
   // aucun écart (12,5 s contre 12,8 s, lien non bridé). Le budget local rejoint donc celui de
   // la CI au lieu de faire échouer la porte sur une machine chargée.
+  //
+  // REMESURÉ le 2026-09-24, phase 17D, et le paragraphe ci-dessus ne se reproduit PAS tel quel :
+  // sur ce serveur de dev, trois navigations mesurées en quatre instants donnent `load` à
+  // **2,4 s** alors que le chargeur de l'application ne se masque qu'à **12,3 s**. `load`
+  // n'attend donc ni les plages ni les textures — un `fetch()` ne le retarde pas, et le document
+  // a fini bien avant. Les trois expirations de `page.goto` observées ce jour-là (sur 105
+  // navigations, sans une seule assertion en cause, et vertes au réessai isolé en 1,8 min)
+  // viennent de la CONTENTION de la machine, pas de la sémantique de `load` : la même suite a
+  // mis 59,5 min contre 35,8 min au lot 17C pour le même travail. Le budget reste donc celui-ci,
+  // et ce qu'il faut retenir est qu'un échec de cette forme se vérifie en relançant le fichier
+  // seul avant d'accuser le code.
   timeout: 120_000,
   expect: {
     // Assertions jouées pendant/juste après le boot (thread encore sous à-coups de décodage).
