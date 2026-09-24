@@ -32,7 +32,7 @@ import { HOURS_TO_RAD } from './MathConstants';
 import { surfaceRotationForSubsolarLongitude } from './frames';
 import { flattenBodies, forEachBody } from '@/config/catalog';
 import type { PositionSource } from './positionProvenance';
-import { readAheadDays } from './ephemerisWindow';
+import { READ_AHEAD_SECONDS, readAheadDays } from './ephemerisWindow';
 
 /**
  * CE QUE L'HORLOGE DEMANDE AUX ÉPHÉMÉRIDES AVANT D'AVANCER (lot 17, décisions D3 et D4).
@@ -69,25 +69,6 @@ const MS_PER_DAY = 86_400_000;
 
 /** Durée (secondes) de la transition animée des positions et tailles Éduc↔Explo. */
 const MORPH_DURATION_S = 1.2;
-
-/**
- * Secondes de lecture prises d'avance sur l'horloge (lot 17, décision D4).
- *
- * QUATRE, et c'est mesuré, pas choisi par symétrie. Lecture de dix secondes au curseur
- * maximal (un an simulé par seconde réelle), contre le build livré, service worker bloqué :
- *
- *   avance    10 Mbit/s              2 Mbit/s
- *    2 s      3,97 ans / 1,16 Mbit/s  2,07 ans / 0,71 Mbit/s
- *    4 s      5,10 ans / 2,01 Mbit/s  2,75 ans / 0,84 Mbit/s
- *   12 s      6,35 ans / 4,34 Mbit/s  AUCUNE avancée de la date
- *
- * Le contre-intuitif est la dernière ligne : un plus gros tampon d'avance NE SAUVE PAS un lien
- * pauvre, il l'achève. Chaque demande porte alors douze ans de grille, soit plus de trois
- * mégaoctets, qui mettent plus de dix secondes à arriver — et l'horloge, qui n'avance que sur
- * des données arrivées, ne bouge plus du tout. Quatre secondes est le meilleur des trois sur
- * LES DEUX liens.
- */
-const EPHEMERIS_READ_AHEAD_SECONDS = 4;
 
 /** Cubic InOut — même courbe que les vols caméra (TWEEN.Easing.Cubic.InOut). */
 function easeInOutCubic(t: number): number {
@@ -155,6 +136,16 @@ export class OrbitalMechanics {
   private _windowRequest: Promise<void> | null = null;
   /** Saut demandé, pas encore appliqué : ses octets ne sont pas là (cf. `jumpToDate`). */
   private _pendingJump: Date | null = null;
+  /**
+   * L'horloge est-elle RETENUE en ce moment, faute d'octets (décision D3) ?
+   *
+   * Ce n'est pas la même chose qu'un fichier manquant : rien n'est dégradé, la date attend. La
+   * distinction compte pour ce qu'on écrit à l'écran (phase 17D) : « précision réduite » serait
+   * faux ici, aucune position n'étant remplacée par une autre.
+   */
+  private _holding = false;
+  /** Depuis combien de secondes RÉELLES elle est retenue, remis à zéro dès qu'elle repart. */
+  private _heldSeconds = 0;
   /**
    * Demandes revenues SANS ce qu'on attendait, d'affilée. Au-delà de la borne ci-dessous, la
    * scène avance quand même : une fenêtre qui ne vient pas est une absence, et une absence se
@@ -296,6 +287,15 @@ export class OrbitalMechanics {
       if (this._prevPaused) this.clock.setTimeScale(this.clock.timeScale);
       this.clock.syncToRealTime();
       this._holdOnMissingWindows(prevMs);
+      // Compté en temps RÉEL : c'est la durée que le lecteur subit, pas celle que la date
+      // parcourt (elle n'avance justement pas).
+      this._heldSeconds = this._holding ? this._heldSeconds + realDelta : 0;
+    } else {
+      // EN PAUSE, plus rien n'attend : la scène est immobile parce que le lecteur l'a voulu.
+      // Laisser le compteur courir ferait dire à l'écran « la date attend ses données » alors
+      // que ce n'est plus la raison de son immobilité. Trouvé en relisant ce fichier.
+      this._holding = false;
+      this._heldSeconds = 0;
     }
     this._prevPaused = isPaused;
 
@@ -352,7 +352,7 @@ export class OrbitalMechanics {
 
   /** Avance de lecture que la vitesse courante réclame (signée, cf. `readAheadDays`). */
   private _leadDays(): number {
-    return readAheadDays(this.clock.timeScale, EPHEMERIS_READ_AHEAD_SECONDS);
+    return readAheadDays(this.clock.timeScale, READ_AHEAD_SECONDS);
   }
 
   /**
@@ -407,12 +407,19 @@ export class OrbitalMechanics {
       // puis trouvé en relisant ce fichier : sans la demande qui suit, une coupure passagère
       // pendant une lecture accélérée arrêtait le chargement des fenêtres pour le reste de la
       // session. Une seule demande est en vol à la fois, donc la bande passante reste bornée.
-      if (this._unmetAsks < OrbitalMechanics._MAX_UNMET_ASKS)
+      if (this._unmetAsks < OrbitalMechanics._MAX_UNMET_ASKS) {
         this.clock.holdAt(new Date(prevMs));
+        this._holding = true;
+      } else {
+        // On a renoncé à ATTENDRE : ce n'est plus une attente mais une absence, que le bandeau
+        // du lot 15 nomme déjà. Dire les deux à la fois serait dire deux choses différentes.
+        this._holding = false;
+      }
       this._requestWindows(this.clock.date, lead, false, true);
       return;
     }
     this._unmetAsks = 0;
+    this._holding = false;
     // Lecture accélérée : on prend de l'avance AVANT d'en avoir besoin, sinon l'horloge
     // buterait sur le bord de sa fenêtre à chaque pas de la grille.
     if (lead !== 0 && !windows.ready(this.clock.date, lead, false))
@@ -787,6 +794,18 @@ export class OrbitalMechanics {
   }
 
   /** Une date demandée dont les octets ne sont pas encore là, s'il y en a une. */
+  /**
+   * Depuis combien de secondes réelles la date attend ses octets, 0 si elle avance.
+   *
+   * Lu par `ui/ephemerisNotice` pour DIRE le retard (décision D4). Un chiffre plutôt qu'un
+   * booléen, parce que l'interface ne doit pas annoncer une attente d'une fraction de seconde :
+   * un saut de date en coûte 0,89 s à 10 Mbit/s (mesuré au 2026-09-23), et clignoter à chaque
+   * saut vaudrait moins que se taire.
+   */
+  get waitingForDataSeconds(): number {
+    return this._heldSeconds;
+  }
+
   get pendingJumpDate(): Date | null {
     return this._pendingJump ? new Date(this._pendingJump) : null;
   }

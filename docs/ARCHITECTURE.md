@@ -637,6 +637,81 @@ ne montre aucun écart (12,5 s contre 12,8 s). C'est pour cette raison, et avec 
 | `e2e/ephemerisWindow.spec.ts` | dans un vrai navigateur : chaque demande porte un `Range`, moins d'un vingtième des octets, la fiche dit toujours « JPL Horizons », un saut de cinquante ans garde cette source, un lien daté démarre à sa date SANS seconde fenêtre, et une fenêtre qui échoue EN COURS DE SESSION fait apparaître le bandeau |
 | `core/permalink.test.ts` | la date demandée se lit dans la query puis dans le chemin d'éclipse, la query prime, et une date illisible ne devient pas une date |
 
+### Le curseur se plafonne au débit mesuré, et une attente se dit (lot 17, phase 17D)
+
+La phase 17C a fait que **la date n'avance que sur des données arrivées**. Elle a aussi chiffré ce
+que cela coûte : au curseur maximal, la lecture parcourt 5,1 années par dix secondes au lieu de
+9,6 sur un lien à 10 Mbit/s, parce que la date RALENTIT pour rester exacte. Restait une question
+de produit, tranchée par l'utilisateur le 2026-09-24 (§ 9b du plan du lot 17, option (c)) :
+
+**La date reste exacte, et c'est le CURSEUR qui renonce, en l'affichant.** Un curseur qui promet
+un an par seconde sur un lien qui n'en sert pas le tiers ne mesure rien : il fait attendre, sans
+le dire. Les deux options écartées, gardées pour la trace : laisser la date ralentir sans toucher
+au curseur (il continue de promettre ce qu'il ne tient pas), et laisser la date avancer en
+annonçant des positions en retard, qui est « une position fausse en attendant » sous une étiquette
+— ce que la décision D3 a refusé et dont le lot 15 a chiffré le prix (Mercure à 2 600 km).
+
+**Le plafond est DÉRIVÉ, jamais écrit à la main** (`core/playbackBudget.ts`, pur) :
+
+- la DEMANDE vient de ce que la scène demande vraiment. Quand la date avance d'un pas de grille,
+  un corps a besoin d'un échantillon de plus, soit `BYTES_PER_SAMPLE` octets tous les `stepDays`
+  jours simulés ; la somme sur les corps COUVERTS à cette date donne des octets par jour simulé.
+  S'y ajoute le coût fixe des marges, redemandées à chaque glissement de fenêtre (3 072 o/s pour
+  64 corps, soit 24,6 kbit/s) ;
+- le DÉBIT est mesuré (`core/transferRate.ts`), et le plafond est la vitesse dont la demande y
+  tient.
+
+**Le modèle de demande reproduit la seule mesure publiée du plan, et c'est ce qui le valide** :
+les 64 corps du manifeste livré (5 fichiers au pas de 1 jour, 1 à 2, 39 à 4, 9 à 8, 3 à 16, 7 à
+64) donnent **800,2 octets par jour simulé**, donc **292 291 o/s = 2,34 Mbit/s** à la vitesse
+maximale : exactement le chiffre mesuré le 2026-09-23. Conséquence à écrire parce qu'elle borne
+l'utilité de la phase : **au-dessus de 2,36 Mbit/s (les 2,34 de demande plus le coût fixe des
+marges) il n'y a AUCUN plafond à afficher**, et l'interface n'affiche alors rien. À 2 Mbit/s il
+vaut 84,5 % de la course, à 120 ko/s 40 %.
+
+**Le débit se mesure sur le TEMPS OCCUPÉ, pas par requête.** Six requêtes simultanées se partagent
+la bande passante : `octets / durée` d'UNE requête sous-estime le lien d'un facteur proche du
+nombre de requêtes en vol, et c'est la mesure qui a trompé le lot 15 (64 requêtes de 77 s chacune
+pour 77 s de trafic au total). Le compteur additionne donc les périodes pendant lesquelles au
+moins une requête était en vol, ignore les trous, et compte le temps d'une requête qui ÉCHOUE avec
+ses zéro octet — l'oublier ferait passer le lien pour deux fois plus rapide. Il ne répond rien
+avant 32 768 octets et 120 ms de temps occupé : plafonner sur du bruit serait pire que ne pas
+plafonner.
+
+**Et il OUBLIE.** Au-delà de 4 Mo, octets et temps occupé sont réduits dans la même proportion :
+le débit mesuré ne bouge pas à cet instant, mais les mesures suivantes pèsent davantage. Sans
+cela, un visiteur qui démarre sur la fibre puis passe sur un lien de train garderait le plafond de
+la fibre et la date se remettrait à attendre en silence ; l'inverse est vrai aussi, un démarrage
+lent brimerait la lecture pour le reste de la session. Quatre mégaoctets, parce que la fenêtre de
+démarrage en pèse environ un : le démarrage n'est pas oublié aussitôt, et quelques mégaoctets de
+navigation suffisent à ce qu'il ne décide plus.
+
+**Le plafond ne descend jamais sous le temps réel 1:1**, où la demande est négligeable, et il
+s'applique à la MAGNITUDE et non au signe : remonter le temps coûte exactement les mêmes octets
+que le parcourir. La poignée REVIENT sur le plafond, sinon deux positions rendraient la même
+vitesse et la fin de course ne voudrait plus rien dire.
+
+**Une ATTENTE n'est pas une ABSENCE, et le bandeau ne dit pas la même chose.** Le bandeau du lot 15
+est étendu, pas doublé (décision D4) : il gagne un état `waiting`, avec son propre titre, sans
+bouton de reprise, et **une absence de fichier PRIME sur une attente** (elle est plus grave et
+porte la seule action qui répare). Écrire « précision réduite » pendant une attente serait FAUX :
+aucune position n'y est remplacée par une autre, la date est seulement plus lente que demandé. La
+décision est prise par une fonction pure, `ui/ephemerisNotice.noticeState`.
+
+**Et on se tait sous 1,5 s.** Mesuré au 2026-09-23 : la fenêtre de démarrage arrive en 0,89 s à
+10 Mbit/s et un saut de date coûte 3,2 s. Une attente d'une seconde est donc le prix NORMAL d'un
+saut, et l'annoncer ferait clignoter un bandeau à chaque clic dans le panneau de dates.
+
+| Garde | Ce qu'elle tient |
+| --- | --- |
+| `core/playbackBudget.test.ts` | la demande reproduit les 2,34 Mbit/s mesurés du plan depuis le manifeste LIVRÉ, le coût fixe des marges est compté, aucun plafond au-dessus de la demande maximale, jamais sous le temps réel, et un pas deux fois plus fin coûte deux fois plus |
+| `core/transferRate.test.ts` | le débit mesure LE LIEN et non la requête, additionne les périodes occupées sans les trous, compte le temps d'un échec, se tait sous ses deux seuils, et OUBLIE le lien du départ sans déformer le débit à l'instant où il oublie |
+| `core/playbackCeiling.test.ts` | chemin de production, contre les binaires livrés : les octets comptés sont ceux que l'hôte a SERVIS, un corps hors couverture n'entre ni dans la mesure ni dans le budget (62 sur 64 au 2026-09-23, Cassini et Rosetta étant des missions closes), et un lien à 2 Mbit/s plafonne là où un lien rapide ne plafonne rien |
+| `ui/speedSlider.test.ts` | l'inverse du curseur est exact sur toute la demi-course, la poignée revient sur le plafond, le plafond porte sur la magnitude et garde le sens du temps, et un plafond absurde ne fige pas la scène |
+| `ui/ephemerisNotice.test.ts` | un fichier manquant PRIME sur une attente, le seuil de 1,5 s se tait juste en dessous, et une reprise réussie garde sa ligne |
+| `core/ephemerisClockGate.test.ts` | l'attente se compte en temps RÉEL, se remet à zéro dès que la date repart, et cesse d'être une attente quand on renonce à attendre |
+| `e2e/playbackCeiling.spec.ts` | dans un vrai navigateur : sur un lien lent le curseur affiche la vitesse soutenable et sa raison, la poignée y revient, la fiche dit toujours « JPL Horizons » ; quand les octets ne viennent pas le bandeau dit que la date attend, sans le mot « precision » et sans reprise ; et à 390 px il ne couvre aucun dock, passe axe et ne déborde pas |
+
 ### Tests qui verrouillent tout ça
 
 | Fichier | Ce qu'il garde |

@@ -3,8 +3,10 @@ import { SPACECRAFT_MISSIONS } from '@/config/spacecraft';
 import type { EphemerisLoadReport } from '@/core/HorizonsEphemerisService';
 import {
   isComplete,
+  noticeState,
   noticeText,
   spacecraftWithoutPosition,
+  WAITING_ANNOUNCE_SECONDS,
 } from './ephemerisNotice';
 
 /**
@@ -67,5 +69,63 @@ describe('ephemerisNotice, what it counts', () => {
     expect(isComplete(report({ missing: missing('ceres') }))).toBe(false);
     // Le manifeste absent n'a AUCUN fichier manquant à nommer, et reste pourtant un défaut.
     expect(isComplete(report({ manifestFailed: true }))).toBe(false);
+  });
+});
+
+/**
+ * UNE ATTENTE N'EST PAS UNE ABSENCE (phase 17D, décision D4).
+ *
+ * La garde qui compte est la précédence : un fichier qui manque se dit « précision réduite » et
+ * porte une reprise ; une date qui attend ses octets ne dégrade RIEN, elle ralentit. Confondre
+ * les deux ferait afficher une action qui ne répare rien, ou un mot faux.
+ */
+describe('noticeState', () => {
+  const situation = (over: Partial<Parameters<typeof noticeState>[0]> = {}) =>
+    noticeState({
+      report: report({ loaded: ['mercury'] }),
+      waitingSeconds: 0,
+      asked: false,
+      recovered: false,
+      ...over,
+    });
+
+  it('se tait quand tout est arrivé et que rien n’attend', () => {
+    expect(situation()).toBe('hidden');
+  });
+
+  it('dit l’attente quand elle dure assez, et se tait juste en dessous', () => {
+    // Un saut de date coûte 0,89 s à 10 Mbit/s (mesuré) : en parler ferait clignoter le bandeau.
+    expect(situation({ waitingSeconds: WAITING_ANNOUNCE_SECONDS - 0.1 })).toBe(
+      'hidden'
+    );
+    expect(situation({ waitingSeconds: WAITING_ANNOUNCE_SECONDS })).toBe(
+      'waiting'
+    );
+  });
+
+  it('UN FICHIER MANQUANT PRIME sur une attente, même longue', () => {
+    expect(
+      situation({
+        report: report({ missing: missing('ceres') }),
+        waitingSeconds: 30,
+      })
+    ).toBe('degraded');
+  });
+
+  it('une reprise réussie garde sa ligne de confirmation', () => {
+    expect(situation({ asked: true, recovered: true })).toBe('recovered');
+    // Et elle prime sur une attente, qui reviendra le dire d'elle-même si elle dure.
+    expect(
+      situation({ asked: true, recovered: true, waitingSeconds: 30 })
+    ).toBe('recovered');
+  });
+
+  it('un manifeste absent reste une dégradation, pas une attente', () => {
+    expect(
+      situation({
+        report: report({ manifestFailed: true }),
+        waitingSeconds: 30,
+      })
+    ).toBe('degraded');
   });
 });

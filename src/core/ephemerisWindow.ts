@@ -57,6 +57,28 @@ export const BYTES_PER_SAMPLE =
  */
 export const WINDOW_MARGIN_SAMPLES = 2;
 
+/**
+ * Secondes de lecture prises d'avance sur l'horloge (lot 17, décision D4).
+ *
+ * Vit ici, avec `readAheadDays` qui l'applique et `core/playbackBudget` qui en deduit le
+ * cout fixe d'une fenetre qui glisse : une seule declaration, trois lecteurs.
+ *
+ * QUATRE, et c'est mesuré, pas choisi par symétrie. Lecture de dix secondes au curseur
+ * maximal (un an simulé par seconde réelle), contre le build livré, service worker bloqué :
+ *
+ *   avance    10 Mbit/s              2 Mbit/s
+ *    2 s      3,97 ans / 1,16 Mbit/s  2,07 ans / 0,71 Mbit/s
+ *    4 s      5,10 ans / 2,01 Mbit/s  2,75 ans / 0,84 Mbit/s
+ *   12 s      6,35 ans / 4,34 Mbit/s  AUCUNE avancée de la date
+ *
+ * Le contre-intuitif est la dernière ligne : un plus gros tampon d'avance NE SAUVE PAS un lien
+ * pauvre, il l'achève. Chaque demande porte alors douze ans de grille, soit plus de trois
+ * mégaoctets, qui mettent plus de dix secondes à arriver — et l'horloge, qui n'avance que sur
+ * des données arrivées, ne bouge plus du tout. Quatre secondes est le meilleur des trois sur
+ * LES DEUX liens.
+ */
+export const READ_AHEAD_SECONDS = 4;
+
 const MS_PER_DAY = 86_400_000;
 
 /** La grille d'échantillons d'un fichier, telle que le manifeste la déclare. */

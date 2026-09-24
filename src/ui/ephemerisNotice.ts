@@ -35,6 +35,17 @@ import type { PublicAPI } from '@/SolarSystemApp';
 const SPACECRAFT_NAMES = new Set(SPACECRAFT_MISSIONS.map((m) => m.name));
 
 /**
+ * En dessous de cette attente, on se TAIT (phase 17D, décision D4).
+ *
+ * Mesuré le 2026-09-23 : la fenêtre de démarrage arrive en 0,89 s à 10 Mbit/s et un saut de
+ * date coûte 3,2 s. Une attente d'une seconde est donc le prix NORMAL d'un saut, et l'annoncer
+ * ferait clignoter un bandeau à chaque clic dans le panneau de dates. Au-delà, l'attente n'est
+ * plus un détail de chargement : c'est le lien qui ne suit pas la vitesse demandée, et le
+ * lecteur a le droit de savoir pourquoi sa date rampe.
+ */
+export const WAITING_ANNOUNCE_SECONDS = 1.5;
+
+/**
  * Le bandeau a paru, changé de taille ou disparu. Écouté par `ui/surfacePanel`, dont le
  * bandeau de provenance occupe la même bande au-dessus du dock du bas.
  */
@@ -68,7 +79,47 @@ export function isComplete(report: EphemerisLoadReport): boolean {
   return !report.manifestFailed && report.missing.length === 0;
 }
 
-export function setupEphemerisNotice(api: PublicAPI): void {
+/** Ce que le bandeau montre, ou rien du tout. */
+export type NoticeState = 'hidden' | 'recovered' | 'waiting' | 'degraded';
+
+export interface NoticeSituation {
+  readonly report: EphemerisLoadReport;
+  /** Secondes réelles d'attente de l'horloge (`OrbitalMechanics.waitingForDataSeconds`). */
+  readonly waitingSeconds: number;
+  /** Une reprise a été DEMANDÉE : sa conclusion mérite une ligne, même bonne. */
+  readonly asked: boolean;
+  /** Cette reprise a tout ramené. */
+  readonly recovered: boolean;
+}
+
+/**
+ * La décision du bandeau, pure et donc falsifiable sans DOM.
+ *
+ * L'ordre n'est pas décoratif : une absence de fichier PRIME sur une attente. Les deux ne
+ * demandent pas la même chose au lecteur — l'une porte la seule action qui répare, l'autre dit
+ * seulement que la date avance au rythme des octets — et « précision réduite » serait FAUX
+ * pendant une attente, où aucune position n'est remplacée par une autre.
+ */
+export function noticeState(situation: NoticeSituation): NoticeState {
+  const { report, waitingSeconds, asked, recovered } = situation;
+  const waiting = waitingSeconds >= WAITING_ANNOUNCE_SECONDS;
+  const complete = isComplete(report);
+  if (complete && !asked && !waiting) return 'hidden';
+  if (recovered) return 'recovered';
+  if (complete && waiting) return 'waiting';
+  return 'degraded';
+}
+
+/** Poignée : la composition dit, à chaque image, depuis combien de temps la date attend. */
+export interface EphemerisNotice {
+  /**
+   * Secondes réelles d'attente de l'horloge (`OrbitalMechanics.waitingForDataSeconds`). Le
+   * bandeau décide seul s'il y a lieu d'en parler.
+   */
+  setWaiting(seconds: number): void;
+}
+
+export function setupEphemerisNotice(api: PublicAPI): EphemerisNotice {
   const service = api.horizonsEphemeris;
   let banner: HTMLElement | null = null;
   let render = (): void => {};
@@ -96,22 +147,45 @@ export function setupEphemerisNotice(api: PublicAPI): void {
 
   /** Une reprise DEMANDÉE laisse sa ligne de confirmation ; une guérison seule, non. */
   let asked = false;
+  /**
+   * Depuis combien de secondes réelles la date attend ses octets. Un état à part de la
+   * dégradation du lot 15 : ici rien n'est remplacé par une source moins précise, la date est
+   * simplement plus lente que demandé. Écrire « précision réduite » serait faux.
+   */
+  let waitingSeconds = 0;
+  /** Une reprise DEMANDÉE a tout ramené : sa ligne de confirmation reste jusqu'à fermeture. */
+  let recovered = false;
 
-  service.onReportChange(() => {
-    if (isComplete(service.report) && !asked) {
+  /** La décision, prise par la fonction pure ci-dessus : ce module n'en tranche aucune. */
+  const state = (): NoticeState =>
+    noticeState({ report: service.report, waitingSeconds, asked, recovered });
+
+  const refresh = (): void => {
+    if (state() === 'hidden') {
       removeBanner();
       return;
     }
     ensureBanner();
     render();
     place();
-  });
+  };
+
+  service.onReportChange(refresh);
 
   if (!isComplete(service.report)) {
     ensureBanner();
     render();
     place();
   }
+
+  return {
+    setWaiting: (seconds: number): void => {
+      const before = state();
+      waitingSeconds = seconds;
+      // Appelée à chaque image : on ne touche au DOM que si la DÉCISION change.
+      if (state() !== before) refresh();
+    },
+  };
 
   function build(): HTMLElement {
     const banner = document.createElement('aside');
@@ -141,10 +215,10 @@ export function setupEphemerisNotice(api: PublicAPI): void {
     document.body.append(banner);
 
     let busy = false;
-    let recovered = false;
 
     render = (): void => {
       const report = service.report;
+      const showing = state();
       banner.setAttribute('aria-label', t('ephemeris.notice.aria'));
       dismiss.textContent = t('ephemeris.notice.dismiss');
       retry.textContent = busy
@@ -152,12 +226,23 @@ export function setupEphemerisNotice(api: PublicAPI): void {
         : t('ephemeris.notice.retry');
       retry.disabled = busy;
 
-      if (recovered) {
+      if (showing === 'recovered') {
         title.textContent = t('ephemeris.notice.recovered');
         detail.textContent = '';
         detail.hidden = true;
         retry.hidden = true;
         banner.dataset['state'] = 'recovered';
+        return;
+      }
+
+      // La précédence (absence de fichier avant attente) est tranchée par `noticeState`.
+      if (showing === 'waiting') {
+        title.textContent = t('ephemeris.notice.waitingTitle');
+        detail.textContent = t('ephemeris.notice.waiting');
+        detail.hidden = false;
+        retry.hidden = true;
+        banner.dataset['state'] = 'waiting';
+        delete banner.dataset['missing'];
         return;
       }
 

@@ -26,6 +26,7 @@ import {
   type SampleGrid,
   type SampleWindow,
 } from './ephemerisWindow';
+import { TransferRateMeter } from './transferRate';
 import Logger from '@/utils/Logger';
 
 const COMPONENTS_PER_SAMPLE = 6;
@@ -135,6 +136,11 @@ export interface EphemerisLoadOptions {
   retryDelaysMs?: readonly number[];
   /** Horloge injectée, pour qu'un test n'attende pas réellement. */
   wait?: (ms: number) => Promise<void>;
+  /**
+   * Horloge MONOTONE, en millisecondes, pour mesurer le débit (`core/transferRate`). Injectée
+   * pour qu'un test mesure un débit exact au lieu de dépendre de la machine.
+   */
+  now?: () => number;
 }
 
 /**
@@ -153,6 +159,15 @@ const DEFAULT_RETRY_DELAYS_MS: readonly number[] = [1_000, 4_000];
 
 const sleep = (ms: number): Promise<void> =>
   new Promise((resolve) => setTimeout(resolve, ms));
+
+/**
+ * Horloge monotone par défaut. `performance.now()` plutôt que `Date.now()` : une mesure de
+ * débit ne doit pas changer de signe parce que l'horloge du système a été remise à l'heure.
+ */
+const monotonicNow = (): number =>
+  typeof performance !== 'undefined' && typeof performance.now === 'function'
+    ? performance.now()
+    : Date.now();
 
 /** Échec de chargement d'une ressource, porteur de sa reprenabilité. */
 class LoadFailure extends Error {
@@ -183,6 +198,7 @@ interface LoadPolicy {
   concurrency: number;
   retryDelaysMs: readonly number[];
   wait: (ms: number) => Promise<void>;
+  now: () => number;
 }
 
 interface HorizonsBodyManifest {
@@ -335,6 +351,14 @@ export class HorizonsEphemerisService implements PreciseEphemerisProvider {
    * au prix d'aujourd'hui, plutôt que de ne pas marcher.
    */
   private _rangesRefused = false;
+  /**
+   * Débit observé, mesuré sur le TEMPS OCCUPÉ (`core/transferRate`). Il n'existe que pour
+   * répondre à une question de produit : quelle vitesse de lecture ce lien soutient-il
+   * (§ 9b du plan du lot 17, option (c)). Une requête qui échoue y entre avec 0 octet, le
+   * temps qu'elle a occupé étant du temps où le lien n'a rien livré.
+   */
+  private readonly _rate = new TransferRateMeter();
+
   /** Un seul chargement à la fois : un double clic sur « reprendre » ne doit pas doubler. */
   private _loading: Promise<void> | null = null;
 
@@ -377,6 +401,7 @@ export class HorizonsEphemerisService implements PreciseEphemerisProvider {
       concurrency: options.concurrency ?? DEFAULT_CONCURRENCY,
       retryDelaysMs: options.retryDelaysMs ?? DEFAULT_RETRY_DELAYS_MS,
       wait: options.wait ?? sleep,
+      now: options.now ?? monotonicNow,
     };
     const service = new HorizonsEphemerisService(new Map(), {
       declared: 0,
@@ -404,6 +429,41 @@ export class HorizonsEphemerisService implements PreciseEphemerisProvider {
   /** Prévient à chaque changement de rapport (chargement initial, puis reprises). */
   onReportChange(listener: (report: EphemerisLoadReport) => void): void {
     this._listeners.push(listener);
+  }
+
+  /**
+   * Débit observé, en octets par seconde, ou `null` tant qu'il n'y a pas de quoi le mesurer.
+   *
+   * Mesuré sur le TEMPS OCCUPÉ, jamais requête par requête : six requêtes simultanées se
+   * partagent la bande passante, donc `octets / durée` d'une requête sous-estime le lien d'un
+   * facteur proche du nombre de requêtes en vol. C'est la mesure qui a trompé le lot 15.
+   */
+  get observedBytesPerSecond(): number | null {
+    return this._rate.bytesPerSecond;
+  }
+
+  /**
+   * Les grilles des corps qui demandent des octets À CETTE DATE, pour que
+   * `core/playbackBudget` en dérive le coût d'un jour simulé.
+   *
+   * Un corps hors couverture ne demande rien et n'entre donc pas dans le budget : le compter
+   * gonflerait la demande d'un tiers au 1969-07-20 (11 corps sur 64, mesuré), et le plafond de
+   * vitesse serait plus bas que ce que le lien soutient vraiment.
+   */
+  budgetGrids(date: Date): SampleGrid[] {
+    const manifests = this._pending?.manifest?.entries;
+    const grids: SampleGrid[] = [];
+    const push = (manifest: HorizonsBodyManifest): void => {
+      const grid: SampleGrid = {
+        startJdTdb: manifest.startJdTdb,
+        stepDays: manifest.stepDays,
+        sampleCount: manifest.sampleCount,
+      };
+      if (covers(grid, date)) grids.push(grid);
+    };
+    if (manifests) for (const [, manifest] of manifests) push(manifest);
+    else for (const body of this.bodies.values()) push(body.manifest);
+    return grids;
   }
 
   /**
@@ -656,15 +716,26 @@ export class HorizonsEphemerisService implements PreciseEphemerisProvider {
       async ([name, body]): Promise<EphemerisLoadFailure | null> => {
         const plan = plans.get(name) ?? null;
         if (plan !== null) this._attempted.set(name, plan);
+        // Un plan `null` ne fait AUCUNE requête : le mesurer ajouterait du temps occupé sans
+        // un octet et ferait passer le lien pour lent (11 corps sur 64 au 1969-07-20).
+        const metered = plan !== null;
+        if (metered) this._rate.begin(policy.now());
         try {
-          this.bodies.set(
+          const loaded = await fetchBody(
             name,
-            await fetchBody(name, body, baseUrl, pending.bodyMu, plan, () => {
+            body,
+            baseUrl,
+            pending.bodyMu,
+            plan,
+            () => {
               this._rangesRefused = true;
-            })
+            }
           );
+          this.bodies.set(name, loaded);
+          if (metered) this._rate.end(policy.now(), loaded.samples.byteLength);
           return null;
         } catch (error) {
+          if (metered) this._rate.end(policy.now(), 0);
           const failure: EphemerisLoadFailure = {
             body: name,
             reason: error instanceof Error ? error.message : String(error),

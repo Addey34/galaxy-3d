@@ -104,6 +104,10 @@ function makeGateHarness(): Harness {
     _windowRequest: null,
     _pendingJump: null,
     _minRecomputeThresholdMs: 1,
+    // Phase 17D : sans ces deux champs, `Object.create` laisse l'accumulation à `undefined`
+    // et le temps d'attente sort en NaN, ce qui passerait inaperçu jusqu'à l'écran.
+    _holding: false,
+    _heldSeconds: 0,
     // `Object.create` n'exécute pas les initialiseurs de champs : la liste des écouteurs doit
     // être posée ici, sinon `onDateSettled` lit `undefined`.
     _dateSettledListeners: [],
@@ -372,5 +376,83 @@ describe('un saut n’a lieu que sur des données arrivées (D3)', () => {
     expect(h.asks.length).toBeLessThanOrEqual(3);
     expect(h.dateMs()).toBe(50 * DAY_MS);
     expect(h.mechanics.pendingJumpDate).toBeNull();
+  });
+});
+
+/**
+ * LE RETARD SE DIT (phase 17D, décision D4).
+ *
+ * L'attente se compte en temps RÉEL, puisque c'est la durée que le lecteur subit : la date,
+ * elle, n'avance justement pas. Et elle se remet à zéro dès que la date repart, sinon le
+ * bandeau resterait pour une attente finie depuis longtemps.
+ */
+describe('le temps d’attente de l’horloge', () => {
+  it('vaut zéro quand la date avance', () => {
+    const h = makeGateHarness();
+    h.setDate(0);
+    h.mechanics.update(1);
+    expect(h.mechanics.waitingForDataSeconds).toBe(0);
+  });
+
+  it('s’accumule en temps RÉEL tant que les octets manquent', () => {
+    const h = makeGateHarness();
+    h.setDate(0);
+    h.mechanics.update(1);
+    h.setReady((ms) => ms <= 0);
+
+    // Deux images de 0,5 s réelle, pendant lesquelles la date ne bouge pas d'un millième.
+    h.setDate(10 * DAY_MS);
+    h.mechanics.update(1, 0.5);
+    h.setDate(10 * DAY_MS);
+    h.mechanics.update(1, 0.5);
+    expect(h.dateMs()).toBe(0);
+    expect(h.mechanics.waitingForDataSeconds).toBeCloseTo(1, 10);
+  });
+
+  it('se remet à zéro dès que la date repart', async () => {
+    const h = makeGateHarness();
+    h.setDate(0);
+    h.mechanics.update(1);
+    h.setReady((ms) => ms <= 0);
+    h.setDate(10 * DAY_MS);
+    h.mechanics.update(1, 2);
+    expect(h.mechanics.waitingForDataSeconds).toBeCloseTo(2, 10);
+
+    h.setReady(() => true);
+    await h.deliver();
+    h.setDate(10 * DAY_MS);
+    h.mechanics.update(1, 0.5);
+    expect(h.dateMs()).toBe(10 * DAY_MS);
+    expect(h.mechanics.waitingForDataSeconds).toBe(0);
+  });
+
+  it('cesse de compter quand on RENONCE à attendre : ce n’est plus une attente', async () => {
+    const h = makeGateHarness();
+    h.setDate(0);
+    h.mechanics.update(1);
+    h.setReady(() => false);
+
+    // Au-delà de la borne de demandes non satisfaites, la scène avance quand même et c'est le
+    // bandeau du lot 15 qui nomme ce qui manque : dire « la date attend » serait alors faux.
+    for (let i = 0; i < 6; i++) {
+      h.setDate((i + 1) * DAY_MS);
+      h.mechanics.update(1, 1);
+      await h.deliver();
+    }
+    expect(h.mechanics.waitingForDataSeconds).toBe(0);
+  });
+
+  it('s’oublie EN PAUSE : la scène est immobile parce qu’on l’a voulu', () => {
+    const h = makeGateHarness();
+    h.setDate(0);
+    h.mechanics.update(1);
+    h.setReady((ms) => ms <= 0);
+    h.setDate(10 * DAY_MS);
+    h.mechanics.update(1, 2);
+    expect(h.mechanics.waitingForDataSeconds).toBeCloseTo(2, 10);
+
+    // `simDelta === 0` est la pause (cf. `update`) : le bandeau ne doit plus rien annoncer.
+    h.mechanics.update(0, 0.5);
+    expect(h.mechanics.waitingForDataSeconds).toBe(0);
   });
 });
