@@ -10,6 +10,7 @@ import { BODY_GROUPS } from './bodyGroups';
 import { defaultDisplay } from './defaultDisplay';
 import { bodyAccentColor, hexToRgbTriplet, onAccentChange } from './bodyAccent';
 import type { OverlayCoordinator } from './overlayCoordinator';
+import { syncSurfaceFocus } from './surfaceFocus';
 
 /** Les trois colonnes du tableau, dans l'ordre de l'en-tête. */
 type Column = 'label' | 'object' | 'orbit';
@@ -373,6 +374,7 @@ export function setupOrbitOptions(
     if (open) coordinator?.requestOpen('orbit-options');
     panel.hidden = !open;
     triggerBtn?.setAttribute('aria-expanded', String(open));
+    syncSurfaceFocus(open, panel, triggerBtn);
   };
   coordinator?.register('orbit-options', () => setOpen(false));
 

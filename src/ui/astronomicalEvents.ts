@@ -10,6 +10,7 @@ import { bodyDisplayName } from '@/i18n/bodyText';
 import type { OverlayCoordinator } from './overlayCoordinator';
 import type { PlanetNavigation } from './planetNav';
 import type { PlaybackControls } from './playback';
+import { getAnnouncer } from './announcer';
 
 const MS_PER_DAY = 86_400_000;
 
@@ -198,7 +199,14 @@ export function setupAstronomicalEvents(
           (event.date.getTime() - om.simulationDate.getTime()) / MS_PER_DAY;
         om.addTimeOffset(deltaDays);
         onDateChange?.();
-        // 3. Recadre la caméra sur le corps observé (Lune, Terre…).
+        // 3. Dit ce qui vient de se passer. Activer une ligne déplace la date de plusieurs
+        //    jours, parfois de plusieurs mois, et la passe du lot 19 a mesuré 3 000 ms de
+        //    silence après l'activation (défaut D11) : à la voix, rien ne distinguait « j'ai
+        //    voyagé jusqu'à l'éclipse » de « il ne s'est rien passé ».
+        getAnnouncer().announce(
+          t('a11y.dateChanged', { date: formatEventDate(event.date) })
+        );
+        // 4. Recadre la caméra sur le corps observé (Lune, Terre…).
         navigation?.selectBody(eventFocusBody(event));
         setOpen(false);
       });

@@ -805,6 +805,22 @@ button {
   text-align: left;
   transition: background 0.12s;
 }
+/*
+ * `hidden` DOIT gagner sur `display: flex`.
+ *
+ * `ui/bodyPalette` filtre en posant l'attribut `hidden` sur les entrées qui ne correspondent
+ * pas. Mais une règle d'auteur qui fixe `display` l'emporte sur `[hidden] { display: none }`
+ * de la feuille du navigateur : le filtre ne masquait donc RIEN. Mesuré au lot 19 en tapant
+ * « mars » : 70 entrées sur 71 portaient `hidden`, et les 71 restaient affichées. Le clavier,
+ * lui, sautait bien à Mars, ce qui rendait le défaut discret — et NVDA annonçait « Mars, 5 sur
+ * 71 » au lieu de « 1 sur 1 ».
+ *
+ * C'est le seul défaut de cette passe qui gênait TOUT LE MONDE, pas seulement qui écoute.
+ */
+.palette-item[hidden],
+.palette-group-title[hidden] {
+  display: none;
+}
 .palette-item:hover,
 .palette-item.is-highlighted {
   background: var(--control-bg-hover);

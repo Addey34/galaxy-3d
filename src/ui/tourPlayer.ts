@@ -23,6 +23,7 @@ import {
   type TourStep,
 } from '@/core/tourEngine';
 import { resolveEclipseDate } from '@/config/tourScripts';
+import { trapFocus } from './surfaceFocus';
 
 export interface TourPlayer {
   dispose(): void;
@@ -76,6 +77,10 @@ export function setupTourPlayer(
   card.setAttribute('role', 'dialog');
   card.setAttribute('aria-modal', 'true');
   card.setAttribute('aria-live', 'polite');
+  // Sans nom, la carte était annoncée « dialogue » et rien de plus (défaut D7 du lot 19).
+  // Elle n'a pas de titre fixe à désigner — sa légende change à chaque étape — donc un libellé
+  // propre plutôt qu'un `aria-labelledby` sur un texte mouvant.
+  card.setAttribute('aria-label', t('a11y.tourPlayer'));
 
   const progress = document.createElement('p');
   progress.className = 'stour-progress';
@@ -112,6 +117,9 @@ export function setupTourPlayer(
   };
 
   const localize = (): void => {
+    // Le nom du dialogue suit la langue comme le reste : posé une fois à la création, il
+    // serait resté dans la langue du démarrage.
+    card.setAttribute('aria-label', t('a11y.tourPlayer'));
     startButton.textContent = t('tours.start');
     startButton.setAttribute('aria-label', t('tours.start'));
     pauseButton.textContent = t(signal.paused ? 'tours.resume' : 'tours.pause');
@@ -160,12 +168,20 @@ export function setupTourPlayer(
     }
   };
 
+  /** Libère le piège à focus du dialogue modal ; `null` quand la carte est fermée. */
+  let releaseTrap: (() => void) | null = null;
+
   const showOverlay = (): void => {
     backdrop.hidden = false;
     card.hidden = false;
     pauseButton.focus();
+    // `aria-modal="true"` déclare le reste de la page inerte : il faut le tenir (défaut D9).
+    releaseTrap?.();
+    releaseTrap = trapFocus(card);
   };
   const hideOverlay = (): void => {
+    releaseTrap?.();
+    releaseTrap = null;
     backdrop.hidden = true;
     card.hidden = true;
     startButton.focus();

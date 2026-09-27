@@ -6,6 +6,7 @@
  * réglages, événements, palette). Fermeture par la croix, Échap, le scrim ou une autre surface.
  */
 import type { OverlayCoordinator } from './overlayCoordinator';
+import { syncSurfaceFocus } from './surfaceFocus';
 
 const btn = document.getElementById('help-btn')!;
 const popover = document.getElementById('help-popover')!;
@@ -19,6 +20,7 @@ export function setupHelp(coordinator?: OverlayCoordinator): void {
     open = next;
     popover.hidden = !next;
     btn.setAttribute('aria-expanded', String(next));
+    syncSurfaceFocus(next, popover, btn);
   };
   coordinator?.register('help', () => setOpen(false));
 

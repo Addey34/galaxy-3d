@@ -57,6 +57,17 @@ export function setupDocumentTitle(): DocumentTitle {
   // Le titre doit suivre un changement de langue même sans nouvelle sélection.
   onLocaleChange(apply);
 
+  /**
+   * ET IL DOIT ÊTRE POSÉ TOUT DE SUITE. Sans cet appel, `apply` n'était déclenché que par
+   * `setBody`, `setEclipse` ou un changement de langue : sur la vue d'ensemble, où aucun des
+   * trois ne se produit, le titre ANGLAIS de la page statique restait en place pendant toute
+   * la visite. La passe lecteur d'écran du lot 19 l'a entendu — c'est le PREMIER énoncé en
+   * entrant dans le document, et une voix française y lisait une phrase anglaise (défaut D1 de
+   * `docs/private/LECTEUR_ECRAN_LOT19.md`). Le défaut disparaissait dès qu'on choisissait un
+   * corps, ce qui explique qu'il ait tenu si longtemps.
+   */
+  apply();
+
   return {
     setBody: (name) => {
       current = name;

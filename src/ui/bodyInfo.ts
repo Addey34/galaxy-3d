@@ -615,6 +615,32 @@ export function setupBodyInfo(coordinator?: OverlayCoordinator): BodyInfoPanel {
     triggerBtn?.setAttribute('aria-expanded', String(next));
   };
 
+  /**
+   * RATTRAPE UN FOCUS QUI ALLAIT ÊTRE PERDU.
+   *
+   * Mesuré au lot 19 (défaut D4) : choisir un corps dans la palette ferme la palette, ouvre
+   * cette fiche, change l'onglet et change l'adresse — et laisse `document.activeElement` sur
+   * `document.body`. Après l'action PRINCIPALE de l'application, quelqu'un au clavier n'avait
+   * plus aucun point d'ancrage et devait retabuler depuis le début du document.
+   *
+   * La fiche ne prend le focus QUE s'il allait être orphelin : sur le `body`, ou dans un
+   * élément qu'on vient de masquer (le champ de la palette qui se referme). Si le focus est
+   * ailleurs et bien vivant, on n'y touche pas : le voler serait un défaut de plus.
+   *
+   * On teste `closest('[hidden]')` et non la visibilité calculée : ces surfaces sont en
+   * `position: fixed`, donc leur `offsetParent` est nul même quand elles sont affichées, et
+   * un test de visibilité conclurait « perdu » à chaque fois.
+   */
+  const adoptOrphanedFocus = (): void => {
+    const active = document.activeElement;
+    const orphaned =
+      !active ||
+      active === document.body ||
+      !active.isConnected ||
+      active.closest('[hidden]') !== null;
+    if (orphaned) closeBtn.focus();
+  };
+
   // Ferme la fiche mais garde le déclencheur (le corps reste sélectionné).
   const collapse = (): void => setVisible(false);
   coordinator?.register('body-info', collapse);
@@ -802,6 +828,7 @@ export function setupBodyInfo(coordinator?: OverlayCoordinator): BodyInfoPanel {
     // désormais compacte et n'occulte pas la scène). L'utilisateur peut la fermer.
     coordinator?.requestOpen('body-info');
     setVisible(true);
+    adoptOrphanedFocus();
     // Neuf corps : on repart d'un bloc live masqué (updateLive le remplira à la frame
     // suivante en Explo) pour ne pas laisser la distance du corps précédent. Même règle pour
     // la provenance de la position, qui décrivait l'autre corps.

@@ -12,9 +12,14 @@ import type { Page, BrowserContext } from '@playwright/test';
  * dialogue sans nom, ou sur un interrupteur dont `aria-pressed` ne bouge jamais. Ici on lit les
  * valeurs elles-mêmes.
  *
- * Ce que cela n'est PAS : une vérification de ce qu'un lecteur d'écran ANNONCE. Cela dépend du
- * lecteur, de sa version, de sa verbosité et du navigateur, et aucune API ne permet de le
- * capturer. Le passage manuel NVDA/VoiceOver reste le vrai juge — voir `docs/TESTING.md`.
+ * Ce que cela n'est PAS : une vérification de ce qu'un lecteur d'écran ANNONCE, ni de l'ordre
+ * dans lequel il le fait.
+ *
+ * Cet en-tête ajoutait « et aucune API ne permet de le capturer ». C'était faux, et le lot 19 l'a
+ * montré : NVDA journalise chaque énoncé, et `scripts/capture-screenreader.mjs` les relève dans
+ * l'ordre, appariés au focus réel. Les parcours qui en sont sortis sont tenus par
+ * `e2e/a11y-screenreader.spec.ts`. Ce qui reste hors de portée d'un test est plus étroit : le
+ * ressenti, la verbosité supportable, et un AUTRE lecteur d'écran que NVDA.
  */
 export interface AXControl {
   role: string;

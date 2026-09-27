@@ -1,6 +1,7 @@
 import './guidedTour.css';
 import { onLocaleChange, t } from '@/i18n';
 import { STORAGE_KEYS } from '@/config/storageKeys';
+import { trapFocus } from './surfaceFocus';
 
 const STORAGE_KEY = STORAGE_KEYS.guidedTour;
 
@@ -123,6 +124,11 @@ export function setupGuidedTour(): GuidedTour {
   progress.className = 'tour-progress';
   const title = document.createElement('h2');
   title.className = 'tour-title';
+  // Le dialogue était annoncé « dialogue », sans rien d'autre : `aria-modal` sans nom
+  // accessible (défaut D7 du lot 19). Son titre d'étape est déjà là, il suffisait de le
+  // désigner.
+  title.id = 'tour-dialog-title';
+  dialog.setAttribute('aria-labelledby', title.id);
   const text = document.createElement('p');
   text.className = 'tour-text';
   const actions = document.createElement('div');
@@ -217,9 +223,13 @@ export function setupGuidedTour(): GuidedTour {
     position(target);
   };
 
+  let releaseTrap: (() => void) | null = null;
+
   const stop = (restoreFocus = true): void => {
     if (!active) return;
     active = false;
+    releaseTrap?.();
+    releaseTrap = null;
     backdrop.hidden = true;
     highlight.hidden = true;
     dialog.hidden = true;
@@ -234,6 +244,9 @@ export function setupGuidedTour(): GuidedTour {
     dialog.hidden = false;
     render();
     next.focus();
+    // `aria-modal="true"` déclare le reste de la page inerte ; sans piège, la tabulation en
+    // sortait dès le troisième bouton (défaut D9 du lot 19).
+    releaseTrap = trapFocus(dialog);
   };
 
   const startIfFirstVisit = (): void => {

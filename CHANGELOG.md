@@ -4,6 +4,45 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Les
 suivent [SemVer](https://semver.org/lang/fr/). L'historique détaillé reste celui de git : ce
 fichier résume ce qui change pour une personne qui utilise ou cite Galaxy.
 
+## [Non publié]
+
+### Corrigé
+
+- **La recherche de corps n'écartait aucun résultat.** Taper « mars » laissait les 71 corps
+  affichés : le code posait bien l'attribut `hidden` sur les entrées sans rapport, mais une règle
+  de style le neutralisait. Ce défaut gênait tout le monde, pas seulement les personnes qui
+  utilisent un lecteur d'écran, et c'est en écoutant qu'on l'a trouvé : le lecteur annonçait
+  « Mars, 5 sur 71 » là où il fallait entendre « 1 sur 1 ».
+- **En français, l'onglet et le titre principal de la page restaient en anglais.** La traduction
+  existait, elle n'était jamais appliquée tant qu'aucun corps n'était choisi. C'était la première
+  phrase qu'un lecteur d'écran prononçait en arrivant.
+- **L'application ne disait rien quand son état changeait.** Elle est désormais capable de
+  parler, et le fait à trois moments : quand le chargement se termine, après une dizaine de
+  secondes d'attente jusque-là silencieuse ; quand un corps est choisi ; et quand l'activation
+  d'un événement déplace la date de plusieurs semaines. La fin d'une préparation hors ligne est
+  annoncée même si le panneau des réglages a été refermé entre-temps, ce qui n'était pas le cas.
+- **Choisir un corps laissait le clavier sans point d'ancrage.** La fiche s'ouvrait, l'adresse
+  changeait, et le focus disparaissait : il fallait repartir du début de la page. Il entre
+  maintenant dans la fiche qui vient de s'ouvrir.
+- **Ouvrir les réglages d'affichage, les couches météo, les événements terrestres ou l'aide
+  laissait le focus sur le bouton**, à quatorze tabulations du panneau qu'on venait d'ouvrir, et
+  la touche Échap n'y pouvait plus rien puisqu'elle n'est écoutée que depuis le panneau.
+- **Les deux cartes de visite guidée se déclaraient modales sans l'être.** Elles annonçaient au
+  lecteur d'écran que le reste de la page était hors d'atteinte, alors que la tabulation en
+  sortait dès le troisième bouton, et elles s'annonçaient « dialogue » sans dire lequel.
+- **La page n'exposait qu'un seul repère de navigation.** La scène en est désormais un, nommé, et
+  les deux barres d'outils aussi : leur nom existait déjà mais n'était exposé nulle part.
+- **La barre de progression du chargement n'avait pas de valeur**, et une seconde barre décrivait
+  la même progression en double.
+
+### Ajouté
+
+- **Une méthode reproductible pour écouter l'application.** Un banc de capture pilote un lecteur
+  d'écran réel (NVDA), muet, et relève chaque énoncé dans l'ordre en le rapprochant de l'élément
+  qui a réellement le focus. Les treize défauts ci-dessus étaient tous sous des tests
+  automatiques verts : les vérificateurs de règles ne disent rien de l'ordre d'annonce ni du
+  parcours du focus. Quatorze gardes tiennent désormais chacune de ces corrections.
+
 ## [0.10.0] - 2026-09-27 (« Surfaces mesurées et démarrage allégé »)
 
 ### Ajouté

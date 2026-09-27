@@ -16,6 +16,7 @@ import { onLocaleChange, t } from '@/i18n';
 import { bodyAccentColor, hexToRgbTriplet, onAccentChange } from './bodyAccent';
 import type { OverlayCoordinator } from './overlayCoordinator';
 import { BODY_GROUPS } from './bodyGroups';
+import { getAnnouncer } from './announcer';
 
 const BODY_CONFIGS = NAVIGABLE_BODIES;
 
@@ -232,7 +233,31 @@ export function setupBodyPalette(
 
   trigger.addEventListener('click', () => setOpen(!open));
 
-  input.addEventListener('input', () => render(input.value));
+  /**
+   * Dit COMBIEN de corps correspondent.
+   *
+   * Mesuré au lot 19 (défaut D8) : on tapait « m », « a », « r », et NVDA n'énonçait que les
+   * lettres elles-mêmes. Rien ne disait si la recherche trouvait quelque chose ; la première
+   * information arrivait à la flèche bas. La région est `polite` et se remplace elle-même,
+   * donc une frappe rapide n'empile pas les annonces.
+   */
+  const announceResults = (count: number): void => {
+    getAnnouncer().announce(
+      count === 0
+        ? t('a11y.searchResultsNone')
+        : count === 1
+          ? t('a11y.searchResultsOne')
+          : t('a11y.searchResults', { count: String(count) }),
+      // Canal « search » : taper vite ne doit pas empiler cinq comptes successifs, seul le
+      // dernier a un sens.
+      'search'
+    );
+  };
+
+  input.addEventListener('input', () => {
+    render(input.value);
+    announceResults(lastVisible.length);
+  });
   input.addEventListener('keydown', (event) => {
     if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
       event.preventDefault();

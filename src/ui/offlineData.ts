@@ -19,6 +19,7 @@ import type {
   OfflineState,
 } from '@/core/HorizonsEphemerisService';
 import { intlLocale, onLocaleChange, t } from '@/i18n';
+import { getAnnouncer } from './announcer';
 
 /**
  * Mégaoctets DÉCIMAUX (10^6), arrondis au dixième, parce que c'est l'unité sous laquelle ces
@@ -44,11 +45,14 @@ export function setupOfflineData(service: HorizonsEphemerisService): void {
    * Ce qu'un lecteur d'écran entend, et SEULEMENT aux deux instants qui comptent : le début et
    * la fin. Mettre `aria-live` sur la ligne d'état annoncerait les 64 pas de progression l'un
    * après l'autre, ce qui rendrait le reste de l'interface inaudible pendant le téléchargement.
+   *
+   * La région était posée ICI, dans la section hors ligne. Or cette section vit dans
+   * `#orbit-options`, qui porte `hidden` dès qu'on referme les réglages : une région live non
+   * rendue n'annonce rien. Quelqu'un qui lançait la préparation puis refermait le panneau
+   * n'apprenait donc jamais qu'elle était finie. Depuis le lot 19 l'annonce passe par la
+   * région unique de `ui/announcer`, attachée au `<body>`, qui n'a pas ce défaut.
    */
-  const announce = document.createElement('p');
-  announce.className = 'sr-only';
-  announce.setAttribute('role', 'status');
-  announce.setAttribute('aria-live', 'polite');
+  const announce = getAnnouncer();
 
   const actions = document.createElement('div');
   actions.className = 'offline-actions';
@@ -65,7 +69,7 @@ export function setupOfflineData(service: HorizonsEphemerisService): void {
   forget.hidden = true;
 
   actions.append(prepare, forget);
-  host.append(status, announce, actions);
+  host.append(status, actions);
 
   /** Dernier état LU. `null` tant qu'aucune lecture n'a abouti. */
   let state: OfflineState | null = null;
@@ -142,7 +146,7 @@ export function setupOfflineData(service: HorizonsEphemerisService): void {
     }
     abort = new AbortController();
     progress = { done: 0, total: state?.declaredFiles ?? 0 };
-    announce.textContent = t('offline.started');
+    announce.announce(t('offline.started'));
     render();
     void service
       .prepareOffline({
@@ -154,7 +158,7 @@ export function setupOfflineData(service: HorizonsEphemerisService): void {
       })
       .then((next) => {
         state = next;
-        announce.textContent =
+        announce.announce(
           next.completeFiles === next.declaredFiles
             ? t('offline.ready', {
                 files: next.declaredFiles,
@@ -164,7 +168,8 @@ export function setupOfflineData(service: HorizonsEphemerisService): void {
                 files: next.completeFiles,
                 total: next.declaredFiles,
                 size: formatMegabytes(next.remainingBytes),
-              });
+              })
+        );
       })
       .finally(() => {
         abort = null;
