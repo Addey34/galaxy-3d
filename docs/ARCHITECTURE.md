@@ -826,6 +826,117 @@ tout : la section le DIT, et l'application redemande ses fenêtres comme avant c
 | `core/ephemerisOffline.test.ts` | chemin de production contre les binaires livrés : une visite de retour ne fait AUCUNE requête et place les corps au bit près, une date éloignée redemande ce qui manque et lui seul, une lecture du magasin n'entre pas dans le débit observé, la préparation rend un état LU, une visite entière sans le moindre octet à n'importe quelle date, des octets tronqués qui ne sont pas rangés, et un manifeste injoignable qui reste un échec quand le magasin est vide |
 | `e2e/ephemerisOffline.spec.ts` | dans un vrai navigateur, avec le vrai `Cache` : la visite de retour ne demande plus un seul octet d'éphéméride, la section dit ce que l'appareil tient et rend la place, et une fois préparé l'appareil place les corps à une date jamais visitée avec TOUT `/assets/ephemerides/**` coupé |
 
+### Le budget du démarrage, famille par famille (lot 17, phase 17F)
+
+Le lot 17 a fait fondre le démarrage. Restait à empêcher qu'il regrossisse sans que personne le
+voie, et la façon de le faire n'est pas neutre : **il n'y a PAS de budget global.** Un seuil unique
+« le démarrage doit tenir sous N octets » créerait une pression permanente à dégrader les textures
+pour financer autre chose, puisqu'elles sont la plus grosse famille du démarrage. Ce serait la
+contradiction frontale de la règle de parité du lot 16, qui vient de poser que chaque corps livre
+l'échelle complète de ce que sa source contient. Chaque famille est donc jugée sur SON plafond, et
+aucune somme ne circule entre elles : améliorer une texture ne peut pas échouer à cause d'une
+régression d'éphéméride, ni l'inverse.
+
+La règle et les plafonds vivent dans `src/core/startupBudget.ts`, module pur.
+
+**Ce que le démarrage coûte, MESURÉ.** Production (`galaxy.adrianguichard.dev`, build de 17E), le
+2026-09-26, service worker bloqué, contexte neuf, fenêtre 1280 x 800, octets du FIL relevés par le
+CDP (`encodedDataLength`, en-têtes comprises), observation arrêtée quand `#loader` est masqué après
+avoir été attendu VISIBLE. Neuf visites ; les six dernières tiennent dans 0,01 % l'une de l'autre.
+La méthode est un script, pas un paragraphe : `node scripts/measure-startup-bytes.mjs`.
+
+| famille | octets servis | requêtes | part |
+| --- | --- | --- | --- |
+| textures | 6 866 520 | 62 | **59,6 %** |
+| éphémérides | 1 048 819 | 63 | 9,1 % |
+| modèles de forme | 828 987 | 15 | 7,2 % |
+| JavaScript | 309 678 | 12 | 2,7 % |
+| instantané des petits corps | 177 624 | 1 | 1,5 % |
+| CSS | 9 125 | 1 | 0,1 % |
+| HTML | 7 667 | 1 | 0,1 % |
+| divers (balise Cloudflare) | 179 | 2 | 0,0 % |
+| **total** | **11 511 538** | **157** | chargeur masqué à 10,0 s |
+
+Le renversement du lot 17 est là, en une ligne : les éphémérides pesaient **77,5 %** du démarrage
+au § 2 du plan, elles en pèsent **9,1 %**, et ce sont les textures qui dominent désormais.
+
+**Les plafonds sont en octets BRUTS**, ceux des fichiers livrés, parce que c'est la seule grandeur
+que le dépôt contrôle et qu'une machine sans réseau peut recompter. Le rapport au fil est MESURÉ à
+côté : textures 0,984 (Firebase comprime certains JPEG à faible entropie : la surface 1k d'Uranus
+tombe de 11 230 à 3 658 octets), maillages 0,768, JavaScript 0,254, et les plages d'éphémérides
+légèrement au-DESSUS de 1, leurs en-têtes pesant plus que ce qu'un `206` économise.
+
+**Deux origines de plafond, et la différence est le cœur de la phase.**
+
+| famille | plafond | origine |
+| --- | --- | --- |
+| textures | 6 979 356 o | **dérivé** : la somme du palier PLANCHER (`core/textureLadder.TIERS[0]`, soit 1k) des 60 couches que le démarrage touche, plus deux raffinements de première vue nommés |
+| modèles | 1 079 152 o | **dérivé** : le niveau le plus léger (`core/modelLod`) des 15 corps modélisés |
+| éphémérides | 1 800 000 o | **posé** : le pire cas mesuré sur toute la couverture, plus 5,3 % |
+| JavaScript | 1 300 000 o | **posé** : la mesure, plus environ huit lots de croissance ordinaire |
+
+Un plafond **dérivé** ne se choisit pas, il se recalcule, et c'est ce qui rend ces deux familles
+insensibles à la pression : ajouter un palier 2k, 4k ou 8k ne coûte RIEN au démarrage, qui ne
+demande que le plancher ; et rétrécir une texture ferait baisser le coût ET le plafond du même
+nombre d'octets, donc n'achèterait rien pour une autre famille. La qualité reste arbitrée par
+`src/config/textureLadder.test.ts`, son seul propriétaire. Ce qui fait rougir ces familles est
+précis : un démarrage qui se met à demander plus gros que le plancher.
+
+**Les deux raffinements de première vue sont nommés, pas noyés dans une somme** : le ciel en 8k
+(979 007 o), parce qu'il entoure la caméra et que sa distance normalisée est nulle, donc le LOD
+résout `ultra` ; et le Soleil en 2k (398 892 o), parce que la première vue est centrée sur lui, à
+moins de 40 rayons. Ce sont les deux SEULS paliers fins que le démarrage demande, mesuré. Une
+troisième entrée fait rougir la garde : soit la première vue s'est mise à charger un palier fin,
+soit c'est légitime et il faut l'écrire avec sa raison.
+
+**Le plafond des éphémérides a corrigé un chiffre que cette série citait depuis 17C.** La fenêtre
+de démarrage a été balayée sur toute la couverture livrée, en faisant tourner le VRAI service
+contre les VRAIS binaires du dépôt. Elle varie d'un facteur 80 :
+
+| date de scène | octets de la fenêtre de démarrage |
+| --- | --- |
+| 1900-06-15 | 21 216 (presque tout hors couverture) |
+| 1969-07-20 | 984 624 |
+| **2015-06-15** | **1 709 040**, pire cas : la ligne de Neptune tient dans la couverture, 722 544 o à elle seule |
+| 2026-09-23 | 987 264 (17C en mesurait 987 168 dans un navigateur : un échantillon d'écart) |
+| 2099-12-01 | 57 888 |
+
+Les 987 168 octets de 17C sont donc un cas MOYEN, ni le pire ni un majorant : une adresse datée de
+l'an 2000 fait payer 1,71 Mo au démarrage, la demi-période de Neptune ne tenant dans la couverture
+qu'entre 1982 et 2018 environ. C'est le piège 8 du plan, confirmé dans le sens qui coûte. Le budget
+est donc posé sur le PIRE cas : sur la date du jour, il rougirait pour un simple lien daté.
+
+**La famille JavaScript ne se compte pas comme « tout `dist/assets/*.js` »**, ce qui serait faux
+dans les deux sens. Elle est la clôture des imports STATIQUES depuis l'entrée déclarée par
+`dist/index.html`, plus les morceaux que le démarrage importe DYNAMIQUEMENT, déclarés un par un
+avec leur raison. La partition est EXHAUSTIVE : tout morceau est dans la clôture, déclaré
+dynamique au démarrage, ou déclaré hors démarrage (le résumé de validation Horizons, le moteur de
+surfaces, le noyau SPK, deux façades de fiches). Sans cette exhaustivité, retirer une déclaration
+ferait baisser le coût mesuré de 61 703 octets sans qu'aucune garde ne rougisse, et un budget qui
+compte moins que la réalité est pire qu'aucun budget. La clôture calculée est en outre CONFRONTÉE
+aux `modulepreload` que Vite écrit dans le document : si l'analyse dérive, le script échoue en le
+disant au lieu de rendre un nombre plausible.
+
+| Garde | Ce qu'elle tient | Où |
+| --- | --- | --- |
+| `core/startupBudget.test.ts` | la règle : le classement par famille, l'indépendance des verdicts, le palier du démarrage, et qu'une texture dégradée n'achète rien | `pnpm verify` |
+| `config/startupBudget.test.ts` | les trois familles qui se comptent sur les artefacts COMMITTÉS : la fenêtre d'éphémérides à quatre dates fixes dont le pire cas, les 60 couches de texture au plancher, les 15 maillages au plus léger | `pnpm verify` |
+| `scripts/check-startup-budget.mjs` | la famille JavaScript, la seule qui exige un build : clôture, partition exhaustive, témoin des `modulepreload` | étape bloquante de `ci.yml`, après `pnpm build` |
+| `e2e/startupBudget.spec.ts` | dans un vrai navigateur : aucun palier au-dessus du plancher sauf les raffinements déclarés, chacun d'eux réellement demandé, les maillages au plus léger, et la fenêtre sous son plafond | `pnpm test:e2e` |
+
+**Ce que la phase ne budgète pas, et l'écrit.** L'instantané des petits corps (177 624 o), la CSS,
+le HTML et la balise d'audience ne portent pas de plafond : ils ne croissent pas par décision de
+chargement, et un plafond de plus serait un contrôle que personne ne lirait. Ils restent NOMMÉS
+dans le relevé, parce qu'une famille « divers » qui grossit sans nom est exactement la façon dont
+un budget se contourne sans mentir. La ligne « autres, 2 228 918 o, 4,9 % » du § 2 du plan n'a
+jamais été ouverte, et cette phase a mesuré une fois, au même endroit, **2 263 107 octets de trois
+images WMS de NASA GIBS** (1,5 % d'écart, mêmes couches) : très probablement les mêmes octets, mais
+ce n'est pas affirmé, la mesure du plan n'ayant pas été refaite. Le classement porte donc désormais
+une famille `external-imagery`, pour que ces octets aient un nom la prochaine fois. **Et ce qui
+n'est pas expliqué est écrit tel quel** : ces trois requêtes ne sont réapparues dans AUCUNE des huit
+visites suivantes, même avec vingt secondes d'observation après le chargeur. Une visite sur neuf,
+pour un comportement identique ; le déclencheur n'est pas identifié.
+
 ### Tests qui verrouillent tout ça
 
 | Fichier | Ce qu'il garde |

@@ -55,6 +55,20 @@ jobs:
       - name: Verify generated documents are unchanged
         run: node scripts/fingerprint-generated.mjs --portable
 
+      # STARTUP BUDGET, FAMILY BY FAMILY (batch 17, phase 17F). This step covers the JavaScript
+      # family only, because it is the one that does not exist before a build: the three others
+      # (ephemeris window, textures, shape models) are measured against the committed artefacts by
+      # src/config/startupBudget.test.ts, inside `pnpm verify` above.
+      #
+      # There is deliberately NO global total. A single startup budget would create permanent
+      # pressure to degrade textures in order to fund something else, contradicting the parity rule
+      # established by batch 16. Each family is judged on its own ceiling, and a breach names the
+      # family. The method behind every number is `node scripts/measure-startup-bytes.mjs`.
+      #
+      # Blocking on purpose: an unbounded bundle is exactly the kind of growth nobody notices.
+      - name: Verify the startup budget per family
+        run: node scripts/check-startup-budget.mjs
+
       # Informational measurement of the actual deploy payload after firebase.json exclusions,
       # so unexpected growth remains visible in deployment logs.
       #

@@ -26,6 +26,8 @@
     "surface:tiles": "node --max-old-space-size=4096 scripts/bake-surface-height-tiles.mjs",
     "gibs:colormap": "node scripts/import-gibs-colormap.mjs",
     "fingerprint:generated": "node scripts/fingerprint-generated.mjs",
+    "budget:startup": "node scripts/check-startup-budget.mjs",
+    "budget:measure": "node scripts/measure-startup-bytes.mjs",
     "schema:generate": "node scripts/generate-registry-schemas.mjs",
     "spk:stage": "node scripts/stage-sat441.mjs",
     "spk:verify": "node scripts/verify-spk-range.mjs",
