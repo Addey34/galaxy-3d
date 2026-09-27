@@ -29,10 +29,19 @@ function entryPoint(panel: HTMLElement): HTMLElement | null {
   return panel.querySelector<HTMLElement>(FOCUSABLE);
 }
 
-/** Ce qui peut recevoir le focus à l'intérieur, dans l'ordre du document, le masqué exclu. */
+/**
+ * Ce qui peut recevoir le focus à l'intérieur, dans l'ordre du document, le masqué exclu.
+ *
+ * On filtre sur `hidden` et NON sur une visibilité calculée. `offsetParent === null` serait le
+ * réflexe, mais il vaut `null` pour tout élément en `position: fixed` — ce que sont ces
+ * dialogues. Le piège ne se déclenche ici que pour le dialogue lui-même et pas pour ses
+ * boutons, mais une garde ne doit pas reposer sur cette nuance : si elle se trompait, le piège
+ * ne verrait plus qu'un seul élément, empêcherait le focus de bouger DU TOUT, et une garde qui
+ * vérifie seulement « le focus est resté dans le dialogue » resterait verte.
+ */
 function focusables(dialog: HTMLElement): HTMLElement[] {
   return [...dialog.querySelectorAll<HTMLElement>(FOCUSABLE)].filter(
-    (el) => el.offsetParent !== null || el === document.activeElement
+    (el) => el.closest('[hidden]') === null
   );
 }
 

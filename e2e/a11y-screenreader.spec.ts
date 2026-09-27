@@ -292,22 +292,38 @@ test.describe('les dialogues modaux tiennent ce qu’ils déclarent', () => {
    * la scène. Un dialogue qui promet une modalité sans la tenir est pire qu'un dialogue non
    * modal : le lecteur d'écran restreint sa lecture à un contenu que le focus a déjà quitté.
    */
-  test('la visite guidée retient le focus', async ({ page }) => {
+  test('la visite guidée retient le focus, et le laisse circuler', async ({
+    page,
+  }) => {
     await boot(page, { locale: 'en', firstVisit: true });
     await expect(page.locator('.tour-dialog')).toBeVisible();
 
     // Assez de tabulations pour faire plus d'un tour complet des boutons du dialogue.
+    const visited: string[] = [];
     for (let i = 0; i < 8; i += 1) {
       await page.keyboard.press('Tab');
+      const inside = await page.evaluate(() => {
+        const dialog = document.querySelector('.tour-dialog');
+        const active = document.activeElement;
+        return {
+          contained: dialog?.contains(active) ?? false,
+          who: active ? String((active as HTMLElement).className) : 'body',
+        };
+      });
       expect(
-        await page.evaluate(
-          () =>
-            document
-              .querySelector('.tour-dialog')
-              ?.contains(document.activeElement) ?? false
-        ),
+        inside.contained,
         `le focus est sorti du dialogue à la tabulation ${i + 1}`
       ).toBe(true);
+      visited.push(inside.who);
     }
+
+    // ET IL CIRCULE. Sans cette seconde moitié, un piège cassé qui immobiliserait le focus sur
+    // un seul bouton laisserait ce test vert : « resté à l'intérieur » est vrai aussi quand
+    // rien ne bouge. C'est exactement ce qu'aurait produit un filtre de visibilité fondé sur
+    // `offsetParent`, nul pour un dialogue en `position: fixed`.
+    expect(
+      new Set(visited).size,
+      `le focus n’a pas circulé : ${visited.join(' → ')}`
+    ).toBeGreaterThan(1);
   });
 });
