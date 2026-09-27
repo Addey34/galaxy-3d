@@ -4,10 +4,53 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Les
 suivent [SemVer](https://semver.org/lang/fr/). L'historique détaillé reste celui de git : ce
 fichier résume ce qui change pour une personne qui utilise ou cite Galaxy.
 
-## [Non publié]
+## [0.10.0] - 2026-09-27 (« Surfaces mesurées et démarrage allégé »)
 
 ### Ajouté
 
+- **Le démarrage ne télécharge plus deux siècles de trajectoires.** L'application lisait les
+  64 fichiers d'éphémérides entiers avant d'afficher quoi que ce soit, soit 38 040 720 octets ;
+  elle ne lit maintenant que la tranche dont la scène a besoin, 987 168 octets pour la première
+  vue. La première visite complète passe de 45,8 à 11,5 mégaoctets, mesurée en production.
+  Sur un lien à 2 mégabits par seconde, le démarrage tombe de 186 à 32 secondes. Rien n'est
+  approximé en échange : la date n'avance que sur des données réellement arrivées, et aucune
+  position de repli n'est affichée en attendant.
+- **Le curseur de vitesse dit ce que la connexion tient.** À un an de simulation par seconde
+  réelle, suivre l'horloge demande 2,3 mégabits par seconde. Quand le lien mesuré ne suit pas, le
+  curseur se plafonne de lui-même et l'écrit (« limité par votre connexion ») au lieu de promettre
+  une vitesse qu'il ne tiendra pas. Le plafond se calcule sur le débit observé, jamais sur une
+  valeur supposée, et au-dessus de 2,4 mégabits par seconde il n'y a aucun plafond.
+- **Une visite de retour ne redemande plus rien.** Ce que l'appareil tient déjà est relu chez lui :
+  la deuxième visite demandait 987 168 octets d'éphémérides, elle en demande désormais zéro.
+- **Un bouton « préparer le hors-ligne »**, dans les réglages : il télécharge à la demande les
+  38 445 024 octets des 64 fichiers, et l'application place ensuite les corps à n'importe quelle
+  date sans réseau. Rien n'est téléchargé sans le demander, et l'état affiché est toujours LU dans
+  ce que l'appareil tient, jamais un « c'est prêt » mémorisé qui survivrait à une purge.
+- **Le poids du démarrage est désormais borné, famille par famille** (éphémérides, textures,
+  modèles de forme, JavaScript), et jamais par un total unique, afin qu'alléger une famille ne
+  puisse jamais se payer en dégradant la qualité d'une autre. Les budgets des textures et des
+  modèles ne sont pas choisis : ils se déduisent de la règle des paliers, si bien qu'ajouter une
+  résolution plus fine ne coûte rien au démarrage.
+- **Chaque texture livre les résolutions que sa source contient vraiment**, selon une règle
+  mesurée et non un choix au cas par cas : jamais plus large que la source lue à son étiquette, et
+  un palier ne se livre que s'il montre réellement quelque chose de plus que le palier du dessous
+  agrandi. Encelade, Rhéa, Dioné et Téthys passent d'un aperçu de 1 024 pixels à 8 192, Cérès
+  reçoit la vraie mosaïque de la sonde Dawn, Bennu la mosaïque d'OSIRIS-REx drapée sur sa forme
+  réelle, et vingt-deux couches récupèrent le palier le plus léger qui leur manquait, si bien
+  qu'un corps lointain ne télécharge plus un fichier inutilement gros. À l'inverse, sept fichiers
+  ont été retirés là où leurs pixels supplémentaires ne montraient rien (Triton, Saturne, son
+  anneau, Uranus, Neptune).
+- **Dix corps de plus portent leur vraie forme** au lieu d'une sphère, soit quinze en tout, à
+  partir des modèles publiés par les missions et les relevés d'occultation. La texture du corps
+  est drapée sur cette forme avec le même matériau que les autres corps, au lieu d'être posée
+  sommet par sommet.
+- **La position de chaque corps vient désormais de la source la plus précise, mesurée corps par
+  corps** contre JPL Horizons et non supposée. Les écarts moyens tombent de 262 600 à 23 kilomètres
+  pour Neptune, de 112 200 à 5 pour Uranus, de 80 730 à 4 pour Saturne, de 22 820 à 55 pour
+  Jupiter, de 2 891 à 5 pour Mars, de 2 637 à 7 pour Mercure et de 1 428 à 5 pour Vénus. La Lune,
+  Io et Europe gardent leur source analytique, parce que la mesure la donne plus précise (10,8
+  kilomètres contre 12,6 pour la Lune). Les chiffres complets sont publiés sur la page
+  « Méthodologie ».
 - **Relief lunaire mesuré** : en s'approchant, le sol de la Lune n'est plus une sphère lisse mais
   la forme que l'altimètre laser du Lunar Reconnaissance Orbiter a relevée. Un socle couvre le
   corps entier à 1,3 kilomètre par point, et trois lieux sont cuits seize fois plus finement, à
@@ -31,8 +74,28 @@ fichier résume ce qui change pour une personne qui utilise ou cite Galaxy.
   Chaque valeur cite sa source ; quand la source publiée ne décrit pas l'objet, la fiche le
   dit au lieu d'afficher un chiffre trompeur.
 
+### Modifié
+
+- **Ce que montre la première vue suit désormais une seule règle**, au lieu de s'être accumulé au
+  fil des ajouts : les grands corps sont nommés, tous les corps du catalogue sont dessinés, seules
+  les orbites des planètes sont tracées, et les quatorze objets d'instrument (les onze sondes et
+  les trois objets interstellaires) ne sont ni dessinés ni nommés tant qu'on ne les demande pas.
+  Auparavant le télescope spatial James Webb et d'autres sondes apparaissaient d'office. Le corps
+  sélectionné, lui, est toujours dessiné et nommé.
+- **Une sonde en orbite autour d'une planète est posée dans le système de cette planète**, par la
+  même règle que ses lunes. En échelle compressée, certaines sondes semblaient jusque-là placées
+  DANS leur planète.
+- **Les réglages sont regroupés dans une seule surface** « Réglages d'affichage », en sections
+  titrées et avec un vocabulaire unique (Étiquette, Objet, Orbite). Deux boutons devenus
+  redondants ont disparu au profit d'une section et d'une colonne : celui du champ d'astéroïdes et
+  celui des trajectoires interstellaires.
+
 ### Corrigé
 
+- **Le chargement des éphémérides échouait en silence sur un lien lent**, et les corps concernés
+  repassaient sans le dire sur une source moins précise. Ce qui arrive est désormais gardé, ce qui
+  manque est nommé à l'écran et repris, et les requêtes sont limitées à six simultanées, cause
+  mesurée de l'échec.
 - En s'approchant très près d'un corps, celui-ci **disparaissait entièrement** : le plan de coupe
   de la caméra passait devant sa surface, sans erreur ni message. Le seuil dépendait du corps
   (17 km d'altitude sur la Lune, 64 sur la Terre, 34 sur Mars).
