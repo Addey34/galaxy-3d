@@ -6,6 +6,46 @@ fichier résume ce qui change pour une personne qui utilise ou cite Galaxy.
 
 ## [Non publié]
 
+### Ajouté
+
+- **Galaxy parle espagnol et portugais du Brésil**, en plus de l'anglais et du français. Tout ce
+  qu'un visiteur lit suit sa langue : l'interface, le nom et la description de chaque corps, les
+  crédits de licence, la raison écrite quand une valeur n'est pas publiée, les visites guidées, et
+  les pages `/methodology` et `/sources`. Le sélecteur est dans le popover d'aide, et chaque
+  segment porte le nom de sa langue dans sa langue.
+- **Une adresse indexable par corps et par langue** : `/es/jupiter/`, `/pt-br/eclipse/2026-08-12/`,
+  `/fr/titan/`. L'anglais reste à la racine, où il est indexé depuis septembre. Le français n'avait
+  jusqu'ici aucune page de corps. Le site publie 450 adresses au lieu de 120, reliées entre elles
+  par `hreflang` réciproque.
+
+### Modifié
+
+- **Le démarrage est plus léger qu'avec deux langues.** Un visiteur ne télécharge que la langue
+  qu'il lit : 1 193 725 octets de JavaScript pour un anglophone, contre 1 225 609 auparavant, alors
+  que deux langues se sont ajoutées. Le texte du catalogue, jusqu'ici embarqué dans toutes ses
+  langues pour tout le monde, est désormais dérivé par langue au moment de la construction.
+- **Les nombres s'écrivent comme la langue les écrit.** L'espagnol et le portugais du Brésil
+  emploient la virgule décimale : un point leur faisait lire mille fois la valeur.
+
+### Corrigé
+
+- **La mention d'une valeur dérivée se lisait « (derived value value) »** sur les pages de corps,
+  dans les quatre langues. Trouvé en relisant la page comme un lecteur la lit.
+- **L'ordinal d'une planète, les libellés du curseur de vitesse et la ponctuation d'une ligne de
+  crédit** ne connaissaient que l'anglais et le français : ils auraient servi de l'anglais, ou une
+  typographie française, aux deux langues neuves.
+- **La langue active du sélecteur n'était marquée que par une couleur**, donc invisible pour une
+  personne qui utilise un lecteur d'écran. Elle est maintenant annoncée, et le changement de langue
+  aussi, dans la langue d'arrivée.
+
+### Ce qui n'est pas traduit, et qui est dit
+
+- La page de confidentialité reste en français et en anglais : c'est un texte de nature juridique,
+  dont la traduction demande une relecture que ce lot n'a pas eue.
+- Les traductions espagnole et portugaise n'ont pas été relues par un locuteur natif. Ce qu'une
+  machine peut vérifier l'est : les nombres, les unités, les noms propres, l'existence de chaque
+  lien, et le fait qu'aucune chaîne ne reste en anglais sans raison écrite.
+
 ### Corrigé
 
 - **La recherche de corps n'écartait aucun résultat.** Taper « mars » laissait les 71 corps
