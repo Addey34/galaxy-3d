@@ -11,13 +11,25 @@
 | `pnpm build`      | typecheck + bundle Vite production      | moyen             |
 | `pnpm test:e2e`   | scénarios Playwright Chromium/WebGL     | long              |
 | `pnpm verify:all` | verify + build + e2e                    | gate complet      |
+| `pnpm budget:startup` | budget du démarrage, famille JavaScript (exige un build) | court |
+| `pnpm budget:measure` | le démarrage mesuré par famille dans un vrai navigateur | moyen |
 
-**Après un `pnpm build`**, `pnpm fingerprint:generated` compare les 171 documents produits
+**Après un `pnpm build`**, `pnpm fingerprint:generated` compare les documents produits
 (pages par corps, pages d'éclipse, pages documentaires, vignettes, sitemap) à la référence
-commitée `src/seo/generated-fingerprint.json`. Il répond à une question que `pnpm verify` ne pose
+commitée `src/seo/generated-fingerprint.json` ; il imprime leur nombre, qui n'est donc pas recopié
+ici (cette ligne en annonçait 171 pour 173 produits, corrigé le 2026-09-26). Il répond à une question que `pnpm verify` ne pose
 pas : le build publie-t-il encore exactement les mêmes documents ? `--write` réécrit la référence
 (à commiter à part), `--portable` exclut les vignettes, qui ne sont pas comparables d'une machine
 à l'autre parce que leur texte dépend des polices du système.
+
+**Toujours après un `pnpm build`** également, `pnpm budget:startup` confronte au plafond ce que le
+démarrage exécute de JavaScript. C'est la seule des quatre familles du budget de démarrage qui
+n'existe pas avant un build ; les trois autres (fenêtre d'éphémérides, textures, maillages) se
+comptent sur les artefacts committés et vivent dans `src/config/startupBudget.test.ts`, donc dans
+`pnpm verify`. **Il n'y a volontairement PAS de total unique** : un budget global créerait une
+pression permanente à dégrader les textures pour financer autre chose. Contrat et nombres dans
+`docs/ARCHITECTURE.md` § « Le budget du démarrage, famille par famille » ; la méthode de mesure est
+`pnpm budget:measure`, jamais un paragraphe.
 
 ## Règles
 

@@ -79,6 +79,8 @@ pnpm format:check # Vérifier le formatage sans réécrire
 pnpm lint       # eslint . (flat config) ; pnpm lint:fix pour corriger
 pnpm verify     # tsc --noEmit && eslint . && format:check && vitest run (gate local rapide)
 pnpm verify:all # verify + build + test:e2e (validation exhaustive)
+pnpm budget:startup # après un build : ce que le démarrage exécute de JavaScript, confronté à son plafond
+pnpm budget:measure # le démarrage mesuré par famille dans un vrai navigateur (la méthode derrière les nombres)
 ```
 
 ## Textures
@@ -343,7 +345,7 @@ Réglages moteur dans `src/config/engine.ts`, catalogue des corps dans `src/regi
 | `SHADER_SETTINGS.nightLights`               | engine      | Intensité / seuil / douceur des lueurs nocturnes |
 | `CAMERA_SETTINGS.defaultBodyDistance`       | engine      | Distance caméra fallback                         |
 | `CELESTIAL_CONFIG.bodies[*].cameraDistance` | bodies      | Distance de visite par corps `{ educ, explo }`   |
-| `SIMU_SCALES`                               | ui/playback | Vitesses disponibles : `[1, 3600, 10800, 21600]` |
+| `MAX_SIMULATION_SCALE`                      | ui/playback | Vitesse maximale du curseur : un an simulé par seconde réelle (`31 557 600`), sur un curseur exponentiel bidirectionnel dont le centre est le temps réel. Corrigé le 2026-09-26 : cette ligne annonçait une liste de vitesses discrètes `[1, 3600, 10800, 21600]`, SUPERSEDED depuis le 2026-09-23 |
 
 ## Dépendances de développement
 
@@ -357,7 +359,7 @@ Réglages moteur dans `src/config/engine.ts`, catalogue des corps dans `src/regi
 ## Qualité et limites actuelles
 
 - `pnpm verify` passe (types + lint + formatage + tests unitaires) ; voir `pnpm test` pour le compte à jour, ces chiffres évoluent trop souvent pour rester figés ici ;
-- `pnpm build` passe sans avertissement de taille : `three`, `astronomy-engine` et `tween` sont séparés du chunk applicatif, qui reste autour de 107 kB gzippés (345 kB avant compression ; c'est le premier chiffre qui décrit ce qui transite réellement).
+- `pnpm build` passe : `three`, `astronomy-engine` et `tween` sont séparés du chunk applicatif. Les poids ne sont pas recopiés ici, ils sont MESURÉS par une garde : `pnpm budget:startup` imprime ce que le démarrage exécute de JavaScript, morceau par morceau, et le confronte à son plafond (corrigé le 2026-09-26 : cette ligne annonçait 107 kB gzippés pour 166, et 345 kB bruts pour 551 458 octets).
 - Le mode Exploration est actif. Les vols caméra concurrents sont annulés et la cible suivie reste centrée, y compris à vitesse accélérée.
 - `IS_MOBILE` reste figé pour les réglages créés à l'initialisation (anticrénelage, ombres, textures) ; seul le plafond de pixel ratio est recalculé au resize.
 - `frame: 'parentRelative'` calcule `helio(corps) − helio(parent)`. Les lunes joviennes viennent d'Astronomy Engine ; les lunes saturniennes utilisent les vecteurs locaux NASA/JPL Horizons issus de SAT441.
