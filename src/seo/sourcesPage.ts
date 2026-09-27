@@ -30,7 +30,7 @@ import { INTERSTELLAR_OBJECTS } from '@/config/interstellar';
 import { NAVIGABLE_TARGETS } from '@/config/navigable';
 import { escapeHtml } from './bodyLandingPage';
 import {
-  type Bilingual,
+  type DocText,
   type DocLocale,
   type DocPage,
   DOC_LOCALES,
@@ -111,8 +111,8 @@ export interface LiveDataService {
   host: string;
   name: string;
   url: string;
-  use: Bilingual;
-  terms: Bilingual;
+  use: DocText;
+  terms: DocText;
 }
 
 /**
@@ -138,10 +138,16 @@ export const LIVE_DATA_SERVICES: readonly LiveDataService[] = [
     use: {
       en: 'Earth weather layers from satellites and reanalysis: VIIRS and MODIS (Terra, Aqua) clouds, IMERG precipitation, MERRA-2 surface air temperature.',
       fr: 'Couches météo terrestres issues de satellites et de réanalyse : nuages VIIRS et MODIS (Terra, Aqua), précipitations IMERG, température de l’air en surface MERRA-2.',
+      es: 'Capas meteorológicas terrestres por satélite y reanálisis: nubes VIIRS y MODIS (Terra, Aqua), precipitación IMERG, temperatura del aire en superficie MERRA-2.',
+      'pt-BR':
+        'Camadas meteorológicas terrestres por satélite e reanálise: nuvens VIIRS e MODIS (Terra, Aqua), precipitação IMERG, temperatura do ar na superfície MERRA-2.',
     },
     terms: {
       en: 'NASA EOSDIS data, no restriction on use; NASA is acknowledged as the source.',
       fr: 'Données NASA EOSDIS, sans restriction d’usage ; la NASA est citée comme source.',
+      es: 'Datos NASA EOSDIS, sin restricción de uso; la NASA se cita como fuente.',
+      'pt-BR':
+        'Dados NASA EOSDIS, sem restrição de uso; a NASA é citada como fonte.',
     },
   },
   {
@@ -151,10 +157,16 @@ export const LIVE_DATA_SERVICES: readonly LiveDataService[] = [
     use: {
       en: 'Model weather layers (forecast and recent days): clouds, precipitation, wind, temperature, pressure, humidity.',
       fr: 'Couches météo de modèle (prévision et jours récents) : nuages, précipitations, vent, température, pression, humidité.',
+      es: 'Capas meteorológicas modelizadas (previsión y días recientes): nubes, precipitación, viento, temperatura, presión, humedad.',
+      'pt-BR':
+        'Camadas meteorológicas modeladas (previsão e dias recentes): nuvens, precipitação, vento, temperatura, pressão, umidade.',
     },
     terms: {
       en: 'Weather data by Open-Meteo.com, licensed under CC BY 4.0; values are resampled into map textures. Free API used under its non-commercial terms.',
       fr: 'Données météo par Open-Meteo.com, sous licence CC BY 4.0 ; les valeurs sont rééchantillonnées en textures de carte. API gratuite utilisée selon ses conditions non commerciales.',
+      es: 'Datos meteorológicos de Open-Meteo.com, bajo licencia CC BY 4.0; los valores se remuestrean en texturas de mapa. API gratuita usada según sus condiciones no comerciales.',
+      'pt-BR':
+        'Dados meteorológicos da Open-Meteo.com, sob licença CC BY 4.0; os valores são reamostrados em texturas de mapa. API gratuita usada conforme os seus termos não comerciais.',
     },
   },
   {
@@ -164,10 +176,16 @@ export const LIVE_DATA_SERVICES: readonly LiveDataService[] = [
     use: {
       en: 'The same model layers for past dates, from the ERA5 reanalysis.',
       fr: 'Les mêmes couches de modèle pour les dates passées, d’après la réanalyse ERA5.',
+      es: 'Las mismas capas modelizadas para fechas pasadas, a partir del reanálisis ERA5.',
+      'pt-BR':
+        'As mesmas camadas modeladas para datas passadas, a partir da reanálise ERA5.',
     },
     terms: {
       en: 'CC BY 4.0 through Open-Meteo. Hersbach, H. et al. (2023), ERA5 hourly data on single levels from 1940 to present, ECMWF, doi:10.24381/cds.adbb2d47. Generated using Copernicus Climate Change Service information.',
       fr: 'CC BY 4.0 via Open-Meteo. Hersbach, H. et al. (2023), ERA5 hourly data on single levels from 1940 to present, ECMWF, doi:10.24381/cds.adbb2d47. Generated using Copernicus Climate Change Service information.',
+      es: 'CC BY 4.0 a través de Open-Meteo. Hersbach, H. et al. (2023), ERA5 hourly data on single levels from 1940 to present, ECMWF, doi:10.24381/cds.adbb2d47. Generado con información del Servicio de Cambio Climático de Copernicus.',
+      'pt-BR':
+        'CC BY 4.0 através da Open-Meteo. Hersbach, H. et al. (2023), ERA5 hourly data on single levels from 1940 to present, ECMWF, doi:10.24381/cds.adbb2d47. Gerado com informações do Serviço de Mudanças Climáticas do Copernicus.',
     },
   },
   ...[...Object.values(EVENT_PROVIDERS), ...Object.values(TILE_PROVIDERS)].map(
@@ -188,10 +206,15 @@ export const LIVE_DATA_SERVICES: readonly LiveDataService[] = [
     use: {
       en: 'Not a data source: cookieless visit counting, described in the privacy policy.',
       fr: 'Pas une source de données : comptage de visites sans cookie, décrit dans la politique de confidentialité.',
+      es: 'No es una fuente de datos: recuento de visitas sin cookies, descrito en la política de privacidad.',
+      'pt-BR':
+        'Não é uma fonte de dados: contagem de visitas sem cookies, descrita na política de privacidade.',
     },
     terms: {
       en: 'See the privacy policy.',
       fr: 'Voir la politique de confidentialité.',
+      es: 'Véase la política de privacidad.',
+      'pt-BR': 'Veja a política de privacidade.',
     },
   },
 ];
@@ -202,6 +225,12 @@ export interface FirebaseHostingConfig {
 }
 
 /** Hôtes HTTPS de la directive `connect-src` de la CSP servie par Firebase. */
+/**
+ * Le separateur decimal par langue. Trois ternaires `fr ? ',' : '.'` vivaient ici, et chacun
+ * servait un point a l'espagnol et au portugais du Bresil, qui ecrivent la virgule.
+ */
+const DECIMAL: DocText = { en: '.', fr: ',', es: ',', 'pt-BR': ',' };
+
 export function connectHostsFromFirebase(
   config: FirebaseHostingConfig
 ): string[] {
@@ -268,21 +297,48 @@ export function missingTextureProvenance(
   );
 }
 
-const LICENSE_LABELS: Record<string, Bilingual> = {
-  'public-domain': { en: 'Public domain', fr: 'Domaine public' },
+const LICENSE_LABELS: Record<string, DocText> = {
+  'public-domain': {
+    en: 'Public domain',
+    fr: 'Domaine public',
+    es: 'Dominio público',
+    'pt-BR': 'Domínio público',
+  },
   generated: {
     en: 'Generated by this project',
     fr: 'Générée par ce projet',
+    es: 'Generado por este proyecto',
+    'pt-BR': 'Gerado por este projeto',
   },
 };
 
-const LAYER_LABELS: Record<string, Bilingual> = {
-  surface: { en: 'surface', fr: 'surface' },
-  clouds: { en: 'clouds', fr: 'nuages' },
-  lights: { en: 'night lights', fr: 'lumières nocturnes' },
-  normalMap: { en: 'relief (normal map)', fr: 'relief (normal map)' },
-  spec: { en: 'land/ocean mask', fr: 'masque terre/mer' },
-  ring: { en: 'ring', fr: 'anneau' },
+const LAYER_LABELS: Record<string, DocText> = {
+  surface: {
+    en: 'surface',
+    fr: 'surface',
+    es: 'superficie',
+    'pt-BR': 'superfície',
+  },
+  clouds: { en: 'clouds', fr: 'nuages', es: 'nubes', 'pt-BR': 'nuvens' },
+  lights: {
+    en: 'night lights',
+    fr: 'lumières nocturnes',
+    es: 'luces nocturnas',
+    'pt-BR': 'luzes noturnas',
+  },
+  normalMap: {
+    en: 'relief (normal map)',
+    fr: 'relief (normal map)',
+    es: 'relieve (mapa de normales)',
+    'pt-BR': 'relevo (mapa de normais)',
+  },
+  spec: {
+    en: 'land/ocean mask',
+    fr: 'masque terre/mer',
+    es: 'máscara tierra/océano',
+    'pt-BR': 'máscara terra/oceano',
+  },
+  ring: { en: 'ring', fr: 'anneau', es: 'anillo', 'pt-BR': 'anel' },
 };
 
 const JD_UNIX_EPOCH = 2_440_587.5;
@@ -311,7 +367,7 @@ export function sourcesPages(input: SourcesInput): DocPage[] {
 function sourcesPage(input: SourcesInput, locale: DocLocale): DocPage {
   const { config, textures, manifest, dependencies, origin, smallBodies } =
     input;
-  const L = (text: Bilingual): string => text[locale];
+  const L = (text: DocText): string => text[locale];
   const name = displayNameResolver(config);
   const flat = flattenBodies(config);
   const sections: string[] = [];
@@ -320,6 +376,8 @@ function sourcesPage(input: SourcesInput, locale: DocLocale): DocPage {
     `      <section><p>${L({
       en: `Every table below is read at build time from the file that is authoritative for it, so this page cannot fall out of date with what the app actually ships. How positions are computed, and how accurate they are, is explained on the <a href="${docPath('methodology', locale)}">methodology page</a>.`,
       fr: `Chaque tableau ci-dessous est lu au build dans le fichier qui fait foi : cette page ne peut pas se désynchroniser de ce que l’application livre réellement. La façon dont les positions sont calculées, et leur précision, est expliquée sur la <a href="${docPath('methodology', locale)}">page de méthodologie</a>.`,
+      es: `Cada tabla de esta página se lee en la compilación en el archivo que es su fuente autorizada, de modo que esta página no puede quedar desfasada respecto a lo que la aplicación entrega realmente. Cómo se calculan las posiciones, y con qué exactitud, se explica en la <a href="${docPath('methodology', locale)}">página de metodología</a>.`,
+      'pt-BR': `Cada tabela desta página é lida na compilação no arquivo que é a sua fonte autorizada, de modo que esta página não pode ficar defasada em relação ao que o aplicativo realmente entrega. Como as posições são calculadas, e com que exatidão, está explicado na <a href="${docPath('methodology', locale)}">página de metodologia</a>.`,
     })}</p></section>`
   );
 
@@ -327,23 +385,93 @@ function sourcesPage(input: SourcesInput, locale: DocLocale): DocPage {
   // Tout est COMPTÉ dans le catalogue, avec la même règle que la fiche et les pages de corps
   // (`core/bodyFacts.ts`) : ce qui s'affiche, ce qui est dérivé, ce qui attend encore sa source.
   const FACT_FIELDS: FactField[] = [...ALL_FACT_FIELDS];
-  const FIELD_LABELS: Record<FactField, Bilingual> = {
-    radiusKm: { en: 'radius', fr: 'rayon' },
-    massKg: { en: 'mass', fr: 'masse' },
-    gravity: { en: 'gravity', fr: 'gravité' },
-    meanTempC: { en: 'mean temperature', fr: 'température moyenne' },
-    moonCount: { en: 'known moons', fr: 'lunes connues' },
-    axialTilt: { en: 'axial tilt', fr: 'obliquité' },
-    distanceAU: { en: 'mean distance', fr: 'distance moyenne' },
-    orbitPeriodDays: { en: 'orbital period', fr: 'période orbitale' },
-    rotationPeriod: { en: 'sidereal rotation', fr: 'rotation sidérale' },
-    launchDate: { en: 'launch date', fr: 'date de lancement' },
-    firstObservation: { en: 'first observation', fr: 'première observation' },
-    eccentricity: { en: 'eccentricity', fr: 'excentricité' },
-    perihelionAU: { en: 'perihelion distance', fr: 'distance de périhélie' },
-    launchVehicle: { en: 'launch vehicle', fr: 'lanceur' },
-    launchSite: { en: 'launch site', fr: 'site de lancement' },
-    absoluteMagnitude: { en: 'absolute magnitude', fr: 'magnitude absolue' },
+  const FIELD_LABELS: Record<FactField, DocText> = {
+    radiusKm: { en: 'radius', fr: 'rayon', es: 'radio', 'pt-BR': 'raio' },
+    massKg: { en: 'mass', fr: 'masse', es: 'masa', 'pt-BR': 'massa' },
+    gravity: {
+      en: 'gravity',
+      fr: 'gravité',
+      es: 'gravedad',
+      'pt-BR': 'gravidade',
+    },
+    meanTempC: {
+      en: 'mean temperature',
+      fr: 'température moyenne',
+      es: 'temperatura media',
+      'pt-BR': 'temperatura média',
+    },
+    moonCount: {
+      en: 'known moons',
+      fr: 'lunes connues',
+      es: 'lunas conocidas',
+      'pt-BR': 'luas conhecidas',
+    },
+    axialTilt: {
+      en: 'axial tilt',
+      fr: 'obliquité',
+      es: 'inclinación axial',
+      'pt-BR': 'inclinação axial',
+    },
+    distanceAU: {
+      en: 'mean distance',
+      fr: 'distance moyenne',
+      es: 'distancia media',
+      'pt-BR': 'distância média',
+    },
+    orbitPeriodDays: {
+      en: 'orbital period',
+      fr: 'période orbitale',
+      es: 'periodo orbital',
+      'pt-BR': 'período orbital',
+    },
+    rotationPeriod: {
+      en: 'sidereal rotation',
+      fr: 'rotation sidérale',
+      es: 'rotación sidérea',
+      'pt-BR': 'rotação sideral',
+    },
+    launchDate: {
+      en: 'launch date',
+      fr: 'date de lancement',
+      es: 'fecha de lanzamiento',
+      'pt-BR': 'data de lançamento',
+    },
+    firstObservation: {
+      en: 'first observation',
+      fr: 'première observation',
+      es: 'primera observación',
+      'pt-BR': 'primeira observação',
+    },
+    eccentricity: {
+      en: 'eccentricity',
+      fr: 'excentricité',
+      es: 'excentricidad',
+      'pt-BR': 'excentricidade',
+    },
+    perihelionAU: {
+      en: 'perihelion distance',
+      fr: 'distance de périhélie',
+      es: 'distancia del perihelio',
+      'pt-BR': 'distância do periélio',
+    },
+    launchVehicle: {
+      en: 'launch vehicle',
+      fr: 'lanceur',
+      es: 'lanzador',
+      'pt-BR': 'veículo lançador',
+    },
+    launchSite: {
+      en: 'launch site',
+      fr: 'site de lancement',
+      es: 'base de lanzamiento',
+      'pt-BR': 'base de lançamento',
+    },
+    absoluteMagnitude: {
+      en: 'absolute magnitude',
+      fr: 'magnitude absolue',
+      es: 'magnitud absoluta',
+      'pt-BR': 'magnitude absoluta',
+    },
   };
   const perSource = new Map<
     string,
@@ -378,10 +506,25 @@ function sourcesPage(input: SourcesInput, locale: DocLocale): DocPage {
       perSource.set(entry.provenance.source, row);
     }
   }
-  const METHOD_LABELS: Record<FactMethod, Bilingual> = {
-    measured: { en: 'measured', fr: 'mesurée' },
-    derived: { en: 'derived', fr: 'dérivée' },
-    illustrative: { en: 'illustrative', fr: 'illustrative' },
+  const METHOD_LABELS: Record<FactMethod, DocText> = {
+    measured: {
+      en: 'measured',
+      fr: 'mesurée',
+      es: 'medido',
+      'pt-BR': 'medido',
+    },
+    derived: {
+      en: 'derived',
+      fr: 'dérivée',
+      es: 'derivado',
+      'pt-BR': 'derivado',
+    },
+    illustrative: {
+      en: 'illustrative',
+      fr: 'illustrative',
+      es: 'ilustrativo',
+      'pt-BR': 'ilustrativo',
+    },
   };
   const factRows = Object.entries(FACT_SOURCES)
     .filter(([id]) => perSource.has(id))
@@ -389,7 +532,12 @@ function sourcesPage(input: SourcesInput, locale: DocLocale): DocPage {
       const row = perSource.get(id)!;
       const reference = [
         source.kind === 'preprint'
-          ? L({ en: 'preprint', fr: 'prépublication' })
+          ? L({
+              en: 'preprint',
+              fr: 'prépublication',
+              es: 'prepublicación',
+              'pt-BR': 'pré-publicação',
+            })
           : 'journal' in source
             ? source.journal
             : undefined,
@@ -417,21 +565,35 @@ function sourcesPage(input: SourcesInput, locale: DocLocale): DocPage {
   sections.push(
     docSection(
       'physical-data',
-      L({ en: 'Physical data', fr: 'Données physiques' }),
+      L({
+        en: 'Physical data',
+        fr: 'Données physiques',
+        es: 'Datos físicos',
+        'pt-BR': 'Dados físicos',
+      }),
       `<p>${L({
         en: `Each value on a body’s information card and public page cites a primary source: a space agency, an agency database, or a published article, never an encyclopaedia. A <strong>derived</strong> value is computed from published ones (a mass from the published GM, a radius from a diameter), and the card says how. ${shownFacts} values are shown, ${derivedFacts} of them derived. ${unsourcedFacts} values the simulation uses are not shown because they are not yet traced to a primary source, and ${unpublishedFacts} have no single value to publish (a range, an upper limit, a quantity that varies too much across the body or its orbit for one number, or a published figure that describes a different quantity): the card says why instead of showing a number.`,
         fr: `Chaque valeur de la fiche d’un corps et de sa page publique cite une source primaire : une agence spatiale, une base de données d’agence ou un article publié, jamais une encyclopédie. Une valeur <strong>dérivée</strong> est calculée à partir de valeurs publiées (une masse depuis le GM publié, un rayon depuis un diamètre), et la fiche dit comment. ${shownFacts} valeurs sont affichées, dont ${derivedFacts} dérivées. ${unsourcedFacts} valeurs utilisées par la simulation ne sont pas affichées faute de source primaire rattachée, et ${unpublishedFacts} n’ont pas de valeur unique à publier (une plage, une limite supérieure, une grandeur qui varie trop sur le corps ou son orbite pour un seul chiffre, ou un chiffre publié qui décrit une autre grandeur) : la fiche dit pourquoi au lieu d’afficher un chiffre.`,
+        es: `Cada valor de la ficha de un cuerpo y de su página pública cita una fuente primaria: una agencia espacial, una base de datos de agencia o un artículo publicado, nunca una enciclopedia. Un valor <strong>derivado</strong> se calcula a partir de valores publicados (una masa a partir del GM publicado, un radio a partir de un diámetro), y la ficha dice cómo. Se muestran ${shownFacts} valores, ${derivedFacts} de ellos derivados. ${unsourcedFacts} valores que la simulación usa no se muestran porque aún no están rastreados hasta una fuente primaria, y ${unpublishedFacts} no tienen un valor único que publicar (un rango, un límite superior, una magnitud que varía demasiado en el cuerpo o en su órbita para un solo número, o una cifra publicada que describe otra magnitud): la ficha dice por qué en lugar de mostrar un número.`,
+        'pt-BR': `Cada valor da ficha de um corpo e da sua página pública cita uma fonte primária: uma agência espacial, uma base de dados de agência ou um artigo publicado, nunca uma enciclopédia. Um valor <strong>derivado</strong> é calculado a partir de valores publicados (uma massa a partir do GM publicado, um raio a partir de um diâmetro), e a ficha diz como. São exibidos ${shownFacts} valores, ${derivedFacts} deles derivados. ${unsourcedFacts} valores que a simulação usa não são exibidos porque ainda não estão rastreados até uma fonte primária, e ${unpublishedFacts} não têm um valor único a publicar (um intervalo, um limite superior, uma grandeza que varia demais no corpo ou na sua órbita para um único número, ou um número publicado que descreve outra grandeza): a ficha diz por quê em vez de exibir um número.`,
       })}</p>` +
         docTable(
           L({
             en: 'Primary sources of the physical data',
             fr: 'Sources primaires des données physiques',
+            es: 'Fuentes primarias de los datos físicos',
+            'pt-BR': 'Fontes primárias dos dados físicos',
           }),
           [
-            L({ en: 'Source', fr: 'Source' }),
-            L({ en: 'Bodies', fr: 'Corps' }),
-            L({ en: 'Values', fr: 'Valeurs' }),
-            L({ en: 'Method', fr: 'Méthode' }),
+            L({ en: 'Source', fr: 'Source', es: 'Fuente', 'pt-BR': 'Fonte' }),
+            L({ en: 'Bodies', fr: 'Corps', es: 'Cuerpos', 'pt-BR': 'Corpos' }),
+            L({
+              en: 'Values',
+              fr: 'Valeurs',
+              es: 'Valores',
+              'pt-BR': 'Valores',
+            }),
+            L({ en: 'Method', fr: 'Méthode', es: 'Método', 'pt-BR': 'Método' }),
           ],
           factRows
         )
@@ -459,36 +621,70 @@ function sourcesPage(input: SourcesInput, locale: DocLocale): DocPage {
         ? L({
             en: 'Procedural texture, no third-party material',
             fr: 'Texture procédurale, aucun contenu tiers',
+            es: 'Textura procedimental, sin material de terceros',
+            'pt-BR': 'Textura procedural, sem material de terceiros',
           })
         : t.sourceUrl
           ? link(t.sourceUrl, escapeHtml(t.credit))
           : escapeHtml(t.credit),
       t.illustrative
-        ? L({ en: 'illustrative', fr: 'illustrative' })
+        ? L({
+            en: 'illustrative',
+            fr: 'illustrative',
+            es: 'ilustrativa',
+            'pt-BR': 'ilustrativa',
+          })
         : L({
             en: 'from real data',
             fr: 'issue de données réelles',
+            es: 'a partir de datos reales',
+            'pt-BR': 'a partir de dados reais',
           }),
     ]);
   sections.push(
     docSection(
       'textures',
-      L({ en: 'Surface textures', fr: 'Textures de surface' }),
+      L({
+        en: 'Surface textures',
+        fr: 'Textures de surface',
+        es: 'Texturas de superficie',
+        'pt-BR': 'Texturas de superfície',
+      }),
       `<p>${L({
         en: 'An <strong>illustrative</strong> surface is not a scientific map: either no spacecraft has imaged the body well enough, or the images were never assembled into a global mosaic. Credits are quoted as recorded in the project’s provenance file.',
         fr: 'Une surface <strong>illustrative</strong> n’est pas une carte scientifique : soit aucune sonde n’a photographié le corps assez bien, soit les images n’ont jamais été assemblées en mosaïque globale. Les crédits sont cités tels qu’inscrits dans le fichier de provenance du projet.',
+        es: 'Una superficie <strong>ilustrativa</strong> no es un mapa científico: o ninguna sonda ha fotografiado el cuerpo lo bastante bien, o las imágenes nunca se ensamblaron en un mosaico global. Los créditos se citan tal como están registrados en el archivo de procedencia del proyecto.',
+        'pt-BR':
+          'Uma superfície <strong>ilustrativa</strong> não é um mapa científico: ou nenhuma sonda fotografou o corpo bem o bastante, ou as imagens nunca foram montadas em um mosaico global. Os créditos são citados tal como registrados no arquivo de procedência do projeto.',
       })}</p>` +
         docTable(
           L({
             en: 'One row per texture layer the app loads',
             fr: 'Une ligne par couche de texture chargée par l’application',
+            es: 'Una fila por capa de textura que carga la aplicación',
+            'pt-BR': 'Uma linha por camada de textura que o aplicativo carrega',
           }),
           [
-            L({ en: 'Body', fr: 'Corps' }),
-            L({ en: 'Layer', fr: 'Couche' }),
-            L({ en: 'Licence', fr: 'Licence' }),
-            L({ en: 'Credit', fr: 'Crédit' }),
-            L({ en: 'Nature', fr: 'Nature' }),
+            L({ en: 'Body', fr: 'Corps', es: 'Cuerpo', 'pt-BR': 'Corpo' }),
+            L({ en: 'Layer', fr: 'Couche', es: 'Capa', 'pt-BR': 'Camada' }),
+            L({
+              en: 'Licence',
+              fr: 'Licence',
+              es: 'Licencia',
+              'pt-BR': 'Licença',
+            }),
+            L({
+              en: 'Credit',
+              fr: 'Crédit',
+              es: 'Crédito',
+              'pt-BR': 'Crédito',
+            }),
+            L({
+              en: 'Nature',
+              fr: 'Nature',
+              es: 'Naturaleza',
+              'pt-BR': 'Natureza',
+            }),
           ],
           textureRows
         )
@@ -508,35 +704,79 @@ function sourcesPage(input: SourcesInput, locale: DocLocale): DocPage {
             ? L({
                 en: 'Draped with the body’s own surface texture, credited in the texture table',
                 fr: 'Drapé de la texture de surface du corps, créditée dans le tableau des textures',
+                es: 'Drapeado con la propia textura de superficie del cuerpo, acreditada en la tabla de texturas',
+                'pt-BR':
+                  'Drapeado com a própria textura de superfície do corpo, creditada na tabela de texturas',
               })
             : (model.colourSource?.[locale] ??
                 L({
                   en: 'No global map published: uniform colour at the published albedo',
                   fr: 'Aucune carte globale publiée : couleur uniforme à l’albédo publié',
+                  es: 'Ningún mapa global publicado: color uniforme al albedo publicado',
+                  'pt-BR':
+                    'Nenhum mapa global publicado: cor uniforme no albedo publicado',
                 }))
         ),
         model.albedo === undefined
-          ? L({ en: 'not used', fr: 'sans objet' })
-          : `${model.albedo.toString().replace('.', locale === 'fr' ? ',' : '.')} (${escapeHtml(model.albedoSource ?? '')})`,
+          ? L({
+              en: 'not used',
+              fr: 'sans objet',
+              es: 'no utilizado',
+              'pt-BR': 'não utilizado',
+            })
+          : `${model.albedo.toString().replace('.', DECIMAL[locale])} (${escapeHtml(model.albedoSource ?? '')})`,
         escapeHtml(model.resolutions.join(', ')),
       ];
     });
   sections.push(
     docSection(
       'models',
-      L({ en: '3D shape models', fr: 'Modèles de forme 3D' }),
+      L({
+        en: '3D shape models',
+        fr: 'Modèles de forme 3D',
+        es: 'Modelos de forma 3D',
+        'pt-BR': 'Modelos de forma 3D',
+      }),
       `<p>${L({
         en: 'Irregular bodies are drawn from their real mission shape models, reduced for the web without inventing geometry. Brightness is set by the published albedo; contrast and colour come from a mission map when one exists.',
         fr: 'Les corps irréguliers sont dessinés d’après leurs vrais modèles de forme de mission, allégés pour le web sans inventer de géométrie. La luminosité suit l’albédo publié ; contrastes et couleur viennent d’une carte de mission quand elle existe.',
+        es: 'Los cuerpos irregulares se dibujan a partir de sus modelos de forma reales de misión, reducidos para la web sin inventar geometría. El brillo lo fija el albedo publicado; el contraste y el color vienen de un mapa de misión cuando existe.',
+        'pt-BR':
+          'Os corpos irregulares são desenhados a partir dos seus modelos de forma reais de missão, reduzidos para a web sem inventar geometria. O brilho é fixado pelo albedo publicado; o contraste e a cor vêm de um mapa de missão quando ele existe.',
       })}</p>` +
         docTable(
-          L({ en: 'Shape models shipped', fr: 'Modèles de forme livrés' }),
+          L({
+            en: 'Shape models shipped',
+            fr: 'Modèles de forme livrés',
+            es: 'Modelos de forma entregados',
+            'pt-BR': 'Modelos de forma entregues',
+          }),
           [
-            L({ en: 'Body', fr: 'Corps' }),
-            L({ en: 'Shape model', fr: 'Modèle de forme' }),
-            L({ en: 'Colour source', fr: 'Source de la couleur' }),
-            L({ en: 'Albedo (reference)', fr: 'Albédo (référence)' }),
-            L({ en: 'Levels of detail', fr: 'Niveaux de détail' }),
+            L({ en: 'Body', fr: 'Corps', es: 'Cuerpo', 'pt-BR': 'Corpo' }),
+            L({
+              en: 'Shape model',
+              fr: 'Modèle de forme',
+              es: 'Modelo de forma',
+              'pt-BR': 'Modelo de forma',
+            }),
+            L({
+              en: 'Colour source',
+              fr: 'Source de la couleur',
+              es: 'Fuente del color',
+              'pt-BR': 'Fonte da cor',
+            }),
+            L({
+              en: 'Albedo (reference)',
+              fr: 'Albédo (référence)',
+              es: 'Albedo (referencia)',
+              'pt-BR': 'Albedo (referência)',
+            }),
+            L({
+              en: 'Levels of detail',
+              fr: 'Niveaux de détail',
+              es: 'Niveles de detalle',
+              'pt-BR': 'Níveis de detalhe',
+            }),
           ],
           modelRows
         )
@@ -549,7 +789,7 @@ function sourcesPage(input: SourcesInput, locale: DocLocale): DocPage {
       const radiusKm = flat.get(body)?.realData?.radiusKm ?? 0;
       const value = groundResolutionKm(level, radiusKm) * 1000;
       return value >= 1000
-        ? `${(value / 1000).toFixed(2).replace('.', locale === 'fr' ? ',' : '.')} km`
+        ? `${(value / 1000).toFixed(2).replace('.', DECIMAL[locale])} km`
         : `${Math.round(value)} m`;
     };
     const reliefRows = input.heightfields.map((set) => [
@@ -559,7 +799,7 @@ function sourcesPage(input: SourcesInput, locale: DocLocale): DocPage {
         : escapeHtml(set.title),
       escapeHtml(metres(set.body, set.baseLevel)),
       set.areas.length === 0
-        ? L({ en: 'none', fr: 'aucune' })
+        ? L({ en: 'none', fr: 'aucune', es: 'ninguno', 'pt-BR': 'nenhum' })
         : escapeHtml(
             set.areas
               .map((area) => `${area.name} (${metres(set.body, area.level)})`)
@@ -570,29 +810,54 @@ function sourcesPage(input: SourcesInput, locale: DocLocale): DocPage {
           .toFixed(1)
           .replace(
             '.',
-            locale === 'fr' ? ',' : '.'
-          )} ${L({ en: 'MB', fr: 'Mo' })}`
+            DECIMAL[locale]
+          )} ${L({ en: 'MB', fr: 'Mo', es: 'MB', 'pt-BR': 'MB' })}`
       ),
     ]);
     sections.push(
       docSection(
         'relief',
-        L({ en: 'Relief', fr: 'Relief' }),
+        L({ en: 'Relief', fr: 'Relief', es: 'Relieve', 'pt-BR': 'Relevo' }),
         `<p>${L({
           en: 'On approach, the ground is displaced by measured altitudes, never by invented detail: no fractal relief, and no shaded-relief image used as geometry. The tiles are cooked offline from a published elevation model, because no tiled height source is served with the cross-origin header a browser needs. A global base covers the whole body; a few named areas, framed on their published feature, are cooked finer.',
           fr: 'À l’approche, le sol est déplacé par des altitudes mesurées, jamais par du détail inventé : aucun relief fractal, et aucune image d’ombrage employée comme géométrie. Les tuiles sont cuites hors ligne depuis un modèle d’élévation publié, faute de source de hauteurs tuilée servie avec l’en-tête d’origine croisée qu’exige un navigateur. Un socle global couvre le corps entier ; quelques aires nommées, cadrées sur leur entité publiée, sont cuites plus finement.',
+          es: 'Al acercarse, el suelo se desplaza con altitudes medidas, nunca con detalle inventado: sin relieve fractal, y sin usar una imagen de relieve sombreado como geometría. Las teselas se cuecen fuera de línea a partir de un modelo de elevación publicado, porque ninguna fuente de alturas en teselas se sirve con el encabezado de origen cruzado que un navegador necesita. Una base global cubre todo el cuerpo; unas pocas áreas nombradas, encuadradas en su formación publicada, se cuecen más finas.',
+          'pt-BR':
+            'Na aproximação, o solo é deslocado por altitudes medidas, nunca por detalhe inventado: sem relevo fractal, e sem usar uma imagem de relevo sombreado como geometria. Os blocos são cozidos offline a partir de um modelo de elevação publicado, porque nenhuma fonte de alturas em blocos é servida com o cabeçalho de origem cruzada que um navegador precisa. Uma base global cobre todo o corpo; algumas áreas nomeadas, enquadradas na sua formação publicada, são cozidas mais finas.',
         })}</p>` +
           docTable(
             L({
               en: 'Height tile sets shipped',
               fr: 'Jeux de tuiles de hauteurs livrés',
+              es: 'Conjuntos de teselas de altura entregados',
+              'pt-BR': 'Conjuntos de blocos de altura entregues',
             }),
             [
-              L({ en: 'Body', fr: 'Corps' }),
-              L({ en: 'Elevation model', fr: 'Modèle d’élévation' }),
-              L({ en: 'Global base', fr: 'Socle global' }),
-              L({ en: 'Named areas', fr: 'Aires nommées' }),
-              L({ en: 'Tiles shipped', fr: 'Tuiles livrées' }),
+              L({ en: 'Body', fr: 'Corps', es: 'Cuerpo', 'pt-BR': 'Corpo' }),
+              L({
+                en: 'Elevation model',
+                fr: 'Modèle d’élévation',
+                es: 'Modelo de elevación',
+                'pt-BR': 'Modelo de elevação',
+              }),
+              L({
+                en: 'Global base',
+                fr: 'Socle global',
+                es: 'Base global',
+                'pt-BR': 'Base global',
+              }),
+              L({
+                en: 'Named areas',
+                fr: 'Aires nommées',
+                es: 'Áreas nombradas',
+                'pt-BR': 'Áreas nomeadas',
+              }),
+              L({
+                en: 'Tiles shipped',
+                fr: 'Tuiles livrées',
+                es: 'Teselas entregadas',
+                'pt-BR': 'Blocos entregues',
+              }),
             ],
             reliefRows
           )
@@ -606,7 +871,7 @@ function sourcesPage(input: SourcesInput, locale: DocLocale): DocPage {
     `<code>${escapeHtml(e.target)}</code>`,
     escapeHtml(
       e.center === 'sun'
-        ? L({ en: 'Sun', fr: 'Soleil' })
+        ? L({ en: 'Sun', fr: 'Soleil', es: 'Sol', 'pt-BR': 'Sol' })
         : name(e.center, locale)
     ),
     String(e.stepDays),
@@ -615,19 +880,46 @@ function sourcesPage(input: SourcesInput, locale: DocLocale): DocPage {
   sections.push(
     docSection(
       'ephemerides',
-      L({ en: 'Ephemerides', fr: 'Éphémérides' }),
+      L({
+        en: 'Ephemerides',
+        fr: 'Éphémérides',
+        es: 'Efemérides',
+        'pt-BR': 'Efemérides',
+      }),
       `<p>${L({
         en: `Precomputed position files come from ${escapeHtml(manifest.source)} (state vectors, frame ${escapeHtml(manifest.frame)}), generated on ${escapeHtml(manifest.generatedAt.slice(0, 10))}. The Horizons target identifier is given so that anyone can request the same data. Planets, the Moon and the Galilean moons otherwise come from ${link('https://github.com/cosinekitty/astronomy', 'astronomy-engine')}; the optional small-body layer reads a snapshot of ${escapeHtml(String(smallBodies.count))} orbits taken from the ${link('https://ssd-api.jpl.nasa.gov/doc/sbdb_query.html', 'JPL Small-Body Database')} on ${escapeHtml(smallBodies.retrieved)} and shipped with the build: queried from a browser, that service replies without the cross-origin header a browser needs in order to accept the reply, so nothing ever reached the page.`,
         fr: `Les fichiers de positions précalculées viennent de ${escapeHtml(manifest.source)} (vecteurs d’état, repère ${escapeHtml(manifest.frame)}), générés le ${escapeHtml(manifest.generatedAt.slice(0, 10))}. L’identifiant de cible Horizons est donné pour que chacun puisse demander les mêmes données. Planètes, Lune et lunes galiléennes viennent sinon d’${link('https://github.com/cosinekitty/astronomy', 'astronomy-engine')} ; la couche optionnelle des petits corps lit un instantané de ${escapeHtml(String(smallBodies.count))} orbites relevé le ${escapeHtml(smallBodies.retrieved)} dans la ${link('https://ssd-api.jpl.nasa.gov/doc/sbdb_query.html', 'JPL Small-Body Database')} et livré avec le build : interrogé depuis un navigateur, ce service répond sans l’en-tête d’origine croisée qu’il faut à celui-ci pour accepter la réponse, et rien n’arrivait donc jamais jusqu’à la page.`,
+        es: `Los archivos de posición precalculados vienen de ${escapeHtml(manifest.source)} (vectores de estado, marco ${escapeHtml(manifest.frame)}), generados el ${escapeHtml(manifest.generatedAt.slice(0, 10))}. Se indica el identificador de destino Horizons para que cualquiera pueda pedir los mismos datos. Los planetas, la Luna y las lunas galileanas vienen por lo demás de ${link('https://github.com/cosinekitty/astronomy', 'astronomy-engine')}; la capa opcional de cuerpos menores lee una muestra de ${escapeHtml(String(smallBodies.count))} órbitas tomada de la ${link('https://ssd-api.jpl.nasa.gov/doc/sbdb_query.html', 'JPL Small-Body Database')} el ${escapeHtml(smallBodies.retrieved)} y entregada con la compilación: consultado desde un navegador, ese servicio responde sin el encabezado de origen cruzado que un navegador necesita para aceptar la respuesta, así que nada llegaba nunca a la página.`,
+        'pt-BR': `Os arquivos de posição pré-calculados vêm de ${escapeHtml(manifest.source)} (vetores de estado, referencial ${escapeHtml(manifest.frame)}), gerados em ${escapeHtml(manifest.generatedAt.slice(0, 10))}. O identificador de alvo Horizons é indicado para que qualquer pessoa possa pedir os mesmos dados. Os planetas, a Lua e as luas galileanas vêm, de resto, de ${link('https://github.com/cosinekitty/astronomy', 'astronomy-engine')}; a camada opcional de corpos menores lê uma amostra de ${escapeHtml(String(smallBodies.count))} órbitas tirada da ${link('https://ssd-api.jpl.nasa.gov/doc/sbdb_query.html', 'JPL Small-Body Database')} em ${escapeHtml(smallBodies.retrieved)} e entregue com a compilação: consultado de um navegador, esse serviço responde sem o cabeçalho de origem cruzada que um navegador precisa para aceitar a resposta, então nada nunca chegava à página.`,
       })}</p>` +
         docTable(
-          L({ en: 'JPL Horizons files', fr: 'Fichiers JPL Horizons' }),
+          L({
+            en: 'JPL Horizons files',
+            fr: 'Fichiers JPL Horizons',
+            es: 'Archivos JPL Horizons',
+            'pt-BR': 'Arquivos JPL Horizons',
+          }),
           [
-            L({ en: 'Body', fr: 'Corps' }),
-            L({ en: 'Horizons target', fr: 'Cible Horizons' }),
-            L({ en: 'Centre', fr: 'Centre' }),
-            L({ en: 'Step (days)', fr: 'Pas (jours)' }),
-            L({ en: 'Coverage (TDB)', fr: 'Couverture (TDB)' }),
+            L({ en: 'Body', fr: 'Corps', es: 'Cuerpo', 'pt-BR': 'Corpo' }),
+            L({
+              en: 'Horizons target',
+              fr: 'Cible Horizons',
+              es: 'Destino Horizons',
+              'pt-BR': 'Alvo Horizons',
+            }),
+            L({ en: 'Centre', fr: 'Centre', es: 'Centro', 'pt-BR': 'Centro' }),
+            L({
+              en: 'Step (days)',
+              fr: 'Pas (jours)',
+              es: 'Paso (días)',
+              'pt-BR': 'Passo (dias)',
+            }),
+            L({
+              en: 'Coverage (TDB)',
+              fr: 'Couverture (TDB)',
+              es: 'Cobertura (TDB)',
+              'pt-BR': 'Cobertura (TDB)',
+            }),
           ],
           ephemerisRows,
           3
@@ -644,29 +936,49 @@ function sourcesPage(input: SourcesInput, locale: DocLocale): DocPage {
         ? L({
             en: 'Solar System barycentre',
             fr: 'barycentre du Système solaire',
+            es: 'Baricentro del Sistema Solar',
+            'pt-BR': 'Baricentro do Sistema Solar',
           })
-        : L({ en: 'Sun', fr: 'Soleil' }),
+        : L({ en: 'Sun', fr: 'Soleil', es: 'Sol', 'pt-BR': 'Sol' }),
     ]),
     ...INTERSTELLAR_OBJECTS.map((object) => [
       `${escapeHtml(name(object.name, locale))} (${escapeHtml(object.designation)})`,
       escapeHtml(object.elements.epoch.toISOString().slice(0, 10)),
-      L({ en: 'Sun (hyperbolic orbit)', fr: 'Soleil (orbite hyperbolique)' }),
+      L({
+        en: 'Sun (hyperbolic orbit)',
+        fr: 'Soleil (orbite hyperbolique)',
+        es: 'Sol (órbita hiperbólica)',
+        'pt-BR': 'Sol (órbita hiperbólica)',
+      }),
     ]),
   ];
   sections.push(
     docSection(
       'elements',
-      L({ en: 'Orbital elements', fr: 'Éléments orbitaux' }),
+      L({
+        en: 'Orbital elements',
+        fr: 'Éléments orbitaux',
+        es: 'Elementos orbitales',
+        'pt-BR': 'Elementos orbitais',
+      }),
       `<p>${L({
         en: 'Osculating elements taken from the live NASA/JPL Horizons API at the epoch shown, by the scripts in the repository; they are data values, not copied from a third-party compilation.',
         fr: 'Éléments osculateurs pris dans l’API NASA/JPL Horizons à l’époque indiquée, par les scripts du dépôt ; ce sont des valeurs de données, pas une copie d’une compilation tierce.',
+        es: 'Elementos osculadores tomados de la API NASA/JPL Horizons en directo en la época indicada, por los scripts del repositorio; son valores de datos, no copiados de una compilación de terceros.',
+        'pt-BR':
+          'Elementos osculadores tirados da API NASA/JPL Horizons ao vivo na época indicada, pelos scripts do repositório; são valores de dados, não copiados de uma compilação de terceiros.',
       })}</p>` +
         docTable(
-          L({ en: 'Keplerian element sets', fr: 'Jeux d’éléments képlériens' }),
+          L({
+            en: 'Keplerian element sets',
+            fr: 'Jeux d’éléments képlériens',
+            es: 'Conjuntos de elementos keplerianos',
+            'pt-BR': 'Conjuntos de elementos keplerianos',
+          }),
           [
-            L({ en: 'Body', fr: 'Corps' }),
-            L({ en: 'Epoch', fr: 'Époque' }),
-            L({ en: 'Centre', fr: 'Centre' }),
+            L({ en: 'Body', fr: 'Corps', es: 'Cuerpo', 'pt-BR': 'Corpo' }),
+            L({ en: 'Epoch', fr: 'Époque', es: 'Época', 'pt-BR': 'Época' }),
+            L({ en: 'Centre', fr: 'Centre', es: 'Centro', 'pt-BR': 'Centro' }),
           ],
           elementRows
         )
@@ -677,20 +989,45 @@ function sourcesPage(input: SourcesInput, locale: DocLocale): DocPage {
   sections.push(
     docSection(
       'live-data',
-      L({ en: 'Live data services', fr: 'Services de données en direct' }),
+      L({
+        en: 'Live data services',
+        fr: 'Services de données en direct',
+        es: 'Servicios de datos en directo',
+        'pt-BR': 'Serviços de dados ao vivo',
+      }),
       `<p>${L({
         en: 'Your browser contacts these services while the app runs, for the layers that use them. The list is checked at build time against the hosts that the site’s security policy allows.',
         fr: 'Votre navigateur contacte ces services pendant l’utilisation de l’application, pour les couches qui s’en servent. La liste est vérifiée au build contre les hôtes qu’autorise la politique de sécurité du site.',
+        es: 'Su navegador contacta estos servicios mientras la aplicación funciona, para las capas que los usan. La lista se verifica en la compilación contra los hosts que la política de seguridad del sitio autoriza.',
+        'pt-BR':
+          'O seu navegador contata estes serviços enquanto o aplicativo funciona, para as camadas que os usam. A lista é verificada na compilação contra os hosts que a política de segurança do site autoriza.',
       })}</p>` +
         docTable(
           L({
             en: 'Services contacted at runtime',
             fr: 'Services contactés à l’exécution',
+            es: 'Servicios contactados en ejecución',
+            'pt-BR': 'Serviços contatados em execução',
           }),
           [
-            L({ en: 'Service', fr: 'Service' }),
-            L({ en: 'Used for', fr: 'Usage' }),
-            L({ en: 'Terms and credit', fr: 'Conditions et crédit' }),
+            L({
+              en: 'Service',
+              fr: 'Service',
+              es: 'Servicio',
+              'pt-BR': 'Serviço',
+            }),
+            L({
+              en: 'Used for',
+              fr: 'Usage',
+              es: 'Utilizado para',
+              'pt-BR': 'Utilizado para',
+            }),
+            L({
+              en: 'Terms and credit',
+              fr: 'Conditions et crédit',
+              es: 'Condiciones y crédito',
+              'pt-BR': 'Termos e crédito',
+            }),
           ],
           LIVE_DATA_SERVICES.map((service) => [
             link(service.url, escapeHtml(service.name)),
@@ -705,16 +1042,33 @@ function sourcesPage(input: SourcesInput, locale: DocLocale): DocPage {
   sections.push(
     docSection(
       'software',
-      L({ en: 'Software', fr: 'Logiciels' }),
+      L({
+        en: 'Software',
+        fr: 'Logiciels',
+        es: 'Software',
+        'pt-BR': 'Software',
+      }),
       docTable(
         L({
           en: 'Libraries bundled with the app',
           fr: 'Bibliothèques embarquées dans l’application',
+          es: 'Bibliotecas incluidas en la aplicación',
+          'pt-BR': 'Bibliotecas incluídas no aplicativo',
         }),
         [
-          L({ en: 'Library', fr: 'Bibliothèque' }),
-          L({ en: 'Version', fr: 'Version' }),
-          L({ en: 'Licence', fr: 'Licence' }),
+          L({
+            en: 'Library',
+            fr: 'Bibliothèque',
+            es: 'Biblioteca',
+            'pt-BR': 'Biblioteca',
+          }),
+          L({ en: 'Version', fr: 'Version', es: 'Versión', 'pt-BR': 'Versão' }),
+          L({
+            en: 'Licence',
+            fr: 'Licence',
+            es: 'Licencia',
+            'pt-BR': 'Licença',
+          }),
         ],
         dependencies.map((d) => [
           d.homepage
@@ -734,6 +1088,8 @@ function sourcesPage(input: SourcesInput, locale: DocLocale): DocPage {
       L({
         en: 'Third-party notices (full text)',
         fr: 'Mentions tierces (texte intégral, en anglais)',
+        es: 'Avisos de terceros (texto completo)',
+        'pt-BR': 'Avisos de terceiros (texto completo)',
       }),
       `<div class="doc-notices" lang="en">${renderMarkdown(
         // Le titre de premier niveau du fichier doublerait celui de la section.
@@ -755,10 +1111,15 @@ function sourcesPage(input: SourcesInput, locale: DocLocale): DocPage {
     title: L({
       en: 'Sources and credits: data, images and licences',
       fr: 'Sources et crédits : données, images et licences',
+      es: 'Fuentes y créditos: datos, imágenes y licencias',
+      'pt-BR': 'Fontes e créditos: dados, imagens e licenças',
     }),
     description: L({
       en: 'Where every texture, shape model, ephemeris and orbital element in Galaxy comes from, with its licence and credit, read from the project’s own provenance files.',
       fr: 'D’où vient chaque texture, modèle de forme, éphéméride et élément orbital de Galaxy, avec sa licence et son crédit, lus dans les fichiers de provenance du projet.',
+      es: 'De dónde viene cada textura, modelo de forma, efeméride y elemento orbital de Galaxy, con su licencia y su crédito, leídos en los propios archivos de procedencia del proyecto.',
+      'pt-BR':
+        'De onde vem cada textura, modelo de forma, efeméride e elemento orbital da Galaxy, com a sua licença e o seu crédito, lidos nos próprios arquivos de procedência do projeto.',
     }),
     body: sections.join('\n'),
     updated: input.updated,

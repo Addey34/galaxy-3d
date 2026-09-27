@@ -40,6 +40,8 @@ import { factSource } from '@/config/factSources';
 import { KM_PER_AU } from '@/core/ScaleService';
 import { distanceDecimals } from '@/core/units';
 import { CARD_HEIGHT, CARD_WIDTH } from './socialCard';
+import { messages } from '@/i18n/allDictionaries';
+import { HTML_LANG, LOCALES, LOCALE_PATH, type Locale } from '@/i18n/locales';
 
 export interface BodyFact {
   label: string;
@@ -195,8 +197,14 @@ export interface LandingPage {
 }
 
 export interface BodyPage extends LandingPage {
-  /** Segment d'URL, en minuscules — `/jupiter`. */
+  /**
+   * Chemin d'URL, en minuscules — `jupiter`, ou `es/jupiter` pour une langue non anglaise.
+   * C'est aussi le dossier écrit dans `dist/`.
+   */
   slug: string;
+  /** Clé du corps dans le catalogue, indépendante de la langue : elle nomme la vignette. */
+  body: string;
+  locale: Locale;
   displayName: string;
   summary: string;
   facts: BodyFact[];
@@ -230,24 +238,106 @@ export function escapeHtml(value: string): string {
 
 const NBSP = '\u202f';
 
-/** Séparateur de milliers fin, en dur : la page est statique et servie en anglais. */
-function formatNumber(value: number, decimals = 0): string {
+/** Séparateur de milliers fin ; le séparateur décimal vient de la langue. */
+function formatNumber(
+  value: number,
+  decimals = 0,
+  locale: Locale = 'en'
+): string {
   const fixed = value.toFixed(decimals);
   const [whole, fraction] = fixed.split('.');
   const grouped = (whole ?? '').replace(/\B(?=(\d{3})+(?!\d))/g, NBSP);
-  return fraction === undefined ? grouped : `${grouped}.${fraction}`;
+  return fraction === undefined
+    ? grouped
+    : `${grouped}${PAGE_MARKS[locale].decimal}${fraction}`;
 }
 
 const SUPERSCRIPTS = '⁰¹²³⁴⁵⁶⁷⁸⁹';
 
 /** Masse en notation scientifique, exposant en vrais chiffres suscrits : `1.90 × 10²⁷ kg`. */
-function formatMass(kilograms: number): string {
+function formatMass(kilograms: number, locale: Locale = 'en'): string {
   const exponent = Math.floor(Math.log10(Math.abs(kilograms)));
   const mantissa = kilograms / 10 ** exponent;
   const digits = [...String(exponent)]
     .map((d) => SUPERSCRIPTS[Number(d)] ?? d)
     .join('');
-  return `${mantissa.toFixed(2)} × 10${digits} kg`;
+  return `${formatNumber(mantissa, 2, locale)} × 10${digits} kg`;
+}
+
+/**
+ * LES LIBELLÉS DE FAITS D'UNE PAGE, dans les quatre langues — et pourquoi ils ne sont PAS ceux
+ * du dictionnaire de l'application.
+ *
+ * L'intention première était de les lire dans `i18n/locales` (une seule source pour un même
+ * mot). La MESURE l'a corrigée : quatre libellés y sont écrits autrement, parce qu'une fiche
+ * d'application a une colonne étroite là où une page a de la place — « Gravity » contre
+ * « Surface gravity », « Mean distance (Sun) » contre « Mean distance from the Sun ». Les
+ * reprendre aurait réécrit l'anglais de 57 pages indexées ET de 34 vignettes de partage, pour un
+ * lecteur qui n'y gagne rien. L'anglais ci-dessous est donc EXACTEMENT celui d'avant le lot 20,
+ * et c'est l'empreinte des documents générés qui le tient : une vignette modifiée le dirait.
+ */
+const FACT_LABELS = {
+  orbits: {
+    en: 'Orbits',
+    fr: 'En orbite autour de',
+    es: 'Orbita a',
+    'pt-BR': 'Orbita',
+  },
+  radius: { en: 'Radius', fr: 'Rayon', es: 'Radio', 'pt-BR': 'Raio' },
+  mass: { en: 'Mass', fr: 'Masse', es: 'Masa', 'pt-BR': 'Massa' },
+  gravity: {
+    en: 'Surface gravity',
+    fr: 'Gravité de surface',
+    es: 'Gravedad en la superficie',
+    'pt-BR': 'Gravidade na superfície',
+  },
+  meanTemperature: {
+    en: 'Mean temperature',
+    fr: 'Température moyenne',
+    es: 'Temperatura media',
+    'pt-BR': 'Temperatura média',
+  },
+  distanceFromParent: {
+    en: 'Mean distance from {parent}',
+    fr: 'Distance moyenne à {parent}',
+    es: 'Distancia media a {parent}',
+    'pt-BR': 'Distância média a {parent}',
+  },
+  distanceFromSun: {
+    en: 'Mean distance from the Sun',
+    fr: 'Distance moyenne au Soleil',
+    es: 'Distancia media al Sol',
+    'pt-BR': 'Distância média ao Sol',
+  },
+  orbitalPeriod: {
+    en: 'Orbital period',
+    fr: 'Période orbitale',
+    es: 'Periodo orbital',
+    'pt-BR': 'Período orbital',
+  },
+  siderealRotation: {
+    en: 'Sidereal rotation',
+    fr: 'Rotation sidérale',
+    es: 'Rotación sidérea',
+    'pt-BR': 'Rotação sideral',
+  },
+  axialTilt: {
+    en: 'Axial tilt',
+    fr: 'Inclinaison axiale',
+    es: 'Inclinación axial',
+    'pt-BR': 'Inclinação axial',
+  },
+  knownMoons: {
+    en: 'Known moons',
+    fr: 'Lunes connues',
+    es: 'Lunas conocidas',
+    'pt-BR': 'Luas conhecidas',
+  },
+} as const;
+
+/** Un libellé de fait, dans une langue. */
+function factLabel(key: keyof typeof FACT_LABELS, locale: Locale): string {
+  return FACT_LABELS[key][locale];
 }
 
 /** Ordre des faits sur la page publique d'un corps. */
@@ -263,7 +353,15 @@ const PAGE_FACT_ORDER: readonly FactField[] = [
   'moonCount',
 ];
 
-const MONTHS = [
+/**
+ * Les noms de mois, ecrits ici plutot que lus dans `Intl`.
+ *
+ * Une page statique doit rendre le MEME octet a chaque build, sur n'importe quelle machine :
+ * `Intl.DateTimeFormat` depend des donnees ICU du moteur, et un changement de version ferait
+ * bouger 444 pages sans qu'aucune source ait change. L'empreinte des documents generes
+ * l'attraperait, mais apres coup et sans en donner la raison.
+ */
+const MONTHS_EN = [
   'January',
   'February',
   'March',
@@ -276,18 +374,86 @@ const MONTHS = [
   'October',
   'November',
   'December',
-];
+] as const;
+const MONTHS_FR = [
+  'janvier',
+  'février',
+  'mars',
+  'avril',
+  'mai',
+  'juin',
+  'juillet',
+  'août',
+  'septembre',
+  'octobre',
+  'novembre',
+  'décembre',
+] as const;
+const MONTHS_ES = [
+  'enero',
+  'febrero',
+  'marzo',
+  'abril',
+  'mayo',
+  'junio',
+  'julio',
+  'agosto',
+  'septiembre',
+  'octubre',
+  'noviembre',
+  'diciembre',
+] as const;
+const MONTHS_PT = [
+  'janeiro',
+  'fevereiro',
+  'março',
+  'abril',
+  'maio',
+  'junho',
+  'julho',
+  'agosto',
+  'setembro',
+  'outubro',
+  'novembro',
+  'dezembro',
+] as const;
 
-/** `2026-08` → « August 2026 », en dur : la page est statique et servie en anglais. */
-function formatAsOf(asOf: string): string {
+/**
+ * La ponctuation des nombres et les mots de date, PAR LANGUE.
+ *
+ * Tout ceci etait ecrit en dur avec le commentaire « la page est statique et servie en anglais ».
+ * Depuis le lot 20 il y a quatre langues de pages, donc le point decimal anglais servi a un
+ * lecteur hispanophone serait une valeur mille fois fausse a la lecture.
+ */
+const PAGE_MARKS: Record<
+  Locale,
+  { decimal: string; months: readonly string[] }
+> = {
+  en: {
+    decimal: '.',
+    months: MONTHS_EN,
+  },
+  fr: { decimal: ',', months: MONTHS_FR },
+  es: { decimal: ',', months: MONTHS_ES },
+  'pt-BR': { decimal: ',', months: MONTHS_PT },
+};
+
+/** `2026-08` → « August 2026 » / « août 2026 » / « agosto de 2026 ». */
+function formatAsOf(asOf: string, locale: Locale = 'en'): string {
   const [year, month] = asOf.split('-').map(Number);
-  return month ? `${MONTHS[month - 1]} ${year}` : String(year);
+  if (!month) return String(year);
+  const name = PAGE_MARKS[locale].months[month - 1]!;
+  // L'anglais et le français juxtaposent, l'espagnol et le portugais lient par « de ».
+  return locale === 'es' || locale === 'pt-BR'
+    ? `${name} de ${year}`
+    : `${name} ${year}`;
 }
 
-function formatRotation(hours: number): string {
+function formatRotation(hours: number, locale: Locale = 'en'): string {
+  const dict = messages[locale];
   return hours < 48
-    ? `${formatNumber(hours, 2)} hours`
-    : `${formatNumber(hours / 24, hours / 24 < 10 ? 2 : 0)} days`;
+    ? `${formatNumber(hours, 2, locale)} ${dict['unit.hours']}`
+    : `${formatNumber(hours / 24, hours / 24 < 10 ? 2 : 0, locale)} ${dict['unit.days']}`;
 }
 
 /**
@@ -298,22 +464,33 @@ function formatRotation(hours: number): string {
  */
 export function bodyFacts(
   config: CelestialBodyConfig,
-  parentDisplayName?: string
+  parentDisplayName?: string,
+  locale: Locale = 'en'
 ): BodyFact[] {
-  return bodyFactsWithSources(config, parentDisplayName).facts;
+  return bodyFactsWithSources(config, parentDisplayName, locale).facts;
 }
 
 export function bodyFactsWithSources(
   config: CelestialBodyConfig,
-  parentDisplayName?: string
+  parentDisplayName?: string,
+  locale: Locale = 'en'
 ): { facts: BodyFact[]; sources: BodySource[] } {
+  // LES LIBELLES VIENNENT DU DICTIONNAIRE DE L'APPLICATION, jamais d'un second jeu de chaines.
+  // Ils etaient ecrits en dur ici (`'Radius'`, `'Mass'`…) alors que `locales.ts` portait deja
+  // `stat.radius` et `stat.mass` : deux verites a tenir pour le meme mot, et c'est la derive que
+  // ce depot corrige partout ailleurs. Une seule source, et la page devient traduisible sans un
+  // mot de plus.
+  const dict = messages[locale];
   const facts: BodyFact[] = [];
   if (!config.realData) return { facts, sources: [] };
   const entries = PAGE_FACT_ORDER.map((field) => bodyFact(config, field));
   const citations = citationOrder(entries);
 
   if (parentDisplayName)
-    facts.push({ label: 'Orbits', value: parentDisplayName });
+    facts.push({
+      label: factLabel('orbits', locale),
+      value: parentDisplayName,
+    });
   for (const entry of entries) {
     if (entry.status !== 'value') continue;
     // Les pages publiques ne décrivent que des corps du catalogue, dont tous les faits sont
@@ -327,47 +504,50 @@ export function bodyFactsWithSources(
       case 'radiusKm':
         // Décimales selon l'ordre de grandeur, même règle que la fiche de l'application. Sans
         // elle Bennu, 242 mètres de rayon, annonçait « 0 km » sur sa page ET sur sa vignette.
-        label = 'Radius';
-        value = `${formatNumber(v, distanceDecimals(v))} km`;
+        label = factLabel('radius', locale);
+        value = `${formatNumber(v, distanceDecimals(v), locale)} km`;
         break;
       case 'massKg':
-        label = 'Mass';
-        value = formatMass(v);
+        label = factLabel('mass', locale);
+        value = formatMass(v, locale);
         break;
       case 'gravity':
-        label = 'Surface gravity';
-        value = `${v.toFixed(v < 0.1 ? 4 : 2)} m/s²`;
+        label = factLabel('gravity', locale);
+        value = `${formatNumber(v, v < 0.1 ? 4 : 2, locale)} m/s²`;
         break;
       case 'meanTempC':
-        label = 'Mean temperature';
-        value = `${formatNumber(v)} °C`;
+        label = factLabel('meanTemperature', locale);
+        value = `${formatNumber(v, 0, locale)} °C`;
         break;
       case 'distanceAU':
         // Demi-grand axe mesuré depuis le PARENT pour un satellite : la page de Titan annonçait
         // « Distance from the Sun: 0.008 AU », soit sa distance à Saturne sous le mauvais libellé.
         if (parentDisplayName) {
-          label = `Mean distance from ${parentDisplayName}`;
-          value = `${formatNumber(v * KM_PER_AU)} km`;
+          label = factLabel('distanceFromParent', locale).replace(
+            '{parent}',
+            parentDisplayName
+          );
+          value = `${formatNumber(v * KM_PER_AU, 0, locale)} km`;
         } else {
-          label = 'Mean distance from the Sun';
-          value = `${v.toFixed(3)} AU`;
+          label = factLabel('distanceFromSun', locale);
+          value = `${formatNumber(v, 3, locale)} ${dict['unit.au']}`;
         }
         break;
       case 'orbitPeriodDays':
-        label = 'Orbital period';
-        value = `${formatNumber(v, v < 10 ? 2 : 0)} days`;
+        label = factLabel('orbitalPeriod', locale);
+        value = `${formatNumber(v, v < 10 ? 2 : 0, locale)} ${dict['unit.days']}`;
         break;
       case 'rotationPeriod':
-        label = 'Sidereal rotation';
-        value = formatRotation(v);
+        label = factLabel('siderealRotation', locale);
+        value = formatRotation(v, locale);
         break;
       case 'axialTilt':
-        label = 'Axial tilt';
-        value = `${((v * 180) / Math.PI).toFixed(1)}°`;
+        label = factLabel('axialTilt', locale);
+        value = `${formatNumber((v * 180) / Math.PI, 1, locale)}°`;
         break;
       case 'moonCount':
-        label = 'Known moons';
-        value = formatNumber(v);
+        label = factLabel('knownMoons', locale);
+        value = formatNumber(v, 0, locale);
         break;
       default:
         // Faits propres à la couche instrument : jamais dans `PAGE_FACT_ORDER`, donc jamais ici.
@@ -375,9 +555,9 @@ export function bodyFactsWithSources(
     }
     const uncertainty = displayedUncertainty(entry);
     if (uncertainty !== null)
-      value += ` (± ${formatNumber(uncertainty * 100)} %)`;
+      value += ` (± ${formatNumber(uncertainty * 100, 0, locale)} %)`;
     if (entry.provenance.asOf)
-      value += ` (as of ${formatAsOf(entry.provenance.asOf)})`;
+      value += ` (${dict['fact.asOf'].replace('{date}', formatAsOf(entry.provenance.asOf, locale))})`;
     facts.push({
       label,
       value,
@@ -394,9 +574,11 @@ export function bodyFactsWithSources(
       index,
       text: [
         `${source.publisher}, ${source.title}`,
-        source.kind === 'preprint' ? 'preprint' : source.journal,
+        source.kind === 'preprint'
+          ? dict['fact.kind.preprint']
+          : source.journal,
         source.published?.slice(0, 4),
-        `read ${source.accessed}`,
+        dict['fact.accessed'].replace('{date}', source.accessed),
       ]
         .filter(Boolean)
         .join('. '),
@@ -430,9 +612,83 @@ export function trimForMeta(text: string, max = 155): string {
  * (`flattenBodies` moins la skybox). Une page menant vers un corps qu'on ne peut pas
  * sélectionner serait une promesse non tenue.
  */
+/**
+ * Le texte de page qui n'est ni dans le dictionnaire ni dans le catalogue : les quatre phrases
+ * propres a une page de corps. Ecrites ici, dans les quatre langues, parce qu'elles n'existent
+ * que sur ces pages et que le dictionnaire de l'application n'a pas a les porter.
+ */
+const PAGE_TEXT = {
+  /** Repli de description quand le catalogue n'en a pas pour ce corps. */
+  fallbackDescription: {
+    en: '{name} in an interactive 3D solar system, at its real position right now, from NASA/JPL ephemeris data.',
+    fr: '{name} dans un système solaire 3D interactif, à sa position réelle en ce moment, à partir des éphémérides NASA/JPL.',
+    es: '{name} en un sistema solar 3D interactivo, en su posición real en este momento, a partir de las efemérides NASA/JPL.',
+    'pt-BR':
+      '{name} em um Sistema Solar 3D interativo, na sua posição real neste momento, a partir das efemérides NASA/JPL.',
+  },
+  /** Phrase d'appel ajoutée APRÈS la troncature de la meta. */
+  callToAction: {
+    en: 'See {name} in 3D, at its real position right now.',
+    fr: 'Voir {name} en 3D, à sa position réelle en ce moment.',
+    es: 'Ver {name} en 3D, en su posición real en este momento.',
+    'pt-BR': 'Veja {name} em 3D, na sua posição real neste momento.',
+  },
+  /** Texte alternatif de la vignette : ce que l'image MONTRE. */
+  imageAlt: {
+    en: '{name} rendered as a 3D sphere by Galaxy',
+    fr: '{name} rendu en sphère 3D par Galaxy',
+    es: '{name} representado como una esfera 3D por Galaxy',
+    'pt-BR': '{name} renderizado como uma esfera 3D pela Galaxy',
+  },
+  /** Le corps du bloc indexable, sous le canevas. */
+  intro: {
+    en: '{name} is shown at its real position, computed from NASA/JPL ephemeris data. The view opens on {name}; you can travel in time, switch between the educational overview and the true-scale voyage, and compare it with every other body of the solar system.',
+    fr: '{name} est montré à sa position réelle, calculée à partir des éphémérides NASA/JPL. La vue s’ouvre sur {name} ; vous pouvez voyager dans le temps, basculer entre la vue d’ensemble éducative et le voyage à vraie échelle, et le comparer à tous les autres corps du système solaire.',
+    es: '{name} se muestra en su posición real, calculada a partir de las efemérides NASA/JPL. La vista se abre sobre {name}; puede viajar en el tiempo, alternar entre la vista general educativa y el viaje a escala real, y compararlo con todos los demás cuerpos del sistema solar.',
+    'pt-BR':
+      '{name} é mostrado na sua posição real, calculada a partir das efemérides NASA/JPL. A vista se abre sobre {name}; você pode viajar no tempo, alternar entre a visão geral educativa e a viagem em escala real, e compará-lo com todos os outros corpos do Sistema Solar.',
+  },
+  /** Titre de la liste des sources primaires. */
+  sources: {
+    en: 'Sources',
+    fr: 'Sources',
+    es: 'Fuentes',
+    'pt-BR': 'Fontes',
+  },
+  /** Mention de la méthode d'une valeur non mesurée, entre parenthèses. */
+  methodValue: {
+    en: '{method} value',
+    fr: 'valeur {method}',
+    es: 'valor {method}',
+    'pt-BR': 'valor {method}',
+  },
+} as const;
+
+/** Une phrase de page, dans une langue, avec son `{name}` rempli. */
+function pageText(
+  key: keyof typeof PAGE_TEXT,
+  locale: Locale,
+  name = ''
+): string {
+  return PAGE_TEXT[key][locale].replace(/\{name\}/g, name);
+}
+
+/**
+ * Le chemin d'une page de corps dans une langue : `/jupiter/` en anglais, `/es/jupiter/` sinon.
+ *
+ * L'anglais reste a la racine parce que ses URL sont indexees depuis le 2026-09-10, et une URL
+ * publiee ne se deplace pas. Meme regle que les pages documentaires (`documentPage.docPath`).
+ */
+export function bodyPagePath(name: string, locale: Locale): string {
+  const segment = LOCALE_PATH[locale];
+  const slug = name.toLowerCase();
+  return segment === '' ? slug : `${segment}/${slug}`;
+}
+
 export function bodyLandingPages(
   config: CelestialConfig,
-  origin: string
+  origin: string,
+  locale: Locale = 'en'
 ): BodyPage[] {
   const flat = flattenBodies(config);
   const parentOf = new Map<string, string>();
@@ -440,21 +696,30 @@ export function bodyLandingPages(
     for (const satellite of Object.keys(cfg.satellites ?? {}))
       parentOf.set(satellite, name);
 
+  const dict = messages[locale];
   const displayOf = (name: string): string => {
     const cfg = flat.get(name);
-    return cfg?.displayName?.en ?? name.charAt(0).toUpperCase() + name.slice(1);
+    return (
+      cfg?.displayName?.[locale] ??
+      cfg?.displayName?.en ??
+      name.charAt(0).toUpperCase() + name.slice(1)
+    );
   };
 
   const pages: BodyPage[] = [];
   for (const [name, cfg] of flat.entries()) {
     if (cfg.kind === 'skybox') continue;
-    const slug = name.toLowerCase();
+    const slug = bodyPagePath(name, locale);
     const displayName = displayOf(name);
     const parent = parentOf.get(name);
-    const description = cfg.realData?.description?.en ?? '';
+    const description =
+      cfg.realData?.description?.[locale] ??
+      cfg.realData?.description?.en ??
+      '';
     const { facts, sources } = bodyFactsWithSources(
       cfg,
-      parent ? displayOf(parent) : undefined
+      parent ? displayOf(parent) : undefined,
+      locale
     );
     pages.push({
       slug,
@@ -465,14 +730,16 @@ export function bodyLandingPages(
       // était déjà en tête, donc la coupe mangeait le nom du site plutôt que le sujet — mais
       // une ellipse en fin de titre reste du bruit. Google ajoute lui-même le nom du site quand
       // il le juge utile ; le budget est mieux dépensé sur ce qui distingue la page.
-      title: `${displayName} in 3D: live position and orbit`,
+      body: name,
+      locale,
+      title: dict['title.body'].replace('{name}', displayName),
       // La phrase d'appel est ajoutée APRÈS la troncature : sinon c'est elle qui se fait
       // couper en plein milieu dans les résultats de recherche, ce qui est exactement
       // l'endroit où elle doit être lisible.
       description: description
-        ? `${trimForMeta(description, 92)} See ${displayName} in 3D, at its real position right now.`
-        : `${displayName} in an interactive 3D solar system, at its real position right now, from NASA/JPL ephemeris data.`,
-      heading: `${displayName} in 3D: live position and orbit`,
+        ? `${trimForMeta(description, 92)} ${pageText('callToAction', locale, displayName)}`
+        : pageText('fallbackDescription', locale, displayName),
+      heading: dict['title.body'].replace('{name}', displayName),
       summary: description,
       facts,
       sources,
@@ -482,10 +749,13 @@ export function bodyLandingPages(
       // Vérifié localement : `vite preview` sert la page sur `/jupiter/` et retombe sur le
       // shell SPA sur `/jupiter`, même distinction.
       canonical: `${origin}/${slug}/`,
-      image: `${origin}/social/${slug}.jpg`,
+      // La vignette est PARTAGÉE par les quatre langues : `socialCard.ts` peint la texture du
+      // corps, sans un mot de texte, donc une page espagnole n'a aucune raison d'en avoir une
+      // autre. C'est aussi ce qui garde les 57 vignettes à 57 (garde de l'invariant du lot).
+      image: `${origin}/social/${name.toLowerCase()}.jpg`,
       // Décrit ce que l'image MONTRE, pas ce que la page raconte : c'est un texte alternatif,
       // lu à voix haute par un lecteur d'écran sur une carte de partage.
-      imageAlt: `${displayName} rendered as a 3D sphere by Galaxy`,
+      imageAlt: pageText('imageAlt', locale, displayName),
       visual: bodyVisual(cfg, name),
     });
   }
@@ -541,14 +811,16 @@ function contentBlock(page: BodyPage): string {
         (fact.source === undefined
           ? ''
           : `<sup><a href="#source-${fact.source}">${fact.source}</a></sup>` +
-            (fact.method === 'measured' ? '' : ` (${fact.method} value)`)) +
+            (fact.method === 'measured'
+              ? ''
+              : ` (${pageText('methodValue', page.locale).replace('{method}', messages[page.locale][`fact.method.${fact.method}` as 'fact.method.derived'])})`)) +
         '</dd>'
     )
     .join('');
   // Chaque valeur renvoie à sa source primaire : c'est ce qui distingue ces pages d'une copie
   // d'encyclopédie, et ce qu'un enseignant vérifie en premier.
   const sources = page.sources.length
-    ? `<h2>Sources</h2><ol>${page.sources
+    ? `<h2>${escapeHtml(pageText('sources', page.locale))}</h2><ol>${page.sources
         .map(
           (source) =>
             `<li id="source-${source.index}" value="${source.index}">${escapeHtml(source.text)}. ` +
@@ -559,9 +831,7 @@ function contentBlock(page: BodyPage): string {
   const summary = page.summary ? `<p>${escapeHtml(page.summary)}</p>` : '';
   return (
     summary +
-    `<p>${escapeHtml(page.displayName)} is shown at its real position, computed from NASA/JPL ephemeris data. ` +
-    `The view opens on ${escapeHtml(page.displayName)}; you can travel in time, switch between the educational ` +
-    `overview and the true-scale voyage, and compare it with every other body of the solar system.</p>` +
+    `<p>${escapeHtml(pageText('intro', page.locale, page.displayName))}</p>` +
     (facts ? `<dl>${facts}</dl>` : '') +
     sources
   );
@@ -578,25 +848,39 @@ export function renderBodyPage(
   page: BodyPage,
   origin = new URL(page.canonical).origin
 ): string {
+  // Les quatre adresses de CE corps, dérivées de la même règle que son propre chemin.
+  const alternates = Object.fromEntries(
+    LOCALES.map((locale) => [
+      locale,
+      `${origin}/${bodyPagePath(page.body, locale)}/`,
+    ])
+  ) as Record<Locale, string>;
   // Données structurées PROPRES à la page. Sans cela, cinquante et une pages annonceraient la
   // même entité `WebApplication`, mots-clés compris — de la donnée structurée dupliquée, ce que
   // ces pages existent précisément pour éviter. Ici chaque page se décrit elle-même et se
   // rattache à l'application, ce qui est à la fois vrai et distinct.
-  return renderLandingPage(baseHtml, page, contentBlock(page), {
-    '@context': 'https://schema.org',
-    '@type': 'WebPage',
-    name: page.title,
-    description: page.description,
-    url: page.canonical,
-    inLanguage: 'en',
-    isPartOf: {
-      '@type': 'WebApplication',
-      name: 'Galaxy',
-      url: `${origin}/`,
-      applicationCategory: 'EducationalApplication',
+  return renderLandingPage(
+    baseHtml,
+    page,
+    contentBlock(page),
+    {
+      '@context': 'https://schema.org',
+      '@type': 'WebPage',
+      name: page.title,
+      description: page.description,
+      url: page.canonical,
+      inLanguage: page.locale,
+      isPartOf: {
+        '@type': 'WebApplication',
+        name: 'Galaxy',
+        url: `${origin}/`,
+        applicationCategory: 'EducationalApplication',
+      },
+      about: { '@type': 'Thing', name: page.displayName },
     },
-    about: { '@type': 'Thing', name: page.displayName },
-  });
+    page.locale,
+    alternates
+  );
 }
 
 /**
@@ -609,9 +893,20 @@ export function renderLandingPage(
   baseHtml: string,
   page: LandingPage,
   block: string,
-  structuredData: object
+  structuredData: object,
+  /**
+   * La langue de la page et ses variantes, quand elle en a.
+   *
+   * `alternates` porte l'URL ABSOLUE de chaque langue, `x-default` compris : un `hreflang` non
+   * RÉCIPROQUE est ignoré par Google, donc chaque page doit nommer toutes ses sœurs, elle-même
+   * incluse. Absent, rien n'est déclaré — c'était l'état des pages de corps avant le lot 20,
+   * quand elles n'existaient qu'en anglais.
+   */
+  locale: Locale = 'en',
+  alternates: Readonly<Partial<Record<Locale, string>>> = {}
 ): string {
   let html = baseHtml;
+  html = replaceAttrAfter(html, '<html', 'lang', HTML_LANG[locale]);
   html = replaceBetween(html, '<title>', '</title>', escapeHtml(page.title));
   html = replaceAttrAfter(
     html,
@@ -620,6 +915,19 @@ export function renderLandingPage(
     page.description
   );
   html = replaceAttrAfter(html, 'rel="canonical"', 'href', page.canonical);
+  const links = LOCALES.filter(
+    (candidate) => alternates[candidate] !== undefined
+  )
+    .map(
+      (candidate) =>
+        `<link rel="alternate" hreflang="${candidate}" href="${escapeHtml(alternates[candidate]!)}" />`
+    )
+    .join('\n    ');
+  if (links !== '')
+    html = html.replace(
+      `<link rel="canonical" href="${escapeHtml(page.canonical)}" />`,
+      `<link rel="canonical" href="${escapeHtml(page.canonical)}" />\n    ${links}\n    <link rel="alternate" hreflang="x-default" href="${escapeHtml(alternates.en ?? page.canonical)}" />`
+    );
   html = replaceAttrAfter(html, 'property="og:title"', 'content', page.title);
   html = replaceAttrAfter(
     html,

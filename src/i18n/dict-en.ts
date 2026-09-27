@@ -27,6 +27,15 @@ export const en = {
   'title.eclipse.lunar.total': 'Total lunar eclipse of {date} in 3D',
   'title.eclipse.lunar.partial': 'Partial lunar eclipse of {date} in 3D',
   'title.eclipse.lunar.penumbral': 'Penumbral lunar eclipse of {date} in 3D',
+  // Le NOM d'une éclipse sans sa date : les pages statiques par langue en ont besoin
+  // (`seo/eclipseLandingPage`), et le déduire du titre en coupant « of … » ne marchait
+  // qu'en anglais.
+  'eclipse.name.solar.total': 'Total solar eclipse',
+  'eclipse.name.solar.annular': 'Annular solar eclipse',
+  'eclipse.name.solar.partial': 'Partial solar eclipse',
+  'eclipse.name.lunar.total': 'Total lunar eclipse',
+  'eclipse.name.lunar.partial': 'Partial lunar eclipse',
+  'eclipse.name.lunar.penumbral': 'Penumbral lunar eclipse',
   'title.overview': 'Galaxy: Real-Time Interactive 3D Solar System',
   'loader.init': 'Initializing...',
   'loader.core': 'Loading core components…',
@@ -496,6 +505,10 @@ export const en = {
   // ── Unités & suffixes (fiche) ──
   'unit.light': 'light',
   'unit.day.short': 'd',
+  // Unites en toutes lettres : les pages statiques par corps les emploient depuis le lot 20,
+  // ou elles etaient ecrites en dur en anglais.
+  'unit.hours': 'hours',
+  'unit.days': 'days',
   'unit.year.short': 'yr',
   'unit.au': 'AU',
   'unit.million': 'M',

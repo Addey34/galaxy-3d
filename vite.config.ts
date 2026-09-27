@@ -183,6 +183,10 @@ function bodyLandingPages() {
           '/src/seo/eclipseLandingPage.ts'
         )) as typeof import('./src/seo/eclipseLandingPage');
 
+        // Les langues autres que l'anglais, lues dans le propriétaire unique de la liste.
+        const OTHER_LOCALES = DERIVED_TEXT_LOCALES;
+        const DOC_LOCALE_COUNT = DERIVED_TEXT_LOCALES.length + 1;
+
         const dist = resolve(__dirname, 'dist');
         // `closeBundle` tourne AUSSI quand le bundle a échoué, et `dist/index.html` n'existe
         // alors pas. Lancer une ENOENT ici REMPLACE l'erreur d'origine par la nôtre : c'est
@@ -209,7 +213,18 @@ function bodyLandingPages() {
           throw new Error(
             `génération des pages de corps : ${pages.length} page(s) seulement, catalogue non chargé ?`
           );
-        for (const page of pages) {
+        /**
+         * UNE PAGE PAR CORPS ET PAR LANGUE (lot 20, phase 20D).
+         *
+         * L'anglais garde la racine (`/jupiter/`), ses URL étant indexées depuis le 2026-09-10 ;
+         * les trois autres langues vivent sous leur segment (`/es/jupiter/`). La VIGNETTE, elle,
+         * reste unique par corps : `socialCard.ts` peint la texture, sans un mot de texte, donc
+         * les quatre langues partagent la même image et le relevé d'empreinte garde ses 57.
+         */
+        const localisedBodyPages = OTHER_LOCALES.flatMap((locale) =>
+          seo.bodyLandingPages(catalogue.CELESTIAL_CONFIG, SITE_ORIGIN, locale)
+        );
+        for (const page of [...pages, ...localisedBodyPages]) {
           const dir = resolve(dist, page.slug);
           await mkdir(dir, { recursive: true });
           await writeFile(
@@ -218,6 +233,13 @@ function bodyLandingPages() {
             'utf-8'
           );
         }
+        // Chaque langue produit le même nombre de pages : une langue qui en produirait moins
+        // signifierait un corps sans page dans cette langue, et le sitemap l'annoncerait quand
+        // même. Mieux vaut casser le build.
+        if (localisedBodyPages.length !== pages.length * OTHER_LOCALES.length)
+          throw new Error(
+            `pages de corps traduites : ${localisedBodyPages.length} au lieu de ${pages.length * OTHER_LOCALES.length}`
+          );
         // Vignettes de partage, une par corps — voir `src/seo/socialCard.ts` pour le POURQUOI.
         // Elles DÉRIVENT des textures déjà versionnées, donc rien de nouveau n'est committé ;
         // elles sont reconstruites à l'identique à chaque build (rendu déterministe, sans GPU).
@@ -426,14 +448,25 @@ function bodyLandingPages() {
           throw new Error(
             `génération des pages d'éclipse : ${eclipsePages.length} page(s) seulement`
           );
-        for (const page of eclipsePages) {
+        const localisedEclipsePages = OTHER_LOCALES.flatMap((locale) =>
+          eclipseSeo.eclipseLandingPages(SITE_ORIGIN, locale)
+        );
+        for (const page of [...eclipsePages, ...localisedEclipsePages]) {
           // La vignette réutilisée doit exister : sinon la balise pointerait vers un 404.
           const cardFile = resolve(socialDir, `${page.focusBody}.jpg`);
           if (!(await stat(cardFile).catch(() => null)))
             throw new Error(
               `vignette absente pour l'éclipse ${page.slug} : ${page.focusBody}.jpg`
             );
-          const dir = resolve(dist, 'eclipse', page.slug);
+          // Le chemin vient du module, pas d'une concaténation locale : c'est lui qui sait où
+          // vit la langue (`/eclipse/…` ou `/es/eclipse/…`).
+          const dir = resolve(
+            dist,
+            ...eclipseSeo
+              .eclipsePagePath(page.event, page.locale)
+              .replace(/^\/|\/$/g, '')
+              .split('/')
+          );
           await mkdir(dir, { recursive: true });
           await writeFile(
             resolve(dir, 'index.html'),
@@ -620,14 +653,22 @@ function bodyLandingPages() {
         await writeFile(
           resolve(dist, 'sitemap.xml'),
           seo.renderSitemap(
-            [...pages, ...eclipsePages, ...docPages],
+            [
+              ...pages,
+              ...localisedBodyPages,
+              ...eclipsePages,
+              ...localisedEclipsePages,
+              ...docPages,
+            ],
             SITE_ORIGIN,
             today
           ),
           'utf-8'
         );
         loader.config.logger.info(
-          `  ${pages.length} pages de corps + ${eclipsePages.length} pages d'éclipse + ${docPages.length} pages documentaires + vignettes + sitemap générés`
+          `  ${pages.length + localisedBodyPages.length} pages de corps + ` +
+            `${eclipsePages.length + localisedEclipsePages.length} pages d'éclipse + ` +
+            `${docPages.length} pages documentaires (${DOC_LOCALE_COUNT} langues) + vignettes + sitemap générés`
         );
       } finally {
         await loader.close();

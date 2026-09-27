@@ -19,22 +19,47 @@
  *   4. **Module PUR.** Les lectures de fichiers vivent dans le plugin Vite (`vite.config.ts`).
  */
 import { escapeHtml } from './bodyLandingPage';
+import {
+  HTML_LANG,
+  LOCALES,
+  LOCALE_ENDONYM,
+  LOCALE_PATH,
+  type Locale,
+} from '@/i18n/locales';
 
-export type DocLocale = 'en' | 'fr';
+/**
+ * Les pages documentaires parlent les MÊMES langues que l'application (lot 20).
+ *
+ * `DocLocale` était `'en' | 'fr'` et `Bilingual` portait deux champs : deux types parallèles à
+ * ceux de l'application, qui auraient dérivé au premier ajout de langue. Ils sont désormais
+ * dérivés de `i18n/locales`, propriétaire unique de la liste des langues et de leurs conventions.
+ */
+export type DocLocale = Locale;
 export type DocSlug = 'methodology' | 'sources';
 
-export const DOC_LOCALES: readonly DocLocale[] = ['en', 'fr'];
+export const DOC_LOCALES: readonly DocLocale[] = LOCALES;
 export const DOC_SLUGS: readonly DocSlug[] = ['methodology', 'sources'];
 
-/** Texte en deux langues — même forme que `LocalizedText` du catalogue, sans repli. */
-export interface Bilingual {
+/**
+ * Texte dans les quatre langues livrées, sans repli : une page documentaire n'a pas le droit
+ * d'afficher une phrase anglaise sous un titre espagnol. Le compilateur nomme chaque manque.
+ */
+export interface DocText {
   en: string;
   fr: string;
+  es: string;
+  'pt-BR': string;
 }
 
-/** `/methodology/` ou `/fr/methodology/` — l'anglais est la langue par défaut du site. */
+/**
+ * `/methodology/`, `/fr/methodology/`, `/pt-br/methodology/` — l'anglais est à la racine.
+ *
+ * Le segment vient de `LOCALE_PATH`, qui écrit le brésilien en minuscules : une URL en `pt-BR`
+ * serait servie mais s'écrirait de deux façons dans les liens et le sitemap.
+ */
 export function docPath(slug: DocSlug, locale: DocLocale): string {
-  return locale === 'en' ? `/${slug}/` : `/${locale}/${slug}/`;
+  const segment = LOCALE_PATH[locale];
+  return segment === '' ? `/${slug}/` : `/${segment}/${slug}/`;
 }
 
 export interface DocPage {
@@ -50,20 +75,66 @@ export interface DocPage {
   updated: string;
 }
 
-const NAV: Record<DocSlug, Bilingual> = {
-  methodology: { en: 'Methodology', fr: 'Méthodologie' },
-  sources: { en: 'Sources & credits', fr: 'Sources et crédits' },
+const NAV: Record<DocSlug, DocText> = {
+  methodology: {
+    en: 'Methodology',
+    fr: 'Méthodologie',
+    es: 'Metodología',
+    'pt-BR': 'Metodologia',
+  },
+  sources: {
+    en: 'Sources & credits',
+    fr: 'Sources et crédits',
+    es: 'Fuentes y créditos',
+    'pt-BR': 'Fontes e créditos',
+  },
 };
 
 const CHROME = {
-  back: { en: '← Back to the app', fr: '← Retour à l’app' },
-  otherLanguage: { en: 'Français', fr: 'English' },
-  updated: { en: 'Data as of', fr: 'Données au' },
-  privacy: { en: 'Privacy', fr: 'Confidentialité' },
+  back: {
+    en: '← Back to the app',
+    fr: '← Retour à l’app',
+    es: '← Volver a la aplicación',
+    'pt-BR': '← Voltar ao aplicativo',
+  },
+  updated: {
+    en: 'Data as of',
+    fr: 'Données au',
+    es: 'Datos al',
+    'pt-BR': 'Dados de',
+  },
+  privacy: {
+    en: 'Privacy',
+    fr: 'Confidentialité',
+    es: 'Privacidad',
+    'pt-BR': 'Privacidade',
+  },
   footer: {
     en: 'Generated at build time from the repository’s own data files.',
     fr: 'Générée au build à partir des fichiers de données du dépôt.',
+    es: 'Generada en la compilación a partir de los archivos de datos del repositorio.',
+    'pt-BR':
+      'Gerada na compilação a partir dos arquivos de dados do repositório.',
   },
+  /** Nom du sélecteur de langue, pour un lecteur d'écran : les liens, eux, sont des endonymes. */
+  languages: {
+    en: 'Language',
+    fr: 'Langue',
+    es: 'Idioma',
+    'pt-BR': 'Idioma',
+  },
+};
+
+/**
+ * `og:locale` EXIGE une région (`xx_YY`), alors que `<html lang>` n'en revendique pas pour
+ * l'espagnol (cf. `i18n/locales`). L'Espagne est donc écrite ici, faute d'un choix régional, et
+ * seulement ici : c'est une métadonnée de partage, pas une déclaration sur le contenu.
+ */
+const OG_LOCALE: Record<DocLocale, string> = {
+  en: 'en_GB',
+  fr: 'fr_FR',
+  es: 'es_ES',
+  'pt-BR': 'pt_BR',
 };
 
 /** Image de partage du site, telle que la déclare l'`index.html` construit. */
@@ -102,7 +173,6 @@ export function renderDocPage(
   image: SocialImage
 ): string {
   const { locale, slug } = page;
-  const other: DocLocale = locale === 'en' ? 'fr' : 'en';
   const url = (s: DocSlug, l: DocLocale): string => `${origin}${docPath(s, l)}`;
   const nav = DOC_SLUGS.map((s) =>
     s === slug
@@ -128,7 +198,7 @@ export function renderDocPage(
   // `<` échappé dans le JSON : une chaîne contenant `</script>` fermerait sinon le bloc.
   const json = JSON.stringify(structured).replace(/</g, '\\u003c');
   return `<!doctype html>
-<html lang="${locale}">
+<html lang="${HTML_LANG[locale]}">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -137,15 +207,17 @@ export function renderDocPage(
     <meta name="robots" content="index, follow" />
     <meta name="theme-color" content="#000000" />
     <link rel="canonical" href="${escapeHtml(page.canonical)}" />
-    <link rel="alternate" hreflang="en" href="${escapeHtml(url(slug, 'en'))}" />
-    <link rel="alternate" hreflang="fr" href="${escapeHtml(url(slug, 'fr'))}" />
+${DOC_LOCALES.map(
+  (l) =>
+    `<link rel="alternate" hreflang="${l}" href="${escapeHtml(url(slug, l))}" />`
+).join('\n    ')}
     <link rel="alternate" hreflang="x-default" href="${escapeHtml(url(slug, 'en'))}" />
     <meta property="og:type" content="article" />
     <meta property="og:title" content="${escapeHtml(page.title)}" />
     <meta property="og:description" content="${escapeHtml(page.description)}" />
     <meta property="og:url" content="${escapeHtml(page.canonical)}" />
     <meta property="og:site_name" content="Galaxy" />
-    <meta property="og:locale" content="${locale === 'fr' ? 'fr_FR' : 'en_GB'}" />
+    <meta property="og:locale" content="${OG_LOCALE[locale]}" />
     <meta property="og:image" content="${escapeHtml(image.url)}" />
     <meta property="og:image:width" content="${escapeHtml(image.width)}" />
     <meta property="og:image:height" content="${escapeHtml(image.height)}" />
@@ -168,7 +240,14 @@ export function renderDocPage(
       </a>
       <nav class="doc-nav" aria-label="Documentation">${nav}</nav>
       <div class="topbar-actions">
-        <a class="doc-lang" href="${docPath(slug, other)}" hreflang="${other}" lang="${other}">${CHROME.otherLanguage[locale]}</a>
+        <nav class="doc-langs" aria-label="${escapeHtml(CHROME.languages[locale])}">${DOC_LOCALES.filter(
+          (l) => l !== locale
+        )
+          .map(
+            (l) =>
+              `<a class="doc-lang" href="${docPath(slug, l)}" hreflang="${l}" lang="${HTML_LANG[l]}">${escapeHtml(LOCALE_ENDONYM[l])}</a>`
+          )
+          .join('')}</nav>
         <a class="back" href="/">${escapeHtml(CHROME.back[locale])}</a>
       </div>
     </header>
@@ -226,13 +305,28 @@ const SUPERSCRIPTS = '⁰¹²³⁴⁵⁶⁷⁸⁹⁻';
  * Nombre lisible dans la langue de la page : séparateur de milliers fin, virgule décimale en
  * français, puissance de dix au-delà de dix millions (`1.7 × 10⁸`).
  */
+/**
+ * La ponctuation des nombres, par langue, decidee UNE fois.
+ *
+ * L'anglais groupe par virgule et decime par point ; le francais fait l'inverse avec une
+ * espace fine insecable. L'espagnol et le portugais du Bresil decimant tous deux par la
+ * virgule, ecrire « 1,234.5 » pour eux aurait affiche mille fois la valeur pour un lecteur
+ * hispanophone. Le groupement suit l'usage : espace pour l'espagnol (recommandation de la
+ * RAE), point au Bresil.
+ */
+const NUMBER_MARKS: Record<DocLocale, { decimal: string; group: string }> = {
+  en: { decimal: '.', group: ',' },
+  fr: { decimal: ',', group: ' ' },
+  es: { decimal: ',', group: ' ' },
+  'pt-BR': { decimal: ',', group: '.' },
+};
+
 export function formatQuantity(
   value: number | null,
   locale: DocLocale
 ): string {
   if (value === null || !Number.isFinite(value)) return 'n/a';
-  const decimal = locale === 'fr' ? ',' : '.';
-  const group = locale === 'fr' ? ' ' : ',';
+  const { decimal, group } = NUMBER_MARKS[locale];
   const abs = Math.abs(value);
   if (abs >= 1e7) {
     const exponent = Math.floor(Math.log10(abs));

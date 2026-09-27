@@ -16,6 +16,12 @@ export const fr: Record<MessageKey, string> = {
   'title.eclipse.lunar.partial': 'Éclipse partielle de Lune du {date} en 3D',
   'title.eclipse.lunar.penumbral':
     'Éclipse de Lune par la pénombre du {date} en 3D',
+  'eclipse.name.solar.total': 'Éclipse totale de Soleil',
+  'eclipse.name.solar.annular': 'Éclipse annulaire de Soleil',
+  'eclipse.name.solar.partial': 'Éclipse partielle de Soleil',
+  'eclipse.name.lunar.total': 'Éclipse totale de Lune',
+  'eclipse.name.lunar.partial': 'Éclipse partielle de Lune',
+  'eclipse.name.lunar.penumbral': 'Éclipse de Lune par la pénombre',
   'title.overview': 'Galaxy : système solaire 3D interactif en temps réel',
   'loader.init': 'Initialisation…',
   'loader.core': 'Chargement des composants…',
@@ -471,6 +477,8 @@ export const fr: Record<MessageKey, string> = {
   // ── Unités & suffixes (fiche) ──
   'unit.light': 'lumière',
   'unit.day.short': 'j',
+  'unit.hours': 'heures',
+  'unit.days': 'jours',
   'unit.year.short': 'ans',
   'unit.au': 'UA',
   'unit.million': 'M',

@@ -39,7 +39,7 @@ import {
 import { messages } from '@/i18n/allDictionaries';
 import { escapeHtml } from './bodyLandingPage';
 import {
-  type Bilingual,
+  type DocText,
   type DocLocale,
   type DocPage,
   DOC_LOCALES,
@@ -109,7 +109,7 @@ export interface EphemerisManifest {
 export function displayNameResolver(
   config: CelestialConfig
 ): (name: string, locale: DocLocale) => string {
-  const names = new Map<string, Partial<Bilingual>>();
+  const names = new Map<string, Partial<DocText>>();
   for (const [name, cfg] of flattenBodies(config))
     if (cfg.displayName) names.set(name, cfg.displayName);
   for (const mission of SPACECRAFT_MISSIONS)
@@ -123,10 +123,25 @@ export function displayNameResolver(
 /** Nombre de jeux de textures mesures : LU dans le releve, jamais saisi. */
 const TEXTURE_LADDER_ROWS = textureLadder.rows.length;
 
-const SOURCE_LABELS: Record<string, Bilingual> = {
-  binaire: { en: 'JPL Horizons file', fr: 'fichier JPL Horizons' },
-  'astronomy-engine': { en: 'astronomy-engine', fr: 'astronomy-engine' },
-  kepler: { en: 'Keplerian elements', fr: 'éléments képlériens' },
+const SOURCE_LABELS: Record<string, DocText> = {
+  binaire: {
+    en: 'JPL Horizons file',
+    fr: 'fichier JPL Horizons',
+    es: 'archivo JPL Horizons',
+    'pt-BR': 'arquivo JPL Horizons',
+  },
+  'astronomy-engine': {
+    en: 'astronomy-engine',
+    fr: 'astronomy-engine',
+    es: 'astronomy-engine',
+    'pt-BR': 'astronomy-engine',
+  },
+  kepler: {
+    en: 'Keplerian elements',
+    fr: 'éléments képlériens',
+    es: 'elementos keplerianos',
+    'pt-BR': 'elementos keplerianos',
+  },
 };
 
 /** « fichier JPL Horizons » ou, si la source a changé en cours de fenêtre, chaque part. */
@@ -144,7 +159,7 @@ function sourceLabel(row: ValidationRow, locale: DocLocale): string {
     .join(', ');
 }
 
-const NA: Bilingual = { en: 'n/a', fr: 'n.d.' };
+const NA: DocText = { en: 'n/a', fr: 'n.d.', es: 's. d.', 'pt-BR': 'n/d' };
 
 function q(value: number | null | undefined, locale: DocLocale): string {
   return value === null || value === undefined
@@ -154,9 +169,17 @@ function q(value: number | null | undefined, locale: DocLocale): string {
 
 const year = (iso: string): string => iso.slice(0, 4);
 
-/** Valeur EXACTE (un pas en jours, une constante), seulement la virgule décimale traduite. */
+/**
+ * Valeur EXACTE (un pas en jours, une constante), seulement le separateur decimal traduit.
+ *
+ * Le francais n'est pas seul a ecrire la virgule : l'espagnol et le portugais du Bresil aussi.
+ * Le ternaire precedent leur servait un point, c'est-a-dire une notation qu'ils ne lisent pas.
+ */
+/** La conjonction d'une enumeration (« a, b ou c »), dans les quatre langues. */
+const OR: DocText = { en: ' or ', fr: ' ou ', es: ' o ', 'pt-BR': ' ou ' };
+
 const exact = (value: number, locale: DocLocale): string =>
-  locale === 'fr' ? String(value).replace('.', ',') : String(value);
+  locale === 'en' ? String(value) : String(value).replace('.', ',');
 
 // ─────────────────────────── dérivés du catalogue ───────────────────────────
 
@@ -198,12 +221,17 @@ const T = {
   title: {
     en: 'Methodology: how Galaxy computes positions',
     fr: 'Méthodologie : comment Galaxy calcule les positions',
+    es: 'Metodología: cómo calcula Galaxy las posiciones',
+    'pt-BR': 'Metodologia: como a Galaxy calcula as posições',
   },
   description: {
     en: 'Reference frames, JPL Horizons ephemerides, Keplerian orbits, interpolation, scales and known limits of Galaxy, with every position source measured against NASA/JPL Horizons.',
     fr: 'Repères, éphémérides JPL Horizons, orbites képlériennes, interpolation, échelles et limites connues de Galaxy, chaque source de position étant mesurée contre NASA/JPL Horizons.',
+    es: 'Marcos de referencia, efemérides JPL Horizons, órbitas keplerianas, interpolación, escalas y límites conocidos de Galaxy, con cada fuente de posición medida contra NASA/JPL Horizons.',
+    'pt-BR':
+      'Referenciais, efemérides JPL Horizons, órbitas keplerianas, interpolação, escalas e limites conhecidos da Galaxy, com cada fonte de posição medida contra a NASA/JPL Horizons.',
   },
-} satisfies Record<string, Bilingual>;
+} satisfies Record<string, DocText>;
 
 export interface MethodologyInput {
   summary: ValidationSummary;
@@ -240,29 +268,38 @@ export function methodologyPages(input: MethodologyInput): DocPage[] {
 
 const PROVIDER_TITLES: Record<
   Exclude<ValidationRow['provider'], 'production'>,
-  Bilingual
+  DocText
 > = {
   'astronomy-engine': {
     en: 'astronomy-engine (VSOP87 and analytic models)',
     fr: 'astronomy-engine (VSOP87 et modèles analytiques)',
+    es: 'astronomy-engine (VSOP87 y modelos analíticos)',
+    'pt-BR': 'astronomy-engine (VSOP87 e modelos analíticos)',
   },
   'horizons-binary': {
     en: 'Precomputed JPL Horizons files',
     fr: 'Fichiers JPL Horizons précalculés',
+    es: 'Archivos JPL Horizons precalculados',
+    'pt-BR': 'Arquivos JPL Horizons pré-calculados',
   },
   kepler: {
     en: 'Keplerian elements (catalogue, moon fallbacks, interstellar objects)',
     fr: 'Éléments képlériens (catalogue, replis des lunes, objets interstellaires)',
+    es: 'Elementos keplerianos (catálogo, respaldo de lunas, objetos interestelares)',
+    'pt-BR':
+      'Elementos keplerianos (catálogo, reserva das luas, objetos interestelares)',
   },
   spk: {
     en: 'SPK kernel SAT441 (measured locally, not enabled on this site)',
     fr: 'Noyau SPK SAT441 (mesuré localement, non activé sur ce site)',
+    es: 'Núcleo SPK SAT441 (medido en local, no activado en este sitio)',
+    'pt-BR': 'Núcleo SPK SAT441 (medido localmente, não ativado neste site)',
   },
 };
 
 function methodologyPage(input: MethodologyInput, locale: DocLocale): DocPage {
   const { summary, manifest, config, origin } = input;
-  const L = (text: Bilingual): string => text[locale];
+  const L = (text: DocText): string => text[locale];
   const name = displayNameResolver(config);
   const rows = summary.rows;
   const production = rows.filter((r) => r.provider === 'production');
@@ -295,7 +332,7 @@ function methodologyPage(input: MethodologyInput, locale: DocLocale): DocPage {
     const text = values.map((v) => exact(v, locale));
     const last = text.pop();
     if (text.length === 0) return last ?? '';
-    return `${text.join(', ')}${locale === 'fr' ? ' ou ' : ' or '}${last}`;
+    return `${text.join(', ')}${OR[locale]}${last}`;
   };
   const num = (v: number | null | undefined): string => q(v, locale);
 
@@ -321,6 +358,8 @@ function methodologyPage(input: MethodologyInput, locale: DocLocale): DocPage {
       ? L({
           en: ' (limited to Horizons coverage)',
           fr: ' (limitée à la couverture Horizons)',
+          es: ' (limitado a la cobertura de Horizons)',
+          'pt-BR': ' (limitado à cobertura da Horizons)',
         })
       : '';
     switch (r.windowKind) {
@@ -328,14 +367,20 @@ function methodologyPage(input: MethodologyInput, locale: DocLocale): DocPage {
         return `${escapeHtml(r.windowFrom)} → ${escapeHtml(r.windowTo)}`;
       case 'epoch':
         return (
-          L({ en: 'epoch ±10 yr', fr: 'époque ±10 ans' }) +
-          ` (${span})${clipped}`
+          L({
+            en: 'epoch ±10 yr',
+            fr: 'époque ±10 ans',
+            es: 'época ±10 años',
+            'pt-BR': 'época ±10 anos',
+          }) + ` (${span})${clipped}`
         );
       case 'perihelion':
         return (
           L({
             en: `perihelion ±${INTERSTELLAR_WINDOW_YEARS} yr`,
             fr: `périhélie ±${INTERSTELLAR_WINDOW_YEARS} ans`,
+            es: `perihelio ±${INTERSTELLAR_WINDOW_YEARS} años`,
+            'pt-BR': `periélio ±${INTERSTELLAR_WINDOW_YEARS} anos`,
           }) + ` (${span})${clipped}`
         );
       default:
@@ -349,13 +394,23 @@ function methodologyPage(input: MethodologyInput, locale: DocLocale): DocPage {
   sections.push(
     docSection(
       'frames',
-      L({ en: 'Reference frames', fr: 'Repères' }),
+      L({
+        en: 'Reference frames',
+        fr: 'Repères',
+        es: 'Marcos de referencia',
+        'pt-BR': 'Referenciais',
+      }),
       `<p>${L({
         en: `Every position is a <strong>geometric</strong> position, with no light-time or aberration correction: where a body is at that instant, not where it appears from Earth. Galaxy works in the <strong>J2000 ecliptic</strong> frame, the frame of the JPL Horizons files and of the orbital elements. astronomy-engine returns J2000 equatorial vectors (ICRF axes); they are rotated into the ecliptic by the J2000 obliquity, ε = ${exact(Number(obliquityArcsec), locale)}″ (${exact(Number(obliquityDeg), locale)}°), the IAU 1976 value that defines the Horizons ecliptic, so that every source shares one frame.`,
         fr: `Chaque position est une position <strong>géométrique</strong>, sans correction de temps de lumière ni d’aberration : où se trouve le corps à cet instant, pas où il paraît depuis la Terre. Galaxy travaille dans l’<strong>écliptique J2000</strong>, le repère des fichiers JPL Horizons et des éléments orbitaux. astronomy-engine fournit des vecteurs équatoriaux J2000 (axes ICRF) ; ils sont tournés vers l’écliptique d’un angle égal à l’obliquité J2000, ε = ${exact(Number(obliquityArcsec), locale)}″ (${exact(Number(obliquityDeg), locale)}°), la valeur IAU 1976 qui définit l’écliptique d’Horizons, pour que toutes les sources partagent un même repère.`,
+        es: `Cada posición es una posición <strong>geométrica</strong>, sin corrección de tiempo de luz ni de aberración: dónde está un cuerpo en ese instante, no dónde se ve desde la Tierra. Galaxy trabaja en el marco <strong>eclíptico J2000</strong>, el de los archivos JPL Horizons y de los elementos orbitales. astronomy-engine devuelve vectores ecuatoriales J2000 (ejes ICRF); se rotan a la eclíptica por la oblicuidad J2000, ε = ${exact(Number(obliquityArcsec), locale)}″ (${exact(Number(obliquityDeg), locale)}°), el valor IAU 1976 que define la eclíptica de Horizons, de modo que todas las fuentes comparten un marco.`,
+        'pt-BR': `Cada posição é uma posição <strong>geométrica</strong>, sem correção de tempo de luz nem de aberração: onde um corpo está naquele instante, não onde ele aparece visto da Terra. A Galaxy trabalha no referencial <strong>eclíptico J2000</strong>, o dos arquivos JPL Horizons e dos elementos orbitais. A astronomy-engine devolve vetores equatoriais J2000 (eixos ICRF); eles são rotacionados para a eclíptica pela obliquidade J2000, ε = ${exact(Number(obliquityArcsec), locale)}″ (${exact(Number(obliquityDeg), locale)}°), o valor IAU 1976 que define a eclíptica da Horizons, de modo que todas as fontes compartilham um referencial.`,
       })}</p><p>${L({
         en: 'The Sun is fixed at the origin: positions are heliocentric. The 3D scene maps the ecliptic onto its horizontal plane: scene X = ecliptic x, scene Y = ecliptic z (towards the north ecliptic pole), scene Z = −ecliptic y. This is a proper rotation (determinant +1), not a mirror, so orbits keep their true direction of travel.',
         fr: 'Le Soleil est fixé à l’origine : les positions sont héliocentriques. La scène 3D place l’écliptique dans son plan horizontal : X scène = x écliptique, Y scène = z écliptique (vers le pôle nord de l’écliptique), Z scène = −y écliptique. C’est une rotation propre (déterminant +1), pas un miroir : les orbites gardent leur vrai sens de parcours.',
+        es: 'El Sol está fijo en el origen: las posiciones son heliocéntricas. La escena 3D proyecta la eclíptica sobre su plano horizontal: X de escena = x eclíptica, Y de escena = z eclíptica (hacia el polo norte eclíptico), Z de escena = −y eclíptica. Es una rotación propia (determinante +1), no un espejo, así que las órbitas conservan su verdadero sentido de recorrido.',
+        'pt-BR':
+          'O Sol está fixo na origem: as posições são heliocêntricas. A cena 3D projeta a eclíptica sobre o seu plano horizontal: X da cena = x eclíptico, Y da cena = z eclíptico (na direção do polo norte eclíptico), Z da cena = −y eclíptico. É uma rotação própria (determinante +1), não um espelho, então as órbitas conservam o seu verdadeiro sentido de percurso.',
       })}</p>`
     )
   );
@@ -364,10 +419,17 @@ function methodologyPage(input: MethodologyInput, locale: DocLocale): DocPage {
   sections.push(
     docSection(
       'time',
-      L({ en: 'Time scale', fr: 'Échelle de temps' }),
+      L({
+        en: 'Time scale',
+        fr: 'Échelle de temps',
+        es: 'Escala de tiempo',
+        'pt-BR': 'Escala de tempo',
+      }),
       `<p>${L({
         en: `The date you choose is read as UTC. From 1972 onwards it is converted to Terrestrial Time with the table of leap seconds, held constant after the last one (TT − UTC = ${exact(lastTtMinusUtc, locale)} s since ${lastLeapDate}), which is the convention JPL Horizons applies to dates given in UT. Before 1972 the date is read as UT1 and ΔT = TT − UT1 follows the Espenak and Meeus model. A single module performs this conversion for every source, and installs it into astronomy-engine, so two sources never disagree about which instant is meant.`,
         fr: `La date choisie est lue en UTC. À partir de 1972, elle est convertie en Temps terrestre par la table des secondes intercalaires, maintenue constante après la dernière (TT − UTC = ${exact(lastTtMinusUtc, locale)} s depuis le ${lastLeapDate}), ce qui est la convention appliquée par JPL Horizons aux dates données en UT. Avant 1972, la date est lue comme UT1 et ΔT = TT − UT1 suit le modèle d’Espenak et Meeus. Un seul module fait cette conversion pour toutes les sources, et l’installe dans astronomy-engine : deux sources ne peuvent pas désigner deux instants différents.`,
+        es: `La fecha que elige se lee como UTC. Desde 1972 se convierte a Tiempo Terrestre con la tabla de segundos intercalares, mantenida constante después del último (TT − UTC = ${exact(lastTtMinusUtc, locale)} s desde ${lastLeapDate}), que es la convención que JPL Horizons aplica a las fechas dadas en UT. Antes de 1972 la fecha se lee como UT1 y ΔT = TT − UT1 sigue el modelo de Espenak y Meeus. Un único módulo realiza esta conversión para todas las fuentes, y la instala en astronomy-engine, de modo que dos fuentes nunca discrepan sobre qué instante se designa.`,
+        'pt-BR': `A data que você escolhe é lida como UTC. A partir de 1972 ela é convertida em Tempo Terrestre com a tabela de segundos intercalares, mantida constante depois do último (TT − UTC = ${exact(lastTtMinusUtc, locale)} s desde ${lastLeapDate}), que é a convenção que a JPL Horizons aplica às datas dadas em UT. Antes de 1972 a data é lida como UT1 e ΔT = TT − UT1 segue o modelo de Espenak e Meeus. Um único módulo faz essa conversão para todas as fontes, e a instala na astronomy-engine, de modo que duas fontes nunca discordam sobre qual instante se designa.`,
       })}</p>`
     )
   );
@@ -379,29 +441,45 @@ function methodologyPage(input: MethodologyInput, locale: DocLocale): DocPage {
       L({
         en: 'Where each position comes from',
         fr: 'D’où vient chaque position',
+        es: 'De dónde viene cada posición',
+        'pt-BR': 'De onde vem cada posição',
       }),
       `<p>${L({
         en: 'For a planet, a moon or a small body, Galaxy tries the following sources in order and keeps the first that answers:',
         fr: 'Pour une planète, une lune ou un petit corps, Galaxy essaie les sources suivantes dans cet ordre et garde la première qui répond :',
+        es: 'Para un planeta, una luna o un cuerpo menor, Galaxy prueba las fuentes siguientes en orden y conserva la primera que responde:',
+        'pt-BR':
+          'Para um planeta, uma lua ou um corpo menor, a Galaxy tenta as fontes seguintes em ordem e mantém a primeira que responde:',
       })}</p><ol class="doc-list">` +
         `<li>${L({
           en: `<strong>A JPL SPK kernel</strong> (SAT441, Saturn’s moons), when the site is configured to serve one. It then takes precedence over the Horizons files. ${summary.spk.enabledInProduction ? 'It is <strong>enabled</strong> on this site.' : 'It is <strong>not enabled</strong> on this site.'}`,
           fr: `<strong>Un noyau SPK du JPL</strong> (SAT441, lunes de Saturne), quand le site est configuré pour en servir un. Il passe alors avant les fichiers Horizons. ${summary.spk.enabledInProduction ? 'Il est <strong>activé</strong> sur ce site.' : 'Il n’est <strong>pas activé</strong> sur ce site.'}`,
+          es: `<strong>Un núcleo SPK del JPL</strong> (SAT441, las lunas de Saturno), cuando el sitio está configurado para servirlo. Tiene entonces prioridad sobre los archivos Horizons. ${summary.spk.enabledInProduction ? 'Está <strong>activado</strong> en este sitio.' : 'No está <strong>activado</strong> en este sitio.'}`,
+          'pt-BR': `<strong>Um núcleo SPK do JPL</strong> (SAT441, as luas de Saturno), quando o site está configurado para servi-lo. Ele tem então prioridade sobre os arquivos Horizons. ${summary.spk.enabledInProduction ? 'Ele está <strong>ativado</strong> neste site.' : 'Ele <strong>não está ativado</strong> neste site.'}`,
         })}</li>` +
         `<li>${L({
           en: `<strong>Precomputed NASA/JPL Horizons files</strong> for ${binaryNatural.length} natural bodies: exact position and velocity states in the ${escapeHtml(manifest.frame)} frame, every ${days(naturalSteps)} days depending on the body, between ${escapeHtml(manifest.coverage.start)} and ${escapeHtml(manifest.coverage.stop)}; the <a href="${docPath('sources', locale)}">sources page</a> gives each file’s step and exact range. A value from a file is compared with the body’s catalogue orbit and rejected if its distance is implausibly large or small; the next source then takes over.`,
           fr: `<strong>Fichiers NASA/JPL Horizons précalculés</strong> pour ${binaryNatural.length} corps naturels : états exacts de position et de vitesse dans le repère ${escapeHtml(manifest.frame)}, tous les ${days(naturalSteps)} jours selon le corps, entre le ${escapeHtml(manifest.coverage.start)} et le ${escapeHtml(manifest.coverage.stop)} ; la <a href="${docPath('sources', locale)}">page des sources</a> donne le pas et la plage exacte de chaque fichier. Une valeur issue d’un fichier est confrontée à l’orbite du corps dans le catalogue et rejetée si sa distance est trop grande ou trop petite pour être plausible ; la source suivante prend alors le relais.`,
+          es: `<strong>Archivos NASA/JPL Horizons precalculados</strong> para ${binaryNatural.length} cuerpos naturales: estados exactos de posición y velocidad en el marco ${escapeHtml(manifest.frame)}, cada ${days(naturalSteps)} días según el cuerpo, entre ${escapeHtml(manifest.coverage.start)} y ${escapeHtml(manifest.coverage.stop)}; la <a href="${docPath('sources', locale)}">página de fuentes</a> da el paso y el rango exacto de cada archivo. Un valor de un archivo se compara con la órbita del cuerpo en el catálogo y se rechaza si su distancia es inverosímilmente grande o pequeña; la fuente siguiente toma entonces el relevo.`,
+          'pt-BR': `<strong>Arquivos NASA/JPL Horizons pré-calculados</strong> para ${binaryNatural.length} corpos naturais: estados exatos de posição e velocidade no referencial ${escapeHtml(manifest.frame)}, a cada ${days(naturalSteps)} dias conforme o corpo, entre ${escapeHtml(manifest.coverage.start)} e ${escapeHtml(manifest.coverage.stop)}; a <a href="${docPath('sources', locale)}">página de fontes</a> dá o passo e o intervalo exato de cada arquivo. Um valor de um arquivo é comparado com a órbita do corpo no catálogo e recusado se a sua distância for implausivelmente grande ou pequena; a fonte seguinte assume então.`,
         })}</li>` +
         `<li>${L({
           en: '<strong>astronomy-engine</strong>, an open-source library: VSOP87 for the planets, and analytic models for the Moon and the four Galilean moons.',
           fr: '<strong>astronomy-engine</strong>, une bibliothèque libre : VSOP87 pour les planètes, et des modèles analytiques pour la Lune et les quatre lunes galiléennes.',
+          es: '<strong>astronomy-engine</strong>, una biblioteca de código abierto: VSOP87 para los planetas, y modelos analíticos para la Luna y las cuatro lunas galileanas.',
+          'pt-BR':
+            '<strong>astronomy-engine</strong>, uma biblioteca de código aberto: VSOP87 para os planetas, e modelos analíticos para a Lua e as quatro luas galileanas.',
         })}</li>` +
         `<li>${L({
           en: `<strong>Keplerian orbital elements</strong>: ${SMALL_BODY_ELEMENTS.length} small bodies, whose osculating elements come from Horizons at a stated epoch and are checked by a test against a Horizons position at that epoch (${barycentric} of them are referred to the Solar System barycentre: beyond Neptune, a heliocentric orbit carries the Sun’s own reflex motion); and a fallback for ${moonFallbacks} moons, derived by script from their Horizons files, used only when a file is missing, out of range or rejected.`,
           fr: `<strong>Éléments orbitaux képlériens</strong> : ${SMALL_BODY_ELEMENTS.length} petits corps, dont les éléments osculateurs viennent d’Horizons à une époque déclarée et qu’un test confronte à une position Horizons à cette époque (${barycentric} d’entre eux sont rapportés au barycentre du Système solaire : au-delà de Neptune, une orbite héliocentrique porte le mouvement réflexe du Soleil lui-même) ; et un repli pour ${moonFallbacks} lunes, dérivé par script de leurs fichiers Horizons, utilisé seulement quand un fichier manque, sort de sa couverture ou est rejeté.`,
+          es: `<strong>Elementos orbitales keplerianos</strong>: ${SMALL_BODY_ELEMENTS.length} cuerpos menores, cuyos elementos osculadores vienen de Horizons en una época declarada y son verificados por una prueba contra una posición de Horizons en esa época (${barycentric} de ellos están referidos al baricentro del Sistema Solar: más allá de Neptuno, una órbita heliocéntrica arrastra el propio movimiento de retroceso del Sol); y un respaldo para ${moonFallbacks} lunas, derivado por script de sus archivos Horizons, usado solo cuando un archivo falta, está fuera de rango o es rechazado.`,
+          'pt-BR': `<strong>Elementos orbitais keplerianos</strong>: ${SMALL_BODY_ELEMENTS.length} corpos menores, cujos elementos osculadores vêm da Horizons em uma época declarada e são verificados por um teste contra uma posição da Horizons nessa época (${barycentric} deles são referidos ao baricentro do Sistema Solar: além de Netuno, uma órbita heliocêntrica carrega o próprio movimento de recuo do Sol); e uma reserva para ${moonFallbacks} luas, derivada por script dos seus arquivos Horizons, usada somente quando um arquivo falta, está fora do intervalo ou é recusado.`,
         })}</li></ol><p>${L({
           en: `The ${binarySpacecraft.length} spacecraft and the ${INTERSTELLAR_OBJECTS.length} interstellar objects follow their own rule. A spacecraft is positioned only by its Horizons file, sampled at a step of ${days(spacecraftSteps)} days (${exact(spacecraftSteps[0]!, locale)} for: ${listNames(finestSpacecraft)}), and is not drawn outside the file’s coverage. An interstellar object is positioned by its hyperbolic elements and drawn only within ±${INTERSTELLAR_WINDOW_YEARS} years of perihelion, the range over which they were checked against Horizons.`,
           fr: `Les ${binarySpacecraft.length} sondes et les ${INTERSTELLAR_OBJECTS.length} objets interstellaires suivent leur propre règle. Une sonde est positionnée uniquement par son fichier Horizons, échantillonné à un pas de ${days(spacecraftSteps)} jours (${exact(spacecraftSteps[0]!, locale)} jour pour : ${listNames(finestSpacecraft)}), et n’est pas dessinée hors de la couverture de ce fichier. Un objet interstellaire est positionné par ses éléments hyperboliques et dessiné seulement à ±${INTERSTELLAR_WINDOW_YEARS} ans de son périhélie, la plage sur laquelle ils ont été vérifiés contre Horizons.`,
+          es: `Las ${binarySpacecraft.length} sondas y los ${INTERSTELLAR_OBJECTS.length} objetos interestelares siguen su propia regla. Una sonda se sitúa únicamente por su archivo Horizons, muestreado con un paso de ${days(spacecraftSteps)} días (${exact(spacecraftSteps[0]!, locale)} para: ${listNames(finestSpacecraft)}), y no se dibuja fuera de la cobertura del archivo. Un objeto interestelar se sitúa por sus elementos hiperbólicos y solo se dibuja dentro de ±${INTERSTELLAR_WINDOW_YEARS} años del perihelio, el rango en el que fueron verificados contra Horizons.`,
+          'pt-BR': `As ${binarySpacecraft.length} sondas e os ${INTERSTELLAR_OBJECTS.length} objetos interestelares seguem a sua própria regra. Uma sonda é posicionada unicamente pelo seu arquivo Horizons, amostrado com um passo de ${days(spacecraftSteps)} dias (${exact(spacecraftSteps[0]!, locale)} para: ${listNames(finestSpacecraft)}), e não é desenhada fora da cobertura do arquivo. Um objeto interestelar é posicionado pelos seus elementos hiperbólicos e desenhado somente dentro de ±${INTERSTELLAR_WINDOW_YEARS} anos do periélio, o intervalo no qual eles foram verificados contra a Horizons.`,
         })}</p>`
     )
   );
@@ -413,13 +491,20 @@ function methodologyPage(input: MethodologyInput, locale: DocLocale): DocPage {
       L({
         en: 'Between two samples: conditional interpolation',
         fr: 'Entre deux échantillons : interpolation conditionnelle',
+        es: 'Entre dos muestras: interpolación condicional',
+        'pt-BR': 'Entre duas amostras: interpolação condicional',
       }),
       `<p>${L({
         en: `A Horizons file holds exact states at a fixed step. Between two of them, a cubic (Hermite) curve is only valid if the body moves smoothly over the interval, which is false as soon as it completes several turns within one step. Galaxy therefore counts how many samples one revolution spans, using the catalogue’s mean period. From ${MIN_SAMPLES_PER_ORBIT_FOR_HERMITE} samples per orbit upwards it uses the cubic. Below that, it propagates each of the two surrounding states along its own two-body orbit and blends them smoothly, so both ends stay exactly on the data.`,
         fr: `Un fichier Horizons contient des états exacts à pas fixe. Entre deux d’entre eux, une courbe cubique (Hermite) n’est valable que si le corps se déplace régulièrement sur l’intervalle, ce qui est faux dès qu’il fait plusieurs tours en un pas. Galaxy compte donc combien d’échantillons couvre une révolution, d’après la période moyenne du catalogue. À partir de ${MIN_SAMPLES_PER_ORBIT_FOR_HERMITE} échantillons par orbite, il emploie la cubique. En dessous, il propage chacun des deux états qui encadrent la date le long de sa propre orbite à deux corps, puis les fond progressivement : chaque extrémité reste exactement sur les données.`,
+        es: `Un archivo Horizons contiene estados exactos con un paso fijo. Entre dos de ellos, una curva cúbica (de Hermite) solo es válida si el cuerpo se mueve suavemente en el intervalo, lo que es falso en cuanto da varias vueltas dentro de un paso. Galaxy cuenta por tanto cuántas muestras abarca una revolución, usando el periodo medio del catálogo. A partir de ${MIN_SAMPLES_PER_ORBIT_FOR_HERMITE} muestras por órbita usa la cúbica. Por debajo, propaga cada uno de los dos estados que rodean la fecha a lo largo de su propia órbita de dos cuerpos y los mezcla suavemente, de modo que ambos extremos siguen exactamente sobre los datos.`,
+        'pt-BR': `Um arquivo Horizons contém estados exatos com um passo fixo. Entre dois deles, uma curva cúbica (de Hermite) só é válida se o corpo se mover suavemente no intervalo, o que é falso assim que ele dá várias voltas dentro de um passo. A Galaxy conta então quantas amostras uma revolução abrange, usando o período médio do catálogo. A partir de ${MIN_SAMPLES_PER_ORBIT_FOR_HERMITE} amostras por órbita ela usa a cúbica. Abaixo disso, ela propaga cada um dos dois estados que cercam a data ao longo da sua própria órbita de dois corpos e os mistura suavemente, de modo que as duas extremidades permanecem exatamente sobre os dados.`,
       })}</p><p>${L({
         en: 'Two refinements follow the same rule, keeping the data and linking it with the right curve. When a moon is massive enough to pull its planet around a shared barycentre (Charon and Pluto), that wobble is removed before interpolation and added back at the requested date. For a declared list of moons close to a flattened planet, the conic is travelled at the measured mean rate rather than the instantaneous one.',
         fr: 'Deux raffinements suivent la même règle, garder les données et les relier par la bonne courbe. Quand une lune est assez massive pour faire tourner sa planète autour d’un barycentre commun (Charon et Pluton), ce ballant est retiré avant l’interpolation puis rajouté à la date demandée. Pour une liste déclarée de lunes proches d’une planète aplatie, la conique est parcourue au rythme moyen mesuré plutôt qu’au rythme instantané.',
+        es: 'Dos refinamientos siguen la misma regla, conservando los datos y uniéndolos con la curva adecuada. Cuando una luna es lo bastante masiva para arrastrar a su planeta alrededor de un baricentro común (Caronte y Plutón), ese bamboleo se retira antes de interpolar y se vuelve a añadir en la fecha pedida. Para una lista declarada de lunas cercanas a un planeta achatado, la cónica se recorre al ritmo medio medido y no al instantáneo.',
+        'pt-BR':
+          'Dois refinamentos seguem a mesma regra, conservando os dados e ligando-os com a curva adequada. Quando uma lua é massiva o bastante para arrastar o seu planeta em torno de um baricentro comum (Caronte e Plutão), essa oscilação é retirada antes da interpolação e reposta na data pedida. Para uma lista declarada de luas próximas de um planeta achatado, a cônica é percorrida no ritmo médio medido e não no instantâneo.',
       })}</p>`
     )
   );
@@ -431,13 +516,20 @@ function methodologyPage(input: MethodologyInput, locale: DocLocale): DocPage {
       L({
         en: 'Keplerian orbits: ellipses and hyperbolas',
         fr: 'Orbites képlériennes : ellipses et hyperboles',
+        es: 'Órbitas keplerianas: elipses e hipérbolas',
+        'pt-BR': 'Órbitas keplerianas: elipses e hipérboles',
       }),
       `<p>${L({
         en: 'For a closed orbit (eccentricity below 1), Kepler’s equation M = E − e sin E is solved for the eccentric anomaly. For an open orbit (eccentricity above 1, the interstellar objects), the hyperbolic form M = e sinh F − F is solved instead; the mean anomaly is then not an angle and is never reduced modulo 360°.',
         fr: 'Pour une orbite fermée (excentricité inférieure à 1), l’équation de Kepler M = E − e sin E est résolue pour l’anomalie excentrique. Pour une orbite ouverte (excentricité supérieure à 1, les objets interstellaires), c’est la forme hyperbolique M = e sinh F − F qui est résolue ; l’anomalie moyenne n’est alors pas un angle et n’est jamais ramenée modulo 360°.',
+        es: 'Para una órbita cerrada (excentricidad menor que 1) se resuelve la ecuación de Kepler M = E − e sin E para la anomalía excéntrica. Para una órbita abierta (excentricidad mayor que 1, los objetos interestelares) se resuelve en su lugar la forma hiperbólica M = e sinh F − F; la anomalía media no es entonces un ángulo y nunca se reduce módulo 360°.',
+        'pt-BR':
+          'Para uma órbita fechada (excentricidade menor que 1) resolve-se a equação de Kepler M = E − e sin E para a anomalia excêntrica. Para uma órbita aberta (excentricidade maior que 1, os objetos interestelares) resolve-se em vez disso a forma hiperbólica M = e sinh F − F; a anomalia média não é então um ângulo e nunca é reduzida módulo 360°.',
       })}</p><p>${L({
         en: `A small body orbiting the Sun moves at the rate set by the Sun’s gravitational parameter. A moon’s elements are referred to its planet, and its rate comes from its measured mean sidereal period, not from the Sun, nor from the instantaneous state the elements were taken from. Orbit lines of orbits with an eccentricity of ${exact(ORBIT_SAMPLE_WARP_MIN_ECCENTRICITY, locale)} or more are sampled evenly in eccentric anomaly rather than in time, so that they reach their true closest point; hyperbolic trajectories are sampled evenly in hyperbolic anomaly.`,
         fr: `Un petit corps en orbite autour du Soleil se déplace au rythme fixé par le paramètre gravitationnel du Soleil. Les éléments d’une lune sont rapportés à sa planète, et son rythme vient de sa période sidérale moyenne mesurée, et non du Soleil ni de l’état instantané d’où les éléments ont été tirés. Les lignes des orbites d’excentricité ${exact(ORBIT_SAMPLE_WARP_MIN_ECCENTRICITY, locale)} ou plus sont échantillonnées régulièrement en anomalie excentrique plutôt que dans le temps, pour atteindre leur vrai point le plus proche ; les trajectoires hyperboliques le sont en anomalie hyperbolique.`,
+        es: `Un cuerpo menor que orbita el Sol se mueve al ritmo fijado por el parámetro gravitacional del Sol. Los elementos de una luna están referidos a su planeta, y su ritmo viene de su periodo sidéreo medio medido, no del Sol, ni del estado instantáneo del que se tomaron los elementos. Las líneas de órbita de excentricidad igual o superior a ${exact(ORBIT_SAMPLE_WARP_MIN_ECCENTRICITY, locale)} se muestrean uniformemente en anomalía excéntrica y no en el tiempo, para que alcancen su verdadero punto más cercano; las trayectorias hiperbólicas se muestrean uniformemente en anomalía hiperbólica.`,
+        'pt-BR': `Um corpo menor que orbita o Sol se move no ritmo fixado pelo parâmetro gravitacional do Sol. Os elementos de uma lua são referidos ao seu planeta, e o seu ritmo vem do seu período sideral médio medido, não do Sol, nem do estado instantâneo de onde os elementos foram tirados. As linhas de órbita de excentricidade igual ou superior a ${exact(ORBIT_SAMPLE_WARP_MIN_ECCENTRICITY, locale)} são amostradas uniformemente em anomalia excêntrica e não no tempo, para que alcancem o seu verdadeiro ponto mais próximo; as trajetórias hiperbólicas são amostradas uniformemente em anomalia hiperbólica.`,
       })}</p>`
     )
   );
@@ -449,19 +541,32 @@ function methodologyPage(input: MethodologyInput, locale: DocLocale): DocPage {
   sections.push(
     docSection(
       'spk',
-      L({ en: 'SPK kernel', fr: 'Noyau SPK' }),
+      L({
+        en: 'SPK kernel',
+        fr: 'Noyau SPK',
+        es: 'Núcleo SPK',
+        'pt-BR': 'Núcleo SPK',
+      }),
       `<p>${L({
         en: 'SPK is JPL’s binary format for high-precision ephemerides. Galaxy can read the SAT441 kernel for Saturn’s moons in a background worker, by HTTP range requests, composing segments through their common centre when the kernel stores no direct pair.',
         fr: 'SPK est le format binaire du JPL pour les éphémérides de haute précision. Galaxy sait lire le noyau SAT441 des lunes de Saturne dans un worker en arrière-plan, par requêtes HTTP partielles, en composant les segments par leur centre commun quand le noyau ne stocke pas la paire directe.',
+        es: 'SPK es el formato binario del JPL para efemérides de alta precisión. Galaxy puede leer el núcleo SAT441 de las lunas de Saturno en un trabajador de fondo, por peticiones HTTP de rango, componiendo segmentos a través de su centro común cuando el núcleo no guarda ningún par directo.',
+        'pt-BR':
+          'SPK é o formato binário do JPL para efemérides de alta precisão. A Galaxy pode ler o núcleo SAT441 das luas de Saturno em um trabalhador de fundo, por requisições HTTP de intervalo, compondo segmentos através do seu centro comum quando o núcleo não guarda nenhum par direto.',
       })} ${L(
         summary.spk.enabledInProduction
           ? {
               en: 'It is <strong>enabled</strong> on this site.',
               fr: 'Il est <strong>activé</strong> sur ce site.',
+              es: 'Está <strong>activado</strong> en este sitio.',
+              'pt-BR': 'Ele está <strong>ativado</strong> neste site.',
             }
           : {
               en: 'It is <strong>not enabled</strong> on this site, so Saturn’s moons use the Horizons files; the figures below were measured locally with the kernel.',
               fr: 'Il n’est <strong>pas activé</strong> sur ce site : les lunes de Saturne utilisent donc les fichiers Horizons ; les chiffres ci-dessous ont été mesurés localement avec le noyau.',
+              es: 'No está <strong>activado</strong> en este sitio, así que las lunas de Saturno usan los archivos Horizons; las cifras siguientes se midieron en local con el núcleo.',
+              'pt-BR':
+                'Ele <strong>não está ativado</strong> neste site, então as luas de Saturno usam os arquivos Horizons; os números abaixo foram medidos localmente com o núcleo.',
             }
       )}</p>` +
         (spkRows.length > 0
@@ -469,12 +574,30 @@ function methodologyPage(input: MethodologyInput, locale: DocLocale): DocPage {
               L({
                 en: 'SPK path against Horizons, position relative to Saturn',
                 fr: 'Chemin SPK contre Horizons, position relative à Saturne',
+                es: 'Vía SPK contra Horizons, posición relativa a Saturno',
+                'pt-BR':
+                  'Via SPK contra a Horizons, posição relativa a Saturno',
               }),
               [
-                L({ en: 'Moon', fr: 'Lune' }),
-                L({ en: 'Window', fr: 'Fenêtre' }),
-                L({ en: 'Mean (km)', fr: 'Moyenne (km)' }),
-                L({ en: 'Max (km)', fr: 'Max (km)' }),
+                L({ en: 'Moon', fr: 'Lune', es: 'Luna', 'pt-BR': 'Lua' }),
+                L({
+                  en: 'Window',
+                  fr: 'Fenêtre',
+                  es: 'Ventana',
+                  'pt-BR': 'Janela',
+                }),
+                L({
+                  en: 'Mean (km)',
+                  fr: 'Moyenne (km)',
+                  es: 'Media (km)',
+                  'pt-BR': 'Média (km)',
+                }),
+                L({
+                  en: 'Max (km)',
+                  fr: 'Max (km)',
+                  es: 'Máx. (km)',
+                  'pt-BR': 'Máx. (km)',
+                }),
               ],
               spkRows.map((r) => [
                 escapeHtml(name(r.body, locale)),
@@ -495,16 +618,24 @@ function methodologyPage(input: MethodologyInput, locale: DocLocale): DocPage {
       L({
         en: 'Educational and Explore scales',
         fr: 'Échelles Éducative et Exploration',
+        es: 'Escalas Educativa y Exploración',
+        'pt-BR': 'Escalas Educativa e Exploração',
       }),
       `<p>${L({
         en: `Positions are computed in astronomical units (AU), then placed in the scene with a single constant K = ${SQRT_K} scene units, so that the Earth, at 1 AU, sits at ${SQRT_K} units in both modes. Only the display changes between the two modes; the computed position is the same.`,
         fr: `Les positions sont calculées en unités astronomiques (UA), puis placées dans la scène avec une seule constante K = ${SQRT_K} unités de scène : la Terre, à 1 UA, est à ${SQRT_K} unités dans les deux modes. Seul l’affichage change entre les deux modes ; la position calculée est la même.`,
+        es: `Las posiciones se calculan en unidades astronómicas (UA) y luego se colocan en la escena con una única constante K = ${SQRT_K} unidades de escena, de modo que la Tierra, a 1 UA, queda a ${SQRT_K} unidades en ambos modos. Solo cambia la visualización entre los dos modos; la posición calculada es la misma.`,
+        'pt-BR': `As posições são calculadas em unidades astronômicas (UA) e depois colocadas na cena com uma única constante K = ${SQRT_K} unidades de cena, de modo que a Terra, a 1 UA, fica a ${SQRT_K} unidades nos dois modos. Só a exibição muda entre os dois modos; a posição calculada é a mesma.`,
       })}</p><ul class="doc-list"><li>${L({
         en: `<strong>Explore</strong> is true scale: distance = AU × ${SQRT_K}, and every body has its physical radius. A distant body can be too small to see, exactly as in space; navigation aids are drawn as labels, never by enlarging a body, and the optical zoom changes only the camera’s field of view.`,
         fr: `<strong>Exploration</strong> est à l’échelle réelle : distance = UA × ${SQRT_K}, et chaque corps a son rayon physique. Un corps lointain peut être trop petit pour être vu, exactement comme dans l’espace ; les aides à la navigation sont des étiquettes, jamais un corps agrandi, et le zoom optique ne change que le champ de la caméra.`,
+        es: `<strong>Exploración</strong> es a escala real: distancia = UA × ${SQRT_K}, y cada cuerpo tiene su radio físico. Un cuerpo lejano puede ser demasiado pequeño para verse, exactamente como en el espacio; las ayudas a la navegación se dibujan como etiquetas, nunca agrandando un cuerpo, y el zoom óptico solo cambia el campo de visión de la cámara.`,
+        'pt-BR': `<strong>Exploração</strong> é em escala real: distância = UA × ${SQRT_K}, e cada corpo tem o seu raio físico. Um corpo distante pode ser pequeno demais para ser visto, exatamente como no espaço; os auxílios à navegação são desenhados como rótulos, nunca aumentando um corpo, e o zoom óptico só muda o campo de visão da câmera.`,
       })}</li><li>${L({
         en: `<strong>Educational</strong> is not to scale: distances are compressed to √AU × ${SQRT_K} along the true direction, and bodies are drawn at enlarged teaching sizes so that all of them stay visible. Around ${listNames(spreadParents)}, the moons’ distances are then multiplied by one common factor per planet, the smallest that keeps every moon outside its enlarged planet, so their order of distance is preserved. Eccentric orbits keep their shape.`,
         fr: `<strong>Éducatif</strong> n’est pas à l’échelle : les distances sont compressées en √UA × ${SQRT_K} dans la vraie direction, et les corps sont dessinés à des tailles pédagogiques agrandies pour rester tous visibles. Autour de ${listNames(spreadParents)}, les distances des lunes sont ensuite multipliées par un facteur commun à chaque planète, le plus petit qui garde chaque lune hors de sa planète agrandie : leur ordre de distance est conservé. Les orbites excentriques gardent leur forme.`,
+        es: `<strong>Educativa</strong> no está a escala: las distancias se comprimen a √UA × ${SQRT_K} a lo largo de la dirección verdadera, y los cuerpos se dibujan en tamaños didácticos ampliados para que todos sigan visibles. Alrededor de ${listNames(spreadParents)}, las distancias de las lunas se multiplican además por un factor común por planeta, el más pequeño que mantiene cada luna fuera de su planeta ampliado, de modo que se conserva su orden de distancia. Las órbitas excéntricas conservan su forma.`,
+        'pt-BR': `<strong>Educativa</strong> não está em escala: as distâncias são comprimidas para √UA × ${SQRT_K} ao longo da direção verdadeira, e os corpos são desenhados em tamanhos didáticos ampliados para que todos permaneçam visíveis. Em torno de ${listNames(spreadParents)}, as distâncias das luas são ainda multiplicadas por um fator comum por planeta, o menor que mantém cada lua fora do seu planeta ampliado, de modo que a sua ordem de distância é preservada. As órbitas excêntricas conservam a sua forma.`,
       })}</li></ul>`
     )
   );
@@ -513,24 +644,50 @@ function methodologyPage(input: MethodologyInput, locale: DocLocale): DocPage {
   const method = `<p>${L({
     en: `Every source is compared with the NASA/JPL Horizons API (geometric state vectors, J2000 ecliptic, time in UT) at ${summary.samplesPerCase} dates per row, spread over the window with a reproducible pseudo-random time of day. The error is the distance between Galaxy’s position and Horizons’ position, in kilometres and in radii of the body. Horizons is the reference here, not absolute truth: its own uncertainty is not included. Measured on ${escapeHtml(summary.generatedAt.slice(0, 10))} by <code>scripts/validate-against-horizons.mjs</code>, whose Horizons answers are cached so that the measurement can be replayed.`,
     fr: `Chaque source est comparée à l’API NASA/JPL Horizons (vecteurs d’état géométriques, écliptique J2000, temps UT) à ${summary.samplesPerCase} dates par ligne, réparties sur la fenêtre avec une heure pseudo-aléatoire reproductible. L’erreur est la distance entre la position de Galaxy et celle d’Horizons, en kilomètres et en rayons du corps. Horizons est ici la référence, pas la vérité absolue : sa propre incertitude n’est pas incluse. Mesuré le ${escapeHtml(summary.generatedAt.slice(0, 10))} par <code>scripts/validate-against-horizons.mjs</code>, dont les réponses Horizons sont mises en cache pour que la mesure puisse être rejouée.`,
+    es: `Cada fuente se compara con la API NASA/JPL Horizons (vectores de estado geométricos, eclíptica J2000, tiempo en UT) en ${summary.samplesPerCase} fechas por fila, repartidas en la ventana con una hora del día pseudoaleatoria reproducible. El error es la distancia entre la posición de Galaxy y la de Horizons, en kilómetros y en radios del cuerpo. Horizons es aquí la referencia, no la verdad absoluta: su propia incertidumbre no está incluida. Medido el ${escapeHtml(summary.generatedAt.slice(0, 10))} por <code>scripts/validate-against-horizons.mjs</code>, cuyas respuestas de Horizons se guardan en caché para poder repetir la medición.`,
+    'pt-BR': `Cada fonte é comparada com a API NASA/JPL Horizons (vetores de estado geométricos, eclíptica J2000, tempo em UT) em ${summary.samplesPerCase} datas por linha, distribuídas na janela com uma hora do dia pseudoaleatória reproduzível. O erro é a distância entre a posição da Galaxy e a da Horizons, em quilômetros e em raios do corpo. A Horizons é aqui a referência, não a verdade absoluta: a sua própria incerteza não está incluída. Medido em ${escapeHtml(summary.generatedAt.slice(0, 10))} por <code>scripts/validate-against-horizons.mjs</code>, cujas respostas da Horizons ficam em cache para que a medição possa ser repetida.`,
   })}</p>`;
   const kmHeaders = [
-    L({ en: 'Mean (km)', fr: 'Moyenne (km)' }),
-    L({ en: '95th pct (km)', fr: '95ᵉ centile (km)' }),
-    L({ en: 'Max (km)', fr: 'Max (km)' }),
+    L({
+      en: 'Mean (km)',
+      fr: 'Moyenne (km)',
+      es: 'Media (km)',
+      'pt-BR': 'Média (km)',
+    }),
+    L({
+      en: '95th pct (km)',
+      fr: '95ᵉ centile (km)',
+      es: 'Percentil 95 (km)',
+      'pt-BR': 'Percentil 95 (km)',
+    }),
+    L({
+      en: 'Max (km)',
+      fr: 'Max (km)',
+      es: 'Máx. (km)',
+      'pt-BR': 'Máx. (km)',
+    }),
   ];
   const radiiHeader = L({
     en: 'Mean (body radii)',
     fr: 'Moyenne (rayons du corps)',
+    es: 'Media (radios del cuerpo)',
+    'pt-BR': 'Média (raios do corpo)',
   });
   const productionTable = docTable(
     L({
       en: `What the app shows, ${year(production[0]!.windowFrom)}–${year(production[0]!.windowTo)}: heliocentric position as the scene composes it (a moon includes its planet’s error)`,
       fr: `Ce que montre l’application, ${year(production[0]!.windowFrom)}–${year(production[0]!.windowTo)} : position héliocentrique telle que la scène la compose (une lune inclut l’erreur de sa planète)`,
+      es: `Lo que muestra la aplicación, ${year(production[0]!.windowFrom)}–${year(production[0]!.windowTo)}: posición heliocéntrica tal como la compone la escena (una luna incluye el error de su planeta)`,
+      'pt-BR': `O que o aplicativo mostra, ${year(production[0]!.windowFrom)}–${year(production[0]!.windowTo)}: posição heliocêntrica tal como a cena a compõe (uma lua inclui o erro do seu planeta)`,
     }),
     [
-      L({ en: 'Body', fr: 'Corps' }),
-      L({ en: 'Source used', fr: 'Source retenue' }),
+      L({ en: 'Body', fr: 'Corps', es: 'Cuerpo', 'pt-BR': 'Corpo' }),
+      L({
+        en: 'Source used',
+        fr: 'Source retenue',
+        es: 'Fuente utilizada',
+        'pt-BR': 'Fonte utilizada',
+      }),
       ...kmHeaders,
       radiiHeader,
     ],
@@ -565,15 +722,20 @@ function methodologyPage(input: MethodologyInput, locale: DocLocale): DocPage {
         ? {
             en: 'Keplerian bodies close to their elements’ epoch; interstellar objects over their drawn window',
             fr: 'Corps képlériens près de l’époque de leurs éléments ; objets interstellaires sur leur fenêtre dessinée',
+            es: 'Cuerpos keplerianos cerca de la época de sus elementos; objetos interestelares en su ventana dibujada',
+            'pt-BR':
+              'Corpos keplerianos perto da época dos seus elementos; objetos interestelares na sua janela desenhada',
           }
         : {
             en: 'Interstellar objects over their drawn window',
             fr: 'Objets interstellaires sur leur fenêtre dessinée',
+            es: 'Objetos interestelares en su ventana dibujada',
+            'pt-BR': 'Objetos interestelares na sua janela desenhada',
           }
     ),
     [
-      L({ en: 'Body', fr: 'Corps' }),
-      L({ en: 'Window', fr: 'Fenêtre' }),
+      L({ en: 'Body', fr: 'Corps', es: 'Cuerpo', 'pt-BR': 'Corpo' }),
+      L({ en: 'Window', fr: 'Fenêtre', es: 'Ventana', 'pt-BR': 'Janela' }),
       ...kmHeaders,
     ],
     nearEpoch.map((r) => [
@@ -594,13 +756,35 @@ function methodologyPage(input: MethodologyInput, locale: DocLocale): DocPage {
     L({
       en: 'Spacecraft, over each mission’s file coverage',
       fr: 'Sondes, sur la couverture du fichier de chaque mission',
+      es: 'Sondas, en la cobertura del archivo de cada misión',
+      'pt-BR': 'Sondas, na cobertura do arquivo de cada missão',
     }),
     [
-      L({ en: 'Mission', fr: 'Mission' }),
-      L({ en: 'Coverage', fr: 'Couverture' }),
-      L({ en: 'Median (km)', fr: 'Médiane (km)' }),
-      L({ en: '95th pct (km)', fr: '95ᵉ centile (km)' }),
-      L({ en: 'Max (km)', fr: 'Max (km)' }),
+      L({ en: 'Mission', fr: 'Mission', es: 'Misión', 'pt-BR': 'Missão' }),
+      L({
+        en: 'Coverage',
+        fr: 'Couverture',
+        es: 'Cobertura',
+        'pt-BR': 'Cobertura',
+      }),
+      L({
+        en: 'Median (km)',
+        fr: 'Médiane (km)',
+        es: 'Mediana (km)',
+        'pt-BR': 'Mediana (km)',
+      }),
+      L({
+        en: '95th pct (km)',
+        fr: '95ᵉ centile (km)',
+        es: 'Percentil 95 (km)',
+        'pt-BR': 'Percentil 95 (km)',
+      }),
+      L({
+        en: 'Max (km)',
+        fr: 'Max (km)',
+        es: 'Máx. (km)',
+        'pt-BR': 'Máx. (km)',
+      }),
     ],
     spacecraftRows.map((r) => [
       escapeHtml(name(r.body, locale)),
@@ -627,21 +811,51 @@ function methodologyPage(input: MethodologyInput, locale: DocLocale): DocPage {
       const table = docTable(
         L(PROVIDER_TITLES[provider]),
         [
-          L({ en: 'Body', fr: 'Corps' }),
-          L({ en: 'Frame', fr: 'Repère' }),
-          L({ en: 'Window', fr: 'Fenêtre' }),
-          L({ en: 'Dates', fr: 'Dates' }),
-          L({ en: 'Mean (km)', fr: 'Moyenne (km)' }),
-          L({ en: 'Median (km)', fr: 'Médiane (km)' }),
-          L({ en: '95th pct (km)', fr: '95ᵉ centile (km)' }),
-          L({ en: 'Max (km)', fr: 'Max (km)' }),
+          L({ en: 'Body', fr: 'Corps', es: 'Cuerpo', 'pt-BR': 'Corpo' }),
+          L({ en: 'Frame', fr: 'Repère', es: 'Marco', 'pt-BR': 'Referencial' }),
+          L({ en: 'Window', fr: 'Fenêtre', es: 'Ventana', 'pt-BR': 'Janela' }),
+          L({ en: 'Dates', fr: 'Dates', es: 'Fechas', 'pt-BR': 'Datas' }),
+          L({
+            en: 'Mean (km)',
+            fr: 'Moyenne (km)',
+            es: 'Media (km)',
+            'pt-BR': 'Média (km)',
+          }),
+          L({
+            en: 'Median (km)',
+            fr: 'Médiane (km)',
+            es: 'Mediana (km)',
+            'pt-BR': 'Mediana (km)',
+          }),
+          L({
+            en: '95th pct (km)',
+            fr: '95ᵉ centile (km)',
+            es: 'Percentil 95 (km)',
+            'pt-BR': 'Percentil 95 (km)',
+          }),
+          L({
+            en: 'Max (km)',
+            fr: 'Max (km)',
+            es: 'Máx. (km)',
+            'pt-BR': 'Máx. (km)',
+          }),
           radiiHeader,
         ],
         providerRows.map((r) => [
           escapeHtml(name(r.body, locale)),
           r.relative
-            ? L({ en: 'relative to planet', fr: 'relatif à la planète' })
-            : L({ en: 'heliocentric', fr: 'héliocentrique' }),
+            ? L({
+                en: 'relative to planet',
+                fr: 'relatif à la planète',
+                es: 'relativa al planeta',
+                'pt-BR': 'relativa ao planeta',
+              })
+            : L({
+                en: 'heliocentric',
+                fr: 'héliocentrique',
+                es: 'heliocéntrica',
+                'pt-BR': 'heliocêntrica',
+              }),
           windowLabel(r),
           String(r.n),
           num(r.km?.mean),
@@ -659,7 +873,12 @@ function methodologyPage(input: MethodologyInput, locale: DocLocale): DocPage {
   sections.push(
     docSection(
       'validation',
-      L({ en: 'Measured accuracy', fr: 'Précision mesurée' }),
+      L({
+        en: 'Measured accuracy',
+        fr: 'Précision mesurée',
+        es: 'Exactitud medida',
+        'pt-BR': 'Exatidão medida',
+      }),
       method +
         productionTable +
         `<p>${L(
@@ -667,22 +886,33 @@ function methodologyPage(input: MethodologyInput, locale: DocLocale): DocPage {
             ? {
                 en: 'Keplerian elements describe an orbit without the pull of the planets, so their error grows with the distance in time from their epoch. Over two centuries it is large; near the epoch it is much smaller:',
                 fr: 'Des éléments képlériens décrivent une orbite sans l’attraction des planètes : leur erreur croît avec l’écart en temps à leur époque. Sur deux siècles elle est grande ; près de l’époque elle est bien plus petite :',
+                es: 'Los elementos keplerianos describen una órbita sin la atracción de los planetas, así que su error crece con la distancia en el tiempo a su época. En dos siglos es grande; cerca de la época es mucho menor:',
+                'pt-BR':
+                  'Os elementos keplerianos descrevem uma órbita sem a atração dos planetas, então o seu erro cresce com a distância no tempo até a sua época. Em dois séculos ele é grande; perto da época é muito menor:',
               }
             : {
                 en: `Keplerian elements describe an orbit without the pull of the planets, so their error grows with the distance in time from their epoch. No body in the production table (${productionSpan}) is positioned by them alone. They remain the fallback outside the coverage of the Horizons files (full measurements below), and the only source for the interstellar objects, measured over their drawn window:`,
                 fr: `Des éléments képlériens décrivent une orbite sans l’attraction des planètes : leur erreur croît avec l’écart en temps à leur époque. Aucun corps du tableau de production (${productionSpan}) n’est positionné par eux seuls. Ils restent le repli hors de la couverture des fichiers Horizons (mesures complètes ci-dessous), et la seule source des objets interstellaires, mesurés sur leur fenêtre dessinée :`,
+                es: `Los elementos keplerianos describen una órbita sin la atracción de los planetas, así que su error crece con la distancia en el tiempo a su época. Ningún cuerpo de la tabla de producción (${productionSpan}) se sitúa solo con ellos. Siguen siendo el respaldo fuera de la cobertura de los archivos Horizons (mediciones completas más abajo), y la única fuente para los objetos interestelares, medida en su ventana dibujada:`,
+                'pt-BR': `Os elementos keplerianos descrevem uma órbita sem a atração dos planetas, então o seu erro cresce com a distância no tempo até a sua época. Nenhum corpo da tabela de produção (${productionSpan}) é posicionado só por eles. Eles continuam a ser a reserva fora da cobertura dos arquivos Horizons (medições completas abaixo), e a única fonte para os objetos interestelares, medida na sua janela desenhada:`,
               }
         )}</p>` +
         epochTable +
         `<p>${L({
           en: 'For spacecraft the median is the meaningful figure: errors peak briefly around close flybys and perihelia, where the trajectory bends faster than the file’s step can resolve.',
           fr: 'Pour les sondes, la médiane est le chiffre parlant : l’erreur culmine brièvement autour des survols rapprochés et des périhélies, où la trajectoire se courbe plus vite que le pas du fichier ne peut le résoudre.',
+          es: 'Para las sondas la cifra significativa es la mediana: los errores culminan brevemente alrededor de los sobrevuelos cercanos y de los perihelios, donde la trayectoria se curva más rápido de lo que el paso del archivo puede resolver.',
+          'pt-BR':
+            'Para as sondas o número significativo é a mediana: os erros atingem um pico breve em torno dos sobrevoos próximos e dos periélios, onde a trajetória se curva mais rápido do que o passo do arquivo consegue resolver.',
         })}</p>` +
         spacecraftTable +
-        `<h3>${L({ en: 'Full measurements, by source', fr: 'Mesures complètes, par source' })}</h3><p>${L(
+        `<h3>${L({ en: 'Full measurements, by source', fr: 'Mesures complètes, par source', es: 'Mediciones completas, por fuente', 'pt-BR': 'Medições completas, por fonte' })}</h3><p>${L(
           {
             en: 'Each source measured on its own, over its own windows, including those the app only uses as a fallback. “Dates” is the number of dates at which the source gave a position.',
             fr: 'Chaque source mesurée seule, sur ses propres fenêtres, y compris celles que l’application n’emploie qu’en repli. « Dates » est le nombre de dates auxquelles la source a donné une position.',
+            es: 'Cada fuente medida por separado, en sus propias ventanas, incluidas aquellas que la aplicación solo usa como respaldo. «Fechas» es el número de fechas en las que la fuente dio una posición.',
+            'pt-BR':
+              'Cada fonte medida separadamente, nas suas próprias janelas, incluindo aquelas que o aplicativo só usa como reserva. “Datas” é o número de datas em que a fonte deu uma posição.',
           }
         )}</p>` +
         detailTables
@@ -693,97 +923,148 @@ function methodologyPage(input: MethodologyInput, locale: DocLocale): DocPage {
   // Les LIBELLÉS viennent du dictionnaire de l'application : la page et la fiche ne peuvent pas
   // diverger. Le type impose une explication par catégorie — en ajouter une sans l'expliquer ici
   // ne compile pas.
-  const CATEGORY_NOTES: Record<TemporalCategory, Bilingual> = {
+  const CATEGORY_NOTES: Record<TemporalCategory, DocText> = {
     live: {
       en: 'the scene is at the present moment, within five minutes, and the data describes it.',
       fr: 'la scène est au présent, à cinq minutes près, et la donnée décrit ce présent.',
+      es: 'la escena está en el momento presente, con menos de cinco minutos de diferencia, y el dato lo describe.',
+      'pt-BR':
+        'a cena está no momento presente, com menos de cinco minutos de diferença, e o dado a descreve.',
     },
     observed: {
       en: 'a measurement of a past instant, such as a satellite image of that day.',
       fr: 'une mesure d’un instant passé, par exemple l’image satellite de ce jour.',
+      es: 'una medición de un instante pasado, como una imagen de satélite de ese día.',
+      'pt-BR':
+        'uma medição de um instante passado, como uma imagem de satélite daquele dia.',
     },
     reported: {
       en: 'an event a third party reported and another party gathered, such as a wildfire or a storm listed by NASA EONET. It is neither a measurement nor a model, and EONET itself asks that its extents not be taken as official. An event with no declared end is shown as ongoing rather than given an invented end date.',
       fr: 'un événement rapporté par un tiers et agrégé par un autre, par exemple un incendie ou une tempête listés par NASA EONET. Ce n’est ni une mesure ni un modèle, et EONET demande lui-même que ses emprises ne soient pas tenues pour officielles. Un événement sans fin déclarée est affiché « en cours » plutôt que doté d’une date de fin inventée.',
+      es: 'un evento que un tercero comunicó y que otro recopiló, como un incendio o una tormenta listados por NASA EONET. No es ni una medición ni un modelo, y EONET misma pide que sus extensiones no se tomen como oficiales. Un evento sin fin declarado se muestra como en curso en lugar de recibir una fecha de fin inventada.',
+      'pt-BR':
+        'um evento que um terceiro relatou e que outro reuniu, como um incêndio ou uma tempestade listados pela NASA EONET. Não é nem uma medição nem um modelo, e a própria EONET pede que as suas extensões não sejam tomadas como oficiais. Um evento sem fim declarado é mostrado como em andamento em vez de receber uma data de fim inventada.',
     },
     reconstructed: {
       en: 'a model of a past or present instant, such as a reanalysis (ERA5, MERRA-2) or a position computed for a date already behind us.',
       fr: 'un modèle sur un instant passé ou présent, par exemple une réanalyse (ERA5, MERRA-2) ou une position calculée pour une date déjà derrière nous.',
+      es: 'un modelo de un instante pasado o presente, como un reanálisis (ERA5, MERRA-2) o una posición calculada para una fecha ya pasada.',
+      'pt-BR':
+        'um modelo de um instante passado ou presente, como uma reanálise (ERA5, MERRA-2) ou uma posição calculada para uma data já passada.',
     },
     predicted: {
       en: 'a model of a future instant, inside the window where its source has been measured. A weather forecast beyond a week is marked as having low confidence.',
       fr: 'un modèle sur un instant futur, dans la fenêtre où sa source a été mesurée. Une prévision météo au-delà d’une semaine est signalée en confiance réduite.',
+      es: 'un modelo de un instante futuro, dentro de la ventana en la que su fuente ha sido medida. Una previsión meteorológica de más de una semana se marca como de baja confianza.',
+      'pt-BR':
+        'um modelo de um instante futuro, dentro da janela na qual a sua fonte foi medida. Uma previsão do tempo além de uma semana é marcada como de baixa confiança.',
     },
     extrapolated: {
       en: 'a calculation outside every window where its gap to the reference was measured. It still draws something, and says that nothing establishes it.',
       fr: 'un calcul hors de toute fenêtre où son écart à la référence a été mesuré. Il dessine quand même quelque chose, et le dit.',
+      es: 'un cálculo fuera de toda ventana en la que se midió su diferencia con la referencia. Sigue dibujando algo, y dice que nada lo establece.',
+      'pt-BR':
+        'um cálculo fora de toda janela na qual a sua diferença com a referência foi medida. Ele continua a desenhar algo, e diz que nada o estabelece.',
     },
     unavailable: {
       en: 'no data for that instant, so nothing is drawn rather than something borrowed from another date.',
       fr: 'aucune donnée pour cet instant : rien n’est dessiné, plutôt qu’une donnée empruntée à une autre date.',
+      es: 'ningún dato para ese instante, así que no se dibuja nada en lugar de algo tomado de otra fecha.',
+      'pt-BR':
+        'nenhum dado para aquele instante, então nada é desenhado em vez de algo tomado de outra data.',
     },
   };
   sections.push(
     docSection(
       'temporal',
-      L({ en: 'What a date says', fr: 'Ce que dit une date' }),
+      L({
+        en: 'What a date says',
+        fr: 'Ce que dit une date',
+        es: 'Lo que dice una fecha',
+        'pt-BR': 'O que uma data diz',
+      }),
       `<p>${L({
         en: 'The scene shows one instant, but each piece of data describes an instant of its own, and they rarely coincide. Satellite imagery does not exist for a scene set in 2030, so the latest real image is shown and the gap to the scene is written next to it. Every dated element therefore carries its own label, and there is no single control saying the whole scene is accurate: the label says what the data is, the measured gap says how far it is.',
         fr: 'La scène montre un instant, mais chaque donnée décrit le sien, et les deux coïncident rarement. L’imagerie satellite n’existe pas pour une scène en 2030 : la dernière image réelle est affichée, et l’écart à la scène est écrit à côté. Chaque élément daté porte donc son étiquette, et aucun réglage unique ne prétend que toute la scène est exacte : l’étiquette dit ce qu’est la donnée, l’écart mesuré dit de combien elle s’en écarte.',
+        es: 'La escena muestra un instante, pero cada dato describe el suyo, y ambos rara vez coinciden. La imagen de satélite no existe para una escena situada en 2030: se muestra la última imagen real y la diferencia con la escena se escribe al lado. Cada elemento fechado lleva por tanto su propia etiqueta, y ningún ajuste único pretende que toda la escena sea exacta: la etiqueta dice qué es el dato, la diferencia medida dice cuánto se aparta.',
+        'pt-BR':
+          'A cena mostra um instante, mas cada dado descreve o seu, e os dois raramente coincidem. A imagem de satélite não existe para uma cena situada em 2030: a última imagem real é mostrada e a diferença com a cena é escrita ao lado. Cada elemento datado carrega então o seu próprio rótulo, e nenhum ajuste único pretende que toda a cena seja exata: o rótulo diz o que o dado é, a diferença medida diz o quanto ele se afasta.',
       })}</p><ul class="doc-list">${TEMPORAL_CATEGORIES.map(
         (category) =>
           `<li><strong>${escapeHtml(
             messages[locale][temporalCategoryLabelKey(category)] ?? category
-          )}</strong>${L({ en: ':', fr: ' :' })} ${L(CATEGORY_NOTES[category])}</li>`
+          )}</strong>${L({ en: ':', fr: ' :', es: ':', 'pt-BR': ':' })} ${L(CATEGORY_NOTES[category])}</li>`
       ).join('')}</ul>`
     )
   );
 
   // 9. Limites connues
   const earth = productionOf('earth');
-  const limits: Bilingual[] = [
+  const limits: DocText[] = [
     {
       en: `The Earth is drawn at the Earth-Moon barycentre, not at its own centre, to avoid a monthly wobble that would show as a zigzag at true scale and high speed; the Moon is placed correctly relative to that point. This offset is what the Earth row of the accuracy table measures${earth ? ` (${num(earth.km?.mean)} km on average)` : ''}.`,
       fr: `La Terre est dessinée au barycentre Terre-Lune, pas en son propre centre, pour éviter un ballant mensuel qui se verrait comme un zigzag à vraie échelle et à grande vitesse ; la Lune est placée correctement par rapport à ce point. Ce décalage est ce que mesure la ligne Terre du tableau de précision${earth ? ` (${num(earth.km?.mean)} km en moyenne)` : ''}.`,
+      es: `La Tierra se dibuja en el baricentro Tierra-Luna, no en su propio centro, para evitar un bamboleo mensual que aparecería como un zigzag a escala real y a gran velocidad; la Luna se sitúa correctamente respecto a ese punto. Este desplazamiento es lo que mide la fila de la Tierra en la tabla de exactitud${earth ? ` (${num(earth.km?.mean)} km de media)` : ''}.`,
+      'pt-BR': `A Terra é desenhada no baricentro Terra-Lua, não no seu próprio centro, para evitar uma oscilação mensal que apareceria como um ziguezague em escala real e em alta velocidade; a Lua é posicionada corretamente em relação a esse ponto. Esse deslocamento é o que a linha da Terra na tabela de exatidão mede${earth ? ` (${num(earth.km?.mean)} km em média)` : ''}.`,
     },
     hasKeplerOnly
       ? {
           en: `Bodies positioned by Keplerian elements alone (${listNames(keplerOnly.map((r) => r.body))}) drift away from their true position far from their epoch, because the two-body model ignores planetary perturbations. The tables above give the size of that drift.`,
           fr: `Les corps positionnés par leurs seuls éléments képlériens (${listNames(keplerOnly.map((r) => r.body))}) s’écartent de leur vraie position loin de leur époque, parce que le modèle à deux corps ignore les perturbations des planètes. Les tableaux ci-dessus donnent l’ampleur de cette dérive.`,
+          es: `Los cuerpos situados solo por elementos keplerianos (${listNames(keplerOnly.map((r) => r.body))}) se apartan de su posición verdadera lejos de su época, porque el modelo de dos cuerpos ignora las perturbaciones planetarias. Las tablas anteriores dan la magnitud de esa desviación.`,
+          'pt-BR': `Os corpos posicionados só por elementos keplerianos (${listNames(keplerOnly.map((r) => r.body))}) se afastam da sua posição verdadeira longe da sua época, porque o modelo de dois corpos ignora as perturbações planetárias. As tabelas acima dão a magnitude desse desvio.`,
         }
       : {
           en: `Keplerian elements drift away from the true position far from their epoch, because the two-body model ignores planetary perturbations. No body in the production table (${productionSpan}) depends on them alone; outside the coverage of the Horizons files they are the fallback described in the next point, and the full measurements give the size of that drift.`,
           fr: `Des éléments képlériens s’écartent de la vraie position loin de leur époque, parce que le modèle à deux corps ignore les perturbations des planètes. Aucun corps du tableau de production (${productionSpan}) n’en dépend seul ; hors de la couverture des fichiers Horizons, ils sont le repli décrit au point suivant, et les mesures complètes donnent l’ampleur de cette dérive.`,
+          es: `Los elementos keplerianos se apartan de la posición verdadera lejos de su época, porque el modelo de dos cuerpos ignora las perturbaciones planetarias. Ningún cuerpo de la tabla de producción (${productionSpan}) depende solo de ellos; fuera de la cobertura de los archivos Horizons son el respaldo descrito en el punto siguiente, y las mediciones completas dan la magnitud de esa desviación.`,
+          'pt-BR': `Os elementos keplerianos se afastam da posição verdadeira longe da sua época, porque o modelo de dois corpos ignora as perturbações planetárias. Nenhum corpo da tabela de produção (${productionSpan}) depende só deles; fora da cobertura dos arquivos Horizons eles são a reserva descrita no ponto seguinte, e as medições completas dão a magnitude desse desvio.`,
         },
     {
       en: `Outside ${escapeHtml(manifest.coverage.start)} to ${escapeHtml(manifest.coverage.stop)}, the Horizons files do not apply: planets fall back to astronomy-engine, other bodies to their Keplerian elements. The production table covers ${year(production[0]!.windowFrom)}–${year(production[0]!.windowTo)} only; the full measurements show the sources over wider windows.`,
       fr: `Hors de la période du ${escapeHtml(manifest.coverage.start)} au ${escapeHtml(manifest.coverage.stop)}, les fichiers Horizons ne s’appliquent pas : les planètes retombent sur astronomy-engine, les autres corps sur leurs éléments képlériens. Le tableau de production ne couvre que ${year(production[0]!.windowFrom)}–${year(production[0]!.windowTo)} ; les mesures complètes montrent les sources sur des fenêtres plus larges.`,
+      es: `Fuera de ${escapeHtml(manifest.coverage.start)} a ${escapeHtml(manifest.coverage.stop)}, los archivos Horizons no se aplican: los planetas recurren a astronomy-engine, los demás cuerpos a sus elementos keplerianos. La tabla de producción solo cubre ${year(production[0]!.windowFrom)}–${year(production[0]!.windowTo)}; las mediciones completas muestran las fuentes en ventanas más amplias.`,
+      'pt-BR': `Fora de ${escapeHtml(manifest.coverage.start)} a ${escapeHtml(manifest.coverage.stop)}, os arquivos Horizons não se aplicam: os planetas recorrem à astronomy-engine, os outros corpos aos seus elementos keplerianos. A tabela de produção cobre somente ${year(production[0]!.windowFrom)}–${year(production[0]!.windowTo)}; as medições completas mostram as fontes em janelas mais amplas.`,
     },
     {
       en: 'The asteroids and comets of the optional small-body layer, several thousand of them, come from a dated snapshot of the JPL Small-Body Database shipped with the build, and are propagated from its elements. They are not part of this measurement.',
       fr: 'Les astéroïdes et comètes de la couche optionnelle des petits corps, plusieurs milliers, viennent d’un instantané daté de la JPL Small-Body Database livré avec le build, et sont propagés depuis ses éléments. Ils ne font pas partie de cette mesure.',
+      es: 'Los asteroides y cometas de la capa opcional de cuerpos menores, varios miles, vienen de una muestra fechada de la JPL Small-Body Database entregada con la compilación, y se propagan a partir de sus elementos. No forman parte de esta medición.',
+      'pt-BR':
+        'Os asteroides e cometas da camada opcional de corpos menores, vários milhares, vêm de uma amostra datada da JPL Small-Body Database entregue com a compilação, e são propagados a partir dos seus elementos. Eles não fazem parte desta medição.',
     },
     ...(drifts.length > 0
       ? [
           {
             en: `Some synchronous moons do not spin exactly at their orbital period in the catalogue, so the face they turn towards their planet slowly drifts: ${drifts.map((d) => `${escapeHtml(name(d.body, 'en'))} ${formatQuantity(d.degreesPerYear, 'en')}° per year`).join(', ')}. The other synchronous moons are locked exactly.`,
             fr: `Certaines lunes synchrones ne tournent pas exactement à leur période orbitale dans le catalogue : la face qu’elles tournent vers leur planète dérive lentement, ${drifts.map((d) => `${escapeHtml(name(d.body, 'fr'))} ${formatQuantity(d.degreesPerYear, 'fr')}° par an`).join(', ')}. Les autres lunes synchrones sont verrouillées exactement.`,
+            es: `Algunas lunas sincrónicas no giran exactamente a su periodo orbital en el catálogo, así que la cara que vuelven hacia su planeta se desplaza lentamente: ${drifts.map((d) => `${escapeHtml(name(d.body, 'es'))} ${formatQuantity(d.degreesPerYear, 'es')}° por año`).join(', ')}. Las demás lunas sincrónicas están bloqueadas exactamente.`,
+            'pt-BR': `Algumas luas sincronizadas não giram exatamente no seu período orbital no catálogo, então a face que elas voltam para o seu planeta se desloca lentamente: ${drifts.map((d) => `${escapeHtml(name(d.body, 'pt-BR'))} ${formatQuantity(d.degreesPerYear, 'pt-BR')}° por ano`).join(', ')}. As outras luas sincronizadas estão travadas exatamente.`,
           },
         ]
       : []),
     {
       en: `A body ships the texture sizes its source actually supports, never more: we do not enlarge a published map, and a size is only shipped when it carries detail the size below does not. So a body served at 2k is not a body we neglected, it is a body whose published map stops there. ${TEXTURE_LADDER_ROWS} texture sets are measured this way at every build.`,
       fr: `Un corps livre les tailles de texture que sa source porte réellement, jamais plus : on n’agrandit pas une carte publiée, et une taille n’est livrée que si elle porte du détail que la taille du dessous ne porte pas. Un corps servi en 2k n’est donc pas un corps négligé, c’est un corps dont la carte publiée s’arrête là. ${TEXTURE_LADDER_ROWS} jeux de textures sont mesurés ainsi à chaque build.`,
+      es: `Un cuerpo entrega los tamaños de textura que su fuente admite realmente, nunca más: no ampliamos un mapa publicado, y un tamaño solo se entrega cuando aporta detalle que el tamaño inferior no tiene. Así que un cuerpo servido en 2k no es un cuerpo descuidado, es un cuerpo cuyo mapa publicado se detiene ahí. ${TEXTURE_LADDER_ROWS} conjuntos de texturas se miden así en cada compilación.`,
+      'pt-BR': `Um corpo entrega os tamanhos de textura que a sua fonte realmente admite, nunca mais: não ampliamos um mapa publicado, e um tamanho só é entregue quando ele traz detalhe que o tamanho inferior não tem. Então um corpo servido em 2k não é um corpo negligenciado, é um corpo cujo mapa publicado para ali. ${TEXTURE_LADDER_ROWS} conjuntos de texturas são medidos assim em cada compilação.`,
     },
     {
       en: `${ILLUSTRATIVE_SURFACES.size} bodies have never been mapped globally: their surfaces are illustrative, not scientific. The <a href="${docPath('sources', locale)}">sources page</a> lists them.`,
       fr: `${ILLUSTRATIVE_SURFACES.size} corps n’ont jamais été cartographiés globalement : leur surface est illustrative, pas scientifique. La <a href="${docPath('sources', locale)}">page des sources</a> les énumère.`,
+      es: `${ILLUSTRATIVE_SURFACES.size} cuerpos nunca han sido cartografiados por completo: sus superficies son ilustrativas, no científicas. La <a href="${docPath('sources', locale)}">página de fuentes</a> los enumera.`,
+      'pt-BR': `${ILLUSTRATIVE_SURFACES.size} corpos nunca foram mapeados por completo: as suas superfícies são ilustrativas, não científicas. A <a href="${docPath('sources', locale)}">página de fontes</a> os lista.`,
     },
   ];
   sections.push(
     docSection(
       'limits',
-      L({ en: 'Known limits', fr: 'Limites connues' }),
+      L({
+        en: 'Known limits',
+        fr: 'Limites connues',
+        es: 'Límites conocidos',
+        'pt-BR': 'Limites conhecidos',
+      }),
       `<ul class="doc-list">${limits.map((l) => `<li>${L(l)}</li>`).join('')}</ul>`
     )
   );

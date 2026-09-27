@@ -21,8 +21,16 @@
 /** Segment des pages d'éclipse — le même que `core/eclipsePages.ts::ECLIPSE_PATH_SEGMENT`. */
 const ECLIPSE_SEGMENT = 'eclipse';
 
-/** Préfixe des pages documentaires françaises (`/fr/methodology/`), cf. `documentPage.ts`. */
-const FRENCH_SEGMENT = 'fr';
+/**
+ * Préfixes des pages documentaires NON anglaises (`/fr/methodology/`, `/es/…`, `/pt-br/…`).
+ *
+ * Écrits ici en dur, et c'est délibéré : ce module est chargé par `vite.config.ts` AVANT que
+ * l'alias `@/` existe, donc il ne peut pas lire `i18n/locales`. `pwaRouting.test.ts` confronte
+ * cette liste aux pages que le build produit VRAIMENT, et rougit si une langue y manque — c'est
+ * exactement le mode de panne que ce module documente en tête : rien ne casse, et seul un
+ * visiteur revenu reçoit l'app shell au lieu de la page demandée.
+ */
+const LOCALISED_SEGMENTS = ['fr', 'es', 'pt-br'];
 
 /**
  * Morceau du résumé de validation Horizons (`config/horizons-validation-summary.json`), chargé
@@ -37,7 +45,11 @@ const VALIDATION_SUMMARY_GLOB = 'assets/horizons-validation-summary-*.js';
 export const LANDING_PAGE_GLOB_IGNORES: string[] = [
   '*/index.html',
   `${ECLIPSE_SEGMENT}/*/index.html`,
-  `${FRENCH_SEGMENT}/*/index.html`,
+  ...LOCALISED_SEGMENTS.map((segment) => `${segment}/*/index.html`),
+  // Les éclipses traduites ont TROIS segments : `es/eclipse/2026-08-12/index.html`.
+  ...LOCALISED_SEGMENTS.map(
+    (segment) => `${segment}/${ECLIPSE_SEGMENT}/*/index.html`
+  ),
   VALIDATION_SUMMARY_GLOB,
 ];
 
@@ -49,7 +61,14 @@ export const NAVIGATE_FALLBACK_DENYLIST: RegExp[] = [
   /^\/[^/.]+\/?$/,
   new RegExp(`^\\/${ECLIPSE_SEGMENT}\\/[^/.]+\\/?$`),
   // Les pages documentaires anglaises (`/methodology/`) tombent déjà sous la règle à un segment.
-  new RegExp(`^\\/${FRENCH_SEGMENT}\\/[^/.]+\\/?$`),
+  ...LOCALISED_SEGMENTS.map(
+    (segment) => new RegExp(`^\\/${segment}\\/[^/.]+\\/?$`)
+  ),
+  // Les pages d'éclipse traduites ont TROIS segments (`/es/eclipse/2026-08-12/`) : c'est
+  // exactement le motif qui avait déjà été manqué une fois, décrit en tête de ce module.
+  ...LOCALISED_SEGMENTS.map(
+    (segment) => new RegExp(`^\\/${segment}\\/${ECLIPSE_SEGMENT}\\/[^/.]+\\/?$`)
+  ),
 ];
 
 export const ECLIPSE_SEGMENT_FOR_TESTS = ECLIPSE_SEGMENT;
