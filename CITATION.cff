@@ -14,8 +14,8 @@ authors:
 repository-code: 'https://github.com/Addey34/galaxy-3d'
 url: 'https://galaxy.adrianguichard.dev/'
 license: PolyForm-Noncommercial-1.0.0
-version: 0.9.0
-date-released: '2026-09-18'
+version: 0.10.0
+date-released: '2026-09-27'
 keywords:
   - solar system
   - ephemeris
