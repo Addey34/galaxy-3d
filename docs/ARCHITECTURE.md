@@ -2316,6 +2316,67 @@ overlay (`meteoModelLayer`) et le vent masque ses particules plutôt que de gard
 autre date. L'ancienne étiquette « moyenne climatique » a disparu avec cette correction : aucune
 climatologie n'était servie.
 
+## Citer Galaxy : un DOI, écrit à un seul endroit (lot 18)
+
+Depuis la version 0.10.0, Galaxy est archivé sur Zenodo et porte un identifiant pérenne. Ce qui
+suit décrit d'où vient ce DOI, pourquoi il n'est écrit qu'une fois, et ce qui empêche ses copies de
+diverger.
+
+**Deux DOI, et le choix entre eux n'est pas neutre.** Zenodo en frappe deux à chaque publication :
+un **DOI de version**, qui désigne l'état publié ce jour-là, et un **DOI de concept**, qui désigne
+l'œuvre et résout toujours vers la version la plus récente. C'est le DOI de concept qui est mis en
+avant partout, parce qu'une référence écrite aujourd'hui ne doit pas pourrir à la prochaine
+publication ; le DOI de version est déclaré à côté, pour qui veut désigner un état figé.
+
+| | |
+| --- | --- |
+| DOI de concept | `10.5281/zenodo.22985614` |
+| DOI de la version 0.10.0 | `10.5281/zenodo.22985615` |
+
+**Un seul propriétaire : `CITATION.cff`.** C'est déjà le fichier que GitHub et la plupart des
+gestionnaires de références lisent ; il n'y avait donc aucune raison d'inventer une seconde source.
+Le DOI y est écrit une fois, et tout le reste le LIT :
+
+- `src/seo/citation.ts` (module PUR, sans E/S) reçoit le TEXTE de `CITATION.cff`, en extrait la
+  citation et rend le bloc « Comment citer » ; il ne contient aucun DOI, aucune version, aucune
+  date ;
+- le plugin de build (`vite.config.ts`) lit le fichier une fois et passe le résultat aux deux
+  générateurs de pages, comme il lisait déjà `repository-code` ;
+- `/methodology` et `/sources`, dans les DEUX langues, affichent ce bloc. Le même module le rend
+  pour les quatre documents : deux copies d'un même texte divergent, et celle qu'on oublie est
+  celle que le lecteur a sous les yeux ;
+- le README est la SEULE copie du dépôt, parce que c'est du Markdown que rien ne construit. Elle
+  est donc confrontée à `CITATION.cff` par un test.
+
+**Le module REFUSE un fichier incomplet, bruyamment.** Une page « comment citer » sans DOI serait
+exactement le genre de texte publié faux que ce dépôt corrige depuis le lot 3 : `parseCitation`
+lève une erreur qui NOMME les champs manquants, et le build s'arrête. Elle refuse aussi une URL
+complète écrite à la place du DOI (le cas réel : un lecteur finit par cliquer sur
+`https://doi.org/https://doi.org/…`) et une date qui n'est pas ISO.
+
+| Garde | Ce qu'elle tient |
+| --- | --- |
+| `src/seo/citation.test.ts` | la lecture du VRAI `CITATION.cff` livré, l'ordre des auteurs, la référence d'une ligne, et six refus (un champ manquant, une URL au lieu d'un DOI, une date non ISO, aucun auteur lisible) |
+| `src/config/citationMetadata.test.ts` | que `package.json`, `CITATION.cff` et le titre de section du `CHANGELOG` disent la MÊME version et la même date ; qu'aucun DOI du README ne soit inconnu de `CITATION.cff` ; que le DOI de concept y domine celui de version ; et qu'un DOI ne soit jamais publié sous une forme non résolvable |
+| `src/seo/docPages.test.ts` | que les QUATRE documents affichent le DOI qu'on leur donne, sous forme résolvable, avec la section titrée dans leur langue |
+
+**Un piège payé en écrivant ces gardes, et c'est sa falsification qui l'a dit.** La première
+version de « le README cite le même DOI » comptait les occurrences : « au moins deux égales au DOI
+de concept ». Or le README en porte trois. En corrompre UNE en laissait deux, donc la garde restait
+VERTE pour un badge qui pointait ailleurs. La propriété juste ne compte rien : elle n'admet **aucun
+DOI inconnu** de `CITATION.cff`. Un second détail du même ordre : le badge de Zenodo s'écrit
+`.../DOI/10.5281/zenodo.NNN.svg`, et ce `.svg` appartient à l'URL de l'image, pas au DOI ; sans le
+retirer, la garde refusait son propre badge.
+
+**Ce que la publication a confirmé et qui n'était pas acquis** : Zenodo a reconnu de lui-même la
+licence du projet (`polyform-noncommercial-1.0.0`), alors qu'elle ne fait pas partie des choix
+courants. Aucune intervention manuelle n'a été nécessaire.
+
+**Ce que ce lot ne fait pas** : il ne touche ni le bundle, ni une texture, ni un binaire. Le module
+de citation est du code de BUILD, absent du JavaScript servi (vérifiable comme `renderSphere` :
+`grep parseCitation dist/assets/*.js` ne rend rien). Les seuls documents qui changent sont les
+quatre pages qui portent désormais le bloc.
+
 ## Pages `/methodology` et `/sources`
 
 Deux documents, chacun en anglais (`/methodology/`, `/sources/`) et en français

@@ -65,7 +65,23 @@ const connectHosts = connectHostsFromFirebase(firebaseJson);
 const manifest = manifestJson as unknown as EphemerisManifest;
 const textures: TextureProvenance[] = shippedTextures();
 
+/**
+ * La citation passée aux pages. Volontairement une valeur EXPLICITE et non le vrai
+ * `CITATION.cff` : ces tests vérifient que la page AFFICHE ce qu'on lui donne, et
+ * `src/seo/citation.test.ts` vérifie séparément que le vrai fichier est lisible.
+ */
+const citation = {
+  title: 'Galaxy: 3D Solar System',
+  authors: ['Guichard, A.'],
+  version: '9.9.9',
+  released: '2026-01-02',
+  doi: '10.5281/zenodo.9999999',
+  repository: 'https://github.com/Addey34/galaxy-3d',
+  url: 'https://galaxy.adrianguichard.dev/',
+};
+
 const methodology = methodologyPages({
+  citation,
   summary,
   manifest,
   config: CELESTIAL_CONFIG,
@@ -127,6 +143,7 @@ function shippedHeightfields() {
 }
 
 const sourcesInput: SourcesInput = {
+  citation,
   config: CELESTIAL_CONFIG,
   textures,
   manifest,
@@ -178,6 +195,57 @@ describe('résumé de validation publié', () => {
   });
 });
 
+describe('bloc « comment citer » des deux pages', () => {
+  /**
+   * POURQUOI cette garde. Le DOI est LU dans `CITATION.cff` et affiché par les deux pages. Retirer
+   * l'appel qui rend la section ne casserait rien : le build resterait vert, et les pages
+   * perdraient silencieusement la seule chose qui rend ce travail citable. C'est exactement la
+   * forme de défaut que ce dépôt attrape par un test plutôt que par une relecture.
+   *
+   * Les quatre documents sont vérifiés, parce qu'une seule langue verte ne dit rien de l'autre.
+   */
+  const pages = [...methodology, ...sourcesPages(sourcesInput)];
+
+  it('couvre bien les quatre documents', () => {
+    expect(pages.length).toBe(4);
+  });
+
+  it.each([
+    ['methodology', 'en'],
+    ['methodology', 'fr'],
+    ['sources', 'en'],
+    ['sources', 'fr'],
+  ])('%s/%s affiche le DOI qu’on lui donne, résolvable', (slug, locale) => {
+    const page = pages.find((p) => p.slug === slug && p.locale === locale)!;
+    expect(page, `${slug}/${locale} absente`).toBeDefined();
+    // La valeur de la fixture, pas celle du dépôt : la page AFFICHE ce qu'on lui passe.
+    expect(page.body).toContain(citation.doi);
+    expect(page.body).toContain(`https://doi.org/${citation.doi}`);
+    // Et la référence d'une ligne, celle qu'un lecteur copie.
+    expect(page.body).toContain(`(version ${citation.version})`);
+  });
+
+  it('titre la section dans la langue de la page', () => {
+    const fr = pages.find((p) => p.slug === 'sources' && p.locale === 'fr')!;
+    const en = pages.find((p) => p.slug === 'sources' && p.locale === 'en')!;
+    expect(fr.body).toContain('Comment citer');
+    expect(en.body).toContain('How to cite');
+    expect(fr.body).not.toContain('How to cite');
+  });
+
+  it('dit que le DOI de concept désigne la dernière version', () => {
+    // La distinction qui compte pour un lecteur : ce DOI ne se périme pas.
+    const fr = pages.find(
+      (p) => p.slug === 'methodology' && p.locale === 'fr'
+    )!;
+    expect(fr.body).toContain('DOI de concept');
+    const en = pages.find(
+      (p) => p.slug === 'methodology' && p.locale === 'en'
+    )!;
+    expect(en.body).toContain('concept DOI');
+  });
+});
+
 describe('page /methodology', () => {
   it('publie chaque chiffre du résumé : le changer change la page', () => {
     const mutated = cloneSummary();
@@ -186,6 +254,7 @@ describe('page /methodology', () => {
     )!;
     titan.km!.mean = 123456;
     const [en] = methodologyPages({
+      citation,
       summary: mutated,
       manifest,
       config: CELESTIAL_CONFIG,
@@ -199,6 +268,7 @@ describe('page /methodology', () => {
     const mutated: EphemerisManifest = JSON.parse(JSON.stringify(manifest));
     for (const entry of Object.values(mutated.bodies)) entry.stepDays = 7;
     const [en] = methodologyPages({
+      citation,
       summary,
       manifest: mutated,
       config: CELESTIAL_CONFIG,
@@ -563,6 +633,7 @@ describe('affirmations de /methodology confrontées au code', () => {
     )!;
     vesta.sources = { kepler: vesta.n };
     const [enMutated] = methodologyPages({
+      citation,
       summary: mutated,
       manifest,
       config: CELESTIAL_CONFIG,

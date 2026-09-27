@@ -48,6 +48,7 @@ import {
   docTable,
   formatQuantity,
 } from './documentPage';
+import { citationSection, type CitationMetadata } from './citation';
 
 // ─────────────────────────── données d'entrée ───────────────────────────
 
@@ -209,6 +210,8 @@ export interface MethodologyInput {
   manifest: EphemerisManifest;
   config: CelestialConfig;
   origin: string;
+  /** Lue dans `CITATION.cff`, seul endroit où le DOI est écrit (cf. `seo/citation.ts`). */
+  citation: CitationMetadata;
 }
 
 /**
@@ -784,6 +787,9 @@ function methodologyPage(input: MethodologyInput, locale: DocLocale): DocPage {
       `<ul class="doc-list">${limits.map((l) => `<li>${L(l)}</li>`).join('')}</ul>`
     )
   );
+
+  // Dernière section : comment citer ce travail. Le DOI n'est pas écrit ici, il est LU.
+  sections.push(citationSection(input.citation, locale));
 
   return {
     slug: 'methodology',

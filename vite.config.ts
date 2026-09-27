@@ -474,21 +474,27 @@ function bodyLandingPages() {
         const connectHosts = sourcesSeo.connectHostsFromFirebase(
           await readJson('firebase.json')
         );
-        const citation = await readFile(
+        const citationFile = await readFile(
           resolve(__dirname, 'CITATION.cff'),
           'utf-8'
         );
-        const repository = /^repository-code:\s*'([^']+)'/m.exec(citation)?.[1];
-        if (!repository)
-          throw new Error('CITATION.cff : repository-code introuvable');
+        const citationSeo = (await loader.ssrLoadModule(
+          '/src/seo/citation.ts'
+        )) as typeof import('./src/seo/citation');
+        // Une seule lecture, un seul propriétaire : le module refuse bruyamment un fichier
+        // incomplet plutôt que de publier une page « comment citer » sans DOI.
+        const citation = citationSeo.parseCitation(citationFile);
+        const repository = citation.repository;
         const docPages = [
           ...methodologySeo.methodologyPages({
+            citation,
             summary: validationSummary,
             manifest,
             config: catalogue.CELESTIAL_CONFIG,
             origin: SITE_ORIGIN,
           }),
           ...sourcesSeo.sourcesPages({
+            citation,
             config: catalogue.CELESTIAL_CONFIG,
             textures: productRegistry.shippedTextures(),
             manifest,

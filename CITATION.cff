@@ -11,6 +11,16 @@ type: software
 authors:
   - given-names: Adrian
     family-names: Guichard
+doi: 10.5281/zenodo.22985614
+identifiers:
+  - type: doi
+    value: 10.5281/zenodo.22985614
+    description: >-
+      DOI de concept : il désigne l'œuvre et résout toujours vers la version la plus récente.
+      C'est celui à citer. Concept DOI, always resolves to the latest version; cite this one.
+  - type: doi
+    value: 10.5281/zenodo.22985615
+    description: DOI de la version 0.10.0. DOI of version 0.10.0.
 repository-code: 'https://github.com/Addey34/galaxy-3d'
 url: 'https://galaxy.adrianguichard.dev/'
 license: PolyForm-Noncommercial-1.0.0

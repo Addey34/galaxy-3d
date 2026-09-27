@@ -2,6 +2,8 @@
 
 **🌍 [Démo en ligne → galaxy.adrianguichard.dev](https://galaxy.adrianguichard.dev/)**
 
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.22985614.svg)](https://doi.org/10.5281/zenodo.22985614)
+
 Visualisateur interactif du système solaire en temps réel, développé en TypeScript avec Three.js. Deux modes d'affichage : **Éducatif** (distances compressées en √, tout visible d'un coup) et **Exploration** (vraie échelle astronomique). Les positions viennent de fichiers NASA/JPL Horizons, d'astronomy-engine et d'éléments képlériens, chacune mesurée contre Horizons : méthode et précision sur [/methodology](https://galaxy.adrianguichard.dev/methodology/). Le mode Exploration est actif avec l'expérience « Voyage spatial » : suivi caméra, distances réelles, temps-lumière et marqueurs projetés.
 
 ## Aperçu
@@ -408,6 +410,25 @@ build : rien n'est committé. Voir `docs/ARCHITECTURE.md` § « Pages d'atterris
 pnpm build
 firebase deploy --only hosting:galaxy
 ```
+
+## Comment citer
+
+Galaxy est archivé sur Zenodo et porte un identifiant pérenne. Le DOI ci-dessous est le **DOI de
+concept** : il désigne l'œuvre et résout toujours vers la version la plus récente, de sorte qu'une
+référence écrite aujourd'hui ne pourrira pas à la prochaine publication.
+
+**[10.5281/zenodo.22985614](https://doi.org/10.5281/zenodo.22985614)**
+
+> Guichard, A. (2026). Galaxy: 3D Solar System (version 0.10.0) [Software]. Zenodo.
+> https://doi.org/10.5281/zenodo.22985614
+
+Le DOI n'est écrit qu'à un seul endroit du dépôt, [`CITATION.cff`](CITATION.cff), que GitHub et la
+plupart des gestionnaires de références lisent directement ; les pages
+[/methodology](https://galaxy.adrianguichard.dev/methodology/) et
+[/sources](https://galaxy.adrianguichard.dev/sources/) le LISENT au lieu de le répéter, et un test
+(`src/config/citationMetadata.test.ts`) confronte la valeur ci-dessus à ce fichier. Le DOI de la
+version 0.10.0 elle-même, si l'on veut désigner cet état précis plutôt que l'œuvre, est
+[10.5281/zenodo.22985615](https://doi.org/10.5281/zenodo.22985615).
 
 ## Licence
 

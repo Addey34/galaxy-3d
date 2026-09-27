@@ -40,6 +40,7 @@ import {
 } from './documentPage';
 import { displayNameResolver, type EphemerisManifest } from './methodologyPage';
 import { renderMarkdown } from './markdown';
+import { citationSection, type CitationMetadata } from './citation';
 
 export interface TextureProvenance {
   body: string;
@@ -78,6 +79,8 @@ export interface HeightfieldProvenance {
 }
 
 export interface SourcesInput {
+  /** Lue dans `CITATION.cff`, seul endroit où le DOI est écrit (cf. `seo/citation.ts`). */
+  citation: CitationMetadata;
   config: CelestialConfig;
   textures: readonly TextureProvenance[];
   /** Jeux de hauteurs livrés, avec les mesures de leur manifeste. */
@@ -741,6 +744,9 @@ function sourcesPage(input: SourcesInput, locale: DocLocale): DocPage {
       )}</div>`
     )
   );
+
+  // Dernière section : comment citer ce travail, rendue par le même module que /methodology.
+  sections.push(citationSection(input.citation, locale));
 
   return {
     slug: 'sources',
