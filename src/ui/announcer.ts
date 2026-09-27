@@ -61,7 +61,7 @@ interface Pending {
   channel?: string;
 }
 
-export function createAnnouncer(): Announcer {
+function createAnnouncer(): Announcer {
   const region = createRegion();
   // DEUX nœuds, et on alterne celui qui porte le texte.
   //
@@ -127,10 +127,4 @@ let shared: Announcer | null = null;
 export function getAnnouncer(): Announcer {
   shared ??= createAnnouncer();
   return shared;
-}
-
-/** Remet le singleton à zéro. Réservé aux tests, qui repartent d'un document neuf. */
-export function resetAnnouncer(): void {
-  shared?.dispose();
-  shared = null;
 }
