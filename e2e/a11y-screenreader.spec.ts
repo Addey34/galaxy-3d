@@ -136,6 +136,36 @@ test.describe('le focus suit ce que fait l’application', () => {
   });
 
   /**
+   * LE REVERS DE D4, et il a été mesuré avant d'être écrit. Rattraper un focus orphelin ne doit
+   * pas devenir « prendre le focus de sa propre initiative ». Arriver directement sur une page
+   * de corps déclenche `selectBody` au démarrage : la fiche s'ouvrait alors avec le focus sur
+   * son bouton « Fermer », et `:focus-visible` correspondait, donc un anneau s'affichait chez
+   * quelqu'un venu d'un résultat de recherche, autour d'un bouton fermant ce qu'il n'avait pas
+   * ouvert. Un focus ne se rattrape que s'il a été PERDU ; au chargement il n'a jamais existé.
+   */
+  test('arriver sur une page de corps ne prend le focus à personne', async ({
+    page,
+  }) => {
+    await blockExternalNetwork(page);
+    await page.addInitScript(() => {
+      localStorage.setItem('ssv-locale', 'en');
+      localStorage.setItem('ssv-guided-tour-v1', '1');
+      localStorage.setItem('ssv-explo-tour-nudge-v1', '1');
+    });
+    await page.goto('/mars/');
+    await expect(page.locator('#loader')).toBeHidden({ timeout: 40_000 });
+    await expect(page.locator('#body-info')).toBeVisible();
+    // Borne : sans elle, un chargement qui n'ouvrirait plus la fiche rendrait ce test vert
+    // sans rien vérifier.
+    await expect(page.locator('#bi-name')).toHaveText('Mars');
+
+    expect(
+      await focusedElement(page),
+      'la fiche a pris le focus sans que personne n’ait agi'
+    ).toBe('document.body');
+  });
+
+  /**
    * D5 et D10, qui n'ont qu'une cause. Quatre surfaces sur six ouvraient leur panneau en
    * laissant le focus sur le déclencheur, et leur écouteur d'Échap est posé SUR LE PANNEAU :
    * tant que le focus n'y entre pas, Échap ne peut pas se déclencher. Mesuré : quatorze

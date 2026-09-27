@@ -2348,7 +2348,7 @@ sur son bouton de fermeture ; quand elle se referme, le focus revient à son dé
 SEULEMENT s'il était encore à l'intérieur.
 
 Ce n'est pas une préférence de style. Les panneaux sont déclarés après tout le dock dans
-`index.html`, donc laisser le focus sur le déclencheur met leur contenu à quatorze tabulations.
+`index.html`, donc laisser le focus sur le déclencheur met leur contenu à quinze tabulations.
 Et leur écouteur d'Échap est posé sur le panneau : tant que le focus n'y entre pas, Échap ne peut
 pas se déclencher. La même correction règle les deux.
 

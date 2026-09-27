@@ -5,14 +5,14 @@
  * réglages d'affichage, couches météo, événements terrestres, aide. La palette et les
  * événements astronomiques, eux, faisaient déjà ce qu'il faut. Ce serait défendable si le
  * contenu suivait dans l'ordre de tabulation, mais les panneaux sont déclarés APRÈS tout le
- * dock dans `index.html` : la passe lecteur d'écran a compté **quatorze tabulations** entre le
- * bouton « Réglages d'affichage » et le panneau qu'il venait d'ouvrir (défaut D5 de
- * `docs/private/LECTEUR_ECRAN_LOT19.md`).
+ * dock dans `index.html` : la passe lecteur d'écran a compté QUINZE tabulations entre le bouton
+ * « Réglages d'affichage » et le panneau qu'il venait d'ouvrir — les quatorze premières
+ * parcourent le reste du dock (défaut D5 de `docs/private/LECTEUR_ECRAN_LOT19.md`).
  *
  * ET CELA EN ENTRAÎNAIT UN SECOND. L'écouteur d'Échap de ces surfaces est posé SUR LE PANNEAU :
  * tant que le focus n'y est pas entré, il ne peut pas se déclencher. Mesuré : réglages ouverts,
- * quinze tabulations plus loin, Échap n'énonce rien et ne ferme rien (défaut D10). Faire entrer
- * le focus corrige donc les deux d'un coup, sans ajouter d'écouteur global.
+ * quatorze tabulations plus loin, Échap n'énonce rien et ne ferme rien (défaut D10). Faire
+ * entrer le focus corrige donc les deux d'un coup, sans ajouter d'écouteur global.
  *
  * Le retour est déjà correct partout et le reste : à la fermeture, le focus revient au
  * déclencheur, mais SEULEMENT s'il se trouvait encore dans le panneau. Voler le focus à

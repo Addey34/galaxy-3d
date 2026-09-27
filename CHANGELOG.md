@@ -25,7 +25,7 @@ fichier résume ce qui change pour une personne qui utilise ou cite Galaxy.
   changeait, et le focus disparaissait : il fallait repartir du début de la page. Il entre
   maintenant dans la fiche qui vient de s'ouvrir.
 - **Ouvrir les réglages d'affichage, les couches météo, les événements terrestres ou l'aide
-  laissait le focus sur le bouton**, à quatorze tabulations du panneau qu'on venait d'ouvrir, et
+  laissait le focus sur le bouton**, à quinze tabulations du panneau qu'on venait d'ouvrir, et
   la touche Échap n'y pouvait plus rien puisqu'elle n'est écoutée que depuis le panneau.
 - **Les deux cartes de visite guidée se déclaraient modales sans l'être.** Elles annonçaient au
   lecteur d'écran que le reste de la page était hors d'atteinte, alors que la tabulation en

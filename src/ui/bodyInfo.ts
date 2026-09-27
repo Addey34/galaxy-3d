@@ -607,6 +607,24 @@ export function setupBodyInfo(coordinator?: OverlayCoordinator): BodyInfoPanel {
     positionEl?.querySelector<HTMLElement>('.bi-position-error');
   let lastPosition: PositionProvenanceView | null = null;
 
+  /**
+   * La personne a-t-elle déjà agi sur la page ?
+   *
+   * `navigator.userActivation` répondrait, mais pas partout ; deux écouteurs en capture le font
+   * partout et disent la même chose. `once` : seule la PREMIÈRE fois compte.
+   *
+   * Ces écouteurs sont posés DANS l'initialisation et non au niveau du module. Au niveau du
+   * module ils s'exécutent à l'import, et `pnpm verify` tourne en environnement `node` : deux
+   * fichiers de test qui importent celui-ci cassaient alors sur « document is not defined ».
+   */
+  let userHasActed = false;
+  for (const type of ['pointerdown', 'keydown'] as const) {
+    document.addEventListener(type, () => (userHasActed = true), {
+      capture: true,
+      once: true,
+    });
+  }
+
   let visible = false;
 
   const setVisible = (next: boolean): void => {
@@ -630,8 +648,16 @@ export function setupBodyInfo(coordinator?: OverlayCoordinator): BodyInfoPanel {
    * On teste `closest('[hidden]')` et non la visibilité calculée : ces surfaces sont en
    * `position: fixed`, donc leur `offsetParent` est nul même quand elles sont affichées, et
    * un test de visibilité conclurait « perdu » à chaque fois.
+   *
+   * ET SEULEMENT SI LA PERSONNE A DÉJÀ AGI. Sans cette condition, arriver directement sur une
+   * page de corps (`/mars/`, c'est-à-dire tout le trafic des pages indexables) posait le focus
+   * sur le bouton « Fermer » avant le moindre geste. Mesuré : `:focus-visible` correspondait,
+   * donc un anneau s'affichait chez quelqu'un venu d'un résultat de recherche, autour d'un
+   * bouton qui ferme ce qu'il n'a pas ouvert. Un focus ne se rattrape que s'il a été perdu ;
+   * au chargement, il n'a jamais existé.
    */
   const adoptOrphanedFocus = (): void => {
+    if (!userHasActed) return;
     const active = document.activeElement;
     const orphaned =
       !active ||
