@@ -13,6 +13,7 @@
 import { SolarSystemApp } from './SolarSystemApp';
 import { LabelSpace } from '@/core/labelSpace';
 import { t } from './i18n';
+import { bodyDisplayName } from './i18n/bodyText';
 import { initStaticI18n } from './i18n/dom';
 import { updateProgress, hideLoader, showError } from './ui/loader';
 import { setupFullscreen } from './ui/fullscreen';
@@ -28,6 +29,8 @@ import { setupPlanetControls } from './ui/planetNav';
 import { setupBodyInfo } from './ui/bodyInfo';
 import { setupPositionProvenance } from './ui/positionProvenance';
 import { setupDocumentTitle } from './ui/documentTitle';
+import { setupDocumentChrome } from './ui/documentChrome';
+import { getAnnouncer } from './ui/announcer';
 import { setupPlayback } from './ui/playback';
 import { MAX_SIMULATION_SCALE } from './ui/speedSlider';
 import { setupQualitySection } from './ui/qualitySection';
@@ -265,6 +268,10 @@ if (surfaceScrim) {
     // change sans rechargement, un titre figé ferait dire deux choses différentes à l'adresse
     // et à l'onglet (cf. ui/documentTitle).
     const documentTitle = setupDocumentTitle();
+    // Le titre de niveau 1 traduit et le repère principal de la page (lot 19, D2 et D3).
+    setupDocumentChrome();
+    // Ce que l'application DIT quand elle change d'état (lot 19, D4, D6 et D11).
+    const announcer = getAnnouncer();
     const planetNav = setupPlanetControls(
       cameraSystem,
       (name) => {
@@ -273,6 +280,16 @@ if (surfaceScrim) {
         exploScaleBadge.setHasTarget(name !== 'overview');
         documentTitle.setBody(name);
         syncPermalink();
+        // Choisir un corps ouvre sa fiche, change l'onglet et change l'adresse, et jusqu'au
+        // lot 19 tout cela se faisait EN SILENCE : la passe NVDA a mesuré 2 500 ms sans un mot
+        // après la sélection (défaut D4). La fiche prend le focus de son côté ; ici on dit ce
+        // qui vient de se passer, ce que le seul déplacement du focus ne suffirait pas à
+        // expliquer.
+        if (name !== 'overview') {
+          announcer.announce(
+            t('a11y.bodySelected', { name: bodyDisplayName(name) })
+          );
+        }
       },
       overlayCoordinator
     );

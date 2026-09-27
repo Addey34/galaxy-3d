@@ -48,6 +48,27 @@ export const messages: Record<Locale, Dict> = {
     'loader.stage.orbit': 'Orbits',
     'loader.stage.ready': 'Ready',
     'loader.texturesDone': 'Textures loaded',
+    // ── Accessibilité : ce que SEUL un lecteur d'écran entend (lot 19) ──
+    // Aucun de ces textes n'est affiché. Ils viennent de la passe NVDA décrite dans
+    // `docs/private/LECTEUR_ECRAN_LOT19.md`, où chaque silence a été mesuré avant d'être
+    // comblé. `a11y.pageHeading` reprend MOT POUR MOT le `<h1>` statique d'`index.html`, que
+    // les robots lisent et que `src/seo/bodyLandingPage.ts` remplace :
+    // `src/seo/headingParity.test.ts` le vérifie.
+    'a11y.pageHeading':
+      'Galaxy: Real-Time Interactive 3D Solar System. Explore the Planets, Moons and Dwarf Planets',
+    'a11y.scene': 'Solar system, interactive 3D view',
+    'a11y.navigation': 'Body navigation',
+    'a11y.loading': 'Loading the solar system, please wait.',
+    'a11y.loadingProgress': 'Loading progress',
+    'a11y.ready': 'Solar system loaded and ready.',
+    'a11y.loadFailed': 'The solar system could not be loaded.',
+    'a11y.bodySelected': '{name} selected. Information panel opened.',
+    'a11y.dateChanged': 'Date set to {date}.',
+    'a11y.searchResults': '{count} bodies match.',
+    'a11y.searchResultsOne': 'One body matches.',
+    'a11y.searchResultsNone': 'No body matches.',
+    'a11y.paletteResults': 'Search results',
+    'a11y.tourPlayer': 'Guided tour in progress',
     'error.title': 'Application Error',
     'error.retry': 'Retry',
     'error.contextLost': 'Reconnecting the 3D view…',
@@ -509,6 +530,23 @@ export const messages: Record<Locale, Dict> = {
     'loader.stage.orbit': 'Orbites',
     'loader.stage.ready': 'Prêt',
     'loader.texturesDone': 'Textures chargées',
+    // ── Accessibilité : ce que SEUL un lecteur d'écran entend (lot 19) ──
+    // Voir le bloc anglais pour la raison de chaque clé.
+    'a11y.pageHeading':
+      'Galaxy : système solaire 3D interactif en temps réel. Explorez les planètes, les lunes et les planètes naines',
+    'a11y.scene': 'Système solaire, vue 3D interactive',
+    'a11y.navigation': 'Navigation entre les corps',
+    'a11y.loading': 'Chargement du système solaire, veuillez patienter.',
+    'a11y.loadingProgress': 'Progression du chargement',
+    'a11y.ready': 'Système solaire chargé et prêt.',
+    'a11y.loadFailed': 'Le système solaire n’a pas pu être chargé.',
+    'a11y.bodySelected': '{name} sélectionné. Fiche d’information ouverte.',
+    'a11y.dateChanged': 'Date réglée sur {date}.',
+    'a11y.searchResults': '{count} corps correspondent.',
+    'a11y.searchResultsOne': 'Un corps correspond.',
+    'a11y.searchResultsNone': 'Aucun corps ne correspond.',
+    'a11y.paletteResults': 'Résultats de la recherche',
+    'a11y.tourPlayer': 'Visite guidée en cours',
     'error.title': 'Erreur de l’application',
     'error.retry': 'Réessayer',
     'error.contextLost': 'Reconnexion de la vue 3D…',

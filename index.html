@@ -177,20 +177,24 @@
         <div class="load-meta">
           <span id="load-percent">0%</span>
         </div>
+        <!-- UNE seule barre de progression exposée, et elle a enfin une VALEUR : elle portait
+             `role="progressbar"` sans jamais recevoir `aria-valuenow`. Mesuré au lot 19,
+             défaut D6 de `docs/private/LECTEUR_ECRAN_LOT19.md`. -->
         <div
           class="loader-bar"
           role="progressbar"
           aria-valuemin="0"
           aria-valuemax="100"
+          aria-valuenow="0"
+          aria-label="Loading progress"
+          data-i18n-aria="a11y.loadingProgress"
         >
           <span id="load-progress-fill"></span>
         </div>
-        <div
-          class="loader-stages"
-          role="progressbar"
-          aria-valuemin="0"
-          aria-valuemax="100"
-        >
+        <!-- Le rail d'étapes répète en abrégé ce que `#load-status` dit en toutes lettres :
+             il est décoratif pour qui écoute. Il portait lui aussi `role="progressbar"`, ce
+             qui faisait DEUX barres de progression pour une seule progression. -->
+        <div class="loader-stages" aria-hidden="true">
           <span
             class="loader-stage"
             data-loader-stage="core"
@@ -244,7 +248,14 @@
          ===================================================================== -->
 
     <!-- ─── Dock haut-gauche : Vue globale + recherche de corps ─────────────── -->
-    <div class="dock dock--top-left">
+    <!-- `role="toolbar"` et non un simple div : un `aria-label` sur un élément SANS rôle
+         n'est exposé nulle part. Mesuré au lot 19, défaut D3. -->
+    <div
+      class="dock dock--top-left"
+      role="toolbar"
+      aria-label="Body navigation"
+      data-i18n-aria="a11y.navigation"
+    >
       <button
         id="orbit-overview"
         class="chip chip--overview is-active"
@@ -306,6 +317,7 @@
     <!-- ─── Dock haut-droit : outils occasionnels (une seule surface ouverte) ── -->
     <div
       class="dock dock--top-right"
+      role="toolbar"
       aria-label="Tools"
       data-i18n-aria="dock.tools.aria"
     >
@@ -876,7 +888,13 @@
         />
       </div>
       <!-- Résultats groupés, générés depuis CELESTIAL_CONFIG par ui/bodyPalette. -->
-      <div id="palette-results" class="palette-results" role="listbox"></div>
+      <div
+          id="palette-results"
+          class="palette-results"
+          role="listbox"
+          aria-label="Search results"
+          data-i18n-aria="a11y.paletteResults"
+        ></div>
     </aside>
 
     <!-- ─── Fiche d'un corps ───────────────────────────────────────────────── -->

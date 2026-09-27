@@ -2316,6 +2316,75 @@ overlay (`meteoModelLayer`) et le vent masque ses particules plutôt que de gard
 autre date. L'ancienne étiquette « moyenne climatique » a disparu avec cette correction : aucune
 climatologie n'était servie.
 
+## Ce que l'application DIT, et où va le focus (lot 19)
+
+Le lot 19 a écouté l'application avec un vrai lecteur d'écran et a relevé treize défauts, tous
+sous des tests verts. Le relevé complet, chiffré, vit dans `docs/private/LECTEUR_ECRAN_LOT19.md`.
+Ce qui suit est le contrat qui en reste.
+
+### Une seule région live, attachée au document
+
+`src/ui/announcer.ts` possède **l'unique** région `aria-live` de l'application. Trois règles :
+
+1. **Elle est attachée au `<body>`, jamais à un panneau.** Une région live dans un conteneur qui
+   porte `hidden` n'annonce rien. C'était le défaut de la région que `ui/offlineData` posait dans
+   la section hors ligne : la fin d'un téléchargement lancé puis laissé de côté ne se disait pas.
+2. **C'est une FILE, pas une variable.** Une région live ne garde que son dernier état : deux
+   messages émis coup sur coup n'en font qu'un, et c'est le premier qui disparaît. Les messages
+   sont donc espacés de 1 200 ms. Un canal facultatif regroupe les messages qui se CORRIGENT au
+   lieu de s'ajouter, comme le nombre de résultats d'une recherche qui change à chaque lettre.
+3. **`polite`, jamais `assertive`.** Rien ici n'est assez urgent pour couper la parole à
+   quelqu'un au milieu d'une phrase.
+
+Ce qui est annoncé, et rien d'autre : la fin du chargement (et son échec), le corps choisi, le
+changement de date provoqué par un événement, le nombre de résultats d'une recherche, l'état du
+hors-ligne. Les étapes intermédiaires d'un chargement ne le sont PAS, délibérément : six étapes
+puis soixante-quatre pas de téléchargement rendraient le reste de l'interface inaudible.
+
+### Ouvrir une surface y emmène le focus
+
+`src/ui/surfaceFocus.ts` possède la règle. Une surface contextuelle qui s'ouvre prend le focus
+sur son bouton de fermeture ; quand elle se referme, le focus revient à son déclencheur, mais
+SEULEMENT s'il était encore à l'intérieur.
+
+Ce n'est pas une préférence de style. Les panneaux sont déclarés après tout le dock dans
+`index.html`, donc laisser le focus sur le déclencheur met leur contenu à quinze tabulations.
+Et leur écouteur d'Échap est posé sur le panneau : tant que le focus n'y entre pas, Échap ne peut
+pas se déclencher. La même correction règle les deux.
+
+Corollaire pour un dialogue qui déclare `aria-modal="true"` : il DOIT retenir le focus
+(`trapFocus`). Déclarer le reste de la page inerte sans le tenir est pire que ne rien déclarer,
+puisque le lecteur d'écran restreint sa lecture à un contenu que le focus a déjà quitté.
+
+### Un focus qui allait être perdu est adopté
+
+Après une action qui ferme la surface d'où elle partait, le focus retombe sur `document.body` et
+la personne au clavier doit repartir du début du document. La fiche d'information ADOPTE ce
+focus quand il est orphelin (sur le `body`, ou dans un élément qu'on vient de masquer), et ne le
+prend jamais à un élément bien vivant.
+
+### La langue du chrome invisible
+
+Le `<title>` et le `<h1 class="sr-only">` restent ANGLAIS dans `index.html` : le premier est lu
+par les robots, le second est en plus l'ancre que `src/seo/bodyLandingPage.ts` remplace.
+L'application les remplace par leur version localisée au démarrage, `ui/documentTitle` pour l'un
+et `ui/documentChrome` pour l'autre. Les versions anglaises des deux côtés doivent coïncider au
+caractère près, sinon un rechargement fait clignoter le texte : `src/seo/titleParity.test.ts` et
+`src/seo/headingParity.test.ts` le vérifient.
+
+### Mesurer ce qu'un lecteur d'écran dit vraiment
+
+`scripts/capture-screenreader.mjs` pilote une copie portable de NVDA, muette, et lit son journal.
+Le point qui décide de tout : **NVDA pose un crochet clavier au niveau du système, donc les
+frappes injectées par CDP lui sont invisibles**. Les touches partent en `SendInput` et CDP ne
+sert qu'à observer. Le parseur du journal est pur et testé (`src/core/speechTranscript.ts`) :
+une mesure fausse est pire qu'une mesure absente, et le premier parseur écrit pour cette passe
+accusait l'application d'un défaut qui était le sien.
+
+Ce banc demande Windows et NVDA : il ne tourne pas en intégration continue. Ce qui y tourne, ce
+sont les gardes de `e2e/a11y-screenreader.spec.ts`, qui vérifient les CONDITIONS de ce qui a été
+entendu (le focus est là, le nom existe, la région live porte le message), jamais la parole.
+
 ## Citer Galaxy : un DOI, écrit à un seul endroit (lot 18)
 
 Depuis la version 0.10.0, Galaxy est archivé sur Zenodo et porte un identifiant pérenne. Ce qui

@@ -607,12 +607,64 @@ export function setupBodyInfo(coordinator?: OverlayCoordinator): BodyInfoPanel {
     positionEl?.querySelector<HTMLElement>('.bi-position-error');
   let lastPosition: PositionProvenanceView | null = null;
 
+  /**
+   * La personne a-t-elle déjà agi sur la page ?
+   *
+   * `navigator.userActivation` répondrait, mais pas partout ; deux écouteurs en capture le font
+   * partout et disent la même chose. `once` : seule la PREMIÈRE fois compte.
+   *
+   * Ces écouteurs sont posés DANS l'initialisation et non au niveau du module. Au niveau du
+   * module ils s'exécutent à l'import, et `pnpm verify` tourne en environnement `node` : deux
+   * fichiers de test qui importent celui-ci cassaient alors sur « document is not defined ».
+   */
+  let userHasActed = false;
+  for (const type of ['pointerdown', 'keydown'] as const) {
+    document.addEventListener(type, () => (userHasActed = true), {
+      capture: true,
+      once: true,
+    });
+  }
+
   let visible = false;
 
   const setVisible = (next: boolean): void => {
     visible = next;
     panel.hidden = !next;
     triggerBtn?.setAttribute('aria-expanded', String(next));
+  };
+
+  /**
+   * RATTRAPE UN FOCUS QUI ALLAIT ÊTRE PERDU.
+   *
+   * Mesuré au lot 19 (défaut D4) : choisir un corps dans la palette ferme la palette, ouvre
+   * cette fiche, change l'onglet et change l'adresse — et laisse `document.activeElement` sur
+   * `document.body`. Après l'action PRINCIPALE de l'application, quelqu'un au clavier n'avait
+   * plus aucun point d'ancrage et devait retabuler depuis le début du document.
+   *
+   * La fiche ne prend le focus QUE s'il allait être orphelin : sur le `body`, ou dans un
+   * élément qu'on vient de masquer (le champ de la palette qui se referme). Si le focus est
+   * ailleurs et bien vivant, on n'y touche pas : le voler serait un défaut de plus.
+   *
+   * On teste `closest('[hidden]')` et non la visibilité calculée : ces surfaces sont en
+   * `position: fixed`, donc leur `offsetParent` est nul même quand elles sont affichées, et
+   * un test de visibilité conclurait « perdu » à chaque fois.
+   *
+   * ET SEULEMENT SI LA PERSONNE A DÉJÀ AGI. Sans cette condition, arriver directement sur une
+   * page de corps (`/mars/`, c'est-à-dire tout le trafic des pages indexables) posait le focus
+   * sur le bouton « Fermer » avant le moindre geste. Mesuré : `:focus-visible` correspondait,
+   * donc un anneau s'affichait chez quelqu'un venu d'un résultat de recherche, autour d'un
+   * bouton qui ferme ce qu'il n'a pas ouvert. Un focus ne se rattrape que s'il a été perdu ;
+   * au chargement, il n'a jamais existé.
+   */
+  const adoptOrphanedFocus = (): void => {
+    if (!userHasActed) return;
+    const active = document.activeElement;
+    const orphaned =
+      !active ||
+      active === document.body ||
+      !active.isConnected ||
+      active.closest('[hidden]') !== null;
+    if (orphaned) closeBtn.focus();
   };
 
   // Ferme la fiche mais garde le déclencheur (le corps reste sélectionné).
@@ -802,6 +854,7 @@ export function setupBodyInfo(coordinator?: OverlayCoordinator): BodyInfoPanel {
     // désormais compacte et n'occulte pas la scène). L'utilisateur peut la fermer.
     coordinator?.requestOpen('body-info');
     setVisible(true);
+    adoptOrphanedFocus();
     // Neuf corps : on repart d'un bloc live masqué (updateLive le remplira à la frame
     // suivante en Explo) pour ne pas laisser la distance du corps précédent. Même règle pour
     // la provenance de la position, qui décrivait l'autre corps.

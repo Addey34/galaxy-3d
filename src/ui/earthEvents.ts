@@ -32,6 +32,7 @@ import { sourceBadgeText } from './sourceBadge';
 import type { EarthEventsOverlay } from './earthEventsOverlay';
 import type { OverlayCoordinator } from './overlayCoordinator';
 import type { PublicAPI } from '@/SolarSystemApp';
+import { syncSurfaceFocus } from './surfaceFocus';
 
 /** Nombre d'événements détaillés sous l'interrupteur. */
 const LISTED_EVENTS = 5;
@@ -253,6 +254,7 @@ export function setupEarthEvents(
     if (open) coordinator?.requestOpen('earth-events');
     if (panel) panel.hidden = !open;
     triggerBtn?.setAttribute('aria-expanded', String(open));
+    syncSurfaceFocus(open, panel, triggerBtn);
   };
   coordinator?.register('earth-events', () => setOpen(false));
   triggerBtn?.addEventListener('click', () => setOpen(!open));

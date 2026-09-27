@@ -17,6 +17,7 @@ import type { PublicAPI } from '@/SolarSystemApp';
 import type { WeatherLayerHandle } from './earthLayer';
 import type { OverlayCoordinator } from './overlayCoordinator';
 import { sourceBadgeText } from './sourceBadge';
+import { syncSurfaceFocus } from './surfaceFocus';
 
 export interface WeatherLayersDeps {
   /** Couches à exposer, dans l'ordre d'affichage (voir le registre dans MainSolarSystemApp). */
@@ -259,6 +260,7 @@ export function setupWeatherLayers(
     if (open) coordinator?.requestOpen('weather-layers');
     panel.hidden = !open;
     triggerBtn?.setAttribute('aria-expanded', String(open));
+    syncSurfaceFocus(open, panel, triggerBtn);
   };
   coordinator?.register('weather-layers', () => setOpen(false));
 

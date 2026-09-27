@@ -315,10 +315,27 @@ Le client Open-Meteo possède en plus des tests Vitest déterministes pour le re
   panneau annonce son ouverture (`aria-expanded`) et se nomme lui-même ; le bouton lecture/pause
   décrit l'action offerte et expose son état ; un seul mode d'échelle est `pressed` à la fois.
 
-**Ce qu'aucun des deux ne fait, et qui reste manuel** : ce qu'un lecteur d'écran ANNONCE. Cela
-dépend du lecteur, de sa version, de sa verbosité et du navigateur ; aucune API ne permet de le
-capturer, donc l'automatiser produirait un test qui ment. L'ordre d'annonce, le ressenti du
-parcours clavier et la pertinence des libellés se jugent avec NVDA ou VoiceOver, à la main.
+- `e2e/a11y-screenreader.spec.ts` (lot 19) vérifie des **parcours** : où va le focus, et ce que
+  l'application DIT quand elle change d'état. Quatorze propriétés, chacune née d'un énoncé
+  réellement entendu ou d'un silence réellement mesuré : le titre de l'onglet et le titre de
+  niveau 1 sont traduits ; la scène est un repère principal nommé ; choisir un corps laisse le
+  focus dans la fiche et jamais sur le `body` ; ouvrir une surface y emmène le focus, ce qui rend
+  du même coup son Échap opérant ; la fin du chargement, le changement de date et le nombre de
+  résultats sont annoncés dans l'unique région live ; aucun dialogue ouvert n'est anonyme ; la
+  visite guidée retient le focus ; et la recherche masque réellement ce qui ne correspond pas.
+
+**CE QUI A CHANGÉ LE 2026-09-27, et cette page disait le contraire.** Il était écrit ici
+qu'« aucune API ne permet de capturer » ce qu'un lecteur d'écran annonce, « donc l'automatiser
+produirait un test qui ment ». C'est FAUX, et le lot 19 l'a montré : **NVDA journalise chaque
+énoncé**, au niveau IO de son journal, et `scripts/capture-screenreader.mjs` pilote une copie
+portable muette pour les relever dans l'ordre, appariés à l'élément qui a réellement le focus.
+Le point qui décide de tout : NVDA pose un crochet clavier au niveau du SYSTÈME, donc les frappes
+injectées par CDP lui sont invisibles et les touches doivent partir en `SendInput`.
+
+Ce banc demande Windows et NVDA : il ne tourne pas en intégration continue, et le relevé qu'il
+produit vit dans `docs/private/LECTEUR_ECRAN_LOT19.md`. **Ce qui reste manuel** est plus étroit
+qu'écrit jusqu'ici : le ressenti, la verbosité supportable, la prononciation, et le comportement
+d'un AUTRE lecteur d'écran (VoiceOver, JAWS).
 
 **Piège CDP à connaître** : `expanded` revient en booléen, `pressed` en CHAÎNE
 (« true »/« false »/« mixed » — le type `tristate` d'ARIA). `axTree.ts` normalise ; sans cela une
