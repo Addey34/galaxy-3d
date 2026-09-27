@@ -655,13 +655,6 @@ const PAGE_TEXT = {
     es: 'Fuentes',
     'pt-BR': 'Fontes',
   },
-  /** Mention de la méthode d'une valeur non mesurée, entre parenthèses. */
-  methodValue: {
-    en: '{method} value',
-    fr: 'valeur {method}',
-    es: 'valor {method}',
-    'pt-BR': 'valor {method}',
-  },
 } as const;
 
 /** Une phrase de page, dans une langue, avec son `{name}` rempli. */
@@ -811,9 +804,14 @@ function contentBlock(page: BodyPage): string {
         (fact.source === undefined
           ? ''
           : `<sup><a href="#source-${fact.source}">${fact.source}</a></sup>` +
+            // `fact.method.derived` vaut DÉJÀ « derived value » / « valeur dérivée » : le
+            // gabarit « {method} value » qui l'enveloppait rendait « (derived value value) »,
+            // en anglais comme dans les trois autres langues. Trouvé en RELISANT la page
+            // rendue, pas par un test : aucune garde ne comparait cette parenthèse. Il y en a
+            // une maintenant (`localisedPages.test.ts`).
             (fact.method === 'measured'
               ? ''
-              : ` (${pageText('methodValue', page.locale).replace('{method}', messages[page.locale][`fact.method.${fact.method}` as 'fact.method.derived'])})`)) +
+              : ` (${messages[page.locale][`fact.method.${fact.method}` as 'fact.method.derived']})`)) +
         '</dd>'
     )
     .join('');

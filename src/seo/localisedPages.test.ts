@@ -173,6 +173,27 @@ describe('pages d’atterrissage localisées', () => {
       expect(labels, `libellé publié perdu : ${label}`).toContain(label);
   });
 
+  it('écrit la mention de méthode une seule fois, dans chaque langue', () => {
+    // DÉFAUT TROUVÉ EN RELISANT LA PAGE RENDUE, pas par un test : la mention enveloppait dans
+    // « {method} value » une valeur de dictionnaire qui disait déjà « derived value », ce qui
+    // rendait « (derived value value) » — en anglais comme dans les trois autres langues, et
+    // l'empreinte ne l'a pas vu parce que ces pages changeaient de toute façon.
+    const expected: Record<string, string> = {
+      en: '(derived value)',
+      fr: '(valeur dérivée)',
+      es: '(valor derivado)',
+      'pt-BR': '(valor derivado)',
+    };
+    for (const [locale, pages] of byLocale) {
+      const titan = pages.find((page) => page.body === 'titan')!;
+      const html = renderBodyPage(BASE, titan, ORIGIN);
+      expect(html, `${locale} : mention absente`).toContain(expected[locale]);
+      // Et jamais deux fois le même mot : c'est la forme exacte du défaut.
+      for (const word of ['value value', 'valeur valeur', 'valor valor'])
+        expect(html, `${locale} : « ${word} »`).not.toContain(word);
+    }
+  });
+
   it('exclut les pages traduites du cache de l’app shell', () => {
     const denied = (path: string): boolean =>
       NAVIGATE_FALLBACK_DENYLIST.some((pattern) => pattern.test(path));
