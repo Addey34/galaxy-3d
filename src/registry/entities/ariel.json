@@ -7,7 +7,9 @@
     "kind": "moon",
     "displayName": {
       "en": "Ariel",
-      "fr": "Ariel"
+      "fr": "Ariel",
+      "es": "Ariel",
+      "pt-BR": "Ariel"
     },
     "radius": 0.17,
     "rotationSpeed": {
@@ -56,11 +58,15 @@
       },
       "description": {
         "en": "The brightest of Uranus's major moons, with the youngest surface and long canyons that may hold traces of past cryovolcanic flows.",
-        "fr": "La plus brillante des grandes lunes d’Uranus, avec la surface la plus jeune et de longs canyons qui pourraient garder la trace d’anciens écoulements cryovolcaniques."
+        "fr": "La plus brillante des grandes lunes d’Uranus, avec la surface la plus jeune et de longs canyons qui pourraient garder la trace d’anciens écoulements cryovolcaniques.",
+        "es": "La más brillante de las grandes lunas de Urano, con la superficie más joven y largos cañones que podrían conservar rastros de antiguos flujos criovolcánicos.",
+        "pt-BR": "A mais brilhante das grandes luas de Urano, com a superfície mais jovem e longos cânions que podem guardar vestígios de antigos fluxos criovulcânicos."
       },
       "wiki": {
         "en": "https://en.wikipedia.org/wiki/Ariel_(moon)",
-        "fr": "https://fr.wikipedia.org/wiki/Ariel_(lune)"
+        "fr": "https://fr.wikipedia.org/wiki/Ariel_(lune)",
+        "es": "https://es.wikipedia.org/wiki/Ariel_(sat%C3%A9lite)",
+        "pt-BR": "https://pt.wikipedia.org/wiki/Ariel_(sat%C3%A9lite_natural)"
       }
     },
     "cameraDistance": {

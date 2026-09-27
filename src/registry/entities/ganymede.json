@@ -6,7 +6,10 @@
   "config": {
     "kind": "moon",
     "displayName": {
-      "fr": "Ganymède"
+      "en": "Ganymede",
+      "fr": "Ganymède",
+      "es": "Ganímedes",
+      "pt-BR": "Ganímedes"
     },
     "frame": "parentRelative",
     "relativeEphemeris": {
@@ -33,11 +36,15 @@
       "ascendingNode": 0,
       "description": {
         "en": "The largest moon in the Solar System, larger than Mercury, with its own intrinsic magnetic field.",
-        "fr": "La plus grande lune du Système solaire, plus grande que Mercure, et dotée de son propre champ magnétique."
+        "fr": "La plus grande lune du Système solaire, plus grande que Mercure, et dotée de son propre champ magnétique.",
+        "es": "La luna más grande del Sistema Solar, más grande que Mercurio, y dotada de su propio campo magnético.",
+        "pt-BR": "A maior lua do Sistema Solar, maior que Mercúrio, e dotada do seu próprio campo magnético."
       },
       "wiki": {
         "en": "https://en.wikipedia.org/wiki/Ganymede_(moon)",
-        "fr": "https://fr.wikipedia.org/wiki/Ganym%C3%A8de_(lune)"
+        "fr": "https://fr.wikipedia.org/wiki/Ganym%C3%A8de_(lune)",
+        "es": "https://es.wikipedia.org/wiki/Gan%C3%ADmedes_(sat%C3%A9lite)",
+        "pt-BR": "https://pt.wikipedia.org/wiki/Gan%C3%ADmedes_(sat%C3%A9lite)"
       }
     },
     "cameraDistance": {
@@ -79,7 +86,9 @@
       "published": false,
       "reason": {
         "en": "The NASA fact sheet gives \"90 to 160 Kelvin\" for daytime, without a mean.",
-        "fr": "La fiche NASA donne « 90 to 160 Kelvin » en journée, sans moyenne."
+        "fr": "La fiche NASA donne « 90 to 160 Kelvin » en journée, sans moyenne.",
+        "es": "La hoja de datos de la NASA da «90 to 160 Kelvin» de día, sin media.",
+        "pt-BR": "A ficha de dados da NASA dá “90 to 160 Kelvin” de dia, sem média."
       }
     },
     "axialTilt": {

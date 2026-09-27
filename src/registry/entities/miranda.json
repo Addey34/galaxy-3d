@@ -7,7 +7,9 @@
     "kind": "moon",
     "displayName": {
       "en": "Miranda",
-      "fr": "Miranda"
+      "fr": "Miranda",
+      "es": "Miranda",
+      "pt-BR": "Miranda"
     },
     "radius": 0.1,
     "rotationSpeed": {
@@ -56,11 +58,15 @@
       },
       "description": {
         "en": "Uranus's smallest major moon, a bizarre patchwork of giant fault canyons and terraced 'racetrack' features up to 20 km deep.",
-        "fr": "La plus petite grande lune d’Uranus, un patchwork étrange de canyons de faille géants et de formations en terrasses profondes de jusqu’à 20 km."
+        "fr": "La plus petite grande lune d’Uranus, un patchwork étrange de canyons de faille géants et de formations en terrasses profondes de jusqu’à 20 km.",
+        "es": "La más pequeña de las grandes lunas de Urano, un extraño mosaico de cañones de falla gigantes y formaciones en terrazas de hasta 20 km de profundidad.",
+        "pt-BR": "A menor das grandes luas de Urano, um estranho mosaico de cânions de falha gigantes e formações em terraços de até 20 km de profundidade."
       },
       "wiki": {
         "en": "https://en.wikipedia.org/wiki/Miranda_(moon)",
-        "fr": "https://fr.wikipedia.org/wiki/Miranda_(lune)"
+        "fr": "https://fr.wikipedia.org/wiki/Miranda_(lune)",
+        "es": "https://es.wikipedia.org/wiki/Miranda_(sat%C3%A9lite)",
+        "pt-BR": "https://pt.wikipedia.org/wiki/Miranda_(sat%C3%A9lite)"
       }
     },
     "cameraDistance": {

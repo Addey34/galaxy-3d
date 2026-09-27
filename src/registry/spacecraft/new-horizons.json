@@ -4,11 +4,15 @@
   "targetClass": "spacecraft",
   "displayName": {
     "en": "New Horizons",
-    "fr": "New Horizons"
+    "fr": "New Horizons",
+    "es": "New Horizons",
+    "pt-BR": "New Horizons"
   },
   "description": {
     "en": "Launched in 2006, flew past Pluto in 2015 and the Kuiper belt object Arrokoth in 2019.",
-    "fr": "Lancée en 2006, elle a survolé Pluton en 2015 puis l’objet de la ceinture de Kuiper Arrokoth en 2019."
+    "fr": "Lancée en 2006, elle a survolé Pluton en 2015 puis l’objet de la ceinture de Kuiper Arrokoth en 2019.",
+    "es": "Lanzada en 2006, sobrevoló Plutón en 2015 y el objeto del cinturón de Kuiper Arrokoth en 2019.",
+    "pt-BR": "Lançada em 2006, sobrevoou Plutão em 2015 e o objeto do cinturão de Kuiper Arrokoth em 2019."
   },
   "launchDate": "2006-01-19",
   "color": "0xc9a0ff",

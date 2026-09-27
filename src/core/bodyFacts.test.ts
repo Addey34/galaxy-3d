@@ -42,7 +42,13 @@ describe('bodyFact : ce qui s’affiche comme un fait', () => {
 
   it('fait primer la déclaration d’inconnue sur la valeur de simulation', () => {
     // L'obliquité 0 d'une lune synchrone sert au rendu ; elle n'est pas une mesure.
-    const reason = { en: 'x'.repeat(40), fr: 'x'.repeat(40), unsourced: true };
+    const reason = {
+      en: 'x'.repeat(40),
+      fr: 'x'.repeat(40),
+      es: 'x'.repeat(40),
+      'pt-BR': 'x'.repeat(40),
+      unsourced: true,
+    };
     const entry = bodyFact(
       body({
         axialTilt: 0,

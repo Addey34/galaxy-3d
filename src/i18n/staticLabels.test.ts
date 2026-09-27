@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { messages } from './locales';
+import { message } from './allDictionaries';
+import { LOCALES } from './locales';
 
 /**
  * LIBELLÉS STATIQUES DE `index.html` — traduits, et jamais périmés.
@@ -68,7 +69,7 @@ describe('libellés statiques de index.html', () => {
       expect(bound.length).toBeGreaterThan(0);
       for (const tag of bound)
         expect(attribute(tag, label), identify(tag)).toBe(
-          messages.en[attribute(tag, binding)!]
+          message('en', attribute(tag, binding)!)
         );
     });
 
@@ -92,7 +93,7 @@ describe('libellés statiques de index.html', () => {
         const key = attribute(tag, binding);
         const value = attribute(tag, label);
         if (key === null || value === null) continue;
-        const english = messages.en[key];
+        const english = message('en', key);
         if (english === undefined) {
           stale.push(`${identify(tag)} → clé inconnue "${key}"`);
         } else if (english !== value) {
@@ -135,7 +136,7 @@ describe('libellés statiques de index.html', () => {
       const text = decode(raw);
       // Élément dont le texte vit dans des enfants : rien à comparer ici.
       if (text === '') continue;
-      const english = messages.en[key];
+      const english = message('en', key);
       if (english === undefined) stale.push(`clé inconnue "${key}"`);
       else if (english !== text)
         stale.push(`"${text}" ≠ en["${key}"] = "${english}"`);
@@ -174,13 +175,18 @@ describe('libellés statiques de index.html', () => {
     expect(sameTab, 'ajouter target="_blank"').toEqual([]);
   });
 
-  it('traduit en français chaque clé référencée par le HTML', () => {
-    const missing = new Set<string>();
-    for (const tag of TAGS)
-      for (const { binding } of BOUND) {
-        const key = attribute(tag, binding);
-        if (key !== null && messages.fr[key] === undefined) missing.add(key);
-      }
-    expect([...missing]).toEqual([]);
-  });
+  // Toutes les langues livrées, et plus seulement le français : au lot 20 ce test ne regardait
+  // que `fr`, si bien qu'une clé du HTML absente de l'espagnol aurait été servie en anglais sans
+  // que rien ne le dise.
+  for (const locale of LOCALES.filter((candidate) => candidate !== 'en'))
+    it(`traduit en ${locale} chaque clé référencée par le HTML`, () => {
+      const missing = new Set<string>();
+      for (const tag of TAGS)
+        for (const { binding } of BOUND) {
+          const key = attribute(tag, binding);
+          if (key !== null && message(locale, key) === undefined)
+            missing.add(key);
+        }
+      expect([...missing]).toEqual([]);
+    });
 });

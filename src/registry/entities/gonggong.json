@@ -6,7 +6,9 @@
   "elements": {
     "displayName": {
       "en": "Gonggong",
-      "fr": "Gonggong"
+      "fr": "Gonggong",
+      "es": "Gonggong",
+      "pt-BR": "Gonggong"
     },
     "a": 67.06649002606795,
     "e": 0.5034146432904725,
@@ -26,11 +28,15 @@
     "visualRadius": 0.097,
     "description": {
       "en": "Named after the Chinese god of water and chaos, this reddish, methane-frosted world spins nearly on its side and shares a steeply tilted, eccentric orbit with its lone moon Xiangliu.",
-      "fr": "Nommée d’après le dieu chinois de l’eau et du chaos, ce monde rougeâtre couvert de givre de méthane tourne presque couché sur le côté et partage une orbite très inclinée et excentrique avec son unique lune Xiangliu."
+      "fr": "Nommée d’après le dieu chinois de l’eau et du chaos, ce monde rougeâtre couvert de givre de méthane tourne presque couché sur le côté et partage une orbite très inclinée et excentrique avec son unique lune Xiangliu.",
+      "es": "Nombrado por el dios chino del agua y del caos, este mundo rojizo cubierto de escarcha de metano gira casi tumbado de lado y comparte una órbita muy inclinada y excéntrica con su única luna, Xiangliu.",
+      "pt-BR": "Nomeado a partir do deus chinês da água e do caos, este mundo avermelhado coberto de geada de metano gira quase deitado de lado e compartilha uma órbita muito inclinada e excêntrica com a sua única lua, Xiangliu."
     },
     "wiki": {
       "en": "https://en.wikipedia.org/wiki/Gonggong_(dwarf_planet)",
-      "fr": "https://fr.wikipedia.org/wiki/(225088)_Gonggong"
+      "fr": "https://fr.wikipedia.org/wiki/(225088)_Gonggong",
+      "es": "https://es.wikipedia.org/wiki/(225088)_Gonggong",
+      "pt-BR": "https://pt.wikipedia.org/wiki/Gonggong"
     }
   },
   "facts": {

@@ -48,7 +48,7 @@ import {
   NAVIGATE_FALLBACK_DENYLIST,
 } from './pwaRouting';
 import { matchesGlob } from 'node:path';
-import { messages } from '@/i18n/locales';
+import { messages } from '@/i18n/allDictionaries';
 
 /**
  * `/methodology` et `/sources` publient des chiffres et des crédits. Ce que ces tests gardent :

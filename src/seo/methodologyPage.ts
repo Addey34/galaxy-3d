@@ -36,7 +36,7 @@ import {
   temporalCategoryLabelKey,
   type TemporalCategory,
 } from '@/core/temporal';
-import { messages } from '@/i18n/locales';
+import { messages } from '@/i18n/allDictionaries';
 import { escapeHtml } from './bodyLandingPage';
 import {
   type Bilingual,

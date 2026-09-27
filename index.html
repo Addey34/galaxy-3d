@@ -1345,8 +1345,51 @@
             aria-label="Language"
             data-i18n-aria="lang.label"
           >
-            <button class="lang-btn" type="button" data-locale="en">EN</button>
-            <button class="lang-btn" type="button" data-locale="fr">FR</button>
+            <!--
+              Quatre langues depuis le lot 20. Chaque segment porte trois choses que l'œil ne
+              voit pas : `lang`, pour que le lecteur d'écran prononce « Español » en espagnol et
+              non en anglais ; `aria-label` avec le nom de la langue dans SA langue, parce que
+              « ES » s'énonce « euh esse » ; et `aria-pressed`, tenu par `ui/langSwitch`, parce
+              qu'avant ce lot la langue active n'était marquée que par une classe CSS, donc
+              invisible pour un lecteur d'écran. `src/i18n/langSwitchMarkup.test.ts` vérifie que
+              ces segments sont exactement les langues livrées.
+            -->
+            <button
+              class="lang-btn"
+              type="button"
+              data-locale="en"
+              lang="en"
+              aria-pressed="false"
+            >
+              EN
+            </button>
+            <button
+              class="lang-btn"
+              type="button"
+              data-locale="fr"
+              lang="fr"
+              aria-pressed="false"
+            >
+              FR
+            </button>
+            <button
+              class="lang-btn"
+              type="button"
+              data-locale="es"
+              lang="es"
+              aria-pressed="false"
+            >
+              ES
+            </button>
+            <button
+              class="lang-btn"
+              type="button"
+              data-locale="pt-BR"
+              lang="pt-BR"
+              aria-pressed="false"
+            >
+              PT
+            </button>
           </div>
           <p class="credits-copy">
             © 2026 Adrian34 ·

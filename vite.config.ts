@@ -1,3 +1,4 @@
+import { existsSync } from 'fs';
 import { fileURLToPath } from 'url';
 import { dirname, resolve } from 'path';
 import { defineConfig } from 'vitest/config';
@@ -6,6 +7,12 @@ import {
   LANDING_PAGE_GLOB_IGNORES,
   NAVIGATE_FALLBACK_DENYLIST,
 } from './src/seo/pwaRouting';
+import {
+  collectTranslations,
+  stripToEnglish,
+  DERIVED_TEXT_LOCALES,
+  type DerivedTextLocale,
+} from './src/core/registryText';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -42,6 +49,78 @@ function stripRegistryNotes() {
       const data = JSON.parse(code) as Record<string, unknown>;
       for (const key of DEV_ONLY) delete data[key];
       return JSON.stringify(data);
+    },
+  };
+}
+
+/**
+ * LE TEXTE NON ANGLAIS DU REGISTRE NE PART PAS DANS LE BUNDLE — il est DÉRIVÉ par langue.
+ *
+ * Les fiches sont importées par `import.meta.glob({ eager: true })`, donc tout leur contenu part
+ * chez le visiteur. Mesuré au lot 20 : les traductions espagnole et portugaise ajoutaient 50 263
+ * octets payés par TOUS, y compris les anglophones. Ce greffon fait deux choses complémentaires :
+ *
+ *   1. il retire les langues autres que l'anglais des fiches SERVIES AU NAVIGATEUR ;
+ *   2. il expose `virtual:registry-text/<langue>`, une carte « anglais -> traduction » construite
+ *      depuis les MÊMES fiches sur le disque, chargée à la demande avec le dictionnaire de la
+ *      langue (`config/catalogueText.ts`).
+ *
+ * `options.ssr` décide, et c'est le point délicat : le build des pages (`ssrLoadModule`) et les
+ * tests Vitest ont besoin des QUATRE langues — `/methodology` écrit les noms de corps en français.
+ * Ils passent par la voie SSR, qui n'est donc pas allégée. Le navigateur, en dev comme en
+ * production, reçoit la version allégée : la voie exercée par les tests e2e est bien celle qui est
+ * livrée.
+ */
+function deriveRegistryText() {
+  const PREFIX = 'virtual:registry-text/catalogue-';
+  const isRegistryJson = (id: string): boolean =>
+    /[\\/]src[\\/]registry[\\/].+\.json$/.test(id) &&
+    !/order\.json$/.test(id) &&
+    !/[\\/]schema[\\/]/.test(id);
+
+  /** Les fiches du disque, lues une fois par demande de module virtuel. */
+  const readFiches = async (): Promise<unknown[]> => {
+    const { readdirSync, readFileSync } = await import('fs');
+    const out: unknown[] = [];
+    for (const dir of ['entities', 'spacecraft', 'interstellar', 'providers']) {
+      const full = resolve(__dirname, 'src/registry', dir);
+      for (const name of readdirSync(full))
+        if (name.endsWith('.json') && name !== 'order.json')
+          out.push(JSON.parse(readFileSync(resolve(full, name), 'utf-8')));
+    }
+    return out;
+  };
+
+  return {
+    name: 'derive-registry-text',
+    enforce: 'pre' as const,
+    resolveId(id: string): string | null {
+      return id.startsWith(PREFIX) ? `\0${id}` : null;
+    },
+    async load(id: string): Promise<string | null> {
+      if (!id.startsWith(`\0${PREFIX}`)) return null;
+      const locale = id.slice(`\0${PREFIX}`.length);
+      if (!(DERIVED_TEXT_LOCALES as readonly string[]).includes(locale))
+        throw new Error(`langue inconnue pour le texte du registre : ${locale}`);
+      const map: Record<string, string> = {};
+      for (const fiche of await readFiches())
+        collectTranslations(fiche, locale as DerivedTextLocale, map);
+      // Un module vide voudrait dire que les fiches n'ont pas été lues : mieux vaut casser le
+      // build que servir une langue silencieusement vide.
+      if (Object.keys(map).length < 50)
+        throw new Error(
+          `texte du registre en ${locale} : ${Object.keys(map).length} entrées seulement, fiches non lues ?`
+        );
+      return `export default ${JSON.stringify(map)};`;
+    },
+    transform(
+      code: string,
+      id: string,
+      options?: { ssr?: boolean }
+    ): string | null {
+      if (options?.ssr) return null;
+      if (!isRegistryJson(id)) return null;
+      return JSON.stringify(stripToEnglish(JSON.parse(code)));
     },
   };
 }
@@ -105,7 +184,19 @@ function bodyLandingPages() {
         )) as typeof import('./src/seo/eclipseLandingPage');
 
         const dist = resolve(__dirname, 'dist');
-        const baseHtml = await readFile(resolve(dist, 'index.html'), 'utf-8');
+        // `closeBundle` tourne AUSSI quand le bundle a échoué, et `dist/index.html` n'existe
+        // alors pas. Lancer une ENOENT ici REMPLACE l'erreur d'origine par la nôtre : c'est
+        // arrivé au lot 20, et le vrai message (celui qui disait quoi corriger) était perdu. On
+        // rend donc la main en le disant, et l'erreur de rollup remonte intacte.
+        const baseHtmlPath = resolve(dist, 'index.html');
+        if (!existsSync(baseHtmlPath)) {
+          console.warn(
+            `  pages de corps non générées : ${baseHtmlPath} absent, donc le bundle n'a pas ` +
+              `été émis. L'erreur qui suit (ou précède) est la vraie cause.`
+          );
+          return;
+        }
+        const baseHtml = await readFile(baseHtmlPath, 'utf-8');
         const pages = seo.bodyLandingPages(
           catalogue.CELESTIAL_CONFIG,
           SITE_ORIGIN
@@ -549,6 +640,7 @@ export default defineConfig({
   json: { stringify: true },
   plugins: [
     stripRegistryNotes(),
+    deriveRegistryText(),
     stripProductionHtmlComments(),
     bodyLandingPages(),
     // PWA installable + hors-ligne. Pensé pour l'usage en classe (wifi d'école saturé) :

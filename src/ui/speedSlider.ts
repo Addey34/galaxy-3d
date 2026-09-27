@@ -11,7 +11,7 @@
  * demi-course est exponentielle, de ±1 au centre à ±`MAX_SIMULATION_SCALE` au bord.
  */
 
-import { getLocale, type Locale } from '@/i18n';
+import { getLocale, INTL_LOCALE, type Locale } from '@/i18n';
 
 /** Un an simulé par seconde réelle. C'est la course maximale du curseur, pas une limite physique. */
 export const MAX_SIMULATION_SCALE = 31_557_600;
@@ -98,14 +98,50 @@ export function applyCeiling(
   };
 }
 
-const SPEED_UNITS = [
-  { scale: 31_557_600, fr: 'an', en: 'y' },
-  { scale: 2_592_000, fr: 'mois', en: 'mo' },
-  { scale: 604_800, fr: 'sem', en: 'wk' },
-  { scale: 86_400, fr: 'j', en: 'd' },
-  { scale: 3_600, fr: 'h', en: 'h' },
-  { scale: 60, fr: 'min', en: 'min' },
-] as const;
+/**
+ * Les abréviations d'unité, une par langue, et le type qui FORCE les quatre.
+ *
+ * `Record<Locale, string>` plutôt qu'un objet libre : au lot 20 il aurait suffi d'oublier une
+ * langue pour qu'un curseur hispanophone annonce « 5,5 mo/s » en anglais, sans qu'aucun test ne
+ * le voie. Ces chaînes restent ici, hors dictionnaire, parce que ce module est PUR et testé par
+ * langue : `speedLabel(scale, 'es')` doit pouvoir répondre sans qu'aucune langue soit active.
+ */
+const SPEED_UNITS: readonly {
+  scale: number;
+  label: Record<Locale, string>;
+}[] = [
+  {
+    scale: 31_557_600,
+    label: { en: 'y', fr: 'an', es: 'a', 'pt-BR': 'a' },
+  },
+  {
+    scale: 2_592_000,
+    label: { en: 'mo', fr: 'mois', es: 'mes', 'pt-BR': 'mês' },
+  },
+  {
+    scale: 604_800,
+    label: { en: 'wk', fr: 'sem', es: 'sem', 'pt-BR': 'sem' },
+  },
+  { scale: 86_400, label: { en: 'd', fr: 'j', es: 'd', 'pt-BR': 'd' } },
+  { scale: 3_600, label: { en: 'h', fr: 'h', es: 'h', 'pt-BR': 'h' } },
+  { scale: 60, label: { en: 'min', fr: 'min', es: 'min', 'pt-BR': 'min' } },
+];
+
+/** « Temps réel 1:1 », dans les quatre langues. */
+const REAL_TIME: Record<Locale, string> = {
+  en: '1:1 · Earth real time',
+  fr: '1:1 · Échelle réelle Terre',
+  es: '1:1 · Tiempo real terrestre',
+  'pt-BR': '1:1 · Tempo real da Terra',
+};
+
+/** La mention du temps qui recule. `{speed}` porte la vitesse déjà formatée. */
+const PAST: Record<Locale, string> = {
+  en: '◀ {speed} (past)',
+  fr: '◀ {speed} (passé)',
+  es: '◀ {speed} (pasado)',
+  'pt-BR': '◀ {speed} (passado)',
+};
 
 /**
  * Quantité affichée sur le curseur, AVEC LE SÉPARATEUR DÉCIMAL DE LA LANGUE.
@@ -117,31 +153,31 @@ const SPEED_UNITS = [
  * désormais à chaque lien lent.
  */
 export function formatQuantity(value: number, locale: Locale): string {
+  // Au-dessus de 10 : un entier, SANS séparateur de milliers (« 1230 », pas « 1 230 ») — c'est
+  // une magnitude de curseur, pas une mesure, et le test le fixe.
   if (value >= 100) return String(Math.round(value / 10) * 10);
   if (value >= 10) return String(Math.round(value));
-  const one = value.toFixed(1).replace(/\.0$/, '');
-  return locale === 'fr' ? one.replace('.', ',') : one;
+  // Une décimale, avec le séparateur de la langue. `Intl` remplace un `replace('.', ',')` qui
+  // n'aurait été juste que pour le français : l'espagnol et le portugais du Brésil écrivent
+  // eux aussi la virgule, et rien ne l'aurait dit.
+  return new Intl.NumberFormat(INTL_LOCALE[locale], {
+    maximumFractionDigits: 1,
+  }).format(value);
 }
 
 export function speedLabel(
   scale: number,
   locale: Locale = getLocale()
 ): string {
-  if (scale === 1)
-    return locale === 'fr'
-      ? '1:1 · Échelle réelle Terre'
-      : '1:1 · Earth real time';
+  if (scale === 1) return REAL_TIME[locale];
 
   // Vitesse signée : magnitude commune, préfixe directionnel pour le passé (temps qui recule).
   const magnitude = Math.abs(scale);
   const reversed = scale < 0;
   const unit = SPEED_UNITS.find((candidate) => magnitude >= candidate.scale);
   const body = unit
-    ? `${formatQuantity(magnitude / unit.scale, locale)} ${
-        locale === 'fr' ? unit.fr : unit.en
-      }/s`
+    ? `${formatQuantity(magnitude / unit.scale, locale)} ${unit.label[locale]}/s`
     : `× ${formatQuantity(magnitude, locale)}`;
   if (!reversed) return body;
-  // Préfixe « ◀ » + mention passé : on remonte le temps.
-  return locale === 'fr' ? `◀ ${body} (passé)` : `◀ ${body} (past)`;
+  return PAST[locale].replace('{speed}', body);
 }

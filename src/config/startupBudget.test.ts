@@ -19,9 +19,12 @@ import {
   type TextureQualityThreshold,
 } from '@/components/systems/TextureSystem';
 import { MODEL_QUALITY_ORDER, type ModelQuality } from '@/core/modelLod';
+import { DERIVED_TEXT_LOCALES } from '@/core/registryText';
 import {
+  BOOT_EXCLUSIVE_CHUNK_GROUPS,
   EPHEMERIS_STARTUP_BUDGET_BYTES,
   FIRST_VIEW_TEXTURE_REFINEMENTS,
+  exclusiveGroupCost,
   TEXTURE_FLOOR_TIER,
   bootTierForFarLayer,
   modelFloorBudget,
@@ -372,5 +375,64 @@ describe('budget du démarrage : famille « modèles »', () => {
 
   it('livre chaque maillage de plancher qu’il demande', () => {
     expect(budget.lines.filter((line) => line.bytes === 0)).toEqual([]);
+  });
+});
+
+/**
+ * LES GROUPES EXCLUSIFS DU DÉMARRAGE (lot 20) — un visiteur ne charge qu'un dictionnaire.
+ *
+ * La famille JavaScript se compte après un build, donc dans `scripts/check-startup-budget.mjs` ;
+ * mais la RÈGLE, elle, est pure, et c'est celle-ci qu'il faut falsifier : un groupe qu'on
+ * additionnerait surestimerait le démarrage de deux dictionnaires, un groupe qu'on ignorerait le
+ * sous-estimerait pour les trois quarts des visiteurs.
+ */
+describe('budget du démarrage : groupes exclusifs', () => {
+  it('ne compte que le membre le plus lourd', () => {
+    const bytes: Record<string, number> = {
+      'dict-fr': 20_000,
+      'dict-es': 24_000,
+      'dict-pt-BR': 22_000,
+    };
+    const worst = exclusiveGroupCost(
+      { chunks: ['dict-fr', 'dict-es', 'dict-pt-BR'], reason: 'test' },
+      (chunk) => bytes[chunk] ?? 0
+    );
+    expect(worst.chunk).toBe('dict-es');
+    expect(worst.bytes).toBe(24_000);
+    // Et ce n'est PAS la somme : la falsification de la règle.
+    const sum = Object.values(bytes).reduce((a, b) => a + b, 0);
+    expect(worst.bytes).toBeLessThan(sum);
+  });
+
+  it('suit le plus lourd quand il change, sans ordre privilégié', () => {
+    const worst = exclusiveGroupCost(
+      { chunks: ['a', 'b'], reason: 'test' },
+      (chunk) => (chunk === 'a' ? 1 : 9)
+    );
+    expect(worst.chunk).toBe('b');
+    const other = exclusiveGroupCost(
+      { chunks: ['a', 'b'], reason: 'test' },
+      (chunk) => (chunk === 'a' ? 9 : 1)
+    );
+    expect(other.chunk).toBe('a');
+  });
+
+  it('déclare les deux groupes de langue, et jamais l’anglais', () => {
+    // L'anglais est dans la clôture STATIQUE — repli de `t()` pour le dictionnaire, seule langue
+    // que les fiches gardent pour le catalogue. L'y déclarer le compterait DEUX fois.
+    const declared = BOOT_EXCLUSIVE_CHUNK_GROUPS.map((group) => group.chunks);
+    expect(declared).toEqual([
+      ['dict-fr', 'dict-es', 'dict-pt-BR'],
+      ['catalogue-fr', 'catalogue-es', 'catalogue-pt-BR'],
+    ]);
+    expect(declared.flat().join(' ')).not.toContain('-en');
+    for (const group of BOOT_EXCLUSIVE_CHUNK_GROUPS)
+      expect(group.reason.length).toBeGreaterThan(40);
+    // Une langue livrée sans son groupe serait payée par tout le monde, en silence : chaque
+    // langue dérivée doit apparaître dans les DEUX groupes.
+    for (const locale of DERIVED_TEXT_LOCALES) {
+      expect(declared[0]).toContain(`dict-${locale}`);
+      expect(declared[1]).toContain(`catalogue-${locale}`);
+    }
   });
 });

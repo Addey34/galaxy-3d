@@ -6,7 +6,9 @@
   "elements": {
     "displayName": {
       "en": "Sedna",
-      "fr": "Sedna"
+      "fr": "Sedna",
+      "es": "Sedna",
+      "pt-BR": "Sedna"
     },
     "a": 506.4484207674334,
     "e": 0.8495572493958709,
@@ -26,11 +28,15 @@
     "visualRadius": 0.078,
     "description": {
       "en": "One of the most distant and coldest known objects in the Solar System, journeying on an extremely elongated, multi-millennial orbit that carries it beyond the Kuiper Belt toward the inner edge of the hypothesized Oort Cloud.",
-      "fr": "L’un des objets connus les plus lointains et les plus froids du Système solaire, parcourant une orbite extrêmement allongée, longue de plusieurs millénaires, qui l’entraîne au-delà de la ceinture de Kuiper vers les abords du nuage d’Oort hypothétique."
+      "fr": "L’un des objets connus les plus lointains et les plus froids du Système solaire, parcourant une orbite extrêmement allongée, longue de plusieurs millénaires, qui l’entraîne au-delà de la ceinture de Kuiper vers les abords du nuage d’Oort hypothétique.",
+      "es": "Uno de los objetos conocidos más lejanos y fríos del Sistema Solar, que recorre una órbita extremadamente alargada, de varios milenios, y que lo lleva más allá del cinturón de Kuiper hacia el borde interior de la hipotética nube de Oort.",
+      "pt-BR": "Um dos objetos conhecidos mais distantes e frios do Sistema Solar, percorrendo uma órbita extremamente alongada, de vários milênios, que o leva além do cinturão de Kuiper na direção da borda interna da hipotética nuvem de Oort."
     },
     "wiki": {
       "en": "https://en.wikipedia.org/wiki/Sedna_(dwarf_planet)",
-      "fr": "https://fr.wikipedia.org/wiki/(90377)_Sedna"
+      "fr": "https://fr.wikipedia.org/wiki/(90377)_Sedna",
+      "es": "https://es.wikipedia.org/wiki/(90377)_Sedna",
+      "pt-BR": "https://pt.wikipedia.org/wiki/Sedna_(planeta_an%C3%A3o)"
     }
   },
   "facts": {

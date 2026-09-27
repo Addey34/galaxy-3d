@@ -6,7 +6,10 @@
   "config": {
     "kind": "star",
     "displayName": {
-      "fr": "Soleil"
+      "en": "Sun",
+      "fr": "Soleil",
+      "es": "Sol",
+      "pt-BR": "Sol"
     },
     "radius": 7,
     "rotationSpeed": {
@@ -23,11 +26,15 @@
     "realData": {
       "description": {
         "en": "The star at the heart of the Solar System. This ball of plasma holds 99.86% of all the mass orbiting it.",
-        "fr": "L’étoile au cœur du Système solaire. Cette boule de plasma concentre 99,86 % de toute la masse en orbite autour d’elle."
+        "fr": "L’étoile au cœur du Système solaire. Cette boule de plasma concentre 99,86 % de toute la masse en orbite autour d’elle.",
+        "es": "La estrella en el corazón del Sistema Solar. Esta bola de plasma concentra el 99,86 % de toda la masa que la orbita.",
+        "pt-BR": "A estrela no coração do Sistema Solar. Esta bola de plasma concentra 99,86% de toda a massa que a orbita."
       },
       "wiki": {
         "en": "https://en.wikipedia.org/wiki/Sun",
-        "fr": "https://fr.wikipedia.org/wiki/Soleil"
+        "fr": "https://fr.wikipedia.org/wiki/Soleil",
+        "es": "https://es.wikipedia.org/wiki/Sol",
+        "pt-BR": "https://pt.wikipedia.org/wiki/Sol"
       }
     },
     "astroBody": "Sun",

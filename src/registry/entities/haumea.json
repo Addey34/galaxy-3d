@@ -6,7 +6,9 @@
   "elements": {
     "displayName": {
       "en": "Haumea",
-      "fr": "Hauméa"
+      "fr": "Hauméa",
+      "es": "Haumea",
+      "pt-BR": "Haumea"
     },
     "a": 43.10286749752674,
     "e": 0.1950094391276499,
@@ -26,11 +28,15 @@
     "visualRadius": 0.123,
     "description": {
       "en": "It spins in under 4 hours, the fastest of any large body in the Solar System, which has stretched it into an egg shape. In 2017 it became the first trans-Neptunian object found to have a ring.",
-      "fr": "Elle tourne sur elle-même en moins de 4 heures, un record parmi les grands corps du Système solaire, ce qui l’a étirée en forme d’œuf. En 2017, elle est devenue le premier objet transneptunien doté d’un anneau connu."
+      "fr": "Elle tourne sur elle-même en moins de 4 heures, un record parmi les grands corps du Système solaire, ce qui l’a étirée en forme d’œuf. En 2017, elle est devenue le premier objet transneptunien doté d’un anneau connu.",
+      "es": "Gira sobre sí misma en menos de 4 horas, un récord entre los grandes cuerpos del Sistema Solar, lo que la ha estirado hasta darle forma de huevo. En 2017 se convirtió en el primer objeto transneptuniano con un anillo conocido.",
+      "pt-BR": "Gira sobre si mesma em menos de 4 horas, um recorde entre os grandes corpos do Sistema Solar, o que a esticou até lhe dar forma de ovo. Em 2017 tornou-se o primeiro objeto transneptuniano com um anel conhecido."
     },
     "wiki": {
       "en": "https://en.wikipedia.org/wiki/Haumea",
-      "fr": "https://fr.wikipedia.org/wiki/(136108)_Haum%C3%A9a"
+      "fr": "https://fr.wikipedia.org/wiki/(136108)_Haum%C3%A9a",
+      "es": "https://es.wikipedia.org/wiki/Haumea_(planeta_enano)",
+      "pt-BR": "https://pt.wikipedia.org/wiki/Haumea"
     }
   },
   "facts": {

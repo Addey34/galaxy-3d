@@ -6,7 +6,9 @@
   "elements": {
     "displayName": {
       "en": "Itokawa",
-      "fr": "Itokawa"
+      "fr": "Itokawa",
+      "es": "Itokawa",
+      "pt-BR": "Itokawa"
     },
     "a": 1.324127117232954,
     "e": 0.2801540468526449,
@@ -30,16 +32,22 @@
       "colourSource": null,
       "credit": {
         "en": "JAXA Hayabusa AMICA images, shape model by R. Gaskell (PSI), NASA PDS HAY-A-AMICA-5-ITOKAWASHAPE-V1.0 (q = 128), decimated for the web.",
-        "fr": "Images JAXA Hayabusa AMICA, modèle de forme de R. Gaskell (PSI), NASA PDS HAY-A-AMICA-5-ITOKAWASHAPE-V1.0 (q = 128), décimé pour le web."
+        "fr": "Images JAXA Hayabusa AMICA, modèle de forme de R. Gaskell (PSI), NASA PDS HAY-A-AMICA-5-ITOKAWASHAPE-V1.0 (q = 128), décimé pour le web.",
+        "es": "Imágenes JAXA Hayabusa AMICA, modelo de forma de R. Gaskell (PSI), NASA PDS HAY-A-AMICA-5-ITOKAWASHAPE-V1.0 (q = 128), diezmado para la web.",
+        "pt-BR": "Imagens JAXA Hayabusa AMICA, modelo de forma de R. Gaskell (PSI), NASA PDS HAY-A-AMICA-5-ITOKAWASHAPE-V1.0 (q = 128), decimado para a web."
       }
     },
     "description": {
       "en": "A 535-metre rubble pile shaped like a sea otter. JAXA’s Hayabusa landed on it in 2005 and brought the first grains of an asteroid back to Earth in 2010.",
-      "fr": "Un amas de gravats de 535 mètres en forme de loutre de mer. La sonde japonaise Hayabusa s’y est posée en 2005 et a rapporté sur Terre, en 2010, les premiers grains d’un astéroïde."
+      "fr": "Un amas de gravats de 535 mètres en forme de loutre de mer. La sonde japonaise Hayabusa s’y est posée en 2005 et a rapporté sur Terre, en 2010, les premiers grains d’un astéroïde.",
+      "es": "Un montón de escombros de 535 metros con forma de nutria marina. La sonda japonesa Hayabusa se posó en él en 2005 y trajo a la Tierra, en 2010, los primeros granos de un asteroide.",
+      "pt-BR": "Uma pilha de entulho de 535 metros em forma de lontra-marinha. A sonda japonesa Hayabusa pousou nele em 2005 e trouxe para a Terra, em 2010, os primeiros grãos de um asteroide."
     },
     "wiki": {
       "en": "https://en.wikipedia.org/wiki/25143_Itokawa",
-      "fr": "https://fr.wikipedia.org/wiki/(25143)_Itokawa"
+      "fr": "https://fr.wikipedia.org/wiki/(25143)_Itokawa",
+      "es": "https://es.wikipedia.org/wiki/(25143)_Itokawa",
+      "pt-BR": "https://pt.wikipedia.org/wiki/25143_Itokawa"
     }
   },
   "facts": {
@@ -67,14 +75,18 @@
       "published": false,
       "reason": {
         "en": "About a hundred-thousandth of Earth’s, and it changes by a large factor between the two lobes: a single value would mislead.",
-        "fr": "Environ un cent-millième de celle de la Terre, et elle change d'un facteur important d'un lobe à l'autre : une valeur unique serait trompeuse."
+        "fr": "Environ un cent-millième de celle de la Terre, et elle change d'un facteur important d'un lobe à l'autre : une valeur unique serait trompeuse.",
+        "es": "Unas cien mil veces menor que la de la Tierra, y cambia en un factor importante de un lóbulo al otro: un valor único induciría a error.",
+        "pt-BR": "Cerca de cem mil vezes menor que a da Terra, e muda por um fator importante de um lóbulo ao outro: um valor único seria enganoso."
       }
     },
     "meanTempC": {
       "published": false,
       "reason": {
         "en": "Surface temperature swings strongly between day and night and along its orbit: a mean would describe no real moment.",
-        "fr": "La température de surface varie fortement entre le jour et la nuit et le long de son orbite : une moyenne ne décrirait aucun instant réel."
+        "fr": "La température de surface varie fortement entre le jour et la nuit et le long de son orbite : une moyenne ne décrirait aucun instant réel.",
+        "es": "La temperatura de la superficie varía mucho entre el día y la noche y a lo largo de su órbita: una media no describiría ningún instante real.",
+        "pt-BR": "A temperatura da superfície varia muito entre o dia e a noite e ao longo da sua órbita: uma média não descreveria nenhum instante real."
       }
     },
     "moonCount": {

@@ -30,7 +30,7 @@ import {
   formatEclipseDate,
   type EclipseEvent,
 } from '@/core/eclipsePages';
-import { messages } from '@/i18n/locales';
+import { messages } from '@/i18n/allDictionaries';
 import {
   escapeHtml,
   renderLandingPage,

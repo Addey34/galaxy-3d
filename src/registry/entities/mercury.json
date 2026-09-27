@@ -6,7 +6,10 @@
   "config": {
     "kind": "planet",
     "displayName": {
-      "fr": "Mercure"
+      "en": "Mercury",
+      "fr": "Mercure",
+      "es": "Mercurio",
+      "pt-BR": "Mercúrio"
     },
     "radius": 0.38,
     "rotationSpeed": {
@@ -30,11 +33,15 @@
       },
       "description": {
         "en": "The smallest planet and the closest to the Sun. With no atmosphere, it swings from +430 °C by day to -180 °C at night.",
-        "fr": "La plus petite planète et la plus proche du Soleil. Sans atmosphère, elle passe de +430 °C le jour à -180 °C la nuit."
+        "fr": "La plus petite planète et la plus proche du Soleil. Sans atmosphère, elle passe de +430 °C le jour à -180 °C la nuit.",
+        "es": "El planeta más pequeño y el más cercano al Sol. Sin atmósfera, pasa de +430 °C de día a -180 °C de noche.",
+        "pt-BR": "O menor planeta e o mais próximo do Sol. Sem atmosfera, passa de +430 °C de dia para -180 °C de noite."
       },
       "wiki": {
         "en": "https://en.wikipedia.org/wiki/Mercury_(planet)",
-        "fr": "https://fr.wikipedia.org/wiki/Mercure_(plan%C3%A8te)"
+        "fr": "https://fr.wikipedia.org/wiki/Mercure_(plan%C3%A8te)",
+        "es": "https://es.wikipedia.org/wiki/Mercurio_(planeta)",
+        "pt-BR": "https://pt.wikipedia.org/wiki/Merc%C3%BArio_(planeta)"
       }
     },
     "astroBody": "Mercury",

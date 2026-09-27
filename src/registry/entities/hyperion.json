@@ -7,7 +7,9 @@
     "kind": "moon",
     "displayName": {
       "en": "Hyperion",
-      "fr": "Hypérion"
+      "fr": "Hypérion",
+      "es": "Hiperión",
+      "pt-BR": "Hipérion"
     },
     "radius": 0.08,
     "rotationSpeed": {
@@ -49,7 +51,9 @@
       "extentRatio": 1.36,
       "credit": {
         "en": "Cassini ISS images, shape model by P. Thomas, J. Joseph and T. Ansty, NASA PDS Saturn Small Moon Shape Models V1.0 (doi:10.26033/ewy3-jy61), decimated for the web.",
-        "fr": "Images Cassini ISS, modèle de forme de P. Thomas, J. Joseph et T. Ansty, NASA PDS Saturn Small Moon Shape Models V1.0 (doi:10.26033/ewy3-jy61), décimé pour le web."
+        "fr": "Images Cassini ISS, modèle de forme de P. Thomas, J. Joseph et T. Ansty, NASA PDS Saturn Small Moon Shape Models V1.0 (doi:10.26033/ewy3-jy61), décimé pour le web.",
+        "es": "Imágenes Cassini ISS, modelo de forma de P. Thomas, J. Joseph y T. Ansty, NASA PDS Saturn Small Moon Shape Models V1.0 (doi:10.26033/ewy3-jy61), diezmado para la web.",
+        "pt-BR": "Imagens Cassini ISS, modelo de forma de P. Thomas, J. Joseph e T. Ansty, NASA PDS Saturn Small Moon Shape Models V1.0 (doi:10.26033/ewy3-jy61), decimado para a web."
       }
     },
     "textureResolutions": {
@@ -67,11 +71,15 @@
       },
       "description": {
         "en": "A spongy, porous outer moon tumbling chaotically through space: its rotation never settles into a fixed period.",
-        "fr": "Une lune extérieure spongieuse et poreuse, qui bascule de façon chaotique dans l’espace : sa rotation ne se stabilise jamais sur une période fixe."
+        "fr": "Une lune extérieure spongieuse et poreuse, qui bascule de façon chaotique dans l’espace : sa rotation ne se stabilise jamais sur une période fixe.",
+        "es": "Una luna externa esponjosa y porosa, que bascula de forma caótica en el espacio: su rotación no se estabiliza nunca en un periodo fijo.",
+        "pt-BR": "Uma lua externa esponjosa e porosa, que oscila de forma caótica no espaço: a sua rotação nunca se estabiliza em um período fixo."
       },
       "wiki": {
         "en": "https://en.wikipedia.org/wiki/Hyperion_(moon)",
-        "fr": "https://fr.wikipedia.org/wiki/Hyp%C3%A9rion_(lune)"
+        "fr": "https://fr.wikipedia.org/wiki/Hyp%C3%A9rion_(lune)",
+        "es": "https://es.wikipedia.org/wiki/Hiperi%C3%B3n_(sat%C3%A9lite)",
+        "pt-BR": "https://pt.wikipedia.org/wiki/Hip%C3%A9rion_(sat%C3%A9lite)"
       }
     },
     "cameraDistance": {
@@ -134,7 +142,9 @@
       "published": false,
       "reason": {
         "en": "NASA NSSDCA lists Hyperion’s rotation as chaotic: it tumbles without a fixed period.",
-        "fr": "La NASA (NSSDCA) classe la rotation d’Hypérion comme chaotique : elle bascule sans période fixe."
+        "fr": "La NASA (NSSDCA) classe la rotation d’Hypérion comme chaotique : elle bascule sans période fixe.",
+        "es": "La NASA (NSSDCA) clasifica la rotación de Hiperión como caótica: bascula sin periodo fijo.",
+        "pt-BR": "A NASA (NSSDCA) classifica a rotação de Hipérion como caótica: ele oscila sem período fixo."
       }
     }
   },

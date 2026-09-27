@@ -4,11 +4,15 @@
   "targetClass": "spacecraft",
   "displayName": {
     "en": "Cassini",
-    "fr": "Cassini"
+    "fr": "Cassini",
+    "es": "Cassini",
+    "pt-BR": "Cassini"
   },
   "description": {
     "en": "Launched in 1997, orbited Saturn from 2004 and ended its mission inside the planet in 2017.",
-    "fr": "Lancée en 1997, en orbite autour de Saturne à partir de 2004, elle a fini sa mission dans la planète en 2017."
+    "fr": "Lancée en 1997, en orbite autour de Saturne à partir de 2004, elle a fini sa mission dans la planète en 2017.",
+    "es": "Lanzada en 1997, orbitó Saturno desde 2004 y terminó su misión dentro del planeta en 2017.",
+    "pt-BR": "Lançada em 1997, orbitou Saturno a partir de 2004 e encerrou a sua missão dentro do planeta em 2017."
   },
   "launchDate": "1997-10-15",
   "color": "0x5fd7c8",

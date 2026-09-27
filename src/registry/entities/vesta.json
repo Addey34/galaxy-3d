@@ -6,7 +6,9 @@
   "elements": {
     "displayName": {
       "en": "Vesta",
-      "fr": "Vesta"
+      "fr": "Vesta",
+      "es": "Vesta",
+      "pt-BR": "Vesta"
     },
     "a": 2.361534934739072,
     "e": 0.09002244561937413,
@@ -25,7 +27,9 @@
       "extentRatio": 1.12,
       "credit": {
         "en": "Dawn Framing Camera images, digital terrain model by F. Preusker, F. Scholten, K.-D. Matz, T. Roatsch, R. Jaumann, C. A. Raymond and C. T. Russell (DLR), NASA PDS DAWN-A-FC2-5-VESTADTMSPG-V1.0, resampled to 0.5° and decimated for the web.",
-        "fr": "Images de la Framing Camera de Dawn, modèle numérique de terrain de F. Preusker, F. Scholten, K.-D. Matz, T. Roatsch, R. Jaumann, C. A. Raymond et C. T. Russell (DLR), NASA PDS DAWN-A-FC2-5-VESTADTMSPG-V1.0, rééchantillonné à 0,5° et décimé pour le web."
+        "fr": "Images de la Framing Camera de Dawn, modèle numérique de terrain de F. Preusker, F. Scholten, K.-D. Matz, T. Roatsch, R. Jaumann, C. A. Raymond et C. T. Russell (DLR), NASA PDS DAWN-A-FC2-5-VESTADTMSPG-V1.0, rééchantillonné à 0,5° et décimé pour le web.",
+        "es": "Imágenes de la Framing Camera de Dawn, modelo digital de terreno de F. Preusker, F. Scholten, K.-D. Matz, T. Roatsch, R. Jaumann, C. A. Raymond y C. T. Russell (DLR), NASA PDS DAWN-A-FC2-5-VESTADTMSPG-V1.0, remuestreado a 0,5° y diezmado para la web.",
+        "pt-BR": "Imagens da Framing Camera da Dawn, modelo digital de terreno de F. Preusker, F. Scholten, K.-D. Matz, T. Roatsch, R. Jaumann, C. A. Raymond e C. T. Russell (DLR), NASA PDS DAWN-A-FC2-5-VESTADTMSPG-V1.0, reamostrado a 0,5° e decimado para a web."
       }
     },
     "surfaceResolutions": [
@@ -36,11 +40,15 @@
     ],
     "description": {
       "en": "The brightest asteroid, and the only one occasionally visible to the naked eye. A giant impact blasted away its south pole, and fragments of that crater rain down on Earth as some of our meteorites.",
-      "fr": "L’astéroïde le plus brillant, et le seul parfois visible à l’œil nu. Un impact géant a arraché son pôle sud, et des fragments de ce cratère tombent sur Terre sous forme de certaines de nos météorites."
+      "fr": "L’astéroïde le plus brillant, et le seul parfois visible à l’œil nu. Un impact géant a arraché son pôle sud, et des fragments de ce cratère tombent sur Terre sous forme de certaines de nos météorites.",
+      "es": "El asteroide más brillante, y el único visible a veces a simple vista. Un impacto gigante arrancó su polo sur, y fragmentos de ese cráter caen sobre la Tierra en forma de algunos de nuestros meteoritos.",
+      "pt-BR": "O asteroide mais brilhante, e o único às vezes visível a olho nu. Um impacto gigante arrancou o seu polo sul, e fragmentos dessa cratera caem na Terra na forma de alguns dos nossos meteoritos."
     },
     "wiki": {
       "en": "https://en.wikipedia.org/wiki/4_Vesta",
-      "fr": "https://fr.wikipedia.org/wiki/(4)_Vesta"
+      "fr": "https://fr.wikipedia.org/wiki/(4)_Vesta",
+      "es": "https://es.wikipedia.org/wiki/(4)_Vesta",
+      "pt-BR": "https://pt.wikipedia.org/wiki/4_Vesta"
     }
   },
   "facts": {

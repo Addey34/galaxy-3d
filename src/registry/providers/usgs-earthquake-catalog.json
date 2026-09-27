@@ -23,10 +23,14 @@
   },
   "use": {
     "en": "Epicentre, magnitude and origin time of the earthquakes drawn by the optional Earth events layer.",
-    "fr": "Épicentre, magnitude et instant d’origine des séismes dessinés par la couche optionnelle des événements terrestres."
+    "fr": "Épicentre, magnitude et instant d’origine des séismes dessinés par la couche optionnelle des événements terrestres.",
+    "es": "Epicentro, magnitud e instante de origen de los terremotos dibujados por la capa opcional de eventos terrestres.",
+    "pt-BR": "Epicentro, magnitude e instante de origem dos terremotos desenhados pela camada opcional de eventos terrestres."
   },
   "terms": {
     "en": "USGS authored or produced data and information are in the U.S. public domain; the USGS asks that proper credit be given. Read at the source on 2026-09-20.",
-    "fr": "Les données et informations produites par l’USGS sont dans le domaine public des États-Unis ; l’USGS demande que le crédit lui soit donné. Conditions lues à la source le 2026-09-20."
+    "fr": "Les données et informations produites par l’USGS sont dans le domaine public des États-Unis ; l’USGS demande que le crédit lui soit donné. Conditions lues à la source le 2026-09-20.",
+    "es": "Los datos y la información producidos por el USGS están en el dominio público de los Estados Unidos; el USGS pide que se le dé el crédito correspondiente. Condiciones leídas en la fuente el 2026-09-20.",
+    "pt-BR": "Os dados e as informações produzidos pelo USGS estão no domínio público dos Estados Unidos; o USGS pede que o crédito lhe seja dado. Condições lidas na fonte em 2026-09-20."
   }
 }

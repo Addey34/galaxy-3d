@@ -6,7 +6,12 @@
  * déclarées du chargeur, pas un morceau du catalogue. Fonction pure, testée.
  */
 import type { Body } from 'astronomy-engine';
-import type { CelestialBodyConfig, ModelConfig, TextureQuality } from '@/types';
+import type {
+  CelestialBodyConfig,
+  LocalizedText,
+  ModelConfig,
+  TextureQuality,
+} from '@/types';
 import { exploCameraDistance } from '@/core/ScaleService';
 import { DEG_TO_RAD as D2R } from '@/core/MathConstants';
 import { PLANETS_TO_SUN_MASS_RATIO } from '@/core/kepler';
@@ -75,8 +80,8 @@ export interface SmallBodyElements {
   meanTempC?: number;
   /** Nombre de satellites naturels connus. */
   moonCount?: number;
-  /** Courte description grand public, localisée (FR/EN). */
-  description?: { en: string; fr: string };
+  /** Courte description grand public, localisée (les quatre langues livrées). */
+  description?: LocalizedText;
   /** Champs sans valeur publiée unique, avec leur raison (cf. `RealData.unknown`). */
   unknown?: NonNullable<CelestialBodyConfig['realData']>['unknown'];
   /**
@@ -86,7 +91,7 @@ export interface SmallBodyElements {
    */
   sources?: NonNullable<CelestialBodyConfig['realData']>['sources'];
   /** Lien « En savoir plus » par langue (article Wikipédia dédié). */
-  wiki?: { en: string; fr: string };
+  wiki?: LocalizedText;
   satellites?: Record<string, CelestialBodyConfig>;
 }
 

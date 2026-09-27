@@ -6,7 +6,10 @@
   "config": {
     "kind": "moon",
     "displayName": {
-      "fr": "Io"
+      "en": "Io",
+      "fr": "Io",
+      "es": "Ío",
+      "pt-BR": "Io"
     },
     "frame": "parentRelative",
     "relativeEphemeris": {
@@ -33,11 +36,15 @@
       "ascendingNode": 0,
       "description": {
         "en": "The innermost Galilean moon, shaped by intense volcanic activity driven by Jupiter tides.",
-        "fr": "La plus proche des lunes galiléennes, modelée par une activité volcanique intense entretenue par les marées de Jupiter."
+        "fr": "La plus proche des lunes galiléennes, modelée par une activité volcanique intense entretenue par les marées de Jupiter.",
+        "es": "La más cercana de las lunas galileanas, modelada por una intensa actividad volcánica alimentada por las mareas de Júpiter.",
+        "pt-BR": "A mais próxima das luas galileanas, modelada por uma intensa atividade vulcânica alimentada pelas marés de Júpiter."
       },
       "wiki": {
         "en": "https://en.wikipedia.org/wiki/Io_(moon)",
-        "fr": "https://fr.wikipedia.org/wiki/Io_(lune)"
+        "fr": "https://fr.wikipedia.org/wiki/Io_(lune)",
+        "es": "https://es.wikipedia.org/wiki/%C3%8Do_(sat%C3%A9lite)",
+        "pt-BR": "https://pt.wikipedia.org/wiki/Io_(sat%C3%A9lite)"
       }
     },
     "cameraDistance": {
@@ -79,7 +86,9 @@
       "published": false,
       "reason": {
         "en": "NASA publishes a range, not a mean: about 80-85 K at night, 420-620 K over volcanic regions.",
-        "fr": "La NASA publie une plage, pas une moyenne : environ 80-85 K la nuit, 420-620 K sur les zones volcaniques."
+        "fr": "La NASA publie une plage, pas une moyenne : environ 80-85 K la nuit, 420-620 K sur les zones volcaniques.",
+        "es": "La NASA publica un rango, no una media: unos 80-85 K de noche, 420-620 K sobre las zonas volcánicas.",
+        "pt-BR": "A NASA publica um intervalo, não uma média: cerca de 80-85 K de noite, 420-620 K sobre as zonas vulcânicas."
       }
     },
     "axialTilt": {

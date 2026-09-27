@@ -6,7 +6,9 @@
   "elements": {
     "displayName": {
       "en": "Hygiea",
-      "fr": "Hygie"
+      "fr": "Hygie",
+      "es": "Higía",
+      "pt-BR": "Hígia"
     },
     "a": 3.138421324853723,
     "e": 0.1194647926154634,
@@ -23,7 +25,9 @@
       "extentRatio": 1.07,
       "credit": {
         "en": "ESO VLT/SPHERE adaptive-optics images and light curves, shape model by Vernazza et al. 2020 (Nature Astronomy 4, 136), DAMIT model 4392 (CC BY 4.0), used at its full 3,200 facets.",
-        "fr": "Images d'optique adaptative ESO VLT/SPHERE et courbes de lumière, modèle de forme de Vernazza et al. 2020 (Nature Astronomy 4, 136), modèle DAMIT 4392 (CC BY 4.0), employé avec ses 3 200 facettes."
+        "fr": "Images d'optique adaptative ESO VLT/SPHERE et courbes de lumière, modèle de forme de Vernazza et al. 2020 (Nature Astronomy 4, 136), modèle DAMIT 4392 (CC BY 4.0), employé avec ses 3 200 facettes.",
+        "es": "Imágenes de óptica adaptativa ESO VLT/SPHERE y curvas de luz, modelo de forma de Vernazza et al. 2020 (Nature Astronomy 4, 136), modelo DAMIT 4392 (CC BY 4.0), usado con sus 3200 facetas completas.",
+        "pt-BR": "Imagens de óptica adaptativa ESO VLT/SPHERE e curvas de luz, modelo de forma de Vernazza et al. 2020 (Nature Astronomy 4, 136), modelo DAMIT 4392 (CC BY 4.0), usado com as suas 3200 facetas completas."
       },
       "radiusMismatch": "Le rayon affiché, 203,56 km, vient du diamètre IRAS de 407,12 km que la SBDB publie encore (IRAS-A-FPA-3-RDR-IMPS-V6.0). Le modèle de Vernazza et al. 2020 a un rayon équivalent-volume de 216,9 km, cohérent avec les 434 +/- 14 km de diamètre que DAMIT publie pour lui. Deux mesures publiées différentes."
     },
@@ -33,11 +37,15 @@
     ],
     "description": {
       "en": "The fourth-largest asteroid. In 2019 it was found to be nearly spherical, so round it may qualify as the smallest dwarf planet in the Solar System.",
-      "fr": "Le quatrième plus gros astéroïde. En 2019, on l’a découvert quasi sphérique, si rond qu’il pourrait être la plus petite planète naine du Système solaire."
+      "fr": "Le quatrième plus gros astéroïde. En 2019, on l’a découvert quasi sphérique, si rond qu’il pourrait être la plus petite planète naine du Système solaire.",
+      "es": "El cuarto asteroide más grande. En 2019 se descubrió que es casi esférico, tan redondo que podría ser el planeta enano más pequeño del Sistema Solar.",
+      "pt-BR": "O quarto maior asteroide. Em 2019 descobriu-se que ele é quase esférico, tão redondo que poderia ser o menor planeta anão do Sistema Solar."
     },
     "wiki": {
       "en": "https://en.wikipedia.org/wiki/10_Hygiea",
-      "fr": "https://fr.wikipedia.org/wiki/(10)_Hygie"
+      "fr": "https://fr.wikipedia.org/wiki/(10)_Hygie",
+      "es": "https://es.wikipedia.org/wiki/(10)_Hig%C3%ADa",
+      "pt-BR": "https://pt.wikipedia.org/wiki/10_H%C3%ADgia"
     }
   },
   "facts": {

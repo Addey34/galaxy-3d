@@ -12,7 +12,7 @@
  */
 import { SolarSystemApp } from './SolarSystemApp';
 import { LabelSpace } from '@/core/labelSpace';
-import { t } from './i18n';
+import { initLocale, onLocaleLoading, t } from './i18n';
 import { bodyDisplayName } from './i18n/bodyText';
 import { initStaticI18n } from './i18n/dom';
 import { updateProgress, hideLoader, showError } from './ui/loader';
@@ -91,18 +91,10 @@ import { setupSurfaceProbe } from './ui/surfaceProbe';
 import { setupMeteoDebug } from './ui/meteoDebug';
 import { loadSmallBodies } from './core/sbdb';
 import { CELESTIAL_CONFIG } from './config/bodies';
+import { hydrateCatalogueText } from './config/catalogueText';
 import { flattenBodies } from './config/catalog';
 import { clearRetiredStorage } from './config/storageKeys';
 
-// Traduit les chaînes statiques du HTML avant tout et synchronise <html lang> ; les modules
-// dynamiques (loader, bodyInfo…) se retraduisent ensuite via leurs propres abonnements.
-initStaticI18n();
-setupLangSwitch();
-clearRetiredStorage();
-setupFullscreen();
-const overlayCoordinator = setupOverlayCoordinator();
-setupHelp(overlayCoordinator);
-const guidedTour = setupGuidedTour();
 const CONTEXTUAL_SURFACE_ANCHORS: Partial<
   Record<SecondaryOverlayId, { trigger: string; panel: string }>
 > = {
@@ -159,38 +151,82 @@ function positionContextualSurface(id: SecondaryOverlayId): void {
   );
 }
 
-// Fermeture au clic extérieur d'une surface contextuelle.
-//   - Mobile : le scrim est une couche tactile plein écran (tap hors feuille = fermer).
-//   - Desktop : le scrim est volontairement transparent aux évènements (il ne doit pas
-//     bloquer la molette/rotation sur la scène) ; on capte donc le clic extérieur au niveau
-//     du document, en ignorant les clics dans une surface ou sur un déclencheur du dock.
-const surfaceScrim = document.getElementById('surface-scrim');
-if (surfaceScrim) {
-  let activeSurfaceId: SecondaryOverlayId | null = null;
-  overlayCoordinator.onOpen((id) => {
-    activeSurfaceId = id;
-    if (id) positionContextualSurface(id);
-    surfaceScrim.hidden = id === null;
-  });
-  window.addEventListener('resize', () => {
-    if (activeSurfaceId) positionContextualSurface(activeSurfaceId);
-  });
-  // Couche tactile mobile.
-  surfaceScrim.addEventListener('click', () => overlayCoordinator.closeAll());
+/**
+ * LE CHROME DE L'INTERFACE : tout ce qui s'affiche avant que la scène existe, donc tout ce qui
+ * porte du TEXTE au démarrage.
+ *
+ * Regroupé dans une fonction, et non laissé au corps du module, pour une raison mesurée au lot
+ * 20 : le dictionnaire de la langue active arrive désormais par le réseau, et il doit être là
+ * avant le premier libellé. Attendre au corps du module demanderait un `await` de premier
+ * niveau, que la cible de build de ce projet REFUSE (« Top-level await is not available in the
+ * configured target environment ("chrome87", "edge88", "es2020", "firefox78", "safari14") »).
+ * Relever cette cible reviendrait à cesser de servir des navigateurs de 2020 — un iPad d'école
+ * sous Safari 14 — pour une commodité d'écriture : c'est exactement l'échange que ce dépôt
+ * refuse. L'attente vit donc dans `loadApp`, qui est asynchrone depuis toujours.
+ */
+function wireChrome(): {
+  overlayCoordinator: ReturnType<typeof setupOverlayCoordinator>;
+  guidedTour: ReturnType<typeof setupGuidedTour>;
+} {
+  // Traduit les chaînes statiques du HTML avant tout et synchronise <html lang> ; les modules
+  // dynamiques (loader, bodyInfo…) se retraduisent ensuite via leurs propres abonnements.
+  initStaticI18n();
+  setupLangSwitch();
+  clearRetiredStorage();
+  setupFullscreen();
+  const overlayCoordinator = setupOverlayCoordinator();
+  setupHelp(overlayCoordinator);
+  const guidedTour = setupGuidedTour();
+  // Fermeture au clic extérieur d'une surface contextuelle.
+  //   - Mobile : le scrim est une couche tactile plein écran (tap hors feuille = fermer).
+  //   - Desktop : le scrim est volontairement transparent aux évènements (il ne doit pas
+  //     bloquer la molette/rotation sur la scène) ; on capte donc le clic extérieur au niveau
+  //     du document, en ignorant les clics dans une surface ou sur un déclencheur du dock.
+  const surfaceScrim = document.getElementById('surface-scrim');
+  if (surfaceScrim) {
+    let activeSurfaceId: SecondaryOverlayId | null = null;
+    overlayCoordinator.onOpen((id) => {
+      activeSurfaceId = id;
+      if (id) positionContextualSurface(id);
+      surfaceScrim.hidden = id === null;
+    });
+    window.addEventListener('resize', () => {
+      if (activeSurfaceId) positionContextualSurface(activeSurfaceId);
+    });
+    // Couche tactile mobile.
+    surfaceScrim.addEventListener('click', () => overlayCoordinator.closeAll());
 
-  // Clic extérieur desktop : seul un clic DANS LA SCÈNE (canvas WebGL) ferme la surface
-  // ouverte. Les autres docks (modes, temps, plein écran) laissent la surface en place —
-  // basculer de mode ou lire l'heure ne doit pas refermer la fiche ou les réglages. Les
-  // déclencheurs gèrent eux-mêmes leur bascule. `pointerdown` pour devancer le focus.
-  document.addEventListener('pointerdown', (event) => {
-    if (surfaceScrim.hidden) return; // aucune surface ouverte
-    const target = event.target as HTMLElement;
-    if (target.tagName === 'CANVAS') overlayCoordinator.closeAll();
-  });
+    // Clic extérieur desktop : seul un clic DANS LA SCÈNE (canvas WebGL) ferme la surface
+    // ouverte. Les autres docks (modes, temps, plein écran) laissent la surface en place —
+    // basculer de mode ou lire l'heure ne doit pas refermer la fiche ou les réglages. Les
+    // déclencheurs gèrent eux-mêmes leur bascule. `pointerdown` pour devancer le focus.
+    document.addEventListener('pointerdown', (event) => {
+      if (surfaceScrim.hidden) return; // aucune surface ouverte
+      const target = event.target as HTMLElement;
+      if (target.tagName === 'CANVAS') overlayCoordinator.closeAll();
+    });
+  }
+
+  return { overlayCoordinator, guidedTour };
 }
 
 (async function loadApp(): Promise<void> {
   try {
+    // LE DICTIONNAIRE DE LA LANGUE DÉTECTÉE, AVANT TOUT LE RESTE (lot 20). Le premier texte
+    // qu'un visiteur voit est celui du chargeur, et le chargeur ne se retraduit pas : il
+    // disparaît. Traduire après coup laisserait donc un démarrage anglais chez un
+    // hispanophone, définitivement. Mesuré par `e2e/i18n-locales.spec.ts`, qui relève la
+    // séquence complète des libellés du chargeur.
+    // Le texte du catalogue suit la langue, et il est chargé AVEC son dictionnaire (lot 20) :
+    // le bundle ne porte que l'anglais des fiches, les trois autres langues sont dérivées au
+    // build. Enregistré ici, avant l'attente, parce que c'est la racine de composition qui a le
+    // droit de connaître à la fois `i18n` et `config`.
+    onLocaleLoading(async (locale) => {
+      await hydrateCatalogueText(locale);
+    });
+    await initLocale();
+    const { overlayCoordinator, guidedTour } = wireChrome();
+
     updateProgress(0, t('loader.init'));
 
     const app = new SolarSystemApp();

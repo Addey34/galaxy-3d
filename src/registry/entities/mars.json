@@ -5,6 +5,12 @@
   "source": "catalogue",
   "config": {
     "kind": "planet",
+    "displayName": {
+      "en": "Mars",
+      "fr": "Mars",
+      "es": "Marte",
+      "pt-BR": "Marte"
+    },
     "radius": 0.53,
     "rotationSpeed": {
       "$rotationHours": 24.6229
@@ -27,11 +33,15 @@
       },
       "description": {
         "en": "The red planet, tinted by iron oxide. It hosts Olympus Mons, the tallest volcano in the Solar System (~22 km).",
-        "fr": "La planète rouge, teintée par l’oxyde de fer. Elle abrite Olympus Mons, le plus haut volcan du Système solaire (~22 km)."
+        "fr": "La planète rouge, teintée par l’oxyde de fer. Elle abrite Olympus Mons, le plus haut volcan du Système solaire (~22 km).",
+        "es": "El planeta rojo, tintado por el óxido de hierro. Alberga el Olympus Mons, el volcán más alto del Sistema Solar (~22 km).",
+        "pt-BR": "O planeta vermelho, tingido pelo óxido de ferro. Ele abriga o Olympus Mons, o vulcão mais alto do Sistema Solar (~22 km)."
       },
       "wiki": {
         "en": "https://en.wikipedia.org/wiki/Mars",
-        "fr": "https://fr.wikipedia.org/wiki/Mars_(plan%C3%A8te)"
+        "fr": "https://fr.wikipedia.org/wiki/Mars_(plan%C3%A8te)",
+        "es": "https://es.wikipedia.org/wiki/Marte_(planeta)",
+        "pt-BR": "https://pt.wikipedia.org/wiki/Marte_(planeta)"
       }
     },
     "astroBody": "Mars",

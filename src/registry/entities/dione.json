@@ -7,7 +7,9 @@
     "kind": "moon",
     "displayName": {
       "en": "Dione",
-      "fr": "Dioné"
+      "fr": "Dioné",
+      "es": "Dione",
+      "pt-BR": "Dione"
     },
     "radius": 0.17,
     "rotationSpeed": {
@@ -58,11 +60,15 @@
       },
       "description": {
         "en": "A dense icy moon with bright wispy fractures cutting across its darker, cratered trailing hemisphere.",
-        "fr": "Une lune glacée dense, striée de fractures brillantes qui traversent son hémisphère arrière plus sombre et cratérisé."
+        "fr": "Une lune glacée dense, striée de fractures brillantes qui traversent son hémisphère arrière plus sombre et cratérisé.",
+        "es": "Una luna helada y densa, surcada por fracturas brillantes que atraviesan su hemisferio posterior, más oscuro y craterizado.",
+        "pt-BR": "Uma lua gelada e densa, riscada por fraturas brilhantes que atravessam o seu hemisfério posterior, mais escuro e craterizado."
       },
       "wiki": {
         "en": "https://en.wikipedia.org/wiki/Dione_(moon)",
-        "fr": "https://fr.wikipedia.org/wiki/Dion%C3%A9_(lune)"
+        "fr": "https://fr.wikipedia.org/wiki/Dion%C3%A9_(lune)",
+        "es": "https://es.wikipedia.org/wiki/Dione_(sat%C3%A9lite)",
+        "pt-BR": "https://pt.wikipedia.org/wiki/Dione_(sat%C3%A9lite)"
       }
     },
     "cameraDistance": {

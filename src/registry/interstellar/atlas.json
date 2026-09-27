@@ -5,7 +5,9 @@
   "population": "interstellar",
   "displayName": {
     "en": "3I/ATLAS",
-    "fr": "3I/ATLAS"
+    "fr": "3I/ATLAS",
+    "es": "3I/ATLAS",
+    "pt-BR": "3I/ATLAS"
   },
   "designation": "C/2025 N1",
   "solution": {
@@ -59,7 +61,9 @@
       "published": false,
       "reason": {
         "en": "The JPL Small-Body Database gives no absolute magnitude H for this comet. It publishes M1 instead, the total magnitude of the cometary brightness law, which includes the glow of the coma around the nucleus: a different quantity, not shown under the same label.",
-        "fr": "La JPL Small-Body Database ne donne pas de magnitude absolue H pour cette comète. Elle publie à la place M1, la magnitude totale de la loi de brillance cométaire, qui inclut l’éclat de la chevelure autour du noyau : une autre grandeur, qu’on n’affiche pas sous le même libellé."
+        "fr": "La JPL Small-Body Database ne donne pas de magnitude absolue H pour cette comète. Elle publie à la place M1, la magnitude totale de la loi de brillance cométaire, qui inclut l’éclat de la chevelure autour du noyau : une autre grandeur, qu’on n’affiche pas sous le même libellé.",
+        "es": "La JPL Small-Body Database no da magnitud absoluta H para este cometa. Publica en su lugar M1, la magnitud total de la ley de brillo cometario, que incluye el resplandor de la coma alrededor del núcleo: otra magnitud, que no se muestra bajo la misma etiqueta.",
+        "pt-BR": "A JPL Small-Body Database não dá magnitude absoluta H para este cometa. Ela publica em seu lugar M1, a magnitude total da lei de brilho cometário, que inclui o brilho da coma em torno do núcleo: outra grandeza, que não é exibida sob o mesmo rótulo."
       }
     }
   },

@@ -26,6 +26,7 @@
  */
 import type { DatedProduct } from './temporal';
 import type { SourceCandidate } from './layerSource';
+import type { MessageKey } from '@/i18n/dict-en';
 
 /** Un point daté à la surface de la Terre, prêt à être peint. */
 export interface EarthEvent {
@@ -66,8 +67,8 @@ export interface EarthEventLayer {
   /** Identifiant de la fiche du fournisseur (`src/registry/providers/`). */
   providerId: string;
   /** Clés i18n du libellé et de la note affichés dans le panneau. */
-  labelKey: string;
-  noteKey: string;
+  labelKey: MessageKey;
+  noteKey: MessageKey;
   /**
    * Valeurs interpolées dans la note. Elles viennent des constantes EXPORTÉES par le client
    * de la source, jamais d'un nombre retapé dans le dictionnaire : une note qui annoncerait

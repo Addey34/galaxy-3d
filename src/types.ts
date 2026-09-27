@@ -7,6 +7,7 @@ import type { ModelQuality } from '@/core/modelLod';
 import type * as THREE from 'three';
 import type { Body } from 'astronomy-engine';
 import type { OrbitalElements } from './core/kepler';
+import type { Locale } from './i18n/locales';
 
 export type { OrbitalElements };
 
@@ -166,10 +167,20 @@ export interface RingConfig {
   textures?: string;
 }
 
-/** Chaîne localisée (contenu catalogue). L'anglais sert de repli. */
+/**
+ * Chaîne localisée (contenu catalogue). L'anglais sert de repli.
+ *
+ * LES QUATRE LANGUES SONT OBLIGATOIRES depuis la phase 20B du lot 20. Les rendre optionnelles
+ * produirait une application « traduite » où une fiche sur deux parle anglais sans que rien ne le
+ * dise : le compilateur NOMME donc chaque manque, et les schémas Zod du registre refusent une
+ * fiche incomplète au chargement. 186 champs localisés sont remplis dans les quatre langues,
+ * comptés par `node scripts/localized-fields.mjs --check`.
+ */
 export interface LocalizedText {
   en: string;
   fr: string;
+  es: string;
+  'pt-BR': string;
 }
 
 export interface CelestialBodyConfig {
@@ -180,7 +191,7 @@ export interface CelestialBodyConfig {
    * anglais pour tous les corps actuels). Renseigner par langue seulement là où le nom diffère
    * de la clé capitalisée (français : Terre, Soleil, Vénus…).
    */
-  displayName?: { en?: string; fr?: string };
+  displayName?: Partial<Record<Locale, string>>;
   radius: number;
   rotationSpeed: number;
   orbitalColor: number;

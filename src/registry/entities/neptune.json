@@ -5,6 +5,12 @@
   "source": "catalogue",
   "config": {
     "kind": "planet",
+    "displayName": {
+      "en": "Neptune",
+      "fr": "Neptune",
+      "es": "Neptuno",
+      "pt-BR": "Netuno"
+    },
     "radius": 1.9,
     "rotationSpeed": {
       "$rotationHours": 16.11
@@ -24,11 +30,15 @@
       },
       "description": {
         "en": "The most distant planet, invisible to the naked eye and found by calculation. Its winds reach 2,000 km/h, the fiercest in the Solar System.",
-        "fr": "La planète la plus lointaine, invisible à l’œil nu et découverte par le calcul. Ses vents atteignent 2 000 km/h, les plus violents du Système solaire."
+        "fr": "La planète la plus lointaine, invisible à l’œil nu et découverte par le calcul. Ses vents atteignent 2 000 km/h, les plus violents du Système solaire.",
+        "es": "El planeta más lejano, invisible a simple vista y descubierto mediante el cálculo. Sus vientos alcanzan 2000 km/h, los más violentos del Sistema Solar.",
+        "pt-BR": "O planeta mais distante, invisível a olho nu e descoberto pelo cálculo. Os seus ventos alcançam 2000 km/h, os mais violentos do Sistema Solar."
       },
       "wiki": {
         "en": "https://en.wikipedia.org/wiki/Neptune",
-        "fr": "https://fr.wikipedia.org/wiki/Neptune_(plan%C3%A8te)"
+        "fr": "https://fr.wikipedia.org/wiki/Neptune_(plan%C3%A8te)",
+        "es": "https://es.wikipedia.org/wiki/Neptuno_(planeta)",
+        "pt-BR": "https://pt.wikipedia.org/wiki/Netuno"
       }
     },
     "astroBody": "Neptune",

@@ -31,11 +31,21 @@
         "fr": {
           "type": "string",
           "minLength": 1
+        },
+        "es": {
+          "type": "string",
+          "minLength": 1
+        },
+        "pt-BR": {
+          "type": "string",
+          "minLength": 1
         }
       },
       "required": [
         "en",
-        "fr"
+        "fr",
+        "es",
+        "pt-BR"
       ],
       "additionalProperties": false
     },
@@ -206,11 +216,21 @@
                     "fr": {
                       "type": "string",
                       "minLength": 1
+                    },
+                    "es": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "pt-BR": {
+                      "type": "string",
+                      "minLength": 1
                     }
                   },
                   "required": [
                     "en",
-                    "fr"
+                    "fr",
+                    "es",
+                    "pt-BR"
                   ],
                   "additionalProperties": false
                 }
@@ -241,13 +261,23 @@
                       "type": "string",
                       "minLength": 1
                     },
+                    "es": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "pt-BR": {
+                      "type": "string",
+                      "minLength": 1
+                    },
                     "unsourced": {
                       "type": "boolean"
                     }
                   },
                   "required": [
                     "en",
-                    "fr"
+                    "fr",
+                    "es",
+                    "pt-BR"
                   ],
                   "additionalProperties": false
                 }
@@ -297,11 +327,21 @@
                     "fr": {
                       "type": "string",
                       "minLength": 1
+                    },
+                    "es": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "pt-BR": {
+                      "type": "string",
+                      "minLength": 1
                     }
                   },
                   "required": [
                     "en",
-                    "fr"
+                    "fr",
+                    "es",
+                    "pt-BR"
                   ],
                   "additionalProperties": false
                 }
@@ -332,13 +372,23 @@
                       "type": "string",
                       "minLength": 1
                     },
+                    "es": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "pt-BR": {
+                      "type": "string",
+                      "minLength": 1
+                    },
                     "unsourced": {
                       "type": "boolean"
                     }
                   },
                   "required": [
                     "en",
-                    "fr"
+                    "fr",
+                    "es",
+                    "pt-BR"
                   ],
                   "additionalProperties": false
                 }
@@ -388,11 +438,21 @@
                     "fr": {
                       "type": "string",
                       "minLength": 1
+                    },
+                    "es": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "pt-BR": {
+                      "type": "string",
+                      "minLength": 1
                     }
                   },
                   "required": [
                     "en",
-                    "fr"
+                    "fr",
+                    "es",
+                    "pt-BR"
                   ],
                   "additionalProperties": false
                 }
@@ -423,13 +483,23 @@
                       "type": "string",
                       "minLength": 1
                     },
+                    "es": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "pt-BR": {
+                      "type": "string",
+                      "minLength": 1
+                    },
                     "unsourced": {
                       "type": "boolean"
                     }
                   },
                   "required": [
                     "en",
-                    "fr"
+                    "fr",
+                    "es",
+                    "pt-BR"
                   ],
                   "additionalProperties": false
                 }
@@ -479,11 +549,21 @@
                     "fr": {
                       "type": "string",
                       "minLength": 1
+                    },
+                    "es": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "pt-BR": {
+                      "type": "string",
+                      "minLength": 1
                     }
                   },
                   "required": [
                     "en",
-                    "fr"
+                    "fr",
+                    "es",
+                    "pt-BR"
                   ],
                   "additionalProperties": false
                 }
@@ -514,13 +594,23 @@
                       "type": "string",
                       "minLength": 1
                     },
+                    "es": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "pt-BR": {
+                      "type": "string",
+                      "minLength": 1
+                    },
                     "unsourced": {
                       "type": "boolean"
                     }
                   },
                   "required": [
                     "en",
-                    "fr"
+                    "fr",
+                    "es",
+                    "pt-BR"
                   ],
                   "additionalProperties": false
                 }

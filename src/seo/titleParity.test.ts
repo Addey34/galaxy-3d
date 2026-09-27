@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { bodyLandingPages } from './bodyLandingPage';
 import { CELESTIAL_CONFIG } from '@/config/bodies';
-import { messages } from '@/i18n/locales';
+import { messages } from '@/i18n/allDictionaries';
 
 /**
  * LE TITRE DE L'ONGLET ET CELUI DE LA PAGE SERVIE DOIVENT ÊTRE LE MÊME TEXTE.

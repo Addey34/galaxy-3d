@@ -5,6 +5,12 @@
   "source": "catalogue",
   "config": {
     "kind": "planet",
+    "displayName": {
+      "en": "Jupiter",
+      "fr": "Jupiter",
+      "es": "Júpiter",
+      "pt-BR": "Júpiter"
+    },
     "radius": 4,
     "rotationSpeed": {
       "$rotationHours": 9.925
@@ -26,11 +32,15 @@
       },
       "description": {
         "en": "The giant of the Solar System, more massive than all the other planets combined. Its Great Red Spot is a storm centuries old.",
-        "fr": "La géante du Système solaire, plus massive que toutes les autres planètes réunies. Sa Grande Tache rouge est une tempête vieille de plusieurs siècles."
+        "fr": "La géante du Système solaire, plus massive que toutes les autres planètes réunies. Sa Grande Tache rouge est une tempête vieille de plusieurs siècles.",
+        "es": "El gigante del Sistema Solar, más masivo que todos los demás planetas juntos. Su Gran Mancha Roja es una tormenta de varios siglos de edad.",
+        "pt-BR": "O gigante do Sistema Solar, mais massivo que todos os outros planetas juntos. A sua Grande Mancha Vermelha é uma tempestade de vários séculos de idade."
       },
       "wiki": {
         "en": "https://en.wikipedia.org/wiki/Jupiter",
-        "fr": "https://fr.wikipedia.org/wiki/Jupiter_(plan%C3%A8te)"
+        "fr": "https://fr.wikipedia.org/wiki/Jupiter_(plan%C3%A8te)",
+        "es": "https://es.wikipedia.org/wiki/J%C3%BApiter_(planeta)",
+        "pt-BR": "https://pt.wikipedia.org/wiki/J%C3%BApiter_(planeta)"
       }
     },
     "astroBody": "Jupiter",

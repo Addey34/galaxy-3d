@@ -6,7 +6,9 @@
   "elements": {
     "displayName": {
       "en": "Bennu",
-      "fr": "Bennu"
+      "fr": "Bennu",
+      "es": "Bennu",
+      "pt-BR": "Bennu"
     },
     "a": 1.12599000686509,
     "e": 0.203694590837364,
@@ -27,16 +29,22 @@
       "extentRatio": 1.18,
       "credit": {
         "en": "NASA/Goddard Scientific Visualization Studio, OSIRIS-REx OLA v20 PTM global shape model (NASA/University of Arizona/CSA/York University/MDA), decimated for the web.",
-        "fr": "NASA/Goddard Scientific Visualization Studio, modèle de forme global OSIRIS-REx OLA v20 PTM (NASA/University of Arizona/CSA/York University/MDA), décimé pour le web."
+        "fr": "NASA/Goddard Scientific Visualization Studio, modèle de forme global OSIRIS-REx OLA v20 PTM (NASA/University of Arizona/CSA/York University/MDA), décimé pour le web.",
+        "es": "NASA/Goddard Scientific Visualization Studio, modelo de forma global OSIRIS-REx OLA v20 PTM (NASA/University of Arizona/CSA/York University/MDA), diezmado para la web.",
+        "pt-BR": "NASA/Goddard Scientific Visualization Studio, modelo de forma global OSIRIS-REx OLA v20 PTM (NASA/University of Arizona/CSA/York University/MDA), decimado para a web."
       }
     },
     "description": {
       "en": "A 500-metre rubble pile shaped like a spinning top, visited by OSIRIS-REx, which brought a sample of it back to Earth in 2023.",
-      "fr": "Un amas de gravats de 500 mètres en forme de toupie, visité par OSIRIS-REx, qui en a rapporté un échantillon sur Terre en 2023."
+      "fr": "Un amas de gravats de 500 mètres en forme de toupie, visité par OSIRIS-REx, qui en a rapporté un échantillon sur Terre en 2023.",
+      "es": "Un montón de escombros de 500 metros con forma de peonza, visitado por OSIRIS-REx, que trajo una muestra suya a la Tierra en 2023.",
+      "pt-BR": "Uma pilha de entulho de 500 metros em forma de pião, visitada pela OSIRIS-REx, que trouxe uma amostra dela para a Terra em 2023."
     },
     "wiki": {
       "en": "https://en.wikipedia.org/wiki/101955_Bennu",
-      "fr": "https://fr.wikipedia.org/wiki/(101955)_Bennu"
+      "fr": "https://fr.wikipedia.org/wiki/(101955)_Bennu",
+      "es": "https://es.wikipedia.org/wiki/(101955)_Bennu",
+      "pt-BR": "https://pt.wikipedia.org/wiki/101955_Benu"
     },
     "surfaceResolutions": [
       "8k",
@@ -72,14 +80,18 @@
       "published": false,
       "reason": {
         "en": "About 8e-5 m/s2, a hundred-thousandth of Earth: a walking pace would put you into orbit, and the usual two-decimal figure would read as zero.",
-        "fr": "Environ 8e-5 m/s2, cent-millième de celle de la Terre : marcher vite suffirait à se mettre en orbite, et l'affichage habituel à deux décimales lirait zéro."
+        "fr": "Environ 8e-5 m/s2, cent-millième de celle de la Terre : marcher vite suffirait à se mettre en orbite, et l'affichage habituel à deux décimales lirait zéro.",
+        "es": "Unos 8e-5 m/s2, cien mil veces menor que la de la Tierra: caminar rápido bastaría para ponerse en órbita, y la presentación habitual con dos decimales leería cero.",
+        "pt-BR": "Cerca de 8e-5 m/s2, cem mil vezes menor que a da Terra: andar rápido bastaria para entrar em órbita, e a exibição habitual com duas casas decimais leria zero."
       }
     },
     "meanTempC": {
       "published": false,
       "reason": {
         "en": "Surface temperature swings by more than 100 C over its 4.3-hour day: a mean would describe no real moment.",
-        "fr": "La température de surface varie de plus de 100 C au fil de sa journée de 4,3 heures : une moyenne ne décrirait aucun instant réel."
+        "fr": "La température de surface varie de plus de 100 C au fil de sa journée de 4,3 heures : une moyenne ne décrirait aucun instant réel.",
+        "es": "La temperatura de la superficie varía más de 100 C a lo largo de su día de 4,3 horas: una media no describiría ningún instante real.",
+        "pt-BR": "A temperatura da superfície varia mais de 100 C ao longo do seu dia de 4,3 horas: uma média não descreveria nenhum instante real."
       }
     },
     "moonCount": {

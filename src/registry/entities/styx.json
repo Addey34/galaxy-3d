@@ -7,7 +7,9 @@
     "kind": "moon",
     "displayName": {
       "en": "Styx",
-      "fr": "Styx"
+      "fr": "Styx",
+      "es": "Estigia",
+      "pt-BR": "Estige"
     },
     "radius": 0.04,
     "rotationSpeed": {
@@ -50,11 +52,15 @@
       "ascendingNode": 0,
       "description": {
         "en": "The smallest and innermost of Pluto’s four small moons, tumbling chaotically under the combined pull of Pluto and Charon.",
-        "fr": "La plus petite et la plus proche des quatre petites lunes de Pluton, en rotation chaotique sous l’attraction combinée de Pluton et Charon."
+        "fr": "La plus petite et la plus proche des quatre petites lunes de Pluton, en rotation chaotique sous l’attraction combinée de Pluton et Charon.",
+        "es": "La más pequeña y la más cercana de las cuatro pequeñas lunas de Plutón, en rotación caótica bajo la atracción combinada de Plutón y Caronte.",
+        "pt-BR": "A menor e a mais próxima das quatro pequenas luas de Plutão, em rotação caótica sob a atração combinada de Plutão e Caronte."
       },
       "wiki": {
         "en": "https://en.wikipedia.org/wiki/Styx_(moon)",
-        "fr": "https://fr.wikipedia.org/wiki/Styx_(lune)"
+        "fr": "https://fr.wikipedia.org/wiki/Styx_(lune)",
+        "es": "https://es.wikipedia.org/wiki/Estigia_(sat%C3%A9lite)",
+        "pt-BR": "https://pt.wikipedia.org/wiki/Estige_(sat%C3%A9lite)"
       }
     },
     "cameraDistance": {
@@ -76,14 +82,18 @@
       "published": false,
       "reason": {
         "en": "Only an upper limit to its mass has been published (Porter et al. 2023, from Hubble and New Horizons astrometry), not a measured value.",
-        "fr": "Seule une limite supérieure de sa masse a été publiée (Porter et al. 2023, astrométrie Hubble et New Horizons), pas une valeur mesurée."
+        "fr": "Seule une limite supérieure de sa masse a été publiée (Porter et al. 2023, astrométrie Hubble et New Horizons), pas une valeur mesurée.",
+        "es": "Solo se ha publicado un límite superior de su masa (Porter et al. 2023, astrometría de Hubble y New Horizons), no un valor medido.",
+        "pt-BR": "Somente um limite superior da sua massa foi publicado (Porter et al. 2023, astrometria do Hubble e da New Horizons), não um valor medido."
       }
     },
     "gravity": {
       "published": false,
       "reason": {
         "en": "No measured mass has been published, only an upper limit (Porter et al. 2023), so no surface gravity can be derived.",
-        "fr": "Aucune masse mesurée n’a été publiée, seulement une limite supérieure (Porter et al. 2023) : aucune gravité de surface ne peut en être dérivée."
+        "fr": "Aucune masse mesurée n’a été publiée, seulement une limite supérieure (Porter et al. 2023) : aucune gravité de surface ne peut en être dérivée.",
+        "es": "No se ha publicado ninguna masa medida, solo un límite superior (Porter et al. 2023): no puede derivarse ninguna gravedad en la superficie.",
+        "pt-BR": "Nenhuma massa medida foi publicada, somente um limite superior (Porter et al. 2023): nenhuma gravidade na superfície pode ser derivada."
       }
     },
     "meanTempC": {

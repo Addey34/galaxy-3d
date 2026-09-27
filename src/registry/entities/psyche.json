@@ -6,7 +6,9 @@
   "elements": {
     "displayName": {
       "en": "Psyche",
-      "fr": "Psyché"
+      "fr": "Psyché",
+      "es": "Psique",
+      "pt-BR": "Psique"
     },
     "a": 2.923760758884039,
     "e": 0.1344462426389801,
@@ -27,16 +29,22 @@
       "colourSource": null,
       "credit": {
         "en": "Adaptive-optics images and light curves, ADAM shape model by Viikinkoski et al. 2018 (A&A 619, L3), DAMIT model 1806 (CC BY 4.0), used at its full 1,352 facets.",
-        "fr": "Images d'optique adaptative et courbes de lumière, modèle de forme ADAM de Viikinkoski et al. 2018 (A&A 619, L3), modèle DAMIT 1806 (CC BY 4.0), employé avec ses 1 352 facettes."
+        "fr": "Images d'optique adaptative et courbes de lumière, modèle de forme ADAM de Viikinkoski et al. 2018 (A&A 619, L3), modèle DAMIT 1806 (CC BY 4.0), employé avec ses 1 352 facettes.",
+        "es": "Imágenes de óptica adaptativa y curvas de luz, modelo de forma ADAM de Viikinkoski et al. 2018 (A&A 619, L3), modelo DAMIT 1806 (CC BY 4.0), usado con sus 1352 facetas completas.",
+        "pt-BR": "Imagens de óptica adaptativa e curvas de luz, modelo de forma ADAM de Viikinkoski et al. 2018 (A&A 619, L3), modelo DAMIT 1806 (CC BY 4.0), usado com as suas 1352 facetas completas."
       }
     },
     "description": {
       "en": "A metal-rich asteroid about 220 kilometres across, in the main belt between Mars and Jupiter. It is the target of NASA’s Psyche mission, launched in 2023 and due to arrive in 2029: the first mission to a metal-rich world.",
-      "fr": "Un astéroïde riche en métaux d’environ 220 kilomètres de diamètre, dans la ceinture principale entre Mars et Jupiter. Il est la cible de la mission Psyche de la NASA, lancée en 2023 et prévue pour y arriver en 2029 : la première mission vers un monde riche en métaux."
+      "fr": "Un astéroïde riche en métaux d’environ 220 kilomètres de diamètre, dans la ceinture principale entre Mars et Jupiter. Il est la cible de la mission Psyche de la NASA, lancée en 2023 et prévue pour y arriver en 2029 : la première mission vers un monde riche en métaux.",
+      "es": "Un asteroide rico en metales de unos 220 kilómetros de diámetro, en el cinturón principal entre Marte y Júpiter. Es el objetivo de la misión Psyche de la NASA, lanzada en 2023 y con llegada prevista en 2029: la primera misión hacia un mundo rico en metales.",
+      "pt-BR": "Um asteroide rico em metais de cerca de 220 quilômetros de diâmetro, no cinturão principal entre Marte e Júpiter. Ele é o alvo da missão Psyche da NASA, lançada em 2023 e com chegada prevista para 2029: a primeira missão a um mundo rico em metais."
     },
     "wiki": {
       "en": "https://en.wikipedia.org/wiki/16_Psyche",
-      "fr": "https://fr.wikipedia.org/wiki/(16)_Psyché"
+      "fr": "https://fr.wikipedia.org/wiki/(16)_Psyché",
+      "es": "https://es.wikipedia.org/wiki/(16)_Psique",
+      "pt-BR": "https://pt.wikipedia.org/wiki/16_Psique"
     }
   },
   "facts": {

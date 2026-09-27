@@ -6,7 +6,10 @@
   "config": {
     "kind": "planet",
     "displayName": {
-      "fr": "Terre"
+      "en": "Earth",
+      "fr": "Terre",
+      "es": "Tierra",
+      "pt-BR": "Terra"
     },
     "radius": 1,
     "rotationSpeed": {
@@ -55,11 +58,15 @@
       "ascendingNode": 0,
       "description": {
         "en": "The only known planet to harbour life. Liquid water covers 71% of its surface, and its atmosphere shields it from solar radiation.",
-        "fr": "La seule planète connue à abriter la vie. L’eau liquide couvre 71 % de sa surface, et son atmosphère la protège du rayonnement solaire."
+        "fr": "La seule planète connue à abriter la vie. L’eau liquide couvre 71 % de sa surface, et son atmosphère la protège du rayonnement solaire.",
+        "es": "El único planeta conocido que alberga vida. El agua líquida cubre el 71 % de su superficie, y su atmósfera lo protege de la radiación solar.",
+        "pt-BR": "O único planeta conhecido que abriga vida. A água líquida cobre 71% da sua superfície, e a atmosfera o protege da radiação solar."
       },
       "wiki": {
         "en": "https://en.wikipedia.org/wiki/Earth",
-        "fr": "https://fr.wikipedia.org/wiki/Terre"
+        "fr": "https://fr.wikipedia.org/wiki/Terre",
+        "es": "https://es.wikipedia.org/wiki/Tierra",
+        "pt-BR": "https://pt.wikipedia.org/wiki/Terra"
       }
     },
     "astroBody": "Earth",
