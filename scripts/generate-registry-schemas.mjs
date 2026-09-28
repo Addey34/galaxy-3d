@@ -27,6 +27,7 @@ const SCHEMAS = [
   ['entity.ts', 'entityJsonSchemaText', 'entity.schema.json'],
   ['spacecraft.ts', 'spacecraftJsonSchemaText', 'spacecraft.schema.json'],
   ['interstellar.ts', 'interstellarJsonSchemaText', 'interstellar.schema.json'],
+  ['tour.ts', 'tourJsonSchemaText', 'tour.schema.json'],
 ];
 
 const DIR = resolve(process.cwd(), 'src/registry/schema');

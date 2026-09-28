@@ -27,6 +27,7 @@ const DIRS = [
   'src/registry/spacecraft',
   'src/registry/interstellar',
   'src/registry/providers',
+  'src/registry/tours',
 ];
 
 const args = process.argv.slice(2);

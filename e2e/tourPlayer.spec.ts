@@ -1,5 +1,30 @@
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { expect, test, type Page } from '@playwright/test';
 import { blockExternalNetwork } from './netBlock';
+
+/**
+ * LES VISITES SONT LUES DANS LE REGISTRE, PAS ÉCRITES ICI (lot 21).
+ *
+ * Ce fichier comptait « 3 » en dur. Depuis que les visites sont des fiches
+ * (`src/registry/tours/`), le compte et les titres viennent d'`order.json` et des fiches
+ * elles-mêmes : c'est ce qui rend vraie la promesse du lot — ajouter une visite est une fiche et
+ * une ligne d'ordre, sans toucher une ligne de `.ts`, pas même un test.
+ */
+const TOURS = resolve(import.meta.dirname, '../src/registry/tours');
+const ORDER = (
+  JSON.parse(readFileSync(resolve(TOURS, 'order.json'), 'utf-8')) as {
+    order: string[];
+  }
+).order;
+const TITLES_EN = ORDER.map(
+  (id) =>
+    (
+      JSON.parse(readFileSync(resolve(TOURS, `${id}.json`), 'utf-8')) as {
+        title: { en: string };
+      }
+    ).title.en
+);
 
 test.beforeEach(async ({ page }) => {
   await blockExternalNetwork(page);
@@ -38,9 +63,14 @@ async function advanceToEnd(page: Page): Promise<void> {
 }
 
 test.describe('scripted tour picker', () => {
-  test('lists the three tours from the help panel', async ({ page }) => {
+  test('lists every tour of the registry, in the declared order', async ({
+    page,
+  }) => {
     await openPicker(page);
-    await expect(page.locator('.stour-picker-item')).toHaveCount(3);
+    const items = page.locator('.stour-picker-item');
+    await expect(items).toHaveCount(ORDER.length);
+    // Le titre vient de la fiche : ce contrôle est ce qui prouve que la DONNÉE arrive à l'écran.
+    await expect(items).toHaveText(TITLES_EN);
   });
 });
 
@@ -60,6 +90,38 @@ test.describe('eclipse tour', () => {
     await expect(card).toBeHidden();
     // Fin de tour : `navigation.selectBody('overview')` referme la fiche d'info.
     await expect(bodyInfo).toBeHidden();
+  });
+
+  /**
+   * L'ÉTAPE QUI A REMPLACÉ UNE EXCEPTION DE CODE (lot 21).
+   *
+   * La première étape de cette visite était, jusqu'ici, préfixée par `ui/tourPlayer.ts` quand
+   * l'identifiant valait « eclipse ». C'est désormais une étape `jumpToEvent` écrite dans la
+   * fiche, et la date est résolue depuis `core/astronomicalEvents.ts` à l'exécution. Ce contrôle
+   * est le seul qui prouve la chaîne entière : fiche → schéma → chargeur → moteur → horloge.
+   *
+   * Le délai est explicite et sa raison écrite : depuis le lot 17C l'horloge est RETENUE jusqu'à
+   * l'arrivée des octets d'éphémérides, et un saut de date prend une dizaine de secondes de
+   * médiane (relevé du 2026-09-27 dans `e2e/events.spec.ts` : 1,3 à 13,6 s). Un délai par défaut
+   * de 30 s tomberait au hasard de la machine.
+   */
+  test('jumps the scene to a real eclipse date, from the fiche alone', async ({
+    page,
+  }) => {
+    await openPicker(page);
+    const dateInput = page.locator('#date-input');
+    const before = await dateInput.inputValue();
+
+    await page.locator('.stour-picker-item').nth(0).click();
+    await expect(dateInput).not.toHaveValue(before, { timeout: 90_000 });
+
+    // Une éclipse solaire survient deux fois par an : la date atteinte est donc à venir, et
+    // proche. Le contrôle borne les deux côtés — une date figée dans une fiche aurait fini par
+    // tomber dans le passé, ce que cette étape existe pour éviter.
+    const after = new Date(await dateInput.inputValue());
+    const now = Date.now();
+    expect(after.getTime()).toBeGreaterThan(now);
+    expect(after.getTime() - now).toBeLessThan(400 * 24 * 3600 * 1000);
   });
 
   test('can be closed early with the Close button', async ({ page }) => {

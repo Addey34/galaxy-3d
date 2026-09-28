@@ -24,7 +24,7 @@ import {
  */
 
 const REGISTRY = resolve(import.meta.dirname);
-const DIRS = ['entities', 'spacecraft', 'interstellar', 'providers'];
+const DIRS = ['entities', 'spacecraft', 'interstellar', 'providers', 'tours'];
 
 function fiches(): { file: string; json: unknown }[] {
   const out: { file: string; json: unknown }[] = [];
@@ -148,5 +148,37 @@ describe('dérivation du texte du registre', () => {
     expect(JSON.stringify(stripToEnglish(config))).toBe(
       JSON.stringify({ en: 'x', radius: 2 })
     );
+  });
+});
+
+/**
+ * UNE `Map` SE TRAVERSE — le défaut trouvé le 2026-09-28 en ouvrant le lot 21.
+ *
+ * `Object.values(new Map(...))` rend un tableau VIDE : la première version de `hydrateLocalized`
+ * ne posait donc RIEN dans un objet rangé par clé, et les 14 objets d'instrument, tenus par
+ * `NAVIGABLE_TARGETS` et `NAVIGABLE_BODIES`, lisaient l'anglais dans les trois autres langues alors
+ * que leur traduction était téléchargée. Invisible en test (les fiches n'y sont pas allégées) et
+ * invisible à l'œil (une description anglaise reste une phrase).
+ */
+describe('la traversée d’une Map', () => {
+  const fiche = () => ({
+    displayName: { en: 'Probe', fr: 'Sonde', es: 'Sonda', 'pt-BR': 'Sonda' },
+  });
+
+  it('pose la langue dans les valeurs d’une Map, pas seulement d’un tableau', () => {
+    const inArray = [stripToEnglish(fiche())];
+    const inMap = new Map([['probe', stripToEnglish(fiche())]]);
+    const map = collectTranslations(fiche(), 'fr');
+
+    expect(hydrateLocalized(inArray, map, 'fr')).toBe(1);
+    // Le cas qui rendait 0 avant le correctif.
+    expect(hydrateLocalized(inMap, map, 'fr')).toBe(1);
+    expect(inMap.get('probe')!.displayName.fr).toBe('Sonde');
+  });
+
+  it('compte les textes anglais d’une Map, pour que la garde et la pose s’accordent', () => {
+    // Deux lectures du même objet : si `englishStrings` ignorait la Map alors que
+    // `hydrateLocalized` la traverse, la garde de `config/catalogueText.test.ts` serait verte à tort.
+    expect(englishStrings(new Map([['probe', fiche()]])).size).toBe(1);
   });
 });

@@ -1,0 +1,42 @@
+{
+  "$schema": "../schema/tour.schema.json",
+  "id": "eclipse",
+  "title": {
+    "en": "Birth of an eclipse",
+    "fr": "Naissance d’une éclipse",
+    "es": "Nacimiento de un eclipse",
+    "pt-BR": "Nascimento de um eclipse"
+  },
+  "steps": [
+    {
+      "kind": "jumpToEvent",
+      "event": "solar-eclipse"
+    },
+    {
+      "kind": "flyTo",
+      "body": "earth"
+    },
+    {
+      "kind": "caption",
+      "text": {
+        "en": "A total solar eclipse happens when the Moon passes exactly between the Sun and the Earth, casting its shadow on our planet. We just jumped to a real upcoming eclipse date.",
+        "fr": "Une éclipse solaire totale se produit quand la Lune passe exactement entre le Soleil et la Terre, projetant son ombre sur notre planète. On vient de sauter à une vraie date d’éclipse à venir.",
+        "es": "Un eclipse solar total ocurre cuando la Luna pasa exactamente entre el Sol y la Tierra, proyectando su sombra sobre nuestro planeta. Acabamos de saltar a una fecha real de eclipse por venir.",
+        "pt-BR": "Um eclipse solar total acontece quando a Lua passa exatamente entre o Sol e a Terra, projetando a sua sombra sobre o nosso planeta. Acabamos de saltar para uma data real de eclipse futuro."
+      }
+    },
+    {
+      "kind": "flyTo",
+      "body": "moon"
+    },
+    {
+      "kind": "caption",
+      "text": {
+        "en": "From the Moon, you can see the shadow it casts on Earth, with the same eclipse shadow rendering used for the real-time view.",
+        "fr": "Depuis la Lune, on voit l’ombre qu’elle projette sur la Terre, avec le même rendu d’ombre d’éclipse qu’en vue temps réel.",
+        "es": "Desde la Luna se ve la sombra que proyecta sobre la Tierra, con el mismo dibujo de sombra de eclipse que en la vista en tiempo real.",
+        "pt-BR": "Da Lua, vê-se a sombra que ela projeta sobre a Terra, com o mesmo desenho de sombra de eclipse da vista em tempo real."
+      }
+    }
+  ]
+}

@@ -1,12 +1,23 @@
 import type { LocalizedText } from '@/types';
+import type { AstronomicalEventKind } from './astronomicalEvents';
 
 /**
  * Une étape d'un tour scénarisé. Pur (aucun DOM, aucun Three.js) — orchestrée par un
  * `TourRuntimeHost` fourni par la couche UI (`src/ui/tourPlayer.ts`).
+ *
+ * Ce vocabulaire est FERMÉ, et c'est ce qui permet à une visite d'être une fiche JSON
+ * (`src/registry/tours/`, lot 21) plutôt que du TypeScript : le schéma
+ * `src/registry/schema/tour.ts` ne décrit rien d'autre que ces formes.
  */
 export type TourStep =
   | { kind: 'flyTo'; body: string }
   | { kind: 'jumpToDate'; date: Date }
+  /**
+   * La prochaine occurrence RÉELLE d'un événement, depuis la date courante de la scène. Le moteur
+   * ne la calcule pas lui-même — il reste sans astronomie — c'est l'hôte qui résout. `body` n'a de
+   * sens que pour une opposition ou une conjonction, où l'événement dépend d'une planète.
+   */
+  | { kind: 'jumpToEvent'; event: AstronomicalEventKind; body?: string }
   | { kind: 'setTimeScale'; scale: number }
   // Sans `durationMs` : la légende attend un geste utilisateur (host.waitForAdvance()).
   | { kind: 'caption'; text: LocalizedText; durationMs?: number }
@@ -14,7 +25,8 @@ export type TourStep =
 
 export interface TourScript {
   id: string;
-  titleKey: LocalizedText;
+  /** Le titre affiché dans le sélecteur — un texte, pas une clé de dictionnaire. */
+  title: LocalizedText;
   steps: TourStep[];
 }
 
@@ -23,6 +35,8 @@ export interface TourRuntimeHost {
   flyTo(body: string): void;
   isFlying(): boolean;
   jumpToDate(date: Date): void;
+  /** Résout l'événement à cet instant, puis saute : cf. l'étape `jumpToEvent`. */
+  jumpToEvent(event: AstronomicalEventKind, body?: string): void;
   setTimeScale(scale: number): void;
   /** Résout quand l'utilisateur avance manuellement une légende sans durée, ou ferme le tour. */
   waitForAdvance(): Promise<void>;
@@ -86,6 +100,9 @@ export async function runTour(
         break;
       case 'jumpToDate':
         host.jumpToDate(step.date);
+        break;
+      case 'jumpToEvent':
+        host.jumpToEvent(step.event, step.body);
         break;
       case 'setTimeScale':
         host.setTimeScale(step.scale);

@@ -11,6 +11,7 @@ function makeHost(overrides: Partial<TourRuntimeHost> = {}): TourRuntimeHost {
     flyTo: vi.fn(),
     isFlying: vi.fn(() => false),
     jumpToDate: vi.fn(),
+    jumpToEvent: vi.fn(),
     setTimeScale: vi.fn(),
     waitForAdvance: vi.fn(() => Promise.resolve()),
     ...overrides,
@@ -34,7 +35,7 @@ describe('runTour', () => {
     const host = makeHost();
     const script: TourScript = {
       id: 'demo',
-      titleKey: text,
+      title: text,
       steps: [
         { kind: 'flyTo', body: 'earth' },
         { kind: 'jumpToDate', date: new Date('2030-01-01T00:00:00Z') },
@@ -55,13 +56,38 @@ describe('runTour', () => {
     vi.useRealTimers();
   });
 
+  /**
+   * L'étape qui a fait disparaître l'exception `id === 'eclipse'` de `ui/tourPlayer.ts` (lot 21).
+   * Le moteur ne résout AUCUNE date : il passe la forme et le corps à l'hôte, qui sait.
+   */
+  it('hands a jumpToEvent step to the host, with its body when it has one', async () => {
+    vi.useFakeTimers();
+    const host = makeHost();
+    const script: TourScript = {
+      id: 'demo',
+      title: text,
+      steps: [
+        { kind: 'jumpToEvent', event: 'solar-eclipse' },
+        { kind: 'jumpToEvent', event: 'opposition', body: 'mars' },
+      ],
+    };
+    const promise = runTour(script, host, () => {}, makeSignal());
+    await vi.runAllTimersAsync();
+    await promise;
+
+    expect(host.jumpToEvent).toHaveBeenNthCalledWith(1, 'solar-eclipse', undefined); // prettier-ignore
+    expect(host.jumpToEvent).toHaveBeenNthCalledWith(2, 'opposition', 'mars');
+    expect(host.jumpToDate).not.toHaveBeenCalled();
+    vi.useRealTimers();
+  });
+
   it('waits for isFlying() to become false before advancing past a flyTo step', async () => {
     vi.useFakeTimers();
     let flying = true;
     const host = makeHost({ isFlying: () => flying });
     const script: TourScript = {
       id: 'demo',
-      titleKey: text,
+      title: text,
       steps: [
         { kind: 'flyTo', body: 'moon' },
         { kind: 'setTimeScale', scale: 1 },
@@ -85,7 +111,7 @@ describe('runTour', () => {
     const host = makeHost({ isFlying: () => true });
     const script: TourScript = {
       id: 'demo',
-      titleKey: text,
+      title: text,
       steps: [
         { kind: 'flyTo', body: 'jupiter' },
         { kind: 'setTimeScale', scale: 1 },
@@ -111,7 +137,7 @@ describe('runTour', () => {
     const host = makeHost({ isFlying: () => flying });
     const script: TourScript = {
       id: 'demo',
-      titleKey: text,
+      title: text,
       steps: [
         { kind: 'flyTo', body: 'saturn' },
         { kind: 'setTimeScale', scale: 1 },
@@ -145,7 +171,7 @@ describe('runTour', () => {
     const host = makeHost({ waitForAdvance: () => advance });
     const script: TourScript = {
       id: 'demo',
-      titleKey: text,
+      title: text,
       steps: [{ kind: 'caption', text }],
     };
     let done = false;
@@ -165,7 +191,7 @@ describe('runTour', () => {
     const host = makeHost();
     const script: TourScript = {
       id: 'demo',
-      titleKey: text,
+      title: text,
       steps: [
         { kind: 'caption', text, durationMs: 500 },
         { kind: 'setTimeScale', scale: 42 },
