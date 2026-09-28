@@ -95,6 +95,31 @@ describe('fiches de jeux de tuiles', () => {
     }
   });
 
+  it('déclare le même format que l’extension de son gabarit', () => {
+    // DEUX SOURCES POUR LA MÊME CHOSE, donc un croisement. Le champ `format` de la fiche n'est
+    // consommé NULLE PART : ce qui décide vraiment du type servi est l'extension du gabarit, que
+    // `core/tileUrl.ts` recopie telle quelle. Une fiche qui annoncerait `image/jpeg` avec un
+    // gabarit en `.png` fonctionnerait donc parfaitement tout en mentant dans sa provenance.
+    //
+    // Ce n'est pas théorique : les couches de Trek mêlent les deux (la Lune, Mars, Mercure et
+    // Cérès servent du JPEG, Vénus du PNG), et l'adresse composée à la main en `.jpg` pour une
+    // couche PNG a réellement rendu 404 au lot 27.
+    const EXTENSIONS: Record<string, string> = {
+      'image/jpeg': '.jpg',
+      'image/png': '.png',
+    };
+    expect(TILESET_PRODUCTS.length).toBeGreaterThan(0);
+    for (const product of TILESET_PRODUCTS) {
+      const expected = EXTENSIONS[product.service.format];
+      expect(expected, `${product.id} : format inconnu`).toBeDefined();
+      expect(
+        product.service.template.endsWith(expected!),
+        `${product.id} déclare ${product.service.format} mais son gabarit finit par ` +
+          `« ${product.service.template.slice(-4)} »`
+      ).toBe(true);
+    }
+  });
+
   it('ordonne les jetons du gabarit comme WMTS les publie', () => {
     // Trouvé en falsifiant : intervertir `{TileRow}` et `{TileCol}` dans la fiche passait tous
     // les autres tests. L'application émettrait alors des adresses VALIDES montrant un autre
