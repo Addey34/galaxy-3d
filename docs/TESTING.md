@@ -132,6 +132,27 @@ y a été vérifiée falsifiable : on réintroduit le défaut, on confirme que l
 Playwright couvre le boot, loader, navigation, sélection 3D, modes, labels, i18n, mobile, petits
 corps, permaliens, événements astronomiques, zoom optique, visite guidée et accessibilité.
 
+**Visites guidées devenues des fiches** (lot 21) : rien n'écrit le NOMBRE de visites. Le compte et
+les titres viennent d'`src/registry/tours/order.json` et des fiches, en unitaire
+(`config/tourScripts.test.ts`) comme en e2e (`tourPlayer.spec.ts`), et la garde mobile mesure la
+plus LONGUE légende du registre plutôt que la première visite venue. C'est ce qui rend vraie la
+promesse du lot : ajouter une visite ne touche aucun `.ts`, pas même un test. Trois pièges de garde
+y sont nommés : une assertion sur « étape 1 » est une COURSE quand les premières étapes sont
+instantanées (on affirme sur le total, qui vient de la fiche) ; `resolveEventDate` est résolue
+depuis DIX dates de référence étalées sur une décennie, parce qu'un seul échantillon ne dirait rien
+d'une opposition de 780 jours de période ; et la seule garde qui prouve la chaîne entière (fiche →
+schéma → chargeur → moteur → horloge) est celle qui vérifie que la visite de l'éclipse déplace
+vraiment la date, avec un délai explicite parce que l'horloge est retenue jusqu'à l'arrivée des
+octets.
+
+**Le texte du registre, dans les deux sens** (lot 21) : `config/catalogueText.test.ts` DÉCOUVRE les
+dossiers de `src/registry/` au lieu de les lister — une liste recopiée aurait exactement le trou
+qu'on cherche — puis confronte la carte de langue livrée aux fiches du disque, et les fiches aux
+racines d'exécution. C'est cette garde qui a trouvé un défaut livré : `Object.values` d'une `Map`
+rend un tableau vide, donc les 14 objets d'instrument lisaient l'anglais dans les trois autres
+langues. Une exception est déclarée avec sa raison (`providers`, prose lue au build seulement) et un
+second contrôle vérifie que cette exception est VRAIE.
+
 **Chargement dégradé des éphémérides** (lot 15) : `core/HorizonsEphemerisService.test.ts` simule
 des `fetch` qui échouent (le manifeste et les binaires sont fabriqués, pas lus sur le disque,
 pour pouvoir choisir qui tombe) et garde la tolérance fichier par fichier, la raison écrite de
