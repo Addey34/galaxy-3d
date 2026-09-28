@@ -1,0 +1,103 @@
+name: Source health
+
+# LE GUETTEUR DES SOURCES (lot 28).
+#
+# Pourquoi il existe, et ce que l'histoire a montre. TROIS lots ont ete bloques par une source
+# devenue muette, et les trois fois c'est un sondage A LA MAIN qui l'a revele : au lot 25, quatre
+# fiches du Master Catalog du NSSDCA servaient leur page « Errors and Messages » en HTTP 200 ; au
+# lot 27, Magellan, Cassini et Galileo faisaient de meme, ce qui a laisse Titan et Europe sans
+# leur intervalle. Entre les deux, personne ne regardait.
+#
+# UN CODE HTTP NE PROUVE RIEN, et c'est tout l'objet : le NSSDCA sert ses erreurs en 200. Chaque
+# source est donc jugee sur un MARQUEUR trouve dans sa reponse, et la liste des sources se DERIVE
+# du depot (le releve des faits livre, plus les capabilities des jeux de tuiles), si bien
+# qu'ajouter une source l'ajoute ici sans que personne y pense.
+#
+# Il ne conditionne RIEN : aucun deploiement, aucun run. Il regarde et il le dit, comme
+# `main-ci-watch.yml`, dont il reprend la forme : une issue qui RESTE, refermee des que tout
+# redevient vivant.
+
+on:
+  schedule:
+    # Une fois par jour. Une source qui tombe ne se repare pas en une heure, et soixante
+    # requetes par jour chez des hotes publics est un poids negligeable.
+    - cron: '17 6 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: source-health
+  cancel-in-progress: false
+
+jobs:
+  probe:
+    name: Are the sources still alive
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1, resolved 2026-09-19
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0, resolved 2026-09-19
+        with:
+          node-version: 22
+
+      # Code de sortie capture SANS pipe : un pipe rend le code du DERNIER maillon, piege deja
+      # ecrit dans `CLAUDE.md`. Le code 2 veut dire « je n'ai pas pu tout mesurer », ce qui n'est
+      # PAS « tout va bien » : il ouvre l'issue comme une source muette.
+      - name: Probe every source the repo depends on
+        id: verdict
+        run: |
+          code=0
+          node scripts/check-source-health.mjs --markdown > sources.md 2> sources.err || code=$?
+          echo "code=$code" >> "$GITHUB_OUTPUT"
+          if [ "$code" = "0" ]; then
+            echo "alive=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "alive=false" >> "$GITHUB_OUTPUT"
+          fi
+          if [ ! -s sources.md ]; then
+            {
+              echo "## Les sources n'ont PAS pu etre sondees (code $code)"
+              echo
+              echo '```'
+              cat sources.err
+              echo '```'
+            } > sources.md
+          fi
+          cat sources.md
+
+      - name: Open or update the tracking issue
+        if: steps.verdict.outputs.alive != 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: |
+          body="$(cat sources.md)"
+          existing="$(gh issue list --repo "$REPO" --label source-health --state open \
+            --limit 1 --json number --jq '.[0].number // empty')"
+          if [ -n "$existing" ]; then
+            gh issue comment "$existing" --repo "$REPO" --body "$body"
+          else
+            gh label create source-health --repo "$REPO" \
+              --description "Une source dont Galaxy depend ne repond plus" --color D93F0B || true
+            gh issue create --repo "$REPO" --label source-health \
+              --title "Des sources dont Galaxy depend ne repondent plus" --body "$body"
+          fi
+
+      # Un temoin qu'on n'eteint jamais est un temoin eteint : quand tout redevient vivant,
+      # l'issue se referme en le disant.
+      - name: Close the tracking issue when every source is alive again
+        if: steps.verdict.outputs.alive == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: |
+          existing="$(gh issue list --repo "$REPO" --label source-health --state open \
+            --limit 1 --json number --jq '.[0].number // empty')"
+          if [ -n "$existing" ]; then
+            gh issue close "$existing" --repo "$REPO" --comment "$(cat sources.md)"
+          fi

@@ -31,6 +31,7 @@
     "inventory:gaps": "node scripts/inventory-gaps.mjs",
     "budget:startup": "node scripts/check-startup-budget.mjs",
     "ci:health": "node scripts/check-ci-health.mjs",
+    "sources:health": "node scripts/check-source-health.mjs",
     "screenreader:nvda": "node scripts/nvda-session.mjs",
     "screenreader:capture": "node scripts/capture-screenreader.mjs",
     "budget:measure": "node scripts/measure-startup-bytes.mjs",
