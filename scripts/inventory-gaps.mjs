@@ -15,7 +15,7 @@
  *
  * **Il ne décide rien, il décrit.** La règle des paliers vit dans `src/core/textureLadder.ts`,
  * celle des faits dans `src/core/bodyFacts.ts`, la file de travail dans `docs/private/VISION.md`
- * § « Ordre d'exécution ». Ce script les interroge par `ssrLoadModule`, comme
+ * § « La file de travail ». Ce script les interroge par `ssrLoadModule`, comme
  * `scripts/compute-mean-motion-scale.mjs` et `scripts/validate-against-horizons.mjs` : une copie
  * dériverait du lecteur, et c'est exactement l'écart que personne ne voit.
  *
