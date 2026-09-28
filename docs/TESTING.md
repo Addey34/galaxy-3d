@@ -86,6 +86,17 @@ pression permanente à dégrader les textures pour financer autre chose. Contrat
   requête vers `/jupiter/` y renvoie l'app shell. Elle vit en unitaire. De même, le talon du
   test d'uniformes ne doit nommer aucun uniforme, sinon il signale un défaut qu'il a écrit.
 
+- **UN TEST VERT AU RÉESSAI N'EST PAS UN TEST VERT, et la CI ne le dit pas toute seule.**
+  `playwright.config.ts` donne deux reprises en CI : un test qui échoue puis passe rend le job
+  VERT et ne laisse qu'un mot dans un journal que personne n'ouvre. Mesuré au lot 24 sur les huit
+  derniers runs de `main` : **dix scénarios distincts** ne sont passés qu'au réessai, et le run
+  annoncé « vert en entier » au lot 23 en contenait **quatre**. `pnpm ci:health` lit cela dans un
+  run donné (par défaut le dernier de `main`) et sort en code 1 ; le workflow
+  `.github/workflows/main-ci-watch.yml` le fait tourner après chaque run de `main` et ouvre une
+  issue. Un test qui échoue trois fois sur trois n'est pas « instable » : il est faux ou mal
+  isolé. Un test qui échoue une fois sur trois ne l'est pas davantage — il dépend de son
+  environnement, et la cause se MESURE (frein CPU du protocole DevTools, `--repeat-each`).
+
 `tsconfig.json` inclut `e2e` : les scénarios Playwright sont **typés par `pnpm typecheck`**, pas
 seulement lintés. Sans cela une erreur de type dans un spec n'apparaissait qu'à l'exécution — donc
 après vingt minutes de suite, ou jamais si la branche fautive n'était pas empruntée.
@@ -103,6 +114,17 @@ après vingt minutes de suite, ou jamais si la branche fautive n'était pas empr
    à-coups. **Tout scénario attend `#loader` caché avant sa première interaction** ; le lot 8
    a coûté un shard de CI rouge, trois tentatives sur trois, pour l'avoir oublié dans un seul
    fichier sur quarante.
+
+   **ET CE N'EST PAS SUFFISANT** (corrigé le 2026-09-28, lot 24 ; la phrase ci-dessus était vraie
+   et incomplète). `#loader` caché ne veut pas dire « l'application accepte un clic ». Mesuré
+   sous frein CPU × 8, page `?debug-meteo&body=earth` : juste après le masquage du chargeur, un
+   aller-retour `requestAnimationFrame` met **13,43 s**, puis 2,25, 1,12 et 2,98 s, et seulement
+   ensuite 0,15 s. Vingt secondes de thread saturé après le signal. Un clic de Playwright a
+   besoin de ce thread : son journal s'arrête alors à « done scrolling » ou à « performing click
+   action », sans jamais dire pourquoi. Un scénario qui clique juste après un démarrage, après un
+   saut de date ou pendant une visite guidée appelle donc `waitForCalmMainThread` /
+   `clickWhenCalm` de `e2e/mainThread.ts`, où la mesure est écrite. Preuve du correctif : le même
+   clic sur `#weather-trigger` passe de **14,6 s** (pour un `actionTimeout` de 15 s) à **1,9 s**.
 6. **Un glisser qui part du CENTRE de l'écran ne tourne pas la caméra.** Quand un corps est
    suivi, son point d'étiquette Explo occupe ce centre, et il garde ses gestes de pointeur par
    conception (seule la molette est réémise vers le canevas). Un scénario qui veut tourner

@@ -1,4 +1,6 @@
 import { expect, test } from '@playwright/test';
+
+import { waitForCalmMainThread } from './mainThread';
 import { blockExternalNetwork } from './netBlock';
 
 /**
@@ -112,6 +114,11 @@ test('Earth surface returns to standard tessellation when zoomed out', async ({
 
   // Retour Vue Globale : la caméra recule bien au-delà du seuil de sortie (hystérésis),
   // la géométrie hi-res est libérée et la surface repasse en densité standard.
+  //
+  // On attend d'abord que le thread rende la main : ce test est passé CINQ fois au réessai sur
+  // les huit derniers runs de `main`, et la densification hi-res de la Terre est justement le
+  // travail qui sature le thread au moment où ces deux clics partent (cf. `e2e/mainThread.ts`).
+  await waitForCalmMainThread(page);
   await page.locator('#body-search-trigger').click();
   await page.locator('#orbit-overview').click();
 

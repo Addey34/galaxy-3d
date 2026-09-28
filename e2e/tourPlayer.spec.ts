@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { expect, test, type Page } from '@playwright/test';
+import { clickWhenCalm, waitForCalmMainThread } from './mainThread';
 import { blockExternalNetwork } from './netBlock';
 
 /**
@@ -47,6 +48,10 @@ test.beforeEach(async ({ page }) => {
 async function openPicker(page: Page): Promise<void> {
   await page.goto('/');
   await expect(page.locator('#loader')).toBeHidden({ timeout: 30_000 });
+  // Le chargeur masqué ne veut pas dire « cliquable » : la mesure est dans `e2e/mainThread.ts`.
+  // C'est la même cause qui a fait expirer `.stour-next` à 15 s dans le shard 6 rouge de la
+  // PR #42, juste après `titan.spec.ts`, le journal s'arrêtant à « done scrolling ».
+  await waitForCalmMainThread(page);
   await page.locator('#help-btn').click();
   await page.locator('.stour-start').click();
   await expect(page.locator('.stour-picker')).toBeVisible();
@@ -62,12 +67,29 @@ async function advanceToEnd(page: Page): Promise<void> {
   for (let i = 0; i < 20; i++) {
     if (!(await card.isVisible())) return;
     if (!(await next.isDisabled())) {
-      await next.click();
+      // Une visite en cours enchaîne vols de caméra et sauts de date : le thread est occupé
+      // par à-coups, et c'est ce clic-ci qui a expiré dans le shard 6 rouge de la PR #42.
+      await clickWhenCalm(page, next);
     } else {
       await page.waitForTimeout(200);
     }
   }
   await expect(card).toBeHidden({ timeout: 20_000 });
+}
+
+/**
+ * Démarre la visite `index` et attend que la scène ait fini d'encaisser sa première étape.
+ *
+ * L'apaisement n'est pas décoratif : la visite de l'éclipse commence par un SAUT DE DATE, qui
+ * recharge des fenêtres d'éphémérides et recalcule toutes les positions. Sous frein CPU × 8, le
+ * clic suivant sur `.stour-close` expirait à 15 s — et seulement pour l'éclipse, les trois
+ * autres visites passant (mesuré le 2026-09-28). C'est la même cause que dans
+ * `e2e/mainThread.ts`, à un autre instant : le thread, pas le réseau.
+ */
+async function startTour(page: Page, index: number): Promise<void> {
+  await page.locator('.stour-picker-item').nth(index).click();
+  await expect(page.locator('.stour-card')).toBeVisible();
+  await waitForCalmMainThread(page);
 }
 
 test.describe('scripted tour picker', () => {
@@ -134,11 +156,11 @@ test.describe('eclipse tour', () => {
 
   test('can be closed early with the Close button', async ({ page }) => {
     await openPicker(page);
-    await page.locator('.stour-picker-item').nth(0).click();
+    await startTour(page, 0);
 
     const card = page.locator('.stour-card');
     await expect(card).toBeVisible();
-    await page.locator('.stour-close').click();
+    await clickWhenCalm(page, page.locator('.stour-close'));
     await expect(card).toBeHidden();
     await expect(page.locator('#body-info')).toBeHidden();
   });
@@ -166,7 +188,7 @@ test.describe('every tour of the registry', () => {
   for (const [index, id] of ORDER.entries()) {
     test(`${id} runs and can be closed`, async ({ page }) => {
       await openPicker(page);
-      await page.locator('.stour-picker-item').nth(index).click();
+      await startTour(page, index);
 
       const card = page.locator('.stour-card');
       await expect(card).toBeVisible();
@@ -177,7 +199,9 @@ test.describe('every tour of the registry', () => {
         new RegExp(`\\b${FICHES[index]!.steps.length}$`)
       );
 
-      await page.locator('.stour-close').click();
+      // La visite CONTINUE de jouer pendant qu'on regarde : on ferme quand la scène a rendu la
+      // main, sinon le clic tombe dans le vol ou le saut de date de l'étape suivante.
+      await clickWhenCalm(page, page.locator('.stour-close'));
       await expect(card).toBeHidden();
       await expect(page.locator('#body-info')).toBeHidden();
     });

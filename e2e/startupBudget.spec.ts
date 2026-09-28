@@ -110,12 +110,32 @@ test('le démarrage ne demande que les paliers planchers, et sa fenêtre tient d
   // démarrage. Sans cette ligne, l'assertion précédente resterait verte pour une liste vide ou
   // pour une entrée devenue obsolète, qui autoriserait alors un palier fin que plus rien ne
   // charge — la tautologie payée DEUX fois au lot 17E.
-  const observed = new Set(textures.map(({ key, tier }) => `${key}@${tier}`));
-  expect(
-    [...allowed].filter((declared) => !observed.has(declared)),
-    `ces raffinements sont déclarés dans FIRST_VIEW_TEXTURE_REFINEMENTS mais le démarrage ne les ` +
-      `demande pas : soit la première vue a changé, soit la déclaration ne décrit plus rien.`
-  ).toEqual([]);
+  //
+  // ON ATTEND CE RAFFINEMENT, ON NE LE SURPREND PAS (lot 24). Cette assertion était jouée à
+  // l'instant où le chargeur se masque, alors qu'un raffinement peut légitimement partir juste
+  // après : sur les huit derniers runs de `main`, ce test est passé QUATRE fois au réessai, et
+  // la dernière fois il manquait exactement `sun/surface@2k`. C'est le même défaut que celui
+  // corrigé sur `e2e/events.spec.ts` — une attente de test plus courte que celle du produit.
+  //
+  // La force de l'affirmation est intacte : une déclaration devenue obsolète n'arrive JAMAIS,
+  // donc le sondage expire et le message est le même.
+  await expect
+    .poll(
+      () => {
+        const observed = new Set(
+          textures.map(({ key, tier }) => `${key}@${tier}`)
+        );
+        return [...allowed].filter((declared) => !observed.has(declared));
+      },
+      {
+        timeout: 30_000,
+        intervals: [500],
+        message:
+          `ces raffinements sont déclarés dans FIRST_VIEW_TEXTURE_REFINEMENTS mais le démarrage ne les ` +
+          `demande pas : soit la première vue a changé, soit la déclaration ne décrit plus rien.`,
+      }
+    )
+    .toEqual([]);
 
   // (3) Les maillages : le plus léger, jamais mieux. Le LOD monte à l'approche, pas au boot.
   expect(

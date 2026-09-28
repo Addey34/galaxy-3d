@@ -1,4 +1,6 @@
 import { expect, test } from '@playwright/test';
+
+import { waitForCalmMainThread } from './mainThread';
 import { blockExternalNetwork } from './netBlock';
 
 // Déterminisme : pas de dépendance à l'API JPL SBDB live pendant les tests.
@@ -21,6 +23,9 @@ test.beforeEach(async ({ page }) => {
 test('switches UI language live and persists the choice', async ({ page }) => {
   await page.goto('/');
   await expect(page.locator('#loader')).toBeHidden({ timeout: 30_000 });
+  // Le chargeur masqué ne veut pas dire « cliquable » : cf. `e2e/mainThread.ts`. Ce test est
+  // passé une fois au réessai sur `main`, et il clique cinq fois de suite.
+  await waitForCalmMainThread(page);
 
   // Contexte navigateur en anglais par défaut → l'UI démarre en anglais.
   const overview = page.locator('#orbit-overview .chip-label');

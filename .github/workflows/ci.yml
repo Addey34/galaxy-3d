@@ -174,6 +174,14 @@ jobs:
     # branche ne peut donc montrer ce depassement avant la fusion : il se corrige a l'avance, en
     # regardant le dernier run de main, ou pas du tout.
     #
+    # DEPUIS LE LOT 24, CETTE LECTURE EXISTE ET ELLE EST AUTOMATIQUE. `pnpm ci:health` lit un run
+    # (par defaut le dernier de main) et sort en code 1 sur trois choses : un job rouge, un test
+    # passe SEULEMENT au reessai, et un shard qui atteint 80 % de ce garde-fou. Le workflow
+    # `main-ci-watch.yml` la joue apres chaque run de main et ouvre une issue. Ce qui a motive ce
+    # guetteur est mesure : DEUX fusions consecutives rouges que personne n'a vues (PR #40 shard 4,
+    # PR #42 shard 6), et DIX scenarios distincts passes au reessai sur les huit derniers runs,
+    # dans des jobs verts.
+    #
     # On repartit sur des MACHINES, jamais sur des workers : `playwright.config.ts` impose
     # `workers: 1` et `fullyParallel: false` parce que deux contextes WebGL en GPU logiciel
     # se disputent le meme CPU et rendent les scenarios lourds instables. Chaque shard garde
