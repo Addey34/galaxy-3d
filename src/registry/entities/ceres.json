@@ -5,7 +5,10 @@
   "source": "small-body",
   "elements": {
     "displayName": {
-      "fr": "Cérès"
+      "en": "Ceres",
+      "fr": "Cérès",
+      "es": "Ceres",
+      "pt-BR": "Ceres"
     },
     "a": 2.766496019994375,
     "e": 0.0783756264716304,
@@ -24,11 +27,15 @@
     "visualRadius": 0.1,
     "description": {
       "en": "The largest body of the asteroid belt and the only dwarf planet of the inner Solar System. NASA’s Dawn probe revealed bright salt deposits there, traces of a briny subsurface ocean.",
-      "fr": "Le plus gros corps de la ceinture d’astéroïdes et la seule planète naine du Système solaire interne. La sonde Dawn y a révélé des dépôts de sel brillants, traces d’un océan souterrain saumâtre."
+      "fr": "Le plus gros corps de la ceinture d’astéroïdes et la seule planète naine du Système solaire interne. La sonde Dawn y a révélé des dépôts de sel brillants, traces d’un océan souterrain saumâtre.",
+      "es": "El cuerpo más grande del cinturón de asteroides y el único planeta enano del Sistema Solar interior. La sonda Dawn de la NASA reveló allí depósitos de sal brillantes, rastros de un océano subterráneo salobre.",
+      "pt-BR": "O maior corpo do cinturão de asteroides e o único planeta anão do Sistema Solar interior. A sonda Dawn da NASA revelou nele depósitos de sal brilhantes, vestígios de um oceano subterrâneo salobro."
     },
     "wiki": {
       "en": "https://en.wikipedia.org/wiki/Ceres_(dwarf_planet)",
-      "fr": "https://fr.wikipedia.org/wiki/(1)_C%C3%A9r%C3%A8s"
+      "fr": "https://fr.wikipedia.org/wiki/(1)_C%C3%A9r%C3%A8s",
+      "es": "https://es.wikipedia.org/wiki/Ceres_(planeta_enano)",
+      "pt-BR": "https://pt.wikipedia.org/wiki/Ceres_(planeta_an%C3%A3o)"
     }
   },
   "facts": {

@@ -6,7 +6,10 @@
   "config": {
     "kind": "moon",
     "displayName": {
-      "fr": "Lune"
+      "en": "Moon",
+      "fr": "Lune",
+      "es": "Luna",
+      "pt-BR": "Lua"
     },
     "frame": "parentRelative",
     "radius": 0.27,
@@ -29,11 +32,15 @@
       "ascendingNode": 0,
       "description": {
         "en": "Earth's only natural satellite. It always shows the same face and stabilises our planet's axial tilt.",
-        "fr": "Le seul satellite naturel de la Terre. Elle montre toujours la même face et stabilise l’inclinaison de l’axe de notre planète."
+        "fr": "Le seul satellite naturel de la Terre. Elle montre toujours la même face et stabilise l’inclinaison de l’axe de notre planète.",
+        "es": "El único satélite natural de la Tierra. Muestra siempre la misma cara y estabiliza la inclinación del eje de nuestro planeta.",
+        "pt-BR": "O único satélite natural da Terra. Ela mostra sempre a mesma face e estabiliza a inclinação do eixo do nosso planeta."
       },
       "wiki": {
         "en": "https://en.wikipedia.org/wiki/Moon",
-        "fr": "https://fr.wikipedia.org/wiki/Lune"
+        "fr": "https://fr.wikipedia.org/wiki/Lune",
+        "es": "https://es.wikipedia.org/wiki/Luna",
+        "pt-BR": "https://pt.wikipedia.org/wiki/Lua"
       }
     },
     "astroBody": "Moon",

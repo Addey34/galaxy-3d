@@ -22,6 +22,8 @@ import {
   findUpcomingAstronomicalEvents,
   type AstronomicalEvent,
 } from './astronomicalEvents';
+import type { Locale } from '@/i18n/locales';
+import type { MessageKey } from '@/i18n/dict-en';
 
 export type EclipseEvent = AstronomicalEvent & {
   kind: 'solar-eclipse' | 'lunar-eclipse';
@@ -139,14 +141,37 @@ export function eclipseStillDescribed(
 }
 
 /** Clé i18n du titre : type × astre. Le tableau des combinaisons réelles est tenu par un test. */
-export function eclipseTitleKey(event: EclipseEvent): string {
+export function eclipseTitleKey(event: EclipseEvent): MessageKey {
   const body = event.kind === 'solar-eclipse' ? 'solar' : 'lunar';
-  return `title.eclipse.${body}.${event.eclipseKind ?? 'partial'}`;
+  // La combinaison est validée par `titleParity.test.ts` sur les 53 éclipses de la fenêtre ;
+  // l'assertion de type est ce qui permet au dictionnaire d'être un `Record<MessageKey, …>`.
+  return `title.eclipse.${body}.${event.eclipseKind ?? 'partial'}` as MessageKey;
 }
 
-const DATE_LOCALE: Record<'en' | 'fr', string> = {
+/**
+ * Locale `Intl` de la date, FIXÉE par langue. Ce n'est pas `INTL_LOCALE` de `i18n/locales` : la
+ * date d'une éclipse doit s'écrire pareil dans l'onglet et dans la page statique, or l'espagnol
+ * générique convient ici (« 12 de agosto de 2026 ») là où le nombre décimal demandait, lui, de
+ * ne revendiquer aucune région.
+ */
+const DATE_LOCALE: Record<Locale, string> = {
   en: 'en-US',
   fr: 'fr-FR',
+  es: 'es',
+  'pt-BR': 'pt-BR',
+};
+
+/**
+ * Le premier du mois s'écrit en ORDINAL dans certaines langues, et `Intl` ne le sait pas.
+ *
+ * Français : « 1er mars », là où `Intl` écrit « 1 mars ». Portugais du Brésil : « 1º de março »,
+ * même raison. L'espagnol écrit bien « 1 de agosto », donc aucune retouche — et l'anglais place
+ * le jour après le mois, où la question ne se pose pas. Une table plutôt qu'un `if (fr)` : la
+ * version précédente ne connaissait que le français, et le portugais serait passé inaperçu.
+ */
+const FIRST_DAY_ORDINAL: Partial<Record<Locale, [RegExp, string]>> = {
+  fr: [/^1 /, '1er '],
+  'pt-BR': [/^1 /, '1º '],
 };
 
 /**
@@ -154,17 +179,17 @@ const DATE_LOCALE: Record<'en' | 'fr', string> = {
  *
  * Locale FIXÉE par langue, pas celle du navigateur : la page statique et l'onglet doivent
  * écrire le même titre anglais au caractère près (sinon le titre clignote au rechargement), et
- * un visiteur `en-GB` écrirait « 12 August 2026 ». Le « 1er » français est ajouté à la main,
- * `Intl` écrivant « 1 mars ».
+ * un visiteur `en-GB` écrirait « 12 August 2026 ».
  */
-export function formatEclipseDate(date: Date, locale: 'en' | 'fr'): string {
+export function formatEclipseDate(date: Date, locale: Locale): string {
   const text = new Intl.DateTimeFormat(DATE_LOCALE[locale], {
     year: 'numeric',
     month: 'long',
     day: 'numeric',
     timeZone: 'UTC',
   }).format(date);
-  return locale === 'fr' && date.getUTCDate() === 1
-    ? text.replace(/^1 /, '1er ')
+  const ordinal = FIRST_DAY_ORDINAL[locale];
+  return ordinal && date.getUTCDate() === 1
+    ? text.replace(ordinal[0], ordinal[1])
     : text;
 }

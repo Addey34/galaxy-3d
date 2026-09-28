@@ -7,7 +7,9 @@
     "kind": "moon",
     "displayName": {
       "en": "Triton",
-      "fr": "Triton"
+      "fr": "Triton",
+      "es": "Tritón",
+      "pt-BR": "Tritão"
     },
     "radius": 0.28,
     "rotationSpeed": {
@@ -58,11 +60,15 @@
       },
       "description": {
         "en": "Neptune's largest moon and the Solar System's only major retrograde satellite, with nitrogen geysers.",
-        "fr": "La plus grande lune de Neptune et la seule grande lune rétrograde du Système solaire, avec des geysers d'azote."
+        "fr": "La plus grande lune de Neptune et la seule grande lune rétrograde du Système solaire, avec des geysers d'azote.",
+        "es": "La luna más grande de Neptuno y el único satélite mayor retrógrado del Sistema Solar, con géiseres de nitrógeno.",
+        "pt-BR": "A maior lua de Netuno e o único satélite maior retrógrado do Sistema Solar, com gêiseres de nitrogênio."
       },
       "wiki": {
         "en": "https://en.wikipedia.org/wiki/Triton_(moon)",
-        "fr": "https://fr.wikipedia.org/wiki/Triton_(lune)"
+        "fr": "https://fr.wikipedia.org/wiki/Triton_(lune)",
+        "es": "https://es.wikipedia.org/wiki/Trit%C3%B3n_(sat%C3%A9lite)",
+        "pt-BR": "https://pt.wikipedia.org/wiki/Trit%C3%A3o_(sat%C3%A9lite)"
       }
     },
     "cameraDistance": {

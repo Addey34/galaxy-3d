@@ -6,7 +6,9 @@
   "elements": {
     "displayName": {
       "en": "Makemake",
-      "fr": "Makémaké"
+      "fr": "Makémaké",
+      "es": "Makemake",
+      "pt-BR": "Makemake"
     },
     "a": 45.4988931027048,
     "e": 0.1603866278527415,
@@ -26,11 +28,15 @@
     "visualRadius": 0.112,
     "description": {
       "en": "Discovered just after Easter 2005 and nicknamed “Easterbunny”, it was later named after the creator god of Rapa Nui (Easter Island). Its reddish surface is coated in frozen methane.",
-      "fr": "Découverte juste après Pâques 2005 et surnommée « Easterbunny », elle fut ensuite nommée d’après le dieu créateur de Rapa Nui (île de Pâques). Sa surface rougeâtre est couverte de méthane gelé."
+      "fr": "Découverte juste après Pâques 2005 et surnommée « Easterbunny », elle fut ensuite nommée d’après le dieu créateur de Rapa Nui (île de Pâques). Sa surface rougeâtre est couverte de méthane gelé.",
+      "es": "Descubierto justo después de la Pascua de 2005 y apodado «Easterbunny», recibió luego el nombre del dios creador de Rapa Nui (isla de Pascua). Su superficie rojiza está cubierta de metano helado.",
+      "pt-BR": "Descoberto logo após a Páscoa de 2005 e apelidado de “Easterbunny”, recebeu depois o nome do deus criador de Rapa Nui (ilha de Páscoa). A sua superfície avermelhada é coberta de metano congelado."
     },
     "wiki": {
       "en": "https://en.wikipedia.org/wiki/Makemake",
-      "fr": "https://fr.wikipedia.org/wiki/(136472)_Mak%C3%A9mak%C3%A9"
+      "fr": "https://fr.wikipedia.org/wiki/(136472)_Mak%C3%A9mak%C3%A9",
+      "es": "https://es.wikipedia.org/wiki/Makemake_(planeta_enano)",
+      "pt-BR": "https://pt.wikipedia.org/wiki/Makemake"
     }
   },
   "facts": {

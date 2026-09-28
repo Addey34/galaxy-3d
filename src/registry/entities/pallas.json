@@ -6,7 +6,9 @@
   "elements": {
     "displayName": {
       "en": "Pallas",
-      "fr": "Pallas"
+      "fr": "Pallas",
+      "es": "Pallas",
+      "pt-BR": "Palas"
     },
     "a": 2.772322475089011,
     "e": 0.2296435321697976,
@@ -23,7 +25,9 @@
       "extentRatio": 1.14,
       "credit": {
         "en": "ESO VLT/SPHERE adaptive-optics images and light curves, ADAM shape model by Marsset et al. 2020 (Nature Astronomy 4, 569), DAMIT model 4395 (CC BY 4.0), used at its full 3,200 facets.",
-        "fr": "Images d'optique adaptative ESO VLT/SPHERE et courbes de lumière, modèle de forme ADAM de Marsset et al. 2020 (Nature Astronomy 4, 569), modèle DAMIT 4395 (CC BY 4.0), employé avec ses 3 200 facettes."
+        "fr": "Images d'optique adaptative ESO VLT/SPHERE et courbes de lumière, modèle de forme ADAM de Marsset et al. 2020 (Nature Astronomy 4, 569), modèle DAMIT 4395 (CC BY 4.0), employé avec ses 3 200 facettes.",
+        "es": "Imágenes de óptica adaptativa ESO VLT/SPHERE y curvas de luz, modelo de forma ADAM de Marsset et al. 2020 (Nature Astronomy 4, 569), modelo DAMIT 4395 (CC BY 4.0), usado con sus 3200 facetas completas.",
+        "pt-BR": "Imagens de óptica adaptativa ESO VLT/SPHERE e curvas de luz, modelo de forma ADAM de Marsset et al. 2020 (Nature Astronomy 4, 569), modelo DAMIT 4395 (CC BY 4.0), usado com as suas 3200 facetas completas."
       }
     },
     "surfaceResolutions": [
@@ -32,11 +36,15 @@
     ],
     "description": {
       "en": "The third-largest asteroid, and the very first to be discovered after Ceres, in 1802. Its steeply tilted orbit is so inclined that no spacecraft has ever visited it.",
-      "fr": "Le troisième plus gros astéroïde, et le tout premier découvert après Cérès, en 1802. Son orbite fortement inclinée est si penchée qu’aucune sonde ne l’a jamais visité."
+      "fr": "Le troisième plus gros astéroïde, et le tout premier découvert après Cérès, en 1802. Son orbite fortement inclinée est si penchée qu’aucune sonde ne l’a jamais visité.",
+      "es": "El tercer asteroide más grande, y el primero descubierto después de Ceres, en 1802. Su órbita está tan inclinada que ninguna sonda lo ha visitado jamás.",
+      "pt-BR": "O terceiro maior asteroide, e o primeiro descoberto depois de Ceres, em 1802. A sua órbita é tão inclinada que nenhuma sonda o visitou até hoje."
     },
     "wiki": {
       "en": "https://en.wikipedia.org/wiki/2_Pallas",
-      "fr": "https://fr.wikipedia.org/wiki/(2)_Pallas"
+      "fr": "https://fr.wikipedia.org/wiki/(2)_Pallas",
+      "es": "https://es.wikipedia.org/wiki/(2)_Pallas",
+      "pt-BR": "https://pt.wikipedia.org/wiki/2_Palas"
     }
   },
   "facts": {

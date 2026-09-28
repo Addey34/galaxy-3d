@@ -7,7 +7,9 @@
     "kind": "moon",
     "displayName": {
       "en": "Mimas",
-      "fr": "Mimas"
+      "fr": "Mimas",
+      "es": "Mimas",
+      "pt-BR": "Mimas"
     },
     "radius": 0.09,
     "rotationSpeed": {
@@ -56,11 +58,15 @@
       },
       "description": {
         "en": "Saturn's closest major moon, dominated by the giant Herschel crater that gives it a Death-Star silhouette.",
-        "fr": "La lune majeure la plus proche de Saturne, dominée par le cratère géant Herschel qui lui donne une silhouette d’Étoile Noire."
+        "fr": "La lune majeure la plus proche de Saturne, dominée par le cratère géant Herschel qui lui donne une silhouette d’Étoile Noire.",
+        "es": "La luna mayor más cercana a Saturno, dominada por el cráter gigante Herschel, que le da una silueta de Estrella de la Muerte.",
+        "pt-BR": "A maior lua mais próxima de Saturno, dominada pela cratera gigante Herschel, que lhe dá uma silhueta de Estrela da Morte."
       },
       "wiki": {
         "en": "https://en.wikipedia.org/wiki/Mimas_(moon)",
-        "fr": "https://fr.wikipedia.org/wiki/Mimas_(lune)"
+        "fr": "https://fr.wikipedia.org/wiki/Mimas_(lune)",
+        "es": "https://es.wikipedia.org/wiki/Mimas_(sat%C3%A9lite)",
+        "pt-BR": "https://pt.wikipedia.org/wiki/Mimas_(sat%C3%A9lite)"
       }
     },
     "cameraDistance": {

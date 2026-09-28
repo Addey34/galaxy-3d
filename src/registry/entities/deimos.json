@@ -7,7 +7,9 @@
     "kind": "moon",
     "displayName": {
       "en": "Deimos",
-      "fr": "Déimos"
+      "fr": "Déimos",
+      "es": "Deimos",
+      "pt-BR": "Deimos"
     },
     "radius": 0.06,
     "rotationSpeed": {
@@ -48,7 +50,9 @@
       "extentRatio": 1.42,
       "credit": {
         "en": "Viking Orbiter images, shape model by P. C. Thomas, NASA PDS Small Body Optical Shape Models (EAR-A-5-DDR-SHAPE-MODELS-V2.1), decimated for the web.",
-        "fr": "Images de Viking Orbiter, modèle de forme de P. C. Thomas, NASA PDS Small Body Optical Shape Models (EAR-A-5-DDR-SHAPE-MODELS-V2.1), décimé pour le web."
+        "fr": "Images de Viking Orbiter, modèle de forme de P. C. Thomas, NASA PDS Small Body Optical Shape Models (EAR-A-5-DDR-SHAPE-MODELS-V2.1), décimé pour le web.",
+        "es": "Imágenes de Viking Orbiter, modelo de forma de P. C. Thomas, NASA PDS Small Body Optical Shape Models (EAR-A-5-DDR-SHAPE-MODELS-V2.1), diezmado para la web.",
+        "pt-BR": "Imagens da Viking Orbiter, modelo de forma de P. C. Thomas, NASA PDS Small Body Optical Shape Models (EAR-A-5-DDR-SHAPE-MODELS-V2.1), decimado para a web."
       }
     },
     "textureResolutions": {
@@ -65,11 +69,15 @@
       },
       "description": {
         "en": "Mars' smaller outer moon, a dark irregular body with a slow synchronous orbit.",
-        "fr": "La plus petite lune extérieure de Mars, un corps sombre et irrégulier en orbite synchrone lente."
+        "fr": "La plus petite lune extérieure de Mars, un corps sombre et irrégulier en orbite synchrone lente.",
+        "es": "La más pequeña y externa de las lunas de Marte, un cuerpo oscuro e irregular en órbita sincrónica lenta.",
+        "pt-BR": "A menor e mais externa das luas de Marte, um corpo escuro e irregular em órbita sincronizada lenta."
       },
       "wiki": {
         "en": "https://en.wikipedia.org/wiki/Deimos_(moon)",
-        "fr": "https://fr.wikipedia.org/wiki/D%C3%A9imos_(lune)"
+        "fr": "https://fr.wikipedia.org/wiki/D%C3%A9imos_(lune)",
+        "es": "https://es.wikipedia.org/wiki/Deimos_(sat%C3%A9lite)",
+        "pt-BR": "https://pt.wikipedia.org/wiki/Deimos_(sat%C3%A9lite)"
       }
     },
     "cameraDistance": {

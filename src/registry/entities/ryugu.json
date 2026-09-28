@@ -6,7 +6,9 @@
   "elements": {
     "displayName": {
       "en": "Ryugu",
-      "fr": "Ryugu"
+      "fr": "Ryugu",
+      "es": "Ryugu",
+      "pt-BR": "Ryugu"
     },
     "a": 1.190915530274858,
     "e": 0.191066697591621,
@@ -29,20 +31,28 @@
       "albedoSource": "Sugita et al. 2019, Science 364, 6437 (JPL SBDB)",
       "colourSource": {
         "en": "ISAS/JAXA, Ryugu v-band normal albedo map, Hayabusa2 ONC (JAXA DARTS); data modified: sampled per vertex",
-        "fr": "ISAS/JAXA, carte d’albédo normal en bande v de Ryugu, Hayabusa2 ONC (JAXA DARTS) ; données modifiées : échantillonnée par sommet"
+        "fr": "ISAS/JAXA, carte d’albédo normal en bande v de Ryugu, Hayabusa2 ONC (JAXA DARTS) ; données modifiées : échantillonnée par sommet",
+        "es": "ISAS/JAXA, mapa de albedo normal en banda v de Ryugu, Hayabusa2 ONC (JAXA DARTS); datos modificados: muestreado por vértice",
+        "pt-BR": "ISAS/JAXA, mapa de albedo normal na banda v de Ryugu, Hayabusa2 ONC (JAXA DARTS); dados modificados: amostrado por vértice"
       },
       "credit": {
         "en": "ISAS/JAXA Hayabusa2, SfM shape model SHAPE_SFM_200k_v20180804 (Watanabe et al. 2019, DARTS); data modified: decimated for the web, pole brought onto Y.",
-        "fr": "ISAS/JAXA Hayabusa2, modèle de forme SfM SHAPE_SFM_200k_v20180804 (Watanabe et al. 2019, DARTS) ; données modifiées : décimé pour le web, pôle ramené sur Y."
+        "fr": "ISAS/JAXA Hayabusa2, modèle de forme SfM SHAPE_SFM_200k_v20180804 (Watanabe et al. 2019, DARTS) ; données modifiées : décimé pour le web, pôle ramené sur Y.",
+        "es": "ISAS/JAXA Hayabusa2, modelo de forma SfM SHAPE_SFM_200k_v20180804 (Watanabe et al. 2019, DARTS); datos modificados: diezmado para la web, polo llevado sobre Y.",
+        "pt-BR": "ISAS/JAXA Hayabusa2, modelo de forma SfM SHAPE_SFM_200k_v20180804 (Watanabe et al. 2019, DARTS); dados modificados: decimado para a web, polo levado sobre Y."
       }
     },
     "description": {
       "en": "A dark, carbon-rich spinning top about 900 metres across. JAXA’s Hayabusa2 fired a projectile into it to dig a fresh crater and brought 5.4 grams of it back to Earth in December 2020.",
-      "fr": "Une toupie sombre et riche en carbone d’environ 900 mètres. La sonde japonaise Hayabusa2 y a tiré un projectile pour creuser un cratère frais et en a rapporté 5,4 grammes sur Terre en décembre 2020."
+      "fr": "Une toupie sombre et riche en carbone d’environ 900 mètres. La sonde japonaise Hayabusa2 y a tiré un projectile pour creuser un cratère frais et en a rapporté 5,4 grammes sur Terre en décembre 2020.",
+      "es": "Una peonza oscura y rica en carbono de unos 900 metros. La Hayabusa2 de JAXA le disparó un proyectil para excavar un cráter fresco y trajo 5,4 gramos a la Tierra en diciembre de 2020.",
+      "pt-BR": "Um pião escuro e rico em carbono de cerca de 900 metros. A Hayabusa2 da JAXA disparou um projétil nele para abrir uma cratera nova e trouxe 5,4 gramas para a Terra em dezembro de 2020."
     },
     "wiki": {
       "en": "https://en.wikipedia.org/wiki/162173_Ryugu",
-      "fr": "https://fr.wikipedia.org/wiki/(162173)_Ryugu"
+      "fr": "https://fr.wikipedia.org/wiki/(162173)_Ryugu",
+      "es": "https://es.wikipedia.org/wiki/(162173)_Ryugu",
+      "pt-BR": "https://pt.wikipedia.org/wiki/162173_Ryugu"
     }
   },
   "facts": {
@@ -72,14 +82,18 @@
       "published": false,
       "reason": {
         "en": "About 0.1 mm/s², a hundred-thousandth of Earth’s, and about a fifth weaker on its equatorial ridge, where the spin works against it: a single value would mislead.",
-        "fr": "Environ 0,1 mm/s², un cent-millième de celle de la Terre, et plus faible d'un cinquième environ sur son bourrelet équatorial, où la rotation s'y oppose : une valeur unique serait trompeuse."
+        "fr": "Environ 0,1 mm/s², un cent-millième de celle de la Terre, et plus faible d'un cinquième environ sur son bourrelet équatorial, où la rotation s'y oppose : une valeur unique serait trompeuse.",
+        "es": "Unos 0,1 mm/s², cien mil veces menor que la de la Tierra, y alrededor de un quinto más débil en su cresta ecuatorial, donde la rotación se le opone: un valor único induciría a error.",
+        "pt-BR": "Cerca de 0,1 mm/s², cem mil vezes menor que a da Terra, e cerca de um quinto mais fraca na sua crista equatorial, onde a rotação se opõe a ela: um valor único seria enganoso."
       }
     },
     "meanTempC": {
       "published": false,
       "reason": {
         "en": "Surface temperature swings strongly over its 7.6-hour day: a mean would describe no real moment.",
-        "fr": "La température de surface varie fortement au fil de sa journée de 7,6 heures : une moyenne ne décrirait aucun instant réel."
+        "fr": "La température de surface varie fortement au fil de sa journée de 7,6 heures : une moyenne ne décrirait aucun instant réel.",
+        "es": "La temperatura de la superficie varía mucho a lo largo de su día de 7,6 horas: una media no describiría ningún instante real.",
+        "pt-BR": "A temperatura da superfície varia muito ao longo do seu dia de 7,6 horas: uma média não descreveria nenhum instante real."
       }
     },
     "moonCount": {

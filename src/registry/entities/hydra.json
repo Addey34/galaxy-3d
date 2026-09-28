@@ -7,7 +7,9 @@
     "kind": "moon",
     "displayName": {
       "en": "Hydra",
-      "fr": "Hydre"
+      "fr": "Hydre",
+      "es": "Hidra",
+      "pt-BR": "Hidra"
     },
     "radius": 0.06,
     "rotationSpeed": {
@@ -48,11 +50,15 @@
       "ascendingNode": 0,
       "description": {
         "en": "Pluto's outermost known moon, the fastest tumbler of the small moons, spinning once roughly every 10 hours.",
-        "fr": "La plus lointaine lune connue de Pluton, celle qui tourne le plus vite parmi les petites lunes, bouclant un tour environ toutes les 10 heures."
+        "fr": "La plus lointaine lune connue de Pluton, celle qui tourne le plus vite parmi les petites lunes, bouclant un tour environ toutes les 10 heures.",
+        "es": "La luna conocida más lejana de Plutón, la que gira más rápido entre las lunas pequeñas, completando una vuelta cada 10 horas aproximadamente.",
+        "pt-BR": "A lua conhecida mais distante de Plutão, a que gira mais rápido entre as luas pequenas, completando uma volta a cada 10 horas aproximadamente."
       },
       "wiki": {
         "en": "https://en.wikipedia.org/wiki/Hydra_(moon)",
-        "fr": "https://fr.wikipedia.org/wiki/Hydre_(lune)"
+        "fr": "https://fr.wikipedia.org/wiki/Hydre_(lune)",
+        "es": "https://es.wikipedia.org/wiki/Hidra_(sat%C3%A9lite)",
+        "pt-BR": "https://pt.wikipedia.org/wiki/Hidra_(sat%C3%A9lite)"
       }
     },
     "cameraDistance": {

@@ -99,7 +99,14 @@ export const NAVIGABLE_TARGETS: ReadonlyMap<string, CelestialBodyConfig> =
             o.displayName,
             // Un objet interstellaire n'a pas de description rédigée dans son registre : sa
             // désignation MPC est ce qui l'identifie, et c'est elle qu'Horizons affiche.
-            { en: o.designation, fr: o.designation },
+            // Une désignation MPC s'écrit pareil dans les quatre langues, mais elle DOIT les
+            // déclarer toutes les quatre : `LocalizedText` les exige depuis le lot 20.
+            {
+              en: o.designation,
+              fr: o.designation,
+              es: o.designation,
+              'pt-BR': o.designation,
+            },
             o.color,
             o.facts
           ),

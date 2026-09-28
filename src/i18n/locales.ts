@@ -1,975 +1,151 @@
 /**
- * Dictionnaires de traduction (français / anglais).
+ * LES QUATRE LANGUES, ET LEUR CHARGEMENT — anglais, français, espagnol, portugais du Brésil.
  *
- * Un seul enregistrement plat par langue : `clé → chaîne`. Les clés sont regroupées par
- * zone d'interface (`loader.*`, `nav.*`, `help.*`, `stat.*`…). L'anglais sert de repli
- * quand une clé manque dans une autre langue (cf. `t()` dans `./index`).
+ * Ce module ne porte AUCUNE chaîne traduite : un dictionnaire par langue vit dans son propre
+ * fichier (`dict-en.ts`, `dict-fr.ts`, `dict-es.ts`, `dict-pt-BR.ts`). Il porte la liste des
+ * langues, leurs conventions (chemin, `lang` HTML, locale `Intl`) et la façon de les charger.
+ *
+ * SEUL L'ANGLAIS EST CHARGÉ AU DÉMARRAGE, et c'est la décision de poids du lot 20. Les trois
+ * autres arrivent par import DYNAMIQUE, donc un visiteur télécharge exactement un dictionnaire.
+ * Avant ce lot, un francophone téléchargeait `en` + `fr` : le démarrage d'un visiteur non
+ * anglophone est donc plus LÉGER qu'avant, et une cinquième langue coûtera zéro octet au
+ * démarrage. L'anglais reste statique parce qu'il est le repli de `t()` : le charger à la demande
+ * ferait apparaître des clés brutes le temps qu'un dictionnaire arrive.
  *
  * Les descriptions et noms des corps ne vivent PAS ici : ils restent dans le catalogue
  * (`config/bodies.ts`, champ `LocalizedText`) — le catalogue est la source unique du contenu.
  */
 
-export type Locale = 'en' | 'fr';
-export const LOCALES: readonly Locale[] = ['en', 'fr'];
+import { en, type MessageKey } from './dict-en';
 
-type Dict = Record<string, string>;
+export type Locale = 'en' | 'fr' | 'es' | 'pt-BR';
 
-export const messages: Record<Locale, Dict> = {
-  en: {
-    // ── Écran de chargement ──
-    // Titre de l'onglet, tenu à jour pendant la navigation (cf. ui/documentTitle). La version
-    // anglaise reprend mot pour mot celle que `src/seo` écrit dans les pages statiques, pour
-    // qu'un rechargement ne change rien de visible.
-    'title.body': '{name} in 3D: live position and orbit',
-    // Pages d'éclipse (`/eclipse/2026-08-12/`) : une clé par combinaison type × astre que le
-    // calcul produit réellement — `src/seo/titleParity.test.ts` le vérifie sur les 53 éclipses.
-    'title.eclipse.solar.total': 'Total solar eclipse of {date} in 3D',
-    'title.eclipse.solar.annular': 'Annular solar eclipse of {date} in 3D',
-    'title.eclipse.solar.partial': 'Partial solar eclipse of {date} in 3D',
-    'title.eclipse.lunar.total': 'Total lunar eclipse of {date} in 3D',
-    'title.eclipse.lunar.partial': 'Partial lunar eclipse of {date} in 3D',
-    'title.eclipse.lunar.penumbral': 'Penumbral lunar eclipse of {date} in 3D',
-    'title.overview': 'Galaxy: Real-Time Interactive 3D Solar System',
-    'loader.init': 'Initializing...',
-    'loader.core': 'Loading core components…',
-    'loader.scene': 'Building scene…',
-    'loader.lighting': 'Setting up lighting…',
-    'loader.bodies': 'Creating celestial bodies…',
-    'loader.finalize': 'Finalizing…',
-    'loader.starting': 'Starting…',
-    'loader.loadingBody': 'Loading {body}…',
-    'loader.creatingBody': 'Creating {body}...',
-    'loader.ephemerides': 'Ephemeris data loaded',
-    'loader.ready': 'Ready for launch',
-    'loader.stage.core': 'Core',
-    'loader.stage.data': 'Data',
-    'loader.stage.scene': 'Scene',
-    'loader.stage.bodies': 'Bodies',
-    'loader.stage.orbit': 'Orbits',
-    'loader.stage.ready': 'Ready',
-    'loader.texturesDone': 'Textures loaded',
-    // ── Accessibilité : ce que SEUL un lecteur d'écran entend (lot 19) ──
-    // Aucun de ces textes n'est affiché. Ils viennent de la passe NVDA décrite dans
-    // `docs/private/LECTEUR_ECRAN_LOT19.md`, où chaque silence a été mesuré avant d'être
-    // comblé. `a11y.pageHeading` reprend MOT POUR MOT le `<h1>` statique d'`index.html`, que
-    // les robots lisent et que `src/seo/bodyLandingPage.ts` remplace :
-    // `src/seo/headingParity.test.ts` le vérifie.
-    'a11y.pageHeading':
-      'Galaxy: Real-Time Interactive 3D Solar System. Explore the Planets, Moons and Dwarf Planets',
-    'a11y.scene': 'Solar system, interactive 3D view',
-    'a11y.navigation': 'Body navigation',
-    'a11y.loading': 'Loading the solar system, please wait.',
-    'a11y.loadingProgress': 'Loading progress',
-    'a11y.ready': 'Solar system loaded and ready.',
-    'a11y.loadFailed': 'The solar system could not be loaded.',
-    'a11y.bodySelected': '{name} selected. Information panel opened.',
-    'a11y.dateChanged': 'Date set to {date}.',
-    'a11y.searchResults': '{count} bodies match.',
-    'a11y.searchResultsOne': 'One body matches.',
-    'a11y.searchResultsNone': 'No body matches.',
-    'a11y.paletteResults': 'Search results',
-    'a11y.tourPlayer': 'Guided tour in progress',
-    'error.title': 'Application Error',
-    'error.retry': 'Retry',
-    'error.contextLost': 'Reconnecting the 3D view…',
-    'error.contextLostTimeout':
-      'The 3D view could not reconnect. Reload the page.',
+/**
+ * Les langues livrées, dans l'ordre où le sélecteur les montre.
+ *
+ * Le portugais est déclaré BRÉSILIEN et non « portugais » : le lexique diffère de celui du
+ * Portugal (« ônibus »/« autocarro », et plus près du sujet « Terra » contre « Terra » mais
+ * « bilhão » contre « mil milhões »), donc annoncer `pt` serait une promesse plus large que ce
+ * qui est livré.
+ */
+export const LOCALES: readonly Locale[] = ['en', 'fr', 'es', 'pt-BR'];
 
-    // ── Éphémérides manquantes (lot 15) ──
-    // Le bandeau n'existe que lorsqu'un fichier manque VRAIMENT : rien à l'écran veut dire
-    // que les 64 sont arrivés. Les nombres sont écrits sans accord de pluriel (« 63 sur 64 »),
-    // le compte pouvant valoir 1 et le dictionnaire n'ayant pas de formes plurielles.
-    'ephemeris.notice.title': 'Reduced precision',
-    'ephemeris.notice.partial':
-      'Precise ephemerides received: {loaded} of {declared}. The other bodies are placed by a less precise source, named on the info card of each body.',
-    'ephemeris.notice.none':
-      'No precise ephemeris could be loaded. Every body is placed by a less precise source, named on its info card.',
-    'ephemeris.notice.spacecraft':
-      'Spacecraft left without any position: {count}.',
-    'ephemeris.notice.retry': 'Load the missing files',
-    'ephemeris.notice.retrying': 'Loading the missing files…',
-    'ephemeris.notice.recovered': 'All ephemerides are loaded.',
-    'ephemeris.notice.dismiss': 'Dismiss this message',
-    'ephemeris.notice.aria': 'Ephemeris loading',
+export type Dict = Record<MessageKey, string>;
 
-    // ── Navigation ──
-    'nav.overview': 'Overview',
-    'nav.bodies': 'Bodies',
-    'nav.search': 'Search a body',
-    'dock.tools.aria': 'Tools',
-    'speed.aria': 'Simulation speed',
-    // Plafond de vitesse mesuré (lot 17, phase 17D) : la date reste exacte, et c'est le curseur
-    // qui renonce. La note n'apparaît que lorsque le lien ne soutient PAS la vitesse demandée.
-    'speed.limited': 'limited by your connection',
-    'ephemeris.notice.waitingTitle': 'The date is waiting for its data',
-    'ephemeris.notice.waiting':
-      'Your connection is slower than the requested playback speed. Nothing wrong is shown: the date advances as the bytes arrive.',
-    // Hors ligne (lot 17, phase 17E). Chaque nombre affiché est LU dans le magasin de
-    // l'appareil, jamais mémorisé après un téléchargement : un cache peut être purgé par le
-    // navigateur sous la pression du quota, et l'appareil partirait en classe en ayant oublié.
-    'offline.hint':
-      'Download every ephemeris file so the app can place the bodies at any date without a network. Nothing is downloaded until you ask.',
-    'offline.reading': 'Checking what this device already holds…',
-    'offline.unavailable':
-      'This browser keeps no storage for the app, so offline use cannot be prepared here.',
-    'offline.noManifest':
-      'The ephemeris index has not arrived, so there is nothing to prepare yet.',
-    'offline.partial':
-      'This device holds {files} of {total} files. Preparing the rest downloads about {size} MB.',
-    'offline.ready':
-      'All {files} files are on this device ({size} MB). Dates work without a network.',
-    'offline.prepare': 'Prepare offline use',
-    'offline.cancel': 'Stop the download',
-    'offline.progress': 'Downloading: {done} of {total} files.',
-    'offline.started': 'Offline preparation started.',
-    'offline.forget': 'Free {size} MB',
-    'nav.searchPlaceholder': 'Search a body…',
-    'nav.paletteAria': 'Search and select a body',
-    'nav.group.star': 'Star',
-    'nav.group.planet': 'Planets',
-    'nav.group.moon': 'Moons',
-    'nav.group.dwarf': 'Dwarf planets',
-    'nav.group.other': 'Small bodies',
-    'nav.group.spacecraft': 'Spacecraft',
-    'nav.group.interstellar': 'Interstellar objects',
-    'nav.kind.moon': 'moon',
-    'nav.kind.dwarf': 'dwarf',
-    'nav.unavailable': 'No position at this date',
-    'nav.kind.spacecraft': 'probe',
-    'nav.kind.interstellar': 'interstellar',
-    'surface.close': 'Close',
-    'bi.trigger.aria': 'Body information',
-    'settings.trigger.aria': 'Display settings',
-    'time.expand': 'Time settings',
-    'events.title': 'Astronomical events',
-    'events.open': 'Astronomical events',
-    'events.close': 'Close astronomical events',
-    'events.empty': 'No upcoming event found',
-    'events.newMoon': 'New Moon',
-    'events.firstQuarter': 'First Quarter',
-    'events.fullMoon': 'Full Moon',
-    'events.thirdQuarter': 'Third Quarter',
-    'events.solarEclipse': 'Solar eclipse',
-    'events.lunarEclipse': 'Lunar eclipse',
-    'events.marchEquinox': 'March equinox',
-    'events.juneSolstice': 'June solstice',
-    'events.septemberEquinox': 'September equinox',
-    'events.decemberSolstice': 'December solstice',
-    'events.perihelion': 'Perihelion (Earth closest to Sun)',
-    'events.aphelion': 'Aphelion (Earth farthest from Sun)',
-    'events.opposition': 'Opposition (closest, visible all night)',
-    'events.conjunction': 'Inferior conjunction (passes between Earth and Sun)',
-    'events.kind.penumbral': 'penumbral',
-    'events.kind.partial': 'partial',
-    'events.kind.annular': 'annular',
-    'events.kind.total': 'total',
-    'events.tip.peak': 'Peak visible near {lat}, {lon}',
-    'events.tip.obscuration': '{percent}% obscured at maximum',
-    'events.tip.goto': 'Click to travel to this date',
+export { en };
+export type { MessageKey };
 
-    // ── Bascule de mode ──
-    'mode.group': 'View mode',
-    'mode.educ': 'Educ.',
-    'mode.explo': 'Explo.',
-    'mode.educ.title': 'Educational view, circular orbits',
-    'mode.explo.title': 'Exploration mode, true scale',
-    'zoom.optical': 'Optical zoom (FOV)',
-
-    // ── Qualité graphique (perf adaptative) ──
-    'quality.heading': 'Graphics quality',
-    'quality.auto': 'Auto',
-    'quality.auto.hint': 'Match this device',
-    'quality.low': 'Low',
-    'quality.low.hint': 'Smoothest on weak GPUs',
-    'quality.medium': 'Medium',
-    'quality.medium.hint': 'Balanced',
-    'quality.high': 'High',
-    'quality.high.hint': 'Best looking',
-    'quality.reloadNote': 'Some options apply on next reload.',
-
-    // ── Lecture / temps ──
-    'playback.playpause': 'Play / Pause',
-    'playback.play': 'Resume simulation',
-    'playback.pause': 'Pause simulation',
-    'time.today': 'Back to now',
-    'time.group': 'Time controls',
-    'time.wheelTime': 'Wheel: ±1 h  ·  Click: pick the time',
-    'time.wheelDate': 'Wheel: ±1 day  ·  Click: pick the date',
-
-    // ── Aide & crédits ──
-    'help.btn.title': 'Help, tips & credits',
-    'help.btn.aria': 'Help, tips and credits',
-    'feedback.btn.title': 'Suggestions and bug reports',
-    'feedback.btn.aria': 'Suggestions and bug reports',
-    'kofi.btn.title': 'Buy me a coffee',
-    'kofi.btn.aria': 'Support this project on Ko-fi',
-    'share.btn.title': 'Share this view',
-    'share.btn.aria': 'Share this view',
-    'share.copied': 'Link copied',
-    'share.failed': 'Copy failed',
-    'capture.btn.title': 'Capture this view',
-    'capture.btn.aria': 'Capture this view',
-    'capture.success': 'Image downloaded',
-    'capture.failed': 'Capture failed',
-    'webxr.btn.enter.title': 'Enter VR',
-    'webxr.btn.enter.aria': 'Enter virtual reality',
-    'webxr.btn.exit.title': 'Exit VR',
-    'webxr.btn.exit.aria': 'Exit virtual reality',
-    'help.dialog.aria': 'Help and credits',
-    'help.title': 'Navigation',
-    'help.tip.drag.key': 'Drag',
-    'help.tip.drag.text': 'orbit the view',
-    'help.tip.zoom.key': 'Scroll · pinch',
-    'help.tip.zoom.text': 'zoom in / out',
-    'help.tip.click.key': 'Click a body',
-    'help.tip.click.text': 'or its label to travel to it',
-    'help.tip.mode.key': 'Educ · Explo',
-    'help.tip.mode.text': 'compressed overview vs true-scale voyage',
-    'help.tip.time.key': 'Clock · date',
-    'help.tip.time.text': 'scroll to time-travel, tap to pick',
-    'credits.textures': 'Textures',
-    'credits.fictional': 'Illustrative surfaces',
-    'credits.fictional.list':
-      'Bodies never mapped globally have an illustrative texture, not a scientific map; the body card says so, and Sources lists them.',
-    'weather.attribution.prefix': 'Weather data:',
-    'weather.attribution.modified': 'resampled into map textures',
-    'credits.models': '3D shape models',
-    'credits.data': 'Data',
-    'credits.privacy': 'Privacy',
-    'credits.methodology': 'Methodology',
-    'credits.methodology.href': '/methodology/',
-    'credits.sources': 'Sources',
-    'credits.sources.href': '/sources/',
-    'lang.label': 'Language',
-    // ── Guided tour (first visit) ──
-    'tour.start': 'Start quick tour',
-    'tour.previous': 'Previous',
-    'tour.next': 'Next',
-    'tour.finish': 'Finish',
-    'tour.close': 'Close tour',
-    'tour.progress': 'Step {current} of {total}',
-    'tour.step.navigation.title': '1. Navigate',
-    'tour.step.navigation.text':
-      'Choose a planet in the top bar or drag the scene.',
-    'tour.step.mode.title': '2. Choose your view',
-    'tour.step.mode.text':
-      'Educational stays simple while Exploration shows the true scale.',
-    'tour.step.time.title': '3. Change time',
-    'tour.step.time.text':
-      'Use the date and speed controls to move through time.',
-    'tour.step.expand.title': '4. Unfold the clock',
-    'tour.step.expand.text':
-      'Click the clock to unfold the advanced date and speed settings.',
-    'tour.step.info.title': '5. Inspect a target',
-    'tour.step.info.text':
-      'After selecting a body, open its information panel from the target button.',
-    'tour.step.settings.title': '6. Adjust display',
-    'tour.step.settings.text':
-      'Open display settings to show or hide labels, objects and orbits, group by group or one object at a time.',
-    'tour.step.weather.title': '7. Explore weather',
-    'tour.step.weather.text':
-      'Open weather layers to see clouds, rain, wind and surface data on Earth.',
-    'tour.step.events.title': '8. Watch the sky',
-    'tour.step.events.text':
-      'Check upcoming astronomical events and select an event for details.',
-    'tour.step.share.title': '9. Share a view',
-    'tour.step.share.text':
-      'Set up a view, then share its link. Whoever opens it lands on the exact same scene.',
-    'tour.step.capture.title': '10. Take a picture',
-    'tour.step.capture.text':
-      'Hide every control and save the view as an image, with the date and the body written on it.',
-    'tour.step.feedback.title': '11. Send feedback',
-    'tour.step.feedback.text':
-      'Report a problem or suggest an idea. Suggestions are public, and you can vote on other people’s.',
-    'tour.step.help.title': '12. Find help',
-    'tour.step.help.text': 'Check the help page for more information.',
-
-    // ── Tours guidés scénarisés ──
-    'tours.start': 'Scripted tours',
-    'tours.pause': 'Pause',
-    'tours.resume': 'Resume',
-    'tours.next': 'Next',
-    'tours.close': 'Close',
-    'tours.progress': 'Step {current} of {total}',
-    'tours.status.flyingTo': 'Flying to {body}…',
-    'tours.status.jumping': 'Jumping through time…',
-    'tours.status.speeding': 'Speeding up time…',
-
-    // ── Nudge visite guidée (premier passage en Explo) ──
-    'exploNudge.text': 'Try a guided tour to see exploration mode’s best side.',
-    'exploNudge.action': 'Show me',
-    'exploNudge.dismiss': 'Dismiss',
-
-    // ── Badge d'échelle permanent (vue d'ensemble Explo, aucune cible) ──
-    'exploScale.fact.earth': 'Sunlight takes about 8 minutes to reach Earth.',
-    'exploScale.fact.jupiter':
-      'Sunlight takes about 43 minutes to reach Jupiter.',
-    'exploScale.fact.neptune': 'Sunlight takes about 4 hours to reach Neptune.',
-    'exploScale.fact.voyager':
-      'Voyager 1, humanity’s farthest spacecraft, is already over 24 billion km from Earth.',
-
-    // ── Surface « Réglages d'affichage » : un vocabulaire, trois colonnes (étiquette, objet,
-    //    orbite), les mêmes mots dans le tableau, ses en-têtes et ses lignes de groupe ──
-    'settings.title': 'Display settings',
-    'settings.section.scene': 'In the scene',
-    'settings.section.rendering': 'Rendering',
-    'settings.section.reading': 'Accessibility and units',
-    'settings.section.view': 'View',
-    'settings.section.offline': 'Offline use',
-    'settings.labelsToggle': 'Show every label',
-    'settings.bodiesToggle': 'Show every object',
-    'settings.orbitsToggle': 'Show every orbit and trajectory',
-    'settings.tableHint':
-      'A column header sets the whole column, a group row its group, a row one object. Spacecraft and interstellar objects start hidden.',
-    'settings.tableCaption': 'What the scene shows, object by object',
-    'settings.col.bodyName': 'Object',
-    'settings.col.names': 'Label',
-    'settings.col.bodies': 'Object',
-    'settings.col.orbits': 'Orbit',
-    'settings.row.name.aria': "Show {name}'s label",
-    'settings.row.body.aria': 'Show {name}',
-    'settings.row.orbit.aria': "Show {name}'s orbit",
-    'settings.row.trajectory.aria': "Show {name}'s trajectory",
-    'settings.group.name.aria': 'Show every label in {group}',
-    'settings.group.body.aria': 'Show every object in {group}',
-    'settings.group.orbit.aria': 'Show every orbit in {group}',
-    'settings.exposure': 'Brightness (exposure)',
-    'settings.colorblind': 'Color-blind friendly orbit colors',
-    'settings.surfaceImagery': 'Stream high-resolution surface imagery',
-    'surface.imagery.headline': '{title} at {resolution}/pixel',
-    'surface.imagery.acquired': 'images from {from} to {to}',
-    'surface.imagery.oversampled':
-      'shown {factor}x larger than the published mosaic ({published} px/degree)',
-    'surface.relief.headline': 'Relief {title} at {resolution}/pixel',
-    'surface.relief.area': 'named area {name}',
-    'surface.relief.acquired': 'altimetry from {from} to {to}',
-    'settings.units': 'Imperial units (mi, °F)',
-
-    // ── Champ d'astéroïdes et de comètes (NEO / comètes / TNO), section des Réglages ──
-    'smallBodies.title': 'Asteroid and comet field',
-    'smallBodies.exploOnly':
-      'Drawn in Exploration mode, one dot per known orbit.',
-    'smallBodies.mainBelt': 'Main belt',
-    'smallBodies.neo': 'Near-Earth objects',
-    'smallBodies.comet': 'Comets',
-    'smallBodies.tno': 'Trans-Neptunian objects',
-    'smallBodies.source':
-      '{count} objects, JPL Small-Body Database, snapshot of {date}.',
-    'smallBodies.sourceStale':
-      '{count} objects, JPL Small-Body Database, snapshot of {date}. This snapshot is {months} months old: orbits refined since then, and objects catalogued since then, may be missing.',
-
-    // ── Couches météo ──
-    'weather.title': 'Weather layers',
-    'weather.trigger.aria': 'Weather layers',
-    'weather.dialog.aria': 'Weather layers',
-    'weather.clouds': 'Clouds (NASA)',
-    'weather.cloudsModel': 'Clouds (Open-Meteo)',
-    'weather.precip': 'Rain (NASA IMERG)',
-    'weather.precipModel': 'Rain (Open-Meteo)',
-    'weather.wind': 'Wind',
-    'weather.thermal': 'Air temperature (MERRA-2)',
-    'weather.thermalModel': 'Air temperature (Open-Meteo)',
-    'weather.clouds.note':
-      "Real cloud cover from NASA satellite imagery (day's snapshot).",
-    'weather.cloudsModel.note':
-      'Modelled cloud cover (Open-Meteo): gap-free worldwide, supports past and forecast; pick this for live view and time travel.',
-    'weather.precip.note':
-      'Observed NASA IMERG V07 rain: its native alpha mask is preserved; no polar extrapolation is added.',
-    'weather.precip.legendLo': 'Light',
-    'weather.precip.legendHi': 'Intense',
-    'weather.precipModel.note':
-      'Modelled rainfall (Open-Meteo): gap-free worldwide, past + forecast. Dry areas stay transparent.',
-    'weather.precipModel.lo': '0 mm/h',
-    'weather.precipModel.hi': '20+ mm/h',
-    'weather.thermalModel.note':
-      'Modelled 2 m air temperature (Open-Meteo): gap-free worldwide, past (ERA5) + forecast.',
-    'weather.thermalModel.lo': '−40 °C',
-    'weather.thermalModel.hi': '+45 °C',
-    'weather.pressureModel': 'Sea-level pressure (Open-Meteo)',
-    'weather.pressureModel.note':
-      'Sea-level pressure shown as smooth isobars in hPa.',
-    'weather.pressureModel.lo': '960 hPa',
-    'weather.pressureModel.hi': '1060 hPa',
-    'weather.humidityModel': 'Relative humidity (Open-Meteo)',
-    'weather.humidityModel.note':
-      'Relative humidity at 2 m from Open-Meteo, in percent.',
-    'weather.humidityModel.lo': '0 %',
-    'weather.humidityModel.hi': '100 %',
-    'weather.source.prefix': 'Source:',
-    'weather.source.approx': 'nearest available',
-    'weather.loading': 'Loading…',
-    // Couche des événements terrestres (voir ui/earthEvents.ts).
-    'earthEvents.title': 'Earth events',
-    'earthEvents.dialog.aria': 'Earth events',
-    'earthEvents.trigger.aria': 'Earth events',
-    'earthEvents.quakes.label': 'Earthquakes (USGS)',
-    'earthEvents.quakes.note':
-      'Origin solutions of magnitude {magnitude} and above over the {days} days before the scene date, measured by seismometer networks. No earthquake exists in the future: a later scene gets the latest real window, and the gap is written below.',
-    'earthEvents.natural.label': 'Natural events (NASA EONET)',
-    'earthEvents.natural.note':
-      'Reported events such as wildfires, volcanoes, storms, floods and ice over the {days} days before the scene date. EONET states that its metadata are intended for visualization and general information only, and should not be construed as official with regard to spatial or temporal extent: these are reports, not measurements.',
-    'earthEvents.empty': 'No event in this window.',
-    'earthEvents.ongoing': 'ongoing',
-    'earthEvents.loading': 'Loading…',
-    'earthEvents.attribution.prefix': 'Event data:',
-    // Catégorie temporelle d'une donnée affichée (voir core/temporal.ts).
-    'time.category.live': 'live',
-    'time.category.observed': 'observed',
-    'time.category.reported': 'reported',
-    'time.category.reconstructed': 'reconstructed (model)',
-    'time.category.predicted': 'predicted',
-    'time.category.extrapolated': 'extrapolated',
-    'time.category.unavailable': 'unavailable',
-    'time.confidence.reduced': 'low confidence',
-    'time.offset.scene': 'scene on {date}',
-    // Provenance de la position d'un corps (voir core/positionProvenance.ts).
-    'bi.position.label': 'Position at this date',
-    'position.source.horizons': 'JPL Horizons ephemeris (precomputed)',
-    'position.source.spk': 'JPL SPK kernel',
-    'position.source.astronomy-engine': 'Astronomy Engine',
-    'position.source.kepler': 'Keplerian orbital elements',
-    'position.error':
-      'Mean measured gap to JPL Horizons: {distance} ({from}–{to})',
-    'position.error.none': 'Gap to JPL Horizons not measured at this date',
-    'weather.wind.note':
-      'Wind flow (Open-Meteo): colour and speed follow wind strength.',
-    'weather.thermal.note':
-      'Air temperature near the surface (MERRA-2 monthly):',
-
-    // ── Divers ──
-    'fullscreen.title': 'Fullscreen',
-
-    // ── Fiche d'info (bodyInfo) ──
-    'bi.live.label': 'Distance from you',
-    'bi.more': 'Learn more',
-    'bi.modelCredit': '3D shape model',
-    'bi.colourCredit': 'Surface colour',
-    'bi.fictional': 'Illustrative surface',
-    'bi.fictional.hint':
-      'No spacecraft has resolved this surface, so the texture is illustrative, not a scientific map.',
-    'stat.radius': 'Radius',
-    'stat.meanDistanceSun': 'Mean distance (Sun)',
-    'stat.meanDistanceFrom': 'Mean distance ({parent})',
-    'stat.mass': 'Mass',
-    'stat.gravity': 'Gravity',
-    'stat.meanTemperature': 'Mean temperature',
-    'stat.siderealRotation': 'Sidereal rotation',
-    'stat.year': 'Year',
-    'stat.orbit': 'Orbit',
-    'stat.knownMoons': 'Known moons',
-    'stat.axialTilt': 'Axial tilt',
-    'stat.launchDate': 'Launch date',
-    'stat.launchVehicle': 'Launch vehicle',
-    'stat.launchSite': 'Launch site',
-    'stat.absoluteMagnitude': 'Absolute magnitude',
-    'stat.eccentricity': 'Eccentricity',
-    'stat.perihelion': 'Perihelion distance',
-    'stat.firstObservation': 'First observation',
-    'stat.unknown': 'No published value',
-    'stat.unsourced': 'Not yet sourced',
-    'stat.unknown.value': 'n/a',
-    'bi.sources': 'Sources',
-    'bi.source': 'source',
-    'fact.method.measured': 'measured value',
-    'fact.method.derived': 'derived value',
-    'fact.method.illustrative': 'illustrative value',
-    'fact.asOf': 'as of {date}',
-    'fact.methods.measured': 'Measured values',
-    'fact.methods.derived': 'Derived values',
-    'fact.methods.illustrative': 'Illustrative values',
-    'fact.accessed': 'read {date}',
-    'fact.kind.preprint': 'preprint',
-    'subtitle.star': 'Star of the Solar System',
-    'subtitle.moon': 'Natural satellite',
-    'subtitle.dwarf': 'Dwarf planet',
-    'subtitle.asteroid': 'Asteroid',
-    'subtitle.comet': 'Comet',
-    'subtitle.spacecraft': 'Space probe',
-    'subtitle.interstellar': 'Interstellar object',
-    'subtitle.planet': 'Planet',
-    // {ordinal} = « 3rd » (anglais) / « 3ᵉ » (français), calculé par bodyInfo.
-    'subtitle.planetOrdinal': '{ordinal} planet from the Sun',
-
-    // ── Unités & suffixes (fiche) ──
-    'unit.light': 'light',
-    'unit.day.short': 'd',
-    'unit.year.short': 'yr',
-    'unit.au': 'AU',
-    'unit.million': 'M',
-    'unit.billion': 'B',
-  },
-
-  fr: {
-    // ── Écran de chargement ──
-    'title.body': '{name} en 3D : position et orbite en direct',
-    'title.eclipse.solar.total': 'Éclipse totale de Soleil du {date} en 3D',
-    'title.eclipse.solar.annular':
-      'Éclipse annulaire de Soleil du {date} en 3D',
-    'title.eclipse.solar.partial':
-      'Éclipse partielle de Soleil du {date} en 3D',
-    'title.eclipse.lunar.total': 'Éclipse totale de Lune du {date} en 3D',
-    'title.eclipse.lunar.partial': 'Éclipse partielle de Lune du {date} en 3D',
-    'title.eclipse.lunar.penumbral':
-      'Éclipse de Lune par la pénombre du {date} en 3D',
-    'title.overview': 'Galaxy : système solaire 3D interactif en temps réel',
-    'loader.init': 'Initialisation…',
-    'loader.core': 'Chargement des composants…',
-    'loader.scene': 'Construction de la scène…',
-    'loader.lighting': 'Mise en place de l’éclairage…',
-    'loader.bodies': 'Création des corps célestes…',
-    'loader.finalize': 'Finalisation…',
-    'loader.starting': 'Démarrage…',
-    'loader.loadingBody': 'Chargement de {body}…',
-    'loader.creatingBody': 'Création de {body}...',
-    'loader.ephemerides': 'Données éphémérides chargées',
-    'loader.ready': 'Prêt au lancement',
-    'loader.stage.core': 'Moteur',
-    'loader.stage.data': 'Données',
-    'loader.stage.scene': 'Scène',
-    'loader.stage.bodies': 'Corps',
-    'loader.stage.orbit': 'Orbites',
-    'loader.stage.ready': 'Prêt',
-    'loader.texturesDone': 'Textures chargées',
-    // ── Accessibilité : ce que SEUL un lecteur d'écran entend (lot 19) ──
-    // Voir le bloc anglais pour la raison de chaque clé.
-    'a11y.pageHeading':
-      'Galaxy : système solaire 3D interactif en temps réel. Explorez les planètes, les lunes et les planètes naines',
-    'a11y.scene': 'Système solaire, vue 3D interactive',
-    'a11y.navigation': 'Navigation entre les corps',
-    'a11y.loading': 'Chargement du système solaire, veuillez patienter.',
-    'a11y.loadingProgress': 'Progression du chargement',
-    'a11y.ready': 'Système solaire chargé et prêt.',
-    'a11y.loadFailed': 'Le système solaire n’a pas pu être chargé.',
-    'a11y.bodySelected': '{name} sélectionné. Fiche d’information ouverte.',
-    'a11y.dateChanged': 'Date réglée sur {date}.',
-    'a11y.searchResults': '{count} corps correspondent.',
-    'a11y.searchResultsOne': 'Un corps correspond.',
-    'a11y.searchResultsNone': 'Aucun corps ne correspond.',
-    'a11y.paletteResults': 'Résultats de la recherche',
-    'a11y.tourPlayer': 'Visite guidée en cours',
-    'error.title': 'Erreur de l’application',
-    'error.retry': 'Réessayer',
-    'error.contextLost': 'Reconnexion de la vue 3D…',
-    'error.contextLostTimeout':
-      'La vue 3D n’a pas pu se reconnecter. Rechargez la page.',
-
-    // ── Éphémérides manquantes (lot 15) ──
-    'ephemeris.notice.title': 'Précision réduite',
-    'ephemeris.notice.partial':
-      'Éphémérides précises reçues : {loaded} sur {declared}. Les autres corps sont placés par une source moins précise, nommée dans leur fiche.',
-    'ephemeris.notice.none':
-      'Aucune éphéméride précise n’a pu être chargée. Tous les corps sont placés par une source moins précise, nommée dans leur fiche.',
-    'ephemeris.notice.spacecraft':
-      'Sondes laissées sans aucune position : {count}.',
-    'ephemeris.notice.retry': 'Charger les fichiers manquants',
-    'ephemeris.notice.retrying': 'Chargement des fichiers manquants…',
-    'ephemeris.notice.recovered': 'Toutes les éphémérides sont chargées.',
-    'ephemeris.notice.dismiss': 'Fermer ce message',
-    'ephemeris.notice.aria': 'Chargement des éphémérides',
-
-    // ── Navigation ──
-    'nav.overview': 'Vue globale',
-    'nav.bodies': 'Corps',
-    'nav.search': 'Rechercher un corps',
-    'dock.tools.aria': 'Outils',
-    'speed.aria': 'Vitesse de simulation',
-    'speed.limited': 'limité par votre connexion',
-    'ephemeris.notice.waitingTitle': 'La date attend ses données',
-    'ephemeris.notice.waiting':
-      'Votre connexion est plus lente que la vitesse de lecture demandée. Rien de faux n’est affiché : la date avance au rythme des octets.',
-    'offline.hint':
-      'Téléchargez tous les fichiers d’éphémérides pour que l’application place les corps à n’importe quelle date sans réseau. Rien n’est téléchargé tant que vous ne le demandez pas.',
-    'offline.reading': 'Lecture de ce que cet appareil tient déjà…',
-    'offline.unavailable':
-      'Ce navigateur ne garde aucun stockage pour l’application : le hors-ligne ne peut pas être préparé ici.',
-    'offline.noManifest':
-      'L’index des éphémérides n’est pas arrivé : il n’y a encore rien à préparer.',
-    'offline.partial':
-      'Cet appareil tient {files} des {total} fichiers. Préparer le reste télécharge environ {size} Mo.',
-    'offline.ready':
-      'Les {files} fichiers sont sur cet appareil ({size} Mo). Les dates fonctionnent sans réseau.',
-    'offline.prepare': 'Préparer le hors-ligne',
-    'offline.cancel': 'Arrêter le téléchargement',
-    'offline.progress': 'Téléchargement : {done} fichiers sur {total}.',
-    'offline.started': 'Préparation du hors-ligne lancée.',
-    'offline.forget': 'Libérer {size} Mo',
-    'nav.searchPlaceholder': 'Rechercher un corps…',
-    'nav.paletteAria': 'Rechercher et sélectionner un corps',
-    'nav.group.star': 'Étoile',
-    'nav.group.planet': 'Planètes',
-    'nav.group.moon': 'Lunes',
-    'nav.group.dwarf': 'Planètes naines',
-    'nav.group.other': 'Petits corps',
-    'nav.group.spacecraft': 'Sondes',
-    'nav.group.interstellar': 'Objets interstellaires',
-    'nav.kind.moon': 'lune',
-    'nav.kind.dwarf': 'naine',
-    'nav.unavailable': 'Aucune position à cette date',
-    'nav.kind.spacecraft': 'sonde',
-    'nav.kind.interstellar': 'interstellaire',
-    'surface.close': 'Fermer',
-    'bi.trigger.aria': 'Informations du corps',
-    'settings.trigger.aria': "Réglages d'affichage",
-    'time.expand': 'Réglages du temps',
-    'events.title': 'Événements astronomiques',
-    'events.open': 'Événements astronomiques',
-    'events.close': 'Fermer les événements astronomiques',
-    'events.empty': 'Aucun événement à venir',
-    'events.newMoon': 'Nouvelle Lune',
-    'events.firstQuarter': 'Premier quartier',
-    'events.fullMoon': 'Pleine Lune',
-    'events.thirdQuarter': 'Dernier quartier',
-    'events.solarEclipse': 'Éclipse solaire',
-    'events.lunarEclipse': 'Éclipse lunaire',
-    'events.marchEquinox': 'Équinoxe de mars',
-    'events.juneSolstice': 'Solstice de juin',
-    'events.septemberEquinox': 'Équinoxe de septembre',
-    'events.decemberSolstice': 'Solstice de décembre',
-    'events.perihelion': 'Périhélie (Terre au plus près du Soleil)',
-    'events.aphelion': 'Aphélie (Terre au plus loin du Soleil)',
-    'events.opposition': 'Opposition (au plus près, visible toute la nuit)',
-    'events.conjunction':
-      'Conjonction inférieure (passe entre Terre et Soleil)',
-    'events.kind.penumbral': 'pénombrale',
-    'events.kind.partial': 'partielle',
-    'events.kind.annular': 'annulaire',
-    'events.kind.total': 'totale',
-    'events.tip.peak': 'Pic visible près de {lat}, {lon}',
-    'events.tip.obscuration': '{percent} % obscurci au maximum',
-    'events.tip.goto': 'Cliquer pour voyager à cette date',
-
-    // ── Bascule de mode ──
-    'mode.group': 'Mode d’affichage',
-    'mode.educ': 'Éduc.',
-    'mode.explo': 'Explo.',
-    'mode.educ.title': 'Vue éducative, orbites circulaires',
-    'mode.explo.title': 'Mode exploration, vraie échelle',
-    'zoom.optical': 'Zoom optique (FOV)',
-
-    // ── Qualité graphique (perf adaptative) ──
-    'quality.heading': 'Qualité graphique',
-    'quality.auto': 'Auto',
-    'quality.auto.hint': 'Adapté à cet appareil',
-    'quality.low': 'Basse',
-    'quality.low.hint': 'La plus fluide sur GPU faible',
-    'quality.medium': 'Moyenne',
-    'quality.medium.hint': 'Équilibrée',
-    'quality.high': 'Élevée',
-    'quality.high.hint': 'Plus beau rendu',
-    'quality.reloadNote': 'Certaines options s’appliquent au rechargement.',
-
-    // ── Lecture / temps ──
-    'playback.playpause': 'Lecture / Pause',
-    'playback.play': 'Reprendre la simulation',
-    'playback.pause': 'Mettre la simulation en pause',
-    'time.group': 'Contrôles temporels',
-    'time.today': 'Revenir à maintenant',
-    'time.wheelTime': 'Molette : ±1 h  ·  Clic : choisir l’heure',
-    'time.wheelDate': 'Molette : ±1 jour  ·  Clic : choisir la date',
-
-    // ── Aide & crédits ──
-    'help.btn.title': 'Aide, astuces et crédits',
-    'help.btn.aria': 'Aide, astuces et crédits',
-    'feedback.btn.title': 'Suggestions et signalements',
-    'feedback.btn.aria': 'Suggestions et signalements',
-    'kofi.btn.title': "M'offrir un café",
-    'kofi.btn.aria': 'Soutenir ce projet sur Ko-fi',
-    'share.btn.title': 'Partager cette vue',
-    'share.btn.aria': 'Partager cette vue',
-    'share.copied': 'Lien copié',
-    'share.failed': 'Échec de la copie',
-    'capture.btn.title': 'Capturer cette vue',
-    'capture.btn.aria': 'Capturer cette vue',
-    'capture.success': 'Image téléchargée',
-    'capture.failed': 'Échec de la capture',
-    'webxr.btn.enter.title': 'Entrer en VR',
-    'webxr.btn.enter.aria': 'Entrer en réalité virtuelle',
-    'webxr.btn.exit.title': 'Quitter la VR',
-    'webxr.btn.exit.aria': 'Quitter la réalité virtuelle',
-    'help.dialog.aria': 'Aide et crédits',
-    'help.title': 'Navigation',
-    'help.tip.drag.key': 'Glisser',
-    'help.tip.drag.text': 'pivoter la vue',
-    'help.tip.zoom.key': 'Molette · pincer',
-    'help.tip.zoom.text': 'zoomer / dézoomer',
-    'help.tip.click.key': 'Cliquer un corps',
-    'help.tip.click.text': 'ou son label pour y voyager',
-    'help.tip.mode.key': 'Éduc · Explo',
-    'help.tip.mode.text': 'vue compressée ou voyage à vraie échelle',
-    'help.tip.time.key': 'Horloge · date',
-    'help.tip.time.text':
-      'molette pour voyager dans le temps, tap pour choisir',
-    'credits.textures': 'Textures',
-    'credits.fictional': 'Surfaces fictives',
-    'credits.fictional.list':
-      'Les corps jamais cartographiés globalement ont une texture illustrative, pas une carte scientifique ; la fiche du corps le signale, et Sources les énumère.',
-    'weather.attribution.prefix': 'Données météo :',
-    'weather.attribution.modified': 'rééchantillonnées en textures de carte',
-    'credits.models': 'Modèles de forme 3D',
-    'credits.data': 'Données',
-    'credits.privacy': 'Confidentialité',
-    'credits.methodology': 'Méthodologie',
-    'credits.methodology.href': '/fr/methodology/',
-    'credits.sources': 'Sources',
-    'credits.sources.href': '/fr/sources/',
-    'lang.label': 'Langue',
-    // ── Visite guidée (première visite) ──
-    'tour.start': 'Lancer la visite rapide',
-    'tour.previous': 'Précédent',
-    'tour.next': 'Suivant',
-    'tour.finish': 'Terminer',
-    'tour.close': 'Fermer la visite',
-    'tour.progress': 'Étape {current} sur {total}',
-    'tour.step.navigation.title': '1. Naviguer',
-    'tour.step.navigation.text':
-      'Choisissez une planète dans la barre du haut ou faites glisser la scène.',
-    'tour.step.mode.title': '2. Choisir une vue',
-    'tour.step.mode.text':
-      'Éducatif simplifie les distances quand Exploration montre l’échelle réelle.',
-    'tour.step.time.title': '3. Changer le temps',
-    'tour.step.time.text':
-      'Utilisez la date et la vitesse pour voyager dans le temps.',
-    'tour.step.expand.title': '4. Déplier l’horloge',
-    'tour.step.expand.text':
-      'Cliquez sur l’horloge pour déplier les réglages avancés de date et de vitesse.',
-    'tour.step.info.title': '5. Inspecter une cible',
-    'tour.step.info.text':
-      'Après avoir sélectionné un corps, ouvrez sa fiche avec le bouton d’information de la cible.',
-    'tour.step.settings.title': '6. Régler l’affichage',
-    'tour.step.settings.text':
-      'Ouvrez les réglages d’affichage pour montrer ou masquer les étiquettes, les objets et les orbites, groupe par groupe ou objet par objet.',
-    'tour.step.weather.title': '7. Explorer la météo',
-    'tour.step.weather.text':
-      'Ouvrez les couches météo pour voir les nuages, la pluie, le vent et les données de surface sur Terre.',
-    'tour.step.events.title': '8. Observer le ciel',
-    'tour.step.events.text':
-      'Consultez les prochains événements astronomiques et choisissez en un pour plus de détails.',
-    'tour.step.share.title': '9. Partager une vue',
-    'tour.step.share.text':
-      'Réglez une vue, puis partagez son lien. Celui qui l’ouvre retrouve exactement la même scène.',
-    'tour.step.capture.title': '10. Prendre une image',
-    'tour.step.capture.text':
-      'Masque tous les contrôles et enregistre la vue en image, avec la date et le corps inscrits dessus.',
-    'tour.step.feedback.title': '11. Donner son avis',
-    'tour.step.feedback.text':
-      'Signalez un problème ou proposez une idée. Les suggestions sont publiques, et vous pouvez voter pour celles des autres.',
-    'tour.step.help.title': '12. Retrouver l’aide',
-    'tour.step.help.text': "Consultez la page d'aide pour plus d'informations.",
-
-    // ── Tours guidés scénarisés ──
-    'tours.start': 'Tours guidés',
-    'tours.pause': 'Pause',
-    'tours.resume': 'Reprendre',
-    'tours.next': 'Suivant',
-    'tours.close': 'Fermer',
-    'tours.progress': 'Étape {current} sur {total}',
-    'tours.status.flyingTo': 'Vol vers {body}…',
-    'tours.status.jumping': 'Saut dans le temps…',
-    'tours.status.speeding': 'Accélération du temps…',
-
-    // ── Nudge visite guidée (premier passage en Explo) ──
-    'exploNudge.text':
-      'Essayez une visite guidée pour découvrir le meilleur du mode Exploration.',
-    'exploNudge.action': 'Me montrer',
-    'exploNudge.dismiss': 'Fermer',
-
-    // ── Badge d'échelle permanent (vue d'ensemble Explo, aucune cible) ──
-    'exploScale.fact.earth':
-      'La lumière du Soleil met environ 8 minutes à atteindre la Terre.',
-    'exploScale.fact.jupiter':
-      'La lumière du Soleil met environ 43 minutes à atteindre Jupiter.',
-    'exploScale.fact.neptune':
-      'La lumière du Soleil met environ 4 heures à atteindre Neptune.',
-    'exploScale.fact.voyager':
-      'Voyager 1, la sonde la plus lointaine de l’humanité, est déjà à plus de 24 milliards de km de la Terre.',
-
-    // ── Surface « Réglages d'affichage » (cf. le bloc anglais) ──
-    'settings.title': 'Réglages d’affichage',
-    'settings.section.scene': 'Dans la scène',
-    'settings.section.rendering': 'Rendu',
-    'settings.section.reading': 'Accessibilité et unités',
-    'settings.section.view': 'Vue',
-    'settings.section.offline': 'Utilisation hors ligne',
-    'settings.labelsToggle': 'Afficher toutes les étiquettes',
-    'settings.bodiesToggle': 'Afficher tous les objets',
-    'settings.orbitsToggle': 'Afficher toutes les orbites et trajectoires',
-    'settings.tableHint':
-      'L’en-tête règle toute la colonne, une ligne de groupe tout son groupe, une ligne un seul objet. Les sondes et les objets interstellaires sont masqués au départ.',
-    'settings.tableCaption': 'Ce que montre la scène, objet par objet',
-    'settings.col.bodyName': 'Objet',
-    'settings.col.names': 'Étiquette',
-    'settings.col.bodies': 'Objet',
-    'settings.col.orbits': 'Orbite',
-    'settings.row.name.aria': 'Afficher l’étiquette de {name}',
-    'settings.row.body.aria': 'Afficher {name}',
-    'settings.row.orbit.aria': 'Afficher l’orbite de {name}',
-    'settings.row.trajectory.aria': 'Afficher la trajectoire de {name}',
-    'settings.group.name.aria': 'Afficher toutes les étiquettes : {group}',
-    'settings.group.body.aria': 'Afficher tous les objets : {group}',
-    'settings.group.orbit.aria': 'Afficher toutes les orbites : {group}',
-    'settings.exposure': 'Luminosité (exposition)',
-    'settings.colorblind': 'Couleurs d’orbite adaptées au daltonisme',
-    'settings.surfaceImagery':
-      'Streamer l’imagerie de surface haute résolution',
-    'surface.imagery.headline': '{title} à {resolution}/pixel',
-    'surface.imagery.acquired': 'images de {from} à {to}',
-    'surface.imagery.oversampled':
-      'affichée {factor} fois plus grande que la mosaïque publiée ({published} px/degré)',
-    'surface.relief.headline': 'Relief {title} à {resolution}/pixel',
-    'surface.relief.area': 'aire nommée {name}',
-    'surface.relief.acquired': 'altimétrie de {from} à {to}',
-    'settings.units': 'Unités impériales (mi, °F)',
-
-    // ── Champ d'astéroïdes et de comètes, section des Réglages ──
-    'smallBodies.title': 'Champ d’astéroïdes et de comètes',
-    'smallBodies.exploOnly':
-      'Dessiné en mode Exploration, un point par orbite connue.',
-    'smallBodies.mainBelt': 'Ceinture principale',
-    'smallBodies.neo': 'Géocroiseurs',
-    'smallBodies.comet': 'Comètes',
-    'smallBodies.tno': 'Objets transneptuniens',
-    'smallBodies.source':
-      '{count} objets, JPL Small-Body Database, relevé du {date}.',
-    'smallBodies.sourceStale':
-      '{count} objets, JPL Small-Body Database, relevé du {date}. Ce relevé date de {months} mois : les orbites affinées depuis, et les objets catalogués depuis, peuvent y manquer.',
-
-    // ── Couches météo ──
-    'weather.title': 'Couches météo',
-    'weather.trigger.aria': 'Couches météo',
-    'weather.dialog.aria': 'Couches météo',
-    'weather.clouds': 'Nuages (NASA)',
-    'weather.cloudsModel': 'Nuages (Open-Meteo)',
-    'weather.precip': 'Pluie (NASA IMERG)',
-    'weather.precipModel': 'Pluie (Open-Meteo)',
-    'weather.wind': 'Vent',
-    'weather.thermal': 'Température MERRA-2',
-    'weather.thermalModel': 'Température Open-Meteo',
-    'weather.clouds.note':
-      'Couverture nuageuse réelle, imagerie satellite NASA (image du jour).',
-    'weather.cloudsModel.note':
-      'Couverture nuageuse modélisée (Open-Meteo) : mondiale sans trou, gère passé et prévision ; à choisir pour le direct et le voyage dans le temps.',
-    'weather.precip.note':
-      'Pluie observée NASA IMERG V07 : son masque alpha natif est conservé ; aucune extrapolation polaire.',
-    'weather.precip.legendLo': 'Faible',
-    'weather.precip.legendHi': 'Intense',
-    'weather.precipModel.note':
-      'Pluie modélisée (Open-Meteo) : mondiale sans trou, passé + prévision. Les zones sèches restent transparentes.',
-    'weather.precipModel.lo': '0 mm/h',
-    'weather.precipModel.hi': '20+ mm/h',
-    'weather.thermalModel.note':
-      "Température de l'air à 2 m modélisée (Open-Meteo) : mondiale sans trou, passé (ERA5) + prévision.",
-    'weather.thermalModel.lo': '−40 °C',
-    'weather.thermalModel.hi': '+45 °C',
-    'weather.pressureModel': 'Pression Open-Meteo',
-    'weather.pressureModel.note':
-      'Pression au niveau de la mer affichée en isobares (hPa).',
-    'weather.pressureModel.lo': '960 hPa',
-    'weather.pressureModel.hi': '1060 hPa',
-    'weather.humidityModel': 'Humidité Open-Meteo',
-    'weather.humidityModel.note':
-      'Humidité relative à 2 m, fournie par Open-Meteo, en pourcentage.',
-    'weather.humidityModel.lo': '0 %',
-    'weather.humidityModel.hi': '100 %',
-    'weather.source.prefix': 'Source :',
-    'weather.source.approx': 'date la plus proche',
-    'weather.loading': 'Chargement…',
-    // Couche des événements terrestres (voir ui/earthEvents.ts).
-    'earthEvents.title': 'Événements terrestres',
-    'earthEvents.dialog.aria': 'Événements terrestres',
-    'earthEvents.trigger.aria': 'Événements terrestres',
-    'earthEvents.quakes.label': 'Séismes (USGS)',
-    'earthEvents.quakes.note':
-      'Solutions d’origine de magnitude {magnitude} et plus sur les {days} jours qui précèdent la date de la scène, mesurées par les réseaux de sismomètres. Aucun séisme n’existe au futur : une scène plus tardive reçoit la dernière fenêtre réelle, et l’écart est écrit ci-dessous.',
-    'earthEvents.natural.label': 'Événements naturels (NASA EONET)',
-    'earthEvents.natural.note':
-      'Événements rapportés (incendies, volcans, tempêtes, inondations, glaces, entre autres) sur les {days} jours qui précèdent la date de la scène. EONET déclare que ses métadonnées sont destinées à la visualisation et à l’information générale seulement, et ne doivent pas être tenues pour officielles quant à l’emprise spatiale ou temporelle : ce sont des rapports, pas des mesures.',
-    'earthEvents.empty': 'Aucun événement sur cette fenêtre.',
-    'earthEvents.ongoing': 'en cours',
-    'earthEvents.loading': 'Chargement…',
-    'earthEvents.attribution.prefix': 'Données d’événements :',
-    // Catégorie temporelle d'une donnée affichée (voir core/temporal.ts).
-    'time.category.live': 'en direct',
-    'time.category.observed': 'observé',
-    'time.category.reported': 'rapporté',
-    'time.category.reconstructed': 'reconstruit (modèle)',
-    'time.category.predicted': 'prédit',
-    'time.category.extrapolated': 'extrapolé',
-    'time.category.unavailable': 'indisponible',
-    'time.confidence.reduced': 'confiance réduite',
-    'time.offset.scene': 'scène au {date}',
-    // Provenance de la position d'un corps (voir core/positionProvenance.ts).
-    'bi.position.label': 'Position à cette date',
-    'position.source.horizons': 'éphéméride JPL Horizons (précalculée)',
-    'position.source.spk': 'noyau SPK du JPL',
-    'position.source.astronomy-engine': 'Astronomy Engine',
-    'position.source.kepler': 'éléments orbitaux képlériens',
-    'position.error':
-      'Écart moyen mesuré à JPL Horizons : {distance} ({from}–{to})',
-    'position.error.none': 'Écart à JPL Horizons non mesuré à cette date',
-    'weather.wind.note':
-      'Flux du vent (Open-Meteo) : la couleur et la vitesse suivent la force du vent.',
-    'weather.thermal.note':
-      'Température de l’air près du sol (MERRA-2 mensuel) :',
-
-    // ── Divers ──
-    'fullscreen.title': 'Plein écran',
-
-    // ── Fiche d'info (bodyInfo) ──
-    'bi.more': 'En savoir plus',
-    'bi.modelCredit': 'Modèle de forme 3D',
-    'bi.colourCredit': 'Couleur de surface',
-    'bi.live.label': 'Distance depuis vous',
-    'bi.fictional': 'Surface fictive',
-    'bi.fictional.hint':
-      'Aucune sonde n’a résolu cette surface, la texture est donc illustrative, pas une carte scientifique.',
-    'stat.radius': 'Rayon',
-    'stat.meanDistanceSun': 'Distance moyenne (Soleil)',
-    'stat.meanDistanceFrom': 'Distance moyenne ({parent})',
-    'stat.mass': 'Masse',
-    'stat.gravity': 'Gravité',
-    'stat.meanTemperature': 'Température moyenne',
-    'stat.siderealRotation': 'Rotation sidérale',
-    'stat.year': 'Année',
-    'stat.orbit': 'Orbite',
-    'stat.knownMoons': 'Lunes connues',
-    'stat.axialTilt': 'Inclinaison axiale',
-    'stat.launchDate': 'Date de lancement',
-    'stat.launchVehicle': 'Lanceur',
-    'stat.launchSite': 'Site de lancement',
-    'stat.absoluteMagnitude': 'Magnitude absolue',
-    'stat.eccentricity': 'Excentricité',
-    'stat.perihelion': 'Distance de périhélie',
-    'stat.firstObservation': 'Première observation',
-    'stat.unknown': 'Donnée non publiée',
-    'stat.unsourced': 'Pas encore sourcée',
-    'stat.unknown.value': 'n.d.',
-    'bi.sources': 'Sources',
-    'bi.source': 'source',
-    'fact.method.measured': 'valeur mesurée',
-    'fact.method.derived': 'valeur dérivée',
-    'fact.method.illustrative': 'valeur illustrative',
-    'fact.asOf': 'en {date}',
-    'fact.methods.measured': 'Valeurs mesurées',
-    'fact.methods.derived': 'Valeurs dérivées',
-    'fact.methods.illustrative': 'Valeurs illustratives',
-    'fact.accessed': 'consultée le {date}',
-    'fact.kind.preprint': 'prépublication',
-    'subtitle.star': 'Étoile du Système solaire',
-    'subtitle.moon': 'Satellite naturel',
-    'subtitle.dwarf': 'Planète naine',
-    'subtitle.asteroid': 'Astéroïde',
-    'subtitle.comet': 'Comète',
-    'subtitle.spacecraft': 'Sonde spatiale',
-    'subtitle.interstellar': 'Objet interstellaire',
-    'subtitle.planet': 'Planète',
-    'subtitle.planetOrdinal': '{ordinal} planète depuis le Soleil',
-
-    // ── Unités & suffixes (fiche) ──
-    'unit.light': 'lumière',
-    'unit.day.short': 'j',
-    'unit.year.short': 'ans',
-    'unit.au': 'UA',
-    'unit.million': 'M',
-    'unit.billion': 'Md',
-  },
+/**
+ * Segment d'URL de chaque langue, pour les pages générées (`/methodology/`, `/fr/methodology/`).
+ *
+ * L'anglais est à la RACINE, et cela ne se discute pas : ses URL sont indexées depuis le
+ * 2026-09-10 et une URL publiée ne se déplace pas. Le brésilien s'écrit en minuscules dans un
+ * chemin, comme tout le reste du site.
+ */
+export const LOCALE_PATH: Record<Locale, string> = {
+  en: '',
+  fr: 'fr',
+  es: 'es',
+  'pt-BR': 'pt-br',
 };
+
+/**
+ * `lang` HTML par langue.
+ *
+ * `en-GB` conserve l'horloge 24 h des `input type="time"` — c'est la raison historique, et elle
+ * vaut toujours. `es` est SANS RÉGION délibérément : le séparateur décimal n'est pas le même en
+ * Espagne (virgule) qu'au Mexique (point), donc annoncer `es-ES` ou `es-419` serait revendiquer
+ * une région qu'on n'a pas choisie.
+ */
+export const HTML_LANG: Record<Locale, string> = {
+  en: 'en-GB',
+  fr: 'fr',
+  es: 'es',
+  'pt-BR': 'pt-BR',
+};
+
+/** Locale BCP 47 pour `Number.toLocaleString` / `Intl`. Même raison qu'au-dessus pour `es`. */
+export const INTL_LOCALE: Record<Locale, string> = {
+  en: 'en-US',
+  fr: 'fr-FR',
+  es: 'es',
+  'pt-BR': 'pt-BR',
+};
+
+/**
+ * Le nom de chaque langue DANS SA PROPRE LANGUE, et le libellé court du sélecteur.
+ *
+ * Ces chaînes ne sont pas dans les dictionnaires, et c'est volontaire : le segment espagnol
+ * s'appelle « Español » pour tout le monde. Traduire un endonyme (« Spanish » dans l'interface
+ * anglaise) obligerait à écrire quatre fois quatre noms, dont douze seraient faux du point de vue
+ * de quelqu'un qui cherche sa langue dans une liste.
+ */
+export const LOCALE_ENDONYM: Record<Locale, string> = {
+  en: 'English',
+  fr: 'Français',
+  es: 'Español',
+  'pt-BR': 'Português (Brasil)',
+};
+
+/** Libellé court du sélecteur. Ce que l'œil lit ; l'endonyme est ce que le lecteur d'écran dit. */
+export const LOCALE_SHORT: Record<Locale, string> = {
+  en: 'EN',
+  fr: 'FR',
+  es: 'ES',
+  'pt-BR': 'PT',
+};
+
+export function isLocale(value: unknown): value is Locale {
+  return LOCALES.includes(value as Locale);
+}
+
+/**
+ * La langue à servir pour une liste de préférences de navigateur — PURE, donc testable.
+ *
+ * `navigator.language.slice(0, 2)` ne suffit pas, et c'est un piège nommé d'avance : il rend
+ * `pt` pour `pt-BR`, qui ne correspond à aucune de nos langues. Deux passes, dans cet ordre :
+ *
+ *   1. une correspondance EXACTE de l'étiquette complète (`pt-br` → `pt-BR`) ;
+ *   2. à défaut, la sous-étiquette primaire (`pt-PT`, `pt-AO` → `pt-BR` ; `es-MX` → `es`).
+ *
+ * La deuxième passe est une DÉCISION, pas un repli technique : un navigateur en portugais du
+ * Portugal reçoit du portugais du Brésil, parce que c'est la seule variante livrée et qu'elle
+ * reste très largement compréhensible. L'anglais termine la liste, comme repli général.
+ */
+export function negotiateLocale(
+  preferences: readonly string[] | string | undefined | null
+): Locale {
+  const list =
+    typeof preferences === 'string'
+      ? [preferences]
+      : (preferences ?? []).filter((tag) => typeof tag === 'string');
+  const byPrimary = new Map<string, Locale>();
+  for (const locale of LOCALES) {
+    const primary = locale.split('-')[0]!.toLowerCase();
+    if (!byPrimary.has(primary)) byPrimary.set(primary, locale);
+  }
+  for (const tag of list) {
+    const lower = tag.toLowerCase();
+    const exact = LOCALES.find((locale) => locale.toLowerCase() === lower);
+    if (exact) return exact;
+    const primary = byPrimary.get(lower.split('-')[0]!);
+    if (primary) return primary;
+  }
+  return 'en';
+}
+
+/**
+ * Les chargeurs des langues NON anglaises. Un `import()` littéral par langue, jamais calculé :
+ * Vite n'analyse pas `import(\`./dict-${locale}\`)` et embarquerait alors tout le dossier.
+ */
+const LOADERS: Record<Exclude<Locale, 'en'>, () => Promise<Dict>> = {
+  fr: () => import('./dict-fr').then((m) => m.fr),
+  es: () => import('./dict-es').then((m) => m.es),
+  'pt-BR': () => import('./dict-pt-BR').then((m) => m.ptBR),
+};
+
+/** Le dictionnaire d'une langue. L'anglais est déjà là ; les autres arrivent par le réseau. */
+export async function loadDictionary(locale: Locale): Promise<Dict> {
+  if (locale === 'en') return en;
+  return LOADERS[locale]();
+}

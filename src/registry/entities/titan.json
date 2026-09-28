@@ -7,7 +7,9 @@
     "kind": "moon",
     "displayName": {
       "en": "Titan",
-      "fr": "Titan"
+      "fr": "Titan",
+      "es": "Titán",
+      "pt-BR": "Titã"
     },
     "radius": 0.55,
     "rotationSpeed": {
@@ -56,11 +58,15 @@
       },
       "description": {
         "en": "Saturn's largest moon, with a dense atmosphere and rivers, lakes, and seas of methane and ethane.",
-        "fr": "La plus grande lune de Saturne, avec une atmosphere dense et des rivieres, lacs et mers de methane et d'ethane."
+        "fr": "La plus grande lune de Saturne, avec une atmosphere dense et des rivieres, lacs et mers de methane et d'ethane.",
+        "es": "La luna más grande de Saturno, con una atmósfera densa y ríos, lagos y mares de metano y etano.",
+        "pt-BR": "A maior lua de Saturno, com uma atmosfera densa e rios, lagos e mares de metano e etano."
       },
       "wiki": {
         "en": "https://en.wikipedia.org/wiki/Titan_(moon)",
-        "fr": "https://fr.wikipedia.org/wiki/Titan_(lune)"
+        "fr": "https://fr.wikipedia.org/wiki/Titan_(lune)",
+        "es": "https://es.wikipedia.org/wiki/Tit%C3%A1n_(sat%C3%A9lite)",
+        "pt-BR": "https://pt.wikipedia.org/wiki/Tit%C3%A3_(sat%C3%A9lite)"
       }
     },
     "cameraDistance": {

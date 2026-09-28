@@ -7,7 +7,9 @@
     "kind": "moon",
     "displayName": {
       "en": "Phobos",
-      "fr": "Phobos"
+      "fr": "Phobos",
+      "es": "Fobos",
+      "pt-BR": "Fobos"
     },
     "radius": 0.08,
     "rotationSpeed": {
@@ -50,7 +52,9 @@
       "extentRatio": 1.26,
       "credit": {
         "en": "Viking Orbiter 1 and Phobos 2 images, shape model by R. W. Gaskell, NASA PDS Gaskell Phobos Shape Model V1.0 (q = 512, doi:10.26033/xzv5-bw95), decimated for the web.",
-        "fr": "Images de Viking Orbiter 1 et Phobos 2, modèle de forme de R. W. Gaskell, NASA PDS Gaskell Phobos Shape Model V1.0 (q = 512, doi:10.26033/xzv5-bw95), décimé pour le web."
+        "fr": "Images de Viking Orbiter 1 et Phobos 2, modèle de forme de R. W. Gaskell, NASA PDS Gaskell Phobos Shape Model V1.0 (q = 512, doi:10.26033/xzv5-bw95), décimé pour le web.",
+        "es": "Imágenes de Viking Orbiter 1 y Phobos 2, modelo de forma de R. W. Gaskell, NASA PDS Gaskell Phobos Shape Model V1.0 (q = 512, doi:10.26033/xzv5-bw95), diezmado para la web.",
+        "pt-BR": "Imagens da Viking Orbiter 1 e da Phobos 2, modelo de forma de R. W. Gaskell, NASA PDS Gaskell Phobos Shape Model V1.0 (q = 512, doi:10.26033/xzv5-bw95), decimado para a web."
       }
     },
     "textureResolutions": {
@@ -70,11 +74,15 @@
       },
       "description": {
         "en": "The larger and faster-orbiting of Mars' two small moons, shaped by ancient impacts.",
-        "fr": "La plus grande et la plus rapide des deux petites lunes de Mars, façonnée par les impacts anciens."
+        "fr": "La plus grande et la plus rapide des deux petites lunes de Mars, façonnée par les impacts anciens.",
+        "es": "La mayor y la más rápida de las dos pequeñas lunas de Marte, moldeada por impactos antiguos.",
+        "pt-BR": "A maior e a mais rápida das duas pequenas luas de Marte, moldada por impactos antigos."
       },
       "wiki": {
         "en": "https://en.wikipedia.org/wiki/Phobos_(moon)",
-        "fr": "https://fr.wikipedia.org/wiki/Phobos_(lune)"
+        "fr": "https://fr.wikipedia.org/wiki/Phobos_(lune)",
+        "es": "https://es.wikipedia.org/wiki/Fobos_(sat%C3%A9lite)",
+        "pt-BR": "https://pt.wikipedia.org/wiki/Fobos_(sat%C3%A9lite)"
       }
     },
     "cameraDistance": {

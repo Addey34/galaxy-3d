@@ -19,7 +19,9 @@
       "extentRatio": 1.85,
       "credit": {
         "en": "Giotto and Vega images, shape model by P. Stooke with pointing by A. Abergel, which its author calls extremely uncertain (500 to 1,000 m), NASA PDS Stooke Small Body Shape Models (EAR-A-5-DDR-STOOKE-SHAPE-MODELS-V2.0), decimated for the web.",
-        "fr": "Images de Giotto et Vega, modèle de forme de P. Stooke, pointage d'A. Abergel, que son auteur dit extrêmement incertain (500 à 1 000 m), NASA PDS Stooke Small Body Shape Models (EAR-A-5-DDR-STOOKE-SHAPE-MODELS-V2.0), décimé pour le web."
+        "fr": "Images de Giotto et Vega, modèle de forme de P. Stooke, pointage d'A. Abergel, que son auteur dit extrêmement incertain (500 à 1 000 m), NASA PDS Stooke Small Body Shape Models (EAR-A-5-DDR-STOOKE-SHAPE-MODELS-V2.0), décimé pour le web.",
+        "es": "Imágenes de Giotto y Vega, modelo de forma de P. Stooke, apuntado de A. Abergel, que su autor califica de extremadamente incierto (500 a 1000 m), NASA PDS Stooke Small Body Shape Models (EAR-A-5-DDR-STOOKE-SHAPE-MODELS-V2.0), diezmado para la web.",
+        "pt-BR": "Imagens da Giotto e da Vega, modelo de forma de P. Stooke, apontamento de A. Abergel, que o seu autor considera extremamente incerto (500 a 1000 m), NASA PDS Stooke Small Body Shape Models (EAR-A-5-DDR-STOOKE-SHAPE-MODELS-V2.0), decimado para a web."
       },
       "radiusMismatch": "Le rayon affiché, 5,5 km, vient du diamètre EFFECTIF de 11 km de la SBDB (Lamy et al. 2004). Le noyau est allongé (15,1 x 7,6 x 7,5 km, mesurés sur le modèle de Stooke), dont le rayon équivalent-volume vaut 4,58 km. Deux grandeurs publiées différentes ; la forme vient du modèle, la taille du catalogue."
     },
@@ -31,11 +33,15 @@
     "kind": "comet",
     "description": {
       "en": "The most famous comet, visible from Earth about every 76 years, with its next return in 2061. It orbits backwards, against the flow of the planets.",
-      "fr": "La plus célèbre des comètes, visible depuis la Terre tous les 76 ans environ, avec un prochain retour en 2061. Elle orbite à rebours, à contre-courant des planètes."
+      "fr": "La plus célèbre des comètes, visible depuis la Terre tous les 76 ans environ, avec un prochain retour en 2061. Elle orbite à rebours, à contre-courant des planètes.",
+      "es": "El cometa más famoso, visible desde la Tierra cada 76 años aproximadamente, con su próximo regreso en 2061. Orbita al revés, contra el sentido de los planetas.",
+      "pt-BR": "O cometa mais famoso, visível da Terra a cada 76 anos aproximadamente, com o próximo retorno em 2061. Ele orbita ao contrário, na direção oposta à dos planetas."
     },
     "wiki": {
       "en": "https://en.wikipedia.org/wiki/Halley%27s_Comet",
-      "fr": "https://fr.wikipedia.org/wiki/Com%C3%A8te_de_Halley"
+      "fr": "https://fr.wikipedia.org/wiki/Com%C3%A8te_de_Halley",
+      "es": "https://es.wikipedia.org/wiki/Cometa_Halley",
+      "pt-BR": "https://pt.wikipedia.org/wiki/Cometa_Halley"
     }
   },
   "facts": {
@@ -52,21 +58,27 @@
       "published": false,
       "reason": {
         "en": "No direct measurement: the nucleus mass is inferred from a density that is itself poorly constrained (\"no more than a quarter that of ice\").",
-        "fr": "Aucune mesure directe : la masse du noyau se déduit d'une densité elle-même mal contrainte (« pas plus du quart de celle de la glace »)."
+        "fr": "Aucune mesure directe : la masse du noyau se déduit d'une densité elle-même mal contrainte (« pas plus du quart de celle de la glace »).",
+        "es": "Ninguna medición directa: la masa del núcleo se deduce de una densidad ella misma mal acotada («no más de un cuarto de la del hielo»).",
+        "pt-BR": "Nenhuma medição direta: a massa do núcleo é deduzida de uma densidade ela mesma mal delimitada (“não mais de um quarto da do gelo”)."
       }
     },
     "gravity": {
       "published": false,
       "reason": {
         "en": "Irregular nucleus of about 15 x 8 km: surface gravity varies by a large factor depending on where you stand, so a single value would mislead.",
-        "fr": "Noyau irrégulier d'environ 15 x 8 km : la gravité de surface varie d'un facteur important selon l'endroit, une valeur unique serait trompeuse."
+        "fr": "Noyau irrégulier d'environ 15 x 8 km : la gravité de surface varie d'un facteur important selon l'endroit, une valeur unique serait trompeuse.",
+        "es": "Núcleo irregular de unos 15 x 8 km: la gravedad en la superficie varía en un factor importante según el lugar, así que un valor único induciría a error.",
+        "pt-BR": "Núcleo irregular de cerca de 15 x 8 km: a gravidade na superfície varia por um fator importante conforme o lugar, então um valor único seria enganoso."
       }
     },
     "meanTempC": {
       "published": false,
       "reason": {
         "en": "Temperature sweeps about 340 K along the orbit, from below -250 C at aphelion to tens of degrees C at perihelion: a mean would describe no real moment.",
-        "fr": "La température parcourt environ 340 K le long de l'orbite, de moins de -250 C à l'aphélie à plusieurs dizaines de degrés au périhélie : une moyenne ne décrirait aucun instant réel."
+        "fr": "La température parcourt environ 340 K le long de l'orbite, de moins de -250 C à l'aphélie à plusieurs dizaines de degrés au périhélie : une moyenne ne décrirait aucun instant réel.",
+        "es": "La temperatura recorre unos 340 K a lo largo de la órbita, de menos de -250 C en el afelio a varias decenas de grados en el perihelio: una media no describiría ningún instante real.",
+        "pt-BR": "A temperatura percorre cerca de 340 K ao longo da órbita, de menos de -250 C no afélio a várias dezenas de graus no periélio: uma média não descreveria nenhum instante real."
       }
     },
     "moonCount": {

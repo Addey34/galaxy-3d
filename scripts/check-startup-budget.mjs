@@ -48,6 +48,8 @@ const loader = await createServer({
 });
 const {
   BOOT_DYNAMIC_CHUNKS,
+  BOOT_EXCLUSIVE_CHUNK_GROUPS,
+  exclusiveGroupCost,
   NON_BOOT_CHUNKS,
   JAVASCRIPT_STARTUP_BUDGET_BYTES,
   judgeFamilies,
@@ -175,7 +177,41 @@ for (const declared of BOOT_DYNAMIC_CHUNKS) {
   bootDynamic.push(found[0]);
 }
 
-const bootFiles = [...new Set([...staticClosure, ...bootDynamic])].sort();
+/**
+ * Les groupes dont le démarrage ne charge QU'UN membre (les dictionnaires de langue, lot 20).
+ * Tous doivent exister — un groupe qui nomme un morceau disparu compterait du vide — mais seul
+ * le plus lourd entre dans le budget, et les autres sont classés sans être comptés.
+ */
+const exclusiveFiles = [];
+const exclusiveCounted = [];
+for (const group of BOOT_EXCLUSIVE_CHUNK_GROUPS) {
+  const members = new Map();
+  for (const declared of group.chunks) {
+    const found = allChunks.filter((file) => chunkName(file) === declared);
+    if (found.length !== 1) {
+      console.error(
+        `\`BOOT_EXCLUSIVE_CHUNK_GROUPS\` déclare « ${declared} », et dist/assets en contient ` +
+          `${found.length}. Un morceau déclaré qui n'existe plus est un budget qui compte du vide.`
+      );
+      process.exit(1);
+    }
+    members.set(declared, found[0]);
+    exclusiveFiles.push(found[0]);
+  }
+  const worst = exclusiveGroupCost(
+    group,
+    (chunk) => statSync(join(ASSETS, members.get(chunk))).size
+  );
+  exclusiveCounted.push({ file: members.get(worst.chunk), ...worst });
+}
+
+const bootFiles = [
+  ...new Set([
+    ...staticClosure,
+    ...bootDynamic,
+    ...exclusiveCounted.map((entry) => entry.file),
+  ]),
+].sort();
 
 // PARTITION EXHAUSTIVE. Sans elle, vider `BOOT_DYNAMIC_CHUNKS` ferait baisser le coût mesure de
 // 61 703 octets sans qu'aucune garde ne rougisse : un budget qui compte moins que la realite est
@@ -183,7 +219,10 @@ const bootFiles = [...new Set([...staticClosure, ...bootDynamic])].sort();
 // au demarrage, ou declare hors demarrage — et un morceau neuf oblige a trancher.
 const declaredOut = new Set(NON_BOOT_CHUNKS.map((entry) => entry.chunk));
 const unclassified = allChunks.filter(
-  (file) => !bootFiles.includes(file) && !declaredOut.has(chunkName(file))
+  (file) =>
+    !bootFiles.includes(file) &&
+    !exclusiveFiles.includes(file) &&
+    !declaredOut.has(chunkName(file))
 );
 if (unclassified.length > 0) {
   console.error(
@@ -214,20 +253,38 @@ const [verdict] = judgeFamilies([
     budgetBytes: JAVASCRIPT_STARTUP_BUDGET_BYTES,
     method:
       'clôture des imports statiques depuis l’entrée de dist/index.html, plus les morceaux ' +
-      'que le démarrage importe dynamiquement (BOOT_DYNAMIC_CHUNKS). Octets BRUTS.',
+      'que le démarrage importe dynamiquement (BOOT_DYNAMIC_CHUNKS), plus le membre le plus ' +
+      'LOURD de chaque groupe exclusif (BOOT_EXCLUSIVE_CHUNK_GROUPS : un visiteur ne charge ' +
+      'qu’un dictionnaire d’interface et qu’une carte de texte du catalogue). Octets BRUTS.',
   },
 ]);
 
 console.log(
   `\nbudget du démarrage — famille « javascript » (octets BRUTS de dist/assets)\n`
 );
+const countedExclusive = new Set(exclusiveCounted.map((entry) => entry.file));
 for (const file of bootFiles) {
   const kind = staticClosure.has(file)
     ? file === entry
       ? 'entrée'
       : 'statique'
-    : 'dynamique au démarrage';
+    : countedExclusive.has(file)
+      ? 'le plus lourd de son groupe exclusif'
+      : 'dynamique au démarrage';
   console.log(`  ${String(sizeOf(file)).padStart(8)} o  ${file}  (${kind})`);
+}
+for (const group of BOOT_EXCLUSIVE_CHUNK_GROUPS) {
+  const counted = exclusiveCounted.find((entry) =>
+    group.chunks.includes(entry.chunk)
+  );
+  const others = exclusiveFiles.filter(
+    (file) => file !== counted.file && group.chunks.includes(chunkName(file))
+  );
+  console.log(
+    `  ${' '.repeat(8)}    groupe exclusif : ${group.chunks.join(' | ')} — seul ` +
+      `${counted.chunk} est compté (le plus lourd). Non comptés : ` +
+      `${others.map((file) => `${file} ${sizeOf(file)} o`).join(', ')}`
+  );
 }
 console.log(
   `  ${'-'.repeat(8)}\n  ${String(bootBytes).padStart(8)} o  démarrage, ` +

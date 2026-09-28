@@ -4,11 +4,15 @@
   "targetClass": "spacecraft",
   "displayName": {
     "en": "Voyager 2",
-    "fr": "Voyager 2"
+    "fr": "Voyager 2",
+    "es": "Voyager 2",
+    "pt-BR": "Voyager 2"
   },
   "description": {
     "en": "Launched in 1977, the only spacecraft to have visited Uranus and Neptune.",
-    "fr": "Lancée en 1977, la seule sonde à avoir visité Uranus et Neptune."
+    "fr": "Lancée en 1977, la seule sonde à avoir visité Uranus et Neptune.",
+    "es": "Lanzada en 1977, la única sonda que ha visitado Urano y Neptuno.",
+    "pt-BR": "Lançada em 1977, a única sonda que visitou Urano e Netuno."
   },
   "launchDate": "1977-08-20",
   "color": "0xffaa44",

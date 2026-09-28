@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { messages } from '@/i18n/locales';
+import { messages } from '@/i18n/allDictionaries';
 
 /**
  * LE TITRE DE NIVEAU 1 EST ÉCRIT À DEUX ENDROITS, ET LES DEUX DOIVENT DIRE LA MÊME CHOSE EN

@@ -6,7 +6,10 @@
   "config": {
     "kind": "planet",
     "displayName": {
-      "fr": "Saturne"
+      "en": "Saturn",
+      "fr": "Saturne",
+      "es": "Saturno",
+      "pt-BR": "Saturno"
     },
     "radius": 3.5,
     "rotationSpeed": {
@@ -36,11 +39,15 @@
       },
       "description": {
         "en": "Famous for its spectacular rings, made of billions of chunks of ice and rock. So low in density it would float on water.",
-        "fr": "Célèbre pour ses anneaux spectaculaires, faits de milliards de blocs de glace et de roche. Si peu dense qu’elle flotterait sur l’eau."
+        "fr": "Célèbre pour ses anneaux spectaculaires, faits de milliards de blocs de glace et de roche. Si peu dense qu’elle flotterait sur l’eau.",
+        "es": "Famoso por sus espectaculares anillos, hechos de miles de millones de bloques de hielo y roca. Tan poco denso que flotaría sobre el agua.",
+        "pt-BR": "Famoso pelos seus anéis espetaculares, feitos de bilhões de blocos de gelo e rocha. Tão pouco denso que flutuaria na água."
       },
       "wiki": {
         "en": "https://en.wikipedia.org/wiki/Saturn",
-        "fr": "https://fr.wikipedia.org/wiki/Saturne_(plan%C3%A8te)"
+        "fr": "https://fr.wikipedia.org/wiki/Saturne_(plan%C3%A8te)",
+        "es": "https://es.wikipedia.org/wiki/Saturno_(planeta)",
+        "pt-BR": "https://pt.wikipedia.org/wiki/Saturno_(planeta)"
       }
     },
     "astroBody": "Saturn",

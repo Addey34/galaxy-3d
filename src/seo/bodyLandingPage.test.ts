@@ -35,7 +35,7 @@ const pages = bodyLandingPages(CELESTIAL_CONFIG, ORIGIN);
 
 /** Un squelette minimal portant les mêmes repères que `index.html`. */
 const BASE_HTML = [
-  '<!doctype html><html><head>',
+  '<!doctype html><html lang="en"><head>',
   '<title>Home</title>',
   '<meta name="description" content="home" />',
   '<link rel="canonical" href="https://example.test/" />',

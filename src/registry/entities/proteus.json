@@ -7,7 +7,9 @@
     "kind": "moon",
     "displayName": {
       "en": "Proteus",
-      "fr": "Protée"
+      "fr": "Protée",
+      "es": "Proteo",
+      "pt-BR": "Proteu"
     },
     "radius": 0.12,
     "rotationSpeed": {
@@ -48,7 +50,9 @@
       "extentRatio": 1.16,
       "credit": {
         "en": "Voyager 2 images, shape model by P. Stooke, NASA PDS Stooke Small Body Shape Models (EAR-A-5-DDR-STOOKE-SHAPE-MODELS-V2.0), decimated for the web.",
-        "fr": "Images de Voyager 2, modèle de forme de P. Stooke, NASA PDS Stooke Small Body Shape Models (EAR-A-5-DDR-STOOKE-SHAPE-MODELS-V2.0), décimé pour le web."
+        "fr": "Images de Voyager 2, modèle de forme de P. Stooke, NASA PDS Stooke Small Body Shape Models (EAR-A-5-DDR-STOOKE-SHAPE-MODELS-V2.0), décimé pour le web.",
+        "es": "Imágenes de Voyager 2, modelo de forma de P. Stooke, NASA PDS Stooke Small Body Shape Models (EAR-A-5-DDR-STOOKE-SHAPE-MODELS-V2.0), diezmado para la web.",
+        "pt-BR": "Imagens da Voyager 2, modelo de forma de P. Stooke, NASA PDS Stooke Small Body Shape Models (EAR-A-5-DDR-STOOKE-SHAPE-MODELS-V2.0), decimado para a web."
       }
     },
     "textureResolutions": {
@@ -66,11 +70,15 @@
       },
       "description": {
         "en": "Neptune's second-largest moon, an irregularly shaped, tidally locked body near the size limit a body of its density can hold without becoming round.",
-        "fr": "La deuxième plus grande lune de Neptune, un corps de forme irrégulière verrouillé par effet de marée, proche de la taille limite qu’un corps de sa densité peut atteindre sans devenir sphérique."
+        "fr": "La deuxième plus grande lune de Neptune, un corps de forme irrégulière verrouillé par effet de marée, proche de la taille limite qu’un corps de sa densité peut atteindre sans devenir sphérique.",
+        "es": "La segunda luna más grande de Neptuno, un cuerpo de forma irregular bloqueado por las mareas, cerca del tamaño límite que un cuerpo de su densidad puede alcanzar sin volverse redondo.",
+        "pt-BR": "A segunda maior lua de Netuno, um corpo de forma irregular travado pelas marés, perto do tamanho limite que um corpo da sua densidade pode alcançar sem ficar redondo."
       },
       "wiki": {
         "en": "https://en.wikipedia.org/wiki/Proteus_(moon)",
-        "fr": "https://fr.wikipedia.org/wiki/Prot%C3%A9e_(lune)"
+        "fr": "https://fr.wikipedia.org/wiki/Prot%C3%A9e_(lune)",
+        "es": "https://es.wikipedia.org/wiki/Proteo_(sat%C3%A9lite)",
+        "pt-BR": "https://pt.wikipedia.org/wiki/Proteu_(sat%C3%A9lite)"
       }
     },
     "cameraDistance": {

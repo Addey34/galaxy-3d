@@ -7,7 +7,9 @@
     "kind": "moon",
     "displayName": {
       "en": "Tethys",
-      "fr": "Téthys"
+      "fr": "Téthys",
+      "es": "Tetis",
+      "pt-BR": "Tétis"
     },
     "radius": 0.16,
     "rotationSpeed": {
@@ -58,11 +60,15 @@
       },
       "description": {
         "en": "An icy moon almost as bright as fresh snow, scarred by the vast Ithaca Chasma canyon and the Odysseus impact basin.",
-        "fr": "Une lune glacée presque aussi brillante que de la neige fraîche, marquée par le vaste canyon Ithaca Chasma et le bassin d’impact Odysseus."
+        "fr": "Une lune glacée presque aussi brillante que de la neige fraîche, marquée par le vaste canyon Ithaca Chasma et le bassin d’impact Odysseus.",
+        "es": "Una luna helada casi tan brillante como la nieve fresca, marcada por el vasto cañón Ithaca Chasma y la cuenca de impacto Odysseus.",
+        "pt-BR": "Uma lua gelada quase tão brilhante quanto neve fresca, marcada pelo vasto cânion Ithaca Chasma e pela bacia de impacto Odysseus."
       },
       "wiki": {
         "en": "https://en.wikipedia.org/wiki/Tethys_(moon)",
-        "fr": "https://fr.wikipedia.org/wiki/T%C3%A9thys_(lune)"
+        "fr": "https://fr.wikipedia.org/wiki/T%C3%A9thys_(lune)",
+        "es": "https://es.wikipedia.org/wiki/Tetis_(sat%C3%A9lite)",
+        "pt-BR": "https://pt.wikipedia.org/wiki/T%C3%A9tis_(sat%C3%A9lite)"
       }
     },
     "cameraDistance": {

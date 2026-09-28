@@ -21,7 +21,12 @@ function makeSignal(): TourSignal {
   return { cancelled: false, paused: false };
 }
 
-const text = { en: 'Caption', fr: 'Légende' };
+const text = {
+  en: 'Caption',
+  fr: 'Légende',
+  es: 'Leyenda',
+  'pt-BR': 'Legenda',
+};
 
 describe('runTour', () => {
   it('runs every step in order and reports progress via onStepChange', async () => {

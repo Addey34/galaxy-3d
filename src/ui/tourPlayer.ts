@@ -15,6 +15,7 @@ import { bodyDisplayName } from '@/i18n/bodyText';
 import type { CameraSystem } from '@/components/systems/CameraSystem';
 import type { OrbitalMechanics } from '@/core/OrbitalMechanics';
 import type { PlanetNavigation } from './planetNav';
+import type { LocalizedText } from '@/types';
 import {
   runTour,
   type TourRuntimeHost,
@@ -35,7 +36,7 @@ export interface TourPlayerPermalink {
   sync(): void;
 }
 
-function localizedText(text: { en: string; fr: string }): string {
+function localizedText(text: LocalizedText): string {
   return text[getLocale()] ?? text.en;
 }
 

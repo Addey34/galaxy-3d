@@ -4,11 +4,15 @@
   "targetClass": "spacecraft",
   "displayName": {
     "en": "Voyager 1",
-    "fr": "Voyager 1"
+    "fr": "Voyager 1",
+    "es": "Voyager 1",
+    "pt-BR": "Voyager 1"
   },
   "description": {
     "en": "Launched in 1977, the most distant human-made object, now in interstellar space.",
-    "fr": "Lancée en 1977, l’objet humain le plus lointain, aujourd’hui dans l’espace interstellaire."
+    "fr": "Lancée en 1977, l’objet humain le plus lointain, aujourd’hui dans l’espace interstellaire.",
+    "es": "Lanzada en 1977, el objeto humano más lejano, hoy en el espacio interestelar.",
+    "pt-BR": "Lançada em 1977, o objeto humano mais distante, hoje no espaço interestelar."
   },
   "launchDate": "1977-09-05",
   "color": "0xffcc66",

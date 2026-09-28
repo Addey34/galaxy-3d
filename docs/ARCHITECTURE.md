@@ -2446,6 +2446,122 @@ de citation est du code de BUILD, absent du JavaScript servi (vérifiable comme 
 `grep parseCitation dist/assets/*.js` ne rend rien). Les seuls documents qui changent sont les
 quatre pages qui portent désormais le bloc.
 
+## Quatre langues, une seule chargée (lot 20)
+
+Galaxy est servi en **anglais, français, espagnol et portugais du Brésil**. Le contrat tient en une
+phrase : *un visiteur télécharge la langue qu'il lit, et rien de plus*. Il se décline en quatre
+règles, chacune tenue par une garde.
+
+### 1. Les clés sont dérivées, jamais listées deux fois
+
+`src/i18n/dict-en.ts` porte le dictionnaire anglais **et** exporte `MessageKey`, dérivé de cet
+objet. Les trois autres dictionnaires sont typés `Record<MessageKey, string>` : une clé manquante ou
+une clé en trop est une erreur de **compilation**, pas un test à écrire. Avant ce lot, `en` et `fr`
+avaient le même nombre de clés par chance.
+
+`src/i18n/translationFidelity.test.ts` ajoute ce qu'un type ne peut pas voir : les nombres, les
+gabarits `{…}` et les noms propres d'une traduction doivent être ceux de la source, et une valeur
+restée identique à l'anglais doit être **déclarée** avec sa raison.
+
+### 2. Le dictionnaire de la langue active arrive par le réseau
+
+L'anglais reste dans le bundle : c'est le repli de `t()`, donc le sortir ferait apparaître des clés
+brutes. `i18n/locales.loadDictionary` charge les autres par un `import()` **littéral** — un
+spécificateur calculé n'est pas analysable par Vite, qui embarquerait alors les quatre.
+
+`initLocale()` est attendu **avant le premier rendu**, dans `loadApp`. Ce n'est pas une précaution :
+le premier texte qu'un visiteur voit est celui du chargeur, et le chargeur ne se retraduit pas, il
+disparaît. `e2e/i18n-locales.spec.ts` relève la SÉQUENCE complète des libellés du chargeur et refuse
+qu'un seul libellé anglais y apparaisse dans une autre langue.
+
+L'attente ne peut pas vivre au corps du module : `await` de premier niveau est refusé par la cible
+de build du projet (`es2020`, Safari 14). Relever cette cible pour une commodité d'écriture
+reviendrait à cesser de servir des navigateurs de 2020.
+
+### 3. Le TEXTE DU CATALOGUE est dérivé des fiches, par langue
+
+Les fiches du registre sont importées par `import.meta.glob({ eager: true })` : tout leur contenu
+part chez le visiteur. Mesuré au lot 20, les traductions espagnole et portugaise ajoutaient
+**50 263 octets payés par tous**, y compris par un anglophone qui ne les lira jamais.
+
+Le greffon `deriveRegistryText` de `vite.config.ts` fait donc deux choses :
+
+- il **retire** les langues autres que l'anglais des fiches servies au navigateur ;
+- il **expose** `virtual:registry-text/catalogue-<langue>`, une carte « anglais → traduction »
+  construite depuis les mêmes fiches, chargée avec le dictionnaire de la langue par
+  `config/catalogueText.ts`, qui la repose EN PLACE sur les objets déjà construits (aucun lecteur ne
+  change : la fiche, les étiquettes et les crédits lisent toujours `texte[langue] ?? texte.en`).
+
+`options.ssr` décide : les générateurs de pages et Vitest ont besoin des quatre langues et passent
+par la voie SSR, qui n'est pas allégée ; le navigateur, en dev comme en production, reçoit la
+version allégée. La voie que les tests e2e exercent est donc bien celle qui est livrée.
+
+La clé de la carte est une **empreinte courte** de la chaîne anglaise (`core/registryText.textKey`,
+FNV-1a 32 bits) : indexée par la chaîne entière, la carte pesait 41 342 octets par langue, dont
+environ 19 000 d'anglais recopié — un texte que le bundle porte déjà. Deux champs portant le même
+anglais partagent la même traduction, ce qui est voulu ; deux traductions différentes pour un même
+anglais sont **refusées au build**, en nommant les deux.
+
+`src/registry/registryText.test.ts` prouve la neutralité de la séparation par un **aller-retour** sur
+les fiches livrées : alléger puis reposer la carte d'une langue reconstruit exactement le texte de
+cette langue.
+
+### 4. Le budget compte des groupes EXCLUSIFS
+
+Un visiteur charge **un** dictionnaire et **une** carte de texte. `BOOT_EXCLUSIVE_CHUNK_GROUPS`
+(`core/startupBudget.ts`) déclare les deux groupes, et seul le membre le plus **lourd** de chaque
+groupe entre dans le total : les additionner surestimerait de deux dictionnaires, les ignorer
+sous-estimerait pour trois visiteurs sur quatre. Une cinquième langue ne coûtera donc rien au
+démarrage des autres, sauf si son dictionnaire devient le plus lourd.
+
+Résultat mesuré au lot 20 : **1 239 699 octets** pour un plafond de 1 300 000. Le total du budget
+compte le plus lourd de chaque groupe ; un visiteur anglophone n'en charge AUCUN, donc il paie
+1 239 699 − 24 275 (`catalogue-fr`) − 21 345 (`dict-fr`) = **1 194 079 octets**, soit **31 530 de
+moins qu'au lot 19** avec deux langues de plus. Ce calcul se refait à chaque build depuis la sortie
+de `node scripts/check-startup-budget.mjs` : ne pas recopier ces nombres, les relire.
+
+### Une adresse par langue
+
+L'anglais reste à la **racine** (`/jupiter/`, `/methodology/`) : ses URL sont indexées depuis le
+2026-09-10, et une adresse publiée ne se déplace pas. Les autres langues vivent sous leur segment,
+donné par `LOCALE_PATH` — `/fr/jupiter/`, `/es/eclipse/2026-08-12/`, `/pt-br/sources/` (le brésilien
+s'écrit en minuscules dans une URL).
+
+Trois contraintes, chacune payée au moins une fois ailleurs :
+
+- **`hreflang` doit être RÉCIPROQUE**, `x-default` compris : chaque page nomme toutes ses sœurs,
+  elle-même incluse. Un ensemble non réciproque est purement ignoré par Google, donc le travail
+  entier serait décoratif sans qu'aucune erreur ne le dise.
+- **Le service worker ne doit pas remplacer ces pages par l'app shell** en cache
+  (`seo/pwaRouting.ts`). Une éclipse traduite a **trois** segments, et c'est exactement le motif que
+  ce module avait déjà manqué une fois.
+- **La vignette de partage est PARTAGÉE par les quatre langues** : `seo/socialCard.ts` peint la
+  texture du corps, sans un mot de texte. C'est aussi ce qui garde le relevé d'empreinte à 57
+  vignettes, la preuve qu'aucune texture n'a bougé.
+
+Les **libellés de faits d'une page** ne viennent PAS du dictionnaire de l'application, et c'est une
+correction mesurée : quatre d'entre eux y sont écrits autrement (une fiche a une colonne étroite, une
+page a de la place), si bien que les aligner réécrivait l'anglais indexé de 57 pages et de **34
+vignettes**. Ils vivent dans `FACT_LABELS` (`seo/bodyLandingPage.ts`), en quatre langues, et
+`seo/localisedPages.test.ts` tient leur anglais au caractère près. Le **titre**, lui, vient bien du
+dictionnaire, et `seo/titleParity.test.ts` vérifie dans les quatre langues qu'il est identique à
+celui que `ui/documentTitle` écrit pendant la navigation.
+
+Enfin, les **noms de mois** d'une page sont écrits en toutes lettres plutôt que lus dans `Intl` : une
+page statique doit rendre le même octet sur n'importe quelle machine, et les données ICU bougent avec
+la version du moteur.
+
+### Ce que ces règles ne couvrent pas
+
+`public/privacy.html` est une page statique du dossier `public/`, hors du générateur, et reste en
+deux langues (français et anglais) : un visiteur hispanophone y lit de l'anglais. C'est un texte de
+nature juridique, dont la traduction demande une relecture que ce lot n'a pas eue.
+
+Les traductions espagnole et portugaise ont été produites par Claude et **relues par aucun locuteur
+natif**. Ce qu'une machine peut vérifier l'est (nombres, unités, noms propres, gabarits, parité des
+clés, existence HTTP des liens) ; ce qu'elle ne peut pas — une tournure, un registre de langue, la
+lisibilité d'une phrase scientifique — reste dû.
+
 ## Pages `/methodology` et `/sources`
 
 Deux documents, chacun en anglais (`/methodology/`, `/sources/`) et en français

@@ -234,7 +234,8 @@ export class InterstellarOverlay {
       markers++;
       if (!isTarget && this.hiddenLabels.has(track.object.name)) continue;
       ctx.font = '11px sans-serif';
-      const text = track.object.displayName[locale];
+      const text =
+        track.object.displayName[locale] ?? track.object.displayName.en;
       const textWidth = ctx.measureText(text).width;
       // Un nom ne s'écrit que s'il trouve sa place : le 19 octobre 2017, celui de 1I tombait
       // exactement sur « Lune » et « OSIRIS-REx » (cf. `core/labelSpace.ts`).

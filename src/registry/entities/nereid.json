@@ -7,7 +7,9 @@
     "kind": "moon",
     "displayName": {
       "en": "Nereid",
-      "fr": "Néréide"
+      "fr": "Néréide",
+      "es": "Nereida",
+      "pt-BR": "Nereida"
     },
     "radius": 0.11,
     "rotationSpeed": {
@@ -54,11 +56,15 @@
       },
       "description": {
         "en": "A small, distant moon with the second-most eccentric orbit of any known moon, likely a captured object rather than one formed alongside Neptune.",
-        "fr": "Une petite lune lointaine dotée de l’orbite la plus excentrique parmi les lunes connues après une autre, probablement un objet capturé plutôt que formé avec Neptune."
+        "fr": "Une petite lune lointaine dotée de l’orbite la plus excentrique parmi les lunes connues après une autre, probablement un objet capturé plutôt que formé avec Neptune.",
+        "es": "Una luna pequeña y lejana, con la segunda órbita más excéntrica entre las lunas conocidas, probablemente un objeto capturado y no formado junto a Neptuno.",
+        "pt-BR": "Uma lua pequena e distante, com a segunda órbita mais excêntrica entre as luas conhecidas, provavelmente um objeto capturado e não formado junto de Netuno."
       },
       "wiki": {
         "en": "https://en.wikipedia.org/wiki/Nereid_(moon)",
-        "fr": "https://fr.wikipedia.org/wiki/N%C3%A9r%C3%A9ide_(lune)"
+        "fr": "https://fr.wikipedia.org/wiki/N%C3%A9r%C3%A9ide_(lune)",
+        "es": "https://es.wikipedia.org/wiki/Nereida_(sat%C3%A9lite)",
+        "pt-BR": "https://pt.wikipedia.org/wiki/Nereida_(sat%C3%A9lite)"
       }
     },
     "cameraDistance": {

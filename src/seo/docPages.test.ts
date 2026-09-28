@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest';
 import { CELESTIAL_CONFIG } from '@/config/bodies';
 import { flattenBodies } from '@/config/catalog';
 import { FACT_SOURCES } from '@/config/factSources';
+import { HTML_LANG } from '@/i18n/locales';
 import { ALL_FACT_FIELDS, bodyFact } from '@/core/bodyFacts';
 import { NAVIGABLE_TARGETS } from '@/config/navigable';
 import { parseSmallBodyDataset, type SmallBodyDatasetFile } from '@/core/sbdb';
@@ -19,6 +20,7 @@ import { ILLUSTRATIVE_SURFACES } from '@/config/catalog';
 import { OBLIQUITY_RAD } from '@/core/frames';
 import { educationalParentOrbitScale } from '@/core/educationalScale';
 import {
+  DOC_LOCALES,
   DOC_SLUGS,
   docPath,
   formatQuantity,
@@ -48,7 +50,7 @@ import {
   NAVIGATE_FALLBACK_DENYLIST,
 } from './pwaRouting';
 import { matchesGlob } from 'node:path';
-import { messages } from '@/i18n/locales';
+import { messages } from '@/i18n/allDictionaries';
 
 /**
  * `/methodology` et `/sources` publient des chiffres et des crédits. Ce que ces tests gardent :
@@ -206,16 +208,15 @@ describe('bloc « comment citer » des deux pages', () => {
    */
   const pages = [...methodology, ...sourcesPages(sourcesInput)];
 
-  it('couvre bien les quatre documents', () => {
-    expect(pages.length).toBe(4);
+  it('couvre bien les huit documents', () => {
+    // Deux sujets par langue, et quatre langues depuis le lot 20.
+    expect(pages.length).toBe(DOC_SLUGS.length * DOC_LOCALES.length);
+    expect(pages.length).toBe(8);
   });
 
-  it.each([
-    ['methodology', 'en'],
-    ['methodology', 'fr'],
-    ['sources', 'en'],
-    ['sources', 'fr'],
-  ])('%s/%s affiche le DOI qu’on lui donne, résolvable', (slug, locale) => {
+  it.each(
+    DOC_SLUGS.flatMap((slug) => DOC_LOCALES.map((locale) => [slug, locale]))
+  )('%s/%s affiche le DOI qu’on lui donne, résolvable', (slug, locale) => {
     const page = pages.find((p) => p.slug === slug && p.locale === locale)!;
     expect(page, `${slug}/${locale} absente`).toBeDefined();
     // La valeur de la fixture, pas celle du dépôt : la page AFFICHE ce qu'on lui passe.
@@ -331,11 +332,16 @@ describe('page /sources', () => {
         for (const field of ALL_FACT_FIELDS)
           if (cfg.kind !== 'skybox' && bodyFact(cfg, field).status === 'value')
             shown++;
-      expect(page.body).toMatch(
-        page.locale === 'fr'
-          ? new RegExp(`${shown} valeurs sont affichées`)
-          : new RegExp(`${shown} values are shown`)
-      );
+      // Le mot qui suit le nombre change de langue, mais le NOMBRE est le meme partout : c'est
+      // lui que cette garde tient. Un ternaire fr/en aurait cherche la phrase anglaise dans la
+      // page espagnole, et rougi pour la mauvaise raison.
+      const NOUN: Record<string, string> = {
+        en: 'values',
+        fr: 'valeurs',
+        es: 'valores',
+        'pt-BR': 'valores',
+      };
+      expect(page.body).toContain(`${shown} ${NOUN[page.locale]}`);
     }
   });
 
@@ -438,10 +444,16 @@ describe('rendu Markdown', () => {
 
 describe('documents et routage', () => {
   it('produit une page par sujet et par langue, reliées entre elles', () => {
+    // Huit chemins depuis le lot 20 : deux sujets par langue, l'anglais a la racine et les
+    // trois autres sous leur segment, le bresilien en minuscules.
     expect(allPages.map((p) => new URL(p.canonical).pathname).sort()).toEqual([
+      '/es/methodology/',
+      '/es/sources/',
       '/fr/methodology/',
       '/fr/sources/',
       '/methodology/',
+      '/pt-br/methodology/',
+      '/pt-br/sources/',
       '/sources/',
     ]);
     for (const page of allPages) {
@@ -453,11 +465,11 @@ describe('documents et routage', () => {
       expect(html).toContain(
         '<meta name="twitter:card" content="summary_large_image" />'
       );
-      expect(html).toContain(`<html lang="${page.locale}">`);
+      expect(html).toContain(`<html lang="${HTML_LANG[page.locale]}">`);
       expect(html).toContain(
         `<link rel="canonical" href="${page.canonical}" />`
       );
-      for (const locale of ['en', 'fr'] as const)
+      for (const locale of DOC_LOCALES)
         expect(html).toContain(
           `hreflang="${locale}" href="${ORIGIN}${docPath(page.slug, locale)}"`
         );

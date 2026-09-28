@@ -6,7 +6,10 @@
   "config": {
     "kind": "moon",
     "displayName": {
-      "fr": "Europe"
+      "en": "Europa",
+      "fr": "Europe",
+      "es": "Europa",
+      "pt-BR": "Europa"
     },
     "frame": "parentRelative",
     "relativeEphemeris": {
@@ -33,11 +36,15 @@
       "ascendingNode": 0,
       "description": {
         "en": "An icy moon with a smooth surface and strong evidence for a global subsurface ocean.",
-        "fr": "Une lune glacée à la surface lisse, avec de fortes preuves de l’existence d’un océan souterrain global."
+        "fr": "Une lune glacée à la surface lisse, avec de fortes preuves de l’existence d’un océan souterrain global.",
+        "es": "Una luna helada de superficie lisa, con fuertes indicios de un océano subterráneo global.",
+        "pt-BR": "Uma lua gelada de superfície lisa, com fortes indícios de um oceano subterrâneo global."
       },
       "wiki": {
         "en": "https://en.wikipedia.org/wiki/Europa_(moon)",
-        "fr": "https://fr.wikipedia.org/wiki/Europe_(lune)"
+        "fr": "https://fr.wikipedia.org/wiki/Europe_(lune)",
+        "es": "https://es.wikipedia.org/wiki/Europa_(sat%C3%A9lite)",
+        "pt-BR": "https://pt.wikipedia.org/wiki/Europa_(sat%C3%A9lite)"
       }
     },
     "cameraDistance": {
@@ -79,7 +86,9 @@
       "published": false,
       "reason": {
         "en": "Published range runs from about 50 K at the poles to about 140 K at the equator; no official mean exists.",
-        "fr": "Plage publiée d'environ 50 K aux pôles à environ 140 K à l'équateur ; aucune moyenne officielle n'existe."
+        "fr": "Plage publiée d'environ 50 K aux pôles à environ 140 K à l'équateur ; aucune moyenne officielle n'existe.",
+        "es": "Rango publicado de unos 50 K en los polos a unos 140 K en el ecuador; no existe ninguna media oficial.",
+        "pt-BR": "Intervalo publicado de cerca de 50 K nos polos a cerca de 140 K no equador; não existe nenhuma média oficial."
       }
     },
     "axialTilt": {

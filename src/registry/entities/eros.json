@@ -6,7 +6,9 @@
   "elements": {
     "displayName": {
       "en": "Eros",
-      "fr": "Éros"
+      "fr": "Éros",
+      "es": "Eros",
+      "pt-BR": "Eros"
     },
     "a": 1.45819547852407,
     "e": 0.2228676636398718,
@@ -29,20 +31,28 @@
       "albedoSource": "Veverka et al. 2000, Science 289, 2088 (JPL SBDB)",
       "colourSource": {
         "en": "NASA/USGS, Eros NEAR MSI Global Albedo Mosaics at 760, 550 and 450 nm (Golish et al. 2023, doi:10.17189/sv8w-5125), public domain",
-        "fr": "NASA/USGS, Eros NEAR MSI Global Albedo Mosaics à 760, 550 et 450 nm (Golish et al. 2023, doi:10.17189/sv8w-5125), domaine public"
+        "fr": "NASA/USGS, Eros NEAR MSI Global Albedo Mosaics à 760, 550 et 450 nm (Golish et al. 2023, doi:10.17189/sv8w-5125), domaine public",
+        "es": "NASA/USGS, Eros NEAR MSI Global Albedo Mosaics a 760, 550 y 450 nm (Golish et al. 2023, doi:10.17189/sv8w-5125), dominio público",
+        "pt-BR": "NASA/USGS, Eros NEAR MSI Global Albedo Mosaics a 760, 550 e 450 nm (Golish et al. 2023, doi:10.17189/sv8w-5125), domínio público"
       },
       "credit": {
         "en": "NASA/JHU-APL NEAR Shoemaker, MSI shape model by R. Gaskell, NASA PDS NEAR-A-MSI-5-EROSSHAPE-V1.0 (q = 128), decimated for the web.",
-        "fr": "NASA/JHU-APL NEAR Shoemaker, modèle de forme MSI de R. Gaskell, NASA PDS NEAR-A-MSI-5-EROSSHAPE-V1.0 (q = 128), décimé pour le web."
+        "fr": "NASA/JHU-APL NEAR Shoemaker, modèle de forme MSI de R. Gaskell, NASA PDS NEAR-A-MSI-5-EROSSHAPE-V1.0 (q = 128), décimé pour le web.",
+        "es": "NASA/JHU-APL NEAR Shoemaker, modelo de forma MSI de R. Gaskell, NASA PDS NEAR-A-MSI-5-EROSSHAPE-V1.0 (q = 128), diezmado para la web.",
+        "pt-BR": "NASA/JHU-APL NEAR Shoemaker, modelo de forma MSI de R. Gaskell, NASA PDS NEAR-A-MSI-5-EROSSHAPE-V1.0 (q = 128), decimado para a web."
       }
     },
     "description": {
       "en": "The first asteroid ever orbited and landed on: NASA’s NEAR Shoemaker circled it for a year and touched down on its surface in February 2001.",
-      "fr": "Le premier astéroïde jamais mis en orbite puis touché : la sonde NEAR Shoemaker de la NASA l’a survolé pendant un an et s’est posée à sa surface en février 2001."
+      "fr": "Le premier astéroïde jamais mis en orbite puis touché : la sonde NEAR Shoemaker de la NASA l’a survolé pendant un an et s’est posée à sa surface en février 2001.",
+      "es": "El primer asteroide orbitado y sobre el que se aterrizó: la NEAR Shoemaker de la NASA lo rodeó durante un año y se posó en su superficie en febrero de 2001.",
+      "pt-BR": "O primeiro asteroide orbitado e no qual se pousou: a NEAR Shoemaker da NASA o circundou durante um ano e tocou a sua superfície em fevereiro de 2001."
     },
     "wiki": {
       "en": "https://en.wikipedia.org/wiki/433_Eros",
-      "fr": "https://fr.wikipedia.org/wiki/(433)_%C3%89ros"
+      "fr": "https://fr.wikipedia.org/wiki/(433)_%C3%89ros",
+      "es": "https://es.wikipedia.org/wiki/(433)_Eros",
+      "pt-BR": "https://pt.wikipedia.org/wiki/433_Eros"
     }
   },
   "facts": {
@@ -72,14 +82,18 @@
       "published": false,
       "reason": {
         "en": "A 34-kilometre peanut: surface gravity varies strongly depending on where you stand, so a single value would mislead.",
-        "fr": "Une cacahuète de 34 kilomètres : la gravité de surface varie fortement selon l'endroit, une valeur unique serait trompeuse."
+        "fr": "Une cacahuète de 34 kilomètres : la gravité de surface varie fortement selon l'endroit, une valeur unique serait trompeuse.",
+        "es": "Un cacahuete de 34 kilómetros: la gravedad en la superficie varía mucho según el lugar, así que un valor único induciría a error.",
+        "pt-BR": "Um amendoim de 34 quilômetros: a gravidade na superfície varia muito conforme o lugar, então um valor único seria enganoso."
       }
     },
     "meanTempC": {
       "published": false,
       "reason": {
         "en": "Surface temperature swings strongly over its 5.3-hour day and along its eccentric orbit: a mean would describe no real moment.",
-        "fr": "La température de surface varie fortement au fil de sa journée de 5,3 heures et le long de son orbite excentrique : une moyenne ne décrirait aucun instant réel."
+        "fr": "La température de surface varie fortement au fil de sa journée de 5,3 heures et le long de son orbite excentrique : une moyenne ne décrirait aucun instant réel.",
+        "es": "La temperatura de la superficie varía mucho a lo largo de su día de 5,3 horas y de su órbita excéntrica: una media no describiría ningún instante real.",
+        "pt-BR": "A temperatura da superfície varia muito ao longo do seu dia de 5,3 horas e da sua órbita excêntrica: uma média não descreveria nenhum instante real."
       }
     },
     "moonCount": {

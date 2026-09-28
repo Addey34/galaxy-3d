@@ -73,12 +73,36 @@ const encoded: z.ZodType<EncodedInput> = z.lazy(() =>
   ])
 );
 
+/**
+ * Un texte localisé : les QUATRE langues sont obligatoires depuis le lot 20.
+ *
+ * Optionnelles, l'espagnol et le portugais auraient produit une application « traduite » où une
+ * fiche sur deux parle anglais, sans que rien ne le dise. Ici, une fiche incomplète est refusée
+ * au chargement, et `scripts/localized-fields.mjs --check` le dit fichier par fichier.
+ */
 const localized = z
-  .object({ en: z.string().min(1), fr: z.string().min(1) })
+  .object({
+    en: z.string().min(1),
+    fr: z.string().min(1),
+    es: z.string().min(1),
+    'pt-BR': z.string().min(1),
+  })
   .strict();
+/**
+ * Le nom d'affichage : les quatre langues, et TOUTES ou AUCUNE.
+ *
+ * Partiel, il laissait `bodyText` retomber sur la clé capitalisée, ce qui est juste en anglais et
+ * en français pour Jupiter mais faux en espagnol (« Júpiter »). Le lot 20 a donc écrit les quatre
+ * noms partout où un bloc existe, et le schéma refuse désormais un bloc à trois langues. Un corps
+ * dont le nom EST la clé capitalisée dans les quatre langues peut toujours n'avoir aucun bloc.
+ */
 const displayName = z
-  .object({ en: z.string(), fr: z.string() })
-  .partial()
+  .object({
+    en: z.string().min(1),
+    fr: z.string().min(1),
+    es: z.string().min(1),
+    'pt-BR': z.string().min(1),
+  })
   .strict();
 const astroBody = z.enum(Object.values(Body) as [string, ...string[]]);
 const color = z.string().regex(/^0x[0-9a-f]{6}$/);

@@ -6,7 +6,10 @@
   "config": {
     "kind": "planet",
     "displayName": {
-      "fr": "Vénus"
+      "en": "Venus",
+      "fr": "Vénus",
+      "es": "Venus",
+      "pt-BR": "Vênus"
     },
     "radius": 0.95,
     "rotationSpeed": {
@@ -36,11 +39,15 @@
       },
       "description": {
         "en": "The hottest planet. Its thick CO₂ atmosphere traps heat through a runaway greenhouse effect, and it spins backwards, very slowly.",
-        "fr": "La planète la plus chaude. Son épaisse atmosphère de CO₂ piège la chaleur par un effet de serre emballé, et elle tourne à l’envers, très lentement."
+        "fr": "La planète la plus chaude. Son épaisse atmosphère de CO₂ piège la chaleur par un effet de serre emballé, et elle tourne à l’envers, très lentement.",
+        "es": "El planeta más caliente. Su espesa atmósfera de CO₂ atrapa el calor por un efecto invernadero desbocado, y gira al revés, muy despacio.",
+        "pt-BR": "O planeta mais quente. A sua espessa atmosfera de CO₂ retém o calor por um efeito estufa descontrolado, e ele gira ao contrário, muito devagar."
       },
       "wiki": {
         "en": "https://en.wikipedia.org/wiki/Venus",
-        "fr": "https://fr.wikipedia.org/wiki/V%C3%A9nus_(plan%C3%A8te)"
+        "fr": "https://fr.wikipedia.org/wiki/V%C3%A9nus_(plan%C3%A8te)",
+        "es": "https://es.wikipedia.org/wiki/Venus_(planeta)",
+        "pt-BR": "https://pt.wikipedia.org/wiki/V%C3%A9nus_(planeta)"
       }
     },
     "astroBody": "Venus",

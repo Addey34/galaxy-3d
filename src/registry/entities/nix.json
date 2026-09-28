@@ -7,7 +7,9 @@
     "kind": "moon",
     "displayName": {
       "en": "Nix",
-      "fr": "Nix"
+      "fr": "Nix",
+      "es": "Nix",
+      "pt-BR": "Nix"
     },
     "radius": 0.06,
     "rotationSpeed": {
@@ -48,11 +50,15 @@
       "ascendingNode": 0,
       "description": {
         "en": "A moon with a reddish crater on an otherwise bright icy surface, rotating chaotically and retrograde relative to its own orbit.",
-        "fr": "Une lune marquée d’un cratère rougeâtre sur une surface glacée par ailleurs brillante, en rotation chaotique et rétrograde par rapport à sa propre orbite."
+        "fr": "Une lune marquée d’un cratère rougeâtre sur une surface glacée par ailleurs brillante, en rotation chaotique et rétrograde par rapport à sa propre orbite.",
+        "es": "Una luna marcada por un cráter rojizo sobre una superficie helada por lo demás brillante, en rotación caótica y retrógrada respecto a su propia órbita.",
+        "pt-BR": "Uma lua marcada por uma cratera avermelhada sobre uma superfície gelada de resto brilhante, em rotação caótica e retrógrada em relação à sua própria órbita."
       },
       "wiki": {
         "en": "https://en.wikipedia.org/wiki/Nix_(moon)",
-        "fr": "https://fr.wikipedia.org/wiki/Nix_(lune)"
+        "fr": "https://fr.wikipedia.org/wiki/Nix_(lune)",
+        "es": "https://es.wikipedia.org/wiki/Nix_(sat%C3%A9lite)",
+        "pt-BR": "https://pt.wikipedia.org/wiki/Nix_(sat%C3%A9lite)"
       }
     },
     "cameraDistance": {

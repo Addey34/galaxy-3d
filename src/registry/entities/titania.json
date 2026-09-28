@@ -7,7 +7,9 @@
     "kind": "moon",
     "displayName": {
       "en": "Titania",
-      "fr": "Titania"
+      "fr": "Titania",
+      "es": "Titania",
+      "pt-BR": "Titânia"
     },
     "radius": 0.21,
     "rotationSpeed": {
@@ -56,11 +58,15 @@
       },
       "description": {
         "en": "Uranus's largest moon, featuring one of the solar system's biggest known fault canyons, Messina Chasma.",
-        "fr": "La plus grande lune d’Uranus, avec l’un des plus grands canyons de faille connus du système solaire, Messina Chasma."
+        "fr": "La plus grande lune d’Uranus, avec l’un des plus grands canyons de faille connus du système solaire, Messina Chasma.",
+        "es": "La luna más grande de Urano, con uno de los mayores cañones de falla conocidos del sistema solar, Messina Chasma.",
+        "pt-BR": "A maior lua de Urano, com um dos maiores cânions de falha conhecidos do sistema solar, Messina Chasma."
       },
       "wiki": {
         "en": "https://en.wikipedia.org/wiki/Titania_(moon)",
-        "fr": "https://fr.wikipedia.org/wiki/Titania_(lune)"
+        "fr": "https://fr.wikipedia.org/wiki/Titania_(lune)",
+        "es": "https://es.wikipedia.org/wiki/Titania_(sat%C3%A9lite)",
+        "pt-BR": "https://pt.wikipedia.org/wiki/Tit%C3%A2nia_(sat%C3%A9lite)"
       }
     },
     "cameraDistance": {

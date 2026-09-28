@@ -7,7 +7,9 @@
     "kind": "moon",
     "displayName": {
       "en": "Oberon",
-      "fr": "Obéron"
+      "fr": "Obéron",
+      "es": "Oberón",
+      "pt-BR": "Oberon"
     },
     "radius": 0.2,
     "rotationSpeed": {
@@ -56,11 +58,15 @@
       },
       "description": {
         "en": "The outermost of Uranus's major moons, its heavily cratered, reddish surface scarred by one of the tallest known mountains in the solar system.",
-        "fr": "La plus extérieure des grandes lunes d’Uranus, à la surface rougeâtre fortement cratérisée, marquée par l’une des plus hautes montagnes connues du système solaire."
+        "fr": "La plus extérieure des grandes lunes d’Uranus, à la surface rougeâtre fortement cratérisée, marquée par l’une des plus hautes montagnes connues du système solaire.",
+        "es": "La más externa de las grandes lunas de Urano, de superficie rojiza y muy craterizada, marcada por una de las montañas más altas conocidas del sistema solar.",
+        "pt-BR": "A mais externa das grandes luas de Urano, de superfície avermelhada e muito craterizada, marcada por uma das montanhas mais altas conhecidas do sistema solar."
       },
       "wiki": {
         "en": "https://en.wikipedia.org/wiki/Oberon_(moon)",
-        "fr": "https://fr.wikipedia.org/wiki/Ob%C3%A9ron_(lune)"
+        "fr": "https://fr.wikipedia.org/wiki/Ob%C3%A9ron_(lune)",
+        "es": "https://es.wikipedia.org/wiki/Ober%C3%B3n_(sat%C3%A9lite)",
+        "pt-BR": "https://pt.wikipedia.org/wiki/Oberon_(sat%C3%A9lite)"
       }
     },
     "cameraDistance": {

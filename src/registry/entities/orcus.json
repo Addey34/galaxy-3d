@@ -6,7 +6,9 @@
   "elements": {
     "displayName": {
       "en": "Orcus",
-      "fr": "Orcus"
+      "fr": "Orcus",
+      "es": "Orcus",
+      "pt-BR": "Orcus"
     },
     "a": 39.2798751411889,
     "e": 0.2238491715385574,
@@ -26,11 +28,15 @@
     "visualRadius": 0.072,
     "description": {
       "en": "Sometimes nicknamed the \"anti-Pluto\" for an orbit that mirrors Pluto's own 2:3 resonance with Neptune, timed so the two are never close together. Its large moon Vanth may be tidally locked to it, much like Charon is to Pluto.",
-      "fr": "Parfois surnommée « anti-Pluton » pour une orbite qui reflète la même résonance 2:3 avec Neptune que Pluton, mais synchronisée pour que les deux ne soient jamais proches. Sa grande lune Vanth serait verrouillée gravitationnellement, un peu comme Charon l’est à Pluton."
+      "fr": "Parfois surnommée « anti-Pluton » pour une orbite qui reflète la même résonance 2:3 avec Neptune que Pluton, mais synchronisée pour que les deux ne soient jamais proches. Sa grande lune Vanth serait verrouillée gravitationnellement, un peu comme Charon l’est à Pluton.",
+      "es": "A veces apodado «anti-Plutón» por una órbita que refleja la misma resonancia 2:3 con Neptuno que Plutón, pero sincronizada para que los dos nunca estén cerca. Su gran luna Vanth estaría bloqueada por las mareas, un poco como Caronte lo está a Plutón.",
+      "pt-BR": "Às vezes apelidado de “anti-Plutão” por uma órbita que reflete a mesma ressonância 2:3 com Netuno que Plutão, mas sincronizada para que os dois nunca estejam próximos. A sua grande lua Vanth estaria travada pelas marés, um pouco como Caronte está para Plutão."
     },
     "wiki": {
       "en": "https://en.wikipedia.org/wiki/Orcus_(dwarf_planet)",
-      "fr": "https://fr.wikipedia.org/wiki/(90482)_Orcus"
+      "fr": "https://fr.wikipedia.org/wiki/(90482)_Orcus",
+      "es": "https://es.wikipedia.org/wiki/(90482)_Orcus",
+      "pt-BR": "https://pt.wikipedia.org/wiki/Orco_(planeta_an%C3%A3o)"
     }
   },
   "facts": {

@@ -5,6 +5,12 @@
   "source": "catalogue",
   "config": {
     "kind": "planet",
+    "displayName": {
+      "en": "Uranus",
+      "fr": "Uranus",
+      "es": "Urano",
+      "pt-BR": "Urano"
+    },
     "radius": 2,
     "rotationSpeed": {
       "$rotationHours": 17.24
@@ -24,11 +30,15 @@
       },
       "description": {
         "en": "The ice giant tipped on its side, with an axis leaning at 98°, so it rolls along its orbit. Each season lasts 21 years.",
-        "fr": "La géante de glace couchée sur le côté, avec un axe penché à 98°, si bien qu’elle roule le long de son orbite. Chaque saison dure 21 ans."
+        "fr": "La géante de glace couchée sur le côté, avec un axe penché à 98°, si bien qu’elle roule le long de son orbite. Chaque saison dure 21 ans.",
+        "es": "El gigante de hielo tumbado de lado, con un eje inclinado 98°, de modo que rueda a lo largo de su órbita. Cada estación dura 21 años.",
+        "pt-BR": "O gigante de gelo deitado de lado, com um eixo inclinado 98°, de modo que ele rola ao longo da sua órbita. Cada estação dura 21 anos."
       },
       "wiki": {
         "en": "https://en.wikipedia.org/wiki/Uranus",
-        "fr": "https://fr.wikipedia.org/wiki/Uranus_(plan%C3%A8te)"
+        "fr": "https://fr.wikipedia.org/wiki/Uranus_(plan%C3%A8te)",
+        "es": "https://es.wikipedia.org/wiki/Urano_(planeta)",
+        "pt-BR": "https://pt.wikipedia.org/wiki/Urano_(planeta)"
       }
     },
     "astroBody": "Uranus",

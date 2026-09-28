@@ -4,11 +4,15 @@
   "targetClass": "spacecraft",
   "displayName": {
     "en": "Juno",
-    "fr": "Juno"
+    "fr": "Juno",
+    "es": "Juno",
+    "pt-BR": "Juno"
   },
   "description": {
     "en": "Launched in 2011, orbiting Jupiter since 2016 on a long polar orbit.",
-    "fr": "Lancée en 2011, en orbite polaire très allongée autour de Jupiter depuis 2016."
+    "fr": "Lancée en 2011, en orbite polaire très allongée autour de Jupiter depuis 2016.",
+    "es": "Lanzada en 2011, en órbita alrededor de Júpiter desde 2016 en una órbita polar muy alargada.",
+    "pt-BR": "Lançada em 2011, em órbita em torno de Júpiter desde 2016 em uma órbita polar muito alongada."
   },
   "launchDate": "2011-08-05",
   "color": "0xff92c2",

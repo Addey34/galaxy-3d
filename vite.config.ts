@@ -1,3 +1,4 @@
+import { existsSync } from 'fs';
 import { fileURLToPath } from 'url';
 import { dirname, resolve } from 'path';
 import { defineConfig } from 'vitest/config';
@@ -6,6 +7,12 @@ import {
   LANDING_PAGE_GLOB_IGNORES,
   NAVIGATE_FALLBACK_DENYLIST,
 } from './src/seo/pwaRouting';
+import {
+  collectTranslations,
+  stripToEnglish,
+  DERIVED_TEXT_LOCALES,
+  type DerivedTextLocale,
+} from './src/core/registryText';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -42,6 +49,78 @@ function stripRegistryNotes() {
       const data = JSON.parse(code) as Record<string, unknown>;
       for (const key of DEV_ONLY) delete data[key];
       return JSON.stringify(data);
+    },
+  };
+}
+
+/**
+ * LE TEXTE NON ANGLAIS DU REGISTRE NE PART PAS DANS LE BUNDLE — il est DÉRIVÉ par langue.
+ *
+ * Les fiches sont importées par `import.meta.glob({ eager: true })`, donc tout leur contenu part
+ * chez le visiteur. Mesuré au lot 20 : les traductions espagnole et portugaise ajoutaient 50 263
+ * octets payés par TOUS, y compris les anglophones. Ce greffon fait deux choses complémentaires :
+ *
+ *   1. il retire les langues autres que l'anglais des fiches SERVIES AU NAVIGATEUR ;
+ *   2. il expose `virtual:registry-text/<langue>`, une carte « anglais -> traduction » construite
+ *      depuis les MÊMES fiches sur le disque, chargée à la demande avec le dictionnaire de la
+ *      langue (`config/catalogueText.ts`).
+ *
+ * `options.ssr` décide, et c'est le point délicat : le build des pages (`ssrLoadModule`) et les
+ * tests Vitest ont besoin des QUATRE langues — `/methodology` écrit les noms de corps en français.
+ * Ils passent par la voie SSR, qui n'est donc pas allégée. Le navigateur, en dev comme en
+ * production, reçoit la version allégée : la voie exercée par les tests e2e est bien celle qui est
+ * livrée.
+ */
+function deriveRegistryText() {
+  const PREFIX = 'virtual:registry-text/catalogue-';
+  const isRegistryJson = (id: string): boolean =>
+    /[\\/]src[\\/]registry[\\/].+\.json$/.test(id) &&
+    !/order\.json$/.test(id) &&
+    !/[\\/]schema[\\/]/.test(id);
+
+  /** Les fiches du disque, lues une fois par demande de module virtuel. */
+  const readFiches = async (): Promise<unknown[]> => {
+    const { readdirSync, readFileSync } = await import('fs');
+    const out: unknown[] = [];
+    for (const dir of ['entities', 'spacecraft', 'interstellar', 'providers']) {
+      const full = resolve(__dirname, 'src/registry', dir);
+      for (const name of readdirSync(full))
+        if (name.endsWith('.json') && name !== 'order.json')
+          out.push(JSON.parse(readFileSync(resolve(full, name), 'utf-8')));
+    }
+    return out;
+  };
+
+  return {
+    name: 'derive-registry-text',
+    enforce: 'pre' as const,
+    resolveId(id: string): string | null {
+      return id.startsWith(PREFIX) ? `\0${id}` : null;
+    },
+    async load(id: string): Promise<string | null> {
+      if (!id.startsWith(`\0${PREFIX}`)) return null;
+      const locale = id.slice(`\0${PREFIX}`.length);
+      if (!(DERIVED_TEXT_LOCALES as readonly string[]).includes(locale))
+        throw new Error(`langue inconnue pour le texte du registre : ${locale}`);
+      const map: Record<string, string> = {};
+      for (const fiche of await readFiches())
+        collectTranslations(fiche, locale as DerivedTextLocale, map);
+      // Un module vide voudrait dire que les fiches n'ont pas été lues : mieux vaut casser le
+      // build que servir une langue silencieusement vide.
+      if (Object.keys(map).length < 50)
+        throw new Error(
+          `texte du registre en ${locale} : ${Object.keys(map).length} entrées seulement, fiches non lues ?`
+        );
+      return `export default ${JSON.stringify(map)};`;
+    },
+    transform(
+      code: string,
+      id: string,
+      options?: { ssr?: boolean }
+    ): string | null {
+      if (options?.ssr) return null;
+      if (!isRegistryJson(id)) return null;
+      return JSON.stringify(stripToEnglish(JSON.parse(code)));
     },
   };
 }
@@ -89,6 +168,15 @@ function bodyLandingPages() {
         logLevel: 'error',
         server: { middlewareMode: true },
         resolve: { alias: { '@': resolve(__dirname, 'src') } },
+        // Ce chargeur ne sert JAMAIS un navigateur : il ne fait que `ssrLoadModule`. Sans ces
+        // deux lignes, son explorateur de dépendances cherche à résoudre
+        // `virtual:registry-text/catalogue-*` et imprime « Error: The following dependencies are
+        // imported but could not be resolved » dans un build qui sort pourtant en code 0. Un
+        // avertissement qui dit « Error » sans rien casser est exactement ce qui fera rater le
+        // prochain vrai message, donc on le supprime à la source : le greffon pour que les
+        // modules virtuels se résolvent, et pas d'exploration pour ne rien pré-empaqueter.
+        plugins: [deriveRegistryText()],
+        optimizeDeps: { noDiscovery: true, include: [] },
       });
       try {
         const catalogue = (await loader.ssrLoadModule(
@@ -104,8 +192,24 @@ function bodyLandingPages() {
           '/src/seo/eclipseLandingPage.ts'
         )) as typeof import('./src/seo/eclipseLandingPage');
 
+        // Les langues autres que l'anglais, lues dans le propriétaire unique de la liste.
+        const OTHER_LOCALES = DERIVED_TEXT_LOCALES;
+        const DOC_LOCALE_COUNT = DERIVED_TEXT_LOCALES.length + 1;
+
         const dist = resolve(__dirname, 'dist');
-        const baseHtml = await readFile(resolve(dist, 'index.html'), 'utf-8');
+        // `closeBundle` tourne AUSSI quand le bundle a échoué, et `dist/index.html` n'existe
+        // alors pas. Lancer une ENOENT ici REMPLACE l'erreur d'origine par la nôtre : c'est
+        // arrivé au lot 20, et le vrai message (celui qui disait quoi corriger) était perdu. On
+        // rend donc la main en le disant, et l'erreur de rollup remonte intacte.
+        const baseHtmlPath = resolve(dist, 'index.html');
+        if (!existsSync(baseHtmlPath)) {
+          console.warn(
+            `  pages de corps non générées : ${baseHtmlPath} absent, donc le bundle n'a pas ` +
+              `été émis. L'erreur qui suit (ou précède) est la vraie cause.`
+          );
+          return;
+        }
+        const baseHtml = await readFile(baseHtmlPath, 'utf-8');
         const pages = seo.bodyLandingPages(
           catalogue.CELESTIAL_CONFIG,
           SITE_ORIGIN
@@ -118,7 +222,18 @@ function bodyLandingPages() {
           throw new Error(
             `génération des pages de corps : ${pages.length} page(s) seulement, catalogue non chargé ?`
           );
-        for (const page of pages) {
+        /**
+         * UNE PAGE PAR CORPS ET PAR LANGUE (lot 20, phase 20D).
+         *
+         * L'anglais garde la racine (`/jupiter/`), ses URL étant indexées depuis le 2026-09-10 ;
+         * les trois autres langues vivent sous leur segment (`/es/jupiter/`). La VIGNETTE, elle,
+         * reste unique par corps : `socialCard.ts` peint la texture, sans un mot de texte, donc
+         * les quatre langues partagent la même image et le relevé d'empreinte garde ses 57.
+         */
+        const localisedBodyPages = OTHER_LOCALES.flatMap((locale) =>
+          seo.bodyLandingPages(catalogue.CELESTIAL_CONFIG, SITE_ORIGIN, locale)
+        );
+        for (const page of [...pages, ...localisedBodyPages]) {
           const dir = resolve(dist, page.slug);
           await mkdir(dir, { recursive: true });
           await writeFile(
@@ -127,6 +242,13 @@ function bodyLandingPages() {
             'utf-8'
           );
         }
+        // Chaque langue produit le même nombre de pages : une langue qui en produirait moins
+        // signifierait un corps sans page dans cette langue, et le sitemap l'annoncerait quand
+        // même. Mieux vaut casser le build.
+        if (localisedBodyPages.length !== pages.length * OTHER_LOCALES.length)
+          throw new Error(
+            `pages de corps traduites : ${localisedBodyPages.length} au lieu de ${pages.length * OTHER_LOCALES.length}`
+          );
         // Vignettes de partage, une par corps — voir `src/seo/socialCard.ts` pour le POURQUOI.
         // Elles DÉRIVENT des textures déjà versionnées, donc rien de nouveau n'est committé ;
         // elles sont reconstruites à l'identique à chaque build (rendu déterministe, sans GPU).
@@ -335,14 +457,25 @@ function bodyLandingPages() {
           throw new Error(
             `génération des pages d'éclipse : ${eclipsePages.length} page(s) seulement`
           );
-        for (const page of eclipsePages) {
+        const localisedEclipsePages = OTHER_LOCALES.flatMap((locale) =>
+          eclipseSeo.eclipseLandingPages(SITE_ORIGIN, locale)
+        );
+        for (const page of [...eclipsePages, ...localisedEclipsePages]) {
           // La vignette réutilisée doit exister : sinon la balise pointerait vers un 404.
           const cardFile = resolve(socialDir, `${page.focusBody}.jpg`);
           if (!(await stat(cardFile).catch(() => null)))
             throw new Error(
               `vignette absente pour l'éclipse ${page.slug} : ${page.focusBody}.jpg`
             );
-          const dir = resolve(dist, 'eclipse', page.slug);
+          // Le chemin vient du module, pas d'une concaténation locale : c'est lui qui sait où
+          // vit la langue (`/eclipse/…` ou `/es/eclipse/…`).
+          const dir = resolve(
+            dist,
+            ...eclipseSeo
+              .eclipsePagePath(page.event, page.locale)
+              .replace(/^\/|\/$/g, '')
+              .split('/')
+          );
           await mkdir(dir, { recursive: true });
           await writeFile(
             resolve(dir, 'index.html'),
@@ -529,14 +662,53 @@ function bodyLandingPages() {
         await writeFile(
           resolve(dist, 'sitemap.xml'),
           seo.renderSitemap(
-            [...pages, ...eclipsePages, ...docPages],
+            [
+              ...pages,
+              ...localisedBodyPages,
+              ...eclipsePages,
+              ...localisedEclipsePages,
+              ...docPages,
+            ],
             SITE_ORIGIN,
             today
           ),
           'utf-8'
         );
+        /**
+         * CHAQUE URL DU SITEMAP DOIT CORRESPONDRE À UN FICHIER ÉCRIT, et réciproquement.
+         *
+         * Avec 450 adresses dans quatre langues, une page écrite au mauvais chemin ne se verrait
+         * pas : le sitemap l'annoncerait, Firebase répondrait par la réécriture SPA, donc un 200
+         * avec le mauvais document — le piège que ce dépôt a déjà payé. La vérification est ici
+         * plutôt que dans un test, parce qu'un contrôle qu'il faut penser à lancer n'est pas un
+         * contrôle.
+         */
+        const sitemapUrls = [
+          ...(await readFile(resolve(dist, 'sitemap.xml'), 'utf-8')).matchAll(
+            /<loc>([^<]+)<\/loc>/g
+          ),
+        ].map((match) => match[1]!.replace(SITE_ORIGIN, ''));
+        const orphans: string[] = [];
+        for (const url of sitemapUrls) {
+          const file =
+            url === '/'
+              ? 'index.html'
+              : url.endsWith('.html')
+                ? url.slice(1)
+                : `${url.slice(1)}index.html`;
+          if (!existsSync(resolve(dist, file))) orphans.push(url);
+        }
+        if (orphans.length > 0)
+          throw new Error(
+            `${orphans.length} adresse(s) du sitemap sans fichier : ${orphans.slice(0, 5).join(', ')}`
+          );
+        if (new Set(sitemapUrls).size !== sitemapUrls.length)
+          throw new Error('le sitemap contient une adresse en double');
+
         loader.config.logger.info(
-          `  ${pages.length} pages de corps + ${eclipsePages.length} pages d'éclipse + ${docPages.length} pages documentaires + vignettes + sitemap générés`
+          `  ${pages.length + localisedBodyPages.length} pages de corps + ` +
+            `${eclipsePages.length + localisedEclipsePages.length} pages d'éclipse + ` +
+            `${docPages.length} pages documentaires (${DOC_LOCALE_COUNT} langues) + vignettes + sitemap générés`
         );
       } finally {
         await loader.close();
@@ -549,6 +721,7 @@ export default defineConfig({
   json: { stringify: true },
   plugins: [
     stripRegistryNotes(),
+    deriveRegistryText(),
     stripProductionHtmlComments(),
     bodyLandingPages(),
     // PWA installable + hors-ligne. Pensé pour l'usage en classe (wifi d'école saturé) :

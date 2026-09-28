@@ -6,7 +6,9 @@
   "elements": {
     "displayName": {
       "en": "Ida",
-      "fr": "Ida"
+      "fr": "Ida",
+      "es": "Ida",
+      "pt-BR": "Ida"
     },
     "a": 2.862971354381273,
     "e": 0.04570747515204408,
@@ -29,16 +31,22 @@
       "colourSource": null,
       "credit": {
         "en": "NASA Galileo SSI, shape model by P. Thomas et al. (1996), NASA PDS EAR-A-5-DDR-SHAPE-MODELS-V2.1, converted to a mesh for the web.",
-        "fr": "NASA Galileo SSI, modèle de forme de P. Thomas et al. (1996), NASA PDS EAR-A-5-DDR-SHAPE-MODELS-V2.1, converti en maillage pour le web."
+        "fr": "NASA Galileo SSI, modèle de forme de P. Thomas et al. (1996), NASA PDS EAR-A-5-DDR-SHAPE-MODELS-V2.1, converti en maillage pour le web.",
+        "es": "NASA Galileo SSI, modelo de forma de P. Thomas et al. (1996), NASA PDS EAR-A-5-DDR-SHAPE-MODELS-V2.1, convertido en malla para la web.",
+        "pt-BR": "NASA Galileo SSI, modelo de forma de P. Thomas et al. (1996), NASA PDS EAR-A-5-DDR-SHAPE-MODELS-V2.1, convertido em malha para a web."
       }
     },
     "description": {
       "en": "The first asteroid found to have its own moon: images taken by NASA’s Galileo probe in 1993 revealed tiny Dactyl orbiting this 60-kilometre main-belt asteroid.",
-      "fr": "Le premier astéroïde découvert avec sa propre lune : les images prises en 1993 par la sonde Galileo de la NASA ont révélé la petite Dactyle en orbite autour de cet astéroïde de 60 kilomètres de la ceinture principale."
+      "fr": "Le premier astéroïde découvert avec sa propre lune : les images prises en 1993 par la sonde Galileo de la NASA ont révélé la petite Dactyle en orbite autour de cet astéroïde de 60 kilomètres de la ceinture principale.",
+      "es": "El primer asteroide descubierto con su propia luna: las imágenes tomadas en 1993 por la sonda Galileo de la NASA revelaron a la pequeña Dáctilo en órbita alrededor de este asteroide de 60 kilómetros del cinturón principal.",
+      "pt-BR": "O primeiro asteroide descoberto com a sua própria lua: as imagens feitas em 1993 pela sonda Galileo da NASA revelaram a pequena Dáctilo em órbita em torno deste asteroide de 60 quilômetros do cinturão principal."
     },
     "wiki": {
       "en": "https://en.wikipedia.org/wiki/243_Ida",
-      "fr": "https://fr.wikipedia.org/wiki/(243)_Ida"
+      "fr": "https://fr.wikipedia.org/wiki/(243)_Ida",
+      "es": "https://es.wikipedia.org/wiki/(243)_Ida",
+      "pt-BR": "https://pt.wikipedia.org/wiki/243_Ida"
     }
   },
   "facts": {
@@ -67,14 +75,18 @@
       "published": false,
       "reason": {
         "en": "A 60-kilometre elongated body spinning in 4.6 hours: surface gravity changes by a large factor from its ends to its middle, so a single value would mislead.",
-        "fr": "Un corps allongé de 60 kilomètres qui tourne en 4,6 heures : la gravité de surface change d'un facteur important de ses extrémités à son centre, une valeur unique serait trompeuse."
+        "fr": "Un corps allongé de 60 kilomètres qui tourne en 4,6 heures : la gravité de surface change d'un facteur important de ses extrémités à son centre, une valeur unique serait trompeuse.",
+        "es": "Un cuerpo alargado de 60 kilómetros que gira en 4,6 horas: la gravedad en la superficie cambia en un factor importante de sus extremos a su centro, así que un valor único induciría a error.",
+        "pt-BR": "Um corpo alongado de 60 quilômetros que gira em 4,6 horas: a gravidade na superfície muda por um fator importante das suas extremidades ao seu centro, então um valor único seria enganoso."
       }
     },
     "meanTempC": {
       "published": false,
       "reason": {
         "en": "Surface temperature swings strongly over its 4.6-hour day: a mean would describe no real moment.",
-        "fr": "La température de surface varie fortement au fil de sa journée de 4,6 heures : une moyenne ne décrirait aucun instant réel."
+        "fr": "La température de surface varie fortement au fil de sa journée de 4,6 heures : une moyenne ne décrirait aucun instant réel.",
+        "es": "La temperatura de la superficie varía mucho a lo largo de su día de 4,6 horas: una media no describiría ningún instante real.",
+        "pt-BR": "A temperatura da superfície varia muito ao longo do seu dia de 4,6 horas: uma média não descreveria nenhum instante real."
       }
     },
     "moonCount": {

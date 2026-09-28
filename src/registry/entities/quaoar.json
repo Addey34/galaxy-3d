@@ -6,7 +6,9 @@
   "elements": {
     "displayName": {
       "en": "Quaoar",
-      "fr": "Quaoar"
+      "fr": "Quaoar",
+      "es": "Quaoar",
+      "pt-BR": "Quaoar"
     },
     "a": 43.33509246671098,
     "e": 0.03694225430757929,
@@ -26,11 +28,15 @@
     "visualRadius": 0.086,
     "description": {
       "en": "A large Kuiper Belt object that surprised astronomers in 2023 with a system of rings orbiting far beyond the distance where rings should be stable; its moon Weywot may be responsible for keeping them from collapsing.",
-      "fr": "Un grand objet de la ceinture de Kuiper qui a surpris les astronomes en 2023 : un système d’anneaux en orbite bien au-delà de la distance où des anneaux sont censés rester stables ; sa lune Weywot pourrait les empêcher de s’effondrer."
+      "fr": "Un grand objet de la ceinture de Kuiper qui a surpris les astronomes en 2023 : un système d’anneaux en orbite bien au-delà de la distance où des anneaux sont censés rester stables ; sa lune Weywot pourrait les empêcher de s’effondrer.",
+      "es": "Un gran objeto del cinturón de Kuiper que sorprendió a los astrónomos en 2023: un sistema de anillos en órbita mucho más allá de la distancia donde los anillos deberían ser estables; su luna Weywot podría impedir que se desplomen.",
+      "pt-BR": "Um grande objeto do cinturão de Kuiper que surpreendeu os astrônomos em 2023: um sistema de anéis em órbita bem além da distância onde anéis deveriam ser estáveis; a sua lua Weywot pode impedir que eles desmoronem."
     },
     "wiki": {
       "en": "https://en.wikipedia.org/wiki/Quaoar",
-      "fr": "https://fr.wikipedia.org/wiki/(50000)_Quaoar"
+      "fr": "https://fr.wikipedia.org/wiki/(50000)_Quaoar",
+      "es": "https://es.wikipedia.org/wiki/(50000)_Quaoar",
+      "pt-BR": "https://pt.wikipedia.org/wiki/Quaoar"
     }
   },
   "facts": {

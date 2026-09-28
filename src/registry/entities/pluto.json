@@ -6,7 +6,9 @@
   "elements": {
     "displayName": {
       "en": "Pluto",
-      "fr": "Pluton"
+      "fr": "Pluton",
+      "es": "Plutón",
+      "pt-BR": "Plutão"
     },
     "a": 39.48741550384992,
     "e": 0.2489763560923634,
@@ -28,11 +30,15 @@
     "rotationBody": "Pluto",
     "description": {
       "en": "Demoted from planet to dwarf planet in 2006, it hosts a heart-shaped nitrogen glacier photographed by New Horizons in 2015. Its moon Charon is so large that the two form a double system.",
-      "fr": "Rétrogradée de planète à planète naine en 2006, elle abrite un glacier d’azote en forme de cœur photographié par New Horizons en 2015. Sa lune Charon est si grande que les deux forment un système double."
+      "fr": "Rétrogradée de planète à planète naine en 2006, elle abrite un glacier d’azote en forme de cœur photographié par New Horizons en 2015. Sa lune Charon est si grande que les deux forment un système double.",
+      "es": "Degradado de planeta a planeta enano en 2006, alberga un glaciar de nitrógeno con forma de corazón fotografiado por New Horizons en 2015. Su luna Caronte es tan grande que ambos forman un sistema doble.",
+      "pt-BR": "Rebaixado de planeta a planeta anão em 2006, ele abriga uma geleira de nitrogênio em forma de coração fotografada pela New Horizons em 2015. A sua lua Caronte é tão grande que os dois formam um sistema duplo."
     },
     "wiki": {
       "en": "https://en.wikipedia.org/wiki/Pluto",
-      "fr": "https://fr.wikipedia.org/wiki/Pluton_(plan%C3%A8te_naine)"
+      "fr": "https://fr.wikipedia.org/wiki/Pluton_(plan%C3%A8te_naine)",
+      "es": "https://es.wikipedia.org/wiki/Plut%C3%B3n_(planeta_enano)",
+      "pt-BR": "https://pt.wikipedia.org/wiki/Plut%C3%A3o"
     },
     "satellites": [
       "charon",

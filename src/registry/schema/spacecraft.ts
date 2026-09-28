@@ -3,8 +3,20 @@ import { z } from 'zod';
 import { fact } from './entity';
 
 const instant = z.string().datetime({ offset: false }).regex(/Z$/);
+/**
+ * Un texte localisé : les QUATRE langues sont obligatoires depuis le lot 20.
+ *
+ * Optionnelles, l'espagnol et le portugais auraient produit une application « traduite » où une
+ * fiche sur deux parle anglais, sans que rien ne le dise. Ici, une fiche incomplète est refusée
+ * au chargement, et `scripts/localized-fields.mjs --check` le dit fichier par fichier.
+ */
 const localized = z
-  .object({ en: z.string().min(1), fr: z.string().min(1) })
+  .object({
+    en: z.string().min(1),
+    fr: z.string().min(1),
+    es: z.string().min(1),
+    'pt-BR': z.string().min(1),
+  })
   .strict();
 
 function isCalendarDate(value: string): boolean {

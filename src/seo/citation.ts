@@ -18,7 +18,7 @@
  */
 
 import { escapeHtml } from './bodyLandingPage';
-import { docSection, type Bilingual, type DocLocale } from './documentPage';
+import { docSection, type DocText, type DocLocale } from './documentPage';
 
 /** Ce que `CITATION.cff` déclare, réduit à ce qu'une citation affiche. */
 export interface CitationMetadata {
@@ -134,23 +134,37 @@ export function doiUrl(meta: CitationMetadata): string {
  * Il vit ici et non dans chaque page, pour la raison habituelle de ce dépôt : deux copies d'un même
  * texte divergent, et celle qu'on oublie est celle que le lecteur a sous les yeux.
  */
+/** Le titre de la section, dans les quatre langues livrees. */
+const HOW_TO_CITE: DocText = {
+  en: 'How to cite',
+  fr: 'Comment citer',
+  es: 'Como citar',
+  'pt-BR': 'Como citar',
+};
+
 export function citationSection(
   meta: CitationMetadata,
   locale: DocLocale
 ): string {
   const line = escapeHtml(citationLine(meta));
   const url = doiUrl(meta);
-  const intro: Bilingual = {
+  const intro: DocText = {
     en: `Galaxy is archived on Zenodo and carries a permanent identifier. The DOI below is the <strong>concept DOI</strong>: it always resolves to the most recent version, so a reference written today does not rot at the next release. Version ${escapeHtml(meta.version)} was published on ${escapeHtml(meta.released)}.`,
     fr: `Galaxy est archivé sur Zenodo et porte un identifiant pérenne. Le DOI ci-dessous est le <strong>DOI de concept</strong> : il désigne toujours la version la plus récente, de sorte qu’une référence écrite aujourd’hui ne pourrira pas à la prochaine publication. La version ${escapeHtml(meta.version)} a été publiée le ${escapeHtml(meta.released)}.`,
+    es: `Galaxy está archivado en Zenodo y lleva un identificador permanente. El DOI de abajo es el <strong>DOI de concepto</strong>: siempre resuelve hacia la versión más reciente, así que una referencia escrita hoy no se echa a perder en la próxima publicación. La versión ${escapeHtml(meta.version)} se publicó el ${escapeHtml(meta.released)}.`,
+    'pt-BR': `A Galaxy está arquivada no Zenodo e carrega um identificador permanente. O DOI abaixo é o <strong>DOI de conceito</strong>: ele sempre resolve para a versão mais recente, então uma referência escrita hoje não se estraga na próxima publicação. A versão ${escapeHtml(meta.version)} foi publicada em ${escapeHtml(meta.released)}.`,
   };
-  const machine: Bilingual = {
+  const machine: DocText = {
     en: `The repository also carries a <a href="${escapeHtml(meta.repository)}/blob/main/CITATION.cff"><code>CITATION.cff</code></a> file, which GitHub and most reference managers read directly. It is the single place this DOI is written: this page reads it rather than repeating it.`,
     fr: `Le dépôt porte aussi un fichier <a href="${escapeHtml(meta.repository)}/blob/main/CITATION.cff"><code>CITATION.cff</code></a>, que GitHub et la plupart des gestionnaires de références lisent directement. C’est le seul endroit où ce DOI est écrit : cette page le lit au lieu de le répéter.`,
+    es: `El repositorio lleva además un archivo <a href="${escapeHtml(meta.repository)}/blob/main/CITATION.cff"><code>CITATION.cff</code></a>, que GitHub y la mayoría de los gestores de referencias leen directamente. Es el único lugar donde este DOI está escrito: esta página lo lee en lugar de repetirlo.`,
+    'pt-BR': `O repositório carrega também um arquivo <a href="${escapeHtml(meta.repository)}/blob/main/CITATION.cff"><code>CITATION.cff</code></a>, que o GitHub e a maioria dos gerenciadores de referências leem diretamente. É o único lugar onde este DOI está escrito: esta página o lê em vez de repeti-lo.`,
   };
   return docSection(
     'citation',
-    locale === 'fr' ? 'Comment citer' : 'How to cite',
+    // Quatre langues depuis le lot 20 : un ternaire aurait rendu le titre anglais a un lecteur
+    // hispanophone, sous un corps de texte espagnol.
+    HOW_TO_CITE[locale],
     `<p>${intro[locale]}</p>` +
       `<p><a href="${escapeHtml(url)}"><code>${escapeHtml(meta.doi)}</code></a></p>` +
       `<blockquote><p>${line}</p></blockquote>` +

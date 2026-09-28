@@ -7,7 +7,9 @@
     "kind": "moon",
     "displayName": {
       "en": "Amalthea",
-      "fr": "Amalthée"
+      "fr": "Amalthée",
+      "es": "Amaltea",
+      "pt-BR": "Amalteia"
     },
     "frame": "parentRelative",
     "rotationBody": "Jupiter",
@@ -48,7 +50,9 @@
       "extentRatio": 1.78,
       "credit": {
         "en": "Voyager 1 and 2 images, shape model by P. Stooke, NASA PDS Stooke Small Body Shape Models (EAR-A-5-DDR-STOOKE-SHAPE-MODELS-V2.0), decimated for the web.",
-        "fr": "Images de Voyager 1 et 2, modèle de forme de P. Stooke, NASA PDS Stooke Small Body Shape Models (EAR-A-5-DDR-STOOKE-SHAPE-MODELS-V2.0), décimé pour le web."
+        "fr": "Images de Voyager 1 et 2, modèle de forme de P. Stooke, NASA PDS Stooke Small Body Shape Models (EAR-A-5-DDR-STOOKE-SHAPE-MODELS-V2.0), décimé pour le web.",
+        "es": "Imágenes de Voyager 1 y 2, modelo de forma de P. Stooke, NASA PDS Stooke Small Body Shape Models (EAR-A-5-DDR-STOOKE-SHAPE-MODELS-V2.0), diezmado para la web.",
+        "pt-BR": "Imagens da Voyager 1 e 2, modelo de forma de P. Stooke, NASA PDS Stooke Small Body Shape Models (EAR-A-5-DDR-STOOKE-SHAPE-MODELS-V2.0), decimado para a web."
       }
     },
     "textureResolutions": {
@@ -66,11 +70,15 @@
       },
       "description": {
         "en": "Jupiter's reddest moon, tidally locked with its long axis always pointing at the planet, likely stained by sulfur from Io.",
-        "fr": "La lune la plus rouge de Jupiter, verrouillée par effet de marée avec son grand axe toujours pointé vers la planète, probablement teintée par le soufre en provenance d’Io."
+        "fr": "La lune la plus rouge de Jupiter, verrouillée par effet de marée avec son grand axe toujours pointé vers la planète, probablement teintée par le soufre en provenance d’Io.",
+        "es": "La luna más roja de Júpiter, bloqueada por las mareas con su eje mayor siempre apuntando al planeta, probablemente tintada por el azufre procedente de Ío.",
+        "pt-BR": "A lua mais vermelha de Júpiter, travada pelas marés com o eixo maior sempre apontado para o planeta, provavelmente tingida pelo enxofre vindo de Io."
       },
       "wiki": {
         "en": "https://en.wikipedia.org/wiki/Amalthea_(moon)",
-        "fr": "https://fr.wikipedia.org/wiki/Amalth%C3%A9e_(lune)"
+        "fr": "https://fr.wikipedia.org/wiki/Amalth%C3%A9e_(lune)",
+        "es": "https://es.wikipedia.org/wiki/Amaltea_(sat%C3%A9lite)",
+        "pt-BR": "https://pt.wikipedia.org/wiki/Amalteia_(sat%C3%A9lite)"
       }
     },
     "cameraDistance": {

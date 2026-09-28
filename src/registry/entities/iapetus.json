@@ -7,7 +7,9 @@
     "kind": "moon",
     "displayName": {
       "en": "Iapetus",
-      "fr": "Japet"
+      "fr": "Japet",
+      "es": "Jápeto",
+      "pt-BR": "Jápeto"
     },
     "radius": 0.18,
     "rotationSpeed": {
@@ -57,11 +59,15 @@
       },
       "description": {
         "en": "A two-toned outer moon known for its dark leading hemisphere and equatorial ridge.",
-        "fr": "Une lune extérieure bicolore, connue pour son hémisphère avant sombre et sa crête équatoriale."
+        "fr": "Une lune extérieure bicolore, connue pour son hémisphère avant sombre et sa crête équatoriale.",
+        "es": "Una luna externa de dos tonos, conocida por su hemisferio delantero oscuro y su cresta ecuatorial.",
+        "pt-BR": "Uma lua externa de dois tons, conhecida pelo seu hemisfério dianteiro escuro e pela sua crista equatorial."
       },
       "wiki": {
         "en": "https://en.wikipedia.org/wiki/Iapetus_(moon)",
-        "fr": "https://fr.wikipedia.org/wiki/Japet_(lune)"
+        "fr": "https://fr.wikipedia.org/wiki/Japet_(lune)",
+        "es": "https://es.wikipedia.org/wiki/J%C3%A1peto_(sat%C3%A9lite)",
+        "pt-BR": "https://pt.wikipedia.org/wiki/J%C3%A1peto_(sat%C3%A9lite)"
       }
     },
     "cameraDistance": {

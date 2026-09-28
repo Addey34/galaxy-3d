@@ -4,11 +4,15 @@
   "targetClass": "spacecraft",
   "displayName": {
     "en": "BepiColombo",
-    "fr": "BepiColombo"
+    "fr": "BepiColombo",
+    "es": "BepiColombo",
+    "pt-BR": "BepiColombo"
   },
   "description": {
     "en": "Launched in 2018, on its way to Mercury through a long series of planetary flybys.",
-    "fr": "Lancée en 2018, en route vers Mercure via une longue série de survols planétaires."
+    "fr": "Lancée en 2018, en route vers Mercure via une longue série de survols planétaires.",
+    "es": "Lanzada en 2018, camino de Mercurio a través de una larga serie de sobrevuelos planetarios.",
+    "pt-BR": "Lançada em 2018, a caminho de Mercúrio por meio de uma longa série de sobrevoos planetários."
   },
   "launchDate": "2018-10-20",
   "color": "0x7aa7ff",
@@ -37,7 +41,9 @@
       "published": false,
       "reason": {
         "en": "The NSSDCA master catalog lists 365 kg, but its own page attributes that figure to the dry mass of the propulsion module alone, and gives a launch mass of 1229 kg for the MPO stack. No single published mass describes the object this marker follows, so none is shown.",
-        "fr": "Le catalogue NSSDCA annonce 365 kg, mais sa propre page attribue ce chiffre à la seule masse sèche du module de propulsion, et donne 1229 kg de masse au lancement pour la pile du MPO. Aucune masse publiée ne décrit d’un seul chiffre l’objet que suit ce marqueur : aucune n’est donc affichée."
+        "fr": "Le catalogue NSSDCA annonce 365 kg, mais sa propre page attribue ce chiffre à la seule masse sèche du module de propulsion, et donne 1229 kg de masse au lancement pour la pile du MPO. Aucune masse publiée ne décrit d’un seul chiffre l’objet que suit ce marqueur : aucune n’est donc affichée.",
+        "es": "El catálogo maestro NSSDCA anuncia 365 kg, pero su propia página atribuye esa cifra únicamente a la masa en seco del módulo de propulsión, y da 1229 kg de masa en el lanzamiento para el conjunto del MPO. Ninguna masa publicada describe con una sola cifra el objeto que sigue este marcador: por eso no se muestra ninguna.",
+        "pt-BR": "O catálogo mestre NSSDCA anuncia 365 kg, mas a sua própria página atribui essa cifra apenas à massa seca do módulo de propulsão, e dá 1229 kg de massa no lançamento para o conjunto do MPO. Nenhuma massa publicada descreve com uma única cifra o objeto que este marcador segue: por isso nenhuma é exibida."
       }
     }
   },

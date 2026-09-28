@@ -22,6 +22,8 @@
  */
 
 /** Ce qu'est le produit, déclaré par la source : c'est lui qui décide mesure ou modèle. */
+import type { MessageKey } from '@/i18n/dict-en';
+
 export type ProductKind =
   /** Capteur à l'instant décrit (imagerie satellite, IMERG, solution d'origine d'un séisme). */
   | 'measurement'
@@ -252,7 +254,16 @@ export const UNAVAILABLE_STAMP: TemporalStamp = {
   ongoing: false,
 };
 
-/** Clé i18n du libellé d'une catégorie (résolue côté UI via `t()`). */
-export function temporalCategoryLabelKey(category: TemporalCategory): string {
-  return `time.category.${category}`;
+/**
+ * Clé i18n du libellé d'une catégorie (résolue côté UI via `t()`).
+ *
+ * Typée `MessageKey` et non `string` depuis le lot 20 : le dictionnaire est désormais un
+ * `Record<MessageKey, string>`, donc une catégorie sans libellé devient une erreur de
+ * COMPILATION. Avant, la page documentaire retombait sur `?? category` et aurait publié
+ * « time.category.predicted » sans que rien ne le dise.
+ */
+export function temporalCategoryLabelKey(
+  category: TemporalCategory
+): MessageKey {
+  return `time.category.${category}` as MessageKey;
 }

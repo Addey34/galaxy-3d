@@ -4,11 +4,15 @@
   "targetClass": "spacecraft",
   "displayName": {
     "en": "Parker Solar Probe",
-    "fr": "Sonde solaire Parker"
+    "fr": "Sonde solaire Parker",
+    "es": "Sonda Solar Parker",
+    "pt-BR": "Sonda Solar Parker"
   },
   "description": {
     "en": "Launched in 2018, repeatedly diving closer to the Sun than any spacecraft before it.",
-    "fr": "Lancée en 2018, elle plonge à répétition plus près du Soleil qu’aucune sonde avant elle."
+    "fr": "Lancée en 2018, elle plonge à répétition plus près du Soleil qu’aucune sonde avant elle.",
+    "es": "Lanzada en 2018, se zambulle repetidamente más cerca del Sol que cualquier sonda anterior.",
+    "pt-BR": "Lançada em 2018, mergulha repetidamente mais perto do Sol que qualquer sonda anterior."
   },
   "launchDate": "2018-08-12",
   "color": "0xff5555",

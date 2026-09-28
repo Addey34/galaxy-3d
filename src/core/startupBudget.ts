@@ -422,6 +422,57 @@ export const NON_BOOT_CHUNKS: readonly BootDynamicChunk[] = [
   },
 ];
 
+/**
+ * DES MORCEAUX DONT LE DÉMARRAGE NE CHARGE QU'UN SEUL — et pourquoi il fallait le dire.
+ *
+ * Depuis le lot 20, les dictionnaires de langue arrivent par import dynamique : un visiteur
+ * charge `dict-fr`, OU `dict-es`, OU `dict-pt-BR`, jamais deux. Les compter tous les trois
+ * surestimerait le démarrage de deux dictionnaires ; n'en compter aucun le sous-estimerait pour
+ * les trois quarts des visiteurs, puisque seul l'anglais est dans la clôture statique. Le budget
+ * prend donc le PLUS LOURD du groupe, ce qui est le pire cas réel.
+ *
+ * Une cinquième langue n'ajoutera donc rien au budget, sauf si son dictionnaire devient le plus
+ * lourd — et c'est exactement la propriété qu'on veut : traduire l'application ne coûte pas au
+ * démarrage, seule la langue effectivement lue est payée.
+ */
+export interface BootExclusiveGroup {
+  /** Noms de morceaux SANS empreinte, comme `BOOT_DYNAMIC_CHUNKS`. */
+  readonly chunks: readonly string[];
+  readonly reason: string;
+}
+
+export const BOOT_EXCLUSIVE_CHUNK_GROUPS: readonly BootExclusiveGroup[] = [
+  {
+    chunks: ['dict-fr', 'dict-es', 'dict-pt-BR'],
+    reason:
+      "un visiteur charge le dictionnaire de SA langue et d'aucune autre (`i18n/locales.loadDictionary`) ; l'anglais, lui, reste dans la clôture statique parce qu'il est le repli de `t()`.",
+  },
+  {
+    chunks: ['catalogue-fr', 'catalogue-es', 'catalogue-pt-BR'],
+    reason:
+      "le TEXTE du catalogue (descriptions, noms, crédits, raisons) suit la même règle que le dictionnaire depuis le lot 20 : le bundle ne porte que l'anglais des fiches, et la langue active arrive dans sa propre carte (`config/catalogueText`, greffon `deriveRegistryText`). Avant cela, les quatre langues du registre étaient inlinées pour tout le monde, soit 50 263 octets payés par un anglophone qui ne les lit jamais.",
+  },
+];
+
+/**
+ * Ce qu'un groupe exclusif coûte au démarrage : son membre le plus lourd.
+ *
+ * Pur et testé, parce que c'est la seule règle du budget qui ne soit pas une somme : une version
+ * qui additionnerait le groupe rendrait le budget faux dans le sens confortable (trop gros), et
+ * une version qui l'ignorerait le rendrait faux dans le sens dangereux.
+ */
+export function exclusiveGroupCost(
+  group: BootExclusiveGroup,
+  bytesOf: (chunk: string) => number
+): { readonly chunk: string; readonly bytes: number } {
+  let worst = { chunk: '', bytes: -1 };
+  for (const chunk of group.chunks) {
+    const bytes = bytesOf(chunk);
+    if (bytes > worst.bytes) worst = { chunk, bytes };
+  }
+  return worst;
+}
+
 export const BOOT_DYNAMIC_CHUNKS: readonly BootDynamicChunk[] = [
   {
     chunk: 'GLTFLoader',

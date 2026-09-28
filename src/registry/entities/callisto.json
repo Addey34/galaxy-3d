@@ -6,7 +6,10 @@
   "config": {
     "kind": "moon",
     "displayName": {
-      "fr": "Callisto"
+      "en": "Callisto",
+      "fr": "Callisto",
+      "es": "Calisto",
+      "pt-BR": "Calisto"
     },
     "frame": "parentRelative",
     "relativeEphemeris": {
@@ -33,11 +36,15 @@
       "ascendingNode": 0,
       "description": {
         "en": "The outermost Galilean moon, heavily cratered and likely hiding a deep salty ocean.",
-        "fr": "La plus éloignée des lunes galiléennes, fortement cratérisée et susceptible d’abriter un océan salé profond."
+        "fr": "La plus éloignée des lunes galiléennes, fortement cratérisée et susceptible d’abriter un océan salé profond.",
+        "es": "La más externa de las lunas galileanas, muy craterizada y que probablemente esconde un océano salado profundo.",
+        "pt-BR": "A mais externa das luas galileanas, muito craterizada e que provavelmente esconde um oceano salgado profundo."
       },
       "wiki": {
         "en": "https://en.wikipedia.org/wiki/Callisto_(moon)",
-        "fr": "https://fr.wikipedia.org/wiki/Callisto_(moon)"
+        "fr": "https://fr.wikipedia.org/wiki/Callisto_(moon)",
+        "es": "https://es.wikipedia.org/wiki/Calisto_(sat%C3%A9lite)",
+        "pt-BR": "https://pt.wikipedia.org/wiki/Calisto_(sat%C3%A9lite)"
       }
     },
     "cameraDistance": {
@@ -79,7 +86,9 @@
       "published": false,
       "reason": {
         "en": "Same as its neighbours: a published range, no single mean surface temperature.",
-        "fr": "Même situation que ses voisines : une plage publiée, pas de température moyenne unique."
+        "fr": "Même situation que ses voisines : une plage publiée, pas de température moyenne unique.",
+        "es": "La misma situación que sus vecinas: un rango publicado, no una temperatura media de superficie única.",
+        "pt-BR": "A mesma situação das suas vizinhas: um intervalo publicado, não uma temperatura média de superfície única."
       }
     },
     "axialTilt": {

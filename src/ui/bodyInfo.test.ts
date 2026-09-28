@@ -18,13 +18,15 @@ function stats(name: string): Map<string, string> {
 }
 
 describe('fiche d’information — libellés', () => {
-  beforeAll(() => {
+  beforeAll(async () => {
     // `setLocale` écrit `<html lang>` ; l'environnement de test n'a pas de DOM. Passer par
     // l'anglais d'abord : sur une machine française, la détection choisit déjà `fr` et
     // `setLocale('fr')` ne fait rien — c'est ainsi que ce test passait en local et cassait en CI.
+    // Et l'ATTENDRE depuis le lot 20 : le dictionnaire arrive par un import dynamique, donc sans
+    // `await` les seize cas de ce fichier comparaient des libellés français à un rendu anglais.
     vi.stubGlobal('document', { documentElement: {} });
-    setLocale('en');
-    setLocale('fr');
+    await setLocale('en');
+    await setLocale('fr');
   });
 
   it('mesure la distance d’un satellite depuis son parent réel', () => {
@@ -53,10 +55,10 @@ describe('fiche d’information — libellés', () => {
 });
 
 describe('fiche d’information : faits sourcés', () => {
-  beforeAll(() => {
+  beforeAll(async () => {
     vi.stubGlobal('document', { documentElement: {} });
-    setLocale('en');
-    setLocale('fr');
+    await setLocale('en');
+    await setLocale('fr');
   });
 
   const statsOf = (name: string) => bodyStats(name, CONFIGS.get(name)!);
@@ -179,10 +181,10 @@ describe('fiche d’information — provenance de la position', () => {
  * traduits ; la magnitude absolue porte son incertitude en valeur absolue, pas en pourcentage.
  */
 describe('fiche d’information : faits nommés et magnitude', () => {
-  beforeAll(() => {
+  beforeAll(async () => {
     vi.stubGlobal('document', { documentElement: {} });
-    setLocale('en');
-    setLocale('fr');
+    await setLocale('en');
+    await setLocale('fr');
   });
 
   const statOf = (name: string, label: string) =>

@@ -11,7 +11,14 @@ import { allBodies, hasIllustrativeSurface } from '@/config/catalog';
 import { TEXTURE_SETTINGS } from '@/config/engine';
 import { KM_PER_AU, SQRT_K } from '@/core/ScaleService';
 import { RAD_TO_DEG as RAD2DEG } from '@/core/MathConstants';
-import { t, intlLocale, getLocale, onLocaleChange } from '@/i18n';
+import {
+  t,
+  intlLocale,
+  getLocale,
+  onLocaleChange,
+  LOCALES,
+  type Locale,
+} from '@/i18n';
 import { bodyDisplayName, bodyDescription } from '@/i18n/bodyText';
 import { NAVIGABLE_BODIES } from '@/config/navigable';
 import type { CelestialBodyConfig, FactField } from '@/types';
@@ -246,7 +253,25 @@ export interface Stat {
  */
 const unknownMark = (): string => t('stat.unknown.value');
 
-const localeKey = (): 'en' | 'fr' => (getLocale() === 'fr' ? 'fr' : 'en');
+/**
+ * Les hôtes Wikipédia autorisés pour le lien « En savoir plus », un par langue livrée.
+ *
+ * DÉRIVÉE de `LOCALES` plutôt qu'écrite à la main : une cinquième langue autoriserait son hôte
+ * du même coup. Le portugais du Brésil lit `pt.wikipedia.org`, qui est l'hôte de toute la
+ * lusophonie — Wikipédia n'a pas de domaine `pt-br`.
+ */
+const WIKIPEDIA_HOSTS = new Set(
+  LOCALES.map((locale) => `${locale.split('-')[0]}.wikipedia.org`)
+);
+
+/**
+ * La langue à lire dans un texte du catalogue.
+ *
+ * C'était `getLocale() === 'fr' ? 'fr' : 'en'`, donc l'espagnol et le portugais recevaient de
+ * l'anglais. Depuis le lot 20 les quatre langues sont obligatoires dans une fiche
+ * (`src/registry/schema/*.ts`), donc il n'y a plus rien à replier ici.
+ */
+const localeKey = (): Locale => getLocale();
 
 /** `2026-08` ou `2026-08-17` → « August 2026 » / « août 2026 » dans la langue courante. */
 function formatAsOf(asOf: string): string {
@@ -510,18 +535,30 @@ export function bodySources(
 }
 
 /**
- * Jeton ordinal localisé pour le rang planétaire.
- * Anglais : « 1st », « 2nd », « 3rd », sinon « nth ». Français (planète est féminin) :
- * « 1ʳᵉ », sinon « nᵉ ».
+ * Jeton ordinal localisé pour le rang planétaire — UNE RÈGLE PAR LANGUE, et les quatre forcées.
+ *
+ * Le genre du mot « planète » décide de la forme abrégée, et il change d'une langue à l'autre :
+ * féminin en français (« 3ᵉ », « 1ʳᵉ »), masculin en espagnol et en portugais (« 3.º », « 3º »).
+ * L'espagnol a en plus une forme apocopée devant un nom masculin singulier, « 1.er planeta ».
+ * Un `Record<Locale, …>` plutôt qu'un `if (getLocale() === 'fr')` : la version précédente aurait
+ * rendu « 3rd planeta desde el Sol » à un hispanophone, et rien ne l'aurait signalé.
  */
+const ORDINAL: Record<Locale, (n: number) => string> = {
+  en: (n) => {
+    const t100 = n % 100;
+    const suffix =
+      t100 >= 11 && t100 <= 13
+        ? 'th'
+        : ({ 1: 'st', 2: 'nd', 3: 'rd' }[n % 10] ?? 'th');
+    return `${n}${suffix}`;
+  },
+  fr: (n) => (n === 1 ? '1ʳᵉ' : `${n}ᵉ`),
+  es: (n) => (n === 1 ? '1.er' : `${n}.º`),
+  'pt-BR': (n) => `${n}º`,
+};
+
 function ordinalToken(n: number): string {
-  if (getLocale() === 'fr') return n === 1 ? '1ʳᵉ' : `${n}ᵉ`;
-  const t100 = n % 100;
-  const suffix =
-    t100 >= 11 && t100 <= 13
-      ? 'th'
-      : ({ 1: 'st', 2: 'nd', 3: 'rd' }[n % 10] ?? 'th');
-  return `${n}${suffix}`;
+  return ORDINAL[getLocale()](n);
 }
 
 /** Sous-titre selon la catégorie (« 3rd planet from the Sun », « Natural satellite »…). */
@@ -800,17 +837,24 @@ export function setupBodyInfo(coordinator?: OverlayCoordinator): BodyInfoPanel {
       const credit = cfg.model?.credit[locale];
       const colour = cfg.model?.colourSource?.[locale];
       // La carte de couleur est une donnée tierce elle aussi : citée à côté de la forme.
+      // Le deux-points vient du dictionnaire (`bi.creditLine`) : il était écrit ici avec une
+      // espace avant, c'est-à-dire la typographie FRANÇAISE, servie aussi à l'anglais.
+      const line = (label: string, value: string): string =>
+        t('bi.creditLine', { label, value });
       creditEl.textContent = credit
-        ? `${t('bi.modelCredit')} : ${credit}${colour ? ` · ${t('bi.colourCredit')} : ${colour}` : ''}`
+        ? `${line(t('bi.modelCredit'), credit)}${colour ? ` · ${line(t('bi.colourCredit'), colour)}` : ''}`
         : '';
       creditEl.hidden = !credit;
     }
 
     // Lien « En savoir plus » — article Wikipédia dans la langue courante (realData.wiki).
     const wiki = cfg.realData.wiki;
+    // L'hôte autorisé DÉPEND de la langue, et cette liste est la seule qui décide : oublier
+    // d'y ajouter `es.wikipedia.org` aurait supprimé le lien sans un mot, ce que
+    // `safeExternalUrl` fait par construction (c'est sa raison d'être).
     const wikiUrl = safeExternalUrl(
-      wiki ? (getLocale() === 'fr' ? wiki.fr : wiki.en) : undefined,
-      new Set(['fr.wikipedia.org', 'en.wikipedia.org'])
+      wiki?.[getLocale()] ?? wiki?.en,
+      WIKIPEDIA_HOSTS
     );
     if (wikiUrl) {
       moreEl.href = wikiUrl;

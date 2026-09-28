@@ -7,7 +7,9 @@
     "kind": "moon",
     "displayName": {
       "en": "Charon",
-      "fr": "Charon"
+      "fr": "Charon",
+      "es": "Caronte",
+      "pt-BR": "Caronte"
     },
     "radius": 0.1,
     "rotationSpeed": {
@@ -52,11 +54,15 @@
       "ascendingNode": 0,
       "description": {
         "en": "Pluto's largest moon, so massive that Pluto and Charon orbit a common barycenter.",
-        "fr": "La plus grande lune de Pluton, si massive que Pluton et Charon orbitent autour d'un barycentre commun."
+        "fr": "La plus grande lune de Pluton, si massive que Pluton et Charon orbitent autour d'un barycentre commun.",
+        "es": "La luna más grande de Plutón, tan masiva que Plutón y Caronte orbitan un baricentro común.",
+        "pt-BR": "A maior lua de Plutão, tão massiva que Plutão e Caronte orbitam um baricentro comum."
       },
       "wiki": {
         "en": "https://en.wikipedia.org/wiki/Charon_(moon)",
-        "fr": "https://fr.wikipedia.org/wiki/Charon_(lune)"
+        "fr": "https://fr.wikipedia.org/wiki/Charon_(lune)",
+        "es": "https://es.wikipedia.org/wiki/Caronte_(sat%C3%A9lite)",
+        "pt-BR": "https://pt.wikipedia.org/wiki/Caronte_(sat%C3%A9lite)"
       }
     },
     "cameraDistance": {

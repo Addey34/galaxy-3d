@@ -5,7 +5,10 @@
   "source": "small-body",
   "elements": {
     "displayName": {
-      "fr": "Éris"
+      "en": "Eris",
+      "fr": "Éris",
+      "es": "Eris",
+      "pt-BR": "Éris"
     },
     "a": 67.83513506437887,
     "e": 0.4384299959852953,
@@ -25,11 +28,15 @@
     "visualRadius": 0.183,
     "description": {
       "en": "More massive than Pluto. Its discovery in 2005 forced astronomers to define what a planet is, and cost Pluto its status. It roams up to three times farther from the Sun than Pluto.",
-      "fr": "Plus massive que Pluton. Sa découverte en 2005 a forcé les astronomes à définir ce qu’est une planète, et a coûté son statut à Pluton. Elle s’éloigne jusqu’à trois fois plus loin du Soleil que Pluton."
+      "fr": "Plus massive que Pluton. Sa découverte en 2005 a forcé les astronomes à définir ce qu’est une planète, et a coûté son statut à Pluton. Elle s’éloigne jusqu’à trois fois plus loin du Soleil que Pluton.",
+      "es": "Más masiva que Plutón. Su descubrimiento en 2005 obligó a los astrónomos a definir qué es un planeta, y le costó a Plutón su estatus. Se aleja hasta tres veces más del Sol que Plutón.",
+      "pt-BR": "Mais massiva que Plutão. A sua descoberta em 2005 obrigou os astrônomos a definir o que é um planeta, e custou a Plutão o seu status. Ela se afasta até três vezes mais do Sol que Plutão."
     },
     "wiki": {
       "en": "https://en.wikipedia.org/wiki/Eris_(dwarf_planet)",
-      "fr": "https://fr.wikipedia.org/wiki/(136199)_%C3%89ris"
+      "fr": "https://fr.wikipedia.org/wiki/(136199)_%C3%89ris",
+      "es": "https://es.wikipedia.org/wiki/Eris_(planeta_enano)",
+      "pt-BR": "https://pt.wikipedia.org/wiki/%C3%89ris_(planeta_an%C3%A3o)"
     }
   },
   "facts": {

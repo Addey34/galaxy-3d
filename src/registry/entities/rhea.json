@@ -7,7 +7,9 @@
     "kind": "moon",
     "displayName": {
       "en": "Rhea",
-      "fr": "Rhéa"
+      "fr": "Rhéa",
+      "es": "Rea",
+      "pt-BR": "Reia"
     },
     "radius": 0.2,
     "rotationSpeed": {
@@ -58,11 +60,15 @@
       },
       "description": {
         "en": "Saturn's second-largest moon, a heavily cratered world of bright water ice.",
-        "fr": "La deuxième plus grande lune de Saturne, un monde de glace d'eau très cratérisé."
+        "fr": "La deuxième plus grande lune de Saturne, un monde de glace d'eau très cratérisé.",
+        "es": "La segunda luna más grande de Saturno, un mundo de hielo de agua muy craterizado.",
+        "pt-BR": "A segunda maior lua de Saturno, um mundo de gelo de água muito craterizado."
       },
       "wiki": {
         "en": "https://en.wikipedia.org/wiki/Rhea_(moon)",
-        "fr": "https://fr.wikipedia.org/wiki/Rh%C3%A9a_(lune)"
+        "fr": "https://fr.wikipedia.org/wiki/Rh%C3%A9a_(lune)",
+        "es": "https://es.wikipedia.org/wiki/Rea_(sat%C3%A9lite)",
+        "pt-BR": "https://pt.wikipedia.org/wiki/Reia_(sat%C3%A9lite)"
       }
     },
     "cameraDistance": {

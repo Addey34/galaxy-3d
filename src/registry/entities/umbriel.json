@@ -7,7 +7,9 @@
     "kind": "moon",
     "displayName": {
       "en": "Umbriel",
-      "fr": "Umbriel"
+      "fr": "Umbriel",
+      "es": "Umbriel",
+      "pt-BR": "Umbriel"
     },
     "radius": 0.17,
     "rotationSpeed": {
@@ -56,11 +58,15 @@
       },
       "description": {
         "en": "The darkest of the five major Uranian moons, heavily cratered with almost no sign of resurfacing since it formed.",
-        "fr": "La plus sombre des cinq grandes lunes d’Uranus, fortement cratérisée et presque sans trace de resurfaçage depuis sa formation."
+        "fr": "La plus sombre des cinq grandes lunes d’Uranus, fortement cratérisée et presque sans trace de resurfaçage depuis sa formation.",
+        "es": "La más oscura de las cinco grandes lunas de Urano, muy craterizada y casi sin rastro de renovación de su superficie desde que se formó.",
+        "pt-BR": "A mais escura das cinco grandes luas de Urano, muito craterizada e quase sem vestígio de renovação da superfície desde que se formou."
       },
       "wiki": {
         "en": "https://en.wikipedia.org/wiki/Umbriel_(moon)",
-        "fr": "https://fr.wikipedia.org/wiki/Umbriel_(lune)"
+        "fr": "https://fr.wikipedia.org/wiki/Umbriel_(lune)",
+        "es": "https://es.wikipedia.org/wiki/Umbriel",
+        "pt-BR": "https://pt.wikipedia.org/wiki/Umbriel"
       }
     },
     "cameraDistance": {

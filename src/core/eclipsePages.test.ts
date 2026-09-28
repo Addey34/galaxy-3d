@@ -13,7 +13,7 @@ import {
   eclipsesInPageWindow,
   formatEclipseDate,
 } from './eclipsePages';
-import { messages } from '@/i18n/locales';
+import { messages } from '@/i18n/allDictionaries';
 
 const eclipses = eclipsesInPageWindow();
 const bySlug = (slug: string) => {

@@ -7,7 +7,9 @@
     "kind": "moon",
     "displayName": {
       "en": "Enceladus",
-      "fr": "Encelade"
+      "fr": "Encelade",
+      "es": "Encélado",
+      "pt-BR": "Encélado"
     },
     "radius": 0.12,
     "rotationSpeed": {
@@ -54,11 +56,15 @@
       "ascendingNode": 0,
       "description": {
         "en": "A bright icy moon with an active south-polar plume and a subsurface ocean.",
-        "fr": "Une lune glacée très brillante, avec un panache actif au pôle sud et un océan souterrain."
+        "fr": "Une lune glacée très brillante, avec un panache actif au pôle sud et un océan souterrain.",
+        "es": "Una luna helada muy brillante, con un penacho activo en el polo sur y un océano subterráneo.",
+        "pt-BR": "Uma lua gelada muito brilhante, com uma pluma ativa no polo sul e um oceano subterrâneo."
       },
       "wiki": {
         "en": "https://en.wikipedia.org/wiki/Enceladus",
-        "fr": "https://fr.wikipedia.org/wiki/Encelade_(lune)"
+        "fr": "https://fr.wikipedia.org/wiki/Encelade_(lune)",
+        "es": "https://es.wikipedia.org/wiki/Enc%C3%A9lado_(sat%C3%A9lite)",
+        "pt-BR": "https://pt.wikipedia.org/wiki/Enc%C3%A9lado_(sat%C3%A9lite)"
       }
     },
     "cameraDistance": {
