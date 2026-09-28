@@ -58,7 +58,7 @@ describe('chaque fiche produit passe le schéma', () => {
   const files = productFiles();
 
   it('trouve bien les fiches', () => {
-    expect(files.length).toBe(68);
+    expect(files.length).toBe(70);
   });
 
   it.each(files.map((f) => [f.slice(PRODUCTS.length + 1), f]))(
