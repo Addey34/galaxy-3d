@@ -86,14 +86,22 @@ function ghJson(path) {
  * coup, et seul le job déjà rouge sauvait le verdict.
  */
 function jobLog(jobId) {
-  return execFileSync(
-    'gh',
-    ['run', 'view', '-R', REPOSITORY, '--job', String(jobId), '--log'],
-    {
-      encoding: 'utf8',
-      maxBuffer: 256 * 1024 * 1024,
-    }
-  );
+  try {
+    return execFileSync(
+      'gh',
+      ['run', 'view', '-R', REPOSITORY, '--job', String(jobId), '--log'],
+      {
+        encoding: 'utf8',
+        maxBuffer: 256 * 1024 * 1024,
+        // `stderr` CAPTURé et non hérité : sinon l'explication de `gh` (« logs will be available
+        // when it is complete ») s'imprime à côté du rapport au lieu d'y entrer.
+        stdio: ['ignore', 'pipe', 'pipe'],
+      }
+    );
+  } catch (error) {
+    const said = String(error?.stderr ?? '').trim();
+    throw new Error(said || String(error?.message ?? error), { cause: error });
+  }
 }
 
 /**
@@ -358,6 +366,14 @@ function main() {
     const id = runArg >= 0 ? argv[runArg + 1] : latestMainRun().id;
     if (!id) throw new Error('--run attend un identifiant de run');
     run = inspectRun(id);
+    // UN RUN EN COURS NE SE JUGE PAS, ET NE SE DÉCLARE PAS NON SAIN POUR AUTANT. Mesuré : `gh run
+    // view --job` refuse le journal d'un job POURTANT TERMINÉ tant que le run ne l'est pas
+    // (« logs will be available when it is complete »), donc tous les journaux seraient illisibles.
+    // C'est « je ne peux pas mesurer », pas « le run est mauvais » : code 2.
+    if (run.conclusion === null)
+      throw new Error(
+        `le run ${run.id} est encore en cours : ses journaux ne sont pas servis avant la fin`
+      );
   } catch (error) {
     // Ne JAMAIS confondre « je n'ai pas pu lire » avec « tout va bien » : c'est exactement le
     // silence qui a fait passer deux runs rouges pour verts.

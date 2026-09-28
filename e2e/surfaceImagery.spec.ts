@@ -477,6 +477,18 @@ test('displaces the ground with measured altitudes, and says where they come fro
    * inversée, ou une tuile lue de travers, se compte en kilomètres et ne tombe dans AUCUN
    * candidat.
    */
+  /*
+   * PAS DE BORNE SÉPARÉE SUR LA LARGEUR DE CETTE BOÎTE, et la falsification dit pourquoi.
+   *
+   * Une assertion « la boîte couvre au plus quatre texels » a été écrite puis RETIRÉE : elle
+   * était vraie par construction (quatre coins donnent au plus quatre valeurs). Une seconde,
+   * « la boîte est plus étroite qu'un texel », a été écrite puis retirée aussi, pour une
+   * raison plus intéressante : impossible de la faire rougir SEULE. En élargissant `half`, c'est
+   * l'assertion ci-dessous qui rougit d'abord, parce qu'aucun coin ne tombe plus sur le bon texel
+   * (mesuré : `half` à 0,03° rend 238,5 m d'écart, `half` à deux texels rend 454 m). La
+   * protection existe donc déjà, et un garde qu'on ne peut pas falsifier est une décoration —
+   * c'est la règle de `docs/TESTING.md`.
+   */
   const latitude = Number(aim![1]);
   const longitude = Number(aim![2]);
   const half = 0.0005;
@@ -497,12 +509,5 @@ test('displaces the ground with measured altitudes, and says where they come fro
       `l'application annonce ${displayed} m, le fichier livré donne ` +
       `${[...candidates].join(' / ')} m sur la boîte d'arrondi de la visée`
   ).toBeLessThan(1);
-  // La boîte d'arrondi ne couvre qu'une poignée de texels : sans cette borne, élargir la boîte
-  // finirait par accepter n'importe quelle altitude du corps.
-  expect(
-    candidates.size,
-    'la boîte d’arrondi de la visée couvre trop de texels'
-  ).toBeLessThanOrEqual(4);
-
   expect(errors, `Erreurs page : ${errors.join(' | ')}`).toEqual([]);
 });
