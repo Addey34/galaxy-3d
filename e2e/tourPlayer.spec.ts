@@ -17,14 +17,14 @@ const ORDER = (
     order: string[];
   }
 ).order;
-const TITLES_EN = ORDER.map(
+const FICHES = ORDER.map(
   (id) =>
-    (
-      JSON.parse(readFileSync(resolve(TOURS, `${id}.json`), 'utf-8')) as {
-        title: { en: string };
-      }
-    ).title.en
+    JSON.parse(readFileSync(resolve(TOURS, `${id}.json`), 'utf-8')) as {
+      title: { en: string };
+      steps: unknown[];
+    }
 );
+const TITLES_EN = FICHES.map((fiche) => fiche.title.en);
 
 test.beforeEach(async ({ page }) => {
   await blockExternalNetwork(page);
@@ -146,32 +146,34 @@ test.describe('eclipse tour', () => {
   });
 });
 
-test.describe('other scripted tours', () => {
-  test('galileans tour starts and can be closed', async ({ page }) => {
-    await openPicker(page);
-    await page.locator('.stour-picker-item').nth(1).click();
+/**
+ * CHAQUE visite du registre démarre et se ferme — la boucle est sur `order.json`, jamais sur des
+ * indices écrits à la main.
+ *
+ * Deux tests nommaient `nth(1)` et `nth(2)` (« galileans », « kuiper ») : une visite ajoutée
+ * n'était donc exercée par rien. Cette forme-ci couvre la quatrième sans être modifiée, ce qui est
+ * la même promesse que le lot tient sur le reste de la chaîne.
+ */
+test.describe('every tour of the registry', () => {
+  for (const [index, id] of ORDER.entries()) {
+    test(`${id} runs and can be closed`, async ({ page }) => {
+      await openPicker(page);
+      await page.locator('.stour-picker-item').nth(index).click();
 
-    const card = page.locator('.stour-card');
-    await expect(card).toBeVisible();
-    await expect(page.locator('.stour-progress')).toContainText('1');
+      const card = page.locator('.stour-card');
+      await expect(card).toBeVisible();
+      // Le TOTAL, pas l'étape courante : une visite dont les premières étapes sont instantanées
+      // (l'éclipse saute la date, puis vole) a déjà dépassé l'étape 1 quand on regarde, et une
+      // assertion sur « 1 » serait une course. Le total, lui, vient de la fiche et ne bouge pas.
+      await expect(page.locator('.stour-progress')).toHaveText(
+        new RegExp(`\\b${FICHES[index]!.steps.length}$`)
+      );
 
-    await page.locator('.stour-close').click();
-    await expect(card).toBeHidden();
-    await expect(page.locator('#body-info')).toBeHidden();
-  });
-
-  test('kuiper tour starts and can be closed', async ({ page }) => {
-    await openPicker(page);
-    await page.locator('.stour-picker-item').nth(2).click();
-
-    const card = page.locator('.stour-card');
-    await expect(card).toBeVisible();
-    await expect(page.locator('.stour-progress')).toContainText('1');
-
-    await page.locator('.stour-close').click();
-    await expect(card).toBeHidden();
-    await expect(page.locator('#body-info')).toBeHidden();
-  });
+      await page.locator('.stour-close').click();
+      await expect(card).toBeHidden();
+      await expect(page.locator('#body-info')).toBeHidden();
+    });
+  }
 });
 
 test.describe('mobile scripted tour', () => {
