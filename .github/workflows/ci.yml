@@ -164,8 +164,10 @@ jobs:
     # montee a 195 scenarios, et le run du lot 20 (`36373970699`, pousse sur main) a donne
     # 24m39 / 21m04 / 23m05 pour les trois premiers shards et un shard 4 COUPE a 30m23 par le
     # garde-fou. Ce n'est donc pas un echec de test, c'est l'enveloppe qui est pleine : le
-    # meme etat qu'au 2026-09-08 et qu'au 2026-09-09, deux fois de suite. Six runners ramenent
-    # l'attendu autour de 16-17 min, c'est-a-dire la calibration d'origine.
+    # meme etat qu'au 2026-09-08 et qu'au 2026-09-09, deux fois de suite. MESURE APRES le passage,
+    # sur le run `36383735129` de main : 14m11 / 19m39 / 15m24 / 15m36 / 18m48 / 19m31, donc au pire
+    # 19m39 pour un garde-fou de 30 min, dix minutes de marge. L'estimation posee avant la mesure
+    # disait 16-17 min : le pire shard est au-dessus, et c'est le chiffre mesure qui fait foi.
     #
     # Et la lecon de procedure, deja payee au lot 19 : ajouter des tests REDISTRIBUE les shards,
     # ce job ne tourne QUE sur main (`if: push`), et une suite locale ne sharde pas. Aucune CI de
@@ -181,7 +183,7 @@ jobs:
       matrix:
         shard: [1, 2, 3, 4, 5, 6]
     # Garde-fou : sans lui, une install apt bloquee (miroirs Ubuntu injoignables) peut trainer
-    # des heures et polluer le statut global. Large marge sur les ~16-17 min attendus par shard.
+    # des heures et polluer le statut global. Large marge sur les 14-20 min MESURES par shard.
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1, resolved 2026-09-19
