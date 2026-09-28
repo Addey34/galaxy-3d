@@ -6,7 +6,25 @@
  * combler, et dans quel ordre, vit dans `docs/private/VISION.md` § « La file de travail », son
  * seul propriétaire.
  */
+import {
+  REFUSED_STEP_REFINEMENTS,
+  shippedBytesForStep,
+} from '@/config/ephemerisStepBudget';
 import type { Capability, Inventory, InventoryRow } from './collect';
+
+/**
+ * Le refus DÉCLARÉ de raffiner le pas d'un corps, en une ligne. Ce n'est pas un jugement
+ * ajouté ici : la déclaration est une donnée (`config/ephemerisStepBudget.ts`), confrontée au
+ * relevé livré par sa propre garde. L'inventaire ne fait que la montrer à côté du manque
+ * qu'elle explique, pour qu'un manque ne s'y lise jamais sans sa raison.
+ */
+function declaredRefusal(id: string): string {
+  const refusal = REFUSED_STEP_REFINEMENTS.find((r) => r.body === id);
+  if (!refusal) return '';
+  if (refusal.neededStepMinutes === null) return '  refus : hors modele';
+  const mo = shippedBytesForStep(refusal.neededStepMinutes / 1440) / 1e6;
+  return `  refus : pas de ${refusal.neededStepMinutes} min, ${mo.toFixed(0)} Mo livres`;
+}
 
 const CAPABILITY_ORDER: readonly Capability[] = [
   'position',
@@ -225,7 +243,7 @@ export function renderInventory(inventory: Inventory): string {
       (row) =>
         `  ${pad(row.id, 12)} ${row.perRev.toFixed(2)} ech/rev  ${km(row.km)}  ${
           row.radii === null ? '-' : `${row.radii.toFixed(2)} rayons`
-        }`
+        }${declaredRefusal(row.id)}`
     )
   );
 

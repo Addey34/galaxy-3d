@@ -293,10 +293,50 @@ barycentre Terre-Lune (où la Terre est dessinée) à 8 jours, Ganymède à 2, C
 Io et Europe n'en ont pas, et c'est mesuré : à un pas abordable leur interpolation reste au-dessus
 d'astronomy-engine (Lune 86 km au pas de 2 jours contre 10,8 ; Io 362 au mieux contre 218 ;
 Europe 250 contre 119). Pour eux, la parité est la position mesurée contre Horizons, qu'ils ont.
-Les chiffres de production font foi sur `/methodology`. Poids, en octets exacts du manifeste :
+Les chiffres de production font foi sur `/methodology`. **La portée de cette méthode a une limite, mesurée au lot 26** : une décimation de vecteurs au pas d'UN JOUR ne peut rien dire d'un satellite dont la période est plus courte qu'un jour, puisque la référence elle-même replie l'orbite. Les quatorze binaires sous-échantillonnés n'ont donc pas été atteints par elle ; voir la section suivante. Poids, en octets exacts du manifeste :
 4,46 Mo économisés sur les fichiers existants, 3,96 Mo ajoutés (dont Ganymède, 1,76 Mo au pas de
 2 jours), soit 38,94 → 38,45 Mo pour cinq fichiers de plus ; démarrage inchangé à la mesure
 (16,9 s à 50 Mbit/s, 41,5 s à 10).
+
+### L'écart d'un satellite se mesure contre l'ARC PROPAGÉ (lot 26)
+
+Sous le seuil d'Hermite, le service propage une conique à deux corps depuis l'échantillon
+encadrant. L'écart ne dépend donc pas de QUAND on regarde mais de la durée propagée depuis le
+nœud le plus proche, et c'est ce que mesure `pnpm ephemeris:propagation`. Sur Amalthée :
+
+| distance au nœud | écart moyen |
+|---|---|
+| 0 à 0,005 j | **12,7 km** |
+| 0,01 à 0,02 j | 263 km |
+| 0,04 à 0,08 j | 851 km |
+| au-delà de 0,125 j | ~1 100 km, **saturé** |
+
+**Deux régimes**, et c'est ce qui explique qu'un pas seize fois plus fin (4 j vers 6 h) n'ait
+divisé l'écart que par deux : 6 h propage encore jusqu'à 0,125 jour, soit toujours dans la
+saturation. Un pas n'achète quelque chose que s'il maintient l'arc dans le régime linéaire.
+
+Trois choses ont été ÉCARTÉES par la mesure, et non par un avis :
+
+- **le démarrage n'est pas la contrainte.** Depuis la phase 17C les fichiers se lisent par
+  fenêtres `Range` : chacune de ces lunes coûte 336 octets au démarrage, 816 au pas d'une heure ;
+- **rétrécir la couverture pour financer un pas fin dégraderait tout le reste du temps**, parce
+  que le repli képlérien est bien pire que le binaire grossier (Mimas : 504 rayons contre 4,3) ;
+- **aucun réglage à zéro octet ne reste.** Le facteur `meanMotionScale` a été balayé sur
+  Amalthée (1,0060 rend 1 181 km, 1,0069219 — la valeur publiée — 1 100, 1,0081 1 225) : il est
+  déjà à son optimum.
+
+Reste le coût en OCTETS LIVRÉS, et il est économique : Firebase facture la somme des versions
+retenues. `src/config/ephemerisStepBudget.ts` porte donc la règle, l'arithmétique du coût et la
+liste des refus DÉCLARÉS, que `pnpm inventory:gaps` imprime à côté du manque qu'ils expliquent :
+un manque ne s'y lit jamais sans sa raison. Le coût n'y est pas écrit, il se dérive du pas, et
+sa garde rougit si un corps s'améliore, se dégrade, ou si un chiffre dérive du relevé committé.
+
+Le générateur sait désormais EXÉCUTER une telle décision : il exprime un pas en minutes (le
+précédent arrondissait en heures, donc tout pas sous une heure partait en `'0 h'` et Horizons
+rendait sa page d'erreur) et découpe une demande trop longue en tranches dont les frontières se
+prennent sur la GRILLE DU FICHIER (`JD <nœud>`), jamais sur une date recalculée, qui dériverait
+de ~69 s entre TDB et UT. Le chemin découpé rend un fichier identique octet pour octet au chemin
+d'un bloc, vérifié sur Encelade.
 
 ### Le repli képlérien
 
