@@ -51,21 +51,36 @@
     },
     "massKg": {
       "published": false,
-      "reason": "not-yet-sourced"
+      "reason": {
+        "en": "Sedna has no known satellite, so no mass has been measured: the JPL Small-Body Database publishes no GM for it.",
+        "fr": "Sedna n'a aucun satellite connu, donc aucune masse n'a été mesurée : la base des petits corps de JPL ne publie aucun GM pour ce corps.",
+        "es": "Sedna no tiene ningún satélite conocido, así que no se ha medido ninguna masa: la base de datos de cuerpos menores del JPL no publica ningún GM para este cuerpo.",
+        "pt-BR": "Sedna não tem nenhum satélite conhecido, portanto nenhuma massa foi medida: a base de pequenos corpos do JPL não publica nenhum GM para este corpo."
+      }
     },
     "gravity": {
       "published": false,
-      "reason": "not-yet-sourced"
+      "reason": {
+        "en": "Surface gravity is derived from a mass, and none is published for Sedna.",
+        "fr": "La gravité de surface se dérive d'une masse, et aucune n'est publiée pour Sedna.",
+        "es": "La gravedad en la superficie se deriva de una masa, y ninguna se publica para Sedna.",
+        "pt-BR": "A gravidade à superfície deriva de uma massa, e nenhuma é publicada para Sedna."
+      }
     },
     "meanTempC": {
       "published": false,
-      "reason": "not-yet-sourced"
+      "reason": {
+        "en": "The JPL Small-Body Database, the source of its other figures, publishes no temperature among its physical parameters.",
+        "fr": "La base des petits corps de JPL, d'où viennent ses autres chiffres, ne publie aucune température parmi ses paramètres physiques.",
+        "es": "La base de datos de cuerpos menores del JPL, de donde proceden sus demás cifras, no publica ninguna temperatura entre sus parámetros físicos.",
+        "pt-BR": "A base de pequenos corpos do JPL, de onde vêm os seus outros números, não publica nenhuma temperatura entre os seus parâmetros físicos."
+      }
     },
     "moonCount": {
       "value": 0,
       "source": "jpl-sbdb",
       "method": "measured",
-      "asOf": "2026-09-20",
+      "asOf": "2026-09-28",
       "detail": "confirmedSatellites"
     },
     "rotationPeriod": {
@@ -74,6 +89,15 @@
       "method": "measured",
       "detail": "partialLightcurve",
       "citation": "LCDB (Rev. 2023-October); Warner et al., 2009"
+    },
+    "axialTilt": {
+      "published": false,
+      "reason": {
+        "en": "The JPL Small-Body Database publishes no spin-axis solution for this body, and an axial tilt cannot be derived without one.",
+        "fr": "La base des petits corps de JPL ne publie aucune solution de pôle pour ce corps, et une inclinaison axiale ne se dérive pas sans elle.",
+        "es": "La base de datos de cuerpos menores del JPL no publica ninguna solución de polo para este cuerpo, y una inclinación axial no puede derivarse sin ella.",
+        "pt-BR": "A base de pequenos corpos do JPL não publica nenhuma solução de polo para este corpo, e uma inclinação axial não se deriva sem ela."
+      }
     }
   },
   "notes": {

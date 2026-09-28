@@ -98,12 +98,22 @@
     },
     "meanTempC": {
       "published": false,
-      "reason": "not-yet-sourced"
+      "reason": {
+        "en": "No temperature is published where its other figures come from: JPL's satellite tables carry size, mass and orbit, and no temperature.",
+        "fr": "Aucune température n'est publiée là où viennent ses autres chiffres : les tables des satellites de JPL portent la taille, la masse et l'orbite, pas de température.",
+        "es": "No se publica ninguna temperatura allí donde se obtienen sus demás cifras: las tablas de satélites del JPL recogen tamaño, masa y órbita, pero ninguna temperatura.",
+        "pt-BR": "Nenhuma temperatura é publicada onde vêm os seus outros números: as tabelas de satélites do JPL trazem tamanho, massa e órbita, mas nenhuma temperatura."
+      }
     },
     "axialTilt": {
       "value": 0,
       "published": false,
-      "reason": "not-yet-sourced"
+      "reason": {
+        "en": "The IAU report on rotational elements, which gives the spin axis of every other moon shown here, publishes no pole for this body, so a tilt relative to its orbit cannot be derived.",
+        "fr": "Le rapport de l'UAI sur les éléments de rotation, qui donne l'axe de toutes les autres lunes affichées ici, ne publie aucun pôle pour ce corps : son inclinaison sur son orbite ne peut donc pas en être dérivée.",
+        "es": "El informe de la UAI sobre elementos de rotación, que da el eje de todas las demás lunas mostradas aquí, no publica ningún polo para este cuerpo, así que su inclinación respecto a su órbita no puede derivarse.",
+        "pt-BR": "O relatório da UAI sobre elementos de rotação, que dá o eixo de todas as outras luas mostradas aqui, não publica nenhum polo para este corpo, portanto a sua inclinação em relação à órbita não pode ser derivada."
+      }
     },
     "distanceAU": {
       "value": {
@@ -119,7 +129,12 @@
     },
     "rotationPeriod": {
       "published": false,
-      "reason": "not-yet-sourced"
+      "reason": {
+        "en": "No rotation period is published where its other figures come from: JPL's satellite tables have no rotation column.",
+        "fr": "Aucune période de rotation n'est publiée là où viennent ses autres chiffres : les tables des satellites de JPL n'ont pas de colonne de rotation.",
+        "es": "No se publica ningún periodo de rotación allí donde se obtienen sus demás cifras: las tablas de satélites del JPL no tienen columna de rotación.",
+        "pt-BR": "Nenhum período de rotação é publicado onde vêm os seus outros números: as tabelas de satélites do JPL não têm coluna de rotação."
+      }
     }
   },
   "notes": {

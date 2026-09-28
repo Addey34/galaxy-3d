@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { CELESTIAL_CONFIG } from './bodies';
 import { forEachBody } from './catalog';
-import type { CelestialBodyConfig, UnknownableField } from '@/types';
-import { notApplicableFacts } from '@/core/bodyFacts';
+import type { CelestialBodyConfig, FactField, UnknownableField } from '@/types';
+import { SIMULATION_ONLY_FACTS, notApplicableFacts } from '@/core/bodyFacts';
 
 /**
  * COMPLÉTUDE DU CATALOGUE — chaque corps porte-t-il ce que l'application promet d'afficher ?
@@ -93,9 +93,15 @@ describe('complétude documentaire du catalogue', () => {
       for (const [field, reason] of Object.entries(
         cfg.realData?.unknown ?? {}
       )) {
-        // Exception unique : « pas encore sourcée ». La simulation peut avoir besoin d'une valeur
-        // (obliquité 0 d'une lune synchrone, rayon de rendu) qu'aucune source ne publie encore.
-        if (realData[field] !== undefined && !reason.unsourced)
+        // Exception DÉCLARÉE, et par champ plutôt que par raison : la scène lit l'obliquité,
+        // le rayon et la masse même quand aucune source ne les publie (voir
+        // `SIMULATION_ONLY_FACTS`). Tout autre champ portant à la fois une valeur et une
+        // raison de ne pas l'afficher est un chiffre que plus personne ne lit.
+        void reason;
+        if (
+          realData[field] !== undefined &&
+          !SIMULATION_ONLY_FACTS.has(field as FactField)
+        )
           contradictions.push(`${name}.${field}`);
       }
     }

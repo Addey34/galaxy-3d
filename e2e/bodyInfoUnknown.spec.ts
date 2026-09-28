@@ -30,15 +30,18 @@ test('la fiche affiche une donnée non publiée au lieu de masquer la ligne', as
   const panel = page.locator('#body-info');
   await expect(panel).toBeVisible();
 
-  // Deux lignes non affichées sur Ganymède, pour deux raisons que la fiche DISTINGUE : la
-  // température n'a pas de valeur publiée unique ; l'obliquité n'est pas encore rattachée à une
-  // source primaire (la scène utilise 0°, qui n'est pas une mesure).
-  await expect(panel.locator('dd.is-unknown')).toHaveCount(2);
+  // UNE seule ligne non affichée sur Ganymède : la température, dont la NASA ne publie qu'une
+  // plage. Son obliquité en portait une deuxième jusqu'au lot 23, « pas encore sourcée » ;
+  // elle est désormais DÉRIVÉE du pôle que l'UAI publie, et la ligne montre un chiffre.
+  await expect(panel.locator('dd.is-unknown')).toHaveCount(1);
   const unknown = panel.locator('dd.is-unknown[title^="Donnée non publiée"]');
   await expect(unknown).toHaveCount(1);
+  // Plus AUCUN champ du catalogue n'est « pas encore sourcé » : chacun porte soit une source,
+  // soit une raison rédigée. La garde exhaustive est dans `src/ui/bodyInfo.test.ts` ; celle-ci
+  // vérifie que la marque a bien disparu de l'écran, là où un visiteur la lisait.
   await expect(
     panel.locator('dd.is-unknown[title^="Pas encore sourcée"]')
-  ).toHaveCount(1);
+  ).toHaveCount(0);
   // Une marque traduite (« n.d. »), pas un zéro ni une chaîne vide : les deux se liraient comme
   // une mesure. Plus de tiret cadratin : aucun texte affiché n'en emploie
   // (`src/seo/publishedText.test.ts`).
@@ -83,5 +86,5 @@ test('la marque de donnée non publiée suit la langue', async ({ page }) => {
   await expect(unknown).toHaveText('n/a');
   await expect(
     page.locator('#body-info dd.is-unknown[title^="Not yet sourced"]')
-  ).toHaveText('n/a');
+  ).toHaveCount(0);
 });

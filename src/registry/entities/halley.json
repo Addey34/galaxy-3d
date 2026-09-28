@@ -85,13 +85,27 @@
       "value": 0,
       "source": "jpl-sbdb",
       "method": "measured",
-      "asOf": "2026-09-20",
+      "asOf": "2026-09-28",
       "detail": "confirmedSatellites"
     },
     "rotationPeriod": {
       "value": 53.5,
       "published": false,
-      "reason": "not-yet-sourced"
+      "reason": {
+        "en": "The JPL Small-Body Database publishes no rotation period for Halley, unlike every other small body shown here.",
+        "fr": "La base des petits corps de JPL ne publie aucune période de rotation pour Halley, contrairement à tous les autres petits corps affichés ici.",
+        "es": "La base de datos de cuerpos menores del JPL no publica ningún periodo de rotación para Halley, a diferencia de todos los demás cuerpos menores mostrados aquí.",
+        "pt-BR": "A base de pequenos corpos do JPL não publica nenhum período de rotação para Halley, ao contrário de todos os outros pequenos corpos mostrados aqui."
+      }
+    },
+    "axialTilt": {
+      "published": false,
+      "reason": {
+        "en": "The JPL Small-Body Database publishes no spin-axis solution for this body, and an axial tilt cannot be derived without one.",
+        "fr": "La base des petits corps de JPL ne publie aucune solution de pôle pour ce corps, et une inclinaison axiale ne se dérive pas sans elle.",
+        "es": "La base de datos de cuerpos menores del JPL no publica ninguna solución de polo para este cuerpo, y una inclinación axial no puede derivarse sin ella.",
+        "pt-BR": "A base de pequenos corpos do JPL não publica nenhuma solução de polo para este corpo, e uma inclinação axial não se deriva sem ela."
+      }
     }
   },
   "notes": {

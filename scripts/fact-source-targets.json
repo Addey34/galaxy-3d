@@ -80,5 +80,249 @@
       "sstr": "C/2025 N1",
       "expect": "C/2025 N1 (ATLAS)"
     }
+  },
+  "naifRotation": {
+    "$comment": "Corps dont on lit le modèle de rotation de l'UAI dans le noyau NAIF. id : code NAIF, VÉRIFIÉ contre la table « Body Numbers and Names » du noyau lui-même (« 401 Phobos »), parce qu'un code faux désigne un autre corps en silence. system : le barycentre dont les arguments trigonométriques servent au modèle, null quand le corps n'en a pas. Un corps listé ici dont le noyau ne publie AUCUN pôle est relevé comme tel : cette absence est ce que la fiche cite comme raison.",
+    "kernel": "pck00011.tpc",
+    "url": "https://naif.jpl.nasa.gov/pub/naif/generic_kernels/pck/pck00011.tpc",
+    "bodies": {
+      "sun": {
+        "id": 10,
+        "system": null,
+        "expect": "Sun"
+      },
+      "mercury": {
+        "id": 199,
+        "system": 1,
+        "expect": "Mercury"
+      },
+      "venus": {
+        "id": 299,
+        "system": 2,
+        "expect": "Venus"
+      },
+      "earth": {
+        "id": 399,
+        "system": 3,
+        "expect": "Earth"
+      },
+      "mars": {
+        "id": 499,
+        "system": 4,
+        "expect": "Mars"
+      },
+      "jupiter": {
+        "id": 599,
+        "system": 5,
+        "expect": "Jupiter"
+      },
+      "saturn": {
+        "id": 699,
+        "system": 6,
+        "expect": "Saturn"
+      },
+      "uranus": {
+        "id": 799,
+        "system": 7,
+        "expect": "Uranus"
+      },
+      "neptune": {
+        "id": 899,
+        "system": 8,
+        "expect": "Neptune"
+      },
+      "pluto": {
+        "id": 999,
+        "system": 9,
+        "expect": "Pluto"
+      },
+      "moon": {
+        "id": 301,
+        "system": 3,
+        "expect": "Moon"
+      },
+      "phobos": {
+        "id": 401,
+        "system": 4,
+        "expect": "Phobos"
+      },
+      "deimos": {
+        "id": 402,
+        "system": 4,
+        "expect": "Deimos"
+      },
+      "io": {
+        "id": 501,
+        "system": 5,
+        "expect": "Io"
+      },
+      "europa": {
+        "id": 502,
+        "system": 5,
+        "expect": "Europa"
+      },
+      "ganymede": {
+        "id": 503,
+        "system": 5,
+        "expect": "Ganymede"
+      },
+      "callisto": {
+        "id": 504,
+        "system": 5,
+        "expect": "Callisto"
+      },
+      "amalthea": {
+        "id": 505,
+        "system": 5,
+        "expect": "Amalthea"
+      },
+      "mimas": {
+        "id": 601,
+        "system": 6,
+        "expect": "Mimas"
+      },
+      "enceladus": {
+        "id": 602,
+        "system": 6,
+        "expect": "Enceladus"
+      },
+      "tethys": {
+        "id": 603,
+        "system": 6,
+        "expect": "Tethys"
+      },
+      "dione": {
+        "id": 604,
+        "system": 6,
+        "expect": "Dione"
+      },
+      "rhea": {
+        "id": 605,
+        "system": 6,
+        "expect": "Rhea"
+      },
+      "titan": {
+        "id": 606,
+        "system": 6,
+        "expect": "Titan"
+      },
+      "hyperion": {
+        "id": 607,
+        "system": 6,
+        "expect": "Hyperion"
+      },
+      "iapetus": {
+        "id": 608,
+        "system": 6,
+        "expect": "Iapetus"
+      },
+      "ariel": {
+        "id": 701,
+        "system": 7,
+        "expect": "Ariel"
+      },
+      "umbriel": {
+        "id": 702,
+        "system": 7,
+        "expect": "Umbriel"
+      },
+      "titania": {
+        "id": 703,
+        "system": 7,
+        "expect": "Titania"
+      },
+      "oberon": {
+        "id": 704,
+        "system": 7,
+        "expect": "Oberon"
+      },
+      "miranda": {
+        "id": 705,
+        "system": 7,
+        "expect": "Miranda"
+      },
+      "triton": {
+        "id": 801,
+        "system": 8,
+        "expect": "Triton"
+      },
+      "nereid": {
+        "id": 802,
+        "system": 8,
+        "expect": "Nereid"
+      },
+      "proteus": {
+        "id": 808,
+        "system": 8,
+        "expect": "Proteus"
+      },
+      "charon": {
+        "id": 901,
+        "system": 9,
+        "expect": "Charon"
+      },
+      "nix": {
+        "id": 902,
+        "system": 9,
+        "expect": "Nix"
+      },
+      "hydra": {
+        "id": 903,
+        "system": 9,
+        "expect": "Hydra"
+      },
+      "kerberos": {
+        "id": 904,
+        "system": 9,
+        "expect": "Kerberos"
+      },
+      "styx": {
+        "id": 905,
+        "system": 9,
+        "expect": "Styx"
+      },
+      "ida": {
+        "id": 2431010,
+        "system": null,
+        "expect": "Asteroid Ida"
+      }
+    }
+  },
+  "nasaScienceBodies": {
+    "$comment": "Pages de corps de NASA Science d'où se lit une température de surface. path : le chemin sous science.nasa.gov. anchor : un fragment de la phrase à relever, déclaré ici plutôt que deviné, pour qu'une page réécrite fasse ÉCHOUER le relevé au lieu de le vider. Le script en extrait les valeurs en degrés Celsius : une seule = une moyenne, que la fiche affiche ; plusieurs = une plage, que la fiche cite dans sa raison.",
+    "bodies": {
+      "enceladus": {
+        "path": "saturn/moons/enceladus",
+        "anchor": "the surface temperature is extremely cold"
+      },
+      "tethys": {
+        "path": "saturn/moons/tethys",
+        "anchor": "Tethyan average temperature of"
+      },
+      "dione": {
+        "path": "saturn/moons/dione",
+        "anchor": "Dione's average temperature of"
+      },
+      "hyperion": {
+        "path": "saturn/moons/hyperion",
+        "anchor": "the average temperature of roughly"
+      },
+      "triton": {
+        "path": "neptune/moons/triton",
+        "anchor": "found surface temperatures of"
+      },
+      "rhea": {
+        "path": "saturn/moons/rhea",
+        "anchor": "Rhea's surface temperatures are also similar"
+      },
+      "phobos": {
+        "path": "mars/moons/phobos",
+        "anchor": "High temperatures for Phobos were measured"
+      },
+      "eris": {
+        "path": "dwarf-planets/eris",
+        "anchor": "Scientists think surface temperatures vary"
+      }
+    }
   }
 }

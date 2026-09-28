@@ -43,27 +43,42 @@
     "radiusKm": {
       "value": 458,
       "published": false,
-      "reason": "not-yet-sourced"
+      "reason": {
+        "en": "The thermal measurements give the system a diameter of 940 km, but splitting it between Orcus and Vanth depends on an assumed albedo ratio: 900 and 280 km under one assumption, 820 and 640 km under another.",
+        "fr": "Les mesures thermiques donnent au système un diamètre de 940 km, mais le répartir entre Orcus et Vanth dépend d'un rapport d'albédo supposé : 900 et 280 km sous une hypothèse, 820 et 640 km sous une autre.",
+        "es": "Las medidas térmicas dan al sistema un diámetro de 940 km, pero repartirlo entre Orcus y Vanth depende de una razón de albedo supuesta: 900 y 280 km bajo una hipótesis, 820 y 640 km bajo otra.",
+        "pt-BR": "As medidas térmicas dão ao sistema um diâmetro de 940 km, mas reparti-lo entre Orcus e Vanth depende de uma razão de albedo suposta: 900 e 280 km numa hipótese, 820 e 640 km noutra."
+      }
     },
     "massKg": {
-      "value": 547800000000000000000,
-      "published": false,
-      "reason": "not-yet-sourced"
+      "value": 6.32e+20,
+      "source": "brown-2010-orcus",
+      "method": "measured",
+      "detail": "systemMass"
     },
     "gravity": {
-      "value": 0.174,
       "published": false,
-      "reason": "not-yet-sourced"
+      "reason": {
+        "en": "Surface gravity needs a radius, and Orcus's own radius is not determined: the published sizes split between Orcus and Vanth according to an assumed albedo ratio.",
+        "fr": "La gravité de surface demande un rayon, et celui d'Orcus n'est pas déterminé : les tailles publiées se répartissent entre Orcus et Vanth selon un rapport d'albédo supposé.",
+        "es": "La gravedad en la superficie necesita un radio, y el de Orcus no está determinado: los tamaños publicados se reparten entre Orcus y Vanth según una razón de albedo supuesta.",
+        "pt-BR": "A gravidade à superfície precisa de um raio, e o de Orcus não está determinado: os tamanhos publicados repartem-se entre Orcus e Vanth segundo uma razão de albedo suposta."
+      }
     },
     "meanTempC": {
       "published": false,
-      "reason": "not-yet-sourced"
+      "reason": {
+        "en": "The JPL Small-Body Database, the source of its other figures, publishes no temperature among its physical parameters.",
+        "fr": "La base des petits corps de JPL, d'où viennent ses autres chiffres, ne publie aucune température parmi ses paramètres physiques.",
+        "es": "La base de datos de cuerpos menores del JPL, de donde proceden sus demás cifras, no publica ninguna temperatura entre sus parámetros físicos.",
+        "pt-BR": "A base de pequenos corpos do JPL, de onde vêm os seus outros números, não publica nenhuma temperatura entre os seus parâmetros físicos."
+      }
     },
     "moonCount": {
       "value": 1,
       "source": "jpl-sbdb",
       "method": "measured",
-      "asOf": "2026-09-20",
+      "asOf": "2026-09-28",
       "detail": "confirmedSatellites"
     },
     "rotationPeriod": {
@@ -72,6 +87,15 @@
       "method": "measured",
       "detail": "partialLightcurve",
       "citation": "LCDB (Rev. 2023-October); Warner et al., 2009"
+    },
+    "axialTilt": {
+      "published": false,
+      "reason": {
+        "en": "The JPL Small-Body Database publishes no spin-axis solution for this body, and an axial tilt cannot be derived without one.",
+        "fr": "La base des petits corps de JPL ne publie aucune solution de pôle pour ce corps, et une inclinaison axiale ne se dérive pas sans elle.",
+        "es": "La base de datos de cuerpos menores del JPL no publica ninguna solución de polo para este cuerpo, y una inclinación axial no puede derivarse sin ella.",
+        "pt-BR": "A base de pequenos corpos do JPL não publica nenhuma solução de polo para este corpo, e uma inclinação axial não se deriva sem ela."
+      }
     }
   },
   "notes": {

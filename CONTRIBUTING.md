@@ -127,7 +127,11 @@ fiche parent pour une lune). Trois blocs :
   valeur affichable sans source et compare chaque valeur citée à sa source telle que
   `pnpm facts:snapshot` l'a relevée (`src/config/factSources.snapshot.json`) : ajoutez la
   désignation SBDB du corps à `scripts/fact-source-targets.json` puis relancez le relevé, n'importez
-  jamais un chiffre de mémoire.
+  jamais un chiffre de mémoire. **Une `reason` est elle aussi une affirmation sur une source**, et
+  depuis le lot 23 elle est confrontée au relevé : écrire qu'une base ne publie pas une grandeur
+  qu'elle publie fait rougir la porte. Le même fichier de cibles porte le code NAIF d'un corps dont
+  on veut dériver l'obliquité (`naifRotation`) et l'ancre d'une page NASA Science dont on relève une
+  température (`nasaScienceBodies`).
 
 Puis régénérez les artefacts dérivés, jamais édités à la main : `pnpm facts:snapshot`,
 `pnpm ephemeris:validate` (désignation Horizons du corps dans

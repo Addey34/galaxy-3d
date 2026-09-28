@@ -37,11 +37,13 @@ import jplSsdSatellitePhysicalParameters from './jpl-ssd-satellite-physical-para
 import jplSsdSatelliteMeanElements from './jpl-ssd-satellite-mean-elements.json';
 import jplSbdb from './jpl-sbdb.json';
 import jplHorizons from './jpl-horizons.json';
+import naifPck from './naif-pck.json';
 import nasaScienceJupiterMoons from './nasa-science-jupiter-moons.json';
 import nasaScienceSaturnMoons from './nasa-science-saturn-moons.json';
 import nasaScienceUranusMoons from './nasa-science-uranus-moons.json';
 import nasaScienceNeptuneMoons from './nasa-science-neptune-moons.json';
 import nasaScienceMarsMoons from './nasa-science-mars-moons.json';
+import nasaScienceBodies from './nasa-science-bodies.json';
 import sicardy2011Eris from './sicardy-2011-eris.json';
 import szakats2023Eris from './szakats-2023-eris.json';
 import ragozzineBrown2009Haumea from './ragozzine-brown-2009-haumea.json';
@@ -50,6 +52,7 @@ import kiss2019Gonggong from './kiss-2019-gonggong.json';
 import margoti2026Quaoar from './margoti-2026-quaoar.json';
 import pal2012Sedna from './pal-2012-sedna.json';
 import kiss2016Nereid from './kiss-2016-nereid.json';
+import brown2010Orcus from './brown-2010-orcus.json';
 
 import horizonsBinary from './horizons-binary.json';
 import spkKernel from './spk.json';
@@ -98,11 +101,13 @@ export const FACT_SOURCE_PROVIDERS = {
   'jpl-ssd-satellite-mean-elements': asFactSource(jplSsdSatelliteMeanElements),
   'jpl-sbdb': asFactSource(jplSbdb),
   'jpl-horizons': asFactSource(jplHorizons),
+  'naif-pck': asFactSource(naifPck),
   'nasa-science-jupiter-moons': asFactSource(nasaScienceJupiterMoons),
   'nasa-science-saturn-moons': asFactSource(nasaScienceSaturnMoons),
   'nasa-science-uranus-moons': asFactSource(nasaScienceUranusMoons),
   'nasa-science-neptune-moons': asFactSource(nasaScienceNeptuneMoons),
   'nasa-science-mars-moons': asFactSource(nasaScienceMarsMoons),
+  'nasa-science-bodies': asFactSource(nasaScienceBodies),
   'sicardy-2011-eris': asFactSource(sicardy2011Eris),
   'szakats-2023-eris': asFactSource(szakats2023Eris),
   'ragozzine-brown-2009-haumea': asFactSource(ragozzineBrown2009Haumea),
@@ -111,6 +116,7 @@ export const FACT_SOURCE_PROVIDERS = {
   'margoti-2026-quaoar': asFactSource(margoti2026Quaoar),
   'pal-2012-sedna': asFactSource(pal2012Sedna),
   'kiss-2016-nereid': asFactSource(kiss2016Nereid),
+  'brown-2010-orcus': asFactSource(brown2010Orcus),
 };
 
 /**

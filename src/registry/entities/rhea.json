@@ -108,12 +108,21 @@
     },
     "meanTempC": {
       "published": false,
-      "reason": "not-yet-sourced"
+      "reason": {
+        "en": "NASA publishes a range, not a mean: about -174 °C in sunlit areas and -220 °C in shaded ones.",
+        "fr": "La NASA publie une plage, pas une moyenne : environ -174 °C dans les zones éclairées et -220 °C dans les zones d'ombre.",
+        "es": "La NASA publica un rango, no una media: unos -174 °C en las zonas iluminadas y -220 °C en las sombreadas.",
+        "pt-BR": "A NASA publica um intervalo, não uma média: cerca de -174 °C nas zonas iluminadas e -220 °C nas sombreadas."
+      }
     },
     "axialTilt": {
-      "value": 0,
-      "published": false,
-      "reason": "not-yet-sourced"
+      "value": {
+        "$deg": 0.05
+      },
+      "source": "naif-pck",
+      "method": "derived",
+      "detail": "obliquityFromPole",
+      "citation": "pck00011.tpc, BODY605"
     },
     "distanceAU": {
       "value": {

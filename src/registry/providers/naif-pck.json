@@ -1,0 +1,10 @@
+{
+  "$schema": "../schema/provider.schema.json",
+  "id": "naif-pck",
+  "role": "fact-source",
+  "publisher": "NASA NAIF",
+  "title": "Generic PCK kernel (IAU rotational elements)",
+  "url": "https://naif.jpl.nasa.gov/pub/naif/generic_kernels/pck/pck00011.tpc",
+  "kind": "agency",
+  "accessed": "2026-09-28"
+}

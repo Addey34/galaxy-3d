@@ -1,6 +1,6 @@
 {
   "generatedBy": "scripts/snapshot-fact-sources.mjs",
-  "retrieved": "2026-09-20",
+  "retrieved": "2026-09-28",
   "nssdca": {
     "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/",
     "mainTableUpdated": "2025-03-18",
@@ -168,6 +168,7 @@
     "amalthea": {
       "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/joviansatfact.html",
       "updated": "2023-12-06",
+      "publishesTemperature": false,
       "semiMajorAxisKm": 181400,
       "siderealOrbitDays": 0.498179,
       "rotation": "S"
@@ -175,6 +176,7 @@
     "io": {
       "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/joviansatfact.html",
       "updated": "2023-12-06",
+      "publishesTemperature": false,
       "semiMajorAxisKm": 421800,
       "siderealOrbitDays": 1.769138,
       "rotation": "S"
@@ -182,6 +184,7 @@
     "europa": {
       "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/joviansatfact.html",
       "updated": "2023-12-06",
+      "publishesTemperature": false,
       "semiMajorAxisKm": 671100,
       "siderealOrbitDays": 3.551181,
       "rotation": "S"
@@ -189,6 +192,7 @@
     "ganymede": {
       "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/joviansatfact.html",
       "updated": "2023-12-06",
+      "publishesTemperature": false,
       "semiMajorAxisKm": 1070400,
       "siderealOrbitDays": 7.154553,
       "rotation": "S"
@@ -196,6 +200,7 @@
     "callisto": {
       "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/joviansatfact.html",
       "updated": "2023-12-06",
+      "publishesTemperature": false,
       "semiMajorAxisKm": 1882700,
       "siderealOrbitDays": 16.689017,
       "rotation": "S"
@@ -203,6 +208,7 @@
     "mimas": {
       "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/saturniansatfact.html",
       "updated": "2025-07-22",
+      "publishesTemperature": false,
       "semiMajorAxisKm": 185520,
       "siderealOrbitDays": 0.9424218,
       "rotation": "S"
@@ -210,6 +216,7 @@
     "enceladus": {
       "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/saturniansatfact.html",
       "updated": "2025-07-22",
+      "publishesTemperature": false,
       "semiMajorAxisKm": 238020,
       "siderealOrbitDays": 1.370218,
       "rotation": "S"
@@ -217,6 +224,7 @@
     "tethys": {
       "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/saturniansatfact.html",
       "updated": "2025-07-22",
+      "publishesTemperature": false,
       "semiMajorAxisKm": 294660,
       "siderealOrbitDays": 1.887802,
       "rotation": "S"
@@ -224,6 +232,7 @@
     "dione": {
       "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/saturniansatfact.html",
       "updated": "2025-07-22",
+      "publishesTemperature": false,
       "semiMajorAxisKm": 377400,
       "siderealOrbitDays": 2.736915,
       "rotation": "S"
@@ -231,6 +240,7 @@
     "rhea": {
       "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/saturniansatfact.html",
       "updated": "2025-07-22",
+      "publishesTemperature": false,
       "semiMajorAxisKm": 527040,
       "siderealOrbitDays": 4.5175,
       "rotation": "S"
@@ -238,6 +248,7 @@
     "titan": {
       "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/saturniansatfact.html",
       "updated": "2025-07-22",
+      "publishesTemperature": false,
       "semiMajorAxisKm": 1221870,
       "siderealOrbitDays": 15.945421,
       "rotation": "S"
@@ -245,6 +256,7 @@
     "hyperion": {
       "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/saturniansatfact.html",
       "updated": "2025-07-22",
+      "publishesTemperature": false,
       "semiMajorAxisKm": 1500930,
       "siderealOrbitDays": 21.276609,
       "rotation": "C"
@@ -252,6 +264,7 @@
     "iapetus": {
       "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/saturniansatfact.html",
       "updated": "2025-07-22",
+      "publishesTemperature": false,
       "semiMajorAxisKm": 3560850,
       "siderealOrbitDays": 79.330183,
       "rotation": "S"
@@ -259,6 +272,7 @@
     "miranda": {
       "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/uraniansatfact.html",
       "updated": "2023-03-11",
+      "publishesTemperature": false,
       "semiMajorAxisKm": 129900,
       "siderealOrbitDays": 1.413479,
       "rotation": "S"
@@ -266,6 +280,7 @@
     "ariel": {
       "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/uraniansatfact.html",
       "updated": "2023-03-11",
+      "publishesTemperature": false,
       "semiMajorAxisKm": 190900,
       "siderealOrbitDays": 2.520379,
       "rotation": "S"
@@ -273,6 +288,7 @@
     "umbriel": {
       "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/uraniansatfact.html",
       "updated": "2023-03-11",
+      "publishesTemperature": false,
       "semiMajorAxisKm": 266000,
       "siderealOrbitDays": 4.144176,
       "rotation": "S"
@@ -280,6 +296,7 @@
     "titania": {
       "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/uraniansatfact.html",
       "updated": "2023-03-11",
+      "publishesTemperature": false,
       "semiMajorAxisKm": 436300,
       "siderealOrbitDays": 8.705867,
       "rotation": "S"
@@ -287,6 +304,7 @@
     "oberon": {
       "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/uraniansatfact.html",
       "updated": "2023-03-11",
+      "publishesTemperature": false,
       "semiMajorAxisKm": 583500,
       "siderealOrbitDays": 13.463234,
       "rotation": "S"
@@ -294,6 +312,7 @@
     "triton": {
       "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/neptuniansatfact.html",
       "updated": "2024-03-11",
+      "publishesTemperature": false,
       "semiMajorAxisKm": 354760,
       "siderealOrbitDays": 5.876854,
       "rotation": "S"
@@ -301,6 +320,7 @@
     "proteus": {
       "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/neptuniansatfact.html",
       "updated": "2024-03-11",
+      "publishesTemperature": false,
       "semiMajorAxisKm": 117647,
       "siderealOrbitDays": 1.122315,
       "rotation": null
@@ -308,6 +328,7 @@
     "nereid": {
       "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/neptuniansatfact.html",
       "updated": "2024-03-11",
+      "publishesTemperature": false,
       "semiMajorAxisKm": 5513400,
       "siderealOrbitDays": 360.13619,
       "rotation": null
@@ -315,6 +336,7 @@
     "phobos": {
       "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/marsfact.html",
       "updated": "2025-05-19",
+      "publishesTemperature": false,
       "semiMajorAxisKm": 9378,
       "siderealOrbitDays": 0.31891,
       "rotation": "S"
@@ -322,6 +344,7 @@
     "deimos": {
       "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/marsfact.html",
       "updated": "2025-05-19",
+      "publishesTemperature": false,
       "semiMajorAxisKm": 23459,
       "siderealOrbitDays": 1.26244,
       "rotation": "S"
@@ -330,6 +353,14 @@
   "jplSatellites": {
     "physicalParameters": {
       "url": "https://ssd.jpl.nasa.gov/sats/phys_par/",
+      "columns": [
+        "Planet",
+        "Satellite",
+        "Code",
+        "GM (km 3 /s 2 )",
+        "Mean Radius (km)",
+        "Mean Density (g/cm 3 )"
+      ],
       "bodies": {
         "moon": {
           "gmKm3s2": 4902.8,
@@ -716,6 +747,1745 @@
       }
     }
   },
+  "naifRotation": {
+    "url": "https://naif.jpl.nasa.gov/pub/naif/generic_kernels/pck/pck00011.tpc",
+    "kernel": "pck00011.tpc",
+    "dated": "Nat Bachman (NAIF)    2022 December 27",
+    "systems": {
+      "1": [
+        [
+          174.7910857,
+          149472.53587500003
+        ],
+        [
+          349.5821714,
+          298945.07175000006
+        ],
+        [
+          164.3732571,
+          448417.60762500006
+        ],
+        [
+          339.1643429,
+          597890.1435000001
+        ],
+        [
+          153.9554286,
+          747362.679375
+        ]
+      ],
+      "3": [
+        [
+          125.045,
+          -1935.5364525
+        ],
+        [
+          250.089,
+          -3871.072905
+        ],
+        [
+          260.008,
+          475263.3328725
+        ],
+        [
+          176.625,
+          487269.629985
+        ],
+        [
+          357.529,
+          35999.0509575
+        ],
+        [
+          311.589,
+          964468.49931
+        ],
+        [
+          134.963,
+          477198.869325
+        ],
+        [
+          276.617,
+          12006.300765
+        ],
+        [
+          34.226,
+          63863.5132425
+        ],
+        [
+          15.134,
+          -5806.6093575
+        ],
+        [
+          119.743,
+          131.84064
+        ],
+        [
+          239.961,
+          6003.1503825
+        ],
+        [
+          25.053,
+          473327.79642
+        ]
+      ],
+      "4": [
+        [
+          190.72646643,
+          15917.10818695,
+          0
+        ],
+        [
+          21.4689247,
+          31834.27934054,
+          0
+        ],
+        [
+          332.86082793,
+          19139.89694742,
+          0
+        ],
+        [
+          394.93256437,
+          38280.79631835,
+          0
+        ],
+        [
+          189.6327156,
+          41215158.1842005,
+          12.711923222
+        ],
+        [
+          121.46893664,
+          660.22803474,
+          0
+        ],
+        [
+          231.05028581,
+          660.9912354,
+          0
+        ],
+        [
+          251.37314025,
+          1320.50145245,
+          0
+        ],
+        [
+          217.98635955,
+          38279.9612555,
+          0
+        ],
+        [
+          196.19729402,
+          19139.83628608,
+          0
+        ],
+        [
+          198.991226,
+          19139.4819985,
+          0
+        ],
+        [
+          226.292679,
+          38280.8511281,
+          0
+        ],
+        [
+          249.663391,
+          57420.7251593,
+          0
+        ],
+        [
+          266.18351,
+          76560.636795,
+          0
+        ],
+        [
+          79.398797,
+          0.5042615,
+          0
+        ],
+        [
+          122.433576,
+          19139.9407476,
+          0
+        ],
+        [
+          43.058401,
+          38280.8753272,
+          0
+        ],
+        [
+          57.663379,
+          57420.7517205,
+          0
+        ],
+        [
+          79.476401,
+          76560.6495004,
+          0
+        ],
+        [
+          166.325722,
+          0.5042615,
+          0
+        ],
+        [
+          129.071773,
+          19140.0328244,
+          0
+        ],
+        [
+          36.352167,
+          38281.0473591,
+          0
+        ],
+        [
+          56.668646,
+          57420.929536,
+          0
+        ],
+        [
+          67.364003,
+          76560.2552215,
+          0
+        ],
+        [
+          104.79268,
+          95700.4387578,
+          0
+        ],
+        [
+          95.391654,
+          0.5042615,
+          0
+        ]
+      ],
+      "5": [
+        [
+          73.32,
+          91472.9
+        ],
+        [
+          24.62,
+          45137.2
+        ],
+        [
+          283.9,
+          4850.7
+        ],
+        [
+          355.8,
+          1191.3
+        ],
+        [
+          119.9,
+          262.1
+        ],
+        [
+          229.8,
+          64.3
+        ],
+        [
+          352.25,
+          2382.6
+        ],
+        [
+          113.35,
+          6070
+        ],
+        [
+          146.64,
+          182945.8
+        ],
+        [
+          49.24,
+          90274.4
+        ],
+        [
+          99.360714,
+          4850.4046
+        ],
+        [
+          175.895369,
+          1191.9605
+        ],
+        [
+          300.323162,
+          262.5475
+        ],
+        [
+          114.012305,
+          6070.2476
+        ],
+        [
+          49.511251,
+          64.3
+        ]
+      ],
+      "6": [
+        [
+          353.32,
+          75706.7
+        ],
+        [
+          28.72,
+          75706.7
+        ],
+        [
+          177.4,
+          -36505.5
+        ],
+        [
+          300,
+          -7225.9
+        ],
+        [
+          316.45,
+          506.2
+        ],
+        [
+          345.2,
+          -1016.3
+        ],
+        [
+          706.64,
+          151413.4
+        ],
+        [
+          57.44,
+          151413.4
+        ]
+      ],
+      "7": [
+        [
+          115.75,
+          54991.87
+        ],
+        [
+          141.69,
+          41887.66
+        ],
+        [
+          135.03,
+          29927.35
+        ],
+        [
+          61.77,
+          25733.59
+        ],
+        [
+          249.32,
+          24471.46
+        ],
+        [
+          43.86,
+          22278.41
+        ],
+        [
+          77.66,
+          20289.42
+        ],
+        [
+          157.36,
+          16652.76
+        ],
+        [
+          101.81,
+          12872.63
+        ],
+        [
+          138.64,
+          8061.81
+        ],
+        [
+          102.23,
+          -2024.22
+        ],
+        [
+          316.41,
+          2863.96
+        ],
+        [
+          304.01,
+          -51.94
+        ],
+        [
+          308.71,
+          -93.17
+        ],
+        [
+          340.82,
+          -75.32
+        ],
+        [
+          259.14,
+          -504.81
+        ],
+        [
+          204.46,
+          -4048.44
+        ],
+        [
+          632.82,
+          5727.92
+        ]
+      ],
+      "8": [
+        [
+          357.85,
+          52.316
+        ],
+        [
+          323.92,
+          62606.6
+        ],
+        [
+          220.51,
+          55064.2
+        ],
+        [
+          354.27,
+          46564.5
+        ],
+        [
+          75.31,
+          26109.4
+        ],
+        [
+          35.36,
+          14325.4
+        ],
+        [
+          142.61,
+          2824.6
+        ],
+        [
+          177.85,
+          52.316
+        ],
+        [
+          647.84,
+          125213.2
+        ],
+        [
+          355.7,
+          104.632
+        ],
+        [
+          533.55,
+          156.948
+        ],
+        [
+          711.4,
+          209.264
+        ],
+        [
+          889.25,
+          261.58
+        ],
+        [
+          1067.1,
+          313.896
+        ],
+        [
+          1244.95,
+          366.212
+        ],
+        [
+          1422.8,
+          418.528
+        ],
+        [
+          1600.65,
+          470.844
+        ]
+      ]
+    },
+    "bodies": {
+      "sun": {
+        "naifId": 10,
+        "system": null,
+        "rotation": {
+          "poleRaDeg": [
+            286.13,
+            0,
+            0
+          ],
+          "poleDecDeg": [
+            63.87,
+            0,
+            0
+          ],
+          "nutPrecRa": null,
+          "nutPrecDec": null,
+          "pmRateDegPerDay": 14.1844
+        }
+      },
+      "mercury": {
+        "naifId": 199,
+        "system": 1,
+        "rotation": {
+          "poleRaDeg": [
+            281.0103,
+            -0.0328,
+            0
+          ],
+          "poleDecDeg": [
+            61.4155,
+            -0.0049,
+            0
+          ],
+          "nutPrecRa": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "nutPrecDec": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "pmRateDegPerDay": 6.1385108
+        }
+      },
+      "venus": {
+        "naifId": 299,
+        "system": 2,
+        "rotation": {
+          "poleRaDeg": [
+            272.76,
+            0,
+            0
+          ],
+          "poleDecDeg": [
+            67.16,
+            0,
+            0
+          ],
+          "nutPrecRa": null,
+          "nutPrecDec": null,
+          "pmRateDegPerDay": -1.4813688
+        }
+      },
+      "earth": {
+        "naifId": 399,
+        "system": 3,
+        "rotation": {
+          "poleRaDeg": [
+            0,
+            -0.641,
+            0
+          ],
+          "poleDecDeg": [
+            90,
+            -0.557,
+            0
+          ],
+          "nutPrecRa": null,
+          "nutPrecDec": null,
+          "pmRateDegPerDay": 360.9856235
+        }
+      },
+      "mars": {
+        "naifId": 499,
+        "system": 4,
+        "rotation": {
+          "poleRaDeg": [
+            317.269202,
+            -0.10927547,
+            0
+          ],
+          "poleDecDeg": [
+            54.432516,
+            -0.05827105,
+            0
+          ],
+          "nutPrecRa": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0.000068,
+            0.000238,
+            0.000052,
+            0.000009,
+            0.419057
+          ],
+          "nutPrecDec": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0.000051,
+            0.000141,
+            0.000031,
+            0.000005,
+            1.591274
+          ],
+          "pmRateDegPerDay": 350.891982443297
+        }
+      },
+      "jupiter": {
+        "naifId": 599,
+        "system": 5,
+        "rotation": {
+          "poleRaDeg": [
+            268.056595,
+            -0.006499,
+            0
+          ],
+          "poleDecDeg": [
+            64.495303,
+            0.002413,
+            0
+          ],
+          "nutPrecRa": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0.000117,
+            0.000938,
+            0.001432,
+            0.00003,
+            0.00215
+          ],
+          "nutPrecDec": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0.00005,
+            0.000404,
+            0.000617,
+            -0.000013,
+            0.000926
+          ],
+          "pmRateDegPerDay": 870.536
+        }
+      },
+      "saturn": {
+        "naifId": 699,
+        "system": 6,
+        "rotation": {
+          "poleRaDeg": [
+            40.589,
+            -0.036,
+            0
+          ],
+          "poleDecDeg": [
+            83.537,
+            -0.004,
+            0
+          ],
+          "nutPrecRa": null,
+          "nutPrecDec": null,
+          "pmRateDegPerDay": 810.7939024
+        }
+      },
+      "uranus": {
+        "naifId": 799,
+        "system": 7,
+        "rotation": {
+          "poleRaDeg": [
+            257.311,
+            0,
+            0
+          ],
+          "poleDecDeg": [
+            -15.175,
+            0,
+            0
+          ],
+          "nutPrecRa": null,
+          "nutPrecDec": null,
+          "pmRateDegPerDay": -501.1600928
+        }
+      },
+      "neptune": {
+        "naifId": 899,
+        "system": 8,
+        "rotation": {
+          "poleRaDeg": [
+            299.36,
+            0,
+            0
+          ],
+          "poleDecDeg": [
+            43.46,
+            0,
+            0
+          ],
+          "nutPrecRa": [
+            0.7,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "nutPrecDec": [
+            -0.51,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "pmRateDegPerDay": 541.1397757
+        }
+      },
+      "pluto": {
+        "naifId": 999,
+        "system": 9,
+        "rotation": {
+          "poleRaDeg": [
+            132.993,
+            0,
+            0
+          ],
+          "poleDecDeg": [
+            -6.163,
+            0,
+            0
+          ],
+          "nutPrecRa": null,
+          "nutPrecDec": null,
+          "pmRateDegPerDay": 56.3625225
+        }
+      },
+      "moon": {
+        "naifId": 301,
+        "system": 3,
+        "rotation": {
+          "poleRaDeg": [
+            269.9949,
+            0.0031,
+            0
+          ],
+          "poleDecDeg": [
+            66.5392,
+            0.013,
+            0
+          ],
+          "nutPrecRa": [
+            -3.8787,
+            -0.1204,
+            0.07,
+            -0.0172,
+            0,
+            0.0072,
+            0,
+            0,
+            0,
+            -0.0052,
+            0,
+            0,
+            0.0043
+          ],
+          "nutPrecDec": [
+            1.5419,
+            0.0239,
+            -0.0278,
+            0.0068,
+            0,
+            -0.0029,
+            0.0009,
+            0,
+            0,
+            0.0008,
+            0,
+            0,
+            -0.0009
+          ],
+          "pmRateDegPerDay": 13.17635815
+        }
+      },
+      "phobos": {
+        "naifId": 401,
+        "system": 4,
+        "rotation": {
+          "poleRaDeg": [
+            317.67071657,
+            -0.10844326,
+            0
+          ],
+          "poleDecDeg": [
+            52.88627266,
+            -0.06134706,
+            0
+          ],
+          "nutPrecRa": [
+            -1.78428399,
+            0.02212824,
+            -0.01028251,
+            -0.00475595
+          ],
+          "nutPrecDec": [
+            -1.07516537,
+            0.00668626,
+            -0.0064874,
+            0.00281576
+          ],
+          "pmRateDegPerDay": 1128.84475928
+        }
+      },
+      "deimos": {
+        "naifId": 402,
+        "system": 4,
+        "rotation": {
+          "poleRaDeg": [
+            316.65705808,
+            -0.10518014,
+            0
+          ],
+          "poleDecDeg": [
+            53.50992033,
+            -0.05979094,
+            0
+          ],
+          "nutPrecRa": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            3.09217726,
+            0.22980637,
+            0.06418655,
+            0.02533537,
+            0.00778695
+          ],
+          "nutPrecDec": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            1.83936004,
+            0.1432532,
+            0.01911409,
+            -0.0148259,
+            0.0019243
+          ],
+          "pmRateDegPerDay": 285.16188899
+        }
+      },
+      "io": {
+        "naifId": 501,
+        "system": 5,
+        "rotation": {
+          "poleRaDeg": [
+            268.05,
+            -0.009,
+            0
+          ],
+          "poleDecDeg": [
+            64.5,
+            0.003,
+            0
+          ],
+          "nutPrecRa": [
+            0,
+            0,
+            0.094,
+            0.024
+          ],
+          "nutPrecDec": [
+            0,
+            0,
+            0.04,
+            0.011
+          ],
+          "pmRateDegPerDay": 203.4889538
+        }
+      },
+      "europa": {
+        "naifId": 502,
+        "system": 5,
+        "rotation": {
+          "poleRaDeg": [
+            268.08,
+            -0.009,
+            0
+          ],
+          "poleDecDeg": [
+            64.51,
+            0.003,
+            0
+          ],
+          "nutPrecRa": [
+            0,
+            0,
+            0,
+            1.086,
+            0.06,
+            0.015,
+            0.009
+          ],
+          "nutPrecDec": [
+            0,
+            0,
+            0,
+            0.468,
+            0.026,
+            0.007,
+            0.002
+          ],
+          "pmRateDegPerDay": 101.3747235
+        }
+      },
+      "ganymede": {
+        "naifId": 503,
+        "system": 5,
+        "rotation": {
+          "poleRaDeg": [
+            268.2,
+            -0.009,
+            0
+          ],
+          "poleDecDeg": [
+            64.57,
+            0.003,
+            0
+          ],
+          "nutPrecRa": [
+            0,
+            0,
+            0,
+            -0.037,
+            0.431,
+            0.091
+          ],
+          "nutPrecDec": [
+            0,
+            0,
+            0,
+            -0.016,
+            0.186,
+            0.039
+          ],
+          "pmRateDegPerDay": 50.3176081
+        }
+      },
+      "callisto": {
+        "naifId": 504,
+        "system": 5,
+        "rotation": {
+          "poleRaDeg": [
+            268.72,
+            -0.009,
+            0
+          ],
+          "poleDecDeg": [
+            64.83,
+            0.003,
+            0
+          ],
+          "nutPrecRa": [
+            0,
+            0,
+            0,
+            0,
+            -0.068,
+            0.59,
+            0,
+            0.01
+          ],
+          "nutPrecDec": [
+            0,
+            0,
+            0,
+            0,
+            -0.029,
+            0.254,
+            0,
+            -0.004
+          ],
+          "pmRateDegPerDay": 21.5710715
+        }
+      },
+      "amalthea": {
+        "naifId": 505,
+        "system": 5,
+        "rotation": {
+          "poleRaDeg": [
+            268.05,
+            -0.009,
+            0
+          ],
+          "poleDecDeg": [
+            64.49,
+            0.003,
+            0
+          ],
+          "nutPrecRa": [
+            -0.84,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0.01,
+            0
+          ],
+          "nutPrecDec": [
+            -0.36,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "pmRateDegPerDay": 722.631456
+        }
+      },
+      "mimas": {
+        "naifId": 601,
+        "system": 6,
+        "rotation": {
+          "poleRaDeg": [
+            40.66,
+            -0.036,
+            0
+          ],
+          "poleDecDeg": [
+            83.52,
+            -0.004,
+            0
+          ],
+          "nutPrecRa": [
+            0,
+            0,
+            13.56,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "nutPrecDec": [
+            0,
+            0,
+            -1.53,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "pmRateDegPerDay": 381.994555
+        }
+      },
+      "enceladus": {
+        "naifId": 602,
+        "system": 6,
+        "rotation": {
+          "poleRaDeg": [
+            40.66,
+            -0.036,
+            0
+          ],
+          "poleDecDeg": [
+            83.52,
+            -0.004,
+            0
+          ],
+          "nutPrecRa": null,
+          "nutPrecDec": null,
+          "pmRateDegPerDay": 262.7318996
+        }
+      },
+      "tethys": {
+        "naifId": 603,
+        "system": 6,
+        "rotation": {
+          "poleRaDeg": [
+            40.66,
+            -0.036,
+            0
+          ],
+          "poleDecDeg": [
+            83.52,
+            -0.004,
+            0
+          ],
+          "nutPrecRa": [
+            0,
+            0,
+            0,
+            9.66,
+            0,
+            0,
+            0,
+            0
+          ],
+          "nutPrecDec": [
+            0,
+            0,
+            0,
+            -1.09,
+            0,
+            0,
+            0,
+            0
+          ],
+          "pmRateDegPerDay": 190.6979085
+        }
+      },
+      "dione": {
+        "naifId": 604,
+        "system": 6,
+        "rotation": {
+          "poleRaDeg": [
+            40.66,
+            -0.036,
+            0
+          ],
+          "poleDecDeg": [
+            83.52,
+            -0.004,
+            0
+          ],
+          "nutPrecRa": null,
+          "nutPrecDec": null,
+          "pmRateDegPerDay": 131.5349316
+        }
+      },
+      "rhea": {
+        "naifId": 605,
+        "system": 6,
+        "rotation": {
+          "poleRaDeg": [
+            40.38,
+            -0.036,
+            0
+          ],
+          "poleDecDeg": [
+            83.55,
+            -0.004,
+            0
+          ],
+          "nutPrecRa": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            3.1,
+            0,
+            0
+          ],
+          "nutPrecDec": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            -0.35,
+            0,
+            0
+          ],
+          "pmRateDegPerDay": 79.6900478
+        }
+      },
+      "titan": {
+        "naifId": 606,
+        "system": 6,
+        "rotation": {
+          "poleRaDeg": [
+            39.4827,
+            0,
+            0
+          ],
+          "poleDecDeg": [
+            83.4279,
+            0,
+            0
+          ],
+          "nutPrecRa": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "nutPrecDec": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "pmRateDegPerDay": 22.5769768
+        }
+      },
+      "hyperion": {
+        "naifId": 607,
+        "system": 6,
+        "rotation": null
+      },
+      "iapetus": {
+        "naifId": 608,
+        "system": 6,
+        "rotation": {
+          "poleRaDeg": [
+            318.16,
+            -3.949,
+            0
+          ],
+          "poleDecDeg": [
+            75.03,
+            -1.143,
+            0
+          ],
+          "nutPrecRa": null,
+          "nutPrecDec": null,
+          "pmRateDegPerDay": 4.5379572
+        }
+      },
+      "ariel": {
+        "naifId": 701,
+        "system": 7,
+        "rotation": {
+          "poleRaDeg": [
+            257.43,
+            0,
+            0
+          ],
+          "poleDecDeg": [
+            -15.1,
+            0,
+            0
+          ],
+          "nutPrecRa": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0.29
+          ],
+          "nutPrecDec": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0.28
+          ],
+          "pmRateDegPerDay": -142.8356681
+        }
+      },
+      "umbriel": {
+        "naifId": 702,
+        "system": 7,
+        "rotation": {
+          "poleRaDeg": [
+            257.43,
+            0,
+            0
+          ],
+          "poleDecDeg": [
+            -15.1,
+            0,
+            0
+          ],
+          "nutPrecRa": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0.21
+          ],
+          "nutPrecDec": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0.2
+          ],
+          "pmRateDegPerDay": -86.8688923
+        }
+      },
+      "titania": {
+        "naifId": 703,
+        "system": 7,
+        "rotation": {
+          "poleRaDeg": [
+            257.43,
+            0,
+            0
+          ],
+          "poleDecDeg": [
+            -15.1,
+            0,
+            0
+          ],
+          "nutPrecRa": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0.29
+          ],
+          "nutPrecDec": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0.28
+          ],
+          "pmRateDegPerDay": -41.3514316
+        }
+      },
+      "oberon": {
+        "naifId": 704,
+        "system": 7,
+        "rotation": {
+          "poleRaDeg": [
+            257.43,
+            0,
+            0
+          ],
+          "poleDecDeg": [
+            -15.1,
+            0,
+            0
+          ],
+          "nutPrecRa": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0.16
+          ],
+          "nutPrecDec": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0.16
+          ],
+          "pmRateDegPerDay": -26.7394932
+        }
+      },
+      "miranda": {
+        "naifId": 705,
+        "system": 7,
+        "rotation": {
+          "poleRaDeg": [
+            257.43,
+            0,
+            0
+          ],
+          "poleDecDeg": [
+            -15.08,
+            0,
+            0
+          ],
+          "nutPrecRa": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            4.41,
+            0,
+            0,
+            0,
+            0,
+            0,
+            -0.04,
+            0
+          ],
+          "nutPrecDec": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            4.25,
+            0,
+            0,
+            0,
+            0,
+            0,
+            -0.02,
+            0
+          ],
+          "pmRateDegPerDay": -254.6906892
+        }
+      },
+      "triton": {
+        "naifId": 801,
+        "system": 8,
+        "rotation": {
+          "poleRaDeg": [
+            299.36,
+            0,
+            0
+          ],
+          "poleDecDeg": [
+            41.17,
+            0,
+            0
+          ],
+          "nutPrecRa": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            -32.35,
+            0,
+            -6.28,
+            -2.08,
+            -0.74,
+            -0.28,
+            -0.11,
+            -0.07,
+            -0.02,
+            -0.01
+          ],
+          "nutPrecDec": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            22.55,
+            0,
+            2.1,
+            0.55,
+            0.16,
+            0.05,
+            0.02,
+            0.01,
+            0,
+            0
+          ],
+          "pmRateDegPerDay": -61.2572637
+        }
+      },
+      "nereid": {
+        "naifId": 802,
+        "system": 8,
+        "rotation": null
+      },
+      "proteus": {
+        "naifId": 808,
+        "system": 8,
+        "rotation": {
+          "poleRaDeg": [
+            299.27,
+            0,
+            0
+          ],
+          "poleDecDeg": [
+            42.91,
+            0,
+            0
+          ],
+          "nutPrecRa": [
+            0.7,
+            0,
+            0,
+            0,
+            0,
+            0,
+            -0.05,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "nutPrecDec": [
+            -0.51,
+            0,
+            0,
+            0,
+            0,
+            0,
+            -0.04,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "pmRateDegPerDay": 320.7654228
+        }
+      },
+      "charon": {
+        "naifId": 901,
+        "system": 9,
+        "rotation": {
+          "poleRaDeg": [
+            132.993,
+            0,
+            0
+          ],
+          "poleDecDeg": [
+            -6.163,
+            0,
+            0
+          ],
+          "nutPrecRa": null,
+          "nutPrecDec": null,
+          "pmRateDegPerDay": 56.3625225
+        }
+      },
+      "nix": {
+        "naifId": 902,
+        "system": 9,
+        "rotation": null
+      },
+      "hydra": {
+        "naifId": 903,
+        "system": 9,
+        "rotation": null
+      },
+      "kerberos": {
+        "naifId": 904,
+        "system": 9,
+        "rotation": null
+      },
+      "styx": {
+        "naifId": 905,
+        "system": 9,
+        "rotation": null
+      },
+      "ida": {
+        "naifId": 2431010,
+        "system": null,
+        "rotation": {
+          "poleRaDeg": [
+            168.76,
+            0,
+            0
+          ],
+          "poleDecDeg": [
+            -87.12,
+            0,
+            0
+          ],
+          "nutPrecRa": null,
+          "nutPrecDec": null,
+          "pmRateDegPerDay": 1864.628007
+        }
+      }
+    }
+  },
+  "nasaScienceBodies": {
+    "enceladus": {
+      "url": "https://science.nasa.gov/saturn/moons/enceladus/",
+      "sentence": "Because Enceladus reflects so much sunlight, the surface temperature is extremely cold, about minus 330 degrees Fahrenheit (minus 201 degrees Celsius).",
+      "celsius": [
+        -201
+      ]
+    },
+    "tethys": {
+      "url": "https://science.nasa.gov/saturn/moons/tethys/",
+      "sentence": "Tethys has a high reflectivity (or visual albedo) of 1.229 in the visual range, again suggesting a composition largely of water ice, which would behave like rock in the Tethyan average temperature of -305 degrees Fahrenheit (-187 degrees Celsius).",
+      "celsius": [
+        -187
+      ]
+    },
+    "dione": {
+      "url": "https://science.nasa.gov/saturn/moons/dione/",
+      "sentence": "At Dione's average temperature of -304 degrees Fahrenheit (-186 degrees Celsius or 87 kelvins), ice is very hard and behaves like rock.",
+      "celsius": [
+        -186
+      ]
+    },
+    "hyperion": {
+      "url": "https://science.nasa.gov/saturn/moons/hyperion/",
+      "sentence": "This may be because the average temperature of roughly -300 degrees Fahrenheit (-180 degrees Celsius) might be close enough to a temperature that would cause volatiles to sublimate, leaving the darker materials accumulated on the crater floors.",
+      "celsius": [
+        -180
+      ]
+    },
+    "triton": {
+      "url": "https://science.nasa.gov/neptune/moons/triton/",
+      "sentence": "NASA's Voyager 2―the only spacecraft to fly past Neptune and Triton―found surface temperatures of -391degrees Fahrenheit (-235 degrees Celsius).",
+      "celsius": [
+        -235
+      ]
+    },
+    "rhea": {
+      "url": "https://science.nasa.gov/saturn/moons/rhea/",
+      "sentence": "Rhea's surface temperatures are also similar to Dione and Tethys, being roughly as warm as -281 degrees Fahrenheit (-174 degrees Celsius) in sunlit areas and ranging down to -364 degrees Fahrenheit (-220 degrees Celsius) in shaded areas.",
+      "celsius": [
+        -174,
+        -220
+      ]
+    },
+    "phobos": {
+      "url": "https://science.nasa.gov/mars/moons/phobos/",
+      "sentence": "High temperatures for Phobos were measured at 25 degrees Fahrenheit (-4 degrees Celsius) and lows at -170 degrees Fahrenheit (-112 degrees Celsius).",
+      "celsius": [
+        -4,
+        -112
+      ]
+    },
+    "eris": {
+      "url": "https://science.nasa.gov/dwarf-planets/eris/",
+      "sentence": "Scientists think surface temperatures vary from about -359 degrees Fahrenheit (-217 degrees Celsius) to -405 degrees Fahrenheit (-243 degrees Celsius).",
+      "celsius": [
+        -217,
+        -243
+      ]
+    }
+  },
   "nasaMoonCounts": {
     "jupiter": {
       "url": "https://science.nasa.gov/jupiter/moons/",
@@ -779,7 +2549,22 @@
         "ref": "Nature vol. 537, pp515-517 (22 September 2016)",
         "notes": null
       },
-      "confirmedSatellites": 0
+      "confirmedSatellites": 0,
+      "physicalParameterNames": [
+        "BV",
+        "G",
+        "GM",
+        "H",
+        "UB",
+        "albedo",
+        "density",
+        "diameter",
+        "extent",
+        "pole",
+        "rot_per",
+        "spec_B",
+        "spec_T"
+      ]
     },
     "pallas": {
       "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=2",
@@ -811,7 +2596,22 @@
         "ref": "Carry et al., Icarus 205, 460-472 (2010)",
         "notes": null
       },
-      "confirmedSatellites": 0
+      "confirmedSatellites": 0,
+      "physicalParameterNames": [
+        "BV",
+        "G",
+        "GM",
+        "H",
+        "UB",
+        "albedo",
+        "density",
+        "diameter",
+        "extent",
+        "pole",
+        "rot_per",
+        "spec_B",
+        "spec_T"
+      ]
     },
     "vesta": {
       "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=4",
@@ -843,7 +2643,22 @@
         "ref": "Park, R.S. et al. 2025, Nat Astron, DOI: 10.1038/s41550-025-02533-7",
         "notes": "values in degrees"
       },
-      "confirmedSatellites": 0
+      "confirmedSatellites": 0,
+      "physicalParameterNames": [
+        "BV",
+        "G",
+        "GM",
+        "H",
+        "UB",
+        "albedo",
+        "density",
+        "diameter",
+        "extent",
+        "pole",
+        "rot_per",
+        "spec_B",
+        "spec_T"
+      ]
     },
     "hygiea": {
       "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=10",
@@ -867,7 +2682,18 @@
         "notes": "REFERENCE LIST:[Pilcher, F. (2020) Minor Planet Bull. 47, 133-135.], [Vernazza, P.; Jorda, L.; Sevecek, P.; Broz, M.; et al. (2020) Nature Astronomy 4, 136-141.], [Ferrais, M.; Jehin, E.; Vernazza, P.; Jorda, L.; et al. (2021) Minor Planet Bull. 48, 166-167.], [Vernazza, P.; Ferrais, M.; Jorda, L.; Hanus, J.; et al. (2021) Astron. Astrophys 654, id. A56.]"
       },
       "pole": null,
-      "confirmedSatellites": 0
+      "confirmedSatellites": 0,
+      "physicalParameterNames": [
+        "BV",
+        "GM",
+        "H",
+        "UB",
+        "albedo",
+        "diameter",
+        "rot_per",
+        "spec_B",
+        "spec_T"
+      ]
     },
     "ida": {
       "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=243",
@@ -891,7 +2717,20 @@
         "notes": "REFERENCE LIST:[Binzel, R.P. (1987) Icarus 72, 135-208.], [Binzel, R.P.; Slivan, S.M.; Magnusson, P.; Wisniewski, W.Z.; et al. (1993) Icarus 105, 310-325.], [Davies, M.E.; Colvin, T.R.; Belton, M.J.S.; Veverka, J.; Thomas, P.C. (1996) Icarus 120, 33-37.], [Cieza, L.A.; Ciliberti, L.N.; Iserte, J.A. (1999) IAPPP Comm. #74, 12-23.], [Kaasalainen, M.; Torppa, J.; Muinonen, K. (2001) Icarus 153, 37-51.], [Behrend, R. (2004) Observatoire de Geneve web site, http://obswww.unige.ch/~behrend/page_cou.html], [Proyecto ECLA (Silvia Alonso Perez) (2011) http://www.geocities.com/proyectoecla/], [Hanus, J.; Broz, M.; Durech, J.; Warner, B.D.; et al. (2013) Astron. Astrophys. 559, A134.], [Polakis, T. (2020) Minor Planet Bull. 47, 13-17.], [Behrend, R. (2021) Observatoire de Geneve web site, http://obswww.unige.ch/~behrend/page_cou.html], [Wilkin, F.P.; AlMassri, F.P.; Bowles, P.; Pargiello, M.; et al. (2022) Minor Planet Bull. 49, 267-268.]"
       },
       "pole": null,
-      "confirmedSatellites": 1
+      "confirmedSatellites": 1,
+      "physicalParameterNames": [
+        "BV",
+        "GM",
+        "H",
+        "UB",
+        "albedo",
+        "density",
+        "diameter",
+        "extent",
+        "rot_per",
+        "spec_B",
+        "spec_T"
+      ]
     },
     "eros": {
       "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=433",
@@ -923,7 +2762,22 @@
         "ref": "Yeomans et al. (2000) Science v.289,pp.2085-2088",
         "notes": null
       },
-      "confirmedSatellites": 0
+      "confirmedSatellites": 0,
+      "physicalParameterNames": [
+        "BV",
+        "G",
+        "GM",
+        "H",
+        "UB",
+        "albedo",
+        "density",
+        "diameter",
+        "extent",
+        "pole",
+        "rot_per",
+        "spec_B",
+        "spec_T"
+      ]
     },
     "itokawa": {
       "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=25143",
@@ -955,7 +2809,18 @@
         "ref": "Demura, H., et al., Science, 312, 1347 (2006)",
         "notes": null
       },
-      "confirmedSatellites": 0
+      "confirmedSatellites": 0,
+      "physicalParameterNames": [
+        "GM",
+        "H",
+        "I",
+        "density",
+        "diameter",
+        "extent",
+        "pole",
+        "rot_per",
+        "spec_B"
+      ]
     },
     "ryugu": {
       "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=162173",
@@ -987,7 +2852,18 @@
         "ref": "Preusker, F.; Scholten, F.; Elgner, S.; Matz, K. D.; et al. (2019) A&A 632 L4.",
         "notes": null
       },
-      "confirmedSatellites": 0
+      "confirmedSatellites": 0,
+      "physicalParameterNames": [
+        "GM",
+        "H",
+        "albedo",
+        "density",
+        "diameter",
+        "extent",
+        "pole",
+        "rot_per",
+        "spec_B"
+      ]
     },
     "bennu": {
       "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=101955",
@@ -1019,7 +2895,24 @@
         "ref": "Daly, M.G., et al., Sci. Adv. 6, eabd3649 (2020)",
         "notes": null
       },
-      "confirmedSatellites": 0
+      "confirmedSatellites": 0,
+      "physicalParameterNames": [
+        "BV",
+        "G",
+        "GM",
+        "H",
+        "I",
+        "IR",
+        "UB",
+        "albedo",
+        "density",
+        "diameter",
+        "extent",
+        "pole",
+        "rot_acc",
+        "rot_per",
+        "spec_B"
+      ]
     },
     "halley": {
       "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=1P",
@@ -1033,7 +2926,17 @@
       "gmKm3s2": null,
       "rotationHours": null,
       "pole": null,
-      "confirmedSatellites": 0
+      "confirmedSatellites": 0,
+      "physicalParameterNames": [
+        "K1",
+        "K2",
+        "M1",
+        "M2",
+        "PC",
+        "albedo",
+        "diameter",
+        "extent"
+      ]
     },
     "pluto": {
       "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=134340",
@@ -1047,7 +2950,11 @@
         "notes": "REFERENCE LIST:[Walker, M.F.; Hardie, R. (1955) Pub. Ast. Soc. Pacific 67, 224.], [Tholen, D.J.; Buie, M.W. (1997) in Pluto and Charon (S.A. Stern and D.J. Tholen, eds.) pp 193-219. Univ. Arizon Press, Tucson.]"
       },
       "pole": null,
-      "confirmedSatellites": 5
+      "confirmedSatellites": 5,
+      "physicalParameterNames": [
+        "H",
+        "rot_per"
+      ]
     },
     "eris": {
       "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=136199",
@@ -1061,7 +2968,11 @@
         "notes": "[Result based on less than full coverage, so that the period may be wrong by 30 percent or so.]  REFERENCE LIST:[Roe, H. G.; Pike, R.E.; Brown, M.E. (2008) Icarus 198, 459-464.]"
       },
       "pole": null,
-      "confirmedSatellites": 1
+      "confirmedSatellites": 1,
+      "physicalParameterNames": [
+        "H",
+        "rot_per"
+      ]
     },
     "haumea": {
       "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=136108",
@@ -1075,7 +2986,11 @@
         "notes": "REFERENCE LIST:[Rabinowitz, D.L.; Barkume, K.; Brown, M.E.; Roe, H.; et al. (2006) Astrophys. J. 639, 1238-1251.], [Rabinowitz, D.L.; Schaefer, B.E.; Tourtellotte, S.W. (2007) Astron. J. 133, 26-43.], [Lellouch, E.; Kiss, C.; Santos-Sanz, P.; Muller, T.G.; et al. (2010) Astron. Astrophys. 518, L147.], [Thirouin, A.; Ortiz, J.L.; Duffard, R.; Santos-Sanz, P.; et al. (2010) Astron. Astrophys. 522, A93.], [Behrend, R. (2011) Observatoire de Geneve web site, http://obswww.unige.ch/~behrend/page_cou.html], [Behrend, R. (2014) Observatoire de Geneve web site, http://obswww.unige.ch/~behrend/page_cou.html], [Lockwood, A.C.; Brown, M.E.; Stansberry, J. (2014) Earth, Moon, and Planets 111, 127-37.], [Clark, M. (2016) Minor Planet Bull. 43, 2-5.], [Behrend, R. (2017) Observatoire de Geneve web site, http://obswww.unige.ch/~behrend/page_cou.html], [Ortiz, J.L.; Santos-Sanz, P.; Sicardy, B.; Benedetti-Rossi, G.; et al. (2017) Nature 550, 219-223.]"
       },
       "pole": null,
-      "confirmedSatellites": 2
+      "confirmedSatellites": 2,
+      "physicalParameterNames": [
+        "H",
+        "rot_per"
+      ]
     },
     "makemake": {
       "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=136472",
@@ -1089,7 +3004,11 @@
         "notes": "[Result based on less than full coverage, so that the period may be wrong by 30 percent or so.]  REFERENCE LIST:[Hromakina, T.A.; Belskaya, I.N.; Krugly, Yu.N.; Shevchenko, V.G.; et al. (2019) Astron. Astrophys. 625, A46.]"
       },
       "pole": null,
-      "confirmedSatellites": 1
+      "confirmedSatellites": 1,
+      "physicalParameterNames": [
+        "H",
+        "rot_per"
+      ]
     },
     "orcus": {
       "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=90482",
@@ -1103,7 +3022,11 @@
         "notes": "[Result based on less than full coverage, so that the period may be wrong by 30 percent or so.]  REFERENCE LIST:[Rabinowitz, D.L.; Schaefer, B.E.; Tourtellotte, S.W. (2007) Astron. J. 133, 26-43.]"
       },
       "pole": null,
-      "confirmedSatellites": 1
+      "confirmedSatellites": 1,
+      "physicalParameterNames": [
+        "H",
+        "rot_per"
+      ]
     },
     "quaoar": {
       "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=50000",
@@ -1117,7 +3040,11 @@
         "notes": "[Result based on less than full coverage, so that the period may be wrong by 30 percent or so.]  REFERENCE LIST:[Rabinowitz, D.L.; Schaefer, B.E.; Tourtellotte, S.W. (2007) Astron. J. 133, 26-43.]"
       },
       "pole": null,
-      "confirmedSatellites": 1
+      "confirmedSatellites": 1,
+      "physicalParameterNames": [
+        "H",
+        "rot_per"
+      ]
     },
     "gonggong": {
       "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=225088",
@@ -1131,7 +3058,11 @@
         "notes": "[Result based on less than full coverage, so that the period may be wrong by 30 percent or so.]  REFERENCE LIST:[Pal, A.; Csaba, K.; Muller, T.G.; Molnar, L.; et al. (2016) Astron. J. 151, A117.]"
       },
       "pole": null,
-      "confirmedSatellites": 1
+      "confirmedSatellites": 1,
+      "physicalParameterNames": [
+        "H",
+        "rot_per"
+      ]
     },
     "sedna": {
       "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=90377",
@@ -1145,7 +3076,11 @@
         "notes": "[Result based on less than full coverage, so that the period may be wrong by 30 percent or so.]  REFERENCE LIST:[Gaudi, B.S.; Stanek, K.Z.; Hartman, J.D.; Holman, M.J.; McLeod, B.A. (2005) Astrophys. J. Let. 629, L49-L52.]"
       },
       "pole": null,
-      "confirmedSatellites": 0
+      "confirmedSatellites": 0,
+      "physicalParameterNames": [
+        "H",
+        "rot_per"
+      ]
     },
     "psyche": {
       "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=16",
@@ -1169,7 +3104,21 @@
         "notes": "REFERENCE LIST:[Van Houten-Groeneveld, I.; van Houten, C.J. (1958) Astrophys. J. 127, 253-273.], [Taylor, R.C.; Gehrels, T.; Capen, R.C. (1976) Astron. J. 81, 778-786.], [Chang, Y.C.; Zhou, X.-h.; Yang, X.-y.; Zhang, Y.-y.; et al. (1981) Acta Astron. Sin. 22, 169-173; Chin. Astron. Astrophys. 5, 434-437.], [Zhou, X.-h.; Yang, X.-y. (1981) Acta Astron. Sin. 22, 378-382; Chin. Astron. Astrophys. 6, 57-59 (1982, 1982ChA...6...57Z).], [Lupishko, D.F.; Bel'skaya, I.N.; Tupieva, F.A.; Chernova, G.P. (1982) Astron. Vestn. 16, 101-108; Solar System Res. 16, 75-80.], [Zhou, X.-z.; Yang, X.-y.; Wu, Z.-x. (1982) Acta Astron. Sin. 23, 349-352; Chin. Astron. Astrophys. 7, 129-131 (1983, 1983ChA...7..129Z).], [Lupishko, D.F.; Bel'skaya, I.N. (1983) in Asteroids, Comets, Meteors. C.-I. Lagerkvist, H. Rickman, eds. Uppsala, pp. 55-61.], [Tedesco, E.F.; Taylor, R.C.; Drummond, J.; Harwood, D.; et al. (1983) Icarus 54, 30-37.], [Tedesco, E.F.; Taylor, R.C. (1985) Icarus 61, 2, 241-251.], [Magnusson, P. (1986) Icarus 68, 1-39.], [Weidenschilling, S.J.; Chapman, C.R.; Davis, D.R.; Greenberg, R.; et al. (1987) Icarus 70, 191-245.], [Drummond, J.D.; Weidenschilling, S.J.; Chapman, C.R.; Davis, D.R. (1988) Icarus 76, 19-77.], [Magnusson, P. (1990) Icarus 85, 229-240.], [Drummond, J.D.; Weidenschilling, S.J.; Chapman, C.R.; Davis, D.R. (1991) Icarus 89, 44-64.], [Broglia, P.; Manara, A. (1992) Astron. Astrophys. 257, 770-772.], [De Angelis, G. (1993) Planet. Space Sci. 41, 285-290.], [Piironen, J.; Magnusson, P.; Lagerkvist, C.-I.; Williams, I.P.; et al. (1997) Astron. Astrophys. Suppl. Ser. 121, 489-497.], [Kaasalainen, M.; Torppa, J.; Piironen, J. (2002) Icarus 159, 369-395.], [Behrend, R. (2003) Observatoire de Geneve web site, http://obswww.unige.ch/~behrend/page_cou.html], [Durech, J.; Kaasalainen, M.; Herald, D.; Dunham, D.; et al. (2011) Icarus 214, 652-670.], [Proyecto ECLA (Silvia Alonso Perez) (2011) http://www.geocities.com/proyectoecla/], [Hanus, J.; Marchis, F.; Durech, J. (2013) Icarus 226, 1045-1057.], [Hanus, J.; Durech, J.; Oszkiewicz, D.A.; Behrend, R.; et al. (2016) Astron. Astrophys. 586, A108.], [Warner, B.D. (2016) Minor Planet Bull. 43, 137-140.], [Hanus, J.; Viikinkoski, M.; Marchis, F.; Durech, J.; et al (2017) Astron. Astrophys. 601, A114.], [Drummond, J.D.; Merline, W.J.; Carry, B.; Conrad, A.; et al. (2018) Icarus 305, 174-185.], [Viikinkoski, M.; Vernazza, P.; Hanus, J.; Le Coroller, H.; et al. (2018) Astron. Astrophys. 619, L3.], [Ferrais, M.; Vernazz, P.; Jorda, L.; Rambaux, N.; et al. (2020) Astorn. Astrophys. 638, L15.], [Shepard, M.K.; de Kleer, K.; Cambioni, S.; Tayler, P.A.; et al. (2021) Plan. Sci. J. 2, id. 125.], [Vernazza, P.; Ferrais, M.; Jorda, L.; Hanus, J.; et al. (2021) Astron. Astrophys 654, id. A56.], [Ferrais, M.; Vernazza, P.; Jorda, L.; Jehin, E.; et al. (2022) Minor Planet Bull. 49, 307-313.]"
       },
       "pole": null,
-      "confirmedSatellites": 0
+      "confirmedSatellites": 0,
+      "physicalParameterNames": [
+        "BV",
+        "G",
+        "GM",
+        "H",
+        "UB",
+        "albedo",
+        "density",
+        "diameter",
+        "extent",
+        "rot_per",
+        "spec_B",
+        "spec_T"
+      ]
     }
   },
   "sbdbInterstellar": {
@@ -1436,6 +3385,22 @@
       "url": "https://arxiv.org/abs/1601.02395",
       "verifiedQuotes": [
         "rotation period of P=11.594(+/-)0.017 h"
+      ]
+    },
+    "brown-2010-orcus": {
+      "url": "https://arxiv.org/abs/0910.4784",
+      "verifiedQuotes": [
+        "system mass of 6.32+- 0.01 X 10^20 kg",
+        "diameter 940+-70 km",
+        "implies sizes of Orcus and Vanth of 900 and 280 km",
+        "implies sizes of 820 and 640 km"
+      ]
+    },
+    "ortiz-2017-haumea": {
+      "url": "https://arxiv.org/abs/2006.03113",
+      "verifiedQuotes": [
+        "elliptical limb with axes 1,704 $\\pm$ 4 km x 1,138 $\\pm$ 26 km",
+        "largest axis is at least 2,322 $\\pm$ 60 km"
       ]
     }
   }

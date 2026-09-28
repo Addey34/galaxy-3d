@@ -155,6 +155,24 @@ export function notApplicableFacts(cfg: CelestialBodyConfig): Set<FactField> {
   return out;
 }
 
+/**
+ * Faits dont la SCÈNE lit la valeur, publiée ou non. Une lune synchrone garde son obliquité
+ * pour l'orienter (`CelestialObject`), un corps garde son rayon pour décider d'une approche de
+ * surface (`ui/surfacePanel`, `ui/surfaceProbe`, `ui/webxr`) et sa masse pour le calcul du
+ * mouvement du parent (`config/gravity`). Ces trois-là peuvent donc porter une valeur ET une
+ * raison de ne pas l'afficher, sans se contredire.
+ *
+ * Tout autre champ, lui, se contredirait : une gravité de surface que la fiche refuse de
+ * publier et que personne ne lit n'est plus un besoin de la simulation, c'est un chiffre mort.
+ * Quatre traînaient ainsi (Haumea, Orcus, Makémaké, Néréide) ; `catalogueCompleteness.test.ts`
+ * les refuse désormais.
+ */
+export const SIMULATION_ONLY_FACTS: ReadonlySet<FactField> = new Set([
+  'axialTilt',
+  'radiusKm',
+  'massKg',
+]);
+
 /** Faits qui évoluent avec les découvertes : leur provenance DOIT porter `asOf`. */
 export const TIME_VARYING_FACTS: ReadonlySet<FactField> = new Set([
   'moonCount',

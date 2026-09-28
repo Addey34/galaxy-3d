@@ -122,12 +122,21 @@
     },
     "meanTempC": {
       "published": false,
-      "reason": "not-yet-sourced"
+      "reason": {
+        "en": "NASA publishes a range, not a mean: about -4 °C on the sunlit side and -112 °C on the night side.",
+        "fr": "La NASA publie une plage, pas une moyenne : environ -4 °C sur la face éclairée et -112 °C sur la face nocturne.",
+        "es": "La NASA publica un rango, no una media: unos -4 °C en la cara iluminada y -112 °C en la cara nocturna.",
+        "pt-BR": "A NASA publica um intervalo, não uma média: cerca de -4 °C na face iluminada e -112 °C na face noturna."
+      }
     },
     "axialTilt": {
-      "value": 0,
-      "published": false,
-      "reason": "not-yet-sourced"
+      "value": {
+        "$deg": 0
+      },
+      "source": "naif-pck",
+      "method": "derived",
+      "detail": "obliquityFromPole",
+      "citation": "pck00011.tpc, BODY401"
     },
     "distanceAU": {
       "value": {
