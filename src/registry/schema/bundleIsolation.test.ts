@@ -44,7 +44,7 @@ const VALUE_IMPORT_SCHEMA =
   /(?:^|[\s;}])import\s+(?!type\s)[^;]*?from\s*['"](?:@\/registry\/schema\/|\.{1,2}\/(?:\.\.\/)*schema\/)|import\s*\(\s*['"](?:@\/registry\/schema\/|\.{1,2}\/(?:\.\.\/)*schema\/)/;
 
 /**
- * Import du registre des PRODUITS. Il lit ses 63 fiches par un glob et ne sert qu'au build et aux
+ * Import du registre des PRODUITS. Il lit toutes ses fiches par un glob et ne sert qu'au build et aux
  * tests (`seo/sourcesPage.ts` par `vite.config.ts`) : importé par l'application, il embarquerait
  * les journaux d'audit de toutes les textures chez chaque visiteur.
  */
