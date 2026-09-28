@@ -14,8 +14,16 @@ import { defineConfig, devices } from '@playwright/test';
  * clic peut alors dépasser le timeout par défaut de 30 s pendant une pause GC/décodage.
  * On calibre donc les timeouts sur ce coût réel (sans masquer une vraie régression : un
  * scénario cassé échoue à toutes les tentatives) et on absorbe l'aléa GPU intrinsèque avec :
- *   - un seul worker + pas de parallélisme → aucune contention GPU entre onglets ;
- * Les scénarios sont désormais déterministes et ne masquent plus un échec local par une reprise.
+ *   - un seul worker + pas de parallélisme → aucune contention GPU entre onglets.
+ *
+ * CETTE EN-TÊTE AFFIRMAIT « les scénarios sont désormais déterministes et ne masquent plus un
+ * échec local par une reprise », deux lignes au-dessus de `retries: process.env.CI ? 2 : 0`.
+ * C'était faux de la CI, et le prix est mesuré (lot 24) : sur les huit derniers runs de `main`,
+ * DIX scénarios distincts ne sont passés qu'au réessai, dans des jobs verts. Ce que les reprises
+ * masquaient a une cause unique, mesurée, et elle est écrite dans `e2e/mainThread.ts` — le
+ * chargeur masqué n'est pas le signal « l'application accepte un clic ». Les reprises restent,
+ * parce qu'un runner partagé garde son aléa ; ce qui change, c'est que leur usage est désormais
+ * LU après chaque fusion par `pnpm ci:health`, au lieu de rester un mot dans un journal.
  */
 export default defineConfig({
   testDir: './e2e',

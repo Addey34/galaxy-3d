@@ -3,6 +3,7 @@ import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { expect, test, type Page, type Request } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
+import { waitForCalmMainThread } from './mainThread';
 import { blockExternalNetwork } from './netBlock';
 
 /**
@@ -68,6 +69,10 @@ async function serveTiles(page: Page): Promise<Request[]> {
 async function boot(page: Page, query: string): Promise<void> {
   await page.goto(`/${query}`);
   await expect(page.locator('#loader')).toBeHidden({ timeout: 60_000 });
+  // Le chargeur masqué ne veut pas dire « la scène a fini » : cf. `e2e/mainThread.ts`, où la
+  // mesure est écrite. Sans cette attente, la molette de `zoomIn` part pendant que le thread
+  // est encore saturé, et le moteur de surface commence sa descente en retard.
+  await waitForCalmMainThread(page);
 }
 
 /** Un cran de molette très ample : OrbitControls met la distance à l'échelle `0,95^(…)`. */
@@ -173,7 +178,28 @@ test('paints tiles on the Moon, says what it serves, and lowers the floor', asyn
   // première version redemandait la couverture entière à chaque image (47 tuiles par seconde,
   // mesuré). On laisse d'abord la couverture finir d'arriver — six requêtes à la fois — puis
   // on compare deux relevés espacés.
-  await page.waitForTimeout(4000);
+  //
+  // L'ATTENTE EST UNE CONDITION, PLUS UNE PAUSE FIXE (lot 24). Deux pauses de 4 s pariaient sur
+  // la vitesse de la machine : sur les huit derniers runs de `main`, ce test est passé SEPT fois
+  // au réessai, sur « des tuiles sont redemandées alors que la caméra ne bouge pas » (43
+  // attendues, 47 reçues) — la file n'avait pas fini d'arriver, et la première pause décidait
+  // à sa place. On attend donc que le compte CESSE DE MONTER, puis on vérifie qu'il ne monte
+  // plus : l'affirmation est la même, elle ne dépend plus de la montre.
+  let previous = -1;
+  await expect
+    .poll(
+      () => {
+        const stable = seen.length === previous;
+        previous = seen.length;
+        return stable;
+      },
+      {
+        timeout: 60_000,
+        intervals: [2000],
+        message: 'la couverture n’a jamais fini d’arriver',
+      }
+    )
+    .toBe(true);
   const settled = seen.length;
   await page.waitForTimeout(4000);
   expect(
@@ -381,8 +407,16 @@ test('displaces the ground with measured altitudes, and says where they come fro
   const text = (await probe.textContent()) ?? '';
   const aim = /visée\s+(-?[\d.]+)°, (-?[\d.]+)°/.exec(text);
   const shown = /sol\s+(-?\d+) m/.exec(text);
+  // Le NIVEAU de relief est LU au relevé, jamais supposé égal au socle : la Lune porte aussi
+  // trois aires cuites au niveau 7-8, et une descente qui tomberait dessus lirait une autre
+  // tuile que celle du socle global.
+  const reliefLevel = /relief\s+niveau (\d+)/.exec(text);
   expect(aim, 'le relevé ne donne pas le point visé').toBeTruthy();
   expect(shown, 'le relevé ne donne pas l’altitude du sol').toBeTruthy();
+  expect(
+    reliefLevel,
+    'le relevé ne donne pas le niveau de relief'
+  ).toBeTruthy();
 
   const manifest = JSON.parse(
     readFileSync(
@@ -391,35 +425,89 @@ test('displaces the ground with measured altitudes, and says where they come fro
     )
   ) as {
     directory: string;
-    baseLevel: number;
     quantumMetres: number;
     offsetMetres: number;
     format: { samples: number };
   };
+  const samples = manifest.format.samples;
+  const level = Number(reliefLevel![1]);
+
+  /** L'altitude que le fichier livré porte à un point donné, par la même arithmétique que le moteur. */
+  const elevationAt = (latitudeDeg: number, longitudeDeg: number): number => {
+    const columns = 2 * 2 ** level;
+    const rows = 2 ** level;
+    const column = Math.floor(((longitudeDeg + 180) / 360) * columns);
+    const row = Math.floor(((90 - latitudeDeg) / 180) * rows);
+    const bytes = readFileSync(
+      resolve(
+        HERE,
+        `../public/${manifest.directory}/${level}/${row}/${column}.hgt`
+      )
+    );
+    const west = -180 + (column * 360) / columns;
+    const north = 90 - (row * 180) / rows;
+    const x = Math.round(
+      ((longitudeDeg - west) / (360 / columns)) * (samples - 1)
+    );
+    const y = Math.round(
+      ((north - latitudeDeg) / (180 / rows)) * (samples - 1)
+    );
+    const dn = bytes.readInt16LE(32 + (y * samples + x) * 2);
+    return manifest.offsetMetres + dn * manifest.quantumMetres;
+  };
+
+  /*
+   * POURQUOI UN ENSEMBLE DE CANDIDATS, ET NON UN SEUL TEXEL (lot 24).
+   *
+   * Ce test lisait le texel sous le point visé tel qu'il est IMPRIMÉ, à trois décimales. Or
+   * l'application, elle, arrondit la longitude à PLEINE précision : quand la visée passe à
+   * moins de 0,0005° d'une frontière de texel, les deux arrondis tombent de part et d'autre et
+   * la comparaison échoue d'un texel entier.
+   *
+   * MESURÉ le 2026-09-28 : visée 20,432°, 151,809° sur la Lune, soit x = 126,498 pour le
+   * nombre imprimé et une frontière à 126,5 — l'intervalle compatible avec l'impression va de
+   * 126,487 à 126,510. L'application annonçait 2583 m (texel 127), le test attendait 2321,5 m
+   * (texel 126) : 261,5 m d'écart pour une tolérance d'un mètre, six fois sur six. Et comme la
+   * visée suit la rotation de la Lune, l'échec dure des heures puis disparaît, ce qui l'avait
+   * fait prendre pour un aléa.
+   *
+   * On compare donc à tout ce que l'impression autorise, et à rien de plus : les quatre coins
+   * de la boîte d'arrondi. C'est la revendication la plus forte que l'information disponible
+   * permette, et elle garde toute sa force de réfutation — une convention de longitude
+   * inversée, ou une tuile lue de travers, se compte en kilomètres et ne tombe dans AUCUN
+   * candidat.
+   */
+  /*
+   * PAS DE BORNE SÉPARÉE SUR LA LARGEUR DE CETTE BOÎTE, et la falsification dit pourquoi.
+   *
+   * Une assertion « la boîte couvre au plus quatre texels » a été écrite puis RETIRÉE : elle
+   * était vraie par construction (quatre coins donnent au plus quatre valeurs). Une seconde,
+   * « la boîte est plus étroite qu'un texel », a été écrite puis retirée aussi, pour une
+   * raison plus intéressante : impossible de la faire rougir SEULE. En élargissant `half`, c'est
+   * l'assertion ci-dessous qui rougit d'abord, parce qu'aucun coin ne tombe plus sur le bon texel
+   * (mesuré : `half` à 0,03° rend 238,5 m d'écart, `half` à deux texels rend 454 m). La
+   * protection existe donc déjà, et un garde qu'on ne peut pas falsifier est une décoration —
+   * c'est la règle de `docs/TESTING.md`.
+   */
   const latitude = Number(aim![1]);
   const longitude = Number(aim![2]);
-  const level = manifest.baseLevel;
-  const columns = 2 * 2 ** level;
-  const rows = 2 ** level;
-  const column = Math.floor(((longitude + 180) / 360) * columns);
-  const row = Math.floor(((90 - latitude) / 180) * rows);
-  const bytes = readFileSync(
-    resolve(
-      HERE,
-      `../public/${manifest.directory}/${level}/${row}/${column}.hgt`
-    )
-  );
-  const samples = manifest.format.samples;
-  const west = -180 + (column * 360) / columns;
-  const north = 90 - (row * 180) / rows;
-  const x = Math.round(((longitude - west) / (360 / columns)) * (samples - 1));
-  const y = Math.round(((north - latitude) / (180 / rows)) * (samples - 1));
-  const dn = bytes.readInt16LE(32 + (y * samples + x) * 2);
-  const expected = manifest.offsetMetres + dn * manifest.quantumMetres;
+  const half = 0.0005;
+  const candidates = new Set<number>();
+  for (const dLat of [-half, half])
+    for (const dLon of [-half, half])
+      candidates.add(elevationAt(latitude + dLat, longitude + dLon));
 
+  const displayed = Number(shown![1]);
+  const closest = [...candidates].reduce((best, value) =>
+    Math.abs(value - displayed) < Math.abs(best - displayed) ? value : best
+  );
   // Un mètre de tolérance : l'application arrondit à l'entier ce que le fichier donne au
   // demi-mètre. Une convention de longitude inversée, elle, se compterait en kilomètres.
-  expect(Math.abs(Number(shown![1]) - expected)).toBeLessThan(1);
-
+  expect(
+    Math.abs(displayed - closest),
+    `visée ${latitude}°, ${longitude}° au niveau ${level} : ` +
+      `l'application annonce ${displayed} m, le fichier livré donne ` +
+      `${[...candidates].join(' / ')} m sur la boîte d'arrondi de la visée`
+  ).toBeLessThan(1);
   expect(errors, `Erreurs page : ${errors.join(' | ')}`).toEqual([]);
 });

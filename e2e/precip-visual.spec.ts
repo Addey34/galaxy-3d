@@ -1,6 +1,8 @@
 import { expect, test } from '@playwright/test';
 import sharp from 'sharp';
 
+import { waitForCalmMainThread } from './mainThread';
+
 async function createImergFixture(): Promise<Buffer> {
   const width = 1024;
   const height = 512;
@@ -67,6 +69,17 @@ test('IMERG keeps its native alpha mask and compiles the observed rain layer', a
 
   await page.goto('/?debug-meteo&body=earth');
   await expect(page.locator('#loader')).toBeHidden({ timeout: 30_000 });
+  /*
+   * ET ENSUITE ON ATTEND QUE LE THREAD RÉPONDE (lot 24).
+   *
+   * C'est ce clic-ci, ligne suivante, qui a rendu le shard 4 rouge à la fusion de la PR #40,
+   * TROIS tentatives sur trois : `locator.click: Timeout 15000ms exceeded` sur
+   * `#weather-trigger`, le journal s'arrêtant à « performing click action ». La cause est
+   * mesurée dans `e2e/mainThread.ts` : sur CETTE page, sous frein CPU × 8, le thread reste
+   * bloqué 13,43 s après que le chargeur se masque. Le clic payait donc l'attente, et il passe
+   * de **14,6 s à 1,9 s** quand on attend d'abord ce signal.
+   */
+  await waitForCalmMainThread(page);
 
   // La pluie n'est plus active au démarrage (`bd06d0c` — choix de sobriété, cf. le commentaire
   // de `e2e/weather.spec.ts`). Ce test attendait `ready ON` sans rien activer : il reposait donc

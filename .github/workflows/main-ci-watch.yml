@@ -1,0 +1,120 @@
+name: Main CI watch
+
+# LE GUETTEUR DE LA CI DE `main` (lot 24).
+#
+# Pourquoi il existe, et ce que la mesure a montre. Le job `e2e-full` de `ci.yml` est
+# `if: push` : il ne tourne QUE sur `main`. Aucune CI de branche ne peut donc montrer un shard
+# rouge avant une fusion, et une suite locale ne sharde pas. Consequence mesuree : DEUX fusions
+# consecutives ont rendu un shard rouge sans que personne le voie (PR #40 shard 4, PR #42
+# shard 6), et les huit derniers runs de `main` sont TOUS non sains au sens de
+# `scripts/check-ci-health.mjs`.
+#
+# Et le cas le plus discret n'est pas le rouge : c'est le VERT OBTENU PAR REESSAI. Playwright a
+# deux reprises en CI, donc un test qui echoue puis passe rend le job vert. Le run de `main` du
+# lot 23 est annonce « vert en entier » : il l'est, et pourtant deux tests n'y sont passes qu'a
+# la deuxieme tentative. Un mot dans un journal que personne n'ouvre.
+#
+# Ce workflow transforme cela en une ISSUE, c'est-a-dire en quelque chose qui reste. Une issue
+# notifie, figure dans la liste du depot, et ne s'en va que lorsqu'un run redevient sain, ou
+# qu'on la ferme. Un courriel d'echec, lui, se lit ou ne se lit pas.
+#
+# Il ne conditionne RIEN : il ne bloque aucun deploiement et ne fait echouer aucun run. Il
+# regarde apres coup et il le dit.
+
+on:
+  workflow_run:
+    workflows: ['CI']
+    types: [completed]
+    branches: [main]
+  # Pour exercer le guetteur contre un run precis, y compris un run passe : c'est ainsi qu'il a
+  # ete falsifie contre les deux runs rouges connus.
+  workflow_dispatch:
+    inputs:
+      run_id:
+        description: 'Identifiant du run CI a examiner (defaut : le dernier de main)'
+        required: false
+        type: string
+
+permissions:
+  contents: read
+  actions: read
+  issues: write
+
+concurrency:
+  group: main-ci-watch
+  cancel-in-progress: false
+
+jobs:
+  watch:
+    name: Read the health of that run
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1, resolved 2026-09-19
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0, resolved 2026-09-19
+        with:
+          node-version: 22
+
+      # UNE SEULE lecture, et son code de sortie capture SANS pipe : sur cette machine comme
+      # ailleurs, un pipe rend le code du DERNIER maillon, et ce piege est deja ecrit dans
+      # `CLAUDE.md`. Le code 2 veut dire « je n'ai pas pu mesurer », ce qui n'est PAS
+      # « tout va bien » : il ouvre l'issue comme un run rouge.
+      - name: Read the run's health
+        id: verdict
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_ID: ${{ inputs.run_id || github.event.workflow_run.id }}
+        run: |
+          code=0
+          node scripts/check-ci-health.mjs --run "$RUN_ID" --markdown > health.md 2> health.err || code=$?
+          echo "code=$code" >> "$GITHUB_OUTPUT"
+          if [ "$code" = "0" ]; then
+            echo "healthy=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "healthy=false" >> "$GITHUB_OUTPUT"
+          fi
+          if [ ! -s health.md ]; then
+            {
+              echo "## La sante du run $RUN_ID n'a PAS pu etre mesuree (code $code)"
+              echo
+              echo '```'
+              cat health.err
+              echo '```'
+            } > health.md
+          fi
+          cat health.md
+
+      - name: Open or update the tracking issue
+        if: steps.verdict.outputs.healthy != 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: |
+          body="$(cat health.md)"
+          existing="$(gh issue list --repo "$REPO" --label ci-health --state open \
+            --limit 1 --json number --jq '.[0].number // empty')"
+          if [ -n "$existing" ]; then
+            gh issue comment "$existing" --repo "$REPO" --body "$body"
+          else
+            gh label create ci-health --repo "$REPO" \
+              --description "La CI de main n'est pas saine" --color B60205 || true
+            gh issue create --repo "$REPO" --label ci-health \
+              --title "La CI de main n'est pas saine" --body "$body"
+          fi
+
+      # Un guetteur qui n'eteint jamais son temoin devient un temoin toujours allume, donc
+      # eteint. Un run sain referme donc l'issue, en disant lequel.
+      - name: Close the tracking issue on a healthy run
+        if: steps.verdict.outputs.healthy == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: |
+          existing="$(gh issue list --repo "$REPO" --label ci-health --state open \
+            --limit 1 --json number --jq '.[0].number // empty')"
+          if [ -n "$existing" ]; then
+            gh issue close "$existing" --repo "$REPO" \
+              --comment "$(cat health.md)"
+          fi
