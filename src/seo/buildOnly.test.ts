@@ -1,6 +1,7 @@
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, relative, resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
+import { BUILD_ONLY_DIRS } from '@/buildOnly';
 
 /**
  * `src/seo/` NE DOIT JAMAIS ATTEINDRE LE BUNDLE CLIENT.
@@ -22,14 +23,17 @@ import { describe, expect, it } from 'vitest';
 
 const SRC = resolve(import.meta.dirname, '..');
 
-/** Tous les fichiers TypeScript de `src/`, hors `src/seo/` et hors tests. */
+/** Les dossiers qui ne sont PAS l'application, lus chez leur propriétaire unique. */
+const EXCLUDED = BUILD_ONLY_DIRS.map((dir) => join(SRC, ...dir.split('/')));
+
+/** Tous les fichiers TypeScript de `src/`, hors dossiers de build et hors tests. */
 function appSources(): string[] {
   const out: string[] = [];
   const walk = (dir: string): void => {
     for (const entry of readdirSync(dir)) {
       const full = join(dir, entry);
       if (statSync(full).isDirectory()) {
-        if (full === join(SRC, 'seo')) continue;
+        if (EXCLUDED.includes(full)) continue;
         walk(full);
       } else if (entry.endsWith('.ts') && !entry.endsWith('.test.ts')) {
         out.push(full);

@@ -9,8 +9,9 @@
  * **Ce module n'est chargé qu'à l'approche d'une surface.** Il n'est importé que par
  * `components/surface/`, lui-même chargé par un `import()` dynamique : les fiches ne pèsent donc
  * rien dans le bundle de démarrage. Il n'importe surtout PAS `registry/products/index.ts`, qui
- * tire les 63 fiches de texture, ni `registry/providers/`, dont la prose bilingue des conditions
- * n'a rien à faire dans un navigateur (le défaut mesuré au lot 8).
+ * tire TOUTES les fiches de texture, ni `registry/providers/`, dont la prose des conditions en
+ * quatre langues n'a rien à faire dans un navigateur (le défaut mesuré au lot 8). Aucun nombre
+ * ici : il bouge à chaque fiche ajoutée, et il annonçait 63 pour 64 au 2026-09-28.
  */
 import type { ImageryTilesetProduct } from '@/registry/schema/product';
 import type { TileMatrixShape } from '@/core/tilePyramid';

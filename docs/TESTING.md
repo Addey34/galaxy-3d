@@ -7,12 +7,13 @@
 | `pnpm typecheck`  | TypeScript strict, sans émission        | court             |
 | `pnpm lint`       | ESLint flat config                      | court             |
 | `pnpm test`       | Vitest, logique et services              | court             |
-| `pnpm verify`     | typecheck + lint + Vitest               | gate local rapide |
+| `pnpm verify`     | typecheck + lint + `format:check` + Vitest | gate local rapide |
 | `pnpm build`      | typecheck + bundle Vite production      | moyen             |
 | `pnpm test:e2e`   | scénarios Playwright Chromium/WebGL     | long              |
 | `pnpm verify:all` | verify + build + e2e                    | gate complet      |
 | `pnpm budget:startup` | budget du démarrage, famille JavaScript (exige un build) | court |
 | `pnpm budget:measure` | le démarrage mesuré par famille dans un vrai navigateur | moyen |
+| `pnpm inventory:gaps` | l'inventaire des manques, dérivé du dépôt corps par corps (`--json` pour la sortie machine) | court |
 
 **Après un `pnpm build`**, `pnpm fingerprint:generated` compare les documents produits
 (pages par corps, pages d'éclipse, pages documentaires, vignettes, sitemap) à la référence

@@ -14,7 +14,7 @@ Merci de vouloir contribuer à ce projet. Ce guide couvre le cas le plus fréque
 ```bash
 pnpm install
 pnpm dev       # http://localhost:5173, hot reload
-pnpm verify    # tsc --noEmit && eslint . && vitest run — à faire passer avant toute PR
+pnpm verify    # tsc --noEmit && eslint . && format:check && vitest run — à faire passer avant toute PR
 ```
 
 `pnpm verify:all` (ajoute `pnpm build` + `pnpm test:e2e`) est le gate complet ; lancez-le si vous
