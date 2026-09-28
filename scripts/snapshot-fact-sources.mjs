@@ -31,6 +31,19 @@ const CACHE_DIR = '.cache/fact-sources';
 const OUT = 'src/config/factSources.snapshot.json';
 mkdirSync(CACHE_DIR, { recursive: true });
 
+/**
+ * UN HTTP 200 N'EST PAS TOUJOURS UNE RÉPONSE. Le Master Catalog du NSSDCA sert sa page
+ * « Errors and Messages » avec un code 200 sur une requête sur deux environ, et pas sur les
+ * mêmes fiches d'un tour à l'autre (mesuré le 2026-09-28 : 4 des 11 sondes en erreur à un
+ * tour, 1 au tour précédent, toutes lisibles quelques minutes plus tard).
+ *
+ * Sans ce contrôle, la page d'erreur entre au CACHE et y reste : le relevé échoue alors
+ * définitivement, sur un fichier qui a l'air d'une réponse valide, et relancer n'y change
+ * rien. C'est exactement le piège du site en production, où la réécriture SPA rend
+ * `index.html` avec un 200 pour un chemin qui n'existe pas.
+ */
+const SERVED_ERROR = /Errors and Messages|An error has occurred/;
+
 async function get(url) {
   const key = createHash('sha1').update(url).digest('hex').slice(0, 16);
   const path = `${CACHE_DIR}/${key}.txt`;
@@ -39,19 +52,27 @@ async function get(url) {
   // L'API SSD de JPL répond 502 par intermittence (mesuré : environ une requête sur trois le
   // 2026-09-20, indépendamment de l'en-tête `Origin`). Une erreur de SERVEUR se retente, avec
   // une attente qui double ; une réponse 4xx est définitive et fait échouer le relevé.
-  let response;
   for (let attempt = 0; ; attempt++) {
     // Certains éditeurs (Nature) servent une page d'interstitiel sans en-tête de navigateur.
-    response = await fetch(url, {
+    const response = await fetch(url, {
       headers: { 'User-Agent': 'Mozilla/5.0 (galaxy fact-source snapshot)' },
     });
-    if (response.ok || response.status < 500 || attempt >= 4) break;
+    const retryable = !response.ok && response.status >= 500;
+    const text = response.ok ? await response.text() : '';
+    const served = response.ok && SERVED_ERROR.test(text);
+    if (!retryable && !served) {
+      if (!response.ok) throw new Error(`HTTP ${response.status} : ${url}`);
+      writeFileSync(path, text);
+      return text;
+    }
+    if (attempt >= 7)
+      throw new Error(
+        served
+          ? `page d'erreur servie en HTTP 200 après ${attempt + 1} tentatives : ${url}`
+          : `HTTP ${response.status} après ${attempt + 1} tentatives : ${url}`
+      );
     await new Promise((resolve) => setTimeout(resolve, 500 * 2 ** attempt));
   }
-  if (!response.ok) throw new Error(`HTTP ${response.status} : ${url}`);
-  const text = await response.text();
-  writeFileSync(path, text);
-  return text;
 }
 
 const decode = (s) =>
