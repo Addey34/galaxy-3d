@@ -1632,6 +1632,20 @@ d'émettre, en nommant la borne franchie. Second piège, silencieux celui-là : 
 (`imageOrientation: 'flipY'`) — sans quoi le carreau affiche le mauvais hémisphère sans aucune
 erreur.
 
+### Quels corps peuvent porter un jeu de tuiles, et lequel ne le peut pas (lot 27)
+
+Une tuile est une CALOTTE SPHÉRIQUE attachée comme enfant du `_meshGroup` du corps, dont elle
+hérite le pôle IAU et la phase de rotation. La conséquence est une contrainte, et elle s'est
+présentée dès le deuxième groupe de corps : **un corps rendu à partir d'un MODÈLE DE FORME publié
+ne peut pas recevoir de tuiles sphériques**, puisque l'imagerie se poserait à côté de sa
+géométrie réelle. NASA Trek publie pourtant un portail pour Vesta, et sa mosaïque HAMO/LAMO est
+la plus fine de son groupe : elle est ÉCARTÉE pour cette seule raison, pas par manque de source.
+
+Le critère est donc lisible sans juger à l'œil : un corps qui livre un fichier dans
+`public/assets/models/` est hors du périmètre du streaming d'imagerie tant que le moteur pose des
+calottes. Drapper une mosaïque sur un maillage irrégulier est un autre travail, avec sa propre
+paramétrisation UV, et ce n'est pas ce que `components/surface/` fait aujourd'hui.
+
 ## Relief mesuré — des hauteurs cuites hors ligne, jamais devinées
 
 Depuis le 2026-09-21 (lot 9, phase 9D), un corps peut déclarer un JEU DE HAUTEURS

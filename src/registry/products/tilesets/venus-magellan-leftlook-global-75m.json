@@ -1,0 +1,60 @@
+{
+  "$schema": "../../schema/product.schema.json",
+  "id": "venus-magellan-leftlook-global-75m",
+  "type": "tileset",
+  "body": "venus",
+  "title": "Magellan SAR Left Look Mosaic 75 m/pixel (Venus_Magellan_LeftLook_mosaic_global_75m)",
+  "providerId": "nasa-trek",
+  "mission": "Magellan",
+  "instrument": "Synthetic Aperture Radar",
+  "service": {
+    "template": "https://trek.nasa.gov/tiles/Venus/EQ/Venus_Magellan_LeftLook_mosaic_global_75m/1.0.0//{Style}/{TileMatrixSet}/{TileMatrix}/{TileRow}/{TileCol}.png",
+    "style": "default",
+    "tileMatrixSet": "default028mm",
+    "format": "image/png",
+    "matrix": {
+      "columnsAtLevelZero": 2,
+      "rowsAtLevelZero": 1,
+      "tileSizePx": 256
+    },
+    "minLevel": 2,
+    "maxLevel": 10
+  },
+  "publishedPixelsPerDegree": 1408,
+  "acquired": {
+    "interval": [["1990-08-10T00:00:00Z", "1992-09-14T00:00:00Z"]]
+  },
+  "license": "other",
+  "rights": "public-domain",
+  "links": [
+    {
+      "rel": "license",
+      "href": "https://www.nasa.gov/nasa-brand-center/images-and-media/"
+    },
+    {
+      "rel": "describedby",
+      "href": "https://trek.nasa.gov/tiles/Venus/EQ/Venus_Magellan_LeftLook_mosaic_global_75m/1.0.0/WMTSCapabilities.xml"
+    },
+    {
+      "rel": "via",
+      "href": "https://pds-geosciences.wustl.edu/missions/magellan/"
+    }
+  ],
+  "providers": [
+    {
+      "name": "NASA Solar System Treks",
+      "roles": ["host"],
+      "url": "https://trek.nasa.gov/venus/"
+    },
+    {
+      "name": "Magellan Project, NASA Jet Propulsion Laboratory",
+      "roles": ["producer"]
+    },
+    {
+      "name": "USGS Astrogeology Science Center",
+      "roles": ["processor"],
+      "url": "https://astrogeology.usgs.gov/"
+    }
+  ],
+  "verified": "2026-09-29"
+}
