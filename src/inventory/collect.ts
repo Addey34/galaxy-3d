@@ -11,7 +11,7 @@
  * **Il ne DÉCIDE rien, il décrit.** Aucun seuil, aucune priorité, aucun verdict de complétude :
  * la règle des paliers de texture vit dans `@/core/textureLadder`, celle des faits applicables
  * dans `@/core/bodyFacts`, et la file de travail vit dans `docs/private/VISION.md`
- * § « Ordre d'exécution », son seul propriétaire. Ce module les INTERROGE.
+ * § « La file de travail », son seul propriétaire. Ce module les INTERROGE.
  *
  * Node seulement, comme `src/seo/` : jamais importé par l'application. Ses lecteurs sont
  * `scripts/inventory-gaps.mjs` (`pnpm inventory:gaps`) et `src/config/inventoryGaps.test.ts`.

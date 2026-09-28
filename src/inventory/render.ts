@@ -3,7 +3,7 @@
  *
  * Il n'ajoute AUCUN jugement à ce que `collect.ts` a lu : les colonnes sont des faits, les
  * blocs qui suivent des regroupements de ces mêmes faits. La file de travail qui décide quoi
- * combler, et dans quel ordre, vit dans `docs/private/VISION.md` § « Ordre d'exécution », son
+ * combler, et dans quel ordre, vit dans `docs/private/VISION.md` § « La file de travail », son
  * seul propriétaire.
  */
 import type { Capability, Inventory, InventoryRow } from './collect';
