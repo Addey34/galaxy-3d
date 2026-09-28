@@ -168,6 +168,15 @@ function bodyLandingPages() {
         logLevel: 'error',
         server: { middlewareMode: true },
         resolve: { alias: { '@': resolve(__dirname, 'src') } },
+        // Ce chargeur ne sert JAMAIS un navigateur : il ne fait que `ssrLoadModule`. Sans ces
+        // deux lignes, son explorateur de dépendances cherche à résoudre
+        // `virtual:registry-text/catalogue-*` et imprime « Error: The following dependencies are
+        // imported but could not be resolved » dans un build qui sort pourtant en code 0. Un
+        // avertissement qui dit « Error » sans rien casser est exactement ce qui fera rater le
+        // prochain vrai message, donc on le supprime à la source : le greffon pour que les
+        // modules virtuels se résolvent, et pas d'exploration pour ne rien pré-empaqueter.
+        plugins: [deriveRegistryText()],
+        optimizeDeps: { noDiscovery: true, include: [] },
       });
       try {
         const catalogue = (await loader.ssrLoadModule(
@@ -665,6 +674,37 @@ function bodyLandingPages() {
           ),
           'utf-8'
         );
+        /**
+         * CHAQUE URL DU SITEMAP DOIT CORRESPONDRE À UN FICHIER ÉCRIT, et réciproquement.
+         *
+         * Avec 450 adresses dans quatre langues, une page écrite au mauvais chemin ne se verrait
+         * pas : le sitemap l'annoncerait, Firebase répondrait par la réécriture SPA, donc un 200
+         * avec le mauvais document — le piège que ce dépôt a déjà payé. La vérification est ici
+         * plutôt que dans un test, parce qu'un contrôle qu'il faut penser à lancer n'est pas un
+         * contrôle.
+         */
+        const sitemapUrls = [
+          ...(await readFile(resolve(dist, 'sitemap.xml'), 'utf-8')).matchAll(
+            /<loc>([^<]+)<\/loc>/g
+          ),
+        ].map((match) => match[1]!.replace(SITE_ORIGIN, ''));
+        const orphans: string[] = [];
+        for (const url of sitemapUrls) {
+          const file =
+            url === '/'
+              ? 'index.html'
+              : url.endsWith('.html')
+                ? url.slice(1)
+                : `${url.slice(1)}index.html`;
+          if (!existsSync(resolve(dist, file))) orphans.push(url);
+        }
+        if (orphans.length > 0)
+          throw new Error(
+            `${orphans.length} adresse(s) du sitemap sans fichier : ${orphans.slice(0, 5).join(', ')}`
+          );
+        if (new Set(sitemapUrls).size !== sitemapUrls.length)
+          throw new Error('le sitemap contient une adresse en double');
+
         loader.config.logger.info(
           `  ${pages.length + localisedBodyPages.length} pages de corps + ` +
             `${eclipsePages.length + localisedEclipsePages.length} pages d'éclipse + ` +
