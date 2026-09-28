@@ -122,12 +122,15 @@ fiche parent pour une lune). Trois blocs :
   sans vecteur).
 - `facts` : un seul objet par fait — `value` (ou une forme dérivée), `source` (id du registre
   `src/registry/providers/`, jamais Wikipédia), `method` (`measured`/`derived`), `asOf` pour le
-  nombre de lunes, `uncertainty`, `citation` — ou `published: false` + `reason` pour une valeur que
-  la simulation utilise sans pouvoir la publier. `src/config/factProvenance.test.ts` refuse une
-  valeur affichable sans source et compare chaque valeur citée à sa source telle que
-  `pnpm facts:snapshot` l'a relevée (`src/config/factSources.snapshot.json`) : ajoutez la
-  désignation SBDB du corps à `scripts/fact-source-targets.json` puis relancez le relevé, n'importez
-  jamais un chiffre de mémoire. **Une `reason` est elle aussi une affirmation sur une source**, et
+  nombre de lunes (**la date de la SOURCE quand elle en publie une, « as of August 2026 » ; sinon
+  celle où sa réponse a été lue, c'est-à-dire le `retrieved` de l'entrée correspondante du relevé ;
+  jamais la date du jour où vous relancez le relevé**), `uncertainty`, `citation` — ou
+  `published: false` + `reason` pour une valeur que la simulation utilise sans pouvoir la publier.
+  `src/config/factProvenance.test.ts` refuse une valeur affichable sans source et compare chaque
+  valeur citée à sa source telle que `pnpm facts:snapshot` l'a relevée
+  (`src/config/factSources.snapshot.json`) : ajoutez la désignation SBDB du corps à
+  `scripts/fact-source-targets.json` puis relancez le relevé, n'importez jamais un chiffre de
+  mémoire. **Une `reason` est elle aussi une affirmation sur une source**, et
   depuis le lot 23 elle est confrontée au relevé : écrire qu'une base ne publie pas une grandeur
   qu'elle publie fait rougir la porte. Le même fichier de cibles porte le code NAIF d'un corps dont
   on veut dériver l'obliquité (`naifRotation`) et l'ancre d'une page NASA Science dont on relève une

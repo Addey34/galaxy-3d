@@ -14,6 +14,9 @@
  *
  *   node scripts/snapshot-fact-sources.mjs            (réseau, réponses mises en cache)
  *   node scripts/snapshot-fact-sources.mjs --offline  (cache .cache/fact-sources/ seul)
+ *   node scripts/snapshot-fact-sources.mjs --carry-over-unavailable
+ *       reprend du relevé précédent une entrée que la source REFUSE de servir, en l'écrivant
+ *       `retrieved: null` + `carriedOver: true`. Sans ce drapeau, le relevé échoue : voir plus bas.
  *
  * Sources lues : fiches NASA NSSDCA (Sun, planètes, Lune, Pluton et Charon), tables JPL SSD
  * des satellites (paramètres physiques, éléments moyens), pages NASA Science des lunes
@@ -24,11 +27,63 @@
  * de forme ne doit pas produire un instantané silencieusement vide.
  */
 import { mkdirSync, readFileSync, writeFileSync, existsSync } from 'node:fs';
-import { createHash } from 'node:crypto';
+
+import {
+  CACHE_DIR,
+  assertEveryUrlDated,
+  cacheKey,
+  sectionDates,
+  stampNow,
+  stampOf,
+} from './fact-source-cache.mjs';
 
 const OFFLINE = process.argv.includes('--offline');
-const CACHE_DIR = '.cache/fact-sources';
 const OUT = 'src/config/factSources.snapshot.json';
+
+/**
+ * UNE SOURCE QUI REFUSE DE SERVIR UNE FICHE, ET CE QU'ON EN FAIT.
+ *
+ * Par défaut, rien : le relevé ÉCHOUE, et c'est voulu. Une source muette ne doit pas produire un
+ * relevé silencieusement incomplet, pas plus qu'une table qui change de forme.
+ *
+ * `--carry-over-unavailable` demande explicitement l'autre comportement : REPRENDRE du relevé
+ * précédent l'entrée qu'on n'a pas pu relire, en DISANT dans le fichier qu'elle a été reprise et
+ * qu'on n'a donc pas de date de lecture pour elle. Le besoin est mesuré : le 2026-09-28, quatre
+ * fiches du Master Catalog du NSSDCA (Cassini, Rosetta, BepiColombo, Hayabusa2) ont servi leur
+ * page « Errors and Messages » en HTTP 200 pendant plus de sept heures, les mêmes quatre à chaque
+ * tour, quel que soit le client HTTP et par n'importe quelle autre adresse du site ; les sept
+ * autres répondaient. Et le cache qui portait leur dernière lecture avait été vidé, donc leur
+ * date de lecture n'existe plus nulle part : elle ne se devine pas, elle s'écrit absente.
+ *
+ * Ce n'est PAS un rattrapage silencieux : sans le drapeau rien ne change, l'entrée reprise porte
+ * `retrieved: null` et `carriedOver: true`, et `factSourceDates.test.ts` énumère exactement
+ * lesquelles le sont. Cette liste doit se VIDER quand la source répond de nouveau.
+ */
+const CARRY_OVER = process.argv.includes('--carry-over-unavailable');
+
+/** La source n'a pas servi le document, par opposition à un document qu'on n'a pas su lire. */
+class SourceUnavailable extends Error {}
+
+const PREVIOUS = existsSync(OUT) ? JSON.parse(readFileSync(OUT, 'utf8')) : {};
+
+/**
+ * Lit une entrée, ou la REPREND du relevé précédent quand la source refuse de la servir et que le
+ * drapeau l'autorise. Toute autre erreur passe : un libellé introuvable reste un échec.
+ */
+async function entry(section, key, read) {
+  try {
+    return await read();
+  } catch (error) {
+    const kept = PREVIOUS[section]?.[key];
+    if (!CARRY_OVER || !(error instanceof SourceUnavailable) || !kept)
+      throw error;
+    console.warn(
+      `reprise du relevé précédent : ${section}.${key} (${error.message})`
+    );
+    const { retrieved: _unknown, carriedOver: _again, url, ...values } = kept;
+    return { url, retrieved: null, carriedOver: true, ...values };
+  }
+}
 mkdirSync(CACHE_DIR, { recursive: true });
 
 /**
@@ -44,11 +99,20 @@ mkdirSync(CACHE_DIR, { recursive: true });
  */
 const SERVED_ERROR = /Errors and Messages|An error has occurred/;
 
+/**
+ * Une réponse ET LA DATE À LAQUELLE ELLE A ÉTÉ LUE. Les deux voyagent ensemble, sans quoi la
+ * seconde finit par être celle de l'exécution : c'est le défaut que la ligne 23.1 corrige, et il
+ * a publié le 2026-09-28 pour huit réponses lues le 2026-09-20.
+ */
 async function get(url) {
-  const key = createHash('sha1').update(url).digest('hex').slice(0, 16);
-  const path = `${CACHE_DIR}/${key}.txt`;
-  if (existsSync(path)) return readFileSync(path, 'utf8');
-  if (OFFLINE) throw new Error(`absent du cache (--offline) : ${url}`);
+  const path = `${CACHE_DIR}/${cacheKey(url)}.txt`;
+  if (existsSync(path))
+    return { text: readFileSync(path, 'utf8'), retrieved: stampOf(path) };
+  // Hors ligne, une réponse absente du cache est une réponse qu'on ne peut pas obtenir : c'est le
+  // même cas qu'une source qui refuse de servir, et `--carry-over-unavailable` s'y applique donc.
+  // C'est ce qui rend une régénération sans réseau identique octet pour octet.
+  if (OFFLINE)
+    throw new SourceUnavailable(`absent du cache (--offline) : ${url}`);
   // L'API SSD de JPL répond 502 par intermittence (mesuré : environ une requête sur trois le
   // 2026-09-20, indépendamment de l'en-tête `Origin`). Une erreur de SERVEUR se retente, avec
   // une attente qui double ; une réponse 4xx est définitive et fait échouer le relevé.
@@ -63,10 +127,10 @@ async function get(url) {
     if (!retryable && !served) {
       if (!response.ok) throw new Error(`HTTP ${response.status} : ${url}`);
       writeFileSync(path, text);
-      return text;
+      return { text, retrieved: stampNow(path) };
     }
     if (attempt >= 7)
-      throw new Error(
+      throw new SourceUnavailable(
         served
           ? `page d'erreur servie en HTTP 200 après ${attempt + 1} tentatives : ${url}`
           : `HTTP ${response.status} après ${attempt + 1} tentatives : ${url}`
@@ -161,22 +225,28 @@ function mainRow(lines, label) {
 }
 
 async function nssdca() {
-  const sheet = async (file) =>
-    htmlLines(await get(`${NSSDCA_BASE}${file}`)).flatMap((line) =>
-      // Les blocs <pre> portent « libellé   valeur » sur une ligne : garder la ligne entière
-      // (le libellé en tête) suffit à `sheetValue`.
-      [line]
-    );
-  const main = htmlLines(await get(`${NSSDCA_BASE}index.html`));
+  // Les blocs <pre> portent « libellé   valeur » sur une ligne : garder la ligne entière
+  // (le libellé en tête) suffit à `sheetValue`.
+  const sheet = async (file) => {
+    const response = await get(`${NSSDCA_BASE}${file}`);
+    return { lines: htmlLines(response.text), retrieved: response.retrieved };
+  };
+  const index = await get(`${NSSDCA_BASE}index.html`);
+  const main = htmlLines(index.text);
   const meanTemperature = mainRow(main, 'Mean Temperature (C)');
   const out = {
-    url: `${NSSDCA_BASE}`,
+    url: NSSDCA_BASE,
+    retrieved: index.retrieved,
     mainTableUpdated: lastUpdated(main),
     bodies: {},
   };
   const planet = async (name, file, labels) => {
-    const lines = await sheet(file);
-    const entry = { updated: lastUpdated(lines), url: `${NSSDCA_BASE}${file}` };
+    const { lines, retrieved } = await sheet(file);
+    const entry = {
+      updated: lastUpdated(lines),
+      url: `${NSSDCA_BASE}${file}`,
+      retrieved,
+    };
     for (const [key, label, options] of labels)
       entry[key] = sheetValue(lines, label, options);
     if (meanTemperature[name] !== undefined)
@@ -291,7 +361,8 @@ async function nssdcaSatellites() {
   };
   const out = {};
   for (const [file, moons] of Object.entries(sheets)) {
-    const lines = htmlLines(await get(`${NSSDCA_BASE}${file}`));
+    const response = await get(`${NSSDCA_BASE}${file}`);
+    const lines = htmlLines(response.text);
     const orbital = lines.findIndex((l) => l.startsWith('Orbital parameters'));
     if (orbital < 0) throw new Error(`section orbitale introuvable : ${file}`);
     const updated = lastUpdated(lines);
@@ -305,6 +376,7 @@ async function nssdcaSatellites() {
       const rotation = lines[at + 4];
       out[body] = {
         url: `${NSSDCA_BASE}${file}`,
+        retrieved: response.retrieved,
         updated,
         publishesTemperature,
         semiMajorAxisKm: number(lines[at + 1]) * 1000,
@@ -314,7 +386,8 @@ async function nssdcaSatellites() {
     }
   }
   // Phobos et Déimos sont décrits dans la fiche de Mars, deux colonnes par grandeur.
-  const mars = htmlLines(await get(`${NSSDCA_BASE}marsfact.html`));
+  const marsSheet = await get(`${NSSDCA_BASE}marsfact.html`);
+  const mars = htmlLines(marsSheet.text);
   const pair = (label) => {
     // DERNIÈRE occurrence : les mêmes libellés décrivent d'abord Mars elle-même.
     const at = mars.findLastIndex((l) => l === label);
@@ -331,6 +404,7 @@ async function nssdcaSatellites() {
   ['phobos', 'deimos'].forEach((body, k) => {
     out[body] = {
       url: `${NSSDCA_BASE}marsfact.html`,
+      retrieved: marsSheet.retrieved,
       updated: lastUpdated(mars),
       publishesTemperature: marsMoonsPublishTemperature,
       semiMajorAxisKm: semiMajor[k],
@@ -403,7 +477,8 @@ async function jplSatellites() {
   const physUrl = 'https://ssd.jpl.nasa.gov/sats/phys_par/';
   const elemUrl = 'https://ssd.jpl.nasa.gov/sats/elem/';
   const phys = {};
-  const physRows = tableRows(await get(physUrl));
+  const physResponse = await get(physUrl);
+  const physRows = tableRows(physResponse.text);
   // Les intitulés de la table, pour la même raison que ci-dessus : les quatre petites lunes de
   // Pluton n'ont pas de fiche NSSDCA, leurs chiffres viennent d'ici, et leur fiche dit qu'on
   // n'y trouve pas de température.
@@ -422,7 +497,8 @@ async function jplSatellites() {
     };
   }
   const elem = {};
-  for (const cells of tableRows(await get(elemUrl))) {
+  const elemResponse = await get(elemUrl);
+  for (const cells of tableRows(elemResponse.text)) {
     // Colonnes : ID, planète, satellite, code, éphéméride, repère, époque, a, e, ω, M, i, nœud, P.
     const body = Object.keys(JPL_NAME).find((k) => JPL_NAME[k] === cells[2]);
     // Première ligne rencontrée seulement : la page répète certains satellites plus bas.
@@ -439,8 +515,17 @@ async function jplSatellites() {
     if (!elem[body]) throw new Error(`JPL elem : ${body} introuvable`);
   }
   return {
-    physicalParameters: { url: physUrl, columns: physColumns, bodies: phys },
-    meanElements: { url: elemUrl, bodies: elem },
+    physicalParameters: {
+      url: physUrl,
+      retrieved: physResponse.retrieved,
+      columns: physColumns,
+      bodies: phys,
+    },
+    meanElements: {
+      url: elemUrl,
+      retrieved: elemResponse.retrieved,
+      bodies: elem,
+    },
   };
 }
 
@@ -471,7 +556,8 @@ async function nasaScienceBodies() {
   const out = {};
   for (const [body, target] of Object.entries(NASA_BODY_TARGET.bodies)) {
     const url = `https://science.nasa.gov/${target.path}/`;
-    const text = htmlLines(await get(url)).join(' ');
+    const response = await get(url);
+    const text = htmlLines(response.text).join(' ');
     const sentence = text
       .split(/(?<=[.!?]) /)
       .find((part) => part.includes(target.anchor));
@@ -486,7 +572,12 @@ async function nasaScienceBodies() {
       throw new Error(
         `NASA Science : aucune valeur Celsius dans « ${sentence} »`
       );
-    out[body] = { url, sentence: sentence.trim(), celsius };
+    out[body] = {
+      url,
+      retrieved: response.retrieved,
+      sentence: sentence.trim(),
+      celsius,
+    };
   }
   return out;
 }
@@ -518,7 +609,8 @@ const NAIF_TARGET = JSON.parse(
  * quatre petites lunes de Pluton cite comme raison de ne pas publier d'obliquité.
  */
 async function naifRotation() {
-  const text = await get(NAIF_TARGET.url);
+  const response = await get(NAIF_TARGET.url);
+  const text = response.text;
   // La table des codes du noyau, ISOLÉE : chercher « Nix » dans le fichier entier trouverait
   // de la prose, et la question posée ici est « ce code est-il celui de ce corps, dans la table
   // que le noyau publie ».
@@ -601,6 +693,7 @@ async function naifRotation() {
   }
   return {
     url: NAIF_TARGET.url,
+    retrieved: response.retrieved,
     kernel: NAIF_TARGET.kernel,
     dated,
     systems,
@@ -628,7 +721,8 @@ async function nasaMoonCounts() {
   const out = {};
   for (const planet of ['jupiter', 'saturn', 'uranus', 'neptune', 'mars']) {
     const url = `https://science.nasa.gov/${planet}/moons/`;
-    const text = htmlLines(await get(url)).join(' ');
+    const response = await get(url);
+    const text = htmlLines(response.text).join(' ');
     const words = { two: 2 };
     // La page répète le chiffre dans ses métadonnées, qui peuvent être en retard sur le corps
     // du texte (Saturne : « 274 » dans la description, « 293 … as of August 2026 » dans la
@@ -651,6 +745,7 @@ async function nasaMoonCounts() {
     const month = match[2] ? MONTHS.indexOf(match[2]) + 1 : 0;
     out[planet] = {
       url,
+      retrieved: response.retrieved,
       moonCount: count,
       asOf: month ? `${match[3]}-${String(month).padStart(2, '0')}` : null,
       sentence: match[0],
@@ -671,7 +766,8 @@ async function sbdb() {
   const out = {};
   for (const [body, sstr] of Object.entries(SBDB_TARGET)) {
     const url = `https://ssd-api.jpl.nasa.gov/sbdb.api?sstr=${encodeURIComponent(sstr)}&phys-par=1&sat=1`;
-    const json = JSON.parse(await get(url));
+    const response = await get(url);
+    const json = JSON.parse(response.text);
     if (!json.object) throw new Error(`SBDB : ${sstr} introuvable`);
     const par = (name) => {
       const p = (json.phys_par ?? []).find((x) => x.name === name);
@@ -697,6 +793,7 @@ async function sbdb() {
     const pole = par('pole');
     out[body] = {
       url: `https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=${encodeURIComponent(sstr)}`,
+      retrieved: response.retrieved,
       fullname: json.object.fullname,
       diameterKm: numeric(par('diameter')),
       gmKm3s2: numeric(par('GM')),
@@ -792,22 +889,25 @@ const collapse = (s) => s.replace(/\s+/g, ' ').replace(/[^\x20-\x7E]+/g, '?');
 
 async function articleText({ url, arxiv, arxivPdf }) {
   if (arxiv) {
-    const xml = await get(
+    const response = await get(
       `https://export.arxiv.org/api/query?id_list=${arxiv}&max_results=1`
     );
-    const summary = xml.match(/<summary>([\s\S]*?)<\/summary>/)?.[1];
+    const summary = response.text.match(/<summary>([\s\S]*?)<\/summary>/)?.[1];
     if (!summary) throw new Error(`résumé arXiv introuvable : ${arxiv}`);
-    return decode(summary.replace(/&lt;/g, '<').replace(/&gt;/g, '>'));
+    return {
+      text: decode(summary.replace(/&lt;/g, '<').replace(/&gt;/g, '>')),
+      retrieved: response.retrieved,
+    };
   }
   if (arxivPdf) {
     // Le tableau n'existe que dans le PDF : extraction par pdftotext (poppler), dont le texte
     // est mis en cache comme les autres réponses. Hors ligne, seul le cache sert.
     const { execFileSync } = await import('node:child_process');
-    const cacheKey = `https://arxiv.org/pdf/${arxivPdf}#pdftotext`;
-    const key = createHash('sha1').update(cacheKey).digest('hex').slice(0, 16);
+    const source = `https://arxiv.org/pdf/${arxivPdf}#pdftotext`;
+    const key = cacheKey(source);
     const path = `${CACHE_DIR}/${key}.txt`;
     if (!existsSync(path)) {
-      if (OFFLINE) throw new Error(`absent du cache (--offline) : ${cacheKey}`);
+      if (OFFLINE) throw new Error(`absent du cache (--offline) : ${source}`);
       const pdf = Buffer.from(
         await (await fetch(`https://arxiv.org/pdf/${arxivPdf}`)).arrayBuffer()
       );
@@ -819,14 +919,14 @@ async function articleText({ url, arxiv, arxivPdf }) {
           encoding: 'latin1',
         })
       );
+      stampNow(path);
     }
-    return readFileSync(path, 'latin1');
+    return { text: readFileSync(path, 'latin1'), retrieved: stampOf(path) };
   }
   // Page d'éditeur : le résumé est dans le HTML servi. Nature répond au `fetch` de Node par
   // une page de défi JavaScript (« Client Challenge ») mais sert l'article à curl : le texte
   // est donc lu par curl, et le script ÉCHOUE plutôt que d'accepter la page de défi.
-  const key = createHash('sha1').update(url).digest('hex').slice(0, 16);
-  const path = `${CACHE_DIR}/${key}.txt`;
+  const path = `${CACHE_DIR}/${cacheKey(url)}.txt`;
   if (!existsSync(path)) {
     if (OFFLINE) throw new Error(`absent du cache (--offline) : ${url}`);
     const { execFileSync } = await import('node:child_process');
@@ -837,17 +937,22 @@ async function articleText({ url, arxiv, arxivPdf }) {
         maxBuffer: 16 * 1024 * 1024,
       })
     );
+    stampNow(path);
   }
   const html = readFileSync(path, 'utf8');
   if (html.includes('<title>Client Challenge</title>'))
     throw new Error(`page de défi au lieu de l'article : ${url}`);
-  return decode(html.replace(/<[^>]*>/g, ' '));
+  return {
+    text: decode(html.replace(/<[^>]*>/g, ' ')),
+    retrieved: stampOf(path),
+  };
 }
 
 async function articles() {
   const out = {};
   for (const [id, article] of Object.entries(ARTICLES)) {
-    const text = collapse(await articleText(article));
+    const response = await articleText(article);
+    const text = collapse(response.text);
     for (const quote of article.quotes)
       if (!text.includes(collapse(quote)))
         throw new Error(
@@ -857,6 +962,7 @@ async function articles() {
       url:
         article.url ??
         `https://arxiv.org/abs/${(article.arxiv ?? article.arxivPdf).replace(/v\d+$/, '')}`,
+      retrieved: response.retrieved,
       verifiedQuotes: article.quotes,
     };
   }
@@ -896,63 +1002,71 @@ const FACTS_IN_BRIEF_LABELS = [
 
 async function nssdcaMasterCatalog() {
   const out = {};
-  for (const [body, target] of Object.entries(NSSDCA_MASTER_TARGET)) {
-    const url = `${NSSDCA_MASTER_BASE}${target.id}`;
-    const flat = decode(
-      (await get(url)).replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ')
+  for (const [body, target] of Object.entries(NSSDCA_MASTER_TARGET))
+    out[body] = await entry('nssdcaMasterCatalog', body, () =>
+      spacecraftSheet(target)
     );
-    const head = flat.indexOf('NSSDCA/COSPAR ID');
-    if (head < 0) throw new Error(`page NSSDCA sans identifiant : ${url}`);
-    // Le nom est le dernier segment avant l'identifiant, après la date du jour servie par le site.
-    const name = flat
-      .slice(0, head)
-      .trim()
-      .replace(/^.*\d{4}\s+/, '')
-      .trim();
-    if (name !== target.expect)
-      throw new Error(
-        `NSSDCA ${target.id} : « ${name} » au lieu de « ${target.expect} »`
-      );
-    const id = flat.slice(head).match(/NSSDCA\/COSPAR ID:\s*(\S+)/)?.[1];
-    if (id !== target.id)
-      throw new Error(`NSSDCA : la page ${url} annonce l'identifiant ${id}`);
-    const facts = flat.match(
-      /Facts in Brief\s+(.*?)\s+(?:Funding Agenc|Discipline)/
-    )?.[1];
-    if (!facts) throw new Error(`bloc « Facts in Brief » introuvable : ${url}`);
-    // Un champ court jusqu'au libellé SUIVANT, et ce libellé se prend dans une liste fermée :
-    // les valeurs sont du texte libre contenant des majuscules (« Cape Canaveral, United
-    // States »), donc « un mot capitalisé suivi d'un deux-points » arrêtait le site au premier
-    // mot — relevé « Cape Canaveral, » pour les huit fiches américaines.
-    const NEXT = `(?=\\s+(?:${FACTS_IN_BRIEF_LABELS.join('|')}):|$)`;
-    const field = (label, pattern) => {
-      const match = facts.match(new RegExp(`${label}:\\s*(${pattern})${NEXT}`));
-      return match ? match[1].trim() : null;
-    };
-    const mass = field('Mass', '[\\d.]+ kg');
-    if (!mass)
-      throw new Error(`masse introuvable dans « Facts in Brief » : ${url}`);
-    const launchDate = field('Launch Date', '\\d{4}-\\d{2}-\\d{2}');
-    if (!launchDate) throw new Error(`date de lancement introuvable : ${url}`);
-    const power = field('Nominal Power', '[\\d.]+ W');
-    out[body] = {
-      url,
-      cosparId: target.id,
-      name,
-      launchDate,
-      launchVehicle: field('Launch Vehicle', '.+?'),
-      launchSite: field('Launch Site', '.+?'),
-      massKg: number(mass.replace(' kg', '')),
-      nominalPowerW: power ? number(power.replace(' W', '')) : null,
-      // Ce que le corps de la page dit d'une masse au lancement, quand il en dit quelque chose.
-      launchMassMentions: [
-        ...flat
-          .slice(0, flat.indexOf('Facts in Brief'))
-          .matchAll(/[^.]*launch mass[^.]*\./gi),
-      ].map((m) => m[0].trim()),
-    };
-  }
   return out;
+}
+
+/** UNE fiche de sonde, lue à sa source. Appelée par `entry`, qui sait la reprendre. */
+async function spacecraftSheet(target) {
+  const url = `${NSSDCA_MASTER_BASE}${target.id}`;
+  const response = await get(url);
+  const flat = decode(
+    response.text.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ')
+  );
+  const head = flat.indexOf('NSSDCA/COSPAR ID');
+  if (head < 0) throw new Error(`page NSSDCA sans identifiant : ${url}`);
+  // Le nom est le dernier segment avant l'identifiant, après la date du jour servie par le site.
+  const name = flat
+    .slice(0, head)
+    .trim()
+    .replace(/^.*\d{4}\s+/, '')
+    .trim();
+  if (name !== target.expect)
+    throw new Error(
+      `NSSDCA ${target.id} : « ${name} » au lieu de « ${target.expect} »`
+    );
+  const id = flat.slice(head).match(/NSSDCA\/COSPAR ID:\s*(\S+)/)?.[1];
+  if (id !== target.id)
+    throw new Error(`NSSDCA : la page ${url} annonce l'identifiant ${id}`);
+  const facts = flat.match(
+    /Facts in Brief\s+(.*?)\s+(?:Funding Agenc|Discipline)/
+  )?.[1];
+  if (!facts) throw new Error(`bloc « Facts in Brief » introuvable : ${url}`);
+  // Un champ court jusqu'au libellé SUIVANT, et ce libellé se prend dans une liste fermée :
+  // les valeurs sont du texte libre contenant des majuscules (« Cape Canaveral, United
+  // States »), donc « un mot capitalisé suivi d'un deux-points » arrêtait le site au premier
+  // mot — relevé « Cape Canaveral, » pour les huit fiches américaines.
+  const NEXT = `(?=\\s+(?:${FACTS_IN_BRIEF_LABELS.join('|')}):|$)`;
+  const field = (label, pattern) => {
+    const match = facts.match(new RegExp(`${label}:\\s*(${pattern})${NEXT}`));
+    return match ? match[1].trim() : null;
+  };
+  const mass = field('Mass', '[\\d.]+ kg');
+  if (!mass)
+    throw new Error(`masse introuvable dans « Facts in Brief » : ${url}`);
+  const launchDate = field('Launch Date', '\\d{4}-\\d{2}-\\d{2}');
+  if (!launchDate) throw new Error(`date de lancement introuvable : ${url}`);
+  const power = field('Nominal Power', '[\\d.]+ W');
+  return {
+    url,
+    retrieved: response.retrieved,
+    cosparId: target.id,
+    name,
+    launchDate,
+    launchVehicle: field('Launch Vehicle', '.+?'),
+    launchSite: field('Launch Site', '.+?'),
+    massKg: number(mass.replace(' kg', '')),
+    nominalPowerW: power ? number(power.replace(' W', '')) : null,
+    // Ce que le corps de la page dit d'une masse au lancement, quand il en dit quelque chose.
+    launchMassMentions: [
+      ...flat
+        .slice(0, flat.indexOf('Facts in Brief'))
+        .matchAll(/[^.]*launch mass[^.]*\./gi),
+    ].map((m) => m[0].trim()),
+  };
 }
 
 // ── JPL SBDB : objets interstellaires ────────────────────────────────────────────────────────
@@ -971,7 +1085,8 @@ async function sbdbInterstellar() {
   const out = {};
   for (const [body, target] of Object.entries(SBDB_INTERSTELLAR_TARGET)) {
     const api = `https://ssd-api.jpl.nasa.gov/sbdb.api?sstr=${encodeURIComponent(target.sstr)}&phys-par=1&full-prec=1`;
-    const json = JSON.parse(await get(api));
+    const response = await get(api);
+    const json = JSON.parse(response.text);
     if (!json.object) throw new Error(`SBDB : ${target.sstr} introuvable`);
     if (json.object.fullname !== target.expect)
       throw new Error(
@@ -993,6 +1108,7 @@ async function sbdbInterstellar() {
     };
     out[body] = {
       url: `https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=${encodeURIComponent(target.sstr)}`,
+      retrieved: response.retrieved,
       fullname: json.object.fullname,
       orbitClass: json.object.orbit_class?.name ?? null,
       eccentricity: element('e'),
@@ -1016,9 +1132,7 @@ async function sbdbInterstellar() {
   return out;
 }
 
-const snapshot = {
-  generatedBy: 'scripts/snapshot-fact-sources.mjs',
-  retrieved: new Date().toISOString().slice(0, 10),
+const sections = {
   nssdca: await nssdca(),
   nssdcaSatellites: await nssdcaSatellites(),
   jplSatellites: await jplSatellites(),
@@ -1030,9 +1144,28 @@ const snapshot = {
   nssdcaMasterCatalog: await nssdcaMasterCatalog(),
   articles: await articles(),
 };
-// La date de relevé n'a de sens qu'en ligne : hors ligne, garder celle du cache existant pour
-// qu'une régénération à l'identique ne produise aucun diff.
-if (OFFLINE && existsSync(OUT))
-  snapshot.retrieved = JSON.parse(readFileSync(OUT, 'utf8')).retrieved;
+
+/**
+ * UNE DATE PAR SECTION, ET ELLE EST DÉRIVÉE DES RÉPONSES, jamais de l'exécution. Une section
+ * lue en deux fois porte les deux jours, et `articles` en est un cas RÉEL : six résumés arXiv,
+ * la page Nature et le PDF d'Haumea lus le 2026-09-20, les deux articles ajoutés au lot 23 lus le
+ * 2026-09-28. Une date unique pour dix sources était le mensonge de ce relevé ; une date unique
+ * par section en serait un plus petit.
+ *
+ * Rien n'est écrit deux fois : ce tableau se DÉDUIT des sections, et `factSourceDates.test.ts`
+ * le redéduit pour vérifier qu'il n'a pas dérivé. C'est aussi pourquoi le cas particulier hors
+ * ligne a disparu : la date vient désormais du cache, donc une régénération sans réseau rend
+ * exactement le même fichier, ce que le rattrapage d'avant ne faisait que simuler.
+ */
+const snapshot = assertEveryUrlDated({
+  generatedBy: 'scripts/snapshot-fact-sources.mjs',
+  retrieved: Object.fromEntries(
+    Object.entries(sections).map(([name, section]) => [
+      name,
+      sectionDates(section),
+    ])
+  ),
+  ...sections,
+});
 writeFileSync(OUT, `${JSON.stringify(snapshot, null, 2)}\n`);
 console.log(`écrit ${OUT}`);
