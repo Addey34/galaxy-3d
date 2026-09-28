@@ -504,6 +504,31 @@ const BODIES = [
   },
 ];
 
+/**
+ * Le pas, dans l'unité la plus grossière qui l'exprime EXACTEMENT.
+ *
+ * Horizons n'accepte qu'un entier d'unités, et il accepte bien les MINUTES : vérifié à l'API le
+ * 2026-09-28, `STEP_SIZE='15 m'` rend « Step-size : 15 minutes ». La version précédente
+ * s'arrêtait aux heures et ARRONDISSAIT, si bien que tout pas sous une heure partait en
+ * `'0 h'` : Horizons rend alors sa page d'erreur, et seule la vérification du nom de cible
+ * l'attrapait, en disant « UNKNOWN », ce qui désigne le mauvais coupable. Les satellites
+ * rapides ont besoin de ces minutes : Amalthée tourne en 11,96 h.
+ */
+function stepSize(stepDays, target) {
+  if (Number.isInteger(stepDays)) return `'${stepDays} d'`;
+  const hours = stepDays * 24;
+  if (Number.isInteger(hours)) return `'${hours} h'`;
+  const minutes = stepDays * 1440;
+  if (!Number.isInteger(minutes))
+    throw new Error(
+      `${target}: le pas ${stepDays} j ne s'exprime pas en minutes entières ` +
+        `(${minutes} min) — Horizons n'accepte qu'un entier d'unités`
+    );
+  if (minutes < 1)
+    throw new Error(`${target}: pas trop fin pour Horizons (${minutes} min)`);
+  return `'${minutes} m'`;
+}
+
 function buildUrl(
   target,
   center,
@@ -520,10 +545,7 @@ function buildUrl(
     CENTER: `500@${CENTER_IDS[center]}`,
     START_TIME: `'${startTime}'`,
     STOP_TIME: `'${stopTime}'`,
-    // Horizons n'accepte qu'un entier d'unités : un pas fractionnaire passe en heures.
-    STEP_SIZE: Number.isInteger(stepDays)
-      ? `'${stepDays} d'`
-      : `'${Math.round(stepDays * 24)} h'`,
+    STEP_SIZE: stepSize(stepDays, target),
     REF_PLANE: 'ECLIPTIC',
     REF_SYSTEM: 'ICRF',
     OUT_UNITS: 'AU-D',
@@ -634,6 +656,75 @@ async function requestSplitAtSolutionEpoch(body, startTime, stopTime) {
   return { before, after, node };
 }
 
+/**
+ * Horizons refuse une demande trop longue, et un pas fin en fait une très vite : Encelade au pas
+ * de six heures sur 1900-2100 vaut 293 660 lignes. On découpe donc en tranches, et les
+ * FRONTIÈRES SE PRENNENT SUR LA GRILLE DU FICHIER LUI-MÊME (`JD <nœud>`), jamais sur une date
+ * recalculée : le fichier est daté en TDB et une date ISO est comprise en UT, donc une
+ * frontière calculée dériverait de ~69 s et le pas cesserait d'être uniforme au raccord.
+ * L'échantillon commun à deux tranches n'est gardé qu'une fois, et l'uniformité est VÉRIFIÉE
+ * au raccord comme elle l'est pour la coupe à l'époque.
+ *
+ * Une tranche ne dépasse JAMAIS la fin demandée : sans ce plafond le fichier débordait de deux
+ * échantillons au-delà de `STOP_TIME`, donc le chemin découpé et le chemin d'un bloc ne
+ * rendaient plus le même fichier, ce qu'un test compare octet pour octet.
+ */
+const MAX_ROWS_PER_REQUEST = 45_000;
+
+const jdOfIso = (iso) =>
+  Date.parse(`${iso}T00:00:00Z`) / 86_400_000 + 2440587.5;
+const jdOfBound = (bound) =>
+  typeof bound === 'string' && bound.startsWith('JD ')
+    ? Number(bound.slice(3))
+    : jdOfIso(bound);
+
+async function requestChunked(body, startTime, stopTime) {
+  const stepDays = body.stepDays ?? STEP_DAYS;
+  const stopJd = jdOfIso(stopTime);
+  const totalRows = Math.floor((stopJd - jdOfIso(startTime)) / stepDays) + 1;
+  if (totalRows <= MAX_ROWS_PER_REQUEST)
+    return parseVectors(
+      await requestVectors(body, startTime, stopTime),
+      body.name
+    );
+
+  const chunks = Math.ceil(totalRows / MAX_ROWS_PER_REQUEST);
+  const spanDays = Math.ceil(totalRows / chunks) * stepDays;
+  process.stdout.write(`${totalRows} lignes en ${chunks} tranches, `);
+
+  let rows = [];
+  let from = startTime;
+  for (let guard = 0; guard <= chunks + 2; guard++) {
+    const to = Math.min(jdOfBound(from) + spanDays, stopJd);
+    const part = parseVectors(
+      await requestVectors(body, from, `JD ${to.toFixed(9)}`),
+      body.name
+    );
+    if (Math.abs(part.stepDays - stepDays) > 1e-9)
+      throw new Error(
+        `${body.name}: tranche au pas ${part.stepDays} j, attendu ${stepDays}`
+      );
+    if (rows.length === 0) rows = part.rows;
+    else {
+      const joint = rows[rows.length - 1].jd;
+      if (Math.abs(part.rows[0].jd - joint) < 1e-9) part.rows.shift();
+      else if (Math.abs(part.rows[0].jd - joint - stepDays) > 1e-9)
+        throw new Error(
+          `${body.name}: raccord non uniforme, ${joint} puis ${part.rows[0].jd}`
+        );
+      rows = rows.concat(part.rows);
+    }
+    const last = rows[rows.length - 1].jd;
+    if (last + stepDays > stopJd) break;
+    from = `JD ${(last + stepDays).toFixed(9)}`;
+  }
+  for (let i = 1; i < rows.length; i++) {
+    if (Math.abs(rows[i].jd - rows[i - 1].jd - stepDays) > 1e-9)
+      throw new Error(`${body.name}: pas non uniforme à la ligne ${i}`);
+  }
+  return { rows, stepDays };
+}
+
 async function fetchBody(body) {
   process.stdout.write(`Fetching ${body.name}... `);
   let rows;
@@ -663,8 +754,11 @@ async function fetchBody(body) {
       process.stdout.write(`split at JD ${split.node}, `);
     }
   } else {
-    const result = await requestVectors(body, body.startTime, body.stopTime);
-    ({ rows, stepDays } = parseVectors(result, body.name));
+    ({ rows, stepDays } = await requestChunked(
+      body,
+      body.startTime ?? START_TIME,
+      body.stopTime ?? STOP_TIME
+    ));
   }
   const binary = encodeBinary(rows);
   const hash = createHash('sha256').update(binary).digest('hex').slice(0, 12);
@@ -696,13 +790,26 @@ if (only) {
     await readFile(resolve(OUTPUT_DIR, 'manifest.json'), 'utf8')
   );
   const replaced = [];
+  /**
+   * Un corps dont le manifeste PORTAIT un facteur d'échelle du temps de propagation le perd
+   * ici, puisque `fetchBody` rend une entrée neuve. Le facteur est DÉRIVÉ du fichier, donc le
+   * recopier serait pire que l'effacer : il décrirait le fichier précédent. On le DIT donc.
+   *
+   * Sans cela l'effacement est silencieux et fausse toute mesure faite dans la foulée : c'est
+   * arrivé le 2026-09-28 en chiffrant ce lot. Il ne peut pas être LIVRÉ, en revanche,
+   * `src/core/meanMotionScale.test.ts` exigeant un facteur numérique pour chaque corps qui
+   * déclare cette propagation.
+   */
+  const lostScale = [];
   for (const name of only) {
     const body = BODIES.find((entry) => entry.name === name);
     if (!body) throw new Error(`--only : corps inconnu « ${name} »`);
     const previous = manifest.bodies[name]?.file;
+    const hadScale = manifest.bodies[name]?.meanMotionScale !== undefined;
     manifest.bodies[name] = await fetchBody(body);
     if (previous && previous !== manifest.bodies[name].file)
       replaced.push(previous);
+    if (hadScale) lostScale.push(name);
   }
   manifest.generatedAt = new Date().toISOString();
   await writeFile(
@@ -716,6 +823,18 @@ if (only) {
   for (const file of replaced) await unlink(resolve(OUTPUT_DIR, file));
   process.stdout.write(`Updated ${[...only].join(', ')}\n`);
   process.exitCode = 0;
+  if (lostScale.length > 0) {
+    process.stdout.write(
+      `
+À FAIRE MAINTENANT : ${lostScale.join(', ')} portait un meanMotionScale, ` +
+        `dérivé du fichier qui vient d'être remplacé.
+` +
+        `Rejouer « pnpm ephemeris:meanmotion » AVANT toute mesure : sans lui, la position ` +
+        `propagée n'est pas celle que l'application servira.
+`
+    );
+    process.exitCode = 1;
+  }
   // Pas de process.exit() pendant qu'un fetch peut garder une connexion ouverte (plantage
   // libuv sous Windows, cf. check-deployed-bundle.mjs) : on sort par le chemin normal.
 }
