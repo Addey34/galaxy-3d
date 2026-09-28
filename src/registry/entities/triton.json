@@ -107,15 +107,19 @@
       "detail": "gravityFromGM"
     },
     "meanTempC": {
-      "published": false,
-      "reason": "not-yet-sourced"
+      "value": -235,
+      "source": "nasa-science-bodies",
+      "method": "measured",
+      "citation": "https://science.nasa.gov/neptune/moons/triton/"
     },
     "axialTilt": {
       "value": {
-        "$deg": 0.4
+        "$deg": 0.01
       },
-      "published": false,
-      "reason": "not-yet-sourced"
+      "source": "naif-pck",
+      "method": "derived",
+      "detail": "obliquityFromPole",
+      "citation": "pck00011.tpc, BODY801"
     },
     "distanceAU": {
       "value": {

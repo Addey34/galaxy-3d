@@ -43,7 +43,12 @@
     "radiusKm": {
       "value": 780,
       "published": false,
-      "reason": "not-yet-sourced"
+      "reason": {
+        "en": "Haumea is too elongated for a single radius: the occultation measured an elliptical limb of 1704 km by 1138 km, and its longest axis is at least 2322 km (Ortiz et al. 2017).",
+        "fr": "Haumea est trop allongée pour un rayon unique : l'occultation a mesuré un limbe elliptique de 1704 km sur 1138 km, et son axe le plus long fait au moins 2322 km (Ortiz et al. 2017).",
+        "es": "Haumea es demasiado alargada para un radio único: la ocultación midió un limbo elíptico de 1704 km por 1138 km, y su eje más largo mide al menos 2322 km (Ortiz et al. 2017).",
+        "pt-BR": "Haumea é alongada demais para um raio único: a ocultação mediu um limbo elíptico de 1704 km por 1138 km, e o seu eixo mais longo tem pelo menos 2322 km (Ortiz et al. 2017)."
+      }
     },
     "massKg": {
       "value": 4.006e+21,
@@ -52,25 +57,39 @@
       "uncertainty": 40000000000000000000
     },
     "gravity": {
-      "value": 0.44,
       "published": false,
-      "reason": "not-yet-sourced"
+      "reason": {
+        "en": "Surface gravity has no single value on a body whose measured limb is 1704 km by 1138 km and whose longest axis is at least 2322 km (Ortiz et al. 2017).",
+        "fr": "La gravité de surface n'a pas de valeur unique sur un corps dont le limbe mesuré fait 1704 km sur 1138 km et dont l'axe le plus long fait au moins 2322 km (Ortiz et al. 2017).",
+        "es": "La gravedad en la superficie no tiene un valor único en un cuerpo cuyo limbo medido es de 1704 km por 1138 km y cuyo eje más largo mide al menos 2322 km (Ortiz et al. 2017).",
+        "pt-BR": "A gravidade à superfície não tem um valor único num corpo cujo limbo medido é de 1704 km por 1138 km e cujo eixo mais longo tem pelo menos 2322 km (Ortiz et al. 2017)."
+      }
     },
     "meanTempC": {
       "published": false,
-      "reason": "not-yet-sourced"
+      "reason": {
+        "en": "The JPL Small-Body Database, the source of its other figures, publishes no temperature among its physical parameters.",
+        "fr": "La base des petits corps de JPL, d'où viennent ses autres chiffres, ne publie aucune température parmi ses paramètres physiques.",
+        "es": "La base de datos de cuerpos menores del JPL, de donde proceden sus demás cifras, no publica ninguna temperatura entre sus parámetros físicos.",
+        "pt-BR": "A base de pequenos corpos do JPL, de onde vêm os seus outros números, não publica nenhuma temperatura entre os seus parâmetros físicos."
+      }
     },
     "moonCount": {
       "value": 2,
       "source": "jpl-sbdb",
       "method": "measured",
-      "asOf": "2026-09-20",
+      "asOf": "2026-09-28",
       "detail": "confirmedSatellites"
     },
     "axialTilt": {
       "value": 126,
       "published": false,
-      "reason": "not-yet-sourced"
+      "reason": {
+        "en": "The JPL Small-Body Database publishes no spin-axis solution for this body, and an axial tilt cannot be derived without one.",
+        "fr": "La base des petits corps de JPL ne publie aucune solution de pôle pour ce corps, et une inclinaison axiale ne se dérive pas sans elle.",
+        "es": "La base de datos de cuerpos menores del JPL no publica ninguna solución de polo para este cuerpo, y una inclinación axial no puede derivarse sin ella.",
+        "pt-BR": "A base de pequenos corpos do JPL não publica nenhuma solução de polo para este corpo, e uma inclinação axial não se deriva sem ela."
+      }
     },
     "rotationPeriod": {
       "value": 3.9154,

@@ -92,9 +92,13 @@
       }
     },
     "axialTilt": {
-      "value": 0,
-      "published": false,
-      "reason": "not-yet-sourced"
+      "value": {
+        "$deg": 0.01
+      },
+      "source": "naif-pck",
+      "method": "derived",
+      "detail": "obliquityFromPole",
+      "citation": "pck00011.tpc, BODY501"
     },
     "distanceAU": {
       "value": {

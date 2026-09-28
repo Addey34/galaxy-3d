@@ -93,13 +93,15 @@
       "value": 1,
       "source": "jpl-sbdb",
       "method": "measured",
-      "asOf": "2026-09-20",
+      "asOf": "2026-09-28",
       "detail": "confirmedSatellites"
     },
     "axialTilt": {
-      "value": 156,
-      "published": false,
-      "reason": "not-yet-sourced"
+      "value": 155.97,
+      "source": "naif-pck",
+      "method": "derived",
+      "detail": "obliquityFromPole",
+      "citation": "pck00011.tpc, BODY2431010"
     },
     "rotationPeriod": {
       "value": 4.634,

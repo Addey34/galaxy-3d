@@ -23,6 +23,17 @@ import { SPACECRAFT_MISSIONS } from './spacecraft';
 import { KM_PER_AU } from '@/core/ScaleService';
 import { PLANETS_TO_SUN_MASS_RATIO } from '@/core/kepler';
 import { DEG_TO_RAD as D2R, RAD_TO_DEG } from '@/core/MathConstants';
+import {
+  angleBetween,
+  centuriesFromJ2000,
+  equatorialToEcliptic,
+  orbitNormalFromElements,
+  orbitNormalFromPositions,
+  spinAngularMomentum,
+  type NutationAngles,
+  type Vec3,
+} from '@/core/iauPole';
+import { JupiterMoons } from 'astronomy-engine';
 import type { CelestialBodyConfig, FactField, FactProvenance } from '@/types';
 
 /**
@@ -192,6 +203,10 @@ const sbdbInterstellar = snapshot.sbdbInterstellar as Record<
     solutionDate: string;
   }
 >;
+const nasaScience = snapshot.nasaScienceBodies as Record<
+  string,
+  { url: string; sentence: string; celsius: number[] }
+>;
 const sbdb = snapshot.sbdb as Record<
   string,
   {
@@ -287,6 +302,14 @@ const ARTICLE_VALUES: Record<
   'pal-2012-sedna': {
     sedna: { radiusKm: { value: 497.5, quote: '995 +/- 80 km' } },
   },
+  'brown-2010-orcus': {
+    orcus: {
+      massKg: {
+        value: 6.32e20,
+        quote: 'system mass of 6.32+- 0.01 X 10^20 kg',
+      },
+    },
+  },
   'kiss-2016-nereid': {
     nereid: {
       rotationPeriod: {
@@ -296,6 +319,77 @@ const ARTICLE_VALUES: Record<
     },
   },
 };
+
+const naif = snapshot.naifRotation as unknown as {
+  kernel: string;
+  systems: Record<string, NutationAngles>;
+  bodies: Record<
+    string,
+    {
+      naifId: number;
+      system: number | null;
+      rotation: {
+        poleRaDeg: number[];
+        poleDecDeg: number[];
+        nutPrecRa: number[] | null;
+        nutPrecDec: number[] | null;
+        pmRateDegPerDay: number;
+      } | null;
+    }
+  >;
+};
+
+/**
+ * L'époque des éléments de repli des satellites : la MÊME pour tout le catalogue, et cette
+ * unicité est vérifiée ici plutôt que recopiée. Elle sert aussi aux quatre lunes galiléennes,
+ * qui n'ont pas d'éléments — astronomy-engine les place — pour que les vingt-trois obliquités
+ * dérivées le soient toutes au même instant.
+ */
+const ORBIT_EPOCH = (() => {
+  const epochs = new Set<number>();
+  for (const { cfg } of bodies)
+    if (cfg.relativeOrbitalElements)
+      epochs.add(cfg.relativeOrbitalElements.epoch.getTime());
+  if (epochs.size !== 1)
+    throw new Error(
+      `éléments de repli : ${epochs.size} époques différentes, la dérivation en suppose une`
+    );
+  return new Date([...epochs][0]);
+})();
+
+/**
+ * Normale de l'orbite d'un corps, en écliptique, prise LÀ OÙ SON ORBITE EST DÉCRITE : les
+ * éléments que sa fiche déclare, ou, quand elle n'en déclare pas parce qu'astronomy-engine
+ * place le corps, astronomy-engine lui-même. C'est la seule entrée de la dérivation qui ne
+ * vienne pas du noyau de NAIF.
+ */
+function orbitNormalOf(
+  name: string,
+  cfg: CelestialBodyConfig
+): { normal: Vec3; epoch: Date } {
+  const elements = cfg.relativeOrbitalElements ?? cfg.orbitalElements;
+  if (elements)
+    return {
+      normal: orbitNormalFromElements(
+        elements.inclinationRad,
+        elements.ascendingNodeRad
+      ),
+      epoch: elements.epoch,
+    };
+  const moon = cfg.relativeEphemeris;
+  if (moon?.kind !== 'jupiterMoon')
+    throw new Error(`${name} : aucune orbite d'où tirer une normale`);
+  const state = JupiterMoons(ORBIT_EPOCH)[moon.moon];
+  return {
+    normal: equatorialToEcliptic(
+      orbitNormalFromPositions(
+        [state.x, state.y, state.z],
+        [state.x + state.vx, state.y + state.vy, state.z + state.vz]
+      )
+    ),
+    epoch: ORBIT_EPOCH,
+  };
+}
 
 /** Obliquité (degrés) entre un pôle RA/Dec J2000 et la normale d'une orbite écliptique (i, Ω). */
 function obliquityFromPole(
@@ -551,6 +645,48 @@ function expected(
       }
       break;
     }
+    case 'naif-pck': {
+      const entry = naif.bodies[name] ?? fail('corps absent du relevé NAIF');
+      const reference = `${naif.kernel}, BODY${entry.naifId}`;
+      if (p.citation !== reference)
+        fail(`citation « ${p.citation} » ≠ « ${reference} »`);
+      if (field !== 'axialTilt') break;
+      if (p.method !== 'derived') fail('l’obliquité se DÉRIVE du pôle publié');
+      const rotation =
+        entry.rotation ?? fail('le noyau ne publie aucun pôle pour ce corps');
+      const { normal, epoch } = orbitNormalOf(name, cfg);
+      const spin = equatorialToEcliptic(
+        spinAngularMomentum(
+          {
+            ...rotation,
+            nutPrecRa: rotation.nutPrecRa ?? undefined,
+            nutPrecDec: rotation.nutPrecDec ?? undefined,
+          },
+          naif.systems[String(entry.system)] ?? [],
+          centuriesFromJ2000(epoch)
+        )
+      );
+      // Tolérance ABSOLUE de 0,0051° : la fiche publie l'obliquité arrondie au centième de
+      // degré, et un arrondi au centième s'écarte au plus de 0,005. Ce n'est pas la précision
+      // de la MESURE (le rapport de l'UAI s'attribue 0,1°), c'est celle de la RECOPIE.
+      return {
+        values: [angleBetween(spin, normal)],
+        tolerance: 0.0051 * D2R,
+        absolute: true,
+      };
+    }
+    case 'nasa-science-bodies': {
+      const row =
+        nasaScience[name] ?? fail('corps absent du relevé NASA Science');
+      if (p.citation !== row.url)
+        fail(`citation « ${p.citation} » ≠ page « ${row.url} »`);
+      if (field !== 'meanTempC') break;
+      // Plusieurs valeurs dans la phrase relevée veulent dire une PLAGE : la page ne publie
+      // alors pas de moyenne, et la fiche n'a pas le droit d'en afficher une.
+      if (row.celsius.length !== 1)
+        fail('la page publie une plage, pas une moyenne');
+      return { values: [row.celsius[0]], tolerance: 0 };
+    }
     case 'jpl-horizons': {
       const el = cfg.orbitalElements ?? fail('pas d’éléments orbitaux');
       if (field === 'distanceAU')
@@ -768,4 +904,194 @@ describe('magnitude absolue des interstellaires : H affichée, ou la raison vér
       expect(reason!.fr).toMatch(/\bM1\b/);
     }
   );
+});
+
+/**
+ * RAISONS CONFRONTÉES À LEUR SOURCE. Une valeur citée sans source ne vaut rien, et le lot 4 l'a
+ * réglé ; une RAISON qui parle d'une source et que personne ne vérifie est exactement le même
+ * défaut, une phrase de plus. « La base des petits corps ne publie pas de température » est une
+ * affirmation sur une source : elle se vérifie contre le relevé de cette source.
+ *
+ * Ces gardes tiennent les quatre-vingt-huit raisons rédigées du catalogue, dont les soixante-trois
+ * du lot 23, dans les deux sens : un
+ * corps dont la source publie la grandeur ne peut PAS écrire qu'elle ne la publie pas, et un
+ * corps dont elle ne la publie pas doit l'écrire plutôt que de laisser un champ muet.
+ */
+describe('raisons rédigées : confrontées à leur source', () => {
+  const reasonOf = (cfg: CelestialBodyConfig, field: FactField) =>
+    cfg.realData?.unknown?.[field];
+  const written = (field: FactField) =>
+    bodies.filter(({ cfg }) => {
+      const reason = reasonOf(cfg, field);
+      return reason !== undefined && reason.unsourced !== true;
+    });
+  const sbdbPhysical = snapshot.sbdb as Record<
+    string,
+    { physicalParameterNames: string[] }
+  >;
+  const nasaBodies = snapshot.nasaScienceBodies as Record<
+    string,
+    { url: string; sentence: string; celsius: number[] }
+  >;
+  const jplColumns = snapshot.jplSatellites.physicalParameters
+    .columns as string[];
+
+  it('aucune température que nous tenons n’est passée sous silence', () => {
+    // Le sens qui compte : une raison ne peut pas dire « personne ne publie » d'un chiffre qui
+    // est dans un de nos relevés. La garde regarde les quatre relevés qui pourraient en porter.
+    const held: string[] = [];
+    for (const { name } of written('meanTempC')) {
+      if (
+        nssdcaSat[name] &&
+        (nssdcaSat[name] as { publishesTemperature?: boolean })
+          .publishesTemperature
+      )
+        held.push(`${name} : fiche NSSDCA des satellites`);
+      if (nssdca[name]?.meanTemperatureC !== undefined)
+        held.push(`${name} : fiche NSSDCA`);
+      if (
+        sbdbPhysical[name]?.physicalParameterNames.some((parameter) =>
+          /temp/i.test(parameter)
+        )
+      )
+        held.push(`${name} : paramètres physiques SBDB`);
+      if (nasaBodies[name]?.celsius.length === 1)
+        held.push(`${name} : page NASA Science`);
+    }
+    expect(held).toEqual([]);
+  });
+
+  it('une raison qui refuse une plage en cite les bornes', () => {
+    // L'autre sens : quand la page de la NASA publie plusieurs températures, la fiche n'a pas le
+    // droit de les taire. Elle dit que c'est une plage, et elle l'écrit avec ses nombres.
+    for (const [name, row] of Object.entries(nasaBodies)) {
+      if (row.celsius.length === 1) continue;
+      const cfg = bodies.find((b) => b.name === name)?.cfg;
+      const reason = reasonOf(cfg!, 'meanTempC');
+      expect(reason, `${name} : plage publiée, aucune raison`).toBeDefined();
+      for (const value of row.celsius)
+        for (const locale of ['en', 'fr', 'es', 'pt-BR'] as const)
+          expect(
+            reason![locale],
+            `${name}.${locale} ne cite pas ${value}`
+          ).toContain(String(value));
+    }
+  });
+
+  it('l’obliquité manque exactement là où le noyau ne publie pas de pôle', () => {
+    // La raison affirme que TOUTES les autres lunes affichées ici ont un axe publié. C'est une
+    // affirmation sur le catalogue entier, donc elle se vérifie sur le catalogue entier.
+    for (const [name, entry] of Object.entries(naif.bodies)) {
+      const cfg = bodies.find((b) => b.name === name)?.cfg;
+      if (!cfg) continue;
+      const status = bodyFact(cfg, 'axialTilt').status;
+      if (entry.rotation)
+        expect(status, `${name} : pôle publié mais aucune obliquité`).toBe(
+          'value'
+        );
+      else {
+        expect(status, `${name} : aucun pôle, aucune raison`).toBe('unknown');
+        expect(reasonOf(cfg, 'axialTilt')?.unsourced).toBeUndefined();
+      }
+    }
+  });
+
+  it('une obliquité refusée à un petit corps est une absence de pôle à la SBDB', () => {
+    for (const { name } of written('axialTilt')) {
+      if (naif.bodies[name]) continue;
+      const row = sbdb[name];
+      expect(row, `${name} : ni noyau NAIF ni relevé SBDB`).toBeDefined();
+      expect(row.pole, `${name} : la SBDB publie un pôle`).toBeNull();
+    }
+  });
+
+  it('une masse ou une gravité refusée est une absence de GM chez celui qui la publierait', () => {
+    for (const field of ['massKg', 'gravity'] as const)
+      for (const { name } of written(field)) {
+        if (phys[name]) {
+          expect(phys[name].gmKm3s2, `${name} : JPL publie un GM`).toBeFalsy();
+          continue;
+        }
+        if (!sbdb[name]) continue;
+        // Orcus publie sa masse (masse du système) et refuse sa gravité, faute de rayon : le
+        // GM n'est pas le sujet de cette raison-là.
+        if (
+          bodyFact(bodies.find((b) => b.name === name)!.cfg, 'massKg')
+            .status === 'value'
+        )
+          continue;
+        expect(sbdb[name].gmKm3s2, `${name} : la SBDB publie un GM`).toBeNull();
+      }
+  });
+
+  it('une rotation refusée est une colonne vide chez celui qui la publierait', () => {
+    for (const { name } of written('rotationPeriod')) {
+      if (nssdcaSat[name]) {
+        const reason = bodies.find((b) => b.name === name)!.cfg.realData!
+          .unknown!.rotationPeriod!;
+        // « S » = synchrone, donc une période publiée : la fiche ne pourrait pas la refuser.
+        // « C » = chaotique, et une raison qui invoque le chaos doit le tenir de la fiche.
+        expect(
+          nssdcaSat[name].rotation,
+          `${name} : la fiche NSSDCA publie une rotation`
+        ).not.toBe('S');
+        if (/chaotic|chaotique|caótica|caotic/i.test(reason.en + reason.fr))
+          expect(nssdcaSat[name].rotation, `${name} : chaos non publié`).toBe(
+            'C'
+          );
+        continue;
+      }
+      if (sbdb[name]) {
+        expect(
+          sbdb[name].rotationHours,
+          `${name} : la SBDB publie une rotation`
+        ).toBeNull();
+        continue;
+      }
+      // Les quatre petites lunes de Pluton n'ont ni fiche NSSDCA ni entrée SBDB : leurs chiffres
+      // viennent de la table de JPL, dont la raison dit qu'elle n'a pas de colonne de rotation.
+      expect(
+        jplColumns.some((column) => /rotation/i.test(column)),
+        `${name} : la table JPL a une colonne de rotation`
+      ).toBe(false);
+    }
+  });
+
+  it('les colonnes de la table JPL ne portent aucune température', () => {
+    expect(jplColumns.some((column) => /temp/i.test(column))).toBe(false);
+    expect(jplColumns.length).toBeGreaterThan(4);
+  });
+
+  it('une raison qui cite un article en cite les nombres vérifiés', () => {
+    // Haumea et Orcus refusent un rayon en DISANT ce que la mesure a donné. Ces nombres sont
+    // ceux des citations que `facts:snapshot` a retrouvées mot pour mot dans l'article.
+    const quoted = (id: string) =>
+      (snapshot.articles as Record<string, { verifiedQuotes: string[] }>)[
+        id
+      ].verifiedQuotes.join(' ');
+    const cases: [string, FactField, string, string[]][] = [
+      ['haumea', 'radiusKm', 'ortiz-2017-haumea', ['1704', '1138', '2322']],
+      ['haumea', 'gravity', 'ortiz-2017-haumea', ['1704', '1138', '2322']],
+      [
+        'orcus',
+        'radiusKm',
+        'brown-2010-orcus',
+        ['940', '900', '280', '820', '640'],
+      ],
+    ];
+    for (const [name, field, article, numbers] of cases) {
+      const cfg = bodies.find((b) => b.name === name)!.cfg;
+      const reason = reasonOf(cfg, field);
+      expect(reason, `${name}.${field}`).toBeDefined();
+      const source = quoted(article).replace(/[,\s]/g, '');
+      for (const value of numbers) {
+        expect(source, `${article} ne porte pas ${value}`).toContain(value);
+        for (const locale of ['en', 'fr', 'es', 'pt-BR'] as const)
+          expect(
+            reason![locale],
+            `${name}.${field}.${locale} ne cite pas ${value}`
+          ).toContain(value);
+      }
+    }
+  });
 });

@@ -1,0 +1,13 @@
+{
+  "$schema": "../schema/provider.schema.json",
+  "id": "brown-2010-orcus",
+  "role": "fact-source",
+  "publisher": "Brown et al.",
+  "title": "The size, density, and formation of the Orcus-Vanth system in the Kuiper belt",
+  "url": "https://arxiv.org/abs/0910.4784",
+  "kind": "article",
+  "journal": "The Astronomical Journal 139, 2700",
+  "published": "2010",
+  "doi": "10.1088/0004-6256/139/6/2700",
+  "accessed": "2026-09-28"
+}

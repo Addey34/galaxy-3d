@@ -85,21 +85,40 @@
     "massKg": {
       "value": 31000000000000000000,
       "published": false,
-      "reason": "not-yet-sourced"
+      "reason": {
+        "en": "JPL's satellite table, the source of its radius, publishes no GM for Nereid, and a mass cannot be derived without one.",
+        "fr": "La table des satellites de JPL, d'où vient son rayon, ne publie aucun GM pour Néréide, et une masse ne s'en dérive pas sans lui.",
+        "es": "La tabla de satélites del JPL, de donde procede su radio, no publica ningún GM para Nereida, y una masa no puede derivarse sin él.",
+        "pt-BR": "A tabela de satélites do JPL, de onde vem o seu raio, não publica nenhum GM para Nereida, e uma massa não se deriva sem ele."
+      }
     },
     "gravity": {
-      "value": 0.0716,
       "published": false,
-      "reason": "not-yet-sourced"
+      "reason": {
+        "en": "Surface gravity is derived from GM, and JPL's satellite table publishes none for Nereid.",
+        "fr": "La gravité de surface se dérive du GM, et la table des satellites de JPL n'en publie aucun pour Néréide.",
+        "es": "La gravedad en la superficie se deriva del GM, y la tabla de satélites del JPL no publica ninguno para Nereida.",
+        "pt-BR": "A gravidade à superfície deriva do GM, e a tabela de satélites do JPL não publica nenhum para Nereida."
+      }
     },
     "meanTempC": {
       "published": false,
-      "reason": "not-yet-sourced"
+      "reason": {
+        "en": "No temperature is published where its other figures come from: neither NASA's satellite fact sheets nor JPL's satellite tables carry one.",
+        "fr": "Aucune température n'est publiée là où viennent ses autres chiffres : ni les fiches des satellites de la NASA, ni les tables des satellites de JPL n'en portent.",
+        "es": "No se publica ninguna temperatura allí donde se obtienen sus demás cifras: ni las hojas de datos de satélites de la NASA ni las tablas de satélites del JPL la incluyen.",
+        "pt-BR": "Nenhuma temperatura é publicada onde vêm os seus outros números: nem as fichas dos satélites da NASA nem as tabelas de satélites do JPL a trazem."
+      }
     },
     "axialTilt": {
       "value": 0,
       "published": false,
-      "reason": "not-yet-sourced"
+      "reason": {
+        "en": "The IAU report on rotational elements, which gives the spin axis of every other moon shown here, publishes no pole for this body, so a tilt relative to its orbit cannot be derived.",
+        "fr": "Le rapport de l'UAI sur les éléments de rotation, qui donne l'axe de toutes les autres lunes affichées ici, ne publie aucun pôle pour ce corps : son inclinaison sur son orbite ne peut donc pas en être dérivée.",
+        "es": "El informe de la UAI sobre elementos de rotación, que da el eje de todas las demás lunas mostradas aquí, no publica ningún polo para este cuerpo, así que su inclinación respecto a su órbita no puede derivarse.",
+        "pt-BR": "O relatório da UAI sobre elementos de rotação, que dá o eixo de todas as outras luas mostradas aqui, não publica nenhum polo para este corpo, portanto a sua inclinação em relação à órbita não pode ser derivada."
+      }
     },
     "distanceAU": {
       "value": {

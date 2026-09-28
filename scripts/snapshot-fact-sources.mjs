@@ -274,6 +274,10 @@ async function nssdcaSatellites() {
     const orbital = lines.findIndex((l) => l.startsWith('Orbital parameters'));
     if (orbital < 0) throw new Error(`section orbitale introuvable : ${file}`);
     const updated = lastUpdated(lines);
+    // Ces fiches ne publient AUCUNE température, et c'est ce qu'une vingtaine de fiches de
+    // corps citent comme raison de n'en afficher aucune. Une raison qui parle d'une source
+    // doit être vérifiée CONTRE la source, sinon c'est une affirmation de plus.
+    const publishesTemperature = lines.some((l) => /temperature/i.test(l));
     for (const [body, label] of Object.entries(moons)) {
       const at = lines.indexOf(label, orbital);
       if (at < 0) throw new Error(`${label} introuvable dans ${file}`);
@@ -281,6 +285,7 @@ async function nssdcaSatellites() {
       out[body] = {
         url: `${NSSDCA_BASE}${file}`,
         updated,
+        publishesTemperature,
         semiMajorAxisKm: number(lines[at + 1]) * 1000,
         siderealOrbitDays: number(lines[at + 3].replace(/R$/, '')),
         rotation: rotation === 'S' || rotation === 'C' ? rotation : null,
@@ -295,6 +300,10 @@ async function nssdcaSatellites() {
     if (at < 0) throw new Error(`fiche de Mars : ${label} introuvable`);
     return [number(mars[at + 1]), number(mars[at + 2])];
   };
+  const moonSection = mars.slice(mars.indexOf('Satellites of Mars'));
+  const marsMoonsPublishTemperature = moonSection.some((l) =>
+    /temperature/i.test(l)
+  );
   const semiMajor = pair('Semimajor axis* (km)');
   const period = pair('Sidereal orbit period (days)');
   const rotation = pair('Sidereal rotation period (days)');
@@ -302,6 +311,7 @@ async function nssdcaSatellites() {
     out[body] = {
       url: `${NSSDCA_BASE}marsfact.html`,
       updated: lastUpdated(mars),
+      publishesTemperature: marsMoonsPublishTemperature,
       semiMajorAxisKm: semiMajor[k],
       siderealOrbitDays: period[k],
       rotation: rotation[k] === period[k] ? 'S' : null,
@@ -372,7 +382,12 @@ async function jplSatellites() {
   const physUrl = 'https://ssd.jpl.nasa.gov/sats/phys_par/';
   const elemUrl = 'https://ssd.jpl.nasa.gov/sats/elem/';
   const phys = {};
-  for (const cells of tableRows(await get(physUrl))) {
+  const physRows = tableRows(await get(physUrl));
+  // Les intitulés de la table, pour la même raison que ci-dessus : les quatre petites lunes de
+  // Pluton n'ont pas de fiche NSSDCA, leurs chiffres viennent d'ici, et leur fiche dit qu'on
+  // n'y trouve pas de température.
+  const physColumns = physRows.find((cells) => cells.length >= 6) ?? [];
+  for (const cells of physRows) {
     const body = Object.keys(JPL_NAME).find((k) => JPL_NAME[k] === cells[1]);
     if (!body || cells.length < 6) continue;
     const gm = valueCell(cells[3]);
@@ -403,8 +418,172 @@ async function jplSatellites() {
     if (!elem[body]) throw new Error(`JPL elem : ${body} introuvable`);
   }
   return {
-    physicalParameters: { url: physUrl, bodies: phys },
+    physicalParameters: { url: physUrl, columns: physColumns, bodies: phys },
     meanElements: { url: elemUrl, bodies: elem },
+  };
+}
+
+// ── NASA Science : les pages de corps ────────────────────────────────────────────
+
+const NASA_BODY_TARGET = JSON.parse(
+  readFileSync(new URL('./fact-source-targets.json', import.meta.url), 'utf8')
+).nasaScienceBodies;
+
+/**
+ * Température de surface des corps dont une page de la NASA en publie une.
+ *
+ * Aucune table d'agence ne publie de température pour un satellite ou pour un objet
+ * transneptunien : ce qui existe est une PHRASE, dans la page que la NASA consacre au corps.
+ * On la relève telle quelle, avec son ancre déclarée à côté du script, et on en extrait les
+ * valeurs en degrés Celsius — celles que la page met entre parenthèses derrière ses degrés
+ * Fahrenheit.
+ *
+ * UNE valeur veut dire une moyenne, et la fiche du corps l'affiche. PLUSIEURS veut dire une
+ * plage, jamais une moyenne : la fiche écrit alors une raison, qui doit citer ces mêmes
+ * nombres. C'est ce que fait déjà Io, dont la NASA publie une plage et pas une moyenne.
+ *
+ * Une ancre qui ne retrouve rien fait ÉCHOUER le relevé : une page réécrite ne doit pas
+ * produire un relevé silencieusement vide, et surtout pas laisser une valeur affichée sans
+ * plus rien derrière elle.
+ */
+async function nasaScienceBodies() {
+  const out = {};
+  for (const [body, target] of Object.entries(NASA_BODY_TARGET.bodies)) {
+    const url = `https://science.nasa.gov/${target.path}/`;
+    const text = htmlLines(await get(url)).join(' ');
+    const sentence = text
+      .split(/(?<=[.!?]) /)
+      .find((part) => part.includes(target.anchor));
+    if (!sentence)
+      throw new Error(
+        `NASA Science : « ${target.anchor} » introuvable sur ${url}`
+      );
+    const celsius = [
+      ...sentence.matchAll(/(minus |-|−)?(\d+(?:\.\d+)?) degrees Celsius/g),
+    ].map((m) => (m[1] ? -number(m[2]) : number(m[2])));
+    if (celsius.length === 0)
+      throw new Error(
+        `NASA Science : aucune valeur Celsius dans « ${sentence} »`
+      );
+    out[body] = { url, sentence: sentence.trim(), celsius };
+  }
+  return out;
+}
+
+// ── NASA NAIF : le modèle de rotation de l'UAI ─────────────────────────────────
+
+const NAIF_TARGET = JSON.parse(
+  readFileSync(new URL('./fact-source-targets.json', import.meta.url), 'utf8')
+).naifRotation;
+
+/**
+ * Coefficients de rotation publiés par le noyau PCK générique de NAIF, qui est la forme lisible
+ * par une machine du rapport du groupe de travail de l'UAI sur les éléments de rotation. On
+ * relève les COEFFICIENTS, jamais un pôle calculé : le pôle dépend de l'instant, et c'est
+ * `core/iauPole.ts` qui l'évalue, une seule fois, pour la fiche comme pour le test.
+ *
+ * Deux précautions que ce relevé prend, et qui ont chacune leur raison :
+ *
+ *   1. le code NAIF de chaque corps est confronté à la table « Body Numbers and Names » du noyau
+ *      lui-même. Un code faux désigne un AUTRE corps sans rien dire, exactement comme le « ; » de
+ *      trop côté Horizons faisait répondre l'astéroïde 699 Hela pour Saturne ;
+ *   2. les arguments trigonométriques d'un système sont relevés LIGNE PAR LIGNE, chaque ligne
+ *      étant un argument avec ses propres coefficients. Les mettre à plat obligerait à deviner
+ *      leur degré, et ce degré n'est pas le même partout : ceux du système de Mars sont
+ *      quadratiques, tous les autres linéaires.
+ *
+ * Un corps demandé dont le noyau ne publie aucun pôle est relevé avec `rotation: null`. Cette
+ * absence n'est pas un trou du relevé : c'est elle que la fiche d'Hypérion, de Néréide et des
+ * quatre petites lunes de Pluton cite comme raison de ne pas publier d'obliquité.
+ */
+async function naifRotation() {
+  const text = await get(NAIF_TARGET.url);
+  // La table des codes du noyau, ISOLÉE : chercher « Nix » dans le fichier entier trouverait
+  // de la prose, et la question posée ici est « ce code est-il celui de ce corps, dans la table
+  // que le noyau publie ».
+  const from = text.indexOf('Body Numbers and Names');
+  const to = text.indexOf('Orientation Constants for the Sun and Planets');
+  if (from < 0 || to <= from)
+    throw new Error('noyau PCK : table des codes introuvable');
+  const flat = ` ${text.slice(from, to).replace(/\s+/g, ' ')} `;
+  const dated = text.match(/By:\s*(.+?)\s*\n/)?.[1];
+  if (!dated) throw new Error('noyau PCK : ligne « By: » introuvable');
+  const blocks = [...text.matchAll(/\\begindata([\s\S]*?)\\begintext/g)];
+  if (blocks.length === 0) throw new Error('noyau PCK : aucun bloc de données');
+  const data = blocks.map((m) => m[1]).join(String.fromCharCode(10));
+  const numbers = (raw) =>
+    raw
+      .trim()
+      .split(/\s+/)
+      .map((cell) => {
+        // Le noyau écrit les petits exposants à la mode Fortran : « -1.4D-12 ».
+        const value = Number(cell.replace(/[dD]/, 'e'));
+        if (!Number.isFinite(value))
+          throw new Error(`noyau PCK : nombre illisible « ${cell} »`);
+        return value;
+      });
+  const scalars = {};
+  const angles = {};
+  for (const m of data.matchAll(/(BODY\d+_[A-Z_]+)\s*=\s*\(([^)]*)\)/g)) {
+    scalars[m[1]] = numbers(m[2]);
+    if (m[1].endsWith('NUT_PREC_ANGLES')) {
+      const rows = m[2]
+        .split(String.fromCharCode(10))
+        .map((line) => line.trim())
+        .filter(Boolean)
+        .map(numbers);
+      const widths = new Set(rows.map((row) => row.length));
+      if (widths.size !== 1)
+        throw new Error(
+          `noyau PCK : ${m[1]} mélange des arguments de degrés différents`
+        );
+      angles[m[1]] = rows;
+    }
+  }
+  const systems = {};
+  const bodies = {};
+  for (const [body, target] of Object.entries(NAIF_TARGET.bodies)) {
+    const named = flat.includes(` ${target.id} ${target.expect} `);
+    const pole = scalars[`BODY${target.id}_POLE_RA`];
+    // Un corps que le noyau ne mentionne nulle part n'a pas de nom à confronter : les quatre
+    // petites lunes de Pluton en sont. Mais un nom présent sous un AUTRE code est une erreur de
+    // cible, et c'est exactement ce que ce second membre attrape.
+    if (!named && (pole || flat.includes(` ${target.expect} `)))
+      throw new Error(
+        `noyau PCK : le code ${target.id} n'est pas « ${target.expect} » dans la table du noyau`
+      );
+    if (!pole) {
+      bodies[body] = {
+        naifId: target.id,
+        system: target.system,
+        rotation: null,
+      };
+      continue;
+    }
+    const pm = scalars[`BODY${target.id}_PM`];
+    if (!pm)
+      throw new Error(`noyau PCK : ${body} a un pôle mais pas de méridien`);
+    const key = `BODY${target.system}_NUT_PREC_ANGLES`;
+    if (target.system !== null && angles[key])
+      systems[target.system] = angles[key];
+    bodies[body] = {
+      naifId: target.id,
+      system: target.system,
+      rotation: {
+        poleRaDeg: pole,
+        poleDecDeg: scalars[`BODY${target.id}_POLE_DEC`],
+        nutPrecRa: scalars[`BODY${target.id}_NUT_PREC_RA`] ?? null,
+        nutPrecDec: scalars[`BODY${target.id}_NUT_PREC_DEC`] ?? null,
+        pmRateDegPerDay: pm[1],
+      },
+    };
+  }
+  return {
+    url: NAIF_TARGET.url,
+    kernel: NAIF_TARGET.kernel,
+    dated,
+    systems,
+    bodies,
   };
 }
 
@@ -433,9 +612,14 @@ async function nasaMoonCounts() {
     // La page répète le chiffre dans ses métadonnées, qui peuvent être en retard sur le corps
     // du texte (Saturne : « 274 » dans la description, « 293 … as of August 2026 » dans la
     // page). La phrase DATÉE fait foi ; sans date, toutes les occurrences doivent concorder.
+    //
+    // Le qualificatif entre le nombre et « moons » est LIBRE, jusqu'à trois mots : la page
+    // d'Uranus est passée de « 29 known moons » à « 29 officially recognized moons » le
+    // 2026-09-22, et une alternation fermée (« known | confirmed ») a fait échouer le relevé.
+    // C'est ce qu'on veut d'une page de prose : elle bouge, et l'échec le dit.
     const matches = [
       ...text.matchAll(
-        /has (\d+|two) (?:known |confirmed )?moons(?:[^.]*?as of (\w+) (\d{4}))?/gi
+        /has (\d+|two) (?:[a-z]+ ){0,3}moons(?:[^.]*?as of (\w+) (\d{4}))?/gi
       ),
     ];
     const match = matches.find((m) => m[2]) ?? matches[0];
@@ -502,6 +686,10 @@ async function sbdb() {
       },
       confirmedSatellites: (json.sat ?? []).filter((s) => s.confirmed === 'Y')
         .length,
+      // TOUT ce que la base publie de physique sur ce corps, par son nom. Une douzaine de
+      // fiches disent « la SBDB ne publie pas de température » ou « pas de pôle » : cette
+      // liste est ce contre quoi ces phrases sont vérifiées.
+      physicalParameterNames: (json.phys_par ?? []).map((x) => x.name).sort(),
     };
   }
   return out;
@@ -554,6 +742,22 @@ const ARTICLES = {
   'kiss-2016-nereid': {
     arxiv: '1601.02395',
     quotes: ['rotation period of P=11.594(+/-)0.017 h'],
+  },
+  'brown-2010-orcus': {
+    arxiv: '0910.4784',
+    quotes: [
+      'system mass of 6.32+- 0.01 X 10^20 kg',
+      'diameter 940+-70 km',
+      'implies sizes of Orcus and Vanth of 900 and 280 km',
+      'implies sizes of 820 and 640 km',
+    ],
+  },
+  'ortiz-2017-haumea': {
+    arxiv: '2006.03113',
+    quotes: [
+      'elliptical limb with axes 1,704 $\\pm$ 4 km x 1,138 $\\pm$ 26 km',
+      'largest axis is at least 2,322 $\\pm$ 60 km',
+    ],
   },
 };
 
@@ -797,6 +1001,8 @@ const snapshot = {
   nssdca: await nssdca(),
   nssdcaSatellites: await nssdcaSatellites(),
   jplSatellites: await jplSatellites(),
+  naifRotation: await naifRotation(),
+  nasaScienceBodies: await nasaScienceBodies(),
   nasaMoonCounts: await nasaMoonCounts(),
   sbdb: await sbdb(),
   sbdbInterstellar: await sbdbInterstellar(),

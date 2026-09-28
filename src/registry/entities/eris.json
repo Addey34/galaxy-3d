@@ -69,19 +69,29 @@
     },
     "meanTempC": {
       "published": false,
-      "reason": "not-yet-sourced"
+      "reason": {
+        "en": "NASA publishes a range, not a mean: surface temperatures thought to vary from about -217 °C to -243 °C.",
+        "fr": "La NASA publie une plage, pas une moyenne : des températures de surface estimées entre environ -217 °C et -243 °C.",
+        "es": "La NASA publica un rango, no una media: temperaturas de superficie estimadas entre unos -217 °C y -243 °C.",
+        "pt-BR": "A NASA publica um intervalo, não uma média: temperaturas de superfície estimadas entre cerca de -217 °C e -243 °C."
+      }
     },
     "moonCount": {
       "value": 1,
       "source": "jpl-sbdb",
       "method": "measured",
-      "asOf": "2026-09-20",
+      "asOf": "2026-09-28",
       "detail": "confirmedSatellites"
     },
     "axialTilt": {
       "value": 78,
       "published": false,
-      "reason": "not-yet-sourced"
+      "reason": {
+        "en": "The JPL Small-Body Database publishes no spin-axis solution for this body, and an axial tilt cannot be derived without one.",
+        "fr": "La base des petits corps de JPL ne publie aucune solution de pôle pour ce corps, et une inclinaison axiale ne se dérive pas sans elle.",
+        "es": "La base de datos de cuerpos menores del JPL no publica ninguna solución de polo para este cuerpo, y una inclinación axial no puede derivarse sin ella.",
+        "pt-BR": "A base de pequenos corpos do JPL não publica nenhuma solução de polo para este corpo, e uma inclinação axial não se deriva sem ela."
+      }
     },
     "rotationPeriod": {
       "value": {

@@ -2117,6 +2117,73 @@ fait foi) ; la colonne P de la table JPL des éléments moyens est anomalistique
 1,7691 j sidéraux), d'où les périodes lues dans les fiches NSSDCA des satellites ; le GM de la SBDB
 pour Itokawa ne correspond pas à la masse publiée que ses propres notes citent.
 
+### L'obliquité d'un satellite se DÉRIVE d'un pôle publié (lot 23)
+
+Aucune table d'agence ne publie l'obliquité d'un satellite. Les fiches NSSDCA la publient pour
+onze corps et pour eux seuls (les huit planètes, Pluton, la Lune, et le Soleil, dont les 7,25°
+sont l'inclinaison de son équateur sur l'écliptique, pas sur une orbite qu'il n'a pas). Ce qui EST
+publié pour une lune, c'est son PÔLE : le rapport du groupe de travail de l'UAI sur les éléments
+de rotation, que NASA NAIF livre sous forme lisible par une machine (`pck00011.tpc`, fournisseur
+`naif-pck`). L'obliquité s'en dérive, exactement comme elle se dérivait déjà du pôle SBDB pour
+Éros et les trois gros astéroïdes.
+
+Le calcul vit dans `src/core/iauPole.ts`, module pur : **angle entre le moment cinétique de
+rotation et la normale de l'orbite**. Le relevé (`pnpm facts:snapshot`) conserve les COEFFICIENTS
+du noyau, jamais un pôle calculé, parce qu'un pôle dépend de l'instant. La normale vient de là où
+l'orbite du corps est décrite : les éléments écliptiques que sa fiche déclare, ou astronomy-engine
+pour les quatre lunes galiléennes, que la fiche ne décrit pas puisque c'est lui qui les place.
+
+**Trois pièges, chacun payé, chacun tenu par `iauPole.test.ts`**, qui confronte les ONZE
+obliquités publiées par la NSSDCA à celle qu'on dérive, sans un seul nombre écrit à la main (les
+orbites viennent d'astronomy-engine, la valeur attendue du relevé) :
+
+1. **le pôle n'est pas une constante.** Le modèle est un polynôme du temps PLUS une somme de
+   termes trigonométriques. Pour la Lune, le premier vaut à lui seul 3,2° : l'ignorer ne donne pas
+   un pôle approché, il donne un autre pôle ;
+2. **les arguments de ces termes sont linéaires pour six systèmes et QUADRATIQUES pour celui de
+   Mars.** Les lire comme des couples quand ce sont des triplets déplaçait le pôle de Mars de 3°
+   en déclinaison : 22,98° d'obliquité là où la NSSDCA publie 25,19, et Deimos, dans la foulée, à
+   3,5° au lieu de 0,002. Le relevé livre donc chaque argument comme un TABLEAU de coefficients ;
+3. **le pôle nord de l'UAI n'est pas la direction du moment cinétique.** Pour un corps en rotation
+   rétrograde (Vénus, Uranus, Triton, les lunes d'Uranus), le corps tourne dans le sens horaire
+   autour de ce pôle, et c'est son antipode qui porte le moment cinétique. Le signe se lit dans la
+   vitesse du méridien d'origine, jamais deviné : sans lui, Uranus rend 82,23° au lieu de 97,77 et
+   Triton 179,5 au lieu de 0,5.
+
+Falsifié quatre fois, chacune rouge pour sa raison : signe rétrograde ignoré (Uranus et Vénus),
+termes trigonométriques ignorés (Mars et la Lune), arguments de Mars mis à plat et relus par
+couples (Mars). Le quatrième cas, tronquer le coefficient quadratique lui-même, reste VERT sur la
+fenêtre de la garde : sur vingt ans autour de J2000 ce terme pèse moins que le seuil, et c'est le
+PAIRAGE qui compte, pas le degré.
+
+### Une raison de ne pas publier est confrontée à sa source, comme une valeur (lot 23)
+
+« La base des petits corps ne publie pas de température » est une affirmation SUR UNE SOURCE. Non
+vérifiée, elle ne vaut pas mieux qu'un chiffre sans provenance, le défaut que les faits sourcés
+avaient réglé pour les VALEURS au lot 4. Le relevé porte donc de quoi trancher, et `factProvenance.test.ts` tranche, dans
+les deux sens :
+
+- les fiches NSSDCA des satellites déclarent si elles publient une température
+  (`publishesTemperature`, calculé sur la SECTION des satellites pour la fiche de Mars, dont la
+  planète en a bien une) ; la table JPL des paramètres physiques livre ses INTITULÉS de colonnes ;
+  la SBDB livre les NOMS de tous ses paramètres physiques ;
+- une raison ne peut pas dire « personne ne publie » d'un chiffre qui est dans un de ces relevés ;
+- symétriquement, une obliquité manque EXACTEMENT là où le noyau de NAIF ne publie pas de pôle
+  (Hypérion, Néréide et les quatre petites lunes de Pluton, dont la rotation n'a pas d'éléments
+  publiés), et une fiche dont le noyau publie un pôle doit afficher une obliquité ;
+- quand une page de la NASA publie une PLAGE plutôt qu'une moyenne (Phobos, Rhéa, Éris), la fiche
+  écrit une raison qui cite ces mêmes bornes, et le test vérifie chaque borne dans les quatre
+  langues ;
+- quand une raison cite les nombres d'un article (le limbe elliptique de Haumea, la taille du
+  système d'Orcus), ces nombres doivent figurer dans les citations que `facts:snapshot` a
+  retrouvées mot pour mot dans l'article.
+
+**Un champ peut porter une valeur ET une raison de ne pas l'afficher, mais seulement trois.** La
+scène lit l'obliquité pour orienter un corps, le rayon pour décider d'une approche de surface et
+la masse pour le mouvement du parent : `SIMULATION_ONLY_FACTS` (`core/bodyFacts.ts`) les déclare,
+et `catalogueCompleteness.test.ts` refuse tout autre champ dans ce cas. Quatre gravités de surface
+traînaient ainsi, non publiées et lues par personne.
+
 ### Les objets d'instrument : deux familles de faits, et une date
 
 Les onze sondes et les trois objets interstellaires portent une fiche comme n'importe quel

@@ -48,7 +48,7 @@ describe('registre des fournisseurs', () => {
       declared,
       'une fiche présente sur le disque mais absente de providers/index.ts ne serait lue par personne'
     ).toEqual(fileIds);
-    expect(fileIds.length).toBe(26);
+    expect(fileIds.length).toBe(29);
   });
 
   it('garde les fiches de services HORS du bundle de l’application', () => {
@@ -110,7 +110,7 @@ describe('registre des fournisseurs', () => {
       ALL_PROVIDERS.length +
         Object.keys(EVENT_PROVIDERS).length +
         Object.keys(TILE_PROVIDERS).length
-    ).toBe(26);
+    ).toBe(29);
   });
 });
 
@@ -120,7 +120,7 @@ describe('FACT_SOURCES dérivé du registre', () => {
     expect(Object.keys(FACT_SOURCES)).toEqual(
       Object.keys(FACT_SOURCE_PROVIDERS)
     );
-    expect(Object.keys(FACT_SOURCES).length).toBe(19);
+    expect(Object.keys(FACT_SOURCES).length).toBe(22);
   });
 
   it('n’expose AUCUNE source de position comme source de fait', () => {

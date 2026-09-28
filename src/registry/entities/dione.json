@@ -107,13 +107,19 @@
       "detail": "gravityFromGM"
     },
     "meanTempC": {
-      "published": false,
-      "reason": "not-yet-sourced"
+      "value": -186,
+      "source": "nasa-science-bodies",
+      "method": "measured",
+      "citation": "https://science.nasa.gov/saturn/moons/dione/"
     },
     "axialTilt": {
-      "value": 0,
-      "published": false,
-      "reason": "not-yet-sourced"
+      "value": {
+        "$deg": 0.05
+      },
+      "source": "naif-pck",
+      "method": "derived",
+      "detail": "obliquityFromPole",
+      "citation": "pck00011.tpc, BODY604"
     },
     "distanceAU": {
       "value": {

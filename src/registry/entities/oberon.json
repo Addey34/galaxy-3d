@@ -106,12 +106,21 @@
     },
     "meanTempC": {
       "published": false,
-      "reason": "not-yet-sourced"
+      "reason": {
+        "en": "No temperature is published where its other figures come from: neither NASA's satellite fact sheets nor JPL's satellite tables carry one.",
+        "fr": "Aucune température n'est publiée là où viennent ses autres chiffres : ni les fiches des satellites de la NASA, ni les tables des satellites de JPL n'en portent.",
+        "es": "No se publica ninguna temperatura allí donde se obtienen sus demás cifras: ni las hojas de datos de satélites de la NASA ni las tablas de satélites del JPL la incluyen.",
+        "pt-BR": "Nenhuma temperatura é publicada onde vêm os seus outros números: nem as fichas dos satélites da NASA nem as tabelas de satélites do JPL a trazem."
+      }
     },
     "axialTilt": {
-      "value": 0,
-      "published": false,
-      "reason": "not-yet-sourced"
+      "value": {
+        "$deg": 0.26
+      },
+      "source": "naif-pck",
+      "method": "derived",
+      "detail": "obliquityFromPole",
+      "citation": "pck00011.tpc, BODY704"
     },
     "distanceAU": {
       "value": {

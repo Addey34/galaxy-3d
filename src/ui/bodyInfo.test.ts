@@ -86,12 +86,25 @@ describe('fiche d’information : faits sourcés', () => {
     expect(moons?.asOf).toBe('août 2026');
   });
 
-  it('dit « pas encore sourcée » plutôt que d’afficher un chiffre sans source', () => {
+  it('n’affiche plus « pas encore sourcée » nulle part, et n’affiche pas non plus de chiffre sans source', () => {
     // Titan portait « -179 °C » : une mesure locale de Huygens présentée comme une moyenne.
+    // Il dit aujourd'hui pourquoi il n'en affiche aucune, comme les 62 autres champs que le
+    // lot 23 a rédigés. Le repli « pas encore sourcée » reste dans le code (`bodyFacts.ts`,
+    // règle 4) et dans sa propre garde ; ce qu'il ne doit plus faire, c'est apparaître.
     const temperature = stat('titan', 'Température moyenne');
     expect(temperature?.value).toBe('n.d.');
-    expect(temperature?.note).toMatch(/^Pas encore sourcée : /);
+    expect(temperature?.note).toMatch(/^Donnée non publiée : /);
     expect(temperature?.sourceIndex).toBeUndefined();
+    const left: string[] = [];
+    for (const [name, cfg] of CONFIGS)
+      for (const entry of bodyStats(name, cfg))
+        if (entry.note?.startsWith('Pas encore sourcée'))
+          left.push(`${name} — ${entry.label}`);
+    for (const [name, cfg] of NAVIGABLE_TARGETS)
+      for (const entry of bodyStats(name, cfg))
+        if (entry.note?.startsWith('Pas encore sourcée'))
+          left.push(`${name} — ${entry.label}`);
+    expect(left).toEqual([]);
   });
 
   it('distingue une donnée non publiée d’une donnée pas encore sourcée', () => {

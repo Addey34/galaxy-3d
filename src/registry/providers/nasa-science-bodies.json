@@ -1,0 +1,10 @@
+{
+  "$schema": "../schema/provider.schema.json",
+  "id": "nasa-science-bodies",
+  "role": "fact-source",
+  "publisher": "NASA Science",
+  "title": "Solar System body pages",
+  "url": "https://science.nasa.gov/solar-system/",
+  "kind": "agency",
+  "accessed": "2026-09-28"
+}
