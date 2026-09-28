@@ -101,7 +101,7 @@ describe('le texte du registre livré', () => {
    * retirer la ligne, et la garde le dira.
    */
   const BUILD_ONLY: Record<string, string> = {
-    // Trois fiches sur vingt portent `use` et `terms` (nasa-eonet, nasa-trek,
+    // Trois fiches sur vingt-six portent `use` et `terms` (nasa-eonet, nasa-trek,
     // usgs-earthquake-catalog) : cette prose n'est lue que par `/sources`, généré au build, où les
     // fiches ne sont pas allégées. La façade d'exécution `FACT_SOURCE_PROVIDERS` n'expose, elle,
     // aucun bloc localisé — vérifié ci-dessous, pour que « build seulement » reste vrai.

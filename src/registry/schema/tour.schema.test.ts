@@ -115,11 +115,23 @@ describe('le schéma des visites refuse', () => {
     ['un corps sur un événement qui n’en dépend pas', { ...valid, steps: [...valid.steps, { kind: 'jumpToEvent', event: 'solar-eclipse', body: 'mars' }] }], // prettier-ignore
     ['une date sans fuseau UTC', { ...valid, steps: [...valid.steps, { kind: 'jumpToDate', date: { $date: '2030-01-01T00:00:00' } }] }], // prettier-ignore
     ['une vitesse nulle', { ...valid, steps: [...valid.steps, { kind: 'setTimeScale', scale: 0 }] }], // prettier-ignore
+    ['un ralenti que le curseur ne sait pas montrer', { ...valid, steps: [...valid.steps, { kind: 'setTimeScale', scale: 0.5 }] }], // prettier-ignore
     ['une vitesse hors de portée du curseur', { ...valid, steps: [...valid.steps, { kind: 'setTimeScale', scale: MAX_SIMULATION_SCALE + 1 }] }], // prettier-ignore
     ['une attente négative', { ...valid, steps: [...valid.steps, { kind: 'wait', ms: -1 }] }], // prettier-ignore
     ['un nom de corps en majuscules', { ...valid, steps: [{ kind: 'flyTo', body: 'Earth' }, valid.steps[1]] }], // prettier-ignore
   ])('%s', (_label, record) => {
     expect(tourSchema.safeParse(record).success).toBe(false);
+  });
+
+  it('accepte une vitesse fractionnaire au-dessus de 1', () => {
+    // Le plafond borne la MAGNITUDE, pas la précision : 1,5 fois le temps réel est une vitesse
+    // que le curseur exponentiel sait représenter, et l'interdire n'aurait servi à rien.
+    expect(
+      tourSchema.safeParse({
+        ...valid,
+        steps: [...valid.steps, { kind: 'setTimeScale', scale: 1.5 }],
+      }).success
+    ).toBe(true);
   });
 
   it('accepte une opposition qui nomme son corps, et une vitesse négative', () => {

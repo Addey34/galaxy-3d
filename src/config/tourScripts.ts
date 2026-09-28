@@ -6,9 +6,9 @@
  * Ajouter une visite est donc une fiche JSON de plus et une ligne dans `order.json` — aucune ligne
  * de TypeScript.
  *
- * Avant ce lot, les trois visites étaient écrites ici en dur, avec leurs dix blocs de prose dans
- * quatre langues : 8 600 octets de TypeScript, dont les trois quarts des traductions étaient
- * téléchargés par des visiteurs qui ne les liraient jamais. La prose vit désormais dans les fiches,
+ * Avant ce lot, les trois visites étaient écrites ici en dur, avec leurs neuf légendes et leurs
+ * trois titres en quatre langues : 8 600 octets de TypeScript, dont trois langues sur quatre
+ * partaient chez des visiteurs qui ne les liraient jamais. La prose vit désormais dans les fiches,
  * donc elle suit la voie du lot 20 : le navigateur ne reçoit que l'anglais, les trois autres
  * langues sont dérivées au build (`core/registryText.ts`).
  */

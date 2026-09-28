@@ -146,7 +146,7 @@ jobs:
   # (un echec signale une regression de cablage) mais ne bloque pas le deploiement, car
   # le rendu WebGL en GPU logiciel CI est lent et parfois capricieux sur les scenarios lourds.
   e2e-full:
-    name: Browser tests (e2e ${{ matrix.shard }}/4)
+    name: Browser tests (e2e ${{ matrix.shard }}/6)
     if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-24.04
     # SHARDING. La suite entiere ne tenait PAS dans le budget : mesure du 2026-09-08, elle
@@ -160,6 +160,18 @@ jobs:
     # que Playwright repartit par NOMBRE de tests, pas par duree : l'ecart 21 vs 14 vient de
     # scenarios lourds tombes dans le meme tiers, et un runner de plus le dilue.
     #
+    # PASSE DE 4 A 6 le 2026-09-28, sur la MEME mesure et pour la meme raison : la suite est
+    # montee a 195 scenarios, et le run du lot 20 (`36373970699`, pousse sur main) a donne
+    # 24m39 / 21m04 / 23m05 pour les trois premiers shards et un shard 4 COUPE a 30m23 par le
+    # garde-fou. Ce n'est donc pas un echec de test, c'est l'enveloppe qui est pleine : le
+    # meme etat qu'au 2026-09-08 et qu'au 2026-09-09, deux fois de suite. Six runners ramenent
+    # l'attendu autour de 16-17 min, c'est-a-dire la calibration d'origine.
+    #
+    # Et la lecon de procedure, deja payee au lot 19 : ajouter des tests REDISTRIBUE les shards,
+    # ce job ne tourne QUE sur main (`if: push`), et une suite locale ne sharde pas. Aucune CI de
+    # branche ne peut donc montrer ce depassement avant la fusion : il se corrige a l'avance, en
+    # regardant le dernier run de main, ou pas du tout.
+    #
     # On repartit sur des MACHINES, jamais sur des workers : `playwright.config.ts` impose
     # `workers: 1` et `fullyParallel: false` parce que deux contextes WebGL en GPU logiciel
     # se disputent le meme CPU et rendent les scenarios lourds instables. Chaque shard garde
@@ -167,9 +179,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        shard: [1, 2, 3, 4]
+        shard: [1, 2, 3, 4, 5, 6]
     # Garde-fou : sans lui, une install apt bloquee (miroirs Ubuntu injoignables) peut trainer
-    # des heures et polluer le statut global. Large marge sur les ~11-16 min attendus par shard.
+    # des heures et polluer le statut global. Large marge sur les ~16-17 min attendus par shard.
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1, resolved 2026-09-19
@@ -186,7 +198,7 @@ jobs:
       - run: pnpm exec playwright install --with-deps chromium
       # `playwright` en direct plutot que `pnpm test:e2e --` : pas d'ambiguite sur la
       # transmission des arguments a travers le script npm.
-      - run: pnpm exec playwright test --shard=${{ matrix.shard }}/4
+      - run: pnpm exec playwright test --shard=${{ matrix.shard }}/6
       - name: Upload Playwright diagnostics
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1, resolved 2026-09-20

@@ -31,10 +31,15 @@ démarrage complètent les contrôles de navigation, de temps et les deux modes 
 - **Événements** : consulter les prochaines phases lunaires et éclipses.
 - **Zoom optique** : ajuster le champ de vision en Exploration sans modifier la physique.
 - **Visite guidée** : parcourir les commandes au clavier ou à la souris au premier démarrage.
-- **Réglages d'affichage** : une surface en cinq sections. Un tableau par objet, groupé comme la
+- **Visites scénarisées** : quatre leçons qui pilotent la caméra et le temps, avec leurs légendes
+  (naissance d'une éclipse, danse des Galiléennes, voyage aux confins, saisons de la Terre). Chacune
+  est un fichier de données : en ajouter une ne demande pas de programmer, et les dates qu'elles
+  visent sont calculées, donc elles ne vieillissent pas.
+- **Réglages d'affichage** : une surface en six sections. Un tableau par objet, groupé comme la
   recherche, avec trois colonnes (étiquette, objet, orbite) ; le champ d'astéroïdes et de
   comètes ; le rendu (luminosité, qualité, imagerie de surface) ; l'accessibilité et les unités ;
-  la vue. Au premier chargement : le Soleil, les huit planètes et la Lune nommés, les orbites des
+  la vue ; et les données hors ligne, qui disent ce que cet appareil détient déjà et le préparent
+  sur demande. Au premier chargement : le Soleil, les huit planètes et la Lune nommés, les orbites des
   planètes, et les sondes comme les objets interstellaires en option. La trajectoire d'un objet
   interstellaire est la colonne « orbite » de sa ligne (une hyperbole ne se referme pas, et trois
   courbes ouvertes encombraient la vue d'ensemble).

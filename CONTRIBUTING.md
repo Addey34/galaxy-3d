@@ -230,6 +230,42 @@ d'écart — ne retirez pas ce garde-fou.
 - **i18n** : toute chaîne d'interface visible passe par `t()`/`data-i18n*` (`src/i18n/`), en
   anglais et en français.
 
+### Ajouter une visite guidée
+
+**De la donnée, et rien d'autre** (lot 21). Une visite est une fiche `src/registry/tours/{id}.json`
+plus son identifiant dans `src/registry/tours/order.json`, qui décide de l'ordre du sélecteur. Aucun
+fichier TypeScript, aucun test, aucune clé de dictionnaire.
+
+```json
+{
+  "$schema": "../schema/tour.schema.json",
+  "id": "exemple",
+  "title": { "en": "…", "fr": "…", "es": "…", "pt-BR": "…" },
+  "steps": [
+    { "kind": "flyTo", "body": "mars" },
+    { "kind": "jumpToEvent", "event": "opposition", "body": "mars" },
+    { "kind": "caption", "text": { "en": "…", "fr": "…", "es": "…", "pt-BR": "…" } }
+  ]
+}
+```
+
+Le vocabulaire des étapes est **fermé** (schéma Zod `src/registry/schema/tour.ts`, qui est la seule
+déclaration) : `flyTo`, `jumpToDate` (`{"$date": "…Z"}`), `jumpToEvent`, `setTimeScale`, `caption`
+et `wait`. Trois règles qui coûtent du temps si on les apprend en chemin :
+
+- **les quatre langues sont obligatoires** sur chaque bloc de texte, titre compris : une fiche
+  incomplète est refusée, et `pnpm i18n:fields` le dit fichier par fichier ;
+- **n'écrivez pas une date que le temps rendra fausse.** `jumpToEvent` vise la prochaine occurrence
+  RÉELLE d'un des événements de `ASTRONOMICAL_EVENT_KINDS` (éclipses, phases, équinoxes, solstices,
+  apsides, oppositions, conjonctions), calculée au moment où la visite y arrive. `body` est requis
+  pour `opposition` et `conjunction`, interdit ailleurs ;
+- **une légende sans `durationMs` attend un geste**, ce qui est ce qu'on veut en classe ; avec
+  `durationMs`, elle s'efface d'elle-même.
+
+`pnpm verify` valide la fiche contre le schéma, vérifie que chaque `flyTo` désigne une cible que la
+navigation sait atteindre, et la suite e2e démarre CHAQUE visite du registre : rien à ajouter pour
+que la nouvelle soit couverte.
+
 ### Ajouter une couche visuelle sur un corps
 
 Une couche se déclare dans `src/components/celestial/celestialLayers.ts` (mesh) et

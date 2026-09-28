@@ -2570,7 +2570,7 @@ fiche JSON du registre, `src/registry/tours/{id}.json`, plus son identifiant dan
 le même patron de donnée que le registre d'entités, les jeux de tuiles et les champs de hauteur,
 prouvé ici une quatrième fois.
 
-Les cinq pièces, dans l'ordre où une fiche les traverse :
+Les six pièces, dans l'ordre où une fiche les traverse :
 
 | Pièce | Rôle |
 |---|---|
@@ -2617,7 +2617,7 @@ théorique.
 Les légendes et les titres sont des blocs localisés à QUATRE langues obligatoires, comme partout
 dans le registre depuis le lot 20. Ils passent donc par la même dérivation : le navigateur ne reçoit
 que l'anglais des fiches, les trois autres langues arrivent dans la carte de leur langue
-(§ « Quatre langues, une seule chargée »). Avant ce lot, les dix blocs de prose des visites étaient
+(§ « Quatre langues, une seule chargée »). Avant ce lot, les neuf légendes et les trois titres des visites étaient
 écrits dans `config/tourScripts.ts`, donc **les quatre langues partaient chez tous les visiteurs** :
 faire de la visite une donnée l'a allégée au lieu de l'alourdir.
 

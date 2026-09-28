@@ -44,14 +44,9 @@ const MAX_TIME_SCALE = 31_557_600;
 
 const timeScale = z
   .number()
-  .int()
   .refine(
-    (value) => value !== 0,
-    'une vitesse nulle arrête le temps, pas la visite'
-  )
-  .refine(
-    (value) => Math.abs(value) <= MAX_TIME_SCALE,
-    `au-delà de ±${MAX_TIME_SCALE}, le curseur de vitesse ne sait pas représenter la valeur`
+    (value) => Math.abs(value) >= 1 && Math.abs(value) <= MAX_TIME_SCALE,
+    `la magnitude doit tenir entre 1 et ${MAX_TIME_SCALE} : c'est ce que le curseur de vitesse sait représenter, et une vitesse nulle arrêterait le temps plutôt que la visite`
   );
 
 /**

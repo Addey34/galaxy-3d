@@ -21,8 +21,16 @@ const FICHES = ORDER.map(
   (id) =>
     JSON.parse(readFileSync(resolve(TOURS, `${id}.json`), 'utf-8')) as {
       title: { en: string };
-      steps: unknown[];
+      steps: { kind: string; text?: { en: string } }[];
     }
+);
+/** La légende anglaise la plus longue du registre, et la visite qui la porte. */
+const LONGEST_CAPTION = FICHES.flatMap((fiche, index) =>
+  fiche.steps
+    .filter((step) => step.kind === 'caption' && step.text !== undefined)
+    .map((step) => ({ index, text: step.text!.en }))
+).reduce((best, entry) =>
+  entry.text.length > best.text.length ? entry : best
 );
 const TITLES_EN = FICHES.map((fiche) => fiche.title.en);
 
@@ -179,12 +187,34 @@ test.describe('every tour of the registry', () => {
 test.describe('mobile scripted tour', () => {
   test.use({ viewport: { width: 390, height: 844 } });
 
-  test('keeps the caption card inside a phone viewport', async ({ page }) => {
+  /**
+   * LA PLUS LONGUE LÉGENDE DU REGISTRE, et non la première visite venue.
+   *
+   * Ce test mesurait la carte sur `nth(0)`, dont la première étape n'affiche aucune prose : il ne
+   * disait donc rien du cas qui déborde vraiment. La visite visée est DÉRIVÉE des fiches, donc une
+   * visite plus bavarde ajoutée demain sera mesurée sans que ce fichier change.
+   */
+  test('keeps the longest caption inside a phone viewport', async ({
+    page,
+  }) => {
     await openPicker(page);
-    await page.locator('.stour-picker-item').nth(0).click();
+    await page.locator('.stour-picker-item').nth(LONGEST_CAPTION.index).click();
 
     const card = page.locator('.stour-card');
     await expect(card).toBeVisible();
+
+    // On avance jusqu'à CETTE légende : les étapes de vol et de saut sont instantanées sous
+    // `reducedMotion`, et « Suivant » reste désactivé tant qu'elles courent.
+    const needle = LONGEST_CAPTION.text.slice(0, 40);
+    const caption = page.locator('.stour-caption');
+    const next = page.locator('.stour-next');
+    for (let i = 0; i < 24; i++) {
+      if (((await caption.textContent()) ?? '').includes(needle)) break;
+      if (!(await next.isDisabled())) await next.click();
+      else await page.waitForTimeout(200);
+    }
+    await expect(caption).toContainText(needle);
+
     const box = await card.boundingBox();
     if (!box) throw new Error('Tour card is not measurable');
     expect(box.x).toBeGreaterThanOrEqual(0);
