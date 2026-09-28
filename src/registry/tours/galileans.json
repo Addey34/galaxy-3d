@@ -1,0 +1,34 @@
+{
+  "$schema": "../schema/tour.schema.json",
+  "id": "galileans",
+  "title": {
+    "en": "The dance of the Galilean moons",
+    "fr": "La danse des Galiléennes",
+    "es": "La danza de las galileanas",
+    "pt-BR": "A dança das galileanas"
+  },
+  "steps": [
+    {
+      "kind": "flyTo",
+      "body": "jupiter"
+    },
+    {
+      "kind": "setTimeScale",
+      "scale": 200000
+    },
+    {
+      "kind": "caption",
+      "text": {
+        "en": "Jupiter and its four largest moons (Io, Europa, Ganymede and Callisto), discovered by Galileo in 1610. Time is now sped up so you can watch them orbit.",
+        "fr": "Jupiter et ses quatre plus grandes lunes (Io, Europe, Ganymède et Callisto), découvertes par Galilée en 1610. Le temps est accéléré pour observer leur ronde.",
+        "es": "Júpiter y sus cuatro lunas más grandes (Ío, Europa, Ganímedes y Calisto), descubiertas por Galileo en 1610. El tiempo está acelerado para observar su ronda.",
+        "pt-BR": "Júpiter e as suas quatro maiores luas (Io, Europa, Ganímedes e Calisto), descobertas por Galileu em 1610. O tempo está acelerado para observar a sua ronda."
+      },
+      "durationMs": 9000
+    },
+    {
+      "kind": "wait",
+      "ms": 9000
+    }
+  ]
+}

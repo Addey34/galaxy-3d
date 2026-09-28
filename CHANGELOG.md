@@ -8,6 +8,18 @@ fichier résume ce qui change pour une personne qui utilise ou cite Galaxy.
 
 ### Ajouté
 
+- **Une visite guidée peut désormais être écrite sans programmer.** Une visite est un fichier de
+  données : son titre, ses étapes, ses légendes dans les quatre langues. L'application en ajoute une
+  sans qu'aucune ligne de code change, et les trois visites existantes sont devenues trois fichiers,
+  à l'identique.
+- **Une quatrième visite, « Les saisons de la Terre »** : la planète vue aux quatre tournants d'une
+  même année, les deux équinoxes et les deux solstices. Elle explique pourquoi les saisons viennent
+  de l'inclinaison de l'axe et non de la distance au Soleil, et le rappelle en passant par le
+  solstice de décembre, deux semaines avant le point où la Terre est le plus proche du Soleil.
+- **Une étape de visite peut viser un événement plutôt qu'une date** : « la prochaine éclipse
+  solaire », « le prochain solstice de juin », « la prochaine opposition de Mars ». La date est
+  calculée au moment où la visite y arrive, donc elle ne vieillit pas. Une date écrite en dur aurait
+  fini par désigner le passé.
 - **Galaxy parle espagnol et portugais du Brésil**, en plus de l'anglais et du français. Tout ce
   qu'un visiteur lit suit sa langue : l'interface, le nom et la description de chaque corps, les
   crédits de licence, la raison écrite quand une valeur n'est pas publiée, les visites guidées, et
@@ -29,6 +41,10 @@ fichier résume ce qui change pour une personne qui utilise ou cite Galaxy.
 
 ### Corrigé
 
+- **Le nom et la description des onze sondes et des trois objets interstellaires restaient en
+  anglais** en français, en espagnol et en portugais, alors que leur traduction était bel et bien
+  téléchargée. Le défaut est né avec la séparation des langues décrite ci-dessus, et il a été trouvé
+  en écrivant la garde qui manquait plutôt qu'à l'œil : une description anglaise reste une phrase.
 - **La mention d'une valeur dérivée se lisait « (derived value value) »** sur les pages de corps,
   dans les quatre langues. Trouvé en relisant la page comme un lecteur la lit.
 - **L'ordinal d'une planète, les libellés du curseur de vitesse et la ponctuation d'une ligne de

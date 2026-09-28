@@ -82,7 +82,13 @@ function deriveRegistryText() {
   const readFiches = async (): Promise<unknown[]> => {
     const { readdirSync, readFileSync } = await import('fs');
     const out: unknown[] = [];
-    for (const dir of ['entities', 'spacecraft', 'interstellar', 'providers']) {
+    for (const dir of [
+      'entities',
+      'spacecraft',
+      'interstellar',
+      'providers',
+      'tours',
+    ]) {
       const full = resolve(__dirname, 'src/registry', dir);
       for (const name of readdirSync(full))
         if (name.endsWith('.json') && name !== 'order.json')

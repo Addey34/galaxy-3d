@@ -2562,6 +2562,84 @@ natif**. Ce qu'une machine peut vérifier l'est (nombres, unités, noms propres,
 clés, existence HTTP des liens) ; ce qu'elle ne peut pas — une tournure, un registre de langue, la
 lisibilité d'une phrase scientifique — reste dû.
 
+## Une visite guidée est une FICHE, pas du code (lot 21)
+
+Une visite guidée scénarisée (« Naissance d'une éclipse », « La danse des Galiléennes »…) est une
+fiche JSON du registre, `src/registry/tours/{id}.json`, plus son identifiant dans
+`src/registry/tours/order.json`. **Ajouter une visite ne touche aucune ligne de TypeScript** : c'est
+le même patron de donnée que le registre d'entités, les jeux de tuiles et les champs de hauteur,
+prouvé ici une quatrième fois.
+
+Les six pièces, dans l'ordre où une fiche les traverse :
+
+| Pièce | Rôle |
+|---|---|
+| `src/registry/tours/*.json` | la visite : un titre, une suite d'étapes |
+| `src/registry/schema/tour.ts` | le schéma Zod, SEULE déclaration de la forme ; `tour.schema.json` en est généré par `pnpm schema:generate` et comparé octet pour octet |
+| `src/registry/tours/index.ts` | l'entrée/sortie : le glob, l'ordre, la conversion pure |
+| `src/config/tourScripts.ts` | la façade d'exécution, et la résolution d'un événement |
+| `src/core/tourEngine.ts` | le séquenceur PUR qui exécute les étapes |
+| `src/ui/tourPlayer.ts` | la carte, le sélecteur, le focus, la localisation |
+
+### Le vocabulaire des étapes est FERMÉ
+
+Une fiche ne porte aucune expression : elle choisit parmi six formes nommées, exactement comme les
+formes déclarées du registre d'entités (`{"$deg": …}`). C'est cette fermeture qui permet à la
+donnée de décrire un comportement sans devenir du code.
+
+| Forme | Effet |
+|---|---|
+| `flyTo` | vole vers un corps ou une cible navigable, par `PlanetNavigation.selectBody` |
+| `jumpToDate` | saute à une date déclarée, `{"$date": "…Z"}` |
+| `jumpToEvent` | saute à la prochaine occurrence RÉELLE d'un événement, depuis la date courante |
+| `setTimeScale` | accélère (ou renverse) le temps, plafonné à ce que le curseur sait représenter |
+| `caption` | une légende localisée ; sans `durationMs` elle attend un geste |
+| `wait` | laisse la scène tourner |
+
+**`jumpToEvent` est la forme qui a fait disparaître une exception de code.** Jusqu'au lot 21,
+`ui/tourPlayer.ts` préfixait un saut de date à la visite dont l'identifiant valait `eclipse` : une
+visite n'était donc pas tout à fait de la donnée, et une deuxième visite voulant sauter à une date
+réelle aurait exigé une deuxième exception. La date est désormais résolue à l'exécution, depuis
+`core/astronomicalEvents.ts`, dont `ASTRONOMICAL_EVENT_KINDS` est le propriétaire unique des
+quatorze formes ; le schéma les cite en les important, jamais en les recopiant. **Une date écrite en
+dur dans une fiche deviendrait fausse avec le temps ; une date dérivée ne peut pas.**
+
+Le moteur reste sans astronomie : il passe la forme et le corps à l'hôte
+(`TourRuntimeHost.jumpToEvent`), et c'est la façade qui résout (`resolveEventDate`). La fenêtre de
+recherche s'ÉLARGIT (400 puis 4 000 jours) au lieu de partir large, parce qu'une opposition de Mars
+(780 jours de période synodique) sort d'une fenêtre calquée sur l'éclipse. Aucune occurrence trouvée
+rend `null`, et l'étape ne saute pas plutôt que de sauter à côté ; un test résout chaque forme citée
+par une fiche depuis dix dates de référence étalées sur une décennie, pour que ce cas reste
+théorique.
+
+### Le texte d'une visite suit la voie des quatre langues
+
+Les légendes et les titres sont des blocs localisés à QUATRE langues obligatoires, comme partout
+dans le registre depuis le lot 20. Ils passent donc par la même dérivation : le navigateur ne reçoit
+que l'anglais des fiches, les trois autres langues arrivent dans la carte de leur langue
+(§ « Quatre langues, une seule chargée »). Avant ce lot, les neuf légendes et les trois titres des visites étaient
+écrits dans `config/tourScripts.ts`, donc **les quatre langues partaient chez tous les visiteurs** :
+faire de la visite une donnée l'a allégée au lieu de l'alourdir.
+
+Le prix à payer est nommé : le texte du registre passe par **cinq listes de dossiers tenues à la
+main** (le greffon `deriveRegistryText` de `vite.config.ts`, `TEXT_ROOTS` de
+`config/catalogueText.ts`, `scripts/localized-fields.mjs`, `src/registry/registryText.test.ts`, et
+la découverte de `config/catalogueText.test.ts`), et **aucune n'échoue bruyamment si on l'oublie**.
+D'où la garde du lot : `src/config/catalogueText.test.ts` confronte la carte livrée aux fiches du
+DISQUE dans les deux sens, en DÉCOUVRANT les dossiers plutôt qu'en les listant. Elle a immédiatement
+dénoncé un défaut réel, décrit ci-dessous.
+
+### Le défaut qu'elle a trouvé : `Object.values` d'une `Map` est vide
+
+`hydrateLocalized` traversait tableaux et objets, pas les `Map`. Or `NAVIGABLE_TARGETS` et
+`NAVIGABLE_BODIES` sont des `Map` : les **14 objets d'instrument** (11 sondes, 3 interstellaires)
+lisaient donc l'ANGLAIS dans les trois autres langues, alors que leur traduction était bel et bien
+téléchargée dans la carte. Mesuré le 2026-09-28 : **0 bloc reposé au lieu de 28**. Le défaut est né
+avec la dérivation du lot 20 et n'était visible que dans le navigateur, puisqu'en test les fiches ne
+sont pas allégées. `core/registryText.ts` traverse maintenant une `Map`, et deux gardes le tiennent
+(une unitaire dans `src/registry/registryText.test.ts`, une d'intégration dans
+`src/config/catalogueText.test.ts`), chacune falsifiée séparément.
+
 ## Pages `/methodology` et `/sources`
 
 Deux documents, chacun en anglais (`/methodology/`, `/sources/`) et en français

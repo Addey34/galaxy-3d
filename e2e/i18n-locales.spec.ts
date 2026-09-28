@@ -218,6 +218,29 @@ test.describe('le texte du catalogue suit la langue', () => {
     await expect(panel).not.toContainText('The only known planet');
   });
 
+  /**
+   * LE DÉFAUT QUE CETTE FAMILLE DE GARDES A LAISSÉ PASSER UN JOUR (trouvé au lot 21).
+   *
+   * La garde ci-dessus porte sur la Terre, qui vit dans `CELESTIAL_CONFIG`, un objet ordinaire.
+   * Les 14 objets d'instrument, eux, sont tenus par des `Map` (`NAVIGABLE_TARGETS`,
+   * `NAVIGABLE_BODIES`) — et `Object.values` d'une `Map` rend un tableau VIDE, donc la carte de
+   * la langue ne se posait pas sur eux : leur description restait ANGLAISE sous une interface
+   * espagnole, alors qu'elle était bel et bien téléchargée. Une sonde plutôt qu'une planète,
+   * c'est donc exactement ce qui manquait ici.
+   */
+  test('la fiche d’une sonde aussi, et pas seulement celle d’une planète', async ({
+    page,
+  }) => {
+    await bootRecordingLoader(page, 'es');
+    await expect(page.locator('#loader')).toBeHidden({ timeout: 40_000 });
+    await page.locator('#body-search-trigger').click();
+    await page.locator('#orbit-voyager1').click();
+    const panel = page.locator('#body-info');
+    await expect(panel).toBeVisible();
+    await expect(panel).toContainText('el objeto humano más lejano');
+    await expect(panel).not.toContainText('the most distant human-made object');
+  });
+
   test('et en anglais, c’est bien l’anglais des fiches', async ({ page }) => {
     // Le TÉMOIN : sans lui, une carte qui ne se poserait jamais passerait pour un succès si le
     // test espagnol cherchait une chaîne trop courte.

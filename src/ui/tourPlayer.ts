@@ -23,7 +23,7 @@ import {
   type TourSignal,
   type TourStep,
 } from '@/core/tourEngine';
-import { resolveEclipseDate } from '@/config/tourScripts';
+import { resolveEventDate } from '@/config/tourScripts';
 import { trapFocus } from './surfaceFocus';
 
 export interface TourPlayer {
@@ -127,7 +127,7 @@ export function setupTourPlayer(
     nextButton.textContent = t('tours.next');
     closeButton.textContent = t('tours.close');
     for (const { script, btn } of pickerButtons) {
-      btn.textContent = localizedText(script.titleKey);
+      btn.textContent = localizedText(script.title);
     }
     if (active && currentScript && currentStep) render(stepIndex, currentStep);
   };
@@ -155,6 +155,7 @@ export function setupTourPlayer(
         nextButton.disabled = true;
         break;
       case 'jumpToDate':
+      case 'jumpToEvent':
         caption.textContent = t('tours.status.jumping');
         nextButton.disabled = true;
         break;
@@ -205,17 +206,7 @@ export function setupTourPlayer(
     if (!script) return;
     closePicker();
 
-    const steps =
-      id === 'eclipse'
-        ? [
-            {
-              kind: 'jumpToDate',
-              date: resolveEclipseDate(om.simulationDate),
-            } as TourStep,
-            ...script.steps,
-          ]
-        : script.steps;
-    currentScript = { ...script, steps };
+    currentScript = script;
     signal = { cancelled: false, paused: false };
     speedChanged = false;
     active = true;
@@ -230,6 +221,13 @@ export function setupTourPlayer(
       flyTo: (body) => navigation.selectBody(body),
       isFlying: () => camera.isFlying,
       jumpToDate: (date) => om.jumpToDate(date),
+      // La date est résolue ICI, au moment où l'étape s'exécute, depuis la date courante de la
+      // scène : c'est ce qui remplace l'exception `id === 'eclipse'` que ce module portait.
+      // `null` (aucune occurrence dans la fenêtre) ne saute pas plutôt que de sauter à côté.
+      jumpToEvent: (event, body) => {
+        const date = resolveEventDate(event, om.simulationDate, body);
+        if (date) om.jumpToDate(date);
+      },
       setTimeScale: (scale) => {
         speedChanged = true;
         om.setSimulationSpeed(scale);

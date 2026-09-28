@@ -15,21 +15,32 @@ import {
 // Convention d'échelle de temps (ΔT) installée dans astronomy-engine : cf. timeScale.ts.
 import './timeScale';
 
-export type AstronomicalEventKind =
-  | 'new-moon'
-  | 'first-quarter'
-  | 'full-moon'
-  | 'third-quarter'
-  | 'solar-eclipse'
-  | 'lunar-eclipse'
-  | 'march-equinox'
-  | 'june-solstice'
-  | 'september-equinox'
-  | 'december-solstice'
-  | 'perihelion'
-  | 'aphelion'
-  | 'opposition'
-  | 'conjunction';
+/**
+ * LES FORMES D'ÉVÉNEMENT, ET LEUR PROPRIÉTAIRE UNIQUE.
+ *
+ * Une VALEUR et non une union de types, parce que deux lecteurs en ont besoin à l'exécution
+ * depuis le lot 21 : le panneau des événements, et le schéma des visites guidées, dont une
+ * étape `jumpToEvent` ne peut citer qu'une forme de cette liste. Le type en est DÉRIVÉ, donc
+ * les deux ne peuvent pas diverger.
+ */
+export const ASTRONOMICAL_EVENT_KINDS = [
+  'new-moon',
+  'first-quarter',
+  'full-moon',
+  'third-quarter',
+  'solar-eclipse',
+  'lunar-eclipse',
+  'march-equinox',
+  'june-solstice',
+  'september-equinox',
+  'december-solstice',
+  'perihelion',
+  'aphelion',
+  'opposition',
+  'conjunction',
+] as const;
+
+export type AstronomicalEventKind = (typeof ASTRONOMICAL_EVENT_KINDS)[number];
 
 export interface AstronomicalEvent {
   kind: AstronomicalEventKind;

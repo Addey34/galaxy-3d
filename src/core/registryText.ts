@@ -22,6 +22,17 @@
  * Ce que cela interdit : deux traductions DIFFÉRENTES pour un même anglais. Aucune n'existe, et
  * `src/registry/registryText.test.ts` le vérifie sur les fiches livrées.
  *
+ * UNE `Map` SE TRAVERSE, ET CE N'EST PAS UN RAFFINEMENT : `Object.values(new Map(...))` rend un
+ * tableau VIDE, donc la première version de `hydrateLocalized` ne posait rien du tout dans un objet
+ * rangé par clé. Mesuré le 2026-09-28, en ouvrant le lot 21 : `NAVIGABLE_TARGETS` et
+ * `NAVIGABLE_BODIES` sont des `Map`, et les 14 objets d'instrument (11 sondes, 3 interstellaires)
+ * lisaient donc l'ANGLAIS dans les trois autres langues, alors que leur traduction était bel et
+ * bien téléchargée. 28 blocs reposés au lieu de 0. Le défaut ne pouvait se voir qu'à l'écran, dans
+ * le navigateur : en test, les fiches ne sont pas allégées, donc leur français est encore là. C'est
+ * `src/config/catalogueText.test.ts` qui l'a dénoncé — la garde que le lot 20 annonçait sans
+ * l'écrire. `stripToEnglish` et `collectTranslations`, elles, ne voient QUE du JSON analysé : leur
+ * ajouter une branche `Map` serait du code qu'aucun appel n'atteint.
+ *
  * Les fiches restent le propriétaire unique du texte : rien n'est déplacé, rien n'est recopié.
  * `stripToEnglish` et `collectTranslations` sont deux lectures de la MÊME fiche, et
  * `hydrateLocalized` reconstruit exactement ce qu'elles ont séparé — propriété vérifiée par un
@@ -144,6 +155,12 @@ export function hydrateLocalized(
   map: Readonly<Record<string, string>>,
   locale: DerivedTextLocale
 ): number {
+  if (value instanceof Map) {
+    let count = 0;
+    for (const entry of value.values())
+      count += hydrateLocalized(entry, map, locale);
+    return count;
+  }
   if (Array.isArray(value)) {
     let count = 0;
     for (const item of value) count += hydrateLocalized(item, map, locale);
@@ -169,6 +186,10 @@ export function englishStrings(
   value: unknown,
   into: Set<string> = new Set()
 ): Set<string> {
+  if (value instanceof Map) {
+    for (const entry of value.values()) englishStrings(entry, into);
+    return into;
+  }
   if (Array.isArray(value)) {
     for (const item of value) englishStrings(item, into);
     return into;
