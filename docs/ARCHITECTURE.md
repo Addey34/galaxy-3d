@@ -2124,8 +2124,8 @@ onze corps et pour eux seuls (les huit planètes, Pluton, la Lune, et le Soleil,
 sont l'inclinaison de son équateur sur l'écliptique, pas sur une orbite qu'il n'a pas). Ce qui EST
 publié pour une lune, c'est son PÔLE : le rapport du groupe de travail de l'UAI sur les éléments
 de rotation, que NASA NAIF livre sous forme lisible par une machine (`pck00011.tpc`, fournisseur
-`naif-pck`). L'obliquité s'en dérive, exactement comme elle se dérivait déjà du pôle SBDB pour
-Éros et les trois gros astéroïdes.
+`naif-pck`). L'obliquité s'en dérive, exactement comme elle se dérivait déjà du pôle SBDB pour les
+sept astéroïdes dont la base publie un pôle.
 
 Le calcul vit dans `src/core/iauPole.ts`, module pur : **angle entre le moment cinétique de
 rotation et la normale de l'orbite**. Le relevé (`pnpm facts:snapshot`) conserve les COEFFICIENTS
