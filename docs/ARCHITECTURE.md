@@ -2514,8 +2514,11 @@ groupe entre dans le total : les additionner surestimerait de deux dictionnaires
 sous-estimerait pour trois visiteurs sur quatre. Une cinquième langue ne coûtera donc rien au
 démarrage des autres, sauf si son dictionnaire devient le plus lourd.
 
-Résultat mesuré au lot 20 : **1 239 699 octets** pour un plafond de 1 300 000, et **1 193 725** pour
-un visiteur anglophone — soit **31 884 octets de moins qu'au lot 19**, avec deux langues de plus.
+Résultat mesuré au lot 20 : **1 239 699 octets** pour un plafond de 1 300 000. Le total du budget
+compte le plus lourd de chaque groupe ; un visiteur anglophone n'en charge AUCUN, donc il paie
+1 239 699 − 24 275 (`catalogue-fr`) − 21 345 (`dict-fr`) = **1 194 079 octets**, soit **31 530 de
+moins qu'au lot 19** avec deux langues de plus. Ce calcul se refait à chaque build depuis la sortie
+de `node scripts/check-startup-budget.mjs` : ne pas recopier ces nombres, les relire.
 
 ### Une adresse par langue
 
