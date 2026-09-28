@@ -163,11 +163,11 @@ Ils necessitent une trajectoire temporelle, un referentiel, une echelle physique
 ### Etat d'avancement
 
 - [x] Lune terrestre et quatre lunes galileennes avec positions astronomy-engine (Ganymede et Callisto passees sur binaires Horizons au lot 12).
-- [x] Textures dediees 2k pour Io, Europe, Ganymede et Callisto.
-- [x] Titan, Encelade, Rhéa et Japet, avec vecteurs locaux Horizons issus de SAT441 et mosaïques Cassini/Voyager 1k.
+- [x] Textures dediees pour Io, Europe, Ganymede et Callisto (les paliers livres ne sont plus recopies ici : leur seul releve est `src/config/textureLadder.json`, imprime par `pnpm inventory:gaps` ; cette ligne annoncait 2k alors que les quatre sont montees plus haut au lot 16).
+- [x] Titan, Encelade, Rhéa et Japet, avec binaires Horizons relatifs au parent et mosaïques Cassini/Voyager. Corrige le 2026-09-28 : cette ligne annoncait 1k pour les quatre, alors que le releve des paliers en montre davantage, et elle attribuait les vecteurs livres a SAT441, qui est le noyau SPK OPTIONNEL (cf. `docs/ARCHITECTURE.md` § « Position d'un corps »).
 - [x] Contrat PreciseEphemerisProvider et lecteur DAF/SPK types 2/3 (l'adaptateur synchrone SpiceEphemerisService, jamais branché, a été retiré le 2026-09-14 au profit du seul chemin Worker).
 - [x] Worker SPK asynchrone pour charger et parser un kernel same-origin hors thread principal.
-- [x] Triton, Charon, Phobos et Deimos, avec vecteurs locaux Horizons relatifs au parent et textures USGS/NASA 1k.
+- [x] Triton, Charon, Phobos et Deimos, avec binaires Horizons relatifs au parent et textures USGS/NASA (paliers dans `src/config/textureLadder.json` ; cette ligne annoncait 1k pour les quatre, corrige le 2026-09-28).
 - [x] Lunes mineures de Saturne, Uranus, Neptune et Pluton (Mimas, Tethys, Dione, Hyperion, Miranda, Ariel, Umbriel, Titania, Oberon, Protee, Nereide, Styx, Nix, Kerberos, Hydra) et Amalthee.
 - [x] Transneptuniens Orcus, Quaoar, Gonggong et Sedna (vague A ci-dessous, partiellement close : Salacia et Varuna restent).
 - [x] Vague C close : onze missions (Voyager 1 et 2, Parker Solar Probe, James Webb, New Horizons, Cassini, Juno, Rosetta, BepiColombo, OSIRIS-REx, Hayabusa2). Hubble exclu pour cause, voir la vague C ci-dessous.

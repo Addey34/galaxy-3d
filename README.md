@@ -352,7 +352,7 @@ Réglages moteur dans `src/config/engine.ts`, catalogue des corps dans `src/regi
 | `SHADER_SETTINGS.nightLights`               | engine      | Intensité / seuil / douceur des lueurs nocturnes |
 | `CAMERA_SETTINGS.defaultBodyDistance`       | engine      | Distance caméra fallback                         |
 | `CELESTIAL_CONFIG.bodies[*].cameraDistance` | bodies      | Distance de visite par corps `{ educ, explo }`   |
-| `MAX_SIMULATION_SCALE`                      | ui/playback | Vitesse maximale du curseur : un an simulé par seconde réelle (`31 557 600`), sur un curseur exponentiel bidirectionnel dont le centre est le temps réel. Corrigé le 2026-09-26 : cette ligne annonçait une liste de vitesses discrètes `[1, 3600, 10800, 21600]`, SUPERSEDED depuis le 2026-09-23 |
+| `MAX_SIMULATION_SCALE`                      | ui/speedSlider | Vitesse maximale du curseur : un an simulé par seconde réelle (`31 557 600`), sur un curseur exponentiel bidirectionnel dont le centre est le temps réel. Corrigé le 2026-09-26 : cette ligne annonçait une liste de vitesses discrètes `[1, 3600, 10800, 21600]`, SUPERSEDED depuis le 2026-09-23 |
 
 ## Dépendances de développement
 
@@ -369,13 +369,14 @@ Réglages moteur dans `src/config/engine.ts`, catalogue des corps dans `src/regi
 - `pnpm build` passe : `three`, `astronomy-engine` et `tween` sont séparés du chunk applicatif. Les poids ne sont pas recopiés ici, ils sont MESURÉS par une garde : `pnpm budget:startup` imprime ce que le démarrage exécute de JavaScript, morceau par morceau, et le confronte à son plafond (corrigé le 2026-09-26 : cette ligne annonçait 107 kB gzippés pour 166, et 345 kB bruts pour 551 458 octets).
 - Le mode Exploration est actif. Les vols caméra concurrents sont annulés et la cible suivie reste centrée, y compris à vitesse accélérée.
 - `IS_MOBILE` reste figé pour les réglages créés à l'initialisation (anticrénelage, ombres, textures) ; seul le plafond de pixel ratio est recalculé au resize.
-- `frame: 'parentRelative'` calcule `helio(corps) − helio(parent)`. Les lunes joviennes viennent d'Astronomy Engine ; les lunes saturniennes utilisent les vecteurs locaux NASA/JPL Horizons issus de SAT441.
+- `frame: 'parentRelative'` calcule `helio(corps) − helio(parent)`. La Lune, Io et Europe viennent d'Astronomy Engine, mesuré plus précis que leurs fichiers ; les autres satellites viennent des binaires NASA/JPL Horizons livrés (`relativeEphemeris.kind: 'horizonsParentRelative'`), avec un repli képlérien. Le noyau SPK SAT441 est un chemin OPTIONNEL (`VITE_SPK_KERNEL_URL`) qui prime sur ces binaires seulement quand il est configuré : cf. `docs/ARCHITECTURE.md` § « Position d'un corps ». Corrigé le 2026-09-28 : cette ligne présentait SAT441 comme la source des lunes saturniennes livrées.
 - `.gitattributes` normalise les fichiers texte en LF ; `pnpm format:check` passe sur tout l'arbre.
 
 ## Direction de développement
 
 En résumé : d'abord rendre le projet visible (déploiement public, CI, SEO) et instructif
-(fiches d'information par corps, i18n FR/EN, transition animée Éducatif→Exploration), ensuite
+(fiches d'information par corps, interface et contenu en quatre langues, transition animée
+Éducatif→Exploration), ensuite
 donner des raisons de revenir, enfin en faire une référence.
 
 Les trois étapes sont livrées : permaliens, événements astronomiques, zoom optique FOV, visite

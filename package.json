@@ -26,6 +26,7 @@
     "surface:tiles": "node --max-old-space-size=4096 scripts/bake-surface-height-tiles.mjs",
     "gibs:colormap": "node scripts/import-gibs-colormap.mjs",
     "fingerprint:generated": "node scripts/fingerprint-generated.mjs",
+    "inventory:gaps": "node scripts/inventory-gaps.mjs",
     "budget:startup": "node scripts/check-startup-budget.mjs",
     "screenreader:nvda": "node scripts/nvda-session.mjs",
     "screenreader:capture": "node scripts/capture-screenreader.mjs",

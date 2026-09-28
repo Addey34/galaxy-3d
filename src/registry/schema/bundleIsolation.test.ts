@@ -1,13 +1,15 @@
 import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join, relative, resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
+import { BUILD_ONLY_DIRS } from '@/buildOnly';
 
 /**
  * ZOD NE DOIT JAMAIS ATTEINDRE LE BUNDLE CLIENT.
  *
  * Le lot 7 valide les registres avec Zod, et cette validation a été choisie en `devDependency`
  * précisément parce qu'elle coûte ZÉRO octet livré : elle tourne en CI, dans les tests et au
- * serveur de dev, jamais dans le navigateur (`docs/private/REGISTRES_LOT7.md` § 5, décision D1).
+ * serveur de dev, jamais dans le navigateur (décision D1 du lot 7 ; son journal, `docs/private/REGISTRES_LOT7.md`, a été perdu — cf.
+ * `CLAUDE.md` § « Sauvegarde des documents privés »).
  * Une promesse de ce genre ne tient que si quelque chose la vérifie : un seul `import` de valeur
  * depuis `src/` suffirait à embarquer Zod chez chaque visiteur, sans qu'aucun test ne rougisse et
  * sans qu'aucune page ne change.
@@ -26,8 +28,12 @@ import { describe, expect, it } from 'vitest';
 const SRC = resolve(import.meta.dirname, '../..');
 const DIST_ASSETS = resolve(SRC, '../dist/assets');
 
-/** Le seul dossier autorisé à importer Zod : le schéma lui-même, jamais livré. */
-const SCHEMA_DIR = join(SRC, 'registry', 'schema');
+/**
+ * Les dossiers qui ne sont PAS l'application, lus chez leur propriétaire unique
+ * (`src/buildOnly.ts`) : le dossier de schémas lui-même, mais aussi `seo/` et `inventory/`, qui
+ * ne sont pas livrés non plus et qui ont donc le droit de lire les registres.
+ */
+const EXCLUDED = BUILD_ONLY_DIRS.map((dir) => join(SRC, ...dir.split('/')));
 
 /** Import de VALEUR de `zod` (les imports de type, eux, disparaissent à la compilation). */
 const VALUE_IMPORT_ZOD =
@@ -67,7 +73,7 @@ function appSources(): string[] {
     for (const entry of readdirSync(dir)) {
       const full = join(dir, entry);
       if (statSync(full).isDirectory()) {
-        if (full === SCHEMA_DIR) continue;
+        if (EXCLUDED.includes(full)) continue;
         walk(full);
       } else if (entry.endsWith('.ts') && !entry.endsWith('.test.ts')) {
         out.push(full);
