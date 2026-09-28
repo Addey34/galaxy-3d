@@ -1,0 +1,77 @@
+{
+  "$schema": "../schema/tour.schema.json",
+  "id": "seasons",
+  "title": {
+    "en": "Earth’s seasons",
+    "fr": "Les saisons de la Terre",
+    "es": "Las estaciones de la Tierra",
+    "pt-BR": "As estações da Terra"
+  },
+  "steps": [
+    {
+      "kind": "flyTo",
+      "body": "earth"
+    },
+    {
+      "kind": "caption",
+      "text": {
+        "en": "The Earth’s seasons come from the tilt of its axis, about 23.4° from the plane of its orbit, not from its distance to the Sun. Watch the lit half as we jump to the four turning points of one year.",
+        "fr": "Les saisons de la Terre viennent de l’inclinaison de son axe, d’environ 23,4° par rapport au plan de son orbite, et non de sa distance au Soleil. Observez la moitié éclairée pendant que nous sautons aux quatre tournants d’une même année.",
+        "es": "Las estaciones de la Tierra provienen de la inclinación de su eje, unos 23,4° respecto al plano de su órbita, y no de su distancia al Sol. Observa la mitad iluminada mientras saltamos a los cuatro momentos clave de un mismo año.",
+        "pt-BR": "As estações da Terra vêm da inclinação do seu eixo, cerca de 23,4° em relação ao plano da sua órbita, e não da sua distância ao Sol. Observe a metade iluminada enquanto saltamos para os quatro momentos decisivos de um mesmo ano."
+      }
+    },
+    {
+      "kind": "jumpToEvent",
+      "event": "march-equinox"
+    },
+    {
+      "kind": "caption",
+      "text": {
+        "en": "March equinox: the Sun stands above the equator, and day and night last almost the same everywhere. Spring begins in the northern hemisphere, autumn in the southern one.",
+        "fr": "Équinoxe de mars : le Soleil est à la verticale de l’équateur, et le jour et la nuit durent presque autant partout. Le printemps commence dans l’hémisphère nord, l’automne dans l’hémisphère sud.",
+        "es": "Equinoccio de marzo: el Sol está en la vertical del ecuador, y el día y la noche duran casi lo mismo en todas partes. La primavera empieza en el hemisferio norte y el otoño en el sur.",
+        "pt-BR": "Equinócio de março: o Sol está a pino sobre o equador, e o dia e a noite duram quase o mesmo em todo lugar. A primavera começa no hemisfério norte e o outono no sul."
+      }
+    },
+    {
+      "kind": "jumpToEvent",
+      "event": "june-solstice"
+    },
+    {
+      "kind": "caption",
+      "text": {
+        "en": "June solstice: the north pole leans towards the Sun and stays lit all day, while the south pole stays in the dark. This is the northern summer.",
+        "fr": "Solstice de juin : le pôle nord penche vers le Soleil et reste éclairé tout le jour, tandis que le pôle sud reste dans l’ombre. C’est l’été de l’hémisphère nord.",
+        "es": "Solsticio de junio: el polo norte se inclina hacia el Sol y permanece iluminado todo el día, mientras el polo sur queda a oscuras. Es el verano del hemisferio norte.",
+        "pt-BR": "Solstício de junho: o polo norte se inclina para o Sol e fica iluminado o dia inteiro, enquanto o polo sul permanece no escuro. É o verão do hemisfério norte."
+      }
+    },
+    {
+      "kind": "jumpToEvent",
+      "event": "september-equinox"
+    },
+    {
+      "kind": "caption",
+      "text": {
+        "en": "September equinox: the Sun crosses the equator again, the other way. Autumn begins in the north, spring in the south.",
+        "fr": "Équinoxe de septembre : le Soleil traverse à nouveau l’équateur, en sens inverse. L’automne commence au nord, le printemps au sud.",
+        "es": "Equinoccio de septiembre: el Sol vuelve a cruzar el ecuador, en sentido contrario. El otoño empieza en el norte y la primavera en el sur.",
+        "pt-BR": "Equinócio de setembro: o Sol cruza o equador novamente, no sentido inverso. O outono começa no norte e a primavera no sul."
+      }
+    },
+    {
+      "kind": "jumpToEvent",
+      "event": "december-solstice"
+    },
+    {
+      "kind": "caption",
+      "text": {
+        "en": "December solstice: the south pole now leans towards the Sun, and it is southern summer. The Earth in fact passes closest to the Sun about two weeks later, in early January, which is the proof that the seasons are a matter of tilt and not of distance.",
+        "fr": "Solstice de décembre : c’est maintenant le pôle sud qui penche vers le Soleil, et c’est l’été de l’hémisphère sud. La Terre passe en réalité au plus près du Soleil environ deux semaines plus tard, début janvier : la preuve que les saisons sont affaire d’inclinaison et non de distance.",
+        "es": "Solsticio de diciembre: ahora es el polo sur el que se inclina hacia el Sol, y es el verano del hemisferio sur. La Tierra pasa en realidad por su punto más cercano al Sol unas dos semanas después, a principios de enero: la prueba de que las estaciones son cuestión de inclinación y no de distancia.",
+        "pt-BR": "Solstício de dezembro: agora é o polo sul que se inclina para o Sol, e é o verão do hemisfério sul. A Terra passa de fato pelo ponto mais próximo do Sol cerca de duas semanas depois, no início de janeiro: a prova de que as estações são questão de inclinação, e não de distância."
+      }
+    }
+  ]
+}
