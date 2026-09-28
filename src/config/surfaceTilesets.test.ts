@@ -161,23 +161,34 @@ describe('fiches de jeux de tuiles', () => {
  * la première ENVELOPPE bien les secondes — même règle que `horizons-binary` face au manifeste.
  */
 describe('couverture déclarée par le fournisseur', () => {
-  it('contient la campagne de chacun de ses jeux de tuiles', () => {
+  it('déclare EXACTEMENT l’union des campagnes qu’il sert, ni plus ni moins', () => {
+    // Le contrôle ne portait que dans UN sens : une fiche hors bornes rougissait, une borne
+    // devenue trop large ne disait rien. La valeur était donc maintenue à la main, et elle l'a
+    // été : le lot 27 a dû l'étendre pour Cérès. Une valeur qu'on entretient est une valeur qui
+    // dérive, alors elle est désormais DÉRIVÉE et vérifiée des deux côtés.
     for (const [id, provider] of Object.entries(TILE_PROVIDERS)) {
       const [from, to] = provider.extent.temporal.interval[0]!;
-      const fromMs = from === null ? -Infinity : Date.parse(from);
-      const toMs = to === null ? Infinity : Date.parse(to);
       const own = [...SURFACE_TILESETS.values()].filter(
         (t) => t.providerId === id
       );
       expect(own.length, `${id} ne sert aucun jeu de tuiles`).toBeGreaterThan(
         0
       );
-      for (const tileset of own) {
-        expect(tileset.acquired.from, tileset.id).toBeGreaterThanOrEqual(
-          fromMs
-        );
-        expect(tileset.acquired.to, tileset.id).toBeLessThanOrEqual(toMs);
-      }
+
+      const union = {
+        from: Math.min(...own.map((t) => t.acquired.from)),
+        to: Math.max(...own.map((t) => t.acquired.to)),
+      };
+      expect(
+        from === null ? -Infinity : Date.parse(from),
+        `${id} : début déclaré ${from}, union des campagnes ` +
+          `${new Date(union.from).toISOString()}`
+      ).toBe(union.from);
+      expect(
+        to === null ? Infinity : Date.parse(to),
+        `${id} : fin déclarée ${to}, union des campagnes ` +
+          `${new Date(union.to).toISOString()}`
+      ).toBe(union.to);
     }
   });
 });

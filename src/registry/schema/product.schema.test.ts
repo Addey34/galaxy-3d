@@ -2,6 +2,12 @@ import { readFileSync, readdirSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import {
+  EPHEMERIS_COLLECTION,
+  HEIGHTFIELD_PRODUCTS,
+  TEXTURE_PRODUCTS,
+  TILESET_PRODUCTS,
+} from '@/registry/products';
+import {
   productJsonSchema,
   productJsonSchemaText,
   productSchema,
@@ -57,8 +63,25 @@ describe('JSON Schema des produits généré depuis Zod', () => {
 describe('chaque fiche produit passe le schéma', () => {
   const files = productFiles();
 
-  it('trouve bien les fiches', () => {
-    expect(files.length).toBe(71);
+  it('trouve exactement les fiches que l’APPLICATION charge', () => {
+    // UN NOMBRE ÉCRIT À LA MAIN N'EST PAS UNE GARDE, c'est une corvée : il a été corrigé de 68
+    // à 70 puis 71 en deux lots, une fois par ajout, et il n'aurait rien dit d'une fiche que le
+    // glob de l'application ne voit pas.
+    //
+    // Ce qui MÉRITE d'être vérifié est le croisement des deux chemins : ce test PARCOURT le
+    // disque, l'application charge par `import.meta.glob`. Une fiche présente ici et absente
+    // là-bas ne ferait rougir personne, et elle serait pourtant invisible en production.
+    const loaded =
+      TEXTURE_PRODUCTS.length +
+      TILESET_PRODUCTS.length +
+      HEIGHTFIELD_PRODUCTS.length +
+      // Une seule fiche de collection, et c'est un objet, pas un tableau.
+      (EPHEMERIS_COLLECTION ? 1 : 0);
+    expect(files.length).toBeGreaterThan(0);
+    expect(
+      loaded,
+      `${files.length} fiches sur le disque, ${loaded} chargées par l’application`
+    ).toBe(files.length);
   });
 
   it.each(files.map((f) => [f.slice(PRODUCTS.length + 1), f]))(

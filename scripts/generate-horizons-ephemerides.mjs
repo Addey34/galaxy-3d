@@ -801,6 +801,16 @@ if (only) {
    * déclare cette propagation.
    */
   const lostScale = [];
+  /**
+   * `generatedAt` ne se réécrit QUE si des octets ont changé.
+   *
+   * Sinon une régénération d'un seul corps produisait un diff qui ne décrit rien : le contenu
+   * identique, la date d'exécution différente. C'est la même faute que le lot 25 a fermée pour le
+   * relevé des faits — une date d'exécution n'appartient à rien — et une date par corps coûterait
+   * 18 % du manifeste, qui est demandé à CHAQUE démarrage. Le champ dit donc désormais quand les
+   * octets livrés ont changé pour la dernière fois, ce qui est vrai et utile.
+   */
+  let changedBytes = false;
   for (const name of only) {
     const body = BODIES.find((entry) => entry.name === name);
     if (!body) throw new Error(`--only : corps inconnu « ${name} »`);
@@ -810,8 +820,10 @@ if (only) {
     if (previous && previous !== manifest.bodies[name].file)
       replaced.push(previous);
     if (hadScale) lostScale.push(name);
+    // Le nom du fichier EST son empreinte : s'il ne change pas, aucun octet livré n'a changé.
+    if (previous !== manifest.bodies[name].file) changedBytes = true;
   }
-  manifest.generatedAt = new Date().toISOString();
+  if (changedBytes) manifest.generatedAt = new Date().toISOString();
   await writeFile(
     resolve(OUTPUT_DIR, 'manifest.json'),
     `${JSON.stringify(manifest, null, 2)}\n`,
