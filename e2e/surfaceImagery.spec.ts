@@ -511,3 +511,42 @@ test('displaces the ground with measured altitudes, and says where they come fro
   ).toBeLessThan(1);
   expect(errors, `Erreurs page : ${errors.join(' | ')}`).toEqual([]);
 });
+
+/**
+ * VÉNUS — le premier jeu de tuiles en PNG, et la pyramide la plus profonde du catalogue.
+ *
+ * Ce scénario ajoute ce que ni la Lune ni Mars n'exercent, et chaque point est une façon
+ * distincte dont le moteur pourrait avoir quelque chose de câblé :
+ *
+ *   - le format. La Lune, Mars, Mercure et Cérès servent du JPEG ; Vénus sert du PNG. Rien dans
+ *     `core/tileUrl.ts` ne lit le champ `format` de la fiche, l'extension venant du gabarit :
+ *     c'est donc le gabarit qu'il faut voir arriver en `.png` sur de vraies requêtes ;
+ *   - la profondeur. Dix niveaux contre huit pour la Lune, soit 524 288 px sur 360° ;
+ *   - le sens de l'écart. À ce niveau la pyramide sert PLUS FIN que la mosaïque publiée
+ *     (1 456 contre 1 408 px/degré), là où Mars reste plus grossière que la sienne.
+ */
+test('paints Venus from a PNG tile set, ten levels deep', async ({ page }) => {
+  const errors: string[] = [];
+  page.on('pageerror', (err) => errors.push(err.message));
+  const seen = await serveTiles(page);
+
+  await boot(page, '?debug-surface&mode=explo&body=venus');
+  const probe = page.locator('#surface-probe');
+  await expect(probe).toContainText('venus', { timeout: 30_000 });
+
+  await zoomIn(page);
+  const badge = page.locator('#surface-imagery');
+  await expect(badge).toBeVisible({ timeout: 30_000 });
+  expect(seen.length, 'aucune tuile demandée en approche').toBeGreaterThan(0);
+
+  for (const request of seen) {
+    expect(request.url()).toContain(
+      '/tiles/Venus/EQ/Venus_Magellan_LeftLook_mosaic_global_75m/1.0.0//default/default028mm/'
+    );
+    // LE POINT DU SCÉNARIO : des tuiles PNG, sur de vraies requêtes.
+    expect(request.url()).toMatch(/\/\d+\/\d+\/\d+\.png$/);
+  }
+
+  await expect(badge.locator('.si-credit')).toContainText('NASA');
+  expect(errors, `Erreurs page : ${errors.join(' | ')}`).toEqual([]);
+});
