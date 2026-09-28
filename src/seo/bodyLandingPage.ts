@@ -921,11 +921,18 @@ export function renderLandingPage(
         `<link rel="alternate" hreflang="${candidate}" href="${escapeHtml(alternates[candidate]!)}" />`
     )
     .join('\n    ');
-  if (links !== '')
+  if (links !== '') {
+    // Les variantes de l'ACCUEIL sont héritées d'`index.html` et pointent toutes vers `/` : les
+    // garder ferait déclarer à cette page huit variantes dont trois menant ailleurs, c'est-à-dire
+    // un ensemble contradictoire qu'un moteur ignore purement. On les RETIRE avant d'écrire les
+    // siennes. Même famille de piège que `og:image:width` documenté plus bas : une balise héritée
+    // est une balise qu'on n'a pas écrite, donc qu'on oublie de regarder.
+    html = html.replace(/\s*<link\s+rel="alternate"[\s\S]*?\/>/g, '');
     html = html.replace(
       `<link rel="canonical" href="${escapeHtml(page.canonical)}" />`,
       `<link rel="canonical" href="${escapeHtml(page.canonical)}" />\n    ${links}\n    <link rel="alternate" hreflang="x-default" href="${escapeHtml(alternates.en ?? page.canonical)}" />`
     );
+  }
   html = replaceAttrAfter(html, 'property="og:title"', 'content', page.title);
   html = replaceAttrAfter(
     html,

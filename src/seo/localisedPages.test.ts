@@ -109,6 +109,16 @@ describe('pages d’atterrissage localisées', () => {
       expect(html).toContain(
         `<link rel="alternate" hreflang="x-default" href="${ORIGIN}/jupiter/" />`
       );
+      // EXACTEMENT cinq variantes, et aucune qui mène à l'accueil : `index.html` en porte trois
+      // (l'application sert ses quatre langues depuis `/`), et les hériter faisait déclarer huit
+      // variantes contradictoires à chaque page traduite. Un ensemble contradictoire est ignoré
+      // par un moteur, donc tout le travail de cette phase l'aurait été.
+      const alternates = html.match(/<link rel="alternate"[^>]*>/g) ?? [];
+      expect(
+        alternates.length,
+        `${locale} : ${alternates.length} variantes`
+      ).toBe(LOCALES.length + 1);
+      expect(alternates.join(' ')).not.toContain(`href="${ORIGIN}/"`);
       expect(html).toContain(
         `<link rel="canonical" href="${page.canonical}" />`
       );

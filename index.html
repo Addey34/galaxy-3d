@@ -34,6 +34,13 @@
 
     <!-- Canonical + langues (SPA bilingue FR/EN sur une seule URL). -->
     <link rel="canonical" href="https://galaxy.adrianguichard.dev/" />
+    <!--
+      L'accueil sert les QUATRE langues depuis la MÊME adresse : l'application choisit la langue
+      du visiteur, il n'y a pas de `/es/`. Ces liens doivent donc tous pointer `/`. Les pages
+      d'atterrissage, elles, ont une adresse par langue et REMPLACENT ce bloc (cf.
+      `src/seo/bodyLandingPage.ts::renderLandingPage`) : l'hériter leur faisait déclarer huit
+      variantes dont trois menant à l'accueil, ce qui annule l'effet de `hreflang`.
+    -->
     <link
       rel="alternate"
       hreflang="en"
@@ -42,6 +49,16 @@
     <link
       rel="alternate"
       hreflang="fr"
+      href="https://galaxy.adrianguichard.dev/"
+    />
+    <link
+      rel="alternate"
+      hreflang="es"
+      href="https://galaxy.adrianguichard.dev/"
+    />
+    <link
+      rel="alternate"
+      hreflang="pt-BR"
       href="https://galaxy.adrianguichard.dev/"
     />
     <link
