@@ -37,7 +37,11 @@
 import { execFileSync } from 'node:child_process';
 import { pathToFileURL } from 'node:url';
 
-const REPOSITORY = 'Addey34/galaxy-3d';
+/**
+ * Le dépôt. GitHub Actions pose toujours `GITHUB_REPOSITORY`, donc le workflow n'a rien à
+ * passer ; en local, le défaut est celui de ce projet.
+ */
+const REPOSITORY = process.env['GITHUB_REPOSITORY'] || 'Addey34/galaxy-3d';
 const WORKFLOW = 'CI';
 
 /**
@@ -75,12 +79,21 @@ function ghJson(path) {
  * Le journal d'un job. `gh run view --log` plutôt que l'API : l'API rend une redirection que
  * `gh api` ne suit pas, et ce chemin-là est celui qui a effectivement rendu les journaux des
  * deux runs rouges pendant l'enquête.
+ *
+ * `-R` EXPLICITE, et ce n'est pas décoratif : sans lui, `gh run view` déduit le dépôt du dossier
+ * COURANT et échoue par « not a git repository » dès qu'on le lance d'ailleurs. Mesuré en jouant
+ * l'étape du guetteur depuis un dossier de travail : les six journaux devenaient illisibles d'un
+ * coup, et seul le job déjà rouge sauvait le verdict.
  */
 function jobLog(jobId) {
-  return execFileSync('gh', ['run', 'view', '--job', String(jobId), '--log'], {
-    encoding: 'utf8',
-    maxBuffer: 256 * 1024 * 1024,
-  });
+  return execFileSync(
+    'gh',
+    ['run', 'view', '-R', REPOSITORY, '--job', String(jobId), '--log'],
+    {
+      encoding: 'utf8',
+      maxBuffer: 256 * 1024 * 1024,
+    }
+  );
 }
 
 /**
@@ -243,7 +256,14 @@ export function judge(run) {
   }
 
   return {
-    healthy: red.length === 0 && retried.length === 0 && full.length === 0,
+    // UN JOURNAL ILLISIBLE REND LE RUN NON SAIN, et c'est le point. Sans cette condition, six
+    // journaux injoignables et aucun job rouge auraient rendu « run SAIN » — c'est-à-dire
+    // exactement le silence qui a fait passer deux runs rouges pour verts.
+    healthy:
+      red.length === 0 &&
+      retried.length === 0 &&
+      full.length === 0 &&
+      unreadable.length === 0,
     red,
     retried,
     full,

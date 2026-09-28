@@ -134,6 +134,28 @@ describe('le jugement, et ses trois natures de défaut', () => {
     expect(verdict.healthy).toBe(false);
   });
 
+  it('un journal ILLISIBLE rend le run non sain, jamais sain par défaut', () => {
+    // Le cas mesuré : `gh run view` sans `-R` échoue par « not a git repository », les six
+    // journaux deviennent illisibles d'un coup, et un run dont aucun job n'est rouge serait
+    // déclaré sain. C'est le silence qu'on refuse.
+    const verdict = judge({
+      jobs: [
+        shard('Browser tests (e2e 1/6)', 'success', 13.9, {
+          passed: null,
+          totalMinutes: null,
+          failed: [],
+          flaky: [],
+          timedOut: [],
+          interrupted: [],
+          unreadable: 'Command failed: gh run view --job 1 --log',
+        }),
+      ],
+    });
+    expect(verdict.healthy).toBe(false);
+    expect(verdict.unreadable).toHaveLength(1);
+    expect(verdict.red).toEqual([]);
+  });
+
   it('un run entièrement propre est sain', () => {
     const clean = parsePlaywrightSummary(
       logLines(

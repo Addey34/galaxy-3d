@@ -14,9 +14,12 @@ import { expect, type Locator, type Page } from '@playwright/test';
  * l'acquittement de l'événement. Pendant ces vingt secondes, `locator.click()` n'avance pas.
  * C'est la cause, MESURÉE et non supposée, des trois clics restés bloqués sur `main` :
  *
- *  - `precip-visual.spec.ts:76` sur `#weather-trigger` (PR #40, shard 4, 3 tentatives sur 3) ;
- *  - `titan.spec.ts:53` sur `.mode-btn[data-mode="explo"]` (PR #42, shard 6, 3 sur 3) ;
- *  - `tourPlayer.spec.ts:65` sur `.stour-next`, dans le même shard que le précédent.
+ *  - `precip-visual.spec.ts` sur `#weather-trigger` (PR #40, shard 4, 3 tentatives sur 3) ;
+ *  - `titan.spec.ts` sur `.mode-btn[data-mode="explo"]` (PR #42, shard 6, 3 sur 3) ;
+ *  - `tourPlayer.spec.ts` sur `.stour-next`, dans le même shard que le précédent.
+ *
+ * Les sélecteurs plutôt que les numéros de ligne : ces trois fichiers ont changé en corrigeant
+ * le défaut, donc un numéro cité ici pourrirait dès le premier commit.
  *
  * La preuve du correctif est un chiffre : sur la même page et sous le même frein, le clic sur
  * `#weather-trigger` passe de **14,6 s** (pour un `actionTimeout` de 15 s, d'où l'échec) à

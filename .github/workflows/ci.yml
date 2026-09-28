@@ -175,8 +175,9 @@ jobs:
     # regardant le dernier run de main, ou pas du tout.
     #
     # DEPUIS LE LOT 24, CETTE LECTURE EXISTE ET ELLE EST AUTOMATIQUE. `pnpm ci:health` lit un run
-    # (par defaut le dernier de main) et sort en code 1 sur trois choses : un job rouge, un test
-    # passe SEULEMENT au reessai, et un shard qui atteint 80 % de ce garde-fou. Le workflow
+    # (par defaut le dernier de main) et sort en code 1 sur quatre choses : un job rouge, un test
+    # passe SEULEMENT au reessai, un shard qui atteint 80 % de ce garde-fou, et un journal qu'il
+    # n'a pas pu lire -- parce que « je n'ai pas pu mesurer » n'est pas « tout va bien ». Le workflow
     # `main-ci-watch.yml` la joue apres chaque run de main et ouvre une issue. Ce qui a motive ce
     # guetteur est mesure : DEUX fusions consecutives rouges que personne n'a vues (PR #40 shard 4,
     # PR #42 shard 6), et DIX scenarios distincts passes au reessai sur les huit derniers runs,
