@@ -57,6 +57,15 @@ pression permanente à dégrader les textures pour financer autre chose. Contrat
 - **Falsifier chaque garde avant de le croire.** Remettre le défaut et vérifier que le test échoue
   vraiment, avec le bon message. Un test qui ne casse pas quand on réintroduit le bug ne garde rien
   — c'est la seule façon de distinguer un garde d'une décoration.
+- **Un garde qui balaie une clé INEXISTANTE est vert en ne vérifiant rien.** « Aucun fait affiché ne
+  tient sa date d'une reprise » parcourait `fiche.sources`, quand une fiche de sonde porte `facts` :
+  l'objet était vide, la boucle ne tournait pas, le test passait. Il compte désormais ce qu'il a
+  balayé (`expect(Object.keys(...).length).toBeGreaterThan(0)`), et c'est la falsification qui l'a
+  trouvé, pas la relecture. **Un garde qui itère doit affirmer qu'il a itéré.**
+- **Un garde qui lit le TEXTE d'un fichier accuse aussi ses commentaires.** « Le script du relevé ne
+  lit pas l'horloge » comptait `new Date()` dans l'en-tête qui EXPLIQUE le défaut : il rougissait sur
+  une phrase, pas sur du code. Retirer les commentaires avant de compter, et falsifier les deux sens :
+  une lecture d'horloge ajoutée doit rougir, un commentaire qui la cite ne doit pas.
 - **Vérifier que la mutation s'est APPLIQUÉE avant de lire le résultat.** Une falsification qui
   n'a pas eu lieu ressemble exactement à un test qui passe. Cas réel : une substitution `perl`
   n'a rien matché (un `\n` dans une chaîne JavaScript est un antislash suivi d'un `n`, pas un

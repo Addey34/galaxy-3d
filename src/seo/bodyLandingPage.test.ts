@@ -241,8 +241,10 @@ describe('faits sourcés sur la page publique', () => {
     expect(html).toContain('<h2>Sources</h2>');
     expect(html).toContain('<li id="source-1" value="1">NASA NSSDCA');
     expect(html).toContain('href="https://science.nasa.gov/jupiter/moons/"');
+    // Septembre, et non août : la page de NASA Science a retiré son « as of August 2026 » le
+    // 2026-09-28, donc la date affichée est celle où elle a été lue (lot 25).
     expect(html).toMatch(
-      /115 \(as of August 2026\)<sup><a href="#source-2">2<\/a><\/sup>/
+      /115 \(as of September 2026\)<sup><a href="#source-2">2<\/a><\/sup>/
     );
   });
 

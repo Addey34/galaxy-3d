@@ -87,7 +87,7 @@
       "value": 115,
       "source": "nasa-science-jupiter-moons",
       "method": "measured",
-      "asOf": "2026-08"
+      "asOf": "2026-09-28"
     },
     "axialTilt": {
       "value": {
@@ -112,6 +112,6 @@
     }
   },
   "notes": {
-    "facts.moonCount": "Chiffre DATÉ (`sources.moonCount.asOf`) : NASA Science l'annonce « as of August 2026 », alors que la fiche NSSDCA en était encore à 95. Les lots de lunes confirmées par l'UAI le périment en quelques années ; `pnpm facts:snapshot` relit la page."
+    "facts.moonCount": "Chiffre DATÉ (`sources.moonCount.asOf`) : la page de NASA Science ne date PLUS son compte de 115, qu'elle annonçait « as of August 2026 » jusqu'au 2026-09-28, alors que la fiche NSSDCA en était encore à 95. Sans date à la source, la date affichée est celle où CETTE page a été lue (lot 25) ; Saturne et Uranus gardent la leur, que leur page donne toujours. Les lots de lunes confirmées par l'UAI le périment en quelques années ; `pnpm facts:snapshot` relit la page."
   }
 }

@@ -226,6 +226,8 @@ const sbdb = snapshot.sbdb as Record<
     rotationHours: { value: number; ref: string; notes: string | null } | null;
     pole: { value: number[]; ref: string } | null;
     confirmedSatellites: number;
+    /** Le jour où CETTE réponse a été lue : la SBDB ne date pas son compte de satellites. */
+    retrieved: string;
   }
 >;
 
@@ -639,8 +641,10 @@ function expected(
             absolute: true,
           };
         case 'moonCount':
-          if (p.asOf !== snapshot.retrieved)
-            fail(`date ${p.asOf} ≠ relevé ${snapshot.retrieved}`);
+          // La SBDB ne date pas son compte de satellites : la date affichée est alors celle de
+          // LA RÉPONSE qui le porte, jamais celle du dernier relevé (ligne 23.1).
+          if (p.asOf !== row.retrieved)
+            fail(`date ${p.asOf} ≠ lecture de la source ${row.retrieved}`);
           return { values: [row.confirmedSatellites], tolerance: 0 };
       }
       break;
@@ -708,11 +712,14 @@ function expected(
         const row = (
           snapshot.nasaMoonCounts as Record<
             string,
-            { moonCount: number; asOf: string | null }
+            { moonCount: number; asOf: string | null; retrieved: string }
           >
         )[planet];
         if (planet !== name) fail('page d’une autre planète');
-        const asOf = row.asOf ?? snapshot.retrieved;
+        // La page dit « as of August 2026 », ou elle ne dit rien : dans ce second cas la date
+        // affichée est celle où CETTE page a été lue. C'est arrivé à Jupiter le 2026-09-28,
+        // dont la page a perdu sa mention.
+        const asOf = row.asOf ?? row.retrieved;
         if (p.asOf !== asOf) fail(`date ${p.asOf} ≠ date de la source ${asOf}`);
         return { values: [row.moonCount], tolerance: 0 };
       }

@@ -107,7 +107,9 @@ function deriveRegistryText() {
       if (!id.startsWith(`\0${PREFIX}`)) return null;
       const locale = id.slice(`\0${PREFIX}`.length);
       if (!(DERIVED_TEXT_LOCALES as readonly string[]).includes(locale))
-        throw new Error(`langue inconnue pour le texte du registre : ${locale}`);
+        throw new Error(
+          `langue inconnue pour le texte du registre : ${locale}`
+        );
       const map: Record<string, string> = {};
       for (const fiche of await readFiches())
         collectTranslations(fiche, locale as DerivedTextLocale, map);
@@ -516,16 +518,24 @@ function bodyLandingPages() {
         const validationSummary = await readJson<
           import('./src/seo/methodologyPage').ValidationSummary
         >('src/config/horizons-validation-summary.json');
-        const factSnapshot = await readJson<{ retrieved: string }>(
-          'src/config/factSources.snapshot.json'
-        );
+        const factSnapshot = await readJson<{
+          retrieved: Record<string, string[]>;
+        }>('src/config/factSources.snapshot.json');
+        // Le relevé des faits ne porte plus UNE date mais, par section, les jours où ses réponses
+        // ont été lues (lot 25). Ce qui date cette page est donc la plus récente de toutes, et non
+        // la dernière exécution du relevé : c'est précisément la différence que ce lot corrige,
+        // et `/sources` était l'endroit où l'ancienne date se PUBLIAIT.
+        const factSnapshotRead = Object.values(factSnapshot.retrieved)
+          .flat()
+          .sort()
+          .at(-1)!;
         // Date DÉTERMINISTE des données publiées. Utiliser la date du build rendrait
         // /sources différent chaque jour sans qu'aucune donnée n'ait changé, et ferait
         // échouer le fingerprint généré par construction.
         const sourcesUpdated = [
           manifest.generatedAt.slice(0, 10),
           validationSummary.generatedAt.slice(0, 10),
-          factSnapshot.retrieved,
+          factSnapshotRead,
         ]
           .sort()
           .at(-1)!;

@@ -2184,6 +2184,70 @@ la masse pour le mouvement du parent : `SIMULATION_ONLY_FACTS` (`core/bodyFacts.
 et `catalogueCompleteness.test.ts` refuse tout autre champ dans ce cas. Quatre gravités de surface
 traînaient ainsi, non publiées et lues par personne.
 
+### Une date de lecture appartient à la RÉPONSE, pas à l'exécution (lot 25)
+
+`factSources.snapshot.json` portait **un seul `retrieved`**, écrit avec `new Date()` à la fin du
+relevé. Un cache chaud en héritait : le fichier livré au lot 23 annonçait le 2026-09-28 pour les
+huit réponses d'articles lues le 2026-09-20 (six résumés arXiv, la page Nature et le PDF d'Haumea,
+soit neuf fichiers de cache datés du 20, le PDF en occupant deux). Ce n'était pas une note interne :
+**vingt fiches AFFICHAIENT cette date d'exécution** derrière leur nombre de lunes, dans les quatre
+langues et sur les pages par corps.
+
+La règle, et elle tient en une phrase : **une réponse est horodatée quand elle arrive, et plus
+personne ne demande l'heure ensuite.**
+
+- **Chaque réponse mise en cache porte sa date** dans un fichier voisin (`<clé>.at`), écrit à
+  l'instant où elle arrive. C'est le seul moment où l'heure courante EST la date de lecture.
+- **Une entrée déjà en cache sans voisin** est datée de la date d'écriture de son fichier, puis
+  FIXÉE à côté d'elle. C'est un relevé, pas une supposition, et il ne coûte aucune requête : c'est
+  ce qui a permis de retrouver le 2026-09-20 de ces huit réponses au lieu de le perdre.
+- **Tout objet du relevé qui cite une `url` porte un `retrieved`.** `assertEveryUrlDated` refuse
+  d'écrire un relevé daté à moitié, et il nomme le chemin fautif.
+- **La date d'une SECTION est dérivée de ses réponses**, jamais écrite : `retrieved` est un tableau
+  des jours distincts, triés, où cette section a été lue. Une section lue en deux fois en porte
+  deux, et `articles` en est un cas réel. Une date unique pour dix sources était le mensonge
+  d'origine ; une date unique par section en serait un plus petit.
+- **Ce qui s'affiche suit.** Quand une source ne date pas son chiffre, la fiche affiche la date de
+  LA RÉPONSE qui le porte : `sbdb[corps].retrieved` pour un nombre de satellites de la SBDB,
+  `nasaMoonCounts[planète].retrieved` pour une page de la NASA qui a perdu son « as of ». Quand la
+  source date son chiffre, c'est SA date qui gagne (« as of August 2026 »).
+
+**Le cas particulier hors ligne a disparu**, et c'est un signe que la correction est à la bonne
+profondeur : le relevé recopiait l'ancien `retrieved` quand il tournait sans réseau, pour ne pas
+produire de diff. La date venant maintenant du cache, une régénération sans réseau rend
+exactement le même fichier, sans rattrapage.
+
+**Trois familles de gardes, dont une vise la CAUSE** (`src/config/factSourceDates.test.ts`,
+mécanisme éprouvé sur un vrai cache temporaire) : un cache chaud garde sa date ; le relevé livré
+annonce, section par
+section, exactement les dates de ses propres réponses, recalculées depuis elles ; et **le script du
+relevé ne lit l'horloge nulle part**, le seul endroit qui en a le droit étant celui qui horodate une
+réponse qui arrive. Cette dernière garde compte le CODE et non les commentaires : sans cela elle
+accusait l'en-tête du module, qui cite `new Date()` pour expliquer le défaut, et un garde qui
+accuse une phrase est un garde qu'on finit par désarmer.
+
+**Et `tsc` tient la porte** : les trois endroits qui lisaient la date globale demandent
+désormais celle d'une entrée ou celle de toutes (deux dans `factProvenance.test.ts`, un dans
+`vite.config.ts`), donc un relevé à l'ancienne forme ne compile plus. La faute ne peut pas
+revenir en silence.
+
+**Et une réponse qu'une source REFUSE de servir se reprend, en le disant.** Par défaut le relevé
+échoue, et cela ne change pas : une source muette ne doit pas produire un relevé silencieusement
+incomplet. Mais `--carry-over-unavailable` demande explicitement de REPRENDRE du relevé précédent
+l'entrée qu'on n'a pas pu relire, avec `retrieved: null` et `carriedOver: true`. La reprise passe par
+un `entry(section, clé, lecture)` partagé, et **une seule section l'utilise aujourd'hui**, celle où
+le besoin s'est présenté : les autres échouent, drapeau ou pas, tant qu'un deuxième cas réel ne
+force pas l'abstraction. Le besoin est
+mesuré : le 2026-09-28, quatre fiches du Master Catalog du NSSDCA (Cassini, Rosetta, BepiColombo,
+Hayabusa2) ont servi leur page « Errors and Messages » en HTTP 200 pendant plus de sept heures, les
+mêmes quatre à chaque tour, quel que soit le client HTTP et par toute autre adresse du site, tandis
+que les sept autres répondaient. Leur date de lecture n'existait plus nulle part, le cache ayant été
+vidé : elle s'écrit donc ABSENTE plutôt que devinée, ce qui est le contraire de la faute corrigée
+ici. Quatre gardes l'encadrent : la liste des reprises est ÉNUMÉRÉE dans le test, une reprise de
+plus comme une reprise de moins la fait rougir, une entrée sans date doit se déclarer reprise, et
+**aucun fait affiché ne peut tenir sa date d'une reprise**. Cette liste doit se vider dès que la
+source répond.
+
 ### Les objets d'instrument : deux familles de faits, et une date
 
 Les onze sondes et les trois objets interstellaires portent une fiche comme n'importe quel

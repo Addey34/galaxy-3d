@@ -79,11 +79,17 @@ describe('fiche d’information : faits sourcés', () => {
     ]);
   });
 
-  it('date un fait qui évolue', () => {
-    // 115 lunes n'est vrai qu'à une date : NASA Science l'annonce « as of August 2026 ».
+  it('date un fait qui évolue, et de la date de SA source quand elle en donne une', () => {
+    // 115 lunes n'est vrai qu'à une date. NASA Science l'annonçait « as of August 2026 » jusqu'au
+    // 2026-09-28, puis a retiré la mention : la fiche affiche alors le jour où la page a été LUE
+    // (lot 25), et `factProvenance.test.ts` confronte cette date au relevé. Saturne, dont la page
+    // donne toujours la sienne, garde celle de la SOURCE : les deux règles sont ici côte à côte.
     const moons = stat('jupiter', 'Lunes connues');
     expect(moons?.value).toBe('115');
-    expect(moons?.asOf).toBe('août 2026');
+    expect(moons?.asOf).toBe('septembre 2026');
+    const saturn = stat('saturn', 'Lunes connues');
+    expect(saturn?.value).toBe('293');
+    expect(saturn?.asOf).toBe('août 2026');
   });
 
   it('n’affiche plus « pas encore sourcée » nulle part, et n’affiche pas non plus de chiffre sans source', () => {
