@@ -550,3 +550,52 @@ test('paints Venus from a PNG tile set, ten levels deep', async ({ page }) => {
   await expect(badge.locator('.si-credit')).toContainText('NASA');
   expect(errors, `Erreurs page : ${errors.join(' | ')}`).toEqual([]);
 });
+
+/**
+ * MERCURE ET CÉRÈS — la preuve qu'ils streament, que le lot 27 n'avait pas donnée.
+ *
+ * Le lot 27 a ajouté trois corps et n'en a exercé qu'un (Vénus, pour son PNG). Les deux autres
+ * n'avaient AUCUNE preuve navigateur : une fiche peut être valide au schéma, citer un hôte connu
+ * et ne rien peindre. Ce qu'ils ajoutent l'un par rapport à l'autre est modeste et c'est voulu :
+ * ce scénario ne cherche pas une différence, il cherche l'ABSENCE de surprise, corps par corps.
+ *
+ * Cérès vaut plus que Mercure ici : c'est le premier PETIT CORPS du catalogue à recevoir de
+ * l'imagerie streamée, et sa position vient d'un binaire Horizons, pas d'astronomy-engine.
+ */
+for (const { body, layer, extension } of [
+  {
+    body: 'mercury',
+    layer: 'Mercury_MESSENGER_MDIS_Basemap_BDR_Mosaic_Global_166m',
+    extension: 'jpg',
+  },
+  {
+    body: 'ceres',
+    layer: 'CE_LAMO_G_00N_180E_EQU_CLR_scale.eq',
+    extension: 'jpg',
+  },
+])
+  test(`paints ${body} from its tile set record alone`, async ({ page }) => {
+    const errors: string[] = [];
+    page.on('pageerror', (err) => errors.push(err.message));
+    const seen = await serveTiles(page);
+
+    await boot(page, `?debug-surface&mode=explo&body=${body}`);
+    await expect(page.locator('#surface-probe')).toContainText(body, {
+      timeout: 30_000,
+    });
+
+    await zoomIn(page);
+    const badge = page.locator('#surface-imagery');
+    await expect(badge).toBeVisible({ timeout: 30_000 });
+    expect(seen.length, 'aucune tuile demandée en approche').toBeGreaterThan(0);
+
+    for (const request of seen) {
+      expect(request.url()).toContain(`/${layer}/1.0.0//default/default028mm/`);
+      expect(request.url()).toMatch(
+        new RegExp('/' + String.raw`\d+/\d+/\d+\.` + extension + '$')
+      );
+    }
+
+    await expect(badge.locator('.si-credit')).toContainText('NASA');
+    expect(errors, `Erreurs page : ${errors.join(' | ')}`).toEqual([]);
+  });
