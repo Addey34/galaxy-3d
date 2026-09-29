@@ -1,0 +1,64 @@
+{
+  "$schema": "../../schema/product.schema.json",
+  "id": "titan-cassini-vims-colorratio-global-32ppd",
+  "type": "tileset",
+  "body": "titan",
+  "title": "Titan Cassini VIMS global infrared colour-ratio mosaic (Titan_global_32ppd_ColorRatio_v2)",
+  "providerId": "nasa-trek",
+  "mission": "Cassini-Huygens",
+  "instrument": "Visual and Infrared Mapping Spectrometer",
+  "service": {
+    "template": "https://trek.nasa.gov/tiles/Titan/EQ/Titan_global_32ppd_ColorRatio_v2/1.0.0//{Style}/{TileMatrixSet}/{TileMatrix}/{TileRow}/{TileCol}.png",
+    "style": "default",
+    "tileMatrixSet": "default028mm",
+    "format": "image/png",
+    "matrix": {
+      "columnsAtLevelZero": 2,
+      "rowsAtLevelZero": 1,
+      "tileSizePx": 256
+    },
+    "minLevel": 0,
+    "maxLevel": 4
+  },
+  "publishedPixelsPerDegree": 32,
+  "acquired": {
+    "interval": [["2004-07-01T00:00:00Z", "2017-04-30T23:59:59Z"]]
+  },
+  "license": "other",
+  "rights": "public-domain",
+  "links": [
+    {
+      "rel": "license",
+      "href": "https://www.nasa.gov/nasa-brand-center/images-and-media/"
+    },
+    {
+      "rel": "describedby",
+      "href": "https://trek.nasa.gov/tiles/Titan/EQ/Titan_global_32ppd_ColorRatio_v2/1.0.0/WMTSCapabilities.xml"
+    },
+    {
+      "rel": "via",
+      "href": "https://doi.org/10.1016/j.icarus.2018.09.017"
+    },
+    {
+      "rel": "via",
+      "href": "https://u-paris.hal.science/hal-03657897v1"
+    }
+  ],
+  "providers": [
+    {
+      "name": "NASA Solar System Treks",
+      "roles": ["host"],
+      "url": "https://trek.nasa.gov/titan/"
+    },
+    {
+      "name": "Cassini VIMS Team",
+      "roles": ["producer"]
+    },
+    {
+      "name": "S. Le Mouelic et al., Laboratoire de Planetologie et Geodynamique (LPG, UMR 6112), CNRS / Universite de Nantes",
+      "roles": ["processor"],
+      "url": "https://doi.org/10.1016/j.icarus.2018.09.017"
+    }
+  ],
+  "verified": "2026-09-29"
+}

@@ -561,6 +561,13 @@ test('paints Venus from a PNG tile set, ten levels deep', async ({ page }) => {
  *
  * Cérès vaut plus que Mercure ici : c'est le premier PETIT CORPS du catalogue à recevoir de
  * l'imagerie streamée, et sa position vient d'un binaire Horizons, pas d'astronomy-engine.
+ *
+ * TITAN s'y est ajouté au lot 36, et il apporte deux choses qu'aucun des cinq autres n'avait :
+ * sa mosaïque est de très loin la plus GROSSIÈRE du jeu (32 pixels par degré, contre 1 408 pour
+ * Vénus et 303 pour la Lune), donc sa pyramide n'a que CINQ niveaux là où Vénus en a dix ; et
+ * c'est la première dont le producteur n'est ni la NASA ni une agence, mais une équipe
+ * universitaire (LPG, CNRS / Nantes), ce qui rend son crédit affiché plus intéressant à vérifier
+ * que celui des autres.
  */
 for (const { body, layer, extension } of [
   {
@@ -572,6 +579,11 @@ for (const { body, layer, extension } of [
     body: 'ceres',
     layer: 'CE_LAMO_G_00N_180E_EQU_CLR_scale.eq',
     extension: 'jpg',
+  },
+  {
+    body: 'titan',
+    layer: 'Titan_global_32ppd_ColorRatio_v2',
+    extension: 'png',
   },
 ])
   test(`paints ${body} from its tile set record alone`, async ({ page }) => {
