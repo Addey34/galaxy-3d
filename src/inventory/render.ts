@@ -188,7 +188,8 @@ export function renderInventory(inventory: Inventory): string {
     .filter((row) => row.illustrativeSurface)
     .map((row) => {
       const surface = row.textures.find((layer) => layer.layer === 'surface');
-      return `${pad(row.id, 12)} ${surface?.shipped.join('/') ?? 'aucune'}`;
+      const seen = row.illustrativeVerified ?? 'JAMAIS REVERIFIE';
+      return `${pad(row.id, 12)} ${pad(surface?.shipped.join('/') ?? 'aucune', 16)} verifie ${seen}`;
     });
   out.push(
     '',

@@ -29,7 +29,7 @@
     "sourceResolution": "no resolved global surface map",
     "projection": "unknown",
     "qualityClass": "illustrative",
-    "note": "Distant unresolved body; current map is illustrative.",
+    "note": "Distant unresolved body; current map is illustrative. Revérifié le 2026-09-29 contre le catalogue USGS Astrogeology, avec témoin : l'identifiant de produit « makemake_image_mosaic » rend exactement les 12 012 octets d'un identifiant qui n'a jamais existé, là où deux contrôles positifs (rhea_image_mosaic, enceladus_image_mosaic) rendent 15 048 et 14 953. Aucune mosaïque photographique globale n'y est donc publiée pour ce corps.",
     "license": "unconfirmed",
     "credit": "unconfirmed",
     "attributionNeeded": true,
