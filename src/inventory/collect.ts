@@ -133,6 +133,13 @@ export interface InventoryRow {
   readonly textures: readonly TextureLayerState[];
   /** Surface illustrative, d'après `ILLUSTRATIVE_SURFACES` de `@/config/catalog`. */
   readonly illustrativeSurface: boolean;
+  /**
+   * La DATE à laquelle l'absence de mosaïque a été revérifiée, LUE dans la raison écrite de la
+   * fiche de surface. Une absence de source n'est pas éternelle : une mission passe, une mosaïque
+   * est publiée, et la raison d'hier devient le mensonge d'aujourd'hui. `null` quand la fiche
+   * n'en porte pas — ce que `src/config/illustrativeSurfaces.test.ts` interdit.
+   */
+  readonly illustrativeVerified: string | null;
   readonly shape: {
     readonly resolutions: readonly string[];
     readonly missingFiles: readonly string[];
@@ -266,6 +273,20 @@ function positionOf(
       .map(([provider, medianKm]) => ({ provider, medianKm }))
       .sort((a, b) => a.medianKm - b.medianKm),
   };
+}
+
+/**
+ * LA DERNIÈRE DATE citée par la raison écrite de la surface. La plus RÉCENTE, parce qu'une fiche
+ * revérifiée garde sa vérification d'origine et ajoute la nouvelle : c'est la dernière qui dit
+ * depuis quand l'absence est tenue pour vraie.
+ */
+function illustrativeVerifiedOn(id: string): string | null {
+  const note =
+    textureReviews().find(
+      (review) => review.body === id && camel(review.layer) === 'surface'
+    )?.note ?? '';
+  const dates = note.match(/\b20\d\d-\d\d-\d\d\b/g);
+  return dates ? dates.sort().at(-1)! : null;
 }
 
 function texturesOf(
@@ -472,6 +493,9 @@ export function collectInventory(root: string): Inventory {
       position,
       textures,
       illustrativeSurface: hasIllustrativeSurface(id),
+      illustrativeVerified: hasIllustrativeSurface(id)
+        ? illustrativeVerifiedOn(id)
+        : null,
       shape,
       tileset: tileset
         ? {
