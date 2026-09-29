@@ -958,7 +958,10 @@ function methodologyPage(input: MethodologyInput, locale: DocLocale): DocPage {
     const deepPublished = deepRows.filter((r) => r.km);
     const deepRefused = deepRows.filter((r) => r.floorRefused);
     const deepBodies = new Set(deepPublished.map((r) => r.body)).size;
-    const firstYear = year([...deepRows].sort()[0]?.windowFrom ?? '');
+    // Trier les DATES, pas les objets : `[...deepRows].sort()` compare des « [object Object] »
+    // et rend donc le premier élément dans l'ordre d'émission, ce qui n'est juste que par
+    // accident. Défaut trouvé en relisant le lot 39 après sa fusion.
+    const firstYear = year(deepRows.map((r) => r.windowFrom).sort()[0] ?? '');
     const lastYear = year(
       deepRows
         .map((r) => r.windowTo)
