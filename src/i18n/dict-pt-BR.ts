@@ -280,6 +280,7 @@ export const ptBR: Record<MessageKey, string> = {
   'tours.next': 'Próximo',
   'tours.close': 'Fechar',
   'tours.progress': 'Etapa {current} de {total}',
+  'tours.outline': 'Visita “{title}”, {count} partes: {beats}',
   'tours.status.flyingTo': 'Voando até {body}…',
   'tours.status.jumping': 'Salto no tempo…',
   'tours.status.speeding': 'Acelerando o tempo…',
@@ -491,4 +492,59 @@ export const ptBR: Record<MessageKey, string> = {
   'unit.au': 'UA',
   'unit.million': 'milhões de',
   'unit.billion': 'bilhões de',
+
+  // ── Précisions de provenance (lot 35) ──
+  // Ce que la source mesure exactement quand le libellé de la fiche est plus large, et la
+  // raison d'une valeur non sourcée. Ces textes vivaient inlinés en QUATRE langues dans
+  // `config/factSources.ts`, donc dans la clôture statique : 6 676 octets de source, 2 828
+  // octets gzippés, payés par un visiteur qui n'en lit qu'un quart. Ici, chaque langue ne
+  // voyage qu'avec son propre dictionnaire.
+  'detail.equatorialRadius1Bar': 'raio equatorial no nível de pressão de 1 bar',
+  'detail.meanGravity1Bar': 'gravidade média no nível de pressão de 1 bar',
+  'detail.equatorialGravity': 'gravidade no equador',
+  'detail.temperature1Bar': 'temperatura média no nível de pressão de 1 bar',
+  'detail.effectiveTemperature':
+    'temperatura efetiva, 5772 K, convertida para °C',
+  'detail.solarRotationAt16Degrees':
+    'período adotado a 16° de latitude: o Sol gira mais rápido no equador que nos polos',
+  'detail.obliquityToEcliptic': 'obliquidade em relação à eclíptica',
+  'detail.synchronousRotation':
+    'rotação sincronizada: igual ao período orbital',
+  'detail.massFromGM': 'massa = GM / G, com G de CODATA 2018',
+  'detail.gravityFromGM': 'g = GM / R², para uma esfera sem rotação',
+  'detail.radiusFromDiameter': 'metade do diâmetro publicado',
+  'detail.equatorialRadiusFromDiameter':
+    'metade do diâmetro equatorial publicado',
+  'detail.volumetricRadiusFromDiameter':
+    'metade do diâmetro equivalente em volume publicado',
+  'detail.itokawaPublishedMass':
+    'massa publicada citada nas notas da base; o GM de 2,1e-9 km³/s² da base não corresponde a ela',
+  'detail.gravityFromSystemMass':
+    'g = G·M / R² com a massa do sistema, para uma esfera sem rotação',
+  'detail.massFromDensity':
+    'massa = densidade publicada × volume do raio publicado',
+  'detail.gravityFromMass': 'g = G·M / R², para uma esfera sem rotação',
+  'detail.systemMass': 'massa do sistema inteiro, satélite incluído',
+  'detail.obliquityFromPole':
+    'ângulo entre o polo de rotação publicado e a normal à órbita',
+  'detail.osculatingSemiMajorAxis':
+    'semieixo maior osculador na época dos elementos',
+  'detail.keplerPeriod':
+    'terceira lei de Kepler aplicada ao semieixo maior osculador',
+  'detail.partialLightcurve':
+    'período de curva de luz que a fonte indica como baseado em uma cobertura incompleta',
+  'detail.confirmedSatellites':
+    'número de satélites confirmados listados pela base',
+  'detail.nssdcaFactsInBrief':
+    'massa tal como consta nos “Facts in Brief” do catálogo para esta sonda',
+  'detail.firstObservationUsed':
+    'primeira observação usada pela solução de órbita publicada',
+  'detail.osculatingEccentricity':
+    'excentricidade osculadora da solução de órbita publicada; acima de 1 a órbita é aberta e o objeto deixa o Sistema Solar',
+  'detail.absoluteMagnitudeH':
+    'magnitude absoluta H: o brilho que o objeto teria a 1 UA do Sol e do observador, com ângulo de fase nulo',
+  'detail.perihelionFromElements':
+    'q = a (1 − e), conforme os elementos osculadores publicados',
+  'fact.notYetSourced':
+    'A Galaxy ainda não vinculou este valor a uma fonte primária (agência espacial, UAI, artigo publicado): por isso ele não é exibido.',
 };

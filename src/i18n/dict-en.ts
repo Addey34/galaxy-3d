@@ -300,6 +300,7 @@ export const en = {
   'tours.next': 'Next',
   'tours.close': 'Close',
   'tours.progress': 'Step {current} of {total}',
+  'tours.outline': 'Tour "{title}", {count} parts: {beats}',
   'tours.status.flyingTo': 'Flying to {body}…',
   'tours.status.jumping': 'Jumping through time…',
   'tours.status.speeding': 'Speeding up time…',
@@ -513,6 +514,62 @@ export const en = {
   'unit.au': 'AU',
   'unit.million': 'M',
   'unit.billion': 'B',
+
+  // ── Précisions de provenance (lot 35) ──
+  // Ce que la source mesure exactement quand le libellé de la fiche est plus large, et la
+  // raison d'une valeur non sourcée. Ces textes vivaient inlinés en QUATRE langues dans
+  // `config/factSources.ts`, donc dans la clôture statique : 6 676 octets de source, 2 828
+  // octets gzippés, payés par un visiteur qui n'en lit qu'un quart. Ici, chaque langue ne
+  // voyage qu'avec son propre dictionnaire.
+  'detail.equatorialRadius1Bar':
+    'equatorial radius at the 1-bar pressure level',
+  'detail.meanGravity1Bar': 'mean gravity at the 1-bar pressure level',
+  'detail.equatorialGravity': 'gravity at the equator',
+  'detail.temperature1Bar': 'mean temperature at the 1-bar pressure level',
+  'detail.effectiveTemperature':
+    'effective temperature, 5772 K, converted to °C',
+  'detail.solarRotationAt16Degrees':
+    'adopted period at 16° latitude: the Sun rotates faster at its equator than near its poles',
+  'detail.obliquityToEcliptic': 'obliquity to the ecliptic',
+  'detail.synchronousRotation':
+    'synchronous rotation: equal to the orbital period',
+  'detail.massFromGM': 'mass = GM / G, with G from CODATA 2018',
+  'detail.gravityFromGM': 'g = GM / R², for a sphere without rotation',
+  'detail.radiusFromDiameter': 'half the published diameter',
+  'detail.equatorialRadiusFromDiameter':
+    'half the published equatorial diameter',
+  'detail.volumetricRadiusFromDiameter':
+    'half the published volume-equivalent diameter',
+  'detail.itokawaPublishedMass':
+    'published mass quoted in the database notes; the database GM of 2.1e-9 km³/s² does not match it',
+  'detail.gravityFromSystemMass':
+    'g = G·M / R² with the system mass, for a sphere without rotation',
+  'detail.massFromDensity':
+    'mass = published density × volume of the published radius',
+  'detail.gravityFromMass': 'g = G·M / R², for a sphere without rotation',
+  'detail.systemMass': 'mass of the whole system, satellite included',
+  'detail.obliquityFromPole':
+    'angle between the published spin pole and the orbit normal',
+  'detail.osculatingSemiMajorAxis':
+    'osculating semi-major axis at the epoch of the elements',
+  'detail.keplerPeriod':
+    'Kepler’s third law applied to the osculating semi-major axis',
+  'detail.partialLightcurve':
+    'lightcurve period that the source flags as based on less than full coverage',
+  'detail.confirmedSatellites':
+    'number of confirmed satellites listed by the database',
+  'detail.nssdcaFactsInBrief':
+    'mass as listed in the catalogue’s “Facts in Brief” for this spacecraft',
+  'detail.firstObservationUsed':
+    'first observation used by the published orbit solution',
+  'detail.osculatingEccentricity':
+    'osculating eccentricity of the published orbit solution; above 1, the orbit is open and the object leaves the Solar System',
+  'detail.absoluteMagnitudeH':
+    'absolute magnitude H: the brightness the object would have 1 AU from both the Sun and the observer, at zero phase angle',
+  'detail.perihelionFromElements':
+    'q = a (1 − e), from the published osculating elements',
+  'fact.notYetSourced':
+    'Galaxy has not yet traced this value to a primary source (space agency, IAU, peer-reviewed article), so it is not shown.',
 };
 
 /** Toutes les clés d'interface de l'application. Dérivé, jamais listé à la main. */

@@ -1,4 +1,5 @@
 import { readFileSync } from 'node:fs';
+import { LOCALES } from '@/i18n/locales';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
@@ -315,18 +316,24 @@ describe('ce que la fiche de Mars fait produire au moteur', () => {
 
 /**
  * L'hôte est déclaré en QUATRE endroits (CSP `connect-src` et `img-src`, `LIVE_DATA_SERVICES`,
- * fiche de fournisseur, `privacy.html` dans les deux langues). Les deux premiers et la fiche
+ * fiche de fournisseur, `privacy.html` dans CHAQUE langue). Les deux premiers et la fiche
  * sont croisés par `core/gibsLegend.test.ts` et `seo/docPages.test.ts` ; la page de
  * confidentialité l'est par `config/privacyDisclosure.test.ts`, mais par suffixe et sur la seule
- * CSP. On ajoute ici le lien direct fiche → page, dans les DEUX langues.
+ * CSP. On ajoute ici le lien direct fiche → page, dans CHAQUE langue.
+ *
+ * LE NOMBRE ÉTAIT ÉCRIT « 2 » À LA MAIN, et le lot 35 l'a fait tomber en portant la page de
+ * deux langues à quatre. C'est précisément ce que ce lot corrige ailleurs : un nombre qu'on
+ * entretient n'est pas une garde. Il se DÉRIVE désormais de `LOCALES`.
  */
 describe('divulgation de l’hôte des tuiles', () => {
   const privacy = readFileSync(resolve(ROOT, 'public/privacy.html'), 'utf8');
 
-  it('nomme l’hôte dans la page de confidentialité, deux fois', () => {
+  it('nomme l’hôte dans la page de confidentialité, une fois par langue', () => {
     for (const provider of Object.values(TILE_PROVIDERS)) {
       const occurrences = privacy.split(provider.host).length - 1;
-      expect(occurrences, `${provider.host} dans privacy.html`).toBe(2);
+      expect(occurrences, `${provider.host} dans privacy.html`).toBe(
+        LOCALES.length
+      );
     }
   });
 });

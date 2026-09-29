@@ -11,8 +11,11 @@
  *                      une image satellite n'existe pas pour une scène en 2030, la dernière
  *                      image réelle est servie, et cet écart doit se voir ;
  *   - observationTime / publicationTime : quand la mesure a été prise, quand la source l'a
- *                      publiée. Pas encore portés par `DatedProduct` : aucune catégorie n'en
- *                      dépend aujourd'hui (les faits du lot 4 portent leur `asOf`) ;
+ *                      publiée. Pas portés par `DatedProduct` : aucune catégorie n'en dépend
+ *                      (les faits du lot 4 portent leur `asOf`). Ce n'était qu'une PHRASE
+ *                      jusqu'au lot 35 — rien ne tombait si une branche se mettait à lire l'un
+ *                      des deux. `temporal.test.ts` le vérifie désormais en les ajoutant au
+ *                      produit avec des valeurs absurdes et en exigeant le même horodatage ;
  *   - now            : l'instant RÉEL. Lui seul sépare ce qui a pu être observé de ce qui ne
  *                      peut être qu'une prédiction.
  *

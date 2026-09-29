@@ -343,11 +343,27 @@ export interface RealData {
   unknown?: Partial<Record<UnknownableField, UnknownReason>>;
 }
 
-/** Raison d'une valeur non affichée — voir `RealData.unknown`. */
-export interface UnknownReason extends LocalizedText {
-  /** Vrai : la valeur n'est pas encore rattachée à une source primaire (≠ non publiée). */
-  unsourced?: boolean;
+/**
+ * Un texte que la fiche écrit ELLE-MÊME dans les quatre langues, ou une CLÉ de dictionnaire.
+ *
+ * Les deux formes ont chacune leur raison d'être, et le lot 35 est ce qui les a séparées. Un
+ * texte propre à une fiche reste dans la fiche — c'est du JSON, et le greffon
+ * `deriveRegistryText` en sort les langues inactives au build. Un texte RÉCURRENT, écrit une
+ * fois dans un module `.ts` et partagé par des dizaines de fiches, n'a lui aucun greffon : les
+ * quatre langues partent dans la clôture statique et tout le monde les paie. Il prend donc la
+ * seconde forme. Résolu par `i18n/localizedOrKey`.
+ */
+export interface MessageRef {
+  /** Une clé de `MessageKey` — typée `string` ici, parce que `@/types` ne dépend pas de l'i18n. */
+  readonly message: string;
 }
+export type LocalizedOrKey = LocalizedText | MessageRef;
+
+/** Raison d'une valeur non affichée — voir `RealData.unknown`. */
+export type UnknownReason = LocalizedOrKey & {
+  /** Vrai : la valeur n'est pas encore rattachée à une source primaire (≠ non publiée). */
+  readonly unsourced?: boolean;
+};
 
 /**
  * Faits documentaires qu'affichent la fiche d'un corps et sa page publique. `rotationPeriod`
@@ -400,7 +416,7 @@ export interface FactProvenance {
   /** Incertitude à 1 σ publiée par la source, dans l'unité du champ (radians pour `axialTilt`). */
   uncertainty?: number;
   /** Ce que la source mesure exactement, quand le libellé affiché est plus large. */
-  detail?: LocalizedText;
+  detail?: LocalizedOrKey;
   /** Référence originale citée par une base de données (SBDB : « Park et al. 2025 »…). */
   citation?: string;
 }

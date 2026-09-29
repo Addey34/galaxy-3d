@@ -313,8 +313,28 @@ classe**, sans quoi une source brille trop ou pas assez sans rien lever. Douze m
 tombées. La forme du halo, elle, a été regardée à l'écran en Éduc et en Explo et mesurée (énergie
 de la face nuit, anneau solaire : `docs/ARCHITECTURE.md` § « Halo lumineux »).
 
-Il n’y a pas encore de seuil de couverture chiffré : la priorité est la couverture comportementale
-des invariants physiques et des frontières d’architecture.
+### Pas de seuil de couverture chiffré, et c’est une DÉCISION (2026-09-29)
+
+Cette ligne disait « pas ENCORE de seuil chiffré », ce qui promettait un chantier que personne
+n’avait ouvert. Elle est tranchée, dans le sens du refus, et voici ce qui le motive.
+
+- **Un pourcentage de couverture est un nombre qu’on entretient, pas une garde.** Le lot 29 a
+  retiré trois valeurs tenues à la main pour cette raison exacte, et un seuil de couverture est
+  la même chose en plus visible : il monte quand on exécute des lignes, y compris sans rien
+  affirmer sur elles. Ce dépôt mesure autre chose — une garde vaut par sa FALSIFICATION, et la
+  question posée à chaque ajout est « qu’est-ce qui rougit si je casse ça ? », jamais « quel
+  pourcentage ai-je touché ? ».
+- **Le coût est réel** : aucun `@vitest/coverage-*` n’est installé, donc l’activer ajoute une
+  dépendance de développement et du temps à chaque exécution de la porte, pour un chiffre dont
+  ce document dit par ailleurs de ne jamais le figer (§ « Compter les tests »).
+- **Ce qui tient lieu de couverture ici** est écrit et vérifiable : la couverture comportementale
+  des invariants physiques et des frontières d’architecture, plus les inventaires DÉRIVÉS du
+  dépôt (`pnpm inventory:gaps`) qui disent corps par corps ce qui manque.
+
+**Ce qui rouvrirait la question** : une régression livrée dont l’analyse montrerait qu’un simple
+relevé de lignes non exécutées l’aurait désignée. Ce n’est arrivé sur aucun des défauts consignés
+dans `docs/private/HANDOFF_ARCHIVE.md` — ils se répartissent entre erreurs de MESURE, conventions
+publiées mal lues et contrats sans garde, dont aucun ne se voit dans un pourcentage.
 
 ## Compter les tests
 

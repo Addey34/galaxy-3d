@@ -154,6 +154,27 @@
             "properties": {
               "kind": {
                 "type": "string",
+                "const": "setMode"
+              },
+              "mode": {
+                "type": "string",
+                "enum": [
+                  "educ",
+                  "explo"
+                ]
+              }
+            },
+            "required": [
+              "kind",
+              "mode"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
                 "const": "caption"
               },
               "text": {

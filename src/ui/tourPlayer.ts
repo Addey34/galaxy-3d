@@ -10,6 +10,7 @@
  * fiche d'info et permalien restent cohérents.
  */
 import './tourPlayer.css';
+import type { ModeSwitcher } from './modeSwitcher';
 import { onLocaleChange, t, getLocale } from '@/i18n';
 import { bodyDisplayName } from '@/i18n/bodyText';
 import type { CameraSystem } from '@/components/systems/CameraSystem';
@@ -45,7 +46,13 @@ export function setupTourPlayer(
   om: OrbitalMechanics,
   navigation: PlanetNavigation,
   scripts: TourScript[],
-  permalink: TourPlayerPermalink
+  permalink: TourPlayerPermalink,
+  /**
+   * Le sélecteur de mode, et NON `OrbitalMechanics` directement : lui seul met à jour les
+   * boutons, `aria-pressed`, la classe du `<body>`, la caméra et le HUD « Voyage ». Une visite
+   * qui appellerait `om.setMode` laisserait tout cela dire le contraire de la scène.
+   */
+  modeSwitcher: ModeSwitcher
 ): TourPlayer {
   const helpPopover = document.getElementById('help-popover');
   if (!helpPopover) return { dispose: () => {} };
@@ -99,12 +106,36 @@ export function setupTourPlayer(
   closeButton.type = 'button';
   closeButton.className = 'stour-close';
   actions.append(pauseButton, nextButton, closeButton);
-  card.append(progress, caption, actions);
+
+  /**
+   * LE SOMMAIRE DE LA VISITE, pour qui ne voit pas la carte.
+   *
+   * La carte annonçait « Étape 3 sur 8 » : une POSITION, sans rien dire de ce que la visite
+   * contient ni d'où elle va. Un visiteur voyant a la scène sous les yeux pour le deviner ;
+   * un lecteur d'écran n'a que ce dialogue. Le sommaire liste les légendes — les temps du
+   * RÉCIT, et non les `flyTo` ou les `wait`, qui sont de la mécanique — et il est rattaché au
+   * dialogue par `aria-describedby`, donc énoncé à l'ouverture, après son nom, et une seule
+   * fois. Visuellement absent : la carte est déjà étroite et l'information est redondante avec
+   * la scène.
+   */
+  const outline = document.createElement('p');
+  outline.className = 'sr-only';
+  outline.id = 'stour-outline';
+  card.setAttribute('aria-describedby', outline.id);
+
+  card.append(outline, progress, caption, actions);
   document.body.append(backdrop, card);
 
   let active = false;
   let signal: TourSignal = { cancelled: false, paused: false };
   let speedChanged = false;
+  /**
+   * Le mode dans lequel l'utilisateur était AVANT la visite, ou `null` si elle n'y a pas
+   * touché. Symétrique de `speedChanged` : une visite emprunte l'application, elle ne la
+   * reconfigure pas. Et on restaure le mode de DÉPART, jamais « éduc » en dur — l'utilisateur
+   * pouvait déjà être en Explo, et le ramener de force serait un autre réglage volé.
+   */
+  let modeBeforeTour: 'educ' | 'explo' | null = null;
   let advanceResolve: (() => void) | null = null;
   let currentScript: TourScript | null = null;
 
@@ -115,6 +146,24 @@ export function setupTourPlayer(
   const triggerAdvance = (): void => {
     advanceResolve?.();
     advanceResolve = null;
+  };
+
+  /** Les légendes de la visite, dans l'ordre : ce sont elles qui la racontent. */
+  const renderOutline = (): void => {
+    if (!currentScript) {
+      outline.textContent = '';
+      return;
+    }
+    const beats = currentScript.steps
+      .filter((step) => step.kind === 'caption')
+      .map((step) => localizedText(step.text));
+    outline.textContent = beats.length
+      ? t('tours.outline', {
+          title: localizedText(currentScript.title),
+          count: beats.length,
+          beats: beats.join(' · '),
+        })
+      : '';
   };
 
   const localize = (): void => {
@@ -129,6 +178,7 @@ export function setupTourPlayer(
     for (const { script, btn } of pickerButtons) {
       btn.textContent = localizedText(script.title);
     }
+    renderOutline();
     if (active && currentScript && currentStep) render(stepIndex, currentStep);
   };
 
@@ -196,6 +246,7 @@ export function setupTourPlayer(
     active = false;
     hideOverlay();
     if (speedChanged) om.setSimulationSpeed(1);
+    if (modeBeforeTour !== null) modeSwitcher.setMode(modeBeforeTour);
     navigation.selectBody('overview');
     permalink.setSuspended(false);
     permalink.sync();
@@ -209,13 +260,16 @@ export function setupTourPlayer(
     currentScript = script;
     signal = { cancelled: false, paused: false };
     speedChanged = false;
+    modeBeforeTour = null;
     active = true;
     stepIndex = 0;
     currentStep = null;
     lastCaptionText = '';
     permalink.setSuspended(true);
-    showOverlay();
+    // Le sommaire AVANT l'ouverture : `aria-describedby` est lu quand le dialogue prend le
+    // focus, et un élément encore vide à cet instant n'est jamais rattrapé.
     localize();
+    showOverlay();
 
     const host: TourRuntimeHost = {
       flyTo: (body) => navigation.selectBody(body),
@@ -232,6 +286,15 @@ export function setupTourPlayer(
         speedChanged = true;
         om.setSimulationSpeed(scale);
       },
+      setMode: (mode) => {
+        modeBeforeTour ??= modeSwitcher.getMode();
+        modeSwitcher.setMode(mode);
+      },
+      // Le morph glisse de 0 (Éduc) à 1 (Explo) ; l'attente se fait sur ce FAIT, jamais sur une
+      // durée recopiée de `MORPH_DURATION_S`, qui deviendrait fausse le jour où elle change.
+      isMorphing: () =>
+        Math.abs(om.scaleMorph - (modeSwitcher.getMode() === 'explo' ? 1 : 0)) >
+        0.001,
       waitForAdvance,
     };
 

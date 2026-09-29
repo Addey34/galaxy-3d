@@ -13,6 +13,8 @@ function makeHost(overrides: Partial<TourRuntimeHost> = {}): TourRuntimeHost {
     jumpToDate: vi.fn(),
     jumpToEvent: vi.fn(),
     setTimeScale: vi.fn(),
+    setMode: vi.fn(),
+    isMorphing: vi.fn(() => false),
     waitForAdvance: vi.fn(() => Promise.resolve()),
     ...overrides,
   };
@@ -202,5 +204,70 @@ describe('runTour', () => {
     await promise;
     expect(host.setTimeScale).toHaveBeenCalledWith(42);
     vi.useRealTimers();
+  });
+});
+
+/**
+ * LE MODE D'ÉCHELLE EST DEVENU UNE ÉTAPE (lot 35, ligne 22.8 d).
+ *
+ * Le patron est celui de `flyTo`, délibérément : l'hôte agit, puis le moteur ATTEND un fait.
+ * Aucune durée n'est recopiée ici — `MORPH_DURATION_S` vit dans `OrbitalMechanics` et pourrait
+ * changer demain, ce qui rendrait une attente fixe silencieusement trop courte : la légende
+ * suivante s'afficherait alors sur une scène à mi-chemin, c'est-à-dire sur aucune des deux
+ * échelles.
+ */
+describe('setMode', () => {
+  it('bascule, puis attend la FIN du morph avant l’étape suivante', async () => {
+    let morphing = true;
+    const setMode = vi.fn(() => {
+      morphing = true;
+    });
+    const caption = vi.fn();
+    const host = makeHost({
+      setMode,
+      isMorphing: () => morphing,
+      waitForAdvance: vi.fn(() => {
+        caption();
+        return Promise.resolve();
+      }),
+    });
+    const script: TourScript = {
+      id: 't',
+      title: text,
+      steps: [
+        { kind: 'setMode', mode: 'explo' },
+        { kind: 'caption', text },
+      ],
+    };
+    const signal = makeSignal();
+    const run = runTour(script, host, () => {}, signal);
+
+    // Tant que la scène morphe, la légende n'est PAS encore demandée.
+    await new Promise((r) => setTimeout(r, 120));
+    expect(setMode).toHaveBeenCalledWith('explo');
+    expect(caption, 'légende affichée pendant le morph').not.toHaveBeenCalled();
+
+    morphing = false;
+    await run;
+    expect(caption).toHaveBeenCalledTimes(1);
+  });
+
+  it('s’interrompt si la visite est fermée pendant le morph', async () => {
+    // Sans cela, fermer une visite pendant la transition laisserait le moteur tourner.
+    const host = makeHost({ isMorphing: () => true });
+    const script: TourScript = {
+      id: 't',
+      title: text,
+      steps: [
+        { kind: 'setMode', mode: 'explo' },
+        { kind: 'caption', text },
+      ],
+    };
+    const signal = makeSignal();
+    const run = runTour(script, host, () => {}, signal);
+    await new Promise((r) => setTimeout(r, 80));
+    signal.cancelled = true;
+    await expect(run).resolves.toBeUndefined();
+    expect(host.waitForAdvance).not.toHaveBeenCalled();
   });
 });

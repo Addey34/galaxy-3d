@@ -2768,7 +2768,7 @@ Les six pièces, dans l'ordre où une fiche les traverse :
 
 ### Le vocabulaire des étapes est FERMÉ
 
-Une fiche ne porte aucune expression : elle choisit parmi six formes nommées, exactement comme les
+Une fiche ne porte aucune expression : elle choisit parmi sept formes nommées, exactement comme les
 formes déclarées du registre d'entités (`{"$deg": …}`). C'est cette fermeture qui permet à la
 donnée de décrire un comportement sans devenir du code.
 
@@ -2778,8 +2778,19 @@ donnée de décrire un comportement sans devenir du code.
 | `jumpToDate` | saute à une date déclarée, `{"$date": "…Z"}` |
 | `jumpToEvent` | saute à la prochaine occurrence RÉELLE d'un événement, depuis la date courante |
 | `setTimeScale` | accélère (ou renverse) le temps, plafonné à ce que le curseur sait représenter |
+| `setMode` | bascule l'échelle, `educ` ou `explo` (lot 35) |
 | `caption` | une légende localisée ; sans `durationMs` elle attend un geste |
 | `wait` | laisse la scène tourner |
+
+**`setMode` est la seule forme ajoutée depuis le lot 21**, et elle suit le patron de `flyTo` :
+l'hôte agit, puis le moteur attend un FAIT (`isMorphing`), jamais une durée. Recopier
+`MORPH_DURATION_S` ici l'aurait rendue silencieusement trop courte le jour où elle change, et la
+légende suivante se serait affichée sur une scène à mi-chemin, c'est-à-dire sur aucune des deux
+échelles. **Une visite RESTITUE ce qu'elle emprunte** : `tourPlayer.finish()` remet le mode du
+DÉPART, comme il remettait déjà la vitesse, et jamais « éduc » en dur — un utilisateur déjà en
+Explo ne doit pas en être sorti par une visite. La preuve qu'une forme n'est pas spéculative est
+qu'une fiche s'en serve : « Voyage aux confins » passe en Explo juste avant Sedna, là où la
+ceinture cesse d'être une file de points bien rangés.
 
 **`jumpToEvent` est la forme qui a fait disparaître une exception de code.** Jusqu'au lot 21,
 `ui/tourPlayer.ts` préfixait un saut de date à la visite dont l'identifiant valait `eclipse` : une

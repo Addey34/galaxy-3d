@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { isLocalizedText } from '@/i18n/localizedOrKey';
 import { CELESTIAL_CONFIG } from './bodies';
 import { flattenBodies } from './catalog';
 import { SPACECRAFT_MISSIONS } from './spacecraft';
@@ -91,6 +92,8 @@ describe('objets navigables', () => {
     expect(entry.status).toBe('unknown');
     if (entry.status !== 'unknown') return;
     expect(entry.reason.unsourced).toBeFalsy();
+    expect(isLocalizedText(entry.reason)).toBe(true);
+    if (!isLocalizedText(entry.reason)) return;
     expect(entry.reason.fr).toContain('365 kg');
     expect(entry.reason.en).toContain('365 kg');
   });

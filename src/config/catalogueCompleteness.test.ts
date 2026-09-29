@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { isLocalizedText } from '@/i18n/localizedOrKey';
 import { CELESTIAL_CONFIG } from './bodies';
 import { forEachBody } from './catalog';
 import type { CelestialBodyConfig, FactField, UnknownableField } from '@/types';
@@ -135,6 +136,7 @@ describe('complétude documentaire du catalogue', () => {
       for (const [field, reason] of Object.entries(
         cfg.realData?.unknown ?? {}
       )) {
+        if (!isLocalizedText(reason)) continue;
         for (const locale of ['en', 'fr'] as const) {
           expect(
             reason[locale]?.length ?? 0,
