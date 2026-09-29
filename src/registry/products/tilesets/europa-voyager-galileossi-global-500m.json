@@ -1,0 +1,64 @@
+{
+  "$schema": "../../schema/product.schema.json",
+  "id": "europa-voyager-galileossi-global-500m",
+  "type": "tileset",
+  "body": "europa",
+  "title": "Europa Voyager - Galileo SSI global mosaic, 500 m (Europa_Voyager_GalileoSSI_global_mosaic_500m)",
+  "providerId": "nasa-trek",
+  "mission": "Voyager 1, Voyager 2, Galileo",
+  "instrument": "ISS (Voyager) and Solid State Imaging (Galileo)",
+  "service": {
+    "template": "https://trek.nasa.gov/tiles/Europa/EQ/Europa_Voyager_GalileoSSI_global_mosaic_500m/1.0.0//{Style}/{TileMatrixSet}/{TileMatrix}/{TileRow}/{TileCol}.png",
+    "style": "default",
+    "tileMatrixSet": "default028mm",
+    "format": "image/png",
+    "matrix": {
+      "columnsAtLevelZero": 2,
+      "rowsAtLevelZero": 1,
+      "tileSizePx": 256
+    },
+    "minLevel": 0,
+    "maxLevel": 5
+  },
+  "publishedPixelsPerDegree": 54.53,
+  "acquired": {
+    "interval": [["1979-03-03T07:11:46Z", "1999-11-25T18:47:56Z"]]
+  },
+  "license": "other",
+  "rights": "public-domain",
+  "links": [
+    {
+      "rel": "license",
+      "href": "https://www.nasa.gov/nasa-brand-center/images-and-media/"
+    },
+    {
+      "rel": "describedby",
+      "href": "https://trek.nasa.gov/tiles/Europa/EQ/Europa_Voyager_GalileoSSI_global_mosaic_500m/1.0.0/WMTSCapabilities.xml"
+    },
+    {
+      "rel": "via",
+      "href": "https://astrogeology.usgs.gov/search/map/europa_voyager_galileo_ssi_global_mosaic_500m"
+    },
+    {
+      "rel": "via",
+      "href": "https://astrogeology.usgs.gov/ckan/dataset/4080036f-afc5-422e-abe9-1c0c8e4f98ea/resource/740685f6-148c-4b9b-97e3-151998f82add/download/europa_simp.pdf"
+    }
+  ],
+  "providers": [
+    {
+      "name": "NASA Solar System Treks",
+      "roles": ["host"],
+      "url": "https://trek.nasa.gov/europa/"
+    },
+    {
+      "name": "Voyager Imaging Science and Galileo SSI Teams",
+      "roles": ["producer"]
+    },
+    {
+      "name": "T. Becker, B. Archinal, T. Colvin, M. Davies, A. Gitlin, R. Kirk and L. Weller, USGS Astrogeology Science Center",
+      "roles": ["processor"],
+      "url": "https://astrogeology.usgs.gov/search/map/europa_voyager_galileo_ssi_global_mosaic_500m"
+    }
+  ],
+  "verified": "2026-09-29"
+}
