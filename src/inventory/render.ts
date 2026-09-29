@@ -10,6 +10,10 @@ import {
   REFUSED_STEP_REFINEMENTS,
   shippedBytesForStep,
 } from '@/config/ephemerisStepBudget';
+import {
+  INTERSTELLAR_ACCURACY,
+  relativeError,
+} from '@/config/interstellarAccuracy';
 import type { Capability, Inventory, InventoryRow } from './collect';
 
 /**
@@ -159,6 +163,24 @@ export function renderInventory(inventory: Inventory): string {
   for (const [family, title] of families) {
     const rows = inventory.rows.filter((row) => row.family === family);
     out.push('', `${title} (${rows.length})`, ...table(rows));
+    // Le pire chiffre du catalogue ne doit pas se lire NU : ces millions de kilometres decrivent
+    // les bords d'une fenetre de +/-20 ans, et l'ecart au perihelie est cent fois plus petit.
+    // La mesure est une donnee (`config/interstellarAccuracy.ts`), gardee par son propre test.
+    if (family === 'interstellar' && INTERSTELLAR_ACCURACY.length > 0) {
+      out.push(
+        '',
+        "  Ces medianes portent sur +/-20 ans autour du perihelie. L'ecart MESURE au perihelie,",
+        '  la ou on regarde, et le meme rapporte a la distance heliocentrique :'
+      );
+      for (const record of INTERSTELLAR_ACCURACY) {
+        const at = record.points.find((p) => p.daysFromPerihelion === 0);
+        if (!at) continue;
+        out.push(
+          `    ${pad(record.body, 10)} ${km(at.errorKm)} au perihelie ` +
+            `(${at.heliocentricAU} UA, soit ${(relativeError(at) * 100).toFixed(4)} %)`
+        );
+      }
+    }
   }
 
   const illustrative = inventory.rows
