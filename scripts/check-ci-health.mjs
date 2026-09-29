@@ -222,8 +222,44 @@ export function inspectRun(runId, { readLogs = true } = {}) {
     attempt: run.run_attempt,
     url: run.html_url,
     createdAt: run.created_at,
+    supersededBy: supersedingRun(run),
     jobs: inspected,
   };
+}
+
+/**
+ * LE RUN QUI A REMPLACÉ CELUI-CI, s'il existe.
+ *
+ * `ci.yml` déclare `concurrency: cancel-in-progress`, donc deux fusions rapprochées ANNULENT le
+ * run de la première. Ce run-là n'est pas malade, il est remplacé : ses shards portent
+ * `cancelled` et aucun n'a échoué. Le dire non sain ouvre une issue pour rien, et **un guetteur
+ * qui crie au loup finit ignoré** — c'est arrivé le 2026-09-29, issue #55 ouverte sur le run du
+ * lot 29 annulé par la poussée du lot 30.
+ *
+ * Le signal est précis et vérifiable : un run du MÊME workflow, sur la MÊME branche, de numéro
+ * SUPÉRIEUR, et créé AVANT que celui-ci ne se termine. Rien d'autre ne vaut : l'API n'expose
+ * nulle part « annulé par la concurrence ».
+ */
+function supersedingRun(run) {
+  if (run.conclusion !== 'cancelled') return null;
+  let list;
+  try {
+    list = ghJson(
+      `repos/${REPOSITORY}/actions/workflows/${run.workflow_id}/runs` +
+        `?branch=${encodeURIComponent(run.head_branch)}&per_page=30`
+    );
+  } catch {
+    // On ne SAIT pas : on ne prétend donc pas que le run est remplacé.
+    return null;
+  }
+  const ended = Date.parse(run.updated_at);
+  for (const other of list.workflow_runs ?? []) {
+    if (other.id === run.id) continue;
+    if (other.run_number <= run.run_number) continue;
+    if (Date.parse(other.created_at) > ended) continue;
+    return { id: other.id, number: other.run_number, url: other.html_url };
+  }
+  return null;
 }
 
 /**
@@ -263,15 +299,35 @@ export function judge(run) {
       full.push({ job: job.name, minutes: job.minutes });
   }
 
+  /**
+   * UN RUN REMPLACÉ N'EST PAS UN RUN MALADE.
+   *
+   * `cancel-in-progress` annule le run de la fusion précédente dès qu'une autre arrive : tous ses
+   * shards portent alors `cancelled`, aucun n'a échoué, et le verdict qui compte est celui du run
+   * SUIVANT. Le condition est stricte — il faut qu'un run plus récent existe ET qu'AUCUN job
+   * n'ait réellement échoué : un vrai échec survenu avant l'annulation reste un défaut, et il
+   * serait scandaleux de le taire sous prétexte que le run a été coupé ensuite.
+   */
+  const onlyCancelled =
+    run.supersededBy != null &&
+    run.jobs.every(
+      (job) =>
+        job.conclusion === 'success' ||
+        job.conclusion === 'skipped' ||
+        job.conclusion === 'cancelled'
+    );
+
   return {
+    superseded: onlyCancelled,
     // UN JOURNAL ILLISIBLE REND LE RUN NON SAIN, et c'est le point. Sans cette condition, six
     // journaux injoignables et aucun job rouge auraient rendu « run SAIN » — c'est-à-dire
     // exactement le silence qui a fait passer deux runs rouges pour verts.
     healthy:
-      red.length === 0 &&
-      retried.length === 0 &&
-      full.length === 0 &&
-      unreadable.length === 0,
+      onlyCancelled ||
+      (red.length === 0 &&
+        retried.length === 0 &&
+        full.length === 0 &&
+        unreadable.length === 0),
     red,
     retried,
     full,
@@ -348,9 +404,13 @@ function render(run, verdict, { markdown }) {
   }
 
   out.push(
-    verdict.healthy
-      ? 'VERDICT : run SAIN (aucun job rouge, aucun réessai, aucune enveloppe pleine).'
-      : 'VERDICT : run NON SAIN.'
+    verdict.superseded
+      ? `VERDICT : run REMPLACÉ par le run ${run.supersededBy.number} ` +
+          `(${run.supersededBy.url}), annulé par la règle de concurrence et non par une panne. ` +
+          `Aucun job n'a échoué ; c'est le run suivant qui fait foi.`
+      : verdict.healthy
+        ? 'VERDICT : run SAIN (aucun job rouge, aucun réessai, aucune enveloppe pleine).'
+        : 'VERDICT : run NON SAIN.'
   );
   return out.join('\n');
 }
