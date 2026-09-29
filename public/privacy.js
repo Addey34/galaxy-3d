@@ -7,15 +7,32 @@
   // cette page statique est hors bundle et ne peut pas l'importer.
   var STORAGE_KEY = 'ssv-locale';
 
+  /* Les QUATRE langues de l'application depuis le lot 20. Cette page n'en connaissait que
+     deux jusqu'au lot 35 : un visiteur hispanophone, dont l'application avait pourtant
+     enregistré 'es', lisait cette page en ANGLAIS — la préférence était lue, puis jetée
+     parce qu'elle ne valait ni 'fr' ni 'en'. */
+  var LOCALES = ['en', 'fr', 'es', 'pt-BR'];
+
+  function known(locale) {
+    for (var i = 0; i < LOCALES.length; i++)
+      if (LOCALES[i] === locale) return true;
+    return false;
+  }
+
   function detectLocale() {
     try {
       var stored = localStorage.getItem(STORAGE_KEY);
-      if (stored === 'fr' || stored === 'en') return stored;
+      if (known(stored)) return stored;
     } catch (e) {
       /* localStorage indisponible (mode privé strict) : on retombe sur le navigateur. */
     }
+    /* `navigator.language` donne 'pt-br', 'pt-pt' ou 'pt' : le portugais du Brésil est la
+       seule variante traduite, et servir de l'anglais à un lusophone serait pire. */
     var nav = (navigator.language || 'en').toLowerCase();
-    return nav.indexOf('fr') === 0 ? 'fr' : 'en';
+    if (nav.indexOf('pt') === 0) return 'pt-BR';
+    if (nav.indexOf('fr') === 0) return 'fr';
+    if (nav.indexOf('es') === 0) return 'es';
+    return 'en';
   }
 
   function apply(locale) {
