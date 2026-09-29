@@ -585,6 +585,11 @@ for (const { body, layer, extension } of [
     layer: 'Titan_global_32ppd_ColorRatio_v2',
     extension: 'png',
   },
+  {
+    body: 'europa',
+    layer: 'Europa_Voyager_GalileoSSI_global_mosaic_500m',
+    extension: 'png',
+  },
 ])
   test(`paints ${body} from its tile set record alone`, async ({ page }) => {
     const errors: string[] = [];
