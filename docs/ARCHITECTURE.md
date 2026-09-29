@@ -2766,6 +2766,44 @@ Les six pièces, dans l'ordre où une fiche les traverse :
 | `src/core/tourEngine.ts` | le séquenceur PUR qui exécute les étapes |
 | `src/ui/tourPlayer.ts` | la carte, le sélecteur, le focus, la localisation |
 
+## Les noms de la surface viennent de l'UAI, et arrivent à l'approche
+
+Trente-six corps du catalogue portent des formations nommées — **15 932** au total, dont 9 087 pour
+la seule Lune. La seule autorité qui nomme une formation planétaire est le *Working Group for
+Planetary System Nomenclature* de l'UAI, et son Gazetteer publie chaque nuit, par corps, un KMZ
+qui porte tout ce qu'elle a approuvé. `pnpm gazetteer:generate` le lit ; rien n'est saisi à la
+main, et surtout pas une étymologie.
+
+**Trois décisions tiennent ce contrat.**
+
+- **La liste des corps se DÉRIVE** : la page de téléchargement de l'UAI dit lesquels elle couvre,
+  et on croise avec `src/registry/entities/`. Ajouter un corps au catalogue amène ses noms ; un
+  corps que l'UAI ne couvre pas ne produit pas de fichier vide. C'est la leçon du lot 29.
+- **L'index vit dans `src/`, les données dans `public/`**, et ce n'est pas un goût : Vite REFUSE
+  qu'un module de l'application importe depuis `public/`. L'application a besoin, AU BUILD, de
+  savoir quels corps portent des noms — c'est ce qui lui évite de demander quoi que ce soit au
+  démarrage — et pas des 15 932 formations. 2 729 octets entrent dans le bundle, 3 176 578 sont
+  servis à l'approche, sous 8 rayons apparents, comme les tuiles de surface.
+- **La provenance voyage AVEC la donnée**, dans l'index : le registre `src/registry/providers/`
+  décrit les sources des FAITS affichés par corps, et sa garde refuse une fiche que rien ne cite.
+  La mention de domaine public et la citation sont celles que l'UAI DEMANDE, lues dans sa FAQ.
+
+**LE DÉFAUT QUI NE SE VERRAIT SUR AUCUNE CAPTURE.** L'UAI publie ses KML en longitude **EST de 0 à
+360** ; `core/frames.ts` travaille en **EST de −180 à 180**. Les deux sont EST : il n'y a aucun
+miroir à appliquer, seulement un repliement, et l'intervalle rendu est semi-ouvert `[-180, 180)`
+pour que la couture ne fasse pas dériver un aller-retour de 360°. Un miroir ne déformerait rien et
+poserait chaque nom à l'exact opposé de sa formation, sur une sphère qui aurait toujours l'air
+juste. `core/gazetteer.test.ts` le croise contre `frames.ts` plutôt que contre un signe deviné.
+
+**Le placement passe par `CelestialObject.surfacePointToWorld`**, donc par la chaîne qui oriente
+vraiment la surface à l'instant de la scène — la même que les épicentres de séismes. Reconstruire
+la phase autrement redonnerait une longitude indépendante de celle qui est RENDUE.
+
+**Ce que le navigateur a trouvé et que le code ne montrait pas** : une adresse d'actif RELATIVE
+résout contre le CHEMIN du corps (`/moon/assets/gazetteer/moon.json`, 404), et le témoin
+`data-names` que lit l'e2e gardait la valeur de l'image précédente sur chaque sortie anticipée,
+donc il annonçait encore cinq noms après qu'on se soit éloigné.
+
 ### Le vocabulaire des étapes est FERMÉ
 
 Une fiche ne porte aucune expression : elle choisit parmi sept formes nommées, exactement comme les
