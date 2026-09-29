@@ -79,6 +79,29 @@ jobs:
       - name: Report deploy payload size
         run: node scripts/check-deploy-size.mjs
 
+      # ÉLAGAGE DES VERSIONS, AVANT le déploiement — et cet ordre est le point entier.
+      #
+      # Firebase Hosting n'a AUCUNE rétention automatique : chaque déploiement empile une
+      # version de plus, pour toujours, et le quota de stockage du PROJET — partagé par tous
+      # ses sites, pas seulement Galaxy — finit par sauter. La purge se faisait à la main dans
+      # la console, une trentaine de minutes tous les quatre jours.
+      #
+      # POURQUOI AVANT ET NON APRÈS. Une première version de cette étape venait après le
+      # déploiement, ce qui ne débloque RIEN : quand le quota est plein, c'est le déploiement
+      # qui échoue, donc l'étape suivante est sautée et l'élagueur ne tourne jamais. Œuf et
+      # poule. Placé avant, il fait de la place PUIS le déploiement passe : la panne se répare
+      # toute seule au lieu d'attendre une console.
+      #
+      # `continue-on-error` est délibéré : un ménage qui échoue ne doit pas empêcher un
+      # déploiement par ailleurs légitime. Le script, lui, refuse d'agir sur une réponse qu'il
+      # ne reconnaît pas plutôt que de supprimer au hasard : il échoue, il ne devine pas.
+      - name: Prune old hosting versions
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        continue-on-error: true
+        env:
+          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
+        run: node scripts/prune-hosting-versions.mjs --apply
+
       # Deploy to Firebase Hosting on pushes to main after verify+build pass, without waiting
       # for E2E. Requires the FIREBASE_TOKEN secret.
       - name: Deploy to Firebase Hosting
