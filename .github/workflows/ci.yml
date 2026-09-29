@@ -85,6 +85,23 @@ jobs:
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: pnpm dlx firebase-tools@15.30.2 deploy --only hosting --token ${{ secrets.FIREBASE_TOKEN }}
 
+      # ÉLAGAGE DES VERSIONS, juste après le déploiement.
+      #
+      # Firebase Hosting n'a AUCUNE rétention automatique : chaque déploiement empile une
+      # version de plus, pour toujours, et le quota de stockage du PROJET — partagé par tous
+      # ses sites, pas seulement Galaxy — finit par sauter. La purge se faisait à la main dans
+      # la console, une trentaine de minutes tous les quatre jours. Cette étape la supprime.
+      #
+      # `continue-on-error` est délibéré : à ce stade le déploiement a RÉUSSI, et un ménage qui
+      # échoue ne doit pas rendre `main` rouge. Le script, lui, refuse d'agir sur une réponse
+      # qu'il ne reconnaît pas plutôt que de supprimer au hasard : il échoue, il ne devine pas.
+      - name: Prune old hosting versions
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        continue-on-error: true
+        env:
+          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
+        run: node scripts/prune-hosting-versions.mjs --apply
+
       # « CI verte » ne dit rien de ce qui est EN LIGNE. Cette etape recupere l'index servi et
       # compare le nom hache de l'entree applicative a celle qu'on vient de construire.
       #
