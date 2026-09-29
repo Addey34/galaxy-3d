@@ -48,6 +48,9 @@ import { SmallBodyOverlay } from './ui/smallBodyOverlay';
 import { InterstellarOverlay } from './ui/interstellarOverlay';
 import { setupSmallBodyFilters } from './ui/smallBodyFilters';
 import { EarthEventsOverlay } from './ui/earthEventsOverlay';
+import { GazetteerOverlay } from './ui/gazetteerOverlay';
+import { setupGazetteerToggle } from './ui/gazetteerToggle';
+import gazetteerIndex from './config/gazetteerIndex.json';
 import { setupEarthEvents } from './ui/earthEvents';
 import { earthquakeLayer, naturalEventLayer } from './core/earthEventLayers';
 import { SpacecraftOverlay } from './ui/spacecraftOverlay';
@@ -424,6 +427,23 @@ function wireChrome(): {
     const earthEventLayers = [earthquakeLayer(), naturalEventLayer()];
     const earthEventsOverlay = new EarthEventsOverlay(earthEventLayers);
     earthEventsOverlay.mount();
+
+    /**
+     * Les corps qui portent des formations nommées, et leur rayon publié.
+     *
+     * Le manifeste DIT lesquels ; le catalogue donne le rayon. Un corps présent dans l'un et
+     * pas dans l'autre ne s'affiche simplement pas, ce que `config/gazetteer.test.ts` interdit
+     * par ailleurs — on ne fabrique pas ici une seconde liste qui pourrait diverger.
+     */
+    const gazetteerRadii = new Map<string, number>();
+    const named = new Set(Object.keys(gazetteerIndex.bodies));
+    for (const [name, cfg] of flattenBodies(CELESTIAL_CONFIG)) {
+      const km = cfg.realData?.radiusKm;
+      if (km && named.has(name)) gazetteerRadii.set(name, km);
+    }
+    const gazetteerOverlay = new GazetteerOverlay(gazetteerRadii);
+    gazetteerOverlay.mount();
+    setupGazetteerToggle(gazetteerOverlay);
     setupEarthEvents(
       api,
       earthEventLayers,
@@ -555,6 +575,17 @@ function wireChrome(): {
       earthEventsOverlay.update(
         cameraSystem.camera,
         sceneSystem.getBody('earth') ?? null,
+        labelSpace
+      );
+      // EN DERNIER : les noms de surface sont l'information la moins urgente de l'écran, donc
+      // ils prennent la place qui RESTE. Un nom de cratère ne doit jamais chasser le libellé
+      // d'un corps ni celui d'une sonde.
+      gazetteerOverlay.draw(
+        cameraSystem.camera,
+        cameraSystem.targetName
+          ? (sceneSystem.getBody(cameraSystem.targetName) ?? undefined)
+          : undefined,
+        cameraSystem.targetName,
         labelSpace
       );
       bodyInfo.updateLive(

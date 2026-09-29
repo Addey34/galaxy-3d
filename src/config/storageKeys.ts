@@ -26,6 +26,8 @@ export const STORAGE_KEYS = {
   units: 'ssv-units',
   /** Imagerie de surface streamée à l'approche (activée par défaut, opt-out). */
   surfaceImagery: 'ssv-surface-imagery',
+  /** Noms de formations de l'UAI écrits à l'approche (activés par défaut, opt-out). */
+  gazetteer: 'ssv-gazetteer',
 } as const;
 
 export type StorageKey = (typeof STORAGE_KEYS)[keyof typeof STORAGE_KEYS];

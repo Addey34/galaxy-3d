@@ -28,6 +28,7 @@
     "surface:capabilities": "node scripts/read-wmts-capabilities.mjs",
     "gibs:colormap": "node scripts/import-gibs-colormap.mjs",
     "fingerprint:generated": "node scripts/fingerprint-generated.mjs",
+    "gazetteer:generate": "node scripts/generate-gazetteer.mjs",
     "inventory:gaps": "node scripts/inventory-gaps.mjs",
     "budget:startup": "node scripts/check-startup-budget.mjs",
     "ci:health": "node scripts/check-ci-health.mjs",

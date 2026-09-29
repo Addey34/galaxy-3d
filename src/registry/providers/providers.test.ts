@@ -48,7 +48,12 @@ describe('registre des fournisseurs', () => {
       declared,
       'une fiche présente sur le disque mais absente de providers/index.ts ne serait lue par personne'
     ).toEqual(fileIds);
-    expect(fileIds.length).toBe(29);
+    // Un PLANCHER, pas un compte tenu a la main : l'egalite ci-dessus est la vraie garde, et
+    // elle resterait verte si les deux cotes devenaient vides. Le nombre exact etait ecrit ici
+    // et se corrigeait a chaque fiche ajoutee — exactement la corvee que le lot 29 a retiree
+    // ailleurs, et la preuve en est que le titre du dernier test de ce fichier annoncait
+    // encore « 19 sources » quand il en affirmait 22.
+    expect(fileIds.length).toBeGreaterThanOrEqual(25);
   });
 
   it('garde les fiches de services HORS du bundle de l’application', () => {
@@ -106,21 +111,26 @@ describe('registre des fournisseurs', () => {
       expect(provider.role, provider.id).toBe('event-source');
     for (const provider of Object.values(TILE_PROVIDERS))
       expect(provider.role, provider.id).toBe('tile-source');
+    // Meme raison : ce total se DERIVE du dossier, il ne se recopie pas. Ce qu'il doit
+    // prouver, c'est qu'aucun role n'en avale un autre, donc que la somme des roles couvre
+    // exactement les fiches du disque.
     expect(
       ALL_PROVIDERS.length +
         Object.keys(EVENT_PROVIDERS).length +
         Object.keys(TILE_PROVIDERS).length
-    ).toBe(29);
+    ).toBe(fileIds.length);
   });
 });
 
 describe('FACT_SOURCES dérivé du registre', () => {
-  it('expose les 19 sources de faits, dans l’ordre du registre', () => {
+  it('expose les sources de faits du registre, dans son ordre', () => {
     // L'ordre est publié : `/sources` écrit son tableau en parcourant cet objet.
     expect(Object.keys(FACT_SOURCES)).toEqual(
       Object.keys(FACT_SOURCE_PROVIDERS)
     );
-    expect(Object.keys(FACT_SOURCES).length).toBe(22);
+    // L'egalite ci-dessus est la garde ; ce plancher n'est la que pour qu'elle ne puisse pas
+    // etre satisfaite par deux ensembles vides.
+    expect(Object.keys(FACT_SOURCES).length).toBeGreaterThanOrEqual(20);
   });
 
   it('n’expose AUCUNE source de position comme source de fait', () => {

@@ -2149,6 +2149,7 @@ body.is-capturing #smallbody-overlay,
 body.is-capturing #spacecraft-overlay,
 body.is-capturing #interstellar-overlay,
 body.is-capturing #earth-events-overlay,
+body.is-capturing #gazetteer-overlay,
 body.is-capturing #surface-imagery,
 body.is-capturing #loader {
   display: none;
@@ -2926,9 +2927,23 @@ body.is-capturing #loader {
 #smallbody-overlay,
 #spacecraft-overlay,
 #interstellar-overlay,
-#earth-events-overlay {
+#earth-events-overlay,
+#gazetteer-overlay {
   width: 100%;
   height: 100%;
+}
+
+/* Noms de formations de l'UAI — la couche la moins urgente, donc sous les autres libellés. */
+#gazetteer-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 18;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+#gazetteer-overlay.is-visible {
+  opacity: 1;
 }
 
 /* Champ des petits corps (SBDB) — canvas instrument sous les labels, non bloquant. */
