@@ -144,6 +144,18 @@ Thomas and Stooke satellite models count longitudes **west**, which was checked 
 - **Modification**: decimated for the web. Its deepest local depression lies at the published
   position of the Stickney crater, which a test holds on the shipped file.
 
+`public/assets/models/mimas/mimas_shape_{1k,2k,4k}.glb`: Mimas. 3,852 / 14,989 / 62,802
+triangles.
+
+- **Source**: NASA PDS Small Bodies Node, *Gaskell Mimas Shape Model V2.0*
+  (`CO-SA-ISSNA-5-MIMASSHAPE-V2.0`, q = 128).
+- **Data credit**: Cassini ISS narrow-angle and Voyager 1 images; shape model by R. W. Gaskell.
+  Distributed by NASA PDS without restriction.
+- **Modification**: decimated for the web, pole turned from Z to Y. Mimas is the least irregular
+  body in this list, and it is here on a measurement rather than on a name: its largest extent
+  exceeds its smallest by 9.1%, above the 5% below which a textured sphere is both more faithful
+  and cheaper.
+
 `public/assets/models/deimos/deimos_shape_1k.glb`: Deimos. 4,188 triangles.
 
 - **Source**: NASA PDS Small Bodies Node, `EAR-A-5-DDR-SHAPE-MODELS-V2.1` (P. C. Thomas).

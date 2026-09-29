@@ -43,6 +43,20 @@
         "$date": "2025-12-31T00:00:00.000Z"
       }
     },
+    "model": {
+      "resolutions": [
+        "1k",
+        "2k",
+        "4k"
+      ],
+      "extentRatio": 1.09,
+      "credit": {
+        "en": "Cassini ISS narrow-angle and Voyager 1 images, shape model by R. W. Gaskell, NASA PDS Gaskell Mimas Shape Model V2.0 (CO-SA-ISSNA-5-MIMASSHAPE-V2.0), decimated for the web.",
+        "fr": "Images Cassini ISS à champ étroit et Voyager 1, modèle de forme de R. W. Gaskell, NASA PDS Gaskell Mimas Shape Model V2.0 (CO-SA-ISSNA-5-MIMASSHAPE-V2.0), décimé pour le web.",
+        "es": "Imágenes de Cassini ISS de ángulo estrecho y Voyager 1, modelo de forma de R. W. Gaskell, NASA PDS Gaskell Mimas Shape Model V2.0 (CO-SA-ISSNA-5-MIMASSHAPE-V2.0), diezmado para la web.",
+        "pt-BR": "Imagens da Cassini ISS de ângulo estreito e da Voyager 1, modelo de forma de R. W. Gaskell, NASA PDS Gaskell Mimas Shape Model V2.0 (CO-SA-ISSNA-5-MIMASSHAPE-V2.0), decimado para a web."
+      }
+    },
     "textureResolutions": {
       "surface": [
         "2k",

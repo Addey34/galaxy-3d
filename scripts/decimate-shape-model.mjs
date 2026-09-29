@@ -140,7 +140,7 @@ async function loadShape(path) {
       index: mesh.geometry.index ? mesh.geometry.index.array : null,
     };
   }
-  const lines = readFileSync(path, 'utf-8')
+  let lines = readFileSync(path, 'utf-8')
     .split('\n')
     .map((line) => line.trim())
     .filter(Boolean);
@@ -158,6 +158,32 @@ async function loadShape(path) {
     return { pos: Float32Array.from(pos), index: Uint32Array.from(index) };
   }
   const first = lines[0].split(/\s+/).map(Number);
+  /**
+   * TROISIÈME variante de la table sommets/plaques, publiée par les modèles de forme de
+   * satellites dérivés de Cassini (`mimas_ver128q.tab`) : les deux comptes sont sur DEUX lignes
+   * séparées — le nombre de sommets en tête, puis le nombre de plaques juste après le dernier
+   * sommet — là où les deux autres variantes les mettent sur la même ligne. Le reste est
+   * identique, « id x y z » puis « id a b c » indexé depuis 1.
+   *
+   * La reconnaître ICI plutôt que de recombiner les fichiers à la main : un format publié se lit,
+   * il ne se prépare pas, sinon la prochaine lune coûtera la même manipulation silencieuse.
+   */
+  if (first.length === 1 && Number.isInteger(first[0])) {
+    const vertices = first[0];
+    const countLine = lines[1 + vertices]?.split(/\s+/).map(Number) ?? [];
+    if (countLine.length !== 1 || !Number.isInteger(countLine[0]))
+      throw new Error(
+        `${path} : ${vertices} sommets annoncés, mais la ligne ${2 + vertices} ne porte pas ` +
+          `le compte des plaques`
+      );
+    // On se ramène à la forme « comptes sur une ligne », que la branche suivante sait lire.
+    lines = [
+      `${vertices} ${countLine[0]}`,
+      ...lines.slice(1, 1 + vertices),
+      ...lines.slice(2 + vertices),
+    ];
+    first.push(countLine[0]);
+  }
   if (first.length === 2 && first.every(Number.isInteger)) {
     // Table sommets/plaques PDS, coordonnées en km. Deux variantes publiées, reconnues au nombre
     // de champs : PDS3 (`ver128q.tab`) numérote chaque ligne et indexe les plaques à partir de 1 ;

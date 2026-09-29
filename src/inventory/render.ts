@@ -14,6 +14,7 @@ import {
   INTERSTELLAR_ACCURACY,
   relativeError,
 } from '@/config/interstellarAccuracy';
+import { SHAPE_MODEL_GAPS, shapeGapLine } from '@/config/shapeModelGaps';
 import type { Capability, Inventory, InventoryRow } from './collect';
 
 /**
@@ -238,6 +239,18 @@ export function renderInventory(inventory: Inventory): string {
       (row) => `  ${pad(row.id, 12)} ${Math.round(row.radiusKm!)} km`
     )
   );
+
+  // Un manque ne se lit jamais nu : la RECHERCHE de sources est une donnee gardee
+  // (`config/shapeModelGaps.ts`), et l'inventaire la montre a cote du corps qu'elle explique.
+  // Sans elle, cette liste ne disait pas si personne n'avait cherche ou si rien n'existe.
+  if (SHAPE_MODEL_GAPS.length > 0)
+    out.push(
+      '',
+      '  Pourquoi, apres recherche dans les trois collections de formes du PDS :',
+      ...SHAPE_MODEL_GAPS.map(
+        (gap) => `    ${pad(gap.body, 12)} ${shapeGapLine(gap)}`
+      )
+    );
 
   const under = inventory.rows
     .filter(
