@@ -300,6 +300,7 @@ export const en = {
   'tours.next': 'Next',
   'tours.close': 'Close',
   'tours.progress': 'Step {current} of {total}',
+  'tours.outline': 'Tour "{title}", {count} parts: {beats}',
   'tours.status.flyingTo': 'Flying to {body}…',
   'tours.status.jumping': 'Jumping through time…',
   'tours.status.speeding': 'Speeding up time…',

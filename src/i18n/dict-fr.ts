@@ -273,6 +273,7 @@ export const fr: Record<MessageKey, string> = {
   'tours.next': 'Suivant',
   'tours.close': 'Fermer',
   'tours.progress': 'Étape {current} sur {total}',
+  'tours.outline': 'Visite « {title} », {count} parties : {beats}',
   'tours.status.flyingTo': 'Vol vers {body}…',
   'tours.status.jumping': 'Saut dans le temps…',
   'tours.status.speeding': 'Accélération du temps…',

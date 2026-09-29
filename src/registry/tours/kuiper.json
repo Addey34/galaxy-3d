@@ -70,6 +70,20 @@
       }
     },
     {
+      "kind": "setMode",
+      "mode": "explo"
+    },
+    {
+      "kind": "caption",
+      "text": {
+        "en": "From here on, the scale becomes the real one: distances are no longer compressed. What looks like emptiness IS the Kuiper belt.",
+        "fr": "À partir d'ici, l'échelle devient la vraie : les distances ne sont plus compressées. Ce qui ressemble à du vide EST la ceinture de Kuiper.",
+        "es": "A partir de aquí, la escala pasa a ser la real: las distancias ya no están comprimidas. Lo que parece vacío ES el cinturón de Kuiper.",
+        "pt-BR": "A partir daqui, a escala passa a ser a real: as distâncias não estão mais comprimidas. O que parece vazio É o cinturão de Kuiper."
+      },
+      "durationMs": 4000
+    },
+    {
       "kind": "flyTo",
       "body": "sedna"
     },

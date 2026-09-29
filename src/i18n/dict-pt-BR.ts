@@ -280,6 +280,7 @@ export const ptBR: Record<MessageKey, string> = {
   'tours.next': 'Próximo',
   'tours.close': 'Fechar',
   'tours.progress': 'Etapa {current} de {total}',
+  'tours.outline': 'Visita “{title}”, {count} partes: {beats}',
   'tours.status.flyingTo': 'Voando até {body}…',
   'tours.status.jumping': 'Salto no tempo…',
   'tours.status.speeding': 'Acelerando o tempo…',

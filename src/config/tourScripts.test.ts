@@ -102,11 +102,23 @@ describe('les trois visites d’origine, étape par étape', () => {
     });
   });
 
-  it('Kuiper : cinq corps, six légendes', () => {
+  it('Kuiper : cinq corps, sept légendes, et le passage à la VRAIE échelle', () => {
     expect(kinds('kuiper').filter((kind) => kind === 'flyTo')).toHaveLength(5);
     expect(kinds('kuiper').filter((kind) => kind === 'caption')).toHaveLength(
-      6
+      7
     );
+    // Le lot 35 a donné aux visites le droit de changer d'échelle, et cette visite est
+    // l'endroit où ça se justifie : la même ceinture est une file de points bien rangés en
+    // Éduc et le vide qu'elle est vraiment en Explo. Le passage précède Sedna, l'objet le plus
+    // lointain du parcours — c'est là que la distance cesse d'être un mot.
+    const steps_ = steps('kuiper');
+    const mode = steps_.findIndex((step) => step.kind === 'setMode');
+    expect(mode, 'aucun passage en Explo').toBeGreaterThan(-1);
+    expect(steps_[mode]).toEqual({ kind: 'setMode', mode: 'explo' });
+    const sedna = steps_.findIndex(
+      (step) => step.kind === 'flyTo' && step.body === 'sedna'
+    );
+    expect(mode, 'le passage doit précéder Sedna').toBeLessThan(sedna);
   });
 });
 

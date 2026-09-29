@@ -246,3 +246,110 @@ test.describe('mobile scripted tour', () => {
     expect(box.y + box.height).toBeLessThanOrEqual(844);
   });
 });
+
+/**
+ * LE SOMMAIRE DE LA VISITE EST ANNONCÉ, ET IL EST DÉRIVÉ DE LA FICHE.
+ *
+ * La carte disait « Étape 3 sur 8 » : une POSITION, et rien sur ce que la visite contient. Un
+ * visiteur voyant a la scène pour le deviner ; un lecteur d'écran n'a que ce dialogue. Le
+ * sommaire liste les LÉGENDES — les temps du récit — et non les `flyTo` ni les `wait`, qui sont
+ * de la mécanique.
+ *
+ * Ce test compare à la FICHE, donc il suit une visite qu'on modifie, et il tombe si le sommaire
+ * se met à lister autre chose que le récit.
+ */
+test.describe("le sommaire d'une visite", () => {
+  test('est rattaché au dialogue et cite les légendes de sa fiche', async ({
+    page,
+  }) => {
+    await openPicker(page);
+    await startTour(page, 0);
+
+    const card = page.locator('.stour-card');
+    const describedBy = await card.getAttribute('aria-describedby');
+    expect(describedBy, 'le dialogue ne décrit rien').toBe('stour-outline');
+
+    const outline = page.locator('#stour-outline');
+    const text = (await outline.textContent()) ?? '';
+    const beats = FICHES[0]!.steps.filter(
+      (step) => step.kind === 'caption' && step.text !== undefined
+    );
+    expect(text).toContain(TITLES_EN[0]!);
+    expect(text, 'le nombre de parties vient de la fiche').toContain(
+      String(beats.length)
+    );
+    // Comparaison EXACTE, et non « contient » : c'est la seule forme qui prouve aussi que le
+    // sommaire ne liste RIEN D'AUTRE. Un `flyTo` ou un `wait` qui s'y glisserait passerait
+    // sous un `toContain`, puisque les légendes y seraient toujours.
+    const expected = beats.map((step) => step.text!.en).join(' · ');
+    expect(text.slice(text.indexOf(': ') + 2)).toBe(expected);
+
+    // Le témoin : cette visite CONTIENT bien de la mécanique, sinon la phrase ci-dessus ne
+    // prouverait rien.
+    const mechanical = FICHES[0]!.steps.filter(
+      (step) => step.kind !== 'caption'
+    );
+    expect(
+      mechanical.length,
+      'cette visite est faite de légendes seules : mauvais témoin'
+    ).toBeGreaterThan(0);
+
+    // Et le sommaire n'est pas VISIBLE : la carte est étroite, et la scène le redit déjà.
+    await expect(outline).toHaveClass(/sr-only/);
+  });
+});
+
+/**
+ * UNE VISITE PEUT CHANGER D'ÉCHELLE, ET ELLE REND CE QU'ELLE A EMPRUNTÉ (lot 35, ligne 22.8 d).
+ *
+ * « Voyage aux confins » passe en Explo juste avant Sedna : c'est le seul endroit du récit où
+ * la distance cesse d'être un mot. Deux choses se vérifient ici, et la seconde est celle qui
+ * aurait été livrée cassée — `finish()` remettait la VITESSE mais pas le MODE, si bien qu'une
+ * visite laissait l'application dans un réglage que l'utilisateur n'a pas choisi.
+ *
+ * Le mode restauré est celui du DÉPART, pas « éduc » en dur : un utilisateur déjà en Explo ne
+ * doit pas en être sorti par une visite.
+ */
+test.describe('une visite qui change d’échelle', () => {
+  const KUIPER = ORDER.indexOf('kuiper');
+
+  test('passe en Explo pendant le récit, puis rend le mode de départ', async ({
+    page,
+  }) => {
+    expect(KUIPER, 'la visite kuiper a disparu du registre').toBeGreaterThan(
+      -1
+    );
+    await openPicker(page);
+
+    const before = await page.evaluate(() =>
+      document.body.classList.contains('is-explo-mode') ? 'explo' : 'educ'
+    );
+    expect(before, 'le témoin part en Éduc').toBe('educ');
+
+    await startTour(page, KUIPER);
+    // On avance jusqu'à ce que la scène bascule : c'est le FAIT qu'on mesure, pas un compte
+    // d'étapes qui changerait avec la fiche. Les légendes sans durée attendent un geste, donc
+    // il en faut un — c'est le même enchaînement qu'`advanceToEnd`, arrêté sur le basculement.
+    const explo = page.locator('body.is-explo-mode');
+    const next = page.locator('.stour-next');
+    for (let i = 0; i < 25 && (await explo.count()) === 0; i++) {
+      if (!(await next.isDisabled())) await clickWhenCalm(page, next);
+      else await page.waitForTimeout(300);
+    }
+    await expect(explo, 'la visite n’est jamais passée en Explo').toHaveCount(
+      1
+    );
+    await expect(
+      page.locator('#mode-controls .mode-btn[data-mode="explo"]')
+    ).toHaveAttribute('aria-pressed', 'true');
+
+    await page.locator('.stour-close').click();
+    await expect(page.locator('.stour-card')).toBeHidden();
+    // Rendu : la classe du corps ET le bouton, parce que les deux se désynchroniseraient si la
+    // visite avait appelé `OrbitalMechanics` au lieu du sélecteur.
+    await expect(page.locator('body.is-explo-mode')).toBeHidden();
+    await expect(
+      page.locator('#mode-controls .mode-btn[data-mode="educ"]')
+    ).toHaveAttribute('aria-pressed', 'true');
+  });
+});

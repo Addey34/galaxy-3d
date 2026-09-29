@@ -40,6 +40,8 @@ function toStep(step: TourStepRecord, where: string): TourStep {
         : { kind: 'jumpToEvent', event: step.event, body: step.body };
     case 'setTimeScale':
       return { kind: 'setTimeScale', scale: step.scale };
+    case 'setMode':
+      return { kind: 'setMode', mode: step.mode };
     case 'caption':
       return step.durationMs === undefined
         ? { kind: 'caption', text: step.text }

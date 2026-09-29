@@ -76,6 +76,15 @@ const step = z.discriminatedUnion('kind', [
     })
     .strict(),
   z.object({ kind: z.literal('setTimeScale'), scale: timeScale }).strict(),
+  /**
+   * `setMode` est la seule forme ajoutée depuis le lot 21, et elle ferme la ligne 22.8 (d) : une
+   * visite pouvait changer la date, la vitesse et la cible, mais PAS l'échelle, alors que c'est
+   * elle qui décide de ce qu'on voit. « Aux confins : la ceinture de Kuiper » le montre — la
+   * même ceinture est une file de points en Éduc et le vide qu'elle est vraiment en Explo.
+   */
+  z
+    .object({ kind: z.literal('setMode'), mode: z.enum(['educ', 'explo']) })
+    .strict(),
   z
     .object({
       kind: z.literal('caption'),

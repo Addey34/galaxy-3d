@@ -108,7 +108,12 @@ describe('le schéma des visites refuse', () => {
     ['une visite qui ne dit rien', { ...valid, steps: [{ kind: 'flyTo', body: 'earth' }] }], // prettier-ignore
     ['un titre à trois langues', { ...valid, title: { en: 'A', fr: 'A', es: 'A' } }], // prettier-ignore
     ['une légende à trois langues', { ...valid, steps: [{ kind: 'caption', text: { en: 'A', fr: 'A', es: 'A' } }] }], // prettier-ignore
-    ['une forme d’étape inconnue', { ...valid, steps: [...valid.steps, { kind: 'setMode', mode: 'explo' }] }], // prettier-ignore
+    // `setMode` servait ici d'exemple de forme INCONNUE jusqu'au lot 35, ce qui prouve que le
+    // vocabulaire était bien fermé. Il est désormais une forme valide : le refus se teste sur
+    // une forme qui n'existe pas, et l'acceptation plus bas.
+    ['une forme d’étape inconnue', { ...valid, steps: [...valid.steps, { kind: 'setCamera', azimuthDeg: 30 }] }], // prettier-ignore
+    ['un mode d’échelle qui n’existe pas', { ...valid, steps: [...valid.steps, { kind: 'setMode', mode: 'voyage' }] }], // prettier-ignore
+    ['un setMode sans mode', { ...valid, steps: [...valid.steps, { kind: 'setMode' }] }], // prettier-ignore
     ['un champ inconnu dans une étape (faute de frappe)', { ...valid, steps: [...valid.steps, { kind: 'flyTo', body: 'mars', durationMs: 10 }] }], // prettier-ignore
     ['un événement inconnu', { ...valid, steps: [...valid.steps, { kind: 'jumpToEvent', event: 'supernova' }] }], // prettier-ignore
     ['une opposition sans corps', { ...valid, steps: [...valid.steps, { kind: 'jumpToEvent', event: 'opposition' }] }], // prettier-ignore
@@ -121,6 +126,17 @@ describe('le schéma des visites refuse', () => {
     ['un nom de corps en majuscules', { ...valid, steps: [{ kind: 'flyTo', body: 'Earth' }, valid.steps[1]] }], // prettier-ignore
   ])('%s', (_label, record) => {
     expect(tourSchema.safeParse(record).success).toBe(false);
+  });
+
+  it('accepte les deux modes d’échelle, et eux seuls', () => {
+    for (const mode of ['educ', 'explo'])
+      expect(
+        tourSchema.safeParse({
+          ...valid,
+          steps: [...valid.steps, { kind: 'setMode', mode }],
+        }).success,
+        mode
+      ).toBe(true);
   });
 
   it('accepte une vitesse fractionnaire au-dessus de 1', () => {

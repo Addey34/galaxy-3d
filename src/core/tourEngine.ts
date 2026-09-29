@@ -9,6 +9,8 @@ import type { AstronomicalEventKind } from './astronomicalEvents';
  * (`src/registry/tours/`, lot 21) plutôt que du TypeScript : le schéma
  * `src/registry/schema/tour.ts` ne décrit rien d'autre que ces formes.
  */
+import type { ScaleMode } from './ScaleService';
+
 export type TourStep =
   | { kind: 'flyTo'; body: string }
   | { kind: 'jumpToDate'; date: Date }
@@ -19,6 +21,16 @@ export type TourStep =
    */
   | { kind: 'jumpToEvent'; event: AstronomicalEventKind; body?: string }
   | { kind: 'setTimeScale'; scale: number }
+  /**
+   * Le MODE d'échelle, `'educ'` ou `'explo'`.
+   *
+   * Une visite pouvait tout changer sauf cela, alors que le permalien le porte depuis toujours
+   * et que c'est le réglage qui décide de ce qu'on VOIT : la ceinture de Kuiper racontée en
+   * Éduc est une file de points bien rangés, et la même en Explo est le vide qu'elle est
+   * vraiment. Une visite qui parle de distances devait donc demander à l'utilisateur de changer
+   * de mode lui-même, au milieu de son récit.
+   */
+  | { kind: 'setMode'; mode: ScaleMode }
   // Sans `durationMs` : la légende attend un geste utilisateur (host.waitForAdvance()).
   | { kind: 'caption'; text: LocalizedText; durationMs?: number }
   | { kind: 'wait'; ms: number };
@@ -38,6 +50,13 @@ export interface TourRuntimeHost {
   /** Résout l'événement à cet instant, puis saute : cf. l'étape `jumpToEvent`. */
   jumpToEvent(event: AstronomicalEventKind, body?: string): void;
   setTimeScale(scale: number): void;
+  setMode(mode: ScaleMode): void;
+  /**
+   * Vrai tant que les corps glissent d'une échelle à l'autre. Même patron que `isFlying` : le
+   * moteur ne connaît AUCUNE durée, il attend un fait. Une légende enchaînée sans cette attente
+   * s'afficherait sur une scène en plein morphing, c'est-à-dire sur aucune des deux échelles.
+   */
+  isMorphing(): boolean;
   /** Résout quand l'utilisateur avance manuellement une légende sans durée, ou ferme le tour. */
   waitForAdvance(): Promise<void>;
 }
@@ -106,6 +125,10 @@ export async function runTour(
         break;
       case 'setTimeScale':
         host.setTimeScale(step.scale);
+        break;
+      case 'setMode':
+        host.setMode(step.mode);
+        await waitUntil(() => !host.isMorphing(), signal);
         break;
       case 'wait':
         await delay(step.ms, signal);

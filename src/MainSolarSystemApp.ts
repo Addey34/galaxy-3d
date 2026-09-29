@@ -619,7 +619,8 @@ function wireChrome(): {
       orbitalMechanics,
       planetNav,
       TOUR_SCRIPTS,
-      permalink
+      permalink,
+      modeSwitcher
     );
     hideLoader();
     guidedTour.startIfFirstVisit();

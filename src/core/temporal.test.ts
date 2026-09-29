@@ -245,3 +245,58 @@ describe('classifyTemporal', () => {
     );
   });
 });
+
+/**
+ * LA CATÉGORIE NE DÉPEND QUE DE CE QUE LE PRODUIT DÉCLARE, et de rien d'autre.
+ *
+ * L'en-tête de `core/temporal.ts` porte depuis longtemps une affirmation : `observationTime` et
+ * `publicationTime` — quand la mesure a été prise, quand la source l'a publiée — ne sont PAS
+ * portés par `DatedProduct`, parce qu'AUCUNE catégorie n'en dépend. C'était vrai, et ce n'était
+ * qu'une phrase : rien ne serait tombé si quelqu'un s'était mis à lire un de ces champs pour
+ * décider d'une catégorie, et la phrase serait devenue fausse en silence.
+ *
+ * Cette garde la rend vérifiable, et par le seul moyen honnête : on ajoute ces deux champs au
+ * produit, avec des valeurs ABSURDES, et on exige que l'horodatage rendu soit identique octet
+ * pour octet. C'est la ligne 22.8 (c), fermée par sa SECONDE branche — le besoin n'existe
+ * toujours pas, mais l'affirmation ne repose plus sur la bonne foi du lecteur.
+ *
+ * Si un jour une catégorie doit dépendre de la date de publication (par exemple pour distinguer
+ * une réanalyse rejouée d'une réanalyse d'époque), c'est CE test qui tombera en premier, et
+ * c'est là qu'il faudra écrire la nouvelle règle.
+ */
+describe('la catégorie ignore ce que le produit ne déclare pas', () => {
+  const validTime = utcDayInterval('2026-08-10');
+  const sim = at('2026-08-10T12:00:00Z');
+  const cases: { readonly what: string; readonly product: DatedProduct }[] = [
+    { what: 'mesure', product: { kind: 'measurement', validTime } },
+    { what: 'réanalyse', product: { kind: 'reanalysis', validTime } },
+    { what: 'éphéméride', product: { kind: 'ephemeris', validTime } },
+    {
+      what: 'prévision',
+      product: {
+        kind: 'forecastModel',
+        validTime: {
+          from: at('2026-08-14T00:00:00Z').getTime(),
+          to: at('2026-08-24T00:00:00Z').getTime(),
+        },
+        reliableHorizonMs: 5 * 86_400_000,
+      },
+    },
+    {
+      what: 'signalement en cours',
+      product: { kind: 'report', validTime, openEnded: true },
+    },
+  ];
+
+  for (const { what, product } of cases)
+    it(`${what} : deux champs de plus ne changent rien`, () => {
+      const reference = classifyTemporal(product, sim, now);
+      // Des valeurs volontairement incohérentes : si une branche les lisait, elle basculerait.
+      const polluted = {
+        ...product,
+        observationTime: at('1801-01-01T00:00:00Z').getTime(),
+        publicationTime: at('2999-12-31T00:00:00Z').getTime(),
+      } as DatedProduct;
+      expect(classifyTemporal(polluted, sim, now)).toEqual(reference);
+    });
+});

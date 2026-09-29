@@ -284,6 +284,7 @@ export const es: Record<MessageKey, string> = {
   'tours.next': 'Siguiente',
   'tours.close': 'Cerrar',
   'tours.progress': 'Paso {current} de {total}',
+  'tours.outline': 'Visita «{title}», {count} partes: {beats}',
   'tours.status.flyingTo': 'Vuelo hacia {body}…',
   'tours.status.jumping': 'Salto en el tiempo…',
   'tours.status.speeding': 'Acelerando el tiempo…',
