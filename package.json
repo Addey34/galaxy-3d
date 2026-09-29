@@ -53,7 +53,6 @@
     "lint:fix": "eslint . --fix",
     "verify": "tsc --noEmit && eslint . && pnpm format:check && vitest run",
     "verify:all": "pnpm verify && pnpm build && pnpm test:e2e",
-    "hosting:prune": "node scripts/prune-hosting-versions.mjs",
     "deploy:size": "node scripts/check-deploy-size.mjs"
   },
   "devDependencies": {
