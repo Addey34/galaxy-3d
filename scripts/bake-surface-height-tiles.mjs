@@ -67,18 +67,28 @@ const MAGIC = 'GXHT';
  * 64 px/degré, régionale à 1024) ont la même forme, et c'est cette forme qui est vérifiée.
  */
 function parseLabel(text, source) {
-  const field = (name) => {
+  /**
+   * Un champ de l'étiquette. `optional` rend `undefined` au lieu d'échouer, et il ne s'emploie
+   * QUE pour les champs dont l'absence a une lecture déclarée plus bas : une absence silencieuse
+   * qui se change en valeur par défaut est exactement ce que ce script refuse ailleurs.
+   */
+  const field = (name, { optional = false } = {}) => {
     const match = new RegExp(`^\\s*${name}\\s*=\\s*([^\\r\\n]+)`, 'm').exec(
       text
     );
-    if (!match) throw new Error(`${source} : champ ${name} absent`);
+    if (!match) {
+      if (optional) return undefined;
+      throw new Error(`${source} : champ ${name} absent`);
+    }
     return match[1]
       .trim()
       .replace(/<[^>]*>\s*$/, '')
       .trim();
   };
-  const number = (name) => {
-    const raw = field(name).replace(/"/g, '');
+  const number = (name, { optional = false } = {}) => {
+    const found = field(name, { optional });
+    if (found === undefined) return undefined;
+    const raw = found.replace(/"/g, '');
     const value = Number.parseFloat(raw);
     if (!Number.isFinite(value))
       throw new Error(`${source} : ${name} illisible (« ${raw} »)`);
@@ -88,7 +98,18 @@ function parseLabel(text, source) {
   const label = {
     productId: field('PRODUCT_ID').replace(/"/g, ''),
     instrument: field('INSTRUMENT_NAME').replace(/"/g, ''),
-    mission: field('INSTRUMENT_HOST_NAME').replace(/"/g, ''),
+    // Deux mots-clés PDS3 publiés pour la MÊME chose : LOLA écrit `INSTRUMENT_HOST_NAME`,
+    // MOLA `SPACECRAFT_NAME`. On lit les deux et on échoue si aucun n'est là, plutôt que de
+    // laisser la provenance vide.
+    mission: (
+      field('INSTRUMENT_HOST_NAME', { optional: true }) ??
+      field('SPACECRAFT_NAME', { optional: true }) ??
+      (() => {
+        throw new Error(
+          `${source} : ni INSTRUMENT_HOST_NAME ni SPACECRAFT_NAME, provenance introuvable`
+        );
+      })()
+    ).replace(/"/g, ''),
     startTime: field('START_TIME').replace(/"/g, ''),
     stopTime: field('STOP_TIME').replace(/"/g, ''),
     coordinateSystem: field('COORDINATE_SYSTEM_NAME').replace(/"/g, ''),
@@ -96,8 +117,17 @@ function parseLabel(text, source) {
     lineSamples: number('LINE_SAMPLES'),
     sampleType: field('SAMPLE_TYPE'),
     sampleBits: number('SAMPLE_BITS'),
-    quantumMetres: number('SCALING_FACTOR'),
-    offsetMetres: number('OFFSET'),
+    /**
+     * DEUX CONVENTIONS PUBLIÉES, et la seconde n'écrit ni l'un ni l'autre.
+     *
+     * LOLA (Lune) donne `SCALING_FACTOR` et `OFFSET`. MOLA (Mars, `megt`) donne des altitudes
+     * en mètres BRUTS rapportées au rayon de référence, et son étiquette ne porte donc aucun
+     * des deux champs : le quantum y vaut 1 m, ce que `UNIT = METER` établit et ce que la
+     * garde ci-dessous exige AVANT de le supposer.
+     */
+    unit: field('UNIT', { optional: true }),
+    quantumMetres: number('SCALING_FACTOR', { optional: true }),
+    offsetMetres: number('OFFSET', { optional: true }),
     pixelsPerDegree: number('MAP_RESOLUTION'),
     radiusKm: number('A_AXIS_RADIUS'),
     northDeg: number('MAXIMUM_LATITUDE'),
@@ -106,15 +136,39 @@ function parseLabel(text, source) {
     eastDeg: number('EASTERNMOST_LONGITUDE'),
   };
 
-  if (label.sampleType !== 'LSB_INTEGER' || label.sampleBits !== 16)
+  // DEUX ORDRES D'OCTETS PUBLIÉS : LOLA écrit en petit-boutiste, MOLA en gros-boutiste. L'ordre
+  // est LU dans l'étiquette et porté jusqu'au décodage ; le deviner donnerait un relief de bruit
+  // parfaitement plausible à l'œil, puisque des altitudes aux octets inversés restent des nombres.
+  if (
+    (label.sampleType !== 'LSB_INTEGER' &&
+      label.sampleType !== 'MSB_INTEGER') ||
+    label.sampleBits !== 16
+  )
     throw new Error(
-      `${source} : échantillons ${label.sampleType}/${label.sampleBits} bits, attendu LSB_INTEGER/16`
+      `${source} : échantillons ${label.sampleType}/${label.sampleBits} bits, ` +
+        `attendu LSB_INTEGER ou MSB_INTEGER sur 16 bits`
     );
+  label.bigEndian = label.sampleType === 'MSB_INTEGER';
+
+  // Quantum absent : il vaut 1 m, mais SEULEMENT si l'étiquette dit que l'unité est le mètre.
+  if (label.quantumMetres === undefined) {
+    if (label.unit !== 'METER')
+      throw new Error(
+        `${source} : ni SCALING_FACTOR ni UNIT = METER, le quantum n'est pas déterminable`
+      );
+    label.quantumMetres = 1;
+    label.quantumAssumed = true;
+  }
   // L'étiquette donne DEUX fois le rayon de référence : `OFFSET` (en mètres, le rayon auquel les
   // hauteurs sont rapportées) et `A_AXIS_RADIUS` (en kilomètres). Nos tuiles portent des
   // altitudes rapportées à ce rayon, donc un offset nul, et le manifeste déclare le rayon. Les
   // deux champs doivent concorder : s'ils divergeaient, le relief serait décalé de leur écart.
-  if (Math.abs(label.offsetMetres / 1000 - label.radiusKm) > 1e-6)
+  if (label.offsetMetres === undefined) {
+    // MOLA n'écrit pas `OFFSET` : le recoupement ci-dessus est alors IMPOSSIBLE, et on le DIT
+    // plutôt que de faire comme s'il avait eu lieu. Le rayon vient d'`A_AXIS_RADIUS` seul.
+    label.offsetMetres = label.radiusKm * 1000;
+    label.offsetCrossCheckUnavailable = true;
+  } else if (Math.abs(label.offsetMetres / 1000 - label.radiusKm) > 1e-6)
     throw new Error(
       `${source} : OFFSET ${label.offsetMetres} m et A_AXIS_RADIUS ${label.radiusKm} km ne concordent pas`
     );
@@ -290,7 +344,9 @@ async function fetchWindow(url, label, window, cacheDir, cacheKey) {
       if (part.length !== window.columns * bytesPerSample)
         throw new Error(`${url} : tronçon de ${part.length} octets inattendu`);
       for (let i = 0; i < window.columns; i += 1)
-        out[(first + k) * window.columns + i] = part.readInt16LE(i * 2);
+        out[(first + k) * window.columns + i] = label.bigEndian
+          ? part.readInt16BE(i * 2)
+          : part.readInt16LE(i * 2);
     }
     process.stdout.write(
       `  \r  fenêtre ${Math.min(first + rows, window.rows)}/${window.rows} lignes`
@@ -478,11 +534,23 @@ async function bakeSet(set, { cacheDir, dryRun }) {
     throw new Error(
       'tampon désaligné : impossible de lire des entiers 16 bits'
     );
-  const samples = new Int16Array(
-    bytes.buffer,
-    bytes.byteOffset,
-    baseLabel.lines * baseLabel.lineSamples
-  );
+  /**
+   * L'ORDRE DES OCTETS SE LIT, IL NE SE SUPPOSE PAS, et cette vue-ci le supposait.
+   *
+   * `new Int16Array(buffer)` décode dans l'ordre de la MACHINE, petit-boutiste partout où ce
+   * dépôt tourne. Sur LOLA c'est le bon ordre et rien ne se voyait ; sur MOLA, gros-boutiste,
+   * le socle sortait avec un pôle nord à 22 496 m et des altitudes saturées de −32768 à 32767,
+   * c'est-à-dire du bruit parfaitement plausible pour qui ne regarde pas les nombres. Les
+   * fenêtres régionales, elles, passaient déjà par `readInt16BE`.
+   */
+  const count = baseLabel.lines * baseLabel.lineSamples;
+  let samples;
+  if (baseLabel.bigEndian) {
+    samples = new Int16Array(count);
+    for (let i = 0; i < count; i += 1) samples[i] = bytes.readInt16BE(i * 2);
+  } else {
+    samples = new Int16Array(bytes.buffer, bytes.byteOffset, count);
+  }
   const baseGrid = new DemGrid(baseLabel, samples);
   const poles = {
     north: baseGrid.rowMean(0),
