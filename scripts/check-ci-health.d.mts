@@ -36,8 +36,21 @@ export interface InspectedJob {
   summary: PlaywrightSummary | null;
 }
 
+/** Le run qui a remplacé celui-ci, quand `cancel-in-progress` l'a annulé. */
+export interface SupersedingRun {
+  id: number;
+  number: number;
+  url: string;
+}
+
 export interface Verdict {
   healthy: boolean;
+  /**
+   * Le run a été REMPLACÉ, pas cassé : `cancel-in-progress` l'a annulé au profit d'un run plus
+   * récent, et aucun job n'a échoué. Il est alors `healthy`, parce qu'un guetteur qui crie au
+   * loup finit ignoré, et c'est le run suivant qui fait foi.
+   */
+  superseded: boolean;
   red: { job: string; test?: string; conclusion: string }[];
   retried: { job: string; test: string }[];
   full: { job: string; minutes: number }[];
@@ -46,7 +59,10 @@ export interface Verdict {
 
 export function logLines(raw: string): string[];
 export function parsePlaywrightSummary(lines: string[]): PlaywrightSummary;
-export function judge(run: { jobs: InspectedJob[] }): Verdict;
+export function judge(run: {
+  jobs: InspectedJob[];
+  supersededBy?: SupersedingRun | null;
+}): Verdict;
 export function inspectRun(
   runId: string | number,
   options?: { readLogs?: boolean }
@@ -58,5 +74,6 @@ export function inspectRun(
   attempt: number;
   url: string;
   createdAt: string;
+  supersededBy: SupersedingRun | null;
   jobs: InspectedJob[];
 };

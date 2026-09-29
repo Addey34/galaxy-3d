@@ -205,3 +205,71 @@ describe('les deux nombres du guetteur viennent de `ci.yml`', () => {
     expect(watch).toContain('issues: write');
   });
 });
+
+describe('un run REMPLACÉ n’est pas un run malade', () => {
+  /**
+   * `ci.yml` déclare `concurrency: cancel-in-progress`, donc deux fusions rapprochées annulent le
+   * run de la première. Le 2026-09-29 le guetteur a ouvert l'issue #55 sur le run du lot 29,
+   * annulé par la poussée du lot 30 : aucun job n'avait échoué, tous portaient `cancelled`.
+   * Un guetteur qui crie au loup finit ignoré, ce que le lot 28 avait déjà payé sur les sources.
+   */
+  const cancelledShard = (shard: number) => ({
+    id: shard,
+    name: `Browser tests (e2e ${shard}/6)`,
+    conclusion: 'cancelled',
+    minutes: 7.8,
+    shard,
+    summary: null,
+  });
+  const superseded = { id: 42, number: 326, url: 'https://x.test/326' };
+
+  it('est déclaré remplacé, et donc SAIN, quand un run plus récent l’a annulé', () => {
+    const verdict = judge({
+      supersededBy: superseded,
+      jobs: [
+        {
+          id: 1,
+          name: 'Verify and build',
+          conclusion: 'success',
+          minutes: 2.9,
+          shard: null,
+          summary: null,
+        },
+        cancelledShard(1),
+        cancelledShard(2),
+      ],
+    });
+    expect(verdict.superseded).toBe(true);
+    expect(verdict.healthy).toBe(true);
+  });
+
+  it('reste NON SAIN si un job a vraiment échoué avant l’annulation', () => {
+    // La condition est stricte, et c'est le point : taire un vrai échec sous prétexte que le run
+    // a été coupé ensuite serait pire que l'issue de trop.
+    const verdict = judge({
+      supersededBy: superseded,
+      jobs: [
+        {
+          id: 1,
+          name: 'Verify and build',
+          conclusion: 'failure',
+          minutes: 2.9,
+          shard: null,
+          summary: null,
+        },
+        cancelledShard(1),
+      ],
+    });
+    expect(verdict.superseded).toBe(false);
+    expect(verdict.healthy).toBe(false);
+  });
+
+  it('reste NON SAIN si rien ne l’a remplacé : on ne sait pas pourquoi il est annulé', () => {
+    const verdict = judge({
+      supersededBy: null,
+      jobs: [cancelledShard(1), cancelledShard(2)],
+    });
+    expect(verdict.superseded).toBe(false);
+    expect(verdict.healthy).toBe(false);
+  });
+});
