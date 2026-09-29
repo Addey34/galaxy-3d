@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { isLocalizedText } from '@/i18n/localizedOrKey';
 import { CELESTIAL_CONFIG } from './bodies';
 import { forEachBody } from './catalog';
 import {
@@ -907,8 +908,14 @@ describe('magnitude absolue des interstellaires : H affichée, ou la raison vér
       expect(row.cometTotalMagnitude, `${name} : la raison cite M1`).not.toBe(
         null
       );
-      expect(reason!.en).toMatch(/\bM1\b/);
-      expect(reason!.fr).toMatch(/\bM1\b/);
+      expect(
+        isLocalizedText(reason!),
+        `${name} : raison propre à la fiche`
+      ).toBe(true);
+      if (!isLocalizedText(reason!))
+        throw new Error(`${name} : raison par clé, pas un texte de fiche`);
+      expect(reason.en).toMatch(/\bM1\b/);
+      expect(reason.fr).toMatch(/\bM1\b/);
     }
   );
 });
@@ -976,10 +983,12 @@ describe('raisons rédigées : confrontées à leur source', () => {
       const cfg = bodies.find((b) => b.name === name)?.cfg;
       const reason = reasonOf(cfg!, 'meanTempC');
       expect(reason, `${name} : plage publiée, aucune raison`).toBeDefined();
+      if (!isLocalizedText(reason!))
+        throw new Error(`${name} : raison par clé`);
       for (const value of row.celsius)
         for (const locale of ['en', 'fr', 'es', 'pt-BR'] as const)
           expect(
-            reason![locale],
+            reason[locale],
             `${name}.${locale} ne cite pas ${value}`
           ).toContain(String(value));
     }
@@ -1042,7 +1051,10 @@ describe('raisons rédigées : confrontées à leur source', () => {
           nssdcaSat[name].rotation,
           `${name} : la fiche NSSDCA publie une rotation`
         ).not.toBe('S');
-        if (/chaotic|chaotique|caótica|caotic/i.test(reason.en + reason.fr))
+        if (
+          isLocalizedText(reason) &&
+          /chaotic|chaotique|caótica|caotic/i.test(reason.en + reason.fr)
+        )
           expect(nssdcaSat[name].rotation, `${name} : chaos non publié`).toBe(
             'C'
           );
@@ -1091,11 +1103,13 @@ describe('raisons rédigées : confrontées à leur source', () => {
       const reason = reasonOf(cfg, field);
       expect(reason, `${name}.${field}`).toBeDefined();
       const source = quoted(article).replace(/[,\s]/g, '');
+      if (!isLocalizedText(reason!))
+        throw new Error(`${name} : raison par clé`);
       for (const value of numbers) {
         expect(source, `${article} ne porte pas ${value}`).toContain(value);
         for (const locale of ['en', 'fr', 'es', 'pt-BR'] as const)
           expect(
-            reason![locale],
+            reason[locale],
             `${name}.${field}.${locale} ne cite pas ${value}`
           ).toContain(value);
       }

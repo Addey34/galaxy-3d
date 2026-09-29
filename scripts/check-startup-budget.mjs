@@ -242,6 +242,70 @@ if (vanished.length > 0) {
   );
   process.exit(1);
 }
+
+/**
+ * LA FUITE DE LANGUE : un texte d'une langue INACTIVE payé par tout le monde au démarrage.
+ *
+ * Le lot 20 a posé un contrat — « un visiteur charge le dictionnaire de SA langue et d'aucune
+ * autre » — et la raison du groupe `catalogue-*` le chiffre elle-même : 50 263 octets qu'un
+ * anglophone ne lit jamais. Ce contrat n'avait AUCUNE garde. Le compte des groupes exclusifs ne
+ * pouvait pas le voir : il raisonne sur des FICHIERS, et une fuite qui vit DANS le morceau
+ * d'entrée n'est pas un fichier de plus.
+ *
+ * Elle existait : la table `DETAIL` de `config/factSources.ts` inlinait ses 116 précisions dans
+ * les quatre langues, au milieu de la clôture statique.
+ *
+ * LA MESURE. On prend les textes en PROSE des morceaux de langue (des chaînes assez longues et
+ * qui contiennent une espace, pour écarter les identifiants et les adresses), et on vérifie
+ * qu'aucun n'apparaît dans un fichier du démarrage qui ne soit pas un membre de ces groupes.
+ * C'est une mesure sur le BUILD, la seule qui voit ce que le navigateur reçoit vraiment.
+ */
+const PROSE_MIN_LENGTH = 24;
+
+function proseLiterals(file) {
+  const source = readFileSync(join(ASSETS, file), 'utf-8');
+  const found = new Set();
+  const pattern = /"((?:[^"\\\n]|\\.)+)"|'((?:[^'\\\n]|\\.)+)'/g;
+  for (const match of source.matchAll(pattern)) {
+    const value = match[1] ?? match[2];
+    if (value.length < PROSE_MIN_LENGTH) continue;
+    if (!value.includes(' ')) continue;
+    if (value.includes('://')) continue;
+    found.add(value);
+  }
+  return found;
+}
+
+const languageFiles = new Set(exclusiveFiles);
+const leaked = [];
+for (const file of exclusiveFiles) {
+  for (const prose of proseLiterals(file)) {
+    for (const boot of bootFiles) {
+      if (languageFiles.has(boot)) continue;
+      if (!readFileSync(join(ASSETS, boot), 'utf-8').includes(prose)) continue;
+      leaked.push({ from: chunkName(file), into: chunkName(boot), prose });
+      break;
+    }
+  }
+}
+if (leaked.length > 0) {
+  const shown = leaked.slice(0, 8);
+  console.error(
+    `FUITE DE LANGUE : ${leaked.length} texte(s) d'une langue inactive sont dans le ` +
+      `démarrage, donc payés par tout le monde.
+` +
+      shown
+        .map((l) => `  « ${l.prose} » (${l.from}) est aussi dans ${l.into}`)
+        .join('\n') +
+      (leaked.length > shown.length
+        ? `\n  … et ${leaked.length - shown.length} autre(s).`
+        : '') +
+      `\nLe contrat du lot 20 est qu'un visiteur ne charge QUE sa langue. Un texte localisé qui ` +
+      `vit dans la clôture statique le viole sans qu'aucun fichier de plus n'apparaisse.`
+  );
+  process.exit(1);
+}
+
 const sizeOf = (file) => statSync(join(ASSETS, file)).size;
 const bootBytes = bootFiles.reduce((sum, file) => sum + sizeOf(file), 0);
 const lazy = allChunks.filter((file) => !bootFiles.includes(file)).sort();

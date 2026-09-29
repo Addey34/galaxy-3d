@@ -21,6 +21,7 @@
  * `notes` (commentaires du catalogue d'origine) est ignoré ici, et retiré du bundle client à
  * l'import par le plugin `stripRegistryNotes` de `vite.config.ts`.
  */
+import type { MessageRef } from '@/types';
 import type {
   CelestialBodyConfig,
   FactField,
@@ -248,7 +249,7 @@ function provenanceOf(entry: FactEntry, where: string): FactProvenance | null {
   };
   if (entry.detail !== undefined) {
     if (typeof entry.detail === 'string') {
-      const detail = (DETAIL as Record<string, LocalizedText>)[entry.detail];
+      const detail = (DETAIL as Record<string, MessageRef>)[entry.detail];
       if (!detail)
         throw new Error(`${where} : précision inconnue ${entry.detail}`);
       provenance.detail = detail;

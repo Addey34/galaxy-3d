@@ -6,6 +6,7 @@
  * documentaires du catalogue (`realData`). Purement lecture : aucun impact sur la simulation.
  * Le contenu est dérivé du catalogue — ajouter un corps n'exige aucune édition ici.
  */
+import { localizedOrKey } from '@/i18n/localizedOrKey';
 import { CELESTIAL_CONFIG } from '@/config/bodies';
 import { allBodies, hasIllustrativeSurface } from '@/config/catalog';
 import { TEXTURE_SETTINGS } from '@/config/engine';
@@ -271,7 +272,6 @@ const WIKIPEDIA_HOSTS = new Set(
  * l'anglais. Depuis le lot 20 les quatre langues sont obligatoires dans une fiche
  * (`src/registry/schema/*.ts`), donc il n'y a plus rien à replier ici.
  */
-const localeKey = (): Locale => getLocale();
 
 /** `2026-08` ou `2026-08-17` → « August 2026 » / « août 2026 » dans la langue courante. */
 function formatAsOf(asOf: string): string {
@@ -447,7 +447,7 @@ export function bodyStats(name: string, cfg: CelestialBodyConfig): Stat[] {
       stats.push({
         label,
         value: unknownMark(),
-        note: `${prefix} : ${entry.reason[localeKey()]}`,
+        note: `${prefix} : ${localizedOrKey(entry.reason)}`,
       });
       continue;
     }
@@ -469,7 +469,7 @@ export function bodyStats(name: string, cfg: CelestialBodyConfig): Stat[] {
       ...(provenance.asOf ? { asOf: formatAsOf(provenance.asOf) } : {}),
       provenance: [
         t(`fact.method.${provenance.method}`),
-        provenance.detail?.[localeKey()],
+        provenance.detail ? localizedOrKey(provenance.detail) : undefined,
         provenance.citation,
         source ? `${source.publisher}, ${source.title}` : undefined,
       ]
