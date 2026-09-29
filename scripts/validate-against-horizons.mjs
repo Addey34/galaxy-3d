@@ -1121,7 +1121,21 @@ for (const body of new Set(
 for (const record of results) {
   if (!record.substituted || record.witness) continue;
   const floor = floors.get(record.body);
-  if (!floor) continue;
+  // PAS de repli silencieux : sans plancher, une ligne substituée serait publiée SANS que la
+  // règle du centième s'applique, et rien ne le dirait. Le cas arrive si le témoin d'un corps
+  // n'a pas pu être mesuré (Horizons refusant sa fenêtre), c'est-à-dire précisément quand on a
+  // le plus besoin de le savoir.
+  if (!floor) {
+    // Le témoin a-t-il seulement été PLANIFIÉ ? `--providers` peut l'avoir écarté, et un tel
+    // lancement ne publie rien. S'il était planifié et n'a pas abouti, on s'arrête.
+    if (cases.some((c) => c.witness && c.body === record.body))
+      throw new Error(
+        `${record.body} ${record.window} : ligne profonde substituée sans plancher mesuré. ` +
+          `Le témoin de ce corps n'a pas abouti, donc la règle de publication ne peut pas ` +
+          `s'appliquer et cette ligne ne doit pas être publiée.`
+      );
+    continue;
+  }
   record.floor = floor;
   // Un CODE, pas une phrase : ce champ est publié tel quel sur /methodology, qui existe en
   // quatre langues. Une phrase française y apparaissait dans le tableau de la page anglaise.
