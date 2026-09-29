@@ -191,8 +191,13 @@ let cacheHits = 0;
  * mesurait donc sa propre dérive, pas l'erreur de l'application. Les deux moitiés partent de
  * l'époque et coïncident avec les requêtes courtes (0,00 à 0,18 km, mesuré sur Itokawa).
  */
-async function horizonsVectors(targetKey, centerKey, datesMs) {
-  const whole = await horizonsVectorsOnce(targetKey, centerKey, datesMs);
+async function horizonsVectors(targetKey, centerKey, datesMs, override) {
+  const whole = await horizonsVectorsOnce(
+    targetKey,
+    centerKey,
+    datesMs,
+    override
+  );
   if (whole.error || !(whole.epochJd > 0)) return whole;
   const before = [];
   const after = [];
@@ -205,7 +210,8 @@ async function horizonsVectors(targetKey, centerKey, datesMs) {
     const part = await horizonsVectorsOnce(
       targetKey,
       centerKey,
-      indices.map((i) => datesMs[i])
+      indices.map((i) => datesMs[i]),
+      override
     );
     if (part.error) return part;
     indices.forEach((i, k) => (rows[i] = part.rows[k]));
@@ -213,9 +219,17 @@ async function horizonsVectors(targetKey, centerKey, datesMs) {
   return { ...whole, rows };
 }
 
-async function horizonsVectorsOnce(targetKey, centerKey, datesMs) {
-  const target = TARGETS[targetKey];
-  const center = CENTERS[centerKey];
+/**
+ * `override` (lot 39) remplace la cible ou le centre de la requête sans toucher aux tables :
+ * `{ target: { command, expect } }` pour interroger le BARYCENTRE d'un système aux époques où
+ * l'API refuse le corps, `{ center: { id, expect } }` pour mesurer l'écart du corps À ce
+ * barycentre. Le contrôle du nom renvoyé s'applique aux deux, et il n'a pas de valeur par
+ * défaut sur une substitution : « Jupiter Barycenter » contient « jupiter », donc le contrôle
+ * ordinaire ne verrait pas la différence.
+ */
+async function horizonsVectorsOnce(targetKey, centerKey, datesMs, override) {
+  const target = override?.target ?? TARGETS[targetKey];
+  const center = override?.center ?? CENTERS[centerKey];
   if (!target)
     throw new Error(`Pas d'identifiant Horizons pour « ${targetKey} »`);
   const params = {
@@ -515,6 +529,100 @@ function epochWindow(epoch) {
   };
 }
 
+// ─────────────────── la profondeur du temps (lot 39) ───────────────────
+//
+// L'horloge de Galaxy accepte n'importe quelle date, et la fiche disait « écart à Horizons non
+// mesuré » dès qu'on sortait de 1600-2400 : honnête, mais muet. Ce qui manquait n'était pas une
+// interface, c'était le CHIFFRE — la fiche affiche déjà la fenêtre qui contient la date.
+//
+// Ce que l'API sert, MESURÉ le 2026-09-29 et non supposé : le centre d'une planète vient d'une
+// théorie de satellites bornée (Jupiter 1600, Saturne 1749, Neptune et Pluton 1800), alors que
+// les BARYCENTRES et les corps de DE441 (Mercure, Vénus, la Terre, la Lune) remontent au
+// 9999-MAR-15 av. J.-C. et vont jusqu'au 9999-DEC-30. D'où la substitution, déclarée par corps
+// dans `validation-targets.json` et jamais devinée ici.
+//
+// La substitution a un PLANCHER : l'écart entre le corps et son barycentre, que le script mesure
+// (`measureFloor`) au lieu de le recopier. Une ligne dont le plancher dépasse un centième de
+// l'écart mesuré n'est PAS publiée : la fiche imprime deux chiffres significatifs, donc en deçà
+// la substitution ne peut pas changer ce que le visiteur lit.
+//
+// Le pas est le MILLÉNAIRE. Il n'est pas arbitraire : l'écart d'astronomy-engine croît lentement
+// (mesuré sur Jupiter : 29 218 km en 2000, 30 596 en 1600, 119 119 en 1002), et la fiche nomme
+// toujours la fenêtre à côté du chiffre, comme elle le fait déjà pour 1900-2100.
+
+const DEEP_TILE_YEARS = 1000;
+/** Première année mesurée : l'ère chrétienne. Avant, voir le § « Ce qui reste » du lot 39. */
+const DEEP_FIRST_YEAR = 1;
+/** Dernier instant servi par l'API (9999-DEC-30), moins une marge de dix jours. */
+const DEEP_LAST_MS = utc('9999-12-20T00:00:00Z');
+/** Fraction de l'écart mesuré en deçà de laquelle le plancher de substitution est publiable. */
+const PUBLISHABLE_FLOOR_FRACTION = 0.01;
+/**
+ * Fenêtre du témoin : la plus large où Horizons sert le corps ET son barycentre pour les SIX
+ * corps substitués (Saturne commence au 1749-12-30, Neptune et Pluton au 1800-01-02, Jupiter
+ * s'arrête au 1600-01-10 → 2200-01-08). Aucune ne s'y fait recadrer, et c'est indispensable :
+ * un recadrage donnerait deux jeux de dates différents aux deux lignes du témoin, qui ne
+ * pourraient plus se comparer.
+ */
+const WITNESS_WINDOW = {
+  id: 'témoin 1801-2199',
+  kind: 'fixed',
+  from: utc('1801-01-01T00:00:00Z'),
+  to: utc('2199-12-01T00:00:00Z'),
+};
+/**
+ * Au-delà de ce multiple du rayon du corps, un plancher ne décrit plus un barycentre de système
+ * planétaire — le plus excentré, celui de Pluton-Charon, est à 1,8 rayon — mais une erreur de
+ * repère ou de centre. Le script s'arrête alors : c'est le garde-fou du piège documenté par ce
+ * dépôt, où comparer une position héliocentrique au barycentre du SYSTÈME SOLAIRE ajoute un
+ * million de km parfaitement plausible.
+ */
+const ABSURD_FLOOR_RADII = 10;
+
+/** `Date.UTC` place les années 0-99 en 1900-1999 : ce détour est la raison de cette fonction. */
+function yearStartMs(year) {
+  const d = new Date(0);
+  d.setUTCFullYear(year, 0, 1);
+  d.setUTCHours(0, 0, 0, 0);
+  return d.getTime();
+}
+
+const DEEP_TILES = [];
+for (let year = 0; year < 10_000; year += DEEP_TILE_YEARS) {
+  const from = yearStartMs(Math.max(year, DEEP_FIRST_YEAR));
+  const to = Math.min(yearStartMs(year + DEEP_TILE_YEARS), DEEP_LAST_MS);
+  if (!(to > from)) continue;
+  const lastYear = new Date(to - MS_PER_DAY).getUTCFullYear();
+  DEEP_TILES.push({
+    id: `an ${new Date(from).getUTCFullYear()}-${lastYear}`,
+    kind: 'deep',
+    from,
+    to,
+  });
+}
+
+/**
+ * Distance GÉOMÉTRIQUE entre un corps et le barycentre qui le remplace aux époques profondes,
+ * demandée à Horizons en une fois (cible = le corps, centre = le barycentre), aux dates du
+ * témoin.
+ *
+ * Ce n'est PAS le plancher, et les confondre coûtait le lot : pour Uranus cette distance ne
+ * dépasse jamais 44 km, alors que la DIFFÉRENCE des deux positions héliocentriques atteint
+ * 4 831 km (nulle vers 1986, l'époque du survol de Voyager 2). Horizons n'est donc pas
+ * cohérent avec lui-même sur ce corps : le barycentre qu'il sert comme cible et celui qu'implique
+ * son éphéméride de satellites ne sont pas le même point. Le plancher qui compte est celui du
+ * chemin RÉELLEMENT emprunté, mesuré par le témoin ; cette distance-ci reste mesurée à côté,
+ * parce que c'est leur désaccord qui a révélé le fait.
+ */
+async function measureSeparation(body, deep, dates) {
+  const answer = await horizonsVectors(body, 'sun', dates, {
+    center: { id: deep.command, expect: deep.expect },
+  });
+  if (answer.error) throw new Error(`séparation ${body} : ${answer.error}`);
+  const km = answer.rows.map((r) => Math.hypot(...r.position));
+  return { maxKm: Math.max(...km), minKm: Math.min(...km), n: km.length };
+}
+
 /**
  * Un « cas » = (corps, source, repère, fenêtre) : une fonction date → position scène (UA) ou
  * null, et le centre Horizons de référence.
@@ -536,10 +644,19 @@ forEachBody(CELESTIAL_CONFIG, ({ name, config: cfg, parentName }) => {
   const parentCenter = relative ? parentName : 'sun';
   const frame = relative ? `relatif à ${parentName}` : 'héliocentrique';
   const extended = relative ? MOON_EXTENDED : EXTENDED;
+  // La source qui répond à TOUTE date, donc la seule que les millénaires profonds puissent
+  // mesurer. Renseignée par la branche qui s'applique, jamais devinée deux fois.
+  let anyDate = null;
 
   // astronomy-engine — les trois branches réellement appelées par `resolve()`.
   if (cfg.relativeEphemeris?.kind === 'jupiterMoon') {
     const moon = cfg.relativeEphemeris.moon;
+    anyDate = {
+      provider: 'astronomy-engine',
+      frame,
+      center: 'jupiter',
+      compute: (date) => ephemeris.getJupiterMoonRelativeAU(moon, date),
+    };
     for (const window of [CORE, extended])
       addCase({
         body: name,
@@ -553,6 +670,13 @@ forEachBody(CELESTIAL_CONFIG, ({ name, config: cfg, parentName }) => {
     if (relative) {
       const parentAstro = mechanics._parentAstroBody.get(name);
       const center = ASTRO_CENTER[parentAstro];
+      anyDate = {
+        provider: 'astronomy-engine',
+        frame: `relatif à ${parentName} (${parentAstro})`,
+        center,
+        compute: (date) =>
+          ephemeris.getParentRelativeAU(cfg.astroBody, parentAstro, date),
+      };
       for (const window of [CORE, extended])
         addCase({
           body: name,
@@ -565,6 +689,12 @@ forEachBody(CELESTIAL_CONFIG, ({ name, config: cfg, parentName }) => {
         });
     } else {
       const astro = cfg.positionBody ?? cfg.astroBody;
+      anyDate = {
+        provider: 'astronomy-engine',
+        frame: astro === cfg.astroBody ? frame : `héliocentrique (${astro})`,
+        center: 'sun',
+        compute: (date) => ephemeris.getHeliocentricAU(astro, date),
+      };
       for (const window of [CORE, extended])
         addCase({
           body: name,
@@ -597,6 +727,12 @@ forEachBody(CELESTIAL_CONFIG, ({ name, config: cfg, parentName }) => {
   // Éléments képlériens — repli de couverture infinie.
   const elements = cfg.relativeOrbitalElements ?? cfg.orbitalElements;
   if (elements) {
+    anyDate ??= {
+      provider: 'kepler',
+      frame,
+      center: parentCenter,
+      compute: (date) => resolver.elementsOnly(cfg, date),
+    };
     for (const window of [epochWindow(elements.epoch), CORE, extended])
       addCase({
         body: name,
@@ -660,6 +796,48 @@ forEachBody(CELESTIAL_CONFIG, ({ name, config: cfg, parentName }) => {
           return equatorialToScene(x / KM_PER_AU, y / KM_PER_AU, z / KM_PER_AU);
         },
       });
+  }
+
+  // Profondeur du temps — un millénaire par ligne, contre la cible profonde déclarée par le
+  // corps. La source mesurée est celle qui RÉPOND à ces dates : aucun binaire ne les couvre.
+  const deep = TARGETS[name]?.deep;
+  if (deep && anyDate) {
+    const substituted = deep.command !== TARGETS[name].command;
+    if (substituted && !deep.expect)
+      throw new Error(
+        `« ${name} » déclare une cible profonde substituée (${deep.command}) sans « expect » : ` +
+          `le contrôle du nom renvoyé retomberait sur « ${name} », que « ${deep.command} » ` +
+          `contient déjà. Voir le $comment.deep de validation-targets.json.`
+      );
+    for (const window of DEEP_TILES)
+      addCase({
+        body: name,
+        provider: anyDate.provider,
+        frame: anyDate.frame,
+        center: anyDate.center,
+        window,
+        compute: anyDate.compute,
+        deep: { ...deep, substituted },
+      });
+
+    // TÉMOIN de la substitution. Une courbe d'écart aux époques profondes est crédible quoi
+    // qu'elle vaille : c'est le témoin qui tranche. Les deux lignes ci-dessous mesurent LA MÊME
+    // source aux MÊMES dates, là où Horizons sert le corps ET son barycentre ; leurs écarts ne
+    // peuvent différer, date par date, de plus que le plancher. Sans elles, une erreur de repère
+    // ou de centre passerait pour une croissance de l'erreur (le piège du lot 22.10, où comparer
+    // l'héliocentrique au barycentre du SYSTÈME SOLAIRE ajoutait un million de km très plausible).
+    if (substituted)
+      for (const witness of ['corps', 'barycentre'])
+        addCase({
+          body: name,
+          provider: 'témoin-profondeur',
+          frame: anyDate.frame,
+          center: anyDate.center,
+          window: WITNESS_WINDOW,
+          compute: anyDate.compute,
+          witness,
+          deep: witness === 'barycentre' ? { ...deep, substituted } : undefined,
+        });
   }
 
   // Production — position héliocentrique telle que la scène la compose.
@@ -755,6 +933,9 @@ for (const [index, c] of cases.entries()) {
   let window = c.window;
   let dates;
   let reference;
+  const override = c.deep?.substituted
+    ? { target: { command: c.deep.command, expect: c.deep.expect } }
+    : undefined;
   for (let attempt = 0; attempt < 3; attempt++) {
     dates = sampleDates(
       `${c.body}|${window.id}|${c.center}`,
@@ -762,7 +943,7 @@ for (const [index, c] of cases.entries()) {
       window.to,
       SAMPLES
     );
-    reference = await horizonsVectors(c.body, c.center, dates);
+    reference = await horizonsVectors(c.body, c.center, dates, override);
     const bound = reference.error ? horizonsBound(reference.error) : null;
     if (!bound) break;
     const from =
@@ -794,6 +975,9 @@ for (const [index, c] of cases.entries()) {
     windowFrom: iso(window.from).slice(0, 10),
     windowTo: iso(window.to).slice(0, 10),
     windowClipped: window.clipped === true,
+    // Cible Horizons RÉELLEMENT interrogée : le corps, ou le barycentre qui le remplace aux
+    // époques profondes. Sans ce champ, deux lignes de sens différent se ressemblent.
+    target: override?.target.command ?? TARGETS[c.body]?.command ?? null,
     center: CENTERS[c.center].id,
     radiusKm: bodyInfo.get(c.body)?.radiusKm ?? null,
     requested: dates.length,
@@ -847,6 +1031,8 @@ for (const [index, c] of cases.entries()) {
 
   const km = stats(record.samples.map((s) => s.errorKm));
   record.km = km;
+  record.witness = c.witness;
+  record.substituted = c.deep?.substituted === true;
   if (record.radiusKm)
     record.radii = Object.fromEntries(
       Object.entries(km).map(([k, v]) => [k, v / record.radiusKm])
@@ -863,6 +1049,88 @@ for (const [index, c] of cases.entries()) {
 }
 
 await loader.close();
+
+// ─────────── plancher de la substitution, mesuré par le témoin (lot 39) ───────────
+//
+// Les deux lignes « témoin-profondeur » d'un corps mesurent la même source aux mêmes dates,
+// l'une contre le corps, l'autre contre son barycentre, là où Horizons sert les deux. La plus
+// grande différence de leurs écarts EST le plancher : le biais que la substitution introduit
+// dans une ligne profonde. Le mesurer sur ce chemin-là, et non sur la distance géométrique
+// corps ↔ barycentre, est tout le sujet : pour Uranus et Neptune, les deux ne disent pas du
+// tout la même chose, et c'est Horizons qui n'est pas cohérent avec lui-même.
+//
+// Une ligne profonde n'est publiée que si son plancher reste sous un centième de l'écart
+// mesuré : bien en deçà de la résolution des deux chiffres significatifs qu'affiche la fiche.
+// Le rayon du corps, lui, n'est PAS un critère de publication — il l'a été une demi-heure, et
+// il refusait les millénaires de Pluton (barycentre à 1,8 rayon) alors que leur écart se compte
+// en MILLIARDS de km, où deux mille kilomètres ne changent rien. Il reste publié comme un fait :
+// le barycentre Pluton-Charon est hors de Pluton, ce qui est aussi la raison pour laquelle
+// `HorizonsEphemerisService` retire puis rend son balancement au corps.
+const floors = new Map();
+for (const body of new Set(
+  results.filter((r) => r.witness).map((r) => r.body)
+)) {
+  const pair = Object.fromEntries(
+    results
+      .filter((r) => r.witness && r.body === body)
+      .map((r) => [r.witness, r])
+  );
+  if (!pair.corps || !pair.barycentre) continue;
+  if (pair.corps.samples.length !== pair.barycentre.samples.length)
+    throw new Error(
+      `témoin ${body} : les deux lignes n'ont pas le même nombre de dates`
+    );
+  let floorKm = 0;
+  pair.corps.samples.forEach((s, i) => {
+    if (s.date !== pair.barycentre.samples[i].date)
+      throw new Error(`témoin ${body} : dates désalignées à l'indice ${i}`);
+    floorKm = Math.max(
+      floorKm,
+      Math.abs(s.errorKm - pair.barycentre.samples[i].errorKm)
+    );
+  });
+  const radiusKm = bodyInfo.get(body)?.radiusKm ?? null;
+  if (radiusKm && floorKm > ABSURD_FLOOR_RADII * radiusKm)
+    throw new Error(
+      `témoin ${body} : la substitution par « ${TARGETS[body].deep.expect} » déplace l'écart de ` +
+        `${fmt(floorKm)} km, soit ${(floorKm / radiusKm).toFixed(1)} rayons du corps. Un barycentre ` +
+        `de système planétaire n'est jamais si loin : c'est le repère ou le centre qui est faux.`
+    );
+  const separation = await measureSeparation(
+    body,
+    TARGETS[body].deep,
+    pair.corps.samples.map((s) => Date.parse(s.date))
+  );
+  floors.set(body, {
+    km: floorKm,
+    radiusKm,
+    separation,
+    window: `${iso(WITNESS_WINDOW.from).slice(0, 10)}→${iso(WITNESS_WINDOW.to).slice(0, 10)}`,
+    n: pair.corps.samples.length,
+    insideBody: radiusKm ? floorKm < radiusKm : false,
+  });
+  console.log(
+    `plancher ${body} : la substitution déplace l'écart de ${fmt(floorKm)} km au plus ` +
+      `(${radiusKm ? (floorKm / radiusKm).toFixed(2) : '?'} rayon), distance géométrique ` +
+      `${fmt(separation.minKm)} à ${fmt(separation.maxKm)} km`
+  );
+}
+
+// Application de la règle, ligne par ligne. Elle vit ICI et non dans la boucle de mesure :
+// le plancher n'existe qu'une fois les deux lignes du témoin mesurées.
+for (const record of results) {
+  if (!record.substituted || record.witness) continue;
+  const floor = floors.get(record.body);
+  if (!floor) continue;
+  record.floor = floor;
+  // Un CODE, pas une phrase : ce champ est publié tel quel sur /methodology, qui existe en
+  // quatre langues. Une phrase française y apparaissait dans le tableau de la page anglaise.
+  // Le détail chiffré reste dans le rapport, qui est un document de travail en français.
+  if (!(floor.km <= PUBLISHABLE_FLOOR_FRACTION * record.km.mean)) {
+    record.floorRefused = 'floor-over-hundredth';
+    record.floorRefusedDetail = `plancher ${fmt(floor.km)} km, soit plus d'un centième de l'écart mesuré (${fmt(record.km.mean)} km)`;
+  }
+}
 
 // ───────────────────────────── rapport ─────────────────────────────
 
@@ -908,6 +1176,39 @@ if (INJECTING)
     '',
     `> **INJECTION DE FALSIFICATION ACTIVE** : +${INJECT_KM} km sur X scène, date décalée de ${INJECT_SECONDS} s, source ${INJECT_PROVIDER ?? 'toutes'}. Ce rapport ne mesure PAS l'application.`
   );
+
+if (floors.size > 0) {
+  lines.push(
+    '',
+    '## Profondeur du temps : la référence et son plancher',
+    '',
+    `Avant 1600, l'API Horizons refuse le centre d'une planète (sa théorie de satellites est bornée) et sert son BARYCENTRE, qui vient de DE441 et remonte au 9999-MAR-15 av. J.-C. Les lignes par millénaire comparent donc la position de Galaxy à ce barycentre. Le PLANCHER de cette substitution est mesuré par un témoin : la même source, aux mêmes dates, mesurée contre le corps ET contre son barycentre là où Horizons sert les deux (${[...floors.values()][0].window}, ${[...floors.values()][0].n} dates) ; la plus grande différence de leurs écarts est le biais que la substitution introduit.`,
+    '',
+    `Une ligne n'est publiée que si son plancher reste sous un centième de l'écart mesuré, bien en deçà de la résolution des deux chiffres significatifs qu'affiche la fiche. La colonne « en rayons du corps » n'est pas un critère : elle dit si le barycentre tombe DANS le corps, ce qui vaut d'être su (celui de Pluton-Charon n'y est pas) sans rien décider.`,
+    '',
+    '| corps | cible profonde | plancher (chemin réel) | en rayons du corps | distance géométrique corps ↔ barycentre |',
+    `|${' --- |'.repeat(5)}`
+  );
+  for (const [body, f] of floors)
+    lines.push(
+      `| ${body} | ${TARGETS[body].deep.command} (${TARGETS[body].deep.expect}) | ${fmt(f.km)} km | ${f.radiusKm ? (f.km / f.radiusKm).toFixed(2) : 'n/a'} | ${fmt(f.separation.minKm)} à ${fmt(f.separation.maxKm)} km |`
+    );
+  const disagreeing = [...floors].filter(
+    ([, f]) => f.km > 2 * f.separation.maxKm
+  );
+  if (disagreeing.length > 0)
+    lines.push(
+      '',
+      `**Les deux dernières colonnes ne disent pas la même chose pour : ${disagreeing.map(([b]) => b).join(', ')}.** Horizons n'est alors pas cohérent avec lui-même : le barycentre qu'il sert comme CIBLE et celui qu'implique l'éphéméride du corps ne sont pas le même point. C'est le plancher du chemin réellement emprunté qui fait foi, et c'est lui qui est appliqué.`
+    );
+  const refused = results.filter((r) => r.floorRefused);
+  lines.push(
+    '',
+    refused.length === 0
+      ? 'Aucune ligne profonde refusée par son plancher.'
+      : `Lignes NON publiées : ${[...new Set(refused.map((r) => `${r.body} ${r.window} (${r.floorRefusedDetail})`))].join(' ; ')}.`
+  );
+}
 
 for (const provider of Object.keys(PROVIDER_TITLES)) {
   const rows = results.filter((r) => r.provider === provider);
@@ -995,8 +1296,31 @@ else {
         generatedAt,
         samplesPerCase: SAMPLES,
         spk: spkStatus,
+        // La substitution de référence des époques profondes, corps par corps : ce que la page
+        // /methodology publie sans avoir à relire un rapport non versionné.
+        deep: {
+          witnessFrom: iso(WITNESS_WINDOW.from).slice(0, 10),
+          witnessTo: iso(WITNESS_WINDOW.to).slice(0, 10),
+          bodies: Object.fromEntries(
+            [...floors].map(([body, f]) => [
+              body,
+              {
+                target: TARGETS[body].deep.command,
+                targetName: TARGETS[body].deep.expect,
+                floorKm: round(f.km),
+                separationMaxKm: round(f.separation.maxKm),
+                radiusKm: f.radiusKm,
+                insideBody: f.insideBody,
+              },
+            ])
+          ),
+        },
         rows: results
-          .filter((r) => r.provider !== 'spk-worker-direct')
+          .filter(
+            (r) =>
+              r.provider !== 'spk-worker-direct' &&
+              r.provider !== 'témoin-profondeur'
+          )
           .map((r) => ({
             body: r.body,
             provider: r.provider,
@@ -1004,6 +1328,9 @@ else {
             windowFrom: r.windowFrom,
             windowTo: r.windowTo,
             windowClipped: r.windowClipped,
+            target: r.target,
+            floorKm: r.floor ? round(r.floor.km) : undefined,
+            floorRefused: r.floorRefused || undefined,
             relative: r.frame.startsWith('relatif'),
             radiusKm: r.radiusKm,
             n: r.samples.length,
@@ -1011,8 +1338,8 @@ else {
             rejected: r.rejected,
             sources: r.sources,
             referenceError: r.referenceError ? true : undefined,
-            km: roundStats(r.km),
-            radii: roundStats(r.radii),
+            km: r.floorRefused ? null : roundStats(r.km),
+            radii: r.floorRefused ? null : roundStats(r.radii),
           })),
       },
       null,

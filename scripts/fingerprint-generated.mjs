@@ -181,7 +181,15 @@ function report(baseline, current) {
   return { removed, added, changed };
 }
 
-/** Écart de poids des morceaux, affiché et jamais bloquant (cf. `bundleSizes`). */
+/**
+ * Écart de poids des morceaux, affiché et jamais bloquant (cf. `bundleSizes`).
+ *
+ * Conséquence à connaître, constatée au lot 39 : ces poids ne valent que du dernier `--write`,
+ * et comme rien n'échoue dessus, ils DÉRIVENT. Écrits au lot 33, ils avaient quatre lots de
+ * retard (styles, dictionnaires, fiches de tuiles) quand le lot 39 les a réécrits en passant.
+ * Ce n'est pas un défaut à corriger par un seuil — le poids d'un morceau bouge à chaque commit,
+ * et une garde dessus finirait désarmée — mais un relevé à ne pas lire comme une mesure du jour.
+ */
 function reportBundle(before, after) {
   const lines = [];
   for (const name of Object.keys(after).sort()) {

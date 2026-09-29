@@ -399,7 +399,7 @@ export const NON_BOOT_CHUNKS: readonly BootDynamicChunk[] = [
   {
     chunk: 'horizons-validation-summary',
     reason:
-      "le résumé de validation contre Horizons n'est lu que par le bloc « Position à cette date » de la fiche, chargé à l'ouverture (`ui/positionProvenance`). 108 835 octets que le démarrage ne paie pas.",
+      "le résumé de validation contre Horizons n'est lu que par le bloc « Position à cette date » de la fiche, chargé à l'ouverture (`ui/positionProvenance`). Un morceau que le démarrage ne paie pas, et dont le poids n'est pas recopié ici : il est mesuré par `pnpm budget:startup`, et le lot 39 l'a fait grossir d'un tiers en pavant la profondeur du temps.",
   },
   {
     chunk: 'PlanetarySurfaceEngine',

@@ -977,6 +977,69 @@ n'est pas expliqué est écrit tel quel** : ces trois requêtes ne sont réappar
 visites suivantes, même avec vingt secondes d'observation après le chargeur. Une visite sur neuf,
 pour un comportement identique ; le déclencheur n'est pas identifié.
 
+### La profondeur du temps : un écart par millénaire, et ce qu'il a fallu pour l'obtenir (lot 39)
+
+L'horloge accepte n'importe quelle date, mais les fenêtres de validation s'arrêtaient à
+1600-2400 : au-delà, la fiche disait « écart à JPL Horizons non mesuré à cette date ». Honnête,
+et muet. Le relevé porte désormais **un millénaire par ligne, de l'an 1 à l'an 9999**, pour les
+dix corps dont la référence existe si loin. **Aucune ligne d'interface n'a été écrite** : la
+fiche nommait déjà la fenêtre à côté du chiffre.
+
+**Ce que l'API sert, mesuré et non supposé.** Le centre d'une planète vient d'une théorie de
+satellites bornée, donc Horizons le refuse avant 1600 (Saturne 1749, Neptune et Pluton 1800).
+Le **barycentre** du système, lui, vient de DE441 et va du 9999-MAR-15 av. J.-C. au
+9999-DEC-30. Mercure, Vénus, la Terre et la Lune sont dans DE441 même : leur cible profonde
+EST le corps. D'où une substitution, déclarée par corps dans `scripts/validation-targets.json`
+et jamais devinée par le script. Un corps sans déclaration n'a pas de profondeur : les petits
+corps sont refusés avant le 1599-12-10 (intégration), Io avant 1600, Charon avant 1800.
+
+**Le témoin, et ce qu'il a trouvé.** Une courbe d'écart aux époques profondes est crédible quoi
+qu'elle vaille. Le script mesure donc, là où Horizons sert le corps ET son barycentre
+(1801-2199), **la même source contre les deux, aux mêmes dates** : la plus grande différence de
+leurs écarts est le PLANCHER de la substitution. Ce plancher n'est pas la distance géométrique
+corps ↔ barycentre, et les confondre était l'erreur.
+
+Les deux chiffres coïncident pour Mars, Jupiter, Saturne et Pluton. **Pour Uranus et Neptune,
+non** : le plancher du chemin réel vaut respectivement 8 915 km et 2 271 km, contre 43 km et
+74 km de distance géométrique. **Horizons n'est pas cohérent avec lui-même sur ces deux corps**
+— le barycentre qu'il sert comme cible et celui qu'implique l'éphéméride du corps ne sont pas le
+même point, et leur écart s'annule autour du survol unique de Voyager 2 qui a caractérisé chaque
+système. Sans le témoin, le plancher d'Uranus aurait été annoncé à 43 km. La table complète, à
+jour, est celle que publie `/methodology` § « La profondeur du temps », dérivée du bloc `deep`
+de `src/config/horizons-validation-summary.json` ; elle n'est pas recopiée ici.
+
+**La règle de publication** : une ligne n'est publiée que si son plancher reste sous un centième
+de l'écart mesuré, bien en deçà de la résolution des deux chiffres significatifs qu'affiche la
+fiche. Cinq millénaires d'Uranus sont retenus par là, avec leur raison, et restent VISIBLES sur
+`/methodology`. Le rayon du corps ne décide de rien — il l'a fait une demi-heure, et refusait les
+millénaires de Pluton (barycentre à 1,8 rayon) alors que leur écart se compte en milliards de km.
+
+**Ce que la mesure a dit au lot 39**, et qui ne se devinait pas : sur le millénaire 1000-2000,
+Galaxy place Jupiter à 59 440 km en moyenne de là où JPL le place, soit **moins d'un rayon de
+Jupiter** ; la Lune est à 50 km de sa position relative à la Terre, et la Terre à 6 900 km. Le
+repli képlérien de Pluton, lui, est à 36 millions de km dès 2000-3000 : le chiffre dit de ne pas
+s'y fier, ce qu'aucune étiquette ne disait. Ces valeurs vivent dans le résumé et sur
+`/methodology` ; celles-ci datent du lot et n'y sont rappelées que pour l'ordre de grandeur.
+
+**Un TROU se dit.** `positionProduct` prenait l'ENVELOPPE [min, max] des fenêtres mesurées d'un
+corps. Tant qu'elles étaient emboîtées, l'enveloppe suffisait ; un pavage par millénaires peut
+avoir un trou (une ligne retenue), et l'enveloppe le déclarait mesuré — la fiche aurait dit
+« reconstruit » sans pouvoir citer le moindre écart. Elle retient maintenant **la fenêtre qui
+contient la date**, et rien d'autre.
+
+**Deux bornes ferment la fenêtre, et aucune n'est un choix** : l'API Horizons s'arrête à ±9999
+(mesuré ; le noyau DE441 va plus loin, l'API non), et un `<input type="date">` ne sait pas écrire
+une année négative — l'application ne peut donc pas AFFICHER une date avant l'an 1, même si son
+horloge y va. Au passage, un défaut que la profondeur a rendu ordinaire : le champ écrivait
+`500-05-14` pour l'an 500, que le navigateur refuse, et il se vidait sans un mot
+(`src/ui/dateField.ts`).
+
+Gardes : `src/config/deepTimeWindows.test.ts` (les corps mesurés sont ceux qui se déclarent, la
+cible interrogée est la cible déclarée, la règle du centième rejouée sur la donnée livrée, le
+pavage sans trou de l'an 1 à l'an 9999), `src/core/positionProvenance.test.ts` (le trou est
+extrapolé, pas reconstruit), `src/ui/dateField.test.ts` et `e2e/temporal.spec.ts` (un visiteur
+parti à l'an 1000 LIT un chiffre, et la barre de temps garde sa date à l'an 500).
+
 ### Tests qui verrouillent tout ça
 
 | Fichier | Ce qu'il garde |
