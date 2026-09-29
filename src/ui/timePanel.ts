@@ -11,6 +11,12 @@
 import { t } from '@/i18n';
 import type { OrbitalMechanics } from '@/core/OrbitalMechanics';
 import { LIVE_TOLERANCE_MS } from '@/core/positionProvenance';
+import {
+  dateFieldTarget,
+  dateFieldValue,
+  timeFieldTarget,
+  timeFieldValue,
+} from './dateField';
 import type { PlaybackControls } from './playback';
 import type { OverlayCoordinator } from './overlayCoordinator';
 
@@ -52,10 +58,7 @@ function flash(el: HTMLElement): void {
 
 function refreshDisplay(om: OrbitalMechanics): void {
   const d = om.simulationDate;
-  const hh = String(d.getUTCHours()).padStart(2, '0');
-  const mm = String(d.getUTCMinutes()).padStart(2, '0');
-  const ss = String(d.getUTCSeconds()).padStart(2, '0');
-  const time = `${hh}:${mm}:${ss}`;
+  const time = timeFieldValue(d);
 
   // Horloge condensée (toujours visible).
   if (time !== _prevClock) {
@@ -73,10 +76,7 @@ function refreshDisplay(om: OrbitalMechanics): void {
   }
 
   if (_editingInput !== dateInput) {
-    const y = d.getUTCFullYear();
-    const mo = String(d.getUTCMonth() + 1).padStart(2, '0');
-    const dy = String(d.getUTCDate()).padStart(2, '0');
-    const dt = `${y}-${mo}-${dy}`;
+    const dt = dateFieldValue(d);
     if (dt !== _prevDate) {
       dateInput.value = dt;
       _prevDate = dt;
@@ -156,11 +156,9 @@ export function setupTimePanel(
 
   // Picker natif → change event.
   timeInput.addEventListener('change', () => {
-    if (!timeInput.value) return;
-    const [h = 0, m = 0, s = 0] = timeInput.value.split(':').map(Number);
     const cur = om.simulationDate;
-    const target = new Date(cur.getTime());
-    target.setUTCHours(h, m, s, 0);
+    const target = timeFieldTarget(timeInput.value, cur);
+    if (!target) return;
     om.addTimeOffset((target.getTime() - cur.getTime()) / 86_400_000);
     _prevTime = timeInput.value;
     flash(timeInput);
@@ -169,11 +167,9 @@ export function setupTimePanel(
   });
 
   dateInput.addEventListener('change', () => {
-    if (!dateInput.value) return;
-    const [y = 0, mo = 0, d = 0] = dateInput.value.split('-').map(Number);
     const cur = om.simulationDate;
-    const target = new Date(cur.getTime());
-    target.setUTCFullYear(y, mo - 1, d);
+    const target = dateFieldTarget(dateInput.value, cur);
+    if (!target) return;
     om.addTimeOffset((target.getTime() - cur.getTime()) / 86_400_000);
     _prevDate = dateInput.value;
     flash(dateInput);

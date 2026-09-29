@@ -35,7 +35,10 @@ describe('measuredWindows', () => {
     expect(measuredWindows(ROWS, 'moon', 'astronomy-engine', false)).toEqual(
       []
     );
-    for (const w of relative) expect(w.meanKm).toBeLessThan(100);
+    // Sur la fenêtre qui contient aujourd'hui. Les millénaires profonds (lot 39) montent
+    // légitimement à des milliers de km à l'an 9000 : les comparer à ce seuil-ci mélangerait
+    // deux questions, l'erreur du repère et l'âge de la date.
+    expect(measuredErrorAt(relative, NOW)?.meanKm).toBeLessThan(100);
   });
 
   it('ignore les lignes sans mesure (couverture nulle)', () => {
@@ -94,6 +97,45 @@ describe('positionProduct', () => {
     expect(
       categoryAt('enceladus', 'kepler', true, at('1500-01-01T00:00:00Z'))
     ).toBe('extrapolated');
+  });
+
+  /**
+   * Le pavage de la profondeur du temps (lot 39) rend ce cas possible : un millénaire dont la
+   * ligne n'est pas publiée laisse un TROU entre deux fenêtres mesurées. L'enveloppe
+   * [min, max] le déclarait mesuré, donc « reconstruit », alors que la fiche n'avait aucun
+   * écart à citer. Falsifié : ce test échoue si `positionProduct` reprend l'enveloppe.
+   */
+  it('un TROU entre deux fenêtres mesurées est extrapolé, pas reconstruit', () => {
+    const rows: AccuracyRow[] = [
+      {
+        body: 'trou',
+        provider: SUMMARY_PROVIDER['astronomy-engine'],
+        windowFrom: '1000-01-01',
+        windowTo: '1999-12-31',
+        relative: false,
+        n: 48,
+        km: { mean: 60_000 },
+      },
+      {
+        body: 'trou',
+        provider: SUMMARY_PROVIDER['astronomy-engine'],
+        windowFrom: '3000-01-01',
+        windowTo: '3999-12-31',
+        relative: false,
+        n: 48,
+        km: { mean: 300_000 },
+      },
+    ];
+    const windows = measuredWindows(rows, 'trou', 'astronomy-engine', false);
+    const category = (iso: string): string =>
+      classifyTemporal(
+        positionProduct('astronomy-engine', at(iso), windows),
+        at(iso),
+        NOW
+      ).category;
+    expect(category('1500-01-01T00:00:00Z')).toBe('reconstructed');
+    expect(category('2500-01-01T00:00:00Z')).toBe('extrapolated');
+    expect(category('3500-01-01T00:00:00Z')).toBe('predicted');
   });
 
   it('aucune mesure du tout → extrapolé, jamais « prédit » par défaut', () => {

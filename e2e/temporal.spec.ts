@@ -47,6 +47,39 @@ test('the info card names the source that places the body at this date', async (
   await expect(error).toContainText('not measured');
 });
 
+/**
+ * LA PROFONDEUR DU TEMPS (lot 39) dans un vrai navigateur. Le relevé peut être juste et la
+ * fiche muette : ce qui compte est qu'un visiteur parti à l'an 1000 LISE un chiffre. Et la
+ * barre de temps doit encore montrer sa date, ce qu'elle ne faisait pas avant l'an 1000 —
+ * « 500-05-14 » n'est pas une valeur qu'un champ de date accepte, et il se vidait en silence.
+ */
+test('year 1000 is measured, year 2500 for Uranus is not, and the date field holds', async ({
+  page,
+}) => {
+  test.setTimeout(180_000);
+  const source = page.locator('.bi-position-source');
+  const error = page.locator('.bi-position-error');
+
+  // An 1000 : astronomy-engine, et l'écart est celui du millénaire 1000-1999.
+  await openAt(page, 'jupiter', '1000-05-14T00:00:00Z');
+  await expect(source).toContainText('Astronomy Engine', { timeout: 30_000 });
+  await expect(source).toContainText('reconstructed');
+  await expect(error).toContainText('Mean measured gap');
+  await expect(error).toContainText('1000');
+
+  // Uranus en 2500 : la fenêtre est mesurée mais RETENUE (son plancher de substitution est
+  // trop grand devant l'écart), donc la fiche continue de dire qu'elle ne sait pas.
+  await openAt(page, 'uranus', '2500-01-01T00:00:00Z');
+  await expect(source).toContainText('Astronomy Engine', { timeout: 30_000 });
+  await expect(error).toContainText('not measured');
+
+  // An 500 : le champ de date porte encore sa valeur, sur quatre chiffres d'année.
+  await openAt(page, 'earth', '0500-03-04T00:00:00Z');
+  await expect(page.locator('#date-input')).toHaveValue('0500-03-04', {
+    timeout: 30_000,
+  });
+});
+
 test('the Sun has no position row, and the overview closes the card', async ({
   page,
 }) => {

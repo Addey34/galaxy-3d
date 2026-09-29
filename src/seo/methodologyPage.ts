@@ -63,10 +63,16 @@ export interface ValidationRow {
   body: string;
   provider:
     'astronomy-engine' | 'horizons-binary' | 'kepler' | 'spk' | 'production';
-  windowKind: 'fixed' | 'binary' | 'epoch' | 'perihelion';
+  windowKind: 'fixed' | 'binary' | 'epoch' | 'perihelion' | 'deep';
   windowFrom: string;
   windowTo: string;
   windowClipped: boolean;
+  /** Cible Horizons interrogée : le corps, ou le barycentre qui le remplace avant 1600. */
+  target: string | null;
+  /** Biais de cette substitution, mesuré par le témoin du lot 39. Absent sans substitution. */
+  floorKm?: number;
+  /** Raison pour laquelle cette ligne n'a PAS d'écart publié malgré une mesure faite. */
+  floorRefused?: string;
   relative: boolean;
   radiusKm: number | null;
   n: number;
@@ -78,10 +84,27 @@ export interface ValidationRow {
   radii: ValidationStats | null;
 }
 
+/** La substitution de référence des époques profondes, corps par corps (lot 39). */
+export interface DeepReference {
+  target: string;
+  targetName: string;
+  /** Biais mesuré par le chemin RÉELLEMENT emprunté (les deux positions héliocentriques). */
+  floorKm: number;
+  /** Distance géométrique corps ↔ barycentre, demandée à Horizons en une seule fois. */
+  separationMaxKm: number;
+  radiusKm: number | null;
+  insideBody: boolean;
+}
+
 export interface ValidationSummary {
   generatedAt: string;
   samplesPerCase: number;
   spk: { kernel: boolean; enabledInProduction: boolean };
+  deep?: {
+    witnessFrom: string;
+    witnessTo: string;
+    bodies: Record<string, DeepReference>;
+  };
   rows: ValidationRow[];
 }
 
@@ -167,7 +190,12 @@ function q(value: number | null | undefined, locale: DocLocale): string {
     : formatQuantity(value, locale);
 }
 
-const year = (iso: string): string => iso.slice(0, 4);
+/**
+ * Année d'une date ISO, SANS ses zéros de tête : le format en porte quatre (`0001-01-01`), et
+ * « de l'an 0001 à l'an 9999 » se lit mal. La fiche écrit déjà « 1 » de son côté
+ * (`ui/bodyInfo`), et les deux ne peuvent pas diverger.
+ */
+const year = (iso: string): string => String(Number(iso.slice(0, 4)));
 
 /**
  * Valeur EXACTE (un pas en jours, une constante), seulement le separateur decimal traduit.
@@ -804,6 +832,9 @@ function methodologyPage(input: MethodologyInput, locale: DocLocale): DocPage {
       const providerRows = rows.filter(
         (r) =>
           r.provider === provider &&
+          // Les millénaires profonds ont leur propre section, qui porte leur référence et son
+          // plancher : les répéter ici doublerait cent lignes sans leur contexte.
+          r.windowKind !== 'deep' &&
           !(provider === 'horizons-binary' && spacecraftNames.has(r.body)) &&
           !(provider === 'spk' && r.n === 0)
       );
@@ -918,6 +949,286 @@ function methodologyPage(input: MethodologyInput, locale: DocLocale): DocPage {
         detailTables
     )
   );
+
+  // 8c. La profondeur du temps (lot 39)
+  // Tout ce qui suit est DÉRIVÉ du résumé de validation : les millénaires, les bornes, les
+  // planchers, les refus, les corps. Aucun chiffre et aucune liste ne sont saisis ici.
+  const deepRows = rows.filter((r) => r.windowKind === 'deep');
+  if (deepRows.length > 0) {
+    const deepPublished = deepRows.filter((r) => r.km);
+    const deepRefused = deepRows.filter((r) => r.floorRefused);
+    const deepBodies = new Set(deepPublished.map((r) => r.body)).size;
+    const firstYear = year([...deepRows].sort()[0]?.windowFrom ?? '');
+    const lastYear = year(
+      deepRows
+        .map((r) => r.windowTo)
+        .sort()
+        .at(-1) ?? ''
+    );
+    const substituted = Object.entries(summary.deep?.bodies ?? {});
+    // Corps où Horizons n'est pas d'accord avec lui-même : le plancher du chemin réel dépasse
+    // largement la distance géométrique corps ↔ barycentre.
+    const disagreeing = substituted.filter(
+      ([, d]) => d.floorKm > 2 * d.separationMaxKm
+    );
+    const outsideBody = substituted.filter(([, d]) => !d.insideBody);
+    // `PROVIDER_TITLES` ne nomme pas « production », qui n'a pas de ligne profonde : la lecture
+    // est donc partielle et déclarée telle, plutôt que forcée par une conversion de type.
+    const deepProviderTitles: Partial<
+      Record<ValidationRow['provider'], DocText>
+    > = PROVIDER_TITLES;
+    const deepProviderLabel = (provider: ValidationRow['provider']): string =>
+      escapeHtml(
+        L(
+          deepProviderTitles[provider] ?? {
+            en: provider,
+            fr: provider,
+            es: provider,
+            'pt-BR': provider,
+          }
+        )
+      );
+    /** « Uranus et Neptune », pas « Uranus, Neptune » : c'est du texte publié, pas une liste. */
+    const bodyList = (names: readonly string[]): string => {
+      const written = names.map((b) => escapeHtml(name(b, locale)));
+      if (written.length < 2) return written.join('');
+      const last = written.pop()!;
+      const and = L({ en: 'and', fr: 'et', es: 'y', 'pt-BR': 'e' });
+      return `${written.join(', ')} ${and} ${last}`;
+    };
+    /**
+     * Le résumé publie un CODE, pas une phrase : la raison se rédige ici, dans la langue de la
+     * page. Un code inconnu s'affiche tel quel plutôt que de disparaître.
+     */
+    const REFUSAL_REASONS: Record<string, DocText> = {
+      'floor-over-hundredth': {
+        en: 'the floor of the substitution is more than a hundredth of the gap measured there',
+        fr: 'le plancher de la substitution dépasse un centième de l’écart mesuré sur cette fenêtre',
+        es: 'el piso de la sustitución supera una centésima de la diferencia medida en esa ventana',
+        'pt-BR':
+          'o piso da substituição ultrapassa um centésimo da diferença medida nessa janela',
+      },
+    };
+    const refusalReason = (code: string): string => {
+      const text = REFUSAL_REASONS[code];
+      return text ? escapeHtml(L(text)) : escapeHtml(code);
+    };
+    const refusedSentence = L(
+      deepRefused.length === 0
+        ? {
+            en: 'No window is held back for that reason.',
+            fr: 'Aucune fenêtre n’est retenue pour cette raison.',
+            es: 'Ninguna ventana se retiene por ese motivo.',
+            'pt-BR': 'Nenhuma janela é retida por esse motivo.',
+          }
+        : {
+            en: `${deepRefused.length} windows are held back, all on ${bodyList([...new Set(deepRefused.map((r) => r.body))])}, and they are listed above with their floor. There, the info card keeps saying that the gap is not measured, which is true.`,
+            fr: `${deepRefused.length} fenêtres sont retenues, toutes sur ${bodyList([...new Set(deepRefused.map((r) => r.body))])}, et elles sont listées ci-dessus avec leur plancher. La fiche y continue de dire que l’écart n’est pas mesuré, ce qui est vrai.`,
+            es: `${deepRefused.length} ventanas quedan retenidas, todas sobre ${bodyList([...new Set(deepRefused.map((r) => r.body))])}, y están listadas más arriba con su piso. Allí la ficha sigue diciendo que la diferencia no está medida, lo cual es cierto.`,
+            'pt-BR': `${deepRefused.length} janelas ficam retidas, todas sobre ${bodyList([...new Set(deepRefused.map((r) => r.body))])}, e estão listadas acima com o seu piso. Ali a ficha continua a dizer que a diferença não está medida, o que é verdade.`,
+          }
+    );
+    const outsideSentence = L(
+      outsideBody.length === 0
+        ? {
+            en: 'every substituted barycentre falls inside its own body.',
+            fr: 'chaque barycentre substitué tombe dans son propre corps.',
+            es: 'cada baricentro sustituido cae dentro de su propio cuerpo.',
+            'pt-BR':
+              'cada baricentro substituído cai dentro do seu próprio corpo.',
+          }
+        : {
+            en: `the barycentre falls outside the body itself for ${bodyList(outsideBody.map(([b]) => b))}, which is also why the app’s own Horizons service takes that wobble out and puts it back.`,
+            fr: `le barycentre tombe hors du corps lui-même pour ${bodyList(outsideBody.map(([b]) => b))}, ce qui est aussi la raison pour laquelle le service Horizons de l’application retire puis rend ce balancement.`,
+            es: `el baricentro cae fuera del propio cuerpo para ${bodyList(outsideBody.map(([b]) => b))}, lo cual es también la razón por la que el servicio Horizons de la aplicación quita ese bamboleo y luego lo devuelve.`,
+            'pt-BR': `o baricentro cai fora do próprio corpo para ${bodyList(outsideBody.map(([b]) => b))}, o que é também a razão pela qual o serviço Horizons do aplicativo retira esse balanço e depois o devolve.`,
+          }
+    );
+    // Un tableau par source, comme les mesures complètes plus haut : mettre la source en
+    // COLONNE répétait « astronomy-engine (VSOP87 et modèles analytiques) » sur 95 lignes.
+    const deepTables = [...new Set(deepPublished.map((r) => r.provider))]
+      .map((provider) => {
+        const providerRows = deepPublished.filter(
+          (r) => r.provider === provider
+        );
+        return docTable(
+          `${L({
+            en: 'Gap to JPL Horizons, millennium by millennium',
+            fr: 'Écart à JPL Horizons, millénaire par millénaire',
+            es: 'Diferencia con JPL Horizons, milenio a milenio',
+            'pt-BR': 'Diferença para a JPL Horizons, milênio a milênio',
+          })} ${deepProviderLabel(provider)}`,
+          [
+            L({ en: 'Body', fr: 'Corps', es: 'Cuerpo', 'pt-BR': 'Corpo' }),
+            L({
+              en: 'Window',
+              fr: 'Fenêtre',
+              es: 'Ventana',
+              'pt-BR': 'Janela',
+            }),
+            ...kmHeaders,
+            radiiHeader,
+          ],
+          providerRows.map((r) => [
+            escapeHtml(name(r.body, locale)),
+            windowLabel(r),
+            num(r.km?.mean),
+            num(r.km?.p95),
+            num(r.km?.max),
+            num(r.radii?.mean),
+          ]),
+          2
+        );
+      })
+      .join('');
+
+    // Les fenêtres mesurées mais NON publiées restent visibles avec leur raison : une mesure
+    // faite et cachée serait exactement ce que cette page reproche au reste du monde.
+    const refusedTable =
+      deepRefused.length === 0
+        ? ''
+        : docTable(
+            L({
+              en: 'Measured windows held back, and why',
+              fr: 'Fenêtres mesurées et retenues, et pourquoi',
+              es: 'Ventanas medidas y retenidas, y por qué',
+              'pt-BR': 'Janelas medidas e retidas, e por quê',
+            }),
+            [
+              L({ en: 'Body', fr: 'Corps', es: 'Cuerpo', 'pt-BR': 'Corpo' }),
+              L({
+                en: 'Window',
+                fr: 'Fenêtre',
+                es: 'Ventana',
+                'pt-BR': 'Janela',
+              }),
+              L({
+                en: 'Floor (km)',
+                fr: 'Plancher (km)',
+                es: 'Piso (km)',
+                'pt-BR': 'Piso (km)',
+              }),
+              L({
+                en: 'Reason',
+                fr: 'Raison',
+                es: 'Motivo',
+                'pt-BR': 'Motivo',
+              }),
+            ],
+            deepRefused.map((r) => [
+              escapeHtml(name(r.body, locale)),
+              windowLabel(r),
+              num(r.floorKm),
+              refusalReason(r.floorRefused ?? ''),
+            ])
+          );
+    const floorTable = docTable(
+      L({
+        en: 'Deep reference and its floor, per body',
+        fr: 'Référence profonde et son plancher, par corps',
+        es: 'Referencia profunda y su piso, por cuerpo',
+        'pt-BR': 'Referência profunda e o seu piso, por corpo',
+      }),
+      [
+        L({ en: 'Body', fr: 'Corps', es: 'Cuerpo', 'pt-BR': 'Corpo' }),
+        L({
+          en: 'Horizons target',
+          fr: 'Cible Horizons',
+          es: 'Objetivo Horizons',
+          'pt-BR': 'Alvo Horizons',
+        }),
+        L({
+          en: 'Floor along the real path (km)',
+          fr: 'Plancher du chemin réel (km)',
+          es: 'Piso por el camino real (km)',
+          'pt-BR': 'Piso pelo caminho real (km)',
+        }),
+        L({
+          en: 'Geometric body to barycentre distance (km)',
+          fr: 'Distance géométrique corps au barycentre (km)',
+          es: 'Distancia geométrica cuerpo a baricentro (km)',
+          'pt-BR': 'Distância geométrica corpo a baricentro (km)',
+        }),
+        L({
+          en: 'Barycentre inside the body',
+          fr: 'Barycentre dans le corps',
+          es: 'Baricentro dentro del cuerpo',
+          'pt-BR': 'Baricentro dentro do corpo',
+        }),
+      ],
+      substituted.map(([body, d]) => [
+        escapeHtml(name(body, locale)),
+        escapeHtml(d.target),
+        num(d.floorKm),
+        num(d.separationMaxKm),
+        d.insideBody
+          ? L({ en: 'yes', fr: 'oui', es: 'sí', 'pt-BR': 'sim' })
+          : L({ en: 'no', fr: 'non', es: 'no', 'pt-BR': 'não' }),
+      ]),
+      2
+    );
+    sections.push(
+      docSection(
+        'depth-of-time',
+        L({
+          en: 'The depth of time',
+          fr: 'La profondeur du temps',
+          es: 'La profundidad del tiempo',
+          'pt-BR': 'A profundidade do tempo',
+        }),
+        `<p>${L({
+          en: `The clock accepts any date, and the app used to say so honestly: outside the windows measured above, an info card reads “gap to JPL Horizons not measured at this date”. It is measured now, one millennium at a time, from year ${firstYear} to year ${lastYear}: ${deepPublished.length} windows over ${deepBodies} bodies. Nothing changed in the interface. The card already named the window next to the figure; it now has one to name.`,
+          fr: `L’horloge accepte n’importe quelle date, et l’application le disait honnêtement : hors des fenêtres mesurées plus haut, une fiche affiche « écart à JPL Horizons non mesuré à cette date ». C’est mesuré désormais, millénaire par millénaire, de l’an ${firstYear} à l’an ${lastYear} : ${deepPublished.length} fenêtres sur ${deepBodies} corps. Rien n’a changé dans l’interface. La fiche nommait déjà la fenêtre à côté du chiffre ; elle en a maintenant une à nommer.`,
+          es: `El reloj acepta cualquier fecha, y la aplicación lo decía honestamente: fuera de las ventanas medidas más arriba, una ficha muestra «diferencia con JPL Horizons no medida en esta fecha». Ahora está medida, milenio a milenio, del año ${firstYear} al año ${lastYear}: ${deepPublished.length} ventanas sobre ${deepBodies} cuerpos. Nada cambió en la interfaz. La ficha ya nombraba la ventana junto a la cifra; ahora tiene una que nombrar.`,
+          'pt-BR': `O relógio aceita qualquer data, e o aplicativo dizia isso honestamente: fora das janelas medidas acima, uma ficha mostra “diferença para a JPL Horizons não medida nesta data”. Agora ela está medida, milênio a milênio, do ano ${firstYear} ao ano ${lastYear}: ${deepPublished.length} janelas sobre ${deepBodies} corpos. Nada mudou na interface. A ficha já nomeava a janela ao lado do número; agora ela tem uma para nomear.`,
+        })}</p><p>${L({
+          en: `Two measured limits close that window, and neither one is a choice. The Horizons API serves the bodies of the DE441 planetary ephemeris from 15 March 9999 BC to 30 December 9999 AD, and refuses anything beyond. And an HTML date field cannot write a negative year, so the app cannot display a date before year 1, even though its clock reaches one.`,
+          fr: `Deux bornes mesurées ferment cette fenêtre, et aucune n’est un choix. L’API Horizons sert les corps de l’éphéméride planétaire DE441 du 15 mars 9999 av. J.-C. au 30 décembre 9999, et refuse au-delà. Et un champ de date HTML ne sait pas écrire une année négative : l’application ne peut donc pas afficher une date avant l’an 1, même si son horloge y va.`,
+          es: `Dos límites medidos cierran esa ventana, y ninguno es una elección. La API Horizons sirve los cuerpos de la efeméride planetaria DE441 del 15 de marzo de 9999 a. C. al 30 de diciembre de 9999, y rechaza más allá. Y un campo de fecha HTML no sabe escribir un año negativo: la aplicación no puede mostrar una fecha anterior al año 1, aunque su reloj llegue allí.`,
+          'pt-BR': `Dois limites medidos fecham essa janela, e nenhum deles é uma escolha. A API Horizons serve os corpos da efeméride planetária DE441 de 15 de março de 9999 a.C. a 30 de dezembro de 9999, e recusa além disso. E um campo de data HTML não sabe escrever um ano negativo: o aplicativo não pode mostrar uma data anterior ao ano 1, embora o seu relógio chegue lá.`,
+        })}</p>` +
+          `<details class="doc-details"><summary>${escapeHtml(
+            L({
+              en: 'Gap to JPL Horizons, millennium by millennium',
+              fr: 'Écart à JPL Horizons, millénaire par millénaire',
+              es: 'Diferencia con JPL Horizons, milenio a milenio',
+              'pt-BR': 'Diferença para a JPL Horizons, milênio a milênio',
+            })
+          )} (${deepPublished.length})</summary>${deepTables}</details>` +
+          `<p>${L({
+            en: `Before 1600 the API refuses the centre of a planet, because that centre comes from a satellite theory fitted over a bounded span. It serves the barycentre of that planet’s system instead, which comes from DE441. The deep windows of ${substituted.length} bodies are therefore measured against that barycentre, and the substitution has a floor: the same source, at the same dates, measured against the body and against its barycentre where Horizons serves both (${escapeHtml(summary.deep?.witnessFrom ?? '')} to ${escapeHtml(summary.deep?.witnessTo ?? '')}). The largest difference between the two is the bias it introduces.`,
+            fr: `Avant 1600, l’API refuse le centre d’une planète, parce que ce centre vient d’une théorie de satellites ajustée sur une plage bornée. Elle sert à la place le barycentre du système de cette planète, qui vient de DE441. Les fenêtres profondes de ${substituted.length} corps sont donc mesurées contre ce barycentre, et la substitution a un plancher : la même source, aux mêmes dates, mesurée contre le corps et contre son barycentre là où Horizons sert les deux (du ${escapeHtml(summary.deep?.witnessFrom ?? '')} au ${escapeHtml(summary.deep?.witnessTo ?? '')}). La plus grande différence entre les deux est le biais qu’elle introduit.`,
+            es: `Antes de 1600, la API rechaza el centro de un planeta, porque ese centro proviene de una teoría de satélites ajustada sobre un intervalo acotado. Sirve en su lugar el baricentro del sistema de ese planeta, que viene de DE441. Las ventanas profundas de ${substituted.length} cuerpos se miden por tanto contra ese baricentro, y la sustitución tiene un piso: la misma fuente, en las mismas fechas, medida contra el cuerpo y contra su baricentro allí donde Horizons sirve ambos (del ${escapeHtml(summary.deep?.witnessFrom ?? '')} al ${escapeHtml(summary.deep?.witnessTo ?? '')}). La mayor diferencia entre las dos es el sesgo que introduce.`,
+            'pt-BR': `Antes de 1600, a API recusa o centro de um planeta, porque esse centro vem de uma teoria de satélites ajustada sobre um intervalo limitado. Ela serve no lugar o baricentro do sistema daquele planeta, que vem do DE441. As janelas profundas de ${substituted.length} corpos são portanto medidas contra esse baricentro, e a substituição tem um piso: a mesma fonte, nas mesmas datas, medida contra o corpo e contra o seu baricentro onde a Horizons serve os dois (de ${escapeHtml(summary.deep?.witnessFrom ?? '')} a ${escapeHtml(summary.deep?.witnessTo ?? '')}). A maior diferença entre as duas é o viés que ela introduz.`,
+          })}</p>` +
+          floorTable +
+          (disagreeing.length === 0
+            ? ''
+            : `<p>${L({
+                en: `For ${bodyList(disagreeing.map(([b]) => b))} the two columns do not agree, and the difference is not ours. Horizons is not consistent with itself on those bodies: the barycentre it serves as a target and the one implied by the body’s own ephemeris are not the same point, and they coincide around the single Voyager 2 flyby that characterised each of those systems. The floor that counts is the one along the path actually taken, and that is the one applied.`,
+                fr: `Pour ${bodyList(disagreeing.map(([b]) => b))}, les deux colonnes ne s’accordent pas, et l’écart n’est pas le nôtre. Horizons n’est pas cohérent avec lui-même sur ces corps : le barycentre qu’il sert comme cible et celui qu’implique l’éphéméride du corps ne sont pas le même point, et ils coïncident autour du survol unique de Voyager 2 qui a caractérisé chacun de ces systèmes. Le plancher qui compte est celui du chemin réellement emprunté, et c’est lui qui est appliqué.`,
+                es: `Para ${bodyList(disagreeing.map(([b]) => b))} las dos columnas no coinciden, y la diferencia no es nuestra. Horizons no es coherente consigo misma en esos cuerpos: el baricentro que sirve como objetivo y el que implica la efeméride del cuerpo no son el mismo punto, y coinciden en torno al único sobrevuelo de la Voyager 2 que caracterizó cada uno de esos sistemas. El piso que cuenta es el del camino realmente recorrido, y es el que se aplica.`,
+                'pt-BR': `Para ${bodyList(disagreeing.map(([b]) => b))} as duas colunas não concordam, e a diferença não é nossa. A Horizons não é coerente consigo mesma nesses corpos: o baricentro que ela serve como alvo e o que a efeméride do corpo implica não são o mesmo ponto, e eles coincidem em torno do único sobrevoo da Voyager 2 que caracterizou cada um desses sistemas. O piso que conta é o do caminho realmente percorrido, e é ele que se aplica.`,
+              })}</p>`) +
+          (refusedTable === ''
+            ? ''
+            : `<details class="doc-details"><summary>${escapeHtml(
+                L({
+                  en: 'Measured windows held back, and why',
+                  fr: 'Fenêtres mesurées et retenues, et pourquoi',
+                  es: 'Ventanas medidas y retenidas, y por qué',
+                  'pt-BR': 'Janelas medidas e retidas, e por quê',
+                })
+              )} (${deepRefused.length})</summary>${refusedTable}</details>`) +
+          `<p>${L({
+            en: `A window is published only when its floor stays below a hundredth of the gap measured there, well under the resolution of the two significant digits an info card shows. ${refusedSentence} The body’s radius decides nothing here, but it is worth knowing: ${outsideSentence}`,
+            fr: `Une fenêtre n’est publiée que si son plancher reste sous un centième de l’écart qui y est mesuré, bien en deçà de la résolution des deux chiffres significatifs qu’affiche une fiche. ${refusedSentence} Le rayon du corps ne décide de rien ici, mais il vaut d’être connu : ${outsideSentence}`,
+            es: `Una ventana solo se publica si su piso se mantiene por debajo de una centésima de la diferencia medida allí, muy por debajo de la resolución de las dos cifras significativas que muestra una ficha. ${refusedSentence} El radio del cuerpo no decide nada aquí, pero vale la pena conocerlo: ${outsideSentence}`,
+            'pt-BR': `Uma janela só é publicada se o seu piso ficar abaixo de um centésimo da diferença medida ali, bem abaixo da resolução dos dois algarismos significativos que uma ficha mostra. ${refusedSentence} O raio do corpo não decide nada aqui, mas vale a pena saber: ${outsideSentence}`,
+          })}</p>`
+      )
+    );
+  }
 
   // 8b. Ce que dit une date
   // Les LIBELLÉS viennent du dictionnaire de l'application : la page et la fiche ne peuvent pas

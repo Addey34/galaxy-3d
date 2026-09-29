@@ -121,13 +121,13 @@ export function positionProduct(
     liveToleranceMs: LIVE_TOLERANCE_MS,
   };
   if (computesAnyDate(source)) {
-    product.measured =
-      windows.length === 0
-        ? NEVER_MEASURED
-        : {
-            from: Math.min(...windows.map((w) => w.from)),
-            to: Math.max(...windows.map((w) => w.to)),
-          };
+    // LA FENÊTRE QUI CONTIENT CETTE DATE, jamais l'enveloppe de toutes. L'enveloppe
+    // [min, max] tenait tant que les fenêtres d'un corps étaient emboîtées ; depuis que la
+    // profondeur du temps les pave millénaire par millénaire (lot 39), une fenêtre absente
+    // — un plancher de substitution refusé, une référence indisponible — laisse un TROU, et
+    // l'enveloppe le déclarait mesuré. La fiche aurait alors annoncé « reconstruit » sans
+    // pouvoir citer le moindre écart : mesuré et muet à la fois.
+    product.measured = measuredErrorAt(windows, date) ?? NEVER_MEASURED;
   }
   return product;
 }

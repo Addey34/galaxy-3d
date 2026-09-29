@@ -1,20 +1,26 @@
 {
   "$comment": "Cibles de validation Horizons — DONNÉE lue par validate-against-horizons.mjs. targets : clé du catalogue → command Horizons (« ; » final UNIQUEMENT pour un numéro de petit corps, cf. le piège « 699; ») + expect (fragment que le nom renvoyé doit contenir). centers : clé de centre → identifiant Horizons. Ajouter un corps au catalogue = l'ajouter ici, sans toucher au script.",
+  "$comment.deep": "deep : la cible de référence AVANT 1600, quand l'API refuse le corps lui-même (lot 39). MESURÉ le 2026-09-29, pas supposé : l'API sert « Jupiter » à partir du 1600-01-10, « Saturne » du 1749-12-30, « Neptune » et « Pluton » du 1800-01-01, parce que le centre d'une planète vient de sa théorie de satellites, bornée ; son BARYCENTRE vient de DE441 et remonte au 9999-MAR-15 av. J.-C. Mercure, Vénus, la Terre et la Lune sont dans DE441 même, donc leur cible profonde EST le corps : aucune substitution, aucun plancher. Un corps sans « deep » n'a pas de référence profonde et n'est pas mesuré là : Cérès et Éris sont refusées avant le 1599-12-10 (intégration de petit corps), Io avant le 1600-01-10 et Charon avant le 1800-01-02. expect est OBLIGATOIRE sur un deep qui substitue, sinon « Jupiter Barycenter » passerait le contrôle par défaut qui ne cherche que « jupiter ». Le PLANCHER de la substitution (écart corps ↔ barycentre) n'est pas écrit ici : le script le MESURE à chaque exécution.",
   "targets": {
     "mercury": {
-      "command": "199"
+      "command": "199",
+      "deep": { "command": "199", "expect": "mercury" }
     },
     "venus": {
-      "command": "299"
+      "command": "299",
+      "deep": { "command": "299", "expect": "venus" }
     },
     "earth": {
-      "command": "399"
+      "command": "399",
+      "deep": { "command": "399", "expect": "earth" }
     },
     "moon": {
-      "command": "301"
+      "command": "301",
+      "deep": { "command": "301", "expect": "moon" }
     },
     "mars": {
-      "command": "499"
+      "command": "499",
+      "deep": { "command": "4", "expect": "mars barycenter" }
     },
     "phobos": {
       "command": "401"
@@ -23,7 +29,8 @@
       "command": "402"
     },
     "jupiter": {
-      "command": "599"
+      "command": "599",
+      "deep": { "command": "5", "expect": "jupiter barycenter" }
     },
     "io": {
       "command": "501"
@@ -41,7 +48,8 @@
       "command": "505"
     },
     "saturn": {
-      "command": "699"
+      "command": "699",
+      "deep": { "command": "6", "expect": "saturn barycenter" }
     },
     "mimas": {
       "command": "601"
@@ -68,7 +76,8 @@
       "command": "608"
     },
     "uranus": {
-      "command": "799"
+      "command": "799",
+      "deep": { "command": "7", "expect": "uranus barycenter" }
     },
     "ariel": {
       "command": "701"
@@ -86,7 +95,8 @@
       "command": "705"
     },
     "neptune": {
-      "command": "899"
+      "command": "899",
+      "deep": { "command": "8", "expect": "neptune barycenter" }
     },
     "triton": {
       "command": "801"
@@ -98,7 +108,8 @@
       "command": "808"
     },
     "pluto": {
-      "command": "999"
+      "command": "999",
+      "deep": { "command": "9", "expect": "pluto barycenter" }
     },
     "charon": {
       "command": "901"
