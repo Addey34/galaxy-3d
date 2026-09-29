@@ -320,6 +320,7 @@ export const fr: Record<MessageKey, string> = {
   'settings.group.orbit.aria': 'Afficher toutes les orbites : {group}',
   'settings.exposure': 'Luminosité (exposition)',
   'settings.colorblind': 'Couleurs d’orbite adaptées au daltonisme',
+  'settings.gazetteer': 'Noms des formations (UAI)',
   'settings.surfaceImagery': 'Streamer l’imagerie de surface haute résolution',
   'surface.imagery.headline': '{title} à {resolution}/pixel',
   'surface.imagery.acquired': 'images de {from} à {to}',

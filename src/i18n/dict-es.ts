@@ -331,6 +331,7 @@ export const es: Record<MessageKey, string> = {
   'settings.group.orbit.aria': 'Mostrar todas las órbitas: {group}',
   'settings.exposure': 'Brillo (exposición)',
   'settings.colorblind': 'Colores de órbita adaptados al daltonismo',
+  'settings.gazetteer': 'Nombres de las formaciones (UAI)',
   'settings.surfaceImagery':
     'Transmitir la imagen de superficie de alta resolución',
   'surface.imagery.headline': '{title} a {resolution}/píxel',

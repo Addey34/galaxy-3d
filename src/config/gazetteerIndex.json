@@ -1,0 +1,163 @@
+{
+ "convention": {
+  "longitude": "east 0-360 degrees, as the IAU GIS download page states for its KML files",
+  "latitude": "planetocentric",
+  "source": "https://planetarynames.wr.usgs.gov/GIS_Downloads"
+ },
+ "provider": {
+  "publisher": "International Astronomical Union Working Group for Planetary System Nomenclature",
+  "title": "Gazetteer of Planetary Nomenclature",
+  "url": "https://planetarynames.wr.usgs.gov/",
+  "rights": "public-domain",
+  "rightsStatedAt": "https://planetarynames.wr.usgs.gov/Page/FAQ",
+  "rightsQuote": "Everything in the Gazetteer of Planetary Nomenclature is in the public domain.",
+  "citation": "International Astronomical Union Working Group for Planetary System Nomenclature. \"Gazetteer of Planetary Nomenclature.\" https://planetarynames.wr.usgs.gov/",
+  "accessed": "2026-09-29"
+ },
+ "bodies": {
+  "amalthea": {
+   "count": 4,
+   "bytes": 794
+  },
+  "ariel": {
+   "count": 26,
+   "bytes": 4791
+  },
+  "bennu": {
+   "count": 36,
+   "bytes": 9937
+  },
+  "callisto": {
+   "count": 154,
+   "bytes": 26317
+  },
+  "ceres": {
+   "count": 149,
+   "bytes": 31607
+  },
+  "charon": {
+   "count": 15,
+   "bytes": 5091
+  },
+  "deimos": {
+   "count": 2,
+   "bytes": 370
+  },
+  "dione": {
+   "count": 98,
+   "bytes": 19975
+  },
+  "enceladus": {
+   "count": 87,
+   "bytes": 19462
+  },
+  "eros": {
+   "count": 41,
+   "bytes": 9415
+  },
+  "europa": {
+   "count": 129,
+   "bytes": 25410
+  },
+  "ganymede": {
+   "count": 196,
+   "bytes": 37441
+  },
+  "hyperion": {
+   "count": 5,
+   "bytes": 932
+  },
+  "iapetus": {
+   "count": 70,
+   "bytes": 14646
+  },
+  "ida": {
+   "count": 25,
+   "bytes": 4472
+  },
+  "io": {
+   "count": 260,
+   "bytes": 49515
+  },
+  "itokawa": {
+   "count": 17,
+   "bytes": 3508
+  },
+  "mars": {
+   "count": 2052,
+   "bytes": 370755
+  },
+  "mercury": {
+   "count": 614,
+   "bytes": 125615
+  },
+  "mimas": {
+   "count": 42,
+   "bytes": 8422
+  },
+  "miranda": {
+   "count": 18,
+   "bytes": 3482
+  },
+  "moon": {
+   "count": 9087,
+   "bytes": 1872929
+  },
+  "nix": {
+   "count": 2,
+   "bytes": 353
+  },
+  "oberon": {
+   "count": 10,
+   "bytes": 1870
+  },
+  "phobos": {
+   "count": 20,
+   "bytes": 4536
+  },
+  "pluto": {
+   "count": 73,
+   "bytes": 20515
+  },
+  "proteus": {
+   "count": 1,
+   "bytes": 167
+  },
+  "rhea": {
+   "count": 144,
+   "bytes": 31015
+  },
+  "ryugu": {
+   "count": 13,
+   "bytes": 3870
+  },
+  "tethys": {
+   "count": 53,
+   "bytes": 9550
+  },
+  "titan": {
+   "count": 304,
+   "bytes": 60959
+  },
+  "titania": {
+   "count": 18,
+   "bytes": 3441
+  },
+  "triton": {
+   "count": 63,
+   "bytes": 11324
+  },
+  "umbriel": {
+   "count": 13,
+   "bytes": 2364
+  },
+  "venus": {
+   "count": 1985,
+   "bytes": 358460
+  },
+  "vesta": {
+   "count": 106,
+   "bytes": 23268
+  }
+ }
+}

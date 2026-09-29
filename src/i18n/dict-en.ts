@@ -345,6 +345,7 @@ export const en = {
   'settings.group.orbit.aria': 'Show every orbit in {group}',
   'settings.exposure': 'Brightness (exposure)',
   'settings.colorblind': 'Color-blind friendly orbit colors',
+  'settings.gazetteer': 'Surface feature names (IAU)',
   'settings.surfaceImagery': 'Stream high-resolution surface imagery',
   'surface.imagery.headline': '{title} at {resolution}/pixel',
   'surface.imagery.acquired': 'images from {from} to {to}',

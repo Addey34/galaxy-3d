@@ -327,6 +327,7 @@ export const ptBR: Record<MessageKey, string> = {
   'settings.group.orbit.aria': 'Mostrar todas as órbitas: {group}',
   'settings.exposure': 'Brilho (exposição)',
   'settings.colorblind': 'Cores de órbita adaptadas ao daltonismo',
+  'settings.gazetteer': 'Nomes das formações (UAI)',
   'settings.surfaceImagery':
     'Transmitir a imagem de superfície em alta resolução',
   'surface.imagery.headline': '{title} a {resolution}/pixel',
