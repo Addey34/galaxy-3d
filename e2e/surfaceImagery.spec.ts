@@ -616,3 +616,63 @@ for (const { body, layer, extension } of [
     await expect(badge.locator('.si-credit')).toContainText('NASA');
     expect(errors, `Erreurs page : ${errors.join(' | ')}`).toEqual([]);
   });
+
+/**
+ * MARS — le relief mesuré au-delà de la Lune, prouvé dans un navigateur.
+ *
+ * Le lot 33 a cuit un socle MOLA pour Mars, et un champ de hauteurs qu'aucun navigateur
+ * n'exerce est un champ dont personne ne sait s'il se pose : c'est la leçon du lot 27, où trois
+ * corps ont reçu de l'imagerie et un seul un scénario.
+ *
+ * Ce que ce scénario ajoute à celui de la Lune, et qui est précisément ce qui DIFFÈRE :
+ *
+ *   - une autre source, MOLA et non LOLA, nommée par le bandeau ;
+ *   - une source GROS-BOUTISTE, là où LOLA est petit-boutiste. C'est le défaut que ce lot a
+ *     corrigé : lu dans l'ordre de la machine, le socle martien sortait avec un pôle nord à
+ *     22 496 m et des altitudes saturées, c'est-à-dire du bruit plausible. Une altitude servie
+ *     qui retombe dans la plage publiée de MOLA est donc une vérification de l'ordre des octets,
+ *     pas seulement de la présence du relief.
+ */
+test('displaces Mars with MOLA altitudes, in the published range', async ({
+  page,
+}) => {
+  const errors: string[] = [];
+  page.on('pageerror', (err) => errors.push(err.message));
+  await serveTiles(page);
+  const heightRequests: string[] = [];
+  page.on('request', (request) => {
+    if (request.url().includes('/height-tiles/'))
+      heightRequests.push(request.url());
+  });
+
+  await boot(page, '?debug-surface&mode=explo&body=mars');
+  const probe = page.locator('#surface-probe');
+  await expect(probe).toContainText('mars', { timeout: 30_000 });
+  await zoomIn(page);
+
+  const badge = page.locator('#surface-imagery');
+  await expect(badge).toBeVisible({ timeout: 30_000 });
+  await expect(badge).toHaveAttribute('data-relief', /\d+/, {
+    timeout: 30_000,
+  });
+  await expect(badge.locator('.si-relief')).toContainText('MOLA');
+  await expect(badge.locator('.si-relief')).toContainText('altimetry from');
+
+  expect(
+    heightRequests.length,
+    'aucune tuile de hauteurs demandée en approche'
+  ).toBeGreaterThan(0);
+  for (const url of heightRequests)
+    expect(url).toContain('/height-tiles/mars/');
+
+  // L'ALTITUDE SERVIE RETOMBE DANS CE QUE MOLA PUBLIE : de −8 183 m (Hellas) à +21 178 m
+  // (Olympus Mons) sur la grille à 32 px/degré. Des octets inversés donnaient ±32 768.
+  const text = (await probe.textContent()) ?? '';
+  const altitude = Number(/([-\d.]+)\s*m\b/.exec(text)?.[1]);
+  if (Number.isFinite(altitude)) {
+    expect(altitude).toBeGreaterThan(-9000);
+    expect(altitude).toBeLessThan(22000);
+  }
+
+  expect(errors, `Erreurs page : ${errors.join(' | ')}`).toEqual([]);
+});
