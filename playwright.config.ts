@@ -27,6 +27,13 @@ import { defineConfig, devices } from '@playwright/test';
  */
 export default defineConfig({
   testDir: './e2e',
+  /**
+   * Les scénarios des pages GÉNÉRÉES vivent dans `e2e/` — donc dans le périmètre de `pnpm format`
+   * et d'ESLint — mais pas dans cette suite : ils demandent un BUILD, que le job e2e ne fait pas.
+   * Ils sont joués par `pnpm test:pages` (`playwright.pages.config.ts`), depuis le job `verify`
+   * qui construit déjà. Le partage se fait par motif de nom, jamais par un dossier à part.
+   */
+  testIgnore: '**/built-*.spec.ts',
   // Un seul worker : toute la suite partage un serveur Vite unique (une seule app WebGL) ;
   // le parallélisme provoquait des timeouts de chargement sous contention.
   fullyParallel: false,

@@ -32,6 +32,24 @@ pression permanente à dégrader les textures pour financer autre chose. Contrat
 `docs/ARCHITECTURE.md` § « Le budget du démarrage, famille par famille » ; la méthode de mesure est
 `pnpm budget:measure`, jamais un paragraphe.
 
+### Les pages GÉNÉRÉES ont leur propre suite
+
+`/methodology`, `/sources` et les pages de corps ne naissent qu'au BUILD : le serveur de
+développement que lance `playwright.config.ts` ne les sert pas, et `e2e/bodyLanding.spec.ts`
+teste l'application ouverte sur un CHEMIN, jamais la page elle-même. Elles ont donc leur config,
+`playwright.pages.config.ts`, qui sert `dist/` par `vite preview` et ne prend que
+`e2e/built-*.spec.ts` — la config principale l'ignore par le même motif.
+
+`pnpm test:pages`. Le fichier reste dans `e2e/`, donc dans le périmètre de `pnpm format` et
+d'ESLint ; un dossier à part en sortirait. En CI ces scénarios tournent dans le job **`verify`**,
+qui construit déjà, et non dans le job e2e, qui est shardé sur six machines sans build.
+
+**Ces scénarios portent un TÉMOIN, et ce n'est pas décoratif** : `vite preview` replie tout chemin
+inconnu sur la coquille de l'application, exactement comme la réécriture SPA de Firebase. Une page
+absente est donc servie en HTTP 200 avec du HTML valide. Chaque page est identifiée par son `<h1>`
+LU dans le fichier construit, et un scénario dédié exige qu'un chemin jamais existé rende une
+coquille DISTINGUABLE de toutes les pages générées.
+
 ## Règles
 
 - Toute logique mathématique, catalogue, horloge ou état déterministe reçoit un test Vitest voisin.
