@@ -79,11 +79,6 @@ export function instrumentProvenance(): {
     : null;
 }
 
-/** Le registre du PDS ne déclare rien sur cette sonde, et c'est MESURÉ, pas déduit d'un silence. */
-export function isArchiveAbsent(spacecraft: string): boolean {
-  return index ? spacecraft in index.absent : false;
-}
-
 const archives = new Map<string, SpacecraftArchive>();
 const failed = new Set<string>();
 

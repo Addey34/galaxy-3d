@@ -148,6 +148,50 @@ test('un CORPS du catalogue n’affiche aucun bloc instruments, et n’en demand
   expect(asked, `demandé pour un corps : ${asked.join(', ')}`).toEqual([]);
 });
 
+test('revenir sur une SONDE déjà vue réaffiche son bloc', async ({ page }) => {
+  /**
+   * LE SEUL SCÉNARIO QUI ATTRAPE LA MAUVAISE FORME DU RACCOURCI, et il a fallu le mesurer pour le
+   * savoir. Le bloc retient la fiche dont il sait qu'elle n'a RIEN à montrer, pour ne pas
+   * redemander son archive toutes les 500 ms indéfiniment (19 appels en 10 s avant la correction,
+   * 0 après). La première forme que j'avais écrite retenait « la réponse est arrivée » et la
+   * confrontait à `!state` : fermer la fiche remettant `state` à `null` sans rien dire de
+   * l'archive, une sonde qui EN A une revoyait son bloc masqué en revenant. J'ai POSÉ cette
+   * variante boguée : les six autres scénarios sont restés VERTS. Celui-ci rougit.
+   */
+  await boot(page, '?body=voyager1');
+  const instruments = block(page);
+  await expect(instruments).toBeVisible({ timeout: 15_000 });
+  await instruments.locator('summary').click();
+  const before = await instruments.locator('.bi-instruments-lid').count();
+  expect(before).toBeGreaterThan(0);
+
+  /**
+   * LE DÉTOUR PAR LA VUE GLOBALE, et c'est LE chemin qui compte — il a fallu deux mesures pour le
+   * trouver. Seul le retour à la vue globale appelle `bodyInfo.hide()`, qui remet le corps courant
+   * à `null` (`src/ui/bodyInfo.ts`) ; ouvrir la palette ne le fait PAS, elle masque la fiche par
+   * l'autre mécanisme et `currentBody()` garde sa valeur. C'est donc ici, et nulle part ailleurs,
+   * que la mauvaise forme du raccourci laisserait le bloc d'une sonde masqué en revenant.
+   */
+  await page.locator('#body-search-trigger').click();
+  await page.locator('#orbit-overview').click();
+  await expect(instruments).toBeHidden();
+  await page.locator('#body-search-trigger').click();
+  await page.locator('#orbit-voyager1').click();
+  await expect(instruments).toBeVisible({ timeout: 15_000 });
+  await instruments.locator('summary').click();
+  await expect(instruments.locator('.bi-instruments-lid')).toHaveCount(before);
+
+  // Et l'aller-retour par un AUTRE corps, qui est l'autre parcours réel.
+  await page.locator('#body-search-trigger').click();
+  await page.locator('#orbit-titan').click();
+  await expect(instruments).toBeHidden();
+  await page.locator('#body-search-trigger').click();
+  await page.locator('#orbit-voyager1').click();
+  await expect(instruments).toBeVisible({ timeout: 15_000 });
+  await instruments.locator('summary').click();
+  await expect(instruments.locator('.bi-instruments-lid')).toHaveCount(before);
+});
+
 test('garde un porteur SANS instrument, témoin BepiColombo', async ({
   page,
 }) => {

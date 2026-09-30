@@ -115,6 +115,22 @@ test('revenir sur un corps déjà vu réaffiche son bloc', async ({ page }) => {
   await expect(block(page)).toBeVisible({ timeout: 15_000 });
   await expect(block(page).locator('li')).toHaveCount(titan);
   await expect(block(page)).toContainText('Cassini-Huygens');
+
+  /**
+   * LE DÉTOUR PAR LA VUE GLOBALE, ajouté au lot 42, et c'est LE chemin qui discrimine. Seul le
+   * retour à la vue globale appelle `bodyInfo.hide()`, qui remet le corps courant à `null` ;
+   * ouvrir la palette ne le fait PAS. Ce lot a ajouté un raccourci qui retient la fiche dont on
+   * sait qu'elle n'a rien à montrer, pour ne pas redemander sa liste toutes les 500 ms
+   * indéfiniment, et sa MAUVAISE forme laisserait ici le bloc masqué en revenant. Mesuré : sans
+   * ces six lignes, cette variante passe les six scénarios de ce fichier.
+   */
+  await page.locator('#body-search-trigger').click();
+  await page.locator('#orbit-overview').click();
+  await expect(block(page)).toBeHidden();
+  await page.locator('#body-search-trigger').click();
+  await page.locator('#orbit-titan').click();
+  await expect(block(page)).toBeVisible({ timeout: 15_000 });
+  await expect(block(page).locator('li')).toHaveCount(titan);
 });
 
 test('une SONDE n’affiche aucun bloc missions, et n’en demande pas la liste', async ({

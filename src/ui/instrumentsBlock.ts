@@ -23,7 +23,11 @@ import {
   loadInstrumentIndex,
   loadSpacecraftArchive,
 } from '@/config/instruments';
-import { groupByHost, type SpacecraftArchive } from '@/core/instruments';
+import {
+  groupByHost,
+  type HostGroup,
+  type SpacecraftArchive,
+} from '@/core/instruments';
 import { missionStanding, type MissionStanding } from '@/core/missions';
 import { formatIsoDay } from '@/core/dateText';
 import { getLocale, intlLocale, onLocaleChange, t } from '@/i18n';
@@ -56,11 +60,23 @@ export function setupInstrumentsBlock(
   let rendered: string | null = null;
   let renderedDay = '';
   let state: State = null;
+  /**
+   * LA FICHE DONT ON SAIT DÉJÀ QU'ELLE N'A RIEN À MONTRER. Sans elle, `sync` redemande l'archive
+   * TOUTES LES 500 ms, indéfiniment, dès qu'une fiche n'en a pas — c'est-à-dire sur les 58 corps du
+   * catalogue, donc le cas le plus commun. La même correction est portée à `missionsBlock`, où la
+   * boucle existe depuis le lot 40.
+   *
+   * Elle ne retient QUE le cas vide, et c'est délibéré : une variable « la réponse est arrivée »
+   * confrontée à `!state` introduirait un défaut, parce que fermer la fiche remet `state` à `null`
+   * sans rien dire de l'archive — une sonde qui EN A une reverrait alors son bloc masqué en
+   * rouvrant. Trouvé en traçant la correction avant de l'appliquer.
+   */
+  let nothingToShow: string | null = null;
 
   /** Une liste d'instruments, éventuellement précédée du nom de son porteur. */
   const appendInstruments = (
     into: HTMLElement,
-    group: ReturnType<typeof groupByHost>['groups'][number] | null,
+    group: HostGroup | null,
     instruments: SpacecraftArchive['instruments'],
     withHost: boolean
   ): void => {
@@ -193,6 +209,10 @@ export function setupInstrumentsBlock(
       state = null;
       return;
     }
+    if (nothingToShow === current) {
+      block.hidden = true;
+      return;
+    }
     const sceneDay = api.orbitalMechanics.simulationDate
       .toISOString()
       .slice(0, 10);
@@ -211,7 +231,13 @@ export function setupInstrumentsBlock(
     void Promise.all([loadInstrumentIndex(), loadSpacecraftArchive(current)])
       .then(([, archive]) => {
         // La fiche a pu changer pendant le vol : on ne rend que ce qui est demandé.
-        if (bodyInfo.currentBody() !== current || !archive) return;
+        if (bodyInfo.currentBody() !== current) return;
+        if (!archive) {
+          // Ce n'est pas une sonde : la réponse est définitive, on ne la redemandera pas.
+          nothingToShow = current;
+          block.hidden = true;
+          return;
+        }
         state = archive;
         render(current, api.orbitalMechanics.simulationDate);
       })
