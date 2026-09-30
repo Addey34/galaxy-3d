@@ -3120,6 +3120,18 @@ ne NOMME ni ne GENRE rien, « cette mission » serait faux pour le JWST, qui est
 déclare AUCUN instrument garde sa place dans le rendu : c'est MMO, et le masquer ferait disparaître
 un tiers de la sonde. Le nom du porteur n'est montré que quand la sonde en a plusieurs.
 
+**UNE BOUCLE DE 500 ms, TROUVÉE EN RELISANT LE DIFF COMMITÉ ET MESURÉE.** Quand la réponse est
+« rien à montrer », `sync` la redemandait toutes les 500 ms, indéfiniment — donc sur les 58 corps du
+catalogue, qui sont le cas commun. Compteur temporaire : **19 appels en 10 s avant, 0 après**, une
+seule chose changée entre les deux séries. La même structure vit dans `missionsBlock` depuis le
+lot 40, où elle frappe les 11 sondes, et elle est corrigée aux DEUX endroits. La variable ne retient
+que le cas VIDE, et c'est un choix : un drapeau « la réponse est arrivée » confronté à `!state`
+introduirait un défaut, parce que le retour à la vue globale efface `state` sans rien dire de
+l'archive. **Le chemin qui discrimine a demandé trois essais et deux mesures** : `toBeHidden()` est
+vrai dès qu'un ANCÊTRE est masqué, et seul le retour à `#orbit-overview` remet le corps courant à
+`null` — ouvrir la palette masque la fiche par l'autre mécanisme en gardant `currentBody()`. Sans ce
+détour, la variante boguée passe les six scénarios de chaque fichier.
+
 **LES GARDES, ET CE QU'ELLES ONT TROUVÉ.** `src/core/instruments.test.ts`,
 `src/config/instruments.test.ts` (sept falsifications, toutes rouges), `e2e/instruments.spec.ts`,
 quatre scénarios axe + 390 px sur la fiche d'une SONDE (`e2e/a11y-audit.spec.ts` : les scénarios
