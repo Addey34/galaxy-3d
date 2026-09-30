@@ -35,6 +35,12 @@ démarrage complètent les contrôles de navigation, de temps et les deux modes 
   (naissance d'une éclipse, danse des Galiléennes, voyage aux confins, saisons de la Terre). Chacune
   est un fichier de données : en ajouter une ne demande pas de programmer, et les dates qu'elles
   visent sont calculées, donc elles ne vieillissent pas.
+- **Noms de la surface** : à l'approche d'un corps, les formations que l'Union astronomique
+  internationale a nommées apparaissent à leur place, avec leur type et leur diamètre. Rien n'est
+  téléchargé tant qu'on n'approche pas.
+- **Missions** : la fiche d'un corps dit quelles missions l'archive du Planetary Data System
+  déclare pour lui, avec l'intervalle de chacune, et marque celles qui avaient commencé à la date
+  de la scène. Une fin non déclarée est dite comme telle, jamais comme « en cours ».
 - **Réglages d'affichage** : une surface en six sections. Un tableau par objet, groupé comme la
   recherche, avec trois colonnes (étiquette, objet, orbite) ; le champ d'astéroïdes et de
   comètes ; le rendu (luminosité, qualité, imagerie de surface) ; l'accessibilité et les unités ;
@@ -155,7 +161,11 @@ vision de la caméra, jamais l'échelle des objets.
 ### Contrôle du temps
 
 - **Play / Pause** : figer la simulation
-- **Réel / 1h/s / 3h/s / 6h/s** : vitesse de simulation
+- **Curseur de vitesse** : bidirectionnel et exponentiel, centre = temps réel 1:1, chaque moitié
+  allant jusqu'à une année de simulation par seconde réelle ; vers la gauche, le temps recule.
+  (Cette ligne annonçait « Réel / 1h/s / 3h/s / 6h/s » jusqu'au 2026-09-30 : ces quatre vitesses
+  discrètes n'existent plus, et le plafond réel est 1 461 fois plus grand que le dernier des
+  quatre. Le nombre n'est pas recopié ici, il vit dans `src/ui/speedSlider.ts`.)
 - **Champ date** : cliquer ou faire défiler la molette pour changer de jour
 - **Champ heure** : idem pour naviguer heure par heure
 - **Aujourd'hui** : revenir au présent
@@ -165,7 +175,9 @@ vision de la caméra, jamais l'échelle des objets.
 
 - **Clic + drag** : orbiter autour du point cible
 - **Scroll** : zoom
-- **Boutons de planète** : voler vers un corps céleste (animation 1.2 s)
+- **Recherche de corps** : ouvrir la palette et choisir un objet pour voler vers lui. (Cette
+  ligne disait « Boutons de planète » : la barre de navigation horizontale a été remplacée par
+  cette palette, qui liste aussi les sondes et les objets interstellaires.)
 
 ### Couches visuelles (Terre)
 

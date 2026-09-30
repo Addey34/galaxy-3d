@@ -120,6 +120,16 @@ const MARKERS = [
     marker: () => '<Capabilities',
     what: 'capabilities WMTS',
   },
+  {
+    prefix: 'https://pds.nasa.gov/api/search/',
+    // Lu le 2026-09-30 sur la réponse RÉELLE de la requête que `pnpm missions:generate` emploie :
+    // le nom d'une investigation est la propriété que le registre rend, et son absence voudrait
+    // dire que le schéma a changé sous nous. Un code 200 ne suffirait pas : cette API rend 200
+    // avec `hits: 0` pour une requête dont la syntaxe ne correspond à rien, ce que le lot 36
+    // avait déjà payé sur cette même API.
+    marker: () => 'pds:Investigation.pds:name',
+    what: 'registre de contexte du PDS',
+  },
 ];
 
 export const MARKER_RULES = MARKERS;
@@ -183,6 +193,17 @@ export function derivedSources() {
   walk(snapshot);
 
   if (urls.delete(SBDB_PAGE)) urls.add(SBDB_API);
+
+  /**
+   * L'API du registre de contexte du PDS, DÉRIVÉE de l'index des missions (lot 40) : c'est le
+   * générateur qui écrit l'URL qu'il interroge, et ce guetteur la relit. Personne ne la tient à
+   * deux endroits, donc elle ne peut pas diverger.
+   */
+  const missions = JSON.parse(
+    readFileSync(join(ROOT, 'src/config/missionIndex.json'), 'utf8')
+  );
+  if (typeof missions.provider?.api === 'string')
+    urls.add(missions.provider.api);
 
   const tilesets = join(ROOT, 'src/registry/products/tilesets');
   for (const file of readdirSync(tilesets).filter((f) => f.endsWith('.json'))) {

@@ -434,6 +434,17 @@ export const fr: Record<MessageKey, string> = {
   'bi.fictional': 'Surface fictive',
   'bi.fictional.hint':
     'Aucune sonde n’a résolu cette surface, la texture est donc illustrative, pas une carte scientifique.',
+  // Missions déclarées sur un corps (voir core/missions.ts et config/missions.ts).
+  'bi.missions.label': 'Missions',
+  'bi.missions.countAtDate': '{count}, dont {active} à cette date',
+  'bi.missions.countAllAtDate': '{count}, toutes à cette date',
+  'bi.missions.none':
+    'Aucune mission de cette archive ne déclare ce corps parmi ses cibles.',
+  'bi.missions.span': 'du {from} au {to}',
+  'bi.missions.spanOpen': 'depuis le {from}, fin non déclarée',
+  'bi.missions.atDate': 'avait commencé à la date de la scène',
+  'bi.missions.note':
+    'Ce que l’archive du PDS déclare pour chaque mission : l’intervalle de ses données et les corps qu’elle prend pour cibles, lu le {date}. Une cible déclarée n’est pas un relevé d’observations, et le début est celui du projet, pas le lancement.',
   'stat.radius': 'Rayon',
   'stat.meanDistanceSun': 'Distance moyenne (Soleil)',
   'stat.meanDistanceFrom': 'Distance moyenne ({parent})',

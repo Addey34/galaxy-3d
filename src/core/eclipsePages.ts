@@ -22,6 +22,7 @@ import {
   findUpcomingAstronomicalEvents,
   type AstronomicalEvent,
 } from './astronomicalEvents';
+import { formatDateText, LONG_DAY } from './dateText';
 import type { Locale } from '@/i18n/locales';
 import type { MessageKey } from '@/i18n/dict-en';
 
@@ -162,34 +163,16 @@ const DATE_LOCALE: Record<Locale, string> = {
 };
 
 /**
- * Le premier du mois s'écrit en ORDINAL dans certaines langues, et `Intl` ne le sait pas.
- *
- * Français : « 1er mars », là où `Intl` écrit « 1 mars ». Portugais du Brésil : « 1º de março »,
- * même raison. L'espagnol écrit bien « 1 de agosto », donc aucune retouche — et l'anglais place
- * le jour après le mois, où la question ne se pose pas. Une table plutôt qu'un `if (fr)` : la
- * version précédente ne connaissait que le français, et le portugais serait passé inaperçu.
- */
-const FIRST_DAY_ORDINAL: Partial<Record<Locale, [RegExp, string]>> = {
-  fr: [/^1 /, '1er '],
-  'pt-BR': [/^1 /, '1º '],
-};
-
-/**
  * Date du pic en toutes lettres, en UTC — « August 12, 2026 », « 12 août 2026 ».
  *
- * Locale FIXÉE par langue, pas celle du navigateur : la page statique et l'onglet doivent
- * écrire le même titre anglais au caractère près (sinon le titre clignote au rechargement), et
- * un visiteur `en-GB` écrirait « 12 August 2026 ».
+ * Locale FIXÉE par langue, pas celle du navigateur : la page statique et l'onglet doivent écrire
+ * le même titre anglais au caractère près (sinon le titre clignote au rechargement), et un
+ * visiteur `en-GB` écrirait « 12 August 2026 ».
+ *
+ * L'ordinal du premier du mois (« 1er mars », « 1º de março ») vivait ICI jusqu'au lot 40 ;
+ * quatre autres endroits de l'application l'ignoraient. La règle a désormais un propriétaire
+ * unique, `core/dateText.ts`, et cette fonction n'en est plus qu'un appelant.
  */
 export function formatEclipseDate(date: Date, locale: Locale): string {
-  const text = new Intl.DateTimeFormat(DATE_LOCALE[locale], {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-    timeZone: 'UTC',
-  }).format(date);
-  const ordinal = FIRST_DAY_ORDINAL[locale];
-  return ordinal && date.getUTCDate() === 1
-    ? text.replace(ordinal[0], ordinal[1])
-    : text;
+  return formatDateText(date, LONG_DAY, locale, DATE_LOCALE[locale]);
 }

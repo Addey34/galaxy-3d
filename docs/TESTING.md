@@ -150,6 +150,17 @@ après vingt minutes de suite, ou jamais si la branche fautive n'était pas empr
    tourne sur le serveur de dev, où le service worker n'est pas enregistré : le piège ne se
    manifeste que dans une mesure faite à la main sur `dist`.
 
+8. **« Execution context was destroyed, most likely because of a navigation » accuse presque
+   toujours l'OUTILLAGE, pas le produit.** Le serveur de dev recharge la page par HMR dès qu'un
+   fichier de `src/` change, et un rechargement tombé en plein `locator.evaluate` donne cette
+   erreur sur un test qui n'a rien à voir avec ce qui a été édité. Mesuré au lot 40 :
+   `earthEvents.spec.ts` rouge à 52/222 pendant une correction de COMMENTAIRES dans
+   `core/eclipsePages.ts`, puis **16 sur 16** en rejouant le même fichier sur un arbre gelé, la
+   date fautive comprise. `pnpm format` est pire encore, puisqu'il réécrit tout l'arbre. **Une
+   suite complète se lance donc sur un arbre GELÉ** : `docs/` reste libre, `src/`, `e2e/`,
+   `index.html` et `public/` non. Avant de soupçonner le produit, regarder l'heure de
+   modification des fichiers.
+
 ## Couverture actuelle
 
 La suite Vitest couvre les transformations de repères, Kepler, éphémérides, horloge, échelles,

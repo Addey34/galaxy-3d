@@ -10,6 +10,7 @@ import { localizedOrKey } from '@/i18n/localizedOrKey';
 import { CELESTIAL_CONFIG } from '@/config/bodies';
 import { allBodies, hasIllustrativeSurface } from '@/config/catalog';
 import { TEXTURE_SETTINGS } from '@/config/engine';
+import { formatIsoDay } from '@/core/dateText';
 import { KM_PER_AU, SQRT_K } from '@/core/ScaleService';
 import { RAD_TO_DEG as RAD2DEG } from '@/core/MathConstants';
 import {
@@ -283,13 +284,9 @@ function formatAsOf(asOf: string): string {
   );
 }
 
-function formatDay(iso: string): string {
-  const [year, month, day] = iso.split('-').map(Number);
-  return new Date(Date.UTC(year, month - 1, day)).toLocaleDateString(
-    intlLocale(),
-    { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' }
-  );
-}
+/** Un jour en toutes lettres, ordinal du 1er du mois compris (`core/dateText.ts`). */
+const formatDay = (iso: string): string =>
+  formatIsoDay(iso, getLocale(), intlLocale());
 
 /** Valeur mise en forme d'un fait, dans l'unité choisie par l'utilisateur. */
 function formatFact(name: string, field: FactField, value: FactValue): string {

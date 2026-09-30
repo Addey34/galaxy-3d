@@ -85,6 +85,7 @@ const IDENTICAL_TO_ENGLISH: Record<string, string> = {
   'credits.textures': 'même mot en français',
   'credits.sources': 'même mot en français',
   'bi.sources': 'même mot en français',
+  'bi.missions.label': 'même mot en français',
   'bi.source': 'même mot en français',
   'tours.pause': 'même mot en français',
   'weather.precip.legendHi': 'même mot en français',

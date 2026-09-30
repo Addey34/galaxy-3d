@@ -37,6 +37,7 @@ const CAPABILITY_ORDER: readonly Capability[] = [
   'shape',
   'tileset',
   'heightfield',
+  'missions',
   'facts',
   'page',
   'card',
@@ -90,6 +91,16 @@ function surfaceCell(row: InventoryRow): string {
   return parts.length ? parts.join(' + ') : '-';
 }
 
+/**
+ * Les missions que le registre de contexte du PDS declare sur ce corps. `0` s'ecrit `aucune` et
+ * non `-` : rien n'est alle la-bas, et c'est une reponse mesuree, pas une case vide.
+ */
+function missionsCell(row: InventoryRow): string {
+  if (!row.applicable.includes('missions')) return '-';
+  if (row.missions === null) return 'HORS INDEX';
+  return row.missions === 0 ? 'aucune' : String(row.missions);
+}
+
 function factsCell(row: InventoryRow): string {
   if (!row.applicable.includes('facts')) return '-';
   const { applicable, sourced, reasoned, unsourced, missing } = row.facts;
@@ -103,12 +114,21 @@ function pageCell(row: InventoryRow): string {
 }
 
 function table(rows: readonly InventoryRow[]): string[] {
-  const header = ['corps', 'position', 'textures', 'surface', 'faits', 'page'];
+  const header = [
+    'corps',
+    'position',
+    'textures',
+    'surface',
+    'missions',
+    'faits',
+    'page',
+  ];
   const cells = rows.map((row) => [
     row.parent ? `${row.id} / ${row.parent}` : row.id,
     positionCell(row),
     textureCell(row),
     surfaceCell(row),
+    missionsCell(row),
     factsCell(row),
     pageCell(row),
   ]);

@@ -90,6 +90,34 @@ describe('santé des sources : le verdict d’une réponse', () => {
     ).toBe('vivante');
   });
 
+  /**
+   * LE REGISTRE DU PDS REND 200 AVEC ZÉRO RÉSULTAT quand la requête ne correspond à rien, et ces
+   * 60 octets ont l'air d'une réponse parfaitement normale. C'est la même classe de piège que la
+   * page d'erreur du NSSDCA servie en 200, et que le `like` de cette API qui rend zéro là où `eq`
+   * rend un résultat : une requête qui rend zéro n'est pas une absence. Les deux corps ci-dessous
+   * sont COPIÉS de réponses réelles, obtenues le 2026-09-30.
+   */
+  it('dit MUETTE de la réponse à zéro résultat du PDS, qui est un HTTP 200 de 60 octets', () => {
+    const url =
+      'https://pds.nasa.gov/api/search/1/classes/context?q=pds:Investigation.pds:type eq "Mission"';
+    expect(
+      judgeResponse({
+        url,
+        body: '{"summary":{"hits":0,"properties":[],"facets":[]},"data":[]}',
+        status: 200,
+      }).verdict
+    ).toBe('muette');
+    expect(
+      judgeResponse({
+        url,
+        body:
+          '{"summary":{"hits":112,"properties":["lid","pds:Investigation.pds:name"],' +
+          '"facets":[]},"data":[{"id":"urn:esa:psa:context:investigation:mission.em16::1.6"',
+        status: 200,
+      }).verdict
+    ).toBe('vivante');
+  });
+
   it('dit SANS MARQUEUR d’un hôte qu’aucune règle ne couvre, au lieu de le croire vivant', () => {
     expect(
       judgeResponse({ url: 'https://example.test/x', body: 'peu importe' })

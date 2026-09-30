@@ -29,6 +29,7 @@
     "gibs:colormap": "node scripts/import-gibs-colormap.mjs",
     "fingerprint:generated": "node scripts/fingerprint-generated.mjs",
     "gazetteer:generate": "node scripts/generate-gazetteer.mjs",
+    "missions:generate": "node scripts/generate-mission-index.mjs",
     "inventory:gaps": "node scripts/inventory-gaps.mjs",
     "budget:startup": "node scripts/check-startup-budget.mjs",
     "ci:health": "node scripts/check-ci-health.mjs",

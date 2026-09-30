@@ -402,6 +402,11 @@ export const NON_BOOT_CHUNKS: readonly BootDynamicChunk[] = [
       "le résumé de validation contre Horizons n'est lu que par le bloc « Position à cette date » de la fiche, chargé à l'ouverture (`ui/positionProvenance`). Un morceau que le démarrage ne paie pas, et dont le poids n'est pas recopié ici : il est mesuré par `pnpm budget:startup`, et le lot 39 l'a fait grossir d'un tiers en pavant la profondeur du temps.",
   },
   {
+    chunk: 'missionIndex',
+    reason:
+      "l'index des missions du registre de contexte du PDS (lot 40) n'est lu que par le bloc « Missions » de la fiche, chargé à son ouverture (`config/missions`). Le comptage par corps est donc hors démarrage, et les listes elles-mêmes ne sont même pas dans le bundle : elles vivent en actifs servis à l'ouverture d'une fiche, comme les noms de surface du lot 37.",
+  },
+  {
     chunk: 'PlanetarySurfaceEngine',
     reason:
       "l'imagerie de surface n'est demandée qu'à l'approche d'un corps qui déclare un jeu de tuiles, jamais au démarrage ni au-dessus de 6 rayons apparents (lot 9, phase 9C).",

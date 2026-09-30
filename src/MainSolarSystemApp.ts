@@ -28,6 +28,7 @@ import { setupLangSwitch } from './ui/langSwitch';
 import { setupPlanetControls } from './ui/planetNav';
 import { setupBodyInfo } from './ui/bodyInfo';
 import { setupPositionProvenance } from './ui/positionProvenance';
+import { setupMissionsBlock } from './ui/missionsBlock';
 import { setupDocumentTitle } from './ui/documentTitle';
 import { setupDocumentChrome } from './ui/documentChrome';
 import { getAnnouncer } from './ui/announcer';
@@ -302,6 +303,9 @@ function wireChrome(): {
     let syncPermalink = (): void => undefined;
     const bodyInfo = setupBodyInfo(overlayCoordinator);
     setupPositionProvenance(api, bodyInfo);
+    // Missions déclarées sur le corps par le registre de contexte du PDS, et leur état à la date
+    // de la scène (lot 40). Index et liste chargés À LA DEMANDE : rien au démarrage.
+    setupMissionsBlock(api, bodyInfo);
     const exploScaleBadge = setupExploScaleBadge();
     // Le titre de l'onglet suit la sélection, comme le chemin de l'URL : depuis que celui-ci
     // change sans rechargement, un titre figé ferait dire deux choses différentes à l'adresse

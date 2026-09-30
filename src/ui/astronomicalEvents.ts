@@ -5,7 +5,8 @@ import {
   type AstronomicalEvent,
 } from '@/core/astronomicalEvents';
 import type { OrbitalMechanics } from '@/core/OrbitalMechanics';
-import { intlLocale, onLocaleChange, t } from '@/i18n';
+import { formatDateText } from '@/core/dateText';
+import { getLocale, intlLocale, onLocaleChange, t } from '@/i18n';
 import { bodyDisplayName } from '@/i18n/bodyText';
 import type { OverlayCoordinator } from './overlayCoordinator';
 import type { PlanetNavigation } from './planetNav';
@@ -14,16 +15,25 @@ import { getAnnouncer } from './announcer';
 
 const MS_PER_DAY = 86_400_000;
 
+/**
+ * `core/dateText.ts` et non `Intl` nu : ce format met le jour de la SEMAINE devant, donc une
+ * ancre `/^1 /` n'y verrait rien et le français écrirait « lun. 1 déc. » au lieu de « 1er déc. ».
+ */
 function formatEventDate(date: Date): string {
-  return new Intl.DateTimeFormat(intlLocale(), {
-    weekday: 'short',
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-    timeZone: 'UTC',
-  }).format(date);
+  return formatDateText(
+    date,
+    {
+      weekday: 'short',
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      timeZone: 'UTC',
+    },
+    getLocale(),
+    intlLocale()
+  );
 }
 
 const EVENT_KEYS: Record<AstronomicalEvent['kind'], string> = {
