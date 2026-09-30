@@ -85,6 +85,52 @@ describe('formatDateText', () => {
     }
   });
 
+  /**
+   * LE CACHE NE DOIT PAS MÉLANGER DEUX FORMATS. Deux appels qui ne diffèrent que par leurs
+   * options, ou que par leur langue, doivent rendre deux résultats différents : une clé de cache
+   * trop grossière rendrait le mois court là où on demande le mois long, et le défaut ne se
+   * verrait qu'à l'écran.
+   */
+  it('cache les formateurs sans confondre deux formats', () => {
+    const date = new Date(Date.UTC(1997, 9, 15));
+    const long = formatDateText(date, LONG_DAY, 'fr', INTL.fr);
+    const short = formatDateText(
+      date,
+      { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' },
+      'fr',
+      INTL.fr
+    );
+    expect(long).toBe('15 octobre 1997');
+    expect(short).not.toBe(long);
+    // Même options, autre langue : le cache doit les séparer.
+    expect(formatDateText(date, LONG_DAY, 'en', INTL.en)).toBe(
+      'October 15, 1997'
+    );
+    // Et deux appels identiques restent identiques, cache chaud.
+    expect(formatDateText(date, LONG_DAY, 'fr', INTL.fr)).toBe(long);
+  });
+
+  /**
+   * L'ORDRE D'ÉCRITURE DES OPTIONS NE DOIT PAS CHANGER LA CLÉ. Sans le tri, deux objets
+   * équivalents produiraient deux entrées de cache, ce qui n'est pas faux mais annule le gain.
+   */
+  it('reconnaît deux jeux d’options équivalents écrits dans un autre ordre', () => {
+    const date = new Date(Date.UTC(2026, 7, 12));
+    const a = formatDateText(
+      date,
+      { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' },
+      'fr',
+      INTL.fr
+    );
+    const b = formatDateText(
+      date,
+      { timeZone: 'UTC', year: 'numeric', month: 'long', day: 'numeric' },
+      'fr',
+      INTL.fr
+    );
+    expect(a).toBe(b);
+  });
+
   it('déclare exactement les langues qui demandent un ordinal', () => {
     expect([...ORDINAL_FIRST_DAY_LOCALES].sort()).toEqual(['fr', 'pt-BR']);
   });
