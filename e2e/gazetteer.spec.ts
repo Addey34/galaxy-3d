@@ -32,10 +32,37 @@ test.beforeEach(async ({ page }) => {
   });
 });
 
+/**
+ * LA LUNE EST LA PAGE LA PLUS LOURDE DE TOUTE LA SUITE, et son budget de calme est ÉCRIT plutôt
+ * que laissé au défaut (lot 40).
+ *
+ * `waitForCalmMainThread` exige trois allers-retours `requestAnimationFrame` sous **500 ms**, ce
+ * qui convient partout ailleurs. Sur `?body=moon` la couche des noms considère **9 087
+ * formations** par image — contre 2 052 pour Mars, 304 pour Titan — et sur un coureur de CI lent
+ * la cadence s'établit JUSTE au-dessus du défaut : série mesurée sur le run `36662976110`,
+ * `9772 2464 549 649 530 533 3152 2827 2868 541 531 524 …` puis un PLATEAU de quatre-vingts
+ * échantillons entre 510 et 540 ms. Trois valeurs consécutives sous 500 n'arrivent jamais, et le
+ * test échoue au démarrage, ses trois tentatives comprises.
+ *
+ * Ce n'est pas un défaut du produit : c'est une attente qui demande à la page la plus chargée
+ * quelque chose qu'un coureur lent ne peut pas donner. **Mesuré, et non supposé** : sur cette
+ * machine, sous frein CPU × 4, la même page tient 121 ms de médiane, et le bloc « Missions » du
+ * lot 40 n'y change rien (124/117/121 ms avec, 121/123/122 ms en coupant sa route — les deux
+ * séries se recouvrent).
+ *
+ * Le budget est donc porté à **1 500 ms POUR CETTE PAGE SEULEMENT**, ce qui sépare toujours sans
+ * ambiguïté la tempête du démarrage (9 772, 8 147, 10 768 ms mesurés) de son régime établi
+ * (~525 ms). Les autres appels gardent le défaut.
+ */
+const MOON_CALM_BUDGET_MS = 1_500;
+
 async function boot(page: Page, query: string): Promise<void> {
   await page.goto(`/${query}`);
   await expect(page.locator('#loader')).toBeHidden({ timeout: 30_000 });
-  await waitForCalmMainThread(page);
+  await waitForCalmMainThread(
+    page,
+    query.includes('body=moon') ? { budgetMs: MOON_CALM_BUDGET_MS } : {}
+  );
 }
 
 test('ne demande AUCUN répertoire au démarrage, ni de loin', async ({

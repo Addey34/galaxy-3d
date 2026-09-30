@@ -40,15 +40,39 @@ export const ORDINAL_FIRST_DAY_LOCALES = Object.freeze(
  * `Intl`, que l'appelant choisit (la page d'éclipse la FIXE par langue, l'interface prend celle
  * du navigateur).
  */
+/**
+ * LES FORMATEURS SONT CACHÉS, parce qu'en construire un coûte, et qu'on en construisait un PAR
+ * DATE AFFICHÉE. La fiche de la Lune écrit trente missions, donc jusqu'à soixante bornes, et le
+ * panneau des événements astronomiques en aligne autant de lignes : autant de
+ * `new Intl.DateTimeFormat`, tous identiques. La clé est la langue plus les options, sérialisées
+ * dans un ordre stable — un `JSON.stringify` direct dépendrait de l'ordre d'écriture de l'objet
+ * et rendrait deux clés différentes pour deux appels équivalents.
+ */
+const formatters = new Map<string, Intl.DateTimeFormat>();
+
+function formatterFor(
+  intlLocale: string,
+  options: Intl.DateTimeFormatOptions
+): Intl.DateTimeFormat {
+  const key = `${intlLocale}|${Object.entries(options)
+    .map(([k, v]) => `${k}=${String(v)}`)
+    .sort()
+    .join(',')}`;
+  let formatter = formatters.get(key);
+  if (!formatter) {
+    formatter = new Intl.DateTimeFormat(intlLocale, options);
+    formatters.set(key, formatter);
+  }
+  return formatter;
+}
+
 export function formatDateText(
   date: Date,
   options: Intl.DateTimeFormatOptions,
   locale: Locale,
   intlLocale: string
 ): string {
-  const parts = new Intl.DateTimeFormat(intlLocale, options).formatToParts(
-    date
-  );
+  const parts = formatterFor(intlLocale, options).formatToParts(date);
   const ordinal = FIRST_DAY_ORDINAL[locale];
   return parts
     .map((part) =>
