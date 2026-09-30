@@ -9,10 +9,16 @@
   max-width: 980px;
 }
 
+/* `min-width: 0` N'EST PAS DÉCORATIF, et son absence se voyait à 390 px.
+   `.doc-nav` est un élément flex de `.page-header` ; un élément flex a `min-width: auto` par
+   défaut, donc il refuse de rétrécir sous la largeur de son contenu — et son propre
+   `flex-wrap: wrap` ne s'applique jamais, faute de place contrainte. L'en-tête débordait ainsi
+   de 59 px en espagnol (407 px de contenu dans 348), sur une police large. Mesuré au lot 41. */
 .doc-nav {
   display: flex;
   gap: var(--sp-2);
   flex-wrap: wrap;
+  min-width: 0;
 }
 .doc-nav-link {
   padding: 0.3rem 0.75rem;
@@ -140,6 +146,22 @@
 /* Une longue URL dans le texte ne doit jamais élargir la page sur mobile. */
 .doc main a {
   overflow-wrap: anywhere;
+}
+
+/* ET UNE URL QUI N'EST PAS UN LIEN NON PLUS. La règle ci-dessus ne couvrait que les ancres et
+   `code` ; la citation Zenodo est du TEXTE BRUT dans un `blockquote`, et son DOI ne se coupe
+   nulle part. Mesuré à 390 px : 335 px de contenu dans une boîte de 220, donc la page entière
+   s'élargissait. Invisible sur une machine dont la police est étroite — les huit pages générées
+   passaient sur Windows et débordaient de 33 px sur le runner Linux de la CI, où la pile de
+   polices retombe sur DejaVu Sans. C'est la garde du lot 41 qui l'a vu à son premier passage.
+
+   `break-word` et non `anywhere` : il ne coupe QUE le mot qui ne tient pas seul sur sa ligne,
+   là où `anywhere` autorise une coupure à chaque caractère et hache un paragraphe étroit. */
+.doc main p,
+.doc main li,
+.doc main blockquote,
+.doc main dd {
+  overflow-wrap: break-word;
 }
 .table-scroll:focus-visible {
   outline: 2px solid rgb(var(--accent));

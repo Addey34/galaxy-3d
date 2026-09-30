@@ -103,11 +103,20 @@ a:hover {
   font-size: 0.95rem;
   color: var(--ink);
 }
+/* `flex-wrap` ET `min-width: 0`, et aucun des deux n'est décoratif.
+   Cette boîte porte le sélecteur de langue. Un élément flex a `min-width: auto` par défaut :
+   il refuse donc de rétrécir sous la largeur de son contenu, et l'en-tête déborde au lieu de
+   passer à la ligne. Mesuré au lot 41 à 390 px, sur `/es/sources/` avec une police large :
+   391 px de contenu dans une boîte de 348, soit un débordement HORIZONTAL de toute la page.
+   Les quatre langues rendent ce texte plus long que l'anglais, et la CI Linux rend une police
+   plus large que Windows : le défaut ne se voyait sur aucune des deux machines à la fois. */
 .topbar-actions {
   display: flex;
   align-items: center;
   gap: var(--sp-3);
   margin-left: auto;
+  flex-wrap: wrap;
+  min-width: 0;
 }
 
 /* Toggle langue — repris du sélecteur EN|FR de l'app (segments pilule). */
