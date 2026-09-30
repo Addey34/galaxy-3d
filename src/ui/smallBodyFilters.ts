@@ -14,7 +14,8 @@
  * flux mais un instantané daté, livré avec le build (`core/sbdb.ts` dit pourquoi). Une donnée
  * figée qui se présenterait comme vivante serait le défaut que ce lot corrige, pas sa solution.
  */
-import { t, intlLocale, onLocaleChange } from '@/i18n';
+import { formatIsoDay } from '@/core/dateText';
+import { t, getLocale, intlLocale, onLocaleChange } from '@/i18n';
 import { isSnapshotStale, snapshotAgeMonths } from '@/core/snapshotAge';
 import type { SmallBodyCategory } from '@/core/sbdb';
 import {
@@ -94,7 +95,6 @@ export function setupSmallBodyFilters(
       noteEl.hidden = true;
       return;
     }
-    const [year, month, day] = dataset.retrieved.split('-').map(Number);
     // Au-delà de l'âge déclaré (`core/snapshotAge.ts`), la phrase le DIT : un relevé périmé
     // ne doit pas se lire comme un relevé du jour. C'est l'horloge du visiteur qui compte, pas
     // la date de la scène : l'âge est celui du relevé, pas celui des positions affichées.
@@ -106,10 +106,7 @@ export function setupSmallBodyFilters(
       {
         count: String(dataset.count),
         months: String(months),
-        date: new Date(Date.UTC(year!, month! - 1, day!)).toLocaleDateString(
-          intlLocale(),
-          { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' }
-        ),
+        date: formatIsoDay(dataset.retrieved, getLocale(), intlLocale()),
       }
     );
     noteEl.hidden = false;

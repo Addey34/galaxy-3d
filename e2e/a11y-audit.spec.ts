@@ -223,4 +223,58 @@ test.describe('mobile viewport', () => {
       JSON.stringify(results.violations, null, 2)
     ).toEqual([]);
   });
+
+  /**
+   * UN `<details>` REPLIÉ N'EST PAS AUDITÉ, et c'est le trou que cette garde ferme.
+   *
+   * Les onze scénarios ci-dessus ouvrent chaque surface, mais aucun ne DÉPLIE un `<details>` :
+   * axe ne voit donc ni les sources d'une fiche, ni, depuis le lot 40, son bloc « Missions ».
+   * Un contraste ou une structure fautive y resterait verte indéfiniment. Ce scénario l'ouvre,
+   * dans les QUATRE langues, à 390 px, et vérifie en plus qu'aucun texte ne débordre en largeur
+   * — la mesure que la règle du texte publié demande et qui se faisait jusqu'ici à la main.
+   */
+  for (const locale of ['en', 'fr', 'es', 'pt-BR'] as const) {
+    test(`body card, missions and sources UNFOLDED, ${locale}, is clean at 390 px`, async ({
+      page,
+    }) => {
+      await page.addInitScript((lang) => {
+        localStorage.setItem('ssv-locale', lang);
+      }, locale);
+      await page.goto('/?body=titan');
+      await expect(page.locator('#loader')).toBeHidden({ timeout: 30_000 });
+      const card = page.locator('#body-info');
+      await expect(card).toBeVisible();
+      const missions = card.locator('.bi-missions');
+      await expect(missions).toBeVisible({ timeout: 15_000 });
+      // Déplier par la propriété, et non par un clic : un clic dépend du thread principal, et
+      // cette garde mesure la MISE EN PAGE, pas l'interaction (que e2e/missions.spec.ts couvre).
+      await card.evaluate((el) => {
+        for (const d of el.querySelectorAll('details')) d.open = true;
+      });
+      const results = await runAxe(page);
+      expect(
+        results.violations,
+        JSON.stringify(results.violations, null, 2)
+      ).toEqual([]);
+
+      // Aucun débordement horizontal : ni la page, ni la fiche elle-même.
+      const overflow = await page.evaluate(() => {
+        const el = document.getElementById('body-info')!;
+        return {
+          page:
+            document.documentElement.scrollWidth -
+            document.documentElement.clientWidth,
+          card: el.scrollWidth - el.clientWidth,
+        };
+      });
+      expect(
+        overflow.page,
+        `débordement de la page (${locale})`
+      ).toBeLessThanOrEqual(0);
+      expect(
+        overflow.card,
+        `débordement de la fiche (${locale})`
+      ).toBeLessThanOrEqual(0);
+    });
+  }
 });

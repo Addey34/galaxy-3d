@@ -442,6 +442,17 @@ export const ptBR: Record<MessageKey, string> = {
   'bi.fictional': 'Superfície ilustrativa',
   'bi.fictional.hint':
     'Nenhuma sonda resolveu esta superfície, então a textura é ilustrativa, não um mapa científico.',
+  // Missões declaradas sobre um corpo (ver core/missions.ts e config/missions.ts).
+  'bi.missions.label': 'Missões',
+  'bi.missions.countAtDate': '{count}, sendo {active} nesta data',
+  'bi.missions.countAllAtDate': '{count}, todas nesta data',
+  'bi.missions.none':
+    'Nenhuma missão deste arquivo declara este corpo entre os seus alvos.',
+  'bi.missions.span': 'de {from} a {to}',
+  'bi.missions.spanOpen': 'desde {from}, fim não declarado',
+  'bi.missions.atDate': 'já havia começado na data da cena',
+  'bi.missions.note':
+    'O que o arquivo do PDS declara para cada missão: o intervalo dos seus dados e os corpos que toma como alvos, lido em {date}. Um alvo declarado não é um registro de observações, e o início é o do projeto, não o lançamento.',
   'stat.radius': 'Raio',
   'stat.meanDistanceSun': 'Distância média (Sol)',
   'stat.meanDistanceFrom': 'Distância média ({parent})',

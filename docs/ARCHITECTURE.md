@@ -2937,6 +2937,119 @@ sont pas allégées. `core/registryText.ts` traverse maintenant une `Map`, et de
 (une unitaire dans `src/registry/registryText.test.ts`, une d'intégration dans
 `src/config/catalogueText.test.ts`), chacune falsifiée séparément.
 
+## Quelles missions ont étudié ce corps (lot 40)
+
+L'application savait **où** est une sonde à une date (trajectoires Horizons, lot 8) et, depuis le
+lot 37, **nommer** une formation. Elle ne savait pas dire ce qui est venu ici, ni quand. Elle le
+dit maintenant, sur la fiche de chaque corps : **112 missions distinctes**, dont **48 corps sur 58
+en déclarent au moins une**, et les dix autres portent la phrase qui l'explique.
+
+**La source est le registre de contexte du Planetary Data System**, interrogé par
+`pnpm missions:generate`, et elle a été choisie après mesure, pas par élimination :
+
+- **il fédère cinq espaces de noms sous une seule API** — `urn:nasa:pds`, mais aussi
+  `urn:esa:psa` (BepiColombo, JUICE, Mars Express, Rosetta, Venus Express, ExoMars),
+  `urn:jaxa:darts` (Hayabusa2), `urn:isro:isda` (Chandrayaan-1) et `urn:kari:kpds`. La priorité
+  ESA du projet est donc servie sans seconde source. **Cette liste est DÉRIVÉE** des identifiants
+  livrés : ma version écrite à la main en oubliait deux, et c'est la garde qui l'a dit ;
+- **la cible d'une investigation est complète** : Voyager y déclare 55 cibles, dont les cinq
+  grandes lunes d'Uranus et les quatre de Neptune ;
+- **une seule requête rend tout le registre**, donc le relevé ne dépend pas de 112 disponibilités.
+
+**CE QUE LE BLOC AFFIRME, ET RIEN DE PLUS.** Le PDS déclare des **cibles**, c'est-à-dire ce dont
+l'archive d'une mission parle ; ce n'est pas un relevé d'observations. La formulation du bloc le
+dit, et il faut qu'elle le dise : le registre déclare « Near Earth Asteroid Scout » sur
+**16 Psyché**, alors que cette mission visait un géocroiseur et n'a jamais été contactée après son
+lancement. C'est très probablement une erreur de métadonnée du PDS — elle n'est pas corrigée en
+silence, parce qu'une correction inventerait un jugement que la source ne porte pas.
+
+### Trois choses que la mesure a trouvées, et qu'aucune relecture n'aurait données
+
+**`pds:Investigation.pds:start_date` N'EST PAS UNE DATE DE LANCEMENT.** Le registre fait commencer
+« Voyager » le **1972-07-01**, alors que Voyager 2 a décollé le **1977-08-20** selon notre propre
+registre des sondes. C'est le début du **projet**. Nommer ce champ « lancement » aurait publié une
+affirmation fausse, et c'est le croisement avec nos `launchDate` qui l'a dit. Le témoin est
+permanent : `src/config/missions.test.ts` exige que les deux dates DIFFÈRENT, pour que personne ne
+« corrige » un jour l'une vers l'autre en croyant réparer une incohérence.
+
+**DEUX FAÇONS DE NE PAS DÉCLARER UNE FIN, et elles se ressemblent exactement.** **36 des 112
+investigations ne déclarent aucune fin** : sur les 113 LIGNES servies, 31 rendent `null` et 6
+rendent la sentinelle `3000-01-01`, l'écart d'une unité étant Venus Express, servie en deux lignes
+portant chacune une des deux formes. Aucune des deux ne veut dire « toujours en
+cours » : Venus Express porte la sentinelle alors que la mission s'est terminée en 2014, et
+Venera 4 rend `null` alors qu'elle s'est tue en 1967. Livrer la sentinelle telle quelle aurait
+affiché « de 2018 à l'an 3000 » ; en déduire « en cours » aurait affiché une sonde soviétique
+encore active. `core/missions.ts` a donc un **quatrième état**, `startedEndUndeclared`, et c'est le
+seul qui compte vraiment : l'application ne sait pas, et c'est cela qu'elle dit.
+
+**LE REGISTRE SE CONTREDIT LUI-MÊME SUR UN PRODUIT.**
+`urn:esa:psa:context:investigation:mission.venus_express` arrive en **deux lignes**, sous le même
+`lidvid` `::1.1`, l'une portant la sentinelle et l'autre `null` ; et `summary.hits` a rendu 113
+puis 112 à une heure d'intervalle pour le même contenu. Deux lignes d'un même identifiant sont donc
+fusionnées, **mais seulement si elles disent la même chose une fois normalisée** — ce qui est le cas
+ici, les deux formes de « pas de fin déclarée » se réécrivant `null`. Un désaccord réel fait
+ÉCHOUER le générateur : choisir entre deux versions divergentes serait arbitraire, et l'arbitraire
+n'a pas sa place dans un chiffre publié. Le chiffre publié est donc celui des **missions**, pas
+celui des lignes.
+
+### L'appariement corps ↔ cible ne se devine pas
+
+Deux règles, et un **accord de classe exigé dans les deux cas** :
+
+- le segment terminal de l'identifiant PDS doit être un corps du catalogue
+  (`satellite.jupiter.europa` → `europa`), ou, pour un petit corps, être préfixé de la désignation
+  SBDB que `scripts/fact-source-targets.json` DÉCLARE déjà (`16_psyche`, `1p_halley`) ;
+- et le `pds:Target.pds:type` publié doit égaler le `targetClass` de la fiche, une fois mis en
+  minuscules et l'espace remplacé par un souligné (`Dwarf Planet` → `dwarf_planet`).
+
+Sans ce second accord, « 106 Dione » l'astéroïde s'apparierait à Dione la lune de Saturne. Un
+désaccord **échoue**, il ne se saute pas en silence, et la falsification est faite : changer le
+`targetClass` de Triton fait sortir le générateur en code 1.
+
+Tout ce qui ne s'apparie pas est **imprimé, groupé par type publié**, et c'est un inventaire à lire :
+50 satellites, 17 astéroïdes, 11 comètes et un objet transneptunien que le catalogue n'a pas — 67P,
+Arrokoth, Didymos, Lutetia, Gaspra, Mathilde, Steins, les Troyens de Lucy.
+
+### Zéro octet au démarrage, mesuré
+
+| | |
+|---|---|
+| Index (`src/config/missionIndex.json`) | morceau séparé, **hors** clôture de démarrage (`NON_BOOT_CHUNKS`) |
+| Listes (`public/assets/missions/{corps}.json`) | 48 fichiers, servis à l'ouverture d'une fiche |
+| Adresse | **ABSOLUE**, parce que le corps est porté par le CHEMIN de l'URL |
+
+Un corps que l'index donne à zéro ne déclenche **aucune** requête : son fichier n'existe pas, et
+demander pour recevoir un 404 serait une requête de trop. L'adresse absolue n'est pas un détail :
+`assets/missions/titan.json` résoudrait en `/titan/assets/missions/titan.json`, c'est-à-dire le
+défaut exact que le lot 37 a payé dans un vrai navigateur. `e2e/missions.spec.ts` le prouve en
+exigeant une réponse **200 sur la liste elle-même**, et la falsification est faite : rendre
+l'adresse relative fait rougir deux scénarios.
+
+**UN CORPS À ZÉRO MISSION ET UNE SONDE NE SE RESSEMBLENT PAS, et `config/missions.ts` les
+distingue.** La fiche s'ouvre aussi pour une sonde et pour un objet interstellaire
+(`config/navigable.ts`), et l'index ne porte que les corps du catalogue. Rendre une liste vide pour
+Voyager 1 afficherait « aucune mission ne déclare ce corps », ce qui n'a aucun sens pour une sonde :
+une mission n'est pas la CIBLE d'une archive, elle en est l'auteur. `loadMissions` rend donc une
+liste (même vide) pour un corps, et `null` quand l'index n'a pas d'entrée — le bloc reste alors
+masqué. Falsifié : sans la distinction, le scénario de la sonde rougit.
+
+**AUCUNE LICENCE N'EST REVENDIQUÉE POUR CETTE DONNÉE, et c'est une décision.** L'index avait
+d'abord été écrit avec `rights: "public-domain"` pointant la page de citation du PDS. Cette page,
+LUE le 2026-09-30, ne dit rien de tel : elle donne des consignes de citation, aux fournisseurs
+comme aux réutilisateurs. Les pages de politique du site (`/home/policies/`, `/about/`,
+`/home/faq/`) rendent 404, et le lien « Privacy / Copyright » de son pied de page mène à la page de
+confidentialité de la NASA, qui ne traite pas de la réutilisation. L'index publie donc ce qu'il
+peut POINTER — `citingGuidance` — et la garde `src/config/missions.test.ts` **exige que `rights`
+reste absent**, pour qu'une licence devinée ne revienne pas par la porte de derrière.
+
+**Le compte par corps est dans l'inventaire dérivé** (`pnpm inventory:gaps`, colonne `missions`),
+avec `aucune` distinct de `HORS INDEX` : zéro mission est une réponse mesurée, une entrée absente
+est un générateur qu'on a oublié de relancer. **Et la source est surveillée** comme les autres :
+`pnpm sources:health` DÉRIVE l'URL de l'API depuis l'index lui-même, et son marqueur est
+`pds:Investigation.pds:name`, parce que cette API rend **HTTP 200 avec zéro résultat** quand la
+requête ne correspond à rien — 60 octets d'apparence parfaitement normale, même classe de piège que
+la page d'erreur du NSSDCA servie en 200.
+
 ## Pages `/methodology` et `/sources`
 
 Deux documents, chacun en anglais (`/methodology/`, `/sources/`) et en français

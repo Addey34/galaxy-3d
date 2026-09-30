@@ -972,6 +972,17 @@
           <span class="bi-position-source"></span>
           <span class="bi-position-error"></span>
         </div>
+        <!-- Missions que le registre de contexte du PDS déclare sur ce corps, leur intervalle
+             et leur état à la date de la scène. Remplie par ui/missionsBlock.ts, qui charge
+             l'index et la liste À LA DEMANDE : rien n'est demandé au démarrage. -->
+        <details class="bi-missions" hidden>
+          <summary>
+            <span data-i18n="bi.missions.label">Missions</span>
+            <span class="bi-missions-count"></span>
+          </summary>
+          <ul></ul>
+          <p class="bi-missions-note"></p>
+        </details>
         <!-- Sources des valeurs ci-dessus, numérotées comme les renvois. Remplies par
              ui/bodyInfo.ts depuis le registre config/factSources.ts. -->
         <details class="bi-sources" hidden>
@@ -1453,6 +1464,20 @@
             <dt data-i18n="credits.data">Data</dt>
             <dd>
               Astronomy Engine · NASA/JPL Horizons · JPL SBDB · NASA GIBS ·
+              <a
+                href="https://pds.nasa.gov/"
+                target="_blank"
+                rel="noopener noreferrer"
+                >NASA Planetary Data System</a
+              >
+              (mission context products) ·
+              <a
+                href="https://planetarynames.wr.usgs.gov/"
+                target="_blank"
+                rel="noopener noreferrer"
+                >IAU Gazetteer of Planetary Nomenclature</a
+              >
+              ·
               <a
                 href="https://open-meteo.com/"
                 target="_blank"

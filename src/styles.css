@@ -1110,6 +1110,59 @@ button {
   font-size: 0.85em;
   color: var(--ink-faint);
 }
+/* Missions déclarées sur ce corps : même typographie que le bloc des sources, dont il est le
+   voisin immédiat, et même repli en `<details>` pour qu'une fiche à trente missions (la Lune)
+   n'écrase pas le reste. La puce d'une mission commencée à la date de la scène est une COULEUR
+   plus vive et un `::before`, jamais la couleur seule : le mode daltonien ne repeint pas ce
+   bloc, et une information portée par la seule teinte serait perdue. */
+.bi-missions {
+  margin: var(--sp-2) 0 0;
+  font-size: 0.7rem;
+  line-height: 1.45;
+  color: var(--ink-dim);
+}
+.bi-missions[hidden] {
+  display: none;
+}
+.bi-missions summary {
+  cursor: pointer;
+  color: var(--ink-faint);
+}
+.bi-missions-count {
+  margin-left: 0.35em;
+  font-variant-numeric: tabular-nums;
+}
+.bi-missions ul {
+  margin: var(--sp-1) 0 0;
+  padding-left: 1.1em;
+  list-style: none;
+}
+.bi-missions li + li {
+  margin-top: var(--sp-1);
+}
+.bi-missions li::before {
+  content: '·';
+  display: inline-block;
+  width: 1.1em;
+  margin-left: -1.1em;
+  color: var(--ink-faint);
+}
+.bi-missions li.is-at-date {
+  color: rgba(235, 244, 255, 0.95);
+}
+.bi-missions li.is-at-date::before {
+  content: '▸';
+  color: rgba(var(--planet-rgb), 0.95);
+}
+.bi-missions-span {
+  display: block;
+  color: var(--ink-faint);
+  font-variant-numeric: tabular-nums;
+}
+.bi-missions-note {
+  margin: var(--sp-2) 0 0;
+  color: var(--ink-faint);
+}
 .bi-sources {
   margin: var(--sp-2) 0 0;
   font-size: 0.7rem;

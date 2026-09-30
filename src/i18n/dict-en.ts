@@ -461,6 +461,20 @@ export const en = {
   'bi.fictional': 'Illustrative surface',
   'bi.fictional.hint':
     'No spacecraft has resolved this surface, so the texture is illustrative, not a scientific map.',
+  // Missions déclarées sur un corps (voir core/missions.ts et config/missions.ts). Le choix des
+  // mots est l'honnêteté de ce bloc : le PDS déclare des CIBLES, ce qui n'est pas un relevé
+  // d'observations, et son `start_date` est le début du PROJET et non un lancement (Voyager y
+  // commence en 1972, cinq ans avant le décollage de Voyager 1).
+  'bi.missions.label': 'Missions',
+  'bi.missions.countAtDate': '{count}, of which {active} at this date',
+  'bi.missions.countAllAtDate': '{count}, all at this date',
+  'bi.missions.none':
+    'No mission in this archive declares this body as a target.',
+  'bi.missions.span': '{from} to {to}',
+  'bi.missions.spanOpen': 'from {from}, end not declared',
+  'bi.missions.atDate': 'had begun at the date of the scene',
+  'bi.missions.note':
+    'What the PDS archive declares for each mission: the interval of its data and the bodies it takes as targets, read on {date}. A declared target is not a record of observation, and the start is the start of the project, not the launch.',
   'stat.radius': 'Radius',
   'stat.meanDistanceSun': 'Mean distance (Sun)',
   'stat.meanDistanceFrom': 'Mean distance ({parent})',

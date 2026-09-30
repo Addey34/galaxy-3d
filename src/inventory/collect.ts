@@ -28,6 +28,7 @@ import { bodyDynamics } from '@/config/gravity';
 import { NAVIGABLE_TARGETS } from '@/config/navigable';
 import { SURFACE_TILESETS } from '@/config/surfaceTilesets';
 import { SURFACE_HEIGHT_SETS } from '@/config/surfaceHeights';
+import missionIndex from '@/config/missionIndex.json';
 import { textureReviews } from '@/registry/products';
 import {
   ALL_FACT_FIELDS,
@@ -46,6 +47,7 @@ export type Capability =
   | 'shape'
   | 'tileset'
   | 'heightfield'
+  | 'missions'
   | 'facts'
   | 'page'
   | 'card';
@@ -150,6 +152,11 @@ export interface InventoryRow {
     readonly publishedPixelsPerDegree: number;
   } | null;
   readonly heightfield: { readonly id: string } | null;
+  /**
+   * Combien de missions le registre de contexte du PDS déclare sur ce corps (lot 40), ou `null`
+   * quand l'index n'a pas d'entrée pour lui. `0` est une réponse, pas une absence.
+   */
+  readonly missions: number | null;
   readonly facts: FactsState;
   readonly page: { readonly locales: readonly Locale[] };
   readonly card: boolean;
@@ -400,6 +407,11 @@ function applicableOf(
   if (cfg.model) out.push('shape');
   if (SURFACE_TILESETS.has(id)) out.push('tileset');
   if (SURFACE_HEIGHT_SETS.has(id)) out.push('heightfield');
+  // `missions` s'applique à TOUT corps, y compris ceux où rien n'est allé : zéro mission n'est
+  // pas un manque, c'est une mesure (aucune archive ne déclare Éris parmi ses cibles), et la
+  // fiche le DIT. Ce qui serait un manque, c'est l'absence d'ENTRÉE dans l'index, signe que
+  // `pnpm missions:generate` n'a pas été relancé après l'ajout d'un corps.
+  out.push('missions');
   return out;
 }
 
@@ -453,6 +465,11 @@ export function collectInventory(root: string): Inventory {
     const shape = shapeOf(id, cfg, root);
     const tileset = SURFACE_TILESETS.get(id);
     const heightfield = SURFACE_HEIGHT_SETS.get(id);
+    const missions = applicable.includes('missions')
+      ? ((missionIndex.bodies as Record<string, { count: number } | undefined>)[
+          id
+        ]?.count ?? null)
+      : null;
     const facts = factsOf(cfg);
     const locales = applicable.includes('page')
       ? LOCALES.filter((locale) =>
@@ -474,6 +491,8 @@ export function collectInventory(root: string): Inventory {
       absent.push('tileset');
     if (applicable.includes('heightfield') && heightfield === undefined)
       absent.push('heightfield');
+    if (applicable.includes('missions') && missions === null)
+      absent.push('missions');
     if (
       applicable.includes('facts') &&
       (facts.unsourced.length > 0 || facts.missing.length > 0)
@@ -505,6 +524,7 @@ export function collectInventory(root: string): Inventory {
           }
         : null,
       heightfield: heightfield ? { id: heightfield.id } : null,
+      missions,
       facts,
       page: { locales },
       card,
