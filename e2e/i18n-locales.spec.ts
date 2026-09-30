@@ -1,5 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 import { blockExternalNetwork } from './netBlock';
+import { waitForCalmMainThread } from './mainThread';
 
 /**
  * LES QUATRE LANGUES, ET LA SEULE CHOSE QU'UN TEST UNITAIRE NE PEUT PAS VOIR (lot 20, phase 20A).
@@ -143,6 +144,32 @@ test.describe('le sélecteur de langue', () => {
   }) => {
     await bootRecordingLoader(page, 'en');
     await expect(page.locator('#loader')).toBeHidden({ timeout: 40_000 });
+    /**
+     * LE CHARGEUR MASQUÉ N'EST PAS « L'APPLICATION ACCEPTE UN CLIC », et ce fichier l'ignorait
+     * partout. Payé sur `main` au lot 42 : le clic sur le sélecteur de langue a expiré à 15 s,
+     * DEUX tentatives sur trois, dans « bascule le catalogue et la fiche sans re-sélection ». Le
+     * run restait VERT grâce au réessai, et seul `pnpm ci:health` l'a dit.
+     *
+     * CE QUI A ÉTÉ MESURÉ, et ce qui ne l'est pas. Sous frein CPU × 4 sur une machine de
+     * développement, ce clic va de **1,0 à 7,7 s** d'un tirage à l'autre, pour un délai par défaut
+     * de 15 s sur un coureur plus lent encore : ce test n'a aucune marge. Avec l'attente, la queue
+     * de la distribution se raccourcit — **4 868 ms au pire sans, 3 086 ms au pire avec**, sur
+     * quatre tirages de chaque côté.
+     *
+     * CE N'EST PAS UNE PREUVE, et il faut le dire : je ne sais pas reproduire ici l'échec du
+     * coureur, donc cette mesure montre une amélioration, pas la disparition du défaut. Ce n'est
+     * pas non plus le 14,6 s → 1,9 s que `e2e/mainThread.ts` rapporte sur son propre cas. Ce qui
+     * tranchera est `pnpm ci:health` sur les prochains runs de `main`.
+     *
+     * CE QUI EST ÉTABLI EN REVANCHE, c'est que le lot 42 n'y est pour rien. Contrôle propre, une
+     * seule chose changée — même page, même build, la route de son index d'instruments coupée ou
+     * non : **1 049 / 1 218 / 3 351 / 1 058 ms avec**, **5 272 / 5 084 / 1 205 / 7 731 ms sans**.
+     * Les deux séries se recouvrent entièrement, et la plus lente est celle SANS.
+     *
+     * Les CINQ tests de ce fichier qui cliquent sont dans le même cas, et reçoivent la même
+     * attente : une correction s'applique à tout, pas au seul test qui a rougi.
+     */
+    await waitForCalmMainThread(page);
     await page.locator('#help-btn').click();
 
     const segments = page.locator('#lang-switch .lang-btn');
@@ -180,6 +207,8 @@ test.describe('le sélecteur de langue', () => {
   }) => {
     await bootRecordingLoader(page, 'en');
     await expect(page.locator('#loader')).toBeHidden({ timeout: 40_000 });
+    // Le thread doit répondre avant qu'on clique : cf. la mesure au premier test de ce fichier.
+    await waitForCalmMainThread(page);
     await page.locator('#body-search-trigger').click();
     await page.locator('#orbit-earth').click();
     const panel = page.locator('#body-info');
@@ -205,6 +234,8 @@ test.describe('le texte du catalogue suit la langue', () => {
   test('la fiche d’un corps est décrite en espagnol', async ({ page }) => {
     await bootRecordingLoader(page, 'es');
     await expect(page.locator('#loader')).toBeHidden({ timeout: 40_000 });
+    // Le thread doit répondre avant qu'on clique : cf. la mesure au premier test de ce fichier.
+    await waitForCalmMainThread(page);
     await page.locator('#body-search-trigger').click();
     await page.locator('#orbit-earth').click();
     const panel = page.locator('#body-info');
@@ -233,6 +264,8 @@ test.describe('le texte du catalogue suit la langue', () => {
   }) => {
     await bootRecordingLoader(page, 'es');
     await expect(page.locator('#loader')).toBeHidden({ timeout: 40_000 });
+    // Le thread doit répondre avant qu'on clique : cf. la mesure au premier test de ce fichier.
+    await waitForCalmMainThread(page);
     await page.locator('#body-search-trigger').click();
     await page.locator('#orbit-voyager1').click();
     const panel = page.locator('#body-info');
@@ -246,6 +279,8 @@ test.describe('le texte du catalogue suit la langue', () => {
     // test espagnol cherchait une chaîne trop courte.
     await bootRecordingLoader(page, 'en');
     await expect(page.locator('#loader')).toBeHidden({ timeout: 40_000 });
+    // Le thread doit répondre avant qu'on clique : cf. la mesure au premier test de ce fichier.
+    await waitForCalmMainThread(page);
     await page.locator('#body-search-trigger').click();
     await page.locator('#orbit-earth').click();
     const panel = page.locator('#body-info');
