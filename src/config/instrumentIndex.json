@@ -1,0 +1,76 @@
+{
+ "provider": {
+  "publisher": "NASA Planetary Data System",
+  "title": "PDS Registry, instrument host and instrument context products",
+  "url": "https://pds.nasa.gov/",
+  "api": "https://pds.nasa.gov/api/search/1/classes/context?q=pds:Instrument_Host.pds:type eq \"Spacecraft\"",
+  "federates": [
+   "urn:esa:psa",
+   "urn:jaxa:darts",
+   "urn:nasa:pds"
+  ],
+  "citingGuidance": "https://pds.nasa.gov/datastandards/citing/",
+  "citation": "NASA Planetary Data System. \"PDS Registry, instrument host and instrument context products.\" https://pds.nasa.gov/"
+ },
+ "retrieved": "2026-09-30",
+ "spacecraft": {
+  "voyager1": {
+   "hosts": 1,
+   "investigations": 1,
+   "instruments": 12,
+   "bytes": 2138
+  },
+  "voyager2": {
+   "hosts": 1,
+   "investigations": 2,
+   "instruments": 13,
+   "bytes": 2484
+  },
+  "new-horizons": {
+   "hosts": 1,
+   "investigations": 3,
+   "instruments": 8,
+   "bytes": 2075
+  },
+  "cassini": {
+   "hosts": 1,
+   "investigations": 1,
+   "instruments": 18,
+   "bytes": 3179
+  },
+  "juno": {
+   "hosts": 1,
+   "investigations": 1,
+   "instruments": 10,
+   "bytes": 1784
+  },
+  "rosetta": {
+   "hosts": 1,
+   "investigations": 1,
+   "instruments": 15,
+   "bytes": 3258
+  },
+  "bepicolombo": {
+   "hosts": 3,
+   "investigations": 1,
+   "instruments": 13,
+   "bytes": 2126
+  },
+  "osiris-rex": {
+   "hosts": 1,
+   "investigations": 2,
+   "instruments": 8,
+   "bytes": 2012
+  },
+  "hayabusa2": {
+   "hosts": 1,
+   "investigations": 1,
+   "instruments": 6,
+   "bytes": 1310
+  }
+ },
+ "absent": {
+  "parker-solar-probe": true,
+  "jwst": true
+ }
+}

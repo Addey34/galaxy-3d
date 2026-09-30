@@ -122,12 +122,24 @@ const MARKERS = [
   },
   {
     prefix: 'https://pds.nasa.gov/api/search/',
-    // Lu le 2026-09-30 sur la réponse RÉELLE de la requête que `pnpm missions:generate` emploie :
-    // le nom d'une investigation est la propriété que le registre rend, et son absence voudrait
-    // dire que le schéma a changé sous nous. Un code 200 ne suffirait pas : cette API rend 200
-    // avec `hits: 0` pour une requête dont la syntaxe ne correspond à rien, ce que le lot 36
-    // avait déjà payé sur cette même API.
-    marker: () => 'pds:Investigation.pds:name',
+    /**
+     * Lu le 2026-09-30 sur les réponses RÉELLES des requêtes que les générateurs emploient : le
+     * NOM de l'entité est la propriété que le registre rend, et son absence voudrait dire que le
+     * schéma a changé sous nous. Un code 200 ne suffirait pas : cette API rend 200 avec
+     * `hits: 0` pour une requête dont la syntaxe ne correspond à rien, ce que le lot 36 avait
+     * déjà payé sur cette même API.
+     *
+     * LE MARQUEUR SE DÉRIVE DE LA CLASSE INTERROGÉE, il ne s'écrit pas une fois par requête. Le
+     * lot 42 interroge `pds:Instrument_Host`, dont la réponse ne contient AUCUN
+     * `pds:Investigation.pds:name` : hériter du marqueur des missions par le seul préfixe aurait
+     * déclaré cette source MUETTE alors qu'elle répond, et un guetteur qui crie au loup finit
+     * ignoré. Une classe nouvelle est donc couverte sans que personne y pense.
+     */
+    marker: (url) => {
+      const q = new URL(url).searchParams.get('q') ?? '';
+      const cls = /pds:([A-Za-z_]+)\.pds:/.exec(q)?.[1];
+      return cls ? `pds:${cls}.pds:name` : 'pds:Investigation.pds:name';
+    },
     what: 'registre de contexte du PDS',
   },
 ];
@@ -204,6 +216,13 @@ export function derivedSources() {
   );
   if (typeof missions.provider?.api === 'string')
     urls.add(missions.provider.api);
+
+  /** Idem pour l'API des porteurs d'instruments, DÉRIVÉE de l'index des instruments (lot 42). */
+  const instruments = JSON.parse(
+    readFileSync(join(ROOT, 'src/config/instrumentIndex.json'), 'utf8')
+  );
+  if (typeof instruments.provider?.api === 'string')
+    urls.add(instruments.provider.api);
 
   const tilesets = join(ROOT, 'src/registry/products/tilesets');
   for (const file of readdirSync(tilesets).filter((f) => f.endsWith('.json'))) {

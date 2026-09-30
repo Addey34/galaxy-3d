@@ -1,0 +1,64 @@
+{
+  "comment": [
+    "CE QUE CHAQUE SONDE EST DANS L'ARCHIVE DU PDS, et rien d'autre (lot 42, ligne 40.2).",
+    "",
+    "Ces identifiants vivent ici et NON dans la fiche du registre, pour la raison qui a déjà fait",
+    "sortir les cibles du relevé des faits vers `scripts/fact-source-targets.json` : une fiche du",
+    "registre est chargée par le bundle client (`import.meta.glob` eager), et un identifiant que",
+    "seul un générateur lit n'a rien à y faire. Ils ne vivent pas dans le script non plus : un",
+    "script ne DÉCLARE pas ses cibles, il les lit.",
+    "",
+    "POURQUOI UNE DÉCLARATION ET PAS UNE DÉRIVATION. Le champ qui aurait servi de clé,",
+    "`pds:Instrument_Host.pds:naif_host_id`, ne peut pas en être une : mesuré le 2026-09-30 sur les",
+    "130 porteurs de type « Spacecraft », il rend 17 fois un NOMBRE (Hayabusa2 « -37 »), 86 fois un",
+    "MNÉMONIQUE (Voyager 1 « VG1 », Cassini « CO »), 26 fois `null`, et UNE fois la phrase littérale",
+    "« not applicable » (Mariner 5). Un champ qui mélange un entier, une abréviation et une phrase",
+    "en prose n'est pas une clé de jointure. Le générateur CROISE donc ce qu'on déclare ici :",
+    "le produit doit exister, son type doit être « Spacecraft », et quand `naif_host_id` EST",
+    "numérique il doit ÊTRE ÉGAL au `identifiers.naif` de la fiche — ce qui est exercé sur donnée",
+    "réelle par Hayabusa2 (-37) et OSIRIS-REx (-64), et non sur un cas hypothétique.",
+    "",
+    "DEUX SONDES SUR ONZE N'Y SONT PAS, et c'est écrit plutôt que comblé (règle de parité) : voir",
+    "leur `absent` ci-dessous, mesuré avec un témoin le 2026-09-30."
+  ],
+  "spacecraft": {
+    "voyager1": {
+      "instrumentHosts": ["urn:nasa:pds:context:instrument_host:spacecraft.vg1"]
+    },
+    "voyager2": {
+      "instrumentHosts": ["urn:nasa:pds:context:instrument_host:spacecraft.vg2"]
+    },
+    "cassini": {
+      "instrumentHosts": ["urn:nasa:pds:context:instrument_host:spacecraft.co"]
+    },
+    "juno": {
+      "instrumentHosts": ["urn:nasa:pds:context:instrument_host:spacecraft.jno"]
+    },
+    "new-horizons": {
+      "instrumentHosts": ["urn:nasa:pds:context:instrument_host:spacecraft.nh"]
+    },
+    "osiris-rex": {
+      "instrumentHosts": ["urn:nasa:pds:context:instrument_host:spacecraft.orex"]
+    },
+    "hayabusa2": {
+      "instrumentHosts": ["urn:jaxa:darts:context:instrument_host:spacecraft.hyb2"]
+    },
+    "rosetta": {
+      "instrumentHosts": ["urn:esa:psa:context:instrument_host:spacecraft.ro"]
+    },
+    "bepicolombo": {
+      "note": "BepiColombo est TROIS porteurs sous UNE seule investigation : l'orbiteur planétaire (MPO), l'orbiteur magnétosphérique japonais (MMO) et le module de transfert (MTM). Les trois sont déclarés parce que la sonde que l'application dessine est la pile complète en croisière ; MMO n'y déclare AUCUN instrument et MTM un seul, ce qui se voit dans le rendu et n'est pas masqué.",
+      "instrumentHosts": [
+        "urn:esa:psa:context:instrument_host:spacecraft.mpo",
+        "urn:esa:psa:context:instrument_host:spacecraft.mmo",
+        "urn:esa:psa:context:instrument_host:spacecraft.mtm"
+      ]
+    },
+    "parker-solar-probe": {
+      "absent": "Le registre de contexte du PDS ne déclare NI investigation NI porteur d'instruments pour cette mission. Mesuré le 2026-09-30 avec un témoin : aucune des 113 investigations de type « Mission » ne la nomme (recherche sur le nom ET sur l'identifiant), et les identifiants plausibles `spacecraft.psp` et `spacecraft.spp` rendent HTTP 404 alors que `spacecraft.vg1` rend 200. Ses données ne sont pas archivées au PDS, qui archive les sciences planétaires : c'est une mission d'héliophysique."
+    },
+    "jwst": {
+      "absent": "Le registre de contexte du PDS ne déclare NI investigation NI porteur d'instruments pour cet observatoire. Mesuré le 2026-09-30 avec un témoin : aucune des 113 investigations de type « Mission » ne le nomme, et les identifiants plausibles `spacecraft.jwst` et `spacecraft.webb` rendent HTTP 404 alors que `spacecraft.vg1` rend 200. C'est un observatoire et non une mission planétaire ; le PDS ne l'archive pas."
+    }
+  }
+}

@@ -3045,10 +3045,113 @@ reste absent**, pour qu'une licence devinée ne revienne pas par la porte de der
 **Le compte par corps est dans l'inventaire dérivé** (`pnpm inventory:gaps`, colonne `missions`),
 avec `aucune` distinct de `HORS INDEX` : zéro mission est une réponse mesurée, une entrée absente
 est un générateur qu'on a oublié de relancer. **Et la source est surveillée** comme les autres :
-`pnpm sources:health` DÉRIVE l'URL de l'API depuis l'index lui-même, et son marqueur est
-`pds:Investigation.pds:name`, parce que cette API rend **HTTP 200 avec zéro résultat** quand la
-requête ne correspond à rien — 60 octets d'apparence parfaitement normale, même classe de piège que
-la page d'erreur du NSSDCA servie en 200.
+`pnpm sources:health` DÉRIVE l'URL de l'API depuis l'index lui-même, et son marqueur se DÉRIVE à
+son tour de la classe que la requête interroge (`pds:Investigation.pds:name` ici,
+`pds:Instrument_Host.pds:name` pour le lot 42) — parce que cette API rend **HTTP 200 avec zéro
+résultat** quand la requête ne correspond à rien, 60 octets d'apparence parfaitement normale, même
+classe de piège que la page d'erreur du NSSDCA servie en 200. Le marqueur était écrit en dur
+jusqu'au lot 42, matché sur le seul PRÉFIXE de l'URL : une seconde requête sur une autre classe
+aurait donc été déclarée MUETTE alors qu'elle répond, et un guetteur qui crie au loup finit ignoré.
+
+## Ce qu'une sonde embarque, et où elle a servi (lot 42)
+
+Le lot 40 répond « qu'est-ce qui est venu ICI » sur la fiche d'un CORPS, et **il y laisse un trou
+qu'il nomme lui-même** : « une mission n'est pas la cible d'une archive, elle en est l'auteur »
+(`src/config/missions.ts`), donc le bloc « Missions » reste masqué sur la fiche d'une SONDE, qui
+n'avait alors que son nom, sa description et ses quatre faits de lancement. Le même registre de
+contexte du PDS déclare pourtant ses INSTRUMENTS. C'est ce que ce lot publie.
+
+**Le chemin des données.** `pnpm instruments:generate` écrit `src/config/instrumentIndex.json` (les
+comptes par sonde, importé DYNAMIQUEMENT, hors clôture de démarrage) et
+`public/assets/instruments/{sonde}.json` (la liste, servie à l'ouverture d'une fiche). Rien n'est
+demandé au démarrage. Les modules : `core/instruments.ts` (pur, ordre et regroupement par porteur),
+`config/instruments.ts` (façade), `ui/instrumentsBlock.ts` (le bloc de fiche).
+
+**L'état d'une investigation dans le temps N'EST PAS redéfini.** Une investigation a exactement la
+forme d'un `MissionRecord`, et `missionStanding` de `core/missions.ts` répond déjà, avec son
+quatrième état pour celles qui ne déclarent aucune fin. Une seconde horloge aurait fait diverger
+deux réponses à la même question.
+
+**LA JOINTURE EST DÉCLARÉE, PAS DEVINÉE**, et le champ qui aurait servi de clé ne peut pas en être
+une : mesuré le 2026-09-30 sur les 130 porteurs de type « Spacecraft »,
+`pds:Instrument_Host.pds:naif_host_id` rend **17 fois un NOMBRE** (Hayabusa2 « -37 »), **86 fois un
+MNÉMONIQUE** (Voyager 1 « VG1 »), **26 fois `null`** et **UNE fois la phrase littérale « not
+applicable »**. Les cibles vivent donc dans `scripts/pds-archive-targets.json`, jamais dans la fiche
+du registre (que le bundle client charge) ni dans le script (un script ne déclare pas ses cibles).
+Le générateur CROISE ce qui y est déclaré : le produit doit exister, son type doit être
+« Spacecraft », et **quand `naif_host_id` EST numérique il doit être ÉGAL au `identifiers.naif` de la
+fiche** — exercé sur donnée réelle par Hayabusa2 et OSIRIS-REx. Le type se LIT et ne se déduit pas
+du segment de l'identifiant : `instrument_host:spacecraft.insight` porte « spacecraft. » et le type
+publié « Lander », et c'est sur ce produit que la garde a été falsifiée.
+
+**LA JOINTURE EST ASYMÉTRIQUE, ET UN SEUL SENS PERD UNE MISSION.** L'investigation `mission.apex`
+(OSIRIS-APEX, l'extension vers Apophis) déclare `spacecraft.orex` parmi ses porteurs, alors que le
+produit `spacecraft.orex` ne déclare PAS `mission.apex` parmi ses investigations. Sur nos onze
+porteurs c'est le seul désaccord, et il vaut une mission entière : le générateur prend l'**union des
+deux sens** et IMPRIME l'asymétrie, parce qu'une contradiction de la source est une information.
+
+**« PHASE » EST LE MAUVAIS MOT, et c'est la mesure qui l'a dit.** Une sonde est citée par une à
+trois investigations : New Horizons en a bien trois (la mission, puis KEM1 et KEM2, ses deux
+extensions Kuiper) et OSIRIS-REx deux, mais la SECONDE de Voyager 2 est « Comet D/1993 F2
+(Shoemaker-Levy 9) Collision into Jupiter », une CAMPAGNE d'observation et non une phase de
+Voyager 2. On publie donc « investigations », le mot de la source. Un témoin permanent l'exige.
+
+**UN INSTRUMENT NE PUBLIE AUCUN TYPE**, mesuré sur cinq produits de trois agences : la classe
+`pds:Instrument` ne sert que `name`, `description`, `naif_instrument_id` et `serial_number`. Il n'y
+a rien à classer, et un type ne sera pas inventé. Le `naif_instrument_id` porte la même plaie que
+celui du porteur et n'est publié **que lorsqu'il est numérique**.
+
+**CE QUI N'EST PAS LIVRÉ : la description de chaque instrument.** Elle existe, elle est riche, et
+elle n'existe qu'en ANGLAIS. Un nom d'instrument est un nom propre, publié tel quel dans les quatre
+langues comme le bloc « Missions » publie « Lucy MIssion » sans le corriger ; un PARAGRAPHE de prose
+anglaise sous une interface portugaise serait une régression, et le traduire serait inventer. Le
+`lid` cite la fiche du PDS, qui la porte.
+
+**DEUX SONDES SUR ONZE SONT ABSENTES DU REGISTRE, ET ELLES LE DISENT.** Parker Solar Probe et le
+JWST : aucune des 113 investigations ne les nomme, et leurs identifiants plausibles rendent HTTP 404
+alors que `spacecraft.vg1` rend 200 (témoin). Leur bloc AFFICHE la mesure au lieu de se masquer, ce
+qui est une décision : un visiteur qui passe de Cassini à Parker verrait sinon un bloc disparaître
+sans savoir pourquoi. Sa note est propre à ce cas, et c'est la relecture du rendu qui l'a exigée :
+la note ordinaire promettait « ce que cette sonde embarque » et « l'identifiant sous chaque nom en
+est la citation » sous un bloc qui venait de dire que l'archive ne déclare rien. La phrase elle-même
+ne NOMME ni ne GENRE rien, « cette mission » serait faux pour le JWST, qui est un observatoire.
+
+**BEPICOLOMBO EST TROIS ENGINS** sous une seule investigation (MPO, MMO, MTM). Un porteur qui ne
+déclare AUCUN instrument garde sa place dans le rendu : c'est MMO, et le masquer ferait disparaître
+un tiers de la sonde. Le nom du porteur n'est montré que quand la sonde en a plusieurs.
+
+**UNE BOUCLE DE 500 ms, TROUVÉE EN RELISANT LE DIFF COMMITÉ ET MESURÉE.** Quand la réponse est
+« rien à montrer », `sync` la redemandait toutes les 500 ms, indéfiniment — donc sur les 58 corps du
+catalogue, qui sont le cas commun. Compteur temporaire : **19 appels en 10 s avant, 0 après**, une
+seule chose changée entre les deux séries. La même structure vit dans `missionsBlock` depuis le
+lot 40, où elle frappe les 11 sondes, et elle est corrigée aux DEUX endroits. La variable ne retient
+que le cas VIDE, et c'est un choix : un drapeau « la réponse est arrivée » confronté à `!state`
+introduirait un défaut, parce que le retour à la vue globale efface `state` sans rien dire de
+l'archive. **Le chemin qui discrimine a demandé trois essais et deux mesures** : `toBeHidden()` est
+vrai dès qu'un ANCÊTRE est masqué, et seul le retour à `#orbit-overview` remet le corps courant à
+`null` — ouvrir la palette masque la fiche par l'autre mécanisme en gardant `currentBody()`. Sans ce
+détour, la variante boguée passe les six scénarios de chaque fichier.
+
+**LES GARDES, ET CE QU'ELLES ONT TROUVÉ.** `src/core/instruments.test.ts`,
+`src/config/instruments.test.ts` (sept falsifications, toutes rouges), `e2e/instruments.spec.ts`,
+quatre scénarios axe + 390 px sur la fiche d'une SONDE (`e2e/a11y-audit.spec.ts` : les scénarios
+existants ouvrent la fiche d'un CORPS, où ce bloc est masqué, donc il n'aurait jamais été audité),
+et la colonne `instruments` de `pnpm inventory:gaps`, où `absente (raison ecrite)` est distinct de
+`HORS INDEX`. **Deux angles morts d'une garde du lot 40 ont été trouvés et corrigés en passant** :
+
+- **la garde d'adresse absolue ne prouvait rien**, parce qu'elle bootait sur `?body=titan`, donc à
+  la racine, où une adresse relative résout au même endroit qu'une absolue. Mesuré : un CORPS garde
+  son chemin après le boot (`/titan/?mode=educ…`), une SONDE est normalisée vers la racine
+  (`/?body=voyager1`), donc seul le boot par le CHEMIN d'un corps rend ce test falsifiable. Il l'est
+  désormais, et il rougit. Corollaire pour ce lot : la même garde ne peut PAS exister pour une
+  sonde, et son scénario le dit au lieu de le prétendre ;
+- **`#body-info` est en `overflow-x: hidden`**, donc un texte trop large y est ROGNÉ et la fiche
+  rapporte `scrollWidth === clientWidth` comme si tout allait bien : mesuré, un identifiant PDS
+  débordant de 70 px laissait la fiche à 286 contre 286. La mesure du débordement est donc ÉLÉMENT
+  PAR ÉLÉMENT, les `.sr-only` exclus parce que leur texte dépasse toujours de 179 à 213 px selon la
+  langue. Le plus long identifiant rendu mesure **236 px dans une boîte de 250, soit 14 px de
+  marge** : la coupure du mot est donc à la limite de porter, et la garde le prouve dès que la
+  police s'élargit de plus que cette marge.
 
 ## Pages `/methodology` et `/sources`
 

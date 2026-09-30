@@ -53,6 +53,34 @@ describe('inventaire dérivé du dépôt', () => {
     ).toHaveLength(3);
   });
 
+  it('joint CHAQUE sonde à l’archive du PDS, ou l’en déclare absente', () => {
+    const spacecraft = inventory.rows.filter(
+      (row) => row.family === 'spacecraft'
+    );
+    // `instruments` n'est applicable qu'à une sonde : un corps n'embarque rien.
+    for (const row of inventory.rows)
+      expect(row.applicable.includes('instruments'), row.id).toBe(
+        row.family === 'spacecraft'
+      );
+    // Aucune sonde HORS INDEX : c'est le seul état qui serait un manque, et il voudrait dire que
+    // `pnpm instruments:generate` n'a pas été relancé après l'ajout d'une sonde.
+    expect(
+      spacecraft.filter((row) => row.instruments === null).map((row) => row.id)
+    ).toEqual([]);
+    const joined = spacecraft.filter(
+      (row) => typeof row.instruments === 'number'
+    );
+    const measuredAbsent = spacecraft.filter(
+      (row) => row.instruments === 'absent-de-l-archive'
+    );
+    expect(joined.length + measuredAbsent.length).toBe(spacecraft.length);
+    // Bornes : si TOUTES étaient absentes, ou aucune, ce test passerait sans rien prouver.
+    expect(joined.length).toBeGreaterThan(0);
+    expect(measuredAbsent.length).toBeGreaterThan(0);
+    for (const row of joined)
+      expect(row.instruments, row.id).toBeGreaterThan(0);
+  });
+
   it('ne signale une absence que pour une capacité applicable', () => {
     for (const row of inventory.rows)
       for (const capability of row.absent)

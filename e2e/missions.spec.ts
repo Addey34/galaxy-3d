@@ -57,10 +57,18 @@ test('remplit le bloc à l’ouverture d’une fiche, et son adresse RÉSOUT', a
   // 200 et un corps HTML, donc on vérifie que la couche a bien obtenu sa LISTE.
   const answered: number[] = [];
   page.on('response', (r) => {
-    if (r.url().includes('/assets/missions/titan.json'))
+    if (r.url().endsWith('/assets/missions/titan.json'))
       answered.push(r.status());
   });
-  await boot(page, '?body=titan');
+  /**
+   * LE BOOT PAR LE CHEMIN, ET C'EST CE QUI REND CE SCÉNARIO FALSIFIABLE. Il bootait sur
+   * `?body=titan` jusqu'au lot 42, donc à la racine : une adresse RELATIVE y résout au même
+   * endroit qu'une absolue, et la garde restait VERTE avec le défaut qu'elle prétendait tenir.
+   * Mesuré le 2026-09-30 : un CORPS garde son chemin après le boot (`/titan/?mode=educ…`), donc
+   * `assets/missions/titan.json` y deviendrait `/titan/assets/missions/titan.json`. C'est la seule
+   * forme sous laquelle ce test dit quelque chose.
+   */
+  await boot(page, 'titan/');
 
   const missions = block(page);
   await expect(missions).toBeVisible({ timeout: 15_000 });
@@ -107,6 +115,22 @@ test('revenir sur un corps déjà vu réaffiche son bloc', async ({ page }) => {
   await expect(block(page)).toBeVisible({ timeout: 15_000 });
   await expect(block(page).locator('li')).toHaveCount(titan);
   await expect(block(page)).toContainText('Cassini-Huygens');
+
+  /**
+   * LE DÉTOUR PAR LA VUE GLOBALE, ajouté au lot 42, et c'est LE chemin qui discrimine. Seul le
+   * retour à la vue globale appelle `bodyInfo.hide()`, qui remet le corps courant à `null` ;
+   * ouvrir la palette ne le fait PAS. Ce lot a ajouté un raccourci qui retient la fiche dont on
+   * sait qu'elle n'a rien à montrer, pour ne pas redemander sa liste toutes les 500 ms
+   * indéfiniment, et sa MAUVAISE forme laisserait ici le bloc masqué en revenant. Mesuré : sans
+   * ces six lignes, cette variante passe les six scénarios de ce fichier.
+   */
+  await page.locator('#body-search-trigger').click();
+  await page.locator('#orbit-overview').click();
+  await expect(block(page)).toBeHidden();
+  await page.locator('#body-search-trigger').click();
+  await page.locator('#orbit-titan').click();
+  await expect(block(page)).toBeVisible({ timeout: 15_000 });
+  await expect(block(page).locator('li')).toHaveCount(titan);
 });
 
 test('une SONDE n’affiche aucun bloc missions, et n’en demande pas la liste', async ({

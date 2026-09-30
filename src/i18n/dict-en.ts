@@ -475,6 +475,20 @@ export const en = {
   'bi.missions.atDate': 'had begun at the date of the scene',
   'bi.missions.note':
     'What the PDS archive declares for each mission: the interval of its data and the bodies it takes as targets, read on {date}. A declared target is not a record of observation, and the start is the start of the project, not the launch.',
+  // LE BLOC « INSTRUMENTS » D'UNE SONDE (lot 42). « Investigations » et non « phases » : mesuré
+  // le 2026-09-30, la SECONDE investigation de Voyager 2 est la campagne d'observation de la
+  // collision de Shoemaker-Levy 9 sur Jupiter, qui n'est pas une phase de Voyager 2.
+  'bi.instruments.label': 'Instruments',
+  'bi.instruments.investigations': 'Investigations it appears in',
+  'bi.instruments.hostEmpty': '(no instrument declared)',
+  // NE NOMME NI NE GENRE RIEN, et c'est voulu : « this mission » serait faux pour le JWST, qui est
+  // un observatoire, et un pronom français forcerait un genre que les deux sondes concernées ne
+  // partagent pas (« la sonde » Parker, « le télescope » Webb). La phrase dit ce qui est MESURÉ.
+  'bi.instruments.absent':
+    'The PDS archive declares no investigation here, and therefore no instrument.',
+  'bi.instruments.absentNote': 'Read in the PDS archive on {date}.',
+  'bi.instruments.note':
+    'What the PDS archive declares this spacecraft carries, read on {date}. Each name is the one the archive publishes, and the identifier below it is its citation.',
   'stat.radius': 'Radius',
   'stat.meanDistanceSun': 'Mean distance (Sun)',
   'stat.meanDistanceFrom': 'Mean distance ({parent})',

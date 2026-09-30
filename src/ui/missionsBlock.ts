@@ -71,6 +71,14 @@ export function setupMissionsBlock(
   let rendered: string | null = null;
   let renderedDay = '';
   let missions: readonly MissionRecord[] | null = null;
+  /**
+   * LA FICHE DONT ON SAIT DÉJÀ QU'ELLE N'A RIEN À MONTRER. Ajoutée au lot 42, qui a mesuré la
+   * boucle : sans elle, `sync` redemande la liste toutes les 500 ms, indéfiniment, sur la fiche
+   * d'une SONDE ou d'un objet interstellaire, où ce bloc n'a rien à dire (`config/missions.ts`
+   * rend `null` pour eux, délibérément). Cf. `ui/instrumentsBlock.ts` pour la raison de ne retenir
+   * que le cas vide.
+   */
+  let nothingToShow: string | null = null;
 
   const render = (body: string, sceneDate: Date): void => {
     const provenance = missionProvenance();
@@ -149,6 +157,10 @@ export function setupMissionsBlock(
       missions = null;
       return;
     }
+    if (nothingToShow === body) {
+      block.hidden = true;
+      return;
+    }
     const sceneDay = api.orbitalMechanics.simulationDate
       .toISOString()
       .slice(0, 10);
@@ -175,7 +187,13 @@ export function setupMissionsBlock(
     void Promise.all([loadMissionIndex(), loadMissions(body)])
       .then(([, list]) => {
         // La fiche a pu changer de corps pendant le vol : on ne rend que ce qui est demandé.
-        if (bodyInfo.currentBody() !== body || !list) return;
+        if (bodyInfo.currentBody() !== body) return;
+        if (!list) {
+          // Ce n'est pas un corps du catalogue : la réponse est définitive.
+          nothingToShow = body;
+          block.hidden = true;
+          return;
+        }
         missions = list;
         render(body, api.orbitalMechanics.simulationDate);
       })
