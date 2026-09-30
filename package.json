@@ -11,6 +11,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
+    "test:pages": "playwright test --config=playwright.pages.config.ts",
     "test:a11y": "playwright test e2e/a11y-audit.spec.ts",
     "test:perf": "playwright test e2e/perf-fps.spec.ts",
     "ephemeris:generate": "node scripts/generate-horizons-ephemerides.mjs",
@@ -54,7 +55,7 @@
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "verify": "tsc --noEmit && eslint . && pnpm format:check && vitest run",
-    "verify:all": "pnpm verify && pnpm build && pnpm test:e2e",
+    "verify:all": "pnpm verify && pnpm build && pnpm test:e2e && pnpm test:pages",
     "deploy:size": "node scripts/check-deploy-size.mjs"
   },
   "devDependencies": {

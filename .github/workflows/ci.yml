@@ -69,6 +69,24 @@ jobs:
       - name: Verify the startup budget per family
         run: node scripts/check-startup-budget.mjs
 
+      # LES PAGES GENEREES, CHARGEES DANS UN NAVIGATEUR (ligne 39.1, lot 41).
+      #
+      # `/methodology`, `/sources` et les pages de corps ne naissent qu'au BUILD, et le serveur
+      # de developpement que joue le job e2e ne les sert pas : `e2e/bodyLanding.spec.ts` teste
+      # l'application ouverte sur un CHEMIN, jamais la page elle-meme. Personne ne les avait
+      # donc jamais ouvertes en CI, et la section que le lot 39 a ajoutee a `/methodology` a du
+      # etre verifiee A LA MAIN.
+      #
+      # ELLES TOURNENT ICI, ET PAS DANS LE JOB e2e, POUR UNE RAISON DE COUT MESUREE : le job
+      # e2e est shard sur SIX machines qui ne construisent pas, donc il faudrait six
+      # `pnpm build`. Ce job-ci construit deja, et n'utilise que 2,4 min de ses 15 ; la suite
+      # ajoute 11 scenarios en 16 s en local, plus l'installation de Chromium.
+      #
+      # Bloquant, parce qu'une page publiee illisible est un defaut visible par un visiteur.
+      - run: pnpm exec playwright install --with-deps chromium
+      - name: Check the generated pages in a browser
+        run: pnpm test:pages
+
       # Informational measurement of the actual deploy payload after firebase.json exclusions,
       # so unexpected growth remains visible in deployment logs.
       #
