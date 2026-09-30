@@ -445,6 +445,15 @@ export const fr: Record<MessageKey, string> = {
   'bi.missions.atDate': 'avait commencé à la date de la scène',
   'bi.missions.note':
     'Ce que l’archive du PDS déclare pour chaque mission : l’intervalle de ses données et les corps qu’elle prend pour cibles, lu le {date}. Une cible déclarée n’est pas un relevé d’observations, et le début est celui du projet, pas le lancement.',
+  // Cf. dict-en pour la raison du mot « investigations ».
+  'bi.instruments.label': 'Instruments',
+  'bi.instruments.investigations': 'Investigations où elle figure',
+  'bi.instruments.hostEmpty': '(aucun instrument déclaré)',
+  'bi.instruments.absent':
+    'L’archive du PDS ne déclare ici aucune investigation, et donc aucun instrument.',
+  'bi.instruments.absentNote': 'Lu dans l’archive du PDS le {date}.',
+  'bi.instruments.note':
+    'Ce que l’archive du PDS déclare que cette sonde embarque, lu le {date}. Chaque nom est celui que l’archive publie, et l’identifiant sous lui en est la citation.',
   'stat.radius': 'Rayon',
   'stat.meanDistanceSun': 'Distance moyenne (Soleil)',
   'stat.meanDistanceFrom': 'Distance moyenne ({parent})',

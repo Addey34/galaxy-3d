@@ -38,6 +38,7 @@ const CAPABILITY_ORDER: readonly Capability[] = [
   'tileset',
   'heightfield',
   'missions',
+  'instruments',
   'facts',
   'page',
   'card',
@@ -101,6 +102,18 @@ function missionsCell(row: InventoryRow): string {
   return row.missions === 0 ? 'aucune' : String(row.missions);
 }
 
+/**
+ * Les instruments que le registre du PDS declare sur cette sonde. `absente` n'est pas un manque :
+ * c'est une mesure, dont la raison vit dans scripts/pds-archive-targets.json.
+ */
+function instrumentsCell(row: InventoryRow): string {
+  if (!row.applicable.includes('instruments')) return '-';
+  if (row.instruments === null) return 'HORS INDEX';
+  if (row.instruments === 'absent-de-l-archive')
+    return 'absente (raison ecrite)';
+  return String(row.instruments);
+}
+
 function factsCell(row: InventoryRow): string {
   if (!row.applicable.includes('facts')) return '-';
   const { applicable, sourced, reasoned, unsourced, missing } = row.facts;
@@ -120,6 +133,7 @@ function table(rows: readonly InventoryRow[]): string[] {
     'textures',
     'surface',
     'missions',
+    'instruments',
     'faits',
     'page',
   ];
@@ -129,6 +143,7 @@ function table(rows: readonly InventoryRow[]): string[] {
     textureCell(row),
     surfaceCell(row),
     missionsCell(row),
+    instrumentsCell(row),
     factsCell(row),
     pageCell(row),
   ]);

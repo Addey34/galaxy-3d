@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test, type Page } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 import { blockExternalNetwork } from './netBlock';
 
@@ -210,6 +210,38 @@ test('explo mode overview has no automatically detectable a11y violations', asyn
   ).toEqual([]);
 });
 
+/**
+ * LE DÉBORDEMENT QU'UNE FICHE NE PEUT PAS MONTRER, ET QUE SEULE CETTE MESURE VOIT.
+ *
+ * `#body-info` est en `overflow-x: hidden`. Un texte trop large y est donc ROGNÉ, et la fiche
+ * rapporte `scrollWidth === clientWidth` comme si tout allait bien : mesuré le 2026-09-30, un
+ * identifiant PDS débordant de 70 px laissait la fiche à 286 contre 286. La métrique « la fiche
+ * déborde-t-elle » est donc AVEUGLE à l'intérieur de la fiche, et c'est ce qu'elle était censée
+ * tenir depuis le lot 40.
+ *
+ * Ce qui voit le défaut est la mesure ÉLÉMENT PAR ÉLÉMENT. Les `.sr-only` en sont exclus, et c'est
+ * mesuré aussi : ce sont des boîtes d'un pixel destinées au lecteur d'écran, dont le texte
+ * dépasse TOUJOURS de 179 à 213 px selon la langue. Les inclure rendrait la garde rouge à
+ * l'arrivée, donc désarmée le jour suivant.
+ */
+async function clippedOverflow(page: Page): Promise<string[]> {
+  return page.evaluate(() => {
+    const card = document.getElementById('body-info');
+    if (!card) return ['#body-info absent'];
+    const out: string[] = [];
+    for (const el of card.querySelectorAll('*')) {
+      if (el.classList.contains('sr-only')) continue;
+      const delta = el.scrollWidth - el.clientWidth;
+      if (delta > 1)
+        out.push(
+          `${el.tagName.toLowerCase()}.${el.className || '-'} +${delta}px ` +
+            `« ${(el.textContent ?? '').trim().slice(0, 48)} »`
+        );
+    }
+    return out;
+  });
+}
+
 test.describe('mobile viewport', () => {
   test.use({ viewport: { width: 390, height: 844 } });
 
@@ -275,6 +307,77 @@ test.describe('mobile viewport', () => {
         overflow.card,
         `débordement de la fiche (${locale})`
       ).toBeLessThanOrEqual(0);
+      // Et le débordement que la fiche ROGNE, donc qu'elle ne peut pas rapporter elle-même.
+      expect(
+        await clippedOverflow(page),
+        `texte rogné dans la fiche (${locale})`
+      ).toEqual([]);
+    });
+  }
+
+  /**
+   * LE BLOC « INSTRUMENTS » D'UNE SONDE (lot 42), même mesure et pour la même raison qu'au lot 40 :
+   * les scénarios ci-dessus ouvrent la fiche d'un CORPS, où ce bloc est masqué. Il n'aurait donc
+   * jamais été audité, et un contraste ou un débordement y serait resté vert indéfiniment.
+   *
+   * LA SONDE TÉMOIN EST MESURÉE, PAS CHOISIE AU HASARD : BepiColombo est la seule qui exerce TOUS
+   * les chemins de rendu du bloc — trois légendes de porteur, dont une qui ne déclare AUCUN
+   * instrument, treize instruments avec leur identifiant logique, et une investigation à fin non
+   * déclarée. Elle porte aussi le plus long jeton insécable rendu (45 caractères,
+   * `urn:esa:psa:context:instrument:mpo.simbio-sys`), à égalité avec Cassini : c'est exactement ce
+   * qu'un identifiant non coupable ferait déborder, et le lot 41 a payé ce défaut sur un DOI.
+   */
+  for (const locale of ['en', 'fr', 'es', 'pt-BR'] as const) {
+    test(`spacecraft card, instruments UNFOLDED, ${locale}, is clean at 390 px`, async ({
+      page,
+    }) => {
+      await page.addInitScript((lang) => {
+        localStorage.setItem('ssv-locale', lang);
+      }, locale);
+      await page.goto('/?body=bepicolombo');
+      await expect(page.locator('#loader')).toBeHidden({ timeout: 30_000 });
+      const card = page.locator('#body-info');
+      await expect(card).toBeVisible();
+      const instruments = card.locator('.bi-instruments');
+      await expect(instruments).toBeVisible({ timeout: 15_000 });
+      // Déplier par la propriété et non par un clic : cette garde mesure la MISE EN PAGE.
+      await card.evaluate((el) => {
+        for (const d of el.querySelectorAll('details')) d.open = true;
+      });
+      // Le bloc doit avoir du contenu à auditer : un bloc vide passerait sans rien prouver.
+      await expect(instruments.locator('.bi-instruments-lid')).not.toHaveCount(
+        0
+      );
+      await expect(instruments.locator('.bi-instruments-host')).toHaveCount(3);
+
+      const results = await runAxe(page);
+      expect(
+        results.violations,
+        JSON.stringify(results.violations, null, 2)
+      ).toEqual([]);
+
+      const overflow = await page.evaluate(() => {
+        const el = document.getElementById('body-info')!;
+        return {
+          page:
+            document.documentElement.scrollWidth -
+            document.documentElement.clientWidth,
+          card: el.scrollWidth - el.clientWidth,
+        };
+      });
+      expect(
+        overflow.page,
+        `débordement de la page (${locale})`
+      ).toBeLessThanOrEqual(0);
+      expect(
+        overflow.card,
+        `débordement de la fiche (${locale})`
+      ).toBeLessThanOrEqual(0);
+      // Et le débordement que la fiche ROGNE, donc qu'elle ne peut pas rapporter elle-même.
+      expect(
+        await clippedOverflow(page),
+        `texte rogné dans la fiche (${locale})`
+      ).toEqual([]);
     });
   }
 });

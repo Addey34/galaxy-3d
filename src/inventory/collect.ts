@@ -29,6 +29,7 @@ import { NAVIGABLE_TARGETS } from '@/config/navigable';
 import { SURFACE_TILESETS } from '@/config/surfaceTilesets';
 import { SURFACE_HEIGHT_SETS } from '@/config/surfaceHeights';
 import missionIndex from '@/config/missionIndex.json';
+import instrumentIndex from '@/config/instrumentIndex.json';
 import { textureReviews } from '@/registry/products';
 import {
   ALL_FACT_FIELDS,
@@ -48,6 +49,7 @@ export type Capability =
   | 'tileset'
   | 'heightfield'
   | 'missions'
+  | 'instruments'
   | 'facts'
   | 'page'
   | 'card';
@@ -157,6 +159,16 @@ export interface InventoryRow {
    * quand l'index n'a pas d'entrée pour lui. `0` est une réponse, pas une absence.
    */
   readonly missions: number | null;
+  /**
+   * Combien d'INSTRUMENTS le registre de contexte du PDS déclare sur cette sonde (lot 42).
+   *
+   * Trois valeurs, et la troisième seule est un manque : un nombre quand la sonde est jointe à
+   * l'archive ; `'absent-de-l-archive'` quand le registre n'en déclare RIEN et que la raison est
+   * écrite dans `scripts/pds-archive-targets.json` (Parker Solar Probe, JWST), ce qui est une
+   * mesure et non un trou ; `null` quand la sonde n'est NI l'un NI l'autre, signe que
+   * `pnpm instruments:generate` n'a pas été relancé.
+   */
+  readonly instruments: number | 'absent-de-l-archive' | null;
   readonly facts: FactsState;
   readonly page: { readonly locales: readonly Locale[] };
   readonly card: boolean;
@@ -399,6 +411,10 @@ function applicableOf(
   cfg: CelestialBodyConfig,
   id: string
 ): Capability[] {
+  // `instruments` n'est applicable qu'à une SONDE : un corps n'embarque rien, et un objet
+  // interstellaire pas davantage. Le rendre applicable partout ferait compter 58 manques qui
+  // n'existent pas.
+  if (family === 'spacecraft') return ['position', 'facts', 'instruments'];
   if (family !== 'body') return ['position', 'facts'];
   if (cfg.kind === 'skybox') return ['texture'];
   const out: Capability[] = ['facts', 'page', 'card'];
@@ -470,6 +486,15 @@ export function collectInventory(root: string): Inventory {
           id
         ]?.count ?? null)
       : null;
+    const instruments = applicable.includes('instruments')
+      ? ((
+          instrumentIndex.spacecraft as Record<
+            string,
+            { instruments: number } | undefined
+          >
+        )[id]?.instruments ??
+        (id in instrumentIndex.absent ? 'absent-de-l-archive' : null))
+      : null;
     const facts = factsOf(cfg);
     const locales = applicable.includes('page')
       ? LOCALES.filter((locale) =>
@@ -493,6 +518,10 @@ export function collectInventory(root: string): Inventory {
       absent.push('heightfield');
     if (applicable.includes('missions') && missions === null)
       absent.push('missions');
+    // Une sonde dont l'archive ne déclare rien n'est PAS un manque : la raison est écrite et
+    // mesurée. Le manque, c'est de n'être ni jointe ni déclarée absente.
+    if (applicable.includes('instruments') && instruments === null)
+      absent.push('instruments');
     if (
       applicable.includes('facts') &&
       (facts.unsourced.length > 0 || facts.missing.length > 0)
@@ -525,6 +554,7 @@ export function collectInventory(root: string): Inventory {
         : null,
       heightfield: heightfield ? { id: heightfield.id } : null,
       missions,
+      instruments,
       facts,
       page: { locales },
       card,

@@ -983,6 +983,18 @@
           <ul></ul>
           <p class="bi-missions-note"></p>
         </details>
+        <!-- Ce que le registre de contexte du PDS declare qu'une SONDE embarque, et les
+             investigations ou elle figure (lot 42). Rempli par ui/instrumentsBlock.ts ; rien n'est
+             demande au demarrage. Le bloc ne s'affiche que sur la fiche d'une sonde, et il DIT
+             l'absence plutot que de se masquer quand l'archive ne connait pas la mission. -->
+        <details class="bi-instruments" hidden>
+          <summary>
+            <span data-i18n="bi.instruments.label">Instruments</span>
+            <span class="bi-instruments-count"></span>
+          </summary>
+          <div class="bi-instruments-body"></div>
+          <p class="bi-instruments-note"></p>
+        </details>
         <!-- Sources des valeurs ci-dessus, numérotées comme les renvois. Remplies par
              ui/bodyInfo.ts depuis le registre config/factSources.ts. -->
         <details class="bi-sources" hidden>

@@ -1115,42 +1115,51 @@ button {
    n'écrase pas le reste. La puce d'une mission commencée à la date de la scène est une COULEUR
    plus vive et un `::before`, jamais la couleur seule : le mode daltonien ne repeint pas ce
    bloc, et une information portée par la seule teinte serait perdue. */
-.bi-missions {
+.bi-missions,
+.bi-instruments {
   margin: var(--sp-2) 0 0;
   font-size: 0.7rem;
   line-height: 1.45;
   color: var(--ink-dim);
 }
-.bi-missions[hidden] {
+.bi-missions[hidden],
+.bi-instruments[hidden] {
   display: none;
 }
-.bi-missions summary {
+.bi-missions summary,
+.bi-instruments summary {
   cursor: pointer;
   color: var(--ink-faint);
 }
-.bi-missions-count {
+.bi-missions-count,
+.bi-instruments-count {
   margin-left: 0.35em;
   font-variant-numeric: tabular-nums;
 }
-.bi-missions ul {
+.bi-missions ul,
+.bi-instruments ul {
   margin: var(--sp-1) 0 0;
   padding-left: 1.1em;
   list-style: none;
 }
-.bi-missions li + li {
+.bi-missions li + li,
+.bi-instruments li + li {
   margin-top: var(--sp-1);
 }
-.bi-missions li::before {
+.bi-missions li::before,
+.bi-instruments li::before {
   content: '·';
   display: inline-block;
   width: 1.1em;
   margin-left: -1.1em;
   color: var(--ink-faint);
 }
-.bi-missions li.is-at-date {
+.bi-missions li.is-at-date,
+.bi-instruments li.is-at-date {
   color: rgba(235, 244, 255, 0.95);
 }
-.bi-missions li.is-at-date::before {
+.bi-missions li.is-at-date::before,
+.bi-instruments li.is-at-date::before {
   content: '▸';
   color: rgba(var(--planet-rgb), 0.95);
 }
@@ -1159,9 +1168,40 @@ button {
   color: var(--ink-faint);
   font-variant-numeric: tabular-nums;
 }
-.bi-missions-note {
+.bi-missions-note,
+.bi-instruments-note {
   margin: var(--sp-2) 0 0;
   color: var(--ink-faint);
+}
+/* Le nom du porteur, montre SEULEMENT quand une sonde en a plusieurs : BepiColombo est trois
+   engins sous une seule investigation, et repeter « Cassini Orbiter » au-dessus de ses dix-huit
+   instruments serait du bruit. */
+.bi-instruments-host,
+.bi-instruments-caption {
+  margin: var(--sp-2) 0 0;
+  color: var(--ink-faint);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-size: 0.62rem;
+}
+.bi-instruments-host:first-child,
+.bi-instruments-caption:first-child {
+  margin-top: var(--sp-1);
+}
+.bi-instruments-empty {
+  text-transform: none;
+  letter-spacing: 0;
+}
+/* L'identifiant logique PDS EST la citation de la source. Il peut etre long : il doit donc pouvoir
+   se couper, sinon il deborde la fiche a 390 px — exactement le defaut que la garde du lot 41 a
+   trouve sur un DOI de huit caracteres de trop. */
+.bi-instruments-lid {
+  display: block;
+  color: var(--ink-faint);
+  font-family: 'SF Mono', 'Cascadia Code', ui-monospace, 'Fira Mono', monospace;
+  font-size: 0.6rem;
+  overflow-wrap: break-word;
+  word-break: break-word;
 }
 .bi-sources {
   margin: var(--sp-2) 0 0;

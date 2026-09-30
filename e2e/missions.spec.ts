@@ -57,10 +57,18 @@ test('remplit le bloc à l’ouverture d’une fiche, et son adresse RÉSOUT', a
   // 200 et un corps HTML, donc on vérifie que la couche a bien obtenu sa LISTE.
   const answered: number[] = [];
   page.on('response', (r) => {
-    if (r.url().includes('/assets/missions/titan.json'))
+    if (r.url().endsWith('/assets/missions/titan.json'))
       answered.push(r.status());
   });
-  await boot(page, '?body=titan');
+  /**
+   * LE BOOT PAR LE CHEMIN, ET C'EST CE QUI REND CE SCÉNARIO FALSIFIABLE. Il bootait sur
+   * `?body=titan` jusqu'au lot 42, donc à la racine : une adresse RELATIVE y résout au même
+   * endroit qu'une absolue, et la garde restait VERTE avec le défaut qu'elle prétendait tenir.
+   * Mesuré le 2026-09-30 : un CORPS garde son chemin après le boot (`/titan/?mode=educ…`), donc
+   * `assets/missions/titan.json` y deviendrait `/titan/assets/missions/titan.json`. C'est la seule
+   * forme sous laquelle ce test dit quelque chose.
+   */
+  await boot(page, 'titan/');
 
   const missions = block(page);
   await expect(missions).toBeVisible({ timeout: 15_000 });

@@ -407,6 +407,11 @@ export const NON_BOOT_CHUNKS: readonly BootDynamicChunk[] = [
       "l'index des missions du registre de contexte du PDS (lot 40) n'est lu que par le bloc « Missions » de la fiche, chargé à son ouverture (`config/missions`). Le comptage par corps est donc hors démarrage, et les listes elles-mêmes ne sont même pas dans le bundle : elles vivent en actifs servis à l'ouverture d'une fiche, comme les noms de surface du lot 37.",
   },
   {
+    chunk: 'instrumentIndex',
+    reason:
+      "l'index des instruments du registre de contexte du PDS (lot 42) n'est lu que par le bloc « Instruments » de la fiche d'une SONDE, chargé à son ouverture (`config/instruments`). Les listes elles-mêmes ne sont pas dans le bundle : elles vivent en actifs servis à l'ouverture d'une fiche, comme les missions du lot 40 et les noms de surface du lot 37.",
+  },
+  {
     chunk: 'PlanetarySurfaceEngine',
     reason:
       "l'imagerie de surface n'est demandée qu'à l'approche d'un corps qui déclare un jeu de tuiles, jamais au démarrage ni au-dessus de 6 rayons apparents (lot 9, phase 9C).",
