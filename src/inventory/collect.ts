@@ -52,6 +52,7 @@ export type Capability =
   | 'tileset'
   | 'heightfield'
   | 'discovery'
+  | 'moons'
   | 'missions'
   | 'instruments'
   | 'places'
@@ -172,6 +173,15 @@ export interface InventoryRow {
    * `pnpm discovery:generate` n'a pas été relancé.
    */
   readonly discovery: number | 'sans-objet' | null;
+  /**
+   * La liste des satellites d'un corps dont la fiche affiche au moins une lune (ligne 22.10,
+   * pas 2), d'où vient le compte des lunes déjà vues à une date. Trois valeurs : la liste et sa
+   * source (la table du JPL, ou SBDB pour un petit corps) ; `'sans-objet'` quand une raison est
+   * écrite dans `satellitesNotCovered` de `scripts/discovery-targets.json` (la Terre) ; `null`,
+   * le seul manque, quand ni l'une ni l'autre n'existe.
+   */
+  readonly moons:
+    { readonly total: number; readonly source: string } | 'sans-objet' | null;
   /**
    * Les formations nommées que l'Orbital Data Explorer déclare observées (ligne 40.3). Trois
    * valeurs : un couple quand le corps est couvert et tiré en entier ; `'non-couvert'` quand
@@ -452,6 +462,9 @@ function applicableOf(
   // `discovery` aussi : un corps sans découverte datée doit le DIRE (le Soleil, la Terre), sinon
   // l'absence d'entrée serait indiscernable d'un générateur pas relancé.
   out.push('discovery');
+  // `moons` s'applique à tout corps dont la fiche affiche au moins une lune : sans lune, il n'y a
+  // rien à compter à une date.
+  if ((cfg.realData?.moonCount ?? 0) > 0) out.push('moons');
   // `places` s'applique à tout corps qui porte des noms de l'UAI : sans nom, rien à observer.
   if (id in gazetteerIndex.bodies) out.push('places');
   return out;
@@ -473,6 +486,9 @@ export function collectInventory(root: string): Inventory {
     join(root, 'src/seo/generated-fingerprint.json')
   );
   const documents = new Set(Object.keys(fingerprint.documents));
+  const discoveryTargets = readJson<{
+    satellitesNotCovered?: Record<string, string>;
+  }>(join(root, 'scripts/discovery-targets.json'));
 
   const flat = flattenBodies(CELESTIAL_CONFIG);
   const dynamics = bodyDynamics(CELESTIAL_CONFIG);
@@ -523,6 +539,19 @@ export function collectInventory(root: string): Inventory {
       : discoveryEntry?.notApplicable
         ? ('sans-objet' as const)
         : (discoveryEntry?.claims?.length ?? null);
+    const system = (
+      discoveryIndex.systems as Record<
+        string,
+        { total: number; source: string } | undefined
+      >
+    )[id];
+    const moons = !applicable.includes('moons')
+      ? null
+      : system
+        ? { total: system.total, source: system.source }
+        : discoveryTargets.satellitesNotCovered?.[id]
+          ? ('sans-objet' as const)
+          : null;
     const placeCover = (
       placeObservationIndex.bodies as Record<
         string,
@@ -574,6 +603,7 @@ export function collectInventory(root: string): Inventory {
       absent.push('missions');
     if (applicable.includes('discovery') && discovery === null)
       absent.push('discovery');
+    if (applicable.includes('moons') && moons === null) absent.push('moons');
     // Une sonde dont l'archive ne déclare rien n'est PAS un manque : la raison est écrite et
     // mesurée. Le manque, c'est de n'être ni jointe ni déclarée absente.
     if (applicable.includes('instruments') && instruments === null)
@@ -612,6 +642,7 @@ export function collectInventory(root: string): Inventory {
       heightfield: heightfield ? { id: heightfield.id } : null,
       missions,
       discovery,
+      moons,
       places,
       instruments,
       facts,

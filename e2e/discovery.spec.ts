@@ -129,6 +129,49 @@ test('Halley : un retour prédit, jamais une découverte en 1758', async ({
   await expect(discovery.locator('.bi-discovery-standing')).toBeHidden();
 });
 
+/**
+ * LIGNE 22.10, PAS 2 : un petit corps que la table du JPL n'a pas en section compte ses
+ * satellites par SBDB. Ida boote par son CHEMIN (`/ida/`), comme Jupiter, pour que l'adresse
+ * de sa liste soit éprouvée là où une adresse relative casserait ; et la NOTE doit nommer la
+ * liste réellement comptée, pas la table du JPL.
+ */
+test('Ida en 1990 puis en 1995 : Dactyl, compté par SBDB, et la note le dit', async ({
+  page,
+}) => {
+  const [dactyl] = systemOf('ida') as { name: string; years: number[] }[];
+  expect(dactyl?.years).toEqual([1993]);
+  await boot(page, 'ida/?date=1990-06-01T12:00:00Z');
+  const discovery = block(page);
+  await expect(discovery).toBeVisible({ timeout: 15_000 });
+  await expect(discovery.locator('.bi-discovery-moons')).toHaveText(
+    'Moons already seen at this date: 0 of the only one the JPL lists today'
+  );
+  await expect(discovery.locator('.bi-discovery-next')).toHaveText(
+    `Next discovery: 1993 (${dactyl!.name})`
+  );
+  await expect(discovery.locator('.bi-discovery-note')).toHaveText(
+    /^This count only includes the satellites the JPL Small-Body Database confirms today, read on /
+  );
+
+  await boot(page, 'ida/?date=1995-06-01T12:00:00Z');
+  await expect(block(page).locator('.bi-discovery-moons')).toHaveText(
+    'Moons already seen at this date: 1 of the only one the JPL lists today',
+    { timeout: 15_000 }
+  );
+  await expect(block(page).locator('.bi-discovery-next')).toBeHidden();
+});
+
+test('Makemake en 2010 : une lune sans nom UAI, nommée par sa désignation', async ({
+  page,
+}) => {
+  await boot(page, 'makemake/?date=2010-06-01T12:00:00Z');
+  const discovery = block(page);
+  await expect(discovery).toBeVisible({ timeout: 15_000 });
+  await expect(discovery.locator('.bi-discovery-next')).toHaveText(
+    'Next discovery: 2015 (S/2015 (136472) 1)'
+  );
+});
+
 test('la Terre n’affiche aucun bloc, et revenir sur Titan le réaffiche', async ({
   page,
 }) => {

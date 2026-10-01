@@ -183,9 +183,16 @@ function discoveryRows(): CardBlockSourceRow[] {
         note('nasa-science', claim.roleRetrieved as string, body);
     }
   }
-  const systems = Object.values(discoveryIndex.systems);
-  for (const system of systems) note('jpl-sats', system.retrieved);
-  const satellites = sum(systems, (s) => s.total);
+  // Chaque liste de satellites DÉCLARE sa source (la table du JPL, ou SBDB pour un petit corps
+  // qu'elle n'a pas en section, ligne 22.10 pas 2) : la ligne de cette source la compte.
+  const systemsBySource = new Map<string, { total: number }[]>();
+  for (const system of Object.values(discoveryIndex.systems)) {
+    note(system.source, system.retrieved);
+    systemsBySource.set(system.source, [
+      ...(systemsBySource.get(system.source) ?? []),
+      system,
+    ]);
+  }
 
   return (Object.keys(discoveryIndex.sources) as DiscoverySourceId[]).map(
     (id) => {
@@ -202,6 +209,8 @@ function discoveryRows(): CardBlockSourceRow[] {
           es: `${count(bodies, locale)} ficha${bodies === 1 ? '' : 's'}`,
           'pt-BR': `${count(bodies, locale)} ficha${bodies === 1 ? '' : 's'}`,
         })[locale];
+      const systems = systemsBySource.get(id) ?? [];
+      const satellites = sum(systems, (s) => s.total);
       return {
         index: 'discoveryIndex.json',
         publisher: source.publisher,
@@ -209,7 +218,7 @@ function discoveryRows(): CardBlockSourceRow[] {
         url: source.url,
         usedBy: ['bi.discovery.label'],
         coverage:
-          id === 'jpl-sats'
+          systems.length > 0
             ? (locale) =>
                 ({
                   en: `${cards(locale)}, and ${count(satellites, locale)} satellites of ${count(systems.length, locale)} systems for the moons already seen at a date`,

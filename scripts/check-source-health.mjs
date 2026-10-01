@@ -258,6 +258,11 @@ export function derivedSources() {
       const url = claim.url.split('#')[0];
       urls.add(url === SBDB_PAGE ? SBDB_API : url);
     }
+  // Et chaque liste de satellites, qui DÉCLARE sa source (ligne 22.10, pas 2).
+  for (const system of Object.values(discovery.systems ?? {})) {
+    const url = system.url.split('#')[0];
+    urls.add(url === SBDB_PAGE ? SBDB_API : url);
+  }
 
   const tilesets = join(ROOT, 'src/registry/products/tilesets');
   for (const file of readdirSync(tilesets).filter((f) => f.endsWith('.json'))) {

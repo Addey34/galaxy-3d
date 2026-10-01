@@ -14,7 +14,11 @@
  * RIEN N'EST DEMANDÉ AU DÉMARRAGE : l'index arrive à l'ouverture d'une fiche, la liste des
  * satellites à l'ouverture de celle de leur parent (`config/discovery.ts`).
  */
-import { loadDiscovery, loadSatelliteDiscoveries } from '@/config/discovery';
+import {
+  loadDiscovery,
+  loadSatelliteDiscoveries,
+  type SatelliteSystemInfo,
+} from '@/config/discovery';
 import {
   discoveryStanding,
   nextSatelliteDiscovery,
@@ -127,7 +131,7 @@ export function setupDiscoveryBlock(
   let claims: readonly DiscoveryClaim[] | null = null;
   let system: {
     satellites: readonly SatelliteDiscovery[];
-    retrieved: string;
+    system: SatelliteSystemInfo;
   } | null = null;
   /** Comme dans `ui/missionsBlock.ts` : on ne retient que le cas VIDE, pour ne pas boucler. */
   let nothingToShow: string | null = null;
@@ -180,15 +184,22 @@ export function setupDiscoveryBlock(
         system.satellites,
         sceneDate
       );
+      // Un seul satellite (six des sept petits corps du pas 2) : « 0 sur les 1 » est faux dans
+      // les quatre langues. Trouvé en LISANT le rendu.
+      const one = total === 1;
       setLine(
         moonsEl,
         atLeast === atMost
-          ? t('bi.discovery.moonsKnown', { count: atLeast, total })
-          : t('bi.discovery.moonsKnownRange', {
-              min: atLeast,
-              max: atMost,
+          ? t(one ? 'bi.discovery.moonsKnownOne' : 'bi.discovery.moonsKnown', {
+              count: atLeast,
               total,
             })
+          : t(
+              one
+                ? 'bi.discovery.moonsKnownRangeOne'
+                : 'bi.discovery.moonsKnownRange',
+              { min: atLeast, max: atMost, total }
+            )
       );
       const next = nextSatelliteDiscovery(system.satellites, sceneDate);
       setLine(
@@ -200,9 +211,22 @@ export function setupDiscoveryBlock(
             })
           : ''
       );
+      // La note dit QUELLE liste a été comptée : la table du JPL, ou SBDB pour un petit corps
+      // (ligne 22.10, pas 2), avec ses satellites non confirmés quand elle en déclare.
+      const info = system.system;
+      const note = t(
+        info.source === 'sbdb'
+          ? 'bi.discovery.moonsNoteSbdb'
+          : 'bi.discovery.moonsNote',
+        { date: formatDay(info.retrieved) }
+      );
       setLine(
         noteEl,
-        t('bi.discovery.moonsNote', { date: formatDay(system.retrieved) })
+        info.unconfirmed?.length
+          ? `${note} ${t('bi.discovery.moonsUnconfirmed', {
+              names: info.unconfirmed.map(satelliteName).join(', '),
+            })}`
+          : note
       );
     } else {
       setLine(moonsEl, '');

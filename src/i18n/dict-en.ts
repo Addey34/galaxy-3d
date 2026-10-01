@@ -487,10 +487,18 @@ export const en = {
     'Moons already seen at this date: {count} of the {total} the JPL lists today',
   'bi.discovery.moonsKnownRange':
     'Moons already seen at this date: between {min} and {max} of the {total} the JPL lists today',
+  'bi.discovery.moonsKnownOne':
+    'Moons already seen at this date: {count} of the only one the JPL lists today',
+  'bi.discovery.moonsKnownRangeOne':
+    'Moons already seen at this date: between {min} and {max} of the only one the JPL lists today',
   'bi.discovery.moonsNext': 'Next discovery: {year} ({names})',
   'bi.discovery.moonsMore': '{names} and {count} more',
   'bi.discovery.moonsNote':
     'This count only includes the moons the JPL table lists today, read on {date}: a moon announced then refuted is not in it, so this is not what was believed at the time.',
+  'bi.discovery.moonsNoteSbdb':
+    'This count only includes the satellites the JPL Small-Body Database confirms today, read on {date}: a satellite announced then refuted is not in it, so this is not what was believed at the time.',
+  'bi.discovery.moonsUnconfirmed':
+    'Not counted, because the database lists them as unconfirmed: {names}.',
   'bi.missions.label': 'Missions',
   'bi.missions.countAtDate': '{count}, of which {active} at this date',
   'bi.missions.countAllAtDate': '{count}, all at this date',

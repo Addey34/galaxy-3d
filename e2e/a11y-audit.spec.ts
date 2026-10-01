@@ -478,6 +478,12 @@ test.describe('mobile viewport, discovery block', () => {
       path: '/pluto/?date=1930-02-01T12:00:00Z',
     })),
     { locale: 'en' as const, path: '/neptune/' },
+    // Ligne 22.10, pas 2 : Hauméa en 2004 exerce la note SBDB, la plus longue du bloc, et une
+    // découverte suivante à deux noms.
+    ...(['en', 'fr', 'es', 'pt-BR'] as const).map((locale) => ({
+      locale,
+      path: '/haumea/?date=2004-06-01T12:00:00Z',
+    })),
   ];
   for (const { locale, path } of cases) {
     test(`discovery block ${path}, ${locale}, is clean at 390 px`, async ({

@@ -46,6 +46,12 @@
       }
     ]
   },
+  "sbdbSatellites": {
+    "$comment": "Pas 2 de la ligne 22.10 (2026-10-02). Les satellites d'un petit corps que la table du JPL n'a pas en section sont lus dans SBDB (`sat=1`), par la MÊME requête que le relevé des faits (`snapshot-fact-sources.mjs`), donc par la réponse même qui donne le compte affiché sur la fiche. Aucune liste de corps ici : elle se DÉRIVE (désignations de `fact-source-targets.json`, moins les sections du JPL). Pour un corps qui a les deux (Pluton), SBDB sert de TÉMOIN : ses années doivent être celles de la table du JPL, ce qui prouve que `year` (« year of discovery » dans la documentation de l'API) désigne la même chose des deux côtés. Le champ `confirmed` n'est PAS documenté par l'API (lu le 2026-10-02) : le générateur n'accepte que « Y » et « N », et échoue sur toute autre valeur."
+  },
+  "satellitesNotCovered": {
+    "earth": "La Lune n'entre dans aucune des deux listes de satellites lues : la table du JPL n'a de section que pour Mars, Jupiter, Saturne, Uranus, Neptune et Pluton, et SBDB ne décrit que des petits corps (mesuré le 2026-10-02). Sa découverte n'a de toute façon pas de date : le JPL la dit connue depuis l'Antiquité, et c'est ce que sa propre fiche affiche."
+  },
   "notApplicable": {
     "sun": "Le Soleil n'a pas été découvert : aucune des trois sources lues ne lui attribue de découverte, et la fiche du NSSDCA, qui en déclare une pour chaque planète, n'en porte aucune pour lui (mesuré le 2026-10-01).",
     "earth": "La Terre n'a pas été découverte : la fiche du NSSDCA, qui déclare une découverte pour chaque autre planète, n'en porte aucune pour elle (mesuré le 2026-10-01)."

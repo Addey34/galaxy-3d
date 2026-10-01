@@ -36,6 +36,15 @@
  *      cette date en retour prédit : publier « découverte en 1758 » aurait été faux pour tout
  *      lecteur, et le corriger de mémoire aurait été interdit.
  *
+ * PAS 2 (2026-10-02) : LES SATELLITES DES PETITS CORPS QUE LA TABLE DU JPL N'A PAS EN SECTION.
+ * SBDB (`sat=1`) les déclare, lu par la MÊME requête que le relevé des faits, donc dans la
+ * réponse même qui donne le compte affiché sur la fiche. La liste des corps se DÉRIVE ; Pluton,
+ * présent dans les deux sources, sert de TÉMOIN (mêmes noms, mêmes années, sinon échec). Tout
+ * corps dont la fiche affiche une lune a sa liste, d'un compte ÉGAL, ou une raison écrite
+ * (`satellitesNotCovered`, la Terre). Deux choses mesurées : `confirmed` n'est pas documenté par
+ * l'API (seuls « Y » et « N » passent), et `iau_name` vaut la chaîne VIDE pour la lune de
+ * Makémaké, nommée alors par sa désignation provisoire.
+ *
  * CE QUE CE COMPTE NE DIT PAS, et la fiche le dit aussi : la table ne recense que les lunes
  * reconnues AUJOURD'HUI. Une lune annoncée puis réfutée n'y figure pas, donc ce n'est pas ce que
  * l'on CROYAIT à une date, mais ce que l'on avait déjà vu de ce qui est reconnu aujourd'hui.
@@ -138,6 +147,12 @@ function catalogue() {
       name: fields.displayName?.en ?? fiche.id,
       targetClass: fiche.targetClass,
       satellites: fields.satellites ?? [],
+      // Le nombre de lunes que la FICHE affiche : c'est à lui que le compte d'une liste de
+      // satellites doit être égal, sans quoi la fiche se contredirait.
+      moonCount:
+        typeof fiche.facts?.moonCount?.value === 'number'
+          ? fiche.facts.moonCount.value
+          : null,
     });
   }
   for (const [id, body] of bodies)
@@ -245,6 +260,55 @@ async function sbdbDiscovery(body, designation) {
   };
 }
 
+// ── SBDB : les satellites d'un petit corps (ligne 22.10, pas 2) ─────────────────────────────
+
+/**
+ * La MÊME requête que le relevé des faits (`snapshot-fact-sources.mjs`, `sbdbFacts`), donc la
+ * réponse même dont la fiche tire son nombre de lunes (`confirmedSatellites`), à la même date de
+ * lecture et dans le même cache. Deux requêtes différentes pourraient se lire à deux jours
+ * d'écart et se contredire ; une seule ne le peut pas.
+ */
+const sbdbSatellitesUrl = (designation) =>
+  `https://ssd-api.jpl.nasa.gov/sbdb.api?sstr=${encodeURIComponent(designation)}&phys-par=1&sat=1`;
+
+async function sbdbSatellites(body, designation) {
+  const { text: body_, retrieved } = await get(sbdbSatellitesUrl(designation));
+  const rows = JSON.parse(body_).sat ?? [];
+  const confirmed = [];
+  const unconfirmed = [];
+  for (const sat of rows) {
+    // `confirmed` n'est pas documenté par l'API (lu le 2026-10-02) : une valeur hors de « Y » et
+    // « N » voudrait dire qu'on ne sait plus ce que l'on compte.
+    if (sat.confirmed !== 'Y' && sat.confirmed !== 'N')
+      throw new Error(
+        `${body} : « confirmed » vaut ${JSON.stringify(sat.confirmed)} pour ${sat.prov_des}, ni Y ni N`
+      );
+    // `year` est « year of discovery » selon la documentation de l'API, et jamais nul. La
+    // référence, elle, est souvent d'une autre année (Dactyl 1993, Belton et al. 1994).
+    if (!YEAR.test(String(sat.year)))
+      throw new Error(
+        `${body} : année illisible pour ${sat.prov_des} : « ${sat.year} »`
+      );
+    // Makémaké : `iau_name` vaut la chaîne VIDE, pas `null` (mesuré le 2026-10-02). Le nom est
+    // alors la désignation provisoire, comme dans la table du JPL.
+    const iauName = sat.iau_name || null;
+    const row = {
+      name: iauName ?? sat.prov_des,
+      ...(iauName ? { provisional: sat.prov_des } : {}),
+      years: [Number(sat.year)],
+      who: null,
+      ref: sat.ref || null,
+    };
+    (sat.confirmed === 'Y' ? confirmed : unconfirmed).push(row);
+  }
+  return {
+    url: `https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=${encodeURIComponent(designation)}`,
+    retrieved,
+    confirmed,
+    unconfirmed,
+  };
+}
+
 // ── NSSDCA : « Discoverer » et « Discovery Date » des fiches planétaires ───────────────────
 
 const MONTHS = [
@@ -348,13 +412,85 @@ for (const [parent, rows] of Object.entries(satellites.systems)) {
     throw new Error(
       `lunes du catalogue absentes de la section de ${parent} : ${[...moons.keys()].join(', ')}`
     );
-  list.sort(
+  systemFiles[parent] = {
+    source: 'jpl-sats',
+    url: satellites.url,
+    retrieved: satellites.retrieved,
+    list,
+  };
+}
+
+// Les satellites des petits corps que la table du JPL n'a pas en section : la liste des corps se
+// DÉRIVE (toute désignation SBDB du catalogue), jamais écrite.
+for (const [body, designation] of Object.entries(SBDB)) {
+  if (!bodies.has(body)) continue;
+  const read = await sbdbSatellites(body, designation);
+  const jpl = systemFiles[body];
+  if (jpl) {
+    // TÉMOIN (Pluton) : là où les deux sources se recouvrent, elles doivent dire la même chose,
+    // nom pour nom et année pour année. C'est ce qui prouve que `year` de SBDB est bien l'année
+    // de découverte au sens de la table du JPL, et pas celle de la publication.
+    const byName = new Map(jpl.list.map((row) => [row.name, row]));
+    for (const row of read.confirmed) {
+      const twin = byName.get(row.name);
+      if (!twin || !twin.years.includes(row.years[0]))
+        throw new Error(
+          `${body} : SBDB date ${row.name} de ${row.years[0]}, la table du JPL ` +
+            `${twin ? `de ${twin.years.join(', ')}` : 'ne le recense pas'}`
+        );
+    }
+    if (read.confirmed.length !== jpl.list.length)
+      throw new Error(
+        `${body} : SBDB confirme ${read.confirmed.length} satellites, la table du JPL en recense ${jpl.list.length}`
+      );
+    console.log(
+      `témoin : ${body}, ${read.confirmed.length} satellites, mêmes noms et mêmes années dans SBDB et la table du JPL`
+    );
+    continue;
+  }
+  if (read.confirmed.length === 0 && read.unconfirmed.length === 0) continue;
+  systemFiles[body] = {
+    source: 'sbdb',
+    url: read.url,
+    retrieved: read.retrieved,
+    list: read.confirmed,
+    ...(read.unconfirmed.length ? { unconfirmed: read.unconfirmed } : {}),
+  };
+}
+
+for (const system of Object.values(systemFiles))
+  system.list.sort(
     (a, b) =>
       Math.min(...a.years) - Math.min(...b.years) ||
       a.name.localeCompare(b.name)
   );
-  systemFiles[parent] = list;
+
+// PARITÉ : tout corps dont la fiche affiche au moins une lune a la liste de ses satellites, d'un
+// compte ÉGAL, ou une raison écrite. Un écart ne se tranche pas : il s'écrit, en arrêtant tout.
+const notCovered = TARGETS.satellitesNotCovered ?? {};
+const uncovered = [];
+for (const [id, body] of bodies) {
+  const system = systemFiles[id];
+  if (notCovered[id]) {
+    if (system)
+      throw new Error(
+        `${id} a une raison écrite dans satellitesNotCovered ET une liste de satellites`
+      );
+    continue;
+  }
+  if (system && system.list.length !== body.moonCount)
+    throw new Error(
+      `${id} : la fiche affiche ${body.moonCount} lune(s), la liste (${system.source}) en compte ${system.list.length}. ` +
+        `Relire les deux sources : l'une a avancé sans l'autre.`
+    );
+  if (!system && body.moonCount > 0)
+    uncovered.push(`${id} (${body.moonCount})`);
 }
+if (uncovered.length)
+  throw new Error(
+    `corps dont la fiche affiche des lunes, sans liste de satellites NI raison écrite : ${uncovered.join(', ')}. ` +
+      `Déclarer une raison dans satellitesNotCovered de scripts/discovery-targets.json.`
+  );
 
 for (const [body, designation] of Object.entries(SBDB)) {
   if (!records.has(body)) continue;
@@ -445,7 +581,7 @@ const index = {
     },
     sbdb: {
       publisher: 'NASA JPL Solar System Dynamics',
-      title: 'Small-Body Database, discovery circumstances',
+      title: 'Small-Body Database, discovery circumstances and satellites',
       url: 'https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html',
       api: 'https://ssd-api.jpl.nasa.gov/sbdb.api?sstr=1&discovery=1',
     },
@@ -474,11 +610,16 @@ for (const body of [...records.keys()].sort()) {
     : { claims: records.get(body) };
 }
 for (const parent of Object.keys(systemFiles).sort()) {
-  const json = JSON.stringify(systemFiles[parent]);
+  const { source, url, retrieved, list, unconfirmed } = systemFiles[parent];
+  const json = JSON.stringify(list);
   index.systems[parent] = {
-    total: systemFiles[parent].length,
+    source,
+    url,
+    total: list.length,
     bytes: Buffer.byteLength(json),
-    retrieved: satellites.retrieved,
+    retrieved,
+    // Non confirmés : pas comptés, mais la fiche dit qu'ils existent.
+    ...(unconfirmed ? { unconfirmed } : {}),
   };
   write(join(OUT, `${parent}.json`), json);
 }
@@ -488,7 +629,7 @@ const claims = [...records.values()].flat();
 console.log(
   `${Object.keys(index.bodies).length} corps : ${claims.length} affirmations ` +
     `(${Object.keys(notApplicable).length} sans objet), ` +
-    `${Object.values(systemFiles).flat().length} satellites sur ${Object.keys(systemFiles).length} systèmes`
+    `${Object.values(systemFiles).flatMap((s) => s.list).length} satellites sur ${Object.keys(systemFiles).length} systèmes`
 );
 if (check) {
   if (drifted.length) {
