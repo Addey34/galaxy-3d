@@ -995,6 +995,29 @@
           <div class="bi-instruments-body"></div>
           <p class="bi-instruments-note"></p>
         </details>
+        <!-- Quels orbiteurs ont observe une formation nommee de ce corps (ligne 40.3), lu dans
+             les empreintes de l'Orbital Data Explorer. Rempli par ui/placesBlock.ts ; rien n'est
+             demande au demarrage, et les noms ne sont charges qu'a l'ouverture du bloc. Un champ
+             et non un clic sur la carte : les noms sont sur un canvas, qu'aucun clavier n'atteint. -->
+        <details class="bi-places" hidden>
+          <summary>
+            <span data-i18n="bi.places.label">Observed formations</span>
+            <span class="bi-places-count"></span>
+          </summary>
+          <p class="bi-places-intro"></p>
+          <form class="bi-places-form" role="search">
+            <input
+              class="bi-places-input"
+              type="search"
+              list="bi-places-names"
+              autocomplete="off"
+              spellcheck="false"
+            />
+            <datalist id="bi-places-names" class="bi-places-names"></datalist>
+          </form>
+          <div class="bi-places-result"></div>
+          <p class="bi-places-note"></p>
+        </details>
         <!-- Sources des valeurs ci-dessus, numérotées comme les renvois. Remplies par
              ui/bodyInfo.ts depuis le registre config/factSources.ts. -->
         <details class="bi-sources" hidden>

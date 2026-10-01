@@ -1,3 +1,5 @@
+import { readFileSync, readdirSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { expect, test, type Page } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 import { blockExternalNetwork } from './netBlock';
@@ -224,6 +226,31 @@ test('explo mode overview has no automatically detectable a11y violations', asyn
  * dépasse TOUJOURS de 179 à 213 px selon la langue. Les inclure rendrait la garde rouge à
  * l'arrivée, donc désarmée le jour suivant.
  */
+/** La formation lunaire la plus observée, LUE dans la donnée livrée (ligne 40.3). */
+const MOST_OBSERVED_MOON = (() => {
+  const dir = resolve(
+    import.meta.dirname,
+    '../public/assets/place-observations/moon'
+  );
+  let best = { id: '', rows: -1 };
+  for (const f of readdirSync(dir))
+    for (const [id, rows] of Object.entries(
+      (
+        JSON.parse(readFileSync(resolve(dir, f), 'utf-8')) as {
+          observed: Record<string, unknown[]>;
+        }
+      ).observed
+    ))
+      if (rows.length > best.rows) best = { id, rows: rows.length };
+  const names = JSON.parse(
+    readFileSync(
+      resolve(import.meta.dirname, '../public/assets/gazetteer/moon.json'),
+      'utf-8'
+    )
+  ) as { name: string; iauId: number }[];
+  return names.find((n) => String(n.iauId) === best.id)!.name;
+})();
+
 async function clippedOverflow(page: Page): Promise<string[]> {
   return page.evaluate(() => {
     const card = document.getElementById('body-info');
@@ -374,6 +401,58 @@ test.describe('mobile viewport', () => {
         `débordement de la fiche (${locale})`
       ).toBeLessThanOrEqual(0);
       // Et le débordement que la fiche ROGNE, donc qu'elle ne peut pas rapporter elle-même.
+      expect(
+        await clippedOverflow(page),
+        `texte rogné dans la fiche (${locale})`
+      ).toEqual([]);
+    });
+  }
+
+  /**
+   * LE BLOC « FORMATIONS OBSERVÉES » (ligne 40.3), avec un RÉSULTAT rendu : c'est lui qui porte
+   * les noms longs de missions et d'instruments publiés par l'ODE, et le lien de l'étiquette PDS.
+   * La formation témoin est la plus observée de la Lune, LUE dans la donnée livrée : elle rend le
+   * plus de lignes, donc le plus de chances de déborder.
+   */
+  for (const locale of ['en', 'fr', 'es', 'pt-BR'] as const) {
+    test(`moon card, observed formation SHOWN, ${locale}, is clean at 390 px`, async ({
+      page,
+    }) => {
+      await page.addInitScript((lang) => {
+        localStorage.setItem('ssv-locale', lang);
+      }, locale);
+      await page.goto('/moon/');
+      await expect(page.locator('#loader')).toBeHidden({ timeout: 30_000 });
+      const card = page.locator('#body-info');
+      await expect(card).toBeVisible();
+      const places = card.locator('.bi-places');
+      await expect(places).toBeVisible({ timeout: 15_000 });
+      await card.evaluate((el) => {
+        for (const d of el.querySelectorAll('details')) d.open = true;
+      });
+      await expect(places.locator('datalist option').first()).toBeAttached({
+        timeout: 15_000,
+      });
+      await places.locator('.bi-places-input').fill(MOST_OBSERVED_MOON);
+      await places.locator('.bi-places-input').press('Enter');
+      await expect(places.locator('.bi-places-result li').first()).toBeVisible({
+        timeout: 15_000,
+      });
+
+      const results = await runAxe(page);
+      expect(
+        results.violations,
+        JSON.stringify(results.violations, null, 2)
+      ).toEqual([]);
+      const overflow = await page.evaluate(
+        () =>
+          document.documentElement.scrollWidth -
+          document.documentElement.clientWidth
+      );
+      expect(
+        overflow,
+        `débordement de la page (${locale})`
+      ).toBeLessThanOrEqual(0);
       expect(
         await clippedOverflow(page),
         `texte rogné dans la fiche (${locale})`

@@ -17,8 +17,9 @@ import type CelestialObject from '@/components/celestial/CelestialObject';
 /**
  * LES NOMS DE LA SURFACE, ÉCRITS SUR LA SURFACE.
  *
- * Trente-six corps du catalogue portent des formations nommées par l'UAI — 15 932 en tout, dont
- * 9 087 pour la seule Lune. Rien de tout cela n'est demandé au démarrage : le fichier d'un corps
+ * Trente-six corps du catalogue portent des formations nommées par l'UAI (le compte se lit dans
+ * `config/gazetteerIndex.json`), dont 9 087 pour la seule Lune. Rien de tout cela n'est demandé
+ * au démarrage : le fichier d'un corps
  * n'est chargé qu'à l'APPROCHE, comme les tuiles de surface, et pour la même raison — survoler
  * Jupiter de loin ne doit coûter aucune requête.
  *

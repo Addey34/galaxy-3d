@@ -121,6 +121,16 @@ const MARKERS = [
     what: 'capabilities WMTS',
   },
   {
+    prefix: 'https://oderest.rsl.wustl.edu/',
+    /**
+     * Lu le 2026-09-30 sur une réponse RÉELLE : l'ODE rend ses erreurs en HTTP 200, avec
+     * `"Status": "ERROR"` (« Invalid IIPT »), et ses réponses valides avec `"Status": "Success"`.
+     * Le code HTTP ne dit donc rien, et c'est ce statut qui tranche.
+     */
+    marker: () => '"Status": "Success"',
+    what: 'Orbital Data Explorer (PDS Geosciences Node)',
+  },
+  {
     prefix: 'https://pds.nasa.gov/api/search/',
     /**
      * Lu le 2026-09-30 sur les réponses RÉELLES des requêtes que les générateurs emploient : le
@@ -216,6 +226,12 @@ export function derivedSources() {
   );
   if (typeof missions.provider?.api === 'string')
     urls.add(missions.provider.api);
+
+  /** Idem pour l'Orbital Data Explorer, DÉRIVÉ de l'index des formations observées (ligne 40.3). */
+  const places = JSON.parse(
+    readFileSync(join(ROOT, 'src/config/placeObservationIndex.json'), 'utf8')
+  );
+  if (typeof places.provider?.api === 'string') urls.add(places.provider.api);
 
   /** Idem pour l'API des porteurs d'instruments, DÉRIVÉE de l'index des instruments (lot 42). */
   const instruments = JSON.parse(

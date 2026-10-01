@@ -454,6 +454,24 @@ export const fr: Record<MessageKey, string> = {
   'bi.instruments.absentNote': 'Lu dans l’archive du PDS le {date}.',
   'bi.instruments.note':
     'Ce que l’archive du PDS déclare que cette sonde embarque, lu le {date}. Chaque nom est celui que l’archive publie, et l’identifiant sous lui en est la citation.',
+  'bi.places.label': 'Formations observées',
+  'bi.places.count': '{observed} sur {total} nommées',
+  'bi.places.search': 'Formation nommée',
+  'bi.places.hint':
+    'Saisissez le nom d’une formation pour voir quels orbiteurs l’ont observée.',
+  'bi.places.unknown': 'Aucune formation de ce corps ne porte ce nom.',
+  'bi.places.none':
+    'Aucune empreinte publiée par l’Orbital Data Explorer ne touche cette formation.',
+  'bi.places.unavailable':
+    'Les observations de cette formation n’ont pas pu être chargées.',
+  'bi.places.observations': 'Observations : {count}, {span}',
+  'bi.places.observationsUndated': 'Observations : {count}, dates non publiées',
+  'bi.places.firstLabel': 'Première observation (étiquette PDS)',
+  'bi.places.announce': '{name}, instruments : {count}',
+  'bi.places.uncovered':
+    'Les empreintes des observations n’ont été trouvées, dans l’Orbital Data Explorer de la NASA, que pour ces corps : {bodies}. Aucun service public d’empreintes n’a été trouvé pour ce corps.',
+  'bi.places.note':
+    'Empreintes lues dans l’Orbital Data Explorer de la NASA (PDS Geosciences Node), produits créés jusqu’au {date}. Un produit dont l’empreinte couvre aussi l’antipode de la formation, comme une carte globale, n’est pas compté.',
   'stat.radius': 'Rayon',
   'stat.meanDistanceSun': 'Distance moyenne (Soleil)',
   'stat.meanDistanceFrom': 'Distance moyenne ({parent})',

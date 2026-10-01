@@ -466,6 +466,25 @@ export const es: Record<MessageKey, string> = {
   'bi.instruments.absentNote': 'Leído en el archivo del PDS el {date}.',
   'bi.instruments.note':
     'Lo que el archivo del PDS declara que lleva esta sonda, leído el {date}. Cada nombre es el que publica el archivo, y el identificador debajo es su cita.',
+  'bi.places.label': 'Formaciones observadas',
+  'bi.places.count': '{observed} de {total} con nombre',
+  'bi.places.search': 'Formación con nombre',
+  'bi.places.hint':
+    'Escriba el nombre de una formación para ver qué orbitadores la observaron.',
+  'bi.places.unknown': 'Ninguna formación de este cuerpo lleva ese nombre.',
+  'bi.places.none':
+    'Ninguna huella publicada por el Orbital Data Explorer toca esta formación.',
+  'bi.places.unavailable':
+    'No se pudieron cargar las observaciones de esta formación.',
+  'bi.places.observations': 'Observaciones: {count}, {span}',
+  'bi.places.observationsUndated':
+    'Observaciones: {count}, fechas no publicadas',
+  'bi.places.firstLabel': 'Primera observación (etiqueta PDS)',
+  'bi.places.announce': '{name}, instrumentos: {count}',
+  'bi.places.uncovered':
+    'Solo se encontraron huellas de observaciones, en el Orbital Data Explorer de la NASA, para estos cuerpos: {bodies}. No se encontró ningún servicio público de huellas para este cuerpo.',
+  'bi.places.note':
+    'Huellas leídas en el Orbital Data Explorer de la NASA (PDS Geosciences Node), productos creados hasta el {date}. No se cuenta un producto cuya huella cubre también el antípoda de la formación, como un mapa global.',
   'stat.radius': 'Radio',
   'stat.meanDistanceSun': 'Distancia media (Sol)',
   'stat.meanDistanceFrom': 'Distancia media ({parent})',

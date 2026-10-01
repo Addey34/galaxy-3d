@@ -489,6 +489,24 @@ export const en = {
   'bi.instruments.absentNote': 'Read in the PDS archive on {date}.',
   'bi.instruments.note':
     'What the PDS archive declares this spacecraft carries, read on {date}. Each name is the one the archive publishes, and the identifier below it is its citation.',
+  'bi.places.label': 'Observed formations',
+  'bi.places.count': '{observed} of {total} named',
+  'bi.places.search': 'Named formation',
+  'bi.places.hint':
+    'Type the name of a formation to see which orbiters imaged it.',
+  'bi.places.unknown': 'No formation of this body has that name.',
+  'bi.places.none':
+    'No footprint published by the Orbital Data Explorer touches this formation.',
+  'bi.places.unavailable':
+    'The observations of this formation could not be loaded.',
+  'bi.places.observations': 'Observations: {count}, {span}',
+  'bi.places.observationsUndated': 'Observations: {count}, dates not published',
+  'bi.places.firstLabel': 'First observation (PDS label)',
+  'bi.places.announce': '{name}, instruments: {count}',
+  'bi.places.uncovered':
+    'Footprints of individual observations were found, in NASA’s Orbital Data Explorer, only for these bodies: {bodies}. No public footprint service was found for this body.',
+  'bi.places.note':
+    'Footprints read in NASA’s Orbital Data Explorer (PDS Geosciences Node), products created up to {date}. A product whose footprint also covers the antipode of the formation, such as a global map, is not counted.',
   'stat.radius': 'Radius',
   'stat.meanDistanceSun': 'Mean distance (Sun)',
   'stat.meanDistanceFrom': 'Mean distance ({parent})',

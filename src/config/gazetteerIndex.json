@@ -44,8 +44,8 @@
    "bytes": 370
   },
   "dione": {
-   "count": 98,
-   "bytes": 19975
+   "count": 95,
+   "bytes": 19197
   },
   "enceladus": {
    "count": 87,
@@ -84,12 +84,12 @@
    "bytes": 3508
   },
   "mars": {
-   "count": 2052,
-   "bytes": 370755
+   "count": 2051,
+   "bytes": 370593
   },
   "mercury": {
-   "count": 614,
-   "bytes": 125615
+   "count": 606,
+   "bytes": 124005
   },
   "mimas": {
    "count": 42,

@@ -115,6 +115,23 @@ describe('répertoire des noms de surface', () => {
       }
   });
 
+  it('ne livre JAMAIS deux fois le même identifiant sur un corps', () => {
+    // L'UAI publie parfois une formation deux fois sous le même lien de fiche (douze cas mesurés
+    // le 2026-09-30, Kunisada à deux centres différents). Le générateur tranche par la fiche ;
+    // une copie restante écrirait le nom deux fois, et ferait mentir tout compte par identifiant
+    // (c'est la garde des formations observées qui l'a vu).
+    for (const body of files) {
+      const seen = new Map<number, string>();
+      for (const f of featuresOf(body)) {
+        expect(
+          seen.has(f.iauId),
+          `${body} : ${f.name} (${f.iauId}) en double`
+        ).toBe(false);
+        seen.set(f.iauId, f.name);
+      }
+    }
+  });
+
   it('fait voyager la provenance AVEC la donnée', () => {
     const p = manifest.provider;
     expect(p.publisher).toContain('International Astronomical Union');

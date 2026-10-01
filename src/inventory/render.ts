@@ -38,6 +38,7 @@ const CAPABILITY_ORDER: readonly Capability[] = [
   'tileset',
   'heightfield',
   'missions',
+  'places',
   'instruments',
   'facts',
   'page',
@@ -114,6 +115,17 @@ function instrumentsCell(row: InventoryRow): string {
   return String(row.instruments);
 }
 
+/**
+ * Les formations nommees que l'ODE declare observees. `non couvert` n'est pas un manque : l'ODE ne
+ * couvre que quatre corps, et c'est ecrit. `TIRAGE INCOMPLET` en est un.
+ */
+function placesCell(row: InventoryRow): string {
+  if (!row.applicable.includes('places')) return '-';
+  if (row.places === null) return 'TIRAGE INCOMPLET';
+  if (row.places === 'non-couvert') return 'non couvert';
+  return `${row.places.observed}/${row.places.formations}`;
+}
+
 function factsCell(row: InventoryRow): string {
   if (!row.applicable.includes('facts')) return '-';
   const { applicable, sourced, reasoned, unsourced, missing } = row.facts;
@@ -133,6 +145,7 @@ function table(rows: readonly InventoryRow[]): string[] {
     'textures',
     'surface',
     'missions',
+    'lieux',
     'instruments',
     'faits',
     'page',
@@ -143,6 +156,7 @@ function table(rows: readonly InventoryRow[]): string[] {
     textureCell(row),
     surfaceCell(row),
     missionsCell(row),
+    placesCell(row),
     instrumentsCell(row),
     factsCell(row),
     pageCell(row),

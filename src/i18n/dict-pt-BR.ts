@@ -462,6 +462,24 @@ export const ptBR: Record<MessageKey, string> = {
   'bi.instruments.absentNote': 'Lido no arquivo do PDS em {date}.',
   'bi.instruments.note':
     'O que o arquivo do PDS declara que esta sonda leva, lido em {date}. Cada nome é o que o arquivo publica, e o identificador abaixo é a sua citação.',
+  'bi.places.label': 'Formações observadas',
+  'bi.places.count': '{observed} de {total} com nome',
+  'bi.places.search': 'Formação com nome',
+  'bi.places.hint':
+    'Digite o nome de uma formação para ver quais orbitadores a observaram.',
+  'bi.places.unknown': 'Nenhuma formação deste corpo tem esse nome.',
+  'bi.places.none':
+    'Nenhuma pegada publicada pelo Orbital Data Explorer toca esta formação.',
+  'bi.places.unavailable':
+    'Não foi possível carregar as observações desta formação.',
+  'bi.places.observations': 'Observações: {count}, {span}',
+  'bi.places.observationsUndated': 'Observações: {count}, datas não publicadas',
+  'bi.places.firstLabel': 'Primeira observação (rótulo PDS)',
+  'bi.places.announce': '{name}, instrumentos: {count}',
+  'bi.places.uncovered':
+    'Pegadas de observações só foram encontradas, no Orbital Data Explorer da NASA, para estes corpos: {bodies}. Nenhum serviço público de pegadas foi encontrado para este corpo.',
+  'bi.places.note':
+    'Pegadas lidas no Orbital Data Explorer da NASA (PDS Geosciences Node), produtos criados até {date}. Um produto cuja pegada também cobre o antípoda da formação, como um mapa global, não é contado.',
   'stat.radius': 'Raio',
   'stat.meanDistanceSun': 'Distância média (Sol)',
   'stat.meanDistanceFrom': 'Distância média ({parent})',

@@ -50,7 +50,7 @@ const OUT = join(ROOT, 'public', 'assets', 'gazetteer');
  * un module de l'application ne peut pas importer depuis `public/` (« Assets in public
  * directory cannot be imported from JavaScript »). L'application a besoin, AU BUILD, de savoir
  * quels corps portent des noms — c'est ce qui lui evite de demander quoi que ce soit au
- * demarrage. Elle n'a pas besoin des 15 932 formations, qui restent servies a l'approche.
+ * demarrage. Elle n'a pas besoin des formations elles-memes, qui restent servies a l'approche.
  *
  * Un seul proprietaire : cet index porte aussi la provenance et la convention, et il n'existe
  * pas de second manifeste dans `public/` qui pourrait en diverger.
@@ -166,12 +166,73 @@ function features(kml) {
       approved: field(b, 'approvaldt').slice(0, 10).replace(/\//g, '-'),
       origin: field(b, 'origin'),
       iauId: Number.parseInt(field(b, 'link').split('/').pop() ?? '', 10) || 0,
+      rawLat: lat,
+      rawDiameter: diameter,
     });
   }
   out.sort(
     (a, b) => b.diameterKm - a.diameterKm || a.name.localeCompare(b.name)
   );
   return out;
+}
+
+/**
+ * L'UAI PUBLIE PARFOIS DEUX FOIS LA MEME FORMATION, et c'est mesure (ligne 40.3, 2026-09-30) :
+ * douze identifiants repetes sur trois corps (Dione 3, Mars 1, Mercure 8), sous le MEME lien de
+ * fiche, sans aucun champ qui dise lequel est courant. Six copies sont identiques dans ce qui est
+ * livre : on en garde une. Six autres DIVERGENT (Kunisada : deux centres a 0,16 degre l'un de
+ * l'autre, 241,45 km contre 241,0). Garder « la premiere » serait arbitraire : c'est la FICHE de
+ * l'UAI qui tranche, par son diametre puis sa latitude, compares aux valeurs NON arrondies. Sa
+ * longitude n'est pas comparee, parce que la fiche l'affiche dans un AUTRE systeme (Kunisada y
+ * est a 246,98, soit 360 - 113,02 : positive vers l'ouest). Une fiche illisible fait ECHOUER le
+ * generateur plutot que de laisser deviner.
+ */
+async function withoutDuplicates(body, list) {
+  const byId = new Map();
+  for (const f of list) byId.set(f.iauId, [...(byId.get(f.iauId) ?? []), f]);
+  const drop = new Set();
+  for (const [id, group] of byId) {
+    if (group.length < 2) continue;
+    const shipped = group.map(({ rawLat: _l, rawDiameter: _d, ...f }) =>
+      JSON.stringify(f)
+    );
+    if (shipped.every((x) => x === shipped[0])) {
+      group.slice(1).forEach((f) => drop.add(f));
+      continue;
+    }
+    const page = await featurePage(id);
+    const num = (re) => Number.parseFloat(re.exec(page)?.[1] ?? '');
+    const diameter = num(/<th>Diameter<\/th>\s*<td>\s*([-\d.]+)/);
+    const lat = num(/<th>Center Latitude<\/th>\s*<td>\s*([-\d.]+)/);
+    if (!Number.isFinite(diameter) || !Number.isFinite(lat))
+      throw new Error(
+        `${body} ${id} : fiche UAI illisible, doublon impossible a trancher`
+      );
+    const score = (f) =>
+      Math.abs(f.rawDiameter - diameter) + Math.abs(f.rawLat - lat);
+    const ranked = [...group].sort((a, b) => score(a) - score(b));
+    if (score(ranked[0]) === score(ranked[1]))
+      throw new Error(
+        `${body} ${id} : la fiche UAI ne departage pas ses ${group.length} enregistrements`
+      );
+    console.log(
+      `${body} : ${group[0].name} (${id}) publie ${group.length} fois, la fiche garde ${ranked[0].rawLat}, ${ranked[0].rawDiameter} km`
+    );
+    ranked.slice(1).forEach((f) => drop.add(f));
+  }
+  return list.filter((f) => !drop.has(f));
+}
+
+async function featurePage(id) {
+  const path = join(CACHE, `feature-${id}.html`);
+  if (!existsSync(path)) {
+    if (offline)
+      throw new Error(`fiche UAI ${id} absente du cache et --offline demande`);
+    const res = await fetch(`https://planetarynames.wr.usgs.gov/Feature/${id}`);
+    if (!res.ok) throw new Error(`fiche UAI ${id} : HTTP ${res.status}`);
+    writeFileSync(path, await res.text());
+  }
+  return readFileSync(path, 'utf8');
 }
 
 const targets = await iauTargets();
@@ -196,7 +257,9 @@ const manifest = { convention: {}, provider: {}, bodies: {} };
 const drifted = [];
 let total = 0;
 for (const { target, body } of pairs) {
-  const list = features(kmlFromKmz(await kmzFor(target)));
+  const list = (
+    await withoutDuplicates(body, features(kmlFromKmz(await kmzFor(target))))
+  ).map(({ rawLat: _lat, rawDiameter: _diameter, ...f }) => f);
   const json = JSON.stringify(list);
   const path = join(OUT, `${body}.json`);
   const before = existsSync(path) ? readFileSync(path, 'utf8') : null;
