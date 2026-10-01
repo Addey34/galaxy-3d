@@ -2831,8 +2831,9 @@ Les six pièces, dans l'ordre où une fiche les traverse :
 
 ## Les noms de la surface viennent de l'UAI, et arrivent à l'approche
 
-Trente-six corps du catalogue portent des formations nommées — **15 932** au total, dont 9 087 pour
-la seule Lune. La seule autorité qui nomme une formation planétaire est le *Working Group for
+Trente-six corps du catalogue portent des formations nommées, dont 9 087 pour la seule Lune ; le
+total se lit dans `src/config/gazetteerIndex.json` (15 920 au 2026-09-30, après le retrait de douze
+doublons que l'UAI publie elle-même, cf. ci-dessous). La seule autorité qui nomme une formation planétaire est le *Working Group for
 Planetary System Nomenclature* de l'UAI, et son Gazetteer publie chaque nuit, par corps, un KMZ
 qui porte tout ce qu'elle a approuvé. `pnpm gazetteer:generate` le lit ; rien n'est saisi à la
 main, et surtout pas une étymologie.
@@ -2845,8 +2846,15 @@ main, et surtout pas une étymologie.
 - **L'index vit dans `src/`, les données dans `public/`**, et ce n'est pas un goût : Vite REFUSE
   qu'un module de l'application importe depuis `public/`. L'application a besoin, AU BUILD, de
   savoir quels corps portent des noms — c'est ce qui lui évite de demander quoi que ce soit au
-  démarrage — et pas des 15 932 formations. 2 729 octets entrent dans le bundle, 3 176 578 sont
+  démarrage — et pas des formations elles-mêmes. 2 729 octets entrent dans le bundle, 3 174 028 sont
   servis à l'approche, sous 8 rayons apparents, comme les tuiles de surface.
+- **L'UAI publie parfois DEUX FOIS la même formation**, sous le même lien de fiche et sans champ
+  qui dise laquelle est courante (mesuré le 2026-09-30 : douze identifiants sur Dione, Mars et
+  Mercure). Une copie identique est retirée ; une copie DIVERGENTE (Kunisada : deux centres à
+  0,16° l'un de l'autre) est tranchée par la FICHE de l'UAI, diamètre puis latitude, et une fiche
+  illisible fait échouer le générateur. La longitude de la fiche n'est pas comparée : elle y est
+  affichée positive vers l'OUEST. Trouvé par la garde du lot 40.3, qui compte les formations
+  observées par identifiant et en voyait une de moins que l'index.
 - **La provenance voyage AVEC la donnée**, dans l'index : le registre `src/registry/providers/`
   décrit les sources des FAITS affichés par corps, et sa garde refuse une fiche que rien ne cite.
   La mention de domaine public et la citation sont celles que l'UAI DEMANDE, lues dans sa FAQ.
@@ -3152,6 +3160,96 @@ et la colonne `instruments` de `pnpm inventory:gaps`, où `absente (raison ecrit
   langue. Le plus long identifiant rendu mesure **236 px dans une boîte de 250, soit 14 px de
   marge** : la coupure du mot est donc à la limite de porter, et la garde le prouve dès que la
   police s'élargit de plus que cette marge.
+
+## Quels orbiteurs ont observé cette formation (ligne 40.3)
+
+La fiche d'un corps qui porte des noms de l'UAI a un bloc « Formations observées » : pour une
+formation nommée, les instruments en orbite dont une empreinte la touche, combien de fois, de quand
+à quand, et l'étiquette PDS de la première observation, qui en est la source primaire. Les comptes
+(formations observées, produits lus, jeux indisponibles) ne sont pas recopiés ici : ils se lisent
+dans `src/config/placeObservationIndex.json`, que `pnpm places:generate` écrit.
+
+**La source est l'Orbital Data Explorer** (PDS Geosciences Node, Washington University). Le
+registre PDS4 ne peut pas répondre : son API n'accepte aucune conjonction et ne sert aucune
+empreinte imagée (mesuré sur sept corps). L'ODE couvre QUATRE corps, la Lune, Mars, Mercure et
+Vénus ; les trente-deux autres corps nommés le disent sur leur fiche, en nommant les corps couverts
+LUS dans l'index, au lieu de masquer le bloc.
+
+**La forme est l'inverse d'une requête.** L'ODE exige un jeu (hôte, instrument, type de produit) à
+chaque question, donc « qu'est-ce qui a vu Tycho » s'éventaille sur 126 jeux lunaires, et le
+pré-calcul formation par formation coûterait des mois. On tire donc les empreintes UNE fois, jeu par
+jeu (`pnpm places:pull`, dans `.cache/ode-footprints/`, reprise possible), et on croise hors ligne
+(`pnpm places:generate`). La géométrie vit dans `src/core/placeObservation.ts`, avec ses tests ; le
+générateur l'importe par `ssrLoadModule` et ne la recopie pas.
+
+**Ce que la mesure a imposé, et qu'il ne faut pas défaire :**
+
+- **Le véhicule est `query=coveragetargz`**, un shapefile dont la table porte identifiant, date et
+  étiquette. `results=x` est mono-produit selon le manuel ; `results=m` coûte quatre fois plus et
+  sert de REPLI, parce que l'export shapefile de MGS MOC ne répond pas (600 s, pas même vingt
+  produits) alors que ses métadonnées portent la géométrie en WKT.
+- **Une page porte trois types de formes** : des surfaces (`_ga`), des traces au sol (`_gl`, les
+  sondeurs radar) et des points (`_gp`, les spectromètres). Chacun se juge à sa façon : une surface
+  contient ou touche, une trace passe à moins d'un rayon, un point tombe dans le disque. Une ligne
+  ne CONTIENT rien, et la règle pair-impair lui ferait dire n'importe quoi.
+- **Le croisement se fait sur les POLYGONES, jamais sur les bornes** : pour une empreinte qui
+  traverse le méridien 0, les bornes de la table sont ambiguës (349° ou 10° de large). Le fichier
+  `ga` découpe SOUVENT ces empreintes en plusieurs enregistrements, regroupés par `ODEId`, mais PAS
+  toujours : un anneau de la caméra HDTV de Kaguya va de 348° à 353° puis à 5°. Lu tel quel dans le
+  plan, ce triangle de 17° couvrait presque toutes les longitudes, « contenait » Copernic et
+  l'antipode de Tycho. Un anneau dont un côté saute de plus de 180° (et de moins de 359,5°, un tour
+  complet n'étant pas une traversée) est donc DÉROULÉ, et le déroulé n'est retenu que s'il est plus
+  étroit que l'original. Trouvé par le contrôle des bornes ci-dessous, pas par une relecture.
+- **Les grandes formes sont INDEXÉES** (segments par rangée de latitude et par cellule de 1°), à
+  partir de 64 sommets : une carte micro-onde de Chang'e (1 014 sommets, 8 838 formations
+  candidates) coûtait 600 ms par produit, soit une cinquantaine d'heures pour la Lune, contre
+  20 minutes indexée (1 191 s, mesuré sur le croisement final). L'index ne change pas le test, et une garde compare ses verdicts à ceux du
+  parcours complet sur des formes tirées au hasard.
+- **Un contrôle INDÉPENDANT tient le croisement** : pour une formation de rayon r, le compte que
+  l'ODE rend dans la boîte INSCRITE dans son disque (demi-côté r/√2) est un plancher, celui de la
+  boîte qui le CIRCONSCRIT un plafond, pour un imageur sans grille globale. Le mien doit tomber
+  entre les deux ; c'est ce contrôle qui a vu le défaut du méridien, dans les deux sens à la fois.
+  Après correction, il tient sur sept des huit couples mesurés (Tycho, Copernic, Jezero, Gale ; LROC
+  ou HiRISE et CTX, HDTV). Le huitième, HDTV à Tycho, dépasse le plafond de 41 produits sur 3 673
+  (1,1 %), et l'écart est LU, pas supposé : ce sont des empreintes dont un côté longe -42,9° de 340°
+  à 2° en traversant la couture, à 11 km du centre du cratère, donc dans son disque ; la boîte de
+  l'ODE, qui coupe ce même côté, ne les rend pas, signe qu'elle lit ce côté par le long chemin.
+- **Un produit qui couvre aussi l'antipode d'une formation ne l'observe pas.** À Tycho, 30 450 des
+  37 338 produits que l'ODE rend pour la boîte du cratère rendent le même compte à l'antipode : ce
+  sont des grilles globales. La règle est posée PAR PRODUIT, dérivée de sa géométrie, sans liste de
+  types exclus. Elle ne vaut que pour une surface : une trace qui passe sur un lieu puis sur son
+  antipode les a observés tous les deux.
+- **Un type de produit redondant n'est pas tiré**, et la redondance se MESURE : par instrument, un
+  type est redondant si au moins vingt de ses images d'une même journée sont toutes déjà dans les
+  types gardés. « Le plus gros type par instrument » aurait été faux : THEMIS range IR et VIS, et
+  MOC ses deux caméras, sous une même étiquette d'instrument.
+- **Le gel de l'ensemble tiré est un jour FINI** : l'ODE lit `maxcreationtime=AAAA-MM-JJ` comme la
+  fin de ce jour, et `maxcreationtime` seul est ignoré sans un mot (il faut la paire). Et **le gel
+  exclut les produits sans date de création** : tout Viking Orbiter comptait zéro sous le gel. Un
+  jeu dont le compte change sous le gel n'est donc pas gelé (`unfrozen.json`), ce qui est sans
+  risque pour des missions finies.
+- **Un jeu que l'ODE ne sert par aucune route est DÉCLARÉ**, pas tu : le tirage le note dans
+  `unavailable.json` avec l'erreur mesurée, et l'index le publie.
+
+**Livraison.** Les observations sont servies en MORCEAUX (`/assets/place-observations/{corps}/{k}.json`,
+`k = iauId % shards`, le nombre de morceaux étant dérivé du poids) : une formation demandée ne fait
+pas payer le fichier entier de la Lune. L'index est importé dynamiquement (`NON_BOOT_CHUNKS`), les
+noms ne sont chargés qu'à l'ouverture du bloc, et rien n'est demandé au démarrage. L'adresse est
+ABSOLUE, parce que la Lune garde son chemin (`/moon/`) après le boot ; `e2e/places.spec.ts` le
+prouve par le `content-type` du morceau servi.
+
+**Pourquoi un champ et non un clic sur la carte** : les noms du gazetteer sont écrits sur un canvas,
+qu'aucun clavier ni lecteur d'écran n'atteint. Un `<input>` relié à une `<datalist>` est natif.
+
+**Ce que ce bloc ne prouve pas** : une empreinte qui TOUCHE une formation n'est pas une image qui la
+montre bien (angle, éclairage, résolution). Le bloc dit « observations », au sens de l'ODE, et
+cite l'étiquette de chacune pour qu'on aille voir.
+
+**Gardes** : `src/core/placeObservation.test.ts` (géométrie), `src/config/placeObservations.test.ts`
+(donnée livrée : index complet, morceaux, identifiants présents au gazetteer, dates, sources https),
+`src/config/gazetteer.test.ts` (aucun identifiant UAI en double), `src/config/sourceHealth.test.ts`
+(l'ODE rend ses erreurs en HTTP 200 avec `"Status": "ERROR"`), `e2e/places.spec.ts`, et l'audit à
+390 px de `e2e/a11y-audit.spec.ts` dans les quatre langues.
 
 ## Pages `/methodology` et `/sources`
 

@@ -118,6 +118,31 @@ describe('santé des sources : le verdict d’une réponse', () => {
     ).toBe('vivante');
   });
 
+  /**
+   * L'ORBITAL DATA EXPLORER REND SES ERREURS EN HTTP 200. Les deux corps sont COPIÉS de réponses
+   * réelles, obtenues le 2026-09-30 : un type de produit inexistant, puis un compte valide.
+   */
+  it('dit MUETTE de l’erreur de l’ODE servie en HTTP 200, et VIVANTE de son compte', () => {
+    const url =
+      'https://oderest.rsl.wustl.edu/live2/?query=product&results=c&output=JSON&target=moon&IHID=LRO&IID=LROC&PT=EDRNAC4';
+    expect(
+      judgeResponse({
+        url,
+        body:
+          '{ "ODEResults": {"Error": "ODE V2.1.5 - Invalid IIPT - no combination of Instrument Host Id, ' +
+          'Instrument Id, and Product Type exists", "Status": "ERROR" }}',
+        status: 200,
+      }).verdict
+    ).toBe('muette');
+    expect(
+      judgeResponse({
+        url,
+        body: '{ "ODEResults": {"Count": "2903649", "QuerySummary": {"results": "C", "target": "moon" }, "Status": "Success" }}',
+        status: 200,
+      }).verdict
+    ).toBe('vivante');
+  });
+
   it('dit SANS MARQUEUR d’un hôte qu’aucune règle ne couvre, au lieu de le croire vivant', () => {
     expect(
       judgeResponse({ url: 'https://example.test/x', body: 'peu importe' })

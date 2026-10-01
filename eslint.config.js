@@ -18,6 +18,8 @@ export default tseslint.config(
       // des erreurs sur des fichiers que la CI, elle, ne voit pas — `pnpm verify` rougissait
       // donc en local et nulle part ailleurs.
       'reports/**',
+      // Idem pour `.cache/` (ignoré par git) : sondes de mesure jetables et caches de relevés.
+      '.cache/**',
       // Harnais de capture d'écran jetable (contexte navigateur Playwright).
       'scripts/ui-audit.mjs',
     ],

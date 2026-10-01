@@ -30,6 +30,7 @@ import { setupBodyInfo } from './ui/bodyInfo';
 import { setupPositionProvenance } from './ui/positionProvenance';
 import { setupMissionsBlock } from './ui/missionsBlock';
 import { setupInstrumentsBlock } from './ui/instrumentsBlock';
+import { setupPlacesBlock } from './ui/placesBlock';
 import { setupDocumentTitle } from './ui/documentTitle';
 import { setupDocumentChrome } from './ui/documentChrome';
 import { getAnnouncer } from './ui/announcer';
@@ -308,6 +309,7 @@ function wireChrome(): {
     // de la scène (lot 40). Index et liste chargés À LA DEMANDE : rien au démarrage.
     setupMissionsBlock(api, bodyInfo);
     setupInstrumentsBlock(api, bodyInfo);
+    setupPlacesBlock(api, bodyInfo);
     const exploScaleBadge = setupExploScaleBadge();
     // Le titre de l'onglet suit la sélection, comme le chemin de l'URL : depuis que celui-ci
     // change sans rechargement, un titre figé ferait dire deux choses différentes à l'adresse

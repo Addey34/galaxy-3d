@@ -29,6 +29,8 @@ import { NAVIGABLE_TARGETS } from '@/config/navigable';
 import { SURFACE_TILESETS } from '@/config/surfaceTilesets';
 import { SURFACE_HEIGHT_SETS } from '@/config/surfaceHeights';
 import missionIndex from '@/config/missionIndex.json';
+import gazetteerIndex from '@/config/gazetteerIndex.json';
+import placeObservationIndex from '@/config/placeObservationIndex.json';
 import instrumentIndex from '@/config/instrumentIndex.json';
 import { textureReviews } from '@/registry/products';
 import {
@@ -50,6 +52,7 @@ export type Capability =
   | 'heightfield'
   | 'missions'
   | 'instruments'
+  | 'places'
   | 'facts'
   | 'page'
   | 'card';
@@ -159,6 +162,14 @@ export interface InventoryRow {
    * quand l'index n'a pas d'entrée pour lui. `0` est une réponse, pas une absence.
    */
   readonly missions: number | null;
+  /**
+   * Les formations nommées que l'Orbital Data Explorer déclare observées (ligne 40.3). Trois
+   * valeurs : un couple quand le corps est couvert et tiré en entier ; `'non-couvert'` quand
+   * l'ODE ne couvre pas ce corps, ce qui est une MESURE écrite dans `docs/ARCHITECTURE.md` et
+   * non un trou ; `null` quand le corps est couvert mais que son tirage est incomplet.
+   */
+  readonly places:
+    { observed: number; formations: number } | 'non-couvert' | null;
   /**
    * Combien d'INSTRUMENTS le registre de contexte du PDS déclare sur cette sonde (lot 42).
    *
@@ -428,6 +439,8 @@ function applicableOf(
   // fiche le DIT. Ce qui serait un manque, c'est l'absence d'ENTRÉE dans l'index, signe que
   // `pnpm missions:generate` n'a pas été relancé après l'ajout d'un corps.
   out.push('missions');
+  // `places` s'applique à tout corps qui porte des noms de l'UAI : sans nom, rien à observer.
+  if (id in gazetteerIndex.bodies) out.push('places');
   return out;
 }
 
@@ -486,6 +499,23 @@ export function collectInventory(root: string): Inventory {
           id
         ]?.count ?? null)
       : null;
+    const placeCover = (
+      placeObservationIndex.bodies as Record<
+        string,
+        | { observed: number; formations: number; missingPages?: number }
+        | undefined
+      >
+    )[id];
+    const places = !applicable.includes('places')
+      ? null
+      : !placeCover
+        ? ('non-couvert' as const)
+        : placeCover.missingPages
+          ? null
+          : {
+              observed: placeCover.observed,
+              formations: placeCover.formations,
+            };
     const instruments = applicable.includes('instruments')
       ? ((
           instrumentIndex.spacecraft as Record<
@@ -522,6 +552,7 @@ export function collectInventory(root: string): Inventory {
     // mesurée. Le manque, c'est de n'être ni jointe ni déclarée absente.
     if (applicable.includes('instruments') && instruments === null)
       absent.push('instruments');
+    if (applicable.includes('places') && places === null) absent.push('places');
     if (
       applicable.includes('facts') &&
       (facts.unsourced.length > 0 || facts.missing.length > 0)
@@ -554,6 +585,7 @@ export function collectInventory(root: string): Inventory {
         : null,
       heightfield: heightfield ? { id: heightfield.id } : null,
       missions,
+      places,
       instruments,
       facts,
       page: { locales },

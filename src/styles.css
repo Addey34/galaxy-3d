@@ -1116,38 +1116,45 @@ button {
    plus vive et un `::before`, jamais la couleur seule : le mode daltonien ne repeint pas ce
    bloc, et une information portée par la seule teinte serait perdue. */
 .bi-missions,
-.bi-instruments {
+.bi-instruments,
+.bi-places {
   margin: var(--sp-2) 0 0;
   font-size: 0.7rem;
   line-height: 1.45;
   color: var(--ink-dim);
 }
 .bi-missions[hidden],
-.bi-instruments[hidden] {
+.bi-instruments[hidden],
+.bi-places[hidden] {
   display: none;
 }
 .bi-missions summary,
-.bi-instruments summary {
+.bi-instruments summary,
+.bi-places summary {
   cursor: pointer;
   color: var(--ink-faint);
 }
 .bi-missions-count,
-.bi-instruments-count {
+.bi-instruments-count,
+.bi-places-count {
   margin-left: 0.35em;
   font-variant-numeric: tabular-nums;
 }
 .bi-missions ul,
-.bi-instruments ul {
+.bi-instruments ul,
+.bi-places ul {
   margin: var(--sp-1) 0 0;
   padding-left: 1.1em;
   list-style: none;
 }
 .bi-missions li + li,
-.bi-instruments li + li {
+.bi-instruments li + li,
+.bi-places li + li {
   margin-top: var(--sp-1);
 }
 .bi-missions li::before,
-.bi-instruments li::before {
+.bi-instruments li::before,
+.bi-places li::before {
   content: '·';
   display: inline-block;
   width: 1.1em;
@@ -1168,8 +1175,39 @@ button {
   color: var(--ink-faint);
   font-variant-numeric: tabular-nums;
 }
+/* Le bloc des formations observees (ligne 40.3) : un champ natif, et des etiquettes PDS dont
+   l'adresse peut etre longue, donc coupees plutot que debordantes (le lot 42 a mesure un
+   debordement ROGNE de 70 px sur un identifiant). */
+.bi-places-form {
+  margin: var(--sp-1) 0 0;
+}
+.bi-places-input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.3em 0.5em;
+  font: inherit;
+  color: var(--ink);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 4px;
+}
+.bi-places-intro,
+.bi-places-title {
+  margin: var(--sp-1) 0 0;
+}
+.bi-places-title {
+  color: rgba(235, 244, 255, 0.95);
+}
+.bi-places li {
+  overflow-wrap: anywhere;
+}
+.bi-places-label {
+  display: block;
+  color: rgba(var(--planet-rgb), 0.95);
+}
 .bi-missions-note,
-.bi-instruments-note {
+.bi-instruments-note,
+.bi-places-note {
   margin: var(--sp-2) 0 0;
   color: var(--ink-faint);
 }
