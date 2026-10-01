@@ -2,6 +2,7 @@ import { readFileSync, readdirSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { expect, test, type Page } from '@playwright/test';
 import { waitForCalmMainThread } from './mainThread';
+import { MOON_SCENE_DATE } from './moonScene';
 import { blockExternalNetwork } from './netBlock';
 
 /**
@@ -105,7 +106,7 @@ test('nomme les orbiteurs d’une formation observée, et son morceau RÉSOUT', 
   });
   // PAR LE CHEMIN : la Lune le garde après le boot, et c'est ce qui rend la garde d'adresse
   // falsifiable (cf. l'en-tête).
-  await boot(page, 'moon/');
+  await boot(page, `moon/?date=${MOON_SCENE_DATE}`);
   expect(new URL(page.url()).pathname).toBe('/moon/');
   const places = block(page);
   await expect(places).toBeVisible({ timeout: 15_000 });
@@ -134,7 +135,7 @@ test('nomme les orbiteurs d’une formation observée, et son morceau RÉSOUT', 
 });
 
 test('un nom INCONNU le dit, sans rien demander d’autre', async ({ page }) => {
-  await boot(page, 'moon/');
+  await boot(page, `moon/?date=${MOON_SCENE_DATE}`);
   const places = block(page);
   await expect(places).toBeVisible({ timeout: 15_000 });
   await places.locator('summary').click();
@@ -161,7 +162,7 @@ test('une formation que RIEN ne touche le DIT, au lieu d’afficher une liste vi
       body: JSON.stringify({ instruments: [], observed: {} }),
     })
   );
-  await boot(page, 'moon/');
+  await boot(page, `moon/?date=${MOON_SCENE_DATE}`);
   const places = block(page);
   await expect(places).toBeVisible({ timeout: 15_000 });
   await places.locator('summary').click();
@@ -208,7 +209,7 @@ test('un corps SANS formation nommée n’affiche pas le bloc', async ({
 test('revenir sur la Lune par la VUE GLOBALE réaffiche le bloc', async ({
   page,
 }) => {
-  await boot(page, 'moon/');
+  await boot(page, `moon/?date=${MOON_SCENE_DATE}`);
   const places = block(page);
   await expect(places).toBeVisible({ timeout: 15_000 });
   // Le détour qui remet le corps courant à `null` (leçon du lot 42), puis par un corps SANS nom,

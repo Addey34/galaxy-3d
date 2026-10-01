@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { expect, test, type Page } from '@playwright/test';
 import { waitForCalmMainThread } from './mainThread';
+import { MOON_SCENE_DATE } from './moonScene';
 import { blockExternalNetwork } from './netBlock';
 
 /**
@@ -33,36 +34,19 @@ test.beforeEach(async ({ page }) => {
 });
 
 /**
- * LA LUNE EST LA PAGE LA PLUS LOURDE DE TOUTE LA SUITE, et son budget de calme est ÉCRIT plutôt
- * que laissé au défaut (lot 40).
+ * LA LUNE DÉMARRE À UNE DATE FIXÉE (`e2e/moonScene.ts`), et ce fichier n'a PLUS de seuil à part.
  *
- * `waitForCalmMainThread` exige trois allers-retours `requestAnimationFrame` sous **500 ms**, ce
- * qui convient partout ailleurs. Sur `?body=moon` la couche des noms considère **9 087
- * formations** par image — contre 2 052 pour Mars, 304 pour Titan — et sur un coureur de CI lent
- * la cadence s'établit JUSTE au-dessus du défaut : série mesurée sur le run `36662976110`,
- * `9772 2464 549 649 530 533 3152 2827 2868 541 531 524 …` puis un PLATEAU de quatre-vingts
- * échantillons entre 510 et 540 ms. Trois valeurs consécutives sous 500 n'arrivent jamais, et le
- * test échoue au démarrage, ses trois tentatives comprises.
- *
- * Ce n'est pas un défaut du produit : c'est une attente qui demande à la page la plus chargée
- * quelque chose qu'un coureur lent ne peut pas donner. **Mesuré, et non supposé** : sur cette
- * machine, sous frein CPU × 4, la même page tient 121 ms de médiane, et le bloc « Missions » du
- * lot 40 n'y change rien (124/117/121 ms avec, 121/123/122 ms en coupant sa route — les deux
- * séries se recouvrent).
- *
- * Le budget est donc porté à **1 500 ms POUR CETTE PAGE SEULEMENT**, ce qui sépare toujours sans
- * ambiguïté la tempête du démarrage (9 772, 8 147, 10 768 ms mesurés) de son régime établi
- * (~525 ms). Les autres appels gardent le défaut.
+ * Le lot 40 avait porté le seuil de calme de `?body=moon` à 1 500 ms, en attribuant un plateau
+ * à ~525 ms par image aux 9 087 noms de la couche de surface. La ligne 44.2 a mesuré que c'était
+ * faux : ces noms sont plafonnés avant d'être dessinés, et ce qui coûtait était la TERRE, dans le
+ * champ derrière la Lune certains jours, la scène changeant avec la date courante. Une date fixée
+ * supprime la cause, donc l'exception, qui la masquait, est retirée.
  */
-const MOON_CALM_BUDGET_MS = 1_500;
 
 async function boot(page: Page, query: string): Promise<void> {
   await page.goto(`/${query}`);
   await expect(page.locator('#loader')).toBeHidden({ timeout: 30_000 });
-  await waitForCalmMainThread(
-    page,
-    query.includes('body=moon') ? { budgetMs: MOON_CALM_BUDGET_MS } : {}
-  );
+  await waitForCalmMainThread(page);
 }
 
 test('ne demande AUCUN répertoire au démarrage, ni de loin', async ({
@@ -85,7 +69,7 @@ test('charge le répertoire d’un corps À L’APPROCHE, et écrit ses noms', a
   page.on('request', (r) => {
     if (r.url().includes('/assets/gazetteer/moon.json')) asked.push(r.url());
   });
-  await boot(page, '?body=moon');
+  await boot(page, `?body=moon&date=${MOON_SCENE_DATE}`);
 
   const overlay = page.locator('#gazetteer-overlay');
   await expect(overlay).toHaveClass(/is-visible/);

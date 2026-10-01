@@ -3,6 +3,7 @@ import { resolve } from 'node:path';
 import { expect, test, type Page } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 import { blockExternalNetwork } from './netBlock';
+import { MOON_SCENE_DATE } from './moonScene';
 
 /**
  * Audit d'accessibilité automatisé (axe-core) — pas un remplacement d'un vrai passage au
@@ -421,7 +422,7 @@ test.describe('mobile viewport', () => {
       await page.addInitScript((lang) => {
         localStorage.setItem('ssv-locale', lang);
       }, locale);
-      await page.goto('/moon/');
+      await page.goto(`/moon/?date=${MOON_SCENE_DATE}`);
       await expect(page.locator('#loader')).toBeHidden({ timeout: 30_000 });
       const card = page.locator('#body-info');
       await expect(card).toBeVisible();
