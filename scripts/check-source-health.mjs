@@ -83,6 +83,12 @@ const MARKERS = [
     what: 'table des satellites',
   },
   {
+    prefix: 'https://ssd.jpl.nasa.gov/planets/',
+    // Lu le 2026-10-01 : la page des découvertes de planètes porte ce titre de section.
+    marker: () => 'Discovery Circumstances',
+    what: 'découvertes des planètes (JPL)',
+  },
+  {
     prefix: 'https://ssd-api.jpl.nasa.gov/sbdb.api',
     marker: () => '"object"',
     what: 'API du Small-Body Database',
@@ -239,6 +245,19 @@ export function derivedSources() {
   );
   if (typeof instruments.provider?.api === 'string')
     urls.add(instruments.provider.api);
+
+  /**
+   * Les sources de la découverte (lot 44), DÉRIVÉES de l'index : chaque affirmation cite l'adresse
+   * qu'elle a lue, et l'API de SBDB est sondée une fois, comme pour le relevé des faits.
+   */
+  const discovery = JSON.parse(
+    readFileSync(join(ROOT, 'src/config/discoveryIndex.json'), 'utf8')
+  );
+  for (const entry of Object.values(discovery.bodies ?? {}))
+    for (const claim of entry.claims ?? []) {
+      const url = claim.url.split('#')[0];
+      urls.add(url === SBDB_PAGE ? SBDB_API : url);
+    }
 
   const tilesets = join(ROOT, 'src/registry/products/tilesets');
   for (const file of readdirSync(tilesets).filter((f) => f.endsWith('.json'))) {

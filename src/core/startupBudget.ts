@@ -412,6 +412,16 @@ export const NON_BOOT_CHUNKS: readonly BootDynamicChunk[] = [
       "l'index des missions du registre de contexte du PDS (lot 40) n'est lu que par le bloc « Missions » de la fiche, chargé à son ouverture (`config/missions`). Le comptage par corps est donc hors démarrage, et les listes elles-mêmes ne sont même pas dans le bundle : elles vivent en actifs servis à l'ouverture d'une fiche, comme les noms de surface du lot 37.",
   },
   {
+    chunk: 'cardBlocks',
+    reason:
+      "les blocs Découverte, Missions, Instruments et Formations observées de la fiche (lots 40 à 44) ne sont chargés qu'à la PREMIÈRE ouverture d'une fiche (`ui/cardBlocks`) : aucun n'agit avant, et le lot 44 les a sortis du démarrage pour financer le sien au lieu de grignoter une marge déjà à 1,7 %.",
+  },
+  {
+    chunk: 'discoveryIndex',
+    reason:
+      "l'index des découvertes (lot 44) n'est lu que par le bloc « Découverte » de la fiche, chargé à son ouverture (`config/discovery`). Les satellites de chaque système ne sont pas dans le bundle : ils vivent en actifs servis à l'ouverture de la fiche de leur parent, comme les missions du lot 40.",
+  },
+  {
     chunk: 'instrumentIndex',
     reason:
       "l'index des instruments du registre de contexte du PDS (lot 42) n'est lu que par le bloc « Instruments » de la fiche d'une SONDE, chargé à son ouverture (`config/instruments`). Les listes elles-mêmes ne sont pas dans le bundle : elles vivent en actifs servis à l'ouverture d'une fiche, comme les missions du lot 40 et les noms de surface du lot 37.",

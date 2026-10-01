@@ -37,6 +37,7 @@ const CAPABILITY_ORDER: readonly Capability[] = [
   'shape',
   'tileset',
   'heightfield',
+  'discovery',
   'missions',
   'places',
   'instruments',
@@ -104,6 +105,17 @@ function missionsCell(row: InventoryRow): string {
 }
 
 /**
+ * Les affirmations de decouverte que les sources primaires declarent sur ce corps (lot 44).
+ * `sans objet` n'est pas un manque : la raison est ecrite dans scripts/discovery-targets.json.
+ */
+function discoveryCell(row: InventoryRow): string {
+  if (!row.applicable.includes('discovery')) return '-';
+  if (row.discovery === null) return 'HORS INDEX';
+  if (row.discovery === 'sans-objet') return 'sans objet (raison ecrite)';
+  return String(row.discovery);
+}
+
+/**
  * Les instruments que le registre du PDS declare sur cette sonde. `absente` n'est pas un manque :
  * c'est une mesure, dont la raison vit dans scripts/pds-archive-targets.json.
  */
@@ -144,6 +156,7 @@ function table(rows: readonly InventoryRow[]): string[] {
     'position',
     'textures',
     'surface',
+    'decouverte',
     'missions',
     'lieux',
     'instruments',
@@ -155,6 +168,7 @@ function table(rows: readonly InventoryRow[]): string[] {
     positionCell(row),
     textureCell(row),
     surfaceCell(row),
+    discoveryCell(row),
     missionsCell(row),
     placesCell(row),
     instrumentsCell(row),

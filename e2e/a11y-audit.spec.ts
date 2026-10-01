@@ -460,3 +460,57 @@ test.describe('mobile viewport', () => {
     });
   }
 });
+
+/**
+ * LE BLOC « DÉCOUVERTE » (lot 44), à 390 px et dans les QUATRE langues. La fiche témoin est
+ * MESURÉE : Pluton en février 1930 est la seule qui exerce TOUT le bloc à la fois, deux
+ * affirmations qui divergent (SBDB et NSSDCA), la phrase d'état, le compte des lunes, la prochaine
+ * découverte et la note. Neptune s'y ajoute en anglais pour le découvreur le plus long publié
+ * (« Galle (based on predictions by John Couch Adams and Urbain Leverrier) »).
+ */
+test.describe('mobile viewport, discovery block', () => {
+  test.use({ viewport: { width: 390, height: 844 } });
+
+  const cases = [
+    ...(['en', 'fr', 'es', 'pt-BR'] as const).map((locale) => ({
+      locale,
+      path: '/pluto/?date=1930-02-01T12:00:00Z',
+    })),
+    { locale: 'en' as const, path: '/neptune/' },
+  ];
+  for (const { locale, path } of cases) {
+    test(`discovery block ${path}, ${locale}, is clean at 390 px`, async ({
+      page,
+    }) => {
+      await page.addInitScript((lang) => {
+        localStorage.setItem('ssv-locale', lang);
+      }, locale);
+      await page.goto(path);
+      await expect(page.locator('#loader')).toBeHidden({ timeout: 30_000 });
+      const discovery = page.locator('#body-info .bi-discovery');
+      await expect(discovery).toBeVisible({ timeout: 15_000 });
+      await expect(
+        discovery.locator('.bi-discovery-claims li').first()
+      ).toBeVisible();
+
+      const results = await runAxe(page);
+      expect(
+        results.violations,
+        JSON.stringify(results.violations, null, 2)
+      ).toEqual([]);
+      const overflow = await page.evaluate(
+        () =>
+          document.documentElement.scrollWidth -
+          document.documentElement.clientWidth
+      );
+      expect(
+        overflow,
+        `débordement de la page (${locale})`
+      ).toBeLessThanOrEqual(0);
+      expect(
+        await clippedOverflow(page),
+        `texte rogné dans la fiche (${locale})`
+      ).toEqual([]);
+    });
+  }
+});

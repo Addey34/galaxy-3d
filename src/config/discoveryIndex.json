@@ -1,0 +1,838 @@
+{
+ "sources": {
+  "jpl-sats": {
+   "publisher": "NASA JPL Solar System Dynamics",
+   "title": "Planetary Satellite Discovery Circumstances",
+   "url": "https://ssd.jpl.nasa.gov/sats/discovery.html"
+  },
+  "sbdb": {
+   "publisher": "NASA JPL Solar System Dynamics",
+   "title": "Small-Body Database, discovery circumstances",
+   "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html",
+   "api": "https://ssd-api.jpl.nasa.gov/sbdb.api?sstr=1&discovery=1"
+  },
+  "nssdca": {
+   "publisher": "NASA NSSDCA",
+   "title": "Planetary Fact Sheets",
+   "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/"
+  },
+  "jpl-planets": {
+   "publisher": "NASA JPL Solar System Dynamics",
+   "title": "Planets, Discovery Circumstances",
+   "url": "https://ssd.jpl.nasa.gov/planets/discovery.html"
+  },
+  "nasa-science": {
+   "publisher": "NASA Science",
+   "title": "Comet 1P/Halley",
+   "url": "https://science.nasa.gov/solar-system/comets/1p-halley/"
+  }
+ },
+ "bodies": {
+  "amalthea": {
+   "claims": [
+    {
+     "source": "jpl-sats",
+     "form": "years",
+     "years": [
+      1892
+     ],
+     "who": "E.E. Barnard",
+     "ref": "IAU WGPSN",
+     "url": "https://ssd.jpl.nasa.gov/sats/discovery.html",
+     "retrieved": "2026-10-01"
+    }
+   ]
+  },
+  "ariel": {
+   "claims": [
+    {
+     "source": "jpl-sats",
+     "form": "years",
+     "years": [
+      1851
+     ],
+     "who": "W. Lassell",
+     "ref": "IAU WGPSN",
+     "url": "https://ssd.jpl.nasa.gov/sats/discovery.html",
+     "retrieved": "2026-10-01"
+    }
+   ]
+  },
+  "bennu": {
+   "claims": [
+    {
+     "source": "sbdb",
+     "form": "day",
+     "day": "1999-09-11",
+     "who": "LINEAR",
+     "where": "Socorro",
+     "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=101955",
+     "retrieved": "2026-10-01"
+    }
+   ]
+  },
+  "callisto": {
+   "claims": [
+    {
+     "source": "jpl-sats",
+     "form": "years",
+     "years": [
+      1610
+     ],
+     "who": "Galileo",
+     "ref": "IAU WGPSN",
+     "url": "https://ssd.jpl.nasa.gov/sats/discovery.html",
+     "retrieved": "2026-10-01"
+    }
+   ]
+  },
+  "ceres": {
+   "claims": [
+    {
+     "source": "sbdb",
+     "form": "day",
+     "day": "1801-01-01",
+     "who": "Piazzi, G.",
+     "where": "Palermo",
+     "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=1",
+     "retrieved": "2026-10-01"
+    }
+   ]
+  },
+  "charon": {
+   "claims": [
+    {
+     "source": "jpl-sats",
+     "form": "years",
+     "years": [
+      1978
+     ],
+     "who": "J.W. Christy",
+     "ref": "IAU WGPSN",
+     "url": "https://ssd.jpl.nasa.gov/sats/discovery.html",
+     "retrieved": "2026-10-01"
+    }
+   ]
+  },
+  "deimos": {
+   "claims": [
+    {
+     "source": "jpl-sats",
+     "form": "years",
+     "years": [
+      1877
+     ],
+     "who": "A. Hall",
+     "ref": "IAU WGPSN",
+     "url": "https://ssd.jpl.nasa.gov/sats/discovery.html",
+     "retrieved": "2026-10-01"
+    }
+   ]
+  },
+  "dione": {
+   "claims": [
+    {
+     "source": "jpl-sats",
+     "form": "years",
+     "years": [
+      1684
+     ],
+     "who": "G.D. Cassini",
+     "ref": "IAU WGPSN",
+     "url": "https://ssd.jpl.nasa.gov/sats/discovery.html",
+     "retrieved": "2026-10-01"
+    }
+   ]
+  },
+  "earth": {
+   "notApplicable": true
+  },
+  "enceladus": {
+   "claims": [
+    {
+     "source": "jpl-sats",
+     "form": "years",
+     "years": [
+      1789
+     ],
+     "who": "W. Herschel",
+     "ref": "IAU WGPSN",
+     "url": "https://ssd.jpl.nasa.gov/sats/discovery.html",
+     "retrieved": "2026-10-01"
+    }
+   ]
+  },
+  "eris": {
+   "claims": [
+    {
+     "source": "sbdb",
+     "form": "day",
+     "day": "2003-10-21",
+     "who": "Brown, M. E., Trujillo, C. A., Rabinowitz, D.",
+     "where": "Palomar",
+     "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=136199",
+     "retrieved": "2026-10-01"
+    }
+   ]
+  },
+  "eros": {
+   "claims": [
+    {
+     "source": "sbdb",
+     "form": "day",
+     "day": "1898-08-13",
+     "who": "Witt, G.",
+     "where": "Berlin",
+     "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=433",
+     "retrieved": "2026-10-01"
+    }
+   ]
+  },
+  "europa": {
+   "claims": [
+    {
+     "source": "jpl-sats",
+     "form": "years",
+     "years": [
+      1610
+     ],
+     "who": "Galileo",
+     "ref": "IAU WGPSN",
+     "url": "https://ssd.jpl.nasa.gov/sats/discovery.html",
+     "retrieved": "2026-10-01"
+    }
+   ]
+  },
+  "ganymede": {
+   "claims": [
+    {
+     "source": "jpl-sats",
+     "form": "years",
+     "years": [
+      1610
+     ],
+     "who": "Galileo",
+     "ref": "IAU WGPSN",
+     "url": "https://ssd.jpl.nasa.gov/sats/discovery.html",
+     "retrieved": "2026-10-01"
+    }
+   ]
+  },
+  "gonggong": {
+   "claims": [
+    {
+     "source": "sbdb",
+     "form": "day",
+     "day": "2007-07-17",
+     "who": "Schwamb, M. E., Brown, M. E., Rabinowitz, D.",
+     "where": "Palomar",
+     "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=225088",
+     "retrieved": "2026-10-01"
+    }
+   ]
+  },
+  "halley": {
+   "claims": [
+    {
+     "source": "sbdb",
+     "form": "day",
+     "day": "1758-12-25",
+     "who": "Palitzsch, Johann Georg",
+     "where": null,
+     "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=1P",
+     "retrieved": "2026-10-01",
+     "role": "predictedReturn",
+     "roleUrl": "https://science.nasa.gov/solar-system/comets/1p-halley/",
+     "roleRetrieved": "2026-10-01"
+    },
+    {
+     "source": "nasa-science",
+     "form": "ancientObservations",
+     "url": "https://science.nasa.gov/solar-system/comets/1p-halley/",
+     "retrieved": "2026-10-01"
+    }
+   ]
+  },
+  "haumea": {
+   "claims": [
+    {
+     "source": "sbdb",
+     "form": "day",
+     "day": "2003-03-07",
+     "who": "Aceituno, F. J., Santos-Sanz, P., Ortiz, J. L.",
+     "where": "Sierra Nevada",
+     "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=136108",
+     "retrieved": "2026-10-01"
+    }
+   ]
+  },
+  "hydra": {
+   "claims": [
+    {
+     "source": "jpl-sats",
+     "form": "years",
+     "years": [
+      2005
+     ],
+     "who": "H.A. Weaver, S.A. Stern, M.J. Mutchler, A.J. Steffl, M.W. Buie, W.J. Merline, J.R. Spencer, E.F. Young, L.A. Young",
+     "ref": "IAUC 8625",
+     "url": "https://ssd.jpl.nasa.gov/sats/discovery.html",
+     "retrieved": "2026-10-01"
+    }
+   ]
+  },
+  "hygiea": {
+   "claims": [
+    {
+     "source": "sbdb",
+     "form": "day",
+     "day": "1849-04-12",
+     "who": "De Gasparis, A.",
+     "where": "Naples",
+     "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=10",
+     "retrieved": "2026-10-01"
+    }
+   ]
+  },
+  "hyperion": {
+   "claims": [
+    {
+     "source": "jpl-sats",
+     "form": "years",
+     "years": [
+      1848
+     ],
+     "who": "W.C Bond, G.P. Bond, W. Lassell",
+     "ref": "IAU WGPSN",
+     "url": "https://ssd.jpl.nasa.gov/sats/discovery.html",
+     "retrieved": "2026-10-01"
+    }
+   ]
+  },
+  "iapetus": {
+   "claims": [
+    {
+     "source": "jpl-sats",
+     "form": "years",
+     "years": [
+      1671
+     ],
+     "who": "G.D. Cassini",
+     "ref": "IAU WGPSN",
+     "url": "https://ssd.jpl.nasa.gov/sats/discovery.html",
+     "retrieved": "2026-10-01"
+    }
+   ]
+  },
+  "ida": {
+   "claims": [
+    {
+     "source": "sbdb",
+     "form": "day",
+     "day": "1884-09-29",
+     "who": "Palisa, J.",
+     "where": "Vienna",
+     "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=243",
+     "retrieved": "2026-10-01"
+    }
+   ]
+  },
+  "io": {
+   "claims": [
+    {
+     "source": "jpl-sats",
+     "form": "years",
+     "years": [
+      1610
+     ],
+     "who": "Galileo",
+     "ref": "IAU WGPSN",
+     "url": "https://ssd.jpl.nasa.gov/sats/discovery.html",
+     "retrieved": "2026-10-01"
+    }
+   ]
+  },
+  "itokawa": {
+   "claims": [
+    {
+     "source": "sbdb",
+     "form": "day",
+     "day": "1998-09-26",
+     "who": "LINEAR",
+     "where": "Socorro",
+     "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=25143",
+     "retrieved": "2026-10-01"
+    }
+   ]
+  },
+  "jupiter": {
+   "claims": [
+    {
+     "source": "nssdca",
+     "form": "prehistoric",
+     "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/jupiterfact.html",
+     "retrieved": "2026-09-28"
+    }
+   ]
+  },
+  "kerberos": {
+   "claims": [
+    {
+     "source": "jpl-sats",
+     "form": "years",
+     "years": [
+      2011
+     ],
+     "who": "M.R. Showalter, D.P. Hamilton, S.A. Stern, H.A. Weaver, A.J. Steffl, L.A. Young",
+     "ref": "IAUC 9221",
+     "url": "https://ssd.jpl.nasa.gov/sats/discovery.html",
+     "retrieved": "2026-10-01"
+    }
+   ]
+  },
+  "makemake": {
+   "claims": [
+    {
+     "source": "sbdb",
+     "form": "day",
+     "day": "2005-03-31",
+     "who": "Brown, M. E., Trujillo, C. A., Rabinowitz, D.",
+     "where": "Palomar",
+     "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=136472",
+     "retrieved": "2026-10-01"
+    }
+   ]
+  },
+  "mars": {
+   "claims": [
+    {
+     "source": "nssdca",
+     "form": "prehistoric",
+     "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/marsfact.html",
+     "retrieved": "2026-09-28"
+    }
+   ]
+  },
+  "mercury": {
+   "claims": [
+    {
+     "source": "nssdca",
+     "form": "prehistoric",
+     "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/mercuryfact.html",
+     "retrieved": "2026-09-28"
+    }
+   ]
+  },
+  "mimas": {
+   "claims": [
+    {
+     "source": "jpl-sats",
+     "form": "years",
+     "years": [
+      1789
+     ],
+     "who": "W. Herschel",
+     "ref": "IAU WGPSN",
+     "url": "https://ssd.jpl.nasa.gov/sats/discovery.html",
+     "retrieved": "2026-10-01"
+    }
+   ]
+  },
+  "miranda": {
+   "claims": [
+    {
+     "source": "jpl-sats",
+     "form": "years",
+     "years": [
+      1948
+     ],
+     "who": "G. Kuiper",
+     "ref": "IAU WGPSN",
+     "url": "https://ssd.jpl.nasa.gov/sats/discovery.html",
+     "retrieved": "2026-10-01"
+    }
+   ]
+  },
+  "moon": {
+   "claims": [
+    {
+     "source": "jpl-planets",
+     "form": "ancient",
+     "url": "https://ssd.jpl.nasa.gov/planets/discovery.html",
+     "retrieved": "2026-10-01"
+    }
+   ]
+  },
+  "neptune": {
+   "claims": [
+    {
+     "source": "nssdca",
+     "form": "day",
+     "day": "1846-09-23",
+     "who": "Johann Gottfried Galle (based on predictions by John Couch Adams and Urbain Leverrier)",
+     "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/neptunefact.html",
+     "retrieved": "2026-09-28"
+    }
+   ]
+  },
+  "nereid": {
+   "claims": [
+    {
+     "source": "jpl-sats",
+     "form": "years",
+     "years": [
+      1949
+     ],
+     "who": "G.P. Kuiper",
+     "ref": "IAU WGPSN",
+     "url": "https://ssd.jpl.nasa.gov/sats/discovery.html",
+     "retrieved": "2026-10-01"
+    }
+   ]
+  },
+  "nix": {
+   "claims": [
+    {
+     "source": "jpl-sats",
+     "form": "years",
+     "years": [
+      2005
+     ],
+     "who": "H.A. Weaver, S.A. Stern, M.J. Mutchler, A.J. Steffl, M.W. Buie, W.J. Merline, J.R. Spencer, E.F. Young, L.A. Young",
+     "ref": "IAUC 8625",
+     "url": "https://ssd.jpl.nasa.gov/sats/discovery.html",
+     "retrieved": "2026-10-01"
+    }
+   ]
+  },
+  "oberon": {
+   "claims": [
+    {
+     "source": "jpl-sats",
+     "form": "years",
+     "years": [
+      1787
+     ],
+     "who": "W. Herschel",
+     "ref": "IAU WGPSN",
+     "url": "https://ssd.jpl.nasa.gov/sats/discovery.html",
+     "retrieved": "2026-10-01"
+    }
+   ]
+  },
+  "orcus": {
+   "claims": [
+    {
+     "source": "sbdb",
+     "form": "day",
+     "day": "2004-02-17",
+     "who": "Brown, M., Trujillo, C.",
+     "where": "Palomar",
+     "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=90482",
+     "retrieved": "2026-10-01"
+    }
+   ]
+  },
+  "pallas": {
+   "claims": [
+    {
+     "source": "sbdb",
+     "form": "day",
+     "day": "1802-03-28",
+     "who": "Olbers, H. W.",
+     "where": "Bremen",
+     "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=2",
+     "retrieved": "2026-10-01"
+    }
+   ]
+  },
+  "phobos": {
+   "claims": [
+    {
+     "source": "jpl-sats",
+     "form": "years",
+     "years": [
+      1877
+     ],
+     "who": "A. Hall",
+     "ref": "IAU WGPSN",
+     "url": "https://ssd.jpl.nasa.gov/sats/discovery.html",
+     "retrieved": "2026-10-01"
+    }
+   ]
+  },
+  "pluto": {
+   "claims": [
+    {
+     "source": "sbdb",
+     "form": "day",
+     "day": "1930-01-23",
+     "who": "Tombaugh, C. W.",
+     "where": "Flagstaff",
+     "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=134340",
+     "retrieved": "2026-10-01"
+    },
+    {
+     "source": "nssdca",
+     "form": "day",
+     "day": "1930-02-18",
+     "who": "Clyde Tombaugh",
+     "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/plutofact.html",
+     "retrieved": "2026-09-28"
+    }
+   ]
+  },
+  "proteus": {
+   "claims": [
+    {
+     "source": "jpl-sats",
+     "form": "years",
+     "years": [
+      1989
+     ],
+     "who": "Voyager Science Team",
+     "ref": "IAU WGPSN",
+     "url": "https://ssd.jpl.nasa.gov/sats/discovery.html",
+     "retrieved": "2026-10-01"
+    }
+   ]
+  },
+  "psyche": {
+   "claims": [
+    {
+     "source": "sbdb",
+     "form": "day",
+     "day": "1852-03-17",
+     "who": "De Gasparis, A.",
+     "where": "Naples",
+     "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=16",
+     "retrieved": "2026-10-01"
+    }
+   ]
+  },
+  "quaoar": {
+   "claims": [
+    {
+     "source": "sbdb",
+     "form": "day",
+     "day": "2002-06-04",
+     "who": "Trujillo, C. A., Brown, M. E.",
+     "where": "Palomar",
+     "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=50000",
+     "retrieved": "2026-10-01"
+    }
+   ]
+  },
+  "rhea": {
+   "claims": [
+    {
+     "source": "jpl-sats",
+     "form": "years",
+     "years": [
+      1672
+     ],
+     "who": "G.D. Cassini",
+     "ref": "IAU WGPSN",
+     "url": "https://ssd.jpl.nasa.gov/sats/discovery.html",
+     "retrieved": "2026-10-01"
+    }
+   ]
+  },
+  "ryugu": {
+   "claims": [
+    {
+     "source": "sbdb",
+     "form": "day",
+     "day": "1999-05-10",
+     "who": "LINEAR",
+     "where": "Socorro",
+     "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=162173",
+     "retrieved": "2026-10-01"
+    }
+   ]
+  },
+  "saturn": {
+   "claims": [
+    {
+     "source": "nssdca",
+     "form": "prehistoric",
+     "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/saturnfact.html",
+     "retrieved": "2026-09-28"
+    }
+   ]
+  },
+  "sedna": {
+   "claims": [
+    {
+     "source": "sbdb",
+     "form": "day",
+     "day": "2003-11-14",
+     "who": "Brown, M. E., Trujillo, C. A., Rabinowitz, D.",
+     "where": "Palomar",
+     "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=90377",
+     "retrieved": "2026-10-01"
+    }
+   ]
+  },
+  "styx": {
+   "claims": [
+    {
+     "source": "jpl-sats",
+     "form": "years",
+     "years": [
+      2012
+     ],
+     "who": "M.R. Showalter, H.A. Weaver, S.A. Stern, A.J. Steffl, M.W. Buie, W.J. Merline, M.J. Mutchler, R. Soummer, H.B. Throop",
+     "ref": "IAUC 9253",
+     "url": "https://ssd.jpl.nasa.gov/sats/discovery.html",
+     "retrieved": "2026-10-01"
+    }
+   ]
+  },
+  "sun": {
+   "notApplicable": true
+  },
+  "tethys": {
+   "claims": [
+    {
+     "source": "jpl-sats",
+     "form": "years",
+     "years": [
+      1684
+     ],
+     "who": "G.D. Cassini",
+     "ref": "IAU WGPSN",
+     "url": "https://ssd.jpl.nasa.gov/sats/discovery.html",
+     "retrieved": "2026-10-01"
+    }
+   ]
+  },
+  "titan": {
+   "claims": [
+    {
+     "source": "jpl-sats",
+     "form": "years",
+     "years": [
+      1655
+     ],
+     "who": "C. Huygens",
+     "ref": "IAU WGPSN",
+     "url": "https://ssd.jpl.nasa.gov/sats/discovery.html",
+     "retrieved": "2026-10-01"
+    }
+   ]
+  },
+  "titania": {
+   "claims": [
+    {
+     "source": "jpl-sats",
+     "form": "years",
+     "years": [
+      1787
+     ],
+     "who": "W. Herschel",
+     "ref": "IAU WGPSN",
+     "url": "https://ssd.jpl.nasa.gov/sats/discovery.html",
+     "retrieved": "2026-10-01"
+    }
+   ]
+  },
+  "triton": {
+   "claims": [
+    {
+     "source": "jpl-sats",
+     "form": "years",
+     "years": [
+      1846
+     ],
+     "who": "W. Lassell",
+     "ref": "IAU WGPSN",
+     "url": "https://ssd.jpl.nasa.gov/sats/discovery.html",
+     "retrieved": "2026-10-01"
+    }
+   ]
+  },
+  "umbriel": {
+   "claims": [
+    {
+     "source": "jpl-sats",
+     "form": "years",
+     "years": [
+      1851
+     ],
+     "who": "W. Lassell",
+     "ref": "IAU WGPSN",
+     "url": "https://ssd.jpl.nasa.gov/sats/discovery.html",
+     "retrieved": "2026-10-01"
+    }
+   ]
+  },
+  "uranus": {
+   "claims": [
+    {
+     "source": "nssdca",
+     "form": "day",
+     "day": "1781-03-13",
+     "who": "William Herschel",
+     "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/uranusfact.html",
+     "retrieved": "2026-09-28"
+    }
+   ]
+  },
+  "venus": {
+   "claims": [
+    {
+     "source": "nssdca",
+     "form": "prehistoric",
+     "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/venusfact.html",
+     "retrieved": "2026-09-28"
+    }
+   ]
+  },
+  "vesta": {
+   "claims": [
+    {
+     "source": "sbdb",
+     "form": "day",
+     "day": "1807-03-29",
+     "who": "Olbers, H. W.",
+     "where": "Bremen",
+     "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=4",
+     "retrieved": "2026-10-01"
+    }
+   ]
+  }
+ },
+ "systems": {
+  "jupiter": {
+   "total": 115,
+   "bytes": 11319,
+   "retrieved": "2026-10-01"
+  },
+  "mars": {
+   "total": 2,
+   "bytes": 167,
+   "retrieved": "2026-10-01"
+  },
+  "neptune": {
+   "total": 16,
+   "bytes": 1925,
+   "retrieved": "2026-10-01"
+  },
+  "pluto": {
+   "total": 5,
+   "bytes": 955,
+   "retrieved": "2026-10-01"
+  },
+  "saturn": {
+   "total": 293,
+   "bytes": 41605,
+   "retrieved": "2026-10-01"
+  },
+  "uranus": {
+   "total": 29,
+   "bytes": 3336,
+   "retrieved": "2026-10-01"
+  }
+ }
+}

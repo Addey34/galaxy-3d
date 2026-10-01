@@ -435,6 +435,30 @@ export const fr: Record<MessageKey, string> = {
   'bi.fictional.hint':
     'Aucune sonde n’a résolu cette surface, la texture est donc illustrative, pas une carte scientifique.',
   // Missions déclarées sur un corps (voir core/missions.ts et config/missions.ts).
+  // Cf. dict-en pour la raison de « ce corps ».
+  'bi.discovery.label': 'Découverte',
+  'bi.discovery.according': '{source}, lu le {date}',
+  'bi.discovery.prehistoric': 'Depuis la préhistoire',
+  'bi.discovery.ancient': 'Depuis l’Antiquité',
+  'bi.discovery.ancientObservations':
+    'Observations anciennes remontant à plus de deux mille ans',
+  'bi.discovery.predictedReturn': 'Retour prédit, observé le {date}',
+  'bi.discovery.notYetKnown':
+    'À la date de la scène, ce corps n’était pas encore connu.',
+  'bi.discovery.known': 'À la date de la scène, ce corps était déjà connu.',
+  'bi.discovery.onTheDay': 'La date de la scène est le jour de sa découverte.',
+  'bi.discovery.withinYear':
+    'La date de la scène tombe dans l’année de sa découverte, dont la source ne donne pas le jour.',
+  'bi.discovery.withinDates':
+    'La date de la scène tombe entre les dates publiées : la réponse dépend de la source.',
+  'bi.discovery.moonsKnown':
+    'Lunes déjà vues à cette date : {count} sur les {total} que recense aujourd’hui le JPL',
+  'bi.discovery.moonsKnownRange':
+    'Lunes déjà vues à cette date : entre {min} et {max} sur les {total} que recense aujourd’hui le JPL',
+  'bi.discovery.moonsNext': 'Découverte suivante : {year} ({names})',
+  'bi.discovery.moonsMore': '{names} et {count} autres',
+  'bi.discovery.moonsNote':
+    'Ce compte ne retient que les lunes que la table du JPL recense aujourd’hui, lue le {date} : une lune annoncée puis réfutée n’y figure pas, donc ce n’est pas ce que l’on croyait à l’époque.',
   'bi.missions.label': 'Missions',
   'bi.missions.countAtDate': '{count}, dont {active} à cette date',
   'bi.missions.countAllAtDate': '{count}, toutes à cette date',

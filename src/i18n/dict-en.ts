@@ -465,6 +465,32 @@ export const en = {
   // mots est l'honnêteté de ce bloc : le PDS déclare des CIBLES, ce qui n'est pas un relevé
   // d'observations, et son `start_date` est le début du PROJET et non un lancement (Voyager y
   // commence en 1972, cinq ans avant le décollage de Voyager 1).
+  // LE BLOC « DÉCOUVERTE » (lot 44, ligne 22.10). Aucune phrase ne genre le corps : « this body »
+  // et non un pronom, parce que la Lune, Titan et Pluton n'ont pas le même genre en français.
+  'bi.discovery.label': 'Discovery',
+  'bi.discovery.according': '{source}, read on {date}',
+  'bi.discovery.prehistoric': 'Since prehistoric times',
+  'bi.discovery.ancient': 'Since ancient times',
+  'bi.discovery.ancientObservations':
+    'Ancient observations going back more than two thousand years',
+  'bi.discovery.predictedReturn': 'Predicted return, observed on {date}',
+  'bi.discovery.notYetKnown':
+    'At the date of the scene, this body was not yet known.',
+  'bi.discovery.known':
+    'At the date of the scene, this body was already known.',
+  'bi.discovery.onTheDay': 'The date of the scene is the day of its discovery.',
+  'bi.discovery.withinYear':
+    'The date of the scene falls in the year of its discovery, and the source does not give the day.',
+  'bi.discovery.withinDates':
+    'The date of the scene falls between the published dates: the answer depends on the source.',
+  'bi.discovery.moonsKnown':
+    'Moons already seen at this date: {count} of the {total} the JPL lists today',
+  'bi.discovery.moonsKnownRange':
+    'Moons already seen at this date: between {min} and {max} of the {total} the JPL lists today',
+  'bi.discovery.moonsNext': 'Next discovery: {year} ({names})',
+  'bi.discovery.moonsMore': '{names} and {count} more',
+  'bi.discovery.moonsNote':
+    'This count only includes the moons the JPL table lists today, read on {date}: a moon announced then refuted is not in it, so this is not what was believed at the time.',
   'bi.missions.label': 'Missions',
   'bi.missions.countAtDate': '{count}, of which {active} at this date',
   'bi.missions.countAllAtDate': '{count}, all at this date',
