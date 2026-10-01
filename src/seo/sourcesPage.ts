@@ -10,6 +10,8 @@
  *   - modèles de forme : le `ModelConfig` du catalogue (crédit, carte de couleur, albédo) ;
  *   - éphémérides : `public/assets/ephemerides/manifest.json` ;
  *   - éléments orbitaux : registres `src/registry/entities/` et `src/registry/interstellar/`, exposés par les façades `config/` ;
+ *   - blocs de fiche (découverte, missions, instruments, formations observées) et noms de surface :
+ *     les `*Index.json` de `src/config/`, lus par `./cardBlockSources` (ligne 44.1) ;
  *   - bibliothèques : `package.json` et le `package.json` de chaque dépendance installée ;
  *   - le texte juridique complet : `THIRD_PARTY_NOTICES.md`, rendu tel quel.
  *
@@ -41,6 +43,7 @@ import {
 import { displayNameResolver, type EphemerisManifest } from './methodologyPage';
 import { renderMarkdown } from './markdown';
 import { citationSection, type CitationMetadata } from './citation';
+import { blockLabel, cardBlockSourceRows } from './cardBlockSources';
 
 export interface TextureProvenance {
   body: string;
@@ -230,6 +233,14 @@ export interface FirebaseHostingConfig {
  * servait un point a l'espagnol et au portugais du Bresil, qui ecrivent la virgule.
  */
 const DECIMAL: DocText = { en: '.', fr: ',', es: ',', 'pt-BR': ',' };
+
+/** Un libellé de l'application cité dans le texte, avec les guillemets de chaque langue. */
+const QUOTE: Record<DocLocale, (text: string) => string> = {
+  en: (text) => `“${text}”`,
+  fr: (text) => `«\u00a0${text}\u00a0»`,
+  es: (text) => `«${text}»`,
+  'pt-BR': (text) => `“${text}”`,
+};
 
 export function connectHostsFromFirebase(
   config: FirebaseHostingConfig
@@ -596,6 +607,68 @@ function sourcesPage(input: SourcesInput, locale: DocLocale): DocPage {
             L({ en: 'Method', fr: 'Méthode', es: 'Método', 'pt-BR': 'Método' }),
           ],
           factRows
+        )
+    )
+  );
+
+  // ── Blocs de fiche (ligne 44.1) ──
+  // Lus dans les index livrés, jamais recopiés : cf. `./cardBlockSources`.
+  const cardBlockRows = cardBlockSourceRows().map((row) => [
+    link(row.url, escapeHtml(`${row.publisher}, ${row.title}`)) +
+      (row.rights
+        ? ` (${link(row.rights.statedAt, escapeHtml(LICENSE_LABELS[row.rights.id]?.[locale] ?? row.rights.id))})`
+        : ''),
+    escapeHtml(
+      row.usedBy.map((key) => QUOTE[locale](blockLabel(key, locale))).join(', ')
+    ),
+    escapeHtml(row.coverage(locale)),
+    escapeHtml(row.asOf),
+  ]);
+  sections.push(
+    docSection(
+      'card-blocks',
+      L({
+        en: 'Discovery, missions, instruments and surface names',
+        fr: 'Découverte, missions, instruments et noms de surface',
+        es: 'Descubrimiento, misiones, instrumentos y nombres de superficie',
+        'pt-BR': 'Descoberta, missões, instrumentos e nomes de superfície',
+      }),
+      `<p>${L({
+        en: 'Several blocks of a body’s information card, and the surface feature names drawn on a body, are read from indexes built offline from primary sources, and their per-body data is downloaded on demand, never at startup. Each card block names its source on the card itself; this table lists them all, with what each one covers and the date of its data, both read in the shipped index.',
+        fr: 'Plusieurs blocs de la fiche d’un corps, ainsi que les noms de formations dessinés sur un corps, sont lus dans des index construits hors ligne depuis des sources primaires, et leurs données par corps sont téléchargées à la demande, jamais au démarrage. Chaque bloc de fiche nomme sa source sur la fiche même ; ce tableau les réunit, avec ce que chacune couvre et la date de ses données, toutes deux lues dans l’index livré.',
+        es: 'Varios bloques de la ficha de un cuerpo, así como los nombres de formaciones dibujados sobre un cuerpo, se leen en índices construidos fuera de línea a partir de fuentes primarias, y sus datos por cuerpo se descargan bajo demanda, nunca al inicio. Cada bloque de la ficha nombra su fuente en la propia ficha; esta tabla las reúne, con lo que cubre cada una y la fecha de sus datos, ambas leídas en el índice entregado.',
+        'pt-BR':
+          'Vários blocos da ficha de um corpo, assim como os nomes de formações desenhados sobre um corpo, são lidos em índices construídos offline a partir de fontes primárias, e os seus dados por corpo são baixados sob demanda, nunca na inicialização. Cada bloco da ficha nomeia a sua fonte na própria ficha; esta tabela as reúne, com o que cada uma cobre e a data dos seus dados, ambas lidas no índice entregue.',
+      })}</p>` +
+        docTable(
+          L({
+            en: 'Sources of the information card blocks',
+            fr: 'Sources des blocs de la fiche',
+            es: 'Fuentes de los bloques de la ficha',
+            'pt-BR': 'Fontes dos blocos da ficha',
+          }),
+          [
+            L({ en: 'Source', fr: 'Source', es: 'Fuente', 'pt-BR': 'Fonte' }),
+            L({
+              en: 'Shown in',
+              fr: 'Affichée dans',
+              es: 'Se muestra en',
+              'pt-BR': 'Exibida em',
+            }),
+            L({
+              en: 'Coverage',
+              fr: 'Couverture',
+              es: 'Cobertura',
+              'pt-BR': 'Cobertura',
+            }),
+            L({
+              en: 'Data as of',
+              fr: 'Données au',
+              es: 'Datos a fecha de',
+              'pt-BR': 'Dados em',
+            }),
+          ],
+          cardBlockRows
         )
     )
   );

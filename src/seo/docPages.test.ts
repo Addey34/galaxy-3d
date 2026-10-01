@@ -45,6 +45,7 @@ import {
   type TextureProvenance,
 } from './sourcesPage';
 import { renderInline, renderMarkdown } from './markdown';
+import { blockLabel, cardBlockSourceRows } from './cardBlockSources';
 import {
   LANDING_PAGE_GLOB_IGNORES,
   NAVIGATE_FALLBACK_DENYLIST,
@@ -342,6 +343,22 @@ describe('page /sources', () => {
         'pt-BR': 'valores',
       };
       expect(page.body).toContain(`${shown} ${NOUN[page.locale]}`);
+    }
+  });
+
+  it('cite la source de chaque bloc de fiche, lue dans les index livrés (ligne 44.1)', () => {
+    const rows = cardBlockSourceRows();
+    for (const page of sources) {
+      const section = page.body.split('id="card-blocks"')[1]?.split('<h2')[0];
+      expect(section, page.locale).toBeDefined();
+      for (const row of rows) {
+        expect(section, `${page.locale} : ${row.url}`).toContain(
+          `href="${row.url}"`
+        );
+        expect(section).toContain(row.asOf);
+      }
+      for (const key of new Set(rows.flatMap((r) => r.usedBy)))
+        expect(section).toContain(blockLabel(key, page.locale));
     }
   });
 
