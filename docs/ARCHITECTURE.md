@@ -3389,6 +3389,19 @@ crédits de l'aide (`data-i18n-href` : le lien suit la langue de l'interface).
   des dépendances INSTALLÉES, et `THIRD_PARTY_NOTICES.md` rendu intégralement (`markdown.ts`,
   sous-ensemble minimal, tout le reste échappé).
 
+**Les sources des blocs de fiche (ligne 44.1, 2026-10-01).** Les blocs Découverte, Missions,
+Instruments et Formations observées, et les noms de surface, lisent chacun un `*Index.json` de
+`src/config/`, qui porte déjà sa provenance (éditeur, titre, adresse, date de lecture ou de gel).
+`src/seo/cardBlockSources.ts` les lit et `/sources` en publie une ligne par source : ce qu'elle
+couvre, COMPTÉ dans l'index, la date de ses données, et les blocs qui l'affichent, nommés par
+leur libellé lu dans les dictionnaires, donc tels que la fiche les écrit. La découverte donne une
+ligne par source DÉCLARÉE dans son index, et sa date est la plage des dates de lecture de ses
+affirmations ; une source qu'aucun corps ne cite fait échouer le build. Une licence n'est publiée
+que si l'index la DÉCLARE avec l'endroit où la source l'écrit (le gazetteer seul, aujourd'hui) :
+celle du PDS a été retirée au lot 40 faute de texte qui la porte. La table du module est indexée
+par nom de fichier, et `cardBlockSources.test.ts` exige qu'elle couvre EXACTEMENT les
+`*Index.json` lus sur le disque : un sixième index rougit tant qu'il n'y est pas.
+
 **Le résumé de validation est versionné, le rapport ne l'est pas.** `reports/` est ignoré par
 git, donc invisible du build de CI. `pnpm ephemeris:validate` écrit aussi
 `src/config/horizons-validation-summary.json` (statistiques sans échantillons, 4 chiffres
