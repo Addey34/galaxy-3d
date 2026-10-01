@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
   E2E_ENVELOPE_MINUTES,
+  E2E_TEST_STEP,
   E2E_WARN_FRACTION,
   judge,
   logLines,
@@ -173,17 +174,29 @@ describe('le jugement, et ses trois natures de défaut', () => {
 });
 
 describe('les deux nombres du guetteur viennent de `ci.yml`', () => {
-  it('l’enveloppe est celle du garde-fou du job e2e', () => {
-    // Le `timeout-minutes` qui suit la matrice des shards, c'est-à-dire celui du job e2e-full.
+  it('l’enveloppe est celle du garde-fou de l’ÉTAPE des tests e2e', () => {
+    // L'étape nommée E2E_TEST_STEP, et le `timeout-minutes` qu'elle porte (ligne 44.2).
+    const at = CI_YML.indexOf(`- name: ${E2E_TEST_STEP}`);
+    expect(
+      at,
+      `l’étape « ${E2E_TEST_STEP} » est absente de ci.yml`
+    ).toBeGreaterThan(0);
+    const step = CI_YML.slice(at, CI_YML.indexOf('run:', at));
+    const guard = /timeout-minutes:\s*(\d+)/.exec(step);
+    expect(guard, 'l’étape des tests n’a pas de garde-fou').toBeTruthy();
+    expect(Number(guard![1])).toBe(E2E_ENVELOPE_MINUTES);
+  });
+
+  it('le job e2e laisse place à l’install ET aux tests, donc ce n’est jamais lui qui coupe', () => {
     const afterMatrix = CI_YML.slice(
       CI_YML.indexOf('shard: [1, 2, 3, 4, 5, 6]')
     );
-    const guard = /timeout-minutes:\s*(\d+)/.exec(afterMatrix);
-    expect(
-      guard,
-      'le garde-fou du job e2e n’a pas été trouvé dans ci.yml'
-    ).toBeTruthy();
-    expect(Number(guard![1])).toBe(E2E_ENVELOPE_MINUTES);
+    const job = Number(/timeout-minutes:\s*(\d+)/.exec(afterMatrix)![1]);
+    const install = afterMatrix.slice(
+      afterMatrix.indexOf('- run: pnpm exec playwright install')
+    );
+    const installGuard = Number(/timeout-minutes:\s*(\d+)/.exec(install)![1]);
+    expect(job).toBeGreaterThan(E2E_ENVELOPE_MINUTES + installGuard);
   });
 
   it('le seuil de signalement reste sous l’enveloppe', () => {

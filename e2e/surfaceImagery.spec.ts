@@ -5,6 +5,7 @@ import { expect, test, type Page, type Request } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 import { waitForCalmMainThread } from './mainThread';
 import { blockExternalNetwork } from './netBlock';
+import { MOON_SCENE_DATE } from './moonScene';
 
 /**
  * L'IMAGERIE DE SURFACE STREAMÉE : ce qu'elle demande, quand, et ce qu'elle peint.
@@ -106,7 +107,7 @@ test('asks for nothing at boot, nor from a distance', async ({ page }) => {
   // Prendre ici un corps SANS jeu de tuiles (Jupiter, première version de ce test) ne prouvait
   // rien : il passait encore avec les deux gardes de distance grands ouverts, puisqu'il n'y
   // avait de toute façon aucune fiche à servir. Falsifié, corrigé.
-  await page.goto('/?mode=explo&body=moon');
+  await page.goto(`/?mode=explo&body=moon&date=${MOON_SCENE_DATE}`);
   await expect(page.locator('#loader')).toBeHidden({ timeout: 60_000 });
   await page.waitForTimeout(3000);
   expect(seen, 'requêtes de tuiles sans approche').toHaveLength(0);
@@ -120,7 +121,10 @@ test('paints tiles on the Moon, says what it serves, and lowers the floor', asyn
   page.on('pageerror', (err) => errors.push(err.message));
   const seen = await serveTiles(page);
 
-  await boot(page, '?debug-surface&mode=explo&body=moon');
+  await boot(
+    page,
+    `?debug-surface&mode=explo&body=moon&date=${MOON_SCENE_DATE}`
+  );
   const probe = page.locator('#surface-probe');
   await expect(probe).toContainText('moon', { timeout: 30_000 });
 
@@ -298,7 +302,10 @@ test('the provenance badge fits a phone screen and hides nothing', async ({
 }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await serveTiles(page);
-  await boot(page, '?debug-surface&mode=explo&body=moon');
+  await boot(
+    page,
+    `?debug-surface&mode=explo&body=moon&date=${MOON_SCENE_DATE}`
+  );
   await expect(page.locator('#surface-probe')).toContainText('moon', {
     timeout: 30_000,
   });
@@ -344,7 +351,10 @@ test('asks for nothing at all when the setting is off', async ({ page }) => {
     localStorage.setItem('ssv-surface-imagery', '0')
   );
 
-  await boot(page, '?debug-surface&mode=explo&body=moon');
+  await boot(
+    page,
+    `?debug-surface&mode=explo&body=moon&date=${MOON_SCENE_DATE}`
+  );
   await expect(page.locator('#surface-probe')).toContainText('moon', {
     timeout: 30_000,
   });
@@ -382,7 +392,10 @@ test('displaces the ground with measured altitudes, and says where they come fro
       heightRequests.push(request.url());
   });
 
-  await boot(page, '?debug-surface&mode=explo&body=moon');
+  await boot(
+    page,
+    `?debug-surface&mode=explo&body=moon&date=${MOON_SCENE_DATE}`
+  );
   const probe = page.locator('#surface-probe');
   await expect(probe).toContainText('moon', { timeout: 30_000 });
   await zoomIn(page);
