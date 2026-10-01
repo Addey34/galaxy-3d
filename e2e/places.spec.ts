@@ -1,7 +1,7 @@
 import { readFileSync, readdirSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { expect, test, type Page } from '@playwright/test';
-import { waitForCalmMainThread } from './mainThread';
+import { clickWhenCalm, waitForCalmMainThread } from './mainThread';
 import { MOON_SCENE_DATE } from './moonScene';
 import { blockExternalNetwork } from './netBlock';
 
@@ -220,10 +220,14 @@ test('revenir sur la Lune par la VUE GLOBALE réaffiche le bloc', async ({
   await page.locator('#body-search-trigger').click();
   await page.locator('#orbit-moon').click();
   await expect(places).toBeVisible({ timeout: 15_000 });
-  await page.locator('#body-search-trigger').click();
+  // APRÈS UN VOL VERS LA LUNE, ON ATTEND QUE LE THREAD RENDE LA MAIN avant de cliquer. Mesuré
+  // le 2026-10-01 (run `36891431375`) : le clic sur `#orbit-jupiter` s'arrêtait à « done
+  // scrolling » et n'est passé qu'au second réessai, signature d'un thread occupé par le vol et
+  // le rechargement de la scène lunaire (`e2e/mainThread.ts`). Aucun délai n'est allongé.
+  await clickWhenCalm(page, page.locator('#body-search-trigger'));
   await page.locator('#orbit-jupiter').click();
   await expect(places).toBeHidden();
-  await page.locator('#body-search-trigger').click();
+  await clickWhenCalm(page, page.locator('#body-search-trigger'));
   await page.locator('#orbit-moon').click();
   await expect(places).toBeVisible({ timeout: 15_000 });
 });
