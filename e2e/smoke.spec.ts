@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { clickWhenCalm } from './mainThread';
 import { blockExternalNetwork } from './netBlock';
 
 // Déterminisme : pas de dépendance à l'API JPL SBDB live pendant les tests.
@@ -118,8 +119,11 @@ test('opens the body info panel on selection and closes it on overview', async (
   await expect(panel.locator('.bi-name')).toHaveText('Earth');
   await expect(panel.locator('.bi-stats dt')).not.toHaveCount(0);
 
-  // Retour Vue Globale : la fiche se referme.
-  await page.locator('#orbit-overview').click();
+  // Retour Vue Globale : la fiche se referme. Le clic attend que le thread rende la main : il
+  // suit le vol vers la Terre, le corps le plus lourd, et le run `36904917081` l'a vu bloqué
+  // (« waiting for scheduled navigations to finish »), vert seulement au réessai. C'est la
+  // signature d'un thread occupé (`e2e/mainThread.ts`) ; aucun délai n'est allongé.
+  await clickWhenCalm(page, page.locator('#orbit-overview'));
   await expect(panel).toBeHidden();
 });
 
