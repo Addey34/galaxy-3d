@@ -11,6 +11,8 @@
  * ces fonctions et compare leurs résultats à des journaux réels.
  */
 
+/** L'étape dont la durée est l'enveloppe (ligne 44.2). */
+export const E2E_TEST_STEP: string;
 export const E2E_ENVELOPE_MINUTES: number;
 export const E2E_WARN_FRACTION: number;
 

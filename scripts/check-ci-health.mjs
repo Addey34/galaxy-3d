@@ -45,7 +45,16 @@ const REPOSITORY = process.env['GITHUB_REPOSITORY'] || 'Addey34/galaxy-3d';
 const WORKFLOW = 'CI';
 
 /**
- * Le garde-fou `timeout-minutes` du job `e2e-full`, recopié ici EXPRÈS et croisé avec
+ * L'ÉTAPE dont la durée est l'enveloppe, depuis le 2026-10-01 (ligne 44.2). L'enveloppe se
+ * mesurait sur le JOB, donc elle comptait aussi l'install des dépendances système, qui a pris
+ * jusqu'à 500 s ce jour-là sur un miroir Ubuntu à 93,6 kB/s, et elle a coupé des shards aux
+ * tests sains. Elle se mesure désormais sur l'étape des tests, et sur le job seulement quand
+ * l'API ne rend pas les étapes (un vieux run).
+ */
+export const E2E_TEST_STEP = 'Run e2e shard';
+
+/**
+ * Le garde-fou `timeout-minutes` de l'étape des tests du job `e2e-full`, recopié ici EXPRÈS et croisé avec
  * `.github/workflows/ci.yml` par `src/config/ciHealth.test.ts` : un script qui lit le YAML pour
  * un seul nombre serait plus fragile que le test qui les compare.
  */
@@ -196,7 +205,10 @@ export function inspectRun(runId, { readLogs = true } = {}) {
 
   const inspected = jobs.map((job) => {
     const shard = E2E_JOB.exec(job.name);
-    const minutes = minutesBetween(job.started_at, job.completed_at);
+    const step = (job.steps ?? []).find((s) => s.name === E2E_TEST_STEP);
+    const minutes = step
+      ? minutesBetween(step.started_at, step.completed_at)
+      : minutesBetween(job.started_at, job.completed_at);
     const base = {
       id: job.id,
       name: job.name,

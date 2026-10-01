@@ -209,9 +209,15 @@ jobs:
       fail-fast: false
       matrix:
         shard: [1, 2, 3, 4, 5, 6]
-    # Garde-fou : sans lui, une install apt bloquee (miroirs Ubuntu injoignables) peut trainer
-    # des heures et polluer le statut global. Large marge sur les 14-20 min MESURES par shard.
-    timeout-minutes: 30
+    # Garde-fous PAR ETAPE depuis le 2026-10-01 (ligne 44.2). Il n'y en avait qu'un, de 30 min sur
+    # le JOB entier, pose contre une install apt bloquee. Il mesurait donc aussi un miroir tiers :
+    # ce jour-la, `playwright install --with-deps` a pris 68 s le matin, puis 363 s et 500 s
+    # ("Fetched 32.1 MB in 5min 43s (93.6 kB/s)", le navigateur lui-meme en 8 s), et deux shards
+    # aux tests SAINS (43 passes sur 46, aucun echec ; puis 29,5 min dont 20 de tests) ont ete
+    # coupes ou rases. Chaque etape a maintenant son garde-fou : 12 min pour l'install (l'intention
+    # d'origine), 30 min pour les TESTS (l'enveloppe que `pnpm ci:health` mesure, sur cette etape
+    # et non sur le job), et 45 min pour le job, qui ne doit plus jamais etre celui qui coupe.
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1, resolved 2026-09-19
         with:
@@ -225,9 +231,13 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm exec playwright install --with-deps chromium
+        timeout-minutes: 12
       # `playwright` en direct plutot que `pnpm test:e2e --` : pas d'ambiguite sur la
-      # transmission des arguments a travers le script npm.
-      - run: pnpm exec playwright test --shard=${{ matrix.shard }}/6
+      # transmission des arguments a travers le script npm. Le NOM de l'etape est lu par
+      # `scripts/check-ci-health.mjs` (E2E_TEST_STEP) : le changer, c'est changer les deux.
+      - name: Run e2e shard
+        timeout-minutes: 30
+        run: pnpm exec playwright test --shard=${{ matrix.shard }}/6
       - name: Upload Playwright diagnostics
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1, resolved 2026-09-20
