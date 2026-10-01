@@ -81,6 +81,25 @@ describe('inventaire dérivé du dépôt', () => {
       expect(row.instruments, row.id).toBeGreaterThan(0);
   });
 
+  it('date la découverte de CHAQUE corps, ou en déclare la question sans objet (lot 44)', () => {
+    const bodies = inventory.rows.filter(
+      (row) => row.family === 'body' && row.kind !== 'skybox'
+    );
+    // Aucun corps HORS INDEX : ce serait `pnpm discovery:generate` pas relancé après un ajout.
+    expect(
+      bodies.filter((row) => row.discovery === null).map((row) => row.id)
+    ).toEqual([]);
+    // Les corps sans objet sont exactement ceux que `scripts/discovery-targets.json` déclare, et
+    // il y en a : sinon ce test passerait sans rien prouver.
+    const without = bodies
+      .filter((row) => row.discovery === 'sans-objet')
+      .map((row) => row.id)
+      .sort();
+    expect(without).toEqual(['earth', 'sun']);
+    for (const row of inventory.rows.filter((r) => r.family !== 'body'))
+      expect(row.applicable.includes('discovery'), row.id).toBe(false);
+  });
+
   it('ne signale une absence que pour une capacité applicable', () => {
     for (const row of inventory.rows)
       for (const capability of row.absent)

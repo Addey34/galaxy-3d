@@ -972,6 +972,20 @@
           <span class="bi-position-source"></span>
           <span class="bi-position-error"></span>
         </div>
+        <!-- Ce que les sources primaires declarent de la decouverte de ce corps, ce qu'on en
+             savait a la date de la scene et, pour une planete qui en a, combien de ses lunes on
+             avait deja vues (lot 44). Rempli par ui/discoveryBlock.ts ; rien n'est demande au
+             demarrage. -->
+        <div class="bi-discovery" hidden>
+          <span class="bi-discovery-label" data-i18n="bi.discovery.label"
+            >Discovery</span
+          >
+          <ul class="bi-discovery-claims"></ul>
+          <p class="bi-discovery-standing" hidden></p>
+          <p class="bi-discovery-moons" hidden></p>
+          <p class="bi-discovery-next" hidden></p>
+          <p class="bi-discovery-note" hidden></p>
+        </div>
         <!-- Missions que le registre de contexte du PDS déclare sur ce corps, leur intervalle
              et leur état à la date de la scène. Remplie par ui/missionsBlock.ts, qui charge
              l'index et la liste À LA DEMANDE : rien n'est demandé au démarrage. -->

@@ -1,0 +1,53 @@
+{
+  "$comment": "Cibles de `pnpm discovery:generate` (lot 44, ligne 22.10) — DONNÉE lue par scripts/generate-discovery-index.mjs, jamais recopiée dans le script. Les désignations SBDB ne sont PAS ici : elles ont un seul propriétaire, `fact-source-targets.json`. jplSatellites.systems : corps parent → intitulé EXACT de sa section dans la table du JPL, dont le compte déclaré est confronté aux lignes lues. nssdcaPlanets : les fiches planétaires du NSSDCA qui portent les champs « Discoverer » et « Discovery Date » (mesuré le 2026-10-01 : celles du Soleil, de la Terre et de la Lune n'en portent aucun). quotes : les affirmations qu'aucune table ne déclare, citées MOT POUR MOT et retrouvées dans la page servie à chaque génération, sans quoi le script échoue. notApplicable : les corps pour lesquels la question n'a pas de sens, avec leur raison.",
+  "jplSatellites": {
+    "url": "https://ssd.jpl.nasa.gov/sats/discovery.html",
+    "systems": {
+      "mars": "Satellites of Mars",
+      "jupiter": "Satellites of Jupiter",
+      "saturn": "Satellites of Saturn",
+      "uranus": "Satellites of Uranus",
+      "neptune": "Satellites of Neptune",
+      "pluto": "Satellites of Dwarf Planet Pluto"
+    }
+  },
+  "nssdcaPlanets": [
+    "mercury",
+    "venus",
+    "mars",
+    "jupiter",
+    "saturn",
+    "uranus",
+    "neptune",
+    "pluto"
+  ],
+  "quotes": {
+    "moon": [
+      {
+        "source": "jpl-planets",
+        "url": "https://ssd.jpl.nasa.gov/planets/discovery.html",
+        "form": "ancient",
+        "anchor": "Most of the planets (including the Earth’s moon) have been known to mankind since ancient times."
+      }
+    ],
+    "halley": [
+      {
+        "source": "nasa-science",
+        "url": "https://science.nasa.gov/solar-system/comets/1p-halley/",
+        "form": "ancientObservations",
+        "anchor": "The comet has since been connected to ancient observations going back more than 2,000 years"
+      },
+      {
+        "source": "nasa-science",
+        "url": "https://science.nasa.gov/solar-system/comets/1p-halley/",
+        "form": "predictedReturn",
+        "year": 1758,
+        "anchor": "Halley correctly predicted the comet would return in 1758"
+      }
+    ]
+  },
+  "notApplicable": {
+    "sun": "Le Soleil n'a pas été découvert : aucune des trois sources lues ne lui attribue de découverte, et la fiche du NSSDCA, qui en déclare une pour chaque planète, n'en porte aucune pour lui (mesuré le 2026-10-01).",
+    "earth": "La Terre n'a pas été découverte : la fiche du NSSDCA, qui déclare une découverte pour chaque autre planète, n'en porte aucune pour elle (mesuré le 2026-10-01)."
+  }
+}

@@ -10,6 +10,7 @@
  *   - `ui/timePanel`    — panneau date-heure (voyage temporel) ;
  *   - `ui/modeSwitcher` — bascule Éducatif ↔ Exploration.
  */
+import Logger from '@/utils/Logger';
 import { SolarSystemApp } from './SolarSystemApp';
 import { LabelSpace } from '@/core/labelSpace';
 import { initLocale, onLocaleLoading, t } from './i18n';
@@ -28,9 +29,6 @@ import { setupLangSwitch } from './ui/langSwitch';
 import { setupPlanetControls } from './ui/planetNav';
 import { setupBodyInfo } from './ui/bodyInfo';
 import { setupPositionProvenance } from './ui/positionProvenance';
-import { setupMissionsBlock } from './ui/missionsBlock';
-import { setupInstrumentsBlock } from './ui/instrumentsBlock';
-import { setupPlacesBlock } from './ui/placesBlock';
 import { setupDocumentTitle } from './ui/documentTitle';
 import { setupDocumentChrome } from './ui/documentChrome';
 import { getAnnouncer } from './ui/announcer';
@@ -305,11 +303,27 @@ function wireChrome(): {
     let syncPermalink = (): void => undefined;
     const bodyInfo = setupBodyInfo(overlayCoordinator);
     setupPositionProvenance(api, bodyInfo);
-    // Missions déclarées sur le corps par le registre de contexte du PDS, et leur état à la date
-    // de la scène (lot 40). Index et liste chargés À LA DEMANDE : rien au démarrage.
-    setupMissionsBlock(api, bodyInfo);
-    setupInstrumentsBlock(api, bodyInfo);
-    setupPlacesBlock(api, bodyInfo);
+    // Les blocs Découverte, Missions, Instruments et Formations observées (lots 40 à 44), en un
+    // morceau chargé à la PREMIÈRE ouverture d'une fiche : aucun n'agit avant, et le budget du
+    // démarrage n'avait plus la marge de les payer (cf. ui/cardBlocks). Un échec de chargement se
+    // retente, espacé : une panne réseau passagère ne doit pas éteindre ces blocs pour la visite.
+    let cardBlocks: 'idle' | 'loading' | 'ready' = 'idle';
+    let cardBlocksRetryAt = 0;
+    api.animationSystem.onFrame(() => {
+      if (cardBlocks !== 'idle' || !bodyInfo.currentBody()) return;
+      if (performance.now() < cardBlocksRetryAt) return;
+      cardBlocks = 'loading';
+      void import('./ui/cardBlocks')
+        .then((module) => {
+          module.setupCardBlocks(api, bodyInfo);
+          cardBlocks = 'ready';
+        })
+        .catch((error: unknown) => {
+          Logger.warn(`[Fiche] blocs indisponibles : ${String(error)}`);
+          cardBlocks = 'idle';
+          cardBlocksRetryAt = performance.now() + 5000;
+        });
+    });
     const exploScaleBadge = setupExploScaleBadge();
     // Le titre de l'onglet suit la sélection, comme le chemin de l'URL : depuis que celui-ci
     // change sans rechargement, un titre figé ferait dire deux choses différentes à l'adresse

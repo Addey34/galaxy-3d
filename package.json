@@ -33,6 +33,7 @@
     "places:pull": "node scripts/pull-ode-footprints.mjs",
     "places:generate": "node scripts/generate-place-observations.mjs",
     "missions:generate": "node scripts/generate-mission-index.mjs",
+    "discovery:generate": "node scripts/generate-discovery-index.mjs",
     "instruments:generate": "node scripts/generate-instrument-index.mjs",
     "inventory:gaps": "node scripts/inventory-gaps.mjs",
     "budget:startup": "node scripts/check-startup-budget.mjs",

@@ -28,6 +28,7 @@ import { bodyDynamics } from '@/config/gravity';
 import { NAVIGABLE_TARGETS } from '@/config/navigable';
 import { SURFACE_TILESETS } from '@/config/surfaceTilesets';
 import { SURFACE_HEIGHT_SETS } from '@/config/surfaceHeights';
+import discoveryIndex from '@/config/discoveryIndex.json';
 import missionIndex from '@/config/missionIndex.json';
 import gazetteerIndex from '@/config/gazetteerIndex.json';
 import placeObservationIndex from '@/config/placeObservationIndex.json';
@@ -50,6 +51,7 @@ export type Capability =
   | 'shape'
   | 'tileset'
   | 'heightfield'
+  | 'discovery'
   | 'missions'
   | 'instruments'
   | 'places'
@@ -162,6 +164,14 @@ export interface InventoryRow {
    * quand l'index n'a pas d'entrée pour lui. `0` est une réponse, pas une absence.
    */
   readonly missions: number | null;
+  /**
+   * Combien d'affirmations de découverte les sources primaires déclarent sur ce corps (lot 44).
+   * Trois valeurs, et la troisième seule est un manque : un nombre ; `'sans-objet'` quand la
+   * question n'a pas de sens et que la raison est écrite dans `scripts/discovery-targets.json`
+   * (le Soleil, la Terre) ; `null` quand le corps n'est pas dans l'index, signe que
+   * `pnpm discovery:generate` n'a pas été relancé.
+   */
+  readonly discovery: number | 'sans-objet' | null;
   /**
    * Les formations nommées que l'Orbital Data Explorer déclare observées (ligne 40.3). Trois
    * valeurs : un couple quand le corps est couvert et tiré en entier ; `'non-couvert'` quand
@@ -439,6 +449,9 @@ function applicableOf(
   // fiche le DIT. Ce qui serait un manque, c'est l'absence d'ENTRÉE dans l'index, signe que
   // `pnpm missions:generate` n'a pas été relancé après l'ajout d'un corps.
   out.push('missions');
+  // `discovery` aussi : un corps sans découverte datée doit le DIRE (le Soleil, la Terre), sinon
+  // l'absence d'entrée serait indiscernable d'un générateur pas relancé.
+  out.push('discovery');
   // `places` s'applique à tout corps qui porte des noms de l'UAI : sans nom, rien à observer.
   if (id in gazetteerIndex.bodies) out.push('places');
   return out;
@@ -499,6 +512,17 @@ export function collectInventory(root: string): Inventory {
           id
         ]?.count ?? null)
       : null;
+    const discoveryEntry = (
+      discoveryIndex.bodies as Record<
+        string,
+        { claims?: unknown[]; notApplicable?: boolean } | undefined
+      >
+    )[id];
+    const discovery = !applicable.includes('discovery')
+      ? null
+      : discoveryEntry?.notApplicable
+        ? ('sans-objet' as const)
+        : (discoveryEntry?.claims?.length ?? null);
     const placeCover = (
       placeObservationIndex.bodies as Record<
         string,
@@ -548,6 +572,8 @@ export function collectInventory(root: string): Inventory {
       absent.push('heightfield');
     if (applicable.includes('missions') && missions === null)
       absent.push('missions');
+    if (applicable.includes('discovery') && discovery === null)
+      absent.push('discovery');
     // Une sonde dont l'archive ne déclare rien n'est PAS un manque : la raison est écrite et
     // mesurée. Le manque, c'est de n'être ni jointe ni déclarée absente.
     if (applicable.includes('instruments') && instruments === null)
@@ -585,6 +611,7 @@ export function collectInventory(root: string): Inventory {
         : null,
       heightfield: heightfield ? { id: heightfield.id } : null,
       missions,
+      discovery,
       places,
       instruments,
       facts,

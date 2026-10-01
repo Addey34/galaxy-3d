@@ -3251,6 +3251,125 @@ cite l'étiquette de chacune pour qu'on aille voir.
 (l'ODE rend ses erreurs en HTTP 200 avec `"Status": "ERROR"`), `e2e/places.spec.ts`, et l'audit à
 390 px de `e2e/a11y-audit.spec.ts` dans les quatre langues.
 
+## Ce qu'on savait d'un corps à une date (lot 44, ligne 22.10)
+
+Premier pas de la **timeline du SAVOIR**. La fiche de chaque corps porte un bloc « Découverte » :
+ce que les sources primaires déclarent de sa découverte, avec la source et la date de lecture de
+chaque affirmation ; ce qu'on en savait **à la date de la scène** ; et, pour Mars, Jupiter,
+Saturne, Uranus, Neptune et Pluton, **combien de leurs lunes on avait déjà vues**, et la
+découverte suivante. La question du réservoir de vision, « que savait-on de Jupiter en 1609, en
+1610 », se pose donc en déplaçant l'horloge : zéro lune en 1609, une borne de zéro à quatre en
+1610, quatre en 1611.
+
+**CE N'EST PAS UN TRAVAIL DE BIBLIOGRAPHIE, et c'est la mesure qui l'a dit.** Le réservoir de
+vision décrivait cette timeline comme une recherche par corps, chaque phrase demandant sa source.
+La mesure du 2026-10-01 a trouvé que la découverte est DÉCLARÉE, champ par champ, par trois
+sources primaires dont deux étaient déjà des sources du dépôt :
+
+| Source | Ce qu'elle déclare | Corps couverts |
+|---|---|---|
+| JPL SSD, *Planetary Satellite Discovery Circumstances* | année, découvreurs, référence UAI, pour **chaque** satellite reconnu | les 30 lunes du catalogue hors la Lune, et les 460 satellites des six systèmes |
+| JPL SBDB, `discovery=1` | jour, découvreurs, lieu | les 19 petits corps |
+| NSSDCA, fiches planétaires | `Discoverer`, `Discovery Date` | Uranus, Neptune, Pluton ; « Prehistoric » pour les cinq planètes visibles à l'œil nu |
+
+Deux affirmations qu'aucune table ne déclare sont **citées mot pour mot** et retrouvées dans la
+page servie à chaque génération, sans quoi le générateur échoue : la Lune (JPL, « known to mankind
+since ancient times ») et Halley (NASA Science, ci-dessous). Le Soleil et la Terre sont **sans
+objet**, raison écrite dans `scripts/discovery-targets.json` : aucune des sources ne leur attribue
+de découverte, et la fiche du NSSDCA, qui en déclare une pour chaque autre planète, n'en porte
+aucune pour la Terre. Leur bloc ne s'affiche pas ; l'inventaire dérivé, lui, le dit.
+
+### Un corps ne porte pas une date, il porte des AFFIRMATIONS
+
+C'est ce que la mesure a imposé, sur trois cas réels qu'une date unique aurait trahis :
+
+- **une source qui ne donne que l'ANNÉE** (la table du JPL) : une année vaut l'année entière, et
+  l'application ne prétend pas savoir quel jour de 1655 Huygens a vu Titan ;
+- **une ligne qui porte DEUX années** : Thémisto « 1975, 2000 » (vue, perdue, retrouvée), Janus
+  « 1966, 1980 », Épiméthée « 1977, 1980 ». Les deux sont publiées, aucune n'est choisie ;
+- **deux sources qui divergent** : Pluton est découverte le **1930-01-23 selon SBDB** et le
+  **1930-02-18 selon le NSSDCA**. La fiche montre les deux, et aucune explication n'est écrite de
+  mémoire.
+
+Une seule règle les couvre (`core/discovery.ts`, pur et testé) : avant la PREMIÈRE date publiée, le
+corps n'était pas encore connu ; après la DERNIÈRE, il l'était ; entre les deux, la réponse dépend
+de la source, et la fiche le dit au lieu de trancher. Le compte des lunes suit la même logique et
+devient une **borne** (« entre 9 et 10 sur 293 » pour Saturne en 1972, à cause de Janus), jamais un
+nombre inventé.
+
+### Quatre choses que la mesure a trouvées
+
+**LA DATE DE MISE À JOUR DE LA PAGE DU JPL MENT.** Elle se dit « last updated 2023-May-23 » et
+recense une lune d'Uranus découverte en **2025**. La date publiée est donc celle de LECTURE, qui
+appartient à la réponse (lot 25) ; le générateur imprime l'écart, et la garde refuse que cette date
+déclarée soit jamais livrée.
+
+**LE MOT « DÉCOUVERTE » D'UNE SOURCE NE VEUT PAS TOUJOURS DIRE DÉCOUVERTE.** SBDB fait découvrir
+Halley le **1758-12-25 par Palitzsch**. Publier « découverte en 1758 » serait faux pour tout
+lecteur, et le corriger de mémoire est interdit. NASA Science écrit que Halley avait prédit le
+**retour** de la comète en 1758, et qu'elle a été rattachée à des observations de plus de deux mille
+ans : le générateur exige que l'année citée soit celle de SBDB, puis requalifie cette date en
+**retour prédit**. Le champ `first_obs` de SBDB, qui aurait pu servir de témoin interne, n'est que
+le début de l'arc de l'orbite ajustée (Cérès : 1995) : inutilisable, et c'est mesuré.
+
+**LE COMPTE DE LA TABLE EST CELUI QUE LA FICHE AFFICHE DÉJÀ.** 115 pour Jupiter, 293 pour Saturne,
+29 pour Uranus, exactement les nombres de NASA Science. La garde
+`src/config/discovery.test.ts` exige l'égalité : deux nombres différents sur une même fiche
+seraient une contradiction visible, et le jour où l'une des sources avance sans l'autre, elle
+rougit et oblige à relire les deux.
+
+**CE QUE CE COMPTE NE DIT PAS, et la fiche l'écrit sous lui** : la table ne recense que les
+satellites reconnus AUJOURD'HUI. Une lune annoncée puis réfutée n'y figure pas, donc ce n'est pas
+ce que l'on CROYAIT à une date, mais ce que l'on avait déjà vu de ce qui est reconnu aujourd'hui.
+Une timeline des croyances, réfutations comprises, demanderait une autre source, que rien ne
+publie sous forme de table.
+
+### Rien au démarrage, et le lot a fait de la place
+
+| | |
+|---|---|
+| Index (`src/config/discoveryIndex.json`) | morceau séparé, **hors** clôture de démarrage (`NON_BOOT_CHUNKS`) |
+| Satellites (`public/assets/discovery/{parent}.json`) | 6 fichiers, servis à l'ouverture de la fiche du parent |
+| Adresse | **ABSOLUE**, pour la raison du lot 37 ; `e2e/discovery.spec.ts` boote par le CHEMIN (`/jupiter/`), la seule forme sous laquelle une adresse relative casserait, et rougit si on la rend relative (falsifié) |
+
+**LES QUATRE BLOCS DE FICHE SONT SORTIS DU DÉMARRAGE.** Le lot 43 avait laissé 22 063 octets de
+marge au budget JavaScript, et le bloc « Découverte » en coûtait environ huit mille. Or les blocs
+Découverte, Missions, Instruments et Formations observées n'agissent pas avant qu'une fiche
+existe : ils interrogent `bodyInfo.currentBody()` et restent masqués tant qu'il rend `null`.
+`ui/cardBlocks.ts` les regroupe donc en un morceau chargé à la **première** ouverture d'une fiche,
+retenté s'il échoue. Le nombre exact se lit dans `pnpm budget:startup`, il ne se recopie pas ici ;
+au moment de ce lot, la marge est remontée au-dessus de ce qu'elle était avant lui.
+
+### Les gardes, et leur falsification
+
+- `src/core/discovery.test.ts` : l'année entière, les deux années de Janus, le désaccord de Pluton,
+  l'Antiquité qui l'emporte sur un retour prédit, la borne du compte (1609, 1610, 1611, Thémisto).
+- `src/config/discovery.test.ts` : chaque corps a des affirmations ou une raison écrite ; chaque
+  lune du catalogue est dans la section de son parent ; le compte égale celui de la fiche ; les
+  deux années, les deux dates de Pluton et la requalification de Halley restent livrées. **Quatre
+  falsifications de la donnée, quatre rouges** : Halley non requalifié, une lune de Jupiter en
+  moins, un corps oublié, Pluton arbitré.
+- `e2e/discovery.spec.ts` : rien au démarrage, Jupiter en 1609 puis 1611, Titan avant et après
+  1655, Pluton entre ses deux dates, Halley, la Terre masquée avec le détour par la vue globale du
+  lot 42. **Deux falsifications du produit, deux rouges** : l'adresse relative, et l'horloge de la
+  scène ignorée. Une troisième est restée verte, et c'était la falsification qui était mal posée :
+  le premier rendu ignorait la date, et la synchronisation suivante, qui compare le jour rendu au
+  jour de la scène, le corrigeait aussitôt.
+- `e2e/a11y-audit.spec.ts` : Pluton en février 1930 (la seule fiche qui exerce tout le bloc) dans
+  les quatre langues, et Neptune pour le découvreur le plus long, à 390 px, axe et débordement
+  élément par élément.
+- **Lire le rendu a trouvé un défaut** : la date et le découvreur n'étaient séparés que par une
+  marge CSS, si bien que le texte de la ligne était « 1930Tombaugh », et c'est ce qu'un lecteur
+  d'écran prononce. Un vrai séparateur est inséré, et le scénario de Pluton refuse qu'une année
+  touche une lettre.
+
+`pnpm discovery:generate` (`--offline`, `--check`, cache partagé avec le relevé des faits),
+`pnpm inventory:gaps` (colonne `decouverte`, où `sans objet (raison ecrite)` est distinct de
+`HORS INDEX`), et `pnpm sources:health`, qui DÉRIVE de l'index les adresses de chaque affirmation.
+
+**Aucune licence n'est revendiquée**, pour la raison du lot 40 : la donnée est citée, source et date
+de lecture sur chaque ligne de la fiche, et rien n'est affirmé qu'on ne puisse pointer.
+
 ## Pages `/methodology` et `/sources`
 
 Deux documents, chacun en anglais (`/methodology/`, `/sources/`) et en français

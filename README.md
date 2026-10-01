@@ -41,6 +41,19 @@ démarrage complètent les contrôles de navigation, de temps et les deux modes 
 - **Missions** : la fiche d'un corps dit quelles missions l'archive du Planetary Data System
   déclare pour lui, avec l'intervalle de chacune, et marque celles qui avaient commencé à la date
   de la scène. Une fin non déclarée est dite comme telle, jamais comme « en cours ».
+- **Instruments** : la fiche d'une sonde dit ce que le même registre déclare qu'elle embarque, et
+  les investigations où elle figure. Une sonde que l'archive ne connaît pas (Parker Solar Probe, le
+  JWST) le dit au lieu de masquer le bloc.
+- **Formations observées** : pour la Lune, Mars, Mercure et Vénus, la fiche dit quels instruments
+  en orbite ont observé une formation nommée, combien de fois et de quand à quand, d'après les
+  empreintes de l'Orbital Data Explorer. Les autres corps nommés disent que ce service ne les
+  couvre pas.
+- **Découverte** : la fiche dit ce que les sources primaires déclarent de la découverte d'un corps
+  (table des satellites du JPL, Small-Body Database, fiches du NSSDCA), chaque affirmation avec sa
+  source et sa date de lecture, et ce qu'on en savait à la date de la scène. Pour une planète qui a
+  des lunes, elle compte celles qu'on avait déjà vues à cette date : remonter en 1609 n'en laisse
+  aucune à Jupiter, 1611 en montre quatre. Quand deux sources divergent, comme pour Pluton, les deux
+  sont montrées.
 - **Réglages d'affichage** : une surface en six sections. Un tableau par objet, groupé comme la
   recherche, avec trois colonnes (étiquette, objet, orbite) ; le champ d'astéroïdes et de
   comètes ; le rendu (luminosité, qualité, imagerie de surface) ; l'accessibilité et les unités ;

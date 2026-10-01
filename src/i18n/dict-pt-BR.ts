@@ -443,6 +443,30 @@ export const ptBR: Record<MessageKey, string> = {
   'bi.fictional.hint':
     'Nenhuma sonda resolveu esta superfície, então a textura é ilustrativa, não um mapa científico.',
   // Missões declaradas sobre um corpo (ver core/missions.ts e config/missions.ts).
+  // Cf. dict-en para a razão de « este corpo ».
+  'bi.discovery.label': 'Descoberta',
+  'bi.discovery.according': '{source}, lido em {date}',
+  'bi.discovery.prehistoric': 'Desde a pré-história',
+  'bi.discovery.ancient': 'Desde a Antiguidade',
+  'bi.discovery.ancientObservations':
+    'Observações antigas de mais de dois mil anos',
+  'bi.discovery.predictedReturn': 'Retorno previsto, observado em {date}',
+  'bi.discovery.notYetKnown':
+    'Na data da cena, este corpo ainda não era conhecido.',
+  'bi.discovery.known': 'Na data da cena, este corpo já era conhecido.',
+  'bi.discovery.onTheDay': 'A data da cena é o dia da sua descoberta.',
+  'bi.discovery.withinYear':
+    'A data da cena cai no ano da sua descoberta, e a fonte não informa o dia.',
+  'bi.discovery.withinDates':
+    'A data da cena cai entre as datas publicadas: a resposta depende da fonte.',
+  'bi.discovery.moonsKnown':
+    'Luas já vistas nesta data: {count} das {total} que o JPL registra hoje',
+  'bi.discovery.moonsKnownRange':
+    'Luas já vistas nesta data: entre {min} e {max} das {total} que o JPL registra hoje',
+  'bi.discovery.moonsNext': 'Próxima descoberta: {year} ({names})',
+  'bi.discovery.moonsMore': '{names} e mais {count}',
+  'bi.discovery.moonsNote':
+    'Esta contagem inclui apenas as luas que a tabela do JPL registra hoje, lida em {date}: uma lua anunciada e depois refutada não aparece nela, portanto não é o que se acreditava na época.',
   'bi.missions.label': 'Missões',
   'bi.missions.countAtDate': '{count}, sendo {active} nesta data',
   'bi.missions.countAllAtDate': '{count}, todas nesta data',
