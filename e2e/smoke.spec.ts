@@ -98,9 +98,13 @@ test('rewinds the simulated date when the speed slider goes left of centre', asy
   await expect(page.locator('#speed-value')).toContainText('◀');
 
   const start = new Date(await dateInput.inputValue()).getTime();
+  // Le champ de date n'avance qu'à l'ARRIVÉE des octets d'éphémérides de la nouvelle fenêtre
+  // (lot 17C) : médiane ~12 s mesurée, donc 10 s était une attente plus courte que celle du
+  // produit, et le test tombait selon la machine (passé au réessai le 2026-10-03, run
+  // `37069466894`, la date restée en place sur un EPYC 7763).
   await expect
     .poll(async () => new Date(await dateInput.inputValue()).getTime(), {
-      timeout: 10_000,
+      timeout: 30_000,
     })
     .toBeLessThan(start - 86_400_000);
 });
