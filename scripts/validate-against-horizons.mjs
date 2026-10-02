@@ -127,6 +127,12 @@ const ASTRO_CENTER = {
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const jdOf = (ms) => ms / MS_PER_DAY + UNIX_EPOCH_JD;
 const iso = (ms) => new Date(ms).toISOString();
+/**
+ * Le JOUR ISO d'un instant, y compris avant l'an 1 (front des années avant J.-C., ligne 22.10).
+ * `toISOString` écrit une année négative SIGNÉE sur six chiffres (« -001000-01-01T… »), si bien
+ * que `slice(0, 10)` la tronquait en « -001000-01 » : on coupe au « T », qui existe toujours.
+ */
+const isoDay = (ms) => iso(ms).split('T')[0];
 const utc = (s) => Date.parse(s);
 
 /** PRNG déterministe (mulberry32) : même graine → mêmes dates → cache réutilisable. */
@@ -389,6 +395,7 @@ const { eclipticToScene, equatorialToScene } = await load(
   '/src/core/frames.ts'
 );
 const { etSecondsFromDate } = await load('/src/core/SpkKernel.ts');
+const { galaxyDeltaT } = await load('/src/core/timeScale.ts');
 const { horizonsServiceFromDisk, horizonsManifest } = await load(
   '/src/core/horizonsTestFixture.ts'
 );
@@ -529,6 +536,80 @@ function epochWindow(epoch) {
   };
 }
 
+// ─────────────────── le témoin ΔT des époques profondes (ligne 22.10) ───────────────────
+//
+// L'écart mesuré par tranche compare deux positions À UNE MÊME DATE UT. Or chaque côté convertit
+// cette date en temps dynamique avec SON ΔT : Horizons le sien, l'application celui de
+// `core/timeScale.ts` (Espenak et Meeus avant 1972). Avant l'époque des observations, aucun des
+// deux n'est une mesure : ce sont deux extrapolations, et leur désaccord entre dans l'écart publié
+// sans être une erreur de position. MESURÉ le 2026-10-02 : 1,6 h vers -9000, 0,07 h vers -1000,
+// soit environ 175 000 km sur les 1,17 million que la Terre accuse vers -9000. On le mesure donc,
+// au milieu de chaque tranche profonde, et on le PUBLIE à côté de l'écart au lieu de le taire.
+// Horizons le publie lui-même : quantité 30 de ses tables d'observation, « TDB-UT ».
+
+async function measureDeltaT(tiles) {
+  const dates = tiles.map((t) => t.from + (t.to - t.from) / 2);
+  const params = {
+    format: 'json',
+    COMMAND: "'10'",
+    CENTER: "'500@399'",
+    EPHEM_TYPE: 'OBSERVER',
+    MAKE_EPHEM: 'YES',
+    OBJ_DATA: 'NO',
+    QUANTITIES: "'30'",
+    TIME_TYPE: 'UT',
+    TLIST_TYPE: 'JD',
+    TLIST: dates.map((ms) => jdOf(ms).toFixed(9)).join(' '),
+  };
+  const query = new URLSearchParams(params).toString();
+  const key = createHash('sha256').update(query).digest('hex').slice(0, 32);
+  const cacheFile = join(CACHE_DIR, `${key}.json`);
+  let result;
+  if (existsSync(cacheFile))
+    result = JSON.parse(readFileSync(cacheFile, 'utf-8')).result;
+  else {
+    if (OFFLINE) throw new Error('--offline : témoin ΔT absent du cache');
+    const json = await (await fetch(`${API_URL}?${query}`)).json();
+    result = json.result ?? '';
+    if (!result.includes('$$SOE'))
+      throw new Error(
+        `témoin ΔT : réponse sans éphéméride\n${result.slice(0, 400)}`
+      );
+    mkdirSync(CACHE_DIR, { recursive: true });
+    writeFileSync(
+      cacheFile,
+      JSON.stringify({
+        query: params,
+        fetchedAt: new Date().toISOString(),
+        result,
+      })
+    );
+  }
+  // Horizons rend ses lignes dans l'ordre CROISSANT des dates, quel que soit l'ordre demandé :
+  // apparier par position sans trier rendait l'an 2000 à la ligne de -9000 (vu le 2026-10-02).
+  const body = result.slice(
+    result.indexOf('$$SOE') + 5,
+    result.indexOf('$$EOE')
+  );
+  const horizons = body
+    .trim()
+    .split('\n')
+    .map((line) => Number(line.trim().split(/\s+/).at(-1)));
+  const sorted = [...dates].sort((a, b) => a - b);
+  if (
+    horizons.length !== sorted.length ||
+    horizons.some((v) => !Number.isFinite(v))
+  )
+    throw new Error(
+      `témoin ΔT : ${horizons.length} lignes lues pour ${sorted.length} dates`
+    );
+  return sorted.map((ms, i) => ({
+    year: new Date(ms).getUTCFullYear(),
+    horizonsS: horizons[i],
+    galaxyS: galaxyDeltaT(jdOf(ms) - 2451545.0),
+  }));
+}
+
 // ─────────────────── la profondeur du temps (lot 39) ───────────────────
 //
 // L'horloge de Galaxy accepte n'importe quelle date, et la fiche disait « écart à Horizons non
@@ -538,7 +619,9 @@ function epochWindow(epoch) {
 // Ce que l'API sert, MESURÉ le 2026-09-29 et non supposé : le centre d'une planète vient d'une
 // théorie de satellites bornée (Jupiter 1600, Saturne 1749, Neptune et Pluton 1800), alors que
 // les BARYCENTRES et les corps de DE441 (Mercure, Vénus, la Terre, la Lune) remontent au
-// 9999-MAR-15 av. J.-C. et vont jusqu'au 9999-DEC-30. D'où la substitution, déclarée par corps
+// 9999-MAR-21 av. J.-C. (calendrier julien ; « 15 mars » écrit ici jusqu'au 2026-10-02 n'avait
+// jamais été mesuré, l'API répond 21 mars pour tous les corps et les deux centres) et vont jusqu'au
+// 9999-DEC-30. D'où la substitution, déclarée par corps
 // dans `validation-targets.json` et jamais devinée ici.
 //
 // La substitution a un PLANCHER : l'écart entre le corps et son barycentre, que le script mesure
@@ -551,8 +634,18 @@ function epochWindow(epoch) {
 // toujours la fenêtre à côté du chiffre, comme elle le fait déjà pour 1900-2100.
 
 const DEEP_TILE_YEARS = 1000;
-/** Première année mesurée : l'ère chrétienne. Avant, voir le § « Ce qui reste » du lot 39. */
+/** Première année des tranches de l'ère chrétienne, inchangée depuis le lot 39. */
 const DEEP_FIRST_YEAR = 1;
+/**
+ * AVANT L'AN 1 (front des années avant J.-C., ligne 22.10, 2026-10-02). L'API répond au jour
+ * julien NÉGATIF, mesuré jusqu'en 9998 av. J.-C., et refuse avant ce qu'elle annonce elle-même :
+ * « No ephemeris for target "Jupiter Barycenter" prior to B.C. 9999-MAR-21 » (calendrier
+ * JULIEN). La première tranche commence au 1er janvier -9997 (grégorien proleptique, année
+ * astronomique), avec la même marge qu'en fin de couverture plutôt que pile sur la borne.
+ * Les années sont ASTRONOMIQUES : l'année 0 est 1 av. J.-C., et la tranche qui la porte va de
+ * -1000 à 0, juste avant la première tranche du lot 39, qui commence à l'an 1.
+ */
+const DEEP_FIRST_BC_MS = yearStartMs(-9997);
 /** Dernier instant servi par l'API (9999-DEC-30), moins une marge de dix jours. */
 const DEEP_LAST_MS = utc('9999-12-20T00:00:00Z');
 /** Fraction de l'écart mesuré en deçà de laquelle le plancher de substitution est publiable. */
@@ -588,6 +681,22 @@ function yearStartMs(year) {
 }
 
 const DEEP_TILES = [];
+for (let year = -10_000; year < 0; year += DEEP_TILE_YEARS) {
+  const from = Math.max(yearStartMs(year), DEEP_FIRST_BC_MS);
+  // La dernière tranche avant l'ère s'arrête au début de l'an 1, où commence celle du lot 39.
+  const to = yearStartMs(
+    year + DEEP_TILE_YEARS === 0 ? 1 : year + DEEP_TILE_YEARS
+  );
+  if (!(to > from)) continue;
+  const lastYear = new Date(to - MS_PER_DAY).getUTCFullYear();
+  DEEP_TILES.push({
+    // « → » plutôt qu'un tiret : « an -1000-0 » se lirait mal avec des années négatives.
+    id: `an ${new Date(from).getUTCFullYear()} → ${lastYear}`,
+    kind: 'deep',
+    from,
+    to,
+  });
+}
 for (let year = 0; year < 10_000; year += DEEP_TILE_YEARS) {
   const from = yearStartMs(Math.max(year, DEEP_FIRST_YEAR));
   const to = Math.min(yearStartMs(year + DEEP_TILE_YEARS), DEEP_LAST_MS);
@@ -956,7 +1065,7 @@ for (const [index, c] of cases.entries()) {
         : window.to;
     if (!(to > from) || (from === window.from && to === window.to)) break;
     window = {
-      id: `${iso(from).slice(0, 10)}→${iso(to).slice(0, 10)} (recadré sur Horizons, demandé ${c.window.id})`,
+      id: `${isoDay(from)}→${isoDay(to)} (recadré sur Horizons, demandé ${c.window.id})`,
       kind: c.window.kind,
       clipped: true,
       from,
@@ -972,8 +1081,8 @@ for (const [index, c] of cases.entries()) {
     // Forme structurée de la fenêtre, pour ce qui publie ces chiffres (`/methodology`) : le
     // libellé `id` est une phrase française, pas une donnée à ré-analyser.
     windowKind: window.kind,
-    windowFrom: iso(window.from).slice(0, 10),
-    windowTo: iso(window.to).slice(0, 10),
+    windowFrom: isoDay(window.from),
+    windowTo: isoDay(window.to),
     windowClipped: window.clipped === true,
     // Cible Horizons RÉELLEMENT interrogée : le corps, ou le barycentre qui le remplace aux
     // époques profondes. Sans ce champ, deux lignes de sens différent se ressemblent.
@@ -1196,7 +1305,7 @@ if (floors.size > 0) {
     '',
     '## Profondeur du temps : la référence et son plancher',
     '',
-    `Avant 1600, l'API Horizons refuse le centre d'une planète (sa théorie de satellites est bornée) et sert son BARYCENTRE, qui vient de DE441 et remonte au 9999-MAR-15 av. J.-C. Les lignes par millénaire comparent donc la position de Galaxy à ce barycentre. Le PLANCHER de cette substitution est mesuré par un témoin : la même source, aux mêmes dates, mesurée contre le corps ET contre son barycentre là où Horizons sert les deux (${[...floors.values()][0].window}, ${[...floors.values()][0].n} dates) ; la plus grande différence de leurs écarts est le biais que la substitution introduit.`,
+    `Avant 1600, l'API Horizons refuse le centre d'une planète (sa théorie de satellites est bornée) et sert son BARYCENTRE, qui vient de DE441 et remonte au 9999-MAR-21 av. J.-C. (calendrier julien) Les lignes par millénaire comparent donc la position de Galaxy à ce barycentre. Le PLANCHER de cette substitution est mesuré par un témoin : la même source, aux mêmes dates, mesurée contre le corps ET contre son barycentre là où Horizons sert les deux (${[...floors.values()][0].window}, ${[...floors.values()][0].n} dates) ; la plus grande différence de leurs écarts est le biais que la substitution introduit.`,
     '',
     `Une ligne n'est publiée que si son plancher reste sous un centième de l'écart mesuré, bien en deçà de la résolution des deux chiffres significatifs qu'affiche la fiche. La colonne « en rayons du corps » n'est pas un critère : elle dit si le barycentre tombe DANS le corps, ce qui vaut d'être su (celui de Pluton-Charon n'y est pas) sans rien décider.`,
     '',
@@ -1313,6 +1422,12 @@ else {
         // La substitution de référence des époques profondes, corps par corps : ce que la page
         // /methodology publie sans avoir à relire un rapport non versionné.
         deep: {
+          // Le désaccord des deux ΔT, une date au milieu de chaque tranche (ligne 22.10).
+          deltaT: (await measureDeltaT(DEEP_TILES)).map((d) => ({
+            year: d.year,
+            horizonsS: round(d.horizonsS),
+            galaxyS: round(d.galaxyS),
+          })),
           witnessFrom: iso(WITNESS_WINDOW.from).slice(0, 10),
           witnessTo: iso(WITNESS_WINDOW.to).slice(0, 10),
           bodies: Object.fromEntries(

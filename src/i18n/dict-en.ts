@@ -516,6 +516,7 @@ export const en = {
     'At this date, a possible satellite of this body had already been reported: from {year} by {who}, then several more times by other observers, including {others}.',
   'bi.discovery.refutedSearched':
     'A survey submitted on {date} found none, down to about {radius} km in radius.',
+  'position.yearBeforeEra': '{year} BC',
   'bi.missions.label': 'Missions',
   'bi.missions.countAtDate': '{count}, of which {active} at this date',
   'bi.missions.countAllAtDate': '{count}, all at this date',

@@ -1,11 +1,113 @@
 {
- "generatedAt": "2026-09-29T22:40:14.627Z",
+ "generatedAt": "2026-10-02T06:19:25.428Z",
  "samplesPerCase": 48,
  "spk": {
   "kernel": true,
   "enabledInProduction": false
  },
  "deep": {
+  "deltaT": [
+   {
+    "year": -9499,
+    "horizonsS": 403400,
+    "galaxyS": 409900
+   },
+   {
+    "year": -8500,
+    "horizonsS": 335400,
+    "galaxyS": 340800
+   },
+   {
+    "year": -7501,
+    "horizonsS": 273600,
+    "galaxyS": 277900
+   },
+   {
+    "year": -6500,
+    "horizonsS": 218100,
+    "galaxyS": 221500
+   },
+   {
+    "year": -5501,
+    "horizonsS": 168900,
+    "galaxyS": 171400
+   },
+   {
+    "year": -4500,
+    "horizonsS": 125900,
+    "galaxyS": 127800
+   },
+   {
+    "year": -3501,
+    "horizonsS": 89280,
+    "galaxyS": 90550
+   },
+   {
+    "year": -2500,
+    "horizonsS": 58920,
+    "galaxyS": 59700
+   },
+   {
+    "year": -1501,
+    "horizonsS": 34850,
+    "galaxyS": 35250
+   },
+   {
+    "year": -500,
+    "horizonsS": 17000,
+    "galaxyS": 17200
+   },
+   {
+    "year": 500,
+    "horizonsS": 5604,
+    "galaxyS": 5705
+   },
+   {
+    "year": 1500,
+    "horizonsS": 294.6,
+    "galaxyS": 198.4
+   },
+   {
+    "year": 2499,
+    "horizonsS": 69.18,
+    "galaxyS": 69.18
+   },
+   {
+    "year": 3500,
+    "horizonsS": 69.18,
+    "galaxyS": 69.18
+   },
+   {
+    "year": 4499,
+    "horizonsS": 69.18,
+    "galaxyS": 69.18
+   },
+   {
+    "year": 5500,
+    "horizonsS": 69.18,
+    "galaxyS": 69.18
+   },
+   {
+    "year": 6499,
+    "horizonsS": 69.18,
+    "galaxyS": 69.18
+   },
+   {
+    "year": 7500,
+    "horizonsS": 69.18,
+    "galaxyS": 69.18
+   },
+   {
+    "year": 8499,
+    "horizonsS": 69.18,
+    "galaxyS": 69.18
+   },
+   {
+    "year": 9499,
+    "horizonsS": 69.18,
+    "galaxyS": 69.18
+   }
+  ],
   "witnessFrom": "1801-01-01",
   "witnessTo": "2199-12-01",
   "bodies": {
@@ -166,6 +268,276 @@
     "median": null,
     "p95": null,
     "max": null
+   }
+  },
+  {
+   "body": "mercury",
+   "provider": "astronomy-engine",
+   "windowKind": "deep",
+   "windowFrom": "-009997-01-01",
+   "windowTo": "-009000-01-01",
+   "windowClipped": false,
+   "target": "199",
+   "relative": false,
+   "radiusKm": 2439.7,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 1092000,
+    "median": 915300,
+    "p95": 2030000,
+    "max": 2082000
+   },
+   "radii": {
+    "mean": 447.5,
+    "median": 375.2,
+    "p95": 831.9,
+    "max": 853.5
+   }
+  },
+  {
+   "body": "mercury",
+   "provider": "astronomy-engine",
+   "windowKind": "deep",
+   "windowFrom": "-009000-01-01",
+   "windowTo": "-008000-01-01",
+   "windowClipped": false,
+   "target": "199",
+   "relative": false,
+   "radiusKm": 2439.7,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 974000,
+    "median": 812900,
+    "p95": 1749000,
+    "max": 1756000
+   },
+   "radii": {
+    "mean": 399.2,
+    "median": 333.2,
+    "p95": 717,
+    "max": 719.9
+   }
+  },
+  {
+   "body": "mercury",
+   "provider": "astronomy-engine",
+   "windowKind": "deep",
+   "windowFrom": "-008000-01-01",
+   "windowTo": "-007000-01-01",
+   "windowClipped": false,
+   "target": "199",
+   "relative": false,
+   "radiusKm": 2439.7,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 729500,
+    "median": 606600,
+    "p95": 1282000,
+    "max": 1374000
+   },
+   "radii": {
+    "mean": 299,
+    "median": 248.6,
+    "p95": 525.4,
+    "max": 563.2
+   }
+  },
+  {
+   "body": "mercury",
+   "provider": "astronomy-engine",
+   "windowKind": "deep",
+   "windowFrom": "-007000-01-01",
+   "windowTo": "-006000-01-01",
+   "windowClipped": false,
+   "target": "199",
+   "relative": false,
+   "radiusKm": 2439.7,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 571100,
+    "median": 485600,
+    "p95": 1009000,
+    "max": 1067000
+   },
+   "radii": {
+    "mean": 234.1,
+    "median": 199,
+    "p95": 413.6,
+    "max": 437.4
+   }
+  },
+  {
+   "body": "mercury",
+   "provider": "astronomy-engine",
+   "windowKind": "deep",
+   "windowFrom": "-006000-01-01",
+   "windowTo": "-005000-01-01",
+   "windowClipped": false,
+   "target": "199",
+   "relative": false,
+   "radiusKm": 2439.7,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 482500,
+    "median": 387300,
+    "p95": 845600,
+    "max": 938800
+   },
+   "radii": {
+    "mean": 197.8,
+    "median": 158.7,
+    "p95": 346.6,
+    "max": 384.8
+   }
+  },
+  {
+   "body": "mercury",
+   "provider": "astronomy-engine",
+   "windowKind": "deep",
+   "windowFrom": "-005000-01-01",
+   "windowTo": "-004000-01-01",
+   "windowClipped": false,
+   "target": "199",
+   "relative": false,
+   "radiusKm": 2439.7,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 375700,
+    "median": 325800,
+    "p95": 635100,
+    "max": 680900
+   },
+   "radii": {
+    "mean": 154,
+    "median": 133.5,
+    "p95": 260.3,
+    "max": 279.1
+   }
+  },
+  {
+   "body": "mercury",
+   "provider": "astronomy-engine",
+   "windowKind": "deep",
+   "windowFrom": "-004000-01-01",
+   "windowTo": "-003000-01-01",
+   "windowClipped": false,
+   "target": "199",
+   "relative": false,
+   "radiusKm": 2439.7,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 244800,
+    "median": 222800,
+    "p95": 472100,
+    "max": 507400
+   },
+   "radii": {
+    "mean": 100.4,
+    "median": 91.32,
+    "p95": 193.5,
+    "max": 208
+   }
+  },
+  {
+   "body": "mercury",
+   "provider": "astronomy-engine",
+   "windowKind": "deep",
+   "windowFrom": "-003000-01-01",
+   "windowTo": "-002000-01-01",
+   "windowClipped": false,
+   "target": "199",
+   "relative": false,
+   "radiusKm": 2439.7,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 181900,
+    "median": 182100,
+    "p95": 293900,
+    "max": 306200
+   },
+   "radii": {
+    "mean": 74.55,
+    "median": 74.66,
+    "p95": 120.5,
+    "max": 125.5
+   }
+  },
+  {
+   "body": "mercury",
+   "provider": "astronomy-engine",
+   "windowKind": "deep",
+   "windowFrom": "-002000-01-01",
+   "windowTo": "-001000-01-01",
+   "windowClipped": false,
+   "target": "199",
+   "relative": false,
+   "radiusKm": 2439.7,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 116100,
+    "median": 107400,
+    "p95": 188500,
+    "max": 229200
+   },
+   "radii": {
+    "mean": 47.59,
+    "median": 44.01,
+    "p95": 77.28,
+    "max": 93.94
+   }
+  },
+  {
+   "body": "mercury",
+   "provider": "astronomy-engine",
+   "windowKind": "deep",
+   "windowFrom": "-001000-01-01",
+   "windowTo": "0001-01-01",
+   "windowClipped": false,
+   "target": "199",
+   "relative": false,
+   "radiusKm": 2439.7,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 67470,
+    "median": 59180,
+    "p95": 113500,
+    "max": 116400
+   },
+   "radii": {
+    "mean": 27.66,
+    "median": 24.26,
+    "p95": 46.54,
+    "max": 47.7
    }
   },
   {
@@ -579,6 +951,276 @@
    "body": "venus",
    "provider": "astronomy-engine",
    "windowKind": "deep",
+   "windowFrom": "-009997-01-01",
+   "windowTo": "-009000-01-01",
+   "windowClipped": false,
+   "target": "299",
+   "relative": false,
+   "radiusKm": 6051.8,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 1253000,
+    "median": 1285000,
+    "p95": 1829000,
+    "max": 2009000
+   },
+   "radii": {
+    "mean": 207.1,
+    "median": 212.4,
+    "p95": 302.3,
+    "max": 332
+   }
+  },
+  {
+   "body": "venus",
+   "provider": "astronomy-engine",
+   "windowKind": "deep",
+   "windowFrom": "-009000-01-01",
+   "windowTo": "-008000-01-01",
+   "windowClipped": false,
+   "target": "299",
+   "relative": false,
+   "radiusKm": 6051.8,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 1093000,
+    "median": 1224000,
+    "p95": 1653000,
+    "max": 1671000
+   },
+   "radii": {
+    "mean": 180.7,
+    "median": 202.3,
+    "p95": 273.2,
+    "max": 276.2
+   }
+  },
+  {
+   "body": "venus",
+   "provider": "astronomy-engine",
+   "windowKind": "deep",
+   "windowFrom": "-008000-01-01",
+   "windowTo": "-007000-01-01",
+   "windowClipped": false,
+   "target": "299",
+   "relative": false,
+   "radiusKm": 6051.8,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 858000,
+    "median": 926300,
+    "p95": 1353000,
+    "max": 1451000
+   },
+   "radii": {
+    "mean": 141.8,
+    "median": 153.1,
+    "p95": 223.6,
+    "max": 239.7
+   }
+  },
+  {
+   "body": "venus",
+   "provider": "astronomy-engine",
+   "windowKind": "deep",
+   "windowFrom": "-007000-01-01",
+   "windowTo": "-006000-01-01",
+   "windowClipped": false,
+   "target": "299",
+   "relative": false,
+   "radiusKm": 6051.8,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 672700,
+    "median": 762400,
+    "p95": 1030000,
+    "max": 1100000
+   },
+   "radii": {
+    "mean": 111.2,
+    "median": 126,
+    "p95": 170.2,
+    "max": 181.8
+   }
+  },
+  {
+   "body": "venus",
+   "provider": "astronomy-engine",
+   "windowKind": "deep",
+   "windowFrom": "-006000-01-01",
+   "windowTo": "-005000-01-01",
+   "windowClipped": false,
+   "target": "299",
+   "relative": false,
+   "radiusKm": 6051.8,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 576000,
+    "median": 643700,
+    "p95": 882600,
+    "max": 890900
+   },
+   "radii": {
+    "mean": 95.17,
+    "median": 106.4,
+    "p95": 145.8,
+    "max": 147.2
+   }
+  },
+  {
+   "body": "venus",
+   "provider": "astronomy-engine",
+   "windowKind": "deep",
+   "windowFrom": "-005000-01-01",
+   "windowTo": "-004000-01-01",
+   "windowClipped": false,
+   "target": "299",
+   "relative": false,
+   "radiusKm": 6051.8,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 427200,
+    "median": 451600,
+    "p95": 651400,
+    "max": 665400
+   },
+   "radii": {
+    "mean": 70.59,
+    "median": 74.63,
+    "p95": 107.6,
+    "max": 110
+   }
+  },
+  {
+   "body": "venus",
+   "provider": "astronomy-engine",
+   "windowKind": "deep",
+   "windowFrom": "-004000-01-01",
+   "windowTo": "-003000-01-01",
+   "windowClipped": false,
+   "target": "299",
+   "relative": false,
+   "radiusKm": 6051.8,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 282400,
+    "median": 308600,
+    "p95": 474900,
+    "max": 540100
+   },
+   "radii": {
+    "mean": 46.66,
+    "median": 51,
+    "p95": 78.47,
+    "max": 89.24
+   }
+  },
+  {
+   "body": "venus",
+   "provider": "astronomy-engine",
+   "windowKind": "deep",
+   "windowFrom": "-003000-01-01",
+   "windowTo": "-002000-01-01",
+   "windowClipped": false,
+   "target": "299",
+   "relative": false,
+   "radiusKm": 6051.8,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 211100,
+    "median": 216000,
+    "p95": 347500,
+    "max": 366400
+   },
+   "radii": {
+    "mean": 34.88,
+    "median": 35.69,
+    "p95": 57.42,
+    "max": 60.55
+   }
+  },
+  {
+   "body": "venus",
+   "provider": "astronomy-engine",
+   "windowKind": "deep",
+   "windowFrom": "-002000-01-01",
+   "windowTo": "-001000-01-01",
+   "windowClipped": false,
+   "target": "299",
+   "relative": false,
+   "radiusKm": 6051.8,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 128300,
+    "median": 122800,
+    "p95": 217500,
+    "max": 222300
+   },
+   "radii": {
+    "mean": 21.2,
+    "median": 20.3,
+    "p95": 35.93,
+    "max": 36.72
+   }
+  },
+  {
+   "body": "venus",
+   "provider": "astronomy-engine",
+   "windowKind": "deep",
+   "windowFrom": "-001000-01-01",
+   "windowTo": "0001-01-01",
+   "windowClipped": false,
+   "target": "299",
+   "relative": false,
+   "radiusKm": 6051.8,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 57650,
+    "median": 57260,
+    "p95": 99720,
+    "max": 110500
+   },
+   "radii": {
+    "mean": 9.526,
+    "median": 9.461,
+    "p95": 16.48,
+    "max": 18.27
+   }
+  },
+  {
+   "body": "venus",
+   "provider": "astronomy-engine",
+   "windowKind": "deep",
    "windowFrom": "0001-01-01",
    "windowTo": "1000-01-01",
    "windowClipped": false,
@@ -980,6 +1622,276 @@
     "median": null,
     "p95": null,
     "max": null
+   }
+  },
+  {
+   "body": "earth",
+   "provider": "astronomy-engine",
+   "windowKind": "deep",
+   "windowFrom": "-009997-01-01",
+   "windowTo": "-009000-01-01",
+   "windowClipped": false,
+   "target": "399",
+   "relative": false,
+   "radiusKm": 6371,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 1413000,
+    "median": 1601000,
+    "p95": 2105000,
+    "max": 2138000
+   },
+   "radii": {
+    "mean": 221.8,
+    "median": 251.3,
+    "p95": 330.5,
+    "max": 335.5
+   }
+  },
+  {
+   "body": "earth",
+   "provider": "astronomy-engine",
+   "windowKind": "deep",
+   "windowFrom": "-009000-01-01",
+   "windowTo": "-008000-01-01",
+   "windowClipped": false,
+   "target": "399",
+   "relative": false,
+   "radiusKm": 6371,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 1166000,
+    "median": 1196000,
+    "p95": 1657000,
+    "max": 1800000
+   },
+   "radii": {
+    "mean": 183,
+    "median": 187.7,
+    "p95": 260.1,
+    "max": 282.5
+   }
+  },
+  {
+   "body": "earth",
+   "provider": "astronomy-engine",
+   "windowKind": "deep",
+   "windowFrom": "-008000-01-01",
+   "windowTo": "-007000-01-01",
+   "windowClipped": false,
+   "target": "399",
+   "relative": false,
+   "radiusKm": 6371,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 998600,
+    "median": 1094000,
+    "p95": 1462000,
+    "max": 1499000
+   },
+   "radii": {
+    "mean": 156.7,
+    "median": 171.7,
+    "p95": 229.5,
+    "max": 235.2
+   }
+  },
+  {
+   "body": "earth",
+   "provider": "astronomy-engine",
+   "windowKind": "deep",
+   "windowFrom": "-007000-01-01",
+   "windowTo": "-006000-01-01",
+   "windowClipped": false,
+   "target": "399",
+   "relative": false,
+   "radiusKm": 6371,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 745000,
+    "median": 726200,
+    "p95": 1147000,
+    "max": 1215000
+   },
+   "radii": {
+    "mean": 116.9,
+    "median": 114,
+    "p95": 180,
+    "max": 190.7
+   }
+  },
+  {
+   "body": "earth",
+   "provider": "astronomy-engine",
+   "windowKind": "deep",
+   "windowFrom": "-006000-01-01",
+   "windowTo": "-005000-01-01",
+   "windowClipped": false,
+   "target": "399",
+   "relative": false,
+   "radiusKm": 6371,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 542100,
+    "median": 548400,
+    "p95": 878700,
+    "max": 931600
+   },
+   "radii": {
+    "mean": 85.09,
+    "median": 86.08,
+    "p95": 137.9,
+    "max": 146.2
+   }
+  },
+  {
+   "body": "earth",
+   "provider": "astronomy-engine",
+   "windowKind": "deep",
+   "windowFrom": "-005000-01-01",
+   "windowTo": "-004000-01-01",
+   "windowClipped": false,
+   "target": "399",
+   "relative": false,
+   "radiusKm": 6371,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 408600,
+    "median": 412200,
+    "p95": 732900,
+    "max": 753800
+   },
+   "radii": {
+    "mean": 64.13,
+    "median": 64.69,
+    "p95": 115,
+    "max": 118.3
+   }
+  },
+  {
+   "body": "earth",
+   "provider": "astronomy-engine",
+   "windowKind": "deep",
+   "windowFrom": "-004000-01-01",
+   "windowTo": "-003000-01-01",
+   "windowClipped": false,
+   "target": "399",
+   "relative": false,
+   "radiusKm": 6371,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 308500,
+    "median": 318600,
+    "p95": 526600,
+    "max": 539600
+   },
+   "radii": {
+    "mean": 48.43,
+    "median": 50.01,
+    "p95": 82.65,
+    "max": 84.7
+   }
+  },
+  {
+   "body": "earth",
+   "provider": "astronomy-engine",
+   "windowKind": "deep",
+   "windowFrom": "-003000-01-01",
+   "windowTo": "-002000-01-01",
+   "windowClipped": false,
+   "target": "399",
+   "relative": false,
+   "radiusKm": 6371,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 221400,
+    "median": 243800,
+    "p95": 355400,
+    "max": 408100
+   },
+   "radii": {
+    "mean": 34.75,
+    "median": 38.26,
+    "p95": 55.78,
+    "max": 64.06
+   }
+  },
+  {
+   "body": "earth",
+   "provider": "astronomy-engine",
+   "windowKind": "deep",
+   "windowFrom": "-002000-01-01",
+   "windowTo": "-001000-01-01",
+   "windowClipped": false,
+   "target": "399",
+   "relative": false,
+   "radiusKm": 6371,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 100700,
+    "median": 96170,
+    "p95": 201400,
+    "max": 224900
+   },
+   "radii": {
+    "mean": 15.8,
+    "median": 15.1,
+    "p95": 31.62,
+    "max": 35.3
+   }
+  },
+  {
+   "body": "earth",
+   "provider": "astronomy-engine",
+   "windowKind": "deep",
+   "windowFrom": "-001000-01-01",
+   "windowTo": "0001-01-01",
+   "windowClipped": false,
+   "target": "399",
+   "relative": false,
+   "radiusKm": 6371,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 60520,
+    "median": 54540,
+    "p95": 115600,
+    "max": 140200
+   },
+   "radii": {
+    "mean": 9.5,
+    "median": 8.56,
+    "p95": 18.15,
+    "max": 22
    }
   },
   {
@@ -1393,6 +2305,276 @@
    "body": "moon",
    "provider": "astronomy-engine",
    "windowKind": "deep",
+   "windowFrom": "-009997-01-01",
+   "windowTo": "-009000-01-01",
+   "windowClipped": false,
+   "target": "301",
+   "relative": true,
+   "radiusKm": 1737.4,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 93980,
+    "median": 93940,
+    "p95": 125200,
+    "max": 128700
+   },
+   "radii": {
+    "mean": 54.09,
+    "median": 54.07,
+    "p95": 72.06,
+    "max": 74.05
+   }
+  },
+  {
+   "body": "moon",
+   "provider": "astronomy-engine",
+   "windowKind": "deep",
+   "windowFrom": "-009000-01-01",
+   "windowTo": "-008000-01-01",
+   "windowClipped": false,
+   "target": "301",
+   "relative": true,
+   "radiusKm": 1737.4,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 70790,
+    "median": 68980,
+    "p95": 94630,
+    "max": 101700
+   },
+   "radii": {
+    "mean": 40.75,
+    "median": 39.71,
+    "p95": 54.47,
+    "max": 58.51
+   }
+  },
+  {
+   "body": "moon",
+   "provider": "astronomy-engine",
+   "windowKind": "deep",
+   "windowFrom": "-008000-01-01",
+   "windowTo": "-007000-01-01",
+   "windowClipped": false,
+   "target": "301",
+   "relative": true,
+   "radiusKm": 1737.4,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 56300,
+    "median": 54960,
+    "p95": 72770,
+    "max": 79160
+   },
+   "radii": {
+    "mean": 32.41,
+    "median": 31.63,
+    "p95": 41.88,
+    "max": 45.56
+   }
+  },
+  {
+   "body": "moon",
+   "provider": "astronomy-engine",
+   "windowKind": "deep",
+   "windowFrom": "-007000-01-01",
+   "windowTo": "-006000-01-01",
+   "windowClipped": false,
+   "target": "301",
+   "relative": true,
+   "radiusKm": 1737.4,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 43100,
+    "median": 42170,
+    "p95": 56940,
+    "max": 60140
+   },
+   "radii": {
+    "mean": 24.81,
+    "median": 24.27,
+    "p95": 32.77,
+    "max": 34.62
+   }
+  },
+  {
+   "body": "moon",
+   "provider": "astronomy-engine",
+   "windowKind": "deep",
+   "windowFrom": "-006000-01-01",
+   "windowTo": "-005000-01-01",
+   "windowClipped": false,
+   "target": "301",
+   "relative": true,
+   "radiusKm": 1737.4,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 31500,
+    "median": 32010,
+    "p95": 41500,
+    "max": 44120
+   },
+   "radii": {
+    "mean": 18.13,
+    "median": 18.42,
+    "p95": 23.89,
+    "max": 25.39
+   }
+  },
+  {
+   "body": "moon",
+   "provider": "astronomy-engine",
+   "windowKind": "deep",
+   "windowFrom": "-005000-01-01",
+   "windowTo": "-004000-01-01",
+   "windowClipped": false,
+   "target": "301",
+   "relative": true,
+   "radiusKm": 1737.4,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 22020,
+    "median": 21490,
+    "p95": 29370,
+    "max": 30720
+   },
+   "radii": {
+    "mean": 12.67,
+    "median": 12.37,
+    "p95": 16.9,
+    "max": 17.68
+   }
+  },
+  {
+   "body": "moon",
+   "provider": "astronomy-engine",
+   "windowKind": "deep",
+   "windowFrom": "-004000-01-01",
+   "windowTo": "-003000-01-01",
+   "windowClipped": false,
+   "target": "301",
+   "relative": true,
+   "radiusKm": 1737.4,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 14610,
+    "median": 14080,
+    "p95": 19360,
+    "max": 20820
+   },
+   "radii": {
+    "mean": 8.409,
+    "median": 8.104,
+    "p95": 11.14,
+    "max": 11.98
+   }
+  },
+  {
+   "body": "moon",
+   "provider": "astronomy-engine",
+   "windowKind": "deep",
+   "windowFrom": "-003000-01-01",
+   "windowTo": "-002000-01-01",
+   "windowClipped": false,
+   "target": "301",
+   "relative": true,
+   "radiusKm": 1737.4,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 9240,
+    "median": 9011,
+    "p95": 12760,
+    "max": 12940
+   },
+   "radii": {
+    "mean": 5.318,
+    "median": 5.187,
+    "p95": 7.346,
+    "max": 7.447
+   }
+  },
+  {
+   "body": "moon",
+   "provider": "astronomy-engine",
+   "windowKind": "deep",
+   "windowFrom": "-002000-01-01",
+   "windowTo": "-001000-01-01",
+   "windowClipped": false,
+   "target": "301",
+   "relative": true,
+   "radiusKm": 1737.4,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 5179,
+    "median": 5180,
+    "p95": 7016,
+    "max": 7265
+   },
+   "radii": {
+    "mean": 2.981,
+    "median": 2.982,
+    "p95": 4.038,
+    "max": 4.182
+   }
+  },
+  {
+   "body": "moon",
+   "provider": "astronomy-engine",
+   "windowKind": "deep",
+   "windowFrom": "-001000-01-01",
+   "windowTo": "0001-01-01",
+   "windowClipped": false,
+   "target": "301",
+   "relative": true,
+   "radiusKm": 1737.4,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 2485,
+    "median": 2425,
+    "p95": 3916,
+    "max": 3994
+   },
+   "radii": {
+    "mean": 1.43,
+    "median": 1.395,
+    "p95": 2.254,
+    "max": 2.299
+   }
+  },
+  {
+   "body": "moon",
+   "provider": "astronomy-engine",
+   "windowKind": "deep",
    "windowFrom": "0001-01-01",
    "windowTo": "1000-01-01",
    "windowClipped": false,
@@ -1794,6 +2976,286 @@
     "median": null,
     "p95": null,
     "max": null
+   }
+  },
+  {
+   "body": "mars",
+   "provider": "astronomy-engine",
+   "windowKind": "deep",
+   "windowFrom": "-009997-01-01",
+   "windowTo": "-009000-01-01",
+   "windowClipped": false,
+   "target": "4",
+   "floorKm": 0.0001583,
+   "relative": false,
+   "radiusKm": 3389.5,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 4549000,
+    "median": 4336000,
+    "p95": 7546000,
+    "max": 8024000
+   },
+   "radii": {
+    "mean": 1342,
+    "median": 1279,
+    "p95": 2226,
+    "max": 2367
+   }
+  },
+  {
+   "body": "mars",
+   "provider": "astronomy-engine",
+   "windowKind": "deep",
+   "windowFrom": "-009000-01-01",
+   "windowTo": "-008000-01-01",
+   "windowClipped": false,
+   "target": "4",
+   "floorKm": 0.0001583,
+   "relative": false,
+   "radiusKm": 3389.5,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 3690000,
+    "median": 3643000,
+    "p95": 5882000,
+    "max": 5894000
+   },
+   "radii": {
+    "mean": 1089,
+    "median": 1075,
+    "p95": 1735,
+    "max": 1739
+   }
+  },
+  {
+   "body": "mars",
+   "provider": "astronomy-engine",
+   "windowKind": "deep",
+   "windowFrom": "-008000-01-01",
+   "windowTo": "-007000-01-01",
+   "windowClipped": false,
+   "target": "4",
+   "floorKm": 0.0001583,
+   "relative": false,
+   "radiusKm": 3389.5,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 2662000,
+    "median": 2622000,
+    "p95": 3957000,
+    "max": 4258000
+   },
+   "radii": {
+    "mean": 785.2,
+    "median": 773.5,
+    "p95": 1167,
+    "max": 1256
+   }
+  },
+  {
+   "body": "mars",
+   "provider": "astronomy-engine",
+   "windowKind": "deep",
+   "windowFrom": "-007000-01-01",
+   "windowTo": "-006000-01-01",
+   "windowClipped": false,
+   "target": "4",
+   "floorKm": 0.0001583,
+   "relative": false,
+   "radiusKm": 3389.5,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 2150000,
+    "median": 2102000,
+    "p95": 3227000,
+    "max": 3267000
+   },
+   "radii": {
+    "mean": 634.4,
+    "median": 620.1,
+    "p95": 952.1,
+    "max": 964
+   }
+  },
+  {
+   "body": "mars",
+   "provider": "astronomy-engine",
+   "windowKind": "deep",
+   "windowFrom": "-006000-01-01",
+   "windowTo": "-005000-01-01",
+   "windowClipped": false,
+   "target": "4",
+   "floorKm": 0.0001583,
+   "relative": false,
+   "radiusKm": 3389.5,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 1514000,
+    "median": 1542000,
+    "p95": 2166000,
+    "max": 2378000
+   },
+   "radii": {
+    "mean": 446.7,
+    "median": 454.9,
+    "p95": 639.1,
+    "max": 701.5
+   }
+  },
+  {
+   "body": "mars",
+   "provider": "astronomy-engine",
+   "windowKind": "deep",
+   "windowFrom": "-005000-01-01",
+   "windowTo": "-004000-01-01",
+   "windowClipped": false,
+   "target": "4",
+   "floorKm": 0.0001583,
+   "relative": false,
+   "radiusKm": 3389.5,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 1026000,
+    "median": 1090000,
+    "p95": 1541000,
+    "max": 1561000
+   },
+   "radii": {
+    "mean": 302.7,
+    "median": 321.5,
+    "p95": 454.7,
+    "max": 460.5
+   }
+  },
+  {
+   "body": "mars",
+   "provider": "astronomy-engine",
+   "windowKind": "deep",
+   "windowFrom": "-004000-01-01",
+   "windowTo": "-003000-01-01",
+   "windowClipped": false,
+   "target": "4",
+   "floorKm": 0.0001583,
+   "relative": false,
+   "radiusKm": 3389.5,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 642200,
+    "median": 657200,
+    "p95": 956400,
+    "max": 984400
+   },
+   "radii": {
+    "mean": 189.5,
+    "median": 193.9,
+    "p95": 282.2,
+    "max": 290.4
+   }
+  },
+  {
+   "body": "mars",
+   "provider": "astronomy-engine",
+   "windowKind": "deep",
+   "windowFrom": "-003000-01-01",
+   "windowTo": "-002000-01-01",
+   "windowClipped": false,
+   "target": "4",
+   "floorKm": 0.0001583,
+   "relative": false,
+   "radiusKm": 3389.5,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 407300,
+    "median": 419200,
+    "p95": 625800,
+    "max": 654400
+   },
+   "radii": {
+    "mean": 120.2,
+    "median": 123.7,
+    "p95": 184.6,
+    "max": 193.1
+   }
+  },
+  {
+   "body": "mars",
+   "provider": "astronomy-engine",
+   "windowKind": "deep",
+   "windowFrom": "-002000-01-01",
+   "windowTo": "-001000-01-01",
+   "windowClipped": false,
+   "target": "4",
+   "floorKm": 0.0001583,
+   "relative": false,
+   "radiusKm": 3389.5,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 228000,
+    "median": 215300,
+    "p95": 370000,
+    "max": 404400
+   },
+   "radii": {
+    "mean": 67.26,
+    "median": 63.53,
+    "p95": 109.2,
+    "max": 119.3
+   }
+  },
+  {
+   "body": "mars",
+   "provider": "astronomy-engine",
+   "windowKind": "deep",
+   "windowFrom": "-001000-01-01",
+   "windowTo": "0001-01-01",
+   "windowClipped": false,
+   "target": "4",
+   "floorKm": 0.0001583,
+   "relative": false,
+   "radiusKm": 3389.5,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 113400,
+    "median": 115700,
+    "p95": 189900,
+    "max": 230000
+   },
+   "radii": {
+    "mean": 33.47,
+    "median": 34.13,
+    "p95": 56.02,
+    "max": 67.84
    }
   },
   {
@@ -2593,6 +4055,286 @@
     "median": null,
     "p95": null,
     "max": null
+   }
+  },
+  {
+   "body": "jupiter",
+   "provider": "astronomy-engine",
+   "windowKind": "deep",
+   "windowFrom": "-009997-01-01",
+   "windowTo": "-009000-01-01",
+   "windowClipped": false,
+   "target": "5",
+   "floorKm": 177.4,
+   "relative": false,
+   "radiusKm": 71492,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 39640000,
+    "median": 36810000,
+    "p95": 71450000,
+    "max": 75760000
+   },
+   "radii": {
+    "mean": 554.4,
+    "median": 514.9,
+    "p95": 999.4,
+    "max": 1060
+   }
+  },
+  {
+   "body": "jupiter",
+   "provider": "astronomy-engine",
+   "windowKind": "deep",
+   "windowFrom": "-009000-01-01",
+   "windowTo": "-008000-01-01",
+   "windowClipped": false,
+   "target": "5",
+   "floorKm": 177.4,
+   "relative": false,
+   "radiusKm": 71492,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 30690000,
+    "median": 28050000,
+    "p95": 55850000,
+    "max": 64930000
+   },
+   "radii": {
+    "mean": 429.3,
+    "median": 392.3,
+    "p95": 781.2,
+    "max": 908.2
+   }
+  },
+  {
+   "body": "jupiter",
+   "provider": "astronomy-engine",
+   "windowKind": "deep",
+   "windowFrom": "-008000-01-01",
+   "windowTo": "-007000-01-01",
+   "windowClipped": false,
+   "target": "5",
+   "floorKm": 177.4,
+   "relative": false,
+   "radiusKm": 71492,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 24650000,
+    "median": 27290000,
+    "p95": 44220000,
+    "max": 49480000
+   },
+   "radii": {
+    "mean": 344.8,
+    "median": 381.7,
+    "p95": 618.6,
+    "max": 692.1
+   }
+  },
+  {
+   "body": "jupiter",
+   "provider": "astronomy-engine",
+   "windowKind": "deep",
+   "windowFrom": "-007000-01-01",
+   "windowTo": "-006000-01-01",
+   "windowClipped": false,
+   "target": "5",
+   "floorKm": 177.4,
+   "relative": false,
+   "radiusKm": 71492,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 19980000,
+    "median": 20740000,
+    "p95": 33960000,
+    "max": 40570000
+   },
+   "radii": {
+    "mean": 279.5,
+    "median": 290,
+    "p95": 474.9,
+    "max": 567.4
+   }
+  },
+  {
+   "body": "jupiter",
+   "provider": "astronomy-engine",
+   "windowKind": "deep",
+   "windowFrom": "-006000-01-01",
+   "windowTo": "-005000-01-01",
+   "windowClipped": false,
+   "target": "5",
+   "floorKm": 177.4,
+   "relative": false,
+   "radiusKm": 71492,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 14290000,
+    "median": 13610000,
+    "p95": 24950000,
+    "max": 31190000
+   },
+   "radii": {
+    "mean": 199.9,
+    "median": 190.3,
+    "p95": 349,
+    "max": 436.3
+   }
+  },
+  {
+   "body": "jupiter",
+   "provider": "astronomy-engine",
+   "windowKind": "deep",
+   "windowFrom": "-005000-01-01",
+   "windowTo": "-004000-01-01",
+   "windowClipped": false,
+   "target": "5",
+   "floorKm": 177.4,
+   "relative": false,
+   "radiusKm": 71492,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 9451000,
+    "median": 9879000,
+    "p95": 15390000,
+    "max": 15650000
+   },
+   "radii": {
+    "mean": 132.2,
+    "median": 138.2,
+    "p95": 215.3,
+    "max": 218.9
+   }
+  },
+  {
+   "body": "jupiter",
+   "provider": "astronomy-engine",
+   "windowKind": "deep",
+   "windowFrom": "-004000-01-01",
+   "windowTo": "-003000-01-01",
+   "windowClipped": false,
+   "target": "5",
+   "floorKm": 177.4,
+   "relative": false,
+   "radiusKm": 71492,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 6048000,
+    "median": 5539000,
+    "p95": 10710000,
+    "max": 11680000
+   },
+   "radii": {
+    "mean": 84.6,
+    "median": 77.47,
+    "p95": 149.8,
+    "max": 163.3
+   }
+  },
+  {
+   "body": "jupiter",
+   "provider": "astronomy-engine",
+   "windowKind": "deep",
+   "windowFrom": "-003000-01-01",
+   "windowTo": "-002000-01-01",
+   "windowClipped": false,
+   "target": "5",
+   "floorKm": 177.4,
+   "relative": false,
+   "radiusKm": 71492,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 3740000,
+    "median": 3483000,
+    "p95": 6964000,
+    "max": 7463000
+   },
+   "radii": {
+    "mean": 52.31,
+    "median": 48.72,
+    "p95": 97.41,
+    "max": 104.4
+   }
+  },
+  {
+   "body": "jupiter",
+   "provider": "astronomy-engine",
+   "windowKind": "deep",
+   "windowFrom": "-002000-01-01",
+   "windowTo": "-001000-01-01",
+   "windowClipped": false,
+   "target": "5",
+   "floorKm": 177.4,
+   "relative": false,
+   "radiusKm": 71492,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 1994000,
+    "median": 1832000,
+    "p95": 3330000,
+    "max": 3962000
+   },
+   "radii": {
+    "mean": 27.89,
+    "median": 25.62,
+    "p95": 46.58,
+    "max": 55.42
+   }
+  },
+  {
+   "body": "jupiter",
+   "provider": "astronomy-engine",
+   "windowKind": "deep",
+   "windowFrom": "-001000-01-01",
+   "windowTo": "0001-01-01",
+   "windowClipped": false,
+   "target": "5",
+   "floorKm": 177.4,
+   "relative": false,
+   "radiusKm": 71492,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 811400,
+    "median": 761600,
+    "p95": 1559000,
+    "max": 1579000
+   },
+   "radii": {
+    "mean": 11.35,
+    "median": 10.65,
+    "p95": 21.8,
+    "max": 22.09
    }
   },
   {
@@ -3749,6 +5491,286 @@
     "median": null,
     "p95": null,
     "max": null
+   }
+  },
+  {
+   "body": "saturn",
+   "provider": "astronomy-engine",
+   "windowKind": "deep",
+   "windowFrom": "-009997-01-01",
+   "windowTo": "-009000-01-01",
+   "windowClipped": false,
+   "target": "6",
+   "floorKm": 286.1,
+   "relative": false,
+   "radiusKm": 60268,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 180300000,
+    "median": 178900000,
+    "p95": 379600000,
+    "max": 409100000
+   },
+   "radii": {
+    "mean": 2991,
+    "median": 2968,
+    "p95": 6299,
+    "max": 6788
+   }
+  },
+  {
+   "body": "saturn",
+   "provider": "astronomy-engine",
+   "windowKind": "deep",
+   "windowFrom": "-009000-01-01",
+   "windowTo": "-008000-01-01",
+   "windowClipped": false,
+   "target": "6",
+   "floorKm": 286.1,
+   "relative": false,
+   "radiusKm": 60268,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 119900000,
+    "median": 112900000,
+    "p95": 227800000,
+    "max": 311600000
+   },
+   "radii": {
+    "mean": 1990,
+    "median": 1874,
+    "p95": 3779,
+    "max": 5170
+   }
+  },
+  {
+   "body": "saturn",
+   "provider": "astronomy-engine",
+   "windowKind": "deep",
+   "windowFrom": "-008000-01-01",
+   "windowTo": "-007000-01-01",
+   "windowClipped": false,
+   "target": "6",
+   "floorKm": 286.1,
+   "relative": false,
+   "radiusKm": 60268,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 112600000,
+    "median": 119600000,
+    "p95": 187200000,
+    "max": 216100000
+   },
+   "radii": {
+    "mean": 1869,
+    "median": 1984,
+    "p95": 3107,
+    "max": 3586
+   }
+  },
+  {
+   "body": "saturn",
+   "provider": "astronomy-engine",
+   "windowKind": "deep",
+   "windowFrom": "-007000-01-01",
+   "windowTo": "-006000-01-01",
+   "windowClipped": false,
+   "target": "6",
+   "floorKm": 286.1,
+   "relative": false,
+   "radiusKm": 60268,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 89130000,
+    "median": 87510000,
+    "p95": 199300000,
+    "max": 216900000
+   },
+   "radii": {
+    "mean": 1479,
+    "median": 1452,
+    "p95": 3306,
+    "max": 3599
+   }
+  },
+  {
+   "body": "saturn",
+   "provider": "astronomy-engine",
+   "windowKind": "deep",
+   "windowFrom": "-006000-01-01",
+   "windowTo": "-005000-01-01",
+   "windowClipped": false,
+   "target": "6",
+   "floorKm": 286.1,
+   "relative": false,
+   "radiusKm": 60268,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 65720000,
+    "median": 66350000,
+    "p95": 118900000,
+    "max": 130400000
+   },
+   "radii": {
+    "mean": 1091,
+    "median": 1101,
+    "p95": 1973,
+    "max": 2164
+   }
+  },
+  {
+   "body": "saturn",
+   "provider": "astronomy-engine",
+   "windowKind": "deep",
+   "windowFrom": "-005000-01-01",
+   "windowTo": "-004000-01-01",
+   "windowClipped": false,
+   "target": "6",
+   "floorKm": 286.1,
+   "relative": false,
+   "radiusKm": 60268,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 40050000,
+    "median": 37920000,
+    "p95": 73210000,
+    "max": 80150000
+   },
+   "radii": {
+    "mean": 664.6,
+    "median": 629.3,
+    "p95": 1215,
+    "max": 1330
+   }
+  },
+  {
+   "body": "saturn",
+   "provider": "astronomy-engine",
+   "windowKind": "deep",
+   "windowFrom": "-004000-01-01",
+   "windowTo": "-003000-01-01",
+   "windowClipped": false,
+   "target": "6",
+   "floorKm": 286.1,
+   "relative": false,
+   "radiusKm": 60268,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 25140000,
+    "median": 26270000,
+    "p95": 48670000,
+    "max": 50530000
+   },
+   "radii": {
+    "mean": 417.1,
+    "median": 435.9,
+    "p95": 807.6,
+    "max": 838.4
+   }
+  },
+  {
+   "body": "saturn",
+   "provider": "astronomy-engine",
+   "windowKind": "deep",
+   "windowFrom": "-003000-01-01",
+   "windowTo": "-002000-01-01",
+   "windowClipped": false,
+   "target": "6",
+   "floorKm": 286.1,
+   "relative": false,
+   "radiusKm": 60268,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 15240000,
+    "median": 14580000,
+    "p95": 28500000,
+    "max": 32080000
+   },
+   "radii": {
+    "mean": 252.9,
+    "median": 241.8,
+    "p95": 472.8,
+    "max": 532.3
+   }
+  },
+  {
+   "body": "saturn",
+   "provider": "astronomy-engine",
+   "windowKind": "deep",
+   "windowFrom": "-002000-01-01",
+   "windowTo": "-001000-01-01",
+   "windowClipped": false,
+   "target": "6",
+   "floorKm": 286.1,
+   "relative": false,
+   "radiusKm": 60268,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 7445000,
+    "median": 6515000,
+    "p95": 16970000,
+    "max": 17360000
+   },
+   "radii": {
+    "mean": 123.5,
+    "median": 108.1,
+    "p95": 281.6,
+    "max": 288
+   }
+  },
+  {
+   "body": "saturn",
+   "provider": "astronomy-engine",
+   "windowKind": "deep",
+   "windowFrom": "-001000-01-01",
+   "windowTo": "0001-01-01",
+   "windowClipped": false,
+   "target": "6",
+   "floorKm": 286.1,
+   "relative": false,
+   "radiusKm": 60268,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 2856000,
+    "median": 2449000,
+    "p95": 7043000,
+    "max": 7781000
+   },
+   "radii": {
+    "mean": 47.4,
+    "median": 40.63,
+    "p95": 116.9,
+    "max": 129.1
    }
   },
   {
@@ -5700,6 +7722,286 @@
    "body": "uranus",
    "provider": "astronomy-engine",
    "windowKind": "deep",
+   "windowFrom": "-009997-01-01",
+   "windowTo": "-009000-01-01",
+   "windowClipped": false,
+   "target": "7",
+   "floorKm": 8915,
+   "relative": false,
+   "radiusKm": 25559,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 11060000,
+    "median": 11070000,
+    "p95": 17790000,
+    "max": 20220000
+   },
+   "radii": {
+    "mean": 432.6,
+    "median": 433.1,
+    "p95": 695.9,
+    "max": 791.1
+   }
+  },
+  {
+   "body": "uranus",
+   "provider": "astronomy-engine",
+   "windowKind": "deep",
+   "windowFrom": "-009000-01-01",
+   "windowTo": "-008000-01-01",
+   "windowClipped": false,
+   "target": "7",
+   "floorKm": 8915,
+   "relative": false,
+   "radiusKm": 25559,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 9503000,
+    "median": 7970000,
+    "p95": 17990000,
+    "max": 19660000
+   },
+   "radii": {
+    "mean": 371.8,
+    "median": 311.8,
+    "p95": 703.7,
+    "max": 769.4
+   }
+  },
+  {
+   "body": "uranus",
+   "provider": "astronomy-engine",
+   "windowKind": "deep",
+   "windowFrom": "-008000-01-01",
+   "windowTo": "-007000-01-01",
+   "windowClipped": false,
+   "target": "7",
+   "floorKm": 8915,
+   "relative": false,
+   "radiusKm": 25559,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 7139000,
+    "median": 6233000,
+    "p95": 12420000,
+    "max": 13560000
+   },
+   "radii": {
+    "mean": 279.3,
+    "median": 243.9,
+    "p95": 486.1,
+    "max": 530.6
+   }
+  },
+  {
+   "body": "uranus",
+   "provider": "astronomy-engine",
+   "windowKind": "deep",
+   "windowFrom": "-007000-01-01",
+   "windowTo": "-006000-01-01",
+   "windowClipped": false,
+   "target": "7",
+   "floorKm": 8915,
+   "relative": false,
+   "radiusKm": 25559,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 5260000,
+    "median": 5018000,
+    "p95": 8775000,
+    "max": 9747000
+   },
+   "radii": {
+    "mean": 205.8,
+    "median": 196.3,
+    "p95": 343.3,
+    "max": 381.3
+   }
+  },
+  {
+   "body": "uranus",
+   "provider": "astronomy-engine",
+   "windowKind": "deep",
+   "windowFrom": "-006000-01-01",
+   "windowTo": "-005000-01-01",
+   "windowClipped": false,
+   "target": "7",
+   "floorKm": 8915,
+   "relative": false,
+   "radiusKm": 25559,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 4562000,
+    "median": 4563000,
+    "p95": 6959000,
+    "max": 7734000
+   },
+   "radii": {
+    "mean": 178.5,
+    "median": 178.5,
+    "p95": 272.3,
+    "max": 302.6
+   }
+  },
+  {
+   "body": "uranus",
+   "provider": "astronomy-engine",
+   "windowKind": "deep",
+   "windowFrom": "-005000-01-01",
+   "windowTo": "-004000-01-01",
+   "windowClipped": false,
+   "target": "7",
+   "floorKm": 8915,
+   "relative": false,
+   "radiusKm": 25559,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 3969000,
+    "median": 3838000,
+    "p95": 6901000,
+    "max": 7926000
+   },
+   "radii": {
+    "mean": 155.3,
+    "median": 150.2,
+    "p95": 270,
+    "max": 310.1
+   }
+  },
+  {
+   "body": "uranus",
+   "provider": "astronomy-engine",
+   "windowKind": "deep",
+   "windowFrom": "-004000-01-01",
+   "windowTo": "-003000-01-01",
+   "windowClipped": false,
+   "target": "7",
+   "floorKm": 8915,
+   "relative": false,
+   "radiusKm": 25559,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 2312000,
+    "median": 2127000,
+    "p95": 4975000,
+    "max": 5035000
+   },
+   "radii": {
+    "mean": 90.45,
+    "median": 83.21,
+    "p95": 194.7,
+    "max": 197
+   }
+  },
+  {
+   "body": "uranus",
+   "provider": "astronomy-engine",
+   "windowKind": "deep",
+   "windowFrom": "-003000-01-01",
+   "windowTo": "-002000-01-01",
+   "windowClipped": false,
+   "target": "7",
+   "floorKm": 8915,
+   "relative": false,
+   "radiusKm": 25559,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 1824000,
+    "median": 1686000,
+    "p95": 3175000,
+    "max": 3625000
+   },
+   "radii": {
+    "mean": 71.35,
+    "median": 65.98,
+    "p95": 124.2,
+    "max": 141.8
+   }
+  },
+  {
+   "body": "uranus",
+   "provider": "astronomy-engine",
+   "windowKind": "deep",
+   "windowFrom": "-002000-01-01",
+   "windowTo": "-001000-01-01",
+   "windowClipped": false,
+   "target": "7",
+   "floorKm": 8915,
+   "relative": false,
+   "radiusKm": 25559,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 1218000,
+    "median": 1304000,
+    "p95": 1826000,
+    "max": 1913000
+   },
+   "radii": {
+    "mean": 47.64,
+    "median": 51.04,
+    "p95": 71.44,
+    "max": 74.83
+   }
+  },
+  {
+   "body": "uranus",
+   "provider": "astronomy-engine",
+   "windowKind": "deep",
+   "windowFrom": "-001000-01-01",
+   "windowTo": "0001-01-01",
+   "windowClipped": false,
+   "target": "7",
+   "floorKm": 8915,
+   "relative": false,
+   "radiusKm": 25559,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 931200,
+    "median": 913300,
+    "p95": 1716000,
+    "max": 2110000
+   },
+   "radii": {
+    "mean": 36.43,
+    "median": 35.73,
+    "p95": 67.15,
+    "max": 82.54
+   }
+  },
+  {
+   "body": "uranus",
+   "provider": "astronomy-engine",
+   "windowKind": "deep",
    "windowFrom": "0001-01-01",
    "windowTo": "1000-01-01",
    "windowClipped": false,
@@ -6751,6 +9053,286 @@
     "median": null,
     "p95": null,
     "max": null
+   }
+  },
+  {
+   "body": "neptune",
+   "provider": "astronomy-engine",
+   "windowKind": "deep",
+   "windowFrom": "-009997-01-01",
+   "windowTo": "-009000-01-01",
+   "windowClipped": false,
+   "target": "8",
+   "floorKm": 2271,
+   "relative": false,
+   "radiusKm": 24764,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 5285000,
+    "median": 5067000,
+    "p95": 7803000,
+    "max": 8468000
+   },
+   "radii": {
+    "mean": 213.4,
+    "median": 204.6,
+    "p95": 315.1,
+    "max": 342
+   }
+  },
+  {
+   "body": "neptune",
+   "provider": "astronomy-engine",
+   "windowKind": "deep",
+   "windowFrom": "-009000-01-01",
+   "windowTo": "-008000-01-01",
+   "windowClipped": false,
+   "target": "8",
+   "floorKm": 2271,
+   "relative": false,
+   "radiusKm": 24764,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 7215000,
+    "median": 7154000,
+    "p95": 8515000,
+    "max": 8672000
+   },
+   "radii": {
+    "mean": 291.3,
+    "median": 288.9,
+    "p95": 343.9,
+    "max": 350.2
+   }
+  },
+  {
+   "body": "neptune",
+   "provider": "astronomy-engine",
+   "windowKind": "deep",
+   "windowFrom": "-008000-01-01",
+   "windowTo": "-007000-01-01",
+   "windowClipped": false,
+   "target": "8",
+   "floorKm": 2271,
+   "relative": false,
+   "radiusKm": 24764,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 6007000,
+    "median": 5929000,
+    "p95": 7304000,
+    "max": 7548000
+   },
+   "radii": {
+    "mean": 242.6,
+    "median": 239.4,
+    "p95": 294.9,
+    "max": 304.8
+   }
+  },
+  {
+   "body": "neptune",
+   "provider": "astronomy-engine",
+   "windowKind": "deep",
+   "windowFrom": "-007000-01-01",
+   "windowTo": "-006000-01-01",
+   "windowClipped": false,
+   "target": "8",
+   "floorKm": 2271,
+   "relative": false,
+   "radiusKm": 24764,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 4364000,
+    "median": 4284000,
+    "p95": 5926000,
+    "max": 6371000
+   },
+   "radii": {
+    "mean": 176.2,
+    "median": 173,
+    "p95": 239.3,
+    "max": 257.3
+   }
+  },
+  {
+   "body": "neptune",
+   "provider": "astronomy-engine",
+   "windowKind": "deep",
+   "windowFrom": "-006000-01-01",
+   "windowTo": "-005000-01-01",
+   "windowClipped": false,
+   "target": "8",
+   "floorKm": 2271,
+   "relative": false,
+   "radiusKm": 24764,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 3099000,
+    "median": 3065000,
+    "p95": 4023000,
+    "max": 4391000
+   },
+   "radii": {
+    "mean": 125.2,
+    "median": 123.8,
+    "p95": 162.4,
+    "max": 177.3
+   }
+  },
+  {
+   "body": "neptune",
+   "provider": "astronomy-engine",
+   "windowKind": "deep",
+   "windowFrom": "-005000-01-01",
+   "windowTo": "-004000-01-01",
+   "windowClipped": false,
+   "target": "8",
+   "floorKm": 2271,
+   "relative": false,
+   "radiusKm": 24764,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 3925000,
+    "median": 3921000,
+    "p95": 4687000,
+    "max": 4829000
+   },
+   "radii": {
+    "mean": 158.5,
+    "median": 158.3,
+    "p95": 189.3,
+    "max": 195
+   }
+  },
+  {
+   "body": "neptune",
+   "provider": "astronomy-engine",
+   "windowKind": "deep",
+   "windowFrom": "-004000-01-01",
+   "windowTo": "-003000-01-01",
+   "windowClipped": false,
+   "target": "8",
+   "floorKm": 2271,
+   "relative": false,
+   "radiusKm": 24764,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 3010000,
+    "median": 2994000,
+    "p95": 3570000,
+    "max": 3648000
+   },
+   "radii": {
+    "mean": 121.5,
+    "median": 120.9,
+    "p95": 144.2,
+    "max": 147.3
+   }
+  },
+  {
+   "body": "neptune",
+   "provider": "astronomy-engine",
+   "windowKind": "deep",
+   "windowFrom": "-003000-01-01",
+   "windowTo": "-002000-01-01",
+   "windowClipped": false,
+   "target": "8",
+   "floorKm": 2271,
+   "relative": false,
+   "radiusKm": 24764,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 2352000,
+    "median": 2343000,
+    "p95": 3006000,
+    "max": 3102000
+   },
+   "radii": {
+    "mean": 94.97,
+    "median": 94.62,
+    "p95": 121.4,
+    "max": 125.3
+   }
+  },
+  {
+   "body": "neptune",
+   "provider": "astronomy-engine",
+   "windowKind": "deep",
+   "windowFrom": "-002000-01-01",
+   "windowTo": "-001000-01-01",
+   "windowClipped": false,
+   "target": "8",
+   "floorKm": 2271,
+   "relative": false,
+   "radiusKm": 24764,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 1501000,
+    "median": 1439000,
+    "p95": 2084000,
+    "max": 2307000
+   },
+   "radii": {
+    "mean": 60.6,
+    "median": 58.1,
+    "p95": 84.14,
+    "max": 93.16
+   }
+  },
+  {
+   "body": "neptune",
+   "provider": "astronomy-engine",
+   "windowKind": "deep",
+   "windowFrom": "-001000-01-01",
+   "windowTo": "0001-01-01",
+   "windowClipped": false,
+   "target": "8",
+   "floorKm": 2271,
+   "relative": false,
+   "radiusKm": 24764,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 1352000,
+    "median": 1393000,
+    "p95": 1748000,
+    "max": 1795000
+   },
+   "radii": {
+    "mean": 54.6,
+    "median": 56.25,
+    "p95": 70.58,
+    "max": 72.47
    }
   },
   {
@@ -8345,6 +10927,286 @@
     "median": null,
     "p95": null,
     "max": null
+   }
+  },
+  {
+   "body": "pluto",
+   "provider": "kepler",
+   "windowKind": "deep",
+   "windowFrom": "-009997-01-01",
+   "windowTo": "-009000-01-01",
+   "windowClipped": false,
+   "target": "9",
+   "floorKm": 2130,
+   "relative": false,
+   "radiusKm": 1188,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 8993000000,
+    "median": 8979000000,
+    "p95": 10380000000,
+    "max": 10450000000
+   },
+   "radii": {
+    "mean": 7570000,
+    "median": 7558000,
+    "p95": 8735000,
+    "max": 8796000
+   }
+  },
+  {
+   "body": "pluto",
+   "provider": "kepler",
+   "windowKind": "deep",
+   "windowFrom": "-009000-01-01",
+   "windowTo": "-008000-01-01",
+   "windowClipped": false,
+   "target": "9",
+   "floorKm": 2130,
+   "relative": false,
+   "radiusKm": 1188,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 8533000000,
+    "median": 8365000000,
+    "p95": 10030000000,
+    "max": 10130000000
+   },
+   "radii": {
+    "mean": 7183000,
+    "median": 7041000,
+    "p95": 8442000,
+    "max": 8524000
+   }
+  },
+  {
+   "body": "pluto",
+   "provider": "kepler",
+   "windowKind": "deep",
+   "windowFrom": "-008000-01-01",
+   "windowTo": "-007000-01-01",
+   "windowClipped": false,
+   "target": "9",
+   "floorKm": 2130,
+   "relative": false,
+   "radiusKm": 1188,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 7899000000,
+    "median": 7870000000,
+    "p95": 9455000000,
+    "max": 9651000000
+   },
+   "radii": {
+    "mean": 6649000,
+    "median": 6625000,
+    "p95": 7959000,
+    "max": 8124000
+   }
+  },
+  {
+   "body": "pluto",
+   "provider": "kepler",
+   "windowKind": "deep",
+   "windowFrom": "-007000-01-01",
+   "windowTo": "-006000-01-01",
+   "windowClipped": false,
+   "target": "9",
+   "floorKm": 2130,
+   "relative": false,
+   "radiusKm": 1188,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 7021000000,
+    "median": 7031000000,
+    "p95": 8711000000,
+    "max": 8877000000
+   },
+   "radii": {
+    "mean": 5910000,
+    "median": 5919000,
+    "p95": 7333000,
+    "max": 7472000
+   }
+  },
+  {
+   "body": "pluto",
+   "provider": "kepler",
+   "windowKind": "deep",
+   "windowFrom": "-006000-01-01",
+   "windowTo": "-005000-01-01",
+   "windowClipped": false,
+   "target": "9",
+   "floorKm": 2130,
+   "relative": false,
+   "radiusKm": 1188,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 5995000000,
+    "median": 5797000000,
+    "p95": 7652000000,
+    "max": 7861000000
+   },
+   "radii": {
+    "mean": 5046000,
+    "median": 4880000,
+    "p95": 6441000,
+    "max": 6617000
+   }
+  },
+  {
+   "body": "pluto",
+   "provider": "kepler",
+   "windowKind": "deep",
+   "windowFrom": "-005000-01-01",
+   "windowTo": "-004000-01-01",
+   "windowClipped": false,
+   "target": "9",
+   "floorKm": 2130,
+   "relative": false,
+   "radiusKm": 1188,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 4890000000,
+    "median": 4692000000,
+    "p95": 6438000000,
+    "max": 6769000000
+   },
+   "radii": {
+    "mean": 4116000,
+    "median": 3949000,
+    "p95": 5420000,
+    "max": 5698000
+   }
+  },
+  {
+   "body": "pluto",
+   "provider": "kepler",
+   "windowKind": "deep",
+   "windowFrom": "-004000-01-01",
+   "windowTo": "-003000-01-01",
+   "windowClipped": false,
+   "target": "9",
+   "floorKm": 2130,
+   "relative": false,
+   "radiusKm": 1188,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 3747000000,
+    "median": 3540000000,
+    "p95": 5067000000,
+    "max": 5428000000
+   },
+   "radii": {
+    "mean": 3154000,
+    "median": 2980000,
+    "p95": 4265000,
+    "max": 4569000
+   }
+  },
+  {
+   "body": "pluto",
+   "provider": "kepler",
+   "windowKind": "deep",
+   "windowFrom": "-003000-01-01",
+   "windowTo": "-002000-01-01",
+   "windowClipped": false,
+   "target": "9",
+   "floorKm": 2130,
+   "relative": false,
+   "radiusKm": 1188,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 2598000000,
+    "median": 2520000000,
+    "p95": 3775000000,
+    "max": 3971000000
+   },
+   "radii": {
+    "mean": 2187000,
+    "median": 2121000,
+    "p95": 3178000,
+    "max": 3343000
+   }
+  },
+  {
+   "body": "pluto",
+   "provider": "kepler",
+   "windowKind": "deep",
+   "windowFrom": "-002000-01-01",
+   "windowTo": "-001000-01-01",
+   "windowClipped": false,
+   "target": "9",
+   "floorKm": 2130,
+   "relative": false,
+   "radiusKm": 1188,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 1594000000,
+    "median": 1505000000,
+    "p95": 2349000000,
+    "max": 2623000000
+   },
+   "radii": {
+    "mean": 1342000,
+    "median": 1267000,
+    "p95": 1977000,
+    "max": 2208000
+   }
+  },
+  {
+   "body": "pluto",
+   "provider": "kepler",
+   "windowKind": "deep",
+   "windowFrom": "-001000-01-01",
+   "windowTo": "0001-01-01",
+   "windowClipped": false,
+   "target": "9",
+   "floorKm": 2130,
+   "relative": false,
+   "radiusKm": 1188,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 805600000,
+    "median": 767600000,
+    "p95": 1319000000,
+    "max": 1500000000
+   },
+   "radii": {
+    "mean": 678100,
+    "median": 646100,
+    "p95": 1110000,
+    "max": 1263000
    }
   },
   {

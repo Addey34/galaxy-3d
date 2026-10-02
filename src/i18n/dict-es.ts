@@ -497,6 +497,7 @@ export const es: Record<MessageKey, string> = {
     'En esta fecha ya se había señalado un posible satélite de este cuerpo: desde {year} por {who}, y después varias veces por otros observadores, entre ellos {others}.',
   'bi.discovery.refutedSearched':
     'Una búsqueda depositada el {date} no encontró ninguno, hasta unos {radius} km de radio.',
+  'position.yearBeforeEra': '{year} a. C.',
   'bi.missions.label': 'Misiones',
   'bi.missions.countAtDate': '{count}, de las cuales {active} en esta fecha',
   'bi.missions.countAllAtDate': '{count}, todas en esta fecha',

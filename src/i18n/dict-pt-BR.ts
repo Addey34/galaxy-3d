@@ -492,6 +492,7 @@ export const ptBR: Record<MessageKey, string> = {
     'Nesta data, um possível satélite deste corpo já havia sido relatado: desde {year} por {who}, e depois várias vezes por outros observadores, entre eles {others}.',
   'bi.discovery.refutedSearched':
     'Uma busca depositada em {date} não encontrou nenhum, até cerca de {radius} km de raio.',
+  'position.yearBeforeEra': '{year} a.C.',
   'bi.missions.label': 'Missões',
   'bi.missions.countAtDate': '{count}, sendo {active} nesta data',
   'bi.missions.countAllAtDate': '{count}, todas nesta data',

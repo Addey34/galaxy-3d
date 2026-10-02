@@ -2,6 +2,7 @@
  * LA PROFONDEUR DU TEMPS (lot 39) confrontée à ce qui la produit.
  *
  * Le relevé de validation porte depuis ce lot un millénaire par ligne, de l'an 1 à l'an 9999,
+ * prolongé le 2026-10-02 jusqu'en 9998 av. J.-C. (année astronomique -9997, ligne 22.10),
  * mesuré contre la cible profonde que `scripts/validation-targets.json` déclare pour chaque
  * corps. Trois choses peuvent dériver sans que rien ne le dise, et chacune a sa garde ici :
  * une cible déclarée dont personne n'a relancé la mesure, un plancher de substitution qui
@@ -102,17 +103,58 @@ describe('profondeur du temps : le plancher de substitution', () => {
 });
 
 describe('profondeur du temps : le pavage', () => {
-  it('chaque corps est pavé sans trou de l’an 1 à l’an 9999', () => {
+  it('chaque corps est pavé sans trou de 9998 av. J.-C. à l’an 9999', () => {
+    // Trier par DATE : en ordre de chaîne, « -001000 » passe avant « -009997 », et le premier
+    // élément serait faux (le même piège qu'à la page /methodology, ligne 22.10).
+    const time = (iso: string): number => Date.parse(`${iso}T00:00:00Z`);
     for (const body of bodiesOf(DEEP)) {
-      const tiles = DEEP.filter((r) => r.body === body).sort((a, b) =>
-        a.windowFrom.localeCompare(b.windowFrom)
+      const tiles = DEEP.filter((r) => r.body === body).sort(
+        (a, b) => time(a.windowFrom) - time(b.windowFrom)
       );
-      expect(tiles[0]!.windowFrom.slice(0, 4)).toBe('0001');
-      expect(tiles.at(-1)!.windowTo.slice(0, 4)).toBe('9999');
+      expect(tiles[0]!.windowFrom, body).toBe('-009997-01-01');
+      expect(tiles.at(-1)!.windowTo.slice(0, 4), body).toBe('9999');
+      // Le passage de l'ère : la tranche qui finit au début de l'an 1 est suivie de celle qui
+      // y commence, sans année 0 perdue ni comptée deux fois.
+      expect(
+        tiles.map((t) => t.windowFrom),
+        body
+      ).toContain('0001-01-01');
       // Bout à bout : la fin d'une tuile est le début de la suivante.
       for (let i = 1; i < tiles.length; i++)
         expect(tiles[i]!.windowFrom).toBe(tiles[i - 1]!.windowTo);
     }
+  });
+
+  /**
+   * LE TÉMOIN ΔT (ligne 22.10) : chaque écart profond compare deux positions à une même date UT,
+   * convertie par deux ΔT qui ne sont plus des mesures avant les observations. Leur désaccord est
+   * publié à côté de l'écart ; cette garde exige qu'il soit mesuré pour CHAQUE tranche.
+   */
+  it('le désaccord des deux ΔT est mesuré au milieu de chaque tranche', () => {
+    const deltaT = (
+      summary as unknown as {
+        deep: {
+          deltaT: { year: number; horizonsS: number; galaxyS: number }[];
+        };
+      }
+    ).deep.deltaT;
+    const time = (iso: string): number => Date.parse(`${iso}T00:00:00Z`);
+    const someBody = bodiesOf(DEEP)[0]!;
+    // L'année du milieu de chaque tranche, dans l'ordre : c'est là que le script mesure ΔT.
+    const midYears = DEEP.filter((r) => r.body === someBody)
+      .map((t) => (time(t.windowFrom) + time(t.windowTo)) / 2)
+      .sort((a, b) => a - b)
+      .map((ms) => new Date(ms).getUTCFullYear());
+    expect(deltaT.map((d) => d.year)).toEqual(midYears);
+    for (const d of deltaT)
+      expect(
+        Number.isFinite(d.horizonsS) && Number.isFinite(d.galaxyS),
+        String(d.year)
+      ).toBe(true);
+    // Borne : avant notre ère les deux ΔT divergent d'au moins une minute, sinon ce témoin ne
+    // témoignerait de rien.
+    const earliest = deltaT[0]!;
+    expect(Math.abs(earliest.horizonsS - earliest.galaxyS)).toBeGreaterThan(60);
   });
 
   it('les tuiles publiées couvrent bien 1900-2100 pour un corps non substitué', () => {

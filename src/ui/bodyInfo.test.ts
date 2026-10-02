@@ -174,6 +174,38 @@ describe('fiche d’information — provenance de la position', () => {
     expect(text.error).toContain('(2016–2035)');
   });
 
+  /**
+   * AVANT L'AN 1 (ligne 22.10) : une tranche astronomique -1000 → 0 se lit « 1001 av. J.-C. –
+   * 1 av. J.-C. », jamais « -1000–0 », que le permalien pourrait déjà faire afficher.
+   */
+  it('écrit une tranche avant notre ère en années avant J.-C.', () => {
+    const text = formatPositionProvenance({
+      source: 'astronomy-engine',
+      stamp,
+      error: {
+        from: Date.parse('-001000-01-01T00:00:00Z'),
+        to: Date.parse('0001-01-01T00:00:00Z'),
+        meanKm: 1_000_000,
+      },
+    });
+    expect(text.error).toContain('(1001 av. J.-C.–1 av. J.-C.)');
+  });
+
+  it('ne confond pas l’an 1 avec 1901 en arrondissant le début', () => {
+    // `Date.UTC(1, 0, 1)` vaut 1901 : un début au 31 décembre de l'an 1 restait « 1 » au lieu de
+    // s'arrondir à 2, l'année la plus proche. Le 1er janvier ne le montrerait pas (coïncidence).
+    const text = formatPositionProvenance({
+      source: 'astronomy-engine',
+      stamp,
+      error: {
+        from: Date.parse('0001-12-31T00:00:00Z'),
+        to: Date.parse('1000-01-01T00:00:00Z'),
+        meanKm: 30_000,
+      },
+    });
+    expect(text.error).toContain('(2–999)');
+  });
+
   it('dit qu’un écart n’a pas été mesuré plutôt que de n’en montrer aucun', () => {
     const text = formatPositionProvenance({
       source: 'kepler',
