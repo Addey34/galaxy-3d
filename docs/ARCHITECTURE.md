@@ -3455,6 +3455,39 @@ traitée comme un jour), deux rouges dans `e2e/discovery.spec.ts`. Un KMZ vieill
 `--check`. La Lune n'est démarrée qu'à `MOON_SCENE_DATE`, comme l'exige
 `src/config/e2eMoonDate.test.ts` ; la borne d'une année seule est donc éprouvée sur Mars.
 
+### Front des croyances (2026-10-02) : ce qu'on a signalé, puis cherché sans le trouver
+
+La fiche de Vénus dit, selon la date de la scène, qu'un possible satellite avait été signalé dès
+1645 par F. Fontana, puis plusieurs fois par d'autres observateurs dont G. Cassini, et, à partir
+du 15 juin 2009, qu'une recherche n'en a trouvé aucun jusqu'à environ 0,3 km de rayon.
+
+**UNE SEULE SOURCE PRIMAIRE RACONTE L'HISTOIRE ET SA RÉFUTATION, EN TEXTE LISIBLE** : Sheppard et
+Trujillo, *A Survey for Satellites of Venus* (arXiv 0906.2781). Le générateur lit son PDF par
+`pdftotext`, avec la méthode et le cache du relevé des faits, et exige que chaque citation y soit
+retrouvée MOT POUR MOT, puis que l'année, les noms et le rayon affichés figurent DANS ces
+citations. La date de la non-détection est celle du dépôt sur arXiv, LUE sur la page de l'article,
+comme ses auteurs et son titre. Trois falsifications du générateur rougissent : une année qui
+n'est pas dans sa citation, une citation altérée d'un mot, un rayon absent des citations.
+
+**CE QUE L'ARTICLE NE DIT PAS, LA FICHE NE LE DIT PAS.** Il ne date pas la fin de la croyance ; il
+n'y a donc aucun état « on n'y croyait plus ». Les états sont : pas encore signalé, signalé
+l'année même (la source ne donne que l'année, la fiche le dit), signalé, puis cherché sans succès
+(`core/discovery.ts`, `refutedStanding`).
+
+**TROIS CAS RESTENT DEHORS, AVEC LEUR RAISON MESURÉE** (`scripts/discovery-targets.json`,
+`refutedClaims.notCovered`) : Thémis pour Saturne (Pickering, 1905), dont la source primaire
+n'existe qu'en image scannée ; les quatre satellites d'Uranus de Herschel (1790 et 1794), dont
+l'étude de 2020 n'est servie en texte par aucun de ses accès ; et un satellite de Mercure, pour
+lequel aucune source n'a été trouvée. Le jour où l'un d'eux devient lisible, il s'ajoute comme de
+la DONNÉE : une entrée dans les cibles, aucune ligne de code.
+
+**Les gardes, et leur falsification.** `src/config/discovery.test.ts` exige une source décrite
+pour chaque croyance livrée et une raison écrite pour chaque cas écarté ; deux falsifications de
+la donnée, deux rouges. `e2e/discovery.spec.ts` éprouve Vénus en 1600, 1645, 1700 et 2010, par
+son CHEMIN ; deux falsifications du produit (la recherche affichée à toute date, l'année même
+traitée comme révolue), deux rouges. `/sources` porte l'article, et `pnpm sources:health` le
+sonde, son marqueur dérivé de son adresse arXiv.
+
 ## Pages `/methodology` et `/sources`
 
 Deux documents, chacun en anglais (`/methodology/`, `/sources/`) et en français

@@ -2,7 +2,11 @@ import { readFileSync, readdirSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
-import type { DiscoveryClaim, SatelliteDiscovery } from '@/core/discovery';
+import type {
+  DiscoveryClaim,
+  RefutedClaim,
+  SatelliteDiscovery,
+} from '@/core/discovery';
 
 /**
  * LA DÉCOUVERTE LIVRÉE (lot 44) : ce qui est sur le disque tient les quatre choses que la mesure
@@ -22,7 +26,8 @@ interface Index {
   sources: Record<string, { url: string }>;
   bodies: Record<
     string,
-    { claims: DiscoveryClaim[] } | { notApplicable: true }
+    | { claims: DiscoveryClaim[]; refuted?: RefutedClaim[] }
+    | { notApplicable: true }
   >;
   systems: Record<
     string,
@@ -45,6 +50,10 @@ const targets = JSON.parse(
 ) as {
   notApplicable: Record<string, string>;
   satellitesNotCovered: Record<string, string>;
+  refutedClaims: {
+    claims: Record<string, unknown[]>;
+    notCovered: Record<string, string>;
+  };
 };
 const snapshot = JSON.parse(
   readFileSync(join(ROOT, 'src/config/factSources.snapshot.json'), 'utf-8')
@@ -234,6 +243,50 @@ describe('découverte livrée', () => {
     const sbdb = claims.find((c) => c.source === 'sbdb');
     expect(sbdb?.form === 'day' && sbdb.role).toBe('predictedReturn');
     expect(claims.some((c) => c.form === 'ancientObservations')).toBe(true);
+  });
+
+  /**
+   * LES CROYANCES RÉFUTÉES (ligne 22.10, 2026-10-02). Le générateur vérifie chaque citation dans
+   * le PDF ; cette garde tient ce qu'il a livré : chaque croyance cite une source décrite dans
+   * l'index, ses dates sont cohérentes, et chaque cas écarté garde une raison écrite.
+   */
+  it('livre chaque croyance réfutée avec sa source, et une raison pour chaque cas écarté', () => {
+    const refuted = Object.entries(index.bodies).flatMap(([body, entry]) =>
+      'claims' in entry
+        ? (entry.refuted ?? []).map((c) => [body, c] as const)
+        : []
+    );
+    expect(refuted.map(([body]) => body).sort()).toEqual(
+      Object.keys(targets.refutedClaims.claims).sort()
+    );
+    for (const [body, claim] of refuted) {
+      expect(index.sources[claim.source], body).toBeDefined();
+      expect(claim.url, body).toBe(index.sources[claim.source]!.url);
+      expect(claim.notFound.on, body).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+      expect(Number(claim.notFound.on.slice(0, 4)), body).toBeGreaterThan(
+        claim.reported.year
+      );
+      expect(claim.retrieved, body).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    }
+    for (const [body, reason] of Object.entries(
+      targets.refutedClaims.notCovered
+    )) {
+      expect(reason, body).toMatch(/^.{40,}$/);
+      expect(targets.refutedClaims.claims[body], body).toBeUndefined();
+    }
+    // Bornes : un cas livré et des cas écartés, sinon ce test ne prouverait rien.
+    expect(refuted.length).toBeGreaterThan(0);
+    expect(
+      Object.keys(targets.refutedClaims.notCovered).length
+    ).toBeGreaterThan(0);
+  });
+
+  it('date la croyance de Vénus par sa source : 1645, puis la recherche du 2009-06-15', () => {
+    const entry = index.bodies.venus;
+    const [claim] = entry && 'claims' in entry ? (entry.refuted ?? []) : [];
+    expect(claim?.reported).toEqual({ year: 1645, who: 'F. Fontana' });
+    expect(claim?.later.who).toBe('G. Cassini');
+    expect(claim?.notFound).toEqual({ on: '2009-06-15', radiusKm: 0.3 });
   });
 
   it('écrit le système de chaque parent et rien d’autre', () => {

@@ -188,3 +188,38 @@ export function nextSatelliteDiscovery(
   const next = Math.min(...later.map(first));
   return { year: next, satellites: later.filter((s) => first(s) === next) };
 }
+
+/**
+ * UNE CROYANCE RÉFUTÉE (ligne 22.10, front des croyances, 2026-10-02) : un objet signalé, puis
+ * cherché sans être trouvé, tel qu'une source primaire le RACONTE. Le générateur n'en livre une
+ * que si l'année, les noms et le rayon figurent dans des citations retrouvées mot pour mot.
+ *
+ * CE QUE LA SOURCE NE DIT PAS, LA FICHE NE LE DIT PAS : l'article de Vénus ne date pas la fin de
+ * la croyance, donc aucun état « on n'y croyait plus » n'existe ici. Il y a seulement : pas encore
+ * signalé, signalé l'année même (la source ne donne pas le jour), signalé, puis cherché sans succès
+ * à partir du jour où la recherche a été rendue publique.
+ */
+export interface RefutedClaim {
+  readonly subject: 'satellite';
+  readonly source: string;
+  readonly url: string;
+  readonly retrieved: string;
+  readonly reported: { readonly year: number; readonly who: string };
+  readonly later: { readonly who: string };
+  readonly notFound: { readonly on: string; readonly radiusKm: number };
+  /** Les auteurs de l'article, tels que sa page les publie (« Sheppard & Trujillo »). */
+  readonly cite: string;
+}
+
+export type RefutedStanding =
+  'notYetReported' | 'reportedThatYear' | 'reported' | 'searched';
+
+export function refutedStanding(
+  claim: RefutedClaim,
+  sceneDate: Date
+): RefutedStanding {
+  const year = sceneDate.getUTCFullYear();
+  if (year < claim.reported.year) return 'notYetReported';
+  if (year === claim.reported.year) return 'reportedThatYear';
+  return utcDay(sceneDate) < claim.notFound.on ? 'reported' : 'searched';
+}

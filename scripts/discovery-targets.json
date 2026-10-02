@@ -49,6 +49,38 @@
   "sbdbSatellites": {
     "$comment": "Pas 2 de la ligne 22.10 (2026-10-02). Les satellites d'un petit corps que la table du JPL n'a pas en section sont lus dans SBDB (`sat=1`), par la MÊME requête que le relevé des faits (`snapshot-fact-sources.mjs`), donc par la réponse même qui donne le compte affiché sur la fiche. Aucune liste de corps ici : elle se DÉRIVE (désignations de `fact-source-targets.json`, moins les sections du JPL). Pour un corps qui a les deux (Pluton), SBDB sert de TÉMOIN : ses années doivent être celles de la table du JPL, ce qui prouve que `year` (« year of discovery » dans la documentation de l'API) désigne la même chose des deux côtés. Le champ `confirmed` n'est PAS documenté par l'API (lu le 2026-10-02) : le générateur n'accepte que « Y » et « N », et échoue sur toute autre valeur."
   },
+  "refutedClaims": {
+    "$comment": "Front des croyances réfutées de la ligne 22.10 (2026-10-02). Une affirmation qu'on a crue puis qu'on n'a pas retrouvée n'entre ici que si une source primaire la RACONTE en texte lisible, cité MOT POUR MOT et retrouvé à chaque génération dans ce que la source sert (le PDF d'arXiv passe par pdftotext, comme dans le relevé des faits). Les années et les noms publiés sont vérifiés DANS ces citations, jamais tapés à côté. La date de la non-détection est celle du dépôt sur arXiv, LUE sur la page de l'article. Ce que l'article ne dit pas, la fiche ne le dit pas : il ne date pas la fin de la croyance, donc rien n'est affiché à ce sujet.",
+    "claims": {
+      "venus": [
+        {
+          "subject": "satellite",
+          "arxivPdf": "0906.2781v1",
+          "reported": {
+            "year": 1645,
+            "who": "F. Fontana",
+            "anchor": "The possible detection and discussion of a Venus satellite dates to at least 1645 when F. Fontana mentioned the observation of a possible Venus satellite."
+          },
+          "later": {
+            "who": "G. Cassini",
+            "anchor": "Possible satellites of Venus were reported several more times by many different and usually experienced observers (including G. Cassini)"
+          },
+          "notFound": {
+            "radiusKm": 0.3,
+            "anchors": [
+              "Although several main belt asteroids were found, no satellites (moons) of Venus were detected.",
+              "No satellites of Venus down to about 0.3 km in radius were found"
+            ]
+          }
+        }
+      ]
+    },
+    "notCovered": {
+      "saturn": "Thémis, satellite de Saturne annoncé par W. H. Pickering en 1905, n'entre pas : sa source primaire (Harvard College Observatory Bulletin) n'existe qu'en image scannée, et aucune source primaire servant du texte lisible ne raconte l'annonce et son abandon (recherche du 2026-10-02 : Wikipédia, Britannica et des sites d'amateurs seulement).",
+      "uranus": "Les quatre satellites d'Uranus que W. Herschel a cru voir en 1790 et 1794 n'entrent pas : l'article qui les étudie (Cunningham 2020, Journal of Astronomical History and Heritage 23, 119) n'est servi en texte par aucun de ses accès, mesuré le 2026-10-02 (page de l'éditeur réduite à 2 998 octets de coquille JavaScript, lien éditeur d'ADS vers une page HTML, copie d'archive d'ADS en HTTP 504).",
+      "mercury": "Aucune source primaire servant du texte lisible n'a été trouvée le 2026-10-02 pour un satellite de Mercure annoncé puis abandonné."
+    }
+  },
   "satellitesNotCovered": {
     "earth": "La Lune n'entre dans aucune des deux listes de satellites lues : la table du JPL n'a de section que pour Mars, Jupiter, Saturne, Uranus, Neptune et Pluton, et SBDB ne décrit que des petits corps (mesuré le 2026-10-02). Sa découverte n'a de toute façon pas de date : le JPL la dit connue depuis l'Antiquité, et c'est ce que sa propre fiche affiche."
   },

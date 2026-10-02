@@ -510,6 +510,12 @@ export const en = {
   'bi.discovery.namesNext': 'Next adoption: {date}, {count} more',
   'bi.discovery.namesNote':
     'Adoption dates from the IAU Gazetteer of Planetary Nomenclature, read on {date}: the date a name became official, not the date the feature was first seen or named.',
+  'bi.discovery.refutedThatYear':
+    'In {year}, the year of the scene, {who} reports a possible satellite of this body; the source does not give the day.',
+  'bi.discovery.refutedReported':
+    'At this date, a possible satellite of this body had already been reported: from {year} by {who}, then several more times by other observers, including {others}.',
+  'bi.discovery.refutedSearched':
+    'A survey submitted on {date} found none, down to about {radius} km in radius.',
   'bi.missions.label': 'Missions',
   'bi.missions.countAtDate': '{count}, of which {active} at this date',
   'bi.missions.countAllAtDate': '{count}, all at this date',

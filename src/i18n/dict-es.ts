@@ -491,6 +491,12 @@ export const es: Record<MessageKey, string> = {
   'bi.discovery.namesNext': 'Siguiente adopción: {date}, {count} más',
   'bi.discovery.namesNote':
     'Fechas de adopción del Gazetteer of Planetary Nomenclature de la UAI, leído el {date}: la fecha en que un nombre se hizo oficial, no la fecha en que la formación se vio o se nombró por primera vez.',
+  'bi.discovery.refutedThatYear':
+    'En {year}, el año de la escena, {who} señala un posible satélite de este cuerpo; la fuente no da el día.',
+  'bi.discovery.refutedReported':
+    'En esta fecha ya se había señalado un posible satélite de este cuerpo: desde {year} por {who}, y después varias veces por otros observadores, entre ellos {others}.',
+  'bi.discovery.refutedSearched':
+    'Una búsqueda depositada el {date} no encontró ninguno, hasta unos {radius} km de radio.',
   'bi.missions.label': 'Misiones',
   'bi.missions.countAtDate': '{count}, de las cuales {active} en esta fecha',
   'bi.missions.countAllAtDate': '{count}, todas en esta fecha',

@@ -203,6 +203,9 @@ function discoveryRows(): CardBlockSourceRow[] {
   const nasaScience = discoveryIndex.sources['nasa-science'].url;
   for (const [body, entry] of Object.entries(discoveryIndex.bodies)) {
     if (!('claims' in entry)) continue;
+    // Les articles qui racontent une croyance réfutée (ligne 22.10) sont lus, eux aussi.
+    for (const claim of 'refuted' in entry ? entry.refuted : [])
+      note(claim.source, claim.retrieved, body);
     for (const claim of entry.claims) {
       note(claim.source, claim.retrieved, body);
       // Une source qui REQUALIFIE une affirmation (Halley) est lue elle aussi, à sa date.

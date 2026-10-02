@@ -490,6 +490,12 @@ test.describe('mobile viewport, discovery block', () => {
       locale,
       path: '/pluto/?date=2017-06-01T12:00:00Z',
     })),
+    // Ligne 22.10, front des croyances : Vénus en 2010 exerce le signalement ET la recherche,
+    // la plus longue ligne du bloc, avec son lien.
+    ...(['en', 'fr', 'es', 'pt-BR'] as const).map((locale) => ({
+      locale,
+      path: '/venus/?date=2010-06-01T12:00:00Z',
+    })),
   ];
   for (const { locale, path } of cases) {
     test(`discovery block ${path}, ${locale}, is clean at 390 px`, async ({

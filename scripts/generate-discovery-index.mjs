@@ -380,6 +380,129 @@ async function quoted(body, quote) {
   };
 }
 
+// ── Les croyances réfutées : ce qu'on a signalé, puis cherché sans le trouver ──────────────
+
+/**
+ * La normalisation de recherche du relevé des faits : espaces fusionnés, et toute suite de
+ * caractères non ASCII ramenée à `?`, parce qu'une apostrophe ou un tiret arrive autrement
+ * selon que pdftotext tourne sur une machine ou une autre. C'est le TEXTE qui est vérifié.
+ */
+const collapse = (s) => s.replace(/\s+/g, ' ').replace(/[^\x20-\x7E]+/g, '?');
+
+/**
+ * Le texte d'un PDF d'arXiv, par pdftotext, avec la clé de cache et la règle de date du relevé
+ * des faits (`snapshot-fact-sources.mjs`, `articleText`) : un même article lu par les deux
+ * scripts n'est téléchargé qu'une fois et ne porte qu'une date.
+ */
+async function arxivPdfText(id) {
+  const { execFileSync } = await import('node:child_process');
+  const source = `https://arxiv.org/pdf/${id}#pdftotext`;
+  const path = join(CACHE, `${cacheKey(source)}.txt`);
+  if (!existsSync(path)) {
+    if (offline)
+      throw new Error(`absent du cache et --offline demandé : ${source}`);
+    const res = await fetch(`https://arxiv.org/pdf/${id}`);
+    if (!res.ok) throw new Error(`HTTP ${res.status} : ${source}`);
+    const pdfPath = join(CACHE, `${cacheKey(source)}.pdf`);
+    writeFileSync(pdfPath, Buffer.from(await res.arrayBuffer()));
+    writeFileSync(
+      path,
+      execFileSync('pdftotext', ['-layout', pdfPath, '-'], {
+        encoding: 'latin1',
+      })
+    );
+    stampNow(path);
+  }
+  return { text: readFileSync(path, 'latin1'), retrieved: stampOf(path) };
+}
+
+const MONTH_NAMES = 'JanFebMarAprMayJunJulAugSepOctNovDec';
+
+/**
+ * La page de l'article sur arXiv : son titre, ses auteurs et le jour de son DÉPÔT, lus dans ce
+ * qu'elle sert. Ce jour est celui où la non-détection devient publique ; il n'est pas tapé.
+ */
+async function arxivAbstract(id) {
+  const bare = id.replace(/v\d+$/, '');
+  const url = `https://arxiv.org/abs/${bare}`;
+  const { text: html, retrieved } = await get(url);
+  const meta = (name) =>
+    [
+      ...html.matchAll(
+        new RegExp(`<meta name="${name}" content="([^"]*)"`, 'g')
+      ),
+    ].map((m) => decode(m[1]));
+  const [title] = meta('citation_title');
+  const authors = meta('citation_author');
+  const m = /Submitted on (\d{1,2}) (\w{3}) (\d{4})/.exec(html);
+  const month = m ? MONTH_NAMES.indexOf(m[2]) / 3 + 1 : 0;
+  if (!title || !authors.length || !m || month < 1)
+    throw new Error(
+      `page arXiv illisible (titre, auteurs ou date de dépôt) : ${url}`
+    );
+  return {
+    url,
+    title,
+    authors,
+    submitted: `${m[3]}-${String(month).padStart(2, '0')}-${m[1].padStart(2, '0')}`,
+    retrieved,
+  };
+}
+
+/** Les noms de famille publiés (« Sheppard, Scott S. ») ; « et al. » au-delà de deux. */
+const citeOf = (authors) => {
+  const surnames = authors.map((a) => a.split(',')[0].trim());
+  return surnames.length <= 2 ? surnames.join(' & ') : `${surnames[0]} et al.`;
+};
+
+/**
+ * Une croyance réfutée, telle que la source la RACONTE. Tout ce que la fiche affiche (l'année, les
+ * noms, le rayon) doit figurer dans une citation retrouvée mot pour mot ; sinon le script s'arrête.
+ */
+async function refutedClaim(body, target) {
+  const pdf = await arxivPdfText(target.arxivPdf);
+  const abs = await arxivAbstract(target.arxivPdf);
+  const text = collapse(pdf.text);
+  const found = (anchor) => {
+    if (!text.includes(collapse(anchor)))
+      throw new Error(
+        `${body} : citation introuvable dans arXiv ${target.arxivPdf} : « ${anchor} »`
+      );
+  };
+  const inside = (value, anchor, what) => {
+    if (!anchor.includes(String(value)))
+      throw new Error(
+        `${body} : ${what} « ${value} » n'est pas DANS sa citation : « ${anchor} »`
+      );
+  };
+  found(target.reported.anchor);
+  inside(target.reported.year, target.reported.anchor, "l'année");
+  inside(target.reported.who, target.reported.anchor, "l'observateur");
+  found(target.later.anchor);
+  inside(target.later.who, target.later.anchor, "l'observateur");
+  for (const anchor of target.notFound.anchors) found(anchor);
+  if (
+    !target.notFound.anchors.some((a) =>
+      a.includes(`${target.notFound.radiusKm} km`)
+    )
+  )
+    throw new Error(
+      `${body} : le rayon ${target.notFound.radiusKm} km n'est dans aucune citation`
+    );
+  return {
+    subject: target.subject,
+    source: `arxiv-${target.arxivPdf.replace(/v\d+$/, '')}`,
+    url: abs.url,
+    retrieved: pdf.retrieved,
+    reported: { year: target.reported.year, who: target.reported.who },
+    later: { who: target.later.who },
+    notFound: { on: abs.submitted, radiusKm: target.notFound.radiusKm },
+    // Les auteurs tels que la page les publie, pour que la fiche NOMME l'article qu'elle cite.
+    cite: citeOf(abs.authors),
+    article: { title: abs.title, authors: abs.authors },
+  };
+}
+
 // ── L'assemblage ───────────────────────────────────────────────────────────────────────────
 
 const bodies = catalogue();
@@ -524,6 +647,34 @@ for (const [body, quotes] of Object.entries(TARGETS.quotes)) {
   }
 }
 
+// Les croyances réfutées, et les cas écrits avec leur raison faute de source lisible.
+const refuted = new Map();
+const refutedArticles = new Map();
+for (const [body, targets] of Object.entries(
+  TARGETS.refutedClaims?.claims ?? {}
+)) {
+  if (!records.has(body))
+    throw new Error(
+      `croyance réfutée déclarée pour ${body}, absent du catalogue`
+    );
+  const list = [];
+  for (const target of targets) {
+    const claim = await refutedClaim(body, target);
+    refutedArticles.set(claim.source, { url: claim.url, ...claim.article });
+    const { article: _article, ...kept } = claim;
+    list.push(kept);
+  }
+  refuted.set(body, list);
+}
+for (const body of Object.keys(TARGETS.refutedClaims?.notCovered ?? {})) {
+  if (!records.has(body))
+    throw new Error(`raison écrite pour ${body}, absent du catalogue`);
+  if (refuted.has(body))
+    throw new Error(
+      `${body} a une croyance réfutée ET une raison de ne pas en avoir`
+    );
+}
+
 const notApplicable = TARGETS.notApplicable;
 const missing = [];
 for (const [body, claims] of records) {
@@ -604,10 +755,22 @@ const index = {
   bodies: {},
   systems: {},
 };
+// Chaque article cité par une croyance réfutée est une source de l'index, décrite par ce que sa
+// page arXiv publie (titre, auteurs), jamais par nous.
+for (const [id, article] of [...refutedArticles].sort()) {
+  index.sources[id] = {
+    publisher: 'arXiv',
+    title: `${article.title} (${citeOf(article.authors)})`,
+    url: article.url,
+  };
+}
 for (const body of [...records.keys()].sort()) {
   index.bodies[body] = notApplicable[body]
     ? { notApplicable: true }
-    : { claims: records.get(body) };
+    : {
+        claims: records.get(body),
+        ...(refuted.has(body) ? { refuted: refuted.get(body) } : {}),
+      };
 }
 for (const parent of Object.keys(systemFiles).sort()) {
   const { source, url, retrieved, list, unconfirmed } = systemFiles[parent];

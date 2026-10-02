@@ -56,7 +56,9 @@ démarrage complètent les contrôles de navigation, de temps et les deux modes 
   de la Small-Body Database pour un petit corps qu'elle ne couvre pas (Ida, Éris, Hauméa...).
   Elle dit aussi combien de noms de surface l'UAI avait rendus officiels à cette date, avec la
   prochaine adoption : une date d'adoption, que la fiche distingue d'une découverte, et les
-  désignations lettrées de la Lune (« Copernicus A ») comptées à part. Quand deux sources divergent, comme pour Pluton, les deux
+  désignations lettrées de la Lune (« Copernicus A ») comptées à part. Et ce qu'on a cru voir
+  sans le retrouver, quand une source primaire le raconte en texte : le satellite de Vénus signalé
+  dès 1645, puis cherché en vain par une recherche publiée en 2009. Quand deux sources divergent, comme pour Pluton, les deux
   sont montrées.
 - **Réglages d'affichage** : une surface en six sections. Un tableau par objet, groupé comme la
   recherche, avec trois colonnes (étiquette, objet, orbite) ; le champ d'astéroïdes et de
