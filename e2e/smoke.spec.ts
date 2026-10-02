@@ -56,8 +56,11 @@ test('wires nav and playback controls (câblage ui/)', async ({ page }) => {
   await earthBtn.click();
   await expect(earthBtn).toHaveClass(/is-active/);
 
-  // Lecture (ui/playback) : la barre temps s'étend pour révéler le slider de vitesse.
-  await page.locator('#time-readout').click();
+  // Lecture (ui/playback) : la barre temps s'étend pour révéler le slider de vitesse. Le vol vers
+  // la Terre occupe encore le thread : les deux clics de la barre attendent qu'il soit calme,
+  // la classe déjà corrigée à la ligne 44.2 (passé seulement au réessai le 2026-10-02, run
+  // 36987706870, sur « waiting for scheduled navigations to finish »).
+  await clickWhenCalm(page, page.locator('#time-readout'));
   const speedRange = page.locator('#speed-range');
   await speedRange.press('End');
   // Vitesse max → libellé « N unité/s » (langue courante : "y/s" en anglais, "an/s" en français).
@@ -65,7 +68,7 @@ test('wires nav and playback controls (câblage ui/)', async ({ page }) => {
 
   // Retour au présent (ui/timePanel → PlaybackControls) : revient à « Réel » = CENTRE du
   // slider bidirectionnel (50 = 1:1 ; gauche = passé, droite = futur).
-  await page.locator('#time-today').click();
+  await clickWhenCalm(page, page.locator('#time-today'));
   await expect(speedRange).toHaveValue('50');
   await expect(page.locator('#speed-value')).toContainText('1:1');
 });
