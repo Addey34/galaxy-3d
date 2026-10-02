@@ -77,6 +77,7 @@ const IDENTICAL_TO_ENGLISH: Record<string, string> = {
   'quality.auto': '« Auto » s’écrit pareil dans les quatre langues',
   'mode.educ': 'abréviation, identique en espagnol et en portugais',
   'mode.explo': 'abréviation, identique dans les quatre langues',
+  'time.histEra': 'le mot « era » est le même en espagnol et en portugais',
   'help.tip.mode.key': 'reprend les deux abréviations ci-dessus',
   // Mots savants identiques d'une langue romane à l'autre.
   'events.kind.penumbral': 'même mot en espagnol et en portugais',

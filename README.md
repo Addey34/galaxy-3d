@@ -9,7 +9,9 @@ Visualisateur interactif du système solaire en temps réel, développé en Type
 ## Aperçu
 
 - Positions réelles : fichiers NASA/JPL Horizons embarqués (planètes, planètes naines, lunes, astéroïdes, comète de Halley et sondes), astronomy-engine et éléments képlériens ; la source et l'erreur mesurée de chaque corps sont publiées sur [/methodology](https://galaxy.adrianguichard.dev/methodology/)
-- Time travel : naviguer librement dans le temps passé et futur
+- Time travel : naviguer librement dans le temps passé et futur ; l'écart des positions à JPL
+  Horizons est mesuré de 9998 av. J.-C. à l'an 9999, et avant le 15 octobre 1582 la date s'affiche
+  et se saisit dans le calendrier julien, celui des historiens
 - Planètes multi-couches : surface PBR, nuages, atmosphère, lueurs nocturnes (shader GLSL)
 - Halo lumineux rond autour du Soleil, des étoiles et des lumières de ville (qualité haute), chaque source déclarée avec sa propre intensité
 - LOD automatique : résolution de texture adaptée à la distance caméra (1k → 8k)

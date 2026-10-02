@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { clickWhenCalm } from './mainThread';
 
 /**
  * MODÈLE TEMPOREL À L'ÉCRAN : ce que la fiche dit de la position du corps selon la date de la
@@ -73,11 +74,14 @@ test('year 1000 is measured, year 2500 for Uranus is not, and the date field hol
   await expect(source).toContainText('Astronomy Engine', { timeout: 30_000 });
   await expect(error).toContainText('not measured');
 
-  // An 500 : le champ de date porte encore sa valeur, sur quatre chiffres d'année.
+  // An 500 : la barre de temps porte encore une date. Depuis la ligne 22.10, c'est le groupe
+  // JULIEN qui la montre avant 1582, et non plus le champ de date grégorien (qui se vidait pour
+  // « 500-05-14 » au lot 39) ; le jour julien exact est tenu par le scénario des témoins d'Horizons.
   await openAt(page, 'earth', '0500-03-04T00:00:00Z');
-  await expect(page.locator('#date-input')).toHaveValue('0500-03-04', {
+  await expect(page.locator('#hist-year')).toHaveValue('500', {
     timeout: 30_000,
   });
+  await expect(page.locator('#hist-era')).toHaveValue('ad');
 });
 
 /**
@@ -102,6 +106,61 @@ test('a date before year 1, opened by the permalink, reads a measured gap in yea
   await expect(error).toContainText('1001 BC');
   await expect(error).not.toContainText('-1000');
   expect(errors).toEqual([]);
+});
+
+/**
+ * AVANT LE 15 OCTOBRE 1582, LA BARRE DE TEMPS ÉCRIT LE CALENDRIER JULIEN (ligne 22.10, pas 2).
+ * Les dates attendues ne viennent PAS de `core/calendar.ts` (ce serait circulaire) : ce sont celles
+ * qu'Horizons imprime pour ces jours juliens, lues le 2026-10-02 (B.C. 0587-Jul-30, et le 29
+ * février 1500, qu'un champ de date de navigateur, grégorien, refuserait).
+ */
+test('before 1582 the time bar writes the Julian calendar, as Horizons prints it', async ({
+  page,
+}) => {
+  test.setTimeout(180_000);
+  const day = page.locator('#hist-day');
+  const month = page.locator('#hist-month');
+  const year = page.locator('#hist-year');
+  const era = page.locator('#hist-era');
+  const expand = async (): Promise<void> => {
+    await expect(page.locator('#loader')).toBeHidden({ timeout: 60_000 });
+    // `#loader` masqué n'est PAS « l'application accepte un clic » (§ « Pièges ») : passé
+    // seulement au réessai le 2026-10-02, run 36992666870, faute de cette attente.
+    await clickWhenCalm(page, page.locator('#time-readout'));
+  };
+
+  // JD 1507231.5 + 12 h : Horizons, « B.C. 0587-Jul-30 ».
+  await openAt(page, 'jupiter', '-000586-07-24T12:00:00Z');
+  await expand();
+  await expect(page.locator('#historic-date')).toBeVisible({ timeout: 30_000 });
+  await expect(page.locator('#date-input')).toBeHidden();
+  await expect(page.locator('#historic-date')).toContainText('Julian calendar');
+  await expect(day).toHaveValue('30');
+  await expect(month).toHaveValue('7');
+  await expect(year).toHaveValue('587');
+  await expect(era).toHaveValue('bc');
+
+  // Saisir une année déplace la scène, en gardant le jour julien.
+  await year.fill('588');
+  await year.blur();
+  await expect(page).toHaveURL(/date=-000587-/, { timeout: 30_000 });
+  await expect(day).toHaveValue('30');
+
+  // JD 2268991.5 + 12 h : Horizons, « A.D. 1500-Feb-29 », un jour que le grégorien n'a pas.
+  await openAt(page, 'earth', '1500-03-10T12:00:00Z');
+  await expand();
+  await expect(day).toHaveValue('29', { timeout: 30_000 });
+  await expect(month).toHaveValue('2');
+  await expect(year).toHaveValue('1500');
+  await expect(era).toHaveValue('ad');
+
+  // Après la réforme, le champ de date habituel revient, et le groupe julien disparaît.
+  await openAt(page, 'earth', '1582-10-15T12:00:00Z');
+  await expand();
+  await expect(page.locator('#date-input')).toHaveValue('1582-10-15', {
+    timeout: 30_000,
+  });
+  await expect(page.locator('#historic-date')).toBeHidden();
 });
 
 test('the Sun has no position row, and the overview closes the card', async ({

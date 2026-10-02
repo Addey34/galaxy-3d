@@ -1,6 +1,7 @@
 import { readFileSync, readdirSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { expect, test, type Page } from '@playwright/test';
+import { clickWhenCalm } from './mainThread';
 import AxeBuilder from '@axe-core/playwright';
 import { blockExternalNetwork } from './netBlock';
 import { MOON_SCENE_DATE } from './moonScene';
@@ -532,4 +533,63 @@ test.describe('mobile viewport, discovery block', () => {
       ).toEqual([]);
     });
   }
+});
+
+/**
+ * LE GROUPE JULIEN DE LA BARRE DE TEMPS (ligne 22.10, années avant J.-C., pas 2), ouvert à une
+ * date avant notre ère, à 390 px et dans les QUATRE langues : chaque champ porte son nom
+ * (jour, mois, année, ère), le groupe le sien, et rien ne déborde ni n'est rogné.
+ */
+test.describe('mobile viewport, Julian date group', () => {
+  test.use({ viewport: { width: 390, height: 844 } });
+  for (const locale of ['en', 'fr', 'es', 'pt-BR'] as const)
+    test(`Julian date group, ${locale}, is clean at 390 px`, async ({
+      page,
+    }) => {
+      await page.addInitScript((lang) => {
+        localStorage.setItem('ssv-locale', lang);
+        localStorage.setItem('ssv-guided-tour-v1', '1');
+      }, locale);
+      await page.goto('/jupiter/?date=-009000-07-15T12:00:00Z');
+      await expect(page.locator('#loader')).toBeHidden({ timeout: 30_000 });
+      await clickWhenCalm(page, page.locator('#time-readout'));
+      await expect(page.locator('#historic-date')).toBeVisible({
+        timeout: 15_000,
+      });
+      // Le cas le plus large : un jour à DEUX chiffres et une année à QUATRE. À une date dont le
+      // jour julien n'a qu'un chiffre, la garde ne pouvait pas voir le champ rogné (vu le
+      // 2026-10-02 : la falsification restait verte).
+      expect((await page.locator('#hist-day').inputValue()).length).toBe(2);
+      expect((await page.locator('#hist-year').inputValue()).length).toBe(4);
+      const results = await runAxe(page);
+      expect(
+        results.violations,
+        JSON.stringify(results.violations, null, 2)
+      ).toEqual([]);
+      const overflow = await page.evaluate(
+        () =>
+          document.documentElement.scrollWidth -
+          document.documentElement.clientWidth
+      );
+      expect(
+        overflow,
+        `débordement de la page (${locale})`
+      ).toBeLessThanOrEqual(0);
+      const clipped = await page.evaluate(() =>
+        // Le GROUPE, pas toute la barre : l'affichage de la vitesse de la barre compacte est
+        // tronqué par une ellipsis VOULUE, et perd de 11 à 24 px de texte sur le runner Linux
+        // (mesuré le 2026-10-02). Ce défaut est antérieur à ce pas et écrit dans la file.
+        [
+          ...document.querySelectorAll<HTMLElement>(
+            '#historic-date, #historic-date *'
+          ),
+        ]
+          .filter((e) => !e.classList.contains('sr-only') && e.offsetParent)
+          .filter((e) => e.scrollWidth - e.clientWidth > 1)
+          .map((e) => `${e.id || e.className}:${e.scrollWidth - e.clientWidth}`)
+      );
+      expect(clipped, `texte rogné dans la barre de temps (${locale})`).toEqual(
+        []
+      );
+    });
 });

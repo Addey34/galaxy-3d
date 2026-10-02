@@ -1029,8 +1029,9 @@ contient la date**, et rien d'autre.
 
 **Deux bornes ferment la fenêtre, et aucune n'est un choix** : l'API Horizons s'arrête à ±9999
 (mesuré ; le noyau DE441 va plus loin, l'API non), et un `<input type="date">` ne sait pas écrire
-une année négative — l'application ne peut donc pas AFFICHER une date avant l'an 1, même si son
-horloge y va. Au passage, un défaut que la profondeur a rendu ordinaire : le champ écrivait
+une année négative — l'application ne pouvait donc pas AFFICHER une date avant l'an 1, même si son
+horloge y allait (SUPERSEDED le 2026-10-02 : avant le 15 octobre 1582, la barre de temps affiche un
+groupe julien, voir le paragraphe « L'interface » ci-dessous). Au passage, un défaut que la profondeur a rendu ordinaire : le champ écrivait
 `500-05-14` pour l'an 500, que le navigateur refuse, et il se vidait sans un mot
 (`src/ui/dateField.ts`).
 
@@ -1056,9 +1057,25 @@ leur accord ne dit rien de la rotation réelle de la Terre, et la page le dit.
 années 0 à 99 en 1900-1999. La fiche écrit une tranche avant l'ère en années av. J.-C. (« 1001
 av. J.-C. »), jamais « -1000 », parce que le permalien sait déjà ouvrir une telle date.
 
-**Ce qui reste, et pourquoi c'est l'étape suivante** : le champ de date ne sait toujours pas
-écrire une année négative, donc un visiteur ne peut y venir que par un lien. L'interface, le
-calendrier affiché et la précision promise se décident sur cette mesure, pas avant.
+**L'interface (pas 2, 2026-10-02) : le calendrier julien avant 1582.** Un champ de date de
+navigateur est grégorien : il ne sait écrire ni une année négative, ni le 29 février 1500, que le
+julien a et que le grégorien n'a pas, et il se viderait sans un mot. Avant le 15 octobre 1582, la
+barre de temps le REMPLACE donc par un groupe jour, mois, année et ère, étiqueté « calendrier
+julien » : c'est le calendrier des historiens, et celui dans lequel Horizons imprime ses dates.
+Après, le champ de date habituel revient, avec son sélecteur natif. La conversion vit dans
+`core/calendar.ts`, pure, testée contre des dates qu'HORIZONS a imprimées (B.C. 0587-Jul-30,
+le 4 et le 15 octobre 1582, le 29 février 1500, l'an 1 av. J.-C. bissextile), et non contre
+elle-même. **Le permalien ne change pas** : il reste une date ISO dans le grégorien prolongé, le
+format machine de JavaScript, si bien qu'aucun lien publié ne casse ; c'est l'AFFICHAGE qui est
+julien. Conséquence visible et voulue : le lien `-000584-05-28` s'affiche « 3 juin 585 av. J.-C. »,
+la date julienne du même jour.
+
+Gardes : `src/core/calendar.test.ts` (les témoins d'Horizons, l'aller-retour sur toute la plage
+de l'horloge, les dates qui n'existent pas en julien) ; `e2e/temporal.spec.ts` (le groupe affiche
+la date julienne d'Horizons, une saisie déplace la scène, le 29 février 1500 tient, le champ
+habituel revient le 15 octobre 1582) ; `e2e/a11y-audit.spec.ts` (le groupe à 390 px dans les quatre
+langues, à un jour de DEUX chiffres et une année de QUATRE : à un jour d'un seul chiffre, la garde
+du texte rogné ne pouvait pas voir le champ trop étroit, et sa falsification restait verte).
 
 Gardes : `src/config/deepTimeWindows.test.ts` (les corps mesurés sont ceux qui se déclarent, la
 cible interrogée est la cible déclarée, la règle du centième rejouée sur la donnée livrée, le
