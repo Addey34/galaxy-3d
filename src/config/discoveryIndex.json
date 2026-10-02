@@ -7,7 +7,7 @@
   },
   "sbdb": {
    "publisher": "NASA JPL Solar System Dynamics",
-   "title": "Small-Body Database, discovery circumstances",
+   "title": "Small-Body Database, discovery circumstances and satellites",
    "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html",
    "api": "https://ssd-api.jpl.nasa.gov/sbdb.api?sstr=1&discovery=1"
   },
@@ -804,32 +804,93 @@
   }
  },
  "systems": {
+  "eris": {
+   "source": "sbdb",
+   "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=136199",
+   "total": 1,
+   "bytes": 120,
+   "retrieved": "2026-09-28"
+  },
+  "gonggong": {
+   "source": "sbdb",
+   "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=225088",
+   "total": 1,
+   "bytes": 118,
+   "retrieved": "2026-09-28"
+  },
+  "haumea": {
+   "source": "sbdb",
+   "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=136108",
+   "total": 2,
+   "bytes": 236,
+   "retrieved": "2026-09-28"
+  },
+  "ida": {
+   "source": "sbdb",
+   "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=243",
+   "total": 1,
+   "bytes": 116,
+   "retrieved": "2026-09-28"
+  },
   "jupiter": {
+   "source": "jpl-sats",
+   "url": "https://ssd.jpl.nasa.gov/sats/discovery.html",
    "total": 115,
    "bytes": 11319,
    "retrieved": "2026-10-01"
   },
+  "makemake": {
+   "source": "sbdb",
+   "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=136472",
+   "total": 1,
+   "bytes": 96,
+   "retrieved": "2026-09-28"
+  },
   "mars": {
+   "source": "jpl-sats",
+   "url": "https://ssd.jpl.nasa.gov/sats/discovery.html",
    "total": 2,
    "bytes": 167,
    "retrieved": "2026-10-01"
   },
   "neptune": {
+   "source": "jpl-sats",
+   "url": "https://ssd.jpl.nasa.gov/sats/discovery.html",
    "total": 16,
    "bytes": 1925,
    "retrieved": "2026-10-01"
   },
+  "orcus": {
+   "source": "sbdb",
+   "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=90482",
+   "total": 1,
+   "bytes": 118,
+   "retrieved": "2026-09-28"
+  },
   "pluto": {
+   "source": "jpl-sats",
+   "url": "https://ssd.jpl.nasa.gov/sats/discovery.html",
    "total": 5,
    "bytes": 955,
    "retrieved": "2026-10-01"
   },
+  "quaoar": {
+   "source": "sbdb",
+   "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=50000",
+   "total": 1,
+   "bytes": 119,
+   "retrieved": "2026-09-28"
+  },
   "saturn": {
+   "source": "jpl-sats",
+   "url": "https://ssd.jpl.nasa.gov/sats/discovery.html",
    "total": 293,
    "bytes": 41605,
    "retrieved": "2026-10-01"
   },
   "uranus": {
+   "source": "jpl-sats",
+   "url": "https://ssd.jpl.nasa.gov/sats/discovery.html",
    "total": 29,
    "bytes": 3336,
    "retrieved": "2026-10-01"

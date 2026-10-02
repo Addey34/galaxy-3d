@@ -38,6 +38,7 @@ const CAPABILITY_ORDER: readonly Capability[] = [
   'tileset',
   'heightfield',
   'discovery',
+  'moons',
   'missions',
   'places',
   'instruments',
@@ -116,6 +117,17 @@ function discoveryCell(row: InventoryRow): string {
 }
 
 /**
+ * La liste des satellites d'un corps qui a des lunes, et sa source (ligne 22.10, pas 2). `sans
+ * objet` n'est pas un manque : la raison est ecrite dans scripts/discovery-targets.json.
+ */
+function moonsCell(row: InventoryRow): string {
+  if (!row.applicable.includes('moons')) return '-';
+  if (row.moons === null) return 'HORS INDEX';
+  if (row.moons === 'sans-objet') return 'sans objet (raison ecrite)';
+  return `${row.moons.total} (${row.moons.source})`;
+}
+
+/**
  * Les instruments que le registre du PDS declare sur cette sonde. `absente` n'est pas un manque :
  * c'est une mesure, dont la raison vit dans scripts/pds-archive-targets.json.
  */
@@ -157,6 +169,7 @@ function table(rows: readonly InventoryRow[]): string[] {
     'textures',
     'surface',
     'decouverte',
+    'lunes',
     'missions',
     'lieux',
     'instruments',
@@ -169,6 +182,7 @@ function table(rows: readonly InventoryRow[]): string[] {
     textureCell(row),
     surfaceCell(row),
     discoveryCell(row),
+    moonsCell(row),
     missionsCell(row),
     placesCell(row),
     instrumentsCell(row),

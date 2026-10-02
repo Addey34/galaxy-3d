@@ -25,14 +25,22 @@ interface DiscoveryIndex {
     | { readonly claims: readonly DiscoveryClaim[] }
     | { readonly notApplicable: true }
   >;
-  readonly systems: Record<
-    string,
-    {
-      readonly total: number;
-      readonly bytes: number;
-      readonly retrieved: string;
-    }
-  >;
+  readonly systems: Record<string, SatelliteSystemInfo>;
+}
+
+/**
+ * Une liste de satellites, telle que l'index la décrit. Deux sources possibles (ligne 22.10,
+ * pas 2) : la table du JPL pour les six systèmes qu'elle couvre, SBDB pour les petits corps
+ * qu'elle n'a pas en section. Le compte de la fiche dépend de laquelle, et sa note le dit.
+ */
+export interface SatelliteSystemInfo {
+  readonly source: 'jpl-sats' | 'sbdb';
+  readonly url: string;
+  readonly total: number;
+  readonly bytes: number;
+  readonly retrieved: string;
+  /** Satellites que la source déclare NON confirmés : jamais comptés, mais la fiche les nomme. */
+  readonly unconfirmed?: readonly SatelliteDiscovery[];
 }
 
 let index: DiscoveryIndex | null = null;
@@ -75,26 +83,26 @@ const systems = new Map<string, readonly SatelliteDiscovery[]>();
 const failed = new Set<string>();
 
 /**
- * Les satellites d'un système, tels que la table du JPL les recense, avec la date de lecture de
- * la table. `null` quand ce corps n'a pas de section dans la table (la plupart), ou si la liste
- * n'a pas pu être lue : la ligne des lunes connues reste alors absente.
+ * Les satellites d'un système, tels que leur source les recense (la table du JPL, ou SBDB pour un
+ * petit corps), avec ce que l'index en dit. `null` quand ce corps n'a pas de liste (la plupart),
+ * ou si la liste n'a pas pu être lue : la ligne des lunes connues reste alors absente.
  */
 export async function loadSatelliteDiscoveries(body: string): Promise<{
   satellites: readonly SatelliteDiscovery[];
-  retrieved: string;
+  system: SatelliteSystemInfo;
 } | null> {
   const loaded = await loadDiscoveryIndex();
   const system = loaded?.systems[body];
   if (!system) return null;
   const cached = systems.get(body);
-  if (cached) return { satellites: cached, retrieved: system.retrieved };
+  if (cached) return { satellites: cached, system };
   if (failed.has(body)) return null;
   try {
     const res = await fetch(`/assets/discovery/${body}.json`);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const list = (await res.json()) as SatelliteDiscovery[];
     systems.set(body, list);
-    return { satellites: list, retrieved: system.retrieved };
+    return { satellites: list, system };
   } catch (error: unknown) {
     failed.add(body);
     Logger.warn(`[Découverte] ${body} indisponible : ${String(error)}`);

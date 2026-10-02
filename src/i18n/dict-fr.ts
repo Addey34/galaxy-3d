@@ -455,10 +455,18 @@ export const fr: Record<MessageKey, string> = {
     'Lunes déjà vues à cette date : {count} sur les {total} que recense aujourd’hui le JPL',
   'bi.discovery.moonsKnownRange':
     'Lunes déjà vues à cette date : entre {min} et {max} sur les {total} que recense aujourd’hui le JPL',
+  'bi.discovery.moonsKnownOne':
+    'Lunes déjà vues à cette date : {count} sur la seule que recense aujourd’hui le JPL',
+  'bi.discovery.moonsKnownRangeOne':
+    'Lunes déjà vues à cette date : entre {min} et {max} sur la seule que recense aujourd’hui le JPL',
   'bi.discovery.moonsNext': 'Découverte suivante : {year} ({names})',
   'bi.discovery.moonsMore': '{names} et {count} autres',
   'bi.discovery.moonsNote':
     'Ce compte ne retient que les lunes que la table du JPL recense aujourd’hui, lue le {date} : une lune annoncée puis réfutée n’y figure pas, donc ce n’est pas ce que l’on croyait à l’époque.',
+  'bi.discovery.moonsNoteSbdb':
+    'Ce compte ne retient que les satellites que la JPL Small-Body Database confirme aujourd’hui, lue le {date} : un satellite annoncé puis réfuté n’y figure pas, donc ce n’est pas ce que l’on croyait à l’époque.',
+  'bi.discovery.moonsUnconfirmed':
+    'Non comptés, parce que la base les dit non confirmés : {names}.',
   'bi.missions.label': 'Missions',
   'bi.missions.countAtDate': '{count}, dont {active} à cette date',
   'bi.missions.countAllAtDate': '{count}, toutes à cette date',

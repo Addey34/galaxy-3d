@@ -3270,6 +3270,7 @@ sources primaires dont deux étaient déjà des sources du dépôt :
 |---|---|---|
 | JPL SSD, *Planetary Satellite Discovery Circumstances* | année, découvreurs, référence UAI, pour **chaque** satellite reconnu | les 30 lunes du catalogue hors la Lune, et les 460 satellites des six systèmes |
 | JPL SBDB, `discovery=1` | jour, découvreurs, lieu | les 19 petits corps |
+| JPL SBDB, `sat=1` (pas 2, ci-dessous) | année de découverte, référence, confirmation, par satellite | les petits corps qui ont une lune hors de la table du JPL (sept au 2026-10-02 ; la liste se lit dans `pnpm inventory:gaps`) |
 | NSSDCA, fiches planétaires | `Discoverer`, `Discovery Date` | Uranus, Neptune, Pluton ; « Prehistoric » pour les cinq planètes visibles à l'œil nu |
 
 Deux affirmations qu'aucune table ne déclare sont **citées mot pour mot** et retrouvées dans la
@@ -3369,6 +3370,53 @@ au moment de ce lot, la marge est remontée au-dessus de ce qu'elle était avant
 
 **Aucune licence n'est revendiquée**, pour la raison du lot 40 : la donnée est citée, source et date
 de lecture sur chaque ligne de la fiche, et rien n'est affirmé qu'on ne puisse pointer.
+
+### Pas 2 (2026-10-02) : les satellites des corps que la table du JPL n'a pas en section
+
+La table du JPL n'a de section que pour Mars, Jupiter, Saturne, Uranus, Neptune et Pluton. Or la
+fiche affiche un nombre de lunes, tiré de SBDB, pour des petits corps qu'elle ne couvre pas (sept au 2026-10-02) : la
+fiche d'Ida disait « 1 lune », et le bloc « Découverte » ne pouvait rien en dire à une date. La
+liste de ces corps n'est écrite nulle part : elle se DÉRIVE (toute désignation SBDB du catalogue
+qui n'a pas déjà sa section au JPL), et `pnpm inventory:gaps` la montre dans sa colonne `lunes`.
+
+**LA LISTE EST LUE DANS LA RÉPONSE MÊME QUI DONNE LE COMPTE DE LA FICHE.** SBDB déclare ses
+satellites par `sat=1`. Le générateur pose la MÊME requête que le relevé des faits
+(`phys-par=1&sat=1`), donc lit la même réponse, à la même date, dans le même cache : deux
+lectures pourraient se contredire, une seule ne le peut pas. La garde l'exige (même date de
+lecture, même compte que `confirmedSatellites`).
+
+**Trois mesures ont décidé, chacune une réponse fausse d'apparence juste évitée :**
+
+- **`year` est l'année de DÉCOUVERTE, et la référence en est souvent une autre.** Dactyl est daté
+  de 1993 pour une référence de 1994 (Belton et al.), Vanth de 2005 pour une de 2007. Ce que
+  `year` désigne a été LU dans la documentation de l'API (« year of discovery ») avant d'être
+  affiché, puis PROUVÉ par un TÉMOIN : Pluton est dans les deux sources, et le générateur exige que
+  ses cinq satellites y portent les mêmes noms et les mêmes années, sinon il échoue.
+- **`confirmed` n'est PAS documenté par l'API.** Le relevé des faits comptait pourtant déjà dessus.
+  Le générateur n'accepte que « Y » et « N » et échoue sur toute autre valeur :
+  une troisième voudrait dire qu'on ne sait plus ce qu'on compte. Un satellite « N » n'est jamais
+  compté, et la note de la fiche le NOMME ; aucun n'existe aujourd'hui parmi les corps du
+  catalogue, donc ce chemin est tenu par le générateur et par le typage, pas par un scénario.
+- **`iau_name` vaut la chaîne VIDE pour la lune de Makémaké**, pas `null`. Le nom est alors la
+  désignation provisoire (« S/2015 (136472) 1 »), comme le fait la table du JPL.
+
+**La parité est une règle du générateur, pas une liste** : tout corps dont la fiche affiche au
+moins une lune a la liste de ses satellites, d'un compte ÉGAL au nombre affiché, ou une raison
+écrite dans `satellitesNotCovered` de `scripts/discovery-targets.json`. Un écart arrête tout : il
+s'écrit, il ne se tranche pas. Seule la Terre porte une raison : aucune des deux listes ne la
+couvre, et la Lune n'a pas de date de découverte.
+
+**La note dit quelle liste a été comptée.** « La table du JPL » pour les six systèmes, « la JPL
+Small-Body Database » pour un petit corps ; et un compte sur un seul satellite s'écrit au
+singulier, défaut trouvé en LISANT le rendu (« 0 sur les 1 », dans les quatre langues). `/sources`
+le compte sans code propre à ce pas : chaque liste DÉCLARE sa source dans l'index, et la ligne de
+cette source la compte.
+
+**Les gardes, et leur falsification.** Trois falsifications de la donnée (une liste vidée, la
+raison de la Terre retirée, une liste retirée de l'index), trois rouges dans `pnpm verify` ; trois
+du générateur sur une réponse modifiée (une année de Pluton qui diverge, un `confirmed` inconnu,
+un satellite devenu non confirmé), trois échecs qui nomment le corps ; deux du produit (la note
+forcée sur la table du JPL, l'adresse rendue relative), deux rouges dans `e2e/discovery.spec.ts`.
 
 ## Pages `/methodology` et `/sources`
 

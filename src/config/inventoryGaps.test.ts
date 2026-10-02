@@ -100,6 +100,44 @@ describe('inventaire dérivé du dépôt', () => {
       expect(row.applicable.includes('discovery'), row.id).toBe(false);
   });
 
+  /**
+   * LIGNE 22.10, PAS 2 : tout corps dont la fiche affiche au moins une lune a la liste de ses
+   * satellites, ou une raison écrite. Le compte de la liste est celui de la fiche.
+   */
+  it('donne la liste de ses satellites à CHAQUE corps qui a des lunes, ou une raison écrite', () => {
+    const withMoons = inventory.rows.filter((row) =>
+      row.applicable.includes('moons')
+    );
+    expect(
+      withMoons.filter((row) => row.moons === null).map((r) => r.id)
+    ).toEqual([]);
+    // Bornes : les deux sources sont exercées, et la raison écrite aussi.
+    const bySource = (source: string): string[] =>
+      withMoons
+        .filter(
+          (row) => typeof row.moons === 'object' && row.moons?.source === source
+        )
+        .map((row) => row.id)
+        .sort();
+    expect(bySource('jpl-sats')).toEqual([
+      'jupiter',
+      'mars',
+      'neptune',
+      'pluto',
+      'saturn',
+      'uranus',
+    ]);
+    expect(bySource('sbdb').length).toBeGreaterThan(0);
+    expect(
+      withMoons.filter((row) => row.moons === 'sans-objet').map((r) => r.id)
+    ).toEqual(['earth']);
+    for (const row of withMoons)
+      if (typeof row.moons === 'object' && row.moons)
+        expect(row.moons.total, row.id).toBe(
+          flattenBodies(CELESTIAL_CONFIG).get(row.id)?.realData?.moonCount
+        );
+  });
+
   it('ne signale une absence que pour une capacité applicable', () => {
     for (const row of inventory.rows)
       for (const capability of row.absent)
