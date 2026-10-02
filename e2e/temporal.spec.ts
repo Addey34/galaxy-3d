@@ -73,11 +73,14 @@ test('year 1000 is measured, year 2500 for Uranus is not, and the date field hol
   await expect(source).toContainText('Astronomy Engine', { timeout: 30_000 });
   await expect(error).toContainText('not measured');
 
-  // An 500 : le champ de date porte encore sa valeur, sur quatre chiffres d'année.
+  // An 500 : la barre de temps porte encore une date. Depuis la ligne 22.10, c'est le groupe
+  // JULIEN qui la montre avant 1582, et non plus le champ de date grégorien (qui se vidait pour
+  // « 500-05-14 » au lot 39) ; le jour julien exact est tenu par le scénario des témoins d'Horizons.
   await openAt(page, 'earth', '0500-03-04T00:00:00Z');
-  await expect(page.locator('#date-input')).toHaveValue('0500-03-04', {
+  await expect(page.locator('#hist-year')).toHaveValue('500', {
     timeout: 30_000,
   });
+  await expect(page.locator('#hist-era')).toHaveValue('ad');
 });
 
 /**

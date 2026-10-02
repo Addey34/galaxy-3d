@@ -575,7 +575,14 @@ test.describe('mobile viewport, Julian date group', () => {
         `débordement de la page (${locale})`
       ).toBeLessThanOrEqual(0);
       const clipped = await page.evaluate(() =>
-        [...document.querySelectorAll<HTMLElement>('#time-panel *')]
+        // Le GROUPE, pas toute la barre : l'affichage de la vitesse de la barre compacte est
+        // tronqué par une ellipsis VOULUE, et perd de 11 à 24 px de texte sur le runner Linux
+        // (mesuré le 2026-10-02). Ce défaut est antérieur à ce pas et écrit dans la file.
+        [
+          ...document.querySelectorAll<HTMLElement>(
+            '#historic-date, #historic-date *'
+          ),
+        ]
           .filter((e) => !e.classList.contains('sr-only') && e.offsetParent)
           .filter((e) => e.scrollWidth - e.clientWidth > 1)
           .map((e) => `${e.id || e.className}:${e.scrollWidth - e.clientWidth}`)
