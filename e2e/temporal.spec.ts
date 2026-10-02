@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { clickWhenCalm } from './mainThread';
 
 /**
  * MODÈLE TEMPOREL À L'ÉCRAN : ce que la fiche dit de la position du corps selon la date de la
@@ -123,7 +124,9 @@ test('before 1582 the time bar writes the Julian calendar, as Horizons prints it
   const era = page.locator('#hist-era');
   const expand = async (): Promise<void> => {
     await expect(page.locator('#loader')).toBeHidden({ timeout: 60_000 });
-    await page.locator('#time-readout').click();
+    // `#loader` masqué n'est PAS « l'application accepte un clic » (§ « Pièges ») : passé
+    // seulement au réessai le 2026-10-02, run 36992666870, faute de cette attente.
+    await clickWhenCalm(page, page.locator('#time-readout'));
   };
 
   // JD 1507231.5 + 12 h : Horizons, « B.C. 0587-Jul-30 ».

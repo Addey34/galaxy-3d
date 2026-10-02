@@ -1,6 +1,7 @@
 import { readFileSync, readdirSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { expect, test, type Page } from '@playwright/test';
+import { clickWhenCalm } from './mainThread';
 import AxeBuilder from '@axe-core/playwright';
 import { blockExternalNetwork } from './netBlock';
 import { MOON_SCENE_DATE } from './moonScene';
@@ -551,7 +552,7 @@ test.describe('mobile viewport, Julian date group', () => {
       }, locale);
       await page.goto('/jupiter/?date=-009000-07-15T12:00:00Z');
       await expect(page.locator('#loader')).toBeHidden({ timeout: 30_000 });
-      await page.locator('#time-readout').click();
+      await clickWhenCalm(page, page.locator('#time-readout'));
       await expect(page.locator('#historic-date')).toBeVisible({
         timeout: 15_000,
       });
