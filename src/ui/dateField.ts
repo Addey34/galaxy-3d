@@ -11,8 +11,9 @@
  * lot 39 rend ce voyage ordinaire.
  *
  * Ce que le format ne sait PAS écrire, et qui est une borne du navigateur et non un choix : une
- * année négative. Le champ ne peut donc pas afficher une date avant l'an 1, alors que l'horloge
- * y va et que la scène y place les corps.
+ * année négative, ni une date julienne comme le 29 février 1500. Avant le 15 octobre 1582, la
+ * barre de temps remplace donc ce champ par un groupe julien (`ui/timePanel.ts`,
+ * `core/calendar.ts`, ligne 22.10).
  */
 
 /** Première année qu'un `<input type="date">` sait porter. */

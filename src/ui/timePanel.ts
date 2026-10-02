@@ -8,7 +8,8 @@
  *   - picker natif (clic) → saut à l'heure/date choisie ;
  *   - bouton présent → retour au temps réel (via `PlaybackControls`).
  */
-import { t } from '@/i18n';
+import { intlLocale, onLocaleChange, t } from '@/i18n';
+import { displayedDate, fromJulianDate } from '@/core/calendar';
 import type { OrbitalMechanics } from '@/core/OrbitalMechanics';
 import { LIVE_TOLERANCE_MS } from '@/core/positionProvenance';
 import {
@@ -28,6 +29,18 @@ const liveDot = document.getElementById('live-dot')!;
 const timeTodayBtn = document.getElementById('time-today')!;
 const timeInput = document.getElementById('time-input') as HTMLInputElement;
 const dateInput = document.getElementById('date-input') as HTMLInputElement;
+/**
+ * AVANT LE 15 OCTOBRE 1582, le champ de date cède la place à ce groupe (ligne 22.10, années avant
+ * J.-C., pas 2) : jour, mois, année et ère, dans le calendrier JULIEN que les historiens et
+ * Horizons emploient pour ces dates. Le champ de date du navigateur est grégorien, et il ne sait
+ * écrire ni une année négative ni le 29 février 1500 : il se viderait sans un mot, le défaut que
+ * le lot 39 avait déjà fermé pour l'an 500. La conversion vit dans `core/calendar.ts`.
+ */
+const historic = document.getElementById('historic-date')!;
+const histDay = document.getElementById('hist-day') as HTMLInputElement;
+const histMonth = document.getElementById('hist-month') as HTMLSelectElement;
+const histYear = document.getElementById('hist-year') as HTMLInputElement;
+const histEra = document.getElementById('hist-era') as HTMLSelectElement;
 
 // Même seuil que la catégorie « en direct » d'une position (core/positionProvenance.ts).
 const LIVE_THRESHOLD_DAYS = LIVE_TOLERANCE_MS / 86_400_000;
@@ -36,6 +49,9 @@ let _prevTime = '';
 let _prevDate = '';
 let _prevClock = '';
 let _editingInput: HTMLInputElement | null = null;
+/** Vrai pendant qu'un champ du groupe julien a le focus : la barre n'écrase pas une saisie. */
+let _editingHistoric = false;
+let _prevHistoric = '';
 
 timeInput.addEventListener('focus', () => {
   _editingInput = timeInput;
@@ -49,6 +65,68 @@ dateInput.addEventListener('focus', () => {
 dateInput.addEventListener('blur', () => {
   if (_editingInput === dateInput) _editingInput = null;
 });
+
+historic.addEventListener('focusin', () => {
+  _editingHistoric = true;
+});
+historic.addEventListener('focusout', (e) => {
+  if (!historic.contains(e.relatedTarget as Node | null))
+    _editingHistoric = false;
+});
+
+/** Les noms des mois et des ères dans la langue courante ; ce sont les mêmes en julien. */
+function labelHistoricFields(): void {
+  const month = new Intl.DateTimeFormat(intlLocale(), {
+    month: 'long',
+    timeZone: 'UTC',
+  });
+  const selected = histMonth.value;
+  histMonth.replaceChildren(
+    ...Array.from({ length: 12 }, (_, i) => {
+      const option = document.createElement('option');
+      option.value = String(i + 1);
+      option.textContent = month.format(Date.UTC(2000, i, 1));
+      return option;
+    })
+  );
+  if (selected) histMonth.value = selected;
+  histEra.options[0]!.textContent = t('time.eraAD');
+  histEra.options[1]!.textContent = t('time.eraBC');
+}
+
+/**
+ * Montre le champ de date OU le groupe julien selon la date de la scène, et remplit le groupe :
+ * une année astronomique négative ou nulle s'écrit avant J.-C. (0 → 1 av. J.-C.).
+ */
+function refreshHistoric(ms: number): boolean {
+  const shown = displayedDate(ms);
+  const julian = shown.calendar === 'julian';
+  historic.hidden = !julian;
+  dateInput.hidden = julian;
+  if (!julian || _editingHistoric) return julian;
+  const key = `${shown.year}-${shown.month}-${shown.day}`;
+  if (key === _prevHistoric) return julian;
+  _prevHistoric = key;
+  histDay.value = String(shown.day);
+  histMonth.value = String(shown.month);
+  histYear.value = String(shown.year >= 1 ? shown.year : 1 - shown.year);
+  histEra.value = shown.year >= 1 ? 'ad' : 'bc';
+  return julian;
+}
+
+/** L'instant que désigne le groupe julien, à l'heure du jour courante ; `null` s'il n'existe pas. */
+function historicTarget(current: number): number | null {
+  const year = Number(histYear.value);
+  if (!Number.isInteger(year) || year < 1) return null;
+  return fromJulianDate(
+    {
+      year: histEra.value === 'bc' ? 1 - year : year,
+      month: Number(histMonth.value),
+      day: Number(histDay.value),
+    },
+    current
+  );
+}
 
 function flash(el: HTMLElement): void {
   el.classList.remove('is-ticking');
@@ -75,7 +153,9 @@ function refreshDisplay(om: OrbitalMechanics): void {
     _prevTime = time;
   }
 
-  if (_editingInput !== dateInput) {
+  if (refreshHistoric(d.getTime())) {
+    // Le groupe julien est affiché : le champ grégorien, masqué, n'a rien à montrer.
+  } else if (_editingInput !== dateInput) {
     const dt = dateFieldValue(d);
     if (dt !== _prevDate) {
       dateInput.value = dt;
@@ -147,6 +227,13 @@ export function setupTimePanel(
   _prevTime = '';
   _prevDate = '';
   _prevClock = '';
+  _prevHistoric = '';
+  labelHistoricFields();
+  onLocaleChange(() => {
+    labelHistoricFields();
+    _prevHistoric = '';
+    refresh();
+  });
   refresh();
   setInterval(refresh, 250);
 
@@ -176,6 +263,30 @@ export function setupTimePanel(
     refresh();
     onChange?.();
   });
+
+  // Groupe julien : une date saisie qui existe dans ce calendrier déplace la scène ; une date qui
+  // n'existe pas (un 29 février d'une année non bissextile) ne bouge rien, comme le champ grégorien.
+  const applyHistoric = (): void => {
+    const cur = om.simulationDate.getTime();
+    const target = historicTarget(cur);
+    if (target === null) return;
+    om.addTimeOffset((target - cur) / 86_400_000);
+    _prevHistoric = '';
+    flash(histDay);
+    refresh();
+    onChange?.();
+  };
+  for (const field of [histDay, histMonth, histYear, histEra])
+    field.addEventListener('change', applyHistoric);
+  addWheelAdjust(
+    histDay,
+    (d) => om.addTimeOffset(d),
+    () => {
+      _prevHistoric = '';
+      refresh();
+    },
+    onChange
+  );
 
   // Retour au présent → temps réel.
   timeTodayBtn.addEventListener('click', () => {

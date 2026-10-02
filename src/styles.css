@@ -570,6 +570,9 @@ button {
 }
 .tb-datetime {
   display: flex;
+  /* Le groupe julien (ligne 22.10) est plus long que le champ de date : il passe à la ligne
+     plutôt que d'être rogné quand la police est plus large (mesuré avec une police élargie). */
+  flex-wrap: wrap;
   align-items: center;
   justify-content: center;
   gap: var(--sp-2);
@@ -613,6 +616,41 @@ button {
 }
 .tb-input.is-ticking {
   animation: tb-tick 0.5s ease-out;
+}
+/* Avant 1582 : jour, mois, année, ère, et le calendrier nommé (ligne 22.10). */
+.tb-historic {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.15rem;
+  min-width: 0;
+  max-width: 100%;
+}
+.tb-historic[hidden] {
+  display: none;
+}
+.tb-input--hist {
+  font-size: 0.72rem;
+  color: var(--ink-dim);
+  padding: 0.18rem 0.25rem;
+}
+/* Les flèches d'un champ numérique prennent de la place : sans elles comptées, « 30 » était rogné
+   de 6 px (mesuré par l'audit à 390 px). */
+.tb-input--hist-day {
+  width: 5ch;
+}
+.tb-input--hist-year {
+  width: 7ch;
+}
+.tb-input--hist option {
+  background: var(--surface-solid, #111);
+  color: var(--ink);
+}
+.tb-calendar {
+  font-size: 0.62rem;
+  color: var(--ink-faint);
+  letter-spacing: 0.04em;
 }
 
 /* ============================================================================

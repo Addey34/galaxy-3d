@@ -827,6 +827,54 @@
                 data-i18n-title="time.wheelDate"
                 title="Wheel: ±1 day  ·  Click: pick the date"
               />
+              <!-- Avant le 15 octobre 1582 : la date en calendrier JULIEN, comme les historiens
+                   l'écrivent (ui/timePanel.ts, core/calendar.ts). Un champ de date de
+                   navigateur est grégorien et ne sait écrire ni une année négative ni le
+                   29 février 1500 : il se viderait sans un mot. -->
+              <span
+                id="historic-date"
+                class="tb-historic"
+                role="group"
+                aria-label="Date in the Julian calendar"
+                data-i18n-aria="time.historicGroup"
+                hidden
+              >
+                <input
+                  type="number"
+                  id="hist-day"
+                  class="tb-input tb-input--hist tb-input--hist-day"
+                  min="1"
+                  max="31"
+                  aria-label="Day"
+                  data-i18n-aria="time.histDay"
+                />
+                <select
+                  id="hist-month"
+                  class="tb-input tb-input--hist"
+                  aria-label="Month"
+                  data-i18n-aria="time.histMonth"
+                ></select>
+                <input
+                  type="number"
+                  id="hist-year"
+                  class="tb-input tb-input--hist tb-input--hist-year"
+                  min="1"
+                  aria-label="Year"
+                  data-i18n-aria="time.histYear"
+                />
+                <select
+                  id="hist-era"
+                  class="tb-input tb-input--hist"
+                  aria-label="Era"
+                  data-i18n-aria="time.histEra"
+                >
+                  <option value="ad">AD</option>
+                  <option value="bc">BC</option>
+                </select>
+                <span class="tb-calendar" data-i18n="time.julianCalendar"
+                  >Julian calendar</span
+                >
+              </span>
             </div>
           </div>
         </div>
