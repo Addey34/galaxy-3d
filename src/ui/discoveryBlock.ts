@@ -28,6 +28,13 @@ import {
   type SatelliteDiscovery,
 } from '@/core/discovery';
 import { formatIsoDay } from '@/core/dateText';
+import { loadNameAdoptions } from '@/config/nameAdoptions';
+import {
+  nextAdoption,
+  namesAdoptedAt,
+  type AdoptedCount,
+  type BodyAdoptions,
+} from '@/core/nameAdoption';
 import { getLocale, intlLocale, onLocaleChange, t } from '@/i18n';
 import { bodyDisplayName } from '@/i18n/bodyText';
 import type { PublicAPI } from '@/SolarSystemApp';
@@ -35,6 +42,30 @@ import type { BodyInfoPanel } from './bodyInfo';
 
 const formatDay = (iso: string): string =>
   formatIsoDay(iso, getLocale(), intlLocale());
+
+/** Une date d'adoption telle que l'UAI la publie : une année seule reste une année. */
+const formatAdoption = (on: string): string =>
+  /^\d{4}$/.test(on) ? on : formatDay(on);
+
+const formatCount = (n: number): string =>
+  new Intl.NumberFormat(intlLocale()).format(n);
+
+/** La ligne d'un compte borné, ou rien quand ce compte n'a pas de sujet (aucun lettré). */
+function countText(
+  count: AdoptedCount,
+  exact: 'bi.discovery.names' | 'bi.discovery.lettered',
+  range: 'bi.discovery.namesRange' | 'bi.discovery.letteredRange'
+): string {
+  if (count.total === 0) return '';
+  const total = formatCount(count.total);
+  return count.atLeast === count.atMost
+    ? t(exact, { count: formatCount(count.atLeast), total })
+    : t(range, {
+        min: formatCount(count.atLeast),
+        max: formatCount(count.atMost),
+        total,
+      });
+}
 
 /** Le nom court d'une source, un nom propre qui ne se traduit pas. */
 const SOURCE_LABEL: Record<DiscoveryClaim['source'], string> = {
@@ -123,7 +154,28 @@ export function setupDiscoveryBlock(
   const moonsEl = block?.querySelector<HTMLElement>('.bi-discovery-moons');
   const nextEl = block?.querySelector<HTMLElement>('.bi-discovery-next');
   const noteEl = block?.querySelector<HTMLElement>('.bi-discovery-note');
-  if (!block || !claimsEl || !standingEl || !moonsEl || !nextEl || !noteEl)
+  const namesEl = block?.querySelector<HTMLElement>('.bi-discovery-names');
+  const letteredEl = block?.querySelector<HTMLElement>(
+    '.bi-discovery-lettered'
+  );
+  const namesNextEl = block?.querySelector<HTMLElement>(
+    '.bi-discovery-names-next'
+  );
+  const namesNoteEl = block?.querySelector<HTMLElement>(
+    '.bi-discovery-names-note'
+  );
+  if (
+    !block ||
+    !claimsEl ||
+    !standingEl ||
+    !moonsEl ||
+    !nextEl ||
+    !noteEl ||
+    !namesEl ||
+    !letteredEl ||
+    !namesNextEl ||
+    !namesNoteEl
+  )
     return;
 
   let rendered: string | null = null;
@@ -133,6 +185,8 @@ export function setupDiscoveryBlock(
     satellites: readonly SatelliteDiscovery[];
     system: SatelliteSystemInfo;
   } | null = null;
+  /** Les noms de surface que l'UAI a adoptés, par date (front des noms de la ligne 22.10). */
+  let names: { adoptions: BodyAdoptions; accessed: string } | null = null;
   /** Comme dans `ui/missionsBlock.ts` : on ne retient que le cas VIDE, pour ne pas boucler. */
   let nothingToShow: string | null = null;
 
@@ -233,6 +287,42 @@ export function setupDiscoveryBlock(
       setLine(nextEl, '');
       setLine(noteEl, '');
     }
+    // LES NOMS OFFICIELS À CETTE DATE. Une date d'ADOPTION, pas de découverte : la note le dit,
+    // et les désignations lettrées sont comptées à part (`core/nameAdoption.ts`).
+    if (names) {
+      const { named, lettered } = namesAdoptedAt(names.adoptions, sceneDate);
+      setLine(
+        namesEl,
+        countText(named, 'bi.discovery.names', 'bi.discovery.namesRange')
+      );
+      setLine(
+        letteredEl,
+        countText(
+          lettered,
+          'bi.discovery.lettered',
+          'bi.discovery.letteredRange'
+        )
+      );
+      const next = nextAdoption(names.adoptions, sceneDate);
+      setLine(
+        namesNextEl,
+        next
+          ? t('bi.discovery.namesNext', {
+              date: formatAdoption(next[0]),
+              count: formatCount(next[1]),
+            })
+          : ''
+      );
+      setLine(
+        namesNoteEl,
+        t('bi.discovery.namesNote', { date: formatDay(names.accessed) })
+      );
+    } else {
+      setLine(namesEl, '');
+      setLine(letteredEl, '');
+      setLine(namesNextEl, '');
+      setLine(namesNoteEl, '');
+    }
     block.hidden = false;
     rendered = body;
     renderedDay = sceneDate.toISOString().slice(0, 10);
@@ -247,6 +337,7 @@ export function setupDiscoveryBlock(
       rendered = null;
       claims = null;
       system = null;
+      names = null;
       return;
     }
     if (nothingToShow === body) {
@@ -260,6 +351,7 @@ export function setupDiscoveryBlock(
       rendered = null;
       claims = null;
       system = null;
+      names = null;
       block.hidden = true;
     }
     if (claims) {
@@ -268,8 +360,12 @@ export function setupDiscoveryBlock(
     }
     if (pending === body) return;
     pending = body;
-    void Promise.all([loadDiscovery(body), loadSatelliteDiscoveries(body)])
-      .then(([found, satellites]) => {
+    void Promise.all([
+      loadDiscovery(body),
+      loadSatelliteDiscoveries(body),
+      loadNameAdoptions(body),
+    ])
+      .then(([found, satellites, adopted]) => {
         if (bodyInfo.currentBody() !== body) return;
         if (!found || found === 'notApplicable') {
           // Pas un corps du catalogue, ou la question n'a pas de sens (le Soleil, la Terre) :
@@ -281,6 +377,7 @@ export function setupDiscoveryBlock(
         }
         claims = found;
         system = satellites;
+        names = adopted;
         render(body, api.orbitalMechanics.simulationDate);
       })
       .finally(() => {

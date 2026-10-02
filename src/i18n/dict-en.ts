@@ -499,6 +499,17 @@ export const en = {
     'This count only includes the satellites the JPL Small-Body Database confirms today, read on {date}: a satellite announced then refuted is not in it, so this is not what was believed at the time.',
   'bi.discovery.moonsUnconfirmed':
     'Not counted, because the database lists them as unconfirmed: {names}.',
+  'bi.discovery.names':
+    'Surface names the IAU had made official at this date: {count} of {total}',
+  'bi.discovery.namesRange':
+    'Surface names the IAU had made official at this date: between {min} and {max} of {total}',
+  'bi.discovery.lettered':
+    'Lettered designations such as “Copernicus A” made official at this date: {count} of {total}',
+  'bi.discovery.letteredRange':
+    'Lettered designations such as “Copernicus A” made official at this date: between {min} and {max} of {total}',
+  'bi.discovery.namesNext': 'Next adoption: {date}, {count} more',
+  'bi.discovery.namesNote':
+    'Adoption dates from the IAU Gazetteer of Planetary Nomenclature, read on {date}: the date a name became official, not the date the feature was first seen or named.',
   'bi.missions.label': 'Missions',
   'bi.missions.countAtDate': '{count}, of which {active} at this date',
   'bi.missions.countAllAtDate': '{count}, all at this date',

@@ -467,6 +467,17 @@ export const fr: Record<MessageKey, string> = {
     'Ce compte ne retient que les satellites que la JPL Small-Body Database confirme aujourd’hui, lue le {date} : un satellite annoncé puis réfuté n’y figure pas, donc ce n’est pas ce que l’on croyait à l’époque.',
   'bi.discovery.moonsUnconfirmed':
     'Non comptés, parce que la base les dit non confirmés : {names}.',
+  'bi.discovery.names':
+    'Noms de surface que l’UAI avait rendus officiels à cette date : {count} sur {total}',
+  'bi.discovery.namesRange':
+    'Noms de surface que l’UAI avait rendus officiels à cette date : entre {min} et {max} sur {total}',
+  'bi.discovery.lettered':
+    'Désignations lettrées comme « Copernicus A » rendues officielles à cette date : {count} sur {total}',
+  'bi.discovery.letteredRange':
+    'Désignations lettrées comme « Copernicus A » rendues officielles à cette date : entre {min} et {max} sur {total}',
+  'bi.discovery.namesNext': 'Adoption suivante : {date}, {count} de plus',
+  'bi.discovery.namesNote':
+    'Dates d’adoption du Gazetteer of Planetary Nomenclature de l’UAI, lu le {date} : la date à laquelle un nom est devenu officiel, pas celle où la formation a été vue ou nommée pour la première fois.',
   'bi.missions.label': 'Missions',
   'bi.missions.countAtDate': '{count}, dont {active} à cette date',
   'bi.missions.countAllAtDate': '{count}, toutes à cette date',

@@ -397,6 +397,11 @@ export interface BootDynamicChunk {
  */
 export const NON_BOOT_CHUNKS: readonly BootDynamicChunk[] = [
   {
+    chunk: 'gazetteerAdoptionIndex',
+    reason:
+      "les dates d'adoption des noms de surface par l'UAI (ligne 22.10, front des noms) ne sont lues que par le bloc « Découverte » de la fiche, chargé à son ouverture (`config/nameAdoptions`). Comptées par corps et par date au générateur, pour que la fiche de la Lune n'ait pas à télécharger ses 9 087 noms pour répondre.",
+  },
+  {
     chunk: 'placeObservationIndex',
     reason:
       "l'index des formations observées (ligne 40.3) n'est lu que par le bloc « Formations observées » de la fiche, chargé à son ouverture (`config/placeObservations`). Les observations elles-mêmes ne sont pas dans le bundle : elles vivent en MORCEAUX servis formation par formation, parce que le fichier entier de la Lune ferait payer des milliers de formations qu'on ne lit pas.",
