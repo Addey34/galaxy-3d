@@ -8,7 +8,11 @@
  *     l'ouverture de la fiche de ce parent, à une adresse ABSOLUE, parce que le corps est porté
  *     par le chemin de l'URL (`/jupiter`) et qu'une adresse relative y rendrait 404.
  */
-import type { DiscoveryClaim, SatelliteDiscovery } from '@/core/discovery';
+import type {
+  DiscoveryClaim,
+  RefutedClaim,
+  SatelliteDiscovery,
+} from '@/core/discovery';
 import Logger from '@/utils/Logger';
 
 /** Une source citée par les affirmations, telle que l'index la décrit. */
@@ -22,7 +26,10 @@ interface DiscoveryIndex {
   readonly sources: Record<string, DiscoverySourceInfo>;
   readonly bodies: Record<
     string,
-    | { readonly claims: readonly DiscoveryClaim[] }
+    | {
+        readonly claims: readonly DiscoveryClaim[];
+        readonly refuted?: readonly RefutedClaim[];
+      }
     | { readonly notApplicable: true }
   >;
   readonly systems: Record<string, SatelliteSystemInfo>;
@@ -77,6 +84,19 @@ export async function loadDiscovery(
   const entry = loaded?.bodies[body];
   if (!entry) return null;
   return 'notApplicable' in entry ? 'notApplicable' : entry.claims;
+}
+
+/**
+ * Les croyances réfutées que l'index déclare pour ce corps (ligne 22.10, front des croyances),
+ * ou une liste vide : la plupart des corps n'en ont pas, et la raison des cas non couverts est
+ * écrite dans `scripts/discovery-targets.json`.
+ */
+export async function loadRefutedClaims(
+  body: string
+): Promise<readonly RefutedClaim[]> {
+  const loaded = await loadDiscoveryIndex();
+  const entry = loaded?.bodies[body];
+  return entry && 'claims' in entry ? (entry.refuted ?? []) : [];
 }
 
 const systems = new Map<string, readonly SatelliteDiscovery[]>();

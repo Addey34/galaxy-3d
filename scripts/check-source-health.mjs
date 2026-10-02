@@ -258,6 +258,9 @@ export function derivedSources() {
       const url = claim.url.split('#')[0];
       urls.add(url === SBDB_PAGE ? SBDB_API : url);
     }
+  // Les articles des croyances réfutées (ligne 22.10, front des croyances).
+  for (const entry of Object.values(discovery.bodies ?? {}))
+    for (const claim of entry.refuted ?? []) urls.add(claim.url);
   // Et chaque liste de satellites, qui DÉCLARE sa source (ligne 22.10, pas 2).
   for (const system of Object.values(discovery.systems ?? {})) {
     const url = system.url.split('#')[0];

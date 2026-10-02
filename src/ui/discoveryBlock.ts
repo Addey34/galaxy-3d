@@ -16,15 +16,18 @@
  */
 import {
   loadDiscovery,
+  loadRefutedClaims,
   loadSatelliteDiscoveries,
   type SatelliteSystemInfo,
 } from '@/config/discovery';
 import {
   discoveryStanding,
   nextSatelliteDiscovery,
+  refutedStanding,
   satellitesKnownAt,
   type DiscoveryClaim,
   type DiscoveryStanding,
+  type RefutedClaim,
   type SatelliteDiscovery,
 } from '@/core/discovery';
 import { formatIsoDay } from '@/core/dateText';
@@ -154,6 +157,7 @@ export function setupDiscoveryBlock(
   const moonsEl = block?.querySelector<HTMLElement>('.bi-discovery-moons');
   const nextEl = block?.querySelector<HTMLElement>('.bi-discovery-next');
   const noteEl = block?.querySelector<HTMLElement>('.bi-discovery-note');
+  const refutedEl = block?.querySelector<HTMLElement>('.bi-discovery-refuted');
   const namesEl = block?.querySelector<HTMLElement>('.bi-discovery-names');
   const letteredEl = block?.querySelector<HTMLElement>(
     '.bi-discovery-lettered'
@@ -171,6 +175,7 @@ export function setupDiscoveryBlock(
     !moonsEl ||
     !nextEl ||
     !noteEl ||
+    !refutedEl ||
     !namesEl ||
     !letteredEl ||
     !namesNextEl ||
@@ -185,6 +190,8 @@ export function setupDiscoveryBlock(
     satellites: readonly SatelliteDiscovery[];
     system: SatelliteSystemInfo;
   } | null = null;
+  /** Les croyances réfutées que l'index déclare (front des croyances de la ligne 22.10). */
+  let refuted: readonly RefutedClaim[] = [];
   /** Les noms de surface que l'UAI a adoptés, par date (front des noms de la ligne 22.10). */
   let names: { adoptions: BodyAdoptions; accessed: string } | null = null;
   /** Comme dans `ui/missionsBlock.ts` : on ne retient que le cas VIDE, pour ne pas boucler. */
@@ -287,6 +294,52 @@ export function setupDiscoveryBlock(
       setLine(nextEl, '');
       setLine(noteEl, '');
     }
+    // CE QU'ON A SIGNALÉ PUIS CHERCHÉ SANS LE TROUVER, selon la date de la scène. Chaque phrase
+    // vient d'une citation vérifiée par le générateur ; rien sur la fin de la croyance, que la
+    // source ne date pas.
+    refutedEl.replaceChildren();
+    for (const claim of refuted) {
+      const at = refutedStanding(claim, sceneDate);
+      if (at === 'notYetReported') continue;
+      const sentences =
+        at === 'reportedThatYear'
+          ? [
+              t('bi.discovery.refutedThatYear', {
+                year: claim.reported.year,
+                who: claim.reported.who,
+              }),
+            ]
+          : [
+              t('bi.discovery.refutedReported', {
+                year: claim.reported.year,
+                who: claim.reported.who,
+                others: claim.later.who,
+              }),
+              ...(at === 'searched'
+                ? [
+                    t('bi.discovery.refutedSearched', {
+                      date: formatDay(claim.notFound.on),
+                      radius: new Intl.NumberFormat(intlLocale()).format(
+                        claim.notFound.radiusKm
+                      ),
+                    }),
+                  ]
+                : []),
+            ];
+      refutedEl.append(document.createTextNode(`${sentences.join(' ')} `));
+      const source = document.createElement('a');
+      source.className = 'bi-discovery-source';
+      source.href = claim.url;
+      source.target = '_blank';
+      source.rel = 'noopener noreferrer';
+      source.textContent = t('bi.discovery.according', {
+        source: `${claim.cite} (arXiv)`,
+        date: formatDay(claim.retrieved),
+      });
+      refutedEl.append(source);
+    }
+    refutedEl.hidden = refutedEl.childNodes.length === 0;
+
     // LES NOMS OFFICIELS À CETTE DATE. Une date d'ADOPTION, pas de découverte : la note le dit,
     // et les désignations lettrées sont comptées à part (`core/nameAdoption.ts`).
     if (names) {
@@ -338,6 +391,7 @@ export function setupDiscoveryBlock(
       claims = null;
       system = null;
       names = null;
+      refuted = [];
       return;
     }
     if (nothingToShow === body) {
@@ -352,6 +406,7 @@ export function setupDiscoveryBlock(
       claims = null;
       system = null;
       names = null;
+      refuted = [];
       block.hidden = true;
     }
     if (claims) {
@@ -364,8 +419,9 @@ export function setupDiscoveryBlock(
       loadDiscovery(body),
       loadSatelliteDiscoveries(body),
       loadNameAdoptions(body),
+      loadRefutedClaims(body),
     ])
-      .then(([found, satellites, adopted]) => {
+      .then(([found, satellites, adopted, beliefs]) => {
         if (bodyInfo.currentBody() !== body) return;
         if (!found || found === 'notApplicable') {
           // Pas un corps du catalogue, ou la question n'a pas de sens (le Soleil, la Terre) :
@@ -378,6 +434,7 @@ export function setupDiscoveryBlock(
         claims = found;
         system = satellites;
         names = adopted;
+        refuted = beliefs;
         render(body, api.orbitalMechanics.simulationDate);
       })
       .finally(() => {

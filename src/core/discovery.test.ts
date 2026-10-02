@@ -2,8 +2,10 @@ import { describe, expect, it } from 'vitest';
 import {
   discoveryStanding,
   nextSatelliteDiscovery,
+  refutedStanding,
   satellitesKnownAt,
   type DiscoveryClaim,
+  type RefutedClaim,
   type SatelliteDiscovery,
 } from './discovery';
 
@@ -149,5 +151,29 @@ describe('nextSatelliteDiscovery', () => {
 
   it('rend null quand tout est déjà vu', () => {
     expect(nextSatelliteDiscovery(jupiterMoons, at('2026-01-01'))).toBeNull();
+  });
+});
+
+describe('une croyance réfutée à une date', () => {
+  const venus: RefutedClaim = {
+    subject: 'satellite',
+    source: 'arxiv-0906.2781',
+    url: 'https://arxiv.org/abs/0906.2781',
+    retrieved: '2026-10-02',
+    reported: { year: 1645, who: 'F. Fontana' },
+    later: { who: 'G. Cassini' },
+    notFound: { on: '2009-06-15', radiusKm: 0.3 },
+    cite: 'Sheppard & Trujillo',
+  };
+  it('ne dit rien avant le premier signalement', () => {
+    expect(refutedStanding(venus, at('1644-12-31'))).toBe('notYetReported');
+  });
+  it('ne prétend pas savoir le jour d’un signalement daté à l’année', () => {
+    expect(refutedStanding(venus, at('1645-06-01'))).toBe('reportedThatYear');
+  });
+  it('dit le signalement, puis la recherche à partir du jour où elle est publique', () => {
+    expect(refutedStanding(venus, at('1700-01-01'))).toBe('reported');
+    expect(refutedStanding(venus, at('2009-06-14'))).toBe('reported');
+    expect(refutedStanding(venus, at('2009-06-15'))).toBe('searched');
   });
 });

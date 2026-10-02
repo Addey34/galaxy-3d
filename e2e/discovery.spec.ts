@@ -266,6 +266,60 @@ test('la Lune : les désignations lettrées comptées à part des noms propres',
   );
 });
 
+/**
+ * LIGNE 22.10, FRONT DES CROYANCES : ce qu'on a signalé autour de Vénus, puis cherché sans le
+ * trouver. Les années et les noms sont LUS dans l'index, que le générateur n'a écrit qu'après
+ * avoir retrouvé chacun dans une citation du PDF. Vénus boote par son CHEMIN, pour que le lien
+ * de la source soit éprouvé là où une adresse relative casserait.
+ */
+test('Vénus : le satellite signalé dès 1645, puis la recherche qui n’en trouve aucun', async ({
+  page,
+}) => {
+  const index = JSON.parse(
+    readFileSync(resolve(ROOT, 'src/config/discoveryIndex.json'), 'utf-8')
+  ) as {
+    bodies: {
+      venus: {
+        refuted: {
+          url: string;
+          reported: { year: number; who: string };
+          later: { who: string };
+          notFound: { on: string; radiusKm: number };
+        }[];
+      };
+    };
+  };
+  const [claim] = index.bodies.venus.refuted;
+  const refuted = (p: Page) => block(p).locator('.bi-discovery-refuted');
+  const { year, who } = claim!.reported;
+
+  await boot(page, `venus/?date=${year - 45}-06-01T12:00:00Z`);
+  await expect(block(page)).toBeVisible({ timeout: 15_000 });
+  await expect(refuted(page)).toBeHidden();
+
+  await boot(page, `venus/?date=${year}-06-01T12:00:00Z`);
+  await expect(refuted(page)).toHaveText(
+    new RegExp(
+      `^In ${year}, the year of the scene, ${who} reports a possible satellite`
+    ),
+    { timeout: 15_000 }
+  );
+
+  await boot(page, 'venus/?date=1700-06-01T12:00:00Z');
+  await expect(refuted(page)).toContainText(
+    `from ${year} by ${who}, then several more times by other observers, including ${claim!.later.who}.`,
+    { timeout: 15_000 }
+  );
+  await expect(refuted(page)).not.toContainText('found none');
+  await expect(refuted(page).locator('a')).toHaveAttribute('href', claim!.url);
+
+  await boot(page, 'venus/?date=2010-06-01T12:00:00Z');
+  await expect(refuted(page)).toContainText(
+    `A survey submitted on ${new Intl.DateTimeFormat('en-US', { dateStyle: 'long', timeZone: 'UTC' }).format(new Date(claim!.notFound.on))} found none, down to about ${claim!.notFound.radiusKm} km in radius.`,
+    { timeout: 15_000 }
+  );
+});
+
 test('la Terre n’affiche aucun bloc, et revenir sur Titan le réaffiche', async ({
   page,
 }) => {

@@ -25,6 +25,11 @@
    "publisher": "NASA Science",
    "title": "Comet 1P/Halley",
    "url": "https://science.nasa.gov/solar-system/comets/1p-halley/"
+  },
+  "arxiv-0906.2781": {
+   "publisher": "arXiv",
+   "title": "A Survey for Satellites of Venus (Sheppard & Trujillo)",
+   "url": "https://arxiv.org/abs/0906.2781"
   }
  },
  "bodies": {
@@ -786,6 +791,26 @@
      "form": "prehistoric",
      "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/venusfact.html",
      "retrieved": "2026-09-28"
+    }
+   ],
+   "refuted": [
+    {
+     "subject": "satellite",
+     "source": "arxiv-0906.2781",
+     "url": "https://arxiv.org/abs/0906.2781",
+     "retrieved": "2026-10-02",
+     "reported": {
+      "year": 1645,
+      "who": "F. Fontana"
+     },
+     "later": {
+      "who": "G. Cassini"
+     },
+     "notFound": {
+      "on": "2009-06-15",
+      "radiusKm": 0.3
+     },
+     "cite": "Sheppard & Trujillo"
     }
    ]
   },
