@@ -1,5 +1,4 @@
 import { expect, test, type Page } from '@playwright/test';
-import { clickWhenCalm } from './mainThread';
 import { blockExternalNetwork } from './netBlock';
 
 test.beforeEach(async ({ page }) => {
@@ -43,9 +42,7 @@ test('selection, information panel and target semantics survive both mode switch
   const info = page.locator('#body-info');
   await expect(info).toBeVisible();
 
-  // Le vol vers la Terre occupe encore le thread : la classe corrigée à la ligne 44.2 (passé
-  // seulement au réessai le 2026-10-02, run 36990394230, « waiting for scheduled navigations »).
-  await clickWhenCalm(page, page.locator('.mode-btn[data-mode="explo"]'));
+  await page.locator('.mode-btn[data-mode="explo"]').click();
   await expect(page.locator('body')).toHaveClass(/is-explo-mode/);
   await expect(info).toBeVisible();
   await expect(info.locator('.bi-name')).toHaveText('Earth');
@@ -57,7 +54,7 @@ test('selection, information panel and target semantics survive both mode switch
     'rgba(0, 0, 0, 0)'
   );
 
-  await clickWhenCalm(page, page.locator('.mode-btn[data-mode="educ"]'));
+  await page.locator('.mode-btn[data-mode="educ"]').click();
   await expect(page.locator('#explo-labels')).toHaveClass(/is-educ-mode/);
   await expect(info).toBeVisible();
   await expect(target.locator('.explo-label-text')).toBeHidden();
