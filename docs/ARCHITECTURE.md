@@ -1034,6 +1034,32 @@ horloge y va. Au passage, un défaut que la profondeur a rendu ordinaire : le ch
 `500-05-14` pour l'an 500, que le navigateur refuse, et il se vidait sans un mot
 (`src/ui/dateField.ts`).
 
+**Avant l'an 1 (ligne 22.10, front des années avant J.-C., pas 1, 2026-10-02).** Les tranches
+remontent désormais jusqu'en **9998 av. J.-C.** (année astronomique -9997). L'API répond au jour
+julien NÉGATIF et refuse avant ce qu'elle annonce elle-même, « prior to B.C. 9999-MAR-21 » : pour
+tous les corps et les deux centres, et dans le calendrier JULIEN qu'Horizons emploie avant 1582.
+Le « 15 mars » écrit plus haut au lot 39 n'avait jamais été mesuré ; il est corrigé. Cent lignes
+nouvelles, toutes profondes, et les lignes déjà publiées sont inchangées.
+
+**Le témoin ΔT.** Chaque écart compare deux positions à un même Temps universel, que chaque côté
+convertit avec son propre ΔT : Horizons le sien (il le publie, quantité 30 de ses tables
+d'observation, « TDB-UT »), l'application celui de `core/timeScale.ts`. Avant l'époque des
+observations, aucun des deux n'est une mesure. Le script mesure leur désaccord au milieu de chaque
+tranche et le publie (`deep.deltaT` du résumé, tableau de `/methodology`) : il entre dans l'écart
+sans être une erreur de position. Pour le futur, les deux figent ΔT à sa valeur actuelle, donc
+leur accord ne dit rien de la rotation réelle de la Terre, et la page le dit.
+
+**Quatre défauts des années négatives, trouvés avant de livrer** : le script coupait
+« -001000-01-01 » en « -001000-01 » (`slice(0, 10)`) ; `/methodology` lisait l'année « -001 »
+(`slice(0, 4)`) ; la page ET la garde du pavage triaient des dates comme des chaînes, où
+« -001000 » passe avant « -009997 » ; et la fiche comparait l'an 1 à 1901, `Date.UTC` plaçant les
+années 0 à 99 en 1900-1999. La fiche écrit une tranche avant l'ère en années av. J.-C. (« 1001
+av. J.-C. »), jamais « -1000 », parce que le permalien sait déjà ouvrir une telle date.
+
+**Ce qui reste, et pourquoi c'est l'étape suivante** : le champ de date ne sait toujours pas
+écrire une année négative, donc un visiteur ne peut y venir que par un lien. L'interface, le
+calendrier affiché et la précision promise se décident sur cette mesure, pas avant.
+
 Gardes : `src/config/deepTimeWindows.test.ts` (les corps mesurés sont ceux qui se déclarent, la
 cible interrogée est la cible déclarée, la règle du centième rejouée sur la donnée livrée, le
 pavage sans trou de l'an 1 à l'an 9999), `src/core/positionProvenance.test.ts` (le trou est
