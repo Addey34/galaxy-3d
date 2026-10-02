@@ -104,6 +104,11 @@ export interface ValidationSummary {
     witnessFrom: string;
     witnessTo: string;
     bodies: Record<string, DeepReference>;
+    /**
+     * Le désaccord des deux ΔT au milieu de chaque tranche profonde (ligne 22.10) : celui
+     * d'Horizons (« TDB-UT ») et celui de l'application (`core/timeScale.ts`), en secondes.
+     */
+    deltaT?: { year: number; horizonsS: number; galaxyS: number }[];
   };
   rows: ValidationRow[];
 }
@@ -195,7 +200,18 @@ function q(value: number | null | undefined, locale: DocLocale): string {
  * « de l'an 0001 à l'an 9999 » se lit mal. La fiche écrit déjà « 1 » de son côté
  * (`ui/bodyInfo`), et les deux ne peuvent pas diverger.
  */
-const year = (iso: string): string => String(Number(iso.slice(0, 4)));
+const year = (iso: string): string => String(yearNumber(iso));
+
+/**
+ * L'année ASTRONOMIQUE d'une date ISO, signe compris. `slice(0, 4)` rendait « -001 » pour
+ * « -001000-01-01 », que `toISOString` écrit pour une année avant l'an 1 (front des années avant
+ * J.-C., ligne 22.10). L'année 0 est 1 av. J.-C., l'année -1000 est 1001 av. J.-C.
+ */
+const yearNumber = (iso: string): number =>
+  Number(/^([+-]?\d+)-\d{2}-\d{2}/.exec(iso)?.[1] ?? Number.NaN);
+
+/** Trier des dates ISO comme des DATES : « -001000 » passe avant « -009997 » en ordre de chaîne. */
+const isoTime = (iso: string): number => Date.parse(`${iso}T00:00:00Z`);
 
 /**
  * Valeur EXACTE (un pas en jours, une constante), seulement le separateur decimal traduit.
@@ -379,9 +395,20 @@ function methodologyPage(input: MethodologyInput, locale: DocLocale): DocPage {
     .filter(([, cfg]) => educationalParentOrbitScale(cfg) > 1)
     .map(([parentName]) => parentName);
 
+  /**
+   * Une année telle qu'un lecteur l'écrit : « 9998 av. J.-C. » pour l'année astronomique -9997.
+   * Les dates restent dans le calendrier grégorien prolongé dans le passé, et la page le dit.
+   */
+  const yearText = (iso: string): string => {
+    const n = yearNumber(iso);
+    return n >= 1
+      ? String(n)
+      : `${1 - n} ${L({ en: 'BC', fr: 'av. J.-C.', es: 'a. C.', 'pt-BR': 'a.C.' })}`;
+  };
+
   /** Libellé d'une fenêtre de mesure, dans la langue de la page. */
   const windowLabel = (r: ValidationRow): string => {
-    const span = `${year(r.windowFrom)}–${year(r.windowTo)}`;
+    const span = `${yearText(r.windowFrom)}–${yearText(r.windowTo)}`;
     const clipped = r.windowClipped
       ? L({
           en: ' (limited to Horizons coverage)',
@@ -961,12 +988,13 @@ function methodologyPage(input: MethodologyInput, locale: DocLocale): DocPage {
     // Trier les DATES, pas les objets : `[...deepRows].sort()` compare des « [object Object] »
     // et rend donc le premier élément dans l'ordre d'émission, ce qui n'est juste que par
     // accident. Défaut trouvé en relisant le lot 39 après sa fusion.
-    const firstYear = year(deepRows.map((r) => r.windowFrom).sort()[0] ?? '');
-    const lastYear = year(
-      deepRows
-        .map((r) => r.windowTo)
-        .sort()
-        .at(-1) ?? ''
+    const byTime = (dates: string[]): string[] =>
+      [...dates].sort((a, b) => isoTime(a) - isoTime(b));
+    const firstYear = yearText(
+      byTime(deepRows.map((r) => r.windowFrom))[0] ?? ''
+    );
+    const lastYear = yearText(
+      byTime(deepRows.map((r) => r.windowTo)).at(-1) ?? ''
     );
     const substituted = Object.entries(summary.deep?.bodies ?? {});
     // Corps où Horizons n'est pas d'accord avec lui-même : le plancher du chemin réel dépasse
@@ -1170,6 +1198,81 @@ function methodologyPage(input: MethodologyInput, locale: DocLocale): DocPage {
       ]),
       2
     );
+    // AVANT L'AN 1, ET CE QUE L'HORLOGE NE SAIT PAS (ligne 22.10). Tout est dérivé du résumé :
+    // le désaccord des deux ΔT, une date au milieu de chaque tranche.
+    const deltaT = summary.deep?.deltaT ?? [];
+    const yearOfNumber = (n: number): string =>
+      n >= 1
+        ? String(n)
+        : `${1 - n} ${L({ en: 'BC', fr: 'av. J.-C.', es: 'a. C.', 'pt-BR': 'a.C.' })}`;
+    const hours = (d: { horizonsS: number; galaxyS: number }): string =>
+      num(Math.abs(d.horizonsS - d.galaxyS) / 3600);
+    const worst = deltaT.reduce<(typeof deltaT)[number] | null>(
+      (w, d) =>
+        !w ||
+        Math.abs(d.horizonsS - d.galaxyS) > Math.abs(w.horizonsS - w.galaxyS)
+          ? d
+          : w,
+      null
+    );
+    const deltaTSection =
+      deltaT.length === 0 || !worst
+        ? ''
+        : `<p>${L({
+            en: `Before year 1, a year is written BC: the astronomical year 0 is 1 BC, and the year -1000 is 1001 BC. Every date in the app is in the Gregorian calendar extended into the past, whereas historians date antiquity in the Julian calendar, which Horizons itself uses to print its dates before 1582. The same day therefore carries two different dates, and the gap grows the further back one goes.`,
+            fr: `Avant l’an 1, une année s’écrit avant J.-C. : l’année astronomique 0 est 1 av. J.-C., et l’année -1000 est 1001 av. J.-C. Toutes les dates de l’application sont dans le calendrier grégorien prolongé dans le passé, alors que les historiens datent l’Antiquité dans le calendrier julien, qu’Horizons emploie lui-même pour imprimer ses dates d’avant 1582. Un même jour porte donc deux dates différentes, et l’écart grandit à mesure qu’on remonte.`,
+            es: `Antes del año 1, un año se escribe antes de Cristo: el año astronómico 0 es 1 a. C., y el año -1000 es 1001 a. C. Todas las fechas de la aplicación están en el calendario gregoriano prolongado hacia el pasado, mientras que los historiadores fechan la Antigüedad en el calendario juliano, que Horizons emplea él mismo para imprimir sus fechas anteriores a 1582. Un mismo día lleva por tanto dos fechas distintas, y la diferencia crece cuanto más se retrocede.`,
+            'pt-BR': `Antes do ano 1, um ano se escreve antes de Cristo: o ano astronômico 0 é 1 a.C., e o ano -1000 é 1001 a.C. Todas as datas do aplicativo estão no calendário gregoriano estendido para o passado, enquanto os historiadores datam a Antiguidade no calendário juliano, que a própria Horizons emprega para imprimir as suas datas anteriores a 1582. Um mesmo dia leva portanto duas datas diferentes, e a diferença cresce quanto mais se recua.`,
+          })}</p><p>${L({
+            en: `Each gap above compares two positions at the same Universal Time. Each side converts that time into dynamical time with its own ΔT, which follows the slowing of the Earth’s rotation. Before the age of observations ΔT is not measured: both values are extrapolations, and their disagreement enters the gap without being a position error. It is measured here in the middle of each window; around ${yearOfNumber(worst.year)}, it reaches ${hours(worst)} h. For the future, both sides freeze ΔT at today’s value, so their agreement says nothing about the Earth’s actual rotation.`,
+            fr: `Chaque écart ci-dessus compare deux positions à un même Temps universel. Chaque côté convertit ce temps en temps dynamique avec son propre ΔT, qui suit le ralentissement de la rotation de la Terre. Avant l’époque des observations, ΔT n’est pas mesuré : les deux valeurs sont des extrapolations, et leur désaccord entre dans l’écart sans être une erreur de position. Il est mesuré ici au milieu de chaque fenêtre ; vers ${yearOfNumber(worst.year)}, il atteint ${hours(worst)} h. Pour le futur, les deux côtés figent ΔT à sa valeur actuelle : leur accord ne dit donc rien de la rotation réelle de la Terre.`,
+            es: `Cada diferencia de arriba compara dos posiciones en un mismo Tiempo universal. Cada lado convierte ese tiempo en tiempo dinámico con su propio ΔT, que sigue la desaceleración de la rotación de la Tierra. Antes de la época de las observaciones, ΔT no está medido: los dos valores son extrapolaciones, y su desacuerdo entra en la diferencia sin ser un error de posición. Se mide aquí en el centro de cada ventana; hacia ${yearOfNumber(worst.year)}, alcanza ${hours(worst)} h. Para el futuro, los dos lados congelan ΔT en su valor actual: su acuerdo no dice nada de la rotación real de la Tierra.`,
+            'pt-BR': `Cada diferença acima compara duas posições num mesmo Tempo universal. Cada lado converte esse tempo em tempo dinâmico com o seu próprio ΔT, que acompanha a desaceleração da rotação da Terra. Antes da época das observações, ΔT não é medido: os dois valores são extrapolações, e o seu desacordo entra na diferença sem ser um erro de posição. Ele é medido aqui no meio de cada janela; por volta de ${yearOfNumber(worst.year)}, chega a ${hours(worst)} h. Para o futuro, os dois lados congelam ΔT no seu valor atual: o acordo entre eles não diz nada da rotação real da Terra.`,
+          })}</p><details class="doc-details"><summary>${escapeHtml(
+            L({
+              en: 'ΔT of JPL Horizons and of the app, in the middle of each window',
+              fr: 'ΔT de JPL Horizons et de l’application, au milieu de chaque fenêtre',
+              es: 'ΔT de JPL Horizons y de la aplicación, en el centro de cada ventana',
+              'pt-BR':
+                'ΔT da JPL Horizons e do aplicativo, no meio de cada janela',
+            })
+          )} (${deltaT.length})</summary>${docTable(
+            L({
+              en: 'ΔT, in seconds, and their disagreement',
+              fr: 'ΔT, en secondes, et leur désaccord',
+              es: 'ΔT, en segundos, y su desacuerdo',
+              'pt-BR': 'ΔT, em segundos, e o seu desacordo',
+            }),
+            [
+              L({ en: 'Year', fr: 'Année', es: 'Año', 'pt-BR': 'Ano' }),
+              L({
+                en: 'JPL Horizons (TDB−UT)',
+                fr: 'JPL Horizons (TDB−UT)',
+                es: 'JPL Horizons (TDB−UT)',
+                'pt-BR': 'JPL Horizons (TDB−UT)',
+              }),
+              L({
+                en: 'The app (TT−UT)',
+                fr: 'L’application (TT−UT)',
+                es: 'La aplicación (TT−UT)',
+                'pt-BR': 'O aplicativo (TT−UT)',
+              }),
+              L({
+                en: 'Disagreement (h)',
+                fr: 'Désaccord (h)',
+                es: 'Desacuerdo (h)',
+                'pt-BR': 'Desacordo (h)',
+              }),
+            ],
+            deltaT.map((d) => [
+              escapeHtml(yearOfNumber(d.year)),
+              num(d.horizonsS),
+              num(d.galaxyS),
+              hours(d),
+            ]),
+            1
+          )}</details>`;
+
     sections.push(
       docSection(
         'depth-of-time',
@@ -1185,11 +1288,12 @@ function methodologyPage(input: MethodologyInput, locale: DocLocale): DocPage {
           es: `El reloj acepta cualquier fecha, y la aplicación lo decía honestamente: fuera de las ventanas medidas más arriba, una ficha muestra «diferencia con JPL Horizons no medida en esta fecha». Ahora está medida, milenio a milenio, del año ${firstYear} al año ${lastYear}: ${deepPublished.length} ventanas sobre ${deepBodies} cuerpos. Nada cambió en la interfaz. La ficha ya nombraba la ventana junto a la cifra; ahora tiene una que nombrar.`,
           'pt-BR': `O relógio aceita qualquer data, e o aplicativo dizia isso honestamente: fora das janelas medidas acima, uma ficha mostra “diferença para a JPL Horizons não medida nesta data”. Agora ela está medida, milênio a milênio, do ano ${firstYear} ao ano ${lastYear}: ${deepPublished.length} janelas sobre ${deepBodies} corpos. Nada mudou na interface. A ficha já nomeava a janela ao lado do número; agora ela tem uma para nomear.`,
         })}</p><p>${L({
-          en: `Two measured limits close that window, and neither one is a choice. The Horizons API serves the bodies of the DE441 planetary ephemeris from 15 March 9999 BC to 30 December 9999 AD, and refuses anything beyond. And an HTML date field cannot write a negative year, so the app cannot display a date before year 1, even though its clock reaches one.`,
-          fr: `Deux bornes mesurées ferment cette fenêtre, et aucune n’est un choix. L’API Horizons sert les corps de l’éphéméride planétaire DE441 du 15 mars 9999 av. J.-C. au 30 décembre 9999, et refuse au-delà. Et un champ de date HTML ne sait pas écrire une année négative : l’application ne peut donc pas afficher une date avant l’an 1, même si son horloge y va.`,
-          es: `Dos límites medidos cierran esa ventana, y ninguno es una elección. La API Horizons sirve los cuerpos de la efeméride planetaria DE441 del 15 de marzo de 9999 a. C. al 30 de diciembre de 9999, y rechaza más allá. Y un campo de fecha HTML no sabe escribir un año negativo: la aplicación no puede mostrar una fecha anterior al año 1, aunque su reloj llegue allí.`,
-          'pt-BR': `Dois limites medidos fecham essa janela, e nenhum deles é uma escolha. A API Horizons serve os corpos da efeméride planetária DE441 de 15 de março de 9999 a.C. a 30 de dezembro de 9999, e recusa além disso. E um campo de data HTML não sabe escrever um ano negativo: o aplicativo não pode mostrar uma data anterior ao ano 1, embora o seu relógio chegue lá.`,
+          en: `Two measured limits close that window, and neither one is a choice. The Horizons API serves the bodies of the DE441 planetary ephemeris from 21 March 9999 BC (a date in the Julian calendar, which is how Horizons prints it) to 30 December 9999 AD, and refuses anything beyond. And an HTML date field cannot write a negative year, so the app cannot display a date before year 1, even though its clock reaches one.`,
+          fr: `Deux bornes mesurées ferment cette fenêtre, et aucune n’est un choix. L’API Horizons sert les corps de l’éphéméride planétaire DE441 du 21 mars 9999 av. J.-C. (une date du calendrier julien, celui dans lequel Horizons l’imprime) au 30 décembre 9999, et refuse au-delà. Et un champ de date HTML ne sait pas écrire une année négative : l’application ne peut donc pas afficher une date avant l’an 1, même si son horloge y va.`,
+          es: `Dos límites medidos cierran esa ventana, y ninguno es una elección. La API Horizons sirve los cuerpos de la efeméride planetaria DE441 del 21 de marzo de 9999 a. C. (una fecha del calendario juliano, en el que Horizons la imprime) al 30 de diciembre de 9999, y rechaza más allá. Y un campo de fecha HTML no sabe escribir un año negativo: la aplicación no puede mostrar una fecha anterior al año 1, aunque su reloj llegue allí.`,
+          'pt-BR': `Dois limites medidos fecham essa janela, e nenhum deles é uma escolha. A API Horizons serve os corpos da efeméride planetária DE441 de 21 de março de 9999 a.C. (uma data do calendário juliano, no qual a Horizons a imprime) a 30 de dezembro de 9999, e recusa além disso. E um campo de data HTML não sabe escrever um ano negativo: o aplicativo não pode mostrar uma data anterior ao ano 1, embora o seu relógio chegue lá.`,
         })}</p>` +
+          deltaTSection +
           `<details class="doc-details"><summary>${escapeHtml(
             L({
               en: 'Gap to JPL Horizons, millennium by millennium',

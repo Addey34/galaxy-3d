@@ -696,7 +696,11 @@ describe('affirmations de /methodology confrontées au code', () => {
         !(r.provider === 'horizons-binary' && spacecraft.has(r.body))
     ).length;
     expect(expected).toBeGreaterThan(100);
-    expect(details).toBe(expected);
+    // Plus le tableau du témoin ΔT des époques profondes (ligne 22.10), une ligne par tranche.
+    const deltaT =
+      (summary.deep as { deltaT?: unknown[] } | undefined)?.deltaT?.length ?? 0;
+    expect(deltaT).toBeGreaterThan(0);
+    expect(details).toBe(expected + deltaT);
   });
 });
 

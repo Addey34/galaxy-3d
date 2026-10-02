@@ -987,7 +987,7 @@ fiche nommait déjà la fenêtre à côté du chiffre.
 
 **Ce que l'API sert, mesuré et non supposé.** Le centre d'une planète vient d'une théorie de
 satellites bornée, donc Horizons le refuse avant 1600 (Saturne 1749, Neptune et Pluton 1800).
-Le **barycentre** du système, lui, vient de DE441 et va du 9999-MAR-15 av. J.-C. au
+Le **barycentre** du système, lui, vient de DE441 et va du 9999-MAR-21 av. J.-C. (calendrier julien ; « 15 mars », écrit ici au lot 39, n'avait jamais été mesuré, corrigé le 2026-10-02) au
 9999-DEC-30. Mercure, Vénus, la Terre et la Lune sont dans DE441 même : leur cible profonde
 EST le corps. D'où une substitution, déclarée par corps dans `scripts/validation-targets.json`
 et jamais devinée par le script. Un corps sans déclaration n'a pas de profondeur : les petits

@@ -194,15 +194,36 @@ export interface PositionProvenanceView {
  */
 function windowYears(from: number, toExclusive: number): [string, string] {
   const startYear = new Date(from).getUTCFullYear();
-  const nextYear = Date.UTC(startYear + 1, 0, 1);
+  const nextYear = yearStartMs(startYear + 1);
   const start =
-    from - Date.UTC(startYear, 0, 1) <= nextYear - from
+    from - yearStartMs(startYear) <= nextYear - from
       ? startYear
       : startYear + 1;
   return [
-    String(start),
-    String(new Date(toExclusive - DAY_MS).getUTCFullYear()),
+    yearText(start),
+    yearText(new Date(toExclusive - DAY_MS).getUTCFullYear()),
   ];
+}
+
+/**
+ * Le 1er janvier d'une année, y compris de 0 à 99 et avant l'an 1. `Date.UTC` place les années
+ * 0 à 99 en 1900-1999 : la première tranche de l'ère, l'an 1, était comparée à 1901.
+ */
+function yearStartMs(year: number): number {
+  const d = new Date(0);
+  d.setUTCFullYear(year, 0, 1);
+  return d.getTime();
+}
+
+/**
+ * Une année ASTRONOMIQUE telle qu'un lecteur l'écrit (front des années avant J.-C., ligne 22.10) :
+ * l'année 0 est 1 av. J.-C., l'année -1000 est 1001 av. J.-C. Sans cela la fiche aurait écrit
+ * « de -1000 à 0 » pour une tranche que le permalien sait déjà ouvrir.
+ */
+function yearText(year: number): string {
+  return year >= 1
+    ? String(year)
+    : t('position.yearBeforeEra', { year: 1 - year });
 }
 
 /**

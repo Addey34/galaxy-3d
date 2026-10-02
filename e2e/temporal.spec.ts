@@ -80,6 +80,30 @@ test('year 1000 is measured, year 2500 for Uranus is not, and the date field hol
   });
 });
 
+/**
+ * AVANT L'AN 1 (ligne 22.10) : le permalien sait déjà ouvrir une date avant notre ère, et la
+ * mesure s'étend désormais jusqu'en 9998 av. J.-C. La fiche doit alors LIRE un chiffre, et nommer
+ * sa tranche en années av. J.-C. (« 1001 BC »), jamais « -1000 ». L'application ne doit lever
+ * aucune erreur à une telle date : c'est ce que ce scénario vérifie d'abord.
+ */
+test('a date before year 1, opened by the permalink, reads a measured gap in years BC', async ({
+  page,
+}) => {
+  test.setTimeout(120_000);
+  const errors: string[] = [];
+  page.on('pageerror', (e) => errors.push(String(e)));
+  await openAt(page, 'jupiter', '-000584-05-28T12:00:00Z');
+  const error = page.locator('.bi-position-error');
+  await expect(page.locator('.bi-position-source')).toContainText(
+    'Astronomy Engine',
+    { timeout: 30_000 }
+  );
+  await expect(error).toContainText('Mean measured gap');
+  await expect(error).toContainText('1001 BC');
+  await expect(error).not.toContainText('-1000');
+  expect(errors).toEqual([]);
+});
+
 test('the Sun has no position row, and the overview closes the card', async ({
   page,
 }) => {
