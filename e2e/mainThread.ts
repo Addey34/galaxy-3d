@@ -29,15 +29,29 @@ import { expect, type Locator, type Page } from '@playwright/test';
  * thread qui rend la main dans un budget, et on échoue bruyamment s'il ne le fait jamais.
  */
 
-/** Budget d'un aller-retour considéré comme calme. */
-const CALM_BUDGET_MS = 500;
+/**
+ * Budget d'un aller-retour considéré comme calme.
+ *
+ * **1 500 ms depuis le 2026-10-03 (ligne 44.3) ; c'était 500.** Les 500 ms séparaient les deux
+ * régimes mesurés ci-dessus, et ce « régime chargé » était celui de la Terre au démarrage,
+ * c'est-à-dire des TEXTURES qui se décodent et s'uploadent. Elles sont désormais exclues par un
+ * signal réel (`data-textures-loading`, lu dans le même aller-retour), donc le budget n'a plus à
+ * les attraper par la durée. Il doit encore rejeter les pics qui restent (un vol de caméra, un
+ * upload : 2,5 à 5,5 s sur un EPYC 7763) SANS rejeter une machine lente mais stable : la vue
+ * d'ensemble tient 700 à 1 180 ms par aller-retour sur un EPYC 9V74 en fin de shard (run
+ * `37072161618`, `titan.spec.ts` passé au réessai sur « 3 fois de suite sous 500 ms »), et la
+ * vue Terre ~430 ms sur un 7763. Un budget absolu de 500 confondait ces deux machines avec un
+ * thread occupé.
+ */
+const CALM_BUDGET_MS = 1500;
 
 /**
  * Nombre d'allers-retours calmes CONSÉCUTIFS exigés.
  *
  * Trois, et non un : la série mesurée ci-dessus retombe à 1,12 s après un 2,25 s, donc un seul
  * échantillon sous le budget ne prouve rien. Trois de suite séparent sans ambiguïté les deux
- * régimes mesurés (0,15 s stable contre 1,1 à 13,4 s).
+ * régimes mesurés (0,15 s stable contre 1,1 à 13,4 s), et depuis la ligne 44.3 ils s'ajoutent à
+ * l'absence de texture en vol.
  */
 const CALM_SAMPLES = 3;
 
@@ -59,25 +73,36 @@ export interface CalmOptions {
 export async function waitForCalmMainThread(
   page: Page,
   { budgetMs, samples, timeoutMs }: CalmOptions = {}
-): Promise<number[]> {
+): Promise<string[]> {
   const budget = budgetMs ?? CALM_BUDGET_MS;
   const wanted = samples ?? CALM_SAMPLES;
   const deadline = Date.now() + (timeoutMs ?? 60_000);
-  const series: number[] = [];
+  const series: string[] = [];
   let streak = 0;
 
   while (streak < wanted) {
     const started = Date.now();
-    await page.evaluate(
-      () => new Promise((resolve) => requestAnimationFrame(() => resolve(0)))
+    // Le même aller-retour lit les textures EN VOL (ligne 44.3) : une image rapide entre deux
+    // couches de la Terre n'est pas du calme, la couche suivante figera la prochaine 2,5 à 5 s
+    // en rendu logiciel. Attribut absent (page sans l'application) : rien en vol.
+    const loading = await page.evaluate(
+      () =>
+        new Promise<string>((resolve) =>
+          requestAnimationFrame(() =>
+            resolve(
+              document.querySelector('canvas')?.dataset['texturesLoading'] ??
+                '0'
+            )
+          )
+        )
     );
     const took = Date.now() - started;
-    series.push(took);
-    streak = took <= budget ? streak + 1 : 0;
+    series.push(loading === '0' ? `${took}` : `${took}+${loading}tex`);
+    streak = took <= budget && loading === '0' ? streak + 1 : 0;
     if (streak < wanted && Date.now() > deadline)
       throw new Error(
-        `le thread principal n'a pas répondu ${wanted} fois de suite sous ${budget} ms : ` +
-          `série mesurée (ms) ${series.join(' ')}`
+        `le thread principal n'a pas répondu ${wanted} fois de suite sous ${budget} ms ` +
+          `sans texture en vol : série mesurée (ms, +N tex = N textures en vol) ${series.join(' ')}`
       );
   }
   return series;
@@ -96,7 +121,7 @@ export async function bootAndSettle(
     loaderTimeoutMs = 60_000,
     ...calm
   }: CalmOptions & { loaderTimeoutMs?: number } = {}
-): Promise<number[]> {
+): Promise<string[]> {
   await page.goto(path);
   await expect(page.locator('#loader')).toBeHidden({
     timeout: loaderTimeoutMs,

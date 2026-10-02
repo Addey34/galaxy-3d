@@ -57,7 +57,9 @@ test('wires nav and playback controls (câblage ui/)', async ({ page }) => {
   await expect(earthBtn).toHaveClass(/is-active/);
 
   // Lecture (ui/playback) : la barre temps s'étend pour révéler le slider de vitesse.
-  await page.locator('#time-readout').click();
+  // Arrivée sur la Terre : ses couches se chargent une à une pendant ~23 s en rendu logiciel
+  // (ligne 44.3), d'où le clic après calme, qui attend aussi qu'aucune texture ne soit en vol.
+  await clickWhenCalm(page, page.locator('#time-readout'));
   const speedRange = page.locator('#speed-range');
   await speedRange.press('End');
   // Vitesse max → libellé « N unité/s » (langue courante : "y/s" en anglais, "an/s" en français).
@@ -65,7 +67,7 @@ test('wires nav and playback controls (câblage ui/)', async ({ page }) => {
 
   // Retour au présent (ui/timePanel → PlaybackControls) : revient à « Réel » = CENTRE du
   // slider bidirectionnel (50 = 1:1 ; gauche = passé, droite = futur).
-  await page.locator('#time-today').click();
+  await clickWhenCalm(page, page.locator('#time-today'));
   await expect(speedRange).toHaveValue('50');
   await expect(page.locator('#speed-value')).toContainText('1:1');
 });
@@ -96,9 +98,13 @@ test('rewinds the simulated date when the speed slider goes left of centre', asy
   await expect(page.locator('#speed-value')).toContainText('◀');
 
   const start = new Date(await dateInput.inputValue()).getTime();
+  // Le champ de date n'avance qu'à l'ARRIVÉE des octets d'éphémérides de la nouvelle fenêtre
+  // (lot 17C) : médiane ~12 s mesurée, donc 10 s était une attente plus courte que celle du
+  // produit, et le test tombait selon la machine (passé au réessai le 2026-10-03, run
+  // `37069466894`, la date restée en place sur un EPYC 7763).
   await expect
     .poll(async () => new Date(await dateInput.inputValue()).getTime(), {
-      timeout: 10_000,
+      timeout: 30_000,
     })
     .toBeLessThan(start - 86_400_000);
 });

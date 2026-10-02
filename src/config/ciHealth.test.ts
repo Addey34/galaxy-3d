@@ -9,6 +9,7 @@ import {
   judge,
   logLines,
   parsePlaywrightSummary,
+  parseRunnerCpu,
 } from '../../scripts/check-ci-health.mjs';
 
 /**
@@ -286,5 +287,43 @@ describe('un run REMPLACÉ n’est pas un run malade', () => {
     });
     expect(verdict.superseded).toBe(false);
     expect(verdict.healthy).toBe(false);
+  });
+});
+
+/**
+ * LE PROCESSEUR DU SHARD (ligne 44.3), lu sur un fragment RÉEL : le run `37064635527`, shard 4,
+ * tel que `gh run view --log` le rend. Le journal recopie d'abord la COMMANDE, deux fois (dont
+ * une colorée), avec le motif littéral `RUNNER_CPU $(lscpu …` : c'est elle que la lecture ne
+ * doit pas prendre pour un résultat.
+ */
+const RUNNER_CPU_STEP = [
+  'Browser tests (e2e 4/7)\tUNKNOWN STEP\t2026-10-02T21:05:33.6144071Z ##[group]Run echo "RUNNER_CPU $(lscpu | grep -m1 \'Model name\' | cut -d: -f2 | xargs) | nproc $(nproc)"',
+  'Browser tests (e2e 4/7)\tUNKNOWN STEP\t2026-10-02T21:05:33.6144909Z \u001b[36;1mecho "RUNNER_CPU $(lscpu | grep -m1 \'Model name\' | cut -d: -f2 | xargs) | nproc $(nproc)"\u001b[0m',
+  'Browser tests (e2e 4/7)\tUNKNOWN STEP\t2026-10-02T21:05:33.6210107Z shell: /usr/bin/bash -e {0}',
+  'Browser tests (e2e 4/7)\tUNKNOWN STEP\t2026-10-02T21:05:33.6210991Z ##[endgroup]',
+  'Browser tests (e2e 4/7)\tUNKNOWN STEP\t2026-10-02T21:05:33.6568849Z RUNNER_CPU AMD EPYC 7763 64-Core Processor | nproc 4',
+].join('\n');
+
+describe('le processeur de la machine', () => {
+  it('se lit dans la ligne que l’étape imprime', () => {
+    expect(parseRunnerCpu(logLines(RUNNER_CPU_STEP))).toEqual({
+      model: 'AMD EPYC 7763 64-Core Processor',
+      cores: 4,
+    });
+  });
+
+  it('ne prend pas la commande recopiée pour un résultat', () => {
+    const commandOnly = RUNNER_CPU_STEP.split('\n').slice(0, 4).join('\n');
+    expect(parseRunnerCpu(logLines(commandOnly))).toBeNull();
+  });
+
+  it('reste muet sur un run antérieur à l’étape, sans le dire en panne', () => {
+    expect(parseRunnerCpu(logLines(GREEN_BUT_RETRIED))).toBeNull();
+  });
+
+  it('est imprimée par ci.yml sous la forme que la lecture attend', () => {
+    expect(CI_YML).toContain('- name: Runner CPU');
+    expect(CI_YML).toContain('echo "RUNNER_CPU $(lscpu');
+    expect(CI_YML).toContain('| nproc $(nproc)"');
   });
 });

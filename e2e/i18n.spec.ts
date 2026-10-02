@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 
-import { waitForCalmMainThread } from './mainThread';
+import { clickWhenCalm, waitForCalmMainThread } from './mainThread';
 import { blockExternalNetwork } from './netBlock';
 
 // Déterminisme : pas de dépendance à l'API JPL SBDB live pendant les tests.
@@ -39,7 +39,9 @@ test('switches UI language live and persists the choice', async ({ page }) => {
   await expect(panel.locator('.bi-name')).toHaveText('Earth');
 
   // Ouvrir le popover d'aide puis basculer en français.
-  await page.locator('#help-btn').click();
+  // Arrivée sur la Terre : ses couches se chargent une à une pendant ~23 s en rendu logiciel
+  // (ligne 44.3), d'où le clic après calme, qui attend aussi qu'aucune texture ne soit en vol.
+  await clickWhenCalm(page, page.locator('#help-btn'));
   await page.locator('#lang-switch .lang-btn[data-locale="fr"]').click();
 
   // Chaînes statiques (data-i18n) retraduites.

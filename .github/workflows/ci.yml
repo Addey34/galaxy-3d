@@ -78,7 +78,7 @@ jobs:
       # etre verifiee A LA MAIN.
       #
       # ELLES TOURNENT ICI, ET PAS DANS LE JOB e2e, POUR UNE RAISON DE COUT MESUREE : le job
-      # e2e est shard sur SEPT machines qui ne construisent pas, donc il faudrait sept
+      # e2e est shard sur HUIT machines qui ne construisent pas, donc il faudrait huit
       # `pnpm build`. Ce job-ci construit deja, et n'utilise que 2,4 min de ses 15 ; la suite
       # ajoute 11 scenarios en 16 s en local, plus l'installation de Chromium.
       #
@@ -164,7 +164,7 @@ jobs:
   # (un echec signale une regression de cablage) mais ne bloque pas le deploiement, car
   # le rendu WebGL en GPU logiciel CI est lent et parfois capricieux sur les scenarios lourds.
   e2e-full:
-    name: Browser tests (e2e ${{ matrix.shard }}/7)
+    name: Browser tests (e2e ${{ matrix.shard }}/8)
     if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-24.04
     # SHARDING. La suite entiere ne tenait PAS dans le budget : mesure du 2026-09-08, elle
@@ -194,6 +194,16 @@ jobs:
     # precedent, 255 scenarios, plafonnait a 23,6 : la derive etait deja la, six tests de plus
     # ont franchi le seuil. Meme etat qu'aux deux passages precedents, corrige AVANT la coupure.
     #
+    # PASSE DE 7 A 8 le 2026-10-03 (ligne 44.3), encore signale par le GUETTEUR avant toute
+    # coupure. Le shard 7 etait deja a 22,8 min sur le run `37026665886` de main ; la ligne 44.3
+    # y a ajoute le temoin `e2e/textureLoadState.spec.ts` (24 a 28 s, l'arrivee sur la Terre
+    # elle-meme, que le temoin ne peut pas eviter) et l'attente des textures aux scenarios qui
+    # agissent juste apres cette arrivee. Trois runs simultanes de la branche ont alors donne au
+    # shard 7 : 21,2 min (Xeon 8573C), 23,9 (EPYC 7763) et 24,1 (EPYC 9V74), au seuil de 24. La
+    # MACHINE compte desormais dans cette lecture : l'etape « Runner CPU » l'imprime, et le meme
+    # shard 6 a pris 13,7 min sur un EPYC 9V45 et 24,4 sur un EPYC 7763 (runs `37069463653` et
+    # `37069466894`).
+    #
     # Et la lecon de procedure, deja payee au lot 19 : ajouter des tests REDISTRIBUE les shards,
     # ce job ne tourne QUE sur main (`if: push`), et une suite locale ne sharde pas. Aucune CI de
     # branche ne peut donc montrer ce depassement avant la fusion : il se corrige a l'avance, en
@@ -215,7 +225,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        shard: [1, 2, 3, 4, 5, 6, 7]
+        shard: [1, 2, 3, 4, 5, 6, 7, 8]
     # Garde-fous PAR ETAPE depuis le 2026-10-01 (ligne 44.2). Il n'y en avait qu'un, de 30 min sur
     # le JOB entier, pose contre une install apt bloquee. Il mesurait donc aussi un miroir tiers :
     # ce jour-la, `playwright install --with-deps` a pris 68 s le matin, puis 363 s et 500 s
@@ -239,12 +249,20 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm exec playwright install --with-deps chromium
         timeout-minutes: 12
+      # LE PROCESSEUR DE LA MACHINE, imprime avant les tests (ligne 44.3, 2026-10-02). GitHub ne
+      # sert pas toujours le meme : mesure ce jour-la sur la vue Terre, en rendu logiciel, une
+      # image coute 224 ms sur un AMD EPYC 9V45 et ~430 ms sur un EPYC 7763, a code egal. Un
+      # shard lent n'accuse donc pas forcement le code. `scripts/check-ci-health.mjs` lit cette
+      # ligne (RUNNER_CPU_LINE) et l'affiche a cote de chaque shard.
+      - name: Runner CPU
+        run: |
+          echo "RUNNER_CPU $(lscpu | grep -m1 'Model name' | cut -d: -f2 | xargs) | nproc $(nproc)"
       # `playwright` en direct plutot que `pnpm test:e2e --` : pas d'ambiguite sur la
       # transmission des arguments a travers le script npm. Le NOM de l'etape est lu par
       # `scripts/check-ci-health.mjs` (E2E_TEST_STEP) : le changer, c'est changer les deux.
       - name: Run e2e shard
         timeout-minutes: 30
-        run: pnpm exec playwright test --shard=${{ matrix.shard }}/7
+        run: pnpm exec playwright test --shard=${{ matrix.shard }}/8
       - name: Upload Playwright diagnostics
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1, resolved 2026-09-20

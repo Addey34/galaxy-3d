@@ -1,6 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 import { blockExternalNetwork } from './netBlock';
-import { waitForCalmMainThread } from './mainThread';
+import { clickWhenCalm, waitForCalmMainThread } from './mainThread';
 
 /**
  * LES QUATRE LANGUES, ET LA SEULE CHOSE QU'UN TEST UNITAIRE NE PEUT PAS VOIR (lot 20, phase 20A).
@@ -215,7 +215,9 @@ test.describe('le sélecteur de langue', () => {
     await expect(panel).toBeVisible();
     await expect(panel.locator('.bi-name')).toHaveText('Earth');
 
-    await page.locator('#help-btn').click();
+    // Arrivée sur la Terre : ses couches se chargent une à une pendant ~23 s en rendu logiciel
+    // (ligne 44.3), d'où le clic après calme, qui attend aussi qu'aucune texture ne soit en vol.
+    await clickWhenCalm(page, page.locator('#help-btn'));
     await page.locator('#lang-switch .lang-btn[data-locale="pt-BR"]').click();
     // Les libellés de la fiche viennent du dictionnaire, donc ils suivent tout de suite.
     await expect(panel).toContainText('Raio');

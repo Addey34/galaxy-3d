@@ -177,6 +177,31 @@ export function parsePlaywrightSummary(lines) {
   return { passed, totalMinutes, ...categories };
 }
 
+/**
+ * LE PROCESSEUR DE LA MACHINE qui a joué un shard (ligne 44.3, 2026-10-02), lu dans la ligne
+ * qu'imprime l'étape « Runner CPU » de `ci.yml`.
+ *
+ * GitHub ne sert pas toujours le même processeur, et la suite tourne en rendu LOGICIEL : mesuré
+ * ce jour-là sur la vue Terre, une image coûte 224 ms sur un AMD EPYC 9V45 et ~430 ms sur un
+ * EPYC 7763, à code égal. Un shard lent ou un réessai se lit donc à côté de sa machine, sinon
+ * on accuse le code d'un écart de matériel.
+ *
+ * Le journal recopie aussi la COMMANDE (`##[group]Run echo "RUNNER_CPU $(lscpu …`), qui ne
+ * doit pas passer pour un résultat. Ce qui l'écarte, mesuré en falsifiant : le NOMBRE exigé
+ * après `nproc` (la commande porte `$(nproc)`) ; l'ancrage en début de ligne n'est qu'une
+ * seconde ceinture. `null` quand la ligne manque (un run antérieur à l'étape), ce qui n'est
+ * pas une panne.
+ */
+export const RUNNER_CPU_LINE = /^RUNNER_CPU (\S.*?) \| nproc (\d+)\s*$/;
+
+export function parseRunnerCpu(lines) {
+  for (const line of lines) {
+    const match = RUNNER_CPU_LINE.exec(line);
+    if (match) return { model: match[1], cores: Number(match[2]) };
+  }
+  return null;
+}
+
 function minutesBetween(startedAt, completedAt) {
   if (!startedAt || !completedAt) return null;
   return (Date.parse(completedAt) - Date.parse(startedAt)) / 60_000;
@@ -219,7 +244,9 @@ export function inspectRun(runId, { readLogs = true } = {}) {
     };
     if (!shard || !readLogs || job.conclusion === 'skipped') return base;
     try {
-      base.summary = parsePlaywrightSummary(logLines(jobLog(job.id)));
+      const lines = logLines(jobLog(job.id));
+      base.summary = parsePlaywrightSummary(lines);
+      base.cpu = parseRunnerCpu(lines);
     } catch (error) {
       base.summary = { unreadable: String(error?.message ?? error) };
     }
@@ -374,7 +401,8 @@ function render(run, verdict, { markdown }) {
             : '') +
           (job.summary.failed.length
             ? `, ${job.summary.failed.length} échoués`
-            : '')
+            : '') +
+          (job.cpu ? `, ${job.cpu.model}` : '')
         : '';
     out.push(
       `${bullet}${job.name} — ${job.conclusion}, ${minutes(job.minutes)}${counts}`

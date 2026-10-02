@@ -26,5 +26,12 @@
  * chaque run. Celle-ci a été MESURÉE parmi les moins chères du mois, Terre hors du coût : 247 ms
  * de médiane en CI, 68 ms ici en rendu logiciel. Un scénario qui a BESOIN de la date courante pour
  * ce qu'il prouve doit le dire et ne pas démarrer sur la Lune.
+ *
+ * LE BUDGET GLOBAL DE CALME EST PASSÉ À 1 500 ms LE 2026-10-03 (ligne 44.3), et ce n'est PAS le
+ * retour du remède écarté ci-dessus. Celui-là était une exception propre à une page, posée sur
+ * un faux diagnostic. Celui-ci vaut pour toute la suite et suit deux mesures : les textures en vol
+ * sont désormais exclues par un signal réel (`data-textures-loading`), et GitHub sert des
+ * processeurs dont une même vue coûte du simple au double (`e2e/mainThread.ts`). La date fixée
+ * reste, puisqu'elle rend la scène identique d'un run à l'autre.
  */
 export const MOON_SCENE_DATE = '2026-09-24T12:00:00Z';

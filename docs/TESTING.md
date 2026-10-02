@@ -152,6 +152,23 @@ après vingt minutes de suite, ou jamais si la branche fautive n'était pas empr
    saut de date ou pendant une visite guidée appelle donc `waitForCalmMainThread` /
    `clickWhenCalm` de `e2e/mainThread.ts`, où la mesure est écrite. Preuve du correctif : le même
    clic sur `#weather-trigger` passe de **14,6 s** (pour un `actionTimeout` de 15 s) à **1,9 s**.
+
+   **Et le calme exige aussi qu'aucune texture ne soit en vol** (ligne 44.3, 2026-10-02). Une
+   texture se termine par un décodage et un upload GPU synchrones ; en rendu logiciel, l'arrivée
+   sur la Terre fige des images de 2,5 à 5,5 s, couche après couche, pendant ~23 s, mesuré sur
+   six machines de CI. Une attente fondée sur la seule durée des images se déclarait satisfaite
+   ENTRE deux couches, juste avant la suivante, si bien qu'un clic « après calme » pouvait tomber
+   au pire moment. `waitForCalmMainThread` lit donc `data-textures-loading` du canvas (publié par
+   `ui/textureLoadState.ts`) dans le même aller-retour, et un scénario qui agit juste après être
+   arrivé sur la Terre passe par lui. Le témoin est `e2e/textureLoadState.spec.ts`, falsifié :
+   rouge sans publication, rouge sans notification. Le budget d'un aller-retour calme est passé
+   en conséquence de 500 à **1 500 ms** : il n'a plus à attraper les textures par la durée, et
+   500 confondait une machine lente mais stable (700 à 1 180 ms sur un EPYC 9V74 en fin de
+   shard) avec un thread occupé ; les pics qui restent, vol ou upload, durent 2,5 à 5,5 s. **Fixer la date n'y aurait rien fait** : la
+   vue Terre coûte la même chose sur dix-sept dates et quatre heures (372 à 402 ms par image),
+   contrairement à la Lune de la ligne 44.2. Et la machine compte : GitHub sert plusieurs
+   processeurs (EPYC 7763, 9V74, 9V45, Xeon 8573C, Xeon 6973P), la même image coûtant 224 ms sur
+   un 9V45 et ~430 ms sur un 7763 ; `pnpm ci:health` affiche celui de chaque shard.
 6. **Un glisser qui part du CENTRE de l'écran ne tourne pas la caméra.** Quand un corps est
    suivi, son point d'étiquette Explo occupe ce centre, et il garde ses gestes de pointeur par
    conception (seule la molette est réémise vers le canevas). Un scénario qui veut tourner

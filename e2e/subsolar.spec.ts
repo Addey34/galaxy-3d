@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { waitForCalmMainThread } from './mainThread';
 import { blockExternalNetwork } from './netBlock';
 
 /**
@@ -99,6 +100,10 @@ test('the subsolar longitude does not drift while the clock races', async ({
   const panel = page.locator('#solar-debug');
   await expect(panel).toBeVisible({ timeout: 40_000 });
   await expect(panel).toContainText('lat error', { timeout: 20_000 });
+  // Démarrage sur la Terre : ses couches se chargent une à une pendant ~23 s en rendu logiciel
+  // (ligne 44.3), et une image figée 3 s pendant la course laisse la date en place. On lance
+  // l'horloge une fois les textures arrivées et le thread calme.
+  await waitForCalmMainThread(page);
 
   // Vitesse maximale via le curseur de lecture (le même chemin que l'utilisateur).
   const speed = page.locator('#speed-range');
