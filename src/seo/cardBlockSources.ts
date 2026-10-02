@@ -16,6 +16,7 @@
  * Module PUR, réservé au build (`src/seo/`) : il importe les quatre dictionnaires ensemble.
  */
 import gazetteerIndex from '@/config/gazetteerIndex.json';
+import gazetteerAdoptionIndex from '@/config/gazetteerAdoptionIndex.json';
 import missionIndex from '@/config/missionIndex.json';
 import instrumentIndex from '@/config/instrumentIndex.json';
 import placeObservationIndex from '@/config/placeObservationIndex.json';
@@ -72,6 +73,36 @@ function gazetteerRows(): CardBlockSourceRow[] {
           fr: `${count(names, locale)} noms sur ${count(bodies.length, locale)} corps`,
           es: `${count(names, locale)} nombres en ${count(bodies.length, locale)} cuerpos`,
           'pt-BR': `${count(names, locale)} nomes em ${count(bodies.length, locale)} corpos`,
+        })[locale],
+      asOf: provider.accessed,
+      rights: { id: provider.rights, statedAt: provider.rightsStatedAt },
+    },
+  ];
+}
+
+/**
+ * Les DATES D'ADOPTION du même gazetteer, que le bloc « Découverte » compte à la date de la scène
+ * (ligne 22.10, front des noms). Une ligne à part parce que l'usage diffère : ce ne sont plus des
+ * noms posés sur la surface, mais l'histoire de leur adoption, et la ligne dit ce que ces dates
+ * ne sont pas.
+ */
+function gazetteerAdoptionRows(): CardBlockSourceRow[] {
+  const { provider } = gazetteerAdoptionIndex;
+  const bodies = Object.values(gazetteerAdoptionIndex.bodies);
+  const names = sum(bodies, (b) => b.total);
+  return [
+    {
+      index: 'gazetteerAdoptionIndex.json',
+      publisher: provider.publisher,
+      title: provider.title,
+      url: provider.url,
+      usedBy: ['bi.discovery.label'],
+      coverage: (locale) =>
+        ({
+          en: `adoption dates of ${count(names, locale)} names on ${count(bodies.length, locale)} bodies, for the names already official at a date (an adoption date, not a discovery date)`,
+          fr: `dates d’adoption de ${count(names, locale)} noms sur ${count(bodies.length, locale)} corps, pour les noms déjà officiels à une date (une date d’adoption, pas de découverte)`,
+          es: `fechas de adopción de ${count(names, locale)} nombres en ${count(bodies.length, locale)} cuerpos, para los nombres ya oficiales en una fecha (una fecha de adopción, no de descubrimiento)`,
+          'pt-BR': `datas de adoção de ${count(names, locale)} nomes em ${count(bodies.length, locale)} corpos, para os nomes já oficiais numa data (uma data de adoção, não de descoberta)`,
         })[locale],
       asOf: provider.accessed,
       rights: { id: provider.rights, statedAt: provider.rightsStatedAt },
@@ -236,6 +267,7 @@ function discoveryRows(): CardBlockSourceRow[] {
 /** Une entrée par index livré, par nom de fichier. */
 export const CARD_BLOCK_INDEXES: Record<string, () => CardBlockSourceRow[]> = {
   'gazetteerIndex.json': gazetteerRows,
+  'gazetteerAdoptionIndex.json': gazetteerAdoptionRows,
   'missionIndex.json': missionRows,
   'instrumentIndex.json': instrumentRows,
   'placeObservationIndex.json': placeObservationRows,

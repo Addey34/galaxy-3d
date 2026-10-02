@@ -35,6 +35,7 @@ import {
   existsSync,
   mkdirSync,
   readFileSync,
+  statSync,
   readdirSync,
   writeFileSync,
 } from 'node:fs';
@@ -56,6 +57,18 @@ const OUT = join(ROOT, 'public', 'assets', 'gazetteer');
  * pas de second manifeste dans `public/` qui pourrait en diverger.
  */
 const INDEX = join(ROOT, 'src', 'config', 'gazetteerIndex.json');
+/**
+ * Les adoptions par date, HORS de la clôture de démarrage : seule la fiche d'un corps les lit,
+ * par un import dynamique (`config/nameAdoptions.ts`). L'index ci-dessus, lui, est dans le bundle.
+ */
+const ADOPTION_INDEX = join(
+  ROOT,
+  'src',
+  'config',
+  'gazetteerAdoptionIndex.json'
+);
+/** Le type que l'UAI donne aux désignations lettrées (« Copernicus A »). */
+const LETTERED_TYPE = 'Satellite Feature';
 const GIS_PAGE = 'https://planetarynames.wr.usgs.gov/GIS_Downloads';
 const KMZ = (t) =>
   `https://asc-planetarynames-data.s3.us-west-2.amazonaws.com/${t}_nomenclature_center_pts.kmz`;
@@ -90,6 +103,15 @@ function catalogueBodies() {
   );
 }
 
+/**
+ * LA DATE DE LECTURE APPARTIENT À LA RÉPONSE (règle du lot 25). Elle était écrite en dur
+ * (« 2026-09-29 ») et ne valait que par coïncidence : la fiche l'affiche désormais (« lu le … »,
+ * ligne 22.10), donc une relecture qui la laisserait à son ancienne valeur mentirait. Chaque KMZ
+ * est daté par l'écriture de son fichier en cache, et l'index publie le jour le PLUS ANCIEN :
+ * aucune donnée n'est alors présentée comme plus fraîche qu'elle ne l'est.
+ */
+const readDays = [];
+
 async function kmzFor(target) {
   mkdirSync(CACHE, { recursive: true });
   const path = join(CACHE, `${target}.kmz`);
@@ -100,6 +122,7 @@ async function kmzFor(target) {
     if (!res.ok) throw new Error(`${target} : HTTP ${res.status}`);
     writeFileSync(path, Buffer.from(await res.arrayBuffer()));
   }
+  readDays.push(statSync(path).mtime.toISOString().slice(0, 10));
   return readFileSync(path);
 }
 
@@ -140,6 +163,25 @@ function kmlFromKmz(buf) {
   throw new Error('KMZ sans fichier .kml');
 }
 
+/**
+ * LA DATE D'ADOPTION, AVEC SA PRÉCISION (ligne 22.10, front des noms, 2026-10-02).
+ *
+ * Le KML écrit toujours un jour et une heure (« 2006/01/01 00:00:00 »). Mais la FICHE de l'UAI
+ * n'affiche qu'une ANNÉE quand ce jour est le 1er janvier (« Approval Date : 2006 »), et un jour
+ * sinon (Occator : « Jul 03, 2015 »). MESURÉ le 2026-10-02 sur 124 fiches : une par couple
+ * (corps, année au 1er janvier), les 89 couples, et une fiche datée au jour par corps qui en a,
+ * soit 35 : 124 conformes sur 124. Un « 01-01 » est donc une ANNÉE SEULE, et le livrer comme un
+ * jour ferait dire à l'application que 7 050 cratères ont été nommés le jour de l'an 2006.
+ * D'où « AAAA » pour une année seule, « AAAA-MM-JJ » pour un jour publié. L'heure est toujours
+ * minuit : une autre voudrait dire que le format a changé, et on s'arrête.
+ */
+function approvalDate(raw, name) {
+  const m = /^(\d{4})\/(\d{2})\/(\d{2}) 00:00:00$/.exec(raw);
+  if (!m)
+    throw new Error(`date d'adoption illisible pour ${name} : « ${raw} »`);
+  return m[2] === '01' && m[3] === '01' ? m[1] : `${m[1]}-${m[2]}-${m[3]}`;
+}
+
 const field = (block, name) => {
   const m = new RegExp('name="' + name + '">([^<]*)<').exec(block);
   return m ? m[1].trim() : '';
@@ -163,7 +205,7 @@ function features(kml) {
       diameterKm: Number.isFinite(diameter)
         ? Math.round(diameter * 10) / 10
         : 0,
-      approved: field(b, 'approvaldt').slice(0, 10).replace(/\//g, '-'),
+      approved: approvalDate(field(b, 'approvaldt'), field(b, 'clean_name')),
       origin: field(b, 'origin'),
       iauId: Number.parseInt(field(b, 'link').split('/').pop() ?? '', 10) || 0,
       rawLat: lat,
@@ -254,6 +296,14 @@ if (pairs.length === 0) {
 
 mkdirSync(OUT, { recursive: true });
 const manifest = { convention: {}, provider: {}, bodies: {} };
+/**
+ * CE QUE L'UAI AVAIT ADOPTÉ À UNE DATE, par corps : les dates d'adoption distinctes, chacune avec
+ * son nombre de noms et, parmi eux, de désignations LETTRÉES (« Copernicus A », type « Satellite
+ * Feature », la Lune seule en porte). Compté ici pour que la fiche n'ait pas à télécharger les
+ * 9 087 noms de la Lune pour répondre. Une date d'ADOPTION n'est pas une date de découverte ni
+ * de premier usage : Copernicus A est adoptée en 2006, et sa fiche cite une liste de 1935.
+ */
+const adoptions = { bodies: {} };
 const drifted = [];
 let total = 0;
 for (const { target, body } of pairs) {
@@ -271,6 +321,19 @@ for (const { target, body } of pairs) {
   manifest.bodies[body] = {
     count: list.length,
     bytes: Buffer.byteLength(json),
+  };
+  const steps = new Map();
+  for (const f of list) {
+    const step = steps.get(f.approved) ?? [f.approved, 0, 0];
+    step[1] += 1;
+    if (f.type === LETTERED_TYPE) step[2] += 1;
+    steps.set(f.approved, step);
+  }
+  adoptions.bodies[body] = {
+    total: list.length,
+    lettered: list.filter((f) => f.type === LETTERED_TYPE).length,
+    // Triées par date ; une année seule (« 2006 ») passe avant les jours de cette année-là.
+    steps: [...steps.values()].sort((a, b) => a[0].localeCompare(b[0])),
   };
   total += list.length;
   console.log(
@@ -304,8 +367,19 @@ manifest.provider = {
     'Everything in the Gazetteer of Planetary Nomenclature is in the public domain.',
   citation:
     'International Astronomical Union Working Group for Planetary System Nomenclature. "Gazetteer of Planetary Nomenclature." https://planetarynames.wr.usgs.gov/',
-  accessed: '2026-09-29',
+  accessed: [...readDays].sort()[0],
 };
+if (!only) {
+  // La provenance voyage avec la donnée, comme dans l'index : la même.
+  const aJson = `${JSON.stringify({ provider: manifest.provider, ...adoptions })}\n`;
+  if (check) {
+    if (
+      !existsSync(ADOPTION_INDEX) ||
+      readFileSync(ADOPTION_INDEX, 'utf8') !== aJson
+    )
+      drifted.push('adoptions');
+  } else writeFileSync(ADOPTION_INDEX, aJson);
+}
 if (!only) {
   const mPath = INDEX;
   const mJson = JSON.stringify(manifest, null, 1);

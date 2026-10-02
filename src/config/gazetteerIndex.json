@@ -17,11 +17,11 @@
  "bodies": {
   "amalthea": {
    "count": 4,
-   "bytes": 794
+   "bytes": 770
   },
   "ariel": {
    "count": 26,
-   "bytes": 4791
+   "bytes": 4635
   },
   "bennu": {
    "count": 36,
@@ -29,7 +29,7 @@
   },
   "callisto": {
    "count": 154,
-   "bytes": 26317
+   "bytes": 25399
   },
   "ceres": {
    "count": 149,
@@ -41,67 +41,67 @@
   },
   "deimos": {
    "count": 2,
-   "bytes": 370
+   "bytes": 358
   },
   "dione": {
    "count": 95,
-   "bytes": 19197
+   "bytes": 19023
   },
   "enceladus": {
    "count": 87,
-   "bytes": 19462
+   "bytes": 19330
   },
   "eros": {
    "count": 41,
-   "bytes": 9415
+   "bytes": 9169
   },
   "europa": {
    "count": 129,
-   "bytes": 25410
+   "bytes": 24798
   },
   "ganymede": {
    "count": 196,
-   "bytes": 37441
+   "bytes": 36343
   },
   "hyperion": {
    "count": 5,
-   "bytes": 932
+   "bytes": 902
   },
   "iapetus": {
    "count": 70,
-   "bytes": 14646
+   "bytes": 14526
   },
   "ida": {
    "count": 25,
-   "bytes": 4472
+   "bytes": 4322
   },
   "io": {
    "count": 260,
-   "bytes": 49515
+   "bytes": 48183
   },
   "itokawa": {
    "count": 17,
-   "bytes": 3508
+   "bytes": 3490
   },
   "mars": {
    "count": 2051,
-   "bytes": 370593
+   "bytes": 361401
   },
   "mercury": {
    "count": 606,
-   "bytes": 124005
+   "bytes": 122229
   },
   "mimas": {
    "count": 42,
-   "bytes": 8422
+   "bytes": 8206
   },
   "miranda": {
    "count": 18,
-   "bytes": 3482
+   "bytes": 3374
   },
   "moon": {
    "count": 9087,
-   "bytes": 1872929
+   "bytes": 1819217
   },
   "nix": {
    "count": 2,
@@ -109,11 +109,11 @@
   },
   "oberon": {
    "count": 10,
-   "bytes": 1870
+   "bytes": 1810
   },
   "phobos": {
    "count": 20,
-   "bytes": 4536
+   "bytes": 4488
   },
   "pluto": {
    "count": 73,
@@ -121,11 +121,11 @@
   },
   "proteus": {
    "count": 1,
-   "bytes": 167
+   "bytes": 161
   },
   "rhea": {
    "count": 144,
-   "bytes": 31015
+   "bytes": 30727
   },
   "ryugu": {
    "count": 13,
@@ -133,27 +133,27 @@
   },
   "tethys": {
    "count": 53,
-   "bytes": 9550
+   "bytes": 9430
   },
   "titan": {
    "count": 304,
-   "bytes": 60959
+   "bytes": 60695
   },
   "titania": {
    "count": 18,
-   "bytes": 3441
+   "bytes": 3333
   },
   "triton": {
    "count": 63,
-   "bytes": 11324
+   "bytes": 10964
   },
   "umbriel": {
    "count": 13,
-   "bytes": 2364
+   "bytes": 2286
   },
   "venus": {
    "count": 1985,
-   "bytes": 358460
+   "bytes": 346796
   },
   "vesta": {
    "count": 106,

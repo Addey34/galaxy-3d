@@ -3,6 +3,7 @@ import { resolve } from 'node:path';
 import { expect, test, type Page } from '@playwright/test';
 import { waitForCalmMainThread } from './mainThread';
 import { blockExternalNetwork } from './netBlock';
+import { MOON_SCENE_DATE } from './moonScene';
 
 /**
  * LA DÉCOUVERTE, DANS UN VRAI NAVIGATEUR (lot 44, ligne 22.10).
@@ -169,6 +170,99 @@ test('Makemake en 2010 : une lune sans nom UAI, nommée par sa désignation', as
   await expect(discovery).toBeVisible({ timeout: 15_000 });
   await expect(discovery.locator('.bi-discovery-next')).toHaveText(
     'Next discovery: 2015 (S/2015 (136472) 1)'
+  );
+});
+
+/**
+ * LIGNE 22.10, FRONT DES NOMS : les noms de surface que l'UAI avait rendus officiels à la date de
+ * la scène. Pluton est le cas qui raconte l'exploration (aucun nom avant New Horizons, puis une
+ * adoption datée au JOUR) ; la Lune est celui des deux pièges (une année seule, et les
+ * désignations lettrées comptées à part). Les nombres sont LUS dans l'index livré.
+ */
+type Step = [string, number, number];
+const adoptionIndex = JSON.parse(
+  readFileSync(resolve(ROOT, 'src/config/gazetteerAdoptionIndex.json'), 'utf-8')
+) as {
+  bodies: Record<string, { total: number; lettered: number; steps: Step[] }>;
+};
+const fmt = (n: number): string => new Intl.NumberFormat('en-US').format(n);
+
+test('Pluton avant et après le 8 août 2017 : ses premiers noms officiels', async ({
+  page,
+}) => {
+  const pluto = adoptionIndex.bodies.pluto!;
+  const [first, firstCount] = pluto.steps[0]!;
+  expect(first).toBe('2017-08-08');
+  await boot(page, 'pluto/?date=2017-06-01T12:00:00Z');
+  const discovery = block(page);
+  await expect(discovery).toBeVisible({ timeout: 15_000 });
+  await expect(discovery.locator('.bi-discovery-names')).toHaveText(
+    `Surface names the IAU had made official at this date: 0 of ${fmt(pluto.total)}`
+  );
+  // Aucune désignation lettrée sur Pluton : la ligne n'existe pas, plutôt que « 0 sur 0 ».
+  await expect(discovery.locator('.bi-discovery-lettered')).toBeHidden();
+  await expect(discovery.locator('.bi-discovery-names-next')).toHaveText(
+    `Next adoption: August 8, 2017, ${firstCount} more`
+  );
+  await expect(discovery.locator('.bi-discovery-names-note')).toHaveText(
+    /not the date the feature was first seen or named\.$/
+  );
+
+  await boot(page, 'pluto/?date=2017-09-01T12:00:00Z');
+  await expect(block(page).locator('.bi-discovery-names')).toHaveText(
+    `Surface names the IAU had made official at this date: ${firstCount} of ${fmt(pluto.total)}`,
+    { timeout: 15_000 }
+  );
+});
+
+/** Ce que l'index compte avant (ou jusqu'à) une année, noms propres ou lettrés. */
+const counted = (
+  body: string,
+  pick: (on: string) => boolean,
+  column: 'named' | 'lettered'
+): number =>
+  adoptionIndex.bodies[body]!.steps.filter(([on]) => pick(on)).reduce(
+    (sum, [, names, letters]) =>
+      sum + (column === 'lettered' ? letters : names - letters),
+    0
+  );
+
+test('Mars en 1976 : une année d’adoption sans jour publié rend une BORNE', async ({
+  page,
+}) => {
+  const mars = adoptionIndex.bodies.mars!;
+  const before = counted('mars', (on) => on.slice(0, 4) < '1976', 'named');
+  const within = counted('mars', (on) => on.slice(0, 4) <= '1976', 'named');
+  // L'année 1976 est publiée SANS jour pour au moins un nom (sinon ce test ne prouverait rien).
+  expect(mars.steps.some(([on]) => on === '1976')).toBe(true);
+  await boot(page, 'mars/?date=1976-06-01T12:00:00Z');
+  const discovery = block(page);
+  await expect(discovery).toBeVisible({ timeout: 15_000 });
+  await expect(discovery.locator('.bi-discovery-names')).toHaveText(
+    `Surface names the IAU had made official at this date: between ${fmt(before)} and ${fmt(within)} of ${fmt(mars.total)}`
+  );
+});
+
+/**
+ * La Lune, à la seule date que la suite lui permet (`e2e/moonScene.ts`) : les désignations
+ * lettrées ont leur ligne, et la ligne des noms ne les compte PAS. Si la séparation cassait, la
+ * première afficherait le total du gazetteer, 9 087 et non le nombre des noms propres.
+ */
+test('la Lune : les désignations lettrées comptées à part des noms propres', async ({
+  page,
+}) => {
+  const moon = adoptionIndex.bodies.moon!;
+  const day = MOON_SCENE_DATE.slice(0, 10);
+  const upTo = (on: string): boolean =>
+    on.length === 4 ? on < day.slice(0, 4) : on <= day;
+  await boot(page, `moon/?date=${MOON_SCENE_DATE}`);
+  const discovery = block(page);
+  await expect(discovery).toBeVisible({ timeout: 15_000 });
+  await expect(discovery.locator('.bi-discovery-names')).toHaveText(
+    `Surface names the IAU had made official at this date: ${fmt(counted('moon', upTo, 'named'))} of ${fmt(moon.total - moon.lettered)}`
+  );
+  await expect(discovery.locator('.bi-discovery-lettered')).toHaveText(
+    `Lettered designations such as “Copernicus A” made official at this date: ${fmt(counted('moon', upTo, 'lettered'))} of ${fmt(moon.lettered)}`
   );
 });
 

@@ -484,6 +484,12 @@ test.describe('mobile viewport, discovery block', () => {
       locale,
       path: '/haumea/?date=2004-06-01T12:00:00Z',
     })),
+    // Ligne 22.10, front des noms : Pluton avant ses premiers noms exerce les trois lignes des
+    // noms officiels et leur note, la plus longue.
+    ...(['en', 'fr', 'es', 'pt-BR'] as const).map((locale) => ({
+      locale,
+      path: '/pluto/?date=2017-06-01T12:00:00Z',
+    })),
   ];
   for (const { locale, path } of cases) {
     test(`discovery block ${path}, ${locale}, is clean at 390 px`, async ({
