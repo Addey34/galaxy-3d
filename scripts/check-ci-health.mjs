@@ -186,9 +186,11 @@ export function parsePlaywrightSummary(lines) {
  * EPYC 7763, à code égal. Un shard lent ou un réessai se lit donc à côté de sa machine, sinon
  * on accuse le code d'un écart de matériel.
  *
- * Ancrée en début de ligne : le journal recopie aussi la COMMANDE (`##[group]Run echo
- * "RUNNER_CPU $(lscpu …`), qui ne doit pas passer pour un résultat. `null` quand la ligne
- * manque (un run antérieur à l'étape), ce qui n'est pas une panne.
+ * Le journal recopie aussi la COMMANDE (`##[group]Run echo "RUNNER_CPU $(lscpu …`), qui ne
+ * doit pas passer pour un résultat. Ce qui l'écarte, mesuré en falsifiant : le NOMBRE exigé
+ * après `nproc` (la commande porte `$(nproc)`) ; l'ancrage en début de ligne n'est qu'une
+ * seconde ceinture. `null` quand la ligne manque (un run antérieur à l'étape), ce qui n'est
+ * pas une panne.
  */
 export const RUNNER_CPU_LINE = /^RUNNER_CPU (\S.*?) \| nproc (\d+)\s*$/;
 

@@ -94,6 +94,7 @@ export class TextureSystem {
   private readonly config: TextureSystemConfig;
   private readonly cache = new Map<string, THREE.Texture>();
   private readonly loadingPromises = new Map<string, Promise<THREE.Texture>>();
+  private readonly _pendingListeners = new Set<(pending: number) => void>();
 
   // Renderer optionnel, branché après la création de la scène. Sert à uploader la texture
   // au GPU (initTexture) DÈS son décodage, hors de la boucle de rendu — sinon le premier
@@ -138,6 +139,27 @@ export class TextureSystem {
   setRenderer(renderer: THREE.WebGLRenderer): void {
     this.renderer = renderer;
     this.maxTextureSize = renderer.capabilities.maxTextureSize;
+  }
+
+  /**
+   * NOMBRE DE CHARGEMENTS EN VOL (ligne 44.3, 2026-10-02). Chacun se termine par un décodage et
+   * un upload GPU synchrones (`initTexture`) : en rendu logiciel, celui des coureurs de CI, chaque
+   * couche de la Terre au gros plan fige une image 2,5 à 5 s, une couche après l'autre, pendant
+   * ~23 s après l'arrivée. `ui/textureLoadState.ts` publie ce nombre sur le canvas, et la suite
+   * e2e attend qu'il retombe à zéro avant de déclarer le thread calme.
+   */
+  get pendingLoads(): number {
+    return this.loadingPromises.size;
+  }
+
+  /** Abonne `listener` aux changements de `pendingLoads` ; rend la fonction de désabonnement. */
+  onPendingLoadsChange(listener: (pending: number) => void): () => void {
+    this._pendingListeners.add(listener);
+    return () => this._pendingListeners.delete(listener);
+  }
+
+  private _notifyPending(): void {
+    for (const listener of this._pendingListeners) listener(this.pendingLoads);
   }
 
   /**
@@ -193,18 +215,21 @@ export class TextureSystem {
           this.cache.set(fullPath, texture);
           this._evictLeastRecentlyUsed();
           this.loadingPromises.delete(fullPath);
+          this._notifyPending();
           resolve(texture);
         },
         undefined,
         (err) => {
           Logger.warn(`[TextureSystem] Failed: ${fullPath}`, err);
           this.loadingPromises.delete(fullPath);
+          this._notifyPending();
           reject(err);
         }
       );
     });
 
     this.loadingPromises.set(fullPath, promise);
+    this._notifyPending();
     return promise;
   }
 

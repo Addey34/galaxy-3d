@@ -18,6 +18,7 @@ import { bodyDisplayName } from './i18n/bodyText';
 import { initStaticI18n } from './i18n/dom';
 import { updateProgress, hideLoader, showError } from './ui/loader';
 import { setupFullscreen } from './ui/fullscreen';
+import { setupTextureLoadState } from './ui/textureLoadState';
 import { setupShare } from './ui/share';
 import { setupCapture } from './ui/capture';
 import { setupWebXR } from './ui/webxr';
@@ -248,7 +249,9 @@ function wireChrome(): {
       sceneSystem,
       orbitalMechanics,
       horizonsEphemeris,
+      textureSystem,
     } = api;
+    setupTextureLoadState(cameraSystem.renderer.domElement, textureSystem);
     setupSolarDebug(api);
     setupGeoDebug(api);
     setupEarthDebug(api);

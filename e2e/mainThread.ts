@@ -59,25 +59,36 @@ export interface CalmOptions {
 export async function waitForCalmMainThread(
   page: Page,
   { budgetMs, samples, timeoutMs }: CalmOptions = {}
-): Promise<number[]> {
+): Promise<string[]> {
   const budget = budgetMs ?? CALM_BUDGET_MS;
   const wanted = samples ?? CALM_SAMPLES;
   const deadline = Date.now() + (timeoutMs ?? 60_000);
-  const series: number[] = [];
+  const series: string[] = [];
   let streak = 0;
 
   while (streak < wanted) {
     const started = Date.now();
-    await page.evaluate(
-      () => new Promise((resolve) => requestAnimationFrame(() => resolve(0)))
+    // Le même aller-retour lit les textures EN VOL (ligne 44.3) : une image rapide entre deux
+    // couches de la Terre n'est pas du calme, la couche suivante figera la prochaine 2,5 à 5 s
+    // en rendu logiciel. Attribut absent (page sans l'application) : rien en vol.
+    const loading = await page.evaluate(
+      () =>
+        new Promise<string>((resolve) =>
+          requestAnimationFrame(() =>
+            resolve(
+              document.querySelector('canvas')?.dataset['texturesLoading'] ??
+                '0'
+            )
+          )
+        )
     );
     const took = Date.now() - started;
-    series.push(took);
-    streak = took <= budget ? streak + 1 : 0;
+    series.push(loading === '0' ? `${took}` : `${took}+${loading}tex`);
+    streak = took <= budget && loading === '0' ? streak + 1 : 0;
     if (streak < wanted && Date.now() > deadline)
       throw new Error(
-        `le thread principal n'a pas répondu ${wanted} fois de suite sous ${budget} ms : ` +
-          `série mesurée (ms) ${series.join(' ')}`
+        `le thread principal n'a pas répondu ${wanted} fois de suite sous ${budget} ms ` +
+          `sans texture en vol : série mesurée (ms, +N tex = N textures en vol) ${series.join(' ')}`
       );
   }
   return series;
@@ -96,7 +107,7 @@ export async function bootAndSettle(
     loaderTimeoutMs = 60_000,
     ...calm
   }: CalmOptions & { loaderTimeoutMs?: number } = {}
-): Promise<number[]> {
+): Promise<string[]> {
   await page.goto(path);
   await expect(page.locator('#loader')).toBeHidden({
     timeout: loaderTimeoutMs,

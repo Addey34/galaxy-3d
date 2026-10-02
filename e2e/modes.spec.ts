@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import { clickWhenCalm } from './mainThread';
 import { blockExternalNetwork } from './netBlock';
 
 test.beforeEach(async ({ page }) => {
@@ -42,7 +43,9 @@ test('selection, information panel and target semantics survive both mode switch
   const info = page.locator('#body-info');
   await expect(info).toBeVisible();
 
-  await page.locator('.mode-btn[data-mode="explo"]').click();
+  // Arrivée sur la Terre : ses couches se chargent une à une pendant ~23 s en rendu logiciel
+  // (ligne 44.3), d'où le clic après calme, qui attend aussi qu'aucune texture ne soit en vol.
+  await clickWhenCalm(page, page.locator('.mode-btn[data-mode="explo"]'));
   await expect(page.locator('body')).toHaveClass(/is-explo-mode/);
   await expect(info).toBeVisible();
   await expect(info.locator('.bi-name')).toHaveText('Earth');
@@ -54,7 +57,7 @@ test('selection, information panel and target semantics survive both mode switch
     'rgba(0, 0, 0, 0)'
   );
 
-  await page.locator('.mode-btn[data-mode="educ"]').click();
+  await clickWhenCalm(page, page.locator('.mode-btn[data-mode="educ"]'));
   await expect(page.locator('#explo-labels')).toHaveClass(/is-educ-mode/);
   await expect(info).toBeVisible();
   await expect(target.locator('.explo-label-text')).toBeHidden();

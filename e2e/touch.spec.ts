@@ -5,6 +5,7 @@ import {
   type BrowserContext,
   type Page,
 } from '@playwright/test';
+import { clickWhenCalm } from './mainThread';
 import { blockExternalNetwork } from './netBlock';
 
 /**
@@ -119,7 +120,9 @@ test('a one-finger drag on the canvas turns the camera', async ({
   await expect(page.locator('#loader')).toBeHidden({ timeout: 40_000 });
   // Simulation en pause : la scène devient statique, donc tout changement d'image vient du
   // geste et de rien d'autre.
-  await page.locator('#play-pause-btn').click();
+  // Arrivée sur la Terre : ses couches se chargent une à une pendant ~23 s en rendu logiciel
+  // (ligne 44.3), d'où le clic après calme, qui attend aussi qu'aucune texture ne soit en vol.
+  await clickWhenCalm(page, page.locator('#play-pause-btn'));
   await page.waitForTimeout(1500);
 
   // AUTO-VALIDATION : deux relevés identiques prouvent que l'image est stable. Sans cela, ce

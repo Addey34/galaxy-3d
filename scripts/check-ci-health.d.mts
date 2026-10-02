@@ -29,6 +29,11 @@ export interface PlaywrightSummary {
 }
 
 /** Un job du run, tel que le script le retient. */
+export interface RunnerCpu {
+  model: string;
+  cores: number;
+}
+
 export interface InspectedJob {
   id: number;
   name: string;
@@ -36,6 +41,8 @@ export interface InspectedJob {
   minutes: number | null;
   shard: number | null;
   summary: PlaywrightSummary | null;
+  /** Processeur de la machine du shard (ligne 44.3) ; absent avant l'étape « Runner CPU ». */
+  cpu?: RunnerCpu | null;
 }
 
 /** Le run qui a remplacé celui-ci, quand `cancel-in-progress` l'a annulé. */
@@ -61,6 +68,8 @@ export interface Verdict {
 
 export function logLines(raw: string): string[];
 export function parsePlaywrightSummary(lines: string[]): PlaywrightSummary;
+export const RUNNER_CPU_LINE: RegExp;
+export function parseRunnerCpu(lines: string[]): RunnerCpu | null;
 export function judge(run: {
   jobs: InspectedJob[];
   supersededBy?: SupersedingRun | null;
