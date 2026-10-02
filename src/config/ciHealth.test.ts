@@ -188,9 +188,11 @@ describe('les deux nombres du guetteur viennent de `ci.yml`', () => {
   });
 
   it('le job e2e laisse place à l’install ET aux tests, donc ce n’est jamais lui qui coupe', () => {
-    const afterMatrix = CI_YML.slice(
-      CI_YML.indexOf('shard: [1, 2, 3, 4, 5, 6]')
-    );
+    // La matrice est repérée par sa FORME, pas par son contenu : le nombre de shards change
+    // (6 puis 7 le 2026-10-02), et un littéral rendait ce test aveugle à chaque passage.
+    const matrix = /shard: \[[\d, ]+\]/.exec(CI_YML);
+    expect(matrix, 'matrice des shards introuvable dans ci.yml').toBeTruthy();
+    const afterMatrix = CI_YML.slice(matrix!.index);
     const job = Number(/timeout-minutes:\s*(\d+)/.exec(afterMatrix)![1]);
     const install = afterMatrix.slice(
       afterMatrix.indexOf('- run: pnpm exec playwright install')
