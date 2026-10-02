@@ -3418,6 +3418,43 @@ du générateur sur une réponse modifiée (une année de Pluton qui diverge, un
 un satellite devenu non confirmé), trois échecs qui nomment le corps ; deux du produit (la note
 forcée sur la table du JPL, l'adresse rendue relative), deux rouges dans `e2e/discovery.spec.ts`.
 
+### Front des noms (2026-10-02) : les noms que l'UAI avait rendus officiels à une date
+
+Le bloc « Découverte » d'un corps qui porte des noms de l'UAI dit combien de ses noms de surface
+étaient OFFICIELS à la date de la scène, la prochaine adoption, et ce que cette date n'est pas.
+Pluton n'en a aucun avant le 8 août 2017, puis quatorze : la carte se remplit après New Horizons.
+
+**UNE DATE D'ADOPTION N'EST PAS UNE DATE DE CONNAISSANCE, et c'est la source qui le dit.** La fiche
+de Copernicus A au gazetteer porte « Approval Date : 2006 » et cite, pour référence, la liste de
+Blagg et Müller de 1935. Et 7 050 des 7 058 noms lunaires de 2006 sont des désignations lettrées,
+que la page de la Lune au gazetteer dit reprises d'un catalogue de la NASA de 1982. Compter des
+noms « connus » à une date aurait fait d'un enregistrement administratif une découverte. La fiche
+compte donc des noms OFFICIELS, le dit dans sa note, et compte les désignations lettrées sur une
+ligne à part : ensemble, la Lune passerait d'environ 2 000 noms à plus de 9 000 en une seule année.
+
+**LE « 1ER JANVIER » DU KML EST UNE ANNÉE SEULE, MESURÉ ET NON SUPPOSÉ.** Le KML écrit toujours un
+jour (« 2006/01/01 00:00:00 »), mais la fiche de l'UAI n'affiche qu'une année quand ce jour est le
+1er janvier, et un jour sinon (Occator : « Jul 03, 2015 »). Lu le 2026-10-02 sur **124 fiches** :
+une par couple (corps, année au 1er janvier), les 89 couples, et une fiche datée au jour par corps
+qui en a, soit 35. **124 conformes sur 124.** Les fichiers du gazetteer livrés portent donc
+« AAAA » ou « AAAA-MM-JJ », et une année que la scène traverse rend une BORNE, comme le compte des
+lunes (Mars en 1976 : entre 400 et 783 noms). Une heure autre que minuit arrête le générateur.
+
+**Le compte est fait au générateur**, par corps et par date, dans
+`src/config/gazetteerAdoptionIndex.json` (hors clôture de démarrage, `config/nameAdoptions.ts`) :
+la fiche de la Lune n'a pas à télécharger ses 9 087 noms pour répondre. Le calcul vit dans
+`core/nameAdoption.ts`, pur et testé. La date de lecture publiée (« lu le … ») était écrite en dur
+dans le générateur, juste par coïncidence ; elle se DÉRIVE désormais de l'écriture des KMZ en
+cache, et c'est la plus ancienne qui est publiée.
+
+**Les gardes, et leur falsification.** `src/config/nameAdoptions.test.ts` recompte l'index depuis
+les fichiers livrés et refuse tout « 1er janvier », dans l'index comme dans les fichiers ; deux
+falsifications de la donnée (un compte modifié, un « 01-01 » réintroduit dans `pluto.json`), deux
+rouges. Deux falsifications du produit (les lettrées fondues dans les noms propres, l'année seule
+traitée comme un jour), deux rouges dans `e2e/discovery.spec.ts`. Un KMZ vieilli fait dériver
+`--check`. La Lune n'est démarrée qu'à `MOON_SCENE_DATE`, comme l'exige
+`src/config/e2eMoonDate.test.ts` ; la borne d'une année seule est donc éprouvée sur Mars.
+
 ## Pages `/methodology` et `/sources`
 
 Deux documents, chacun en anglais (`/methodology/`, `/sources/`) et en français
