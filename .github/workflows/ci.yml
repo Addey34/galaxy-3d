@@ -245,7 +245,8 @@ jobs:
       # shard lent n'accuse donc pas forcement le code. `scripts/check-ci-health.mjs` lit cette
       # ligne (RUNNER_CPU_LINE) et l'affiche a cote de chaque shard.
       - name: Runner CPU
-        run: echo "RUNNER_CPU $(lscpu | grep -m1 'Model name' | cut -d: -f2 | xargs) | nproc $(nproc)"
+        run: |
+          echo "RUNNER_CPU $(lscpu | grep -m1 'Model name' | cut -d: -f2 | xargs) | nproc $(nproc)"
       # `playwright` en direct plutot que `pnpm test:e2e --` : pas d'ambiguite sur la
       # transmission des arguments a travers le script npm. Le NOM de l'etape est lu par
       # `scripts/check-ci-health.mjs` (E2E_TEST_STEP) : le changer, c'est changer les deux.
