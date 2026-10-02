@@ -161,7 +161,10 @@ après vingt minutes de suite, ou jamais si la branche fautive n'était pas empr
    au pire moment. `waitForCalmMainThread` lit donc `data-textures-loading` du canvas (publié par
    `ui/textureLoadState.ts`) dans le même aller-retour, et un scénario qui agit juste après être
    arrivé sur la Terre passe par lui. Le témoin est `e2e/textureLoadState.spec.ts`, falsifié :
-   rouge sans publication, rouge sans notification. **Fixer la date n'y aurait rien fait** : la
+   rouge sans publication, rouge sans notification. Le budget d'un aller-retour calme est passé
+   en conséquence de 500 à **1 500 ms** : il n'a plus à attraper les textures par la durée, et
+   500 confondait une machine lente mais stable (700 à 1 180 ms sur un EPYC 9V74 en fin de
+   shard) avec un thread occupé ; les pics qui restent, vol ou upload, durent 2,5 à 5,5 s. **Fixer la date n'y aurait rien fait** : la
    vue Terre coûte la même chose sur dix-sept dates et quatre heures (372 à 402 ms par image),
    contrairement à la Lune de la ligne 44.2. Et la machine compte : GitHub sert plusieurs
    processeurs (EPYC 7763, 9V74, 9V45, Xeon 8573C, Xeon 6973P), la même image coûtant 224 ms sur
