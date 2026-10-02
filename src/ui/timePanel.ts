@@ -101,8 +101,11 @@ function labelHistoricFields(): void {
 function refreshHistoric(ms: number): boolean {
   const shown = displayedDate(ms);
   const julian = shown.calendar === 'julian';
-  historic.hidden = !julian;
-  dateInput.hidden = julian;
+  // N'écrire l'attribut que s'il CHANGE : cette fonction tourne toutes les 250 ms, et réécrire
+  // `hidden` à l'identique est quand même une mutation du DOM, qui peut invalider le style au
+  // moment où le thread est déjà chargé (juste après un vol vers un corps).
+  if (historic.hidden !== !julian) historic.hidden = !julian;
+  if (dateInput.hidden !== julian) dateInput.hidden = julian;
   if (!julian || _editingHistoric) return julian;
   const key = `${shown.year}-${shown.month}-${shown.day}`;
   if (key === _prevHistoric) return julian;
