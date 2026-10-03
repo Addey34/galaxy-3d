@@ -38,6 +38,8 @@ export interface AccuracyRow {
   windowFrom: string;
   windowTo: string;
   relative: boolean;
+  /** Rayon du corps, écrit par le script de validation ; absent pour une sonde ou un interstellaire. */
+  radiusKm?: number | null;
   n: number;
   km: { mean: number | null } | null;
 }
@@ -62,6 +64,8 @@ export interface MeasuredWindow {
   /** Fin incluse : le jour `windowTo` entier. */
   to: number;
   meanKm: number;
+  /** Rayon du corps, lu dans la même ligne du résumé que l'écart (jamais recopié). */
+  radiusKm?: number | null;
 }
 
 /**
@@ -89,7 +93,26 @@ export function measuredWindows(
       from: Date.parse(`${r.windowFrom}T00:00:00Z`),
       to: Date.parse(`${r.windowTo}T00:00:00Z`) + DAY_MS,
       meanKm: r.km!.mean!,
+      radiusKm: r.radiusKm ?? null,
     }));
+}
+
+/**
+ * LE CORPS EST-IL DESSINÉ HORS DE SA PLACE RÉELLE ? (ligne 22.10, 2026-10-03)
+ *
+ * L'écart affiché est juste et ne dit pas ce qu'il implique : 1 413 000 km pour la Terre vers
+ * 9998 av. J.-C., c'est 111 fois son diamètre. Le critère est celui du DIAMÈTRE parce qu'il a un
+ * sens physique exact : au-delà, la sphère dessinée et la vraie ne se recouvrent plus du tout, le
+ * corps est dessiné AILLEURS. Rend le nombre de diamètres, ou `null` en deçà, ou sans rayon publié.
+ *
+ * Mesuré sur le résumé du 2026-10-02 : ce n'est pas qu'une affaire de temps profond. Aujourd'hui,
+ * interpolés depuis leur binaire Horizons, Amalthée et Styx sont à 6 et 8 diamètres.
+ */
+export function diametersOff(window: MeasuredWindow): number | null {
+  const radius = window.radiusKm;
+  if (radius == null || !(radius > 0)) return null;
+  const diameters = window.meanKm / (2 * radius);
+  return diameters > 1 ? diameters : null;
 }
 
 /** Aucune fenêtre mesurée : tout instant est hors de la fenêtre. */

@@ -105,7 +105,18 @@ test('a date before year 1, opened by the permalink, reads a measured gap in yea
   await expect(error).toContainText('Mean measured gap');
   await expect(error).toContainText('1001 BC');
   await expect(error).not.toContainText('-1000');
+  // 811 400 km pour un rayon de 71 492 km, soit 5,7 diamètres : la fiche dit que Jupiter est
+  // dessinée hors de sa place réelle (ligne 22.10, 2026-10-03).
+  await expect(page.locator('.bi-position-offset')).toHaveText(
+    'That is 5.7 times its diameter: at this date, the body is drawn away from its true place.'
+  );
   expect(errors).toEqual([]);
+
+  // Le contre-témoin : la Terre en 2026, à 0,4 diamètre de sa place mesurée, ne dit rien de tel.
+  await openAt(page, 'earth', '2026-06-01T00:00:00Z');
+  await expect(error).toContainText('Mean measured gap', { timeout: 30_000 });
+  await expect(page.locator('.bi-position-offset')).toBeHidden();
+  await expect(page.locator('.bi-position')).toBeVisible();
 });
 
 /**

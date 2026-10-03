@@ -450,6 +450,8 @@ export const en = {
   'position.error':
     'Mean measured gap to JPL Horizons: {distance} ({from}–{to})',
   'position.error.none': 'Gap to JPL Horizons not measured at this date',
+  'position.offset':
+    'That is {times} times its diameter: at this date, the body is drawn away from its true place.',
   'weather.wind.note':
     'Wind flow (Open-Meteo): colour and speed follow wind strength.',
   'weather.thermal.note': 'Air temperature near the surface (MERRA-2 monthly):',
