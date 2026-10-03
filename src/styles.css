@@ -342,7 +342,10 @@ button {
   align-items: center;
   gap: var(--sp-2);
   padding: var(--sp-1) var(--sp-2);
-  height: var(--control-h);
+  /* Plancher et non hauteur fixe : le libellé de vitesse peut passer à trois lignes au pire
+     (temps qui recule, débit limité, police large, 390 px), et la barre grandit alors de
+     quelques pixels au lieu de le couper (2026-10-03). */
+  min-height: var(--control-h);
   box-sizing: content-box;
 }
 
@@ -455,15 +458,20 @@ button {
   letter-spacing: 0.14em;
   color: var(--ink-faint);
 }
+/* La vitesse PASSE À LA LIGNE plutôt que d'être tronquée (2026-10-03). L'ellipsis d'avant
+   coupait, à 390 px, chaque libellé « limité par votre connexion » de 33 à 100 px : le visiteur
+   au réseau lent, celui que ce libellé concerne, lisait « … limité par vo… ». Et sous une police
+   plus large (DejaVu Sans, celle des postes Linux), même le libellé par défaut perdait 5 à 17 px.
+   Deux lignes au pire, mesuré ; `balance` les égalise au lieu de laisser un mot seul. */
 .tb-speed {
   font-size: 0.62rem;
   font-weight: 700;
   letter-spacing: 0.02em;
+  line-height: 1.2;
   color: rgba(var(--accent), 0.9);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
   max-width: 100%;
+  overflow-wrap: break-word;
+  text-wrap: balance;
 }
 
 /* Retour au présent — discret, vert. */

@@ -5,6 +5,18 @@ import { clickWhenCalm } from './mainThread';
 import AxeBuilder from '@axe-core/playwright';
 import { blockExternalNetwork } from './netBlock';
 import { MOON_SCENE_DATE } from './moonScene';
+import { en } from '../src/i18n/dict-en';
+import { es } from '../src/i18n/dict-es';
+import { fr } from '../src/i18n/dict-fr';
+import { ptBR } from '../src/i18n/dict-pt-BR';
+
+/** La mention « débit limité » de chaque langue, LUE dans les dictionnaires, jamais recopiée. */
+const SPEED_LIMITED: Record<string, string> = {
+  en: en['speed.limited'],
+  fr: fr['speed.limited'],
+  es: es['speed.limited'],
+  'pt-BR': ptBR['speed.limited'],
+};
 
 /**
  * Audit d'accessibilité automatisé (axe-core) — pas un remplacement d'un vrai passage au
@@ -575,13 +587,27 @@ test.describe('mobile viewport, Julian date group', () => {
         overflow,
         `débordement de la page (${locale})`
       ).toBeLessThanOrEqual(0);
+      // LE PIRE LIBELLÉ DE VITESSE (2026-10-03) : le temps qui recule, plus la mention du débit
+      // limité, composés comme `ui/playback.ts` les compose (« vitesse · limité… »). L'ellipsis
+      // d'avant coupait ce libellé de 33 à 100 px à 390 px ; il passe désormais à la ligne, et la
+      // barre grandit au lieu de le rogner. Toute la barre est donc vérifiée, la vitesse comprise,
+      // dans les deux sens : en largeur, et en hauteur dans sa rangée en `overflow: hidden`.
+      // Police élargie d'un pixel : la méthode du dépôt pour voir sur Windows ce que la pile de
+      // polices fait sur Linux (DejaVu Sans, plus large). C'est là que le libellé passe à trois
+      // lignes, et qu'une hauteur de rangée FIXE le couperait en bas.
+      await page.addStyleTag({
+        content: '* { letter-spacing: 1px !important; }',
+      });
+      await page.locator('#speed-range').press('Home');
+      await expect(page.locator('#speed-value')).toContainText('◀');
+      await page.evaluate((limited) => {
+        const el = document.getElementById('speed-value')!;
+        el.textContent = `${el.textContent} · ${limited}`;
+      }, SPEED_LIMITED[locale]!);
       const clipped = await page.evaluate(() =>
-        // Le GROUPE, pas toute la barre : l'affichage de la vitesse de la barre compacte est
-        // tronqué par une ellipsis VOULUE, et perd de 11 à 24 px de texte sur le runner Linux
-        // (mesuré le 2026-10-02). Ce défaut est antérieur à ce pas et écrit dans la file.
         [
           ...document.querySelectorAll<HTMLElement>(
-            '#historic-date, #historic-date *'
+            '#time-panel, #time-panel *'
           ),
         ]
           .filter((e) => !e.classList.contains('sr-only') && e.offsetParent)
@@ -591,5 +617,18 @@ test.describe('mobile viewport, Julian date group', () => {
       expect(clipped, `texte rogné dans la barre de temps (${locale})`).toEqual(
         []
       );
+      const spill = await page.evaluate(() => {
+        const el = document
+          .getElementById('speed-value')!
+          .getBoundingClientRect();
+        const row = document
+          .querySelector('#time-panel .time-bar-primary')!
+          .getBoundingClientRect();
+        return Math.max(row.top - el.top, el.bottom - row.bottom);
+      });
+      expect(
+        spill,
+        `vitesse hors de sa rangée, en hauteur (${locale})`
+      ).toBeLessThanOrEqual(0);
     });
 });
