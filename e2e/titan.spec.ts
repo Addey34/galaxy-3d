@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 
-import { bootAndSettle } from './mainThread';
+import { bootAndSettle, clickWhenCalm } from './mainThread';
 
 test.beforeEach(async ({ page }) => {
   await page.route('**/sbdb_query.api*', (route) => route.abort());
@@ -39,6 +39,10 @@ test('Planetary moons are navigable in both display modes with live information 
    * coût réel du travail demandé — huit corps à charger, plus un morphe d'échelle — écrit au
    * lieu d'être laissé au défaut. Un vrai bug échoue quand même : il échouerait aux trois
    * tentatives, et sur une assertion, pas sur la montre.
+   *
+   * Remesuré le 2026-10-03 (ligne 44.3), quand chaque lune attend que les textures de la
+   * précédente soient arrivées : **126 à 132 s** sur trois runs de CI (EPYC 7763), soit 55 % du
+   * budget. Le budget tient, et c'est ce chiffre-ci qui fait foi désormais.
    */
   test.setTimeout(240_000);
   // Le chargeur masqué ne veut pas dire « cliquable » : cf. `e2e/mainThread.ts`, où la mesure
@@ -60,7 +64,11 @@ test('Planetary moons are navigable in both display modes with live information 
   // NAVIGATION — vérifiée sur TOUTES les lunes (opération légère : recherche + sélection +
   // fiche). Confirme que chaque lune est navigable et que sa fiche s'ouvre.
   for (const [id, name] of moons) {
-    await page.locator('#body-search-trigger').click();
+    // Les textures de la lune PRÉCÉDENTE se chargent encore : en rendu logiciel chacune fige une
+    // image plusieurs secondes, et le clic attendait « stable » (deux images) au-delà de ses
+    // 15 s (ligne 44.3, run `37078359462`, EPYC 9V74). Le clic après calme attend qu'aucune
+    // texture ne soit en vol.
+    await clickWhenCalm(page, page.locator('#body-search-trigger'));
     await page.locator('#palette-input').fill(name);
     const moonButton = page.locator(`#orbit-${id}`);
     await expect(moonButton).toBeVisible();
@@ -75,7 +83,7 @@ test('Planetary moons are navigable in both display modes with live information 
   // sur les 8 lunes était redondant (même code) et saturait le GPU logiciel du runner CI. La
   // couverture reste complète : navigation × 8 + morph × 1 dans les deux sens.
   const [, lastName] = moons[moons.length - 1];
-  await page.locator('.mode-btn[data-mode="explo"]').click();
+  await clickWhenCalm(page, page.locator('.mode-btn[data-mode="explo"]'));
   await expect(page.locator('body')).toHaveClass(/is-explo-mode/);
   await expect(info.locator('.bi-name')).toHaveText(lastName);
   await expect(info.locator('.bi-live-dist')).toContainText('AU');
@@ -83,7 +91,7 @@ test('Planetary moons are navigable in both display modes with live information 
     page.locator(`.explo-label[aria-label="${lastName}"]`)
   ).toBeVisible();
 
-  await page.locator('.mode-btn[data-mode="educ"]').click();
+  await clickWhenCalm(page, page.locator('.mode-btn[data-mode="educ"]'));
   await expect(page.locator('body')).not.toHaveClass(/is-explo-mode/);
   await expect(info.locator('.bi-name')).toHaveText(lastName);
 });
