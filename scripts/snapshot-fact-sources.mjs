@@ -777,6 +777,10 @@ async function sbdb() {
         sigma: p.sigma ?? null,
         ref: p.ref ?? null,
         notes: p.notes ?? null,
+        // CE QUE LA BASE DIT DE SA PROPRE GRANDEUR (2026-10-03) : « body rotation period
+        // (synodic) » pour `rot_per`. La fiche lit la nature d'une valeur ici, jamais dans un
+        // souvenir : son libellé disait « rotation sidérale » pour quinze petits corps.
+        desc: p.desc ?? null,
       };
     };
     // Sigma asymétrique SBDB (« -1/+4 ») : conservée telle quelle, la déparer mentirait.
