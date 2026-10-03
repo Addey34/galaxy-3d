@@ -42,7 +42,7 @@ import { setupExploTourNudge } from './ui/exploTourNudge';
 import { setupExploScaleBadge } from './ui/exploScaleBadge';
 import { setupPermalinks } from './ui/permalink';
 import { requestedSceneDate } from './core/permalink';
-import { NAVIGABLE_BODIES } from './config/navigable';
+import { LANDING_PAGE_BODIES } from './config/navigable';
 import { setupAstronomicalEvents } from './ui/astronomicalEvents';
 import { setupOpticalZoom } from './ui/opticalZoom';
 import { ExploHud } from './ui/exploHud';
@@ -647,18 +647,15 @@ function wireChrome(): {
       orbitalMechanics,
       planetNav,
       modeSwitcher,
-      bodyNames,
+      // Depuis le 2026-10-03 tout ce qui se sélectionne a sa page, sondes et interstellaires
+      // compris : la liste des adresses gardées et celle des cibles sélectionnables sont la même.
+      LANDING_PAGE_BODIES,
       cameraSystem,
       {
         playback,
         onEclipseAddress: (event) => documentTitle.setEclipse(event),
       },
-      // Même exclusion de la skybox que `bodyNames` : elle n'est pas une destination.
-      new Set(
-        [...NAVIGABLE_BODIES.entries()]
-          .filter(([, cfg]) => cfg.kind !== 'skybox')
-          .map(([name]) => name)
-      )
+      LANDING_PAGE_BODIES
     );
     syncPermalink = permalink.sync;
     permalink.applyInitialState();

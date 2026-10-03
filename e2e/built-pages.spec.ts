@@ -62,6 +62,11 @@ function generatedDocuments(): string[] {
 const DOCUMENTS = generatedDocuments();
 /** Une page de corps : la troisième famille de documents générés. */
 const BODY_PAGE = 'titan';
+/**
+ * Une page d'objet d'instrument (2026-10-03) : la quatrième famille. Une SONDE, et celle dont le
+ * bloc d'instruments est le plus long (douze identifiants du PDS), donc le pire cas de la page.
+ */
+const INSTRUMENT_PAGE = 'voyager1';
 
 async function settleAnimations(page: Page): Promise<void> {
   await page.evaluate(async () => {
@@ -125,6 +130,12 @@ test.describe('pages générées, à 390 px', () => {
     await checkDocument(page, BODY_PAGE);
   });
 
+  test(`/${INSTRUMENT_PAGE} se charge, passe axe et ne déborde pas`, async ({
+    page,
+  }) => {
+    await checkDocument(page, INSTRUMENT_PAGE);
+  });
+
   /**
    * LE TÉMOIN, ISOLÉ. Sans lui, les scénarios ci-dessus pourraient passer sur une coquille servie
    * à la place d'une page absente — c'est le piège que ce dépôt a déjà payé en production. Ce
@@ -141,7 +152,7 @@ test.describe('pages générées, à 390 px', () => {
     const shell =
       (await page.locator('h1').first().textContent())?.trim() ?? '';
     expect(shell.length, 'la coquille porte un <h1>').toBeGreaterThan(0);
-    for (const path of [...DOCUMENTS, BODY_PAGE])
+    for (const path of [...DOCUMENTS, BODY_PAGE, INSTRUMENT_PAGE])
       expect(
         builtHeading(path),
         `${path} ne se distingue pas de la coquille`

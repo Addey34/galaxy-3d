@@ -29,6 +29,7 @@ import {
   citationOrder,
   displayedAbsoluteUncertainty,
   displayedUncertainty,
+  SCIENTIFIC_MASS_KG,
   type FactEntry,
   type FactValue,
 } from '@/core/bodyFacts';
@@ -110,7 +111,6 @@ function superscript(n: number): string {
  * indispensable pour un corps (1,9 × 10²⁷ kg) et absurde pour une sonde : Voyager 1 a d'abord
  * affiché « 7,22 × 10² kg » là où sa source publie 721,9 kg. Vu à l'écran, pas déduit.
  */
-const SCIENTIFIC_MASS_KG = 1e6;
 
 function formatMass(kg: number): string {
   // Sous le seuil, l'arrondi entier effaçait la précision PUBLIÉE : la NASA donne 721,9 kg
@@ -123,8 +123,10 @@ function formatMass(kg: number): string {
 }
 
 /**
- * Période de rotation SIDÉRALE, en heures (puis en jours si très longue), telle que la lit
- * `core/bodyFacts.factValue` dans la vitesse de rotation axiale. Ce n'est pas le jour solaire :
+ * Période de rotation, en heures (puis en jours si très longue), telle que la lit
+ * `core/bodyFacts.factValue` dans la vitesse de rotation axiale. Sidérale, synodique ou non
+ * qualifiée selon ce que la source déclare (le LIBELLÉ le dit, `core/factQuantity.ts`) ; ce
+ * n'est en tout cas pas le jour solaire :
  * Mercure tourne en 58,6 j mais son jour solaire dure 176 j. La valeur est déjà absolue : le
  * signe porte le sens (Triton rétrograde), pas la durée ; sans cela Triton affichait « -142h 57m ».
  */

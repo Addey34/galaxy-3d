@@ -281,3 +281,10 @@ export function citationOrder(
       order.set(entry.provenance.source, order.size + 1);
   return order;
 }
+
+/**
+ * Sous ce seuil une masse s'écrit en kilogrammes, avec la décimale que la source publie (721,9 kg
+ * pour Voyager 1) ; au-delà, en notation scientifique. Partagé par la fiche de l'application et
+ * par les pages publiques : les deux écrivaient la même masse différemment.
+ */
+export const SCIENTIFIC_MASS_KG = 1e6;

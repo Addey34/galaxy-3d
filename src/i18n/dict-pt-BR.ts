@@ -19,6 +19,7 @@ import type { MessageKey } from './dict-en';
 export const ptBR: Record<MessageKey, string> = {
   // ── Écran de chargement ──
   'title.body': '{name} em 3D: posição e órbita ao vivo',
+  'title.instrument': '{name} em 3D: posição e trajetória ao vivo',
   'title.eclipse.solar.total': 'Eclipse solar total de {date} em 3D',
   'title.eclipse.solar.annular': 'Eclipse solar anular de {date} em 3D',
   'title.eclipse.solar.partial': 'Eclipse solar parcial de {date} em 3D',

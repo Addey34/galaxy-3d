@@ -9,6 +9,7 @@ import type { MessageKey } from './dict-en';
 export const fr: Record<MessageKey, string> = {
   // ── Écran de chargement ──
   'title.body': '{name} en 3D : position et orbite en direct',
+  'title.instrument': '{name} en 3D : position et trajectoire en direct',
   'title.eclipse.solar.total': 'Éclipse totale de Soleil du {date} en 3D',
   'title.eclipse.solar.annular': 'Éclipse annulaire de Soleil du {date} en 3D',
   'title.eclipse.solar.partial': 'Éclipse partielle de Soleil du {date} en 3D',

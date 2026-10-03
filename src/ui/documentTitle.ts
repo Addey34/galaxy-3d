@@ -20,6 +20,7 @@
  */
 import { getLocale, onLocaleChange, t } from '@/i18n';
 import { bodyDisplayName } from '@/i18n/bodyText';
+import { isNavigableTarget } from '@/config/navigable';
 import {
   eclipseTitleKey,
   formatEclipseDate,
@@ -51,7 +52,11 @@ export function setupDocumentTitle(): DocumentTitle {
     document.title =
       current === null || current === 'overview'
         ? t('title.overview')
-        : t('title.body', { name: bodyDisplayName(current) });
+        : // Une sonde ou un interstellaire a sa page depuis le 2026-10-03, dont le titre dit
+          // « trajectoire » : l'onglet dit la même chose qu'elle.
+          t(isNavigableTarget(current) ? 'title.instrument' : 'title.body', {
+            name: bodyDisplayName(current),
+          });
   };
 
   // Le titre doit suivre un changement de langue même sans nouvelle sélection.

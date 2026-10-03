@@ -140,3 +140,17 @@ export function navigableBodies(
 /** Table construite une fois, partagée par la couche UI. */
 export const NAVIGABLE_BODIES: ReadonlyMap<string, CelestialBodyConfig> =
   navigableBodies();
+
+/**
+ * TOUT CE QUI A UNE PAGE PUBLIQUE, donc une adresse `/{nom}/` que l'application garde en
+ * naviguant : chaque corps du catalogue (sauf la skybox) et, depuis le 2026-10-03, les quatorze
+ * objets d'instrument (`src/seo/instrumentLandingPage.ts`). Une seule liste, lue par le
+ * permalien ET confrontée par `src/seo/landingPageSet.test.ts` aux pages que les générateurs
+ * produisent : une page sans entrée ici serait une adresse que l'application refuserait de
+ * garder, une entrée sans page une adresse qu'elle écrirait vers un 404 déguisé.
+ */
+export const LANDING_PAGE_BODIES: ReadonlySet<string> = new Set(
+  [...NAVIGABLE_BODIES.entries()]
+    .filter(([, cfg]) => cfg.kind !== 'skybox')
+    .map(([name]) => name)
+);

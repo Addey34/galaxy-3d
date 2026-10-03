@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { bodyLandingPages } from './bodyLandingPage';
+import { instrumentLandingPages } from './instrumentLandingPage';
+import { NAVIGABLE_TARGETS } from '@/config/navigable';
 import { eclipseLandingPages, eclipsePageTitle } from './eclipseLandingPage';
 import { eclipsesInPageWindow, eclipseTitleKey } from '@/core/eclipsePages';
 import { CELESTIAL_CONFIG } from '@/config/bodies';
@@ -49,6 +51,29 @@ describe('parité des titres', () => {
         );
         // Et le titre de niveau 1 de la page est le même texte : c'est le premier énoncé d'un
         // lecteur d'écran qui arrive sur l'adresse.
+        expect(page.heading).toBe(page.title);
+      }
+    });
+
+    it(`écrit le titre d'objet d'instrument que reprend l'onglet en ${locale}`, () => {
+      // Sondes et interstellaires (2026-10-03) : « trajectoire » et non « orbite », et
+      // `ui/documentTitle` choisit le même gabarit pour eux (`isNavigableTarget`).
+      const pattern = messages[locale]['title.instrument'];
+      const pages = instrumentLandingPages(
+        NAVIGABLE_TARGETS,
+        {
+          archives: new Map(),
+          archiveRetrieved: '2026-09-30',
+          coverage: new Map(),
+        },
+        'https://example.test',
+        locale
+      );
+      expect(pages.length).toBe(NAVIGABLE_TARGETS.size);
+      for (const page of pages) {
+        expect(page.title, `${page.slug} en ${locale}`).toBe(
+          pattern.replace('{name}', page.displayName)
+        );
         expect(page.heading).toBe(page.title);
       }
     });

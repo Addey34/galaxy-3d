@@ -430,8 +430,10 @@ function shapeOf(
  *   irréguliers qui n'en ont pas encore sont une ligne de la file, pas un champ d'ici.
  * - `tileset` et `heightfield` idem : ce module dit qui en a un, la file dit pour qui une
  *   source existe.
- * - un objet d'instrument (sonde, interstellaire) n'a ni surface, ni forme, ni page : il n'a
- *   que sa position et ses faits. C'est l'invariant Explo (`CLAUDE.md`), pas un manque.
+ * - un objet d'instrument (sonde, interstellaire) n'a ni surface ni forme : l'invariant Explo
+ *   (`CLAUDE.md`), pas un manque. Il a en revanche sa PAGE et sa VIGNETTE depuis le 2026-10-03
+ *   (`src/seo/instrumentLandingPage.ts`), donc elles lui sont applicables : leur absence serait
+ *   désormais un vrai manque, et la règle de parité veut qu'il se voie ici.
  * - le fond d'étoiles n'est pas un corps : il n'a qu'une texture. Ni position (il ne bouge
  *   pas), ni faits, ni page, ni vignette.
  * - le Soleil et le fond d'étoiles ne sont pas des cibles de validation
@@ -445,8 +447,9 @@ function applicableOf(
   // `instruments` n'est applicable qu'à une SONDE : un corps n'embarque rien, et un objet
   // interstellaire pas davantage. Le rendre applicable partout ferait compter 58 manques qui
   // n'existent pas.
-  if (family === 'spacecraft') return ['position', 'facts', 'instruments'];
-  if (family !== 'body') return ['position', 'facts'];
+  if (family === 'spacecraft')
+    return ['position', 'facts', 'instruments', 'page', 'card'];
+  if (family !== 'body') return ['position', 'facts', 'page', 'card'];
   if (cfg.kind === 'skybox') return ['texture'];
   const out: Capability[] = ['facts', 'page', 'card'];
   if (cfg.kind !== 'star') out.push('position');
