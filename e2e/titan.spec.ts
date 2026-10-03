@@ -39,6 +39,10 @@ test('Planetary moons are navigable in both display modes with live information 
    * coût réel du travail demandé — huit corps à charger, plus un morphe d'échelle — écrit au
    * lieu d'être laissé au défaut. Un vrai bug échoue quand même : il échouerait aux trois
    * tentatives, et sur une assertion, pas sur la montre.
+   *
+   * Remesuré le 2026-10-03 (ligne 44.3), quand chaque lune attend que les textures de la
+   * précédente soient arrivées : **126 à 132 s** sur trois runs de CI (EPYC 7763), soit 55 % du
+   * budget. Le budget tient, et c'est ce chiffre-ci qui fait foi désormais.
    */
   test.setTimeout(240_000);
   // Le chargeur masqué ne veut pas dire « cliquable » : cf. `e2e/mainThread.ts`, où la mesure
