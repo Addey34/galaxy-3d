@@ -129,6 +129,7 @@ export const DETAIL = {
   equatorialGravity: { message: 'detail.equatorialGravity' },
   temperature1Bar: { message: 'detail.temperature1Bar' },
   effectiveTemperature: { message: 'detail.effectiveTemperature' },
+  surfaceTemperature: { message: 'detail.surfaceTemperature' },
   solarRotationAt16Degrees: { message: 'detail.solarRotationAt16Degrees' },
   obliquityToEcliptic: { message: 'detail.obliquityToEcliptic' },
   synchronousRotation: { message: 'detail.synchronousRotation' },

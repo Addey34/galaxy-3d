@@ -110,6 +110,7 @@
       "value": -235,
       "source": "nasa-science-bodies",
       "method": "measured",
+      "detail": "surfaceTemperature",
       "citation": "https://science.nasa.gov/neptune/moons/triton/"
     },
     "axialTilt": {

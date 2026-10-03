@@ -23,7 +23,7 @@ import {
 } from '@/i18n';
 import { bodyDisplayName, bodyDescription } from '@/i18n/bodyText';
 import { NAVIGABLE_BODIES } from '@/config/navigable';
-import type { CelestialBodyConfig, FactField } from '@/types';
+import type { CelestialBodyConfig, FactField, FactProvenance } from '@/types';
 import {
   bodyFact,
   citationOrder,
@@ -46,6 +46,7 @@ import {
   type MeasuredWindow,
   type PositionSource,
 } from '@/core/positionProvenance';
+import { rotationLabelKey, temperatureLabelKey } from '@/core/factQuantity';
 import {
   DAY_MS,
   temporalCategoryLabelKey,
@@ -394,7 +395,11 @@ function formatNumericFact(
   }
 }
 
-function factLabel(name: string, field: FactField): string {
+function factLabel(
+  name: string,
+  field: FactField,
+  provenance?: FactProvenance
+): string {
   const parent = PARENT_OF.get(name) ?? null;
   switch (field) {
     case 'radiusKm':
@@ -409,9 +414,9 @@ function factLabel(name: string, field: FactField): string {
     case 'gravity':
       return t('stat.gravity');
     case 'meanTempC':
-      return t('stat.meanTemperature');
+      return t(temperatureLabelKey(provenance));
     case 'rotationPeriod':
-      return t('stat.siderealRotation');
+      return t(rotationLabelKey(provenance));
     case 'orbitPeriodDays':
       return parent ? t('stat.orbit') : t('stat.year');
     case 'moonCount':
@@ -474,7 +479,11 @@ export function bodyStats(name: string, cfg: CelestialBodyConfig): Stat[] {
   const stats: Stat[] = [];
   for (const entry of entries) {
     if (entry.status === 'absent') continue;
-    const label = factLabel(name, entry.field);
+    const label = factLabel(
+      name,
+      entry.field,
+      entry.status === 'value' ? entry.provenance : undefined
+    );
     if (entry.status === 'unknown') {
       // La ligne reste, avec sa raison : une ligne absente est ambiguë, l'utilisateur ne peut
       // pas distinguer « la science ne donne pas ce chiffre » de « le catalogue l'a oublié ».
@@ -544,7 +553,7 @@ export function bodySources(
     for (const e of entries)
       if (e.status === 'value' && e.provenance.source === id) {
         const labels = byMethod.get(e.provenance.method) ?? [];
-        labels.push(factLabel(name, e.field));
+        labels.push(factLabel(name, e.field, e.provenance));
         byMethod.set(e.provenance.method, labels);
       }
     const supports = [...byMethod]

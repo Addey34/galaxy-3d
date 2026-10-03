@@ -539,6 +539,12 @@ export const fr: Record<MessageKey, string> = {
   'stat.gravity': 'Gravité',
   'stat.meanTemperature': 'Température moyenne',
   'stat.siderealRotation': 'Rotation sidérale',
+  'stat.meanTemperature1Bar': 'Température moyenne à 1 bar',
+  'stat.effectiveTemperature': 'Température effective',
+  'stat.surfaceTemperature': 'Température de surface',
+  'stat.siderealRotationAt16': 'Rotation sidérale (latitude 16°)',
+  'stat.synodicRotation': 'Rotation synodique',
+  'stat.rotationPeriod': 'Période de rotation',
   'stat.year': 'Année',
   'stat.orbit': 'Orbite',
   'stat.knownMoons': 'Lunes connues',
@@ -603,6 +609,8 @@ export const fr: Record<MessageKey, string> = {
   'detail.obliquityToEcliptic': 'obliquité par rapport à l’écliptique',
   'detail.synchronousRotation':
     'rotation synchrone : égale à la période orbitale',
+  'detail.surfaceTemperature':
+    'température de surface telle que la source l’écrit, pas une moyenne',
   'detail.massFromGM': 'masse = GM / G, avec G de CODATA 2018',
   'detail.gravityFromGM': 'g = GM / R², pour une sphère sans rotation',
   'detail.radiusFromDiameter': 'moitié du diamètre publié',
