@@ -9,14 +9,12 @@ import { blockExternalNetwork } from './netBlock';
  *
  * Ce que ces scénarios prouvent et qu'aucun test unitaire ne peut prouver :
  *
- *  - que l'actif est bien SERVI, et servi en JSON. Ce scénario ne prouve PAS que l'adresse doive
- *    être absolue, et il faut le dire : j'ai essayé de le falsifier en rendant l'adresse relative,
- *    et il est resté VERT. La raison est mesurée, pas supposée — une sonde n'a pas de page
- *    d'atterrissage, donc le permalien réécrit `/voyager1/` en `/?body=voyager1` AVANT que le bloc
- *    ne demande son fichier, et la base de l'URL est alors la racine quoi qu'il arrive. Un CORPS,
- *    lui, GARDE son chemin (`/titan/?mode=educ…`, mesuré le 2026-09-30), et c'est là que la garde
- *    d'adresse a un sens : elle vit dans `e2e/missions.spec.ts`. L'adresse reste absolue ici parce
- *    qu'elle est juste et gratuite, pas parce qu'un scénario la prouve ;
+ *  - que l'actif est bien SERVI, et servi en JSON, depuis une adresse ABSOLUE. Au lot 42 ce
+ *    scénario ne pouvait pas le prouver, et le disait : une sonde n'avait pas de page
+ *    d'atterrissage, le permalien réécrivait `/voyager1/` en `/?body=voyager1` avant que le bloc ne
+ *    demande son fichier, et une adresse relative résolvait donc à la racine quoi qu'il arrive.
+ *    DEPUIS LE 2026-10-03 la sonde a sa page et GARDE son chemin : une adresse relative résoudrait
+ *    en `/voyager1/assets/…`, et ce scénario rougit (falsifié, cf. la ligne qui exige le chemin) ;
  *  - que RIEN n'est demandé au démarrage : ni l'index, ni aucune liste ;
  *  - qu'une sonde que l'archive ne connaît PAS le DIT, au lieu de masquer son bloc. C'est le choix
  *    du lot 42 : un visiteur qui passe de Cassini à Parker Solar Probe verrait sinon un bloc
@@ -77,11 +75,12 @@ test('remplit le bloc sur la fiche d’une sonde, et son adresse RÉSOUT', async
       });
   });
   /**
-   * LE BOOT SE FAIT PAR LE CHEMIN parce que c'est une vraie porte d'entrée, pas parce qu'il rend
-   * ce scénario falsifiable : mesuré, l'application réécrit aussitôt `/voyager1/` en
-   * `/?body=voyager1`, une sonde n'ayant pas de page d'atterrissage. Cf. l'en-tête.
+   * LE BOOT SE FAIT PAR LE CHEMIN, et le chemin RESTE : c'est ce qui rend la garde d'adresse
+   * absolue falsifiable (cf. l'en-tête). Sans cette ligne, une régression qui renverrait la sonde
+   * à la racine rendrait la garde muette sans rien dire.
    */
   await boot(page, 'voyager1/');
+  await expect(page).toHaveURL(/\/voyager1\/(\?|$)/);
 
   const instruments = block(page);
   await expect(instruments).toBeVisible({ timeout: 15_000 });

@@ -457,6 +457,127 @@ function bodyLandingPages() {
             throw new Error(`vignette de partage manquante : ${page.slug}.jpg`);
         }
 
+        /**
+         * LES QUATORZE OBJETS D'INSTRUMENT (2026-10-03) : sondes et interstellaires, chacun sa
+         * page dans les quatre langues et sa vignette. Voir `src/seo/instrumentLandingPage.ts` pour
+         * le pourquoi. Le générateur est PUR : l'archive du PDS et la couverture des éphémérides
+         * sont lues ici et lui sont passées.
+         */
+        const navigable = (await loader.ssrLoadModule(
+          '/src/config/navigable.ts'
+        )) as typeof import('./src/config/navigable');
+        const instrumentSeo = (await loader.ssrLoadModule(
+          '/src/seo/instrumentLandingPage.ts'
+        )) as typeof import('./src/seo/instrumentLandingPage');
+        const instrumentIndex = JSON.parse(
+          await readFile(
+            resolve(__dirname, 'src/config/instrumentIndex.json'),
+            'utf-8'
+          )
+        ) as {
+          retrieved: string;
+          spacecraft: Record<string, unknown>;
+          absent: Record<string, unknown>;
+        };
+        const archives = new Map<
+          string,
+          import('./src/seo/instrumentLandingPage').ArchiveInput
+        >();
+        for (const id of Object.keys(instrumentIndex.spacecraft))
+          archives.set(id, {
+            status: 'declared',
+            archive: JSON.parse(
+              await readFile(
+                resolve(__dirname, `public/assets/instruments/${id}.json`),
+                'utf-8'
+              )
+            ) as import('./src/core/instruments').SpacecraftArchive,
+          });
+        for (const id of Object.keys(instrumentIndex.absent))
+          archives.set(id, { status: 'absent' });
+        // Couverture du fichier Horizons de chaque sonde : début et pas du MANIFESTE, jamais
+        // recopiés. Jour julien (TDB) → jour civil ; la précision voulue est le jour.
+        const ephemerisManifest = JSON.parse(
+          await readFile(
+            resolve(__dirname, 'public/assets/ephemerides/manifest.json'),
+            'utf-8'
+          )
+        ) as {
+          bodies: Record<
+            string,
+            { startJdTdb: number; stepDays: number; sampleCount: number }
+          >;
+        };
+        const jdDay = (jd: number): string =>
+          new Date((jd - 2440587.5) * 86_400_000).toISOString().slice(0, 10);
+        const coverage = new Map<string, { from: string; to: string }>();
+        for (const [id, cfg] of navigable.NAVIGABLE_TARGETS) {
+          const entry = ephemerisManifest.bodies[id];
+          if (cfg.kind !== 'spacecraft' || !entry) continue;
+          coverage.set(id, {
+            from: jdDay(entry.startJdTdb),
+            to: jdDay(
+              entry.startJdTdb + entry.stepDays * (entry.sampleCount - 1)
+            ),
+          });
+        }
+        const instrumentInputs = {
+          archives,
+          archiveRetrieved: instrumentIndex.retrieved,
+          coverage,
+        };
+        const instrumentPages = instrumentSeo.instrumentLandingPages(
+          navigable.NAVIGABLE_TARGETS,
+          instrumentInputs,
+          SITE_ORIGIN
+        );
+        // Un objet sans page ne se verrait nulle part : le compte doit être EXACTEMENT celui de
+        // la table, dans chaque langue.
+        if (instrumentPages.length !== navigable.NAVIGABLE_TARGETS.size)
+          throw new Error(
+            `pages d'objets d'instrument : ${instrumentPages.length} au lieu de ${navigable.NAVIGABLE_TARGETS.size}`
+          );
+        const localisedInstrumentPages = OTHER_LOCALES.flatMap((locale) =>
+          instrumentSeo.instrumentLandingPages(
+            navigable.NAVIGABLE_TARGETS,
+            instrumentInputs,
+            SITE_ORIGIN,
+            locale
+          )
+        );
+        for (const page of [...instrumentPages, ...localisedInstrumentPages]) {
+          const dir = resolve(dist, page.slug);
+          await mkdir(dir, { recursive: true });
+          await writeFile(
+            resolve(dir, 'index.html'),
+            instrumentSeo.renderInstrumentPage(baseHtml, page),
+            'utf-8'
+          );
+        }
+        // Vignette : le fond des corps, le POINT du marqueur à la place de la sphère, et le texte.
+        for (const page of instrumentPages) {
+          const target = resolve(socialDir, `${page.slug}.jpg`);
+          await sharp(Buffer.from(card.cardBackgroundSvg(false)))
+            .composite([
+              { input: Buffer.from(card.cardMarkerSvg(page.color)) },
+              {
+                input: Buffer.from(
+                  card.cardTextSvg(
+                    page.displayName,
+                    page.facts.map((fact) => `${fact.label}: ${fact.value}`),
+                    domain,
+                    'Live position and trajectory, in 3D'
+                  )
+                ),
+              },
+            ])
+            .jpeg({ quality: 85, chromaSubsampling: '4:4:4' })
+            .toFile(target);
+          const written = await stat(target).catch(() => null);
+          if (!written || written.size === 0)
+            throw new Error(`vignette de partage manquante : ${page.slug}.jpg`);
+        }
+
         // Une page par éclipse de la fenêtre fixe 2024-2035 — voir `src/seo/eclipseLandingPage.ts`.
         // Même garde que pour les corps : la fenêtre en contient 53, et un calcul qui n'en rend
         // presque aucune est une panne, pas un choix — qui effacerait des pages déjà indexées.
@@ -681,6 +802,8 @@ function bodyLandingPages() {
             [
               ...pages,
               ...localisedBodyPages,
+              ...instrumentPages,
+              ...localisedInstrumentPages,
               ...eclipsePages,
               ...localisedEclipsePages,
               ...docPages,
@@ -723,6 +846,7 @@ function bodyLandingPages() {
 
         loader.config.logger.info(
           `  ${pages.length + localisedBodyPages.length} pages de corps + ` +
+            `${instrumentPages.length + localisedInstrumentPages.length} pages d'objets d'instrument + ` +
             `${eclipsePages.length + localisedEclipsePages.length} pages d'éclipse + ` +
             `${docPages.length} pages documentaires (${DOC_LOCALE_COUNT} langues) + vignettes + sitemap générés`
         );

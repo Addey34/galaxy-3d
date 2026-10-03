@@ -358,6 +358,53 @@ export function cardBackgroundSvg(emissive: boolean): string {
   );
 }
 
+/** Marge droite que le titre ne doit jamais franchir. */
+export const TEXT_RIGHT_MARGIN = 40;
+/** Largeur moyenne d'un caractère gras, en fraction de la taille : estimation PRUDENTE. */
+const BOLD_CHAR_WIDTH = 0.62;
+
+/**
+ * LE TITRE DE LA VIGNETTE TIENT DANS SA COLONNE (2026-10-03).
+ *
+ * Il était écrit à 84 px quel que soit le nom : assez pour « Encelade », le plus long des corps
+ * (9 caractères), mais « 1I/ʻOumuamua » DÉBORDAIT du bord droit, vu en regardant la vignette
+ * rendue, et « James Webb Space Telescope » (26 caractères) l'aurait fait de moitié. La taille
+ * reste 84 tant que le nom tient, ce qui garde les vignettes des corps au bit près ; elle
+ * diminue ensuite, puis le nom passe sur deux lignes sous un plancher. L'estimation est prudente,
+ * et c'est un RENDU qui la juge : `socialCard.test.ts` rasterise chaque titre et exige qu'aucun
+ * pixel ne franchisse la marge.
+ */
+function titleSvg(displayName: string, clean: (v: string) => string): string {
+  const width = CARD_WIDTH - TEXT_LEFT - TEXT_RIGHT_MARGIN;
+  const fits = (text: string, size: number): boolean =>
+    [...text].length * size * BOLD_CHAR_WIDTH <= width;
+  const line = (text: string, y: number, size: number): string =>
+    `<text x="${TEXT_LEFT}" y="${y}" font-size="${size}" font-weight="700" fill="#ffffff">${clean(text)}</text>`;
+  if (fits(displayName, 84)) return line(displayName, 298, 84);
+  const shrunk = Math.floor(
+    width / ([...displayName].length * BOLD_CHAR_WIDTH)
+  );
+  if (shrunk >= 56) return line(displayName, 298, shrunk);
+  // Deux lignes, coupées à l'espace le plus proche du milieu, à la taille qui fait tenir la plus
+  // longue des deux.
+  const words = displayName.split(' ');
+  let best: [string, string] = [displayName, ''];
+  let bestLonger = Infinity;
+  for (let i = 1; i < words.length; i++) {
+    const a = words.slice(0, i).join(' ');
+    const b = words.slice(i).join(' ');
+    const longer = Math.max([...a].length, [...b].length);
+    if (longer < bestLonger) {
+      bestLonger = longer;
+      best = [a, b];
+    }
+  }
+  // 56 au plus : entre la ligne « GALAXY » (ligne de base 205) et le sous-titre (352), deux
+  // lignes plus grandes toucheraient l'une ou l'autre par leurs capitales ou leurs jambages.
+  const size = Math.min(56, Math.floor(width / (bestLonger * BOLD_CHAR_WIDTH)));
+  return line(best[0], 258, size) + line(best[1], 258 + size, size);
+}
+
 /**
  * Texte de la vignette. Tout ce qui vient du catalogue est échappé : un nom contenant `<` ou
  * `&` casserait sinon le SVG entier — et donc le build au mieux, une vignette vide au pire.
@@ -365,7 +412,13 @@ export function cardBackgroundSvg(emissive: boolean): string {
 export function cardTextSvg(
   displayName: string,
   facts: string[],
-  domain: string
+  domain: string,
+  /**
+   * La ligne sous le nom. Le défaut est celui des corps, inchangé (l'empreinte des vignettes le
+   * tient octet pour octet) ; une sonde ou un interstellaire n'a pas une « orbite » à montrer
+   * mais une trajectoire, d'où le second texte.
+   */
+  tagline = 'Live position and orbit, in 3D'
 ): string {
   const font = 'Segoe UI, Helvetica, Arial, DejaVu Sans, sans-serif';
   // Espaces fines insécables → espaces simples : toutes les polices système n'ont pas le
@@ -382,8 +435,8 @@ export function cardTextSvg(
   return (
     `<svg xmlns="http://www.w3.org/2000/svg" width="${CARD_WIDTH}" height="${CARD_HEIGHT}" font-family="${font}">` +
     `<text x="${TEXT_LEFT}" y="205" font-size="22" letter-spacing="5" fill="#7fa7d9">GALAXY · 3D SOLAR SYSTEM</text>` +
-    `<text x="${TEXT_LEFT}" y="298" font-size="84" font-weight="700" fill="#ffffff">${clean(displayName)}</text>` +
-    `<text x="${TEXT_LEFT}" y="352" font-size="30" fill="#c6d2e3">Live position and orbit, in 3D</text>` +
+    titleSvg(displayName, clean) +
+    `<text x="${TEXT_LEFT}" y="352" font-size="30" fill="#c6d2e3">${clean(tagline)}</text>` +
     lines +
     `<text x="${TEXT_LEFT}" y="568" font-size="22" fill="#6fb3ff">${clean(domain)}</text>` +
     '</svg>'
@@ -588,4 +641,30 @@ export function renderShape(
     out[offset + 3] = 255;
   }
   return out;
+}
+
+/**
+ * LE MARQUEUR D'UN OBJET D'INSTRUMENT, là où un corps a sa sphère (2026-10-03).
+ *
+ * Une sonde ou un interstellaire n'a ni texture ni taille apparente : l'application le montre par
+ * un POINT dans sa couche d'instrument, jamais par une sphère (l'invariant Explo). La vignette dit
+ * la même chose que l'application, et rien de plus : un point lumineux de la couleur du marqueur,
+ * avec son halo, à l'endroit où un corps aurait sa sphère. Peindre une boule serait inventer une
+ * forme que rien ne publie.
+ */
+export function cardMarkerSvg(color: string): string {
+  const safe = /^#[0-9a-f]{6}$/i.test(color) ? color : '#ffffff';
+  const cx = SPHERE_CENTER_X;
+  const cy = CARD_HEIGHT / 2;
+  return (
+    `<svg xmlns="http://www.w3.org/2000/svg" width="${CARD_WIDTH}" height="${CARD_HEIGHT}">` +
+    '<defs>' +
+    `<radialGradient id="halo"><stop offset="0" stop-color="${safe}" stop-opacity="0.55"/>` +
+    `<stop offset="1" stop-color="${safe}" stop-opacity="0"/></radialGradient>` +
+    '</defs>' +
+    `<circle cx="${cx}" cy="${cy}" r="90" fill="url(#halo)"/>` +
+    `<circle cx="${cx}" cy="${cy}" r="34" fill="none" stroke="${safe}" stroke-width="3" opacity="0.6"/>` +
+    `<circle cx="${cx}" cy="${cy}" r="12" fill="${safe}"/>` +
+    '</svg>'
+  );
 }

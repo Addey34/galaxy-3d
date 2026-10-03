@@ -116,8 +116,9 @@ test('a probe is searchable, selectable and listed in the settings table', async
   await entry.click();
   await expect(page.locator('#orbit-juno')).toHaveClass(/is-active/);
   await expect(page.locator('#body-info .bi-name')).toHaveText('Juno');
-  // Le chemin d'URL porte la sélection comme pour tout autre corps.
-  await expect(page).toHaveURL(/body=juno/);
+  // Le chemin d'URL porte la sélection comme pour tout autre corps : depuis le 2026-10-03 la
+  // sonde a sa page, donc son adresse est `/juno/` et non plus `?body=juno`.
+  await expect(page).toHaveURL(/\/juno\/(\?|$)/);
 
   // Et elle a une ligne de réglages : nom et marqueur, jamais d'orbite (elle n'en a pas).
   await page.keyboard.press('Escape');

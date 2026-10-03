@@ -1462,8 +1462,11 @@ situation.
 
 **Ils n'entrent PAS dans `CELESTIAL_CONFIG`, et c'est le choix central.** Ce catalogue décrit ce
 que la scène fabrique : un mesh, des textures à précharger, une ligne d'orbite fermée, une page
-d'atterrissage, une vignette de partage, une fiche de faits sourcés. Une sonde n'a rien de tout
-cela, et l'invariant Explo lui interdit même une taille apparente plancher. L'y faire entrer
+d'atterrissage, une vignette de partage, une fiche de faits sourcés. Une sonde n'avait rien de tout
+cela (**SUPERSEDED pour la page et la vignette le 2026-10-03** : les sondes ont gagné depuis des
+faits de lancement sourcés et ce que l'archive du PDS déclare qu'elles embarquent, et elles ont
+désormais leur page, par un générateur À PART, sans entrer dans ce catalogue ; cf. § « Pages
+d'atterrissage par corps et vignettes de partage », paragraphe « Les objets d'instrument »), et l'invariant Explo lui interdit même une taille apparente plancher. L'y faire entrer
 aurait demandé une exception dans `CelestialObjectFactory`, dans `TextureSystem`, dans
 `catalogValidation`, dans `OrbitalMechanics` et dans les quatre générateurs de pages — cinq
 exceptions pour partager quatre champs. `src/config/navigable.ts` ne partage donc que ce qui est
@@ -2042,6 +2045,25 @@ fond), que le produit des remises à l'échelle vaut le gain de chaque classe, e
 restauré. Chacun falsifié (douze mutations).
 
 ## Pages d'atterrissage par corps et vignettes de partage
+
+**Les objets d'instrument ont leur page depuis le 2026-10-03.** Les onze sondes et les trois
+interstellaires étaient les seuls objets nommés de l'application sans page ni vignette : une
+décision écrite, juste à son époque (§ « Objets d'instrument navigables »), plus depuis.
+`src/seo/instrumentLandingPage.ts` les rend par le même `renderLandingPage` que les corps et les
+éclipses, dans les quatre langues, à `/{nom}/` : description, faits de lancement ou d'orbite cités
+par leur source (`core/bodyFacts.ts`, la règle de la fiche), couverture du fichier Horizons LUE dans
+le manifeste, et pour une sonde ce que l'archive du PDS déclare qu'elle embarque, identifiant
+compris, ou la raison de son absence (Parker, JWST). Ils n'entrent PAS dans `CELESTIAL_CONFIG` : le
+générateur lit `NAVIGABLE_TARGETS`, la table que la fiche lit déjà. **Une seule liste des adresses
+qui ont une page**, `LANDING_PAGE_BODIES` (`config/navigable.ts`), lue par le permalien (qui GARDE
+donc `/voyager1/` au lieu de le renvoyer à la racine) et confrontée aux pages générées par
+`instrumentLandingPage.test.ts`. Le titre dit « trajectoire » et non « orbite » (`title.instrument`,
+le même pour l'onglet, tenu par `titleParity.test.ts`). **La vignette ne peint pas de sphère** : un
+point de la couleur du marqueur, comme l'application, puisqu'une sphère inventerait une forme que
+rien ne publie. Son titre tient désormais dans sa colonne, ce que le nom de ʻOumuamua avait
+montré en débordant, vu en REGARDANT la vignette : `cardTitleFit.test.ts` rasterise chaque titre
+et exige qu'aucun pixel n'entre dans la marge (falsifié : quatre noms débordaient à 84 px fixes).
+La taille reste 84 tant qu'un nom tient, donc aucune vignette de corps n'a changé d'un octet.
 
 L'application est une URL unique : `?body=jupiter` est un paramètre, pas une route. Un moteur de
 recherche ne peut donc classer qu'UN sujet pour tout le site alors que le catalogue en contient
@@ -3232,7 +3254,9 @@ et la colonne `instruments` de `pnpm inventory:gaps`, où `absente (raison ecrit
   son chemin après le boot (`/titan/?mode=educ…`), une SONDE est normalisée vers la racine
   (`/?body=voyager1`), donc seul le boot par le CHEMIN d'un corps rend ce test falsifiable. Il l'est
   désormais, et il rougit. Corollaire pour ce lot : la même garde ne peut PAS exister pour une
-  sonde, et son scénario le dit au lieu de le prétendre ;
+  sonde, et son scénario le dit au lieu de le prétendre (**SUPERSEDED le 2026-10-03** : la sonde a
+  sa page et GARDE son chemin, et la garde de `e2e/instruments.spec.ts` rougit désormais avec une
+  adresse relative, falsifié) ;
 - **`#body-info` est en `overflow-x: hidden`**, donc un texte trop large y est ROGNÉ et la fiche
   rapporte `scrollWidth === clientWidth` comme si tout allait bien : mesuré, un identifiant PDS
   débordant de 70 px laissait la fiche à 286 contre 286. La mesure du débordement est donc ÉLÉMENT

@@ -19,6 +19,7 @@ export const en = {
   // anglaise reprend mot pour mot celle que `src/seo` écrit dans les pages statiques, pour
   // qu'un rechargement ne change rien de visible.
   'title.body': '{name} in 3D: live position and orbit',
+  'title.instrument': '{name} in 3D: live position and trajectory',
   // Pages d'éclipse (`/eclipse/2026-08-12/`) : une clé par combinaison type × astre que le
   // calcul produit réellement — `src/seo/titleParity.test.ts` le vérifie sur les 53 éclipses.
   'title.eclipse.solar.total': 'Total solar eclipse of {date} in 3D',

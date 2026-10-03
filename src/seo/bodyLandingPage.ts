@@ -240,7 +240,7 @@ export function escapeHtml(value: string): string {
 const NBSP = '\u202f';
 
 /** Séparateur de milliers fin ; le séparateur décimal vient de la langue. */
-function formatNumber(
+export function formatNumber(
   value: number,
   decimals = 0,
   locale: Locale = 'en'
@@ -256,7 +256,7 @@ function formatNumber(
 const SUPERSCRIPTS = '⁰¹²³⁴⁵⁶⁷⁸⁹';
 
 /** Masse en notation scientifique, exposant en vrais chiffres suscrits : `1.90 × 10²⁷ kg`. */
-function formatMass(kilograms: number, locale: Locale = 'en'): string {
+export function formatMass(kilograms: number, locale: Locale = 'en'): string {
   const exponent = Math.floor(Math.log10(Math.abs(kilograms)));
   const mantissa = kilograms / 10 ** exponent;
   const digits = [...String(exponent)]
