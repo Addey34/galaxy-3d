@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 
-import { bootAndSettle } from './mainThread';
+import { bootAndSettle, clickWhenCalm } from './mainThread';
 
 test.beforeEach(async ({ page }) => {
   await page.route('**/sbdb_query.api*', (route) => route.abort());
@@ -60,7 +60,11 @@ test('Planetary moons are navigable in both display modes with live information 
   // NAVIGATION — vérifiée sur TOUTES les lunes (opération légère : recherche + sélection +
   // fiche). Confirme que chaque lune est navigable et que sa fiche s'ouvre.
   for (const [id, name] of moons) {
-    await page.locator('#body-search-trigger').click();
+    // Les textures de la lune PRÉCÉDENTE se chargent encore : en rendu logiciel chacune fige une
+    // image plusieurs secondes, et le clic attendait « stable » (deux images) au-delà de ses
+    // 15 s (ligne 44.3, run `37078359462`, EPYC 9V74). Le clic après calme attend qu'aucune
+    // texture ne soit en vol.
+    await clickWhenCalm(page, page.locator('#body-search-trigger'));
     await page.locator('#palette-input').fill(name);
     const moonButton = page.locator(`#orbit-${id}`);
     await expect(moonButton).toBeVisible();
@@ -75,7 +79,7 @@ test('Planetary moons are navigable in both display modes with live information 
   // sur les 8 lunes était redondant (même code) et saturait le GPU logiciel du runner CI. La
   // couverture reste complète : navigation × 8 + morph × 1 dans les deux sens.
   const [, lastName] = moons[moons.length - 1];
-  await page.locator('.mode-btn[data-mode="explo"]').click();
+  await clickWhenCalm(page, page.locator('.mode-btn[data-mode="explo"]'));
   await expect(page.locator('body')).toHaveClass(/is-explo-mode/);
   await expect(info.locator('.bi-name')).toHaveText(lastName);
   await expect(info.locator('.bi-live-dist')).toContainText('AU');
@@ -83,7 +87,7 @@ test('Planetary moons are navigable in both display modes with live information 
     page.locator(`.explo-label[aria-label="${lastName}"]`)
   ).toBeVisible();
 
-  await page.locator('.mode-btn[data-mode="educ"]').click();
+  await clickWhenCalm(page, page.locator('.mode-btn[data-mode="educ"]'));
   await expect(page.locator('body')).not.toHaveClass(/is-explo-mode/);
   await expect(info.locator('.bi-name')).toHaveText(lastName);
 });
