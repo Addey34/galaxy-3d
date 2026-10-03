@@ -37,6 +37,7 @@ import {
   displayedUncertainty,
 } from '@/core/bodyFacts';
 import { factSource } from '@/config/factSources';
+import { rotationLabelKey, temperatureLabelKey } from '@/core/factQuantity';
 import { KM_PER_AU } from '@/core/ScaleService';
 import { distanceDecimals } from '@/core/units';
 import { CARD_HEIGHT, CARD_WIDTH } from './socialCard';
@@ -291,12 +292,6 @@ const FACT_LABELS = {
     es: 'Gravedad en la superficie',
     'pt-BR': 'Gravidade na superfície',
   },
-  meanTemperature: {
-    en: 'Mean temperature',
-    fr: 'Température moyenne',
-    es: 'Temperatura media',
-    'pt-BR': 'Temperatura média',
-  },
   distanceFromParent: {
     en: 'Mean distance from {parent}',
     fr: 'Distance moyenne à {parent}',
@@ -314,12 +309,6 @@ const FACT_LABELS = {
     fr: 'Période orbitale',
     es: 'Periodo orbital',
     'pt-BR': 'Período orbital',
-  },
-  siderealRotation: {
-    en: 'Sidereal rotation',
-    fr: 'Rotation sidérale',
-    es: 'Rotación sidérea',
-    'pt-BR': 'Rotação sideral',
   },
   axialTilt: {
     en: 'Axial tilt',
@@ -516,7 +505,10 @@ export function bodyFactsWithSources(
         value = `${formatNumber(v, v < 0.1 ? 4 : 2, locale)} m/s²`;
         break;
       case 'meanTempC':
-        label = factLabel('meanTemperature', locale);
+        // Le libellé suit la grandeur que la source déclare (`core/factQuantity.ts`), comme sur
+        // la fiche : la Terre a une moyenne, Jupiter une moyenne à 1 bar, le Soleil une
+        // température effective, Encelade une température de surface.
+        label = dict[temperatureLabelKey(entry.provenance)];
         value = `${formatNumber(v, 0, locale)} °C`;
         break;
       case 'distanceAU':
@@ -538,7 +530,8 @@ export function bodyFactsWithSources(
         value = `${formatNumber(v, v < 10 ? 2 : 0, locale)} ${dict['unit.days']}`;
         break;
       case 'rotationPeriod':
-        label = factLabel('siderealRotation', locale);
+        // Sidérale, synodique ou neutre selon ce que la source déclare (`core/factQuantity.ts`).
+        label = dict[rotationLabelKey(entry.provenance)];
         value = formatRotation(v, locale);
         break;
       case 'axialTilt':

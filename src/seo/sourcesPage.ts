@@ -405,11 +405,14 @@ function sourcesPage(input: SourcesInput, locale: DocLocale): DocPage {
       es: 'gravedad',
       'pt-BR': 'gravidade',
     },
+    // Noms NEUTRES (2026-10-03) : ce compte regroupe tous les corps, et le champ n'y désigne pas
+    // la même grandeur partout (moyenne, à 1 bar, effective, de surface ; sidérale, synodique).
+    // Le libellé exact de chaque corps vient de `core/factQuantity.ts`.
     meanTempC: {
-      en: 'mean temperature',
-      fr: 'température moyenne',
-      es: 'temperatura media',
-      'pt-BR': 'temperatura média',
+      en: 'temperature',
+      fr: 'température',
+      es: 'temperatura',
+      'pt-BR': 'temperatura',
     },
     moonCount: {
       en: 'known moons',
@@ -436,10 +439,10 @@ function sourcesPage(input: SourcesInput, locale: DocLocale): DocPage {
       'pt-BR': 'período orbital',
     },
     rotationPeriod: {
-      en: 'sidereal rotation',
-      fr: 'rotation sidérale',
-      es: 'rotación sidérea',
-      'pt-BR': 'rotação sideral',
+      en: 'rotation period',
+      fr: 'période de rotation',
+      es: 'periodo de rotación',
+      'pt-BR': 'período de rotação',
     },
     launchDate: {
       en: 'launch date',

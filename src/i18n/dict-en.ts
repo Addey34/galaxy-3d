@@ -576,6 +576,12 @@ export const en = {
   'stat.gravity': 'Gravity',
   'stat.meanTemperature': 'Mean temperature',
   'stat.siderealRotation': 'Sidereal rotation',
+  'stat.meanTemperature1Bar': 'Mean temperature at 1 bar',
+  'stat.effectiveTemperature': 'Effective temperature',
+  'stat.surfaceTemperature': 'Surface temperature',
+  'stat.siderealRotationAt16': 'Sidereal rotation (latitude 16°)',
+  'stat.synodicRotation': 'Synodic rotation',
+  'stat.rotationPeriod': 'Rotation period',
   'stat.year': 'Year',
   'stat.orbit': 'Orbit',
   'stat.knownMoons': 'Known moons',
@@ -642,6 +648,8 @@ export const en = {
   'detail.obliquityToEcliptic': 'obliquity to the ecliptic',
   'detail.synchronousRotation':
     'synchronous rotation: equal to the orbital period',
+  'detail.surfaceTemperature':
+    'surface temperature as the source states it, not an average',
   'detail.massFromGM': 'mass = GM / G, with G from CODATA 2018',
   'detail.gravityFromGM': 'g = GM / R², for a sphere without rotation',
   'detail.radiusFromDiameter': 'half the published diameter',

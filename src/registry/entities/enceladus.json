@@ -106,6 +106,7 @@
       "value": -201,
       "source": "nasa-science-bodies",
       "method": "measured",
+      "detail": "surfaceTemperature",
       "citation": "https://science.nasa.gov/saturn/moons/enceladus/"
     },
     "axialTilt": {

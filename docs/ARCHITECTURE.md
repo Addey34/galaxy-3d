@@ -2258,6 +2258,23 @@ défaut montre déjà la face éclairée — le test passait sans le cadrage imp
 
 ## Faits sourcés : ce que la fiche et la page d'un corps affichent
 
+**Le libellé suit la grandeur que la source déclare (2026-10-03).** Un champ ne dit pas la même
+chose d'un corps à l'autre : `meanTempC` est une moyenne pour la Terre (NSSDCA, « Mean
+Temperature »), une moyenne au niveau de 1 bar pour une géante (la même note : « or for the gas
+giants at the one bar level »), la température effective pour le Soleil, et une température de
+surface pour Encelade et Triton (NASA Science : « the surface temperature is… », « found surface
+temperatures of… »). `rotationPeriod` est sidérale pour une planète (« relative to the fixed
+background stars ») ou une rotation synchrone, synodique pour un petit corps de la SBDB (« body
+rotation period (synodic) », le `desc` de la base, désormais gardé dans le relevé), prise à 16° de
+latitude pour le Soleil, et sans adjectif quand l'article source n'en écrit pas (Néréide, Quaoar).
+La fiche et les pages publiques écrivaient « température moyenne » et « rotation sidérale » pour
+tous. `core/factQuantity.ts` rend la clé du libellé exact depuis la provenance, une règle et deux
+lecteurs (`t()` pour la fiche, le dictionnaire de la langue pour les pages). Gardes :
+`src/config/factQuantity.test.ts` confronte chaque libellé à la phrase, au champ ou à la citation
+de sa source dans le relevé livré (falsifié trois fois : SBDB dite sidérale, la précision de
+surface d'Encelade retirée, la température effective du Soleil dite moyenne) ;
+`src/ui/bodyInfo.test.ts` le lit sur la fiche rendue.
+
 Rayon, masse, gravité, température moyenne, distance, périodes, rotation, obliquité et nombre de
 lunes sont des affirmations scientifiques. Chacune porte une provenance dans le catalogue, à côté
 de la valeur que la simulation lit (`realData.sources[champ]`, type `FactProvenance`) :

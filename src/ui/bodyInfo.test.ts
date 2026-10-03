@@ -65,6 +65,25 @@ describe('fiche d’information : faits sourcés', () => {
   const stat = (name: string, label: string) =>
     statsOf(name).find((s) => s.label === label);
 
+  /**
+   * LE LIBELLÉ SUIT LA GRANDEUR DE LA SOURCE (2026-10-03), sur la fiche telle qu'elle s'affiche.
+   * La règle et sa justification par source vivent dans `src/config/factQuantity.test.ts`.
+   */
+  it('écrit la grandeur exacte que la source déclare, pas un libellé générique', () => {
+    const labels = (name: string) => statsOf(name).map((s) => s.label);
+    expect(labels('enceladus')).toContain('Température de surface');
+    expect(labels('sun')).toContain('Température effective');
+    expect(labels('sun')).toContain('Rotation sidérale (latitude 16°)');
+    expect(labels('jupiter')).toContain('Température moyenne à 1 bar');
+    expect(labels('ceres')).toContain('Rotation synodique');
+    expect(labels('nereid')).toContain('Période de rotation');
+    // Les cas ordinaires gardent leur libellé : la Terre, Mars, une lune synchrone, Éris.
+    expect(labels('earth')).toContain('Température moyenne');
+    expect(labels('mars')).toContain('Rotation sidérale');
+    expect(labels('titan')).toContain('Rotation sidérale');
+    expect(labels('eris')).toContain('Rotation sidérale');
+  });
+
   it('renvoie chaque valeur à une source numérotée de la liste', () => {
     const jupiter = statsOf('jupiter');
     const sources = bodySources('jupiter', CONFIGS.get('jupiter')!);
