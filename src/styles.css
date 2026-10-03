@@ -1099,9 +1099,13 @@ button {
   font-size: 0.75rem;
   color: #eaf3ff;
 }
-.bi-position-error {
+.bi-position-error,
+.bi-position-offset {
   font-size: 0.7rem;
   color: var(--ink-dim);
+}
+.bi-position-offset[hidden] {
+  display: none;
 }
 .bi-stats {
   display: grid;

@@ -437,6 +437,8 @@ export const es: Record<MessageKey, string> = {
   'position.error':
     'Diferencia media medida con JPL Horizons: {distance} ({from}–{to})',
   'position.error.none': 'Diferencia con JPL Horizons no medida en esta fecha',
+  'position.offset':
+    'Es decir, {times} veces su diámetro: en esta fecha, el cuerpo se dibuja fuera de su lugar real.',
   'weather.wind.note':
     'Flujo del viento (Open-Meteo): el color y la velocidad siguen la fuerza del viento.',
   'weather.thermal.note':

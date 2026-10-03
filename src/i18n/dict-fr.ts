@@ -425,6 +425,8 @@ export const fr: Record<MessageKey, string> = {
   'position.error':
     'Écart moyen mesuré à JPL Horizons : {distance} ({from}–{to})',
   'position.error.none': 'Écart à JPL Horizons non mesuré à cette date',
+  'position.offset':
+    'Soit {times} fois son diamètre : à cette date, le corps est dessiné hors de sa place réelle.',
   'weather.wind.note':
     'Flux du vent (Open-Meteo) : la couleur et la vitesse suivent la force du vent.',
   'weather.thermal.note':

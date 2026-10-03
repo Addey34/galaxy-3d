@@ -217,6 +217,40 @@ describe('fiche d’information — provenance de la position', () => {
     expect(text.error).toBe('Écart à JPL Horizons non mesuré à cette date');
   });
 
+  /**
+   * L'ÉCART QUI DÉPASSE LE DIAMÈTRE (ligne 22.10, 2026-10-03) : au-delà, la sphère dessinée et la
+   * vraie ne se recouvrent plus, et la fiche le dit en une seconde phrase. La Terre vers 9998
+   * av. J.-C. est la mesure réelle du résumé : 1 413 000 km pour un rayon de 6 371 km.
+   */
+  const deep = {
+    from: Date.parse('-009997-01-01T00:00:00Z'),
+    to: Date.parse('-009000-01-01T00:00:00Z'),
+  };
+  it('dit qu’un corps est dessiné hors de sa place quand l’écart dépasse son diamètre', () => {
+    const text = formatPositionProvenance({
+      source: 'astronomy-engine',
+      stamp,
+      error: { ...deep, meanKm: 1_413_000, radiusKm: 6371 },
+    });
+    expect(text.offset).toBe(
+      'Soit 110 fois son diamètre : à cette date, le corps est dessiné hors de sa place réelle.'
+    );
+  });
+
+  it('se tait tant que l’écart reste sous le diamètre, et sans rayon publié', () => {
+    const at = (meanKm: number, radiusKm: number | null) =>
+      formatPositionProvenance({
+        source: 'horizons',
+        stamp,
+        error: { ...deep, meanKm, radiusKm },
+      }).offset;
+    // Juste sous et juste au-dessus d'un diamètre (2 × 100 km).
+    expect(at(199, 100)).toBeNull();
+    expect(at(201, 100)).toContain('1 fois son diamètre');
+    // Une sonde n'a pas de rayon dans le résumé : aucune phrase plutôt qu'une division par rien.
+    expect(at(1_000_000, null)).toBeNull();
+  });
+
   it('affiche la confiance réduite d’une prévision sans changer la catégorie', () => {
     const text = formatPositionProvenance({
       source: 'astronomy-engine',

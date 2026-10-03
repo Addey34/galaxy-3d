@@ -41,7 +41,11 @@ import {
   onUnitSystemChange,
 } from '@/core/units';
 import { safeExternalUrl } from '@/utils/safeUrl';
-import type { MeasuredWindow, PositionSource } from '@/core/positionProvenance';
+import {
+  diametersOff,
+  type MeasuredWindow,
+  type PositionSource,
+} from '@/core/positionProvenance';
 import {
   DAY_MS,
   temporalCategoryLabelKey,
@@ -234,6 +238,8 @@ function yearText(year: number): string {
 export function formatPositionProvenance(view: PositionProvenanceView): {
   source: string;
   error: string;
+  /** Seconde phrase quand l'écart dépasse le diamètre du corps (`core/positionProvenance.ts`). */
+  offset: string | null;
 } {
   const parts = [
     t(`position.source.${view.source}`),
@@ -242,9 +248,14 @@ export function formatPositionProvenance(view: PositionProvenanceView): {
   if (view.stamp.confidence === 'reduced')
     parts.push(t('time.confidence.reduced'));
   if (!view.error)
-    return { source: parts.join(' · '), error: t('position.error.none') };
+    return {
+      source: parts.join(' · '),
+      error: t('position.error.none'),
+      offset: null,
+    };
   const { value, unit } = convertDistanceKm(view.error.meanKm);
   const [from, to] = windowYears(view.error.from, view.error.to);
+  const diameters = diametersOff(view.error);
   return {
     source: parts.join(' · '),
     error: t('position.error', {
@@ -252,6 +263,14 @@ export function formatPositionProvenance(view: PositionProvenanceView): {
       from,
       to,
     }),
+    offset:
+      diameters === null
+        ? null
+        : t('position.offset', {
+            times: diameters.toLocaleString(intlLocale(), {
+              maximumSignificantDigits: 2,
+            }),
+          }),
   };
 }
 
@@ -660,6 +679,9 @@ export function setupBodyInfo(coordinator?: OverlayCoordinator): BodyInfoPanel {
   );
   const positionError =
     positionEl?.querySelector<HTMLElement>('.bi-position-error');
+  const positionOffset = positionEl?.querySelector<HTMLElement>(
+    '.bi-position-offset'
+  );
   let lastPosition: PositionProvenanceView | null = null;
 
   /**
@@ -965,6 +987,12 @@ export function setupBodyInfo(coordinator?: OverlayCoordinator): BodyInfoPanel {
       positionSource.textContent = text.source;
     if (positionError.textContent !== text.error)
       positionError.textContent = text.error;
+    if (positionOffset) {
+      if (positionOffset.textContent !== (text.offset ?? ''))
+        positionOffset.textContent = text.offset ?? '';
+      if (positionOffset.hidden !== (text.offset === null))
+        positionOffset.hidden = text.offset === null;
+    }
     positionEl.hidden = false;
   }
 

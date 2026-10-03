@@ -434,6 +434,8 @@ export const ptBR: Record<MessageKey, string> = {
     'Diferença média medida em relação ao JPL Horizons: {distance} ({from}–{to})',
   'position.error.none':
     'Diferença em relação ao JPL Horizons não medida nesta data',
+  'position.offset':
+    'Ou seja, {times} vezes o seu diâmetro: nesta data, o corpo é desenhado fora do seu lugar real.',
   'weather.wind.note':
     'Fluxo do vento (Open-Meteo): a cor e a velocidade seguem a força do vento.',
   'weather.thermal.note': 'Temperatura do ar perto do solo (MERRA-2 mensal):',

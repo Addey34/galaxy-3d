@@ -1077,6 +1077,26 @@ habituel revient le 15 octobre 1582) ; `e2e/a11y-audit.spec.ts` (le groupe à 39
 langues, à un jour de DEUX chiffres et une année de QUATRE : à un jour d'un seul chiffre, la garde
 du texte rogné ne pouvait pas voir le champ trop étroit, et sa falsification restait verte).
 
+**Quand l'écart dépasse le diamètre (2026-10-03) : « dessiné hors de sa place réelle ».** La
+fiche affichait l'écart juste, sans dire ce qu'il implique : 1 413 000 km pour la Terre vers
+9998 av. J.-C., c'est 111 fois son diamètre. Au-delà d'UN diamètre, la sphère dessinée et la vraie
+ne se recouvrent plus du tout, et la fiche l'écrit en une seconde phrase du même bloc (« Soit 5,7
+fois son diamètre : à cette date, le corps est dessiné hors de sa place réelle. »). Le critère est
+celui du diamètre parce qu'il a ce sens physique exact ; le rayon le déclencherait quand les deux
+sphères se recouvrent encore. Le calcul est `diametersOff` de `core/positionProvenance.ts`, sur le
+rayon que le script de validation écrit dans LA MÊME ligne du résumé que l'écart, jamais recopié.
+**Ce n'est pas qu'une affaire de temps profond**, et c'est voulu : mesuré sur le résumé du
+2026-10-02, 289 fenêtres dépassent le rayon, dont, AUJOURD'HUI, les satellites interpolés depuis
+leur binaire Horizons (Amalthée et Styx à 6 et 8 diamètres). La fiche le dit à toute date.
+
+Gardes : `src/ui/bodyInfo.test.ts` (la phrase juste au-dessus d'un diamètre, son absence juste
+en dessous et sans rayon publié, et le cas réel de la Terre) ; `src/config/positionOffset.test.ts`
+(chaque ligne mesurée d'un corps du catalogue porte un rayon, ÉGAL à celui de la fiche : les
+deux falsifications, rayon absent et rayon décalé d'un kilomètre, sont rouges ; seuls les objets
+d'instrument en sont dépourvus, et leur fiche n'a pas de bloc position) ; `e2e/temporal.spec.ts`
+(Jupiter en 585 av. J.-C. à 5,7 diamètres, et le contre-témoin, la Terre en 2026 à 0,4 diamètre,
+dont la phrase reste masquée alors que le bloc est visible : rouge avec un seuil à 0,1).
+
 Gardes : `src/config/deepTimeWindows.test.ts` (les corps mesurés sont ceux qui se déclarent, la
 cible interrogée est la cible déclarée, la règle du centième rejouée sur la donnée livrée, le
 pavage sans trou de l'an 1 à l'an 9999), `src/core/positionProvenance.test.ts` (le trou est
