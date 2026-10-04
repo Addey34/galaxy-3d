@@ -558,6 +558,40 @@ describe('forme réelle de la vignette', () => {
     expect(brightestX).toBeLessThan(SIZE / 2);
   });
 
+  it('drape sa carte par PIXEL, pas une couleur par triangle', () => {
+    // UN SEUL triangle face à la caméra, dans le plan z = 1 : son éclairage est constant par
+    // construction, donc toute variation à l'écran vient de la carte. Une carte à bandes de
+    // longitude fines n'y apparaît que si la couleur est lue pixel par pixel. Lue au centre du
+    // triangle (le défaut vu sur la vignette de Mimas le 2026-10-04), tout sortait d'UNE couleur.
+    // Un premier essai sur un icosaèdre passait AUSSI avec le défaut : à 64 px, le voisinage du
+    // centre chevauche plusieurs faces, éclairées différemment.
+    const triangle = {
+      positions: Float32Array.from([-1, -1, 1, 1, -1, 1, 0, 1, 1]),
+      indices: Uint32Array.from([0, 1, 2]),
+    };
+    const width = 512;
+    const height = 256;
+    const data = new Uint8ClampedArray(width * height * 3);
+    for (let y = 0; y < height; y++)
+      for (let x = 0; x < width; x++) {
+        const v = Math.floor(x / 8) % 2 ? 230 : 40;
+        data.set([v, v, v], (y * width + x) * 3);
+      }
+    const shape = renderShape(triangle, GREY, SIZE, {
+      data,
+      width,
+      height,
+      channels: 3,
+    });
+    const values = new Set<number>();
+    for (let x = 0; x < SIZE; x++) {
+      const [r, g, b, a] = pixel(shape, SIZE, x, SIZE / 2);
+      if (a) values.add(luminance([r, g, b, a]));
+    }
+    // Plusieurs bandes traversent la ligne médiane : il en faut au moins deux valeurs.
+    expect(values.size).toBeGreaterThan(1);
+  });
+
   it('ne rend rien plutôt que de planter sur un maillage vide', () => {
     const empty = renderShape(
       { positions: new Float32Array(), indices: new Uint32Array() },

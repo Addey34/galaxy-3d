@@ -13,7 +13,7 @@ provenance (source URL, resolution, licence) is in one file per texture layer un
 1. **Public domain: USGS Astrogeology / NASA-JPL / ESA spacecraft mosaics, NASA and NOAA Earth data.** Derived from
    official global mosaics, no copyright restriction. Bodies: `io`, `europa`, `ganymede`,
    `callisto`, `titan`, `enceladus`, `rhea`, `iapetus`, `triton`, `charon`, `phobos`, `deimos`,
-   `vesta`, `pluto`, `tethys`, `dione`, `ceres`, `bennu` (USGS Astrogeology Cassini/Voyager global mosaics, 293m
+   `vesta`, `pluto`, `tethys`, `dione`, `ceres`, `bennu`, `mimas` (USGS Astrogeology Cassini/Voyager global mosaics, 293m
    and 154m/pixel respectively; `deimos` is NASA's Viking-derived map from NASA 3D Resources),
    `earth` (surface, clouds, night lights and land/ocean mask from NASA Earth Observatory /
    Visible Earth Blue Marble and Black Marble; relief normal and height maps derived from the
@@ -21,7 +21,10 @@ provenance (source URL, resolution, licence) is in one file per texture layer un
    illustrative group below: it carried a procedural surface although the published Dawn
    Framing Camera mosaic exists. `bennu` had no surface texture at all before lot 16 and now
    carries the OSIRIS-REx OCAMS global mosaic (Golish et al. 2021), draped on its OLA shape
-   model. Attribution is courteous but not legally required.
+   model. `mimas` left the generated group below on 2026-10-04: the Cassini ISS global mosaic of
+   Roatsch et al. (DLR) is archived by NASA PDS (`CO-S-ISSNA/ISSWA-5-MIDR-V1.0`, volume
+   `coiss_3006`) and was read there, label included; the earlier search had only looked at the
+   USGS catalogue. Attribution is courteous but not legally required.
 
 2. **CC BY 4.0: Solar System Scope.** Requires attribution; compatible with non-commercial and
    donation-supported use. Bodies (surface / cloud / normal / spec / lights / ring layers, incl.
@@ -45,7 +48,7 @@ provenance (source URL, resolution, licence) is in one file per texture layer un
    ice-patches parameterized from each body's real published data, no external image involved)
    for bodies that have never been imaged well enough for a global mosaic to exist: `orcus`,
    `quaoar`, `gonggong`, `sedna` (never visited by any spacecraft, not covered by Solar System
-   Scope's illustrative set), `mimas`, `hyperion`, `miranda`, `ariel`, `umbriel`, `titania`,
+   Scope's illustrative set), `hyperion`, `miranda`, `ariel`, `umbriel`, `titania`,
    `oberon`, `amalthea`, `proteus`, `nereid`, `styx`, `nix`, `kerberos`, `hydra` (imaged by
    Voyager 2 / Galileo / New Horizons, but only partially or at too low a resolution for a
    controlled global mosaic; see each body's provenance file for the specific

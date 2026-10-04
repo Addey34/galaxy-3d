@@ -21,7 +21,7 @@
 import { createRequire } from 'node:module';
 import { resolve, dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { existsSync, mkdirSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync } from 'node:fs';
 
 const require = createRequire(import.meta.url);
 let sharp;
@@ -420,6 +420,25 @@ const IMPORTS = [
     tier: 'free',
   },
   {
+    // Mosaïque Cassini ISS de Roatsch et al. (DLR), archivée au PDS dans le jeu
+    // CO-S-ISSNA/ISSWA-5-MIDR-V1.0, volume coiss_3006 (version 4, 2017-10-24). Lue telle quelle,
+    // étiquette comprise, par `readPds3Image`. Elle est identique, au pixel près (corrélation
+    // 1,0000), au `MI_170630_DLR_basemap_degrees.tif` que l'USGS sert en zip.
+    // Retéléchargement :
+    // https://planetarydata.jpl.nasa.gov/img/data/cassini/cassini_orbiter/coiss_3006/data/images/SM_1M_0_0_SIMP.IMG
+    body: 'mimas',
+    layer: 'surface',
+    src: `${V1}/mimas/SM_1M_0_0_SIMP.IMG`,
+    resolutions: ['8k', '4k', '2k', '1k'],
+    fillHoles: true,
+    tint: null,
+    source:
+      'https://planetarydata.jpl.nasa.gov/img/data/cassini/cassini_orbiter/coiss_3006/',
+    license: 'public-domain',
+    credit: 'NASA/JPL/SSI Cassini ISS, mosaïque DLR (Roatsch et al.), NASA PDS',
+    tier: 'free',
+  },
+  {
     body: 'deimos',
     layer: 'surface',
     src: `${V1}/deimos/Mars - Deimos nasa gov.tif`,
@@ -500,6 +519,61 @@ async function fillBlackHoles(pipeline, width, height) {
   return sharp(data, { raw: { width, height, channels: ch } });
 }
 
+/**
+ * Lit une image PDS3 à étiquette ATTACHÉE (`.IMG`, comme les mosaïques Cassini ISS du volume
+ * `coiss_3006`) et la rend comme entrée brute de sharp. Tout se LIT dans l'étiquette, et tout ce
+ * que ce lecteur ne sait pas traiter est REFUSÉ : un octet de 16 bits lu comme 8, ou une carte
+ * dont le bord gauche n'est pas l'antiméridien, rendrait une texture plausible et fausse.
+ *
+ * Le seul cadrage accepté est celui des autres textures : cylindrique simple, centrée sur 0,
+ * de -180° à +180° Est de gauche à droite. Une étiquette en longitudes OUEST avec
+ * `WESTERNMOST_LONGITUDE = 180` à gauche décrit exactement ce cadrage (Mimas, vérifié le
+ * 2026-10-04 sur le cratère Herschel, à sa longitude du gazetteer et non à son miroir).
+ */
+function readPds3Image(path) {
+  const buffer = readFileSync(path);
+  const head = buffer.subarray(0, 64 * 1024).toString('latin1');
+  const label = head.slice(0, head.search(/^END\s*$/m));
+  const value = (key) => {
+    const match = new RegExp(`^\\s*${key}\\s*=\\s*"?([^"\\r\\n<]+)`, 'm').exec(
+      label
+    );
+    if (!match) throw new Error(`${path} : ${key} absent de l'étiquette`);
+    return match[1].trim();
+  };
+  const recordBytes = Number(value('RECORD_BYTES'));
+  const imageRecord = Number(value('\\^IMAGE'));
+  const width = Number(value('LINE_SAMPLES'));
+  const height = Number(value('LINES'));
+  const refuse = (why) => {
+    throw new Error(`${path} : ${why}, non pris en charge`);
+  };
+  if (value('SAMPLE_BITS') !== '8')
+    refuse(`SAMPLE_BITS ${value('SAMPLE_BITS')}`);
+  if (value('MAP_PROJECTION_TYPE') !== 'SIMPLE CYLINDRICAL')
+    refuse(`projection ${value('MAP_PROJECTION_TYPE')}`);
+  // Le bord GAUCHE est la longitude la plus à l'Ouest dans les deux conventions : 180 en
+  // longitudes Ouest, -180 en longitudes Est. Les deux décrivent l'antiméridien.
+  const leftEdge = Number(value('WESTERNMOST_LONGITUDE'));
+  if (Number(value('CENTER_LONGITUDE')) !== 0 || Math.abs(leftEdge) !== 180)
+    refuse(
+      `cadrage centré sur ${value('CENTER_LONGITUDE')}, bord gauche ${leftEdge}`
+    );
+  const offset = (imageRecord - 1) * recordBytes;
+  const pixels = buffer.subarray(offset, offset + width * height);
+  if (pixels.length !== width * height) refuse('fichier tronqué');
+  return { input: pixels, options: { raw: { width, height, channels: 1 } } };
+}
+
+/** La source d'une entrée, ouverte par sharp ; une image PDS3 passe par son étiquette. */
+function openSource(entry) {
+  if (/\.img$/i.test(entry.src)) {
+    const { input, options } = readPds3Image(entry.src);
+    return sharp(input, { ...options, limitInputPixels: false });
+  }
+  return sharp(entry.src, { limitInputPixels: false });
+}
+
 async function importOne(entry) {
   if (ONLY && entry.body !== ONLY) return;
   if (!existsSync(entry.src)) {
@@ -507,7 +581,7 @@ async function importOne(entry) {
     return;
   }
 
-  const meta = await sharp(entry.src, { limitInputPixels: false }).metadata();
+  const meta = await openSource(entry).metadata();
   const srcWidth = meta.width ?? 0;
   const srcHeight = meta.height ?? 0;
   const outDir = join(TEX_DIR, entry.body);
@@ -544,7 +618,7 @@ async function importOne(entry) {
     }
 
     mkdirSync(outDir, { recursive: true });
-    let pipe = sharp(entry.src, { limitInputPixels: false })
+    let pipe = openSource(entry)
       .resize(width, height, { fit: 'fill', kernel: 'lanczos3' })
       .toColourspace('srgb');
     // N&B → RGB (+ teinte optionnelle). Les pixels ENTIÈREMENT transparents passent d'abord au
