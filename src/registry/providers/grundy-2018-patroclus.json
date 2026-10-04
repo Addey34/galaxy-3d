@@ -1,0 +1,13 @@
+{
+  "$schema": "../schema/provider.schema.json",
+  "id": "grundy-2018-patroclus",
+  "role": "fact-source",
+  "publisher": "Grundy et al.",
+  "title": "The upcoming mutual event season for the Patroclus-Menoetius Trojan binary",
+  "url": "https://arxiv.org/abs/1903.03729",
+  "kind": "article",
+  "journal": "Icarus 305, 198-202",
+  "published": "2018",
+  "doi": "10.1016/j.icarus.2018.01.009",
+  "accessed": "2026-10-04"
+}

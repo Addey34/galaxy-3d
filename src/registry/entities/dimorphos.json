@@ -1,0 +1,148 @@
+{
+  "$schema": "../schema/entity.schema.json",
+  "id": "dimorphos",
+  "targetClass": "satellite",
+  "source": "catalogue",
+  "config": {
+    "kind": "moon",
+    "displayName": {
+      "en": "Dimorphos",
+      "fr": "Dimorphos",
+      "es": "Dimorphos",
+      "pt-BR": "Dimorphos"
+    },
+    "radius": 0.03,
+    "rotationSpeed": {
+      "$spinPeriodDays": 0.4743055556
+    },
+    "orbitalColor": "0xe0a070",
+    "fallbackColor": "0x4e4e4e",
+    "frame": "parentRelative",
+    "relativeEphemeris": {
+      "kind": "horizonsParentRelative"
+    },
+    "relativeOrbitalElements": {
+      "semiMajorAxisAU": 7.704645534e-9,
+      "eccentricity": 0,
+      "inclinationRad": {
+        "$deg": 170.7246
+      },
+      "ascendingNodeRad": {
+        "$deg": 39.8103
+      },
+      "argPerihelionRad": 0,
+      "meanAnomalyAtEpochRad": {
+        "$deg": 17.8608
+      },
+      "epoch": {
+        "$date": "2025-12-31T00:00:00.000Z"
+      }
+    },
+    "textureResolutions": {},
+    "realData": {
+      "orbitalInclination": 0,
+      "ascendingNode": 0,
+      "description": {
+        "en": "The small moon of the asteroid Didymos, about 160 metres across. On 26 September 2022 NASA’s DART spacecraft struck it on purpose, shortening its orbit around Didymos by 32 minutes: the first time humanity deliberately changed the motion of a celestial body.",
+        "fr": "La petite lune de l’astéroïde Didymos, d’environ 160 mètres. Le 26 septembre 2022, la sonde DART de la NASA l’a percutée délibérément et a raccourci de 32 minutes son orbite autour de Didymos : la première fois que l’humanité modifiait volontairement le mouvement d’un corps céleste.",
+        "es": "La pequeña luna del asteroide Didymos, de unos 160 metros. El 26 de septiembre de 2022, la sonda DART de la NASA la impactó deliberadamente y acortó en 32 minutos su órbita alrededor de Didymos: la primera vez que la humanidad cambió a propósito el movimiento de un cuerpo celeste.",
+        "pt-BR": "A pequena lua do asteroide Didymos, com cerca de 160 metros. Em 26 de setembro de 2022, a sonda DART da NASA colidiu com ela de propósito e encurtou em 32 minutos a sua órbita em torno de Didymos: a primeira vez que a humanidade mudou deliberadamente o movimento de um corpo celeste."
+      },
+      "wiki": {
+        "en": "https://en.wikipedia.org/wiki/Dimorphos",
+        "fr": "https://fr.wikipedia.org/wiki/Dimorphos",
+        "es": "https://es.wikipedia.org/wiki/Dimorphos",
+        "pt-BR": "https://pt.wikipedia.org/wiki/Dimorphos"
+      }
+    },
+    "cameraDistance": {
+      "educ": 0.5,
+      "explo": {
+        "$cameraFromRadiusKm": 0.08
+      }
+    },
+    "loadPriority": 13
+  },
+  "facts": {
+    "radiusKm": {
+      "value": {
+        "$diameterKm": 0.16
+      },
+      "source": "nasa-didymos-dimorphos",
+      "method": "derived",
+      "detail": "radiusFromDiameter"
+    },
+    "massKg": {
+      "published": false,
+      "reason": {
+        "en": "NASA’s page on the Didymos system, the source of its other figures, publishes no mass for it, and the JPL Small-Body Database publishes no physical parameters for a satellite.",
+        "fr": "La page de la NASA sur le système de Didymos, d’où viennent ses autres chiffres, ne publie pas sa masse, et la base des petits corps de JPL ne publie aucun paramètre physique pour un satellite.",
+        "es": "La página de la NASA sobre el sistema de Didymos, de donde proceden sus demás cifras, no publica su masa, y la base de datos de cuerpos menores del JPL no publica ningún parámetro físico para un satélite.",
+        "pt-BR": "A página da NASA sobre o sistema de Didymos, de onde vêm os seus outros números, não publica a sua massa, e a base de pequenos corpos do JPL não publica nenhum parâmetro físico para um satélite."
+      }
+    },
+    "gravity": {
+      "published": false,
+      "reason": {
+        "en": "Surface gravity is derived from a mass, and none is published for this body.",
+        "fr": "La gravité de surface se dérive d’une masse, et aucune n’est publiée pour ce corps.",
+        "es": "La gravedad en la superficie se deriva de una masa, y no se publica ninguna para este cuerpo.",
+        "pt-BR": "A gravidade na superfície se deriva de uma massa, e nenhuma é publicada para este corpo."
+      }
+    },
+    "meanTempC": {
+      "published": false,
+      "reason": {
+        "en": "NASA’s page on the Didymos system, the source of its other figures, publishes no temperature.",
+        "fr": "La page de la NASA sur le système de Didymos, d’où viennent ses autres chiffres, ne publie aucune température.",
+        "es": "La página de la NASA sobre el sistema de Didymos, de donde proceden sus demás cifras, no publica ninguna temperatura.",
+        "pt-BR": "A página da NASA sobre o sistema de Didymos, de onde vêm os seus outros números, não publica nenhuma temperatura."
+      }
+    },
+    "axialTilt": {
+      "value": {
+        "$deg": 170.7246
+      },
+      "published": false,
+      "reason": {
+        "en": "The IAU report on rotational elements, which gives the spin axis of most moons shown here, publishes no pole for this body, so a tilt relative to its orbit cannot be derived.",
+        "fr": "Le rapport de l'UAI sur les éléments de rotation, qui donne l'axe de la plupart des lunes affichées ici, ne publie aucun pôle pour ce corps : son inclinaison sur son orbite ne peut donc pas en être dérivée.",
+        "es": "El informe de la UAI sobre elementos de rotación, que da el eje de la mayoría de las lunas mostradas aquí, no publica ningún polo para este cuerpo, así que su inclinación respecto a su órbita no puede derivarse.",
+        "pt-BR": "O relatório da UAI sobre elementos de rotação, que dá o eixo da maioria das luas mostradas aqui, não publica nenhum polo para este corpo, portanto a sua inclinação em relação à órbita não pode ser derivada."
+      }
+    },
+    "distanceAU": {
+      "published": false,
+      "reason": {
+        "en": "Neither NASA’s page nor the JPL Small-Body Database publishes its distance from Didymos: the database gives only its ratio to Didymos’s diameter, measured before the impact.",
+        "fr": "Ni la page de la NASA ni la base des petits corps de JPL ne publient sa distance à Didymos : la base n’en donne que le rapport au diamètre de Didymos, mesuré avant l’impact.",
+        "es": "Ni la página de la NASA ni la base de datos de cuerpos menores del JPL publican su distancia a Didymos: la base solo da su relación con el diámetro de Didymos, medida antes del impacto.",
+        "pt-BR": "Nem a página da NASA nem a base de pequenos corpos do JPL publicam a sua distância a Didymos: a base dá apenas a sua razão com o diâmetro de Didymos, medida antes do impacto."
+      }
+    },
+    "orbitPeriodDays": {
+      "value": 0.4743055556,
+      "source": "nasa-didymos-dimorphos",
+      "method": "measured",
+      "uncertainty": 0.0013888889,
+      "detail": "afterDartImpact"
+    },
+    "rotationPeriod": {
+      "published": false,
+      "reason": {
+        "en": "NASA’s page on the Didymos system, the source of its other figures, publishes no rotation period for it.",
+        "fr": "La page de la NASA sur le système de Didymos, d’où viennent ses autres chiffres, ne publie pas sa période de rotation.",
+        "es": "La página de la NASA sobre el sistema de Didymos, de donde proceden sus demás cifras, no publica su periodo de rotación.",
+        "pt-BR": "A página da NASA sobre o sistema de Didymos, de onde vêm os seus outros números, não publica o seu período de rotação."
+      }
+    }
+  },
+  "notes": {
+    "": "Satellite d'une cible de mission, ajouté au catalogue le 2026-10-04 (vague 2). Taille et période lues sur la page « Didymos & Dimorphos » de NASA Science, citée mot pour mot dans le relevé des faits.",
+    "relativeOrbitalElements": "Elements MOYENS, mesures sur le binaire (node scripts/derive-relative-elements.mjs --mean dimorphos, epoque 2026-01-01) : plan et rayon moyens sur 400 jours, periode du catalogue. Le repli ne sert que hors de la couverture du binaire (2000-2030 ; avant 2000 il porte l'orbite d'APRES l'impact de DART, plus courte de 32 min, faute d'un second jeu d'elements).",
+    "facts.axialTilt": "Valeur de TRAVAIL, non publiée (rendu seulement) : l'inclinaison sur l'écliptique de la normale de son orbite, mesurée sur le binaire (même nombre que `relativeOrbitalElements`). Une rotation synchrone se fait autour de cette normale ; à 0°, la lune tournait à l'endroit quand Didymos tourne à l'envers, et `spinDirection.test.ts` l'a vu.",
+    "rotationSpeed": "Rendu seulement : la rotation est prise synchrone de l'orbite, ce qu'elle était avant l'impact (période de 11,92177 h dans l'en-tête Horizons de la solution s547). Aucune période de rotation n'est publiée par la source citée, et la fiche ne l'affiche pas.",
+    "facts.orbitPeriodDays": "11 h 23 min ± 2 min, la période APRÈS l'impact de DART. Avant le 2022-09-26 elle était de 11 h 55 min ; le binaire Horizons porte les deux, et la fiche affiche la seule qui vaut aujourd'hui.",
+    "radius": "Taille de rendu en mode éducatif, comme les autres petites lunes. En mode exploration, l'échelle vraie vient de `radiusKm`."
+  }
+}

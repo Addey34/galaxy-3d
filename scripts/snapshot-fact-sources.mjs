@@ -801,6 +801,9 @@ async function sbdb() {
       fullname: json.object.fullname,
       diameterKm: numeric(par('diameter')),
       gmKm3s2: numeric(par('GM')),
+      // La DENSITÉ, que la base publie parfois sans GM (Didymos, 2026-10-04) : avec le
+      // diamètre de la même référence, elle donne une masse que la fiche refusait faute de GM.
+      densityGcm3: numeric(par('density')),
       rotationHours: numeric(par('rot_per')),
       // DEUX ÉCRITURES du même pôle (RA/Dec équatoriales J2000) : « 51.8/+10.8 » (Lutetia) et
       // « 78, -71 degrees » (Didymos). Découper sur « / » seul rendait `NaN` pour la seconde,
@@ -885,6 +888,25 @@ const ARTICLES = {
       'diameter 940+-70 km',
       'implies sizes of Orcus and Vanth of 900 and 280 km',
       'implies sizes of 820 and 640 km',
+    ],
+  },
+  // Les satellites de deux cibles de missions (2026-10-04). La page de NASA Science est lue par
+  // curl comme celle de Nature ; Grundy et al. donnent l'orbite dans la table 2 du PDF seule.
+  'nasa-didymos-dimorphos': {
+    url: 'https://science.nasa.gov/solar-system/asteroids/didymos/',
+    quotes: [
+      'The moonlet, Dimorphos (Didymos B), is about 525 feet (160 meters) in diameter.',
+      'shortening the 11-hour and 55-minute orbit to 11 hours and 23 minutes',
+      'margin of uncertainty of approximately plus or minus 2 minutes',
+    ],
+  },
+  'grundy-2018-patroclus': {
+    arxivPdf: '1903.03729v1',
+    quotes: [
+      'Period (days) P 4.282680 ± 0.000063',
+      'Semimajor axis (km) a 688.5 ± 4.7',
+      'System mass (1018 kg) Msys 1.410 ± 0.029',
+      'Buie et al. (2015) estimated the b axis radii as 59 and 54 km',
     ],
   },
   'ortiz-2017-haumea': {

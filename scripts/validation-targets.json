@@ -126,6 +126,14 @@
     "styx": {
       "command": "905"
     },
+    "dimorphos": {
+      "command": "120065803",
+      "expect": "dimorphos"
+    },
+    "menoetius": {
+      "command": "120000617",
+      "expect": "menoetius"
+    },
     "ceres": {
       "command": "1;"
     },
@@ -367,6 +375,14 @@
     "pluto": {
       "id": "999",
       "expect": "pluto"
+    },
+    "didymos": {
+      "id": "920065803",
+      "expect": "didymos"
+    },
+    "patroclus": {
+      "id": "920000617",
+      "expect": "patroclus"
     }
   }
 }

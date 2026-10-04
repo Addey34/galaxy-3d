@@ -1192,7 +1192,7 @@
      "lid": "urn:nasa:pds:context:target:satellite.65803_didymos.dimorphos",
      "name": "(65803) Didymos I (Dimorphos)",
      "type": "Asteroid",
-     "body": null
+     "body": "dimorphos"
     }
    ]
   },
@@ -1741,7 +1741,7 @@
      "lid": "urn:nasa:pds:context:target:satellite.65803_didymos.dimorphos",
      "name": "(65803) Didymos I (Dimorphos)",
      "type": "Asteroid",
-     "body": null
+     "body": "dimorphos"
     }
    ]
   },
@@ -1799,7 +1799,7 @@
      "lid": "urn:nasa:pds:context:target:satellite.617_patroclus.menoetius",
      "name": "(617) Patroclus I (Menoetius)",
      "type": "Asteroid",
-     "body": null
+     "body": "menoetius"
     }
    ]
   },

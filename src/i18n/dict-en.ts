@@ -688,6 +688,8 @@ export const en = {
     'absolute magnitude H: the brightness the object would have 1 AU from both the Sun and the observer, at zero phase angle',
   'detail.perihelionFromElements':
     'q = a (1 − e), from the published osculating elements',
+  'detail.afterDartImpact':
+    'the period after the DART impact of 26 September 2022 (11 h 55 min before)',
   'fact.notYetSourced':
     'Galaxy has not yet traced this value to a primary source (space agency, IAU, peer-reviewed article), so it is not shown.',
 };

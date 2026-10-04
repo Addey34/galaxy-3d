@@ -157,6 +157,7 @@ export const DETAIL = {
   osculatingEccentricity: { message: 'detail.osculatingEccentricity' },
   absoluteMagnitudeH: { message: 'detail.absoluteMagnitudeH' },
   perihelionFromElements: { message: 'detail.perihelionFromElements' },
+  afterDartImpact: { message: 'detail.afterDartImpact' },
 } as const satisfies Record<string, { message: MessageKey }>;
 
 /**

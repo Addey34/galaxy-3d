@@ -164,15 +164,25 @@ export const SHAPE_MODEL_GAPS: readonly ShapeModelGap[] = [
     radiusKm: 1.3,
     reason: 'not-found-in-registries',
   },
-  // Rayons de TRAVAIL, non publiés (cf. leur fiche) : Arrokoth n'a pas de rayon unique, et le
-  // diamètre SBDB de Patrocle décrit la paire avec Menoetius.
+  // Rayons de TRAVAIL, non publiés (cf. leur fiche) : Arrokoth n'a pas de rayon unique, et
+  // Patrocle porte l'axe b de son ellipsoïde d'occultation (le diamètre SBDB décrit la paire).
   {
     body: 'arrokoth',
     radiusKm: 9.57,
     reason: 'published-not-imported',
     source: 'PDS, urn:nasa:pds:nh_derived:arrokoth_shapemodel_porter2024',
   },
-  { body: 'patroclus', radiusKm: 70.181, reason: 'not-found-in-registries' },
+  { body: 'patroclus', radiusKm: 59, reason: 'not-found-in-registries' },
+  // Les satellites de la vague 2 (2026-10-04). Dimorphos : le bundle même du modèle de
+  // Didymos, en versions v003 et v004. Menoetius : rien au registre, seulement les axes d'un
+  // ellipsoïde ajusté sur des occultations (Buie et al. 2015), ce qui n'est pas un maillage.
+  {
+    body: 'dimorphos',
+    radiusKm: 0.08,
+    reason: 'published-not-imported',
+    source: 'PDS, urn:nasa:pds:dart_shapemodel (dimorphos_model_v004)',
+  },
+  { body: 'menoetius', radiusKm: 54, reason: 'not-found-in-registries' },
 ];
 
 /** Les collections interrogées, pour que la prochaine recherche parte d'où celle-ci s'arrête. */

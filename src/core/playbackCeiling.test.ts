@@ -167,9 +167,10 @@ describe('le débit mesuré par le service (phase 17D)', () => {
     // 62 sur 64 au 2026-09-23, et c'est la mesure qui l'a dit, pas moi : Cassini et Rosetta
     // sont des missions CLOSES, leur couverture s'arrête avant cette date. Elles ne demandent
     // donc aucun octet et n'ont rien à faire dans le budget. 85 sur 87 depuis les 23 cibles de
-    // missions (2026-10-04), qui sont toutes couvertes à cette date.
-    expect(Object.keys(horizonsManifest.bodies).length).toBe(87);
-    expect(today.length).toBe(85);
+    // missions (2026-10-04), qui sont toutes couvertes à cette date ; 87 sur 89 avec leurs deux
+    // satellites, couverts eux aussi.
+    expect(Object.keys(horizonsManifest.bodies).length).toBe(89);
+    expect(today.length).toBe(87);
     expect(then.length).toBeLessThan(today.length);
     expect(bytesPerSimulatedDay(then)).toBeLessThan(
       bytesPerSimulatedDay(today)

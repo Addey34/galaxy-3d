@@ -304,6 +304,16 @@
         "system": 9,
         "expect": "Styx"
       },
+      "dimorphos": {
+        "id": 120065803,
+        "system": null,
+        "expect": "Dimorphos"
+      },
+      "menoetius": {
+        "id": 120000617,
+        "system": null,
+        "expect": "Menoetius"
+      },
       "ida": {
         "id": 2431010,
         "system": null,

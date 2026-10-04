@@ -288,7 +288,14 @@ function bodyFor(lid, type, bodies, sbdb) {
     if (!bodies.has(candidate)) continue;
     const declared = bodies.get(candidate);
     const published = asTargetClass(type);
-    if (published !== declared)
+    // UN SATELLITE D'ASTÉROÏDE est publié « Asteroid » sous un identifiant `satellite.` :
+    // `satellite.65803_didymos.dimorphos` (2026-10-04). On n'accepte CETTE paire que sous ce
+    // segment, et un astéroïde homonyme d'une lune (`asteroid.106_dione`) reste refusé.
+    const satelliteOfAsteroid =
+      declared === 'satellite' &&
+      published === 'asteroid' &&
+      String(lid).includes(':target:satellite.');
+    if (published !== declared && !satelliteOfAsteroid)
       throw new Error(
         `désaccord de classe sur ${lid} : le PDS publie « ${type} » (${published}) et ` +
           `la fiche ${candidate} déclare « ${declared} ». Un appariement sur le seul nom ` +

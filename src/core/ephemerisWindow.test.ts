@@ -523,10 +523,12 @@ describe('ce que la première vue coûte réellement', () => {
       (sum, entry) => sum + entry.sampleCount * 48,
       0
     );
-    // 38 445 024 au lot 17 ; 50 834 160 depuis les 23 cibles de missions (2026-10-04).
-    expect(shipped).toBe(50_834_160);
-    // 62 au lot 17, plus les 23 cibles de missions du 2026-10-04 : une requête par corps.
-    expect(requests).toBe(85);
+    // 38 445 024 au lot 17 ; 50 834 160 avec les 23 cibles de missions (2026-10-04), puis
+    // 51 193 104 avec leurs deux satellites, bornés à 2000-2030 et 2000-2050.
+    expect(shipped).toBe(51_193_104);
+    // 62 au lot 17, plus les 23 cibles de missions du 2026-10-04 et leurs deux satellites : une
+    // requête par corps.
+    expect(requests).toBe(87);
     // Moins de 2 % de ce qui est livré aujourd'hui : c'est tout l'objet du lot.
     expect(bytes).toBeLessThan(shipped * 0.02);
     expect(bytes).toBeGreaterThan(500_000);

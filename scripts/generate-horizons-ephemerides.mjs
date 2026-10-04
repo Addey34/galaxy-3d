@@ -28,6 +28,10 @@ const CENTER_IDS = {
   uranus: '799',
   neptune: '899',
   pluto: '999',
+  // Les PRIMAIRES de deux systèmes binaires (2026-10-04), et non leur barycentre : Horizons sert
+  // le satellite relativement à ce corps, et c'est la géométrie de la PAIRE qui se voit.
+  didymos: '920065803',
+  patroclus: '920000617',
 };
 // IMPORTANT — le point-virgule final sur COMMAND force Horizons à chercher dans la base des
 // PETITS corps (astéroïdes/comètes) plutôt que dans la table des corps majeurs/satellites.
@@ -606,6 +610,30 @@ const BODIES = [
     center: 'pluto',
   },
   { name: 'hydra', target: '903', expectedName: 'hydra', center: 'pluto' },
+  // Les satellites de deux cibles de missions (2026-10-04, vague 2). Horizons ne les sert que
+  // sur une fenêtre BORNÉE, lue dans ses refus (« No ephemeris for target … prior to
+  // 2000-JAN-02 », « after 2030-DEC-30 » pour Dimorphos, « after 2050-NOV-30 » pour Menoetius) :
+  // hors d'elle, les éléments `relativeOrbitalElements` de la fiche prennent le relais.
+  // Début au 2000-01-05, premier nœud de la grille commune de 4 jours partie de 1900-01-01 :
+  // leurs échantillons tombent aux MÊMES instants que ceux des autres corps, et l'époque des
+  // éléments de repli (2025-12-31) est celle de toutes les autres lunes.
+  // Dimorphos est la reconstruction de DART (s547), avant ET après l'impact du 2022-09-26.
+  {
+    name: 'dimorphos',
+    target: '120065803',
+    expectedName: 'dimorphos',
+    center: 'didymos',
+    startTime: '2000-01-05',
+    stopTime: '2030-12-29',
+  },
+  {
+    name: 'menoetius',
+    target: '120000617',
+    expectedName: 'menoetius',
+    center: 'patroclus',
+    startTime: '2000-01-05',
+    stopTime: '2050-11-29',
+  },
   // Sondes spatiales — cibles JPL Horizons par ID négatif, pas de ';' final (contrairement aux
   // numéros de petits corps ambigus, ces IDs sont déjà uniques). `startTime` par corps évite de
   // demander des décennies de non-données à Horizons avant le lancement réel.
