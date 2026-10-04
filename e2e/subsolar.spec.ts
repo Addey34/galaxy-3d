@@ -120,11 +120,15 @@ test('the subsolar longitude does not drift while the clock races', async ({
   // Laisse réellement défiler : sans avance de date, le test ne prouverait rien.
   await expect.poll(dateOf, { timeout: 20_000 }).not.toBe(startDate);
   await page.waitForTimeout(4_000);
-
-  const advanced = await dateOf();
-  expect(
-    new Date(advanced).getTime() - new Date(startDate).getTime()
-  ).toBeGreaterThan(86_400_000);
+  // Après quatre secondes de course, plus d'un jour simulé, ATTENDU et non supposé : à vitesse
+  // maximale l'horloge se retient tant que les octets de la fenêtre d'éphémérides suivante ne
+  // sont pas arrivés (lot 17C). Lu sur la seule attente fixe, le run 37187784227 a vu une avance
+  // d'un millième d'année seulement.
+  const advancedMs = async (): Promise<number> =>
+    new Date(await dateOf()).getTime() - new Date(startDate).getTime();
+  await expect
+    .poll(advancedMs, { timeout: 30_000 })
+    .toBeGreaterThan(86_400_000);
 
   const lonError = await readError(panel, 'lon error');
   expect(Number.isNaN(lonError)).toBe(false);

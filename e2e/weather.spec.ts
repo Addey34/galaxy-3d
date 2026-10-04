@@ -89,6 +89,45 @@ test('satellite and model layers are mutually exclusive', async ({ page }) => {
   await expect(model).not.toBeChecked();
 });
 
+/**
+ * Une couche COUPÉE dont le chargement continue en fond ne verrouille pas sa case.
+ *
+ * Les nuages satellite préchargent dès le démarrage et suivent la date, couche visible ou non.
+ * La case était verrouillée pendant TOUT chargement : après un passage au modèle, le visiteur ne
+ * pouvait plus revenir au satellite, et la case annonçait « Loading… » pour une couche éteinte.
+ * Le scénario précédent l'a attrapé au réessai en CI (run 37190524753), quand GIBS, refusé,
+ * repassait par « loading » entre deux tentatives. Ici GIBS ne répond JAMAIS, pour que la couche
+ * reste en chargement d'un bout à l'autre et que le verdict ne dépende d'aucune fenêtre.
+ */
+test('a layer switched off while it loads can be switched back on', async ({
+  page,
+}) => {
+  await page.route('**/gibs.earthdata.nasa.gov/**', () => {
+    // Jamais servie : la couche satellite reste en chargement.
+  });
+  await openWeatherPanel(page);
+
+  const satellite = weatherRow(page, 'Clouds (NASA)').locator('input');
+  const model = weatherRow(page, 'Clouds (Open-Meteo)').locator('input');
+  // Témoin : la couche active qui charge est bien verrouillée (le clic unique du mobile).
+  await expect(satellite).toBeChecked();
+  await expect(satellite).toBeDisabled();
+
+  await model.check();
+  await expect(satellite).not.toBeChecked();
+  await expect(satellite).toBeEnabled();
+  await expect(satellite).toHaveAttribute('aria-busy', 'false');
+  await expect(
+    weatherRow(page, 'Clouds (NASA)').locator('.wl-loading')
+  ).toBeHidden();
+
+  await satellite.check();
+  await expect(satellite).toBeChecked();
+  await expect(model).not.toBeChecked();
+  // Réactivée pendant que son chargement court : elle est de nouveau verrouillée.
+  await expect(satellite).toBeDisabled();
+});
+
 test('weather debug exposes the render contract', async ({ page }) => {
   await page.goto('/?debug-meteo');
   await expect(page.locator('#loader')).toBeHidden({ timeout: 30_000 });
