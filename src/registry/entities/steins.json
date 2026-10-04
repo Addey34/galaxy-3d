@@ -20,6 +20,22 @@
     "kind": "asteroid",
     "color": "0x5fb3a8",
     "fallbackColor": "0x949494",
+    "model": {
+      "resolutions": [
+        "2k",
+        "1k"
+      ],
+      "extentRatio": 1.38,
+      "albedo": 0.3,
+      "albedoSource": "NEOWISE, Masiero et al. 2011, ApJ 741, 68 (JPL SBDB), 0.300 +/- 0.034",
+      "colourSource": null,
+      "credit": {
+        "en": "ESA Rosetta OSIRIS, plate shape model by T. L. Farnham and L. Jorda (NASA PDS, RO-A-OSINAC/OSIWAC-5-STEINS-SHAPE-V1.0), read from the Rosetta SPICE archive at NAIF (DSK ROS_ST_K020_OSPCLAM_N_V1), decimated for the web.",
+        "fr": "ESA Rosetta OSIRIS, modèle de forme en plaques de T. L. Farnham et L. Jorda (NASA PDS, RO-A-OSINAC/OSIWAC-5-STEINS-SHAPE-V1.0), lu dans l’archive SPICE de Rosetta au NAIF (DSK ROS_ST_K020_OSPCLAM_N_V1), décimé pour le web.",
+        "es": "ESA Rosetta OSIRIS, modelo de forma en placas de T. L. Farnham y L. Jorda (NASA PDS, RO-A-OSINAC/OSIWAC-5-STEINS-SHAPE-V1.0), leído en el archivo SPICE de Rosetta en el NAIF (DSK ROS_ST_K020_OSPCLAM_N_V1), diezmado para la web.",
+        "pt-BR": "ESA Rosetta OSIRIS, modelo de forma em placas de T. L. Farnham e L. Jorda (NASA PDS, RO-A-OSINAC/OSIWAC-5-STEINS-SHAPE-V1.0), lido no arquivo SPICE da Rosetta no NAIF (DSK ROS_ST_K020_OSPCLAM_N_V1), decimado para a web."
+      }
+    },
     "description": {
       "en": "A small main-belt asteroid about 5 kilometres across, visited by ESA’s Rosetta in 2008. It was the first E-type asteroid seen up close, and a loosely bound pile of rubble.",
       "fr": "Un petit astéroïde de la ceinture principale d’environ 5 kilomètres, visité par la sonde Rosetta de l’ESA en 2008. Ce fut le premier astéroïde de type E observé de près, un amas de débris faiblement liés.",

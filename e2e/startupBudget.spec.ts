@@ -85,8 +85,16 @@ test('le démarrage ne demande que les paliers planchers, et sa fenêtre tient d
   // (1) La dérivation a vu quelque chose. Sans cette borne, un sélecteur cassé rendrait des
   // listes vides, donc trois assertions vertes qui ne mesurent rien.
   expect(textures.length).toBeGreaterThan(40);
-  expect(models.length).toBeGreaterThan(10);
   expect(ephemerisBytes).toBeGreaterThan(0);
+  // LES MAILLAGES S'ATTENDENT, COMME LES RAFFINEMENTS PLUS BAS (2026-10-04). `CelestialObject`
+  // les lance sans les attendre, et la première requête ne part qu'après l'`import()` de
+  // `GLTFLoader` : rien n'ordonne cette requête avant le masquage du chargeur. Run
+  // `37207793663`, shard 8, premier test d'un serveur froid : ZÉRO maillage compté à cet instant,
+  // puis vert au réessai. Un démarrage qui cesserait d'en demander n'arrive jamais, donc le
+  // sondage expire avec la même affirmation.
+  await expect
+    .poll(() => models.length, { timeout: 60_000, intervals: [500] })
+    .toBeGreaterThan(10);
 
   // (2) Aucun palier au-dessus du plancher, sauf les raffinements de première vue NOMMÉS.
   const allowed = new Set(

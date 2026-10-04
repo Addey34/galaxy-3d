@@ -20,6 +20,23 @@
     "kind": "comet",
     "color": "0x7fd1d1",
     "fallbackColor": "0x484848",
+    "model": {
+      "resolutions": [
+        "2k",
+        "1k"
+      ],
+      "extentRatio": 1.35,
+      "radiusMismatch": "Le rayon affiché, 3,0 km, vient du diamètre de 6,0 km que la SBDB publie (A’Hearn et al. 2005, après Deep Impact seul). Le modèle de Farnham et Thomas, qui ajoute le survol de Stardust, publie un rayon équivalent-volume de 2,83 ± 0,1 km. Deux mesures publiées différentes ; la forme vient du modèle, la taille du catalogue.",
+      "albedo": 0.05,
+      "albedoSource": "Earth, Moon, and Planets 89, 117 (2002) (JPL SBDB), 0.05 +/- 0.02",
+      "colourSource": null,
+      "credit": {
+        "en": "NASA Deep Impact and Stardust-NExT, plate shape model by T. L. Farnham and P. C. Thomas (NASA PDS, DIF-C-HRIV/ITS/MRI-5-TEMPEL1-SHAPE-V2.0), read from the Rosetta SPICE archive at NAIF (DSK TEMPEL1_9P_K032_THO_V01), decimated for the web.",
+        "fr": "NASA Deep Impact et Stardust-NExT, modèle de forme en plaques de T. L. Farnham et P. C. Thomas (NASA PDS, DIF-C-HRIV/ITS/MRI-5-TEMPEL1-SHAPE-V2.0), lu dans l’archive SPICE de Rosetta au NAIF (DSK TEMPEL1_9P_K032_THO_V01), décimé pour le web.",
+        "es": "NASA Deep Impact y Stardust-NExT, modelo de forma en placas de T. L. Farnham y P. C. Thomas (NASA PDS, DIF-C-HRIV/ITS/MRI-5-TEMPEL1-SHAPE-V2.0), leído en el archivo SPICE de Rosetta en el NAIF (DSK TEMPEL1_9P_K032_THO_V01), diezmado para la web.",
+        "pt-BR": "NASA Deep Impact e Stardust-NExT, modelo de forma em placas de T. L. Farnham e P. C. Thomas (NASA PDS, DIF-C-HRIV/ITS/MRI-5-TEMPEL1-SHAPE-V2.0), lido no arquivo SPICE da Rosetta no NAIF (DSK TEMPEL1_9P_K032_THO_V01), decimado para a web."
+      }
+    },
     "description": {
       "en": "A comet about 6 kilometres across. On 4 July 2005 NASA’s Deep Impact released an impactor that struck its surface, and Stardust later returned to image the impact site.",
       "fr": "Une comète d’environ 6 kilomètres. Le 4 juillet 2005, la sonde Deep Impact de la NASA a largué un impacteur qui a frappé sa surface, et Stardust est revenue plus tard photographier le site de l’impact.",

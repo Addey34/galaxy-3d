@@ -218,6 +218,26 @@ moon Dimorphos.
 - **Modification**: read from DSK to OBJ by `scripts/dsk-to-obj.mjs`, pole brought onto +Y,
   decimated. Uniform colour at albedo 0.103 (NEOWISE, JPL SBDB).
 
+`public/assets/models/tempel-1/tempel-1_shape_{1k,2k}.glb`: comet 9P/Tempel 1.
+
+- **Source**: the Rosetta SPICE archive at NAIF, a NASA PDS archive
+  (`ro_rl-e_m_a_c-spice-6-v1.0`, `TEMPEL1_9P_K032_THO_V01.BDS`), made from the plate model of
+  T. L. Farnham and P. C. Thomas (2013), NASA PDS `DIF-C-HRIV/ITS/MRI-5-TEMPEL1-SHAPE-V2.0`, whose
+  Small Bodies Node host refused access.
+- **Data credit**: NASA Deep Impact and Stardust-NExT images (Thomas et al. 2013, *Icarus* 222,
+  453). Distributed by NASA PDS without restriction.
+- **Modification**: read from DSK to OBJ by `scripts/dsk-to-obj.mjs`, pole brought onto +Y,
+  decimated. Uniform colour at albedo 0.05 (JPL SBDB).
+
+`public/assets/models/steins/steins_shape_{1k,2k}.glb`: asteroid (2867) Šteins.
+
+- **Source**: the same Rosetta SPICE archive at NAIF (`ROS_ST_K020_OSPCLAM_N_V1.BDS`), made from
+  the plate model of T. L. Farnham and L. Jorda (2013), NASA PDS
+  `RO-A-OSINAC/OSIWAC-5-STEINS-SHAPE-V1.0`.
+- **Data credit**: ESA Rosetta OSIRIS images. Distributed by NASA PDS without restriction.
+- **Modification**: read from DSK to OBJ by `scripts/dsk-to-obj.mjs`, pole brought onto +Y,
+  decimated. Uniform colour at albedo 0.300 (NEOWISE, JPL SBDB).
+
 ### Moons, a comet and main-belt asteroids (parity pass, 2026-09-22)
 
 Same pipeline. Where a body already has a real surface texture, the model carries no baked colour:
