@@ -1,4 +1,4 @@
-/* global console, process */
+/* global Buffer, console, process */
 /**
  * Import de textures brutes (V1) → jeux LOD propres dans public/assets/textures/.
  *
@@ -68,6 +68,10 @@ function baseName(body, layer) {
  *  - resolutions: paliers à générer (jamais > largeur source ; les trop grands sont ignorés).
  *  - fillHoles  : true = comble les zones noires (zones non imagées) par extension des bords.
  *  - tint       : [r,g,b] optionnel pour teinter une source N&B (ex. Callisto brun-gris).
+ *  - centerLongitude : 180 quand la source est centrée sur 180° Est (0 au bord gauche), cadrage
+ *                 courant des produits OSIRIS-REx et des cartes de Stooke. L'application attend 0 au
+ *                 centre (`core/modelUv.ts`) : l'image est alors roulée d'une demi-largeur. Absent =
+ *                 0. Toute autre valeur est refusée. Lu dans l'étiquette de la source, jamais deviné.
  *  - license/credit/tier : provenance, affichée en fin d'import et recopiée dans
  *                 sa fiche src/registry/products/textures/.
  */
@@ -101,6 +105,9 @@ const IMPORTS = [
     src: `${V1}/callisto/callisto_surface_15k.tif`,
     resolutions: ['8k', '4k', '2k', '1k'],
     fillHoles: true,
+    // Centrée sur 180° Est (étiquette ou mesure du 2026-10-04) : livrée tournée d'un demi-tour
+    // jusqu'à cette date. Voir `src/config/textureOrientation.test.ts`.
+    centerLongitude: 180,
     ...USGS,
   },
   {
@@ -117,6 +124,9 @@ const IMPORTS = [
     src: `${V1}/europa/Europa_Voyager_GalileoSSI_global_mosaic_500m.tif`,
     resolutions: ['8k', '4k', '2k', '1k'],
     fillHoles: true,
+    // Centrée sur 180° Est (étiquette ou mesure du 2026-10-04) : livrée tournée d'un demi-tour
+    // jusqu'à cette date. Voir `src/config/textureOrientation.test.ts`.
+    centerLongitude: 180,
     ...USGS,
   },
   {
@@ -125,6 +135,9 @@ const IMPORTS = [
     src: `${V1}/ganymede/Ganymede_Voyager_GalileoSSI_global_mosaic_1km.tif`,
     resolutions: ['8k', '4k', '2k', '1k'],
     fillHoles: true,
+    // Centrée sur 180° Est (étiquette ou mesure du 2026-10-04) : livrée tournée d'un demi-tour
+    // jusqu'à cette date. Voir `src/config/textureOrientation.test.ts`.
+    centerLongitude: 180,
     ...USGS,
   },
   {
@@ -149,6 +162,9 @@ const IMPORTS = [
     src: `${V1}/pluto/Pluto_NewHorizons_Global_Mosaic_300m_Jul2017_8bit.tif`,
     resolutions: ['8k', '4k', '2k', '1k'],
     fillHoles: true,
+    // Centrée sur 180° Est (étiquette ou mesure du 2026-10-04) : livrée tournée d'un demi-tour
+    // jusqu'à cette date. Voir `src/config/textureOrientation.test.ts`.
+    centerLongitude: 180,
     ...USGS,
   },
   {
@@ -219,6 +235,9 @@ const IMPORTS = [
     src: `${V1}/ceres/Ceres_Dawn_FC_DLR_global_20ppd_Oct2015.tif`,
     resolutions: ['4k', '2k', '1k'],
     fillHoles: true,
+    // Centrée sur 180° Est (étiquette ou mesure du 2026-10-04) : livrée tournée d'un demi-tour
+    // jusqu'à cette date. Voir `src/config/textureOrientation.test.ts`.
+    centerLongitude: 180,
     ...USGS,
   },
   {
@@ -228,6 +247,9 @@ const IMPORTS = [
     src: `${V1}/bennu/Bennu_global_FB34_FB56_ShapeV28_GndControl_MinnaertPhase30_PAN_8bit.tif`,
     resolutions: ['8k', '4k', '2k', '1k'],
     fillHoles: false,
+    // Étiquette ISIS : CenterLongitude = 180.0, PositiveEast, 0 à 360. Importée sans ce
+    // décalage au lot 16, la surface était tournée d'un demi-tour sur le modèle OLA.
+    centerLongitude: 180,
     ...USGS,
   },
 
@@ -412,6 +434,9 @@ const IMPORTS = [
     src: `${V1}/titan/Titan_ISS_P19658_Mosaic_Global_4km.tif`,
     resolutions: ['4k', '2k', '1k'],
     fillHoles: true, // trous documentés aux hautes latitudes nord
+    // Centrée sur 180° Est (étiquette ou mesure du 2026-10-04) : livrée tournée d'un demi-tour
+    // jusqu'à cette date. Voir `src/config/textureOrientation.test.ts`.
+    centerLongitude: 180,
     tint: null,
     source:
       'https://astrogeology.usgs.gov/search/map/titan_cassini_iss_global_mosaic_4005m',
@@ -491,6 +516,28 @@ async function blackenTransparent(pipeline, width, height) {
     if (data[o + ch - 1] === 0) data[o] = data[o + 1] = data[o + 2] = 0;
   }
   return sharp(data, { raw: { width, height, channels: ch } });
+}
+
+/**
+ * Roule une image équirectangulaire d'une demi-largeur : une source centrée sur 180° Est devient
+ * centrée sur 0, le cadrage de l'application. Sans cela, le drapé d'un modèle de forme tourne la
+ * surface d'un demi-tour sur sa forme, sans aucune erreur : c'est ce qu'a porté Bennu du lot 16
+ * au 2026-10-04 (étiquette ISIS `CenterLongitude = 180.0`, recalage pente/variance à 179°).
+ */
+async function rollHalfTurn(pipeline, width, height) {
+  const { data, info } = await pipeline
+    .clone()
+    .raw()
+    .toBuffer({ resolveWithObject: true });
+  const ch = info.channels;
+  const out = Buffer.alloc(data.length);
+  const half = Math.floor(width / 2);
+  for (let y = 0; y < height; y++) {
+    const row = y * width * ch;
+    data.copy(out, row + (width - half) * ch, row, row + half * ch);
+    data.copy(out, row, row + half * ch, row + width * ch);
+  }
+  return sharp(out, { raw: { width, height, channels: ch } });
 }
 
 async function fillBlackHoles(pipeline, width, height) {
@@ -633,6 +680,16 @@ async function importOne(entry) {
     }
     if (entry.fillHoles) {
       pipe = await fillBlackHoles(pipe, width, height);
+    }
+    if (entry.centerLongitude === 180) {
+      pipe = await rollHalfTurn(pipe, width, height);
+    } else if (
+      entry.centerLongitude !== undefined &&
+      entry.centerLongitude !== 0
+    ) {
+      throw new Error(
+        `${entry.body} : centerLongitude ${entry.centerLongitude} non pris en charge (0 ou 180)`
+      );
     }
     process.stdout.write(`  → ${label} … `);
     await pipe.jpeg({ quality: 88, progressive: true }).toFile(dst);

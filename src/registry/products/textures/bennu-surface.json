@@ -31,6 +31,6 @@
     "sourcePixelWidth": 31417,
     "projection": "equirectangular",
     "qualityClass": "native-candidate",
-    "note": "Largeur lue au bloc Dimensions/Samples de l'étiquette ISIS du produit (31417 x 15709). Bennu n'avait AUCUNE texture avant le lot 16 : sa forme portait un albédo cuit. La mosaïque est panchromatique, donc la surface est monochrome, ce qui est la donnée publiée."
+    "note": "Largeur lue au bloc Dimensions/Samples de l'étiquette ISIS du produit (31417 x 15709). Bennu n'avait AUCUNE texture avant le lot 16 : sa forme portait un albédo cuit. La mosaïque est panchromatique, donc la surface est monochrome, ce qui est la donnée publiée. ORIENTATION corrigee le 2026-10-04 : la carte etait livree tournee d'un demi-tour (source centree sur 180, cadrage garde a l'import) ; etiquette ISIS CenterLongitude = 180.0 ; recalage pente du modele OLA / variance de la carte : pic a 179 degres avant, 359 apres (r = 0,306 contre 0,050). Reimporte depuis la source avec centerLongitude 180. Garde : src/config/textureOrientation.test.ts."
   }
 }
