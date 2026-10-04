@@ -20,6 +20,21 @@
     "kind": "asteroid",
     "color": "0xff9f43",
     "fallbackColor": "0x9e9e9e",
+    "model": {
+      "resolutions": [
+        "1k"
+      ],
+      "extentRatio": 1.35,
+      "albedo": 0.35,
+      "albedoSource": "Brozovic et al. 2018, Icarus 300, 115 (JPL SBDB), 0.35 +/- 0.10",
+      "colourSource": null,
+      "credit": {
+        "en": "NASA JPL Goldstone and Arecibo radar, preliminary shape model by M. Brozović et al. (2018, Icarus 300, 115), NASA PDS gbo.ast-apophis.jpl.radar.shape_model, used at its full 3,996 facets.",
+        "fr": "Radar de Goldstone (NASA JPL) et d’Arecibo, modèle de forme préliminaire de M. Brozović et al. (2018, Icarus 300, 115), NASA PDS gbo.ast-apophis.jpl.radar.shape_model, utilisé avec ses 3 996 facettes.",
+        "es": "Radar de Goldstone (NASA JPL) y de Arecibo, modelo de forma preliminar de M. Brozović et al. (2018, Icarus 300, 115), NASA PDS gbo.ast-apophis.jpl.radar.shape_model, usado con sus 3996 facetas.",
+        "pt-BR": "Radar de Goldstone (NASA JPL) e de Arecibo, modelo de forma preliminar de M. Brozović et al. (2018, Icarus 300, 115), NASA PDS gbo.ast-apophis.jpl.radar.shape_model, usado com as suas 3.996 facetas."
+      }
+    },
     "description": {
       "en": "An asteroid about 340 metres across that will pass safely about 32,000 kilometres from Earth’s surface on 13 April 2029. NASA’s OSIRIS-APEX spacecraft will study it during that approach.",
       "fr": "Un astéroïde d’environ 340 mètres qui passera sans danger à environ 32 000 kilomètres de la surface de la Terre le 13 avril 2029. La sonde OSIRIS-APEX de la NASA l’étudiera pendant ce passage.",

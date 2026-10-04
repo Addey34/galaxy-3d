@@ -59,7 +59,19 @@ export type ShapeGapReason =
    * le registre du PDS par cible (bundles ET collections), le dossier `SHAPE` de la PSA pour
    * Rosetta, et la table `asteroid_models` de DAMIT. Une absence CHERCHÉE.
    */
-  | 'not-found-in-registries';
+  | 'not-found-in-registries'
+  /**
+   * Plusieurs solutions publiées qui se contredisent, sans taille étalonnée (`source`) : en
+   * importer une serait présenter un CHOIX comme une mesure, et son échelle viendrait du
+   * catalogue, ce qui rendrait tautologique la garde du volume. Leucus, 2026-10-04.
+   */
+  | 'ambiguous-solutions'
+  /**
+   * Le jeu est servi, mais il ne déclare AUCUNE licence (`source`), et l'avis général de son
+   * éditeur exclut les usages autres qu'éducatifs ou éditoriaux sans licence particulière. On
+   * n'importe pas sur une licence supposée : 67P, lu le 2026-10-04.
+   */
+  | 'licence-not-stated';
 
 export interface ShapeModelGap {
   /** Nom du corps au catalogue. */
@@ -67,7 +79,7 @@ export interface ShapeModelGap {
   /** Rayon moyen publié, en km, tel que la fiche le porte. */
   readonly radiusKm: number;
   readonly reason: ShapeGapReason;
-  /** Le jeu publié, pour `published-not-imported` et `archive-refuses-access`. */
+  /** Le jeu publié, pour toute raison qui nomme un jeu (tout sauf les absences cherchées). */
   readonly source?: string;
 }
 
@@ -86,45 +98,22 @@ export const SHAPE_MODEL_GAPS: readonly ShapeModelGap[] = [
   // Les cibles de missions entrées au catalogue le 2026-10-04. Rayons LUS des fiches (diamètre
   // SBDB / 2), recomparés par le test.
   {
-    body: 'lutetia',
-    radiusKm: 49,
-    reason: 'published-not-imported',
-    source: 'DAMIT, modèle non convexe 282',
-  },
-  {
-    body: 'gaspra',
-    radiusKm: 6.1,
-    reason: 'published-not-imported',
-    source: 'PDS, urn:nasa:pds:ast-sat.thomas.shape-models (951gaspra)',
-  },
-  {
-    body: 'mathilde',
-    radiusKm: 26.4,
-    reason: 'published-not-imported',
-    source: 'PDS, urn:nasa:pds:ast-sat.thomas.shape-models (253mathilde)',
-  },
-  {
     body: 'leucus',
     radiusKm: 17.0775,
-    reason: 'published-not-imported',
-    source: 'DAMIT, modèles convexes 6692 et 6693',
+    reason: 'ambiguous-solutions',
+    source:
+      'DAMIT, modèles convexes 6692 (pôle 321°, 77°) et 6693 (152°, 51°), qualité 1, taille non étalonnée',
   },
   {
     body: 'didymos',
     radiusKm: 0.39,
-    reason: 'published-not-imported',
+    reason: 'archive-refuses-access',
     source: 'PDS, urn:nasa:pds:dart_shapemodel (didymos_model_v003)',
-  },
-  {
-    body: 'apophis',
-    radiusKm: 0.17,
-    reason: 'published-not-imported',
-    source: 'PDS, urn:nasa:pds:gbo.ast-apophis.jpl.radar.shape_model',
   },
   {
     body: 'churyumov-gerasimenko',
     radiusKm: 1.7,
-    reason: 'published-not-imported',
+    reason: 'licence-not-stated',
     source: 'ESA PSA, RO-C-MULTI-5-67P-SHAPE-V2.0',
   },
   {
@@ -169,7 +158,7 @@ export const SHAPE_MODEL_GAPS: readonly ShapeModelGap[] = [
   {
     body: 'arrokoth',
     radiusKm: 9.57,
-    reason: 'published-not-imported',
+    reason: 'archive-refuses-access',
     source: 'PDS, urn:nasa:pds:nh_derived:arrokoth_shapemodel_porter2024',
   },
   { body: 'patroclus', radiusKm: 59, reason: 'not-found-in-registries' },
@@ -179,7 +168,7 @@ export const SHAPE_MODEL_GAPS: readonly ShapeModelGap[] = [
   {
     body: 'dimorphos',
     radiusKm: 0.08,
-    reason: 'published-not-imported',
+    reason: 'archive-refuses-access',
     source: 'PDS, urn:nasa:pds:dart_shapemodel (dimorphos_model_v004)',
   },
   { body: 'menoetius', radiusKm: 54, reason: 'not-found-in-registries' },
@@ -211,5 +200,9 @@ export function shapeGapLine(gap: ShapeModelGap): string {
       return `jeu nomme, hote en HTTP 403 : ${gap.source}`;
     case 'not-found-in-registries':
       return 'aucun maillage au registre du PDS, a la PSA ni dans DAMIT';
+    case 'ambiguous-solutions':
+      return `solutions publiees contradictoires, non importees : ${gap.source}`;
+    case 'licence-not-stated':
+      return `jeu servi sans licence declaree, non importe : ${gap.source}`;
   }
 }

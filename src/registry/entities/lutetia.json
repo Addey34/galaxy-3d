@@ -20,6 +20,21 @@
     "kind": "asteroid",
     "color": "0xb07fd1",
     "fallbackColor": "0x787878",
+    "model": {
+      "resolutions": [
+        "1k"
+      ],
+      "extentRatio": 1.43,
+      "albedo": 0.19,
+      "albedoSource": "Sierks et al. 2011, Science 334, 487 (JPL SBDB), 0.19 +/- 0.01",
+      "colourSource": null,
+      "credit": {
+        "en": "Ground-based adaptive optics and light curves, shape model by B. Carry et al. (2010), DAMIT model 282 (CC BY 4.0), used at its full 512 facets.",
+        "fr": "Optique adaptative au sol et courbes de lumière, modèle de forme de B. Carry et al. (2010), modèle DAMIT 282 (CC BY 4.0), utilisé avec ses 512 facettes.",
+        "es": "Óptica adaptativa desde tierra y curvas de luz, modelo de forma de B. Carry et al. (2010), modelo DAMIT 282 (CC BY 4.0), usado con sus 512 facetas.",
+        "pt-BR": "Óptica adaptativa em solo e curvas de luz, modelo de forma de B. Carry et al. (2010), modelo DAMIT 282 (CC BY 4.0), usado com as suas 512 facetas."
+      }
+    },
     "description": {
       "en": "A main-belt asteroid about 100 kilometres across. ESA’s Rosetta flew past it in 2010 on its way to comet 67P and revealed a battered world of many craters.",
       "fr": "Un astéroïde de la ceinture principale d’environ 100 kilomètres. La sonde Rosetta de l’ESA l’a survolé en 2010, en route vers la comète 67P, et a révélé un monde criblé de cratères.",

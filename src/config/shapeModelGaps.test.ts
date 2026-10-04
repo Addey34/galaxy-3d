@@ -83,7 +83,9 @@ describe('corps sans modèle de forme : la recherche est écrite', () => {
     for (const gap of SHAPE_MODEL_GAPS) {
       const named =
         gap.reason === 'published-not-imported' ||
-        gap.reason === 'archive-refuses-access';
+        gap.reason === 'archive-refuses-access' ||
+        gap.reason === 'ambiguous-solutions' ||
+        gap.reason === 'licence-not-stated';
       expect(Boolean(gap.source?.trim()), gap.body).toBe(named);
     }
   });
