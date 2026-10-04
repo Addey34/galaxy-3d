@@ -1,0 +1,102 @@
+{
+  "$schema": "../schema/entity.schema.json",
+  "id": "annefrank",
+  "targetClass": "asteroid",
+  "source": "small-body",
+  "elements": {
+    "displayName": {
+      "en": "Annefrank",
+      "fr": "Annefrank",
+      "es": "Annefrank",
+      "pt-BR": "Annefrank"
+    },
+    "a": 2.212644543576054,
+    "e": 0.06312827773659137,
+    "iDeg": 4.247435411927348,
+    "omDeg": 120.5508726239479,
+    "wDeg": 9.4578719221397,
+    "maDeg": 213.3590615328742,
+    "epoch": "2026-01-01T00:00:00.000Z",
+    "kind": "asteroid",
+    "color": "0xd1c45f",
+    "fallbackColor": "0x969696",
+    "description": {
+      "en": "A small main-belt asteroid about 5 kilometres across, photographed by NASA’s Stardust in November 2002 on its way to comet Wild 2.",
+      "fr": "Un petit astéroïde de la ceinture principale d’environ 5 kilomètres, photographié par la sonde Stardust de la NASA en novembre 2002, en route vers la comète Wild 2.",
+      "es": "Un pequeño asteroide del cinturón principal de unos 5 kilómetros, fotografiado por la sonda Stardust de la NASA en noviembre de 2002, rumbo al cometa Wild 2.",
+      "pt-BR": "Um pequeno asteroide do cinturão principal com cerca de 5 quilômetros, fotografado pela sonda Stardust da NASA em novembro de 2002, a caminho do cometa Wild 2."
+    },
+    "wiki": {
+      "en": "https://en.wikipedia.org/wiki/5535_Annefrank",
+      "fr": "https://fr.wikipedia.org/wiki/(5535)_Annefrank",
+      "es": "https://es.wikipedia.org/wiki/(5535)_Annefrank",
+      "pt-BR": "https://pt.wikipedia.org/wiki/5535_Annefrank"
+    }
+  },
+  "facts": {
+    "radiusKm": {
+      "value": {
+        "$diameterKm": 4.8
+      },
+      "source": "jpl-sbdb",
+      "method": "derived",
+      "detail": "radiusFromDiameter",
+      "citation": "T.C. Duxbury et al. (2003) JGR v.109, E02002"
+    },
+    "massKg": {
+      "published": false,
+      "reason": {
+        "en": "The JPL Small-Body Database publishes no GM for this body, and no mass can be derived without one.",
+        "fr": "La base des petits corps de JPL ne publie aucun GM pour ce corps, et aucune masse ne se dérive sans lui.",
+        "es": "La base de datos de cuerpos menores del JPL no publica ningún GM para este cuerpo, y no puede derivarse ninguna masa sin él.",
+        "pt-BR": "A base de pequenos corpos do JPL não publica nenhum GM para este corpo, e nenhuma massa se deriva sem ele."
+      }
+    },
+    "gravity": {
+      "published": false,
+      "reason": {
+        "en": "Surface gravity is derived from a mass, and none is published for this body.",
+        "fr": "La gravité de surface se dérive d’une masse, et aucune n’est publiée pour ce corps.",
+        "es": "La gravedad en la superficie se deriva de una masa, y no se publica ninguna para este cuerpo.",
+        "pt-BR": "A gravidade na superfície se deriva de uma massa, e nenhuma é publicada para este corpo."
+      }
+    },
+    "meanTempC": {
+      "published": false,
+      "reason": {
+        "en": "The JPL Small-Body Database, the source of its other figures, publishes no temperature among its physical parameters.",
+        "fr": "La base des petits corps de JPL, d'où viennent ses autres chiffres, ne publie aucune température parmi ses paramètres physiques.",
+        "es": "La base de datos de cuerpos menores del JPL, de donde proceden sus demás cifras, no publica ninguna temperatura entre sus parámetros físicos.",
+        "pt-BR": "A base de pequenos corpos do JPL, de onde vêm os seus outros números, não publica nenhuma temperatura entre os seus parâmetros físicos."
+      }
+    },
+    "moonCount": {
+      "value": 0,
+      "source": "jpl-sbdb",
+      "method": "measured",
+      "asOf": "2026-10-04",
+      "detail": "confirmedSatellites"
+    },
+    "axialTilt": {
+      "published": false,
+      "reason": {
+        "en": "The JPL Small-Body Database publishes no spin-axis solution for this body, and an axial tilt cannot be derived without one.",
+        "fr": "La base des petits corps de JPL ne publie aucune solution de pôle pour ce corps, et une inclinaison axiale ne se dérive pas sans elle.",
+        "es": "La base de datos de cuerpos menores del JPL no publica ninguna solución de polo para este cuerpo, y una inclinación axial no puede derivarse sin ella.",
+        "pt-BR": "A base de pequenos corpos do JPL não publica nenhuma solução de polo para este corpo, e uma inclinação axial não se deriva sem ela."
+      }
+    },
+    "rotationPeriod": {
+      "value": 15.12,
+      "source": "jpl-sbdb",
+      "method": "measured",
+      "detail": "partialLightcurve",
+      "citation": "LCDB (Rev. 2023-October); Warner et al., 2009"
+    }
+  },
+  "notes": {
+    "": "Cible déclarée d'une mission au registre du PDS, ajoutée au catalogue le 2026-10-04 (pages des missions, vague 1). Faits lus à la SBDB ; description fondée sur les descriptions de missions du PDS et les pages de NASA Science ou de l'ESA citées dans le handoff du 2026-10-04.",
+    "a": "Éléments osculateurs JPL Horizons EXACTEMENT à cette époque (COMMAND '5535;', EPHEM_TYPE=ELEMENTS, TLIST=2461041.5, CENTER=500@10).",
+    "fallbackColor": "Gris de l'albédo géométrique SBDB (réflectance en sRGB, plancher 0x48 pour rester visible) ; sans albédo publié, une teinte d'attente. Ce n'est pas une mesure de couleur."
+  }
+}

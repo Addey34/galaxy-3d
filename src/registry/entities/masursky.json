@@ -1,0 +1,103 @@
+{
+  "$schema": "../schema/entity.schema.json",
+  "id": "masursky",
+  "targetClass": "asteroid",
+  "source": "small-body",
+  "elements": {
+    "displayName": {
+      "en": "Masursky",
+      "fr": "Masursky",
+      "es": "Masursky",
+      "pt-BR": "Masursky"
+    },
+    "a": 2.568754694935891,
+    "e": 0.1102261681057361,
+    "iDeg": 12.11698755568384,
+    "omDeg": 215.2777015205973,
+    "wDeg": 287.1532024767826,
+    "maDeg": 16.43121180823866,
+    "epoch": "2026-01-01T00:00:00.000Z",
+    "kind": "asteroid",
+    "color": "0x7f9fd1",
+    "fallbackColor": "0x5f5f5f",
+    "description": {
+      "en": "A main-belt asteroid about 11 kilometres across, photographed by Cassini in 2000 on its way to Jupiter and Saturn.",
+      "fr": "Un astéroïde de la ceinture principale d’environ 11 kilomètres, photographié par la sonde Cassini en 2000, en route vers Jupiter et Saturne.",
+      "es": "Un asteroide del cinturón principal de unos 11 kilómetros, fotografiado por la sonda Cassini en 2000, rumbo a Júpiter y Saturno.",
+      "pt-BR": "Um asteroide do cinturão principal com cerca de 11 quilômetros, fotografado pela sonda Cassini em 2000, a caminho de Júpiter e Saturno."
+    },
+    "wiki": {
+      "en": "https://en.wikipedia.org/wiki/2685_Masursky",
+      "fr": "https://fr.wikipedia.org/wiki/(2685)_Masursky",
+      "es": "https://es.wikipedia.org/wiki/(2685)_Masursky",
+      "pt-BR": "https://pt.wikipedia.org/wiki/2685_Masursky"
+    }
+  },
+  "facts": {
+    "radiusKm": {
+      "value": {
+        "$diameterKm": 10.744
+      },
+      "source": "jpl-sbdb",
+      "method": "derived",
+      "uncertainty": 0.085,
+      "detail": "radiusFromDiameter",
+      "citation": "urn:nasa:pds:neowise_diameters_albedos::2.0[mainbelt] (http://adsabs.harvard.edu/abs/2014ApJ...791..121M)"
+    },
+    "massKg": {
+      "published": false,
+      "reason": {
+        "en": "The JPL Small-Body Database publishes no GM for this body, and no mass can be derived without one.",
+        "fr": "La base des petits corps de JPL ne publie aucun GM pour ce corps, et aucune masse ne se dérive sans lui.",
+        "es": "La base de datos de cuerpos menores del JPL no publica ningún GM para este cuerpo, y no puede derivarse ninguna masa sin él.",
+        "pt-BR": "A base de pequenos corpos do JPL não publica nenhum GM para este corpo, e nenhuma massa se deriva sem ele."
+      }
+    },
+    "gravity": {
+      "published": false,
+      "reason": {
+        "en": "Surface gravity is derived from a mass, and none is published for this body.",
+        "fr": "La gravité de surface se dérive d’une masse, et aucune n’est publiée pour ce corps.",
+        "es": "La gravedad en la superficie se deriva de una masa, y no se publica ninguna para este cuerpo.",
+        "pt-BR": "A gravidade na superfície se deriva de uma massa, e nenhuma é publicada para este corpo."
+      }
+    },
+    "meanTempC": {
+      "published": false,
+      "reason": {
+        "en": "The JPL Small-Body Database, the source of its other figures, publishes no temperature among its physical parameters.",
+        "fr": "La base des petits corps de JPL, d'où viennent ses autres chiffres, ne publie aucune température parmi ses paramètres physiques.",
+        "es": "La base de datos de cuerpos menores del JPL, de donde proceden sus demás cifras, no publica ninguna temperatura entre sus parámetros físicos.",
+        "pt-BR": "A base de pequenos corpos do JPL, de onde vêm os seus outros números, não publica nenhuma temperatura entre os seus parâmetros físicos."
+      }
+    },
+    "moonCount": {
+      "value": 0,
+      "source": "jpl-sbdb",
+      "method": "measured",
+      "asOf": "2026-10-04",
+      "detail": "confirmedSatellites"
+    },
+    "axialTilt": {
+      "published": false,
+      "reason": {
+        "en": "The JPL Small-Body Database publishes no spin-axis solution for this body, and an axial tilt cannot be derived without one.",
+        "fr": "La base des petits corps de JPL ne publie aucune solution de pôle pour ce corps, et une inclinaison axiale ne se dérive pas sans elle.",
+        "es": "La base de datos de cuerpos menores del JPL no publica ninguna solución de polo para este cuerpo, y una inclinación axial no puede derivarse sin ella.",
+        "pt-BR": "A base de pequenos corpos do JPL não publica nenhuma solução de polo para este corpo, e uma inclinação axial não se deriva sem ela."
+      }
+    },
+    "rotationPeriod": {
+      "value": 59.531,
+      "source": "jpl-sbdb",
+      "method": "measured",
+      "detail": "partialLightcurve",
+      "citation": "LCDB (Rev. 2023-October); Warner et al., 2009"
+    }
+  },
+  "notes": {
+    "": "Cible déclarée d'une mission au registre du PDS, ajoutée au catalogue le 2026-10-04 (pages des missions, vague 1). Faits lus à la SBDB ; description fondée sur les descriptions de missions du PDS et les pages de NASA Science ou de l'ESA citées dans le handoff du 2026-10-04.",
+    "a": "Éléments osculateurs JPL Horizons EXACTEMENT à cette époque (COMMAND '2685;', EPHEM_TYPE=ELEMENTS, TLIST=2461041.5, CENTER=500@10).",
+    "fallbackColor": "Gris de l'albédo géométrique SBDB (réflectance en sRGB, plancher 0x48 pour rester visible) ; sans albédo publié, une teinte d'attente. Ce n'est pas une mesure de couleur."
+  }
+}

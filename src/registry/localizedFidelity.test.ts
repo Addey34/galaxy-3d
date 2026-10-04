@@ -112,9 +112,21 @@ describe('fidélité des textes localisés du registre', () => {
   });
 
   it('déclare les quatre langues dans chaque texte', () => {
+    // UN LIEN WIKIPÉDIA PEUT MANQUER EN ESPAGNOL OU EN PORTUGAIS, et c'est une MESURE : le
+    // script des liens interlangues (`scripts/wiki-langlinks.mjs`) les DÉRIVE de l'article
+    // anglais, et un article qui n'existe pas est omis, la fiche retombant alors sur l'anglais.
+    // Aucun corps ne l'exerçait avant le 2026-10-04 : Dinkinesh n'a pas d'article espagnol,
+    // Polymele ni espagnol ni portugais. Sa garde est `pnpm i18n:wiki --check`, qui ajouterait
+    // tout article apparu. L'anglais et le français restent exigés, eux, comme tout texte.
+    const derivedAbsent = (block: Block, locale: Locale): boolean =>
+      block.path.endsWith('wiki') && (locale === 'es' || locale === 'pt-BR');
     const incomplete = blocks
       .filter((block) =>
-        LOCALES.some((locale) => typeof block.values[locale] !== 'string')
+        LOCALES.some(
+          (locale) =>
+            typeof block.values[locale] !== 'string' &&
+            !derivedAbsent(block, locale)
+        )
       )
       .map(
         (block) =>

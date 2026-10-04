@@ -1,0 +1,104 @@
+{
+  "$schema": "../schema/entity.schema.json",
+  "id": "mathilde",
+  "targetClass": "asteroid",
+  "source": "small-body",
+  "elements": {
+    "displayName": {
+      "en": "Mathilde",
+      "fr": "Mathilde",
+      "es": "Mathilde",
+      "pt-BR": "Mathilde"
+    },
+    "a": 2.646575226829693,
+    "e": 0.2643669967664038,
+    "iDeg": 6.740818848305732,
+    "omDeg": 179.4958997292756,
+    "wDeg": 157.5903028070098,
+    "maDeg": 237.1050288435943,
+    "epoch": "2026-01-01T00:00:00.000Z",
+    "kind": "asteroid",
+    "color": "0x8a8f9e",
+    "fallbackColor": "0x484848",
+    "description": {
+      "en": "A main-belt asteroid about 53 kilometres across that reflects only about 4 percent of the sunlight it receives. NASA’s NEAR Shoemaker flew past it in June 1997, on its way to Eros, and measured its mass.",
+      "fr": "Un astéroïde de la ceinture principale d’environ 53 kilomètres, qui ne renvoie qu’environ 4 % de la lumière du Soleil. La sonde NEAR Shoemaker de la NASA l’a survolé en juin 1997, en route vers Éros, et en a mesuré la masse.",
+      "es": "Un asteroide del cinturón principal de unos 53 kilómetros que solo refleja alrededor del 4 % de la luz solar que recibe. La sonda NEAR Shoemaker de la NASA lo sobrevoló en junio de 1997, rumbo a Eros, y midió su masa.",
+      "pt-BR": "Um asteroide do cinturão principal com cerca de 53 quilômetros que reflete apenas cerca de 4% da luz solar que recebe. A sonda NEAR Shoemaker da NASA passou por ele em junho de 1997, a caminho de Eros, e mediu a sua massa."
+    },
+    "wiki": {
+      "en": "https://en.wikipedia.org/wiki/253_Mathilde",
+      "fr": "https://fr.wikipedia.org/wiki/(253)_Mathilde",
+      "es": "https://es.wikipedia.org/wiki/(253)_Mathilde",
+      "pt-BR": "https://pt.wikipedia.org/wiki/253_Mathilde"
+    }
+  },
+  "facts": {
+    "radiusKm": {
+      "value": {
+        "$diameterKm": 52.8
+      },
+      "source": "jpl-sbdb",
+      "method": "derived",
+      "detail": "radiusFromDiameter"
+    },
+    "massKg": {
+      "value": {
+        "$gm": 0.00689
+      },
+      "source": "jpl-sbdb",
+      "method": "derived",
+      "uncertainty": {
+        "$gm": 0.0003
+      },
+      "detail": "massFromGM",
+      "citation": "Yeomans et al. (1997) Science v.278, pp.2106-2109"
+    },
+    "gravity": {
+      "value": {
+        "$gm": 0.00689,
+        "$radiusKm": 26.4
+      },
+      "source": "jpl-sbdb",
+      "method": "derived",
+      "detail": "gravityFromGM",
+      "citation": "Yeomans et al. (1997) Science v.278, pp.2106-2109"
+    },
+    "meanTempC": {
+      "published": false,
+      "reason": {
+        "en": "The JPL Small-Body Database, the source of its other figures, publishes no temperature among its physical parameters.",
+        "fr": "La base des petits corps de JPL, d'où viennent ses autres chiffres, ne publie aucune température parmi ses paramètres physiques.",
+        "es": "La base de datos de cuerpos menores del JPL, de donde proceden sus demás cifras, no publica ninguna temperatura entre sus parámetros físicos.",
+        "pt-BR": "A base de pequenos corpos do JPL, de onde vêm os seus outros números, não publica nenhuma temperatura entre os seus parâmetros físicos."
+      }
+    },
+    "moonCount": {
+      "value": 0,
+      "source": "jpl-sbdb",
+      "method": "measured",
+      "asOf": "2026-10-04",
+      "detail": "confirmedSatellites"
+    },
+    "axialTilt": {
+      "published": false,
+      "reason": {
+        "en": "The JPL Small-Body Database publishes no spin-axis solution for this body, and an axial tilt cannot be derived without one.",
+        "fr": "La base des petits corps de JPL ne publie aucune solution de pôle pour ce corps, et une inclinaison axiale ne se dérive pas sans elle.",
+        "es": "La base de datos de cuerpos menores del JPL no publica ninguna solución de polo para este cuerpo, y una inclinación axial no puede derivarse sin ella.",
+        "pt-BR": "A base de pequenos corpos do JPL não publica nenhuma solução de polo para este corpo, e uma inclinação axial não se deriva sem ela."
+      }
+    },
+    "rotationPeriod": {
+      "value": 417.7,
+      "source": "jpl-sbdb",
+      "method": "measured",
+      "citation": "LCDB (Rev. 2023-October); Warner et al., 2009"
+    }
+  },
+  "notes": {
+    "": "Cible déclarée d'une mission au registre du PDS, ajoutée au catalogue le 2026-10-04 (pages des missions, vague 1). Faits lus à la SBDB ; description fondée sur les descriptions de missions du PDS et les pages de NASA Science ou de l'ESA citées dans le handoff du 2026-10-04.",
+    "a": "Éléments osculateurs JPL Horizons EXACTEMENT à cette époque (COMMAND '253;', EPHEM_TYPE=ELEMENTS, TLIST=2461041.5, CENTER=500@10).",
+    "fallbackColor": "Gris de l'albédo géométrique SBDB (réflectance en sRGB, plancher 0x48 pour rester visible) ; sans albédo publié, une teinte d'attente. Ce n'est pas une mesure de couleur."
+  }
+}

@@ -1,0 +1,106 @@
+{
+  "$schema": "../schema/entity.schema.json",
+  "id": "wild-2",
+  "targetClass": "comet",
+  "source": "small-body",
+  "elements": {
+    "displayName": {
+      "en": "Wild 2",
+      "fr": "Wild 2",
+      "es": "Wild 2",
+      "pt-BR": "Wild 2"
+    },
+    "a": 3.450853064590212,
+    "e": 0.5378505580613324,
+    "iDeg": 3.238592978828248,
+    "omDeg": 136.1053494597314,
+    "wDeg": 41.544460776743,
+    "maDeg": 170.9538455409108,
+    "epoch": "2026-01-01T00:00:00.000Z",
+    "measuredMaxDistanceAU": 22.05,
+    "kind": "comet",
+    "color": "0x7fa0ff",
+    "fallbackColor": "0x4e4e4e",
+    "description": {
+      "en": "A comet about 4 kilometres across. NASA’s Stardust flew past it in January 2004, collected particles of its dust and returned them to Earth in January 2006.",
+      "fr": "Une comète d’environ 4 kilomètres. La sonde Stardust de la NASA l’a survolée en janvier 2004, a recueilli des particules de sa poussière et les a rapportées sur Terre en janvier 2006.",
+      "es": "Un cometa de unos 4 kilómetros. La sonda Stardust de la NASA lo sobrevoló en enero de 2004, recogió partículas de su polvo y las trajo a la Tierra en enero de 2006.",
+      "pt-BR": "Um cometa com cerca de 4 quilômetros. A sonda Stardust da NASA passou por ele em janeiro de 2004, recolheu partículas da sua poeira e as trouxe para a Terra em janeiro de 2006."
+    },
+    "wiki": {
+      "en": "https://en.wikipedia.org/wiki/81P%2FWild",
+      "fr": "https://fr.wikipedia.org/wiki/81P%2FWild",
+      "es": "https://es.wikipedia.org/wiki/81P%2FWild",
+      "pt-BR": "https://pt.wikipedia.org/wiki/81P%2FWild"
+    }
+  },
+  "facts": {
+    "radiusKm": {
+      "value": {
+        "$diameterKm": 4.0
+      },
+      "source": "jpl-sbdb",
+      "method": "derived",
+      "detail": "radiusFromDiameter",
+      "citation": "Lamy,P.L.,Toth,I.,Fernandez,Y.R.,Weaver,H.A. (2004) Comets II, pp. 223-264"
+    },
+    "massKg": {
+      "published": false,
+      "reason": {
+        "en": "The JPL Small-Body Database publishes no GM for this body, and no mass can be derived without one.",
+        "fr": "La base des petits corps de JPL ne publie aucun GM pour ce corps, et aucune masse ne se dérive sans lui.",
+        "es": "La base de datos de cuerpos menores del JPL no publica ningún GM para este cuerpo, y no puede derivarse ninguna masa sin él.",
+        "pt-BR": "A base de pequenos corpos do JPL não publica nenhum GM para este corpo, e nenhuma massa se deriva sem ele."
+      }
+    },
+    "gravity": {
+      "published": false,
+      "reason": {
+        "en": "Surface gravity is derived from a mass, and none is published for this body.",
+        "fr": "La gravité de surface se dérive d’une masse, et aucune n’est publiée pour ce corps.",
+        "es": "La gravedad en la superficie se deriva de una masa, y no se publica ninguna para este cuerpo.",
+        "pt-BR": "A gravidade na superfície se deriva de uma massa, e nenhuma é publicada para este corpo."
+      }
+    },
+    "meanTempC": {
+      "published": false,
+      "reason": {
+        "en": "The JPL Small-Body Database, the source of its other figures, publishes no temperature among its physical parameters.",
+        "fr": "La base des petits corps de JPL, d'où viennent ses autres chiffres, ne publie aucune température parmi ses paramètres physiques.",
+        "es": "La base de datos de cuerpos menores del JPL, de donde proceden sus demás cifras, no publica ninguna temperatura entre sus parámetros físicos.",
+        "pt-BR": "A base de pequenos corpos do JPL, de onde vêm os seus outros números, não publica nenhuma temperatura entre os seus parâmetros físicos."
+      }
+    },
+    "moonCount": {
+      "value": 0,
+      "source": "jpl-sbdb",
+      "method": "measured",
+      "asOf": "2026-10-04",
+      "detail": "confirmedSatellites"
+    },
+    "axialTilt": {
+      "published": false,
+      "reason": {
+        "en": "The JPL Small-Body Database publishes no spin-axis solution for this body, and an axial tilt cannot be derived without one.",
+        "fr": "La base des petits corps de JPL ne publie aucune solution de pôle pour ce corps, et une inclinaison axiale ne se dérive pas sans elle.",
+        "es": "La base de datos de cuerpos menores del JPL no publica ninguna solución de polo para este cuerpo, y una inclinación axial no puede derivarse sin ella.",
+        "pt-BR": "A base de pequenos corpos do JPL não publica nenhuma solução de polo para este corpo, e uma inclinação axial não se deriva sem ela."
+      }
+    },
+    "rotationPeriod": {
+      "published": false,
+      "reason": {
+        "en": "The JPL Small-Body Database publishes no rotation period for this body.",
+        "fr": "La base des petits corps de JPL ne publie aucune période de rotation pour ce corps.",
+        "es": "La base de datos de cuerpos menores del JPL no publica ningún periodo de rotación para este cuerpo.",
+        "pt-BR": "A base de pequenos corpos do JPL não publica nenhum período de rotação para este corpo."
+      }
+    }
+  },
+  "notes": {
+    "elements.measuredMaxDistanceAU": "Mesurée dans le fichier Horizons livré : 22,049 UA en 1901, sur l'orbite d'avant la rencontre de Jupiter de 1974 (aphélie actuel 5,3 UA). Arrondie au centième supérieur ; `ephemerisPlausibility.test.ts` la confronte au fichier.",
+    "": "Cible déclarée d'une mission au registre du PDS, ajoutée au catalogue le 2026-10-04 (pages des missions, vague 1). Faits lus à la SBDB ; description fondée sur les descriptions de missions du PDS et les pages de NASA Science ou de l'ESA citées dans le handoff du 2026-10-04.",
+    "a": "Éléments osculateurs JPL Horizons EXACTEMENT à cette époque (COMMAND '90000863;', EPHEM_TYPE=ELEMENTS, TLIST=2461041.5, CENTER=500@10).",
+    "fallbackColor": "Gris de l'albédo géométrique SBDB (réflectance en sRGB, plancher 0x48 pour rester visible) ; sans albédo publié, une teinte d'attente. Ce n'est pas une mesure de couleur."
+  }
+}

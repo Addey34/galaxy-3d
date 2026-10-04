@@ -21,13 +21,29 @@
    "count": 2,
    "bytes": 229
   },
+  "annefrank": {
+   "count": 1,
+   "bytes": 129
+  },
+  "apophis": {
+   "count": 1,
+   "bytes": 120
+  },
   "ariel": {
    "count": 1,
    "bytes": 111
   },
+  "arrokoth": {
+   "count": 2,
+   "bytes": 329
+  },
   "bennu": {
    "count": 1,
    "bytes": 111
+  },
+  "borrelly": {
+   "count": 1,
+   "bytes": 129
   },
   "callisto": {
    "count": 7,
@@ -41,13 +57,29 @@
    "count": 1,
    "bytes": 129
   },
+  "churyumov-gerasimenko": {
+   "count": 1,
+   "bytes": 154
+  },
   "deimos": {
    "count": 2,
    "bytes": 259
   },
+  "didymos": {
+   "count": 2,
+   "bytes": 341
+  },
+  "dinkinesh": {
+   "count": 1,
+   "bytes": 113
+  },
   "dione": {
    "count": 3,
    "bytes": 347
+  },
+  "donaldjohanson": {
+   "count": 1,
+   "bytes": 113
   },
   "earth": {
    "count": 14,
@@ -69,17 +101,37 @@
    "count": 8,
    "bytes": 1021
   },
+  "eurybates": {
+   "count": 1,
+   "bytes": 113
+  },
   "ganymede": {
    "count": 7,
    "bytes": 833
+  },
+  "gaspra": {
+   "count": 1,
+   "bytes": 119
+  },
+  "giacobini-zinner": {
+   "count": 1,
+   "bytes": 159
   },
   "gonggong": {
    "count": 0,
    "bytes": 0
   },
+  "grigg-skjellerup": {
+   "count": 1,
+   "bytes": 150
+  },
   "halley": {
    "count": 5,
    "bytes": 638
+  },
+  "hartley-2": {
+   "count": 1,
+   "bytes": 115
   },
   "haumea": {
    "count": 0,
@@ -121,6 +173,14 @@
    "count": 1,
    "bytes": 129
   },
+  "leucus": {
+   "count": 1,
+   "bytes": 113
+  },
+  "lutetia": {
+   "count": 1,
+   "bytes": 154
+  },
   "makemake": {
    "count": 0,
    "bytes": 0
@@ -128,6 +188,14 @@
   "mars": {
    "count": 21,
    "bytes": 2779
+  },
+  "masursky": {
+   "count": 1,
+   "bytes": 135
+  },
+  "mathilde": {
+   "count": 1,
+   "bytes": 173
   },
   "mercury": {
    "count": 4,
@@ -165,9 +233,17 @@
    "count": 0,
    "bytes": 0
   },
+  "orus": {
+   "count": 1,
+   "bytes": 113
+  },
   "pallas": {
    "count": 0,
    "bytes": 0
+  },
+  "patroclus": {
+   "count": 1,
+   "bytes": 113
   },
   "phobos": {
    "count": 4,
@@ -176,6 +252,10 @@
   "pluto": {
    "count": 2,
    "bytes": 231
+  },
+  "polymele": {
+   "count": 1,
+   "bytes": 113
   },
   "proteus": {
    "count": 1,
@@ -209,6 +289,10 @@
    "count": 0,
    "bytes": 0
   },
+  "steins": {
+   "count": 1,
+   "bytes": 154
+  },
   "styx": {
    "count": 1,
    "bytes": 129
@@ -216,6 +300,10 @@
   "sun": {
    "count": 7,
    "bytes": 928
+  },
+  "tempel-1": {
+   "count": 3,
+   "bytes": 423
   },
   "tethys": {
    "count": 3,
@@ -248,6 +336,10 @@
   "vesta": {
    "count": 1,
    "bytes": 167
+  },
+  "wild-2": {
+   "count": 1,
+   "bytes": 129
   }
  }
 }

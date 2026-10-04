@@ -89,6 +89,20 @@ const localized = z
   })
   .strict();
 /**
+ * Les liens Wikipédia : l'anglais et le français sont écrits, l'espagnol et le portugais sont
+ * DÉRIVÉS de l'article anglais par `scripts/wiki-langlinks.mjs`, qui OMET une langue où
+ * l'article n'existe pas (la fiche retombe alors sur l'anglais). Premier cas réel le 2026-10-04 :
+ * Dinkinesh n'a pas d'article espagnol, Polymele ni espagnol ni portugais.
+ */
+const wikiLinks = z
+  .object({
+    en: z.string().min(1),
+    fr: z.string().min(1),
+    es: z.string().min(1).optional(),
+    'pt-BR': z.string().min(1).optional(),
+  })
+  .strict();
+/**
  * Le nom d'affichage : les quatre langues, et TOUTES ou AUCUNE.
  *
  * Partiel, il laissait `bodyText` retomber sur la clé capitalisée, ce qui est juste en anglais et
@@ -246,7 +260,7 @@ const catalogueConfig = z
         orbitalInclination: encoded.optional(),
         ascendingNode: encoded.optional(),
         description: localized.optional(),
-        wiki: localized.optional(),
+        wiki: wikiLinks.optional(),
       })
       .strict()
       .optional(),
@@ -274,6 +288,7 @@ const smallBodyElements = z
     maDeg: z.number(),
     epoch: isoInstant,
     barycentric: z.literal(true).optional(),
+    measuredMaxDistanceAU: z.number().positive().optional(),
     kind: z.enum(['asteroid', 'comet', 'dwarf']).optional(),
     color: color.optional(),
     surfaceResolutions: z.array(z.enum(['1k', '2k', '4k', '8k'])).optional(),
@@ -282,7 +297,7 @@ const smallBodyElements = z
     visualRadius: z.number().positive().optional(),
     rotationBody: astroBody.optional(),
     description: localized.optional(),
-    wiki: localized.optional(),
+    wiki: wikiLinks.optional(),
     satellites: satellites.optional(),
   })
   .strict();

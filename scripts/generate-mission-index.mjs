@@ -87,10 +87,10 @@ const CONTEXT = `${API}/classes/context`;
 const NO_END_SENTINEL = '3000-01-01';
 /**
  * Et son PENDANT pour le début, trouvé le 2026-10-04 en REGARDANT l'index des pages de mission :
- * DART déclare un début au 1000-01-01. Une seule mission sur 112, et elle ne vise aucun corps
- * du catalogue, donc la fiche de l'application ne l'a jamais montrée. Le catalogue des pages
- * l'écrit `null` (« début non déclaré ») ; une mission qui la porterait EN visant un corps du
- * catalogue fait échouer, parce que la fiche, qui suppose un début, afficherait l'an 1000.
+ * DART déclare un début au 1000-01-01. Une seule mission sur 112. Elle ne visait aucun corps du
+ * catalogue, jusqu'à l'entrée de Didymos le même jour : la fiche de Didymos aurait alors affiché
+ * une mission commencée en l'an 1000. Elle est réécrite `null` (« début non déclaré ») partout,
+ * et `core/missions.ts` a l'état qui le dit (`startUndeclared`).
  */
 const NO_START_SENTINEL = '1000-01-01';
 
@@ -256,9 +256,19 @@ async function target(lid) {
   };
 }
 
-/** `Dwarf Planet` → `dwarf_planet`, pour confronter le type PDS au `targetClass` du registre. */
-const asTargetClass = (type) =>
-  typeof type === 'string' ? type.toLowerCase().replace(/\s+/g, '_') : null;
+/**
+ * `Dwarf Planet` → `dwarf_planet`, pour confronter le type PDS au `targetClass` du registre.
+ *
+ * UNE SEULE TRADUCTION, et elle est écrite : le PDS publie « Trans-Neptunian Object » (Arrokoth),
+ * que le vocabulaire EPNCore du registre ne connaît pas. EPNCore range un objet transneptunien
+ * sous `asteroid` ; sans cette ligne, Arrokoth ne s'apparierait jamais (2026-10-04).
+ */
+const PDS_CLASS_ALIASES = { 'trans-neptunian_object': 'asteroid' };
+const asTargetClass = (type) => {
+  if (typeof type !== 'string') return null;
+  const cls = type.toLowerCase().replace(/\s+/g, '_');
+  return PDS_CLASS_ALIASES[cls] ?? cls;
+};
 
 /**
  * Le corps du catalogue qu'une cible PDS désigne, ou `null`. Deux règles, et un accord de classe
@@ -267,8 +277,12 @@ const asTargetClass = (type) =>
 function bodyFor(lid, type, bodies, sbdb) {
   const segment = String(lid).split(':').pop().split('.').pop();
   const candidates = [segment];
+  // Le segment COMMENCE par la désignation SBDB déclarée, suivie d'un tiret bas : le PDS écrit
+  // `486958_2014_mu69` pour Arrokoth et `9p_tempel_1` pour Tempel 1, jamais l'identifiant du
+  // registre. Le tiret bas exigé empêche `21_` (Lutetia) de prendre `21p_` (Giacobini-Zinner),
+  // et l'accord de classe ci-dessous reste la seconde barrière.
   for (const [body, designation] of Object.entries(sbdb))
-    if (segment === `${designation.toLowerCase()}_${body}`)
+    if (segment.startsWith(`${designation.toLowerCase()}_`))
       candidates.push(body);
   for (const candidate of candidates) {
     if (!bodies.has(candidate)) continue;
@@ -313,6 +327,7 @@ for (const lid of [...targetLids].sort()) targets.set(lid, await target(lid));
 const declared = new Map();
 const duplicates = [];
 const sentinels = [];
+const startSentinels = [];
 for (const row of rows) {
   const props = row.properties;
   const mission = {
@@ -328,6 +343,8 @@ for (const row of rows) {
     sentinels.push(mission.name);
     mission.end = null;
   }
+  // Le champ doit être PRÉSENT (contrôlé juste après) ; sa sentinelle, elle, devient `null`.
+  const startSentinel = mission.start === NO_START_SENTINEL;
   if (!mission.name || !mission.lid)
     throw new Error(
       `investigation sans nom ni identifiant : ${JSON.stringify(props)}`
@@ -335,7 +352,10 @@ for (const row of rows) {
   // Les 113 missions déclarent toutes un début (mesuré le 2026-09-30). `core/missions.ts` compte
   // donc sur ce champ : si la source cesse de le publier, ce lot doit ÉCHOUER, pas livrer un
   // enregistrement dont l'état à une date serait indécidable.
-  if (!mission.start)
+  if (startSentinel) {
+    startSentinels.push(mission.name);
+    mission.start = null;
+  } else if (!mission.start)
     throw new Error(
       `« ${mission.name} » ne déclare pas de début. Les 113 missions en déclaraient un le ` +
         `2026-09-30 : la source a changé, et core/missions.ts suppose ce champ présent.`
@@ -490,22 +510,11 @@ for (const mission of [...declared.values()].sort((a, b) =>
       `« ${mission.name} » ne publie pas de description (${mission.lid}). Les 112 en ` +
         `publiaient une le 2026-10-04 : la source a changé, et une page vide ne se publie pas.`
     );
-  const noStart = mission.start === NO_START_SENTINEL;
-  if (
-    noStart &&
-    mission.targets.some((lid) =>
-      bodyFor(lid, targets.get(lid).type, bodies, sbdb)
-    )
-  )
-    throw new Error(
-      `« ${mission.name} » déclare le début sentinelle ${NO_START_SENTINEL} et vise un corps ` +
-        `du catalogue : la fiche afficherait l'an 1000. core/missions.ts suppose un vrai début.`
-    );
   catalogue.push({
     slug,
     name: mission.name,
     lid: mission.lid,
-    start: noStart ? null : mission.start,
+    start: mission.start,
     end: mission.end,
     description,
     targets: mission.targets.map((lid) => {
@@ -564,6 +573,10 @@ console.log(
 console.log(
   `Sentinelle ${NO_END_SENTINEL} réécrite « fin non déclarée » pour ${sentinels.length} missions : ` +
     `${sentinels.join(', ')}.`
+);
+console.log(
+  `Sentinelle ${NO_START_SENTINEL} réécrite « début non déclaré » pour ${startSentinels.length} ` +
+    `mission(s) : ${startSentinels.join(', ')}.`
 );
 console.log('\nCibles hors catalogue, par type publié :');
 for (const [type, lids] of [...unmatched.entries()].sort(

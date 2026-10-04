@@ -1,0 +1,100 @@
+{
+  "$schema": "../schema/entity.schema.json",
+  "id": "didymos",
+  "targetClass": "asteroid",
+  "source": "small-body",
+  "elements": {
+    "displayName": {
+      "en": "Didymos",
+      "fr": "Didymos",
+      "es": "Didymos",
+      "pt-BR": "Didymos"
+    },
+    "a": 1.642590575122127,
+    "e": 0.3832059735828258,
+    "iDeg": 3.414052637470924,
+    "omDeg": 72.98481981187552,
+    "wDeg": 319.5886111487066,
+    "maDeg": 186.4186602986481,
+    "epoch": "2026-01-01T00:00:00.000Z",
+    "kind": "asteroid",
+    "color": "0xe07070",
+    "fallbackColor": "0x4e4e4e",
+    "description": {
+      "en": "An asteroid about 780 metres across that comes close to Earth’s orbit, with a small moon, Dimorphos. In September 2022 NASA’s DART spacecraft struck the moon to measure how much an impact can change an asteroid’s orbit.",
+      "fr": "Un astéroïde d’environ 780 mètres qui s’approche de l’orbite terrestre, accompagné d’une petite lune, Dimorphos. En septembre 2022, la sonde DART de la NASA a percuté cette lune pour mesurer de combien un impact peut modifier l’orbite d’un astéroïde.",
+      "es": "Un asteroide de unos 780 metros que se acerca a la órbita terrestre, con una pequeña luna, Dimorphos. En septiembre de 2022, la sonda DART de la NASA impactó contra esa luna para medir cuánto puede cambiar un impacto la órbita de un asteroide.",
+      "pt-BR": "Um asteroide com cerca de 780 metros que se aproxima da órbita da Terra, com uma pequena lua, Dimorphos. Em setembro de 2022, a sonda DART da NASA colidiu com essa lua para medir o quanto um impacto pode mudar a órbita de um asteroide."
+    },
+    "wiki": {
+      "en": "https://en.wikipedia.org/wiki/65803_Didymos",
+      "fr": "https://fr.wikipedia.org/wiki/(65803)_Didymos",
+      "es": "https://es.wikipedia.org/wiki/(65803)_D%C3%ADdimo",
+      "pt-BR": "https://pt.wikipedia.org/wiki/65803_Didymos"
+    }
+  },
+  "facts": {
+    "radiusKm": {
+      "value": {
+        "$diameterKm": 0.78
+      },
+      "source": "jpl-sbdb",
+      "method": "derived",
+      "uncertainty": 0.015,
+      "detail": "radiusFromDiameter",
+      "citation": "Naidu, S. P.; Benner, L. A. M.; Brozovic, M.; et al. (2020) Icarus 348, 113777"
+    },
+    "massKg": {
+      "published": false,
+      "reason": {
+        "en": "The JPL Small-Body Database publishes no GM for this body, and no mass can be derived without one.",
+        "fr": "La base des petits corps de JPL ne publie aucun GM pour ce corps, et aucune masse ne se dérive sans lui.",
+        "es": "La base de datos de cuerpos menores del JPL no publica ningún GM para este cuerpo, y no puede derivarse ninguna masa sin él.",
+        "pt-BR": "A base de pequenos corpos do JPL não publica nenhum GM para este corpo, e nenhuma massa se deriva sem ele."
+      }
+    },
+    "gravity": {
+      "published": false,
+      "reason": {
+        "en": "Surface gravity is derived from a mass, and none is published for this body.",
+        "fr": "La gravité de surface se dérive d’une masse, et aucune n’est publiée pour ce corps.",
+        "es": "La gravedad en la superficie se deriva de una masa, y no se publica ninguna para este cuerpo.",
+        "pt-BR": "A gravidade na superfície se deriva de uma massa, e nenhuma é publicada para este corpo."
+      }
+    },
+    "meanTempC": {
+      "published": false,
+      "reason": {
+        "en": "The JPL Small-Body Database, the source of its other figures, publishes no temperature among its physical parameters.",
+        "fr": "La base des petits corps de JPL, d'où viennent ses autres chiffres, ne publie aucune température parmi ses paramètres physiques.",
+        "es": "La base de datos de cuerpos menores del JPL, de donde proceden sus demás cifras, no publica ninguna temperatura entre sus parámetros físicos.",
+        "pt-BR": "A base de pequenos corpos do JPL, de onde vêm os seus outros números, não publica nenhuma temperatura entre os seus parâmetros físicos."
+      }
+    },
+    "moonCount": {
+      "value": 1,
+      "source": "jpl-sbdb",
+      "method": "measured",
+      "asOf": "2026-10-04",
+      "detail": "confirmedSatellites"
+    },
+    "axialTilt": {
+      "value": 170.8,
+      "source": "jpl-sbdb",
+      "method": "derived",
+      "detail": "obliquityFromPole",
+      "citation": "Naidu, S. P.; Benner, L. A. M.; Brozovic, M.; et al. (2020) Icarus 348, 113777"
+    },
+    "rotationPeriod": {
+      "value": 2.2593,
+      "source": "jpl-sbdb",
+      "method": "measured",
+      "citation": "LCDB (Rev. 2023-October); Warner et al., 2009"
+    }
+  },
+  "notes": {
+    "": "Cible déclarée d'une mission au registre du PDS, ajoutée au catalogue le 2026-10-04 (pages des missions, vague 1). Faits lus à la SBDB ; description fondée sur les descriptions de missions du PDS et les pages de NASA Science ou de l'ESA citées dans le handoff du 2026-10-04.",
+    "a": "Éléments osculateurs JPL Horizons EXACTEMENT à cette époque (COMMAND '65803;', EPHEM_TYPE=ELEMENTS, TLIST=2461041.5, CENTER=500@10).",
+    "fallbackColor": "Gris de l'albédo géométrique SBDB (réflectance en sRGB, plancher 0x48 pour rester visible) ; sans albédo publié, une teinte d'attente. Ce n'est pas une mesure de couleur."
+  }
+}

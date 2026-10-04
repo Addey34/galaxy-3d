@@ -1,0 +1,102 @@
+{
+  "$schema": "../schema/entity.schema.json",
+  "id": "hartley-2",
+  "targetClass": "comet",
+  "source": "small-body",
+  "elements": {
+    "displayName": {
+      "en": "Hartley 2",
+      "fr": "Hartley 2",
+      "es": "Hartley 2",
+      "pt-BR": "Hartley 2"
+    },
+    "a": 3.476136206041993,
+    "e": 0.6933214708623593,
+    "iDeg": 13.6042985846336,
+    "omDeg": 219.7611366384518,
+    "wDeg": 181.3339367039385,
+    "maDeg": 123.4377461440608,
+    "epoch": "2026-01-01T00:00:00.000Z",
+    "kind": "comet",
+    "color": "0xd17fb0",
+    "fallbackColor": "0x4e4e4e",
+    "description": {
+      "en": "A small comet about 1.6 kilometres across, visited by NASA’s EPOXI, the extended mission of the Deep Impact spacecraft.",
+      "fr": "Une petite comète d’environ 1,6 kilomètre, visitée par EPOXI, la mission prolongée de la sonde Deep Impact de la NASA.",
+      "es": "Un pequeño cometa de unos 1,6 kilómetros, visitado por EPOXI, la misión extendida de la sonda Deep Impact de la NASA.",
+      "pt-BR": "Um pequeno cometa com cerca de 1,6 quilômetro, visitado pela EPOXI, a missão estendida da sonda Deep Impact da NASA."
+    },
+    "wiki": {
+      "en": "https://en.wikipedia.org/wiki/103P%2FHartley",
+      "fr": "https://fr.wikipedia.org/wiki/103P%2FHartley",
+      "es": "https://es.wikipedia.org/wiki/103P%2FHartley",
+      "pt-BR": "https://pt.wikipedia.org/wiki/103P%2FHartley"
+    }
+  },
+  "facts": {
+    "radiusKm": {
+      "value": {
+        "$diameterKm": 1.6
+      },
+      "source": "jpl-sbdb",
+      "method": "derived",
+      "detail": "radiusFromDiameter",
+      "citation": "Lamy,P.L.,Toth,I.,Fernandez,Y.R.,Weaver,H.A. (2004) Comets II, pp. 223-264"
+    },
+    "massKg": {
+      "published": false,
+      "reason": {
+        "en": "The JPL Small-Body Database publishes no GM for this body, and no mass can be derived without one.",
+        "fr": "La base des petits corps de JPL ne publie aucun GM pour ce corps, et aucune masse ne se dérive sans lui.",
+        "es": "La base de datos de cuerpos menores del JPL no publica ningún GM para este cuerpo, y no puede derivarse ninguna masa sin él.",
+        "pt-BR": "A base de pequenos corpos do JPL não publica nenhum GM para este corpo, e nenhuma massa se deriva sem ele."
+      }
+    },
+    "gravity": {
+      "published": false,
+      "reason": {
+        "en": "Surface gravity is derived from a mass, and none is published for this body.",
+        "fr": "La gravité de surface se dérive d’une masse, et aucune n’est publiée pour ce corps.",
+        "es": "La gravedad en la superficie se deriva de una masa, y no se publica ninguna para este cuerpo.",
+        "pt-BR": "A gravidade na superfície se deriva de uma massa, e nenhuma é publicada para este corpo."
+      }
+    },
+    "meanTempC": {
+      "published": false,
+      "reason": {
+        "en": "The JPL Small-Body Database, the source of its other figures, publishes no temperature among its physical parameters.",
+        "fr": "La base des petits corps de JPL, d'où viennent ses autres chiffres, ne publie aucune température parmi ses paramètres physiques.",
+        "es": "La base de datos de cuerpos menores del JPL, de donde proceden sus demás cifras, no publica ninguna temperatura entre sus parámetros físicos.",
+        "pt-BR": "A base de pequenos corpos do JPL, de onde vêm os seus outros números, não publica nenhuma temperatura entre os seus parâmetros físicos."
+      }
+    },
+    "moonCount": {
+      "value": 0,
+      "source": "jpl-sbdb",
+      "method": "measured",
+      "asOf": "2026-10-04",
+      "detail": "confirmedSatellites"
+    },
+    "axialTilt": {
+      "published": false,
+      "reason": {
+        "en": "The JPL Small-Body Database publishes no spin-axis solution for this body, and an axial tilt cannot be derived without one.",
+        "fr": "La base des petits corps de JPL ne publie aucune solution de pôle pour ce corps, et une inclinaison axiale ne se dérive pas sans elle.",
+        "es": "La base de datos de cuerpos menores del JPL no publica ninguna solución de polo para este cuerpo, y una inclinación axial no puede derivarse sin ella.",
+        "pt-BR": "A base de pequenos corpos do JPL não publica nenhuma solução de polo para este corpo, e uma inclinação axial não se deriva sem ela."
+      }
+    },
+    "rotationPeriod": {
+      "value": 18.1,
+      "source": "jpl-sbdb",
+      "method": "measured",
+      "detail": "partialLightcurve",
+      "citation": "LCDB (Rev. 2023-October); Warner et al., 2009"
+    }
+  },
+  "notes": {
+    "": "Cible déclarée d'une mission au registre du PDS, ajoutée au catalogue le 2026-10-04 (pages des missions, vague 1). Faits lus à la SBDB ; description fondée sur les descriptions de missions du PDS et les pages de NASA Science ou de l'ESA citées dans le handoff du 2026-10-04.",
+    "a": "Éléments osculateurs JPL Horizons EXACTEMENT à cette époque (COMMAND '90000960;', EPHEM_TYPE=ELEMENTS, TLIST=2461041.5, CENTER=500@10).",
+    "fallbackColor": "Gris de l'albédo géométrique SBDB (réflectance en sRGB, plancher 0x48 pour rester visible) ; sans albédo publié, une teinte d'attente. Ce n'est pas une mesure de couleur."
+  }
+}

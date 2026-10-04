@@ -802,9 +802,22 @@ async function sbdb() {
       diameterKm: numeric(par('diameter')),
       gmKm3s2: numeric(par('GM')),
       rotationHours: numeric(par('rot_per')),
+      // DEUX ÉCRITURES du même pôle (RA/Dec équatoriales J2000) : « 51.8/+10.8 » (Lutetia) et
+      // « 78, -71 degrees » (Didymos). Découper sur « / » seul rendait `NaN` pour la seconde,
+      // sans un mot. Que ce soient bien RA et Dec a été VÉRIFIÉ : le pôle écliptique publié par
+      // la source citée pour Didymos (Naidu et al. 2020, λ 310°, β −84°) se convertit en RA 78,2°,
+      // Dec −70,8° (2026-10-04). Une valeur qui ne donne pas deux nombres fait échouer.
       pole: pole && {
         ...pole,
-        value: pole.value.split('/').map(Number),
+        value: (() => {
+          const parts = pole.value
+            .replace(/degrees?/i, '')
+            .split(/[/,]/)
+            .map((s) => Number(s.trim()));
+          if (parts.length !== 2 || !parts.every(Number.isFinite))
+            throw new Error(`SBDB ${sstr} : pôle illisible « ${pole.value} »`);
+          return parts;
+        })(),
       },
       confirmedSatellites: (json.sat ?? []).filter((s) => s.confirmed === 'Y')
         .length,

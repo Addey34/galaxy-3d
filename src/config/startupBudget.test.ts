@@ -31,6 +31,7 @@ import {
   textureFloorBudget,
   type TextureFloorInput,
 } from '@/core/startupBudget';
+import { orbitLineShownByDefault } from '@/core/orbitLineDefaults';
 import type { TextureQuality } from '@/types';
 
 /**
@@ -69,11 +70,16 @@ function shippedBytes(path: string): number | null {
 // ÉPHÉMÉRIDES
 // ---------------------------------------------------------------------------
 
-/** Ce que `SolarSystemApp._loadResources` demande : la date, et les périodes des lignes. */
+/**
+ * Ce que `SolarSystemApp._loadResources` demande : la date, et les périodes des lignes TRACÉES
+ * au démarrage, c'est-à-dire celles de la règle par défaut (`core/orbitLineDefaults.ts`). Jusqu'au
+ * 2026-10-04 c'étaient les périodes de TOUS les corps, ligne affichée ou non.
+ */
 const ORBIT_PERIODS: Record<string, number> = {};
 for (const [name, cfg] of flattenBodies(CELESTIAL_CONFIG)) {
   const period = cfg.realData?.orbitPeriodDays;
-  if (period !== undefined && period > 0) ORBIT_PERIODS[name] = period;
+  if (period !== undefined && period > 0 && orbitLineShownByDefault(cfg.kind))
+    ORBIT_PERIODS[name] = period;
 }
 
 /**

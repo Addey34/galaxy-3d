@@ -111,11 +111,12 @@ describe('le service charge des fenêtres (lot 17C)', () => {
     expect(log.every((call) => /^bytes=\d+-\d+$/.test(call.range ?? ''))).toBe(
       true
     );
-    expect(shipped).toBe(38_445_024);
-    // MESURÉ ici, et ce n'est pas le 1,47 % du plan : celui-ci comptait les lignes d'orbite
-    // des seules PLANÈTES, alors que `SolarSystemApp._recomputeOrbits` calcule la ligne de
-    // TOUS les corps, visible ou non. Halley en demande 333 Ko à elle seule (76 ans de
-    // révolution, pas de 4 jours), Uranus 368 Ko. Le gain reste d'un facteur 39.
+    // 38 445 024 au lot 17 ; 50 834 160 depuis les 23 cibles de missions (2026-10-04).
+    expect(shipped).toBe(50_834_160);
+    // MESURÉ ici avec TOUTES les lignes d'orbite allumées, le pire cas qu'un visiteur obtient en
+    // allumant la colonne entière : Halley en demande 333 Ko à elle seule (76 ans de révolution,
+    // pas de 4 jours), Uranus 368 Ko. Le démarrage, lui, ne demande depuis le 2026-10-04 que les
+    // lignes TRACÉES (`core/orbitLineDefaults.ts`) ; c'est `startupBudget.test.ts` qui le mesure.
     expect(served).toBeLessThan(shipped * 0.03);
     expect(served).toBeGreaterThan(900_000);
     expect(service.report.missing).toEqual([]);

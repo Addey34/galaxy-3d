@@ -26,8 +26,11 @@ export interface MissionRecord {
    * Le début que l'archive déclare, en jour ISO. Ce N'EST PAS une date de lancement : le PDS
    * fait commencer « Voyager » le 1972-07-01, alors que Voyager 1 a décollé le 1977-09-05. C'est
    * le début du PROJET, et les deux ne se confondent pas.
+   *
+   * `null` quand l'archive écrit sa sentinelle de début `1000-01-01` : DART, la seule au
+   * 2026-10-04, devenue visible sur une fiche quand Didymos est entré au catalogue.
    */
-  readonly start: string;
+  readonly start: string | null;
   /** La fin déclarée, en jour ISO, ou `null` quand l'archive n'en déclare aucune. */
   readonly end: string | null;
 }
@@ -41,13 +44,19 @@ export type MissionStanding =
   /** La scène est après la fin déclarée. */
   | 'ended'
   /** La mission a commencé et l'archive ne déclare PAS de fin : on ne sait pas, on le dit. */
-  | 'startedEndUndeclared';
+  | 'startedEndUndeclared'
+  /**
+   * L'archive ne déclare PAS de début (sentinelle `1000-01-01`) : on ne sait pas si la mission
+   * avait commencé à cette date. Seule une fin déclarée ET dépassée reste certaine (`ended`).
+   */
+  | 'startUndeclared';
 
 export const MISSION_STANDINGS: readonly MissionStanding[] = [
   'notYetStarted',
   'underway',
   'ended',
   'startedEndUndeclared',
+  'startUndeclared',
 ];
 
 /**
@@ -69,6 +78,10 @@ export function missionStanding(
   sceneDate: Date
 ): MissionStanding {
   const at = utcDay(sceneDate);
+  if (mission.start === null)
+    return mission.end !== null && at > mission.end
+      ? 'ended'
+      : 'startUndeclared';
   if (at < mission.start) return 'notYetStarted';
   if (mission.end === null) return 'startedEndUndeclared';
   return at <= mission.end ? 'underway' : 'ended';
@@ -98,7 +111,13 @@ export function missionsAtDate(
 export function sortMissions(
   missions: readonly MissionRecord[]
 ): readonly MissionRecord[] {
-  return [...missions].sort(
-    (a, b) => a.start.localeCompare(b.start) || a.name.localeCompare(b.name)
-  );
+  // Un début non déclaré va à la FIN : en tête, il passerait pour la plus ancienne mission.
+  return [...missions].sort((a, b) => {
+    if (a.start !== b.start) {
+      if (a.start === null) return 1;
+      if (b.start === null) return -1;
+      return a.start.localeCompare(b.start);
+    }
+    return a.name.localeCompare(b.name);
+  });
 }

@@ -71,8 +71,16 @@ describe('dérivation du texte du registre', () => {
       const missing: string[] = [];
       for (const { file, json } of all) {
         const map = collectTranslations(json, locale);
+        // Un lien Wikipédia peut manquer dans une langue : il est DÉRIVÉ de l'article anglais
+        // et omis quand l'article n'existe pas (cf. `localizedFidelity.test.ts`). Sa garde est
+        // `pnpm i18n:wiki --check`, pas cette carte.
+        const wikiEnglish = new Set(
+          [...JSON.stringify(json).matchAll(/"wiki":\{"en":"([^"]+)"/g)].map(
+            (m) => m[1]!
+          )
+        );
         for (const english of englishStrings(json))
-          if (map[textKey(english)] === undefined)
+          if (map[textKey(english)] === undefined && !wikiEnglish.has(english))
             missing.push(`${file} : « ${english.slice(0, 60)} »`);
       }
       expect(

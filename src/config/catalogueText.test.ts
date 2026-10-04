@@ -185,7 +185,12 @@ describe('le texte du registre livré', () => {
           if (map[textKey(english)] === undefined)
             missing.push(`${dir} (démarrage) : ${english}`);
         for (const english of deferred)
-          if (card[textKey(english)] === undefined)
+          // Un lien Wikipédia peut manquer en espagnol ou en portugais : il est DÉRIVÉ de
+          // l'article anglais et omis où l'article n'existe pas (`localizedFidelity.test.ts`).
+          if (
+            card[textKey(english)] === undefined &&
+            !english.startsWith('https://en.wikipedia.org/')
+          )
             missing.push(`${dir} (fiche) : ${english}`);
       }
       expect(

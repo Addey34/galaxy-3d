@@ -1,0 +1,104 @@
+{
+  "$schema": "../schema/entity.schema.json",
+  "id": "giacobini-zinner",
+  "targetClass": "comet",
+  "source": "small-body",
+  "elements": {
+    "displayName": {
+      "en": "Giacobini–Zinner",
+      "fr": "Giacobini-Zinner",
+      "es": "Giacobini-Zinner",
+      "pt-BR": "Giacobini-Zinner"
+    },
+    "a": 3.491346235147648,
+    "e": 0.7110906356782928,
+    "iDeg": 32.05439725010414,
+    "omDeg": 195.3077963609671,
+    "wDeg": 172.9399710043106,
+    "maDeg": 42.55003574136059,
+    "epoch": "2026-01-01T00:00:00.000Z",
+    "kind": "comet",
+    "color": "0xb4a7ff",
+    "fallbackColor": "0x4e4e4e",
+    "description": {
+      "en": "A small comet about 2 kilometres across, the source of the Draconid meteors. On 11 September 1985 the International Cometary Explorer flew past it: the first spacecraft to fly by a comet.",
+      "fr": "Une petite comète d’environ 2 kilomètres, à l’origine des météores des Draconides. Le 11 septembre 1985, l’International Cometary Explorer l’a survolée : la première sonde à survoler une comète.",
+      "es": "Un pequeño cometa de unos 2 kilómetros, origen de los meteoros Dracónidas. El 11 de septiembre de 1985, el International Cometary Explorer pasó junto a él: la primera sonda en sobrevolar un cometa.",
+      "pt-BR": "Um pequeno cometa com cerca de 2 quilômetros, origem dos meteoros Dracônidas. Em 11 de setembro de 1985, o International Cometary Explorer passou por ele: a primeira sonda a sobrevoar um cometa."
+    },
+    "wiki": {
+      "en": "https://en.wikipedia.org/wiki/21P%2FGiacobini%E2%80%93Zinner",
+      "fr": "https://fr.wikipedia.org/wiki/21P%2FGiacobini-Zinner",
+      "es": "https://es.wikipedia.org/wiki/21P%2FGiacobini-Zinner",
+      "pt-BR": "https://pt.wikipedia.org/wiki/21P%2FGiacobini-Zinner"
+    }
+  },
+  "facts": {
+    "radiusKm": {
+      "value": {
+        "$diameterKm": 2.0
+      },
+      "source": "jpl-sbdb",
+      "method": "derived",
+      "detail": "radiusFromDiameter",
+      "citation": "Lamy,P.L.,Toth,I.,Fernandez,Y.R.,Weaver,H.A. (2004) Comets II, pp. 223-264"
+    },
+    "massKg": {
+      "published": false,
+      "reason": {
+        "en": "The JPL Small-Body Database publishes no GM for this body, and no mass can be derived without one.",
+        "fr": "La base des petits corps de JPL ne publie aucun GM pour ce corps, et aucune masse ne se dérive sans lui.",
+        "es": "La base de datos de cuerpos menores del JPL no publica ningún GM para este cuerpo, y no puede derivarse ninguna masa sin él.",
+        "pt-BR": "A base de pequenos corpos do JPL não publica nenhum GM para este corpo, e nenhuma massa se deriva sem ele."
+      }
+    },
+    "gravity": {
+      "published": false,
+      "reason": {
+        "en": "Surface gravity is derived from a mass, and none is published for this body.",
+        "fr": "La gravité de surface se dérive d’une masse, et aucune n’est publiée pour ce corps.",
+        "es": "La gravedad en la superficie se deriva de una masa, y no se publica ninguna para este cuerpo.",
+        "pt-BR": "A gravidade na superfície se deriva de uma massa, e nenhuma é publicada para este corpo."
+      }
+    },
+    "meanTempC": {
+      "published": false,
+      "reason": {
+        "en": "The JPL Small-Body Database, the source of its other figures, publishes no temperature among its physical parameters.",
+        "fr": "La base des petits corps de JPL, d'où viennent ses autres chiffres, ne publie aucune température parmi ses paramètres physiques.",
+        "es": "La base de datos de cuerpos menores del JPL, de donde proceden sus demás cifras, no publica ninguna temperatura entre sus parámetros físicos.",
+        "pt-BR": "A base de pequenos corpos do JPL, de onde vêm os seus outros números, não publica nenhuma temperatura entre os seus parâmetros físicos."
+      }
+    },
+    "moonCount": {
+      "value": 0,
+      "source": "jpl-sbdb",
+      "method": "measured",
+      "asOf": "2026-10-04",
+      "detail": "confirmedSatellites"
+    },
+    "axialTilt": {
+      "published": false,
+      "reason": {
+        "en": "The JPL Small-Body Database publishes no spin-axis solution for this body, and an axial tilt cannot be derived without one.",
+        "fr": "La base des petits corps de JPL ne publie aucune solution de pôle pour ce corps, et une inclinaison axiale ne se dérive pas sans elle.",
+        "es": "La base de datos de cuerpos menores del JPL no publica ninguna solución de polo para este cuerpo, y una inclinación axial no puede derivarse sin ella.",
+        "pt-BR": "A base de pequenos corpos do JPL não publica nenhuma solução de polo para este corpo, e uma inclinação axial não se deriva sem ela."
+      }
+    },
+    "rotationPeriod": {
+      "published": false,
+      "reason": {
+        "en": "The JPL Small-Body Database publishes no rotation period for this body.",
+        "fr": "La base des petits corps de JPL ne publie aucune période de rotation pour ce corps.",
+        "es": "La base de datos de cuerpos menores del JPL no publica ningún periodo de rotación para este cuerpo.",
+        "pt-BR": "A base de pequenos corpos do JPL não publica nenhum período de rotação para este corpo."
+      }
+    }
+  },
+  "notes": {
+    "": "Cible déclarée d'une mission au registre du PDS, ajoutée au catalogue le 2026-10-04 (pages des missions, vague 1). Faits lus à la SBDB ; description fondée sur les descriptions de missions du PDS et les pages de NASA Science ou de l'ESA citées dans le handoff du 2026-10-04.",
+    "a": "Éléments osculateurs JPL Horizons EXACTEMENT à cette époque (COMMAND '90000324;', EPHEM_TYPE=ELEMENTS, TLIST=2461041.5, CENTER=500@10).",
+    "fallbackColor": "Gris de l'albédo géométrique SBDB (réflectance en sRGB, plancher 0x48 pour rester visible) ; sans albédo publié, une teinte d'attente. Ce n'est pas une mesure de couleur."
+  }
+}

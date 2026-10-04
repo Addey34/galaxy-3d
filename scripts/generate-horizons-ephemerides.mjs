@@ -188,6 +188,227 @@ const BODIES = [
     center: 'sun',
     splitAtSolutionEpoch: true,
   },
+  // Pages des missions, vague 1 (2026-10-04) : les 23 cibles héliocentriques que le registre du
+  // PDS déclare et que le catalogue n'avait pas. Mêmes COMMAND que `validation-targets.json` ;
+  // pour une comète, l'enregistrement de la solution de l'apparition la plus proche (`CAP`),
+  // dont la même requête rend bien `90000030` pour Halley.
+  //
+  // Le pas est MESURÉ par la règle du lot 11, ci-dessus, et désormais par un outil qui se
+  // rejoue (`node scripts/measure-ephemeris-step.mjs`) : écart MAXIMAL en km du service de
+  // production sur le fichier de 4 jours décimé à 8, 16, 32 et 64 jours, aux nœuds écartés.
+  //
+  //   corps                   8 j / 16 j / 32 j / 64 j                      pas retenu
+  //   lutetia                 6,0 / 176,0 / 700,9 / 2 748                   → 8 j
+  //   gaspra                  10,5 / 126,2 / 501,1 / 1 978                  → 8 j
+  //   mathilde                9,2 / 271,5 / 1 085 / 4 329                   → 8 j
+  //   steins                  6,1 / 170,6 / 677,5 / 2 682                   → 8 j
+  //   annefrank               4,4 / 143,1 / 567,8 / 2 208                   → 8 j
+  //   masursky                3,1 / 224,1 / 894,3 / 3 510                   → 8 j
+  //   didymos                 414,7 / 1 498 / 4 358 / 12 215                → 4 j
+  //   dinkinesh               6,8 / 138,4 / 551,4 / 2 128                   → 8 j
+  //   donaldjohanson          8,1 / 205,0 / 810,3 / 3 225                   → 8 j
+  //   eurybates               0,1 / 1,5 / 23,1 / 1 974                      → 16 j
+  //   polymele                0,1 / 1,5 / 24,4 / 1 860                      → 16 j
+  //   leucus                  0,1 / 1,3 / 19,4 / 2 049                      → 32 j
+  //   orus                    0,1 / 1,1 / 15,5 / 1 708                      → 32 j
+  //   patroclus               0,1 / 2,0 / 30,5 / 1 304                      → 16 j
+  //   apophis                 13 446 / 487 505 / 590 851 / 2 323 595        → 4 j
+  //   arrokoth                0,2 / 0,2 / 2,4 / 19,3                        → 64 j
+  //   tempel-1                48,5 / 774,1 / 31 232 / 122 157               → 4 j
+  //   borrelly                107,9 / 1 703 / 27 368 / 101 639              → 4 j
+  //   wild-2                  604 746 / 1 626 415 / 1 275 089 / 7 971 094   → 4 j
+  //   hartley-2               731,9 / 11 289 / 452 736 / 1 255 009          → 4 j
+  //   churyumov-gerasimenko   2 790 / 25 448 / 889 300 / 2 567 646          → 4 j
+  //   giacobini-zinner        643,5 / 10 106 / 85 202 / 266 013             → 4 j
+  //   grigg-skjellerup        1 818 / 27 134 / 159 748 / 479 665            → 4 j
+  //
+  // Wild 2 dès 8 jours : sa rencontre avec Jupiter de 1974 se joue en quelques jours. Didymos,
+  // Apophis et les comètes restent au plancher pour la même famille de raison que Bennu et
+  // Halley : un passage près d'une planète ou du périhélie.
+  {
+    name: 'lutetia',
+    target: '21;',
+    expectedName: 'lutetia',
+    center: 'sun',
+    splitAtSolutionEpoch: true,
+    stepDays: 8,
+  },
+  {
+    name: 'gaspra',
+    target: '951;',
+    expectedName: 'gaspra',
+    center: 'sun',
+    splitAtSolutionEpoch: true,
+    stepDays: 8,
+  },
+  {
+    name: 'mathilde',
+    target: '253;',
+    expectedName: 'mathilde',
+    center: 'sun',
+    splitAtSolutionEpoch: true,
+    stepDays: 8,
+  },
+  {
+    name: 'steins',
+    target: '2867;',
+    expectedName: 'steins',
+    center: 'sun',
+    splitAtSolutionEpoch: true,
+    stepDays: 8,
+  },
+  {
+    name: 'annefrank',
+    target: '5535;',
+    expectedName: 'annefrank',
+    center: 'sun',
+    splitAtSolutionEpoch: true,
+    stepDays: 8,
+  },
+  {
+    name: 'masursky',
+    target: '2685;',
+    expectedName: 'masursky',
+    center: 'sun',
+    splitAtSolutionEpoch: true,
+    stepDays: 8,
+  },
+  {
+    name: 'didymos',
+    target: '65803;',
+    expectedName: 'didymos',
+    center: 'sun',
+    splitAtSolutionEpoch: true,
+    stepDays: 4,
+  },
+  {
+    name: 'dinkinesh',
+    target: '152830;',
+    expectedName: 'dinkinesh',
+    center: 'sun',
+    splitAtSolutionEpoch: true,
+    stepDays: 8,
+  },
+  {
+    name: 'donaldjohanson',
+    target: '52246;',
+    expectedName: 'donaldjohanson',
+    center: 'sun',
+    splitAtSolutionEpoch: true,
+    stepDays: 8,
+  },
+  {
+    name: 'eurybates',
+    target: '3548;',
+    expectedName: 'eurybates',
+    center: 'sun',
+    splitAtSolutionEpoch: true,
+    stepDays: 16,
+  },
+  {
+    name: 'polymele',
+    target: '15094;',
+    expectedName: 'polymele',
+    center: 'sun',
+    splitAtSolutionEpoch: true,
+    stepDays: 16,
+  },
+  {
+    name: 'leucus',
+    target: '11351;',
+    expectedName: 'leucus',
+    center: 'sun',
+    splitAtSolutionEpoch: true,
+    stepDays: 32,
+  },
+  {
+    name: 'orus',
+    target: '21900;',
+    expectedName: 'orus',
+    center: 'sun',
+    splitAtSolutionEpoch: true,
+    stepDays: 32,
+  },
+  {
+    name: 'patroclus',
+    target: '617;',
+    expectedName: 'patroclus',
+    center: 'sun',
+    splitAtSolutionEpoch: true,
+    stepDays: 16,
+  },
+  {
+    name: 'apophis',
+    target: '99942;',
+    expectedName: 'apophis',
+    center: 'sun',
+    splitAtSolutionEpoch: true,
+    stepDays: 4,
+  },
+  {
+    name: 'arrokoth',
+    target: '486958;',
+    expectedName: 'arrokoth',
+    center: 'sun',
+    splitAtSolutionEpoch: true,
+    stepDays: 64,
+  },
+  {
+    name: 'tempel-1',
+    target: '90000192;',
+    expectedName: 'tempel 1',
+    center: 'sun',
+    splitAtSolutionEpoch: true,
+    stepDays: 4,
+  },
+  {
+    name: 'borrelly',
+    target: '90000306;',
+    expectedName: 'borrelly',
+    center: 'sun',
+    splitAtSolutionEpoch: true,
+    stepDays: 4,
+  },
+  {
+    name: 'wild-2',
+    target: '90000863;',
+    expectedName: 'wild 2',
+    center: 'sun',
+    splitAtSolutionEpoch: true,
+    stepDays: 4,
+  },
+  {
+    name: 'hartley-2',
+    target: '90000960;',
+    expectedName: 'hartley 2',
+    center: 'sun',
+    splitAtSolutionEpoch: true,
+    stepDays: 4,
+  },
+  {
+    name: 'churyumov-gerasimenko',
+    target: '90000703;',
+    expectedName: 'churyumov-gerasimenko',
+    center: 'sun',
+    splitAtSolutionEpoch: true,
+    stepDays: 4,
+  },
+  {
+    name: 'giacobini-zinner',
+    target: '90000324;',
+    expectedName: 'giacobini-zinner',
+    center: 'sun',
+    splitAtSolutionEpoch: true,
+    stepDays: 4,
+  },
+  {
+    name: 'grigg-skjellerup',
+    target: '90000378;',
+    expectedName: 'grigg-skjellerup',
+    center: 'sun',
+    splitAtSolutionEpoch: true,
+    stepDays: 4,
+  },
   {
     name: 'orcus',
     target: '90482;',

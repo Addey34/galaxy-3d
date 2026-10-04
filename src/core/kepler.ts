@@ -74,6 +74,15 @@ export interface OrbitalElements {
    * Le corps central est alors le Soleil PLUS les planètes : μ = k²·(1 + Σ m_planètes / m☉).
    */
   barycentric?: boolean;
+  /**
+   * La distance au Soleil la plus GRANDE que le fichier Horizons du corps lui donne sur
+   * 1900-2100 (UA), déclarée SEULEMENT quand elle dépasse le double de l'aphélie des éléments.
+   * Premier et seul cas au 2026-10-04 : Wild 2, à 22,05 UA en 1901, sur l'orbite qu'il suivait
+   * avant sa rencontre avec Jupiter de 1974. Sans elle, la borne de plausibilité
+   * (`core/ephemerisPlausibility.ts`) refusait sa position mesurée et la remplaçait par une orbite
+   * képlérienne fausse. `ephemerisPlausibility.test.ts` confronte la valeur au fichier livré.
+   */
+  measuredMaxDistanceAU?: number;
 }
 
 /** Constante gravitationnelle de Gauss (rad/jour) — mouvement moyen n = k / a^1.5. */

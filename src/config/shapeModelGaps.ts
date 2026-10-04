@@ -40,7 +40,26 @@ export type ShapeGapReason =
    * La sonde qui aurait pu le modeler ne l'a pas fait : son jeu dérivé nomme d'autres corps.
    * Distingué de la cause précédente parce qu'il se rouvrira si la mission publie plus tard.
    */
-  | 'mission-derived-set-excludes-it';
+  | 'mission-derived-set-excludes-it'
+  /**
+   * Un maillage EST publié, et sa source est nommée (`source`) ; son import est la vague suivante
+   * des cibles de missions (2026-10-04). Un manque écrit, pas une absence : il se referme en
+   * livrant le modèle, et la garde exige alors que l'entrée sorte d'ici.
+   */
+  | 'published-not-imported'
+  /**
+   * Le jeu est NOMMÉ par l'archive elle-même (`source`), mais son hôte refuse de le servir :
+   * HTTP 403 sur tout `pdssbn.astro.umd.edu/holdings/`, mesuré le 2026-10-04, alors que les pages
+   * de mission du même serveur répondent 200 et citent ces jeux. Une absence d'accès, pas de
+   * source : à re-mesurer avant de conclure quoi que ce soit d'autre.
+   */
+  | 'archive-refuses-access'
+  /**
+   * Rien trouvé, le 2026-10-04, dans les trois registres interrogés pour les cibles de missions :
+   * le registre du PDS par cible (bundles ET collections), le dossier `SHAPE` de la PSA pour
+   * Rosetta, et la table `asteroid_models` de DAMIT. Une absence CHERCHÉE.
+   */
+  | 'not-found-in-registries';
 
 export interface ShapeModelGap {
   /** Nom du corps au catalogue. */
@@ -48,10 +67,12 @@ export interface ShapeModelGap {
   /** Rayon moyen publié, en km, tel que la fiche le porte. */
   readonly radiusKm: number;
   readonly reason: ShapeGapReason;
+  /** Le jeu publié, pour `published-not-imported` et `archive-refuses-access`. */
+  readonly source?: string;
 }
 
 /**
- * LES SEPT, après que Mimas en est sorti. Chiffres LUS du catalogue ; le test les recompare et
+ * LES SEPT du 2026-09-29 (après que Mimas en est sorti), puis les cibles de missions du 2026-10-04. Chiffres LUS du catalogue ; le test les recompare et
  * rougit si un corps gagne un modèle et reste ici, ou en perd un et n'y est pas.
  */
 export const SHAPE_MODEL_GAPS: readonly ShapeModelGap[] = [
@@ -62,6 +83,96 @@ export const SHAPE_MODEL_GAPS: readonly ShapeModelGap[] = [
   { body: 'nix', radiusKm: 18, reason: 'mission-derived-set-excludes-it' },
   { body: 'kerberos', radiusKm: 6, reason: 'mission-derived-set-excludes-it' },
   { body: 'styx', radiusKm: 5.2, reason: 'mission-derived-set-excludes-it' },
+  // Les cibles de missions entrées au catalogue le 2026-10-04. Rayons LUS des fiches (diamètre
+  // SBDB / 2), recomparés par le test.
+  {
+    body: 'lutetia',
+    radiusKm: 49,
+    reason: 'published-not-imported',
+    source: 'DAMIT, modèle non convexe 282',
+  },
+  {
+    body: 'gaspra',
+    radiusKm: 6.1,
+    reason: 'published-not-imported',
+    source: 'PDS, urn:nasa:pds:ast-sat.thomas.shape-models (951gaspra)',
+  },
+  {
+    body: 'mathilde',
+    radiusKm: 26.4,
+    reason: 'published-not-imported',
+    source: 'PDS, urn:nasa:pds:ast-sat.thomas.shape-models (253mathilde)',
+  },
+  {
+    body: 'leucus',
+    radiusKm: 17.0775,
+    reason: 'published-not-imported',
+    source: 'DAMIT, modèles convexes 6692 et 6693',
+  },
+  {
+    body: 'didymos',
+    radiusKm: 0.39,
+    reason: 'published-not-imported',
+    source: 'PDS, urn:nasa:pds:dart_shapemodel (didymos_model_v003)',
+  },
+  {
+    body: 'apophis',
+    radiusKm: 0.17,
+    reason: 'published-not-imported',
+    source: 'PDS, urn:nasa:pds:gbo.ast-apophis.jpl.radar.shape_model',
+  },
+  {
+    body: 'churyumov-gerasimenko',
+    radiusKm: 1.7,
+    reason: 'published-not-imported',
+    source: 'ESA PSA, RO-C-MULTI-5-67P-SHAPE-V2.0',
+  },
+  {
+    body: 'tempel-1',
+    radiusKm: 3,
+    reason: 'archive-refuses-access',
+    source: 'dif-c-hriv_its_mri-5-tempel1-shape-v2.0',
+  },
+  {
+    body: 'wild-2',
+    radiusKm: 2,
+    reason: 'archive-refuses-access',
+    source: 'sdu-c-navcam-5-wild2-shape-model-v2.1',
+  },
+  {
+    body: 'hartley-2',
+    radiusKm: 0.8,
+    reason: 'archive-refuses-access',
+    source: 'dif-c-hriv_mri-5-hartley2-shape-v1.0',
+  },
+  { body: 'steins', radiusKm: 2.58, reason: 'not-found-in-registries' },
+  { body: 'annefrank', radiusKm: 2.4, reason: 'not-found-in-registries' },
+  { body: 'masursky', radiusKm: 5.372, reason: 'not-found-in-registries' },
+  { body: 'dinkinesh', radiusKm: 0.3595, reason: 'not-found-in-registries' },
+  {
+    body: 'donaldjohanson',
+    radiusKm: 1.9475,
+    reason: 'not-found-in-registries',
+  },
+  { body: 'eurybates', radiusKm: 31.9425, reason: 'not-found-in-registries' },
+  { body: 'polymele', radiusKm: 10.5375, reason: 'not-found-in-registries' },
+  { body: 'orus', radiusKm: 25.405, reason: 'not-found-in-registries' },
+  { body: 'borrelly', radiusKm: 2.4, reason: 'not-found-in-registries' },
+  { body: 'giacobini-zinner', radiusKm: 1, reason: 'not-found-in-registries' },
+  {
+    body: 'grigg-skjellerup',
+    radiusKm: 1.3,
+    reason: 'not-found-in-registries',
+  },
+  // Rayons de TRAVAIL, non publiés (cf. leur fiche) : Arrokoth n'a pas de rayon unique, et le
+  // diamètre SBDB de Patrocle décrit la paire avec Menoetius.
+  {
+    body: 'arrokoth',
+    radiusKm: 9.57,
+    reason: 'published-not-imported',
+    source: 'PDS, urn:nasa:pds:nh_derived:arrokoth_shapemodel_porter2024',
+  },
+  { body: 'patroclus', radiusKm: 70.181, reason: 'not-found-in-registries' },
 ];
 
 /** Les collections interrogées, pour que la prochaine recherche parte d'où celle-ci s'arrête. */
@@ -70,11 +181,25 @@ export const SHAPE_COLLECTIONS_SEARCHED: readonly string[] = [
   'non_mission/EAR_A_5_DDR_SHAPE_MODELS_V2_1',
   'multi_mission/',
   'urn:nasa:pds:nh_derived:plutosystem_geophysics',
+  // 2026-10-04, pour les cibles de missions :
+  'registre du PDS, par cible (Product_Bundle et Product_Collection)',
+  'ESA PSA, INTERNATIONAL-ROSETTA-MISSION/SHAPE/ et les jeux de Steins et Lutetia',
+  'DAMIT, table asteroid_models (témoin : Pallas 4395, Psyché 1806)',
+  'pdssbn.astro.umd.edu, pages de mission Deep Impact, Stardust, DS1, EPOXI',
 ];
 
 /** Ce qu'on dit d'un manque, en une ligne, pour l'inventaire. */
 export function shapeGapLine(gap: ShapeModelGap): string {
-  return gap.reason === 'no-published-mesh'
-    ? 'aucun maillage publie dans les trois collections du PDS'
-    : 'jeu derive de New Horizons : Pluton et Charon seulement';
+  switch (gap.reason) {
+    case 'no-published-mesh':
+      return 'aucun maillage publie dans les trois collections du PDS';
+    case 'mission-derived-set-excludes-it':
+      return 'jeu derive de New Horizons : Pluton et Charon seulement';
+    case 'published-not-imported':
+      return `maillage publie, import a venir : ${gap.source}`;
+    case 'archive-refuses-access':
+      return `jeu nomme, hote en HTTP 403 : ${gap.source}`;
+    case 'not-found-in-registries':
+      return 'aucun maillage au registre du PDS, a la PSA ni dans DAMIT';
+  }
 }

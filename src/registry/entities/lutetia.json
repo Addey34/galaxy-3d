@@ -1,0 +1,104 @@
+{
+  "$schema": "../schema/entity.schema.json",
+  "id": "lutetia",
+  "targetClass": "asteroid",
+  "source": "small-body",
+  "elements": {
+    "displayName": {
+      "en": "Lutetia",
+      "fr": "Lutèce",
+      "es": "Lutecia",
+      "pt-BR": "Lutécia"
+    },
+    "a": 2.434098355887891,
+    "e": 0.1647776246125677,
+    "iDeg": 3.064559098126129,
+    "omDeg": 80.8373511547249,
+    "wDeg": 249.9284879976472,
+    "maDeg": 257.4636474523047,
+    "epoch": "2026-01-01T00:00:00.000Z",
+    "kind": "asteroid",
+    "color": "0xb07fd1",
+    "fallbackColor": "0x787878",
+    "description": {
+      "en": "A main-belt asteroid about 100 kilometres across. ESA’s Rosetta flew past it in 2010 on its way to comet 67P and revealed a battered world of many craters.",
+      "fr": "Un astéroïde de la ceinture principale d’environ 100 kilomètres. La sonde Rosetta de l’ESA l’a survolé en 2010, en route vers la comète 67P, et a révélé un monde criblé de cratères.",
+      "es": "Un asteroide del cinturón principal de unos 100 kilómetros. La sonda Rosetta de la ESA lo sobrevoló en 2010, rumbo al cometa 67P, y reveló un mundo castigado por numerosos cráteres.",
+      "pt-BR": "Um asteroide do cinturão principal com cerca de 100 quilômetros. A sonda Rosetta da ESA passou por ele em 2010, a caminho do cometa 67P, e revelou um mundo marcado por muitas crateras."
+    },
+    "wiki": {
+      "en": "https://en.wikipedia.org/wiki/21_Lutetia",
+      "fr": "https://fr.wikipedia.org/wiki/(21)_Lut%C3%A8ce",
+      "es": "https://es.wikipedia.org/wiki/(21)_Lutecia",
+      "pt-BR": "https://pt.wikipedia.org/wiki/21_Lut%C3%A9cia"
+    }
+  },
+  "facts": {
+    "radiusKm": {
+      "value": {
+        "$diameterKm": 98
+      },
+      "source": "jpl-sbdb",
+      "method": "derived",
+      "uncertainty": 1.0,
+      "detail": "radiusFromDiameter",
+      "citation": "Sierks et al., Science 334, 487, 2011"
+    },
+    "massKg": {
+      "value": {
+        "$gm": 0.1134
+      },
+      "source": "jpl-sbdb",
+      "method": "derived",
+      "uncertainty": {
+        "$gm": 0.0011
+      },
+      "detail": "massFromGM",
+      "citation": "Patzold et al., Science 334, 491, 2011"
+    },
+    "gravity": {
+      "value": {
+        "$gm": 0.1134,
+        "$radiusKm": 49.0
+      },
+      "source": "jpl-sbdb",
+      "method": "derived",
+      "detail": "gravityFromGM",
+      "citation": "Patzold et al., Science 334, 491, 2011"
+    },
+    "meanTempC": {
+      "published": false,
+      "reason": {
+        "en": "The JPL Small-Body Database, the source of its other figures, publishes no temperature among its physical parameters.",
+        "fr": "La base des petits corps de JPL, d'où viennent ses autres chiffres, ne publie aucune température parmi ses paramètres physiques.",
+        "es": "La base de datos de cuerpos menores del JPL, de donde proceden sus demás cifras, no publica ninguna temperatura entre sus parámetros físicos.",
+        "pt-BR": "A base de pequenos corpos do JPL, de onde vêm os seus outros números, não publica nenhuma temperatura entre os seus parâmetros físicos."
+      }
+    },
+    "moonCount": {
+      "value": 0,
+      "source": "jpl-sbdb",
+      "method": "measured",
+      "asOf": "2026-10-04",
+      "detail": "confirmedSatellites"
+    },
+    "axialTilt": {
+      "value": 96.3,
+      "source": "jpl-sbdb",
+      "method": "derived",
+      "detail": "obliquityFromPole",
+      "citation": "Sierks et al., Science 334, 487, 2011"
+    },
+    "rotationPeriod": {
+      "value": 8.1655,
+      "source": "jpl-sbdb",
+      "method": "measured",
+      "citation": "LCDB (Rev. 2023-October); Warner et al., 2009"
+    }
+  },
+  "notes": {
+    "": "Cible déclarée d'une mission au registre du PDS, ajoutée au catalogue le 2026-10-04 (pages des missions, vague 1). Faits lus à la SBDB ; description fondée sur les descriptions de missions du PDS et les pages de NASA Science ou de l'ESA citées dans le handoff du 2026-10-04.",
+    "a": "Éléments osculateurs JPL Horizons EXACTEMENT à cette époque (COMMAND '21;', EPHEM_TYPE=ELEMENTS, TLIST=2461041.5, CENTER=500@10).",
+    "fallbackColor": "Gris de l'albédo géométrique SBDB (réflectance en sRGB, plancher 0x48 pour rester visible) ; sans albédo publié, une teinte d'attente. Ce n'est pas une mesure de couleur."
+  }
+}

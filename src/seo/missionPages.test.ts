@@ -221,6 +221,8 @@ describe('les pages des missions', () => {
   });
 
   it('écarte les cibles d’étalonnage en les comptant', () => {
+    // NExT : Tempel 1 est au catalogue depuis le 2026-10-04, donc LIÉ, et ses cibles
+    // d'étalonnage restent comptées sans être listées.
     const next = catalogue.missions.find((m) => m.slug === 'next')!;
     const calibrations = next.targets.filter((t) =>
       CALIBRATION_TYPES.has(String(t.type))
@@ -229,11 +231,17 @@ describe('les pages des missions', () => {
     const body = page('next').body;
     expect(body).toContain(`${calibrations} calibration targets`);
     expect(body).not.toContain('NON SCIENCE');
-    expect(body).toContain('9P/Tempel 1 (comet)');
+    expect(body).toContain('href="/tempel-1/"');
+    // Une comète hors catalogue garde son nom et son type publiés, traduits.
+    expect(page('near-earth-asteroid-rendezvous', 'fr').body).toContain(
+      'C/1996 B2 (Hyakutake) (comète)'
+    );
   });
 
   it('dit quand aucune cible n’est dans le catalogue', () => {
-    expect(page('lucy').body).toContain(
+    // Spitzer ne déclare aucune cible naturelle ; Lucy, l'exemple d'origine, vise depuis le
+    // 2026-10-04 sept corps du catalogue.
+    expect(page('spitzer').body).toContain(
       'None of the targets this mission declares is in Galaxy'
     );
   });

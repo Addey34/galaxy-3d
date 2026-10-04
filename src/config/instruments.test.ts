@@ -140,7 +140,9 @@ describe('archive des sondes livrée', () => {
   it('ne livre aucune borne au-delà de 2100 : la sentinelle du PDS est réécrite', () => {
     for (const id of files)
       for (const investigation of archiveOf(id).investigations) {
-        expect(investigation.start.slice(0, 4), id).toMatch(/^(19|20)\d\d$/);
+        // Un début NON déclaré (sentinelle `1000-01-01`) est réécrit `null`, jamais livré.
+        if (investigation.start !== null)
+          expect(investigation.start.slice(0, 4), id).toMatch(/^(19|20)\d\d$/);
         if (investigation.end !== null)
           expect(investigation.end.slice(0, 4), id).toMatch(/^(19|20)\d\d$/);
       }

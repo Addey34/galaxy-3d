@@ -1,0 +1,104 @@
+{
+  "$schema": "../schema/entity.schema.json",
+  "id": "donaldjohanson",
+  "targetClass": "asteroid",
+  "source": "small-body",
+  "elements": {
+    "displayName": {
+      "en": "Donaldjohanson",
+      "fr": "Donaldjohanson",
+      "es": "Donaldjohanson",
+      "pt-BR": "Donaldjohanson"
+    },
+    "a": 2.383559417029651,
+    "e": 0.1869164294038842,
+    "iDeg": 4.425483474167949,
+    "omDeg": 262.7765211132491,
+    "wDeg": 212.8462443530007,
+    "maDeg": 105.3125609581818,
+    "epoch": "2026-01-01T00:00:00.000Z",
+    "kind": "asteroid",
+    "color": "0xc7a06b",
+    "fallbackColor": "0x5b5b5b",
+    "description": {
+      "en": "A main-belt asteroid about 4 kilometres across, made of two lobes joined by a narrow neck. NASA’s Lucy flew past it on 20 April 2025, at about 960 kilometres.",
+      "fr": "Un astéroïde de la ceinture principale d’environ 4 kilomètres, formé de deux lobes reliés par un col étroit. La sonde Lucy de la NASA l’a survolé le 20 avril 2025, à environ 960 kilomètres.",
+      "es": "Un asteroide del cinturón principal de unos 4 kilómetros, formado por dos lóbulos unidos por un cuello estrecho. La sonda Lucy de la NASA lo sobrevoló el 20 de abril de 2025, a unos 960 kilómetros.",
+      "pt-BR": "Um asteroide do cinturão principal com cerca de 4 quilômetros, formado por dois lóbulos unidos por um pescoço estreito. A sonda Lucy da NASA passou por ele em 20 de abril de 2025, a cerca de 960 quilômetros."
+    },
+    "wiki": {
+      "en": "https://en.wikipedia.org/wiki/52246_Donaldjohanson",
+      "fr": "https://fr.wikipedia.org/wiki/(52246)_Donaldjohanson",
+      "es": "https://es.wikipedia.org/wiki/(52246)_Donaldjohanson"
+    }
+  },
+  "facts": {
+    "radiusKm": {
+      "value": {
+        "$diameterKm": 3.895
+      },
+      "source": "jpl-sbdb",
+      "method": "derived",
+      "uncertainty": 0.0065,
+      "detail": "radiusFromDiameter",
+      "citation": "urn:nasa:pds:neowise_diameters_albedos::2.0[mainbelt] (http://adsabs.harvard.edu/abs/2011ApJ...741...68M)"
+    },
+    "massKg": {
+      "published": false,
+      "reason": {
+        "en": "The JPL Small-Body Database publishes no GM for this body, and no mass can be derived without one.",
+        "fr": "La base des petits corps de JPL ne publie aucun GM pour ce corps, et aucune masse ne se dérive sans lui.",
+        "es": "La base de datos de cuerpos menores del JPL no publica ningún GM para este cuerpo, y no puede derivarse ninguna masa sin él.",
+        "pt-BR": "A base de pequenos corpos do JPL não publica nenhum GM para este corpo, e nenhuma massa se deriva sem ele."
+      }
+    },
+    "gravity": {
+      "published": false,
+      "reason": {
+        "en": "Surface gravity is derived from a mass, and none is published for this body.",
+        "fr": "La gravité de surface se dérive d’une masse, et aucune n’est publiée pour ce corps.",
+        "es": "La gravedad en la superficie se deriva de una masa, y no se publica ninguna para este cuerpo.",
+        "pt-BR": "A gravidade na superfície se deriva de uma massa, e nenhuma é publicada para este corpo."
+      }
+    },
+    "meanTempC": {
+      "published": false,
+      "reason": {
+        "en": "The JPL Small-Body Database, the source of its other figures, publishes no temperature among its physical parameters.",
+        "fr": "La base des petits corps de JPL, d'où viennent ses autres chiffres, ne publie aucune température parmi ses paramètres physiques.",
+        "es": "La base de datos de cuerpos menores del JPL, de donde proceden sus demás cifras, no publica ninguna temperatura entre sus parámetros físicos.",
+        "pt-BR": "A base de pequenos corpos do JPL, de onde vêm os seus outros números, não publica nenhuma temperatura entre os seus parâmetros físicos."
+      }
+    },
+    "moonCount": {
+      "value": 0,
+      "source": "jpl-sbdb",
+      "method": "measured",
+      "asOf": "2026-10-04",
+      "detail": "confirmedSatellites"
+    },
+    "axialTilt": {
+      "published": false,
+      "reason": {
+        "en": "The JPL Small-Body Database publishes no spin-axis solution for this body, and an axial tilt cannot be derived without one.",
+        "fr": "La base des petits corps de JPL ne publie aucune solution de pôle pour ce corps, et une inclinaison axiale ne se dérive pas sans elle.",
+        "es": "La base de datos de cuerpos menores del JPL no publica ninguna solución de polo para este cuerpo, y una inclinación axial no puede derivarse sin ella.",
+        "pt-BR": "A base de pequenos corpos do JPL não publica nenhuma solução de polo para este corpo, e uma inclinação axial não se deriva sem ela."
+      }
+    },
+    "rotationPeriod": {
+      "published": false,
+      "reason": {
+        "en": "The JPL Small-Body Database publishes no rotation period for this body.",
+        "fr": "La base des petits corps de JPL ne publie aucune période de rotation pour ce corps.",
+        "es": "La base de datos de cuerpos menores del JPL no publica ningún periodo de rotación para este cuerpo.",
+        "pt-BR": "A base de pequenos corpos do JPL não publica nenhum período de rotação para este corpo."
+      }
+    }
+  },
+  "notes": {
+    "": "Cible déclarée d'une mission au registre du PDS, ajoutée au catalogue le 2026-10-04 (pages des missions, vague 1). Faits lus à la SBDB ; description fondée sur les descriptions de missions du PDS et les pages de NASA Science ou de l'ESA citées dans le handoff du 2026-10-04.",
+    "a": "Éléments osculateurs JPL Horizons EXACTEMENT à cette époque (COMMAND '52246;', EPHEM_TYPE=ELEMENTS, TLIST=2461041.5, CENTER=500@10).",
+    "fallbackColor": "Gris de l'albédo géométrique SBDB (réflectance en sRGB, plancher 0x48 pour rester visible) ; sans albédo publié, une teinte d'attente. Ce n'est pas une mesure de couleur."
+  }
+}

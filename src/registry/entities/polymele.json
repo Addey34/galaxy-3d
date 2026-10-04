@@ -1,0 +1,102 @@
+{
+  "$schema": "../schema/entity.schema.json",
+  "id": "polymele",
+  "targetClass": "asteroid",
+  "source": "small-body",
+  "elements": {
+    "displayName": {
+      "en": "Polymele",
+      "fr": "Polymele",
+      "es": "Polymele",
+      "pt-BR": "Polymele"
+    },
+    "a": 5.190227093174851,
+    "e": 0.09619198658704273,
+    "iDeg": 12.97882066559814,
+    "omDeg": 50.32726022856589,
+    "wDeg": 5.810144028117545,
+    "maDeg": 130.2189017303425,
+    "epoch": "2026-01-01T00:00:00.000Z",
+    "kind": "asteroid",
+    "color": "0xa3c46b",
+    "fallbackColor": "0x565656",
+    "description": {
+      "en": "A Jupiter Trojan asteroid about 21 kilometres across. NASA’s Lucy is due to fly past it on 14 September 2027.",
+      "fr": "Un astéroïde troyen de Jupiter d’environ 21 kilomètres. La sonde Lucy de la NASA doit le survoler le 14 septembre 2027.",
+      "es": "Un asteroide troyano de Júpiter de unos 21 kilómetros. La sonda Lucy de la NASA debe sobrevolarlo el 14 de septiembre de 2027.",
+      "pt-BR": "Um asteroide troiano de Júpiter com cerca de 21 quilômetros. A sonda Lucy da NASA deve passar por ele em 14 de setembro de 2027."
+    },
+    "wiki": {
+      "en": "https://en.wikipedia.org/wiki/15094_Polymele",
+      "fr": "https://fr.wikipedia.org/wiki/(15094)_Polym%C3%A8le"
+    }
+  },
+  "facts": {
+    "radiusKm": {
+      "value": {
+        "$diameterKm": 21.075
+      },
+      "source": "jpl-sbdb",
+      "method": "derived",
+      "uncertainty": 0.068,
+      "detail": "radiusFromDiameter",
+      "citation": "urn:nasa:pds:neowise_diameters_albedos::2.0[jupiter_trojans] (http://adsabs.harvard.edu/abs/2012ApJ...759...49G)"
+    },
+    "massKg": {
+      "published": false,
+      "reason": {
+        "en": "The JPL Small-Body Database publishes no GM for this body, and no mass can be derived without one.",
+        "fr": "La base des petits corps de JPL ne publie aucun GM pour ce corps, et aucune masse ne se dérive sans lui.",
+        "es": "La base de datos de cuerpos menores del JPL no publica ningún GM para este cuerpo, y no puede derivarse ninguna masa sin él.",
+        "pt-BR": "A base de pequenos corpos do JPL não publica nenhum GM para este corpo, e nenhuma massa se deriva sem ele."
+      }
+    },
+    "gravity": {
+      "published": false,
+      "reason": {
+        "en": "Surface gravity is derived from a mass, and none is published for this body.",
+        "fr": "La gravité de surface se dérive d’une masse, et aucune n’est publiée pour ce corps.",
+        "es": "La gravedad en la superficie se deriva de una masa, y no se publica ninguna para este cuerpo.",
+        "pt-BR": "A gravidade na superfície se deriva de uma massa, e nenhuma é publicada para este corpo."
+      }
+    },
+    "meanTempC": {
+      "published": false,
+      "reason": {
+        "en": "The JPL Small-Body Database, the source of its other figures, publishes no temperature among its physical parameters.",
+        "fr": "La base des petits corps de JPL, d'où viennent ses autres chiffres, ne publie aucune température parmi ses paramètres physiques.",
+        "es": "La base de datos de cuerpos menores del JPL, de donde proceden sus demás cifras, no publica ninguna temperatura entre sus parámetros físicos.",
+        "pt-BR": "A base de pequenos corpos do JPL, de onde vêm os seus outros números, não publica nenhuma temperatura entre os seus parâmetros físicos."
+      }
+    },
+    "moonCount": {
+      "published": false,
+      "reason": {
+        "en": "The JPL Small-Body Database lists no satellite, while NASA’s Lucy mission page names an unnamed satellite of Polymele: the two sources disagree.",
+        "fr": "La base des petits corps de JPL ne recense aucun satellite, alors que la page de la mission Lucy de la NASA en mentionne un, encore sans nom : les deux sources se contredisent.",
+        "es": "La base de datos de cuerpos menores del JPL no registra ningún satélite, mientras que la página de la misión Lucy de la NASA menciona uno, aún sin nombre: las dos fuentes no coinciden.",
+        "pt-BR": "A base de pequenos corpos do JPL não registra nenhum satélite, enquanto a página da missão Lucy da NASA menciona um, ainda sem nome: as duas fontes divergem."
+      }
+    },
+    "axialTilt": {
+      "published": false,
+      "reason": {
+        "en": "The JPL Small-Body Database publishes no spin-axis solution for this body, and an axial tilt cannot be derived without one.",
+        "fr": "La base des petits corps de JPL ne publie aucune solution de pôle pour ce corps, et une inclinaison axiale ne se dérive pas sans elle.",
+        "es": "La base de datos de cuerpos menores del JPL no publica ninguna solución de polo para este cuerpo, y una inclinación axial no puede derivarse sin ella.",
+        "pt-BR": "A base de pequenos corpos do JPL não publica nenhuma solução de polo para este corpo, e uma inclinação axial não se deriva sem ela."
+      }
+    },
+    "rotationPeriod": {
+      "value": 5.8607,
+      "source": "jpl-sbdb",
+      "method": "measured",
+      "citation": "[Buie, M. W. et al. (2018) AJ 155, Issue 6, article id. 245]"
+    }
+  },
+  "notes": {
+    "": "Cible déclarée d'une mission au registre du PDS, ajoutée au catalogue le 2026-10-04 (pages des missions, vague 1). Faits lus à la SBDB ; description fondée sur les descriptions de missions du PDS et les pages de NASA Science ou de l'ESA citées dans le handoff du 2026-10-04.",
+    "a": "Éléments osculateurs JPL Horizons EXACTEMENT à cette époque (COMMAND '15094;', EPHEM_TYPE=ELEMENTS, TLIST=2461041.5, CENTER=500@10).",
+    "fallbackColor": "Gris de l'albédo géométrique SBDB (réflectance en sRGB, plancher 0x48 pour rester visible) ; sans albédo publié, une teinte d'attente. Ce n'est pas une mesure de couleur."
+  }
+}

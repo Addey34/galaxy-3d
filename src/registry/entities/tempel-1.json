@@ -1,0 +1,102 @@
+{
+  "$schema": "../schema/entity.schema.json",
+  "id": "tempel-1",
+  "targetClass": "comet",
+  "source": "small-body",
+  "elements": {
+    "displayName": {
+      "en": "Tempel 1",
+      "fr": "Tempel 1",
+      "es": "Tempel 1",
+      "pt-BR": "Tempel 1"
+    },
+    "a": 3.298412630451541,
+    "e": 0.4681363826067093,
+    "iDeg": 10.54713961374288,
+    "omDeg": 67.09863504134117,
+    "wDeg": 184.5018842939922,
+    "maDeg": 233.334467167216,
+    "epoch": "2026-01-01T00:00:00.000Z",
+    "kind": "comet",
+    "color": "0x7fd1d1",
+    "fallbackColor": "0x484848",
+    "description": {
+      "en": "A comet about 6 kilometres across. On 4 July 2005 NASA’s Deep Impact released an impactor that struck its surface, and Stardust later returned to image the impact site.",
+      "fr": "Une comète d’environ 6 kilomètres. Le 4 juillet 2005, la sonde Deep Impact de la NASA a largué un impacteur qui a frappé sa surface, et Stardust est revenue plus tard photographier le site de l’impact.",
+      "es": "Un cometa de unos 6 kilómetros. El 4 de julio de 2005, la sonda Deep Impact de la NASA liberó un impactador que chocó contra su superficie, y Stardust volvió después para fotografiar el lugar del impacto.",
+      "pt-BR": "Um cometa com cerca de 6 quilômetros. Em 4 de julho de 2005, a sonda Deep Impact da NASA soltou um impactador que atingiu a sua superfície, e a Stardust voltou mais tarde para fotografar o local do impacto."
+    },
+    "wiki": {
+      "en": "https://en.wikipedia.org/wiki/Tempel_1",
+      "fr": "https://fr.wikipedia.org/wiki/9P%2FTempel",
+      "es": "https://es.wikipedia.org/wiki/9P%2FTempel_1",
+      "pt-BR": "https://pt.wikipedia.org/wiki/9P%2FTempel_1"
+    }
+  },
+  "facts": {
+    "radiusKm": {
+      "value": {
+        "$diameterKm": 6.0
+      },
+      "source": "jpl-sbdb",
+      "method": "derived",
+      "uncertainty": 0.1,
+      "detail": "radiusFromDiameter",
+      "citation": "A'Hearn, M.F. et al. (2005) Science 310:258-264"
+    },
+    "massKg": {
+      "published": false,
+      "reason": {
+        "en": "The JPL Small-Body Database publishes no GM for this body, and no mass can be derived without one.",
+        "fr": "La base des petits corps de JPL ne publie aucun GM pour ce corps, et aucune masse ne se dérive sans lui.",
+        "es": "La base de datos de cuerpos menores del JPL no publica ningún GM para este cuerpo, y no puede derivarse ninguna masa sin él.",
+        "pt-BR": "A base de pequenos corpos do JPL não publica nenhum GM para este corpo, e nenhuma massa se deriva sem ele."
+      }
+    },
+    "gravity": {
+      "published": false,
+      "reason": {
+        "en": "Surface gravity is derived from a mass, and none is published for this body.",
+        "fr": "La gravité de surface se dérive d’une masse, et aucune n’est publiée pour ce corps.",
+        "es": "La gravedad en la superficie se deriva de una masa, y no se publica ninguna para este cuerpo.",
+        "pt-BR": "A gravidade na superfície se deriva de uma massa, e nenhuma é publicada para este corpo."
+      }
+    },
+    "meanTempC": {
+      "published": false,
+      "reason": {
+        "en": "The JPL Small-Body Database, the source of its other figures, publishes no temperature among its physical parameters.",
+        "fr": "La base des petits corps de JPL, d'où viennent ses autres chiffres, ne publie aucune température parmi ses paramètres physiques.",
+        "es": "La base de datos de cuerpos menores del JPL, de donde proceden sus demás cifras, no publica ninguna temperatura entre sus parámetros físicos.",
+        "pt-BR": "A base de pequenos corpos do JPL, de onde vêm os seus outros números, não publica nenhuma temperatura entre os seus parâmetros físicos."
+      }
+    },
+    "moonCount": {
+      "value": 0,
+      "source": "jpl-sbdb",
+      "method": "measured",
+      "asOf": "2026-10-04",
+      "detail": "confirmedSatellites"
+    },
+    "axialTilt": {
+      "published": false,
+      "reason": {
+        "en": "The JPL Small-Body Database publishes no spin-axis solution for this body, and an axial tilt cannot be derived without one.",
+        "fr": "La base des petits corps de JPL ne publie aucune solution de pôle pour ce corps, et une inclinaison axiale ne se dérive pas sans elle.",
+        "es": "La base de datos de cuerpos menores del JPL no publica ninguna solución de polo para este cuerpo, y una inclinación axial no puede derivarse sin ella.",
+        "pt-BR": "A base de pequenos corpos do JPL não publica nenhuma solução de polo para este corpo, e uma inclinação axial não se deriva sem ela."
+      }
+    },
+    "rotationPeriod": {
+      "value": 40.7,
+      "source": "jpl-sbdb",
+      "method": "measured",
+      "citation": "A'Hearn, M.F. et al. (2005) Science 310:258-264"
+    }
+  },
+  "notes": {
+    "": "Cible déclarée d'une mission au registre du PDS, ajoutée au catalogue le 2026-10-04 (pages des missions, vague 1). Faits lus à la SBDB ; description fondée sur les descriptions de missions du PDS et les pages de NASA Science ou de l'ESA citées dans le handoff du 2026-10-04.",
+    "a": "Éléments osculateurs JPL Horizons EXACTEMENT à cette époque (COMMAND '90000192;', EPHEM_TYPE=ELEMENTS, TLIST=2461041.5, CENTER=500@10).",
+    "fallbackColor": "Gris de l'albédo géométrique SBDB (réflectance en sRGB, plancher 0x48 pour rester visible) ; sans albédo publié, une teinte d'attente. Ce n'est pas une mesure de couleur."
+  }
+}
