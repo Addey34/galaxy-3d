@@ -210,7 +210,9 @@ jobs:
     # modeles de forme, aucun test navigateur ajoute, tous verts, aucun reessai). Les MEMES
     # 36 scenarios ont pris 21,6 min sur un EPYC 7763 (run `37183269879`). Ce n'est donc pas une
     # derive du code mais la machine la plus lente que GitHub serve, et elle revient : la marge
-    # se reprend en repartissant, pas en esperant une autre machine.
+    # se reprend en repartissant, pas en esperant une autre machine. MESURE APRES, sur le run
+    # `37186382225` de la branche : pire shard 19,9 min (EPYC 7763), contre 23,2 sur le meme
+    # processeur a huit machines (run `37183782647`), tous verts, aucun reessai.
     #
     # Et la lecon de procedure, deja payee au lot 19 : ajouter des tests REDISTRIBUE les shards,
     # ce job ne tourne QUE sur main (`if: push`), et une suite locale ne sharde pas. Aucune CI de
