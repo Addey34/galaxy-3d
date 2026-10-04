@@ -41,8 +41,19 @@ import type { BodyInfoPanel } from './bodyInfo';
 const formatDay = (iso: string): string =>
   formatIsoDay(iso, getLocale(), intlLocale());
 
-/** L'intervalle déclaré, ou l'absence de fin, dite comme telle. */
-function formatSpan(mission: MissionRecord): string {
+/**
+ * L'intervalle déclaré d'une mission, dans la langue courante : fin non déclarée, ou début non
+ * déclaré (la sentinelle `1000-01-01` du PDS), dits comme tels. Partagé par le bloc « Missions »
+ * d'un corps et le bloc « Instruments » d'une sonde, qui le recopiaient chacun.
+ */
+export function missionSpanText(
+  mission: Pick<MissionRecord, 'start' | 'end'>,
+  formatDay: (iso: string) => string
+): string {
+  if (mission.start === null)
+    return mission.end === null
+      ? t('bi.missions.spanUndeclared')
+      : t('bi.missions.spanEndOnly', { to: formatDay(mission.end) });
   return mission.end === null
     ? t('bi.missions.spanOpen', { from: formatDay(mission.start) })
     : t('bi.missions.span', {
@@ -50,6 +61,10 @@ function formatSpan(mission: MissionRecord): string {
         to: formatDay(mission.end),
       });
 }
+
+/** L'intervalle déclaré, dans la langue courante. */
+const formatSpan = (mission: MissionRecord): string =>
+  missionSpanText(mission, formatDay);
 
 const HAS_BEGUN: readonly MissionStanding[] = [
   'underway',

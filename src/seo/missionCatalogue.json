@@ -74,7 +74,7 @@
      "lid": "urn:nasa:pds:context:target:comet.26p_grigg-skjellerup",
      "name": "26P/Grigg-Skjellerup",
      "type": "Comet",
-     "body": null
+     "body": "grigg-skjellerup"
     }
    ]
   },
@@ -90,25 +90,25 @@
      "lid": "urn:nasa:pds:context:target:asteroid.21_lutetia",
      "name": "21 Lutetia",
      "type": "Asteroid",
-     "body": null
+     "body": "lutetia"
     },
     {
      "lid": "urn:nasa:pds:context:target:asteroid.2867_steins",
      "name": "2867 Steins",
      "type": "Asteroid",
-     "body": null
+     "body": "steins"
     },
     {
      "lid": "urn:nasa:pds:context:target:comet.67p_churyumov-gerasimenko",
      "name": "67P/Churyumov-Gerasimenko",
      "type": "Comet",
-     "body": null
+     "body": "churyumov-gerasimenko"
     },
     {
      "lid": "urn:nasa:pds:context:target:comet.9p_tempel_1",
      "name": "9P/Tempel 1",
      "type": "Comet",
-     "body": null
+     "body": "tempel-1"
     },
     {
      "lid": "urn:nasa:pds:context:target:planet.earth",
@@ -384,7 +384,7 @@
      "lid": "urn:nasa:pds:context:target:asteroid.99942_apophis",
      "name": "99942 Apophis",
      "type": "Asteroid",
-     "body": null
+     "body": "apophis"
     }
    ]
   },
@@ -563,7 +563,7 @@
      "lid": "urn:nasa:pds:context:target:asteroid.2685_masursky",
      "name": "2685 Masursky",
      "type": "Asteroid",
-     "body": null
+     "body": "masursky"
     },
     {
      "lid": "urn:nasa:pds:context:target:astrophysical.gravitational_waves",
@@ -1138,7 +1138,7 @@
      "lid": "urn:nasa:pds:context:target:comet.9p_tempel_1",
      "name": "9P/Tempel 1",
      "type": "Comet",
-     "body": null
+     "body": "tempel-1"
     }
    ]
   },
@@ -1154,7 +1154,7 @@
      "lid": "urn:nasa:pds:context:target:comet.19p_borrelly",
      "name": "19P/Borrelly",
      "type": "Comet",
-     "body": null
+     "body": "borrelly"
     }
    ]
   },
@@ -1186,7 +1186,7 @@
      "lid": "urn:nasa:pds:context:target:asteroid.65803_didymos",
      "name": "(65803) Didymos (1996 GT)",
      "type": "Asteroid",
-     "body": null
+     "body": "didymos"
     },
     {
      "lid": "urn:nasa:pds:context:target:satellite.65803_didymos.dimorphos",
@@ -1242,7 +1242,7 @@
      "lid": "urn:nasa:pds:context:target:comet.103p_hartley_2",
      "name": "103P/Hartley 2",
      "type": "Comet",
-     "body": null
+     "body": "hartley-2"
     },
     {
      "lid": "urn:nasa:pds:context:target:comet.c2009_p1_garradd",
@@ -1342,7 +1342,7 @@
      "lid": "urn:nasa:pds:context:target:asteroid.951_gaspra",
      "name": "951 Gaspra",
      "type": "Asteroid",
-     "body": null
+     "body": "gaspra"
     },
     {
      "lid": "urn:nasa:pds:context:target:calibrator.calibration",
@@ -1617,7 +1617,7 @@
      "lid": "urn:nasa:pds:context:target:comet.21p_giacobini-zinner",
      "name": "21P/Giacobini-Zinner",
      "type": "Comet",
-     "body": null
+     "body": "giacobini-zinner"
     }
    ]
   },
@@ -1735,7 +1735,7 @@
      "lid": "urn:nasa:pds:context:target:asteroid.65803_didymos",
      "name": "(65803) Didymos (1996 GT)",
      "type": "Asteroid",
-     "body": null
+     "body": "didymos"
     },
     {
      "lid": "urn:nasa:pds:context:target:satellite.65803_didymos.dimorphos",
@@ -1757,43 +1757,43 @@
      "lid": "urn:nasa:pds:context:target:asteroid.11351_leucus",
      "name": "(11351) Leucus",
      "type": "Asteroid",
-     "body": null
+     "body": "leucus"
     },
     {
      "lid": "urn:nasa:pds:context:target:asteroid.15094_polymele",
      "name": "(15094) Polymele",
      "type": "Asteroid",
-     "body": null
+     "body": "polymele"
     },
     {
      "lid": "urn:nasa:pds:context:target:asteroid.152830_dinkinesh",
      "name": "(152830) Dinkinesh",
      "type": "Asteroid",
-     "body": null
+     "body": "dinkinesh"
     },
     {
      "lid": "urn:nasa:pds:context:target:asteroid.21900_orus",
      "name": "(21900) Orus",
      "type": "Asteroid",
-     "body": null
+     "body": "orus"
     },
     {
      "lid": "urn:nasa:pds:context:target:asteroid.3548_eurybates",
      "name": "(3548) Eurybates",
      "type": "Asteroid",
-     "body": null
+     "body": "eurybates"
     },
     {
      "lid": "urn:nasa:pds:context:target:asteroid.52246_donaldjohanson",
      "name": "(52246) Donaldjohanson",
      "type": "Asteroid",
-     "body": null
+     "body": "donaldjohanson"
     },
     {
      "lid": "urn:nasa:pds:context:target:asteroid.617_patroclus",
      "name": "617 Patroclus",
      "type": "Asteroid",
-     "body": null
+     "body": "patroclus"
     },
     {
      "lid": "urn:nasa:pds:context:target:satellite.617_patroclus.menoetius",
@@ -2191,7 +2191,7 @@
      "lid": "urn:nasa:pds:context:target:asteroid.253_mathilde",
      "name": "253 Mathilde",
      "type": "Asteroid",
-     "body": null
+     "body": "mathilde"
     },
     {
      "lid": "urn:nasa:pds:context:target:asteroid.433_eros",
@@ -2398,7 +2398,7 @@
      "lid": "urn:nasa:pds:context:target:trans-neptunian_object.486958_2014_mu69",
      "name": "(486958) Arrokoth",
      "type": "Trans-Neptunian Object",
-     "body": null
+     "body": "arrokoth"
     }
    ]
   },
@@ -2426,7 +2426,7 @@
      "lid": "urn:nasa:pds:context:target:trans-neptunian_object.486958_2014_mu69",
      "name": "(486958) Arrokoth",
      "type": "Trans-Neptunian Object",
-     "body": null
+     "body": "arrokoth"
     }
    ]
   },
@@ -2454,7 +2454,7 @@
      "lid": "urn:nasa:pds:context:target:comet.9p_tempel_1",
      "name": "9P/Tempel 1",
      "type": "Comet",
-     "body": null
+     "body": "tempel-1"
     }
    ]
   },
@@ -2677,13 +2677,13 @@
      "lid": "urn:nasa:pds:context:target:asteroid.5535_annefrank",
      "name": "5535 Annefrank",
      "type": "Asteroid",
-     "body": null
+     "body": "annefrank"
     },
     {
      "lid": "urn:nasa:pds:context:target:comet.81p_wild_2",
      "name": "81P/Wild 2",
      "type": "Comet",
-     "body": null
+     "body": "wild-2"
     }
    ]
   },

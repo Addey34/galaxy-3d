@@ -122,11 +122,13 @@ describe('pas des satellites : ce qui est refusé, et pourquoi', () => {
 
   it('le coût total des raffinements refusés est ÉNORME devant ce qui est livré', () => {
     // C'est la raison du refus, et elle se recalcule : trois corps chiffrables valent plus de
-    // dix fois l'ensemble des éphémérides livrées, pour des lunes de 84 à 252 km de rayon.
+    // HUIT fois l'ensemble des éphémérides livrées, pour des lunes de 84 à 252 km de rayon. C'était
+    // dix fois au lot 26, quand le livré pesait 38 Mo ; les 23 cibles de missions du 2026-10-04
+    // le portent à 50,8 Mo, et le rapport mesuré tombe à 8,2. Le refus tient toujours.
     let shipped = 0;
     for (const entry of Object.values(manifest.bodies))
       shipped += statSync(join(EPHEMERIDES, entry.file)).size;
     const refused = refusedRefinementBytes();
-    expect(refused).toBeGreaterThan(shipped * 10);
+    expect(refused).toBeGreaterThan(shipped * 8);
   });
 });

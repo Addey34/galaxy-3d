@@ -1,0 +1,102 @@
+{
+  "$schema": "../schema/entity.schema.json",
+  "id": "steins",
+  "targetClass": "asteroid",
+  "source": "small-body",
+  "elements": {
+    "displayName": {
+      "en": "Šteins",
+      "fr": "Šteins",
+      "es": "Šteins",
+      "pt-BR": "Šteins"
+    },
+    "a": 2.363165895399586,
+    "e": 0.1466998366853257,
+    "iDeg": 9.924661613331708,
+    "omDeg": 55.29477771376693,
+    "wDeg": 251.4413085917589,
+    "maDeg": 232.2492614200007,
+    "epoch": "2026-01-01T00:00:00.000Z",
+    "kind": "asteroid",
+    "color": "0x5fb3a8",
+    "fallbackColor": "0x949494",
+    "description": {
+      "en": "A small main-belt asteroid about 5 kilometres across, visited by ESA’s Rosetta in 2008. It was the first E-type asteroid seen up close, and a loosely bound pile of rubble.",
+      "fr": "Un petit astéroïde de la ceinture principale d’environ 5 kilomètres, visité par la sonde Rosetta de l’ESA en 2008. Ce fut le premier astéroïde de type E observé de près, un amas de débris faiblement liés.",
+      "es": "Un pequeño asteroide del cinturón principal de unos 5 kilómetros, visitado por la sonda Rosetta de la ESA en 2008. Fue el primer asteroide de tipo E observado de cerca, un montón de escombros débilmente unidos.",
+      "pt-BR": "Um pequeno asteroide do cinturão principal com cerca de 5 quilômetros, visitado pela sonda Rosetta da ESA em 2008. Foi o primeiro asteroide do tipo E observado de perto, um amontoado de detritos fracamente ligados."
+    },
+    "wiki": {
+      "en": "https://en.wikipedia.org/wiki/2867_%C5%A0teins",
+      "fr": "https://fr.wikipedia.org/wiki/(2867)_%C5%A0teins",
+      "es": "https://es.wikipedia.org/wiki/(2867)_%C5%A0teins",
+      "pt-BR": "https://pt.wikipedia.org/wiki/2867_%C5%A0teins"
+    }
+  },
+  "facts": {
+    "radiusKm": {
+      "value": {
+        "$diameterKm": 5.16
+      },
+      "source": "jpl-sbdb",
+      "method": "derived",
+      "uncertainty": 0.0835,
+      "detail": "radiusFromDiameter",
+      "citation": "EAR_A_COMPIL_5_NEOWISEDIAM_V1_0[mainbelt] (http://adsabs.harvard.edu/abs/2011ApJ...741...68M)"
+    },
+    "massKg": {
+      "published": false,
+      "reason": {
+        "en": "The JPL Small-Body Database publishes no GM for this body, and no mass can be derived without one.",
+        "fr": "La base des petits corps de JPL ne publie aucun GM pour ce corps, et aucune masse ne se dérive sans lui.",
+        "es": "La base de datos de cuerpos menores del JPL no publica ningún GM para este cuerpo, y no puede derivarse ninguna masa sin él.",
+        "pt-BR": "A base de pequenos corpos do JPL não publica nenhum GM para este corpo, e nenhuma massa se deriva sem ele."
+      }
+    },
+    "gravity": {
+      "published": false,
+      "reason": {
+        "en": "Surface gravity is derived from a mass, and none is published for this body.",
+        "fr": "La gravité de surface se dérive d’une masse, et aucune n’est publiée pour ce corps.",
+        "es": "La gravedad en la superficie se deriva de una masa, y no se publica ninguna para este cuerpo.",
+        "pt-BR": "A gravidade na superfície se deriva de uma massa, e nenhuma é publicada para este corpo."
+      }
+    },
+    "meanTempC": {
+      "published": false,
+      "reason": {
+        "en": "The JPL Small-Body Database, the source of its other figures, publishes no temperature among its physical parameters.",
+        "fr": "La base des petits corps de JPL, d'où viennent ses autres chiffres, ne publie aucune température parmi ses paramètres physiques.",
+        "es": "La base de datos de cuerpos menores del JPL, de donde proceden sus demás cifras, no publica ninguna temperatura entre sus parámetros físicos.",
+        "pt-BR": "A base de pequenos corpos do JPL, de onde vêm os seus outros números, não publica nenhuma temperatura entre os seus parâmetros físicos."
+      }
+    },
+    "moonCount": {
+      "value": 0,
+      "source": "jpl-sbdb",
+      "method": "measured",
+      "asOf": "2026-10-04",
+      "detail": "confirmedSatellites"
+    },
+    "axialTilt": {
+      "published": false,
+      "reason": {
+        "en": "The JPL Small-Body Database publishes no spin-axis solution for this body, and an axial tilt cannot be derived without one.",
+        "fr": "La base des petits corps de JPL ne publie aucune solution de pôle pour ce corps, et une inclinaison axiale ne se dérive pas sans elle.",
+        "es": "La base de datos de cuerpos menores del JPL no publica ninguna solución de polo para este cuerpo, y una inclinación axial no puede derivarse sin ella.",
+        "pt-BR": "A base de pequenos corpos do JPL não publica nenhuma solução de polo para este corpo, e uma inclinação axial não se deriva sem ela."
+      }
+    },
+    "rotationPeriod": {
+      "value": 6.049,
+      "source": "jpl-sbdb",
+      "method": "measured",
+      "citation": "LCDB (Rev. 2023-October); Warner et al., 2009"
+    }
+  },
+  "notes": {
+    "": "Cible déclarée d'une mission au registre du PDS, ajoutée au catalogue le 2026-10-04 (pages des missions, vague 1). Faits lus à la SBDB ; description fondée sur les descriptions de missions du PDS et les pages de NASA Science ou de l'ESA citées dans le handoff du 2026-10-04.",
+    "a": "Éléments osculateurs JPL Horizons EXACTEMENT à cette époque (COMMAND '2867;', EPHEM_TYPE=ELEMENTS, TLIST=2461041.5, CENTER=500@10).",
+    "fallbackColor": "Gris de l'albédo géométrique SBDB (réflectance en sRGB, plancher 0x48 pour rester visible) ; sans albédo publié, une teinte d'attente. Ce n'est pas une mesure de couleur."
+  }
+}

@@ -19,28 +19,39 @@ import { APP_SETTINGS, SPK_SETTINGS, TEXTURE_SETTINGS } from './config/engine';
 import { CELESTIAL_CONFIG } from './config/bodies';
 import { bodyDynamics } from './config/gravity';
 import { flattenBodies, forEachBody } from './config/catalog';
+import { orbitLineShownByDefault } from './core/orbitLineDefaults';
+import type { CelestialBodyConfig } from './types';
 import { t } from './i18n';
 import Logger from './utils/Logger';
 
 type ProgressCallback = (percent: number, message: string) => void;
 
 /**
- * Période de révolution de chaque corps du catalogue qui en a une.
+ * Période de révolution de chaque corps dont la ligne d'orbite est TRACÉE.
  *
- * C'est ce que coûte une LIGNE d'orbite en octets d'éphéméride : `orbitPath` échantillonne
- * une période ENTIÈRE centrée sur la date, et il le fait pour tous les corps tracés, la
- * visibilité d'une ligne étant décidée plus tard, dans la scène. Mesuré le 2026-09-23 :
- * 563 472 octets pour la première vue, 572 640 avec toutes les orbites allumées, soit 1,5 %
- * des 38 445 024 livrés.
+ * C'est ce que coûte une ligne en octets d'éphéméride : `orbitPath` échantillonne une période
+ * ENTIÈRE centrée sur la date. Jusqu'au 2026-10-04 la demande portait sur TOUS les corps, la
+ * visibilité d'une ligne n'étant décidée qu'ensuite, dans la scène : Halley coûtait 333 Ko au
+ * démarrage pour une ligne masquée par défaut. Avec 23 cibles de missions de plus, la première vue
+ * du 2015-06-15 demandait 2 037 696 octets pour un budget de 1 800 000. On ne demande désormais
+ * que les lignes tracées ; une ligne allumée plus tard fait venir sa période à ce moment-là
+ * (`_queueOrbitLine`).
  */
-function orbitPeriodsByBody(): Record<string, number> {
+function orbitPeriodsByBody(
+  shown: (name: string, kind: CelestialBodyConfig['kind']) => boolean
+): Record<string, number> {
   const periods: Record<string, number> = {};
   for (const [name, cfg] of flattenBodies(CELESTIAL_CONFIG)) {
     const period = cfg.realData?.orbitPeriodDays;
-    if (period !== undefined && period > 0) periods[name] = period;
+    if (period !== undefined && period > 0 && shown(name, cfg.kind))
+      periods[name] = period;
   }
   return periods;
 }
+
+/** Au démarrage, avant que la scène existe : la règle par défaut, et rien d'autre. */
+const shownAtBoot = (_name: string, kind: CelestialBodyConfig['kind']) =>
+  orbitLineShownByDefault(kind);
 
 function reportProgress(
   progressCallback: ProgressCallback,
@@ -171,7 +182,7 @@ export class SolarSystemApp {
       {
         scene: {
           date: this._startDate ?? new Date(),
-          orbitPeriodDays: orbitPeriodsByBody(),
+          orbitPeriodDays: orbitPeriodsByBody(shownAtBoot),
         },
       }
     ).then((horizons) => {
@@ -193,7 +204,9 @@ export class SolarSystemApp {
    */
   private _ephemerisWindows(): EphemerisWindows {
     const service = this._horizonsEphemeris!;
-    const periods = orbitPeriodsByBody();
+    // Relues À CHAQUE demande : l'ensemble des lignes tracées change quand le tableau change.
+    const periods = (): Record<string, number> =>
+      orbitPeriodsByBody((name) => this.systems.scene!.isOrbitLineShown(name));
     const request = (
       date: Date,
       leadDays: number,
@@ -201,7 +214,7 @@ export class SolarSystemApp {
     ): Parameters<typeof service.hasCoverageFor>[0] => ({
       date,
       leadDays,
-      ...(lines ? { orbitPeriodDays: periods } : {}),
+      ...(lines ? { orbitPeriodDays: periods() } : {}),
     });
     return {
       ready: (date, leadDays, lines) =>
@@ -360,7 +373,15 @@ export class SolarSystemApp {
     );
     forEachBody(CELESTIAL_CONFIG, ({ name, config: cfg }) => {
       if (cfg.kind !== 'skybox') bodies[name]?.setScaleMode('educ');
+      // Les lignes tracées au départ sont celles dont la période a été demandée : la règle par
+      // défaut. Le tableau « Dans la scène » l'applique à son tour, sans contradiction.
+      if (cfg.kind !== 'skybox' && cfg.kind !== 'star')
+        this.systems.scene?.setBodyOrbitVisible(
+          name,
+          orbitLineShownByDefault(cfg.kind)
+        );
     });
+    this.systems.scene?.onOrbitLineShown((name) => this._queueOrbitLine(name));
     this._recomputeOrbits();
     // Synchronise _orbitsGloballyVisible avec l'état réel des lignes (educ au démarrage).
     // Sans cet appel, le flag reste false alors que les lignes THREE.Line sont visibles
@@ -398,9 +419,50 @@ export class SolarSystemApp {
       if (cfg.kind === 'skybox') return;
       bodies[name]?.setScaleMode(mode);
       if (cfg.kind === 'star') return;
+      // Une ligne masquée n'est ni calculée ni payée : elle le sera quand on l'allumera.
+      if (!scene.isOrbitLineShown(name)) return;
       const points = om.computeOrbitPoints(name, cfg, date);
       if (points) scene.setOrbitPoints(name, points);
     });
+    scene.applyOrbitPoints();
+  }
+
+  /** Lignes allumées dans la même tâche, servies par UNE demande d'octets. */
+  private readonly _pendingOrbitLines = new Set<string>();
+
+  /**
+   * Une ligne d'orbite vient d'être allumée : faire venir sa période, PUIS la tracer. Les
+   * allumages d'une même tâche (une colonne entière du tableau) sont regroupés, pour ne pas
+   * émettre une requête par corps.
+   */
+  private _queueOrbitLine(name: string): void {
+    const first = this._pendingOrbitLines.size === 0;
+    this._pendingOrbitLines.add(name);
+    if (!first) return;
+    queueMicrotask(() => void this._flushOrbitLines());
+  }
+
+  private async _flushOrbitLines(): Promise<void> {
+    const names = [...this._pendingOrbitLines];
+    this._pendingOrbitLines.clear();
+    const om = this._orbitalMechanics;
+    const scene = this.systems.scene;
+    if (!om || !scene || !this._horizonsEphemeris) return;
+    const wanted = new Set(names);
+    const periods = orbitPeriodsByBody((n) => wanted.has(n));
+    if (Object.keys(periods).length > 0)
+      await this._horizonsEphemeris.ensureCoverage({
+        date: om.simulationDate,
+        orbitPeriodDays: periods,
+      });
+    const all = flattenBodies(CELESTIAL_CONFIG);
+    for (const name of names) {
+      const cfg = all.get(name);
+      // Éteinte entre-temps : rien à tracer.
+      if (!cfg || !scene.isOrbitLineShown(name)) continue;
+      const points = om.computeOrbitPoints(name, cfg, om.simulationDate);
+      if (points) scene.setOrbitPoints(name, points);
+    }
     scene.applyOrbitPoints();
   }
 

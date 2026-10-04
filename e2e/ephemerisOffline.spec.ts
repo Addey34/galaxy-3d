@@ -36,6 +36,18 @@ function countBinaries(page: Page): { requests: number } {
   return traffic;
 }
 
+/**
+ * Le nombre de fichiers, LU au manifeste servi : il était écrit « 64 » ici, et l'ajout de 23 corps
+ * au catalogue (2026-10-04) l'a rendu faux sans que le produit change de comportement.
+ */
+async function shippedFiles(page: Page): Promise<number> {
+  return page.evaluate(async () => {
+    const response = await fetch('/assets/ephemerides/manifest.json');
+    const manifest = (await response.json()) as { bodies: object };
+    return Object.keys(manifest.bodies).length;
+  });
+}
+
 /** Ouvre la surface de réglages et sa section « Utilisation hors ligne ». */
 async function openOfflineSection(page: Page): Promise<void> {
   await page.locator('#settings-trigger').click();
@@ -79,8 +91,9 @@ test('la section hors ligne DIT ce que l’appareil tient, et le prépare', asyn
 
   await openOfflineSection(page);
   const status = page.locator('#offline-status');
+  const files = await shippedFiles(page);
   // Au départ, aucun fichier n'est tenu ENTIER : seules les fenêtres du démarrage sont là.
-  await expect(status).toContainText('holds 0 of 64 files', {
+  await expect(status).toContainText(`holds 0 of ${files} files`, {
     timeout: 30_000,
   });
 
@@ -95,7 +108,7 @@ test('la section hors ligne DIT ce que l’appareil tient, et le prépare', asyn
   const forget = page.locator('#offline-forget');
   await expect(forget).toBeVisible();
   await forget.click();
-  await expect(status).toContainText('holds 0 of 64 files', {
+  await expect(status).toContainText(`holds 0 of ${files} files`, {
     timeout: 60_000,
   });
 });

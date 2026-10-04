@@ -97,8 +97,15 @@ describe('missions livrées', () => {
   it('ne livre aucune borne au-delà de 2100 : la sentinelle du PDS est réécrite', () => {
     for (const body of files)
       for (const m of missionsOf(body)) {
-        expect(m.start, `${body}/${m.name} début`).toMatch(/^\d{4}-\d\d-\d\d$/);
-        expect(m.start < '2100-01-01', `${body}/${m.name} début`).toBe(true);
+        // La sentinelle de DÉBUT `1000-01-01` est réécrite `null` (DART, depuis l'entrée de
+        // Didymos au catalogue le 2026-10-04) : jamais livrée comme une date.
+        if (m.start !== null) {
+          expect(m.start, `${body}/${m.name} début`).toMatch(
+            /^\d{4}-\d\d-\d\d$/
+          );
+          expect(m.start > '1900-01-01', `${body}/${m.name} début`).toBe(true);
+          expect(m.start < '2100-01-01', `${body}/${m.name} début`).toBe(true);
+        }
         if (m.end !== null) {
           expect(m.end, `${body}/${m.name} fin`).toMatch(/^\d{4}-\d\d-\d\d$/);
           expect(m.end < '2100-01-01', `${body}/${m.name} fin`).toBe(true);
@@ -165,7 +172,7 @@ describe('missions livrées', () => {
     ).launchDate;
     expect(voyager!.start).toBe('1972-07-01');
     expect(launch).toBe('1977-08-20');
-    expect(voyager!.start < launch).toBe(true);
+    expect(voyager!.start! < launch).toBe(true);
   });
 
   /**
@@ -176,7 +183,8 @@ describe('missions livrées', () => {
     const covered = Object.values(index.bodies).filter(
       (e) => e.count > 0
     ).length;
-    expect(covered).toBe(48);
+    // 48 au lot 40, 71 depuis le 2026-10-04 : les 23 cibles de missions entrées au catalogue.
+    expect(covered).toBe(71);
     // 112 investigations DISTINCTES, pour 113 lignes rendues : le registre sert deux fois
     // `mission.venus_express` sous le même `lidvid`, et le générateur les fusionne parce
     // qu'elles sont identiques une fois la sentinelle réécrite. Le chiffre publié est celui
@@ -206,11 +214,14 @@ describe('missions livrées', () => {
     // Croisement du module pur avec la donnée réelle : une mission doit être « commencée » le
     // jour de son début, quelle que soit la forme de sa fin.
     for (const body of files)
-      for (const m of missionsOf(body))
+      for (const m of missionsOf(body)) {
+        // Un début non déclaré n'a pas de « propre date » : son état a son test (core).
+        if (m.start === null) continue;
         expect(
           missionStanding(m, new Date(`${m.start}T12:00:00Z`)),
           `${body}/${m.name}`
         ).toMatch(/^(underway|startedEndUndeclared)$/);
+      }
   });
 
   /**
@@ -224,8 +235,9 @@ describe('missions livrées', () => {
     for (const body of files)
       for (const m of missionsOf(body)) distinct.set(m.lid, m);
     const noEnd = [...distinct.values()].filter((m) => m.end === null);
-    expect(distinct.size).toBe(92);
-    expect(noEnd.length).toBe(31);
+    // 92 et 31 au lot 40 ; 104 et 36 depuis l'entrée des 23 cibles de missions (2026-10-04).
+    expect(distinct.size).toBe(104);
+    expect(noEnd.length).toBe(36);
     // Et le témoin qui donne son sens à l'état : Venera 4 s'est tue en 1967, et l'archive ne
     // déclare pas sa fin. La dire « en cours » afficherait une sonde soviétique encore active.
     const venera4 = noEnd.find((m) => m.name === 'Venera 4');

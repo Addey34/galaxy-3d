@@ -48,6 +48,32 @@
     }
    ]
   },
+  "annefrank": {
+   "claims": [
+    {
+     "source": "sbdb",
+     "form": "day",
+     "day": "1942-03-23",
+     "who": "Reinmuth, K.",
+     "where": "Heidelberg",
+     "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=5535",
+     "retrieved": "2026-10-04"
+    }
+   ]
+  },
+  "apophis": {
+   "claims": [
+    {
+     "source": "sbdb",
+     "form": "day",
+     "day": "2004-06-19",
+     "who": "Tholen, D. J.",
+     "where": "Kitt Peak",
+     "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=99942",
+     "retrieved": "2026-10-04"
+    }
+   ]
+  },
   "ariel": {
    "claims": [
     {
@@ -63,6 +89,19 @@
     }
    ]
   },
+  "arrokoth": {
+   "claims": [
+    {
+     "source": "sbdb",
+     "form": "day",
+     "day": "2014-06-26",
+     "who": "Hubble Space Telescope",
+     "where": "HST",
+     "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=486958",
+     "retrieved": "2026-10-04"
+    }
+   ]
+  },
   "bennu": {
    "claims": [
     {
@@ -73,6 +112,19 @@
      "where": "Socorro",
      "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=101955",
      "retrieved": "2026-10-01"
+    }
+   ]
+  },
+  "borrelly": {
+   "claims": [
+    {
+     "source": "sbdb",
+     "form": "day",
+     "day": "1904-12-28",
+     "who": "Borrelly",
+     "where": "Marseilles, France",
+     "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=19P",
+     "retrieved": "2026-10-04"
     }
    ]
   },
@@ -119,6 +171,19 @@
     }
    ]
   },
+  "churyumov-gerasimenko": {
+   "claims": [
+    {
+     "source": "sbdb",
+     "form": "day",
+     "day": "1969-10-22",
+     "who": "Churyumov, Klim Ivanovic",
+     "where": "Alma-Ata Observatory, Russia",
+     "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=67P",
+     "retrieved": "2026-10-04"
+    }
+   ]
+  },
   "deimos": {
    "claims": [
     {
@@ -134,6 +199,32 @@
     }
    ]
   },
+  "didymos": {
+   "claims": [
+    {
+     "source": "sbdb",
+     "form": "day",
+     "day": "1996-04-11",
+     "who": "Spacewatch",
+     "where": "Kitt Peak",
+     "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=65803",
+     "retrieved": "2026-10-04"
+    }
+   ]
+  },
+  "dinkinesh": {
+   "claims": [
+    {
+     "source": "sbdb",
+     "form": "day",
+     "day": "1999-11-04",
+     "who": "LINEAR",
+     "where": "Socorro",
+     "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=152830",
+     "retrieved": "2026-10-04"
+    }
+   ]
+  },
   "dione": {
    "claims": [
     {
@@ -146,6 +237,19 @@
      "ref": "IAU WGPSN",
      "url": "https://ssd.jpl.nasa.gov/sats/discovery.html",
      "retrieved": "2026-10-01"
+    }
+   ]
+  },
+  "donaldjohanson": {
+   "claims": [
+    {
+     "source": "sbdb",
+     "form": "day",
+     "day": "1981-03-02",
+     "who": "Bus, S. J.",
+     "where": "Siding Spring",
+     "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=52246",
+     "retrieved": "2026-10-04"
     }
    ]
   },
@@ -208,6 +312,19 @@
     }
    ]
   },
+  "eurybates": {
+   "claims": [
+    {
+     "source": "sbdb",
+     "form": "day",
+     "day": "1973-09-19",
+     "who": "Van Houten, C. J.",
+     "where": "Palomar",
+     "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=3548",
+     "retrieved": "2026-10-04"
+    }
+   ]
+  },
   "ganymede": {
    "claims": [
     {
@@ -223,6 +340,32 @@
     }
    ]
   },
+  "gaspra": {
+   "claims": [
+    {
+     "source": "sbdb",
+     "form": "day",
+     "day": "1916-07-30",
+     "who": "Neujmin, G.",
+     "where": "Simeis",
+     "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=951",
+     "retrieved": "2026-10-04"
+    }
+   ]
+  },
+  "giacobini-zinner": {
+   "claims": [
+    {
+     "source": "sbdb",
+     "form": "day",
+     "day": "1900-12-20",
+     "who": "Giacobini, M.",
+     "where": "Nice Observatory, France",
+     "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=21P",
+     "retrieved": "2026-10-04"
+    }
+   ]
+  },
   "gonggong": {
    "claims": [
     {
@@ -233,6 +376,19 @@
      "where": "Palomar",
      "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=225088",
      "retrieved": "2026-10-01"
+    }
+   ]
+  },
+  "grigg-skjellerup": {
+   "claims": [
+    {
+     "source": "sbdb",
+     "form": "day",
+     "day": "1902-07-23",
+     "who": "Grigg, John",
+     "where": "Thames, New Zealand",
+     "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=26P",
+     "retrieved": "2026-10-04"
     }
    ]
   },
@@ -255,6 +411,19 @@
      "form": "ancientObservations",
      "url": "https://science.nasa.gov/solar-system/comets/1p-halley/",
      "retrieved": "2026-10-01"
+    }
+   ]
+  },
+  "hartley-2": {
+   "claims": [
+    {
+     "source": "sbdb",
+     "form": "day",
+     "day": "1986-03-15",
+     "who": "Hartley, Malcolm",
+     "where": "U. K. Schmidt Telescope Unit, Siding Spring",
+     "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=103P",
+     "retrieved": "2026-10-04"
     }
    ]
   },
@@ -395,6 +564,32 @@
     }
    ]
   },
+  "leucus": {
+   "claims": [
+    {
+     "source": "sbdb",
+     "form": "day",
+     "day": "1997-10-12",
+     "who": "Beijing Schmidt CCD Asteroid Program",
+     "where": "Xinglong",
+     "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=11351",
+     "retrieved": "2026-10-04"
+    }
+   ]
+  },
+  "lutetia": {
+   "claims": [
+    {
+     "source": "sbdb",
+     "form": "day",
+     "day": "1852-11-15",
+     "who": "Goldschmidt, H.",
+     "where": "Paris",
+     "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=21",
+     "retrieved": "2026-10-04"
+    }
+   ]
+  },
   "makemake": {
    "claims": [
     {
@@ -415,6 +610,32 @@
      "form": "prehistoric",
      "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/marsfact.html",
      "retrieved": "2026-09-28"
+    }
+   ]
+  },
+  "masursky": {
+   "claims": [
+    {
+     "source": "sbdb",
+     "form": "day",
+     "day": "1981-05-03",
+     "who": "Bowell, E.",
+     "where": "Flagstaff (AM)",
+     "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=2685",
+     "retrieved": "2026-10-04"
+    }
+   ]
+  },
+  "mathilde": {
+   "claims": [
+    {
+     "source": "sbdb",
+     "form": "day",
+     "day": "1885-11-12",
+     "who": "Palisa, J.",
+     "where": "Vienna",
+     "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=253",
+     "retrieved": "2026-10-04"
     }
    ]
   },
@@ -538,6 +759,19 @@
     }
    ]
   },
+  "orus": {
+   "claims": [
+    {
+     "source": "sbdb",
+     "form": "day",
+     "day": "1999-11-09",
+     "who": "Kobayashi, T.",
+     "where": "Oizumi",
+     "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=21900",
+     "retrieved": "2026-10-04"
+    }
+   ]
+  },
   "pallas": {
    "claims": [
     {
@@ -548,6 +782,19 @@
      "where": "Bremen",
      "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=2",
      "retrieved": "2026-10-01"
+    }
+   ]
+  },
+  "patroclus": {
+   "claims": [
+    {
+     "source": "sbdb",
+     "form": "day",
+     "day": "1906-10-17",
+     "who": "Kopff, A.",
+     "where": "Heidelberg",
+     "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=617",
+     "retrieved": "2026-10-04"
     }
    ]
   },
@@ -584,6 +831,19 @@
      "who": "Clyde Tombaugh",
      "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/plutofact.html",
      "retrieved": "2026-09-28"
+    }
+   ]
+  },
+  "polymele": {
+   "claims": [
+    {
+     "source": "sbdb",
+     "form": "day",
+     "day": "1999-11-17",
+     "who": "CSS",
+     "where": "Catalina",
+     "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=15094",
+     "retrieved": "2026-10-04"
     }
    ]
   },
@@ -679,6 +939,19 @@
     }
    ]
   },
+  "steins": {
+   "claims": [
+    {
+     "source": "sbdb",
+     "form": "day",
+     "day": "1969-11-04",
+     "who": "Chernykh, N.",
+     "where": "Nauchnyj",
+     "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=2867",
+     "retrieved": "2026-10-04"
+    }
+   ]
+  },
   "styx": {
    "claims": [
     {
@@ -696,6 +969,19 @@
   },
   "sun": {
    "notApplicable": true
+  },
+  "tempel-1": {
+   "claims": [
+    {
+     "source": "sbdb",
+     "form": "day",
+     "day": "1867-04-03",
+     "who": "Tempel, William",
+     "where": "Marseilles, France",
+     "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=9P",
+     "retrieved": "2026-10-04"
+    }
+   ]
   },
   "tethys": {
    "claims": [
@@ -826,15 +1112,49 @@
      "retrieved": "2026-10-01"
     }
    ]
+  },
+  "wild-2": {
+   "claims": [
+    {
+     "source": "sbdb",
+     "form": "day",
+     "day": "1978-01-06",
+     "who": "Wild, Paul",
+     "where": "Astronomical Institute of Berne, Switzerland",
+     "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=81P",
+     "retrieved": "2026-10-04"
+    }
+   ]
   }
  },
  "systems": {
+  "didymos": {
+   "source": "sbdb",
+   "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=65803",
+   "total": 1,
+   "bytes": 121,
+   "retrieved": "2026-10-04"
+  },
+  "dinkinesh": {
+   "source": "sbdb",
+   "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=152830",
+   "total": 1,
+   "bytes": 190,
+   "retrieved": "2026-10-04"
+  },
   "eris": {
    "source": "sbdb",
    "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=136199",
    "total": 1,
    "bytes": 120,
    "retrieved": "2026-09-28"
+  },
+  "eurybates": {
+   "source": "sbdb",
+   "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=3548",
+   "total": 1,
+   "bytes": 97,
+   "retrieved": "2026-10-04"
   },
   "gonggong": {
    "source": "sbdb",
@@ -891,6 +1211,13 @@
    "total": 1,
    "bytes": 118,
    "retrieved": "2026-09-28"
+  },
+  "patroclus": {
+   "source": "sbdb",
+   "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=617",
+   "total": 1,
+   "bytes": 120,
+   "retrieved": "2026-10-04"
   },
   "pluto": {
    "source": "jpl-sats",

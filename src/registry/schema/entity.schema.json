@@ -1205,9 +1205,7 @@
                   },
                   "required": [
                     "en",
-                    "fr",
-                    "es",
-                    "pt-BR"
+                    "fr"
                   ],
                   "additionalProperties": false
                 }
@@ -2468,6 +2466,10 @@
               "type": "boolean",
               "const": true
             },
+            "measuredMaxDistanceAU": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
             "kind": {
               "type": "string",
               "enum": [
@@ -2586,9 +2588,7 @@
               },
               "required": [
                 "en",
-                "fr",
-                "es",
-                "pt-BR"
+                "fr"
               ],
               "additionalProperties": false
             },

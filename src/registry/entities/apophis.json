@@ -1,0 +1,102 @@
+{
+  "$schema": "../schema/entity.schema.json",
+  "id": "apophis",
+  "targetClass": "asteroid",
+  "source": "small-body",
+  "elements": {
+    "displayName": {
+      "en": "Apophis",
+      "fr": "Apophis",
+      "es": "Apophis",
+      "pt-BR": "Apophis"
+    },
+    "a": 0.9223741196612864,
+    "e": 0.1911599236523363,
+    "iDeg": 3.340958345792554,
+    "omDeg": 203.8990676461007,
+    "wDeg": 126.6733155317589,
+    "maDeg": 358.4220382278125,
+    "epoch": "2026-01-01T00:00:00.000Z",
+    "kind": "asteroid",
+    "color": "0xff9f43",
+    "fallbackColor": "0x9e9e9e",
+    "description": {
+      "en": "An asteroid about 340 metres across that will pass safely about 32,000 kilometres from Earth’s surface on 13 April 2029. NASA’s OSIRIS-APEX spacecraft will study it during that approach.",
+      "fr": "Un astéroïde d’environ 340 mètres qui passera sans danger à environ 32 000 kilomètres de la surface de la Terre le 13 avril 2029. La sonde OSIRIS-APEX de la NASA l’étudiera pendant ce passage.",
+      "es": "Un asteroide de unos 340 metros que pasará sin peligro a unos 32 000 kilómetros de la superficie de la Tierra el 13 de abril de 2029. La sonda OSIRIS-APEX de la NASA lo estudiará durante ese paso.",
+      "pt-BR": "Um asteroide com cerca de 340 metros que passará com segurança a cerca de 32.000 quilômetros da superfície da Terra em 13 de abril de 2029. A sonda OSIRIS-APEX da NASA o estudará durante essa aproximação."
+    },
+    "wiki": {
+      "en": "https://en.wikipedia.org/wiki/99942_Apophis",
+      "fr": "https://fr.wikipedia.org/wiki/(99942)_Apophis",
+      "es": "https://es.wikipedia.org/wiki/(99942)_Apophis",
+      "pt-BR": "https://pt.wikipedia.org/wiki/99942_Ap%C3%B3fis"
+    }
+  },
+  "facts": {
+    "radiusKm": {
+      "value": {
+        "$diameterKm": 0.34
+      },
+      "source": "jpl-sbdb",
+      "method": "derived",
+      "uncertainty": 0.02,
+      "detail": "radiusFromDiameter",
+      "citation": "Brozovic et al., Icarus 300, 115-128 (2018)"
+    },
+    "massKg": {
+      "published": false,
+      "reason": {
+        "en": "The JPL Small-Body Database publishes no GM for this body, and no mass can be derived without one.",
+        "fr": "La base des petits corps de JPL ne publie aucun GM pour ce corps, et aucune masse ne se dérive sans lui.",
+        "es": "La base de datos de cuerpos menores del JPL no publica ningún GM para este cuerpo, y no puede derivarse ninguna masa sin él.",
+        "pt-BR": "A base de pequenos corpos do JPL não publica nenhum GM para este corpo, e nenhuma massa se deriva sem ele."
+      }
+    },
+    "gravity": {
+      "published": false,
+      "reason": {
+        "en": "Surface gravity is derived from a mass, and none is published for this body.",
+        "fr": "La gravité de surface se dérive d’une masse, et aucune n’est publiée pour ce corps.",
+        "es": "La gravedad en la superficie se deriva de una masa, y no se publica ninguna para este cuerpo.",
+        "pt-BR": "A gravidade na superfície se deriva de uma massa, e nenhuma é publicada para este corpo."
+      }
+    },
+    "meanTempC": {
+      "published": false,
+      "reason": {
+        "en": "The JPL Small-Body Database, the source of its other figures, publishes no temperature among its physical parameters.",
+        "fr": "La base des petits corps de JPL, d'où viennent ses autres chiffres, ne publie aucune température parmi ses paramètres physiques.",
+        "es": "La base de datos de cuerpos menores del JPL, de donde proceden sus demás cifras, no publica ninguna temperatura entre sus parámetros físicos.",
+        "pt-BR": "A base de pequenos corpos do JPL, de onde vêm os seus outros números, não publica nenhuma temperatura entre os seus parâmetros físicos."
+      }
+    },
+    "moonCount": {
+      "value": 0,
+      "source": "jpl-sbdb",
+      "method": "measured",
+      "asOf": "2026-10-04",
+      "detail": "confirmedSatellites"
+    },
+    "axialTilt": {
+      "published": false,
+      "reason": {
+        "en": "The JPL Small-Body Database publishes no spin-axis solution for this body, and an axial tilt cannot be derived without one.",
+        "fr": "La base des petits corps de JPL ne publie aucune solution de pôle pour ce corps, et une inclinaison axiale ne se dérive pas sans elle.",
+        "es": "La base de datos de cuerpos menores del JPL no publica ninguna solución de polo para este cuerpo, y una inclinación axial no puede derivarse sin ella.",
+        "pt-BR": "A base de pequenos corpos do JPL não publica nenhuma solução de polo para este corpo, e uma inclinação axial não se deriva sem ela."
+      }
+    },
+    "rotationPeriod": {
+      "value": 30.56,
+      "source": "jpl-sbdb",
+      "method": "measured",
+      "citation": "Pravec et al., Icarus 233, 48-60 (2014)"
+    }
+  },
+  "notes": {
+    "": "Cible déclarée d'une mission au registre du PDS, ajoutée au catalogue le 2026-10-04 (pages des missions, vague 1). Faits lus à la SBDB ; description fondée sur les descriptions de missions du PDS et les pages de NASA Science ou de l'ESA citées dans le handoff du 2026-10-04.",
+    "a": "Éléments osculateurs JPL Horizons EXACTEMENT à cette époque (COMMAND '99942;', EPHEM_TYPE=ELEMENTS, TLIST=2461041.5, CENTER=500@10).",
+    "fallbackColor": "Gris de l'albédo géométrique SBDB (réflectance en sRGB, plancher 0x48 pour rester visible) ; sans albédo publié, une teinte d'attente. Ce n'est pas une mesure de couleur."
+  }
+}

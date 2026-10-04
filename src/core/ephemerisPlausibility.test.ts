@@ -356,5 +356,43 @@ describe('borne héliocentrique de plausibilité', () => {
     // Les corps qui ont motivé la garde doivent y passer, sinon elle ne dit rien.
     expect(bodies).toContain('sedna');
     expect(bodies).toContain('halley');
+    // Et le premier corps à déclarer sa distance mesurée (2026-10-04).
+    expect(bodies).toContain('wild-2');
+  });
+
+  /**
+   * UNE DISTANCE DÉCLARÉE NE DÉRIVE PAS EN SILENCE : elle doit couvrir le maximum que le fichier
+   * livré atteint, et ne pas le dépasser de plus d'un centième d'UA. Plus large, elle désarmerait
+   * la borne pour ce corps sans raison mesurée ; plus étroite, elle refuserait une vraie position.
+   */
+  it('confronte chaque distance maximale déclarée au fichier livré', () => {
+    const manifest = JSON.parse(
+      readFileSync(join(EPHEMERIS_DIR, 'manifest.json'), 'utf8')
+    ) as {
+      bodies: Record<string, { file: string; sampleCount: number }>;
+    };
+    const declared = [...catalogue.entries()].filter(
+      ([, cfg]) => cfg.orbitalElements?.measuredMaxDistanceAU !== undefined
+    );
+    expect(declared.map(([name]) => name)).toEqual(['wild-2']);
+    for (const [name, cfg] of declared) {
+      const entry = manifest.bodies[name]!;
+      const bytes = readFileSync(join(EPHEMERIS_DIR, entry.file));
+      const samples = new Float64Array(
+        bytes.buffer.slice(
+          bytes.byteOffset,
+          bytes.byteOffset + bytes.byteLength
+        )
+      );
+      let max = 0;
+      for (let i = 0; i < entry.sampleCount; i++)
+        max = Math.max(
+          max,
+          Math.hypot(samples[i * 6]!, samples[i * 6 + 1]!, samples[i * 6 + 2]!)
+        );
+      const value = cfg.orbitalElements!.measuredMaxDistanceAU!;
+      expect(value, name).toBeGreaterThanOrEqual(max);
+      expect(value - max, name).toBeLessThan(0.01);
+    }
   });
 });

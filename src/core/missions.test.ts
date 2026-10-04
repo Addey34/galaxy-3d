@@ -9,7 +9,7 @@ import {
 
 const mission = (
   name: string,
-  start: string,
+  start: string | null,
   end: string | null
 ): MissionRecord => ({ name, lid: `urn:test:${name}`, start, end });
 
@@ -17,14 +17,19 @@ const mission = (
 const CASSINI = mission('Cassini-Huygens', '1997-10-15', '2017-09-15');
 /** Voyager : début de PROJET en 1972, et aucune fin déclarée. Les deux pièges en un seul cas. */
 const VOYAGER = mission('Voyager', '1972-07-01', null);
+/**
+ * DART : l'archive écrit sa sentinelle de début `1000-01-01`, réécrite `null`, et ne déclare pas de
+ * fin. Devenu visible le 2026-10-04, quand Didymos est entré au catalogue.
+ */
+const DART = mission('Double Asteroid Redirection Test', null, null);
 
 const at = (iso: string) => new Date(`${iso}T12:00:00Z`);
 
 describe('missionStanding', () => {
-  it('rend les quatre états, et rien d’autre', () => {
-    expect(MISSION_STANDINGS).toHaveLength(4);
+  it('rend les cinq états, et rien d’autre', () => {
+    expect(MISSION_STANDINGS).toHaveLength(5);
     for (const date of ['1960-01-01', '2000-01-01', '2020-01-01'])
-      for (const record of [CASSINI, VOYAGER])
+      for (const record of [CASSINI, VOYAGER, DART])
         expect(MISSION_STANDINGS).toContain(missionStanding(record, at(date)));
   });
 
@@ -60,6 +65,18 @@ describe('missionStanding', () => {
   });
 
   /** Le jour est comparé en UTC : le résultat ne doit pas dépendre du fuseau de la personne. */
+  it('ne devine rien quand l’archive ne déclare pas de début', () => {
+    // Ni « pas encore commencée » ni « en cours » : on ne sait pas, à aucune date.
+    for (const date of ['1000-01-02', '2022-09-26', '2099-01-01'])
+      expect(missionStanding(DART, at(date))).toBe('startUndeclared');
+    // Une fin déclarée et dépassée, elle, reste une certitude.
+    const endOnly = mission('Fin seule', null, '2000-01-01');
+    expect(missionStanding(endOnly, at('2001-01-01'))).toBe('ended');
+    expect(missionStanding(endOnly, at('1999-01-01'))).toBe('startUndeclared');
+    // Et une telle mission n'est jamais comptée parmi celles qui avaient commencé.
+    expect(missionsAtDate([DART], at('2023-01-01'))).toEqual([]);
+  });
+
   it('compare en UTC et non en heure locale', () => {
     const eve = new Date('1997-10-14T23:30:00Z');
     const dawn = new Date('1997-10-15T00:30:00Z');
@@ -82,6 +99,14 @@ describe('missionsAtDate', () => {
 });
 
 describe('sortMissions', () => {
+  it('range un début non déclaré en dernier, jamais en tête', () => {
+    expect(sortMissions([DART, VOYAGER, CASSINI]).map((m) => m.name)).toEqual([
+      'Voyager',
+      'Cassini-Huygens',
+      'Double Asteroid Redirection Test',
+    ]);
+  });
+
   /**
    * TRI SUR DES CHAÎNES, jamais sur des objets : le lot 39 a livré un `[...rows].sort()` qui
    * comparait des « [object Object] » et dont l'ordre n'était juste que par accident.

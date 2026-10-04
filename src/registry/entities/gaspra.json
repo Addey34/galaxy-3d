@@ -1,0 +1,100 @@
+{
+  "$schema": "../schema/entity.schema.json",
+  "id": "gaspra",
+  "targetClass": "asteroid",
+  "source": "small-body",
+  "elements": {
+    "displayName": {
+      "en": "Gaspra",
+      "fr": "Gaspra",
+      "es": "Gaspra",
+      "pt-BR": "Gaspra"
+    },
+    "a": 2.210330432691594,
+    "e": 0.1734838214517762,
+    "iDeg": 4.10550097708703,
+    "omDeg": 252.985945643394,
+    "wDeg": 130.0419744503109,
+    "maDeg": 65.22492207665074,
+    "epoch": "2026-01-01T00:00:00.000Z",
+    "kind": "asteroid",
+    "color": "0xd18a5f",
+    "fallbackColor": "0x878787",
+    "description": {
+      "en": "A stony main-belt asteroid about 18 by 10 kilometres. NASA’s Galileo passed it on 29 October 1991, on its way to Jupiter: the first time a spacecraft had ever encountered an asteroid.",
+      "fr": "Un astéroïde rocheux de la ceinture principale d’environ 18 kilomètres sur 10. La sonde Galileo de la NASA l’a croisé le 29 octobre 1991, en route vers Jupiter : la première rencontre d’une sonde avec un astéroïde.",
+      "es": "Un asteroide rocoso del cinturón principal de unos 18 por 10 kilómetros. La sonda Galileo de la NASA pasó junto a él el 29 de octubre de 1991, rumbo a Júpiter: el primer encuentro de una sonda con un asteroide.",
+      "pt-BR": "Um asteroide rochoso do cinturão principal com cerca de 18 por 10 quilômetros. A sonda Galileo da NASA passou por ele em 29 de outubro de 1991, a caminho de Júpiter: o primeiro encontro de uma sonda com um asteroide."
+    },
+    "wiki": {
+      "en": "https://en.wikipedia.org/wiki/951_Gaspra",
+      "fr": "https://fr.wikipedia.org/wiki/(951)_Gaspra",
+      "es": "https://es.wikipedia.org/wiki/(951)_Gaspra",
+      "pt-BR": "https://pt.wikipedia.org/wiki/951_Gaspra"
+    }
+  },
+  "facts": {
+    "radiusKm": {
+      "value": {
+        "$diameterKm": 12.2
+      },
+      "source": "jpl-sbdb",
+      "method": "derived",
+      "detail": "radiusFromDiameter"
+    },
+    "massKg": {
+      "published": false,
+      "reason": {
+        "en": "The JPL Small-Body Database publishes no GM for this body, and no mass can be derived without one.",
+        "fr": "La base des petits corps de JPL ne publie aucun GM pour ce corps, et aucune masse ne se dérive sans lui.",
+        "es": "La base de datos de cuerpos menores del JPL no publica ningún GM para este cuerpo, y no puede derivarse ninguna masa sin él.",
+        "pt-BR": "A base de pequenos corpos do JPL não publica nenhum GM para este corpo, e nenhuma massa se deriva sem ele."
+      }
+    },
+    "gravity": {
+      "published": false,
+      "reason": {
+        "en": "Surface gravity is derived from a mass, and none is published for this body.",
+        "fr": "La gravité de surface se dérive d’une masse, et aucune n’est publiée pour ce corps.",
+        "es": "La gravedad en la superficie se deriva de una masa, y no se publica ninguna para este cuerpo.",
+        "pt-BR": "A gravidade na superfície se deriva de uma massa, e nenhuma é publicada para este corpo."
+      }
+    },
+    "meanTempC": {
+      "published": false,
+      "reason": {
+        "en": "The JPL Small-Body Database, the source of its other figures, publishes no temperature among its physical parameters.",
+        "fr": "La base des petits corps de JPL, d'où viennent ses autres chiffres, ne publie aucune température parmi ses paramètres physiques.",
+        "es": "La base de datos de cuerpos menores del JPL, de donde proceden sus demás cifras, no publica ninguna temperatura entre sus parámetros físicos.",
+        "pt-BR": "A base de pequenos corpos do JPL, de onde vêm os seus outros números, não publica nenhuma temperatura entre os seus parâmetros físicos."
+      }
+    },
+    "moonCount": {
+      "value": 0,
+      "source": "jpl-sbdb",
+      "method": "measured",
+      "asOf": "2026-10-04",
+      "detail": "confirmedSatellites"
+    },
+    "axialTilt": {
+      "published": false,
+      "reason": {
+        "en": "The JPL Small-Body Database publishes no spin-axis solution for this body, and an axial tilt cannot be derived without one.",
+        "fr": "La base des petits corps de JPL ne publie aucune solution de pôle pour ce corps, et une inclinaison axiale ne se dérive pas sans elle.",
+        "es": "La base de datos de cuerpos menores del JPL no publica ninguna solución de polo para este cuerpo, y una inclinación axial no puede derivarse sin ella.",
+        "pt-BR": "A base de pequenos corpos do JPL não publica nenhuma solução de polo para este corpo, e uma inclinação axial não se deriva sem ela."
+      }
+    },
+    "rotationPeriod": {
+      "value": 7.042,
+      "source": "jpl-sbdb",
+      "method": "measured",
+      "citation": "LCDB (Rev. 2023-October); Warner et al., 2009"
+    }
+  },
+  "notes": {
+    "": "Cible déclarée d'une mission au registre du PDS, ajoutée au catalogue le 2026-10-04 (pages des missions, vague 1). Faits lus à la SBDB ; description fondée sur les descriptions de missions du PDS et les pages de NASA Science ou de l'ESA citées dans le handoff du 2026-10-04.",
+    "a": "Éléments osculateurs JPL Horizons EXACTEMENT à cette époque (COMMAND '951;', EPHEM_TYPE=ELEMENTS, TLIST=2461041.5, CENTER=500@10).",
+    "fallbackColor": "Gris de l'albédo géométrique SBDB (réflectance en sRGB, plancher 0x48 pour rester visible) ; sans albédo publié, une teinte d'attente. Ce n'est pas une mesure de couleur."
+  }
+}

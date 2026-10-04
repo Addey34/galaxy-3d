@@ -78,6 +78,14 @@ describe('corps sans modèle de forme : la recherche est écrite', () => {
     expect(pluto.sort()).toEqual(['hydra', 'kerberos', 'nix', 'styx']);
     for (const gap of SHAPE_MODEL_GAPS)
       expect(shapeGapLine(gap).length, gap.body).toBeGreaterThan(10);
+    // Un manque qui renvoie à un jeu PUBLIÉ le nomme, pour qu'on puisse le vérifier et l'importer ;
+    // une absence cherchée n'en nomme aucun (2026-10-04).
+    for (const gap of SHAPE_MODEL_GAPS) {
+      const named =
+        gap.reason === 'published-not-imported' ||
+        gap.reason === 'archive-refuses-access';
+      expect(Boolean(gap.source?.trim()), gap.body).toBe(named);
+    }
   });
 
   it('garde la trace des collections interrogées', () => {

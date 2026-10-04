@@ -534,6 +534,8 @@ export const en = {
   'bi.missions.none':
     'No mission in this archive declares this body as a target.',
   'bi.missions.span': '{from} to {to}',
+  'bi.missions.spanUndeclared': 'dates not declared',
+  'bi.missions.spanEndOnly': 'until {to}, start not declared',
   'bi.missions.spanOpen': 'from {from}, end not declared',
   'bi.missions.atDate': 'had begun at the date of the scene',
   'bi.missions.note':

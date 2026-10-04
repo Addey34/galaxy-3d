@@ -237,6 +237,98 @@
     "psyche": {
       "command": "16;",
       "expect": "psyche"
+    },
+    "lutetia": {
+      "command": "21;",
+      "expect": "lutetia"
+    },
+    "gaspra": {
+      "command": "951;",
+      "expect": "gaspra"
+    },
+    "mathilde": {
+      "command": "253;",
+      "expect": "mathilde"
+    },
+    "steins": {
+      "command": "2867;",
+      "expect": "steins"
+    },
+    "annefrank": {
+      "command": "5535;",
+      "expect": "annefrank"
+    },
+    "masursky": {
+      "command": "2685;",
+      "expect": "masursky"
+    },
+    "didymos": {
+      "command": "65803;",
+      "expect": "didymos"
+    },
+    "dinkinesh": {
+      "command": "152830;",
+      "expect": "dinkinesh"
+    },
+    "donaldjohanson": {
+      "command": "52246;",
+      "expect": "donaldjohanson"
+    },
+    "eurybates": {
+      "command": "3548;",
+      "expect": "eurybates"
+    },
+    "polymele": {
+      "command": "15094;",
+      "expect": "polymele"
+    },
+    "leucus": {
+      "command": "11351;",
+      "expect": "leucus"
+    },
+    "orus": {
+      "command": "21900;",
+      "expect": "orus"
+    },
+    "patroclus": {
+      "command": "617;",
+      "expect": "patroclus"
+    },
+    "apophis": {
+      "command": "99942;",
+      "expect": "apophis"
+    },
+    "arrokoth": {
+      "command": "486958;",
+      "expect": "arrokoth"
+    },
+    "tempel-1": {
+      "command": "90000192;",
+      "expect": "tempel 1"
+    },
+    "borrelly": {
+      "command": "90000306;",
+      "expect": "borrelly"
+    },
+    "wild-2": {
+      "command": "90000863;",
+      "expect": "wild 2"
+    },
+    "hartley-2": {
+      "command": "90000960;",
+      "expect": "hartley 2"
+    },
+    "churyumov-gerasimenko": {
+      "command": "90000703;",
+      "expect": "churyumov-gerasimenko"
+    },
+    "giacobini-zinner": {
+      "command": "90000324;",
+      "expect": "giacobini-zinner"
+    },
+    "grigg-skjellerup": {
+      "command": "90000378;",
+      "expect": "grigg-skjellerup"
     }
   },
   "centers": {

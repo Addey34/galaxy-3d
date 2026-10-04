@@ -20,7 +20,8 @@
       "2026-09-28"
     ],
     "sbdb": [
-      "2026-09-28"
+      "2026-09-28",
+      "2026-10-04"
     ],
     "sbdbInterstellar": [
       "2026-09-28"
@@ -3267,6 +3268,699 @@
         "rot_per",
         "spec_B",
         "spec_T"
+      ]
+    },
+    "lutetia": {
+      "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=21",
+      "retrieved": "2026-10-04",
+      "fullname": "21 Lutetia (A852 VA)",
+      "diameterKm": {
+        "value": 98,
+        "sigma": 2,
+        "ref": "Sierks et al., Science 334, 487, 2011",
+        "notes": null,
+        "desc": "effective body diameter"
+      },
+      "gmKm3s2": {
+        "value": 0.1134,
+        "sigma": 0.0011,
+        "ref": "Patzold et al., Science 334, 491, 2011",
+        "notes": null,
+        "desc": "standard gravitational parameter: product of the mass (M) and gravitational constant (G)"
+      },
+      "rotationHours": {
+        "value": 8.1655,
+        "sigma": null,
+        "ref": "LCDB (Rev. 2023-October); Warner et al., 2009",
+        "notes": "REFERENCE LIST:[Lupishko, D.F.; Bel'skaya, I.N.; Tupieva, F.A. (1983) Pis'ma Astron. Zh. 9, 691-694; Sov. Astron. Lett. 9, 358-360.], [Zappala, V.; Di Martino, M.; Knezevic, Z.; Djurasevic, G. (1984) Astron. Astrophys. 130, 208-210.], [Lupishko, D.F.; Velichko, F.P. (1987) Kin. Fiz. Neb. Tel 3(1), 57-65; Kinematics and Physics of Celestial Bodies 3(1), 63-71.], [Michalowski, T. (1992) in Asteroids, Comets, Meteors 1991. A.W. Harris, E. Bowell, eds. Lunar and Planetary Institute, Houston, pp. 417-419.], [Michalowski, T. (1993) Icarus 106, 563-572.], [De Angelis, G. (1995) Planet. Space Sci. 43, 649-682.], [Lagerkvist, C.-I.; Erikson, A.; Debehogne, H.; Festin, L.; et al. (1995) Astron. Astrophys. Suppl. Ser. 113, 115-129.], [Michalowski, T. (1996) Icarus 123, 456-462.], [Szabo, Gy.; Sarneczky, K.; Kiss, L.L. (1999) in Proc. IAU Coll. 173, Evolution and Source Regions of Asteroids and Comets, 185-188.], [Behrend, R. (2003) Observatoire de Geneve web site, http://obswww.unige.ch/~behrend/page_cou.html], [Torppa, J.; Kaasalainen, M.; Michalowski, T.; Kwiatkowski, T.; et al. (2003) Icarus 164, 346-383.], [Faury, G. (2009) Bull. Amer. Astron. Soc. 40.], [Behrend, R. (2010) Observatoire de Geneve web site, http://obswww.unige.ch/~behrend/page_cou.html], [Belskaya, I.N.; Fornasier, S.; Krugly, Yu.N.; Shevchenko, V.G.; et al. (2010) Astron. Astrophys. 515, A29.], [Carry, B.; Kaasalainen, M.; Leyrat, C.; Merline, W.J.; et al. (2010) Astron. Astrophys. 523, A94.], [Behrend, R. (2018) Observatoire de Geneve web site, http://obswww.unige.ch/~behrend/page_cou.html], [Muinonen, K.; Torppa, J.; Wang, X.-B.; Cellino, A.; Penttila, A. (2020) Astron. Astrophys. 642, A138.], [Vernazza, P.; Ferrais, M.; Jorda, L.; Hanus, J.; et al. (2021) Astron. Astrophys 654, id. A56.], [Ferrais, M.; Vernazza, P.; Jorda, L.; Jehin, E.; et al. (2022) Minor Planet Bull. 49, 307-313.]",
+        "desc": "body rotation period (synodic)"
+      },
+      "pole": {
+        "value": [
+          51.8,
+          10.8
+        ],
+        "sigma": "0.4/0.4",
+        "ref": "Sierks et al., Science 334, 487, 2011",
+        "notes": null,
+        "desc": "spin-pole direction in R.A./Dec."
+      },
+      "confirmedSatellites": 0,
+      "physicalParameterNames": [
+        "BV",
+        "G",
+        "GM",
+        "H",
+        "UB",
+        "albedo",
+        "density",
+        "diameter",
+        "extent",
+        "pole",
+        "rot_per",
+        "spec_B",
+        "spec_T"
+      ]
+    },
+    "gaspra": {
+      "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=951",
+      "retrieved": "2026-10-04",
+      "fullname": "951 Gaspra (A916 OJ)",
+      "diameterKm": {
+        "value": 12.2,
+        "sigma": null,
+        "ref": null,
+        "notes": "Yeomans E-mail 2001-Apr-04",
+        "desc": "effective body diameter"
+      },
+      "gmKm3s2": null,
+      "rotationHours": {
+        "value": 7.042,
+        "sigma": null,
+        "ref": "LCDB (Rev. 2023-October); Warner et al., 2009",
+        "notes": "REFERENCE LIST:[Barucci, M.A.; Fulchignoni, M.; Di Martino, M. (1989) Bull. Amer. Astron. Soc. 21, 963.], [Di Martino, M.; Ferreri, W.; Fulchignoni, M.; De Angelis, G.; et al. (1990) Icarus 87, 372-376.], [Goldader, J.D.; Tholen, D.J.; Cruikshank, D.P.; Hartmann, W.K. (1991) Astron. J. 102, 1503-1509.], [De Angelis, G. (1992) in Physical properties of small solar system bodies. A. Brahic, J.-C. Gerard, J. Surdej, eds. Universite de Liege, Institut d'Astrophysique, Liege, pp. 195-201.], [Magnusson, P.; Barucci, M.A.; Binzel, R.P.; Blanco, C.; et al. (1992) Icarus 97, 124-129.], [Wisniewski, W.Z.; Barucci, M.A.; Fulchignoni, M.; De Sanctis, C.; et al. (1993) Icarus 101, 213-222.], [De Angelis, G. (1995) Planet. Space Sci. 43, 649-682.], [Kaasalainen, M.; Torppa, J.; Muinonen, K. (2001) Icarus 153, 37-51.], [Tungalag, N.; Shevchenko, V.G.; Lupishko, D.F. (2002) Kin. Fiz. Neb. Tel 18, 508-516; Kinematics and Physics of Celestial Bodies 18, ???-???.], [Hanus, J.; Broz, M.; Durech, J.; Warner, B.D.; et al. (2013) Astron. Astrophys. 559, A134.], [Dykhuis, M.J.; Molnar, L.A.; Gates, C.J.; Gonzales, J.A.; et al. (2016) Icarus 267, 174-203.], [Behrend, R. (2018) Observatoire de Geneve web site, http://obswww.unige.ch/~behrend/page_cou.html]",
+        "desc": "body rotation period (synodic)"
+      },
+      "pole": null,
+      "confirmedSatellites": 0,
+      "physicalParameterNames": [
+        "BV",
+        "H",
+        "UB",
+        "albedo",
+        "diameter",
+        "extent",
+        "rot_per",
+        "spec_B",
+        "spec_T"
+      ]
+    },
+    "mathilde": {
+      "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=253",
+      "retrieved": "2026-10-04",
+      "fullname": "253 Mathilde (A885 VA)",
+      "diameterKm": {
+        "value": 52.8,
+        "sigma": null,
+        "ref": null,
+        "notes": "Yeomans E-mail 2001-Apr-04",
+        "desc": "effective body diameter"
+      },
+      "gmKm3s2": {
+        "value": 0.00689,
+        "sigma": 0.0003,
+        "ref": "Yeomans et al. (1997) Science v.278, pp.2106-2109",
+        "notes": null,
+        "desc": "standard gravitational parameter: product of the mass (M) and gravitational constant (G)"
+      },
+      "rotationHours": {
+        "value": 417.7,
+        "sigma": null,
+        "ref": "LCDB (Rev. 2023-October); Warner et al., 2009",
+        "notes": "REFERENCE LIST:[Mottola, S.; Sears, W.D.; Erikson, A.; Harris, A.W.; et al. (1995) Planet. Space Sci. 43, 1609-1613.], [Pravec, P.; et al. (2005) Icarus 173, 108-131.], [Durech, J.; Tonry, J.; Erasmus, N.; Denneau, L.; et al. (2020) Astron. Astrophys. 643, A59.], [Martikainen, J.; Muinonen, K.; Penttila, A.; Cellino, A.; Wang, X.-B. (2021) Astron. Astrophys. 649, A98.]",
+        "desc": "body rotation period (synodic)"
+      },
+      "pole": null,
+      "confirmedSatellites": 0,
+      "physicalParameterNames": [
+        "GM",
+        "H",
+        "albedo",
+        "density",
+        "diameter",
+        "rot_per",
+        "spec_B"
+      ]
+    },
+    "steins": {
+      "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=2867",
+      "retrieved": "2026-10-04",
+      "fullname": "2867 Steins (1969 VC)",
+      "diameterKm": {
+        "value": 5.16,
+        "sigma": 0.167,
+        "ref": "EAR_A_COMPIL_5_NEOWISEDIAM_V1_0[mainbelt] (http://adsabs.harvard.edu/abs/2011ApJ...741...68M)",
+        "notes": null,
+        "desc": "effective body diameter"
+      },
+      "gmKm3s2": null,
+      "rotationHours": {
+        "value": 6.049,
+        "sigma": null,
+        "ref": "LCDB (Rev. 2023-October); Warner et al., 2009",
+        "notes": "REFERENCE LIST:[Hicks, M.D.; Bauer, J.M.; Tokunaga, A.T. (2004) IAUC 8315.], [Warner, B.D. (2004) Minor Planet Bull. 31, 67-70.], [Behrend, R. (2005) Observatoire de Geneve web site, http://obswww.unige.ch/~behrend/page_cou.html], [Weissman, P.R.; Lowry, S.C.; Choi, Y.-J. (2005) Bull. Amer. Astron. Soc. 37, 644.], [Kuppers, M.; Mottola, S.; Lowry, S.C.; A'Hearn, M.F.; et al. (2007) Astron. Astrophys. 462, L13-L16.], [Weissman, P.R.; Lowry, S.C.; Choi, Y.-J. (2007) Astron. Astrophys. 466, 737-742.], [Jorda, L.; Lamy, P.L.; Faury, G.; Weissman, P.; et al. (2008) Astron. Astrophys. 487, 1171-1178.], [Lamy, P.L.; Kaasalainen, M.; Lowry, S.; Weissman, P.; et al. (2008) Astron. Astrophys. 487, 1179-1185.], [Lamy, P.; Kaasalainen, M.; Jorda, L.; Faury, G.; et al. (2008) Bull. Amer. Astron. Soc. 40 (28.33).], [Dotto, E.; Perna, D.; Fornasier, S.; Belskaya, I.N.; et al. (2009) Astron. Astrophys. 494, L29-L32.], [Jorda, L.; Lamy, P.L.; Gaskell, R.W.; Kaasalainen, M.; et al. (2012) Icarus 221, 1089-1100.], [Waszczak, A.; Chang, C.-K.; Ofeck, E.O.; Laher, F.; et al. (2015) Astron. J. 150, A75.]",
+        "desc": "body rotation period (synodic)"
+      },
+      "pole": null,
+      "confirmedSatellites": 0,
+      "physicalParameterNames": [
+        "H",
+        "albedo",
+        "diameter",
+        "rot_per"
+      ]
+    },
+    "annefrank": {
+      "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=5535",
+      "retrieved": "2026-10-04",
+      "fullname": "5535 Annefrank (1942 EM)",
+      "diameterKm": {
+        "value": 4.8,
+        "sigma": null,
+        "ref": "T.C. Duxbury et al. (2003) JGR v.109, E02002",
+        "notes": "sphere having a volume equal to that of the fit tri-axial ellipsoid",
+        "desc": "effective body diameter"
+      },
+      "gmKm3s2": null,
+      "rotationHours": {
+        "value": 15.12,
+        "sigma": null,
+        "ref": "LCDB (Rev. 2023-October); Warner et al., 2009",
+        "notes": "[Result based on less than full coverage, so that the period may be wrong by 30 percent or so.]  REFERENCE LIST:[Schmidt, B.E.; Bauer, J.; Buratti, J.; Russell, C.T. (2007) Lunar & Planetary Sci. XXXVIII, 1859.], [Waszczak, A.; Chang, C.-K.; Ofeck, E.O.; Laher, F.; et al. (2015) Astron. J. 150, A75.]",
+        "desc": "body rotation period (synodic)"
+      },
+      "pole": null,
+      "confirmedSatellites": 0,
+      "physicalParameterNames": [
+        "H",
+        "albedo",
+        "diameter",
+        "extent",
+        "rot_per"
+      ]
+    },
+    "masursky": {
+      "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=2685",
+      "retrieved": "2026-10-04",
+      "fullname": "2685 Masursky (1981 JN)",
+      "diameterKm": {
+        "value": 10.744,
+        "sigma": 0.17,
+        "ref": "urn:nasa:pds:neowise_diameters_albedos::2.0[mainbelt] (http://adsabs.harvard.edu/abs/2014ApJ...791..121M)",
+        "notes": null,
+        "desc": "effective body diameter"
+      },
+      "gmKm3s2": null,
+      "rotationHours": {
+        "value": 59.531,
+        "sigma": null,
+        "ref": "LCDB (Rev. 2023-October); Warner et al., 2009",
+        "notes": "[Result based on less than full coverage, so that the period may be wrong by 30 percent or so.]  REFERENCE LIST:[Hayes-Gehrke, M.; Khan, R.; Liao, S.; Siegel, T.; et al. (2023) Minor Planet Bull. 50, 11.]",
+        "desc": "body rotation period (synodic)"
+      },
+      "pole": null,
+      "confirmedSatellites": 0,
+      "physicalParameterNames": [
+        "H",
+        "albedo",
+        "diameter",
+        "rot_per"
+      ]
+    },
+    "didymos": {
+      "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=65803",
+      "retrieved": "2026-10-04",
+      "fullname": "65803 Didymos (1996 GT)",
+      "diameterKm": {
+        "value": 0.78,
+        "sigma": 0.03,
+        "ref": "Naidu, S. P.; Benner, L. A. M.; Brozovic, M.; et al. (2020) Icarus 348, 113777",
+        "notes": null,
+        "desc": "effective body diameter"
+      },
+      "gmKm3s2": null,
+      "rotationHours": {
+        "value": 2.2593,
+        "sigma": null,
+        "ref": "LCDB (Rev. 2023-October); Warner et al., 2009",
+        "notes": "REFERENCE LIST:[Pravec, P.; et al. (2003) IAUC 8244. (65803)], [Kitazato, K.; Abe, M.; Mito, H. (2005) Asia-Oceana Geophys. Soc. abstract 58-PS-A1183.], [Pravec, P.; et al. (2006) Icarus 181, 63-93.], [Naidu, S.P.; Benner, L.A.M.; Brozovic, M.; Nolan, M.C.; et al. (2020) Icarus 348, id. 113777.], [Panfichi, A.M.; Pajuelo, M. (2023) Minor Planet Bull. 50, 128-130.]",
+        "desc": "body rotation period (synodic)"
+      },
+      "pole": {
+        "value": [
+          78,
+          -71
+        ],
+        "sigma": "20 degrees",
+        "ref": "Naidu, S. P.; Benner, L. A. M.; Brozovic, M.; et al. (2020) Icarus 348, 113777",
+        "notes": null,
+        "desc": "spin-pole direction in R.A./Dec."
+      },
+      "confirmedSatellites": 1,
+      "physicalParameterNames": [
+        "H",
+        "density",
+        "diameter",
+        "extent",
+        "pole",
+        "rot_per",
+        "spec_B"
+      ]
+    },
+    "dinkinesh": {
+      "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=152830",
+      "retrieved": "2026-10-04",
+      "fullname": "152830 Dinkinesh (1999 VD57)",
+      "diameterKm": {
+        "value": 0.719,
+        "sigma": 0.024,
+        "ref": "Levison et al. (2024), https://doi.org/10.1038/s41586-024-07378-0",
+        "notes": null,
+        "desc": "effective body diameter"
+      },
+      "gmKm3s2": {
+        "value": 3.3e-8,
+        "sigma": 1.6e-9,
+        "ref": "Levison et al. (2024), https://doi.org/10.1038/s41586-024-07378-0",
+        "notes": null,
+        "desc": "standard gravitational parameter: product of the mass (M) and gravitational constant (G)"
+      },
+      "rotationHours": {
+        "value": 52.67,
+        "sigma": 0.04,
+        "ref": "Mottola, S. et al. (2023) https://doi.org/10.1093/mnrasl/slad066",
+        "notes": null,
+        "desc": "body rotation period (synodic)"
+      },
+      "pole": null,
+      "confirmedSatellites": 1,
+      "physicalParameterNames": [
+        "GM",
+        "H",
+        "density",
+        "diameter",
+        "rot_per"
+      ]
+    },
+    "donaldjohanson": {
+      "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=52246",
+      "retrieved": "2026-10-04",
+      "fullname": "52246 Donaldjohanson (1981 EQ5)",
+      "diameterKm": {
+        "value": 3.895,
+        "sigma": 0.013,
+        "ref": "urn:nasa:pds:neowise_diameters_albedos::2.0[mainbelt] (http://adsabs.harvard.edu/abs/2011ApJ...741...68M)",
+        "notes": null,
+        "desc": "effective body diameter"
+      },
+      "gmKm3s2": null,
+      "rotationHours": null,
+      "pole": null,
+      "confirmedSatellites": 0,
+      "physicalParameterNames": [
+        "H",
+        "albedo",
+        "diameter"
+      ]
+    },
+    "eurybates": {
+      "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=3548",
+      "retrieved": "2026-10-04",
+      "fullname": "3548 Eurybates (1973 SO)",
+      "diameterKm": {
+        "value": 63.885,
+        "sigma": 0.299,
+        "ref": "urn:nasa:pds:neowise_diameters_albedos::2.0[jupiter_trojans] (http://adsabs.harvard.edu/abs/2012ApJ...759...49G)",
+        "notes": null,
+        "desc": "effective body diameter"
+      },
+      "gmKm3s2": null,
+      "rotationHours": {
+        "value": 8.711,
+        "sigma": null,
+        "ref": "LCDB (Rev. 2023-October); Warner et al., 2009",
+        "notes": "REFERENCE LIST:[Stephens, R.D. (2010) Minor Planet Bull. 37, 47-48.], [Mottola, S.; Di Martino, M.; Erikson, A.; Gonano-Beurer, M.; et al. (2011) Astron. J. 141, A170.], [Mottola, S.; Marchi, S.; Buie, M.W.; Hellmich, S.; et al. (2016) DPS 48/EPSC 11, 208.04.], [Pal, A.; Szakats, R.; Kiss, C.; Bodi, A.; et al. (2020) Ap. J. Supl. Ser. 247, id.26.], [Stephens, R.D.; Warner, B.D. (2021) Minor Planet Bull. 48, 13-15.]",
+        "desc": "body rotation period (synodic)"
+      },
+      "pole": null,
+      "confirmedSatellites": 1,
+      "physicalParameterNames": [
+        "H",
+        "albedo",
+        "diameter",
+        "rot_per"
+      ]
+    },
+    "polymele": {
+      "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=15094",
+      "retrieved": "2026-10-04",
+      "fullname": "15094 Polymele (1999 WB2)",
+      "diameterKm": {
+        "value": 21.075,
+        "sigma": 0.136,
+        "ref": "urn:nasa:pds:neowise_diameters_albedos::2.0[jupiter_trojans] (http://adsabs.harvard.edu/abs/2012ApJ...759...49G)",
+        "notes": null,
+        "desc": "effective body diameter"
+      },
+      "gmKm3s2": null,
+      "rotationHours": {
+        "value": 5.8607,
+        "sigma": 0.0005,
+        "ref": "[Buie, M. W. et al. (2018) AJ 155, Issue 6, article id. 245]",
+        "notes": null,
+        "desc": "body rotation period (synodic)"
+      },
+      "pole": null,
+      "confirmedSatellites": 0,
+      "physicalParameterNames": [
+        "G",
+        "H",
+        "albedo",
+        "diameter",
+        "rot_per"
+      ]
+    },
+    "leucus": {
+      "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=11351",
+      "retrieved": "2026-10-04",
+      "fullname": "11351 Leucus (1997 TS25)",
+      "diameterKm": {
+        "value": 34.155,
+        "sigma": 0.646,
+        "ref": "urn:nasa:pds:neowise_diameters_albedos::2.0[jupiter_trojans] (http://adsabs.harvard.edu/abs/2012ApJ...759...49G)",
+        "notes": null,
+        "desc": "effective body diameter"
+      },
+      "gmKm3s2": null,
+      "rotationHours": {
+        "value": 445.924,
+        "sigma": null,
+        "ref": "LCDB (Rev. 2023-October); Warner et al., 2009",
+        "notes": "REFERENCE LIST:[Buie, M.W.; Zangari, A.M.; Marchi, S.; Mottola, S.; Levinson, H.F. (2016) DPS #48, 208.06. (and private communications).], [Buie, M.W.; Zangari, A.M.; Marchi, S.; Levinson, H.F.; Mottola, S. (2018) Astron. J. 155, A245.], [Mottola, S.; Hellmich, S.; Buie, M.W.; Zangari, A.M.; et al. (2020) Plan. Sci. J. 1, id. 73.]",
+        "desc": "body rotation period (synodic)"
+      },
+      "pole": null,
+      "confirmedSatellites": 0,
+      "physicalParameterNames": [
+        "H",
+        "albedo",
+        "diameter",
+        "rot_per"
+      ]
+    },
+    "orus": {
+      "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=21900",
+      "retrieved": "2026-10-04",
+      "fullname": "21900 Orus (1999 VQ10)",
+      "diameterKm": {
+        "value": 50.81,
+        "sigma": 0.809,
+        "ref": "urn:nasa:pds:neowise_diameters_albedos::2.0[jupiter_trojans] (http://adsabs.harvard.edu/abs/2012ApJ...759...49G)",
+        "notes": null,
+        "desc": "effective body diameter"
+      },
+      "gmKm3s2": null,
+      "rotationHours": {
+        "value": 13.45,
+        "sigma": null,
+        "ref": "LCDB (Rev. 2023-October); Warner et al., 2009",
+        "notes": "[Result based on less than full coverage, so that the period may be wrong by 30 percent or so.]  REFERENCE LIST:[Mottola, S.; Di Martino, M.; Erikson, A.; Gonano-Beurer, M.; et al. (2011) Astron. J. 141, A170.], [Mottola, S.; Marchi, S.; Buie, M.W.; Hellmich, S.; et al. (2016) DPS 48/EPSC 11, 208.04.]",
+        "desc": "body rotation period (synodic)"
+      },
+      "pole": null,
+      "confirmedSatellites": 0,
+      "physicalParameterNames": [
+        "H",
+        "albedo",
+        "diameter",
+        "rot_per"
+      ]
+    },
+    "patroclus": {
+      "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=617",
+      "retrieved": "2026-10-04",
+      "fullname": "617 Patroclus (A906 UL)",
+      "diameterKm": {
+        "value": 140.362,
+        "sigma": 0.868,
+        "ref": "urn:nasa:pds:neowise_diameters_albedos::2.0[jupiter_trojans] (http://adsabs.harvard.edu/abs/2012ApJ...759...49G)",
+        "notes": null,
+        "desc": "effective body diameter"
+      },
+      "gmKm3s2": null,
+      "rotationHours": {
+        "value": 102.8,
+        "sigma": null,
+        "ref": "LCDB (Rev. 2023-October); Warner et al., 2009",
+        "notes": "REFERENCE LIST:[Behrend, R. (2005) Observatoire de Geneve web site, http://obswww.unige.ch/~behrend/page_cou.html], [Marchis, F.; Hestroffer, D.; Descamps, P.; Berthier, J.; et al. (2006) Nature 439, 565-567.], [Mueller, M.; Marchis, F.; Emery, J.P.; Harris, A.W. (DLR); et al. (2010) Icarus 205, 505-515.], [Oey, J. (2012) Minor Planet Bull. 39, 106-107.], [Stephens, R.D.; Warner, B.D. (2018) Minor Planet Bull. 45, 343-347.], [Berthier, J.; Descampls, P.; Vachier, F.; Normand, J.; et al. (2020) Icarus 352, id. 113990.]",
+        "desc": "body rotation period (synodic)"
+      },
+      "pole": null,
+      "confirmedSatellites": 1,
+      "physicalParameterNames": [
+        "BV",
+        "H",
+        "UB",
+        "albedo",
+        "diameter",
+        "rot_per",
+        "spec_T"
+      ]
+    },
+    "apophis": {
+      "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=99942",
+      "retrieved": "2026-10-04",
+      "fullname": "99942 Apophis (2004 MN4)",
+      "diameterKm": {
+        "value": 0.34,
+        "sigma": 0.04,
+        "ref": "Brozovic et al., Icarus 300, 115-128 (2018)",
+        "notes": "Based on 3D shape model derived from radar observations in 2012-2013",
+        "desc": "effective body diameter"
+      },
+      "gmKm3s2": null,
+      "rotationHours": {
+        "value": 30.56,
+        "sigma": 0.01,
+        "ref": "Pravec et al., Icarus 233, 48-60 (2014)",
+        "notes": null,
+        "desc": "body rotation period (synodic)"
+      },
+      "pole": null,
+      "confirmedSatellites": 0,
+      "physicalParameterNames": [
+        "G",
+        "H",
+        "I",
+        "albedo",
+        "diameter",
+        "rot_per",
+        "spec_B"
+      ]
+    },
+    "arrokoth": {
+      "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=486958",
+      "retrieved": "2026-10-04",
+      "fullname": "486958 Arrokoth (2014 MU69)",
+      "diameterKm": null,
+      "gmKm3s2": null,
+      "rotationHours": {
+        "value": 15.918,
+        "sigma": null,
+        "ref": "LCDB (Rev. 2023-October); Warner et al., 2009",
+        "notes": "[Result based on less than full coverage, so that the period may be wrong by 30 percent or so.]  REFERENCE LIST:[Porter, S.; Beyer, R.; Keane, J.; Umurhan, O.; et al. (2019) EPSC-DPS Joint Meeting, 2019 September 15-20. Geneva, Switzerland, id. EPSC-DPS2019-311.], [Buie, M.W.; Porter, S.B.; Tamblyn, P.; Terrell, D.; and 129 co-authors. (2020) Astron. J. 159, id. 130.]",
+        "desc": "body rotation period (synodic)"
+      },
+      "pole": null,
+      "confirmedSatellites": 0,
+      "physicalParameterNames": [
+        "H",
+        "rot_per"
+      ]
+    },
+    "tempel-1": {
+      "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=9P",
+      "retrieved": "2026-10-04",
+      "fullname": "9P/Tempel 1",
+      "diameterKm": {
+        "value": 6,
+        "sigma": 0.2,
+        "ref": "A'Hearn, M.F. et al. (2005) Science 310:258-264",
+        "notes": null,
+        "desc": "effective body diameter"
+      },
+      "gmKm3s2": null,
+      "rotationHours": {
+        "value": 40.7,
+        "sigma": null,
+        "ref": "A'Hearn, M.F. et al. (2005) Science 310:258-264",
+        "notes": null,
+        "desc": "body rotation period (synodic)"
+      },
+      "pole": null,
+      "confirmedSatellites": 0,
+      "physicalParameterNames": [
+        "K1",
+        "M1",
+        "albedo",
+        "diameter",
+        "extent",
+        "rot_per"
+      ]
+    },
+    "borrelly": {
+      "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=19P",
+      "retrieved": "2026-10-04",
+      "fullname": "19P/Borrelly",
+      "diameterKm": {
+        "value": 4.8,
+        "sigma": null,
+        "ref": "Lamy,P.L.,Toth,I.,Fernandez,Y.R.,Weaver,H.A. (to be published)",
+        "notes": null,
+        "desc": "effective body diameter"
+      },
+      "gmKm3s2": null,
+      "rotationHours": null,
+      "pole": null,
+      "confirmedSatellites": 0,
+      "physicalParameterNames": [
+        "K1",
+        "K2",
+        "M1",
+        "M2",
+        "PC",
+        "albedo",
+        "diameter"
+      ]
+    },
+    "wild-2": {
+      "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=81P",
+      "retrieved": "2026-10-04",
+      "fullname": "81P/Wild 2",
+      "diameterKm": {
+        "value": 4,
+        "sigma": null,
+        "ref": "Lamy,P.L.,Toth,I.,Fernandez,Y.R.,Weaver,H.A. (2004) Comets II, pp. 223-264",
+        "notes": null,
+        "desc": "effective body diameter"
+      },
+      "gmKm3s2": null,
+      "rotationHours": null,
+      "pole": null,
+      "confirmedSatellites": 0,
+      "physicalParameterNames": [
+        "K1",
+        "K2",
+        "M1",
+        "M2",
+        "PC",
+        "diameter"
+      ]
+    },
+    "hartley-2": {
+      "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=103P",
+      "retrieved": "2026-10-04",
+      "fullname": "103P/Hartley 2",
+      "diameterKm": {
+        "value": 1.6,
+        "sigma": null,
+        "ref": "Lamy,P.L.,Toth,I.,Fernandez,Y.R.,Weaver,H.A. (2004) Comets II, pp. 223-264",
+        "notes": null,
+        "desc": "effective body diameter"
+      },
+      "gmKm3s2": null,
+      "rotationHours": {
+        "value": 18.1,
+        "sigma": null,
+        "ref": "LCDB (Rev. 2023-October); Warner et al., 2009",
+        "notes": "[Result based on less than full coverage, so that the period may be wrong by 30 percent or so.]  REFERENCE LIST:[Harmon, J.K.; Nolan, M.C; Howell, E.S.; Giorgini, J.D. (2010) CBET 2515.], [Belton, M.J.S.; Thomas, P.; Li, J.-Y.; Williams, J.; et al. (2013) Icarus 222, 595-609.]",
+        "desc": "body rotation period (synodic)"
+      },
+      "pole": null,
+      "confirmedSatellites": 0,
+      "physicalParameterNames": [
+        "K1",
+        "M1",
+        "diameter",
+        "rot_per"
+      ]
+    },
+    "churyumov-gerasimenko": {
+      "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=67P",
+      "retrieved": "2026-10-04",
+      "fullname": "67P/Churyumov-Gerasimenko",
+      "diameterKm": {
+        "value": 3.4,
+        "sigma": 0.1,
+        "ref": "Sierks et al., Science 347, aaa1044 (2015)",
+        "notes": null,
+        "desc": "effective body diameter"
+      },
+      "gmKm3s2": {
+        "value": 6.622e-7,
+        "sigma": 2e-10,
+        "ref": "Patzold et al., Nature 530, 63 (2016)",
+        "notes": null,
+        "desc": "standard gravitational parameter: product of the mass (M) and gravitational constant (G)"
+      },
+      "rotationHours": {
+        "value": 12.76129,
+        "sigma": 0.00005,
+        "ref": "Mottola et al., Astronomy & Astrophysics 569, L2 (2014)",
+        "notes": "Pre-perihelion in 2015 value, post-perihelion period is 12.4043 +- 0.0007 h",
+        "desc": "body rotation period (synodic)"
+      },
+      "pole": {
+        "value": [
+          69.3,
+          64.1
+        ],
+        "sigma": "0.1",
+        "ref": "Sierks et al., Science 347, aaa1044 (2015)",
+        "notes": null,
+        "desc": "spin-pole direction in R.A./Dec."
+      },
+      "confirmedSatellites": 0,
+      "physicalParameterNames": [
+        "GM",
+        "K1",
+        "M1",
+        "density",
+        "diameter",
+        "pole",
+        "rot_per"
+      ]
+    },
+    "giacobini-zinner": {
+      "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=21P",
+      "retrieved": "2026-10-04",
+      "fullname": "21P/Giacobini-Zinner",
+      "diameterKm": {
+        "value": 2,
+        "sigma": null,
+        "ref": "Lamy,P.L.,Toth,I.,Fernandez,Y.R.,Weaver,H.A. (2004) Comets II, pp. 223-264",
+        "notes": null,
+        "desc": "effective body diameter"
+      },
+      "gmKm3s2": null,
+      "rotationHours": null,
+      "pole": null,
+      "confirmedSatellites": 0,
+      "physicalParameterNames": [
+        "K1",
+        "M1",
+        "diameter"
+      ]
+    },
+    "grigg-skjellerup": {
+      "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=26P",
+      "retrieved": "2026-10-04",
+      "fullname": "26P/Grigg-Skjellerup",
+      "diameterKm": {
+        "value": 2.6,
+        "sigma": null,
+        "ref": "Lamy,P.L.,Toth,I.,Fernandez,Y.R.,Weaver,H.A. (2004) Comets II, pp. 223-264",
+        "notes": null,
+        "desc": "effective body diameter"
+      },
+      "gmKm3s2": null,
+      "rotationHours": null,
+      "pole": null,
+      "confirmedSatellites": 0,
+      "physicalParameterNames": [
+        "K1",
+        "M1",
+        "diameter"
       ]
     }
   },

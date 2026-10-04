@@ -1,7 +1,7 @@
 {
   "version": 1,
   "source": "NASA/JPL Horizons",
-  "generatedAt": "2026-09-22T12:34:10.958Z",
+  "generatedAt": "2026-10-04T04:02:39.263Z",
   "frame": "ECLIPTIC_J2000",
   "center": "SUN",
   "units": "AU-D",
@@ -525,6 +525,190 @@
       "file": "callisto.fdd0debc7a31.bin",
       "target": "504",
       "center": "jupiter",
+      "startJdTdb": 2415020.5,
+      "stepDays": 4,
+      "sampleCount": 18354
+    },
+    "lutetia": {
+      "file": "lutetia.804e5cb9b2de.bin",
+      "target": "21;",
+      "center": "sun",
+      "startJdTdb": 2415020.5,
+      "stepDays": 8,
+      "sampleCount": 9177
+    },
+    "gaspra": {
+      "file": "gaspra.7082334cb69d.bin",
+      "target": "951;",
+      "center": "sun",
+      "startJdTdb": 2415020.5,
+      "stepDays": 8,
+      "sampleCount": 9177
+    },
+    "mathilde": {
+      "file": "mathilde.207cf47b3d5f.bin",
+      "target": "253;",
+      "center": "sun",
+      "startJdTdb": 2415020.5,
+      "stepDays": 8,
+      "sampleCount": 9177
+    },
+    "steins": {
+      "file": "steins.24ea9eff9b4a.bin",
+      "target": "2867;",
+      "center": "sun",
+      "startJdTdb": 2415020.5,
+      "stepDays": 8,
+      "sampleCount": 9177
+    },
+    "annefrank": {
+      "file": "annefrank.1042b9bb54bd.bin",
+      "target": "5535;",
+      "center": "sun",
+      "startJdTdb": 2415020.5,
+      "stepDays": 8,
+      "sampleCount": 9177
+    },
+    "masursky": {
+      "file": "masursky.258434d0c4b8.bin",
+      "target": "2685;",
+      "center": "sun",
+      "startJdTdb": 2415020.5,
+      "stepDays": 8,
+      "sampleCount": 9177
+    },
+    "didymos": {
+      "file": "didymos.9ee3cc0e56d0.bin",
+      "target": "65803;",
+      "center": "sun",
+      "startJdTdb": 2415020.5,
+      "stepDays": 4,
+      "sampleCount": 18354
+    },
+    "dinkinesh": {
+      "file": "dinkinesh.a4cef2d0aac8.bin",
+      "target": "152830;",
+      "center": "sun",
+      "startJdTdb": 2415020.5,
+      "stepDays": 8,
+      "sampleCount": 9177
+    },
+    "donaldjohanson": {
+      "file": "donaldjohanson.69c81c02c813.bin",
+      "target": "52246;",
+      "center": "sun",
+      "startJdTdb": 2415020.5,
+      "stepDays": 8,
+      "sampleCount": 9177
+    },
+    "eurybates": {
+      "file": "eurybates.795008dd2452.bin",
+      "target": "3548;",
+      "center": "sun",
+      "startJdTdb": 2415020.5,
+      "stepDays": 16,
+      "sampleCount": 4589
+    },
+    "polymele": {
+      "file": "polymele.64a483c0748a.bin",
+      "target": "15094;",
+      "center": "sun",
+      "startJdTdb": 2415020.5,
+      "stepDays": 16,
+      "sampleCount": 4589
+    },
+    "leucus": {
+      "file": "leucus.67bfb97dd38d.bin",
+      "target": "11351;",
+      "center": "sun",
+      "startJdTdb": 2415020.5,
+      "stepDays": 32,
+      "sampleCount": 2295
+    },
+    "orus": {
+      "file": "orus.1a053be5f282.bin",
+      "target": "21900;",
+      "center": "sun",
+      "startJdTdb": 2415020.5,
+      "stepDays": 32,
+      "sampleCount": 2295
+    },
+    "patroclus": {
+      "file": "patroclus.868760eb143c.bin",
+      "target": "617;",
+      "center": "sun",
+      "startJdTdb": 2415020.5,
+      "stepDays": 16,
+      "sampleCount": 4589
+    },
+    "apophis": {
+      "file": "apophis.2c2f1be03042.bin",
+      "target": "99942;",
+      "center": "sun",
+      "startJdTdb": 2415020.5,
+      "stepDays": 4,
+      "sampleCount": 18354
+    },
+    "arrokoth": {
+      "file": "arrokoth.90039216e0a7.bin",
+      "target": "486958;",
+      "center": "sun",
+      "startJdTdb": 2415020.5,
+      "stepDays": 64,
+      "sampleCount": 1148
+    },
+    "tempel-1": {
+      "file": "tempel-1.3c8fb663dd31.bin",
+      "target": "90000192;",
+      "center": "sun",
+      "startJdTdb": 2415020.5,
+      "stepDays": 4,
+      "sampleCount": 18354
+    },
+    "borrelly": {
+      "file": "borrelly.8640e4a74647.bin",
+      "target": "90000306;",
+      "center": "sun",
+      "startJdTdb": 2415020.5,
+      "stepDays": 4,
+      "sampleCount": 18354
+    },
+    "wild-2": {
+      "file": "wild-2.c3de64c286c4.bin",
+      "target": "90000863;",
+      "center": "sun",
+      "startJdTdb": 2415020.5,
+      "stepDays": 4,
+      "sampleCount": 18354
+    },
+    "hartley-2": {
+      "file": "hartley-2.c3964406e0bf.bin",
+      "target": "90000960;",
+      "center": "sun",
+      "startJdTdb": 2415020.5,
+      "stepDays": 4,
+      "sampleCount": 18354
+    },
+    "churyumov-gerasimenko": {
+      "file": "churyumov-gerasimenko.a2ec0a0314ba.bin",
+      "target": "90000703;",
+      "center": "sun",
+      "startJdTdb": 2415020.5,
+      "stepDays": 4,
+      "sampleCount": 18354
+    },
+    "giacobini-zinner": {
+      "file": "giacobini-zinner.0146c61d5715.bin",
+      "target": "90000324;",
+      "center": "sun",
+      "startJdTdb": 2415020.5,
+      "stepDays": 4,
+      "sampleCount": 18354
+    },
+    "grigg-skjellerup": {
+      "file": "grigg-skjellerup.8430f7ba13fd.bin",
+      "target": "90000378;",
+      "center": "sun",
       "startJdTdb": 2415020.5,
       "stepDays": 4,
       "sampleCount": 18354

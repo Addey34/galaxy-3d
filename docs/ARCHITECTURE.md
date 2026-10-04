@@ -710,6 +710,13 @@ l'utilité de la phase : **au-dessus de 2,36 Mbit/s (les 2,34 de demande plus le
 marges) il n'y a AUCUN plafond à afficher**, et l'interface n'affiche alors rien. À 2 Mbit/s il
 vaut 84,5 % de la course, à 120 ko/s 40 %.
 
+**Mis à jour le 2026-10-04, et c'est un coût, pas une retouche** : les 23 cibles de missions
+portent le manifeste à 87 fichiers, donc **969 octets par jour simulé, 2,83 Mbit/s** à la vitesse
+maximale et 4 176 o/s de marges. Le seuil sans plafond passe à **2,86 Mbit/s** ; à 2 Mbit/s le
+plafond vaut **69,5 %** du maximum, à 120 ko/s **32,7 %**. Chaque corps dessiné fait venir ses
+positions en lecture accélérée, ligne d'orbite ou non. Mesuré par les fonctions de
+`core/playbackBudget.ts`, tenu par `playbackBudget.test.ts`.
+
 **Le débit se mesure sur le TEMPS OCCUPÉ, pas par requête.** Six requêtes simultanées se partagent
 la bande passante : `octets / durée` d'UNE requête sous-estime le lien d'un facteur proche du
 nombre de requêtes en vol, et c'est la mesure qui a trompé le lot 15 (64 requêtes de 77 s chacune
@@ -826,7 +833,7 @@ ne le dise. Une entrée fausse est SUPPRIMÉE, pas seulement ignorée.
 
 **Le manifeste a sa copie, et sans elle le hors-ligne ne tiendrait pas une heure.** Il est servi
 en `NetworkFirst` avec une péremption d'une heure (`ssv-ephemeris-manifest`), donc un appareil
-préparé le matin afficherait l'après-midi « aucune éphéméride précise » alors que ses 64 fichiers
+préparé le matin afficherait l'après-midi « aucune éphéméride précise » alors que tous ses fichiers
 sont là. L'ordre reste le réseau d'abord : le manifeste est le seul fichier MUTABLE de cette
 famille et il pointe des binaires nommés par le hachage de leur contenu. Quand il arrive, il
 purge du magasin ce qu'il ne nomme plus, et c'est la cohérence que ce magasin doit tenir lui-même,
@@ -853,7 +860,7 @@ fait donc AVANT `TransferRateMeter.begin`, et `fetchBody` ne connaît plus que l
 **Et la conséquence vraie de la préparation est écrite, elle aussi** : un corps dont l'appareil
 tient le fichier entier sort du budget de `budgetGrids`. Il ne demandera plus un octet à aucune
 date, donc le compter plafonnerait la lecture au nom d'un trafic qui n'aura pas lieu. Une fois
-les 64 fichiers préparés, le curseur de vitesse n'a plus de plafond du tout.
+tous les fichiers préparés, le curseur de vitesse n'a plus de plafond du tout.
 
 **Ce que la phase ne fait pas, et le dit.** Elle ne remet pas les éphémérides dans le précache du
 service worker : `sw.js` continue de ne garder que l'app shell, et les 38 Mo restent une décision
@@ -3780,6 +3787,67 @@ Gardes : `src/seo/missionPages.test.ts` (catalogue contre l'index et les listes 
 livrés, citation, sentinelle, étalonnage, liens, quatre langues ; règles falsifiées une à une),
 `e2e/built-pages.spec.ts` (l'index et la page de Voyager, la plus longue, dans les quatre
 langues : axe et 390 px, sur le build).
+
+## Les cibles des missions entrées au catalogue (2026-10-04, vague 1)
+
+Les pages des missions montraient ce que le registre du PDS déclare, et vingt de ses missions ne
+visaient aucun corps du catalogue. **23 corps héliocentriques** y sont entrés : quinze astéroïdes
+(Lutetia, Gaspra, Mathilde, Šteins, Annefrank, Masursky, Didymos, Dinkinesh, Donaldjohanson, les
+cinq Troyens de Lucy, Apophis) et Arrokoth, plus sept comètes (Tempel 1, Borrelly, Wild 2, Hartley 2,
+67P, Giacobini-Zinner, Grigg-Skjellerup). Chaque fiche suit la recette de 16 Psyché, sans une ligne
+de TypeScript propre au corps : éléments d'Horizons à l'époque 2026-01-01 (barycentriques pour
+Arrokoth), binaire Horizons au pas MESURÉ, faits lus à la SBDB, découverte, missions, noms de surface
+de l'UAI quand ils existent, page et vignette.
+
+**Ce que la mesure a décidé, corps par corps :**
+
+- **Le pas de chaque binaire** sort de `scripts/measure-ephemeris-step.mjs`, la règle du lot 11
+  enfin rejouable (elle avait été mesurée à la main) : 4 jours pour Didymos, Apophis et les comètes,
+  8 pour la ceinture principale, 16 ou 32 pour les Troyens, 64 pour Arrokoth. Témoin : rejoué sur
+  les cinq corps que le lot 11 a laissés à 4 jours, il retrouve chaque décision.
+- **Une comète vise une SOLUTION d'Horizons**, l'apparition la plus proche (`CAP`) : la même requête
+  rend `90000030` pour Halley, la solution déjà livrée.
+- **Wild 2 était à 22 UA en 1901**, sur l'orbite d'avant sa capture par Jupiter en 1974 : la borne de
+  plausibilité, calculée sur l'orbite actuelle, refusait sa position mesurée. Elle accepte désormais
+  une distance MESURÉE et déclarée (`measuredMaxDistanceAU`), confrontée au fichier livré.
+- **Les vecteurs de référence à ±10 ans** ne mesurent plus les éléments mais la physique pour
+  Apophis (sa rencontre de 2029 avec la Terre), les Troyens (leur libration) et les comètes
+  (Jupiter, forces non gravitationnelles) : ces lignes sont écartées, avec leur raison, et la ligne à
+  l'époque reste pour chacun.
+- **Les sentinelles** : le pôle de Didymos s'écrit « 78, -71 degrees » à la SBDB, que le relevé
+  découpait en `NaN` (les deux formes se lisent désormais, et c'est bien RA/Dec, vérifié sur la
+  source citée) ; DART déclare un début `1000-01-01`, que la fiche de Didymos aurait affiché comme
+  l'an 1000 : il devient l'état `startUndeclared` de `core/missions.ts`.
+- **Un fait que deux sources contredisent n'est pas publié** : NASA donne à Polymele un satellite
+  sans nom, la SBDB n'en compte aucun ; son nombre de lunes porte cette raison.
+- **Les rayons de travail** de Patrocle (le diamètre SBDB décrit la paire avec Menoetius) et
+  d'Arrokoth (deux lobes, 35 × 20 × 10 km selon NASA Science) sont des valeurs non publiées, comme
+  celui de Hauméa : ils servent au rendu et aux écarts en rayons, la fiche n'en affiche aucun.
+
+**Ce qui reste, écrit** : les modèles de forme (`config/shapeModelGaps.ts`). Huit maillages sont
+publiés et nommés, leur import est la vague suivante ; trois sont nommés par l'archive mais son
+hôte répond 403 ; les autres n'existent ni au registre du PDS, ni à la PSA, ni dans DAMIT. Les deux
+satellites (Dimorphos, Menoetius) attendent aussi leur vague : Horizons ne les sert que sur une
+fenêtre bornée, et la SBDB ne publie aucune taille pour un satellite.
+
+### Une ligne d'orbite n'est payée que si elle est tracée
+
+Une ligne coûte une période ENTIÈRE d'éphéméride. Le démarrage la demandait pour tous les corps,
+ligne affichée ou non : Halley seule y coûtait **332 832 octets**, pour une ligne masquée par défaut.
+Avec les 23 cibles, la première vue du 2015-06-15 demandait **2 037 696 octets** pour un budget de
+1 800 000, et la garde du budget nommait déjà la piste.
+
+La règle « quelles lignes sont tracées au départ » a désormais un propriétaire,
+`core/orbitLineDefaults.ts` (les planètes), lu par l'application avant que l'interface existe et par
+`ui/defaultDisplay.ts`. `SolarSystemApp` ne demande et ne calcule que les lignes tracées ; la scène
+prévient quand une ligne s'allume (`SceneSystem.onOrbitLineShown`), et l'application fait venir sa
+période PUIS la trace, en regroupant les allumages d'une même tâche. L'horloge, qui attend les
+octets des lignes avant d'avancer, ne compte elle aussi que les lignes tracées.
+
+Gardes : `src/config/startupBudget.test.ts` (la demande EXACTE du démarrage, désormais la règle
+par défaut) et `e2e/orbitLinesOnDemand.spec.ts`, qui le voit au réseau : Halley ne demande que sa
+position au démarrage, puis plus de 100 Ko quand on allume son orbite. Falsifié en rendant au
+démarrage toutes les périodes : 332 832 octets pour Halley, rouge.
 
 ## Événements terrestres — séismes USGS et événements rapportés EONET
 

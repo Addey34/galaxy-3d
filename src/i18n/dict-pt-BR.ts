@@ -510,6 +510,8 @@ export const ptBR: Record<MessageKey, string> = {
   'bi.missions.none':
     'Nenhuma missão deste arquivo declara este corpo entre os seus alvos.',
   'bi.missions.span': 'de {from} a {to}',
+  'bi.missions.spanUndeclared': 'datas não declaradas',
+  'bi.missions.spanEndOnly': 'até {to}, início não declarado',
   'bi.missions.spanOpen': 'desde {from}, fim não declarado',
   'bi.missions.atDate': 'já havia começado na data da cena',
   'bi.missions.note':

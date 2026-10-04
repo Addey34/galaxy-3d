@@ -43,9 +43,21 @@
    "count": 2,
    "bytes": 358
   },
+  "didymos": {
+   "count": 2,
+   "bytes": 636
+  },
+  "dinkinesh": {
+   "count": 5,
+   "bytes": 920
+  },
   "dione": {
    "count": 95,
    "bytes": 19023
+  },
+  "donaldjohanson": {
+   "count": 11,
+   "bytes": 3005
   },
   "enceladus": {
    "count": 87,
@@ -62,6 +74,10 @@
   "ganymede": {
    "count": 196,
    "bytes": 36343
+  },
+  "gaspra": {
+   "count": 34,
+   "bytes": 5372
   },
   "hyperion": {
    "count": 5,
@@ -83,9 +99,17 @@
    "count": 17,
    "bytes": 3490
   },
+  "lutetia": {
+   "count": 37,
+   "bytes": 8071
+  },
   "mars": {
    "count": 2051,
    "bytes": 361401
+  },
+  "mathilde": {
+   "count": 23,
+   "bytes": 3759
   },
   "mercury": {
    "count": 606,
@@ -130,6 +154,10 @@
   "ryugu": {
    "count": 13,
    "bytes": 3870
+  },
+  "steins": {
+   "count": 24,
+   "bytes": 5307
   },
   "tethys": {
    "count": 53,

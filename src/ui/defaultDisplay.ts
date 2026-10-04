@@ -19,6 +19,7 @@
  */
 import { MAJOR_BODIES } from './exploHud';
 import type { BodyKind } from '@/types';
+import { orbitLineShownByDefault } from '@/core/orbitLineDefaults';
 
 export interface DisplayDefaults {
   label: boolean;
@@ -38,6 +39,8 @@ export function defaultDisplay(name: string, kind: BodyKind): DisplayDefaults {
   return {
     label: MAJOR_BODIES.has(name),
     object: true,
-    orbit: kind === 'planet',
+    // La règle des orbites a son propriétaire dans `core/` : l'application la lit au démarrage,
+    // avant que ce tableau existe, pour ne télécharger que les lignes tracées.
+    orbit: orbitLineShownByDefault(kind),
   };
 }

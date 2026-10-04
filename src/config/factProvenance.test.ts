@@ -216,7 +216,8 @@ const sbdb = snapshot.sbdb as Record<
     diameterKm: {
       value: number;
       sigma: number | string | null;
-      ref: string;
+      // `null` : la SBDB ne cite aucune source (Gaspra, Mathilde).
+      ref: string | null;
     } | null;
     gmKm3s2: {
       value: number;
@@ -578,8 +579,12 @@ function expected(
       const row = sbdbInterstellar[name]
         ? ({} as (typeof sbdb)[string])
         : (sbdb[name] ?? fail('corps absent de la SBDB'));
-      const cite = (ref: string | undefined): void => {
-        if (p.citation !== ref)
+      // Une référence VIDE à la source (la SBDB n'en cite aucune pour le diamètre de Gaspra ni
+      // pour celui de Mathilde) veut dire : aucune citation dans la fiche. Le schéma refuse
+      // une citation vide, et en écrire une inventée serait pire (2026-10-04).
+      const cite = (ref: string | null | undefined): void => {
+        const expected = ref ? ref : undefined;
+        if (p.citation !== expected)
           fail(`citation « ${p.citation} » ≠ référence SBDB « ${ref} »`);
       };
       switch (field) {

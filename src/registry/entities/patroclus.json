@@ -1,0 +1,103 @@
+{
+  "$schema": "../schema/entity.schema.json",
+  "id": "patroclus",
+  "targetClass": "asteroid",
+  "source": "small-body",
+  "elements": {
+    "displayName": {
+      "en": "Patroclus",
+      "fr": "Patrocle",
+      "es": "Patroclo",
+      "pt-BR": "Pátroclo"
+    },
+    "a": 5.206045758437494,
+    "e": 0.1393379774877145,
+    "iDeg": 22.0642317478882,
+    "omDeg": 44.35010822018449,
+    "wDeg": 308.7828780853671,
+    "maDeg": 45.51143181876312,
+    "epoch": "2026-01-01T00:00:00.000Z",
+    "kind": "asteroid",
+    "color": "0xc98bd1",
+    "fallbackColor": "0x484848",
+    "description": {
+      "en": "A Jupiter Trojan asteroid that travels with a companion, Menoetius: the two orbit each other. NASA’s Lucy is due to fly past the pair on 3 March 2033, the last encounter of its planned tour.",
+      "fr": "Un astéroïde troyen de Jupiter qui voyage avec un compagnon, Menoetius : les deux tournent l’un autour de l’autre. La sonde Lucy de la NASA doit survoler le couple le 3 mars 2033, dernière rencontre de son parcours prévu.",
+      "es": "Un asteroide troyano de Júpiter que viaja con un compañero, Menoetius: los dos giran uno alrededor del otro. La sonda Lucy de la NASA debe sobrevolar la pareja el 3 de marzo de 2033, el último encuentro de su recorrido previsto.",
+      "pt-BR": "Um asteroide troiano de Júpiter que viaja com um companheiro, Menoetius: os dois giram um em torno do outro. A sonda Lucy da NASA deve passar pelo par em 3 de março de 2033, o último encontro do seu percurso previsto."
+    },
+    "wiki": {
+      "en": "https://en.wikipedia.org/wiki/617_Patroclus",
+      "fr": "https://fr.wikipedia.org/wiki/(617)_Patrocle",
+      "es": "https://es.wikipedia.org/wiki/(617)_Patroclo",
+      "pt-BR": "https://pt.wikipedia.org/wiki/617_P%C3%A1troclo"
+    }
+  },
+  "facts": {
+    "radiusKm": {
+      "value": 70.181,
+      "published": false,
+      "reason": {
+        "en": "The 140-kilometre diameter in the JPL Small-Body Database describes Patroclus and Menoetius together, seen as one unresolved object, not Patroclus alone.",
+        "fr": "Le diamètre de 140 kilomètres de la base des petits corps de JPL décrit Patroclus et Menoetius ensemble, vus comme un seul objet non résolu, et non Patroclus seul.",
+        "es": "El diámetro de 140 kilómetros de la base de datos de cuerpos menores del JPL describe a Patroclus y Menoetius juntos, vistos como un único objeto no resuelto, y no a Patroclus solo.",
+        "pt-BR": "O diâmetro de 140 quilômetros da base de pequenos corpos do JPL descreve Patroclus e Menoetius juntos, vistos como um único objeto não resolvido, e não Patroclus sozinho."
+      }
+    },
+    "massKg": {
+      "published": false,
+      "reason": {
+        "en": "The JPL Small-Body Database publishes no GM for this body, and no mass can be derived without one.",
+        "fr": "La base des petits corps de JPL ne publie aucun GM pour ce corps, et aucune masse ne se dérive sans lui.",
+        "es": "La base de datos de cuerpos menores del JPL no publica ningún GM para este cuerpo, y no puede derivarse ninguna masa sin él.",
+        "pt-BR": "A base de pequenos corpos do JPL não publica nenhum GM para este corpo, e nenhuma massa se deriva sem ele."
+      }
+    },
+    "gravity": {
+      "published": false,
+      "reason": {
+        "en": "Surface gravity is derived from a mass, and none is published for this body.",
+        "fr": "La gravité de surface se dérive d’une masse, et aucune n’est publiée pour ce corps.",
+        "es": "La gravedad en la superficie se deriva de una masa, y no se publica ninguna para este cuerpo.",
+        "pt-BR": "A gravidade na superfície se deriva de uma massa, e nenhuma é publicada para este corpo."
+      }
+    },
+    "meanTempC": {
+      "published": false,
+      "reason": {
+        "en": "The JPL Small-Body Database, the source of its other figures, publishes no temperature among its physical parameters.",
+        "fr": "La base des petits corps de JPL, d'où viennent ses autres chiffres, ne publie aucune température parmi ses paramètres physiques.",
+        "es": "La base de datos de cuerpos menores del JPL, de donde proceden sus demás cifras, no publica ninguna temperatura entre sus parámetros físicos.",
+        "pt-BR": "A base de pequenos corpos do JPL, de onde vêm os seus outros números, não publica nenhuma temperatura entre os seus parâmetros físicos."
+      }
+    },
+    "moonCount": {
+      "value": 1,
+      "source": "jpl-sbdb",
+      "method": "measured",
+      "asOf": "2026-10-04",
+      "detail": "confirmedSatellites"
+    },
+    "axialTilt": {
+      "published": false,
+      "reason": {
+        "en": "The JPL Small-Body Database publishes no spin-axis solution for this body, and an axial tilt cannot be derived without one.",
+        "fr": "La base des petits corps de JPL ne publie aucune solution de pôle pour ce corps, et une inclinaison axiale ne se dérive pas sans elle.",
+        "es": "La base de datos de cuerpos menores del JPL no publica ninguna solución de polo para este cuerpo, y una inclinación axial no puede derivarse sin ella.",
+        "pt-BR": "A base de pequenos corpos do JPL não publica nenhuma solução de polo para este corpo, e uma inclinação axial não se deriva sem ela."
+      }
+    },
+    "rotationPeriod": {
+      "value": 102.8,
+      "source": "jpl-sbdb",
+      "method": "measured",
+      "citation": "LCDB (Rev. 2023-October); Warner et al., 2009"
+    }
+  },
+  "notes": {
+    "facts.radiusKm": "Valeur de TRAVAIL, non publiée (rendu, écarts en rayons) : la moitié du diamètre SBDB de 140,362 km, qui décrit la paire Patroclus-Menoetius non résolue. Même convention que Hauméa.",
+    "": "Cible déclarée d'une mission au registre du PDS, ajoutée au catalogue le 2026-10-04 (pages des missions, vague 1). Faits lus à la SBDB ; description fondée sur les descriptions de missions du PDS et les pages de NASA Science ou de l'ESA citées dans le handoff du 2026-10-04.",
+    "a": "Éléments osculateurs JPL Horizons EXACTEMENT à cette époque (COMMAND '617;', EPHEM_TYPE=ELEMENTS, TLIST=2461041.5, CENTER=500@10).",
+    "fallbackColor": "Gris de l'albédo géométrique SBDB (réflectance en sRGB, plancher 0x48 pour rester visible) ; sans albédo publié, une teinte d'attente. Ce n'est pas une mesure de couleur."
+  }
+}

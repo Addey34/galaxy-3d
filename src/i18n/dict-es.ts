@@ -515,6 +515,8 @@ export const es: Record<MessageKey, string> = {
   'bi.missions.none':
     'Ninguna misión de este archivo declara este cuerpo entre sus objetivos.',
   'bi.missions.span': 'del {from} al {to}',
+  'bi.missions.spanUndeclared': 'fechas no declaradas',
+  'bi.missions.spanEndOnly': 'hasta el {to}, inicio no declarado',
   'bi.missions.spanOpen': 'desde el {from}, fin no declarado',
   'bi.missions.atDate': 'había comenzado en la fecha de la escena',
   'bi.missions.note':

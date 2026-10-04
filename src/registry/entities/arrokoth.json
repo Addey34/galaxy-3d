@@ -1,0 +1,105 @@
+{
+  "$schema": "../schema/entity.schema.json",
+  "id": "arrokoth",
+  "targetClass": "asteroid",
+  "source": "small-body",
+  "elements": {
+    "displayName": {
+      "en": "Arrokoth",
+      "fr": "Arrokoth",
+      "es": "Arrokoth",
+      "pt-BR": "Arrokoth"
+    },
+    "a": 44.23110733741269,
+    "e": 0.03778604817333189,
+    "iDeg": 2.449952373720629,
+    "omDeg": 159.0465343905875,
+    "wDeg": 183.8410372008219,
+    "maDeg": 315.3956310807417,
+    "epoch": "2026-01-01T00:00:00.000Z",
+    "barycentric": true,
+    "kind": "asteroid",
+    "color": "0xc8644c",
+    "fallbackColor": "0x8a4a3c",
+    "description": {
+      "en": "A small Kuiper Belt object, the most distant body ever explored by a spacecraft. NASA’s New Horizons flew past it on 1 January 2019 and found two lobes joined together, like a flattened snowman, with a very red surface.",
+      "fr": "Un petit objet de la ceinture de Kuiper, le corps le plus lointain jamais exploré par une sonde. La sonde New Horizons de la NASA l’a survolé le 1er janvier 2019 et a découvert deux lobes soudés, comme un bonhomme de neige aplati, à la surface très rouge.",
+      "es": "Un pequeño objeto del cinturón de Kuiper, el cuerpo más lejano jamás explorado por una sonda. La sonda New Horizons de la NASA lo sobrevoló el 1 de enero de 2019 y descubrió dos lóbulos unidos, como un muñeco de nieve aplastado, con una superficie muy roja.",
+      "pt-BR": "Um pequeno objeto do cinturão de Kuiper, o corpo mais distante já explorado por uma sonda. A sonda New Horizons da NASA passou por ele em 1º de janeiro de 2019 e descobriu dois lóbulos unidos, como um boneco de neve achatado, com uma superfície muito vermelha."
+    },
+    "wiki": {
+      "en": "https://en.wikipedia.org/wiki/486958_Arrokoth",
+      "fr": "https://fr.wikipedia.org/wiki/(486958)_Arrokoth",
+      "es": "https://es.wikipedia.org/wiki/(486958)_Arrokoth",
+      "pt-BR": "https://pt.wikipedia.org/wiki/486958_Arrokoth"
+    }
+  },
+  "facts": {
+    "radiusKm": {
+      "value": 9.57,
+      "published": false,
+      "reason": {
+        "en": "Two lobes joined together, and the JPL Small-Body Database publishes no diameter for it: no single radius describes it.",
+        "fr": "Deux lobes soudés, et la base des petits corps de JPL ne publie aucun diamètre pour lui : aucun rayon unique ne le décrit.",
+        "es": "Dos lóbulos unidos, y la base de datos de cuerpos menores del JPL no publica ningún diámetro para él: ningún radio único lo describe.",
+        "pt-BR": "Dois lóbulos unidos, e a base de pequenos corpos do JPL não publica nenhum diâmetro para ele: nenhum raio único o descreve."
+      }
+    },
+    "massKg": {
+      "published": false,
+      "reason": {
+        "en": "The JPL Small-Body Database publishes no GM for this body, and no mass can be derived without one.",
+        "fr": "La base des petits corps de JPL ne publie aucun GM pour ce corps, et aucune masse ne se dérive sans lui.",
+        "es": "La base de datos de cuerpos menores del JPL no publica ningún GM para este cuerpo, y no puede derivarse ninguna masa sin él.",
+        "pt-BR": "A base de pequenos corpos do JPL não publica nenhum GM para este corpo, e nenhuma massa se deriva sem ele."
+      }
+    },
+    "gravity": {
+      "published": false,
+      "reason": {
+        "en": "Surface gravity is derived from a mass, and none is published for this body.",
+        "fr": "La gravité de surface se dérive d’une masse, et aucune n’est publiée pour ce corps.",
+        "es": "La gravedad en la superficie se deriva de una masa, y no se publica ninguna para este cuerpo.",
+        "pt-BR": "A gravidade na superfície se deriva de uma massa, e nenhuma é publicada para este corpo."
+      }
+    },
+    "meanTempC": {
+      "published": false,
+      "reason": {
+        "en": "The JPL Small-Body Database, the source of its other figures, publishes no temperature among its physical parameters.",
+        "fr": "La base des petits corps de JPL, d'où viennent ses autres chiffres, ne publie aucune température parmi ses paramètres physiques.",
+        "es": "La base de datos de cuerpos menores del JPL, de donde proceden sus demás cifras, no publica ninguna temperatura entre sus parámetros físicos.",
+        "pt-BR": "A base de pequenos corpos do JPL, de onde vêm os seus outros números, não publica nenhuma temperatura entre os seus parâmetros físicos."
+      }
+    },
+    "moonCount": {
+      "value": 0,
+      "source": "jpl-sbdb",
+      "method": "measured",
+      "asOf": "2026-10-04",
+      "detail": "confirmedSatellites"
+    },
+    "axialTilt": {
+      "published": false,
+      "reason": {
+        "en": "The JPL Small-Body Database publishes no spin-axis solution for this body, and an axial tilt cannot be derived without one.",
+        "fr": "La base des petits corps de JPL ne publie aucune solution de pôle pour ce corps, et une inclinaison axiale ne se dérive pas sans elle.",
+        "es": "La base de datos de cuerpos menores del JPL no publica ninguna solución de polo para este cuerpo, y una inclinación axial no puede derivarse sin ella.",
+        "pt-BR": "A base de pequenos corpos do JPL não publica nenhuma solução de polo para este corpo, e uma inclinação axial não se deriva sem ela."
+      }
+    },
+    "rotationPeriod": {
+      "value": 15.918,
+      "source": "jpl-sbdb",
+      "method": "measured",
+      "detail": "partialLightcurve",
+      "citation": "LCDB (Rev. 2023-October); Warner et al., 2009"
+    }
+  },
+  "notes": {
+    "facts.radiusKm": "Valeur de TRAVAIL, non publiée (rendu, écarts en rayons) : rayon équivalent en volume d'un ellipsoïde de 35 × 20 × 10 km, les dimensions que NASA Science publie (page Arrokoth, faits, lue le 2026-10-04). Même convention que Hauméa.",
+    "": "Cible déclarée d'une mission au registre du PDS, ajoutée au catalogue le 2026-10-04 (pages des missions, vague 1). Faits lus à la SBDB ; description fondée sur les descriptions de missions du PDS et les pages de NASA Science ou de l'ESA citées dans le handoff du 2026-10-04.",
+    "a": "Éléments osculateurs JPL Horizons EXACTEMENT à cette époque (COMMAND '486958;', EPHEM_TYPE=ELEMENTS, TLIST=2461041.5, CENTER=500@0).",
+    "fallbackColor": "Gris de l'albédo géométrique SBDB (réflectance en sRGB, plancher 0x48 pour rester visible) ; sans albédo publié, une teinte d'attente. Ce n'est pas une mesure de couleur."
+  }
+}

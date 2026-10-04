@@ -1,5 +1,5 @@
 {
- "generatedAt": "2026-10-02T06:19:25.428Z",
+ "generatedAt": "2026-10-04T04:43:41.706Z",
  "samplesPerCase": 48,
  "spk": {
   "kernel": true,
@@ -14036,6 +14036,3157 @@
     "median": 0.4605,
     "p95": 1.037,
     "max": 1.367
+   }
+  },
+  {
+   "body": "lutetia",
+   "provider": "horizons-binary",
+   "windowKind": "binary",
+   "windowFrom": "1900-01-02",
+   "windowTo": "2100-12-25",
+   "windowClipped": false,
+   "target": "21;",
+   "relative": false,
+   "radiusKm": 49,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 2.842,
+    "median": 0.9301,
+    "p95": 12.87,
+    "max": 18.55
+   },
+   "radii": {
+    "mean": 0.058,
+    "median": 0.01898,
+    "p95": 0.2627,
+    "max": 0.3786
+   }
+  },
+  {
+   "body": "lutetia",
+   "provider": "kepler",
+   "windowKind": "epoch",
+   "windowFrom": "2016-01-01",
+   "windowTo": "2036-01-01",
+   "windowClipped": false,
+   "target": "21;",
+   "relative": false,
+   "radiusKm": 49,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 1620000,
+    "median": 1523000,
+    "p95": 3616000,
+    "max": 3670000
+   },
+   "radii": {
+    "mean": 33060,
+    "median": 31090,
+    "p95": 73800,
+    "max": 74890
+   }
+  },
+  {
+   "body": "lutetia",
+   "provider": "kepler",
+   "windowKind": "fixed",
+   "windowFrom": "1900-01-01",
+   "windowTo": "2100-12-31",
+   "windowClipped": false,
+   "target": "21;",
+   "relative": false,
+   "radiusKm": 49,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 26570000,
+    "median": 24290000,
+    "p95": 60010000,
+    "max": 68960000
+   },
+   "radii": {
+    "mean": 542200,
+    "median": 495800,
+    "p95": 1225000,
+    "max": 1407000
+   }
+  },
+  {
+   "body": "lutetia",
+   "provider": "kepler",
+   "windowKind": "fixed",
+   "windowFrom": "1600-01-01",
+   "windowTo": "2400-01-01",
+   "windowClipped": false,
+   "target": "21;",
+   "relative": false,
+   "radiusKm": 49,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 98220000,
+    "median": 92430000,
+    "p95": 180200000,
+    "max": 226600000
+   },
+   "radii": {
+    "mean": 2004000,
+    "median": 1886000,
+    "p95": 3677000,
+    "max": 4625000
+   }
+  },
+  {
+   "body": "lutetia",
+   "provider": "production",
+   "windowKind": "fixed",
+   "windowFrom": "1900-01-01",
+   "windowTo": "2100-12-31",
+   "windowClipped": false,
+   "target": "21;",
+   "relative": false,
+   "radiusKm": 49,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {
+    "binaire": 48
+   },
+   "km": {
+    "mean": 3.204,
+    "median": 1.103,
+    "p95": 16.21,
+    "max": 20.9
+   },
+   "radii": {
+    "mean": 0.06539,
+    "median": 0.02252,
+    "p95": 0.3309,
+    "max": 0.4265
+   }
+  },
+  {
+   "body": "gaspra",
+   "provider": "horizons-binary",
+   "windowKind": "binary",
+   "windowFrom": "1900-01-02",
+   "windowTo": "2100-12-25",
+   "windowClipped": false,
+   "target": "951;",
+   "relative": false,
+   "radiusKm": 6.1,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 3.654,
+    "median": 1.756,
+    "p95": 15.07,
+    "max": 18.84
+   },
+   "radii": {
+    "mean": 0.599,
+    "median": 0.2879,
+    "p95": 2.471,
+    "max": 3.089
+   }
+  },
+  {
+   "body": "gaspra",
+   "provider": "kepler",
+   "windowKind": "epoch",
+   "windowFrom": "2016-01-01",
+   "windowTo": "2036-01-01",
+   "windowClipped": false,
+   "target": "951;",
+   "relative": false,
+   "radiusKm": 6.1,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 1031000,
+    "median": 1010000,
+    "p95": 2139000,
+    "max": 2276000
+   },
+   "radii": {
+    "mean": 169000,
+    "median": 165600,
+    "p95": 350600,
+    "max": 373100
+   }
+  },
+  {
+   "body": "gaspra",
+   "provider": "kepler",
+   "windowKind": "fixed",
+   "windowFrom": "1900-01-01",
+   "windowTo": "2100-12-31",
+   "windowClipped": false,
+   "target": "951;",
+   "relative": false,
+   "radiusKm": 6.1,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 10850000,
+    "median": 10220000,
+    "p95": 23510000,
+    "max": 23630000
+   },
+   "radii": {
+    "mean": 1779000,
+    "median": 1676000,
+    "p95": 3855000,
+    "max": 3874000
+   }
+  },
+  {
+   "body": "gaspra",
+   "provider": "kepler",
+   "windowKind": "fixed",
+   "windowFrom": "1600-01-01",
+   "windowTo": "2400-01-01",
+   "windowClipped": false,
+   "target": "951;",
+   "relative": false,
+   "radiusKm": 6.1,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 40860000,
+    "median": 41440000,
+    "p95": 79880000,
+    "max": 85620000
+   },
+   "radii": {
+    "mean": 6699000,
+    "median": 6793000,
+    "p95": 13100000,
+    "max": 14040000
+   }
+  },
+  {
+   "body": "gaspra",
+   "provider": "production",
+   "windowKind": "fixed",
+   "windowFrom": "1900-01-01",
+   "windowTo": "2100-12-31",
+   "windowClipped": false,
+   "target": "951;",
+   "relative": false,
+   "radiusKm": 6.1,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {
+    "binaire": 48
+   },
+   "km": {
+    "mean": 3.934,
+    "median": 1.392,
+    "p95": 15.55,
+    "max": 21.66
+   },
+   "radii": {
+    "mean": 0.6449,
+    "median": 0.2282,
+    "p95": 2.55,
+    "max": 3.55
+   }
+  },
+  {
+   "body": "mathilde",
+   "provider": "horizons-binary",
+   "windowKind": "binary",
+   "windowFrom": "1900-01-02",
+   "windowTo": "2100-12-25",
+   "windowClipped": false,
+   "target": "253;",
+   "relative": false,
+   "radiusKm": 26.4,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 3.237,
+    "median": 0.9172,
+    "p95": 11.68,
+    "max": 23.45
+   },
+   "radii": {
+    "mean": 0.1226,
+    "median": 0.03474,
+    "p95": 0.4425,
+    "max": 0.8881
+   }
+  },
+  {
+   "body": "mathilde",
+   "provider": "kepler",
+   "windowKind": "epoch",
+   "windowFrom": "2016-01-01",
+   "windowTo": "2036-01-01",
+   "windowClipped": false,
+   "target": "253;",
+   "relative": false,
+   "radiusKm": 26.4,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 2215000,
+    "median": 1950000,
+    "p95": 5719000,
+    "max": 6241000
+   },
+   "radii": {
+    "mean": 83910,
+    "median": 73850,
+    "p95": 216600,
+    "max": 236400
+   }
+  },
+  {
+   "body": "mathilde",
+   "provider": "kepler",
+   "windowKind": "fixed",
+   "windowFrom": "1900-01-01",
+   "windowTo": "2100-12-31",
+   "windowClipped": false,
+   "target": "253;",
+   "relative": false,
+   "radiusKm": 26.4,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 19270000,
+    "median": 16450000,
+    "p95": 44350000,
+    "max": 47480000
+   },
+   "radii": {
+    "mean": 730000,
+    "median": 623000,
+    "p95": 1680000,
+    "max": 1798000
+   }
+  },
+  {
+   "body": "mathilde",
+   "provider": "kepler",
+   "windowKind": "fixed",
+   "windowFrom": "1600-01-01",
+   "windowTo": "2400-01-01",
+   "windowClipped": false,
+   "target": "253;",
+   "relative": false,
+   "radiusKm": 26.4,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 64230000,
+    "median": 62380000,
+    "p95": 136500000,
+    "max": 146900000
+   },
+   "radii": {
+    "mean": 2433000,
+    "median": 2363000,
+    "p95": 5171000,
+    "max": 5563000
+   }
+  },
+  {
+   "body": "mathilde",
+   "provider": "production",
+   "windowKind": "fixed",
+   "windowFrom": "1900-01-01",
+   "windowTo": "2100-12-31",
+   "windowClipped": false,
+   "target": "253;",
+   "relative": false,
+   "radiusKm": 26.4,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {
+    "binaire": 48
+   },
+   "km": {
+    "mean": 2.956,
+    "median": 1.042,
+    "p95": 12.97,
+    "max": 17.44
+   },
+   "radii": {
+    "mean": 0.112,
+    "median": 0.03948,
+    "p95": 0.4914,
+    "max": 0.6604
+   }
+  },
+  {
+   "body": "steins",
+   "provider": "horizons-binary",
+   "windowKind": "binary",
+   "windowFrom": "1900-01-02",
+   "windowTo": "2100-12-25",
+   "windowClipped": false,
+   "target": "2867;",
+   "relative": false,
+   "radiusKm": 2.58,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 3.578,
+    "median": 1.763,
+    "p95": 16.59,
+    "max": 24.53
+   },
+   "radii": {
+    "mean": 1.387,
+    "median": 0.6832,
+    "p95": 6.432,
+    "max": 9.506
+   }
+  },
+  {
+   "body": "steins",
+   "provider": "kepler",
+   "windowKind": "epoch",
+   "windowFrom": "2016-01-01",
+   "windowTo": "2036-01-01",
+   "windowClipped": false,
+   "target": "2867;",
+   "relative": false,
+   "radiusKm": 2.58,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 1483000,
+    "median": 1275000,
+    "p95": 3832000,
+    "max": 4721000
+   },
+   "radii": {
+    "mean": 574800,
+    "median": 494300,
+    "p95": 1485000,
+    "max": 1830000
+   }
+  },
+  {
+   "body": "steins",
+   "provider": "kepler",
+   "windowKind": "fixed",
+   "windowFrom": "1900-01-01",
+   "windowTo": "2100-12-31",
+   "windowClipped": false,
+   "target": "2867;",
+   "relative": false,
+   "radiusKm": 2.58,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 11140000,
+    "median": 10220000,
+    "p95": 26470000,
+    "max": 28300000
+   },
+   "radii": {
+    "mean": 4319000,
+    "median": 3961000,
+    "p95": 10260000,
+    "max": 10970000
+   }
+  },
+  {
+   "body": "steins",
+   "provider": "kepler",
+   "windowKind": "fixed",
+   "windowFrom": "1600-01-01",
+   "windowTo": "2400-01-01",
+   "windowClipped": false,
+   "target": "2867;",
+   "relative": false,
+   "radiusKm": 2.58,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 40820000,
+    "median": 36520000,
+    "p95": 82120000,
+    "max": 102700000
+   },
+   "radii": {
+    "mean": 15820000,
+    "median": 14150000,
+    "p95": 31830000,
+    "max": 39820000
+   }
+  },
+  {
+   "body": "steins",
+   "provider": "production",
+   "windowKind": "fixed",
+   "windowFrom": "1900-01-01",
+   "windowTo": "2100-12-31",
+   "windowClipped": false,
+   "target": "2867;",
+   "relative": false,
+   "radiusKm": 2.58,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {
+    "binaire": 48
+   },
+   "km": {
+    "mean": 3.605,
+    "median": 2.417,
+    "p95": 14.5,
+    "max": 21.67
+   },
+   "radii": {
+    "mean": 1.397,
+    "median": 0.9369,
+    "p95": 5.619,
+    "max": 8.401
+   }
+  },
+  {
+   "body": "annefrank",
+   "provider": "horizons-binary",
+   "windowKind": "binary",
+   "windowFrom": "1900-01-02",
+   "windowTo": "2100-12-25",
+   "windowClipped": false,
+   "target": "5535;",
+   "relative": false,
+   "radiusKm": 2.4,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 3.048,
+    "median": 2.085,
+    "p95": 13.08,
+    "max": 24.42
+   },
+   "radii": {
+    "mean": 1.27,
+    "median": 0.8686,
+    "p95": 5.451,
+    "max": 10.17
+   }
+  },
+  {
+   "body": "annefrank",
+   "provider": "kepler",
+   "windowKind": "epoch",
+   "windowFrom": "2016-01-01",
+   "windowTo": "2036-01-01",
+   "windowClipped": false,
+   "target": "5535;",
+   "relative": false,
+   "radiusKm": 2.4,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 340200,
+    "median": 227500,
+    "p95": 970900,
+    "max": 1163000
+   },
+   "radii": {
+    "mean": 141700,
+    "median": 94810,
+    "p95": 404500,
+    "max": 484800
+   }
+  },
+  {
+   "body": "annefrank",
+   "provider": "kepler",
+   "windowKind": "fixed",
+   "windowFrom": "1900-01-01",
+   "windowTo": "2100-12-31",
+   "windowClipped": false,
+   "target": "5535;",
+   "relative": false,
+   "radiusKm": 2.4,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 2157000,
+    "median": 1441000,
+    "p95": 5441000,
+    "max": 7073000
+   },
+   "radii": {
+    "mean": 898600,
+    "median": 600500,
+    "p95": 2267000,
+    "max": 2947000
+   }
+  },
+  {
+   "body": "annefrank",
+   "provider": "kepler",
+   "windowKind": "fixed",
+   "windowFrom": "1600-01-01",
+   "windowTo": "2400-01-01",
+   "windowClipped": false,
+   "target": "5535;",
+   "relative": false,
+   "radiusKm": 2.4,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 8240000,
+    "median": 2783000,
+    "p95": 27130000,
+    "max": 30510000
+   },
+   "radii": {
+    "mean": 3433000,
+    "median": 1159000,
+    "p95": 11300000,
+    "max": 12710000
+   }
+  },
+  {
+   "body": "annefrank",
+   "provider": "production",
+   "windowKind": "fixed",
+   "windowFrom": "1900-01-01",
+   "windowTo": "2100-12-31",
+   "windowClipped": false,
+   "target": "5535;",
+   "relative": false,
+   "radiusKm": 2.4,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {
+    "binaire": 48
+   },
+   "km": {
+    "mean": 3.304,
+    "median": 1.988,
+    "p95": 15.58,
+    "max": 24.43
+   },
+   "radii": {
+    "mean": 1.377,
+    "median": 0.8281,
+    "p95": 6.492,
+    "max": 10.18
+   }
+  },
+  {
+   "body": "masursky",
+   "provider": "horizons-binary",
+   "windowKind": "binary",
+   "windowFrom": "1900-01-02",
+   "windowTo": "2100-12-25",
+   "windowClipped": false,
+   "target": "2685;",
+   "relative": false,
+   "radiusKm": 5.372,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 2.883,
+    "median": 1.093,
+    "p95": 16.1,
+    "max": 21.29
+   },
+   "radii": {
+    "mean": 0.5366,
+    "median": 0.2035,
+    "p95": 2.997,
+    "max": 3.962
+   }
+  },
+  {
+   "body": "masursky",
+   "provider": "kepler",
+   "windowKind": "epoch",
+   "windowFrom": "2016-01-01",
+   "windowTo": "2036-01-01",
+   "windowClipped": false,
+   "target": "2685;",
+   "relative": false,
+   "radiusKm": 5.372,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 921600,
+    "median": 916600,
+    "p95": 2147000,
+    "max": 2598000
+   },
+   "radii": {
+    "mean": 171600,
+    "median": 170600,
+    "p95": 399600,
+    "max": 483600
+   }
+  },
+  {
+   "body": "masursky",
+   "provider": "kepler",
+   "windowKind": "fixed",
+   "windowFrom": "1900-01-01",
+   "windowTo": "2100-12-31",
+   "windowClipped": false,
+   "target": "2685;",
+   "relative": false,
+   "radiusKm": 5.372,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 9745000,
+    "median": 9216000,
+    "p95": 20380000,
+    "max": 22190000
+   },
+   "radii": {
+    "mean": 1814000,
+    "median": 1715000,
+    "p95": 3794000,
+    "max": 4130000
+   }
+  },
+  {
+   "body": "masursky",
+   "provider": "kepler",
+   "windowKind": "fixed",
+   "windowFrom": "1600-01-01",
+   "windowTo": "2400-01-01",
+   "windowClipped": false,
+   "target": "2685;",
+   "relative": false,
+   "radiusKm": 5.372,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 35200000,
+    "median": 34490000,
+    "p95": 69770000,
+    "max": 73020000
+   },
+   "radii": {
+    "mean": 6552000,
+    "median": 6421000,
+    "p95": 12990000,
+    "max": 13590000
+   }
+  },
+  {
+   "body": "masursky",
+   "provider": "production",
+   "windowKind": "fixed",
+   "windowFrom": "1900-01-01",
+   "windowTo": "2100-12-31",
+   "windowClipped": false,
+   "target": "2685;",
+   "relative": false,
+   "radiusKm": 5.372,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {
+    "binaire": 48
+   },
+   "km": {
+    "mean": 2.501,
+    "median": 0.8857,
+    "p95": 16.12,
+    "max": 21.08
+   },
+   "radii": {
+    "mean": 0.4656,
+    "median": 0.1649,
+    "p95": 3.001,
+    "max": 3.923
+   }
+  },
+  {
+   "body": "didymos",
+   "provider": "horizons-binary",
+   "windowKind": "binary",
+   "windowFrom": "1900-01-02",
+   "windowTo": "2100-12-29",
+   "windowClipped": false,
+   "target": "65803;",
+   "relative": false,
+   "radiusKm": 0.39,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 3.447,
+    "median": 0.6311,
+    "p95": 16.26,
+    "max": 39.34
+   },
+   "radii": {
+    "mean": 8.839,
+    "median": 1.618,
+    "p95": 41.7,
+    "max": 100.9
+   }
+  },
+  {
+   "body": "didymos",
+   "provider": "kepler",
+   "windowKind": "epoch",
+   "windowFrom": "2016-01-01",
+   "windowTo": "2036-01-01",
+   "windowClipped": false,
+   "target": "65803;",
+   "relative": false,
+   "radiusKm": 0.39,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 1553000,
+    "median": 349700,
+    "p95": 8200000,
+    "max": 11070000
+   },
+   "radii": {
+    "mean": 3982000,
+    "median": 896600,
+    "p95": 21030000,
+    "max": 28390000
+   }
+  },
+  {
+   "body": "didymos",
+   "provider": "kepler",
+   "windowKind": "fixed",
+   "windowFrom": "1900-01-01",
+   "windowTo": "2100-12-31",
+   "windowClipped": false,
+   "target": "65803;",
+   "relative": false,
+   "radiusKm": 0.39,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 7800000,
+    "median": 5705000,
+    "p95": 21000000,
+    "max": 24330000
+   },
+   "radii": {
+    "mean": 20000000,
+    "median": 14630000,
+    "p95": 53830000,
+    "max": 62380000
+   }
+  },
+  {
+   "body": "didymos",
+   "provider": "kepler",
+   "windowKind": "fixed",
+   "windowFrom": "1600-01-01",
+   "windowTo": "2400-01-01",
+   "windowClipped": false,
+   "target": "65803;",
+   "relative": false,
+   "radiusKm": 0.39,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 72470000,
+    "median": 12730000,
+    "p95": 325600000,
+    "max": 372200000
+   },
+   "radii": {
+    "mean": 185800000,
+    "median": 32650000,
+    "p95": 834800000,
+    "max": 954400000
+   }
+  },
+  {
+   "body": "didymos",
+   "provider": "production",
+   "windowKind": "fixed",
+   "windowFrom": "1900-01-01",
+   "windowTo": "2100-12-31",
+   "windowClipped": false,
+   "target": "65803;",
+   "relative": false,
+   "radiusKm": 0.39,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {
+    "binaire": 48
+   },
+   "km": {
+    "mean": 4.682,
+    "median": 1.408,
+    "p95": 14.31,
+    "max": 36.56
+   },
+   "radii": {
+    "mean": 12.01,
+    "median": 3.611,
+    "p95": 36.68,
+    "max": 93.75
+   }
+  },
+  {
+   "body": "dinkinesh",
+   "provider": "horizons-binary",
+   "windowKind": "binary",
+   "windowFrom": "1900-01-02",
+   "windowTo": "2100-12-25",
+   "windowClipped": false,
+   "target": "152830;",
+   "relative": false,
+   "radiusKm": 0.3595,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 3.462,
+    "median": 1.734,
+    "p95": 14.73,
+    "max": 21.49
+   },
+   "radii": {
+    "mean": 9.631,
+    "median": 4.825,
+    "p95": 40.98,
+    "max": 59.78
+   }
+  },
+  {
+   "body": "dinkinesh",
+   "provider": "kepler",
+   "windowKind": "epoch",
+   "windowFrom": "2016-01-01",
+   "windowTo": "2036-01-01",
+   "windowClipped": false,
+   "target": "152830;",
+   "relative": false,
+   "radiusKm": 0.3595,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 468400,
+    "median": 414900,
+    "p95": 1104000,
+    "max": 1152000
+   },
+   "radii": {
+    "mean": 1303000,
+    "median": 1154000,
+    "p95": 3070000,
+    "max": 3204000
+   }
+  },
+  {
+   "body": "dinkinesh",
+   "provider": "kepler",
+   "windowKind": "fixed",
+   "windowFrom": "1900-01-01",
+   "windowTo": "2100-12-31",
+   "windowClipped": false,
+   "target": "152830;",
+   "relative": false,
+   "radiusKm": 0.3595,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 3937000,
+    "median": 3461000,
+    "p95": 9473000,
+    "max": 11330000
+   },
+   "radii": {
+    "mean": 10950000,
+    "median": 9628000,
+    "p95": 26350000,
+    "max": 31520000
+   }
+  },
+  {
+   "body": "dinkinesh",
+   "provider": "kepler",
+   "windowKind": "fixed",
+   "windowFrom": "1600-01-01",
+   "windowTo": "2400-01-01",
+   "windowClipped": false,
+   "target": "152830;",
+   "relative": false,
+   "radiusKm": 0.3595,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 14710000,
+    "median": 14050000,
+    "p95": 29260000,
+    "max": 39670000
+   },
+   "radii": {
+    "mean": 40930000,
+    "median": 39070000,
+    "p95": 81390000,
+    "max": 110300000
+   }
+  },
+  {
+   "body": "dinkinesh",
+   "provider": "production",
+   "windowKind": "fixed",
+   "windowFrom": "1900-01-01",
+   "windowTo": "2100-12-31",
+   "windowClipped": false,
+   "target": "152830;",
+   "relative": false,
+   "radiusKm": 0.3595,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {
+    "binaire": 48
+   },
+   "km": {
+    "mean": 3.635,
+    "median": 2.075,
+    "p95": 14.93,
+    "max": 28.93
+   },
+   "radii": {
+    "mean": 10.11,
+    "median": 5.772,
+    "p95": 41.54,
+    "max": 80.46
+   }
+  },
+  {
+   "body": "donaldjohanson",
+   "provider": "horizons-binary",
+   "windowKind": "binary",
+   "windowFrom": "1900-01-02",
+   "windowTo": "2100-12-25",
+   "windowClipped": false,
+   "target": "52246;",
+   "relative": false,
+   "radiusKm": 1.9475,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 3.233,
+    "median": 1.245,
+    "p95": 12.87,
+    "max": 19.81
+   },
+   "radii": {
+    "mean": 1.66,
+    "median": 0.6392,
+    "p95": 6.606,
+    "max": 10.17
+   }
+  },
+  {
+   "body": "donaldjohanson",
+   "provider": "kepler",
+   "windowKind": "epoch",
+   "windowFrom": "2016-01-01",
+   "windowTo": "2036-01-01",
+   "windowClipped": false,
+   "target": "52246;",
+   "relative": false,
+   "radiusKm": 1.9475,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 492000,
+    "median": 350200,
+    "p95": 1296000,
+    "max": 1505000
+   },
+   "radii": {
+    "mean": 252600,
+    "median": 179800,
+    "p95": 665600,
+    "max": 772600
+   }
+  },
+  {
+   "body": "donaldjohanson",
+   "provider": "kepler",
+   "windowKind": "fixed",
+   "windowFrom": "1900-01-01",
+   "windowTo": "2100-12-31",
+   "windowClipped": false,
+   "target": "52246;",
+   "relative": false,
+   "radiusKm": 1.9475,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 16290000,
+    "median": 14240000,
+    "p95": 39110000,
+    "max": 40250000
+   },
+   "radii": {
+    "mean": 8363000,
+    "median": 7312000,
+    "p95": 20080000,
+    "max": 20670000
+   }
+  },
+  {
+   "body": "donaldjohanson",
+   "provider": "kepler",
+   "windowKind": "fixed",
+   "windowFrom": "1600-01-01",
+   "windowTo": "2400-01-01",
+   "windowClipped": false,
+   "target": "52246;",
+   "relative": false,
+   "radiusKm": 1.9475,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 56930000,
+    "median": 53920000,
+    "p95": 119600000,
+    "max": 124100000
+   },
+   "radii": {
+    "mean": 29230000,
+    "median": 27690000,
+    "p95": 61390000,
+    "max": 63700000
+   }
+  },
+  {
+   "body": "donaldjohanson",
+   "provider": "production",
+   "windowKind": "fixed",
+   "windowFrom": "1900-01-01",
+   "windowTo": "2100-12-31",
+   "windowClipped": false,
+   "target": "52246;",
+   "relative": false,
+   "radiusKm": 1.9475,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {
+    "binaire": 48
+   },
+   "km": {
+    "mean": 3.317,
+    "median": 1.877,
+    "p95": 12.96,
+    "max": 21.56
+   },
+   "radii": {
+    "mean": 1.703,
+    "median": 0.964,
+    "p95": 6.654,
+    "max": 11.07
+   }
+  },
+  {
+   "body": "eurybates",
+   "provider": "horizons-binary",
+   "windowKind": "binary",
+   "windowFrom": "1900-01-02",
+   "windowTo": "2100-12-25",
+   "windowClipped": false,
+   "target": "3548;",
+   "relative": false,
+   "radiusKm": 31.9425,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 1.83,
+    "median": 0.4445,
+    "p95": 8.968,
+    "max": 16.14
+   },
+   "radii": {
+    "mean": 0.0573,
+    "median": 0.01392,
+    "p95": 0.2808,
+    "max": 0.5052
+   }
+  },
+  {
+   "body": "eurybates",
+   "provider": "kepler",
+   "windowKind": "epoch",
+   "windowFrom": "2016-01-01",
+   "windowTo": "2036-01-01",
+   "windowClipped": false,
+   "target": "3548;",
+   "relative": false,
+   "radiusKm": 31.9425,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 4545000,
+    "median": 1482000,
+    "p95": 18450000,
+    "max": 21400000
+   },
+   "radii": {
+    "mean": 142300,
+    "median": 46390,
+    "p95": 577500,
+    "max": 669900
+   }
+  },
+  {
+   "body": "eurybates",
+   "provider": "kepler",
+   "windowKind": "fixed",
+   "windowFrom": "1900-01-01",
+   "windowTo": "2100-12-31",
+   "windowClipped": false,
+   "target": "3548;",
+   "relative": false,
+   "radiusKm": 31.9425,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 308200000,
+    "median": 321900000,
+    "p95": 631200000,
+    "max": 667900000
+   },
+   "radii": {
+    "mean": 9648000,
+    "median": 10080000,
+    "p95": 19760000,
+    "max": 20910000
+   }
+  },
+  {
+   "body": "eurybates",
+   "provider": "kepler",
+   "windowKind": "fixed",
+   "windowFrom": "1600-01-01",
+   "windowTo": "2400-01-01",
+   "windowClipped": false,
+   "target": "3548;",
+   "relative": false,
+   "radiusKm": 31.9425,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 428400000,
+    "median": 388000000,
+    "p95": 1001000000,
+    "max": 1066000000
+   },
+   "radii": {
+    "mean": 13410000,
+    "median": 12150000,
+    "p95": 31340000,
+    "max": 33370000
+   }
+  },
+  {
+   "body": "eurybates",
+   "provider": "production",
+   "windowKind": "fixed",
+   "windowFrom": "1900-01-01",
+   "windowTo": "2100-12-31",
+   "windowClipped": false,
+   "target": "3548;",
+   "relative": false,
+   "radiusKm": 31.9425,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {
+    "binaire": 48
+   },
+   "km": {
+    "mean": 1.654,
+    "median": 0.5655,
+    "p95": 8.159,
+    "max": 16.58
+   },
+   "radii": {
+    "mean": 0.05177,
+    "median": 0.0177,
+    "p95": 0.2554,
+    "max": 0.519
+   }
+  },
+  {
+   "body": "polymele",
+   "provider": "horizons-binary",
+   "windowKind": "binary",
+   "windowFrom": "1900-01-02",
+   "windowTo": "2100-12-25",
+   "windowClipped": false,
+   "target": "15094;",
+   "relative": false,
+   "radiusKm": 10.5375,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 1.738,
+    "median": 0.5339,
+    "p95": 10.77,
+    "max": 15.63
+   },
+   "radii": {
+    "mean": 0.165,
+    "median": 0.05067,
+    "p95": 1.022,
+    "max": 1.484
+   }
+  },
+  {
+   "body": "polymele",
+   "provider": "kepler",
+   "windowKind": "epoch",
+   "windowFrom": "2016-01-01",
+   "windowTo": "2036-01-01",
+   "windowClipped": false,
+   "target": "15094;",
+   "relative": false,
+   "radiusKm": 10.5375,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 4564000,
+    "median": 1507000,
+    "p95": 19310000,
+    "max": 21670000
+   },
+   "radii": {
+    "mean": 433100,
+    "median": 143000,
+    "p95": 1832000,
+    "max": 2056000
+   }
+  },
+  {
+   "body": "polymele",
+   "provider": "kepler",
+   "windowKind": "fixed",
+   "windowFrom": "1900-01-01",
+   "windowTo": "2100-12-31",
+   "windowClipped": false,
+   "target": "15094;",
+   "relative": false,
+   "radiusKm": 10.5375,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 231800000,
+    "median": 198300000,
+    "p95": 508800000,
+    "max": 576800000
+   },
+   "radii": {
+    "mean": 22000000,
+    "median": 18820000,
+    "p95": 48290000,
+    "max": 54740000
+   }
+  },
+  {
+   "body": "polymele",
+   "provider": "kepler",
+   "windowKind": "fixed",
+   "windowFrom": "1600-01-01",
+   "windowTo": "2400-01-01",
+   "windowClipped": false,
+   "target": "15094;",
+   "relative": false,
+   "radiusKm": 10.5375,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 328300000,
+    "median": 261100000,
+    "p95": 718400000,
+    "max": 988000000
+   },
+   "radii": {
+    "mean": 31160000,
+    "median": 24780000,
+    "p95": 68180000,
+    "max": 93760000
+   }
+  },
+  {
+   "body": "polymele",
+   "provider": "production",
+   "windowKind": "fixed",
+   "windowFrom": "1900-01-01",
+   "windowTo": "2100-12-31",
+   "windowClipped": false,
+   "target": "15094;",
+   "relative": false,
+   "radiusKm": 10.5375,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {
+    "binaire": 48
+   },
+   "km": {
+    "mean": 1.749,
+    "median": 0.4063,
+    "p95": 9.787,
+    "max": 15.58
+   },
+   "radii": {
+    "mean": 0.166,
+    "median": 0.03856,
+    "p95": 0.9288,
+    "max": 1.478
+   }
+  },
+  {
+   "body": "leucus",
+   "provider": "horizons-binary",
+   "windowKind": "binary",
+   "windowFrom": "1900-01-02",
+   "windowTo": "2100-12-25",
+   "windowClipped": false,
+   "target": "11351;",
+   "relative": false,
+   "radiusKm": 17.0775,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 5.72,
+    "median": 4.704,
+    "p95": 14.01,
+    "max": 15.28
+   },
+   "radii": {
+    "mean": 0.335,
+    "median": 0.2754,
+    "p95": 0.8206,
+    "max": 0.8946
+   }
+  },
+  {
+   "body": "leucus",
+   "provider": "kepler",
+   "windowKind": "epoch",
+   "windowFrom": "2016-01-01",
+   "windowTo": "2036-01-01",
+   "windowClipped": false,
+   "target": "11351;",
+   "relative": false,
+   "radiusKm": 17.0775,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 4064000,
+    "median": 1353000,
+    "p95": 18080000,
+    "max": 22110000
+   },
+   "radii": {
+    "mean": 238000,
+    "median": 79210,
+    "p95": 1059000,
+    "max": 1294000
+   }
+  },
+  {
+   "body": "leucus",
+   "provider": "kepler",
+   "windowKind": "fixed",
+   "windowFrom": "1900-01-01",
+   "windowTo": "2100-12-31",
+   "windowClipped": false,
+   "target": "11351;",
+   "relative": false,
+   "radiusKm": 17.0775,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 533200000,
+    "median": 297800000,
+    "p95": 1513000000,
+    "max": 1540000000
+   },
+   "radii": {
+    "mean": 31220000,
+    "median": 17440000,
+    "p95": 88610000,
+    "max": 90190000
+   }
+  },
+  {
+   "body": "leucus",
+   "provider": "kepler",
+   "windowKind": "fixed",
+   "windowFrom": "1600-01-01",
+   "windowTo": "2400-01-01",
+   "windowClipped": false,
+   "target": "11351;",
+   "relative": false,
+   "radiusKm": 17.0775,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 957500000,
+    "median": 903900000,
+    "p95": 1541000000,
+    "max": 1562000000
+   },
+   "radii": {
+    "mean": 56070000,
+    "median": 52930000,
+    "p95": 90250000,
+    "max": 91450000
+   }
+  },
+  {
+   "body": "leucus",
+   "provider": "production",
+   "windowKind": "fixed",
+   "windowFrom": "1900-01-01",
+   "windowTo": "2100-12-31",
+   "windowClipped": false,
+   "target": "11351;",
+   "relative": false,
+   "radiusKm": 17.0775,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {
+    "binaire": 48
+   },
+   "km": {
+    "mean": 6.283,
+    "median": 4.529,
+    "p95": 15.49,
+    "max": 16.32
+   },
+   "radii": {
+    "mean": 0.3679,
+    "median": 0.2652,
+    "p95": 0.9069,
+    "max": 0.9558
+   }
+  },
+  {
+   "body": "orus",
+   "provider": "horizons-binary",
+   "windowKind": "binary",
+   "windowFrom": "1900-01-02",
+   "windowTo": "2100-12-25",
+   "windowClipped": false,
+   "target": "21900;",
+   "relative": false,
+   "radiusKm": 25.405,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 6.43,
+    "median": 6.125,
+    "p95": 14.54,
+    "max": 14.61
+   },
+   "radii": {
+    "mean": 0.2531,
+    "median": 0.2411,
+    "p95": 0.5722,
+    "max": 0.5751
+   }
+  },
+  {
+   "body": "orus",
+   "provider": "kepler",
+   "windowKind": "epoch",
+   "windowFrom": "2016-01-01",
+   "windowTo": "2036-01-01",
+   "windowClipped": false,
+   "target": "21900;",
+   "relative": false,
+   "radiusKm": 25.405,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 3507000,
+    "median": 3105000,
+    "p95": 7850000,
+    "max": 7911000
+   },
+   "radii": {
+    "mean": 138100,
+    "median": 122200,
+    "p95": 309000,
+    "max": 311400
+   }
+  },
+  {
+   "body": "orus",
+   "provider": "kepler",
+   "windowKind": "fixed",
+   "windowFrom": "1900-01-01",
+   "windowTo": "2100-12-31",
+   "windowClipped": false,
+   "target": "21900;",
+   "relative": false,
+   "radiusKm": 25.405,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 414800000,
+    "median": 238400000,
+    "p95": 1180000000,
+    "max": 1218000000
+   },
+   "radii": {
+    "mean": 16330000,
+    "median": 9386000,
+    "p95": 46460000,
+    "max": 47930000
+   }
+  },
+  {
+   "body": "orus",
+   "provider": "kepler",
+   "windowKind": "fixed",
+   "windowFrom": "1600-01-01",
+   "windowTo": "2400-01-01",
+   "windowClipped": false,
+   "target": "21900;",
+   "relative": false,
+   "radiusKm": 25.405,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 1077000000,
+    "median": 1233000000,
+    "p95": 1539000000,
+    "max": 1552000000
+   },
+   "radii": {
+    "mean": 42380000,
+    "median": 48550000,
+    "p95": 60590000,
+    "max": 61080000
+   }
+  },
+  {
+   "body": "orus",
+   "provider": "production",
+   "windowKind": "fixed",
+   "windowFrom": "1900-01-01",
+   "windowTo": "2100-12-31",
+   "windowClipped": false,
+   "target": "21900;",
+   "relative": false,
+   "radiusKm": 25.405,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {
+    "binaire": 48
+   },
+   "km": {
+    "mean": 6.688,
+    "median": 6.352,
+    "p95": 13.5,
+    "max": 18.07
+   },
+   "radii": {
+    "mean": 0.2633,
+    "median": 0.25,
+    "p95": 0.5315,
+    "max": 0.7113
+   }
+  },
+  {
+   "body": "patroclus",
+   "provider": "horizons-binary",
+   "windowKind": "binary",
+   "windowFrom": "1900-01-02",
+   "windowTo": "2100-12-25",
+   "windowClipped": false,
+   "target": "617;",
+   "relative": false,
+   "radiusKm": 70.181,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 1.813,
+    "median": 0.5818,
+    "p95": 7.806,
+    "max": 16.21
+   },
+   "radii": {
+    "mean": 0.02583,
+    "median": 0.00829,
+    "p95": 0.1112,
+    "max": 0.231
+   }
+  },
+  {
+   "body": "patroclus",
+   "provider": "kepler",
+   "windowKind": "epoch",
+   "windowFrom": "2016-01-01",
+   "windowTo": "2036-01-01",
+   "windowClipped": false,
+   "target": "617;",
+   "relative": false,
+   "radiusKm": 70.181,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 2894000,
+    "median": 2298000,
+    "p95": 8937000,
+    "max": 10230000
+   },
+   "radii": {
+    "mean": 41230,
+    "median": 32740,
+    "p95": 127300,
+    "max": 145800
+   }
+  },
+  {
+   "body": "patroclus",
+   "provider": "kepler",
+   "windowKind": "fixed",
+   "windowFrom": "1900-01-01",
+   "windowTo": "2100-12-31",
+   "windowClipped": false,
+   "target": "617;",
+   "relative": false,
+   "radiusKm": 70.181,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 61320000,
+    "median": 60170000,
+    "p95": 169200000,
+    "max": 175100000
+   },
+   "radii": {
+    "mean": 873700,
+    "median": 857400,
+    "p95": 2412000,
+    "max": 2495000
+   }
+  },
+  {
+   "body": "patroclus",
+   "provider": "kepler",
+   "windowKind": "fixed",
+   "windowFrom": "1600-01-01",
+   "windowTo": "2400-01-01",
+   "windowClipped": false,
+   "target": "617;",
+   "relative": false,
+   "radiusKm": 70.181,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 132500000,
+    "median": 116000000,
+    "p95": 276400000,
+    "max": 344200000
+   },
+   "radii": {
+    "mean": 1887000,
+    "median": 1653000,
+    "p95": 3938000,
+    "max": 4904000
+   }
+  },
+  {
+   "body": "patroclus",
+   "provider": "production",
+   "windowKind": "fixed",
+   "windowFrom": "1900-01-01",
+   "windowTo": "2100-12-31",
+   "windowClipped": false,
+   "target": "617;",
+   "relative": false,
+   "radiusKm": 70.181,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {
+    "binaire": 48
+   },
+   "km": {
+    "mean": 1.813,
+    "median": 0.4581,
+    "p95": 7.69,
+    "max": 18.39
+   },
+   "radii": {
+    "mean": 0.02584,
+    "median": 0.006527,
+    "p95": 0.1096,
+    "max": 0.262
+   }
+  },
+  {
+   "body": "apophis",
+   "provider": "horizons-binary",
+   "windowKind": "binary",
+   "windowFrom": "1900-01-02",
+   "windowTo": "2100-12-29",
+   "windowClipped": false,
+   "target": "99942;",
+   "relative": false,
+   "radiusKm": 0.17,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 20.54,
+    "median": 3.657,
+    "p95": 158.3,
+    "max": 213.5
+   },
+   "radii": {
+    "mean": 120.8,
+    "median": 21.51,
+    "p95": 931.4,
+    "max": 1256
+   }
+  },
+  {
+   "body": "apophis",
+   "provider": "kepler",
+   "windowKind": "epoch",
+   "windowFrom": "2016-01-01",
+   "windowTo": "2036-01-01",
+   "windowClipped": false,
+   "target": "99942;",
+   "relative": false,
+   "radiusKm": 0.17,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 69780000,
+    "median": 2095000,
+    "p95": 302300000,
+    "max": 320400000
+   },
+   "radii": {
+    "mean": 410500000,
+    "median": 12330000,
+    "p95": 1778000000,
+    "max": 1885000000
+   }
+  },
+  {
+   "body": "apophis",
+   "provider": "kepler",
+   "windowKind": "fixed",
+   "windowFrom": "1900-01-01",
+   "windowTo": "2100-12-31",
+   "windowClipped": false,
+   "target": "99942;",
+   "relative": false,
+   "radiusKm": 0.17,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 151100000,
+    "median": 169500000,
+    "p95": 275000000,
+    "max": 320500000
+   },
+   "radii": {
+    "mean": 889100000,
+    "median": 997300000,
+    "p95": 1618000000,
+    "max": 1885000000
+   }
+  },
+  {
+   "body": "apophis",
+   "provider": "kepler",
+   "windowKind": "fixed",
+   "windowFrom": "1600-01-01",
+   "windowTo": "2400-01-01",
+   "windowClipped": false,
+   "target": "99942;",
+   "relative": false,
+   "radiusKm": 0.17,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 193800000,
+    "median": 209900000,
+    "p95": 306000000,
+    "max": 324300000
+   },
+   "radii": {
+    "mean": 1140000000,
+    "median": 1235000000,
+    "p95": 1800000000,
+    "max": 1908000000
+   }
+  },
+  {
+   "body": "apophis",
+   "provider": "production",
+   "windowKind": "fixed",
+   "windowFrom": "1900-01-01",
+   "windowTo": "2100-12-31",
+   "windowClipped": false,
+   "target": "99942;",
+   "relative": false,
+   "radiusKm": 0.17,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {
+    "binaire": 48
+   },
+   "km": {
+    "mean": 15.94,
+    "median": 2.291,
+    "p95": 116.8,
+    "max": 159.1
+   },
+   "radii": {
+    "mean": 93.79,
+    "median": 13.48,
+    "p95": 686.8,
+    "max": 936.1
+   }
+  },
+  {
+   "body": "arrokoth",
+   "provider": "horizons-binary",
+   "windowKind": "binary",
+   "windowFrom": "1900-01-02",
+   "windowTo": "2100-12-25",
+   "windowClipped": false,
+   "target": "486958;",
+   "relative": false,
+   "radiusKm": 9.57,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 6.652,
+    "median": 5.062,
+    "p95": 13.99,
+    "max": 16.93
+   },
+   "radii": {
+    "mean": 0.6951,
+    "median": 0.5289,
+    "p95": 1.462,
+    "max": 1.769
+   }
+  },
+  {
+   "body": "arrokoth",
+   "provider": "kepler",
+   "windowKind": "epoch",
+   "windowFrom": "2016-01-01",
+   "windowTo": "2036-01-01",
+   "windowClipped": false,
+   "target": "486958;",
+   "relative": false,
+   "radiusKm": 9.57,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 1669,
+    "median": 1244,
+    "p95": 4701,
+    "max": 5132
+   },
+   "radii": {
+    "mean": 174.4,
+    "median": 130,
+    "p95": 491.3,
+    "max": 536.3
+   }
+  },
+  {
+   "body": "arrokoth",
+   "provider": "kepler",
+   "windowKind": "fixed",
+   "windowFrom": "1900-01-01",
+   "windowTo": "2100-12-31",
+   "windowClipped": false,
+   "target": "486958;",
+   "relative": false,
+   "radiusKm": 9.57,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 689200,
+    "median": 69740,
+    "p95": 3688000,
+    "max": 4683000
+   },
+   "radii": {
+    "mean": 72020,
+    "median": 7287,
+    "p95": 385300,
+    "max": 489400
+   }
+  },
+  {
+   "body": "arrokoth",
+   "provider": "kepler",
+   "windowKind": "fixed",
+   "windowFrom": "1600-01-01",
+   "windowTo": "2400-01-01",
+   "windowClipped": false,
+   "target": "486958;",
+   "relative": false,
+   "radiusKm": 9.57,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 6477000,
+    "median": 7736000,
+    "p95": 13870000,
+    "max": 14320000
+   },
+   "radii": {
+    "mean": 676800,
+    "median": 808400,
+    "p95": 1450000,
+    "max": 1497000
+   }
+  },
+  {
+   "body": "arrokoth",
+   "provider": "production",
+   "windowKind": "fixed",
+   "windowFrom": "1900-01-01",
+   "windowTo": "2100-12-31",
+   "windowClipped": false,
+   "target": "486958;",
+   "relative": false,
+   "radiusKm": 9.57,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {
+    "binaire": 48
+   },
+   "km": {
+    "mean": 5.882,
+    "median": 5.463,
+    "p95": 12.21,
+    "max": 15.33
+   },
+   "radii": {
+    "mean": 0.6146,
+    "median": 0.5708,
+    "p95": 1.276,
+    "max": 1.602
+   }
+  },
+  {
+   "body": "tempel-1",
+   "provider": "horizons-binary",
+   "windowKind": "binary",
+   "windowFrom": "1900-01-02",
+   "windowTo": "2100-12-29",
+   "windowClipped": false,
+   "target": "90000192;",
+   "relative": false,
+   "radiusKm": 3,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 2.053,
+    "median": 0.202,
+    "p95": 12.53,
+    "max": 17.77
+   },
+   "radii": {
+    "mean": 0.6844,
+    "median": 0.06735,
+    "p95": 4.178,
+    "max": 5.922
+   }
+  },
+  {
+   "body": "tempel-1",
+   "provider": "kepler",
+   "windowKind": "epoch",
+   "windowFrom": "2016-01-01",
+   "windowTo": "2036-01-01",
+   "windowClipped": false,
+   "target": "90000192;",
+   "relative": false,
+   "radiusKm": 3,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 61380000,
+    "median": 13700000,
+    "p95": 271100000,
+    "max": 400400000
+   },
+   "radii": {
+    "mean": 20460000,
+    "median": 4565000,
+    "p95": 90370000,
+    "max": 133500000
+   }
+  },
+  {
+   "body": "tempel-1",
+   "provider": "kepler",
+   "windowKind": "fixed",
+   "windowFrom": "1900-01-01",
+   "windowTo": "2100-12-31",
+   "windowClipped": false,
+   "target": "90000192;",
+   "relative": false,
+   "radiusKm": 3,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 494900000,
+    "median": 535400000,
+    "p95": 952200000,
+    "max": 994500000
+   },
+   "radii": {
+    "mean": 165000000,
+    "median": 178500000,
+    "p95": 317400000,
+    "max": 331500000
+   }
+  },
+  {
+   "body": "tempel-1",
+   "provider": "kepler",
+   "windowKind": "fixed",
+   "windowFrom": "1600-01-01",
+   "windowTo": "2400-01-01",
+   "windowClipped": false,
+   "target": "90000192;",
+   "relative": false,
+   "radiusKm": 3,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 597900000,
+    "median": 632300000,
+    "p95": 1002000000,
+    "max": 1281000000
+   },
+   "radii": {
+    "mean": 199300000,
+    "median": 210800000,
+    "p95": 333800000,
+    "max": 427100000
+   }
+  },
+  {
+   "body": "tempel-1",
+   "provider": "production",
+   "windowKind": "fixed",
+   "windowFrom": "1900-01-01",
+   "windowTo": "2100-12-31",
+   "windowClipped": false,
+   "target": "90000192;",
+   "relative": false,
+   "radiusKm": 3,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {
+    "binaire": 48
+   },
+   "km": {
+    "mean": 1.804,
+    "median": 0.2048,
+    "p95": 8.849,
+    "max": 18.49
+   },
+   "radii": {
+    "mean": 0.6012,
+    "median": 0.06828,
+    "p95": 2.95,
+    "max": 6.164
+   }
+  },
+  {
+   "body": "borrelly",
+   "provider": "horizons-binary",
+   "windowKind": "binary",
+   "windowFrom": "1900-01-02",
+   "windowTo": "2100-12-29",
+   "windowClipped": false,
+   "target": "90000306;",
+   "relative": false,
+   "radiusKm": 2.4,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 1.323,
+    "median": 0.1247,
+    "p95": 9.87,
+    "max": 11.63
+   },
+   "radii": {
+    "mean": 0.5513,
+    "median": 0.05197,
+    "p95": 4.112,
+    "max": 4.846
+   }
+  },
+  {
+   "body": "borrelly",
+   "provider": "kepler",
+   "windowKind": "epoch",
+   "windowFrom": "2016-01-01",
+   "windowTo": "2036-01-01",
+   "windowClipped": false,
+   "target": "90000306;",
+   "relative": false,
+   "radiusKm": 2.4,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 8494000,
+    "median": 1209000,
+    "p95": 51920000,
+    "max": 94510000
+   },
+   "radii": {
+    "mean": 3539000,
+    "median": 503900,
+    "p95": 21630000,
+    "max": 39380000
+   }
+  },
+  {
+   "body": "borrelly",
+   "provider": "kepler",
+   "windowKind": "fixed",
+   "windowFrom": "1900-01-01",
+   "windowTo": "2100-12-31",
+   "windowClipped": false,
+   "target": "90000306;",
+   "relative": false,
+   "radiusKm": 2.4,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 98410000,
+    "median": 72930000,
+    "p95": 301800000,
+    "max": 373700000
+   },
+   "radii": {
+    "mean": 41000000,
+    "median": 30390000,
+    "p95": 125700000,
+    "max": 155700000
+   }
+  },
+  {
+   "body": "borrelly",
+   "provider": "kepler",
+   "windowKind": "fixed",
+   "windowFrom": "1600-01-01",
+   "windowTo": "2400-01-01",
+   "windowClipped": false,
+   "target": "90000306;",
+   "relative": false,
+   "radiusKm": 2.4,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 370900000,
+    "median": 148100000,
+    "p95": 1028000000,
+    "max": 1118000000
+   },
+   "radii": {
+    "mean": 154600000,
+    "median": 61730000,
+    "p95": 428200000,
+    "max": 466000000
+   }
+  },
+  {
+   "body": "borrelly",
+   "provider": "production",
+   "windowKind": "fixed",
+   "windowFrom": "1900-01-01",
+   "windowTo": "2100-12-31",
+   "windowClipped": false,
+   "target": "90000306;",
+   "relative": false,
+   "radiusKm": 2.4,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {
+    "binaire": 48
+   },
+   "km": {
+    "mean": 1.562,
+    "median": 0.1142,
+    "p95": 7.628,
+    "max": 14.21
+   },
+   "radii": {
+    "mean": 0.651,
+    "median": 0.04758,
+    "p95": 3.178,
+    "max": 5.922
+   }
+  },
+  {
+   "body": "wild-2",
+   "provider": "horizons-binary",
+   "windowKind": "binary",
+   "windowFrom": "1900-01-02",
+   "windowTo": "2100-12-29",
+   "windowClipped": false,
+   "target": "90000863;",
+   "relative": false,
+   "radiusKm": 2,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 21.9,
+    "median": 1.183,
+    "p95": 97.71,
+    "max": 256.6
+   },
+   "radii": {
+    "mean": 10.95,
+    "median": 0.5914,
+    "p95": 48.86,
+    "max": 128.3
+   }
+  },
+  {
+   "body": "wild-2",
+   "provider": "kepler",
+   "windowKind": "epoch",
+   "windowFrom": "2016-01-01",
+   "windowTo": "2036-01-01",
+   "windowClipped": false,
+   "target": "90000863;",
+   "relative": false,
+   "radiusKm": 2,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 2910000,
+    "median": 2346000,
+    "p95": 12740000,
+    "max": 21180000
+   },
+   "radii": {
+    "mean": 1455000,
+    "median": 1173000,
+    "p95": 6368000,
+    "max": 10590000
+   }
+  },
+  {
+   "body": "wild-2",
+   "provider": "kepler",
+   "windowKind": "fixed",
+   "windowFrom": "1900-01-01",
+   "windowTo": "2100-12-31",
+   "windowClipped": false,
+   "target": "90000863;",
+   "relative": false,
+   "radiusKm": 2,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 1057000000,
+    "median": 183200000,
+    "p95": 3686000000,
+    "max": 4031000000
+   },
+   "radii": {
+    "mean": 528500000,
+    "median": 91610000,
+    "p95": 1843000000,
+    "max": 2015000000
+   }
+  },
+  {
+   "body": "wild-2",
+   "provider": "kepler",
+   "windowKind": "fixed",
+   "windowFrom": "1600-01-01",
+   "windowTo": "2400-01-01",
+   "windowClipped": false,
+   "target": "90000863;",
+   "relative": false,
+   "radiusKm": 2,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 1613000000,
+    "median": 962300000,
+    "p95": 3853000000,
+    "max": 4972000000
+   },
+   "radii": {
+    "mean": 806600000,
+    "median": 481100000,
+    "p95": 1926000000,
+    "max": 2486000000
+   }
+  },
+  {
+   "body": "wild-2",
+   "provider": "production",
+   "windowKind": "fixed",
+   "windowFrom": "1900-01-01",
+   "windowTo": "2100-12-31",
+   "windowClipped": false,
+   "target": "90000863;",
+   "relative": false,
+   "radiusKm": 2,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {
+    "binaire": 48
+   },
+   "km": {
+    "mean": 15.17,
+    "median": 0.9499,
+    "p95": 75.97,
+    "max": 141.1
+   },
+   "radii": {
+    "mean": 7.586,
+    "median": 0.4749,
+    "p95": 37.99,
+    "max": 70.54
+   }
+  },
+  {
+   "body": "hartley-2",
+   "provider": "horizons-binary",
+   "windowKind": "binary",
+   "windowFrom": "1900-01-02",
+   "windowTo": "2100-12-29",
+   "windowClipped": false,
+   "target": "90000960;",
+   "relative": false,
+   "radiusKm": 0.8,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 109.7,
+    "median": 1.5,
+    "p95": 550.4,
+    "max": 1958
+   },
+   "radii": {
+    "mean": 137.1,
+    "median": 1.875,
+    "p95": 688,
+    "max": 2447
+   }
+  },
+  {
+   "body": "hartley-2",
+   "provider": "kepler",
+   "windowKind": "epoch",
+   "windowFrom": "2016-01-01",
+   "windowTo": "2036-01-01",
+   "windowClipped": false,
+   "target": "90000960;",
+   "relative": false,
+   "radiusKm": 0.8,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 1241000,
+    "median": 1218000,
+    "p95": 3052000,
+    "max": 4824000
+   },
+   "radii": {
+    "mean": 1551000,
+    "median": 1523000,
+    "p95": 3815000,
+    "max": 6030000
+   }
+  },
+  {
+   "body": "hartley-2",
+   "provider": "kepler",
+   "windowKind": "fixed",
+   "windowFrom": "1900-01-01",
+   "windowTo": "2100-12-31",
+   "windowClipped": false,
+   "target": "90000960;",
+   "relative": false,
+   "radiusKm": 0.8,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 348100000,
+    "median": 207200000,
+    "p95": 1067000000,
+    "max": 1115000000
+   },
+   "radii": {
+    "mean": 435200000,
+    "median": 259000000,
+    "p95": 1333000000,
+    "max": 1394000000
+   }
+  },
+  {
+   "body": "hartley-2",
+   "provider": "kepler",
+   "windowKind": "fixed",
+   "windowFrom": "1600-01-01",
+   "windowTo": "2400-01-01",
+   "windowClipped": false,
+   "target": "90000960;",
+   "relative": false,
+   "radiusKm": 0.8,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 581300000,
+    "median": 634100000,
+    "p95": 1041000000,
+    "max": 1241000000
+   },
+   "radii": {
+    "mean": 726700000,
+    "median": 792700000,
+    "p95": 1301000000,
+    "max": 1552000000
+   }
+  },
+  {
+   "body": "hartley-2",
+   "provider": "production",
+   "windowKind": "fixed",
+   "windowFrom": "1900-01-01",
+   "windowTo": "2100-12-31",
+   "windowClipped": false,
+   "target": "90000960;",
+   "relative": false,
+   "radiusKm": 0.8,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {
+    "binaire": 48
+   },
+   "km": {
+    "mean": 27.13,
+    "median": 0.4672,
+    "p95": 150.6,
+    "max": 330
+   },
+   "radii": {
+    "mean": 33.92,
+    "median": 0.584,
+    "p95": 188.3,
+    "max": 412.5
+   }
+  },
+  {
+   "body": "churyumov-gerasimenko",
+   "provider": "horizons-binary",
+   "windowKind": "binary",
+   "windowFrom": "1900-01-02",
+   "windowTo": "2100-12-29",
+   "windowClipped": false,
+   "target": "90000703;",
+   "relative": false,
+   "radiusKm": 1.7,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 2.466,
+    "median": 1.473,
+    "p95": 11.97,
+    "max": 12.98
+   },
+   "radii": {
+    "mean": 1.451,
+    "median": 0.8662,
+    "p95": 7.044,
+    "max": 7.635
+   }
+  },
+  {
+   "body": "churyumov-gerasimenko",
+   "provider": "kepler",
+   "windowKind": "epoch",
+   "windowFrom": "2016-01-01",
+   "windowTo": "2036-01-01",
+   "windowClipped": false,
+   "target": "90000703;",
+   "relative": false,
+   "radiusKm": 1.7,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 20390000,
+    "median": 1348000,
+    "p95": 101600000,
+    "max": 130700000
+   },
+   "radii": {
+    "mean": 12000000,
+    "median": 793100,
+    "p95": 59790000,
+    "max": 76850000
+   }
+  },
+  {
+   "body": "churyumov-gerasimenko",
+   "provider": "kepler",
+   "windowKind": "fixed",
+   "windowFrom": "1900-01-01",
+   "windowTo": "2100-12-31",
+   "windowClipped": false,
+   "target": "90000703;",
+   "relative": false,
+   "radiusKm": 1.7,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 429900000,
+    "median": 336600000,
+    "p95": 1099000000,
+    "max": 1223000000
+   },
+   "radii": {
+    "mean": 252900000,
+    "median": 198000000,
+    "p95": 646700000,
+    "max": 719500000
+   }
+  },
+  {
+   "body": "churyumov-gerasimenko",
+   "provider": "kepler",
+   "windowKind": "fixed",
+   "windowFrom": "1600-01-01",
+   "windowTo": "2400-01-01",
+   "windowClipped": false,
+   "target": "90000703;",
+   "relative": false,
+   "radiusKm": 1.7,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 592600000,
+    "median": 601600000,
+    "p95": 1061000000,
+    "max": 1216000000
+   },
+   "radii": {
+    "mean": 348600000,
+    "median": 353900000,
+    "p95": 624100000,
+    "max": 715100000
+   }
+  },
+  {
+   "body": "churyumov-gerasimenko",
+   "provider": "production",
+   "windowKind": "fixed",
+   "windowFrom": "1900-01-01",
+   "windowTo": "2100-12-31",
+   "windowClipped": false,
+   "target": "90000703;",
+   "relative": false,
+   "radiusKm": 1.7,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {
+    "binaire": 48
+   },
+   "km": {
+    "mean": 2.193,
+    "median": 0.6719,
+    "p95": 12.36,
+    "max": 14.56
+   },
+   "radii": {
+    "mean": 1.29,
+    "median": 0.3952,
+    "p95": 7.269,
+    "max": 8.567
+   }
+  },
+  {
+   "body": "giacobini-zinner",
+   "provider": "horizons-binary",
+   "windowKind": "binary",
+   "windowFrom": "1900-01-02",
+   "windowTo": "2100-12-29",
+   "windowClipped": false,
+   "target": "90000324;",
+   "relative": false,
+   "radiusKm": 1,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 1.774,
+    "median": 0.0393,
+    "p95": 6.327,
+    "max": 21.35
+   },
+   "radii": {
+    "mean": 1.774,
+    "median": 0.0393,
+    "p95": 6.327,
+    "max": 21.35
+   }
+  },
+  {
+   "body": "giacobini-zinner",
+   "provider": "kepler",
+   "windowKind": "epoch",
+   "windowFrom": "2016-01-01",
+   "windowTo": "2036-01-01",
+   "windowClipped": false,
+   "target": "90000324;",
+   "relative": false,
+   "radiusKm": 1,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 16920000,
+    "median": 4382000,
+    "p95": 58820000,
+    "max": 92990000
+   },
+   "radii": {
+    "mean": 16920000,
+    "median": 4382000,
+    "p95": 58820000,
+    "max": 92990000
+   }
+  },
+  {
+   "body": "giacobini-zinner",
+   "provider": "kepler",
+   "windowKind": "fixed",
+   "windowFrom": "1900-01-01",
+   "windowTo": "2100-12-31",
+   "windowClipped": false,
+   "target": "90000324;",
+   "relative": false,
+   "radiusKm": 1,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 215800000,
+    "median": 126400000,
+    "p95": 742300000,
+    "max": 898800000
+   },
+   "radii": {
+    "mean": 215800000,
+    "median": 126400000,
+    "p95": 742300000,
+    "max": 898800000
+   }
+  },
+  {
+   "body": "giacobini-zinner",
+   "provider": "kepler",
+   "windowKind": "fixed",
+   "windowFrom": "1600-01-01",
+   "windowTo": "2400-01-01",
+   "windowClipped": false,
+   "target": "90000324;",
+   "relative": false,
+   "radiusKm": 1,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 594500000,
+    "median": 662900000,
+    "p95": 1031000000,
+    "max": 1051000000
+   },
+   "radii": {
+    "mean": 594500000,
+    "median": 662900000,
+    "p95": 1031000000,
+    "max": 1051000000
+   }
+  },
+  {
+   "body": "giacobini-zinner",
+   "provider": "production",
+   "windowKind": "fixed",
+   "windowFrom": "1900-01-01",
+   "windowTo": "2100-12-31",
+   "windowClipped": false,
+   "target": "90000324;",
+   "relative": false,
+   "radiusKm": 1,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {
+    "binaire": 48
+   },
+   "km": {
+    "mean": 1.858,
+    "median": 0.1143,
+    "p95": 11.69,
+    "max": 30.31
+   },
+   "radii": {
+    "mean": 1.858,
+    "median": 0.1143,
+    "p95": 11.69,
+    "max": 30.31
+   }
+  },
+  {
+   "body": "grigg-skjellerup",
+   "provider": "horizons-binary",
+   "windowKind": "binary",
+   "windowFrom": "1900-01-02",
+   "windowTo": "2100-12-29",
+   "windowClipped": false,
+   "target": "90000378;",
+   "relative": false,
+   "radiusKm": 1.3,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 1.693,
+    "median": 0.1499,
+    "p95": 7.765,
+    "max": 11.35
+   },
+   "radii": {
+    "mean": 1.302,
+    "median": 0.1153,
+    "p95": 5.973,
+    "max": 8.728
+   }
+  },
+  {
+   "body": "grigg-skjellerup",
+   "provider": "kepler",
+   "windowKind": "epoch",
+   "windowFrom": "2016-01-01",
+   "windowTo": "2036-01-01",
+   "windowClipped": false,
+   "target": "90000378;",
+   "relative": false,
+   "radiusKm": 1.3,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 966900,
+    "median": 754500,
+    "p95": 2219000,
+    "max": 2772000
+   },
+   "radii": {
+    "mean": 743700,
+    "median": 580400,
+    "p95": 1707000,
+    "max": 2132000
+   }
+  },
+  {
+   "body": "grigg-skjellerup",
+   "provider": "kepler",
+   "windowKind": "fixed",
+   "windowFrom": "1900-01-01",
+   "windowTo": "2100-12-31",
+   "windowClipped": false,
+   "target": "90000378;",
+   "relative": false,
+   "radiusKm": 1.3,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 349700000,
+    "median": 273900000,
+    "p95": 800700000,
+    "max": 861900000
+   },
+   "radii": {
+    "mean": 269000000,
+    "median": 210700000,
+    "p95": 615900000,
+    "max": 663000000
+   }
+  },
+  {
+   "body": "grigg-skjellerup",
+   "provider": "kepler",
+   "windowKind": "fixed",
+   "windowFrom": "1600-01-01",
+   "windowTo": "2400-01-01",
+   "windowClipped": false,
+   "target": "90000378;",
+   "relative": false,
+   "radiusKm": 1.3,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 414200000,
+    "median": 455200000,
+    "p95": 771100000,
+    "max": 843100000
+   },
+   "radii": {
+    "mean": 318600000,
+    "median": 350200000,
+    "p95": 593100000,
+    "max": 648500000
+   }
+  },
+  {
+   "body": "grigg-skjellerup",
+   "provider": "production",
+   "windowKind": "fixed",
+   "windowFrom": "1900-01-01",
+   "windowTo": "2100-12-31",
+   "windowClipped": false,
+   "target": "90000378;",
+   "relative": false,
+   "radiusKm": 1.3,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {
+    "binaire": 48
+   },
+   "km": {
+    "mean": 3.4,
+    "median": 0.1696,
+    "p95": 33.62,
+    "max": 43.71
+   },
+   "radii": {
+    "mean": 2.615,
+    "median": 0.1304,
+    "p95": 25.86,
+    "max": 33.62
    }
   },
   {

@@ -70,9 +70,15 @@ export function isPlausibleHeliocentricPosition(
     const distanceAU = position.length();
     const apoapsisAU = elements.semiMajorAxisAU * (1 + elements.eccentricity);
     const periapsisAU = elements.semiMajorAxisAU * (1 - elements.eccentricity);
+    // Une distance MESURÉE et déclarée l'emporte sur l'orbite actuelle quand elle va plus loin :
+    // une comète capturée par Jupiter (Wild 2, 1974) a suivi une autre orbite avant.
+    const maxAU = Math.max(
+      apoapsisAU * HELIOCENTRIC_DISTANCE_MAX_FACTOR,
+      elements.measuredMaxDistanceAU ?? 0
+    );
     return (
       distanceAU >= periapsisAU * HELIOCENTRIC_DISTANCE_MIN_FACTOR &&
-      distanceAU <= apoapsisAU * HELIOCENTRIC_DISTANCE_MAX_FACTOR
+      distanceAU <= maxAU
     );
   }
   const expectedDistanceAU = cfg.realData?.distanceAU;

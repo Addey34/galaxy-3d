@@ -1,0 +1,103 @@
+{
+  "$schema": "../schema/entity.schema.json",
+  "id": "churyumov-gerasimenko",
+  "targetClass": "comet",
+  "source": "small-body",
+  "elements": {
+    "displayName": {
+      "en": "Churyumov–Gerasimenko",
+      "fr": "Tchourioumov-Guérassimenko",
+      "es": "Churyumov-Gerasimenko",
+      "pt-BR": "Churyumov-Gerasimenko"
+    },
+    "a": 3.458760542962808,
+    "e": 0.6496988103385752,
+    "iDeg": 3.867254438118702,
+    "omDeg": 36.30454525701264,
+    "wDeg": 22.22566845880604,
+    "maDeg": 232.9237664266431,
+    "epoch": "2026-01-01T00:00:00.000Z",
+    "kind": "comet",
+    "color": "0x68c9ff",
+    "fallbackColor": "0x4e4e4e",
+    "description": {
+      "en": "The comet that ESA’s Rosetta orbited from August 2014: the first comet orbited by a spacecraft and the first to receive a lander. The mission ended on 30 September 2016 with a planned landing on its surface.",
+      "fr": "La comète autour de laquelle la sonde Rosetta de l’ESA a tourné à partir d’août 2014 : la première comète mise en orbite par une sonde, et la première à recevoir un atterrisseur. La mission s’est achevée le 30 septembre 2016 par une descente prévue sur sa surface.",
+      "es": "El cometa que la sonda Rosetta de la ESA orbitó desde agosto de 2014: el primer cometa orbitado por una sonda y el primero en recibir un módulo de aterrizaje. La misión terminó el 30 de septiembre de 2016 con un descenso previsto sobre su superficie.",
+      "pt-BR": "O cometa que a sonda Rosetta da ESA orbitou a partir de agosto de 2014: o primeiro cometa orbitado por uma sonda e o primeiro a receber um módulo de pouso. A missão terminou em 30 de setembro de 2016 com uma descida planejada sobre a sua superfície."
+    },
+    "wiki": {
+      "en": "https://en.wikipedia.org/wiki/67P%2FChuryumov%E2%80%93Gerasimenko",
+      "fr": "https://fr.wikipedia.org/wiki/67P%2FTchourioumov-Gu%C3%A9rassimenko",
+      "es": "https://es.wikipedia.org/wiki/67P%2FChuryumov-Gerasimenko",
+      "pt-BR": "https://pt.wikipedia.org/wiki/67P%2FChuryumov-Gerasimenko"
+    }
+  },
+  "facts": {
+    "radiusKm": {
+      "value": {
+        "$diameterKm": 3.4
+      },
+      "source": "jpl-sbdb",
+      "method": "derived",
+      "uncertainty": 0.05,
+      "detail": "radiusFromDiameter",
+      "citation": "Sierks et al., Science 347, aaa1044 (2015)"
+    },
+    "massKg": {
+      "value": {
+        "$gm": 6.622e-07
+      },
+      "source": "jpl-sbdb",
+      "method": "derived",
+      "uncertainty": {
+        "$gm": 2e-10
+      },
+      "detail": "massFromGM",
+      "citation": "Patzold et al., Nature 530, 63 (2016)"
+    },
+    "gravity": {
+      "published": false,
+      "reason": {
+        "en": "About 0.0002 m/s², a few hundred-thousandths of Earth’s: the usual two-decimal figure would read as zero.",
+        "fr": "Environ 0,0002 m/s², quelques cent-millièmes de celle de la Terre : l’affichage habituel à deux décimales indiquerait zéro.",
+        "es": "Unos 0,0002 m/s², unas pocas cienmilésimas de la de la Tierra: la cifra habitual con dos decimales se leería como cero.",
+        "pt-BR": "Cerca de 0,0002 m/s², alguns centésimos de milésimo da da Terra: o valor habitual com duas casas decimais seria lido como zero."
+      }
+    },
+    "meanTempC": {
+      "published": false,
+      "reason": {
+        "en": "The JPL Small-Body Database, the source of its other figures, publishes no temperature among its physical parameters.",
+        "fr": "La base des petits corps de JPL, d'où viennent ses autres chiffres, ne publie aucune température parmi ses paramètres physiques.",
+        "es": "La base de datos de cuerpos menores del JPL, de donde proceden sus demás cifras, no publica ninguna temperatura entre sus parámetros físicos.",
+        "pt-BR": "A base de pequenos corpos do JPL, de onde vêm os seus outros números, não publica nenhuma temperatura entre os seus parâmetros físicos."
+      }
+    },
+    "moonCount": {
+      "value": 0,
+      "source": "jpl-sbdb",
+      "method": "measured",
+      "asOf": "2026-10-04",
+      "detail": "confirmedSatellites"
+    },
+    "axialTilt": {
+      "value": 51.1,
+      "source": "jpl-sbdb",
+      "method": "derived",
+      "detail": "obliquityFromPole",
+      "citation": "Sierks et al., Science 347, aaa1044 (2015)"
+    },
+    "rotationPeriod": {
+      "value": 12.76129,
+      "source": "jpl-sbdb",
+      "method": "measured",
+      "citation": "Mottola et al., Astronomy & Astrophysics 569, L2 (2014)"
+    }
+  },
+  "notes": {
+    "": "Cible déclarée d'une mission au registre du PDS, ajoutée au catalogue le 2026-10-04 (pages des missions, vague 1). Faits lus à la SBDB ; description fondée sur les descriptions de missions du PDS et les pages de NASA Science ou de l'ESA citées dans le handoff du 2026-10-04.",
+    "a": "Éléments osculateurs JPL Horizons EXACTEMENT à cette époque (COMMAND '90000703;', EPHEM_TYPE=ELEMENTS, TLIST=2461041.5, CENTER=500@10).",
+    "fallbackColor": "Gris de l'albédo géométrique SBDB (réflectance en sRGB, plancher 0x48 pour rester visible) ; sans albédo publié, une teinte d'attente. Ce n'est pas une mesure de couleur."
+  }
+}

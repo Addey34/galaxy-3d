@@ -65,6 +65,7 @@ export class SceneSystem {
   private readonly _orbitPts = new Map<string, Float32Array>();
   private _orbitsGloballyVisible = false;
   private readonly _orbitHidden = new Set<string>();
+  private readonly _orbitShownListeners: ((name: string) => void)[] = [];
   private readonly _bodyHidden = new Set<string>();
 
   /** Table des corps, conservée pour exposer leurs positions monde (HUD explo). */
@@ -412,10 +413,26 @@ export class SceneSystem {
   }
 
   setBodyOrbitVisible(name: string, visible: boolean): void {
+    const wasHidden = this._orbitHidden.has(name);
     if (visible) this._orbitHidden.delete(name);
     else this._orbitHidden.add(name);
     const line = this._orbitLines.get(name);
     if (line) line.visible = this._orbitsGloballyVisible && visible;
+    // Une ligne qui S'ALLUME n'a peut-être pas encore ses points : l'application ne calcule (et
+    // ne télécharge) que les lignes tracées. Elle est prévenue ici, et rien n'est émis pour une
+    // ligne déjà visible.
+    if (visible && wasHidden)
+      for (const listener of this._orbitShownListeners) listener(name);
+  }
+
+  /** La ligne d'orbite de ce corps est-elle demandée (indépendamment du masquage global) ? */
+  isOrbitLineShown(name: string): boolean {
+    return !this._orbitHidden.has(name);
+  }
+
+  /** Être prévenu quand une ligne d'orbite masquée est rallumée. */
+  onOrbitLineShown(listener: (name: string) => void): void {
+    this._orbitShownListeners.push(listener);
   }
 
   /** Noms de tous les corps dotés d'une ligne d'orbite (planètes, naines, lunes, petits corps). */

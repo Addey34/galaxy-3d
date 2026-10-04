@@ -43,6 +43,15 @@ export interface SmallBodyElements {
    * corps par corps sur mesure, cf. `OrbitalElements.barycentric`.
    */
   barycentric?: boolean;
+  /**
+   * La distance au Soleil la plus GRANDE que le fichier Horizons du corps lui donne sur
+   * 1900-2100 (UA), déclarée SEULEMENT quand elle dépasse le double de l'aphélie des éléments.
+   * Premier et seul cas au 2026-10-04 : Wild 2, à 22,05 UA en 1901, sur l'orbite qu'il suivait
+   * avant sa rencontre avec Jupiter de 1974. Sans elle, la borne de plausibilité
+   * (`core/ephemerisPlausibility.ts`) refusait sa position mesurée et la remplaçait par une orbite
+   * képlérienne fausse. `ephemerisPlausibility.test.ts` confronte la valeur au fichier livré.
+   */
+  measuredMaxDistanceAU?: number;
   /** Rayon physique moyen (km). */
   radiusKm: number;
   /** Catégorie — défaut 'asteroid'. */
@@ -183,6 +192,9 @@ export function smallBodyToConfig(el: SmallBodyElements): CelestialBodyConfig {
       meanAnomalyAtEpochRad: el.maDeg * D2R,
       epoch: new Date(el.epoch),
       ...(el.barycentric ? { barycentric: true } : {}),
+      ...(el.measuredMaxDistanceAU !== undefined
+        ? { measuredMaxDistanceAU: el.measuredMaxDistanceAU }
+        : {}),
     },
     cameraDistance: { educ: 2, explo: exploCameraDistance(el.radiusKm) },
   };

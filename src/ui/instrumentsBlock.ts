@@ -29,6 +29,7 @@ import {
   type SpacecraftArchive,
 } from '@/core/instruments';
 import { missionStanding, type MissionStanding } from '@/core/missions';
+import { missionSpanText } from './missionsBlock';
 import { formatIsoDay } from '@/core/dateText';
 import { getLocale, intlLocale, onLocaleChange, t } from '@/i18n';
 import type { PublicAPI } from '@/SolarSystemApp';
@@ -175,15 +176,7 @@ export function setupInstrumentsBlock(
         }
         const span = document.createElement('span');
         span.className = 'bi-missions-span';
-        span.textContent =
-          investigation.end === null
-            ? t('bi.missions.spanOpen', {
-                from: formatDay(investigation.start),
-              })
-            : t('bi.missions.span', {
-                from: formatDay(investigation.start),
-                to: formatDay(investigation.end),
-              });
+        span.textContent = missionSpanText(investigation, formatDay);
         li.append(span);
         list.append(li);
       }
