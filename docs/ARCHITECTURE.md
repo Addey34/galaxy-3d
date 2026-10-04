@@ -3956,6 +3956,27 @@ après). Leurs écarts de rayon sont déclarés : 3,9 % pour Arrokoth contre un 
 pour Donaldjohanson, dont le diamètre de la SBDB est une mesure thermique d'avant le survol. Les
 archives SPICE de Deep Impact, EPOXI, Stardust et DS1 précèdent le format DSK : rien pour les comètes.
 
+### Vague 5 : Tempel 1 et Šteins, dans l'archive SPICE de Rosetta (2026-10-04)
+
+La phrase précédente était vraie et incomplète : la forme de Tempel 1 n'est pas dans l'archive de
+la mission qui l'a vue, mais dans celle de **Rosetta** (`ro_rl-e_m_a_c-spice-6-v1.0`, archive PDS3
+chez NAIF), où l'ESA SPICE Service l'a convertie en DSK depuis le modèle de Farnham et Thomas que
+l'UMD refuse de servir. La même archive porte **Šteins** (Farnham et Jorda, OSIRIS), notée
+« introuvable » à la vague 1. Le commentaire de chaque DSK nomme le jeu du PDS d'origine : ce sont
+deux jeux de la NASA, distribués sans restriction, ce qui n'est PAS le cas de 67P (jeu de la PSA
+sans licence déclarée), même si l'archive de Rosetta en porte aussi des DSK. La décision sur 67P
+reste celle de l'utilisateur.
+
+Rien de neuf dans la chaîne : deux entrées de recette, un bloc `model` par fiche, deux niveaux
+(les sources ont 32 040 et 20 480 plaques, sous le budget du 4k). Les gardes ont tout tenu sans
+`--principal`. Un seul écart déclaré : le rayon équivalent-volume de Tempel 1, 2,83 km, est celui
+que publie le jeu (2,83 ± 0,1), à 5,6 % des 3,0 km de la SBDB (A'Hearn et al. 2005, Deep Impact
+seul). Šteins tombe à 1,9 % de sa fiche. Albédos lus à la SBDB : 0,05 et 0,300.
+
+Ce qui reste a été cherché ce jour-là dans les DSK génériques de NAIF (`generic_kernels/dsk/`, qui
+renvoient vers l'archive de Rosetta pour Šteins), dans l'archive de Lucy (Donaldjohanson seul) et
+dans les collections non-mission du miroir du PSI : aucune comète de plus.
+
 ### Une ligne d'orbite n'est payée que si elle est tracée
 
 Une ligne coûte une période ENTIÈRE d'éphéméride. Le démarrage la demandait pour tous les corps,

@@ -111,12 +111,6 @@ export const SHAPE_MODEL_GAPS: readonly ShapeModelGap[] = [
     source: 'ESA PSA, RO-C-MULTI-5-67P-SHAPE-V2.0',
   },
   {
-    body: 'tempel-1',
-    radiusKm: 3,
-    reason: 'archive-refuses-access',
-    source: 'dif-c-hriv_its_mri-5-tempel1-shape-v2.0',
-  },
-  {
     body: 'wild-2',
     radiusKm: 2,
     reason: 'archive-refuses-access',
@@ -128,7 +122,6 @@ export const SHAPE_MODEL_GAPS: readonly ShapeModelGap[] = [
     reason: 'archive-refuses-access',
     source: 'dif-c-hriv_mri-5-hartley2-shape-v1.0',
   },
-  { body: 'steins', radiusKm: 2.58, reason: 'not-found-in-registries' },
   { body: 'annefrank', radiusKm: 2.4, reason: 'not-found-in-registries' },
   { body: 'masursky', radiusKm: 5.372, reason: 'not-found-in-registries' },
   { body: 'dinkinesh', radiusKm: 0.3595, reason: 'not-found-in-registries' },
@@ -166,6 +159,9 @@ export const SHAPE_COLLECTIONS_SEARCHED: readonly string[] = [
   'NAIF, archive SPICE PDS4 de DART (dsk/), et serveur SPICE de l’ESA pour Hera (dsk/)',
   'NAIF, archives SPICE de New Horizons (PDS3) et de Lucy (PDS4) : Arrokoth et Donaldjohanson',
   'NAIF, archives SPICE de Deep Impact, EPOXI, Stardust et DS1 : antérieures au format DSK',
+  // 2026-10-04, vague 5 : Tempel 1 et Šteins en sont sortis, lus dans l'archive de Rosetta.
+  'NAIF, archive SPICE PDS3 de Rosetta (DATA/DSK/) et DSK génériques (generic_kernels/dsk/)',
+  'miroir du PSI, collections non_mission de formes : aucune comète',
 ];
 
 /** Ce qu'on dit d'un manque, en une ligne, pour l'inventaire. */
