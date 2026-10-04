@@ -78,10 +78,15 @@ export function setupWeatherLayers(
     { checkbox: HTMLInputElement; loading: HTMLElement }
   >();
 
+  // Une case n'est verrouillée que si sa couche est ACTIVE et charge : le verrou évite le
+  // second clic qui couperait une activation en cours. Une couche coupée continue de charger
+  // en fond (préchargement, suivi de la date, candidat suivant) ; verrouiller sa case
+  // empêchait alors de la réactiver, et annonçait « Chargement… » pour une couche éteinte.
   const syncLoading = (layerId: string): void => {
     const control = controls.get(layerId);
     if (!control) return;
-    const isLoading = loadState.get(layerId) === 'loading';
+    const isLoading =
+      loadState.get(layerId) === 'loading' && control.checkbox.checked;
     control.checkbox.disabled = isLoading;
     control.checkbox.setAttribute('aria-busy', String(isLoading));
     control.loading.hidden = !isLoading;
@@ -237,6 +242,7 @@ export function setupWeatherLayers(
         // L'activation de la température estompe nuages/pluie (et inversement).
         if (layer.id === 'thermal') applyThermalInteraction();
         syncDetail();
+        syncLoading(layer.id);
       });
       syncDetail();
       syncLoading(layer.id);
