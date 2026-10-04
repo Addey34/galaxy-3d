@@ -129,10 +129,10 @@ body's long axis. Every level must also have its faces pointing outwards.
 Archive (`RO-C-MULTI-5-67P-SHAPE-V2.0`) states no licence in its readme, catalogue or user guide;
 the archive asks only for an acknowledgement in publications, and ESA's website notice excludes
 uses other than educational, editorial or informational ones without a specific licence. It is
-not imported on an assumed licence. Arrokoth has a published model whose host
-(`pdssbn.astro.umd.edu/holdings/`) answered HTTP 403 to every request that day, as it did for
-Tempel 1, Wild 2 and Hartley 2 (Didymos and Dimorphos, on the same host, were read from NAIF
-instead, below). (11351) Leucus has two convex DAMIT solutions with different poles
+not imported on an assumed licence. Tempel 1, Wild 2 and Hartley 2 have published models whose
+host (`pdssbn.astro.umd.edu/holdings/`) answered HTTP 403 to every request that day, and their
+missions' SPICE archives at NAIF predate the DSK format (Didymos, Dimorphos and Arrokoth, on the
+same host, were read from NAIF instead, below). (11351) Leucus has two convex DAMIT solutions with different poles
 and no calibrated size: importing one would present a choice as a measurement.
 
 ### Mission targets (2026-10-04)
@@ -195,6 +195,26 @@ moon Dimorphos. 3,866 / 15,738 / 62,626 and 3,881 / 15,719 / 62,449 triangles.
 - **Modification**: read from DSK type 2 to OBJ by `scripts/dsk-to-obj.mjs`, pole brought onto +Y,
   decimated. Uniform colour at the geometric albedo of the system, 0.15 (Daly et al. 2023,
   *Nature* 616, 443).
+
+`public/assets/models/arrokoth/arrokoth_shape_{1k,2k}.glb`: (486958) Arrokoth. 3,912 / 15,520
+triangles, from a 40,960-facet model.
+
+- **Source**: the New Horizons SPICE archive at NAIF, a NASA PDS archive
+  (`nh-j_p_ss-spice-6-v1.0`, `mu69_porter_2024_v01.bds`), the model of S. Porter et al. (2024),
+  also archived as `urn:nasa:pds:nh_derived:arrokoth_shapemodel_porter2024`.
+- **Data credit**: NASA/JHU-APL/SwRI New Horizons LORRI. Distributed by NASA PDS without restriction.
+- **Modification**: read from DSK (big-endian) to OBJ by `scripts/dsk-to-obj.mjs`, pole brought onto
+  +Y, decimated. Uniform colour at albedo 0.21 (Hofgartner et al. 2021, *Icarus*).
+
+`public/assets/models/donaldjohanson/donaldjohanson_shape_{1k,2k,4k}.glb`: (52246) Donaldjohanson.
+4,011 / 15,077 / 61,827 triangles.
+
+- **Source**: the Lucy SPICE archive at NAIF, a NASA PDS archive
+  (`lucy_spice/spice_kernels/dsk/lcy_donj_k548_iso20m_v10.bds`), a shape model made by the DLR
+  team by stereophotogrammetry and contour fitting.
+- **Data credit**: NASA/SwRI Lucy L'LORRI. Distributed by NASA PDS without restriction.
+- **Modification**: read from DSK to OBJ by `scripts/dsk-to-obj.mjs`, pole brought onto +Y,
+  decimated. Uniform colour at albedo 0.103 (NEOWISE, JPL SBDB).
 
 ### Moons, a comet and main-belt asteroids (parity pass, 2026-09-22)
 

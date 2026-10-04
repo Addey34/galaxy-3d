@@ -3907,7 +3907,7 @@ tournés dans leurs axes principaux (`--principal`) ; et le rayon équivalent-vo
   étalonnée. En importer une serait présenter un choix comme une mesure, et son échelle viendrait
   du catalogue, ce qui rendrait la garde du volume tautologique.
 
-### Vague 4 : Didymos et Dimorphos lus en DSK (2026-10-04)
+### Vague 4 : Didymos, Dimorphos, Arrokoth et Donaldjohanson lus en DSK (2026-10-04)
 
 Les modèles SPC de DART que l'UMD refusait sont aussi servis par l'archive SPICE PDS4 de DART
 chez NAIF, en DSK, un format binaire que rien ne lisait ici. `scripts/dsk-to-obj.mjs` le lit sans
@@ -3919,6 +3919,15 @@ Les rayons équivalents (0,365 et 0,075 km) sont 6,4 % sous ceux des fiches, un 
 et d'autre et DÉCLARÉ : Daly et al. 2023 donnent 151 ± 5 m de diamètre équivalent pour Dimorphos.
 La couleur cuite est l'albédo du système, 0,15 ± 0,02 (Daly et al. 2023), la SBDB n'en publiant
 aucun pour Didymos.
+
+La même source a rendu deux formes de plus : celle d'Arrokoth (Porter et al. 2024, celle que l'UMD
+refusait), dans l'archive SPICE de New Horizons, et celle de **Donaldjohanson**, dans l'archive de
+Lucy, que la recherche de la vague 1 n'avait pas trouvée (elle était notée « introuvable »). Le
+fichier d'Arrokoth est gros-boutiste (« BIG-IEEE ») : le lecteur lit les deux ordres d'octets que
+l'en-tête déclare, et le fichier petit-boutiste de Didymos sert de témoin (mêmes octets avant et
+après). Leurs écarts de rayon sont déclarés : 3,9 % pour Arrokoth contre un rayon de travail, 23 %
+pour Donaldjohanson, dont le diamètre de la SBDB est une mesure thermique d'avant le survol. Les
+archives SPICE de Deep Impact, EPOXI, Stardust et DS1 précèdent le format DSK : rien pour les comètes.
 
 ### Une ligne d'orbite n'est payée que si elle est tracée
 

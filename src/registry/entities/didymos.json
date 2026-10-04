@@ -19,7 +19,7 @@
     "epoch": "2026-01-01T00:00:00.000Z",
     "kind": "asteroid",
     "color": "0xe07070",
-    "fallbackColor": "0x4e4e4e",
+    "fallbackColor": "0x6c6c6c",
     "model": {
       "resolutions": [
         "4k",
@@ -121,6 +121,6 @@
   "notes": {
     "": "Cible déclarée d'une mission au registre du PDS, ajoutée au catalogue le 2026-10-04 (pages des missions, vague 1). Faits lus à la SBDB ; description fondée sur les descriptions de missions du PDS et les pages de NASA Science ou de l'ESA citées dans le handoff du 2026-10-04.",
     "a": "Éléments osculateurs JPL Horizons EXACTEMENT à cette époque (COMMAND '65803;', EPHEM_TYPE=ELEMENTS, TLIST=2461041.5, CENTER=500@10).",
-    "fallbackColor": "Gris de l'albédo géométrique SBDB (réflectance en sRGB, plancher 0x48 pour rester visible) ; sans albédo publié, une teinte d'attente. Ce n'est pas une mesure de couleur."
+    "fallbackColor": "Gris de l'albédo géométrique de Daly et al. 2023 (0,15, albédo du système), même règle que les autres corps (puissance 1/2,2) : la sphère d'attente a la couleur moyenne du modèle cuit. C'était une teinte d'attente avant la vague 4 (2026-10-04), faute d'albédo à la SBDB. Ce n'est pas une mesure de couleur."
   }
 }

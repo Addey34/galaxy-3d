@@ -23,8 +23,8 @@
  *     à partir de l'entier 11 (indices de sommets comptés à partir de 1) ; doubles 1-24 = le
  *     descripteur du segment, sommets à partir du double 35, en km dans le repère du corps.
  *
- * Le script ne lit que des fichiers petit-boutistes (« LTL-IEEE »), et le VÉRIFIE : un autre
- * format binaire rendrait des nombres plausibles et faux.
+ * Le script lit les deux ordres d'octets que déclare l'en-tête (« LTL-IEEE », « BIG-IEEE ») et
+ * refuse tout autre format : un ordre mal deviné rendrait des nombres plausibles et faux.
  */
 import { readFileSync, writeFileSync } from 'node:fs';
 
@@ -42,14 +42,23 @@ const ascii = (from, to) => buffer.toString('latin1', from, to);
 
 if (ascii(0, 8) !== 'DAS/DSK ')
   throw new Error(`${input} : pas un DSK (identifiant « ${ascii(0, 8)} »)`);
-if (!ascii(0, RECORD).includes('LTL-IEEE'))
-  throw new Error(`${input} : format binaire autre que LTL-IEEE, non lu ici`);
+// Les deux ordres d'octets existent dans les archives : LTL-IEEE (DART, Lucy) et BIG-IEEE
+// (Arrokoth, archive de New Horizons). Tout autre format est refusé.
+const header = ascii(0, RECORD);
+const big = header.includes('BIG-IEEE');
+if (!big && !header.includes('LTL-IEEE'))
+  throw new Error(
+    `${input} : format binaire ni LTL-IEEE ni BIG-IEEE, non lu ici`
+  );
+const readInt = (offset) =>
+  big ? buffer.readInt32BE(offset) : buffer.readInt32LE(offset);
+const readDouble = (offset) =>
+  big ? buffer.readDoubleBE(offset) : buffer.readDoubleLE(offset);
 
-const int32 = (record, index) =>
-  buffer.readInt32LE((record - 1) * RECORD + index * 4);
+const int32 = (record, index) => readInt((record - 1) * RECORD + index * 4);
 // En-tête : identifiant (8), nom interne (60), puis réservés et commentaires.
-const reservedRecords = buffer.readInt32LE(68);
-const commentRecords = buffer.readInt32LE(76);
+const reservedRecords = readInt(68);
+const commentRecords = readInt(76);
 
 /** Numéros d'enregistrement de chaque type, dans l'ordre des adresses logiques. */
 const records = { 1: [], 2: [], 3: [] };
@@ -76,7 +85,7 @@ const read = (type, address) => {
     throw new Error(`adresse ${address} de type ${type} hors du fichier`);
   const offset =
     (record - 1) * RECORD + ((address - 1) % per) * (type === 2 ? 8 : 4);
-  return type === 2 ? buffer.readDoubleLE(offset) : buffer.readInt32LE(offset);
+  return type === 2 ? readDouble(offset) : readInt(offset);
 };
 const int = (address) => read(3, address);
 const dbl = (address) => read(2, address);
