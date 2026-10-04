@@ -212,6 +212,21 @@
     }
    ]
   },
+  "dimorphos": {
+   "claims": [
+    {
+     "source": "sbdb",
+     "form": "years",
+     "years": [
+      2003
+     ],
+     "who": null,
+     "ref": "Pravec et al. (2003), IAUC 8244",
+     "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=65803",
+     "retrieved": "2026-10-04"
+    }
+   ]
+  },
   "dinkinesh": {
    "claims": [
     {
@@ -635,6 +650,21 @@
      "who": "Palisa, J.",
      "where": "Vienna",
      "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=253",
+     "retrieved": "2026-10-04"
+    }
+   ]
+  },
+  "menoetius": {
+   "claims": [
+    {
+     "source": "sbdb",
+     "form": "years",
+     "years": [
+      2001
+     ],
+     "who": null,
+     "ref": "Merline et al. (2001), IAUC 7741",
+     "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=617",
      "retrieved": "2026-10-04"
     }
    ]
@@ -1132,7 +1162,7 @@
    "source": "sbdb",
    "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=65803",
    "total": 1,
-   "bytes": 121,
+   "bytes": 140,
    "retrieved": "2026-10-04"
   },
   "dinkinesh": {
@@ -1216,7 +1246,7 @@
    "source": "sbdb",
    "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=617",
    "total": 1,
-   "bytes": 120,
+   "bytes": 139,
    "retrieved": "2026-10-04"
   },
   "pluto": {

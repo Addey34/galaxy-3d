@@ -7,6 +7,7 @@ import {
   G_SI,
   factSource,
   gravityFromGM,
+  gravityFromMass,
   massFromDensity,
   massFromGM,
 } from './factSources';
@@ -225,6 +226,12 @@ const sbdb = snapshot.sbdb as Record<
       ref: string;
       notes: string | null;
     } | null;
+    /** g/cm³, sauf quand la base change d'unité sans le dire (Dinkinesh : « 2400 »). */
+    densityGcm3: {
+      value: number;
+      sigma: number | string | null;
+      ref: string | null;
+    } | null;
     rotationHours: { value: number; ref: string; notes: string | null } | null;
     pole: { value: number[]; ref: string } | null;
     confirmedSatellites: number;
@@ -311,6 +318,32 @@ const ARTICLE_VALUES: Record<
       massKg: {
         value: 6.32e20,
         quote: 'system mass of 6.32+- 0.01 X 10^20 kg',
+      },
+    },
+  },
+  'nasa-didymos-dimorphos': {
+    dimorphos: {
+      radiusKm: {
+        value: 0.16 / 2,
+        quote:
+          'The moonlet, Dimorphos (Didymos B), is about 525 feet (160 meters) in diameter.',
+      },
+      orbitPeriodDays: {
+        value: (11 + 23 / 60) / 24,
+        quote:
+          'shortening the 11-hour and 55-minute orbit to 11 hours and 23 minutes',
+      },
+    },
+  },
+  'grundy-2018-patroclus': {
+    menoetius: {
+      distanceAU: {
+        value: 688.5 / KM_PER_AU,
+        quote: 'Semimajor axis (km) a 688.5 ± 4.7',
+      },
+      orbitPeriodDays: {
+        value: 4.28268,
+        quote: 'Period (days) P 4.282680 ± 0.000063',
       },
     },
   },
@@ -428,6 +461,26 @@ function obliquityFromPole(
  * (rayon moyen ou équatorial) : la valeur du catalogue doit correspondre à l'une d'elles, et le
  * test suivant exige alors une précision (`detail`) quand ce n'est pas la définition par défaut.
  */
+/** La clé du message de précision d'une provenance (`detail.massFromDensity`), ou rien. */
+const detailKey = (p: FactProvenance): string | undefined =>
+  p.detail && 'message' in p.detail ? String(p.detail.message) : undefined;
+
+/**
+ * La densité SBDB d'un corps, en g/cm³, ou l'échec. La base change parfois d'unité sans le dire
+ * (Dinkinesh : « 2400 », des kg/m³) : une densité hors de l'échelle d'un corps solide refuse.
+ */
+function sbdbDensity(
+  row: (typeof sbdb)[string],
+  fail: (why: string) => never
+): { value: number; ref: string | null } {
+  const density = row.densityGcm3 ?? fail('aucune densité publiée');
+  if (!(density.value > 0.1 && density.value < 10))
+    fail(`densité ${density.value} hors de l'échelle des g/cm³`);
+  if (density.ref !== row.diameterKm?.ref)
+    fail('densité et diamètre ne viennent pas de la même référence');
+  return density;
+}
+
 function expected(
   name: string,
   cfg: CelestialBodyConfig,
@@ -609,6 +662,18 @@ function expected(
           cite(row.diameterKm?.ref);
           return { values: [row.diameterKm!.value / 2], tolerance: 1e-9 };
         case 'massKg': {
+          if (detailKey(p) === 'detail.massFromDensity') {
+            cite(sbdbDensity(row, fail).ref);
+            return {
+              values: [
+                massFromDensity(
+                  sbdbDensity(row, fail).value,
+                  row.diameterKm!.value / 2
+                ),
+              ],
+              tolerance: 1e-9,
+            };
+          }
           cite(row.gmKm3s2?.ref);
           const published = row.gmKm3s2?.notes?.match(
             /published mass of ([\d.e+]+) kg/
@@ -622,6 +687,19 @@ function expected(
           };
         }
         case 'gravity':
+          if (detailKey(p) === 'detail.gravityFromMass') {
+            cite(sbdbDensity(row, fail).ref);
+            const radius = row.diameterKm!.value / 2;
+            return {
+              values: [
+                gravityFromMass(
+                  massFromDensity(sbdbDensity(row, fail).value, radius),
+                  radius
+                ),
+              ],
+              tolerance: 1e-9,
+            };
+          }
           cite(row.gmKm3s2?.ref);
           return {
             values: [
@@ -1042,6 +1120,17 @@ describe('raisons rédigées : confrontées à leur source', () => {
         )
           continue;
         expect(sbdb[name].gmKm3s2, `${name} : la SBDB publie un GM`).toBeNull();
+        // Ni une densité qui, avec le diamètre de la même référence, DONNE la masse : la
+        // fiche de Didymos la refusait « faute de GM » alors que la base publie les deux
+        // (2026-10-04).
+        const density = sbdb[name].densityGcm3;
+        expect(
+          density !== null &&
+            density.value > 0.1 &&
+            density.value < 10 &&
+            density.ref === sbdb[name].diameterKm?.ref,
+          `${name} : la SBDB publie densité et diamètre, la masse se dérive`
+        ).toBe(false);
       }
   });
 

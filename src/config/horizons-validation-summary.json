@@ -1,5 +1,5 @@
 {
- "generatedAt": "2026-10-04T04:43:41.706Z",
+ "generatedAt": "2026-10-04T06:30:06.136Z",
  "samplesPerCase": 48,
  "spk": {
   "kernel": true,
@@ -14998,6 +14998,143 @@
    }
   },
   {
+   "body": "dimorphos",
+   "provider": "horizons-binary",
+   "windowKind": "binary",
+   "windowFrom": "2000-01-06",
+   "windowTo": "2030-12-28",
+   "windowClipped": false,
+   "target": "120065803",
+   "relative": true,
+   "radiusKm": 0.08,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 0.01562,
+    "median": 0.01537,
+    "p95": 0.03761,
+    "max": 0.03835
+   },
+   "radii": {
+    "mean": 0.1952,
+    "median": 0.1922,
+    "p95": 0.4701,
+    "max": 0.4794
+   }
+  },
+  {
+   "body": "dimorphos",
+   "provider": "kepler",
+   "windowKind": "epoch",
+   "windowFrom": "2015-12-31",
+   "windowTo": "2030-12-28",
+   "windowClipped": true,
+   "target": "120065803",
+   "relative": true,
+   "radiusKm": 0.08,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 1.437,
+    "median": 1.38,
+    "p95": 2.276,
+    "max": 2.309
+   },
+   "radii": {
+    "mean": 17.97,
+    "median": 17.25,
+    "p95": 28.45,
+    "max": 28.86
+   }
+  },
+  {
+   "body": "dimorphos",
+   "provider": "kepler",
+   "windowKind": "fixed",
+   "windowFrom": "2000-01-03",
+   "windowTo": "2030-12-28",
+   "windowClipped": true,
+   "target": "120065803",
+   "relative": true,
+   "radiusKm": 0.08,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 1.27,
+    "median": 1.191,
+    "p95": 2.321,
+    "max": 2.34
+   },
+   "radii": {
+    "mean": 15.88,
+    "median": 14.89,
+    "p95": 29.02,
+    "max": 29.25
+   }
+  },
+  {
+   "body": "dimorphos",
+   "provider": "kepler",
+   "windowKind": "fixed",
+   "windowFrom": "2000-01-03",
+   "windowTo": "2030-12-28",
+   "windowClipped": true,
+   "target": "120065803",
+   "relative": true,
+   "radiusKm": 0.08,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 1.449,
+    "median": 1.514,
+    "p95": 2.337,
+    "max": 2.342
+   },
+   "radii": {
+    "mean": 18.12,
+    "median": 18.92,
+    "p95": 29.21,
+    "max": 29.27
+   }
+  },
+  {
+   "body": "dimorphos",
+   "provider": "production",
+   "windowKind": "fixed",
+   "windowFrom": "2001-01-02",
+   "windowTo": "2025-07-12",
+   "windowClipped": true,
+   "target": "120065803",
+   "relative": false,
+   "radiusKm": 0.08,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {
+    "binaire": 48
+   },
+   "km": {
+    "mean": 38.9,
+    "median": 29.21,
+    "p95": 114.3,
+    "max": 158
+   },
+   "radii": {
+    "mean": 486.2,
+    "median": 365.1,
+    "p95": 1428,
+    "max": 1976
+   }
+  },
+  {
    "body": "dinkinesh",
    "provider": "horizons-binary",
    "windowKind": "binary",
@@ -15828,7 +15965,7 @@
    "windowClipped": false,
    "target": "617;",
    "relative": false,
-   "radiusKm": 70.181,
+   "radiusKm": 59,
    "n": 48,
    "uncovered": 0,
    "rejected": 0,
@@ -15840,10 +15977,10 @@
     "max": 16.21
    },
    "radii": {
-    "mean": 0.02583,
-    "median": 0.00829,
-    "p95": 0.1112,
-    "max": 0.231
+    "mean": 0.03073,
+    "median": 0.009861,
+    "p95": 0.1323,
+    "max": 0.2748
    }
   },
   {
@@ -15855,7 +15992,7 @@
    "windowClipped": false,
    "target": "617;",
    "relative": false,
-   "radiusKm": 70.181,
+   "radiusKm": 59,
    "n": 48,
    "uncovered": 0,
    "rejected": 0,
@@ -15867,10 +16004,10 @@
     "max": 10230000
    },
    "radii": {
-    "mean": 41230,
-    "median": 32740,
-    "p95": 127300,
-    "max": 145800
+    "mean": 49050,
+    "median": 38950,
+    "p95": 151500,
+    "max": 173400
    }
   },
   {
@@ -15882,7 +16019,7 @@
    "windowClipped": false,
    "target": "617;",
    "relative": false,
-   "radiusKm": 70.181,
+   "radiusKm": 59,
    "n": 48,
    "uncovered": 0,
    "rejected": 0,
@@ -15894,10 +16031,10 @@
     "max": 175100000
    },
    "radii": {
-    "mean": 873700,
-    "median": 857400,
-    "p95": 2412000,
-    "max": 2495000
+    "mean": 1039000,
+    "median": 1020000,
+    "p95": 2869000,
+    "max": 2968000
    }
   },
   {
@@ -15909,7 +16046,7 @@
    "windowClipped": false,
    "target": "617;",
    "relative": false,
-   "radiusKm": 70.181,
+   "radiusKm": 59,
    "n": 48,
    "uncovered": 0,
    "rejected": 0,
@@ -15921,10 +16058,10 @@
     "max": 344200000
    },
    "radii": {
-    "mean": 1887000,
-    "median": 1653000,
-    "p95": 3938000,
-    "max": 4904000
+    "mean": 2245000,
+    "median": 1966000,
+    "p95": 4685000,
+    "max": 5834000
    }
   },
   {
@@ -15936,7 +16073,7 @@
    "windowClipped": false,
    "target": "617;",
    "relative": false,
-   "radiusKm": 70.181,
+   "radiusKm": 59,
    "n": 48,
    "uncovered": 0,
    "rejected": 0,
@@ -15950,10 +16087,147 @@
     "max": 18.39
    },
    "radii": {
-    "mean": 0.02584,
-    "median": 0.006527,
-    "p95": 0.1096,
-    "max": 0.262
+    "mean": 0.03073,
+    "median": 0.007764,
+    "p95": 0.1303,
+    "max": 0.3117
+   }
+  },
+  {
+   "body": "menoetius",
+   "provider": "horizons-binary",
+   "windowKind": "binary",
+   "windowFrom": "2000-01-06",
+   "windowTo": "2050-11-25",
+   "windowClipped": false,
+   "target": "120000617",
+   "relative": true,
+   "radiusKm": 54,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 7.697,
+    "median": 7.473,
+    "p95": 14.24,
+    "max": 14.29
+   },
+   "radii": {
+    "mean": 0.1425,
+    "median": 0.1384,
+    "p95": 0.2637,
+    "max": 0.2647
+   }
+  },
+  {
+   "body": "menoetius",
+   "provider": "kepler",
+   "windowKind": "epoch",
+   "windowFrom": "2015-12-31",
+   "windowTo": "2035-12-31",
+   "windowClipped": false,
+   "target": "120000617",
+   "relative": true,
+   "radiusKm": 54,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 27.46,
+    "median": 26.6,
+    "p95": 52.49,
+    "max": 57.39
+   },
+   "radii": {
+    "mean": 0.5086,
+    "median": 0.4926,
+    "p95": 0.972,
+    "max": 1.063
+   }
+  },
+  {
+   "body": "menoetius",
+   "provider": "kepler",
+   "windowKind": "fixed",
+   "windowFrom": "2000-01-03",
+   "windowTo": "2050-11-28",
+   "windowClipped": true,
+   "target": "120000617",
+   "relative": true,
+   "radiusKm": 54,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 71.12,
+    "median": 64.67,
+    "p95": 180.4,
+    "max": 189.2
+   },
+   "radii": {
+    "mean": 1.317,
+    "median": 1.198,
+    "p95": 3.341,
+    "max": 3.504
+   }
+  },
+  {
+   "body": "menoetius",
+   "provider": "kepler",
+   "windowKind": "fixed",
+   "windowFrom": "2000-01-03",
+   "windowTo": "2050-11-28",
+   "windowClipped": true,
+   "target": "120000617",
+   "relative": true,
+   "radiusKm": 54,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 71,
+    "median": 59.74,
+    "p95": 170.8,
+    "max": 199.7
+   },
+   "radii": {
+    "mean": 1.315,
+    "median": 1.106,
+    "p95": 3.163,
+    "max": 3.697
+   }
+  },
+  {
+   "body": "menoetius",
+   "provider": "production",
+   "windowKind": "fixed",
+   "windowFrom": "2000-01-03",
+   "windowTo": "2050-11-28",
+   "windowClipped": true,
+   "target": "120000617",
+   "relative": false,
+   "radiusKm": 54,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {
+    "binaire": 48
+   },
+   "km": {
+    "mean": 204.9,
+    "median": 191.2,
+    "p95": 392.5,
+    "max": 410.9
+   },
+   "radii": {
+    "mean": 3.794,
+    "median": 3.54,
+    "p95": 7.268,
+    "max": 7.609
    }
   },
   {

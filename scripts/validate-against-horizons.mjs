@@ -287,11 +287,16 @@ async function horizonsVectorsOnce(targetKey, centerKey, datesMs, override) {
         /* réponse non JSON : transitoire, on réessaie */
       }
       const result = json?.result ?? json?.error;
-      // Définitif : un bloc d'éphéméride, ou un refus de plage nommé par Horizons.
+      // Définitif : un bloc d'éphéméride, ou un refus de plage nommé par Horizons. Ce refus a
+      // DEUX formes : « No ephemeris for target … » et, quand Horizons compose deux noyaux
+      // SPICE dont l'un ne couvre pas la date, « Insufficient ephemeris data has been loaded »
+      // (Dimorphos vu du Soleil en 2000, le barycentre de Didymos ne commençant qu'en 2001,
+      // mesuré le 2026-10-04). Le second était pris pour une panne et réessayé en vain.
       if (
         response.ok &&
         typeof result === 'string' &&
-        (result.includes('$$SOE') || /No ephemeris/i.test(result))
+        (result.includes('$$SOE') ||
+          /No ephemeris|Insufficient ephemeris data/i.test(result))
       ) {
         text = result;
         mkdirSync(CACHE_DIR, { recursive: true });
@@ -316,6 +321,7 @@ async function horizonsVectorsOnce(targetKey, centerKey, datesMs, override) {
   if (!text.includes('$$SOE')) {
     const reason =
       text.match(/No ephemeris[^\n]*/)?.[0] ??
+      text.match(/Insufficient ephemeris data[^\n]*/)?.[0] ??
       text.trim().split('\n').slice(-3).join(' ');
     return { error: reason.trim() };
   }
@@ -1035,6 +1041,40 @@ function horizonsBound(message) {
   return { kind: m[1], ms };
 }
 
+/**
+ * La plage d'une fenêtre que la référence sert, SONDÉE : un point couvert d'abord (sept dates
+ * régulières), puis chaque bord par dichotomie, au jour près. `null` si aucun point ne répond.
+ */
+async function probedCoverage(c, window, override) {
+  const served = async (ms) =>
+    !(await horizonsVectors(c.body, c.center, [ms], override)).error;
+  let inside = null;
+  for (let k = 1; k <= 7 && inside === null; k++) {
+    const ms = window.from + ((window.to - window.from) * k) / 8;
+    if (await served(ms)) inside = ms;
+  }
+  if (inside === null) return null;
+  const edge = async (outer) => {
+    if (await served(outer)) return outer;
+    let lo = outer;
+    let hi = inside;
+    while (Math.abs(hi - lo) > MS_PER_DAY) {
+      const mid = Math.round((lo + hi) / 2);
+      if (await served(mid)) hi = mid;
+      else lo = mid;
+    }
+    return hi;
+  };
+  // Un jour de marge de chaque côté, comme pour une borne nommée : les dates d'échantillon
+  // s'arrondissent au jour, et retombaient sinon dans la journée non couverte.
+  const from = await edge(window.from);
+  const to = await edge(window.to);
+  return {
+    from: from === window.from ? from : from + MS_PER_DAY,
+    to: to === window.to ? to : to - MS_PER_DAY,
+  };
+}
+
 for (const [index, c] of cases.entries()) {
   // Une fenêtre que la RÉFÉRENCE ne couvre pas (Horizons sert les centres de planète et les
   // satellites sur des plages bornées) est recadrée sur les bornes que nomme Horizons, et le
@@ -1045,7 +1085,9 @@ for (const [index, c] of cases.entries()) {
   const override = c.deep?.substituted
     ? { target: { command: c.deep.command, expect: c.deep.expect } }
     : undefined;
-  for (let attempt = 0; attempt < 3; attempt++) {
+  // Quatre essais : deux bornes nommées (avant, après), puis une couverture SONDÉE, puis la
+  // requête qui la mesure (Dimorphos vu du Soleil les emploie toutes, 2026-10-04).
+  for (let attempt = 0; attempt < 4; attempt++) {
     dates = sampleDates(
       `${c.body}|${window.id}|${c.center}`,
       window.from,
@@ -1053,6 +1095,26 @@ for (const [index, c] of cases.entries()) {
       SAMPLES
     );
     reference = await horizonsVectors(c.body, c.center, dates, override);
+    if (
+      reference.error &&
+      /Insufficient ephemeris data/i.test(reference.error)
+    ) {
+      // Le refus SPICE ne nomme pas de borne, seulement une date qui échoue : la couverture
+      // se SONDE alors, au jour près, par dichotomie sur des requêtes d'une seule date (en
+      // cache comme les autres). Dimorphos vu du Soleil : 2001-01-02 → 2025-07-13, la fenêtre
+      // du barycentre de la solution DART (2026-10-04).
+      const covered = await probedCoverage(c, window, override);
+      if (!covered) break;
+      if (covered.from === window.from && covered.to === window.to) break;
+      window = {
+        id: `${isoDay(covered.from)}→${isoDay(covered.to)} (recadré sur la couverture sondée d'Horizons, demandé ${c.window.id})`,
+        kind: c.window.kind,
+        clipped: true,
+        from: covered.from,
+        to: covered.to,
+      };
+      continue;
+    }
     const bound = reference.error ? horizonsBound(reference.error) : null;
     if (!bound) break;
     const from =

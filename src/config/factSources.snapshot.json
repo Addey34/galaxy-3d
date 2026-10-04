@@ -31,7 +31,8 @@
     ],
     "articles": [
       "2026-09-20",
-      "2026-09-28"
+      "2026-09-28",
+      "2026-10-04"
     ]
   },
   "nssdca": {
@@ -2476,6 +2477,16 @@
         "system": 9,
         "rotation": null
       },
+      "dimorphos": {
+        "naifId": 120065803,
+        "system": null,
+        "rotation": null
+      },
+      "menoetius": {
+        "naifId": 120000617,
+        "system": null,
+        "rotation": null
+      },
       "ida": {
         "naifId": 2431010,
         "system": null,
@@ -2622,6 +2633,13 @@
         "notes": null,
         "desc": "standard gravitational parameter: product of the mass (M) and gravitational constant (G)"
       },
+      "densityGcm3": {
+        "value": 2.162,
+        "sigma": 0.008,
+        "ref": "Nature vol. 537, pp515-517 (22 September 2016)",
+        "notes": null,
+        "desc": "bulk density"
+      },
       "rotationHours": {
         "value": 9.07417,
         "sigma": 0.000001,
@@ -2673,6 +2691,13 @@
         "ref": "Vernazza et al., A&A 654, A56 (2021)",
         "notes": null,
         "desc": "standard gravitational parameter: product of the mass (M) and gravitational constant (G)"
+      },
+      "densityGcm3": {
+        "value": 2.89,
+        "sigma": 0.08,
+        "ref": "Marsset et al., Nature Astronomy 4, 569-576 (2020)",
+        "notes": null,
+        "desc": "bulk density"
       },
       "rotationHours": {
         "value": 7.8132214,
@@ -2726,6 +2751,13 @@
         "notes": null,
         "desc": "standard gravitational parameter: product of the mass (M) and gravitational constant (G)"
       },
+      "densityGcm3": {
+        "value": 3.46,
+        "sigma": 0.005,
+        "ref": "Park, R.S. et al. 2025, Nat Astron, DOI: 10.1038/s41550-025-02533-7",
+        "notes": null,
+        "desc": "bulk density"
+      },
       "rotationHours": {
         "value": 5.3421276322,
         "sigma": 4e-10,
@@ -2778,6 +2810,7 @@
         "notes": null,
         "desc": "standard gravitational parameter: product of the mass (M) and gravitational constant (G)"
       },
+      "densityGcm3": null,
       "rotationHours": {
         "value": 13.828,
         "sigma": null,
@@ -2816,6 +2849,13 @@
         "ref": "Belton et al. (1996) Icarus v.120, pp.185-199",
         "notes": "0.0024 < GM < 0.0031",
         "desc": "standard gravitational parameter: product of the mass (M) and gravitational constant (G)"
+      },
+      "densityGcm3": {
+        "value": 2.6,
+        "sigma": 0.5,
+        "ref": "Belton et al. (1996) Icarus v.120, pp.185-199",
+        "notes": null,
+        "desc": "bulk density"
       },
       "rotationHours": {
         "value": 4.634,
@@ -2857,6 +2897,13 @@
         "ref": "Yeomans et al. (2000) Science v.289,pp.2085-2088",
         "notes": null,
         "desc": "standard gravitational parameter: product of the mass (M) and gravitational constant (G)"
+      },
+      "densityGcm3": {
+        "value": 2.67,
+        "sigma": 0.03,
+        "ref": "Yeomans et al. (2000) Science v.289,pp.2085-2088",
+        "notes": "based on a volume of 2503 +/- 25 km^3. Porosity 10-30%.",
+        "desc": "bulk density"
       },
       "rotationHours": {
         "value": 5.27,
@@ -2910,6 +2957,13 @@
         "notes": "derived from published mass of 3.51e10 kg +/- 3%",
         "desc": "standard gravitational parameter: product of the mass (M) and gravitational constant (G)"
       },
+      "densityGcm3": {
+        "value": 1.9,
+        "sigma": 0.13,
+        "ref": "Science 312:1330-1334",
+        "notes": "Porosity 41%",
+        "desc": "bulk density"
+      },
       "rotationHours": {
         "value": 12.132,
         "sigma": null,
@@ -2957,6 +3011,13 @@
         "ref": "Watanabe, S.; Hirabayashi, M.; Hirata, N.; Hirata, Na.; et al. (2019) Science 364, 267-272.",
         "notes": null,
         "desc": "standard gravitational parameter: product of the mass (M) and gravitational constant (G)"
+      },
+      "densityGcm3": {
+        "value": 1.19,
+        "sigma": 0.02,
+        "ref": "Watanabe, S.; Hirabayashi, M.; Hirata, N.; Hirata, Na.; et al. (2019) Science 364, 267-272.",
+        "notes": null,
+        "desc": "bulk density"
       },
       "rotationHours": {
         "value": 7.63262,
@@ -3006,6 +3067,13 @@
         "notes": null,
         "desc": "standard gravitational parameter: product of the mass (M) and gravitational constant (G)"
       },
+      "densityGcm3": {
+        "value": 1.194,
+        "sigma": 0.003,
+        "ref": "Daly, M.G., et al., Sci. Adv. 6, eabd3649 (2020)",
+        "notes": null,
+        "desc": "bulk density"
+      },
       "rotationHours": {
         "value": 4.296061,
         "sigma": 0.000002,
@@ -3054,6 +3122,7 @@
         "desc": "effective body diameter"
       },
       "gmKm3s2": null,
+      "densityGcm3": null,
       "rotationHours": null,
       "pole": null,
       "confirmedSatellites": 0,
@@ -3074,6 +3143,7 @@
       "fullname": "134340 Pluto (1930 BM)",
       "diameterKm": null,
       "gmKm3s2": null,
+      "densityGcm3": null,
       "rotationHours": {
         "value": 153.2935,
         "sigma": null,
@@ -3094,6 +3164,7 @@
       "fullname": "136199 Eris (2003 UB313)",
       "diameterKm": null,
       "gmKm3s2": null,
+      "densityGcm3": null,
       "rotationHours": {
         "value": 25.9,
         "sigma": null,
@@ -3114,6 +3185,7 @@
       "fullname": "136108 Haumea (2003 EL61)",
       "diameterKm": null,
       "gmKm3s2": null,
+      "densityGcm3": null,
       "rotationHours": {
         "value": 3.9154,
         "sigma": null,
@@ -3134,6 +3206,7 @@
       "fullname": "136472 Makemake (2005 FY9)",
       "diameterKm": null,
       "gmKm3s2": null,
+      "densityGcm3": null,
       "rotationHours": {
         "value": 22.8266,
         "sigma": null,
@@ -3154,6 +3227,7 @@
       "fullname": "90482 Orcus (2004 DW)",
       "diameterKm": null,
       "gmKm3s2": null,
+      "densityGcm3": null,
       "rotationHours": {
         "value": 13.188,
         "sigma": null,
@@ -3174,6 +3248,7 @@
       "fullname": "50000 Quaoar (2002 LM60)",
       "diameterKm": null,
       "gmKm3s2": null,
+      "densityGcm3": null,
       "rotationHours": {
         "value": 8.84,
         "sigma": null,
@@ -3194,6 +3269,7 @@
       "fullname": "225088 Gonggong (2007 OR10)",
       "diameterKm": null,
       "gmKm3s2": null,
+      "densityGcm3": null,
       "rotationHours": {
         "value": 22.4,
         "sigma": null,
@@ -3214,6 +3290,7 @@
       "fullname": "90377 Sedna (2003 VB12)",
       "diameterKm": null,
       "gmKm3s2": null,
+      "densityGcm3": null,
       "rotationHours": {
         "value": 10.273,
         "sigma": null,
@@ -3245,6 +3322,13 @@
         "ref": "Farnocchia et al. (2024), AJ 168, 21",
         "notes": null,
         "desc": "standard gravitational parameter: product of the mass (M) and gravitational constant (G)"
+      },
+      "densityGcm3": {
+        "value": 4.172,
+        "sigma": 0.145,
+        "ref": "Farnocchia et al. (2024), AJ 168, 21",
+        "notes": null,
+        "desc": "bulk density"
       },
       "rotationHours": {
         "value": 4.196,
@@ -3287,6 +3371,13 @@
         "ref": "Patzold et al., Science 334, 491, 2011",
         "notes": null,
         "desc": "standard gravitational parameter: product of the mass (M) and gravitational constant (G)"
+      },
+      "densityGcm3": {
+        "value": 3.4,
+        "sigma": 0.3,
+        "ref": "Patzold et al., Science 334, 491, 2011",
+        "notes": null,
+        "desc": "bulk density"
       },
       "rotationHours": {
         "value": 8.1655,
@@ -3334,6 +3425,7 @@
         "desc": "effective body diameter"
       },
       "gmKm3s2": null,
+      "densityGcm3": null,
       "rotationHours": {
         "value": 7.042,
         "sigma": null,
@@ -3373,6 +3465,13 @@
         "notes": null,
         "desc": "standard gravitational parameter: product of the mass (M) and gravitational constant (G)"
       },
+      "densityGcm3": {
+        "value": 1.3,
+        "sigma": 0.2,
+        "ref": "Yeomans et al. (1997) Science v.278, pp.2106-2109",
+        "notes": "based on a nominal volume of 78000 km^3 (with lower/uppper limits of 67000/90000 km^3)",
+        "desc": "bulk density"
+      },
       "rotationHours": {
         "value": 417.7,
         "sigma": null,
@@ -3404,6 +3503,7 @@
         "desc": "effective body diameter"
       },
       "gmKm3s2": null,
+      "densityGcm3": null,
       "rotationHours": {
         "value": 6.049,
         "sigma": null,
@@ -3432,6 +3532,7 @@
         "desc": "effective body diameter"
       },
       "gmKm3s2": null,
+      "densityGcm3": null,
       "rotationHours": {
         "value": 15.12,
         "sigma": null,
@@ -3461,6 +3562,7 @@
         "desc": "effective body diameter"
       },
       "gmKm3s2": null,
+      "densityGcm3": null,
       "rotationHours": {
         "value": 59.531,
         "sigma": null,
@@ -3489,6 +3591,13 @@
         "desc": "effective body diameter"
       },
       "gmKm3s2": null,
+      "densityGcm3": {
+        "value": 2.17,
+        "sigma": 0.35,
+        "ref": "Naidu, S. P.; Benner, L. A. M.; Brozovic, M.; et al. (2020) Icarus 348, 113777",
+        "notes": null,
+        "desc": "bulk density"
+      },
       "rotationHours": {
         "value": 2.2593,
         "sigma": null,
@@ -3535,6 +3644,13 @@
         "notes": null,
         "desc": "standard gravitational parameter: product of the mass (M) and gravitational constant (G)"
       },
+      "densityGcm3": {
+        "value": 2400,
+        "sigma": 350,
+        "ref": "Levison et al. (2024), https://doi.org/10.1038/s41586-024-07378-0",
+        "notes": null,
+        "desc": "bulk density"
+      },
       "rotationHours": {
         "value": 52.67,
         "sigma": 0.04,
@@ -3564,6 +3680,7 @@
         "desc": "effective body diameter"
       },
       "gmKm3s2": null,
+      "densityGcm3": null,
       "rotationHours": null,
       "pole": null,
       "confirmedSatellites": 0,
@@ -3585,6 +3702,7 @@
         "desc": "effective body diameter"
       },
       "gmKm3s2": null,
+      "densityGcm3": null,
       "rotationHours": {
         "value": 8.711,
         "sigma": null,
@@ -3613,6 +3731,7 @@
         "desc": "effective body diameter"
       },
       "gmKm3s2": null,
+      "densityGcm3": null,
       "rotationHours": {
         "value": 5.8607,
         "sigma": 0.0005,
@@ -3642,6 +3761,7 @@
         "desc": "effective body diameter"
       },
       "gmKm3s2": null,
+      "densityGcm3": null,
       "rotationHours": {
         "value": 445.924,
         "sigma": null,
@@ -3670,6 +3790,7 @@
         "desc": "effective body diameter"
       },
       "gmKm3s2": null,
+      "densityGcm3": null,
       "rotationHours": {
         "value": 13.45,
         "sigma": null,
@@ -3698,6 +3819,7 @@
         "desc": "effective body diameter"
       },
       "gmKm3s2": null,
+      "densityGcm3": null,
       "rotationHours": {
         "value": 102.8,
         "sigma": null,
@@ -3729,6 +3851,7 @@
         "desc": "effective body diameter"
       },
       "gmKm3s2": null,
+      "densityGcm3": null,
       "rotationHours": {
         "value": 30.56,
         "sigma": 0.01,
@@ -3754,6 +3877,7 @@
       "fullname": "486958 Arrokoth (2014 MU69)",
       "diameterKm": null,
       "gmKm3s2": null,
+      "densityGcm3": null,
       "rotationHours": {
         "value": 15.918,
         "sigma": null,
@@ -3780,6 +3904,7 @@
         "desc": "effective body diameter"
       },
       "gmKm3s2": null,
+      "densityGcm3": null,
       "rotationHours": {
         "value": 40.7,
         "sigma": null,
@@ -3810,6 +3935,7 @@
         "desc": "effective body diameter"
       },
       "gmKm3s2": null,
+      "densityGcm3": null,
       "rotationHours": null,
       "pole": null,
       "confirmedSatellites": 0,
@@ -3835,6 +3961,7 @@
         "desc": "effective body diameter"
       },
       "gmKm3s2": null,
+      "densityGcm3": null,
       "rotationHours": null,
       "pole": null,
       "confirmedSatellites": 0,
@@ -3859,6 +3986,7 @@
         "desc": "effective body diameter"
       },
       "gmKm3s2": null,
+      "densityGcm3": null,
       "rotationHours": {
         "value": 18.1,
         "sigma": null,
@@ -3892,6 +4020,13 @@
         "ref": "Patzold et al., Nature 530, 63 (2016)",
         "notes": null,
         "desc": "standard gravitational parameter: product of the mass (M) and gravitational constant (G)"
+      },
+      "densityGcm3": {
+        "value": 0.533,
+        "sigma": 0.006,
+        "ref": "Patzold et al., Nature 530, 63 (2016)",
+        "notes": null,
+        "desc": "bulk density"
       },
       "rotationHours": {
         "value": 12.76129,
@@ -3933,6 +4068,7 @@
         "desc": "effective body diameter"
       },
       "gmKm3s2": null,
+      "densityGcm3": null,
       "rotationHours": null,
       "pole": null,
       "confirmedSatellites": 0,
@@ -3954,6 +4090,7 @@
         "desc": "effective body diameter"
       },
       "gmKm3s2": null,
+      "densityGcm3": null,
       "rotationHours": null,
       "pole": null,
       "confirmedSatellites": 0,
@@ -4264,6 +4401,25 @@
         "diameter 940+-70 km",
         "implies sizes of Orcus and Vanth of 900 and 280 km",
         "implies sizes of 820 and 640 km"
+      ]
+    },
+    "nasa-didymos-dimorphos": {
+      "url": "https://science.nasa.gov/solar-system/asteroids/didymos/",
+      "retrieved": "2026-10-04",
+      "verifiedQuotes": [
+        "The moonlet, Dimorphos (Didymos B), is about 525 feet (160 meters) in diameter.",
+        "shortening the 11-hour and 55-minute orbit to 11 hours and 23 minutes",
+        "margin of uncertainty of approximately plus or minus 2 minutes"
+      ]
+    },
+    "grundy-2018-patroclus": {
+      "url": "https://arxiv.org/abs/1903.03729",
+      "retrieved": "2026-10-04",
+      "verifiedQuotes": [
+        "Period (days) P 4.282680 ± 0.000063",
+        "Semimajor axis (km) a 688.5 ± 4.7",
+        "System mass (1018 kg) Msys 1.410 ± 0.029",
+        "Buie et al. (2015) estimated the b axis radii as 59 and 54 km"
       ]
     },
     "ortiz-2017-haumea": {

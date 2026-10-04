@@ -710,10 +710,11 @@ l'utilité de la phase : **au-dessus de 2,36 Mbit/s (les 2,34 de demande plus le
 marges) il n'y a AUCUN plafond à afficher**, et l'interface n'affiche alors rien. À 2 Mbit/s il
 vaut 84,5 % de la course, à 120 ko/s 40 %.
 
-**Mis à jour le 2026-10-04, et c'est un coût, pas une retouche** : les 23 cibles de missions
-portent le manifeste à 87 fichiers, donc **969 octets par jour simulé, 2,83 Mbit/s** à la vitesse
-maximale et 4 176 o/s de marges. Le seuil sans plafond passe à **2,86 Mbit/s** ; à 2 Mbit/s le
-plafond vaut **69,5 %** du maximum, à 120 ko/s **32,7 %**. Chaque corps dessiné fait venir ses
+**Mis à jour le 2026-10-04, et c'est un coût, pas une retouche** : les 23 cibles de missions et
+leurs deux satellites portent le manifeste à 89 fichiers, donc **993 octets par jour simulé,
+2,90 Mbit/s** à la vitesse maximale et 4 272 o/s de marges. Le seuil sans plafond passe à
+**2,94 Mbit/s** ; à 2 Mbit/s le plafond vaut **67,8 %** du maximum, à 120 ko/s **31,9 %** (avec
+les seules 23 cibles : 2,83 Mbit/s, 69,5 % et 32,7 %). Chaque corps dessiné fait venir ses
 positions en lecture accélérée, ligne d'orbite ou non. Mesuré par les fonctions de
 `core/playbackBudget.ts`, tenu par `playbackBudget.test.ts`.
 
@@ -3824,11 +3825,63 @@ de l'UAI quand ils existent, page et vignette.
   d'Arrokoth (deux lobes, 35 × 20 × 10 km selon NASA Science) sont des valeurs non publiées, comme
   celui de Hauméa : ils servent au rendu et aux écarts en rayons, la fiche n'en affiche aucun.
 
-**Ce qui reste, écrit** : les modèles de forme (`config/shapeModelGaps.ts`). Huit maillages sont
-publiés et nommés, leur import est la vague suivante ; trois sont nommés par l'archive mais son
-hôte répond 403 ; les autres n'existent ni au registre du PDS, ni à la PSA, ni dans DAMIT. Les deux
-satellites (Dimorphos, Menoetius) attendent aussi leur vague : Horizons ne les sert que sur une
-fenêtre bornée, et la SBDB ne publie aucune taille pour un satellite.
+**Ce qui reste, écrit** : les modèles de forme (`config/shapeModelGaps.ts`). Neuf maillages sont
+publiés et nommés (celui de Dimorphos compris, vague 2), leur import est la vague suivante ; trois
+sont nommés par l'archive mais son hôte répond 403 ; les autres n'existent ni au registre du PDS, ni
+à la PSA, ni dans DAMIT. Les deux satellites sont entrés à la vague 2, ci-dessous.
+
+### Vague 2 : Dimorphos et Menoetius, deux satellites de petits corps (2026-10-04)
+
+Les deux premières lunes du catalogue dont le parent est un petit corps. Mêmes règles que les
+autres lunes, et chaque écart à ces règles est une MESURE :
+
+- **Le binaire est relatif au PRIMAIRE, pas au barycentre.** Horizons sert Dimorphos par rapport
+  à `920065803` (Didymos, solution DART s547) et Menoetius par rapport à `920000617` (Patrocle) :
+  c'est la géométrie de la PAIRE qui se voit quand on s'approche. Mesuré contre Horizons, le
+  binaire tient à 38 m pour Dimorphos (0,48 rayon au pire) et à 14 km pour Menoetius (0,26).
+- **La couverture est BORNÉE**, lue dans les refus d'Horizons : 2000-2030 pour Dimorphos,
+  2000-2050 pour Menoetius. Les fichiers commencent au 2000-01-05, premier nœud de la grille
+  commune de 4 jours partie de 1900, pour que l'époque des éléments de repli soit celle de toutes
+  les autres lunes. Hors de la couverture, le repli képlérien (éléments MOYENS du binaire) garde
+  le rayon de l'orbite mais pas la phase de Dimorphos : sa période publiée est à ± 2 min (un tour
+  par an), et Scheirich et al. 2024 mesurent une période qui change encore après l'impact. La
+  borne de phase de `relativeElements.test.ts` le déclare au lieu de l'élargir pour tous.
+- **L'impact de DART coûte un rayon, mesuré** : l'intervalle de 4 jours qui l'enjambe mélange
+  deux orbites (période 11 h 55 puis 11 h 23), et l'outil de propagation ancré autour du
+  2022-09-26 mesure un écart qui sature à 1,0-1,1 rayon de Dimorphos, contre 0,3 en régime
+  ordinaire.
+- **La position héliocentrique composée s'écarte davantage, et c'est le PARENT** : le fichier de
+  Didymos est la solution au sol (`65803;`, 1900-2100) et celui de Patrocle le barycentre du
+  couple (`617;`). Le composé s'écarte donc de 158 km (Dimorphos, comparé au barycentre DART que
+  Horizons ne sert que du 2001-01-02 au 2025-07-13) et de 411 km (Menoetius, la distance du
+  primaire au barycentre d'un couple presque égal). Le résumé de validation le publie tel quel ;
+  `ephemerisStepBudget.test.ts` ne le compte pas comme un refus de pas, par une règle dérivée
+  (binaire sous la cible et composé plus de dix fois le binaire).
+- **Une couverture de référence que rien ne nomme se SONDE.** Horizons refuse Dimorphos vu du
+  Soleil en 2000 par « Insufficient ephemeris data has been loaded », un refus SPICE qui ne nomme
+  aucune borne, et que `validate-against-horizons.mjs` prenait pour une panne. Il trouve
+  désormais la couverture par dichotomie au jour près, sur des requêtes d'une date mises en cache.
+
+**Les faits, et ce qu'ils ont révélé ailleurs.** La SBDB ne publie rien de physique pour un
+satellite. Dimorphos prend sa taille et sa période d'après l'impact sur la page de NASA Science
+« Didymos & Dimorphos », Menoetius son orbite dans Grundy et al. 2018 (table 2 du PDF) : deux
+sources citées mot pour mot par le relevé des faits. En cherchant la masse de Didymos, il est
+apparu que la SBDB publie sa DENSITÉ (2,17, même référence que son diamètre) : sa fiche refusait
+une masse « faute de GM » alors qu'elle se dérive. Le relevé lit désormais la densité, la fiche
+publie la masse, et une garde refuse toute masse déclarée absente quand densité et diamètre de
+la même référence sont publiés (Didymos était le seul cas). La masse du COUPLE de Patrocle est une
+valeur de travail non publiée : elle donne le bon μ à la propagation de Menoetius, et la fiche
+dit qu'aucune répartition n'est publiée.
+
+**Trois raccords que le registre a demandés.** Le PDS classe Dimorphos « Asteroid » sous un
+identifiant `satellite.65803_didymos.dimorphos` : le générateur des missions accepte cette paire
+sous ce segment seulement. Les six raisons « le rapport de l'UAI donne l'axe de toutes les autres
+lunes » étaient déjà fausses (six lunes sans pôle) : elles disent « la plupart », et les deux
+nouvelles lunes portent la même raison, confrontée à leur absence du noyau NAIF. Enfin, sans pôle
+publié, l'axe dessiné était celui d'une obliquité nulle : Dimorphos tournait à l'endroit autour de
+Didymos qui tourne à l'envers. Les trois corps des deux couples portent maintenant, en valeur de
+travail, l'inclinaison de la normale de l'orbite mesurée sur le binaire, puisqu'une rotation
+synchrone se fait autour d'elle.
 
 ### Une ligne d'orbite n'est payée que si elle est tracée
 

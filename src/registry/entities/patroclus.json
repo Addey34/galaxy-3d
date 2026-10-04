@@ -31,11 +31,14 @@
       "fr": "https://fr.wikipedia.org/wiki/(617)_Patrocle",
       "es": "https://es.wikipedia.org/wiki/(617)_Patroclo",
       "pt-BR": "https://pt.wikipedia.org/wiki/617_P%C3%A1troclo"
-    }
+    },
+    "satellites": [
+      "menoetius"
+    ]
   },
   "facts": {
     "radiusKm": {
-      "value": 70.181,
+      "value": 59,
       "published": false,
       "reason": {
         "en": "The 140-kilometre diameter in the JPL Small-Body Database describes Patroclus and Menoetius together, seen as one unresolved object, not Patroclus alone.",
@@ -45,12 +48,13 @@
       }
     },
     "massKg": {
+      "value": 1.41e18,
       "published": false,
       "reason": {
-        "en": "The JPL Small-Body Database publishes no GM for this body, and no mass can be derived without one.",
-        "fr": "La base des petits corps de JPL ne publie aucun GM pour ce corps, et aucune masse ne se dérive sans lui.",
-        "es": "La base de datos de cuerpos menores del JPL no publica ningún GM para este cuerpo, y no puede derivarse ninguna masa sin él.",
-        "pt-BR": "A base de pequenos corpos do JPL não publica nenhum GM para este corpo, e nenhuma massa se deriva sem ele."
+        "en": "Only the mass of the pair is published (Grundy et al. 2018), not how it divides between Patroclus and Menoetius.",
+        "fr": "Seule la masse du couple est publiée (Grundy et al. 2018), pas sa répartition entre Patrocle et Menoetius.",
+        "es": "Solo se publica la masa de la pareja (Grundy et al. 2018), no cómo se reparte entre Patroclo y Menoetius.",
+        "pt-BR": "Só é publicada a massa do par (Grundy et al. 2018), não como ela se divide entre Pátroclo e Menoetius."
       }
     },
     "gravity": {
@@ -79,6 +83,7 @@
       "detail": "confirmedSatellites"
     },
     "axialTilt": {
+      "value": 152.5301,
       "published": false,
       "reason": {
         "en": "The JPL Small-Body Database publishes no spin-axis solution for this body, and an axial tilt cannot be derived without one.",
@@ -95,7 +100,9 @@
     }
   },
   "notes": {
-    "facts.radiusKm": "Valeur de TRAVAIL, non publiée (rendu, écarts en rayons) : la moitié du diamètre SBDB de 140,362 km, qui décrit la paire Patroclus-Menoetius non résolue. Même convention que Hauméa.",
+    "facts.radiusKm": "Valeur de TRAVAIL, non publiée (rendu, écarts en rayons) : l'axe b de l'ellipsoïde de Buie et al. 2015, 59 km, que cite Grundy et al. 2018 (le diamètre SBDB de 140,362 km décrit la paire non résolue ; il servait de valeur de travail avant l'entrée de Menoetius, 2026-10-04).",
+    "facts.axialTilt": "Valeur de TRAVAIL, non publiée (rendu seulement) : l'inclinaison sur l'écliptique de l'orbite MUTUELLE, mesurée sur le binaire de Menoetius. Grundy et al. 2018 jugent les deux rotations synchronisées sur cette orbite, donc le couple tourne autour de sa normale, comme Menoetius.",
+    "facts.massKg": "Valeur de TRAVAIL, non publiée : la masse du COUPLE, 1,410 × 10^18 kg (Grundy et al. 2018, table 2). Elle sert la propagation de Menoetius autour de Patrocle (`config/gravity.ts`), où c'est bien la masse du couple qui compte, et la fiche ne l'affiche pas.",
     "": "Cible déclarée d'une mission au registre du PDS, ajoutée au catalogue le 2026-10-04 (pages des missions, vague 1). Faits lus à la SBDB ; description fondée sur les descriptions de missions du PDS et les pages de NASA Science ou de l'ESA citées dans le handoff du 2026-10-04.",
     "a": "Éléments osculateurs JPL Horizons EXACTEMENT à cette époque (COMMAND '617;', EPHEM_TYPE=ELEMENTS, TLIST=2461041.5, CENTER=500@10).",
     "fallbackColor": "Gris de l'albédo géométrique SBDB (réflectance en sRGB, plancher 0x48 pour rester visible) ; sans albédo publié, une teinte d'attente. Ce n'est pas une mesure de couleur."

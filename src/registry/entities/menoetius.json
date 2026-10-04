@@ -1,0 +1,149 @@
+{
+  "$schema": "../schema/entity.schema.json",
+  "id": "menoetius",
+  "targetClass": "satellite",
+  "source": "catalogue",
+  "config": {
+    "kind": "moon",
+    "displayName": {
+      "en": "Menoetius",
+      "fr": "Menoetius",
+      "es": "Menoetius",
+      "pt-BR": "Menoetius"
+    },
+    "radius": 0.08,
+    "rotationSpeed": {
+      "$spinPeriodDays": 4.28268
+    },
+    "orbitalColor": "0xb98bd1",
+    "fallbackColor": "0x484848",
+    "frame": "parentRelative",
+    "relativeEphemeris": {
+      "kind": "horizonsParentRelative"
+    },
+    "relativeOrbitalElements": {
+      "semiMajorAxisAU": 0.000004619121166,
+      "eccentricity": 0,
+      "inclinationRad": {
+        "$deg": 152.5301
+      },
+      "ascendingNodeRad": {
+        "$deg": 324.1516
+      },
+      "argPerihelionRad": 0,
+      "meanAnomalyAtEpochRad": {
+        "$deg": 3.043
+      },
+      "epoch": {
+        "$date": "2025-12-31T00:00:00.000Z"
+      }
+    },
+    "textureResolutions": {},
+    "realData": {
+      "orbitalInclination": 0,
+      "ascendingNode": 0,
+      "description": {
+        "en": "The companion of the Jupiter Trojan Patroclus, almost as large as Patroclus itself: the two orbit each other every 4.28 days, about 690 kilometres apart. The pair is a target of NASA’s Lucy mission.",
+        "fr": "Le compagnon du troyen de Jupiter Patrocle, presque aussi grand que lui : les deux tournent l’un autour de l’autre en 4,28 jours, à environ 690 kilomètres de distance. Le couple est une cible de la mission Lucy de la NASA.",
+        "es": "El compañero del troyano de Júpiter Patroclo, casi tan grande como él: los dos giran uno alrededor del otro cada 4,28 días, a unos 690 kilómetros de distancia. La pareja es un objetivo de la misión Lucy de la NASA.",
+        "pt-BR": "O companheiro do troiano de Júpiter Pátroclo, quase tão grande quanto ele: os dois giram um em torno do outro a cada 4,28 dias, a cerca de 690 quilômetros de distância. O par é um alvo da missão Lucy da NASA."
+      },
+      "wiki": {
+        "en": "https://en.wikipedia.org/wiki/617_Patroclus",
+        "fr": "https://fr.wikipedia.org/wiki/(617)_Patrocle",
+        "es": "https://es.wikipedia.org/wiki/(617)_Patroclo",
+        "pt-BR": "https://pt.wikipedia.org/wiki/617_P%C3%A1troclo"
+      }
+    },
+    "cameraDistance": {
+      "educ": 0.6,
+      "explo": {
+        "$cameraFromRadiusKm": 54
+      }
+    },
+    "loadPriority": 13
+  },
+  "facts": {
+    "radiusKm": {
+      "value": 54,
+      "published": false,
+      "reason": {
+        "en": "Only the axes of an ellipsoid fitted to stellar occultations are published for it (Buie et al. 2015, as quoted by Grundy et al. 2018), not a mean radius.",
+        "fr": "Seuls les axes d’un ellipsoïde ajusté sur des occultations stellaires sont publiés pour lui (Buie et al. 2015, cités par Grundy et al. 2018), pas un rayon moyen.",
+        "es": "Para él solo se publican los ejes de un elipsoide ajustado a ocultaciones estelares (Buie et al. 2015, citados por Grundy et al. 2018), no un radio medio.",
+        "pt-BR": "Para ele só são publicados os eixos de um elipsoide ajustado a ocultações estelares (Buie et al. 2015, citados por Grundy et al. 2018), não um raio médio."
+      }
+    },
+    "massKg": {
+      "published": false,
+      "reason": {
+        "en": "Only the mass of the pair is published (Grundy et al. 2018), not how it divides between Patroclus and Menoetius.",
+        "fr": "Seule la masse du couple est publiée (Grundy et al. 2018), pas sa répartition entre Patrocle et Menoetius.",
+        "es": "Solo se publica la masa de la pareja (Grundy et al. 2018), no cómo se reparte entre Patroclo y Menoetius.",
+        "pt-BR": "Só é publicada a massa do par (Grundy et al. 2018), não como ela se divide entre Pátroclo e Menoetius."
+      }
+    },
+    "gravity": {
+      "published": false,
+      "reason": {
+        "en": "Surface gravity is derived from a mass, and none is published for this body.",
+        "fr": "La gravité de surface se dérive d’une masse, et aucune n’est publiée pour ce corps.",
+        "es": "La gravedad en la superficie se deriva de una masa, y no se publica ninguna para este cuerpo.",
+        "pt-BR": "A gravidade na superfície se deriva de uma massa, e nenhuma é publicada para este corpo."
+      }
+    },
+    "meanTempC": {
+      "published": false,
+      "reason": {
+        "en": "The article that gives its orbit, the source of its other figures, publishes no temperature.",
+        "fr": "L’article qui donne son orbite, d’où viennent ses autres chiffres, ne publie aucune température.",
+        "es": "El artículo que da su órbita, de donde proceden sus demás cifras, no publica ninguna temperatura.",
+        "pt-BR": "O artigo que dá a sua órbita, de onde vêm os seus outros números, não publica nenhuma temperatura."
+      }
+    },
+    "axialTilt": {
+      "value": {
+        "$deg": 152.5301
+      },
+      "published": false,
+      "reason": {
+        "en": "The IAU report on rotational elements, which gives the spin axis of most moons shown here, publishes no pole for this body, so a tilt relative to its orbit cannot be derived.",
+        "fr": "Le rapport de l'UAI sur les éléments de rotation, qui donne l'axe de la plupart des lunes affichées ici, ne publie aucun pôle pour ce corps : son inclinaison sur son orbite ne peut donc pas en être dérivée.",
+        "es": "El informe de la UAI sobre elementos de rotación, que da el eje de la mayoría de las lunas mostradas aquí, no publica ningún polo para este cuerpo, así que su inclinación respecto a su órbita no puede derivarse.",
+        "pt-BR": "O relatório da UAI sobre elementos de rotação, que dá o eixo da maioria das luas mostradas aqui, não publica nenhum polo para este corpo, portanto a sua inclinação em relação à órbita não pode ser derivada."
+      }
+    },
+    "distanceAU": {
+      "value": {
+        "$km": 688.5
+      },
+      "source": "grundy-2018-patroclus",
+      "method": "measured",
+      "uncertainty": {
+        "$km": 4.7
+      }
+    },
+    "orbitPeriodDays": {
+      "value": 4.28268,
+      "source": "grundy-2018-patroclus",
+      "method": "measured",
+      "uncertainty": 0.000063
+    },
+    "rotationPeriod": {
+      "published": false,
+      "reason": {
+        "en": "Its spin is thought to be locked to its 4.28-day orbit, but the article that gives that orbit publishes no rotation period of its own.",
+        "fr": "Sa rotation passe pour être synchronisée sur son orbite de 4,28 jours, mais l’article qui donne cette orbite ne publie pas de période de rotation qui lui soit propre.",
+        "es": "Se cree que su rotación está sincronizada con su órbita de 4,28 días, pero el artículo que da esa órbita no publica un periodo de rotación propio.",
+        "pt-BR": "Acredita-se que a sua rotação esteja sincronizada com a sua órbita de 4,28 dias, mas o artigo que dá essa órbita não publica um período de rotação próprio."
+      }
+    }
+  },
+  "notes": {
+    "": "Satellite d'une cible de mission, ajouté au catalogue le 2026-10-04 (vague 2). Orbite lue dans Grundy et al. 2018, table 2 (solution circulaire, Menoetius relatif à Patrocle), citée mot pour mot dans le relevé des faits.",
+    "facts.radiusKm": "Valeur de TRAVAIL, non publiée (rendu, écarts en rayons) : l'axe b de l'ellipsoïde de Buie et al. 2015, 54 km, que cite Grundy et al. 2018. Patrocle porte la même convention (59 km).",
+    "relativeOrbitalElements": "Elements MOYENS, mesures sur le binaire (node scripts/derive-relative-elements.mjs --mean menoetius, epoque 2026-01-01) : plan et rayon moyens sur 400 jours, periode du catalogue. Le repli ne sert que hors de la couverture du binaire (2000-2050).",
+    "facts.axialTilt": "Valeur de TRAVAIL, non publiée (rendu seulement) : l'inclinaison sur l'écliptique de la normale de son orbite, mesurée sur le binaire (même nombre que `relativeOrbitalElements`). Une rotation synchrone se fait autour de cette normale ; à 0°, la lune tournait à l'endroit quand le couple tourne à l'envers, et `spinDirection.test.ts` l'a vu.",
+    "rotationSpeed": "Rendu seulement : rotation prise synchrone de l'orbite, ce que Grundy et al. 2018 jugent compatible avec la période de la courbe de lumière. La fiche ne l'affiche pas."
+  }
+}

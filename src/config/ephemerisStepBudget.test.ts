@@ -42,6 +42,14 @@ function servedMedianRadii(body: string): number | null {
   return row?.radii?.median ?? null;
 }
 
+/** L'écart médian du BINAIRE seul, en rayons : ce que le pas porte, sans la position du parent. */
+function binaryMedianRadii(body: string): number | null {
+  const row = summary.rows.find(
+    (r) => r.body === body && r.provider === 'horizons-binary'
+  );
+  return row?.radii?.median ?? null;
+}
+
 /** Les corps dont le pas livré ne résout pas l'orbite : moins de 2 échantillons par révolution. */
 function underSampledSatellites(): string[] {
   const periods = new Map<string, number>();
@@ -107,7 +115,21 @@ describe('pas des satellites : ce qui est refusé, et pourquoi', () => {
     const over = new Set<string>();
     for (const body of underSampledSatellites()) {
       const served = servedMedianRadii(body);
-      if (served !== null && served > TARGET_MEDIAN_RADII) over.add(body);
+      if (served === null || served <= TARGET_MEDIAN_RADII) continue;
+      // Un écart que le PAS ne porte pas n'est pas un refus de pas. Dimorphos et Menoetius
+      // (2026-10-04) : leur binaire tient la cible (0,19 et 0,14 rayon), et l'écart composé
+      // vient de leur PARENT, dessiné au barycentre du couple ou par une autre solution
+      // qu'Horizons (1 900 et 25 fois l'écart du binaire). Le critère se dérive : binaire
+      // sous la cible ET écart composé plus de dix fois le sien. Les six refus déclarés ont
+      // un rapport de 0,99 à 1,26, et Phobos (binaire 0,94, composé 1,19) reste donc déclaré.
+      const binary = binaryMedianRadii(body);
+      if (
+        binary !== null &&
+        binary <= TARGET_MEDIAN_RADII &&
+        served > 10 * binary
+      )
+        continue;
+      over.add(body);
     }
     expect([...over].sort()).toEqual([...declared].sort());
   });
@@ -124,7 +146,8 @@ describe('pas des satellites : ce qui est refusé, et pourquoi', () => {
     // C'est la raison du refus, et elle se recalcule : trois corps chiffrables valent plus de
     // HUIT fois l'ensemble des éphémérides livrées, pour des lunes de 84 à 252 km de rayon. C'était
     // dix fois au lot 26, quand le livré pesait 38 Mo ; les 23 cibles de missions du 2026-10-04
-    // le portent à 50,8 Mo, et le rapport mesuré tombe à 8,2. Le refus tient toujours.
+    // le portent à 50,8 Mo (rapport 8,2), leurs deux satellites à 51,2 Mo, et le rapport
+    // mesuré tombe à 8,16. Le refus tient toujours.
     let shipped = 0;
     for (const entry of Object.values(manifest.bodies))
       shipped += statSync(join(EPHEMERIDES, entry.file)).size;

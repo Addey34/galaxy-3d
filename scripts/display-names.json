@@ -101,5 +101,7 @@
   "hartley-2": { "en": "Hartley 2", "fr": "Hartley 2", "es": "Hartley 2", "pt-BR": "Hartley 2" },
   "churyumov-gerasimenko": { "en": "Churyumov–Gerasimenko", "fr": "Tchourioumov-Guérassimenko", "es": "Churyumov-Gerasimenko", "pt-BR": "Churyumov-Gerasimenko" },
   "giacobini-zinner": { "en": "Giacobini–Zinner", "fr": "Giacobini-Zinner", "es": "Giacobini-Zinner", "pt-BR": "Giacobini-Zinner" },
-  "grigg-skjellerup": { "en": "Grigg–Skjellerup", "fr": "Grigg-Skjellerup", "es": "Grigg-Skjellerup", "pt-BR": "Grigg-Skjellerup" }
+  "grigg-skjellerup": { "en": "Grigg–Skjellerup", "fr": "Grigg-Skjellerup", "es": "Grigg-Skjellerup", "pt-BR": "Grigg-Skjellerup" },
+  "dimorphos": { "en": "Dimorphos", "fr": "Dimorphos", "es": "Dimorphos", "pt-BR": "Dimorphos" },
+  "menoetius": { "en": "Menoetius", "fr": "Menoetius", "es": "Menoetius", "pt-BR": "Menoetius" }
 }

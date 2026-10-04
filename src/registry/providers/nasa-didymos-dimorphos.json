@@ -1,0 +1,10 @@
+{
+  "$schema": "../schema/provider.schema.json",
+  "id": "nasa-didymos-dimorphos",
+  "role": "fact-source",
+  "publisher": "NASA Science",
+  "title": "Didymos & Dimorphos",
+  "url": "https://science.nasa.gov/solar-system/asteroids/didymos/",
+  "kind": "agency",
+  "accessed": "2026-10-04"
+}

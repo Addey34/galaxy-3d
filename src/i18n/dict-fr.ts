@@ -647,6 +647,8 @@ export const fr: Record<MessageKey, string> = {
     'magnitude absolue H : l’éclat qu’aurait l’objet à 1 UA du Soleil et de l’observateur, sous un angle de phase nul',
   'detail.perihelionFromElements':
     'q = a (1 − e), d’après les éléments osculateurs publiés',
+  'detail.afterDartImpact':
+    'la période après l’impact de DART du 26 septembre 2022 (11 h 55 min avant)',
   'fact.notYetSourced':
     'Galaxy n’a pas encore rattaché cette valeur à une source primaire (agence spatiale, UAI, article publié) : elle n’est donc pas affichée.',
 };

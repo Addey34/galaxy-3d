@@ -53,6 +53,11 @@ const PARENT_MASS_KG = {
   neptune: 1.024e26,
   // Pluton + Charon : le système est un binaire, ses satellites orbitent le barycentre.
   pluto: 1.303e22 + 1.586e21,
+  // Deux binaires de cibles de missions (2026-10-04). Didymos : densité × volume, les deux
+  // publiés par la SBDB (Naidu et al. 2020), la forme même de sa fiche. Patrocle : la masse du
+  // COUPLE (Grundy et al. 2018), que sa fiche porte en valeur de travail non publiée.
+  didymos: 2170 * (4 / 3) * Math.PI * 390 ** 3,
+  patroclus: 1.41e18,
 };
 
 const manifest = JSON.parse(

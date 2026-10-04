@@ -572,11 +572,36 @@ for (const [body, designation] of Object.entries(SBDB)) {
     continue;
   }
   if (read.confirmed.length === 0 && read.unconfirmed.length === 0) continue;
+  // Une lune du CATALOGUE (Dimorphos, Menoetius, 2026-10-04) prend sa découverte dans cette
+  // liste, comme une lune de planète la prend dans la section du JPL : par son nom UAI, et une
+  // lune introuvable arrête tout.
+  const moons = new Map(
+    bodies.get(body).satellites.map((id) => [bodies.get(id).name, id])
+  );
+  const list = read.confirmed.map((row) => {
+    const id = moons.get(row.name);
+    if (!id) return row;
+    moons.delete(row.name);
+    records.get(id).push({
+      source: 'sbdb',
+      form: 'years',
+      years: row.years,
+      who: row.who,
+      ref: row.ref,
+      url: read.url,
+      retrieved: read.retrieved,
+    });
+    return { ...row, body: id };
+  });
+  if (moons.size)
+    throw new Error(
+      `lunes du catalogue absentes des satellites confirmés de ${body} à la SBDB : ${[...moons.keys()].join(', ')}`
+    );
   systemFiles[body] = {
     source: 'sbdb',
     url: read.url,
     retrieved: read.retrieved,
-    list: read.confirmed,
+    list,
     ...(read.unconfirmed.length ? { unconfirmed: read.unconfirmed } : {}),
   };
 }

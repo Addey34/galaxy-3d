@@ -1,7 +1,7 @@
 {
   "version": 1,
   "source": "NASA/JPL Horizons",
-  "generatedAt": "2026-10-04T04:02:39.263Z",
+  "generatedAt": "2026-10-04T06:19:27.723Z",
   "frame": "ECLIPTIC_J2000",
   "center": "SUN",
   "units": "AU-D",
@@ -712,6 +712,22 @@
       "startJdTdb": 2415020.5,
       "stepDays": 4,
       "sampleCount": 18354
+    },
+    "dimorphos": {
+      "file": "dimorphos.1f268d79e729.bin",
+      "target": "120065803",
+      "center": "didymos",
+      "startJdTdb": 2451548.5,
+      "stepDays": 4,
+      "sampleCount": 2830
+    },
+    "menoetius": {
+      "file": "menoetius.ba1f470bacc0.bin",
+      "target": "120000617",
+      "center": "patroclus",
+      "startJdTdb": 2451548.5,
+      "stepDays": 4,
+      "sampleCount": 4648
     }
   }
 }

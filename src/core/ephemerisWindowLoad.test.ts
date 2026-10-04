@@ -111,8 +111,9 @@ describe('le service charge des fenêtres (lot 17C)', () => {
     expect(log.every((call) => /^bytes=\d+-\d+$/.test(call.range ?? ''))).toBe(
       true
     );
-    // 38 445 024 au lot 17 ; 50 834 160 depuis les 23 cibles de missions (2026-10-04).
-    expect(shipped).toBe(50_834_160);
+    // 38 445 024 au lot 17 ; 50 834 160 avec les 23 cibles de missions (2026-10-04), puis
+    // 51 193 104 avec leurs deux satellites, bornés à 2000-2030 et 2000-2050.
+    expect(shipped).toBe(51_193_104);
     // MESURÉ ici avec TOUTES les lignes d'orbite allumées, le pire cas qu'un visiteur obtient en
     // allumant la colonne entière : Halley en demande 333 Ko à elle seule (76 ans de révolution,
     // pas de 4 jours), Uranus 368 Ko. Le démarrage, lui, ne demande depuis le 2026-10-04 que les

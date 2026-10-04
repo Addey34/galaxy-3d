@@ -127,10 +127,10 @@
       "value": 0,
       "published": false,
       "reason": {
-        "en": "The IAU report on rotational elements, which gives the spin axis of every other moon shown here, publishes no pole for this body, so a tilt relative to its orbit cannot be derived.",
-        "fr": "Le rapport de l'UAI sur les éléments de rotation, qui donne l'axe de toutes les autres lunes affichées ici, ne publie aucun pôle pour ce corps : son inclinaison sur son orbite ne peut donc pas en être dérivée.",
-        "es": "El informe de la UAI sobre elementos de rotación, que da el eje de todas las demás lunas mostradas aquí, no publica ningún polo para este cuerpo, así que su inclinación respecto a su órbita no puede derivarse.",
-        "pt-BR": "O relatório da UAI sobre elementos de rotação, que dá o eixo de todas as outras luas mostradas aqui, não publica nenhum polo para este corpo, portanto a sua inclinação em relação à órbita não pode ser derivada."
+        "en": "The IAU report on rotational elements, which gives the spin axis of most moons shown here, publishes no pole for this body, so a tilt relative to its orbit cannot be derived.",
+        "fr": "Le rapport de l'UAI sur les éléments de rotation, qui donne l'axe de la plupart des lunes affichées ici, ne publie aucun pôle pour ce corps : son inclinaison sur son orbite ne peut donc pas en être dérivée.",
+        "es": "El informe de la UAI sobre elementos de rotación, que da el eje de la mayoría de las lunas mostradas aquí, no publica ningún polo para este cuerpo, así que su inclinación respecto a su órbita no puede derivarse.",
+        "pt-BR": "O relatório da UAI sobre elementos de rotação, que dá o eixo da maioria das luas mostradas aqui, não publica nenhum polo para este corpo, portanto a sua inclinação em relação à órbita não pode ser derivada."
       }
     },
     "distanceAU": {

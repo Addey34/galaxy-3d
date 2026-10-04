@@ -31,7 +31,10 @@
       "fr": "https://fr.wikipedia.org/wiki/(65803)_Didymos",
       "es": "https://es.wikipedia.org/wiki/(65803)_D%C3%ADdimo",
       "pt-BR": "https://pt.wikipedia.org/wiki/65803_Didymos"
-    }
+    },
+    "satellites": [
+      "dimorphos"
+    ]
   },
   "facts": {
     "radiusKm": {
@@ -45,22 +48,27 @@
       "citation": "Naidu, S. P.; Benner, L. A. M.; Brozovic, M.; et al. (2020) Icarus 348, 113777"
     },
     "massKg": {
-      "published": false,
-      "reason": {
-        "en": "The JPL Small-Body Database publishes no GM for this body, and no mass can be derived without one.",
-        "fr": "La base des petits corps de JPL ne publie aucun GM pour ce corps, et aucune masse ne se dérive sans lui.",
-        "es": "La base de datos de cuerpos menores del JPL no publica ningún GM para este cuerpo, y no puede derivarse ninguna masa sin él.",
-        "pt-BR": "A base de pequenos corpos do JPL não publica nenhum GM para este corpo, e nenhuma massa se deriva sem ele."
-      }
+      "value": {
+        "$density": 2.17,
+        "$radiusKm": 0.39
+      },
+      "source": "jpl-sbdb",
+      "method": "derived",
+      "detail": "massFromDensity",
+      "citation": "Naidu, S. P.; Benner, L. A. M.; Brozovic, M.; et al. (2020) Icarus 348, 113777"
     },
     "gravity": {
-      "published": false,
-      "reason": {
-        "en": "Surface gravity is derived from a mass, and none is published for this body.",
-        "fr": "La gravité de surface se dérive d’une masse, et aucune n’est publiée pour ce corps.",
-        "es": "La gravedad en la superficie se deriva de una masa, y no se publica ninguna para este cuerpo.",
-        "pt-BR": "A gravidade na superfície se deriva de uma massa, e nenhuma é publicada para este corpo."
-      }
+      "value": {
+        "$massKg": {
+          "$density": 2.17,
+          "$radiusKm": 0.39
+        },
+        "$radiusKm": 0.39
+      },
+      "source": "jpl-sbdb",
+      "method": "derived",
+      "detail": "gravityFromMass",
+      "citation": "Naidu, S. P.; Benner, L. A. M.; Brozovic, M.; et al. (2020) Icarus 348, 113777"
     },
     "meanTempC": {
       "published": false,

@@ -183,8 +183,9 @@ describe('missions livrées', () => {
     const covered = Object.values(index.bodies).filter(
       (e) => e.count > 0
     ).length;
-    // 48 au lot 40, 71 depuis le 2026-10-04 : les 23 cibles de missions entrées au catalogue.
-    expect(covered).toBe(71);
+    // 48 au lot 40, 71 depuis le 2026-10-04 : les 23 cibles de missions entrées au catalogue,
+    // puis 73 avec leurs deux satellites (Dimorphos, Menoetius).
+    expect(covered).toBe(73);
     // 112 investigations DISTINCTES, pour 113 lignes rendues : le registre sert deux fois
     // `mission.venus_express` sous le même `lidvid`, et le générateur les fusionne parce
     // qu'elles sont identiques une fois la sentinelle réécrite. Le chiffre publié est celui

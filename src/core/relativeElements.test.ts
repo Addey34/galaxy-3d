@@ -197,6 +197,12 @@ describe('repli képlérien confronté aux binaires Horizons', () => {
    *   - Hypérion (22 % / 54 %) : résonance 4:3 avec Titan, orbite chaotique ;
    *   - Miranda (3 % / 15 %) : orbite inclinée de 4,3° sur l'équateur d'Uranus, dont le
    *     nœud précesse ; des éléments figés gardent le plan de l'époque.
+   *   - Dimorphos (2026-10-04) : sa phase N'EST PAS tenue, et la borne le dit (2,1, soit
+   *     « n'importe où sur son orbite »). La période affichée est publiée à ± 2 min (NASA), un
+   *     tour d'incertitude par an pour une orbite de 11 h ; et la limite est aussi physique :
+   *     Scheirich et al. 2024 (arXiv 2403.02804) mesurent une période qui change encore des
+   *     semaines après l'impact, et une orbite peut-être chaotique 70 jours après. Le repli ne
+   *     sert que hors de 2000-2030, où le binaire couvre tout ; le RAYON, lui, reste tenu.
    * Hors de la couverture des binaires (avant 1900, après 2100), le repli est donc sur la
    * bonne orbite mais sa phase n'est garantie que dans ces bornes. On ne le coupe pas :
    * `null` gèlerait le corps en Éduc et le cacherait au centre de sa planète en Explo, ce
@@ -206,6 +212,7 @@ describe('repli képlérien confronté aux binaires Horizons', () => {
     mimas: [0.12, 0.55],
     hyperion: [0.32, 0.8],
     miranda: [0.12, 0.22],
+    dimorphos: [2.1, 2.1],
   };
   const DEFAULT_PHASE_BOUNDS = [0.12, 0.12] as const;
 

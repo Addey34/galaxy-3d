@@ -655,6 +655,8 @@ export const ptBR: Record<MessageKey, string> = {
     'magnitude absoluta H: o brilho que o objeto teria a 1 UA do Sol e do observador, com ângulo de fase nulo',
   'detail.perihelionFromElements':
     'q = a (1 − e), conforme os elementos osculadores publicados',
+  'detail.afterDartImpact':
+    'o período após o impacto da DART em 26 de setembro de 2022 (11 h 55 min antes)',
   'fact.notYetSourced':
     'A Galaxy ainda não vinculou este valor a uma fonte primária (agência espacial, UAI, artigo publicado): por isso ele não é exibido.',
 };
