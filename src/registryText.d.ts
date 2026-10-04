@@ -19,3 +19,21 @@ declare module 'virtual:registry-text/catalogue-pt-BR' {
   const map: Record<string, string>;
   export default map;
 }
+// Le texte LONG des fiches, dans les quatre langues : chargé à la première ouverture d'une fiche
+// (`config/cardText.ts`).
+declare module 'virtual:registry-text/card-en' {
+  const map: Record<string, string>;
+  export default map;
+}
+declare module 'virtual:registry-text/card-fr' {
+  const map: Record<string, string>;
+  export default map;
+}
+declare module 'virtual:registry-text/card-es' {
+  const map: Record<string, string>;
+  export default map;
+}
+declare module 'virtual:registry-text/card-pt-BR' {
+  const map: Record<string, string>;
+  export default map;
+}

@@ -9,7 +9,10 @@ import {
 } from './src/seo/pwaRouting';
 import {
   collectTranslations,
+  collectDeferredText,
+  deferLongText,
   stripToEnglish,
+  CARD_TEXT_LOCALES,
   DERIVED_TEXT_LOCALES,
   type DerivedTextLocale,
 } from './src/core/registryText';
@@ -73,15 +76,29 @@ function stripRegistryNotes() {
  */
 function deriveRegistryText() {
   const PREFIX = 'virtual:registry-text/catalogue-';
+  /**
+   * Le texte LONG des fiches (descriptions, raisons, crédits, liens) voyage à part, dans TOUTES
+   * les langues, et n'arrive qu'à la première ouverture d'une fiche : cf.
+   * `core/registryText.ts::DEFERRED_TEXT_KEYS`. Seuls les registres que lit la fiche sont
+   * concernés ; les fournisseurs et les visites gardent leur texte au démarrage.
+   */
+  const CARD_PREFIX = 'virtual:registry-text/card-';
+  const DEFERRING_DIRS = ['entities', 'spacecraft', 'interstellar'];
   const isRegistryJson = (id: string): boolean =>
     /[\\/]src[\\/]registry[\\/].+\.json$/.test(id) &&
     !/order\.json$/.test(id) &&
     !/[\\/]schema[\\/]/.test(id);
+  const defersText = (id: string): boolean => {
+    const dir = /[\\/]registry[\\/]([^\\/]+)[\\/]/.exec(id)?.[1];
+    return dir !== undefined && DEFERRING_DIRS.includes(dir);
+  };
 
   /** Les fiches du disque, lues une fois par demande de module virtuel. */
-  const readFiches = async (): Promise<unknown[]> => {
+  const readFiches = async (
+    only?: readonly string[]
+  ): Promise<{ dir: string; fiche: unknown }[]> => {
     const { readdirSync, readFileSync } = await import('fs');
-    const out: unknown[] = [];
+    const out: { dir: string; fiche: unknown }[] = [];
     for (const dir of [
       'entities',
       'spacecraft',
@@ -89,10 +106,14 @@ function deriveRegistryText() {
       'providers',
       'tours',
     ]) {
+      if (only && !only.includes(dir)) continue;
       const full = resolve(__dirname, 'src/registry', dir);
       for (const name of readdirSync(full))
         if (name.endsWith('.json') && name !== 'order.json')
-          out.push(JSON.parse(readFileSync(resolve(full, name), 'utf-8')));
+          out.push({
+            dir,
+            fiche: JSON.parse(readFileSync(resolve(full, name), 'utf-8')),
+          });
     }
     return out;
   };
@@ -101,9 +122,30 @@ function deriveRegistryText() {
     name: 'derive-registry-text',
     enforce: 'pre' as const,
     resolveId(id: string): string | null {
-      return id.startsWith(PREFIX) ? `\0${id}` : null;
+      return id.startsWith(PREFIX) || id.startsWith(CARD_PREFIX)
+        ? `\0${id}`
+        : null;
     },
     async load(id: string): Promise<string | null> {
+      if (id.startsWith(`\0${CARD_PREFIX}`)) {
+        const locale = id.slice(`\0${CARD_PREFIX}`.length);
+        if (!(CARD_TEXT_LOCALES as readonly string[]).includes(locale))
+          throw new Error(`langue inconnue pour le texte de fiche : ${locale}`);
+        const map: Record<string, string> = {};
+        for (const { fiche } of await readFiches(DEFERRING_DIRS))
+          collectDeferredText(
+            fiche,
+            locale as (typeof CARD_TEXT_LOCALES)[number],
+            map
+          );
+        // Même garde que la carte du démarrage : un module presque vide voudrait dire que les
+        // fiches n'ont pas été lues, et la fiche s'ouvrirait sans aucun texte.
+        if (Object.keys(map).length < 50)
+          throw new Error(
+            `texte de fiche en ${locale} : ${Object.keys(map).length} entrées seulement, fiches non lues ?`
+          );
+        return `export default ${JSON.stringify(map)};`;
+      }
       if (!id.startsWith(`\0${PREFIX}`)) return null;
       const locale = id.slice(`\0${PREFIX}`.length);
       if (!(DERIVED_TEXT_LOCALES as readonly string[]).includes(locale))
@@ -111,8 +153,14 @@ function deriveRegistryText() {
           `langue inconnue pour le texte du registre : ${locale}`
         );
       const map: Record<string, string> = {};
-      for (const fiche of await readFiches())
-        collectTranslations(fiche, locale as DerivedTextLocale, map);
+      // Les blocs différés n'entrent pas dans la carte du démarrage : ils sont dans `card-`.
+      for (const { dir, fiche } of await readFiches())
+        collectTranslations(
+          fiche,
+          locale as DerivedTextLocale,
+          map,
+          DEFERRING_DIRS.includes(dir)
+        );
       // Un module vide voudrait dire que les fiches n'ont pas été lues : mieux vaut casser le
       // build que servir une langue silencieusement vide.
       if (Object.keys(map).length < 50)
@@ -128,7 +176,8 @@ function deriveRegistryText() {
     ): string | null {
       if (options?.ssr) return null;
       if (!isRegistryJson(id)) return null;
-      return JSON.stringify(stripToEnglish(JSON.parse(code)));
+      const english = stripToEnglish(JSON.parse(code));
+      return JSON.stringify(defersText(id) ? deferLongText(english) : english);
     },
   };
 }

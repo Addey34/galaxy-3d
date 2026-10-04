@@ -7,6 +7,7 @@
  * Le contenu est dérivé du catalogue — ajouter un corps n'exige aucune édition ici.
  */
 import { localizedOrKey } from '@/i18n/localizedOrKey';
+import { loadCardText } from '@/config/cardText';
 import { CELESTIAL_CONFIG } from '@/config/bodies';
 import { allBodies, hasIllustrativeSurface } from '@/config/catalog';
 import { TEXTURE_SETTINGS } from '@/config/engine';
@@ -884,9 +885,13 @@ export function setupBodyInfo(coordinator?: OverlayCoordinator): BodyInfoPanel {
     // fichier glTF : nulle part où un visiteur le voit, alors que la politique ISAS/JAXA exige
     // de citer la source (et les modifications) de tout usage de ses données.
     if (creditEl) {
-      const locale = getLocale() === 'fr' ? 'fr' : 'en';
-      const credit = cfg.model?.credit[locale];
-      const colour = cfg.model?.colourSource?.[locale];
+      // La langue ACTIVE, repli anglais. Ce code choisissait entre `fr` et `en` seulement : un
+      // visiteur espagnol ou portugais lisait le crédit en anglais alors que sa traduction était
+      // dans la fiche (vu le 2026-10-04 en différant ce texte).
+      const locale = getLocale();
+      const credit = cfg.model?.credit[locale] ?? cfg.model?.credit.en;
+      const colour =
+        cfg.model?.colourSource?.[locale] ?? cfg.model?.colourSource?.en;
       // La carte de couleur est une donnée tierce elle aussi : citée à côté de la forme.
       // Le deux-points vient du dictionnaire (`bi.creditLine`) : il était écrit ici avec une
       // espace avant, c'est-à-dire la typographie FRANÇAISE, servie aussi à l'anglais.
@@ -936,6 +941,21 @@ export function setupBodyInfo(coordinator?: OverlayCoordinator): BodyInfoPanel {
     if (triggerBtn) triggerBtn.hidden = false;
   };
 
+  /**
+   * Le texte long de la fiche (description, raisons, crédits, lien) arrive à la PREMIÈRE
+   * ouverture, dans la langue active (`config/cardText.ts`). La fiche se rend tout de suite avec
+   * ce qu'elle a, puis une seconde fois si des blocs ont été reposés : jamais pour rien, puisque
+   * le chargement rend le nombre de blocs touchés. Un échec réseau laisse la fiche sans ce texte,
+   * et la prochaine ouverture réessaie.
+   */
+  const refreshWhenCardTextArrives = (): void => {
+    void loadCardText(getLocale())
+      .then((count) => {
+        if (count > 0 && currentName) render(currentName);
+      })
+      .catch(() => undefined);
+  };
+
   const show = (name: string): void => {
     const cfg = CONFIGS.get(name);
     // Corps sans fiche (skybox, sans données) : ne pas ouvrir de surface vide.
@@ -945,6 +965,7 @@ export function setupBodyInfo(coordinator?: OverlayCoordinator): BodyInfoPanel {
     }
     currentName = name;
     render(name);
+    refreshWhenCardTextArrives();
     // La sélection ouvre la fiche : sur toutes tailles, la surface s'affiche (elle est
     // désormais compacte et n'occulte pas la scène). L'utilisateur peut la fermer.
     coordinator?.requestOpen('body-info');
@@ -963,6 +984,7 @@ export function setupBodyInfo(coordinator?: OverlayCoordinator): BodyInfoPanel {
   onLocaleChange(() => {
     if (currentName) render(currentName);
     updatePosition(lastPosition);
+    refreshWhenCardTextArrives();
   });
   // Mode daltonien basculé : recolore l'accent de la fiche du corps courant.
   onAccentChange(() => {

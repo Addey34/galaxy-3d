@@ -12,7 +12,9 @@ import { getLocale, t } from './index';
 /** Le texte, dans la langue active. */
 export function localizedOrKey(value: LocalizedOrKey): string {
   if ('message' in value) return t(value.message);
-  return value[getLocale()] ?? value.en;
+  // `?? ''` : un texte DIFFÉRÉ (`config/cardText.ts`) n'a pas encore d'anglais tant que la
+  // carte de la fiche n'est pas arrivée ; rendre `undefined` écrirait le mot dans la page.
+  return value[getLocale()] ?? value.en ?? '';
 }
 
 /**
