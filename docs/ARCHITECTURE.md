@@ -3897,8 +3897,8 @@ tournés dans leurs axes principaux (`--principal`) ; et le rayon équivalent-vo
 
 - Didymos, Dimorphos et Arrokoth : leurs jeux sont sur `pdssbn.astro.umd.edu/holdings/`, qui a
   répondu 403 à toute requête ce jour-là (et à plusieurs agents), comme pour les trois comètes de
-  la vague 1, alors qu'une page de mission du même hôte répond 200. Piste non mesurée : NAIF
-  publie les noyaux SPICE de DART, peut-être avec ces formes en DSK.
+  la vague 1, alors qu'une page de mission du même hôte répond 200. Didymos et Dimorphos en sont
+  sortis à la vague 4, ci-dessous.
 - 67P : servi par la PSA, mais le jeu ne déclare aucune licence (lisez-moi, catalogue, guide), la
   PSA ne demande qu'un remerciement pour une publication, et l'avis général du site de l'ESA
   exclut les usages autres qu'éducatifs ou éditoriaux sans licence particulière. Rien n'est
@@ -3906,6 +3906,19 @@ tournés dans leurs axes principaux (`--principal`) ; et le rayon équivalent-vo
 - Leucus : DAMIT publie deux solutions convexes de qualité 1, aux pôles différents, sans taille
   étalonnée. En importer une serait présenter un choix comme une mesure, et son échelle viendrait
   du catalogue, ce qui rendrait la garde du volume tautologique.
+
+### Vague 4 : Didymos et Dimorphos lus en DSK (2026-10-04)
+
+Les modèles SPC de DART que l'UMD refusait sont aussi servis par l'archive SPICE PDS4 de DART
+chez NAIF, en DSK, un format binaire que rien ne lisait ici. `scripts/dsk-to-obj.mjs` le lit sans
+dépendance, couche par couche (DAS, DLA, DSK de type 2, indices de `dsk02.inc`) et refuse ce qu'il
+ne sait pas lire (autre format binaire que LTL-IEEE, plusieurs segments, autre type). Ce qui l'a
+validé : 49 152 plaques pour le fichier de 9 309 mm, exactement 6 × 64² × 2, la grille de la SPC,
+puis les gardes de `shapeModels.test.ts` sur les fichiers produits (volume, pôle, faces sortantes).
+Les rayons équivalents (0,365 et 0,075 km) sont 6,4 % sous ceux des fiches, un écart publié de part
+et d'autre et DÉCLARÉ : Daly et al. 2023 donnent 151 ± 5 m de diamètre équivalent pour Dimorphos.
+La couleur cuite est l'albédo du système, 0,15 ± 0,02 (Daly et al. 2023), la SBDB n'en publiant
+aucun pour Didymos.
 
 ### Une ligne d'orbite n'est payée que si elle est tracée
 

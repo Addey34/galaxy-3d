@@ -105,12 +105,6 @@ export const SHAPE_MODEL_GAPS: readonly ShapeModelGap[] = [
       'DAMIT, modèles convexes 6692 (pôle 321°, 77°) et 6693 (152°, 51°), qualité 1, taille non étalonnée',
   },
   {
-    body: 'didymos',
-    radiusKm: 0.39,
-    reason: 'archive-refuses-access',
-    source: 'PDS, urn:nasa:pds:dart_shapemodel (didymos_model_v003)',
-  },
-  {
     body: 'churyumov-gerasimenko',
     radiusKm: 1.7,
     reason: 'licence-not-stated',
@@ -162,15 +156,9 @@ export const SHAPE_MODEL_GAPS: readonly ShapeModelGap[] = [
     source: 'PDS, urn:nasa:pds:nh_derived:arrokoth_shapemodel_porter2024',
   },
   { body: 'patroclus', radiusKm: 59, reason: 'not-found-in-registries' },
-  // Les satellites de la vague 2 (2026-10-04). Dimorphos : le bundle même du modèle de
-  // Didymos, en versions v003 et v004. Menoetius : rien au registre, seulement les axes d'un
-  // ellipsoïde ajusté sur des occultations (Buie et al. 2015), ce qui n'est pas un maillage.
-  {
-    body: 'dimorphos',
-    radiusKm: 0.08,
-    reason: 'archive-refuses-access',
-    source: 'PDS, urn:nasa:pds:dart_shapemodel (dimorphos_model_v004)',
-  },
+  // Menoetius (vague 2, 2026-10-04) : rien au registre, seulement les axes d'un ellipsoïde
+  // ajusté sur des occultations (Buie et al. 2015), ce qui n'est pas un maillage. Didymos et
+  // Dimorphos sont sortis d'ici à la vague 4, lus en DSK chez NAIF.
   { body: 'menoetius', radiusKm: 54, reason: 'not-found-in-registries' },
 ];
 
@@ -185,6 +173,8 @@ export const SHAPE_COLLECTIONS_SEARCHED: readonly string[] = [
   'ESA PSA, INTERNATIONAL-ROSETTA-MISSION/SHAPE/ et les jeux de Steins et Lutetia',
   'DAMIT, table asteroid_models (témoin : Pallas 4395, Psyché 1806)',
   'pdssbn.astro.umd.edu, pages de mission Deep Impact, Stardust, DS1, EPOXI',
+  // 2026-10-04, vague 4 : la même forme servie AILLEURS que l'hôte qui refuse.
+  'NAIF, archive SPICE PDS4 de DART (dsk/), et serveur SPICE de l’ESA pour Hera (dsk/)',
 ];
 
 /** Ce qu'on dit d'un manque, en une ligne, pour l'inventaire. */
