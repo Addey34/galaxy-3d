@@ -1944,6 +1944,39 @@ dimensions dans l'en-tête SOF de chaque JPEG (quelques kilo-octets, pas un déc
 les poids relevés sont ceux des fichiers sur disque. Un fichier ajouté, retiré ou redimensionné
 sans relancer `pnpm textures:ladder --write` fait rougir la porte.
 
+## L'orientation en longitude d'une texture (2026-10-04)
+
+**Le contrat.** Toute carte livrée a la longitude 0 au CENTRE et l'Est vers la droite : c'est ce
+que supposent le drapé d'un modèle (`core/modelUv.ts`, u = 0,5 + atan2(−z, x) / 2π) et la sphère
+(`SphereGeometry` met u = 0,5 sur +X), et c'est le cadrage des tuiles Trek, déclarées de −180 à
++180. Une source centrée sur 180° se ROULE d'une demi-largeur à l'import :
+`centerLongitude: 180` dans l'entrée de `scripts/import-textures.mjs`, valeur lue dans l'étiquette
+de la source et jamais devinée.
+
+**Ce qui l'a imposé.** L'import gardait le cadrage de la source. Sept corps ont donc été livrés
+tournés d'un demi-tour : Bennu (étiquette ISIS `CenterLongitude = 180.0`, pic de recalage sur le
+modèle à 179°), Cérès, Pluton (son cœur du côté de Charon), Europe, Ganymède, Callisto et Titan.
+Chacun a au moins deux preuves indépendantes : l'étiquette, un repère du gazetteer de l'UAI, les
+tuiles Trek (corrélation 0,90 à 0,95 après correction), ou le modèle drapé. Bennu a été réimporté
+depuis sa source ; les six autres ont été roulés sur leurs paliers livrés (une passe JPEG de plus,
+qualité 88, comme l'import), leurs sources pesant plusieurs Go.
+
+**Trois pièges mesurés en route.** L'étiquette ne prédit pas seule : Rhéa est étiquetée
+« centre 180 » à l'USGS et sa carte livrée est juste (corrélation 0,999 avec la mosaïque Cassini
+du PDS), sa source ayant été recadrée ailleurs. Trek peut déclarer −180..180 et servir autre chose :
+sa couche ISS de Titan met Menrva à +180°. Et une mosaïque de référence peut porter son propre
+méridien origine : la carte NEAR de 2001 d'Éros est décalée d'environ 78° sur le gazetteer.
+**Seule une mesure sur un repère nommé tranche.**
+
+**La garde** est `src/config/textureOrientation.test.ts`, dans `pnpm verify` : des témoins
+nommés (un repère nettement clair ou sombre contre le même parallèle à 180°, coordonnées lues au
+gazetteer livré) et, pour les corps drapés où il est net, le recalage pente du modèle / variance
+de la carte, dont le pic doit tomber à moins de 5° de 0 et sans miroir. Elle a été falsifiée sur
+les cartes d'avant la correction : exactement les sept corps rougissent, les autres restent verts.
+Les corps sans témoin assez contrasté (Encelade, Dioné, Téthys, Io, Triton, Charon, Déimos,
+Mercure) ont été vérifiés le même jour contre une référence indépendante quand elle existait (tuiles
+Trek, mosaïques Cassini du PDS), ou sur un repère à l'œil seulement (Io, Triton, Charon, Déimos).
+
 ## Modèles de forme : la vraie forme, et la texture du corps drapée dessus
 
 Un corps irrégulier dont un modèle de forme scientifique est publié l'affiche, au lieu d'une

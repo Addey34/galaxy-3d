@@ -40,6 +40,6 @@
     "sourceResolution": "1 km/pixel",
     "projection": "equirectangular",
     "qualityClass": "native",
-    "note": "Imported through the validated fetch pipeline."
+    "note": "Imported through the validated fetch pipeline. ORIENTATION corrigee le 2026-10-04 : la carte etait livree tournee d'un demi-tour (source centree sur 180, cadrage garde a l'import) ; etiquette CenterLongitude = 180.0 ; tuiles Trek de Ganymede (Tros a sa longitude) : correlation 0,936 apres contre 0,040 avant. Paliers livres roules d'une demi-largeur. Garde : src/config/textureOrientation.test.ts."
   }
 }

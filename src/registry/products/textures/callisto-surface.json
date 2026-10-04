@@ -42,6 +42,6 @@
     "sourceResolution": "1 km/pixel",
     "projection": "equirectangular",
     "qualityClass": "native",
-    "note": "Imported through the validated fetch pipeline."
+    "note": "Imported through the validated fetch pipeline. ORIENTATION corrigee le 2026-10-04 : la carte etait livree tournee d'un demi-tour (source centree sur 180, cadrage garde a l'import) ; source sans etiquette ; tuiles Trek de Callisto : correlation 0,945 apres contre -0,120 avant. Paliers livres roules d'une demi-largeur. Garde : src/config/textureOrientation.test.ts."
   }
 }

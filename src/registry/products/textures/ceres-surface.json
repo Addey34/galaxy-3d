@@ -28,7 +28,7 @@
     "sourcePixelWidth": 7383,
     "projection": "equirectangular",
     "qualityClass": "native-candidate",
-    "note": "Largeur lue a l'etiquette PDS3 (LINE_SAMPLES = 7383), d'ou le plafond a 4k. Jusqu'au lot 16 Ceres portait une surface PROCEDURALE et figurait parmi les surfaces illustratives, alors que cette mosaique Dawn publiee existe. Le produit a 140 m/pixel que cite la page USGS n'est servi qu'en cube ISIS ; le TIFF telechargeable est celui-ci.",
+    "note": "Largeur lue a l'etiquette PDS3 (LINE_SAMPLES = 7383), d'ou le plafond a 4k. Jusqu'au lot 16 Ceres portait une surface PROCEDURALE et figurait parmi les surfaces illustratives, alors que cette mosaique Dawn publiee existe. Le produit a 140 m/pixel que cite la page USGS n'est servi qu'en cube ISIS ; le TIFF telechargeable est celui-ci. ORIENTATION corrigee le 2026-10-04 : la carte etait livree tournee d'un demi-tour (source centree sur 180, cadrage garde a l'import) ; etiquette CenterLongitude = 180.0 ; tuiles Trek de Ceres (georeferencees, Occator a sa longitude) : correlation 0,565 apres contre 0,340 avant. Paliers livres roules d'une demi-largeur. Garde : src/config/textureOrientation.test.ts.",
     "processing": "import-textures",
     "downloadUrl": "https://asc-pds-services.s3.us-west-2.amazonaws.com/mosaic/Ceres_Dawn_FC_DLR_global_20ppd_Oct2015.tif"
   },

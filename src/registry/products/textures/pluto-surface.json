@@ -31,7 +31,7 @@
     "sourceResolution": "300 m/pixel",
     "projection": "equirectangular",
     "qualityClass": "native-candidate",
-    "note": "Best comprehensive global New Horizons mosaic currently identified.",
+    "note": "Best comprehensive global New Horizons mosaic currently identified. ORIENTATION corrigee le 2026-10-04 : la carte etait livree tournee d'un demi-tour (source centree sur 180, cadrage garde a l'import) ; etiquette CenterLongitude = 180.0 ; le coeur (Sputnik Planitia, 178,7 E) etait au CENTRE de la carte, donc du cote de Charon. Paliers livres roules d'une demi-largeur. Garde : src/config/textureOrientation.test.ts.",
     "license": "public-domain-if-usgs",
     "credit": "USGS Astrogeology / NASA New Horizons (if sourced from the mosaic above)",
     "attributionNeeded": true,
