@@ -111,6 +111,31 @@ async function checkDocument(page: Page, path: string): Promise<void> {
       document.documentElement.clientWidth
   );
   expect(overflow, `${path} : débordement horizontal`).toBeLessThanOrEqual(0);
+  await expectSeparatedLanguages(page, path);
+}
+
+/**
+ * LES LIENS DE LANGUE NE SE COLLENT PAS. Sans règle de mise en page, ils s'affichaient
+ * « EnglishEspañolPortuguês (Brasil) » : vu sur une capture le 2026-10-04, aucune garde ne le
+ * disait, puisque axe et le débordement étaient verts. Deux liens posés sur la MÊME ligne doivent
+ * être séparés d'un écart visible ; passer à la ligne est permis. Une page sans sélecteur (page de
+ * corps) n'a rien à vérifier.
+ */
+async function expectSeparatedLanguages(page: Page, path: string) {
+  const boxes = await page.locator('.doc-lang').evaluateAll((links) =>
+    links.map((link) => {
+      const r = link.getBoundingClientRect();
+      return { left: r.left, right: r.right, top: r.top };
+    })
+  );
+  for (let i = 1; i < boxes.length; i++) {
+    const [a, b] = [boxes[i - 1]!, boxes[i]!];
+    if (Math.abs(a.top - b.top) > 2) continue;
+    expect(
+      b.left - a.right,
+      `${path} : liens de langue ${i} et ${i + 1} collés`
+    ).toBeGreaterThanOrEqual(4);
+  }
 }
 
 test.describe('pages générées, à 390 px', () => {
@@ -153,6 +178,20 @@ test.describe('pages générées, à 390 px', () => {
       await checkDocument(page, path);
     });
   }
+
+  /**
+   * À 390 px les liens de langue peuvent passer chacun à la ligne ; c'est sur un écran large,
+   * où ils tiennent sur une seule, que le défaut se voyait. Une page documentaire suffit : les
+   * trois familles partagent le même en-tête (`documentPage.ts`).
+   */
+  test('les liens de langue restent séparés sur un écran large', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await page.goto('/fr/missions/', { waitUntil: 'domcontentloaded' });
+    await expect(page.locator('.doc-lang')).toHaveCount(3);
+    await expectSeparatedLanguages(page, 'fr/missions (1280 px)');
+  });
 
   /**
    * LE TÉMOIN, ISOLÉ. Sans lui, les scénarios ci-dessus pourraient passer sur une coquille servie

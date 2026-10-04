@@ -36,6 +36,16 @@
   background: rgba(255, 255, 255, 0.06);
   border: 1px solid var(--hairline);
 }
+/* Les autres langues du document. Sans règle propre, ces liens s'affichaient côte à côte comme
+   du texte, sans aucun espace : « EnglishEspañolPortuguês (Brasil) », vu sur une capture le
+   2026-10-04. Flex avec un écart, et les deux mêmes garde-fous que `.doc-nav` : passer à la
+   ligne plutôt que déborder à 390 px, ce que `min-width: auto` empêcherait. */
+.doc-langs {
+  display: flex;
+  gap: var(--sp-3);
+  flex-wrap: wrap;
+  min-width: 0;
+}
 .doc-lang {
   font-size: 0.85rem;
   font-weight: 600;
