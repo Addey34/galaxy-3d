@@ -20,6 +20,22 @@
     "kind": "asteroid",
     "color": "0xd18a5f",
     "fallbackColor": "0x878787",
+    "model": {
+      "resolutions": [
+        "2k",
+        "1k"
+      ],
+      "extentRatio": 1.77,
+      "albedo": 0.246,
+      "albedoSource": "NEOWISE, Masiero et al. 2014, ApJ 791, 121 (JPL SBDB), 0.246 +/- 0.032",
+      "colourSource": null,
+      "credit": {
+        "en": "NASA Galileo SSI, shape model by P. Thomas et al. (1994, Icarus 107, 25), NASA PDS ast-sat.thomas.shape-models, decimated for the web.",
+        "fr": "NASA Galileo SSI, modèle de forme de P. Thomas et al. (1994, Icarus 107, 25), NASA PDS ast-sat.thomas.shape-models, décimé pour le web.",
+        "es": "NASA Galileo SSI, modelo de forma de P. Thomas et al. (1994, Icarus 107, 25), NASA PDS ast-sat.thomas.shape-models, diezmado para la web.",
+        "pt-BR": "NASA Galileo SSI, modelo de forma de P. Thomas et al. (1994, Icarus 107, 25), NASA PDS ast-sat.thomas.shape-models, decimado para a web."
+      }
+    },
     "description": {
       "en": "A stony main-belt asteroid about 18 by 10 kilometres. NASA’s Galileo passed it on 29 October 1991, on its way to Jupiter: the first time a spacecraft had ever encountered an asteroid.",
       "fr": "Un astéroïde rocheux de la ceinture principale d’environ 18 kilomètres sur 10. La sonde Galileo de la NASA l’a croisé le 29 octobre 1991, en route vers Jupiter : la première rencontre d’une sonde avec un astéroïde.",

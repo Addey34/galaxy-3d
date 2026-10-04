@@ -3825,10 +3825,9 @@ de l'UAI quand ils existent, page et vignette.
   d'Arrokoth (deux lobes, 35 × 20 × 10 km selon NASA Science) sont des valeurs non publiées, comme
   celui de Hauméa : ils servent au rendu et aux écarts en rayons, la fiche n'en affiche aucun.
 
-**Ce qui reste, écrit** : les modèles de forme (`config/shapeModelGaps.ts`). Neuf maillages sont
-publiés et nommés (celui de Dimorphos compris, vague 2), leur import est la vague suivante ; trois
-sont nommés par l'archive mais son hôte répond 403 ; les autres n'existent ni au registre du PDS, ni
-à la PSA, ni dans DAMIT. Les deux satellites sont entrés à la vague 2, ci-dessous.
+**Ce qui reste, écrit** : les modèles de forme, que la vague 3 a soldés autant que les sources le
+permettaient (ci-dessous) ; chaque manque restant porte sa cause dans `config/shapeModelGaps.ts`.
+Les deux satellites sont entrés à la vague 2.
 
 ### Vague 2 : Dimorphos et Menoetius, deux satellites de petits corps (2026-10-04)
 
@@ -3882,6 +3881,31 @@ publié, l'axe dessiné était celui d'une obliquité nulle : Dimorphos tournait
 Didymos qui tourne à l'envers. Les trois corps des deux couples portent maintenant, en valeur de
 travail, l'inclinaison de la normale de l'orbite mesurée sur le binaire, puisqu'une rotation
 synchrone se fait autour d'elle.
+
+### Vague 3 : les modèles de forme des cibles (2026-10-04)
+
+Neuf maillages étaient nommés après les vagues 1 et 2. **Quatre sont livrés**, par le pipeline des
+autres corps (`decimate-shape-model.mjs`, puis `bake-shape-colour.mjs` à l'albédo publié, faute de
+carte de couleur) : Gaspra et Mathilde (grilles de Thomas au PDS, longitudes ouest), Apophis
+(modèle radar préliminaire de Brozović et al. 2018) et Lutetia (DAMIT 282, CC BY 4.0). Les
+gardes de `shapeModels.test.ts` ont décidé deux choses : les pôles publiés de Gaspra et de
+Mathilde sont à 11° et 30° de leur axe de plus grande inertie, donc ces deux maillages sont
+tournés dans leurs axes principaux (`--principal`) ; et le rayon équivalent-volume de Mathilde
+(25,6 km) s'écarte de 3,2 % du rayon affiché, un écart déclaré (`radiusMismatch`).
+
+**Cinq ne le sont pas, et chaque raison est une mesure du jour** :
+
+- Didymos, Dimorphos et Arrokoth : leurs jeux sont sur `pdssbn.astro.umd.edu/holdings/`, qui a
+  répondu 403 à toute requête ce jour-là (et à plusieurs agents), comme pour les trois comètes de
+  la vague 1, alors qu'une page de mission du même hôte répond 200. Piste non mesurée : NAIF
+  publie les noyaux SPICE de DART, peut-être avec ces formes en DSK.
+- 67P : servi par la PSA, mais le jeu ne déclare aucune licence (lisez-moi, catalogue, guide), la
+  PSA ne demande qu'un remerciement pour une publication, et l'avis général du site de l'ESA
+  exclut les usages autres qu'éducatifs ou éditoriaux sans licence particulière. Rien n'est
+  importé sur une licence supposée.
+- Leucus : DAMIT publie deux solutions convexes de qualité 1, aux pôles différents, sans taille
+  étalonnée. En importer une serait présenter un choix comme une mesure, et son échelle viendrait
+  du catalogue, ce qui rendrait la garde du volume tautologique.
 
 ### Une ligne d'orbite n'est payée que si elle est tracée
 

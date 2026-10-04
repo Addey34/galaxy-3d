@@ -124,9 +124,62 @@ body's long axis. Every level must also have its faces pointing outwards.
 - **Modification**: converted from a latitude/longitude radius grid to a triangle mesh, then
   decimated for the web.
 
-**Skipped on purpose, not forgotten**: (99942) Apophis has no published measured shape model;
-67P/Churyumov-Gerasimenko is not in the catalogue, and its archived models carry a
-non-commercial licence.
+**Skipped on purpose, not forgotten** (read 2026-10-04; the list lives in
+`src/config/shapeModelGaps.ts`): 67P/Churyumov-Gerasimenko's dataset at the ESA Planetary Science
+Archive (`RO-C-MULTI-5-67P-SHAPE-V2.0`) states no licence in its readme, catalogue or user guide;
+the archive asks only for an acknowledgement in publications, and ESA's website notice excludes
+uses other than educational, editorial or informational ones without a specific licence. It is
+not imported on an assumed licence. Didymos, Dimorphos and Arrokoth have published models whose
+host (`pdssbn.astro.umd.edu/holdings/`) answered HTTP 403 to every request that day, as it did for
+Tempel 1, Wild 2 and Hartley 2. (11351) Leucus has two convex DAMIT solutions with different poles
+and no calibrated size: importing one would present a choice as a measurement.
+
+### Mission targets (2026-10-04)
+
+Same pipeline. None of these bodies has a surface texture, so each model carries a uniform colour
+at its published geometric albedo (`scripts/bake-shape-colour.mjs`, no map).
+
+`public/assets/models/gaspra/gaspra_shape_{1k,2k}.glb`: asteroid (951) Gaspra. 3,968 / 15,435
+triangles. No 4k level: the 2° source grid holds about 32,400 triangles of real information.
+
+- **Source**: NASA PDS Small Bodies Node, `urn:nasa:pds:ast-sat.thomas.shape-models`
+  (`951gaspra.tab`).
+- **Data credit**: NASA Galileo Solid-State Imaging; shape model by P. Thomas et al. (1994,
+  *Icarus* 107, 25). Public domain.
+- **Modification**: west longitudes (as the label states) converted to east, the grid meshed and
+  decimated, then rotated into its principal axes of inertia, since the published pole lies 11°
+  from the axis of greatest inertia. Uniform colour at albedo 0.246 (NEOWISE, JPL SBDB).
+
+`public/assets/models/mathilde/mathilde_shape_{1k,2k}.glb`: asteroid (253) Mathilde. 4,071 /
+14,160 triangles, from a 3° grid of about 14,400 triangles.
+
+- **Source**: NASA PDS Small Bodies Node, `urn:nasa:pds:ast-sat.thomas.shape-models`
+  (`253mathilde.tab`).
+- **Data credit**: NASA/JHU-APL NEAR Multi-Spectral Imager; shape model by P. Thomas et al. (1999,
+  *Icarus* 140, 17). Public domain.
+- **Modification**: as for Gaspra; its published pole lies 30° from the axis of greatest inertia.
+  Uniform colour at albedo 0.0436 (IRAS, JPL SBDB).
+
+`public/assets/models/apophis/apophis_shape_1k.glb`: asteroid (99942) Apophis. 3,996 triangles,
+the full model.
+
+- **Source**: NASA PDS Small Bodies Node, `urn:nasa:pds:gbo.ast-apophis.jpl.radar.shape_model`
+  (`apophis_v233s7.obj`), the preliminary model B of Brozović et al. (2018, *Icarus* 300, 115).
+- **Data credit**: NASA JPL Goldstone and Arecibo Observatory radar. Distributed by NASA PDS
+  without restriction.
+- **Modification**: pole brought onto +Y, nothing decimated. Uniform colour at albedo 0.35
+  (Brozović et al. 2018, JPL SBDB). Apophis tumbles (Pravec et al. 2014); the app turns the model
+  about its axis of greatest inertia at a single period.
+
+`public/assets/models/lutetia/lutetia_shape_1k.glb`: asteroid (21) Lutetia. 512 triangles, the
+full model.
+
+- **Source**: DAMIT, model 282. **Licence: CC BY 4.0**, with the attribution displayed in the
+  app's info card.
+- **Data credit**: B. Carry et al. (2010), ground-based adaptive optics and light curves,
+  calibrated in size.
+- **Modification**: pole brought onto +Y, nothing decimated. Uniform colour at albedo 0.19
+  (Sierks et al. 2011, JPL SBDB).
 
 ### Moons, a comet and main-belt asteroids (parity pass, 2026-09-22)
 

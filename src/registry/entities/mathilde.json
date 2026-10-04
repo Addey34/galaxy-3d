@@ -20,6 +20,23 @@
     "kind": "asteroid",
     "color": "0x8a8f9e",
     "fallbackColor": "0x484848",
+    "model": {
+      "resolutions": [
+        "2k",
+        "1k"
+      ],
+      "extentRatio": 1.4,
+      "radiusMismatch": "Le rayon affiché, 26,4 km, est la moitié du diamètre de 52,8 km que la SBDB publie sans citer de source. Le modèle de Thomas et al. 1999 a un rayon équivalent-volume de 25,6 km. Deux grandeurs publiées différentes ; la forme vient du modèle, la taille du catalogue.",
+      "albedo": 0.0436,
+      "albedoSource": "IRAS-A-FPA-3-RDR-IMPS-V6.0 (JPL SBDB), 0.0436 +/- 0.004",
+      "colourSource": null,
+      "credit": {
+        "en": "NASA/JHU-APL NEAR MSI, shape model by P. Thomas et al. (1999, Icarus 140, 17), NASA PDS ast-sat.thomas.shape-models, decimated for the web.",
+        "fr": "NASA/JHU-APL NEAR MSI, modèle de forme de P. Thomas et al. (1999, Icarus 140, 17), NASA PDS ast-sat.thomas.shape-models, décimé pour le web.",
+        "es": "NASA/JHU-APL NEAR MSI, modelo de forma de P. Thomas et al. (1999, Icarus 140, 17), NASA PDS ast-sat.thomas.shape-models, diezmado para la web.",
+        "pt-BR": "NASA/JHU-APL NEAR MSI, modelo de forma de P. Thomas et al. (1999, Icarus 140, 17), NASA PDS ast-sat.thomas.shape-models, decimado para a web."
+      }
+    },
     "description": {
       "en": "A main-belt asteroid about 53 kilometres across that reflects only about 4 percent of the sunlight it receives. NASA’s NEAR Shoemaker flew past it in June 1997, on its way to Eros, and measured its mass.",
       "fr": "Un astéroïde de la ceinture principale d’environ 53 kilomètres, qui ne renvoie qu’environ 4 % de la lumière du Soleil. La sonde NEAR Shoemaker de la NASA l’a survolé en juin 1997, en route vers Éros, et en a mesuré la masse.",
