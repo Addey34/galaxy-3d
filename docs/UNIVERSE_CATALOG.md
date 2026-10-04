@@ -118,10 +118,13 @@ le fichier) et non sur le rayon moyen — Eros et Ida depassent le double de leu
 equivalente, et s'en approcher « a 1,15 rayon » mettait l'objectif DEDANS : ecran noir, sans erreur.
 
 **Poids.** Les modeles scientifiques publies sont hors de portee du web : celui de Bennu fait
-3,37 M de triangles et 60 Mo. `scripts/decimate-shape-model.mjs --target N` le ramene au budget
-voulu par regroupement de sommets, en imprimant avant/apres les deux statistiques de forme —
-sur Bennu 6,00 % → 6,03 % et 1,118 → 1,119, donc la signature du corps survit. Le fichier produit
-est deterministe.
+3,15 M de plaques. `scripts/decimate-shape-model.mjs --target N` le ramene au budget voulu, en
+imprimant avant/apres les deux statistiques de forme, donc on voit si la signature du corps
+survit. Le fichier produit est deterministe. **Depuis le 2026-10-04** la reduction est un
+effondrement d'aretes (meshoptimizer) suivi d'un controle de surface fermee, et non plus un
+regroupement de sommets, qui laissait des trous et des faces retournees sur 38 des 49 niveaux ;
+tous les corps se regenerent par `pnpm shapes:generate`, depuis la recette
+`scripts/shape-model-targets.json`.
 
 **Niveaux de detail (2026-09-16).** Chaque modele est livre en `{corps}/{corps}_shape_{1k,2k,4k}.glb`
 (~4 000 / 15 000 / 60 000 triangles), chemin derive par `catalog.modelPath`, niveaux declares dans

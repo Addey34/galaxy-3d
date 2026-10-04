@@ -64,50 +64,53 @@ PolyForm license covers images, textures or fonts.
 
 ## 3D shape models
 
-Every model below is shipped as **levels of detail**, `public/assets/models/{body}/{body}_shape_{1k,2k,4k}.glb`
-(budgets of ~4,000 / ~15,000 / ~60,000 triangles, produced from the original scientific product by
-`scripts/decimate-shape-model.mjs --target`). A level is only shipped if the source holds enough
-detail for it: Ida has no 4k level. The app loads the lightest level first and a finer one only
-when the camera comes close, capped by the graphics quality tier.
+Every model below is shipped as **levels of detail**, `public/assets/models/{body}/{body}_shape_{1k,2k,4k}.glb`,
+all produced from the original scientific product by `scripts/generate-shape-models.mjs`. Its
+recipe, `scripts/shape-model-targets.json`, holds each body's source and options and the triangle
+budget of each level; each file's own triangle count is in the file. A level is only shipped if the
+source holds enough detail for it: Ida has no 4k level. The app loads the lightest level first and
+a finer one only when the camera comes close, capped by the graphics quality tier.
 
-`public/assets/models/bennu/bennu_shape_{1k,2k,4k}.glb`: asteroid (101955) Bennu. 4,113 / 15,633 /
-62,833 triangles (73 KiB / 274 KiB / 1.1 MiB).
+**How every level is reduced** (since 2026-10-04): edge collapse with the meshoptimizer library
+(MIT licence, a build-time tool, never shipped to the browser), then a check that the result is a
+closed surface (every edge shared by exactly two triangles, in opposite directions); the script
+refuses to write a level that is not. No geometry is invented: the script prints the shape
+statistics before and after. The earlier method, vertex clustering, left holes, folded and flipped
+faces on 38 of the 49 shipped levels. Each file's glTF `asset.copyright` carries the model's
+credit, as shown in the app's info card.
 
-- **Source**: NASA/Goddard Scientific Visualization Studio, *Global Bennu 3D Model, OLA v20 PTM*
-  (<https://svs.gsfc.nasa.gov/5069>).
+`public/assets/models/bennu/bennu_shape_{1k,2k,4k}.glb`: asteroid (101955) Bennu.
+
+- **Source**: the OSIRIS-REx SPICE archive at NAIF, a NASA PDS archive
+  (`naif.jpl.nasa.gov/pub/naif/pds/pds4/orex/orex_spice/spice_kernels/dsk/`):
+  `bennu_g_00880mm_alt_obj_0000n00000_v020.bds`, the OLA v20 global shape model at 88 cm
+  (3,145,728 plates). Until 2026-10-04 the same v20 model came from a NASA/Goddard Scientific
+  Visualization Studio export (<https://svs.gsfc.nasa.gov/5069>), which that page no longer serves.
 - **Data credit**: NASA / University of Arizona / CSA / York University / MDA, from the
-  OSIRIS-REx laser altimeter (OLA). Public domain, as NASA-produced work.
-- **Modification**: reduced from 3,366,134 triangles by vertex clustering with
-  `scripts/decimate-shape-model.mjs`, so it can be served on the web (60.6 MB source). No
-  geometry was invented: the script reports the shape statistics before and after, and the two
-  that characterise the body are unchanged (radius standard deviation 6.00 % → 6.03 %, equator
-  to pole ratio 1.118 → 1.119). The credit above is also embedded in the file's glTF `asset.copyright`.
-  The file was later re-exported with its pole on +Y instead of Z (the scene spins bodies about
-  their local Y axis); geometry and triangle count are unchanged.
+  OSIRIS-REx laser altimeter (OLA). Distributed by NASA PDS without restriction.
+- **Modification**: read from DSK to OBJ by `scripts/dsk-to-obj.mjs`, pole brought onto +Y,
+  decimated. The app drapes Bennu's own texture on it (below), so the model carries no colour.
 
-The four wave-A models below follow the same pipeline: decimated by
-`scripts/decimate-shape-model.mjs` (deterministic vertex clustering, no geometry invented), pole
-brought onto +Y where the source carried it on Z, and the credit embedded in each file's glTF
-`asset.copyright`. Each file's volume-equivalent radius is checked against the published mean
-radius, and its orientation by `src/config/shapeModels.test.ts`: the maximum-inertia axis
-within 10° of +Y when the largest moment clearly dominates, otherwise +Y perpendicular to the
-body's long axis. Every level must also have its faces pointing outwards.
+Every model's volume-equivalent radius is checked against the published mean radius, and its
+orientation by `src/config/shapeModels.test.ts`: the maximum-inertia axis within 10° of +Y when the
+largest moment clearly dominates, otherwise +Y perpendicular to the body's long axis. Every level
+must also have its faces pointing outwards and be a closed surface.
 
-`public/assets/models/eros/eros_shape_{1k,2k,4k}.glb`: asteroid (433) Eros. 3,751 / 15,499 / 61,652 triangles.
+`public/assets/models/eros/eros_shape_{1k,2k,4k}.glb`: asteroid (433) Eros.
 
 - **Source**: NASA PDS Small Bodies Node, `NEAR-A-MSI-5-EROSSHAPE-V1.0` (q = 128).
 - **Data credit**: NASA / JHU-APL NEAR Shoemaker, Multi-Spectral Imager; shape model by
   R. Gaskell. Public domain (NASA-funded archive product, no restriction).
 - **Modification**: decimated for the web.
 
-`public/assets/models/itokawa/itokawa_shape_{1k,2k,4k}.glb`: asteroid (25143) Itokawa. 3,918 / 15,114 / 62,781 triangles.
+`public/assets/models/itokawa/itokawa_shape_{1k,2k,4k}.glb`: asteroid (25143) Itokawa.
 
 - **Source**: NASA PDS Small Bodies Node, `HAY-A-AMICA-5-ITOKAWASHAPE-V1.0` (q = 128).
 - **Data credit**: JAXA Hayabusa AMICA images; shape model by R. Gaskell (PSI). Distributed by
   NASA PDS without restriction.
 - **Modification**: decimated for the web.
 
-`public/assets/models/ryugu/ryugu_shape_{1k,2k,4k}.glb`: asteroid (162173) Ryugu. 4,196 / 15,368 / 62,727 triangles.
+`public/assets/models/ryugu/ryugu_shape_{1k,2k,4k}.glb`: asteroid (162173) Ryugu.
 
 - **Source**: JAXA DARTS, Hayabusa2 SfM shape model `SHAPE_SFM_200k_v20180804`
   (Watanabe et al. 2019, *Science* 364).
@@ -116,7 +119,7 @@ body's long axis. Every level must also have its faces pointing outwards.
 - **Modification (stated as required)**: decimated for the web and re-oriented so that the
   rotation pole lies on +Y.
 
-`public/assets/models/ida/ida_shape_{1k,2k}.glb`: asteroid (243) Ida. 4,115 / 15,744 triangles. No 4k level: the 2° source grid holds ~32,400 triangles of real information, and a 60,000-triangle level would interpolate, not measure.
+`public/assets/models/ida/ida_shape_{1k,2k}.glb`: asteroid (243) Ida. No 4k level: the 2° source grid holds ~32,400 triangles of real information, and a 60,000-triangle level would interpolate, not measure.
 
 - **Source**: NASA PDS Small Bodies Node, `EAR-A-5-DDR-SHAPE-MODELS-V2.1`.
 - **Data credit**: NASA Galileo Solid-State Imaging; shape model by P. Thomas et al. (1996).
@@ -140,8 +143,8 @@ and no calibrated size: importing one would present a choice as a measurement.
 Same pipeline. None of these bodies has a surface texture, so each model carries a uniform colour
 at its published geometric albedo (`scripts/bake-shape-colour.mjs`, no map).
 
-`public/assets/models/gaspra/gaspra_shape_{1k,2k}.glb`: asteroid (951) Gaspra. 3,968 / 15,435
-triangles. No 4k level: the 2° source grid holds about 32,400 triangles of real information.
+`public/assets/models/gaspra/gaspra_shape_{1k,2k}.glb`: asteroid (951) Gaspra. No 4k
+level: the 2° source grid holds about 32,400 triangles of real information.
 
 - **Source**: NASA PDS Small Bodies Node, `urn:nasa:pds:ast-sat.thomas.shape-models`
   (`951gaspra.tab`).
@@ -151,8 +154,8 @@ triangles. No 4k level: the 2° source grid holds about 32,400 triangles of real
   decimated, then rotated into its principal axes of inertia, since the published pole lies 11°
   from the axis of greatest inertia. Uniform colour at albedo 0.246 (NEOWISE, JPL SBDB).
 
-`public/assets/models/mathilde/mathilde_shape_{1k,2k}.glb`: asteroid (253) Mathilde. 4,071 /
-14,160 triangles, from a 3° grid of about 14,400 triangles.
+`public/assets/models/mathilde/mathilde_shape_{1k,2k}.glb`: asteroid (253) Mathilde, from a
+3° grid of about 14,400 triangles.
 
 - **Source**: NASA PDS Small Bodies Node, `urn:nasa:pds:ast-sat.thomas.shape-models`
   (`253mathilde.tab`).
@@ -161,8 +164,8 @@ triangles. No 4k level: the 2° source grid holds about 32,400 triangles of real
 - **Modification**: as for Gaspra; its published pole lies 30° from the axis of greatest inertia.
   Uniform colour at albedo 0.0436 (IRAS, JPL SBDB).
 
-`public/assets/models/apophis/apophis_shape_1k.glb`: asteroid (99942) Apophis. 3,996 triangles,
-the full model.
+`public/assets/models/apophis/apophis_shape_1k.glb`: asteroid (99942) Apophis, the
+full model.
 
 - **Source**: NASA PDS Small Bodies Node, `urn:nasa:pds:gbo.ast-apophis.jpl.radar.shape_model`
   (`apophis_v233s7.obj`), the preliminary model B of Brozović et al. (2018, *Icarus* 300, 115).
@@ -172,8 +175,8 @@ the full model.
   (Brozović et al. 2018, JPL SBDB). Apophis tumbles (Pravec et al. 2014); the app turns the model
   about its axis of greatest inertia at a single period.
 
-`public/assets/models/lutetia/lutetia_shape_1k.glb`: asteroid (21) Lutetia. 512 triangles, the
-full model.
+`public/assets/models/lutetia/lutetia_shape_1k.glb`: asteroid (21) Lutetia, the full
+model.
 
 - **Source**: DAMIT, model 282. **Licence: CC BY 4.0**, with the attribution displayed in the
   app's info card.
@@ -184,7 +187,7 @@ full model.
 
 `public/assets/models/didymos/didymos_shape_{1k,2k,4k}.glb` and
 `public/assets/models/dimorphos/dimorphos_shape_{1k,2k,4k}.glb`: asteroid (65803) Didymos and its
-moon Dimorphos. 3,866 / 15,738 / 62,626 and 3,881 / 15,719 / 62,449 triangles.
+moon Dimorphos.
 
 - **Source**: the DART SPICE archive at NAIF, a NASA PDS archive
   (`naif.jpl.nasa.gov/pub/naif/pds/pds4/dart/dart_spice/spice_kernels/dsk/`):
@@ -196,8 +199,8 @@ moon Dimorphos. 3,866 / 15,738 / 62,626 and 3,881 / 15,719 / 62,449 triangles.
   decimated. Uniform colour at the geometric albedo of the system, 0.15 (Daly et al. 2023,
   *Nature* 616, 443).
 
-`public/assets/models/arrokoth/arrokoth_shape_{1k,2k}.glb`: (486958) Arrokoth. 3,912 / 15,520
-triangles, from a 40,960-facet model.
+`public/assets/models/arrokoth/arrokoth_shape_{1k,2k}.glb`: (486958) Arrokoth, from a
+40,960-facet model.
 
 - **Source**: the New Horizons SPICE archive at NAIF, a NASA PDS archive
   (`nh-j_p_ss-spice-6-v1.0`, `mu69_porter_2024_v01.bds`), the model of S. Porter et al. (2024),
@@ -207,7 +210,6 @@ triangles, from a 40,960-facet model.
   +Y, decimated. Uniform colour at albedo 0.21 (Hofgartner et al. 2021, *Icarus*).
 
 `public/assets/models/donaldjohanson/donaldjohanson_shape_{1k,2k,4k}.glb`: (52246) Donaldjohanson.
-4,011 / 15,077 / 61,827 triangles.
 
 - **Source**: the Lucy SPICE archive at NAIF, a NASA PDS archive
   (`lucy_spice/spice_kernels/dsk/lcy_donj_k548_iso20m_v10.bds`), a shape model made by the DLR
@@ -224,7 +226,7 @@ below in this file applies unchanged. Longitudes are read as each source label s
 Thomas and Stooke satellite models count longitudes **west**, which was checked on Thomas's Phobos
 (the Stickney crater falls at 50 for a published 49.7° W) and converted to east before meshing.
 
-`public/assets/models/phobos/phobos_shape_{1k,2k,4k}.glb`: Phobos. 3,934 / 15,029 / 62,078 triangles.
+`public/assets/models/phobos/phobos_shape_{1k,2k,4k}.glb`: Phobos.
 
 - **Source**: NASA PDS Small Bodies Node, *Gaskell Phobos Shape Model V1.0* (q = 512,
   doi:10.26033/xzv5-bw95).
@@ -232,8 +234,7 @@ Thomas and Stooke satellite models count longitudes **west**, which was checked 
 - **Modification**: decimated for the web. Its deepest local depression lies at the published
   position of the Stickney crater, which a test holds on the shipped file.
 
-`public/assets/models/mimas/mimas_shape_{1k,2k,4k}.glb`: Mimas. 3,852 / 14,989 / 62,802
-triangles.
+`public/assets/models/mimas/mimas_shape_{1k,2k,4k}.glb`: Mimas.
 
 - **Source**: NASA PDS Small Bodies Node, *Gaskell Mimas Shape Model V2.0*
   (`CO-SA-ISSNA-5-MIMASSHAPE-V2.0`, q = 128).
@@ -244,15 +245,15 @@ triangles.
   exceeds its smallest by 9.1%, above the 5% below which a textured sphere is both more faithful
   and cheaper.
 
-`public/assets/models/deimos/deimos_shape_1k.glb`: Deimos. 4,188 triangles.
+`public/assets/models/deimos/deimos_shape_1k.glb`: Deimos.
 
 - **Source**: NASA PDS Small Bodies Node, `EAR-A-5-DDR-SHAPE-MODELS-V2.1` (P. C. Thomas).
 - **Data credit**: Viking Orbiter images; shape model by P. C. Thomas. Distributed by NASA PDS without restriction.
 - **Modification**: 5° latitude/longitude grid converted to a mesh, longitudes turned from west to
   east. One level only: the grid holds no more.
 
-`public/assets/models/amalthea/amalthea_shape_1k.glb` (4,196 triangles) and
-`public/assets/models/proteus/proteus_shape_1k.glb` (4,128 triangles): Amalthea and Proteus.
+`public/assets/models/amalthea/amalthea_shape_1k.glb` and
+`public/assets/models/proteus/proteus_shape_1k.glb`: Amalthea and Proteus.
 
 - **Source**: NASA PDS Small Bodies Node, `EAR-A-5-DDR-STOOKE-SHAPE-MODELS-V2.0` (P. Stooke).
 - **Data credit**: Voyager 1 and 2 images (Amalthea), Voyager 2 images (Proteus); shape models by
@@ -261,7 +262,7 @@ triangles.
   nearly round and without a usable rotation frame in its source, is also rotated into its
   principal axes of inertia.
 
-`public/assets/models/hyperion/hyperion_shape_{1k,2k}.glb`: Hyperion. 3,992 / 15,503 triangles.
+`public/assets/models/hyperion/hyperion_shape_{1k,2k}.glb`: Hyperion.
 
 - **Source**: NASA PDS, *Saturn Small Moon Shape Models V1.0* (P. Thomas, J. Joseph and T. Ansty,
   2018, doi:10.26033/ewy3-jy61).
@@ -269,7 +270,7 @@ triangles.
 - **Modification**: rotated into its principal axes of inertia (Hyperion rotates chaotically, and
   its file's Z axis is its long axis), then decimated. No 4k level: the source has 29,268 facets.
 
-`public/assets/models/halley/halley_shape_1k.glb`: comet 1P/Halley. 4,196 triangles.
+`public/assets/models/halley/halley_shape_1k.glb`: comet 1P/Halley.
 
 - **Source**: NASA PDS Small Bodies Node, `EAR-A-5-DDR-STOOKE-SHAPE-MODELS-V2.0`.
 - **Data credit**: Giotto and Vega images; shape model by P. Stooke, with pointing by A. Abergel,
@@ -278,7 +279,7 @@ triangles.
 - **Modification**: 5° grid converted to a mesh and rotated into its principal axes of inertia
   (the model's "north" runs along the long axis).
 
-`public/assets/models/vesta/vesta_shape_{1k,2k,4k}.glb`: asteroid (4) Vesta. 3,945 / 15,588 / 62,456 triangles.
+`public/assets/models/vesta/vesta_shape_{1k,2k,4k}.glb`: asteroid (4) Vesta.
 
 - **Source**: NASA PDS, `DAWN-A-FC2-5-VESTADTMSPG-V1.0` (Preusker, Scholten, Matz, Roatsch,
   Jaumann, Raymond and Russell, DLR, 2016).
@@ -287,8 +288,8 @@ triangles.
   meshed and decimated. Same Claudia double-prime longitude system as the USGS mosaic the shipped
   texture comes from.
 
-`public/assets/models/pallas/pallas_shape_1k.glb` (3,200 triangles), `public/assets/models/hygiea/hygiea_shape_1k.glb`
-(3,200 triangles) and `public/assets/models/psyche/psyche_shape_1k.glb` (1,352 triangles): asteroids
+`public/assets/models/pallas/pallas_shape_1k.glb`, `public/assets/models/hygiea/hygiea_shape_1k.glb`
+and `public/assets/models/psyche/psyche_shape_1k.glb`: asteroids
 (2) Pallas, (10) Hygiea and (16) Psyche.
 
 - **Source**: DAMIT, Database of Asteroid Models from Inversion Techniques (Charles University,
@@ -305,12 +306,14 @@ triangles.
 texture shipped). Mean brightness = the published geometric albedo converted to the app's display
 convention measured on the Moon texture; contrasts and colour ratios come from mission maps:
 
-- Bennu: NASA/USGS *Bennu OSIRIS-REx OCAMS Global Albedo Mosaic* (Golish et al. 2021), public
-  domain; albedo 0.044 (Hergenrother et al. 2019).
 - Eros: NASA/USGS *Eros NEAR MSI Global Albedo Mosaics* at 760, 550 and 450 nm (Golish et al.
   2023, doi:10.17189/sv8w-5125), public domain; albedo 0.25 (Veverka et al. 2000).
 - Ryugu: ISAS/JAXA v-band normal albedo map from Hayabusa2 ONC (JAXA DARTS); **modification
   stated as required**: resampled per vertex. Albedo 0.045 (Sugita et al. 2019).
+- For both, since 2026-10-04: the colours first sampled from those maps are carried over onto the
+  new vertices, each averaged over the area one vertex covers, because the maps could not be read
+  again that day (the host serving the Eros mosaics refused access). Nothing is added: these are
+  the same measured colours, with the per-vertex noise of point sampling averaged out.
 - Itokawa (albedo 0.27, Hayabusa AMICA), Ida (albedo 0.262, NEOWISE) and Psyche (albedo 0.1203,
   IRAS): no global map is published, so the colour is uniform at the published albedo; nothing is
   painted in. Bodies that have a real surface texture carry no baked colour: the app drapes the

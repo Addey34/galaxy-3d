@@ -26,12 +26,12 @@
         "2k",
         "1k"
       ],
-      "extentRatio": 1.18,
+      "extentRatio": 1.19,
       "credit": {
-        "en": "NASA/Goddard Scientific Visualization Studio, OSIRIS-REx OLA v20 PTM global shape model (NASA/University of Arizona/CSA/York University/MDA), decimated for the web.",
-        "fr": "NASA/Goddard Scientific Visualization Studio, modèle de forme global OSIRIS-REx OLA v20 PTM (NASA/University of Arizona/CSA/York University/MDA), décimé pour le web.",
-        "es": "NASA/Goddard Scientific Visualization Studio, modelo de forma global OSIRIS-REx OLA v20 PTM (NASA/University of Arizona/CSA/York University/MDA), diezmado para la web.",
-        "pt-BR": "NASA/Goddard Scientific Visualization Studio, modelo de forma global OSIRIS-REx OLA v20 PTM (NASA/University of Arizona/CSA/York University/MDA), decimado para a web."
+        "en": "NASA/University of Arizona/CSA/York University/MDA, OSIRIS-REx OLA v20 global shape model (OSIRIS-REx SPICE archive at NAIF), decimated for the web.",
+        "fr": "NASA/University of Arizona/CSA/York University/MDA, modèle de forme global OSIRIS-REx OLA v20 (archive SPICE d’OSIRIS-REx au NAIF), décimé pour le web.",
+        "es": "NASA/University of Arizona/CSA/York University/MDA, modelo de forma global OSIRIS-REx OLA v20 (archivo SPICE de OSIRIS-REx en el NAIF), diezmado para la web.",
+        "pt-BR": "NASA/University of Arizona/CSA/York University/MDA, modelo de forma global OSIRIS-REx OLA v20 (arquivo SPICE da OSIRIS-REx no NAIF), decimado para a web."
       }
     },
     "description": {

@@ -51,13 +51,20 @@ const body = args[0];
 const albedo = Number(option('--albedo'));
 if (!body || !(albedo > 0)) {
   console.error(
-    'usage : node scripts/bake-shape-colour.mjs <corps> --albedo <pV> [--map carte.tif | --rgb r.tif,v.tif,b.tif] [--lon0 0]'
+    'usage : node scripts/bake-shape-colour.mjs <corps> --albedo <pV> [--map carte.tif | --rgb r.tif,v.tif,b.tif | --from ancien.glb] [--lon0 0]'
   );
   process.exit(1);
 }
 const lon0 = Number(option('--lon0') ?? 0);
 const mapPaths =
   option('--rgb')?.split(',') ?? (option('--map') ? [option('--map')] : []);
+/**
+ * `--from <ancien.glb>` : la couleur par sommet d'un maillage DÉJÀ cuit du même corps, dans le
+ * même repère, reportée sur les nouveaux sommets. Pour un corps dont la carte de mission ne se
+ * relit plus (Éros : l'hôte qui sert les mosaïques NEAR MSI répond 403 le 2026-10-04), c'est la
+ * mesure existante qu'on garde, moyennée sur l'empreinte du niveau, et rien d'autre.
+ */
+const fromPath = option('--from');
 
 /**
  * Valeur exploitable : un albédo ou une réflectance positive et plausible. Les cartes 8 bits
@@ -98,6 +105,114 @@ async function loadBand(path) {
   const mean = sum / weight;
   if (!(mean > 0)) throw new Error(`${path} : carte vide ou illisible`);
   return { values, width: info.width, height: info.height, mean };
+}
+
+/**
+ * La bande MOYENNÉE sur l'empreinte d'un sommet du niveau. Prendre un seul pixel par sommet,
+ * comme ce script le faisait, mesure le bruit de la carte et non l'albédo de la région : sur
+ * Bennu, la couleur livrée de deux sommets voisins était décorrélée (−0,02), pour 13,7 %
+ * d'écart d'un sommet à l'autre (mesuré le 2026-10-04). L'empreinte d'un sommet couvre
+ * 41 253 deg² / n ; la bande est ramenée à autant de cellules, moyennées en ignorant les trous.
+ */
+function lowPass(band, vertexCount) {
+  const step = Math.sqrt(41253 / vertexCount);
+  const width = Math.max(4, Math.min(band.width, Math.round(360 / step)));
+  const height = Math.max(2, Math.round((width * band.height) / band.width));
+  const sum = new Float64Array(width * height);
+  const weight = new Float64Array(width * height);
+  for (let y = 0; y < band.height; y++) {
+    const cy = Math.min(height - 1, Math.floor((y * height) / band.height));
+    for (let x = 0; x < band.width; x++) {
+      const v = band.values[y * band.width + x];
+      if (!isValid(v)) continue;
+      const cx = Math.min(width - 1, Math.floor((x * width) / band.width));
+      sum[cy * width + cx] += v;
+      weight[cy * width + cx] += 1;
+    }
+  }
+  const values = new Float32Array(width * height);
+  for (let i = 0; i < values.length; i++)
+    values[i] = weight[i] > 0 ? sum[i] / weight[i] : NaN;
+  return { values, width, height, mean: band.mean };
+}
+
+/**
+ * Couleur d'un maillage déjà cuit (`--from`), moyennée pour chaque nouveau sommet sur les
+ * anciens sommets à moins d'un pas du niveau (racine de l'aire par sommet) ; le plus proche à
+ * défaut. Rend des valeurs LINÉAIRES, normalisées ensuite comme une carte.
+ */
+function transfer(source, positions, indices) {
+  const count = positions.length / 3;
+  let area = 0;
+  const p = positions;
+  const idx = indices;
+  for (let t = 0; t < idx.length; t += 3) {
+    const [a, b, c] = [idx[t] * 3, idx[t + 1] * 3, idx[t + 2] * 3];
+    const u = [p[b] - p[a], p[b + 1] - p[a + 1], p[b + 2] - p[a + 2]];
+    const v = [p[c] - p[a], p[c + 1] - p[a + 1], p[c + 2] - p[a + 2]];
+    area +=
+      Math.hypot(
+        u[1] * v[2] - u[2] * v[1],
+        u[2] * v[0] - u[0] * v[2],
+        u[0] * v[1] - u[1] * v[0]
+      ) / 2;
+  }
+  const radius = Math.sqrt(area / count);
+  const cell = (x) => Math.floor(x / radius);
+  const grid = new Map();
+  const n = source.positions.length / 3;
+  for (let i = 0; i < n; i++) {
+    const key = [0, 1, 2].map((k) => cell(source.positions[i * 3 + k])).join();
+    const list = grid.get(key) ?? [];
+    list.push(i);
+    grid.set(key, list);
+  }
+  const out = new Float32Array(count * 3);
+  for (let i = 0; i < count; i++) {
+    const q = [p[i * 3], p[i * 3 + 1], p[i * 3 + 2]];
+    const c = q.map(cell);
+    const acc = [0, 0, 0];
+    let k = 0;
+    let nearest = -1;
+    let best = Infinity;
+    for (let dx = -1; dx <= 1; dx++)
+      for (let dy = -1; dy <= 1; dy++)
+        for (let dz = -1; dz <= 1; dz++)
+          for (const j of grid.get(`${c[0] + dx},${c[1] + dy},${c[2] + dz}`) ??
+            []) {
+            const d = Math.hypot(
+              source.positions[j * 3] - q[0],
+              source.positions[j * 3 + 1] - q[1],
+              source.positions[j * 3 + 2] - q[2]
+            );
+            if (d < best) {
+              best = d;
+              nearest = j;
+            }
+            if (d > radius) continue;
+            for (let m = 0; m < 3; m++) acc[m] += source.colours[j * 4 + m];
+            k++;
+          }
+    if (!k && nearest < 0) {
+      // Rien dans les cellules voisines : recherche exhaustive, rare.
+      for (let j = 0; j < n; j++) {
+        const d = Math.hypot(
+          source.positions[j * 3] - q[0],
+          source.positions[j * 3 + 1] - q[1],
+          source.positions[j * 3 + 2] - q[2]
+        );
+        if (d < best) {
+          best = d;
+          nearest = j;
+        }
+      }
+    }
+    for (let m = 0; m < 3; m++)
+      out[i * 3 + m] = k
+        ? acc[m] / k / 65535
+        : source.colours[nearest * 4 + m] / 65535;
+  }
+  return out;
 }
 
 /**
@@ -160,6 +275,11 @@ function readGlb(path) {
       indexAccessor.componentType === 5125 ? Uint32Array : Uint16Array,
       1
     ),
+    // Couleur par sommet déjà cuite (VEC4 entiers 16 bits normalisés), lue pour `--from`.
+    colours:
+      primitive.attributes.COLOR_0 === undefined
+        ? null
+        : view(primitive.attributes.COLOR_0, Uint16Array, 4),
     asset: gltf.asset,
     name: gltf.meshes[0].name,
   };
@@ -287,9 +407,12 @@ function writeGlb(
 
 const bands = [];
 for (const path of mapPaths) bands.push(await loadBand(path));
+const fromMesh = fromPath ? readGlb(fromPath) : null;
+if (fromMesh && !fromMesh.colours)
+  throw new Error(`${fromPath} : aucune couleur par sommet à reporter`);
 const display = albedo * DISPLAY_PER_ALBEDO;
 console.log(
-  `${body} : albédo ${albedo} → luminance affichée moyenne ${display.toFixed(3)} ; ${bands.length ? `${bands.length} bande(s) de carte` : 'aucune carte, couleur uniforme neutre'}`
+  `${body} : albédo ${albedo} → luminance affichée moyenne ${display.toFixed(3)} ; ${fromPath ? `couleur reportée depuis ${fromPath}` : bands.length ? `${bands.length} bande(s) de carte` : 'aucune carte, couleur uniforme neutre'}`
 );
 
 const dir = join(ROOT, 'public/assets/models', body);
@@ -298,8 +421,11 @@ for (const file of readdirSync(dir)
   .sort()) {
   const glb = readGlb(join(dir, file));
   const count = glb.positions.length / 3;
-  const linear = new Float32Array(count * 3);
-  for (let i = 0; i < count; i++) {
+  const linear = fromMesh
+    ? transfer(fromMesh, glb.positions, glb.indices)
+    : new Float32Array(count * 3);
+  const levelBands = bands.map((band) => lowPass(band, count));
+  for (let i = 0; i < count && !fromMesh; i++) {
     // Repère du corps : on défait (x, y, z) → (x, z, −y) de `--z-up`.
     const x = glb.positions[i * 3];
     const y = -glb.positions[i * 3 + 2];
@@ -308,10 +434,10 @@ for (const file of readdirSync(dir)
     const lon = (Math.atan2(y, x) * 180) / Math.PI;
     const lat = (Math.asin(z / r) * 180) / Math.PI;
     let rgb;
-    if (bands.length === 3)
-      rgb = bands.map((band) => sampleRelative(band, lon, lat));
-    else if (bands.length === 1)
-      rgb = Array(3).fill(sampleRelative(bands[0], lon, lat));
+    if (levelBands.length === 3)
+      rgb = levelBands.map((band) => sampleRelative(band, lon, lat));
+    else if (levelBands.length === 1)
+      rgb = Array(3).fill(sampleRelative(levelBands[0], lon, lat));
     else rgb = [1, 1, 1];
     for (let k = 0; k < 3; k++) linear[i * 3 + k] = rgb[k];
   }
@@ -336,7 +462,7 @@ for (const file of readdirSync(dir)
   }
   const size = writeGlb(
     join(dir, file),
-    bands.length
+    bands.length || fromMesh
       ? { ...glb, colours }
       : { ...glb, colours: null, uniform: [display, display, display] }
   );

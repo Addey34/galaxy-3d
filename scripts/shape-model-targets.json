@@ -1,0 +1,133 @@
+{
+  "$comment": "Recette des modèles de forme livrés, lue par scripts/generate-shape-models.mjs. Les NIVEAUX se lisent dans la fiche (model.resolutions), l'albédo aussi (model.albedo : présent = couleur cuite) ; le crédit embarqué est model.credit.en. Les options ont été DÉRIVÉES le 2026-10-04 en comparant chaque combinaison au maillage livré jusque-là (1k, distance moyenne au plus proche sommet d'une version dense) : la bonne coïncide à 0,1-1,7 %, la suivante à 3-17 %.",
+  "budgets": { "1k": 4000, "2k": 15000, "4k": 60000 },
+  "bodies": {
+    "amalthea": {
+      "cache": ".cache/shapes/j5amalthea.tab",
+      "url": "https://sbnarchive.psi.edu/pds3/non_mission/EAR_A_5_DDR_STOOKE_SHAPE_MODELS_V2_0/data/j5amalthea.tab",
+      "flags": ["--z-up", "--west", "--lon-lat"]
+    },
+    "apophis": {
+      "cache": ".cache/shape-models/apophis_v233s7.obj",
+      "dataset": "urn:nasa:pds:gbo.ast-apophis.jpl.radar.shape_model (apophis_v233s7.obj)",
+      "flags": ["--z-up", "--principal"]
+    },
+    "arrokoth": {
+      "cache": ".cache/shape-models/arrokoth.obj",
+      "dsk": ".cache/shape-models/mu69_porter_2024_v01.bds",
+      "dataset": "NAIF, archive SPICE de New Horizons nh-j_p_ss-spice-6-v1.0 (mu69_porter_2024_v01.bds)",
+      "flags": ["--z-up"]
+    },
+    "bennu": {
+      "cache": ".cache/shape-models/bennu_v020.obj",
+      "dsk": ".cache/shape-models/bennu_g_00880mm_alt_obj_0000n00000_v020.bds",
+      "url": "https://naif.jpl.nasa.gov/pub/naif/pds/pds4/orex/orex_spice/spice_kernels/dsk/bennu_g_00880mm_alt_obj_0000n00000_v020.bds",
+      "flags": ["--z-up"]
+    },
+    "deimos": {
+      "cache": ".cache/shapes/m2deimos.tab",
+      "url": "https://sbnarchive.psi.edu/pds3/non_mission/EAR_A_5_DDR_SHAPE_MODELS_V2_1/data/m2deimos.tab",
+      "flags": ["--z-up", "--west"]
+    },
+    "didymos": {
+      "cache": ".cache/shape-models/didymos_4657.obj",
+      "dsk": ".cache/shape-models/didymos_g_04657mm_spc_0000n00000_v003.bds",
+      "url": "https://naif.jpl.nasa.gov/pub/naif/pds/pds4/dart/dart_spice/spice_kernels/dsk/didymos_g_04657mm_spc_0000n00000_v003.bds",
+      "flags": ["--z-up"]
+    },
+    "dimorphos": {
+      "cache": ".cache/shape-models/dimorphos_0972.obj",
+      "dsk": ".cache/shape-models/dimorphos_g_00972mm_spc_0000n00000_v004.bds",
+      "url": "https://naif.jpl.nasa.gov/pub/naif/pds/pds4/dart/dart_spice/spice_kernels/dsk/dimorphos_g_00972mm_spc_0000n00000_v004.bds",
+      "flags": ["--z-up"]
+    },
+    "donaldjohanson": {
+      "cache": ".cache/shape-models/donaldjohanson.obj",
+      "dsk": ".cache/shape-models/lcy_donj.bds",
+      "url": "https://naif.jpl.nasa.gov/pub/naif/pds/pds4/lucy/lucy_spice/spice_kernels/dsk/lcy_donj_k548_iso20m_v10.bds",
+      "flags": ["--z-up"]
+    },
+    "eros": {
+      "cache": ".cache/shapes/eros_ver128q.tab",
+      "url": "https://sbnarchive.psi.edu/pds3/near/NEAR_A_MSI_5_EROSSHAPE_V1_0/data/vertex/ver128q.tab",
+      "flags": ["--z-up"],
+      "colourFrom": "3a36b12:public/assets/models/eros/eros_shape_4k.glb"
+    },
+    "gaspra": {
+      "cache": ".cache/shape-models/951gaspra.tab",
+      "dataset": "urn:nasa:pds:ast-sat.thomas.shape-models (951gaspra.tab)",
+      "flags": ["--z-up", "--principal", "--west"]
+    },
+    "halley": {
+      "cache": ".cache/shapes/1682q1halley.tab",
+      "url": "https://sbnarchive.psi.edu/pds3/non_mission/EAR_A_5_DDR_STOOKE_SHAPE_MODELS_V2_0/data/1682q1halley.tab",
+      "flags": ["--principal", "--lon-lat"]
+    },
+    "hygiea": {
+      "cache": ".cache/shapes/hygiea_vernazza2020.txt",
+      "dataset": "DAMIT, Hygiea (Vernazza et al. 2020)",
+      "flags": ["--z-up"]
+    },
+    "hyperion": {
+      "cache": ".cache/shapes/hyperion_30k_plt.tab",
+      "dataset": "NASA PDS, Saturn Small Moon Shape Models V1.0 (hyperion_30k_plt.tab)",
+      "flags": ["--principal"]
+    },
+    "ida": {
+      "cache": ".cache/shapes/243ida.tab",
+      "url": "https://sbnarchive.psi.edu/pds3/non_mission/EAR_A_5_DDR_SHAPE_MODELS_V2_1/data/243ida.tab",
+      "flags": ["--z-up"]
+    },
+    "itokawa": {
+      "cache": ".cache/shapes/itokawa_ver128q.tab",
+      "url": "https://sbnarchive.psi.edu/pds3/hayabusa/HAY_A_AMICA_5_ITOKAWASHAPE_V1_0/data/vertex/ver128q.tab",
+      "flags": ["--z-up"]
+    },
+    "lutetia": {
+      "cache": ".cache/shape-models/lutetia_282_shape.obj",
+      "dataset": "DAMIT, model 282",
+      "flags": ["--z-up"]
+    },
+    "mathilde": {
+      "cache": ".cache/shape-models/253mathilde.tab",
+      "dataset": "urn:nasa:pds:ast-sat.thomas.shape-models (253mathilde.tab)",
+      "flags": ["--z-up", "--principal", "--west"]
+    },
+    "mimas": {
+      "cache": ".cache/shapes/mimas_ver128q.tab",
+      "url": "https://sbnarchive.psi.edu/pds3/multi_mission/CO_SA_ISSNA_5_MIMASSHAPE_V2_0/data/mimas_ver128q.tab",
+      "flags": ["--z-up"]
+    },
+    "pallas": {
+      "cache": ".cache/shapes/pallas_marsset2020.txt",
+      "dataset": "DAMIT, Pallas (Marsset et al. 2020)",
+      "flags": ["--z-up"]
+    },
+    "phobos": {
+      "cache": ".cache/shapes/phobos_ver512q.tab",
+      "dataset": "NASA PDS Small Bodies Node, Gaskell Phobos Shape Model V1.0 (q = 512)",
+      "flags": ["--z-up"]
+    },
+    "proteus": {
+      "cache": ".cache/shapes/n8proteus.tab",
+      "url": "https://sbnarchive.psi.edu/pds3/non_mission/EAR_A_5_DDR_STOOKE_SHAPE_MODELS_V2_0/data/n8proteus.tab",
+      "flags": ["--z-up", "--principal", "--west", "--lon-lat"]
+    },
+    "psyche": {
+      "cache": ".cache/shapes/psyche_viikinkoski2018.txt",
+      "dataset": "DAMIT, Psyche (Viikinkoski et al. 2018)",
+      "flags": ["--z-up"]
+    },
+    "ryugu": {
+      "cache": ".cache/shapes/ryugu_SHAPE_SFM_200k_v20180804.obj",
+      "url": "https://data.darts.isas.jaxa.jp/pub/hayabusa2/paper/Watanabe_2019/SHAPE_SFM_200k_v20180804.obj",
+      "flags": ["--z-up"],
+      "colourFrom": "3a36b12:public/assets/models/ryugu/ryugu_shape_4k.glb"
+    },
+    "vesta": {
+      "cache": ".cache/shapes/vesta_dawn_05deg.tab",
+      "dataset": "NASA PDS, DAWN-A-FC2-5-VESTADTMSPG-V1.0 (grille 0,5°, scripts/fetch-vesta-dtm-grid.mjs)",
+      "flags": ["--z-up"]
+    }
+  }
+}
