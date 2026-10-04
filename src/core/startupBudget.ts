@@ -417,6 +417,26 @@ export const NON_BOOT_CHUNKS: readonly BootDynamicChunk[] = [
       "l'index des missions du registre de contexte du PDS (lot 40) n'est lu que par le bloc « Missions » de la fiche, chargé à son ouverture (`config/missions`). Le comptage par corps est donc hors démarrage, et les listes elles-mêmes ne sont même pas dans le bundle : elles vivent en actifs servis à l'ouverture d'une fiche, comme les noms de surface du lot 37.",
   },
   {
+    chunk: 'card-en',
+    reason:
+      "le texte LONG des fiches (descriptions, raisons, crédits, liens Wikipédia) en anglais, sorti du démarrage le 2026-10-04 (`config/cardText.ts`) : seule la fiche le lit, et il n'arrive qu'à sa première ouverture. C'est ce qui a rendu possible l'ajout de 25 corps au catalogue.",
+  },
+  {
+    chunk: 'card-fr',
+    reason:
+      "le même texte de fiche en français, chargé avec l'anglais à la première ouverture d'une fiche quand l'interface est en français (`config/cardText.ts`).",
+  },
+  {
+    chunk: 'card-es',
+    reason:
+      "le même texte de fiche en espagnol, chargé à la première ouverture d'une fiche quand l'interface est en espagnol (`config/cardText.ts`).",
+  },
+  {
+    chunk: 'card-pt-BR',
+    reason:
+      "le même texte de fiche en portugais du Brésil, chargé à la première ouverture d'une fiche quand l'interface est en portugais (`config/cardText.ts`).",
+  },
+  {
     chunk: 'cardBlocks',
     reason:
       "les blocs Découverte, Missions, Instruments et Formations observées de la fiche (lots 40 à 44) ne sont chargés qu'à la PREMIÈRE ouverture d'une fiche (`ui/cardBlocks`) : aucun n'agit avant, et le lot 44 les a sortis du démarrage pour financer le sien au lieu de grignoter une marge déjà à 1,7 %.",

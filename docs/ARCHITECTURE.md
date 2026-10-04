@@ -2856,6 +2856,45 @@ anglais sont **refusées au build**, en nommant les deux.
 les fiches livrées : alléger puis reposer la carte d'une langue reconstruit exactement le texte de
 cette langue.
 
+### 3 bis. Le texte LONG d'une fiche n'arrive qu'à son ouverture (2026-10-04)
+
+Mesuré avant d'ajouter 25 corps au catalogue : l'anglais localisé des 58 fiches pesait **23 896
+octets** dans le bundle de démarrage (raisons 10 749, descriptions 7 572, crédits 2 659, liens
+Wikipédia 2 360, noms 323), et la carte de chaque autre langue en portait la traduction. Or ce
+texte n'est lu que par la fiche (`ui/bodyInfo.ts`). Une fiche comme celle d'Éros coûtait 2,3 Ko
+au démarrage, pour une marge de 21 206 octets : le lot ne passait pas.
+
+Les champs de `DEFERRED_TEXT_KEYS` (`core/registryText.ts` : `description`, `reason`, `credit`,
+`colourSource`, `wiki`) des registres que lit la fiche (entités, sondes, interstellaires) sont donc
+**différés dans les quatre langues, anglais compris** :
+
+- le greffon remplace chaque bloc par `{ deferredText: empreinte }` (drapeau `unsourced` gardé) et
+  l'exclut de la carte de démarrage de sa langue ;
+- il expose `virtual:registry-text/card-<langue>` pour les quatre langues, que `config/cardText.ts`
+  charge à la PREMIÈRE ouverture d'une fiche (l'anglais, repli de chaque bloc, plus la langue
+  active) et repose en place ;
+- la fiche se rend tout de suite avec ce qu'elle a, puis une seconde fois quand des blocs ont été
+  reposés, jamais pour rien, puisque le chargement rend le nombre de blocs touchés ;
+- la marque n'a pas de `$` en tête : `registry/load.ts` réserve ce préfixe aux formes de calcul, et
+  la première version (`$k`) faisait refuser la fiche du Soleil au démarrage.
+
+Résultat mesuré : démarrage **1 278 794 → 1 234 158 octets**, marge **21 206 → 65 842**, et la
+carte de démarrage de chaque autre langue perd environ 23 Ko (5 908 octets pour le portugais). La
+marque `deferredText`, répétée sur chaque bloc, coûte 2 320 octets de plus que `$k` : le prix d'un
+nom lisible, mesuré.
+
+Gardes : `src/config/catalogueText.test.ts` (chaque texte dans la bonne carte, aucun texte
+seulement différé dans une carte de démarrage, falsifié en désactivant l'exclusion : 3 rouges, et
+un aller-retour fiche allégée plus cartes égal à la fiche d'origine, dans les trois langues) ;
+`e2e/cardText.spec.ts`, la seule garde qui voit cette voie, puisque Vitest et les pages générées
+lisent des fiches complètes : description, lien, crédit en espagnol, aucun « undefined », et le
+témoin qu'aucune carte de fiche ne part tant qu'aucune fiche ne s'ouvre (falsifié en supprimant le
+second rendu : rouge).
+
+En passant, un défaut visible corrigé : le crédit d'un modèle de forme ne choisissait qu'entre
+`fr` et `en`, si bien qu'un visiteur espagnol ou portugais le lisait en anglais alors que la fiche
+porte sa traduction.
+
 ### 4. Le budget compte des groupes EXCLUSIFS
 
 Un visiteur charge **un** dictionnaire et **une** carte de texte. `BOOT_EXCLUSIVE_CHUNK_GROUPS`

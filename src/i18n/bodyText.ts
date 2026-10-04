@@ -28,5 +28,6 @@ export function bodyDisplayName(name: string): string {
 export function bodyDescription(cfg: CelestialBodyConfig): string {
   const d = cfg.realData?.description;
   if (!d) return '';
-  return d[getLocale()] ?? d.en;
+  // Texte différé pas encore arrivé (`config/cardText.ts`) : chaîne vide, la fiche se re-rend.
+  return d[getLocale()] ?? d.en ?? '';
 }

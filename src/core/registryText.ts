@@ -112,13 +112,21 @@ export function stripToEnglish<T>(value: T): T {
 export function collectTranslations(
   value: unknown,
   locale: DerivedTextLocale,
-  into: Record<string, string> = {}
+  into: Record<string, string> = {},
+  /**
+   * Écarte les blocs DIFFÉRÉS (`DEFERRED_TEXT_KEYS`) : ils voyagent dans la carte de la fiche,
+   * chargée à sa première ouverture, et n'ont rien à faire dans celle du démarrage.
+   */
+  skipDeferred = false,
+  key = ''
 ): Record<string, string> {
   if (Array.isArray(value)) {
-    for (const item of value) collectTranslations(item, locale, into);
+    for (const item of value)
+      collectTranslations(item, locale, into, skipDeferred, key);
     return into;
   }
   if (isLocalizedBlock(value)) {
+    if (skipDeferred && DEFERRED_TEXT_KEYS.includes(key)) return into;
     const english = value.en as string;
     const translation = value[locale];
     if (typeof translation === 'string') {
@@ -135,8 +143,10 @@ export function collectTranslations(
     return into;
   }
   if (value !== null && typeof value === 'object')
-    for (const entry of Object.values(value as Record<string, unknown>))
-      collectTranslations(entry, locale, into);
+    for (const [child, entry] of Object.entries(
+      value as Record<string, unknown>
+    ))
+      collectTranslations(entry, locale, into, skipDeferred, child);
   return into;
 }
 
@@ -202,4 +212,145 @@ export function englishStrings(
     for (const entry of Object.values(value as Record<string, unknown>))
       englishStrings(entry, into);
   return into;
+}
+
+/**
+ * LE TEXTE LONG D'UNE FICHE NE PART PLUS AU DÉMARRAGE (2026-10-04).
+ *
+ * Mesuré avant d'ajouter 25 corps au catalogue : l'anglais localisé des 58 fiches pesait
+ * 23 896 octets dans le bundle de démarrage (raisons 10 749, descriptions 7 572, crédits 2 659,
+ * liens Wikipédia 2 360), et les noms 323 seulement. Or ce texte n'est lu QUE par la fiche
+ * (`ui/bodyInfo.ts`) ; la marge du budget JavaScript était de 21 206 octets, et une fiche comme
+ * celle d'Éros y coûtait 2,3 Ko. Le lot ne passait pas.
+ *
+ * Ces champs sont donc DIFFÉRÉS dans TOUTES les langues, anglais compris : le navigateur reçoit
+ * à leur place `{ deferredText: empreinte }`, et la carte `virtual:registry-text/card-<langue>` les rend à
+ * la première ouverture d'une fiche. L'anglais n'est plus un repli ici, parce que la fiche est le
+ * seul lecteur et qu'elle attend la carte : un nom manquant au démarrage serait visible, une
+ * description absente une fraction de seconde ne l'est pas.
+ */
+export const DEFERRED_TEXT_KEYS: readonly string[] = [
+  'description',
+  'reason',
+  'credit',
+  'colourSource',
+  'wiki',
+];
+
+/** Toutes les langues ont une carte de fiche, l'anglais compris. */
+export const CARD_TEXT_LOCALES = ['en', ...DERIVED_TEXT_LOCALES] as const;
+export type CardTextLocale = (typeof CARD_TEXT_LOCALES)[number];
+
+/** Clé portée par un bloc différé à la place de son texte. */
+// Pas de `$` en tête : `registry/load.ts` réserve ce préfixe aux formes de calcul déclarées
+// (`$deg`, `$gm`…) et refusait la fiche au démarrage.
+export const DEFERRED_KEY = 'deferredText';
+
+/**
+ * Remplace chaque bloc différé par son empreinte, en gardant ses drapeaux (`unsourced`). À
+ * appeler APRÈS `stripToEnglish`, sur une fiche que le navigateur va recevoir.
+ */
+export function deferLongText<T>(value: T, key = ''): T {
+  if (Array.isArray(value))
+    return value.map((item) => deferLongText(item, key)) as unknown as T;
+  if (isLocalizedBlock(value)) {
+    if (!DEFERRED_TEXT_KEYS.includes(key)) return value;
+    const out: Record<string, unknown> = {
+      [DEFERRED_KEY]: textKey(value.en as string),
+    };
+    for (const flag of FLAGS) if (flag in value) out[flag] = value[flag];
+    return out as unknown as T;
+  }
+  if (value !== null && typeof value === 'object') {
+    const out: Record<string, unknown> = {};
+    for (const [child, entry] of Object.entries(
+      value as Record<string, unknown>
+    ))
+      out[child] = deferLongText(entry, child);
+    return out as unknown as T;
+  }
+  return value;
+}
+
+/** La carte « empreinte → texte » des blocs différés d'une langue, anglais compris. */
+export function collectDeferredText(
+  value: unknown,
+  locale: CardTextLocale,
+  into: Record<string, string> = {},
+  key = ''
+): Record<string, string> {
+  if (Array.isArray(value)) {
+    for (const item of value) collectDeferredText(item, locale, into, key);
+    return into;
+  }
+  if (isLocalizedBlock(value)) {
+    if (!DEFERRED_TEXT_KEYS.includes(key)) return into;
+    const text = value[locale];
+    if (typeof text !== 'string') return into;
+    const hash = textKey(value.en as string);
+    const existing = into[hash];
+    if (existing !== undefined && existing !== text)
+      throw new Error(
+        `collision d'empreinte de texte (${hash}) : « ${existing} » et « ${text} »`
+      );
+    into[hash] = text;
+    return into;
+  }
+  if (value !== null && typeof value === 'object')
+    for (const [child, entry] of Object.entries(
+      value as Record<string, unknown>
+    ))
+      collectDeferredText(entry, locale, into, child);
+  return into;
+}
+
+/**
+ * Repose les blocs différés EN PLACE : l'anglais depuis sa carte, la langue active depuis la
+ * sienne. Rend le nombre de blocs touchés ; zéro sur une donnée qui n'a pas été allégée (Vitest,
+ * les pages générées), ce qui permet à l'appelant de ne rien re-rendre pour rien.
+ */
+export function hydrateDeferred(
+  value: unknown,
+  english: Readonly<Record<string, string>>,
+  translation: Readonly<Record<string, string>> | null,
+  locale: CardTextLocale
+): number {
+  if (value instanceof Map) {
+    let count = 0;
+    for (const entry of value.values())
+      count += hydrateDeferred(entry, english, translation, locale);
+    return count;
+  }
+  if (Array.isArray(value)) {
+    let count = 0;
+    for (const item of value)
+      count += hydrateDeferred(item, english, translation, locale);
+    return count;
+  }
+  if (value !== null && typeof value === 'object') {
+    const record = value as Record<string, unknown>;
+    const hash = record[DEFERRED_KEY];
+    if (typeof hash === 'string') {
+      let count = 0;
+      if (typeof english[hash] === 'string' && record.en === undefined) {
+        record.en = english[hash];
+        count = 1;
+      }
+      const text = translation?.[hash];
+      if (
+        locale !== 'en' &&
+        typeof text === 'string' &&
+        record[locale] === undefined
+      ) {
+        record[locale] = text;
+        count = 1;
+      }
+      return count;
+    }
+    let count = 0;
+    for (const entry of Object.values(record))
+      count += hydrateDeferred(entry, english, translation, locale);
+    return count;
+  }
+  return 0;
 }
