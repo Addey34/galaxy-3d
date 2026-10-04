@@ -18,6 +18,8 @@ import {
  */
 const MAX_POLE_OFFSET_DEG = 10;
 
+const PROJECT_ROOT = resolve(__dirname, '../..');
+
 /**
  * Rapport du plus grand moment d'inertie au moyen à partir duquel l'axe de plus grande inertie
  * est DÉFINI. En dessous (Protée 1,004, Halley 1,01), la mesure de son orientation est du bruit.
@@ -38,8 +40,6 @@ const DEFINED_AXIS_RATIO = 1.03;
  * sans provenance.
  */
 
-const PROJECT_ROOT = resolve(__dirname, '../..');
-
 const withModel = (): [string, CelestialBodyConfig][] =>
   [...flattenBodies(CELESTIAL_CONFIG).entries()].filter(
     ([, cfg]) => cfg.model !== undefined
@@ -59,15 +59,22 @@ const levels = (): [string, string, string][] =>
   );
 
 /**
- * Budget de triangles par niveau (cf. `core/modelLod.ts`, produits par
- * `decimate-shape-model.mjs --target`), marge de 5 %. C'est ce qui rend le chargement FLUIDE :
- * le niveau léger qu'on charge d'abord pour chaque astéroïde ne peut pas grossir sans bruit.
+ * La recette des modèles livrés (`scripts/generate-shape-models.mjs`), seule propriétaire des
+ * budgets de triangles et des options de chaque corps.
  */
-const TRIANGLE_BUDGET: Record<string, number> = {
-  '1k': 4000,
-  '2k': 15000,
-  '4k': 60000,
+const RECIPE = JSON.parse(
+  readFileSync(join(PROJECT_ROOT, 'scripts/shape-model-targets.json'), 'utf8')
+) as {
+  budgets: Record<string, number>;
+  bodies: Record<string, { cache: string; flags: string[] }>;
 };
+
+/**
+ * Budget de triangles par niveau (cf. `core/modelLod.ts`), marge de 5 %. C'est ce qui rend le
+ * chargement FLUIDE : le niveau léger qu'on charge d'abord pour chaque astéroïde ne peut pas
+ * grossir sans bruit.
+ */
+const TRIANGLE_BUDGET = RECIPE.budgets;
 
 describe('modèles de forme 3D', () => {
   it('déclare au moins un corps modélisé', () => {
@@ -338,6 +345,74 @@ describe('sens des faces des modèles livrés', () => {
     }
     expect(signed).toBeGreaterThan(0);
   });
+});
+
+/**
+ * UNE SURFACE FERMÉE, ET RIEN D'AUTRE. Chaque arête bordée par exactement deux triangles, parcourue
+ * dans deux sens opposés : sinon un trou, une arête non manifold ou une face retournée, que la
+ * scène dessine en noir. Le regroupement de sommets qui produisait ces fichiers en laissait sur
+ * 38 des 49 niveaux (Bennu 4k : 1 470 arêtes non manifold, 983 de bord), quand toutes les
+ * sources mesurées en avaient zéro (2026-10-04). Les sommets sont soudés par POSITION : la
+ * fermeture est une propriété de la surface, pas de la numérotation.
+ */
+describe('topologie des modèles livrés', () => {
+  it.each(levels())('%s %s', (_name, _quality, onDisk) => {
+    const { positions, index } = readGlbGeometry(onDisk);
+    const weld = new Map<string, number>();
+    const id = (v: number): number => {
+      const key = `${positions[v * 3]},${positions[v * 3 + 1]},${positions[v * 3 + 2]}`;
+      if (!weld.has(key)) weld.set(key, weld.size);
+      return weld.get(key)!;
+    };
+    const edges = new Map<string, { n: number; forward: number }>();
+    for (let t = 0; t < index.length; t += 3)
+      for (let k = 0; k < 3; k++) {
+        const a = id(index[t + k]!);
+        const b = id(index[t + ((k + 1) % 3)]!);
+        const key = a < b ? `${a},${b}` : `${b},${a}`;
+        const e = edges.get(key) ?? { n: 0, forward: 0 };
+        e.n++;
+        if (a < b) e.forward++;
+        edges.set(key, e);
+      }
+    let boundary = 0;
+    let nonManifold = 0;
+    let flipped = 0;
+    for (const e of edges.values()) {
+      if (e.n === 1) boundary++;
+      else if (e.n > 2) nonManifold++;
+      else if (e.forward !== 1) flipped++;
+    }
+    expect({ boundary, nonManifold, flipped }).toEqual({
+      boundary: 0,
+      nonManifold: 0,
+      flipped: 0,
+    });
+  });
+});
+
+describe('recette des modèles de forme', () => {
+  it('couvre exactement les corps modélisés', () => {
+    // Un corps modélisé hors recette ne se régénère plus ; une entrée sans fiche est morte.
+    expect(Object.keys(RECIPE.bodies).sort()).toEqual(
+      withModel()
+        .map(([name]) => name)
+        .sort()
+    );
+  });
+
+  it.each(levels())(
+    '%s %s : embarque le crédit de sa fiche',
+    (name, _q, onDisk) => {
+      const bytes = readFileSync(onDisk);
+      const gltf = JSON.parse(
+        bytes.toString('utf8', 20, 20 + bytes.readUInt32LE(12))
+      ) as { asset: { copyright?: string } };
+      expect(gltf.asset.copyright).toBe(
+        flattenBodies(CELESTIAL_CONFIG).get(name)!.model!.credit.en
+      );
+    }
+  );
 });
 
 describe('débordement des modèles (extentRatio)', () => {

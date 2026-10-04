@@ -2,13 +2,15 @@
 /**
  * Réduit un modèle de forme scientifique à une taille utilisable sur le web.
  *
- * Usage :
- *   node scripts/decimate-shape-model.mjs <entrée> <sortie.glb> [grille] [--z-up] [--target N]
- * `--target N` : cherche la grille dont le maillage produit approche N triangles (sans le
- * dépasser de plus de 5 %). C'est ainsi que sont produits les niveaux de détail
- * `{corps}_shape_{1k,2k,4k}.glb` : un budget de triangles par niveau, pas une grille réglée à la
- * main corps par corps. Refuse un budget que la SOURCE ne peut pas atteindre — un niveau plus
- * détaillé que sa source serait une interpolation présentée comme une mesure.
+ * Usage (en pratique par `scripts/generate-shape-models.mjs`, qui lit la recette) :
+ *   node scripts/decimate-shape-model.mjs <entrée> <sortie.glb> --target N
+ *        [--z-up] [--west] [--lon-lat] [--principal] [--whole]
+ * `--target N` : au plus N triangles. C'est ainsi que sont produits les niveaux de détail
+ * `{corps}_shape_{1k,2k,4k}.glb` : un budget de triangles par niveau. Refuse un budget que la
+ * SOURCE ne peut pas atteindre — un niveau plus détaillé que sa source serait une interpolation
+ * présentée comme une mesure. `--whole` lève ce refus pour le niveau le plus léger d'un corps
+ * dont la source entière tient sous ce budget (Lutetia, Psyché) : elle est alors livrée telle
+ * quelle, rien n'est décimé.
  *
  * Entrées lues : glTF binaire (.glb), Wavefront (.obj), et les deux formats de la PDS Small
  * Bodies Node — table sommets/plaques (`ver128q.tab` : comptes, « id x y z », « id a b c ») et
@@ -35,24 +37,26 @@
  * d'ailleurs nommée « Fake » dans le fichier. La décimer nous-mêmes est le seul moyen d'avoir
  * à la fois la vraie forme et un poids raisonnable.
  *
- * MÉTHODE : regroupement de sommets. La boîte englobante est découpée en une grille régulière,
- * les sommets d'une même cellule sont remplacés par leur centroïde, les triangles devenus
- * dégénérés ou dupliqués sont supprimés. C'est un filtre passe-bas — la forme d'ensemble
- * survit, les cailloux disparaissent.
+ * MÉTHODE : effondrement d'arêtes (meshoptimizer), après soudure des sommets confondus, puis
+ * contrôle que la surface est FERMÉE (cf. `simplify`). Le regroupement de sommets employé
+ * jusqu'au 2026-10-04 soudait tout ce qui tombait dans une même cellule de grille : la forme
+ * d'ensemble survivait, mais pas la topologie.
  *
  * CE QUI DOIT ÊTRE VÉRIFIÉ, et que le script imprime avant/après : l'écart-type du rayon et le
  * rapport équateur/pôles. Ce sont les deux nombres qui distinguent un modèle de forme d'une
- * patate. S'ils bougent, la décimation a mangé la signature du corps et la grille est trop
- * grossière. Sur Bennu, de 3,37 M à 22,8 k triangles : 6,00 % → 6,03 % et 1,118 → 1,119.
+ * patate. S'ils bougent, la décimation a mangé la signature du corps. Sur Bennu (v20 en DSK,
+ * 3,15 M de plaques) à 3 974 triangles, pondérés par l'aire : rapport équateur/pôles inchangé.
  *
- * Le fichier produit est DÉTERMINISTE : les cellules sont parcourues dans l'ordre de leur
- * indice, jamais dans l'ordre d'insertion, donc deux exécutions donnent les mêmes octets.
+ * Le fichier produit est DÉTERMINISTE : la simplification l'est, et les sommets sont numérotés
+ * dans l'ordre de leur première apparition, donc deux exécutions donnent les mêmes octets.
  */
 import { readFileSync, writeFileSync } from 'fs';
 import { dirname, resolve } from 'path';
 import { fileURLToPath, pathToFileURL } from 'url';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
+const { MeshoptSimplifier } = await import('meshoptimizer');
+await MeshoptSimplifier.ready;
 const { GLTFLoader } = await import(
   pathToFileURL(
     resolve(ROOT, 'node_modules/three/examples/jsm/loaders/GLTFLoader.js')
@@ -250,8 +254,12 @@ async function loadShape(path) {
       const phi = (lat * Math.PI) / 180;
       const lambda = (lon * Math.PI) / 180;
       const k = (i * lons.length + j) * 3;
-      pos[k] = r * Math.cos(phi) * Math.cos(lambda);
-      pos[k + 1] = r * Math.cos(phi) * Math.sin(lambda);
+      // Aux pôles, cos(φ) vaut 6e-17 et non 0 : les sommets d'une même latitude ±90°
+      // resteraient distincts à 1e-14 près, et la soudure laisserait le pôle ouvert (Vesta,
+      // 1 440 arêtes de bord). Le pôle est UN point.
+      const c = Math.abs(lat) === 90 ? 0 : Math.cos(phi);
+      pos[k] = r * c * Math.cos(lambda);
+      pos[k + 1] = r * c * Math.sin(lambda);
       pos[k + 2] = r * Math.sin(phi);
     })
   );
@@ -363,7 +371,8 @@ function writeGlb(path, positions, normals, indices, copyright, name) {
   const gltf = {
     asset: {
       version: '2.0',
-      generator: 'galaxy scripts/decimate-shape-model.mjs (vertex clustering)',
+      generator:
+        'galaxy scripts/decimate-shape-model.mjs (meshoptimizer edge collapse)',
       copyright,
     },
     scene: 0,
@@ -567,17 +576,16 @@ function alignToPrincipalAxes(pos, index, triangles) {
   );
 }
 const targetAt = args.indexOf('--target');
-const TARGET = targetAt === -1 ? null : Number(args[targetAt + 1]);
-const [input, output, gridArg] = args
+const TARGET = targetAt === -1 ? NaN : Number(args[targetAt + 1]);
+const [input, output] = args
   .filter((_a, i) => targetAt === -1 || (i !== targetAt && i !== targetAt + 1))
   .filter((a) => !a.startsWith('--'));
-if (!input || !output) {
+if (!input || !output || !(TARGET > 0)) {
   console.error(
-    'usage : node scripts/decimate-shape-model.mjs <entrée> <sortie.glb> [grille] [--z-up]'
+    'usage : node scripts/decimate-shape-model.mjs <entrée> <sortie.glb> --target N [--z-up] [--west] [--lon-lat] [--principal]'
   );
   process.exit(1);
 }
-let GRID = Number(gridArg ?? 52);
 
 const shape = await loadShape(input);
 const pos = Float32Array.from(shape.pos);
@@ -605,65 +613,162 @@ const beforeArea = shapeStats(
 );
 const volumeBefore = meshVolume(pos, index, triangleCount);
 
-function cluster(GRID) {
-  const min = [Infinity, Infinity, Infinity];
-  const max = [-Infinity, -Infinity, -Infinity];
-  for (let i = 0; i < pos.length; i++) {
-    const k = i % 3;
-    if (pos[i] < min[k]) min[k] = pos[i];
-    if (pos[i] > max[k]) max[k] = pos[i];
+/**
+ * Soude les sommets de MÊME position (une grille répète le pôle à chaque longitude, un glTF
+ * drapé duplique sa couture) puis écarte les triangles devenus dégénérés ou répétés. Sans
+ * soudure, la simplification verrait des bords là où la surface est fermée.
+ */
+function weld(pos, index, triangleCount) {
+  const byPosition = new Map();
+  const remap = new Uint32Array(pos.length / 3);
+  const welded = [];
+  for (let i = 0; i < pos.length / 3; i++) {
+    const key = `${pos[i * 3]},${pos[i * 3 + 1]},${pos[i * 3 + 2]}`;
+    let n = byPosition.get(key);
+    if (n === undefined) {
+      n = byPosition.size;
+      byPosition.set(key, n);
+      welded.push(pos[i * 3], pos[i * 3 + 1], pos[i * 3 + 2]);
+    }
+    remap[i] = n;
   }
-  const span = [0, 1, 2].map((k) => max[k] - min[k] || 1);
-  const cellOf = (v) => {
-    let key = 0;
-    for (let k = 0; k < 3; k++)
-      key =
-        key * GRID +
-        Math.min(
-          GRID - 1,
-          Math.floor(((pos[v * 3 + k] - min[k]) / span[k]) * GRID)
-        );
-    return key;
-  };
-
-  const sums = new Map();
-  for (let i = 0; i < vertexCount; i++) {
-    const key = cellOf(i);
-    let s = sums.get(key);
-    if (!s) sums.set(key, (s = [0, 0, 0, 0]));
-    s[0] += pos[i * 3];
-    s[1] += pos[i * 3 + 1];
-    s[2] += pos[i * 3 + 2];
-    s[3]++;
-  }
-  // Ordre stable : par indice de cellule, jamais par ordre d'insertion.
-  const keys = [...sums.keys()].sort((a, b) => a - b);
-  const remap = new Map();
-  const outPos = new Float32Array(keys.length * 3);
-  keys.forEach((key, n) => {
-    const s = sums.get(key);
-    outPos[n * 3] = s[0] / s[3];
-    outPos[n * 3 + 1] = s[1] / s[3];
-    outPos[n * 3 + 2] = s[2] / s[3];
-    remap.set(key, n);
-  });
-
   const seen = new Set();
-  const outIdx = [];
+  const triangles = [];
   for (let t = 0; t < triangleCount; t++) {
-    const a = remap.get(cellOf(index ? index[t * 3] : t * 3));
-    const b = remap.get(cellOf(index ? index[t * 3 + 1] : t * 3 + 1));
-    const c = remap.get(cellOf(index ? index[t * 3 + 2] : t * 3 + 2));
+    const [a, b, c] = [0, 1, 2].map(
+      (k) => remap[index ? index[t * 3 + k] : t * 3 + k]
+    );
     if (a === b || b === c || a === c) continue;
     const lo = Math.min(a, b, c);
     const hi = Math.max(a, b, c);
     const sig = `${lo},${a + b + c - lo - hi},${hi}`;
     if (seen.has(sig)) continue;
     seen.add(sig);
-    outIdx.push(a, b, c);
+    triangles.push(a, b, c);
   }
+  return {
+    pos: Float32Array.from(welded),
+    index: Uint32Array.from(triangles),
+  };
+}
 
-  const outNrm = new Float32Array(keys.length * 3);
+/**
+ * Ce qu'un maillage de surface FERMÉE doit être, compté arête par arête : chaque arête bordée
+ * par exactement deux triangles (sinon un trou, ou une arête non manifold), et parcourue dans
+ * deux sens opposés (sinon une face retournée, que la scène dessine en noir).
+ */
+export function topologyDefects(index) {
+  const edges = new Map();
+  for (let t = 0; t < index.length; t += 3)
+    for (let k = 0; k < 3; k++) {
+      const a = index[t + k];
+      const b = index[t + ((k + 1) % 3)];
+      const key = a < b ? `${a},${b}` : `${b},${a}`;
+      const e = edges.get(key) ?? { n: 0, forward: 0 };
+      e.n++;
+      if (a < b) e.forward++;
+      edges.set(key, e);
+    }
+  let boundary = 0;
+  let nonManifold = 0;
+  let flipped = 0;
+  for (const e of edges.values()) {
+    if (e.n === 1) boundary++;
+    else if (e.n > 2) nonManifold++;
+    else if (e.forward !== 1) flipped++;
+  }
+  return { boundary, nonManifold, flipped };
+}
+
+const clean = (d) => d.boundary + d.nonManifold + d.flipped === 0;
+
+/**
+ * Retire les NAGEOIRES : deux triangles sur les trois mêmes sommets, de sens opposés. C'est un
+ * feuillet d'épaisseur nulle que l'effondrement d'arêtes laisse parfois (662 paires sur Bennu
+ * à 60 000 triangles, toutes ses arêtes non manifold) ; il ne porte ni volume ni surface
+ * extérieure, et la scène le dessine en noir. Les retirer ferme la surface sans rien inventer.
+ */
+function removeFins(index) {
+  const byVertices = new Map();
+  for (let t = 0; t < index.length; t += 3) {
+    const key = [index[t], index[t + 1], index[t + 2]]
+      .sort((a, b) => a - b)
+      .join();
+    const list = byVertices.get(key) ?? [];
+    list.push(t);
+    byVertices.set(key, list);
+  }
+  // Même cycle à une rotation près = même sens.
+  const cycle = (t) => {
+    const v = [index[t], index[t + 1], index[t + 2]];
+    const i = v.indexOf(Math.min(...v));
+    return `${v[i]},${v[(i + 1) % 3]},${v[(i + 2) % 3]}`;
+  };
+  const drop = new Set();
+  for (const list of byVertices.values()) {
+    if (list.length !== 2) continue;
+    if (cycle(list[0]) === cycle(list[1]))
+      drop.add(list[1]); // doublon : un seul compte
+    else for (const t of list) drop.add(t); // nageoire : ni l'un ni l'autre
+  }
+  if (!drop.size) return index;
+  const kept = [];
+  for (let t = 0; t < index.length; t += 3)
+    if (!drop.has(t)) kept.push(index[t], index[t + 1], index[t + 2]);
+  return Uint32Array.from(kept);
+}
+
+/**
+ * Simplification par EFFONDREMENT D'ARÊTES (meshoptimizer), qui garde la topologie de la
+ * source. Le regroupement de sommets qu'elle remplace soudait tout ce qui tombait dans une même
+ * cellule de grille, ce qui créait des arêtes non manifold, des faces retournées et des trous
+ * sur 38 des 49 niveaux livrés, quand toutes les sources mesurées en avaient zéro (2026-10-04).
+ *
+ * Trois passes, dans cet ordre et pas d'autre : la simplification nue, qui suit le mieux la
+ * forme ; puis, si elle a laissé un défaut, la même avec `RegularizeLight`, puis `Regularize`,
+ * qui préfèrent des triangles réguliers (erreur un peu plus forte, toujours sous 1 % de la
+ * taille du corps sur les modèles mesurés). Si les trois échouent, on REFUSE d'écrire : un maillage troué livré en
+ * silence est exactement ce que ce script a fait jusqu'ici.
+ */
+function simplify(source, target) {
+  const sourceDefects = topologyDefects(source.index);
+  if (!clean(sourceDefects))
+    throw new Error(
+      `source non fermée : ${JSON.stringify(sourceDefects)} — rien à préserver`
+    );
+  let index = source.index;
+  let error = 0;
+  let pass = 'source entière';
+  if (source.index.length / 3 > target) {
+    for (const flags of [[], ['RegularizeLight'], ['Regularize']]) {
+      const [out, err] = MeshoptSimplifier.simplify(
+        source.index,
+        source.pos,
+        3,
+        target * 3,
+        1,
+        flags
+      );
+      index = removeFins(out);
+      error = err;
+      pass = flags.length ? flags.join('+') : 'simple';
+      if (clean(topologyDefects(index))) break;
+    }
+    const defects = topologyDefects(index);
+    if (!clean(defects))
+      throw new Error(
+        `simplification à ${target} triangles non fermée : ${JSON.stringify(defects)}`
+      );
+  }
+  // Sommets renumérotés dans l'ordre de leur première apparition : déterministe.
+  const order = new Map();
+  for (const v of index) if (!order.has(v)) order.set(v, order.size);
+  const outPos = new Float32Array(order.size * 3);
+  for (const [v, n] of order)
+    for (let k = 0; k < 3; k++) outPos[n * 3 + k] = source.pos[v * 3 + k];
+  const outIdx = Array.from(index, (v) => order.get(v));
+
+  const outNrm = new Float32Array(order.size * 3);
   for (let i = 0; i < outIdx.length; i += 3) {
     const [a, b, c] = [outIdx[i], outIdx[i + 1], outIdx[i + 2]];
     const ux = outPos[b * 3] - outPos[a * 3];
@@ -681,45 +786,34 @@ function cluster(GRID) {
       outNrm[k * 3 + 2] += nz;
     }
   }
-  for (let i = 0; i < keys.length; i++) {
+  for (let i = 0; i < order.size; i++) {
     const len =
       Math.hypot(outNrm[i * 3], outNrm[i * 3 + 1], outNrm[i * 3 + 2]) || 1;
     outNrm[i * 3] /= len;
     outNrm[i * 3 + 1] /= len;
     outNrm[i * 3 + 2] /= len;
   }
-  return { keys, outPos, outIdx, outNrm };
+  return { count: order.size, outPos, outIdx, outNrm, error, pass };
 }
 
-if (TARGET !== null) {
-  // La grille croît avec le nombre de triangles produits : recherche dichotomique.
-  if (triangleCount < TARGET * 0.95)
-    throw new Error(
-      `la source n'a que ${triangleCount} triangles : impossible d'en produire ${TARGET} sans inventer de géométrie`
-    );
-  let lo = 4;
-  let hi = 2048;
-  let best = null;
-  while (lo <= hi) {
-    const mid = (lo + hi) >> 1;
-    const produced = cluster(mid).outIdx.length / 3;
-    if (produced <= TARGET * 1.05) {
-      best = mid;
-      lo = mid + 1;
-    } else hi = mid - 1;
-  }
-  GRID = best ?? 4;
-  console.log(`grille retenue pour ~${TARGET} triangles : ${GRID}`);
-}
-const { keys, outPos, outIdx, outNrm } = cluster(GRID);
+const whole = args.includes('--whole');
+if (triangleCount < TARGET * 0.95 && !whole)
+  throw new Error(
+    `la source n'a que ${triangleCount} triangles : impossible d'en produire ${TARGET} sans inventer de géométrie (--whole pour livrer la source entière au niveau le plus léger)`
+  );
+const source = weld(pos, index, triangleCount);
+const { count, outPos, outIdx, outNrm, error, pass } = simplify(source, TARGET);
+console.log(
+  `simplification (${pass}) : erreur relative ${error.toExponential(2)}, topologie fermée`
+);
 
-const after = shapeStats(outPos, keys.length);
+const after = shapeStats(outPos, count);
 const afterArea = shapeStats(
   outPos,
-  keys.length,
-  vertexAreaWeights(outPos, outIdx, outIdx.length / 3, keys.length)
+  count,
+  vertexAreaWeights(outPos, outIdx, outIdx.length / 3, count)
 );
-console.log(`sortie : ${keys.length} sommets, ${outIdx.length / 3} triangles`);
+console.log(`sortie : ${count} sommets, ${outIdx.length / 3} triangles`);
 console.log(
   `  écart-type du rayon  ${before.sdPct.toFixed(2)} %  →  ${after.sdPct.toFixed(2)} %`
 );

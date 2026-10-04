@@ -1947,7 +1947,7 @@ sans relancer `pnpm textures:ladder --write` fait rougir la porte.
 ## Modèles de forme : la vraie forme, et la texture du corps drapée dessus
 
 Un corps irrégulier dont un modèle de forme scientifique est publié l'affiche, au lieu d'une
-sphère (règle de parité de l'utilisateur, 2026-09-22). Quinze corps en ont un ; la liste fait foi
+sphère (règle de parité de l'utilisateur, 2026-09-22). La liste des corps qui en ont un fait foi
 dans les fiches (`model`) et dans `THIRD_PARTY_NOTICES.md`, qu'un test confronte l'une à l'autre.
 La sphère n'est jamais supprimée, seulement masquée : un modèle qui ne se charge pas laisse le
 corps affiché.
@@ -1983,6 +1983,33 @@ corps affiché.
   niveau léger, Hypérion n'a pas de 4k.
 - **Les faces** pointent vers l'extérieur (volume signé positif), garde ajoutée quand le lecteur de
   grille a appris à inverser les longitudes.
+- **La surface est fermée** (2026-10-04) : chaque arête bordée par exactement deux triangles, de
+  sens opposés. Le regroupement de sommets qui produisait les niveaux laissait des trous, des
+  arêtes non manifold et des faces retournées sur 38 des 49 niveaux, alors que toutes les sources
+  mesurées en avaient zéro ; la scène les dessinait en triangles noirs. La réduction est désormais
+  un effondrement d'arêtes (meshoptimizer, outil de build, jamais servi), suivi du retrait des
+  « nageoires » (deux triangles sur les mêmes sommets en sens opposés, feuillet sans volume que
+  l'effondrement laisse parfois) et d'un contrôle de fermeture : le script REFUSE d'écrire un
+  niveau ouvert. Garde dans `shapeModels.test.ts`, sommets soudés par position, falsifiée sur
+  l'ancien Éros 1k.
+- **La recette est une donnée.** `scripts/shape-model-targets.json` porte, par corps, la source (cache,
+  adresse vérifiée ou nom du jeu de données) et les options ; `pnpm shapes:generate` régénère tout.
+  Ce qui appartient à la fiche n'y est pas recopié : les niveaux (`model.resolutions`), la cuisson
+  (présente si `model.albedo` l'est) et le crédit embarqué dans le glTF (`model.credit.en`, que 19
+  fichiers sur 24 remplaçaient par « source à documenter »). Les options n'étaient écrites nulle
+  part : elles ont été **dérivées** en produisant chaque combinaison et en la comparant au fichier
+  livré (distance moyenne de ses sommets à une version dense du nouveau maillage). La bonne
+  coïncide à 0,1-1,7 %, la suivante à 3-17 % ; seule exception, `--z-up` devient sans effet après
+  `--principal`. Deux pièges de cette mesure : normaliser par le rayon moyen des SOMMETS la rend
+  dépendante de l'échantillonnage (une grille est dense aux pôles), et le pôle d'une grille doit
+  être UN point (`cos 90°` vaut 6e-17 en flottant, et la soudure exacte laissait Vesta ouverte).
+- **La couleur cuite se moyenne sur l'empreinte d'un sommet.** Prélever un pixel de carte par
+  sommet mesurait le bruit de la carte : sur la couleur livrée de Bennu, deux sommets voisins
+  étaient décorrélés (−0,02) pour 13,7 % d'écart. Bennu étant drapé de sa texture, cette couleur
+  n'était d'ailleurs pas affichée, et elle n'est plus cuite. Éros et Ryugu gardent leur couleur
+  mesurée, reportée depuis les fichiers du commit `3a36b12` et moyennée sur l'empreinte de chaque
+  nouveau sommet (`bake-shape-colour.mjs --from`), parce que leurs cartes ne se relisaient pas ce
+  jour-là ; une carte relue passe par la même moyenne (`lowPass`).
 
 ## Halo lumineux — qui brille, et combien
 
