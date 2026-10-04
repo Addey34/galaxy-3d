@@ -464,6 +464,44 @@ const IMPORTS = [
     tier: 'free',
   },
   {
+    // Albédos NEAR MSI de Golish et al. (2023) à 760, 550 et 450 nm, composés en couleur par
+    // `scripts/compose-albedo-texture.mjs --albedo 0.25 --chroma-blur 48` (mêmes règles que la
+    // couleur que portait le modèle). Membres `data/eros_nearmsi_filter{3,1,2}.tif` du zip
+    // https://asc-pds-individual-investigations.s3.us-west-2.amazonaws.com/eros_global-albedo-maps_golish_2023/eros_global-albedo-maps_golish_2023.zip
+    // lus un à un par requêtes Range (2,57 Go en tout). Étiquette ISIS : PositiveEast,
+    // CenterLongitude = 180.0 ; cadrage vérifié sur le cratère Psyche.
+    body: 'eros',
+    layer: 'surface',
+    src: `${V1}/eros/eros_golish2023_rgb.png`,
+    resolutions: ['8k', '4k', '2k', '1k'],
+    fillHoles: true,
+    tint: null,
+    centerLongitude: 180,
+    source: 'https://astrogeology.usgs.gov/search/map/near_msi_albedo_mosaics',
+    license: 'public-domain',
+    credit: 'NASA/JHU-APL NEAR MSI, USGS (Golish et al. 2023)',
+    tier: 'free',
+  },
+  {
+    // Photomosaïque de Stooke (2012) : images AMICA reprojetées sur le modèle de Gaskell
+    // (Stooke Small Bodies Maps V2.0, MULTI-SA-MULTI-6-STOOKEMAPS-V2.0, document/25143itokawa/
+    // new-itokawa-mosaic.jpg). Domaine public, crédit requis. Grille : 0 aux bords, 180 au centre,
+    // longitudes croissantes vers la droite ; recalage sur le modèle livré : pic à 1°, direct.
+    body: 'itokawa',
+    layer: 'surface',
+    src: `${V1}/itokawa/new-itokawa-mosaic.jpg`,
+    resolutions: ['8k', '4k', '2k', '1k'],
+    fillHoles: false,
+    tint: null,
+    centerLongitude: 180,
+    source:
+      'https://sbnarchive.psi.edu/pds3/multi_mission/MULTI_SA_MULTI_6_STOOKEMAPS_V2_0/document/aamapdesc.html',
+    license: 'public-domain',
+    credit:
+      'Stooke, P., Stooke Small Bodies Maps V2.0, NASA PDS (JAXA Hayabusa AMICA)',
+    tier: 'free',
+  },
+  {
     body: 'deimos',
     layer: 'surface',
     src: `${V1}/deimos/Mars - Deimos nasa gov.tif`,

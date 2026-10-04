@@ -119,10 +119,10 @@
   "notes": {
     "a": "Éléments osculateurs JPL Horizons EXACTEMENT à cette époque (COMMAND '101955;', EPHEM_TYPE=ELEMENTS, TLIST=2461041.5), par `pnpm ephemeris:small-body`. Ils étaient à l'époque J2000 : propagés en deux corps sur 26 ans, ils plaçaient Bennu à 0,47 UA de sa vraie position au 1er janvier 2026 (0,72 UA en 2036) — mesuré contre les vecteurs Horizons. Un géocroiseur frôle la Terre : les perturbations s'y accumulent vite.",
     "facts.radiusKm": "Diamètre 0,48444 km (JPL SBDB, ±0,0003) → rayon moyen.",
-    "fallbackColor": "Pas de texture : la surface de Bennu n'a pas de mosaïque équirectangulaire publiée à laquelle on puisse se fier. C'est la FORME qui la fait reconnaître, pas sa couleur.",
+    "fallbackColor": "Couleur de la sphère d'attente, avant l'arrivée du modèle drapé de la mosaïque OCAMS (lot 16).",
     "facts.axialTilt": "Obliquité DÉRIVÉE, pas recopiée : pôle SBDB (RA 85,4522°, Dec −60,3678°) converti en écliptique puis comparé à la normale orbitale (i, Ω ci-dessus) → 177,5° (177,6° avec les éléments J2000 : le plan orbital a très légèrement tourné). Bennu tourne donc à l'envers, ce qui est bien la valeur publiée — le calcul la retrouve.",
     "facts.massKg": "GM = 4,8904e-9 km³/s² (SBDB) ÷ G → 7,33e10 kg.",
     "model.extentRatio": "Mesuré sur le fichier : rayon max / rayon équivalent-volume.",
-    "model.albedo": "Luminosité et couleur RÉELLES, cuites dans le modèle (bake-shape-colour.mjs) ; la sphère d'attente ci-dessus a la même couleur moyenne, pour ne pas changer d'aspect au chargement."
+    "model.albedo": "Plus d'albédo cuit depuis le lot 16 : le modèle est drapé de la mosaïque OCAMS, et le test exige qu'un modèle drapé n'en porte pas."
   }
 }

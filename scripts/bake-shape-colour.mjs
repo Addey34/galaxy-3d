@@ -35,11 +35,12 @@ import { readFileSync, readdirSync, writeFileSync } from 'fs';
 import { dirname, join, resolve } from 'path';
 import { fileURLToPath } from 'url';
 import sharp from 'sharp';
+import { DISPLAY_PER_ALBEDO } from './display-albedo.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 
-/** Luminance linéaire affichée par unité d'albédo géométrique, mesurée sur la texture lunaire. */
-export const DISPLAY_PER_ALBEDO = 0.312 / 0.12;
+/** Luminance linéaire affichée par unité d'albédo géométrique : propriétaire `display-albedo.mjs`. */
+export { DISPLAY_PER_ALBEDO };
 const SAMPLE_WIDTH = 2048;
 
 const args = process.argv.slice(2);

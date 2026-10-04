@@ -1977,6 +1977,38 @@ Les corps sans témoin assez contrasté (Encelade, Dioné, Téthys, Io, Triton, 
 Mercure) ont été vérifiés le même jour contre une référence indépendante quand elle existait (tuiles
 Trek, mosaïques Cassini du PDS), ou sur un repère à l'œil seulement (Io, Triton, Charon, Déimos).
 
+### Les petits corps modélisés : une carte drapée seulement si les DEUX repères concordent (2026-10-04)
+
+Quinze corps portaient un modèle de forme sans texture, peints à leur albédo. Draper une carte
+suppose que la carte ET le modèle soient dans le même repère, et c'est la condition qui a trié :
+
+| Corps | Carte | Carte contre l'UAI | Modèle contre l'UAI ou contre la carte | Décision |
+|---|---|---|---|---|
+| Éros | albédos NEAR MSI de Golish et al. (2023), 760/550/450 nm, composés en couleur | Psyche à sa longitude, Himeros à son antipode | 25 des 33 grands cratères nommés sont des creux du modèle à 0°, 17 au mieux autrement | **drapée** |
+| Itokawa | photomosaïque AMICA de Stooke (PDS) | grille de la carte (0 aux bords) | recalage sur le modèle : pic à 1°, sans miroir | **drapée** |
+| Ida | photomosaïque Galileo de Stooke (30 % imagé) | 92 % des noms sur des pixels imagés, Afon au méridien | aucune orientation n'y met les cratères nommés en creux (11 à 14 sur 21) ; la grille du modèle suit la convention de Davies et al. 1996 (pôle à Dec +87°, rotation rétrograde) | en attente : repère du modèle à établir |
+| Gaspra, Mathilde | photomosaïques de Stooke (35 % et 20 % imagés) | 91 % et 83 % des noms sur des pixels imagés | modèles tournés dans leurs axes principaux (`--principal`, pôle déplacé de 11° et 30°) : leur repère n'est plus celui de l'UAI | en attente : le drapé devrait lire le repère d'avant la rotation |
+
+Pour les autres, aucune carte n'a été trouvée là où l'on a cherché le 2026-10-04 : le dépôt S3
+complet des mosaïques de l'USGS (18 844 clés listées), les cartes de Stooke au PDS (Ida, Gaspra,
+Mathilde, Éros, Itokawa, Phobos, Déimos, Amalthée, Hypérion, Épiméthée, Wild 2 seulement) et les
+archives SPICE de NAIF. Cela vaut pour Psyché, Apophis, Lutetia, Šteins, Didymos, Dimorphos,
+Donaldjohanson, Arrokoth et Tempel 1. Psyché n'a pas encore été visitée, Apophis n'est connue
+que par radar ; pour les autres, une recherche plus large (archives propres à chaque mission)
+reste à faire et n'est pas une absence prouvée.
+
+**Trois outils nés de ce tri.** `scripts/compose-albedo-texture.mjs` compose des albédos
+flottants en couleur selon les règles de la couleur cuite (rapports entre bandes gardés, un seul
+facteur vers l'albédo publié, convention lue dans `scripts/display-albedo.mjs`, NoData jamais
+mélangé), et ne lisse que la chrominance. Les membres d'un zip de 2,57 Go se lisent un à un par
+requêtes Range. Et une bande flottante sort de sharp en TROIS copies : on la reprend par
+`extractChannel(0)` après avoir vérifié que le fichier n'en porte qu'une.
+
+**Ce qui ne tranche pas pour Éros**, et pourquoi il n'est pas dans la garde d'orientation : ses
+cartes sont corrigées à phase nulle, donc sans ombrage, si bien que ni le recalage pente/variance
+(qui donnait un miroir à 191°, r = 0,230) ni un témoin de luminosité ne mesurent quoi que ce soit.
+Deux repères nommés lus à l'œil et le test des cratères sur le modèle tiennent la décision.
+
 ## Modèles de forme : la vraie forme, et la texture du corps drapée dessus
 
 Un corps irrégulier dont un modèle de forme scientifique est publié l'affiche, au lieu d'une

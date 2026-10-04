@@ -481,7 +481,7 @@ function meanLuminance(path: string): {
 describe('couleur réelle des modèles de forme', () => {
   it('le script de cuisson utilise la même convention que ce test', () => {
     const script = readFileSync(
-      join(PROJECT_ROOT, 'scripts/bake-shape-colour.mjs'),
+      join(PROJECT_ROOT, 'scripts/display-albedo.mjs'),
       'utf8'
     );
     expect(script).toContain('0.312 / 0.12');

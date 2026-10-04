@@ -50,8 +50,7 @@
     "eros": {
       "cache": ".cache/shapes/eros_ver128q.tab",
       "url": "https://sbnarchive.psi.edu/pds3/near/NEAR_A_MSI_5_EROSSHAPE_V1_0/data/vertex/ver128q.tab",
-      "flags": ["--z-up"],
-      "colourFrom": "3a36b12:public/assets/models/eros/eros_shape_4k.glb"
+      "flags": ["--z-up"]
     },
     "gaspra": {
       "cache": ".cache/shape-models/951gaspra.tab",

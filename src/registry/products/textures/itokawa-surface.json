@@ -1,0 +1,36 @@
+{
+  "$schema": "../../schema/product.schema.json",
+  "id": "itokawa-surface",
+  "type": "texture",
+  "body": "itokawa",
+  "layer": "surface",
+  "shipped": true,
+  "license": "other",
+  "rights": "public-domain",
+  "links": [
+    {
+      "rel": "license",
+      "href": "https://sbnarchive.psi.edu/pds3/multi_mission/MULTI_SA_MULTI_6_STOOKEMAPS_V2_0/document/aamapdesc.html"
+    }
+  ],
+  "providers": [
+    {
+      "name": "Stooke, P., Stooke Small Bodies Maps V2.0, MULTI-SA-MULTI-6-STOOKEMAPS-V2.0, NASA Planetary Data System, 2012 (JAXA Hayabusa AMICA images)",
+      "roles": [
+        "producer"
+      ]
+    }
+  ],
+  "tier": "free",
+  "review": {
+    "status": "ready",
+    "processing": "import-textures",
+    "downloadUrl": "https://sbnarchive.psi.edu/pds3/multi_mission/MULTI_SA_MULTI_6_STOOKEMAPS_V2_0/document/25143itokawa/new-itokawa-mosaic.jpg",
+    "sourcePage": "https://sbnarchive.psi.edu/pds3/multi_mission/MULTI_SA_MULTI_6_STOOKEMAPS_V2_0/document/aamapdesc.html",
+    "sourceResolution": "20 pixel/degree global photomosaic, simple cylindrical",
+    "sourcePixelWidth": 7200,
+    "projection": "equirectangular",
+    "qualityClass": "native",
+    "note": "Importee le 2026-10-04. Photomosaique de Stooke : les meilleures images AMICA de chaque region, reprojetees sur un rendu du modele de Gaskell, de petits blocs servant de points de controle ; le domaine public y est declare avec un credit requis. Ce n'est pas une carte photometrique (eclairage rendu aussi uniforme que possible, de petites zones jamais eclairees sur les meridiens 0 et 180 au sud). Grille de la carte : 0 aux bords, 180 au centre, longitudes croissantes vers la droite, donc roulee d'une demi-largeur. Recalage pente du modele livre / variance de la carte : pic a 1 degre, sans miroir (r = 0,165 contre 0,101), tenu par src/config/textureOrientation.test.ts."
+  }
+}

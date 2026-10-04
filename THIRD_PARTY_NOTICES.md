@@ -24,7 +24,16 @@ provenance (source URL, resolution, licence) is in one file per texture layer un
    model. `mimas` left the generated group below on 2026-10-04: the Cassini ISS global mosaic of
    Roatsch et al. (DLR) is archived by NASA PDS (`CO-S-ISSNA/ISSWA-5-MIDR-V1.0`, volume
    `coiss_3006`) and was read there, label included; the earlier search had only looked at the
-   USGS catalogue. Attribution is courteous but not legally required.
+   USGS catalogue. `eros` (since 2026-10-04) carries a colour map composed from the NEAR MSI
+   global albedo mosaics at 760, 550 and 450 nm of Golish et al. (2023), served by USGS
+   Astrogeology, draped on its shape model. Attribution is courteous but not legally required.
+
+   **Exception within this group: `itokawa` (since 2026-10-04)** is the global photomosaic of the
+   Stooke Small Bodies Maps V2.0 (JAXA Hayabusa AMICA images reprojected by P. Stooke), archived
+   by NASA PDS. These maps "are in the public domain but should not be used without proper credit
+   being given": the required citation is "Stooke, P., Stooke Small Bodies Maps V2.0.
+   MULTI-SA-MULTI-6-STOOKEMAPS-V2.0. NASA Planetary Data System, 2012." It is given in full on
+   the `/sources` page, and the app's credits name Philip Stooke / NASA PDS for Itokawa.
 
 2. **CC BY 4.0: Solar System Scope.** Requires attribution; compatible with non-commercial and
    donation-supported use. Bodies (surface / cloud / normal / spec / lights / ring layers, incl.
@@ -104,14 +113,16 @@ must also have its faces pointing outwards and be a closed surface.
 - **Source**: NASA PDS Small Bodies Node, `NEAR-A-MSI-5-EROSSHAPE-V1.0` (q = 128).
 - **Data credit**: NASA / JHU-APL NEAR Shoemaker, Multi-Spectral Imager; shape model by
   R. Gaskell. Public domain (NASA-funded archive product, no restriction).
-- **Modification**: decimated for the web.
+- **Modification**: decimated for the web. Since 2026-10-04 it carries no baked colour: the app
+  drapes Eros's colour texture on it (group 1 of the texture notices above).
 
 `public/assets/models/itokawa/itokawa_shape_{1k,2k,4k}.glb`: asteroid (25143) Itokawa.
 
 - **Source**: NASA PDS Small Bodies Node, `HAY-A-AMICA-5-ITOKAWASHAPE-V1.0` (q = 128).
 - **Data credit**: JAXA Hayabusa AMICA images; shape model by R. Gaskell (PSI). Distributed by
   NASA PDS without restriction.
-- **Modification**: decimated for the web.
+- **Modification**: decimated for the web. Since 2026-10-04 it carries no baked colour: the app
+  drapes Stooke's AMICA photomosaic on it (group 1 of the texture notices above).
 
 `public/assets/models/ryugu/ryugu_shape_{1k,2k,4k}.glb`: asteroid (162173) Ryugu.
 
@@ -329,17 +340,16 @@ and `public/assets/models/psyche/psyche_shape_1k.glb`: asteroids
 texture shipped). Mean brightness = the published geometric albedo converted to the app's display
 convention measured on the Moon texture; contrasts and colour ratios come from mission maps:
 
-- Eros: NASA/USGS *Eros NEAR MSI Global Albedo Mosaics* at 760, 550 and 450 nm (Golish et al.
-  2023, doi:10.17189/sv8w-5125), public domain; albedo 0.25 (Veverka et al. 2000).
 - Ryugu: ISAS/JAXA v-band normal albedo map from Hayabusa2 ONC (JAXA DARTS); **modification
-  stated as required**: resampled per vertex. Albedo 0.045 (Sugita et al. 2019).
-- For both, since 2026-10-04: the colours first sampled from those maps are carried over onto the
-  new vertices, each averaged over the area one vertex covers, because the maps could not be read
-  again that day (the host serving the Eros mosaics refused access). Nothing is added: these are
-  the same measured colours, with the per-vertex noise of point sampling averaged out.
-- Itokawa (albedo 0.27, Hayabusa AMICA), Ida (albedo 0.262, NEOWISE) and Psyche (albedo 0.1203,
-  IRAS): no global map is published, so the colour is uniform at the published albedo; nothing is
-  painted in. Bodies that have a real surface texture carry no baked colour: the app drapes the
+  stated as required**: resampled per vertex. Albedo 0.045 (Sugita et al. 2019). Since 2026-10-04
+  the colours first sampled from that map are carried over onto the new vertices, each averaged
+  over the area one vertex covers. Nothing is added: these are the same measured colours, with the
+  per-vertex noise of point sampling averaged out.
+- Ida (albedo 0.262, NEOWISE) and Psyche (albedo 0.1203, IRAS): the colour is uniform at the
+  published albedo; nothing is painted in. A Galileo photomosaic of Ida exists (Stooke), but it is
+  not draped while the frame of Ida's shape model is unresolved (see `docs/ARCHITECTURE.md`).
+- Eros (until 2026-10-04) carried colour baked from the NEAR MSI albedo mosaics; it now carries a
+  texture made from the same mosaics, so its model has no baked colour. Bodies that have a real surface texture carry no baked colour: the app drapes the
   texture on the model instead.
 
 The source maps (hundreds of MB each) are not redistributed; only the sampled colours are.

@@ -1,0 +1,37 @@
+{
+  "$schema": "../../schema/product.schema.json",
+  "id": "eros-surface",
+  "type": "texture",
+  "body": "eros",
+  "layer": "surface",
+  "shipped": true,
+  "license": "other",
+  "rights": "public-domain",
+  "links": [
+    {
+      "rel": "license",
+      "href": "https://www.usgs.gov/information-policies-and-instructions/copyrights-and-credits"
+    }
+  ],
+  "providers": [
+    {
+      "name": "USGS Astrogeology / NASA-JHU/APL NEAR MSI global albedo mosaics (Golish et al. 2023)",
+      "roles": [
+        "producer"
+      ]
+    }
+  ],
+  "tier": "free",
+  "filled": true,
+  "review": {
+    "status": "ready",
+    "processing": "import-textures",
+    "downloadUrl": "https://asc-pds-individual-investigations.s3.us-west-2.amazonaws.com/eros_global-albedo-maps_golish_2023/eros_global-albedo-maps_golish_2023.zip",
+    "sourcePage": "https://astrogeology.usgs.gov/search/map/near_msi_albedo_mosaics",
+    "sourceResolution": "10 m/pixel global albedo mosaics, 0 degree phase, filters 3 (760 nm), 1 (550 nm) and 2 (450 nm)",
+    "sourcePixelWidth": 10682,
+    "projection": "equirectangular",
+    "qualityClass": "native",
+    "note": "Composee le 2026-10-04 par scripts/compose-albedo-texture.mjs (--albedo 0.25 --chroma-blur 48) depuis trois membres du zip, lus un a un par requetes Range : rouge 760 nm, vert 550 nm, bleu 450 nm, rapports entre bandes mesures, un seul facteur commun ramenant la luminance moyenne a l'albedo 0,25 (Veverka et al. 2000) selon la convention mesuree sur la Lune. Seuls les RAPPORTS de couleur sont lisses (48 px a 8k, soit 2 degres) : a 12 px un mouchetis rose et vert restait visible a l echelle de la vignette ; ce qui demeure a 48 px, autour de Psyche notamment, est une variation de couleur mesuree, pas du bruit. 2,0 % de valeurs saturees, 0,97 % sans mesure comblees a l'import. Etiquette ISIS : PositiveEast, CenterLongitude = 180.0, donc roulee d'une demi-largeur. Orientation verifiee sur deux reperes nommes : le fond sombre du cratere Psyche a sa longitude du gazetteer, le rebord de Himeros a son antipode. Les cartes etant corrigees a phase nulle, elles ne portent aucun ombrage : ni le recalage sur le modele ni un temoin de luminosite ne tranchent pour Eros, d'ou son absence de src/config/textureOrientation.test.ts. Le modele de forme est, lui, dans le repere de l'UAI : 25 des 33 plus grands crateres nommes y sont des creux, contre 17 au mieux sous une autre orientation."
+  }
+}

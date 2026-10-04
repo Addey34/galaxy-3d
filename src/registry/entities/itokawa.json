@@ -27,9 +27,6 @@
         "1k"
       ],
       "extentRatio": 1.93,
-      "albedo": 0.27,
-      "albedoSource": "Hayabusa AMICA disk-integrated photometry near opposition (Icarus, 2018)",
-      "colourSource": null,
       "credit": {
         "en": "JAXA Hayabusa AMICA images, shape model by R. Gaskell (PSI), NASA PDS HAY-A-AMICA-5-ITOKAWASHAPE-V1.0 (q = 128), decimated for the web.",
         "fr": "Images JAXA Hayabusa AMICA, modèle de forme de R. Gaskell (PSI), NASA PDS HAY-A-AMICA-5-ITOKAWASHAPE-V1.0 (q = 128), décimé pour le web.",
@@ -48,7 +45,12 @@
       "fr": "https://fr.wikipedia.org/wiki/(25143)_Itokawa",
       "es": "https://es.wikipedia.org/wiki/(25143)_Itokawa",
       "pt-BR": "https://pt.wikipedia.org/wiki/25143_Itokawa"
-    }
+    },
+    "surfaceResolutions": [
+      "4k",
+      "2k",
+      "1k"
+    ]
   },
   "facts": {
     "radiusKm": {
