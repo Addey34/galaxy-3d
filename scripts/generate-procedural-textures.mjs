@@ -397,18 +397,9 @@ const BODIES = [
   // ── Lunes sans mosaïque photo réelle (aucun bassin/tache n'est une vraie position — voir
   //    src/registry/products/textures/ pour la limite de couverture de chaque survol). ──
 
-  // "Death Star" — le cratère Herschel fait ~1/3 du diamètre de Mimas, parois hautes, pic
-  // central de ~6 km (comparable à l'Everest) ; cratérisation dense par ailleurs.
-  {
-    name: 'mimas',
-    baseColor: [217, 214, 205],
-    craterCount: 26,
-    craterMinRadius: 0.04,
-    craterMaxRadius: 0.11,
-    albedoVariation: 0.12,
-    heightContrast: 0.5,
-    largeBasins: [{ radius: 0.62, depth: 1, centralPeak: true }],
-  },
+  // Mimas n'est plus ici depuis le 2026-10-04 : sa mosaïque Cassini ISS réelle est importée par
+  // scripts/import-textures.mjs, et régénérer une texture procédurale l'aurait écrasée.
+
   // Aspect "éponge" : cratères profonds, denses, sans bourrelet d'éjecta visible (Thomas et al.
   // 2007) — cratérisation très dense + `craterRimStrength: 0`.
   {
