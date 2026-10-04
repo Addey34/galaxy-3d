@@ -833,7 +833,7 @@ ne le dise. Une entrée fausse est SUPPRIMÉE, pas seulement ignorée.
 
 **Le manifeste a sa copie, et sans elle le hors-ligne ne tiendrait pas une heure.** Il est servi
 en `NetworkFirst` avec une péremption d'une heure (`ssv-ephemeris-manifest`), donc un appareil
-préparé le matin afficherait l'après-midi « aucune éphéméride précise » alors que ses 64 fichiers
+préparé le matin afficherait l'après-midi « aucune éphéméride précise » alors que tous ses fichiers
 sont là. L'ordre reste le réseau d'abord : le manifeste est le seul fichier MUTABLE de cette
 famille et il pointe des binaires nommés par le hachage de leur contenu. Quand il arrive, il
 purge du magasin ce qu'il ne nomme plus, et c'est la cohérence que ce magasin doit tenir lui-même,
@@ -860,7 +860,7 @@ fait donc AVANT `TransferRateMeter.begin`, et `fetchBody` ne connaît plus que l
 **Et la conséquence vraie de la préparation est écrite, elle aussi** : un corps dont l'appareil
 tient le fichier entier sort du budget de `budgetGrids`. Il ne demandera plus un octet à aucune
 date, donc le compter plafonnerait la lecture au nom d'un trafic qui n'aura pas lieu. Une fois
-les 64 fichiers préparés, le curseur de vitesse n'a plus de plafond du tout.
+tous les fichiers préparés, le curseur de vitesse n'a plus de plafond du tout.
 
 **Ce que la phase ne fait pas, et le dit.** Elle ne remet pas les éphémérides dans le précache du
 service worker : `sw.js` continue de ne garder que l'app shell, et les 38 Mo restent une décision
