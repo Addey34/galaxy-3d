@@ -120,8 +120,7 @@
     "ryugu": {
       "cache": ".cache/shapes/ryugu_SHAPE_SFM_200k_v20180804.obj",
       "url": "https://data.darts.isas.jaxa.jp/pub/hayabusa2/paper/Watanabe_2019/SHAPE_SFM_200k_v20180804.obj",
-      "flags": ["--z-up"],
-      "colourFrom": "3a36b12:public/assets/models/ryugu/ryugu_shape_4k.glb"
+      "flags": ["--z-up"]
     },
     "steins": {
       "cache": ".cache/shape-models/steins.obj",

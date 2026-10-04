@@ -340,13 +340,11 @@ and `public/assets/models/psyche/psyche_shape_1k.glb`: asteroids
 texture shipped). Mean brightness = the published geometric albedo converted to the app's display
 convention measured on the Moon texture; contrasts and colour ratios come from mission maps:
 
-- Ryugu: ISAS/JAXA v-band normal albedo map from Hayabusa2 ONC (JAXA DARTS); **modification
-  stated as required**: resampled per vertex. Albedo 0.045 (Sugita et al. 2019). Since 2026-10-04
-  the colours first sampled from that map are carried over onto the new vertices, each averaged
-  over the area one vertex covers. Nothing is added: these are the same measured colours, with the
-  per-vertex noise of point sampling averaged out.
-- Ida (albedo 0.262, NEOWISE) and Psyche (albedo 0.1203, IRAS): the colour is uniform at the
-  published albedo; nothing is painted in. A Galileo photomosaic of Ida exists (Stooke), but it is
+- Ryugu (albedo 0.045, Sugita et al. 2019), Ida (albedo 0.262, NEOWISE) and Psyche (albedo
+  0.1203, IRAS): the colour is uniform at the published albedo; nothing is painted in. Ryugu's
+  model carried, until 2026-10-04, a colour sampled from a JAXA figure (an RGBA image of a
+  colour-coded albedo map, not a data product) and read with the wrong pixel stride: it bore no
+  relation to the surface and was removed. A Galileo photomosaic of Ida exists (Stooke), but it is
   not draped while the frame of Ida's shape model is unresolved (see `docs/ARCHITECTURE.md`).
 - Eros (until 2026-10-04) carried colour baked from the NEAR MSI albedo mosaics; it now carries a
   texture made from the same mosaics, so its model has no baked colour. Bodies that have a real surface texture carry no baked colour: the app drapes the

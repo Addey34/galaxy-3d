@@ -29,12 +29,7 @@
       "extentRatio": 1.18,
       "albedo": 0.045,
       "albedoSource": "Sugita et al. 2019, Science 364, 6437 (JPL SBDB)",
-      "colourSource": {
-        "en": "ISAS/JAXA, Ryugu v-band normal albedo map, Hayabusa2 ONC (JAXA DARTS); data modified: sampled per vertex",
-        "fr": "ISAS/JAXA, carte d’albédo normal en bande v de Ryugu, Hayabusa2 ONC (JAXA DARTS) ; données modifiées : échantillonnée par sommet",
-        "es": "ISAS/JAXA, mapa de albedo normal en banda v de Ryugu, Hayabusa2 ONC (JAXA DARTS); datos modificados: muestreado por vértice",
-        "pt-BR": "ISAS/JAXA, mapa de albedo normal na banda v de Ryugu, Hayabusa2 ONC (JAXA DARTS); dados modificados: amostrado por vértice"
-      },
+      "colourSource": null,
       "credit": {
         "en": "ISAS/JAXA Hayabusa2, SfM shape model SHAPE_SFM_200k_v20180804 (Watanabe et al. 2019, DARTS); data modified: decimated for the web, pole brought onto Y.",
         "fr": "ISAS/JAXA Hayabusa2, modèle de forme SfM SHAPE_SFM_200k_v20180804 (Watanabe et al. 2019, DARTS) ; données modifiées : décimé pour le web, pôle ramené sur Y.",
@@ -124,6 +119,6 @@
     "facts.axialTilt": "DÉRIVÉE du pôle SBDB (RA 96,3956°, Dec −66,3937°, Preusker et al. 2019) : rétrograde.",
     "facts.massKg": "GM = 3,00e-8 km³/s² (SBDB) ÷ G.",
     "model.extentRatio": "Mesuré sur le fichier : rayon max / rayon équivalent-volume.",
-    "model.albedo": "Luminosité et couleur RÉELLES, cuites dans le modèle (bake-shape-colour.mjs) ; la sphère d'attente ci-dessus a la même couleur moyenne, pour ne pas changer d'aspect au chargement."
+    "model.albedo": "Couleur UNIFORME à l'albédo publié depuis le 2026-10-04. La couleur cuite jusque-là venait d'une FIGURE d'article RGBA (1 440 × 720, ryugu_Fig_3E_v-albedo_map.tiff), pas d'un produit de données : le script lisait ses octets R, V, B, A entrelacés comme des pixels consécutifs, et les octets d'une palette comme un albédo. Elle n'avait donc aucun rapport avec la surface. Aucune carte d'albédo publiée comme donnée n'a été trouvée sur DARTS."
   }
 }
