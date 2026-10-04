@@ -9,6 +9,9 @@ import { bodyLandingPages } from './bodyLandingPage';
 import { eclipseLandingPages } from './eclipseLandingPage';
 import { CELESTIAL_CONFIG } from '@/config/bodies';
 import { ECLIPSE_PATH_SEGMENT } from '@/core/eclipsePages';
+import { LOCALES } from '@/i18n/locales';
+import { docPath, MISSIONS_SLUG } from './documentPage';
+import missionCatalogue from './missionCatalogue.json';
 
 /**
  * Chaque page que le build écrit doit être à la fois NON précachée et NON remplacée par l'app
@@ -20,6 +23,12 @@ const ORIGIN = 'https://example.test';
 const pages = [
   ...bodyLandingPages(CELESTIAL_CONFIG, ORIGIN),
   ...eclipseLandingPages(ORIGIN),
+  // Les pages de mission (2026-10-04) : deux segments en anglais, TROIS traduites.
+  ...LOCALES.flatMap((locale) =>
+    missionCatalogue.missions.map((mission) => ({
+      canonical: `${ORIGIN}${docPath(`${MISSIONS_SLUG}/${mission.slug}`, locale)}`,
+    }))
+  ),
 ];
 
 describe('routage du service worker pour les pages d’atterrissage', () => {
@@ -27,6 +36,9 @@ describe('routage du service worker pour les pages d’atterrissage', () => {
     // Borne : un ensemble vide rendrait tout le reste vert sans rien vérifier.
     expect(pages.length).toBeGreaterThan(100);
     expect(ECLIPSE_SEGMENT_FOR_TESTS).toBe(ECLIPSE_PATH_SEGMENT);
+    expect(
+      pages.some((p) => p.canonical.endsWith('/pt-br/missions/voyager/'))
+    ).toBe(true);
   });
 
   it('ne précache aucune page générée', () => {

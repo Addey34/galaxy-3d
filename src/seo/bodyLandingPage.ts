@@ -211,6 +211,11 @@ export interface BodyPage extends LandingPage {
   facts: BodyFact[];
   /** Sources primaires des faits, dans l'ordre de leurs numéros. */
   sources: BodySource[];
+  /**
+   * Les missions que l'archive du PDS déclare pour ce corps, chacune liée à sa page
+   * (`missionPages.ts`, 2026-10-04). Vide pour un corps qu'aucune mission ne vise.
+   */
+  missions: { name: string; href: string }[];
   canonical: string;
   /**
    * Vignette de partage PROPRE à ce corps. Les cinquante et une pages partageaient jusqu'ici
@@ -674,7 +679,12 @@ export function bodyPagePath(name: string, locale: Locale): string {
 export function bodyLandingPages(
   config: CelestialConfig,
   origin: string,
-  locale: Locale = 'en'
+  locale: Locale = 'en',
+  /** Corps → missions qui le visent, chemin sans langue (`missions/voyager`). */
+  missions: ReadonlyMap<
+    string,
+    readonly { name: string; slug: string }[]
+  > = new Map()
 ): BodyPage[] {
   const flat = flattenBodies(config);
   const parentOf = new Map<string, string>();
@@ -729,6 +739,15 @@ export function bodyLandingPages(
       summary: description,
       facts,
       sources,
+      // Même règle de chemin que les documents (`documentPage.docPath`), écrite ici sans
+      // l'importer : `documentPage` importe déjà ce module.
+      missions: (missions.get(name) ?? []).map((mission) => ({
+        name: mission.name,
+        href:
+          LOCALE_PATH[locale] === ''
+            ? `/${mission.slug}/`
+            : `/${LOCALE_PATH[locale]}/${mission.slug}/`,
+      })),
       // Barre finale VOULUE. La page est `dist/<slug>/index.html` : Firebase sert un index de
       // répertoire et redirige `/jupiter` (301) vers `/jupiter/`. Un canonique sans barre
       // désignerait donc une URL qui redirige — le canonique doit nommer l'adresse finale.
@@ -820,10 +839,21 @@ function contentBlock(page: BodyPage): string {
         .join('')}</ol>`
     : '';
   const summary = page.summary ? `<p>${escapeHtml(page.summary)}</p>` : '';
+  // Le même titre que le bloc de la fiche (`bi.missions.label`), et la même note : une cible
+  // déclarée n'est pas un relevé d'observation, et le début est celui du projet.
+  const missions = page.missions.length
+    ? `<h2>${escapeHtml(messages[page.locale]['bi.missions.label'])}</h2><ul>${page.missions
+        .map(
+          (mission) =>
+            `<li><a href="${escapeHtml(mission.href)}">${escapeHtml(mission.name)}</a></li>`
+        )
+        .join('')}</ul>`
+    : '';
   return (
     summary +
     `<p>${escapeHtml(pageText('intro', page.locale, page.displayName))}</p>` +
     (facts ? `<dl>${facts}</dl>` : '') +
+    missions +
     sources
   );
 }

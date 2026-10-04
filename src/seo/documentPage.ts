@@ -41,6 +41,15 @@ export const DOC_LOCALES: readonly DocLocale[] = LOCALES;
 export const DOC_SLUGS: readonly DocSlug[] = ['methodology', 'sources'];
 
 /**
+ * Les pages des missions (2026-10-04) sont aussi des documents : l'index `/missions/` et une page
+ * par mission, `/missions/voyager/`. Elles ne sont pas dans `DOC_SLUGS`, qui nomme les deux
+ * documents liés depuis l'aide de l'application (`credits.{slug}.href`), mais elles entrent dans
+ * la navigation de tous les documents.
+ */
+export const MISSIONS_SLUG = 'missions';
+const NAV_SLUGS: readonly string[] = [...DOC_SLUGS, MISSIONS_SLUG];
+
+/**
  * Texte dans les quatre langues livrées, sans repli : une page documentaire n'a pas le droit
  * d'afficher une phrase anglaise sous un titre espagnol. Le compilateur nomme chaque manque.
  */
@@ -57,13 +66,14 @@ export interface DocText {
  * Le segment vient de `LOCALE_PATH`, qui écrit le brésilien en minuscules : une URL en `pt-BR`
  * serait servie mais s'écrirait de deux façons dans les liens et le sitemap.
  */
-export function docPath(slug: DocSlug, locale: DocLocale): string {
+export function docPath(slug: string, locale: DocLocale): string {
   const segment = LOCALE_PATH[locale];
   return segment === '' ? `/${slug}/` : `/${segment}/${slug}/`;
 }
 
 export interface DocPage {
-  slug: DocSlug;
+  /** `methodology`, `sources`, `missions` ou `missions/voyager` : le chemin sans la langue. */
+  slug: string;
   locale: DocLocale;
   /** URL absolue finale, barre comprise (même règle que les pages de corps). */
   canonical: string;
@@ -75,7 +85,7 @@ export interface DocPage {
   updated: string;
 }
 
-const NAV: Record<DocSlug, DocText> = {
+const NAV: Record<string, DocText> = {
   methodology: {
     en: 'Methodology',
     fr: 'Méthodologie',
@@ -87,6 +97,12 @@ const NAV: Record<DocSlug, DocText> = {
     fr: 'Sources et crédits',
     es: 'Fuentes y créditos',
     'pt-BR': 'Fontes e créditos',
+  },
+  missions: {
+    en: 'Missions',
+    fr: 'Missions',
+    es: 'Misiones',
+    'pt-BR': 'Missões',
   },
 };
 
@@ -173,11 +189,15 @@ export function renderDocPage(
   image: SocialImage
 ): string {
   const { locale, slug } = page;
-  const url = (s: DocSlug, l: DocLocale): string => `${origin}${docPath(s, l)}`;
-  const nav = DOC_SLUGS.map((s) =>
+  const url = (s: string, l: DocLocale): string => `${origin}${docPath(s, l)}`;
+  // Une page de mission est DANS la rubrique « Missions » sans être sa page : la rubrique est
+  // marquée courante à l'œil, mais `aria-current="page"` reste réservé à la page elle-même.
+  const nav = NAV_SLUGS.map((s) =>
     s === slug
-      ? `<a class="doc-nav-link is-current" aria-current="page" href="${docPath(s, locale)}">${escapeHtml(NAV[s][locale])}</a>`
-      : `<a class="doc-nav-link" href="${docPath(s, locale)}">${escapeHtml(NAV[s][locale])}</a>`
+      ? `<a class="doc-nav-link is-current" aria-current="page" href="${docPath(s, locale)}">${escapeHtml(NAV[s]![locale])}</a>`
+      : slug.startsWith(`${s}/`)
+        ? `<a class="doc-nav-link is-current" href="${docPath(s, locale)}">${escapeHtml(NAV[s]![locale])}</a>`
+        : `<a class="doc-nav-link" href="${docPath(s, locale)}">${escapeHtml(NAV[s]![locale])}</a>`
   ).join('');
   const structured = {
     '@context': 'https://schema.org',
