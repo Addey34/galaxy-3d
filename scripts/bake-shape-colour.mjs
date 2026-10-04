@@ -35,11 +35,12 @@ import { readFileSync, readdirSync, writeFileSync } from 'fs';
 import { dirname, join, resolve } from 'path';
 import { fileURLToPath } from 'url';
 import sharp from 'sharp';
+import { DISPLAY_PER_ALBEDO } from './display-albedo.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 
-/** Luminance linéaire affichée par unité d'albédo géométrique, mesurée sur la texture lunaire. */
-export const DISPLAY_PER_ALBEDO = 0.312 / 0.12;
+/** Luminance linéaire affichée par unité d'albédo géométrique : propriétaire `display-albedo.mjs`. */
+export { DISPLAY_PER_ALBEDO };
 const SAMPLE_WIDTH = 2048;
 
 const args = process.argv.slice(2);
@@ -82,10 +83,21 @@ async function loadBand(path) {
   // voisins et produit des valeurs ÉNORMES près des trous : elles faisaient exploser la moyenne,
   // assombrissaient tout le corps et sortaient en taches saturées (Éros, constaté à l'écran).
   // Plus proche voisin : aucune valeur inventée, seulement échantillonnée.
+  // Une carte d'albédo porte UNE bande. Une figure d'article en couleurs (RGBA) n'en est pas
+  // une : la couleur de Ryugu en a été tirée jusqu'au 2026-10-04, ses octets R, V, B, A lus
+  // comme des pixels consécutifs. Et même une vraie bande ressort de sharp en trois copies
+  // dès qu'on la demande en flottant : on ne lit donc que la première, après vérification.
+  if (meta.channels !== 1)
+    throw new Error(
+      `${path} : ${meta.channels} canaux, une seule bande d'albédo attendue`
+    );
   const { data, info } = await image
     .resize(SAMPLE_WIDTH, height, { fit: 'fill', kernel: 'nearest' })
+    .extractChannel(0)
     .raw({ depth: 'float' })
     .toBuffer({ resolveWithObject: true });
+  if (info.channels !== 1)
+    throw new Error(`${path} : ${info.channels} canaux après extraction`);
   const values = new Float32Array(
     data.buffer,
     data.byteOffset,

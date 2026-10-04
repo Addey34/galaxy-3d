@@ -27,14 +27,6 @@
         "1k"
       ],
       "extentRatio": 2.1,
-      "albedo": 0.25,
-      "albedoSource": "Veverka et al. 2000, Science 289, 2088 (JPL SBDB)",
-      "colourSource": {
-        "en": "NASA/USGS, Eros NEAR MSI Global Albedo Mosaics at 760, 550 and 450 nm (Golish et al. 2023, doi:10.17189/sv8w-5125), public domain",
-        "fr": "NASA/USGS, Eros NEAR MSI Global Albedo Mosaics à 760, 550 et 450 nm (Golish et al. 2023, doi:10.17189/sv8w-5125), domaine public",
-        "es": "NASA/USGS, Eros NEAR MSI Global Albedo Mosaics a 760, 550 y 450 nm (Golish et al. 2023, doi:10.17189/sv8w-5125), dominio público",
-        "pt-BR": "NASA/USGS, Eros NEAR MSI Global Albedo Mosaics a 760, 550 e 450 nm (Golish et al. 2023, doi:10.17189/sv8w-5125), domínio público"
-      },
       "credit": {
         "en": "NASA/JHU-APL NEAR Shoemaker, MSI shape model by R. Gaskell, NASA PDS NEAR-A-MSI-5-EROSSHAPE-V1.0 (q = 128), decimated for the web.",
         "fr": "NASA/JHU-APL NEAR Shoemaker, modèle de forme MSI de R. Gaskell, NASA PDS NEAR-A-MSI-5-EROSSHAPE-V1.0 (q = 128), décimé pour le web.",
@@ -53,7 +45,13 @@
       "fr": "https://fr.wikipedia.org/wiki/(433)_%C3%89ros",
       "es": "https://es.wikipedia.org/wiki/(433)_Eros",
       "pt-BR": "https://pt.wikipedia.org/wiki/433_Eros"
-    }
+    },
+    "surfaceResolutions": [
+      "8k",
+      "4k",
+      "2k",
+      "1k"
+    ]
   },
   "facts": {
     "radiusKm": {
@@ -124,6 +122,6 @@
     "facts.axialTilt": "DÉRIVÉE du pôle SBDB (RA 11,37°, Dec 17,22°, Yeomans et al. 2000) et de la normale orbitale : Éros tourne presque couché sur son orbite.",
     "facts.massKg": "GM = 4,463e-4 km³/s² (SBDB) ÷ G.",
     "model.extentRatio": "Mesuré sur le fichier : rayon max / rayon équivalent-volume.",
-    "model.albedo": "Luminosité et couleur RÉELLES, cuites dans le modèle (bake-shape-colour.mjs) ; la sphère d'attente ci-dessus a la même couleur moyenne, pour ne pas changer d'aspect au chargement."
+    "model.albedo": "Drapé depuis le 2026-10-04 de la mosaïque couleur de Golish et al. (2023) : la couleur cuite qu'il portait (reportée de 3a36b12) n'a plus d'objet, et le test exige qu'un modèle drapé n'en porte pas."
   }
 }

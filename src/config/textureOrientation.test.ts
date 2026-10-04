@@ -60,7 +60,7 @@ const WITNESSES: readonly {
 ];
 
 /** Corps drapés dont le recalage pente/variance donne un pic net (mesuré le 2026-10-04). */
-const REGISTERED = ['bennu', 'vesta', 'mimas'] as const;
+const REGISTERED = ['bennu', 'vesta', 'mimas', 'itokawa'] as const;
 
 /** Le plus petit palier de surface livré : c'est lui que voit d'abord un visiteur. */
 function smallestSurface(body: string): string {

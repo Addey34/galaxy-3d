@@ -236,6 +236,22 @@
       "bytes": 2761017
     },
     {
+      "body": "eros",
+      "layer": "surface",
+      "shipped": [
+        "1k",
+        "2k",
+        "4k",
+        "8k"
+      ],
+      "detail": {
+        "2k": 0.17773,
+        "4k": 0.14397,
+        "8k": 0.04738
+      },
+      "bytes": 6728715
+    },
+    {
       "body": "europa",
       "layer": "surface",
       "shipped": [
@@ -372,6 +388,20 @@
         "8k": 0.00586
       },
       "bytes": 4724268
+    },
+    {
+      "body": "itokawa",
+      "layer": "surface",
+      "shipped": [
+        "1k",
+        "2k",
+        "4k"
+      ],
+      "detail": {
+        "2k": 0.0629,
+        "4k": 0.02049
+      },
+      "bytes": 1647511
     },
     {
       "body": "jupiter",
