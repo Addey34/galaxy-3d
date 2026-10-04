@@ -480,10 +480,14 @@ export function renderShape(
   fallback: [number, number, number],
   size: number,
   /**
-   * Carte équirectangulaire du corps quand il en a une (Phobos, Vesta) : chaque triangle prend
-   * la couleur de la carte à la longitude et latitude de son centre, lues dans le repère du
-   * FICHIER, exactement comme l'application drape sa texture (`core/modelUv.ts`). Sans carte,
-   * l'aplat de repli, comme avant.
+   * Carte équirectangulaire du corps quand il en a une (Phobos, Vesta) : chaque PIXEL prend la
+   * couleur de la carte à la longitude et latitude de son point de surface, interpolé entre les
+   * trois sommets dans le repère du FICHIER, exactement comme l'application drape sa texture
+   * (`core/modelUv.ts`, lue par fragment). Sans carte, l'aplat de repli, comme avant.
+   *
+   * Une couleur par TRIANGLE, lue en son centre, était un échantillonnage ponctuel : sur la
+   * mosaïque de Mimas (2026-10-04), chaque facette prenait un pixel de cratère au hasard, et la
+   * vignette sortait en mosaïque de facettes bruitées que la scène ne montre jamais.
    */
   texture: RawImage | null = null
 ): Uint8ClampedArray {
@@ -579,25 +583,6 @@ export function renderShape(
     if (nz <= 0) continue;
     const light =
       AMBIENT + Math.max(nx * LIGHT[0] + ny * LIGHT[1] + nz * LIGHT[2], 0);
-    let faceColour = linear;
-    if (texture) {
-      // Centre du triangle dans le repère du fichier (non recentré) : c'est là que la carte
-      // a été projetée. Mêmes conventions que `drapeEquirectangular`.
-      const fx = positions[a * 3]! + positions[b * 3]! + positions[c * 3]!;
-      const fy =
-        positions[a * 3 + 1]! + positions[b * 3 + 1]! + positions[c * 3 + 1]!;
-      const fz =
-        positions[a * 3 + 2]! + positions[b * 3 + 2]! + positions[c * 3 + 2]!;
-      const r = Math.hypot(fx, fy, fz);
-      if (r > 0) {
-        const rgb = sampleBilinear(
-          texture,
-          0.5 + Math.atan2(-fz, fx) / (2 * Math.PI),
-          0.5 - Math.asin(Math.min(Math.max(fy / r, -1), 1)) / Math.PI
-        );
-        faceColour = [toLinear(rgb[0]), toLinear(rgb[1]), toLinear(rgb[2])];
-      }
-    }
 
     const minX = Math.max(0, Math.floor(Math.min(ax, bx, cxs)));
     const maxX = Math.min(size - 1, Math.ceil(Math.max(ax, bx, cxs)));
@@ -622,7 +607,38 @@ export function renderShape(
         depth[index] = z;
         shade[index] = light;
         covered[index] = 1;
-        if (colour) colour.set(faceColour, index * 3);
+        if (colour && texture) {
+          // Point de surface dans le repère du fichier (non recentré) : c'est là que la carte a
+          // été projetée. Mêmes poids que la profondeur, mêmes conventions que
+          // `drapeEquirectangular`.
+          const fx =
+            w1 * positions[a * 3]! +
+            w2 * positions[b * 3]! +
+            w0 * positions[c * 3]!;
+          const fy =
+            w1 * positions[a * 3 + 1]! +
+            w2 * positions[b * 3 + 1]! +
+            w0 * positions[c * 3 + 1]!;
+          const fz =
+            w1 * positions[a * 3 + 2]! +
+            w2 * positions[b * 3 + 2]! +
+            w0 * positions[c * 3 + 2]!;
+          const r = Math.hypot(fx, fy, fz);
+          const rgb =
+            r > 0
+              ? sampleBilinear(
+                  texture,
+                  0.5 + Math.atan2(-fz, fx) / (2 * Math.PI),
+                  0.5 - Math.asin(Math.min(Math.max(fy / r, -1), 1)) / Math.PI
+                )
+              : null;
+          colour.set(
+            rgb
+              ? [toLinear(rgb[0]), toLinear(rgb[1]), toLinear(rgb[2])]
+              : linear,
+            index * 3
+          );
+        }
       }
     }
   }
