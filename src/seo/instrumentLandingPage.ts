@@ -28,7 +28,7 @@ import {
 import { groupByHost, type SpacecraftArchive } from '@/core/instruments';
 import { factSource } from '@/config/factSources';
 import { messages } from '@/i18n/allDictionaries';
-import { INTL_LOCALE, LOCALES, type Locale } from '@/i18n/locales';
+import { INTL_LOCALE, LOCALE_PATH, LOCALES, type Locale } from '@/i18n/locales';
 import {
   bodyPagePath,
   escapeHtml,
@@ -52,6 +52,12 @@ export interface InstrumentPageInputs {
   archiveRetrieved: string;
   /** Couverture du fichier Horizons de chaque sonde, en jours ISO, lue dans le manifeste. */
   coverage: ReadonlyMap<string, { from: string; to: string }>;
+  /**
+   * Identifiant PDS d'une mission → chemin de sa page sans la langue (`missions/juno`). Une
+   * investigation qui n'a pas de page (une campagne d'observation n'est pas une mission) reste
+   * un nom sans lien.
+   */
+  missionPages?: ReadonlyMap<string, string>;
 }
 
 export interface InstrumentPage extends LandingPage {
@@ -125,7 +131,7 @@ const fill = (text: string, name: string): string =>
   text.replace(/\{name\}/g, name);
 
 /** `AAAA-MM-JJ` en toutes lettres, dans la langue de la page. */
-function longDay(iso: string, locale: Locale): string {
+export function longDay(iso: string, locale: Locale): string {
   const [y, m, d] = iso.split('-').map(Number);
   return new Intl.DateTimeFormat(INTL_LOCALE[locale], {
     day: 'numeric',
@@ -227,7 +233,8 @@ function factsWithSources(
 function instrumentsBlock(
   input: ArchiveInput | undefined,
   retrieved: string,
-  locale: Locale
+  locale: Locale,
+  missionPages: ReadonlyMap<string, string> = new Map()
 ): string {
   if (!input) return '';
   const dict = messages[locale] as Record<string, string>;
@@ -256,7 +263,13 @@ function instrumentsBlock(
           .join('');
   const investigations = input.archive.investigations.length
     ? `<h3>${escapeHtml(dict['bi.instruments.investigations']!)}</h3><ul>${input.archive.investigations
-        .map((i) => `<li>${escapeHtml(i.name)}</li>`)
+        .map((i) => {
+          const slug = missionPages.get(i.lid);
+          if (!slug) return `<li>${escapeHtml(i.name)}</li>`;
+          const segment = LOCALE_PATH[locale];
+          const href = segment === '' ? `/${slug}/` : `/${segment}/${slug}/`;
+          return `<li><a href="${escapeHtml(href)}">${escapeHtml(i.name)}</a></li>`;
+        })
         .join('')}</ul>`
     : '';
   return (
@@ -303,7 +316,8 @@ export function instrumentLandingPages(
         ? instrumentsBlock(
             inputs.archives.get(name),
             inputs.archiveRetrieved,
-            locale
+            locale,
+            inputs.missionPages
           )
         : '');
     const metaBase = described || intro;

@@ -218,9 +218,26 @@ function bodyLandingPages() {
           return;
         }
         const baseHtml = await readFile(baseHtmlPath, 'utf-8');
+        /**
+         * LES MISSIONS (2026-10-04) : le catalogue écrit par `pnpm missions:generate`, lu UNE
+         * fois. Il nourrit les pages `/missions/`, et les liens que les pages de corps et de
+         * sondes portent vers elles : un lien ne peut donc pas viser une page absente.
+         */
+        const missionSeo = (await loader.ssrLoadModule(
+          '/src/seo/missionPages.ts'
+        )) as typeof import('./src/seo/missionPages');
+        const missionCatalogue = JSON.parse(
+          await readFile(
+            resolve(__dirname, 'src/seo/missionCatalogue.json'),
+            'utf-8'
+          )
+        ) as import('./src/seo/missionPages').MissionCatalogue;
+        const missionsByBody = missionSeo.missionsByBody(missionCatalogue);
         const pages = seo.bodyLandingPages(
           catalogue.CELESTIAL_CONFIG,
-          SITE_ORIGIN
+          SITE_ORIGIN,
+          'en',
+          missionsByBody
         );
         // Un catalogue vide, un chargeur qui rend un module vide, un renommage de champ : le
         // build produirait alors zéro page et un sitemap réduit à deux URL, SANS rien signaler
@@ -239,7 +256,12 @@ function bodyLandingPages() {
          * les quatre langues partagent la même image et le relevé d'empreinte garde ses 57.
          */
         const localisedBodyPages = OTHER_LOCALES.flatMap((locale) =>
-          seo.bodyLandingPages(catalogue.CELESTIAL_CONFIG, SITE_ORIGIN, locale)
+          seo.bodyLandingPages(
+            catalogue.CELESTIAL_CONFIG,
+            SITE_ORIGIN,
+            locale,
+            missionsByBody
+          )
         );
         for (const page of [...pages, ...localisedBodyPages]) {
           const dir = resolve(dist, page.slug);
@@ -525,6 +547,7 @@ function bodyLandingPages() {
           archives,
           archiveRetrieved: instrumentIndex.retrieved,
           coverage,
+          missionPages: missionSeo.missionSlugsByLid(missionCatalogue),
         };
         const instrumentPages = instrumentSeo.instrumentLandingPages(
           navigable.NAVIGABLE_TARGETS,
@@ -781,6 +804,41 @@ function bodyLandingPages() {
             heightfields,
           }),
         ];
+        /**
+         * LES PAGES DES MISSIONS : l'index et une page par mission, dans chaque langue. Les sondes
+         * de Galaxy qui figurent dans une mission se lisent dans LEUR archive du PDS (lot 42),
+         * jamais dans une table écrite ici.
+         */
+        const spacecraftByMission = new Map<string, string[]>();
+        for (const [id, input] of archives) {
+          if (input.status !== 'declared') continue;
+          for (const investigation of input.archive.investigations) {
+            const list = spacecraftByMission.get(investigation.lid) ?? [];
+            list.push(id);
+            spacecraftByMission.set(investigation.lid, list);
+          }
+        }
+        const missionDocPages = [undefined, ...OTHER_LOCALES].flatMap((locale) =>
+          missionSeo.missionPages(
+            {
+              catalogue: missionCatalogue,
+              config: catalogue.CELESTIAL_CONFIG,
+              navigable: navigable.NAVIGABLE_TARGETS,
+              spacecraftByMission,
+              origin: SITE_ORIGIN,
+            },
+            locale ?? 'en'
+          )
+        );
+        // L'index plus une page par mission, dans chaque langue : rien de moins.
+        if (
+          missionDocPages.length !==
+          (missionCatalogue.missions.length + 1) * DOC_LOCALE_COUNT
+        )
+          throw new Error(
+            `pages des missions : ${missionDocPages.length} au lieu de ${(missionCatalogue.missions.length + 1) * DOC_LOCALE_COUNT}`
+          );
+        docPages.push(...missionDocPages);
         for (const page of docPages) {
           const dir = resolve(dist, new URL(page.canonical).pathname.slice(1));
           await mkdir(dir, { recursive: true });

@@ -3681,6 +3681,67 @@ Piège payé : `THIRD_PARTY_NOTICES.md` est en CRLF dans un checkout Windows, et
 pas le retour chariot (`\r`) en JavaScript. Le retrait du titre de premier niveau était un no-op silencieux ; le
 test le rejoue désormais en CRLF.
 
+## Pages des missions (`/missions/`, 2026-10-04)
+
+L'index `/missions/` et une page par mission que le registre de contexte du PDS déclare
+(`/missions/cassini-huygens/`), dans les quatre langues, générés au build et ajoutés au sitemap.
+Le lot 40 donnait à chaque fiche les missions qui visent son corps ; ces pages sont l'AUTRE sens
+du même graphe : ce qu'une mission a visé, et ce que Galaxy en montre. Générateur pur :
+`src/seo/missionPages.ts`.
+
+- **Des documents, pas des copies d'`index.html`** (même rendu que `/methodology`,
+  `documentPage.ts`). Une mission n'a pas de position que la scène pourrait ouvrir ; la scène est
+  à un lien, puisque chaque cible du catalogue renvoie à la page de son corps et chaque sonde
+  suivie à la sienne. Conséquence mesurée : **zéro octet** ajouté au démarrage (budget JS
+  inchangé), aucune règle de permalien.
+- **Le chemin vient de l'identifiant PDS** (segment terminal, `mission.` retiré, `_` réécrit
+  `-`) : `bc` pour BepiColombo, `hyb2` pour Hayabusa2. Laids pour certains, mais STABLES, puisque
+  c'est l'identifiant logique du produit ; un nom affiché, lui, change. Deux missions qui
+  donneraient le même chemin font échouer le générateur.
+- **Les données** : `pnpm missions:generate` écrit aussi `src/seo/missionCatalogue.json`
+  (dossier jamais livré au client, `src/buildOnly.ts`) : chaque mission, ses cibles telles que
+  l'archive les déclare (corps du catalogue, ou nom et type publiés), et sa description. La
+  description vient d'une SECONDE requête, pas d'un champ ajouté à la première : changer
+  l'adresse aurait changé la clé de cache, donc redaté le bloc « Missions » de la fiche, qui n'a
+  pas changé. Les pages publient donc deux dates de lecture, chacune la sienne.
+- **Les sondes d'une mission se lisent dans LEUR archive** (`public/assets/instruments/*.json`,
+  lot 42), par l'identifiant de l'investigation : aucune table écrite à la main.
+- **Les liens retour** : la page d'un corps porte une section « Missions » (le libellé du bloc de
+  la fiche, `bi.missions.label`), la page d'une sonde lie ses investigations qui ont une page. Les
+  deux dérivent du MÊME catalogue que les pages, donc un lien ne peut pas viser une page absente,
+  et `missionPages.test.ts` exige que les missions d'un corps soient exactement celles que sa
+  fiche affiche.
+
+Ce que la page affirme, et rien de plus :
+
+- **Le début est celui du PROJET** (mots de la source, `colStart`), jamais un lancement ; une fin
+  non déclarée ne veut pas dire « en cours ». Les deux sont écrits sur chaque page.
+- **La description est CITÉE en anglais**, `<blockquote lang="en">`, avec sa date de lecture : la
+  traduire serait écrire à la place de l'archive. Deux descriptions sur 112 sont des documents
+  PDS3 aplatis : le titre souligné de tête est retiré (la page a le sien), et celle d'ExoMars 2016
+  s'arrête à la dernière phrase avant un tableau des phases dont les colonnes n'ont pas survécu,
+  en le DISANT (`missionDescription`).
+- **Les cibles d'étalonnage ne se listent pas** (types publiés `Calibrator` et
+  `Calibration Field` : « PLAQUE », « DARK SKY »), mais leur nombre est écrit. Les types de cible
+  sont traduits par une liste FERMÉE : un type nouveau fait échouer le build plutôt que de
+  s'afficher en anglais sous un titre espagnol.
+
+**Trouvé en REGARDANT l'index rendu, aucun test ne l'aurait dit** : DART ouvrait la liste au
+**1000-01-01**, la sentinelle de DÉBUT de l'archive, pendant exact de la fin `3000-01-01` du
+lot 40. Une seule mission sur 112, qui ne vise aucun corps du catalogue, donc la fiche ne l'a
+jamais montrée. Le catalogue l'écrit `null` (« non déclaré », en fin d'index), et le générateur
+REFUSE cette sentinelle sur une mission qui viserait un corps du catalogue, puisque
+`core/missions.ts` suppose un vrai début.
+
+Routage du service worker : les missions sont la seconde rubrique à DEUX segments après les
+éclipses (`NESTED_SEGMENTS` de `pwaRouting.ts`), donc trois traduites ; `pwaRouting.test.ts`
+confronte les deux listes à toutes les pages de mission, falsifié en retirant le segment.
+
+Gardes : `src/seo/missionPages.test.ts` (catalogue contre l'index et les listes par corps
+livrés, citation, sentinelle, étalonnage, liens, quatre langues ; règles falsifiées une à une),
+`e2e/built-pages.spec.ts` (l'index et la page de Voyager, la plus longue, dans les quatre
+langues : axe et 390 px, sur le build).
+
 ## Événements terrestres — séismes USGS et événements rapportés EONET
 
 La Terre porte deux couches d'événements optionnelles, éteintes au départ : les séismes du

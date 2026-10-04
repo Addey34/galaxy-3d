@@ -1,0 +1,3458 @@
+{
+ "retrieved": "2026-09-29",
+ "descriptionsRetrieved": "2026-10-04",
+ "missions": [
+  {
+   "slug": "bc",
+   "name": "BepiColombo",
+   "lid": "urn:esa:psa:context:investigation:mission.bc",
+   "start": "2018-10-20",
+   "end": null,
+   "description": "BEPICOLOMBO Mission Overview ============================ BepiColombo is Europe's first mission to Mercury. It has been defined as a collaboration between ESA and the Japan Aerospace Exploration Agency (JAXA), executed under ESA leadership. The mission comprises two spacecraft: the Mercury Planetary Orbiter (MPO), built by ESA, and the Mercury Magnetospheric Orbiter (MMO), built by JAXA, which are dedicated to the detailed study of the planet and its magnetosphere respectively. Their orbits have therefore been optimised accordingly. The ESA-built Mercury Transfer Module (MTM) is carrying both MMO and MPO. The MPO is a three-axis-stabilized and nadir-pointing spacecraft designed for an operational lifetime of one Earth year (with a possible extension of one year). The MPO will be placed in an inertially fixed polar orbit; the spacecraft has one axis aligned with the nadir direction to allow continuous nadir observation of the planet. The MPO’s 2.3-hour low-eccentricity orbit will provide excellent spatial resolution over the entire planet’s surface. The MPO science payload will investigate Mercury’s interior, surface composition and morphology, intrinsic magnetic field, the composition of the exosphere and the coupling between all of these aspects. The MMO is a spin-stabilized spacecraft after it is separated from the MPO following the Mercury orbit insertion. The MMO is optimized for in-situ plasma and electromagnetic fields and waves measurements in Mercury orbit. The MTM provides the acceleration and braking required during Cruise to reach the eventual capture by Mercury and the large amount of power required by the solar electric propulsion system. BepiColombo was launched on 20 October 2018 on an Ariane 5 from Kourou, with arrival to Mercury in November 2026 after several Venus and Mercury flybys. The nominal mission is 1 year with a possible 1-year extension. See instrument context products for more information on the instruments in the PSA bundle, and the BepiColombo bundle for information on the mission phases",
+   "targets": [
+    {
+     "lid": "urn:nasa:pds:context:target:planet.earth",
+     "name": "Earth",
+     "type": "Planet",
+     "body": "earth"
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:planet.mercury",
+     "name": "Mercury",
+     "type": "Planet",
+     "body": "mercury"
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:planet.venus",
+     "name": "Venus",
+     "type": "Planet",
+     "body": "venus"
+    }
+   ]
+  },
+  {
+   "slug": "em16",
+   "name": "ExoMars 2016",
+   "lid": "urn:esa:psa:context:investigation:mission.em16",
+   "start": "2016-01-07",
+   "end": null,
+   "description": "ExoMars 2016 Mission Overview ============================= ExoMars 2016 was launched in March 2016 and consists of the Trace Gas Orbiter (TGO) and Schiaparelli, an entry, descent and landing demonstrator module. The primary goal of the mission is to detect trace gasses in the Martian atmosphere in particular to follow up on earlier detections of Methane. Schiaparelli, the technology demonstration lander, did not reach the surface, therefore the only data archived was from the DREAMS instrument, which was obtained during the cruise phase of the mission. The Trace Gas Orbiter (TGO) entered science operations at Mars in April 2018 and has been operating nominally since. It has 4 instruments, CaSSIS, a 4 colour push frame camera, FREND, an epithermal neutron detector, and ACS and NOMAD which are high resolution spectrometers covering the UV to thermal IR range optimised for atmospheric studies. All instruments coninue in good health apart from the Thermal Infrared (TIRVIM) channel on ACS. TIRVIM stopped working on December 3rd, 2019 due to HW failure. Since then it has been kept on to ensure thermal mode of the ACS but without producing science data. Housekeeping data is still being generated and archived as of today. Mission Phases ============== Start Time Acronym Name 2016-03-14T00:00:00.000 necp Near Earth Commissioning 2016-04-17T00:00:00.000 icp Cruise 2016-10-16T00:00:00.000 mamp Mars Approach and Orbit Insertion 2016-10-21T17:53:53.000 maop Mars Arrival Orbit 2017-03-15T11:58:45.000 ap Aerobraking 2018-03-09T03:22:54.000 cvp Commissioning and Verification 2018-04-21T13:49:13.000 psp Science Phase",
+   "targets": [
+    {
+     "lid": "urn:nasa:pds:context:target:planet.mars",
+     "name": "Mars",
+     "type": "Planet",
+     "body": "mars"
+    }
+   ]
+  },
+  {
+   "slug": "giotto",
+   "name": "Giotto Mission",
+   "lid": "urn:esa:psa:context:investigation:mission.giotto",
+   "start": "1985-07-02",
+   "end": "1992-07-10",
+   "description": "ESA's Giotto mission was the first European deep-space mission flown. As part of the Hally Armada, Giotto was launched in July of 1985, flew by Halley's Comet on 15 March 1986 at a distance of 596 kilometers - returning the first images of a comet nucleus - and then went on to an extended mission to fly by Comet 26P/Grigg-Skjellerup in July 1992.",
+   "targets": [
+    {
+     "lid": "urn:nasa:pds:context:target:comet.1p_halley",
+     "name": "1P/Halley",
+     "type": "Comet",
+     "body": "halley"
+    }
+   ]
+  },
+  {
+   "slug": "giotto-extended-mission",
+   "name": "Giotto Extended Mission",
+   "lid": "urn:esa:psa:context:investigation:mission.giotto_extended_mission",
+   "start": "1990-01-01",
+   "end": "1992-01-01",
+   "description": "After encountering Halley's Comet at part of the Halley Armada in March 1986, ESA's Giotto spacecraft hibernated through an extended cruide period on its way to encountering comet 26P/Grigg-Skjellerup. It flew by the comet at a distance of 200km in July 1992.",
+   "targets": [
+    {
+     "lid": "urn:nasa:pds:context:target:comet.26p_grigg-skjellerup",
+     "name": "26P/Grigg-Skjellerup",
+     "type": "Comet",
+     "body": null
+    }
+   ]
+  },
+  {
+   "slug": "international-rosetta-mission",
+   "name": "International Rosetta Mission",
+   "lid": "urn:esa:psa:context:investigation:mission.international_rosetta_mission",
+   "start": "1995-03-01",
+   "end": null,
+   "description": "ESA's Rosetta mission launched on 2 March 2004. Designed to do a detailed study of comet 67P/Churyumov-Gerasimenko, it was the first spacecraft to orbit a comet and to deploy a lander to the surface of a comet. The spacecraft first encountered the comet in August 2014, established orbit, and observed the nucleus of the comet in detail through perihelion. The mission ended on 30 September 2016 with a planned hard landing on the comet's surface.",
+   "targets": [
+    {
+     "lid": "urn:nasa:pds:context:target:asteroid.21_lutetia",
+     "name": "21 Lutetia",
+     "type": "Asteroid",
+     "body": null
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:asteroid.2867_steins",
+     "name": "2867 Steins",
+     "type": "Asteroid",
+     "body": null
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:comet.67p_churyumov-gerasimenko",
+     "name": "67P/Churyumov-Gerasimenko",
+     "type": "Comet",
+     "body": null
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:comet.9p_tempel_1",
+     "name": "9P/Tempel 1",
+     "type": "Comet",
+     "body": null
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:planet.earth",
+     "name": "Earth",
+     "type": "Planet",
+     "body": "earth"
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:planet.mars",
+     "name": "Mars",
+     "type": "Planet",
+     "body": "mars"
+    }
+   ]
+  },
+  {
+   "slug": "iue",
+   "name": "International Ultraviolet Explorer Mission",
+   "lid": "urn:esa:psa:context:investigation:mission.iue",
+   "start": "1978-01-26",
+   "end": "1996-09-30",
+   "description": "The IUE mission was a joint collaboration between NASA, ESA, and the UK's Science and Engineering Research Council. It launched in January 1978 for a nominal 3-year service life, and was still operating effectively 18 years later when it was turned off as a result of funding being cut.",
+   "targets": [
+    {
+     "lid": "urn:nasa:pds:context:target:planet.jupiter",
+     "name": "Jupiter",
+     "type": "Planet",
+     "body": "jupiter"
+    }
+   ]
+  },
+  {
+   "slug": "juice",
+   "name": "JUICE",
+   "lid": "urn:esa:psa:context:investigation:mission.juice",
+   "start": "2023-04-14",
+   "end": null,
+   "description": "JUICE - JUpiter ICy moons Explorer - is the first large-class mission in ESA's Cosmic Vision 2015-2025 programme. The spacecraft was launched on 14th April 2023 from Kourou, French Guyana. The cruise trajectory includes a double Lunar-Earth gravity assist (Aug 2024), a Venus Gravity assist (Aug 2025) and two Earth gravity assist (Sept 2026 and Jan 2029) before entering in orbit around Jupiter in July 2031. It will spend more than 3 years in orbit around Jupiter (tour), making detailed observations of the giant gaseous planet Jupiter and three of its largest moons, Ganymede, Callisto and Europa. In late 2034 it will enter in orbit around Ganymede (Ganymede phase) where it will remain for an additional year. The mission will investigate conditions that may support habitable environments within the satellites, all of which are thought to contain subsurface liquid water oceans. Ganymede, the largest moon in the Solar System, is a prime target due to its internal structure and subsurface ocean, its unique intrinsic magnetic field, and its complex interactions with Jupiter’s magnetosphere, offering a natural laboratory for studying the emergence, evolution and potential habitability of icy worlds around giant planets. JUICE will also conduct a global investigation of the Jupiter system as the archetype for giant planet systems throughout our Universe: it will study Jupiter’s atmospheric circulation, composition, and flow of energy from the cloud tops to the thermosphere, and characterise the 3D structure of the magnetosphere and its coupling with the ionosphere and thermosphere. Interactions between the moons and the magnetosphere, as well as tidal and gravitational evolution within the Galilean system, will also be assessed. Additional targets include the innermost Galilean moon, Io and its plasma torus, the minor and irregular moons, and the ring systems. The payload includes four remote‑sensing instruments (UVS, SWI, JANUS and MAJIS), three geophysical packages (3GM, GALA, RIME), three particles‑and‑fields instruments (JMAG, PEP, RPWI), and one experiment using the spacecraft’s telecommunications system to connect with ground‑based radio telescopes (PRIDE), plus an onboard radiation monitor (RADEM). For more detailed information about the Juice mission, please consult Boutonnet, A., Langevin, Y. and Erd, C. Designing the JUICE Trajectory. Space Sci Rev 220, 67 (2024). https://doi.org/10.1007/s11214-024-01093-y and Witasse, O. et al, The JUpiter ICy moons Explorer (JUICE) mission: post-launch status and mission overview,Space Sci Rev 220, 67 (in prep)",
+   "targets": [
+    {
+     "lid": "urn:nasa:pds:context:target:comet.3i_atlas",
+     "name": "3I/ATLAS",
+     "type": "Comet",
+     "body": null
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:planet.earth",
+     "name": "Earth",
+     "type": "Planet",
+     "body": "earth"
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:planet.jupiter",
+     "name": "Jupiter",
+     "type": "Planet",
+     "body": "jupiter"
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:planet.venus",
+     "name": "Venus",
+     "type": "Planet",
+     "body": "venus"
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:plasma_stream.solar_wind",
+     "name": "SOLAR WIND",
+     "type": "Plasma Stream",
+     "body": null
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:satellite.earth.moon",
+     "name": "Moon",
+     "type": "Satellite",
+     "body": "moon"
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:satellite.jupiter.callisto",
+     "name": "Callisto",
+     "type": "Satellite",
+     "body": "callisto"
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:satellite.jupiter.europa",
+     "name": "Europa",
+     "type": "Satellite",
+     "body": "europa"
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:satellite.jupiter.ganymede",
+     "name": "Ganymede",
+     "type": "Satellite",
+     "body": "ganymede"
+    }
+   ]
+  },
+  {
+   "slug": "mars-express",
+   "name": "Mars Express",
+   "lid": "urn:esa:psa:context:investigation:mission.mars_express",
+   "start": "2003-06-02",
+   "end": null,
+   "description": "The Mars Express mission consisted of (i) a 3-axis stabilized orbiter with a fixed high-gain antenna and body-mounted instruments, and (ii) a lander named BEAGLE-2, and was dedicated to the orbital and in-situ study of the interior, subsurface, surface and atmosphere of the planet.",
+   "targets": [
+    {
+     "lid": "urn:nasa:pds:context:target:planet.mars",
+     "name": "Mars",
+     "type": "Planet",
+     "body": "mars"
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:plasma_stream.solar_wind",
+     "name": "SOLAR WIND",
+     "type": "Plasma Stream",
+     "body": null
+    }
+   ]
+  },
+  {
+   "slug": "ulysses",
+   "name": "Ulysses",
+   "lid": "urn:esa:psa:context:investigation:mission.ulysses",
+   "start": "1990-10-06",
+   "end": null,
+   "description": "The Ulysses Mission was a joint ESA-NASA mission designed to orbit the Sun and study the space environment around it at all latitutdes. It launched in October of 1990, and the original mission was extended four times, until the spacecraft was ultimately shut down in the face of multiple hardware in June 2009.",
+   "targets": [
+    {
+     "lid": "urn:nasa:pds:context:target:planet.jupiter",
+     "name": "Jupiter",
+     "type": "Planet",
+     "body": "jupiter"
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:star.sun",
+     "name": "Sun",
+     "type": "Star",
+     "body": "sun"
+    }
+   ]
+  },
+  {
+   "slug": "venus-express",
+   "name": "Venus Express",
+   "lid": "urn:esa:psa:context:investigation:mission.venus_express",
+   "start": "2005-11-09",
+   "end": null,
+   "description": "Venus Express is ESA's first mission to Venus, launched on November 9, 2005. It used a modified Mars Express spacecraft design and is equipped with upgraded instruments from previous ESA missions. The mission aims to study Venus's atmosphere, plasma environment, and surface in detail. After launching on a Soyuz rocket, Venus Express spent 150 days in interplanetary transfer before entering orbit around Venus on April 11, 2006. The spacecraft's operational orbit is an elliptical quasi-polar orbit with a 24-hour cycle, peaking at 66,000 km and dipping to 250 km. The mission timeline comprised several phases, including pre-launch operations, early orbit, commissioning, and extended mission phases, with a focus on scientific observation. The latter included data collection and transmission related to Venus's atmosphere and surface dynamics over an expected lifespan of nearly 486 days, later extended in phases lasting until 2012. Data acquisition strategies involved various observation modes, including Earth and solar occultations, with specific objectives for each scientific instrument onboard. The mission's extended phases aimed to enhance observational coverage and conduct detailed studies based on prior findings. Overall, Venus Express contributed significantly to Venusian science by providing valuable insights into the planet’s characteristics and dynamics.",
+   "targets": [
+    {
+     "lid": "urn:nasa:pds:context:target:planet.venus",
+     "name": "Venus",
+     "type": "Planet",
+     "body": "venus"
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:plasma_stream.solar_wind",
+     "name": "SOLAR WIND",
+     "type": "Plasma Stream",
+     "body": null
+    }
+   ]
+  },
+  {
+   "slug": "ch1",
+   "name": "Chandrayaan-1 Mission",
+   "lid": "urn:isro:isda:context:investigation:mission.ch1",
+   "start": "2008-10-22",
+   "end": "2009-08-28",
+   "description": "Chandrayaan-1 was launched on 22nd October, 2008 using a variant of the Indian Polar Satellite Launch Vehicle (PSLV-XL). The spacecraft was inserted into an elliptical lunar polar orbit on 8th November and was placed in the desired 100km orbit on 12th November. The Chandrayaan-1 mission successfully operated until 28th August, 2009, when a communication failure led to loss of contact and the mission was called off on 30th August. Chandrayaan-1 marks the beginning of India's planetary exploration programme initiated by the Indian Space Research Organization (ISRO). Apart from five Indian built payloads (TMC, HySI, LLRI, HEX and MIPS), it also carried two Indo-Foreign collaborative payloads (C1XS and SARA) and four foreign payloads (M3, mini-SAR, SIR-2 and RADOM). Chandrayaan-1 mission represents a truly international effort in planetary exploration. After reaching the designated lunar polar orbit and checks of various spacecraft sub-systems and parameters, the Moon Impact Probe (MIP) was released on 14th November to reach a designated area near the South Pole. Images captured by the camera on board MIP allowed identification of its impact point. This followed commissioning of the scientific payloads. One of the payloads, the Radiation Dose Monitor (RADOM), was switched on soon after lift-off and the Terrain Mapping Camera (TMC) was commissioned during one of the early earth bound orbits. The other eight payloads were commissioned one by one between November 16 and December 9. The mission operation was relatively smooth until April 26th, 2009, when the failure of star sensor led to the decision to raise the spacecraft orbit from 100 to 200 km to reduce the number of maneuvers needed for orbit maintenance. On August 28 2009, loss of communication with the spacecraft led to termination of the mission. Mission Objective - To realize the mission goal of harnessing the science payloads, lunar craft and the launch vehicle with suitable ground support systems including Deep Space Network station. - To realize the integration and testing, launching and achieving lunar polar orbit of about 100 km, in-orbit operation of experiments, communication/ telecomm and, telemetry data reception, quick look data and archival for scientific investigation by identified group of scientists.",
+   "targets": [
+    {
+     "lid": "urn:nasa:pds:context:target:satellite.earth.moon",
+     "name": "Moon",
+     "type": "Satellite",
+     "body": "moon"
+    }
+   ]
+  },
+  {
+   "slug": "hyb2",
+   "name": "Hayabusa2 Asteroid Sample Return Mission",
+   "lid": "urn:jaxa:darts:context:investigation:mission.hyb2",
+   "start": "2014-12-03",
+   "end": null,
+   "description": "The Hayabusa2 mission will obtain samples from the C-type asteroid (162173) Ryugu to investigate the origin of water and organic materials on Earth, and bring them back to Earth. It is important to understand the early history and transfer processes of the Solar System.",
+   "targets": [
+    {
+     "lid": "urn:nasa:pds:context:target:asteroid.162173_ryugu",
+     "name": "(162173) Ryugu",
+     "type": "Asteroid",
+     "body": "ryugu"
+    }
+   ]
+  },
+  {
+   "slug": "slim",
+   "name": "Smart Lander for Investigating Moon mission",
+   "lid": "urn:jaxa:darts:context:investigation:mission.slim",
+   "start": "2023-09-06",
+   "end": "2024-08-23",
+   "description": "The Smart Lander for Investigating Moon (SLIM) mission aims to attempt a 'pinpoint landing' within an approximately 100-meter error circle on the Moon. The planned landing site is located near Shioli crater (25.2 degrees east, 13.3 degrees south), to the west of Mare Nectaris. Based on observations from the Kaguya (SELENE) spacecraft, there is a high possibility that mantle materials are exposed around Shioli crater. Therefore, we aim to estimate the Mg# (i.e., the atomic ratio of Mg / (Mg + Fe)) of lunar mantle materials, which is crucial for understanding the early history of the Earth-Moon system.",
+   "targets": [
+    {
+     "lid": "urn:nasa:pds:context:target:satellite.earth.moon",
+     "name": "Moon",
+     "type": "Satellite",
+     "body": "moon"
+    }
+   ]
+  },
+  {
+   "slug": "vco",
+   "name": "Venus Climate Orbiter Akatsuki Mission",
+   "lid": "urn:jaxa:darts:context:investigation:mission.vco",
+   "start": "2010-05-20",
+   "end": null,
+   "description": "The main goal of the mission of Akatsuki, also known as Venus Climate Orbiter (VCO) and PLANET-C is to understand the Venusian atmospheric dynamics, super-rotation, and cloud physics, with the explorations of the ground surface and the interplanetary dust also being the themes. The Venusian atmosphere was studied during the Venus Express mission of the European Space Agency. Akatsuki was also designed to study the Venusian atmosphere, but in contrast to the Venus Express strategy, five cameras with narrowband filters will image Venus at different wavelengths to track the distributions of clouds and minor gaseous constituents at different heights. In other words, we aim to study the Venusian atmospheric dynamics in three dimensions, while Venus Express collected mainly spectroscopic observations of the atmosphere. The mission started with the mission name and the spacecraft name PLANET-C, which means Japan's third planetary explorer succeeding SUISEI (PLANET-A), which observed Halley's comet, and NOZOMI (PLANET-B), which could not complete its mission to explore Mars.",
+   "targets": [
+    {
+     "lid": "urn:nasa:pds:context:target:planet.venus",
+     "name": "Venus",
+     "type": "Planet",
+     "body": "venus"
+    }
+   ]
+  },
+  {
+   "slug": "kplo",
+   "name": "Korea Pathfinder Lunar Orbiter",
+   "lid": "urn:kari:kpds:context:investigation:mission.kplo",
+   "start": "2022-08-04",
+   "end": "2030-12-31",
+   "description": "Korea Pathfinder Lunar Orbiter (KPLO), or Danuri (다누리), is the first Korea robotic lunar probe expected to carry out a lunar observation mission at a nominal orbiting altitude of ~100 km from the Moon. It is a cooperative project between the Korea Aerospace Research Institute (KARI), which will oversee the system, main body of the orbiter, and ground station, and a Korea university, research institutes, and NASA supporting the payloads, deep space communication, and navigation technology. The KPLO spacecraft consists of the main body of the orbiter, propulsion systems, tracking systems, three communications antennae, two solar arrays, and six payloads. The KPLO project involves mapping the lunar environment, technology demonstrations for planetary exploration, international cooperation, and establishing a deep-space network. The KPLO mission is a large portion of phase one of the Korea Lunar Exploration Program (KLEP) and Korea's exciting journey into space exploration.",
+   "targets": [
+    {
+     "lid": "urn:nasa:pds:context:target:planet.earth",
+     "name": "Earth",
+     "type": "Planet",
+     "body": "earth"
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:satellite.earth.moon",
+     "name": "Moon",
+     "type": "Satellite",
+     "body": "moon"
+    }
+   ]
+  },
+  {
+   "slug": "2001-mars-odyssey",
+   "name": "Mars Odyssey",
+   "lid": "urn:nasa:pds:context:investigation:mission.2001_mars_odyssey",
+   "start": "2001-01-04",
+   "end": null,
+   "description": "The 2001 Mars Odyssey mission consists of an orbiter that investigates the climate and geology of Mars.",
+   "targets": [
+    {
+     "lid": "urn:nasa:pds:context:target:planet.mars",
+     "name": "Mars",
+     "type": "Planet",
+     "body": "mars"
+    }
+   ]
+  },
+  {
+   "slug": "apex",
+   "name": "OSIRIS-APEX Mission",
+   "lid": "urn:nasa:pds:context:investigation:mission.apex",
+   "start": "2023-09-25",
+   "end": null,
+   "description": "The OSIRIS-APEX mission is an extended mission of the OSIRiS-REx mission. APEX uses the capable OSIRIS-REX spacecraft with its complete instrument suite. APEX will distantly observe Apophis during the 2029 Earth encounter and capture its evolution in real time, revealing the consequences of an asteroid undergoing tidal disturbance by a major planet. Beginning in 2029 June, the spacecraft’s instrument suite will begin providing high resolution data of this “stony” asteroid — advancing knowledge of these objects and their connection to meteorites.",
+   "targets": [
+    {
+     "lid": "urn:nasa:pds:context:target:asteroid.99942_apophis",
+     "name": "99942 Apophis",
+     "type": "Asteroid",
+     "body": null
+    }
+   ]
+  },
+  {
+   "slug": "apollo-11",
+   "name": "Apollo 11",
+   "lid": "urn:nasa:pds:context:investigation:mission.apollo_11",
+   "start": "1969-07-16",
+   "end": "1969-07-24",
+   "description": "NASA's Apollo 11 mission was the first crewed lunar landing and moonwalk. While on the lunar surface, astronauts measured moonquakes, collected a sample of solar wind, deployed a laser retroreflector, collected lunar samples, and performed ceremonial duties.",
+   "targets": [
+    {
+     "lid": "urn:nasa:pds:context:target:plasma_stream.solar_wind",
+     "name": "SOLAR WIND",
+     "type": "Plasma Stream",
+     "body": null
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:satellite.earth.moon",
+     "name": "Moon",
+     "type": "Satellite",
+     "body": "moon"
+    }
+   ]
+  },
+  {
+   "slug": "apollo-12",
+   "name": "Apollo 12",
+   "lid": "urn:nasa:pds:context:investigation:mission.apollo_12",
+   "start": "1969-11-14",
+   "end": "1969-11-24",
+   "description": "The Apollo 12 was the second mission that allowed humans to walk on the Moon. It consisted of the Command and Service Module (CSM) and the Lunar Module (LM). The CSM took images of the surface and communicated with Earth. The LM carried the Astronauts and Apollo Lunar Surface Experiments Package (ALSEP) to the surface.",
+   "targets": [
+    {
+     "lid": "urn:nasa:pds:context:target:plasma_stream.solar_wind",
+     "name": "SOLAR WIND",
+     "type": "Plasma Stream",
+     "body": null
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:satellite.earth.moon",
+     "name": "Moon",
+     "type": "Satellite",
+     "body": "moon"
+    }
+   ]
+  },
+  {
+   "slug": "apollo-14",
+   "name": "Apollo 14",
+   "lid": "urn:nasa:pds:context:investigation:mission.apollo_14",
+   "start": "1971-01-31",
+   "end": "1971-02-09",
+   "description": "The Apollo 14 was the third mission that allowed humans to walk on the Moon. It consisted of the Command and Service Module (CSM) and the Lunar Module (LM). The CSM took images of the surface and communicated with Earth. The LM carried the Astronauts and Apollo Lunar Surface Experiments Package (ALSEP) to the surface.",
+   "targets": [
+    {
+     "lid": "urn:nasa:pds:context:target:plasma_stream.solar_wind",
+     "name": "SOLAR WIND",
+     "type": "Plasma Stream",
+     "body": null
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:satellite.earth.moon",
+     "name": "Moon",
+     "type": "Satellite",
+     "body": "moon"
+    }
+   ]
+  },
+  {
+   "slug": "apollo-15",
+   "name": "Apollo 15",
+   "lid": "urn:nasa:pds:context:investigation:mission.apollo_15",
+   "start": "1971-07-26",
+   "end": "1971-08-07",
+   "description": "The Apollo 15 was the fourth mission that allowed humans to walk on the Moon. It consisted of the Command and Service Module (CSM) and the Lunar Module (LM). The CSM took images of the surface and communicated with Earth. The LM carried the Astronauts and Apollo Lunar Surface Experiments Package (ALSEP) to the surface.",
+   "targets": [
+    {
+     "lid": "urn:nasa:pds:context:target:plasma_stream.solar_wind",
+     "name": "SOLAR WIND",
+     "type": "Plasma Stream",
+     "body": null
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:satellite.earth.moon",
+     "name": "Moon",
+     "type": "Satellite",
+     "body": "moon"
+    }
+   ]
+  },
+  {
+   "slug": "apollo-16",
+   "name": "Apollo 16",
+   "lid": "urn:nasa:pds:context:investigation:mission.apollo_16",
+   "start": "1972-04-16",
+   "end": "1972-04-27",
+   "description": "The Apollo 16 was the fifth mission that allowed humans to walk on the Moon. It consisted of the Command and Service Module (CSM) and the Lunar Module (LM). The CSM took images of the surface and communicated with Earth. The LM carried the Astronauts and Apollo Lunar Surface Experiments Package (ALSEP) to the surface.",
+   "targets": [
+    {
+     "lid": "urn:nasa:pds:context:target:plasma_stream.solar_wind",
+     "name": "SOLAR WIND",
+     "type": "Plasma Stream",
+     "body": null
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:satellite.earth.moon",
+     "name": "Moon",
+     "type": "Satellite",
+     "body": "moon"
+    }
+   ]
+  },
+  {
+   "slug": "apollo-17",
+   "name": "Apollo 17",
+   "lid": "urn:nasa:pds:context:investigation:mission.apollo_17",
+   "start": "1972-12-07",
+   "end": "1972-12-19",
+   "description": "The Apollo 17 was the sixth mission that allowed humans to walk on the Moon. It consisted of the Command and Service Module (CSM) and the Lunar Module (LM). The CSM took images of the surface and communicated with Earth. The LM carried the Astronauts and Apollo Lunar Surface Experiments Package (ALSEP) to the surface.",
+   "targets": [
+    {
+     "lid": "urn:nasa:pds:context:target:plasma_stream.solar_wind",
+     "name": "SOLAR WIND",
+     "type": "Plasma Stream",
+     "body": null
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:satellite.earth.moon",
+     "name": "Moon",
+     "type": "Satellite",
+     "body": "moon"
+    }
+   ]
+  },
+  {
+   "slug": "artemis2",
+   "name": "Artemis 2 Mission",
+   "lid": "urn:nasa:pds:context:investigation:mission.artemis2",
+   "start": "2026-04-01",
+   "end": "2026-04-10",
+   "description": "The Artemis II mission was the first crewed test mission under NASA's Artemis program. On April 1, 2026, four astronauts launched aboard the Orion spacecraft on the Space Launch System (SLS) rocket for a nearly 10-day voyage around the Moon. The Artemis II crew members were NASA astronauts Reid Wiseman (Commander), Victor Glover (Pilot), and Christina Koch (Mission Specialist 1), along with CSA (Canadian Space Agency) astronaut Jeremy Hansen (Mission Specialist 2). Science observations included opportunistic imaging and observations around Earth and during transit to the Moon on Flight Days 1 to 5, Lunar Flyby on Flight Day 6, and additional opportunistic imaging during the return to Earth on Flight Days 7 to 10. After traveling more than 695,000 miles, the crew members splashed down on April 10, 2026 in the Pacific Ocean off the coast of San Diego, California. At their farthest point, the crew traveled 252,756 miles from Earth, setting a record for the greatest distance humans have traveled in space.",
+   "targets": [
+    {
+     "lid": "urn:nasa:pds:context:target:planet.earth",
+     "name": "Earth",
+     "type": "Planet",
+     "body": "earth"
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:satellite.earth.moon",
+     "name": "Moon",
+     "type": "Satellite",
+     "body": "moon"
+    }
+   ]
+  },
+  {
+   "slug": "bopps",
+   "name": "Balloon Observation Platform for Planetary Science",
+   "lid": "urn:nasa:pds:context:investigation:mission.bopps",
+   "start": "2014-09-25",
+   "end": "2014-09-26",
+   "description": "The 2014 BOPPS flight launched from Ft. Sumner, New Mexico at 8L20, and achieved and altitude of 130,000 feet, from which it observed the asteroid (1) Ceres and comets C/2013 A1 (Siding Spring) and C/2014 E2 (Jacques).",
+   "targets": []
+  },
+  {
+   "slug": "cassini-huygens",
+   "name": "Cassini-Huygens",
+   "lid": "urn:nasa:pds:context:investigation:mission.cassini-huygens",
+   "start": "1997-10-15",
+   "end": "2017-09-15",
+   "description": "Orbiting the ringed planet Saturn and its numerous moons, the Cassini spacecraft was a keystone of exploration of the Saturnian system and the properties of gaseous planets in our solar system. A joint endeavor of NASA, the European Space Agency, or ESA, and the Italian Space Agency, Cassini launched in 1997 along with ESA's Huygens probe. The spacecraft contributed to studies of Jupiter for six months in 2000 before reaching its destination, Saturn, in 2004 and starting a string of flybys of Saturn's moons. That same year it released the Huygens probe on Saturn's moon Titan to conduct a study of the moon's atmosphere and surface composition. In its second extended mission, Cassini made the first observations of a complete seasonal period for Saturn and its moons, flew between the rings and descended into the planet's atmosphere.",
+   "targets": [
+    {
+     "lid": "urn:nasa:pds:context:target:asteroid.2685_masursky",
+     "name": "2685 Masursky",
+     "type": "Asteroid",
+     "body": null
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:astrophysical.gravitational_waves",
+     "name": "Gravitational Waves",
+     "type": "Astrophysical",
+     "body": null
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:dust.dust",
+     "name": "DUST",
+     "type": "Dust",
+     "body": null
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:planet.earth",
+     "name": "Earth",
+     "type": "Planet",
+     "body": "earth"
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:planet.jupiter",
+     "name": "Jupiter",
+     "type": "Planet",
+     "body": "jupiter"
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:planet.saturn",
+     "name": "Saturn",
+     "type": "Planet",
+     "body": "saturn"
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:planet.venus",
+     "name": "Venus",
+     "type": "Planet",
+     "body": "venus"
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:planetary_system.solar_system",
+     "name": "Solar System",
+     "type": "Planetary System",
+     "body": null
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:plasma_stream.solar_wind",
+     "name": "SOLAR WIND",
+     "type": "Plasma Stream",
+     "body": null
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:satellite.earth.moon",
+     "name": "Moon",
+     "type": "Satellite",
+     "body": "moon"
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:satellite.jupiter.callisto",
+     "name": "Callisto",
+     "type": "Satellite",
+     "body": "callisto"
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:satellite.jupiter.europa",
+     "name": "Europa",
+     "type": "Satellite",
+     "body": "europa"
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:satellite.jupiter.ganymede",
+     "name": "Ganymede",
+     "type": "Satellite",
+     "body": "ganymede"
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:satellite.jupiter.io",
+     "name": "Io",
+     "type": "Satellite",
+     "body": "io"
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:satellite.saturn.aegaeon",
+     "name": "Aegaeon",
+     "type": "Satellite",
+     "body": null
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:satellite.saturn.albiorix",
+     "name": "Albiorix",
+     "type": "Satellite",
+     "body": null
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:satellite.saturn.anthe",
+     "name": "Anthe",
+     "type": "Satellite",
+     "body": null
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:satellite.saturn.atlas",
+     "name": "Atlas",
+     "type": "Satellite",
+     "body": null
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:satellite.saturn.bebhionn",
+     "name": "Bebhionn",
+     "type": "Satellite",
+     "body": null
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:satellite.saturn.bergelmir",
+     "name": "Bergelmir",
+     "type": "Satellite",
+     "body": null
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:satellite.saturn.bestla",
+     "name": "Bestla",
+     "type": "Satellite",
+     "body": null
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:satellite.saturn.calypso",
+     "name": "Calypso",
+     "type": "Satellite",
+     "body": null
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:satellite.saturn.daphnis",
+     "name": "Daphnis",
+     "type": "Satellite",
+     "body": null
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:satellite.saturn.dione",
+     "name": "Dione",
+     "type": "Satellite",
+     "body": "dione"
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:satellite.saturn.enceladus",
+     "name": "Enceladus",
+     "type": "Satellite",
+     "body": "enceladus"
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:satellite.saturn.epimetheus",
+     "name": "Epimetheus",
+     "type": "Satellite",
+     "body": null
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:satellite.saturn.erriapus",
+     "name": "Erriapus",
+     "type": "Satellite",
+     "body": null
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:satellite.saturn.fornjot",
+     "name": "Fornjot",
+     "type": "Satellite",
+     "body": null
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:satellite.saturn.greip",
+     "name": "Greip",
+     "type": "Satellite",
+     "body": null
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:satellite.saturn.hati",
+     "name": "Hati",
+     "type": "Satellite",
+     "body": null
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:satellite.saturn.helene",
+     "name": "Helene",
+     "type": "Satellite",
+     "body": null
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:satellite.saturn.hyperion",
+     "name": "Hyperion",
+     "type": "Satellite",
+     "body": "hyperion"
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:satellite.saturn.hyrrokkin",
+     "name": "Hyrrokkin",
+     "type": "Satellite",
+     "body": null
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:satellite.saturn.iapetus",
+     "name": "Iapetus",
+     "type": "Satellite",
+     "body": "iapetus"
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:satellite.saturn.ijiraq",
+     "name": "Ijiraq",
+     "type": "Satellite",
+     "body": null
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:satellite.saturn.janus",
+     "name": "Janus",
+     "type": "Satellite",
+     "body": null
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:satellite.saturn.kari",
+     "name": "Kari",
+     "type": "Satellite",
+     "body": null
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:satellite.saturn.kiviuq",
+     "name": "Kiviuq",
+     "type": "Satellite",
+     "body": null
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:satellite.saturn.loge",
+     "name": "Loge",
+     "type": "Satellite",
+     "body": null
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:satellite.saturn.methone",
+     "name": "Methone",
+     "type": "Satellite",
+     "body": null
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:satellite.saturn.mimas",
+     "name": "Mimas",
+     "type": "Satellite",
+     "body": "mimas"
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:satellite.saturn.mundilfari",
+     "name": "Mundilfari",
+     "type": "Satellite",
+     "body": null
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:satellite.saturn.narvi",
+     "name": "Narvi",
+     "type": "Satellite",
+     "body": null
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:satellite.saturn.paaliaq",
+     "name": "Paaliaq",
+     "type": "Satellite",
+     "body": null
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:satellite.saturn.pallene",
+     "name": "Pallene",
+     "type": "Satellite",
+     "body": null
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:satellite.saturn.pan",
+     "name": "Pan",
+     "type": "Satellite",
+     "body": null
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:satellite.saturn.pandora",
+     "name": "Pandora",
+     "type": "Satellite",
+     "body": null
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:satellite.saturn.phoebe",
+     "name": "Phoebe",
+     "type": "Satellite",
+     "body": null
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:satellite.saturn.polydeuces",
+     "name": "Polydeuces",
+     "type": "Satellite",
+     "body": null
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:satellite.saturn.prometheus",
+     "name": "Prometheus",
+     "type": "Satellite",
+     "body": null
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:satellite.saturn.rhea",
+     "name": "Rhea",
+     "type": "Satellite",
+     "body": "rhea"
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:satellite.saturn.siarnaq",
+     "name": "Siarnaq",
+     "type": "Satellite",
+     "body": null
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:satellite.saturn.skathi",
+     "name": "Skathi",
+     "type": "Satellite",
+     "body": null
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:satellite.saturn.skoll",
+     "name": "Skoll",
+     "type": "Satellite",
+     "body": null
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:satellite.saturn.surtur",
+     "name": "Surtur",
+     "type": "Satellite",
+     "body": null
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:satellite.saturn.suttungr",
+     "name": "Suttungr",
+     "type": "Satellite",
+     "body": null
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:satellite.saturn.tarqeq",
+     "name": "Tarqeq",
+     "type": "Satellite",
+     "body": null
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:satellite.saturn.tarvos",
+     "name": "Tarvos",
+     "type": "Satellite",
+     "body": null
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:satellite.saturn.telesto",
+     "name": "Telesto",
+     "type": "Satellite",
+     "body": null
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:satellite.saturn.tethys",
+     "name": "Tethys",
+     "type": "Satellite",
+     "body": "tethys"
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:satellite.saturn.thrymr",
+     "name": "Thrymr",
+     "type": "Satellite",
+     "body": null
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:satellite.saturn.titan",
+     "name": "Titan",
+     "type": "Satellite",
+     "body": "titan"
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:satellite.saturn.ymir",
+     "name": "Ymir",
+     "type": "Satellite",
+     "body": null
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:star.alf_vir",
+     "name": "Spica",
+     "type": "Star",
+     "body": null
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:star.sun",
+     "name": "Sun",
+     "type": "Star",
+     "body": "sun"
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:star.wasp-3",
+     "name": "WASP-3",
+     "type": "Star",
+     "body": null
+    }
+   ]
+  },
+  {
+   "slug": "clipper",
+   "name": "Europa Clipper Mission",
+   "lid": "urn:nasa:pds:context:investigation:mission.clipper",
+   "start": "2024-10-14",
+   "end": "2034-09-30",
+   "description": "NASA's Europa Clipper spacecraft will perform dozens of close flybys of Jupiter's moon Europa, gathering detailed measurements to investigate whether the moon could have conditions suitable for life. Europa Clipper is not a life detection mission - its main science goal is to determine whether there are places below Europa's surface that could support life.",
+   "targets": [
+    {
+     "lid": "urn:nasa:pds:context:target:planet.jupiter",
+     "name": "Jupiter",
+     "type": "Planet",
+     "body": "jupiter"
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:satellite.jupiter.callisto",
+     "name": "Callisto",
+     "type": "Satellite",
+     "body": "callisto"
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:satellite.jupiter.europa",
+     "name": "Europa",
+     "type": "Satellite",
+     "body": "europa"
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:satellite.jupiter.ganymede",
+     "name": "Ganymede",
+     "type": "Satellite",
+     "body": "ganymede"
+    }
+   ]
+  },
+  {
+   "slug": "clps-to-19d",
+   "name": "Firefly Aerospace's Blue Ghost Mission 1",
+   "lid": "urn:nasa:pds:context:investigation:mission.clps_to_19d",
+   "start": "2025-01-15",
+   "end": "2025-03-16",
+   "description": "As part of NASA’s CLPS (Commercial Lunar Payload Services) initiative and Artemis campaign, Firefly’s Blue Ghost lunar lander delivered ten NASA science and technology instruments to Mare Crisium on the near side of the Moon. The CLPS name for the delivery is CLPS Task Order (TO) 19D and the Firefly Aerospace mission name is Blue Ghost Mission 1. Blue Ghost Mission 1 (BGM1) launched on Jan 15, 2025 and landed on March 2, 2025. The surface mission extended through one lunar day and multiple hours into the lunar night before concluding on March 16, 2025.",
+   "targets": [
+    {
+     "lid": "urn:nasa:pds:context:target:satellite.earth.moon",
+     "name": "Moon",
+     "type": "Satellite",
+     "body": "moon"
+    }
+   ]
+  },
+  {
+   "slug": "clps-to-2ab",
+   "name": "CLPS Task Order 2AB",
+   "lid": "urn:nasa:pds:context:investigation:mission.clps_to_2ab",
+   "start": "2024-01-08",
+   "end": "2024-01-18",
+   "description": "The NASA payload suite on Astrobotic Peregrine Mission 1 was slated to provide some of the first measurements from the surface of the Moon since Apollo, but it did not land on the lunar surface due to an anomaly with the propulsion system. The spacecraft was targeting a landing within Sinus Viscositatis in order to provide complementary and meaningful data to NASA’s Lunar-VISE instrument suite, which will land on the nearby Gruithuisen Domes in 2026. The NASA payloads aboard Astrobotic Peregrine 1 were focusing on characterizing the radiation environment in space and on the surface, volatiles present on or near the surface, and surface temperatures and mineralogy. The payload also included the Laser Retroreflector Array (LRA) which could have enabled precise laser ranging from orbiting spacecraft. Because the Peregrine spacecraft never landed on the Moon, all of the data acquired during the mission occurred in cislunar space. This allowed for measurements of the radiation environment experienced by the spacecraft during the mission as well as measurements of volatiles released by the spacecraft during operations and as a result of the anomaly experienced in the propulsion system. Except for the LRA, all other NASA payloads were powered on at various points and collected science data.",
+   "targets": [
+    {
+     "lid": "urn:nasa:pds:context:target:satellite.earth.moon",
+     "name": "Moon",
+     "type": "Satellite",
+     "body": "moon"
+    }
+   ]
+  },
+  {
+   "slug": "clps-to-2im",
+   "name": "CLPS Task Order 2IM",
+   "lid": "urn:nasa:pds:context:investigation:mission.clps_to_2im",
+   "start": "2024-02-15",
+   "end": "2024-03-23",
+   "description": "The Intuitive Machines 1 (IM-1, TO2-IM) mission launched a Nova-C lander, called Odyssesus, on Feb 15, 2024. Odyssesus landed on Feb 22, 2024 at (80.13S, 1.44E), about 25km east of the Malapert A crater near the south pole region of the Moon, carrying six NASA payloads and commercial cargo. The scientific objectives of the NASA provided payloads included: studies of plume-surface interactions (SCALPSS), radio astronomy and space weather interactions with the lunar surface (ROLSES), and a laser retroreflector array (LRA). These payloads have archived data in the PDS. Odysseus also carried NASA tech demo payloads to demonstrate precision landing technologies (Navigation Doppler Lidar, NDL), communication and navigation node capabilities (Lunar Node-1, LN-1), and measure the quantity of liquid propellant in micro-gravity environments (Radio Frequency Mass Gauge, RFMG). These payloads have not archived data in the PDS.",
+   "targets": [
+    {
+     "lid": "urn:nasa:pds:context:target:satellite.earth.moon",
+     "name": "Moon",
+     "type": "Satellite",
+     "body": "moon"
+    }
+   ]
+  },
+  {
+   "slug": "clps-to-prime1",
+   "name": "CLPS Task Order PRIME-1",
+   "lid": "urn:nasa:pds:context:investigation:mission.clps_to_prime1",
+   "start": "2025-02-27",
+   "end": "2025-03-07",
+   "description": "The Intuitive Machines 2 (IM-2, CLPS Task Order TO-Prime 1) mission launched a Nova-C lander, called Athena, on UT February 27, 2025. Athena landed on March 6, 2025 at (84.79S, 29.20E) in the Mons Mouton region in the South Pole region of the Moon. It carried three NASA instruments, and commercial cargo. NASA payloads included the LRA (Laser Retroreflector Array), and the payload suite Prime-1 (Polar Resources Ice Mining Experiment-1). PRIME-1 is a suite of two instruments, the TRIDENT drill (The Regolith Ice Drill for Exploring New Terrain) and MSolo (Mass Spectrometer observing lunar operations). MSolo is designed to identify and quantify volatiles, including those that emanate from the lander, drilling processes, and other payloads conducting operations on the surface. LRA is designed to serve as a fiducial marker of the lander on the lunar surface. MSolo and LRA have archived data in the PDS. The TRIDENT drill, a tech demo designed to demonstrate drilling into the lunar regolith, was unable to complete its science objectives due to the final roughly horizontal orientation of the lander, which prevented the drill from reaching the lunar surface. This payload has not archived data in the PDS.",
+   "targets": [
+    {
+     "lid": "urn:nasa:pds:context:target:satellite.earth.moon",
+     "name": "Moon",
+     "type": "Satellite",
+     "body": "moon"
+    }
+   ]
+  },
+  {
+   "slug": "comet-sl9-jupiter-collision",
+   "name": "Comet D/1993 F2 (Shoemaker-Levy 9) Collision into Jupiter",
+   "lid": "urn:nasa:pds:context:investigation:mission.comet_sl9-jupiter_collision",
+   "start": "1993-01-01",
+   "end": "1996-01-01",
+   "description": "The impact of comet D/1993 F2 (Shoemaker-Levy 9), colloquially referred to as \"SL9\", into the planet Jupiter in July 1994 represented the first time in human history that people had discovered a body in the sky and were able to preict its impact on a planet more than a few seconds in advance. The event was observed by both spacecraft and ground-based observatories around the world.",
+   "targets": [
+    {
+     "lid": "urn:nasa:pds:context:target:planet.jupiter",
+     "name": "Jupiter",
+     "type": "Planet",
+     "body": "jupiter"
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:satellite.jupiter.europa",
+     "name": "Europa",
+     "type": "Satellite",
+     "body": "europa"
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:satellite.jupiter.io",
+     "name": "Io",
+     "type": "Satellite",
+     "body": "io"
+    }
+   ]
+  },
+  {
+   "slug": "contour-mission",
+   "name": "Comet Nucleus Tour",
+   "lid": "urn:nasa:pds:context:investigation:mission.contour_mission",
+   "start": "2002-07-05",
+   "end": "2002-08-15",
+   "description": "The Comet Nucleus Tour mission failed when the spacecraft broke apart during a planned maneuver six weeks after launch. No data were returned.",
+   "targets": []
+  },
+  {
+   "slug": "dawn-mission-to-vesta-and-ceres",
+   "name": "Dawn Mission to Vesta and Ceres",
+   "lid": "urn:nasa:pds:context:investigation:mission.dawn_mission_to_vesta_and_ceres",
+   "start": "2007-09-27",
+   "end": "2016-07-01",
+   "description": "The Dawn mission launched in Sept. 2007 to rendezvous and orbit the asteroid (4) Vesta and the dwarf planet (1) Ceres. Vesta orbit operations took place from July 2011 to Sept. 2012, and Ceres orbit operations from March 2015 to Oct. 2018. The scientific objectives of the mission were to characterize the asteroids' internal structure, density, shape, size, composition and mass and to return data on surface morphology, cratering, and magnetism. Communication with the spacecraft was lost after hydrazine exhaustion in October 2018.",
+   "targets": [
+    {
+     "lid": "urn:nasa:pds:context:target:asteroid.4_vesta",
+     "name": "4 Vesta",
+     "type": "Asteroid",
+     "body": "vesta"
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:dwarf_planet.1_ceres",
+     "name": "1 Ceres",
+     "type": "Dwarf Planet",
+     "body": "ceres"
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:planet.mars",
+     "name": "Mars",
+     "type": "Planet",
+     "body": "mars"
+    }
+   ]
+  },
+  {
+   "slug": "deep-impact",
+   "name": "Deep Impact",
+   "lid": "urn:nasa:pds:context:investigation:mission.deep_impact",
+   "start": "2005-01-12",
+   "end": "2005-07-13",
+   "description": "The Deep Impact mission consisted of an impactor and a fly-by spacecraft that rendezvoused with comet 9P/Tempel 1. The impactor was released to impact the comet surface on July 4 2005, while the flyby spacecraft observed.",
+   "targets": [
+    {
+     "lid": "urn:nasa:pds:context:target:calibrator.calibration",
+     "name": "CALIBRATION",
+     "type": "Calibrator",
+     "body": null
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:comet.9p_tempel_1",
+     "name": "9P/Tempel 1",
+     "type": "Comet",
+     "body": null
+    }
+   ]
+  },
+  {
+   "slug": "deep-space-1",
+   "name": "Deep Space 1",
+   "lid": "urn:nasa:pds:context:investigation:mission.deep_space_1",
+   "start": "1998-10-24",
+   "end": "2001-12-18",
+   "description": "The Deep Space 1 mission was a \"new technology\" mission that performed engineering tests of various technologies, including io propulsion and autonomous navigation. It also flew by asteroid (9660) Braille and Comet 19P/Borrelly.",
+   "targets": [
+    {
+     "lid": "urn:nasa:pds:context:target:comet.19p_borrelly",
+     "name": "19P/Borrelly",
+     "type": "Comet",
+     "body": null
+    }
+   ]
+  },
+  {
+   "slug": "deep-space-program-science-experiment",
+   "name": "Deep Space Program Science Experiment",
+   "lid": "urn:nasa:pds:context:investigation:mission.deep_space_program_science_experiment",
+   "start": "1991-11-19",
+   "end": "1994-05-07",
+   "description": "The Deep Space Program Science Experiment (DSPSE), the first in a series of technology demonstrations by the Ballistic Missile Defense Organization (BMDO) and NASA, was launched in 1994. The spacecraft, called Clementine, was expected to be 'lost and gone forever' after its brief mission, similar to the song it was named after.",
+   "targets": [
+    {
+     "lid": "urn:nasa:pds:context:target:satellite.earth.moon",
+     "name": "Moon",
+     "type": "Satellite",
+     "body": "moon"
+    }
+   ]
+  },
+  {
+   "slug": "double-asteroid-redirection-test",
+   "name": "Double Asteroid Redirection Test",
+   "lid": "urn:nasa:pds:context:investigation:mission.double_asteroid_redirection_test",
+   "start": null,
+   "end": null,
+   "description": "The DART mission was a planetary defense and technology demonstration mission that impacted the moon (Dimorphos) of the Didymos asteroid system to measure the effect on the moon's orbit.",
+   "targets": [
+    {
+     "lid": "urn:nasa:pds:context:target:asteroid.65803_didymos",
+     "name": "(65803) Didymos (1996 GT)",
+     "type": "Asteroid",
+     "body": null
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:satellite.65803_didymos.dimorphos",
+     "name": "(65803) Didymos I (Dimorphos)",
+     "type": "Asteroid",
+     "body": null
+    }
+   ]
+  },
+  {
+   "slug": "dscovr",
+   "name": "Deep Space Climate Observatory (DSCOVR)",
+   "lid": "urn:nasa:pds:context:investigation:mission.dscovr",
+   "start": "2015-02-11",
+   "end": null,
+   "description": "The Deep Space Climate Observatory (DSCOVR) mission monitors changes in the solar wind, providing space weather alerts and forecasts or geomagnetic storms that could disrupt power grids, satellites, telecommunications, aviation, and GPS. It orbits at the L1 (Lagrange 1) point between the Earth and the Sun and was launched on February 11, 2015.",
+   "targets": [
+    {
+     "lid": "urn:nasa:pds:context:target:planet.earth",
+     "name": "Earth",
+     "type": "Planet",
+     "body": "earth"
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:planet.jupiter",
+     "name": "Jupiter",
+     "type": "Planet",
+     "body": "jupiter"
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:satellite.earth.moon",
+     "name": "Moon",
+     "type": "Satellite",
+     "body": "moon"
+    }
+   ]
+  },
+  {
+   "slug": "epoxi",
+   "name": "EPOXI",
+   "lid": "urn:nasa:pds:context:investigation:mission.epoxi",
+   "start": "2007-09-26",
+   "end": "2013-09-20",
+   "description": "\"EPOXI\" is the moniket assigned to the two extended missions for the Deep Impact spacecraft: the Extrasolar Planet Observation and Characterization (EPOCh) Mission, and the Deep Impact Extended Investigation (DIXI) mission. As part of the DIXI mission, the spacecraft flew by Comet 103P/Hartley 2. As part of the EPOCh mission, the spacecraft used the larger of its two telescopes to find extrasolar planets using the transit method.",
+   "targets": [
+    {
+     "lid": "urn:nasa:pds:context:target:calibrator.calibration",
+     "name": "CALIBRATION",
+     "type": "Calibrator",
+     "body": null
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:comet.103p_hartley_2",
+     "name": "103P/Hartley 2",
+     "type": "Comet",
+     "body": null
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:comet.c2009_p1_garradd",
+     "name": "C/2009 P1 (Garradd)",
+     "type": "Comet",
+     "body": null
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:comet.c2012_s1_ison",
+     "name": "C/2012 S1 (ISON)",
+     "type": "Comet",
+     "body": null
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:planet.earth",
+     "name": "Earth",
+     "type": "Planet",
+     "body": "earth"
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:planet.mars",
+     "name": "Mars",
+     "type": "Planet",
+     "body": "mars"
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:star.1swasp_j175207.01_373246.3",
+     "name": "GSC 03089-00929",
+     "type": "Star",
+     "body": null
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:star.bd_36_2593",
+     "name": "HAT-P-4",
+     "type": "Star",
+     "body": null
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:star.bd_47_2846",
+     "name": "HAT-P-7",
+     "type": "Star",
+     "body": null
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:star.kepler-1",
+     "name": "GSC 03549-02811",
+     "type": "Star",
+     "body": null
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:star.moa_2009-blg-266",
+     "name": "MOA 2009-BLG-266",
+     "type": "Star",
+     "body": null
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:star.ross_905",
+     "name": "Gliese 436",
+     "type": "Star",
+     "body": null
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:star.wasp-3",
+     "name": "WASP-3",
+     "type": "Star",
+     "body": null
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:star.xo-2",
+     "name": "XO-2",
+     "type": "Star",
+     "body": null
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:star.xo-3",
+     "name": "XO-3",
+     "type": "Star",
+     "body": null
+    }
+   ]
+  },
+  {
+   "slug": "galileo",
+   "name": "Galileo",
+   "lid": "urn:nasa:pds:context:investigation:mission.galileo",
+   "start": "1977-10-01",
+   "end": "2003-09-21",
+   "description": "The Galileo was sent to Jupiter to study the planet and its moons. It was delivered to space on Space Shuttle Atlantis on October 18, 1989. It sent an atmospheric probe into Jupiter's atmosphere to study the composition.",
+   "targets": [
+    {
+     "lid": "urn:nasa:pds:context:target:asteroid.243_ida",
+     "name": "243 Ida",
+     "type": "Asteroid",
+     "body": "ida"
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:asteroid.951_gaspra",
+     "name": "951 Gaspra",
+     "type": "Asteroid",
+     "body": null
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:calibrator.calibration",
+     "name": "CALIBRATION",
+     "type": "Calibrator",
+     "body": null
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:planet.earth",
+     "name": "Earth",
+     "type": "Planet",
+     "body": "earth"
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:planet.jupiter",
+     "name": "Jupiter",
+     "type": "Planet",
+     "body": "jupiter"
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:planet.venus",
+     "name": "Venus",
+     "type": "Planet",
+     "body": "venus"
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:planetary_system.solar_system",
+     "name": "Solar System",
+     "type": "Planetary System",
+     "body": null
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:plasma_stream.solar_wind",
+     "name": "SOLAR WIND",
+     "type": "Plasma Stream",
+     "body": null
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:satellite.earth.moon",
+     "name": "Moon",
+     "type": "Satellite",
+     "body": "moon"
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:satellite.jupiter.amalthea",
+     "name": "Amalthea",
+     "type": "Satellite",
+     "body": "amalthea"
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:satellite.jupiter.callisto",
+     "name": "Callisto",
+     "type": "Satellite",
+     "body": "callisto"
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:satellite.jupiter.europa",
+     "name": "Europa",
+     "type": "Satellite",
+     "body": "europa"
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:satellite.jupiter.ganymede",
+     "name": "Ganymede",
+     "type": "Satellite",
+     "body": "ganymede"
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:satellite.jupiter.io",
+     "name": "Io",
+     "type": "Satellite",
+     "body": "io"
+    }
+   ]
+  },
+  {
+   "slug": "gravity-recovery-and-interior-laboratory",
+   "name": "Gravity Recovery and Interior Laboratory",
+   "lid": "urn:nasa:pds:context:investigation:mission.gravity_recovery_and_interior_laboratory",
+   "start": "2011-09-10",
+   "end": "2012-12-18",
+   "description": "Gravity Recovery and Interior Laboratory (GRAIL) consist of two small spacecrafts (GRAIL A [Ebb] and B [Flow]). It was launched on September 10, 2011. It used high-quality gravitational field mapping of the Moon to determine its interior structure. On August 31, 2012, the two spacecrafts started collecting data at a lower altitude.",
+   "targets": [
+    {
+     "lid": "urn:nasa:pds:context:target:satellite.earth.moon",
+     "name": "Moon",
+     "type": "Satellite",
+     "body": "moon"
+    }
+   ]
+  },
+  {
+   "slug": "hayabusa",
+   "name": "Hayabusa Mission",
+   "lid": "urn:nasa:pds:context:investigation:mission.hayabusa",
+   "start": "2003-05-09",
+   "end": "2010-06-13",
+   "description": "The Hayabusa (formerly MUSES-C) mission was a JAXA mission that successfully encountered and collected sampled from asteroid (25143) Itokawa in September-November 2005, returning those samples to Earth. The spacecraft itself burned up on reentry into Earth's atmosphere, as planned.",
+   "targets": [
+    {
+     "lid": "urn:nasa:pds:context:target:asteroid.25143_itokawa",
+     "name": "25143 Itokawa",
+     "type": "Asteroid",
+     "body": "itokawa"
+    }
+   ]
+  },
+  {
+   "slug": "hst",
+   "name": "HST",
+   "lid": "urn:nasa:pds:context:investigation:mission.hst",
+   "start": "1990-04-08",
+   "end": null,
+   "description": "The Hubble Space Telescope is a cooperative program of the European Space Agency (ESA) and the National Aeronautics and Space Administration (NASA) to operate a long-lived space-based observatory for the benefit of the international astronomical community. HST is an observatory first dreamt of in the 1940s, designed and built in the 1970s and 80s, and launched in the 1990s. HST was designed to be a different type of mission for NASA: a permanent space-based observatory. HST is a 2.4-meter, f/24 Ritchey-Chretien reflecting telescope capable of performing observations in the visible, near-ultraviolet, and near-infrared. It was deployed in low-Earth orbit (600 kilometers altitude) by the crew of the space shuttle Discovery (STS-31) on 25 April 1990. It was visited by astronauts for servicing missions five times, most recently in 2009.",
+   "targets": [
+    {
+     "lid": "urn:nasa:pds:context:target:dwarf_planet.134340_pluto",
+     "name": "(134340) Pluto",
+     "type": "Dwarf Planet",
+     "body": "pluto"
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:planet.jupiter",
+     "name": "Jupiter",
+     "type": "Planet",
+     "body": "jupiter"
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:planet.mars",
+     "name": "Mars",
+     "type": "Planet",
+     "body": "mars"
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:planet.mercury",
+     "name": "Mercury",
+     "type": "Planet",
+     "body": "mercury"
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:planet.neptune",
+     "name": "Neptune",
+     "type": "Planet",
+     "body": "neptune"
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:planet.saturn",
+     "name": "Saturn",
+     "type": "Planet",
+     "body": "saturn"
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:planet.uranus",
+     "name": "Uranus",
+     "type": "Planet",
+     "body": "uranus"
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:planet.venus",
+     "name": "Venus",
+     "type": "Planet",
+     "body": "venus"
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:satellite.saturn.dione",
+     "name": "Dione",
+     "type": "Satellite",
+     "body": "dione"
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:satellite.saturn.enceladus",
+     "name": "Enceladus",
+     "type": "Satellite",
+     "body": "enceladus"
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:satellite.saturn.epimetheus",
+     "name": "Epimetheus",
+     "type": "Satellite",
+     "body": null
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:satellite.saturn.helene",
+     "name": "Helene",
+     "type": "Satellite",
+     "body": null
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:satellite.saturn.hyperion",
+     "name": "Hyperion",
+     "type": "Satellite",
+     "body": "hyperion"
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:satellite.saturn.janus",
+     "name": "Janus",
+     "type": "Satellite",
+     "body": null
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:satellite.saturn.mimas",
+     "name": "Mimas",
+     "type": "Satellite",
+     "body": "mimas"
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:satellite.saturn.pandora",
+     "name": "Pandora",
+     "type": "Satellite",
+     "body": null
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:satellite.saturn.prometheus",
+     "name": "Prometheus",
+     "type": "Satellite",
+     "body": null
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:satellite.saturn.rhea",
+     "name": "Rhea",
+     "type": "Satellite",
+     "body": "rhea"
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:satellite.saturn.tethys",
+     "name": "Tethys",
+     "type": "Satellite",
+     "body": "tethys"
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:satellite.saturn.titan",
+     "name": "Titan",
+     "type": "Satellite",
+     "body": "titan"
+    }
+   ]
+  },
+  {
+   "slug": "infrared-astronomical-satellite",
+   "name": "Infrared Astronomical Satellite",
+   "lid": "urn:nasa:pds:context:investigation:mission.infrared_astronomical_satellite",
+   "start": "1983-01-26",
+   "end": "1983-11-23",
+   "description": "The IRAS mission was a joint program of the USA, the Netherlands, and the UK to conduct a survey of the sky in four IR wavelengths. It also made pointed observatons of selected astronomical and solar system objects.",
+   "targets": []
+  },
+  {
+   "slug": "insight",
+   "name": "InSight Lander",
+   "lid": "urn:nasa:pds:context:investigation:mission.insight",
+   "start": "2018-05-05",
+   "end": "2022-12-15",
+   "description": "NASA's InSight Lander mission placed a lander on Mars that deployed a seismometer and a heat-flow probe, along with cameras, a magnetometer, a meteorology experiment, and a radio science experiment.",
+   "targets": [
+    {
+     "lid": "urn:nasa:pds:context:target:planet.mars",
+     "name": "Mars",
+     "type": "Planet",
+     "body": "mars"
+    }
+   ]
+  },
+  {
+   "slug": "international-cometary-explorer",
+   "name": "International Cometary Explorer",
+   "lid": "urn:nasa:pds:context:investigation:mission.international_cometary_explorer",
+   "start": "1983-12-22",
+   "end": null,
+   "description": "The International Cometary Explorer (ICE) became part of the Halley Armada to study comet Halley in 1986. It was first place in the Earth-Sun L1 position under the name of International Sun/Earth Explorer 3 (ISEE-3). It was to study the Sun-Earth relationship beyond the Earth's magnetosphere. As the part of the armada, it went through the tail of Halley to collect data. In 2014, a crowdfunding group tried to use it for another comet pass, but it lost contact with the spacecraft.",
+   "targets": [
+    {
+     "lid": "urn:nasa:pds:context:target:comet.21p_giacobini-zinner",
+     "name": "21P/Giacobini-Zinner",
+     "type": "Comet",
+     "body": null
+    }
+   ]
+  },
+  {
+   "slug": "juno",
+   "name": "Juno",
+   "lid": "urn:nasa:pds:context:investigation:mission.juno",
+   "start": "2011-08-05",
+   "end": null,
+   "description": "Juno is a spacecraft that was launched on August 5, 2011 and arrived at Jupiter in July 2016. Juno is orbiting Jupiter and its prime mission was 32 high inclination, high eccentricity orbits of the planet, acquiring data at each periapsis for several hours. Juno has been taking measurements to help finding clues about how the planet formed, its composition, including its rocky core, and its atmospheric structure and turbulences. The mission was extended for an additional 40 orbits that should continue until September 2025. These orbits have shorter periods, going from ~43 days to ~38 days, and currently at ~33 days. The reduction in the orbial periods allows Juno to conduct close flybys of Ganymede, Europa, Io, and Jupiter's ring system, as well as gather more information about Jupiter's northern hemisphere.",
+   "targets": [
+    {
+     "lid": "urn:nasa:pds:context:target:dust.dust",
+     "name": "DUST",
+     "type": "Dust",
+     "body": null
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:planet.earth",
+     "name": "Earth",
+     "type": "Planet",
+     "body": "earth"
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:planet.jupiter",
+     "name": "Jupiter",
+     "type": "Planet",
+     "body": "jupiter"
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:planetary_system.solar_system",
+     "name": "Solar System",
+     "type": "Planetary System",
+     "body": null
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:plasma_stream.solar_wind",
+     "name": "SOLAR WIND",
+     "type": "Plasma Stream",
+     "body": null
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:satellite.earth.moon",
+     "name": "Moon",
+     "type": "Satellite",
+     "body": "moon"
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:satellite.jupiter.callisto",
+     "name": "Callisto",
+     "type": "Satellite",
+     "body": "callisto"
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:satellite.jupiter.europa",
+     "name": "Europa",
+     "type": "Satellite",
+     "body": "europa"
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:satellite.jupiter.ganymede",
+     "name": "Ganymede",
+     "type": "Satellite",
+     "body": "ganymede"
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:satellite.jupiter.io",
+     "name": "Io",
+     "type": "Satellite",
+     "body": "io"
+    }
+   ]
+  },
+  {
+   "slug": "kaguya",
+   "name": "Kaguya",
+   "lid": "urn:nasa:pds:context:investigation:mission.kaguya",
+   "start": "2007-09-14",
+   "end": "2009-06-10",
+   "description": "SELENE, Japan's second lunar probe, was renamed Kaguya (Moon Princess) after launch following a public poll. Its mission aimed to orbit the Moon and gather data on its origins, geological evolution, and surface environment, while also conducting radio science experiments. The mission included two small sub-satellites, originally named Relay Satellite (Rstar) and VRAD satellite (Vstar), which were renamed Okina and Ouna, meaning \"honorable elderly man\" and \"honorable elderly woman.\"",
+   "targets": [
+    {
+     "lid": "urn:nasa:pds:context:target:satellite.earth.moon",
+     "name": "Moon",
+     "type": "Satellite",
+     "body": "moon"
+    }
+   ]
+  },
+  {
+   "slug": "ladee",
+   "name": "Lunar Atmosphere and Dust Environment Explorer (LADEE)",
+   "lid": "urn:nasa:pds:context:investigation:mission.ladee",
+   "start": "2013-09-01",
+   "end": "2014-02-17",
+   "description": "The Lunar Atmosphere and Dust Environment Explorer (LADEE) was a robotic mission that, from low lunar orbit, gathered detailed information about the lunar atmosphere, conditions near the surface and environmental influences on lunar dust. LADEE was launched in September 2013 and carried out lunar orbital operations for 223 days, concluding when the spacecraft was decommissioned by impact into the moon in April 2014.",
+   "targets": [
+    {
+     "lid": "urn:nasa:pds:context:target:satellite.earth.moon",
+     "name": "Moon",
+     "type": "Satellite",
+     "body": "moon"
+    }
+   ]
+  },
+  {
+   "slug": "light-italian-cubesat-for-imaging-of-asteroids",
+   "name": "Light Italian CubeSat for Imaging of Asteroids",
+   "lid": "urn:nasa:pds:context:investigation:mission.light_italian_cubesat_for_imaging_of_asteroids",
+   "start": "2021-11-24",
+   "end": null,
+   "description": "The LICIACube mission was a mission of the Agenzia Spaziale Italiana (ASI) that was carried by the Double Asteroid Redirection Test (DART) mission impactor spacecraft to the vicinity of the Didymos system. It was then released 15 days before the DART impact into Dimorphos to observe the impact and aftermath of the collision of DART with Dimorphos.",
+   "targets": [
+    {
+     "lid": "urn:nasa:pds:context:target:asteroid.65803_didymos",
+     "name": "(65803) Didymos (1996 GT)",
+     "type": "Asteroid",
+     "body": null
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:satellite.65803_didymos.dimorphos",
+     "name": "(65803) Didymos I (Dimorphos)",
+     "type": "Asteroid",
+     "body": null
+    }
+   ]
+  },
+  {
+   "slug": "lucy",
+   "name": "Lucy MIssion",
+   "lid": "urn:nasa:pds:context:investigation:mission.lucy",
+   "start": "2021-10-16",
+   "end": null,
+   "description": "Lucy will be the first space mission to explore a population of small bodies known as the JupiterTrojan asteroids. This mission plan includes encounters with three main belt alsteroid and eight Jupiter Trojans. The Lucy spacecraft also observed the impact of the DART spacecraft into the Dimorphos, the moon of the Didymos system.",
+   "targets": [
+    {
+     "lid": "urn:nasa:pds:context:target:asteroid.11351_leucus",
+     "name": "(11351) Leucus",
+     "type": "Asteroid",
+     "body": null
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:asteroid.15094_polymele",
+     "name": "(15094) Polymele",
+     "type": "Asteroid",
+     "body": null
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:asteroid.152830_dinkinesh",
+     "name": "(152830) Dinkinesh",
+     "type": "Asteroid",
+     "body": null
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:asteroid.21900_orus",
+     "name": "(21900) Orus",
+     "type": "Asteroid",
+     "body": null
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:asteroid.3548_eurybates",
+     "name": "(3548) Eurybates",
+     "type": "Asteroid",
+     "body": null
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:asteroid.52246_donaldjohanson",
+     "name": "(52246) Donaldjohanson",
+     "type": "Asteroid",
+     "body": null
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:asteroid.617_patroclus",
+     "name": "617 Patroclus",
+     "type": "Asteroid",
+     "body": null
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:satellite.617_patroclus.menoetius",
+     "name": "(617) Patroclus I (Menoetius)",
+     "type": "Asteroid",
+     "body": null
+    }
+   ]
+  },
+  {
+   "slug": "lunar-crater-observation-and-sensing-satellite",
+   "name": "Lunar Crater Observation and Sensing Satellite",
+   "lid": "urn:nasa:pds:context:investigation:mission.lunar_crater_observation_and_sensing_satellite",
+   "start": "2009-06-18",
+   "end": "2009-10-09",
+   "description": "LCROSS launched as a secondary payload with Lunar Reconnaissance Orbiter (LRO) on June 18, 2009. After trans-lunar injection, LRO separated and performed its mission. The LCROSS Shepherding Spacecraft (SSC) remained attached to the spent Atlas upper stage, called the Centaur. Over 112 days, the Shepherding Spacecraft adjusted the Centaur's course to bring it to an impact within the Cabeus Crater near the South Pole of the moon. It impacted on October 9, 2009. LCROSS used the Centaur as a 2300 kg kinetic impactor with more than 200 times the energy of the Lunar Prospector (LP) impact to excavate more than 250 metric tons of lunar regolith. The resulting ejecta cloud was observed from a number of Lunar-orbital and Earth-based assets, and the LCROSS spacecraft. After releasing the Centaur, the SSC flew toward the impact plume, sending real-time data to characterize the morphology, evolution and composition of the plume with a suite of cameras and spectrometers. The SSC then became a 700 kg impactor itself, providing a second opportunity to study the nature of the Lunar Regolith.",
+   "targets": [
+    {
+     "lid": "urn:nasa:pds:context:target:satellite.earth.moon",
+     "name": "Moon",
+     "type": "Satellite",
+     "body": "moon"
+    }
+   ]
+  },
+  {
+   "slug": "lunar-prospector",
+   "name": "Lunar Prospector",
+   "lid": "urn:nasa:pds:context:investigation:mission.lunar_prospector",
+   "start": "1998-01-06",
+   "end": "1999-07-31",
+   "description": "The Lunar Prospector (LP) Mission consisted of a spin-stabilized orbiter spacecraft designed to perform continuous mapping of the Moon from a circular polar orbit. The LP spacecraft was launched on January 7, 1998 (UTC). The primary mapping mission began on January 16, 1998 and lasted for one year. During most of the mapping mission, the spacecraft mapped the surface from a 118-minute, circular, polar orbit 100 km above the moon's surface. Starting on December 19, 1998, the spacecraft was maneuvered into a 40 km orbit as a transition into a low altitude extended mission orbit. The transition orbit was used to collect gravity data in order to verify the moon's gravity model in preparation for conducting the extended mission orbit. The extended mission began on January 16, 1999. The objective of the extended mission was to provide higher resolution mapping from a circular, polar orbit averaging 30 km above the moon's surface. The Lunar Prospector mission ended on July 31, 1999 when the spacecraft was intentionally impacted into a crater near the south pole. The impact site was targeted for one of the hydrogen deposits detected by Lunar Prospector's Neutron Spectrometer.",
+   "targets": [
+    {
+     "lid": "urn:nasa:pds:context:target:satellite.earth.moon",
+     "name": "Moon",
+     "type": "Satellite",
+     "body": "moon"
+    }
+   ]
+  },
+  {
+   "slug": "lunar-reconnaissance-orbiter",
+   "name": "Lunar Reconnaissance Orbiter",
+   "lid": "urn:nasa:pds:context:investigation:mission.lunar_reconnaissance_orbiter",
+   "start": "2009-06-18",
+   "end": null,
+   "description": "The Lunar Reconnaissance Orbiter (LRO), launched on June 18, 2009, continues to orbit and investigate the Moon. The mission objectives include producing a high-resolution global topographic model, mapping the distribution of hydrogen, and identifying lunar landing sites and associated hazards.",
+   "targets": [
+    {
+     "lid": "urn:nasa:pds:context:target:satellite.earth.moon",
+     "name": "Moon",
+     "type": "Satellite",
+     "body": "moon"
+    }
+   ]
+  },
+  {
+   "slug": "lunar-trailblazer",
+   "name": "Lunar Trailblazer",
+   "lid": "urn:nasa:pds:context:investigation:mission.lunar_trailblazer",
+   "start": "2025-02-01",
+   "end": null,
+   "description": "Lunar Trailblazer is a NASA SIMPLEX mission to acquire simultaneous, nested high-resolution near-infrared spectral images and thermal infrared data. The payload consists of the High-resolution Volatiles and Minerals Moon Mapper (HVM3) and the Lunar Thermal Mapper (LTM). The mission will study the mineralogy of the lunar surface at all latitudes, including within Permanently Shadowed Regions.",
+   "targets": [
+    {
+     "lid": "urn:nasa:pds:context:target:satellite.earth.moon",
+     "name": "Moon",
+     "type": "Satellite",
+     "body": "moon"
+    }
+   ]
+  },
+  {
+   "slug": "magellan",
+   "name": "Magellan",
+   "lid": "urn:nasa:pds:context:investigation:mission.magellan",
+   "start": "1989-05-04",
+   "end": "1994-10-12",
+   "description": "Magellan is a spacecraft that was sent to Venus to study the surface of the planet. It was launched on May 4, 1989 by the Space Shuttle Atlantis. It mapped the surface by radar.",
+   "targets": [
+    {
+     "lid": "urn:nasa:pds:context:target:planet.venus",
+     "name": "Venus",
+     "type": "Planet",
+     "body": "venus"
+    }
+   ]
+  },
+  {
+   "slug": "mariner-10",
+   "name": "Mariner 10",
+   "lid": "urn:nasa:pds:context:investigation:mission.mariner_10",
+   "start": "1973-11-03",
+   "end": "1975-03-24",
+   "description": "Mariner 10 is a spacecraft launched on November 3, 1973, that conducted flybys of Mercury and Venus. It was the first spacecraft to utilize gravity assist for its journey.",
+   "targets": [
+    {
+     "lid": "urn:nasa:pds:context:target:planet.mercury",
+     "name": "Mercury",
+     "type": "Planet",
+     "body": "mercury"
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:planet.venus",
+     "name": "Venus",
+     "type": "Planet",
+     "body": "venus"
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:plasma_stream.solar_wind",
+     "name": "SOLAR WIND",
+     "type": "Plasma Stream",
+     "body": null
+    }
+   ]
+  },
+  {
+   "slug": "mariner67",
+   "name": "Mariner 67",
+   "lid": "urn:nasa:pds:context:investigation:mission.mariner67",
+   "start": "1967-06-14",
+   "end": "1968-11-05",
+   "description": "The Mariner 67 mission, consisting of the Mariner 5 spacecraft, flew by Venus on 19 October 1967 at an altitude of 4094 km. It returned data data on both interplanetary and Venusian magnetic fields, charged particles, and plasmas, as well as radio refractivity and UV emissions of the Venusian atmosphere. Contact was lost on 7 December, and operations ended 5 November 1968.",
+   "targets": [
+    {
+     "lid": "urn:nasa:pds:context:target:planet.venus",
+     "name": "Venus",
+     "type": "Planet",
+     "body": "venus"
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:plasma_stream.solar_wind",
+     "name": "SOLAR WIND",
+     "type": "Plasma Stream",
+     "body": null
+    }
+   ]
+  },
+  {
+   "slug": "mariner69",
+   "name": "Mariner 69",
+   "lid": "urn:nasa:pds:context:investigation:mission.mariner69",
+   "start": "1969-02-24",
+   "end": "1970-12-28",
+   "description": "The Mariner 69 mission involved two uncrewed NASA spacecraft, Mariner 6 and Mariner 7, which completed the first dual mission to Mars in 1969 under the Mariner program. Mariner 6 launched from Launch Complex 36B and Mariner 7 from Launch Complex 36A at Cape Canaveral Air Force Station. Both spacecraft flew over Mars' equator and south polar regions, analyzing the atmosphere and surface using remote sensors. They recorded and relayed hundreds of images back to Earth. The mission aimed to study Mars' surface and atmosphere during close flybys, laying the groundwork for future investigations, particularly the search for extraterrestrial life. Additionally, it aimed to develop and demonstrate technologies needed for future Mars missions. Mariner 6 also provided valuable experience and data to aid the Mariner 7 encounter five days later.",
+   "targets": [
+    {
+     "lid": "urn:nasa:pds:context:target:planet.mars",
+     "name": "Mars",
+     "type": "Planet",
+     "body": "mars"
+    }
+   ]
+  },
+  {
+   "slug": "mariner71",
+   "name": "Mariner 9",
+   "lid": "urn:nasa:pds:context:investigation:mission.mariner71",
+   "start": "1968-06-01",
+   "end": "1973-06-01",
+   "description": "On November 14, 1971, Mariner 9 became the first spacecraft to orbit another planet when it established orbit around Mars. Six experiments were carried as part of the science payload: television, ultraviolet spectrometer, infrared spectroscopy, infrared radiometry, S-band occultation and celestial mechanics. The mission was originally planned as a pair, similar to the Mariner 6 and 7 missions, but Mariner 8 was lost because of guidance difficulties in the second stage of the launch vehicle. It was determined that an orbit for a single-spacecraft mission could be developed to meet all basic mission and specific science objectives. A single-spacecraft plan, involving an inclination of 65 degrees, a period of about 12 hours, a periapsis altitude of 1350 Km, and an arrival date of November 14, 1971, was evaluated and formalized in 2 weeks. Mariner 9 carried on the Mariner program investigation of the Martian atmosphere, and mapping of the Martian surface at the highest resolution yet achieved at the time.",
+   "targets": [
+    {
+     "lid": "urn:nasa:pds:context:target:planet.mars",
+     "name": "Mars",
+     "type": "Planet",
+     "body": "mars"
+    }
+   ]
+  },
+  {
+   "slug": "mars-exploration-rover",
+   "name": "Mars Exploration Rovers: Spirit and Opportunity",
+   "lid": "urn:nasa:pds:context:investigation:mission.mars_exploration_rover",
+   "start": "2000-05-08",
+   "end": "2019-02-13",
+   "description": "NASA's twin rovers, Spirit and Opportunity, landed on Mars on Jan. 3 and Jan. 24, 2004 PST (Jan. 4 and Jan. 25 UTC), respectively. The rovers were planned as 90-day missions to search for geological clues regarding environmental conditions on early Mars, and assess whether those environments were conducive to life. Spirit lasted 20 times longer than its original design, concluding its mission on March 22, 2010. Opportunity worked for nearly 15 years on Mars and broke the driving record for putting the most miles on its odometer, ending its mission on Feb. 13, 2019.",
+   "targets": [
+    {
+     "lid": "urn:nasa:pds:context:target:planet.mars",
+     "name": "Mars",
+     "type": "Planet",
+     "body": "mars"
+    }
+   ]
+  },
+  {
+   "slug": "mars-global-surveyor",
+   "name": "Mars Global Surveyor",
+   "lid": "urn:nasa:pds:context:investigation:mission.mars_global_surveyor",
+   "start": "1994-10-12",
+   "end": "2006-11-14",
+   "description": "Mars Global Surveyor was an orbiting spacecraft that looped around the Red Planet for a decade. The mission overhauled scientists' understanding of Mars by studying the entire Martian surface, atmosphere, and interior. Major findings included dramatic evidence that water still flows on Mars in short bursts down hillside gullies, and the identification of water-related mineral deposits leading to selection of a Mars rover landing site for a subsequent mission. The mission continued sending images and other data until November 2006, when it went silent due to a series of events linked to a computer error likely caused by battery failure.",
+   "targets": [
+    {
+     "lid": "urn:nasa:pds:context:target:planet.mars",
+     "name": "Mars",
+     "type": "Planet",
+     "body": "mars"
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:satellite.mars.phobos",
+     "name": "Phobos",
+     "type": "Satellite",
+     "body": "phobos"
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:star.sun",
+     "name": "Sun",
+     "type": "Star",
+     "body": "sun"
+    }
+   ]
+  },
+  {
+   "slug": "mars-observer",
+   "name": "Mars Observer",
+   "lid": "urn:nasa:pds:context:investigation:mission.mars_observer",
+   "start": "1992-09-25",
+   "end": "1993-08-21",
+   "description": "Mars Observer was launched on September 25, 1992, from Cape Canaveral using a Titan III rocket. However, on August 21, 1993, contact was lost during the pre-Mars-Orbit-Insertion sequence, and efforts to re-establish communication failed. The spacecraft was intended to enter an elliptical orbit around Mars, subsequently adjusting to a near-circular, low altitude, sun-synchronous orbit for global mapping over a Martian year. The mission planned for continuous data collection and playback, with specific orbit trim adjustments for uniform coverage. Mars Observer featured a stabilized platform for its scientific instruments, including a Gamma Ray Spectrometer and Magnetometer. However, it lacked a movable scanning platform, relying instead on internal scanning mechanisms for its observations.",
+   "targets": [
+    {
+     "lid": "urn:nasa:pds:context:target:planet.mars",
+     "name": "Mars",
+     "type": "Planet",
+     "body": "mars"
+    }
+   ]
+  },
+  {
+   "slug": "mars-pathfinder",
+   "name": "Mars Pathfinder",
+   "lid": "urn:nasa:pds:context:investigation:mission.mars_pathfinder",
+   "start": "1993-11-01",
+   "end": "1998-03-10",
+   "description": "The Mars Pathfinder mission, designed to demonstrate a low-cost method for delivering a set of science instruments to the Red Planet, was the first wheeled vehicle to be used on any other planet in the solar system and served as the foundation for the Mars rovers of today. The mission landed a rover -- Sojourner -- on the surface of Mars using an air bag landing system and innovative petal design, which have been used since in various incarnations to land other rovers on the Red Planet. Sojourner spent 83 days of a planned seven-day mission exploring the Martian terrain, snapping photographs and taking chemical, atmospheric and other measurements",
+   "targets": [
+    {
+     "lid": "urn:nasa:pds:context:target:planet.mars",
+     "name": "Mars",
+     "type": "Planet",
+     "body": "mars"
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:satellite.mars.deimos",
+     "name": "Deimos",
+     "type": "Satellite",
+     "body": "deimos"
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:satellite.mars.phobos",
+     "name": "Phobos",
+     "type": "Satellite",
+     "body": "phobos"
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:star.sun",
+     "name": "Sun",
+     "type": "Star",
+     "body": "sun"
+    }
+   ]
+  },
+  {
+   "slug": "mars-reconnaissance-orbiter",
+   "name": "Mars Reconnaissance Orbiter",
+   "lid": "urn:nasa:pds:context:investigation:mission.mars_reconnaissance_orbiter",
+   "start": "2005-08-12",
+   "end": null,
+   "description": "The Mars Reconnaissance Orbiter, or MRO, has studied the Red Planet's atmosphere and terrain from orbit since 2006 and also serves as a key data relay station for other Mars missions, including the Mars Exploration Rover Opportunity. Equipped with a powerful camera called HiRISE that has aided in a number of discoveries, the Mars Reconnaissance Orbiter has sent back thousands of stunning images of the Martian surface that are helping scientists learn more about Mars, including the history of water flows on or near the planet's surface.",
+   "targets": [
+    {
+     "lid": "urn:nasa:pds:context:target:planet.mars",
+     "name": "Mars",
+     "type": "Planet",
+     "body": "mars"
+    }
+   ]
+  },
+  {
+   "slug": "mars-science-laboratory",
+   "name": "Mars Science Laboratory",
+   "lid": "urn:nasa:pds:context:investigation:mission.mars_science_laboratory",
+   "start": "2003-10-01",
+   "end": null,
+   "description": "The Mars Science Laboratory (MSL) project, initiated in 2003, marked a significant advancement in Mars exploration with the successful deployment of the Curiosity rover. Launched on November 26, 2011, and landing in Gale Crater on August 6, 2012, the MSL mission has broadened our understanding of Martian environments and their potential habitability. Throughout its journey to Mars, and during its primary mission which concluded on September 28, 2014, Curiosity undertook comprehensive scientific investigations. These included routine instrument health checks and data collection by the Radiation Assessment Detector (RAD) during transit. On the Martian surface, Curiosity's primary objectives were to assess the biological potential of the landing site, characterize the landing region's geology, study planetary processes relevant to habitability, and quantify the spectrum of surface radiation. The rover gathered crucial data through imaging, spectroscopy, and other analytic techniques to evaluate the composition of Martian soils, rocks, and the atmosphere. These efforts have provided vital insights into Mars' habitability and environmental history. The continuation of these scientific objectives into Curiosity’s first extended mission aims to deepen the exploration of potentially habitable environments that could also preserve organic compounds. Additionally, the mission focuses on exploring and characterizing significant geological transitions in the region surrounding the foothills of Mt. Sharp. This ongoing research is pivotal for understanding the past and present potential for life on Mars and informs future exploratory missions to the Red Planet.",
+   "targets": [
+    {
+     "lid": "urn:nasa:pds:context:target:planet.mars",
+     "name": "Mars",
+     "type": "Planet",
+     "body": "mars"
+    }
+   ]
+  },
+  {
+   "slug": "mars2020",
+   "name": "Mars 2020: Perseverance Rover",
+   "lid": "urn:nasa:pds:context:investigation:mission.mars2020",
+   "start": "2020-07-30",
+   "end": null,
+   "description": "The Mars 2020 Perseverance Rover searches for signs of ancient microbial life, to advance NASA's quest to explore the past habitability of Mars. The rover is collecting core samples of Martian rock and soil (broken rock and soil), for potential pickup by a future mission that would bring them to Earth for detailed study.",
+   "targets": [
+    {
+     "lid": "urn:nasa:pds:context:target:planet.mars",
+     "name": "Mars",
+     "type": "Planet",
+     "body": "mars"
+    }
+   ]
+  },
+  {
+   "slug": "maven",
+   "name": "Mars Atmosphere and Volatile EvolutioN",
+   "lid": "urn:nasa:pds:context:investigation:mission.maven",
+   "start": "2013-11-13",
+   "end": null,
+   "description": "The Mars Atmosphere and Volatile Evolution (MAVEN) spacecraft was sent to Mars to study the atmosphere. It was launched on November 18, 2013. It would study the loss of volatiles, current state of the upper atmosphere, rate of escape for the gases, and ratios of stable isotopes. In 2017, the orbit was changed to be part of the communications relay for Mars.",
+   "targets": [
+    {
+     "lid": "urn:nasa:pds:context:target:planet.mars",
+     "name": "Mars",
+     "type": "Planet",
+     "body": "mars"
+    }
+   ]
+  },
+  {
+   "slug": "messenger",
+   "name": "MErcury Surface, Space ENvironment, GEochemistry, and Ranging",
+   "lid": "urn:nasa:pds:context:investigation:mission.messenger",
+   "start": "2004-08-03",
+   "end": "2015-04-30",
+   "description": "Mercury Surface, Space Environment, Geochemistry, and Ranging (MESSENGER) launched in August 2004. It entered into orbit around Mercury on March 18, 2011. It was to study the chemical composition, geology, and magnetic field of Mercury. It impacted the planet on April 30, 2015.",
+   "targets": [
+    {
+     "lid": "urn:nasa:pds:context:target:calibrator.calibration",
+     "name": "CALIBRATION",
+     "type": "Calibrator",
+     "body": null
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:planet.earth",
+     "name": "Earth",
+     "type": "Planet",
+     "body": "earth"
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:planet.mercury",
+     "name": "Mercury",
+     "type": "Planet",
+     "body": "mercury"
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:planet.venus",
+     "name": "Venus",
+     "type": "Planet",
+     "body": "venus"
+    }
+   ]
+  },
+  {
+   "slug": "midcourse-space-experiment",
+   "name": "Midcourse Space Experiment",
+   "lid": "urn:nasa:pds:context:investigation:mission.midcourse_space_experiment",
+   "start": "1996-04-24",
+   "end": "1997-02-26",
+   "description": "The Midcourse Space Experiment (MSX) was launched in 1996 by the U.S. Ballistic Missile Defence Organization (renamed the \"Missile Defense Agency\" in 2002) as a technology demonstration mission. Part of its mission included mapping the galactic plane in the Infrared, imaging the moon, and surveying small bodies.",
+   "targets": [
+    {
+     "lid": "urn:nasa:pds:context:target:dust.dust",
+     "name": "DUST",
+     "type": "Dust",
+     "body": null
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:satellite.earth.moon",
+     "name": "Moon",
+     "type": "Satellite",
+     "body": "moon"
+    }
+   ]
+  },
+  {
+   "slug": "near-earth-asteroid-rendezvous",
+   "name": "Near Earth Asteroid Rendezvous Mission",
+   "lid": "urn:nasa:pds:context:investigation:mission.near_earth_asteroid_rendezvous",
+   "start": "1996-02-17",
+   "end": "2001-02-28",
+   "description": "The Near Earth Asteroid Rendezvous (NEAR) mission to the near-earth asteroid 433 Eros was launched in Feb. 1996 and carried out Eros orbital operations from Feb. 2000 through Feb. 2001. It acquired the first comprehensive, spatially resolved measurements of the geomorphology, reflectance spectral properties, and shape of an asteroid, and X-ray and gamma-ray spectral measurements of elemental abundances from orbit and the surface. The ambient magnetic field in the vicinity of Eros was also measured. On the way to Eros, the spacecraft also performed a flyby of the asteroid 253 Mathilde in June 1997, obtaining image data and a mass determination.",
+   "targets": [
+    {
+     "lid": "urn:nasa:pds:context:target:asteroid.253_mathilde",
+     "name": "253 Mathilde",
+     "type": "Asteroid",
+     "body": null
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:asteroid.433_eros",
+     "name": "433 Eros",
+     "type": "Asteroid",
+     "body": "eros"
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:comet.c1996_b2_hyakutake",
+     "name": "C/1996 B2 (Hyakutake)",
+     "type": "Comet",
+     "body": null
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:magnetic_field.interplanetary_magnetic_field",
+     "name": "Interplanetary Magnetic Field",
+     "type": "Magnetic Field",
+     "body": null
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:planet.earth",
+     "name": "Earth",
+     "type": "Planet",
+     "body": "earth"
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:planetary_system.solar_system",
+     "name": "Solar System",
+     "type": "Planetary System",
+     "body": null
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:satellite.earth.moon",
+     "name": "Moon",
+     "type": "Satellite",
+     "body": "moon"
+    }
+   ]
+  },
+  {
+   "slug": "neas",
+   "name": "Near Earth Asteroid Scout Mission",
+   "lid": "urn:nasa:pds:context:investigation:mission.neas",
+   "start": "2021-11-23",
+   "end": null,
+   "description": "The NEAS mission was intended as a technology test/demonstration for developing a CubetSat with a solar sail that could be deployed to Near-Earth Asteroids (NEA). It was one of 10 CubeSats launched on Artemis 1 on 16 November 2022. The mission was lost when no communication could be established with the CubeSat post-launch.",
+   "targets": [
+    {
+     "lid": "urn:nasa:pds:context:target:asteroid.16_psyche",
+     "name": "16 Psyche",
+     "type": "Asteroid",
+     "body": "psyche"
+    }
+   ]
+  },
+  {
+   "slug": "neowise",
+   "name": "Near-Earth Object Wide-Field Infrared Survey Explorer",
+   "lid": "urn:nasa:pds:context:investigation:mission.neowise",
+   "start": "2013-12-23",
+   "end": "2020-12-31",
+   "description": "The NEOWISE mission reactivated the Wide-Field Infrared Survey Explorere (WISE) spacecraft to hunt for asteroids and comets, including those that could pose a threat to Earth. The NEOWISE mission ran from December 2013 to JUly 31, 2024. The WISE spacecraft burned up on reentry to Earth's atmosphere on November 1, 2024.",
+   "targets": []
+  },
+  {
+   "slug": "new-horizons",
+   "name": "New Horizons",
+   "lid": "urn:nasa:pds:context:investigation:mission.new_horizons",
+   "start": "2006-01-19",
+   "end": "2016-10-26",
+   "description": "New Horizons mission was the first to fly by and study the dwarf planet Pluto and its moons Charon, Nix, and Hydra. As the New Horizons spacecraft passed through the Jovian system for a gravity assist in February of 2007, it performed scientific observations of Jupiter, the Galilean satellites, the Jovian rings, Himalia, Elara, and Earth. After the successfull flyby of Pluto on July 14, 2015, the spacecraft continued on for extended missions in the Kuiper Belt.",
+   "targets": [
+    {
+     "lid": "urn:nasa:pds:context:target:dust.dust",
+     "name": "DUST",
+     "type": "Dust",
+     "body": null
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:dwarf_planet.134340_pluto",
+     "name": "(134340) Pluto",
+     "type": "Dwarf Planet",
+     "body": "pluto"
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:planet.earth",
+     "name": "Earth",
+     "type": "Planet",
+     "body": "earth"
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:planet.jupiter",
+     "name": "Jupiter",
+     "type": "Planet",
+     "body": "jupiter"
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:plasma_stream.solar_wind",
+     "name": "SOLAR WIND",
+     "type": "Plasma Stream",
+     "body": null
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:ring.jupiter.rings",
+     "name": "Jupiter Rings",
+     "type": "Ring",
+     "body": null
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:satellite.134340_pluto.charon",
+     "name": "Charon",
+     "type": "Satellite",
+     "body": "charon"
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:satellite.134340_pluto.hydra",
+     "name": "Hydra",
+     "type": "Satellite",
+     "body": "hydra"
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:satellite.134340_pluto.kerberos",
+     "name": "Kerberos",
+     "type": "Satellite",
+     "body": "kerberos"
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:satellite.134340_pluto.nix",
+     "name": "Nix",
+     "type": "Satellite",
+     "body": "nix"
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:satellite.134340_pluto.styx",
+     "name": "Styx",
+     "type": "Satellite",
+     "body": "styx"
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:satellite.jupiter.callirrhoe",
+     "name": "Callirrhoe",
+     "type": "Satellite",
+     "body": null
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:satellite.jupiter.callisto",
+     "name": "Callisto",
+     "type": "Satellite",
+     "body": "callisto"
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:satellite.jupiter.elara",
+     "name": "Elara",
+     "type": "Satellite",
+     "body": null
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:satellite.jupiter.europa",
+     "name": "Europa",
+     "type": "Satellite",
+     "body": "europa"
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:satellite.jupiter.ganymede",
+     "name": "Ganymede",
+     "type": "Satellite",
+     "body": "ganymede"
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:satellite.jupiter.himalia",
+     "name": "Himalia",
+     "type": "Satellite",
+     "body": null
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:satellite.jupiter.io",
+     "name": "Io",
+     "type": "Satellite",
+     "body": "io"
+    }
+   ]
+  },
+  {
+   "slug": "new-horizons-kem1",
+   "name": "New Horizons Kuiper Belt Extended Mission 1",
+   "lid": "urn:nasa:pds:context:investigation:mission.new_horizons_kem1",
+   "start": "2016-10-26",
+   "end": "2022-09-30",
+   "description": "The first extended mission of the New Horizons spacecraft in the Kuiper Belt, KEM1 included the close flyby of (486958) Arrokoth (2014 MU69), a Kuiper Blet Object (KBO), as well as survey observations of the Kuiper Belt environment.",
+   "targets": [
+    {
+     "lid": "urn:nasa:pds:context:target:dust.dust",
+     "name": "DUST",
+     "type": "Dust",
+     "body": null
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:plasma_stream.solar_wind",
+     "name": "SOLAR WIND",
+     "type": "Plasma Stream",
+     "body": null
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:trans-neptunian_object.486958_2014_mu69",
+     "name": "(486958) Arrokoth",
+     "type": "Trans-Neptunian Object",
+     "body": null
+    }
+   ]
+  },
+  {
+   "slug": "new-horizons-kem2",
+   "name": "New Horizons Kuiper Belt Extended Mission 2",
+   "lid": "urn:nasa:pds:context:investigation:mission.new_horizons_kem2",
+   "start": "2022-10-01",
+   "end": "2024-09-30",
+   "description": "The New Horizons Kuiper Belt Extended Mission (KEM) is a mission to a recently discovered, unexplored region of the solar system, the Kuiper Belt. The first part (KEM1) included a close flyby of Kuiper Belt Object (KBO) 2014 MU69 (Arrokoth). This second part (KEM2) continued to survey the Kuiper Belt using New Horizons as an observatory, examining many other Kuiper Belt Objects and Centaurs while studying the Kuiper Belt dust, gas, plasma, and energetic particle environments. These studies will place both the Pluto system and Arrokoth in better context among KBOs, increasing scientific understanding of both. New science goals for KEM2 include: new studies in Planetary Science (large-phase angle observations of gas giants), Heliophysics (Lyman-alpha all sky map), and Astrophysics (cosmic optical and ultraviolet background, and distant shock regions). KEM2 data deliveries also include data taken during KEM1 but not downlinked until KEM2.",
+   "targets": [
+    {
+     "lid": "urn:nasa:pds:context:target:dust.dust",
+     "name": "DUST",
+     "type": "Dust",
+     "body": null
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:plasma_stream.solar_wind",
+     "name": "SOLAR WIND",
+     "type": "Plasma Stream",
+     "body": null
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:trans-neptunian_object.486958_2014_mu69",
+     "name": "(486958) Arrokoth",
+     "type": "Trans-Neptunian Object",
+     "body": null
+    }
+   ]
+  },
+  {
+   "slug": "next",
+   "name": "New Exploration of Tempel 1 Mission",
+   "lid": "urn:nasa:pds:context:investigation:mission.next",
+   "start": "2004-02-12",
+   "end": "2011-03-25",
+   "description": "The NExT mission was the extended mission, approved in 2007, for the Stardust spacecraft after it successfully returned samples of comet dust to Earth. The Stardust spacecraft was redirected to intercept Comet 9P/Tempel 1, target of the Deep Impact mission in in 2005, to image the impact area. Small changes were noted.",
+   "targets": [
+    {
+     "lid": "urn:nasa:pds:context:target:calibrator.calibration",
+     "name": "CALIBRATION",
+     "type": "Calibrator",
+     "body": null
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:calibrator.non_science",
+     "name": "NON SCIENCE",
+     "type": "Calibrator",
+     "body": null
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:comet.9p_tempel_1",
+     "name": "9P/Tempel 1",
+     "type": "Comet",
+     "body": null
+    }
+   ]
+  },
+  {
+   "slug": "orex",
+   "name": "OSIRIS-REx",
+   "lid": "urn:nasa:pds:context:investigation:mission.orex",
+   "start": "2016-09-08",
+   "end": null,
+   "description": "The OSIRIS-REx (Origins, Spectral Interpretation, Resource Identification, Security, Regolith Explorer) mission returned a sample of regolith material from the near-Earth carbonaceous asteroid (101955) Bennu in April 2021. 121.6g of material were successfully returned to earth on 21 September 2023. Following this, the spacecraft was redirected for an extended mission to asteroid (99942) Apophis.",
+   "targets": [
+    {
+     "lid": "urn:nasa:pds:context:target:asteroid.101955_bennu",
+     "name": "101955 Bennu",
+     "type": "Asteroid",
+     "body": "bennu"
+    }
+   ]
+  },
+  {
+   "slug": "phobos-2",
+   "name": "Phobos Mission",
+   "lid": "urn:nasa:pds:context:investigation:mission.phobos_2",
+   "start": "1988-07-07",
+   "end": "1989-03-27",
+   "description": "The Phobos mission was a program of the Soviet Union intended to send two spacecraft, Phobos 1 and 2, to study the satellites of Mars. The two spacecraft were launch 5 days apart in July 1988. Phobos 1 was lost in transit. Phobos 2 entered a Martian orbit and returned some observations, but contact was lost prior to deployment of the Phobos landers.",
+   "targets": [
+    {
+     "lid": "urn:nasa:pds:context:target:planet.jupiter",
+     "name": "Jupiter",
+     "type": "Planet",
+     "body": "jupiter"
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:planet.mars",
+     "name": "Mars",
+     "type": "Planet",
+     "body": "mars"
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:satellite.mars.phobos",
+     "name": "Phobos",
+     "type": "Satellite",
+     "body": "phobos"
+    }
+   ]
+  },
+  {
+   "slug": "phoenix",
+   "name": "Mars Phoenix",
+   "lid": "urn:nasa:pds:context:investigation:mission.phoenix",
+   "start": "2007-08-04",
+   "end": "2008-11-02",
+   "description": "The Phoenix Mission was the first Scout class mission. It consisted of a single lander with associated instrumentation. Phoenix was launched on August 4, 2007 and landed on the northern plains of Mars (68.22 degrees N, 234.25 degrees East Areocentric) on May 25, 2008. The Lander operated until November 2, 2008, performing on the Martian surface for 152 sols (sols are Martian days, 1 sol equaling 24.66 hours). The Surface Phase constituted the primary and extended missions, and focused on testing the hypothesis that water ice exists beneath a thin soil cover, evaluating evidence for habitability zones, and monitoring weather during the northern summer. Hence, inferring the presence of water and its interaction with the Martian soil was of crucial importance.",
+   "targets": [
+    {
+     "lid": "urn:nasa:pds:context:target:planet.mars",
+     "name": "Mars",
+     "type": "Planet",
+     "body": "mars"
+    }
+   ]
+  },
+  {
+   "slug": "pioneer-10",
+   "name": "Pioneer 10",
+   "lid": "urn:nasa:pds:context:investigation:mission.pioneer_10",
+   "start": "1972-03-02",
+   "end": "1997-03-31",
+   "description": "Pioneer 10 was the first spacecraft that went to Jupiter. It was also the first spacecraft to achieve escape velocity. It was launched on March 2, 1972. It was at 80 AU from Earth when it lost contact.",
+   "targets": [
+    {
+     "lid": "urn:nasa:pds:context:target:planet.jupiter",
+     "name": "Jupiter",
+     "type": "Planet",
+     "body": "jupiter"
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:planetary_system.solar_system",
+     "name": "Solar System",
+     "type": "Planetary System",
+     "body": null
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:plasma_stream.solar_wind",
+     "name": "SOLAR WIND",
+     "type": "Plasma Stream",
+     "body": null
+    }
+   ]
+  },
+  {
+   "slug": "pioneer-11",
+   "name": "Pioneer 11",
+   "lid": "urn:nasa:pds:context:investigation:mission.pioneer_11",
+   "start": "1972-03-02",
+   "end": "1995-09-30",
+   "description": "NASA's Pioneer 11, a sister spacecraft to Pioneer 10, was the first spacecraft to study Saturn up close. The mission ended in 1995 and Pioneer 11 is on a trajectory to take it out of the solar system. Pioneer 11 is one of five spacecraft on a trajectory that will take them out of our solar system. Pioneer 11 will pass near the star Lambda Aquila in almost four million years. Like Pioneer 10 and Voyager 1 and 2, Pioneer 11 carries a message from humanity to the cosmos.",
+   "targets": [
+    {
+     "lid": "urn:nasa:pds:context:target:planet.jupiter",
+     "name": "Jupiter",
+     "type": "Planet",
+     "body": "jupiter"
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:planet.saturn",
+     "name": "Saturn",
+     "type": "Planet",
+     "body": "saturn"
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:planetary_system.solar_system",
+     "name": "Solar System",
+     "type": "Planetary System",
+     "body": null
+    }
+   ]
+  },
+  {
+   "slug": "pioneer-8",
+   "name": "Pioneer 8",
+   "lid": "urn:nasa:pds:context:investigation:mission.pioneer_8",
+   "start": "1967-12-13",
+   "end": "1996-08-22",
+   "description": "The Pioneer 8, Pioneer C, was launched on December 13, 1967. It was part of group of spacecrafts to study space weather at various points between Earth and the Sun. The spacecraft was in a solar orbit of 1.1 AU.",
+   "targets": []
+  },
+  {
+   "slug": "pioneer-9",
+   "name": "Pioneer 9",
+   "lid": "urn:nasa:pds:context:investigation:mission.pioneer_9",
+   "start": "1968-11-18",
+   "end": "1983-05-19",
+   "description": "The Pioneer 9, Pioneer D, was launched on November 8, 1968. It was part of group of spacecrafts to study space weather at various points between Earth and the Sun. The spacecraft was in a solar orbit of 0.8 AU.",
+   "targets": []
+  },
+  {
+   "slug": "pioneer-venus",
+   "name": "Pioneer Venus",
+   "lid": "urn:nasa:pds:context:investigation:mission.pioneer_venus",
+   "start": "1978-05-20",
+   "end": "1992-10-07",
+   "description": "The Pioneer Venus was launched on May 20, 1978. It had an orbiter and four probes that entered the atmosphere. One probe had even transmitted data from the surface. The bus that carried the orbiter and probes also had mass spectrometers to study the atmosphere. The orbiter lasted until August 1992.",
+   "targets": [
+    {
+     "lid": "urn:nasa:pds:context:target:planet.venus",
+     "name": "Venus",
+     "type": "Planet",
+     "body": "venus"
+    }
+   ]
+  },
+  {
+   "slug": "psyche",
+   "name": "Psyche Mission",
+   "lid": "urn:nasa:pds:context:investigation:mission.psyche",
+   "start": "2022-08-01",
+   "end": null,
+   "description": "The primary objective of the Psyche mission is to map and study the poperties of asteroid (16) Psyche. Psyche is the first mission to a metal asteroid which offers a new opportunity for discovery on the building blocks of planet formation. The spacecraft launched successfully on 13 October 2023.",
+   "targets": [
+    {
+     "lid": "urn:nasa:pds:context:target:asteroid.16_psyche",
+     "name": "16 Psyche",
+     "type": "Asteroid",
+     "body": "psyche"
+    }
+   ]
+  },
+  {
+   "slug": "sakigake",
+   "name": "Sakigake Mission",
+   "lid": "urn:nasa:pds:context:investigation:mission.sakigake",
+   "start": "1985-01-07",
+   "end": "1999-01-07",
+   "description": "The Sakigake spacecraft, a test spacecraft for the Japanese launched on 7 January 1985, flew by Halley's Comet at a distance of about 7 million km. It was part of the Halley Armada, but also the interplanetary plasma and Earth's magnetic tail. Sakigake paved the way for the Suisei mission.",
+   "targets": [
+    {
+     "lid": "urn:nasa:pds:context:target:comet.1p_halley",
+     "name": "1P/Halley",
+     "type": "Comet",
+     "body": "halley"
+    }
+   ]
+  },
+  {
+   "slug": "solar-and-heliospheric-observatory",
+   "name": "Solar and Heliospheric Observatory Mission",
+   "lid": "urn:nasa:pds:context:investigation:mission.solar_and_heliospheric_observatory",
+   "start": "1995-12-02",
+   "end": null,
+   "description": "The SOHO mission is an ESA-lead joint mission between NASA and the European Space Agency to operate a solar telescope parked in the first Lagrangian (L1) libration point between the Earth and Sun. Launched in December 1995, it has been operating for nearly 30 years.",
+   "targets": [
+    {
+     "lid": "urn:nasa:pds:context:target:star.sun",
+     "name": "Sun",
+     "type": "Star",
+     "body": "sun"
+    }
+   ]
+  },
+  {
+   "slug": "spitzer",
+   "name": "Spitzer Space Telescope Mission",
+   "lid": "urn:nasa:pds:context:investigation:mission.spitzer",
+   "start": "2003-08-25",
+   "end": "2020-01-30",
+   "description": "The Spitzer Space Telescope, the last of NASA's Great Observatories to launch, was a space-based infrared observatory. Launched as the Space Infrared Telescope Facility (SIRTF) in August 2003, it was renamed in December of the same year to honor Lyman S. Spitzer, Jr., one of the earliest proponents of space-based telescopes. Spitzer operated with cryogenically-cooled instruments until the last of its helium boiled away in May 2009, at which point the project was reconfigured and renamed the Spitzer Warm Mission. Operations continued until 30 January 2020.",
+   "targets": []
+  },
+  {
+   "slug": "stardust",
+   "name": "Stardust Mission",
+   "lid": "urn:nasa:pds:context:investigation:mission.stardust",
+   "start": "1999-02-07",
+   "end": "2006-01-16",
+   "description": "The Stardust Mission, launched in February 1999, was the f1rst to collect and return samples of cometary and interplanetary dust. The primary mission included a flyby of asteroid (5535) Annefrank in November 2002, on the way to the flyby of long-period Comet 81P/Wild 2 in January 2004. The samples collected (in aerogel) were successfully returned to Earth in January 2006. The spacecraft was redirected to Comet 9P/Tempel 1 in its extended mission (NExT - New Exploration of Tempel 1).",
+   "targets": [
+    {
+     "lid": "urn:nasa:pds:context:target:asteroid.5535_annefrank",
+     "name": "5535 Annefrank",
+     "type": "Asteroid",
+     "body": null
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:comet.81p_wild_2",
+     "name": "81P/Wild 2",
+     "type": "Comet",
+     "body": null
+    }
+   ]
+  },
+  {
+   "slug": "suisei",
+   "name": "Suisei Mission",
+   "lid": "urn:nasa:pds:context:investigation:mission.suisei",
+   "start": "1985-08-18",
+   "end": "1998-02-28",
+   "description": "The Suisei mission was the primary Japanese mission to Comet 1P/Halley - part of the Halley Armada. Following on the success of the Sakigake practice mission, Suisei launched in August 1985 and successfully flew by Halley's comet at a distance of 151,000km on the sunward side.",
+   "targets": [
+    {
+     "lid": "urn:nasa:pds:context:target:comet.1p_halley",
+     "name": "1P/Halley",
+     "type": "Comet",
+     "body": "halley"
+    }
+   ]
+  },
+  {
+   "slug": "vega-1",
+   "name": "Vega Mission - Vega 1",
+   "lid": "urn:nasa:pds:context:investigation:mission.vega_1",
+   "start": "1984-12-15",
+   "end": "1986-04-01",
+   "description": "The Vega program lead by the Soviet Union and including a number of European partners, was designed to investigate Venus and then to flyby Comet 1P/Halley. The name \"VeGa\" is a combination of the first two (Russian) letters of \"Venus\" and \"Halley\". It included twin spacecraft designated \"Vega 1\" and \"Vega 2\". The Vega 1 spacecraft Launched on 15 December 1984, delivered a balloon into the Venusian atmosphere on 11 June 1985, and encountered Comet Halley on 6 March 1986.",
+   "targets": [
+    {
+     "lid": "urn:nasa:pds:context:target:comet.1p_halley",
+     "name": "1P/Halley",
+     "type": "Comet",
+     "body": "halley"
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:plasma_stream.solar_wind",
+     "name": "SOLAR WIND",
+     "type": "Plasma Stream",
+     "body": null
+    }
+   ]
+  },
+  {
+   "slug": "vega-2",
+   "name": "Vega Mission - Vega 2",
+   "lid": "urn:nasa:pds:context:investigation:mission.vega_2",
+   "start": "1984-12-21",
+   "end": "1986-04-01",
+   "description": "The Vega program lead by the Soviet Union and including a number of European partners, was designed to investigate Venus and then to flyby Comet 1P/Halley. The name \"VeGa\" is a combination of the first two (Russian) letters of \"Venus\" and \"Halley\". It included twin spacecraft designated \"Vega 1\" and \"Vega 2\". The Vega 2 spacecraft Launched on 21 December 1984, delivered a balloon into the Venusian atmosphere on 15 June 1985, and encountered Comet Halley on 9 March 1986.",
+   "targets": [
+    {
+     "lid": "urn:nasa:pds:context:target:comet.1p_halley",
+     "name": "1P/Halley",
+     "type": "Comet",
+     "body": "halley"
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:plasma_stream.solar_wind",
+     "name": "SOLAR WIND",
+     "type": "Plasma Stream",
+     "body": null
+    }
+   ]
+  },
+  {
+   "slug": "venera-10",
+   "name": "Venera 10",
+   "lid": "urn:nasa:pds:context:investigation:mission.venera_10",
+   "start": "1975-06-14",
+   "end": null,
+   "description": "The Soviet Venera 10 mission and its twin Venera 9 launched five days apart. Each comprised an orbiter and an attached descent craft (lander probe). The orbiter relayed communications for the lander and studied the atmosphere and cloud layers of Venus. The descent craft made in-situ measurements made in-situ measurements of the Venus atmosphere and surface.",
+   "targets": [
+    {
+     "lid": "urn:nasa:pds:context:target:planet.venus",
+     "name": "Venus",
+     "type": "Planet",
+     "body": "venus"
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:plasma_stream.solar_wind",
+     "name": "SOLAR WIND",
+     "type": "Plasma Stream",
+     "body": null
+    }
+   ]
+  },
+  {
+   "slug": "venera-11",
+   "name": "Venera 11",
+   "lid": "urn:nasa:pds:context:investigation:mission.venera_11",
+   "start": "1978-09-09",
+   "end": "1980-02-01",
+   "description": "Venera 11 and Venera 12 were twin Soviet missions, launched five days apart, to study Venus and the interplanetary medium. Both missions comprised a flight platform (bus) and a descent craft (lander probe). The flight platform had instruments to study solar-wind composition, gamma-ray bursts, ultraviolet radiation, and the electron density of the ionosphere of Venus. The lander probe carried instruments to study the characteristics and composition of the atmosphere and surface of Venus.",
+   "targets": [
+    {
+     "lid": "urn:nasa:pds:context:target:planet.venus",
+     "name": "Venus",
+     "type": "Planet",
+     "body": "venus"
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:plasma_stream.solar_wind",
+     "name": "SOLAR WIND",
+     "type": "Plasma Stream",
+     "body": null
+    }
+   ]
+  },
+  {
+   "slug": "venera-13",
+   "name": "Venera 13",
+   "lid": "urn:nasa:pds:context:investigation:mission.venera_13",
+   "start": "1981-10-30",
+   "end": "1983-04-25",
+   "description": "The Soviet Venera 13 mission returned the first color images and audio recordings from the surface of Venus. Along with the Venera 14 mission, it formed a pair of identical spacecraft, each comprising a flyby carrier bus and a descent craft (lander probe). Launched five days apart, the objective of the missions was to make in-situ studies of the Venus atmosphere and surface.",
+   "targets": [
+    {
+     "lid": "urn:nasa:pds:context:target:planet.venus",
+     "name": "Venus",
+     "type": "Planet",
+     "body": "venus"
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:plasma_stream.solar_wind",
+     "name": "SOLAR WIND",
+     "type": "Plasma Stream",
+     "body": null
+    }
+   ]
+  },
+  {
+   "slug": "venera-14",
+   "name": "Venera 14",
+   "lid": "urn:nasa:pds:context:investigation:mission.venera_14",
+   "start": "1981-11-04",
+   "end": "1983-04-09",
+   "description": "The Soviet Venera 14 mission and its twin Venera 13 formed a pair of identical spacecraft, each comprising of a flyby carrier bus and a descent craft (lander probe), built to take advantage of the 1981 Venus launch opportunity. Launched five days apart, the objective of the missions was to make in-situ studies of the Venus atmosphere and surface.",
+   "targets": [
+    {
+     "lid": "urn:nasa:pds:context:target:planet.venus",
+     "name": "Venus",
+     "type": "Planet",
+     "body": "venus"
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:plasma_stream.solar_wind",
+     "name": "SOLAR WIND",
+     "type": "Plasma Stream",
+     "body": null
+    }
+   ]
+  },
+  {
+   "slug": "venera-15",
+   "name": "Venera 15",
+   "lid": "urn:nasa:pds:context:investigation:mission.venera_15",
+   "start": "1983-06-02",
+   "end": "1985-01-05",
+   "description": "The Soviet Venera 15 and Venera 16 missions consisted of two identical spacecraft that used 8 cm band side-looking radar to map the surface of Venus. The spacecraft entered nearly polar orbits a day apart with orbital planes shifted 4.45 deg, enabling reimaging capabilities. Both had periapsis at 62 deg N latitude and together mapped from the north pole to 30 deg N latitude with 1-2 km resolution over 8 months of operations.",
+   "targets": [
+    {
+     "lid": "urn:nasa:pds:context:target:planet.venus",
+     "name": "Venus",
+     "type": "Planet",
+     "body": "venus"
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:plasma_stream.solar_wind",
+     "name": "SOLAR WIND",
+     "type": "Plasma Stream",
+     "body": null
+    }
+   ]
+  },
+  {
+   "slug": "venera-16",
+   "name": "Venera 16",
+   "lid": "urn:nasa:pds:context:investigation:mission.venera_16",
+   "start": "1983-06-07",
+   "end": "1985-06-13",
+   "description": "The Soviet Venera 16 and Venera 15 missions consisted of two identical spacecraft that used 8 cm band side-looking radar to map the surface of Venus. The spacecraft entered nearly polar orbits a day apart with orbital planes shifted 4.45 deg, enabling reimaging capabilities. Both had periapsis at 62 deg N latitude and together mapped from the north pole to 30 deg N latitude with 1-2 km resolution over 8 months of operations.",
+   "targets": [
+    {
+     "lid": "urn:nasa:pds:context:target:planet.venus",
+     "name": "Venus",
+     "type": "Planet",
+     "body": "venus"
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:plasma_stream.solar_wind",
+     "name": "SOLAR WIND",
+     "type": "Plasma Stream",
+     "body": null
+    }
+   ]
+  },
+  {
+   "slug": "venera-2",
+   "name": "Venera 2",
+   "lid": "urn:nasa:pds:context:investigation:mission.venera_2",
+   "start": "1965-11-12",
+   "end": null,
+   "description": "Venera 2, the second Soviet mission to Venus, aimed to study the planet’s atmosphere, magnetic field, radiation, and surface temperature, and to photograph it during approach. The spacecraft returned sporadic data during its three-month cruise. Venera 2 flew by Venus on 27 February 1966 but returned no data because communications failed about two weeks earlier.",
+   "targets": [
+    {
+     "lid": "urn:nasa:pds:context:target:planet.venus",
+     "name": "Venus",
+     "type": "Planet",
+     "body": "venus"
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:plasma_stream.solar_wind",
+     "name": "SOLAR WIND",
+     "type": "Plasma Stream",
+     "body": null
+    }
+   ]
+  },
+  {
+   "slug": "venera-3",
+   "name": "Venera 3",
+   "lid": "urn:nasa:pds:context:investigation:mission.venera_3",
+   "start": "1965-11-16",
+   "end": "1966-03-01",
+   "description": "Venera 3 mission intended to explore Venus and land on the surface. The Soviet Venera 3 mission comprised a carrier bus and an attached descent craft (lander probe). The lander probe impacted Venus on 1 March 1966, making Venera 3 the first spacecraft to reach the surface of another planet. However, the communications systems had failed on 16 February, before planetary data could be returned.",
+   "targets": [
+    {
+     "lid": "urn:nasa:pds:context:target:planet.venus",
+     "name": "Venus",
+     "type": "Planet",
+     "body": "venus"
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:plasma_stream.solar_wind",
+     "name": "SOLAR WIND",
+     "type": "Plasma Stream",
+     "body": null
+    }
+   ]
+  },
+  {
+   "slug": "venera-4",
+   "name": "Venera 4",
+   "lid": "urn:nasa:pds:context:investigation:mission.venera_4",
+   "start": "1967-06-12",
+   "end": null,
+   "description": "The Soviet Venera 4 launched on 12 June 12 1967 with a carrier bus and lander probe to study Venus. The bus carried a magnetometer, cosmic ray detectors, particle detectors, and hydrogen and oxygen indicators. The lander had thermometers, barometer, radio altimeter, density gauge, gas analyzers, and radio transmitters. On 18 October it became the first probe to transmit data from another planet's atmosphere.",
+   "targets": [
+    {
+     "lid": "urn:nasa:pds:context:target:planet.venus",
+     "name": "Venus",
+     "type": "Planet",
+     "body": "venus"
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:plasma_stream.solar_wind",
+     "name": "SOLAR WIND",
+     "type": "Plasma Stream",
+     "body": null
+    }
+   ]
+  },
+  {
+   "slug": "venera-5",
+   "name": "Venera 5",
+   "lid": "urn:nasa:pds:context:investigation:mission.venera_5",
+   "start": "1969-01-05",
+   "end": null,
+   "description": "The Soviet Venera 5 mission and its twin, the Venera 6 mission, formed a pair of identical spacecraft, each consisting of a carrier bus and a descent craft (lander probe). Launched five days apart, the objective of the missions was to make in-situ studies of the Venus atmosphere and study the interplanetary medium.",
+   "targets": [
+    {
+     "lid": "urn:nasa:pds:context:target:planet.venus",
+     "name": "Venus",
+     "type": "Planet",
+     "body": "venus"
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:plasma_stream.solar_wind",
+     "name": "SOLAR WIND",
+     "type": "Plasma Stream",
+     "body": null
+    }
+   ]
+  },
+  {
+   "slug": "venera-6",
+   "name": "Venera 6",
+   "lid": "urn:nasa:pds:context:investigation:mission.venera_6",
+   "start": "1969-01-10",
+   "end": null,
+   "description": "The Soviet Venera 6 mission and its twin, the Venera 5 mission, formed a pair of identical spacecraft, each consisting of a carrier bus and a descent craft (lander probe). Launched five days apart, the objective of the missions was to make in-situ studies of the Venus atmosphere and study the interplanetary medium.",
+   "targets": [
+    {
+     "lid": "urn:nasa:pds:context:target:planet.venus",
+     "name": "Venus",
+     "type": "Planet",
+     "body": "venus"
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:plasma_stream.solar_wind",
+     "name": "SOLAR WIND",
+     "type": "Plasma Stream",
+     "body": null
+    }
+   ]
+  },
+  {
+   "slug": "venera-7",
+   "name": "Venera 7",
+   "lid": "urn:nasa:pds:context:investigation:mission.venera_7",
+   "start": "1970-08-17",
+   "end": null,
+   "description": "The Soviet Venera 7 mission consisted of a carrier bus and a descent craft (lander probe). The objectives of the mission were to return data from the Venus atmosphere, make a landing on the surface, and continue to return data after landing. Venera 7 descent craft was the first spacecraft to return data after landing on another planet.",
+   "targets": [
+    {
+     "lid": "urn:nasa:pds:context:target:planet.venus",
+     "name": "Venus",
+     "type": "Planet",
+     "body": "venus"
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:plasma_stream.solar_wind",
+     "name": "SOLAR WIND",
+     "type": "Plasma Stream",
+     "body": null
+    }
+   ]
+  },
+  {
+   "slug": "venera-8",
+   "name": "Venera 8",
+   "lid": "urn:nasa:pds:context:investigation:mission.venera_8",
+   "start": "1972-03-27",
+   "end": null,
+   "description": "The Soviet Venera 8 mission consisted of a carrier bus and a descent craft (lander probe). The objectives of the mission were to make a more sophisticated set of scientific measurements at the Venus surface, including studies of the Venus regolith.",
+   "targets": [
+    {
+     "lid": "urn:nasa:pds:context:target:planet.venus",
+     "name": "Venus",
+     "type": "Planet",
+     "body": "venus"
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:plasma_stream.solar_wind",
+     "name": "SOLAR WIND",
+     "type": "Plasma Stream",
+     "body": null
+    }
+   ]
+  },
+  {
+   "slug": "venera-9",
+   "name": "Venera 9",
+   "lid": "urn:nasa:pds:context:investigation:mission.venera_9",
+   "start": "1975-06-08",
+   "end": "1975-12-25",
+   "description": "The Soviet Venera 9 mission was the first mission to return pictures from the surface of Venus and the first to go into orbit around another planet. Venera 9 and its twin Venera 10 launched five days apart. Each comprised an orbiter and an attached descent craft (lander probe). The orbiter relayed communications for the lander and studied the atmosphere and cloud layers of Venus. The descent craft made in-situ measurements in the Venus atmosphere and on the surface.",
+   "targets": [
+    {
+     "lid": "urn:nasa:pds:context:target:planet.venus",
+     "name": "Venus",
+     "type": "Planet",
+     "body": "venus"
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:plasma_stream.solar_wind",
+     "name": "SOLAR WIND",
+     "type": "Plasma Stream",
+     "body": null
+    }
+   ]
+  },
+  {
+   "slug": "viking",
+   "name": "Viking Project",
+   "lid": "urn:nasa:pds:context:investigation:mission.viking",
+   "start": "1975-08-20",
+   "end": "1983-05-21",
+   "description": "The Viking mission to Mars consisted of four spacecraft: the two orbiters VO1 and VO2, and two landers VL1 and VL2. During cruise to Mars, the landers were attached to the orbiters; the combined spacecraft were then known as Viking 1 and 2. The role of the orbiters was to transport the landers to Mars, to carry reconnaissance instruments for certifying the landing sites, to act as relay stations for lander data, and to perform their own scientific investigations. The initial orbit periapses were placed over the candidate landing sites to allow for maximum viewing resolution and relay of the lander data. After the primary lander missions were completed, the orbiters' orbits were allowed to drift so that the entire planetary surface could be systematically mapped by the three remote sensing experiments. The Viking 1 spacecraft was launched August 20, 1975, and arrived at Mars on June 19, 1976. Lander 1 was deployed to the Mars surface on July 20, 1976. The VO1 orbital inclination of 38-39 degrees was chosen to optimize communication with VL1. Viking 2 was launched September 9, 1975 and arrived at Mars August 7, 1976. VL2 landed on September 3, 1976, at a more northerly site than VL1. The VO2 orbit was correspondingly more inclined than VO1; initially 55 degrees, it was later adjusted to 80 degrees, providing particularly good coverage of polar regions. The areocentric locations of VL1 and VL2 have since been determined to be (22.270N, 48.264W) and (47.669N, 226.032W), respectively.",
+   "targets": [
+    {
+     "lid": "urn:nasa:pds:context:target:planet.mars",
+     "name": "Mars",
+     "type": "Planet",
+     "body": "mars"
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:satellite.mars.deimos",
+     "name": "Deimos",
+     "type": "Satellite",
+     "body": "deimos"
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:satellite.mars.phobos",
+     "name": "Phobos",
+     "type": "Satellite",
+     "body": "phobos"
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:star.sun",
+     "name": "Sun",
+     "type": "Star",
+     "body": "sun"
+    }
+   ]
+  },
+  {
+   "slug": "viper",
+   "name": "Volatiles Investigating Polar Exploration Rover",
+   "lid": "urn:nasa:pds:context:investigation:mission.viper",
+   "start": "2025-01-01",
+   "end": "2025-01-01",
+   "description": "The VIPER mission, short for Volatiles Investigating Polar Exploration Rover, is a NASA initiative designed to explore the Moon's south pole. This robotic rover aims to locate and analyze water ice and other resources trapped in the lunar soil. By studying these materials, VIPER plans to help scientists understand the distribution, composition, and accessibility of lunar resources, which could support future human exploration. VIPER will operate in some of the coldest and darkest regions of the Moon, known as permanently shadowed craters, where water ice has been preserved for billions of years. The rover is about the size of a golf cart and is designed to traverse several miles during its original 100-day mission. The VIPER mission faced delays due to a combination of factors, including the need for additional preflight testing and supply chain challenges. Initially planned for a late 2023 launch, the mission was postponed to late 2024 to allow more time for testing the Astrobotic Griffin lander, which was to carry the rover. However, further delays pushed the readiness date to September 2025. NASA ultimately decided to cancel the mission in 2024, citing potential risks to other lunar exploration programs.",
+   "targets": [
+    {
+     "lid": "urn:nasa:pds:context:target:satellite.earth.moon",
+     "name": "Moon",
+     "type": "Satellite",
+     "body": "moon"
+    }
+   ]
+  },
+  {
+   "slug": "voyager",
+   "name": "Voyager",
+   "lid": "urn:nasa:pds:context:investigation:mission.voyager",
+   "start": "1972-07-01",
+   "end": null,
+   "description": "The Voyager 1 and 2 spacecraft, launched in 1977, are on a mission to explore interstellar space, well beyond Pluto, after having successfully studied Jupiter and Saturn. Voyager 1 entered interstellar space in August 2012, followed by Voyager 2 in November 2018. Both spacecraft are still transmitting scientific data back to Earth via the Deep Space Network. They've made significant discoveries, such as active volcanoes on Jupiter's moon Io and details about Saturn's rings, and Voyager 2 is the only spacecraft to have visited Uranus and Neptune. Their ongoing mission, the Voyager Interstellar Mission, aims to explore the outer edge of the Sun's influence and beyond.",
+   "targets": [
+    {
+     "lid": "urn:nasa:pds:context:target:calibration_field.dark",
+     "name": "DARK",
+     "type": "Calibration Field",
+     "body": null
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:calibration_field.dark_sky",
+     "name": "DARK SKY",
+     "type": "Calibration Field",
+     "body": null
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:calibration_field.scat_light",
+     "name": "SCAT LIGHT",
+     "type": "Calibration Field",
+     "body": null
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:calibration_field.sky",
+     "name": "SKY",
+     "type": "Calibration Field",
+     "body": null
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:calibrator.cal_lamps",
+     "name": "CAL LAMPS",
+     "type": "Calibrator",
+     "body": null
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:calibrator.plaque",
+     "name": "PLAQUE",
+     "type": "Calibrator",
+     "body": null
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:planet.earth",
+     "name": "Earth",
+     "type": "Planet",
+     "body": "earth"
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:planet.jupiter",
+     "name": "Jupiter",
+     "type": "Planet",
+     "body": "jupiter"
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:planet.neptune",
+     "name": "Neptune",
+     "type": "Planet",
+     "body": "neptune"
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:planet.saturn",
+     "name": "Saturn",
+     "type": "Planet",
+     "body": "saturn"
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:planet.uranus",
+     "name": "Uranus",
+     "type": "Planet",
+     "body": "uranus"
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:planetary_system.solar_system",
+     "name": "Solar System",
+     "type": "Planetary System",
+     "body": null
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:satellite.jupiter.adrastea",
+     "name": "Adrastea",
+     "type": "Satellite",
+     "body": null
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:satellite.jupiter.amalthea",
+     "name": "Amalthea",
+     "type": "Satellite",
+     "body": "amalthea"
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:satellite.jupiter.callisto",
+     "name": "Callisto",
+     "type": "Satellite",
+     "body": "callisto"
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:satellite.jupiter.europa",
+     "name": "Europa",
+     "type": "Satellite",
+     "body": "europa"
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:satellite.jupiter.ganymede",
+     "name": "Ganymede",
+     "type": "Satellite",
+     "body": "ganymede"
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:satellite.jupiter.io",
+     "name": "Io",
+     "type": "Satellite",
+     "body": "io"
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:satellite.jupiter.metis",
+     "name": "Metis",
+     "type": "Satellite",
+     "body": null
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:satellite.jupiter.thebe",
+     "name": "Thebe",
+     "type": "Satellite",
+     "body": null
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:satellite.neptune.larissa",
+     "name": "Larissa",
+     "type": "Satellite",
+     "body": null
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:satellite.neptune.nereid",
+     "name": "Nereid",
+     "type": "Satellite",
+     "body": "nereid"
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:satellite.neptune.proteus",
+     "name": "Proteus",
+     "type": "Satellite",
+     "body": "proteus"
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:satellite.neptune.triton",
+     "name": "Triton",
+     "type": "Satellite",
+     "body": "triton"
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:satellite.rock",
+     "name": "ROCK",
+     "type": "Satellite",
+     "body": null
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:satellite.saturn.atlas",
+     "name": "Atlas",
+     "type": "Satellite",
+     "body": null
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:satellite.saturn.calypso",
+     "name": "Calypso",
+     "type": "Satellite",
+     "body": null
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:satellite.saturn.dione",
+     "name": "Dione",
+     "type": "Satellite",
+     "body": "dione"
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:satellite.saturn.enceladus",
+     "name": "Enceladus",
+     "type": "Satellite",
+     "body": "enceladus"
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:satellite.saturn.epimetheus",
+     "name": "Epimetheus",
+     "type": "Satellite",
+     "body": null
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:satellite.saturn.helene",
+     "name": "Helene",
+     "type": "Satellite",
+     "body": null
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:satellite.saturn.hyperion",
+     "name": "Hyperion",
+     "type": "Satellite",
+     "body": "hyperion"
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:satellite.saturn.iapetus",
+     "name": "Iapetus",
+     "type": "Satellite",
+     "body": "iapetus"
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:satellite.saturn.janus",
+     "name": "Janus",
+     "type": "Satellite",
+     "body": null
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:satellite.saturn.mimas",
+     "name": "Mimas",
+     "type": "Satellite",
+     "body": "mimas"
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:satellite.saturn.pandora",
+     "name": "Pandora",
+     "type": "Satellite",
+     "body": null
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:satellite.saturn.phoebe",
+     "name": "Phoebe",
+     "type": "Satellite",
+     "body": null
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:satellite.saturn.prometheus",
+     "name": "Prometheus",
+     "type": "Satellite",
+     "body": null
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:satellite.saturn.rhea",
+     "name": "Rhea",
+     "type": "Satellite",
+     "body": "rhea"
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:satellite.saturn.telesto",
+     "name": "Telesto",
+     "type": "Satellite",
+     "body": null
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:satellite.saturn.tethys",
+     "name": "Tethys",
+     "type": "Satellite",
+     "body": "tethys"
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:satellite.saturn.titan",
+     "name": "Titan",
+     "type": "Satellite",
+     "body": "titan"
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:satellite.uranus.ariel",
+     "name": "Ariel",
+     "type": "Satellite",
+     "body": "ariel"
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:satellite.uranus.miranda",
+     "name": "Miranda",
+     "type": "Satellite",
+     "body": "miranda"
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:satellite.uranus.oberon",
+     "name": "Oberon",
+     "type": "Satellite",
+     "body": "oberon"
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:satellite.uranus.puck",
+     "name": "Puck",
+     "type": "Satellite",
+     "body": null
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:satellite.uranus.titania",
+     "name": "Titania",
+     "type": "Satellite",
+     "body": "titania"
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:satellite.uranus.umbriel",
+     "name": "Umbriel",
+     "type": "Satellite",
+     "body": "umbriel"
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:star.alf_cen",
+     "name": "Alpha Centauri",
+     "type": "Star",
+     "body": null
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:star.alf_lyr",
+     "name": "Vega",
+     "type": "Star",
+     "body": null
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:star.alf_pav",
+     "name": "Alpha Pavonis",
+     "type": "Star",
+     "body": null
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:star.bet_cen",
+     "name": "Beta Centauri",
+     "type": "Star",
+     "body": null
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:star.bet_cma",
+     "name": "Mirzam",
+     "type": "Star",
+     "body": null
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:star.sig_sgr",
+     "name": "Sigma Sagittarii",
+     "type": "Star",
+     "body": null
+    },
+    {
+     "lid": "urn:nasa:pds:context:target:star.sun",
+     "name": "Sun",
+     "type": "Star",
+     "body": "sun"
+    }
+   ]
+  },
+  {
+   "slug": "wise",
+   "name": "Wide-Field Infrared Survey Explorer Mission",
+   "lid": "urn:nasa:pds:context:investigation:mission.wise",
+   "start": "2009-12-14",
+   "end": "2012-02-01",
+   "description": "The WISE mission was the primary mission for the WISE spacecraft, launched 14 December 2009. It conducted an all-sky survey at wavelength of 3.4, 4.6, 12, and 22 micrometers. The primary mission ended in February 2011 when the cryogen was exhausted. The spacecraft was placed into hibernation, and subsequently reactivated for the NEOWISE extended mission.",
+   "targets": []
+  }
+ ]
+}

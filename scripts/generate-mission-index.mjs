@@ -74,11 +74,25 @@ const OUT = join(ROOT, 'public', 'assets', 'missions');
  * missions, qui restent servies à l'ouverture d'une fiche.
  */
 const INDEX = join(ROOT, 'src', 'config', 'missionIndex.json');
+/**
+ * LE CATALOGUE DES MISSIONS, pour les pages `/missions/` (2026-10-04). Il vit dans `src/seo/`,
+ * dossier qui n'atteint jamais le bundle (`src/buildOnly.ts`) : seules les pages générées au
+ * build le lisent, et l'application n'a besoin ni des descriptions ni des cibles hors catalogue.
+ */
+const CATALOGUE = join(ROOT, 'src', 'seo', 'missionCatalogue.json');
 
 const API = 'https://pds.nasa.gov/api/search/1';
 const CONTEXT = `${API}/classes/context`;
 /** La sentinelle « pas de fin déclarée » du PDS. Mesurée, pas supposée : cf. l'en-tête. */
 const NO_END_SENTINEL = '3000-01-01';
+/**
+ * Et son PENDANT pour le début, trouvé le 2026-10-04 en REGARDANT l'index des pages de mission :
+ * DART déclare un début au 1000-01-01. Une seule mission sur 112, et elle ne vise aucun corps
+ * du catalogue, donc la fiche de l'application ne l'a jamais montrée. Le catalogue des pages
+ * l'écrit `null` (« début non déclaré ») ; une mission qui la porterait EN visant un corps du
+ * catalogue fait échouer, parce que la fiche, qui suppose un début, afficherait l'an 1000.
+ */
+const NO_START_SENTINEL = '1000-01-01';
 
 const args = process.argv.slice(2);
 const offline = args.includes('--offline');
@@ -188,6 +202,48 @@ async function investigations() {
     return null;
   });
   return { rows: JSON.parse(body).data, retrieved };
+}
+
+/**
+ * LA DESCRIPTION DE CHAQUE MISSION, par une SECONDE requête et non en ajoutant un champ à la
+ * première. Ajouter un champ changerait l'adresse, donc la clé de cache, donc la date de lecture
+ * de l'index que l'application affiche déjà (« lu dans l'archive du PDS le … ») : une page de
+ * plus ne doit pas redater un bloc de fiche qui n'a pas changé. Les pages publient donc DEUX
+ * dates, chacune celle de sa réponse.
+ *
+ * Mesuré le 2026-10-04 : les 112 missions publient une description, en prose, de 103 à 2 593
+ * caractères, en anglais. Une mission sans description fait ÉCHOUER : une page sans texte serait
+ * une adresse de plus dans le sitemap, et rien d'autre.
+ */
+async function descriptions() {
+  const fields = ['lid', 'pds:Investigation.pds:description'];
+  const url =
+    `${CONTEXT}?q=${encodeURIComponent('pds:Investigation.pds:type eq "Mission"')}` +
+    `&limit=500&fields=${fields.join(',')}`;
+  const { body, retrieved } = await get(url, (text) => {
+    let parsed;
+    try {
+      parsed = JSON.parse(text);
+    } catch {
+      return 'corps illisible, ce n’est pas du JSON';
+    }
+    const rows = parsed.data ?? [];
+    if (rows.length < (parsed.summary?.hits ?? 0))
+      return `le PDS annonce ${parsed.summary.hits} missions et n’en rend que ${rows.length}, il faudrait paginer`;
+    if (rows.length < 100)
+      return `${rows.length} missions seulement, réponse tronquée ou format changé`;
+    return null;
+  });
+  const byLid = new Map();
+  for (const row of JSON.parse(body).data) {
+    const lid = one(row.properties.lid);
+    const text = one(row.properties['pds:Investigation.pds:description']);
+    // Le champ demandé revient TOUJOURS, rempli de la chaîne « null » quand il est absent
+    // (piège mesuré au lot 42) : c'est la valeur qui se teste, pas la présence de la clé.
+    if (typeof text === 'string' && text.trim() && text !== 'null')
+      byLid.set(lid, text.replace(/\s+/g, ' ').trim());
+  }
+  return { byLid, retrieved };
 }
 
 /** Le produit de contexte d'une cible : son nom et son type PUBLIÉS. */
@@ -401,6 +457,85 @@ if (check) {
   if (!existsSync(INDEX) || readFileSync(INDEX, 'utf8') !== indexJson)
     drifted.push('index');
 } else writeFileSync(INDEX, indexJson);
+
+/**
+ * LE CATALOGUE DES PAGES : chaque mission, ses cibles TELLES QUE L'ARCHIVE LES DÉCLARE (celles du
+ * catalogue de Galaxy sont nommées par leur corps, les autres par leur nom et leur type publiés),
+ * et sa description. Le chemin de la page vient du segment terminal de l'identifiant, qui est
+ * stable par construction (c'est l'identifiant logique du produit) ; deux missions qui
+ * produiraient le même chemin font ÉCHOUER.
+ */
+const described = await descriptions();
+const slugs = new Map();
+const catalogue = [];
+for (const mission of [...declared.values()].sort((a, b) =>
+  a.lid.localeCompare(b.lid)
+)) {
+  const segment = mission.lid.split(':').pop();
+  if (!segment.startsWith('mission.'))
+    throw new Error(`identifiant de mission inattendu : ${mission.lid}`);
+  const slug = segment.slice('mission.'.length).replace(/_/g, '-');
+  if (!/^[a-z0-9-]+$/.test(slug))
+    throw new Error(
+      `chemin de page illisible pour ${mission.lid} : « ${slug} »`
+    );
+  if (slugs.has(slug))
+    throw new Error(
+      `deux missions donneraient la même page /missions/${slug}/ : ${slugs.get(slug)} et ${mission.lid}`
+    );
+  slugs.set(slug, mission.lid);
+  const description = described.byLid.get(mission.lid);
+  if (!description)
+    throw new Error(
+      `« ${mission.name} » ne publie pas de description (${mission.lid}). Les 112 en ` +
+        `publiaient une le 2026-10-04 : la source a changé, et une page vide ne se publie pas.`
+    );
+  const noStart = mission.start === NO_START_SENTINEL;
+  if (
+    noStart &&
+    mission.targets.some((lid) =>
+      bodyFor(lid, targets.get(lid).type, bodies, sbdb)
+    )
+  )
+    throw new Error(
+      `« ${mission.name} » déclare le début sentinelle ${NO_START_SENTINEL} et vise un corps ` +
+        `du catalogue : la fiche afficherait l'an 1000. core/missions.ts suppose un vrai début.`
+    );
+  catalogue.push({
+    slug,
+    name: mission.name,
+    lid: mission.lid,
+    start: noStart ? null : mission.start,
+    end: mission.end,
+    description,
+    targets: mission.targets.map((lid) => {
+      const { name, type } = targets.get(lid);
+      return {
+        lid,
+        name,
+        type,
+        body: bodyFor(lid, type, bodies, sbdb),
+      };
+    }),
+  });
+}
+const catalogueJson = `${JSON.stringify(
+  {
+    retrieved,
+    descriptionsRetrieved: described.retrieved,
+    missions: catalogue,
+  },
+  null,
+  1
+)}
+`;
+if (check) {
+  if (
+    !existsSync(CATALOGUE) ||
+    readFileSync(CATALOGUE, 'utf8') !== catalogueJson
+  )
+    drifted.push('catalogue des pages');
+} else writeFileSync(CATALOGUE, catalogueJson);
 
 const withNone = [...byBody.entries()]
   .filter(([, l]) => l.length === 0)

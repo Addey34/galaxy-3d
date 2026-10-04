@@ -53,7 +53,7 @@ function generatedDocuments(): string[] {
   ];
   const docs: string[] = [];
   for (const prefix of prefixes)
-    for (const name of ['methodology', 'sources'])
+    for (const name of ['methodology', 'sources', 'missions'])
       if (existsSync(join(DIST, prefix, name, 'index.html')))
         docs.push(prefix ? `${prefix}/${name}` : name);
   return docs;
@@ -67,6 +67,14 @@ const BODY_PAGE = 'titan';
  * bloc d'instruments est le plus long (douze identifiants du PDS), donc le pire cas de la page.
  */
 const INSTRUMENT_PAGE = 'voyager1';
+/**
+ * Une page de mission (2026-10-04), la cinquième famille, dans les QUATRE langues : celle de
+ * Voyager, qui déclare le plus de cibles (55) et donc la plus longue liste à 390 px. Chemins
+ * dérivés des préfixes de langue trouvés dans `dist/`, comme les documents.
+ */
+const MISSION_PAGES = DOCUMENTS.filter((d) => d.endsWith('missions')).map(
+  (index) => `${index}/voyager`
+);
 
 async function settleAnimations(page: Page): Promise<void> {
   await page.evaluate(async () => {
@@ -108,10 +116,12 @@ async function checkDocument(page: Page, path: string): Promise<void> {
 test.describe('pages générées, à 390 px', () => {
   test.use({ viewport: { width: 390, height: 844 } });
 
-  test('la dérivation trouve les deux documents dans les quatre langues', () => {
+  test('la dérivation trouve les trois documents dans les quatre langues', () => {
     // Un compte, pour qu'une langue perdue se voie ici plutôt que par l'absence d'un scénario.
-    expect(DOCUMENTS.length).toBe(8);
+    expect(DOCUMENTS.length).toBe(12);
+    expect(MISSION_PAGES.length).toBe(4);
     expect(DOCUMENTS).toContain('methodology');
+    expect(DOCUMENTS).toContain('es/missions');
     expect(DOCUMENTS).toContain('fr/sources');
     expect(DOCUMENTS).toContain('pt-br/methodology');
   });
@@ -135,6 +145,14 @@ test.describe('pages générées, à 390 px', () => {
   }) => {
     await checkDocument(page, INSTRUMENT_PAGE);
   });
+
+  for (const path of MISSION_PAGES) {
+    test(`/${path} se charge, passe axe et ne déborde pas`, async ({
+      page,
+    }) => {
+      await checkDocument(page, path);
+    });
+  }
 
   /**
    * LE TÉMOIN, ISOLÉ. Sans lui, les scénarios ci-dessus pourraient passer sur une coquille servie

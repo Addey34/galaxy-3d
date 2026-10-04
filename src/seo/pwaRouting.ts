@@ -22,6 +22,16 @@
 const ECLIPSE_SEGMENT = 'eclipse';
 
 /**
+ * Segment des pages de mission (`/missions/voyager/`), le même que
+ * `documentPage.ts::MISSIONS_SLUG`. Deux segments, comme les éclipses : la forme exacte qui a
+ * déjà échappé une fois à ces deux listes.
+ */
+const MISSIONS_SEGMENT = 'missions';
+
+/** Les rubriques dont les pages vivent DEUX segments sous la racine, ou sous la langue. */
+const NESTED_SEGMENTS = [ECLIPSE_SEGMENT, MISSIONS_SEGMENT];
+
+/**
  * Préfixes des pages documentaires NON anglaises (`/fr/methodology/`, `/es/…`, `/pt-br/…`).
  *
  * Écrits ici en dur, et c'est délibéré : ce module est chargé par `vite.config.ts` AVANT que
@@ -44,11 +54,11 @@ const VALIDATION_SUMMARY_GLOB = 'assets/horizons-validation-summary-*.js';
 /** Fichiers générés à NE PAS précacher (motifs glob, relatifs à `dist/`). */
 export const LANDING_PAGE_GLOB_IGNORES: string[] = [
   '*/index.html',
-  `${ECLIPSE_SEGMENT}/*/index.html`,
+  ...NESTED_SEGMENTS.map((nested) => `${nested}/*/index.html`),
   ...LOCALISED_SEGMENTS.map((segment) => `${segment}/*/index.html`),
-  // Les éclipses traduites ont TROIS segments : `es/eclipse/2026-08-12/index.html`.
-  ...LOCALISED_SEGMENTS.map(
-    (segment) => `${segment}/${ECLIPSE_SEGMENT}/*/index.html`
+  // Les éclipses et les missions traduites ont TROIS segments : `es/eclipse/2026-08-12/index.html`.
+  ...LOCALISED_SEGMENTS.flatMap((segment) =>
+    NESTED_SEGMENTS.map((nested) => `${segment}/${nested}/*/index.html`)
   ),
   VALIDATION_SUMMARY_GLOB,
 ];
@@ -59,15 +69,17 @@ export const NAVIGATE_FALLBACK_DENYLIST: RegExp[] = [
   // Un segment unique sans point : les pages de corps, sans toucher `/`, `/assets/…` ni les
   // fichiers.
   /^\/[^/.]+\/?$/,
-  new RegExp(`^\\/${ECLIPSE_SEGMENT}\\/[^/.]+\\/?$`),
+  ...NESTED_SEGMENTS.map((nested) => new RegExp(`^\\/${nested}\\/[^/.]+\\/?$`)),
   // Les pages documentaires anglaises (`/methodology/`) tombent déjà sous la règle à un segment.
   ...LOCALISED_SEGMENTS.map(
     (segment) => new RegExp(`^\\/${segment}\\/[^/.]+\\/?$`)
   ),
-  // Les pages d'éclipse traduites ont TROIS segments (`/es/eclipse/2026-08-12/`) : c'est
-  // exactement le motif qui avait déjà été manqué une fois, décrit en tête de ce module.
-  ...LOCALISED_SEGMENTS.map(
-    (segment) => new RegExp(`^\\/${segment}\\/${ECLIPSE_SEGMENT}\\/[^/.]+\\/?$`)
+  // Les pages d'éclipse et de mission traduites ont TROIS segments (`/es/eclipse/2026-08-12/`) :
+  // c'est exactement le motif qui avait déjà été manqué une fois, décrit en tête de ce module.
+  ...LOCALISED_SEGMENTS.flatMap((segment) =>
+    NESTED_SEGMENTS.map(
+      (nested) => new RegExp(`^\\/${segment}\\/${nested}\\/[^/.]+\\/?$`)
+    )
   ),
 ];
 
