@@ -105,12 +105,6 @@ export const SHAPE_MODEL_GAPS: readonly ShapeModelGap[] = [
       'DAMIT, modèles convexes 6692 (pôle 321°, 77°) et 6693 (152°, 51°), qualité 1, taille non étalonnée',
   },
   {
-    body: 'didymos',
-    radiusKm: 0.39,
-    reason: 'archive-refuses-access',
-    source: 'PDS, urn:nasa:pds:dart_shapemodel (didymos_model_v003)',
-  },
-  {
     body: 'churyumov-gerasimenko',
     radiusKm: 1.7,
     reason: 'licence-not-stated',
@@ -138,11 +132,6 @@ export const SHAPE_MODEL_GAPS: readonly ShapeModelGap[] = [
   { body: 'annefrank', radiusKm: 2.4, reason: 'not-found-in-registries' },
   { body: 'masursky', radiusKm: 5.372, reason: 'not-found-in-registries' },
   { body: 'dinkinesh', radiusKm: 0.3595, reason: 'not-found-in-registries' },
-  {
-    body: 'donaldjohanson',
-    radiusKm: 1.9475,
-    reason: 'not-found-in-registries',
-  },
   { body: 'eurybates', radiusKm: 31.9425, reason: 'not-found-in-registries' },
   { body: 'polymele', radiusKm: 10.5375, reason: 'not-found-in-registries' },
   { body: 'orus', radiusKm: 25.405, reason: 'not-found-in-registries' },
@@ -153,24 +142,12 @@ export const SHAPE_MODEL_GAPS: readonly ShapeModelGap[] = [
     radiusKm: 1.3,
     reason: 'not-found-in-registries',
   },
-  // Rayons de TRAVAIL, non publiés (cf. leur fiche) : Arrokoth n'a pas de rayon unique, et
-  // Patrocle porte l'axe b de son ellipsoïde d'occultation (le diamètre SBDB décrit la paire).
-  {
-    body: 'arrokoth',
-    radiusKm: 9.57,
-    reason: 'archive-refuses-access',
-    source: 'PDS, urn:nasa:pds:nh_derived:arrokoth_shapemodel_porter2024',
-  },
+  // Rayon de TRAVAIL, non publié (cf. sa fiche) : Patrocle porte l'axe b de son ellipsoïde
+  // d'occultation (le diamètre SBDB décrit la paire).
   { body: 'patroclus', radiusKm: 59, reason: 'not-found-in-registries' },
-  // Les satellites de la vague 2 (2026-10-04). Dimorphos : le bundle même du modèle de
-  // Didymos, en versions v003 et v004. Menoetius : rien au registre, seulement les axes d'un
-  // ellipsoïde ajusté sur des occultations (Buie et al. 2015), ce qui n'est pas un maillage.
-  {
-    body: 'dimorphos',
-    radiusKm: 0.08,
-    reason: 'archive-refuses-access',
-    source: 'PDS, urn:nasa:pds:dart_shapemodel (dimorphos_model_v004)',
-  },
+  // Menoetius (vague 2, 2026-10-04) : rien au registre, seulement les axes d'un ellipsoïde
+  // ajusté sur des occultations (Buie et al. 2015), ce qui n'est pas un maillage. Didymos et
+  // Dimorphos sont sortis d'ici à la vague 4, lus en DSK chez NAIF.
   { body: 'menoetius', radiusKm: 54, reason: 'not-found-in-registries' },
 ];
 
@@ -185,6 +162,10 @@ export const SHAPE_COLLECTIONS_SEARCHED: readonly string[] = [
   'ESA PSA, INTERNATIONAL-ROSETTA-MISSION/SHAPE/ et les jeux de Steins et Lutetia',
   'DAMIT, table asteroid_models (témoin : Pallas 4395, Psyché 1806)',
   'pdssbn.astro.umd.edu, pages de mission Deep Impact, Stardust, DS1, EPOXI',
+  // 2026-10-04, vague 4 : la même forme servie AILLEURS que l'hôte qui refuse.
+  'NAIF, archive SPICE PDS4 de DART (dsk/), et serveur SPICE de l’ESA pour Hera (dsk/)',
+  'NAIF, archives SPICE de New Horizons (PDS3) et de Lucy (PDS4) : Arrokoth et Donaldjohanson',
+  'NAIF, archives SPICE de Deep Impact, EPOXI, Stardust et DS1 : antérieures au format DSK',
 ];
 
 /** Ce qu'on dit d'un manque, en une ligne, pour l'inventaire. */

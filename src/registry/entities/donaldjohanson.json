@@ -20,6 +20,24 @@
     "kind": "asteroid",
     "color": "0xc7a06b",
     "fallbackColor": "0x5b5b5b",
+    "model": {
+      "resolutions": [
+        "4k",
+        "2k",
+        "1k"
+      ],
+      "extentRatio": 1.98,
+      "radiusMismatch": "Le rayon affiché, 1,95 km, vient du diamètre thermique de 3,895 km que la SBDB publie (NEOWISE, Masiero et al. 2011), mesuré avant le survol. Le modèle de Lucy a un rayon équivalent-volume de 2,40 km. Deux mesures publiées différentes ; la forme vient du modèle, la taille du catalogue.",
+      "albedo": 0.103,
+      "albedoSource": "NEOWISE, Masiero et al. 2011, ApJ 741, 68 (JPL SBDB), 0.103 +/- 0.019",
+      "colourSource": null,
+      "credit": {
+        "en": "NASA/SwRI Lucy L’LORRI, shape model by the DLR team (stereophotogrammetry and contour fitting), read from the Lucy SPICE archive at NAIF (DSK lcy_donj_k548_iso20m_v10), decimated for the web.",
+        "fr": "NASA/SwRI Lucy L’LORRI, modèle de forme de l’équipe du DLR (stéréophotogrammétrie et ajustement de contours), lu dans l’archive SPICE de Lucy au NAIF (DSK lcy_donj_k548_iso20m_v10), décimé pour le web.",
+        "es": "NASA/SwRI Lucy L’LORRI, modelo de forma del equipo del DLR (estereofotogrametría y ajuste de contornos), leído en el archivo SPICE de Lucy en el NAIF (DSK lcy_donj_k548_iso20m_v10), diezmado para la web.",
+        "pt-BR": "NASA/SwRI Lucy L’LORRI, modelo de forma da equipe do DLR (estereofotogrametria e ajuste de contornos), lido no arquivo SPICE da Lucy no NAIF (DSK lcy_donj_k548_iso20m_v10), decimado para a web."
+      }
+    },
     "description": {
       "en": "A main-belt asteroid about 4 kilometres across, made of two lobes joined by a narrow neck. NASA’s Lucy flew past it on 20 April 2025, at about 960 kilometres.",
       "fr": "Un astéroïde de la ceinture principale d’environ 4 kilomètres, formé de deux lobes reliés par un col étroit. La sonde Lucy de la NASA l’a survolé le 20 avril 2025, à environ 960 kilomètres.",

@@ -16,7 +16,25 @@
       "$spinPeriodDays": 0.4743055556
     },
     "orbitalColor": "0xe0a070",
-    "fallbackColor": "0x4e4e4e",
+    "fallbackColor": "0x6c6c6c",
+    "model": {
+      "resolutions": [
+        "4k",
+        "2k",
+        "1k"
+      ],
+      "extentRatio": 1.24,
+      "radiusMismatch": "Le rayon affiché, 0,08 km, vient des « environ 160 mètres » de la page de NASA Science. Le modèle SPC v004 de DART a un rayon équivalent-volume de 0,075 km, et Daly et al. 2023 publient 151 ± 5 m de diamètre équivalent. Deux grandeurs publiées différentes ; la forme vient du modèle, la taille de la fiche.",
+      "albedo": 0.15,
+      "albedoSource": "Daly et al. 2023, Nature 616, 443 (doi:10.1038/s41586-023-05810-5), geometric albedo of the Didymos system 0.15 +/- 0.02",
+      "colourSource": null,
+      "credit": {
+        "en": "NASA/JHU-APL DART DRACO, SPC shape model v004 of Dimorphos (NASA PDS urn:nasa:pds:dart_shapemodel), read from the DART SPICE archive at NAIF (DSK), decimated for the web.",
+        "fr": "NASA/JHU-APL DART DRACO, modèle de forme SPC v004 de Dimorphos (NASA PDS urn:nasa:pds:dart_shapemodel), lu dans l’archive SPICE de DART au NAIF (DSK), décimé pour le web.",
+        "es": "NASA/JHU-APL DART DRACO, modelo de forma SPC v004 de Dimorphos (NASA PDS urn:nasa:pds:dart_shapemodel), leído en el archivo SPICE de DART en el NAIF (DSK), diezmado para la web.",
+        "pt-BR": "NASA/JHU-APL DART DRACO, modelo de forma SPC v004 de Dimorphos (NASA PDS urn:nasa:pds:dart_shapemodel), lido no arquivo SPICE da DART no NAIF (DSK), decimado para a web."
+      }
+    },
     "frame": "parentRelative",
     "relativeEphemeris": {
       "kind": "horizonsParentRelative"
@@ -141,6 +159,7 @@
     "": "Satellite d'une cible de mission, ajouté au catalogue le 2026-10-04 (vague 2). Taille et période lues sur la page « Didymos & Dimorphos » de NASA Science, citée mot pour mot dans le relevé des faits.",
     "relativeOrbitalElements": "Elements MOYENS, mesures sur le binaire (node scripts/derive-relative-elements.mjs --mean dimorphos, epoque 2026-01-01) : plan et rayon moyens sur 400 jours, periode du catalogue. Le repli ne sert que hors de la couverture du binaire (2000-2030 ; avant 2000 il porte l'orbite d'APRES l'impact de DART, plus courte de 32 min, faute d'un second jeu d'elements).",
     "facts.axialTilt": "Valeur de TRAVAIL, non publiée (rendu seulement) : l'inclinaison sur l'écliptique de la normale de son orbite, mesurée sur le binaire (même nombre que `relativeOrbitalElements`). Une rotation synchrone se fait autour de cette normale ; à 0°, la lune tournait à l'endroit quand Didymos tourne à l'envers, et `spinDirection.test.ts` l'a vu.",
+    "fallbackColor": "Gris de l'albédo du système de Didymos, 0,15 (Daly et al. 2023), même règle que les autres corps (puissance 1/2,2). Ce n'est pas une mesure de couleur.",
     "rotationSpeed": "Rendu seulement : la rotation est prise synchrone de l'orbite, ce qu'elle était avant l'impact (période de 11,92177 h dans l'en-tête Horizons de la solution s547). Aucune période de rotation n'est publiée par la source citée, et la fiche ne l'affiche pas.",
     "facts.orbitPeriodDays": "11 h 23 min ± 2 min, la période APRÈS l'impact de DART. Avant le 2022-09-26 elle était de 11 h 55 min ; le binaire Horizons porte les deux, et la fiche affiche la seule qui vaut aujourd'hui.",
     "radius": "Taille de rendu en mode éducatif, comme les autres petites lunes. En mode exploration, l'échelle vraie vient de `radiusKm`."

@@ -20,7 +20,24 @@
     "barycentric": true,
     "kind": "asteroid",
     "color": "0xc8644c",
-    "fallbackColor": "0x8a4a3c",
+    "fallbackColor": "0x7d7d7d",
+    "model": {
+      "resolutions": [
+        "2k",
+        "1k"
+      ],
+      "extentRatio": 1.9,
+      "radiusMismatch": "Le rayon de travail, 9,57 km, est le rayon équivalent de l’ellipsoïde de 35 x 20 x 10 km que publie NASA Science. Le modèle de Porter et al. 2024 a un rayon équivalent-volume de 9,95 km. Deux grandeurs publiées différentes ; la forme vient du modèle.",
+      "albedo": 0.21,
+      "albedoSource": "Hofgartner et al. 2021, Icarus (doi:10.1016/j.icarus.2020.113723), p_V 0.21 (+0.05 / -0.04) at 550 nm",
+      "colourSource": null,
+      "credit": {
+        "en": "NASA/JHU-APL/SwRI New Horizons LORRI, shape model by S. Porter et al. (2024), read from the New Horizons SPICE archive at NAIF (DSK mu69_porter_2024_v01), decimated for the web.",
+        "fr": "NASA/JHU-APL/SwRI New Horizons LORRI, modèle de forme de S. Porter et al. (2024), lu dans l’archive SPICE de New Horizons au NAIF (DSK mu69_porter_2024_v01), décimé pour le web.",
+        "es": "NASA/JHU-APL/SwRI New Horizons LORRI, modelo de forma de S. Porter et al. (2024), leído en el archivo SPICE de New Horizons en el NAIF (DSK mu69_porter_2024_v01), diezmado para la web.",
+        "pt-BR": "NASA/JHU-APL/SwRI New Horizons LORRI, modelo de forma de S. Porter et al. (2024), lido no arquivo SPICE da New Horizons no NAIF (DSK mu69_porter_2024_v01), decimado para a web."
+      }
+    },
     "description": {
       "en": "A small Kuiper Belt object, the most distant body ever explored by a spacecraft. NASA’s New Horizons flew past it on 1 January 2019 and found two lobes joined together, like a flattened snowman, with a very red surface.",
       "fr": "Un petit objet de la ceinture de Kuiper, le corps le plus lointain jamais exploré par une sonde. La sonde New Horizons de la NASA l’a survolé le 1er janvier 2019 et a découvert deux lobes soudés, comme un bonhomme de neige aplati, à la surface très rouge.",
@@ -100,6 +117,6 @@
     "facts.radiusKm": "Valeur de TRAVAIL, non publiée (rendu, écarts en rayons) : rayon équivalent en volume d'un ellipsoïde de 35 × 20 × 10 km, les dimensions que NASA Science publie (page Arrokoth, faits, lue le 2026-10-04). Même convention que Hauméa.",
     "": "Cible déclarée d'une mission au registre du PDS, ajoutée au catalogue le 2026-10-04 (pages des missions, vague 1). Faits lus à la SBDB ; description fondée sur les descriptions de missions du PDS et les pages de NASA Science ou de l'ESA citées dans le handoff du 2026-10-04.",
     "a": "Éléments osculateurs JPL Horizons EXACTEMENT à cette époque (COMMAND '486958;', EPHEM_TYPE=ELEMENTS, TLIST=2461041.5, CENTER=500@0).",
-    "fallbackColor": "Gris de l'albédo géométrique SBDB (réflectance en sRGB, plancher 0x48 pour rester visible) ; sans albédo publié, une teinte d'attente. Ce n'est pas une mesure de couleur."
+    "fallbackColor": "Gris de l'albédo géométrique de Hofgartner et al. 2021 (0,21), même règle que les autres corps (puissance 1/2,2) : la sphère d'attente a la couleur moyenne du modèle cuit. C'était une teinte d'attente avant la vague 4 (2026-10-04), faute d'albédo à la SBDB. Ce n'est pas une mesure de couleur."
   }
 }
