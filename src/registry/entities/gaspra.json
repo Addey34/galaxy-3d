@@ -26,9 +26,6 @@
         "1k"
       ],
       "extentRatio": 1.77,
-      "albedo": 0.246,
-      "albedoSource": "NEOWISE, Masiero et al. 2014, ApJ 791, 121 (JPL SBDB), 0.246 +/- 0.032",
-      "colourSource": null,
       "credit": {
         "en": "NASA Galileo SSI, shape model by P. Thomas et al. (1994, Icarus 107, 25), NASA PDS ast-sat.thomas.shape-models, decimated for the web.",
         "fr": "NASA Galileo SSI, modèle de forme de P. Thomas et al. (1994, Icarus 107, 25), NASA PDS ast-sat.thomas.shape-models, décimé pour le web.",
@@ -47,7 +44,11 @@
       "fr": "https://fr.wikipedia.org/wiki/(951)_Gaspra",
       "es": "https://es.wikipedia.org/wiki/(951)_Gaspra",
       "pt-BR": "https://pt.wikipedia.org/wiki/951_Gaspra"
-    }
+    },
+    "surfaceResolutions": [
+      "2k",
+      "1k"
+    ]
   },
   "facts": {
     "radiusKm": {
@@ -111,6 +112,7 @@
   "notes": {
     "": "Cible déclarée d'une mission au registre du PDS, ajoutée au catalogue le 2026-10-04 (pages des missions, vague 1). Faits lus à la SBDB ; description fondée sur les descriptions de missions du PDS et les pages de NASA Science ou de l'ESA citées dans le handoff du 2026-10-04.",
     "a": "Éléments osculateurs JPL Horizons EXACTEMENT à cette époque (COMMAND '951;', EPHEM_TYPE=ELEMENTS, TLIST=2461041.5, CENTER=500@10).",
-    "fallbackColor": "Gris de l'albédo géométrique SBDB (réflectance en sRGB, plancher 0x48 pour rester visible) ; sans albédo publié, une teinte d'attente. Ce n'est pas une mesure de couleur."
+    "fallbackColor": "Gris de l'albédo géométrique SBDB (réflectance en sRGB, plancher 0x48 pour rester visible) ; sans albédo publié, une teinte d'attente. Ce n'est pas une mesure de couleur.",
+    "model.albedo": "Drapé depuis le 2026-10-05 de la photomosaïque Galileo de Stooke : un modèle drapé ne porte plus de couleur cuite. Le modèle est livré dans le repère de Thomas (pôle mesuré sur Y), plus dans ses axes d'inertie : c'est dans ce repère que la carte a été projetée."
   }
 }

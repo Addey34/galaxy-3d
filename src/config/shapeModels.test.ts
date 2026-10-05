@@ -31,6 +31,19 @@ const PROJECT_ROOT = resolve(__dirname, '../..');
 const DEFINED_AXIS_RATIO = 1.03;
 
 /**
+ * Modèles livrés dans le repère de leur pôle MESURÉ alors que leur axe de plus grande inertie,
+ * calculé à densité homogène, s'en écarte de plus de `MAX_POLE_OFFSET_DEG`. Chacun avec son écart
+ * mesuré et sa raison ; la tolérance reste loin des 90° du défaut visé.
+ *
+ * Gaspra (11,0°, 2026-10-05) : le pôle du modèle de Thomas et al. (1994) est celui de la rotation
+ * OBSERVÉE, et c'est dans ce repère que la photomosaïque de Stooke a été projetée. Le tourner dans
+ * ses axes d'inertie (`--principal`, livré jusque-là) rendait le drapé impossible et faisait
+ * tourner le corps autour d'un axe calculé plutôt que mesuré, la moitié du modèle n'ayant été vue
+ * qu'en basse résolution.
+ */
+const MEASURED_POLE_FRAME: Readonly<Record<string, number>> = { gaspra: 12 };
+
+/**
  * MODÈLES DE FORME — ce que le contrat doit garantir.
  *
  * Une sphère ne dit rien de vrai d'un corps de quelques centaines de mètres : ce qui fait
@@ -250,6 +263,7 @@ describe('orientation des modèles livrés', () => {
     (name, _quality, onDisk) => {
       const { positions, index } = readGlbGeometry(onDisk);
       const { moments, axes } = principalInertia(positions, index);
+      const maxOffsetDeg = MEASURED_POLE_FRAME[name] ?? MAX_POLE_OFFSET_DEG;
       const angleToY = (axis: [number, number, number]) =>
         (Math.acos(Math.min(1, Math.abs(axis[1]))) * 180) / Math.PI;
       if (moments[2] / moments[1] >= DEFINED_AXIS_RATIO) {
@@ -257,7 +271,7 @@ describe('orientation des modèles livrés', () => {
         expect(
           tiltDeg,
           `${name} : axe d'inertie maximale à ${tiltDeg.toFixed(1)}° de Y`
-        ).toBeLessThan(MAX_POLE_OFFSET_DEG);
+        ).toBeLessThan(maxOffsetDeg);
       } else {
         // Axe maximal indéfini (corps en cigare ou presque rond) : Y doit seulement être
         // PERPENDICULAIRE au grand axe, l'axe de plus petite inertie, autour duquel une

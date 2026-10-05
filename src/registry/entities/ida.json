@@ -26,9 +26,6 @@
         "1k"
       ],
       "extentRatio": 2,
-      "albedo": 0.262,
-      "albedoSource": "NEOWISE, Mainzer et al. 2012, ApJ 759 L8 (JPL SBDB)",
-      "colourSource": null,
       "credit": {
         "en": "NASA Galileo SSI, shape model by P. Thomas et al. (1996), NASA PDS EAR-A-5-DDR-SHAPE-MODELS-V2.1, converted to a mesh for the web.",
         "fr": "NASA Galileo SSI, modèle de forme de P. Thomas et al. (1996), NASA PDS EAR-A-5-DDR-SHAPE-MODELS-V2.1, converti en maillage pour le web.",
@@ -47,7 +44,11 @@
       "fr": "https://fr.wikipedia.org/wiki/(243)_Ida",
       "es": "https://es.wikipedia.org/wiki/(243)_Ida",
       "pt-BR": "https://pt.wikipedia.org/wiki/243_Ida"
-    }
+    },
+    "surfaceResolutions": [
+      "2k",
+      "1k"
+    ]
   },
   "facts": {
     "radiusKm": {
@@ -117,6 +118,6 @@
     "facts.massKg": "GM = 0,00275 km³/s² (SBDB, Belton et al. 1996, mesuré grâce à Dactyle) ÷ G.",
     "facts.moonCount": "Dactyle, découverte sur les images de Galileo — pas encore dans ce catalogue.",
     "model.extentRatio": "Mesuré sur le fichier : rayon max / rayon équivalent-volume.",
-    "model.albedo": "Luminosité et couleur RÉELLES, cuites dans le modèle (bake-shape-colour.mjs) ; la sphère d'attente ci-dessus a la même couleur moyenne, pour ne pas changer d'aspect au chargement."
+    "model.albedo": "Drapé depuis le 2026-10-05 de la photomosaïque Galileo de Stooke et Nyrtsov : un modèle drapé ne porte plus de couleur cuite."
   }
 }
