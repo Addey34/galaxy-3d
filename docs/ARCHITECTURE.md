@@ -2062,6 +2062,37 @@ la correction n'est pas une constante de filtre. Les spectres NIMS d'Ida commenc
 n'ont ni vert ni violet. Ce qui rouvrirait la question : des cubes couleur d'Ida publiés, ou un
 étalonnage des filtres SSI documenté pour 1993.
 
+**La couleur VARIABLE de Gaspra n'est pas livrée, et la raison est MESURÉE (2026-10-05).** La
+moyenne de #115 reste. La tentative a suivi le plan « pose, puis report, puis validation
+croisée », sur des sondes hors dépôt ; ce qu'elle a établi vaut d'être gardé.
+
+- **La pose de chaque série se retrouve** depuis les plans d'angles des cubes, par rendu du
+  modèle de Thomas et ajustement, sans noyaux SPICE. Ces angles ont été calculés avec une caméra
+  en perspective à ~71 km (la phase varie linéairement de 11° sur le corps, alors que Galileo
+  était à plus de 1 600 km). Sur les plans à 350 px : recouvrement des silhouettes 0,997,
+  émission 1,6 à 2,1°, incidence 1,6 à 1,9°, sur les six séries ; le modèle de Mathilde, témoin,
+  plafonne à 0,86, 19° et 30°.
+- **Trois défauts de l'archive, au-delà de la série C de #115.** Le fond des cubes couleur vaut
+  0,0 et non −1 comme dans les fichiers de géométrie. Les bandes de chaque série restent décalées
+  de 0,2 à 0,7 px les unes des autres, dans une direction propre à chaque série, alors que la
+  documentation annonce un recalage. Et les images couleur sont décalées de leurs PROPRES plans
+  d'angles : 1,5 à 2,0 px pour B à E, 6,5 px pour F, mesuré en maximisant l'accord entre la
+  luminosité et l'ombrage de Lommel-Seeliger prédit par ces plans. Les rapports par série
+  retrouvent la couleur moyenne de #115 (rouge/vert 1,124 à 1,127, violet/vert 0,769 à 0,777),
+  série C comprise une fois ses bandes remises dans l'ordre.
+- **Ce qui a décidé.** Après les trois corrections, B, C, D et E s'accordent par blocs de 20°
+  (violet/vert : corrélation 0,65 à 0,98 ; rouge/vert : 0,32 à 0,65), et l'accord survit au
+  retrait de ce qu'expliquent les angles (2 à 26 % de la variance). Mais ces quatre séries
+  voient Gaspra du MÊME point, à 2° de rotation près : un défaut fixe dans l'image tomberait aux
+  mêmes endroits. Seule F, 25 minutes plus tard et tournée d'environ 25°, peut trancher. Elle
+  varie autant (écart-type 0,025 à 0,028 contre 0,019 à 0,040) et retrouve la même moyenne
+  (0,758), mais **pas aux mêmes endroits** : corrélation −0,14 à +0,10 avec chacune des quatre,
+  à toutes les échelles. Le motif commun est donc lié au point de vue, pas à la surface.
+
+Ce qui rouvrirait la question : une seconde série couleur COMPLÈTE prise d'un autre point de
+vue (A n'a pas de vert, F pas de rouge), ou des noyaux de pointage qui permettraient de recaler
+les images brutes sans passer par les plans de l'archive.
+
 Pour les autres, aucune carte n'a été trouvée là où l'on a cherché le 2026-10-04 : le dépôt S3
 complet des mosaïques de l'USGS (18 844 clés listées), les cartes de Stooke au PDS (Ida, Gaspra,
 Mathilde, Éros, Itokawa, Phobos, Déimos, Amalthée, Hypérion, Épiméthée, Wild 2 seulement) et les
