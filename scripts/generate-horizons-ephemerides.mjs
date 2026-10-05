@@ -208,7 +208,7 @@ const BODIES = [
   //   steins                  6,1 / 170,6 / 677,5 / 2 682                   → 8 j
   //   annefrank               4,4 / 143,1 / 567,8 / 2 208                   → 8 j
   //   masursky                3,1 / 224,1 / 894,3 / 3 510                   → 8 j
-  //   didymos                 414,7 / 1 498 / 4 358 / 12 215                → 4 j
+  //   didymos                 414,7 / 1 498 / 4 358 / 12 215                → 1 j (cf. son entrée)
   //   dinkinesh               6,8 / 138,4 / 551,4 / 2 128                   → 8 j
   //   donaldjohanson          8,1 / 205,0 / 810,3 / 3 225                   → 8 j
   //   eurybates               0,1 / 1,5 / 23,1 / 1 974                      → 16 j
@@ -283,7 +283,11 @@ const BODIES = [
     expectedName: 'didymos',
     center: 'sun',
     splitAtSolutionEpoch: true,
-    stepDays: 4,
+    // Au pas d'UN jour et non de 4 (2026-10-05, décision de l'utilisateur, qui accepte les
+    // octets) : au pas de 4 jours, l'interpolation de Didymos portait Dimorphos composé à
+    // 15,85 km au pire, cent fois son diamètre. Cf. `docs/ARCHITECTURE.md` § « La position
+    // composée d'un satellite de petit corps ».
+    stepDays: 1,
     // Le primaire de la solution DART là où Horizons le sert : cf. `overlayPrimary`.
     primary: { target: '920065803', insideJdTdb: 2459000.5 },
   },
@@ -630,6 +634,11 @@ const BODIES = [
     center: 'didymos',
     startTime: '2000-01-05',
     stopTime: '2030-12-29',
+    // Au pas d'UN jour (2026-10-05) : l'intervalle qui contient l'impact ne se résout pas au
+    // pas de 4 jours (44 heures à plus d'un diamètre, mesuré heure par heure), et le saut de
+    // vitesse se lit dans l'en-tête d'Horizons (cf. `readImpulses`).
+    stepDays: 1,
+    impulses: ['DART impact was on'],
   },
   {
     name: 'menoetius',
@@ -1024,6 +1033,53 @@ async function coverageEdge(body, target, inside, outside) {
   return inside;
 }
 
+const MONTHS = 'JanFebMarAprMayJunJulAugSepOctNovDec';
+
+/**
+ * Les sauts de vitesse d'un corps, LUS dans l'en-tête d'Horizons et jamais saisis. L'entrée
+ * déclare seulement la phrase qui ouvre la déclaration (`impulses: ['DART impact was on']`) ;
+ * l'instant est celui que la même phrase donne en TDB (« equivalent to 2022-Sep-26
+ * 23:15:33.365 TDB », coupé sur deux lignes dans la réponse). Une phrase absente, ou un instant
+ * hors du fichier, fait ÉCHOUER la génération : un saut publié au mauvais endroit déformerait
+ * l'intervalle qui le contient sans rien d'anormal à l'écran.
+ */
+async function readImpulses(body, rows) {
+  const params = new URLSearchParams({
+    format: 'json',
+    COMMAND: `'${body.target}'`,
+    OBJ_DATA: 'YES',
+    MAKE_EPHEM: 'NO',
+  });
+  const response = await fetch(`${API_URL}?${params}`, {
+    headers: { 'User-Agent': 'Galaxy-Ephemeris-Generator/1.0' },
+  });
+  if (!response.ok) throw new Error(`${body.name}: HTTP ${response.status}`);
+  const { result } = await response.json();
+  return body.impulses.map((phrase) => {
+    const start = result.indexOf(phrase);
+    const match =
+      start === -1
+        ? null
+        : /equivalent to\s+(\d{4})-([A-Z][a-z]{2})-(\d{2})\s+(\d{2}):(\d{2}):(\d{2}(?:\.\d+)?)\s+TDB/.exec(
+            result.slice(start)
+          );
+    if (!match)
+      throw new Error(
+        `${body.name}: « ${phrase} » suivi d'un instant TDB introuvable dans l'en-tête Horizons`
+      );
+    const [, y, mon, d, h, mi, s] = match;
+    const month = MONTHS.indexOf(mon) / 3;
+    const ms =
+      Date.UTC(Number(y), month, Number(d), Number(h), Number(mi)) +
+      Number(s) * 1000;
+    const jd = ms / 86_400_000 + 2_440_587.5;
+    if (!(jd > rows[0].jd && jd < rows[rows.length - 1].jd))
+      throw new Error(`${body.name}: saut au JD ${jd} hors du fichier`);
+    process.stdout.write(`saut de vitesse au JD ${jd.toFixed(6)} TDB, `);
+    return jd;
+  });
+}
+
 async function overlayPrimary(body, rows, stepDays) {
   const { target } = body.primary;
   const first = rows[0].jd;
@@ -1111,6 +1167,7 @@ async function fetchBody(body) {
   const primary = body.primary
     ? await overlayPrimary(body, rows, stepDays)
     : undefined;
+  const impulses = body.impulses ? await readImpulses(body, rows) : undefined;
   const binary = encodeBinary(rows);
   const hash = createHash('sha256').update(binary).digest('hex').slice(0, 12);
   const file = `${body.name}.${hash}.bin`;
@@ -1124,6 +1181,7 @@ async function fetchBody(body) {
     stepDays,
     sampleCount: rows.length,
     ...(primary ? { primary } : {}),
+    ...(impulses ? { impulses } : {}),
   };
 }
 

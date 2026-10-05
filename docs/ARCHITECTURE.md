@@ -724,6 +724,12 @@ petit corps »). **1 002 octets par jour simulé, 2,93 Mbit/s** à la vitesse ma
 plafond **2,96 Mbit/s** ; à 2 Mbit/s le plafond vaut **67,1 %** du maximum, à 120 ko/s
 **31,6 %**. Les éphémérides livrées passent de 51 193 104 à 51 853 824 octets.
 
+**Mis à jour le 2026-10-05, encore** : Didymos et Dimorphos passent au pas d'un jour, pour que
+Dimorphos composé tienne sous son diamètre (même §). **1 074 octets par jour simulé,
+3,14 Mbit/s** à la vitesse maximale, seuil sans plafond **3,17 Mbit/s** ; à 2 Mbit/s le plafond
+vaut **62,6 %** du maximum, à 120 ko/s **29,5 %**. Les éphémérides livrées passent de
+51 853 824 à 54 904 128 octets (Didymos 880 992 → 3 523 920, Dimorphos 135 840 → 543 216).
+
 **Le débit se mesure sur le TEMPS OCCUPÉ, pas par requête.** Six requêtes simultanées se partagent
 la bande passante : `octets / durée` d'UNE requête sous-estime le lien d'un facteur proche du
 nombre de requêtes en vol, et c'est la mesure qui a trompé le lot 15 (64 requêtes de 77 s chacune
@@ -4001,7 +4007,9 @@ autres lunes, et chaque écart à ces règles est une MESURE :
 - **L'impact de DART coûte un rayon, mesuré** : l'intervalle de 4 jours qui l'enjambe mélange
   deux orbites (période 11 h 55 puis 11 h 23), et l'outil de propagation ancré autour du
   2022-09-26 mesure un écart qui sature à 1,0-1,1 rayon de Dimorphos, contre 0,3 en régime
-  ordinaire.
+  ordinaire. [SUPERSEDED le 2026-10-05 : mesuré heure par heure, l'intervalle allait jusqu'à
+  346 m, soit 4,3 rayons ; le saut de vitesse est désormais publié et l'intervalle ne fond plus
+  les deux orbites, cf. § « La position composée d'un satellite de petit corps ».]
 - **La position héliocentrique composée s'écarte davantage, et c'est le PARENT** : le fichier de
   Didymos est la solution au sol (`65803;`, 1900-2100) et celui de Patrocle le barycentre du
   couple (`617;`). Le composé s'écarte donc de 158 km (Dimorphos, comparé au barycentre DART que
@@ -4054,7 +4062,8 @@ au sol plutôt que sur ce primaire, et la cause n'était ni la même ni celle qu
 
 **Ce qui a changé.** Le générateur substitue au parent les vecteurs du PRIMAIRE sur l'intervalle
 où Horizons le sert, SONDÉ par dichotomie à chaque génération (`overlayPrimary`) et publié au
-manifeste (`primary`) : 2001-01-04 → 2025-07-11 pour Didymos, 2000-01-06 → 2050-11-25 pour
+manifeste (`primary`) : 2001-01-04 → 2025-07-11 pour Didymos (2001-01-03 → 2025-07-12 depuis
+son pas d'un jour, la grille sondée étant plus fine), 2000-01-06 → 2050-11-25 pour
 Patrocle. Ailleurs, la solution au sol reste ; le saut aux raccords (85 et 3 km pour Didymos, 496
 et 527 km pour Patrocle) est un changement de SOLUTION, que le générateur imprime. Patrocle passe
 au pas de 4 jours de Menoetius, sans quoi son ballant ne se retire pas, et c'est le mécanisme de
@@ -4079,6 +4088,39 @@ les 16 km de Dimorphos sont maintenant l'INTERPOLATION de Didymos, un géocroise
 tous les 4 jours ; descendre sous le diamètre de Dimorphos (160 m) demanderait un pas d'environ
 un jour sur tout le fichier de Didymos, soit quatre fois ses octets. C'est une décision de budget,
 écrite ici et non prise.
+[SUPERSEDED le 2026-10-05 : décision prise, ci-dessous.]
+
+**Dimorphos sous son diamètre (2026-10-05), décision de l'utilisateur qui accepte les octets.**
+Didymos passe au pas d'un jour (880 992 → 3 523 920 octets). La validation tombe à 34 m en
+moyenne, mais une mesure HEURE PAR HEURE autour de l'impact (le tirage de 48 dates ne l'avait
+touché qu'une fois, à 328 m) montrait un autre défaut, qui n'était pas Didymos : le fichier
+RELATIF de Dimorphos, au pas de 4 jours, fondait une orbite d'avant l'impact et une d'après sur
+l'intervalle qui le contient, 44 heures au-dessus du diamètre (346 m au pire). Deux corrections,
+et chacune a été mesurée seule :
+
+- **Le saut de vitesse est PUBLIÉ, et lu chez Horizons.** L'en-tête de la cible `120065803` écrit
+  « DART impact was on 26-Sep-2022 @ 23:14:24.183 UTC, equivalent to 2022-Sep-26 23:15:33.365
+  TDB ». Le générateur y lit l'instant TDB (`readImpulses`, l'entrée ne déclare que la phrase
+  qui l'ouvre) et le publie au manifeste (`impulses`) ; une phrase absente ou un instant hors du
+  fichier font échouer la génération. Dans l'intervalle qui le contient, l'interpolation
+  dynamique propage depuis le SEUL côté de la date (`impulseInInterval`) au lieu de fondre.
+- **Dimorphos passe aussi au pas d'un jour** (135 840 → 543 216 octets). Le saut seul ne suffit
+  pas : propagé d'un seul côté sur un arc de plusieurs jours, Dimorphos s'écarte encore de 265 m.
+
+Mesuré heure par heure contre Horizons, impact compris : relatif 50 m au pire, composé 101 m.
+Toutes les 12 h sur l'intervalle où Didymos est lu sur son primaire (17 903 dates) : composé
+89 m au pire hors des cinq secondes intercalaires, où la RÉFÉRENCE elle-même est ambiguë d'une
+seconde (15 à 34 km, à la vitesse de Didymos, exactement aux cinq instants de 2001-2025 ; un
+piège de mesure, pas de l'application). Le relevé de validation donne 22 m en moyenne et 85 m au
+pire, contre 2,54 et 15,85 km. Pour le reste de la couverture de Dimorphos (2000, 2025-2030),
+Didymos est sa solution au sol, et l'écart de solution reste celui écrit plus haut.
+
+`src/config/compositeReference.test.ts` tient l'écart sous le diamètre (deux fois le rayon de la
+fiche) sur des vecteurs d'Horizons committés (`compositeReferenceVectors.json`, écrits par
+`node scripts/capture-composite-reference.mjs`) : le jour de l'impact heure par heure, puis tous
+les 60 jours. **Falsifié trois fois** : le saut ignoré par le service rend 220 m le jour de
+l'impact ; l'ancien Didymos au pas de 4 jours, 15,2 km ; l'ancien Dimorphos sans saut publié,
+351 m.
 
 ### Vague 3 : les modèles de forme des cibles (2026-10-04)
 

@@ -274,6 +274,14 @@ export interface HorizonsBodyManifest {
    * `config/gravity.ts` garde la priorité.
    */
   reflex?: { companion: string; factor: number };
+  /**
+   * Instants (JD TDB) où la vitesse du corps SAUTE, lus par le générateur dans l'en-tête
+   * d'Horizons et jamais saisis : l'impact de DART sur Dimorphos. La position y est continue,
+   * la vitesse non, donc fondre les deux ancres d'un intervalle qui en contient un mélange une
+   * orbite d'avant et une orbite d'après (346 m au pire, mesuré au pas de 4 jours). Dans cet
+   * intervalle l'interpolation dynamique propage depuis le SEUL côté de la date.
+   */
+  impulses?: readonly number[];
 }
 
 /**
@@ -372,6 +380,23 @@ interface FetchedBody {
 /** Premier échantillon tenu, dans la grille du FICHIER. */
 function heldFirstIndex(body: LoadedBody): number {
   return body.firstIndex ?? 0;
+}
+
+/**
+ * Fraction de l'intervalle `index` (grille du FICHIER) où tombe un saut de vitesse publié,
+ * strictement entre ses deux ancres, ou `null`. Un saut posé SUR un nœud ne coupe aucun
+ * intervalle : l'état de ce nœud appartient déjà à l'une des deux orbites.
+ */
+export function impulseInInterval(
+  manifest: HorizonsBodyManifest,
+  index: number
+): number | null {
+  if (!manifest.impulses) return null;
+  for (const jd of manifest.impulses) {
+    const u = (jd - manifest.startJdTdb) / manifest.stepDays - index;
+    if (u > 0 && u < 1) return u;
+  }
+  return null;
 }
 
 /** Nombre d'échantillons tenus, qui vaut `manifest.sampleCount` quand le fichier est entier. */
@@ -1296,8 +1321,12 @@ export class HorizonsEphemerisService implements PreciseEphemerisProvider {
 
     const u = samplePosition - index;
     return (
-      this._keplerianBetweenSamples(body, local, u) ??
-      this._hermiteBetweenSamples(body, local, u)
+      this._keplerianBetweenSamples(
+        body,
+        local,
+        u,
+        impulseInInterval(body.manifest, index)
+      ) ?? this._hermiteBetweenSamples(body, local, u)
     );
   }
 
@@ -1323,7 +1352,9 @@ export class HorizonsEphemerisService implements PreciseEphemerisProvider {
     body: LoadedBody,
     /** Index dans les échantillons TENUS, pas dans la grille du fichier (cf. `_sampleGrid`). */
     index: number,
-    u: number
+    u: number,
+    /** Fraction de l'intervalle où la vitesse saute (`manifest.impulses`), sinon `null`. */
+    impulseU: number | null = null
   ): THREE.Vector3 | null {
     const dynamics = body.dynamics;
     if (dynamics?.periodDays === undefined) return null;
@@ -1357,6 +1388,10 @@ export class HorizonsEphemerisService implements PreciseEphemerisProvider {
       _forward
     );
     if (!forward) return null;
+    // Avant le saut, seule l'ancre d'avant décrit l'orbite suivie ; après, seule celle d'après.
+    // Le raccord au saut est continu en position, au plancher de propagation près.
+    if (impulseU !== null && u < impulseU)
+      return eclipticToScene(forward.x, forward.y, forward.z);
 
     _stateR.set(values[b], values[b + 1], values[b + 2]);
     _stateV.set(values[b + 3], values[b + 4], values[b + 5]);
@@ -1368,6 +1403,8 @@ export class HorizonsEphemerisService implements PreciseEphemerisProvider {
       _backward
     );
     if (!backward) return null;
+    if (impulseU !== null)
+      return eclipticToScene(backward.x, backward.y, backward.z);
 
     // Poids en smoothstep : vaut 0 en u = 0 et 1 en u = 1, derivee nulle aux deux bouts.
     // C'est ce qui rend le raccord C1 d'un intervalle au suivant.

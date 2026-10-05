@@ -1,7 +1,7 @@
 {
   "version": 1,
   "source": "NASA/JPL Horizons",
-  "generatedAt": "2026-10-05T03:39:16.964Z",
+  "generatedAt": "2026-10-05T06:01:21.036Z",
   "frame": "ECLIPTIC_J2000",
   "center": "SUN",
   "units": "AU-D",
@@ -578,16 +578,16 @@
       "sampleCount": 9177
     },
     "didymos": {
-      "file": "didymos.b41f02b46892.bin",
+      "file": "didymos.144dbe709c2b.bin",
       "target": "65803;",
       "center": "sun",
       "startJdTdb": 2415020.5,
-      "stepDays": 4,
-      "sampleCount": 18354,
+      "stepDays": 1,
+      "sampleCount": 73415,
       "primary": {
         "target": "920065803",
-        "fromJdTdb": 2451912.5,
-        "toJdTdb": 2460868.5
+        "fromJdTdb": 2451911.5,
+        "toJdTdb": 2460869.5
       }
     },
     "dinkinesh": {
@@ -728,12 +728,15 @@
       "sampleCount": 18354
     },
     "dimorphos": {
-      "file": "dimorphos.1f268d79e729.bin",
+      "file": "dimorphos.6cd5e517bb51.bin",
       "target": "120065803",
       "center": "didymos",
       "startJdTdb": 2451548.5,
-      "stepDays": 4,
-      "sampleCount": 2830
+      "stepDays": 1,
+      "sampleCount": 11317,
+      "impulses": [
+        2459849.469136169
+      ]
     },
     "menoetius": {
       "file": "menoetius.ba1f470bacc0.bin",
