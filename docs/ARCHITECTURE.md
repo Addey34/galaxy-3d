@@ -718,6 +718,12 @@ les seules 23 cibles : 2,83 Mbit/s, 69,5 % et 32,7 %). Chaque corps dessiné fai
 positions en lecture accélérée, ligne d'orbite ou non. Mesuré par les fonctions de
 `core/playbackBudget.ts`, tenu par `playbackBudget.test.ts`.
 
+**Mis à jour le 2026-10-05** : Patrocle passe du pas de 16 jours au pas de 4 jours de Menoetius,
+pour que son ballant autour du barycentre se retire (§ « La position composée d'un satellite de
+petit corps »). **1 002 octets par jour simulé, 2,93 Mbit/s** à la vitesse maximale, seuil sans
+plafond **2,96 Mbit/s** ; à 2 Mbit/s le plafond vaut **67,1 %** du maximum, à 120 ko/s
+**31,6 %**. Les éphémérides livrées passent de 51 193 104 à 51 853 824 octets.
+
 **Le débit se mesure sur le TEMPS OCCUPÉ, pas par requête.** Six requêtes simultanées se partagent
 la bande passante : `octets / durée` d'UNE requête sous-estime le lien d'un facteur proche du
 nombre de requêtes en vol, et c'est la mesure qui a trompé le lot 15 (64 requêtes de 77 s chacune
@@ -3987,7 +3993,9 @@ autres lunes, et chaque écart à ces règles est une MESURE :
   Horizons ne sert que du 2001-01-02 au 2025-07-13) et de 411 km (Menoetius, la distance du
   primaire au barycentre d'un couple presque égal). Le résumé de validation le publie tel quel ;
   `ephemerisStepBudget.test.ts` ne le compte pas comme un refus de pas, par une règle dérivée
-  (binaire sous la cible et composé plus de dix fois le binaire).
+  (binaire sous la cible et composé plus de dix fois le binaire). **[SUPERSEDED le 2026-10-05 :
+  les deux causes étaient mal nommées et sont corrigées, § « La position composée d'un satellite
+  de petit corps » ci-dessous.]**
 - **Une couverture de référence que rien ne nomme se SONDE.** Horizons refuse Dimorphos vu du
   Soleil en 2000 par « Insufficient ephemeris data has been loaded », un refus SPICE qui ne nomme
   aucune borne, et que `validate-against-horizons.mjs` prenait pour une panne. Il trouve
@@ -4013,6 +4021,49 @@ publié, l'axe dessiné était celui d'une obliquité nulle : Dimorphos tournait
 Didymos qui tourne à l'envers. Les trois corps des deux couples portent maintenant, en valeur de
 travail, l'inclinaison de la normale de l'orbite mesurée sur le binaire, puisqu'une rotation
 synchrone se fait autour d'elle.
+
+### La position composée d'un satellite de petit corps (2026-10-05)
+
+**Horizons est cohérent avec lui-même, et c'est ce qui a nommé la vraie cause.** Dimorphos vu du
+Soleil égale, à 0,00 km aux 26 dates mesurées, le primaire vu du Soleil plus Dimorphos vu du
+primaire (Menoetius de même). Tout l'écart du composé venait donc du PARENT, lu sur sa solution
+au sol plutôt que sur ce primaire, et la cause n'était ni la même ni celle qu'on avait écrite :
+
+- **Didymos** : la solution au sol (`65803;`) et le primaire de la solution DART (`920065803`)
+  sont deux orbites, qui divergent en remontant le temps : 112 km en 2002, 30 km en 2014, 1 à
+  2 km en 2022-2024. Le décalage barycentre/primaire, lui, ne fait que ~10 m.
+- **Patrocle** : l'écart au primaire (`920000617`) se décompose EXACTEMENT en −0,2202 × Menoetius
+  plus une constante lente (47 km en 2005 et 2020, 312 km en 2040), résidu sous 1,7 km sur trois
+  décades. C'est le ballant du primaire autour du barycentre du couple, en 4,28 jours, plus un
+  écart de solution.
+
+**Ce qui a changé.** Le générateur substitue au parent les vecteurs du PRIMAIRE sur l'intervalle
+où Horizons le sert, SONDÉ par dichotomie à chaque génération (`overlayPrimary`) et publié au
+manifeste (`primary`) : 2001-01-04 → 2025-07-11 pour Didymos, 2000-01-06 → 2050-11-25 pour
+Patrocle. Ailleurs, la solution au sol reste ; le saut aux raccords (85 et 3 km pour Didymos, 496
+et 527 km pour Patrocle) est un changement de SOLUTION, que le générateur imprime. Patrocle passe
+au pas de 4 jours de Menoetius, sans quoi son ballant ne se retire pas, et c'est le mécanisme de
+Pluton qui le retire et le remet (`BodyDynamics.reflex`), avec deux généralisations : les deux
+grilles sont ALIGNÉES et non plus identiques (Menoetius commence 9 132 échantillons après
+Patrocle, `alignedOffset`), et hors du fichier compagnon le corps s'interpole sans ballant, puisque
+sa solution au sol n'en porte pas.
+
+**Le facteur ne vient pas des masses, il est DÉRIVÉ des binaires.** Aucune répartition de la masse
+du couple n'est publiée ; le facteur est celui qui rend le primaire LISSE une fois le compagnon
+retiré (`core/reflexFactor.ts`, différences d'ordre SIX : à l'ordre deux, la courbure de l'orbite
+autour du Soleil, ~26 000 km sur 4 jours, noyait le ballant et rendait −0,45 sans rien réduire,
+un nombre faux d'apparence plausible). Les fichiers livrés redonnent −0,22024, le témoin mesuré
+d'abord sur Horizons ; Didymos donne −0,009 (Dimorphos pèse ~1 % du couple) sans rien réduire, et
+la règle ne le publie pas. `pnpm ephemeris:reflex` l'écrit au manifeste, `--check` le confronte
+aux binaires, et `reflexFactor.test.ts` tient l'égalité, falsifiée par un facteur de −0,25.
+
+**Ce que la mesure donne** (`pnpm ephemeris:validate`, la validation compare désormais le parent
+au primaire sur l'intervalle publié, et à la solution au sol ailleurs) : Menoetius composé 411 →
+11 km au pire (7,6 → 0,2 rayon), Dimorphos composé 158 → 16 km. **Ce qui reste, et pourquoi** :
+les 16 km de Dimorphos sont maintenant l'INTERPOLATION de Didymos, un géocroiseur échantillonné
+tous les 4 jours ; descendre sous le diamètre de Dimorphos (160 m) demanderait un pas d'environ
+un jour sur tout le fichier de Didymos, soit quatre fois ses octets. C'est une décision de budget,
+écrite ici et non prise.
 
 ### Vague 3 : les modèles de forme des cibles (2026-10-04)
 

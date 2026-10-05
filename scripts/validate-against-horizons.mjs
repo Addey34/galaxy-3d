@@ -198,6 +198,50 @@ let cacheHits = 0;
  * l'époque et coïncident avec les requêtes courtes (0,00 à 0,18 km, mesuré sur Itokawa).
  */
 async function horizonsVectors(targetKey, centerKey, datesMs, override) {
+  // Un fichier qui porte le PRIMAIRE d'un système binaire sur un intervalle (manifeste,
+  // `primary`, 2026-10-05) se compare au primaire sur cet intervalle et à sa solution au sol
+  // ailleurs : comparer partout à la solution au sol compterait comme une erreur exactement la
+  // correction que le fichier apporte (de 59 à 502 km pour Patrocle).
+  const primary = horizonsManifest.bodies[targetKey]?.primary;
+  if (primary && !override && centerKey === 'sun') {
+    const inside = [];
+    const outside = [];
+    datesMs.forEach((ms, i) =>
+      (jdOf(ms) >= primary.fromJdTdb && jdOf(ms) <= primary.toJdTdb
+        ? inside
+        : outside
+      ).push(i)
+    );
+    if (inside.length > 0) {
+      const rows = new Array(datesMs.length);
+      let result = null;
+      for (const [indices, partOverride] of [
+        [
+          inside,
+          {
+            target: {
+              command: primary.target,
+              expect: TARGETS[targetKey].expect,
+            },
+          },
+        ],
+        [outside, undefined],
+      ]) {
+        if (indices.length === 0) continue;
+        const part = await horizonsVectors(
+          targetKey,
+          centerKey,
+          indices.map((i) => datesMs[i]),
+          // Hors de l'intervalle : la solution au sol, sans repasser par ce partage.
+          partOverride ?? { solutionOnly: true }
+        );
+        if (part.error) return part;
+        indices.forEach((i, k) => (rows[i] = part.rows[k]));
+        result ??= part;
+      }
+      return { ...result, rows };
+    }
+  }
   const whole = await horizonsVectorsOnce(
     targetKey,
     centerKey,

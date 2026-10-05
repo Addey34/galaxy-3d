@@ -17,6 +17,7 @@
     "ephemeris:generate": "node scripts/generate-horizons-ephemerides.mjs",
     "ephemeris:elements": "node scripts/derive-relative-elements.mjs",
     "ephemeris:meanmotion": "node scripts/compute-mean-motion-scale.mjs",
+    "ephemeris:reflex": "node scripts/compute-reflex-factor.mjs",
     "ephemeris:propagation": "node scripts/measure-propagation-error.mjs",
     "ephemeris:step": "node scripts/measure-ephemeris-step.mjs",
     "ephemeris:interstellar": "node scripts/derive-interstellar-elements.mjs",

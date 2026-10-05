@@ -3,7 +3,11 @@ import { describe, expect, it } from 'vitest';
 import { CELESTIAL_CONFIG } from '@/config/bodies';
 import { bodyDynamics } from '@/config/gravity';
 import { flattenBodies } from '@/config/catalog';
-import { HorizonsEphemerisService } from './HorizonsEphemerisService';
+import {
+  HorizonsEphemerisService,
+  withPublishedReflex,
+  type HorizonsBodyManifest,
+} from './HorizonsEphemerisService';
 import {
   EPHEMERIDES_DIR,
   horizonsManifest,
@@ -11,6 +15,7 @@ import {
   type HorizonsManifestEntry,
 } from './horizonsTestFixture';
 import {
+  alignedOffset,
   BYTES_PER_SAMPLE,
   byteRangeForIndices,
   covers,
@@ -23,6 +28,7 @@ import {
   rangeHeader,
   samplePositionForDate,
   windowContains,
+  windowInCompanionGrid,
   WINDOW_MARGIN_SAMPLES,
   type SampleGrid,
   type SampleWindow,
@@ -69,9 +75,15 @@ function loadWindow(name: string, window: SampleWindow): unknown {
     startJdTdb: entry.startJdTdb + window.firstIndex * entry.stepDays,
     sampleCount: window.lastIndex - window.firstIndex + 1,
   };
-  const dynamics = bodyDynamics(CELESTIAL_CONFIG)[name];
+  const dynamics = DYNAMICS[name];
   return { manifest, samples, ...(dynamics ? { dynamics } : {}) };
 }
+
+/** Les dynamiques comme le chargement réseau les voit : masses, puis ballant PUBLIÉ. */
+const DYNAMICS = withPublishedReflex(
+  bodyDynamics(CELESTIAL_CONFIG),
+  Object.entries(horizonsManifest.bodies) as [string, HorizonsBodyManifest][]
+);
 
 /**
  * Le service, construit sur la seule FENÊTRE d'un corps : c'est ce que fera la phase 17C.
@@ -88,9 +100,17 @@ function windowedService(
   window: SampleWindow
 ): HorizonsEphemerisService {
   const loaded = new Map<string, unknown>([[name, loadWindow(name, window)]]);
-  const companion = bodyDynamics(CELESTIAL_CONFIG)[name]?.reflex?.companion;
+  const companion = DYNAMICS[name]?.reflex?.companion;
   if (companion && horizonsManifest.bodies[companion]) {
-    loaded.set(companion, loadWindow(companion, window));
+    // Le même intervalle de TEMPS, traduit dans la grille du compagnon : identique pour Pluton
+    // et Charon, décalé de 9 132 échantillons pour Patrocle et Menoetius (2026-10-05).
+    const offset = alignedOffset(gridOf(name), gridOf(companion));
+    const companionWindow =
+      offset === null
+        ? null
+        : windowInCompanionGrid(window, offset, gridOf(companion));
+    if (companionWindow)
+      loaded.set(companion, loadWindow(companion, companionWindow));
   }
   type Ctor = new (bodies: Map<string, unknown>) => HorizonsEphemerisService;
   return new (HorizonsEphemerisService as unknown as Ctor)(loaded);
@@ -524,8 +544,9 @@ describe('ce que la première vue coûte réellement', () => {
       0
     );
     // 38 445 024 au lot 17 ; 50 834 160 avec les 23 cibles de missions (2026-10-04), puis
-    // 51 193 104 avec leurs deux satellites, bornés à 2000-2030 et 2000-2050.
-    expect(shipped).toBe(51_193_104);
+    // 51 193 104 avec leurs deux satellites, bornés à 2000-2030 et 2000-2050 ; 51 853 824 quand
+    // Patrocle passe au pas de 4 jours de Menoetius pour que son ballant se retire (2026-10-05).
+    expect(shipped).toBe(51_853_824);
     // 62 au lot 17, plus les 23 cibles de missions du 2026-10-04 et leurs deux satellites : une
     // requête par corps.
     expect(requests).toBe(87);

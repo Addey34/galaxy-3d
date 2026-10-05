@@ -284,6 +284,8 @@ const BODIES = [
     center: 'sun',
     splitAtSolutionEpoch: true,
     stepDays: 4,
+    // Le primaire de la solution DART là où Horizons le sert : cf. `overlayPrimary`.
+    primary: { target: '920065803', insideJdTdb: 2459000.5 },
   },
   {
     name: 'dinkinesh',
@@ -339,7 +341,10 @@ const BODIES = [
     expectedName: 'patroclus',
     center: 'sun',
     splitAtSolutionEpoch: true,
-    stepDays: 16,
+    // 4 jours et non plus 16 (2026-10-05) : la grille de Menoetius, sans quoi le ballant du
+    // primaire autour du barycentre (4,3 jours) ne se retire pas (`reflex`, cf. gravity.ts).
+    stepDays: 4,
+    primary: { target: '920000617', insideJdTdb: 2459000.5 },
   },
   {
     name: 'apophis',
@@ -974,6 +979,100 @@ async function requestChunked(body, startTime, stopTime) {
   return { rows, stepDays };
 }
 
+/**
+ * LE PRIMAIRE D'UN SYSTÈME BINAIRE, LÀ OÙ HORIZONS LE SERT (2026-10-05).
+ *
+ * Le satellite d'un petit corps est stocké relativement au PRIMAIRE (`CENTER_IDS`), mais le
+ * parent était lu sur sa solution AU SOL (`65803;`, `617;`), qui n'est pas ce corps : c'est une
+ * autre orbite, ajustée sur l'astrométrie du couple non résolu. Mesuré contre Horizons, que l'on
+ * a trouvé cohérent avec lui-même à 0,00 km (Dimorphos vu du Soleil = primaire vu du Soleil +
+ * Dimorphos vu du primaire), TOUT l'écart du satellite composé venait de là : 112 km en 2002
+ * pour Didymos, décroissant à 1-2 km en 2022-2024 ; de 59 à 502 km pour Patrocle, dont l'écart
+ * se décompose exactement en −0,2202 × Menoetius + une constante lente (résidu sous 1,7 km).
+ *
+ * Sur l'intervalle où Horizons sert le primaire, ses vecteurs remplacent donc ceux de la
+ * solution au sol, sur la MÊME grille. L'intervalle est SONDÉ par dichotomie à chaque génération
+ * (le refus SPICE ne nomme aucune borne) et publié au manifeste ; le saut aux deux raccords est
+ * imprimé, puisque c'est un changement de solution et non un mouvement.
+ */
+async function isCovered(body, target, jd) {
+  const params = new URLSearchParams({
+    format: 'json',
+    COMMAND: `'${target}'`,
+    OBJ_DATA: 'NO',
+    MAKE_EPHEM: 'YES',
+    EPHEM_TYPE: 'VECTORS',
+    CENTER: `500@${CENTER_IDS[body.center]}`,
+    TLIST: `'${jd}'`,
+    VEC_TABLE: '1',
+    CSV_FORMAT: 'YES',
+  });
+  const response = await fetch(`${API_URL}?${params}`, {
+    headers: { 'User-Agent': 'Galaxy-Ephemeris-Generator/1.0' },
+  });
+  if (!response.ok) throw new Error(`${body.name}: HTTP ${response.status}`);
+  const { result } = await response.json();
+  return typeof result === 'string' && result.includes('$$SOE');
+}
+
+async function coverageEdge(body, target, inside, outside) {
+  while (Math.abs(outside - inside) > 0.5) {
+    const middle = (inside + outside) / 2;
+    if (await isCovered(body, target, middle)) inside = middle;
+    else outside = middle;
+  }
+  return inside;
+}
+
+async function overlayPrimary(body, rows, stepDays) {
+  const { target } = body.primary;
+  const first = rows[0].jd;
+  const last = rows[rows.length - 1].jd;
+  // Un point intérieur connu : le milieu de la grille des satellites de petits corps (2000-2050).
+  const inside = Number(body.primary.insideJdTdb);
+  if (!(await isCovered(body, target, inside)))
+    throw new Error(
+      `${body.name}: le primaire ${target} n'est pas servi au JD ${inside}`
+    );
+  const low = await coverageEdge(body, target, inside, first);
+  const high = await coverageEdge(body, target, inside, last);
+  const from = first + Math.ceil((low - first) / stepDays) * stepDays;
+  const to = first + Math.floor((high - first) / stepDays) * stepDays;
+  const primary = parseVectors(
+    await requestVectors(
+      { ...body, target },
+      `JD ${from.toFixed(9)}`,
+      `JD ${to.toFixed(9)}`
+    ),
+    body.name
+  );
+  if (Math.abs(primary.stepDays - stepDays) > 1e-9)
+    throw new Error(
+      `${body.name}: primaire au pas ${primary.stepDays} j, attendu ${stepDays}`
+    );
+  const offset = Math.round((primary.rows[0].jd - first) / stepDays);
+  const jump = (k) => {
+    const a = rows[offset + k].state;
+    const b = primary.rows[k].state;
+    return Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]) * 149_597_870.7;
+  };
+  const jumps = [jump(0), jump(primary.rows.length - 1)];
+  primary.rows.forEach((row, k) => {
+    if (Math.abs(rows[offset + k].jd - row.jd) > 1e-9)
+      throw new Error(`${body.name}: primaire hors grille au JD ${row.jd}`);
+    rows[offset + k] = row;
+  });
+  process.stdout.write(
+    `primaire ${target} du JD ${primary.rows[0].jd} au JD ${primary.rows.at(-1).jd} ` +
+      `(saut aux raccords ${jumps.map((km) => `${km.toFixed(1)} km`).join(' / ')}), `
+  );
+  return {
+    target,
+    fromJdTdb: primary.rows[0].jd,
+    toJdTdb: primary.rows.at(-1).jd,
+  };
+}
+
 async function fetchBody(body) {
   process.stdout.write(`Fetching ${body.name}... `);
   let rows;
@@ -1009,6 +1108,9 @@ async function fetchBody(body) {
       body.stopTime ?? STOP_TIME
     ));
   }
+  const primary = body.primary
+    ? await overlayPrimary(body, rows, stepDays)
+    : undefined;
   const binary = encodeBinary(rows);
   const hash = createHash('sha256').update(binary).digest('hex').slice(0, 12);
   const file = `${body.name}.${hash}.bin`;
@@ -1021,6 +1123,7 @@ async function fetchBody(body) {
     startJdTdb: rows[0].jd,
     stepDays,
     sampleCount: rows.length,
+    ...(primary ? { primary } : {}),
   };
 }
 
@@ -1050,6 +1153,7 @@ if (only) {
    * déclare cette propagation.
    */
   const lostScale = [];
+  const lostReflex = [];
   /**
    * `generatedAt` ne se réécrit QUE si des octets ont changé.
    *
@@ -1065,10 +1169,13 @@ if (only) {
     if (!body) throw new Error(`--only : corps inconnu « ${name} »`);
     const previous = manifest.bodies[name]?.file;
     const hadScale = manifest.bodies[name]?.meanMotionScale !== undefined;
+    const hadReflex = manifest.bodies[name]?.reflex !== undefined;
     manifest.bodies[name] = await fetchBody(body);
     if (previous && previous !== manifest.bodies[name].file)
       replaced.push(previous);
     if (hadScale) lostScale.push(name);
+    // Même cas pour le ballant publié (`pnpm ephemeris:reflex`), dérivé lui aussi du fichier.
+    if (hadReflex) lostReflex.push(name);
     // Le nom du fichier EST son empreinte : s'il ne change pas, aucun octet livré n'a changé.
     if (previous !== manifest.bodies[name].file) changedBytes = true;
   }
@@ -1092,6 +1199,15 @@ if (only) {
 ` +
         `Rejouer « pnpm ephemeris:meanmotion » AVANT toute mesure : sans lui, la position ` +
         `propagée n'est pas celle que l'application servira.
+`
+    );
+    process.exitCode = 1;
+  }
+  if (lostReflex.length > 0) {
+    process.stdout.write(
+      `
+À FAIRE MAINTENANT : ${lostReflex.join(', ')} portait un facteur de ballant dérivé du ` +
+        `fichier remplacé. Rejouer « pnpm ephemeris:reflex » avant toute mesure.
 `
     );
     process.exitCode = 1;

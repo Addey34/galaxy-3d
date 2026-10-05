@@ -402,6 +402,38 @@ const VECTORS: readonly (readonly [string, string, number, number, number])[] =
       210377450.7679456,
       -16743262.76442443,
     ],
+    // Patrocle (2026-10-05) : le PRIMAIRE (920000617) de 2000 à 2050, ballant autour du
+    // barycentre du couple restitué par le facteur publié au manifeste ; la solution au sol
+    // (617;) avant 2000. Avant le changement, le fichier portait la solution au sol partout, à
+    // 59-502 km du primaire.
+    [
+      'patroclus',
+      '2005-03-03T07:12:00.000Z',
+      -599353352.5798829,
+      534477725.3370917,
+      324251832.678036,
+    ],
+    [
+      'patroclus',
+      '2020-07-15T17:30:00.000Z',
+      -640121233.2845379,
+      -548554667.4687787,
+      22353659.44441968,
+    ],
+    [
+      'patroclus',
+      '2042-11-02T03:00:00.000Z',
+      -846707053.1078713,
+      -128447885.2315598,
+      202679829.2269615,
+    ],
+    [
+      'patroclus',
+      '1950-06-10T12:00:00.000Z',
+      -162001922.1076668,
+      -725477049.8665682,
+      -163677267.7812132,
+    ],
   ];
 
 const PARENT: Record<string, string> = {
@@ -414,6 +446,7 @@ const PARENT: Record<string, string> = {
   styx: 'pluto',
   hyperion: 'saturn',
   nereid: 'neptune',
+  patroclus: 'sun',
 };
 const BOUND_KM: Record<string, number> = {
   phobos: 45,
@@ -425,6 +458,7 @@ const BOUND_KM: Record<string, number> = {
   styx: 400,
   hyperion: 400,
   nereid: 100,
+  patroclus: 30,
 };
 const KM_PER_AU = 149_597_870.7;
 const horizons = horizonsServiceFromDisk();
