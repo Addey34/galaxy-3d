@@ -2017,6 +2017,26 @@ Donaldjohanson, Arrokoth et Tempel 1. Psyché n'a pas encore été visitée, Apo
 que par radar ; pour les autres, une recherche plus large (archives propres à chaque mission)
 reste à faire et n'est pas une absence prouvée.
 
+**Les archives des missions, lues le 2026-10-05** pour les cinq corps NASA, par le registre du PDS
+(`pds.nasa.gov/api/search/1`, les 3 863 collections listées puis filtrées, la requête
+`lid like … and …` étant refusée par l'API) :
+
+| Corps | Ce que la mission publie | Servi par | Statut |
+|---|---|---|---|
+| Tempel 1 | le modèle de forme de Farnham et Thomas (`DIF-C-HRIV/ITS/MRI-5-TEMPEL1-SHAPE-V2.0`), aucune carte | — | absence prouvée |
+| Donaldjohanson | des images L'LORRI brutes et des spectres LEISA, aucun produit dérivé | — | absence prouvée |
+| Didymos, Dimorphos | une table d'albédo RELATIF par facette du modèle SPC (`dart_shapemodel`, `data_derived_*`), sans question de repère | `pdssbn.astro.umd.edu` seulement | bloqué par la source |
+| Arrokoth | la carte d'albédo de Porter et al. 2024 (deux projections azimutales polaires, une par lobe, ses coordonnées de texture dans l'OBJ du même jeu), et les cartes d'albédo et de réflectance de `nh_derived:arrokoth_geophysics` | `pdssbn.astro.umd.edu` seulement | bloqué par la source |
+
+**Le blocage est mesuré, pas supposé** : les deux hôtes de l'UMD répondent HTTP 403 sur tout
+`holdings/`, avec ou sans en-têtes de navigateur, depuis un service distant, et dans le navigateur
+de l'utilisateur ; la racine du site répond 200 (témoin). Aucun miroir : PSI n'héberge pas ces
+missions, et les copies de livraison de `pds.nasa.gov/data/pds4/releases/sbn/` ne portent que les
+étiquettes et les inventaires. **Ce qui rouvrirait la question** : un `holdings/` de nouveau servi.
+Didymos et Dimorphos passeraient alors par `bake-shape-colour.mjs` (valeur par facette) ; Arrokoth
+demanderait en plus de livrer dans le glb les coordonnées de texture de Porter, puisque son repère
+n'admet pas de projection en longitude et latitude.
+
 **Trois outils nés de ce tri.** `scripts/compose-albedo-texture.mjs` compose des albédos
 flottants en couleur selon les règles de la couleur cuite (rapports entre bandes gardés, un seul
 facteur vers l'albédo publié, convention lue dans `scripts/display-albedo.mjs`, NoData jamais
