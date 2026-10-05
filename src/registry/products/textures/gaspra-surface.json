@@ -19,6 +19,12 @@
       "roles": [
         "producer"
       ]
+    },
+    {
+      "name": "Domingue, D.L. et al., Galileo SSI/Gaspra Color and Geometry Image Cubes, galileo.ast-gaspra.color_geom_cubes, NASA Planetary Data System (mean colour)",
+      "roles": [
+        "processor"
+      ]
     }
   ],
   "tier": "free",
@@ -31,6 +37,6 @@
     "sourcePixelWidth": 7200,
     "projection": "equirectangular",
     "qualityClass": "native",
-    "note": "Importee le 2026-10-05. Photomosaique de Stooke : images Galileo SSI reprojetees avec le controle de position de P. Thomas, le meme auteur que le modele de forme ; le domaine public y est declare avec un credit requis. Environ un tiers de la surface est image en haute resolution, le reste a basse resolution ou en gris uni (jamais vu). Grille de la carte : longitudes Ouest, 180 aux bords, 0 au centre, donc l'Est vers la droite, le cadrage de l'application. Recalage par l'ombrage (luminosite contre normale du modele de Thomas, Soleil ajuste) sur 720 reperes essayes : pic a 0, sans miroir ni pole retourne, R2 0,53 contre 0,48 au mieux ailleurs et 0,46 pour un couple carte/modele de deux corps differents."
+    "note": "Importee le 2026-10-05. Photomosaique de Stooke : images Galileo SSI reprojetees avec le controle de position de P. Thomas, le meme auteur que le modele de forme ; le domaine public y est declare avec un credit requis. Environ un tiers de la surface est image en haute resolution, le reste a basse resolution ou en gris uni (jamais vu). Grille de la carte : longitudes Ouest, 180 aux bords, 0 au centre, donc l'Est vers la droite, le cadrage de l'application. Recalage par l'ombrage (luminosite contre normale du modele de Thomas, Soleil ajuste) sur 720 reperes essayes : pic a 0, sans miroir ni pole retourne, R2 0,53 contre 0,48 au mieux ailleurs et 0,46 pour un couple carte/modele de deux corps differents. Couleur MOYENNE mesuree (2026-10-05) : chrominance des cubes couleur Galileo SSI de galileo.ast-gaspra.color_geom_cubes (PDS, servis par PSI) a 671/559/404 nm, series B, D, E (6 449 pixels eclaires et vus sous moins de 75 degres), rapports au vert 1,133 et 0,777, posee sur la luminance de la mosaique (tint [255, 241, 216]). Ce ne sont pas des cartes : la couleur VARIABLE demanderait de reconstruire la geometrie de chaque prise de vue, sans noyaux de pointage archives. La serie C est ecartee : ses trois premieres bandes sont decalees d'un cran par rapport a son etiquette. Reproduire : scripts/measure-mean-colour.mjs."
   }
 }

@@ -35,6 +35,9 @@ provenance (source URL, resolution, licence) is in one file per texture layer un
    proper credit being given": the required citation is "Stooke, P., Stooke Small Bodies Maps
    V2.0. MULTI-SA-MULTI-6-STOOKEMAPS-V2.0. NASA Planetary Data System, 2012." It is given in full
    on the `/sources` page, and the app's credits name Philip Stooke / NASA PDS for these bodies.
+   Gaspra's map also carries, since 2026-10-05, its MEAN colour measured on the Galileo SSI
+   colour cubes of Domingue et al. (`galileo.ast-gaspra.color_geom_cubes`, NASA PDS, public
+   domain), at 671, 559 and 404 nm: only the chroma is applied, on the mosaic's own luminance.
 
 2. **CC BY 4.0: Solar System Scope.** Requires attribution; compatible with non-commercial and
    donation-supported use. Bodies (surface / cloud / normal / spec / lights / ring layers, incl.

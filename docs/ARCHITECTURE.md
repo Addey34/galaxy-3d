@@ -1993,7 +1993,7 @@ suppose que la carte ET le modèle soient dans le même repère, et c'est la con
 | Éros | albédos NEAR MSI de Golish et al. (2023), 760/550/450 nm, composés en couleur | Psyche à sa longitude, Himeros à son antipode | 25 des 33 grands cratères nommés sont des creux du modèle à 0°, 17 au mieux autrement | **drapée** |
 | Itokawa | photomosaïque AMICA de Stooke (PDS) | grille de la carte (0 aux bords) | recalage sur le modèle : pic à 1°, sans miroir | **drapée** |
 | Ida | photomosaïque Galileo de Stooke et Nyrtsov (30 % imagé), projetée sur le modèle de Thomas | 92 % des noms sur des pixels imagés, Afon au méridien | modèle en longitudes Est (étiquette `243ida.lbl`), repère de Davies et al. 1996 ; recalage par l'ombrage : pic à 0°, sans miroir ni pôle retourné | **drapée** (2026-10-05) |
-| Gaspra | photomosaïque Galileo de Stooke (35 % imagé), contrôle de position de Thomas | 91 % des noms sur des pixels imagés | modèle de Thomas laissé dans le repère de son pôle mesuré (il était tourné dans ses axes principaux, pôle déplacé de 11°) ; recalage par l'ombrage : pic à 0°, sans miroir ni pôle retourné | **drapée** (2026-10-05) |
+| Gaspra | photomosaïque Galileo de Stooke (35 % imagé), contrôle de position de Thomas | 91 % des noms sur des pixels imagés | modèle de Thomas laissé dans le repère de son pôle mesuré (il était tourné dans ses axes principaux, pôle déplacé de 11°) ; recalage par l'ombrage : pic à 0°, sans miroir ni pôle retourné | **drapée** (2026-10-05), **couleur moyenne mesurée** (ci-dessous) |
 | Mathilde | photomosaïque NEAR de Stooke et Pfau (20 % imagé), grille sans étiquettes | 83 % des noms sur des pixels imagés | le recalage par l'ombrage ne s'y distingue pas du hasard (R² 0,30 à 0°, jusqu'à 0,42 ailleurs, autant qu'un couple de deux corps différents) | en attente : aucune mesure ne prouve le repère de la carte |
 
 **Le recalage par l'ombrage (2026-10-05)**, parce que ni les cratères ni la pente n'ont tranché pour
@@ -2014,6 +2014,21 @@ des triangles (un sommet par cellule ne suffit pas à un modèle décimé) ; fal
 roulée d'un demi-tour, une texture en miroir, et l'ancien Gaspra tourné dans ses axes principaux
 (pic à 248°). Le test des creux qui tenait Ida en attente le 2026-10-04 (11 à 14 cratères sur 21 quelle que
 soit l'orientation) était donc une mesure sans pouvoir de décision, pas un désaccord.
+
+**La couleur de Gaspra, et pourquoi elle est MOYENNE (2026-10-05).** Le PDS sert, chez PSI, les
+cubes couleur Galileo SSI de Domingue et al. (`galileo.ast-gaspra.color_geom_cubes`) : six
+filtres de 404 à 986 nm, étalonnés en réflectance, recalés entre eux, avec les angles d'incidence,
+d'émission et de phase calculés sur le modèle de Thomas. Ce ne sont **pas des cartes** : des images
+de 150 × 150 pixels vues de la sonde, d'un seul côté, sans longitude ni latitude, et les noyaux de
+pointage n'ont jamais été archivés. Poser une couleur VARIABLE sur le modèle demanderait de
+reconstruire la géométrie de chaque prise de vue ; la couleur MOYENNE se mesure sans cela, et c'est
+elle qui est livrée. `scripts/measure-mean-colour.mjs` la DÉRIVE des cubes (règles d'Éros : rapports
+entre bandes gardés, lus comme du RVB linéaire, encodés en sRGB ; seule la chrominance est posée,
+sur la luminance de la mosaïque). Trois séries sur six servent : A et F n'ont pas les trois bandes,
+et **C est écartée parce que l'archive est fausse** : ses trois premières bandes sont décalées d'un
+cran (son « violet » vaut le rouge des séries voisines à 1 % près, son « vert » leur violet), alors
+que son étiquette annonce le même ordre. Le script écarte toute série à plus de 10 % de la médiane,
+et le dit. Rapports au vert : 1,133 (671 nm) et 0,777 (404 nm), la pente rouge d'un type S.
 
 Pour les autres, aucune carte n'a été trouvée là où l'on a cherché le 2026-10-04 : le dépôt S3
 complet des mosaïques de l'USGS (18 844 clés listées), les cartes de Stooke au PDS (Ida, Gaspra,
