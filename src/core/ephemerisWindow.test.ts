@@ -545,8 +545,10 @@ describe('ce que la première vue coûte réellement', () => {
     );
     // 38 445 024 au lot 17 ; 50 834 160 avec les 23 cibles de missions (2026-10-04), puis
     // 51 193 104 avec leurs deux satellites, bornés à 2000-2030 et 2000-2050 ; 51 853 824 quand
-    // Patrocle passe au pas de 4 jours de Menoetius pour que son ballant se retire (2026-10-05).
-    expect(shipped).toBe(51_853_824);
+    // Patrocle passe au pas de 4 jours de Menoetius pour que son ballant se retire (2026-10-05) ;
+    // 54 904 128 quand Didymos et Dimorphos passent au pas d'un jour, le même jour, pour que
+    // Dimorphos composé tienne sous son diamètre (cf. `compositeReference.test.ts`).
+    expect(shipped).toBe(54_904_128);
     // 62 au lot 17, plus les 23 cibles de missions du 2026-10-04 et leurs deux satellites : une
     // requête par corps.
     expect(requests).toBe(87);
