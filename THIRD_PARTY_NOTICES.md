@@ -39,7 +39,7 @@ provenance (source URL, resolution, licence) is in one file per texture layer un
    colour cubes of Domingue et al. (`galileo.ast-gaspra.color_geom_cubes`, NASA PDS, public
    domain), at 671, 559 and 404 nm: only the chroma is applied, on the mosaic's own luminance.
 
-2. **CC BY 4.0: Solar System Scope.** Requires attribution; compatible with non-commercial and
+2. **CC BY 4.0: Solar System Scope, and ISAS/JAXA for `ryugu`.** Requires attribution; compatible with non-commercial and
    donation-supported use. Bodies (surface / cloud / normal / spec / lights / ring layers, incl.
    8k variants): `mercury`, `venus`, `mars`, `moon`, `jupiter`, `saturn`, `uranus`, `neptune`,
    `sun`, `stars`. Keep the "Solar System Scope (CC BY 4.0)" credit in the app. **Note: `earth` is
@@ -47,6 +47,19 @@ provenance (source URL, resolution, licence) is in one file per texture layer un
    provider with the rest of the planet set. `saturn/saturn_ring_8k.jpg` was regenerated on
    2026-09-16 from the same Solar System Scope file (`8k_saturn_ring_alpha.png`): the previous
    export had leaked white pixels from under the transparent inner edge.
+
+   **`ryugu` (since 2026-10-05)** carries an albedo map made by this project: no albedo map of
+   Ryugu is published as a data product. Source: the Hayabusa2 ONC seven-filter cubes,
+   photometrically corrected and co-registered (Sugita, S. et al., Hayabusa2 Optical Navigation
+   Camera Data, doi:10.17597/isas.darts/hyb2-00200, collection
+   `urn:jaxa:darts:hyb2_onc:data_reflectance_coregistered`, served by NASA PDS at PSI). Licence:
+   Government of Japan Standard Terms of Use 2.0, declared compatible with CC BY 4.0 (ISAS Data
+   Policy, read 2026-10-05). **Data credit: ISAS/JAXA.** **Modification (stated as required)**:
+   the 550 nm reflectance of 27 cubes is binned into a 0.25° map through each pixel's own latitude
+   and longitude planes (`scripts/mosaic-onc-images.mjs`), scaled to the published geometric
+   albedo 0.045 (Sugita et al. 2019), and given the MEAN colour of the 700, 550 and 480 nm bands
+   only; unobserved areas (shadows, polar caps, 13 % of the surface) are filled smoothly from
+   their edges, with no detail added.
 
 3. **Confirmed licence, explicitly illustrative.** The licence and source are known and recorded,
    but the map itself is not a validated scientific global mosaic (either no spacecraft imaged the
@@ -135,7 +148,8 @@ must also have its faces pointing outwards and be a closed surface.
 - **Data credit**: **ISAS/JAXA**. The ISAS data policy allows use, including commercial use,
   provided the source is credited and **modifications are stated**.
 - **Modification (stated as required)**: decimated for the web and re-oriented so that the
-  rotation pole lies on +Y.
+  rotation pole lies on +Y. Since 2026-10-05 the app drapes the ONC albedo map on it (group 2 of
+  the texture notices above).
 
 `public/assets/models/ida/ida_shape_{1k,2k}.glb`: asteroid (243) Ida. No 4k level: the 2° source grid holds ~32,400 triangles of real information, and a 60,000-triangle level would interpolate, not measure.
 
@@ -349,10 +363,11 @@ and `public/assets/models/psyche/psyche_shape_1k.glb`: asteroids
 texture shipped). Mean brightness = the published geometric albedo converted to the app's display
 convention measured on the Moon texture; contrasts and colour ratios come from mission maps:
 
-- Ryugu (albedo 0.045, Sugita et al. 2019) and Psyche (albedo 0.1203, IRAS): the colour is
-  uniform at the published albedo; nothing is painted in. Ryugu's model carried, until
-  2026-10-04, a colour sampled from a JAXA figure (an RGBA image of a colour-coded albedo map, not
-  a data product) and read with the wrong pixel stride: it bore no relation to the surface and was
+- Psyche (albedo 0.1203, IRAS): the colour is uniform at the published albedo; nothing is
+  painted in. Ryugu was in the same case from 2026-10-04 to 2026-10-05 and is now draped with the
+  ONC albedo map (group 2 of the texture notices above). Before 2026-10-04 its model carried a
+  colour sampled from a JAXA figure (an RGBA image of a colour-coded albedo map, not a data
+  product) and read with the wrong pixel stride: it bore no relation to the surface and was
   removed. Ida carried a uniform colour too until 2026-10-05; it is now draped with Stooke's
   Galileo photomosaic.
 - Eros (until 2026-10-04) carried colour baked from the NEAR MSI albedo mosaics; it now carries a

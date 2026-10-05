@@ -2000,6 +2000,7 @@ suppose que la carte ET le modèle soient dans le même repère, et c'est la con
 | Itokawa | photomosaïque AMICA de Stooke (PDS) | grille de la carte (0 aux bords) | recalage sur le modèle : pic à 1°, sans miroir | **drapée** |
 | Ida | photomosaïque Galileo de Stooke et Nyrtsov (30 % imagé), projetée sur le modèle de Thomas | 92 % des noms sur des pixels imagés, Afon au méridien | modèle en longitudes Est (étiquette `243ida.lbl`), repère de Davies et al. 1996 ; recalage par l'ombrage : pic à 0°, sans miroir ni pôle retourné | **drapée** (2026-10-05) |
 | Gaspra | photomosaïque Galileo de Stooke (35 % imagé), contrôle de position de Thomas | 91 % des noms sur des pixels imagés | modèle de Thomas laissé dans le repère de son pôle mesuré (il était tourné dans ses axes principaux, pôle déplacé de 11°) ; recalage par l'ombrage : pic à 0°, sans miroir ni pôle retourné | **drapée** (2026-10-05), **couleur moyenne mesurée** (ci-dessous) |
+| Ryugu | carte d'albédo à 550 nm FABRIQUÉE depuis les cubes ONC recalés (aucune n'est publiée comme donnée) | plans de latitude et longitude de l'ONC : direction de visée résolue par image, résidu d'émission médian 9,4° (7,7 à 10,9), contre 17 à 18° décalée de 90° ou 180° ou en miroir | 6 des 7 cratères nommés sont des creux du modèle de Watanabe à 0°, 1 à 3 décalés, 2 en miroir | **drapée** (2026-10-05), **albédo seul, couleur moyenne** (ci-dessous) |
 | Mathilde | photomosaïque NEAR de Stooke et Pfau (20 % imagé), grille sans étiquettes | 83 % des noms sur des pixels imagés | le recalage par l'ombrage ne s'y distingue pas du hasard (R² 0,30 à 0°, jusqu'à 0,42 ailleurs, autant qu'un couple de deux corps différents) | en attente : aucune mesure ne prouve le repère de la carte |
 
 **Le recalage par l'ombrage (2026-10-05)**, parce que ni les cratères ni la pente n'ont tranché pour
@@ -2093,6 +2094,21 @@ Ce qui rouvrirait la question : une seconde série couleur COMPLÈTE prise d'un 
 vue (A n'a pas de vert, F pas de rouge), ou des noyaux de pointage qui permettraient de recaler
 les images brutes sans passer par les plans de l'archive.
 
+**La carte de Ryugu est FABRIQUÉE, et elle est livrée (2026-10-05).** Aucune carte d'albédo de
+Ryugu n'est publiée comme donnée, mais PSI sert les cubes ONC à sept filtres, photométriquement
+corrigés et recalés, avec pour chacun ses plans de latitude, longitude, incidence et émission
+(`hyb2_onc`, collections `data_reflectance_coregistered` et `geometry`). Chaque pixel se reporte
+donc par ses PROPRES coordonnées, sans ajuster de pose : `scripts/mosaic-onc-images.mjs`, à 0,25°,
+pondéré par cos i · cos e, puis `scripts/compose-albedo-texture.mjs` calé sur l'albédo géométrique
+0,045. Ce qui l'a rendue livrable, contrairement à la couleur variable de Gaspra, ce sont des vues
+INDÉPENDANTES : Ryugu tourne en 7,6 h, donc trois dates voient chaque lieu sous d'autres angles.
+L'albédo s'y reproduit (r 0,79 à 0,84 par blocs de 2°, 0,73 à 0,83 sans la moyenne de chaque
+latitude) ; la couleur non (pente 860/480 et UV 390/480 : r 0,01 à 0,24), donc seule sa MOYENNE
+est posée (700/550/480 nm : 1,013 / 1 / 0,994). Deux cubes du 2018-06-28 sont écartés (bandes 860
+et 950 nm vides, les cinq autres vingt fois trop basses). 87 % de la surface est mesurée ; le
+reste (ombres, calottes) est comblé par propagation depuis les bords, sans détail : le `fillHoles`
+de l'import, un seul flou, laissait noires les calottes polaires, vu sur la vignette.
+
 Pour les autres, aucune carte n'a été trouvée là où l'on a cherché le 2026-10-04 : le dépôt S3
 complet des mosaïques de l'USGS (18 844 clés listées), les cartes de Stooke au PDS (Ida, Gaspra,
 Mathilde, Éros, Itokawa, Phobos, Déimos, Amalthée, Hypérion, Épiméthée, Wild 2 seulement) et les
@@ -2111,7 +2127,7 @@ adresses exactes que le registre publie (`pdssbn.astro.umd.edu` et
 
 | Corps | Images | Hôte | Pose | Verdict |
 |---|---|---|---|---|
-| Ryugu | ONC : I/F étalonnés et réflectances multi-filtres recalées | PSI (`hyb2_onc`) | plans de latitude et longitude par pixel | **accessible** |
+| Ryugu | ONC : I/F étalonnés et réflectances multi-filtres recalées | PSI (`hyb2_onc`) | plans de latitude et longitude par pixel | **accessible**, carte livrée le 2026-10-05 (ci-dessus) |
 | Mathilde | NEAR MSI : images brutes et étalonnées en I/F | PSI (`NEAR_A_MSI_3_EDR_MATHILDE_V1_0`) | noyaux du survol à PSI (`NEAR_A_SPICE_6_MATHILDE_V1_0`) | **accessible** |
 | Lutetia, Šteins | OSIRIS NAC et WAC, niveaux 2 et 3 | PSA de l'ESA | noyaux de Rosetta chez NAIF | accessible ; licence à trancher, comme 67P |
 | Didymos, Dimorphos | DRACO, dont des images étalonnées avec plans géométriques | UMD seulement | | bloqué (403) |
@@ -2221,7 +2237,9 @@ corps affiché.
   n'était d'ailleurs pas affichée, et elle n'est plus cuite. Éros et Ryugu gardent leur couleur
   mesurée, reportée depuis les fichiers du commit `3a36b12` et moyennée sur l'empreinte de chaque
   nouveau sommet (`bake-shape-colour.mjs --from`), parce que leurs cartes ne se relisaient pas ce
-  jour-là ; une carte relue passe par la même moyenne (`lowPass`).
+  jour-là ; une carte relue passe par la même moyenne (`lowPass`). [SUPERSEDED pour ces deux corps : la couleur de Ryugu, lue dans une figure, a été retirée le
+  2026-10-04 et Éros est drapé de sa texture depuis le même jour ; Ryugu est drapé de sa carte ONC
+  depuis le 2026-10-05. Aucun modèle livré ne porte plus de couleur cuite.]
 
 ## Halo lumineux — qui brille, et combien
 

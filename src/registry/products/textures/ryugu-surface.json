@@ -1,0 +1,48 @@
+{
+  "$schema": "../../schema/product.schema.json",
+  "id": "ryugu-surface",
+  "type": "texture",
+  "body": "ryugu",
+  "layer": "surface",
+  "shipped": true,
+  "license": "CC-BY-4.0",
+  "links": [
+    {
+      "rel": "license",
+      "href": "https://www.isas.jaxa.jp/en/researchers/data-policy/"
+    },
+    {
+      "rel": "via",
+      "href": "https://sbnarchive.psi.edu/pds4/hayabusa2/hyb2_onc/"
+    },
+    {
+      "rel": "describedby",
+      "href": "https://darts.isas.jaxa.jp/doi/hyb2/hyb2-00200.html"
+    }
+  ],
+  "providers": [
+    {
+      "name": "ISAS/JAXA, Hayabusa2 ONC (Sugita, S. et al., Hayabusa2 Optical Navigation Camera Data, doi:10.17597/isas.darts/hyb2-00200)",
+      "roles": [
+        "licensor",
+        "producer"
+      ]
+    }
+  ],
+  "tier": "free",
+  "review": {
+    "status": "ready",
+    "processing": "import-textures",
+    "downloadUrl": "https://sbnarchive.psi.edu/pds4/hayabusa2/hyb2_onc/data_reflectance_coregistered/",
+    "sourcePage": "https://darts.isas.jaxa.jp/doi/hyb2/hyb2-00200.html",
+    "sourceResolution": "0.25 degree/pixel albedo map built from 27 ONC seven-filter cubes (2018-06-28, 2018-07-03, 2018-07-12)",
+    "sourcePixelWidth": 1440,
+    "projection": "equirectangular",
+    "qualityClass": "native",
+    "note": "Fabriquee le 2026-10-05 : aucune carte d'albedo de Ryugu n'est publiee comme donnee. Cubes ONC a sept filtres, photometriquement corriges et recales (collection data_reflectance_coregistered), reportes par leurs plans de latitude et longitude (scripts/mosaic-onc-images.mjs), ponderes par cos i . cos e, pixels vus et eclaires sous 70 degres ; deux cubes du 2018-06-28 ecartes (bandes 860 et 950 nm vides). Luminosite calee sur l'albedo geometrique publie 0,045 (Sugita et al. 2019) par scripts/compose-albedo-texture.mjs. Temoins : l'albedo a 550 nm se reproduit d'une date a l'autre (r 0,79 a 0,84 par blocs de 2 degres, 0,73 a 0,83 sans la moyenne de chaque latitude) ; les longitudes des plans sont celles du modele livre (residu d'emission median 9,4 degres contre 17 a 18 decale ou en miroir). La COULEUR ne se reproduit pas entre dates : seule sa moyenne est posee (rapports 700/550/480 nm 1,013 / 1 / 0,994). 87 % de la surface mesuree ; les ombres et les poles sont combles sans detail invente.",
+    "license": "Government of Japan Standard Terms of Use 2.0, compatible CC BY 4.0 (ISAS Data Policy, read 2026-10-05)",
+    "credit": "ISAS/JAXA",
+    "attributionNeeded": true,
+    "provenanceNote": "ISAS data policy (read 2026-10-05): free use including commercial; credit 'ISAS/JAXA'; state that the data were modified and how (mosaicked from ONC cubes, calibrated to the published albedo, mean colour only)."
+  }
+}

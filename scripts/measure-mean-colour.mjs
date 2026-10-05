@@ -1,4 +1,4 @@
-/* global Buffer, console, process */
+/* global console, process */
 /**
  * LA COULEUR MOYENNE D'UN CORPS, mesurée sur des cubes couleur étalonnés (2026-10-05).
  *
@@ -28,6 +28,7 @@
  * géométrie ; aucune autre explication ne rend ces trois égalités à 1 % près.
  */
 import { readFileSync } from 'node:fs';
+import { tintFromMeans } from './colour-tint.mjs';
 
 const args = process.argv.slice(2);
 const option = (name) => {
@@ -113,12 +114,7 @@ const total = kept.reduce((s, set) => s + set.n, 0);
 const mean = [0, 1, 2].map(
   (k) => kept.reduce((s, set) => s + set.mean[k] * set.n, 0) / total
 );
-const top = Math.max(...mean);
-const toSrgb = (c) =>
-  Math.round(
-    255 * (c <= 0.0031308 ? 12.92 * c : 1.055 * c ** (1 / 2.4) - 0.055)
-  );
-const tint = mean.map((c) => toSrgb(c / top));
+const tint = tintFromMeans(mean);
 console.log(
   `\n${kept.length} séries, ${total} pixels : réflectances ${mean.map((c) => c.toFixed(4)).join(' / ')}`
 );
