@@ -7,6 +7,15 @@
  * s'approche ASSEZ pour qu'il se voie, et jamais au-delà du plafond du palier de qualité. Un
  * astéroïde qu'on ne visite pas ne coûte ainsi que ~70 Kio, quel que soit l'appareil.
  */
+/**
+ * CADENCE DU NIVEAU DE DÉTAIL, en images : textures ET modèles ne sont réévalués qu'une image sur
+ * `LOD_UPDATE_INTERVAL` (`AnimationSystem._updateLOD`), parce qu'un changement de palier déclenche
+ * un upload GPU coûteux. Exportée parce que la suite e2e en dépend (`e2e/mainThread.ts`) : un
+ * chargement DÛ n'est visible dans `data-textures-loading` qu'à la prochaine réévaluation, donc
+ * un calme se prouve sur une série d'images plus longue que cette cadence.
+ */
+export const LOD_UPDATE_INTERVAL = 5;
+
 export type ModelQuality = '1k' | '2k' | '4k';
 
 export const MODEL_QUALITY_ORDER: readonly ModelQuality[] = ['1k', '2k', '4k'];

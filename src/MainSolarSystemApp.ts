@@ -18,7 +18,10 @@ import { bodyDisplayName } from './i18n/bodyText';
 import { initStaticI18n } from './i18n/dom';
 import { updateProgress, hideLoader, showError } from './ui/loader';
 import { setupFullscreen } from './ui/fullscreen';
-import { setupTextureLoadState } from './ui/textureLoadState';
+import {
+  setupSceneMotionState,
+  setupTextureLoadState,
+} from './ui/textureLoadState';
 import { setupShare } from './ui/share';
 import { setupCapture } from './ui/capture';
 import { setupWebXR } from './ui/webxr';
@@ -252,6 +255,17 @@ function wireChrome(): {
       textureSystem,
     } = api;
     setupTextureLoadState(cameraSystem.renderer.domElement, textureSystem);
+    // Même patron que `isMorphing` des visites guidées : le morph a atteint l'échelle du mode.
+    setupSceneMotionState(
+      cameraSystem.renderer.domElement,
+      () =>
+        cameraSystem.isFlying ||
+        Math.abs(
+          orbitalMechanics.scaleMorph -
+            (orbitalMechanics.scaleMode === 'explo' ? 1 : 0)
+        ) > 0.001,
+      (cb) => animationSystem.onFrame(cb)
+    );
     setupSolarDebug(api);
     setupGeoDebug(api);
     setupEarthDebug(api);
