@@ -19,13 +19,11 @@ import {
   solarIrradianceFactor,
   type SphericalOccluder,
 } from '@/core/eclipse';
+import { LOD_UPDATE_INTERVAL } from '@/core/modelLod';
 import { SQRT_K } from '@/core/ScaleService';
 import type { CameraSystem } from './CameraSystem';
 import type { CelestialBodies } from './SceneSystem';
 
-// LOD revu toutes les 5 frames seulement : un changement de texture déclenche un upload
-// GPU coûteux ; le faire à chaque frame provoquerait des à-coups (spikes de frame-time).
-const LOD_UPDATE_INTERVAL = 5;
 const LOD_MAX_NORMALIZED_DISTANCE = 250;
 const LOD_NORMALIZED_DISTANCE_THRESHOLD = 2;
 

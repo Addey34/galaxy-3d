@@ -25,3 +25,33 @@ export function setupTextureLoadState(
   publish(textures.pendingLoads);
   return textures.onPendingLoadsChange(publish);
 }
+
+/**
+ * LA SCÈNE EN MOUVEMENT, publiée sur le canvas (2026-10-05) : `data-scene-moving` vaut `1`
+ * pendant un vol de caméra ou le glissement d'une échelle à l'autre, `0` sinon.
+ *
+ * Le compte de textures en vol ne suffit pas à dire « plus rien ne va se charger ». Pendant un
+ * vol, la distance change et chaque palier franchi demandera ses textures ; or le niveau de détail
+ * n'est réévalué qu'une image sur cinq (`LOD_UPDATE_INTERVAL`), donc le compte vaut `0` entre deux
+ * paliers. Mesuré ce jour-là, frein CPU × 4 : deux fois sur cinq, l'attente de calme se déclarait
+ * satisfaite une seconde après la sélection de la Terre, et ses textures au gros plan partaient
+ * juste après, sans aucun clic (run de `main` `37268935169`, `e2e/modes.spec.ts`, réessai).
+ *
+ * Lu dans `onFrame`, en fin d'image, et écrit sur CHANGEMENT seulement : une comparaison de
+ * booléen par image, aucune écriture au repos.
+ */
+export function setupSceneMotionState(
+  canvas: HTMLCanvasElement,
+  isMoving: () => boolean,
+  onFrame: (cb: () => void) => () => void
+): () => void {
+  let published: string | undefined;
+  const publish = (): void => {
+    const value = isMoving() ? '1' : '0';
+    if (value === published) return;
+    published = value;
+    canvas.dataset['sceneMoving'] = value;
+  };
+  publish();
+  return onFrame(publish);
+}
