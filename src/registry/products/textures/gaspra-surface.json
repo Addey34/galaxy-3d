@@ -1,0 +1,36 @@
+{
+  "$schema": "../../schema/product.schema.json",
+  "id": "gaspra-surface",
+  "type": "texture",
+  "body": "gaspra",
+  "layer": "surface",
+  "shipped": true,
+  "license": "other",
+  "rights": "public-domain",
+  "links": [
+    {
+      "rel": "license",
+      "href": "https://sbnarchive.psi.edu/pds3/multi_mission/MULTI_SA_MULTI_6_STOOKEMAPS_V2_0/document/aamapdesc.html"
+    }
+  ],
+  "providers": [
+    {
+      "name": "Stooke, P., Stooke Small Bodies Maps V2.0, MULTI-SA-MULTI-6-STOOKEMAPS-V2.0, NASA Planetary Data System, 2012 (NASA Galileo SSI images)",
+      "roles": [
+        "producer"
+      ]
+    }
+  ],
+  "tier": "free",
+  "review": {
+    "status": "ready",
+    "processing": "import-textures",
+    "downloadUrl": "https://sbnarchive.psi.edu/pds3/multi_mission/MULTI_SA_MULTI_6_STOOKEMAPS_V2_0/document/951gaspra/gabestmo.jpg",
+    "sourcePage": "https://sbnarchive.psi.edu/pds3/multi_mission/MULTI_SA_MULTI_6_STOOKEMAPS_V2_0/document/aamapdesc.html",
+    "sourceResolution": "20 pixel/degree global photomosaic, simple cylindrical",
+    "sourcePixelWidth": 7200,
+    "projection": "equirectangular",
+    "qualityClass": "native",
+    "note": "Importee le 2026-10-05. Photomosaique de Stooke : images Galileo SSI reprojetees avec le controle de position de P. Thomas, le meme auteur que le modele de forme ; le domaine public y est declare avec un credit requis. Environ un tiers de la surface est image en haute resolution, le reste a basse resolution ou en gris uni (jamais vu). Grille de la carte : longitudes Ouest, 180 aux bords, 0 au centre, donc l'Est vers la droite, le cadrage de l'application. Recalage par l'ombrage (luminosite contre normale du modele de Thomas, Soleil ajuste) sur 720 reperes essayes : pic a 0, sans miroir ni pole retourne, R2 0,53 contre 0,48 au mieux ailleurs et 0,46 pour un couple carte/modele de deux corps differents."
+  }
+}

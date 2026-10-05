@@ -28,12 +28,13 @@ provenance (source URL, resolution, licence) is in one file per texture layer un
    global albedo mosaics at 760, 550 and 450 nm of Golish et al. (2023), served by USGS
    Astrogeology, draped on its shape model. Attribution is courteous but not legally required.
 
-   **Exception within this group: `itokawa` (since 2026-10-04)** is the global photomosaic of the
-   Stooke Small Bodies Maps V2.0 (JAXA Hayabusa AMICA images reprojected by P. Stooke), archived
-   by NASA PDS. These maps "are in the public domain but should not be used without proper credit
-   being given": the required citation is "Stooke, P., Stooke Small Bodies Maps V2.0.
-   MULTI-SA-MULTI-6-STOOKEMAPS-V2.0. NASA Planetary Data System, 2012." It is given in full on
-   the `/sources` page, and the app's credits name Philip Stooke / NASA PDS for Itokawa.
+   **Exception within this group: `itokawa` (since 2026-10-04), `gaspra` and `ida` (since
+   2026-10-05)** carry the global photomosaics of the Stooke Small Bodies Maps V2.0 (JAXA Hayabusa
+   AMICA images for Itokawa, NASA Galileo SSI images for Gaspra and Ida, reprojected by P. Stooke),
+   archived by NASA PDS. These maps "are in the public domain but should not be used without
+   proper credit being given": the required citation is "Stooke, P., Stooke Small Bodies Maps
+   V2.0. MULTI-SA-MULTI-6-STOOKEMAPS-V2.0. NASA Planetary Data System, 2012." It is given in full
+   on the `/sources` page, and the app's credits name Philip Stooke / NASA PDS for these bodies.
 
 2. **CC BY 4.0: Solar System Scope.** Requires attribution; compatible with non-commercial and
    donation-supported use. Bodies (surface / cloud / normal / spec / lights / ring layers, incl.
@@ -139,7 +140,8 @@ must also have its faces pointing outwards and be a closed surface.
 - **Data credit**: NASA Galileo Solid-State Imaging; shape model by P. Thomas et al. (1996).
   Public domain.
 - **Modification**: converted from a latitude/longitude radius grid to a triangle mesh, then
-  decimated for the web.
+  decimated for the web. Since 2026-10-05 it is draped with Stooke's Galileo photomosaic (group 1
+  of the texture notices above), which was projected on this same model.
 
 **Skipped on purpose, not forgotten** (read 2026-10-04; the list lives in
 `src/config/shapeModelGaps.ts`): 67P/Churyumov-Gerasimenko's dataset at the ESA Planetary Science
@@ -154,8 +156,9 @@ and no calibrated size: importing one would present a choice as a measurement.
 
 ### Mission targets (2026-10-04)
 
-Same pipeline. None of these bodies has a surface texture, so each model carries a uniform colour
-at its published geometric albedo (`scripts/bake-shape-colour.mjs`, no map).
+Same pipeline. Except Gaspra (draped since 2026-10-05, below), none of these bodies has a surface
+texture, so each model carries a uniform colour at its published geometric albedo
+(`scripts/bake-shape-colour.mjs`, no map).
 
 `public/assets/models/gaspra/gaspra_shape_{1k,2k}.glb`: asteroid (951) Gaspra. No 4k
 level: the 2° source grid holds about 32,400 triangles of real information.
@@ -165,8 +168,10 @@ level: the 2° source grid holds about 32,400 triangles of real information.
 - **Data credit**: NASA Galileo Solid-State Imaging; shape model by P. Thomas et al. (1994,
   *Icarus* 107, 25). Public domain.
 - **Modification**: west longitudes (as the label states) converted to east, the grid meshed and
-  decimated, then rotated into its principal axes of inertia, since the published pole lies 11°
-  from the axis of greatest inertia. Uniform colour at albedo 0.246 (NEOWISE, JPL SBDB).
+  decimated. It stays in the frame of its published pole, which lies 11° from the axis of greatest
+  inertia computed at uniform density: Stooke's Galileo photomosaic, draped on it since
+  2026-10-05, was projected in that frame. Until that date it was rotated into its principal axes
+  and carried a uniform colour at its albedo.
 
 `public/assets/models/mathilde/mathilde_shape_{1k,2k}.glb`: asteroid (253) Mathilde, from a
 3° grid of about 14,400 triangles.
@@ -175,8 +180,9 @@ level: the 2° source grid holds about 32,400 triangles of real information.
   (`253mathilde.tab`).
 - **Data credit**: NASA/JHU-APL NEAR Multi-Spectral Imager; shape model by P. Thomas et al. (1999,
   *Icarus* 140, 17). Public domain.
-- **Modification**: as for Gaspra; its published pole lies 30° from the axis of greatest inertia.
-  Uniform colour at albedo 0.0436 (IRAS, JPL SBDB).
+- **Modification**: west longitudes converted to east, the grid meshed and decimated, then rotated
+  into its principal axes of inertia, since its published pole lies 30° from the axis of greatest
+  inertia. Uniform colour at albedo 0.0436 (IRAS, JPL SBDB).
 
 `public/assets/models/apophis/apophis_shape_1k.glb`: asteroid (99942) Apophis, the
 full model.
@@ -340,12 +346,12 @@ and `public/assets/models/psyche/psyche_shape_1k.glb`: asteroids
 texture shipped). Mean brightness = the published geometric albedo converted to the app's display
 convention measured on the Moon texture; contrasts and colour ratios come from mission maps:
 
-- Ryugu (albedo 0.045, Sugita et al. 2019), Ida (albedo 0.262, NEOWISE) and Psyche (albedo
-  0.1203, IRAS): the colour is uniform at the published albedo; nothing is painted in. Ryugu's
-  model carried, until 2026-10-04, a colour sampled from a JAXA figure (an RGBA image of a
-  colour-coded albedo map, not a data product) and read with the wrong pixel stride: it bore no
-  relation to the surface and was removed. A Galileo photomosaic of Ida exists (Stooke), but it is
-  not draped while the frame of Ida's shape model is unresolved (see `docs/ARCHITECTURE.md`).
+- Ryugu (albedo 0.045, Sugita et al. 2019) and Psyche (albedo 0.1203, IRAS): the colour is
+  uniform at the published albedo; nothing is painted in. Ryugu's model carried, until
+  2026-10-04, a colour sampled from a JAXA figure (an RGBA image of a colour-coded albedo map, not
+  a data product) and read with the wrong pixel stride: it bore no relation to the surface and was
+  removed. Ida carried a uniform colour too until 2026-10-05; it is now draped with Stooke's
+  Galileo photomosaic.
 - Eros (until 2026-10-04) carried colour baked from the NEAR MSI albedo mosaics; it now carries a
   texture made from the same mosaics, so its model has no baked colour. Bodies that have a real surface texture carry no baked colour: the app drapes the
   texture on the model instead.

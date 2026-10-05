@@ -118,6 +118,6 @@
     "facts.axialTilt": "DÉRIVÉE du pôle SBDB (RA 90,53°, Dec −66,30°, Demura et al. 2006) : rotation rétrograde.",
     "facts.massKg": "Masse PUBLIÉE (3,51e10 kg ± 3 %, Fujiwara et al. 2006), citée dans les notes de la SBDB. Le GM de la même fiche (2,1e-9 km³/s²) ne lui correspond pas : 2,1e-9 / G = 3,15e10 kg, la valeur que ce catalogue affichait jusqu'ici.",
     "model.extentRatio": "Mesuré sur le fichier : rayon max / rayon équivalent-volume.",
-    "model.albedo": "Luminosité et couleur RÉELLES, cuites dans le modèle (bake-shape-colour.mjs) ; la sphère d'attente ci-dessus a la même couleur moyenne, pour ne pas changer d'aspect au chargement."
+    "model.albedo": "Drapé depuis le 2026-10-04 de la photomosaïque AMICA de Stooke : un modèle drapé ne porte plus de couleur cuite."
   }
 }

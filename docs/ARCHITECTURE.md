@@ -1986,8 +1986,28 @@ suppose que la carte ET le modèle soient dans le même repère, et c'est la con
 |---|---|---|---|---|
 | Éros | albédos NEAR MSI de Golish et al. (2023), 760/550/450 nm, composés en couleur | Psyche à sa longitude, Himeros à son antipode | 25 des 33 grands cratères nommés sont des creux du modèle à 0°, 17 au mieux autrement | **drapée** |
 | Itokawa | photomosaïque AMICA de Stooke (PDS) | grille de la carte (0 aux bords) | recalage sur le modèle : pic à 1°, sans miroir | **drapée** |
-| Ida | photomosaïque Galileo de Stooke (30 % imagé) | 92 % des noms sur des pixels imagés, Afon au méridien | aucune orientation n'y met les cratères nommés en creux (11 à 14 sur 21) ; la grille du modèle suit la convention de Davies et al. 1996 (pôle à Dec +87°, rotation rétrograde) | en attente : repère du modèle à établir |
-| Gaspra, Mathilde | photomosaïques de Stooke (35 % et 20 % imagés) | 91 % et 83 % des noms sur des pixels imagés | modèles tournés dans leurs axes principaux (`--principal`, pôle déplacé de 11° et 30°) : leur repère n'est plus celui de l'UAI | en attente : le drapé devrait lire le repère d'avant la rotation |
+| Ida | photomosaïque Galileo de Stooke et Nyrtsov (30 % imagé), projetée sur le modèle de Thomas | 92 % des noms sur des pixels imagés, Afon au méridien | modèle en longitudes Est (étiquette `243ida.lbl`), repère de Davies et al. 1996 ; recalage par l'ombrage : pic à 0°, sans miroir ni pôle retourné | **drapée** (2026-10-05) |
+| Gaspra | photomosaïque Galileo de Stooke (35 % imagé), contrôle de position de Thomas | 91 % des noms sur des pixels imagés | modèle de Thomas laissé dans le repère de son pôle mesuré (il était tourné dans ses axes principaux, pôle déplacé de 11°) ; recalage par l'ombrage : pic à 0°, sans miroir ni pôle retourné | **drapée** (2026-10-05) |
+| Mathilde | photomosaïque NEAR de Stooke et Pfau (20 % imagé), grille sans étiquettes | 83 % des noms sur des pixels imagés | le recalage par l'ombrage ne s'y distingue pas du hasard (R² 0,30 à 0°, jusqu'à 0,42 ailleurs, autant qu'un couple de deux corps différents) | en attente : aucune mesure ne prouve le repère de la carte |
+
+**Le recalage par l'ombrage (2026-10-05)**, parce que ni les cratères ni la pente n'ont tranché pour
+ces trois corps. Le test des creux (le centre d'un cratère nommé plus bas que son pourtour) ne
+discrimine pas sur une grille de 2° : Gaspra 13 cratères sur 26 à 0°, jusqu'à 20 ailleurs sans aucun pic, et le
+témoin Déimos n'en a que deux de mesurables. La pente contre la variance de la carte, qui a recalé
+Itokawa, change de vainqueur selon le seuil du masque. Dans une photomosaïque OMBRÉE, en revanche,
+la luminosité d'une région vue sous un même Soleil suit l'orientation des facettes : on ajuste
+luminosité ≈ a + b·n par moindres carrés (n normale du modèle, b direction du Soleil fois
+l'albédo), et l'on compare le R² sur 720 repères candidats (décalage de longitude, miroir, pôle
+retourné). Le niveau du hasard se mesure en posant la carte d'un corps sur le modèle d'un AUTRE :
+0,41 à 0,47. Gaspra (0,53) et Ida (0,48) culminent exactement à l'identité, avec une pente
+régulière (0,27 à 30°) ; un ombrage lambertien (max(0, n·s), Soleil cherché) rend la même
+réponse. Les cartes aplanies (Itokawa, Éros, Vesta, Mimas, Phobos) n'ont pas d'ombrage, et la
+mesure n'y dit rien (R² autour de 0,1 partout) : elle ne remplace pas les autres. Elle est tenue
+sur les fichiers LIVRÉS par `src/config/textureOrientation.test.ts`, qui échantillonne l'intérieur
+des triangles (un sommet par cellule ne suffit pas à un modèle décimé) ; falsifiée par une texture
+roulée d'un demi-tour, une texture en miroir, et l'ancien Gaspra tourné dans ses axes principaux
+(pic à 248°). Le test des creux qui tenait Ida en attente le 2026-10-04 (11 à 14 cratères sur 21 quelle que
+soit l'orientation) était donc une mesure sans pouvoir de décision, pas un désaccord.
 
 Pour les autres, aucune carte n'a été trouvée là où l'on a cherché le 2026-10-04 : le dépôt S3
 complet des mosaïques de l'USGS (18 844 clés listées), les cartes de Stooke au PDS (Ida, Gaspra,
@@ -3982,7 +4002,9 @@ carte de couleur) : Gaspra et Mathilde (grilles de Thomas au PDS, longitudes oue
 (modèle radar préliminaire de Brozović et al. 2018) et Lutetia (DAMIT 282, CC BY 4.0). Les
 gardes de `shapeModels.test.ts` ont décidé deux choses : les pôles publiés de Gaspra et de
 Mathilde sont à 11° et 30° de leur axe de plus grande inertie, donc ces deux maillages sont
-tournés dans leurs axes principaux (`--principal`) ; et le rayon équivalent-volume de Mathilde
+tournés dans leurs axes principaux (`--principal`) [SUPERSEDED le 2026-10-05 pour Gaspra, rendu
+à son repère mesuré pour y draper sa carte : § « Les petits corps modélisés »] ; et le rayon
+équivalent-volume de Mathilde
 (25,6 km) s'écarte de 3,2 % du rayon affiché, un écart déclaré (`radiusMismatch`).
 
 **Cinq ne le sont pas, et chaque raison est une mesure du jour** :

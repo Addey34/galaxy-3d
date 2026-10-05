@@ -502,6 +502,43 @@ const IMPORTS = [
     tier: 'free',
   },
   {
+    // Photomosaïque de Stooke (2000) : images Galileo SSI reprojetées avec le contrôle de position
+    // de P. Thomas (Stooke Small Bodies Maps V2.0, document/951gaspra/gabestmo.jpg, 20 px/degré).
+    // Domaine public, crédit requis. Grille : longitudes OUEST, 180 aux bords, 0 au centre, donc
+    // l'Est vers la droite : le cadrage de l'application, rien à rouler. Recalage par l'OMBRAGE sur
+    // la grille de Thomas en longitudes Est : pic à 0°, sans miroir ni pôle retourné (2026-10-05).
+    body: 'gaspra',
+    layer: 'surface',
+    src: `${V1}/gaspra/gabestmo.jpg`,
+    // Pas de 4k : la mosaïque fait 7 200 px, mais son 4k ne porte que 0,11 % de variance de plus
+    // que le 2k, sous le plancher de `textureLadder.test.ts` (les images Galileo n'ont pas ce détail).
+    resolutions: ['2k', '1k'],
+    fillHoles: false,
+    tint: null,
+    source:
+      'https://sbnarchive.psi.edu/pds3/multi_mission/MULTI_SA_MULTI_6_STOOKEMAPS_V2_0/document/aamapdesc.html',
+    license: 'public-domain',
+    credit: 'Stooke, P., Stooke Small Bodies Maps V2.0, NASA PDS (Galileo SSI)',
+    tier: 'free',
+  },
+  {
+    // Photomosaïque de Stooke et Nyrtsov (2000) : images Galileo SSI reprojetées sur le modèle de
+    // Thomas (document/243ida/icylmos2.jpg, 10 px/degré). Même grille que Gaspra. Le modèle de
+    // Thomas est en longitudes EST (étiquette 243ida.lbl), repère de Davies et al. 1996 ; recalage
+    // par l'ombrage : pic à 0°, sans miroir ni pôle retourné (2026-10-05).
+    body: 'ida',
+    layer: 'surface',
+    src: `${V1}/ida/icylmos2.jpg`,
+    resolutions: ['8k', '4k', '2k', '1k'],
+    fillHoles: false,
+    tint: null,
+    source:
+      'https://sbnarchive.psi.edu/pds3/multi_mission/MULTI_SA_MULTI_6_STOOKEMAPS_V2_0/document/aamapdesc.html',
+    license: 'public-domain',
+    credit: 'Stooke, P., Stooke Small Bodies Maps V2.0, NASA PDS (Galileo SSI)',
+    tier: 'free',
+  },
+  {
     body: 'deimos',
     layer: 'surface',
     src: `${V1}/deimos/Mars - Deimos nasa gov.tif`,

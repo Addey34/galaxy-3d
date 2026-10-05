@@ -55,7 +55,7 @@
     "gaspra": {
       "cache": ".cache/shape-models/951gaspra.tab",
       "dataset": "urn:nasa:pds:ast-sat.thomas.shape-models (951gaspra.tab)",
-      "flags": ["--z-up", "--principal", "--west"]
+      "flags": ["--z-up", "--west"]
     },
     "halley": {
       "cache": ".cache/shapes/1682q1halley.tab",
