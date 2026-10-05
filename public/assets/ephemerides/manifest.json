@@ -1,7 +1,7 @@
 {
   "version": 1,
   "source": "NASA/JPL Horizons",
-  "generatedAt": "2026-10-04T06:19:27.723Z",
+  "generatedAt": "2026-10-05T03:39:16.964Z",
   "frame": "ECLIPTIC_J2000",
   "center": "SUN",
   "units": "AU-D",
@@ -578,12 +578,17 @@
       "sampleCount": 9177
     },
     "didymos": {
-      "file": "didymos.9ee3cc0e56d0.bin",
+      "file": "didymos.b41f02b46892.bin",
       "target": "65803;",
       "center": "sun",
       "startJdTdb": 2415020.5,
       "stepDays": 4,
-      "sampleCount": 18354
+      "sampleCount": 18354,
+      "primary": {
+        "target": "920065803",
+        "fromJdTdb": 2451912.5,
+        "toJdTdb": 2460868.5
+      }
     },
     "dinkinesh": {
       "file": "dinkinesh.a4cef2d0aac8.bin",
@@ -634,12 +639,21 @@
       "sampleCount": 2295
     },
     "patroclus": {
-      "file": "patroclus.868760eb143c.bin",
+      "file": "patroclus.973aed740c8f.bin",
       "target": "617;",
       "center": "sun",
       "startJdTdb": 2415020.5,
-      "stepDays": 16,
-      "sampleCount": 4589
+      "stepDays": 4,
+      "sampleCount": 18354,
+      "primary": {
+        "target": "920000617",
+        "fromJdTdb": 2451548.5,
+        "toJdTdb": 2470136.5
+      },
+      "reflex": {
+        "companion": "menoetius",
+        "factor": -0.22024
+      }
     },
     "apophis": {
       "file": "apophis.2c2f1be03042.bin",

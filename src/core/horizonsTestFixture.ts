@@ -2,7 +2,11 @@ import { readFileSync } from 'node:fs';
 import { vi } from 'vitest';
 import { CELESTIAL_CONFIG } from '@/config/bodies';
 import { bodyDynamics } from '@/config/gravity';
-import { HorizonsEphemerisService } from './HorizonsEphemerisService';
+import {
+  HorizonsEphemerisService,
+  withPublishedReflex,
+  type HorizonsBodyManifest,
+} from './HorizonsEphemerisService';
 
 /**
  * Charge le service Horizons sur les binaires RÉELLEMENT COMMITTÉS, pour les tests.
@@ -43,7 +47,11 @@ export const horizonsManifest = JSON.parse(
  * et le test n'exercerait pas le chemin réel.
  */
 export function horizonsServiceFromDisk(): HorizonsEphemerisService {
-  const dynamics = bodyDynamics(CELESTIAL_CONFIG);
+  // Le ballant PUBLIÉ au manifeste (Patrocle) s'ajoute comme au chargement réseau.
+  const dynamics = withPublishedReflex(
+    bodyDynamics(CELESTIAL_CONFIG),
+    Object.entries(horizonsManifest.bodies) as [string, HorizonsBodyManifest][]
+  );
   const loaded = new Map<string, unknown>();
 
   for (const [name, entry] of Object.entries(horizonsManifest.bodies)) {

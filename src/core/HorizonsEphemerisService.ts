@@ -15,6 +15,7 @@ import type { PreciseEphemerisProvider } from './PreciseEphemerisProvider';
 import { mapWithConcurrency } from '@/utils/concurrency';
 import { medianMeanMotionScale } from './meanMotionScale';
 import {
+  alignedOffset,
   byteRangeForIndices,
   covers,
   fileByteLength,
@@ -23,6 +24,7 @@ import {
   planBodyWindow,
   rangeHeader,
   windowContains,
+  windowInCompanionGrid,
   type SampleGrid,
   type SampleWindow,
 } from './ephemerisWindow';
@@ -245,7 +247,7 @@ interface LoadPolicy {
   now: () => number;
 }
 
-interface HorizonsBodyManifest {
+export interface HorizonsBodyManifest {
   file: string;
   target: string;
   /** Body name when the binary is sampled relative to a parent instead of the Sun. */
@@ -261,6 +263,34 @@ interface HorizonsBodyManifest {
    * que si on tient le fichier entier.
    */
   meanMotionScale?: number;
+  /**
+   * L'intervalle où le fichier porte les vecteurs du PRIMAIRE d'un système binaire plutôt que
+   * sa solution au sol (cf. `overlayPrimary` du générateur). Informatif pour l'application.
+   */
+  primary?: { target: string; fromJdTdb: number; toJdTdb: number };
+  /**
+   * Ballant autour du barycentre, PUBLIÉ quand les masses ne le donnent pas (Patrocle, cf.
+   * `core/reflexFactor.ts` et `pnpm ephemeris:reflex`). Un ballant dérivé des masses par
+   * `config/gravity.ts` garde la priorité.
+   */
+  reflex?: { companion: string; factor: number };
+}
+
+/**
+ * Les dynamiques du catalogue, complétées du ballant que le manifeste PUBLIE pour un corps dont
+ * les masses ne le donnent pas.
+ */
+export function withPublishedReflex(
+  bodyMu: Readonly<Record<string, BodyDynamics>>,
+  entries: readonly [string, HorizonsBodyManifest][]
+): Readonly<Record<string, BodyDynamics>> {
+  let merged: Record<string, BodyDynamics> | null = null;
+  for (const [name, entry] of entries) {
+    if (!entry.reflex || bodyMu[name]?.reflex) continue;
+    merged ??= { ...bodyMu };
+    merged[name] = { ...(bodyMu[name] ?? { mu: 0 }), reflex: entry.reflex };
+  }
+  return merged ?? bodyMu;
 }
 
 interface HorizonsManifest {
@@ -402,7 +432,11 @@ function isManifestBody(value: unknown): value is HorizonsBodyManifest {
     (body.meanMotionScale === undefined ||
       (typeof body.meanMotionScale === 'number' &&
         Number.isFinite(body.meanMotionScale) &&
-        body.meanMotionScale > 0))
+        body.meanMotionScale > 0)) &&
+    (body.reflex === undefined ||
+      (typeof body.reflex.companion === 'string' &&
+        typeof body.reflex.factor === 'number' &&
+        Number.isFinite(body.reflex.factor)))
   );
 }
 
@@ -909,15 +943,12 @@ export class HorizonsEphemerisService implements PreciseEphemerisProvider {
       const companionName = bodyMu[name]?.reflex?.companion;
       if (companionName === undefined) continue;
       const companion = byName.get(companionName);
-      // Grilles différentes : `_withoutReflex` refuse déjà de mélanger deux pas, et élargir
-      // la fenêtre du compagnon n'y changerait rien — ce serait payer des octets pour rien.
-      if (
-        !companion ||
-        companion.startJdTdb !== entry.startJdTdb ||
-        companion.stepDays !== entry.stepDays ||
-        companion.sampleCount !== entry.sampleCount
-      )
-        continue;
+      // Grilles non ALIGNÉES : `_withoutReflex` refuse déjà de mélanger deux instants, et
+      // élargir la fenêtre du compagnon n'y changerait rien — ce serait payer des octets pour
+      // rien. Alignées mais décalées (Patrocle depuis 1900, Menoetius depuis 2000), la fenêtre
+      // du corps se TRADUIT dans la grille du compagnon.
+      const offset = companion ? alignedOffset(entry, companion) : null;
+      if (!companion || offset === null) continue;
       const plan = plans.get(name);
       if (plan === null || plan === undefined) continue;
       const companionPlan = plans.get(companionName) ?? null;
@@ -925,9 +956,11 @@ export class HorizonsEphemerisService implements PreciseEphemerisProvider {
         plans.set(companionName, 'full');
         continue;
       }
+      const needed = windowInCompanionGrid(plan, offset, companion);
+      if (needed === null) continue;
       plans.set(
         companionName,
-        companionPlan === null ? plan : mergeWindows(companionPlan, plan)
+        companionPlan === null ? needed : mergeWindows(companionPlan, needed)
       );
     }
     return plans;
@@ -974,6 +1007,7 @@ export class HorizonsEphemerisService implements PreciseEphemerisProvider {
       try {
         const fetched = await fetchManifest(pending.manifestUrl, pending.store);
         pending.manifest = fetched;
+        pending.bodyMu = withPublishedReflex(pending.bodyMu, fetched.entries);
         // Entretien du magasin, HORS du chemin de chargement : ranger la copie hors ligne du
         // manifeste, puis retirer ce qu'il ne nomme plus (les binaires portent le hachage de
         // leur contenu, donc une régénération laisse des entrées jamais relues).
@@ -1174,8 +1208,16 @@ export class HorizonsEphemerisService implements PreciseEphemerisProvider {
   private _samplePosition(body: LoadedBody, date: Date): THREE.Vector3 | null {
     const reflex = body.dynamics?.reflex;
     if (reflex) {
-      const smooth = this._withoutReflex(body);
       const companion = this.bodies.get(reflex.companion);
+      // Hors de la couverture du FICHIER compagnon il n'y a pas de ballant à retirer : le
+      // fichier du corps y porte une solution qui ne balance pas (Patrocle avant 2000, cf.
+      // `HorizonsBodyManifest.primary`). Dedans, faute des octets du compagnon, on se tait.
+      if (
+        companion &&
+        !covers(HorizonsEphemerisService._grid(companion.manifest), date)
+      )
+        return this._sampleGrid(body, date);
+      const smooth = this._withoutReflex(body);
       if (smooth && companion) {
         const position = this._sampleGrid(smooth, date);
         const wobble = this._sampleGrid(companion, date);
@@ -1205,20 +1247,17 @@ export class HorizonsEphemerisService implements PreciseEphemerisProvider {
     const m = body.manifest;
     const c = companion?.manifest;
     let result: LoadedBody | null = null;
-    if (
-      companion &&
-      c &&
-      c.startJdTdb === m.startJdTdb &&
-      c.stepDays === m.stepDays &&
-      c.sampleCount === m.sampleCount
-    ) {
+    // Décalage du compagnon dans la grille du corps : 0 pour Pluton et Charon, 9 132 pour
+    // Patrocle et Menoetius. Tout se compte en index du CORPS.
+    const offset = c ? alignedOffset(m, c) : null;
+    if (companion && c && offset !== null) {
       const firstIndex = Math.max(
         heldFirstIndex(body),
-        heldFirstIndex(companion)
+        heldFirstIndex(companion) + offset
       );
       const lastIndex = Math.min(
         heldFirstIndex(body) + heldSampleCount(body) - 1,
-        heldFirstIndex(companion) + heldSampleCount(companion) - 1
+        heldFirstIndex(companion) + heldSampleCount(companion) - 1 + offset
       );
       // Un seul échantillon commun n'interpole rien : `_sampleGrid` a besoin de l'index ET
       // du suivant.
@@ -1228,7 +1267,8 @@ export class HorizonsEphemerisService implements PreciseEphemerisProvider {
         const bodyOffset =
           (firstIndex - heldFirstIndex(body)) * COMPONENTS_PER_SAMPLE;
         const companionOffset =
-          (firstIndex - heldFirstIndex(companion)) * COMPONENTS_PER_SAMPLE;
+          (firstIndex - offset - heldFirstIndex(companion)) *
+          COMPONENTS_PER_SAMPLE;
         for (let i = 0; i < samples.length; i++)
           samples[i] =
             body.samples[bodyOffset + i] -

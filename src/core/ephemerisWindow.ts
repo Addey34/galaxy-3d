@@ -284,6 +284,45 @@ export function windowContains(
  * Réunion de deux fenêtres, pour étendre ce qu'on tient sans redemander ce qu'on a. Les deux
  * doivent venir de la MÊME grille : réunir deux pas différents mélangerait deux instants.
  */
+/**
+ * Décalage, en échantillons, de la grille d'un COMPAGNON dans celle d'un corps : l'index k du
+ * compagnon est l'instant de l'index k + décalage du corps. `null` quand les deux grilles ne
+ * tombent pas sur les mêmes nœuds (pas différents, ou débuts décalés d'une fraction de pas) :
+ * on ne soustrait jamais deux instants différents. Deux grilles IDENTIQUES rendent 0 (Pluton et
+ * Charon) ; Patrocle (1900-2100) et Menoetius (2000-2050), 9 132.
+ */
+export function alignedOffset(
+  body: SampleGrid,
+  companion: SampleGrid
+): number | null {
+  if (companion.stepDays !== body.stepDays) return null;
+  const offset = (companion.startJdTdb - body.startJdTdb) / body.stepDays;
+  const rounded = Math.round(offset);
+  return Math.abs(offset - rounded) < 1e-9 ? rounded : null;
+}
+
+/**
+ * La fenêtre d'un corps, exprimée dans la grille de son compagnon et bornée à son fichier.
+ * `null` quand les deux ne se recouvrent pas.
+ */
+export function windowInCompanionGrid(
+  window: SampleWindow,
+  offset: number,
+  companion: SampleGrid
+): SampleWindow | null {
+  const firstIndex = Math.max(0, window.firstIndex - offset);
+  const lastIndex = Math.min(
+    companion.sampleCount - 1,
+    window.lastIndex - offset
+  );
+  if (lastIndex < firstIndex) return null;
+  return {
+    firstIndex,
+    lastIndex,
+    ...byteRangeForIndices(firstIndex, lastIndex),
+  };
+}
+
 export function mergeWindows(a: SampleWindow, b: SampleWindow): SampleWindow {
   const firstIndex = Math.min(a.firstIndex, b.firstIndex);
   const lastIndex = Math.max(a.lastIndex, b.lastIndex);

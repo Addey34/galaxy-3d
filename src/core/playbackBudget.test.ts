@@ -27,17 +27,18 @@ const grids = Object.values(
 );
 
 describe('bytesPerSimulatedDay', () => {
-  it('reproduit la mesure publiée : 2,90 Mbit/s à la vitesse maximale', () => {
+  it('reproduit la mesure publiée : 2,93 Mbit/s à la vitesse maximale', () => {
     const perDay = bytesPerSimulatedDay(grids);
     // 64 corps au 2026-09-24 (800,2 o par jour simulé, 2,34 Mbit/s, la mesure du plan) ; 87
     // depuis les 23 cibles de missions du 2026-10-04, 89 avec leurs deux satellites le même
-    // jour. Si le catalogue change, ce chiffre change AVEC lui : c'est le point, la demande est
-    // calculée et non déclarée.
+    // jour, 1 002 quand Patrocle passe au pas de 4 jours (2026-10-05, +48/4 − 48/16). Si le
+    // catalogue change, ce chiffre change AVEC lui : c'est le point, la demande est calculée et
+    // non déclarée.
     expect(grids.length).toBe(89);
-    expect(perDay).toBeCloseTo(993.0, 1);
+    expect(perDay).toBeCloseTo(1002.0, 1);
     const atMaxSpeed = (perDay * MAX_SIMULATION_SCALE) / SECONDS_PER_DAY;
-    expect(atMaxSpeed).toBeCloseTo(362_693.25, 0);
-    expect((atMaxSpeed * 8) / 1e6).toBeCloseTo(2.9, 2);
+    expect(atMaxSpeed).toBeCloseTo(365_980.5, 0);
+    expect((atMaxSpeed * 8) / 1e6).toBeCloseTo(2.928, 2);
   });
 
   it('ne compte que les corps passés : un corps hors couverture ne demande rien', () => {
@@ -110,7 +111,7 @@ describe('sustainableTimeScale', () => {
     expect(ceiling(null)).toBeNull();
   });
 
-  it('ne plafonne rien au-dessus de la demande maximale (2,90 Mbit/s)', () => {
+  it('ne plafonne rien au-dessus de la demande maximale (2,93 Mbit/s)', () => {
     // 10 Mbit/s : le plan mesure que ce lien absorbe la vitesse maximale. Le plafond doit donc
     // être ABSENT, et pas égal au maximum : l'interface ne dit rien quand il n'y a rien à dire.
     expect(ceiling(1_250_000)).toBeNull();
@@ -121,16 +122,16 @@ describe('sustainableTimeScale', () => {
     const cap = ceiling(250_000);
     expect(cap).not.toBeNull();
     expect(cap!).toBeLessThan(MAX_SIMULATION_SCALE);
-    // 67,8 % du maximum, dérivé : (250 000 − 4 272) × 86 400 / 993. C'était 84,5 % avec les
+    // 67,1 % du maximum, dérivé : (250 000 − 4 272) × 86 400 / 1 002. C'était 84,5 % avec les
     // 64 fichiers du lot 17 : chaque corps tracé fait venir ses positions en lecture accélérée.
     // Le prix des 23 cibles de missions et de leurs deux satellites (2026-10-04), mesuré et
-    // écrit (69,5 % avant les satellites).
+    // écrit (69,5 % avant les satellites, 67,8 % avant le pas de 4 jours de Patrocle).
     const expected = Math.floor(
       ((250_000 - overheadBytesPerSecond(bodyCount)) * SECONDS_PER_DAY) /
         perSimulatedDay
     );
     expect(cap).toBe(expected);
-    expect(cap! / MAX_SIMULATION_SCALE).toBeCloseTo(0.678, 2);
+    expect(cap! / MAX_SIMULATION_SCALE).toBeCloseTo(0.671, 2);
   });
 
   it('un lien deux fois plus lent plafonne deux fois plus bas, à peu près', () => {
