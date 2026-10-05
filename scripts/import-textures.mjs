@@ -483,6 +483,29 @@ const IMPORTS = [
     tier: 'free',
   },
   {
+    // Carte d'albédo FABRIQUÉE le 2026-10-05 : aucune n'est publiée comme donnée. Cubes ONC à sept
+    // filtres, photométriquement corrigés et recalés (urn:jaxa:darts:hyb2_onc:data_reflectance_
+    // coregistered, PSI), reportés par leurs plans de latitude et longitude :
+    // `scripts/mosaic-onc-images.mjs --step 0.25` (550 nm), puis `scripts/compose-albedo-texture.mjs`
+    // avec le même fichier en trois bandes, `--albedo 0.045` (Sugita et al. 2019) et `--width 1440`.
+    // Grille : longitude 0 au bord gauche, Est vers la droite, d'où le recentrage. Teinte : la
+    // couleur MOYENNE de 700, 550 et 480 nm (rapports 1,013 / 1 / 0,994) ; ses variations ne se
+    // reproduisent pas d'une date à l'autre, celles de l'albédo si (r 0,79 à 0,84).
+    body: 'ryugu',
+    layer: 'surface',
+    src: `${V1}/ryugu/ryugu_onc_albedo.png`,
+    resolutions: ['1k'],
+    // Lacunes déjà comblées par propagation dans la mosaïque : le flou unique de `fillHoles`
+    // laissait noires les calottes polaires jamais vues.
+    fillHoles: false,
+    tint: [255, 254, 253],
+    centerLongitude: 180,
+    source: 'https://darts.isas.jaxa.jp/doi/hyb2/hyb2-00200.html',
+    license: 'CC BY 4.0',
+    credit: 'ISAS/JAXA Hayabusa2 ONC (Sugita et al.), données modifiées',
+    tier: 'free',
+  },
+  {
     // Photomosaïque de Stooke (2012) : images AMICA reprojetées sur le modèle de Gaskell
     // (Stooke Small Bodies Maps V2.0, MULTI-SA-MULTI-6-STOOKEMAPS-V2.0, document/25143itokawa/
     // new-itokawa-mosaic.jpg). Domaine public, crédit requis. Grille : 0 aux bords, 180 au centre,

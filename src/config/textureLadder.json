@@ -683,6 +683,15 @@
       "bytes": 6497147
     },
     {
+      "body": "ryugu",
+      "layer": "surface",
+      "shipped": [
+        "1k"
+      ],
+      "detail": {},
+      "bytes": 44411
+    },
+    {
       "body": "saturn",
       "layer": "ring",
       "shipped": [
