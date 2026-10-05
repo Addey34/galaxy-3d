@@ -2101,6 +2101,29 @@ Donaldjohanson, Arrokoth et Tempel 1. Psyché n'a pas encore été visitée, Apo
 que par radar ; pour les autres, une recherche plus large (archives propres à chaque mission)
 reste à faire et n'est pas une absence prouvée.
 
+**Les images brutes des corps gris, recensées le 2026-10-05.** Une carte qui n'existe pas peut se
+FABRIQUER si l'on a le modèle de forme, des images et de quoi poser chaque image sur le modèle
+(noyaux SPICE, ou plans de latitude et longitude livrés avec l'image). Recensement fait sur les
+3 863 collections du registre du PDS (l'hôte de chaque étiquette relu), puis par requête directe.
+Les deux hôtes de l'Université du Maryland répondent 403 sur leurs `holdings`, y compris aux
+adresses exactes que le registre publie (`pdssbn.astro.umd.edu` et
+`pds-smallbodies.astro.umd.edu`).
+
+| Corps | Images | Hôte | Pose | Verdict |
+|---|---|---|---|---|
+| Ryugu | ONC : I/F étalonnés et réflectances multi-filtres recalées | PSI (`hyb2_onc`) | plans de latitude et longitude par pixel | **accessible** |
+| Mathilde | NEAR MSI : images brutes et étalonnées en I/F | PSI (`NEAR_A_MSI_3_EDR_MATHILDE_V1_0`) | noyaux du survol à PSI (`NEAR_A_SPICE_6_MATHILDE_V1_0`) | **accessible** |
+| Lutetia, Šteins | OSIRIS NAC et WAC, niveaux 2 et 3 | PSA de l'ESA | noyaux de Rosetta chez NAIF | accessible ; licence à trancher, comme 67P |
+| Didymos, Dimorphos | DRACO, dont des images étalonnées avec plans géométriques | UMD seulement | | bloqué (403) |
+| Arrokoth | LORRI, produits dérivés | UMD seulement | | bloqué (403) |
+| Donaldjohanson | aucune image L'LORRI au registre, seulement des spectres LEISA | UMD seulement | | bloqué |
+| Tempel 1 | Deep Impact et Stardust-NExT | UMD seulement | | bloqué (403) |
+| Psyché, Apophis | aucune image rapprochée n'existe encore | | | sans objet |
+
+Pour la couleur de Ryugu, aucun produit n'avait été trouvé sur DARTS ; PSI sert pourtant la
+collection `data_reflectance_coregistered` de l'ONC, multi-filtres et recalée, avec ses plans
+géométriques.
+
 **Les archives des missions, lues le 2026-10-05** pour les cinq corps NASA, par le registre du PDS
 (`pds.nasa.gov/api/search/1`, les 3 863 collections listées puis filtrées, la requête
 `lid like … and …` étant refusée par l'API) :
@@ -2108,7 +2131,7 @@ reste à faire et n'est pas une absence prouvée.
 | Corps | Ce que la mission publie | Servi par | Statut |
 |---|---|---|---|
 | Tempel 1 | le modèle de forme de Farnham et Thomas (`DIF-C-HRIV/ITS/MRI-5-TEMPEL1-SHAPE-V2.0`), aucune carte | — | absence prouvée |
-| Donaldjohanson | des images L'LORRI brutes et des spectres LEISA, aucun produit dérivé | — | absence prouvée |
+| Donaldjohanson | des spectres LEISA bruts et étalonnés, aucun produit dérivé ; **aucune collection d'images L'LORRI du survol** au registre (relu le 2026-10-05 : les seules données L'LORRI sont celles de Didymos ; « images L'LORRI brutes » écrit plus tôt le même jour était faux) | — | absence prouvée |
 | Didymos, Dimorphos | une table d'albédo RELATIF par facette du modèle SPC (`dart_shapemodel`, `data_derived_*`), sans question de repère | `pdssbn.astro.umd.edu` seulement | bloqué par la source |
 | Arrokoth | la carte d'albédo de Porter et al. 2024 (deux projections azimutales polaires, une par lobe, ses coordonnées de texture dans l'OBJ du même jeu), et les cartes d'albédo et de réflectance de `nh_derived:arrokoth_geophysics` | `pdssbn.astro.umd.edu` seulement | bloqué par la source |
 
