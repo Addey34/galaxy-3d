@@ -2036,6 +2036,32 @@ cran (son « violet » vaut le rouge des séries voisines à 1 % près, son « v
 que son étiquette annonce le même ordre. Le script écarte toute série à plus de 10 % de la médiane,
 et le dit. Rapports au vert : 1,133 (671 nm) et 0,777 (404 nm), la pente rouge d'un type S.
 
+**Ida reste sans couleur, et la raison est MESURÉE (2026-10-05).** Pour Ida, PSI ne sert pas de
+cubes couleur, seulement les images étalonnées de Domingue (`galileo.ast-ida.ssi.cal-images`),
+une par filtre, dont une seule série (E) porte rouge, vert et violet. Leur moyenne sur les pixels
+éclairés est stable au seuil près (rouge/vert 1,118 à 1,122, violet/vert 0,758 à 0,762), mais la
+méthode **échoue à son témoin** : appliquée aux images étalonnées de GASPRA, celles-là mêmes que
+ses cubes recalent, elle ne rend pas ce que les cubes disent. Série B, rapports au vert :
+
+| Filtre | Cube | Images étalonnées |
+|---|---|---|
+| violet 404 nm | 0,713 | 0,731 |
+| rouge 671 nm | 1,158 | 1,513 |
+| IR 756 nm | 1,320 | 1,507 |
+| IR 889 nm | 0,996 | 1,393 |
+| IR 968 nm | 0,903 | 1,518 |
+
+Le cube montre le spectre d'un type S, qui monte jusqu'à 756 nm puis creuse la bande à 1 µm ; les
+images étalonnées n'ont aucune bande (968 nm égal à 671 nm), et leurs niveaux absolus sont quatre
+à cinq fois ceux du cube, alors que la documentation des cubes ne décrit qu'un recalage. Les
+séries C, D et E donnent rouge/vert de 1,34 à 1,44 sur les images, contre 1,133 sur les cubes.
+C'est donc l'étalonnage des images qui n'est pas fiable pour une COULEUR, et non celui des cubes :
+la couleur de Gaspra tient, celle d'Ida ne se dérive pas de cette archive. Transposer à Ida les
+facteurs mesurés sur Gaspra rendrait rouge/vert 0,86, un spectre bleu impossible pour un type S :
+la correction n'est pas une constante de filtre. Les spectres NIMS d'Ida commencent à 0,7 µm et
+n'ont ni vert ni violet. Ce qui rouvrirait la question : des cubes couleur d'Ida publiés, ou un
+étalonnage des filtres SSI documenté pour 1993.
+
 Pour les autres, aucune carte n'a été trouvée là où l'on a cherché le 2026-10-04 : le dépôt S3
 complet des mosaïques de l'USGS (18 844 clés listées), les cartes de Stooke au PDS (Ida, Gaspra,
 Mathilde, Éros, Itokawa, Phobos, Déimos, Amalthée, Hypérion, Épiméthée, Wild 2 seulement) et les
