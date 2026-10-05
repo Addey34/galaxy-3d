@@ -514,7 +514,11 @@ const IMPORTS = [
     // que le 2k, sous le plancher de `textureLadder.test.ts` (les images Galileo n'ont pas ce détail).
     resolutions: ['2k', '1k'],
     fillHoles: false,
-    tint: null,
+    // COULEUR MOYENNE MESURÉE (2026-10-05) : chrominance des cubes couleur Galileo SSI
+    // (galileo.ast-gaspra.color_geom_cubes, PDS) à 671/559/404 nm, séries B, D, E, posée sur la
+    // luminance de la mosaïque. Reproduire : scripts/measure-mean-colour.mjs --bands 2,1,0 sur
+    // les six cubes (A et F n'ont pas trois bandes, C est écartée : bandes décalées d'un cran).
+    tint: [255, 241, 216],
     source:
       'https://sbnarchive.psi.edu/pds3/multi_mission/MULTI_SA_MULTI_6_STOOKEMAPS_V2_0/document/aamapdesc.html',
     license: 'public-domain',
