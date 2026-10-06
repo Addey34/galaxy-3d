@@ -1,7 +1,7 @@
 {
   "version": 1,
   "source": "NASA/JPL Horizons",
-  "generatedAt": "2026-10-05T06:01:21.036Z",
+  "generatedAt": "2026-10-06T06:17:54.043Z",
   "frame": "ECLIPTIC_J2000",
   "center": "SUN",
   "units": "AU-D",
@@ -704,12 +704,17 @@
       "sampleCount": 18354
     },
     "churyumov-gerasimenko": {
-      "file": "churyumov-gerasimenko.a2ec0a0314ba.bin",
+      "file": "churyumov-gerasimenko.3f36f5744a7c.bin",
       "target": "90000703;",
       "center": "sun",
       "startJdTdb": 2415020.5,
       "stepDays": 4,
-      "sampleCount": 18354
+      "sampleCount": 18354,
+      "primary": {
+        "target": "1000012",
+        "fromJdTdb": 2456660.5,
+        "toJdTdb": 2457752.5
+      }
     },
     "giacobini-zinner": {
       "file": "giacobini-zinner.0146c61d5715.bin",

@@ -328,7 +328,8 @@
     },
     "churyumov-gerasimenko": {
       "command": "90000703;",
-      "expect": "churyumov-gerasimenko"
+      "expect": "churyumov-gerasimenko",
+      "primaryExpect": "(1000012)"
     },
     "giacobini-zinner": {
       "command": "90000324;",

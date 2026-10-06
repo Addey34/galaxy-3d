@@ -405,6 +405,18 @@ const BODIES = [
     center: 'sun',
     splitAtSolutionEpoch: true,
     stepDays: 4,
+    // La solution de la MISSION là où Horizons la sert (2026-10-06) : rapportée à la solution
+    // générale de la SBDB (90000703), Rosetta paraissait à 888-1 907 km de la comète en
+    // 2014-2016, hors de sa sphère de Hill (220-670 km), donc jamais son satellite ; rapportée à
+    // 1000012 (source `rosetta_merged`), elle est à ~170 km le 2015-07-26. Même classe de
+    // défaut que Dimorphos et Menoetius (§ « La position composée d'un satellite de petit corps »).
+    // Horizons ne NOMME pas cette solution (« (1000012) », source `rosetta_merged`) : le nom
+    // attendu est donc celui-là, et la garde de `assertResolvedTarget` reste armée.
+    primary: {
+      target: '1000012',
+      insideJdTdb: 2457230.5,
+      expectedName: '(1000012)',
+    },
   },
   {
     name: 'giacobini-zinner',
@@ -1096,7 +1108,11 @@ async function overlayPrimary(body, rows, stepDays) {
   const to = first + Math.floor((high - first) / stepDays) * stepDays;
   const primary = parseVectors(
     await requestVectors(
-      { ...body, target },
+      {
+        ...body,
+        target,
+        expectedName: body.primary.expectedName ?? body.expectedName,
+      },
       `JD ${from.toFixed(9)}`,
       `JD ${to.toFixed(9)}`
     ),
