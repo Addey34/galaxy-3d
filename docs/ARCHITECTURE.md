@@ -2318,6 +2318,38 @@ et al. 2012 (6,04681 h), 0,7534 °/j sur 3 170 jours depuis J2000, fait 132° mo
 cohérent avec la mesure, sans la prouver seul. **Rien n'est encore drapé** : la carte reste à
 fabriquer depuis cette pose, et à valider entre l'approche et le départ.
 
+**La carte de Lutetia : recalée, pas encore livrable (2026-10-06).** `pnpm pose:spice map
+lutetia-flyby --pose truth --step 0.15` reporte vingt images NAC (`map.images` de la recette) sur
+le modèle livré, à la pose du PCK que la recherche a confirmée à 1,68° : chaque point vu et éclairé
+prend la réflectance de son pixel (décalage de pointage mesuré par corrélation, de 4 à 268 px),
+corrigée de Lommel-Seeliger et ramenée à la médiane de son image. Deux groupes INDÉPENDANTS sont
+cartographiés à part : A, l'approche (treize images, phase 0,3 à 18°), et B, l'approche rapprochée
+et le départ (sept images, phase 27 à 126°). Mesuré au pas de 0,15° :
+
+- **Le recalage tient** : les formes de A et de B (laplacien de gaussienne) se corrèlent à
+  **0,80 au décalage nul**, contre 0,21 au mieux décalées de 1 à 3°. Le géoréférencement est bon à
+  mieux qu'une case. Ce témoin n'a de sens qu'à un pas fin : à 1°, il rendait 0,83 contre 0,81, et
+  la commande le dit désormais d'elle-même.
+- **La radiométrie s'accorde moins** : r 0,55 par blocs de 2° (0,49 sans la moyenne de chaque
+  latitude), contre 0,79 à 0,84 pour Ryugu. L'ombrage du relief que le modèle de 98 000 plaques ne
+  résout pas change avec la phase, et Lutetia est d'albédo assez uniforme : on compare surtout des
+  ombres.
+- **Couverture** : 34,8 % de la surface pour A, 35,4 % pour l'ensemble.
+- **Ce qui bloque la livraison : une frange sombre le long du bord de la couverture**, vue sur la
+  carte et non dans un chiffre. Six variantes ne l'ont pas levée, et chacune a été mesurée : angles
+  limités à 60° (couverture 26,5 %, frange intacte) ; rejet des valeurs à plus d'un facteur 2 de la
+  médiane de l'image (intact) ; érosion de la couverture de 1° (la calotte nord disparaît, des
+  taches blanches apparaissent) ; seuil sur la meilleure vue de chaque case, cos i · cos e ≥ 0,4
+  (couverture 21,5 %, frange intacte) ; échantillonnage limité à l'intérieur du disque observé
+  (intact, et un premier seuil prenait 39 à 52 % du cadre pour le disque, rien n'était donc érodé) ;
+  correction photométrique empirique par tranche de cos i · cos e (la frange devient CLAIRE et
+  l'accord radiométrique tombe à 0,19). Seule la limitation au disque observé est gardée, inoffensive
+  et juste. **Rien n'est livré.**
+
+Ce qui rouvrirait la question : une loi photométrique ajustée aux données plutôt que Lommel-Seeliger
+seul (une loi de Hapke ou d'Akimov ajustée sur ces images), ou un
+modèle de forme plus fin sur les bords de la couverture.
+
 Pour la couleur de Ryugu, aucun produit n'avait été trouvé sur DARTS ; PSI sert pourtant la
 collection `data_reflectance_coregistered` de l'ONC, multi-filtres et recalée, avec ses plans
 géométriques.
