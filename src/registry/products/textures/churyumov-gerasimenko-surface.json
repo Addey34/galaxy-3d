@@ -1,0 +1,41 @@
+{
+  "$schema": "../../schema/product.schema.json",
+  "id": "churyumov-gerasimenko-surface",
+  "type": "texture",
+  "body": "churyumov-gerasimenko",
+  "layer": "surface",
+  "shipped": true,
+  "license": "CC-BY-NC-3.0-IGO",
+  "links": [
+    {
+      "rel": "license",
+      "href": "https://www.cosmos.esa.int/web/esdc/terms-and-conditions"
+    },
+    {
+      "rel": "via",
+      "href": "https://archives.esac.esa.int/psa/ftp/INTERNATIONAL-ROSETTA-MISSION/OSINAC/RO-C-OSINAC-4-PRL-67P-M06-REFLECT-V2.0/"
+    }
+  ],
+  "providers": [
+    {
+      "name": "ESA/Rosetta OSIRIS (ESA, H. Sierks), NAC reflectance images RO-C-OSINAC-4-PRL-67P-M06-REFLECT-V2.0, ESA Planetary Science Archive",
+      "roles": ["licensor", "producer"]
+    }
+  ],
+  "tier": "free",
+  "review": {
+    "status": "ready",
+    "processing": "import-textures",
+    "downloadUrl": "https://archives.esac.esa.int/psa/ftp/INTERNATIONAL-ROSETTA-MISSION/OSINAC/RO-C-OSINAC-4-PRL-67P-M06-REFLECT-V2.0/DATA/IMG/",
+    "sourcePage": "https://archives.esac.esa.int/psa/ftp/INTERNATIONAL-ROSETTA-MISSION/OSINAC/RO-C-OSINAC-4-PRL-67P-M06-REFLECT-V2.0/",
+    "sourceResolution": "2048 x 2048 texture atlas of the shipped shape model (about 4.5 m per texel) built from twenty-two OSIRIS NAC reflectance frames of 3 and 5-6 August 2014",
+    "sourcePixelWidth": 2048,
+    "projection": "atlas",
+    "qualityClass": "native",
+    "note": "Fabriquee le 2026-10-06 : aucune carte de 67P n'est publiee comme donnee, et aucune carte equirectangulaire ne peut la porter (13,5 % de sa surface partage sa direction avec une autre : le cou, les surplombs). La texture est donc un ATLAS du modele livre (scripts/unwrap-shape-model.mjs, xatlas), partage par ses trois niveaux. Vingt-deux images NAC (onze le 3 aout, onze les 5 et 6 aout ; dix autres du 5 aout, sans aucun signal du noyau, ecartees) reportees sur le modele au repere 67P/C-G_CK, oriente par le CK de la comete (temoins de l'etiquette tenus a 0,006 degre). Transfert de detail : l'albedo des onze images du 3 aout (Lommel-Seeliger, relatif a chaque image) multiplie par le relief fin d'une photomosaique de toutes les images (phase 41 a 54 degres), filtres limites a chaque ile de l'atlas. Temoins entre vues INDEPENDANTES, le 3 aout (A) contre les 5-6 aout (B) : formes correlees a 0,66 au decalage nul contre 0,31 au mieux decalees de 1 a 3 degres ; photomosaique contre A 0,85 contre 0,35 ; radiometrie 0,66 par blocs de 2 degres. 64,4 % de la surface mesuree ; le reste, jamais vu sur ces images, est au gris moyen mesure, raccorde par un fondu, sans detail invente. Luminosite calee sur l'albedo geometrique 0,065 (Fornasier et al. 2015, A&A 583, A30) par scripts/compose-albedo-texture.mjs --atlas. La bande du haut de l'image est une pastille a la moyenne, que lit la sphere de repli.",
+    "license": "CC BY-NC 3.0 IGO (ESA Space Science Archives terms, read 2026-10-06)",
+    "credit": "ESA/Rosetta OSIRIS (ESA, H. Sierks)",
+    "attributionNeeded": true,
+    "provenanceNote": "ESA Space Science Archives terms (read 2026-10-06): data distributed under CC BY-NC 3.0 IGO; credit line for Rosetta OSIRIS 'ESA, H. Sierks'; commercial use requires authorisation (data.licences@esa.int). Modified: mapped into the shape model's texture atlas, photometrically normalised, detail-transferred, calibrated to the published albedo. Shipping under NC decided by the project owner on 2026-10-06."
+  }
+}

@@ -156,6 +156,13 @@ export interface ModelConfig {
    * masquer un fichier faux ; `shapeModels.test.ts` borne l'écart même déclaré.
    */
   radiusMismatch?: string;
+  /**
+   * Le modèle porte un ATLAS de texture (`TEXCOORD_0`, partagé par tous ses niveaux) au lieu
+   * d'être drapé par direction : pour un corps dont plusieurs surfaces partagent une direction
+   * (le cou de 67P). Sa texture de surface est alors dans cet atlas, et la sphère de repli n'en
+   * lit que la pastille d'albédo moyen (`core/modelUv.ts`, `ATLAS_CHART_TOP`).
+   */
+  atlas?: boolean;
 }
 
 export interface RingConfig {

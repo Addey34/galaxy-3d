@@ -4,7 +4,7 @@
  * au cadrage de leur source, pour `scripts/import-textures.mjs`.
  *
  *   node scripts/compose-albedo-texture.mjs --rgb r.tif,v.tif,b.tif --albedo <pV> --out sortie.png
- *     [--width 8192] [--chroma-blur px]
+ *     [--width 8192] [--chroma-blur px] [--atlas]
  *
  * Mêmes règles que la couleur cuite dans les modèles de forme (`scripts/bake-shape-colour.mjs`) ;
  * la constante `DISPLAY_PER_ALBEDO` vient de `scripts/display-albedo.mjs`, jamais recopiée :
@@ -36,9 +36,11 @@ const width = Number(option('--width') ?? 8192);
 // décalage entre filtres et le bruit des longueurs d'onde extrêmes sortent en mouchetis rose et
 // vert que l'œil prend pour de la couleur (Éros, vu le 2026-10-04). La couleur moyenne ne change pas.
 const chromaBlur = Number(option('--chroma-blur') ?? 0);
+// `--atlas` : la source est l'atlas d'un modèle de forme, pas une carte équirectangulaire.
+const atlas = args.includes('--atlas');
 if (!paths || paths.length !== 3 || !(albedo > 0) || !out) {
   console.error(
-    'usage : node scripts/compose-albedo-texture.mjs --rgb r.tif,v.tif,b.tif --albedo <pV> --out sortie.png [--width 8192] [--chroma-blur px]'
+    'usage : node scripts/compose-albedo-texture.mjs --rgb r.tif,v.tif,b.tif --albedo <pV> --out sortie.png [--width 8192] [--chroma-blur px] [--atlas]'
   );
   process.exit(2);
 }
@@ -101,7 +103,9 @@ let lum = 0;
 let area = 0;
 let measured = 0;
 for (let y = 0; y < height; y++) {
-  const w = Math.cos(((y + 0.5) / height - 0.5) * Math.PI);
+  // Un ATLAS (67P, `--atlas`) donne à chaque texel à peu près la même aire de surface (xatlas
+  // l'égalise) : aucun poids en latitude, qui n'y a aucun sens.
+  const w = atlas ? 1 : Math.cos(((y + 0.5) / height - 0.5) * Math.PI);
   for (let x = 0; x < width; x++) {
     const i = y * width + x;
     const [r, g, b] = [reduced[0][i], reduced[1][i], reduced[2][i]];

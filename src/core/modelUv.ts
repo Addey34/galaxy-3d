@@ -31,6 +31,22 @@
  * coordonnée différente dans chacun de ses triangles.
  */
 
+/**
+ * ATLAS (2026-10-06) : un modèle qui porte ses propres coordonnées de texture (`TEXCOORD_0`, écrites
+ * par `scripts/unwrap-shape-model.mjs`) n'est pas drapé par direction. Sur 67P, 13,5 % de la surface
+ * partage sa direction avec une autre, et la projection ci-dessous y poserait le même pixel en deux
+ * endroits. Ses îles occupent v ∈ [0, ATLAS_CHART_TOP] ; la bande au-dessus est la PASTILLE, que la
+ * cuisson remplit de l'albédo moyen mesuré, et que lit la sphère qui tient lieu du modèle avant son
+ * chargement ou s'il échoue (une carte d'atlas plaquée sur une sphère n'aurait aucun sens).
+ * Même valeur que `CHART_TOP` du script, croisée par `config/shapeModels.test.ts`.
+ */
+export const ATLAS_CHART_TOP = 0.98;
+/** Le milieu de la pastille, lu par la sphère d'un corps à atlas. */
+export const ATLAS_SWATCH_UV: readonly [number, number] = [
+  0.5,
+  (1 + ATLAS_CHART_TOP) / 2,
+];
+
 /** En deçà (fraction du rayon), un sommet est considéré sur l'axe polaire. */
 const POLE_AXIS_EPSILON = 1e-9;
 

@@ -526,6 +526,27 @@ const IMPORTS = [
     tier: 'free',
   },
   {
+    // ATLAS FABRIQUÉ le 2026-10-06 : aucune carte de 67P n'est publiée comme donnée, et aucune
+    // carte équirectangulaire ne peut la porter (13,5 % de sa surface partage sa direction avec
+    // une autre). Vingt-deux images NAC d'OSIRIS d'août 2014 (RO-C-OSINAC-4-PRL-67P-M06-REFLECT-
+    // V2.0, PSA) reportées dans l'ATLAS du modèle livré (`scripts/unwrap-shape-model.mjs`), au
+    // repère 67P/C-G_CK : `pnpm pose:spice map cg-prelanding --pose truth`, puis `texture`
+    // (albédo du 3 août multiplié par le relief fin d'une photomosaïque à phase 25-60°), puis
+    // `scripts/compose-albedo-texture.mjs --atlas` avec le même fichier en trois bandes,
+    // `--albedo 0.065` (Fornasier et al. 2015) et `--width 2048`. Carrée : le ratio est gardé.
+    // Surface non vue (36 %) : gris moyen mesuré, déjà comblé ; la bande du haut est la pastille.
+    body: 'churyumov-gerasimenko',
+    layer: 'surface',
+    src: `${V1}/churyumov-gerasimenko/cg_osiris_atlas.png`,
+    resolutions: ['1k', '2k'],
+    fillHoles: false,
+    source:
+      'https://archives.esac.esa.int/psa/ftp/INTERNATIONAL-ROSETTA-MISSION/OSINAC/RO-C-OSINAC-4-PRL-67P-M06-REFLECT-V2.0/',
+    license: 'CC BY-NC 3.0 IGO',
+    credit: 'ESA/Rosetta OSIRIS (ESA, H. Sierks), données modifiées',
+    tier: 'free',
+  },
+  {
     // Photomosaïque de Stooke (2012) : images AMICA reprojetées sur le modèle de Gaskell
     // (Stooke Small Bodies Maps V2.0, MULTI-SA-MULTI-6-STOOKEMAPS-V2.0, document/25143itokawa/
     // new-itokawa-mosaic.jpg). Domaine public, crédit requis. Grille : 0 aux bords, 180 au centre,

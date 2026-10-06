@@ -180,6 +180,87 @@
         "maxErrorDeg": 2,
         "maxWitnessRatio": 0.8
       }
+    },
+    "cg-prelanding": {
+      "$comment": "67P/Churyumov-Gerasimenko à l'approche de Rosetta, 3 au 6 août 2014 (280 à 110 km, phase ~40°). NAC d'OSIRIS, réflectance (niveau 4, distorsion et visée corrigées, 2 304 px à 18,82 µrad), PSA, CC BY-NC 3.0 IGO (« ESA, H. Sierks »). Noyaux : ceux que nomment les étiquettes (SPICE_FILE_NAME), ROS_V36 et ROS_OSIRIS_V1 remplacés par ROS_V38 et V2. Vérité : 67P/C-G_CK, le repère du DSK livré, orienté par le CK de la comète (CATT). Groupes de la carte : le 3 août (A) et les 5-6 août (B), deux journées et deux séries de rotations distinctes.",
+      "body": "churyumov-gerasimenko",
+      "naifBody": "1000012",
+      "spacecraft": "-226",
+      "camera": {
+        "instrument": "-226111",
+        "lines": 2304,
+        "samples": 2304,
+        "lineAxis": "+X",
+        "sampleAxis": "+Y",
+        "pixelScaleRad": 1.882e-5
+      },
+      "kernelBase": "https://naif.jpl.nasa.gov/pub/naif/pds/data/ro_rl-e_m_a_c-spice-6-v1.0/rossp_1000/DATA/",
+      "kernels": [
+        "LSK/NAIF0011.TLS",
+        "SCLK/ROS_160929_STEP.TSC",
+        "FK/ROS_V38.TF",
+        "IK/ROS_OSIRIS_V17.TI",
+        "PCK/PCK00010.TPC",
+        "PCK/ROS_CG_RAD_V10.TPC",
+        "SPK/DE405.BSP",
+        "SPK/CORB_DV_257_03___T19_00345.BSP",
+        "SPK/RORB_DV_257_03___T19_00345.BSP",
+        "CK/CATT_DV_145_02_______00216.BC",
+        "CK/RATT_DV_145_01_01_T6_00216.BC",
+        "CK/ROS_OSIRIS_V2.BC"
+      ],
+      "imageBase": "https://archives.esac.esa.int/psa/ftp/INTERNATIONAL-ROSETTA-MISSION/OSINAC/RO-C-OSINAC-4-PRL-67P-M06-REFLECT-V2.0/DATA/IMG/",
+      "images": [
+        "N20140803T110436163EF4BF82",
+        "N20140803T131934594EF4BF82",
+        "N20140803T151934569EF4BF82",
+        "N20140803T171934549EF4BF82",
+        "N20140803T191934554EF4BF82",
+        "N20140803T211934560EF4BF82"
+      ],
+      "imageSuffix": ".IMG",
+      "imageFormat": "pds3",
+      "truthFrame": "67P/C-G_CK",
+      "search": {
+        "coarseBin": [16, 16],
+        "fineBin": [8, 8],
+        "coarseSigma": 1.0,
+        "fineSigma": 1.0,
+        "maxShiftPx": [400, 400]
+      },
+      "map": {
+        "images": [
+          "N20140803T110436163EF4BF82",
+          "N20140803T121934590EF4BF82",
+          "N20140803T131934594EF4BF82",
+          "N20140803T141934589EF4BF82",
+          "N20140803T151934569EF4BF82",
+          "N20140803T161934554EF4BF82",
+          "N20140803T171934549EF4BF82",
+          "N20140803T181934555EF4BF82",
+          "N20140803T191934554EF4BF82",
+          "N20140803T201934553EF4BF82",
+          "N20140803T211934560EF4BF82",
+          "N20140805T194314611EF4BF22",
+          "N20140805T204314578EF4BF22",
+          "N20140805T214314596EF4BF22",
+          "N20140805T231914571EF4BF22",
+          "N20140806T001914558EF4BF22",
+          "N20140806T011914586EF4BF22",
+          "N20140806T021914570EF4BF22",
+          "N20140806T031914583EF4BF22",
+          "N20140806T041913626EF4BF22",
+          "N20140806T051914575EF4BF22",
+          "N20140806T061914589EF4BF22"
+        ],
+        "$commentExcluded": "Retirées le 2026-10-06 : les dix images du 5 août de 00 h 19 à 09 h 19 (N20140805T0x1934…) ne portent AUCUN signal du noyau (I/F de -2e-5 à 4e-5, contre 0,016 sur une image où il est), alors que leur étiquette le place à 181 km avec une pose normale. Cause non établie ; elles ne rendaient aucun point.",
+        "splitTime": "2014-08-04T12:00:00",
+        "mosaicPhase": [25, 60],
+        "texture": "detail",
+        "limbPx": 6,
+        "projection": "atlas",
+        "atlasSize": 2048
+      }
     }
   }
 }

@@ -468,6 +468,12 @@ export interface ShapeMesh {
    * plus sombre que l'application (Lutetia, 2026-10-06).
    */
   baseColor?: [number, number, number];
+  /**
+   * Coordonnées d'ATLAS, deux par sommet, quand le modèle en porte (`unwrap-shape-model.mjs`,
+   * 67P) : la carte se lit alors à ces coordonnées interpolées, comme l'application la lit, et non
+   * par la direction du point (deux surfaces de même direction y recevraient le même pixel).
+   */
+  uv?: Float32Array;
 }
 
 /**
@@ -639,8 +645,18 @@ export function renderShape(
             w2 * positions[b * 3 + 2]! +
             w0 * positions[c * 3 + 2]!;
           const r = Math.hypot(fx, fy, fz);
-          const rgb =
-            r > 0
+          const uv = mesh.uv;
+          const rgb = uv
+            ? sampleBilinear(
+                texture,
+                w1 * uv[a * 2]! + w2 * uv[b * 2]! + w0 * uv[c * 2]!,
+                // v = 1 en haut de l'image, ligne 0 du tampon.
+                1 -
+                  (w1 * uv[a * 2 + 1]! +
+                    w2 * uv[b * 2 + 1]! +
+                    w0 * uv[c * 2 + 1]!)
+              )
+            : r > 0
               ? sampleBilinear(
                   texture,
                   0.5 + Math.atan2(-fz, fx) / (2 * Math.PI),

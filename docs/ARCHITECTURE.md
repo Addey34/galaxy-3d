@@ -2423,6 +2423,52 @@ Pour la couleur de Ryugu, aucun produit n'avait été trouvé sur DARTS ; PSI se
 collection `data_reflectance_coregistered` de l'ONC, multi-filtres et recalée, avec ses plans
 géométriques.
 
+**67P : un ATLAS, parce qu'aucune carte ne peut la porter (2026-10-06).** La carte NAC de 67P,
+cuite d'abord en équirectangulaire comme celle de Lutetia, était juste (deux journées
+indépendantes : recalage des formes 0,57 au décalage nul contre 0,16 décalé) mais inlivrable : sur
+le modèle, **13,5 % de la surface partage sa direction vue du centre avec une autre** (le cou, les
+surplombs ; Lutetia 0,0 %, Éros 1,1 %, mesuré en comptant, case de 1° par case, les points dont
+les rayons s'écartent de plus de 15 % du rayon médian). L'application drape par direction
+(`core/modelUv.ts`) : ces deux surfaces y recevaient le même pixel. Décision de l'utilisateur : un
+vrai dépliage.
+
+- **L'atlas est fabriqué par la recette**, `"atlas": true` dans `scripts/shape-model-targets.json` :
+  après la décimation, `scripts/unwrap-shape-model.mjs` déplie le niveau le plus fin avec xatlas
+  (`xatlasjs`, MIT, devDependency, jamais servi ; deux dépliages rendent les mêmes octets), puis
+  SIMPLIFIE les deux autres niveaux depuis ce maillage déplié. L'effondrement d'arêtes garde les
+  coutures et ne crée aucun sommet : chaque couple (position, coordonnée) d'un niveau grossier
+  existe dans le plus fin, et c'est ce que `shapeModels.test.ts` vérifie. **Un seul atlas pour les
+  trois niveaux est une obligation** : le modèle et la texture changent de niveau séparément, sur
+  un même matériau. Chaque niveau passe la garde de surface FERMÉE (sur la surface soudée), mise en
+  commun avec la décimation dans `scripts/shape-glb.mjs`.
+- **La PASTILLE** : les îles occupent v ≤ 0,98 (`ATLAS_CHART_TOP`, une valeur, trois lecteurs
+  croisés par des tests : le script, `posekit.py`, l'application) ; la bande au-dessus est remplie
+  de la moyenne. La sphère qui tient lieu du modèle avant son chargement, ou s'il échoue, lit ce
+  seul point : une carte d'atlas plaquée sur une sphère n'aurait aucun sens. La fiche n'affiche pas
+  non plus l'atlas en fond d'en-tête (`e2e/modelAtlas.spec.ts`, témoin Lutetia, falsifié).
+- **La cuisson dans l'atlas** (`map.projection: "atlas"`, `atlasSize: 2048` dans la recette de
+  pose) : chaque point échantillonné sur le modèle porte sa coordonnée, et sa réflectance tombe
+  dans SON texel (4,5 m). Les filtres du transfert de détail restent DANS une île
+  (`chart_blur`) : une île voisine dans l'image est un autre morceau de la comète. Les marges
+  prolongent leur île sur 8 texels, puis la moyenne.
+- **Mesuré**, 3 août (A) contre 5-6 août (B) : couverture 64,4 % (53,5 % en équirectangulaire,
+  qui perdait les surfaces superposées), recalage des formes **0,66 au décalage nul contre 0,31**
+  décalé de 1 à 3°, radiométrie 0,66 par blocs de 2°, photomosaïque contre A 0,85 contre 0,35.
+  Calée sur l'albédo 0,065 (Fornasier et al. 2015) par `compose-albedo-texture.mjs --atlas`, sans
+  poids en latitude (un texel d'atlas couvre partout à peu près la même aire ;
+  `measure-texture-ladder.mjs` suit la même règle, ce qui corrige au passage le profil d'anneau de
+  Saturne, qui n'est pas une carte). CC BY-NC 3.0 IGO, crédit « ESA, H. Sierks ».
+- **Dix images du 5 août (00 h 19 à 09 h 19) ne portent aucun signal** du noyau (I/F au plus
+  4·10⁻⁵, contre 0,016 quand il est dans le champ), alors que leur étiquette le place à 181 km
+  avec une pose normale. Cause non établie ; retirées de la recette avec cette raison. Vingt-deux
+  images contribuent.
+- **Pièges payés.** xatlasjs rend des coordonnées DÉJÀ sur [0, 1] : les diviser par la taille de
+  l'atlas tassait tout dans un coin de 0,0004 (attrapé par la lecture des bornes, désormais une
+  garde). Re-déplier un maillage déjà déplié double ses coutures : le dépliage part toujours de la
+  sortie de la décimation, c'est pourquoi il vit dans `shapes:generate` et nulle part ailleurs. Une
+  couleur cuite (`bake-shape-colour.mjs`) réécrit les fichiers SANS leurs coordonnées : le
+  générateur refuse un atlas sur un corps qui déclare un albédo cuit.
+
 **Les archives des missions, lues le 2026-10-05** pour les cinq corps NASA, par le registre du PDS
 (`pds.nasa.gov/api/search/1`, les 3 863 collections listées puis filtrées, la requête
 `lid like … and …` étant refusée par l'API) :
@@ -4599,7 +4645,8 @@ DLR, SPC des NAVCAM de l'ESA) parce que c'est le modèle OSIRIS de référence e
 de plaques pour le 4k. Trois niveaux fermés, sans `--principal`. Rayon équivalent-volume 1,648 km,
 à 3,1 % des 1,7 km de la SBDB (diamètre de Sierks et al. 2015) : écart déclaré (`radiusMismatch`).
 Couleur uniforme à l'albédo géométrique 0,065 lu à la source (Fornasier et al. 2015, A&A 583, A30,
-« 6.5±0.2% at 649 nm »), la SBDB n'en publiant aucun.
+« 6.5±0.2% at 649 nm »), la SBDB n'en publiant aucun. [SUPERSEDED le 2026-10-06 : 67P porte
+désormais un atlas et sa texture OSIRIS, calée sur ce même albédo ; cf. § « 67P : un ATLAS ».]
 
 Rien de neuf dans la chaîne : deux entrées de recette, un bloc `model` par fiche, deux niveaux
 (les sources ont 32 040 et 20 480 plaques, sous le budget du 4k). Les gardes ont tout tenu sans

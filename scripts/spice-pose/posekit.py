@@ -31,6 +31,7 @@ import os
 import re
 import struct
 from dataclasses import dataclass, field
+from typing import Optional
 
 import numpy as np
 from scipy.ndimage import gaussian_laplace
@@ -99,7 +100,7 @@ def read_glb(path):
         raise ValueError(f"{path} : extensions requises {meta['extensionsRequired']}")
     prim = meta["meshes"][0]["primitives"][0]
     dtypes = {5126: "<f4", 5125: "<u4", 5123: "<u2"}
-    sizes = {"VEC3": 3, "SCALAR": 1}
+    sizes = {"VEC3": 3, "VEC2": 2, "SCALAR": 1}
 
     def accessor(i):
         a = meta["accessors"][i]
@@ -113,8 +114,10 @@ def read_glb(path):
     pos = accessor(prim["attributes"]["POSITION"]).astype(np.float64)
     nor = accessor(prim["attributes"]["NORMAL"]).astype(np.float64)
     tri = accessor(prim["indices"]).astype(np.int64).reshape(-1, 3)
+    # Coordonnées d'ATLAS quand le modèle en porte (`unwrap-shape-model.mjs`), origine en bas.
+    uv = accessor(prim["attributes"]["TEXCOORD_0"]).astype(np.float64) if "TEXCOORD_0" in prim["attributes"] else None
     back = lambda a: np.stack([a[:, 0], -a[:, 2], a[:, 1]], 1)
-    return back(pos), back(nor), tri, meta.get("asset", {}).get("copyright", "")
+    return back(pos), back(nor), tri, meta.get("asset", {}).get("copyright", ""), uv
 
 
 def shipped_model(body):
@@ -134,6 +137,7 @@ class Mesh:
     nor: np.ndarray
     tri: np.ndarray
     name: str
+    uv: Optional[np.ndarray] = None
 
     def volume_radius(self):
         a, b, c = (self.pos[self.tri[:, k]] for k in range(3))
@@ -142,11 +146,11 @@ class Mesh:
 
     def scaled(self, radius):
         r, _ = self.volume_radius()
-        return Mesh(self.pos * (radius / r), self.nor, self.tri, self.name)
+        return Mesh(self.pos * (radius / r), self.nor, self.tri, self.name, self.uv)
 
-    def sample(self, spacing, seed=0):
+    def sample(self, spacing, seed=0, with_uv=False):
         """Points tirés sur les triangles, à peu près un par carré de côté `spacing`, avec la
-        normale interpolée des sommets. Déterministe."""
+        normale interpolée des sommets (et la coordonnée d'atlas avec `with_uv`). Déterministe."""
         a, b, c = (self.pos[self.tri[:, k]] for k in range(3))
         area = 0.5 * np.linalg.norm(np.cross(b - a, c - a), axis=1)
         n = np.maximum(1, np.round(area / spacing**2)).astype(np.int64)
@@ -159,12 +163,16 @@ class Mesh:
         p = np.einsum("ij,ijk->ik", w, self.pos[idx])
         nn = np.einsum("ij,ijk->ik", w, self.nor[idx])
         nn /= np.linalg.norm(nn, axis=1, keepdims=True)
+        if with_uv:
+            if self.uv is None:
+                raise ValueError(f"{self.name} : le modèle ne porte pas d'atlas (TEXCOORD_0)")
+            return p, nn, np.einsum("ij,ijk->ik", w, self.uv[idx])
         return p, nn
 
 
 def load_model(body, radius=None):
-    pos, nor, tri, credit = read_glb(shipped_model(body))
-    m = Mesh(pos, nor, tri, body)
+    pos, nor, tri, credit, uv = read_glb(shipped_model(body))
+    m = Mesh(pos, nor, tri, body, uv)
     _, vol = m.volume_radius()
     if vol <= 0:
         raise ValueError(f"{body} : volume signé négatif, faces retournées")
@@ -578,7 +586,7 @@ def reflectance_samples(P, N, cam, B, g, image, shift, max_angle=70.0, spacing=0
     r = np.linalg.norm(p, axis=1)
     lat = np.degrees(np.arcsin(p[:, 2] / r))
     lon = np.degrees(np.arctan2(p[:, 1], p[:, 0]))
-    return lat, lon, refl, m0 * mu, iof
+    return lat, lon, refl, m0 * mu, iof, idx
 
 
 class MapGrid:
@@ -691,3 +699,120 @@ def detail_texture(albedo, mosaic, step, sigma_deg=1.5, feather_deg=2.0, clip=(0
     detail = np.where(valid & (large > 0), m / np.maximum(large, 1e-9), 1.0)
     base = texture_fill(albedo, round(feather_deg / step))
     return base * np.clip(detail, *clip)
+
+
+# ---------------------------------------------------------------- atlas (2026-10-06)
+#
+# Un corps que la DIRECTION ne décrit pas (67P : 13,5 % de sa surface partage sa direction avec une
+# autre) se cartographie dans l'ATLAS de son modèle (`scripts/unwrap-shape-model.mjs`) : chaque point
+# de surface a son texel. Les filtres y restent DANS une île de l'atlas : une île voisine dans l'image
+# est un autre morceau du corps, et un flou qui la traverserait y mêlerait sa lumière.
+
+
+class AtlasGrid:
+    """Accumulateur dans l'atlas, ligne 0 en HAUT (ligne = (1 − v) × taille)."""
+
+    def __init__(self, size):
+        self.nx = self.ny = size
+        self.sum = np.zeros(size * size)
+        self.w = np.zeros(size * size)
+
+    def cells(self, uv):
+        x = np.clip((uv[:, 0] * self.nx).astype(np.int64), 0, self.nx - 1)
+        y = np.clip(((1 - uv[:, 1]) * self.ny).astype(np.int64), 0, self.ny - 1)
+        return y * self.nx + x
+
+    def add_cells(self, k, value, weight):
+        np.add.at(self.sum, k, value * weight)
+        np.add.at(self.w, k, weight)
+
+    def mean(self):
+        return np.where(self.w > 0, self.sum / np.maximum(self.w, 1e-30), 0).reshape(self.ny, self.nx)
+
+
+def atlas_charts(mesh, size):
+    """Les ÎLES de l'atlas à cette taille : chaque texel dont le centre tombe dans un triangle
+    reçoit le numéro de son île (composante connexe), 0 hors de toute île. Rend aussi l'aire de
+    surface (km²) que couvre un texel en moyenne."""
+    from scipy.ndimage import label
+
+    inside = np.zeros((size, size), bool)
+    uv = mesh.uv * [size, size]
+    uv[:, 1] = size - uv[:, 1]  # ligne depuis le haut
+    for a, b, c in mesh.tri:
+        pa, pb, pc = uv[a], uv[b], uv[c]
+        x0, x1 = int(np.floor(min(pa[0], pb[0], pc[0]))), int(np.ceil(max(pa[0], pb[0], pc[0])))
+        y0, y1 = int(np.floor(min(pa[1], pb[1], pc[1]))), int(np.ceil(max(pa[1], pb[1], pc[1])))
+        x0, y0, x1, y1 = max(x0, 0), max(y0, 0), min(x1, size), min(y1, size)
+        if x1 <= x0 or y1 <= y0:
+            continue
+        d = (pb[1] - pc[1]) * (pa[0] - pc[0]) + (pc[0] - pb[0]) * (pa[1] - pc[1])
+        if abs(d) < 1e-12:
+            continue
+        xs, ys = np.meshgrid(np.arange(x0, x1) + 0.5, np.arange(y0, y1) + 0.5)
+        l1 = ((pb[1] - pc[1]) * (xs - pc[0]) + (pc[0] - pb[0]) * (ys - pc[1])) / d
+        l2 = ((pc[1] - pa[1]) * (xs - pc[0]) + (pa[0] - pc[0]) * (ys - pc[1])) / d
+        hit = (l1 >= -1e-9) & (l2 >= -1e-9) & (1 - l1 - l2 >= -1e-9)
+        inside[y0:y1, x0:x1] |= hit
+    labels, count = label(inside)
+    a, b, c = (mesh.pos[mesh.tri[:, k]] for k in range(3))
+    area = 0.5 * np.linalg.norm(np.cross(b - a, c - a), axis=1).sum()
+    return labels, count, area / max(int(inside.sum()), 1)
+
+
+def chart_blur(values, valid, labels, sigma):
+    """Moyenne gaussienne NORMALISÉE île par île : `values` là où `valid`, floutées sans jamais
+    franchir le bord d'une île. Rend la moyenne (0 là où rien n'est mesuré à portée)."""
+    from scipy.ndimage import find_objects, gaussian_filter
+
+    out = np.zeros(values.shape, dtype=float)
+    pad = int(np.ceil(3 * sigma))
+    for i, box in enumerate(find_objects(labels), start=1):
+        if box is None:
+            continue
+        ys = slice(max(box[0].start - pad, 0), min(box[0].stop + pad, labels.shape[0]))
+        xs = slice(max(box[1].start - pad, 0), min(box[1].stop + pad, labels.shape[1]))
+        mine = labels[ys, xs] == i
+        m = mine & valid[ys, xs]
+        if not m.any():
+            continue
+        num = gaussian_filter(np.where(m, values[ys, xs], 0.0), sigma)
+        den = gaussian_filter(m.astype(float), sigma)
+        blurred = np.where(den > 0.3, num / np.maximum(den, 1e-12), 0)
+        out[ys, xs] = np.where(mine, blurred, out[ys, xs])
+    return out
+
+
+ATLAS_CHART_TOP = 0.98  # = ATLAS_CHART_TOP de src/core/modelUv.ts, croisé par spicePose.test.ts
+
+
+def atlas_texture(albedo, mosaic, labels, sigma_px, feather_px, clip=(0.6, 1.4)):
+    """La texture d'atlas par TRANSFERT DE DÉTAIL, comme `detail_texture`, mais île par île :
+    albédo d'approche (lacunes isolées comblées dans leur île) multiplié par le relief fin de la
+    photomosaïque (la mosaïque divisée par sa version floutée sur `sigma_px`). Hors mesure, le gris
+    moyen mesuré, raccordé par un fondu ; les marges entre îles prennent la valeur du texel d'île
+    le plus proche, pour que le filtrage bilinéaire et les mipmaps n'y lisent jamais du noir."""
+    from scipy.ndimage import distance_transform_edt
+
+    charts = labels > 0
+    measured = (albedo > 0) & charts
+    gaps = chart_blur(albedo, measured, labels, 2.0)
+    base = np.where(measured, albedo, np.where(charts, gaps, 0))
+    known = base > 0
+    mean = float(albedo[measured].mean())
+    d, (iy, ix) = distance_transform_edt(~known, return_indices=True)
+    w = np.clip(1 - d / feather_px, 0, 1)
+    base = np.where(known, base, w * base[iy, ix] + (1 - w) * mean)
+    valid = (mosaic > 0) & charts
+    large = chart_blur(mosaic, valid, labels, sigma_px)
+    detail = np.where(valid & (large > 0), mosaic / np.maximum(large, 1e-9), 1.0)
+    tex = np.where(charts, base * np.clip(detail, *clip), 0)
+    gap, (iy, ix) = distance_transform_edt(~charts, return_indices=True)
+    # Les marges prolongent leur île sur 8 texels (le filtrage et les premiers niveaux de mipmap y
+    # lisent), puis la moyenne : prolongées jusqu'au bout, elles striaient tout l'atlas.
+    mean_tex = float(tex[charts].mean())
+    tex = np.where(gap <= 8, tex[iy, ix], mean_tex)
+    # La PASTILLE : la bande au-dessus des îles, à la moyenne de la surface, que lit la sphère de
+    # repli (`ATLAS_SWATCH_UV`). Le prolongement des îles ci-dessus l'avait remplie de leurs bords.
+    tex[: int(np.ceil((1 - ATLAS_CHART_TOP) * tex.shape[0]))] = mean_tex
+    return tex

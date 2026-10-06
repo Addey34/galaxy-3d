@@ -198,10 +198,28 @@ def cmd_map(t, a):
     cam, geo, imgs = pk.geometry(sp, sub)
     mesh = pk.load_model(t["body"])
     radius, _ = mesh.volume_radius()
-    grids = {k: pk.MapGrid(a.step) for k in ("all", "A", "B", "mosaic")}
-    spacing = math.radians(a.step) * radius / 2
-    P, N = mesh.sample(spacing)
-    print(f"{len(P)} points au pas de {spacing:.3f} km, carte de {grids['all'].nx} x {grids['all'].ny}", flush=True)
+    atlas = m.get("projection") == "atlas"
+    if atlas:
+        # Carte dans l'ATLAS du modèle (2026-10-06) : chaque point de surface a son texel, même
+        # là où plusieurs surfaces partagent une direction (le cou de 67P).
+        size = m["atlasSize"]
+        labels, charts, texel_area = pk.atlas_charts(mesh, size)
+        texel_km = math.sqrt(texel_area)
+        grids = {k: pk.AtlasGrid(size) for k in ("all", "A", "B", "mosaic")}
+        spacing = texel_km / 2
+        P, N, UV = mesh.sample(spacing, with_uv=True)
+        cells = grids["all"].cells(UV)
+        print(f"{len(P)} points au pas de {spacing:.4f} km, atlas de {size} x {size}, {charts} îles, texel de {texel_km * 1000:.1f} m", flush=True)
+    else:
+        grids = {k: pk.MapGrid(a.step) for k in ("all", "A", "B", "mosaic")}
+        spacing = math.radians(a.step) * radius / 2
+        P, N = mesh.sample(spacing)
+        print(f"{len(P)} points au pas de {spacing:.3f} km, carte de {grids['all'].nx} x {grids['all'].ny}", flush=True)
+    def add(grid, lat, lon, idx, value, weight):
+        if atlas:
+            grid.add_cells(cells[idx], value, weight)
+        else:
+            grid.add(lat, lon, value, weight)
     if a.pose == "search":
         res = json.load(open(os.path.join(pk.ROOT, ".cache", "spice-pose", t["id"], f"search_{t['body']}.json")))
         B0 = pk.bmat(*res["results"][0]["x"])
@@ -214,7 +232,7 @@ def cmd_map(t, a):
     for g, image in zip(geo, imgs):
         B = pose_at(g)
         shift = pk.pointing_shift(scene, cam, B, g, image, (4, 4), tuple(t["search"]["maxShiftPx"]))
-        lat, lon, refl, w, iof = pk.reflectance_samples(
+        lat, lon, refl, w, iof, idx = pk.reflectance_samples(
             P, N, cam, B, g, image, shift, max_angle=m.get("maxAngle", 70.0), spacing=spacing,
             limb_px=m.get("limbPx", 0),
         )
@@ -225,39 +243,54 @@ def cmd_map(t, a):
         # Une ombre ou un bord rasant que le modèle ne résout pas sort à presque zéro, et la
         # division par Lommel-Seeliger le gonfle : franges noires vues sur Lutetia (2026-10-06).
         keep = (refl > 0.5) & (refl < 2.0)
-        lat, lon, refl, w, iof = lat[keep], lon[keep], refl[keep], w[keep], iof[keep]
+        lat, lon, refl, w, iof, idx = lat[keep], lon[keep], refl[keep], w[keep], iof[keep], idx[keep]
         phase = math.degrees(math.acos(np.clip((-g["p"] / g["d"]) @ (g["sun"] / np.linalg.norm(g["sun"])), -1, 1)))
-        group = "A" if phase < m["splitPhase"] else "B"
-        grids["all"].add(lat, lon, refl, w)
-        grids[group].add(lat, lon, refl, w)
+        # Deux groupes INDÉPENDANTS : par phase (un survol : approche, puis départ), ou par date
+        # quand toutes les images ont la même phase (67P, été 2014 : deux journées distinctes).
+        if "splitTime" in m:
+            group = "A" if g["et"] < sp.str2et(m["splitTime"]) else "B"
+        else:
+            group = "A" if phase < m["splitPhase"] else "B"
+        add(grids["all"], lat, lon, idx, refl, w)
+        add(grids[group], lat, lon, idx, refl, w)
         # PHOTOMOSAÏQUE : l'I/F brut, ombrage du relief compris, des images de phase intermédiaire
         # (`mosaicPhase`). Pendant un survol le Soleil éclaire la surface sous presque le même angle
         # (Lutetia tourne de 22° en 30 min) : l'ombrage reste cohérent d'une image à l'autre.
         lo, hi = m.get("mosaicPhase", [None, None])
         if lo is not None and lo <= phase <= hi:
-            grids["mosaic"].add(lat, lon, iof / np.median(iof), w)
+            add(grids["mosaic"], lat, lon, idx, iof / np.median(iof), w)
         print(f"{g['name']} : phase {phase:5.1f}°, groupe {group}, {len(refl)} points, décalage {shift}", flush=True)
     out = os.path.join(pk.ROOT, ".cache", "spice-pose", t["id"])
     maps = {k: v.mean() for k, v in grids.items()}
     for k, v in maps.items():
         Image.fromarray(v.astype(np.float32), mode="F").save(os.path.join(out, f"map_{k}.tif"))
-    lat_c = 90 - (np.arange(grids["all"].ny) + 0.5) * a.step
-    area = np.cos(np.radians(lat_c))[:, None] * np.ones((1, grids["all"].nx))
+    if atlas:
+        # Dans l'atlas, un texel couvre partout à peu près la même aire (xatlas l'égalise) : la
+        # couverture est la part des texels d'île qui ont une mesure. Les distances sont en texels,
+        # l'équivalent de 2° et de 1 à 3° de grand cercle sur le rayon équivalent.
+        area = (labels > 0).astype(float)
+        px_per_deg = math.radians(1) * radius / texel_km
+        block, step_unit, shifts = 2.0 * px_per_deg, 1.0, tuple(round(d * px_per_deg) for d in (1, 2, 3))
+    else:
+        lat_c = 90 - (np.arange(grids["all"].ny) + 0.5) * a.step
+        area = np.cos(np.radians(lat_c))[:, None] * np.ones((1, grids["all"].nx))
+        block, step_unit, shifts = 2.0, a.step, (1, 2, 3)
     cov = lambda v: float((area * (v > 0)).sum() / area.sum())
     print(f"couverture : tout {cov(maps['all']):.1%}, A {cov(maps['A']):.1%}, B {cov(maps['B']):.1%}")
-    agree = pk.block_agreement(pk.fill_small_gaps(maps["A"]), pk.fill_small_gaps(maps["B"]), 2.0, a.step)
+    agree = pk.block_agreement(pk.fill_small_gaps(maps["A"]), pk.fill_small_gaps(maps["B"]), block, step_unit)
     print(f"accord radiométrique A/B par blocs de 2° : {agree['blocks']} blocs communs, r {agree['r']:.3f}, sans la moyenne de chaque latitude {agree['r_lat']:.3f}")
-    reg = pk.shape_registration(maps["A"], maps["B"], a.step)
+    reg = pk.shape_registration(maps["A"], maps["B"], step_unit, shifts)
     print(f"recalage des formes A/B : r {reg['at_zero']:.3f} au décalage nul, {reg['max_shifted']:.3f} au mieux décalé de 1 à 3° (moyenne {reg['mean_shifted']:.3f})")
-    if a.step > 0.25:
+    if not atlas and a.step > 0.25:
         # Mesuré le 2026-10-06 : au pas de 1°, un décalage de 1° ne vaut qu'une case, sous la largeur
         # du filtre, et le témoin rendait 0,83 au décalage nul contre 0,81 décalé.
         print("  témoin de recalage NON SIGNIFICATIF à ce pas : le relancer à 0,25° ou moins")
     if (maps["mosaic"] > 0).any():
-        mreg = pk.shape_registration(maps["mosaic"], maps["A"], a.step)
+        mreg = pk.shape_registration(maps["mosaic"], maps["A"], step_unit, shifts)
         print(f"photomosaïque : couverture {cov(maps['mosaic']):.1%}, recalage des formes contre A r {mreg['at_zero']:.3f} au décalage nul, {mreg['max_shifted']:.3f} au mieux décalée")
     write_texture(t, out, a.step)
-    json.dump(dict(coverage={k: cov(v) for k, v in maps.items()}, agreement=agree, registration=reg, step=a.step, pose=a.pose),
+    json.dump(dict(coverage={k: cov(v) for k, v in maps.items()}, agreement=agree, registration=reg, step=a.step, pose=a.pose,
+                   **({"atlasSize": m["atlasSize"], "texelKm": texel_km} if atlas else {})),
               open(os.path.join(out, "map_report.json"), "w"), indent=1)
 
 
@@ -268,7 +301,14 @@ def write_texture(t, out, step):
 
     m = t["map"]
     load = lambda k: np.array(Image.open(os.path.join(out, f"map_{k}.tif"))).astype(float)
-    if m.get("texture") == "detail":
+    if m.get("projection") == "atlas":
+        # Mêmes réglages que la carte équirectangulaire, convertis en texels sur le rayon équivalent.
+        mesh = pk.load_model(t["body"])
+        radius, _ = mesh.volume_radius()
+        labels, _, texel_area = pk.atlas_charts(mesh, m["atlasSize"])
+        px_per_deg = math.radians(1) * radius / math.sqrt(texel_area)
+        tex = pk.atlas_texture(load("A"), load("mosaic"), labels, 1.5 * px_per_deg, 2.0 * px_per_deg)
+    elif m.get("texture") == "detail":
         tex = pk.detail_texture(load("A"), load("mosaic"), step)
     else:
         tex = pk.texture_fill(load(m.get("textureGroup", "A")), round(2.0 / step))

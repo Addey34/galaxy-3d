@@ -63,6 +63,9 @@ importers:
       vitest:
         specifier: ^4.1.10
         version: 4.1.10(@types/node@25.9.1)(vite@6.3.3(@types/node@25.9.1)(terser@5.50.0))
+      xatlasjs:
+        specifier: 0.2.0
+        version: 0.2.0
       zod:
         specifier: ^4.6.5
         version: 4.6.5
@@ -1542,6 +1545,9 @@ packages:
     resolution: {integrity: sha512-NUPRluOfOiTKBKvWPtSD4PhFvWCqOi0BGStNWs57X9js7XGTprSmFoz5F0tWhR4WPjNeR9jXqdC7/UpSJTnlRg==}
     engines: {node: '>=18'}
 
+  comlink@4.4.2:
+    resolution: {integrity: sha512-OxGdvBmJuNKSCMO4NTl1L47VRp6xn2wG4F/2hYzB6tiCb709otOxtEYCSvK80PtjODfXXZu8ds+Nw5kVCjqd2g==}
+
   commander@2.20.3:
     resolution: {integrity: sha512-GpVkmM8vF2vQUkj2LvZmD35JxeJOLCwJ9cUkugyk2nuhbv3+mJvpLYYt+0+USMxE+oj+ey/lJEnhZw75x/OMcQ==}
 
@@ -2688,6 +2694,9 @@ packages:
 
   workbox-window@7.4.1:
     resolution: {integrity: sha512-notZDH2u8VXaqyuD7xaqIfEFi6SRM4SUSd7ewe9PDsVqADuepxX2ZMY3uvuZGxzY5ZOsGC/vD3A/3smFtJt4/A==}
+
+  xatlasjs@0.2.0:
+    resolution: {integrity: sha512-3YxdpuDY4X2Kjn/Zm2c5648x/hYAP/X5YIx7nc1ify65kroSX+CFyzkhbBkIq9RDpjhA2prPRyhJZzYPUE1WgQ==}
 
   yallist@3.1.1:
     resolution: {integrity: sha512-a4UGQaWPH59mOXUYnAG2ewncQS4i4F43Tv3JoAM+s2VDAmS9NsK8GpDMLrCHPksFT7h3K6TOoUNn2pb7RoXx4g==}
@@ -4128,6 +4137,9 @@ snapshots:
 
   chai@6.2.2: {}
 
+  comlink@4.4.2:
+    optional: true
+
   commander@2.20.3: {}
 
   common-tags@1.8.2: {}
@@ -5491,6 +5503,10 @@ snapshots:
     dependencies:
       '@types/trusted-types': 2.0.7
       workbox-core: 7.4.1
+
+  xatlasjs@0.2.0:
+    optionalDependencies:
+      comlink: 4.4.2
 
   yallist@3.1.1: {}
 

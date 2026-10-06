@@ -1,6 +1,7 @@
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
+import { ATLAS_CHART_TOP } from '@/core/modelUv';
 
 /**
  * La recette de l'outil de pose SPICE (`scripts/spice-pose-targets.json`, lue par
@@ -114,5 +115,17 @@ describe('outil de pose SPICE : la recette contre ce qui est livré', () => {
     expect(lines.length).toBeGreaterThan(0);
     for (const l of lines) expect(l).toMatch(/^[\w-]+==[\d.]+$/);
     expect(read('scripts/spice-pose.mjs')).toMatch(/\['-I'/);
+  });
+
+  it('la bande de pastille de l’atlas est la même pour la cuisson et pour l’application', () => {
+    // 2026-10-06 : la cuisson remplit la bande au-dessus de ATLAS_CHART_TOP à la moyenne, et la
+    // sphère de repli d'un corps à atlas y lit sa couleur. Deux constantes, une seule valeur.
+    const kit = readFileSync(
+      join(ROOT, 'scripts/spice-pose/posekit.py'),
+      'utf8'
+    );
+    expect(Number(/^ATLAS_CHART_TOP = ([\d.]+)/m.exec(kit)?.[1])).toBe(
+      ATLAS_CHART_TOP
+    );
   });
 });

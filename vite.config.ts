@@ -396,7 +396,7 @@ function bodyLandingPages() {
           const gltf = json as unknown as {
             meshes: {
               primitives: {
-                attributes: { POSITION: number };
+                attributes: { POSITION: number; TEXCOORD_0?: number };
                 indices: number;
               }[];
             }[];
@@ -416,7 +416,10 @@ function bodyLandingPages() {
 
           const factor =
             gltf.materials?.[0]?.pbrMetallicRoughness?.baseColorFactor;
-          const read = (accessorIndex: number): ArrayLike<number> => {
+          const read = (
+            accessorIndex: number,
+            width = 3
+          ): ArrayLike<number> => {
             const accessor = gltf.accessors[accessorIndex]!;
             const bufferView = gltf.bufferViews[accessor.bufferView]!;
             const start =
@@ -425,7 +428,7 @@ function bodyLandingPages() {
             // 5126 float32, 5125 uint32, 5123 uint16 — les seuls types qu'un modèle de forme
             // décimé par `scripts/decimate-shape-model.mjs` peut porter.
             if (accessor.componentType === 5126)
-              return new Float32Array(bin!.buffer, at, accessor.count * 3);
+              return new Float32Array(bin!.buffer, at, accessor.count * width);
             if (accessor.componentType === 5125)
               return new Uint32Array(bin!.buffer, at, accessor.count);
             if (accessor.componentType === 5123)
@@ -444,6 +447,14 @@ function bodyLandingPages() {
             ),
             // La couleur que l'application affiche sur ce modèle quand il n'a pas de texture.
             ...(factor ? { baseColor: [factor[0]!, factor[1]!, factor[2]!] } : {}),
+            // Un ATLAS (67P) : la texture se lit à ces coordonnées, pas par direction.
+            ...(primitive.attributes.TEXCOORD_0 !== undefined
+              ? {
+                  uv: Float32Array.from(
+                    read(primitive.attributes.TEXCOORD_0, 2) as ArrayLike<number>
+                  ),
+                }
+              : {}),
           };
         };
 
