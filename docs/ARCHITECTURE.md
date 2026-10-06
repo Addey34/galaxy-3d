@@ -2307,7 +2307,10 @@ exactement l'erreur qu'il devait révéler.
 `ROS_LUTETIA` du DSK livré), contours 0,57 à 0,75 et luminosité 0,92 à 0,98, contre 0,13 à 0,17
 et 0,71 à 0,82 au hasard. À l'aveugle, l'outil retrouve cette pose à **1,68°** (six départs sur
 huit au même endroit, contours 0,75 à 0,76) : la méthode tient sur une autre caméra et un autre
-corps qu'Éros.
+corps qu'Éros. **C'est désormais une SECONDE GARDE** (`pnpm pose:spice guard lutetia-flyby`, environ
+1 h 30), mesurée le 2026-10-06 : Lutetia à 1,68° (borne 2°), témoins Gaspra 0,43 et Mathilde 0,40
+du bon modèle (borne 0,8), mis au même volume ; et le même 1,68° qu'à la première recherche,
+la méthode est reproductible.
 
 **Šteins : la pose est trouvée, et c'est le PCK qui est faux au survol.** Avec les vrais axes (et
 une tolérance de pointage portée à 200 px : le corps prédit tombe à ~130 px de l'observé, la

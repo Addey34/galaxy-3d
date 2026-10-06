@@ -174,6 +174,11 @@
         "limbPx": 6,
         "mosaicPhase": [24, 60],
         "texture": "detail"
+      },
+      "guard": {
+        "witnesses": ["gaspra", "mathilde"],
+        "maxErrorDeg": 2,
+        "maxWitnessRatio": 0.8
       }
     }
   }
