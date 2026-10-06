@@ -1564,6 +1564,17 @@ terminée à 03 h 53 UTC le 5), Cassini et Saturne du 2004-07-01 au 2017-09-13, 
 au catalogue). [SUPERSEDED : 67P est au catalogue depuis le 2026-10-04, sans phase
 `satelliteOf` déclarée pour Rosetta, ce que ce § ne mesurait pas.]
 
+**BepiColombo avant son arrivée à Mercure (2026-10-06).** Horizons sert désormais une solution
+de l'ESA « ajustée jusqu'au 2026-09-28, prédite ensuite », jusqu'au 2027-04-11. Régénéré, le
+fichier diffère de l'ancien de 11 701 km au plus (le 2026-12-12) et de 7 722 km mi-décembre, une
+fois la sonde autour de Mercure ; la phase dérivée ne bouge pas (2026-10-13 au 2027-04-08). Une
+trajectoire PRÉDITE se révise à chaque manœuvre : régénérer près des échéances. **Défaut mesuré,
+non encore corrigé** : après l'arrivée la sonde tourne autour de Mercure (2 900 à 3 900 km du
+centre le 2027-03-15, quelques heures par tour), et un fichier au pas d'UN jour ne peut pas
+décrire une telle orbite. L'application la place alors jusqu'à 27 000 km de Mercure, heure par
+heure contre Horizons. Le remède est un segment relatif à Mercure au pas fin sur la phase,
+comme les lunes ont leur fichier relatif à leur parent.
+
 **Pourquoi un survol reste héliocentrique.** La règle des lunes étire √d : à la frontière de la
 sphère de Hill de Jupiter elle poserait l'objet à 35 × 3,43 × √0,355 ≈ 49 unités de la planète,
 l'orbite de Saturne à l'écran, et un fondu entre les deux repères le ferait jaillir puis revenir.
