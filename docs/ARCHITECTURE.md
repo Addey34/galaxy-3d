@@ -2252,7 +2252,11 @@ réflectance), noyaux de Rosetta chez NAIF (`ro_rl-e_m_a_c-spice-6-v1.0`), avec 
   malgré le lien Ko-fi du site. Cela rouvre 67P.
 - **L'archive Rosetta porte des DSK OSIRIS de Lutetia** (`ROS_LU_K003` à `K780`, `M002`, `M003` ;
   `K098` pèse 8 Mo) et son PCK (`ROS_LUTETIA_RSOC_V03`) : le modèle livré de Lutetia (DAMIT 282,
-  512 triangles) peut être remplacé par celui de la mission, comme Šteins l'a été.
+  512 triangles) peut être remplacé par celui de la mission, comme Šteins l'a été. **Fait le
+  2026-10-06** : `ROS_LU_K098_OSPCLAM_N_V1` (98 280 plaques, modèle de Farnham, jeu NASA PDS
+  `RO-A-OSINAC/OSIWAC-5-LUTETIA-SHAPE-V1.0`, distribué sans restriction, donc hors de la question
+  de la clause non commerciale), trois niveaux fermés au lieu d'un, rayon équivalent-volume
+  49,20 km contre 49 km publiés (0,4 %), `extentRatio` de 1,43 toujours juste.
 
 **Šteins : les noyaux sont ceux que nomment les étiquettes.** L'éphéméride « prédite »
 (`2867_STEINS_2004_2016.BSP`) place l'astéroïde à 983 km de Rosetta à 18:38:18 UTC, quand
@@ -4368,7 +4372,8 @@ l'impact ; l'ancien Didymos au pas de 4 jours, 15,2 km ; l'ancien Dimorphos sans
 Neuf maillages étaient nommés après les vagues 1 et 2. **Quatre sont livrés**, par le pipeline des
 autres corps (`decimate-shape-model.mjs`, puis `bake-shape-colour.mjs` à l'albédo publié, faute de
 carte de couleur) : Gaspra et Mathilde (grilles de Thomas au PDS, longitudes ouest), Apophis
-(modèle radar préliminaire de Brozović et al. 2018) et Lutetia (DAMIT 282, CC BY 4.0). Les
+(modèle radar préliminaire de Brozović et al. 2018) et Lutetia (DAMIT 282, CC BY 4.0) [SUPERSEDED le 2026-10-06 : Lutetia porte le modèle OSIRIS
+de Farnham, cf. § « L'outil de pose SPICE, versionné »]. Les
 gardes de `shapeModels.test.ts` ont décidé deux choses : les pôles publiés de Gaspra et de
 Mathilde sont à 11° et 30° de leur axe de plus grande inertie, donc ces deux maillages sont
 tournés dans leurs axes principaux (`--principal`) [SUPERSEDED le 2026-10-05 pour Gaspra, rendu
