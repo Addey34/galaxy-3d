@@ -143,9 +143,50 @@ def cmd_truth(t, a):
         print(f"hasard : contours {fine.score(R).mean():.3f}, luminosité {fine.score(R, edge=False).mean():.3f}")
 
 
+def cmd_witness(t, _):
+    """Les témoins d'étiquette, AVANT toute recherche (2026-10-06). Une étiquette OSIRIS porte ce
+    que le pipeline de l'équipe a calculé avec les mêmes noyaux : le point sous la sonde dans le
+    repère qu'elle nomme, et l'azimut du nord CÉLESTE, compté dans le repère d'AFFICHAGE qu'elle
+    déclare (`LINE_DISPLAY_DIRECTION`, `SAMPLE_DISPLAY_DIRECTION` : la NAC affiche ses échantillons
+    vers la GAUCHE, la WAC vers la droite). Les recalculer valide la géométrie et la caméra (axes,
+    rotation autour de la visée) sans rien supposer de l'orientation du corps. Code 1 si un écart
+    dépasse 0,5°.
+
+    Piège payé le 2026-10-06 : un premier témoin supposait un affichage standard et AJUSTAIT un
+    décalage constant (« 90° de convention ») ; il validait ainsi des axes tournés de 90°, et la
+    pose vraie de Lutetia ne reproduisait pas ses images. Un témoin ne s'ajuste pas."""
+    import math
+    import spiceypy as sp
+
+    cam, geo, _ = pk.geometry(sp, t)
+    _, frame, _, _, _ = sp.getfov(sp.bods2c(t["camera"]["instrument"]), 10)
+    worst = 0.0
+    for g in geo:
+        _, _, lbl = pk.load_frame(t, g["name"])
+        need = ("SUB_SPACECRAFT_LATITUDE", "SUB_SPACECRAFT_LONGITUDE", "NORTH_AZIMUTH", "ROSETTA:COORDINATE_SYSTEM")
+        if not all(k in lbl for k in need):
+            raise SystemExit(f"{g['name']} : étiquette sans témoins ({', '.join(k for k in need if k not in lbl)})")
+        num = lambda k: float(lbl[k].split()[0])
+        body_frame = lbl["ROSETTA:COORDINATE_SYSTEM"]
+        lt = g["d"] / 299792.458
+        p, _ = sp.spkpos(t["spacecraft"], g["et"], body_frame, "LT+S", t["naifBody"])
+        _, lon, lat = sp.reclat(np.array(p))
+        dlat = math.degrees(lat) - num("SUB_SPACECRAFT_LATITUDE")
+        dlon = (math.degrees(lon) - num("SUB_SPACECRAFT_LONGITUDE") + 180) % 360 - 180
+        down = cam.line_axis if lbl.get("LINE_DISPLAY_DIRECTION", "DOWN") == "DOWN" else -cam.line_axis
+        right = cam.sample_axis if lbl.get("SAMPLE_DISPLAY_DIRECTION", "RIGHT") == "RIGHT" else -cam.sample_axis
+        z = np.array(sp.pxform("J2000", frame, g["et"])) @ np.array([0, 0, 1.0])
+        az = math.degrees(math.atan2(z @ down, z @ right)) % 360
+        daz = (az - num("NORTH_AZIMUTH") + 180) % 360 - 180
+        worst = max(worst, abs(dlat), abs(dlon * math.cos(lat)), abs(daz))
+        print(f"{g['name']} : sous la sonde {dlat:+.3f}° / {dlon:+.3f}° ({body_frame}), nord {daz:+.2f}°")
+    print(f"écart maximal {worst:.3f}° : " + ("TÉMOINS TENUS" if worst <= 0.5 else "TÉMOINS ROMPUS"))
+    sys.exit(0 if worst <= 0.5 else 1)
+
+
 def main():
     p = argparse.ArgumentParser()
-    p.add_argument("command", choices=["fetch", "search", "guard", "truth"])
+    p.add_argument("command", choices=["fetch", "search", "guard", "truth", "witness"])
     p.add_argument("target")
     p.add_argument("--model")
     p.add_argument("--poles", type=int, default=400)
@@ -153,7 +194,7 @@ def main():
     p.add_argument("--jobs", type=int, default=max(1, (os.cpu_count() or 2) - 2))
     a = p.parse_args()
     t = target(a.target, a.recipe)
-    {"fetch": cmd_fetch, "search": cmd_search, "guard": cmd_guard, "truth": cmd_truth}[a.command](t, a)
+    {"fetch": cmd_fetch, "search": cmd_search, "guard": cmd_guard, "truth": cmd_truth, "witness": cmd_witness}[a.command](t, a)
 
 
 if __name__ == "__main__":

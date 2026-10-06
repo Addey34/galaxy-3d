@@ -53,7 +53,7 @@
       }
     },
     "steins-flyby": {
-      "$comment": "Survol de Šteins par Rosetta, 2008-09-05 (approche rapprochée 18:38 UTC, 803 km). Caméra grand angle d'OSIRIS (WAC), réflectance (niveau 4, I/F) de la PSA, sous CC BY-NC 3.0 IGO (« ESA, H. Sierks »). Sept images du filtre le plus fourni (Empty_OI, 631 nm), de la phase 4° à l'approche à 109° au départ. Le modèle livré vient du DSK OSIRIS ROS_ST_K020, dans le repère STEINS_FIXED que définit ROS_STEINS_V05 : l'orientation VRAIE est donc publiée. MESURÉ le 2026-10-06 : la caméra est VALIDÉE par des témoins indépendants de la pose (axes -Y/-X et rotation autour de la visée : l'azimut du nord céleste de l'étiquette, à 90,0° de convention près sur les sept images ; échelle carrée de l'étiquette, `pixelScaleRad` ; point sous la sonde à 0,02°), le modèle livré est identique au DSK, et pourtant ni la pose du PCK ni aucune pose trouvée à l'aveugle ne reproduit ces images (contours 0,28 au mieux, autant que le hasard, à tout sigma). Aucune carte ne se fabrique sur cette cible ; cf. docs/ARCHITECTURE.md. Les noyaux sont ceux que nomment les étiquettes (SPICE_FILE_NAME) du pipeline OSIRIS, à deux versions près absentes de l'archive (ROS_V36 -> ROS_V38, ROS_OSIRIS_V1 -> V2) : l'éphéméride « prédite » de Šteins (2867_STEINS_2004_2016) place l'astéroïde à 983 km au lieu de 803 à l'approche rapprochée, hors du champ.",
+      "$comment": "Survol de Šteins par Rosetta, 2008-09-05 (approche rapprochée 18:38 UTC, 803 km). Caméra grand angle d'OSIRIS (WAC), réflectance (niveau 4, I/F) de la PSA, sous CC BY-NC 3.0 IGO (« ESA, H. Sierks »). Sept images du filtre le plus fourni (Empty_OI, 631 nm), de la phase 4° à l'approche à 109° au départ. Le modèle livré vient du DSK OSIRIS ROS_ST_K020, dans le repère STEINS_FIXED que définit ROS_STEINS_V05 : l'orientation VRAIE est donc publiée. MESURÉ le 2026-10-06 : caméra établie par `witness` (point sous la sonde à 0,017°, nord céleste dans le repère d'affichage déclaré : lignes +X, échantillons −Y, échelle de l'étiquette). La recherche à l'aveugle converge (six départs sur huit à 1,4°, contours 0,69) vers un pôle à 5,4° de celui du PCK et un méridien à 138° : le PCK est faux au survol, et la pose de l'outil le remplace. Tolérance de pointage portée à 200 px (le corps prédit tombe à ~130 px de l'observé).",
       "body": "steins",
       "naifBody": "2002867",
       "spacecraft": "-226",
@@ -61,8 +61,8 @@
         "instrument": "-226112",
         "lines": 2048,
         "samples": 2048,
-        "lineAxis": "-Y",
-        "sampleAxis": "-X",
+        "lineAxis": "+X",
+        "sampleAxis": "-Y",
         "pixelScaleRad": 9.9499e-5
       },
       "kernelBase": "https://naif.jpl.nasa.gov/pub/naif/pds/data/ro_rl-e_m_a_c-spice-6-v1.0/rossp_1000/DATA/",
@@ -97,7 +97,55 @@
         "fineBin": [1, 1],
         "coarseSigma": 1.0,
         "fineSigma": 1.0,
-        "maxShiftPx": [100, 100]
+        "maxShiftPx": [200, 200]
+      }
+    },
+    "lutetia-flyby": {
+      "$comment": "Survol de Lutetia par Rosetta, 2010-07-10 (approche rapprochée 15:45 UTC, 3 169 km). Caméra à petit champ d'OSIRIS (NAC), réflectance (niveau 4, distorsion et visée corrigées, rééchantillonnée sur 2 304 px à 18,82 µrad, échelle lue dans l'étiquette), PSA, CC BY-NC 3.0 IGO (« ESA, H. Sierks »). Six images de la phase 1,9° à 81°. Noyaux : ceux que nomment les étiquettes (SPICE_FILE_NAME), ROS_V36 et ROS_OSIRIS_V1 remplacés par ROS_V38 et V2, absents de l'archive. Vérité : ROS_LUTETIA, le repère du DSK livré (LUTETIA_FIXED tourné de 164,7°), orientation de ROS_LUTETIA_RSOC_V03.",
+      "body": "lutetia",
+      "naifBody": "2000021",
+      "spacecraft": "-226",
+      "camera": {
+        "instrument": "-226111",
+        "lines": 2304,
+        "samples": 2304,
+        "lineAxis": "+X",
+        "sampleAxis": "+Y",
+        "pixelScaleRad": 1.882e-5
+      },
+      "kernelBase": "https://naif.jpl.nasa.gov/pub/naif/pds/data/ro_rl-e_m_a_c-spice-6-v1.0/rossp_1000/DATA/",
+      "kernels": [
+        "LSK/NAIF0011.TLS",
+        "SCLK/ROS_160929_STEP.TSC",
+        "FK/ROS_V38.TF",
+        "FK/ROS_LUTETIA_RSOC_V03.TF",
+        "IK/ROS_OSIRIS_V17.TI",
+        "PCK/PCK00010.TPC",
+        "PCK/ROS_LUTETIA_RSOC_V03.TPC",
+        "SPK/DE405.BSP",
+        "SPK/ORHS_______________00109.BSP",
+        "SPK/ORHR___________T19_00122.BSP",
+        "CK/ATNR_P040302093352_T6_00127.BC",
+        "CK/ROS_OSIRIS_V2.BC"
+      ],
+      "imageBase": "https://archives.esac.esa.int/psa/ftp/INTERNATIONAL-ROSETTA-MISSION/OSINAC/RO-A-OSINAC-4-AST2-LUTETIA-REFLECT-V2.0/DATA/IMG/",
+      "images": [
+        "N20100710T152240560EF4BF82",
+        "N20100710T153339088EF4BF82",
+        "N20100710T153815051EF4BF82",
+        "N20100710T154047674EF4BF22",
+        "N20100710T154241240EF4BF22",
+        "N20100710T154441262EF4BF22"
+      ],
+      "imageSuffix": ".IMG",
+      "imageFormat": "pds3",
+      "truthFrame": "ROS_LUTETIA",
+      "search": {
+        "coarseBin": [32, 32],
+        "fineBin": [16, 16],
+        "coarseSigma": 1.0,
+        "fineSigma": 1.0,
+        "maxShiftPx": [400, 400]
       }
     }
   }
