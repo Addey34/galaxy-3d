@@ -83,6 +83,33 @@ async function ensureSource(body, entry) {
   return cache;
 }
 
+/**
+ * Une grille latitude / longitude / rayon peut porter une SPHÈRE DE REMPLISSAGE : la moitié de
+ * `253mathilde.tab` vaut exactement 26,5 km, sans que son étiquette le dise (mesuré le
+ * 2026-10-06). Rend le rayon le plus fréquent et la part d'AIRE qu'il couvre (poids cos φ, donc
+ * les lignes polaires, qui répètent légitimement un même rayon, ne comptent pas). `null` pour une
+ * source qui n'est pas une grille à trois colonnes.
+ */
+function dominantRadius(path) {
+  if (!path.endsWith('.tab')) return null;
+  const rows = readFileSync(path, 'utf8')
+    .split(/\r?\n/)
+    .map((line) => line.trim().split(/\s+/).map(Number))
+    .filter((r) => r.length === 3 && r.every(Number.isFinite));
+  if (rows.length < 100) return null;
+  const latIndex = rows.every((r) => Math.abs(r[0]) <= 90) ? 0 : 1;
+  const area = new Map();
+  let total = 0;
+  for (const r of rows) {
+    const w = Math.cos((r[latIndex] * Math.PI) / 180);
+    const key = r[2].toFixed(4);
+    area.set(key, (area.get(key) ?? 0) + w);
+    total += w;
+  }
+  const [radius, share] = [...area].reduce((a, b) => (b[1] > a[1] ? b : a));
+  return { radius: Number(radius), share: share / total };
+}
+
 const run = (script, args, env = {}) =>
   execFileSync('node', [join(ROOT, 'scripts', script), ...args], {
     cwd: ROOT,
@@ -99,6 +126,30 @@ for (const [body, entry] of Object.entries(recipe.bodies)) {
   if (!model) throw new Error(`${body} : la fiche ne déclare aucun modèle`);
   console.log(`\n=== ${body} : ${model.resolutions.join(', ')}`);
   const source = await ensureSource(body, entry);
+  const dominant = dominantRadius(source);
+  if (
+    dominant &&
+    dominant.share > 0.02 &&
+    entry.placeholderRadiusKm === undefined
+  )
+    throw new Error(
+      `${body} : ${(dominant.share * 100).toFixed(1)} % de l'aire au rayon ${dominant.radius} km, ` +
+        `une sphère de remplissage probable. La déclarer (placeholderRadiusKm) ET la dire dans le crédit.`
+    );
+  if (
+    entry.placeholderRadiusKm !== undefined &&
+    (!dominant ||
+      dominant.share <= 0.02 ||
+      dominant.radius !== entry.placeholderRadiusKm)
+  )
+    throw new Error(
+      `${body} : la recette déclare une sphère de remplissage à ${entry.placeholderRadiusKm} km, ` +
+        `la source ne la porte plus (${dominant ? `${dominant.radius} km, ${(dominant.share * 100).toFixed(1)} %` : 'pas une grille'}).`
+    );
+  if (dominant && dominant.share > 0.02)
+    console.log(
+      `  sphère de remplissage déclarée : ${(dominant.share * 100).toFixed(1)} % de l'aire à ${dominant.radius} km`
+    );
 
   const dir = join(ROOT, 'public/assets/models', body);
   mkdirSync(dir, { recursive: true });

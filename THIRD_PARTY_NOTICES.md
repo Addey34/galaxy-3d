@@ -200,6 +200,9 @@ level: the 2° source grid holds about 32,400 triangles of real information.
 - **Modification**: west longitudes converted to east, the grid meshed and decimated, then rotated
   into its principal axes of inertia, since its published pole lies 30° from the axis of greatest
   inertia. Uniform colour at albedo 0.0436 (IRAS, JPL SBDB).
+- **Limit of the source**: 3,688 of the 7,381 radii of `253mathilde.tab` are exactly 26.5 km,
+  about half of the surface by area: in that part the file is a sphere, not a measured shape, and
+  its label does not say so. The mesh keeps it as published. Measured on 2026-10-06.
 
 `public/assets/models/apophis/apophis_shape_1k.glb`: asteroid (99942) Apophis, the
 full model.

@@ -2184,7 +2184,13 @@ ne le dit pas. Les autres grilles de Thomas en cache n'ont rien de tel (Protée 
 0 %). Exclure de la comparaison les pixels qui tombent sur cette sphère ne suffit pas : Mathilde
 0,60, Gaspra 0,57, et les meilleures solutions de Mathilde dispersées entre des orientations sans
 rapport. Conséquence pour l'application : le Mathilde affiché est à moitié une sphère, puisque le
-maillage livré vient de ce fichier.
+maillage livré vient de ce fichier. C'est désormais DIT : le crédit du modèle (fiche et
+`/sources`, quatre langues) et `THIRD_PARTY_NOTICES.md` le déclarent. Et c'est GARDÉ :
+`scripts/generate-shape-models.mjs` mesure, pour toute grille, la part d'aire du rayon le plus
+fréquent et refuse de produire un maillage au-delà de 2 % tant que la recette ne déclare pas
+`placeholderRadiusKm` (une déclaration que la source ne porte plus échoue aussi) ; seul Mathilde
+déclenche, les douze autres grilles ressortent identiques à l'octet. `shapeModels.test.ts` exige
+que le rayon déclaré figure dans le crédit de chaque langue (falsifié).
 
 Ce qui rouvrirait la question : un modèle de forme de Mathilde complet, ou une forme reconstruite
 depuis les images elles-mêmes (stéréophotoclinométrie), ce qui est un chantier en soi.

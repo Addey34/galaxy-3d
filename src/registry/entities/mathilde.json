@@ -31,10 +31,10 @@
       "albedoSource": "IRAS-A-FPA-3-RDR-IMPS-V6.0 (JPL SBDB), 0.0436 +/- 0.004",
       "colourSource": null,
       "credit": {
-        "en": "NASA/JHU-APL NEAR MSI, shape model by P. Thomas et al. (1999, Icarus 140, 17), NASA PDS ast-sat.thomas.shape-models, decimated for the web.",
-        "fr": "NASA/JHU-APL NEAR MSI, modèle de forme de P. Thomas et al. (1999, Icarus 140, 17), NASA PDS ast-sat.thomas.shape-models, décimé pour le web.",
-        "es": "NASA/JHU-APL NEAR MSI, modelo de forma de P. Thomas et al. (1999, Icarus 140, 17), NASA PDS ast-sat.thomas.shape-models, diezmado para la web.",
-        "pt-BR": "NASA/JHU-APL NEAR MSI, modelo de forma de P. Thomas et al. (1999, Icarus 140, 17), NASA PDS ast-sat.thomas.shape-models, decimado para a web."
+        "en": "NASA/JHU-APL NEAR MSI, shape model by P. Thomas et al. (1999, Icarus 140, 17), NASA PDS ast-sat.thomas.shape-models, decimated for the web. About half of the surface is, in the source file, a sphere of radius 26.5 km rather than a measured shape.",
+        "fr": "NASA/JHU-APL NEAR MSI, modèle de forme de P. Thomas et al. (1999, Icarus 140, 17), NASA PDS ast-sat.thomas.shape-models, décimé pour le web. Environ la moitié de la surface est, dans le fichier source, une sphère de 26,5 km de rayon et non une forme mesurée.",
+        "es": "NASA/JHU-APL NEAR MSI, modelo de forma de P. Thomas et al. (1999, Icarus 140, 17), NASA PDS ast-sat.thomas.shape-models, diezmado para la web. Cerca de la mitad de la superficie es, en el archivo fuente, una esfera de 26,5 km de radio y no una forma medida.",
+        "pt-BR": "NASA/JHU-APL NEAR MSI, modelo de forma de P. Thomas et al. (1999, Icarus 140, 17), NASA PDS ast-sat.thomas.shape-models, decimado para a web. Cerca de metade da superfície é, no arquivo de origem, uma esfera de 26,5 km de raio e não uma forma medida."
       }
     },
     "description": {
