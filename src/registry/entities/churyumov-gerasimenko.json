@@ -20,6 +20,20 @@
     "kind": "comet",
     "color": "0x68c9ff",
     "fallbackColor": "0x4e4e4e",
+    "model": {
+      "resolutions": ["4k", "2k", "1k"],
+      "extentRatio": 1.61,
+      "radiusMismatch": "Le rayon affiché, 1,7 km, vient du diamètre effectif de 3,4 km que la SBDB publie (Sierks et al. 2015, sur les premiers mois d’OSIRIS). Le modèle SPC SHAP5 de 2016, sur toute la mission, donne un volume dont le rayon équivalent vaut 1,648 km, soit 3,1 % de moins. Deux mesures publiées différentes ; la forme vient du modèle, la taille du catalogue.",
+      "albedo": 0.065,
+      "albedoSource": "Fornasier et al. 2015, A&A 583, A30 (arXiv:1505.06888), OSIRIS, geometric albedo 6.5 +/- 0.2 % at 649 nm",
+      "colourSource": null,
+      "credit": {
+        "en": "ESA Rosetta OSIRIS, SPC SHAP5 plate shape model by R. Gaskell, L. Jorda, C. Capanna, S. Hviid and P. Gutierrez (RO-C-MULTI-5-67P-SHAPE-V2.0, NASA PDS and ESA PSA, CC BY-NC 3.0 IGO, credit ESA, H. Sierks), read from the Rosetta SPICE archive at NAIF (DSK ROS_CG_K097_OSPCLPS_N_V1), decimated for the web.",
+        "fr": "ESA Rosetta OSIRIS, modèle de forme en plaques SPC SHAP5 de R. Gaskell, L. Jorda, C. Capanna, S. Hviid et P. Gutierrez (RO-C-MULTI-5-67P-SHAPE-V2.0, NASA PDS et ESA PSA, CC BY-NC 3.0 IGO, crédit ESA, H. Sierks), lu dans l’archive SPICE de Rosetta au NAIF (DSK ROS_CG_K097_OSPCLPS_N_V1), décimé pour le web.",
+        "es": "ESA Rosetta OSIRIS, modelo de forma en placas SPC SHAP5 de R. Gaskell, L. Jorda, C. Capanna, S. Hviid y P. Gutierrez (RO-C-MULTI-5-67P-SHAPE-V2.0, NASA PDS y ESA PSA, CC BY-NC 3.0 IGO, crédito ESA, H. Sierks), leído en el archivo SPICE de Rosetta en el NAIF (DSK ROS_CG_K097_OSPCLPS_N_V1), diezmado para la web.",
+        "pt-BR": "ESA Rosetta OSIRIS, modelo de forma em placas SPC SHAP5 de R. Gaskell, L. Jorda, C. Capanna, S. Hviid e P. Gutierrez (RO-C-MULTI-5-67P-SHAPE-V2.0, NASA PDS e ESA PSA, CC BY-NC 3.0 IGO, crédito ESA, H. Sierks), lido no arquivo SPICE da Rosetta no NAIF (DSK ROS_CG_K097_OSPCLPS_N_V1), decimado para a web."
+      }
+    },
     "description": {
       "en": "The comet that ESA’s Rosetta orbited from August 2014: the first comet orbited by a spacecraft and the first to receive a lander. The mission ended on 30 September 2016 with a planned landing on its surface.",
       "fr": "La comète autour de laquelle la sonde Rosetta de l’ESA a tourné à partir d’août 2014 : la première comète mise en orbite par une sonde, et la première à recevoir un atterrisseur. La mission s’est achevée le 30 septembre 2016 par une descente prévue sur sa surface.",
