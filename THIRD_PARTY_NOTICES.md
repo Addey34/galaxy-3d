@@ -164,11 +164,13 @@ must also have its faces pointing outwards and be a closed surface.
 `src/config/shapeModelGaps.ts`): 67P/Churyumov-Gerasimenko's dataset at the ESA Planetary Science
 Archive (`RO-C-MULTI-5-67P-SHAPE-V2.0`) states no licence in its readme, catalogue or user guide;
 the archive asks only for an acknowledgement in publications, and ESA's website notice excludes
-uses other than educational, editorial or informational ones without a specific licence. It is
-not imported on an assumed licence. Tempel 1, Wild 2 and Hartley 2 have published models whose
+uses other than educational, editorial or informational ones without a specific licence. It was
+not imported on an assumed licence. (Superseded on 2026-10-06: the ESA Space Science Archives'
+terms state CC BY-NC 3.0 IGO, and the model is now shipped, below.) Tempel 1, Wild 2 and Hartley 2 have published models whose
 host (`pdssbn.astro.umd.edu/holdings/`) answered HTTP 403 to every request that day, and their
 missions' SPICE archives at NAIF predate the DSK format (Didymos, Dimorphos and Arrokoth, on the
-same host, were read from NAIF instead, below). (11351) Leucus has two convex DAMIT solutions with different poles
+same host, were read from NAIF instead, below, and so was Tempel 1 from the Rosetta SPICE
+archive). (11351) Leucus has two convex DAMIT solutions with different poles
 and no calibrated size: importing one would present a choice as a measurement.
 
 ### Mission targets (2026-10-04)
@@ -277,6 +279,21 @@ moon Dimorphos.
 - **Data credit**: ESA Rosetta OSIRIS images. Distributed by NASA PDS without restriction.
 - **Modification**: read from DSK to OBJ by `scripts/dsk-to-obj.mjs`, pole brought onto +Y,
   decimated. Uniform colour at albedo 0.300 (NEOWISE, JPL SBDB).
+
+`public/assets/models/churyumov-gerasimenko/churyumov-gerasimenko_shape_{1k,2k,4k}.glb`: comet
+67P/Churyumov-Gerasimenko (added 2026-10-06).
+
+- **Source**: the same Rosetta SPICE archive at NAIF (`ROS_CG_K097_OSPCLPS_N_V1.BDS`), made from
+  the SPC SHAP5 plate model of R. Gaskell, L. Jorda, C. Capanna, S. Hviid and P. Gutierrez,
+  `RO-C-MULTI-5-67P-SHAPE-V2.0` (NASA PDS and ESA PSA, 2017), about 97,000 plates.
+- **Licence**: the ESA Space Science Archives distribute their data under **CC BY-NC 3.0 IGO**
+  (`cosmos.esa.int/web/esdc/terms-and-conditions`, read 2026-10-06), with the credit line
+  « ESA, H. Sierks » for OSIRIS; commercial use needs ESA's authorisation. This data set is
+  served by both archives, and the app follows the ESA terms. The data set declares no licence
+  of its own, which kept the model out until the archive terms were read.
+- **Data credit**: ESA Rosetta OSIRIS images, ESA, H. Sierks.
+- **Modification**: read from DSK to OBJ by `scripts/dsk-to-obj.mjs`, pole brought onto +Y,
+  decimated. Uniform colour at geometric albedo 0.065 (Fornasier et al. 2015, A&A 583, A30).
 
 ### Moons, a comet and main-belt asteroids (parity pass, 2026-09-22)
 

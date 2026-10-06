@@ -1561,7 +1561,8 @@ insertion en orbite (la NASA la publie au 4 juillet, heure de Californie : la co
 terminée à 03 h 53 UTC le 5), Cassini et Saturne du 2004-07-01 au 2017-09-13, BepiColombo et Mercure dès le 2026-10-13
 (fichier prédit), OSIRIS-REx et Bennu du 2018-12-01 au 2021-04-15, Hayabusa2 et Ryugu du
 2018-06-22 au 2019-11-20. Aucune pour les Voyager, New Horizons, Parker, Rosetta (67P n'est pas
-au catalogue).
+au catalogue). [SUPERSEDED : 67P est au catalogue depuis le 2026-10-04, sans phase
+`satelliteOf` déclarée pour Rosetta, ce que ce § ne mesurait pas.]
 
 **Pourquoi un survol reste héliocentrique.** La règle des lunes étire √d : à la frontière de la
 sphère de Hill de Jupiter elle poserait l'objet à 35 × 3,43 × √0,355 ≈ 49 unités de la planète,
@@ -4423,6 +4424,17 @@ l'UMD refuse de servir. La même archive porte **Šteins** (Farnham et Jorda, OS
 deux jeux de la NASA, distribués sans restriction, ce qui n'est PAS le cas de 67P (jeu de la PSA
 sans licence déclarée), même si l'archive de Rosetta en porte aussi des DSK. La décision sur 67P
 reste celle de l'utilisateur.
+
+**67P livré le 2026-10-06.** L'utilisateur a tranché : les archives de l'ESA déclarent CC BY-NC
+3.0 IGO (§ « L'outil de pose SPICE, versionné »), et le modèle se livre sous cette licence. Source :
+`ROS_CG_K097_OSPCLPS_N_V1.BDS` de la même archive, le modèle SPC SHAP5 de Gaskell, Jorda, Capanna,
+Hviid et Gutierrez (`RO-C-MULTI-5-67P-SHAPE-V2.0`, environ 97 000 plaques, repère de Cheops), lu
+par `dsk-to-obj.mjs`. Choisi parmi les familles de l'archive (SPC de LAM-PSI, MSPCD de LAM, SPG du
+DLR, SPC des NAVCAM de l'ESA) parce que c'est le modèle OSIRIS de référence et qu'il porte assez
+de plaques pour le 4k. Trois niveaux fermés, sans `--principal`. Rayon équivalent-volume 1,648 km,
+à 3,1 % des 1,7 km de la SBDB (diamètre de Sierks et al. 2015) : écart déclaré (`radiusMismatch`).
+Couleur uniforme à l'albédo géométrique 0,065 lu à la source (Fornasier et al. 2015, A&A 583, A30,
+« 6.5±0.2% at 649 nm »), la SBDB n'en publiant aucun.
 
 Rien de neuf dans la chaîne : deux entrées de recette, un bloc `model` par fiche, deux niveaux
 (les sources ont 32 040 et 20 480 plaques, sous le budget du 4k). Les gardes ont tout tenu sans

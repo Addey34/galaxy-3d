@@ -69,7 +69,9 @@ export type ShapeGapReason =
   /**
    * Le jeu est servi, mais il ne déclare AUCUNE licence (`source`), et l'avis général de son
    * éditeur exclut les usages autres qu'éducatifs ou éditoriaux sans licence particulière. On
-   * n'importe pas sur une licence supposée : 67P, lu le 2026-10-04.
+   * n'importe pas sur une licence supposée : 67P, lu le 2026-10-04. [SUPERSEDED le 2026-10-06 pour
+   * 67P : les archives de l'ESA déclarent CC BY-NC 3.0 IGO, l'utilisateur l'a acceptée, son modèle est
+   * livré. La cause reste pour un prochain jeu servi sans licence.]
    */
   | 'licence-not-stated';
 
@@ -103,12 +105,6 @@ export const SHAPE_MODEL_GAPS: readonly ShapeModelGap[] = [
     reason: 'ambiguous-solutions',
     source:
       'DAMIT, modèles convexes 6692 (pôle 321°, 77°) et 6693 (152°, 51°), qualité 1, taille non étalonnée',
-  },
-  {
-    body: 'churyumov-gerasimenko',
-    radiusKm: 1.7,
-    reason: 'licence-not-stated',
-    source: 'ESA PSA, RO-C-MULTI-5-67P-SHAPE-V2.0',
   },
   {
     body: 'wild-2',
