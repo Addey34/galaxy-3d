@@ -9,6 +9,7 @@ Ligne de commande de l'outil de pose (cf. `posekit.py` pour la méthode). Lancé
   truth  <cible>                  score des contours à l'orientation vraie, contre des tirages au hasard
 """
 import argparse
+import math
 import json
 import os
 import sys
@@ -66,7 +67,7 @@ def download(url, path):
 def cmd_fetch(t, _):
     for k in t["kernels"]:
         download(t["kernelBase"] + k, os.path.join(pk.kernel_dir(t), os.path.basename(k)))
-    for n in t["images"]:
+    for n in dict.fromkeys(t["images"] + t.get("map", {}).get("images", [])):
         for suf in (t["imageSuffix"], t.get("labelSuffix")) if t.get("labelSuffix") else (t["imageSuffix"],):
             download(t["imageBase"] + n + suf, os.path.join(pk.image_dir(t), n + suf))
     print("noyaux et images en cache")
@@ -184,17 +185,87 @@ def cmd_witness(t, _):
     sys.exit(0 if worst <= 0.5 else 1)
 
 
+def cmd_map(t, a):
+    """Carte d'albédo relatif depuis les images `mapImages` de la recette, à la pose `--pose`
+    (`truth` : le repère de vérité ; `search` : le meilleur résultat de `search`). Deux groupes
+    séparés par `mapSplitPhase` (degrés) sont cartographiés À PART et comparés par blocs de 2° :
+    on ne livre que si deux vues indépendantes s'accordent. Écrit des TIFF flottants (NoData 0)."""
+    import spiceypy as sp
+    from PIL import Image
+
+    m = t["map"]
+    sub = dict(t, images=m["images"])
+    cam, geo, imgs = pk.geometry(sp, sub)
+    mesh = pk.load_model(t["body"])
+    radius, _ = mesh.volume_radius()
+    grids = {"all": pk.MapGrid(a.step), "A": pk.MapGrid(a.step), "B": pk.MapGrid(a.step)}
+    spacing = math.radians(a.step) * radius / 2
+    P, N = mesh.sample(spacing)
+    print(f"{len(P)} points au pas de {spacing:.3f} km, carte de {grids['all'].nx} x {grids['all'].ny}", flush=True)
+    if a.pose == "search":
+        res = json.load(open(os.path.join(pk.ROOT, ".cache", "spice-pose", t["id"], f"search_{t['body']}.json")))
+        B0 = pk.bmat(*res["results"][0]["x"])
+        _, g0, _ = pk.geometry(sp, t)
+        et0, rate = g0[0]["et"], rotation_rate(t["body"])
+        pose_at = lambda g: pk.rz_deg(rate * (g["et"] - et0) / 86400) @ B0
+    else:
+        pose_at = lambda g: g["truth"]
+    scene = pk.make_scene(mesh, min(g["d"] for g in geo) / cam.ks * 4)
+    for g, image in zip(geo, imgs):
+        B = pose_at(g)
+        shift = pk.pointing_shift(scene, cam, B, g, image, (4, 4), tuple(t["search"]["maxShiftPx"]))
+        lat, lon, refl, w = pk.reflectance_samples(
+            P, N, cam, B, g, image, shift, max_angle=m.get("maxAngle", 70.0), spacing=spacing,
+            limb_px=m.get("limbPx", 0),
+        )
+        if len(refl) < 100:
+            print(f"{g['name']} : {len(refl)} points, écartée", flush=True)
+            continue
+        refl = refl / np.median(refl)  # la phase change d'une image à l'autre : relatif à l'image
+        # Une ombre ou un bord rasant que le modèle ne résout pas sort à presque zéro, et la
+        # division par Lommel-Seeliger le gonfle : franges noires vues sur Lutetia (2026-10-06).
+        keep = (refl > 0.5) & (refl < 2.0)
+        lat, lon, refl, w = lat[keep], lon[keep], refl[keep], w[keep]
+        phase = math.degrees(math.acos(np.clip((-g["p"] / g["d"]) @ (g["sun"] / np.linalg.norm(g["sun"])), -1, 1)))
+        group = "A" if phase < m["splitPhase"] else "B"
+        grids["all"].add(lat, lon, refl, w)
+        grids[group].add(lat, lon, refl, w)
+        print(f"{g['name']} : phase {phase:5.1f}°, groupe {group}, {len(refl)} points, décalage {shift}", flush=True)
+    out = os.path.join(pk.ROOT, ".cache", "spice-pose", t["id"])
+    maps = {k: v.mean() for k, v in grids.items()}
+    for k, v in maps.items():
+        Image.fromarray(v.astype(np.float32), mode="F").save(os.path.join(out, f"map_{k}.tif"))
+    lat_c = 90 - (np.arange(grids["all"].ny) + 0.5) * a.step
+    area = np.cos(np.radians(lat_c))[:, None] * np.ones((1, grids["all"].nx))
+    cov = lambda v: float((area * (v > 0)).sum() / area.sum())
+    print(f"couverture : tout {cov(maps['all']):.1%}, A {cov(maps['A']):.1%}, B {cov(maps['B']):.1%}")
+    agree = pk.block_agreement(pk.fill_small_gaps(maps["A"]), pk.fill_small_gaps(maps["B"]), 2.0, a.step)
+    print(f"accord radiométrique A/B par blocs de 2° : {agree['blocks']} blocs communs, r {agree['r']:.3f}, sans la moyenne de chaque latitude {agree['r_lat']:.3f}")
+    reg = pk.shape_registration(maps["A"], maps["B"], a.step)
+    print(f"recalage des formes A/B : r {reg['at_zero']:.3f} au décalage nul, {reg['max_shifted']:.3f} au mieux décalé de 1 à 3° (moyenne {reg['mean_shifted']:.3f})")
+    if a.step > 0.25:
+        # Mesuré le 2026-10-06 : au pas de 1°, un décalage de 1° ne vaut qu'une case, sous la largeur
+        # du filtre, et le témoin rendait 0,83 au décalage nul contre 0,81 décalé.
+        print("  témoin de recalage NON SIGNIFICATIF à ce pas : le relancer à 0,25° ou moins")
+    tex = pk.texture_fill(maps[m.get("textureGroup", "A")], round(2.0 / a.step))
+    Image.fromarray(tex.astype(np.float32), mode="F").save(os.path.join(out, "map_texture.tif"))
+    json.dump(dict(coverage={k: cov(v) for k, v in maps.items()}, agreement=agree, registration=reg, step=a.step, pose=a.pose),
+              open(os.path.join(out, "map_report.json"), "w"), indent=1)
+
+
 def main():
     p = argparse.ArgumentParser()
-    p.add_argument("command", choices=["fetch", "search", "guard", "truth", "witness"])
+    p.add_argument("command", choices=["fetch", "search", "guard", "truth", "witness", "map"])
     p.add_argument("target")
     p.add_argument("--model")
     p.add_argument("--poles", type=int, default=400)
+    p.add_argument("--pose", choices=["truth", "search"], default="truth")
+    p.add_argument("--step", type=float, default=0.25, help="pas de la carte, degrés")
     p.add_argument("--recipe", default=RECIPE, help="autre recette, pour falsifier une garde")
     p.add_argument("--jobs", type=int, default=max(1, (os.cpu_count() or 2) - 2))
     a = p.parse_args()
     t = target(a.target, a.recipe)
-    {"fetch": cmd_fetch, "search": cmd_search, "guard": cmd_guard, "truth": cmd_truth, "witness": cmd_witness}[a.command](t, a)
+    {"fetch": cmd_fetch, "search": cmd_search, "guard": cmd_guard, "truth": cmd_truth, "witness": cmd_witness, "map": cmd_map}[a.command](t, a)
 
 
 if __name__ == "__main__":

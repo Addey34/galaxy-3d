@@ -524,3 +524,151 @@ def blind_search(coarse, fine, poles=400, wstep=10, keep=8, jobs=1, log=print):
         log(f"  départ {k + 1} : contours {o['score']:.4f} à {np.round(o['x'], 1).tolist()}")
     out.sort(key=lambda o: -o["score"])
     return out
+
+
+# ---------------------------------------------------------------- carte
+
+
+def pointing_shift(scene, cam, B, g, image, b, maxshift_px):
+    """Décalage de pointage (pixels bruts, lignes puis échantillons) qui superpose le rendu à
+    l'image : la visée des noyaux n'est pas celle des images corrigées (Šteins : ~130 px)."""
+    pr = predict(scene, cam, B, g, b)
+    ob = np.nan_to_num(binimg(image, b))
+    _, s = xcorr(pr, ob, (maxshift_px[0] // b[0], maxshift_px[1] // b[1]))
+    return s[0] * b[0], s[1] * b[1]
+
+
+def reflectance_samples(P, N, cam, B, g, image, shift, max_angle=70.0, spacing=0.1, limb_px=0):
+    """Pour chaque point du modèle vu ET éclairé dans cette image, sa latitude et sa longitude
+    (repère du fichier, longitude Est), la réflectance corrigée de Lommel-Seeliger et le poids
+    cos i · cos e. Le rendu de visibilité est celui de la recherche, au pixel brut."""
+    pixel_km = g["d"] / cam.ks
+    scene = Scene(P, N, spacing, max(pixel_km, spacing))
+    sb = B @ g["sun"]
+    sb /= np.linalg.norm(sb)
+    lit = shadow_mask(P, N, sb, scene.pixel_km / 2)
+    mu0 = N @ sb
+    k, idx, mu, H, W = project(scene, cam, B, g, (1, 1))
+    il, js = np.divmod(k, W)
+    il = il + shift[0]
+    js = js + shift[1]
+    ok = (il >= 0) & (il < image.shape[0]) & (js >= 0) & (js < image.shape[1])
+    il, js, idx, mu = il[ok], js[ok], idx[ok], mu[ok]
+    m0 = np.clip(mu0[idx], 0, 1)
+    cosmax = math.cos(math.radians(max_angle))
+    keep = lit[idx] & (m0 > cosmax) & (mu > cosmax)
+    il, js, idx, mu, m0 = il[keep], js[keep], idx[keep], mu[keep], m0[keep]
+    iof = image[il, js]
+    good = np.isfinite(iof) & (iof > 0)
+    if limb_px:
+        # Un pixel au bord du disque, dans l'IMAGE, mêle le corps et le ciel : il sort en frange
+        # sombre tout le long de la couverture (Lutetia, 2026-10-06). On n'échantillonne que
+        # l'intérieur du disque observé, érodé de `limb_px` pixels.
+        from scipy.ndimage import binary_erosion
+
+        img = np.nan_to_num(image)
+        # Seuil sur le HAUT de l'histogramme : la médiane des pixels positifs inclut le bruit du
+        # fond et prenait 39 à 52 % du cadre pour le disque (mesuré), si bien que rien n'était érodé.
+        disc = img > 0.2 * np.percentile(img, 99)
+        good &= binary_erosion(disc, iterations=limb_px)[il, js]
+    idx, mu, m0, iof = idx[good], mu[good], m0[good], iof[good]
+    ls = m0 / (m0 + mu)
+    refl = iof / ls
+    p = P[idx]
+    r = np.linalg.norm(p, axis=1)
+    lat = np.degrees(np.arcsin(p[:, 2] / r))
+    lon = np.degrees(np.arctan2(p[:, 1], p[:, 0]))
+    return lat, lon, refl, m0 * mu
+
+
+class MapGrid:
+    """Carte équirectangulaire, longitude Est, bord gauche à −180° (`src/core/modelUv.ts`)."""
+
+    def __init__(self, step):
+        self.step = step
+        self.nx, self.ny = round(360 / step), round(180 / step)
+        self.sum = np.zeros(self.nx * self.ny)
+        self.w = np.zeros(self.nx * self.ny)
+
+    def add(self, lat, lon, value, weight):
+        x = np.clip(((lon + 180) / self.step).astype(np.int64), 0, self.nx - 1)
+        y = np.clip(((90 - lat) / self.step).astype(np.int64), 0, self.ny - 1)
+        k = y * self.nx + x
+        np.add.at(self.sum, k, value * weight)
+        np.add.at(self.w, k, weight)
+
+    def mean(self):
+        return np.where(self.w > 0, self.sum / np.maximum(self.w, 1e-30), 0).reshape(self.ny, self.nx)
+
+
+def block_agreement(a, b, block, step):
+    """Corrélation de deux cartes par blocs de `block` degrés, là où les deux mesurent, brute puis
+    sans la moyenne de chaque bande de latitude (comme pour Ryugu)."""
+    n = max(1, round(block / step))
+    ny, nx = a.shape
+    ya, yb, xa = ny // n, ny // n, nx // n
+    def blocks(m):
+        v = m[: ya * n, : xa * n].reshape(ya, n, xa, n)
+        c = (v > 0).sum((1, 3))
+        s = np.where(v > 0, v, 0).sum((1, 3))
+        return np.where(c >= n * n // 2, s / np.maximum(c, 1), np.nan)
+    A, Bm = blocks(a), blocks(b)
+    both = np.isfinite(A) & np.isfinite(Bm)
+    if both.sum() < 10:
+        return dict(blocks=int(both.sum()), r=float("nan"), r_lat=float("nan"))
+    r = float(np.corrcoef(A[both], Bm[both])[0, 1])
+    Ad = A - np.nanmean(np.where(both, A, np.nan), axis=1, keepdims=True)
+    Bd = Bm - np.nanmean(np.where(both, Bm, np.nan), axis=1, keepdims=True)
+    r_lat = float(np.corrcoef(Ad[both], Bd[both])[0, 1])
+    return dict(blocks=int(both.sum()), r=r, r_lat=r_lat)
+
+
+def fill_small_gaps(m, size=5, min_fraction=0.4):
+    """Comble une case vide entourée de mesures (le resserrement des méridiens vers les pôles en
+    laisse au pas des points) par la moyenne de ses voisines mesurées. Ne s'étend pas au-delà."""
+    from scipy.ndimage import uniform_filter
+
+    valid = (m > 0).astype(float)
+    s = uniform_filter(np.where(m > 0, m, 0), size)
+    c = uniform_filter(valid, size)
+    return np.where(m > 0, m, np.where(c > min_fraction, s / np.maximum(c, 1e-9), 0))
+
+
+def shape_registration(a, b, step, shifts_deg=(1, 2, 3), sigma=3):
+    """Les FORMES de deux cartes indépendantes se superposent-elles ? Corrélation de leurs
+    laplaciens de gaussienne au décalage nul, contre le maximum aux décalages de 1 à 3°. Pour une
+    carte drapée, c'est le recalage qui compte ; l'accord radiométrique dépend de l'ombrage du
+    relief non résolu, qui change avec la phase (Lutetia, 2026-10-06)."""
+    from scipy.ndimage import gaussian_laplace
+
+    a, b = fill_small_gaps(a), fill_small_gaps(b)
+    both = (a > 0) & (b > 0)
+    la, lb = gaussian_laplace(a, sigma), gaussian_laplace(b, sigma)
+
+    def r(dy, dx):
+        bs = np.roll(np.roll(lb, dy, 0), dx, 1)
+        ms = np.roll(np.roll(both, dy, 0), dx, 1) & both
+        return float(np.corrcoef(la[ms], bs[ms])[0, 1])
+
+    others = []
+    for d in shifts_deg:
+        n = round(d / step)
+        for dy, dx in ((n, 0), (-n, 0), (0, n), (0, -n), (n, n), (-n, -n), (n, -n), (-n, n)):
+            others.append(r(dy, dx))
+    return dict(at_zero=r(0, 0), max_shifted=max(others), mean_shifted=float(np.mean(others)), cells=int(both.sum()))
+
+
+def texture_fill(m, feather_cells):
+    """La carte d'une texture : lacunes isolées comblées localement, surface NON VUE au gris moyen
+    de ce qui est mesuré, raccordée par un fondu de `feather_cells` cases. Aucun détail inventé."""
+    from scipy.ndimage import distance_transform_edt
+
+    m = fill_small_gaps(m)
+    measured = m > 0
+    mean = float(m[measured].mean())
+    d = distance_transform_edt(~measured)
+    w = np.clip(1 - d / feather_cells, 0, 1)
+    # Prolonge la dernière valeur mesurée sur la bande de fondu, puis glisse vers la moyenne.
+    _, (iy, ix) = distance_transform_edt(~measured, return_indices=True)
+    edge = m[iy, ix]
+    return np.where(measured, m, w * edge + (1 - w) * mean)
