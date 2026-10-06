@@ -90,6 +90,7 @@
     "mathilde": {
       "cache": ".cache/shape-models/253mathilde.tab",
       "dataset": "urn:nasa:pds:ast-sat.thomas.shape-models (253mathilde.tab)",
+      "placeholderRadiusKm": 26.5,
       "flags": ["--z-up", "--principal", "--west"]
     },
     "mimas": {

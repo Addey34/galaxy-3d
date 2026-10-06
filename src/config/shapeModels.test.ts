@@ -79,7 +79,10 @@ const RECIPE = JSON.parse(
   readFileSync(join(PROJECT_ROOT, 'scripts/shape-model-targets.json'), 'utf8')
 ) as {
   budgets: Record<string, number>;
-  bodies: Record<string, { cache: string; flags: string[] }>;
+  bodies: Record<
+    string,
+    { cache: string; flags: string[]; placeholderRadiusKm?: number }
+  >;
 };
 
 /**
@@ -425,6 +428,36 @@ describe('recette des modèles de forme', () => {
       expect(gltf.asset.copyright).toBe(
         flattenBodies(CELESTIAL_CONFIG).get(name)!.model!.credit.en
       );
+    }
+  );
+});
+
+/**
+ * UNE SPHÈRE DE REMPLISSAGE DÉCLARÉE EST DITE AU VISITEUR, DANS SES QUATRE LANGUES.
+ *
+ * La moitié de `253mathilde.tab` vaut exactement 26,5 km : une sphère, pas une forme mesurée, et
+ * l'étiquette PDS ne le dit pas (mesuré le 2026-10-06). Le générateur la DÉTECTE et refuse de
+ * produire le maillage tant que la recette ne la déclare pas ; ce test exige que le rayon déclaré
+ * figure dans le crédit affiché (fiche et `/sources`), sans quoi le maillage montrerait une moitié
+ * inventée sans que personne le sache.
+ */
+describe('sphère de remplissage déclarée', () => {
+  const declared = Object.entries(RECIPE.bodies).filter(
+    ([, e]) => e.placeholderRadiusKm !== undefined
+  );
+  it('au moins un corps la déclare (Mathilde)', () => {
+    expect(declared.map(([b]) => b)).toContain('mathilde');
+  });
+  it.each(declared)(
+    '%s : le crédit nomme le rayon dans chaque langue',
+    (name, e) => {
+      const credit = flattenBodies(CELESTIAL_CONFIG).get(name)!.model!.credit;
+      const r = e.placeholderRadiusKm!;
+      for (const [locale, text] of Object.entries(credit)) {
+        const written =
+          locale === 'en' ? String(r) : String(r).replace('.', ',');
+        expect(text, `${name} ${locale}`).toContain(written);
+      }
     }
   );
 });
