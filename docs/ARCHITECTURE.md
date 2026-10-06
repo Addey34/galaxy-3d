@@ -4375,13 +4375,16 @@ trajectoire de Rosetta servie par Horizons est relative à la solution de la MIS
 comète (`1000012`, source `rosetta_merged`), et le binaire de 67P était tiré de la solution
 générale de la SBDB (`90000703`) : rapportée à `1000012`, Rosetta est à environ 170 km le
 2015-07-26. Le remède est celui de Didymos et de Patrocle : `primary` déclare `1000012`, sondé
-par dichotomie et servi du JD 2456660,5 au JD 2457752,5 (2014-01-03 au 2016-12-31), avec un saut
+par dichotomie et servi du JD 2456660,5 au JD 2457752,5 (2014-01-03 au 2016-12-30), avec un saut
 de 1 318 et 651 km aux deux raccords. Après régénération, la distance mesurée va de **6 à 378 km**,
 le maximum autour du périhélie d'août 2015, et
 `pnpm spacecraft:phases` dérive la phase **2014-08-03 au 2016-10-02**. Horizons ne NOMME pas
 `1000012` (« (1000012) ») : le primaire déclare son nom attendu (`expectedName` au générateur,
 `primaryExpect` dans `scripts/validation-targets.json`), pour que la garde de nom, qui a déjà
-attrapé « 699 Hela », reste armée.
+attrapé « 699 Hela », reste armée. Et `/sources` cite désormais, à côté de la cible
+Horizons de chaque fichier, la solution qui la remplace et son intervalle, lus dans le manifeste :
+sans eux, qui redemandait la cible publiée obtenait d'autres vecteurs que le fichier (garde dans
+`src/seo/docPages.test.ts`, falsifiée).
 
 ### Vague 3 : les modèles de forme des cibles (2026-10-04)
 
