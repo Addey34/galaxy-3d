@@ -1,5 +1,5 @@
 {
- "generatedAt": "2026-10-05T06:03:51.683Z",
+ "generatedAt": "2026-10-06T06:20:16.076Z",
  "samplesPerCase": 48,
  "spk": {
   "kernel": true,
@@ -17067,13 +17067,13 @@
    "rejected": 0,
    "sources": {},
    "km": {
-    "mean": 2.466,
+    "mean": 2.48,
     "median": 1.473,
     "p95": 11.97,
     "max": 12.98
    },
    "radii": {
-    "mean": 1.451,
+    "mean": 1.459,
     "median": 0.8662,
     "p95": 7.044,
     "max": 7.635
@@ -17177,14 +17177,14 @@
     "binaire": 48
    },
    "km": {
-    "mean": 2.193,
-    "median": 0.6719,
+    "mean": 2.234,
+    "median": 0.781,
     "p95": 12.36,
     "max": 14.56
    },
    "radii": {
-    "mean": 1.29,
-    "median": 0.3952,
+    "mean": 1.314,
+    "median": 0.4594,
     "p95": 7.269,
     "max": 8.567
    }

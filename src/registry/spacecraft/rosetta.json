@@ -45,6 +45,13 @@
       "citation": "NSSDCA/COSPAR 2004-006A"
     }
   },
+  "satelliteOf": [
+    {
+      "body": "churyumov-gerasimenko",
+      "from": "2014-08-03T00:00:00Z",
+      "to": "2016-10-02T00:00:00Z"
+    }
+  ],
   "coverage": {
     "temporal": {
       "interval": [

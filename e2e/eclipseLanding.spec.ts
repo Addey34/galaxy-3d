@@ -129,6 +129,23 @@ test('a total lunar eclipse page shows a coppery Moon, not a black disc', async 
       }
       return { red, blue, bright, total: data.length / 4 };
     });
+  // Et la mesure ne commence qu'à l'ARRIVÉE, lue sur l'état que l'application publie : vol de
+  // caméra terminé (`data-scene-moving`) et aucune texture en vol. Sonder 30 s ne suffisait pas
+  // sur la machine la plus lente du parc : 1,24 rendu au réessai sur un Xeon 8370C (run
+  // 37423495405, shard 4), la valeur d'une Lune pas encore cadrée.
+  await expect
+    .poll(
+      () =>
+        page.evaluate(() => {
+          const canvas = document.querySelector('canvas');
+          return (
+            canvas?.dataset['sceneMoving'] !== '1' &&
+            (canvas?.dataset['texturesLoading'] ?? '0') === '0'
+          );
+        }),
+      { timeout: 90_000 }
+    )
+    .toBe(true);
   let disc = await measure();
   await expect
     .poll(

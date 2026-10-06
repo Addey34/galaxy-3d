@@ -4367,6 +4367,22 @@ les 60 jours. **Falsifié trois fois** : le saut ignoré par le service rend 220
 l'impact ; l'ancien Didymos au pas de 4 jours, 15,2 km ; l'ancien Dimorphos sans saut publié,
 351 m.
 
+**Rosetta autour de 67P : le même défaut, chez une sonde (2026-10-06).** Rosetta n'avait aucune
+phase `satelliteOf`, alors qu'elle a gravité autour de 67P de 2014 à 2016. La dérivation n'y était
+pour rien : les binaires livrés la plaçaient à **888 à 1 907 km** de la comète de juillet 2014 à
+septembre 2016 (mesuré au pas de 30 jours), au-delà de la sphère de Hill de 67P (220 à 670 km). La
+trajectoire de Rosetta servie par Horizons est relative à la solution de la MISSION pour la
+comète (`1000012`, source `rosetta_merged`), et le binaire de 67P était tiré de la solution
+générale de la SBDB (`90000703`) : rapportée à `1000012`, Rosetta est à environ 170 km le
+2015-07-26. Le remède est celui de Didymos et de Patrocle : `primary` déclare `1000012`, sondé
+par dichotomie et servi du JD 2456660,5 au JD 2457752,5 (2014-01-03 au 2016-12-31), avec un saut
+de 1 318 et 651 km aux deux raccords. Après régénération, la distance mesurée va de **6 à 378 km**,
+le maximum autour du périhélie d'août 2015, et
+`pnpm spacecraft:phases` dérive la phase **2014-08-03 au 2016-10-02**. Horizons ne NOMME pas
+`1000012` (« (1000012) ») : le primaire déclare son nom attendu (`expectedName` au générateur,
+`primaryExpect` dans `scripts/validation-targets.json`), pour que la garde de nom, qui a déjà
+attrapé « 699 Hela », reste armée.
+
 ### Vague 3 : les modèles de forme des cibles (2026-10-04)
 
 Neuf maillages étaient nommés après les vagues 1 et 2. **Quatre sont livrés**, par le pipeline des

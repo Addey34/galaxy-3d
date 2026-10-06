@@ -221,7 +221,10 @@ async function horizonsVectors(targetKey, centerKey, datesMs, override) {
           {
             target: {
               command: primary.target,
-              expect: TARGETS[targetKey].expect,
+              // Un primaire que Horizons ne nomme pas déclare le nom qu'il rend (67P :
+              // « (1000012) », source `rosetta_merged`) ; la garde de nom reste armée.
+              expect:
+                TARGETS[targetKey].primaryExpect ?? TARGETS[targetKey].expect,
             },
           },
         ],
