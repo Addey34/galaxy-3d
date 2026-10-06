@@ -2128,13 +2128,54 @@ adresses exactes que le registre publie (`pdssbn.astro.umd.edu` et
 | Corps | Images | Hôte | Pose | Verdict |
 |---|---|---|---|---|
 | Ryugu | ONC : I/F étalonnés et réflectances multi-filtres recalées | PSI (`hyb2_onc`) | plans de latitude et longitude par pixel | **accessible**, carte livrée le 2026-10-05 (ci-dessus) |
-| Mathilde | NEAR MSI : images brutes et étalonnées en I/F | PSI (`NEAR_A_MSI_3_EDR_MATHILDE_V1_0`) | noyaux du survol à PSI (`NEAR_A_SPICE_6_MATHILDE_V1_0`) | **accessible** |
+| Mathilde | NEAR MSI : images brutes et étalonnées en I/F | PSI (`NEAR_A_MSI_3_EDR_MATHILDE_V1_0`) | noyaux du survol à PSI (`NEAR_A_SPICE_6_MATHILDE_V1_0`) | accessible, mais **aucune pose établie sur le modèle** (2026-10-06, ci-dessous) : rien de livré |
 | Lutetia, Šteins | OSIRIS NAC et WAC, niveaux 2 et 3 | PSA de l'ESA | noyaux de Rosetta chez NAIF | accessible ; licence à trancher, comme 67P |
 | Didymos, Dimorphos | DRACO, dont des images étalonnées avec plans géométriques | UMD seulement | | bloqué (403) |
 | Arrokoth | LORRI, produits dérivés | UMD seulement | | bloqué (403) |
 | Donaldjohanson | aucune image L'LORRI au registre, seulement des spectres LEISA | UMD seulement | | bloqué |
 | Tempel 1 | Deep Impact et Stardust-NExT | UMD seulement | | bloqué (403) |
 | Psyché, Apophis | aucune image rapprochée n'existe encore | | | sans objet |
+
+**Mathilde : les images se posent sur le ciel, pas sur le modèle (2026-10-06).** Le plan était
+celui de Ryugu, la pose en plus : calculer chaque prise de vue depuis les noyaux, projeter chaque
+pixel sur le modèle de Thomas, bâtir la carte, la valider entre vues indépendantes. Rien n'est
+livré, et voici ce qui a été mesuré, sur des sondes hors dépôt (`.cache/mathilde-msi/probe/`).
+
+- **Le volume ne donne aucun angle.** `geometry/` ne contient que `geominfo.txt`, qui renvoie au
+  volume SPICE ; dans l'index, latitude, longitude, incidence, émission et phase valent `+1.0E32`
+  sur les 980 lignes, et les étiquettes portent `"UNK"`. 363 des 534 images du jour du survol
+  existent en I/F (l'I/F est réservé aux vues résolues, la radiance aux sources ponctuelles).
+- **SPICE place Mathilde, pas son orientation.** Les noyaux (CK des jours 177 et 178, `msi15.ti`,
+  `math9749.bsp`, trajectoire de croisière) mettent le corps à quelques milliradians de sa place
+  dans l'image ; l'écart se décompose en un biais de pointage constant (0,74 et −0,39 mrad) et une
+  erreur de position relative de 37 km, ajustés sur les centroïdes de 220 vues entières : résidu
+  de quelques pixels (10 au plus) sur les 214 vues du départ ; les six vues du croissant d'approche
+  s'écartent de 43 px, ce qu'explique le décalage de la partie éclairée à phase 136°. Mais
+  ni le volume ni le PCK générique de NAIF ne donnent l'orientation de Mathilde (des rayons
+  seulement) : la rotation du repère J2000 vers celui du modèle doit être AJUSTÉE. Une seule
+  rotation suffit pour tout le survol, Mathilde tournant de 0,4° en 25 minutes.
+- **Ce qui a décidé : le modèle d'un AUTRE corps fait aussi bien.** Rendu du modèle avec ombres
+  portées et ombrage de Lommel-Seeliger, comparé à huit vues entières (le croissant d'approche à
+  phase 136°, le départ à 42-48°), recherche exhaustive puis affinement. Le témoin est le modèle de
+  Gaspra, mis à l'échelle, ajusté de la même façon. Sur la luminosité : Mathilde 0,83, Gaspra
+  0,85, le miroir de Mathilde 0,81. Sur les contours (laplacien de gaussienne, limbe et bords
+  d'ombre), après affinement de dix candidats de chaque côté : Mathilde 0,38, Gaspra 0,43, et le
+  résultat ne bouge pas quand on triple la densité du rendu. Le modèle de Mathilde gagne sur le
+  croissant d'approche (0,58 contre 0,54) et perd sur le départ (0,32 contre 0,40), les vues où
+  domine la grande concavité dans l'ombre, qu'aucune orientation ne reproduit. Toutes ses
+  meilleures solutions convergent vers une même rotation (pôle du modèle à environ 3° du pôle
+  céleste nord) : une solution stable, mais pas meilleure que celle d'un corps étranger, donc pas
+  une pose.
+- **Les cratères nommés ne tranchent pas non plus** : 10 des 20 cratères mesurables sont plus
+  bas que leur pourtour dans le modèle à l'orientation livrée, 15 sur 22 au mieux sous un décalage
+  de longitude, sans pic, ni direct ni en miroir.
+
+Ce que cette mesure ne dit PAS : elle juge le modèle de Thomas ET ce moteur de rendu ensemble
+(projection de points, carte d'ombre), pas le modèle seul. Ce qui rouvrirait la question : un
+moteur par lancer de rayons avec un décalage de position ajusté par vue, l'orientation que Thomas
+et al. ont utilisée (1999, non archivée au PDS), ou un modèle de forme plus récent de Mathilde.
+**Leçon** : la corrélation d'une silhouette éclairée récompense « une tache de la bonne taille »,
+et seul un témoin de forme ÉTRANGÈRE le montre ; sans lui, 0,83 se lisait comme un succès.
 
 Pour la couleur de Ryugu, aucun produit n'avait été trouvé sur DARTS ; PSI sert pourtant la
 collection `data_reflectance_coregistered` de l'ONC, multi-filtres et recalée, avec ses plans
