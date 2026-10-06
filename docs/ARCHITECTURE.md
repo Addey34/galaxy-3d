@@ -2129,7 +2129,7 @@ adresses exactes que le registre publie (`pdssbn.astro.umd.edu` et
 |---|---|---|---|---|
 | Ryugu | ONC : I/F étalonnés et réflectances multi-filtres recalées | PSI (`hyb2_onc`) | plans de latitude et longitude par pixel | **accessible**, carte livrée le 2026-10-05 (ci-dessus) |
 | Mathilde | NEAR MSI : images brutes et étalonnées en I/F | PSI (`NEAR_A_MSI_3_EDR_MATHILDE_V1_0`) | noyaux du survol à PSI (`NEAR_A_SPICE_6_MATHILDE_V1_0`) | accessible, mais **aucune pose établie sur le modèle** (2026-10-06, ci-dessous) : rien de livré |
-| Lutetia, Šteins | OSIRIS NAC et WAC, niveaux 2 et 3 | PSA de l'ESA | noyaux de Rosetta chez NAIF | accessible ; licence à trancher, comme 67P |
+| Lutetia, Šteins | OSIRIS NAC et WAC, niveaux 2 à 4 (réflectance) | PSA de l'ESA | noyaux de Rosetta chez NAIF | accessible ; licence CC BY-NC 3.0 IGO lue et acceptée le 2026-10-06 (ci-dessous) |
 | Didymos, Dimorphos | DRACO, dont des images étalonnées avec plans géométriques | UMD seulement | | bloqué (403) |
 | Arrokoth | LORRI, produits dérivés | UMD seulement | | bloqué (403) |
 | Donaldjohanson | aucune image L'LORRI au registre, seulement des spectres LEISA | UMD seulement | | bloqué |
@@ -2196,6 +2196,87 @@ Ce qui rouvrirait la question : un modèle de forme de Mathilde complet, ou une 
 depuis les images elles-mêmes (stéréophotoclinométrie), ce qui est un chantier en soi.
 **Leçon** : la corrélation d'une silhouette éclairée récompense « une tache de la bonne taille »,
 et seul un témoin de forme ÉTRANGÈRE le montre ; sans lui, 0,83 se lisait comme un succès.
+
+**L'outil de pose SPICE, versionné (2026-10-06).** La sonde qui a tranché Mathilde est devenue un
+script du dépôt : `pnpm pose:spice` (`scripts/spice-pose.mjs`, `scripts/spice-pose/posekit.py`,
+`pose.py`), sa recette est une donnée (`scripts/spice-pose-targets.json`). Il retrouve
+l'orientation d'un petit corps dans les images d'une mission : SPICE place la sonde, le corps et
+la caméra, l'orientation s'AJUSTE (une rotation J2000 vers le repère du modèle, propagée par la
+période de rotation LUE dans la fiche), sur la ressemblance des contours (laplacien de gaussienne)
+entre l'image et le rendu du modèle avec ombres portées, du grossier (400 pôles × 36 méridiens,
+luminosité) au fin (Nelder-Mead sur les contours depuis huit départs distants d'au moins 20°,
+choisis avant tout affinement, donc indépendants du parallélisme).
+
+- **Python et spiceypy, pas un lecteur SPK/CK en Node.** La géométrie est ce que la garde juge ;
+  un lecteur maison (SPK de types 1, 2 et 13, CK, PCK binaire, chaînes de repères, horloges, temps
+  de lumière) serait une seconde source d'erreur, à valider contre la boîte à outils de NAIF, que
+  spiceypy est. L'outil tourne hors ligne comme les mosaïques : ni bundle, ni CI. Le lanceur crée
+  un environnement aux versions exactes de `requirements.txt` et appelle `python -I`, qui
+  n'importe rien du dossier courant (les images téléchargées sont des données).
+- **Le modèle est celui qui est LIVRÉ** (le niveau le plus fin de `public/assets/models/{corps}/`,
+  ramené pôle sur Z), donc une pose trouvée est celle du maillage sur lequel une carte serait
+  drapée. Le pas des points et les tolérances du rendu dérivent du pixel au sol ; l'échelle de la
+  caméra vient du champ de vue du noyau d'instrument (`getfov`).
+- **La garde, rejouable** : `pnpm pose:spice fetch eros-approach` puis `guard eros-approach`
+  (environ 7 min sur 14 processus). Six images de l'approche d'Éros (2000-02-11), orientation
+  vraie (`erosatt_1999304_2001151.bpc`) jamais utilisée pour ajuster. Mesuré deux fois : Éros
+  retrouvé à **1,28° puis 1,48°** (borne 2°) ; contours 0,77 contre 0,37 pour Gaspra et 0,26 à
+  0,28 pour Mathilde, mis au même volume (0,48 et 0,34 à 0,36 du bon modèle, borne 0,8). Les
+  départs qui convergent s'accordent à environ 1°, ce qui est la précision de la méthode.
+  **Falsifiée** : la même garde avec une caméra en miroir rompt (meilleur Éros à 152°, contours
+  0,23, code 1). Sans réseau, `src/config/spicePose.test.ts` confronte la recette à ce qui est
+  livré (fiche, période, modèle du corps et des témoins, niveaux lisibles), falsifié par un témoin
+  sans modèle.
+- **Piège payé** : les processus de travail sous Windows RELISENT le module au démarrage de chaque
+  pool ; modifier `posekit.py` pendant une recherche a fait planter une falsification en
+  `KeyError`, un code 1 qui ne prouvait rien. On ne touche pas au code pendant qu'il tourne.
+
+**Le contrôle de la sphère de remplissage se fait sur la SOURCE, jamais sur le maillage livré.**
+Sur les maillages livrés, Mathilde ne montre que 0,6 % d'aire au rayon dominant : `--principal`
+recentre le maillage, et la sphère de 26,5 km n'est plus centrée sur l'origine. Sur les sources
+(Mathilde témoin à 49,5 %), tous les corps gris sont sous 1 % : Lutetia 0,9 % (512 triangles, la
+résolution seule), Šteins 0,1 %, Tempel 1 0,1 %, Didymos 0,1 %, Dimorphos 0,1 %, Donaldjohanson
+0,0 %, Arrokoth 0,0 %, Apophis 0,3 %.
+
+**Le recensement, refait le 2026-10-06.** Les deux hôtes de l'UMD répondent toujours 403 sur
+`holdings/` (la racine 200, témoin) : DART, New Horizons, Lucy et Deep Impact restent bloqués, et
+le registre (3 863 collections relues) n'a toujours aucune image L'LORRI de Donaldjohanson. Seuls
+**Lutetia et Šteins** ont images et noyaux accessibles : OSIRIS à la PSA (niveaux 2 à 4, dont la
+réflectance), noyaux de Rosetta chez NAIF (`ro_rl-e_m_a_c-spice-6-v1.0`), avec deux trouvailles :
+
+- **La licence est DÉCLARÉE à la source.** Les conditions des archives scientifiques de l'ESA
+  (`cosmos.esa.int/web/esdc/terms-and-conditions`, lues le 2026-10-06) placent leurs données sous
+  **CC BY-NC 3.0 IGO**, crédit OSIRIS « ESA, H. Sierks », usage commercial soumis à autorisation
+  (`data.licences@esa.int`). L'utilisateur a décidé le même jour de livrer sous cette licence,
+  malgré le lien Ko-fi du site. Cela rouvre 67P.
+- **L'archive Rosetta porte des DSK OSIRIS de Lutetia** (`ROS_LU_K003` à `K780`, `M002`, `M003` ;
+  `K098` pèse 8 Mo) et son PCK (`ROS_LUTETIA_RSOC_V03`) : le modèle livré de Lutetia (DAMIT 282,
+  512 triangles) peut être remplacé par celui de la mission, comme Šteins l'a été.
+
+**Šteins : les noyaux sont ceux que nomment les étiquettes.** L'éphéméride « prédite »
+(`2867_STEINS_2004_2016.BSP`) place l'astéroïde à 983 km de Rosetta à 18:38:18 UTC, quand
+l'étiquette de l'image dit 802,7 km, et hors du champ. Chaque étiquette OSIRIS liste les noyaux du
+pipeline (`SPICE_FILE_NAME`) : avec `ORHO_…_00077`, `ORHR_…T19_00122` et
+`ATNR_…_T6_00127`, la distance est 802,7 km. Les produits `EF` et `ID` sont deux fenêtres de la
+même pose (512 et 256 px) ; la recette prend `EF`.
+
+**Šteins : aucune pose établie, et ce n'est pas l'orientation du PCK (mesuré).** À
+l'orientation de `ROS_STEINS_V05` (repère `STEINS_FIXED`, celui du DSK livré, vérifié dans le
+fichier), aucun des huit arrangements d'axes de la caméra WAC ne reproduit la silhouette : 0,22 au
+mieux (lignes −Y, échantillons −X), contre 0,75 pour Éros à sa pose vraie. Pôle gardé et méridien
+balayé, le maximum reste 0,27 : ce n'est donc pas le méridien seul, bien que la vitesse du PCK
+(1 428,099 °/j, soit 6,0500 h) diffère de la période publiée par Jorda et al. 2012 (6,04681 h).
+Le modèle est hors de cause (6,81 × 5,62 × 4,20 km).
+
+**La recherche à l'aveugle tranche dans l'autre sens : AUCUNE orientation ne reproduit ces images.**
+Sept images, 400 pôles × 36 méridiens puis huit affinements (17 min) : contours 0,215 à 0,275, et
+les huit solutions ne convergent pas (jusqu'à 179° l'une de l'autre), là où Éros en fait converger
+cinq à 1° près à 0,77. Le défaut n'est donc PAS l'orientation du PCK, mais la mise en image de la
+WAC dans l'outil (échelle des images corrigées de leur distorsion contre le champ de vue de l'IK,
+interprétation des fenêtres `FIRST_LINE`/`FIRST_LINE_SAMPLE`, ou un corps de 40 à 80 px trop
+petit pour le critère des contours). **Rien n'est drapé.** Ce qui rouvrirait la question : une
+caméra validée d'abord sur un corps à orientation SÛRE vu par OSIRIS (la garde Éros ne valide que
+la MSI de NEAR), puis Lutetia, vue en NAC sur environ 2 000 px.
 
 Pour la couleur de Ryugu, aucun produit n'avait été trouvé sur DARTS ; PSI sert pourtant la
 collection `data_reflectance_coregistered` de l'ONC, multi-filtres et recalée, avec ses plans
@@ -4303,7 +4384,9 @@ tournés dans leurs axes principaux (`--principal`) [SUPERSEDED le 2026-10-05 po
 - 67P : servi par la PSA, mais le jeu ne déclare aucune licence (lisez-moi, catalogue, guide), la
   PSA ne demande qu'un remerciement pour une publication, et l'avis général du site de l'ESA
   exclut les usages autres qu'éducatifs ou éditoriaux sans licence particulière. Rien n'est
-  importé sur une licence supposée.
+  importé sur une licence supposée. [SUPERSEDED le 2026-10-06 : les conditions des archives
+  scientifiques de l'ESA déclarent CC BY-NC 3.0 IGO, et l'utilisateur a accepté de livrer sous
+  cette licence ; cf. § « L'outil de pose SPICE, versionné ». 67P est donc rouvert.]
 - Leucus : DAMIT publie deux solutions convexes de qualité 1, aux pôles différents, sans taille
   étalonnée. En importer une serait présenter un choix comme une mesure, et son échelle viendrait
   du catalogue, ce qui rendrait la garde du volume tautologique.

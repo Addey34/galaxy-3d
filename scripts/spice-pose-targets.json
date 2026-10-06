@@ -1,0 +1,103 @@
+{
+  "$comment": "Recette de scripts/spice-pose : pour chaque jeu d'images, d'où viennent les noyaux et les images, quelle caméra, et (pour une garde) le repère de VÉRITÉ qui ne sert qu'à juger. La période de rotation se LIT dans la fiche du corps (src/registry/entities/{body}.json), elle n'est pas recopiée ici. Les axes de la caméra (vers quoi croissent lignes et échantillons) sont ceux que la garde d'Éros a validés le 2026-10-06 ; une caméra nouvelle se valide de même avant toute carte.",
+  "targets": {
+    "eros-approach": {
+      "$comment": "LA GARDE de l'outil. Approche d'Éros par NEAR, 2000-02-11 (Éros à 2 700 km) : trois rafales à 80 min d'écart, six images. L'orientation vraie (`erosatt_1999304_2001151.bpc`, repère EROS_FIXED) n'entre jamais dans l'ajustement. Les témoins sont les modèles livrés de Gaspra et de Mathilde, mis au même volume.",
+      "body": "eros",
+      "naifBody": "2000433",
+      "spacecraft": "-93",
+      "camera": {
+        "instrument": "-93001",
+        "lines": 244,
+        "samples": 537,
+        "lineAxis": "-Y",
+        "sampleAxis": "+Z"
+      },
+      "kernelBase": "https://sbnarchive.psi.edu/pds3/near/NEAR_A_SPICE_6_EROS_ORBIT_V1_0/data/",
+      "kernels": [
+        "lsk/naif0007.tls",
+        "sclk/near_171.tsc",
+        "ik/msi15.ti",
+        "pck/pck00007.tpc",
+        "fk/eros_fixed.tf",
+        "spk/de403s.bsp",
+        "spk/erosephem_1999004_2002181.bsp",
+        "spk/near_erosorbit_nav_v1.bsp",
+        "ck/near_2000042_v01.bc",
+        "pck/erosatt_1999304_2001151.bpc"
+      ],
+      "imageBase": "https://sbnarchive.psi.edu/pds3/near/NEAR_A_MSI_3_EDR_EROS_ORBIT_V1_0/data/2000/042/iof/",
+      "images": [
+        "m0125648249f4_2p_iof",
+        "m0125648301f4_2p_iof",
+        "m0125653033f4_2p_iof",
+        "m0125653111f4_2p_iof",
+        "m0125657843f4_2p_iof",
+        "m0125657921f4_2p_iof"
+      ],
+      "imageSuffix": ".fit",
+      "labelSuffix": ".lbl",
+      "imageFormat": "fits",
+      "truthFrame": "EROS_FIXED",
+      "search": {
+        "coarseBin": [2, 4],
+        "fineBin": [1, 2],
+        "coarseSigma": 1.0,
+        "fineSigma": 1.0,
+        "maxShiftPx": [80, 160]
+      },
+      "guard": {
+        "witnesses": ["gaspra", "mathilde"],
+        "maxErrorDeg": 2,
+        "maxWitnessRatio": 0.8
+      }
+    },
+    "steins-flyby": {
+      "$comment": "Survol de Šteins par Rosetta, 2008-09-05 (approche rapprochée 18:38 UTC, 803 km). Caméra grand angle d'OSIRIS (WAC), réflectance (niveau 4, I/F) de la PSA, sous CC BY-NC 3.0 IGO (« ESA, H. Sierks »). Sept images du filtre le plus fourni (Empty_OI, 631 nm), de la phase 4° à l'approche à 109° au départ. Le modèle livré vient du DSK OSIRIS ROS_ST_K020, dans le repère STEINS_FIXED que définit ROS_STEINS_V05 : l'orientation VRAIE est donc publiée. MESURÉ le 2026-10-06 : ni elle ni aucune autre ne reproduit ces images (contours 0,28 au mieux, solutions dispersées), donc la mise en image de la WAC n'est PAS validée, et les axes ci-dessous (les moins mauvais à la pose du PCK) non plus. Aucune carte ne se fabrique sur cette cible ; cf. docs/ARCHITECTURE.md. Les noyaux sont ceux que nomment les étiquettes (SPICE_FILE_NAME) du pipeline OSIRIS, à deux versions près absentes de l'archive (ROS_V36 -> ROS_V38, ROS_OSIRIS_V1 -> V2) : l'éphéméride « prédite » de Šteins (2867_STEINS_2004_2016) place l'astéroïde à 983 km au lieu de 803 à l'approche rapprochée, hors du champ.",
+      "body": "steins",
+      "naifBody": "2002867",
+      "spacecraft": "-226",
+      "camera": {
+        "instrument": "-226112",
+        "lines": 2048,
+        "samples": 2048,
+        "lineAxis": "-Y",
+        "sampleAxis": "-X"
+      },
+      "kernelBase": "https://naif.jpl.nasa.gov/pub/naif/pds/data/ro_rl-e_m_a_c-spice-6-v1.0/rossp_1000/DATA/",
+      "kernels": [
+        "LSK/NAIF0011.TLS",
+        "SCLK/ROS_160929_STEP.TSC",
+        "FK/ROS_V38.TF",
+        "IK/ROS_OSIRIS_V17.TI",
+        "PCK/PCK00010.TPC",
+        "PCK/ROS_STEINS_V05.TPC",
+        "SPK/DE405.BSP",
+        "SPK/ORHO_______________00077.BSP",
+        "SPK/ORHR___________T19_00122.BSP",
+        "CK/ATNR_P040302093352_T6_00127.BC",
+        "CK/ROS_OSIRIS_V2.BC"
+      ],
+      "imageBase": "https://archives.esac.esa.int/psa/ftp/INTERNATIONAL-ROSETTA-MISSION/OSIWAC/RO-A-OSIWAC-4-AST1-STEINS-REFLECT-V2.0/DATA/IMG/",
+      "images": [
+        "W20080905T183546391EF4BF17",
+        "W20080905T183657558EF4BF17",
+        "W20080905T183740797EF4BF17",
+        "W20080905T183802520EF4BF17",
+        "W20080905T183855313EF4BF17",
+        "W20080905T183933797EF4BF17",
+        "W20080905T184024988EF4BF17"
+      ],
+      "imageSuffix": ".IMG",
+      "imageFormat": "pds3",
+      "truthFrame": "STEINS_FIXED",
+      "search": {
+        "coarseBin": [2, 2],
+        "fineBin": [1, 1],
+        "coarseSigma": 1.0,
+        "fineSigma": 1.0,
+        "maxShiftPx": [100, 100]
+      }
+    }
+  }
+}
