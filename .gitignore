@@ -69,3 +69,6 @@ temp/
 
 # SAT441 is a deployment-only large binary; verify and publish it outside Git.
 public/assets/kernels/*.bsp
+
+# Cache Python de scripts/spice-pose (outil de pose SPICE)
+__pycache__/
