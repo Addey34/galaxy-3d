@@ -578,7 +578,7 @@ def reflectance_samples(P, N, cam, B, g, image, shift, max_angle=70.0, spacing=0
     r = np.linalg.norm(p, axis=1)
     lat = np.degrees(np.arcsin(p[:, 2] / r))
     lon = np.degrees(np.arctan2(p[:, 1], p[:, 0]))
-    return lat, lon, refl, m0 * mu
+    return lat, lon, refl, m0 * mu, iof
 
 
 class MapGrid:
@@ -672,3 +672,22 @@ def texture_fill(m, feather_cells):
     _, (iy, ix) = distance_transform_edt(~measured, return_indices=True)
     edge = m[iy, ix]
     return np.where(measured, m, w * edge + (1 - w) * mean)
+
+
+def detail_texture(albedo, mosaic, step, sigma_deg=1.5, feather_deg=2.0, clip=(0.6, 1.4)):
+    """Texture par TRANSFERT DE DÉTAIL (2026-10-06) : la carte d'albédo à faible phase (plate)
+    multipliée par le relief FIN de la photomosaïque, c'est-à-dire la mosaïque divisée par sa
+    version floutée sur `sigma_deg`. L'ombrage à grande échelle, celui de l'éclairage du survol,
+    part (l'application ombre déjà le modèle) ; les cratères et leurs bords restent. Hors de la
+    mosaïque, le détail vaut 1."""
+    from scipy.ndimage import gaussian_filter
+
+    m = fill_small_gaps(mosaic)
+    valid = m > 0
+    sig = sigma_deg / step
+    num = gaussian_filter(np.where(valid, m, 0), sig)
+    den = gaussian_filter(valid.astype(float), sig)
+    large = np.where(den > 0.3, num / np.maximum(den, 1e-9), 0)
+    detail = np.where(valid & (large > 0), m / np.maximum(large, 1e-9), 1.0)
+    base = texture_fill(albedo, round(feather_deg / step))
+    return base * np.clip(detail, *clip)

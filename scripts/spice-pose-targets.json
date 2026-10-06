@@ -171,7 +171,9 @@
           "N20100710T154820771EF4BF22"
         ],
         "splitPhase": 22,
-        "limbPx": 6
+        "limbPx": 6,
+        "mosaicPhase": [24, 60],
+        "texture": "detail"
       }
     }
   }

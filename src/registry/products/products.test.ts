@@ -25,7 +25,7 @@ const ROOT = resolve(import.meta.dirname, '..', '..', '..');
 describe('fiches de textures', () => {
   it('une fiche par couche, identifiants uniques', () => {
     const ids = TEXTURE_PRODUCTS.map((p) => p.id);
-    expect(ids.length).toBe(69);
+    expect(ids.length).toBe(70);
     expect(new Set(ids).size).toBe(ids.length);
     const keys = TEXTURE_PRODUCTS.map((p) => `${p.body}/${p.layer}`);
     expect(new Set(keys).size).toBe(keys.length);
@@ -49,12 +49,14 @@ describe('fiches de textures', () => {
       expect(bodies.has(p.body), p.id).toBe(true);
   });
 
-  it('ne publie que les trois libellés que /sources sait afficher', () => {
-    // `seo/sourcesPage.ts` traduit « public-domain » et « generated », et affiche tel quel
-    // « CC BY 4.0 ». Un nouveau libellé passerait sur la page sans traduction.
+  it('ne publie que les libellés que /sources sait afficher', () => {
+    // `seo/sourcesPage.ts` traduit « public-domain » et « generated », et affiche tels quels
+    // « CC BY 4.0 » et « CC BY-NC 3.0 IGO » (Lutetia, 2026-10-06 : les archives de l'ESA). Un
+    // nouveau libellé passerait sur la page sans traduction.
     const labels = new Set(shippedTextures().map((t) => t.license));
     expect([...labels].sort()).toEqual([
       'CC BY 4.0',
+      'CC BY-NC 3.0 IGO',
       'generated',
       'public-domain',
     ]);

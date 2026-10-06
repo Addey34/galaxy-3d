@@ -198,7 +198,7 @@ def cmd_map(t, a):
     cam, geo, imgs = pk.geometry(sp, sub)
     mesh = pk.load_model(t["body"])
     radius, _ = mesh.volume_radius()
-    grids = {"all": pk.MapGrid(a.step), "A": pk.MapGrid(a.step), "B": pk.MapGrid(a.step)}
+    grids = {k: pk.MapGrid(a.step) for k in ("all", "A", "B", "mosaic")}
     spacing = math.radians(a.step) * radius / 2
     P, N = mesh.sample(spacing)
     print(f"{len(P)} points au pas de {spacing:.3f} km, carte de {grids['all'].nx} x {grids['all'].ny}", flush=True)
@@ -214,7 +214,7 @@ def cmd_map(t, a):
     for g, image in zip(geo, imgs):
         B = pose_at(g)
         shift = pk.pointing_shift(scene, cam, B, g, image, (4, 4), tuple(t["search"]["maxShiftPx"]))
-        lat, lon, refl, w = pk.reflectance_samples(
+        lat, lon, refl, w, iof = pk.reflectance_samples(
             P, N, cam, B, g, image, shift, max_angle=m.get("maxAngle", 70.0), spacing=spacing,
             limb_px=m.get("limbPx", 0),
         )
@@ -225,11 +225,17 @@ def cmd_map(t, a):
         # Une ombre ou un bord rasant que le modèle ne résout pas sort à presque zéro, et la
         # division par Lommel-Seeliger le gonfle : franges noires vues sur Lutetia (2026-10-06).
         keep = (refl > 0.5) & (refl < 2.0)
-        lat, lon, refl, w = lat[keep], lon[keep], refl[keep], w[keep]
+        lat, lon, refl, w, iof = lat[keep], lon[keep], refl[keep], w[keep], iof[keep]
         phase = math.degrees(math.acos(np.clip((-g["p"] / g["d"]) @ (g["sun"] / np.linalg.norm(g["sun"])), -1, 1)))
         group = "A" if phase < m["splitPhase"] else "B"
         grids["all"].add(lat, lon, refl, w)
         grids[group].add(lat, lon, refl, w)
+        # PHOTOMOSAÏQUE : l'I/F brut, ombrage du relief compris, des images de phase intermédiaire
+        # (`mosaicPhase`). Pendant un survol le Soleil éclaire la surface sous presque le même angle
+        # (Lutetia tourne de 22° en 30 min) : l'ombrage reste cohérent d'une image à l'autre.
+        lo, hi = m.get("mosaicPhase", [None, None])
+        if lo is not None and lo <= phase <= hi:
+            grids["mosaic"].add(lat, lon, iof / np.median(iof), w)
         print(f"{g['name']} : phase {phase:5.1f}°, groupe {group}, {len(refl)} points, décalage {shift}", flush=True)
     out = os.path.join(pk.ROOT, ".cache", "spice-pose", t["id"])
     maps = {k: v.mean() for k, v in grids.items()}
@@ -247,15 +253,39 @@ def cmd_map(t, a):
         # Mesuré le 2026-10-06 : au pas de 1°, un décalage de 1° ne vaut qu'une case, sous la largeur
         # du filtre, et le témoin rendait 0,83 au décalage nul contre 0,81 décalé.
         print("  témoin de recalage NON SIGNIFICATIF à ce pas : le relancer à 0,25° ou moins")
-    tex = pk.texture_fill(maps[m.get("textureGroup", "A")], round(2.0 / a.step))
-    Image.fromarray(tex.astype(np.float32), mode="F").save(os.path.join(out, "map_texture.tif"))
+    if (maps["mosaic"] > 0).any():
+        mreg = pk.shape_registration(maps["mosaic"], maps["A"], a.step)
+        print(f"photomosaïque : couverture {cov(maps['mosaic']):.1%}, recalage des formes contre A r {mreg['at_zero']:.3f} au décalage nul, {mreg['max_shifted']:.3f} au mieux décalée")
+    write_texture(t, out, a.step)
     json.dump(dict(coverage={k: cov(v) for k, v in maps.items()}, agreement=agree, registration=reg, step=a.step, pose=a.pose),
               open(os.path.join(out, "map_report.json"), "w"), indent=1)
 
 
+def write_texture(t, out, step):
+    """`map_texture.tif` depuis les cartes sauvées : `texture: "detail"` transfère le relief fin de
+    la photomosaïque sur la carte d'albédo A ; sinon la carte du groupe `textureGroup`, comblée."""
+    from PIL import Image
+
+    m = t["map"]
+    load = lambda k: np.array(Image.open(os.path.join(out, f"map_{k}.tif"))).astype(float)
+    if m.get("texture") == "detail":
+        tex = pk.detail_texture(load("A"), load("mosaic"), step)
+    else:
+        tex = pk.texture_fill(load(m.get("textureGroup", "A")), round(2.0 / step))
+    Image.fromarray(tex.astype(np.float32), mode="F").save(os.path.join(out, "map_texture.tif"))
+    print(f"texture écrite : {os.path.join(out, 'map_texture.tif')} ({tex.shape[1]} x {tex.shape[0]})")
+
+
+def cmd_texture(t, a):
+    """Reconstruit la texture depuis les cartes d'une précédente commande `map`, sans reprojeter."""
+    out = os.path.join(pk.ROOT, ".cache", "spice-pose", t["id"])
+    step = json.load(open(os.path.join(out, "map_report.json")))["step"]
+    write_texture(t, out, step)
+
+
 def main():
     p = argparse.ArgumentParser()
-    p.add_argument("command", choices=["fetch", "search", "guard", "truth", "witness", "map"])
+    p.add_argument("command", choices=["fetch", "search", "guard", "truth", "witness", "map", "texture"])
     p.add_argument("target")
     p.add_argument("--model")
     p.add_argument("--poles", type=int, default=400)
@@ -265,7 +295,7 @@ def main():
     p.add_argument("--jobs", type=int, default=max(1, (os.cpu_count() or 2) - 2))
     a = p.parse_args()
     t = target(a.target, a.recipe)
-    {"fetch": cmd_fetch, "search": cmd_search, "guard": cmd_guard, "truth": cmd_truth, "witness": cmd_witness, "map": cmd_map}[a.command](t, a)
+    {"fetch": cmd_fetch, "search": cmd_search, "guard": cmd_guard, "truth": cmd_truth, "witness": cmd_witness, "map": cmd_map, "texture": cmd_texture}[a.command](t, a)
 
 
 if __name__ == "__main__":

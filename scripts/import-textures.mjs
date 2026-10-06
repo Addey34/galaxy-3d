@@ -506,6 +506,26 @@ const IMPORTS = [
     tier: 'free',
   },
   {
+    // Carte FABRIQUÉE le 2026-10-06 : aucune n'est publiée comme donnée. Vingt images NAC
+    // d'OSIRIS (RO-A-OSINAC-4-AST2-LUTETIA-REFLECT-V2.0, PSA) reportées sur le modèle livré à la pose
+    // du PCK que l'outil a confirmée à l'aveugle à 1,68° : `pnpm pose:spice map lutetia-flyby
+    // --step 0.15`, puis `texture` (transfert de détail : l'albédo des treize images d'approche,
+    // phase 0,3 à 18°, multiplié par le relief fin d'une photomosaïque des images de phase 26 à
+    // 60°), puis `scripts/compose-albedo-texture.mjs` avec le même fichier en trois bandes,
+    // `--albedo 0.19` (Sierks et al. 2011) et `--width 2400`. Grille centrée sur 0, Est vers la
+    // droite : aucun recentrage. Surface non vue (65 %) : gris moyen mesuré, déjà comblé.
+    body: 'lutetia',
+    layer: 'surface',
+    src: `${V1}/lutetia/lutetia_osiris_mosaic.png`,
+    resolutions: ['1k', '2k'],
+    fillHoles: false,
+    source:
+      'https://archives.esac.esa.int/psa/ftp/INTERNATIONAL-ROSETTA-MISSION/OSINAC/RO-A-OSINAC-4-AST2-LUTETIA-REFLECT-V2.0/',
+    license: 'CC BY-NC 3.0 IGO',
+    credit: 'ESA/Rosetta OSIRIS (ESA, H. Sierks), données modifiées',
+    tier: 'free',
+  },
+  {
     // Photomosaïque de Stooke (2012) : images AMICA reprojetées sur le modèle de Gaskell
     // (Stooke Small Bodies Maps V2.0, MULTI-SA-MULTI-6-STOOKEMAPS-V2.0, document/25143itokawa/
     // new-itokawa-mosaic.jpg). Domaine public, crédit requis. Grille : 0 aux bords, 180 au centre,
