@@ -65,7 +65,10 @@ function positionCell(row: InventoryRow): string {
     binary?.samplesPerRevolution != null
       ? ` ${binary.samplesPerRevolution.toFixed(2)} ech/rev`
       : '';
-  return `${step}${perRev}, ${km(medianKm)}`;
+  const segments = (binary?.segments ?? [])
+    .map((segment) => ` + segment ${segment.center} ${segment.stepDays} j`)
+    .join('');
+  return `${step}${perRev}${segments}, ${km(medianKm)}`;
 }
 
 function textureCell(row: InventoryRow): string {

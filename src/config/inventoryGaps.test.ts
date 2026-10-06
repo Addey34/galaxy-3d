@@ -154,10 +154,25 @@ describe('inventaire dérivé du dépôt', () => {
 
   it('rend le pas de chaque binaire tel que le manifeste le déclare', () => {
     const manifest = readJson('public/assets/ephemerides/manifest.json') as {
-      bodies: Record<string, { file: string; stepDays: number }>;
+      bodies: Record<
+        string,
+        { file: string; stepDays: number; segmentOf?: string }
+      >;
     };
     const byId = new Map(inventory.rows.map((row) => [row.id, row]));
     for (const [id, entry] of Object.entries(manifest.bodies)) {
+      // Un segment n'est pas un corps : il se lit sur la ligne du corps qu'il prolonge.
+      if (entry.segmentOf !== undefined) {
+        const owner = byId.get(entry.segmentOf);
+        expect(owner, `${id} : segment d'un corps absent`).toBeDefined();
+        const segment = owner!.position.binary?.segments.find(
+          (candidate) => candidate.id === id
+        );
+        expect(segment?.file, id).toBe(entry.file);
+        expect(segment?.stepDays, id).toBe(entry.stepDays);
+        expect(segment?.bytes, `${id} : binaire absent`).toBeTypeOf('number');
+        continue;
+      }
       const row = byId.get(id);
       expect(row, `${id} est au manifeste mais absent du relevé`).toBeDefined();
       expect(row!.position.binary?.file).toBe(entry.file);

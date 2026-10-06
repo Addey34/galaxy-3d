@@ -1,5 +1,5 @@
 {
- "generatedAt": "2026-10-06T15:45:58.937Z",
+ "generatedAt": "2026-10-06T16:07:03.522Z",
  "samplesPerCase": 48,
  "spk": {
   "kernel": true,
@@ -17654,10 +17654,10 @@
    "rejected": 0,
    "sources": {},
    "km": {
-    "mean": 690.4,
+    "mean": 2.036,
     "median": 0.4095,
-    "p95": 21.4,
-    "max": 30640
+    "p95": 9.443,
+    "max": 21
    },
    "radii": null
   },

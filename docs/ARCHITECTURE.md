@@ -730,6 +730,14 @@ Dimorphos composé tienne sous son diamètre (même §). **1 074 octets par jour
 vaut **62,6 %** du maximum, à 120 ko/s **29,5 %**. Les éphémérides livrées passent de
 51 853 824 à 54 904 128 octets (Didymos 880 992 → 3 523 920, Dimorphos 135 840 → 543 216).
 
+**Mis à jour le 2026-10-06** : le segment de BepiColombo autour de Mercure (§ « BepiColombo autour
+de Mercure : un segment ») ajoute un fichier au pas de 12 h. **1 170 octets par jour simulé,
+3,42 Mbit/s** à la vitesse maximale, seuil sans plafond **3,45 Mbit/s** ; à 2 Mbit/s le plafond
+vaut **57,5 %** du maximum, à 120 ko/s **27,1 %**. Ces chiffres comptent le segment comme s'il
+couvrait toute date ; le plafond réel est calculé sur les corps que la DATE fait demander
+(`budgetGrids`), donc il ne bouge que du 2026-10-13 au 2027-04-09. Les éphémérides livrées
+passent de 54 904 128 à 54 921 264 octets.
+
 **Le débit se mesure sur le TEMPS OCCUPÉ, pas par requête.** Six requêtes simultanées se partagent
 la bande passante : `octets / durée` d'UNE requête sous-estime le lien d'un facteur proche du
 nombre de requêtes en vol, et c'est la mesure qui a trompé le lot 15 (64 requêtes de 77 s chacune
@@ -1568,12 +1576,35 @@ au catalogue). [SUPERSEDED : 67P est au catalogue depuis le 2026-10-04, sans pha
 de l'ESA « ajustée jusqu'au 2026-09-28, prédite ensuite », jusqu'au 2027-04-11. Régénéré, le
 fichier diffère de l'ancien de 11 701 km au plus (le 2026-12-12) et de 7 722 km mi-décembre, une
 fois la sonde autour de Mercure ; la phase dérivée ne bouge pas (2026-10-13 au 2027-04-08). Une
-trajectoire PRÉDITE se révise à chaque manœuvre : régénérer près des échéances. **Défaut mesuré,
-non encore corrigé** : après l'arrivée la sonde tourne autour de Mercure (2 900 à 3 900 km du
-centre le 2027-03-15, quelques heures par tour), et un fichier au pas d'UN jour ne peut pas
-décrire une telle orbite. L'application la place alors jusqu'à 27 000 km de Mercure, heure par
-heure contre Horizons. Le remède est un segment relatif à Mercure au pas fin sur la phase,
-comme les lunes ont leur fichier relatif à leur parent.
+trajectoire PRÉDITE se révise à chaque manœuvre : régénérer près des échéances (le segment
+ci-dessous ET sa référence, `node scripts/capture-segment-reference.mjs`).
+
+**BepiColombo autour de Mercure : un segment (2026-10-06).** Après l'arrivée la sonde tourne
+autour de Mercure (2 900 à 3 900 km du centre le 2027-03-15, quelques heures par tour), ce qu'un
+fichier au pas d'UN jour ne décrit pas : l'application la plaçait jusqu'à 27 000 km de Mercure
+quand Horizons la dit à 3 000, heure par heure. Le manifeste porte donc un SEGMENT,
+`bepicolombo-mercury` (`segmentOf: "bepicolombo"`, `center: "mercury"`) : sur sa couverture,
+`getHeliocentricAU("bepicolombo")` rend Mercure plus ce fichier, et le fichier grossier n'y sert
+PAS de repli (sans les octets du segment, la position est absente, comme hors fenêtre).
+
+- **Ancres de 12 h, propagées à deux corps autour de Mercure** (`attractorMu`, la masse de la
+  fiche de Mercure), toujours, sans critère de période : un segment existe justement parce que
+  son pas ne résout pas l'orbite. Le pas a été MESURÉ en décimant un tirage au pas de 10 min de
+  toute la phase : sans rien d'autre, 12 h laissaient 3 118 km au pire.
+- **Les manœuvres sont LUES dans ce tirage, pas écrites** (`core/impulseDetection.ts`) : sur
+  10 min, un état propagé à deux corps rejoint le suivant à 14 m en médiane et 104 m au plus ;
+  à travers une poussée, de 6,6 à 10,5 km. Seize épisodes de 20 à 40 min, de la capture
+  (2026-11-21) aux descentes de mars 2027. Chaque épisode, élargi d'un intervalle de chaque côté
+  (une poussée qui remplit une partie d'un intervalle laisse jusqu'à 940 m à ses bords), devient
+  un instant publié en `impulses`, où le service propage d'un seul côté, comme à l'impact de
+  DART. Le générateur imprime le fond et refuse un fond à moins d'un tiers du seuil (1 km).
+- **Mesuré contre Horizons par le service réel** (`segmentReference.test.ts`, vecteurs capturés
+  autour de chaque manœuvre et tous les deux jours) : 56 km au pire autour des manœuvres (1,83 %
+  de la distance à Mercure, pendant la capture), 10 km ailleurs (0,34 %). Falsifié : sans les
+  manœuvres 2 528 km, sans le segment 49 634 km.
+- **Le prix** : 357 ancres, 17 136 octets, 96 octets par jour simulé pendant la phase (le pas de
+  2 h ne faisait pas mieux au pire, 103 km, pour six fois les octets ; le pas de 10 min, 1,23 Mo,
+  aurait multiplié par sept le débit de la lecture accélérée).
 
 **Pourquoi un survol reste héliocentrique.** La règle des lunes étire √d : à la frontière de la
 sphère de Hill de Jupiter elle poserait l'objet à 35 × 3,43 × √0,355 ≈ 49 unités de la planète,

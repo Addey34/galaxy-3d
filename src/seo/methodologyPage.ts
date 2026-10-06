@@ -122,6 +122,10 @@ export interface EphemerisManifestEntry {
   sampleCount: number;
   /** Intervalle où le fichier porte une AUTRE solution (`overlayPrimary` du générateur). */
   primary?: { target: string; fromJdTdb: number; toJdTdb: number };
+  /** Instants des sauts de vitesse (JD TDB), lus ou détectés par le générateur. */
+  impulses?: readonly number[];
+  /** La sonde que ce fichier prolonge sur sa couverture (segment relatif à `center`). */
+  segmentOf?: string;
 }
 
 export interface EphemerisManifest {
@@ -360,7 +364,20 @@ function methodologyPage(input: MethodologyInput, locale: DocLocale): DocPage {
   const lastLeapDate = new Date(lastLeapMs).toISOString().slice(0, 10);
 
   // ── Manifest des éphémérides ──
-  const binaries = Object.entries(manifest.bodies);
+  // Un SEGMENT (2026-10-06) prolonge le fichier d'une sonde ; il n'est pas un corps de plus.
+  const allBinaries = Object.entries(manifest.bodies);
+  const binaries = allBinaries.filter(([, e]) => e.segmentOf === undefined);
+  const segments = allBinaries.filter(([, e]) => e.segmentOf !== undefined);
+  const segmentText = segments
+    .map(([, e]) =>
+      L({
+        en: ` While ${escapeHtml(name(e.segmentOf!, locale))} orbits ${escapeHtml(name(e.center!, locale))}, a second file takes over: its position relative to ${escapeHtml(name(e.center!, locale))}, every ${exact(e.stepDays, locale)} day, propagated around ${escapeHtml(name(e.center!, locale))} between samples, with the ${e.impulses?.length ?? 0} manoeuvres of that period read in a finer sampling of the trajectory and propagated from one side only.`,
+        fr: ` Pendant que ${escapeHtml(name(e.segmentOf!, locale))} tourne autour de ${escapeHtml(name(e.center!, locale))}, un second fichier prend la main : sa position relative à ${escapeHtml(name(e.center!, locale))}, tous les ${exact(e.stepDays, locale)} jour, propagée autour de ${escapeHtml(name(e.center!, locale))} entre deux échantillons, avec les ${e.impulses?.length ?? 0} manœuvres de cette période, lues dans un échantillonnage plus fin de la trajectoire et propagées d’un seul côté.`,
+        es: ` Mientras ${escapeHtml(name(e.segmentOf!, locale))} orbita ${escapeHtml(name(e.center!, locale))}, toma el relevo un segundo archivo: su posición relativa a ${escapeHtml(name(e.center!, locale))}, cada ${exact(e.stepDays, locale)} día, propagada alrededor de ${escapeHtml(name(e.center!, locale))} entre dos muestras, con las ${e.impulses?.length ?? 0} maniobras de ese periodo, leídas en un muestreo más fino de la trayectoria y propagadas desde un solo lado.`,
+        'pt-BR': ` Enquanto ${escapeHtml(name(e.segmentOf!, locale))} orbita ${escapeHtml(name(e.center!, locale))}, um segundo arquivo assume: a sua posição relativa a ${escapeHtml(name(e.center!, locale))}, a cada ${exact(e.stepDays, locale)} dia, propagada ao redor de ${escapeHtml(name(e.center!, locale))} entre duas amostras, com as ${e.impulses?.length ?? 0} manobras desse período, lidas numa amostragem mais fina da trajetória e propagadas de um só lado.`,
+      })
+    )
+    .join('');
   const binarySpacecraft = binaries.filter(([n]) => spacecraftNames.has(n));
   const binaryNatural = binaries.filter(([n]) => !spacecraftNames.has(n));
   const stepsOf = (entries: typeof binaries): number[] =>
@@ -533,10 +550,10 @@ function methodologyPage(input: MethodologyInput, locale: DocLocale): DocPage {
           es: `<strong>Elementos orbitales keplerianos</strong>: ${SMALL_BODY_ELEMENTS.length} cuerpos menores, cuyos elementos osculadores vienen de Horizons en una época declarada y son verificados por una prueba contra una posición de Horizons en esa época (${barycentric} de ellos están referidos al baricentro del Sistema Solar: más allá de Neptuno, una órbita heliocéntrica arrastra el propio movimiento de retroceso del Sol); y un respaldo para ${moonFallbacks} lunas, derivado por script de sus archivos Horizons, usado solo cuando un archivo falta, está fuera de rango o es rechazado.`,
           'pt-BR': `<strong>Elementos orbitais keplerianos</strong>: ${SMALL_BODY_ELEMENTS.length} corpos menores, cujos elementos osculadores vêm da Horizons em uma época declarada e são verificados por um teste contra uma posição da Horizons nessa época (${barycentric} deles são referidos ao baricentro do Sistema Solar: além de Netuno, uma órbita heliocêntrica carrega o próprio movimento de recuo do Sol); e uma reserva para ${moonFallbacks} luas, derivada por script dos seus arquivos Horizons, usada somente quando um arquivo falta, está fora do intervalo ou é recusado.`,
         })}</li></ol><p>${L({
-          en: `The ${binarySpacecraft.length} spacecraft and the ${INTERSTELLAR_OBJECTS.length} interstellar objects follow their own rule. A spacecraft is positioned only by its Horizons file, sampled at a step of ${days(spacecraftSteps)} days (${exact(spacecraftSteps[0]!, locale)} for: ${listNames(finestSpacecraft)}), and is not drawn outside the file’s coverage. An interstellar object is positioned by its hyperbolic elements and drawn only within ±${INTERSTELLAR_WINDOW_YEARS} years of perihelion, the range over which they were checked against Horizons.`,
-          fr: `Les ${binarySpacecraft.length} sondes et les ${INTERSTELLAR_OBJECTS.length} objets interstellaires suivent leur propre règle. Une sonde est positionnée uniquement par son fichier Horizons, échantillonné à un pas de ${days(spacecraftSteps)} jours (${exact(spacecraftSteps[0]!, locale)} jour pour : ${listNames(finestSpacecraft)}), et n’est pas dessinée hors de la couverture de ce fichier. Un objet interstellaire est positionné par ses éléments hyperboliques et dessiné seulement à ±${INTERSTELLAR_WINDOW_YEARS} ans de son périhélie, la plage sur laquelle ils ont été vérifiés contre Horizons.`,
-          es: `Las ${binarySpacecraft.length} sondas y los ${INTERSTELLAR_OBJECTS.length} objetos interestelares siguen su propia regla. Una sonda se sitúa únicamente por su archivo Horizons, muestreado con un paso de ${days(spacecraftSteps)} días (${exact(spacecraftSteps[0]!, locale)} para: ${listNames(finestSpacecraft)}), y no se dibuja fuera de la cobertura del archivo. Un objeto interestelar se sitúa por sus elementos hiperbólicos y solo se dibuja dentro de ±${INTERSTELLAR_WINDOW_YEARS} años del perihelio, el rango en el que fueron verificados contra Horizons.`,
-          'pt-BR': `As ${binarySpacecraft.length} sondas e os ${INTERSTELLAR_OBJECTS.length} objetos interestelares seguem a sua própria regra. Uma sonda é posicionada unicamente pelo seu arquivo Horizons, amostrado com um passo de ${days(spacecraftSteps)} dias (${exact(spacecraftSteps[0]!, locale)} para: ${listNames(finestSpacecraft)}), e não é desenhada fora da cobertura do arquivo. Um objeto interestelar é posicionado pelos seus elementos hiperbólicos e desenhado somente dentro de ±${INTERSTELLAR_WINDOW_YEARS} anos do periélio, o intervalo no qual eles foram verificados contra a Horizons.`,
+          en: `The ${binarySpacecraft.length} spacecraft and the ${INTERSTELLAR_OBJECTS.length} interstellar objects follow their own rule. A spacecraft is positioned only by its Horizons file, sampled at a step of ${days(spacecraftSteps)} days (${exact(spacecraftSteps[0]!, locale)} for: ${listNames(finestSpacecraft)}), and is not drawn outside the file’s coverage.${segmentText} An interstellar object is positioned by its hyperbolic elements and drawn only within ±${INTERSTELLAR_WINDOW_YEARS} years of perihelion, the range over which they were checked against Horizons.`,
+          fr: `Les ${binarySpacecraft.length} sondes et les ${INTERSTELLAR_OBJECTS.length} objets interstellaires suivent leur propre règle. Une sonde est positionnée uniquement par son fichier Horizons, échantillonné à un pas de ${days(spacecraftSteps)} jours (${exact(spacecraftSteps[0]!, locale)} jour pour : ${listNames(finestSpacecraft)}), et n’est pas dessinée hors de la couverture de ce fichier.${segmentText} Un objet interstellaire est positionné par ses éléments hyperboliques et dessiné seulement à ±${INTERSTELLAR_WINDOW_YEARS} ans de son périhélie, la plage sur laquelle ils ont été vérifiés contre Horizons.`,
+          es: `Las ${binarySpacecraft.length} sondas y los ${INTERSTELLAR_OBJECTS.length} objetos interestelares siguen su propia regla. Una sonda se sitúa únicamente por su archivo Horizons, muestreado con un paso de ${days(spacecraftSteps)} días (${exact(spacecraftSteps[0]!, locale)} para: ${listNames(finestSpacecraft)}), y no se dibuja fuera de la cobertura del archivo.${segmentText} Un objeto interestelar se sitúa por sus elementos hiperbólicos y solo se dibuja dentro de ±${INTERSTELLAR_WINDOW_YEARS} años del perihelio, el rango en el que fueron verificados contra Horizons.`,
+          'pt-BR': `As ${binarySpacecraft.length} sondas e os ${INTERSTELLAR_OBJECTS.length} objetos interestelares seguem a sua própria regra. Uma sonda é posicionada unicamente pelo seu arquivo Horizons, amostrado com um passo de ${days(spacecraftSteps)} dias (${exact(spacecraftSteps[0]!, locale)} para: ${listNames(finestSpacecraft)}), e não é desenhada fora da cobertura do arquivo.${segmentText} Um objeto interestelar é posicionado pelos seus elementos hiperbólicos e desenhado somente dentro de ±${INTERSTELLAR_WINDOW_YEARS} anos do periélio, o intervalo no qual eles foram verificados contra a Horizons.`,
         })}</p>`
     )
   );
