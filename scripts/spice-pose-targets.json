@@ -53,7 +53,7 @@
       }
     },
     "steins-flyby": {
-      "$comment": "Survol de Šteins par Rosetta, 2008-09-05 (approche rapprochée 18:38 UTC, 803 km). Caméra grand angle d'OSIRIS (WAC), réflectance (niveau 4, I/F) de la PSA, sous CC BY-NC 3.0 IGO (« ESA, H. Sierks »). Sept images du filtre le plus fourni (Empty_OI, 631 nm), de la phase 4° à l'approche à 109° au départ. Le modèle livré vient du DSK OSIRIS ROS_ST_K020, dans le repère STEINS_FIXED que définit ROS_STEINS_V05 : l'orientation VRAIE est donc publiée. MESURÉ le 2026-10-06 : ni elle ni aucune autre ne reproduit ces images (contours 0,28 au mieux, solutions dispersées), donc la mise en image de la WAC n'est PAS validée, et les axes ci-dessous (les moins mauvais à la pose du PCK) non plus. Aucune carte ne se fabrique sur cette cible ; cf. docs/ARCHITECTURE.md. Les noyaux sont ceux que nomment les étiquettes (SPICE_FILE_NAME) du pipeline OSIRIS, à deux versions près absentes de l'archive (ROS_V36 -> ROS_V38, ROS_OSIRIS_V1 -> V2) : l'éphéméride « prédite » de Šteins (2867_STEINS_2004_2016) place l'astéroïde à 983 km au lieu de 803 à l'approche rapprochée, hors du champ.",
+      "$comment": "Survol de Šteins par Rosetta, 2008-09-05 (approche rapprochée 18:38 UTC, 803 km). Caméra grand angle d'OSIRIS (WAC), réflectance (niveau 4, I/F) de la PSA, sous CC BY-NC 3.0 IGO (« ESA, H. Sierks »). Sept images du filtre le plus fourni (Empty_OI, 631 nm), de la phase 4° à l'approche à 109° au départ. Le modèle livré vient du DSK OSIRIS ROS_ST_K020, dans le repère STEINS_FIXED que définit ROS_STEINS_V05 : l'orientation VRAIE est donc publiée. MESURÉ le 2026-10-06 : la caméra est VALIDÉE par des témoins indépendants de la pose (axes -Y/-X et rotation autour de la visée : l'azimut du nord céleste de l'étiquette, à 90,0° de convention près sur les sept images ; échelle carrée de l'étiquette, `pixelScaleRad` ; point sous la sonde à 0,02°), le modèle livré est identique au DSK, et pourtant ni la pose du PCK ni aucune pose trouvée à l'aveugle ne reproduit ces images (contours 0,28 au mieux, autant que le hasard, à tout sigma). Aucune carte ne se fabrique sur cette cible ; cf. docs/ARCHITECTURE.md. Les noyaux sont ceux que nomment les étiquettes (SPICE_FILE_NAME) du pipeline OSIRIS, à deux versions près absentes de l'archive (ROS_V36 -> ROS_V38, ROS_OSIRIS_V1 -> V2) : l'éphéméride « prédite » de Šteins (2867_STEINS_2004_2016) place l'astéroïde à 983 km au lieu de 803 à l'approche rapprochée, hors du champ.",
       "body": "steins",
       "naifBody": "2002867",
       "spacecraft": "-226",
@@ -62,7 +62,8 @@
         "lines": 2048,
         "samples": 2048,
         "lineAxis": "-Y",
-        "sampleAxis": "-X"
+        "sampleAxis": "-X",
+        "pixelScaleRad": 9.9499e-5
       },
       "kernelBase": "https://naif.jpl.nasa.gov/pub/naif/pds/data/ro_rl-e_m_a_c-spice-6-v1.0/rossp_1000/DATA/",
       "kernels": [

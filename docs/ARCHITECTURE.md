@@ -2265,7 +2265,7 @@ pipeline (`SPICE_FILE_NAME`) : avec `ORHO_…_00077`, `ORHR_…T19_00122` et
 `ATNR_…_T6_00127`, la distance est 802,7 km. Les produits `EF` et `ID` sont deux fenêtres de la
 même pose (512 et 256 px) ; la recette prend `EF`.
 
-**Šteins : aucune pose établie, et ce n'est pas l'orientation du PCK (mesuré).** À
+**Šteins : aucune pose établie (mesuré).** À
 l'orientation de `ROS_STEINS_V05` (repère `STEINS_FIXED`, celui du DSK livré, vérifié dans le
 fichier), aucun des huit arrangements d'axes de la caméra WAC ne reproduit la silhouette : 0,22 au
 mieux (lignes −Y, échantillons −X), contre 0,75 pour Éros à sa pose vraie. Pôle gardé et méridien
@@ -2276,12 +2276,36 @@ Le modèle est hors de cause (6,81 × 5,62 × 4,20 km).
 **La recherche à l'aveugle tranche dans l'autre sens : AUCUNE orientation ne reproduit ces images.**
 Sept images, 400 pôles × 36 méridiens puis huit affinements (17 min) : contours 0,215 à 0,275, et
 les huit solutions ne convergent pas (jusqu'à 179° l'une de l'autre), là où Éros en fait converger
-cinq à 1° près à 0,77. Le défaut n'est donc PAS l'orientation du PCK, mais la mise en image de la
-WAC dans l'outil (échelle des images corrigées de leur distorsion contre le champ de vue de l'IK,
-interprétation des fenêtres `FIRST_LINE`/`FIRST_LINE_SAMPLE`, ou un corps de 40 à 80 px trop
-petit pour le critère des contours). **Rien n'est drapé.** Ce qui rouvrirait la question : une
-caméra validée d'abord sur un corps à orientation SÛRE vu par OSIRIS (la garde Éros ne valide que
-la MSI de NEAR), puis Lutetia, vue en NAC sur environ 2 000 px.
+cinq à 1° près à 0,77. **Rien n'est drapé.**
+
+**Ce n'est pas la caméra : chaque maillon est validé par un témoin qui ne dépend pas de la pose
+(2026-10-06).** Les étiquettes OSIRIS portent ce que le pipeline de l'équipe a calculé avec les
+mêmes noyaux, et chaque valeur se recalcule :
+
+- **Le point sous la sonde** (`SUB_SPACECRAFT_LATITUDE`/`LONGITUDE`, dans `STEINS_FIXED`)
+  concorde à 0,02° près sur les sept images : géométrie et PCK sont ceux du pipeline.
+- **L'azimut du nord** (`NORTH_AZIMUTH`) est celui du nord CÉLESTE (J2000), avec une convention
+  décalée d'exactement 90,0° (sept images sur sept) ; avec les axes lignes −Y et échantillons −X,
+  il suit l'étiquette à 0,1° près, et va en sens inverse avec l'axe des lignes retourné. Les axes
+  et la rotation autour de la visée sont donc ceux du pipeline. Le point d'intérêt
+  (`IMAGE_POI_PIXEL`) ne tranchait pas le sens des lignes : la cible n'y est qu'à 8 px du centre.
+- **L'échelle** des images corrigées de leur distorsion est carrée (`ROSETTA:HORIZONTAL_RESOLUTION`
+  = 99,499 µrad), et non celle du champ de vue de l'IK (96,46 et 102,74) : la recette la déclare
+  (`camera.pixelScaleRad`), ce qui n'a rien changé au score.
+- **Le modèle livré** est identique au DSK lu par SPICE (mêmes extrêmes, même point le plus
+  éloigné).
+- **Les pixels** : aucune des huit transformations (retournements, transpositions, rotations)
+  appliquées aux données ne relève le score à la pose du PCK.
+- L'attitude mesurée (`ROS_SC_MES_080101_090101_V03`) donne le même score que celle que nomment
+  les étiquettes (`ATNR_…_T6_00127`).
+
+À la pose du PCK, le critère ne se distingue pas du hasard à aucune échelle de filtre (σ de 1 à
+4 px : 0,22 contre 0,22 ; 0,48 contre 0,45). Deux causes restent possibles, et rien de ce qui
+précède ne les départage : un PCK qui ne décrit pas l'orientation réelle à l'instant du survol (sa
+vitesse correspond à 6,0500 h contre 6,04681 h publiées, et le pipeline s'en sert sans le
+valider), ou un critère des contours qui ne porte plus sur des corps de 40 à 90 px vus près de
+l'opposition. **Ce qui rouvrirait la question** : Lutetia en NAC, vue sur environ 2 000 px, avec
+le même jeu de témoins d'étiquette AVANT toute recherche.
 
 Pour la couleur de Ryugu, aucun produit n'avait été trouvé sur DARTS ; PSI sert pourtant la
 collection `data_reflectance_coregistered` de l'ONC, multi-filtres et recalée, avec ses plans
