@@ -49,6 +49,33 @@ describe('le titre d’une vignette tient dans sa colonne', () => {
     expect(names.length).toBeGreaterThan(60);
   });
 
+  /**
+   * La garde de la marge est vide de sens pour un titre INVISIBLE : aucun pixel, aucun
+   * débordement. Payé le 2026-10-06 : « Churyumov–Gerasimenko », un seul mot de 21 caractères,
+   * ne trouvait aucune espace où se couper et sortait en `font-size="0"`, vu en regardant sa
+   * vignette. Ce test exige que chaque nom soit ÉCRIT en entier, à une taille lisible.
+   */
+  it('chaque titre est écrit en entier, à une taille lisible', () => {
+    const MIN_TITLE_PX = 40;
+    const bad: string[] = [];
+    for (const name of names) {
+      const svg = cardTextSvg(name, [], 'example.test', '');
+      const titles = [
+        ...svg.matchAll(
+          /<text [^>]*font-size="(\d+)" font-weight="700"[^>]*>([^<]*)<\/text>/g
+        ),
+      ];
+      const sizes = titles.map((m) => Number(m[1]));
+      const written = titles
+        .map((m) => m[2]!.replace(/&amp;/g, '&'))
+        .join(' ')
+        .replace(/([–-]) /g, '$1');
+      if (sizes.some((s) => s < MIN_TITLE_PX) || written !== name)
+        bad.push(`${name} : tailles ${sizes.join(',')}, écrit « ${written} »`);
+    }
+    expect(bad).toEqual([]);
+  });
+
   it('aucun titre n’entre dans la marge droite', async () => {
     const limit = CARD_WIDTH - TEXT_RIGHT_MARGIN;
     const over: string[] = [];

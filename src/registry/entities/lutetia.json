@@ -21,18 +21,16 @@
     "color": "0xb07fd1",
     "fallbackColor": "0x787878",
     "model": {
-      "resolutions": [
-        "1k"
-      ],
+      "resolutions": ["4k", "2k", "1k"],
       "extentRatio": 1.43,
       "albedo": 0.19,
       "albedoSource": "Sierks et al. 2011, Science 334, 487 (JPL SBDB), 0.19 +/- 0.01",
       "colourSource": null,
       "credit": {
-        "en": "Ground-based adaptive optics and light curves, shape model by B. Carry et al. (2010), DAMIT model 282 (CC BY 4.0), used at its full 512 facets.",
-        "fr": "Optique adaptative au sol et courbes de lumière, modèle de forme de B. Carry et al. (2010), modèle DAMIT 282 (CC BY 4.0), utilisé avec ses 512 facettes.",
-        "es": "Óptica adaptativa desde tierra y curvas de luz, modelo de forma de B. Carry et al. (2010), modelo DAMIT 282 (CC BY 4.0), usado con sus 512 facetas.",
-        "pt-BR": "Óptica adaptativa em solo e curvas de luz, modelo de forma de B. Carry et al. (2010), modelo DAMIT 282 (CC BY 4.0), usado com as suas 512 facetas."
+        "en": "ESA Rosetta OSIRIS, plate shape model by T. L. Farnham (NASA PDS, RO-A-OSINAC/OSIWAC-5-LUTETIA-SHAPE-V1.0), read from the Rosetta SPICE archive at NAIF (DSK ROS_LU_K098_OSPCLAM_N_V1), decimated for the web.",
+        "fr": "ESA Rosetta OSIRIS, modèle de forme en plaques de T. L. Farnham (NASA PDS, RO-A-OSINAC/OSIWAC-5-LUTETIA-SHAPE-V1.0), lu dans l’archive SPICE de Rosetta au NAIF (DSK ROS_LU_K098_OSPCLAM_N_V1), décimé pour le web.",
+        "es": "ESA Rosetta OSIRIS, modelo de forma en placas de T. L. Farnham (NASA PDS, RO-A-OSINAC/OSIWAC-5-LUTETIA-SHAPE-V1.0), leído en el archivo SPICE de Rosetta en el NAIF (DSK ROS_LU_K098_OSPCLAM_N_V1), diezmado para la web.",
+        "pt-BR": "ESA Rosetta OSIRIS, modelo de forma em placas de T. L. Farnham (NASA PDS, RO-A-OSINAC/OSIWAC-5-LUTETIA-SHAPE-V1.0), lido no arquivo SPICE da Rosetta no NAIF (DSK ROS_LU_K098_OSPCLAM_N_V1), decimado para a web."
       }
     },
     "description": {

@@ -217,15 +217,14 @@ full model.
   (Brozović et al. 2018, JPL SBDB). Apophis tumbles (Pravec et al. 2014); the app turns the model
   about its axis of greatest inertia at a single period.
 
-`public/assets/models/lutetia/lutetia_shape_1k.glb`: asteroid (21) Lutetia, the full
-model.
+`public/assets/models/lutetia/lutetia_shape_{1k,2k,4k}.glb`: asteroid (21) Lutetia (OSIRIS model
+since 2026-10-06; until then DAMIT model 282, 512 facets, from ground-based data).
 
-- **Source**: DAMIT, model 282. **Licence: CC BY 4.0**, with the attribution displayed in the
-  app's info card.
-- **Data credit**: B. Carry et al. (2010), ground-based adaptive optics and light curves,
-  calibrated in size.
-- **Modification**: pole brought onto +Y, nothing decimated. Uniform colour at albedo 0.19
-  (Sierks et al. 2011, JPL SBDB).
+- **Source**: the Rosetta SPICE archive at NAIF (`ROS_LU_K098_OSPCLAM_N_V1.BDS`), made from the
+  plate model of T. L. Farnham (2013), NASA PDS `RO-A-OSINAC/OSIWAC-5-LUTETIA-SHAPE-V1.0`.
+- **Data credit**: ESA Rosetta OSIRIS images. Distributed by NASA PDS without restriction.
+- **Modification**: read from DSK to OBJ by `scripts/dsk-to-obj.mjs`, pole brought onto +Y,
+  decimated. Uniform colour at albedo 0.19 (Sierks et al. 2011, JPL SBDB).
 
 `public/assets/models/didymos/didymos_shape_{1k,2k,4k}.glb` and
 `public/assets/models/dimorphos/dimorphos_shape_{1k,2k,4k}.glb`: asteroid (65803) Didymos and its

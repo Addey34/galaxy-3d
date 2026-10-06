@@ -386,13 +386,20 @@ function titleSvg(displayName: string, clean: (v: string) => string): string {
   );
   if (shrunk >= 56) return line(displayName, 298, shrunk);
   // Deux lignes, coupées à l'espace le plus proche du milieu, à la taille qui fait tenir la plus
-  // longue des deux.
-  const words = displayName.split(' ');
+  // longue des deux. Un tiret est aussi une coupure (gardé en fin de première ligne) : sans lui,
+  // « Churyumov–Gerasimenko », un seul mot, ne trouvait aucune coupure et sortait en
+  // `font-size="0"`, un titre invisible que la garde de la marge ne pouvait pas voir (2026-10-06).
+  const chars = [...displayName];
+  const cuts: [string, string][] = [];
+  chars.forEach((c, i) => {
+    if (c === ' ')
+      cuts.push([chars.slice(0, i).join(''), chars.slice(i + 1).join('')]);
+    else if ((c === '–' || c === '-') && i > 0 && i < chars.length - 1)
+      cuts.push([chars.slice(0, i + 1).join(''), chars.slice(i + 1).join('')]);
+  });
   let best: [string, string] = [displayName, ''];
   let bestLonger = Infinity;
-  for (let i = 1; i < words.length; i++) {
-    const a = words.slice(0, i).join(' ');
-    const b = words.slice(i).join(' ');
+  for (const [a, b] of cuts) {
     const longer = Math.max([...a].length, [...b].length);
     if (longer < bestLonger) {
       bestLonger = longer;
