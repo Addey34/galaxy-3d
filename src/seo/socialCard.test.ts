@@ -493,6 +493,27 @@ describe('forme réelle de la vignette', () => {
     expect(luminance(lit)).toBeGreaterThan(luminance(dark) * 1.15);
   });
 
+  it('prend la couleur du matériau du fichier, celle que l’application affiche', () => {
+    // Un modèle sans texture porte sa couleur cuite à l'albédo publié dans son matériau
+    // (`baseColorFactor`, linéaire). La vignette lisait la teinte de repli de la fiche, d'une
+    // autre convention, et sortait ~2,6 fois plus sombre que l'application (2026-10-06).
+    const dark = renderShape(
+      { ...ball, baseColor: [0.05, 0.05, 0.05] },
+      GREY,
+      SIZE
+    );
+    const bright = renderShape(
+      { ...ball, baseColor: [0.8, 0.8, 0.8] },
+      GREY,
+      SIZE
+    );
+    const at = (s: Uint8ClampedArray) =>
+      luminance(pixel(s, SIZE, SIZE / 2, SIZE / 2));
+    expect(at(bright)).toBeGreaterThan(at(dark) * 2);
+    // Sans couleur de matériau, la teinte de repli, comme avant.
+    expect(at(renderShape(ball, GREY, SIZE))).toBeGreaterThan(at(dark));
+  });
+
   it('détoure le corps au lieu de remplir la case', () => {
     const shape = renderShape(ball, GREY, SIZE);
     for (const [x, y] of [

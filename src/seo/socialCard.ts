@@ -460,6 +460,14 @@ export interface ShapeMesh {
   positions: Float32Array;
   /** Indices de sommets, trois par triangle. */
   indices: Uint32Array;
+  /**
+   * Couleur LINÉAIRE du matériau du fichier (`baseColorFactor`), celle que l'application affiche
+   * sur un modèle sans texture : la couleur cuite à l'albédo publié par
+   * `scripts/bake-shape-colour.mjs`. Absente, la vignette retombe sur la teinte de repli de la
+   * fiche, qui suit une autre convention (la réflectance brute en sRGB) et sortait ~2,6 fois
+   * plus sombre que l'application (Lutetia, 2026-10-06).
+   */
+  baseColor?: [number, number, number];
 }
 
 /**
@@ -545,7 +553,7 @@ export function renderShape(
   const shade = new Float32Array(size * size);
   const covered = new Uint8Array(size * size);
   const colour = texture ? new Float32Array(size * size * 3) : null;
-  const linear: [number, number, number] = [
+  const linear: [number, number, number] = mesh.baseColor ?? [
     toLinear(fallback[0]),
     toLinear(fallback[1]),
     toLinear(fallback[2]),
