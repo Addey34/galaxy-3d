@@ -120,6 +120,8 @@ export interface EphemerisManifestEntry {
   startJdTdb: number;
   stepDays: number;
   sampleCount: number;
+  /** Intervalle où le fichier porte une AUTRE solution (`overlayPrimary` du générateur). */
+  primary?: { target: string; fromJdTdb: number; toJdTdb: number };
 }
 
 export interface EphemerisManifest {

@@ -400,6 +400,16 @@ describe('page /sources', () => {
       expect(en!.body).toContain(`<code>${entry.target}</code>`);
   });
 
+  it('cite la solution qui remplace la cible sur un intervalle, dans chaque langue', () => {
+    // Sans elle, qui redemande la cible publiée obtient d'autres vecteurs que le fichier : 67P
+    // s'en écarte de 1 318 km en 2014-2016 (2026-10-06). Lu dans le manifeste, jamais retapé.
+    const withPrimary = Object.values(manifest.bodies).filter((e) => e.primary);
+    expect(withPrimary.length).toBeGreaterThanOrEqual(3);
+    for (const page of sources)
+      for (const entry of withPrimary)
+        expect(page.body).toContain(`<code>${entry.primary!.target}</code>`);
+  });
+
   it('rend le texte juridique complet, titres compris', () => {
     const [en] = sources;
     const headings = sourcesInput.notices.match(/^##\s+.+$/gm) ?? [];
