@@ -61,7 +61,7 @@ provenance (source URL, resolution, licence) is in one file per texture layer un
    only; unobserved areas (shadows, polar caps, 13 % of the surface) are filled smoothly from
    their edges, with no detail added.
 
-2b. **CC BY-NC 3.0 IGO: ESA, for `lutetia` (since 2026-10-06).** The ESA Space Science Archives,
+2b. **CC BY-NC 3.0 IGO: ESA, for `lutetia` and `churyumov-gerasimenko` (since 2026-10-06).** The ESA Space Science Archives,
    which serve the Rosetta OSIRIS images through the Planetary Science Archive, distribute their
    data under CC BY-NC 3.0 IGO (`cosmos.esa.int/web/esdc/terms-and-conditions`, read 2026-10-06):
    attribution required with the mission credit line, **non-commercial use only**, commercial use
@@ -75,6 +75,14 @@ provenance (source URL, resolution, licence) is in one file per texture layer un
    fine relief of a photomosaic of the frames at phase 26 to 60°, scaled to the published geometric
    albedo 0.19 (Sierks et al. 2011); the 65 % of the surface OSIRIS never saw is the measured mean
    grey, with no detail added.
+   `churyumov-gerasimenko` (comet 67P) carries a texture made the same way, but as an ATLAS of
+   its shape model rather than a map: 13.5 % of its surface shares its direction from the centre
+   with another part (the neck, the overhangs), so no latitude/longitude map can hold it. Twenty-two
+   NAC reflectance frames of 3 and 5-6 August 2014 (`RO-C-OSINAC-4-PRL-67P-M06-REFLECT-V2.0`),
+   projected into the atlas at the comet's attitude from its CK kernel. **Modification (stated as
+   required)**: the albedo of the 3 August frames multiplied by the fine relief of a photomosaic of
+   all frames, scaled to the published geometric albedo 0.065 (Fornasier et al. 2015); the 36 % of
+   the surface these frames never saw is the measured mean grey, with no detail added.
 
 3. **Confirmed licence, explicitly illustrative.** The licence and source are known and recorded,
    but the map itself is not a validated scientific global mosaic (either no spacecraft imaged the
@@ -308,7 +316,9 @@ moon Dimorphos.
   of its own, which kept the model out until the archive terms were read.
 - **Data credit**: ESA Rosetta OSIRIS images, ESA, H. Sierks.
 - **Modification**: read from DSK to OBJ by `scripts/dsk-to-obj.mjs`, pole brought onto +Y,
-  decimated. Uniform colour at geometric albedo 0.065 (Fornasier et al. 2015, A&A 583, A30).
+  decimated, then unwrapped into a texture atlas (`scripts/unwrap-shape-model.mjs`, xatlas, MIT)
+  shared by its three levels. It carries the OSIRIS texture of group 2b of the texture notices
+  above (until 2026-10-06, a uniform colour at geometric albedo 0.065).
 
 ### Moons, a comet and main-belt asteroids (parity pass, 2026-09-22)
 

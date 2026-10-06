@@ -18,7 +18,7 @@ import {
 import { applyTexture } from '@/components/celestial/celestialTextures';
 import { KM_PER_AU, SQRT_K } from '@/core/ScaleService';
 import { fitScale, meshVolume, volumeEquivalentRadius } from '@/core/modelFit';
-import { drapeEquirectangular } from '@/core/modelUv';
+import { ATLAS_SWATCH_UV, drapeEquirectangular } from '@/core/modelUv';
 import { markGlowOccluder } from '@/components/systems/glowSelection';
 import {
   GEOMETRY_SEGMENTS_HI,
@@ -249,6 +249,16 @@ export default class CelestialObject {
     if (this.layers.has('ring')) void this._loadRingTexture();
     // On commence par le niveau le plus léger : un astéroïde qu'on ne visite pas ne coûte que
     // ~70 Kio. Le LOD (updateLODTextures) monte ensuite le niveau quand la caméra approche.
+    // Un corps à ATLAS : sa texture n'a de sens que sur son modèle. La sphère qui le précède (ou
+    // le remplace s'il échoue) lit la pastille d'albédo moyen, uniforme, et rien d'autre.
+    if (this.config.model?.atlas && surface) {
+      const uv = surface.geometry.getAttribute('uv');
+      if (uv) {
+        for (let i = 0; i < uv.count; i++)
+          uv.setXY(i, ATLAS_SWATCH_UV[0], ATLAS_SWATCH_UV[1]);
+        uv.needsUpdate = true;
+      }
+    }
     const firstModel = this.config.model
       ? lightestModelQuality(this.config.model.resolutions)
       : null;
@@ -1540,6 +1550,21 @@ export default class CelestialObject {
     const surface = this.layers.get('surface');
     if (!this.config.textures?.surface || !surface) return false;
     const material = surface.material;
+    if (this.config.model?.atlas) {
+      // L'atlas est DANS le fichier : on garde la géométrie telle quelle (indexée, normales lisses
+      // calculées sur la surface soudée par le script). Un fichier sans coordonnées garde sa
+      // propre couleur plutôt qu'une texture qui ne s'y applique pas.
+      if (meshes.some((mesh) => !mesh.geometry.getAttribute('uv')))
+        throw new Error('modèle déclaré à atlas sans TEXCOORD_0');
+      for (const mesh of meshes) {
+        const own = Array.isArray(mesh.material)
+          ? mesh.material
+          : [mesh.material];
+        for (const m of own) m?.dispose();
+        mesh.material = material;
+      }
+      return true;
+    }
     for (const mesh of meshes) {
       const source = mesh.geometry;
       const position = source.getAttribute('position');

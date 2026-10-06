@@ -35,13 +35,24 @@ const TEX_DIR = join(ROOT, 'public/assets/textures');
 const OUT = join(ROOT, 'src/config/textureLadder.json');
 const WRITE = process.argv.includes('--write');
 
+/**
+ * Poids d'une ligne : cos(latitude) sur une équirectangulaire (2:1, même règle que
+ * `import-textures.mjs`), 1 ailleurs. Un ATLAS de modèle (67P, carré) donne à chaque texel à peu
+ * près la même aire, et une latitude n'y a aucun sens (2026-10-06).
+ */
+function rowWeight(y, width, height) {
+  return Math.abs(width / height - 2) < 0.05
+    ? Math.cos(((y + 0.5) / height - 0.5) * Math.PI)
+    : 1;
+}
+
 /** Variance pondérée par cos(latitude) d'une équirectangulaire. */
 function weightedVariance(pixels, width, height) {
   let weight = 0;
   let sum = 0;
   let sumSquares = 0;
   for (let y = 0; y < height; y++) {
-    const w = Math.cos(((y + 0.5) / height - 0.5) * Math.PI);
+    const w = rowWeight(y, width, height);
     let rowSum = 0;
     let rowSquares = 0;
     const offset = y * width;
@@ -64,7 +75,7 @@ function weightedVarianceOfDifference(a, b, width, height) {
   let sum = 0;
   let sumSquares = 0;
   for (let y = 0; y < height; y++) {
-    const w = Math.cos(((y + 0.5) / height - 0.5) * Math.PI);
+    const w = rowWeight(y, width, height);
     let rowSum = 0;
     let rowSquares = 0;
     const offset = y * width;

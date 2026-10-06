@@ -89,6 +89,18 @@
       "bytes": 4496585
     },
     {
+      "body": "churyumov-gerasimenko",
+      "layer": "surface",
+      "shipped": [
+        "1k",
+        "2k"
+      ],
+      "detail": {
+        "2k": 0.0927
+      },
+      "bytes": 462071
+    },
+    {
       "body": "deimos",
       "layer": "surface",
       "shipped": [
@@ -711,7 +723,7 @@
         "2k"
       ],
       "detail": {
-        "2k": 0.00277
+        "2k": 0.00276
       },
       "bytes": 24874
     },

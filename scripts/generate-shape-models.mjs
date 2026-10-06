@@ -177,6 +177,23 @@ for (const [body, entry] of Object.entries(recipe.bodies)) {
     );
   }
 
+  // ATLAS (2026-10-06) : un corps que la direction ne décrit pas reçoit des coordonnées de texture
+  // propres, partagées par tous ses niveaux (`unwrap-shape-model.mjs`). Sa couleur vient alors de
+  // sa texture : une couleur cuite réécrirait les fichiers sans leurs coordonnées.
+  if (entry.atlas) {
+    if (model.albedo !== undefined)
+      throw new Error(
+        `${body} : un atlas porte une texture, la couleur cuite (albedo) effacerait ses coordonnées`
+      );
+    run('unwrap-shape-model.mjs', [
+      body,
+      '--levels',
+      model.resolutions.join(','),
+      '--budgets',
+      model.resolutions.map((q) => recipe.budgets[q]).join(','),
+    ]);
+  }
+
   if (model.albedo === undefined) continue;
   const bakeArgs = [body, '--albedo', String(model.albedo)];
   let fromFile = null;

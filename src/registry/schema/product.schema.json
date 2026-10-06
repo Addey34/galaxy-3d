@@ -17,7 +17,7 @@
         },
         "body": {
           "type": "string",
-          "pattern": "^[a-z0-9]+$"
+          "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
         },
         "layer": {
           "type": "string",
@@ -247,7 +247,7 @@
         },
         "body": {
           "type": "string",
-          "pattern": "^[a-z0-9]+$"
+          "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
         },
         "layer": {
           "type": "string",
@@ -447,7 +447,7 @@
         },
         "body": {
           "type": "string",
-          "pattern": "^[a-z0-9]+$"
+          "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
         },
         "title": {
           "type": "string",
@@ -669,7 +669,7 @@
         },
         "body": {
           "type": "string",
-          "pattern": "^[a-z0-9]+$"
+          "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
         },
         "title": {
           "type": "string",

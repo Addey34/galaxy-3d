@@ -10,6 +10,7 @@ import {
   meshVolume,
   volumeEquivalentRadius,
 } from '@/core/modelFit';
+import { ATLAS_CHART_TOP } from '@/core/modelUv';
 
 /**
  * Écart toléré entre l'axe de plus grande inertie d'un modèle et Y. Mesuré sur les cinq
@@ -224,6 +225,7 @@ describe('modèles de forme 3D', () => {
 function readGlbGeometry(path: string): {
   positions: Float32Array;
   index: Uint16Array | Uint32Array;
+  uv: Float32Array | null;
 } {
   const bytes = readFileSync(path);
   if (bytes.toString('ascii', 0, 4) !== 'glTF')
@@ -250,7 +252,12 @@ function readGlbGeometry(path: string): {
     indices.accessor.componentType === 5125
       ? new Uint32Array(indices.slice)
       : new Uint16Array(indices.slice);
-  return { positions: new Float32Array(position.slice), index };
+  const texcoord = primitive.attributes.TEXCOORD_0;
+  return {
+    positions: new Float32Array(position.slice),
+    index,
+    uv: texcoord === undefined ? null : new Float32Array(view(texcoord).slice),
+  };
 }
 
 describe('orientation des modèles livrés', () => {
@@ -406,6 +413,92 @@ describe('topologie des modèles livrés', () => {
       flipped: 0,
     });
   });
+});
+
+/**
+ * L'ATLAS D'UN MODÈLE (2026-10-06), pour un corps que la direction ne décrit pas (67P).
+ *
+ * `unwrap-shape-model.mjs` déplie le niveau le plus fin, puis simplifie les autres DEPUIS lui :
+ * l'effondrement d'arêtes ne crée aucun sommet, il en garde. Chaque couple (position, coordonnée)
+ * d'un niveau grossier existe donc dans le plus fin, et c'est la preuve que les trois niveaux
+ * partagent UN atlas, ce qu'exige un matériau commun dont la texture change de niveau à part.
+ */
+describe('atlas des modèles de forme', () => {
+  const atlased = withModel().filter(([, cfg]) => cfg.model!.atlas === true);
+
+  it('la fiche et la recette le déclarent ensemble', () => {
+    const recipe = Object.entries(RECIPE.bodies)
+      .filter(([, entry]) => (entry as { atlas?: boolean }).atlas === true)
+      .map(([name]) => name)
+      .sort();
+    expect(recipe).toEqual(atlased.map(([name]) => name).sort());
+    expect(recipe.length).toBeGreaterThan(0);
+  });
+
+  it('le script et l’application bornent les îles au même endroit', () => {
+    const script = readFileSync(
+      join(PROJECT_ROOT, 'scripts/unwrap-shape-model.mjs'),
+      'utf8'
+    );
+    expect(Number(/const CHART_TOP = ([\d.]+);/.exec(script)?.[1])).toBe(
+      ATLAS_CHART_TOP
+    );
+  });
+
+  it.each(levels())(
+    '%s %s : coordonnées si et seulement si atlas',
+    (name, _q, onDisk) => {
+      const { uv } = readGlbGeometry(onDisk);
+      const atlas =
+        flattenBodies(CELESTIAL_CONFIG).get(name)!.model!.atlas === true;
+      if (!atlas) {
+        expect(uv).toBeNull();
+        return;
+      }
+      expect(uv).not.toBeNull();
+      let maxV = -Infinity;
+      let minU = Infinity;
+      let maxU = -Infinity;
+      let minV = Infinity;
+      for (let i = 0; i < uv!.length; i += 2) {
+        minU = Math.min(minU, uv![i]!);
+        maxU = Math.max(maxU, uv![i]!);
+        minV = Math.min(minV, uv![i + 1]!);
+        maxV = Math.max(maxV, uv![i + 1]!);
+      }
+      expect(minU).toBeGreaterThanOrEqual(0);
+      expect(maxU).toBeLessThanOrEqual(1);
+      expect(minV).toBeGreaterThanOrEqual(0);
+      // La pastille au-dessus reste libre ; et l'atlas occupe bien sa hauteur (un atlas tassé dans
+      // un coin, défaut payé le 2026-10-06, passerait sinon).
+      expect(maxV).toBeLessThanOrEqual(ATLAS_CHART_TOP + 1e-6);
+      expect(maxV).toBeGreaterThan(ATLAS_CHART_TOP * 0.9);
+      expect(maxU).toBeGreaterThan(0.9);
+    }
+  );
+
+  it.each(atlased.map(([name]) => name))(
+    '%s : tous les niveaux partagent l’atlas du plus fin',
+    (name) => {
+      const qualities =
+        flattenBodies(CELESTIAL_CONFIG).get(name)!.model!.resolutions;
+      const read = (q: string) =>
+        readGlbGeometry(join(PROJECT_ROOT, 'public', modelPath(name, q)));
+      const key = (g: ReturnType<typeof read>, i: number) =>
+        `${g.positions[i * 3]},${g.positions[i * 3 + 1]},${g.positions[i * 3 + 2]}|${g.uv![i * 2]},${g.uv![i * 2 + 1]}`;
+      const finest = read(qualities[0]!);
+      const known = new Set<string>();
+      for (let i = 0; i < finest.positions.length / 3; i++)
+        known.add(key(finest, i));
+      for (const q of qualities.slice(1)) {
+        const level = read(q);
+        let missing = 0;
+        for (let i = 0; i < level.positions.length / 3; i++)
+          if (!known.has(key(level, i))) missing++;
+        expect(missing, `${name} ${q}`).toBe(0);
+      }
+    }
+  );
 });
 
 describe('recette des modèles de forme', () => {

@@ -927,7 +927,9 @@ export function setupBodyInfo(coordinator?: OverlayCoordinator): BodyInfoPanel {
     const surface = cfg.textures?.surface;
     const resolutions = cfg.textureResolutions.surface;
     const res = resolutions?.[resolutions.length - 1];
-    if (surface && res) {
+    // L'ATLAS d'un modèle (67P) n'est pas une image de la surface mais ses îles dépliées côte à
+    // côte : en fond d'en-tête, il ne montrerait rien du corps.
+    if (surface && res && cfg.model?.atlas !== true) {
       panel.style.setProperty(
         '--bi-hero',
         `url("${TEXTURE_SETTINGS.basePath}${surface}_${res}.jpg")`

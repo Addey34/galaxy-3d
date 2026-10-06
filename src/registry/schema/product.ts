@@ -109,7 +109,7 @@ const textureIdentity = {
   $schema: z.string().optional(),
   id: kebabId,
   type: z.literal('texture'),
-  body: z.string().regex(/^[a-z0-9]+$/),
+  body: z.string().regex(/^[a-z0-9]+(-[a-z0-9]+)*$/),
   /** Clé de couche telle que le catalogue la nomme (`surface`, `normalMap`…). */
   layer: z.string().regex(/^[a-z][A-Za-z0-9]*$/),
 };
@@ -236,7 +236,7 @@ const imageryTileset = z
     id: kebabId,
     type: z.literal('tileset'),
     /** Corps du catalogue que ce jeu recouvre. */
-    body: z.string().regex(/^[a-z0-9]+$/),
+    body: z.string().regex(/^[a-z0-9]+(-[a-z0-9]+)*$/),
     /** Titre publié par la source, affiché dans le bandeau de provenance. */
     title: z.string().min(1),
     /** Fiche `providers/` du service contacté (rôle `tile-source`). */
@@ -331,7 +331,7 @@ const heightfieldSet = z
     $schema: z.string().optional(),
     id: kebabId,
     type: z.literal('heightfield'),
-    body: z.string().regex(/^[a-z0-9]+$/),
+    body: z.string().regex(/^[a-z0-9]+(-[a-z0-9]+)*$/),
     title: z.string().min(1),
     mission: z.string().min(1),
     instrument: z.string().min(1),
