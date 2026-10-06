@@ -2170,10 +2170,24 @@ livré, et voici ce qui a été mesuré, sur des sondes hors dépôt (`.cache/ma
   bas que leur pourtour dans le modèle à l'orientation livrée, 15 sur 22 au mieux sous un décalage
   de longitude, sans pic, ni direct ni en miroir.
 
-Ce que cette mesure ne dit PAS : elle juge le modèle de Thomas ET ce moteur de rendu ensemble
-(projection de points, carte d'ombre), pas le modèle seul. Ce qui rouvrirait la question : un
-moteur par lancer de rayons avec un décalage de position ajusté par vue, l'orientation que Thomas
-et al. ont utilisée (1999, non archivée au PDS), ou un modèle de forme plus récent de Mathilde.
+**Ce qui a départagé l'outil et le modèle (2026-10-06) : le même outil sur ÉROS.** Mêmes caméra,
+noyaux, format d'images et moteur ; images de l'approche du 11 février 2000 (Éros à 2 700 km,
+même taille apparente que Mathilde au départ), trois rafales à 80 minutes d'écart, une seule
+orientation ajustée et propagée par la seule vitesse de rotation de l'UAI (l'orientation vraie,
+lue dans `erosatt_1999304_2001151.bpc`, ne sert qu'à juger). À la pose vraie, le rendu reproduit
+les images (contours 0,70 à 0,77, contre 0,22 au hasard). À l'aveugle, l'ajustement la retrouve à
+**0,8°** près, et le bon modèle écrase les témoins : Éros 0,76, Gaspra 0,34, Mathilde 0,31, tous
+mis à la même taille. L'outil marche ; c'est le modèle de Mathilde qui ne reproduit pas ses images.
+**La raison est dans le fichier : 49 % de l'aire du modèle est une sphère de remplissage.** 3 688
+des 7 381 rayons valent exactement 26,5 km, pour l'essentiel en une seule grande région, et l'étiquette PDS
+ne le dit pas. Les autres grilles de Thomas en cache n'ont rien de tel (Protée 0,4 %, les autres
+0 %). Exclure de la comparaison les pixels qui tombent sur cette sphère ne suffit pas : Mathilde
+0,60, Gaspra 0,57, et les meilleures solutions de Mathilde dispersées entre des orientations sans
+rapport. Conséquence pour l'application : le Mathilde affiché est à moitié une sphère, puisque le
+maillage livré vient de ce fichier.
+
+Ce qui rouvrirait la question : un modèle de forme de Mathilde complet, ou une forme reconstruite
+depuis les images elles-mêmes (stéréophotoclinométrie), ce qui est un chantier en soi.
 **Leçon** : la corrélation d'une silhouette éclairée récompense « une tache de la bonne taille »,
 et seul un témoin de forme ÉTRANGÈRE le montre ; sans lui, 0,83 se lisait comme un succès.
 
