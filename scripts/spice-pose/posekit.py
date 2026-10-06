@@ -282,10 +282,12 @@ def camera(sp, target):
     bs = np.array(bsight) / np.linalg.norm(bsight)
     tl = max(abs(v @ la) / (v @ bs) for v in bounds)
     ts = max(abs(v @ sa) / (v @ bs) for v in bounds)
-    return (
-        Camera(cam["lines"], cam["samples"], cam["lines"] / (2 * tl), cam["samples"] / (2 * ts), la, sa, bs),
-        frame,
-    )
+    kl, ks = cam["lines"] / (2 * tl), cam["samples"] / (2 * ts)
+    if cam.get("pixelScaleRad"):
+        # Images corrigées de leur distorsion (OSIRIS) : l'étiquette donne une échelle CARRÉE
+        # (`ROSETTA:HORIZONTAL_RESOLUTION`), qui n'est plus celle du champ de vue de l'IK.
+        kl = ks = 1 / cam["pixelScaleRad"]
+    return Camera(cam["lines"], cam["samples"], kl, ks, la, sa, bs), frame
 
 
 def kernel_dir(target):
