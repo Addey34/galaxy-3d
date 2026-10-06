@@ -22,6 +22,7 @@ const STEP_DAYS = 4;
 const PROBE_EVENT_STEP_DAYS = 1;
 const CENTER_IDS = {
   sun: '10',
+  mercury: '199',
   mars: '499',
   jupiter: '599',
   saturn: '699',
@@ -761,6 +762,35 @@ const BODIES = [
     stepDays: PROBE_EVENT_STEP_DAYS,
   },
   {
+    // SEGMENT relatif à Mercure (2026-10-06) : une fois en orbite, BepiColombo fait le tour de
+    // Mercure en quelques heures (2 900 à 3 900 km du centre le 2027-03-15, Horizons), ce
+    // qu'aucun fichier au pas d'UN jour ne décrit : l'application la plaçait jusqu'à 27 000 km
+    // de la planète. Sur la phase `satelliteOf` dérivée, la position est donc celle de Mercure
+    // plus ce vecteur, propagé à deux corps autour de Mercure entre deux ancres.
+    //
+    // Le pas se MESURE contre un tirage au pas de 10 min de la même phase : sans les
+    // manœuvres, 12 h laissaient 3 118 km au pire (seize poussées de descente, de
+    // décembre 2026 à mars 2027) ; avec elles, publiées en `impulses` et propagées d'un seul
+    // côté, au plus 50 km après la capture (1,6 % de la distance à Mercure) et 127 km
+    // avant, à 200 000 km. Le pas de 2 h ne faisait pas mieux au pire (103 km) pour six fois
+    // les octets. Les manœuvres se LISENT dans le tirage fin (`core/impulseDetection.ts`) :
+    // une trajectoire prédite se replanifie, et une liste écrite ici pourrirait.
+    name: 'bepicolombo-mercury',
+    target: '-121',
+    expectedName: 'bepicolombo',
+    center: 'mercury',
+    segmentOf: 'bepicolombo',
+    startTime: '2026-10-13',
+    stopTime: '2027-04-09',
+    stepDays: 0.5,
+    impulseProbe: {
+      stepDays: 10 / 1440,
+      // Fond mesuré : 104 m au plus en 10 min ; poussées : 6 562 m au moins. Le seuil est
+      // posé entre les deux ordres de grandeur, et le générateur imprime les deux.
+      thresholdKm: 1,
+    },
+  },
+  {
     name: 'osiris-rex',
     target: '-64',
     expectedName: 'osiris-rex',
@@ -856,7 +886,14 @@ function parseVectors(result, name) {
       return { jd, state };
     });
   if (rows.length < 2) throw new Error(`${name}: not enough samples`);
-  const stepDays = rows[1].jd - rows[0].jd;
+  // Horizons imprime le JD à 9 décimales : sous la journée, la différence de deux lignes
+  // s'écarte du pas demandé de ~4e-10 j (10 min devenaient 0,0069444440 j, soit une seconde de
+  // dérive en fin de segment). Un pas est un nombre ENTIER de minutes (cf. `stepSize`) : on
+  // publie celui-là quand la différence en est à moins de 1e-8 j.
+  const measuredStep = rows[1].jd - rows[0].jd;
+  const wholeMinutes = Math.round(measuredStep * 1440) / 1440;
+  const stepDays =
+    Math.abs(measuredStep - wholeMinutes) < 1e-8 ? wholeMinutes : measuredStep;
   for (let i = 1; i < rows.length; i++) {
     if (Math.abs(rows[i].jd - rows[i - 1].jd - stepDays) > 1e-9)
       throw new Error(`${name}: non-uniform step at ${i}`);
@@ -1145,10 +1182,72 @@ async function overlayPrimary(body, rows, stepDays) {
   };
 }
 
+/**
+ * Un SEGMENT dont les ancres sont espacées : tirage au pas fin, manœuvres DÉTECTÉES dans ce
+ * tirage (`core/impulseDetection.ts`), puis une ancre gardée sur `stepDays / probe.stepDays`.
+ * La gravité qui sert à détecter est celle que l'application emploie pour propager
+ * (`attractorMu` du centre, lu au catalogue), chargée par `ssrLoadModule` comme les autres
+ * scripts qui réutilisent `src/core/`.
+ */
+async function probeImpulses(body) {
+  const probe = body.impulseProbe;
+  const every = Math.round(body.stepDays / probe.stepDays);
+  if (Math.abs(every * probe.stepDays - body.stepDays) > 1e-9)
+    throw new Error(
+      `${body.name}: le pas n'est pas un multiple du pas de sonde`
+    );
+  const { createServer } = await import('vite');
+  const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
+  const loader = await createServer({
+    configFile: false,
+    logLevel: 'error',
+    appType: 'custom',
+    optimizeDeps: { noDiscovery: true, include: [] },
+    server: { middlewareMode: true, hmr: false, ws: false, watch: null },
+    resolve: { alias: { '@': resolve(root, 'src') } },
+  });
+  try {
+    const { detectImpulses, decimateAroundImpulses } =
+      await loader.ssrLoadModule('/src/core/impulseDetection.ts');
+    const { bodyDynamics } = await loader.ssrLoadModule(
+      '/src/config/gravity.ts'
+    );
+    const mu = bodyDynamics()[body.center]?.attractorMu;
+    if (!(mu > 0))
+      throw new Error(
+        `${body.name}: aucune masse au catalogue pour ${body.center}`
+      );
+    const fine = await requestChunked(
+      { ...body, stepDays: probe.stepDays },
+      body.startTime,
+      body.stopTime
+    );
+    const found = detectImpulses(fine.rows, mu, probe.thresholdKm);
+    process.stdout.write(
+      `${found.impulses.length} manœuvres (résidu le plus faible ${found.weakestImpulseKm?.toFixed(3)} km ; ` +
+        `fond médian ${found.backgroundMedianKm.toFixed(3)} km, max ${found.backgroundMaxKm.toFixed(3)} km), `
+    );
+    // Deux ordres de grandeur séparaient le fond des poussées à la mesure ; un fond qui
+    // s'approche du seuil rendrait la détection arbitraire, et on le refuse.
+    if (found.backgroundMaxKm > probe.thresholdKm / 3)
+      throw new Error(
+        `${body.name}: fond ${found.backgroundMaxKm} km trop près du seuil ${probe.thresholdKm} km`
+      );
+    return {
+      rows: decimateAroundImpulses(fine.rows, every, found.impulses),
+      stepDays: body.stepDays,
+      impulses: found.impulses,
+    };
+  } finally {
+    await loader.close();
+  }
+}
+
 async function fetchBody(body) {
   process.stdout.write(`Fetching ${body.name}... `);
   let rows;
   let stepDays;
+  let detectedImpulses;
   if (body.splitAtSolutionEpoch) {
     const split = await requestSplitAtSolutionEpoch(
       body,
@@ -1173,6 +1272,12 @@ async function fetchBody(body) {
       }
       process.stdout.write(`split at JD ${split.node}, `);
     }
+  } else if (body.impulseProbe) {
+    ({
+      rows,
+      stepDays,
+      impulses: detectedImpulses,
+    } = await probeImpulses(body));
   } else {
     ({ rows, stepDays } = await requestChunked(
       body,
@@ -1183,7 +1288,9 @@ async function fetchBody(body) {
   const primary = body.primary
     ? await overlayPrimary(body, rows, stepDays)
     : undefined;
-  const impulses = body.impulses ? await readImpulses(body, rows) : undefined;
+  const impulses = body.impulses
+    ? await readImpulses(body, rows)
+    : detectedImpulses;
   const binary = encodeBinary(rows);
   const hash = createHash('sha256').update(binary).digest('hex').slice(0, 12);
   const file = `${body.name}.${hash}.bin`;
@@ -1198,6 +1305,7 @@ async function fetchBody(body) {
     sampleCount: rows.length,
     ...(primary ? { primary } : {}),
     ...(impulses ? { impulses } : {}),
+    ...(body.segmentOf ? { segmentOf: body.segmentOf } : {}),
   };
 }
 

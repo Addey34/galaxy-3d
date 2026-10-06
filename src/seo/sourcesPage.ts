@@ -943,7 +943,8 @@ function sourcesPage(input: SourcesInput, locale: DocLocale): DocPage {
 
   // ── Éphémérides ──
   const ephemerisRows = Object.entries(manifest.bodies).map(([body, e]) => [
-    escapeHtml(name(body, locale)),
+    // Un SEGMENT porte le nom de la sonde qu'il prolonge, pas sa clé de fichier.
+    escapeHtml(name(e.segmentOf ?? body, locale)),
     // La solution substituée sur un intervalle (2026-10-06) : sans elle, qui redemande la cible
     // obtient d'autres vecteurs que le fichier (67P : jusqu'à 1 318 km en 2014-2016).
     `<code>${escapeHtml(e.target)}</code>` +
@@ -953,6 +954,14 @@ function sourcesPage(input: SourcesInput, locale: DocLocale): DocPage {
             fr: `remplacée par <code>${escapeHtml(e.primary.target)}</code> du ${escapeHtml(isoFromJd(e.primary.fromJdTdb))} au ${escapeHtml(isoFromJd(e.primary.toJdTdb))}`,
             es: `sustituida por <code>${escapeHtml(e.primary.target)}</code> del ${escapeHtml(isoFromJd(e.primary.fromJdTdb))} al ${escapeHtml(isoFromJd(e.primary.toJdTdb))}`,
             'pt-BR': `substituída por <code>${escapeHtml(e.primary.target)}</code> de ${escapeHtml(isoFromJd(e.primary.fromJdTdb))} a ${escapeHtml(isoFromJd(e.primary.toJdTdb))}`,
+          })}`
+        : '') +
+      (e.segmentOf
+        ? `<br>${L({
+            en: `segment, ${e.impulses?.length ?? 0} manoeuvres read in the trajectory`,
+            fr: `segment, ${e.impulses?.length ?? 0} manœuvres lues dans la trajectoire`,
+            es: `segmento, ${e.impulses?.length ?? 0} maniobras leídas en la trayectoria`,
+            'pt-BR': `segmento, ${e.impulses?.length ?? 0} manobras lidas na trajetória`,
           })}`
         : ''),
     escapeHtml(

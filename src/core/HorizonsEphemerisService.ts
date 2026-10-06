@@ -282,17 +282,32 @@ export interface HorizonsBodyManifest {
    * intervalle l'interpolation dynamique propage depuis le SEUL côté de la date.
    */
   impulses?: readonly number[];
+  /**
+   * Ce fichier est un SEGMENT d'un autre corps (2026-10-06) : sur sa couverture, la position
+   * de ce corps est celle du `center` plus ce fichier, au pas fin. BepiColombo en orbite
+   * autour de Mercure fait un tour en quelques heures, ce que son fichier héliocentrique au
+   * pas d'un jour ne décrit pas (jusqu'à 27 000 km d'écart, mesuré contre Horizons).
+   */
+  segmentOf?: string;
 }
 
 /**
  * Les dynamiques du catalogue, complétées du ballant que le manifeste PUBLIE pour un corps dont
- * les masses ne le donnent pas.
+ * les masses ne le donnent pas, et de l'attracteur de chaque SEGMENT : une sonde en orbite
+ * autour d'un corps se propage sous la seule gravité de ce corps (`attractorMu`).
  */
 export function withPublishedReflex(
   bodyMu: Readonly<Record<string, BodyDynamics>>,
   entries: readonly [string, HorizonsBodyManifest][]
 ): Readonly<Record<string, BodyDynamics>> {
   let merged: Record<string, BodyDynamics> | null = null;
+  for (const [name, entry] of entries) {
+    if (entry.segmentOf === undefined || entry.center === undefined) continue;
+    const attractorMu = bodyMu[entry.center]?.attractorMu;
+    if (attractorMu === undefined || bodyMu[name]) continue;
+    merged ??= { ...bodyMu };
+    merged[name] = { mu: attractorMu };
+  }
   for (const [name, entry] of entries) {
     if (!entry.reflex || bodyMu[name]?.reflex) continue;
     merged ??= { ...bodyMu };
@@ -1209,8 +1224,31 @@ export class HorizonsEphemerisService implements PreciseEphemerisProvider {
    * si le corps/la date est hors couverture.
    */
   getHeliocentricAU(name: string, date: Date): THREE.Vector3 | null {
+    const segment = this._segmentAt(name, date);
+    if (segment) {
+      // Sur la couverture du segment, le fichier grossier n'est PAS un repli : il placerait
+      // la sonde à des dizaines de milliers de km de sa planète. Faute d'octets, on se tait.
+      const center = this.bodies.get(segment.manifest.center!);
+      const relative = this._sampleGrid(segment, date);
+      const origin = center ? this._samplePosition(center, date) : null;
+      return relative && origin ? relative.add(origin) : null;
+    }
     const body = this.bodies.get(name);
     return body ? this._samplePosition(body, date) : null;
+  }
+
+  /** Le segment de `name` dont la grille couvre `date`, s'il y en a un d'inscrit. */
+  private _segmentAt(name: string, date: Date): LoadedBody | null {
+    for (const body of this.bodies.values()) {
+      const m = body.manifest;
+      if (
+        m.segmentOf === name &&
+        m.center !== undefined &&
+        covers(HorizonsEphemerisService._grid(m), date)
+      )
+        return body;
+    }
+    return null;
   }
   /** Returns a precise child-minus-parent vector when both Horizons states are covered. */
   getParentRelativeAU(
@@ -1357,17 +1395,22 @@ export class HorizonsEphemerisService implements PreciseEphemerisProvider {
     impulseU: number | null = null
   ): THREE.Vector3 | null {
     const dynamics = body.dynamics;
-    if (dynamics?.periodDays === undefined) return null;
-
+    if (!dynamics) return null;
     const { stepDays } = body.manifest;
-    // Combien d'echantillons par revolution le fichier offre-t-il ? Au-dela du seuil la
-    // cubique est adequate et on la laisse faire : les planetes et les sondes, dont la
-    // periode se compte en annees, ne passent jamais par ici. Le critere porte sur la
-    // periode CATALOGUE, stable, et non sur la periode osculatrice de l'etat courant
-    // (cf. `BodyDynamics.periodDays`) : la branche doit etre la meme sur toute la
-    // trajectoire d'un corps, sinon on raccorde deux interpolations differentes au milieu.
-    if (dynamics.periodDays / stepDays >= MIN_SAMPLES_PER_ORBIT_FOR_HERMITE) {
-      return null;
+    // Un SEGMENT existe parce que son pas ne résout pas l'orbite (BepiColombo fait le tour de
+    // Mercure en quelques heures, ancres toutes les 12 h) : il se propage toujours, et sa
+    // « période catalogue » n'existe pas. Mesuré contre son propre tirage au pas de 10 min.
+    if (body.manifest.segmentOf === undefined) {
+      if (dynamics.periodDays === undefined) return null;
+      // Combien d'echantillons par revolution le fichier offre-t-il ? Au-dela du seuil la
+      // cubique est adequate et on la laisse faire : les planetes et les sondes, dont la
+      // periode se compte en annees, ne passent jamais par ici. Le critere porte sur la
+      // periode CATALOGUE, stable, et non sur la periode osculatrice de l'etat courant
+      // (cf. `BodyDynamics.periodDays`) : la branche doit etre la meme sur toute la
+      // trajectoire d'un corps, sinon on raccorde deux interpolations differentes au milieu.
+      if (dynamics.periodDays / stepDays >= MIN_SAMPLES_PER_ORBIT_FOR_HERMITE) {
+        return null;
+      }
     }
 
     const mu = dynamics.mu;

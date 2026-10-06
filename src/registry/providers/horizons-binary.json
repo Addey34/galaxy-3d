@@ -14,7 +14,7 @@
     }
   },
   "samplingStepSeconds": {
-    "min": 86400,
+    "min": 43200,
     "max": 5529600
   },
   "coverageNote": "Enveloppe de public/assets/ephemerides/manifest.json : chaque binaire porte sa propre couverture, et providers.test.ts refuse une entree du manifeste qui sortirait de cet intervalle."

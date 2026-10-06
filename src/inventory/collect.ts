@@ -77,6 +77,17 @@ export interface PositionState {
      * période orbitale.
      */
     readonly samplesPerRevolution: number | null;
+    /**
+     * Les SEGMENTS de ce corps (`segmentOf` au manifeste) : un fichier relatif à un autre corps,
+     * au pas fin, qui prend la main sur sa couverture (BepiColombo autour de Mercure).
+     */
+    readonly segments: readonly {
+      readonly id: string;
+      readonly file: string;
+      readonly center: string;
+      readonly stepDays: number;
+      readonly bytes: number | null;
+    }[];
   } | null;
   /**
    * Les champs de position que porte la fiche, par leur NOM DE CHAMP et non par le nom d'une
@@ -224,6 +235,7 @@ interface ManifestEntry {
   stepDays: number;
   sampleCount: number;
   meanMotionScale?: number;
+  segmentOf?: string;
 }
 
 interface LadderRow {
@@ -310,6 +322,18 @@ function positionOf(
               : null,
           samplesPerRevolution:
             periodDays === undefined ? null : periodDays / entry.stepDays,
+          segments: Object.entries(manifest)
+            .filter(([, other]) => other.segmentOf === id)
+            .map(([segmentId, segment]) => {
+              const path = join(ephemerisDir, segment.file);
+              return {
+                id: segmentId,
+                file: segment.file,
+                center: segment.center,
+                stepDays: segment.stepDays,
+                bytes: existsSync(path) ? statSync(path).size : null,
+              };
+            }),
         }
       : null,
     declares: declaresOf(cfg),

@@ -1034,6 +1034,10 @@ forEachBody(CELESTIAL_CONFIG, ({ name, config: cfg, parentName }) => {
 // Sondes : binaires Horizons seuls, sur leur couverture propre.
 for (const [name, entry] of Object.entries(horizonsManifest.bodies)) {
   if (bodyInfo.has(name)) continue;
+  // Un SEGMENT n'est pas un corps : il est mesuré À TRAVERS son corps (`segmentOf`), dont la
+  // position héliocentrique l'emploie sur sa couverture. Le mesurer à part demanderait à
+  // Horizons une cible qui n'existe pas.
+  if (entry.segmentOf !== undefined) continue;
   bodyInfo.set(name, { radiusKm: undefined, relative: false });
   addCase({
     body: name,

@@ -168,8 +168,9 @@ describe('le débit mesuré par le service (phase 17D)', () => {
     // sont des missions CLOSES, leur couverture s'arrête avant cette date. Elles ne demandent
     // donc aucun octet et n'ont rien à faire dans le budget. 85 sur 87 depuis les 23 cibles de
     // missions (2026-10-04), qui sont toutes couvertes à cette date ; 87 sur 89 avec leurs deux
-    // satellites, couverts eux aussi.
-    expect(Object.keys(horizonsManifest.bodies).length).toBe(89);
+    // satellites, couverts eux aussi. 90 fichiers avec le segment de BepiColombo autour de
+    // Mercure (2026-10-06), qui ne commence que le 2026-10-13 : il ne demande rien à cette date.
+    expect(Object.keys(horizonsManifest.bodies).length).toBe(90);
     expect(today.length).toBe(87);
     expect(then.length).toBeLessThan(today.length);
     expect(bytesPerSimulatedDay(then)).toBeLessThan(

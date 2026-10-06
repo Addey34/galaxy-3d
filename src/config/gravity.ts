@@ -43,6 +43,12 @@ export interface BodyDynamics {
    * est rajouté, le compagnon venant de son propre binaire. Cf. `REFLEX_MIN_MASS_RATIO`.
    */
   reflex?: { companion: string; factor: number };
+  /**
+   * Paramètre gravitationnel du corps LUI-MÊME (UA³/jour²), sans le Soleil. Il gouverne une
+   * sonde en orbite autour de lui, dont le manifeste publie alors un SEGMENT relatif à ce
+   * corps (`HorizonsBodyManifest.segmentOf`, BepiColombo autour de Mercure).
+   */
+  attractorMu?: number;
 }
 
 /**
@@ -115,11 +121,11 @@ export function bodyDynamics(
   for (const [name, body] of Object.entries(config.bodies)) {
     // Corps héliocentrique : le Soleil, plus sa propre masse (terme réel, 0,1 % pour
     // Jupiter, et gratuit à écrire correctement).
+    const ownMu = gravitationalParameter(body.realData?.massKg ?? 0);
     parameters[name] = {
-      mu:
-        MU_SUN_AU3_PER_DAY2 +
-        gravitationalParameter(body.realData?.massKg ?? 0),
+      mu: MU_SUN_AU3_PER_DAY2 + ownMu,
       periodDays: body.realData?.orbitPeriodDays,
+      ...(ownMu > 0 ? { attractorMu: ownMu } : {}),
     };
 
     const satellites = Object.entries(body.satellites ?? {});

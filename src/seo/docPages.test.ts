@@ -287,7 +287,8 @@ describe('page /methodology', () => {
     const steps = [
       ...new Set(
         Object.entries(manifest.bodies)
-          .filter(([name]) => !spacecraft.has(name))
+          // Un segment prolonge une sonde : ni un corps naturel, ni un pas de plus.
+          .filter(([name, e]) => !spacecraft.has(name) && !e.segmentOf)
           .map(([, e]) => e.stepDays)
       ),
     ].sort((a, b) => a - b);
@@ -408,6 +409,27 @@ describe('page /sources', () => {
     for (const page of sources)
       for (const entry of withPrimary)
         expect(page.body).toContain(`<code>${entry.primary!.target}</code>`);
+  });
+
+  it('nomme un segment par sa sonde et dit ses manœuvres, dans chaque langue', () => {
+    // 2026-10-06 : la clé de fichier « bepicolombo-mercury » s'affichait comme un nom de corps.
+    const segments = Object.entries(manifest.bodies).filter(
+      ([, e]) => e.segmentOf
+    );
+    expect(segments.length).toBeGreaterThanOrEqual(1);
+    const words = ['manoeuvres', 'manœuvres', 'maniobras', 'manobras'];
+    sources.forEach((page, i) => {
+      for (const [key, entry] of segments) {
+        expect(page.body).not.toMatch(new RegExp(`>${key}<`, 'i'));
+        expect(page.body).toContain(
+          `segment${i < 2 ? '' : 'o'}, ${entry.impulses!.length} ${words[i]}`
+        );
+      }
+    });
+    methodology.forEach((page, i) => {
+      for (const [, entry] of segments)
+        expect(page.body).toContain(`${entry.impulses!.length} ${words[i]}`);
+    });
   });
 
   it('rend le texte juridique complet, titres compris', () => {
