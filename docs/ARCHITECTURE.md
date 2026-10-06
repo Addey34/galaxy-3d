@@ -2335,20 +2335,20 @@ et le départ (sept images, phase 27 à 126°). Mesuré au pas de 0,15° :
   résout pas change avec la phase, et Lutetia est d'albédo assez uniforme : on compare surtout des
   ombres.
 - **Couverture** : 34,8 % de la surface pour A, 35,4 % pour l'ensemble.
-- **Ce qui bloque la livraison : une frange sombre le long du bord de la couverture**, vue sur la
-  carte et non dans un chiffre. Six variantes ne l'ont pas levée, et chacune a été mesurée : angles
-  limités à 60° (couverture 26,5 %, frange intacte) ; rejet des valeurs à plus d'un facteur 2 de la
-  médiane de l'image (intact) ; érosion de la couverture de 1° (la calotte nord disparaît, des
-  taches blanches apparaissent) ; seuil sur la meilleure vue de chaque case, cos i · cos e ≥ 0,4
-  (couverture 21,5 %, frange intacte) ; échantillonnage limité à l'intérieur du disque observé
-  (intact, et un premier seuil prenait 39 à 52 % du cadre pour le disque, rien n'était donc érodé) ;
-  correction photométrique empirique par tranche de cos i · cos e (la frange devient CLAIRE et
-  l'accord radiométrique tombe à 0,19). Seule la limitation au disque observé est gardée, inoffensive
-  et juste. **Rien n'est livré.**
-
-Ce qui rouvrirait la question : une loi photométrique ajustée aux données plutôt que Lommel-Seeliger
-seul (une loi de Hapke ou d'Akimov ajustée sur ces images), ou un
-modèle de forme plus fin sur les bords de la couverture.
+- **La « frange sombre » le long du bord de la couverture n'existe pas : c'était mon RENDU de
+  contrôle** (2026-10-06). Je regardais la carte étirée entre ses 1ᵉʳ et 99,5ᵉ centiles, ce qui
+  rend NOIR un écart de 5 à 10 %. Six variantes ont poursuivi cet artefact (angles limités à 60°,
+  rejet des valeurs extrêmes, érosion de la couverture, seuil sur la meilleure vue, échantillonnage
+  limité au disque observé, correction photométrique empirique, cette dernière faisant tomber
+  l'accord radiométrique à 0,19), jusqu'à ce qu'une MESURE le démente : l'écart de chaque
+  échantillon à sa case ne vaut que 0,96 à 65-70° d'émission ou d'incidence contre 1,02 de face, et
+  seuls les pixels à moins de 3 px du bord du disque sont nettement plus sombres (0,82), ce que
+  l'échantillonnage limité au disque écarte (seule variante gardée). Rendue linéairement, la carte
+  tient entre 0,93 et 1,06 de sa médiane pour 99 % des cases, et 0,02 % seulement passent sous 0,8.
+- **Ce qui décide vraiment : l'albédo de Lutetia à faible phase est presque UNIFORME** (±4 %).
+  Calée sur l'albédo publié de 0,19, la texture ressemblerait au gris uniforme déjà cuit dans le
+  modèle, avec de faibles nuances sur 35 % de la surface. **Rien n'est livré** tant que ce gain
+  n'est pas jugé à la hauteur de son coût (licence non commerciale, chaîne d'import, fiche).
 
 Pour la couleur de Ryugu, aucun produit n'avait été trouvé sur DARTS ; PSI sert pourtant la
 collection `data_reflectance_coregistered` de l'ONC, multi-filtres et recalée, avec ses plans
