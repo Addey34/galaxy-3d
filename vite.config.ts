@@ -407,10 +407,15 @@ function bodyLandingPages() {
               byteOffset?: number;
             }[];
             bufferViews: { byteOffset?: number; byteLength: number }[];
+            materials?: {
+              pbrMetallicRoughness?: { baseColorFactor?: number[] };
+            }[];
           };
           const primitive = gltf.meshes?.[0]?.primitives?.[0];
           if (!primitive) throw new Error(`${path} : aucun maillage`);
 
+          const factor =
+            gltf.materials?.[0]?.pbrMetallicRoughness?.baseColorFactor;
           const read = (accessorIndex: number): ArrayLike<number> => {
             const accessor = gltf.accessors[accessorIndex]!;
             const bufferView = gltf.bufferViews[accessor.bufferView]!;
@@ -437,6 +442,8 @@ function bodyLandingPages() {
             indices: Uint32Array.from(
               read(primitive.indices) as ArrayLike<number>
             ),
+            // La couleur que l'application affiche sur ce modèle quand il n'a pas de texture.
+            ...(factor ? { baseColor: [factor[0]!, factor[1]!, factor[2]!] } : {}),
           };
         };
 

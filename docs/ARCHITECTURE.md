@@ -2366,6 +2366,14 @@ restent, l'ombrage à grande échelle part ; ce facteur de détail tient entre 0
 modification déclarée (fiche de texture, `THIRD_PARTY_NOTICES.md` groupe 2b, crédits de l'aide,
 `/sources`). La couleur uniforme cuite dans le modèle est retirée, comme pour tout corps drapé.
 
+**Šteins : pas de carte, par résolution (2026-10-06).** Sa pose est établie, mais la WAC ne le voit
+qu'à 0,080 km par pixel au plus près (99,5 µrad × 803 km), et à 0,10-0,14 km à l'approche, pour une
+circonférence d'environ 16,5 km : un pixel couvre déjà ~1,75°, soit une carte native d'environ
+200 px de tour. Le plus petit niveau de texture livrable fait 1 024 px, et l'échelle des textures
+(`core/textureLadder.ts`) refuse tout niveau plus large que sa source : la carte serait un
+suréchantillonnage d'un facteur cinq, une interpolation présentée comme une mesure. Écrit avant
+tout calcul, et c'est ce qui l'a évité.
+
 Pour la couleur de Ryugu, aucun produit n'avait été trouvé sur DARTS ; PSI sert pourtant la
 collection `data_reflectance_coregistered` de l'ONC, multi-filtres et recalée, avec ses plans
 géométriques.
@@ -2630,9 +2638,14 @@ il n'y en a pas pour Bennu — donc sa vignette sphérique n'était qu'une bille
 repli. Or ce qui l'identifie n'est pas sa couleur mais sa **silhouette**. Les deux chemins
 partagent la même direction de lumière et le même ambiant : une vignette qui s'éclairerait
 autrement se verrait dans une galerie de partages. Depuis le lot parité, `renderShape` lit aussi
-la carte équirectangulaire du corps quand il en a une, triangle par triangle, à la longitude et
-latitude de son centre dans le repère du fichier : Phobos et Vesta gardent leur texture sur leur
-forme, comme dans l'application.
+la carte équirectangulaire du corps quand il en a une, pixel par pixel (depuis la PR #109 ;
+« triangle par triangle » jusque-là), à la longitude et latitude du point de surface dans le repère
+du fichier : Phobos et Vesta gardent leur texture sur leur forme, comme dans l'application. **Sans
+texture, la couleur est celle du MATÉRIAU du fichier** (`baseColorFactor`, linéaire, depuis le
+2026-10-06), soit la couleur cuite à l'albédo publié que l'application affiche. Jusque-là la
+vignette prenait la teinte de repli de la fiche, d'une autre convention (la réflectance brute en
+sRGB) : les dix corps à couleur cuite sortaient ~2,6 fois plus sombres que dans l'application, vu
+en drapant Lutetia (94 contre 146 sur 255 à albédo égal). Test dans `socialCard.test.ts`, falsifié.
 
 Deux pièges du rendu de forme, tous deux payés une fois :
 
