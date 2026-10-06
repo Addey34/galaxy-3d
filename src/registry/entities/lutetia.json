@@ -23,9 +23,6 @@
     "model": {
       "resolutions": ["4k", "2k", "1k"],
       "extentRatio": 1.43,
-      "albedo": 0.19,
-      "albedoSource": "Sierks et al. 2011, Science 334, 487 (JPL SBDB), 0.19 +/- 0.01",
-      "colourSource": null,
       "credit": {
         "en": "ESA Rosetta OSIRIS, plate shape model by T. L. Farnham (NASA PDS, RO-A-OSINAC/OSIWAC-5-LUTETIA-SHAPE-V1.0), read from the Rosetta SPICE archive at NAIF (DSK ROS_LU_K098_OSPCLAM_N_V1), decimated for the web.",
         "fr": "ESA Rosetta OSIRIS, modèle de forme en plaques de T. L. Farnham (NASA PDS, RO-A-OSINAC/OSIWAC-5-LUTETIA-SHAPE-V1.0), lu dans l’archive SPICE de Rosetta au NAIF (DSK ROS_LU_K098_OSPCLAM_N_V1), décimé pour le web.",
@@ -44,7 +41,8 @@
       "fr": "https://fr.wikipedia.org/wiki/(21)_Lut%C3%A8ce",
       "es": "https://es.wikipedia.org/wiki/(21)_Lutecia",
       "pt-BR": "https://pt.wikipedia.org/wiki/21_Lut%C3%A9cia"
-    }
+    },
+    "surfaceResolutions": ["2k", "1k"]
   },
   "facts": {
     "radiusKm": {

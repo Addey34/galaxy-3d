@@ -61,6 +61,21 @@ provenance (source URL, resolution, licence) is in one file per texture layer un
    only; unobserved areas (shadows, polar caps, 13 % of the surface) are filled smoothly from
    their edges, with no detail added.
 
+2b. **CC BY-NC 3.0 IGO: ESA, for `lutetia` (since 2026-10-06).** The ESA Space Science Archives,
+   which serve the Rosetta OSIRIS images through the Planetary Science Archive, distribute their
+   data under CC BY-NC 3.0 IGO (`cosmos.esa.int/web/esdc/terms-and-conditions`, read 2026-10-06):
+   attribution required with the mission credit line, **non-commercial use only**, commercial use
+   subject to ESA's authorisation (`data.licences@esa.int`). The project owner decided on
+   2026-10-06 to ship under these terms, the site carrying only a voluntary donation link.
+   **Data credit: ESA/Rosetta OSIRIS (ESA, H. Sierks).** `lutetia` carries a map made by this
+   project, none being published as a data product: twenty NAC reflectance frames of the
+   2010-07-10 flyby (`RO-A-OSINAC-4-AST2-LUTETIA-REFLECT-V2.0`) projected onto the shape model at
+   the PCK pose that the project's pose tool recovered blind to 1.68°. **Modification (stated as
+   required)**: the albedo of the thirteen approach frames (phase 0.3 to 18°) multiplied by the
+   fine relief of a photomosaic of the frames at phase 26 to 60°, scaled to the published geometric
+   albedo 0.19 (Sierks et al. 2011); the 65 % of the surface OSIRIS never saw is the measured mean
+   grey, with no detail added.
+
 3. **Confirmed licence, explicitly illustrative.** The licence and source are known and recorded,
    but the map itself is not a validated scientific global mosaic (either no spacecraft imaged the
    body, or, for `halley`, flyby images were never assembled into one): `eris`,
@@ -224,7 +239,8 @@ since 2026-10-06; until then DAMIT model 282, 512 facets, from ground-based data
   plate model of T. L. Farnham (2013), NASA PDS `RO-A-OSINAC/OSIWAC-5-LUTETIA-SHAPE-V1.0`.
 - **Data credit**: ESA Rosetta OSIRIS images. Distributed by NASA PDS without restriction.
 - **Modification**: read from DSK to OBJ by `scripts/dsk-to-obj.mjs`, pole brought onto +Y,
-  decimated. Uniform colour at albedo 0.19 (Sierks et al. 2011, JPL SBDB).
+  decimated. Draped since 2026-10-06 with its OSIRIS map (texture group 2b above); until then a
+  uniform colour at albedo 0.19 (Sierks et al. 2011, JPL SBDB).
 
 `public/assets/models/didymos/didymos_shape_{1k,2k,4k}.glb` and
 `public/assets/models/dimorphos/dimorphos_shape_{1k,2k,4k}.glb`: asteroid (65803) Didymos and its

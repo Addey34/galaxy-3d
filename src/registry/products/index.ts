@@ -67,6 +67,7 @@ export const HEIGHTFIELD_PRODUCTS: readonly HeightfieldSetProduct[] =
  */
 export function licenseLabel(product: ShippedTextureProduct): string {
   if (product.license === 'CC-BY-4.0') return 'CC BY 4.0';
+  if (product.license === 'CC-BY-NC-3.0-IGO') return 'CC BY-NC 3.0 IGO';
   if (product.license === 'other' && product.rights) return product.rights;
   throw new Error(
     `licence sans libellé affichable : ${product.license} (${product.id})`

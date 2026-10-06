@@ -2113,7 +2113,8 @@ de l'import, un seul flou, laissait noires les calottes polaires, vu sur la vign
 Pour les autres, aucune carte n'a été trouvée là où l'on a cherché le 2026-10-04 : le dépôt S3
 complet des mosaïques de l'USGS (18 844 clés listées), les cartes de Stooke au PDS (Ida, Gaspra,
 Mathilde, Éros, Itokawa, Phobos, Déimos, Amalthée, Hypérion, Épiméthée, Wild 2 seulement) et les
-archives SPICE de NAIF. Cela vaut pour Psyché, Apophis, Lutetia, Šteins, Didymos, Dimorphos,
+archives SPICE de NAIF. Cela vaut pour Psyché, Apophis, Lutetia [drapée le 2026-10-06 d'une carte
+fabriquée, cf. § « L'outil de pose SPICE, versionné »], Šteins, Didymos, Dimorphos,
 Donaldjohanson, Arrokoth et Tempel 1. Psyché n'a pas encore été visitée, Apophis n'est connue
 que par radar ; pour les autres, une recherche plus large (archives propres à chaque mission)
 reste à faire et n'est pas une absence prouvée.
@@ -2347,8 +2348,23 @@ et le départ (sept images, phase 27 à 126°). Mesuré au pas de 0,15° :
   tient entre 0,93 et 1,06 de sa médiane pour 99 % des cases, et 0,02 % seulement passent sous 0,8.
 - **Ce qui décide vraiment : l'albédo de Lutetia à faible phase est presque UNIFORME** (±4 %).
   Calée sur l'albédo publié de 0,19, la texture ressemblerait au gris uniforme déjà cuit dans le
-  modèle, avec de faibles nuances sur 35 % de la surface. **Rien n'est livré** tant que ce gain
-  n'est pas jugé à la hauteur de son coût (licence non commerciale, chaîne d'import, fiche).
+  modèle, avec de faibles nuances sur 35 % de la surface.
+
+**Lutetia drapée d'une carte par transfert de détail (2026-10-06, choix de l'utilisateur après ce
+constat).** Une PHOTOMOSAÏQUE garde le relief que la carte d'albédo n'a pas : l'I/F brut des trois
+images de phase 26 à 60° (15:40 à 15:43), dont l'ombrage reste cohérent puisque pendant le survol
+le Soleil éclaire la surface sous presque le même angle (Lutetia tourne de 22° en 30 min).
+Couverture 28,3 %, recalage des formes contre la carte d'approche, faite d'images indépendantes :
+**0,78 au décalage nul**, 0,18 au mieux décalée. Mais elle cuit aussi l'ombrage à GRANDE échelle
+de l'éclairage de 2010 (une plage blanche sur les pentes face au Soleil), qui ferait double emploi
+avec celui que l'application calcule sur le modèle. La texture livrée (`pnpm pose:spice texture`,
+`texture: "detail"`) est donc la carte d'albédo d'approche multipliée par le relief FIN de la
+photomosaïque (la mosaïque divisée par sa version floutée sur 1,5°) : les cratères et leurs bords
+restent, l'ombrage à grande échelle part ; ce facteur de détail tient entre 0,84 et 1,11 (1ᵉʳ au
+99ᵉ centile). Calée sur l'albédo 0,19 (`compose-albedo-texture.mjs`), importée en 1k et 2k
+(source de 2 400 px), sous **CC BY-NC 3.0 IGO**, crédit « ESA/Rosetta OSIRIS (ESA, H. Sierks) »,
+modification déclarée (fiche de texture, `THIRD_PARTY_NOTICES.md` groupe 2b, crédits de l'aide,
+`/sources`). La couleur uniforme cuite dans le modèle est retirée, comme pour tout corps drapé.
 
 Pour la couleur de Ryugu, aucun produit n'avait été trouvé sur DARTS ; PSI sert pourtant la
 collection `data_reflectance_coregistered` de l'ONC, multi-filtres et recalée, avec ses plans

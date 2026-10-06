@@ -1,0 +1,41 @@
+{
+  "$schema": "../../schema/product.schema.json",
+  "id": "lutetia-surface",
+  "type": "texture",
+  "body": "lutetia",
+  "layer": "surface",
+  "shipped": true,
+  "license": "CC-BY-NC-3.0-IGO",
+  "links": [
+    {
+      "rel": "license",
+      "href": "https://www.cosmos.esa.int/web/esdc/terms-and-conditions"
+    },
+    {
+      "rel": "via",
+      "href": "https://archives.esac.esa.int/psa/ftp/INTERNATIONAL-ROSETTA-MISSION/OSINAC/RO-A-OSINAC-4-AST2-LUTETIA-REFLECT-V2.0/"
+    }
+  ],
+  "providers": [
+    {
+      "name": "ESA/Rosetta OSIRIS (ESA, H. Sierks), NAC reflectance images RO-A-OSINAC-4-AST2-LUTETIA-REFLECT-V2.0, ESA Planetary Science Archive",
+      "roles": ["licensor", "producer"]
+    }
+  ],
+  "tier": "free",
+  "review": {
+    "status": "ready",
+    "processing": "import-textures",
+    "downloadUrl": "https://archives.esac.esa.int/psa/ftp/INTERNATIONAL-ROSETTA-MISSION/OSINAC/RO-A-OSINAC-4-AST2-LUTETIA-REFLECT-V2.0/DATA/IMG/",
+    "sourcePage": "https://archives.esac.esa.int/psa/ftp/INTERNATIONAL-ROSETTA-MISSION/OSINAC/RO-A-OSINAC-4-AST2-LUTETIA-REFLECT-V2.0/",
+    "sourceResolution": "0.15 degree/pixel map built from twenty OSIRIS NAC reflectance frames of the 2010-07-10 flyby",
+    "sourcePixelWidth": 2400,
+    "projection": "equirectangular",
+    "qualityClass": "native",
+    "note": "Fabriquee le 2026-10-06 : aucune carte de Lutetia n'est publiee comme donnee. Vingt images NAC reportees sur le modele livre (DSK OSIRIS ROS_LU_K098) a la pose du PCK ROS_LUTETIA_RSOC_V03, que l'outil de pose (pnpm pose:spice) a retrouvee a l'aveugle a 1,68 degre ; camera etablie par les temoins de l'etiquette (point sous la sonde a 0,010 degre, nord celeste a 0,00 degre). Transfert de detail : l'albedo des treize images d'approche (phase 0,3 a 18 degres, Lommel-Seeliger, relatif a chaque image) multiplie par le relief fin d'une photomosaique des images de phase 26 a 60 degres (I/F divise par sa version floutee sur 1,5 degre), pour garder les crateres sans l'ombrage a grande echelle du survol, que l'application calcule deja. Temoins entre vues INDEPENDANTES : formes des cartes d'approche et de depart correlees a 0,80 au decalage nul contre 0,21 au mieux decalees de 1 a 3 degres ; photomosaique contre approche 0,78 contre 0,18 ; radiometrie 0,55 par blocs de 2 degres (l'ombrage du relief non resolu change avec la phase). Albedo presque uniforme (99 % entre 0,93 et 1,06 de la mediane). 34,6 % de la surface mesuree ; le reste, jamais vu par OSIRIS, est au gris moyen mesure, raccorde par un fondu, sans detail invente. Luminosite calee sur l'albedo geometrique 0,19 (Sierks et al. 2011) par scripts/compose-albedo-texture.mjs.",
+    "license": "CC BY-NC 3.0 IGO (ESA Space Science Archives terms, read 2026-10-06)",
+    "credit": "ESA/Rosetta OSIRIS (ESA, H. Sierks)",
+    "attributionNeeded": true,
+    "provenanceNote": "ESA Space Science Archives terms (read 2026-10-06): data distributed under CC BY-NC 3.0 IGO; credit line for Rosetta OSIRIS 'ESA, H. Sierks'; commercial use requires authorisation (data.licences@esa.int). Modified: mapped onto the shape model, photometrically normalised, detail-transferred, calibrated to the published albedo. Shipping under NC decided by the project owner on 2026-10-06."
+  }
+}

@@ -1,6 +1,6 @@
 {
   "$comment": "Relevé écrit par `pnpm textures:ladder --write`. Ne pas éditer à la main. `detail` = part de variance (pondérée cos lat) que le palier porte en plus de son aller-retour en demi-résolution.",
-  "measuredAt": "2026-10-05",
+  "measuredAt": "2026-10-06",
   "rows": [
     {
       "body": "amalthea",
@@ -452,6 +452,18 @@
         "2k": 0.61583
       },
       "bytes": 553053
+    },
+    {
+      "body": "lutetia",
+      "layer": "surface",
+      "shipped": [
+        "1k",
+        "2k"
+      ],
+      "detail": {
+        "2k": 0.05819
+      },
+      "bytes": 87963
     },
     {
       "body": "makemake",
