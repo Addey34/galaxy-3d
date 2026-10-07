@@ -34,6 +34,8 @@ export class AnimationSystem {
   private lodUpdateFrame = 0;
   private lightingUpdateFrame = 0;
   private lastLightingMode: 'educ' | 'explo' | null = null;
+  /** Corps suivi lors de la dernière passe d'éclairage (cf. `_subjectExposure`). */
+  private _lightingTarget: string | null = null;
 
   // State
   private isRunning = false;
@@ -197,8 +199,15 @@ export class AnimationSystem {
   ): void {
     if (!sunWorldPosition) return;
     const mode = this.orbitalMechanics?.scaleMode ?? 'educ';
+    // Un changement de corps SUIVI force la passe comme un changement de mode : la compensation
+    // de l'ombre réfractée en dépend (`_subjectExposure`). Sans cela elle attendait jusqu'à six
+    // images, soit plus de 30 s sur le runner le plus lent : la garde de l'éclipse y a lu 1,36 au
+    // premier essai (run 37589888455, Xeon 8370C), puis passé au réessai.
+    const target = this.cameraSystem?.targetName ?? null;
     const modeChanged = mode !== this.lastLightingMode;
+    const forced = modeChanged || target !== this._lightingTarget;
     this.lastLightingMode = mode;
+    this._lightingTarget = target;
 
     if (mode === 'educ') {
       if (modeChanged) {
@@ -212,12 +221,12 @@ export class AnimationSystem {
           body.setEclipseShadowSource(sunWorldPosition, 0, null, 0);
         }
       }
-      this._updateEducEarthMoonEclipse(modeChanged);
+      this._updateEducEarthMoonEclipse(forced);
       return;
     }
 
     this.lightingUpdateFrame++;
-    if (!modeChanged && this.lightingUpdateFrame % 6 !== 0) return;
+    if (!forced && this.lightingUpdateFrame % 6 !== 0) return;
 
     const sunBody = this.celestialBodies['sun'];
     const sunRadius =
