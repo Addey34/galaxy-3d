@@ -51,7 +51,9 @@ export type ShapeGapReason =
    * Le jeu est NOMMÉ par l'archive elle-même (`source`), mais son hôte refuse de le servir :
    * HTTP 403 sur tout `pdssbn.astro.umd.edu/holdings/`, mesuré le 2026-10-04, alors que les pages
    * de mission du même serveur répondent 200 et citent ces jeux. Une absence d'accès, pas de
-   * source : à re-mesurer avant de conclure quoi que ce soit d'autre.
+   * source : à re-mesurer avant de conclure quoi que ce soit d'autre. RE-MESURÉ le 2026-10-07 :
+   * inchangé, tout `/holdings/` (jeux PDS3 et `pds4-…`) en 403 depuis cette machine ET depuis un
+   * autre réseau (WebFetch), alors que l'accueil et les index du serveur répondent 200.
    */
   | 'archive-refuses-access'
   /**
@@ -124,7 +126,17 @@ export const SHAPE_MODEL_GAPS: readonly ShapeModelGap[] = [
   { body: 'eurybates', radiusKm: 31.9425, reason: 'not-found-in-registries' },
   { body: 'polymele', radiusKm: 10.5375, reason: 'not-found-in-registries' },
   { body: 'orus', radiusKm: 25.405, reason: 'not-found-in-registries' },
-  { body: 'borrelly', radiusKm: 2.4, reason: 'not-found-in-registries' },
+  // Borrelly (corrigé le 2026-10-07) : la page des types de données comète du même hôte
+  // (`data_sb/comet_type.shtml`, § Shape Models) NOMME ce jeu, que la recherche du 2026-10-04
+  // n'avait pas vu. Ce sont des cartes d'élévation de la face vue par DS1, pas un maillage fermé :
+  // même servi, il ne donnerait pas seul une forme entière.
+  {
+    body: 'borrelly',
+    radiusKm: 2.4,
+    reason: 'archive-refuses-access',
+    source:
+      "ds1-c-micas-5-borrelly-dem-v1.0 (cartes d'elevation de la face vue, pas un maillage ferme)",
+  },
   { body: 'giacobini-zinner', radiusKm: 1, reason: 'not-found-in-registries' },
   {
     body: 'grigg-skjellerup',
@@ -158,6 +170,8 @@ export const SHAPE_COLLECTIONS_SEARCHED: readonly string[] = [
   // 2026-10-04, vague 5 : Tempel 1 et Šteins en sont sortis, lus dans l'archive de Rosetta.
   'NAIF, archive SPICE PDS3 de Rosetta (DATA/DSK/) et DSK génériques (generic_kernels/dsk/)',
   'miroir du PSI, collections non_mission de formes : aucune comète',
+  // 2026-10-07 : l'index des comètes par type de données, qui nomme le jeu de Borrelly.
+  'pds-smallbodies.astro.umd.edu/data_sb/comet_type.shtml (§ Shape Models)',
 ];
 
 /** Ce qu'on dit d'un manque, en une ligne, pour l'inventaire. */
