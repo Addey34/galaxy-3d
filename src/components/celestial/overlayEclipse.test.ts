@@ -36,7 +36,9 @@ const attenuationOf = (material: THREE.Material): number | undefined =>
 describe('carreau posé sur une sphère : même ombre que la sphère', () => {
   it('la sphère de la Lune porte bien une ombre d’éclipse par fragment', () => {
     const moon = makeMoon();
-    const surface = moon.layers.get('surface')!;
+    const surface = (
+      moon as unknown as { layers: Map<string, THREE.Mesh> }
+    ).layers.get('surface')!;
     expect(
       getEclipseShadowUniforms(surface.material as THREE.Material)
     ).toBeDefined();
