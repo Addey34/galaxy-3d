@@ -24,7 +24,9 @@ interface PoseTarget {
     samples: number;
     lineAxis: string;
     sampleAxis: string;
+    pixelScaleRad?: number;
   };
+  imageSuffix?: string;
   kernelBase: string;
   kernels: string[];
   imageBase: string;
@@ -125,6 +127,23 @@ describe('outil de pose SPICE : la recette contre ce qui est livré', () => {
     expect(lines.length).toBeGreaterThan(0);
     for (const l of lines) expect(l).toMatch(/^[\w-]+==[\d.]+$/);
     expect(read('scripts/spice-pose.mjs')).toMatch(/\['-I'/);
+  });
+
+  it('une même caméra, au même produit d’image, a une seule échelle', () => {
+    // 2026-10-07 : Miranda gardait 133 000 px/rad quand Ariel et Titania, même caméra et mêmes
+    // images corrigées, en avaient MESURÉ 128 000 au limbe (`pose:spice limb`). Deux nombres pour
+    // une caméra, c'est au moins un faux, et rien ne le voyait.
+    const scales = new Map<string, Set<number>>();
+    for (const [, t] of targets) {
+      if (t.camera.pixelScaleRad === undefined) continue;
+      const key = `${t.camera.instrument} ${t.camera.lines}x${t.camera.samples} ${t.imageFormat} ${t.imageSuffix ?? ''}`;
+      if (!scales.has(key)) scales.set(key, new Set());
+      scales.get(key)!.add(t.camera.pixelScaleRad);
+    }
+    for (const [key, set] of scales) expect([...set], key).toHaveLength(1);
+    expect(
+      targets.filter(([, t]) => t.camera.instrument === '-32101').length
+    ).toBeGreaterThanOrEqual(3);
   });
 
   it('la bande de pastille de l’atlas est la même pour la cuisson et pour l’application', () => {
