@@ -2487,6 +2487,10 @@ l'hémisphère sud se cartographie.
   4,4 s à côté. Décalage SYSTÉMATIQUE mesuré d'environ (−65, −300) px, rattrapé image par image.
 - **Caméra MESURÉE, pas supposée** : échelle des images corrigées 133 000 px/rad (pic de
   corrélation d'une sphère éclairée sur les quatre images où le disque est entier, 0,88 à 0,92) ;
+  **SUPERSEDED le 2026-10-07 : 128 000**, mesuré au limbe sur Titania (voir plus bas) ; cette
+  corrélation est plate entre 127 000 et 136 000. Carte refaite à 128 000 : formes 0,793 contre
+  0,783, radiométrie 0,535 contre 0,530 (0,405 contre 0,390 sans la moyenne des latitudes),
+  28,4 % contre 28,2 % ; détail du palier 4k 3,5 % contre 2,6 % ;
   axes lignes +Y, échantillons +X, la seule des huit conventions qui place le Soleil du côté
   éclairé (prédit −156°, observé −167° sur les quatre images ; les autres à 50° et plus).
 - **Le corps est une sphère** au rayon de sa fiche (`posekit.load_model`, pour un corps qui ne
@@ -2518,8 +2522,8 @@ celle de Miranda :
   de 0,06 à 0,3. Le même ajustement donne 129 500 à 132 500 sur Miranda, triaxiale ; et la
   corrélation qui avait donné 133 000 y est PLATE (r 0,89 à 0,92 de 127 000 à 136 000). Sur Ariel,
   la carte à 128 000 bat celle à 133 000 sur les deux témoins (formes 0,535 contre 0,504,
-  radiométrie sans la moyenne des latitudes 0,312 contre 0,243). La recette de Miranda n'a pas été
-  touchée ; son échelle reste à remesurer au limbe si on la reprend.
+  radiométrie sans la moyenne des latitudes 0,312 contre 0,243). La carte de Miranda a été refaite
+  à 128 000 le 2026-10-07, et ses deux témoins s'améliorent (ci-dessus).
 - **La marge sans donnée tirait le pointage** (`map.maskNoData`). Le zéro exact est la marge que
   laisse la correction géométrique (67 lignes en haut et en bas ; le ciel lit un bruit NÉGATIF,
   médiane −13). Comptée comme du ciel, elle décalait le disque tronqué d'environ 40 px : Melusine
@@ -2549,7 +2553,7 @@ phase 70°, 3,4 km/px). Le disque y tient ENTIER dans le champ, et c'est là que
 tranche : l'ajustement au limbe rend **127 234 à 127 521 px/rad sur les six images**, quand la
 corrélation d'une sphère éclairée reste plate (pic entre 130 000 et 133 000). La recette garde les
 128 000 d'Ariel, la même caméra, à moins d'un pixel du disque de Titania ; les 133 000 de Miranda
-sont donc 4 % trop forts, à reprendre avec elle. Formes **0,732 au décalage nul contre 0,492** au
+étaient donc 4 % trop forts, et sa carte a été refaite à 128 000. Formes **0,732 au décalage nul contre 0,492** au
 mieux décalées (0,118 en moyenne), radiométrie 0,906, 21 % de la surface ; repère vérifié en
 projetant les cratères nommés dans les images des deux groupes (Gertrude, Calphurnia, Ursula,
 Jessica). Pas de 0,25° : le pixel le plus fin (3,4 km) ne porte que 1 458 px de circonférence,

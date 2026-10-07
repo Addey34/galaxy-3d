@@ -263,7 +263,7 @@
       }
     },
     "miranda-voyager": {
-      "$comment": "Miranda vue par Voyager 2, 1986-01-24 (approche 16 h 59 UTC, 29 000 km). Caméra à petit champ de l'ISS, images CALIBRÉES (I/F) et corrigées de la distorsion du vidicon (GEOMED, 1000 x 1000) du nœud Ring-Moon du PDS (VGISS_7206), domaine public. Échelle des images corrigées MESURÉE le 2026-10-06 sur les quatre images où le disque est entier : 133 000 px/rad (pic de corrélation d'une sphère éclairée, 0,88 à 0,92) ; axes : lignes +Y, échantillons +X, seule convention qui place le Soleil du côté éclairé (prédit -156°, observé -167°). Pointage : CK DISCONTINU du nœud Ring-Moon (SEDR, ~100 pixels bruts), lu au compte d'horloge de fin de pose ; décalage systématique d'environ (-65, -300) px rattrapé image par image. Miranda : ura111 (même solution que vgr2.ura111 ; 54 m de la version longue de 2,1 Go). Sphère au rayon de la fiche (pas de modèle de forme). Vérité : IAU_MIRANDA (PCK00010).",
+      "$comment": "Miranda vue par Voyager 2, 1986-01-24 (approche 16 h 59 UTC, 29 000 km). Caméra à petit champ de l'ISS, images CALIBRÉES (I/F) et corrigées de la distorsion du vidicon (GEOMED, 1000 x 1000) du nœud Ring-Moon du PDS (VGISS_7206), domaine public. Échelle des images corrigées : 128 000 px/rad depuis le 2026-10-07, MESURÉE au limbe (`pose:spice limb titania-voyager`, six disques entiers, 127 207 à 127 551) ; les 133 000 du 2026-10-06 venaient d'une corrélation de sphère éclairée, plate entre 127 000 et 136 000, et la carte à 128 000 bat la précédente sur les deux témoins ; axes : lignes +Y, échantillons +X, seule convention qui place le Soleil du côté éclairé (prédit -156°, observé -167°). Pointage : CK DISCONTINU du nœud Ring-Moon (SEDR, ~100 pixels bruts), lu au compte d'horloge de fin de pose ; décalage systématique d'environ (-65, -300) px rattrapé image par image. Miranda : ura111 (même solution que vgr2.ura111 ; 54 m de la version longue de 2,1 Go). Sphère au rayon de la fiche (pas de modèle de forme). Vérité : IAU_MIRANDA (PCK00010).",
       "body": "miranda",
       "naifBody": "705",
       "spacecraft": "-32",
@@ -273,7 +273,7 @@
         "samples": 1000,
         "lineAxis": "+Y",
         "sampleAxis": "+X",
-        "pixelScaleRad": 7.5188e-06,
+        "pixelScaleRad": 7.8125e-06,
         "discreteCk": {
           "structure": "-32100",
           "from": "VG2_SCAN_PLATFORM",
