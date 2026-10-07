@@ -513,6 +513,20 @@ function expected(
           fail('rotation non synchrone selon la source');
         return { values: [sat.siderealOrbitDays * 24], tolerance: MEASURED };
       }
+      // Les petites lunes de Pluton (2026-10-07) : leur rotation est lue dans le tableau « Other
+      // Moons of Pluto » de la fiche de Pluton, leur seule source de rotation.
+      const plutoMoon = (
+        snapshot.nssdca as unknown as {
+          plutoSmallMoons?: {
+            bodies: Record<string, { rotationPeriodDays: number }>;
+          };
+        }
+      ).plutoSmallMoons?.bodies[name];
+      if (plutoMoon && field === 'rotationPeriod')
+        return {
+          values: [plutoMoon.rotationPeriodDays * 24],
+          tolerance: MEASURED,
+        };
       if (!sheet) fail('corps absent des fiches');
       switch (field) {
         case 'radiusKm':

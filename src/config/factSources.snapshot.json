@@ -286,16 +286,20 @@
       ],
       "bodies": {
         "styx": {
-          "geometricAlbedo": 0.65
+          "geometricAlbedo": 0.65,
+          "rotationPeriodDays": 3.24
         },
         "nix": {
-          "geometricAlbedo": 0.56
+          "geometricAlbedo": 0.56,
+          "rotationPeriodDays": 1.83
         },
         "kerberos": {
-          "geometricAlbedo": 0.56
+          "geometricAlbedo": 0.56,
+          "rotationPeriodDays": 5.31
         },
         "hydra": {
-          "geometricAlbedo": 0.83
+          "geometricAlbedo": 0.83,
+          "rotationPeriodDays": 0.43
         }
       }
     }
