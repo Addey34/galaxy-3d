@@ -8,6 +8,7 @@ import {
   UMBRA_REFRACTED_LIGHT,
   umbralDepth,
   umbralTint,
+  refractedShadowExposure,
 } from './eclipse';
 
 describe('physical light attenuation', () => {
@@ -127,5 +128,24 @@ describe('ombre cuivrée d’un occulteur qui a une atmosphère', () => {
     expect(clear[0]).toBeCloseTo(1, 8);
     expect(clear[1]).toBeCloseTo(1, 8);
     expect(clear[2]).toBeCloseTo(1, 8);
+  });
+});
+
+describe('exposition adaptée à la lumière réfractée', () => {
+  it('ne touche à rien hors de l’ombre', () => {
+    expect(refractedShadowExposure(1)).toBe(1);
+  });
+  it('compense exactement le niveau de l’ombre', () => {
+    expect(refractedShadowExposure(0.5)).toBeCloseTo(2, 12);
+  });
+  it('se plafonne à l’inverse de la lumière réfractée', () => {
+    expect(refractedShadowExposure(0)).toBeCloseTo(
+      1 / UMBRA_REFRACTED_LIGHT,
+      12
+    );
+    expect(refractedShadowExposure(0.01)).toBeCloseTo(
+      1 / UMBRA_REFRACTED_LIGHT,
+      12
+    );
   });
 });

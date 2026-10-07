@@ -2042,6 +2042,16 @@ uniforme sur un atlas), et `0,5 / 2,6` pour un modèle à couleur cuite.
 - **Mesuré avant de livrer**, même build, textures substituées par interception réseau : la Lune
   pleine passe d'environ 155 à 60 sur 255 au centre du disque, sombre mais lisible ; Encelade d'une
   médiane de 78 à 150.
+- **L'éclipse totale de Lune, rattrapée par la CI.** La Lune cinq fois plus sombre rendait son
+  disque totalement éclipsé NOIR (garde `e2e/eclipseLanding.spec.ts`, rouge/bleu 1,03 pour un seuil
+  de 2,5) : la lumière réfractée, 0,10 du limbe éclairé, est déjà au bord de sa borne mesurée
+  (≤ 0,15) et ne pouvait pas compenser. Choix de l'utilisateur : adapter la POSE, comme sur une
+  photographie de totalité. `refractedShadowExposure` (`core/eclipse.ts`) multiplie l'éclairage du
+  seul corps que la caméra SUIT par l'inverse du niveau de son ombre réfractée, plafonné à 10 :
+  limbe et ombre ensemble, donc leur rapport tient ; une ombre neutre (la Lune sur la Terre) n'est
+  pas compensée. Une exposition GLOBALE a été essayée d'abord et écartée, mesure à l'appui : le
+  disque était bien cuivré, mais la Voie lactée s'éclaircissait aussi et la garde lisait un fond
+  bleuté (1,06). Falsifié : sans compensation, 1,03.
 
 ## L'orientation en longitude d'une texture (2026-10-04)
 

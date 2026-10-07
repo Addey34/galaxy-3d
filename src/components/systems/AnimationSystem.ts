@@ -16,6 +16,7 @@ import type { EffectComposer } from 'three/examples/jsm/postprocessing/EffectCom
 import type { Starfield } from '@/components/celestial/Starfield';
 import {
   computeLightAttenuation,
+  refractedShadowExposure,
   solarIrradianceFactor,
   type SphericalOccluder,
 } from '@/core/eclipse';
@@ -55,6 +56,19 @@ export class AnimationSystem {
   private composer: EffectComposer | null = null;
   private starfield: Starfield | null = null;
   private cameraSystem!: CameraSystem;
+  /**
+   * Compensation de l'ombre RÉFRACTÉE pour le corps que la caméra SUIT : la pose du sujet, comme
+   * sur une photographie de totalité (`refractedShadowExposure`). Elle multiplie l'éclairage de
+   * ce seul corps, limbe éclairé et ombre ensemble, donc leur rapport mesuré (≤ 0,15) est tenu ;
+   * le ciel et les autres corps gardent leur exposition. Mesuré le 2026-10-07 : une exposition
+   * GLOBALE ×10 rendait bien le disque cuivré, mais éclaircissait aussi la Voie lactée, et la
+   * garde de `eclipseLanding.spec.ts` lisait alors un fond bleuté (rouge/bleu 1,06).
+   */
+  private _subjectExposure(name: string, refractedLevel: number): number {
+    return this.cameraSystem?.targetName === name
+      ? refractedShadowExposure(refractedLevel)
+      : 1;
+  }
   private celestialBodies!: CelestialBodies;
   private orbitalMechanics: OrbitalMechanics | null = null;
 
@@ -279,7 +293,15 @@ export class AnimationSystem {
         );
         // En Explo l'ombre est calculée par fragment : aucune teinte CPU par-dessus.
         body.setUmbraTint(null);
-        body.setLightAttenuation(irradiance);
+        // Ombre par fragment ; la compensation du sujet suit le niveau au CENTRE du corps, et
+        // seulement si l'occulteur réfracte (cf. refractedShadowExposure).
+        body.setLightAttenuation(
+          irradiance *
+            this._subjectExposure(
+              name,
+              occluderBody?.refractsLight ? eclipse : 1
+            )
+        );
       } else {
         body.setLightAttenuation(eclipse * irradiance);
       }
@@ -303,7 +325,10 @@ export class AnimationSystem {
 
     const eclipse = this.orbitalMechanics.getEarthMoonEclipse();
     earth?.setLightAttenuation(eclipse.earth);
-    moon?.setLightAttenuation(eclipse.moon);
+    // En Éducatif l'ombre de la Terre sur la Lune est toujours celle d'un occulteur qui réfracte.
+    moon?.setLightAttenuation(
+      eclipse.moon * this._subjectExposure('moon', eclipse.moon)
+    );
     // L'ombre de la Terre est cuivrée : en Éducatif elle arrive par cette teinte, faute de
     // pouvoir être calculée par fragment sur des positions comprimées.
     moon?.setUmbraTint(eclipse.moonTint);
