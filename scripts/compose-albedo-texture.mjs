@@ -4,7 +4,7 @@
  * au cadrage de leur source, pour `scripts/import-textures.mjs`.
  *
  *   node scripts/compose-albedo-texture.mjs --rgb r.tif,v.tif,b.tif --albedo <pV> --out sortie.png
- *     [--width 8192] [--chroma-blur px] [--atlas]
+ *     [--width 8192] [--chroma-blur px] [--atlas] [--max-saturated <pour cent>]
  *
  * Mêmes règles que la couleur cuite dans les modèles de forme (`scripts/bake-shape-colour.mjs`) ;
  * la constante `DISPLAY_PER_ALBEDO` vient de `scripts/display-albedo.mjs`, jamais recopiée :
@@ -38,9 +38,14 @@ const width = Number(option('--width') ?? 8192);
 const chromaBlur = Number(option('--chroma-blur') ?? 0);
 // `--atlas` : la source est l'atlas d'un modèle de forme, pas une carte équirectangulaire.
 const atlas = args.includes('--atlas');
+// `--max-saturated` : plafond de valeurs saturées, en pour cent. Pour un corps CLAIR, la
+// convention d'affichage demande une luminance moyenne que l'écran ne peut pas porter (Ariel,
+// albédo 0,39 : 1,014, donc 84,6 % des valeurs écrêtées, mesuré le 2026-10-07). Le facteur
+// commun est alors abaissé jusqu'à ce plafond, et la sortie imprime les DEUX luminances.
+const maxSaturated = option('--max-saturated');
 if (!paths || paths.length !== 3 || !(albedo > 0) || !out) {
   console.error(
-    'usage : node scripts/compose-albedo-texture.mjs --rgb r.tif,v.tif,b.tif --albedo <pV> --out sortie.png [--width 8192] [--chroma-blur px] [--atlas]'
+    'usage : node scripts/compose-albedo-texture.mjs --rgb r.tif,v.tif,b.tif --albedo <pV> --out sortie.png [--width 8192] [--chroma-blur px] [--atlas] [--max-saturated <pour cent>]'
   );
   process.exit(2);
 }
@@ -115,7 +120,8 @@ for (let y = 0; y < height; y++) {
     measured++;
   }
 }
-const factor = (albedo * DISPLAY_PER_ALBEDO) / (lum / area);
+const conventionFactor = (albedo * DISPLAY_PER_ALBEDO) / (lum / area);
+let factor = conventionFactor;
 
 /** Flou en boîte séparable, passé deux fois, qui ignore les trous (NaN). */
 function boxBlur(values, radius) {
@@ -176,6 +182,22 @@ if (chromaBlur > 0) {
         : smooth[i] * luminance[i];
   }
 }
+if (maxSaturated !== undefined) {
+  // Le facteur qui n'écrête que `maxSaturated` % des valeurs : l'inverse de leur quantile.
+  const values = [];
+  for (let i = 0; i < width * height; i++)
+    for (let k = 0; k < 3; k++)
+      if (!Number.isNaN(reduced[k][i])) values.push(reduced[k][i]);
+  values.sort((a, b) => a - b);
+  const q =
+    values[
+      Math.min(
+        values.length - 1,
+        Math.floor(values.length * (1 - Number(maxSaturated) / 100))
+      )
+    ];
+  factor = Math.min(conventionFactor, 1 / q);
+}
 const toSrgb = (c) => {
   const v = Math.min(1, Math.max(0, c));
   return Math.round(
@@ -199,6 +221,10 @@ await sharp(rgb, { raw: { width, height, channels: 3 } })
   .toFile(out);
 console.log(
   `${out} : ${width}×${height}, ${((100 * measured) / (width * height)).toFixed(2)} % mesuré, ` +
-    `facteur ${factor.toFixed(3)} (albédo ${albedo} → luminance ${(albedo * DISPLAY_PER_ALBEDO).toFixed(3)}), ` +
+    `facteur ${factor.toFixed(3)} (albédo ${albedo} → luminance ${(albedo * DISPLAY_PER_ALBEDO).toFixed(3)}` +
+    (factor < conventionFactor
+      ? `, PLAFONNÉE à ${((factor / conventionFactor) * albedo * DISPLAY_PER_ALBEDO).toFixed(3)} par --max-saturated`
+      : '') +
+    `), ` +
     `${((100 * clipped) / (3 * measured)).toFixed(3)} % de valeurs saturées`
 );

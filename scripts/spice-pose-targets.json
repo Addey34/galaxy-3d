@@ -341,6 +341,81 @@
         "limbPx": 3,
         "weightByResolution": true
       }
+    },
+    "ariel-voyager": {
+      "$comment": "Ariel vue par Voyager 2, 1986-01-24, mêmes noyaux et même pointage (CK discontinu) que miranda-voyager, images GEOMED du nœud Ring-Moon (VGISS_7206), domaine public. Deux séries indépendantes : 14 h 37 à 14 h 40 (phase 32°, 1,5 km/px, disque tronqué en haut du champ) et 16 h 09 à 16 h 14 (mosaïque claire, phase 68°, 1,17 km/px). Échelle MESURÉE le 2026-10-07 par ajustement d'un cercle au limbe éclairé : 128 000 px/rad (127 000 à 128 600 sur quatre images, insensible au seuil de 0,06 à 0,3) ; la corrélation d'une sphère éclairée, qui avait donné 133 000 sur Miranda, est plate entre 127 000 et 136 000 et ne départage pas. Même ajustement sur Miranda : 129 500 à 132 500 (corps triaxial). La carte à 128 000 bat celle à 133 000 sur les deux témoins. Écartées de la carte : C2684344 (filtre UV, l'albédo livré est visuel ; radiométrie A/B 0,47 sans elle contre 0,43) et C2684537 (aucun limbe dans le champ, seulement le terminateur : rien n'y fixe le pointage, qui saute de (-36, 28) à (40, 168) px selon la méthode). maskNoData : le pointage se mesure sur les seuls pixels valides, la marge nulle de la correction géométrique tirant le disque tronqué d'environ 40 px. Vérité : IAU_ARIEL (PCK00010).",
+      "body": "ariel",
+      "naifBody": "701",
+      "spacecraft": "-32",
+      "camera": {
+        "instrument": "-32101",
+        "lines": 1000,
+        "samples": 1000,
+        "lineAxis": "+Y",
+        "sampleAxis": "+X",
+        "pixelScaleRad": 7.8125e-06,
+        "discreteCk": {
+          "structure": "-32100",
+          "from": "VG2_SCAN_PLATFORM",
+          "clockKey": "SPACECRAFT_CLOCK_STOP_COUNT",
+          "partition": "3",
+          "tolerance": "0:00:400"
+        }
+      },
+      "kernelBase": "https://naif.jpl.nasa.gov/pub/naif/",
+      "kernels": [
+        "https://naif.jpl.nasa.gov/pub/naif/generic_kernels/lsk/naif0012.tls",
+        "https://naif.jpl.nasa.gov/pub/naif/generic_kernels/pck/pck00010.tpc",
+        "https://naif.jpl.nasa.gov/pub/naif/generic_kernels/spk/planets/de440s.bsp",
+        "https://naif.jpl.nasa.gov/pub/naif/VOYAGER/kernels/sclk/vg200051.tsc",
+        "https://naif.jpl.nasa.gov/pub/naif/VOYAGER/kernels/fk/vg2_v02.tf",
+        "https://naif.jpl.nasa.gov/pub/naif/VOYAGER/kernels/ik/vg2_issna_v02.ti",
+        "https://naif.jpl.nasa.gov/pub/naif/VOYAGER/kernels/spk/vgr2.ura111.bsp",
+        "https://naif.jpl.nasa.gov/pub/naif/generic_kernels/spk/satellites/a_old_versions/ura111.bsp",
+        "https://pds-rings.seti.org/voyager/ck/vg2_ura_version1_type1_iss_sedr.bc"
+      ],
+      "imageBase": "https://pds-rings.seti.org/holdings/volumes/VGISS_7xxx/VGISS_7206/DATA/",
+      "images": [
+        "C26843XX/C2684338_GEOMED",
+        "C26843XX/C2684340_GEOMED",
+        "C26843XX/C2684342_GEOMED",
+        "C26843XX/C2684344_GEOMED"
+      ],
+      "imageSuffix": ".IMG",
+      "labelSuffix": ".LBL",
+      "imageFormat": "pds3-detached",
+      "truthFrame": "IAU_ARIEL",
+      "search": {
+        "coarseBin": [
+          8,
+          8
+        ],
+        "fineBin": [
+          4,
+          4
+        ],
+        "coarseSigma": 1,
+        "fineSigma": 1,
+        "maxShiftPx": [
+          400,
+          400
+        ]
+      },
+      "map": {
+        "images": [
+          "C26843XX/C2684338_GEOMED",
+          "C26843XX/C2684340_GEOMED",
+          "C26843XX/C2684342_GEOMED",
+          "C26845XX/C2684533_GEOMED",
+          "C26845XX/C2684535_GEOMED",
+          "C26845XX/C2684539_GEOMED"
+        ],
+        "splitTime": "1986-01-24T15:30:00",
+        "textureGroup": "all",
+        "limbPx": 3,
+        "weightByResolution": true,
+        "maskNoData": true
+      }
     }
   }
 }

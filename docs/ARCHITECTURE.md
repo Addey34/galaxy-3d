@@ -2506,6 +2506,43 @@ l'hémisphère sud se cartographie.
   elle ne rend aucun point, à juste titre. Calée sur l'albédo géométrique visuel 0,32 (NSSDCA) ;
   1,4 % des valeurs saturent (les falaises les plus claires d'une lune claire). Domaine public.
 
+**Ariel, par la même chaîne (2026-10-07).** Recette `ariel-voyager`, six images NAC de
+`VGISS_7206` en deux séries indépendantes : 14 h 37 à 14 h 40 (A, phase 32°, 1,5 km/px) et
+16 h 09 à 16 h 14 (B, phase 68°, 1,17 km/px). Trois choses ont été MESURÉES, et aucune n'était
+celle de Miranda :
+
+- **L'échelle est 128 000 px/rad, pas 133 000.** Le disque d'Ariel déborde du champ sur toutes les
+  images : la corrélation d'une sphère éclairée y échange l'échelle contre le décalage (pic à
+  110 000, r 0,75). Un cercle ajusté au LIMBE éclairé (RANSAC sur le bord du disque plein,
+  sonde de session non versionnée) rend 127 000 à 128 600 sur quatre images, insensible au seuil
+  de 0,06 à 0,3. Le même ajustement donne 129 500 à 132 500 sur Miranda, triaxiale ; et la
+  corrélation qui avait donné 133 000 y est PLATE (r 0,89 à 0,92 de 127 000 à 136 000). Sur Ariel,
+  la carte à 128 000 bat celle à 133 000 sur les deux témoins (formes 0,535 contre 0,504,
+  radiométrie sans la moyenne des latitudes 0,312 contre 0,243). La recette de Miranda n'a pas été
+  touchée ; son échelle reste à remesurer au limbe si on la reprend.
+- **La marge sans donnée tirait le pointage** (`map.maskNoData`). Le zéro exact est la marge que
+  laisse la correction géométrique (67 lignes en haut et en bas ; le ciel lit un bruit NÉGATIF,
+  médiane −13). Comptée comme du ciel, elle décalait le disque tronqué d'environ 40 px : Melusine
+  et Gwyn tombaient à côté de leurs cratères dans les images A et JUSTES dans les images B.
+  `posekit.masked_xcorr` corrèle sur les seuls pixels valides. Radiométrie A/B 0,47 avant, 0,75
+  après. **Option et non défaut, mesuré** : sur Miranda elle rend radiométrie 0,594 contre 0,530 mais
+  formes 0,748 contre 0,783, donc pas une meilleure carte ; sans l'option, la carte de Miranda se
+  reproduit À L'IDENTIQUE (décalages, comptes et témoins du journal d'origine).
+- **Deux images écartées, avec leur raison** : `C2684344` (filtre UV : l'albédo livré est visuel,
+  radiométrie 0,47 sans elle contre 0,43) et `C2684537` (aucun limbe dans le champ, seulement le
+  terminateur : son décalage saute de (−36, 28) à (40, 168) px selon la méthode, rien ne le fixe).
+
+Résultat : formes **0,484 au décalage nul contre 0,193** au mieux décalées, radiométrie 0,747,
+19 % de la surface ; repère vérifié en projetant les cratères nommés DANS les images (Melusine,
+Gwyn, Agape, Mab) puis sur la carte (Melusine, cratère clair, sur la tache claire). Pas de 0,1° :
+la circonférence divisée par le pixel le plus fin donne 3 108 px. **L'albédo ne se porte pas** :
+0,39 (NSSDCA) demande une luminance d'affichage de 1,014, donc 84,6 % de valeurs écrêtées ;
+`compose-albedo-texture --max-saturated 1.4` (la saturation de Miranda) la plafonne à 0,791, et
+Ariel s'affiche ainsi un peu MOINS clair que Miranda (0,827) alors qu'elle l'est plus. Mesuré à
+côté, et laissé tel quel faute de décision : les mosaïques des lunes glacées de Saturne s'affichent
+de 0,14 (Encelade) à 0,22 (Dioné), sans lien avec leur albédo ; la convention de `display-albedo.mjs`
+ne vaut que pour les textures COMPOSÉES. 1k et 2k (source de 3 600 px). Domaine public.
+
 **Les archives des missions, lues le 2026-10-05** pour les cinq corps NASA, par le registre du PDS
 (`pds.nasa.gov/api/search/1`, les 3 863 collections listées puis filtrées, la requête
 `lid like … and …` étant refusée par l'API) :

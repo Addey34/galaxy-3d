@@ -548,6 +548,26 @@ const IMPORTS = [
     tier: 'free',
   },
   {
+    // Carte FABRIQUÉE le 2026-10-07, même chaîne que Miranda : six images NAC de Voyager 2 du
+    // 1986-01-24 (VGISS_7206, GEOMED), `pnpm pose:spice map ariel-voyager --pose truth --step 0.1`
+    // (échelle 128 000 px/rad mesurée au limbe, pointage sur les seuls pixels valides), puis
+    // `scripts/compose-albedo-texture.mjs` avec le même fichier en trois bandes, `--albedo 0.39`
+    // (NSSDCA), `--width 3600` et `--max-saturated 1.4` : la convention d'affichage demandait une
+    // luminance de 1,014, que l'écran ne porte pas (84,6 % saturé). Repère vérifié sur les noms de
+    // l'UAI (Melusine, Gwyn, Agape, Mab). Hémisphère nord jamais éclairé en 1986 : gris moyen mesuré.
+    body: 'ariel',
+    layer: 'surface',
+    src: `${V1}/ariel/ariel_voyager_map.png`,
+    resolutions: ['1k', '2k'],
+    fillHoles: false,
+    source:
+      'https://pds-rings.seti.org/holdings/volumes/VGISS_7xxx/VGISS_7206/',
+    license: 'public-domain',
+    credit:
+      'NASA/JPL Voyager 2 ISS, PDS Ring-Moon Systems Node, données modifiées',
+    tier: 'free',
+  },
+  {
     // ATLAS FABRIQUÉ le 2026-10-06 : aucune carte de 67P n'est publiée comme donnée, et aucune
     // carte équirectangulaire ne peut la porter (13,5 % de sa surface partage sa direction avec
     // une autre). Vingt-deux images NAC d'OSIRIS d'août 2014 (RO-C-OSINAC-4-PRL-67P-M06-REFLECT-
