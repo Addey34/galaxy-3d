@@ -1,0 +1,725 @@
+{
+  "$comment": "Écrit par `node scripts/measure-display-albedo.mjs --write`. Ne pas éditer à la main. Règle : `src/core/displayAlbedo.ts`.",
+  "luminancePerAlbedo": 0.5,
+  "gains": {
+    "mercury": 0.31035,
+    "moon": 0.19159,
+    "phobos": 0.12734,
+    "deimos": 0.15429,
+    "amalthea": 0.37824,
+    "io": 1.19295,
+    "europa": 1.09858,
+    "ganymede": 2.93762,
+    "callisto": 1.9707,
+    "enceladus": 3.48807,
+    "rhea": 2.19463,
+    "mimas": 1.60765,
+    "tethys": 2.02513,
+    "dione": 1.57308,
+    "hyperion": 0.44157,
+    "miranda": 0.193,
+    "ariel": 0.24762,
+    "umbriel": 0.75869,
+    "titania": 0.19209,
+    "oberon": 0.67611,
+    "triton": 1.61425,
+    "proteus": 0.24839,
+    "nereid": 0.1948,
+    "ceres": 0.18821,
+    "vesta": 2.26157,
+    "pallas": 0.29913,
+    "hygiea": 0.38416,
+    "psyche": 0.19231,
+    "pluto": 2.11509,
+    "halley": 0.16038,
+    "bennu": 0.20508,
+    "eros": 0.19585,
+    "ryugu": 0.19223,
+    "ida": 0.39482,
+    "lutetia": 0.19227,
+    "gaspra": 0.45382,
+    "mathilde": 0.19231,
+    "steins": 0.19231,
+    "didymos": 0.19231,
+    "dimorphos": 0.19231,
+    "donaldjohanson": 0.19231,
+    "apophis": 0.19231,
+    "arrokoth": 0.19231,
+    "tempel-1": 0.19231
+  },
+  "rows": [
+    {
+      "body": "stars",
+      "rule": "excluded",
+      "reason": "pas une surface éclairée"
+    },
+    {
+      "body": "sun",
+      "rule": "excluded",
+      "reason": "pas une surface éclairée"
+    },
+    {
+      "body": "mercury",
+      "rule": "texture",
+      "albedo": 0.142,
+      "source": {
+        "path": "nssdca.bodies.mercury.geometricAlbedo",
+        "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/mercuryfact.html"
+      },
+      "texture": "public/assets/textures/mercury/mercury_surface_1k.jpg",
+      "textureMeanLuminance": 0.22877,
+      "gain": 0.31035
+    },
+    {
+      "body": "venus",
+      "rule": "excluded",
+      "reason": "atmosphère (déclarée par le catalogue) : l'albédo publié est celui du disque entier, nuages et brumes compris, pas celui de la surface que porte la texture"
+    },
+    {
+      "body": "earth",
+      "rule": "excluded",
+      "reason": "atmosphère (déclarée par le catalogue) : l'albédo publié est celui du disque entier, nuages et brumes compris, pas celui de la surface que porte la texture"
+    },
+    {
+      "body": "moon",
+      "rule": "texture",
+      "albedo": 0.12,
+      "source": {
+        "path": "nssdca.bodies.moon.geometricAlbedo",
+        "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/moonfact.html"
+      },
+      "texture": "public/assets/textures/moon/moon_surface_1k.jpg",
+      "textureMeanLuminance": 0.31316,
+      "gain": 0.19159
+    },
+    {
+      "body": "mars",
+      "rule": "excluded",
+      "reason": "atmosphère (pression de surface « 6.36 mb at mean radius (variable from 4.0 to 8.7 mb depending on season) », NSSDCA) : l'albédo publié est celui du disque entier, nuages et brumes compris, pas celui de la surface que porte la texture"
+    },
+    {
+      "body": "phobos",
+      "rule": "texture",
+      "albedo": 0.07,
+      "source": {
+        "path": "nssdcaSatellites.phobos.visualGeometricAlbedo",
+        "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/marsfact.html"
+      },
+      "texture": "public/assets/textures/phobos/phobos_surface_1k.jpg",
+      "textureMeanLuminance": 0.27486,
+      "gain": 0.12734
+    },
+    {
+      "body": "deimos",
+      "rule": "texture",
+      "albedo": 0.08,
+      "source": {
+        "path": "nssdcaSatellites.deimos.visualGeometricAlbedo",
+        "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/marsfact.html"
+      },
+      "texture": "public/assets/textures/deimos/deimos_surface_1k.jpg",
+      "textureMeanLuminance": 0.25925,
+      "gain": 0.15429
+    },
+    {
+      "body": "jupiter",
+      "rule": "excluded",
+      "reason": "atmosphère (pression de surface « >>1000 bars », NSSDCA) : l'albédo publié est celui du disque entier, nuages et brumes compris, pas celui de la surface que porte la texture"
+    },
+    {
+      "body": "amalthea",
+      "rule": "texture",
+      "albedo": 0.09,
+      "source": {
+        "path": "nssdcaSatellites.amalthea.visualGeometricAlbedo",
+        "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/joviansatfact.html"
+      },
+      "texture": "public/assets/textures/amalthea/amalthea_surface_1k.jpg",
+      "textureMeanLuminance": 0.11897,
+      "gain": 0.37824
+    },
+    {
+      "body": "io",
+      "rule": "texture",
+      "albedo": 0.62,
+      "source": {
+        "path": "nssdcaSatellites.io.visualGeometricAlbedo",
+        "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/joviansatfact.html"
+      },
+      "texture": "public/assets/textures/io/io_surface_1k.jpg",
+      "textureMeanLuminance": 0.25986,
+      "gain": 1.19295
+    },
+    {
+      "body": "europa",
+      "rule": "texture",
+      "albedo": 0.68,
+      "source": {
+        "path": "nssdcaSatellites.europa.visualGeometricAlbedo",
+        "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/joviansatfact.html"
+      },
+      "texture": "public/assets/textures/europa/europa_surface_1k.jpg",
+      "textureMeanLuminance": 0.30949,
+      "gain": 1.09858
+    },
+    {
+      "body": "ganymede",
+      "rule": "texture",
+      "albedo": 0.44,
+      "source": {
+        "path": "nssdcaSatellites.ganymede.visualGeometricAlbedo",
+        "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/joviansatfact.html"
+      },
+      "texture": "public/assets/textures/ganymede/ganymede_surface_1k.jpg",
+      "textureMeanLuminance": 0.07489,
+      "gain": 2.93762
+    },
+    {
+      "body": "callisto",
+      "rule": "texture",
+      "albedo": 0.19,
+      "source": {
+        "path": "nssdcaSatellites.callisto.visualGeometricAlbedo",
+        "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/joviansatfact.html"
+      },
+      "texture": "public/assets/textures/callisto/callisto_surface_1k.jpg",
+      "textureMeanLuminance": 0.04821,
+      "gain": 1.9707
+    },
+    {
+      "body": "saturn",
+      "rule": "excluded",
+      "reason": "atmosphère (pression de surface « >>1000 bars », NSSDCA) : l'albédo publié est celui du disque entier, nuages et brumes compris, pas celui de la surface que porte la texture"
+    },
+    {
+      "body": "enceladus",
+      "rule": "texture",
+      "albedo": 1,
+      "source": {
+        "path": "nssdcaSatellites.enceladus.visualGeometricAlbedo",
+        "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/saturniansatfact.html"
+      },
+      "texture": "public/assets/textures/enceladus/enceladus_surface_1k.jpg",
+      "textureMeanLuminance": 0.14335,
+      "gain": 3.48807
+    },
+    {
+      "body": "rhea",
+      "rule": "texture",
+      "albedo": 0.7,
+      "source": {
+        "path": "nssdcaSatellites.rhea.visualGeometricAlbedo",
+        "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/saturniansatfact.html"
+      },
+      "texture": "public/assets/textures/rhea/rhea_surface_1k.jpg",
+      "textureMeanLuminance": 0.15948,
+      "gain": 2.19463
+    },
+    {
+      "body": "iapetus",
+      "rule": "excluded",
+      "reason": "la source publie deux albédos, « 0.05 / 0.5 » : aucun nombre unique ne décrit ce corps",
+      "source": {
+        "path": "nssdcaSatellites.iapetus.visualGeometricAlbedo",
+        "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/saturniansatfact.html"
+      }
+    },
+    {
+      "body": "titan",
+      "rule": "excluded",
+      "reason": "atmosphère (« Titan is Saturn's largest moon, and the only moon in our solar system known to have a substantial atmosphere. », https://science.nasa.gov/saturn/moons/titan/) : l'albédo publié est celui du disque entier, nuages et brumes compris, pas celui de la surface que porte la texture"
+    },
+    {
+      "body": "mimas",
+      "rule": "texture",
+      "albedo": 0.6,
+      "source": {
+        "path": "nssdcaSatellites.mimas.visualGeometricAlbedo",
+        "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/saturniansatfact.html"
+      },
+      "texture": "public/assets/textures/mimas/mimas_surface_1k.jpg",
+      "textureMeanLuminance": 0.18661,
+      "gain": 1.60765
+    },
+    {
+      "body": "tethys",
+      "rule": "texture",
+      "albedo": 0.8,
+      "source": {
+        "path": "nssdcaSatellites.tethys.visualGeometricAlbedo",
+        "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/saturniansatfact.html"
+      },
+      "texture": "public/assets/textures/tethys/tethys_surface_1k.jpg",
+      "textureMeanLuminance": 0.19752,
+      "gain": 2.02513
+    },
+    {
+      "body": "dione",
+      "rule": "texture",
+      "albedo": 0.7,
+      "source": {
+        "path": "nssdcaSatellites.dione.visualGeometricAlbedo",
+        "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/saturniansatfact.html"
+      },
+      "texture": "public/assets/textures/dione/dione_surface_1k.jpg",
+      "textureMeanLuminance": 0.22249,
+      "gain": 1.57308
+    },
+    {
+      "body": "hyperion",
+      "rule": "texture",
+      "albedo": 0.3,
+      "source": {
+        "path": "nssdcaSatellites.hyperion.visualGeometricAlbedo",
+        "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/saturniansatfact.html"
+      },
+      "texture": "public/assets/textures/hyperion/hyperion_surface_1k.jpg",
+      "textureMeanLuminance": 0.3397,
+      "gain": 0.44157
+    },
+    {
+      "body": "uranus",
+      "rule": "excluded",
+      "reason": "atmosphère (pression de surface « >>1000 bars », NSSDCA) : l'albédo publié est celui du disque entier, nuages et brumes compris, pas celui de la surface que porte la texture"
+    },
+    {
+      "body": "miranda",
+      "rule": "texture",
+      "albedo": 0.32,
+      "source": {
+        "path": "nssdcaSatellites.miranda.visualGeometricAlbedo",
+        "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/uraniansatfact.html"
+      },
+      "texture": "public/assets/textures/miranda/miranda_surface_1k.jpg",
+      "textureMeanLuminance": 0.82903,
+      "gain": 0.193
+    },
+    {
+      "body": "ariel",
+      "rule": "texture",
+      "albedo": 0.39,
+      "source": {
+        "path": "nssdcaSatellites.ariel.visualGeometricAlbedo",
+        "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/uraniansatfact.html"
+      },
+      "texture": "public/assets/textures/ariel/ariel_surface_1k.jpg",
+      "textureMeanLuminance": 0.78749,
+      "gain": 0.24762
+    },
+    {
+      "body": "umbriel",
+      "rule": "texture",
+      "albedo": 0.21,
+      "source": {
+        "path": "nssdcaSatellites.umbriel.visualGeometricAlbedo",
+        "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/uraniansatfact.html"
+      },
+      "texture": "public/assets/textures/umbriel/umbriel_surface_1k.jpg",
+      "textureMeanLuminance": 0.1384,
+      "gain": 0.75869
+    },
+    {
+      "body": "titania",
+      "rule": "texture",
+      "albedo": 0.27,
+      "source": {
+        "path": "nssdcaSatellites.titania.visualGeometricAlbedo",
+        "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/uraniansatfact.html"
+      },
+      "texture": "public/assets/textures/titania/titania_surface_1k.jpg",
+      "textureMeanLuminance": 0.70279,
+      "gain": 0.19209
+    },
+    {
+      "body": "oberon",
+      "rule": "texture",
+      "albedo": 0.23,
+      "source": {
+        "path": "nssdcaSatellites.oberon.visualGeometricAlbedo",
+        "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/uraniansatfact.html"
+      },
+      "texture": "public/assets/textures/oberon/oberon_surface_1k.jpg",
+      "textureMeanLuminance": 0.17009,
+      "gain": 0.67611
+    },
+    {
+      "body": "neptune",
+      "rule": "excluded",
+      "reason": "atmosphère (pression de surface « >>1000 bars », NSSDCA) : l'albédo publié est celui du disque entier, nuages et brumes compris, pas celui de la surface que porte la texture"
+    },
+    {
+      "body": "triton",
+      "rule": "texture",
+      "albedo": 0.72,
+      "source": {
+        "path": "nssdcaSatellites.triton.visualGeometricAlbedo",
+        "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/neptuniansatfact.html"
+      },
+      "texture": "public/assets/textures/triton/triton_surface_1k.jpg",
+      "textureMeanLuminance": 0.22301,
+      "gain": 1.61425
+    },
+    {
+      "body": "proteus",
+      "rule": "texture",
+      "albedo": 0.1,
+      "source": {
+        "path": "nssdcaSatellites.proteus.visualGeometricAlbedo",
+        "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/neptuniansatfact.html"
+      },
+      "texture": "public/assets/textures/proteus/proteus_surface_1k.jpg",
+      "textureMeanLuminance": 0.2013,
+      "gain": 0.24839
+    },
+    {
+      "body": "nereid",
+      "rule": "texture",
+      "albedo": 0.16,
+      "source": {
+        "path": "nssdcaSatellites.nereid.visualGeometricAlbedo",
+        "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/neptuniansatfact.html"
+      },
+      "texture": "public/assets/textures/nereid/nereid_surface_1k.jpg",
+      "textureMeanLuminance": 0.41068,
+      "gain": 0.1948
+    },
+    {
+      "body": "ceres",
+      "rule": "texture",
+      "albedo": 0.09,
+      "source": {
+        "path": "sbdb.ceres.albedo",
+        "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=1"
+      },
+      "texture": "public/assets/textures/ceres/ceres_surface_1k.jpg",
+      "textureMeanLuminance": 0.2391,
+      "gain": 0.18821
+    },
+    {
+      "body": "vesta",
+      "rule": "texture",
+      "albedo": 0.4228,
+      "source": {
+        "path": "sbdb.vesta.albedo",
+        "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=4"
+      },
+      "texture": "public/assets/textures/vesta/vesta_surface_1k.jpg",
+      "textureMeanLuminance": 0.09347,
+      "gain": 2.26157
+    },
+    {
+      "body": "pallas",
+      "rule": "texture",
+      "albedo": 0.155,
+      "source": {
+        "path": "sbdb.pallas.albedo",
+        "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=2"
+      },
+      "texture": "public/assets/textures/pallas/pallas_surface_1k.jpg",
+      "textureMeanLuminance": 0.25909,
+      "gain": 0.29913
+    },
+    {
+      "body": "hygiea",
+      "rule": "texture",
+      "albedo": 0.0717,
+      "source": {
+        "path": "sbdb.hygiea.albedo",
+        "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=10"
+      },
+      "texture": "public/assets/textures/hygiea/hygiea_surface_1k.jpg",
+      "textureMeanLuminance": 0.09332,
+      "gain": 0.38416
+    },
+    {
+      "body": "psyche",
+      "rule": "baked",
+      "albedo": 0.1203,
+      "gain": 0.19231
+    },
+    {
+      "body": "pluto",
+      "rule": "texture",
+      "albedo": 0.52,
+      "source": {
+        "path": "nssdca.bodies.pluto.geometricAlbedo",
+        "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/plutofact.html"
+      },
+      "texture": "public/assets/textures/pluto/pluto_surface_1k.jpg",
+      "textureMeanLuminance": 0.12293,
+      "gain": 2.11509
+    },
+    {
+      "body": "charon",
+      "rule": "excluded",
+      "reason": "aucun albédo géométrique dans les sources du relevé"
+    },
+    {
+      "body": "styx",
+      "rule": "excluded",
+      "reason": "aucun albédo géométrique dans les sources du relevé"
+    },
+    {
+      "body": "nix",
+      "rule": "excluded",
+      "reason": "aucun albédo géométrique dans les sources du relevé"
+    },
+    {
+      "body": "kerberos",
+      "rule": "excluded",
+      "reason": "aucun albédo géométrique dans les sources du relevé"
+    },
+    {
+      "body": "hydra",
+      "rule": "excluded",
+      "reason": "aucun albédo géométrique dans les sources du relevé"
+    },
+    {
+      "body": "eris",
+      "rule": "excluded",
+      "reason": "aucun albédo géométrique dans les sources du relevé"
+    },
+    {
+      "body": "haumea",
+      "rule": "excluded",
+      "reason": "aucun albédo géométrique dans les sources du relevé"
+    },
+    {
+      "body": "makemake",
+      "rule": "excluded",
+      "reason": "aucun albédo géométrique dans les sources du relevé"
+    },
+    {
+      "body": "orcus",
+      "rule": "excluded",
+      "reason": "aucun albédo géométrique dans les sources du relevé"
+    },
+    {
+      "body": "quaoar",
+      "rule": "excluded",
+      "reason": "aucun albédo géométrique dans les sources du relevé"
+    },
+    {
+      "body": "gonggong",
+      "rule": "excluded",
+      "reason": "aucun albédo géométrique dans les sources du relevé"
+    },
+    {
+      "body": "sedna",
+      "rule": "excluded",
+      "reason": "aucun albédo géométrique dans les sources du relevé"
+    },
+    {
+      "body": "halley",
+      "rule": "texture",
+      "albedo": 0.04,
+      "source": {
+        "path": "sbdb.halley.albedo",
+        "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=1P"
+      },
+      "texture": "public/assets/textures/halley/halley_surface_1k.jpg",
+      "textureMeanLuminance": 0.12471,
+      "gain": 0.16038
+    },
+    {
+      "body": "bennu",
+      "rule": "texture",
+      "albedo": 0.044,
+      "source": {
+        "path": "sbdb.bennu.albedo",
+        "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=101955"
+      },
+      "texture": "public/assets/textures/bennu/bennu_surface_1k.jpg",
+      "textureMeanLuminance": 0.10728,
+      "gain": 0.20508
+    },
+    {
+      "body": "eros",
+      "rule": "texture",
+      "albedo": 0.25,
+      "source": {
+        "path": "sbdb.eros.albedo",
+        "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=433"
+      },
+      "texture": "public/assets/textures/eros/eros_surface_1k.jpg",
+      "textureMeanLuminance": 0.63825,
+      "gain": 0.19585
+    },
+    {
+      "body": "itokawa",
+      "rule": "excluded",
+      "reason": "aucun albédo géométrique dans les sources du relevé"
+    },
+    {
+      "body": "ryugu",
+      "rule": "texture",
+      "albedo": 0.045,
+      "source": {
+        "path": "sbdb.ryugu.albedo",
+        "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=162173"
+      },
+      "texture": "public/assets/textures/ryugu/ryugu_surface_1k.jpg",
+      "textureMeanLuminance": 0.11705,
+      "gain": 0.19223
+    },
+    {
+      "body": "ida",
+      "rule": "texture",
+      "albedo": 0.262,
+      "source": {
+        "path": "sbdb.ida.albedo",
+        "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=243"
+      },
+      "texture": "public/assets/textures/ida/ida_surface_1k.jpg",
+      "textureMeanLuminance": 0.3318,
+      "gain": 0.39482
+    },
+    {
+      "body": "lutetia",
+      "rule": "texture",
+      "albedo": 0.19,
+      "source": {
+        "path": "sbdb.lutetia.albedo",
+        "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=21"
+      },
+      "texture": "public/assets/textures/lutetia/lutetia_surface_1k.jpg",
+      "textureMeanLuminance": 0.49408,
+      "gain": 0.19227
+    },
+    {
+      "body": "gaspra",
+      "rule": "texture",
+      "albedo": 0.246,
+      "source": {
+        "path": "sbdb.gaspra.albedo",
+        "url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=951"
+      },
+      "texture": "public/assets/textures/gaspra/gaspra_surface_1k.jpg",
+      "textureMeanLuminance": 0.27103,
+      "gain": 0.45382
+    },
+    {
+      "body": "mathilde",
+      "rule": "baked",
+      "albedo": 0.0436,
+      "gain": 0.19231
+    },
+    {
+      "body": "steins",
+      "rule": "baked",
+      "albedo": 0.3,
+      "gain": 0.19231
+    },
+    {
+      "body": "annefrank",
+      "rule": "excluded",
+      "reason": "ni texture ni couleur cuite : la teinte de repli de la fiche"
+    },
+    {
+      "body": "masursky",
+      "rule": "excluded",
+      "reason": "ni texture ni couleur cuite : la teinte de repli de la fiche"
+    },
+    {
+      "body": "didymos",
+      "rule": "baked",
+      "albedo": 0.15,
+      "gain": 0.19231
+    },
+    {
+      "body": "dimorphos",
+      "rule": "baked",
+      "albedo": 0.15,
+      "gain": 0.19231
+    },
+    {
+      "body": "dinkinesh",
+      "rule": "excluded",
+      "reason": "ni texture ni couleur cuite : la teinte de repli de la fiche"
+    },
+    {
+      "body": "donaldjohanson",
+      "rule": "baked",
+      "albedo": 0.103,
+      "gain": 0.19231
+    },
+    {
+      "body": "eurybates",
+      "rule": "excluded",
+      "reason": "ni texture ni couleur cuite : la teinte de repli de la fiche"
+    },
+    {
+      "body": "polymele",
+      "rule": "excluded",
+      "reason": "ni texture ni couleur cuite : la teinte de repli de la fiche"
+    },
+    {
+      "body": "leucus",
+      "rule": "excluded",
+      "reason": "ni texture ni couleur cuite : la teinte de repli de la fiche"
+    },
+    {
+      "body": "orus",
+      "rule": "excluded",
+      "reason": "ni texture ni couleur cuite : la teinte de repli de la fiche"
+    },
+    {
+      "body": "patroclus",
+      "rule": "excluded",
+      "reason": "ni texture ni couleur cuite : la teinte de repli de la fiche"
+    },
+    {
+      "body": "menoetius",
+      "rule": "excluded",
+      "reason": "ni texture ni couleur cuite : la teinte de repli de la fiche"
+    },
+    {
+      "body": "apophis",
+      "rule": "baked",
+      "albedo": 0.35,
+      "gain": 0.19231
+    },
+    {
+      "body": "arrokoth",
+      "rule": "baked",
+      "albedo": 0.21,
+      "gain": 0.19231
+    },
+    {
+      "body": "tempel-1",
+      "rule": "baked",
+      "albedo": 0.05,
+      "gain": 0.19231
+    },
+    {
+      "body": "borrelly",
+      "rule": "excluded",
+      "reason": "ni texture ni couleur cuite : la teinte de repli de la fiche"
+    },
+    {
+      "body": "wild-2",
+      "rule": "excluded",
+      "reason": "ni texture ni couleur cuite : la teinte de repli de la fiche"
+    },
+    {
+      "body": "hartley-2",
+      "rule": "excluded",
+      "reason": "ni texture ni couleur cuite : la teinte de repli de la fiche"
+    },
+    {
+      "body": "churyumov-gerasimenko",
+      "rule": "excluded",
+      "reason": "aucun albédo géométrique dans les sources du relevé"
+    },
+    {
+      "body": "giacobini-zinner",
+      "rule": "excluded",
+      "reason": "ni texture ni couleur cuite : la teinte de repli de la fiche"
+    },
+    {
+      "body": "grigg-skjellerup",
+      "rule": "excluded",
+      "reason": "ni texture ni couleur cuite : la teinte de repli de la fiche"
+    }
+  ]
+}

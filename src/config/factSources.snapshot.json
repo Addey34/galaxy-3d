@@ -32,7 +32,8 @@
     "articles": [
       "2026-09-20",
       "2026-09-28",
-      "2026-10-04"
+      "2026-10-04",
+      "2026-10-07"
     ]
   },
   "nssdca": {
@@ -51,8 +52,14 @@
         "siderealRotationHours": 1407.6,
         "siderealOrbitDays": 87.969,
         "obliquityDeg": 0.034,
+        "geometricAlbedo": 0.142,
         "semiMajorAxisAU": 0.38709893,
         "moonCount": 0,
+        "surfacePressure": {
+          "raw": "<~5 x 10-15 bar (0.005 picobar)",
+          "bar": 5.000000000000001e-15,
+          "lowerBound": false
+        },
         "meanTemperatureC": 167
       },
       "venus": {
@@ -66,8 +73,14 @@
         "siderealRotationHours": -5832.6,
         "siderealOrbitDays": 224.701,
         "obliquityDeg": 177.36,
+        "geometricAlbedo": 0.689,
         "semiMajorAxisAU": 0.72333199,
         "moonCount": 0,
+        "surfacePressure": {
+          "raw": "92 bars",
+          "bar": 92,
+          "lowerBound": false
+        },
         "meanTemperatureC": 464
       },
       "earth": {
@@ -81,8 +94,14 @@
         "siderealRotationHours": 23.9345,
         "siderealOrbitDays": 365.256,
         "obliquityDeg": 23.44,
+        "geometricAlbedo": 0.434,
         "semiMajorAxisAU": 1.00000011,
         "moonCount": 1,
+        "surfacePressure": {
+          "raw": "1014 mb",
+          "bar": 1.014,
+          "lowerBound": false
+        },
         "meanTemperatureC": 15
       },
       "mars": {
@@ -96,8 +115,14 @@
         "siderealRotationHours": 24.6229,
         "siderealOrbitDays": 686.98,
         "obliquityDeg": 25.19,
+        "geometricAlbedo": 0.17,
         "semiMajorAxisAU": 1.52366231,
         "moonCount": 2,
+        "surfacePressure": {
+          "raw": "6.36 mb at mean radius (variable from 4.0 to 8.7 mb depending on season)",
+          "bar": 0.00636,
+          "lowerBound": false
+        },
         "meanTemperatureC": -65
       },
       "jupiter": {
@@ -111,8 +136,14 @@
         "siderealRotationHours": 9.925,
         "siderealOrbitDays": 4332.589,
         "obliquityDeg": 3.13,
+        "geometricAlbedo": 0.538,
         "semiMajorAxisAU": 5.20336301,
         "moonCount": 95,
+        "surfacePressure": {
+          "raw": ">>1000 bars",
+          "bar": 1000,
+          "lowerBound": true
+        },
         "meanTemperatureC": -110
       },
       "saturn": {
@@ -126,8 +157,14 @@
         "siderealRotationHours": 10.656,
         "siderealOrbitDays": 10755.699,
         "obliquityDeg": 26.73,
+        "geometricAlbedo": 0.499,
         "semiMajorAxisAU": 9.53707032,
         "moonCount": 274,
+        "surfacePressure": {
+          "raw": ">>1000 bars",
+          "bar": 1000,
+          "lowerBound": true
+        },
         "meanTemperatureC": -140
       },
       "uranus": {
@@ -141,8 +178,14 @@
         "siderealRotationHours": -17.24,
         "siderealOrbitDays": 30685.4,
         "obliquityDeg": 97.77,
+        "geometricAlbedo": 0.488,
         "semiMajorAxisAU": 19.19126393,
         "moonCount": 28,
+        "surfacePressure": {
+          "raw": ">>1000 bars",
+          "bar": 1000,
+          "lowerBound": true
+        },
         "meanTemperatureC": -195
       },
       "neptune": {
@@ -156,8 +199,14 @@
         "siderealRotationHours": 16.11,
         "siderealOrbitDays": 60189.018,
         "obliquityDeg": 28.32,
+        "geometricAlbedo": 0.442,
         "semiMajorAxisAU": 30.06896348,
         "moonCount": 16,
+        "surfacePressure": {
+          "raw": ">>1000 bars",
+          "bar": 1000,
+          "lowerBound": true
+        },
         "meanTemperatureC": -200
       },
       "pluto": {
@@ -171,8 +220,14 @@
         "siderealRotationHours": -153.2928,
         "siderealOrbitDays": 90560,
         "obliquityDeg": 119.51,
+        "geometricAlbedo": 0.52,
         "semiMajorAxisAU": 39.48168677,
         "moonCount": 5,
+        "surfacePressure": {
+          "raw": "~13 microbar",
+          "bar": 0.000013,
+          "lowerBound": false
+        },
         "meanTemperatureC": -225
       },
       "charon": {
@@ -196,6 +251,12 @@
         "siderealOrbitDays": 27.3217,
         "siderealRotationHours": 655.72,
         "obliquityDeg": 6.68,
+        "geometricAlbedo": 0.12,
+        "surfacePressure": {
+          "raw": "3 x 10-15 bar (2 x 10-12 torr)",
+          "bar": 3.0000000000000002e-15,
+          "lowerBound": false
+        },
         "meanTemperatureC": -20
       },
       "sun": {
@@ -219,7 +280,11 @@
       "publishesTemperature": false,
       "semiMajorAxisKm": 181400,
       "siderealOrbitDays": 0.498179,
-      "rotation": "S"
+      "rotation": "S",
+      "visualGeometricAlbedo": {
+        "value": 0.09,
+        "raw": "0.09"
+      }
     },
     "io": {
       "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/joviansatfact.html",
@@ -228,7 +293,11 @@
       "publishesTemperature": false,
       "semiMajorAxisKm": 421800,
       "siderealOrbitDays": 1.769138,
-      "rotation": "S"
+      "rotation": "S",
+      "visualGeometricAlbedo": {
+        "value": 0.62,
+        "raw": "0.62"
+      }
     },
     "europa": {
       "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/joviansatfact.html",
@@ -237,7 +306,11 @@
       "publishesTemperature": false,
       "semiMajorAxisKm": 671100,
       "siderealOrbitDays": 3.551181,
-      "rotation": "S"
+      "rotation": "S",
+      "visualGeometricAlbedo": {
+        "value": 0.68,
+        "raw": "0.68"
+      }
     },
     "ganymede": {
       "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/joviansatfact.html",
@@ -246,7 +319,11 @@
       "publishesTemperature": false,
       "semiMajorAxisKm": 1070400,
       "siderealOrbitDays": 7.154553,
-      "rotation": "S"
+      "rotation": "S",
+      "visualGeometricAlbedo": {
+        "value": 0.44,
+        "raw": "0.44"
+      }
     },
     "callisto": {
       "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/joviansatfact.html",
@@ -255,7 +332,11 @@
       "publishesTemperature": false,
       "semiMajorAxisKm": 1882700,
       "siderealOrbitDays": 16.689017,
-      "rotation": "S"
+      "rotation": "S",
+      "visualGeometricAlbedo": {
+        "value": 0.19,
+        "raw": "0.19"
+      }
     },
     "mimas": {
       "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/saturniansatfact.html",
@@ -264,7 +345,11 @@
       "publishesTemperature": false,
       "semiMajorAxisKm": 185520,
       "siderealOrbitDays": 0.9424218,
-      "rotation": "S"
+      "rotation": "S",
+      "visualGeometricAlbedo": {
+        "value": 0.6,
+        "raw": "0.6"
+      }
     },
     "enceladus": {
       "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/saturniansatfact.html",
@@ -273,7 +358,11 @@
       "publishesTemperature": false,
       "semiMajorAxisKm": 238020,
       "siderealOrbitDays": 1.370218,
-      "rotation": "S"
+      "rotation": "S",
+      "visualGeometricAlbedo": {
+        "value": 1,
+        "raw": "1.0"
+      }
     },
     "tethys": {
       "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/saturniansatfact.html",
@@ -282,7 +371,11 @@
       "publishesTemperature": false,
       "semiMajorAxisKm": 294660,
       "siderealOrbitDays": 1.887802,
-      "rotation": "S"
+      "rotation": "S",
+      "visualGeometricAlbedo": {
+        "value": 0.8,
+        "raw": "0.8"
+      }
     },
     "dione": {
       "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/saturniansatfact.html",
@@ -291,7 +384,11 @@
       "publishesTemperature": false,
       "semiMajorAxisKm": 377400,
       "siderealOrbitDays": 2.736915,
-      "rotation": "S"
+      "rotation": "S",
+      "visualGeometricAlbedo": {
+        "value": 0.7,
+        "raw": "0.7"
+      }
     },
     "rhea": {
       "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/saturniansatfact.html",
@@ -300,7 +397,11 @@
       "publishesTemperature": false,
       "semiMajorAxisKm": 527040,
       "siderealOrbitDays": 4.5175,
-      "rotation": "S"
+      "rotation": "S",
+      "visualGeometricAlbedo": {
+        "value": 0.7,
+        "raw": "0.7"
+      }
     },
     "titan": {
       "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/saturniansatfact.html",
@@ -309,7 +410,11 @@
       "publishesTemperature": false,
       "semiMajorAxisKm": 1221870,
       "siderealOrbitDays": 15.945421,
-      "rotation": "S"
+      "rotation": "S",
+      "visualGeometricAlbedo": {
+        "value": 0.22,
+        "raw": "0.22"
+      }
     },
     "hyperion": {
       "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/saturniansatfact.html",
@@ -318,7 +423,11 @@
       "publishesTemperature": false,
       "semiMajorAxisKm": 1500930,
       "siderealOrbitDays": 21.276609,
-      "rotation": "C"
+      "rotation": "C",
+      "visualGeometricAlbedo": {
+        "value": 0.3,
+        "raw": "0.3"
+      }
     },
     "iapetus": {
       "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/saturniansatfact.html",
@@ -327,7 +436,11 @@
       "publishesTemperature": false,
       "semiMajorAxisKm": 3560850,
       "siderealOrbitDays": 79.330183,
-      "rotation": "S"
+      "rotation": "S",
+      "visualGeometricAlbedo": {
+        "value": null,
+        "raw": "0.05 / 0.5"
+      }
     },
     "miranda": {
       "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/uraniansatfact.html",
@@ -336,7 +449,11 @@
       "publishesTemperature": false,
       "semiMajorAxisKm": 129900,
       "siderealOrbitDays": 1.413479,
-      "rotation": "S"
+      "rotation": "S",
+      "visualGeometricAlbedo": {
+        "value": 0.32,
+        "raw": "0.32"
+      }
     },
     "ariel": {
       "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/uraniansatfact.html",
@@ -345,7 +462,11 @@
       "publishesTemperature": false,
       "semiMajorAxisKm": 190900,
       "siderealOrbitDays": 2.520379,
-      "rotation": "S"
+      "rotation": "S",
+      "visualGeometricAlbedo": {
+        "value": 0.39,
+        "raw": "0.39"
+      }
     },
     "umbriel": {
       "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/uraniansatfact.html",
@@ -354,7 +475,11 @@
       "publishesTemperature": false,
       "semiMajorAxisKm": 266000,
       "siderealOrbitDays": 4.144176,
-      "rotation": "S"
+      "rotation": "S",
+      "visualGeometricAlbedo": {
+        "value": 0.21,
+        "raw": "0.21"
+      }
     },
     "titania": {
       "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/uraniansatfact.html",
@@ -363,7 +488,11 @@
       "publishesTemperature": false,
       "semiMajorAxisKm": 436300,
       "siderealOrbitDays": 8.705867,
-      "rotation": "S"
+      "rotation": "S",
+      "visualGeometricAlbedo": {
+        "value": 0.27,
+        "raw": "0.27"
+      }
     },
     "oberon": {
       "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/uraniansatfact.html",
@@ -372,7 +501,11 @@
       "publishesTemperature": false,
       "semiMajorAxisKm": 583500,
       "siderealOrbitDays": 13.463234,
-      "rotation": "S"
+      "rotation": "S",
+      "visualGeometricAlbedo": {
+        "value": 0.23,
+        "raw": "0.23"
+      }
     },
     "triton": {
       "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/neptuniansatfact.html",
@@ -381,7 +514,11 @@
       "publishesTemperature": false,
       "semiMajorAxisKm": 354760,
       "siderealOrbitDays": 5.876854,
-      "rotation": "S"
+      "rotation": "S",
+      "visualGeometricAlbedo": {
+        "value": 0.72,
+        "raw": "0.72"
+      }
     },
     "proteus": {
       "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/neptuniansatfact.html",
@@ -390,7 +527,11 @@
       "publishesTemperature": false,
       "semiMajorAxisKm": 117647,
       "siderealOrbitDays": 1.122315,
-      "rotation": null
+      "rotation": null,
+      "visualGeometricAlbedo": {
+        "value": 0.1,
+        "raw": "0.10"
+      }
     },
     "nereid": {
       "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/neptuniansatfact.html",
@@ -399,7 +540,11 @@
       "publishesTemperature": false,
       "semiMajorAxisKm": 5513400,
       "siderealOrbitDays": 360.13619,
-      "rotation": null
+      "rotation": null,
+      "visualGeometricAlbedo": {
+        "value": 0.16,
+        "raw": "0.16"
+      }
     },
     "phobos": {
       "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/marsfact.html",
@@ -408,7 +553,11 @@
       "publishesTemperature": false,
       "semiMajorAxisKm": 9378,
       "siderealOrbitDays": 0.31891,
-      "rotation": "S"
+      "rotation": "S",
+      "visualGeometricAlbedo": {
+        "value": 0.07,
+        "raw": "0.07"
+      }
     },
     "deimos": {
       "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/marsfact.html",
@@ -417,7 +566,11 @@
       "publishesTemperature": false,
       "semiMajorAxisKm": 23459,
       "siderealOrbitDays": 1.26244,
-      "rotation": "S"
+      "rotation": "S",
+      "visualGeometricAlbedo": {
+        "value": 0.08,
+        "raw": "0.08"
+      }
     }
   },
   "jplSatellites": {
@@ -2647,6 +2800,13 @@
         "notes": "derived from published value: 952.1532 +/- 0.0001 deg./day",
         "desc": "body rotation period (synodic)"
       },
+      "albedo": {
+        "value": 0.09,
+        "sigma": 0.003,
+        "ref": "Li et al. (2006) Icarus v182:pp143-160",
+        "notes": "V-band geometric albedo",
+        "desc": "geometric albedo"
+      },
       "pole": {
         "value": [
           291.421,
@@ -2705,6 +2865,13 @@
         "ref": "Carry et al., Icarus 205, 460-472 (2010)",
         "notes": null,
         "desc": "body rotation period (synodic)"
+      },
+      "albedo": {
+        "value": 0.155,
+        "sigma": null,
+        "ref": "Vernazza et al., A&A 654, A56 (2021)",
+        "notes": null,
+        "desc": "geometric albedo"
       },
       "pole": {
         "value": [
@@ -2765,6 +2932,13 @@
         "notes": "Rotation rate (deg/day): 1617.33312922 +/- 0.00000013",
         "desc": "body rotation period (synodic)"
       },
+      "albedo": {
+        "value": 0.4228,
+        "sigma": 0.053,
+        "ref": "IRAS-A-FPA-3-RDR-IMPS-V6.0",
+        "notes": "IRAS observations used: 2",
+        "desc": "geometric albedo"
+      },
       "pole": {
         "value": [
           309.0611,
@@ -2818,6 +2992,13 @@
         "notes": "REFERENCE LIST:[Pilcher, F. (2020) Minor Planet Bull. 47, 133-135.], [Vernazza, P.; Jorda, L.; Sevecek, P.; Broz, M.; et al. (2020) Nature Astronomy 4, 136-141.], [Ferrais, M.; Jehin, E.; Vernazza, P.; Jorda, L.; et al. (2021) Minor Planet Bull. 48, 166-167.], [Vernazza, P.; Ferrais, M.; Jorda, L.; Hanus, J.; et al. (2021) Astron. Astrophys 654, id. A56.]",
         "desc": "body rotation period (synodic)"
       },
+      "albedo": {
+        "value": 0.0717,
+        "sigma": 0.002,
+        "ref": "IRAS-A-FPA-3-RDR-IMPS-V6.0",
+        "notes": "IRAS observations used: 22",
+        "desc": "geometric albedo"
+      },
       "pole": null,
       "confirmedSatellites": 0,
       "physicalParameterNames": [
@@ -2863,6 +3044,13 @@
         "ref": "LCDB (Rev. 2023-October); Warner et al., 2009",
         "notes": "REFERENCE LIST:[Binzel, R.P. (1987) Icarus 72, 135-208.], [Binzel, R.P.; Slivan, S.M.; Magnusson, P.; Wisniewski, W.Z.; et al. (1993) Icarus 105, 310-325.], [Davies, M.E.; Colvin, T.R.; Belton, M.J.S.; Veverka, J.; Thomas, P.C. (1996) Icarus 120, 33-37.], [Cieza, L.A.; Ciliberti, L.N.; Iserte, J.A. (1999) IAPPP Comm. #74, 12-23.], [Kaasalainen, M.; Torppa, J.; Muinonen, K. (2001) Icarus 153, 37-51.], [Behrend, R. (2004) Observatoire de Geneve web site, http://obswww.unige.ch/~behrend/page_cou.html], [Proyecto ECLA (Silvia Alonso Perez) (2011) http://www.geocities.com/proyectoecla/], [Hanus, J.; Broz, M.; Durech, J.; Warner, B.D.; et al. (2013) Astron. Astrophys. 559, A134.], [Polakis, T. (2020) Minor Planet Bull. 47, 13-17.], [Behrend, R. (2021) Observatoire de Geneve web site, http://obswww.unige.ch/~behrend/page_cou.html], [Wilkin, F.P.; AlMassri, F.P.; Bowles, P.; Pargiello, M.; et al. (2022) Minor Planet Bull. 49, 267-268.]",
         "desc": "body rotation period (synodic)"
+      },
+      "albedo": {
+        "value": 0.262,
+        "sigma": 0.032,
+        "ref": "urn:nasa:pds:neowise_diameters_albedos::2.0[mainbelt] (http://adsabs.harvard.edu/abs/2012ApJ...759L...8M)",
+        "notes": null,
+        "desc": "geometric albedo"
       },
       "pole": null,
       "confirmedSatellites": 1,
@@ -2911,6 +3099,13 @@
         "ref": "LCDB (Rev. 2023-October); Warner et al., 2009",
         "notes": "REFERENCE LIST:[Campa, M. (1938) Mem. Soc. Astron. Ital. 11, 285-301.], [Beyer, M. (1953) Astron. Nachr. 281, 121-130.], [Cailliate, C. (1956) Publ. Observ. Lyon 3, fasc. 28.], [Cristescu, C. (1976) Icarus 28, 39-42.], [Dunlap, J.L. (1976) Icarus 28, 69-78.], [Millis, R.L.; Bowell, E.; Thompson, D.T. (1976) Icarus 28, 53-67.], [Scaltriti, F.; Zappala, V. (1976) Icarus 28, 29-35.], [Taylor, R.C. (1985) Icarus 61, 3, 490-496.], [Hicks, M.; Buratti, B.J.; Rabinowitz, D.L.; Genevier, G. (1999) Icarus 141, 411-414.], [Yeomans, D.K.; Antreasian, P.G.; Bariiot, J.-P.; Chesley, S.R.; et al. (2000) Science 289, 2085-2087.], [Kaasalainen, M.; Torppa, J.; Muinonen, K. (2001) Icarus 153, 37-51.], [Miller, J.K.; Konopliv, A.S.; Antreasian, P.G.; Bordi, J.J.; et al. (2002) Icarus 155, 3-17.], [Wolters, S.D.; Green, S.F.; McBride, N.; Davies, J.K. (2008) Icarus 193, 535-552.], [Behrend, R. (2009) Observatoire de Geneve web site, http://obswww.unige.ch/~behrend/page_cou.html], [Koehn, B.W.; Bowell, E.L.G.; Skiff, B.A.; Sanborn, J.J.; et al. (2014) Minor Planet Bull. 41, 286-300.], [Warner, B.D. (2017) Minor Planet Bull. 44, 22-36.], [Aznar, A.M.; Predatu, M.; Vaduvescu, O.; Oey, J. (2018) arXiv:1801.09420. Romanian J. Phys. 62, 904 (2017).], [Hasegawa, S.; Kuroda, D.; Kitazato, K.; Kasuga, T.; et al. (2018) Pub. Astron. Soc. Japan 70, A114.], [Skiff, B.A.; McLelland, K.P.; Sanborn, J.J.; Pravec, P.; Koehn, B.W. (2019) Minor Planet Bull. 46, 238-265.], [Warner, B.D.; Stephens, R.D. (2019) Minor Planet Bull. 46, 27-40.]",
         "desc": "body rotation period (synodic)"
+      },
+      "albedo": {
+        "value": 0.25,
+        "sigma": 0.06,
+        "ref": "Veverka et al. (2000) Science v.289,pp.2088-2097",
+        "notes": "average",
+        "desc": "geometric albedo"
       },
       "pole": {
         "value": [
@@ -2971,6 +3166,7 @@
         "notes": "REFERENCE LIST:[Lambert, J.S.; Tholen, D.J. (2001) Bull. Amer. Astron. Soc. 33, 1402.], [Lowry, S.C.; Weissman, P.R.; Hicks, M.D. (2001) Bull. Amer. Astron. Soc. 33, 1150.], [Dermawan, B.; Nakamura, T.; Fukushima, H.; Sato, H.; et al. (2002) Pub. Astron. Soc. Japan 54, 635-640.], [Kaasalainen, M.; et al. (2003) Astron. Astrophys. 405, L29-L32.], [Ohba, Y.; Abe, M.; Hasagawa, S.; Ishiguro, M.; et al. (2005) Earth Planets Space 55, 341-347.], [Warner, B.D. (2004) Minor Planet Bull. 31, 67-70.], [Lowry, S.; Weissman, P.R.; Hicks, M.D.; Whiteley, R.J.; Larson, S. (2005) Icarus 176, 408-417.], [Nishihara, S.; Abe, M.; Hasagawa, S.; Ishiguro, M.; et al. (2005) Lunar & Planetary Sci. XXXVI, 1833.], [Durech, J.; Vokrouhlicky, D.; Kaasalainen, M.; Weissman, P.; et al. (2008) Astron. Astrophys. 488, 345-350.], [Higgins, D.J. (2011) http://www.david-higgins.com/Astronomy/asteroid/lightcurves.htm], [Nishihara, S.; Kitzato, K.; Abe, M.; Hasegawa, S.; et al. (2018) ArXiv:2018.80202742.]",
         "desc": "body rotation period (synodic)"
       },
+      "albedo": null,
       "pole": {
         "value": [
           90.53,
@@ -3025,6 +3221,13 @@
         "ref": "Watanabe, S.; Hirabayashi, M.; Hirata, N.; Hirata, Na.; et al. (2019) Science 364, 267-272.",
         "notes": null,
         "desc": "body rotation period (synodic)"
+      },
+      "albedo": {
+        "value": 0.045,
+        "sigma": 0.002,
+        "ref": "Sugita, S.; Honda, R.; Morota, T.; et al. (2019) Science 364, 6437.",
+        "notes": null,
+        "desc": "geometric albedo"
       },
       "pole": {
         "value": [
@@ -3081,6 +3284,13 @@
         "notes": "J2000 epoch",
         "desc": "body rotation period (synodic)"
       },
+      "albedo": {
+        "value": 0.044,
+        "sigma": 0.002,
+        "ref": "Hergenrother, M.C., et al., Nat. Commun. 10, 1291 (2019)",
+        "notes": null,
+        "desc": "geometric albedo"
+      },
       "pole": {
         "value": [
           85.4522,
@@ -3124,6 +3334,13 @@
       "gmKm3s2": null,
       "densityGcm3": null,
       "rotationHours": null,
+      "albedo": {
+        "value": 0.04,
+        "sigma": 0.01,
+        "ref": "Earth, Moon, and Planets, v. 89, Issue 1, p. 117-134 (2002)",
+        "notes": null,
+        "desc": "geometric albedo"
+      },
       "pole": null,
       "confirmedSatellites": 0,
       "physicalParameterNames": [
@@ -3151,6 +3368,7 @@
         "notes": "REFERENCE LIST:[Walker, M.F.; Hardie, R. (1955) Pub. Ast. Soc. Pacific 67, 224.], [Tholen, D.J.; Buie, M.W. (1997) in Pluto and Charon (S.A. Stern and D.J. Tholen, eds.) pp 193-219. Univ. Arizon Press, Tucson.]",
         "desc": "body rotation period (synodic)"
       },
+      "albedo": null,
       "pole": null,
       "confirmedSatellites": 5,
       "physicalParameterNames": [
@@ -3172,6 +3390,7 @@
         "notes": "[Result based on less than full coverage, so that the period may be wrong by 30 percent or so.]  REFERENCE LIST:[Roe, H. G.; Pike, R.E.; Brown, M.E. (2008) Icarus 198, 459-464.]",
         "desc": "body rotation period (synodic)"
       },
+      "albedo": null,
       "pole": null,
       "confirmedSatellites": 1,
       "physicalParameterNames": [
@@ -3193,6 +3412,7 @@
         "notes": "REFERENCE LIST:[Rabinowitz, D.L.; Barkume, K.; Brown, M.E.; Roe, H.; et al. (2006) Astrophys. J. 639, 1238-1251.], [Rabinowitz, D.L.; Schaefer, B.E.; Tourtellotte, S.W. (2007) Astron. J. 133, 26-43.], [Lellouch, E.; Kiss, C.; Santos-Sanz, P.; Muller, T.G.; et al. (2010) Astron. Astrophys. 518, L147.], [Thirouin, A.; Ortiz, J.L.; Duffard, R.; Santos-Sanz, P.; et al. (2010) Astron. Astrophys. 522, A93.], [Behrend, R. (2011) Observatoire de Geneve web site, http://obswww.unige.ch/~behrend/page_cou.html], [Behrend, R. (2014) Observatoire de Geneve web site, http://obswww.unige.ch/~behrend/page_cou.html], [Lockwood, A.C.; Brown, M.E.; Stansberry, J. (2014) Earth, Moon, and Planets 111, 127-37.], [Clark, M. (2016) Minor Planet Bull. 43, 2-5.], [Behrend, R. (2017) Observatoire de Geneve web site, http://obswww.unige.ch/~behrend/page_cou.html], [Ortiz, J.L.; Santos-Sanz, P.; Sicardy, B.; Benedetti-Rossi, G.; et al. (2017) Nature 550, 219-223.]",
         "desc": "body rotation period (synodic)"
       },
+      "albedo": null,
       "pole": null,
       "confirmedSatellites": 2,
       "physicalParameterNames": [
@@ -3214,6 +3434,7 @@
         "notes": "[Result based on less than full coverage, so that the period may be wrong by 30 percent or so.]  REFERENCE LIST:[Hromakina, T.A.; Belskaya, I.N.; Krugly, Yu.N.; Shevchenko, V.G.; et al. (2019) Astron. Astrophys. 625, A46.]",
         "desc": "body rotation period (synodic)"
       },
+      "albedo": null,
       "pole": null,
       "confirmedSatellites": 1,
       "physicalParameterNames": [
@@ -3235,6 +3456,7 @@
         "notes": "[Result based on less than full coverage, so that the period may be wrong by 30 percent or so.]  REFERENCE LIST:[Rabinowitz, D.L.; Schaefer, B.E.; Tourtellotte, S.W. (2007) Astron. J. 133, 26-43.]",
         "desc": "body rotation period (synodic)"
       },
+      "albedo": null,
       "pole": null,
       "confirmedSatellites": 1,
       "physicalParameterNames": [
@@ -3256,6 +3478,7 @@
         "notes": "[Result based on less than full coverage, so that the period may be wrong by 30 percent or so.]  REFERENCE LIST:[Rabinowitz, D.L.; Schaefer, B.E.; Tourtellotte, S.W. (2007) Astron. J. 133, 26-43.]",
         "desc": "body rotation period (synodic)"
       },
+      "albedo": null,
       "pole": null,
       "confirmedSatellites": 1,
       "physicalParameterNames": [
@@ -3277,6 +3500,7 @@
         "notes": "[Result based on less than full coverage, so that the period may be wrong by 30 percent or so.]  REFERENCE LIST:[Pal, A.; Csaba, K.; Muller, T.G.; Molnar, L.; et al. (2016) Astron. J. 151, A117.]",
         "desc": "body rotation period (synodic)"
       },
+      "albedo": null,
       "pole": null,
       "confirmedSatellites": 1,
       "physicalParameterNames": [
@@ -3298,6 +3522,7 @@
         "notes": "[Result based on less than full coverage, so that the period may be wrong by 30 percent or so.]  REFERENCE LIST:[Gaudi, B.S.; Stanek, K.Z.; Hartman, J.D.; Holman, M.J.; McLeod, B.A. (2005) Astrophys. J. Let. 629, L49-L52.]",
         "desc": "body rotation period (synodic)"
       },
+      "albedo": null,
       "pole": null,
       "confirmedSatellites": 0,
       "physicalParameterNames": [
@@ -3336,6 +3561,13 @@
         "ref": "LCDB (Rev. 2023-October); Warner et al., 2009",
         "notes": "REFERENCE LIST:[Van Houten-Groeneveld, I.; van Houten, C.J. (1958) Astrophys. J. 127, 253-273.], [Taylor, R.C.; Gehrels, T.; Capen, R.C. (1976) Astron. J. 81, 778-786.], [Chang, Y.C.; Zhou, X.-h.; Yang, X.-y.; Zhang, Y.-y.; et al. (1981) Acta Astron. Sin. 22, 169-173; Chin. Astron. Astrophys. 5, 434-437.], [Zhou, X.-h.; Yang, X.-y. (1981) Acta Astron. Sin. 22, 378-382; Chin. Astron. Astrophys. 6, 57-59 (1982, 1982ChA...6...57Z).], [Lupishko, D.F.; Bel'skaya, I.N.; Tupieva, F.A.; Chernova, G.P. (1982) Astron. Vestn. 16, 101-108; Solar System Res. 16, 75-80.], [Zhou, X.-z.; Yang, X.-y.; Wu, Z.-x. (1982) Acta Astron. Sin. 23, 349-352; Chin. Astron. Astrophys. 7, 129-131 (1983, 1983ChA...7..129Z).], [Lupishko, D.F.; Bel'skaya, I.N. (1983) in Asteroids, Comets, Meteors. C.-I. Lagerkvist, H. Rickman, eds. Uppsala, pp. 55-61.], [Tedesco, E.F.; Taylor, R.C.; Drummond, J.; Harwood, D.; et al. (1983) Icarus 54, 30-37.], [Tedesco, E.F.; Taylor, R.C. (1985) Icarus 61, 2, 241-251.], [Magnusson, P. (1986) Icarus 68, 1-39.], [Weidenschilling, S.J.; Chapman, C.R.; Davis, D.R.; Greenberg, R.; et al. (1987) Icarus 70, 191-245.], [Drummond, J.D.; Weidenschilling, S.J.; Chapman, C.R.; Davis, D.R. (1988) Icarus 76, 19-77.], [Magnusson, P. (1990) Icarus 85, 229-240.], [Drummond, J.D.; Weidenschilling, S.J.; Chapman, C.R.; Davis, D.R. (1991) Icarus 89, 44-64.], [Broglia, P.; Manara, A. (1992) Astron. Astrophys. 257, 770-772.], [De Angelis, G. (1993) Planet. Space Sci. 41, 285-290.], [Piironen, J.; Magnusson, P.; Lagerkvist, C.-I.; Williams, I.P.; et al. (1997) Astron. Astrophys. Suppl. Ser. 121, 489-497.], [Kaasalainen, M.; Torppa, J.; Piironen, J. (2002) Icarus 159, 369-395.], [Behrend, R. (2003) Observatoire de Geneve web site, http://obswww.unige.ch/~behrend/page_cou.html], [Durech, J.; Kaasalainen, M.; Herald, D.; Dunham, D.; et al. (2011) Icarus 214, 652-670.], [Proyecto ECLA (Silvia Alonso Perez) (2011) http://www.geocities.com/proyectoecla/], [Hanus, J.; Marchis, F.; Durech, J. (2013) Icarus 226, 1045-1057.], [Hanus, J.; Durech, J.; Oszkiewicz, D.A.; Behrend, R.; et al. (2016) Astron. Astrophys. 586, A108.], [Warner, B.D. (2016) Minor Planet Bull. 43, 137-140.], [Hanus, J.; Viikinkoski, M.; Marchis, F.; Durech, J.; et al (2017) Astron. Astrophys. 601, A114.], [Drummond, J.D.; Merline, W.J.; Carry, B.; Conrad, A.; et al. (2018) Icarus 305, 174-185.], [Viikinkoski, M.; Vernazza, P.; Hanus, J.; Le Coroller, H.; et al. (2018) Astron. Astrophys. 619, L3.], [Ferrais, M.; Vernazz, P.; Jorda, L.; Rambaux, N.; et al. (2020) Astorn. Astrophys. 638, L15.], [Shepard, M.K.; de Kleer, K.; Cambioni, S.; Tayler, P.A.; et al. (2021) Plan. Sci. J. 2, id. 125.], [Vernazza, P.; Ferrais, M.; Jorda, L.; Hanus, J.; et al. (2021) Astron. Astrophys 654, id. A56.], [Ferrais, M.; Vernazza, P.; Jorda, L.; Jehin, E.; et al. (2022) Minor Planet Bull. 49, 307-313.]",
         "desc": "body rotation period (synodic)"
+      },
+      "albedo": {
+        "value": 0.1203,
+        "sigma": 0.004,
+        "ref": "IRAS-A-FPA-3-RDR-IMPS-V6.0",
+        "notes": "IRAS observations used: 32",
+        "desc": "geometric albedo"
       },
       "pole": null,
       "confirmedSatellites": 0,
@@ -3386,6 +3618,13 @@
         "notes": "REFERENCE LIST:[Lupishko, D.F.; Bel'skaya, I.N.; Tupieva, F.A. (1983) Pis'ma Astron. Zh. 9, 691-694; Sov. Astron. Lett. 9, 358-360.], [Zappala, V.; Di Martino, M.; Knezevic, Z.; Djurasevic, G. (1984) Astron. Astrophys. 130, 208-210.], [Lupishko, D.F.; Velichko, F.P. (1987) Kin. Fiz. Neb. Tel 3(1), 57-65; Kinematics and Physics of Celestial Bodies 3(1), 63-71.], [Michalowski, T. (1992) in Asteroids, Comets, Meteors 1991. A.W. Harris, E. Bowell, eds. Lunar and Planetary Institute, Houston, pp. 417-419.], [Michalowski, T. (1993) Icarus 106, 563-572.], [De Angelis, G. (1995) Planet. Space Sci. 43, 649-682.], [Lagerkvist, C.-I.; Erikson, A.; Debehogne, H.; Festin, L.; et al. (1995) Astron. Astrophys. Suppl. Ser. 113, 115-129.], [Michalowski, T. (1996) Icarus 123, 456-462.], [Szabo, Gy.; Sarneczky, K.; Kiss, L.L. (1999) in Proc. IAU Coll. 173, Evolution and Source Regions of Asteroids and Comets, 185-188.], [Behrend, R. (2003) Observatoire de Geneve web site, http://obswww.unige.ch/~behrend/page_cou.html], [Torppa, J.; Kaasalainen, M.; Michalowski, T.; Kwiatkowski, T.; et al. (2003) Icarus 164, 346-383.], [Faury, G. (2009) Bull. Amer. Astron. Soc. 40.], [Behrend, R. (2010) Observatoire de Geneve web site, http://obswww.unige.ch/~behrend/page_cou.html], [Belskaya, I.N.; Fornasier, S.; Krugly, Yu.N.; Shevchenko, V.G.; et al. (2010) Astron. Astrophys. 515, A29.], [Carry, B.; Kaasalainen, M.; Leyrat, C.; Merline, W.J.; et al. (2010) Astron. Astrophys. 523, A94.], [Behrend, R. (2018) Observatoire de Geneve web site, http://obswww.unige.ch/~behrend/page_cou.html], [Muinonen, K.; Torppa, J.; Wang, X.-B.; Cellino, A.; Penttila, A. (2020) Astron. Astrophys. 642, A138.], [Vernazza, P.; Ferrais, M.; Jorda, L.; Hanus, J.; et al. (2021) Astron. Astrophys 654, id. A56.], [Ferrais, M.; Vernazza, P.; Jorda, L.; Jehin, E.; et al. (2022) Minor Planet Bull. 49, 307-313.]",
         "desc": "body rotation period (synodic)"
       },
+      "albedo": {
+        "value": 0.19,
+        "sigma": 0.01,
+        "ref": "Sierks et al., Science 334, 487, 2011",
+        "notes": null,
+        "desc": "geometric albedo"
+      },
       "pole": {
         "value": [
           51.8,
@@ -3433,6 +3672,13 @@
         "notes": "REFERENCE LIST:[Barucci, M.A.; Fulchignoni, M.; Di Martino, M. (1989) Bull. Amer. Astron. Soc. 21, 963.], [Di Martino, M.; Ferreri, W.; Fulchignoni, M.; De Angelis, G.; et al. (1990) Icarus 87, 372-376.], [Goldader, J.D.; Tholen, D.J.; Cruikshank, D.P.; Hartmann, W.K. (1991) Astron. J. 102, 1503-1509.], [De Angelis, G. (1992) in Physical properties of small solar system bodies. A. Brahic, J.-C. Gerard, J. Surdej, eds. Universite de Liege, Institut d'Astrophysique, Liege, pp. 195-201.], [Magnusson, P.; Barucci, M.A.; Binzel, R.P.; Blanco, C.; et al. (1992) Icarus 97, 124-129.], [Wisniewski, W.Z.; Barucci, M.A.; Fulchignoni, M.; De Sanctis, C.; et al. (1993) Icarus 101, 213-222.], [De Angelis, G. (1995) Planet. Space Sci. 43, 649-682.], [Kaasalainen, M.; Torppa, J.; Muinonen, K. (2001) Icarus 153, 37-51.], [Tungalag, N.; Shevchenko, V.G.; Lupishko, D.F. (2002) Kin. Fiz. Neb. Tel 18, 508-516; Kinematics and Physics of Celestial Bodies 18, ???-???.], [Hanus, J.; Broz, M.; Durech, J.; Warner, B.D.; et al. (2013) Astron. Astrophys. 559, A134.], [Dykhuis, M.J.; Molnar, L.A.; Gates, C.J.; Gonzales, J.A.; et al. (2016) Icarus 267, 174-203.], [Behrend, R. (2018) Observatoire de Geneve web site, http://obswww.unige.ch/~behrend/page_cou.html]",
         "desc": "body rotation period (synodic)"
       },
+      "albedo": {
+        "value": 0.246,
+        "sigma": 0.032,
+        "ref": "urn:nasa:pds:neowise_diameters_albedos::2.0[mainbelt] (http://adsabs.harvard.edu/abs/2014ApJ...791..121M)",
+        "notes": null,
+        "desc": "geometric albedo"
+      },
       "pole": null,
       "confirmedSatellites": 0,
       "physicalParameterNames": [
@@ -3479,6 +3725,13 @@
         "notes": "REFERENCE LIST:[Mottola, S.; Sears, W.D.; Erikson, A.; Harris, A.W.; et al. (1995) Planet. Space Sci. 43, 1609-1613.], [Pravec, P.; et al. (2005) Icarus 173, 108-131.], [Durech, J.; Tonry, J.; Erasmus, N.; Denneau, L.; et al. (2020) Astron. Astrophys. 643, A59.], [Martikainen, J.; Muinonen, K.; Penttila, A.; Cellino, A.; Wang, X.-B. (2021) Astron. Astrophys. 649, A98.]",
         "desc": "body rotation period (synodic)"
       },
+      "albedo": {
+        "value": 0.0436,
+        "sigma": 0.004,
+        "ref": "IRAS-A-FPA-3-RDR-IMPS-V6.0",
+        "notes": "IRAS observations used: 20",
+        "desc": "geometric albedo"
+      },
       "pole": null,
       "confirmedSatellites": 0,
       "physicalParameterNames": [
@@ -3511,6 +3764,13 @@
         "notes": "REFERENCE LIST:[Hicks, M.D.; Bauer, J.M.; Tokunaga, A.T. (2004) IAUC 8315.], [Warner, B.D. (2004) Minor Planet Bull. 31, 67-70.], [Behrend, R. (2005) Observatoire de Geneve web site, http://obswww.unige.ch/~behrend/page_cou.html], [Weissman, P.R.; Lowry, S.C.; Choi, Y.-J. (2005) Bull. Amer. Astron. Soc. 37, 644.], [Kuppers, M.; Mottola, S.; Lowry, S.C.; A'Hearn, M.F.; et al. (2007) Astron. Astrophys. 462, L13-L16.], [Weissman, P.R.; Lowry, S.C.; Choi, Y.-J. (2007) Astron. Astrophys. 466, 737-742.], [Jorda, L.; Lamy, P.L.; Faury, G.; Weissman, P.; et al. (2008) Astron. Astrophys. 487, 1171-1178.], [Lamy, P.L.; Kaasalainen, M.; Lowry, S.; Weissman, P.; et al. (2008) Astron. Astrophys. 487, 1179-1185.], [Lamy, P.; Kaasalainen, M.; Jorda, L.; Faury, G.; et al. (2008) Bull. Amer. Astron. Soc. 40 (28.33).], [Dotto, E.; Perna, D.; Fornasier, S.; Belskaya, I.N.; et al. (2009) Astron. Astrophys. 494, L29-L32.], [Jorda, L.; Lamy, P.L.; Gaskell, R.W.; Kaasalainen, M.; et al. (2012) Icarus 221, 1089-1100.], [Waszczak, A.; Chang, C.-K.; Ofeck, E.O.; Laher, F.; et al. (2015) Astron. J. 150, A75.]",
         "desc": "body rotation period (synodic)"
       },
+      "albedo": {
+        "value": 0.3,
+        "sigma": 0.034,
+        "ref": "EAR_A_COMPIL_5_NEOWISEDIAM_V1_0[mainbelt] (http://adsabs.harvard.edu/abs/2011ApJ...741...68M)",
+        "notes": null,
+        "desc": "geometric albedo"
+      },
       "pole": null,
       "confirmedSatellites": 0,
       "physicalParameterNames": [
@@ -3539,6 +3799,13 @@
         "ref": "LCDB (Rev. 2023-October); Warner et al., 2009",
         "notes": "[Result based on less than full coverage, so that the period may be wrong by 30 percent or so.]  REFERENCE LIST:[Schmidt, B.E.; Bauer, J.; Buratti, J.; Russell, C.T. (2007) Lunar & Planetary Sci. XXXVIII, 1859.], [Waszczak, A.; Chang, C.-K.; Ofeck, E.O.; Laher, F.; et al. (2015) Astron. J. 150, A75.]",
         "desc": "body rotation period (synodic)"
+      },
+      "albedo": {
+        "value": 0.311,
+        "sigma": 0.056,
+        "ref": "urn:nasa:pds:neowise_diameters_albedos::2.0[mainbelt] (http://adsabs.harvard.edu/abs/2012ApJ...759L...8M)",
+        "notes": null,
+        "desc": "geometric albedo"
       },
       "pole": null,
       "confirmedSatellites": 0,
@@ -3569,6 +3836,13 @@
         "ref": "LCDB (Rev. 2023-October); Warner et al., 2009",
         "notes": "[Result based on less than full coverage, so that the period may be wrong by 30 percent or so.]  REFERENCE LIST:[Hayes-Gehrke, M.; Khan, R.; Liao, S.; Siegel, T.; et al. (2023) Minor Planet Bull. 50, 11.]",
         "desc": "body rotation period (synodic)"
+      },
+      "albedo": {
+        "value": 0.114,
+        "sigma": 0.034,
+        "ref": "urn:nasa:pds:neowise_diameters_albedos::2.0[mainbelt] (http://adsabs.harvard.edu/abs/2012ApJ...759L...8M)",
+        "notes": null,
+        "desc": "geometric albedo"
       },
       "pole": null,
       "confirmedSatellites": 0,
@@ -3605,6 +3879,7 @@
         "notes": "REFERENCE LIST:[Pravec, P.; et al. (2003) IAUC 8244. (65803)], [Kitazato, K.; Abe, M.; Mito, H. (2005) Asia-Oceana Geophys. Soc. abstract 58-PS-A1183.], [Pravec, P.; et al. (2006) Icarus 181, 63-93.], [Naidu, S.P.; Benner, L.A.M.; Brozovic, M.; Nolan, M.C.; et al. (2020) Icarus 348, id. 113777.], [Panfichi, A.M.; Pajuelo, M. (2023) Minor Planet Bull. 50, 128-130.]",
         "desc": "body rotation period (synodic)"
       },
+      "albedo": null,
       "pole": {
         "value": [
           78,
@@ -3658,6 +3933,7 @@
         "notes": null,
         "desc": "body rotation period (synodic)"
       },
+      "albedo": null,
       "pole": null,
       "confirmedSatellites": 1,
       "physicalParameterNames": [
@@ -3682,6 +3958,13 @@
       "gmKm3s2": null,
       "densityGcm3": null,
       "rotationHours": null,
+      "albedo": {
+        "value": 0.103,
+        "sigma": 0.019,
+        "ref": "urn:nasa:pds:neowise_diameters_albedos::2.0[mainbelt] (http://adsabs.harvard.edu/abs/2011ApJ...741...68M)",
+        "notes": null,
+        "desc": "geometric albedo"
+      },
       "pole": null,
       "confirmedSatellites": 0,
       "physicalParameterNames": [
@@ -3709,6 +3992,13 @@
         "ref": "LCDB (Rev. 2023-October); Warner et al., 2009",
         "notes": "REFERENCE LIST:[Stephens, R.D. (2010) Minor Planet Bull. 37, 47-48.], [Mottola, S.; Di Martino, M.; Erikson, A.; Gonano-Beurer, M.; et al. (2011) Astron. J. 141, A170.], [Mottola, S.; Marchi, S.; Buie, M.W.; Hellmich, S.; et al. (2016) DPS 48/EPSC 11, 208.04.], [Pal, A.; Szakats, R.; Kiss, C.; Bodi, A.; et al. (2020) Ap. J. Supl. Ser. 247, id.26.], [Stephens, R.D.; Warner, B.D. (2021) Minor Planet Bull. 48, 13-15.]",
         "desc": "body rotation period (synodic)"
+      },
+      "albedo": {
+        "value": 0.052,
+        "sigma": 0.007,
+        "ref": "urn:nasa:pds:neowise_diameters_albedos::2.0[jupiter_trojans] (http://adsabs.harvard.edu/abs/2012ApJ...759...49G)",
+        "notes": null,
+        "desc": "geometric albedo"
       },
       "pole": null,
       "confirmedSatellites": 1,
@@ -3738,6 +4028,13 @@
         "ref": "[Buie, M. W. et al. (2018) AJ 155, Issue 6, article id. 245]",
         "notes": null,
         "desc": "body rotation period (synodic)"
+      },
+      "albedo": {
+        "value": 0.091,
+        "sigma": 0.017,
+        "ref": "urn:nasa:pds:neowise_diameters_albedos::2.0[jupiter_trojans] (http://adsabs.harvard.edu/abs/2012ApJ...759...49G)",
+        "notes": null,
+        "desc": "geometric albedo"
       },
       "pole": null,
       "confirmedSatellites": 0,
@@ -3769,6 +4066,13 @@
         "notes": "REFERENCE LIST:[Buie, M.W.; Zangari, A.M.; Marchi, S.; Mottola, S.; Levinson, H.F. (2016) DPS #48, 208.06. (and private communications).], [Buie, M.W.; Zangari, A.M.; Marchi, S.; Levinson, H.F.; Mottola, S. (2018) Astron. J. 155, A245.], [Mottola, S.; Hellmich, S.; Buie, M.W.; Zangari, A.M.; et al. (2020) Plan. Sci. J. 1, id. 73.]",
         "desc": "body rotation period (synodic)"
       },
+      "albedo": {
+        "value": 0.079,
+        "sigma": 0.013,
+        "ref": "urn:nasa:pds:neowise_diameters_albedos::2.0[jupiter_trojans] (http://adsabs.harvard.edu/abs/2012ApJ...759...49G)",
+        "notes": null,
+        "desc": "geometric albedo"
+      },
       "pole": null,
       "confirmedSatellites": 0,
       "physicalParameterNames": [
@@ -3798,6 +4102,13 @@
         "notes": "[Result based on less than full coverage, so that the period may be wrong by 30 percent or so.]  REFERENCE LIST:[Mottola, S.; Di Martino, M.; Erikson, A.; Gonano-Beurer, M.; et al. (2011) Astron. J. 141, A170.], [Mottola, S.; Marchi, S.; Buie, M.W.; Hellmich, S.; et al. (2016) DPS 48/EPSC 11, 208.04.]",
         "desc": "body rotation period (synodic)"
       },
+      "albedo": {
+        "value": 0.075,
+        "sigma": 0.014,
+        "ref": "urn:nasa:pds:neowise_diameters_albedos::2.0[jupiter_trojans] (http://adsabs.harvard.edu/abs/2012ApJ...759...49G)",
+        "notes": null,
+        "desc": "geometric albedo"
+      },
       "pole": null,
       "confirmedSatellites": 0,
       "physicalParameterNames": [
@@ -3826,6 +4137,13 @@
         "ref": "LCDB (Rev. 2023-October); Warner et al., 2009",
         "notes": "REFERENCE LIST:[Behrend, R. (2005) Observatoire de Geneve web site, http://obswww.unige.ch/~behrend/page_cou.html], [Marchis, F.; Hestroffer, D.; Descamps, P.; Berthier, J.; et al. (2006) Nature 439, 565-567.], [Mueller, M.; Marchis, F.; Emery, J.P.; Harris, A.W. (DLR); et al. (2010) Icarus 205, 505-515.], [Oey, J. (2012) Minor Planet Bull. 39, 106-107.], [Stephens, R.D.; Warner, B.D. (2018) Minor Planet Bull. 45, 343-347.], [Berthier, J.; Descampls, P.; Vachier, F.; Normand, J.; et al. (2020) Icarus 352, id. 113990.]",
         "desc": "body rotation period (synodic)"
+      },
+      "albedo": {
+        "value": 0.047,
+        "sigma": 0.003,
+        "ref": "urn:nasa:pds:neowise_diameters_albedos::2.0[jupiter_trojans] (http://adsabs.harvard.edu/abs/2012ApJ...759...49G)",
+        "notes": null,
+        "desc": "geometric albedo"
       },
       "pole": null,
       "confirmedSatellites": 1,
@@ -3859,6 +4177,13 @@
         "notes": null,
         "desc": "body rotation period (synodic)"
       },
+      "albedo": {
+        "value": 0.35,
+        "sigma": 0.1,
+        "ref": "Brozovic et al., Icarus 300, 115-128 (2018)",
+        "notes": null,
+        "desc": "geometric albedo"
+      },
       "pole": null,
       "confirmedSatellites": 0,
       "physicalParameterNames": [
@@ -3885,6 +4210,7 @@
         "notes": "[Result based on less than full coverage, so that the period may be wrong by 30 percent or so.]  REFERENCE LIST:[Porter, S.; Beyer, R.; Keane, J.; Umurhan, O.; et al. (2019) EPSC-DPS Joint Meeting, 2019 September 15-20. Geneva, Switzerland, id. EPSC-DPS2019-311.], [Buie, M.W.; Porter, S.B.; Tamblyn, P.; Terrell, D.; and 129 co-authors. (2020) Astron. J. 159, id. 130.]",
         "desc": "body rotation period (synodic)"
       },
+      "albedo": null,
       "pole": null,
       "confirmedSatellites": 0,
       "physicalParameterNames": [
@@ -3912,6 +4238,13 @@
         "notes": null,
         "desc": "body rotation period (synodic)"
       },
+      "albedo": {
+        "value": 0.05,
+        "sigma": 0.02,
+        "ref": "Earth, Moon, and Planets, v. 89, Issue 1, p. 117-134 (2002)",
+        "notes": null,
+        "desc": "geometric albedo"
+      },
       "pole": null,
       "confirmedSatellites": 0,
       "physicalParameterNames": [
@@ -3937,6 +4270,13 @@
       "gmKm3s2": null,
       "densityGcm3": null,
       "rotationHours": null,
+      "albedo": {
+        "value": 0.022,
+        "sigma": 0.003,
+        "ref": "Earth, Moon, and Planets, v. 89, Issue 1, p. 117-134 (2002)",
+        "notes": null,
+        "desc": "geometric albedo"
+      },
       "pole": null,
       "confirmedSatellites": 0,
       "physicalParameterNames": [
@@ -3963,6 +4303,7 @@
       "gmKm3s2": null,
       "densityGcm3": null,
       "rotationHours": null,
+      "albedo": null,
       "pole": null,
       "confirmedSatellites": 0,
       "physicalParameterNames": [
@@ -3994,6 +4335,7 @@
         "notes": "[Result based on less than full coverage, so that the period may be wrong by 30 percent or so.]  REFERENCE LIST:[Harmon, J.K.; Nolan, M.C; Howell, E.S.; Giorgini, J.D. (2010) CBET 2515.], [Belton, M.J.S.; Thomas, P.; Li, J.-Y.; Williams, J.; et al. (2013) Icarus 222, 595-609.]",
         "desc": "body rotation period (synodic)"
       },
+      "albedo": null,
       "pole": null,
       "confirmedSatellites": 0,
       "physicalParameterNames": [
@@ -4035,6 +4377,7 @@
         "notes": "Pre-perihelion in 2015 value, post-perihelion period is 12.4043 +- 0.0007 h",
         "desc": "body rotation period (synodic)"
       },
+      "albedo": null,
       "pole": {
         "value": [
           69.3,
@@ -4070,6 +4413,7 @@
       "gmKm3s2": null,
       "densityGcm3": null,
       "rotationHours": null,
+      "albedo": null,
       "pole": null,
       "confirmedSatellites": 0,
       "physicalParameterNames": [
@@ -4092,6 +4436,7 @@
       "gmKm3s2": null,
       "densityGcm3": null,
       "rotationHours": null,
+      "albedo": null,
       "pole": null,
       "confirmedSatellites": 0,
       "physicalParameterNames": [
@@ -4402,6 +4747,14 @@
         "implies sizes of Orcus and Vanth of 900 and 280 km",
         "implies sizes of 820 and 640 km"
       ]
+    },
+    "nasa-titan": {
+      "url": "https://science.nasa.gov/saturn/moons/titan/",
+      "retrieved": "2026-10-07",
+      "verifiedQuotes": [
+        "Titan is Saturn's largest moon, and the only moon in our solar system known to have a substantial atmosphere."
+      ],
+      "atmosphereOf": "titan"
     },
     "nasa-didymos-dimorphos": {
       "url": "https://science.nasa.gov/solar-system/asteroids/didymos/",

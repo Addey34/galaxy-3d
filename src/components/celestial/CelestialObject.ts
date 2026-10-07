@@ -66,6 +66,7 @@ import { TEXTURE_QUALITY_PIXELS } from '@/components/systems/TextureSystem';
 import type { TextureSystem } from '@/components/systems/TextureSystem';
 import type { MeteoRenderDiagnostics } from '@/core/meteoDiagnostics';
 import { whenIdle } from '@/utils/idleCallback';
+import { displayGain } from '@/config/displayAlbedo';
 
 const CLOUDS_ROTATION_FACTOR = 0.1;
 // Opacité de l'ombre portée des nuages sur la surface (0 = aucune, 1 = noir).
@@ -1515,6 +1516,18 @@ export default class CelestialObject {
       // Un corps qui a une vraie texture la garde sur sa vraie forme (cf. `core/modelUv.ts`) :
       // même matériau que la sphère, donc mêmes niveaux de texture, ombres et éclipses.
       const draped = this._drapeSurface(meshes);
+      // Couleur CUITE (modèle sans texture) : elle a été cuite à la convention de cuisson, le gain
+      // la ramène à la règle d'affichage (`core/displayAlbedo.ts`). Drapé, le modèle porte le
+      // matériau de la sphère, qui a déjà le sien.
+      if (!draped) {
+        const gain = displayGain(this.name);
+        for (const mesh of meshes)
+          for (const m of Array.isArray(mesh.material)
+            ? mesh.material
+            : [mesh.material])
+            if (m instanceof THREE.MeshStandardMaterial)
+              m.color.multiplyScalar(gain);
+      }
 
       // Un modèle de forme masque un halo comme la sphère qu'il remplace.
       for (const mesh of meshes) markGlowOccluder(mesh);

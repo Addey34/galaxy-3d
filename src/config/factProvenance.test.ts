@@ -155,7 +155,9 @@ type Expected = { values: number[]; tolerance: number; absolute?: boolean };
 /** Tolérance relative : l'arrondi d'affichage le plus fin (4 chiffres significatifs). */
 const MEASURED = 1e-3;
 
-const nssdca = snapshot.nssdca.bodies as Record<
+// `surfacePressure` (objet, 2026-10-07) n'est pas un fait affiché : lu par
+// `scripts/measure-display-albedo.mjs`, pas ici.
+const nssdca = snapshot.nssdca.bodies as unknown as Record<
   string,
   Record<string, number | string>
 >;
