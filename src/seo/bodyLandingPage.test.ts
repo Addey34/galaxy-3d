@@ -1,3 +1,4 @@
+import { KM_PER_AU } from '@/core/ScaleService';
 import { describe, expect, it } from 'vitest';
 import { CELESTIAL_CONFIG } from '@/config/bodies';
 import { bodyFromPathname } from '@/core/permalink';
@@ -181,6 +182,31 @@ describe('faits affichés', () => {
     }
     // Sans cette borne, un `find` qui ne trouve plus rien viderait la boucle en silence.
     expect(checked).toBeGreaterThan(40);
+  });
+
+  it('donne à une distance au parent les décimales de son ordre de grandeur', () => {
+    // Même défaut que le rayon de Bennu, sur la distance (2026-10-07) : Dimorphos est à 1,152 km
+    // de Didymos, et l'arrondi à l'entier publiait « 1 km », une précision que la source n'a
+    // pas perdue. L'affiché doit rester à moins d'une demi-unité de sa dernière décimale.
+    const flat = flattenBodies(CELESTIAL_CONFIG);
+    let checked = 0;
+    for (const page of pages) {
+      const distanceAU = flat.get(page.slug)?.realData?.distanceAU;
+      const fact = page.facts.find((f) =>
+        f.label.startsWith('Mean distance from')
+      );
+      if (!distanceAU || !fact || !fact.value.endsWith(' km')) continue;
+      checked++;
+      const km = distanceAU * KM_PER_AU;
+      const text = fact.value.replace(/[^0-9.]/g, '');
+      const decimals = text.split('.')[1]?.length ?? 0;
+      expect(
+        Math.abs(Number(text) - km),
+        `${page.slug} : ${km} km affiché « ${fact.value} »`
+      ).toBeLessThanOrEqual(0.5 * 10 ** -decimals + 1e-9);
+      if (km < 100) expect(decimals, page.slug).toBeGreaterThan(0);
+    }
+    expect(checked).toBeGreaterThan(30);
   });
 
   it('mesure la distance d’une lune depuis sa planète, pas depuis le Soleil', () => {

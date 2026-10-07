@@ -359,7 +359,8 @@ function formatNumericFact(
       // Demi-grand axe mesuré depuis le PARENT pour un satellite (Titan → Saturne).
       if (PARENT_OF.get(name)) {
         const fromParent = convertDistanceKm(value * KM_PER_AU);
-        return `${num(fromParent.value)} ${fromParent.unit}`;
+        // Décimales selon l'ordre de grandeur, comme le rayon : 1,152 km lisait « 1 km ».
+        return `${num(fromParent.value, distanceDecimals(fromParent.value))} ${fromParent.unit}`;
       }
       return `${num(value, 2)} ${t('unit.au')}`;
     }

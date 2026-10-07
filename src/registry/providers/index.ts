@@ -55,6 +55,7 @@ import kiss2016Nereid from './kiss-2016-nereid.json';
 import brown2010Orcus from './brown-2010-orcus.json';
 import nasaDidymosDimorphos from './nasa-didymos-dimorphos.json';
 import grundy2018Patroclus from './grundy-2018-patroclus.json';
+import richardson2024Didymos from './richardson-2024-didymos.json';
 
 import horizonsBinary from './horizons-binary.json';
 import spkKernel from './spk.json';
@@ -121,6 +122,7 @@ export const FACT_SOURCE_PROVIDERS = {
   'brown-2010-orcus': asFactSource(brown2010Orcus),
   'nasa-didymos-dimorphos': asFactSource(nasaDidymosDimorphos),
   'grundy-2018-patroclus': asFactSource(grundy2018Patroclus),
+  'richardson-2024-didymos': asFactSource(richardson2024Didymos),
 };
 
 /**

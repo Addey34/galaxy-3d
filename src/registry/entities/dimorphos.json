@@ -93,10 +93,10 @@
     "massKg": {
       "published": false,
       "reason": {
-        "en": "NASA’s page on the Didymos system, the source of its other figures, publishes no mass for it, and the JPL Small-Body Database publishes no physical parameters for a satellite.",
-        "fr": "La page de la NASA sur le système de Didymos, d’où viennent ses autres chiffres, ne publie pas sa masse, et la base des petits corps de JPL ne publie aucun paramètre physique pour un satellite.",
-        "es": "La página de la NASA sobre el sistema de Didymos, de donde proceden sus demás cifras, no publica su masa, y la base de datos de cuerpos menores del JPL no publica ningún parámetro físico para un satélite.",
-        "pt-BR": "A página da NASA sobre o sistema de Didymos, de onde vêm os seus outros números, não publica a sua massa, e a base de pequenos corpos do JPL não publica nenhum parâmetro físico para um satélite."
+        "en": "Not measured yet: the DART team writes that the mass of Dimorphos remains the largest uncertainty of the impact, and that the Hera mission will resolve it (Richardson et al. 2024).",
+        "fr": "Pas encore mesurée : l’équipe de DART écrit que la masse de Dimorphos reste la plus grande incertitude de l’impact, et que la mission Hera la tranchera (Richardson et al. 2024).",
+        "es": "Aún no medida: el equipo de DART escribe que la masa de Dimorphos sigue siendo la mayor incertidumbre del impacto, y que la misión Hera la resolverá (Richardson et al. 2024).",
+        "pt-BR": "Ainda não medida: a equipe da DART escreve que a massa de Dimorphos continua sendo a maior incerteza do impacto, e que a missão Hera a resolverá (Richardson et al. 2024)."
       }
     },
     "gravity": {
@@ -130,13 +130,15 @@
       }
     },
     "distanceAU": {
-      "published": false,
-      "reason": {
-        "en": "Neither NASA’s page nor the JPL Small-Body Database publishes its distance from Didymos: the database gives only its ratio to Didymos’s diameter, measured before the impact.",
-        "fr": "Ni la page de la NASA ni la base des petits corps de JPL ne publient sa distance à Didymos : la base n’en donne que le rapport au diamètre de Didymos, mesuré avant l’impact.",
-        "es": "Ni la página de la NASA ni la base de datos de cuerpos menores del JPL publican su distancia a Didymos: la base solo da su relación con el diámetro de Didymos, medida antes del impacto.",
-        "pt-BR": "Nem a página da NASA nem a base de pequenos corpos do JPL publicam a sua distância a Didymos: a base dá apenas a sua razão com o diâmetro de Didymos, medida antes do impacto."
-      }
+      "value": {
+        "$km": 1.152
+      },
+      "source": "richardson-2024-didymos",
+      "method": "measured",
+      "uncertainty": {
+        "$km": 0.018
+      },
+      "detail": "separationAfterDartImpact"
     },
     "orbitPeriodDays": {
       "value": 0.4743055556,
@@ -148,10 +150,10 @@
     "rotationPeriod": {
       "published": false,
       "reason": {
-        "en": "NASA’s page on the Didymos system, the source of its other figures, publishes no rotation period for it.",
-        "fr": "La page de la NASA sur le système de Didymos, d’où viennent ses autres chiffres, ne publie pas sa période de rotation.",
-        "es": "La página de la NASA sobre el sistema de Didymos, de donde proceden sus demás cifras, no publica su periodo de rotación.",
-        "pt-BR": "A página da NASA sobre o sistema de Didymos, de onde vêm os seus outros números, não publica o seu período de rotação."
+        "en": "Not known since the impact: its rotation period is listed as pending, and Dimorphos may have entered a tumbling rotation (Richardson et al. 2024). Before the impact it turned in step with its orbit, in 11 h 55 min.",
+        "fr": "Inconnue depuis l’impact : sa période de rotation est notée en attente, et Dimorphos est peut-être entré dans une rotation chaotique (Richardson et al. 2024). Avant l’impact, il tournait au rythme de son orbite, en 11 h 55 min.",
+        "es": "Desconocido desde el impacto: su periodo de rotación figura como pendiente, y Dimorphos quizá entró en una rotación caótica (Richardson et al. 2024). Antes del impacto giraba al ritmo de su órbita, en 11 h 55 min.",
+        "pt-BR": "Desconhecido desde o impacto: o seu período de rotação consta como pendente, e Dimorphos talvez tenha entrado numa rotação caótica (Richardson et al. 2024). Antes do impacto girava no ritmo da sua órbita, em 11 h 55 min."
       }
     }
   },

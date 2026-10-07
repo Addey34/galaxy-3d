@@ -531,7 +531,10 @@ export function bodyFactsWithSources(
             '{parent}',
             parentDisplayName
           );
-          value = `${formatNumber(v * KM_PER_AU, 0, locale)} km`;
+          // Même règle de décimales que le rayon : Dimorphos est à 1,152 km de Didymos, et un
+          // arrondi à l'entier annonçait « 1 km ».
+          const km = v * KM_PER_AU;
+          value = `${formatNumber(km, distanceDecimals(km), locale)} km`;
         } else {
           label = factLabel('distanceFromSun', locale);
           value = `${formatNumber(v, 3, locale)} ${dict['unit.au']}`;

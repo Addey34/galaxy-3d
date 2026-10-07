@@ -4829,6 +4829,16 @@
         "margin of uncertainty of approximately plus or minus 2 minutes"
       ]
     },
+    "richardson-2024-didymos": {
+      "url": "https://arxiv.org/abs/2502.14990",
+      "retrieved": "2026-10-07",
+      "verifiedQuotes": [
+        "Mean Separation of Component Centerse [km] 1.20 ± 0.03 1.189 ± 0.017 1.152 ± 0.018",
+        "Secondary Rotation Periodk [h] 11.921629 ± 0.000003 11.92149 ± 0.00002 pending",
+        "The largest uncertainty in the momentum transfer enhancement factor of the DART impact remains the mass of Dimorphos, which will be resolved by the Hera mission.",
+        "may have entered a tumbling rotation state"
+      ]
+    },
     "grundy-2018-patroclus": {
       "url": "https://arxiv.org/abs/1903.03729",
       "retrieved": "2026-10-04",

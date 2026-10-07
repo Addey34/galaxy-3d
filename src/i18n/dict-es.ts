@@ -663,6 +663,8 @@ export const es: Record<MessageKey, string> = {
     'q = a (1 − e), según los elementos osculadores publicados',
   'detail.afterDartImpact':
     'el periodo tras el impacto de DART del 26 de septiembre de 2022 (11 h 55 min antes)',
+  'detail.separationAfterDartImpact':
+    'la distancia media entre los dos centros justo después del impacto de DART (1,189 km antes)',
   'fact.notYetSourced':
     'Galaxy aún no ha vinculado este valor a una fuente primaria (agencia espacial, UAI, artículo publicado): por eso no se muestra.',
 };

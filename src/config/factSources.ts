@@ -158,6 +158,7 @@ export const DETAIL = {
   absoluteMagnitudeH: { message: 'detail.absoluteMagnitudeH' },
   perihelionFromElements: { message: 'detail.perihelionFromElements' },
   afterDartImpact: { message: 'detail.afterDartImpact' },
+  separationAfterDartImpact: { message: 'detail.separationAfterDartImpact' },
 } as const satisfies Record<string, { message: MessageKey }>;
 
 /**
