@@ -412,17 +412,6 @@ const BODIES = [
     heightContrast: 0.4,
     craterRimStrength: 0,
   },
-  // Surface la plus brillante/jeune des lunes d'Uranus : peu de grands cratères (effacés par un
-  // resurfaçage relativement récent), beaucoup de petits (Voyager 2 imaging science, 1986).
-  {
-    name: 'ariel',
-    baseColor: [196, 194, 190],
-    craterCount: 28,
-    craterMinRadius: 0.03,
-    craterMaxRadius: 0.08,
-    albedoVariation: 0.1,
-    heightContrast: 0.35,
-  },
   // La plus sombre des grandes lunes d'Uranus ; cratère Wunda (plancher/parois clairs) au pôle
   // nord — seule feature isolée nommée, approximée par un unique groupe de patch à 1 élément.
   {

@@ -141,6 +141,6 @@
     }
   },
   "notes": {
-    "textureResolutions": "Aucune mosaïque globale contrôlée n'existe côté USGS pour Ariel — vérifié en direct (2026-08-26, voir registry/products/textures). Texture procédurale générée : peu de grands cratères + beaucoup de petits (Voyager 2 imaging science, 1986)."
+    "textureResolutions": "Carte fabriquée le 2026-10-07 depuis six images de Voyager 2 calibrées et corrigées de leur distorsion (PDS, nœud Ring-Moon), reportées au repère IAU_ARIEL et vérifiées sur les noms de l'UAI ; seul l'hémisphère sud, éclairé en 1986, est mesuré. Voir registry/products/textures/ariel-surface.json."
   }
 }

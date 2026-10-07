@@ -237,7 +237,9 @@ def cmd_map(t, a):
     scene = pk.make_scene(mesh, min(g["d"] for g in geo) / cam.ks * 4)
     for g, image in zip(geo, imgs):
         B = pose_at(g)
-        shift = pk.pointing_shift(scene, cam, B, g, image, (4, 4), tuple(t["search"]["maxShiftPx"]))
+        shift = pk.pointing_shift(
+            scene, cam, B, g, image, (4, 4), tuple(t["search"]["maxShiftPx"]), m.get("maskNoData", False)
+        )
         lat, lon, refl, w, iof, idx = pk.reflectance_samples(
             P, N, cam, B, g, image, shift, max_angle=m.get("maxAngle", 70.0), spacing=spacing,
             limb_px=m.get("limbPx", 0),

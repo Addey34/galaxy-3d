@@ -597,12 +597,46 @@ def blind_search(coarse, fine, poles=400, wstep=10, keep=8, jobs=1, log=print):
 # ---------------------------------------------------------------- carte
 
 
-def pointing_shift(scene, cam, B, g, image, b, maxshift_px):
+def masked_xcorr(pred, obs, valid, maxs):
+    """`xcorr` calculée sur les SEULS pixels observés valides, à chaque décalage (moyennes et
+    normes dans le recouvrement). Un recouvrement où le rendu ne varie presque plus est écarté :
+    sa corrélation n'a plus de sens (17,6 mesuré sur une image d'Ariel sans ce garde)."""
+    H, W = pred.shape
+    S = (2 * H, 2 * W)
+    FY = lambda Y: np.conj(np.fft.rfft2(Y, S))
+    cut = lambda c: np.roll(np.roll(c, maxs[0], 0), maxs[1], 1)[: 2 * maxs[0] + 1, : 2 * maxs[1] + 1]
+    R = lambda X, fy: cut(np.fft.irfft2(np.fft.rfft2(X, S) * fy, S))
+    M = valid.astype(float)
+    o = np.where(valid, obs, 0.0)
+    f1, fp, fpp = FY(np.ones_like(pred)), FY(pred), FY(pred**2)
+    n = np.maximum(R(M, f1), 1.0)
+    Sp, Spp = R(M, fp), R(M, fpp)
+    So, Soo, Sop = R(o, f1), R(o**2, f1), R(o, fp)
+    vp = Spp - Sp**2 / n
+    vo = Soo - So**2 / n
+    ok = (n > 0.3 * H * W) & (vp > 0.25 * ((pred - pred.mean()) ** 2).sum()) & (vo > 0)
+    c = np.where(ok, (Sop - Sp * So / n) / np.sqrt(np.where(ok, vp * vo, 1.0)), -1.0)
+    i, j = np.unravel_index(np.argmax(c), c.shape)
+    return c[i, j], (i - maxs[0], j - maxs[1])
+
+
+def pointing_shift(scene, cam, B, g, image, b, maxshift_px, mask_no_data=False):
     """Décalage de pointage (pixels bruts, lignes puis échantillons) qui superpose le rendu à
-    l'image : la visée des noyaux n'est pas celle des images corrigées (Šteins : ~130 px)."""
+    l'image : la visée des noyaux n'est pas celle des images corrigées (Šteins : ~130 px).
+    `mask_no_data` (option de recette `map.maskNoData`) compare sur les seuls pixels valides,
+    finis et non NULS : le zéro exact est la marge sans donnée que laisse la correction
+    géométrique des images Voyager (67 lignes en haut et en bas sur Ariel ; le ciel, lui, lit un
+    bruit NÉGATIF, médiane −13 ; l'étiquette ne déclare aucune valeur nulle). Comptée comme du
+    ciel, cette marge tirait le disque TRONQUÉ d'Ariel d'environ 40 px vers le bas (2026-10-07).
+    Option et non défaut : sur Miranda, dont le disque tient dans le champ, elle n'améliore pas
+    la carte (mesuré, voir ARCHITECTURE)."""
     pr = predict(scene, cam, B, g, b)
-    ob = np.nan_to_num(binimg(image, b))
-    _, s = xcorr(pr, ob, (maxshift_px[0] // b[0], maxshift_px[1] // b[1]))
+    maxs = (maxshift_px[0] // b[0], maxshift_px[1] // b[1])
+    if mask_no_data:
+        valid = binimg((np.isfinite(image) & (image != 0)).astype(float), b) == 1
+        _, s = masked_xcorr(pr, np.nan_to_num(binimg(image, b)), valid, maxs)
+    else:
+        _, s = xcorr(pr, np.nan_to_num(binimg(image, b)), maxs)
     return s[0] * b[0], s[1] * b[1]
 
 

@@ -13,7 +13,7 @@ provenance (source URL, resolution, licence) is in one file per texture layer un
 1. **Public domain: USGS Astrogeology / NASA-JPL / ESA spacecraft mosaics, NASA and NOAA Earth data.** Derived from
    official global mosaics, no copyright restriction. Bodies: `io`, `europa`, `ganymede`,
    `callisto`, `titan`, `enceladus`, `rhea`, `iapetus`, `triton`, `charon`, `phobos`, `deimos`,
-   `vesta`, `pluto`, `tethys`, `dione`, `ceres`, `bennu`, `mimas`, `miranda` (USGS Astrogeology Cassini/Voyager global mosaics, 293m
+   `vesta`, `pluto`, `tethys`, `dione`, `ceres`, `bennu`, `mimas`, `miranda`, `ariel` (USGS Astrogeology Cassini/Voyager global mosaics, 293m
    and 154m/pixel respectively; `deimos` is NASA's Viking-derived map from NASA 3D Resources),
    `earth` (surface, clouds, night lights and land/ocean mask from NASA Earth Observatory /
    Visible Earth Blue Marble and Black Marble; relief normal and height maps derived from the
@@ -31,7 +31,8 @@ provenance (source URL, resolution, licence) is in one file per texture layer un
    corrected for the vidicon's distortion, are (NASA PDS Ring-Moon Systems Node, `VGISS_7206`).
    This project projected eleven of them onto the moon in its IAU frame, checked on the IAU
    feature names; only the southern hemisphere, lit in 1986, is measured, the rest is the measured
-   mean grey. Attribution is courteous but not legally required.
+   mean grey. `ariel` followed on 2026-10-07 by the same method, from six images of the same
+   volume. Attribution is courteous but not legally required.
 
    **Exception within this group: `itokawa` (since 2026-10-04), `gaspra` and `ida` (since
    2026-10-05)** carry the global photomosaics of the Stooke Small Bodies Maps V2.0 (JAXA Hayabusa
@@ -102,7 +103,7 @@ provenance (source URL, resolution, licence) is in one file per texture layer un
    ice-patches parameterized from each body's real published data, no external image involved)
    for bodies that have never been imaged well enough for a global mosaic to exist: `orcus`,
    `quaoar`, `gonggong`, `sedna` (never visited by any spacecraft, not covered by Solar System
-   Scope's illustrative set), `hyperion`, `ariel`, `umbriel`, `titania`,
+   Scope's illustrative set), `hyperion`, `umbriel`, `titania`,
    `oberon`, `amalthea`, `proteus`, `nereid`, `styx`, `nix`, `kerberos`, `hydra` (imaged by
    Voyager 2 / Galileo / New Horizons, but only partially or at too low a resolution for a
    controlled global mosaic; see each body's provenance file for the specific
