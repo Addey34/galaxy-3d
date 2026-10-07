@@ -238,7 +238,8 @@
         "equatorialRadiusKm": 606,
         "surfaceGravity": 0.29,
         "siderealOrbitDays": 6.3872,
-        "siderealRotationDays": 6.3872
+        "siderealRotationDays": 6.3872,
+        "geometricAlbedo": 0.42
       },
       "moon": {
         "updated": "2024-01-11",
@@ -269,6 +270,33 @@
         "siderealRotationHours": 609.12,
         "obliquityDeg": 7.25,
         "effectiveTemperatureK": 5772
+      }
+    },
+    "plutoSmallMoons": {
+      "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/plutofact.html",
+      "updated": "2024-01-11",
+      "retrieved": "2026-09-28",
+      "columns": [
+        "",
+        "Semi-Major Axis (km)",
+        "Orbital Period (days)",
+        "Rotation Period (days)",
+        "Mean Diameter (km)",
+        "Geometric Albedo"
+      ],
+      "bodies": {
+        "styx": {
+          "geometricAlbedo": 0.65
+        },
+        "nix": {
+          "geometricAlbedo": 0.56
+        },
+        "kerberos": {
+          "geometricAlbedo": 0.56
+        },
+        "hydra": {
+          "geometricAlbedo": 0.83
+        }
       }
     }
   },
@@ -4704,7 +4732,15 @@
       "url": "https://arxiv.org/abs/1304.1041",
       "retrieved": "2026-09-20",
       "verifiedQuotes": [
-        "measured equatorial diameter of 1434 +/- 14 km"
+        "measured equatorial diameter of 1434 +/- 14 km",
+        "yielding an albedo of 0.81+0.01/-0.02"
+      ],
+      "albedoOf": [
+        {
+          "body": "makemake",
+          "value": 0.81,
+          "quote": "yielding an albedo of 0.81+0.01/-0.02"
+        }
       ]
     },
     "kiss-2019-gonggong": {
@@ -4721,14 +4757,30 @@
       "verifiedQuotes": [
         "equivalent volumetric diameter of 1094.4 +/- 4.6 km",
         "density of 1.760 +/- 0.109 g/cm3",
-        "8.8394 +/- 0.0002 hours"
+        "8.8394 +/- 0.0002 hours",
+        "we derive a geometric albedo of pV = 0.125 +/- 0.038"
+      ],
+      "albedoOf": [
+        {
+          "body": "quaoar",
+          "value": 0.125,
+          "quote": "we derive a geometric albedo of pV = 0.125 +/- 0.038"
+        }
       ]
     },
     "pal-2012-sedna": {
       "url": "https://arxiv.org/abs/1204.0899",
       "retrieved": "2026-09-20",
       "verifiedQuotes": [
-        "995 +/- 80 km"
+        "995 +/- 80 km",
+        "the respective geometric albedos are pV 0.32 +/- 0.06"
+      ],
+      "albedoOf": [
+        {
+          "body": "sedna",
+          "value": 0.32,
+          "quote": "the respective geometric albedos are pV 0.32 +/- 0.06"
+        }
       ]
     },
     "kiss-2016-nereid": {
@@ -4745,7 +4797,15 @@
         "system mass of 6.32+- 0.01 X 10^20 kg",
         "diameter 940+-70 km",
         "implies sizes of Orcus and Vanth of 900 and 280 km",
-        "implies sizes of 820 and 640 km"
+        "implies sizes of 820 and 640 km",
+        "a geometric albedo of 0.28+-0.04"
+      ],
+      "albedoOf": [
+        {
+          "body": "orcus",
+          "value": 0.28,
+          "quote": "a geometric albedo of 0.28+-0.04"
+        }
       ]
     },
     "nasa-titan": {
@@ -4780,7 +4840,71 @@
       "retrieved": "2026-09-28",
       "verifiedQuotes": [
         "elliptical limb with axes 1,704 $\\pm$ 4 km x 1,138 $\\pm$ 26 km",
-        "largest axis is at least 2,322 $\\pm$ 60 km"
+        "largest axis is at least 2,322 $\\pm$ 60 km",
+        "a geometric albedo of 0.51 $\\pm$ 0.02"
+      ],
+      "albedoOf": [
+        {
+          "body": "haumea",
+          "value": 0.51,
+          "quote": "a geometric albedo of 0.51 $\\pm$ 0.02"
+        }
+      ]
+    },
+    "kiss-2019-gonggong-table3": {
+      "url": "https://arxiv.org/abs/1903.05439",
+      "retrieved": "2026-10-07",
+      "verifiedQuotes": [
+        "3a 306.0 26.4 51 44.8 pg/s 1224±55 0.14±0.01"
+      ],
+      "albedoOf": [
+        {
+          "body": "gonggong",
+          "value": 0.14,
+          "quote": "3a 306.0 26.4 51 44.8 pg/s 1224±55 0.14±0.01"
+        }
+      ]
+    },
+    "santos-sanz-2012-eris": {
+      "url": "https://arxiv.org/abs/1202.1481",
+      "retrieved": "2026-10-07",
+      "verifiedQuotes": [
+        "D = 2326 ± 12 km, pV = 96+9 -4 % (Sicardy et al. 2011)"
+      ],
+      "albedoOf": [
+        {
+          "body": "eris",
+          "value": 0.96,
+          "quote": "D = 2326 ± 12 km, pV = 96+9 -4 % (Sicardy et al. 2011)"
+        }
+      ]
+    },
+    "muller-2014-itokawa": {
+      "url": "https://arxiv.org/abs/1404.5842",
+      "retrieved": "2026-10-07",
+      "verifiedQuotes": [
+        "we assign a geometric albedo of 0.29±0.02 for"
+      ],
+      "albedoOf": [
+        {
+          "body": "itokawa",
+          "value": 0.29,
+          "quote": "we assign a geometric albedo of 0.29±0.02 for"
+        }
+      ]
+    },
+    "fornasier-2015-67p": {
+      "url": "https://arxiv.org/abs/1505.06888",
+      "retrieved": "2026-10-07",
+      "verifiedQuotes": [
+        "The geometric albedo of the comet is 6.5$\\pm$0.2\\% at 649 nm"
+      ],
+      "albedoOf": [
+        {
+          "body": "churyumov-gerasimenko",
+          "value": 0.065,
+          "quote": "The geometric albedo of the comet is 6.5$\\pm$0.2\\% at 649 nm"
+        }
       ]
     }
   }

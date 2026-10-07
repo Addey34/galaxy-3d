@@ -2042,8 +2042,18 @@ uniforme sur un atlas), et `0,5 / 2,6` pour un modèle à couleur cuite.
   - **Japet** : le NSSDCA publie « 0.05 / 0.5 » et NASA Science « 0.03-0.05 » contre « 0.5-0.6 »
     selon la face. Aucun nombre ne le décrit, et sa mosaïque livrée n'a que 1,7 de contraste entre
     ses faces au lieu d'environ 12 : il faudrait une carte radiométrique, chantier à part ;
-  - les corps sans albédo dans les sources du relevé (Charon, les petites lunes de Pluton, les
-    planètes naines lointaines, Itokawa, 67P) : ils gardent la luminosité de leur source.
+  - un corps sans albédo dans les sources du relevé (code `noAlbedo`) garderait la luminosité de
+    sa source. **Il n'y en a plus depuis le 2026-10-07** : les quatorze qui manquaient ont chacun
+    une source primaire LUE. Charon et les quatre petites lunes de Pluton par la fiche de Pluton
+    du NSSDCA (libellé « Geometric Albedo » de Charon, tableau « Other Moons of Pluto », section
+    `nssdca.plutoSmallMoons` du relevé, en-tête confronté) ; les planètes naines, Itokawa et 67P
+    par une déclaration `albedoOf` d'un article du relevé, dont la citation doit être l'une des
+    citations VÉRIFIÉES dans le texte publié et contenir le nombre (tel quel ou en pour cent),
+    sinon le relevé échoue (falsifié). Quatre réserves écrites à côté de leur citation dans
+    `scripts/snapshot-fact-sources.mjs` : Makemake (Brown 2013 dit « albedo », géométrique par
+    construction), Orcus (albédo du SYSTÈME avec Vanth, que Spitzer ne sépare pas), Éris (la
+    valeur de Sicardy et al. 2011 est une formule absente du texte servi par Nature, lue chez
+    Santos-Sanz et al. 2012 qui la leur créditent), 67P (OSIRIS à 649 nm, pas en bande V).
 - **Ce que la règle ne corrige pas** : le CONTRASTE interne d'une mosaïque retouchée par son
   éditeur. Un gain unique cale la moyenne et l'ordre des corps, pas l'écart entre deux régions.
 - **Mesuré avant de livrer**, même build, textures substituées par interception réseau : la Lune

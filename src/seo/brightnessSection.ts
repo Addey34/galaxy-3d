@@ -47,6 +47,21 @@ const SOURCE_NAMES: Record<string, string> = {
   sbdb: 'JPL SBDB',
 };
 
+/**
+ * Le libellé d'une source : le nom de sa section du relevé, ou, pour un article, son
+ * identifiant arXiv LU dans son adresse. `null` pour une source que la page ne sait pas nommer.
+ */
+function sourceName(source: { path: string; url: string }): string | null {
+  const section = source.path.split('.')[0]!;
+  if (section === 'articles') {
+    const arxiv = source.url.match(
+      /^https:\/\/arxiv\.org\/abs\/([\d.]+)$/
+    )?.[1];
+    return arxiv ? `arXiv:${arxiv}` : null;
+  }
+  return SOURCE_NAMES[section] ?? null;
+}
+
 const EXCLUSION_TEXT: Record<DisplayAlbedoExclusionKind, DocText> = {
   notLit: {
     en: 'not a lit surface',
@@ -100,7 +115,7 @@ export function assertPublishableAlbedoTable(table: DisplayAlbedoTable): void {
       throw new Error(`luminosité : ${row.body} sans gain`);
     if (row.rule === 'texture' && !row.source)
       throw new Error(`luminosité : ${row.body} sans source d'albédo`);
-    if (row.source && !SOURCE_NAMES[row.source.path.split('.')[0]!])
+    if (row.source && sourceName(row.source) === null)
       throw new Error(
         `luminosité : source d'albédo sans nom publiable (${row.source.path})`
       );
@@ -137,7 +152,7 @@ export function brightnessSection(
         });
   const sourceCell = (r: DisplayAlbedoRow): string => {
     if (r.source)
-      return `<a href="${escapeHtml(r.source.url)}">${escapeHtml(SOURCE_NAMES[r.source.path.split('.')[0]!]!)}</a>`;
+      return `<a href="${escapeHtml(r.source.url)}">${escapeHtml(sourceName(r.source)!)}</a>`;
     return escapeHtml(bodies.get(r.body)?.model?.albedoSource ?? '');
   };
 

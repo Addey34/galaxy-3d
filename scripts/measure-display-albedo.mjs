@@ -66,6 +66,26 @@ function publishedAlbedo(name) {
       path: `nssdca.bodies.${name}.geometricAlbedo`,
       url: body.url,
     };
+  const moon = snapshot.nssdca?.plutoSmallMoons?.bodies?.[name];
+  if (moon?.geometricAlbedo !== undefined)
+    return {
+      value: moon.geometricAlbedo,
+      raw: String(moon.geometricAlbedo),
+      path: `nssdca.plutoSmallMoons.bodies.${name}.geometricAlbedo`,
+      url: snapshot.nssdca.plutoSmallMoons.url,
+    };
+  // Un article dont une citation VÉRIFIÉE donne l'albédo (2026-10-07) : SBDB n'en publie aucun
+  // pour les planètes naines, Itokawa ni 67P.
+  for (const [id, article] of Object.entries(snapshot.articles ?? {})) {
+    const at = (article.albedoOf ?? []).findIndex((a) => a.body === name);
+    if (at >= 0)
+      return {
+        value: article.albedoOf[at].value,
+        raw: article.albedoOf[at].quote,
+        path: `articles.${id}.albedoOf.${at}.value`,
+        url: article.url,
+      };
+  }
   const small = snapshot.sbdb?.[name];
   if (small?.albedo)
     return {
