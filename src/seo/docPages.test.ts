@@ -23,12 +23,14 @@ import {
   DOC_LOCALES,
   DOC_SLUGS,
   docPath,
+  formatExact,
   formatQuantity,
   renderDocPage,
   socialImageFromHtml,
 } from './documentPage';
 import {
   assertPublishableSummary,
+  displayNameResolver,
   methodologyPages,
   synchronousSpinDrifts,
   type EphemerisManifest,
@@ -45,6 +47,12 @@ import {
   type TextureProvenance,
 } from './sourcesPage';
 import { renderInline, renderMarkdown } from './markdown';
+import {
+  assertPublishableAlbedoTable,
+  type DisplayAlbedoTable,
+} from './brightnessSection';
+import { escapeHtml } from './bodyLandingPage';
+import albedoTable from '@/config/displayAlbedo.json';
 import { blockLabel, cardBlockSourceRows } from './cardBlockSources';
 import {
   LANDING_PAGE_GLOB_IGNORES,
@@ -841,5 +849,101 @@ describe('cohérence des sources publiées', () => {
         indexHtml.replace('property="og:image"', 'property="x"')
       )
     ).toThrow('og:image');
+  });
+});
+
+/**
+ * LA RÈGLE DE LUMINOSITÉ, PUBLIÉE (2026-10-07) : la section `brightness` de `/methodology`
+ * confrontée à `config/displayAlbedo.json`, la table que l'application lit. Chaque corps qui suit
+ * la règle a sa ligne avec SON albédo et SON gain, chaque corps hors règle est rangé sous SA
+ * raison, et rien d'autre n'y figure.
+ */
+describe('/methodology : la luminosité des surfaces suit la table des gains', () => {
+  const nameOf = displayNameResolver(CELESTIAL_CONFIG);
+  const sectionOf = (body: string): string => {
+    const start = body.indexOf('id="brightness"');
+    expect(start).toBeGreaterThan(-1);
+    const end = body.indexOf('<h2', start);
+    return body.slice(start, end === -1 ? undefined : end);
+  };
+  const following = albedoTable.rows.filter((r) => r.rule !== 'excluded');
+  const bodies = flattenBodies(CELESTIAL_CONFIG);
+  const excluded = albedoTable.rows.filter(
+    (r) => r.rule === 'excluded' && bodies.get(r.body)?.kind !== 'skybox'
+  );
+
+  it.each(methodology.map((p) => [p.locale, p] as const))(
+    '%s : une ligne par corps qui suit la règle, avec son albédo et son gain',
+    (locale, page) => {
+      const section = sectionOf(page.body);
+      expect(section).toContain(
+        `${formatExact(albedoTable.luminancePerAlbedo, locale)} `
+      );
+      const tableRows = [
+        ...section.matchAll(/<tbody>([\s\S]*?)<\/tbody>/g),
+      ].flatMap((m) => m[1]!.match(/<tr>[\s\S]*?<\/tr>/g) ?? []);
+      expect(tableRows).toHaveLength(following.length);
+      following.forEach((r, i) => {
+        const cells = [
+          ...tableRows[i]!.matchAll(/<t[dh][^>]*>([\s\S]*?)<\/t[dh]>/g),
+        ].map((m) => m[1]);
+        expect(cells[0]).toBe(escapeHtml(nameOf(r.body, locale)));
+        expect(cells[3]).toBe(formatExact(r.albedo!, locale));
+        expect(cells[4]).toBe(formatQuantity(r.gain!, locale));
+      });
+      expect(section).not.toContain('—');
+    }
+  );
+
+  it.each(methodology.map((p) => [p.locale, p] as const))(
+    '%s : chaque corps hors règle sous sa raison, une fois',
+    (locale, page) => {
+      const items = new Map(
+        [
+          ...sectionOf(page.body).matchAll(
+            /<li data-exclusion="(\w+)">([\s\S]*?)<\/li>/g
+          ),
+        ].map((m) => [m[1]!, m[2]!])
+      );
+      for (const r of excluded)
+        expect(items.get(r.exclusion!), r.body).toContain(
+          escapeHtml(nameOf(r.body, locale))
+        );
+      // Les noms précèdent la raison (`<strong>`), séparés par des virgules.
+      const listed = [...items.values()]
+        .map((li) => li.split('</strong>')[0]!.split(',').length)
+        .reduce((a, b) => a + b, 0);
+      expect(listed).toBe(excluded.length);
+    }
+  );
+
+  it('refuse une raison sans traduction, une règle ou une source inconnues', () => {
+    const base = JSON.parse(JSON.stringify(albedoTable)) as DisplayAlbedoTable;
+    const withRow = (row: DisplayAlbedoTable['rows'][number]) => ({
+      ...base,
+      rows: [...base.rows, row],
+    });
+    expect(() =>
+      assertPublishableAlbedoTable(
+        withRow({ body: 'x', rule: 'excluded', exclusion: 'nouvelle' })
+      )
+    ).toThrow('code de raison');
+    expect(() =>
+      assertPublishableAlbedoTable(
+        withRow({ body: 'x', rule: 'drapé', gain: 1 })
+      )
+    ).toThrow('règle inconnue');
+    expect(() =>
+      assertPublishableAlbedoTable(
+        withRow({
+          body: 'x',
+          rule: 'texture',
+          albedo: 0.1,
+          gain: 1,
+          source: { path: 'wikipedia.x', url: 'https://example.org' },
+        })
+      )
+    ).toThrow('sans nom publiable');
+    expect(() => assertPublishableAlbedoTable(base)).not.toThrow();
   });
 });

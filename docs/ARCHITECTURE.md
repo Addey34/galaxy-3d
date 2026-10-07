@@ -2022,6 +2022,13 @@ uniforme sur un atlas), et `0,5 / 2,6` pour un modèle à couleur cuite.
   n'importe que la carte `gains` (import nommé, les lignes détaillées restent hors du bundle).
   `src/config/displayAlbedo.test.ts` confronte chaque ligne au relevé, à la texture remesurée et à
   la règle ; falsifié (un gain modifié, la constante changée).
+- **Publiée sur `/methodology`** (section `brightness`, `src/seo/brightnessSection.ts`), dans les
+  quatre langues, LUE dans la même table au build : le facteur, une ligne par corps qui suit la
+  règle (albédo exact, source, gain), et les corps hors règle rangés sous leur raison. Une raison
+  est un CODE de la table (`exclusion`, liste fermée `DISPLAY_ALBEDO_EXCLUSIONS` de
+  `core/displayAlbedo.ts`), traduit par la page ; un code inconnu, une règle inconnue ou une source
+  d'albédo sans nom publiable font échouer le build. Garde : `src/seo/docPages.test.ts`, falsifiée
+  (une ligne retirée, un gain remplacé, une raison omise).
 - **Un seul endroit dans la scène** : `createSurfaceLayerMaterial`, que partagent la sphère, les
   carreaux d'imagerie streamée et le modèle drapé ; plus le matériau d'un modèle à couleur cuite.
   Les vignettes de partage appliquent le même gain (`withDisplayGain`) ; sans compression des
