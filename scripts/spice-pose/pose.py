@@ -7,6 +7,8 @@ Ligne de commande de l'outil de pose (cf. `posekit.py` pour la méthode). Lancé
   guard  <cible>                  la GARDE : le bon modèle à moins de maxErrorDeg de la vérité, et
                                   chaque témoin sous maxWitnessRatio de son score ; code 1 sinon
   truth  <cible>                  score des contours à l'orientation vraie, contre des tirages au hasard
+  limb   <cible>                  ÉCHELLE de la caméra mesurée au limbe, contre `pixelScaleRad` ;
+                                  code 1 au-delà de --tolerance pour cent
 """
 import argparse
 import math
@@ -191,6 +193,45 @@ def cmd_witness(t, _):
     sys.exit(0 if worst <= 0.5 else 1)
 
 
+def cmd_limb(t, a):
+    """L'ÉCHELLE de la caméra, mesurée au limbe (2026-10-07) : sur chaque image de la recette, un
+    cercle ajusté au bord du disque (`posekit.limb_circle`), divisé par le rayon angulaire du corps
+    (rayon de la fiche, distance des noyaux). Médiane des images dont le bord est assez long
+    (`--min-arc` degrés, 200 points), comparée à `camera.pixelScaleRad` ; code 1 au-delà de
+    `--tolerance` pour cent, ou s'il reste moins de trois images. Ne vaut que pour un corps
+    presque SPHÉRIQUE : Miranda, triaxiale, rend 129 500 à 132 500 pour une caméra à ~127 400.
+    Mesure qui a tranché l'échelle des images Voyager corrigées : Titania, disque entier sur six
+    images, 127 234 à 127 521 px/rad, quand la corrélation restait plate."""
+    import spiceypy as sp
+
+    names = list(dict.fromkeys(t["images"] + t.get("map", {}).get("images", [])))
+    cam, geo, imgs = pk.geometry(sp, dict(t, images=names))
+    radius, _ = pk.load_model(t["body"]).volume_radius()
+    declared = 1 / t["camera"]["pixelScaleRad"]
+    kept = []
+    for g, image in zip(geo, imgs):
+        c = pk.limb_circle(image)
+        if c is None:
+            print(f"{g['name']} : aucun disque, écartée")
+            continue
+        scale = c["radius"] / math.asin(radius / g["d"])
+        ok = c["arcDeg"] >= a.min_arc and c["points"] >= 200
+        print(f"{g['name']} : rayon {c['radius']:.1f} px sur {c['arcDeg']:.0f}° ({c['points']} points), "
+              f"{scale:.0f} px/rad" + ("" if ok else " ; bord trop court, écartée"))
+        if ok:
+            kept.append(scale)
+    if len(kept) < 3:
+        print(f"MESURE IMPOSSIBLE : {len(kept)} image(s) au bord assez long")
+        sys.exit(2)
+    med = float(np.median(kept))
+    dev = 100 * (med / declared - 1)
+    print()
+    print(f"médiane {med:.0f} px/rad sur {len(kept)} images ({min(kept):.0f} à {max(kept):.0f}), "
+          f"recette {declared:.0f}, écart {dev:+.2f} % (borne {a.tolerance} %)")
+    print("ÉCHELLE TENUE" if abs(dev) <= a.tolerance else "ÉCHELLE ROMPUE")
+    sys.exit(0 if abs(dev) <= a.tolerance else 1)
+
+
 def cmd_map(t, a):
     """Carte d'albédo relatif depuis les images `mapImages` de la recette, à la pose `--pose`
     (`truth` : le repère de vérité ; `search` : le meilleur résultat de `search`). Deux groupes
@@ -338,17 +379,19 @@ def cmd_texture(t, a):
 
 def main():
     p = argparse.ArgumentParser()
-    p.add_argument("command", choices=["fetch", "search", "guard", "truth", "witness", "map", "texture"])
+    p.add_argument("command", choices=["fetch", "search", "guard", "truth", "witness", "map", "texture", "limb"])
     p.add_argument("target")
     p.add_argument("--model")
     p.add_argument("--poles", type=int, default=400)
     p.add_argument("--pose", choices=["truth", "search"], default="truth")
     p.add_argument("--step", type=float, default=0.25, help="pas de la carte, degrés")
     p.add_argument("--recipe", default=RECIPE, help="autre recette, pour falsifier une garde")
+    p.add_argument("--tolerance", type=float, default=1.0, help="limb : écart toléré, pour cent")
+    p.add_argument("--min-arc", type=float, default=90.0, help="limb : arc de bord minimal, degrés")
     p.add_argument("--jobs", type=int, default=max(1, (os.cpu_count() or 2) - 2))
     a = p.parse_args()
     t = target(a.target, a.recipe)
-    {"fetch": cmd_fetch, "search": cmd_search, "guard": cmd_guard, "truth": cmd_truth, "witness": cmd_witness, "map": cmd_map, "texture": cmd_texture}[a.command](t, a)
+    {"fetch": cmd_fetch, "search": cmd_search, "guard": cmd_guard, "truth": cmd_truth, "witness": cmd_witness, "map": cmd_map, "texture": cmd_texture, "limb": cmd_limb}[a.command](t, a)
 
 
 if __name__ == "__main__":

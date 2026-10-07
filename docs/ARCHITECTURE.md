@@ -2514,7 +2514,7 @@ celle de Miranda :
 - **L'échelle est 128 000 px/rad, pas 133 000.** Le disque d'Ariel déborde du champ sur toutes les
   images : la corrélation d'une sphère éclairée y échange l'échelle contre le décalage (pic à
   110 000, r 0,75). Un cercle ajusté au LIMBE éclairé (RANSAC sur le bord du disque plein,
-  sonde de session non versionnée) rend 127 000 à 128 600 sur quatre images, insensible au seuil
+  versionné depuis : `pnpm pose:spice limb`, ci-dessous) rend 127 000 à 128 600 sur quatre images, insensible au seuil
   de 0,06 à 0,3. Le même ajustement donne 129 500 à 132 500 sur Miranda, triaxiale ; et la
   corrélation qui avait donné 133 000 y est PLATE (r 0,89 à 0,92 de 127 000 à 136 000). Sur Ariel,
   la carte à 128 000 bat celle à 133 000 sur les deux témoins (formes 0,535 contre 0,504,
@@ -2555,6 +2555,22 @@ projetant les cratères nommés dans les images des deux groupes (Gertrude, Calp
 Jessica). Pas de 0,25° : le pixel le plus fin (3,4 km) ne porte que 1 458 px de circonférence,
 donc **1k seulement**, et la 2k procédurale livrée jusqu'ici est retirée plutôt qu'agrandie.
 Albédo 0,27 (NSSDCA), sous le plafond : 0,14 % de valeurs saturées. Domaine public.
+
+**L'échelle au limbe, versionnée : `pnpm pose:spice limb <cible>` (2026-10-07).** La sonde qui a
+tranché l'échelle de la caméra de Voyager est devenue une commande de l'outil, comme la sonde de
+pose l'était devenue pour Mathilde. Sur chaque image de la recette (`images` et `map.images`),
+`posekit.limb_circle` ajuste un cercle au bord du disque (plus grand objet au-dessus de 0,15 × le
+99e centile, fermé et rempli ; bord gardé seulement contre une donnée VALIDE ; RANSAC, puis
+moindres carrés sur les points retenus), divisé par le rayon angulaire du corps (rayon de la fiche,
+distance des noyaux). Médiane des images dont le bord couvre au moins 90° et 200 points, comparée
+à `camera.pixelScaleRad` : code 1 au-delà de 1 % (`--tolerance`), code 2 s'il reste moins de trois
+images. Deux défauts payés en l'écrivant : un « cercle » plus grand que l'image est une DROITE, le
+bord rectiligne d'un disque tronqué par le cadre, qui l'emportait sur l'arc du limbe (Ariel, deux
+images perdues) ; et l'image UV d'Ariel rend 103 840, l'arc du terminateur l'emportant sur un limbe
+sombre, ce que la médiane absorbe et que la sortie montre. **Garde** : `limb titania-voyager`,
+médiane 127 367 sur six disques entiers, −0,49 % de la recette, TENUE ; **falsifiée** avec une
+recette à 133 000 : −4,24 %, ROMPUE, code 1. Ne vaut que pour un corps presque sphérique : Miranda,
+triaxiale, rend 129 860 à 132 218.
 
 **Les archives des missions, lues le 2026-10-05** pour les cinq corps NASA, par le registre du PDS
 (`pds.nasa.gov/api/search/1`, les 3 863 collections listées puis filtrées, la requête

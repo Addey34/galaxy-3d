@@ -597,6 +597,58 @@ def blind_search(coarse, fine, poles=400, wstep=10, keep=8, jobs=1, log=print):
 # ---------------------------------------------------------------- carte
 
 
+def limb_circle(image, threshold=0.15, tries=4000, seed=1):
+    """Cercle ajusté au BORD du disque (2026-10-07) : centre (échantillon, ligne), rayon en pixels,
+    nombre de points retenus et arc couvert en degrés. Géométrique, donc indépendant du modèle
+    photométrique, à la différence de la corrélation d'une sphère éclairée, qui ne départageait
+    pas 127 000 de 136 000 px/rad sur les images de Voyager. Le disque est le plus grand objet
+    au-dessus de `threshold` × le 99e centile, fermé et rempli ; son bord n'est gardé que là où
+    le voisin extérieur est une donnée VALIDE (ni marge nulle, ni NaN, ni bord du cadre). Le
+    terminateur, qui n'est pas un cercle de ce rayon, est écarté par RANSAC."""
+    from scipy import ndimage as ndi
+
+    valid = np.isfinite(image) & (image != 0)
+    v = np.where(valid, image, 0.0)
+    m = v > threshold * np.percentile(v[valid], 99)
+    m = ndi.binary_closing(m, iterations=4)
+    lab, n = ndi.label(m)
+    if n == 0:
+        return None
+    m = ndi.binary_fill_holes(lab == 1 + int(np.argmax(ndi.sum(m, lab, range(1, n + 1)))))
+    edge = np.zeros_like(m)
+    for dy, dx in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+        edge |= m & ~np.roll(np.roll(m, dy, 0), dx, 1) & np.roll(np.roll(valid, dy, 0), dx, 1)
+    edge &= ~ndi.binary_dilation(~valid, iterations=6)
+    edge[:8] = edge[-8:] = False
+    edge[:, :8] = edge[:, -8:] = False
+    ys, xs = np.nonzero(edge)
+    if len(xs) < 50:
+        return None
+    P = np.stack([xs, ys], 1).astype(float)
+    rng = np.random.default_rng(seed)
+    best = None
+    for _ in range(tries):
+        (x1, y1), (x2, y2), (x3, y3) = P[rng.choice(len(P), 3, replace=False)]
+        A = np.array([[x2 - x1, y2 - y1], [x3 - x1, y3 - y1]])
+        if abs(np.linalg.det(A)) < 1e-6:
+            continue
+        c = np.linalg.solve(A, 0.5 * np.array([x2**2 - x1**2 + y2**2 - y1**2, x3**2 - x1**2 + y3**2 - y1**2]))
+        r = math.hypot(x1 - c[0], y1 - c[1])
+        if r > max(image.shape):
+            # Un « cercle » plus grand que l'image est une DROITE : le bord rectiligne d'un disque
+            # tronqué par le cadre gagnait sinon contre l'arc du limbe (Ariel, 2026-10-07).
+            continue
+        inl = np.abs(np.hypot(P[:, 0] - c[0], P[:, 1] - c[1]) - r) < 1.5
+        if best is None or inl.sum() > best.sum():
+            best = inl
+    Q = P[best]
+    sol = np.linalg.lstsq(np.c_[2 * Q, np.ones(len(Q))], (Q**2).sum(1), rcond=None)[0]
+    cx, cy = sol[0], sol[1]
+    r = math.sqrt(sol[2] + cx * cx + cy * cy)
+    arc = math.degrees(np.ptp(np.unwrap(np.sort(np.arctan2(Q[:, 1] - cy, Q[:, 0] - cx)))))
+    return dict(center=(cx, cy), radius=r, points=int(best.sum()), arcDeg=arc)
+
+
 def masked_xcorr(pred, obs, valid, maxs):
     """`xcorr` calculée sur les SEULS pixels observés valides, à chaque décalage (moyennes et
     normes dans le recouvrement). Un recouvrement où le rendu ne varie presque plus est écarté :
