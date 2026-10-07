@@ -2052,6 +2052,14 @@ uniforme sur un atlas), et `0,5 / 2,6` pour un modèle à couleur cuite.
   pas compensée. Une exposition GLOBALE a été essayée d'abord et écartée, mesure à l'appui : le
   disque était bien cuivré, mais la Voie lactée s'éclaircissait aussi et la garde lisait un fond
   bleuté (1,06). Falsifié : sans compensation, 1,03.
+  Deux runs de CI l'ont ensuite fait échouer au premier essai, à la même valeur (1,357 puis 1,356,
+  sur deux processeurs différents) : un état reproductible, pas un aléa. La cause était plus
+  ancienne que la règle : un carreau d'imagerie streamée (LROC) recevait l'atténuation de la sphère
+  mais PAS sa teinte cuivrée ni la source de son ombre, et un carreau créé entre deux passes
+  d'éclairage (une image sur six) restait en plein jour. Presque noirs dans l'ombre, ces carreaux ne
+  se voyaient pas ; compensés, ils sont apparus gris. Corrigé dans `CelestialObject`
+  (`_syncOverlayEclipse`), tenu par `src/components/celestial/overlayEclipse.test.ts`, sans
+  réseau, falsifié. Et la passe d'éclairage est forcée quand le corps suivi change.
 
 ## L'orientation en longitude d'une texture (2026-10-04)
 
