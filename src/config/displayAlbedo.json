@@ -31,9 +31,22 @@
     "hygiea": 0.38416,
     "psyche": 0.19231,
     "pluto": 2.11509,
+    "charon": 1.09654,
+    "styx": 0.49952,
+    "nix": 0.44925,
+    "kerberos": 0.4697,
+    "hydra": 0.62523,
+    "eris": 1.28295,
+    "haumea": 0.83743,
+    "makemake": 1.24927,
+    "orcus": 0.26201,
+    "quaoar": 0.24723,
+    "gonggong": 0.34276,
+    "sedna": 1.00439,
     "halley": 0.16038,
     "bennu": 0.20508,
     "eros": 0.19585,
+    "itokawa": 0.49227,
     "ryugu": 0.19223,
     "ida": 0.39482,
     "lutetia": 0.19227,
@@ -45,7 +58,8 @@
     "donaldjohanson": 0.19231,
     "apophis": 0.19231,
     "arrokoth": 0.19231,
-    "tempel-1": 0.19231
+    "tempel-1": 0.19231,
+    "churyumov-gerasimenko": 0.19291
   },
   "rows": [
     {
@@ -462,75 +476,147 @@
     },
     {
       "body": "charon",
-      "rule": "excluded",
-      "exclusion": "noAlbedo",
-      "reason": "aucun albédo géométrique dans les sources du relevé"
+      "rule": "texture",
+      "albedo": 0.42,
+      "source": {
+        "path": "nssdca.bodies.charon.geometricAlbedo",
+        "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/plutofact.html"
+      },
+      "texture": "public/assets/textures/charon/charon_surface_1k.jpg",
+      "textureMeanLuminance": 0.19151,
+      "gain": 1.09654
     },
     {
       "body": "styx",
-      "rule": "excluded",
-      "exclusion": "noAlbedo",
-      "reason": "aucun albédo géométrique dans les sources du relevé"
+      "rule": "texture",
+      "albedo": 0.65,
+      "source": {
+        "path": "nssdca.plutoSmallMoons.bodies.styx.geometricAlbedo",
+        "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/plutofact.html"
+      },
+      "texture": "public/assets/textures/styx/styx_surface_1k.jpg",
+      "textureMeanLuminance": 0.65062,
+      "gain": 0.49952
     },
     {
       "body": "nix",
-      "rule": "excluded",
-      "exclusion": "noAlbedo",
-      "reason": "aucun albédo géométrique dans les sources du relevé"
+      "rule": "texture",
+      "albedo": 0.56,
+      "source": {
+        "path": "nssdca.plutoSmallMoons.bodies.nix.geometricAlbedo",
+        "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/plutofact.html"
+      },
+      "texture": "public/assets/textures/nix/nix_surface_1k.jpg",
+      "textureMeanLuminance": 0.62327,
+      "gain": 0.44925
     },
     {
       "body": "kerberos",
-      "rule": "excluded",
-      "exclusion": "noAlbedo",
-      "reason": "aucun albédo géométrique dans les sources du relevé"
+      "rule": "texture",
+      "albedo": 0.56,
+      "source": {
+        "path": "nssdca.plutoSmallMoons.bodies.kerberos.geometricAlbedo",
+        "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/plutofact.html"
+      },
+      "texture": "public/assets/textures/kerberos/kerberos_surface_1k.jpg",
+      "textureMeanLuminance": 0.59612,
+      "gain": 0.4697
     },
     {
       "body": "hydra",
-      "rule": "excluded",
-      "exclusion": "noAlbedo",
-      "reason": "aucun albédo géométrique dans les sources du relevé"
+      "rule": "texture",
+      "albedo": 0.83,
+      "source": {
+        "path": "nssdca.plutoSmallMoons.bodies.hydra.geometricAlbedo",
+        "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/plutofact.html"
+      },
+      "texture": "public/assets/textures/hydra/hydra_surface_1k.jpg",
+      "textureMeanLuminance": 0.66376,
+      "gain": 0.62523
     },
     {
       "body": "eris",
-      "rule": "excluded",
-      "exclusion": "noAlbedo",
-      "reason": "aucun albédo géométrique dans les sources du relevé"
+      "rule": "texture",
+      "albedo": 0.96,
+      "source": {
+        "path": "articles.santos-sanz-2012-eris.albedoOf.0.value",
+        "url": "https://arxiv.org/abs/1202.1481"
+      },
+      "texture": "public/assets/textures/eris/eris_surface_1k.jpg",
+      "textureMeanLuminance": 0.37414,
+      "gain": 1.28295
     },
     {
       "body": "haumea",
-      "rule": "excluded",
-      "exclusion": "noAlbedo",
-      "reason": "aucun albédo géométrique dans les sources du relevé"
+      "rule": "texture",
+      "albedo": 0.51,
+      "source": {
+        "path": "articles.ortiz-2017-haumea.albedoOf.0.value",
+        "url": "https://arxiv.org/abs/2006.03113"
+      },
+      "texture": "public/assets/textures/haumea/haumea_surface_1k.jpg",
+      "textureMeanLuminance": 0.3045,
+      "gain": 0.83743
     },
     {
       "body": "makemake",
-      "rule": "excluded",
-      "exclusion": "noAlbedo",
-      "reason": "aucun albédo géométrique dans les sources du relevé"
+      "rule": "texture",
+      "albedo": 0.81,
+      "source": {
+        "path": "articles.brown-2013-makemake.albedoOf.0.value",
+        "url": "https://arxiv.org/abs/1304.1041"
+      },
+      "texture": "public/assets/textures/makemake/makemake_surface_1k.jpg",
+      "textureMeanLuminance": 0.32419,
+      "gain": 1.24927
     },
     {
       "body": "orcus",
-      "rule": "excluded",
-      "exclusion": "noAlbedo",
-      "reason": "aucun albédo géométrique dans les sources du relevé"
+      "rule": "texture",
+      "albedo": 0.28,
+      "source": {
+        "path": "articles.brown-2010-orcus.albedoOf.0.value",
+        "url": "https://arxiv.org/abs/0910.4784"
+      },
+      "texture": "public/assets/textures/orcus/orcus_surface_1k.jpg",
+      "textureMeanLuminance": 0.53434,
+      "gain": 0.26201
     },
     {
       "body": "quaoar",
-      "rule": "excluded",
-      "exclusion": "noAlbedo",
-      "reason": "aucun albédo géométrique dans les sources du relevé"
+      "rule": "texture",
+      "albedo": 0.125,
+      "source": {
+        "path": "articles.margoti-2026-quaoar.albedoOf.0.value",
+        "url": "https://arxiv.org/abs/2607.06450"
+      },
+      "texture": "public/assets/textures/quaoar/quaoar_surface_1k.jpg",
+      "textureMeanLuminance": 0.2528,
+      "gain": 0.24723
     },
     {
       "body": "gonggong",
-      "rule": "excluded",
-      "exclusion": "noAlbedo",
-      "reason": "aucun albédo géométrique dans les sources du relevé"
+      "rule": "texture",
+      "albedo": 0.14,
+      "source": {
+        "path": "articles.kiss-2019-gonggong-table3.albedoOf.0.value",
+        "url": "https://arxiv.org/abs/1903.05439"
+      },
+      "texture": "public/assets/textures/gonggong/gonggong_surface_1k.jpg",
+      "textureMeanLuminance": 0.20423,
+      "gain": 0.34276
     },
     {
       "body": "sedna",
-      "rule": "excluded",
-      "exclusion": "noAlbedo",
-      "reason": "aucun albédo géométrique dans les sources du relevé"
+      "rule": "texture",
+      "albedo": 0.32,
+      "source": {
+        "path": "articles.pal-2012-sedna.albedoOf.0.value",
+        "url": "https://arxiv.org/abs/1204.0899"
+      },
+      "texture": "public/assets/textures/sedna/sedna_surface_1k.jpg",
+      "textureMeanLuminance": 0.1593,
+      "gain": 1.00439
     },
     {
       "body": "halley",
@@ -570,9 +656,15 @@
     },
     {
       "body": "itokawa",
-      "rule": "excluded",
-      "exclusion": "noAlbedo",
-      "reason": "aucun albédo géométrique dans les sources du relevé"
+      "rule": "texture",
+      "albedo": 0.29,
+      "source": {
+        "path": "articles.muller-2014-itokawa.albedoOf.0.value",
+        "url": "https://arxiv.org/abs/1404.5842"
+      },
+      "texture": "public/assets/textures/itokawa/itokawa_surface_1k.jpg",
+      "textureMeanLuminance": 0.29455,
+      "gain": 0.49227
     },
     {
       "body": "ryugu",
@@ -744,9 +836,15 @@
     },
     {
       "body": "churyumov-gerasimenko",
-      "rule": "excluded",
-      "exclusion": "noAlbedo",
-      "reason": "aucun albédo géométrique dans les sources du relevé"
+      "rule": "texture",
+      "albedo": 0.065,
+      "source": {
+        "path": "articles.fornasier-2015-67p.albedoOf.0.value",
+        "url": "https://arxiv.org/abs/1505.06888"
+      },
+      "texture": "public/assets/textures/churyumov-gerasimenko/churyumov-gerasimenko_surface_1k.jpg",
+      "textureMeanLuminance": 0.16847,
+      "gain": 0.19291
     },
     {
       "body": "giacobini-zinner",

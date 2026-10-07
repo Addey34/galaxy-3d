@@ -305,10 +305,14 @@ async function nssdca() {
     ['surfaceGravity', 'Surface gravity (m/s2)'],
     ['siderealOrbitDays', 'Sidereal orbit period (days)', { occurrence: 1 }],
     ['siderealRotationDays', 'Sidereal rotation period (days)'],
+    // L'albédo de Charon (2026-10-07), écrit « Albedo » avec une majuscule, contrairement à
+    // celui de Pluton : les deux libellés ne se confondent donc pas.
+    ['geometricAlbedo', 'Geometric Albedo'],
   ]);
   delete out.bodies.charon.meanTemperatureC;
   // La fiche de Pluton ne publie que la pression de Pluton.
   delete out.bodies.charon.surfacePressure;
+  out.plutoSmallMoons = await plutoSmallMoons();
   await planet('moon', 'moonfact.html', [
     ['mass1e24Kg', 'Mass (1024 kg)'],
     ['volumetricMeanRadiusKm', 'Volumetric mean radius (km)'],
@@ -487,6 +491,45 @@ function bulkAlbedo(lines, bulk, orbital, label, file) {
       `${name} : albédo illisible (${cells.join(' | ')}) dans ${file}`
     );
   return { value: raw.includes('/') ? null : number(raw), raw };
+}
+
+/**
+ * LES PETITES LUNES DE PLUTON (2026-10-07) : la fiche de Pluton les décrit dans un tableau
+ * « Other Moons of Pluto », dont la dernière colonne est l'albédo géométrique. Elles n'ont pas
+ * d'autre fiche au NSSDCA, d'où une section à part plutôt qu'une entrée de `bodies`. L'en-tête
+ * est CONFRONTÉ à ce qu'on lit, pour qu'une colonne ajoutée ne décale pas les valeurs en silence.
+ */
+async function plutoSmallMoons() {
+  const url = `${NSSDCA_BASE}plutofact.html`;
+  const response = await get(url);
+  const at = response.text.indexOf('Other Moons of Pluto');
+  if (at < 0)
+    throw new Error('fiche de Pluton : tableau des petites lunes absent');
+  const rows = tableRows(
+    response.text.slice(at, response.text.indexOf('</table>', at))
+  );
+  const header = rows[0] ?? [];
+  const column = header.findIndex((h) => h === 'Geometric Albedo');
+  if (column < 0)
+    throw new Error(
+      `fiche de Pluton : colonne d'albédo absente (${header.join(' | ')})`
+    );
+  const bodies = {};
+  for (const cells of rows.slice(1)) {
+    const name = cells[0]?.split(' (')[0]?.toLowerCase();
+    if (!name) continue;
+    bodies[name] = { geometricAlbedo: number(cells[column]) };
+  }
+  for (const name of ['styx', 'nix', 'kerberos', 'hydra'])
+    if (bodies[name]?.geometricAlbedo === undefined)
+      throw new Error(`fiche de Pluton : ${name} sans albédo`);
+  return {
+    url,
+    updated: lastUpdated(htmlLines(response.text)),
+    retrieved: response.retrieved,
+    columns: header,
+    bodies,
+  };
 }
 
 // ── JPL SSD : satellites ─────────────────────────────────────────────────────────────────────
@@ -935,7 +978,19 @@ const ARTICLES = {
   },
   'brown-2013-makemake': {
     arxiv: '1304.1041',
-    quotes: ['measured equatorial diameter of 1434 +/- 14 km'],
+    quotes: [
+      'measured equatorial diameter of 1434 +/- 14 km',
+      'yielding an albedo of 0.81+0.01/-0.02',
+    ],
+    // « albedo » sans qualificatif : tiré de l'aire projetée de l'occultation et de la magnitude
+    // absolue, c'est l'albédo géométrique par construction. Même solution que le diamètre cité.
+    albedoOf: [
+      {
+        body: 'makemake',
+        value: 0.81,
+        quote: 'yielding an albedo of 0.81+0.01/-0.02',
+      },
+    ],
   },
   'kiss-2019-gonggong': {
     arxiv: '1903.05439',
@@ -947,11 +1002,29 @@ const ARTICLES = {
       'equivalent volumetric diameter of 1094.4 +/- 4.6 km',
       'density of 1.760 +/- 0.109 g/cm3',
       '8.8394 +/- 0.0002 hours',
+      'we derive a geometric albedo of pV = 0.125 +/- 0.038',
+    ],
+    albedoOf: [
+      {
+        body: 'quaoar',
+        value: 0.125,
+        quote: 'we derive a geometric albedo of pV = 0.125 +/- 0.038',
+      },
     ],
   },
   'pal-2012-sedna': {
     arxiv: '1204.0899',
-    quotes: ['995 +/- 80 km'],
+    quotes: [
+      '995 +/- 80 km',
+      'the respective geometric albedos are pV 0.32 +/- 0.06',
+    ],
+    albedoOf: [
+      {
+        body: 'sedna',
+        value: 0.32,
+        quote: 'the respective geometric albedos are pV 0.32 +/- 0.06',
+      },
+    ],
   },
   'kiss-2016-nereid': {
     arxiv: '1601.02395',
@@ -964,6 +1037,11 @@ const ARTICLES = {
       'diameter 940+-70 km',
       'implies sizes of Orcus and Vanth of 900 and 280 km',
       'implies sizes of 820 and 640 km',
+      'a geometric albedo of 0.28+-0.04',
+    ],
+    // L'albédo du SYSTÈME Orcus-Vanth, que Spitzer ne sépare pas : Orcus en porte l'essentiel.
+    albedoOf: [
+      { body: 'orcus', value: 0.28, quote: 'a geometric albedo of 0.28+-0.04' },
     ],
   },
   // Les satellites de deux cibles de missions (2026-10-04). La page de NASA Science est lue par
@@ -1000,6 +1078,65 @@ const ARTICLES = {
     quotes: [
       'elliptical limb with axes 1,704 $\\pm$ 4 km x 1,138 $\\pm$ 26 km',
       'largest axis is at least 2,322 $\\pm$ 60 km',
+      'a geometric albedo of 0.51 $\\pm$ 0.02',
+    ],
+    albedoOf: [
+      {
+        body: 'haumea',
+        value: 0.51,
+        quote: 'a geometric albedo of 0.51 $\\pm$ 0.02',
+      },
+    ],
+  },
+  // LES ALBÉDOS QU'AUCUN RÉSUMÉ DÉJÀ CITÉ NE DONNE (2026-10-07), lus dans le texte publié.
+  // Gonggong : la table 3 de Kiss et al. 2019 ; les quatre solutions qui donnent la taille déjà
+  // citée (1 230 km, satellite dans l'équateur) publient toutes pV = 0,14 ± 0,01.
+  'kiss-2019-gonggong-table3': {
+    arxivPdf: '1903.05439v1',
+    quotes: ['3a 306.0 26.4 51 44.8 pg/s 1224±55 0.14±0.01'],
+    albedoOf: [
+      {
+        body: 'gonggong',
+        value: 0.14,
+        quote: '3a 306.0 26.4 51 44.8 pg/s 1224±55 0.14±0.01',
+      },
+    ],
+  },
+  // Éris : la page de Nature (Sicardy et al. 2011, déjà citée) rend la valeur en formule, absente
+  // du texte servi. Santos-Sanz et al. 2012 la recopient en la créditant à Sicardy et al.
+  'santos-sanz-2012-eris': {
+    arxivPdf: '1202.1481v1',
+    quotes: ['D = 2326 ± 12 km, pV = 96+9 -4 % (Sicardy et al. 2011)'],
+    albedoOf: [
+      {
+        body: 'eris',
+        value: 0.96,
+        quote: 'D = 2326 ± 12 km, pV = 96+9 -4 % (Sicardy et al. 2011)',
+      },
+    ],
+  },
+  // Itokawa : la taille mesurée IN SITU par Hayabusa et la magnitude de Bernardi et al. 2009.
+  'muller-2014-itokawa': {
+    arxivPdf: '1404.5842v1',
+    quotes: ['we assign a geometric albedo of 0.29±0.02 for'],
+    albedoOf: [
+      {
+        body: 'itokawa',
+        value: 0.29,
+        quote: 'we assign a geometric albedo of 0.29±0.02 for',
+      },
+    ],
+  },
+  // 67P : OSIRIS à 649 nm, pas en bande V ; la seule mesure du noyau résolu par Rosetta.
+  'fornasier-2015-67p': {
+    arxiv: '1505.06888',
+    quotes: ['The geometric albedo of the comet is 6.5$\\pm$0.2\\% at 649 nm'],
+    albedoOf: [
+      {
+        body: 'churyumov-gerasimenko',
+        value: 0.065,
+        quote: 'The geometric albedo of the comet is 6.5$\\pm$0.2\\% at 649 nm',
+      },
     ],
   },
 };
@@ -1073,6 +1210,27 @@ async function articleText({ url, arxiv, arxivPdf }) {
   };
 }
 
+/**
+ * L'albédo qu'un article publie pour un corps (2026-10-07), lu par
+ * `scripts/measure-display-albedo.mjs`. Sa citation doit être l'une des citations VÉRIFIÉES de
+ * l'article, et contenir le nombre déclaré, tel quel ou en pour cent : la transcription reste
+ * humaine, mais elle ne peut pas citer une phrase qui ne le dit pas.
+ */
+function albedoOf(id, article) {
+  return article.albedoOf.map(({ body, value, quote }) => {
+    if (!article.quotes.includes(quote))
+      throw new Error(
+        `${id} : la citation d'albédo de ${body} n'est pas vérifiée`
+      );
+    const percent = String(Math.round(value * 1e6) / 1e4);
+    if (!quote.includes(String(value)) && !quote.includes(percent))
+      throw new Error(
+        `${id} : ${value} absent de la citation d'albédo de ${body}`
+      );
+    return { body, value, quote };
+  });
+}
+
 async function articles() {
   const out = {};
   for (const [id, article] of Object.entries(ARTICLES)) {
@@ -1090,6 +1248,7 @@ async function articles() {
       retrieved: response.retrieved,
       verifiedQuotes: article.quotes,
       ...(article.atmosphereOf ? { atmosphereOf: article.atmosphereOf } : {}),
+      ...(article.albedoOf ? { albedoOf: albedoOf(id, article) } : {}),
     };
   }
   return out;
