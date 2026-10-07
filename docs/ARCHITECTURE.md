@@ -2040,8 +2040,17 @@ uniforme sur un atlas), et `0,5 / 2,6` pour un modèle à couleur cuite.
     vérifiée par le relevé le dit (Titan, NASA Science). Leur albédo est celui du disque entier,
     nuages et brumes compris, pas celui de la surface que porte la texture ;
   - **Japet** : le NSSDCA publie « 0.05 / 0.5 » et NASA Science « 0.03-0.05 » contre « 0.5-0.6 »
-    selon la face. Aucun nombre ne le décrit, et sa mosaïque livrée n'a que 1,7 de contraste entre
-    ses faces au lieu d'environ 12 : il faudrait une carte radiométrique, chantier à part ;
+    selon la face. Aucun nombre ne le décrit. **Mesuré le 2026-10-07** (`faceContrast` de
+    `core/displayAlbedo.ts` : luminance linéaire moyenne de la fenêtre de 60° de longitude la plus
+    claire sur la plus sombre, ±40° de latitude) : la carte livrée (USGS, 803 m) porte **1,99**
+    pour un rapport publié de 10. Le générateur écrit les deux albédos et ce contraste dans la
+    table, `displayAlbedo.test.ts` le remesure et ÉCHOUE si une carte livrée dépasse la moitié du
+    rapport publié (Japet devrait alors rejoindre la règle), et `/methodology` publie les deux
+    nombres. **La seule autre carte globale trouvée**, la mosaïque couleur de Schenk (PIA18436,
+    2014, 400 m), mesure **29,7** par la même méthode : au-delà de ce que publient les sources
+    (10 à 20), et sa légende déclare des couleurs « enhanced » sans rien dire de l'albédo. Elle
+    n'est donc pas une carte radiométrique, et le reste est écrit en ces termes sur la page
+    (« aucune carte globale trouvée à ce jour ») ;
   - un corps sans albédo dans les sources du relevé (code `noAlbedo`) garderait la luminosité de
     sa source. **Il n'y en a plus depuis le 2026-10-07** : les quatorze qui manquaient ont chacun
     une source primaire LUE. Charon et les quatre petites lunes de Pluton par la fiche de Pluton

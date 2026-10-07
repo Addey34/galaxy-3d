@@ -157,12 +157,30 @@ for (const { name, config } of allBodies(CELESTIAL_CONFIG)) {
     continue;
   }
   if (albedo.value === null) {
+    // Deux albédos (Japet, « 0.05 / 0.5 ») : le rapport qu'il faudrait reproduire, LU, et celui
+    // que la carte livrée porte, MESURÉ. Tant que le second est loin du premier, aucun gain
+    // unique ne donne à chaque face son albédo (2026-10-07).
+    const albedos = albedo.raw.split('/').map((v) => Number(v.trim()));
+    if (albedos.length !== 2 || albedos.some((v) => !(v > 0)))
+      throw new Error(`${name} : deux albédos illisibles, « ${albedo.raw} »`);
+    const file = `public/assets/textures/${texturePath(name, 'surface')}_${level}.jpg`;
+    const { data, info } = await sharp(join(ROOT, file))
+      .removeAlpha()
+      .raw()
+      .toBuffer({ resolveWithObject: true });
+    const contrast = round(
+      rule.faceContrast(data, info.width, info.height, info.channels)
+    );
+    const published = round(Math.max(...albedos) / Math.min(...albedos));
     rows.push({
       body: name,
       rule: 'excluded',
       exclusion: 'twoAlbedos',
-      reason: `la source publie deux albédos, « ${albedo.raw} » : aucun nombre unique ne décrit ce corps`,
+      reason: `la source publie deux albédos, « ${albedo.raw} », soit un rapport de ${published} entre ses faces, et sa carte n'en porte que ${contrast} : aucun gain unique ne donne à chaque face son albédo`,
       source: { path: albedo.path, url: albedo.url },
+      albedos,
+      texture: file,
+      textureFaceContrast: contrast,
     });
     continue;
   }

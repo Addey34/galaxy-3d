@@ -81,6 +81,58 @@ export function meanLinearLuminance(
   return sum / area;
 }
 
+/** Largeur en longitude et demi-hauteur en latitude d'une « face » pour `faceContrast`. */
+export const FACE_LONGITUDE_DEG = 60;
+export const FACE_HALF_LATITUDE_DEG = 40;
+
+/**
+ * LE CONTRASTE ENTRE LES FACES d'une carte équirectangulaire (2026-10-07) : la luminance
+ * linéaire moyenne de la fenêtre la plus claire divisée par celle de la plus sombre, chaque
+ * fenêtre couvrant `FACE_LONGITUDE_DEG` de longitude sur ±`FACE_HALF_LATITUDE_DEG` de latitude,
+ * pondérée cos(latitude), les longitudes balayées tous les degrés. C'est la grandeur qu'un corps
+ * à deux albédos (Japet) devrait reproduire pour qu'un gain unique suffise.
+ */
+export function faceContrast(
+  rgb: ArrayLike<number>,
+  width: number,
+  height: number,
+  channels: number
+): number {
+  const lut = Array.from({ length: 256 }, (_, c) => toLinear(c));
+  const yFrom = Math.round(height * (0.5 - FACE_HALF_LATITUDE_DEG / 180));
+  const yTo = Math.round(height * (0.5 + FACE_HALF_LATITUDE_DEG / 180));
+  // Une colonne : somme pondérée de sa luminance et de son aire, sur la bande de latitudes.
+  const sum = new Float64Array(width);
+  const area = new Float64Array(width);
+  for (let y = yFrom; y < yTo; y++) {
+    const w = Math.cos(((y + 0.5) / height - 0.5) * Math.PI);
+    for (let x = 0; x < width; x++) {
+      const i = (y * width + x) * channels;
+      sum[x]! +=
+        w *
+        (0.2126 * lut[rgb[i]!]! +
+          0.7152 * lut[rgb[i + 1]!]! +
+          0.0722 * lut[rgb[i + 2]!]!);
+      area[x]! += w;
+    }
+  }
+  const span = Math.max(1, Math.round((width * FACE_LONGITUDE_DEG) / 360));
+  const step = Math.max(1, Math.round(width / 360));
+  let darkest = Infinity;
+  let brightest = 0;
+  for (let x0 = 0; x0 < width; x0 += step) {
+    let s = 0;
+    let a = 0;
+    for (let dx = 0; dx < span; dx++) {
+      s += sum[(x0 + dx) % width]!;
+      a += area[(x0 + dx) % width]!;
+    }
+    darkest = Math.min(darkest, s / a);
+    brightest = Math.max(brightest, s / a);
+  }
+  return brightest / darkest;
+}
+
 /**
  * Pression de surface PUBLIÉE au-delà de laquelle le disque vu est une atmosphère et non la
  * surface de la texture. 1 mbar sépare Mars (6,36 mbar, poussière et calottes saisonnières dans

@@ -7,6 +7,7 @@ import {
   DISPLAY_LUMINANCE_PER_ALBEDO,
   bakedGain,
   displayGain as gainFor,
+  faceContrast,
   meanLinearLuminance,
 } from '@/core/displayAlbedo';
 import { CELESTIAL_CONFIG } from './bodies';
@@ -34,6 +35,8 @@ interface Row {
   textureMeanLuminance?: number;
   gain?: number;
   reason?: string;
+  albedos?: number[];
+  textureFaceContrast?: number;
 }
 const rows = table.rows as Row[];
 const byBody = new Map(rows.map((r) => [r.body, r]));
@@ -134,6 +137,53 @@ describe('luminosité affichée : la table des gains', () => {
     for (const r of rows.filter((x) => x.rule === 'excluded'))
       expect(r.reason?.length ?? 0, r.body).toBeGreaterThan(10);
     expect(byBody.get('iapetus')?.reason).toContain('0.05 / 0.5');
+    expect(byBody.get('iapetus')?.albedos).toEqual([0.05, 0.5]);
     expect(byBody.get('titan')?.reason).toContain('substantial atmosphere');
   });
+});
+
+/**
+ * LE CONTRASTE ENTRE LES FACES (2026-10-07), raison mesurée pour laquelle Japet reste hors règle :
+ * ses deux albédos publiés sont dans un rapport de 10, sa carte livrée n'en porte que 2.
+ */
+describe('luminosité affichée : le contraste entre les faces', () => {
+  it('rend le rapport de deux hémisphères uniformes, et 1 sur une carte uniforme', () => {
+    const W = 360;
+    const H = 180;
+    const image = (left: number, right: number): Uint8Array => {
+      const rgb = new Uint8Array(W * H * 3);
+      for (let y = 0; y < H; y++)
+        for (let x = 0; x < W; x++)
+          rgb.fill(
+            x < W / 2 ? left : right,
+            (y * W + x) * 3,
+            (y * W + x) * 3 + 3
+          );
+      return rgb;
+    };
+    const lin = (c: number): number => ((c / 255 + 0.055) / 1.055) ** 2.4;
+    expect(faceContrast(image(200, 200), W, H, 3)).toBeCloseTo(1, 10);
+    expect(faceContrast(image(60, 240), W, H, 3)).toBeCloseTo(
+      lin(240) / lin(60),
+      6
+    );
+  });
+
+  const twoAlbedos = rows.filter((r) => r.albedos !== undefined);
+  it.each(twoAlbedos.map((r) => [r.body, r] as const))(
+    '%s : contraste remesuré sur la texture livrée, loin du rapport publié',
+    async (_, r) => {
+      const { data, info } = await sharp(join(ROOT, r.texture!))
+        .removeAlpha()
+        .raw()
+        .toBuffer({ resolveWithObject: true });
+      expect(
+        faceContrast(data, info.width, info.height, info.channels)
+      ).toBeCloseTo(r.textureFaceContrast!, 4);
+      const published = Math.max(...r.albedos!) / Math.min(...r.albedos!);
+      // La raison ne tient que tant que la carte est loin du rapport publié : une carte
+      // radiométrique livrée ferait échouer ce test, et Japet devrait alors rejoindre la règle.
+      expect(r.textureFaceContrast!).toBeLessThan(published / 2);
+    }
+  );
 });

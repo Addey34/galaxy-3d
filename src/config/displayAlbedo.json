@@ -240,11 +240,17 @@
       "body": "iapetus",
       "rule": "excluded",
       "exclusion": "twoAlbedos",
-      "reason": "la source publie deux albédos, « 0.05 / 0.5 » : aucun nombre unique ne décrit ce corps",
+      "reason": "la source publie deux albédos, « 0.05 / 0.5 », soit un rapport de 10 entre ses faces, et sa carte n'en porte que 1.99085 : aucun gain unique ne donne à chaque face son albédo",
       "source": {
         "path": "nssdcaSatellites.iapetus.visualGeometricAlbedo",
         "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/saturniansatfact.html"
-      }
+      },
+      "albedos": [
+        0.05,
+        0.5
+      ],
+      "texture": "public/assets/textures/iapetus/iapetus_surface_1k.jpg",
+      "textureFaceContrast": 1.99085
     },
     {
       "body": "titan",
