@@ -45,6 +45,9 @@ def rotation_rate(body):
         return None
 
     hours = find(f)
+    if not hours and f.get("facts", {}).get("rotationPeriod", {}).get("detail") == "synchronousRotation":
+        # Rotation synchrone (les lunes d'Uranus) : la période est celle de l'orbite.
+        hours = f["facts"]["orbitPeriodDays"]["value"] * 24
     if not hours:
         raise ValueError(f"{body} : pas de période de rotation dans la fiche")
     return 360 * 24 / hours
@@ -66,7 +69,10 @@ def download(url, path):
 
 def cmd_fetch(t, _):
     for k in t["kernels"]:
-        download(t["kernelBase"] + k, os.path.join(pk.kernel_dir(t), os.path.basename(k)))
+        # Une entrée peut être une adresse complète : les noyaux de Voyager viennent de trois
+        # hôtes (NAIF générique, NAIF Voyager, nœud Ring-Moon du PDS).
+        url = k if k.startswith("https://") else t["kernelBase"] + k
+        download(url, os.path.join(pk.kernel_dir(t), os.path.basename(k)))
     for n in dict.fromkeys(t["images"] + t.get("map", {}).get("images", [])):
         for suf in (t["imageSuffix"], t.get("labelSuffix")) if t.get("labelSuffix") else (t["imageSuffix"],):
             download(t["imageBase"] + n + suf, os.path.join(pk.image_dir(t), n + suf))
@@ -240,6 +246,11 @@ def cmd_map(t, a):
             print(f"{g['name']} : {len(refl)} points, écartée", flush=True)
             continue
         refl = refl / np.median(refl)  # la phase change d'une image à l'autre : relatif à l'image
+        if m.get("weightByResolution"):
+            # Une image 4 fois plus fine pèse 16 fois plus (2026-10-06, Miranda) : sans cela, les
+            # vues lointaines, quatre fois plus nombreuses en points, noyaient le détail des vues
+            # rapprochées dans la moyenne. Pixel au sol pris à la distance du centre.
+            w = w / (g["d"] / cam.ks) ** 2
         # Une ombre ou un bord rasant que le modèle ne résout pas sort à presque zéro, et la
         # division par Lommel-Seeliger le gonfle : franges noires vues sur Lutetia (2026-10-06).
         keep = (refl > 0.5) & (refl < 2.0)

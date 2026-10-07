@@ -22,6 +22,8 @@ export const ILLUSTRATIVE_SURFACES: ReadonlySet<string> = new Set([
   // mosaïque Dawn FC publiée existe (7383 px, lue à son étiquette PDS3).
   // Mimas en est SORTIE le 2026-10-04 : la mosaïque Cassini ISS du PDS (volume coiss_3006,
   // 5 760 px) existait ; la recherche précédente n'avait regardé que le catalogue de l'USGS.
+  // Miranda en est SORTIE le 2026-10-06 : carte fabriquée depuis les images Voyager 2 calibrées
+  // et corrigées du PDS (nœud Ring-Moon), hémisphère sud seul.
   'eris',
   'haumea',
   'makemake',
@@ -34,7 +36,6 @@ export const ILLUSTRATIVE_SURFACES: ReadonlySet<string> = new Set([
   'sedna',
   'amalthea',
   'hyperion',
-  'miranda',
   'ariel',
   'umbriel',
   'titania',

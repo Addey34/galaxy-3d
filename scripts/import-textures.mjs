@@ -526,6 +526,28 @@ const IMPORTS = [
     tier: 'free',
   },
   {
+    // Carte FABRIQUÉE le 2026-10-06 : aucune mosaïque de Miranda n'est publiée comme donnée.
+    // Douze images NAC de Voyager 2 du 1986-01-24 (onze contribuent), calibrées et corrigées de
+    // la distorsion du vidicon par le nœud Ring-Moon du PDS (VGISS_7206, GEOMED), reportées sur
+    // la sphère au repère IAU_MIRANDA : `pnpm pose:spice map miranda-voyager --pose truth
+    // --step 0.05`, chaque échantillon pesé aussi par l'inverse du carré de son pixel au sol
+    // (`weightByResolution`), puis `scripts/compose-albedo-texture.mjs` avec le même fichier en
+    // trois bandes, `--albedo 0.32` (NSSDCA) et `--width 7200`. Repère vérifié sur les noms de
+    // l'UAI (Arden, Inverness, Elsinore, Verona Rupes). Hémisphère nord jamais éclairé en 1986 :
+    // gris moyen mesuré, déjà comblé.
+    body: 'miranda',
+    layer: 'surface',
+    src: `${V1}/miranda/miranda_voyager_map.png`,
+    resolutions: ['1k', '2k', '4k'],
+    fillHoles: false,
+    source:
+      'https://pds-rings.seti.org/holdings/volumes/VGISS_7xxx/VGISS_7206/',
+    license: 'public-domain',
+    credit:
+      'NASA/JPL Voyager 2 ISS, PDS Ring-Moon Systems Node, données modifiées',
+    tier: 'free',
+  },
+  {
     // ATLAS FABRIQUÉ le 2026-10-06 : aucune carte de 67P n'est publiée comme donnée, et aucune
     // carte équirectangulaire ne peut la porter (13,5 % de sa surface partage sa direction avec
     // une autre). Vingt-deux images NAC d'OSIRIS d'août 2014 (RO-C-OSINAC-4-PRL-67P-M06-REFLECT-

@@ -261,6 +261,86 @@
         "projection": "atlas",
         "atlasSize": 2048
       }
+    },
+    "miranda-voyager": {
+      "$comment": "Miranda vue par Voyager 2, 1986-01-24 (approche 16 h 59 UTC, 29 000 km). Caméra à petit champ de l'ISS, images CALIBRÉES (I/F) et corrigées de la distorsion du vidicon (GEOMED, 1000 x 1000) du nœud Ring-Moon du PDS (VGISS_7206), domaine public. Échelle des images corrigées MESURÉE le 2026-10-06 sur les quatre images où le disque est entier : 133 000 px/rad (pic de corrélation d'une sphère éclairée, 0,88 à 0,92) ; axes : lignes +Y, échantillons +X, seule convention qui place le Soleil du côté éclairé (prédit -156°, observé -167°). Pointage : CK DISCONTINU du nœud Ring-Moon (SEDR, ~100 pixels bruts), lu au compte d'horloge de fin de pose ; décalage systématique d'environ (-65, -300) px rattrapé image par image. Miranda : ura111 (même solution que vgr2.ura111 ; 54 m de la version longue de 2,1 Go). Sphère au rayon de la fiche (pas de modèle de forme). Vérité : IAU_MIRANDA (PCK00010).",
+      "body": "miranda",
+      "naifBody": "705",
+      "spacecraft": "-32",
+      "camera": {
+        "instrument": "-32101",
+        "lines": 1000,
+        "samples": 1000,
+        "lineAxis": "+Y",
+        "sampleAxis": "+X",
+        "pixelScaleRad": 7.5188e-06,
+        "discreteCk": {
+          "structure": "-32100",
+          "from": "VG2_SCAN_PLATFORM",
+          "clockKey": "SPACECRAFT_CLOCK_STOP_COUNT",
+          "partition": "3",
+          "tolerance": "0:00:400"
+        }
+      },
+      "kernelBase": "https://naif.jpl.nasa.gov/pub/naif/",
+      "kernels": [
+        "https://naif.jpl.nasa.gov/pub/naif/generic_kernels/lsk/naif0012.tls",
+        "https://naif.jpl.nasa.gov/pub/naif/generic_kernels/pck/pck00010.tpc",
+        "https://naif.jpl.nasa.gov/pub/naif/generic_kernels/spk/planets/de440s.bsp",
+        "https://naif.jpl.nasa.gov/pub/naif/VOYAGER/kernels/sclk/vg200051.tsc",
+        "https://naif.jpl.nasa.gov/pub/naif/VOYAGER/kernels/fk/vg2_v02.tf",
+        "https://naif.jpl.nasa.gov/pub/naif/VOYAGER/kernels/ik/vg2_issna_v02.ti",
+        "https://naif.jpl.nasa.gov/pub/naif/VOYAGER/kernels/spk/vgr2.ura111.bsp",
+        "https://naif.jpl.nasa.gov/pub/naif/generic_kernels/spk/satellites/a_old_versions/ura111.bsp",
+        "https://pds-rings.seti.org/voyager/ck/vg2_ura_version1_type1_iss_sedr.bc"
+      ],
+      "imageBase": "https://pds-rings.seti.org/holdings/volumes/VGISS_7xxx/VGISS_7206/DATA/",
+      "images": [
+        "C26844XX/C2684409_GEOMED",
+        "C26844XX/C2684411_GEOMED",
+        "C26844XX/C2684413_GEOMED",
+        "C26844XX/C2684415_GEOMED"
+      ],
+      "imageSuffix": ".IMG",
+      "labelSuffix": ".LBL",
+      "imageFormat": "pds3-detached",
+      "truthFrame": "IAU_MIRANDA",
+      "search": {
+        "coarseBin": [
+          8,
+          8
+        ],
+        "fineBin": [
+          4,
+          4
+        ],
+        "coarseSigma": 1,
+        "fineSigma": 1,
+        "maxShiftPx": [
+          400,
+          400
+        ]
+      },
+      "map": {
+        "images": [
+          "C26844XX/C2684409_GEOMED",
+          "C26844XX/C2684411_GEOMED",
+          "C26844XX/C2684413_GEOMED",
+          "C26844XX/C2684415_GEOMED",
+          "C26846XX/C2684608_GEOMED",
+          "C26846XX/C2684611_GEOMED",
+          "C26846XX/C2684614_GEOMED",
+          "C26846XX/C2684617_GEOMED",
+          "C26846XX/C2684620_GEOMED",
+          "C26846XX/C2684623_GEOMED",
+          "C26846XX/C2684626_GEOMED",
+          "C26846XX/C2684629_GEOMED"
+        ],
+        "splitTime": "1986-01-24T16:00:00",
+        "textureGroup": "all",
+        "limbPx": 3,
+        "weightByResolution": true
+      }
     }
   }
 }

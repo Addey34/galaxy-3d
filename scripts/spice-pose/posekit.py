@@ -170,7 +170,33 @@ class Mesh:
         return p, nn
 
 
+def sphere_mesh(radius, name, bands=180):
+    """Une sphère de `radius` km, pôle sur +Z, bandes de 1° : chaque point y est à moins de
+    r·(1 − cos 0,5°) de la vraie sphère (9 m sur Miranda, 30 m sur Titania)."""
+    th = np.linspace(0, math.pi, bands + 1)
+    ph = np.linspace(0, 2 * math.pi, 2 * bands, endpoint=False)
+    T, P = np.meshgrid(th, ph, indexing="ij")
+    v = np.stack([np.sin(T) * np.cos(P), np.sin(T) * np.sin(P), np.cos(T)], -1).reshape(-1, 3)
+    m = 2 * bands
+    i, j = np.meshgrid(np.arange(bands), np.arange(m), indexing="ij")
+    a, b = i * m + j, i * m + (j + 1) % m
+    c, d = (i + 1) * m + j, (i + 1) * m + (j + 1) % m
+    tri = np.concatenate([np.stack([a, c, b], -1).reshape(-1, 3), np.stack([b, c, d], -1).reshape(-1, 3)])
+    return Mesh(v * radius, v.copy(), tri, name)
+
+
+def fiche(body):
+    with open(os.path.join(ROOT, "src", "registry", "entities", f"{body}.json"), encoding="utf-8") as f:
+        return json.load(f)
+
+
 def load_model(body, radius=None):
+    """Le niveau le plus fin livré ; pour un corps dont la fiche ne déclare AUCUN modèle (les
+    lunes d'Uranus, sphériques), une sphère au rayon de la fiche (2026-10-06). Un modèle déclaré
+    mais absent du disque reste une erreur : on ne le remplace pas en silence."""
+    card = fiche(body)
+    if "model" not in card.get("elements", {}):
+        return sphere_mesh(radius or float(card["facts"]["radiusKm"]["value"]), body)
     pos, nor, tri, credit, uv = read_glb(shipped_model(body))
     m = Mesh(pos, nor, tri, body, uv)
     _, vol = m.volume_radius()
@@ -242,11 +268,34 @@ def read_pds3(path):
     return a, window, top
 
 
+def read_pds3_detached(label_path, data_path):
+    """Image d'un produit PDS3 à étiquette DÉTACHÉE (Voyager ISS du nœud Ring-Moon, 2026-10-06) :
+    `^IMAGE = ("fichier", enregistrement)`, entiers 16 bits multipliés par
+    `REFLECTANCE_SCALING_FACTOR` (I/F), l'en-tête VICAR occupant le premier enregistrement."""
+    text = open(label_path, encoding="latin1").read()
+    top = {}
+    for m in re.finditer(r"(?m)^\s*([A-Z0-9_^:]+)\s*=\s*\"?([^\"\r\n]*?)\"?\s*$", text):
+        top.setdefault(m.group(1), m.group(2).strip())
+    obj = re.search(r"(?s)OBJECT\s*=\s*IMAGE(?![A-Z_])(.*?)END_OBJECT\s*=\s*IMAGE", text)
+    if not obj:
+        raise ValueError(f"{label_path} : pas d'objet IMAGE")
+    im = dict(re.findall(r"(?m)^\s*([A-Z_]+)\s*=\s*\"?([^\"\r\n]*?)\"?\s*$", obj.group(1)))
+    h, w = int(im["LINES"]), int(im["LINE_SAMPLES"])
+    dt = {("LSB_INTEGER", "16"): "<i2", ("MSB_INTEGER", "16"): ">i2"}[(im["SAMPLE_TYPE"], im["SAMPLE_BITS"])]
+    # `^IMAGE = ("fichier", 2)` : des guillemets DANS la valeur, que la lecture générique ne garde pas.
+    record = int(re.search(r"(?m)^\s*\^IMAGE\s*=\s*\(.*?,\s*(\d+)\s*\)", text).group(1))
+    off = (record - 1) * int(top["RECORD_BYTES"])
+    with open(data_path, "rb") as f:
+        b = f.read()
+    a = np.frombuffer(b, dtype=dt, count=w * h, offset=off).reshape(h, w).astype(np.float64)
+    return a * float(im.get("REFLECTANCE_SCALING_FACTOR", 1)), (0, 0), top
+
+
 def exposure_seconds(value):
     """`EXPOSURE_DURATION` d'une étiquette, avec son unité (NEAR en ms, OSIRIS en s)."""
     m = re.match(r"\s*([0-9.eE+-]+)\s*(<\s*(\w+)\s*>)?", value)
     unit = (m.group(3) or "s").lower()
-    return float(m.group(1)) * {"s": 1, "ms": 1e-3}[unit]
+    return float(m.group(1)) * {"s": 1, "second": 1, "ms": 1e-3}[unit]
 
 
 def load_frame(target, name):
@@ -257,6 +306,8 @@ def load_frame(target, name):
         return a, (0, 0), read_label(os.path.join(d, name + target["labelSuffix"]))
     if target["imageFormat"] == "pds3":
         return read_pds3(os.path.join(d, name + target["imageSuffix"]))
+    if target["imageFormat"] == "pds3-detached":
+        return read_pds3_detached(os.path.join(d, name + target["labelSuffix"]), os.path.join(d, name + target["imageSuffix"]))
     raise ValueError(f"format d'image non pris en charge : {target['imageFormat']}")
 
 
@@ -324,7 +375,16 @@ def geometry(sp, target):
         frames.append(a)
         et = sp.str2et(lbl["START_TIME"]) + exposure_seconds(lbl["EXPOSURE_DURATION"]) / 2
         p, lt = sp.spkpos(target["naifBody"], et, "J2000", "LT+S", target["spacecraft"])
-        r = sp.pxform("J2000", frame, et)
+        ck = target["camera"].get("discreteCk")
+        if ck:
+            # Un CK DISCONTINU (Voyager, type 1) ne donne l'orientation qu'aux instants des prises,
+            # indexés sur le compte d'horloge de l'étiquette : on le lit à ce compte, pas à une
+            # heure convertie, qui tombe à côté (4,4 s d'écart mesuré à Uranus).
+            sc = sp.scencd(int(target["spacecraft"]), ck["partition"] + "/" + lbl[ck["clockKey"]])
+            C, _ = sp.ckgp(int(ck["structure"]), sc, sp.sctiks(int(target["spacecraft"]), ck["tolerance"]), "J2000")
+            r = np.array(sp.pxform(ck["from"], frame, et)) @ np.array(C)
+        else:
+            r = sp.pxform("J2000", frame, et)
         s, _ = sp.spkpos("SUN", et - lt, "J2000", "LT+S", target["naifBody"])
         g = dict(name=name, et=et, p=np.array(p), R=np.array(r), sun=np.array(s), d=float(np.linalg.norm(p)),
                  window=window, shape=a.shape)
