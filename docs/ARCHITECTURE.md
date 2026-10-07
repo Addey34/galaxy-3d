@@ -2543,6 +2543,19 @@ côté, et laissé tel quel faute de décision : les mosaïques des lunes glacé
 de 0,14 (Encelade) à 0,22 (Dioné), sans lien avec leur albédo ; la convention de `display-albedo.mjs`
 ne vaut que pour les textures COMPOSÉES. 1k et 2k (source de 3 600 px). Domaine public.
 
+**Titania, par la même chaîne (2026-10-07).** Recette `titania-voyager`, six images NAC en deux
+séries : 09 h 10 à 09 h 15 (A, quatre filtres, phase 34°, 4,6 km/px) et 14 h 17 à 14 h 19 (B,
+phase 70°, 3,4 km/px). Le disque y tient ENTIER dans le champ, et c'est là que l'échelle se
+tranche : l'ajustement au limbe rend **127 234 à 127 521 px/rad sur les six images**, quand la
+corrélation d'une sphère éclairée reste plate (pic entre 130 000 et 133 000). La recette garde les
+128 000 d'Ariel, la même caméra, à moins d'un pixel du disque de Titania ; les 133 000 de Miranda
+sont donc 4 % trop forts, à reprendre avec elle. Formes **0,732 au décalage nul contre 0,492** au
+mieux décalées (0,118 en moyenne), radiométrie 0,906, 21 % de la surface ; repère vérifié en
+projetant les cratères nommés dans les images des deux groupes (Gertrude, Calphurnia, Ursula,
+Jessica). Pas de 0,25° : le pixel le plus fin (3,4 km) ne porte que 1 458 px de circonférence,
+donc **1k seulement**, et la 2k procédurale livrée jusqu'ici est retirée plutôt qu'agrandie.
+Albédo 0,27 (NSSDCA), sous le plafond : 0,14 % de valeurs saturées. Domaine public.
+
 **Les archives des missions, lues le 2026-10-05** pour les cinq corps NASA, par le registre du PDS
 (`pds.nasa.gov/api/search/1`, les 3 863 collections listées puis filtrées, la requête
 `lid like … and …` étant refusée par l'API) :

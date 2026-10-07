@@ -432,17 +432,6 @@ const BODIES = [
       },
     ],
   },
-  // Réseau de canyons (Messina Chasmata, ~1500 km) + cratères à pics centraux — canyons non
-  // modélisés par ce générateur (pas de primitive linéaire) ; cratérisation modérée seule.
-  {
-    name: 'titania',
-    baseColor: [166, 160, 152],
-    craterCount: 18,
-    craterMinRadius: 0.04,
-    craterMaxRadius: 0.13,
-    albedoVariation: 0.11,
-    heightContrast: 0.45,
-  },
   // Surface sombre, cratères jusqu'à ~200 km avec pics centraux, l'une des plus anciennes du
   // système (peu de resurfaçage) — cratérisation dense avec quelques grands bassins.
   {

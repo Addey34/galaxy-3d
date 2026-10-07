@@ -45,7 +45,6 @@
     },
     "textureResolutions": {
       "surface": [
-        "2k",
         "1k"
       ]
     },
@@ -141,6 +140,6 @@
     }
   },
   "notes": {
-    "textureResolutions": "Aucune mosaïque globale contrôlée n'existe côté USGS pour Titania — vérifié en direct (2026-08-26, voir registry/products/textures). Texture procédurale générée (cratérisation modérée seule — le générateur ne modélise pas les réseaux de canyons comme Messina Chasma, voir le commentaire sur cette limite dans scripts/generate-procedural-textures.mjs)."
+    "textureResolutions": "Carte fabriquée le 2026-10-07 depuis six images de Voyager 2 calibrées et corrigées de leur distorsion (PDS, nœud Ring-Moon), reportées au repère IAU_TITANIA et vérifiées sur les noms de l'UAI ; seul l'hémisphère sud, éclairé en 1986, est mesuré. 1k seulement : le pixel le plus fin (3,4 km) ne porte que 1 458 px de circonférence. Voir registry/products/textures/titania-surface.json."
   }
 }

@@ -568,6 +568,25 @@ const IMPORTS = [
     tier: 'free',
   },
   {
+    // Carte FABRIQUÉE le 2026-10-07, même chaîne qu'Ariel : six images NAC de Voyager 2 du
+    // 1986-01-24 (VGISS_7206, GEOMED), `pnpm pose:spice map titania-voyager --pose truth
+    // --step 0.25`, puis `scripts/compose-albedo-texture.mjs` avec le même fichier en trois bandes,
+    // `--albedo 0.27` (NSSDCA) et `--width 1440`. 1k seulement : le pixel le plus fin (3,4 km) ne
+    // porte que 1 458 px de circonférence. Repère vérifié sur les noms de l'UAI (Gertrude,
+    // Calphurnia, Ursula, Jessica). Hémisphère nord jamais éclairé en 1986 : gris moyen mesuré.
+    body: 'titania',
+    layer: 'surface',
+    src: `${V1}/titania/titania_voyager_map.png`,
+    resolutions: ['1k'],
+    fillHoles: false,
+    source:
+      'https://pds-rings.seti.org/holdings/volumes/VGISS_7xxx/VGISS_7206/',
+    license: 'public-domain',
+    credit:
+      'NASA/JPL Voyager 2 ISS, PDS Ring-Moon Systems Node, données modifiées',
+    tier: 'free',
+  },
+  {
     // ATLAS FABRIQUÉ le 2026-10-06 : aucune carte de 67P n'est publiée comme donnée, et aucune
     // carte équirectangulaire ne peut la porter (13,5 % de sa surface partage sa direction avec
     // une autre). Vingt-deux images NAC d'OSIRIS d'août 2014 (RO-C-OSINAC-4-PRL-67P-M06-REFLECT-
