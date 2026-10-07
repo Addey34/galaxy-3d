@@ -73,8 +73,18 @@ describe('outil de pose SPICE : la recette contre ce qui est livré', () => {
     '%s : le corps a une fiche, une période et un modèle livré',
     (_, t) => {
       const fiche = JSON.parse(read(`src/registry/entities/${t.body}.json`));
-      expect(rotationPeriod(fiche)).toBeGreaterThan(0);
-      expect(shippedModels(t.body).length).toBeGreaterThan(0);
+      // Rotation synchrone (les lunes d'Uranus) : la période est celle de l'orbite, comme le lit
+      // `rotation_rate` de `pose.py`.
+      const synchronous =
+        fiche.facts?.rotationPeriod?.detail === 'synchronousRotation'
+          ? fiche.facts.orbitPeriodDays?.value * 24
+          : undefined;
+      expect(rotationPeriod(fiche) ?? synchronous).toBeGreaterThan(0);
+      // Un corps SANS modèle déclaré est une sphère au rayon de sa fiche (`posekit.load_model`) ;
+      // un modèle déclaré doit, lui, être livré.
+      if (fiche.elements?.model)
+        expect(shippedModels(t.body).length).toBeGreaterThan(0);
+      else expect(fiche.facts?.radiusKm?.value).toBeGreaterThan(0);
       for (const w of t.guard?.witnesses ?? []) {
         expect(w).not.toBe(t.body);
         expect(shippedModels(w).length, `témoin ${w}`).toBeGreaterThan(0);
@@ -89,7 +99,7 @@ describe('outil de pose SPICE : la recette contre ce qui est livré', () => {
     expect(Number.isInteger(Number(t.camera.instrument))).toBe(true);
     expect(t.kernelBase).toMatch(/^https:\/\//);
     expect(t.imageBase).toMatch(/^https:\/\//);
-    expect(['fits', 'pds3']).toContain(t.imageFormat);
+    expect(['fits', 'pds3', 'pds3-detached']).toContain(t.imageFormat);
     // Deux noyaux de même nom s'écraseraient dans le cache, qui les range à plat.
     const names = t.kernels.map((k) => k.split('/').pop());
     expect(new Set(names).size).toBe(names.length);

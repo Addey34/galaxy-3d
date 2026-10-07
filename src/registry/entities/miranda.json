@@ -45,6 +45,7 @@
     },
     "textureResolutions": {
       "surface": [
+        "4k",
         "2k",
         "1k"
       ]
@@ -142,6 +143,6 @@
   },
   "notes": {
     "relativeOrbitalElements": "JPL Horizons osculating elements, epoch 2000-01-01.5 TDB (EPHEM_TYPE=ELEMENTS, TLIST=2451545.0), même méthode que les lunes de Saturne. L'inclinaison ~97° n'est pas une orbite rétrograde : c'est l'écliptique qui est très inclinée par rapport au plan équatorial d'Uranus (axe couché à 97,77°, voir realData.axialTilt d'Uranus) — ces lunes orbitent normalement dans ce plan équatorial.",
-    "textureResolutions": "Aucune mosaïque globale contrôlée : Voyager 2 (survol unique, 1986) n'a imagé en détail qu'environ la moitié de Miranda — vérifié en direct (2026-08-26, voir registry/products/textures). Texture procédurale générée, avec de larges plages de terrain distinct approximant ses coronae réelles (Inverness/Arden/Elsinore)."
+    "textureResolutions": "Carte fabriquée le 2026-10-06 depuis onze images de Voyager 2 calibrées et corrigées de leur distorsion (PDS, nœud Ring-Moon), reportées au repère IAU_MIRANDA et vérifiées sur les noms de l'UAI ; seul l'hémisphère sud, éclairé en 1986, est mesuré. Voir registry/products/textures/miranda-surface.json."
   }
 }

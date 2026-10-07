@@ -412,27 +412,6 @@ const BODIES = [
     heightContrast: 0.4,
     craterRimStrength: 0,
   },
-  // Coronae (Inverness/Arden/Elsinore) : vastes terrains tectoniques en chevron, distincts du
-  // terrain cratérisé environnant — approximés par de larges "taches" de terrain plutôt que des
-  // cratères ; peu de grands cratères (surface partiellement renouvelée par la tectonique).
-  {
-    name: 'miranda',
-    baseColor: [200, 198, 195],
-    craterCount: 12,
-    craterMinRadius: 0.05,
-    craterMaxRadius: 0.12,
-    albedoVariation: 0.12,
-    heightContrast: 0.4,
-    patchGroups: [
-      {
-        count: 3,
-        minRadius: 0.22,
-        maxRadius: 0.32,
-        opacity: 0.55,
-        color: [168, 166, 160],
-      },
-    ],
-  },
   // Surface la plus brillante/jeune des lunes d'Uranus : peu de grands cratères (effacés par un
   // resurfaçage relativement récent), beaucoup de petits (Voyager 2 imaging science, 1986).
   {

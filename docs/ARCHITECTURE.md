@@ -2469,6 +2469,43 @@ vrai dépliage.
   couleur cuite (`bake-shape-colour.mjs`) réécrit les fichiers SANS leurs coordonnées : le
   générateur refuse un atlas sur un corps qui déclare un albédo cuit.
 
+**Les lunes d'Uranus par Voyager 2 : Miranda d'abord (2026-10-06).** Étude de faisabilité faite
+SUR LES INDEX du nœud Ring-Moon du PDS avant tout téléchargement (`*_moon_summary.tab` des
+volumes `VGISS_7201` à `7207`) : pour une carte 1k, il faut des images dont le pixel au sol est
+au plus la circonférence divisée par 1024. **Miranda** 11 images (0,28 à 1,36 km/px), 32 % vu et
+éclairé ; **Ariel** 8, 25 % ; **Titania** 6, 24 % ; **Umbriel et Obéron : aucune** (meilleures
+5,2 et 6,1 km/px pour 3,6 et 4,7 demandés), écartées par résolution comme Šteins. Chacune des
+trois a deux séries indépendantes. En 1986 le Soleil était presque au-dessus du pôle sud : seul
+l'hémisphère sud se cartographie.
+
+- **Images** : `GEOMED` du nœud, calibrées (I/F codé sur 16 bits, `REFLECTANCE_SCALING_FACTOR`)
+  et corrigées de la distorsion du vidicon par les réseaux, 1000 × 1000. Lues par
+  `read_pds3_detached` (étiquette détachée, `^IMAGE = ("fichier", 2)`).
+- **Pointage** : le CK DISCONTINU du nœud (`vg2_ura_version1_type1_iss_sedr.bc`, SEDR, ~100
+  pixels bruts annoncés), qui ne porte l'orientation qu'aux instants des prises : il se lit au
+  compte d'horloge de FIN de pose de l'étiquette (`camera.discreteCk`), une heure convertie tombant
+  4,4 s à côté. Décalage SYSTÉMATIQUE mesuré d'environ (−65, −300) px, rattrapé image par image.
+- **Caméra MESURÉE, pas supposée** : échelle des images corrigées 133 000 px/rad (pic de
+  corrélation d'une sphère éclairée sur les quatre images où le disque est entier, 0,88 à 0,92) ;
+  axes lignes +Y, échantillons +X, la seule des huit conventions qui place le Soleil du côté
+  éclairé (prédit −156°, observé −167° sur les quatre images ; les autres à 50° et plus).
+- **Le corps est une sphère** au rayon de sa fiche (`posekit.load_model`, pour un corps qui ne
+  déclare AUCUN modèle ; un modèle déclaré et absent reste une erreur). Noyau de Miranda :
+  `ura111.bsp` (même solution que l'éphéméride de Voyager, à 54 m de la version longue de 2,1 Go).
+- **Pondération par la résolution** (`map.weightByResolution`) : chaque échantillon pèse aussi
+  l'inverse du carré de son pixel au sol. Sans elle, les quatre vues lointaines (1,3 km/px),
+  quatre fois plus riches en points, noyaient le détail des huit vues rapprochées (0,3 km/px) et
+  la carte sortait floue. Option de recette : les cartes de Lutetia et de 67P ne bougent pas.
+- **Mesuré**, 15 h (A) contre 16 h 40 (B), deux points de vue à 200° de longitude l'un de
+  l'autre : formes **0,78 au décalage nul contre 0,12** décalées de 1 à 3°, radiométrie 0,53,
+  28 % de la surface. **Repère vérifié sur les noms de l'UAI** (le gazetteer livré, en longitudes
+  Est) : Arden, Inverness et Elsinore Coronae et Verona Rupes tombent sur leurs formations. Un
+  premier témoin chiffré (contraste dans chaque couronne contre son demi-tour) a été ÉCARTÉ : il
+  mesurait la résolution des images qui couvrent la zone, pas le terrain.
+- Une image (`C2684623`) ne montre que le limbe : toutes ses visées passent les 70° d'émission,
+  elle ne rend aucun point, à juste titre. Calée sur l'albédo géométrique visuel 0,32 (NSSDCA) ;
+  1,4 % des valeurs saturent (les falaises les plus claires d'une lune claire). Domaine public.
+
 **Les archives des missions, lues le 2026-10-05** pour les cinq corps NASA, par le registre du PDS
 (`pds.nasa.gov/api/search/1`, les 3 863 collections listées puis filtrées, la requête
 `lid like … and …` étant refusée par l'API) :
