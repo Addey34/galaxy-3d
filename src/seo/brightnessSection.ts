@@ -33,6 +33,9 @@ export interface DisplayAlbedoRow {
   source?: { path: string; url: string };
   gain?: number;
   exclusion?: string;
+  /** Les deux albédos publiés d'un corps `twoAlbedos`, et le contraste mesuré sur sa carte. */
+  albedos?: number[];
+  textureFaceContrast?: number;
 }
 
 export interface DisplayAlbedoTable {
@@ -111,6 +114,11 @@ export function assertPublishableAlbedoTable(table: DisplayAlbedoTable): void {
       throw new Error(
         `luminosité : ${row.body} hors règle sans code de raison connu (${String(row.exclusion)})`
       );
+    if (
+      row.exclusion === 'twoAlbedos' &&
+      (row.albedos?.length !== 2 || row.textureFaceContrast === undefined)
+    )
+      throw new Error(`luminosité : ${row.body} sans ses deux albédos mesurés`);
     if (row.rule !== 'excluded' && row.gain === undefined)
       throw new Error(`luminosité : ${row.body} sans gain`);
     if (row.rule === 'texture' && !row.source)
@@ -165,18 +173,35 @@ export function brightnessSection(
   ]);
 
   // La voûte étoilée est une ligne de la table, pas un corps qu'un lecteur chercherait ici.
+  /** Pour un corps à deux albédos : le rapport publié et celui que porte sa carte, MESURÉ. */
+  const faceMeasure = (r: DisplayAlbedoRow): string => {
+    const [a, b] = r.albedos!;
+    const low = formatExact(Math.min(a!, b!), locale);
+    const high = formatExact(Math.max(a!, b!), locale);
+    const ratio = n(Math.max(a!, b!) / Math.min(a!, b!));
+    const measured = n(r.textureFaceContrast!);
+    const who = escapeHtml(name(r.body, locale));
+    return ` ${L({
+      en: `For ${who}, ${low} and ${high}, a ratio of ${ratio} between its faces, while its shipped map, measured between its brightest and darkest 60° of longitude, carries only ${measured}: a single gain cannot give each face its albedo, and no global map found so far publishes that contrast as albedo.`,
+      fr: `Pour ${who}, ${low} et ${high}, soit un rapport de ${ratio} entre ses faces, alors que sa carte livrée, mesurée entre ses 60° de longitude les plus clairs et les plus sombres, n’en porte que ${measured} : un gain unique ne peut pas donner à chaque face son albédo, et aucune carte globale trouvée à ce jour ne publie ce contraste comme un albédo.`,
+      es: `Para ${who}, ${low} y ${high}, una razón de ${ratio} entre sus caras, mientras que su mapa entregado, medido entre sus 60° de longitud más claros y más oscuros, solo tiene ${measured}: una ganancia única no puede dar a cada cara su albedo, y ningún mapa global encontrado hasta ahora publica ese contraste como albedo.`,
+      'pt-BR': `Para ${who}, ${low} e ${high}, uma razão de ${ratio} entre as suas faces, enquanto o seu mapa entregue, medido entre os seus 60° de longitude mais claros e mais escuros, tem apenas ${measured}: um ganho único não pode dar a cada face o seu albedo, e nenhum mapa global encontrado até agora publica esse contraste como albedo.`,
+    })}`;
+  };
+
   const excluded = DISPLAY_ALBEDO_EXCLUSIONS.map((kind) => {
-    const names = table.rows
-      .filter(
-        (r) =>
-          r.rule === 'excluded' &&
-          r.exclusion === kind &&
-          bodies.get(r.body)?.kind !== 'skybox'
-      )
-      .map((r) => escapeHtml(name(r.body, locale)));
+    const members = table.rows.filter(
+      (r) =>
+        r.rule === 'excluded' &&
+        r.exclusion === kind &&
+        bodies.get(r.body)?.kind !== 'skybox'
+    );
+    const names = members.map((r) => escapeHtml(name(r.body, locale)));
+    const measures =
+      kind === 'twoAlbedos' ? members.map(faceMeasure).join('') : '';
     return names.length === 0
       ? ''
-      : `<li data-exclusion="${kind}"><strong>${names.join(', ')}</strong>${L({ en: ':', fr: ' :', es: ':', 'pt-BR': ':' })} ${L(EXCLUSION_TEXT[kind])}.</li>`;
+      : `<li data-exclusion="${kind}"><strong>${names.join(', ')}</strong>${L({ en: ':', fr: ' :', es: ':', 'pt-BR': ':' })} ${L(EXCLUSION_TEXT[kind])}.${measures}</li>`;
   }).join('');
 
   return docSection(

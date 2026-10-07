@@ -910,6 +910,15 @@ describe('/methodology : la luminosité des surfaces suit la table des gains', (
           escapeHtml(nameOf(r.body, locale))
         );
       // Les noms précèdent la raison (`<strong>`), séparés par des virgules.
+      // Un corps à deux albédos porte ses deux nombres : le rapport publié, le contraste mesuré.
+      for (const r of excluded.filter((x) => x.exclusion === 'twoAlbedos')) {
+        const [a, b] = r.albedos!;
+        const li = items.get('twoAlbedos')!;
+        expect(li).toContain(
+          formatQuantity(Math.max(a!, b!) / Math.min(a!, b!), locale)
+        );
+        expect(li).toContain(formatQuantity(r.textureFaceContrast!, locale));
+      }
       const listed = [...items.values()]
         .map((li) => li.split('</strong>')[0]!.split(',').length)
         .reduce((a, b) => a + b, 0);
