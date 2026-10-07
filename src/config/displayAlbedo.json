@@ -51,11 +51,13 @@
     {
       "body": "stars",
       "rule": "excluded",
+      "exclusion": "notLit",
       "reason": "pas une surface éclairée"
     },
     {
       "body": "sun",
       "rule": "excluded",
+      "exclusion": "notLit",
       "reason": "pas une surface éclairée"
     },
     {
@@ -73,11 +75,13 @@
     {
       "body": "venus",
       "rule": "excluded",
+      "exclusion": "atmosphere",
       "reason": "atmosphère (déclarée par le catalogue) : l'albédo publié est celui du disque entier, nuages et brumes compris, pas celui de la surface que porte la texture"
     },
     {
       "body": "earth",
       "rule": "excluded",
+      "exclusion": "atmosphere",
       "reason": "atmosphère (déclarée par le catalogue) : l'albédo publié est celui du disque entier, nuages et brumes compris, pas celui de la surface que porte la texture"
     },
     {
@@ -95,6 +99,7 @@
     {
       "body": "mars",
       "rule": "excluded",
+      "exclusion": "atmosphere",
       "reason": "atmosphère (pression de surface « 6.36 mb at mean radius (variable from 4.0 to 8.7 mb depending on season) », NSSDCA) : l'albédo publié est celui du disque entier, nuages et brumes compris, pas celui de la surface que porte la texture"
     },
     {
@@ -124,6 +129,7 @@
     {
       "body": "jupiter",
       "rule": "excluded",
+      "exclusion": "atmosphere",
       "reason": "atmosphère (pression de surface « >>1000 bars », NSSDCA) : l'albédo publié est celui du disque entier, nuages et brumes compris, pas celui de la surface que porte la texture"
     },
     {
@@ -189,6 +195,7 @@
     {
       "body": "saturn",
       "rule": "excluded",
+      "exclusion": "atmosphere",
       "reason": "atmosphère (pression de surface « >>1000 bars », NSSDCA) : l'albédo publié est celui du disque entier, nuages et brumes compris, pas celui de la surface que porte la texture"
     },
     {
@@ -218,6 +225,7 @@
     {
       "body": "iapetus",
       "rule": "excluded",
+      "exclusion": "twoAlbedos",
       "reason": "la source publie deux albédos, « 0.05 / 0.5 » : aucun nombre unique ne décrit ce corps",
       "source": {
         "path": "nssdcaSatellites.iapetus.visualGeometricAlbedo",
@@ -227,6 +235,7 @@
     {
       "body": "titan",
       "rule": "excluded",
+      "exclusion": "atmosphere",
       "reason": "atmosphère (« Titan is Saturn's largest moon, and the only moon in our solar system known to have a substantial atmosphere. », https://science.nasa.gov/saturn/moons/titan/) : l'albédo publié est celui du disque entier, nuages et brumes compris, pas celui de la surface que porte la texture"
     },
     {
@@ -280,6 +289,7 @@
     {
       "body": "uranus",
       "rule": "excluded",
+      "exclusion": "atmosphere",
       "reason": "atmosphère (pression de surface « >>1000 bars », NSSDCA) : l'albédo publié est celui du disque entier, nuages et brumes compris, pas celui de la surface que porte la texture"
     },
     {
@@ -345,6 +355,7 @@
     {
       "body": "neptune",
       "rule": "excluded",
+      "exclusion": "atmosphere",
       "reason": "atmosphère (pression de surface « >>1000 bars », NSSDCA) : l'albédo publié est celui du disque entier, nuages et brumes compris, pas celui de la surface que porte la texture"
     },
     {
@@ -452,61 +463,73 @@
     {
       "body": "charon",
       "rule": "excluded",
+      "exclusion": "noAlbedo",
       "reason": "aucun albédo géométrique dans les sources du relevé"
     },
     {
       "body": "styx",
       "rule": "excluded",
+      "exclusion": "noAlbedo",
       "reason": "aucun albédo géométrique dans les sources du relevé"
     },
     {
       "body": "nix",
       "rule": "excluded",
+      "exclusion": "noAlbedo",
       "reason": "aucun albédo géométrique dans les sources du relevé"
     },
     {
       "body": "kerberos",
       "rule": "excluded",
+      "exclusion": "noAlbedo",
       "reason": "aucun albédo géométrique dans les sources du relevé"
     },
     {
       "body": "hydra",
       "rule": "excluded",
+      "exclusion": "noAlbedo",
       "reason": "aucun albédo géométrique dans les sources du relevé"
     },
     {
       "body": "eris",
       "rule": "excluded",
+      "exclusion": "noAlbedo",
       "reason": "aucun albédo géométrique dans les sources du relevé"
     },
     {
       "body": "haumea",
       "rule": "excluded",
+      "exclusion": "noAlbedo",
       "reason": "aucun albédo géométrique dans les sources du relevé"
     },
     {
       "body": "makemake",
       "rule": "excluded",
+      "exclusion": "noAlbedo",
       "reason": "aucun albédo géométrique dans les sources du relevé"
     },
     {
       "body": "orcus",
       "rule": "excluded",
+      "exclusion": "noAlbedo",
       "reason": "aucun albédo géométrique dans les sources du relevé"
     },
     {
       "body": "quaoar",
       "rule": "excluded",
+      "exclusion": "noAlbedo",
       "reason": "aucun albédo géométrique dans les sources du relevé"
     },
     {
       "body": "gonggong",
       "rule": "excluded",
+      "exclusion": "noAlbedo",
       "reason": "aucun albédo géométrique dans les sources du relevé"
     },
     {
       "body": "sedna",
       "rule": "excluded",
+      "exclusion": "noAlbedo",
       "reason": "aucun albédo géométrique dans les sources du relevé"
     },
     {
@@ -548,6 +571,7 @@
     {
       "body": "itokawa",
       "rule": "excluded",
+      "exclusion": "noAlbedo",
       "reason": "aucun albédo géométrique dans les sources du relevé"
     },
     {
@@ -613,11 +637,13 @@
     {
       "body": "annefrank",
       "rule": "excluded",
+      "exclusion": "noColour",
       "reason": "ni texture ni couleur cuite : la teinte de repli de la fiche"
     },
     {
       "body": "masursky",
       "rule": "excluded",
+      "exclusion": "noColour",
       "reason": "ni texture ni couleur cuite : la teinte de repli de la fiche"
     },
     {
@@ -635,6 +661,7 @@
     {
       "body": "dinkinesh",
       "rule": "excluded",
+      "exclusion": "noColour",
       "reason": "ni texture ni couleur cuite : la teinte de repli de la fiche"
     },
     {
@@ -646,31 +673,37 @@
     {
       "body": "eurybates",
       "rule": "excluded",
+      "exclusion": "noColour",
       "reason": "ni texture ni couleur cuite : la teinte de repli de la fiche"
     },
     {
       "body": "polymele",
       "rule": "excluded",
+      "exclusion": "noColour",
       "reason": "ni texture ni couleur cuite : la teinte de repli de la fiche"
     },
     {
       "body": "leucus",
       "rule": "excluded",
+      "exclusion": "noColour",
       "reason": "ni texture ni couleur cuite : la teinte de repli de la fiche"
     },
     {
       "body": "orus",
       "rule": "excluded",
+      "exclusion": "noColour",
       "reason": "ni texture ni couleur cuite : la teinte de repli de la fiche"
     },
     {
       "body": "patroclus",
       "rule": "excluded",
+      "exclusion": "noColour",
       "reason": "ni texture ni couleur cuite : la teinte de repli de la fiche"
     },
     {
       "body": "menoetius",
       "rule": "excluded",
+      "exclusion": "noColour",
       "reason": "ni texture ni couleur cuite : la teinte de repli de la fiche"
     },
     {
@@ -694,31 +727,37 @@
     {
       "body": "borrelly",
       "rule": "excluded",
+      "exclusion": "noColour",
       "reason": "ni texture ni couleur cuite : la teinte de repli de la fiche"
     },
     {
       "body": "wild-2",
       "rule": "excluded",
+      "exclusion": "noColour",
       "reason": "ni texture ni couleur cuite : la teinte de repli de la fiche"
     },
     {
       "body": "hartley-2",
       "rule": "excluded",
+      "exclusion": "noColour",
       "reason": "ni texture ni couleur cuite : la teinte de repli de la fiche"
     },
     {
       "body": "churyumov-gerasimenko",
       "rule": "excluded",
+      "exclusion": "noAlbedo",
       "reason": "aucun albédo géométrique dans les sources du relevé"
     },
     {
       "body": "giacobini-zinner",
       "rule": "excluded",
+      "exclusion": "noColour",
       "reason": "ni texture ni couleur cuite : la teinte de repli de la fiche"
     },
     {
       "body": "grigg-skjellerup",
       "rule": "excluded",
+      "exclusion": "noColour",
       "reason": "ni texture ni couleur cuite : la teinte de repli de la fiche"
     }
   ]

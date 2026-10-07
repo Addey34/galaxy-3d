@@ -13,6 +13,7 @@
  * Module PUR : données en entrée, pages en sortie.
  */
 import textureLadder from '@/config/textureLadder.json';
+import displayAlbedoTable from '@/config/displayAlbedo.json';
 import type { CelestialConfig } from '@/types';
 import {
   flattenBodies,
@@ -49,6 +50,7 @@ import {
   formatQuantity,
 } from './documentPage';
 import { citationSection, type CitationMetadata } from './citation';
+import { brightnessSection } from './brightnessSection';
 
 // ─────────────────────────── données d'entrée ───────────────────────────
 
@@ -1434,6 +1436,9 @@ function methodologyPage(input: MethodologyInput, locale: DocLocale): DocPage {
       ).join('')}</ul>`
     )
   );
+
+  // La luminosité des surfaces : la règle et sa table, lues (2026-10-07).
+  sections.push(brightnessSection(displayAlbedoTable, config, locale, name));
 
   // 9. Limites connues
   const earth = productionOf('earth');

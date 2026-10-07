@@ -108,7 +108,12 @@ for (const { name, config } of allBodies(CELESTIAL_CONFIG)) {
   };
   const excluded = rule.displayAlbedoExclusion(candidate);
   if (excluded) {
-    rows.push({ body: name, rule: 'excluded', reason: excluded });
+    rows.push({
+      body: name,
+      rule: 'excluded',
+      exclusion: excluded.kind,
+      reason: excluded.reason,
+    });
     continue;
   }
   if (!candidate.hasSurfaceTexture) {
@@ -126,6 +131,7 @@ for (const { name, config } of allBodies(CELESTIAL_CONFIG)) {
     rows.push({
       body: name,
       rule: 'excluded',
+      exclusion: 'noAlbedo',
       reason: 'aucun albédo géométrique dans les sources du relevé',
     });
     continue;
@@ -134,6 +140,7 @@ for (const { name, config } of allBodies(CELESTIAL_CONFIG)) {
     rows.push({
       body: name,
       rule: 'excluded',
+      exclusion: 'twoAlbedos',
       reason: `la source publie deux albédos, « ${albedo.raw} » : aucun nombre unique ne décrit ce corps`,
       source: { path: albedo.path, url: albedo.url },
     });

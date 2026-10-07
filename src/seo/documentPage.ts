@@ -326,6 +326,16 @@ const SUPERSCRIPTS = '⁰¹²³⁴⁵⁶⁷⁸⁹⁻';
  * français, puissance de dix au-delà de dix millions (`1.7 × 10⁸`).
  */
 /**
+ * Un nombre tel qu'il est PUBLIÉ par sa source (un albédo de 0.1203), sans arrondi, avec le
+ * séparateur décimal de la langue. Réservé aux valeurs sous mille, qui n'ont pas de groupes.
+ */
+export function formatExact(value: number, locale: DocLocale): string {
+  if (!Number.isFinite(value) || Math.abs(value) >= 1000)
+    throw new Error(`formatExact : ${value} hors domaine`);
+  return String(value).replace('.', NUMBER_MARKS[locale].decimal);
+}
+
+/**
  * La ponctuation des nombres, par langue, decidee UNE fois.
  *
  * L'anglais groupe par virgule et decime par point ; le francais fait l'inverse avec une

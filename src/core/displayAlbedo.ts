@@ -104,17 +104,41 @@ export interface DisplayAlbedoCandidate {
 }
 
 /**
- * Pourquoi un corps NE suit PAS la règle, ou `null` s'il la suit. Une raison est une phrase
- * publiable : la table la garde, et l'inventaire la lit.
+ * Les RAISONS pour lesquelles un corps ne suit pas la règle, en codes : la table les garde à côté
+ * de leur phrase, et `/methodology` les publie dans chaque langue sans relire la phrase française.
+ * `noAlbedo` et `twoAlbedos` sont décidées par le générateur, qui seul lit le relevé.
  */
+export const DISPLAY_ALBEDO_EXCLUSIONS = [
+  'notLit',
+  'atmosphere',
+  'twoAlbedos',
+  'noAlbedo',
+  'noColour',
+] as const;
+export type DisplayAlbedoExclusionKind =
+  (typeof DISPLAY_ALBEDO_EXCLUSIONS)[number];
+
+export interface DisplayAlbedoExclusion {
+  kind: DisplayAlbedoExclusionKind;
+  /** Une phrase publiable, en français : la table la garde, et l'inventaire la lit. */
+  reason: string;
+}
+
+/** Pourquoi un corps NE suit PAS la règle, ou `null` s'il la suit. */
 export function displayAlbedoExclusion(
   body: DisplayAlbedoCandidate
-): string | null {
+): DisplayAlbedoExclusion | null {
   if (['star', 'skybox', 'spacecraft', 'interstellar'].includes(body.kind))
-    return 'pas une surface éclairée';
+    return { kind: 'notLit', reason: 'pas une surface éclairée' };
   if (body.atmosphereEvidence)
-    return `atmosphère (${body.atmosphereEvidence}) : l'albédo publié est celui du disque entier, nuages et brumes compris, pas celui de la surface que porte la texture`;
+    return {
+      kind: 'atmosphere',
+      reason: `atmosphère (${body.atmosphereEvidence}) : l'albédo publié est celui du disque entier, nuages et brumes compris, pas celui de la surface que porte la texture`,
+    };
   if (!body.hasSurfaceTexture && body.bakedAlbedo === undefined)
-    return 'ni texture ni couleur cuite : la teinte de repli de la fiche';
+    return {
+      kind: 'noColour',
+      reason: 'ni texture ni couleur cuite : la teinte de repli de la fiche',
+    };
   return null;
 }
