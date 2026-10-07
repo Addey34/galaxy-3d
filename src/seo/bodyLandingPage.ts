@@ -43,6 +43,7 @@ import { distanceDecimals } from '@/core/units';
 import { CARD_HEIGHT, CARD_WIDTH } from './socialCard';
 import { messages } from '@/i18n/allDictionaries';
 import { HTML_LANG, LOCALES, LOCALE_PATH, type Locale } from '@/i18n/locales';
+import { displayGain } from '@/config/displayAlbedo';
 
 export interface BodyFact {
   label: string;
@@ -87,6 +88,11 @@ export interface BodyVisual {
    * repli. Ce qui l'identifie est sa SILHOUETTE, et elle est ici. Cf. `renderShape`.
    */
   model: string | null;
+  /**
+   * Gain de luminosité de la surface (`config/displayAlbedo.ts`), celui que l'application
+   * applique à la texture ou à la couleur cuite : la vignette montre ce que montre la scène.
+   */
+  displayGain: number;
 }
 
 export interface BodyRingVisual {
@@ -157,6 +163,7 @@ export function bodyVisual(
     model: config.model
       ? `public${modelPath(bodyName, config.model.resolutions.includes('2k') ? '2k' : config.model.resolutions[0]!)}`
       : null,
+    displayGain: displayGain(bodyName),
   };
 }
 

@@ -213,6 +213,21 @@ export function computeUmbralShadow(
 export const UMBRA_REFRACTED_LIGHT = 0.1;
 
 /**
+ * EXPOSITION ADAPTÉE À LA LUMIÈRE RÉFRACTÉE (2026-10-07), comme la pose longue d'une photographie
+ * de totalité. Depuis que la luminosité d'une surface suit son albédo publié
+ * (`core/displayAlbedo.ts`), la Lune s'affiche cinq fois plus sombre qu'avant, et son disque
+ * totalement éclipsé, à `UMBRA_REFRACTED_LIGHT` de cela, était devenu noir (e2e
+ * `eclipseLanding.spec.ts`, rapport rouge/bleu 1,03 pour un seuil de 2,5). L'éclairage du corps
+ * SUIVI monte donc de l'inverse du niveau de lumière de l'ombre, plafonné à l'inverse de la lumière
+ * réfractée : la pose du sujet, pas celle de toute la scène (cf. `AnimationSystem`).
+ * RÉSERVÉ à l'ombre d'un occulteur qui réfracte : une ombre neutre (la Lune sur la Terre) doit
+ * rester sombre, c'est ce qu'elle montre.
+ */
+export function refractedShadowExposure(lightLevel: number): number {
+  return 1 / THREE.MathUtils.clamp(lightLevel, UMBRA_REFRACTED_LIGHT, 1);
+}
+
+/**
  * Teinte de l'ombre réfractée selon sa PROFONDEUR (0 = bord de l'ombre, 1 = axe), normalisée
  * en luminance : la teinte ne change que la couleur, jamais la clarté (même discipline que le
  * bandeau crépusculaire). Mesurée pixel par pixel sur une photographie NASA de totalité

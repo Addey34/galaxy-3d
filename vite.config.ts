@@ -458,13 +458,33 @@ function bodyLandingPages() {
           };
         };
 
+        const withBakedGain = (
+          mesh: import('./src/seo/socialCard').ShapeMesh,
+          gain: number
+        ): import('./src/seo/socialCard').ShapeMesh =>
+          mesh.baseColor
+            ? {
+                ...mesh,
+                baseColor: [
+                  mesh.baseColor[0] * gain,
+                  mesh.baseColor[1] * gain,
+                  mesh.baseColor[2] * gain,
+                ],
+              }
+            : mesh;
+
         for (const page of pages) {
           const visual = page.visual;
+          // Le gain de luminosité de la scène (`config/displayAlbedo.ts`), sur la texture comme
+          // sur la couleur cuite : la vignette montre ce que montre l'application.
           const texture = visual.surface
-            ? await loadRaw(
-                visual.surface,
-                CARD_TEXTURE_WIDTH,
-                CARD_TEXTURE_HEIGHT
+            ? card.withDisplayGain(
+                await loadRaw(
+                  visual.surface,
+                  CARD_TEXTURE_WIDTH,
+                  CARD_TEXTURE_HEIGHT
+                ),
+                visual.displayGain
               )
             : null;
           // Le profil d'anneau est déjà une image large et courte (2048 × 125) : la relire
@@ -491,7 +511,10 @@ function bodyLandingPages() {
           const superSample = ring || visual.model ? 2 : 1;
           const sphere = visual.model
             ? card.renderShape(
-                await loadShapeMesh(visual.model),
+                withBakedGain(
+                  await loadShapeMesh(visual.model),
+                  visual.displayGain
+                ),
                 visual.fallback,
                 span * superSample,
                 // Un corps qui a une texture la garde sur sa forme, comme dans l'application.

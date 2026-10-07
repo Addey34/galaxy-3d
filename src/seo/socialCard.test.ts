@@ -11,6 +11,7 @@ import {
   renderSphere,
   renderShape,
   type RawImage,
+  withDisplayGain,
 } from './socialCard';
 
 /**
@@ -621,5 +622,31 @@ describe('forme réelle de la vignette', () => {
     );
     expect(empty.length).toBe(SIZE * SIZE * 4);
     expect(Array.from(empty).every((v) => v === 0)).toBe(true);
+  });
+});
+
+describe('vignette : le gain de luminosité de la scène', () => {
+  const image = {
+    data: Uint8Array.from([0, 64, 128, 200, 255, 30]),
+    width: 2,
+    height: 1,
+    channels: 3,
+  };
+  it('un gain de 1 rend l’image intacte', () => {
+    expect(withDisplayGain(image, 1)).toBe(image);
+  });
+  it('éclaircit en linéaire, garde le noir, écrête au blanc', () => {
+    const out = withDisplayGain(image, 2);
+    expect(out.data[0]).toBe(0);
+    for (let i = 1; i < 6; i++)
+      expect(out.data[i]!).toBeGreaterThanOrEqual(image.data[i]!);
+    expect(out.data[4]).toBe(255);
+    // 2 en linéaire, c'est 2^(1/2,2) ≈ 1,37 en sRGB pour une valeur moyenne.
+    expect(out.data[2]! / image.data[2]!).toBeCloseTo(2 ** (1 / 2.2), 1);
+  });
+  it('assombrit sous 1', () => {
+    const out = withDisplayGain(image, 0.2);
+    for (let i = 1; i < 6; i++)
+      expect(out.data[i]!).toBeLessThan(image.data[i]!);
   });
 });

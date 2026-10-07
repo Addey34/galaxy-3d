@@ -66,6 +66,7 @@ import { TEXTURE_QUALITY_PIXELS } from '@/components/systems/TextureSystem';
 import type { TextureSystem } from '@/components/systems/TextureSystem';
 import type { MeteoRenderDiagnostics } from '@/core/meteoDiagnostics';
 import { whenIdle } from '@/utils/idleCallback';
+import { displayGain } from '@/config/displayAlbedo';
 
 const CLOUDS_ROTATION_FACTOR = 0.1;
 // Opacité de l'ombre portée des nuages sur la surface (0 = aucune, 1 = noir).
@@ -103,6 +104,8 @@ export default class CelestialObject {
    * doivent recevoir la même irradiance et la même occultation à chaque frame.
    */
   private readonly _overlayMaterials = new Set<THREE.Material>();
+  /** Dernière atténuation appliquée, pour un carreau créé entre deux passes. */
+  private _lightAttenuation = 1;
   /** Finesse de l'imagerie streamée qui recouvre la surface, en px sur 360° (0 = aucune). */
   private _streamedImageryWidthPx = 0;
   private readonly _tiltGroup: THREE.Group;
@@ -574,7 +577,30 @@ export default class CelestialObject {
   createSurfaceOverlayMaterial(): THREE.Material {
     const material = createSurfaceLayerMaterial(this.config, this.name);
     this._overlayMaterials.add(material);
+    // Un carreau qui arrive ENTRE deux passes d'éclairage (une image sur six) prend tout de suite
+    // l'état de la sphère : sinon il restait plein jour, sans teinte, jusqu'à la passe suivante.
+    setMaterialLightAttenuation(material, this._lightAttenuation);
+    this._syncOverlayEclipse(material);
     return material;
+  }
+
+  /**
+   * Recopie l'ombre d'éclipse de la sphère (source, rayons, teinte cuivrée) dans un carreau posé
+   * dessus (2026-10-07). Seule la sphère la recevait : un carreau de la Lune restait SANS teinte
+   * pendant une éclipse totale. Invisible tant que l'ombre le laissait presque noir, il est apparu
+   * gris dès que la Lune suivie a été compensée (`refractedShadowExposure`), et la garde de
+   * `eclipseLanding.spec.ts` a lu 1,36 au lieu de plus de 2,5, deux fois, au premier essai.
+   */
+  private _syncOverlayEclipse(material: THREE.Material): void {
+    const from = this._eclipseShadow;
+    const to = getEclipseShadowUniforms(material);
+    if (!from || !to) return;
+    to.sunPosition.value.copy(from.sunPosition.value);
+    to.sunRadius.value = from.sunRadius.value;
+    to.occluderPosition.value.copy(from.occluderPosition.value);
+    to.occluderRadius.value = from.occluderRadius.value;
+    to.occluderRefracts.value = from.occluderRefracts.value;
+    to.umbraTint.value.copy(from.umbraTint.value);
   }
 
   /** Oublie un matériau de recouvrement (l'appelant reste responsable de son `dispose`). */
@@ -1103,6 +1129,7 @@ export default class CelestialObject {
    */
   setLightAttenuation(attenuation: number): void {
     const bounded = THREE.MathUtils.clamp(attenuation, 0, 6);
+    this._lightAttenuation = bounded;
     this.layers.forEach((mesh, layerName) => {
       if (layerName === 'lights') return;
       const materials = Array.isArray(mesh.material)
@@ -1143,6 +1170,7 @@ export default class CelestialObject {
     const target = this._eclipseShadow.umbraTint.value;
     if (tint) target.setRGB(tint[0], tint[1], tint[2]);
     else target.setRGB(1, 1, 1);
+    this._overlayMaterials.forEach((m) => this._syncOverlayEclipse(m));
   }
 
   setEclipseShadowSource(
@@ -1162,6 +1190,7 @@ export default class CelestialObject {
     } else {
       this._eclipseShadow.occluderRadius.value = 0;
     }
+    this._overlayMaterials.forEach((m) => this._syncOverlayEclipse(m));
   }
 
   /**
@@ -1515,6 +1544,18 @@ export default class CelestialObject {
       // Un corps qui a une vraie texture la garde sur sa vraie forme (cf. `core/modelUv.ts`) :
       // même matériau que la sphère, donc mêmes niveaux de texture, ombres et éclipses.
       const draped = this._drapeSurface(meshes);
+      // Couleur CUITE (modèle sans texture) : elle a été cuite à la convention de cuisson, le gain
+      // la ramène à la règle d'affichage (`core/displayAlbedo.ts`). Drapé, le modèle porte le
+      // matériau de la sphère, qui a déjà le sien.
+      if (!draped) {
+        const gain = displayGain(this.name);
+        for (const mesh of meshes)
+          for (const m of Array.isArray(mesh.material)
+            ? mesh.material
+            : [mesh.material])
+            if (m instanceof THREE.MeshStandardMaterial)
+              m.color.multiplyScalar(gain);
+      }
 
       // Un modèle de forme masque un halo comme la sphère qu'il remplace.
       for (const mesh of meshes) markGlowOccluder(mesh);

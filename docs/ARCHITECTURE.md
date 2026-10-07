@@ -1999,6 +1999,68 @@ dimensions dans l'en-tête SOF de chaque JPEG (quelques kilo-octets, pas un déc
 les poids relevés sont ceux des fichiers sur disque. Un fichier ajouté, retiré ou redimensionné
 sans relancer `pnpm textures:ladder --write` fait rougir la porte.
 
+## La luminosité d'une surface suit son albédo publié (2026-10-07)
+
+**Le défaut.** Deux conventions cohabitaient, et l'ordre des corps à l'écran était faux. Les
+mosaïques importées gardaient la luminosité choisie par leur éditeur ; les cartes fabriquées et les
+couleurs cuites suivaient `scripts/display-albedo.mjs` (2,6 de luminance par unité d'albédo, réglé
+sur la Lune). Mesuré sur les textures livrées : Encelade (albédo 1,0) à une luminance linéaire
+moyenne de 0,14, Dioné (0,7) à 0,22, Miranda (0,32) à 0,83. Encelade paraissait six fois plus
+sombre que Miranda, l'inverse de la réalité.
+
+**La règle** (`src/core/displayAlbedo.ts`, seul propriétaire) : la luminance linéaire moyenne
+affichée d'une surface vaut **0,5 × son albédo géométrique publié**. Elle s'applique au RENDU, par
+un gain sur la couleur du matériau, et non aux fichiers : rien n'est réencodé, et un gain supérieur
+à 1 ne s'écrête pas sur 8 bits (la compression ACES s'en charge). 0,5 est le plus grand facteur qui
+laisse Encelade sous 5 % de valeurs saturées sur sa propre texture (4,4 % ; 14 % à 0,7, 45 % à 1,0).
+Le gain vaut `0,5 × albédo / luminance moyenne mesurée de la texture` (pondérée cos latitude, ou
+uniforme sur un atlas), et `0,5 / 2,6` pour un modèle à couleur cuite.
+
+- **Les données.** Le relevé des faits lit l'albédo géométrique (fiches de satellites du NSSDCA,
+  fiches de corps, SBDB) et la pression de surface des fiches de corps ; `pnpm textures:albedo`
+  (`scripts/measure-display-albedo.mjs`) écrit `src/config/displayAlbedo.json`, dont l'application
+  n'importe que la carte `gains` (import nommé, les lignes détaillées restent hors du bundle).
+  `src/config/displayAlbedo.test.ts` confronte chaque ligne au relevé, à la texture remesurée et à
+  la règle ; falsifié (un gain modifié, la constante changée).
+- **Un seul endroit dans la scène** : `createSurfaceLayerMaterial`, que partagent la sphère, les
+  carreaux d'imagerie streamée et le modèle drapé ; plus le matériau d'un modèle à couleur cuite.
+  Les vignettes de partage appliquent le même gain (`withDisplayGain`) ; sans compression des
+  hautes lumières, elles écrêtent au-delà de 1.
+- **Hors de la règle, chacun avec sa raison écrite dans la table** :
+  - les corps dont le disque vu est une ATMOSPHÈRE : le catalogue en déclare une (Terre, Vénus),
+    la fiche du NSSDCA publie une pression de surface d'au moins 1 mbar (Mars 6,36 mb, les
+    géantes « >>1000 bars » ; Pluton, ~13 µbar, et Mercure suivent la règle), ou une citation
+    vérifiée par le relevé le dit (Titan, NASA Science). Leur albédo est celui du disque entier,
+    nuages et brumes compris, pas celui de la surface que porte la texture ;
+  - **Japet** : le NSSDCA publie « 0.05 / 0.5 » et NASA Science « 0.03-0.05 » contre « 0.5-0.6 »
+    selon la face. Aucun nombre ne le décrit, et sa mosaïque livrée n'a que 1,7 de contraste entre
+    ses faces au lieu d'environ 12 : il faudrait une carte radiométrique, chantier à part ;
+  - les corps sans albédo dans les sources du relevé (Charon, les petites lunes de Pluton, les
+    planètes naines lointaines, Itokawa, 67P) : ils gardent la luminosité de leur source.
+- **Ce que la règle ne corrige pas** : le CONTRASTE interne d'une mosaïque retouchée par son
+  éditeur. Un gain unique cale la moyenne et l'ordre des corps, pas l'écart entre deux régions.
+- **Mesuré avant de livrer**, même build, textures substituées par interception réseau : la Lune
+  pleine passe d'environ 155 à 60 sur 255 au centre du disque, sombre mais lisible ; Encelade d'une
+  médiane de 78 à 150.
+- **L'éclipse totale de Lune, rattrapée par la CI.** La Lune cinq fois plus sombre rendait son
+  disque totalement éclipsé NOIR (garde `e2e/eclipseLanding.spec.ts`, rouge/bleu 1,03 pour un seuil
+  de 2,5) : la lumière réfractée, 0,10 du limbe éclairé, est déjà au bord de sa borne mesurée
+  (≤ 0,15) et ne pouvait pas compenser. Choix de l'utilisateur : adapter la POSE, comme sur une
+  photographie de totalité. `refractedShadowExposure` (`core/eclipse.ts`) multiplie l'éclairage du
+  seul corps que la caméra SUIT par l'inverse du niveau de son ombre réfractée, plafonné à 10 :
+  limbe et ombre ensemble, donc leur rapport tient ; une ombre neutre (la Lune sur la Terre) n'est
+  pas compensée. Une exposition GLOBALE a été essayée d'abord et écartée, mesure à l'appui : le
+  disque était bien cuivré, mais la Voie lactée s'éclaircissait aussi et la garde lisait un fond
+  bleuté (1,06). Falsifié : sans compensation, 1,03.
+  Deux runs de CI l'ont ensuite fait échouer au premier essai, à la même valeur (1,357 puis 1,356,
+  sur deux processeurs différents) : un état reproductible, pas un aléa. La cause était plus
+  ancienne que la règle : un carreau d'imagerie streamée (LROC) recevait l'atténuation de la sphère
+  mais PAS sa teinte cuivrée ni la source de son ombre, et un carreau créé entre deux passes
+  d'éclairage (une image sur six) restait en plein jour. Presque noirs dans l'ombre, ces carreaux ne
+  se voyaient pas ; compensés, ils sont apparus gris. Corrigé dans `CelestialObject`
+  (`_syncOverlayEclipse`), tenu par `src/components/celestial/overlayEclipse.test.ts`, sans
+  réseau, falsifié. Et la passe d'éclairage est forcée quand le corps suivi change.
+
 ## L'orientation en longitude d'une texture (2026-10-04)
 
 **Le contrat.** Toute carte livrée a la longitude 0 au CENTRE et l'Est vers la droite : c'est ce

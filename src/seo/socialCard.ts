@@ -455,6 +455,21 @@ export function cardTextSvg(
  * Coordonnées dans l'unité du fichier — `renderShape` les recentre et les met à l'échelle
  * lui-même, parce qu'un modèle publié n'a aucune raison d'arriver normalisé.
  */
+/**
+ * La texture d'un corps vue par l'application : chaque composante, en LINÉAIRE, multipliée par
+ * son gain de luminosité (`config/displayAlbedo.ts`), puis ramenée en sRGB. La vignette n'a pas
+ * la compression des hautes lumières de la scène : au-delà de 1 elle écrête (Encelade, 4 % des
+ * valeurs au gain 3,5, mesuré le 2026-10-07). Un gain de 1 rend l'image intacte, au bit près.
+ */
+export function withDisplayGain(image: RawImage, gain: number): RawImage {
+  if (gain === 1) return image;
+  const lut = new Uint8Array(256);
+  for (let c = 0; c < 256; c++) lut[c] = toSrgb(toLinear(c) * gain);
+  const data = new Uint8Array(image.data.length);
+  for (let i = 0; i < data.length; i++) data[i] = lut[image.data[i]!]!;
+  return { ...image, data };
+}
+
 export interface ShapeMesh {
   /** Positions XYZ mises bout à bout, trois nombres par sommet. */
   positions: Float32Array;

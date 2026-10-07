@@ -22,6 +22,7 @@ import {
   markGlowOccluder,
   markGlowSource,
 } from '@/components/systems/glowSelection';
+import { displayGain } from '@/config/displayAlbedo';
 
 /**
  * Crée toutes les couches applicables selon la config et les renvoie indexées par nom.
@@ -72,7 +73,7 @@ export function createSurfaceLayerMaterial(
   // Clair de Lune activé pour les corps à lumières nocturnes (Terre) : sa face
   // nuit peut être partiellement éclairée par la Lune (réflecteur).
   const hasNightLights = Boolean(config.textures?.lights);
-  return createSurfaceMaterial(
+  const material = createSurfaceMaterial(
     isSun,
     config.textures?.surface ? undefined : config.fallbackColor,
     hasNightLights,
@@ -89,6 +90,12 @@ export function createSurfaceLayerMaterial(
     // Couleur du ciel de ce corps : le bandeau crépusculaire en hérite (cf. layerConfig).
     config.atmosphereColor
   );
+  // LA LUMINOSITÉ SUIT L'ALBÉDO PUBLIÉ (2026-10-07, `core/displayAlbedo.ts`) : la couleur du
+  // matériau multiplie la texture. Le carreau d'imagerie streamée et le modèle drapé partagent ce
+  // matériau, donc ce gain : un seul endroit, aucune couture de luminosité entre eux.
+  if (config.textures?.surface && !isSun)
+    material.color.multiplyScalar(displayGain(name));
+  return material;
 }
 
 function createSurfaceLayer(

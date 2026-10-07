@@ -145,7 +145,10 @@ const decode = (s) =>
     .replace(/&amp;/g, '&')
     .replace(/&omega;/g, 'ω')
     .replace(/&#39;/g, "'")
-    .replace(/&quot;/g, '"');
+    .replace(/&quot;/g, '"')
+    // « >>1000 bars », « <~5 x 10-15 bar » : la pression de surface des fiches (2026-10-07).
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>');
 
 /**
  * HTML → lignes de texte, espaces normalisés. Les balises sont retirées SANS saut de ligne :
@@ -249,6 +252,8 @@ async function nssdca() {
     };
     for (const [key, label, options] of labels)
       entry[key] = sheetValue(lines, label, options);
+    const pressure = surfacePressure(lines);
+    if (pressure) entry.surfacePressure = pressure;
     if (meanTemperature[name] !== undefined)
       entry.meanTemperatureC = meanTemperature[name];
     out.bodies[name] = entry;
@@ -262,6 +267,9 @@ async function nssdca() {
     ['siderealRotationHours', 'Sidereal rotation period (hrs)'],
     ['siderealOrbitDays', 'Sidereal orbit period (days)'],
     ['obliquityDeg', 'Obliquity to orbit (deg)'],
+    // L'ALBÉDO GÉOMÉTRIQUE (2026-10-07), que la luminosité affichée d'une surface suit
+    // désormais (`core/displayAlbedo.ts`). Libellé de la table « Bulk parameters ».
+    ['geometricAlbedo', 'Geometric albedo'],
   ];
   const terrestrial = [
     ...common('Equatorial radius (km)', 'Surface gravity (mean) (m/s2)'),
@@ -299,6 +307,8 @@ async function nssdca() {
     ['siderealRotationDays', 'Sidereal rotation period (days)'],
   ]);
   delete out.bodies.charon.meanTemperatureC;
+  // La fiche de Pluton ne publie que la pression de Pluton.
+  delete out.bodies.charon.surfacePressure;
   await planet('moon', 'moonfact.html', [
     ['mass1e24Kg', 'Mass (1024 kg)'],
     ['volumetricMeanRadiusKm', 'Volumetric mean radius (km)'],
@@ -307,6 +317,7 @@ async function nssdca() {
     ['siderealOrbitDays', 'Revolution period (days)'],
     ['siderealRotationHours', 'Sidereal rotation period (hrs)'],
     ['obliquityDeg', 'Obliquity to orbit (deg)'],
+    ['geometricAlbedo', 'Geometric albedo'],
   ]);
   await planet('sun', 'sunfact.html', [
     ['mass1e24Kg', 'Mass (1024 kg)'],
@@ -317,6 +328,34 @@ async function nssdca() {
     ['effectiveTemperatureK', 'Effective temperature:'],
   ]);
   return out;
+}
+
+/**
+ * LA PRESSION DE SURFACE d'une fiche de corps (2026-10-07), qui décide si le disque vu est une
+ * surface ou une atmosphère (`core/displayAlbedo.ts`). Cinq écritures mesurées sur les fiches :
+ * « 6.36 mb », « 92 bars », « >>1000 bars » (géantes : une BORNE, il n'y a pas de surface),
+ * « 3 x 10-15 bar » (exposant collé par la suppression du `<sup>`) et « ~13 microbar ». La
+ * valeur est convertie en bar ; le texte est gardé tel quel. Pas de ligne : `null` (le Soleil).
+ */
+function surfacePressure(lines) {
+  const line = lines.find((l) => /^Surface pressure/i.test(l));
+  if (!line) return null;
+  const raw = line.slice(line.indexOf(':') + 1).trim();
+  const unit = { bar: 1, bars: 1, mb: 1e-3, microbar: 1e-6 };
+  const sci = raw.match(
+    /([\d.]+)\s*x\s*10\s*([-−]?\d+)\s*(bars?|mb|microbar)\b/i
+  );
+  const plain = raw.match(/([\d.,]+)\s*(bars?|mb|microbar)\b/i);
+  const m = sci ?? plain;
+  if (!m) throw new Error(`pression de surface illisible : « ${raw} »`);
+  const mantissa = number(m[1]);
+  const exponent = sci ? Number(m[2].replace('−', '-')) : 0;
+  const u = unit[(sci ? m[3] : m[2]).toLowerCase()];
+  return {
+    raw,
+    bar: mantissa * 10 ** exponent * u,
+    lowerBound: raw.startsWith('>'),
+  };
 }
 
 // ── NASA NSSDCA : fiches des satellites ──────────────────────────────────────────────────────
@@ -370,6 +409,7 @@ async function nssdcaSatellites() {
     // corps citent comme raison de n'en afficher aucune. Une raison qui parle d'une source
     // doit être vérifiée CONTRE la source, sinon c'est une affirmation de plus.
     const publishesTemperature = lines.some((l) => /temperature/i.test(l));
+    const bulk = lines.findIndex((l) => /^Bulk parameters/.test(l));
     for (const [body, label] of Object.entries(moons)) {
       const at = lines.indexOf(label, orbital);
       if (at < 0) throw new Error(`${label} introuvable dans ${file}`);
@@ -382,6 +422,7 @@ async function nssdcaSatellites() {
         semiMajorAxisKm: number(lines[at + 1]) * 1000,
         siderealOrbitDays: number(lines[at + 3].replace(/R$/, '')),
         rotation: rotation === 'S' || rotation === 'C' ? rotation : null,
+        visualGeometricAlbedo: bulkAlbedo(lines, bulk, orbital, label, file),
       };
     }
   }
@@ -401,6 +442,7 @@ async function nssdcaSatellites() {
   const semiMajor = pair('Semimajor axis* (km)');
   const period = pair('Sidereal orbit period (days)');
   const rotation = pair('Sidereal rotation period (days)');
+  const albedo = pair('Geometric albedo');
   ['phobos', 'deimos'].forEach((body, k) => {
     out[body] = {
       url: `${NSSDCA_BASE}marsfact.html`,
@@ -410,9 +452,41 @@ async function nssdcaSatellites() {
       semiMajorAxisKm: semiMajor[k],
       siderealOrbitDays: period[k],
       rotation: rotation[k] === period[k] ? 'S' : null,
+      visualGeometricAlbedo: { value: albedo[k], raw: String(albedo[k]) },
     };
   });
   return out;
+}
+
+/**
+ * L'ALBÉDO GÉOMÉTRIQUE VISUEL d'un satellite, dernière cellule de sa ligne dans la table « Bulk
+ * parameters » (2026-10-07). La ligne y porte le nom SANS la lettre de la planète (« Enceladus
+ * (II) » contre « Enceladus (SII) » dans la table orbitale), et pas toujours quatre cellules :
+ * Protée et Néréide n'ont pas de densité. On prend donc les cellules jusqu'à la ligne suivante,
+ * au moins trois, et la dernière doit être un albédo. Une valeur DOUBLE est gardée telle quelle,
+ * `value: null` : « 0.05 / 0.5 » pour Japet, dont les deux faces diffèrent d'un facteur dix, et
+ * qu'aucun nombre unique ne décrit.
+ */
+function bulkAlbedo(lines, bulk, orbital, label, file) {
+  if (bulk < 0)
+    throw new Error(`table « Bulk parameters » introuvable : ${file}`);
+  const name = label.split(' (')[0];
+  const at = lines.findIndex(
+    (l, i) => i > bulk && i < orbital && l.startsWith(`${name} (`)
+  );
+  if (at < 0)
+    throw new Error(`${name} absent de la table « Bulk parameters » : ${file}`);
+  const cells = [];
+  for (let i = at + 1; i < orbital; i++) {
+    if (/^[A-Z][a-z]|^S\//.test(lines[i])) break;
+    cells.push(lines[i]);
+  }
+  const raw = cells.at(-1);
+  if (cells.length < 3 || !/^\d*\.\d+( \/ \d*\.\d+)?$/.test(raw ?? ''))
+    throw new Error(
+      `${name} : albédo illisible (${cells.join(' | ')}) dans ${file}`
+    );
+  return { value: raw.includes('/') ? null : number(raw), raw };
 }
 
 // ── JPL SSD : satellites ─────────────────────────────────────────────────────────────────────
@@ -805,6 +879,8 @@ async function sbdb() {
       // diamètre de la même référence, elle donne une masse que la fiche refusait faute de GM.
       densityGcm3: numeric(par('density')),
       rotationHours: numeric(par('rot_per')),
+      // L'ALBÉDO GÉOMÉTRIQUE (2026-10-07), que la luminosité affichée d'une surface suit.
+      albedo: numeric(par('albedo')),
       // DEUX ÉCRITURES du même pôle (RA/Dec équatoriales J2000) : « 51.8/+10.8 » (Lutetia) et
       // « 78, -71 degrees » (Didymos). Découper sur « / » seul rendait `NaN` pour la seconde,
       // sans un mot. Que ce soient bien RA et Dec a été VÉRIFIÉ : le pôle écliptique publié par
@@ -892,6 +968,16 @@ const ARTICLES = {
   },
   // Les satellites de deux cibles de missions (2026-10-04). La page de NASA Science est lue par
   // curl comme celle de Nature ; Grundy et al. donnent l'orbite dans la table 2 du PDF seule.
+  // L'ATMOSPHÈRE DE TITAN (2026-10-07) : aucune fiche du NSSDCA ne publie sa pression, et son
+  // albédo (0,22) est celui de sa brume, pas de la surface que porte sa texture (mosaïque Cassini
+  // dans une fenêtre du méthane). `atmosphereOf` le dit à `scripts/measure-display-albedo.mjs`.
+  'nasa-titan': {
+    url: 'https://science.nasa.gov/saturn/moons/titan/',
+    atmosphereOf: 'titan',
+    quotes: [
+      "Titan is Saturn's largest moon, and the only moon in our solar system known to have a substantial atmosphere.",
+    ],
+  },
   'nasa-didymos-dimorphos': {
     url: 'https://science.nasa.gov/solar-system/asteroids/didymos/',
     quotes: [
@@ -1003,6 +1089,7 @@ async function articles() {
         `https://arxiv.org/abs/${(article.arxiv ?? article.arxivPdf).replace(/v\d+$/, '')}`,
       retrieved: response.retrieved,
       verifiedQuotes: article.quotes,
+      ...(article.atmosphereOf ? { atmosphereOf: article.atmosphereOf } : {}),
     };
   }
   return out;
