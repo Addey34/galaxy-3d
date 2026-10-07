@@ -416,6 +416,81 @@
         "weightByResolution": true,
         "maskNoData": true
       }
+    },
+    "titania-voyager": {
+      "$comment": "Titania vue par Voyager 2, 1986-01-24, même chaîne que ariel-voyager (images GEOMED du nœud Ring-Moon, VGISS_7206, domaine public ; CK discontinu ; sphère au rayon de la fiche). Deux séries indépendantes : 09 h 10 à 09 h 15 (quatre filtres, phase 34°, 4,6 km/px) et 14 h 17 à 14 h 19 (mosaïque claire, phase 70°, 3,4 km/px). Vérité : IAU_TITANIA (PCK00010).",
+      "body": "titania",
+      "naifBody": "703",
+      "spacecraft": "-32",
+      "camera": {
+        "instrument": "-32101",
+        "lines": 1000,
+        "samples": 1000,
+        "lineAxis": "+Y",
+        "sampleAxis": "+X",
+        "pixelScaleRad": 7.8125e-06,
+        "discreteCk": {
+          "structure": "-32100",
+          "from": "VG2_SCAN_PLATFORM",
+          "clockKey": "SPACECRAFT_CLOCK_STOP_COUNT",
+          "partition": "3",
+          "tolerance": "0:00:400"
+        }
+      },
+      "kernelBase": "https://naif.jpl.nasa.gov/pub/naif/",
+      "kernels": [
+        "https://naif.jpl.nasa.gov/pub/naif/generic_kernels/lsk/naif0012.tls",
+        "https://naif.jpl.nasa.gov/pub/naif/generic_kernels/pck/pck00010.tpc",
+        "https://naif.jpl.nasa.gov/pub/naif/generic_kernels/spk/planets/de440s.bsp",
+        "https://naif.jpl.nasa.gov/pub/naif/VOYAGER/kernels/sclk/vg200051.tsc",
+        "https://naif.jpl.nasa.gov/pub/naif/VOYAGER/kernels/fk/vg2_v02.tf",
+        "https://naif.jpl.nasa.gov/pub/naif/VOYAGER/kernels/ik/vg2_issna_v02.ti",
+        "https://naif.jpl.nasa.gov/pub/naif/VOYAGER/kernels/spk/vgr2.ura111.bsp",
+        "https://naif.jpl.nasa.gov/pub/naif/generic_kernels/spk/satellites/a_old_versions/ura111.bsp",
+        "https://pds-rings.seti.org/voyager/ck/vg2_ura_version1_type1_iss_sedr.bc"
+      ],
+      "imageBase": "https://pds-rings.seti.org/holdings/volumes/VGISS_7xxx/VGISS_7206/DATA/",
+      "images": [
+        "C26836XX/C2683649_GEOMED",
+        "C26836XX/C2683651_GEOMED",
+        "C26836XX/C2683653_GEOMED",
+        "C26836XX/C2683655_GEOMED"
+      ],
+      "imageSuffix": ".IMG",
+      "labelSuffix": ".LBL",
+      "imageFormat": "pds3-detached",
+      "truthFrame": "IAU_TITANIA",
+      "search": {
+        "coarseBin": [
+          8,
+          8
+        ],
+        "fineBin": [
+          4,
+          4
+        ],
+        "coarseSigma": 1,
+        "fineSigma": 1,
+        "maxShiftPx": [
+          400,
+          400
+        ]
+      },
+      "map": {
+        "images": [
+          "C26836XX/C2683649_GEOMED",
+          "C26836XX/C2683651_GEOMED",
+          "C26836XX/C2683653_GEOMED",
+          "C26836XX/C2683655_GEOMED",
+          "C26843XX/C2684313_GEOMED",
+          "C26843XX/C2684315_GEOMED"
+        ],
+        "splitTime": "1986-01-24T12:00:00",
+        "textureGroup": "all",
+        "limbPx": 3,
+        "weightByResolution": true,
+        "maskNoData": true
+      }
     }
   }
 }

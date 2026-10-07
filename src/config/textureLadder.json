@@ -824,13 +824,10 @@
       "body": "titania",
       "layer": "surface",
       "shipped": [
-        "1k",
-        "2k"
+        "1k"
       ],
-      "detail": {
-        "2k": 0.28677
-      },
-      "bytes": 450222
+      "detail": {},
+      "bytes": 18384
     },
     {
       "body": "triton",
