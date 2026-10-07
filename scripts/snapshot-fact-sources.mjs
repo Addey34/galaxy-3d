@@ -510,19 +510,28 @@ async function plutoSmallMoons() {
   );
   const header = rows[0] ?? [];
   const column = header.findIndex((h) => h === 'Geometric Albedo');
-  if (column < 0)
+  // La période de rotation (2026-10-07), mesurée par New Horizons : ces lunes tournent sans
+  // synchronisme, et c'est la seule colonne de rotation que publie une source du relevé pour elles.
+  const rotation = header.findIndex((h) => h === 'Rotation Period (days)');
+  if (column < 0 || rotation < 0)
     throw new Error(
-      `fiche de Pluton : colonne d'albédo absente (${header.join(' | ')})`
+      `fiche de Pluton : colonne d'albédo ou de rotation absente (${header.join(' | ')})`
     );
   const bodies = {};
   for (const cells of rows.slice(1)) {
     const name = cells[0]?.split(' (')[0]?.toLowerCase();
     if (!name) continue;
-    bodies[name] = { geometricAlbedo: number(cells[column]) };
+    bodies[name] = {
+      geometricAlbedo: number(cells[column]),
+      rotationPeriodDays: number(cells[rotation]),
+    };
   }
   for (const name of ['styx', 'nix', 'kerberos', 'hydra'])
-    if (bodies[name]?.geometricAlbedo === undefined)
-      throw new Error(`fiche de Pluton : ${name} sans albédo`);
+    if (
+      bodies[name]?.geometricAlbedo === undefined ||
+      !(bodies[name]?.rotationPeriodDays > 0)
+    )
+      throw new Error(`fiche de Pluton : ${name} sans albédo ou sans rotation`);
   return {
     url,
     updated: lastUpdated(htmlLines(response.text)),

@@ -13,7 +13,9 @@
     },
     "radius": 0.06,
     "rotationSpeed": {
-      "$rotationHours": 43.9
+      "$rotationHours": {
+        "$days": 1.83
+      }
     },
     "orbitalColor": "0xd8d3c9",
     "fallbackColor": "0xcfc9bd",
@@ -128,13 +130,8 @@
       "method": "measured"
     },
     "rotationPeriod": {
-      "published": false,
-      "reason": {
-        "en": "No rotation period is published where its other figures come from: JPL's satellite tables have no rotation column.",
-        "fr": "Aucune période de rotation n'est publiée là où viennent ses autres chiffres : les tables des satellites de JPL n'ont pas de colonne de rotation.",
-        "es": "No se publica ningún periodo de rotación allí donde se obtienen sus demás cifras: las tablas de satélites del JPL no tienen columna de rotación.",
-        "pt-BR": "Nenhum período de rotação é publicado onde vêm os seus outros números: as tabelas de satélites do JPL não têm coluna de rotação."
-      }
+      "source": "nssdca-fact-sheets",
+      "method": "measured"
     }
   },
   "notes": {
