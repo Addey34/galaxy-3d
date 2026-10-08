@@ -93,7 +93,9 @@ test('a lunar eclipse page opens on the Moon', async ({ page }) => {
 test('a total lunar eclipse page shows a coppery Moon, not a black disc', async ({
   page,
 }) => {
-  await openApp(page, '/eclipse/2026-03-03/');
+  // `?debug-eclipse` charge la sonde qui DIT l'état des matériaux si la mesure échoue (ligne
+  // 45.2 : une Lune grise figée, une fois sur plusieurs, sur les seuls processeurs lents de la CI).
+  await openApp(page, '/eclipse/2026-03-03/?debug-eclipse');
   await expect(page.locator('#body-info .bi-name')).toHaveText('Moon');
   // Le cadrage n'est posé qu'à l'ARRIVÉE du vol caméra : mesurer avant ne dirait rien. On
   // attend donc la MESURE elle-même, pas une durée : une pause fixe de 3 s a rendu 1,24 sur un
@@ -147,15 +149,30 @@ test('a total lunar eclipse page shows a coppery Moon, not a black disc', async 
     )
     .toBe(true);
   let disc = await measure();
-  await expect
-    .poll(
-      async () => {
-        disc = await measure();
-        return disc ? disc.red / Math.max(disc.blue, 1) : 0;
-      },
-      { timeout: 30_000 }
-    )
-    .toBeGreaterThan(2.5);
+  try {
+    await expect
+      .poll(
+        async () => {
+          disc = await measure();
+          return disc ? disc.red / Math.max(disc.blue, 1) : 0;
+        },
+        { timeout: 30_000 }
+      )
+      .toBeGreaterThan(2.5);
+  } catch (error) {
+    // L'échec ne se reproduit qu'en CI : il doit y dire CE QUE chaque matériau de la Lune portait.
+    const state = await page.evaluate(() =>
+      (
+        window as unknown as {
+          eclipseProbe?: { state(body: string): unknown };
+        }
+      ).eclipseProbe?.state('moon')
+    );
+    console.log(
+      `ECLIPSE-PROBE ${JSON.stringify({ disc, state, url: page.url() })}`
+    );
+    throw error;
+  }
 
   expect(disc, 'aucun canvas lisible').not.toBeNull();
   // Cuivré, pas gris : mesuré 4,1 ici, 1,5 dès que la teinte ou le cadrage saute.
