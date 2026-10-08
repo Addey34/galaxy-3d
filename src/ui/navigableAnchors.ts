@@ -21,15 +21,13 @@
  * l'interface le dit, plutôt que de laisser la caméra suivre une position périmée.
  */
 import * as THREE from 'three';
-import { eclipticToScene } from '@/core/frames';
-import { keplerianPositionEcliptic } from '@/core/kepler';
 import type { InstrumentPlacer } from '@/core/instrumentPlacement';
 import type { HorizonsEphemerisService } from '@/core/HorizonsEphemerisService';
 import type { CameraTarget } from '@/components/systems/CameraSystem';
 import { SPACECRAFT_MISSIONS } from '@/config/spacecraft';
 import {
   INTERSTELLAR_OBJECTS,
-  interstellarWindow,
+  interstellarSceneAU,
 } from '@/config/interstellar';
 import { MARKER_FRAMING_RADIUS, NAVIGABLE_TARGETS } from '@/config/navigable';
 
@@ -95,17 +93,9 @@ export function createNavigableAnchors(
   for (const mission of SPACECRAFT_MISSIONS)
     add(mission.name, (date) => horizons.getHeliocentricAU(mission.name, date));
 
-  for (const object of INTERSTELLAR_OBJECTS) {
-    const { from, to } = interstellarWindow(object);
-    const fromMs = from.getTime();
-    const toMs = to.getTime();
-    add(object.name, (date) => {
-      const ms = date.getTime();
-      if (ms < fromMs || ms > toMs) return null;
-      const p = keplerianPositionEcliptic(object.elements, date);
-      return eclipticToScene(p.x, p.y, p.z);
-    });
-  }
+  // La règle même du marqueur (`interstellarSceneAU`) : la caméra suit le point dessiné.
+  for (const object of INTERSTELLAR_OBJECTS)
+    add(object.name, (date) => interstellarSceneAU(object, date, horizons));
 
   const scratch = new THREE.Vector3();
 

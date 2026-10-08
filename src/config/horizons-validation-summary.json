@@ -1,5 +1,5 @@
 {
- "generatedAt": "2026-10-06T16:07:03.522Z",
+ "generatedAt": "2026-10-08T04:34:43.974Z",
  "samplesPerCase": 48,
  "spk": {
   "kernel": true,
@@ -17702,6 +17702,72 @@
     "median": 3.862,
     "p95": 1727,
     "max": 2630
+   },
+   "radii": null
+  },
+  {
+   "body": "oumuamua",
+   "provider": "horizons-binary",
+   "windowKind": "binary",
+   "windowFrom": "1997-09-09",
+   "windowTo": "2037-09-10",
+   "windowClipped": false,
+   "target": "1I",
+   "relative": false,
+   "radiusKm": null,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 0.9792,
+    "median": 0.01891,
+    "p95": 3.448,
+    "max": 3.808
+   },
+   "radii": null
+  },
+  {
+   "body": "borisov",
+   "provider": "horizons-binary",
+   "windowKind": "binary",
+   "windowFrom": "1999-12-08",
+   "windowTo": "2039-12-08",
+   "windowClipped": false,
+   "target": "2I",
+   "relative": false,
+   "radiusKm": null,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 0.3267,
+    "median": 0.01814,
+    "p95": 1.15,
+    "max": 1.258
+   },
+   "radii": null
+  },
+  {
+   "body": "atlas",
+   "provider": "horizons-binary",
+   "windowKind": "binary",
+   "windowFrom": "2005-10-29",
+   "windowTo": "2045-10-29",
+   "windowClipped": false,
+   "target": "3I",
+   "relative": false,
+   "radiusKm": null,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 0.765,
+    "median": 0.02923,
+    "p95": 0.438,
+    "max": 30.47
    },
    "radii": null
   },

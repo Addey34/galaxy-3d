@@ -508,6 +508,7 @@ function wireChrome(): {
     // Objets interstellaires — couche instrument 2D active dans les DEUX modes : leur
     // trajectoire ouverte se lit justement dans la vue compressée (cf. interstellarOverlay.ts).
     const interstellarOverlay = new InterstellarOverlay();
+    interstellarOverlay.setPositionSource(horizonsEphemeris);
     interstellarOverlay.mount();
     interstellarOverlay.setActive(true);
 

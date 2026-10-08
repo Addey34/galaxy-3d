@@ -125,6 +125,11 @@ test('trajectories are the Orbit column of the interstellar rows, one object at 
   await expect(trajectory).not.toBeChecked();
   await trajectory.check();
   await expect(overlay).toHaveAttribute('data-paths', '1');
+  // Puis la ligne passe au fichier Horizons dès que sa fenêtre de ±20 ans est arrivée
+  // (2026-10-08) : elle suit alors le même point que le marqueur, au lieu des éléments.
+  await expect(overlay).toHaveAttribute('data-measured-paths', '1', {
+    timeout: 30_000,
+  });
   // Tracée sans que le marqueur soit montré, comme l'orbite d'un corps masqué.
   await expect(overlay).toHaveAttribute('data-markers', '0');
 

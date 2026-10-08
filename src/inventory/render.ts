@@ -244,14 +244,14 @@ export function renderInventory(inventory: Inventory): string {
   for (const [family, title] of families) {
     const rows = inventory.rows.filter((row) => row.family === family);
     out.push('', `${title} (${rows.length})`, ...table(rows));
-    // Le pire chiffre du catalogue ne doit pas se lire NU : ces millions de kilometres decrivent
-    // les bords d'une fenetre de +/-20 ans, et l'ecart au perihelie est cent fois plus petit.
-    // La mesure est une donnee (`config/interstellarAccuracy.ts`), gardee par son propre test.
+    // Depuis le 2026-10-08 la position vient du fichier Horizons, et la colonne en donne l'ecart.
+    // Les elements ne servent plus qu'en REPLI (ligne tracee avant l'arrivee du fichier) : leur
+    // ecart mesure au perihelie reste dit, sous ce nom (`config/interstellarAccuracy.ts`).
     if (family === 'interstellar' && INTERSTELLAR_ACCURACY.length > 0) {
       out.push(
         '',
-        "  Ces medianes portent sur +/-20 ans autour du perihelie. L'ecart MESURE au perihelie,",
-        '  la ou on regarde, et le meme rapporte a la distance heliocentrique :'
+        "  Les elements hyperboliques, qui ne servent plus qu'en repli : leur ecart MESURE au",
+        '  perihelie, et le meme rapporte a la distance heliocentrique :'
       );
       for (const record of INTERSTELLAR_ACCURACY) {
         const at = record.points.find((p) => p.daysFromPerihelion === 0);

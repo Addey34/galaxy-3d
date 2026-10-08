@@ -229,6 +229,7 @@ const isoTime = (iso: string): number => Date.parse(`${iso}T00:00:00Z`);
  */
 /** La conjonction d'une enumeration (« a, b ou c »), dans les quatre langues. */
 const OR: DocText = { en: ' or ', fr: ' ou ', es: ' o ', 'pt-BR': ' ou ' };
+const AND: DocText = { en: ' and ', fr: ' et ', es: ' y ', 'pt-BR': ' e ' };
 
 const exact = (value: number, locale: DocLocale): string =>
   locale === 'en' ? String(value) : String(value).replace('.', ',');
@@ -356,6 +357,11 @@ function methodologyPage(input: MethodologyInput, locale: DocLocale): DocPage {
   const rows = summary.rows;
   const production = rows.filter((r) => r.provider === 'production');
   const spacecraftNames = new Set(SPACECRAFT_MISSIONS.map((m) => m.name));
+  // Les objets SUIVIS PAR LEUR SEUL FICHIER : les sondes, et depuis le 2026-10-08 les objets
+  // interstellaires. Ni les uns ni les autres ne sont des corps du catalogue, et leurs fichiers
+  // ne doivent pas se compter parmi ceux des corps naturels.
+  const interstellarNames = new Set(INTERSTELLAR_OBJECTS.map((o) => o.name));
+  const fileOnlyNames = new Set([...spacecraftNames, ...interstellarNames]);
   const productionOf = (body: string): ValidationRow | undefined =>
     production.find((r) => r.body === body);
 
@@ -381,7 +387,7 @@ function methodologyPage(input: MethodologyInput, locale: DocLocale): DocPage {
     )
     .join('');
   const binarySpacecraft = binaries.filter(([n]) => spacecraftNames.has(n));
-  const binaryNatural = binaries.filter(([n]) => !spacecraftNames.has(n));
+  const binaryNatural = binaries.filter(([n]) => !fileOnlyNames.has(n));
   const stepsOf = (entries: typeof binaries): number[] =>
     [...new Set(entries.map(([, e]) => e.stepDays))].sort((a, b) => a - b);
   const naturalSteps = stepsOf(binaryNatural);
@@ -389,6 +395,25 @@ function methodologyPage(input: MethodologyInput, locale: DocLocale): DocPage {
   const finestSpacecraft = binarySpacecraft
     .filter(([, e]) => e.stepDays === spacecraftSteps[0])
     .map(([n]) => n);
+  const binaryInterstellar = binaries.filter(([n]) => interstellarNames.has(n));
+  // « 1 jour pour 1I/ʻOumuamua, 4 jours pour 2I/Borisov et 3I/ATLAS » : LU au manifeste.
+  const interstellarStepText = stepsOf(binaryInterstellar)
+    .map((step) => {
+      const names = binaryInterstellar
+        .filter(([, e]) => e.stepDays === step)
+        .map(([n]) => escapeHtml(name(n, locale)));
+      const joined =
+        names.length > 1
+          ? `${names.slice(0, -1).join(', ')}${L(AND)}${names[names.length - 1]}`
+          : names[0];
+      return L({
+        en: `${exact(step, locale)} day${step === 1 ? '' : 's'} for ${joined}`,
+        fr: `${exact(step, locale)} jour${step === 1 ? '' : 's'} pour ${joined}`,
+        es: `${exact(step, locale)} día${step === 1 ? '' : 's'} para ${joined}`,
+        'pt-BR': `${exact(step, locale)} dia${step === 1 ? '' : 's'} para ${joined}`,
+      });
+    })
+    .join(', ');
   const listNames = (names: readonly string[]): string =>
     names.map((n) => escapeHtml(name(n, locale))).join(', ');
   // « 4, 8, 16 ou 64 » : depuis le lot 11 les pas des fichiers naturels sont quatre, et une
@@ -552,10 +577,10 @@ function methodologyPage(input: MethodologyInput, locale: DocLocale): DocPage {
           es: `<strong>Elementos orbitales keplerianos</strong>: ${SMALL_BODY_ELEMENTS.length} cuerpos menores, cuyos elementos osculadores vienen de Horizons en una época declarada y son verificados por una prueba contra una posición de Horizons en esa época (${barycentric} de ellos están referidos al baricentro del Sistema Solar: más allá de Neptuno, una órbita heliocéntrica arrastra el propio movimiento de retroceso del Sol); y un respaldo para ${moonFallbacks} lunas, derivado por script de sus archivos Horizons, usado solo cuando un archivo falta, está fuera de rango o es rechazado.`,
           'pt-BR': `<strong>Elementos orbitais keplerianos</strong>: ${SMALL_BODY_ELEMENTS.length} corpos menores, cujos elementos osculadores vêm da Horizons em uma época declarada e são verificados por um teste contra uma posição da Horizons nessa época (${barycentric} deles são referidos ao baricentro do Sistema Solar: além de Netuno, uma órbita heliocêntrica carrega o próprio movimento de recuo do Sol); e uma reserva para ${moonFallbacks} luas, derivada por script dos seus arquivos Horizons, usada somente quando um arquivo falta, está fora do intervalo ou é recusado.`,
         })}</li></ol><p>${L({
-          en: `The ${binarySpacecraft.length} spacecraft and the ${INTERSTELLAR_OBJECTS.length} interstellar objects follow their own rule. A spacecraft is positioned only by its Horizons file, sampled at a step of ${days(spacecraftSteps)} days (${exact(spacecraftSteps[0]!, locale)} for: ${listNames(finestSpacecraft)}), and is not drawn outside the file’s coverage.${segmentText} An interstellar object is positioned by its hyperbolic elements and drawn only within ±${INTERSTELLAR_WINDOW_YEARS} years of perihelion, the range over which they were checked against Horizons.`,
-          fr: `Les ${binarySpacecraft.length} sondes et les ${INTERSTELLAR_OBJECTS.length} objets interstellaires suivent leur propre règle. Une sonde est positionnée uniquement par son fichier Horizons, échantillonné à un pas de ${days(spacecraftSteps)} jours (${exact(spacecraftSteps[0]!, locale)} jour pour : ${listNames(finestSpacecraft)}), et n’est pas dessinée hors de la couverture de ce fichier.${segmentText} Un objet interstellaire est positionné par ses éléments hyperboliques et dessiné seulement à ±${INTERSTELLAR_WINDOW_YEARS} ans de son périhélie, la plage sur laquelle ils ont été vérifiés contre Horizons.`,
-          es: `Las ${binarySpacecraft.length} sondas y los ${INTERSTELLAR_OBJECTS.length} objetos interestelares siguen su propia regla. Una sonda se sitúa únicamente por su archivo Horizons, muestreado con un paso de ${days(spacecraftSteps)} días (${exact(spacecraftSteps[0]!, locale)} para: ${listNames(finestSpacecraft)}), y no se dibuja fuera de la cobertura del archivo.${segmentText} Un objeto interestelar se sitúa por sus elementos hiperbólicos y solo se dibuja dentro de ±${INTERSTELLAR_WINDOW_YEARS} años del perihelio, el rango en el que fueron verificados contra Horizons.`,
-          'pt-BR': `As ${binarySpacecraft.length} sondas e os ${INTERSTELLAR_OBJECTS.length} objetos interestelares seguem a sua própria regra. Uma sonda é posicionada unicamente pelo seu arquivo Horizons, amostrado com um passo de ${days(spacecraftSteps)} dias (${exact(spacecraftSteps[0]!, locale)} para: ${listNames(finestSpacecraft)}), e não é desenhada fora da cobertura do arquivo.${segmentText} Um objeto interestelar é posicionado pelos seus elementos hiperbólicos e desenhado somente dentro de ±${INTERSTELLAR_WINDOW_YEARS} anos do periélio, o intervalo no qual eles foram verificados contra a Horizons.`,
+          en: `The ${binarySpacecraft.length} spacecraft and the ${INTERSTELLAR_OBJECTS.length} interstellar objects follow their own rule. A spacecraft is positioned only by its Horizons file, sampled at a step of ${days(spacecraftSteps)} days (${exact(spacecraftSteps[0]!, locale)} for: ${listNames(finestSpacecraft)}), and is not drawn outside the file’s coverage.${segmentText} An interstellar object is positioned by its own Horizons file, the JPL solution with its non-gravitational accelerations, sampled at a step of ${interstellarStepText}, and drawn only within ±${INTERSTELLAR_WINDOW_YEARS} years of perihelion; its hyperbolic elements are only the fallback until that file arrives.`,
+          fr: `Les ${binarySpacecraft.length} sondes et les ${INTERSTELLAR_OBJECTS.length} objets interstellaires suivent leur propre règle. Une sonde est positionnée uniquement par son fichier Horizons, échantillonné à un pas de ${days(spacecraftSteps)} jours (${exact(spacecraftSteps[0]!, locale)} jour pour : ${listNames(finestSpacecraft)}), et n’est pas dessinée hors de la couverture de ce fichier.${segmentText} Un objet interstellaire est positionné par son propre fichier Horizons, la solution de JPL avec ses accélérations non gravitationnelles, échantillonné au pas de ${interstellarStepText}, et dessiné seulement à ±${INTERSTELLAR_WINDOW_YEARS} ans de son périhélie ; ses éléments hyperboliques ne sont que le repli tant que ce fichier n’est pas arrivé.`,
+          es: `Las ${binarySpacecraft.length} sondas y los ${INTERSTELLAR_OBJECTS.length} objetos interestelares siguen su propia regla. Una sonda se sitúa únicamente por su archivo Horizons, muestreado con un paso de ${days(spacecraftSteps)} días (${exact(spacecraftSteps[0]!, locale)} para: ${listNames(finestSpacecraft)}), y no se dibuja fuera de la cobertura del archivo.${segmentText} Un objeto interestelar se sitúa por su propio archivo Horizons, la solución del JPL con sus aceleraciones no gravitacionales, muestreado con un paso de ${interstellarStepText}, y solo se dibuja dentro de ±${INTERSTELLAR_WINDOW_YEARS} años del perihelio; sus elementos hiperbólicos solo son el respaldo mientras ese archivo no llega.`,
+          'pt-BR': `As ${binarySpacecraft.length} sondas e os ${INTERSTELLAR_OBJECTS.length} objetos interestelares seguem a sua própria regra. Uma sonda é posicionada unicamente pelo seu arquivo Horizons, amostrado com um passo de ${days(spacecraftSteps)} dias (${exact(spacecraftSteps[0]!, locale)} para: ${listNames(finestSpacecraft)}), e não é desenhada fora da cobertura do arquivo.${segmentText} Um objeto interestelar é posicionado pelo seu próprio arquivo Horizons, a solução do JPL com as suas acelerações não gravitacionais, amostrado com um passo de ${interstellarStepText}, e desenhado somente dentro de ±${INTERSTELLAR_WINDOW_YEARS} anos do periélio; os seus elementos hiperbólicos são só a reserva enquanto esse arquivo não chega.`,
         })}</p>`
     )
   );
@@ -826,17 +851,18 @@ function methodologyPage(input: MethodologyInput, locale: DocLocale): DocPage {
 
   const spacecraftRows = rows.filter(
     (r) =>
-      r.provider === 'horizons-binary' && spacecraftNames.has(r.body) && r.n > 0
+      r.provider === 'horizons-binary' && fileOnlyNames.has(r.body) && r.n > 0
   );
   const spacecraftTable = docTable(
     L({
-      en: 'Spacecraft, over each mission’s file coverage',
-      fr: 'Sondes, sur la couverture du fichier de chaque mission',
-      es: 'Sondas, en la cobertura del archivo de cada misión',
-      'pt-BR': 'Sondas, na cobertura do arquivo de cada missão',
+      en: 'Spacecraft and interstellar objects, over the coverage of each one’s file',
+      fr: 'Sondes et objets interstellaires, sur la couverture du fichier de chacun',
+      es: 'Sondas y objetos interestelares, en la cobertura del archivo de cada uno',
+      'pt-BR':
+        'Sondas e objetos interestelares, na cobertura do arquivo de cada um',
     }),
     [
-      L({ en: 'Mission', fr: 'Mission', es: 'Misión', 'pt-BR': 'Missão' }),
+      L({ en: 'Object', fr: 'Objet', es: 'Objeto', 'pt-BR': 'Objeto' }),
       L({
         en: 'Coverage',
         fr: 'Couverture',
@@ -883,7 +909,7 @@ function methodologyPage(input: MethodologyInput, locale: DocLocale): DocPage {
           // Les millénaires profonds ont leur propre section, qui porte leur référence et son
           // plancher : les répéter ici doublerait cent lignes sans leur contexte.
           r.windowKind !== 'deep' &&
-          !(provider === 'horizons-binary' && spacecraftNames.has(r.body)) &&
+          !(provider === 'horizons-binary' && fileOnlyNames.has(r.body)) &&
           !(provider === 'spk' && r.n === 0)
       );
       if (providerRows.length === 0) return '';
@@ -970,10 +996,10 @@ function methodologyPage(input: MethodologyInput, locale: DocLocale): DocPage {
                   'Os elementos keplerianos descrevem uma órbita sem a atração dos planetas, então o seu erro cresce com a distância no tempo até a sua época. Em dois séculos ele é grande; perto da época é muito menor:',
               }
             : {
-                en: `Keplerian elements describe an orbit without the pull of the planets, so their error grows with the distance in time from their epoch. No body in the production table (${productionSpan}) is positioned by them alone. They remain the fallback outside the coverage of the Horizons files (full measurements below), and the only source for the interstellar objects, measured over their drawn window:`,
-                fr: `Des éléments képlériens décrivent une orbite sans l’attraction des planètes : leur erreur croît avec l’écart en temps à leur époque. Aucun corps du tableau de production (${productionSpan}) n’est positionné par eux seuls. Ils restent le repli hors de la couverture des fichiers Horizons (mesures complètes ci-dessous), et la seule source des objets interstellaires, mesurés sur leur fenêtre dessinée :`,
-                es: `Los elementos keplerianos describen una órbita sin la atracción de los planetas, así que su error crece con la distancia en el tiempo a su época. Ningún cuerpo de la tabla de producción (${productionSpan}) se sitúa solo con ellos. Siguen siendo el respaldo fuera de la cobertura de los archivos Horizons (mediciones completas más abajo), y la única fuente para los objetos interestelares, medida en su ventana dibujada:`,
-                'pt-BR': `Os elementos keplerianos descrevem uma órbita sem a atração dos planetas, então o seu erro cresce com a distância no tempo até a sua época. Nenhum corpo da tabela de produção (${productionSpan}) é posicionado só por eles. Eles continuam a ser a reserva fora da cobertura dos arquivos Horizons (medições completas abaixo), e a única fonte para os objetos interestelares, medida na sua janela desenhada:`,
+                en: `Keplerian elements describe an orbit without the pull of the planets, so their error grows with the distance in time from their epoch. No body in the production table (${productionSpan}) is positioned by them alone. They remain the fallback outside the coverage of the Horizons files (full measurements below), and the fallback of the interstellar objects until their file arrives, measured over their drawn window:`,
+                fr: `Des éléments képlériens décrivent une orbite sans l’attraction des planètes : leur erreur croît avec l’écart en temps à leur époque. Aucun corps du tableau de production (${productionSpan}) n’est positionné par eux seuls. Ils restent le repli hors de la couverture des fichiers Horizons (mesures complètes ci-dessous), et le repli des objets interstellaires tant que leur fichier n’est pas arrivé, mesurés sur leur fenêtre dessinée :`,
+                es: `Los elementos keplerianos describen una órbita sin la atracción de los planetas, así que su error crece con la distancia en el tiempo a su época. Ningún cuerpo de la tabla de producción (${productionSpan}) se sitúa solo con ellos. Siguen siendo el respaldo fuera de la cobertura de los archivos Horizons (mediciones completas más abajo), y el respaldo de los objetos interestelares mientras su archivo no llega, medido en su ventana dibujada:`,
+                'pt-BR': `Os elementos keplerianos descrevem uma órbita sem a atração dos planetas, então o seu erro cresce com a distância no tempo até a sua época. Nenhum corpo da tabela de produção (${productionSpan}) é posicionado só por eles. Eles continuam a ser a reserva fora da cobertura dos arquivos Horizons (medições completas abaixo), e a reserva dos objetos interestelares enquanto o seu arquivo não chega, medida na sua janela desenhada:`,
               }
         )}</p>` +
         epochTable +

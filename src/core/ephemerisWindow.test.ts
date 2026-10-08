@@ -549,13 +549,43 @@ describe('ce que la première vue coûte réellement', () => {
     // 54 904 128 quand Didymos et Dimorphos passent au pas d'un jour, le même jour, pour que
     // Dimorphos composé tienne sous son diamètre (cf. `compositeReference.test.ts`) ;
     // 54 921 264 avec le segment de BepiColombo autour de Mercure (2026-10-06, 357 ancres de
-    // 12 h, cf. `segmentReference.test.ts`).
-    expect(shipped).toBe(54_921_264);
+    // 12 h, cf. `segmentReference.test.ts`) ; 55 973 520 avec les trois objets interstellaires
+    // (2026-10-08 : 1I au pas d'un jour, 2I et 3I au pas de 4 jours, sur ±20 ans).
+    expect(shipped).toBe(55_973_520);
     // 62 au lot 17, plus les 23 cibles de missions du 2026-10-04 et leurs deux satellites : une
-    // requête par corps.
-    expect(requests).toBe(87);
+    // requête par corps ; 90 avec les trois objets interstellaires (2026-10-08), couverts à
+    // cette date.
+    expect(requests).toBe(90);
     // Moins de 2 % de ce qui est livré aujourd'hui : c'est tout l'objet du lot.
     expect(bytes).toBeLessThan(shipped * 0.02);
     expect(bytes).toBeGreaterThan(500_000);
+  });
+});
+
+/**
+ * UN INTERVALLE FIXE (2026-10-08) : la trajectoire d'un objet interstellaire se trace depuis son
+ * fichier sur toute sa fenêtre, quelle que soit la date affichée.
+ */
+describe('un intervalle fixe à tenir', () => {
+  const grid: SampleGrid = { startJdTdb: 1000, stepDays: 1, sampleCount: 100 };
+
+  it('élargit la fenêtre à tout l’intervalle, loin de la date', () => {
+    const window = planBodyWindow(
+      grid,
+      { date: at(1010.5), span: { from: at(1040), to: at(1080) } },
+      0
+    )!;
+    expect(window.firstIndex).toBe(10);
+    expect(window.lastIndex).toBeGreaterThanOrEqual(80);
+  });
+
+  it('borne à la couverture un intervalle qui la dépasse, au lieu de l’ignorer', () => {
+    const window = planBodyWindow(
+      grid,
+      { date: at(1050.5), span: { from: at(900), to: at(2000) } },
+      0
+    )!;
+    expect(window.firstIndex).toBe(0);
+    expect(window.lastIndex).toBe(99);
   });
 });

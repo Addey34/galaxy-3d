@@ -292,6 +292,31 @@ export function sampleHyperbolicTrajectory(
   return points;
 }
 
+/**
+ * Les INSTANTS des points de `sampleHyperbolicTrajectory` (mêmes bornes, même répartition en F),
+ * pour lire une autre source de position aux mêmes points : la ligne d'un objet interstellaire
+ * se trace alors depuis son fichier Horizons, avec la densité qu'exige la courbure au périhélie.
+ */
+export function sampleHyperbolicTimes(
+  el: OrbitalElements,
+  from: Date,
+  to: Date,
+  count: number
+): Date[] {
+  const e = el.eccentricity;
+  const n = meanMotion(el);
+  const fFrom = solveHyperbolicKepler(meanAnomalyAt(el, from), e);
+  const fTo = solveHyperbolicKepler(meanAnomalyAt(el, to), e);
+  const times: Date[] = [];
+  for (let i = 0; i < count; i++) {
+    const f = fFrom + ((fTo - fFrom) * i) / (count - 1);
+    const m = e * Math.sinh(f) - f;
+    const days = (m - el.meanAnomalyAtEpochRad) / n;
+    times.push(new Date(el.epoch.getTime() + days * MS_PER_DAY));
+  }
+  return times;
+}
+
 /** Rotation périfocal → écliptique : R_z(Ω) · R_x(i) · R_z(ω). */
 function perifocalToEcliptic(
   el: OrbitalElements,

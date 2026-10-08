@@ -15,8 +15,14 @@
  * compris) : ≤ 0,1 % de la distance sur ±20 ans autour du périhélie, 0,3 % au périhélie
  * même de 1I, qui passe à 0,26 UA du Soleil — cf. `interstellar.test.ts`.
  */
+import type * as THREE from 'three';
 import type { LocalizedText, RealData } from '@/types';
-import { hyperbolicPerihelionDate, type OrbitalElements } from '@/core/kepler';
+import { eclipticToScene } from '@/core/frames';
+import {
+  hyperbolicPerihelionDate,
+  keplerianPositionEcliptic,
+  type OrbitalElements,
+} from '@/core/kepler';
 import { loadInterstellarObjects } from '@/registry/interstellar';
 
 export interface InterstellarObject {
@@ -54,6 +60,35 @@ const MS_PER_JULIAN_YEAR = 365.25 * 86_400_000;
 
 export const INTERSTELLAR_OBJECTS: readonly InterstellarObject[] =
   loadInterstellarObjects();
+
+/** Ce qui sait donner une position héliocentrique mesurée (le service Horizons, en pratique). */
+export interface HeliocentricSource {
+  getHeliocentricAU(name: string, date: Date): THREE.Vector3 | null;
+}
+
+/**
+ * OÙ EST UN OBJET INTERSTELLAIRE à `date`, en UA dans le repère de la scène, ou `null` hors de
+ * sa fenêtre. La seule règle, lue par son marqueur ET par l'ancre que la caméra suit.
+ *
+ * Le fichier Horizons d'abord (2026-10-08) : la solution de JPL, accélérations non
+ * gravitationnelles comprises, interpolée au pas d'un jour. Mesuré contre Horizons au pas de
+ * 15 min sur ±5 jours autour de chaque périhélie : 141 km au pire pour 1I (0,26 UA du Soleil),
+ * 0,06 pour 2I, 0,14 pour 3I, contre 122 919 km pour les éléments à deux corps au périhélie
+ * de 1I. Les éléments restent le repli tant que la fenêtre du fichier n'est pas arrivée.
+ */
+export function interstellarSceneAU(
+  object: InterstellarObject,
+  date: Date,
+  horizons: HeliocentricSource | null
+): THREE.Vector3 | null {
+  const { from, to } = interstellarWindow(object);
+  const ms = date.getTime();
+  if (ms < from.getTime() || ms > to.getTime()) return null;
+  const measured = horizons?.getHeliocentricAU(object.name, date) ?? null;
+  if (measured) return measured;
+  const p = keplerianPositionEcliptic(object.elements, date);
+  return eclipticToScene(p.x, p.y, p.z);
+}
 
 /** Fenêtre affichée d'un objet : ±`INTERSTELLAR_WINDOW_YEARS` autour de son périhélie. */
 export function interstellarWindow(object: InterstellarObject): {

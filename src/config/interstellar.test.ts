@@ -1,12 +1,17 @@
+import * as THREE from 'three';
 import { describe, expect, it } from 'vitest';
 import {
   INTERSTELLAR_OBJECTS,
   INTERSTELLAR_TRAJECTORY_SAMPLES,
   INTERSTELLAR_WINDOW_YEARS,
+  interstellarSceneAU,
   interstellarWindow,
+  type HeliocentricSource,
 } from './interstellar';
+import { eclipticToScene } from '@/core/frames';
 import {
   keplerianPositionEcliptic,
+  sampleHyperbolicTimes,
   sampleHyperbolicTrajectory,
 } from '@/core/kepler';
 
@@ -311,4 +316,60 @@ describe('interstellar trajectory line sampling', () => {
       expect(maxGapDeg).toBeLessThan(5);
     }
   );
+});
+
+/**
+ * LA POSITION D'UN OBJET INTERSTELLAIRE, UNE SEULE RÈGLE (2026-10-08) : `interstellarSceneAU`,
+ * lue par le marqueur ET par l'ancre que la caméra suit. Le fichier Horizons d'abord, les
+ * éléments en repli, rien hors de la fenêtre.
+ */
+describe('interstellarSceneAU', () => {
+  const oumuamua = byName('oumuamua');
+  const { from, perihelion, to } = interstellarWindow(oumuamua);
+  const measured = new THREE.Vector3(1, 2, 3);
+  const source = (answer: THREE.Vector3 | null): HeliocentricSource => ({
+    getHeliocentricAU: (name) => (name === 'oumuamua' ? answer : null),
+  });
+
+  it('prend la position mesurée quand la source la tient', () => {
+    expect(interstellarSceneAU(oumuamua, perihelion, source(measured))).toBe(
+      measured
+    );
+  });
+
+  it('retombe sur les éléments quand la source ne répond pas, ou sans source', () => {
+    const p = keplerianPositionEcliptic(oumuamua.elements, perihelion);
+    const expected = eclipticToScene(p.x, p.y, p.z);
+    for (const s of [source(null), null])
+      expect(
+        interstellarSceneAU(oumuamua, perihelion, s)!.distanceTo(expected)
+      ).toBeLessThan(1e-12);
+  });
+
+  it('ne place rien hors de la fenêtre, même si la source répond', () => {
+    const before = new Date(from.getTime() - 86_400_000);
+    const after = new Date(to.getTime() + 86_400_000);
+    expect(interstellarSceneAU(oumuamua, before, source(measured))).toBeNull();
+    expect(interstellarSceneAU(oumuamua, after, source(measured))).toBeNull();
+  });
+});
+
+describe('sampleHyperbolicTimes', () => {
+  it('donne les instants exacts des points de la ligne', () => {
+    for (const object of INTERSTELLAR_OBJECTS) {
+      const { from, to } = interstellarWindow(object);
+      const points = sampleHyperbolicTrajectory(object.elements, from, to, 64);
+      const times = sampleHyperbolicTimes(object.elements, from, to, 64);
+      expect(times[0]!.getTime()).toBeCloseTo(from.getTime(), -1);
+      expect(times[63]!.getTime()).toBeCloseTo(to.getTime(), -1);
+      times.forEach((t, i) => {
+        const p = keplerianPositionEcliptic(object.elements, t);
+        const q = points[i]!;
+        expect(
+          Math.hypot(p.x - q.x, p.y - q.y, p.z - q.z),
+          object.name
+        ).toBeLessThan(1e-9);
+      });
+    }
+  });
 });

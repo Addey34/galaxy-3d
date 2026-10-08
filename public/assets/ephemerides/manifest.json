@@ -1,7 +1,7 @@
 {
   "version": 1,
   "source": "NASA/JPL Horizons",
-  "generatedAt": "2026-10-06T16:00:30.926Z",
+  "generatedAt": "2026-10-08T04:21:47.821Z",
   "frame": "ECLIPTIC_J2000",
   "center": "SUN",
   "units": "AU-D",
@@ -777,6 +777,30 @@
         2461468.545403642
       ],
       "segmentOf": "bepicolombo"
+    },
+    "oumuamua": {
+      "file": "oumuamua.9aebe8d982c4.bin",
+      "target": "1I",
+      "center": "sun",
+      "startJdTdb": 2450699.5,
+      "stepDays": 1,
+      "sampleCount": 14614
+    },
+    "borisov": {
+      "file": "borisov.446a9771805f.bin",
+      "target": "2I",
+      "center": "sun",
+      "startJdTdb": 2451519.5,
+      "stepDays": 4,
+      "sampleCount": 3654
+    },
+    "atlas": {
+      "file": "atlas.dea97c5ed71a.bin",
+      "target": "3I",
+      "center": "sun",
+      "startJdTdb": 2453671.5,
+      "stepDays": 4,
+      "sampleCount": 3654
     }
   }
 }

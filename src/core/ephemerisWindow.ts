@@ -125,6 +125,13 @@ export interface BodyWindowRequest {
    * l'horloge va le plus vite.
    */
   readonly leadDays?: number;
+  /**
+   * Un INTERVALLE FIXE à tenir, indépendant de la date (2026-10-08) : la trajectoire d'un
+   * objet interstellaire, tracée depuis son fichier sur toute sa fenêtre de ±20 ans. Une
+   * période d'orbite se centre sur la date ; une trajectoire ouverte n'a pas de centre. Bornée
+   * à la couverture, comme l'avance.
+   */
+  readonly span?: { readonly from: Date; readonly to: Date };
 }
 
 /** Taille totale du fichier décrit par cette grille. */
@@ -194,8 +201,8 @@ function windowFromIndices(
 
 /**
  * Index de l'échantillon encadrant, BORNÉ à la couverture au lieu d'être refusé hors d'elle.
- * Réservé à l'avance de lecture : une avance qui dépasse le fichier doit s'arrêter à son
- * dernier échantillon utile, pas annuler l'élargissement.
+ * Pour l'avance de lecture et pour un intervalle fixe (`span`) : ce qui dépasse le fichier doit
+ * s'arrêter à son dernier échantillon utile, pas annuler l'élargissement.
  */
 function clampedCoveringIndex(grid: SampleGrid, date: Date): number | null {
   const position = samplePositionForDate(grid, date);
@@ -253,6 +260,16 @@ export function planBodyWindow(
     if (ahead !== null) {
       lowIndex = Math.min(lowIndex, ahead);
       highIndex = Math.max(highIndex, ahead);
+    }
+  }
+
+  const span = request.span;
+  if (span !== undefined) {
+    const first = clampedCoveringIndex(grid, span.from);
+    const last = clampedCoveringIndex(grid, span.to);
+    if (first !== null && last !== null) {
+      lowIndex = Math.min(lowIndex, first, last);
+      highIndex = Math.max(highIndex, first, last);
     }
   }
 

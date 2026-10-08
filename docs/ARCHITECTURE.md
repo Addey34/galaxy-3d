@@ -407,6 +407,24 @@ vraie échelle), donc couche instrument 2D, `ui/interstellarOverlay.ts`. Quatre 
   `M = e·sinh F − F` ; M n'est pas un angle et ne se réduit **jamais** modulo 2π (Horizons donne
   818° pour 3I à son époque). `keplerianPositionEcliptic` aiguille sur e > 1 ; a est négatif,
   convention Horizons.
+- **La POSITION vient d'un fichier Horizons depuis le 2026-10-08**, les éléments ne servant
+  plus que de repli tant que le fichier n'est pas arrivé. Une seule règle,
+  `interstellarSceneAU` (`config/interstellar.ts`), lue par le marqueur ET par l'ancre que la
+  caméra suit. Pas MESURÉ par objet contre Horizons au pas d'une heure sur ±20 jours autour du
+  périhélie : 1I (0,26 UA) tient en 141 km au pas d'un jour et monterait à 32 853 km à
+  4 jours ; 2I (2,9 km) et 3I (36,8 km) tiennent à 4 jours. Sur toute la fenêtre, la
+  validation donne une médiane de 0,02 à 0,03 km (30 km au pire, 3I), contre 4 à 8,7 MILLIONS
+  pour les éléments. Cette décision renverse celle de la ligne 22.7 (2026-09-29, écrire l'écart
+  plutôt que le combler, `config/interstellarAccuracy.ts`, marquée SUPERSEDED) : le gain y était
+  jugé sous-pixel, mais le marqueur et une ligne tracée par l'AUTRE source se seraient séparés
+  de plusieurs unités de scène loin du périhélie.
+- **La LIGNE suit le même fichier, demandé à l'affichage.** Une trajectoire est masquée par
+  défaut ; cochée, la couche demande au service l'intervalle ENTIER de sa fenêtre (`span`,
+  `core/ephemerisWindow.ts`, l'équivalent pour une trajectoire ouverte de la période d'une
+  orbite fermée, qui se centre sur la date) et retrace ses 512 points aux mêmes instants
+  (`sampleHyperbolicTimes`) dès que tous sont tenus. En attendant, elle est tracée par les
+  éléments, seul moment où ligne et marqueur peuvent se séparer. `data-measured-paths` le
+  publie, et `e2e/interstellar.spec.ts` l'exige (falsifié).
 - **Les éléments viennent d'Horizons, à l'époque de sa propre solution**
   (`scripts/derive-interstellar-elements.mjs`, `pnpm ephemeris:interstellar`, cible vérifiée par
   son nom). Mesuré contre 21 vecteurs Horizons, accélérations non gravitationnelles comprises :
@@ -737,6 +755,14 @@ vaut **57,5 %** du maximum, à 120 ko/s **27,1 %**. Ces chiffres comptent le seg
 couvrait toute date ; le plafond réel est calculé sur les corps que la DATE fait demander
 (`budgetGrids`), donc il ne bouge que du 2026-10-13 au 2027-04-09. Les éphémérides livrées
 passent de 54 904 128 à 54 921 264 octets.
+
+**Mis à jour le 2026-10-08** : les trois objets interstellaires reçoivent leur fichier Horizons
+(§ « Trajectoires ouvertes »), 1I au pas d'un jour, 2I et 3I au pas de 4 jours, sur leur fenêtre
+de ±20 ans. **1 242 octets par jour simulé, 3,63 Mbit/s** à la vitesse maximale, seuil sans
+plafond **3,67 Mbit/s** ; à 2 Mbit/s le plafond vaut **54,1 %** du maximum, à 120 ko/s
+**25,5 %**. Le pas a été MESURÉ par objet pour ne payer que ce qui sert : au pas d'un jour
+partout, la demande montait à 1 314 octets. Les éphémérides livrées passent de 54 921 264 à
+55 973 520 octets.
 
 **Le débit se mesure sur le TEMPS OCCUPÉ, pas par requête.** Six requêtes simultanées se partagent
 la bande passante : `octets / durée` d'UNE requête sous-estime le lien d'un facteur proche du

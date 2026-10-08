@@ -28,6 +28,15 @@
  * ancrées près de chaque périhélie (1I 2017-11-23, 2I 2020-01-05, 3I 2026-02-19) ; ce qui croît
  * est l'effet des perturbations planétaires, pas la vétusté d'un ajustement.
  *
+ * [SUPERSEDED le 2026-10-08 : les trois objets ont désormais leur fichier Horizons (1I au pas d'un
+ * jour, 2I et 3I à 4 jours), servis par une règle unique, `interstellarSceneAU`, au marqueur, à
+ * l'ancre de la caméra et à la ligne. Mesuré : médiane de 0,02 à 0,03 km sur toute la fenêtre,
+ * 30 km au pire, contre 4 à 8,7 millions pour les éléments, et la validation a montré ce que le
+ * paragraphe ci-dessous n'avait pas vu : loin du périhélie le marqueur et sa ligne se seraient
+ * séparés de plusieurs unités de scène dès qu'on mélangeait les deux sources. Les mesures de ce
+ * module décrivent maintenant les ÉLÉMENTS, qui ne servent plus qu'en repli. Coût : +72 octets
+ * par jour simulé, cf. `docs/ARCHITECTURE.md`. Le paragraphe est gardé pour son raisonnement.]
+ *
  * POURQUOI CE N'EST PAS COMBLÉ. Un binaire Horizons sur la fenêtre coûterait environ 700 Ko par
  * objet au pas d'un jour, ce qui est abordable ; mais ces objets ne passent PAS par le résolveur
  * de positions : `ui/interstellarOverlay.ts` appelle `keplerianPositionEcliptic` directement.
