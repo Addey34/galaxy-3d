@@ -28,14 +28,16 @@ import {
 import type { LabelSpace } from '@/core/labelSpace';
 import { eclipticToScene } from '@/core/frames';
 import {
-  keplerianPositionEcliptic,
+  sampleHyperbolicTimes,
   sampleHyperbolicTrajectory,
 } from '@/core/kepler';
 import { getLocale } from '@/i18n';
 import {
   INTERSTELLAR_OBJECTS,
   INTERSTELLAR_TRAJECTORY_SAMPLES,
+  interstellarSceneAU,
   interstellarWindow,
+  type HeliocentricSource,
   type InterstellarObject,
 } from '@/config/interstellar';
 
@@ -45,7 +47,22 @@ interface Track {
   toMs: number;
   /** Points de la trajectoire en UA, déjà dans le repère de la scène (x, y, z entrelacés). */
   pathAU: Float32Array;
+  /** Instants de ces points, pour relire la ligne dans le fichier Horizons. */
+  times: readonly Date[];
+  /** Vrai une fois la ligne retracée depuis le fichier : elle passe alors par le marqueur. */
+  measured: boolean;
   css: string;
+}
+
+/**
+ * Ce que la couche demande au service : des positions, et, pour une trajectoire affichée,
+ * l'intervalle entier de sa fenêtre (`HorizonsEphemerisService.ensureCoverage`).
+ */
+export interface TrajectorySource extends HeliocentricSource {
+  ensureCoverage?(request: {
+    date: Date;
+    spans: Record<string, { from: Date; to: Date }>;
+  }): Promise<unknown>;
 }
 
 /** Vrai si le point projeté (NDC) est devant la caméra, entre les plans near/far. */
@@ -84,6 +101,63 @@ export class InterstellarOverlay {
   private readonly _p = new THREE.Vector3();
   private readonly _q = new THREE.Vector3();
 
+  /** La source mesurée des positions (`setPositionSource`), sinon les seuls éléments. */
+  private _positions: TrajectorySource | null = null;
+
+  /** Branche le service Horizons : le marqueur suit alors la même position que l'ancre. */
+  setPositionSource(source: TrajectorySource): void {
+    this._positions = source;
+    for (const track of this.tracks)
+      if (this.pathNames.has(track.object.name)) this._requestTrajectory(track);
+  }
+
+  /**
+   * Fait venir la fenêtre ENTIÈRE d'une trajectoire affichée (2026-10-08). Sans elle, la ligne
+   * resterait tracée par les éléments pendant que le marqueur suit le fichier, et la validation
+   * mesure jusqu'à 17 millions de km entre les deux pour 1I, loin du périhélie. Demandée à
+   * l'affichage seulement : les trajectoires sont masquées par défaut, et 1I pèse 701 Ko.
+   */
+  private _requestTrajectory(track: Track): void {
+    const source = this._positions;
+    if (!source?.ensureCoverage || track.measured) return;
+    void source
+      .ensureCoverage({
+        // Une date que le fichier couvre toujours : le planificateur part d'elle.
+        date: interstellarWindow(track.object).perihelion,
+        spans: {
+          [track.object.name]: {
+            from: new Date(track.fromMs),
+            to: new Date(track.toMs),
+          },
+        },
+      })
+      .then(() => {
+        this._hasDrawn = false;
+      });
+  }
+
+  /** Retrace la ligne depuis le fichier dès que tous ses points y sont tenus. */
+  private _measurePath(track: Track): void {
+    const source = this._positions;
+    if (!source || track.measured) return;
+    const last = track.times.length - 1;
+    if (
+      !source.getHeliocentricAU(track.object.name, track.times[0]!) ||
+      !source.getHeliocentricAU(track.object.name, track.times[last]!)
+    )
+      return;
+    const path = new Float32Array(track.times.length * 3);
+    for (let i = 0; i <= last; i++) {
+      const p = source.getHeliocentricAU(track.object.name, track.times[i]!);
+      if (!p) return;
+      path[i * 3] = p.x;
+      path[i * 3 + 1] = p.y;
+      path[i * 3 + 2] = p.z;
+    }
+    track.pathAU = path;
+    track.measured = true;
+  }
+
   constructor(objects: readonly InterstellarObject[] = INTERSTELLAR_OBJECTS) {
     this.canvas = document.createElement('canvas');
     this.canvas.id = 'interstellar-overlay';
@@ -108,6 +182,13 @@ export class InterstellarOverlay {
         fromMs: from.getTime(),
         toMs: to.getTime(),
         pathAU,
+        times: sampleHyperbolicTimes(
+          object.elements,
+          from,
+          to,
+          INTERSTELLAR_TRAJECTORY_SAMPLES
+        ),
+        measured: false,
         css: `#${object.color.toString(16).padStart(6, '0')}`,
       };
     });
@@ -128,6 +209,8 @@ export class InterstellarOverlay {
    */
   setTrajectoryNames(names: ReadonlySet<string>): void {
     this.pathNames = new Set(names);
+    for (const track of this.tracks)
+      if (this.pathNames.has(track.object.name)) this._requestTrajectory(track);
     this._hasDrawn = false; // force le prochain dessin : la vue n'a pas bougé, le réglage oui
   }
 
@@ -173,7 +256,7 @@ export class InterstellarOverlay {
       this._hasDrawn = false;
       // Plus rien n'est peint : plus rien n'est cliquable (cf. `markerAt`).
       this._markers.length = 0;
-      this._publish(0, 0, 0);
+      this._publish(0, 0, 0, 0);
     }
   }
 
@@ -201,20 +284,26 @@ export class InterstellarOverlay {
     let markers = 0;
     let tracks = 0;
     let paths = 0;
+    let measuredPaths = 0;
     for (const track of this.tracks) {
       if (now < track.fromMs || now > track.toMs) continue;
       tracks++;
       // La trajectoire est un réglage à part, comme l'orbite d'un corps masqué : elle se
       // trace même quand le marqueur ne l'est pas.
       if (this.pathNames.has(track.object.name)) {
+        this._measurePath(track);
         this._drawPath(ctx, camera, track, morph, w, h);
         paths++;
+        if (track.measured) measuredPaths++;
       }
       const isTarget = track.object.name === this.target;
       if (!isTarget && this.hidden.has(track.object.name)) continue;
 
-      const pos = keplerianPositionEcliptic(track.object.elements, date);
-      const s = eclipticToScene(pos.x, pos.y, pos.z);
+      // Le point suit la solution d'Horizons quand son fichier est là (`interstellarSceneAU`),
+      // et la ligne aussi une fois sa fenêtre arrivée (`_measurePath`) : avant, elle est tracée
+      // par les éléments, et c'est le seul moment où les deux peuvent se séparer.
+      const s = interstellarSceneAU(track.object, date, this._positions);
+      if (!s) continue;
       scaleToScene(this._p, s.x, s.y, s.z, morph).project(camera);
       if (
         !inDepth(this._p) ||
@@ -261,7 +350,7 @@ export class InterstellarOverlay {
         ctx.fillText(text, x + placed.dx - textWidth / 2, y + placed.dy + 4);
       }
     }
-    this._publish(markers, tracks, paths);
+    this._publish(markers, tracks, paths, measuredPaths);
   }
 
   /**
@@ -374,15 +463,22 @@ export class InterstellarOverlay {
    * trajectoire tracée). Le second ne dépend pas du cadrage : hors fenêtre, les trois objets
    * sont à plus de 116 UA, donc hors champ de toute façon, et compter les seuls marqueurs ne
    * prouverait pas que la borne est appliquée. `data-paths` compte les trajectoires RÉELLEMENT
-   * tracées : 0 par défaut, puisqu'elles sont en opt-in. N'écrit que sur changement.
+   * tracées : 0 par défaut, puisqu'elles sont en opt-in. `data-measured-paths` compte celles
+   * qui sont déjà retracées depuis le fichier Horizons (2026-10-08). N'écrit que sur changement.
    */
-  private _publish(markers: number, tracks: number, paths: number): void {
-    const key = `${markers}/${tracks}/${paths}`;
+  private _publish(
+    markers: number,
+    tracks: number,
+    paths: number,
+    measuredPaths: number
+  ): void {
+    const key = `${markers}/${tracks}/${paths}/${measuredPaths}`;
     if (key === this.lastPublished) return;
     this.lastPublished = key;
     this.canvas.dataset.markers = String(markers);
     this.canvas.dataset.tracks = String(tracks);
     this.canvas.dataset.paths = String(paths);
+    this.canvas.dataset.measuredPaths = String(measuredPaths);
   }
 
   private _clear(): void {

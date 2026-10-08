@@ -117,8 +117,9 @@ describe('le service charge des fenêtres (lot 17C)', () => {
     // 54 904 128 quand Didymos et Dimorphos passent au pas d'un jour, le même jour, pour que
     // Dimorphos composé tienne sous son diamètre (cf. `compositeReference.test.ts`) ;
     // 54 921 264 avec le segment de BepiColombo autour de Mercure (2026-10-06, 357 ancres de
-    // 12 h, cf. `segmentReference.test.ts`).
-    expect(shipped).toBe(54_921_264);
+    // 12 h, cf. `segmentReference.test.ts`) ; 55 973 520 avec les trois objets interstellaires
+    // (2026-10-08 : 1I au pas d'un jour, 2I et 3I au pas de 4 jours, sur ±20 ans).
+    expect(shipped).toBe(55_973_520);
     // MESURÉ ici avec TOUTES les lignes d'orbite allumées, le pire cas qu'un visiteur obtient en
     // allumant la colonne entière : Halley en demande 333 Ko à elle seule (76 ans de révolution,
     // pas de 4 jours), Uranus 368 Ko. Le démarrage, lui, ne demande depuis le 2026-10-04 que les

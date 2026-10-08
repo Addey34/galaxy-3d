@@ -132,6 +132,10 @@ export interface SceneWindowRequest {
    * qui coûte : une position vaut 96 octets, une ligne demande une période ENTIÈRE.
    */
   readonly orbitPeriodDays?: Readonly<Record<string, number>>;
+  /** Intervalles fixes à tenir, par corps (cf. `BodyWindowRequest.span`). */
+  readonly spans?: Readonly<
+    Record<string, { readonly from: Date; readonly to: Date }>
+  >;
 }
 
 /**
@@ -958,6 +962,7 @@ export class HorizonsEphemerisService implements PreciseEphemerisProvider {
       ...(scene.orbitPeriodDays?.[name] !== undefined
         ? { orbitPeriodDays: scene.orbitPeriodDays[name] }
         : {}),
+      ...(scene.spans?.[name] !== undefined ? { span: scene.spans[name] } : {}),
     });
   }
 

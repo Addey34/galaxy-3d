@@ -300,14 +300,20 @@ function positionOf(
     if (current === undefined || row.km.median < current)
       best.set(row.provider, row.km.median);
   }
-  // Un objet d'instrument n'a pas de ligne `production` : une seule source le mesure, et c'est
-  // celle-là qui décrit ce que l'application sert.
+  // Un objet d'instrument n'a pas de ligne `production` : c'est son FICHIER qui décrit ce que
+  // l'application sert quand il en a un (une sonde n'a que lui ; un objet interstellaire le
+  // préfère à ses éléments depuis le 2026-10-08, cf. `interstellarSceneAU`), sinon sa source
+  // unique.
   const servedRows =
     production.length > 0
       ? production
-      : best.size === 1
-        ? own.filter((row) => row.km !== null)
-        : [];
+      : best.has('horizons-binary')
+        ? own.filter(
+            (row) => row.provider === 'horizons-binary' && row.km !== null
+          )
+        : best.size === 1
+          ? own.filter((row) => row.km !== null)
+          : [];
   return {
     binary: entry
       ? {

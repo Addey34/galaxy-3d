@@ -807,6 +807,42 @@ const BODIES = [
     startTime: '2014-12-05',
     stopTime: '2026-11-25',
   },
+  // OBJETS INTERSTELLAIRES (2026-10-08) : la solution d'Horizons, accélérations non
+  // gravitationnelles comprises, au lieu du seul modèle à deux corps des éléments (122 919 km
+  // d'écart au périhélie de 1I, 0,3 % de sa distance au Soleil). Bornes = la fenêtre affichée,
+  // ±20 ans autour du périhélie (`config/interstellar.ts`), plus un jour de chaque côté : hors
+  // de cette fenêtre l'application ne montre rien, il n'y a donc rien à servir. Mêmes COMMAND
+  // que `scripts/derive-interstellar-elements.mjs`, nom rendu confronté de même.
+  {
+    name: 'oumuamua',
+    target: '1I',
+    expectedName: "1i/'oumuamua",
+    center: 'sun',
+    startTime: '1997-09-08',
+    stopTime: '2037-09-11',
+    // Le pas se MESURE par corps (2026-10-08, contre Horizons au pas d'une heure sur ±20 jours
+    // autour du périhélie) : à 4 jours, 32 853 km pour 1I, qui passe à 0,26 UA ; à 1 jour, 141.
+    // Borisov (2 UA, 2,9 km) et ATLAS (1,36 UA, 36,8 km) tiennent au pas de 4 jours.
+    stepDays: PROBE_EVENT_STEP_DAYS,
+  },
+  {
+    name: 'borisov',
+    target: '2I',
+    expectedName: 'borisov (c/2019 q4)',
+    center: 'sun',
+    startTime: '1999-12-07',
+    stopTime: '2039-12-10',
+    stepDays: 4,
+  },
+  {
+    name: 'atlas',
+    target: '3I',
+    expectedName: 'atlas (c/2025 n1)',
+    center: 'sun',
+    startTime: '2005-10-28',
+    stopTime: '2045-10-31',
+    stepDays: 4,
+  },
 ];
 
 /**
