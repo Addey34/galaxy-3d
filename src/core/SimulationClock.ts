@@ -23,8 +23,7 @@ export class SimulationClock {
   private _offsetMs = 0;
   private _timeScale = 1;
 
-  syncToRealTime(): void {
-    const now = Date.now();
+  syncToRealTime(now: number = Date.now()): void {
     this._date = new Date(
       this._baseRealTime +
         this._offsetMs +
@@ -42,7 +41,11 @@ export class SimulationClock {
     this._offsetMs = this._date.getTime() - now;
     this._baseRealTime = now;
     this._timeScale = scale;
-    this.syncToRealTime();
+    // Le MÊME instant que l'ancrage. Relire `Date.now()` ici laissait passer la milliseconde
+    // écoulée entre les deux lectures, multipliée par la vitesse : 8,8 h simulées à un an par
+    // seconde. Mesuré le 2026-10-08 sous frein CPU : une date « retenue » faute d'octets
+    // glissait ainsi d'image en image, sur des données que personne n'avait vérifiées.
+    this.syncToRealTime(now);
   }
 
   /**
@@ -68,7 +71,7 @@ export class SimulationClock {
     // target = baseRealTime + newOffset + realElapsed * timeScale
     this._offsetMs =
       target.getTime() - this._baseRealTime - realElapsed * this._timeScale;
-    this.syncToRealTime();
+    this.syncToRealTime(now);
   }
 
   addDays(days: number): void {
@@ -80,9 +83,10 @@ export class SimulationClock {
   }
 
   resetOffset(): void {
-    this._baseRealTime = Date.now();
+    const now = Date.now();
+    this._baseRealTime = now;
     this._offsetMs = 0;
-    this.syncToRealTime();
+    this.syncToRealTime(now);
   }
 
   // ── Getters ───────────────────────────────────────────────────────────────

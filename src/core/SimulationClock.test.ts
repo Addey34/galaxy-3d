@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { SimulationClock } from './SimulationClock';
 
 const MS_PER_DAY = 86_400_000;
@@ -65,5 +65,60 @@ describe('SimulationClock', () => {
 
     expect(drift).toBeGreaterThanOrEqual(0);
     expect(drift).toBeLessThanOrEqual(realElapsed * 31_557_600);
+  });
+
+  describe('une seule lecture du temps réel par opération', () => {
+    // Chaque appel à `Date.now()` avance d'une milliseconde : le pire cas d'un appareil lent,
+    // où l'horloge système tourne entre deux lectures. À un an par seconde, une milliseconde
+    // de trop vaut 8,8 h simulées (mesuré le 2026-10-08 sous frein CPU : une date retenue
+    // faute d'octets glissait d'image en image).
+    const SCALE = 31_557_600;
+    afterEach(() => {
+      vi.restoreAllMocks();
+    });
+    /** Rend la DERNIÈRE valeur servie, pour comparer à l'instant réellement lu. */
+    const tickingNow = (): (() => number) => {
+      let now = Date.UTC(2026, 9, 8);
+      vi.spyOn(Date, 'now').mockImplementation(() => (now += 1));
+      return () => now;
+    };
+
+    it('holdAt pose EXACTEMENT la date retenue', () => {
+      tickingNow();
+      const clock = new SimulationClock();
+      clock.setTimeScale(SCALE);
+      const held = new Date('2030-01-01T00:00:00Z');
+      clock.holdAt(held);
+      expect(clock.date.getTime()).toBe(held.getTime());
+    });
+
+    it('setTimeScale ne déplace pas la date', () => {
+      tickingNow();
+      const clock = new SimulationClock();
+      clock.setTimeScale(SCALE);
+      const before = clock.date.getTime();
+      clock.setTimeScale(SCALE / 2);
+      expect(clock.date.getTime()).toBe(before);
+    });
+
+    it('un saut arrive EXACTEMENT sur sa cible', () => {
+      tickingNow();
+      const clock = new SimulationClock();
+      clock.setTimeScale(SCALE);
+      const before = clock.date.getTime();
+      clock.addDays(3);
+      expect(clock.date.getTime()).toBe(before + 3 * MS_PER_DAY);
+    });
+
+    it('resetOffset revient au présent de SA lecture', () => {
+      const lastNow = tickingNow();
+      const clock = new SimulationClock();
+      clock.setTimeScale(SCALE);
+      clock.addDays(10);
+      clock.resetOffset();
+      expect(clock.offsetDays).toBe(0);
+      // La date vaut l'instant d'ancrage, pas une milliseconde plus tard fois la vitesse.
+      expect(clock.date.getTime()).toBe(lastNow());
+    });
   });
 });
