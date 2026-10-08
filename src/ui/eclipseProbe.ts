@@ -34,6 +34,12 @@ export interface EclipseProbeState {
   body: string;
   followed: string | null;
   scaleMode: string;
+  /**
+   * Le CADRAGE : centre du corps en coordonnées normalisées de l'écran (0,0 au centre, ±1 aux
+   * bords) et rayon apparent en fraction de la demi-hauteur. Distingue « mauvaise couleur » de
+   * « Lune hors du carré que le test mesure ».
+   */
+  screen: { x: number; y: number; radius: number; inFront: boolean };
   materials: EclipseMaterialState[];
 }
 
@@ -84,10 +90,22 @@ export function setupEclipseProbe(api: PublicAPI): void {
           : [mesh.material];
         for (const material of list) materials.push(describe(mesh, material));
       });
+      const camera = api.sceneSystem.camera;
+      const center = body.group.getWorldPosition(new THREE.Vector3());
+      const distance = center.distanceTo(camera.position);
+      const radius = body.getFrameRadius(api.orbitalMechanics.scaleMode);
+      const halfFov = THREE.MathUtils.degToRad(camera.fov / 2);
+      const ndc = center.clone().project(camera);
       return {
         body: bodyName,
         followed: api.cameraSystem.targetName ?? null,
         scaleMode: api.orbitalMechanics.scaleMode,
+        screen: {
+          x: ndc.x,
+          y: ndc.y,
+          radius: Math.atan2(radius, distance) / halfFov,
+          inFront: ndc.z < 1,
+        },
         materials,
       };
     },
