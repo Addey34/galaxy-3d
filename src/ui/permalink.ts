@@ -19,9 +19,6 @@ import type { ModeSwitcher } from './modeSwitcher';
 import type { PlaybackControls } from './playback';
 
 const MS_PER_DAY = 86_400_000;
-// Garde-fou : n'attend jamais indéfiniment l'arrivée du vol caméra avant d'appliquer un
-// cadrage précis restauré depuis un permalien (au cas où `isFlying` resterait bloqué à true).
-const MAX_ARRIVAL_WAIT_MS = 3000;
 
 export interface PermalinkController {
   applyInitialState(): void;
@@ -42,18 +39,6 @@ export interface PermalinkController {
 }
 
 /** Attend que le vol caméra en cours se termine (ou le délai max), puis appelle `then`. */
-function afterCameraArrival(camera: CameraSystem, then: () => void): void {
-  const start = performance.now();
-  const tick = (): void => {
-    if (!camera.isFlying || performance.now() - start > MAX_ARRIVAL_WAIT_MS) {
-      then();
-      return;
-    }
-    requestAnimationFrame(tick);
-  };
-  tick();
-}
-
 export interface PermalinkEclipseHooks {
   /** Fige la lecture à l'arrivée sur une éclipse, comme le panneau d'événements. */
   playback?: Pick<PlaybackControls, 'pause'>;
@@ -176,7 +161,7 @@ export function setupPermalinks(
     if (view && state.body) {
       // Le cadrage précis n'a de sens qu'une fois le vol vers le corps sélectionné terminé :
       // appliqué plus tôt, le tween en cours l'écraserait à son arrivée.
-      afterCameraArrival(camera, () => {
+      camera.whenSettled(() => {
         camera.applyViewAngles(view.azimuthDeg, view.polarDeg, view.distance);
         sync(view);
       });
@@ -185,7 +170,7 @@ export function setupPermalinks(
       // une fois le vol terminé, sinon le tween écraserait la pose.
       const from = eclipseViewFrom(pathEclipse);
       if (from)
-        afterCameraArrival(camera, () => {
+        camera.whenSettled(() => {
           camera.viewFromBody(from);
           sync();
         });

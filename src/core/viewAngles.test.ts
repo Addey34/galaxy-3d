@@ -1,6 +1,10 @@
 import * as THREE from 'three';
 import { describe, expect, it } from 'vitest';
-import { viewAnglesFromDirection } from './viewAngles';
+import {
+  VIEW_FROM_CLEARANCE,
+  viewAnglesFromDirection,
+  viewFromDistance,
+} from './viewAngles';
 
 /**
  * Le seul contrat qui compte : les angles rendus, repassés dans la conversion inverse de
@@ -30,5 +34,23 @@ describe('angles de caméra depuis une direction', () => {
 
   it('refuse une direction nulle plutôt que de rendre des angles arbitraires', () => {
     expect(viewAnglesFromDirection(new THREE.Vector3())).toBeNull();
+  });
+});
+
+describe('viewFromDistance (ligne 45.2)', () => {
+  it('sort la caméra de la Terre : le cas mesuré de la Lune éclipsée en Éducatif', () => {
+    // Lune à 2,24 de la Terre (rayon 1), cadrée à 2,0 : la caméra était à 0,24 du centre.
+    const distance = viewFromDistance(2, 2.24, 1);
+    expect(distance).toBeCloseTo(2.24 - VIEW_FROM_CLEARANCE, 9);
+    expect(2.24 - distance).toBeGreaterThan(1);
+  });
+
+  it('garde la distance courante quand la caméra est déjà hors du corps', () => {
+    expect(viewFromDistance(2, 30, 1)).toBe(2);
+  });
+
+  it('garde la distance courante quand la cible touche presque le corps', () => {
+    expect(viewFromDistance(2, 1, 1)).toBe(2);
+    expect(viewFromDistance(2, Number.NaN, 1)).toBe(2);
   });
 });

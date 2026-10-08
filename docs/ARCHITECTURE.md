@@ -3113,6 +3113,25 @@ défaut montre déjà la face éclairée — le test passait sans le cadrage imp
 3 mars 2026, rouge/bleu mesure 4,1 avec, 1,5 sans ; c'est cette page que teste
 `e2e/eclipseLanding.spec.ts`.
 
+**Corrigé le 2026-10-08 (ligne 45.2) : la pose n'était pas toujours appliquée, et quand elle
+l'était, la caméra se trouvait DANS la Terre.** La garde lisait une Lune grise (rouge/bleu 1,36)
+une fois sur plusieurs, sur les seuls Xeon de la CI. La sonde `?debug-eclipse` (étendue ce jour :
+uniformes liés au programme, date appliquée, exposition, corps devant la caméra) a écarté le
+matériau (uniformes identiques et bien liés dans les deux cas) et montré deux défauts :
+
+1. **La pose attendait le vol par un sondage plafonné à 3 s d'horloge murale.** En rendu
+   logiciel, l'envoi d'une texture 8k fige une image plusieurs secondes : le plafond expirait
+   pendant le vol, la pose s'appliquait, puis l'arrivée du vol l'écrasait (sonde : caméra à la
+   distance et dans la direction d'approche par défaut). `CameraSystem.whenSettled` exécute
+   désormais l'action à la fin RÉELLE du vol (arrivée, ou annulation par un changement de mode),
+   pour la pose d'éclipse comme pour les angles d'un permalien partagé ; le sondage est retiré.
+   Mesuré par A/B simultané en CI, garde seule, 36 tirages par copie : 21 échecs sur 180 sans le
+   correctif (tous sur Xeon sauf deux), 0 sur 108 avec, dont six machines Xeon.
+2. **La pose gardait la distance courante.** En Éducatif la Lune est à 1,76 unité de la Terre,
+   de rayon 1, et était cadrée à 2,0 : la caméra était à 0,24 du centre de la Terre, et ce qu'on
+   voyait dépendait des coques terrestres dessinées depuis l'intérieur. `viewFromDistance`
+   (`core/viewAngles.ts`) la garde à 1,15 rayon de la Terre, là où se tient un observateur.
+
 ## Faits sourcés : ce que la fiche et la page d'un corps affichent
 
 **Le libellé suit la grandeur que la source déclare (2026-10-03).** Un champ ne dit pas la même
