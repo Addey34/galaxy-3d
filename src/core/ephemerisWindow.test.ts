@@ -18,11 +18,13 @@ import {
   alignedOffset,
   BYTES_PER_SAMPLE,
   byteRangeForIndices,
+  composeWindow,
   covers,
   coveringIndex,
   fileByteLength,
   interpretRangeResponse,
   mergeWindows,
+  missingSlice,
   parseContentRange,
   planBodyWindow,
   rangeHeader,
@@ -603,5 +605,68 @@ describe('un intervalle fixe à tenir', () => {
     )!;
     expect(window.firstIndex).toBe(0);
     expect(window.lastIndex).toBe(99);
+  });
+});
+
+describe('ne redemander que la tranche manquante (ligne 45.5)', () => {
+  const w = (first: number, last: number): SampleWindow => ({
+    firstIndex: first,
+    lastIndex: last,
+    ...byteRangeForIndices(first, last),
+  });
+
+  it('demande la QUEUE quand l’avance glisse vers le futur', () => {
+    expect(missingSlice(w(10, 40), w(12, 55))).toEqual(w(41, 55));
+    // Contact exact : la fenêtre voulue commence juste après la tenue.
+    expect(missingSlice(w(10, 40), w(41, 50))).toEqual(w(41, 50));
+  });
+
+  it('demande la TÊTE quand l’horloge recule', () => {
+    expect(missingSlice(w(10, 40), w(3, 38))).toEqual(w(3, 9));
+    expect(missingSlice(w(10, 40), w(2, 9))).toEqual(w(2, 9));
+  });
+
+  it('redemande la voulue ENTIÈRE quand une seule plage ne suffit pas', () => {
+    expect(missingSlice(null, w(10, 40))).toBeNull();
+    // Manque des deux côtés : une plage ne peut pas sauter le milieu.
+    expect(missingSlice(w(10, 40), w(5, 45))).toBeNull();
+    // Aucun contact : rien à recoller.
+    expect(missingSlice(w(10, 40), w(42, 60))).toBeNull();
+    expect(missingSlice(w(10, 40), w(0, 8))).toBeNull();
+  });
+
+  it('recompose la fenêtre voulue AU BIT PRÈS, depuis le fichier livré', () => {
+    const name = 'mercury';
+    const entry = horizonsManifest.bodies[name];
+    const file = readFileSync(EPHEMERIDES_DIR + entry.file);
+    const whole = new Float64Array(
+      file.buffer.slice(file.byteOffset, file.byteOffset + file.byteLength)
+    );
+    const take = (first: number, last: number) => ({
+      firstIndex: first,
+      samples: whole.slice(first * 6, (last + 1) * 6),
+    });
+    const wanted = w(1_000, 1_080);
+    const held = take(990, 1_050);
+    const slice = missingSlice(w(990, 1_050), wanted)!;
+    expect(slice).toEqual(w(1_051, 1_080));
+    const out = composeWindow(
+      held,
+      take(slice.firstIndex, slice.lastIndex),
+      wanted
+    );
+    expect(Array.from(out)).toEqual(
+      Array.from(whole.slice(1_000 * 6, 1_081 * 6))
+    );
+  });
+
+  it('refuse de laisser un TROU, qui se lirait comme une position', () => {
+    const zeros = (first: number, last: number) => ({
+      firstIndex: first,
+      samples: new Float64Array((last - first + 1) * 6),
+    });
+    expect(() => composeWindow(zeros(0, 10), zeros(13, 20), w(0, 20))).toThrow(
+      /gap/
+    );
   });
 });

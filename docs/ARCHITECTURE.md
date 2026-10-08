@@ -625,6 +625,18 @@ maximale, la phase de BepiColombo autour de Mercure, qui commence dans l'avance,
 demandée d'avance ; la date qui y entrait relançait une passe complète, puis, au-delà de deux
 demandes, avançait avec ce corps sur sa position de repli.
 
+**Une fenêtre qui glisse ne redemande que ses échantillons NEUFS (ligne 45.5, 2026-10-08).**
+Quand la fenêtre voulue prolonge celle qu'on tient d'un seul côté, seule la tranche manquante
+part au réseau (`missingSlice`), et la fenêtre voulue se recompose avec ce qu'on tenait
+(`composeWindow`, au bit près, sans jamais dépasser la voulue, donc sans grossir la mémoire avec
+la durée de lecture). Un manque des deux côtés, ou aucun contact, redemande la voulue entière.
+Avant, chaque glissement redemandait la fenêtre ENTIÈRE des 64 corps : dix glissements à un an par
+seconde servaient **12 519 312 octets, contre 1 022 736** désormais, pour le même nombre de
+requêtes (`ephemerisWindowLoad.test.ts`, binaires livrés). Le second chiffre est celui que le
+modèle du plafond de vitesse suppose (`core/playbackBudget`, 800 octets par jour simulé) : le
+plafond décrit enfin ce que le lien paie. Le compteur de débit mesure la tranche reçue, pas la
+fenêtre recomposée.
+
 **L'horloge n'avance que sur des données arrivées (décision D3).** `OrbitalMechanics` interroge
 `EphemerisWindows.ready` avant de laisser la date bouger ; sinon elle revient où elle était
 (`SimulationClock.holdAt`, qui ré-ancre l'offset pour qu'aucune dette ne soit rattrapée à la

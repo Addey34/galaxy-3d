@@ -386,6 +386,92 @@ export function mergeWindows(a: SampleWindow, b: SampleWindow): SampleWindow {
   };
 }
 
+/**
+ * LA SEULE TRANCHE À DEMANDER quand une fenêtre tenue recouvre déjà une partie de la voulue,
+ * ou `null` s'il faut demander la voulue entière (rien de tenu, aucun contact, ou un manque
+ * des DEUX côtés, qu'une seule plage `Range` ne sait pas exprimer sans redemander le milieu).
+ *
+ * Ligne 45.5, mesurée le 2026-10-08 : à chaque glissement de l'avance de lecture, les 64 corps
+ * redemandaient leur fenêtre ENTIÈRE, soit quatre secondes de lecture quand un seul pas d'horloge
+ * en manquait. Le modèle de `core/playbackBudget` compte pourtant les seuls échantillons NEUFS ;
+ * le lien payait donc bien plus que le plafond ne le supposait.
+ */
+export function missingSlice(
+  held: SampleWindow | null,
+  wanted: SampleWindow
+): SampleWindow | null {
+  if (held === null) return null;
+  const tail =
+    wanted.lastIndex > held.lastIndex &&
+    wanted.firstIndex >= held.firstIndex &&
+    wanted.firstIndex <= held.lastIndex + 1;
+  const head =
+    wanted.firstIndex < held.firstIndex &&
+    wanted.lastIndex <= held.lastIndex &&
+    wanted.lastIndex >= held.firstIndex - 1;
+  if (tail)
+    return sliceOf(
+      Math.max(held.lastIndex + 1, wanted.firstIndex),
+      wanted.lastIndex
+    );
+  if (head)
+    return sliceOf(
+      wanted.firstIndex,
+      Math.min(held.firstIndex - 1, wanted.lastIndex)
+    );
+  return null;
+}
+
+function sliceOf(firstIndex: number, lastIndex: number): SampleWindow {
+  return {
+    firstIndex,
+    lastIndex,
+    ...byteRangeForIndices(firstIndex, lastIndex),
+  };
+}
+
+/** Des échantillons et l'index, dans la grille du fichier, du premier d'entre eux. */
+export interface HeldSamples {
+  readonly firstIndex: number;
+  readonly samples: Float64Array;
+}
+
+/**
+ * Recompose EXACTEMENT la fenêtre voulue à partir de ce qu'on tenait et de la tranche reçue.
+ *
+ * On garde la voulue, ni plus ni moins : réunir sans fin ferait grossir la mémoire tenue avec la
+ * durée de lecture, jusqu'au fichier entier. Chaque échantillon vient de l'une des deux sources,
+ * recopié tel quel : la position rendue est donc celle du fichier, au bit près. Lève une erreur
+ * si l'une des deux ne couvre pas ce qu'on lui demande, plutôt que de laisser un trou de zéros
+ * qui serait lu comme une position.
+ */
+export function composeWindow(
+  held: HeldSamples,
+  slice: HeldSamples,
+  wanted: SampleWindow
+): Float64Array {
+  const count = wanted.lastIndex - wanted.firstIndex + 1;
+  const out = new Float64Array(count * COMPONENTS_PER_SAMPLE);
+  const filled = new Uint8Array(count);
+  for (const source of [held, slice]) {
+    const sourceCount = source.samples.length / COMPONENTS_PER_SAMPLE;
+    const from = Math.max(wanted.firstIndex, source.firstIndex);
+    const to = Math.min(wanted.lastIndex, source.firstIndex + sourceCount - 1);
+    if (to < from) continue;
+    out.set(
+      source.samples.subarray(
+        (from - source.firstIndex) * COMPONENTS_PER_SAMPLE,
+        (to - source.firstIndex + 1) * COMPONENTS_PER_SAMPLE
+      ),
+      (from - wanted.firstIndex) * COMPONENTS_PER_SAMPLE
+    );
+    filled.fill(1, from - wanted.firstIndex, to - wanted.firstIndex + 1);
+  }
+  if (filled.includes(0))
+    throw new Error('composeWindow: the two sources leave a gap');
+  return out;
+}
+
 /** Ce qu'une réponse a réellement apporté. */
 export type RangeOutcome =
   /** Le serveur a honoré la plage : les octets sont ceux de la fenêtre demandée. */
