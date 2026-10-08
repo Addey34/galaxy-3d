@@ -28,6 +28,23 @@ export interface EclipseMaterialState {
   umbraTint: [number, number, number] | null;
   color: string | null;
   map: string | null;
+  /**
+   * Le programme LIÉ lit-il les MÊMES objets d'uniformes que ceux du matériau (ligne 45.2) ?
+   * `null` tant que le matériau n'a jamais été compilé. Un `false` voudrait dire que les
+   * réglages écrivent dans des objets que le shader ne lit pas.
+   */
+  boundAttenuation: boolean | null;
+  boundUmbraTint: boolean | null;
+}
+
+/** Un autre corps vu de la caméra : peut-il masquer celui qu'on regarde ? */
+export interface EclipseScreenBody {
+  body: string;
+  x: number;
+  y: number;
+  radius: number;
+  /** Distance à la caméra, en unités de scène. */
+  distance: number;
 }
 
 export interface EclipseProbeState {
@@ -40,6 +57,14 @@ export interface EclipseProbeState {
    * « Lune hors du carré que le test mesure ».
    */
   screen: { x: number; y: number; radius: number; inFront: boolean };
+  /** Distance du corps regardé à la caméra, pour comparer à `others`. */
+  distance: number;
+  /** Date appliquée à la scène, et saut encore en attente de ses octets. */
+  simulationDate: string;
+  pendingJump: string | null;
+  toneMappingExposure: number;
+  /** Les corps qui pourraient se trouver devant (la Terre pendant une éclipse de Lune). */
+  others: EclipseScreenBody[];
   materials: EclipseMaterialState[];
 }
 
@@ -49,7 +74,8 @@ export interface EclipseProbe {
 
 function describe(
   mesh: THREE.Mesh,
-  material: THREE.Material
+  material: THREE.Material,
+  renderer: THREE.WebGLRenderer
 ): EclipseMaterialState {
   const attenuation = material.userData['__lightAttenuationUniform'] as
     { value: number } | undefined;
@@ -73,6 +99,53 @@ function describe(
       : null,
     color: standard.color ? `#${standard.color.getHexString()}` : null,
     map: image ? `${image.width ?? '?'}x${image.height ?? '?'}` : null,
+    ...boundUniforms(material, renderer, attenuation, shadow?.umbraTint),
+  };
+}
+
+function boundUniforms(
+  material: THREE.Material,
+  renderer: THREE.WebGLRenderer,
+  attenuation: unknown,
+  umbraTint: unknown
+): { boundAttenuation: boolean | null; boundUmbraTint: boolean | null } {
+  const uniforms = (
+    renderer.properties.get(material) as {
+      uniforms?: Record<string, unknown>;
+    }
+  ).uniforms;
+  if (!uniforms) return { boundAttenuation: null, boundUmbraTint: null };
+  return {
+    boundAttenuation:
+      attenuation === undefined
+        ? null
+        : uniforms['uLightAttenuation'] === attenuation,
+    boundUmbraTint:
+      umbraTint === undefined
+        ? null
+        : uniforms['uEclipseUmbraTint'] === umbraTint,
+  };
+}
+
+function screenOf(
+  api: PublicAPI,
+  name: string
+): (EclipseScreenBody & { inFront: boolean }) | null {
+  const body = api.sceneSystem.getBody(name);
+  if (!body) return null;
+  const camera = api.sceneSystem.camera;
+  const center = body.group.getWorldPosition(new THREE.Vector3());
+  const distance = center.distanceTo(camera.position);
+  const radius = body.getFrameRadius(api.orbitalMechanics.scaleMode);
+  const halfFov = THREE.MathUtils.degToRad(camera.fov / 2);
+  const ndc = center.clone().project(camera);
+  return {
+    body: name,
+    x: ndc.x,
+    y: ndc.y,
+    radius: Math.atan2(radius, distance) / halfFov,
+    distance,
+    inFront: ndc.z < 1,
   };
 }
 
@@ -88,24 +161,37 @@ export function setupEclipseProbe(api: PublicAPI): void {
         const list = Array.isArray(mesh.material)
           ? mesh.material
           : [mesh.material];
-        for (const material of list) materials.push(describe(mesh, material));
+        for (const material of list)
+          materials.push(describe(mesh, material, api.sceneSystem.renderer));
       });
-      const camera = api.sceneSystem.camera;
-      const center = body.group.getWorldPosition(new THREE.Vector3());
-      const distance = center.distanceTo(camera.position);
-      const radius = body.getFrameRadius(api.orbitalMechanics.scaleMode);
-      const halfFov = THREE.MathUtils.degToRad(camera.fov / 2);
-      const ndc = center.clone().project(camera);
+      const self = screenOf(api, bodyName)!;
+      const others = ['earth', 'sun']
+        .filter((name) => name !== bodyName)
+        .map((name) => screenOf(api, name))
+        .filter((other): other is NonNullable<typeof other> => other !== null)
+        .map(({ body: name, x, y, radius, distance }) => ({
+          body: name,
+          x,
+          y,
+          radius,
+          distance,
+        }));
+      const pending = api.orbitalMechanics.pendingJumpDate;
       return {
         body: bodyName,
         followed: api.cameraSystem.targetName ?? null,
         scaleMode: api.orbitalMechanics.scaleMode,
         screen: {
-          x: ndc.x,
-          y: ndc.y,
-          radius: Math.atan2(radius, distance) / halfFov,
-          inFront: ndc.z < 1,
+          x: self.x,
+          y: self.y,
+          radius: self.radius,
+          inFront: self.inFront,
         },
+        distance: self.distance,
+        simulationDate: api.orbitalMechanics.simulationDate.toISOString(),
+        pendingJump: pending ? pending.toISOString() : null,
+        toneMappingExposure: api.sceneSystem.renderer.toneMappingExposure,
+        others,
         materials,
       };
     },
