@@ -78,7 +78,7 @@ jobs:
       # etre verifiee A LA MAIN.
       #
       # ELLES TOURNENT ICI, ET PAS DANS LE JOB e2e, POUR UNE RAISON DE COUT MESUREE : le job
-      # e2e est shard sur NEUF machines qui ne construisent pas, donc il faudrait neuf
+      # e2e est shard sur DIX machines qui ne construisent pas, donc il faudrait dix
       # `pnpm build`. Ce job-ci construit deja, et n'utilise que 2,4 min de ses 15 ; la suite
       # ajoute 11 scenarios en 16 s en local, plus l'installation de Chromium.
       #
@@ -164,7 +164,7 @@ jobs:
   # (un echec signale une regression de cablage) mais ne bloque pas le deploiement, car
   # le rendu WebGL en GPU logiciel CI est lent et parfois capricieux sur les scenarios lourds.
   e2e-full:
-    name: Browser tests (e2e ${{ matrix.shard }}/9)
+    name: Browser tests (e2e ${{ matrix.shard }}/10)
     if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-24.04
     # SHARDING. La suite entiere ne tenait PAS dans le budget : mesure du 2026-09-08, elle
@@ -214,6 +214,12 @@ jobs:
     # `37186382225` de la branche : pire shard 19,9 min (EPYC 7763), contre 23,2 sur le meme
     # processeur a huit machines (run `37183782647`), tous verts, aucun reessai.
     #
+    # PASSE DE 9 A 10 le 2026-10-08, pour la meme raison et toujours le MEME shard 8, signale par
+    # le guetteur trois fois en deux jours, tous ses tests verts : 24,2 min sur un Xeon 8573C
+    # (run `37619741138`), 24,7 sur un EPYC 7763 (run `37731149037`), puis 28,1 sur un Xeon 8370C
+    # (run `37773351130`), a moins de deux minutes de la coupure. Le run `37764310389` (25,9 min)
+    # n'est pas compte : trois tentatives d'un test rouge l'avaient gonfle.
+    #
     # Et la lecon de procedure, deja payee au lot 19 : ajouter des tests REDISTRIBUE les shards,
     # ce job ne tourne QUE sur main (`if: push`), et une suite locale ne sharde pas. Aucune CI de
     # branche ne peut donc montrer ce depassement avant la fusion : il se corrige a l'avance, en
@@ -235,7 +241,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        shard: [1, 2, 3, 4, 5, 6, 7, 8, 9]
+        shard: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
     # Garde-fous PAR ETAPE depuis le 2026-10-01 (ligne 44.2). Il n'y en avait qu'un, de 30 min sur
     # le JOB entier, pose contre une install apt bloquee. Il mesurait donc aussi un miroir tiers :
     # ce jour-la, `playwright install --with-deps` a pris 68 s le matin, puis 363 s et 500 s
@@ -272,7 +278,7 @@ jobs:
       # `scripts/check-ci-health.mjs` (E2E_TEST_STEP) : le changer, c'est changer les deux.
       - name: Run e2e shard
         timeout-minutes: 30
-        run: pnpm exec playwright test --shard=${{ matrix.shard }}/9
+        run: pnpm exec playwright test --shard=${{ matrix.shard }}/10
       - name: Upload Playwright diagnostics
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1, resolved 2026-09-20
