@@ -515,6 +515,8 @@ export class HorizonsEphemerisService implements PreciseEphemerisProvider {
    * on dit qu'elle manque (lot 15), et on laisse la scène continuer avec la source de repli.
    */
   private readonly _attempted = new Map<string, SampleWindow | 'full'>();
+  /** Corps que la scène ne montre pas et qui ont une source de repli (cf. `setDormant`). */
+  private _dormant: ReadonlySet<string> = new Set();
   /**
    * L'hôte a ignoré une plage (200 avec tout le fichier) ou répondu quelque chose qui ne
    * décrit pas ce fichier : on repasse aux fichiers entiers pour tout le monde. C'est la
@@ -655,9 +657,34 @@ export class HorizonsEphemerisService implements PreciseEphemerisProvider {
       if (this._holdsWholeFile(manifest)) return;
       if (covers(grid, date)) grids.push(grid);
     };
-    if (manifests) for (const [, manifest] of manifests) push(manifest);
-    else for (const body of this.bodies.values()) push(body.manifest);
+    if (manifests) {
+      for (const [name, manifest] of manifests)
+        if (!this._dormant.has(name)) push(manifest);
+    } else {
+      for (const [name, body] of this.bodies)
+        if (!this._dormant.has(name)) push(body.manifest);
+    }
     return grids;
+  }
+
+  /**
+   * LES CORPS QUE LA SCÈNE NE MONTRE PAS ET QUI ONT UNE SOURCE DE REPLI NE DEMANDENT RIEN
+   * (ligne 45.4, 2026-10-08). Un corps « dormant » n'est ni chargé, ni attendu par l'horloge
+   * (`hasCoverageFor`), ni compté dans le plafond de vitesse (`budgetGrids`) ; ce qu'il tient
+   * déjà reste tenu et lisible.
+   *
+   * Défaut MESURÉ : les trois objets interstellaires, masqués par défaut, ajoutaient trois
+   * requêtes à chaque passage et 72 octets par jour simulé au budget. En lecture à vitesse
+   * maximale sur la CI, le plafond tombait alors à 78 % du maximum, la première fenêtre se
+   * planifiait sur cette avance réduite, puis un second passage complet (75 requêtes, 12 s)
+   * suivait dès que le plafond se relâchait : l'horloge restait figée 21 s au lieu de 17.
+   *
+   * Réservé aux corps qui ont un REPLI. Une sonde n'en a pas : sa disponibilité, que la palette
+   * affiche, est MESURÉE sur la position rendue (`ui/navigableAnchors`), et la priver de ses
+   * octets la griserait à tort dès que la date quitte la fenêtre de démarrage.
+   */
+  setDormant(names: ReadonlySet<string>): void {
+    this._dormant = new Set(names);
   }
 
   /**
@@ -875,6 +902,7 @@ export class HorizonsEphemerisService implements PreciseEphemerisProvider {
     );
     for (const [name, plan] of plans) {
       if (plan === null) continue;
+      if (this._dormant.has(name)) continue;
       if (this._holds(name, plan)) continue;
       if (this._permanent.has(name)) continue;
       if (this._loading === null && this._attemptCovers(name, plan)) continue;
@@ -1101,6 +1129,7 @@ export class HorizonsEphemerisService implements PreciseEphemerisProvider {
     // rien du tout — il est alors inscrit sans la moindre requête.
     const wanted = entries.filter(([name]) => {
       if (this._permanent.has(name)) return false;
+      if (this._dormant.has(name)) return false;
       const plan = plans.get(name) ?? null;
       if (plan === null) return !this.bodies.has(name);
       return !this._holds(name, plan);
@@ -1184,8 +1213,9 @@ export class HorizonsEphemerisService implements PreciseEphemerisProvider {
 
     // Ce que la scène demande vraiment à cette date : les corps hors couverture n'ont rien à
     // recevoir et sortent donc des DEUX comptes (cf. `EphemerisLoadReport.declared`).
+    // Un corps dormant n'est pas demandé ici, donc il n'est ni attendu ni manquant.
     const needed = entries.filter(
-      ([name]) => (plans.get(name) ?? null) !== null
+      ([name]) => (plans.get(name) ?? null) !== null && !this._dormant.has(name)
     );
     const missing = needed
       .map(

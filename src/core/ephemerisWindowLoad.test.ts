@@ -365,3 +365,49 @@ describe('une fenêtre qui manque, et ce qu’on en dit (lot 17C)', () => {
     expect(service.getHeliocentricAU('mimas', SCENE_DATE)).not.toBeNull();
   });
 });
+
+describe('un corps que la scène ne montre pas ne demande rien (ligne 45.4)', () => {
+  const DORMANT = new Set(['oumuamua', 'borisov', 'atlas']);
+  const far = new Date('2030-03-01T00:00:00Z');
+
+  it('ni octets, ni attente, ni budget, ni bandeau ; ce qu’il tient reste lisible', async () => {
+    const log: Served[] = [];
+    const service = await loadWindowed(log);
+    // Témoin : au démarrage les trois objets sont couverts et chargés comme les autres.
+    for (const name of DORMANT) {
+      expect(service.getHeliocentricAU(name, SCENE_DATE), name).not.toBeNull();
+      expect(service.report.loaded, name).toContain(name);
+    }
+    const awake = service.budgetGrids(far).length;
+
+    service.setDormant(DORMANT);
+    expect(service.budgetGrids(far).length).toBe(awake - DORMANT.size);
+    // Ce qu'il tient déjà reste tenu.
+    for (const name of DORMANT)
+      expect(service.getHeliocentricAU(name, SCENE_DATE), name).not.toBeNull();
+
+    const before = log.length;
+    const report = await service.ensureCoverage(sceneRequest(far, false));
+    const asked = new Set(log.slice(before).map((call) => call.body));
+    for (const name of DORMANT) {
+      expect(asked.has(name), name).toBe(false);
+      expect(report.loaded, name).not.toContain(name);
+    }
+    expect(asked.has('earth')).toBe(true);
+    expect(report.missing).toEqual([]);
+    expect(report.declared).toBe(report.loaded.length);
+    // L'horloge n'attend pas des octets qu'on ne demande pas.
+    expect(service.hasCoverageFor(sceneRequest(far, false))).toBe(true);
+
+    // Montré de nouveau, il redevient attendu, puis servi.
+    service.setDormant(new Set());
+    expect(service.hasCoverageFor(sceneRequest(far, false))).toBe(false);
+    await service.ensureCoverage(sceneRequest(far, false));
+    const whole = horizonsServiceFromDisk();
+    for (const name of DORMANT) {
+      const fromFile = whole.getHeliocentricAU(name, far);
+      expect(fromFile, name).not.toBeNull();
+      expect(service.getHeliocentricAU(name, far)!.x, name).toBe(fromFile!.x);
+    }
+  });
+});
