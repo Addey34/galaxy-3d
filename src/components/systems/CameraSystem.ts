@@ -64,6 +64,8 @@ export class CameraSystem {
    */
   private externalTargets: Record<string, CameraTarget> = {};
   private isAnimating = false;
+  /** Actions différées jusqu'à la fin du vol en cours (cf. `whenSettled`). */
+  private _whenSettled: (() => void)[] = [];
   private currentTarget: {
     name: string;
     group: THREE.Group;
@@ -279,10 +281,10 @@ export class CameraSystem {
           .copy(this.targetWorldPosition)
           .add(this.cameraOffset);
       }
-      this.isAnimating = false;
       this.controls.enabled = true;
       this.controls.update();
       onArrive?.();
+      this._settle();
       return;
     }
 
@@ -385,12 +387,12 @@ export class CameraSystem {
             .copy(this.targetWorldPosition)
             .add(this.cameraOffset);
         }
-        this.isAnimating = false;
         this.controls.enabled = true;
         this.controls.update();
         Logger.success('[CameraSystem] Camera animation completed');
         // Enchaînement optionnel (ex. après le recul de transition, revenir au corps suivi).
         onArrive?.();
+        this._settle();
       })
       .start();
   }
@@ -684,11 +686,36 @@ export class CameraSystem {
   transitionScaleMode(mode: 'educ' | 'explo'): void {
     this._applyScaleModeBounds(mode);
     this.tweenGroup.removeAll();
-    this.isAnimating = false;
     this.controls.enabled = true;
     this.trackingPaused = false;
     this._setAdaptiveExposure(null);
     this.controls.update();
+    this._settle();
+  }
+
+  /**
+   * Exécute `action` quand plus aucun vol ne peut réécrire la caméra : tout de suite s'il n'y
+   * en a pas, sinon à la fin RÉELLE du vol (arrivée, ou vol annulé par un changement de mode).
+   * Un vol remplacé par un autre ne compte pas : l'action attend la fin du suivant.
+   *
+   * Remplace l'attente sondée de `ui/permalink.ts`, plafonnée à 3 s d'horloge murale (ligne
+   * 45.2, 2026-10-08). En rendu logiciel, l'envoi d'une texture 8k fige une image plusieurs
+   * secondes : le plafond expirait alors PENDANT le vol, la pose « vue depuis la Terre » d'une
+   * éclipse de Lune s'appliquait, puis l'arrivée du vol l'écrasait. Mesuré par la sonde
+   * d'éclipse sur les Xeon de la CI : caméra à la distance et dans la direction d'approche par
+   * défaut, Lune grise (rouge/bleu 1,36).
+   */
+  whenSettled(action: () => void): void {
+    if (this.isAnimating) this._whenSettled.push(action);
+    else action();
+  }
+
+  /** Fin d'un vol, quelle qu'elle soit : libère les actions qui l'attendaient. */
+  private _settle(): void {
+    this.isAnimating = false;
+    const pending = this._whenSettled;
+    this._whenSettled = [];
+    for (const action of pending) action();
   }
 
   /** Nom du corps actuellement suivi, ou null en vue libre / vue d'ensemble. */

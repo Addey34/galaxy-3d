@@ -242,3 +242,76 @@ it('borne le zoom sur le rayon de dégagement, pas sur le rayon moyen', () => {
 
   expect(cameraSystem.controls.minDistance).toBeCloseTo(clearance * 1.15, 9);
 });
+
+describe('CameraSystem.whenSettled (ligne 45.2)', () => {
+  function flyingSystem(): CameraSystem {
+    const cameraSystem = new CameraSystem();
+    cameraSystem.camera = new THREE.PerspectiveCamera(65);
+    cameraSystem.camera.position.set(0, 10, 10);
+    cameraSystem.controls = {
+      target: new THREE.Vector3(),
+      enabled: true,
+      minDistance: 0,
+      maxDistance: 1000,
+      update: () => {},
+    } as unknown as CameraSystem['controls'];
+    cameraSystem.renderer = {
+      toneMappingExposure: 1,
+      xr: { isPresenting: false },
+    } as unknown as CameraSystem['renderer'];
+    cameraSystem.tweenGroup = new TweenGroup();
+    Reflect.set(cameraSystem, 'celestialBodies', {
+      earth: bodyAt(35),
+      mars: bodyAt(53),
+    });
+    return cameraSystem;
+  }
+  const finishFlights = (cameraSystem: CameraSystem): void => {
+    cameraSystem.tweenGroup.update(performance.now() + 60_000);
+  };
+
+  it('agit tout de suite quand aucun vol ne peut réécrire la caméra', () => {
+    const cameraSystem = flyingSystem();
+    let calls = 0;
+    cameraSystem.whenSettled(() => calls++);
+    expect(calls).toBe(1);
+  });
+
+  it('attend la fin RÉELLE du vol, quel que soit le temps écoulé, et la pose posée tient', () => {
+    const cameraSystem = flyingSystem();
+    cameraSystem.setTarget('earth');
+    const pose = new THREE.Vector3(35, 0, 3);
+    let calls = 0;
+    cameraSystem.whenSettled(() => {
+      calls++;
+      cameraSystem.camera.position.copy(pose);
+    });
+    // Une image figée de plusieurs secondes ne suffit pas : seul l'achèvement du vol compte.
+    expect(calls).toBe(0);
+    finishFlights(cameraSystem);
+    expect(calls).toBe(1);
+    expect(cameraSystem.isFlying).toBe(false);
+    finishFlights(cameraSystem);
+    expect(cameraSystem.camera.position.distanceTo(pose)).toBe(0);
+  });
+
+  it('un vol remplacé ne libère rien : l’action attend la fin du suivant', () => {
+    const cameraSystem = flyingSystem();
+    cameraSystem.setTarget('earth');
+    let calls = 0;
+    cameraSystem.whenSettled(() => calls++);
+    cameraSystem.setTarget('mars');
+    expect(calls).toBe(0);
+    finishFlights(cameraSystem);
+    expect(calls).toBe(1);
+  });
+
+  it('un vol annulé par un changement de mode libère l’action', () => {
+    const cameraSystem = flyingSystem();
+    cameraSystem.setTarget('earth');
+    let calls = 0;
+    cameraSystem.whenSettled(() => calls++);
+    cameraSystem.transitionScaleMode('explo');
+    expect(calls).toBe(1);
+  });
+});
