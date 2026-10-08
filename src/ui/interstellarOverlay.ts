@@ -33,6 +33,7 @@ import {
 } from '@/core/kepler';
 import { getLocale } from '@/i18n';
 import {
+  dormantInterstellarNames,
   INTERSTELLAR_OBJECTS,
   INTERSTELLAR_TRAJECTORY_SAMPLES,
   interstellarSceneAU,
@@ -63,6 +64,8 @@ export interface TrajectorySource extends HeliocentricSource {
     date: Date;
     spans: Record<string, { from: Date; to: Date }>;
   }): Promise<unknown>;
+  /** Objets que la scène ne montre pas : ni octets, ni attente (cf. `_syncDormant`). */
+  setDormant?(names: ReadonlySet<string>): void;
 }
 
 /** Vrai si le point projeté (NDC) est devant la caméra, entre les plans near/far. */
@@ -107,6 +110,7 @@ export class InterstellarOverlay {
   /** Branche le service Horizons : le marqueur suit alors la même position que l'ancre. */
   setPositionSource(source: TrajectorySource): void {
     this._positions = source;
+    this._syncDormant();
     for (const track of this.tracks)
       if (this.pathNames.has(track.object.name)) this._requestTrajectory(track);
   }
@@ -209,6 +213,8 @@ export class InterstellarOverlay {
    */
   setTrajectoryNames(names: ReadonlySet<string>): void {
     this.pathNames = new Set(names);
+    // AVANT la demande de trajectoire : un objet dormant ne demanderait rien.
+    this._syncDormant();
     for (const track of this.tracks)
       if (this.pathNames.has(track.object.name)) this._requestTrajectory(track);
     this._hasDrawn = false; // force le prochain dessin : la vue n'a pas bougé, le réglage oui
@@ -218,13 +224,31 @@ export class InterstellarOverlay {
   setTarget(name: string | null): void {
     if (this.target === name) return;
     this.target = name;
+    this._syncDormant();
     this._hasDrawn = false;
   }
 
   /** Marqueurs à ne pas peindre (colonne « Objet » du tableau Réglages). */
   setHiddenNames(names: ReadonlySet<string>): void {
     this.hidden = new Set(names);
+    this._syncDormant();
     this._hasDrawn = false; // la vue n'a pas bougé, le réglage oui
+  }
+
+  /**
+   * UN OBJET QUE LA SCÈNE NE MONTRE PAS NE DEMANDE AUCUN OCTET (ligne 45.4, 2026-10-08) :
+   * marqueur masqué, non sélectionné, trajectoire non tracée. C'est l'état par défaut des trois
+   * objets. Sa position retombe alors sur ses éléments (`interstellarSceneAU`), que rien ne
+   * peint, et l'ancre de caméra reste disponible. Montré, il redevient attendu par l'horloge et
+   * suit de nouveau son fichier. Mesure et raison : `HorizonsEphemerisService.setDormant`.
+   */
+  private _syncDormant(): void {
+    this._positions?.setDormant?.(
+      dormantInterstellarNames(
+        this.tracks.map((track) => track.object.name),
+        { hidden: this.hidden, target: this.target, paths: this.pathNames }
+      )
+    );
   }
 
   /** Noms à ne pas écrire (colonne « Étiquette »), les marqueurs restent. */

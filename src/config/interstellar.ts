@@ -90,6 +90,29 @@ export function interstellarSceneAU(
   return eclipticToScene(p.x, p.y, p.z);
 }
 
+/**
+ * Les objets que la scène ne montre pas (ligne 45.4) : marqueur masqué, non sélectionné,
+ * trajectoire non tracée. Ils ne demandent aucun octet (`HorizonsEphemerisService.setDormant`)
+ * et leur position retombe sur leurs éléments, que rien ne peint.
+ */
+export function dormantInterstellarNames(
+  names: readonly string[],
+  scene: {
+    readonly hidden: ReadonlySet<string>;
+    readonly target: string | null;
+    readonly paths: ReadonlySet<string>;
+  }
+): Set<string> {
+  return new Set(
+    names.filter(
+      (name) =>
+        scene.hidden.has(name) &&
+        name !== scene.target &&
+        !scene.paths.has(name)
+    )
+  );
+}
+
 /** Fenêtre affichée d'un objet : ±`INTERSTELLAR_WINDOW_YEARS` autour de son périhélie. */
 export function interstellarWindow(object: InterstellarObject): {
   from: Date;

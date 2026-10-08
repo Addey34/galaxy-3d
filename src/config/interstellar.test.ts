@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { describe, expect, it } from 'vitest';
 import {
+  dormantInterstellarNames,
   INTERSTELLAR_OBJECTS,
   INTERSTELLAR_TRAJECTORY_SAMPLES,
   INTERSTELLAR_WINDOW_YEARS,
@@ -371,5 +372,34 @@ describe('sampleHyperbolicTimes', () => {
         ).toBeLessThan(1e-9);
       });
     }
+  });
+});
+
+describe('dormantInterstellarNames (ligne 45.4)', () => {
+  const names = INTERSTELLAR_OBJECTS.map((object) => object.name);
+  const none = new Set<string>();
+
+  it('rend dormants les objets masqués, et eux seuls', () => {
+    const hidden = new Set(names);
+    expect(
+      dormantInterstellarNames(names, { hidden, target: null, paths: none })
+    ).toEqual(hidden);
+    expect(
+      dormantInterstellarNames(names, {
+        hidden: none,
+        target: null,
+        paths: none,
+      }).size
+    ).toBe(0);
+  });
+
+  it('réveille l’objet sélectionné et celui dont la trajectoire est tracée', () => {
+    const [first, second, third] = names;
+    const dormant = dormantInterstellarNames(names, {
+      hidden: new Set(names),
+      target: first!,
+      paths: new Set([second!]),
+    });
+    expect([...dormant]).toEqual([third]);
   });
 });
