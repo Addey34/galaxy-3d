@@ -16,6 +16,7 @@
  */
 import { execFileSync, spawnSync } from 'node:child_process';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
+import { constants, setPriority } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -43,6 +44,18 @@ if (
     stdio: 'inherit',
   });
   writeFileSync(STAMP, wanted);
+}
+// La recherche sature tous les cœurs pendant de longues minutes : `guard` relance une
+// recherche complète par modèle (le vrai corps, puis chaque témoin). En priorité basse
+// elle rend la main dès qu'un éditeur en demande, sans rien perdre quand la machine est
+// libre. Les enfants héritent de la priorité, donc les workers `--jobs` aussi.
+// SPICE_POSE_PRIORITY=normal pour retrouver le comportement d'avant.
+if (process.env.SPICE_POSE_PRIORITY !== 'normal') {
+  try {
+    setPriority(0, constants.priority.PRIORITY_BELOW_NORMAL);
+  } catch {
+    // priorité non modifiable sur cette plateforme : on continue normalement
+  }
 }
 const run = spawnSync(
   py,
