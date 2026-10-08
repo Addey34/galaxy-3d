@@ -66,6 +66,11 @@ for (const date of CASES) {
     const panel = page.locator('#solar-debug');
     await expect(panel).toBeVisible({ timeout: 40_000 });
     await expect(panel).toContainText('lat error', { timeout: 20_000 });
+    // Le panneau s'affiche pendant que les couches de la Terre s'envoient encore, et chacune
+    // fige une image plusieurs secondes en rendu logiciel. Lire le panneau dans ce creux a
+    // dépassé les 15 s de `locator.evaluate` sur un Xeon 8370C (run 37773351130, passé au
+    // réessai, ligne 45.6) : on lit une fois le thread calme, comme le scénario d'horloge.
+    await waitForCalmMainThread(page);
 
     const lonError = await readError(panel, 'lon error');
     expect(Number.isNaN(lonError)).toBe(false);
