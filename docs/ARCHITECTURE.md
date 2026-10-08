@@ -616,6 +616,15 @@ sans plages, et le contrôle est arithmétique : les 38 040 720 octets de la col
 sont les 38 445 024 livrés moins 404 304, c'est-à-dire exactement Cassini (349 104) et Rosetta
 (55 200), dont les missions sont closes depuis 2017 et 2016.
 
+**Sauf si l'AVANCE y entre (ligne 45.5, 2026-10-08).** Un corps hors couverture à la date, mais
+dont la couverture commence avant la fin de l'avance de lecture, est demandé avec les autres, du
+bord de sa couverture au bout de l'avance (`planBodyWindow`, puis la même règle pour un fichier
+entier). Il n'est pas compté au bandeau tant que la date n'y est pas. La règle d'avant, « c'est
+la date affichée qui décide, pas l'avance », est SUPERSEDED : mesurée sous frein CPU à vitesse
+maximale, la phase de BepiColombo autour de Mercure, qui commence dans l'avance, n'était jamais
+demandée d'avance ; la date qui y entrait relançait une passe complète, puis, au-delà de deux
+demandes, avançait avec ce corps sur sa position de repli.
+
 **L'horloge n'avance que sur des données arrivées (décision D3).** `OrbitalMechanics` interroge
 `EphemerisWindows.ready` avant de laisser la date bouger ; sinon elle revient où elle était
 (`SimulationClock.holdAt`, qui ré-ancre l'offset pour qu'aucune dette ne soit rattrapée à la

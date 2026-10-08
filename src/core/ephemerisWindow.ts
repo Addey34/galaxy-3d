@@ -246,7 +246,7 @@ export function planBodyWindow(
   marginSamples: number = WINDOW_MARGIN_SAMPLES
 ): SampleWindow | null {
   const index = coveringIndex(grid, request.date);
-  if (index === null) return null;
+  if (index === null) return leadIntoCoverage(grid, request, marginSamples);
 
   let lowIndex = index;
   let highIndex = index;
@@ -285,6 +285,42 @@ export function planBodyWindow(
   }
 
   return windowFromIndices(grid, lowIndex, highIndex, marginSamples);
+}
+
+/**
+ * Date hors couverture, mais l'AVANCE y entre : la fenêtre va du bord de la couverture au bout
+ * de l'avance, ou `null` si l'avance n'y entre pas.
+ *
+ * Remplace la règle « c'est la date affichée qui décide, pas l'avance » (SUPERSEDED le
+ * 2026-10-08, ligne 45.5). Mesurée sous frein CPU à vitesse maximale : la phase de
+ * BepiColombo autour de Mercure commence dans l'avance de lecture, n'était donc jamais
+ * demandée d'avance, et la date qui y entrait manquait ses octets. L'horloge relançait une
+ * passe complète, puis, au-delà de deux demandes, avançait avec ce corps sur sa position de
+ * repli. Ce qu'il fallait était connu une passe plus tôt.
+ *
+ * Seule l'avance compte ici : une ligne d'orbite ou un intervalle fixe hors de la date n'a pas
+ * de position à montrer avant que la date n'y soit.
+ */
+function leadIntoCoverage(
+  grid: SampleGrid,
+  request: BodyWindowRequest,
+  marginSamples: number
+): SampleWindow | null {
+  const lead = request.leadDays;
+  if (lead === undefined || lead === 0) return null;
+  const from = samplePositionForDate(grid, request.date);
+  const to = samplePositionForDate(
+    grid,
+    new Date(request.date.getTime() + lead * MS_PER_DAY)
+  );
+  if (!Number.isFinite(from) || !Number.isFinite(to)) return null;
+  const low = Math.min(from, to);
+  const high = Math.max(from, to);
+  // Même borne que `coveringIndex` : le dernier échantillon n'encadre rien.
+  if (high < 0 || low >= grid.sampleCount - 1) return null;
+  const clamp = (position: number): number =>
+    Math.min(grid.sampleCount - 2, Math.max(0, Math.floor(position)));
+  return windowFromIndices(grid, clamp(low), clamp(high), marginSamples);
 }
 
 /** Une fenêtre contient-elle déjà tout ce qu'une autre demande ? */
