@@ -219,6 +219,9 @@ jobs:
     # (run `37619741138`), 24,7 sur un EPYC 7763 (run `37731149037`), puis 28,1 sur un Xeon 8370C
     # (run `37773351130`), a moins de deux minutes de la coupure. Le run `37764310389` (25,9 min)
     # n'est pas compte : trois tentatives d'un test rouge l'avaient gonfle.
+    # MESURE APRES, sur le run `37789632085` de la branche : pire shard 18,7 min (EPYC 7763), contre
+    # 20,6 sur le meme processeur a neuf machines (run `37789539508` de main), tous verts, aucun
+    # reessai.
     #
     # Et la lecon de procedure, deja payee au lot 19 : ajouter des tests REDISTRIBUE les shards,
     # ce job ne tourne QUE sur main (`if: push`), et une suite locale ne sharde pas. Aucune CI de
