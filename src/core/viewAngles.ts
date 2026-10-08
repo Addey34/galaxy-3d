@@ -25,3 +25,32 @@ export function viewAnglesFromDirection(direction: THREE.Vector3): {
     ),
   };
 }
+
+/**
+ * Marge, en rayons du corps de référence, laissée entre la caméra et sa surface. Elle couvre
+ * ses coques (atmosphère, nuages), un peu plus grandes que le globe.
+ */
+export const VIEW_FROM_CLEARANCE = 1.15;
+
+/**
+ * La distance à la cible quand on la regarde DEPUIS un autre corps : la distance courante,
+ * sauf si elle placerait la caméra DANS ce corps (ligne 45.2, 2026-10-08).
+ *
+ * Défaut MESURÉ par la sonde d'éclipse : en Éducatif la Lune est à 2,24 unités de la Terre,
+ * dont le rayon vaut 1, et la caméra cadrait la Lune à 2,0 : elle se trouvait à 0,24 du centre
+ * de la Terre. Ce qu'on voyait alors dépendait des coques terrestres dessinées depuis
+ * l'intérieur, et la garde de la Lune cuivrée lisait une fois sur plusieurs un disque gris
+ * (rouge/bleu 1,36). Un observateur réel se tient à la SURFACE de la Terre, pas en son centre.
+ *
+ * `separation` est la distance de la cible au corps de référence, `referenceRadius` son rayon
+ * à l'échelle affichée. Si la cible touche presque ce corps, on garde la distance courante.
+ */
+export function viewFromDistance(
+  current: number,
+  separation: number,
+  referenceRadius: number
+): number {
+  const room = separation - referenceRadius * VIEW_FROM_CLEARANCE;
+  if (!(room > 0)) return current;
+  return Math.min(current, room);
+}

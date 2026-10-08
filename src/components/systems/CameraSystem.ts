@@ -9,7 +9,7 @@
  */
 import TWEEN, { Group as TweenGroup } from '@tweenjs/tween.js';
 import * as THREE from 'three';
-import { viewAnglesFromDirection } from '@/core/viewAngles';
+import { viewAnglesFromDirection, viewFromDistance } from '@/core/viewAngles';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import {
   CAMERA_CONTROLS_SETTINGS,
@@ -773,7 +773,11 @@ export class CameraSystem {
     this.applyViewAngles(
       angles.azimuthDeg,
       angles.polarDeg,
-      this.controls.getDistance()
+      viewFromDistance(
+        this.controls.getDistance(),
+        direction.length(),
+        (reference.userData['radius'] as number | undefined) ?? 0
+      )
     );
   }
 
