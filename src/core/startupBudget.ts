@@ -397,6 +397,11 @@ export interface BootDynamicChunk {
  */
 export const NON_BOOT_CHUNKS: readonly BootDynamicChunk[] = [
   {
+    chunk: 'eclipseProbe',
+    reason:
+      "la sonde d'éclipse (ligne 45.2) n'est importée que sous `?debug-eclipse`, que seul `e2e/eclipseLanding.spec.ts` demande : un visiteur ne la charge jamais.",
+  },
+  {
     chunk: 'gazetteerAdoptionIndex',
     reason:
       "les dates d'adoption des noms de surface par l'UAI (ligne 22.10, front des noms) ne sont lues que par le bloc « Découverte » de la fiche, chargé à son ouverture (`config/nameAdoptions`). Comptées par corps et par date au générateur, pour que la fiche de la Lune n'ait pas à télécharger ses 9 087 noms pour répondre.",

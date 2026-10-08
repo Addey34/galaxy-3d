@@ -96,6 +96,7 @@ import { setupGeoDebug } from './ui/geoDebug';
 import { setupTerminatorProbe } from './ui/terminatorProbe';
 import { setupEarthDebug } from './ui/earthDebug';
 import { setupSurfaceProbe } from './ui/surfaceProbe';
+import { hasDebugFlag } from '@/utils/debugFlags';
 import { setupMeteoDebug } from './ui/meteoDebug';
 import { loadSmallBodies } from './core/sbdb';
 import { CELESTIAL_CONFIG } from './config/bodies';
@@ -271,6 +272,10 @@ function wireChrome(): {
     setupEarthDebug(api);
     setupTerminatorProbe(api);
     setupSurfaceProbe(api);
+    // Sonde d'éclipse (ligne 45.2) : chargée À LA DEMANDE, seulement sous `?debug-eclipse`, pour
+    // ne rien ajouter au démarrage ordinaire.
+    if (hasDebugFlag('debug-eclipse'))
+      void import('./ui/eclipseProbe').then((m) => m.setupEclipseProbe(api));
     setupContextRecovery(sceneSystem);
     // Dit à l’écran, sans ouvrir de fiche, quand des éphémérides ne sont pas arrivées, et
     // depuis la phase 17D quand la date ATTEND ses octets, ce qui n'est pas la même chose.
