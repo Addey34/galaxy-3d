@@ -45,16 +45,31 @@ test.beforeEach(async ({ page }) => {
   });
 });
 
+/**
+ * Le panneau s'affiche pendant que les couches de la Terre s'envoient encore, et chacune fige
+ * une image plusieurs secondes en rendu logiciel. Une lecture tombée dans ce creux a dépassé les
+ * 15 s par défaut de `locator.evaluate` sur un Xeon 8370C (run 37773351130, passé au réessai,
+ * ligne 45.6). La lecture n'a pas besoin d'un thread CALME, seulement d'un thread qui répond :
+ * on lui laisse donc le temps d'un creux. Attendre le calme, essayé d'abord, coûtait 7 s par
+ * scénario sur un EPYC 7763 (42,6 s contre 35,7, mesuré en CI) ; ce délai ne coûte rien quand
+ * le thread répond.
+ */
+const READ_TIMEOUT_MS = 60_000;
+
 const readError = (
   panel: ReturnType<import('@playwright/test').Page['locator']>,
   label: string
 ) =>
-  panel.evaluate((el, l) => {
-    const match = el.textContent?.match(
-      new RegExp(l + String.raw`\s+(-?[\d.]+) deg`)
-    );
-    return match ? Number(match[1]) : Number.NaN;
-  }, label);
+  panel.evaluate(
+    (el, l) => {
+      const match = el.textContent?.match(
+        new RegExp(l + String.raw`\s+(-?[\d.]+) deg`)
+      );
+      return match ? Number(match[1]) : Number.NaN;
+    },
+    label,
+    { timeout: READ_TIMEOUT_MS }
+  );
 
 for (const date of CASES) {
   test(`subsolar point lands on its true longitude at ${date}`, async ({
