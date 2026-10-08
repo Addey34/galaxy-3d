@@ -764,6 +764,21 @@ plafond **3,67 Mbit/s** ; à 2 Mbit/s le plafond vaut **54,1 %** du maximum, à 
 partout, la demande montait à 1 314 octets. Les éphémérides livrées passent de 54 921 264 à
 55 973 520 octets.
 
+**Corrigé le même jour (ligne 45.4) : un objet interstellaire que la scène ne montre pas ne
+demande rien.** Ces chiffres supposaient les trois objets toujours servis, alors qu'ils sont
+MASQUÉS par défaut. Mesuré en CI par un A/B simultané (même machine, même build, manifeste avec
+et sans leurs fichiers) : à la vitesse maximale, l'horloge restait figée environ 4 s de plus avant
+de repartir (17 contre 21 s sur un EPYC 7763), par une vague de requêtes de plus à chaque passage
+et un plafond de vitesse plus bas, qui coûtait une fenêtre de plus avant de libérer la date. Un
+objet DORMANT (marqueur masqué, non sélectionné, trajectoire non tracée) n'est donc ni chargé, ni
+attendu par l'horloge, ni compté dans `budgetGrids`, ni dans le bandeau
+(`HorizonsEphemerisService.setDormant`, règle dans `config/interstellar.ts`
+`dormantInterstellarNames`) ; sa position retombe sur ses éléments, que rien ne peint. L'état par
+défaut revient ainsi aux chiffres du 2026-10-06 ; montrer un objet le rend de nouveau attendu.
+**Les sondes sont exclues de cette règle, délibérément** : elles n'ont pas de repli, et leur
+disponibilité dans la palette est MESURÉE sur la position rendue (`ui/navigableAnchors`), donc les
+priver d'octets les griserait à tort dès que la date quitte sa fenêtre de démarrage.
+
 **Le débit se mesure sur le TEMPS OCCUPÉ, pas par requête.** Six requêtes simultanées se partagent
 la bande passante : `octets / durée` d'UNE requête sous-estime le lien d'un facteur proche du
 nombre de requêtes en vol, et c'est la mesure qui a trompé le lot 15 (64 requêtes de 77 s chacune
