@@ -17,10 +17,12 @@ import { medianMeanMotionScale } from './meanMotionScale';
 import {
   alignedOffset,
   byteRangeForIndices,
+  composeWindow,
   covers,
   fileByteLength,
   interpretRangeResponse,
   mergeWindows,
+  missingSlice,
   planBodyWindow,
   rangeHeader,
   windowContains,
@@ -1173,20 +1175,33 @@ export class HorizonsEphemerisService implements PreciseEphemerisProvider {
           return null;
         }
 
+        // Ce qu'on tient déjà ne se redemande pas au réseau non plus : seule la tranche
+        // manquante part, et la fenêtre voulue se recompose ici (ligne 45.5).
+        const prior = this.bodies.get(name);
+        const slice =
+          plan === 'full' || !prior
+            ? null
+            : missingSlice(heldWindow(prior), plan);
+
         this._rate.begin(policy.now());
         try {
-          const fetched = await fetchBody(
+          const received = await fetchBody(
             name,
             body,
             baseUrl,
             pending.bodyMu,
-            plan,
+            slice ?? plan,
             () => {
               this._rangesRefused = true;
             }
           );
+          const fetched =
+            slice !== null && plan !== 'full' && prior
+              ? completeWindow(received, prior, slice, plan)
+              : received;
           this.bodies.set(name, fetched.body);
-          this._rate.end(policy.now(), fetched.body.samples.byteLength);
+          // Ce qui a TRAVERSÉ le lien, pas la fenêtre recomposée : le débit mesure le réseau.
+          this._rate.end(policy.now(), received.body.samples.byteLength);
           // RANGER N'EST PAS CHARGER : l'écriture part en tâche de fond et n'est JAMAIS
           // attendue ici. Cf. `_store` pour ce que cet `await` a coûté.
           if (pending.store)
@@ -1640,6 +1655,32 @@ async function fetchManifest(
  * requête (onze corps sur 64 au 1969-07-20, mesuré en écrivant le plan du lot 17), et un corps
  * dont le magasin tient déjà la fenêtre.
  */
+/**
+ * La fenêtre voulue, recomposée de la tranche reçue et de ce qu'on tenait. Si l'hôte a rendu le
+ * fichier ENTIER (plage ignorée, décision D7), il n'y a rien à recomposer : on le garde tel quel.
+ */
+function completeWindow(
+  received: FetchedBody,
+  prior: LoadedBody,
+  slice: SampleWindow,
+  wanted: SampleWindow
+): FetchedBody {
+  if (heldFirstIndex(received.body) !== slice.firstIndex) return received;
+  const samples = composeWindow(
+    { firstIndex: heldFirstIndex(prior), samples: prior.samples },
+    { firstIndex: slice.firstIndex, samples: received.body.samples },
+    wanted
+  );
+  return {
+    body: { ...received.body, samples, firstIndex: wanted.firstIndex },
+    stored: {
+      firstIndex: wanted.firstIndex,
+      lastIndex: wanted.lastIndex,
+      bytes: samples.buffer as ArrayBuffer,
+    },
+  };
+}
+
 async function fetchBody(
   name: string,
   body: HorizonsBodyManifest,

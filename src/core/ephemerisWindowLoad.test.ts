@@ -367,6 +367,48 @@ describe('une fenêtre qui manque, et ce qu’on en dit (lot 17C)', () => {
     expect(fromWindow!.z).toBe(fromFile!.z);
   });
 
+  it('quand l’avance glisse, ne redemande que les échantillons NEUFS (ligne 45.5)', async () => {
+    // Mesuré le 2026-10-08 : à chaque glissement, les 64 corps redemandaient leur fenêtre
+    // ENTIÈRE. Chaque plage doit désormais commencer là où la fenêtre tenue s'arrête.
+    const log: Served[] = [];
+    const service = await loadWindowed(
+      log,
+      {},
+      sceneRequest(SCENE_DATE, false)
+    );
+    const first = new Map(log.map((call) => [call.body, call.range]));
+    const step = sceneRequest(SCENE_DATE, false, 60);
+    const before = log.length;
+    await service.ensureCoverage(step);
+    const slid = log.slice(before);
+    expect(slid.length).toBeGreaterThan(0);
+
+    const end = (range: string | null | undefined): number =>
+      Number(/-(\d+)$/.exec(range ?? '')![1]);
+    const start = (range: string | null | undefined): number =>
+      Number(/=(\d+)-/.exec(range ?? '')![1]);
+    for (const call of slid) {
+      const held = first.get(call.body);
+      if (held === undefined) continue;
+      expect(start(call.range), call.body).toBe(end(held) + 1);
+    }
+
+    // Et la fenêtre recomposée place chaque corps au bit près, sur toute l'avance.
+    const whole = horizonsServiceFromDisk();
+    for (const name of WITNESSES) {
+      for (const offsetDays of [0, 17.3, 58]) {
+        const date = new Date(SCENE_DATE.getTime() + offsetDays * 86_400_000);
+        const fromFile = whole.getHeliocentricAU(name, date);
+        if (fromFile === null) continue;
+        const fromWindow = service.getHeliocentricAU(name, date);
+        expect(fromWindow, `${name} ${offsetDays}`).not.toBeNull();
+        expect(fromWindow!.x, `${name} x`).toBe(fromFile.x);
+        expect(fromWindow!.y, `${name} y`).toBe(fromFile.y);
+        expect(fromWindow!.z, `${name} z`).toBe(fromFile.z);
+      }
+    }
+  });
+
   it('charge le fichier ENTIER d’un corps dont le facteur n’est pas publié', async () => {
     const log: Served[] = [];
     // Manifeste d'avant la phase 17B : le facteur d'échelle du temps de propagation se
