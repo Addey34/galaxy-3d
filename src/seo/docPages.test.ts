@@ -4,7 +4,12 @@ import { describe, expect, it } from 'vitest';
 import { CELESTIAL_CONFIG } from '@/config/bodies';
 import { flattenBodies } from '@/config/catalog';
 import { FACT_SOURCES } from '@/config/factSources';
-import { HTML_LANG } from '@/i18n/locales';
+import {
+  HTML_LANG,
+  INTL_LOCALE,
+  LOCALES,
+  UNREVIEWED_TRANSLATIONS,
+} from '@/i18n/locales';
 import { ALL_FACT_FIELDS, bodyFact } from '@/core/bodyFacts';
 import { NAVIGABLE_TARGETS } from '@/config/navigable';
 import { parseSmallBodyDataset, type SmallBodyDatasetFile } from '@/core/sbdb';
@@ -954,5 +959,33 @@ describe('/methodology : la luminosité des surfaces suit la table des gains', (
       )
     ).toThrow('sans nom publiable');
     expect(() => assertPublishableAlbedoTable(base)).not.toThrow();
+  });
+});
+
+describe('/methodology : la dette de relecture des traductions est DITE (ligne 22.9)', () => {
+  const limitsOf = (body: string): string => {
+    const start = body.indexOf('id="limits"');
+    expect(start).toBeGreaterThan(-1);
+    const end = body.indexOf('<h2', start);
+    return body.slice(start, end === -1 ? undefined : end);
+  };
+
+  it.each(methodology.map((p) => [p.locale, p] as const))(
+    '%s : chaque langue sans relecture native est nommée dans la langue de la page',
+    (locale, page) => {
+      expect(UNREVIEWED_TRANSLATIONS.length).toBeGreaterThan(0);
+      const names = new Intl.DisplayNames([INTL_LOCALE[locale]], {
+        type: 'language',
+      });
+      const section = limitsOf(page.body);
+      for (const code of UNREVIEWED_TRANSLATIONS)
+        expect(section).toContain(escapeHtml(names.of(code)!));
+      expect(section).toContain('Claude');
+      expect(section).not.toContain('—');
+    }
+  );
+
+  it('ne déclare que des langues livrées', () => {
+    for (const code of UNREVIEWED_TRANSLATIONS) expect(LOCALES).toContain(code);
   });
 });

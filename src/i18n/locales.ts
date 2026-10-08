@@ -30,6 +30,15 @@ export type Locale = 'en' | 'fr' | 'es' | 'pt-BR';
  */
 export const LOCALES: readonly Locale[] = ['en', 'fr', 'es', 'pt-BR'];
 
+/**
+ * Les langues dont AUCUN locuteur natif n'a relu le texte (ligne 22.9). Traduites par Claude au
+ * lot 20 depuis le français et l'anglais ; les gardes mécaniques vérifient nombres, unités, noms
+ * propres, gabarits et liens, pas une tournure ni un registre. `/methodology` le DIT au lecteur
+ * en lisant cette liste : quand une relecture nommée aura eu lieu, la langue sort d'ici et la
+ * phrase suit.
+ */
+export const UNREVIEWED_TRANSLATIONS: readonly Locale[] = ['es', 'pt-BR'];
+
 export type Dict = Record<MessageKey, string>;
 
 export { en };

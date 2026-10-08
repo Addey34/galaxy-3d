@@ -38,6 +38,7 @@ import {
   type TemporalCategory,
 } from '@/core/temporal';
 import { messages } from '@/i18n/allDictionaries';
+import { INTL_LOCALE, UNREVIEWED_TRANSLATIONS } from '@/i18n/locales';
 import { escapeHtml } from './bodyLandingPage';
 import {
   type DocText,
@@ -1468,6 +1469,15 @@ function methodologyPage(input: MethodologyInput, locale: DocLocale): DocPage {
 
   // 9. Limites connues
   const earth = productionOf('earth');
+  // Les langues sans relecture native, NOMMÉES dans la langue de la page (ligne 22.9).
+  const unreviewed = (lang: keyof DocText): string => {
+    const names = new Intl.DisplayNames([INTL_LOCALE[lang]], {
+      type: 'language',
+    });
+    return new Intl.ListFormat(INTL_LOCALE[lang], {
+      type: 'conjunction',
+    }).format(UNREVIEWED_TRANSLATIONS.map((code) => names.of(code) ?? code));
+  };
   const limits: DocText[] = [
     {
       en: `The Earth is drawn at the Earth-Moon barycentre, not at its own centre, to avoid a monthly wobble that would show as a zigzag at true scale and high speed; the Moon is placed correctly relative to that point. This offset is what the Earth row of the accuracy table measures${earth ? ` (${num(earth.km?.mean)} km on average)` : ''}.`,
@@ -1523,6 +1533,16 @@ function methodologyPage(input: MethodologyInput, locale: DocLocale): DocPage {
       es: `${ILLUSTRATIVE_SURFACES.size} cuerpos nunca han sido cartografiados por completo: sus superficies son ilustrativas, no científicas. La <a href="${docPath('sources', locale)}">página de fuentes</a> los enumera.`,
       'pt-BR': `${ILLUSTRATIVE_SURFACES.size} corpos nunca foram mapeados por completo: as suas superfícies são ilustrativas, não científicas. A <a href="${docPath('sources', locale)}">página de fontes</a> os lista.`,
     },
+    ...(UNREVIEWED_TRANSLATIONS.length > 0
+      ? [
+          {
+            en: `Translations not yet reviewed by native speakers: ${unreviewed('en')}. These texts were translated by Claude, an AI model, from French and English. Automatic checks ensure they contain no number, unit, proper name or link absent from the original; they cannot judge phrasing or register.`,
+            fr: `Traductions pas encore relues par des locuteurs natifs : ${unreviewed('fr')}. Ces textes ont été traduits par Claude, un modèle d’IA, depuis le français et l’anglais. Des vérifications automatiques garantissent qu’ils ne contiennent aucun nombre, unité, nom propre ni lien absent de l’original ; elles ne peuvent pas juger une tournure ni un registre.`,
+            es: `Traducciones aún no revisadas por hablantes nativos: ${unreviewed('es')}. Estos textos fueron traducidos por Claude, un modelo de IA, a partir del francés y del inglés. Unas comprobaciones automáticas garantizan que no contienen ningún número, unidad, nombre propio ni enlace ausente del original; no pueden juzgar una expresión ni un registro.`,
+            'pt-BR': `Traduções ainda não revisadas por falantes nativos: ${unreviewed('pt-BR')}. Estes textos foram traduzidos pelo Claude, um modelo de IA, a partir do francês e do inglês. Verificações automáticas garantem que eles não contêm nenhum número, unidade, nome próprio ou link ausente do original; elas não podem julgar uma expressão nem um registro.`,
+          },
+        ]
+      : []),
   ];
   sections.push(
     docSection(

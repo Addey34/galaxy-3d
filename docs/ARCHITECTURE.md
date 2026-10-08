@@ -3824,7 +3824,10 @@ nature juridique, dont la traduction demande une relecture que ce lot n'a pas eu
 Les traductions espagnole et portugaise ont été produites par Claude et **relues par aucun locuteur
 natif**. Ce qu'une machine peut vérifier l'est (nombres, unités, noms propres, gabarits, parité des
 clés, existence HTTP des liens) ; ce qu'elle ne peut pas — une tournure, un registre de langue, la
-lisibilité d'une phrase scientifique — reste dû.
+lisibilité d'une phrase scientifique — reste dû. **Depuis le 2026-10-09 (ligne 22.9), le lecteur
+le voit** : `/methodology` le dit dans ses « Limites connues », en nommant chaque langue de
+`UNREVIEWED_TRANSLATIONS` (`i18n/locales.ts`) dans la langue de la page ; une relecture nommée
+retire la langue de cette liste, et la phrase suit (`docPages.test.ts`).
 
 ## Une visite guidée est une FICHE, pas du code (lot 21)
 
