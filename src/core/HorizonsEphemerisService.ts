@@ -12,7 +12,7 @@ import { jdTdbFromDate } from './timeScale';
 import { propagateTwoBody } from './twoBodyPropagation';
 import type { BodyDynamics } from '@/config/gravity';
 import type { PreciseEphemerisProvider } from './PreciseEphemerisProvider';
-import { mapWithConcurrency } from '@/utils/concurrency';
+import { mapWithByteBudget, mapWithConcurrency } from '@/utils/concurrency';
 import { medianMeanMotionScale } from './meanMotionScale';
 import {
   alignedOffset,
@@ -179,6 +179,11 @@ export interface EphemerisLoadOptions {
   scene?: SceneWindowRequest;
   /** Requêtes simultanées. Cf. `utils/concurrency` pour la raison mesurée de cette borne. */
   concurrency?: number;
+  /**
+   * Plafond quand le débit mesuré permet d'élargir (`MAX_CONCURRENCY` par défaut). Un test
+   * qui exige une requête à la fois le fixe au plancher.
+   */
+  maxConcurrency?: number;
   /** Attentes entre deux essais d'un MÊME fichier. Vide = un seul essai. */
   retryDelaysMs?: readonly number[];
   /** Horloge injectée, pour qu'un test n'attende pas réellement. */
@@ -202,6 +207,28 @@ export interface EphemerisLoadOptions {
  * régression de démarrage à 50 et 10 Mbit/s.
  */
 const DEFAULT_CONCURRENCY = 6;
+
+/**
+ * AU-DELÀ des six, une requête de plus ne part que si les octets en vol tiennent dans ce que le
+ * débit MESURÉ livre en ces secondes (ligne 45.5, `utils/concurrency` § `mapWithByteBudget`).
+ * Un lien lent ou pas encore mesuré reste donc à six, la borne prouvée ci-dessus ; un lien
+ * rapide n'attend plus le thread principal entre deux vagues.
+ */
+//
+// Mesuré le 2026-10-09 (même build, plafond 6 contre 64, sonde de l'horloge) : première passe à
+// vitesse maximale de 18,2 à 7,7 s sous frein CPU ×20, de 7,9 à 5,7 s à 250 ko/s, inchangée à
+// 24 ko/s (56,9 et 57,9 s, aucun échec ni d'un côté ni de l'autre).
+//
+// La borne qui reste, écrite plutôt que tue : le PREMIER envoi d'une passe se fie au débit
+// mémorisé. Sur un lien qui vient de se dégrader, il peut mettre en vol jusqu'à
+// `débit mémorisé × IN_FLIGHT_SECONDS` octets (45 requêtes bridées à 24 ko/s après un
+// démarrage rapide) ; le frein d'âge empêche d'en ajouter dès qu'une requête dépasse
+// `2 × IN_FLIGHT_SECONDS`. La durée d'une requête est donc bornée par ces octets divisés par
+// le débit réel, loin des 706 s du lot 15, où 64 fichiers ENTIERS étaient en vol.
+export const IN_FLIGHT_SECONDS = 2;
+
+/** Jamais plus de requêtes en vol que ceci, même sur un lien qui absorbe tout. */
+export const MAX_CONCURRENCY = 64;
 
 /**
  * Deux reprises, à 1 s puis 4 s. Bornées parce qu'un chargement qui insiste indéfiniment est
@@ -248,6 +275,7 @@ function isRetryableError(error: unknown): boolean {
 
 interface LoadPolicy {
   concurrency: number;
+  maxConcurrency: number;
   retryDelaysMs: readonly number[];
   wait: (ms: number) => Promise<void>;
   now: () => number;
@@ -588,6 +616,7 @@ export class HorizonsEphemerisService implements PreciseEphemerisProvider {
   ): Promise<HorizonsEphemerisService> {
     const policy: LoadPolicy = {
       concurrency: options.concurrency ?? DEFAULT_CONCURRENCY,
+      maxConcurrency: options.maxConcurrency ?? MAX_CONCURRENCY,
       retryDelaysMs: options.retryDelaysMs ?? DEFAULT_RETRY_DELAYS_MS,
       wait: options.wait ?? sleep,
       now: options.now ?? monotonicNow,
@@ -1143,9 +1172,28 @@ export class HorizonsEphemerisService implements PreciseEphemerisProvider {
       if (plan === null) return !this.bodies.has(name);
       return !this._holds(name, plan);
     });
-    const failures = await mapWithConcurrency(
+    const failures = await mapWithByteBudget(
       wanted,
-      policy.concurrency,
+      {
+        floor: policy.concurrency,
+        ceiling: Math.max(policy.concurrency, policy.maxConcurrency),
+        // Par excès : la fenêtre planifiée, alors qu'une tranche ou le magasin en coûtent moins.
+        cost: ([name, body]) => {
+          const plan = plans.get(name) ?? null;
+          if (plan === null) return 0;
+          return plan === 'full'
+            ? fileByteLength(HorizonsEphemerisService._grid(body))
+            : plan.byteLength;
+        },
+        allowance: () => {
+          const rate = this._rate.bytesPerSecond;
+          return rate === null ? null : rate * IN_FLIGHT_SECONDS;
+        },
+        // Une requête en vol depuis deux budgets : le lien n'est plus celui que le débit
+        // mémorisé décrit, on revient au plancher.
+        maxAgeMs: 2 * IN_FLIGHT_SECONDS * 1_000,
+        now: policy.now,
+      },
       async ([name, body]): Promise<EphemerisLoadFailure | null> => {
         const plan = plans.get(name) ?? null;
         if (plan !== null) this._attempted.set(name, plan);

@@ -494,3 +494,62 @@ describe('un corps que la scène ne montre pas ne demande rien (ligne 45.4)', ()
     }
   });
 });
+
+describe('six requêtes au moins, davantage sur un lien mesuré rapide (ligne 45.5)', () => {
+  /** Le serveur des binaires livrés, avec un compteur de requêtes simultanées. */
+  const counted = (log: Served[], delayMs: number) => {
+    const inner = serveRealEphemerides(log);
+    const state = { inFlight: 0, peak: 0 };
+    const server = (async (input: unknown, init?: RequestInit) => {
+      if (String(input).endsWith('manifest.json'))
+        return inner(input as string, init);
+      state.inFlight++;
+      state.peak = Math.max(state.peak, state.inFlight);
+      await new Promise((resolve) => setTimeout(resolve, delayMs));
+      try {
+        return await inner(input as string, init);
+      } finally {
+        state.inFlight--;
+      }
+    }) as typeof fetch;
+    return { server, state };
+  };
+
+  it('reste à six tant que le débit n’est pas mesuré, puis élargit', async () => {
+    const log: Served[] = [];
+    const { server, state } = counted(log, 2);
+    stubBrowser(server);
+    // Horloge injectée : une seconde par lecture rend le lien LENT, aucun élargissement.
+    let slow = 0;
+    await HorizonsEphemerisService.load(
+      MANIFEST_URL,
+      bodyDynamics(CELESTIAL_CONFIG),
+      {
+        scene: sceneRequest(SCENE_DATE, false),
+        retryDelaysMs: [],
+        now: () => (slow += 1_000),
+      }
+    );
+    expect(state.peak).toBe(6);
+
+    // Deux millisecondes par lecture : un lien rapide, et assez de temps occupé pour être mesuré.
+    let quick = 0;
+    const fast = counted([], 2);
+    stubBrowser(fast.server);
+    const service = await HorizonsEphemerisService.load(
+      MANIFEST_URL,
+      bodyDynamics(CELESTIAL_CONFIG),
+      {
+        scene: sceneRequest(SCENE_DATE, false),
+        retryDelaysMs: [],
+        now: () => (quick += 2),
+      }
+    );
+    // Le démarrage mesure le lien ; la passe suivante, un saut de date, élargit.
+    fast.state.peak = 0;
+    await service.ensureCoverage(
+      sceneRequest(new Date('2080-03-01T00:00:00Z'), false)
+    );
+    expect(fast.state.peak).toBeGreaterThan(6);
+  });
+});
