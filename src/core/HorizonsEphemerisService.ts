@@ -980,7 +980,14 @@ export class HorizonsEphemerisService implements PreciseEphemerisProvider {
       // Même sans plages, un corps que la date ne concerne pas ne demande RIEN : la
       // couverture se lit au manifeste, pas dans les octets. Onze corps sur 64 sont dans ce
       // cas au 1969-07-20 (mesuré), et leur fichier entier serait payé pour un `null`.
-      return covers(HorizonsEphemerisService._grid(entry), scene.date)
+      // Et un corps où l'AVANCE entre demande son fichier comme s'il était déjà couvert : même
+      // règle que `planBodyWindow` (ligne 45.5).
+      const grid = HorizonsEphemerisService._grid(entry);
+      return covers(grid, scene.date) ||
+        planBodyWindow(grid, {
+          date: scene.date,
+          ...(scene.leadDays !== undefined ? { leadDays: scene.leadDays } : {}),
+        }) !== null
         ? 'full'
         : null;
     }
@@ -1214,8 +1221,15 @@ export class HorizonsEphemerisService implements PreciseEphemerisProvider {
     // Ce que la scène demande vraiment à cette date : les corps hors couverture n'ont rien à
     // recevoir et sortent donc des DEUX comptes (cf. `EphemerisLoadReport.declared`).
     // Un corps dormant n'est pas demandé ici, donc il n'est ni attendu ni manquant.
+    // Un corps demandé pour l'AVANCE seule (sa couverture commence plus loin, ligne 45.5)
+    // n'est pas affiché à cette date : il n'entre pas non plus dans ce compte.
+    const scene = pending.scene;
     const needed = entries.filter(
-      ([name]) => (plans.get(name) ?? null) !== null && !this._dormant.has(name)
+      ([name, entry]) =>
+        (plans.get(name) ?? null) !== null &&
+        !this._dormant.has(name) &&
+        (scene === null ||
+          covers(HorizonsEphemerisService._grid(entry), scene.date))
     );
     const missing = needed
       .map(

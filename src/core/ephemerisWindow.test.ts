@@ -370,15 +370,31 @@ describe('l’avance de lecture élargit la fenêtre (lot 17C)', () => {
     expect(huge.byteEnd).toBe(fileByteLength(grid) - 1);
   });
 
-  it('ne ressuscite PAS un corps que la date ne concerne pas', () => {
-    // Une avance de dix ans traverse la couverture de Cassini, close en 2017. Le corps n'a
-    // pourtant rien à demander : c'est la DATE AFFICHÉE qui décide, pas l'avance.
+  it('va chercher un corps dont la couverture COMMENCE dans l’avance', () => {
+    // SUPERSEDED le 2026-10-08 (ligne 45.5) : « c'est la date affichée qui décide, pas
+    // l'avance ». Une avance de dix ans en arrière ENTRE dans la couverture de Cassini, close
+    // en 2017 : l'horloge y sera dans quelques secondes, et ses octets doivent être là.
+    const grid = gridOf('cassini');
+    const w = planBodyWindow(grid, { date: SCENE_DATE, leadDays: -3650 })!;
+    expect(w).not.toBeNull();
+    // Du bout de l'avance jusqu'au DERNIER échantillon utile, rien au-delà du fichier.
+    expect(w.lastIndex).toBe(grid.sampleCount - 1);
+    const at = new Date(SCENE_DATE.getTime() - 3650 * 86_400_000);
+    const reached = coveringIndex(grid, at)!;
+    expect(w.firstIndex).toBe(reached - WINDOW_MARGIN_SAMPLES);
+  });
+
+  it('ne demande RIEN quand l’avance n’atteint pas la couverture', () => {
+    // Cassini est close depuis 2017 : une avance d'un an en arrière n'y entre pas, une avance
+    // vers le futur non plus.
+    const grid = gridOf('cassini');
     expect(
-      planBodyWindow(gridOf('cassini'), {
-        date: SCENE_DATE,
-        leadDays: -3650,
-      })
+      planBodyWindow(grid, { date: SCENE_DATE, leadDays: -365 })
     ).toBeNull();
+    expect(
+      planBodyWindow(grid, { date: SCENE_DATE, leadDays: 3650 })
+    ).toBeNull();
+    expect(planBodyWindow(grid, { date: SCENE_DATE })).toBeNull();
   });
 
   it('se combine avec la période d’orbite au lieu de la remplacer', () => {

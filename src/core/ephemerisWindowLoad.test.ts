@@ -326,6 +326,47 @@ describe('une fenêtre qui manque, et ce qu’on en dit (lot 17C)', () => {
     expect(noticeText(report)[0]).toContain(String(report.declared));
   });
 
+  it('demande D’AVANCE un corps dont la couverture commence dans l’avance (ligne 45.5)', async () => {
+    // Le segment de BepiColombo autour de Mercure commence le 2026-10-13, vingt jours après
+    // la date de la scène. À un an par seconde l'avance de quatre secondes y entre largement :
+    // ses octets doivent être demandés avec les autres, sinon la date qui y arrive les attend
+    // (mesuré sous frein CPU le 2026-10-08 : une passe complète de plus, puis la position de
+    // repli quand l'horloge cesse d'attendre).
+    const SEGMENT = 'bepicolombo-mercury';
+    const log: Served[] = [];
+    const service = await loadWindowed(
+      log,
+      {},
+      sceneRequest(SCENE_DATE, false)
+    );
+    expect(log.some((call) => call.body === SEGMENT)).toBe(false);
+
+    const ahead = sceneRequest(SCENE_DATE, false, 365);
+    expect(service.hasCoverageFor(ahead)).toBe(false);
+    const report = await service.ensureCoverage(ahead);
+    expect(log.some((call) => call.body === SEGMENT)).toBe(true);
+    expect(service.hasCoverageFor(ahead)).toBe(true);
+    // Rien à montrer À CETTE DATE : ni reçu, ni manquant, et le bandeau ne le compte pas.
+    expect(service.getHeliocentricAU(SEGMENT, SCENE_DATE)).toBeNull();
+    expect(report.loaded).not.toContain(SEGMENT);
+    expect(report.missing.map((failure) => failure.body)).not.toContain(
+      SEGMENT
+    );
+
+    // La date entre dans le segment : rien à redemander, et la position est celle du fichier
+    // entier, au bit près.
+    const before = log.length;
+    const inside = new Date('2026-12-01T00:00:00Z');
+    expect(service.hasCoverageFor(sceneRequest(inside, false))).toBe(true);
+    expect(log.length).toBe(before);
+    const whole = horizonsServiceFromDisk();
+    const fromWindow = service.getHeliocentricAU(SEGMENT, inside);
+    const fromFile = whole.getHeliocentricAU(SEGMENT, inside);
+    expect(fromWindow).not.toBeNull();
+    expect(fromWindow!.x).toBe(fromFile!.x);
+    expect(fromWindow!.z).toBe(fromFile!.z);
+  });
+
   it('charge le fichier ENTIER d’un corps dont le facteur n’est pas publié', async () => {
     const log: Served[] = [];
     // Manifeste d'avant la phase 17B : le facteur d'échelle du temps de propagation se
