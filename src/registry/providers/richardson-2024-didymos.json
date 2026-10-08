@@ -1,0 +1,12 @@
+{
+  "$schema": "../schema/provider.schema.json",
+  "id": "richardson-2024-didymos",
+  "role": "fact-source",
+  "publisher": "Richardson et al.",
+  "title": "The Dynamical State of the Didymos System Before and After the DART Impact",
+  "url": "https://arxiv.org/abs/2502.14990",
+  "kind": "article",
+  "journal": "The Planetary Science Journal 5, 182",
+  "published": "2024",
+  "accessed": "2026-10-07"
+}

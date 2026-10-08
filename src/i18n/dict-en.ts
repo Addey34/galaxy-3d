@@ -690,6 +690,8 @@ export const en = {
     'q = a (1 − e), from the published osculating elements',
   'detail.afterDartImpact':
     'the period after the DART impact of 26 September 2022 (11 h 55 min before)',
+  'detail.separationAfterDartImpact':
+    'the mean distance between the two centres just after the DART impact (1.189 km before)',
   'fact.notYetSourced':
     'Galaxy has not yet traced this value to a primary source (space agency, IAU, peer-reviewed article), so it is not shown.',
 };

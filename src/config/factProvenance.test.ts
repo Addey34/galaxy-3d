@@ -337,6 +337,15 @@ const ARTICLE_VALUES: Record<
       },
     },
   },
+  'richardson-2024-didymos': {
+    dimorphos: {
+      distanceAU: {
+        value: 1.152 / KM_PER_AU,
+        quote:
+          'Mean Separation of Component Centerse [km] 1.20 ± 0.03 1.189 ± 0.017 1.152 ± 0.018',
+      },
+    },
+  },
   'grundy-2018-patroclus': {
     menoetius: {
       distanceAU: {

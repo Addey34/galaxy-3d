@@ -1073,6 +1073,19 @@ const ARTICLES = {
       'margin of uncertainty of approximately plus or minus 2 minutes',
     ],
   },
+  // LE SYSTÈME DE DIDYMOS APRÈS DART (2026-10-07) : la synthèse de l'équipe de dynamique de la
+  // mission (Richardson et al. 2024, PSJ 5, 182), table 2 du PDF. Elle donne la distance des
+  // centres APRÈS l'impact, et dit que la rotation de Dimorphos est « pending » et sa masse la
+  // plus grande incertitude, que Hera tranchera : les raisons de la fiche la citent.
+  'richardson-2024-didymos': {
+    arxivPdf: '2502.14990v1',
+    quotes: [
+      'Mean Separation of Component Centerse [km] 1.20 ± 0.03 1.189 ± 0.017 1.152 ± 0.018',
+      'Secondary Rotation Periodk [h] 11.921629 ± 0.000003 11.92149 ± 0.00002 pending',
+      'The largest uncertainty in the momentum transfer enhancement factor of the DART impact remains the mass of Dimorphos, which will be resolved by the Hera mission.',
+      'may have entered a tumbling rotation state',
+    ],
+  },
   'grundy-2018-patroclus': {
     arxivPdf: '1903.03729v1',
     quotes: [
