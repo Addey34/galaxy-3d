@@ -625,6 +625,21 @@ maximale, la phase de BepiColombo autour de Mercure, qui commence dans l'avance,
 demandée d'avance ; la date qui y entrait relançait une passe complète, puis, au-delà de deux
 demandes, avançait avec ce corps sur sa position de repli.
 
+**Six requêtes au moins, davantage si le lien MESURÉ les livre (ligne 45.5, 2026-10-09).** Sur
+une machine lente, une passe de fenêtres n'est pas réglée par le réseau mais par le thread
+principal : chaque requête y passe deux fois (`fetch`, puis `arrayBuffer`), derrière une image,
+donc des vagues de six coûtent deux images chacune quand le réseau rend les octets en 10 ms. Le
+pool (`utils/concurrency` § `mapWithByteBudget`) garde TOUJOURS six requêtes permises, la borne
+mesurée au lot 15 sur lien pauvre ; au-delà, une requête ne part que si les octets en vol tiennent
+dans `débit mesuré × IN_FLIGHT_SECONDS` (2 s), jusqu'à `MAX_CONCURRENCY` (64), et plus aucune ne
+s'ajoute tant qu'une requête en vol dépasse deux fois ce budget. Débit pas encore mesuré ou lien
+lent : exactement six, comme avant. Mesuré sur le même build (plafond 6 contre 64) : première passe
+à vitesse maximale de **18,2 à 7,7 s** sous frein CPU ×20, de **7,9 à 5,7 s** à 250 ko/s,
+inchangée à 24 ko/s (56,9 et 57,9 s), sans un échec. Borne écrite dans le code, à côté de
+`IN_FLIGHT_SECONDS` : le premier envoi d'une passe se fie au débit MÉMORISÉ, donc sur un lien qui
+vient de se dégrader il peut mettre en vol jusqu'à ce débit × 2 s d'octets (45 requêtes, bridées à
+24 ko/s après un démarrage rapide), loin des 64 fichiers entiers du lot 15.
+
 **Une fenêtre qui glisse ne redemande que ses échantillons NEUFS (ligne 45.5, 2026-10-08).**
 Quand la fenêtre voulue prolonge celle qu'on tient d'un seul côté, seule la tranche manquante
 part au réseau (`missingSlice`), et la fenêtre voulue se recompose avec ce qu'on tenait

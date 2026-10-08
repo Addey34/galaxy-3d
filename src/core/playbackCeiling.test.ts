@@ -122,6 +122,7 @@ async function loadMetered(
       scene: { date, leadDays: 0, orbitPeriodDays: PERIODS },
       retryDelaysMs: [],
       concurrency: 1,
+      maxConcurrency: 1,
       now: () => (tick += MS_PER_CALL),
     }
   );
