@@ -50,13 +50,26 @@ test.beforeEach(async ({ page }) => {
   });
 });
 
+/**
+ * Même creux que celui de `subsolar.spec.ts` (`READ_TIMEOUT_MS`, ligne 45.6) : le panneau
+ * s'affiche pendant que les couches de la Terre s'envoient, et une lecture tombée dedans a
+ * dépassé les 15 s par défaut sur un Xeon 8370C (run 37934534441, 2026-11-03, passé au
+ * réessai). La lecture veut un thread qui RÉPOND, pas un thread calme ; ce délai ne coûte rien
+ * quand il répond.
+ */
+const READ_TIMEOUT_MS = 60_000;
+
 const readSeparation = (panel: ReturnType<Page['locator']>, site: string) =>
-  panel.evaluate((el, id) => {
-    const match = el.textContent?.match(
-      new RegExp(id + String.raw`\s+.*?sep\s+([\d.]+) deg`)
-    );
-    return match ? Number(match[1]) : Number.NaN;
-  }, site);
+  panel.evaluate(
+    (el, id) => {
+      const match = el.textContent?.match(
+        new RegExp(id + String.raw`\s+.*?sep\s+([\d.]+) deg`)
+      );
+      return match ? Number(match[1]) : Number.NaN;
+    },
+    site,
+    { timeout: READ_TIMEOUT_MS }
+  );
 
 for (const date of CASES) {
   test(`published epicentres land on the rendered Earth at ${date}`, async ({
