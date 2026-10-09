@@ -1,8 +1,8 @@
 {
   "$comment": "Écrit par pnpm surface:tiles. Ne pas éditer à la main : les tuiles portent le même quantum et le même offset dans leur propre en-tête.",
-  "id": "mars-mola-megt",
+  "id": "mars-mola-megr",
   "body": "mars",
-  "directory": "assets/height-tiles/mars/fb46a14a6459",
+  "directory": "assets/height-tiles/mars/d9d41f5a3bc3",
   "format": {
     "magic": "GXHT",
     "version": 1,
@@ -18,13 +18,23 @@
       "level": 4,
       "global": true,
       "sourcePixelsPerDegree": 32,
-      "sourceProductId": "MEGT90N000FB.IMG"
+      "sourceProductId": "MEGR90N000FB.IMG"
     }
   ],
   "elevationMetres": {
-    "minimum": -8183,
-    "maximum": 21178
+    "minimum": -23183,
+    "maximum": 21290
   },
+  "figure": {
+    "source": "naif-pck",
+    "renderRadiusKm": 3389.5,
+    "radiiKm": [
+      3396.19,
+      3396.19,
+      3376.2
+    ]
+  },
+  "figureFloorRatio": 0.997752,
   "tiles": 512,
   "bytes": 67650560
 }

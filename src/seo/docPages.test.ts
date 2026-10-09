@@ -52,7 +52,11 @@ import {
   type TextureProvenance,
 } from './sourcesPage';
 import { renderInline, renderMarkdown } from './markdown';
-import { bodyFigure, publishedRadiiKm } from '@/config/bodyFigure';
+import {
+  bodyFigure,
+  fittedRadiiKm,
+  publishedRadiiKm,
+} from '@/config/bodyFigure';
 import {
   assertPublishableAlbedoTable,
   type DisplayAlbedoTable,
@@ -1008,6 +1012,20 @@ describe('/methodology : les globes sont les ellipsoïdes publiés (ligne 45.3)'
       // « 9.80% » en anglais, « 9,80 % » ailleurs : l'usage typographique de chaque langue.
       const value = formatQuantity((100 * (a - c)) / a, locale);
       expect(page.body).toContain(locale === 'en' ? `${value}%` : `${value} %`);
+    }
+  );
+});
+
+describe('/methodology : un ellipsoïde AJUSTÉ est dit, avec ses demi-axes (ligne 45.3)', () => {
+  it.each(methodology.map((p) => [p.locale, p] as const))(
+    '%s : Cérès nommée avec les demi-axes de fittedFigures.json',
+    (locale, page) => {
+      const radii = fittedRadiiKm('ceres');
+      expect(radii).not.toBeNull();
+      const nameOf = displayNameResolver(CELESTIAL_CONFIG);
+      expect(page.body).toContain(escapeHtml(nameOf('ceres', locale)));
+      for (const r of radii!)
+        expect(page.body).toContain(formatExact(r, locale));
     }
   );
 });

@@ -851,20 +851,17 @@ export class PlanetarySurfaceEngine {
     }
   }
 
-  /** Abaisse la sphère livrée au minimum mesuré du jeu, une seule fois par attachement. */
+  /**
+   * Abaisse l'enveloppe livrée sous le relief, une seule fois par attachement, du facteur que le
+   * cuiseur a MESURÉ contre le globe rendu (`figureFloorRatio`, ligne 45.3). L'ancienne règle
+   * (minimum des hauteurs rapporté à une sphère) aurait rétréci le globe de Cérès de 8 % : son
+   * relief est cuit contre une sphère de 470 km alors que son globe est aplati.
+   */
   private _applyShellScale(): void {
     const heights = this._heights;
     const host = this._host;
-    if (!heights || !host || this._shellScaled || this._radiusKm <= 0) return;
-    const dropKm =
-      heights.manifest.datumRadiusKm -
-      this._radiusKm +
-      heights.manifest.minElevationMetres / 1000;
-    // Sur un ellipsoïde, l'enveloppe abaissée doit rester sous le relief JUSQU'À l'équateur, là
-    // où elle est la plus grande : on la rapporte donc à son plus grand demi-axe (Mars, ligne 45.3).
-    const figure = host.figure;
-    const widest = figure ? Math.max(figure.a, figure.b, figure.c, 1) : 1;
-    const factor = (this._radiusKm + dropKm) / this._radiusKm / widest;
+    if (!heights || !host || this._shellScaled) return;
+    const factor = heights.manifest.figureFloorRatio;
     if (!(factor > 0) || factor >= 1) return;
     host.setSurfaceShellScale(factor);
     this._shellScaled = true;

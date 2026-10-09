@@ -408,7 +408,9 @@ test('displaces the ground with measured altitudes, and says where they come fro
     timeout: 30_000,
   });
   await expect(badge.locator('.si-relief')).toContainText('LOLA');
-  await expect(badge.locator('.si-relief')).toContainText('altimetry from');
+  await expect(badge.locator('.si-relief')).toContainText(
+    'heights measured from'
+  );
   await expect(badge.locator('.si-credit')).toContainText('PDS Geosciences');
   expect(
     heightRequests.filter((url) => url.endsWith('.hgt')).length,
@@ -669,7 +671,9 @@ test('displaces Mars with MOLA altitudes, in the published range', async ({
     timeout: 30_000,
   });
   await expect(badge.locator('.si-relief')).toContainText('MOLA');
-  await expect(badge.locator('.si-relief')).toContainText('altimetry from');
+  await expect(badge.locator('.si-relief')).toContainText(
+    'heights measured from'
+  );
 
   expect(
     heightRequests.length,
@@ -678,14 +682,74 @@ test('displaces Mars with MOLA altitudes, in the published range', async ({
   for (const url of heightRequests)
     expect(url).toContain('/height-tiles/mars/');
 
-  // L'ALTITUDE SERVIE RETOMBE DANS CE QUE MOLA PUBLIE : de −8 183 m (Hellas) à +21 178 m
-  // (Olympus Mons) sur la grille à 32 px/degré. Des octets inversés donnaient ±32 768.
+  // L'ALTITUDE SERVIE RETOMBE DANS LA PLAGE QUE LE CUISEUR A MESURÉE, lue au manifeste servi et
+  // non recopiée ici : les bornes écrites à la main étaient celles de MEGT (−8 183 à +21 178 m,
+  // rapportées à l'aréoïde) et seraient devenues fausses au passage au rayon MEGR (ligne 45.3).
+  // Des octets inversés donnaient ±32 768, hors de toute plage.
+  await expectAltitudeInManifestRange(page, probe, 'mars');
+
+  expect(errors, `Erreurs page : ${errors.join(' | ')}`).toEqual([]);
+});
+
+/** L'altitude affichée par la sonde tombe dans la plage MESURÉE du manifeste livré du corps. */
+async function expectAltitudeInManifestRange(
+  page: import('@playwright/test').Page,
+  probe: import('@playwright/test').Locator,
+  body: string
+): Promise<void> {
+  const manifest = (await (
+    await page.request.get(`/assets/height-tiles/${body}/manifest.json`)
+  ).json()) as { elevationMetres: { minimum: number; maximum: number } };
   const text = (await probe.textContent()) ?? '';
   const altitude = Number(/([-\d.]+)\s*m\b/.exec(text)?.[1]);
   if (Number.isFinite(altitude)) {
-    expect(altitude).toBeGreaterThan(-9000);
-    expect(altitude).toBeLessThan(22000);
+    expect(altitude).toBeGreaterThanOrEqual(manifest.elevationMetres.minimum);
+    expect(altitude).toBeLessThanOrEqual(manifest.elevationMetres.maximum);
   }
+}
 
+/**
+ * CÉRÈS — un relief de STÉRÉOPHOTOGRAMMÉTRIE posé sur un globe APLATI (ligne 45.3, lot 2).
+ *
+ * Ce qui diffère de la Lune et de Mars, et que seul un navigateur montre : une source attachée à
+ * son étiquette (Dawn, `^IMAGE = 4`), un globe dont l'ellipsoïde est ajusté au relief lui-même, et
+ * une enveloppe abaissée de 1,5 % au lieu des 8 % de l'ancienne règle. Le bandeau nomme Dawn, les
+ * tuiles demandées sont celles de Cérès, et l'altitude tombe dans la plage du manifeste.
+ */
+test('displaces Ceres with the Dawn terrain model, on its fitted ellipsoid', async ({
+  page,
+}) => {
+  const errors: string[] = [];
+  page.on('pageerror', (err) => errors.push(err.message));
+  await serveTiles(page);
+  const heightRequests: string[] = [];
+  page.on('request', (request) => {
+    if (request.url().includes('/height-tiles/'))
+      heightRequests.push(request.url());
+  });
+
+  await boot(page, '?debug-surface&mode=explo&body=ceres');
+  const probe = page.locator('#surface-probe');
+  await expect(probe).toContainText('ceres', { timeout: 30_000 });
+  await zoomIn(page);
+
+  const badge = page.locator('#surface-imagery');
+  await expect(badge).toBeVisible({ timeout: 30_000 });
+  await expect(badge).toHaveAttribute('data-relief', /\d+/, {
+    timeout: 30_000,
+  });
+  await expect(badge.locator('.si-relief')).toContainText('Dawn');
+  await expect(badge.locator('.si-relief')).toContainText(
+    'heights measured from'
+  );
+
+  expect(
+    heightRequests.length,
+    'aucune tuile de hauteurs demandée en approche'
+  ).toBeGreaterThan(0);
+  for (const url of heightRequests)
+    expect(url).toContain('/height-tiles/ceres/');
+
+  await expectAltitudeInManifestRange(page, probe, 'ceres');
   expect(errors, `Erreurs page : ${errors.join(' | ')}`).toEqual([]);
 });

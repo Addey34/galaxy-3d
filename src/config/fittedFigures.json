@@ -1,0 +1,18 @@
+{
+  "$comment": "Écrit par pnpm surface:tiles (scripts/bake-surface-height-tiles.mjs, fitOblate) : l'ellipsoïde ajusté au relief d'un corps dont aucun rayon publié ne décrit la forme mesurée. Lu par config/bodyFigure.ts. Ne pas éditer à la main.",
+  "ceres": {
+    "radiiKm": [
+      482.08,
+      482.08,
+      445.93
+    ],
+    "method": "oblate-least-squares-inverse-square-radius-area-weighted",
+    "sourceProductId": "CE_HAMO_G_00N_180E_EQU_DTM.IMG",
+    "sampleStep": 6,
+    "residualKm": {
+      "rms": 2.01,
+      "minimum": -7.39,
+      "maximum": 9.54
+    }
+  }
+}

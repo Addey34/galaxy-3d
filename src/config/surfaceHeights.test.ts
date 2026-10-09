@@ -18,6 +18,7 @@ import { buildTilePatch } from '@/core/tilePatch';
 import { tileBounds } from '@/core/tilePyramid';
 import { CELESTIAL_CONFIG } from './bodies';
 import { flattenBodies } from './catalog';
+import { bodyFigure, figureRadiiKm } from './bodyFigure';
 
 /**
  * LES TUILES DE HAUTEURS LIVRÉES SONT-ELLES CE QUE LE MANIFESTE ANNONCE ?
@@ -374,4 +375,64 @@ describe('profondeur de Tycho, contre la mesure publiée par l’équipe LROC', 
       around.reduce((total, value) => total + value, 0) / around.length;
     expect(median).toBeLessThan(outside - 1500);
   });
+});
+
+describe('le relief et le globe rendu décrivent la MÊME figure (ligne 45.3)', () => {
+  const bodies = flattenBodies(CELESTIAL_CONFIG);
+
+  it.each([...SURFACE_HEIGHT_SETS].map(([body, set]) => [body, set] as const))(
+    '%s : le cuiseur a supposé le globe que l’application dessine',
+    (body, set) => {
+      const manifest = loadManifest(set.manifestPath);
+      const radiusKm = bodies.get(body)!.realData!.radiusKm!;
+      // Le cuiseur recopie la règle de `bodyFigure` (il ne lit pas de TypeScript) : c'est ici
+      // qu'une divergence se verrait, avant qu'une enveloppe ne passe au-dessus du relief.
+      expect(manifest.figure.renderRadiusKm).toBeCloseTo(radiusKm, 9);
+      const figure = bodyFigure(body, radiusKm);
+      if (figure === null) {
+        expect(manifest.figure.radiiKm).toBeNull();
+      } else {
+        expect(manifest.figure.radiiKm).toEqual(figureRadiiKm(body));
+      }
+      expect(manifest.figureFloorRatio).toBeGreaterThan(0.9);
+      expect(manifest.figureFloorRatio).toBeLessThanOrEqual(1);
+    }
+  );
+});
+
+describe('le relief LIVRÉ tombe sur la forme publiée du corps (ligne 45.3)', () => {
+  const bodies = flattenBodies(CELESTIAL_CONFIG);
+  /**
+   * Le rayon mesuré aux deux pôles, comparé au rayon POLAIRE du globe rendu (le demi-axe c de
+   * l'ellipsoïde, ou le rayon de la sphère). Le relief de Mars livré jusqu'au 2026-10-09 venait
+   * de MEGT, des hauteurs rapportées à l'aréoïde : posé sur la sphère de 3 396 km, son pôle nord
+   * tombait à environ 3 394 km, 18 km au-dessus du demi-axe polaire publié (3 376,2 km). Aucun
+   * test ne regardait le rayon ; celui-ci l'aurait vu.
+   *
+   * La tolérance est PHYSIQUE, pas un réglage : 10 km couvre les calottes et les bassins polaires
+   * réels (Cérès : +3 km au nord, Mars : quelques km de calotte), pas un aplatissement oublié.
+   */
+  const POLAR_TOLERANCE_KM = 10;
+
+  it.each([...SURFACE_HEIGHT_SETS].map(([body, set]) => [body, set] as const))(
+    '%s : rayon mesuré aux deux pôles près du rayon polaire rendu',
+    (body, set) => {
+      const manifest = loadManifest(set.manifestPath);
+      const radiusKm = bodies.get(body)!.realData!.radiusKm!;
+      const radii = figureRadiiKm(body);
+      const polarKm = bodyFigure(body, radiusKm) && radii ? radii[2] : radiusKm;
+      const level = manifest.baseLevel;
+      const rows = 2 ** level;
+      for (const row of [0, rows - 1]) {
+        const tile = loadTile(manifest, { level, row, column: 0 });
+        const y = row === 0 ? 0 : tile.samples - 1;
+        const poleKm =
+          manifest.datumRadiusKm + heightMetresAt(tile, 0, y) / 1000;
+        expect(
+          Math.abs(poleKm - polarKm),
+          `${body} pôle ${row === 0 ? 'nord' : 'sud'} : ${poleKm.toFixed(1)} km contre ${polarKm} km`
+        ).toBeLessThan(POLAR_TOLERANCE_KM);
+      }
+    }
+  );
 });

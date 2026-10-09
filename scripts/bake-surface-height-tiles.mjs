@@ -52,6 +52,8 @@ const TARGETS = join(ROOT, 'scripts', 'surface-height-targets.json');
 
 /** Échantillons par côté d'une tuile : 256 intervalles, donc 257 sommets (registre GRILLE). */
 const TILE_SAMPLES = 257;
+/** Un échantillon sur six, dans chaque direction, pour ajuster un ellipsoïde (6,5 M sur Cérès). */
+const FIT_SAMPLE_STEP = 6;
 /** Octets d'en-tête d'une tuile. Doit rester pair : les hauteurs sont des entiers 16 bits. */
 const HEADER_BYTES = 32;
 /** Version du format, relue et vérifiée par `src/core/heightTile.ts`. */
@@ -68,12 +70,28 @@ const MAGIC = 'GXHT';
  */
 function parseLabel(text, source) {
   /**
+   * UNE HAUTEUR RAPPORTÉE À L'ARÉOÏDE N'EST PAS UN RAYON (ligne 45.3, 2026-10-09). Le relief de Mars
+   * a été livré depuis MEGT, « planetary radius minus the areoid radius » : posé sur la sphère de
+   * référence, il mettait les pôles environ 20 km trop haut, puisque l'aréoïde suit l'aplatissement.
+   * Le cuiseur ne place que des RAYONS (sphère de référence + hauteur) ; un produit qui se déclare
+   * relatif à un géoïde est donc refusé ici, et son jumeau de rayon (MEGR) doit être employé.
+   */
+  // La règle vise la DÉFINITION de l'échantillon, pas le mot : l'étiquette LOLA parle du géoïde
+  // pour définir sa topographie, mais ses échantillons sont bien un rayon (`PLANETARY_RADIUS =
+  // (DN * SCALING_FACTOR) + OFFSET`).
+  if (/radius\s+minus\s+the\s+(?:are|ge)oid/i.test(text.replace(/\s+/g, ' ')))
+    throw new Error(
+      `${source} : hauteurs rapportées à un géoïde (aréoïde), pas un rayon planétaire ; employer le produit de rayon`
+    );
+  /**
    * Un champ de l'étiquette. `optional` rend `undefined` au lieu d'échouer, et il ne s'emploie
    * QUE pour les champs dont l'absence a une lecture déclarée plus bas : une absence silencieuse
    * qui se change en valeur par défaut est exactement ce que ce script refuse ailleurs.
    */
   const field = (name, { optional = false } = {}) => {
-    const match = new RegExp(`^\\s*${name}\\s*=\\s*([^\\r\\n]+)`, 'm').exec(
+    // `^IMAGE` porte un `^`, qui est une ancre pour une expression régulière : le nom s'échappe.
+    const escaped = name.replace(/[$^]/g, '\\$&');
+    const match = new RegExp(`^\\s*${escaped}\\s*=\\s*([^\\r\\n]+)`, 'm').exec(
       text
     );
     if (!match) {
@@ -134,6 +152,10 @@ function parseLabel(text, source) {
     southDeg: number('MINIMUM_LATITUDE'),
     westDeg: number('WESTERNMOST_LONGITUDE'),
     eastDeg: number('EASTERNMOST_LONGITUDE'),
+    imageByteOffset: imageByteOffset(field, number, source),
+    // Valeur « pas de mesure » (Dawn : −32768 sur la ligne extrême du pôle sud). Absente chez LOLA
+    // et MOLA, qui couvrent tout.
+    missingDn: number('MISSING_CONSTANT', { optional: true }),
   };
 
   // DEUX ORDRES D'OCTETS PUBLIÉS : LOLA écrit en petit-boutiste, MOLA en gros-boutiste. L'ordre
@@ -185,6 +207,48 @@ function parseLabel(text, source) {
         `à ${label.pixelsPerDegree} px/degré (attendu ${expectedSamples} x ${expectedLines})`
     );
   return label;
+}
+
+/**
+ * OÙ COMMENCENT LES ÉCHANTILLONS (2026-10-08). LOLA et MOLA publient l'étiquette À CÔTÉ de
+ * l'image (`^IMAGE = "LDEM_64.IMG"`) : l'image commence à son premier octet. Le relief de Dawn
+ * (Cérès, `DWNCHSPG_2`) la publie DANS le fichier, suivie d'un en-tête VICAR : `^IMAGE = 4`
+ * désigne alors le quatrième enregistrement de `RECORD_BYTES` octets. Lire l'image depuis
+ * l'octet 0 donnerait un relief décalé de trois enregistrements, et rien d'anormal à l'œil.
+ */
+function imageByteOffset(field, number, source) {
+  const pointer = field('^IMAGE', { optional: true });
+  if (pointer === undefined || /^"/.test(pointer)) return 0;
+  const record = Number.parseInt(pointer, 10);
+  const recordBytes = number('RECORD_BYTES', { optional: true });
+  if (!(record >= 1) || !(recordBytes > 0))
+    throw new Error(
+      `${source} : ^IMAGE = ${pointer} sans RECORD_BYTES lisible, l'image est introuvable`
+    );
+  return (record - 1) * recordBytes;
+}
+
+/**
+ * Le texte de l'étiquette. Attachée à l'image (même adresse), elle n'en lit que le DÉBUT par une
+ * requête de plage, jusqu'à sa ligne `END` : le fichier de Cérès pèse 466 Mo, et l'en-tête VICAR
+ * qui suit contient des mots-clés qu'un lecteur trop gourmand prendrait pour ceux de l'étiquette.
+ */
+async function fetchLabel(labelUrl, imageUrl) {
+  if (labelUrl !== imageUrl) return fetchText(labelUrl);
+  const response = await fetch(labelUrl, {
+    headers: { Range: 'bytes=0-262143' },
+  });
+  if (response.status !== 206)
+    throw new Error(
+      `${labelUrl} : requête de plage refusée (HTTP ${response.status})`
+    );
+  const text = Buffer.from(await response.arrayBuffer()).toString('latin1');
+  const end = /^END\s*$/m.exec(text);
+  if (!end)
+    throw new Error(
+      `${labelUrl} : fin d'étiquette introuvable dans les 256 premiers Ko`
+    );
+  return text.slice(0, end.index);
 }
 
 // ── Accès aux échantillons de la source ──────────────────────────────────────────────────────
@@ -323,7 +387,9 @@ async function fetchWindow(url, label, window, cacheDir, cacheKey) {
     const ranges = [];
     for (let k = 0; k < rows; k += 1) {
       const start =
-        (window.row + first + k) * rowBytes + window.column * bytesPerSample;
+        label.imageByteOffset +
+        (window.row + first + k) * rowBytes +
+        window.column * bytesPerSample;
       ranges.push(`${start}-${start + window.columns * bytesPerSample - 1}`);
     }
     const response = await fetch(url, {
@@ -381,6 +447,178 @@ function splitByteRanges(body, contentType) {
     index = next;
   }
   return parts;
+}
+
+/**
+ * LES TROUS DE LA SOURCE (ligne 45.3, 2026-10-09). Le relief de Dawn ne mesure pas sa ligne
+ * extrême du pôle sud (−32768 partout, `MISSING_CONSTANT`) : interpolée telle quelle, elle aurait
+ * mis le pôle à −32 km. Une ligne EXTRÊME (bande de 1/60° au pôle) reprend la ligne voisine,
+ * colonne par colonne, et le cuiseur le dit ; un trou AILLEURS fait échouer la cuisson, parce que
+ * le combler serait inventer du relief là où la source n'en a pas.
+ */
+function fillExtremeRows(samples, label, source) {
+  const missing = label.missingDn;
+  const width = label.lineSamples;
+  const last = label.lines - 1;
+  let filled = 0;
+  for (const [row, neighbour] of [
+    [0, 1],
+    [last, last - 1],
+  ]) {
+    for (let c = 0; c < width; c += 1) {
+      if (samples[row * width + c] !== missing) continue;
+      const value = samples[neighbour * width + c];
+      if (value === missing)
+        throw new Error(
+          `${source} : la ligne ${row} et sa voisine sont sans mesure en colonne ${c}`
+        );
+      samples[row * width + c] = value;
+      filled += 1;
+    }
+  }
+  let holes = 0;
+  for (let i = width; i < last * width; i += 1)
+    if (samples[i] === missing) holes += 1;
+  if (holes > 0)
+    throw new Error(
+      `${source} : ${holes} échantillons sans mesure hors des lignes extrêmes, refus de combler`
+    );
+  if (filled > 0)
+    console.log(
+      `${filled} échantillons sans mesure sur les lignes extrêmes, repris de la ligne voisine`
+    );
+}
+
+// ── La figure du globe RENDU, et le plancher de l'enveloppe (ligne 45.3) ──────────────────────
+
+const SNAPSHOT = join(ROOT, 'src', 'config', 'factSources.snapshot.json');
+const FITTED = join(ROOT, 'src', 'config', 'fittedFigures.json');
+
+/** Le rayon de la fiche du corps, en km : celui sur lequel l'application dessine le globe. */
+function ficheRadiusKm(body) {
+  const fiche = JSON.parse(
+    readFileSync(
+      join(ROOT, 'src', 'registry', 'entities', `${body}.json`),
+      'utf8'
+    )
+  );
+  const value = fiche.facts?.radiusKm?.value;
+  if (typeof value === 'number') return value;
+  if (value && typeof value.$diameterKm === 'number')
+    return value.$diameterKm / 2;
+  throw new Error(`${body} : rayon de fiche illisible`);
+}
+
+/**
+ * Les demi-axes du globe tel que l'APPLICATION le dessine (`config/bodyFigure.ts`) : ceux du noyau
+ * PCK quand il en publie de différents, sinon ceux ajustés au relief (`fittedFigures.json`), sinon
+ * une sphère du rayon de la fiche. Même règle que l'application, recopiée parce que ce script ne
+ * lit pas de TypeScript ; `config/surfaceHeights.test.ts` confronte le manifeste à l'application.
+ */
+function renderFigure(body, fitted) {
+  const radiusKm = ficheRadiusKm(body);
+  const pck = JSON.parse(readFileSync(SNAPSHOT, 'utf8')).naifRotation.bodies[
+    body
+  ]?.radiiKm;
+  const distinct = (r) =>
+    Array.isArray(r) && r.length === 3 && !(r[0] === r[1] && r[1] === r[2]);
+  if (distinct(pck)) return { radiusKm, radiiKm: pck, source: 'naif-pck' };
+  const fit =
+    fitted ??
+    (existsSync(FITTED)
+      ? JSON.parse(readFileSync(FITTED, 'utf8'))[body]
+      : null);
+  if (fit && distinct(fit.radiiKm))
+    return { radiusKm, radiiKm: fit.radiiKm, source: 'fitted' };
+  return { radiusKm, radiiKm: null, source: 'sphere' };
+}
+
+/** Rayon du globe rendu, en km, dans la direction (latitude, longitude Est) en degrés. */
+function renderRadiusAt(figure, latitudeDeg, longitudeDeg) {
+  if (!figure.radiiKm) return figure.radiusKm;
+  const [a, b, c] = figure.radiiKm;
+  const lat = (latitudeDeg * Math.PI) / 180;
+  const lon = (longitudeDeg * Math.PI) / 180;
+  const x = Math.cos(lat) * Math.cos(lon);
+  const y = Math.cos(lat) * Math.sin(lon);
+  const z = Math.sin(lat);
+  return 1 / Math.sqrt((x / a) ** 2 + (y / b) ** 2 + (z / c) ** 2);
+}
+
+/**
+ * L'ELLIPSOÏDE AJUSTÉ AU RELIEF, quand aucun rayon publié ne décrit le corps tel que la mission l'a
+ * mesuré (Cérès : le noyau PCK ne porte que les rayons d'avant Dawn). Moindres carrés LINÉAIRES sur
+ * 1/r² = P·(x² + y²) + Q·z², pondérés par l'aire (cos φ), un échantillon sur `step` dans chaque
+ * direction. Aplati, et c'est mesuré : le triaxial n'abaisse le résidu que de 2,01 à 1,93 km rms
+ * sur Cérès, et met son grand axe à 45,9° de longitude, ce que la figure de l'application (a au
+ * méridien origine) n'exprime pas.
+ */
+function fitOblate(samples, label, step) {
+  const ppd = label.pixelsPerDegree;
+  const datumM = label.radiusKm * 1000;
+  let n11 = 0;
+  let n12 = 0;
+  let n22 = 0;
+  let b1 = 0;
+  let b2 = 0;
+  for (let row = 0; row < label.lines; row += step) {
+    const latDeg = label.northDeg - (row + 0.5) / ppd;
+    const lat = (latDeg * Math.PI) / 180;
+    const w = Math.cos(lat);
+    const z2 = Math.sin(lat) ** 2;
+    const e2 = Math.cos(lat) ** 2;
+    for (let col = 0; col < label.lineSamples; col += step) {
+      const r =
+        (datumM +
+          samples[row * label.lineSamples + col] * label.quantumMetres) /
+        1000;
+      const t = 1 / (r * r);
+      n11 += w * e2 * e2;
+      n12 += w * e2 * z2;
+      n22 += w * z2 * z2;
+      b1 += w * e2 * t;
+      b2 += w * z2 * t;
+    }
+  }
+  const det = n11 * n22 - n12 * n12;
+  const P = (b1 * n22 - b2 * n12) / det;
+  const Q = (n11 * b2 - n12 * b1) / det;
+  const a = 1 / Math.sqrt(P);
+  const c = 1 / Math.sqrt(Q);
+  // Résidu, sur les mêmes échantillons.
+  let sum = 0;
+  let weight = 0;
+  let min = Number.POSITIVE_INFINITY;
+  let max = Number.NEGATIVE_INFINITY;
+  for (let row = 0; row < label.lines; row += step) {
+    const latDeg = label.northDeg - (row + 0.5) / ppd;
+    const lat = (latDeg * Math.PI) / 180;
+    const w = Math.cos(lat);
+    const fit = 1 / Math.sqrt(P * Math.cos(lat) ** 2 + Q * Math.sin(lat) ** 2);
+    for (let col = 0; col < label.lineSamples; col += step) {
+      const r =
+        (datumM +
+          samples[row * label.lineSamples + col] * label.quantumMetres) /
+        1000;
+      const d = r - fit;
+      sum += w * d * d;
+      weight += w;
+      if (d < min) min = d;
+      if (d > max) max = d;
+    }
+  }
+  const round = (v) => Number(v.toFixed(2));
+  return {
+    radiiKm: [round(a), round(a), round(c)],
+    method: 'oblate-least-squares-inverse-square-radius-area-weighted',
+    sourceProductId: label.productId,
+    sampleStep: step,
+    residualKm: {
+      rms: round(Math.sqrt(sum / weight)),
+      minimum: round(min),
+      maximum: round(max),
+    },
+  };
 }
 
 // ── Cuisson d'une tuile ──────────────────────────────────────────────────────────────────────
@@ -516,7 +754,7 @@ async function main() {
 async function bakeSet(set, { cacheDir, dryRun }) {
   console.log(`\n=== ${set.id} (${set.body}) ===`);
   const baseLabel = parseLabel(
-    await fetchText(set.base.label),
+    await fetchLabel(set.base.label, set.base.image),
     set.base.label.split('/').pop()
   );
   console.log(
@@ -524,12 +762,15 @@ async function bakeSet(set, { cacheDir, dryRun }) {
       `à ${baseLabel.pixelsPerDegree} px/degré, quantum ${baseLabel.quantumMetres} m, ` +
       `rayon de référence ${baseLabel.radiusKm} km`
   );
-  const bytes = await cachedFile(set.base.image, cacheDir);
+  const file = await cachedFile(set.base.image, cacheDir);
   const expected = baseLabel.lines * baseLabel.lineSamples * 2;
-  if (bytes.length !== expected)
+  const offset = baseLabel.imageByteOffset;
+  // Séparée, l'image fait EXACTEMENT sa grille ; attachée, l'étiquette et l'en-tête la précèdent.
+  if (offset === 0 ? file.length !== expected : file.length < offset + expected)
     throw new Error(
-      `${set.base.image} : ${bytes.length} octets, attendu ${expected}`
+      `${set.base.image} : ${file.length} octets, attendu ${offset} + ${expected}`
     );
+  const bytes = file.subarray(offset, offset + expected);
   if (bytes.byteOffset % 2 !== 0)
     throw new Error(
       'tampon désaligné : impossible de lire des entiers 16 bits'
@@ -551,6 +792,8 @@ async function bakeSet(set, { cacheDir, dryRun }) {
   } else {
     samples = new Int16Array(bytes.buffer, bytes.byteOffset, count);
   }
+  if (baseLabel.missingDn !== undefined)
+    fillExtremeRows(samples, baseLabel, set.base.image);
   const baseGrid = new DemGrid(baseLabel, samples);
   const poles = {
     north: baseGrid.rowMean(0),
@@ -567,11 +810,38 @@ async function bakeSet(set, { cacheDir, dryRun }) {
   let minElevation = Number.POSITIVE_INFINITY;
   let maxElevation = Number.NEGATIVE_INFINITY;
 
+  // La figure du globe rendu : ajustée ici quand la cible le demande, sinon lue (PCK ou sphère).
+  const fitted =
+    set.figure === 'fit'
+      ? fitOblate(samples, baseLabel, FIT_SAMPLE_STEP)
+      : null;
+  if (fitted)
+    console.log(
+      `ellipsoïde ajusté : ${fitted.radiiKm.join(' x ')} km, résidu ${fitted.residualKm.rms} km rms ` +
+        `(${fitted.residualKm.minimum} à ${fitted.residualKm.maximum} km)`
+    );
+  const figure = renderFigure(set.body, fitted);
+  // Le plancher : le plus petit rapport, sur TOUS les échantillons cuits, entre le rayon mesuré et
+  // le rayon du globe rendu dans la même direction. L'enveloppe abaissée de ce facteur reste sous
+  // le relief partout, et ne descend pas plus bas : sur Cérès, l'ancienne règle (minimum des
+  // hauteurs rapporté à une sphère) l'aurait rétrécie de 8 % au lieu de 1,5 %.
+  let floorRatio = Number.POSITIVE_INFINITY;
+  const datumKm = baseLabel.radiusKm;
+
   const emit = (level, row, column, values) => {
-    for (const dn of values) {
-      const m = dn * quantum;
-      if (m < minElevation) minElevation = m;
-      if (m > maxElevation) maxElevation = m;
+    const b = tileBounds(level, row, column);
+    for (let j = 0; j < TILE_SAMPLES; j += 1) {
+      const latitude = b.north - ((b.north - b.south) * j) / (TILE_SAMPLES - 1);
+      for (let i = 0; i < TILE_SAMPLES; i += 1) {
+        const dn = values[j * TILE_SAMPLES + i];
+        const m = dn * quantum;
+        if (m < minElevation) minElevation = m;
+        if (m > maxElevation) maxElevation = m;
+        const longitude = b.west + ((b.east - b.west) * i) / (TILE_SAMPLES - 1);
+        const ratio =
+          (datumKm + m / 1000) / renderRadiusAt(figure, latitude, longitude);
+        if (ratio < floorRatio) floorRatio = ratio;
+      }
     }
     entries.push({
       level,
@@ -606,7 +876,7 @@ async function bakeSet(set, { cacheDir, dryRun }) {
   // Aires nommées.
   for (const area of set.areas ?? []) {
     const label = parseLabel(
-      await fetchText(area.label),
+      await fetchLabel(area.label, area.image),
       area.label.split('/').pop()
     );
     const span = areaSpanDeg(
@@ -617,19 +887,31 @@ async function bakeSet(set, { cacheDir, dryRun }) {
     // L'emprise est bornée par celle de la source : le rempart sud de Tycho touche la limite du
     // fichier régional (45° sud), et déborder rendrait des hauteurs recopiées du dernier
     // échantillon sans que rien ne le dise.
+    // Une source GLOBALE (0 à 360 Est, Cérès) ne borne rien en longitude : ramenées dans
+    // −180..180, ses deux bornes se confondent, et la boîte sortait VIDE. Avec des bornes
+    // infinies, la fenêtre de lecture qui suit ne finissait jamais (1 h 40 figée, 2026-10-09).
+    const globalSource = Math.abs(label.eastDeg - label.westDeg - 360) < 1e-9;
     const box = {
-      west: Math.max(
-        normaliseEast(label.westDeg, -180),
-        area.centre.longitudeDeg - span.longitude
-      ),
-      east: Math.min(
-        normaliseEast(label.eastDeg, -180 + 1e-9),
-        area.centre.longitudeDeg + span.longitude
-      ),
+      west: globalSource
+        ? area.centre.longitudeDeg - span.longitude
+        : Math.max(
+            normaliseEast(label.westDeg, -180),
+            area.centre.longitudeDeg - span.longitude
+          ),
+      east: globalSource
+        ? area.centre.longitudeDeg + span.longitude
+        : Math.min(
+            normaliseEast(label.eastDeg, -180 + 1e-9),
+            area.centre.longitudeDeg + span.longitude
+          ),
       north: Math.min(label.northDeg, area.centre.latitudeDeg + span.latitude),
       south: Math.max(label.southDeg, area.centre.latitudeDeg - span.latitude),
     };
     const tiles = area.levels.flatMap((level) => tilesForBox(level, box));
+    if (tiles.length === 0)
+      throw new Error(
+        `aire ${area.id} : aucune tuile dans l'emprise demandée, la cible ou la source est fausse`
+      );
     // Emprise RÉELLE : celle des tuiles cuites, pas celle du carré demandé. C'est elle que
     // l'application consultera pour savoir si une tuile d'imagerie est couverte.
     const finest = Math.max(...area.levels);
@@ -691,14 +973,23 @@ async function bakeSet(set, { cacheDir, dryRun }) {
       columns: columnEnd - column,
       rows: rowEnd - row,
     };
-    const windowSamples = await fetchWindow(
-      area.image,
-      label,
-      window,
-      cacheDir,
-      `${set.id}-${area.id}-${window.column}-${window.row}-${window.columns}x${window.rows}`
-    );
-    const grid = new DemGrid(label, windowSamples, window);
+    // Une aire qui lit le MÊME fichier que le socle (Cérès : un seul modèle global à 60 px/degré)
+    // reprend la grille déjà en mémoire. La lire par plages serait inutile, et l'archive de Dawn
+    // refuse les requêtes multi-plages (HTTP 200, le fichier entier).
+    const grid =
+      area.image === set.base.image
+        ? baseGrid
+        : new DemGrid(
+            label,
+            await fetchWindow(
+              area.image,
+              label,
+              window,
+              cacheDir,
+              `${set.id}-${area.id}-${window.column}-${window.row}-${window.columns}x${window.rows}`
+            ),
+            window
+          );
     for (const tile of tiles)
       emit(
         tile.level,
@@ -748,6 +1039,14 @@ async function bakeSet(set, { cacheDir, dryRun }) {
       minimum: Number(minElevation.toFixed(1)),
       maximum: Number(maxElevation.toFixed(1)),
     },
+    // Le globe que l'application dessine, et le facteur qui met son enveloppe sous le relief
+    // (arrondi PAR DÉFAUT au millionième : arrondir au plus proche pourrait la remonter au-dessus).
+    figure: {
+      source: figure.source,
+      renderRadiusKm: figure.radiusKm,
+      radiiKm: figure.radiiKm,
+    },
+    figureFloorRatio: Math.floor(floorRatio * 1e6) / 1e6,
     tiles: entries.length,
     bytes: entries.reduce((total, entry) => total + entry.bytes.length, 0),
   };
@@ -757,9 +1056,28 @@ async function bakeSet(set, { cacheDir, dryRun }) {
       `altitudes ${manifest.elevationMetres.minimum} à ${manifest.elevationMetres.maximum} m, ` +
       `répertoire ${manifest.directory}`
   );
+  console.log(
+    `globe rendu : ${figure.source}, plancher de l'enveloppe ${manifest.figureFloorRatio}`
+  );
   if (dryRun) {
     console.log('--dry-run : rien écrit');
     return;
+  }
+  if (fitted) {
+    const all = existsSync(FITTED)
+      ? JSON.parse(readFileSync(FITTED, 'utf8'))
+      : {};
+    all.$comment =
+      "Écrit par pnpm surface:tiles (scripts/bake-surface-height-tiles.mjs, fitOblate) : l'ellipsoïde ajusté au relief d'un corps dont aucun rayon publié ne décrit la forme mesurée. Lu par config/bodyFigure.ts. Ne pas éditer à la main.";
+    all[set.body] = fitted;
+    const sorted = Object.fromEntries(
+      Object.keys(all)
+        .sort((x, y) =>
+          x === '$comment' ? -1 : y === '$comment' ? 1 : x.localeCompare(y)
+        )
+        .map((key) => [key, all[key]])
+    );
+    writeFileSync(FITTED, `${JSON.stringify(sorted, null, 2)}\n`);
   }
 
   const outputDir = join(ROOT, set.output);

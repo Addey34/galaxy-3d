@@ -38,7 +38,11 @@ import {
   type TemporalCategory,
 } from '@/core/temporal';
 import { messages } from '@/i18n/allDictionaries';
-import { bodyFigure, publishedRadiiKm } from '@/config/bodyFigure';
+import {
+  bodyFigure,
+  fittedRadiiKm,
+  publishedRadiiKm,
+} from '@/config/bodyFigure';
 import { INTL_LOCALE, UNREVIEWED_TRANSLATIONS } from '@/i18n/locales';
 import { escapeHtml } from './bodyLandingPage';
 import {
@@ -508,6 +512,33 @@ function methodologyPage(input: MethodologyInput, locale: DocLocale): DocPage {
   if (saturnRadii === null)
     throw new Error('methodology : rayons de Saturne absents du relevé');
 
+  // Les corps dont l'ellipsoïde est AJUSTÉ au relief livré (Cérès) : le noyau NAIF ne les
+  // décrit pas tels que la mission les a mesurés. Nommés, avec leurs demi-axes, lus dans
+  // `fittedFigures.json` : la phrase disparaît si la liste se vide.
+  const fittedBodies = [...flattenBodies(config)]
+    .filter(([name]) => fittedRadiiKm(name) !== null)
+    .map(([name]) => ({ name, radii: fittedRadiiKm(name)! }));
+  const fittedSentence = (lang: keyof DocText): string => {
+    if (fittedBodies.length === 0) return '';
+    const list = new Intl.ListFormat(INTL_LOCALE[lang], {
+      type: 'conjunction',
+    }).format(
+      fittedBodies.map(
+        (b) =>
+          `${escapeHtml(name(b.name, lang))} (${b.radii
+            .map((r) => exact(r, lang))
+            .join(' × ')} km)`
+      )
+    );
+    const text: DocText = {
+      en: ` For ${list}, whose kernel radii predate the mission that mapped it, the ellipsoid is fitted to the shipped terrain model instead.`,
+      fr: ` Pour ${list}, dont les rayons du noyau précèdent la mission qui l’a cartographié, l’ellipsoïde est ajusté au modèle de terrain livré.`,
+      es: ` Para ${list}, cuyos radios del núcleo son anteriores a la misión que lo cartografió, el elipsoide se ajusta al modelo de terreno entregado.`,
+      'pt-BR': ` Para ${list}, cujos raios do núcleo são anteriores à missão que o mapeou, o elipsoide é ajustado ao modelo de terreno entregue.`,
+    };
+    return text[lang];
+  };
+
   const sections: string[] = [];
 
   // 1. Repères
@@ -532,10 +563,10 @@ function methodologyPage(input: MethodologyInput, locale: DocLocale): DocPage {
         'pt-BR':
           'O Sol está fixo na origem: as posições são heliocêntricas. A cena 3D projeta a eclíptica sobre o seu plano horizontal: X da cena = x eclíptico, Y da cena = z eclíptico (na direção do polo norte eclíptico), Z da cena = −y eclíptico. É uma rotação própria (determinante +1), não um espelho, então as órbitas conservam o seu verdadeiro sentido de percurso.',
       })}</p><p>${L({
-        en: `A globe is drawn as the ellipsoid its three published radii describe, read from the same NAIF kernel as the rotation models, not as a sphere: ${flattened} bodies are flattened or elongated this way, Saturn by ${saturnFlattening}% from equator to pole. Each surface point is pushed along its direction from the centre, so a map keeps its planetocentric latitude, and a marker or a streamed tile lands on the texture it describes. Bodies with three equal radii, or none published, stay spheres.`,
-        fr: `Un globe est dessiné comme l’ellipsoïde que décrivent ses trois rayons publiés, lus dans le même noyau NAIF que les modèles de rotation, et non comme une sphère : ${flattened} corps sont ainsi aplatis ou allongés, Saturne de ${saturnFlattening} % de l’équateur au pôle. Chaque point de la surface est poussé le long de sa direction depuis le centre : une carte garde sa latitude planétocentrique, et un marqueur ou un carreau streamé tombe sur la texture qu’il décrit. Les corps aux trois rayons égaux, ou sans rayons publiés, restent des sphères.`,
-        es: `Un globo se dibuja como el elipsoide que describen sus tres radios publicados, leídos en el mismo núcleo NAIF que los modelos de rotación, y no como una esfera: ${flattened} cuerpos quedan así achatados o alargados, Saturno un ${saturnFlattening} % del ecuador al polo. Cada punto de la superficie se desplaza a lo largo de su dirección desde el centro, de modo que un mapa conserva su latitud planetocéntrica, y un marcador o una tesela transmitida cae sobre la textura que describe. Los cuerpos con tres radios iguales, o sin radios publicados, siguen siendo esferas.`,
-        'pt-BR': `Um globo é desenhado como o elipsoide que os seus três raios publicados descrevem, lidos no mesmo núcleo NAIF que os modelos de rotação, e não como uma esfera: ${flattened} corpos ficam assim achatados ou alongados, Saturno em ${saturnFlattening} % do equador ao polo. Cada ponto da superfície é deslocado ao longo da sua direção a partir do centro, de modo que um mapa conserva a sua latitude planetocêntrica, e um marcador ou um ladrilho transmitido cai sobre a textura que descreve. Os corpos com três raios iguais, ou sem raios publicados, continuam esferas.`,
+        en: `A globe is drawn as the ellipsoid its three published radii describe, read from the same NAIF kernel as the rotation models, not as a sphere: ${flattened} bodies are flattened or elongated this way, Saturn by ${saturnFlattening}% from equator to pole.${fittedSentence('en')} Each surface point is pushed along its direction from the centre, so a map keeps its planetocentric latitude, and a marker or a streamed tile lands on the texture it describes. Bodies with three equal radii, or none published, stay spheres.`,
+        fr: `Un globe est dessiné comme l’ellipsoïde que décrivent ses trois rayons publiés, lus dans le même noyau NAIF que les modèles de rotation, et non comme une sphère : ${flattened} corps sont ainsi aplatis ou allongés, Saturne de ${saturnFlattening} % de l’équateur au pôle.${fittedSentence('fr')} Chaque point de la surface est poussé le long de sa direction depuis le centre : une carte garde sa latitude planétocentrique, et un marqueur ou un carreau streamé tombe sur la texture qu’il décrit. Les corps aux trois rayons égaux, ou sans rayons publiés, restent des sphères.`,
+        es: `Un globo se dibuja como el elipsoide que describen sus tres radios publicados, leídos en el mismo núcleo NAIF que los modelos de rotación, y no como una esfera: ${flattened} cuerpos quedan así achatados o alargados, Saturno un ${saturnFlattening} % del ecuador al polo.${fittedSentence('es')} Cada punto de la superficie se desplaza a lo largo de su dirección desde el centro, de modo que un mapa conserva su latitud planetocéntrica, y un marcador o una tesela transmitida cae sobre la textura que describe. Los cuerpos con tres radios iguales, o sin radios publicados, siguen siendo esferas.`,
+        'pt-BR': `Um globo é desenhado como o elipsoide que os seus três raios publicados descrevem, lidos no mesmo núcleo NAIF que os modelos de rotação, e não como uma esfera: ${flattened} corpos ficam assim achatados ou alongados, Saturno em ${saturnFlattening} % do equador ao polo.${fittedSentence('pt-BR')} Cada ponto da superfície é deslocado ao longo da sua direção a partir do centro, de modo que um mapa conserva a sua latitude planetocêntrica, e um marcador ou um ladrilho transmitido cai sobre a textura que descreve. Os corpos com três raios iguais, ou sem raios publicados, continuam esferas.`,
       })}</p>`
     )
   );

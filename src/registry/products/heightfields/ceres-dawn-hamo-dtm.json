@@ -1,0 +1,42 @@
+{
+  "$schema": "../../schema/product.schema.json",
+  "id": "ceres-dawn-hamo-dtm",
+  "type": "heightfield",
+  "body": "ceres",
+  "title": "Dawn FC2 Ceres HAMO Digital Terrain Model, stereophotogrammetry (CE_HAMO_G_00N_180E_EQU_DTM, 60 pixels/degree)",
+  "mission": "Dawn",
+  "instrument": "Framing Camera 2",
+  "manifest": "assets/height-tiles/ceres/manifest.json",
+  "generatedBy": "scripts/bake-surface-height-tiles.mjs",
+  "acquired": {
+    "interval": [["2015-08-16T00:00:00Z", "2015-10-23T23:59:59Z"]]
+  },
+  "license": "other",
+  "rights": "public-domain",
+  "links": [
+    {
+      "rel": "license",
+      "href": "https://www.nasa.gov/nasa-brand-center/images-and-media/"
+    },
+    {
+      "rel": "describedby",
+      "href": "https://sbnarchive.psi.edu/pds3/dawn/fc/DWNCHSPG_2/CATALOG/FC2_CERES_HAMO_DTM_SPG_DS.CAT"
+    },
+    {
+      "rel": "via",
+      "href": "https://sbnarchive.psi.edu/pds3/dawn/fc/DWNCHSPG_2/"
+    }
+  ],
+  "providers": [
+    {
+      "name": "Frank Preusker et al., German Aerospace Center (DLR)",
+      "roles": ["producer"]
+    },
+    {
+      "name": "PDS Small Bodies Node, Planetary Science Institute",
+      "roles": ["host"],
+      "url": "https://sbnarchive.psi.edu/pds3/dawn/fc/DWNCHSPG_2/"
+    }
+  ],
+  "verified": "2026-10-09"
+}
