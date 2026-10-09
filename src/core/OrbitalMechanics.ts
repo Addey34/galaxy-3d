@@ -322,6 +322,7 @@ export class OrbitalMechanics {
     // morph (les positions s'interpolent chaque frame) ou au tout premier passage / après un
     // saut temporel (`_lastPositionMs === null`), où un recalcul immédiat est obligatoire.
     const nowMs = date.getTime();
+    const jumped = this._lastPositionMs === null;
     const mustRecompute =
       this._morphActive ||
       this._lastPositionMs === null ||
@@ -333,6 +334,8 @@ export class OrbitalMechanics {
       forEachBody(this.config, ({ name, config: cfg }) => {
         if (hasOrbit(cfg)) this._updateBody(name, cfg, date);
       });
+      if (jumped)
+        for (const listener of this._positionsJumpedListeners) listener();
     }
 
     // HORS du throttle, et après lui : la phase de rotation terrestre est la seule grandeur
@@ -479,6 +482,18 @@ export class OrbitalMechanics {
   onDateSettled(listener: () => void): void {
     this._dateSettledListeners.push(listener);
   }
+
+  /**
+   * Prévient quand les positions viennent d'être recalculées À FROID : le tout premier calcul
+   * (avant lui, chaque corps attend sur l'axe +X à sa distance de catalogue), puis après un
+   * saut de date ou un changement de mode. Appelé APRÈS le recalcul, positions à jour. Un
+   * corps peut y avoir sauté le long de son orbite, ce que la caméra qui le suit doit savoir
+   * (ligne 45.9) ; l'écoulement continu du temps, lui, ne déclenche rien.
+   */
+  onPositionsJumped(listener: () => void): void {
+    this._positionsJumpedListeners.push(listener);
+  }
+  private readonly _positionsJumpedListeners: (() => void)[] = [];
 
   /** Le saut lui-même, une fois ses données là. */
   private _jumpNow(target: Date): void {

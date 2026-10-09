@@ -274,3 +274,54 @@ test('clicking a projected label selects and centers the body', async ({
 
   expect(errors, `Erreurs page : ${errors.join(' | ')}`).toEqual([]);
 });
+
+/**
+ * LIGNE 45.9 : un corps ouvert PAR LIEN arrive vu côté jour. Le lien sélectionnait le corps
+ * avant le premier calcul des positions (encore posé sur l'axe +X), puis le saut de date le
+ * déplaçait sous un offset de caméra fixe : sur `main`, la Terre du 1er mars 1990 n'avait que
+ * 4 % de son disque éclairé, Cérès du 9 octobre 2026 était vue sous 113° de phase. Mesuré au
+ * centre du corps par la sonde (`?debug-eclipse`), une fois le vol fini et la date appliquée.
+ */
+for (const [body, date] of [
+  ['earth', '1990-03-01T00:00:00Z'],
+  ['ceres', '2026-10-09T00:00:00Z'],
+] as const) {
+  test(`a ${body} link opened in Explo lands on the day side`, async ({
+    page,
+  }) => {
+    await page.goto(`/?body=${body}&mode=explo&date=${date}&debug-eclipse`);
+    await expect(page.locator('#loader')).toBeHidden({ timeout: 60_000 });
+    const phase = () =>
+      page.evaluate(
+        ([name, day]) => {
+          const probe = (
+            window as unknown as {
+              eclipseProbe?: {
+                state(b: string): {
+                  followed: string | null;
+                  cameraFlying: boolean;
+                  simulationDate: string;
+                  pendingJump: string | null;
+                  phaseDeg: number;
+                } | null;
+              };
+            }
+          ).eclipseProbe?.state(name);
+          if (
+            !probe ||
+            probe.followed !== name ||
+            probe.cameraFlying ||
+            probe.pendingJump !== null ||
+            !probe.simulationDate.startsWith(day)
+          )
+            return null;
+          return probe.phaseDeg;
+        },
+        [body, date.slice(0, 10)] as const
+      );
+    // Le saut attend ses octets d'éphémérides (médiane ~12 s mesurée au lot 17C) : 60 s.
+    await expect.poll(phase, { timeout: 60_000 }).not.toBeNull();
+    // L'approche vise ~35° ; la face nuit commence à 90°.
+    expect(await phase()).toBeLessThan(60);
+  });
+}

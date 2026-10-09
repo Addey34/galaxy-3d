@@ -59,6 +59,13 @@ export interface EclipseProbeState {
   screen: { x: number; y: number; radius: number; inFront: boolean };
   /** Distance du corps regardé à la caméra, pour comparer à `others`. */
   distance: number;
+  /**
+   * Angle Soleil-corps-caméra en degrés (0 = face éclairée pleine, 180 = face nuit), au centre
+   * du corps. Lu par la garde du démarrage par lien (ligne 45.9).
+   */
+  phaseDeg: number;
+  /** Vrai pendant un vol caméra : la phase ne se lit qu'à l'arrivée. */
+  cameraFlying: boolean;
   /** Date appliquée à la scène, et saut encore en attente de ses octets. */
   simulationDate: string;
   pendingJump: string | null;
@@ -149,6 +156,18 @@ function screenOf(
   };
 }
 
+function phaseOf(api: PublicAPI, name: string): number {
+  const center = api.sceneSystem
+    .getBody(name)!
+    .group.getWorldPosition(new THREE.Vector3());
+  const sun = api.sceneSystem
+    .getBody('sun')
+    ?.group.getWorldPosition(new THREE.Vector3());
+  const toCamera = api.sceneSystem.camera.position.clone().sub(center);
+  const toSun = (sun ?? new THREE.Vector3()).clone().sub(center);
+  return THREE.MathUtils.radToDeg(toCamera.angleTo(toSun));
+}
+
 export function setupEclipseProbe(api: PublicAPI): void {
   const probe: EclipseProbe = {
     state(bodyName) {
@@ -188,6 +207,8 @@ export function setupEclipseProbe(api: PublicAPI): void {
           inFront: self.inFront,
         },
         distance: self.distance,
+        phaseDeg: phaseOf(api, bodyName),
+        cameraFlying: api.cameraSystem.isFlying,
         simulationDate: api.orbitalMechanics.simulationDate.toISOString(),
         pendingJump: pending ? pending.toISOString() : null,
         toneMappingExposure: api.sceneSystem.renderer.toneMappingExposure,

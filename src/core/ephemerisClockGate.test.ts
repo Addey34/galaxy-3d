@@ -111,6 +111,8 @@ function makeGateHarness(): Harness {
     // `Object.create` n'exécute pas les initialiseurs de champs : la liste des écouteurs doit
     // être posée ici, sinon `onDateSettled` lit `undefined`.
     _dateSettledListeners: [],
+    // Idem pour `onPositionsJumped` (ligne 45.9), parcouru à chaque recalcul à froid.
+    _positionsJumpedListeners: [],
   }))
     Object.defineProperty(mechanics, key, { value, writable: true });
   Object.defineProperty(mechanics, 'clock', { value: clock });

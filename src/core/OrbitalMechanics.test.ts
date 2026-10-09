@@ -99,6 +99,10 @@ function makeThrottleHarness(thresholdMs: number): {
     value: [],
     writable: true,
   });
+  Object.defineProperty(mechanics, '_positionsJumpedListeners', {
+    value: [],
+    writable: true,
+  });
 
   return {
     mechanics,
@@ -222,6 +226,30 @@ describe('OrbitalMechanics orbit sampling', () => {
       mechanics.addTimeOffset(2);
       mechanics.update(1);
       expect(updateBody).toHaveBeenCalledTimes(1);
+    });
+
+    it('signale un recalcul À FROID, jamais l’écoulement continu (ligne 45.9)', () => {
+      const { mechanics, setDate, updateBody } = makeThrottleHarness(1000);
+      // Le signal tombe APRÈS le recalcul : la caméra y lit des positions à jour.
+      const seen: number[] = [];
+      mechanics.onPositionsJumped(() =>
+        seen.push(updateBody.mock.calls.length)
+      );
+
+      setDate(0);
+      mechanics.update(1); // premier calcul : avant lui, les corps attendent sur l'axe +X
+      expect(seen).toEqual([1]);
+
+      // Écoulement continu, même au-delà du seuil (vitesse élevée) : rien.
+      setDate(5_000);
+      mechanics.update(1);
+      setDate(1_000_000);
+      mechanics.update(1);
+      expect(seen).toEqual([1]);
+
+      mechanics.addTimeOffset(180);
+      mechanics.update(1);
+      expect(seen).toEqual([1, 4]);
     });
 
     /**
