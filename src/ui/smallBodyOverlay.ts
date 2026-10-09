@@ -10,6 +10,7 @@
  * Actif uniquement en mode Exploration. Chaque frame propage les orbites (Kepler) et redessine
  * les marqueurs visibles, plafonnés pour tenir à l'échelle de milliers de corps.
  */
+import type { ScreenOcclusion } from '@/core/screenOcclusion';
 import * as THREE from 'three';
 import { SQRT_K } from '@/core/ScaleService';
 import { scaleToScene } from '@/core/overlayScale';
@@ -24,6 +25,8 @@ const MAX_MARKERS = 1500;
 export const SMALL_BODY_MARKER_RGB = '180, 200, 235';
 
 export class SmallBodyOverlay {
+  /** Les corps qui masquent un repère passé derrière eux (ligne 45.8), ou rien. */
+  private _occlusion: ScreenOcclusion | null = null;
   private readonly canvas: HTMLCanvasElement;
   private readonly ctx: CanvasRenderingContext2D | null;
   private bodies: ParsedSmallBody[] = [];
@@ -60,6 +63,11 @@ export class SmallBodyOverlay {
     this.visibleCategories = categories;
   }
 
+  /** Les corps qui masquent un marqueur passé derrière eux (ligne 45.8). */
+  setOcclusion(occlusion: ScreenOcclusion | null): void {
+    this._occlusion = occlusion;
+  }
+
   /** Affiche/masque l'overlay. À l'extinction, efface le canvas. */
   setActive(active: boolean): void {
     this.active = active;
@@ -84,6 +92,7 @@ export class SmallBodyOverlay {
 
     this.ctx.fillStyle = `rgba(${SMALL_BODY_MARKER_RGB}, 0.75)`;
     let drawn = 0;
+    let occluded = 0;
     for (let b = 0; b < this.bodies.length && drawn < MAX_MARKERS; b++) {
       const body = this.bodies[b];
       if (body.category && !this.visibleCategories.has(body.category)) continue;
@@ -92,6 +101,11 @@ export class SmallBodyOverlay {
       scaleToScene(this._p, scene.x, scene.y, scene.z, morph);
 
       if (cutoff > 0 && this._p.distanceToSquared(this._cam) > cutoff) continue;
+      // Derrière une planète vue de près : ne pas se peindre sur son sol.
+      if (this._occlusion?.hides(this._p.x, this._p.y, this._p.z)) {
+        occluded++;
+        continue;
+      }
 
       this._p.project(camera);
       if (
@@ -109,6 +123,9 @@ export class SmallBodyOverlay {
       this.ctx.fillRect(x - 0.75, y - 0.75, 1.5, 1.5);
       drawn++;
     }
+    // Lus par l'e2e (ligne 45.8) : ce qui est peint, et ce qu'un corps a masqué.
+    this.canvas.dataset['drawn'] = String(drawn);
+    this.canvas.dataset['occluded'] = String(occluded);
   }
 
   /** Rayon² de coupe LOD (unités scène²), ou 0 = pas de coupe. */

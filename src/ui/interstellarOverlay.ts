@@ -18,6 +18,7 @@
  *
  * Hors fenêtre, rien : ni marqueur ni ligne (cf. `INTERSTELLAR_WINDOW_YEARS`).
  */
+import type { ScreenOcclusion } from '@/core/screenOcclusion';
 import * as THREE from 'three';
 import { scaleToScene } from '@/core/overlayScale';
 import {
@@ -82,6 +83,13 @@ const REDRAW_DATE_STEP_MS = 10 * 60_000;
 const OFFSCREEN_MARGIN_PX = 64;
 
 export class InterstellarOverlay {
+  /** Les corps qui masquent un repère passé derrière eux (ligne 45.8), ou rien. */
+  private _occlusion: ScreenOcclusion | null = null;
+
+  /** Branche l'occultation par les corps (`core/screenOcclusion`), recomposée à chaque image. */
+  setOcclusion(occlusion: ScreenOcclusion | null): void {
+    this._occlusion = occlusion;
+  }
   private readonly canvas: HTMLCanvasElement;
   private readonly ctx: CanvasRenderingContext2D | null;
   private readonly tracks: Track[];
@@ -328,7 +336,9 @@ export class InterstellarOverlay {
       // par les éléments, et c'est le seul moment où les deux peuvent se séparer.
       const s = interstellarSceneAU(track.object, date, this._positions);
       if (!s) continue;
-      scaleToScene(this._p, s.x, s.y, s.z, morph).project(camera);
+      scaleToScene(this._p, s.x, s.y, s.z, morph);
+      if (this._occlusion?.hides(this._p.x, this._p.y, this._p.z)) continue;
+      this._p.project(camera);
       if (
         !inDepth(this._p) ||
         Math.abs(this._p.x) > 1 ||

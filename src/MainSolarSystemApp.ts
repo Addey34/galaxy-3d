@@ -10,6 +10,8 @@
  *   - `ui/timePanel`    — panneau date-heure (voyage temporel) ;
  *   - `ui/modeSwitcher` — bascule Éducatif ↔ Exploration.
  */
+import { Vector3 } from 'three';
+import { ScreenOcclusion, type SceneOccluder } from './core/screenOcclusion';
 import Logger from '@/utils/Logger';
 import { SolarSystemApp } from './SolarSystemApp';
 import { LabelSpace } from '@/core/labelSpace';
@@ -575,6 +577,42 @@ function wireChrome(): {
     // les libellés DOM du HUD et ceux dessinés au canvas s'ignoraient et se recouvraient.
     const labelSpace = new LabelSpace();
     exploHud.setLabelSpace(labelSpace);
+    // LES CORPS MASQUENT CE QUI EST DERRIÈRE EUX (ligne 45.8, 2026-10-09). Recomposé à chaque
+    // image et partagé par les couches 2D, qui se peignaient par-dessus une planète vue de près
+    // (1 064 pixels de marqueurs d'astéroïdes mesurés sur le sol de Mars). Sphère INSCRITE du
+    // globe rendu : rayon rendu × plus petit demi-axe ; un corps masqué par le tableau ne cache
+    // rien.
+    const occlusion = new ScreenOcclusion();
+    const occluders: SceneOccluder[] = [];
+    const cameraWorld = new Vector3();
+    const bodyWorld = new Vector3();
+    exploHud.setOcclusion(occlusion);
+    smallBodyOverlay.setOcclusion(occlusion);
+    spacecraftOverlay.setOcclusion(occlusion);
+    interstellarOverlay.setOcclusion(occlusion);
+    const refreshOcclusion = (): void => {
+      occluders.length = 0;
+      for (const [name, body] of sceneSystem.bodyEntries()) {
+        if (!body.group.visible) continue;
+        const radius =
+          (body.group.userData['radius'] as number | undefined) ?? 0;
+        if (!(radius > 0)) continue;
+        const figure = body.figure;
+        const inscribed = figure
+          ? Math.min(1, figure.a, figure.b, figure.c)
+          : 1;
+        body.group.getWorldPosition(bodyWorld);
+        occluders.push({
+          name,
+          x: bodyWorld.x,
+          y: bodyWorld.y,
+          z: bodyWorld.z,
+          radius: radius * inscribed,
+        });
+      }
+      cameraSystem.camera.getWorldPosition(cameraWorld);
+      occlusion.set(cameraWorld, occluders);
+    };
     animationSystem.onFrame(() => {
       const morph = orbitalMechanics.scaleMorph;
       // Phase 17D : le curseur se plafonne à ce que le lien soutient, et la date qui attend le
@@ -590,6 +628,7 @@ function wireChrome(): {
       // AVANT les couches 2D et la caméra : les ancres et les marqueurs doivent décrire la
       // même position à la même frame.
       navigableAnchors.update(orbitalMechanics.simulationDate, morph);
+      refreshOcclusion();
       exploHud.update(cameraSystem.camera, cameraSystem, sceneSystem);
       // L'objet sélectionné est toujours peint et nommé, même quand le tableau le masque
       // (cf. `ui/defaultDisplay.ts`) : le HUD applique déjà cette exception aux corps.

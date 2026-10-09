@@ -14,6 +14,7 @@
  * Piloté chaque frame par `AnimationSystem.onFrame`. Inerte (aucune écriture DOM) quand
  * `setActive(false)` a été appelé.
  */
+import type { ScreenOcclusion } from '@/core/screenOcclusion';
 import * as THREE from 'three';
 import type { CameraSystem } from '@/components/systems/CameraSystem';
 import type { SceneSystem } from '@/components/systems/SceneSystem';
@@ -222,6 +223,13 @@ export function findLabelPlacement(
 }
 
 export class ExploHud {
+  /** Les corps qui masquent un repère passé derrière eux (ligne 45.8), ou rien. */
+  private _occlusion: ScreenOcclusion | null = null;
+
+  /** Branche l'occultation par les corps (`core/screenOcclusion`), recomposée à chaque image. */
+  setOcclusion(occlusion: ScreenOcclusion | null): void {
+    this._occlusion = occlusion;
+  }
   private readonly labelsLayer: HTMLDivElement;
   private readonly labels = new Map<string, HTMLButtonElement>();
   private readonly _ndc = new THREE.Vector3();
@@ -376,6 +384,10 @@ export class ExploHud {
       // `.explo-label.is-target` — le HUD, l'animation d'acquisition, et plusieurs scénarios e2e.
       if (bodyName !== targetName && this._hiddenNames.has(bodyName)) return;
       if (isOverview && !MAJOR_BODIES.has(bodyName)) return;
+      // Une lune passée derrière sa planète ne garde pas son étiquette par-dessus ; un corps ne
+      // se cache pas derrière lui-même (ligne 45.8).
+      if (this._occlusion?.hides(worldPos.x, worldPos.y, worldPos.z, bodyName))
+        return;
       this._ndc.copy(worldPos).project(camera);
       const onScreen =
         this._ndc.z >= -1 &&
