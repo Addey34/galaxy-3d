@@ -14,7 +14,9 @@ import * as THREE from 'three';
 import {
   buildLayers,
   createSurfaceLayerMaterial,
+  layerFigure,
 } from '@/components/celestial/celestialLayers';
+import { figureRadius, type Figure } from '@/core/ellipsoid';
 import { applyTexture } from '@/components/celestial/celestialTextures';
 import { KM_PER_AU, SQRT_K } from '@/core/ScaleService';
 import { fitScale, meshVolume, volumeEquivalentRadius } from '@/core/modelFit';
@@ -202,12 +204,19 @@ export default class CelestialObject {
   // Carte statique complète, conservée comme secours uniquement pour les pixels polaires sans donnée NASA.
   private _staticCloudTexture: THREE.Texture | null = null;
 
+  /**
+   * L'ellipsoïde publié du corps (ligne 45.3), rapporté à son rayon de rendu, ou `null` pour une
+   * sphère. Toutes les couches en forme de globe le portent, et les carreaux sans hauteurs aussi.
+   */
+  readonly figure: Figure | null;
+
   constructor(
     private readonly textureSystem: TextureSystem,
     private readonly config: CelestialBodyConfig,
     readonly name: string,
     private readonly animationSystem: AnimationSystem
   ) {
+    this.figure = layerFigure(config, name);
     this.group = new THREE.Group();
     this.group.name = name;
 
@@ -648,9 +657,12 @@ export default class CelestialObject {
     longitudeDeg: number,
     out = new THREE.Vector3()
   ): THREE.Vector3 {
-    geographicToLocalDirection(latitudeDeg, longitudeDeg, out).multiplyScalar(
-      this.config.radius
-    );
+    geographicToLocalDirection(latitudeDeg, longitudeDeg, out);
+    // Sur l'ellipsoïde, pas sur la sphère : le marqueur tombe là où la surface est dessinée.
+    const onFigure = this.figure
+      ? figureRadius(this.figure, out.x, out.y, out.z)
+      : 1;
+    out.multiplyScalar(this.config.radius * onFigure);
     return this._meshGroup.localToWorld(out);
   }
 
@@ -1443,7 +1455,8 @@ export default class CelestialObject {
       this._surfaceGeoHi = createSphereGeometry(
         this.config.radius,
         'surface',
-        GEOMETRY_SEGMENTS_HI
+        GEOMETRY_SEGMENTS_HI,
+        this.figure
       );
     }
     const next = shouldBeHiRes ? this._surfaceGeoHi : this._surfaceGeoStd;

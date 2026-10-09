@@ -38,6 +38,7 @@ import {
   type TemporalCategory,
 } from '@/core/temporal';
 import { messages } from '@/i18n/allDictionaries';
+import { bodyFigure, publishedRadiiKm } from '@/config/bodyFigure';
 import { INTL_LOCALE, UNREVIEWED_TRANSLATIONS } from '@/i18n/locales';
 import { escapeHtml } from './bodyLandingPage';
 import {
@@ -490,6 +491,23 @@ function methodologyPage(input: MethodologyInput, locale: DocLocale): DocPage {
     }
   };
 
+  // Les globes ellipsoïdaux (ligne 45.3) : comptés, et l'aplatissement de Saturne LU dans le
+  // relevé, jamais écrits ici.
+  const flattened = [...flattenBodies(config)].filter(
+    // Un corps à modèle de forme montre son MAILLAGE : l'ellipsoïde n'est que sa sphère de repli.
+    ([name, cfg]) =>
+      !cfg.model && bodyFigure(name, cfg.realData?.radiusKm) !== null
+  ).length;
+  const saturnRadii = publishedRadiiKm('saturn');
+  const saturnFlattening = saturnRadii
+    ? formatQuantity(
+        (100 * (saturnRadii[0] - saturnRadii[2])) / saturnRadii[0],
+        locale
+      )
+    : '?';
+  if (saturnRadii === null)
+    throw new Error('methodology : rayons de Saturne absents du relevé');
+
   const sections: string[] = [];
 
   // 1. Repères
@@ -513,6 +531,11 @@ function methodologyPage(input: MethodologyInput, locale: DocLocale): DocPage {
         es: 'El Sol está fijo en el origen: las posiciones son heliocéntricas. La escena 3D proyecta la eclíptica sobre su plano horizontal: X de escena = x eclíptica, Y de escena = z eclíptica (hacia el polo norte eclíptico), Z de escena = −y eclíptica. Es una rotación propia (determinante +1), no un espejo, así que las órbitas conservan su verdadero sentido de recorrido.',
         'pt-BR':
           'O Sol está fixo na origem: as posições são heliocêntricas. A cena 3D projeta a eclíptica sobre o seu plano horizontal: X da cena = x eclíptico, Y da cena = z eclíptico (na direção do polo norte eclíptico), Z da cena = −y eclíptico. É uma rotação própria (determinante +1), não um espelho, então as órbitas conservam o seu verdadeiro sentido de percurso.',
+      })}</p><p>${L({
+        en: `A globe is drawn as the ellipsoid its three published radii describe, read from the same NAIF kernel as the rotation models, not as a sphere: ${flattened} bodies are flattened or elongated this way, Saturn by ${saturnFlattening}% from equator to pole. Each surface point is pushed along its direction from the centre, so a map keeps its planetocentric latitude, and a marker or a streamed tile lands on the texture it describes. Bodies with three equal radii, or none published, stay spheres.`,
+        fr: `Un globe est dessiné comme l’ellipsoïde que décrivent ses trois rayons publiés, lus dans le même noyau NAIF que les modèles de rotation, et non comme une sphère : ${flattened} corps sont ainsi aplatis ou allongés, Saturne de ${saturnFlattening} % de l’équateur au pôle. Chaque point de la surface est poussé le long de sa direction depuis le centre : une carte garde sa latitude planétocentrique, et un marqueur ou un carreau streamé tombe sur la texture qu’il décrit. Les corps aux trois rayons égaux, ou sans rayons publiés, restent des sphères.`,
+        es: `Un globo se dibuja como el elipsoide que describen sus tres radios publicados, leídos en el mismo núcleo NAIF que los modelos de rotación, y no como una esfera: ${flattened} cuerpos quedan así achatados o alargados, Saturno un ${saturnFlattening} % del ecuador al polo. Cada punto de la superficie se desplaza a lo largo de su dirección desde el centro, de modo que un mapa conserva su latitud planetocéntrica, y un marcador o una tesela transmitida cae sobre la textura que describe. Los cuerpos con tres radios iguales, o sin radios publicados, siguen siendo esferas.`,
+        'pt-BR': `Um globo é desenhado como o elipsoide que os seus três raios publicados descrevem, lidos no mesmo núcleo NAIF que os modelos de rotação, e não como uma esfera: ${flattened} corpos ficam assim achatados ou alongados, Saturno em ${saturnFlattening} % do equador ao polo. Cada ponto da superfície é deslocado ao longo da sua direção a partir do centro, de modo que um mapa conserva a sua latitude planetocêntrica, e um marcador ou um ladrilho transmitido cai sobre a textura que descreve. Os corpos com três raios iguais, ou sem raios publicados, continuam esferas.`,
       })}</p>`
     )
   );

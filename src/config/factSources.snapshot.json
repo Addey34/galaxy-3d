@@ -1477,7 +1477,12 @@
           "nutPrecRa": null,
           "nutPrecDec": null,
           "pmRateDegPerDay": 14.1844
-        }
+        },
+        "radiiKm": [
+          695700,
+          695700,
+          695700
+        ]
       },
       "mercury": {
         "naifId": 199,
@@ -1508,7 +1513,12 @@
             0
           ],
           "pmRateDegPerDay": 6.1385108
-        }
+        },
+        "radiiKm": [
+          2440.53,
+          2440.53,
+          2438.26
+        ]
       },
       "venus": {
         "naifId": 299,
@@ -1527,7 +1537,12 @@
           "nutPrecRa": null,
           "nutPrecDec": null,
           "pmRateDegPerDay": -1.4813688
-        }
+        },
+        "radiiKm": [
+          6051.8,
+          6051.8,
+          6051.8
+        ]
       },
       "earth": {
         "naifId": 399,
@@ -1546,7 +1561,12 @@
           "nutPrecRa": null,
           "nutPrecDec": null,
           "pmRateDegPerDay": 360.9856235
-        }
+        },
+        "radiiKm": [
+          6378.1366,
+          6378.1366,
+          6356.7519
+        ]
       },
       "mars": {
         "naifId": 499,
@@ -1602,7 +1622,12 @@
             1.591274
           ],
           "pmRateDegPerDay": 350.891982443297
-        }
+        },
+        "radiiKm": [
+          3396.19,
+          3396.19,
+          3376.2
+        ]
       },
       "jupiter": {
         "naifId": 599,
@@ -1653,7 +1678,12 @@
             0.000926
           ],
           "pmRateDegPerDay": 870.536
-        }
+        },
+        "radiiKm": [
+          71492,
+          71492,
+          66854
+        ]
       },
       "saturn": {
         "naifId": 699,
@@ -1672,7 +1702,12 @@
           "nutPrecRa": null,
           "nutPrecDec": null,
           "pmRateDegPerDay": 810.7939024
-        }
+        },
+        "radiiKm": [
+          60268,
+          60268,
+          54364
+        ]
       },
       "uranus": {
         "naifId": 799,
@@ -1691,7 +1726,12 @@
           "nutPrecRa": null,
           "nutPrecDec": null,
           "pmRateDegPerDay": -501.1600928
-        }
+        },
+        "radiiKm": [
+          25559,
+          25559,
+          24973
+        ]
       },
       "neptune": {
         "naifId": 899,
@@ -1728,7 +1768,12 @@
             0
           ],
           "pmRateDegPerDay": 541.1397757
-        }
+        },
+        "radiiKm": [
+          24764,
+          24764,
+          24341
+        ]
       },
       "pluto": {
         "naifId": 999,
@@ -1747,7 +1792,12 @@
           "nutPrecRa": null,
           "nutPrecDec": null,
           "pmRateDegPerDay": 56.3625225
-        }
+        },
+        "radiiKm": [
+          1188.3,
+          1188.3,
+          1188.3
+        ]
       },
       "moon": {
         "naifId": 301,
@@ -1794,7 +1844,12 @@
             -0.0009
           ],
           "pmRateDegPerDay": 13.17635815
-        }
+        },
+        "radiiKm": [
+          1737.4,
+          1737.4,
+          1737.4
+        ]
       },
       "phobos": {
         "naifId": 401,
@@ -1823,7 +1878,12 @@
             0.00281576
           ],
           "pmRateDegPerDay": 1128.84475928
-        }
+        },
+        "radiiKm": [
+          13,
+          11.4,
+          9.1
+        ]
       },
       "deimos": {
         "naifId": 402,
@@ -1864,7 +1924,12 @@
             0.0019243
           ],
           "pmRateDegPerDay": 285.16188899
-        }
+        },
+        "radiiKm": [
+          7.8,
+          6,
+          5.1
+        ]
       },
       "io": {
         "naifId": 501,
@@ -1893,7 +1958,12 @@
             0.011
           ],
           "pmRateDegPerDay": 203.4889538
-        }
+        },
+        "radiiKm": [
+          1829.4,
+          1819.4,
+          1815.7
+        ]
       },
       "europa": {
         "naifId": 502,
@@ -1928,7 +1998,12 @@
             0.002
           ],
           "pmRateDegPerDay": 101.3747235
-        }
+        },
+        "radiiKm": [
+          1562.6,
+          1560.3,
+          1559.5
+        ]
       },
       "ganymede": {
         "naifId": 503,
@@ -1961,7 +2036,12 @@
             0.039
           ],
           "pmRateDegPerDay": 50.3176081
-        }
+        },
+        "radiiKm": [
+          2631.2,
+          2631.2,
+          2631.2
+        ]
       },
       "callisto": {
         "naifId": 504,
@@ -1998,7 +2078,12 @@
             -0.004
           ],
           "pmRateDegPerDay": 21.5710715
-        }
+        },
+        "radiiKm": [
+          2410.3,
+          2410.3,
+          2410.3
+        ]
       },
       "amalthea": {
         "naifId": 505,
@@ -2039,7 +2124,12 @@
             0
           ],
           "pmRateDegPerDay": 722.631456
-        }
+        },
+        "radiiKm": [
+          125,
+          73,
+          64
+        ]
       },
       "mimas": {
         "naifId": 601,
@@ -2076,7 +2166,12 @@
             0
           ],
           "pmRateDegPerDay": 381.994555
-        }
+        },
+        "radiiKm": [
+          207.8,
+          196.7,
+          190.6
+        ]
       },
       "enceladus": {
         "naifId": 602,
@@ -2095,7 +2190,12 @@
           "nutPrecRa": null,
           "nutPrecDec": null,
           "pmRateDegPerDay": 262.7318996
-        }
+        },
+        "radiiKm": [
+          256.6,
+          251.4,
+          248.3
+        ]
       },
       "tethys": {
         "naifId": 603,
@@ -2132,7 +2232,12 @@
             0
           ],
           "pmRateDegPerDay": 190.6979085
-        }
+        },
+        "radiiKm": [
+          538.4,
+          528.3,
+          526.3
+        ]
       },
       "dione": {
         "naifId": 604,
@@ -2151,7 +2256,12 @@
           "nutPrecRa": null,
           "nutPrecDec": null,
           "pmRateDegPerDay": 131.5349316
-        }
+        },
+        "radiiKm": [
+          563.4,
+          561.3,
+          559.6
+        ]
       },
       "rhea": {
         "naifId": 605,
@@ -2188,7 +2298,12 @@
             0
           ],
           "pmRateDegPerDay": 79.6900478
-        }
+        },
+        "radiiKm": [
+          765,
+          763.1,
+          762.4
+        ]
       },
       "titan": {
         "naifId": 606,
@@ -2225,12 +2340,22 @@
             0
           ],
           "pmRateDegPerDay": 22.5769768
-        }
+        },
+        "radiiKm": [
+          2575.15,
+          2574.78,
+          2574.47
+        ]
       },
       "hyperion": {
         "naifId": 607,
         "system": 6,
-        "rotation": null
+        "rotation": null,
+        "radiiKm": [
+          180.1,
+          133,
+          102.7
+        ]
       },
       "iapetus": {
         "naifId": 608,
@@ -2249,7 +2374,12 @@
           "nutPrecRa": null,
           "nutPrecDec": null,
           "pmRateDegPerDay": 4.5379572
-        }
+        },
+        "radiiKm": [
+          745.7,
+          745.7,
+          712.1
+        ]
       },
       "ariel": {
         "naifId": 701,
@@ -2296,7 +2426,12 @@
             0.28
           ],
           "pmRateDegPerDay": -142.8356681
-        }
+        },
+        "radiiKm": [
+          581.1,
+          577.9,
+          577.7
+        ]
       },
       "umbriel": {
         "naifId": 702,
@@ -2345,7 +2480,12 @@
             0.2
           ],
           "pmRateDegPerDay": -86.8688923
-        }
+        },
+        "radiiKm": [
+          584.7,
+          584.7,
+          584.7
+        ]
       },
       "titania": {
         "naifId": 703,
@@ -2396,7 +2536,12 @@
             0.28
           ],
           "pmRateDegPerDay": -41.3514316
-        }
+        },
+        "radiiKm": [
+          788.9,
+          788.9,
+          788.9
+        ]
       },
       "oberon": {
         "naifId": 704,
@@ -2449,7 +2594,12 @@
             0.16
           ],
           "pmRateDegPerDay": -26.7394932
-        }
+        },
+        "radiiKm": [
+          761.4,
+          761.4,
+          761.4
+        ]
       },
       "miranda": {
         "naifId": 705,
@@ -2506,7 +2656,12 @@
             0
           ],
           "pmRateDegPerDay": -254.6906892
-        }
+        },
+        "radiiKm": [
+          240.4,
+          234.2,
+          232.9
+        ]
       },
       "triton": {
         "naifId": 801,
@@ -2561,12 +2716,22 @@
             0
           ],
           "pmRateDegPerDay": -61.2572637
-        }
+        },
+        "radiiKm": [
+          1352.6,
+          1352.6,
+          1352.6
+        ]
       },
       "nereid": {
         "naifId": 802,
         "system": 8,
-        "rotation": null
+        "rotation": null,
+        "radiiKm": [
+          170,
+          170,
+          170
+        ]
       },
       "proteus": {
         "naifId": 808,
@@ -2621,7 +2786,12 @@
             0
           ],
           "pmRateDegPerDay": 320.7654228
-        }
+        },
+        "radiiKm": [
+          218,
+          208,
+          201
+        ]
       },
       "charon": {
         "naifId": 901,
@@ -2640,37 +2810,48 @@
           "nutPrecRa": null,
           "nutPrecDec": null,
           "pmRateDegPerDay": 56.3625225
-        }
+        },
+        "radiiKm": [
+          606,
+          606,
+          606
+        ]
       },
       "nix": {
         "naifId": 902,
         "system": 9,
-        "rotation": null
+        "rotation": null,
+        "radiiKm": null
       },
       "hydra": {
         "naifId": 903,
         "system": 9,
-        "rotation": null
+        "rotation": null,
+        "radiiKm": null
       },
       "kerberos": {
         "naifId": 904,
         "system": 9,
-        "rotation": null
+        "rotation": null,
+        "radiiKm": null
       },
       "styx": {
         "naifId": 905,
         "system": 9,
-        "rotation": null
+        "rotation": null,
+        "radiiKm": null
       },
       "dimorphos": {
         "naifId": 120065803,
         "system": null,
-        "rotation": null
+        "rotation": null,
+        "radiiKm": null
       },
       "menoetius": {
         "naifId": 120000617,
         "system": null,
-        "rotation": null
+        "rotation": null,
+        "radiiKm": null
       },
       "ida": {
         "naifId": 2431010,
@@ -2689,7 +2870,12 @@
           "nutPrecRa": null,
           "nutPrecDec": null,
           "pmRateDegPerDay": 1864.628007
-        }
+        },
+        "radiiKm": [
+          26.8,
+          12,
+          7.6
+        ]
       }
     }
   },

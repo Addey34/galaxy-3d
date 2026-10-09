@@ -525,7 +525,8 @@ function bodyLandingPages() {
                 visual.fallback,
                 span * superSample,
                 visual.emissive,
-                ring
+                ring,
+                visual.figure
               );
           const target = resolve(socialDir, `${page.slug}.jpg`);
           let body = sharp(

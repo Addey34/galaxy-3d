@@ -1786,6 +1786,48 @@ déjà à l'ancien plancher), parce que la direction d'approche vise le terminat
 trois points n'a changé au lot 9C (2026-09-21), qui n'a touché ni la géométrie de la sphère, ni
 les couches d'instrument, ni la direction d'approche ; le § suivant dit ce qu'il a changé.
 
+## Le globe est l'ellipsoïde publié, pas une sphère (ligne 45.3, lot 1, 2026-10-09)
+
+Jusqu'à ce lot, tous les corps étaient des sphères : Saturne avait le même rayon au pôle et à
+l'équateur, alors qu'elle est aplatie de 9,8 %. Désormais un globe a les trois demi-axes que publie
+le noyau PCK générique de NAIF (`pck00011.tpc`), le même que celui des modèles de rotation.
+
+**D'où viennent les rayons.** Le relevé des faits les lit avec les coefficients de rotation
+(`scripts/snapshot-fact-sources.mjs`, section `naifRotation`, champ `radiiKm`), pour les corps de
+`scripts/fact-source-targets.json` § `naifRotation`. Seule la section `\begindata` est lue : le
+noyau garde en commentaire des valeurs anciennes (Charon à 605 km, Larissa sans second rayon
+équatorial) qu'un lecteur naïf prendrait. `config/bodyFigure.ts` les rapporte au rayon de rendu
+du corps (celui de sa fiche) ; le globe dessiné a donc exactement les demi-axes publiés, quel que
+soit le rayon que la fiche affiche.
+
+**Restent des sphères**, et la raison se lit dans `bodyFigure` : trois rayons égaux (la Lune,
+Ganymède, Triton) ou aucun rayon publié (les quatre petites lunes de Pluton, Dimorphos, Menoetius).
+Des rayons égaux mais différents du rayon de la fiche ne changent pas la TAILLE d'un corps rond.
+**Cérès n'est pas dans la liste lue** : le noyau ne lui donne que des rayons d'avant Dawn
+(487,3 × 446 km, Thomas 2005), et son ellipsoïde viendra de son modèle de terrain (lot 2).
+
+**Le choix qui compte : pousser chaque sommet le long de SA direction**, jamais étirer le maillage
+par axe (`core/ellipsoid.ts`). Toute l'application passe d'une latitude à une position par une
+direction depuis le centre (`frames.geographicToLocalDirection`, `surfacePointToWorld`, les
+carreaux, le point subsolaire, les noms de surface) : c'est une latitude PLANÉTOCENTRIQUE. Un
+maillage étiré aurait mis chaque texel à sa latitude « paramétrique », jusqu'à 3° d'écart à 45° sur
+Saturne, et décalé carreaux et marqueurs de la texture qu'ils recouvrent. Les normales sont
+celles de l'ellipsoïde (son gradient), pas la direction : à 45° sur Saturne l'écart dépasse 5°.
+
+**Ce qui suit la figure** : toutes les couches en forme de globe (surface, nuages, atmosphère,
+lumières, couches météo ; l'anneau, plat, non), la géométrie haute résolution, `surfacePointToWorld`,
+les carreaux d'imagerie SANS hauteurs, et la sphère de repli d'un corps à modèle de forme (vue
+seulement si le maillage n'arrive pas). Un carreau AVEC hauteurs porte déjà le rayon mesuré et
+l'ignore ; l'enveloppe abaissée sous le relief se rapporte au plus grand demi-axe, pour rester sous
+le relief jusqu'à l'équateur (Mars). Les vignettes de partage aussi (`socialCard.renderSphere`, un
+rayon orthographique contre l'ellipsoïde) : une figure ronde y rend la sphère d'avant au bit près.
+
+Gardes : `core/ellipsoid.test.ts` (axes a, b, c du repère local, point sur l'ellipsoïde, normale
+perpendiculaire à la surface, latitude planétocentrique conservée), `config/bodyFigure.test.ts`
+(façade égale au relevé, rapport pôle/équateur de la géométrie RENDUE de Saturne),
+`seo/socialCard.test.ts` (silhouette aplatie dans le rapport publié), `seo/docPages.test.ts` (le
+compte et l'aplatissement publiés sur `/methodology` sont ceux du code).
+
 ## Imagerie de surface streamée — une mosaïque publiée, posée sur la sphère
 
 Depuis le 2026-09-21 (lot 9, phase 9C), un corps peut déclarer un JEU DE TUILES : une mosaïque

@@ -3,6 +3,7 @@
  * Centralise les conventions de rendu : facteurs d'échelle des couches (surface, nuages,
  * atmosphère, lumières), finesse des sphères/anneaux et matériaux standard réutilisés.
  */
+import { deformToFigure, isSphere, type Figure } from '@/core/ellipsoid';
 import * as THREE from 'three';
 import {
   TERMINATOR_GLSL,
@@ -102,10 +103,29 @@ export const RING_SEGMENTS = 128;
 export function createSphereGeometry(
   radius: number,
   layerType = 'surface',
-  segments: number = GEOMETRY_SEGMENTS
+  segments: number = GEOMETRY_SEGMENTS,
+  // L'ellipsoïde publié du corps (`config/bodyFigure`), ou rien pour une sphère. Chaque sommet est
+  // poussé le long de SA direction (cf. `core/ellipsoid`) : les UV, donc la latitude de la
+  // texture, restent planétocentriques.
+  figure: Figure | null = null
 ): THREE.SphereGeometry {
   const scale = LAYER_RADIUS_SCALE[layerType] ?? 1.0;
-  return new THREE.SphereGeometry(radius * scale, segments, segments);
+  const geometry = new THREE.SphereGeometry(radius * scale, segments, segments);
+  if (figure && !isSphere(figure)) {
+    const position = geometry.getAttribute('position') as THREE.BufferAttribute;
+    const normal = geometry.getAttribute('normal') as THREE.BufferAttribute;
+    deformToFigure(
+      position.array as Float32Array,
+      normal.array as Float32Array,
+      radius * scale,
+      figure
+    );
+    position.needsUpdate = true;
+    normal.needsUpdate = true;
+    geometry.computeBoundingSphere();
+    geometry.computeBoundingBox();
+  }
+  return geometry;
 }
 
 export function createSurfaceMaterial(
