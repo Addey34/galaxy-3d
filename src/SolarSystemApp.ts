@@ -365,6 +365,11 @@ export class SolarSystemApp {
     this._orbitalMechanics.onMorphPhase = () => {
       this.systems.scene?.setOrbitLinesVisible(false);
     };
+    // Un corps suivi qui SAUTE le long de son orbite (premier calcul, saut de date) garde la
+    // face que la caméra en voyait (ligne 45.9, `CameraSystem.realignAfterPositionJump`).
+    this._orbitalMechanics.onPositionsJumped(() =>
+      this.systems.camera.realignAfterPositionJump()
+    );
     this.systems.animation.setOrbitalMechanics(this._orbitalMechanics);
 
     // Positionner les planètes sur leurs positions réelles avant le premier rendu

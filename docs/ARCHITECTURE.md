@@ -2306,6 +2306,40 @@ L'ordre suit l'albédo publié, et aucun corps n'est noir. Gardes : `core/eclips
 et `components/systems/AnimationSystem.test.ts` (la passe : Cérès suivie éclairée à 1, rapport
 Mars/Cérès inchangé, sonde suivie par sa position), falsifiée en retirant le facteur de la passe.
 
+## La caméra garde la face du corps suivi à travers un saut (2026-10-09, ligne 45.9)
+
+**Le défaut.** L'approche d'un corps vise sa face éclairée (`CameraSystem._approachDirection`,
+vue 3/4 à environ 35° de phase), puis le suivi garde l'offset caméra → corps FIXE dans le repère
+du monde. Pendant que le temps s'écoule, c'est voulu : la caméra reste inertielle. Mais un corps
+qui SAUTE le long de son orbite emporte sa face éclairée hors du champ. Mesuré sur un lien
+`?body=…&mode=explo` (date fixée, sonde `?debug-eclipse`) : le lien sélectionnait le corps AVANT
+le premier calcul des positions, quand chaque corps attend encore sur l'axe +X à sa distance de
+catalogue (Mars à (43, 0, 0), azimut exactement 0). L'approche visait donc un Soleil au mauvais
+endroit, et le corps rejoignait ensuite sa vraie longitude. Phase à l'arrivée : Cérès 113°, Mars
+117°, contre 37° pour les mêmes corps cliqués après le démarrage ; la Lune et Vesta, proches de
+l'azimut 0 ce jour-là, 48°. Un lien daté (saut qui attend ses octets) fait pareil : la Terre du
+1er mars 1990 s'ouvrait à 158°, 4 % de son disque éclairé.
+
+**La règle.** `OrbitalMechanics.onPositionsJumped` prévient après chaque recalcul À FROID des
+positions (le premier, un saut de date, un changement de mode), positions déjà écrites ; jamais
+pour l'écoulement continu, même rapide. `CameraSystem.realignAfterPositionJump` tourne alors
+l'offset de la rotation qui mène l'ancienne direction corps → Soleil à la nouvelle, ce qui garde
+la phase et la distance ; si le saut tombe pendant un vol, il relance l'approche, qui vise alors
+le vrai Soleil. La direction de référence est relevée à la sélection et à chaque image de suivi.
+Rien pour le Soleil suivi, une session XR ou un suivi suspendu par un changement de mode. Un
+changement de mode est radial pour un corps héliocentrique : la rotation y est nulle.
+
+**Conséquence assumée** : un saut de date fait par le visiteur pendant qu'il suit un corps garde
+aussi la face qu'il regardait, au lieu de le laisser devant la face nuit six mois plus tard.
+
+**Mesuré après** (démarrage par lien, même protocole) : Cérès 37°, Mars 37°, la Lune 34°, Vesta
+33°, Orcus 31°, Patrocle 50° ; lien de 1990, part éclairée du disque : Terre 4 % → 84 %, Cérès
+10 % → 75 %, Mars 64 % → 90 %. Gardes : `core/OrbitalMechanics.test.ts` (le signal tombe au
+premier calcul et après un saut, jamais pour l'écoulement continu),
+`components/systems/CameraSystem.test.ts` (phase gardée après un saut, témoin à 113° sans le
+recalage ; vol relancé) et `e2e/explo.spec.ts` (« lands on the day side », Terre 1990 et Cérès),
+chacune falsifiée : sans le câblage de `SolarSystemApp`, la garde e2e lit 157,7° et 113,3°.
+
 ## L'orientation en longitude d'une texture (2026-10-04)
 
 **Le contrat.** Toute carte livrée a la longitude 0 au CENTRE et l'Est vers la droite : c'est ce

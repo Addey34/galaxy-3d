@@ -343,3 +343,81 @@ describe('CameraSystem.whenSettled (ligne 45.2)', () => {
     expect(calls).toBe(1);
   });
 });
+
+describe('CameraSystem.realignAfterPositionJump (ligne 45.9)', () => {
+  function following(body: { group: THREE.Group }): CameraSystem {
+    const cameraSystem = new CameraSystem();
+    cameraSystem.camera = new THREE.PerspectiveCamera(65);
+    cameraSystem.controls = {
+      target: new THREE.Vector3(),
+      enabled: true,
+      update: () => {},
+    } as unknown as CameraSystem['controls'];
+    cameraSystem.renderer = {
+      toneMappingExposure: 1,
+      xr: { isPresenting: false },
+    } as unknown as CameraSystem['renderer'];
+    cameraSystem.tweenGroup = new TweenGroup();
+    Reflect.set(cameraSystem, 'celestialBodies', { ceres: body });
+    cameraSystem.setTarget('ceres');
+    cameraSystem.tweenGroup.update(performance.now() + 60_000); // arrivée
+    return cameraSystem;
+  }
+  /** Angle Soleil-corps-caméra : 0° = face éclairée pleine, 180° = face nuit. */
+  const phaseDeg = (cameraSystem: CameraSystem, body: THREE.Group): number => {
+    const toCamera = cameraSystem.camera.position.clone().sub(body.position);
+    const toSun = body.position.clone().negate();
+    return THREE.MathUtils.radToDeg(toCamera.angleTo(toSun));
+  };
+
+  it('garde la face vue quand le corps saute le long de son orbite', () => {
+    const body = bodyAt(58);
+    const cameraSystem = following(body);
+    const before = phaseDeg(cameraSystem, body.group);
+    expect(before).toBeLessThan(60);
+
+    // Le saut : le corps passe de l'axe +X à −86° (le démarrage par lien mesuré). Ordre réel
+    // d'une image : `OrbitalMechanics.update` (positions, puis le signal), PUIS le suivi.
+    const jump = (target: THREE.Group): void => {
+      const angle = THREE.MathUtils.degToRad(-86);
+      target.position.set(93 * Math.cos(angle), 0, 93 * Math.sin(angle));
+    };
+    jump(body.group);
+    cameraSystem.realignAfterPositionJump();
+    cameraSystem.update(0);
+    expect(phaseDeg(cameraSystem, body.group)).toBeCloseTo(before, 6);
+    expect(cameraSystem.controls.target.distanceTo(body.group.position)).toBe(
+      0
+    );
+
+    // Témoin : sans le signal, le suivi seul translate, et la face nuit arrive (113°).
+    const witness = bodyAt(58);
+    const unaligned = following(witness);
+    jump(witness.group);
+    unaligned.update(0);
+    expect(phaseDeg(unaligned, witness.group)).toBeGreaterThan(90);
+  });
+
+  it('relance l’approche si le saut tombe pendant le vol', () => {
+    const body = bodyAt(58);
+    const cameraSystem = new CameraSystem();
+    cameraSystem.camera = new THREE.PerspectiveCamera(65);
+    cameraSystem.camera.position.set(0, 160, 220);
+    cameraSystem.controls = {
+      target: new THREE.Vector3(),
+      enabled: true,
+      update: () => {},
+    } as unknown as CameraSystem['controls'];
+    cameraSystem.renderer = {
+      toneMappingExposure: 1,
+      xr: { isPresenting: false },
+    } as unknown as CameraSystem['renderer'];
+    cameraSystem.tweenGroup = new TweenGroup();
+    Reflect.set(cameraSystem, 'celestialBodies', { ceres: body });
+    cameraSystem.setTarget('ceres');
+    body.group.position.set(0, 0, -93);
+    cameraSystem.realignAfterPositionJump();
+    cameraSystem.tweenGroup.update(performance.now() + 60_000);
+    expect(phaseDeg(cameraSystem, body.group)).toBeLessThan(60);
+  });
+});

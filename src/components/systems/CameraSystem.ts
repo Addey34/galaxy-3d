@@ -154,6 +154,7 @@ export class CameraSystem {
     this.trackingPaused = false;
     body.updateWorldMatrix(true, false);
     body.getWorldPosition(this.targetWorldPosition);
+    this._recordSunSide();
 
     // Rayon CIBLE du mode courant (pas `userData['radius']`, qui peut être en cours de morph
     // Éduc↔Explo au moment précis de cette sélection — cf. CelestialObject.getFrameRadius) :
@@ -416,6 +417,7 @@ export class CameraSystem {
         this.targetWorldPosition.y + offsetY,
         this.targetWorldPosition.z + offsetZ
       );
+      this._recordSunSide();
     }
 
     this._updateExploClipPlanes();
@@ -666,6 +668,58 @@ export class CameraSystem {
     const pending = this._whenSettled;
     this._whenSettled = [];
     for (const action of pending) action();
+  }
+
+  /**
+   * Direction corps → Soleil du corps suivi, telle qu'elle était quand l'offset de la caméra a
+   * été posé ou réappliqué pour la dernière fois (ligne 45.9). C'est la référence d'un saut.
+   */
+  private readonly _sunSide = new THREE.Vector3();
+  private _sunSideValid = false;
+  private readonly _jumpRotation = new THREE.Quaternion();
+  private readonly _jumpOffset = new THREE.Vector3();
+
+  private _recordSunSide(): void {
+    this._sunSide.copy(this.targetWorldPosition).negate();
+    this._sunSideValid = this._sunSide.lengthSq() > 1e-12;
+    if (this._sunSideValid) this._sunSide.normalize();
+  }
+
+  /**
+   * GARDE LA FACE VUE quand le corps suivi a SAUTÉ le long de son orbite (ligne 45.9,
+   * 2026-10-09). Appelé par `OrbitalMechanics.onPositionsJumped`, positions déjà à jour.
+   *
+   * L'offset caméra → corps est fixe dans le repère du monde : c'est voulu pendant que le temps
+   * s'écoule (la caméra reste inertielle), mais un saut fait tourner le corps autour du Soleil
+   * d'un coup, et la face éclairée tournait avec lui hors du champ. Mesuré sur un lien
+   * `?body=ceres&mode=explo` : le corps était sélectionné AVANT le premier calcul des
+   * positions, encore posé sur l'axe +X, et arrivait vu sous 113° de phase (Mars 117°, contre
+   * 37° pour le même corps cliqué après le démarrage). On tourne donc l'offset de la rotation
+   * qui mène l'ancienne direction du Soleil à la nouvelle ; pendant un vol, on relance
+   * l'approche, qui vise alors le vrai Soleil. Le Soleil suivi n'a pas de face nuit.
+   */
+  realignAfterPositionJump(): void {
+    const target = this.currentTarget;
+    if (!target?.group || target.name === 'sun') return;
+    if (this.renderer?.xr?.isPresenting || this.trackingPaused) return;
+    const reference = this._sunSideValid ? this._sunSide.clone() : null;
+    target.group.getWorldPosition(this.targetWorldPosition);
+    this._recordSunSide();
+    if (!reference || !this._sunSideValid) return;
+    this._jumpRotation.setFromUnitVectors(reference, this._sunSide);
+    // Pas de saut mesurable (un changement de mode est radial pour un corps héliocentrique).
+    if (Math.abs(this._jumpRotation.w) > 1 - 1e-12) return;
+    if (this.isAnimating) {
+      this.setTarget(target.name);
+      return;
+    }
+    this._jumpOffset
+      .subVectors(this.camera.position, this.controls.target)
+      .applyQuaternion(this._jumpRotation);
+    this.cameraOffset.copy(this._jumpOffset);
+    this.controls.target.copy(this.targetWorldPosition);
+    this.camera.position.copy(this.targetWorldPosition).add(this._jumpOffset);
+    this.controls.update();
   }
 
   /** Nom du corps actuellement suivi, ou null en vue libre / vue d'ensemble. */
