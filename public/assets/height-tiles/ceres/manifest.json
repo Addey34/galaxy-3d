@@ -1,0 +1,88 @@
+{
+  "$comment": "Écrit par pnpm surface:tiles. Ne pas éditer à la main : les tuiles portent le même quantum et le même offset dans leur propre en-tête.",
+  "id": "ceres-dawn-hamo-dtm",
+  "body": "ceres",
+  "directory": "assets/height-tiles/ceres/9e97a98b0929",
+  "format": {
+    "magic": "GXHT",
+    "version": 1,
+    "samples": 257
+  },
+  "quantumMetres": 1,
+  "offsetMetres": 0,
+  "datumRadiusKm": 470,
+  "coordinateSystem": "PLANETOCENTRIC",
+  "baseLevel": 4,
+  "coverage": [
+    {
+      "level": 4,
+      "global": true,
+      "sourcePixelsPerDegree": 60,
+      "sourceProductId": "CE_HAMO_G_00N_180E_EQU_DTM.IMG"
+    },
+    {
+      "level": 5,
+      "levels": [
+        5
+      ],
+      "area": {
+        "id": "occator",
+        "name": "Occator",
+        "gazetteerFeatureId": 15341,
+        "centre": {
+          "latitudeDeg": 19.819,
+          "longitudeDeg": -120.665
+        },
+        "diameterKm": 92
+      },
+      "bounds": {
+        "west": -123.75,
+        "east": -118.125,
+        "south": 16.875,
+        "north": 22.5
+      },
+      "sourcePixelsPerDegree": 60,
+      "sourceProductId": "CE_HAMO_G_00N_180E_EQU_DTM.IMG"
+    },
+    {
+      "level": 5,
+      "levels": [
+        5
+      ],
+      "area": {
+        "id": "ahuna-mons",
+        "name": "Ahuna Mons",
+        "gazetteerFeatureId": 15409,
+        "centre": {
+          "latitudeDeg": -10.478,
+          "longitudeDeg": -43.8
+        },
+        "diameterKm": 20
+      },
+      "bounds": {
+        "west": -50.625,
+        "east": -39.375,
+        "south": -16.875,
+        "north": -5.625
+      },
+      "sourcePixelsPerDegree": 60,
+      "sourceProductId": "CE_HAMO_G_00N_180E_EQU_DTM.IMG"
+    }
+  ],
+  "elevationMetres": {
+    "minimum": -27951,
+    "maximum": 17055
+  },
+  "figure": {
+    "source": "fitted",
+    "renderRadiusKm": 469.7,
+    "radiiKm": [
+      482.08,
+      482.08,
+      445.93
+    ]
+  },
+  "figureFloorRatio": 0.984644,
+  "tiles": 517,
+  "bytes": 68311210
+}

@@ -2,7 +2,12 @@ import { describe, expect, it } from 'vitest';
 import * as THREE from 'three';
 import { CELESTIAL_CONFIG } from './bodies';
 import { flattenBodies } from './catalog';
-import { bodyFigure, publishedRadiiKm } from './bodyFigure';
+import {
+  bodyFigure,
+  figureRadiiKm,
+  fittedRadiiKm,
+  publishedRadiiKm,
+} from './bodyFigure';
 import { createSphereGeometry } from './layerConfig';
 import snapshot from './factSources.snapshot.json';
 
@@ -68,5 +73,15 @@ describe('la figure de chaque corps', () => {
     expect(pole / equator).toBeCloseTo(c / a, 4);
     // Rapportée au rayon de la fiche : l'équateur rendu vaut a, quel qu'il soit.
     expect(equator / 10).toBeCloseTo(a / cfg.realData!.radiusKm!, 4);
+  });
+
+  it('donne à Cérès l’ellipsoïde AJUSTÉ au relief de Dawn, le noyau ne portant que celui d’avant', () => {
+    expect(publishedRadiiKm('ceres')).toBeNull();
+    const radii = fittedRadiiKm('ceres');
+    expect(radii).not.toBeNull();
+    expect(figureRadiiKm('ceres')).toEqual(radii);
+    const figure = bodyFigure('ceres', bodies.get('ceres')?.realData?.radiusKm);
+    expect(figure).not.toBeNull();
+    expect(figure!.c).toBeLessThan(figure!.a);
   });
 });

@@ -1,9 +1,9 @@
 {
   "$schema": "../../schema/product.schema.json",
-  "id": "mars-mola-megt",
+  "id": "mars-mola-megr",
   "type": "heightfield",
   "body": "mars",
-  "title": "MOLA Mission Experiment Gridded Data Record (MEGT90N000FB, 32 pixels/degree)",
+  "title": "MOLA Mission Experiment Gridded Data Record, planetary radius (MEGR90N000FB, 32 pixels/degree)",
   "mission": "Mars Global Surveyor",
   "instrument": "Mars Orbiter Laser Altimeter",
   "manifest": "assets/height-tiles/mars/manifest.json",
@@ -20,7 +20,7 @@
     },
     {
       "rel": "describedby",
-      "href": "https://pds-geosciences.wustl.edu/mgs/urn-nasa-pds-mgs_mola_topography_derived/meg032/megt90n000fb.lbl"
+      "href": "https://pds-geosciences.wustl.edu/mgs/urn-nasa-pds-mgs_mola_topography_derived/meg032/megr90n000fb.lbl"
     },
     {
       "rel": "via",
@@ -38,5 +38,5 @@
       "url": "https://pds-geosciences.wustl.edu/missions/mgs/megdr.html"
     }
   ],
-  "verified": "2026-09-29"
+  "verified": "2026-10-09"
 }

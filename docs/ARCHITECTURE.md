@@ -1804,7 +1804,13 @@ soit le rayon que la fiche affiche.
 Ganymède, Triton) ou aucun rayon publié (les quatre petites lunes de Pluton, Dimorphos, Menoetius).
 Des rayons égaux mais différents du rayon de la fiche ne changent pas la TAILLE d'un corps rond.
 **Cérès n'est pas dans la liste lue** : le noyau ne lui donne que des rayons d'avant Dawn
-(487,3 × 446 km, Thomas 2005), et son ellipsoïde viendra de son modèle de terrain (lot 2).
+(487,3 × 446 km, Thomas 2005). **Depuis le lot 2 (2026-10-09), son ellipsoïde est AJUSTÉ à son
+modèle de terrain livré** : le cuiseur de hauteurs le calcule (`fitOblate`, moindres carrés
+linéaires sur 1/r², pondérés par l'aire) et l'écrit dans `src/config/fittedFigures.json`, avec
+sa méthode, son produit source et son résidu ; `bodyFigure` le lit quand le noyau ne publie pas de
+rayons différents, et `/methodology` le dit en nommant le corps et ses demi-axes. Aplati et non
+triaxial, et c'est mesuré : le triaxial n'abaisse le résidu que de 2,01 à 1,93 km rms, et met son
+grand axe à 45,9° de longitude, ce que la figure (a au méridien origine) n'exprime pas.
 
 **Le choix qui compte : pousser chaque sommet le long de SA direction**, jamais étirer le maillage
 par axe (`core/ellipsoid.ts`). Toute l'application passe d'une latitude à une position par une
@@ -1818,8 +1824,8 @@ celles de l'ellipsoïde (son gradient), pas la direction : à 45° sur Saturne l
 lumières, couches météo ; l'anneau, plat, non), la géométrie haute résolution, `surfacePointToWorld`,
 les carreaux d'imagerie SANS hauteurs, et la sphère de repli d'un corps à modèle de forme (vue
 seulement si le maillage n'arrive pas). Un carreau AVEC hauteurs porte déjà le rayon mesuré et
-l'ignore ; l'enveloppe abaissée sous le relief se rapporte au plus grand demi-axe, pour rester sous
-le relief jusqu'à l'équateur (Mars). Les vignettes de partage aussi (`socialCard.renderSphere`, un
+l'ignore ; l'enveloppe abaissée sous le relief suit le plancher MESURÉ par le cuiseur (cf. § «
+Relief mesuré », « La sphère livrée descend sous le relief »). Les vignettes de partage aussi (`socialCard.renderSphere`, un
 rayon orthographique contre l'ellipsoïde) : une figure ronde y rend la sphère d'avant au bit près.
 
 Gardes : `core/ellipsoid.test.ts` (axes a, b, c du repère local, point sur l'ellipsoïde, normale
@@ -2023,9 +2029,41 @@ désignerait un répertoire supprimé, c'est-à-dire un relief absent sans la mo
 à un rayon de référence, et **61 % de la surface lunaire est SOUS ce rayon** (mesuré sur les tuiles
 livrées, pondéré par la surface ; les mers descendent à 2 ou 3 km en dessous et le minimum vaut
 9 105 m). Laissée à sa taille, la sphère du catalogue masquerait tous
-les fonds. `CelestialObject.setSurfaceShellScale` la met donc au minimum MESURÉ du jeu tant que
+les fonds. `CelestialObject.setSurfaceShellScale` la met donc au plancher MESURÉ du jeu tant que
 des carreaux de relief sont posés, et la rétablit ensuite : elle reste une borne inférieure de la
 surface réelle et ne montre rien que la donnée ne porte pas.
+
+**Le plancher se mesure contre le globe RENDU, échantillon par échantillon (ligne 45.3, lot 2,
+2026-10-09).** Le cuiseur écrit `figureFloorRatio` au manifeste : le plus petit rapport, sur
+TOUS les échantillons cuits, entre le rayon mesuré et celui du globe rendu dans la même direction
+(sphère de la fiche, ou ellipsoïde de `bodyFigure`), arrondi PAR DÉFAUT au millionième. Le moteur
+l'applique tel quel, et un manifeste sans lui se refuse. L'ancienne règle (minimum des hauteurs
+rapporté à une sphère) supposait que le relief et le globe décrivent la même sphère ; sur Cérès,
+dont le relief est rapporté à une sphère de 470 km alors que le globe est aplati, elle aurait
+rétréci le globe de 8 % au lieu de 1,5 %. Sur la Lune, sphérique, les deux règles coïncident au
+millionième, et ses tuiles sont restées identiques à l'octet près (même répertoire haché). Le
+manifeste porte aussi la figure que le cuiseur a supposée, et `config/surfaceHeights.test.ts` la
+confronte à celle de l'application, parce que le cuiseur, qui ne lit pas de TypeScript, en recopie
+la règle.
+
+**Un relief se cuit depuis un RAYON, jamais depuis une hauteur sur un géoïde.** Le relief de Mars
+livré jusqu'au 2026-10-09 venait de `MEGT90N000FB`, dont l'étiquette dit « *Topography is the
+planetary radius minus the areoid radius* » : posé sur la sphère de référence de 3 396 km, il
+mettait le pôle nord vers 3 394 km, environ 18 km au-dessus du demi-axe polaire publié. Il vient
+désormais de `MEGR90N000FB`, le rayon planétaire de la même grille (`OFFSET` = 3 396 000 m), dont
+le pôle nord tombe sur le demi-axe polaire du noyau. Deux gardes, falsifiées l'une et l'autre : le
+cuiseur REFUSE une étiquette qui définit son échantillon comme un rayon moins un géoïde (la règle
+vise la définition, pas le mot : l'étiquette LOLA parle du géoïde pour sa topographie, ses
+échantillons restent un rayon) ; et `surfaceHeights.test.ts` exige que le rayon LIVRÉ aux deux
+pôles tombe à moins de 10 km du rayon polaire rendu (calottes et bassins réels compris).
+
+**Deux cas de source que Cérès a fait apparaître.** Une ligne extrême sans mesure
+(`MISSING_CONSTANT`, le pôle sud de Dawn) reprend la ligne voisine, et le cuiseur le dit ; un trou
+ailleurs fait échouer la cuisson. Et une source GLOBALE (0 à 360° Est) ne borne plus la longitude
+d'une aire : ramenées à −180..180, ses bornes se confondaient, l'aire sortait vide avec des bornes
+infinies, et la lecture qui suivait ne finissait jamais (1 h 40 figée). Une aire sans tuile fait
+désormais échouer la cuisson, et une aire qui lit le même fichier que le socle reprend sa grille
+en mémoire (l'archive de Dawn refuse les requêtes multi-plages).
 
 **Deux carreaux voisins se touchent par construction.** Les tuiles de hauteurs sont à registre
 GRILLE (257 échantillons par côté, soit 256 intervalles), donc le bord d'une tuile EST la première

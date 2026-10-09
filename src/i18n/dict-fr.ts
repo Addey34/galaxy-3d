@@ -337,7 +337,7 @@ export const fr: Record<MessageKey, string> = {
     'affichée {factor} fois plus grande que la mosaïque publiée ({published} px/degré)',
   'surface.relief.headline': 'Relief {title} à {resolution}/pixel',
   'surface.relief.area': 'aire nommée {name}',
-  'surface.relief.acquired': 'altimétrie de {from} à {to}',
+  'surface.relief.acquired': 'hauteurs mesurées entre {from} et {to}',
   'settings.units': 'Unités impériales (mi, °F)',
 
   // ── Champ d'astéroïdes et de comètes, section des Réglages ──

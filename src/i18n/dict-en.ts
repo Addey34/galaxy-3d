@@ -362,7 +362,7 @@ export const en = {
     'shown {factor}x larger than the published mosaic ({published} px/degree)',
   'surface.relief.headline': 'Relief {title} at {resolution}/pixel',
   'surface.relief.area': 'named area {name}',
-  'surface.relief.acquired': 'altimetry from {from} to {to}',
+  'surface.relief.acquired': 'heights measured from {from} to {to}',
   'settings.units': 'Imperial units (mi, °F)',
 
   // ── Champ d'astéroïdes et de comètes (NEO / comètes / TNO), section des Réglages ──
