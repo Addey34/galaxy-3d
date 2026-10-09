@@ -62,15 +62,58 @@
       ]
     },
     {
-      "id": "mars-mola-megt",
+      "id": "mars-mola-megr",
       "body": "mars",
       "output": "public/assets/height-tiles/mars",
       "base": {
         "level": 4,
-        "label": "https://pds-geosciences.wustl.edu/mgs/urn-nasa-pds-mgs_mola_topography_derived/meg032/megt90n000fb.lbl",
-        "image": "https://pds-geosciences.wustl.edu/mgs/urn-nasa-pds-mgs_mola_topography_derived/meg032/megt90n000fb.img"
+        "label": "https://pds-geosciences.wustl.edu/mgs/urn-nasa-pds-mgs_mola_topography_derived/meg032/megr90n000fb.lbl",
+        "image": "https://pds-geosciences.wustl.edu/mgs/urn-nasa-pds-mgs_mola_topography_derived/meg032/megr90n000fb.img"
       },
       "areas": []
+    },
+    {
+      "id": "ceres-dawn-hamo-dtm",
+      "body": "ceres",
+      "figure": "fit",
+      "output": "public/assets/height-tiles/ceres",
+      "base": {
+        "level": 4,
+        "label": "https://sbnarchive.psi.edu/pds3/dawn/fc/DWNCHSPG_2/DATA/CE_HAMO_G_00N_180E_EQU_DTM.IMG",
+        "image": "https://sbnarchive.psi.edu/pds3/dawn/fc/DWNCHSPG_2/DATA/CE_HAMO_G_00N_180E_EQU_DTM.IMG"
+      },
+      "areas": [
+        {
+          "id": "occator",
+          "name": "Occator",
+          "gazetteerFeatureId": 15341,
+          "centre": {
+            "latitudeDeg": 19.819,
+            "longitudeDeg": -120.665
+          },
+          "diameterKm": 92,
+          "levels": [
+            5
+          ],
+          "label": "https://sbnarchive.psi.edu/pds3/dawn/fc/DWNCHSPG_2/DATA/CE_HAMO_G_00N_180E_EQU_DTM.IMG",
+          "image": "https://sbnarchive.psi.edu/pds3/dawn/fc/DWNCHSPG_2/DATA/CE_HAMO_G_00N_180E_EQU_DTM.IMG"
+        },
+        {
+          "id": "ahuna-mons",
+          "name": "Ahuna Mons",
+          "gazetteerFeatureId": 15409,
+          "centre": {
+            "latitudeDeg": -10.478,
+            "longitudeDeg": -43.8
+          },
+          "diameterKm": 20,
+          "levels": [
+            5
+          ],
+          "label": "https://sbnarchive.psi.edu/pds3/dawn/fc/DWNCHSPG_2/DATA/CE_HAMO_G_00N_180E_EQU_DTM.IMG",
+          "image": "https://sbnarchive.psi.edu/pds3/dawn/fc/DWNCHSPG_2/DATA/CE_HAMO_G_00N_180E_EQU_DTM.IMG"
+        }
+      ]
     }
   ]
 }

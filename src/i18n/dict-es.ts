@@ -349,7 +349,7 @@ export const es: Record<MessageKey, string> = {
     'mostrada {factor} veces más grande que el mosaico publicado ({published} px/grado)',
   'surface.relief.headline': 'Relieve {title} a {resolution}/píxel',
   'surface.relief.area': 'área nombrada {name}',
-  'surface.relief.acquired': 'altimetría de {from} a {to}',
+  'surface.relief.acquired': 'alturas medidas entre {from} y {to}',
   'settings.units': 'Unidades imperiales (mi, °F)',
 
   // ── Champ d'astéroïdes et de comètes, section des Réglages ──

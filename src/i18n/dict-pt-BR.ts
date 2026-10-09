@@ -345,7 +345,7 @@ export const ptBR: Record<MessageKey, string> = {
     'exibida {factor} vezes maior que o mosaico publicado ({published} px/grau)',
   'surface.relief.headline': 'Relevo {title} a {resolution}/pixel',
   'surface.relief.area': 'área nomeada {name}',
-  'surface.relief.acquired': 'altimetria de {from} a {to}',
+  'surface.relief.acquired': 'alturas medidas entre {from} e {to}',
   'settings.units': 'Unidades imperiais (mi, °F)',
 
   // ── Champ d'astéroïdes et de comètes, section des Réglages ──

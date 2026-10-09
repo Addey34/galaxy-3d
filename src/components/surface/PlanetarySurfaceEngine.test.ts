@@ -217,6 +217,10 @@ describe('le relief sous les carreaux', () => {
       minElevationMetres: -9000,
       maxElevationMetres: 10000,
       baseLevel: 4,
+      // Le plancher MESURÉ par le cuiseur contre le globe rendu (ligne 45.3), délibérément
+      // différent de l'ancienne règle (RADIUS_KM − 9) / RADIUS_KM : le moteur doit lire celui-ci.
+      figureFloorRatio: 0.98765,
+      figure: { source: 'sphere', renderRadiusKm: RADIUS_KM, radiiKm: null },
     },
   };
 
@@ -249,8 +253,8 @@ describe('le relief sous les carreaux', () => {
     // 25 carreaux du niveau 8, mais au plus quatre tuiles de socle sous eux.
     expect(fetchHeights.mock.calls.length).toBeLessThanOrEqual(4);
     expect(fetchHeights).toHaveBeenCalled();
-    // La sphère livrée descend au minimum MESURÉ du jeu, une seule fois.
-    expect(host.shell).toEqual([(RADIUS_KM - 9) / RADIUS_KM]);
+    // L'enveloppe descend au plancher que le cuiseur a MESURÉ, une seule fois.
+    expect(host.shell).toEqual([0.98765]);
 
     engine.update(camera, 800);
     expect(engine.state?.relief?.level).toBe(4);

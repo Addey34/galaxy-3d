@@ -60,6 +60,18 @@ export interface HeightManifest {
   maxElevationMetres: number;
   /** Niveau du socle global. */
   baseLevel: number;
+  /**
+   * Facteur qui met l'enveloppe du globe RENDU (sphère ou ellipsoïde, `config/bodyFigure`) sous
+   * le relief partout : le plus petit rapport, sur tous les échantillons cuits, entre le rayon
+   * mesuré et celui du globe dans la même direction (ligne 45.3). Calculé par le cuiseur.
+   */
+  figureFloorRatio: number;
+  /** La figure que le cuiseur a supposée, confrontée à l'application par un test. */
+  figure: {
+    source: string;
+    renderRadiusKm: number;
+    radiiKm: readonly [number, number, number] | null;
+  };
 }
 
 function toSet(fiche: HeightfieldSetProduct): SurfaceHeightSet {
@@ -108,6 +120,8 @@ interface RawManifest {
   baseLevel?: unknown;
   coverage?: unknown;
   elevationMetres?: { minimum?: unknown; maximum?: unknown };
+  figureFloorRatio?: unknown;
+  figure?: { source?: unknown; renderRadiusKm?: unknown; radiiKm?: unknown };
 }
 
 /**
@@ -181,5 +195,33 @@ export function parseHeightManifest(raw: unknown): HeightManifest {
     minElevationMetres: number(elevation.minimum, 'altitude minimale', -1e6),
     maxElevationMetres: number(elevation.maximum, 'altitude maximale', -1e6),
     baseLevel: number(data.baseLevel, 'niveau du socle', 0),
+    figureFloorRatio: floorRatio(data.figureFloorRatio),
+    figure: {
+      source: String(data.figure?.source ?? ''),
+      renderRadiusKm: number(
+        data.figure?.renderRadiusKm,
+        'rayon du globe rendu',
+        Number.MIN_VALUE
+      ),
+      radiiKm: Array.isArray(data.figure?.radiiKm)
+        ? ((data.figure.radiiKm as unknown[]).map((r) =>
+            number(r, 'demi-axe', Number.MIN_VALUE)
+          ) as unknown as [number, number, number])
+        : null,
+    },
   };
+}
+
+/** Le plancher doit être un facteur dans ]0, 1] : au-delà, l'enveloppe passerait AU-DESSUS du relief. */
+function floorRatio(value: unknown): number {
+  if (
+    typeof value !== 'number' ||
+    !Number.isFinite(value) ||
+    value <= 0 ||
+    value > 1
+  )
+    throw new Error(
+      `manifeste de hauteurs : plancher de l'enveloppe invalide (${String(value)})`
+    );
+  return value;
 }
