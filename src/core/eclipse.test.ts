@@ -5,6 +5,7 @@ import {
   computeUmbralShadow,
   MIN_LIGHT_ATTENUATION,
   solarIrradianceFactor,
+  subjectLightAdaptation,
   UMBRA_REFRACTED_LIGHT,
   umbralDepth,
   umbralTint,
@@ -50,6 +51,18 @@ describe('physical light attenuation', () => {
     expect(solarIrradianceFactor(1)).toBe(1);
     expect(solarIrradianceFactor(0.5)).toBe(4);
     expect(solarIrradianceFactor(30)).toBe(0.03);
+  });
+
+  it('éclaire le corps suivi comme à 1 UA (ligne 45.7)', () => {
+    // Le corps suivi reçoit exactement l'éclairement de la Terre, quelle que soit sa distance.
+    for (const au of [0.39, 1, 2.77, 5.2, 9.54, 39.5])
+      expect(
+        solarIrradianceFactor(au) * subjectLightAdaptation(au)
+      ).toBeCloseTo(1, 12);
+    expect(subjectLightAdaptation(2.77)).toBeCloseTo(2.77 ** 2, 9);
+    // Aucun corps suivi, ou le Soleil (distance nulle) : rien ne change.
+    expect(subjectLightAdaptation(null)).toBe(1);
+    expect(subjectLightAdaptation(0)).toBe(1);
   });
 });
 

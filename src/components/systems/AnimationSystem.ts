@@ -18,6 +18,7 @@ import {
   computeLightAttenuation,
   refractedShadowExposure,
   solarIrradianceFactor,
+  subjectLightAdaptation,
   type SphericalOccluder,
 } from '@/core/eclipse';
 import { LOD_UPDATE_INTERVAL } from '@/core/modelLod';
@@ -71,6 +72,24 @@ export class AnimationSystem {
       ? refractedShadowExposure(refractedLevel)
       : 1;
   }
+  /** Facteur d'adaptation au corps suivi, en Explo (cf. `subjectLightAdaptation`). */
+  private _subjectAdaptation(
+    target: string | null,
+    entries: [string, CelestialBodies[string]][],
+    sunWorldPosition: THREE.Vector3
+  ): number {
+    if (target === null || target === 'sun') return 1;
+    const index = entries.findIndex(([name]) => name === target);
+    if (index >= 0) {
+      this._subjectPos.copy(this._lightingSnapshot[index].position);
+    } else if (!this.cameraSystem?.getTargetWorldPosition(this._subjectPos)) {
+      return 1;
+    }
+    return subjectLightAdaptation(
+      this._subjectPos.distanceTo(sunWorldPosition) / SQRT_K
+    );
+  }
+  private readonly _subjectPos = new THREE.Vector3();
   private celestialBodies!: CelestialBodies;
   private orbitalMechanics: OrbitalMechanics | null = null;
 
@@ -252,6 +271,16 @@ export class AnimationSystem {
       slot.radius = (group.userData['radius'] as number | undefined) ?? 0;
     }
 
+    // ADAPTATION AU CORPS SUIVI (ligne 45.7) : un facteur COMMUN, qui éclaire le corps suivi
+    // comme à 1 UA. Sa position est lue dans l'instantané quand c'est un corps, sinon dans le
+    // groupe que suit la caméra (sonde, objet interstellaire), à chaque passe : jamais une valeur
+    // mémorisée au clic, qui serait celle d'avant un morph.
+    const adaptation = this._subjectAdaptation(
+      target,
+      entries,
+      sunWorldPosition
+    );
+
     for (let i = 0; i < entries.length; i++) {
       const [name, body] = entries[i];
       if (name === 'sun') {
@@ -306,13 +335,14 @@ export class AnimationSystem {
         // seulement si l'occulteur réfracte (cf. refractedShadowExposure).
         body.setLightAttenuation(
           irradiance *
+            adaptation *
             this._subjectExposure(
               name,
               occluderBody?.refractsLight ? eclipse : 1
             )
         );
       } else {
-        body.setLightAttenuation(eclipse * irradiance);
+        body.setLightAttenuation(eclipse * irradiance * adaptation);
       }
     }
   }

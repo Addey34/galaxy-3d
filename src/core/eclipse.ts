@@ -283,3 +283,24 @@ export function solarIrradianceFactor(distanceAU: number): number {
   if (!Number.isFinite(distanceAU) || distanceAU <= EPSILON) return 1;
   return THREE.MathUtils.clamp(1 / (distanceAU * distanceAU), 0.03, 6);
 }
+
+/**
+ * ADAPTATION AU CORPS SUIVI (ligne 45.7, 2026-10-09) : le facteur qui multiplie l'éclairage de
+ * TOUS les corps pour que le corps suivi soit éclairé comme à 1 UA, comme une caméra qui pose
+ * pour la lumière qui tombe sur son sujet.
+ *
+ * Ce qui reste visible est donc l'ALBÉDO (`core/displayAlbedo.ts`) : Cérès (0,09) reste plus
+ * sombre que Vesta (0,42), mais aucun des deux n'est noir. L'ancienne adaptation, 1/√éclairement
+ * bornée à [0,65 ; 4], laissait Cérès à une luminance moyenne de 2 sur 255 en Explo, la
+ * compression ACES écrasant les basses lumières bien plus que linéairement.
+ *
+ * Les rapports entre corps d'un même champ sont conservés (le même facteur pour tous) ; le
+ * ciel, le Soleil et les lignes d'orbite n'en dépendent pas, puisqu'ils ne reçoivent pas
+ * d'éclairage. `null` (aucun corps suivi) ne change rien, et le Soleil suivi non plus.
+ */
+export function subjectLightAdaptation(
+  subjectDistanceAU: number | null
+): number {
+  if (subjectDistanceAU === null) return 1;
+  return 1 / solarIrradianceFactor(subjectDistanceAU);
+}
