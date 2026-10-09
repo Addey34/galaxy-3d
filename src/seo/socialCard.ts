@@ -16,6 +16,8 @@
  */
 
 /** Image brute non compressée — ce que produit `sharp(...).raw()`. */
+import { isSphere, type Figure } from '@/core/ellipsoid';
+
 export interface RawImage {
   data: Uint8Array | Uint8ClampedArray;
   width: number;
@@ -164,7 +166,10 @@ export function renderSphere(
   fallback: [number, number, number],
   size: number,
   emissive: boolean,
-  ring?: RingRender | null
+  ring?: RingRender | null,
+  // L'ellipsoïde publié (ligne 45.3), rapporté au rayon de rendu. Absent ou rond : la sphère
+  // d'avant, au bit près.
+  figure?: Figure | null
 ): Uint8ClampedArray {
   const out = new Uint8ClampedArray(size * size * 4);
   const center = size / 2;
@@ -184,12 +189,50 @@ export function renderSphere(
       const dy = py + 0.5 - center;
       const distance = Math.hypot(dx, dy);
       // Bord lissé sur un pixel : sans lui la silhouette crénelée se voit à l'oeil nu.
-      const coverage = Math.min(Math.max(radius + 0.5 - distance, 0), 1);
+      let coverageOverride: number | null = null;
+      const sphereCoverage = Math.min(Math.max(radius + 0.5 - distance, 0), 1);
 
       // --- le globe -------------------------------------------------------------------
       let sphere: [number, number, number] | null = null;
       let sphereZ = 0;
-      if (coverage > 0) {
+      if (figure && !isSphere(figure)) {
+        const hit = ellipsoidHit(
+          dx / radius,
+          -dy / radius,
+          figure,
+          cosTilt,
+          sinTilt
+        );
+        coverageOverride = Math.min(Math.max(radius * hit.margin + 0.5, 0), 1);
+        if (coverageOverride > 0) {
+          const p = hit.point;
+          sphereZ = p.viewZ;
+          const latitude = Math.asin(
+            Math.min(
+              Math.max(p.bodyY / Math.hypot(p.x, p.bodyY, p.bodyZ), -1),
+              1
+            )
+          );
+          const longitude = Math.atan2(p.x, p.bodyZ);
+          const rgb = texture
+            ? sampleBilinear(
+                texture,
+                longitude / (2 * Math.PI) + 0.5,
+                0.5 - latitude / Math.PI
+              )
+            : fallback;
+          const n = p.normal;
+          const light = emissive
+            ? 1 - 0.6 * (1 - n[2])
+            : AMBIENT +
+              Math.max(n[0] * LIGHT[0] + n[1] * LIGHT[1] + n[2] * LIGHT[2], 0);
+          sphere = [
+            toLinear(rgb[0]) * light,
+            toLinear(rgb[1]) * light,
+            toLinear(rgb[2]) * light,
+          ];
+        }
+      } else if (sphereCoverage > 0) {
         const nx = Math.min(Math.max(dx / radius, -1), 1);
         const ny = Math.min(Math.max(-dy / radius, -1), 1);
         const nz = Math.sqrt(Math.max(1 - nx * nx - ny * ny, 0));
@@ -220,6 +263,8 @@ export function renderSphere(
           toLinear(rgb[2]) * light,
         ];
       }
+
+      const coverage = coverageOverride ?? sphereCoverage;
 
       // --- l'anneau -------------------------------------------------------------------
       let ringColor: [number, number, number] | null = null;
@@ -300,6 +345,56 @@ export function renderSphere(
     }
   }
   return out;
+}
+
+/**
+ * Rayon orthographique (caméra en +Z, vue inclinée de `tilt` autour de X) contre l'ellipsoïde
+ * `figure`, ramené à la case : le plus grand demi-axe vaut 1, pour que le corps la remplisse
+ * comme la sphère. Rend le point le plus PROCHE, sa normale en repère de VUE, et une marge
+ * signée au bord (en rayons) qui lisse la silhouette comme `coverage` lisse le cercle.
+ */
+function ellipsoidHit(
+  x: number,
+  y: number,
+  figure: Figure,
+  cosTilt: number,
+  sinTilt: number
+): {
+  margin: number;
+  point: {
+    x: number;
+    bodyY: number;
+    bodyZ: number;
+    viewZ: number;
+    normal: [number, number, number];
+  };
+} {
+  const widest = Math.max(figure.a, figure.b, figure.c);
+  const a = figure.a / widest;
+  const b = figure.b / widest;
+  const c = figure.c / widest;
+  // Repère du corps : X vers le méridien origine vu de face, Y le pôle, Z vers l'observateur.
+  // bodyY = y·cos + z·sin, bodyZ = −y·sin + z·cos ; F = (x/a)² + (bodyZ/b)² + (bodyY/c)².
+  const qa = (sinTilt / c) ** 2 + (cosTilt / b) ** 2;
+  const qb = 2 * y * cosTilt * sinTilt * (1 / c ** 2 - 1 / b ** 2);
+  const qc = (x / a) ** 2 + ((y * cosTilt) / c) ** 2 + ((y * sinTilt) / b) ** 2;
+  const minimum = qc - (qb * qb) / (4 * qa);
+  const margin = 1 - Math.sqrt(Math.max(minimum, 0));
+  const disc = qb * qb - 4 * qa * (qc - 1);
+  const z = disc >= 0 ? (-qb + Math.sqrt(disc)) / (2 * qa) : -qb / (2 * qa);
+  const bodyY = y * cosTilt + z * sinTilt;
+  const bodyZ = -y * sinTilt + z * cosTilt;
+  // Gradient en repère du corps, puis retour en repère de vue.
+  const gx = x / a ** 2;
+  const gy = bodyY / c ** 2;
+  const gz = bodyZ / b ** 2;
+  const vy = gy * cosTilt - gz * sinTilt;
+  const vz = gy * sinTilt + gz * cosTilt;
+  const g = Math.hypot(gx, vy, vz) || 1;
+  return {
+    margin,
+    point: { x, bodyY, bodyZ, viewZ: z, normal: [gx / g, vy / g, vz / g] },
+  };
 }
 
 /** Interpolation lissée entre deux bornes — même courbe que `smoothstep` en GLSL. */

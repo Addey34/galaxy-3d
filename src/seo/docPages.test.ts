@@ -52,6 +52,7 @@ import {
   type TextureProvenance,
 } from './sourcesPage';
 import { renderInline, renderMarkdown } from './markdown';
+import { bodyFigure, publishedRadiiKm } from '@/config/bodyFigure';
 import {
   assertPublishableAlbedoTable,
   type DisplayAlbedoTable,
@@ -988,4 +989,25 @@ describe('/methodology : la dette de relecture des traductions est DITE (ligne 2
   it('ne déclare que des langues livrées', () => {
     for (const code of UNREVIEWED_TRANSLATIONS) expect(LOCALES).toContain(code);
   });
+});
+
+describe('/methodology : les globes sont les ellipsoïdes publiés (ligne 45.3)', () => {
+  const bodies = flattenBodies(CELESTIAL_CONFIG);
+  const flattened = [...bodies].filter(
+    // Un corps à modèle de forme montre son MAILLAGE : l'ellipsoïde n'est que sa sphère de repli.
+    ([name, cfg]) =>
+      !cfg.model && bodyFigure(name, cfg.realData?.radiusKm) !== null
+  ).length;
+  const [a, , c] = publishedRadiiKm('saturn')!;
+
+  it.each(methodology.map((p) => [p.locale, p] as const))(
+    '%s : le nombre de corps et l’aplatissement de Saturne sont ceux du code',
+    (locale, page) => {
+      expect(flattened).toBeGreaterThan(10);
+      expect(page.body).toContain(` ${flattened} `);
+      // « 9.80% » en anglais, « 9,80 % » ailleurs : l'usage typographique de chaque langue.
+      const value = formatQuantity((100 * (a - c)) / a, locale);
+      expect(page.body).toContain(locale === 'en' ? `${value}%` : `${value} %`);
+    }
+  );
 });

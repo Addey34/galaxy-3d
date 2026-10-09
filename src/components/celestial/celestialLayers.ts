@@ -3,6 +3,8 @@
  * lumières nocturnes · anneau). Extrait de CelestialObject : ajouter un type de couche se
  * fait ici, pas dans la classe qui n'orchestre que le cycle de vie (tilt, rotation, LOD).
  */
+import { bodyFigure } from '@/config/bodyFigure';
+import type { Figure } from '@/core/ellipsoid';
 import * as THREE from 'three';
 import {
   configureShadows,
@@ -28,6 +30,18 @@ import { displayGain } from '@/config/displayAlbedo';
  * Crée toutes les couches applicables selon la config et les renvoie indexées par nom.
  * La couche `ring` a une texture chargée à part (voir CelestialObject._loadRingTexture).
  */
+/**
+ * L'ellipsoïde publié du corps (ligne 45.3), rapporté à son rayon de rendu, ou `null` pour une
+ * sphère. Toutes les couches EN FORME DE GLOBE le prennent (surface, nuages, atmosphère, lumières,
+ * couches météo) ; l'anneau, plat, non.
+ */
+export function layerFigure(
+  config: CelestialBodyConfig,
+  name: string
+): Figure | null {
+  return bodyFigure(name, config.realData?.radiusKm);
+}
+
 export function buildLayers(
   config: CelestialBodyConfig,
   name: string
@@ -105,7 +119,12 @@ function createSurfaceLayer(
   const isSun = name === 'sun';
   const material = createSurfaceLayerMaterial(config, name);
   const mesh = new THREE.Mesh(
-    createSphereGeometry(config.radius, 'surface'),
+    createSphereGeometry(
+      config.radius,
+      'surface',
+      undefined,
+      layerFigure(config, name)
+    ),
     material
   );
   mesh.name = `${name}_surface`;
@@ -123,7 +142,12 @@ function createCloudsLayer(
   name: string
 ): THREE.Mesh {
   const mesh = new THREE.Mesh(
-    createSphereGeometry(config.radius, 'clouds'),
+    createSphereGeometry(
+      config.radius,
+      'clouds',
+      undefined,
+      layerFigure(config, name)
+    ),
     createCloudsMaterial()
   );
   mesh.name = `${name}_clouds`;
@@ -136,7 +160,12 @@ function createThermalLayer(
   name: string
 ): THREE.Mesh {
   const mesh = new THREE.Mesh(
-    createSphereGeometry(config.radius, 'thermal'),
+    createSphereGeometry(
+      config.radius,
+      'thermal',
+      undefined,
+      layerFigure(config, name)
+    ),
     createThermalMaterial()
   );
   mesh.name = `${name}_thermal`;
@@ -153,7 +182,12 @@ function createPrecipLayer(
   name: string
 ): THREE.Mesh {
   const mesh = new THREE.Mesh(
-    createSphereGeometry(config.radius, 'precip'),
+    createSphereGeometry(
+      config.radius,
+      'precip',
+      undefined,
+      layerFigure(config, name)
+    ),
     createPrecipMaterial()
   );
   mesh.name = `${name}_precip`;
@@ -185,7 +219,12 @@ function createAtmosphereLayer(
   });
 
   const mesh = new THREE.Mesh(
-    createSphereGeometry(config.radius, 'atmosphere'),
+    createSphereGeometry(
+      config.radius,
+      'atmosphere',
+      undefined,
+      layerFigure(config, name)
+    ),
     material
   );
   mesh.name = `${name}_atmosphere`;
@@ -218,7 +257,12 @@ function createLightsLayer(
   });
 
   const mesh = new THREE.Mesh(
-    createSphereGeometry(config.radius, 'lights'),
+    createSphereGeometry(
+      config.radius,
+      'lights',
+      undefined,
+      layerFigure(config, name)
+    ),
     material
   );
   mesh.name = `${name}_lights`;

@@ -33,6 +33,7 @@
  *     carreaux d'un autre niveau sont maintenant retirés SEULEMENT quand le nouveau niveau est
  *     complet.
  */
+import type { Figure } from '@/core/ellipsoid';
 import * as THREE from 'three';
 
 import {
@@ -76,6 +77,11 @@ export interface SurfaceHost {
   readonly name: string;
   /** Rayon LOCAL des couches, avant le facteur d'échelle de scène. */
   readonly layerRadius: number;
+  /**
+   * L'ellipsoïde publié du corps (`core/ellipsoid`), ou `null` pour une sphère. Un carreau sans
+   * hauteurs s'y pose ; l'enveloppe abaissée sous le relief en tient compte.
+   */
+  readonly figure?: Figure | null;
   readonly group: THREE.Object3D;
   attachSpinningChild(object: THREE.Object3D): void;
   createSurfaceOverlayMaterial(): THREE.Material;
@@ -854,7 +860,11 @@ export class PlanetarySurfaceEngine {
       heights.manifest.datumRadiusKm -
       this._radiusKm +
       heights.manifest.minElevationMetres / 1000;
-    const factor = (this._radiusKm + dropKm) / this._radiusKm;
+    // Sur un ellipsoïde, l'enveloppe abaissée doit rester sous le relief JUSQU'À l'équateur, là
+    // où elle est la plus grande : on la rapporte donc à son plus grand demi-axe (Mars, ligne 45.3).
+    const figure = host.figure;
+    const widest = figure ? Math.max(figure.a, figure.b, figure.c, 1) : 1;
+    const factor = (this._radiusKm + dropKm) / this._radiusKm / widest;
     if (!(factor > 0) || factor >= 1) return;
     host.setSurfaceShellScale(factor);
     this._shellScaled = true;
@@ -903,6 +913,7 @@ export class PlanetarySurfaceEngine {
       const tile = new SurfaceTile({
         index,
         radius: host.layerRadius,
+        figure: host.figure ?? null,
         shape: tileset.matrix,
         material: host.createSurfaceOverlayMaterial(),
         releaseMaterial: (material) =>

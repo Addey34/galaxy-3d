@@ -650,3 +650,37 @@ describe('vignette : le gain de luminosité de la scène', () => {
       expect(out.data[i]!).toBeLessThan(image.data[i]!);
   });
 });
+
+describe('la vignette a la FIGURE du corps (ligne 45.3)', () => {
+  /** Étendue, en pixels, des pixels couverts à plus de moitié, horizontalement et verticalement. */
+  const extent = (image: Uint8ClampedArray, size: number) => {
+    let minX = size;
+    let maxX = -1;
+    let minY = size;
+    let maxY = -1;
+    for (let y = 0; y < size; y++)
+      for (let x = 0; x < size; x++)
+        if ((image[(y * size + x) * 4 + 3] ?? 0) > 127) {
+          minX = Math.min(minX, x);
+          maxX = Math.max(maxX, x);
+          minY = Math.min(minY, y);
+          maxY = Math.max(maxY, y);
+        }
+    return { width: maxX - minX + 1, height: maxY - minY + 1 };
+  };
+
+  it('aplatit la silhouette dans le rapport pôle/équateur publié', () => {
+    const size = 200;
+    const c = 54_364 / 60_268;
+    const flat = renderSphere(null, GREY, size, false, null, { a: 1, b: 1, c });
+    const { width, height } = extent(flat, size);
+    expect(height / width).toBeCloseTo(c, 1);
+    expect(Math.abs(height / width - c)).toBeLessThan(0.02);
+  });
+
+  it('rend une figure ronde exactement comme la sphère d’avant', () => {
+    expect(
+      renderSphere(null, GREY, SIZE, false, null, { a: 1, b: 1, c: 1 })
+    ).toEqual(renderSphere(null, GREY, SIZE, false));
+  });
+});

@@ -791,11 +791,19 @@ async function naifRotation() {
       throw new Error(
         `noyau PCK : le code ${target.id} n'est pas « ${target.expect} » dans la table du noyau`
       );
+    // Les trois rayons de l'ellipsoïde publié (a, b, c en km : a vers le méridien origine, c
+    // le long du pôle), ou `null` quand le noyau n'en publie pas pour ce corps. Lus comme les
+    // coefficients, jamais recopiés : ils dessinent le globe (ligne 45.3).
+    const radii = scalars[`BODY${target.id}_RADII`] ?? null;
+    if (radii !== null && (radii.length !== 3 || radii.some((r) => !(r > 0))))
+      throw new Error(`noyau PCK : rayons illisibles pour ${body}`);
+    const radiiKm = radii;
     if (!pole) {
       bodies[body] = {
         naifId: target.id,
         system: target.system,
         rotation: null,
+        radiiKm,
       };
       continue;
     }
@@ -815,6 +823,7 @@ async function naifRotation() {
         nutPrecDec: scalars[`BODY${target.id}_NUT_PREC_DEC`] ?? null,
         pmRateDegPerDay: pm[1],
       },
+      radiiKm,
     };
   }
   return {

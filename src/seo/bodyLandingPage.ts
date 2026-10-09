@@ -23,6 +23,8 @@
  * le plugin Vite (`vite.config.ts`), pour que tout ce qui décide quelque chose soit testable
  * sans build.
  */
+import { bodyFigure } from '@/config/bodyFigure';
+import type { Figure } from '@/core/ellipsoid';
 import { flattenBodies, modelPath, ringTexturePath } from '@/config/catalog';
 import type {
   CelestialBodyConfig,
@@ -93,6 +95,11 @@ export interface BodyVisual {
    * applique à la texture ou à la couleur cuite : la vignette montre ce que montre la scène.
    */
   displayGain: number;
+  /**
+   * L'ellipsoïde publié du corps (`config/bodyFigure`, ligne 45.3), ou `null` pour une sphère :
+   * la vignette de Saturne est aplatie comme Saturne l'est dans la scène.
+   */
+  figure: Figure | null;
 }
 
 export interface BodyRingVisual {
@@ -164,6 +171,7 @@ export function bodyVisual(
       ? `public${modelPath(bodyName, config.model.resolutions.includes('2k') ? '2k' : config.model.resolutions[0]!)}`
       : null,
     displayGain: displayGain(bodyName),
+    figure: bodyFigure(bodyName, config.realData?.radiusKm),
   };
 }
 

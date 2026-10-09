@@ -24,6 +24,7 @@
  * MESURÉES, cuites depuis un modèle d'élévation publié. Le carreau gagne alors une jupe, et sa
  * géométrie vient du module pur `core/tilePatch.ts`, où elle est testée.
  */
+import { deformToFigure, isSphere, type Figure } from '@/core/ellipsoid';
 import * as THREE from 'three';
 
 import { buildTilePatch, type PatchHeights } from '@/core/tilePatch';
@@ -51,6 +52,11 @@ export class SurfaceTile {
     index: TileIndex;
     /** Rayon LOCAL des couches du corps (`CelestialObject.layerRadius`). */
     radius: number;
+    /**
+     * L'ellipsoïde du corps : un carreau SANS hauteurs s'y pose, comme la surface qu'il recouvre.
+     * Un carreau avec hauteurs porte déjà le rayon mesuré et l'ignore.
+     */
+    figure?: Figure | null;
     /** Forme de la matrice, pour retrouver l'emprise du carreau. */
     shape: TileMatrixShape;
     /**
@@ -79,6 +85,13 @@ export class SurfaceTile {
         ? { skirtDepth: params.skirtDepth }
         : {}),
     });
+    if (!params.heights && params.figure && !isSphere(params.figure))
+      deformToFigure(
+        patch.positions,
+        patch.normals,
+        params.radius,
+        params.figure
+      );
     this._geometry = new THREE.BufferGeometry();
     this._geometry.setAttribute(
       'position',
