@@ -41,7 +41,9 @@ describe('CameraSystem target flights', () => {
     expect(cameraSystem.targetName).toBe('mars');
     expect(cameraSystem.tweenGroup.getAll()).toHaveLength(2);
   });
-  it('adapts FOV and exposure for a distant true-scale target', () => {
+  // L'exposition n'est plus adaptée ici (ligne 45.7) : elle reste celle de l'utilisateur, et
+  // l'adaptation au corps suivi passe par l'éclairage (`AnimationSystem.test.ts`).
+  it('adapts the FOV for a distant true-scale target and leaves the exposure alone', () => {
     const cameraSystem = new CameraSystem();
     cameraSystem.camera = new THREE.PerspectiveCamera(65);
     cameraSystem.camera.position.set(0, 10, 10);
@@ -64,7 +66,33 @@ describe('CameraSystem target flights', () => {
     cameraSystem.setTarget('neptune');
 
     expect(cameraSystem.camera.fov).toBe(55);
-    expect(cameraSystem.renderer.toneMappingExposure).toBe(4);
+    expect(cameraSystem.renderer.toneMappingExposure).toBe(1);
+  });
+
+  it('lit la position du corps suivi À L’INSTANT, pas celle du clic', () => {
+    const cameraSystem = new CameraSystem();
+    cameraSystem.camera = new THREE.PerspectiveCamera(65);
+    cameraSystem.camera.position.set(0, 10, 10);
+    cameraSystem.controls = {
+      target: new THREE.Vector3(),
+      enabled: true,
+      update: () => {},
+    } as unknown as CameraSystem['controls'];
+    cameraSystem.renderer = {
+      toneMappingExposure: 1,
+      xr: { isPresenting: false },
+    } as unknown as CameraSystem['renderer'];
+    cameraSystem.tweenGroup = new TweenGroup();
+    const ceres = bodyAt(58);
+    Reflect.set(cameraSystem, 'celestialBodies', { ceres });
+    const out = new THREE.Vector3();
+    expect(cameraSystem.getTargetWorldPosition(out)).toBe(false);
+
+    cameraSystem.setTarget('ceres');
+    // Le morph Éduc → Explo déplace le corps APRÈS le clic (√2,77 × 35 → 2,77 × 35).
+    ceres.group.position.x = 97;
+    expect(cameraSystem.getTargetWorldPosition(out)).toBe(true);
+    expect(out.x).toBe(97);
   });
 
   it('keeps the current camera framing during a scale-mode transition', () => {

@@ -6,7 +6,6 @@
 import { STORAGE_KEYS } from '@/config/storageKeys';
 import { onLocaleChange, t } from '@/i18n';
 import type { SceneSystem } from '@/components/systems/SceneSystem';
-import type { CameraSystem } from '@/components/systems/CameraSystem';
 
 const MIN_EXPOSURE = 0.4;
 const MAX_EXPOSURE = 2.0;
@@ -32,10 +31,7 @@ function writeStored(value: number): void {
   }
 }
 
-export function setupRenderExposure(
-  scene: SceneSystem,
-  camera: CameraSystem
-): void {
+export function setupRenderExposure(scene: SceneSystem): void {
   const group = document.createElement('div');
   group.id = 'render-exposure';
   group.className = 'render-exposure';
@@ -75,18 +71,16 @@ export function setupRenderExposure(
 
   const initial = readStored();
   range.value = String(initial);
-  // Les DEUX : la scène pose la valeur tout de suite, la caméra la retient comme référence
-  // de son adaptation à l'éloignement. Sans le second appel, le premier recalcul adaptatif
-  // repart de la constante de configuration et efface le réglage — le défaut « la luminosité
-  // ne se sauvegarde pas », qui était en fait « elle se sauvegarde puis se fait écraser ».
+  // Le rendu ne porte QUE ce réglage : l'adaptation au corps suivi passe par l'éclairage des
+  // corps (`core/eclipse.ts::subjectLightAdaptation`, ligne 45.7), plus par l'exposition. Tant
+  // qu'elle passait par l'exposition, la caméra la recalculait depuis une constante et
+  // effaçait le réglage (« la luminosité ne se sauvegarde pas »), d'où un second appel ici.
   scene.setToneMappingExposure(initial);
-  camera.setBaseExposure(initial);
   refresh();
 
   range.addEventListener('input', () => {
     const next = Number(range.value);
     scene.setToneMappingExposure(next);
-    camera.setBaseExposure(next);
     writeStored(next);
     refresh();
   });

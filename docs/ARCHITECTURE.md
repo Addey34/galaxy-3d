@@ -2268,6 +2268,44 @@ uniforme sur un atlas), et `0,5 / 2,6` pour un modèle à couleur cuite.
   (`_syncOverlayEclipse`), tenu par `src/components/celestial/overlayEclipse.test.ts`, sans
   réseau, falsifié. Et la passe d'éclairage est forcée quand le corps suivi change.
 
+## L'éclairage s'adapte au corps suivi (2026-10-09, ligne 45.7)
+
+**Le défaut.** En Explo, Cérès suivie était presque noire : à 2,77 UA elle reçoit 13 % de
+l'éclairement terrestre, son albédo est de 0,09, et la compression ACES écrase les basses lumières
+bien plus que linéairement. Mesuré dans un vrai navigateur (date fixée au 2026-10-09, disque cadré
+au même rayon apparent) : luminance moyenne du disque **2 sur 255**, 99ᵉ centile 24. Une
+adaptation existait, dans `CameraSystem` : l'exposition du rendu multipliée par 1/√éclairement,
+bornée à [0,65 ; 4]. Elle avait deux défauts mesurés en plus de sa faiblesse : calculée sur la
+position du corps AU CLIC, elle lisait au démarrage en Explo des positions encore comprimées
+(Cérès posée ×1,66 au lieu de ×2,77, Mars ×1,23 au lieu de ×1,52), et chaque changement de mode
+la remettait à l'exposition de base sans la recalculer.
+
+**La règle** (choix de l'utilisateur : adapter au corps suivi). `subjectLightAdaptation`
+(`core/eclipse.ts`) rend 1/éclairement à la distance du corps suivi, et `AnimationSystem` en
+multiplie l'éclairage de TOUS les corps à chaque passe Explo : le corps suivi est éclairé comme à
+1 UA, comme une caméra qui pose pour la lumière qui tombe sur son sujet. Ce qui reste visible est
+donc l'ALBÉDO, que la règle du § précédent rend fidèle. La position du sujet est lue à chaque
+passe, dans l'instantané de la passe pour un corps, dans le groupe que suit la caméra pour une
+sonde ou un objet interstellaire (`CameraSystem.getTargetWorldPosition`). Rien ne change sans
+corps suivi, ni le Soleil suivi, ni en Éducatif, où l'éclairage est déjà uniforme.
+
+**Pourquoi l'éclairage et non l'exposition.** Ce dépôt avait déjà mesuré, pour l'éclipse de Lune,
+qu'une exposition globale éclaircit aussi la Voie lactée (§ précédent). Mesuré de nouveau ici sur
+`main` : Saturne suivie était posée ×3,09, et le ciel comme les anneaux s'en trouvaient éclaircis,
+pendant que le disque restait sombre (moyenne 30 sur 255). En passant par l'éclairage, le ciel, le
+Soleil et les lignes d'orbite, qui ne reçoivent pas de lumière, ne bougent plus ; les rapports
+entre corps d'un même champ (Saturne et ses lunes) sont gardés, le facteur étant commun. Le
+curseur de luminosité porte désormais SEUL l'exposition du rendu, et la caméra n'y écrit plus.
+Conséquence visible et assumée : les anneaux de Saturne, que l'exposition ×3 éclaircissait, se
+lisent sombres fin 2026, le Soleil les éclairant presque par la tranche.
+
+**Mesuré après** (même protocole, médiane de la partie ÉCLAIRÉE du disque, qui ne dépend pas de la
+phase sous laquelle on le voit) : Cérès 34, les troyens Patrocle 36 et Eurybate 39, la Lune 47,
+Mercure 48, Vesta 102 ; moyennes du disque Pluton 142, Encelade 138, Saturne 144 (30 avant).
+L'ordre suit l'albédo publié, et aucun corps n'est noir. Gardes : `core/eclipse.test.ts` (la règle)
+et `components/systems/AnimationSystem.test.ts` (la passe : Cérès suivie éclairée à 1, rapport
+Mars/Cérès inchangé, sonde suivie par sa position), falsifiée en retirant le facteur de la passe.
+
 ## L'orientation en longitude d'une texture (2026-10-04)
 
 **Le contrat.** Toute carte livrée a la longitude 0 au CENTRE et l'Est vers la droite : c'est ce

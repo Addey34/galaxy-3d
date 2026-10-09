@@ -444,7 +444,7 @@ function wireChrome(): {
     );
     exploHud.setMode('educ');
     exploHud.setActive(true);
-    setupRenderExposure(sceneSystem, cameraSystem);
+    setupRenderExposure(sceneSystem);
     setupColorblindToggle(sceneSystem);
     setupUnitsToggle();
     setupQualitySection(sceneSystem);

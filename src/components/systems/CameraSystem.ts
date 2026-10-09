@@ -11,14 +11,8 @@ import TWEEN, { Group as TweenGroup } from '@tweenjs/tween.js';
 import * as THREE from 'three';
 import { viewAnglesFromDirection, viewFromDistance } from '@/core/viewAngles';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import {
-  CAMERA_CONTROLS_SETTINGS,
-  CAMERA_SETTINGS,
-  RENDER_SETTINGS,
-} from '@/config/engine';
-import { solarIrradianceFactor } from '@/core/eclipse';
+import { CAMERA_CONTROLS_SETTINGS, CAMERA_SETTINGS } from '@/config/engine';
 import { followNearPlane } from '@/core/surfaceApproach';
-import { SQRT_K } from '@/core/ScaleService';
 import Logger from '@/utils/Logger';
 import { prefersReducedMotion } from '@/utils/reducedMotion';
 import type { CameraDistance } from '@/types';
@@ -160,7 +154,6 @@ export class CameraSystem {
     this.trackingPaused = false;
     body.updateWorldMatrix(true, false);
     body.getWorldPosition(this.targetWorldPosition);
-    this._setAdaptiveExposure(bodyName, this.targetWorldPosition);
 
     // Rayon CIBLE du mode courant (pas `userData['radius']`, qui peut être en cours de morph
     // Éduc↔Explo au moment précis de cette sélection — cf. CelestialObject.getFrameRadius) :
@@ -493,47 +486,6 @@ export class CameraSystem {
     }
   }
 
-  /**
-   * Exposition de RÉFÉRENCE, sur laquelle l'adaptation à l'éloignement vient se multiplier.
-   *
-   * C'était la constante de configuration, et c'était un défaut : le curseur de luminosité
-   * (`ui/renderExposure.ts`) écrivait bien son réglage dans `localStorage` et l'appliquait au
-   * démarrage, mais le premier recalcul adaptatif — changement de mode, de cible, fin d'un vol
-   * caméra — repartait de la constante et écrasait le choix de l'utilisateur. Vu de l'extérieur,
-   * le réglage « ne se sauvegardait pas » ; en réalité il était sauvegardé puis piétiné.
-   */
-  private _baseExposure = RENDER_SETTINGS.toneMappingExposure;
-
-  /** Fixe l'exposition de référence choisie par l'utilisateur et la ré-applique tout de suite. */
-  setBaseExposure(value: number): void {
-    this._baseExposure = value;
-    // Ré-application immédiate sur la cible courante : sans ça le curseur ne ferait effet
-    // qu'au prochain recalcul, donc « après coup », ce qui se lit comme un contrôle cassé.
-    this._setAdaptiveExposure(
-      this.currentTarget?.name ?? null,
-      this.currentTarget ? this.targetWorldPosition : undefined
-    );
-  }
-
-  private _setAdaptiveExposure(
-    bodyName: string | null,
-    worldPosition?: THREE.Vector3
-  ): void {
-    if (!this.renderer) return;
-    let exposure = this._baseExposure;
-    if (
-      this._scaleMode === 'explo' &&
-      bodyName &&
-      bodyName !== 'sun' &&
-      worldPosition
-    ) {
-      const distanceAU = worldPosition.length() / SQRT_K;
-      const irradiance = solarIrradianceFactor(distanceAU);
-      exposure *= THREE.MathUtils.clamp(1 / Math.sqrt(irradiance), 0.65, 4);
-    }
-    this.renderer.toneMappingExposure = exposure;
-  }
-
   private _setFov(fov: number): void {
     if (Math.abs(this.camera.fov - fov) < 0.01) return;
     this.camera.fov = fov;
@@ -569,7 +521,6 @@ export class CameraSystem {
     this.currentTarget = null;
     this.trackingPaused = false;
     this._setFov(CAMERA_SETTINGS.fov);
-    this._setAdaptiveExposure(null);
     // Retour à la vue d'ensemble : restaure les bornes de zoom globales du mode (sinon on
     // resterait limité aux bornes proportionnelles du dernier corps ciblé).
     this._applyGlobalZoomBounds();
@@ -688,7 +639,6 @@ export class CameraSystem {
     this.tweenGroup.removeAll();
     this.controls.enabled = true;
     this.trackingPaused = false;
-    this._setAdaptiveExposure(null);
     this.controls.update();
     this._settle();
   }
@@ -721,6 +671,19 @@ export class CameraSystem {
   /** Nom du corps actuellement suivi, ou null en vue libre / vue d'ensemble. */
   get targetName(): string | null {
     return this.currentTarget?.name ?? null;
+  }
+
+  /**
+   * Position monde de l'objet suivi, LUE à l'instant dans son groupe (corps, sonde ou objet
+   * interstellaire), ou `false` sans cible. Sert à l'adaptation de l'éclairage au corps suivi
+   * (`AnimationSystem`, ligne 45.7) : une valeur mémorisée au clic serait celle du mode d'avant
+   * pendant un morph.
+   */
+  getTargetWorldPosition(out: THREE.Vector3): boolean {
+    const group = this.currentTarget?.group;
+    if (!group) return false;
+    group.getWorldPosition(out);
+    return true;
   }
 
   /** Distance caméra → cible suivie en unités scène, ou null si aucune cible. */
