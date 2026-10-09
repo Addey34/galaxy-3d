@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { blockExternalNetwork } from './netBlock';
+import { waitForCalmMainThread } from './mainThread';
 
 // Déterminisme : réseau externe coupé. Depuis le lot 8b cela ne vide plus l'overlay, qui lit un
 // instantané livré avec l'application ; ces scénarios testent de toute façon la section, pas le
@@ -51,4 +52,34 @@ test('the asteroid and comet field is a section of display settings, in both mod
   await expect(cometRow.locator('.oo-checkbox')).not.toBeChecked();
 
   expect(errors, `Erreurs page : ${errors.join(' | ')}`).toEqual([]);
+});
+
+/**
+ * UN MARQUEUR DERRIÈRE UNE PLANÈTE NE SE PEINT PAS SUR SON SOL (ligne 45.8, 2026-10-09).
+ *
+ * Mesuré avant correction, à 1 000 km au-dessus de Mars qui remplit l'écran : 1 064 pixels de
+ * marqueurs d'astéroïdes peints sur la surface, pris d'abord pour des étoiles. La couche publie
+ * ce qu'elle peint et ce qu'un corps a masqué : ici, rien ne doit être peint, et quelque chose
+ * doit avoir été masqué (sinon le scénario ne prouverait rien).
+ */
+test('asteroid markers behind a near planet are hidden, not painted on its ground', async ({
+  page,
+}) => {
+  test.setTimeout(120_000);
+  await page.setViewportSize({ width: 1000, height: 700 });
+  await page.goto('/?body=mars&mode=explo&date=2026-04-10T00:00:00Z');
+  await expect(page.locator('#loader')).toBeHidden({ timeout: 60_000 });
+  await waitForCalmMainThread(page);
+  const canvas = page.locator('canvas').first();
+  const box = (await canvas.boundingBox())!;
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+  await page.mouse.wheel(0, -12_000);
+
+  const overlay = page.locator('#smallbody-overlay');
+  await expect
+    .poll(async () => Number(await overlay.getAttribute('data-occluded')), {
+      timeout: 30_000,
+    })
+    .toBeGreaterThan(0);
+  expect(Number(await overlay.getAttribute('data-drawn'))).toBe(0);
 });

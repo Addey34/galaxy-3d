@@ -15,6 +15,7 @@
  * cliquable — sans lui, une sonde serait le seul objet nommé à l'écran qu'un clic ne peut pas
  * atteindre, puisqu'elle n'a aucun mesh que le rayon puisse toucher.
  */
+import type { ScreenOcclusion } from '@/core/screenOcclusion';
 import * as THREE from 'three';
 import type { InstrumentPlacer } from '@/core/instrumentPlacement';
 import {
@@ -28,6 +29,13 @@ import { getLocale } from '@/i18n';
 import type { SpacecraftMission } from '@/config/spacecraft';
 
 export class SpacecraftOverlay {
+  /** Les corps qui masquent un repère passé derrière eux (ligne 45.8), ou rien. */
+  private _occlusion: ScreenOcclusion | null = null;
+
+  /** Branche l'occultation par les corps (`core/screenOcclusion`), recomposée à chaque image. */
+  setOcclusion(occlusion: ScreenOcclusion | null): void {
+    this._occlusion = occlusion;
+  }
   private readonly canvas: HTMLCanvasElement;
   private readonly ctx: CanvasRenderingContext2D | null;
   private readonly missions: SpacecraftMission[];
@@ -137,7 +145,10 @@ export class SpacecraftOverlay {
       const posAU = horizons.getHeliocentricAU(mission.name, date);
       if (!posAU) continue; // avant le lancement, ou au-delà de la solution de trajectoire
 
-      place(this._p, mission.name, posAU, date, morph).project(camera);
+      place(this._p, mission.name, posAU, date, morph);
+      // Derrière un corps (une sonde en orbite passe derrière sa planète) : rien à peindre.
+      if (this._occlusion?.hides(this._p.x, this._p.y, this._p.z)) continue;
+      this._p.project(camera);
       if (
         this._p.z < -1 ||
         this._p.z > 1 ||

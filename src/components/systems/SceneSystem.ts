@@ -384,6 +384,11 @@ export class SceneSystem {
     return this._celestialBodies[name];
   }
 
+  /** Tous les corps de la scène, par nom (lu par l'occultation des couches 2D, ligne 45.8). */
+  bodyEntries(): [string, CelestialObject][] {
+    return Object.entries(this._celestialBodies);
+  }
+
   private createOrbitVisual(bodyName: string, color: number): THREE.Line {
     const geometry = new THREE.BufferGeometry();
     const material = new THREE.LineBasicMaterial({

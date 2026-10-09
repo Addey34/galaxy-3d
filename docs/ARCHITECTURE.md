@@ -1534,6 +1534,30 @@ lot 14, le tracé est la colonne « Orbite » de la ligne de chaque objet (une h
 place d'une orbite), et il ne se conserve pas d'une visite à l'autre, comme tout le contenu de la
 scène (cf. « La surface Réglages d'affichage »).
 
+## Un repère derrière un corps ne se peint pas par-dessus (ligne 45.8, 2026-10-09)
+
+Les couches instrument (petits corps, sondes, objets interstellaires, marqueurs et étiquettes de
+l'Explo) dessinent en 2D sur un canevas posé AU-DESSUS du rendu WebGL : rien ne les masquait quand
+leur objet passait derrière une planète. Vu de près, Mars portait 1 064 pixels de marqueurs
+d'astéroïdes sur son sol, pris d'abord pour des étoiles. **La mesure a d'abord écarté le
+coupable supposé** : la même vue sans le champ d'étoiles ne change aucun pixel du disque, et la
+passe de lueur, qui l'aurait expliqué, ne tournait même pas ; c'est la même vue SANS les
+catégories de petits corps qui a montré les 1 064 pixels.
+
+`core/screenOcclusion.ts` (pur) répond « ce point est-il caché ? » : le segment caméra → point
+traverse-t-il la sphère d'un corps avant de l'atteindre. `MainSolarSystemApp` recompose une fois
+par image l'ensemble des occulteurs (corps VISIBLES, sphère INSCRITE au globe rendu : rayon rendu
+× plus petit demi-axe de la figure), réduit aux corps dont le rayon apparent dépasse un milliradian
+(un ou deux en pratique, donc 8 000 petits corps restent bon marché). Les quatre couches le
+consultent avant de projeter ; l'étiquette d'un corps ne se cache pas derrière lui-même, et un
+corps qui contient la caméra ne masque rien. La sphère inscrite est un choix : un repère visible au
+ras du limbe n'est jamais caché à tort, et seule une bande de l'aplatissement d'une géante peut en
+laisser passer un, ce qui est le moindre des deux défauts.
+
+Gardes : `core/screenOcclusion.test.ts`, et `e2e/smallBodyFilters.spec.ts` (au-dessus de Mars qui
+remplit l'écran, la couche publie `data-drawn` = 0 et `data-occluded` > 0 ; l'occultation
+désactivée, il rougit).
+
 ## Couches d'instrument pendant le morph Éduc↔Explo
 
 Les corps 3D n'sautent pas d'un mode à l'autre : `OrbitalMechanics` interpole leur position
