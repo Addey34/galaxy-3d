@@ -26,6 +26,7 @@ import {
   type FactEntry,
 } from '@/core/bodyFacts';
 import { groupByHost, type SpacecraftArchive } from '@/core/instruments';
+import { formatIsoDay } from '@/core/dateText';
 import { factSource } from '@/config/factSources';
 import { messages } from '@/i18n/allDictionaries';
 import { INTL_LOCALE, LOCALE_PATH, LOCALES, type Locale } from '@/i18n/locales';
@@ -130,15 +131,12 @@ const TEXT = {
 const fill = (text: string, name: string): string =>
   text.replace(/\{name\}/g, name);
 
-/** `AAAA-MM-JJ` en toutes lettres, dans la langue de la page. */
+/**
+ * `AAAA-MM-JJ` en toutes lettres, dans la langue de la page, le premier du mois en ordinal
+ * (« 1er septembre 2028 ») : la règle de `core/dateText.ts`, que cette page ignorait.
+ */
 export function longDay(iso: string, locale: Locale): string {
-  const [y, m, d] = iso.split('-').map(Number);
-  return new Intl.DateTimeFormat(INTL_LOCALE[locale], {
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-    timeZone: 'UTC',
-  }).format(new Date(Date.UTC(y!, m! - 1, d!)));
+  return formatIsoDay(iso, locale, INTL_LOCALE[locale]);
 }
 
 /** La valeur affichée d'un fait, avec la même précision que la fiche de l'application. */
