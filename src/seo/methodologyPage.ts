@@ -137,6 +137,13 @@ export interface EphemerisManifestEntry {
   segmentOf?: string;
   /** Segment d'un SURVOL planétaire (ligne 45.10). */
   flyby?: true;
+  /** Aplatissement publié par `pnpm ephemeris:oblateness` (ligne 45.10, pas 2). */
+  oblateness?: {
+    j2: number;
+    radiusKm: number;
+    poleRaDeg: number;
+    poleDecDeg: number;
+  };
 }
 
 export interface EphemerisManifest {
@@ -349,10 +356,10 @@ function flybySegmentText(
   const coarsest = stepWords(Math.max(...minutes), locale);
   const percent = exact(FLYBY_PLAN.segmentShare * 100, locale);
   const text: DocText = {
-    en: ` During ${flybys} planetary flybys and ${departures} departures from the Earth, made by ${probes} of them, a short file takes over for a few days: the position relative to the centre of the planet, every ${finest} to ${coarsest}, propagated along the hyperbola around the planet between samples. These passages are detected in the true trajectory (a stay inside the planet’s sphere of influence), and each step is the coarsest that keeps the position within ${percent} % of the distance to the planet, measured against Horizons at every passage: a validation at fixed dates never falls on one.`,
-    fr: ` Pendant ${flybys} survols de planètes et ${departures} départs de la Terre, faits par ${probes} d’entre elles, un fichier court prend la main pour quelques jours : la position relative au centre de la planète, toutes les ${finest} à ${coarsest}, propagée le long de l’hyperbole autour de la planète entre deux échantillons. Ces passages sont détectés dans la trajectoire vraie (un séjour dans la sphère d’influence de la planète), et chaque pas est le plus grossier qui garde la position à moins de ${percent} % de la distance à la planète, mesuré contre Horizons à chaque passage : une validation à dates fixes ne tombe jamais sur l’un d’eux.`,
-    es: ` Durante ${flybys} sobrevuelos de planetas y ${departures} salidas desde la Tierra, hechos por ${probes} de ellas, un archivo corto toma el relevo durante unos días: la posición relativa al centro del planeta, cada ${finest} a ${coarsest}, propagada a lo largo de la hipérbola alrededor del planeta entre dos muestras. Estos pasos se detectan en la trayectoria real (una estancia dentro de la esfera de influencia del planeta), y cada paso es el más grueso que mantiene la posición a menos del ${percent} % de la distancia al planeta, medido contra Horizons en cada paso: una validación en fechas fijas nunca cae en uno.`,
-    'pt-BR': ` Durante ${flybys} sobrevoos de planetas e ${departures} partidas da Terra, feitos por ${probes} delas, um arquivo curto assume por alguns dias: a posição relativa ao centro do planeta, a cada ${finest} a ${coarsest}, propagada ao longo da hipérbole em torno do planeta entre duas amostras. Essas passagens são detectadas na trajetória real (uma estadia dentro da esfera de influência do planeta), e cada passo é o mais grosso que mantém a posição a menos de ${percent} % da distância ao planeta, medido contra o Horizons em cada passagem: uma validação em datas fixas nunca cai em uma delas.`,
+    en: ` During ${flybys} planetary flybys and ${departures} departures from the Earth, made by ${probes} of them, a short file takes over for a few days: the position relative to the centre of the planet, every ${finest} to ${coarsest}, propagated along the hyperbola around the planet, with its flattening (the J2 term), between samples. These passages are detected in the true trajectory (a stay inside the planet’s sphere of influence), and each step is the coarsest that keeps the position within ${percent} % of the distance to the planet, measured against Horizons at every passage: a validation at fixed dates never falls on one.`,
+    fr: ` Pendant ${flybys} survols de planètes et ${departures} départs de la Terre, faits par ${probes} d’entre elles, un fichier court prend la main pour quelques jours : la position relative au centre de la planète, toutes les ${finest} à ${coarsest}, propagée le long de l’hyperbole autour de la planète, avec son aplatissement (le terme J2), entre deux échantillons. Ces passages sont détectés dans la trajectoire vraie (un séjour dans la sphère d’influence de la planète), et chaque pas est le plus grossier qui garde la position à moins de ${percent} % de la distance à la planète, mesuré contre Horizons à chaque passage : une validation à dates fixes ne tombe jamais sur l’un d’eux.`,
+    es: ` Durante ${flybys} sobrevuelos de planetas y ${departures} salidas desde la Tierra, hechos por ${probes} de ellas, un archivo corto toma el relevo durante unos días: la posición relativa al centro del planeta, cada ${finest} a ${coarsest}, propagada a lo largo de la hipérbola alrededor del planeta, con su achatamiento (el término J2), entre dos muestras. Estos pasos se detectan en la trayectoria real (una estancia dentro de la esfera de influencia del planeta), y cada paso es el más grueso que mantiene la posición a menos del ${percent} % de la distancia al planeta, medido contra Horizons en cada paso: una validación en fechas fijas nunca cae en uno.`,
+    'pt-BR': ` Durante ${flybys} sobrevoos de planetas e ${departures} partidas da Terra, feitos por ${probes} delas, um arquivo curto assume por alguns dias: a posição relativa ao centro do planeta, a cada ${finest} a ${coarsest}, propagada ao longo da hipérbole em torno do planeta, com o seu achatamento (o termo J2), entre duas amostras. Essas passagens são detectadas na trajetória real (uma estadia dentro da esfera de influência do planeta), e cada passo é o mais grosso que mantém a posição a menos de ${percent} % da distância ao planeta, medido contra o Horizons em cada passagem: uma validação em datas fixas nunca cai em uma delas.`,
   };
   return text[locale];
 }
@@ -453,14 +460,19 @@ function methodologyPage(input: MethodologyInput, locale: DocLocale): DocPage {
   const flybyText = flybySegmentText(flybySegments, manifest.bodies, locale);
   const segmentText =
     segments
-      .map(([, e]) =>
-        L({
-          en: ` While ${escapeHtml(name(e.segmentOf!, locale))} orbits ${escapeHtml(name(e.center!, locale))}, a second file takes over: its position relative to ${escapeHtml(name(e.center!, locale))}, every ${exact(e.stepDays, locale)} day, propagated around ${escapeHtml(name(e.center!, locale))} between samples, with the ${e.impulses?.length ?? 0} manoeuvres of that period read in a finer sampling of the trajectory and propagated from one side only.`,
-          fr: ` Pendant que ${escapeHtml(name(e.segmentOf!, locale))} tourne autour de ${escapeHtml(name(e.center!, locale))}, un second fichier prend la main : sa position relative à ${escapeHtml(name(e.center!, locale))}, tous les ${exact(e.stepDays, locale)} jour, propagée autour de ${escapeHtml(name(e.center!, locale))} entre deux échantillons, avec les ${e.impulses?.length ?? 0} manœuvres de cette période, lues dans un échantillonnage plus fin de la trajectoire et propagées d’un seul côté.`,
-          es: ` Mientras ${escapeHtml(name(e.segmentOf!, locale))} orbita ${escapeHtml(name(e.center!, locale))}, toma el relevo un segundo archivo: su posición relativa a ${escapeHtml(name(e.center!, locale))}, cada ${exact(e.stepDays, locale)} día, propagada alrededor de ${escapeHtml(name(e.center!, locale))} entre dos muestras, con las ${e.impulses?.length ?? 0} maniobras de ese periodo, leídas en un muestreo más fino de la trayectoria y propagadas desde un solo lado.`,
-          'pt-BR': ` Enquanto ${escapeHtml(name(e.segmentOf!, locale))} orbita ${escapeHtml(name(e.center!, locale))}, um segundo arquivo assume: a sua posição relativa a ${escapeHtml(name(e.center!, locale))}, a cada ${exact(e.stepDays, locale)} dia, propagada ao redor de ${escapeHtml(name(e.center!, locale))} entre duas amostras, com as ${e.impulses?.length ?? 0} manobras desse período, lidas numa amostragem mais fina da trajetória e propagadas de um só lado.`,
-        })
-      )
+      .map(([, e]) => {
+        const who = escapeHtml(name(e.segmentOf!, locale));
+        const around = escapeHtml(name(e.center!, locale));
+        const n = e.impulses?.length ?? 0;
+        // L'aplatissement de la planète, quand le manifeste le publie (ligne 45.10, pas 2).
+        const flat = manifest.bodies[e.center!]?.oblateness !== undefined;
+        return L({
+          en: ` While ${who} orbits ${around}, a second file takes over: its position relative to ${around}, every ${exact(e.stepDays, locale)} day, propagated around ${around}${flat ? ' (its gravity and its flattening, the J2 term)' : ''} between samples, with the ${n} manoeuvre${n === 1 ? '' : 's'} of that period read in a finer sampling of the trajectory and propagated from one side only.`,
+          fr: ` Pendant que ${who} tourne autour de ${around}, un second fichier prend la main : sa position relative à ${around}, tous les ${exact(e.stepDays, locale)} jour, propagée autour de ${around}${flat ? ' (sa gravité et son aplatissement, le terme J2)' : ''} entre deux échantillons, avec ${n === 1 ? 'la manœuvre' : `les ${n} manœuvres`} de cette période, lue${n === 1 ? '' : 's'} dans un échantillonnage plus fin de la trajectoire et propagée${n === 1 ? '' : 's'} d’un seul côté.`,
+          es: ` Mientras ${who} orbita ${around}, toma el relevo un segundo archivo: su posición relativa a ${around}, cada ${exact(e.stepDays, locale)} día, propagada alrededor de ${around}${flat ? ' (su gravedad y su achatamiento, el término J2)' : ''} entre dos muestras, con ${n === 1 ? 'la maniobra' : `las ${n} maniobras`} de ese periodo, leída${n === 1 ? '' : 's'} en un muestreo más fino de la trayectoria y propagada${n === 1 ? '' : 's'} desde un solo lado.`,
+          'pt-BR': ` Enquanto ${who} orbita ${around}, um segundo arquivo assume: a sua posição relativa a ${around}, a cada ${exact(e.stepDays, locale)} dia, propagada ao redor de ${around}${flat ? ' (a sua gravidade e o seu achatamento, o termo J2)' : ''} entre duas amostras, com ${n === 1 ? 'a manobra' : `as ${n} manobras`} desse período, lida${n === 1 ? '' : 's'} numa amostragem mais fina da trajetória e propagada${n === 1 ? '' : 's'} de um só lado.`,
+        });
+      })
       .join('') + flybyText;
   const binarySpacecraft = binaries.filter(([n]) => spacecraftNames.has(n));
   const binaryNatural = binaries.filter(([n]) => !fileOnlyNames.has(n));

@@ -15,6 +15,7 @@ import {
   MU_SUN_AU3_PER_DAY2,
 } from '@/core/twoBodyPropagation';
 import type { CelestialConfig } from '@/types';
+import type { Oblateness } from '@/core/oblatePropagation';
 
 /** Ce qu'il faut savoir d'un corps pour propager son mouvement le long de sa conique. */
 export interface BodyDynamics {
@@ -49,6 +50,12 @@ export interface BodyDynamics {
    * corps (`HorizonsBodyManifest.segmentOf`, BepiColombo autour de Mercure).
    */
   attractorMu?: number;
+  /**
+   * L'aplatissement de ce même attracteur (terme J2), pour un SEGMENT dont la planète le
+   * publie au manifeste (`pnpm ephemeris:oblateness`). Posé par le service, jamais ici : la
+   * donnée vit dans le manifeste, pas dans le catalogue du démarrage.
+   */
+  oblateness?: Oblateness;
 }
 
 /**

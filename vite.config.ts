@@ -7,6 +7,7 @@ import {
   LANDING_PAGE_GLOB_IGNORES,
   NAVIGATE_FALLBACK_DENYLIST,
 } from './src/seo/pwaRouting';
+import { stripGlslComments as stripGlslSource } from './src/build/glslComments';
 import {
   collectTranslations,
   collectDeferredText,
@@ -29,6 +30,25 @@ function stripProductionHtmlComments() {
     name: 'strip-production-html-comments',
     transformIndexHtml(html: string): string {
       return html.replace(/<!--[\s\S]*?-->/g, '');
+    },
+  };
+}
+
+/**
+ * Retire les COMMENTAIRES et l'indentation des shaders GLSL écrits en gabarits
+ * (`src/build/glslComments.ts`) : le minifieur ne touche jamais au contenu d'une chaîne, et
+ * 14,5 Ko de commentaires partaient au démarrage (2026-10-11). Actif en dev AUSSI, pour que la
+ * suite e2e compile les shaders transformés ; les fins de ligne sont gardées, donc les numéros
+ * de ligne du serveur de dev restent justes.
+ */
+function stripGlslComments() {
+  return {
+    name: 'strip-glsl-comments',
+    enforce: 'pre' as const,
+    transform(code: string, id: string): { code: string; map: null } | null {
+      if (!/[\\/]src[\\/].+\.ts$/.test(id) || /\.test\.ts$/.test(id)) return null;
+      const out = stripGlslSource(code, id);
+      return out === null ? null : { code: out, map: null };
     },
   };
 }
@@ -1009,6 +1029,7 @@ function bodyLandingPages() {
 export default defineConfig({
   json: { stringify: true },
   plugins: [
+    stripGlslComments(),
     stripRegistryNotes(),
     deriveRegistryText(),
     stripProductionHtmlComments(),

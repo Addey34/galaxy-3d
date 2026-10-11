@@ -125,6 +125,12 @@ export function deriveSatellitePhases(
       last = t;
       boundDays++;
     }
+    // Liée au dernier jour que le fichier couvre, la sonde l'est jusqu'à la fin du fichier : la
+    // phase va alors au minuit suivant. Sinon le dernier jour, que le fichier couvre jusqu'à
+    // quelques dizaines de secondes avant minuit (sa grille est en TDB), sortait de la phase, et
+    // la sonde quittait son corps un jour durant avant de disparaître (Juno, 2028-08-31 : saut
+    // de 4,08 rayons Éducatif, 2026-10-11).
+    if (first !== null && last + DAY_MS >= toMs && last < toMs) last += DAY_MS;
     if (first !== null && boundDays >= SATELLITE_MIN_BOUND_DAYS)
       phases.push({ body: candidate.name, fromMs: first, toMs: last });
   }

@@ -1,7 +1,7 @@
 /**
  * LES DOSSIERS QUI NE DOIVENT JAMAIS ATTEINDRE LE BUNDLE DU VISITEUR, déclarés UNE FOIS.
  *
- * Trois dossiers de `src/` ne tournent qu'au build, en CI ou dans les tests, et chacun a sa
+ * Quatre dossiers de `src/` ne tournent qu'au build (`build/` depuis le 2026-10-11), en CI ou dans les tests, et chacun a sa
  * raison mesurée :
  *
  *   - `seo/` : rastériseurs de sphère et de maillage, gabarits SVG. Personne n'exécute ça dans
@@ -23,6 +23,9 @@
 
 /** Chemins relatifs à `src/`, en segments séparés par `/`. */
 export const BUILD_ONLY_DIRS: readonly string[] = [
+  // Les transformations du source au build (`glslComments.ts` : TypeScript, une
+  // `devDependency`, pour lire les gabarits des shaders). Ajouté le 2026-10-11.
+  'build',
   'inventory',
   'registry/schema',
   'seo',

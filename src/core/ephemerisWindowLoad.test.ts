@@ -120,8 +120,10 @@ describe('le service charge des fenêtres (lot 17C)', () => {
     // 12 h, cf. `segmentReference.test.ts`) ; 55 973 520 avec les trois objets interstellaires
     // (2026-10-08 : 1I au pas d'un jour, 2I et 3I au pas de 4 jours, sur ±20 ans) ; 56 343 648
     // avec les trois sondes de l'ESA (2026-10-09 : Solar Orbiter, JUICE et Hera au pas d'un jour) ;
-    // 56 410 368 avec les 65 segments de survol (2026-10-11, 66 720 octets, ligne 45.10).
-    expect(shipped).toBe(56_410_368);
+    // 56 410 368 avec les 65 segments de survol (2026-10-11, 66 720 octets, ligne 45.10) ;
+    // 57 754 512 avec Juno et Cassini en orbite (même jour, pas 2 : 426 240 et 925 584 octets,
+    // les survols replanifiés avec le terme J2, Juno ramené à la couverture d'Horizons).
+    expect(shipped).toBe(57_754_512);
     // MESURÉ ici avec TOUTES les lignes d'orbite allumées, le pire cas qu'un visiteur obtient en
     // allumant la colonne entière : Halley en demande 333 Ko à elle seule (76 ans de révolution,
     // pas de 4 jours), Uranus 368 Ko. Le démarrage, lui, ne demande depuis le 2026-10-04 que les

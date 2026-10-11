@@ -1,7 +1,7 @@
 {
   "version": 1,
   "source": "NASA/JPL Horizons",
-  "generatedAt": "2026-10-11T07:26:14.981Z",
+  "generatedAt": "2026-10-11T09:39:35.563Z",
   "frame": "ECLIPTIC_J2000",
   "center": "SUN",
   "units": "AU-D",
@@ -48,7 +48,13 @@
       "center": "sun",
       "startJdTdb": 2415020.5,
       "stepDays": 4,
-      "sampleCount": 18354
+      "sampleCount": 18354,
+      "oblateness": {
+        "j2": 0.016298,
+        "radiusKm": 60268,
+        "poleRaDeg": 40.589,
+        "poleDecDeg": 83.537
+      }
     },
     "enceladus": {
       "file": "enceladus.aecead95dd0d.bin",
@@ -89,7 +95,13 @@
       "center": "sun",
       "startJdTdb": 2415020.5,
       "stepDays": 8,
-      "sampleCount": 9177
+      "sampleCount": 9177,
+      "oblateness": {
+        "j2": 0.00196045,
+        "radiusKm": 3396.2,
+        "poleRaDeg": 317.269202,
+        "poleDecDeg": 54.432516
+      }
     },
     "phobos": {
       "file": "phobos.6f5cce9878ec.bin",
@@ -114,7 +126,13 @@
       "center": "sun",
       "startJdTdb": 2415020.5,
       "stepDays": 4,
-      "sampleCount": 18354
+      "sampleCount": 18354,
+      "oblateness": {
+        "j2": 0.003411,
+        "radiusKm": 24764,
+        "poleRaDeg": 299.36,
+        "poleDecDeg": 43.46
+      }
     },
     "triton": {
       "file": "triton.2d2fdac66dd8.bin",
@@ -322,12 +340,12 @@
       "sampleCount": 7273
     },
     "juno": {
-      "file": "juno.00a4cd25af7c.bin",
+      "file": "juno.d5900b73bb10.bin",
       "target": "-61",
       "center": "sun",
       "startJdTdb": 2455780.5,
       "stepDays": 1,
-      "sampleCount": 6264
+      "sampleCount": 6236
     },
     "rosetta": {
       "file": "rosetta.e0c02fc00d85.bin",
@@ -367,7 +385,13 @@
       "center": "sun",
       "startJdTdb": 2415020.5,
       "stepDays": 4,
-      "sampleCount": 18354
+      "sampleCount": 18354,
+      "oblateness": {
+        "j2": 0.014736,
+        "radiusKm": 71492,
+        "poleRaDeg": 268.056595,
+        "poleDecDeg": 64.495303
+      }
     },
     "uranus": {
       "file": "uranus.13c7a426032e.bin",
@@ -375,7 +399,13 @@
       "center": "sun",
       "startJdTdb": 2415020.5,
       "stepDays": 4,
-      "sampleCount": 18354
+      "sampleCount": 18354,
+      "oblateness": {
+        "j2": 0.00334343,
+        "radiusKm": 25559,
+        "poleRaDeg": 257.311,
+        "poleDecDeg": -15.175
+      }
     },
     "vesta": {
       "file": "vesta.92479d3cb61c.bin",
@@ -495,7 +525,13 @@
       "center": "sun",
       "startJdTdb": 2415020.5,
       "stepDays": 8,
-      "sampleCount": 9177
+      "sampleCount": 9177,
+      "oblateness": {
+        "j2": 0.0000503,
+        "radiusKm": 2440.5,
+        "poleRaDeg": 281.0103,
+        "poleDecDeg": 61.4155
+      }
     },
     "venus": {
       "file": "venus.4ba713238ffd.bin",
@@ -503,7 +539,13 @@
       "center": "sun",
       "startJdTdb": 2415020.5,
       "stepDays": 8,
-      "sampleCount": 9177
+      "sampleCount": 9177,
+      "oblateness": {
+        "j2": 0.000004458,
+        "radiusKm": 6051.8,
+        "poleRaDeg": 272.76,
+        "poleDecDeg": 67.16
+      }
     },
     "earth": {
       "file": "earth.425172abf3de.bin",
@@ -511,7 +553,13 @@
       "center": "sun",
       "startJdTdb": 2415020.5,
       "stepDays": 8,
-      "sampleCount": 9177
+      "sampleCount": 9177,
+      "oblateness": {
+        "j2": 0.00108263,
+        "radiusKm": 6378.137,
+        "poleRaDeg": 0,
+        "poleDecDeg": 90
+      }
     },
     "ganymede": {
       "file": "ganymede.713d28a71de3.bin",
@@ -827,653 +875,680 @@
       "sampleCount": 757
     },
     "bepicolombo--earth-2018-10-22": {
-      "file": "bepicolombo--earth-2018-10-22.c6b7cae92907.bin",
+      "file": "bepicolombo--earth-2018-10-22.4a9c417ba99b.bin",
       "target": "-121",
       "center": "earth",
       "startJdTdb": 2458413.5,
       "stepDays": 0.5,
-      "sampleCount": 3,
+      "sampleCount": 4,
       "segmentOf": "bepicolombo",
       "flyby": true
     },
     "bepicolombo--earth-2020-04-10": {
-      "file": "bepicolombo--earth-2020-04-10.d82bf89b689b.bin",
+      "file": "bepicolombo--earth-2020-04-10.a1d693cd4e51.bin",
       "target": "-121",
       "center": "earth",
       "startJdTdb": 2458947.125,
-      "stepDays": 0.25,
-      "sampleCount": 22,
+      "stepDays": 0.5,
+      "sampleCount": 12,
       "segmentOf": "bepicolombo",
       "flyby": true
     },
     "bepicolombo--venus-2020-10-15": {
-      "file": "bepicolombo--venus-2020-10-15.9f65aeaf90b9.bin",
+      "file": "bepicolombo--venus-2020-10-15.5fee4386ecdd.bin",
       "target": "-121",
       "center": "venus",
       "startJdTdb": 2459137.291666667,
-      "stepDays": 0.25,
-      "sampleCount": 6,
+      "stepDays": 0.5,
+      "sampleCount": 4,
       "segmentOf": "bepicolombo",
       "flyby": true
     },
     "bepicolombo--venus-2021-08-10": {
-      "file": "bepicolombo--venus-2021-08-10.054d03b1380d.bin",
+      "file": "bepicolombo--venus-2021-08-10.5ff15bdb4169.bin",
       "target": "-121",
       "center": "venus",
       "startJdTdb": 2459436.375,
-      "stepDays": 0.25,
-      "sampleCount": 6,
+      "stepDays": 0.5,
+      "sampleCount": 4,
       "segmentOf": "bepicolombo",
       "flyby": true
     },
     "bepicolombo--mercury-2021-10-01": {
-      "file": "bepicolombo--mercury-2021-10-01.32260ddb77fb.bin",
+      "file": "bepicolombo--mercury-2021-10-01.8596f21e8953.bin",
       "target": "-121",
       "center": "mercury",
       "startJdTdb": 2459488.416666667,
-      "stepDays": 0.25,
-      "sampleCount": 8,
-      "segmentOf": "bepicolombo",
-      "flyby": true
-    },
-    "bepicolombo--mercury-2022-06-23": {
-      "file": "bepicolombo--mercury-2022-06-23.034fa2236cb7.bin",
-      "target": "-121",
-      "center": "mercury",
-      "startJdTdb": 2459753.333333333,
-      "stepDays": 0.25,
-      "sampleCount": 6,
-      "segmentOf": "bepicolombo",
-      "flyby": true
-    },
-    "bepicolombo--mercury-2023-06-19": {
-      "file": "bepicolombo--mercury-2023-06-19.4ac0d3280917.bin",
-      "target": "-121",
-      "center": "mercury",
-      "startJdTdb": 2460114.375,
-      "stepDays": 0.25,
-      "sampleCount": 6,
-      "segmentOf": "bepicolombo",
-      "flyby": true
-    },
-    "bepicolombo--mercury-2024-09-04": {
-      "file": "bepicolombo--mercury-2024-09-04.eca9bf5cb2e7.bin",
-      "target": "-121",
-      "center": "mercury",
-      "startJdTdb": 2460557.333333333,
       "stepDays": 0.5,
       "sampleCount": 5,
       "segmentOf": "bepicolombo",
       "flyby": true
     },
+    "bepicolombo--mercury-2022-06-23": {
+      "file": "bepicolombo--mercury-2022-06-23.8cef3c259264.bin",
+      "target": "-121",
+      "center": "mercury",
+      "startJdTdb": 2459753.333333333,
+      "stepDays": 0.5,
+      "sampleCount": 4,
+      "segmentOf": "bepicolombo",
+      "flyby": true
+    },
+    "bepicolombo--mercury-2023-06-19": {
+      "file": "bepicolombo--mercury-2023-06-19.416b849623d5.bin",
+      "target": "-121",
+      "center": "mercury",
+      "startJdTdb": 2460114.375,
+      "stepDays": 0.5,
+      "sampleCount": 4,
+      "segmentOf": "bepicolombo",
+      "flyby": true
+    },
+    "bepicolombo--mercury-2024-09-04": {
+      "file": "bepicolombo--mercury-2024-09-04.a18b62754ddb.bin",
+      "target": "-121",
+      "center": "mercury",
+      "startJdTdb": 2460557.333333333,
+      "stepDays": 0.5,
+      "sampleCount": 6,
+      "segmentOf": "bepicolombo",
+      "flyby": true
+    },
     "bepicolombo--mercury-2024-12-01": {
-      "file": "bepicolombo--mercury-2024-12-01.df33c67a8125.bin",
+      "file": "bepicolombo--mercury-2024-12-01.68ebd7f418ff.bin",
       "target": "-121",
       "center": "mercury",
       "startJdTdb": 2460645.5,
       "stepDays": 0.5,
-      "sampleCount": 3,
+      "sampleCount": 4,
       "segmentOf": "bepicolombo",
       "flyby": true
     },
     "bepicolombo--mercury-2025-01-08": {
-      "file": "bepicolombo--mercury-2025-01-08.f1a56104dd54.bin",
+      "file": "bepicolombo--mercury-2025-01-08.3646ab769c4c.bin",
       "target": "-121",
       "center": "mercury",
       "startJdTdb": 2460683.291666667,
-      "stepDays": 0.25,
-      "sampleCount": 6,
+      "stepDays": 0.5,
+      "sampleCount": 4,
       "segmentOf": "bepicolombo",
       "flyby": true
     },
     "cassini--earth-1997-10-17": {
-      "file": "cassini--earth-1997-10-17.074b51a32a91.bin",
+      "file": "cassini--earth-1997-10-17.931b8b408fde.bin",
       "target": "-82",
       "center": "earth",
       "startJdTdb": 2450738.5,
-      "stepDays": 0.25,
-      "sampleCount": 4,
+      "stepDays": 0.5,
+      "sampleCount": 3,
       "segmentOf": "cassini",
       "flyby": true
     },
     "cassini--venus-1998-04-26": {
-      "file": "cassini--venus-1998-04-26.7d777946dd84.bin",
+      "file": "cassini--venus-1998-04-26.f330d09fac88.bin",
       "target": "-82",
       "center": "venus",
       "startJdTdb": 2450929.375,
-      "stepDays": 0.25,
-      "sampleCount": 6,
+      "stepDays": 0.5,
+      "sampleCount": 4,
       "segmentOf": "cassini",
       "flyby": true
     },
     "cassini--venus-1999-06-24": {
-      "file": "cassini--venus-1999-06-24.c403478b26b4.bin",
+      "file": "cassini--venus-1999-06-24.f04da7fa9592.bin",
       "target": "-82",
       "center": "venus",
       "startJdTdb": 2451353.375,
-      "stepDays": 0.25,
-      "sampleCount": 6,
+      "stepDays": 0.5,
+      "sampleCount": 4,
       "segmentOf": "cassini",
       "flyby": true
     },
     "cassini--earth-1999-08-18": {
-      "file": "cassini--earth-1999-08-18.3deaaefedff6.bin",
+      "file": "cassini--earth-1999-08-18.c270212b3dbd.bin",
       "target": "-82",
       "center": "earth",
       "startJdTdb": 2451407.75,
-      "stepDays": 0.25,
-      "sampleCount": 8,
+      "stepDays": 0.5,
+      "sampleCount": 5,
       "segmentOf": "cassini",
       "flyby": true
     },
     "hayabusa2--earth-2014-12-05": {
-      "file": "hayabusa2--earth-2014-12-05.a16463c06151.bin",
+      "file": "hayabusa2--earth-2014-12-05.adc08f8a0a1a.bin",
       "target": "-37",
       "center": "earth",
       "startJdTdb": 2456996.5,
-      "stepDays": 0.25,
-      "sampleCount": 4,
+      "stepDays": 0.5,
+      "sampleCount": 3,
       "segmentOf": "hayabusa2",
       "flyby": true
     },
     "hayabusa2--earth-2015-12-03": {
-      "file": "hayabusa2--earth-2015-12-03.5f3d626d8fba.bin",
+      "file": "hayabusa2--earth-2015-12-03.289bcc9617e5.bin",
       "target": "-37",
       "center": "earth",
       "startJdTdb": 2457356.583333333,
       "stepDays": 0.006944444444444444,
-      "sampleCount": 835,
+      "sampleCount": 837,
       "segmentOf": "hayabusa2",
       "flyby": true
     },
     "hayabusa2--earth-2020-12-05": {
-      "file": "hayabusa2--earth-2020-12-05.fc34839eb3dd.bin",
+      "file": "hayabusa2--earth-2020-12-05.c59beed04b44.bin",
       "target": "-37",
       "center": "earth",
       "startJdTdb": 2459186.5,
-      "stepDays": 0.25,
-      "sampleCount": 24,
+      "stepDays": 0.5,
+      "sampleCount": 13,
       "segmentOf": "hayabusa2",
       "flyby": true
     },
     "hera--earth-2024-10-08": {
-      "file": "hera--earth-2024-10-08.d4d56b8cf95e.bin",
+      "file": "hera--earth-2024-10-08.2a107e671b8a.bin",
       "target": "-91",
       "center": "earth",
       "startJdTdb": 2460591.5,
-      "stepDays": 0.25,
-      "sampleCount": 8,
+      "stepDays": 0.5,
+      "sampleCount": 5,
       "segmentOf": "hera",
       "flyby": true
     },
     "hera--mars-2025-03-12": {
-      "file": "hera--mars-2025-03-12.e2f4236a8273.bin",
+      "file": "hera--mars-2025-03-12.b66a447e7f77.bin",
       "target": "-91",
       "center": "mars",
       "startJdTdb": 2460746.458333333,
       "stepDays": 0.5,
-      "sampleCount": 3,
+      "sampleCount": 4,
       "segmentOf": "hera",
       "flyby": true
     },
     "juice--earth-2023-04-15": {
-      "file": "juice--earth-2023-04-15.348a260ba0c2.bin",
+      "file": "juice--earth-2023-04-15.8f2957e4d8a1.bin",
       "target": "-28",
       "center": "earth",
       "startJdTdb": 2460049.5,
+      "stepDays": 0.5,
+      "sampleCount": 8,
+      "segmentOf": "juice",
+      "flyby": true
+    },
+    "juice--earth-2024-08-20": {
+      "file": "juice--earth-2024-08-20.c55233896f0c.bin",
+      "target": "-28",
+      "center": "earth",
+      "startJdTdb": 2460540.25,
+      "stepDays": 0.5,
+      "sampleCount": 14,
+      "impulses": [
+        2460542.387949
+      ],
+      "segmentOf": "juice",
+      "flyby": true
+    },
+    "juice--venus-2025-08-31": {
+      "file": "juice--venus-2025-08-31.a1b93ab67263.bin",
+      "target": "-28",
+      "center": "venus",
+      "startJdTdb": 2460918.291666667,
+      "stepDays": 0.5,
+      "sampleCount": 4,
+      "segmentOf": "juice",
+      "flyby": true
+    },
+    "juice--earth-2026-09-28": {
+      "file": "juice--earth-2026-09-28.13df3e0a8910.bin",
+      "target": "-28",
+      "center": "earth",
+      "startJdTdb": 2461310.833333333,
+      "stepDays": 0.5,
+      "sampleCount": 6,
+      "segmentOf": "juice",
+      "flyby": true
+    },
+    "juice--earth-2029-01-17": {
+      "file": "juice--earth-2029-01-17.5c1942cf5398.bin",
+      "target": "-28",
+      "center": "earth",
+      "startJdTdb": 2462153.041666667,
       "stepDays": 0.5,
       "sampleCount": 7,
       "segmentOf": "juice",
       "flyby": true
     },
-    "juice--earth-2024-08-20": {
-      "file": "juice--earth-2024-08-20.e8c535eb78d4.bin",
-      "target": "-28",
-      "center": "earth",
-      "startJdTdb": 2460540.25,
-      "stepDays": 0.25,
-      "sampleCount": 25,
-      "segmentOf": "juice",
-      "flyby": true
-    },
-    "juice--venus-2025-08-31": {
-      "file": "juice--venus-2025-08-31.ce3d45308a83.bin",
-      "target": "-28",
-      "center": "venus",
-      "startJdTdb": 2460918.291666667,
-      "stepDays": 0.25,
-      "sampleCount": 6,
-      "segmentOf": "juice",
-      "flyby": true
-    },
-    "juice--earth-2026-09-28": {
-      "file": "juice--earth-2026-09-28.d09eb191309d.bin",
-      "target": "-28",
-      "center": "earth",
-      "startJdTdb": 2461310.833333333,
-      "stepDays": 0.25,
-      "sampleCount": 10,
-      "segmentOf": "juice",
-      "flyby": true
-    },
-    "juice--earth-2029-01-17": {
-      "file": "juice--earth-2029-01-17.045088093449.bin",
-      "target": "-28",
-      "center": "earth",
-      "startJdTdb": 2462153.041666667,
-      "stepDays": 0.5,
-      "sampleCount": 6,
-      "segmentOf": "juice",
-      "flyby": true
-    },
     "juno--earth-2011-08-07": {
-      "file": "juno--earth-2011-08-07.f720d6df621f.bin",
+      "file": "juno--earth-2011-08-07.f2e9a956aca8.bin",
       "target": "-61",
       "center": "earth",
       "startJdTdb": 2455780.5,
-      "stepDays": 0.25,
-      "sampleCount": 4,
+      "stepDays": 0.5,
+      "sampleCount": 3,
       "segmentOf": "juno",
       "flyby": true
     },
     "juno--earth-2013-10-09": {
-      "file": "juno--earth-2013-10-09.c8b163814da5.bin",
+      "file": "juno--earth-2013-10-09.7577bb1a0844.bin",
       "target": "-61",
       "center": "earth",
       "startJdTdb": 2456574.083333333,
-      "stepDays": 0.25,
-      "sampleCount": 10,
+      "stepDays": 0.5,
+      "sampleCount": 6,
       "segmentOf": "juno",
       "flyby": true
     },
     "jwst--earth-2021-12-26": {
-      "file": "jwst--earth-2021-12-26.27ff2b125ff4.bin",
+      "file": "jwst--earth-2021-12-26.8662bdecbbbc.bin",
       "target": "-170",
       "center": "earth",
       "startJdTdb": 2459574.5,
-      "stepDays": 0.25,
-      "sampleCount": 40,
+      "stepDays": 0.5,
+      "sampleCount": 21,
       "segmentOf": "jwst",
       "flyby": true
     },
     "new-horizons--jupiter-2007-02-28": {
-      "file": "new-horizons--jupiter-2007-02-28.129dd3973f9c.bin",
+      "file": "new-horizons--jupiter-2007-02-28.5708dcf8dffe.bin",
       "target": "-98",
       "center": "jupiter",
       "startJdTdb": 2454157.458333333,
       "stepDays": 0.5,
-      "sampleCount": 6,
+      "sampleCount": 7,
       "segmentOf": "new-horizons",
       "flyby": true
     },
     "osiris-rex--earth-2016-09-10": {
-      "file": "osiris-rex--earth-2016-09-10.b13b1cb6fb8c.bin",
+      "file": "osiris-rex--earth-2016-09-10.3002ec2d9eca.bin",
       "target": "-64",
       "center": "earth",
       "startJdTdb": 2457641.5,
-      "stepDays": 0.25,
-      "sampleCount": 6,
+      "stepDays": 0.5,
+      "sampleCount": 4,
       "segmentOf": "osiris-rex",
       "flyby": true
     },
     "osiris-rex--earth-2017-09-22": {
-      "file": "osiris-rex--earth-2017-09-22.07a15b504ed4.bin",
+      "file": "osiris-rex--earth-2017-09-22.fdfa977f7640.bin",
       "target": "-64",
       "center": "earth",
       "startJdTdb": 2458017.291666667,
+      "stepDays": 0.5,
+      "sampleCount": 10,
+      "segmentOf": "osiris-rex",
+      "flyby": true
+    },
+    "osiris-rex--earth-2023-09-24": {
+      "file": "osiris-rex--earth-2023-09-24.d1a2acef2f1c.bin",
+      "target": "-64",
+      "center": "earth",
+      "startJdTdb": 2460210,
       "stepDays": 0.5,
       "sampleCount": 9,
       "segmentOf": "osiris-rex",
       "flyby": true
     },
-    "osiris-rex--earth-2023-09-24": {
-      "file": "osiris-rex--earth-2023-09-24.6c1650a9973c.bin",
-      "target": "-64",
-      "center": "earth",
-      "startJdTdb": 2460210,
-      "stepDays": 0.25,
-      "sampleCount": 16,
-      "segmentOf": "osiris-rex",
-      "flyby": true
-    },
     "osiris-rex--earth-2025-09-23": {
-      "file": "osiris-rex--earth-2025-09-23.9ea1776817ec.bin",
+      "file": "osiris-rex--earth-2025-09-23.322ec0691d1d.bin",
       "target": "-64",
       "center": "earth",
       "startJdTdb": 2460939.875,
+      "stepDays": 0.5,
+      "sampleCount": 12,
+      "segmentOf": "osiris-rex",
+      "flyby": true
+    },
+    "osiris-rex--earth-2027-03-16": {
+      "file": "osiris-rex--earth-2027-03-16.ae0b75dab12e.bin",
+      "target": "-64",
+      "center": "earth",
+      "startJdTdb": 2461477.791666667,
+      "stepDays": 0.5,
+      "sampleCount": 10,
+      "segmentOf": "osiris-rex",
+      "flyby": true
+    },
+    "osiris-rex--earth-2029-04-13": {
+      "file": "osiris-rex--earth-2029-04-13.c7ff50b5fed1.bin",
+      "target": "-64",
+      "center": "earth",
+      "startJdTdb": 2462237.583333333,
       "stepDays": 0.5,
       "sampleCount": 11,
       "segmentOf": "osiris-rex",
       "flyby": true
     },
-    "osiris-rex--earth-2027-03-16": {
-      "file": "osiris-rex--earth-2027-03-16.1ccf9fd942f5.bin",
-      "target": "-64",
-      "center": "earth",
-      "startJdTdb": 2461477.791666667,
-      "stepDays": 0.25,
-      "sampleCount": 18,
-      "segmentOf": "osiris-rex",
-      "flyby": true
-    },
-    "osiris-rex--earth-2029-04-13": {
-      "file": "osiris-rex--earth-2029-04-13.441c4195a3f2.bin",
-      "target": "-64",
-      "center": "earth",
-      "startJdTdb": 2462237.583333333,
-      "stepDays": 0.25,
-      "sampleCount": 20,
-      "segmentOf": "osiris-rex",
-      "flyby": true
-    },
     "parker-solar-probe--earth-2018-08-13": {
-      "file": "parker-solar-probe--earth-2018-08-13.618883cd8cd3.bin",
+      "file": "parker-solar-probe--earth-2018-08-13.0bd57ff2caa1.bin",
       "target": "-96",
       "center": "earth",
       "startJdTdb": 2458343.5,
-      "stepDays": 0.16666666666666666,
+      "stepDays": 0.25,
       "sampleCount": 3,
       "segmentOf": "parker-solar-probe",
       "flyby": true
     },
     "parker-solar-probe--venus-2018-10-03": {
-      "file": "parker-solar-probe--venus-2018-10-03.ab7c0bb8289d.bin",
+      "file": "parker-solar-probe--venus-2018-10-03.7e568fc910fb.bin",
       "target": "-96",
       "center": "venus",
       "startJdTdb": 2458394.375,
       "stepDays": 0.5,
-      "sampleCount": 3,
-      "segmentOf": "parker-solar-probe",
-      "flyby": true
-    },
-    "parker-solar-probe--venus-2019-12-26": {
-      "file": "parker-solar-probe--venus-2019-12-26.9f948c465234.bin",
-      "target": "-96",
-      "center": "venus",
-      "startJdTdb": 2458843.708333333,
-      "stepDays": 0.25,
       "sampleCount": 4,
       "segmentOf": "parker-solar-probe",
       "flyby": true
     },
+    "parker-solar-probe--venus-2019-12-26": {
+      "file": "parker-solar-probe--venus-2019-12-26.ee57a084e6a6.bin",
+      "target": "-96",
+      "center": "venus",
+      "startJdTdb": 2458843.708333333,
+      "stepDays": 0.5,
+      "sampleCount": 3,
+      "segmentOf": "parker-solar-probe",
+      "flyby": true
+    },
     "parker-solar-probe--venus-2020-07-11": {
-      "file": "parker-solar-probe--venus-2020-07-11.16e1839f9626.bin",
+      "file": "parker-solar-probe--venus-2020-07-11.a505ad55e75e.bin",
       "target": "-96",
       "center": "venus",
       "startJdTdb": 2459041.333333333,
       "stepDays": 0.5,
-      "sampleCount": 3,
+      "sampleCount": 4,
       "segmentOf": "parker-solar-probe",
       "flyby": true
     },
     "parker-solar-probe--venus-2021-02-20": {
-      "file": "parker-solar-probe--venus-2021-02-20.943daf2a759a.bin",
+      "file": "parker-solar-probe--venus-2021-02-20.2cab5f10c61f.bin",
       "target": "-96",
       "center": "venus",
       "startJdTdb": 2459265.541666667,
       "stepDays": 0.5,
-      "sampleCount": 3,
+      "sampleCount": 4,
       "segmentOf": "parker-solar-probe",
       "flyby": true
     },
     "parker-solar-probe--venus-2021-10-16": {
-      "file": "parker-solar-probe--venus-2021-10-16.1f8b61d89ce1.bin",
+      "file": "parker-solar-probe--venus-2021-10-16.80f6aa3ef425.bin",
       "target": "-96",
       "center": "venus",
       "startJdTdb": 2459503.416666667,
       "stepDays": 0.5,
-      "sampleCount": 3,
+      "sampleCount": 4,
       "segmentOf": "parker-solar-probe",
       "flyby": true
     },
     "parker-solar-probe--venus-2023-08-21": {
-      "file": "parker-solar-probe--venus-2023-08-21.2f312ac4ad4f.bin",
+      "file": "parker-solar-probe--venus-2023-08-21.3d0b2349678f.bin",
       "target": "-96",
       "center": "venus",
       "startJdTdb": 2460177.458333333,
       "stepDays": 0.5,
-      "sampleCount": 3,
+      "sampleCount": 4,
       "segmentOf": "parker-solar-probe",
       "flyby": true
     },
     "parker-solar-probe--venus-2024-11-06": {
-      "file": "parker-solar-probe--venus-2024-11-06.f6f90e504e9f.bin",
+      "file": "parker-solar-probe--venus-2024-11-06.c2b5ab81fa3b.bin",
       "target": "-96",
       "center": "venus",
       "startJdTdb": 2460620.541666667,
       "stepDays": 0.5,
-      "sampleCount": 3,
+      "sampleCount": 4,
       "segmentOf": "parker-solar-probe",
       "flyby": true
     },
     "rosetta--earth-2004-03-04": {
-      "file": "rosetta--earth-2004-03-04.01518389c1f2.bin",
+      "file": "rosetta--earth-2004-03-04.c62cf96b02d7.bin",
       "target": "-226",
       "center": "earth",
       "startJdTdb": 2453068.5,
-      "stepDays": 0.25,
-      "sampleCount": 8,
-      "segmentOf": "rosetta",
-      "flyby": true
-    },
-    "rosetta--earth-2005-03-04": {
-      "file": "rosetta--earth-2005-03-04.4908b8e1314f.bin",
-      "target": "-226",
-      "center": "earth",
-      "startJdTdb": 2453431.708333333,
-      "stepDays": 0.25,
-      "sampleCount": 22,
-      "segmentOf": "rosetta",
-      "flyby": true
-    },
-    "rosetta--mars-2007-02-25": {
-      "file": "rosetta--mars-2007-02-25.75a46bb4242c.bin",
-      "target": "-226",
-      "center": "mars",
-      "startJdTdb": 2454156.291666667,
       "stepDays": 0.5,
       "sampleCount": 5,
       "segmentOf": "rosetta",
       "flyby": true
     },
+    "rosetta--earth-2005-03-04": {
+      "file": "rosetta--earth-2005-03-04.80424d549d9e.bin",
+      "target": "-226",
+      "center": "earth",
+      "startJdTdb": 2453431.708333333,
+      "stepDays": 0.5,
+      "sampleCount": 12,
+      "segmentOf": "rosetta",
+      "flyby": true
+    },
+    "rosetta--mars-2007-02-25": {
+      "file": "rosetta--mars-2007-02-25.89db37bdd4da.bin",
+      "target": "-226",
+      "center": "mars",
+      "startJdTdb": 2454156.291666667,
+      "stepDays": 0.5,
+      "sampleCount": 6,
+      "segmentOf": "rosetta",
+      "flyby": true
+    },
     "rosetta--earth-2007-11-13": {
-      "file": "rosetta--earth-2007-11-13.b96cfe36f87b.bin",
+      "file": "rosetta--earth-2007-11-13.999dfe408f6d.bin",
       "target": "-226",
       "center": "earth",
       "startJdTdb": 2454416.458333333,
       "stepDays": 0.5,
-      "sampleCount": 9,
+      "sampleCount": 10,
       "segmentOf": "rosetta",
       "flyby": true
     },
     "rosetta--earth-2009-11-13": {
-      "file": "rosetta--earth-2009-11-13.d55a792f6748.bin",
+      "file": "rosetta--earth-2009-11-13.3d93785ed0fd.bin",
       "target": "-226",
       "center": "earth",
       "startJdTdb": 2455146.833333333,
       "stepDays": 0.5,
-      "sampleCount": 9,
+      "sampleCount": 10,
       "segmentOf": "rosetta",
       "flyby": true
     },
     "solar-orbiter--earth-2020-02-11": {
-      "file": "solar-orbiter--earth-2020-02-11.7aa0ba689e39.bin",
+      "file": "solar-orbiter--earth-2020-02-11.429545296b88.bin",
       "target": "-144",
       "center": "earth",
       "startJdTdb": 2458890.5,
       "stepDays": 0.5,
-      "sampleCount": 3,
+      "sampleCount": 4,
       "segmentOf": "solar-orbiter",
       "flyby": true
     },
     "solar-orbiter--venus-2020-12-27": {
-      "file": "solar-orbiter--venus-2020-12-27.af2ae8ec78e1.bin",
+      "file": "solar-orbiter--venus-2020-12-27.e1d3cb5fe678.bin",
       "target": "-144",
       "center": "venus",
       "startJdTdb": 2459210.416666667,
       "stepDays": 0.5,
-      "sampleCount": 3,
+      "sampleCount": 4,
       "segmentOf": "solar-orbiter",
       "flyby": true
     },
     "solar-orbiter--venus-2021-08-09": {
-      "file": "solar-orbiter--venus-2021-08-09.4c4effe9d44f.bin",
+      "file": "solar-orbiter--venus-2021-08-09.7390a7264527.bin",
       "target": "-144",
       "center": "venus",
       "startJdTdb": 2459435.333333333,
       "stepDays": 0.5,
-      "sampleCount": 3,
+      "sampleCount": 4,
       "segmentOf": "solar-orbiter",
       "flyby": true
     },
     "solar-orbiter--earth-2021-11-27": {
-      "file": "solar-orbiter--earth-2021-11-27.a87c11fa8ed5.bin",
+      "file": "solar-orbiter--earth-2021-11-27.0e5f5d06ce31.bin",
       "target": "-144",
       "center": "earth",
       "startJdTdb": 2459544.416666667,
       "stepDays": 0.5,
-      "sampleCount": 6,
+      "sampleCount": 7,
       "segmentOf": "solar-orbiter",
       "flyby": true
     },
     "solar-orbiter--venus-2022-09-04": {
-      "file": "solar-orbiter--venus-2022-09-04.0e74c0da676f.bin",
+      "file": "solar-orbiter--venus-2022-09-04.a13495983ce9.bin",
       "target": "-144",
       "center": "venus",
       "startJdTdb": 2459826.291666667,
-      "stepDays": 0.25,
-      "sampleCount": 6,
+      "stepDays": 0.5,
+      "sampleCount": 4,
       "segmentOf": "solar-orbiter",
       "flyby": true
     },
     "solar-orbiter--venus-2025-02-18": {
-      "file": "solar-orbiter--venus-2025-02-18.eb0c17930039.bin",
+      "file": "solar-orbiter--venus-2025-02-18.dfc18955a414.bin",
       "target": "-144",
       "center": "venus",
       "startJdTdb": 2460724.458333333,
-      "stepDays": 0.25,
-      "sampleCount": 6,
+      "stepDays": 0.5,
+      "sampleCount": 4,
       "segmentOf": "solar-orbiter",
       "flyby": true
     },
     "solar-orbiter--venus-2026-12-24": {
-      "file": "solar-orbiter--venus-2026-12-24.705f6277dc5f.bin",
+      "file": "solar-orbiter--venus-2026-12-24.2cdb9c168675.bin",
       "target": "-144",
       "center": "venus",
       "startJdTdb": 2461398.416666667,
-      "stepDays": 0.25,
-      "sampleCount": 6,
+      "stepDays": 0.5,
+      "sampleCount": 4,
       "segmentOf": "solar-orbiter",
       "flyby": true
     },
     "solar-orbiter--venus-2028-03-18": {
-      "file": "solar-orbiter--venus-2028-03-18.c3aa2b99f2a7.bin",
+      "file": "solar-orbiter--venus-2028-03-18.6d9ad1c30e67.bin",
       "target": "-144",
       "center": "venus",
       "startJdTdb": 2461848.333333333,
       "stepDays": 0.5,
-      "sampleCount": 3,
+      "sampleCount": 4,
       "segmentOf": "solar-orbiter",
       "flyby": true
     },
     "solar-orbiter--venus-2029-06-10": {
-      "file": "solar-orbiter--venus-2029-06-10.aaa64ff72336.bin",
+      "file": "solar-orbiter--venus-2029-06-10.6170d7d98344.bin",
       "target": "-144",
       "center": "venus",
       "startJdTdb": 2462297.625,
       "stepDays": 0.5,
-      "sampleCount": 3,
+      "sampleCount": 4,
       "segmentOf": "solar-orbiter",
       "flyby": true
     },
     "solar-orbiter--venus-2030-09-03": {
-      "file": "solar-orbiter--venus-2030-09-03.74503fccce75.bin",
+      "file": "solar-orbiter--venus-2030-09-03.52c588fbf382.bin",
       "target": "-144",
       "center": "venus",
       "startJdTdb": 2462747.291666667,
-      "stepDays": 0.25,
-      "sampleCount": 6,
+      "stepDays": 0.5,
+      "sampleCount": 4,
       "segmentOf": "solar-orbiter",
       "flyby": true
     },
     "voyager1--earth-1977-09-06": {
-      "file": "voyager1--earth-1977-09-06.4590d57e5ebf.bin",
+      "file": "voyager1--earth-1977-09-06.8019ede4bc38.bin",
       "target": "-31",
       "center": "earth",
       "startJdTdb": 2443392.5,
-      "stepDays": 0.25,
-      "sampleCount": 4,
+      "stepDays": 0.5,
+      "sampleCount": 3,
       "segmentOf": "voyager1",
       "flyby": true
     },
     "voyager1--jupiter-1979-03-05": {
-      "file": "voyager1--jupiter-1979-03-05.38f6c434809c.bin",
+      "file": "voyager1--jupiter-1979-03-05.e05468128e06.bin",
       "target": "-31",
       "center": "jupiter",
-      "startJdTdb": 2443936.458333333,
+      "startJdTdb": 2443936.416666667,
       "stepDays": 0.5,
-      "sampleCount": 9,
-      "segmentOf": "voyager1",
-      "flyby": true
-    },
-    "voyager1--saturn-1980-11-13": {
-      "file": "voyager1--saturn-1980-11-13.2c92161e5119.bin",
-      "target": "-31",
-      "center": "saturn",
-      "startJdTdb": 2444552.625,
-      "stepDays": 0.25,
-      "sampleCount": 32,
+      "sampleCount": 10,
       "segmentOf": "voyager1",
       "flyby": true
     },
     "voyager2--earth-1977-08-21": {
-      "file": "voyager2--earth-1977-08-21.36aa6092a593.bin",
+      "file": "voyager2--earth-1977-08-21.d15a4d4abb71.bin",
       "target": "-32",
       "center": "earth",
       "startJdTdb": 2443376.5,
-      "stepDays": 0.25,
-      "sampleCount": 6,
+      "stepDays": 0.5,
+      "sampleCount": 4,
       "segmentOf": "voyager2",
       "flyby": true
     },
     "voyager2--jupiter-1979-07-09": {
-      "file": "voyager2--jupiter-1979-07-09.15c78b5930cd.bin",
+      "file": "voyager2--jupiter-1979-07-09.500c1c9376c4.bin",
       "target": "-32",
       "center": "jupiter",
-      "startJdTdb": 2444060.666666667,
+      "startJdTdb": 2444060.625,
       "stepDays": 0.5,
-      "sampleCount": 16,
+      "sampleCount": 17,
       "segmentOf": "voyager2",
       "flyby": true
     },
     "voyager2--saturn-1981-08-26": {
-      "file": "voyager2--saturn-1981-08-26.74bdbc790dd2.bin",
+      "file": "voyager2--saturn-1981-08-26.7bcc1db1d320.bin",
       "target": "-32",
       "center": "saturn",
-      "startJdTdb": 2444840.541666667,
+      "startJdTdb": 2444840.5,
+      "stepDays": 0.5,
+      "sampleCount": 10,
+      "segmentOf": "voyager2",
+      "flyby": true
+    },
+    "voyager2--uranus-1986-01-24": {
+      "file": "voyager2--uranus-1986-01-24.df53fa8cdde6.bin",
+      "target": "-32",
+      "center": "uranus",
+      "startJdTdb": 2446453,
       "stepDays": 0.5,
       "sampleCount": 9,
       "segmentOf": "voyager2",
       "flyby": true
     },
-    "voyager2--uranus-1986-01-24": {
-      "file": "voyager2--uranus-1986-01-24.3930ec734938.bin",
+    "voyager2--neptune-1989-08-25": {
+      "file": "voyager2--neptune-1989-08-25.730bdd2c2c21.bin",
       "target": "-32",
-      "center": "uranus",
-      "startJdTdb": 2446453,
+      "center": "neptune",
+      "startJdTdb": 2447760.625,
       "stepDays": 0.5,
-      "sampleCount": 8,
+      "sampleCount": 11,
       "segmentOf": "voyager2",
       "flyby": true
     },
-    "voyager2--neptune-1989-08-25": {
-      "file": "voyager2--neptune-1989-08-25.2e43240e097e.bin",
-      "target": "-32",
-      "center": "neptune",
-      "startJdTdb": 2447760.666666667,
+    "cassini--saturn-2017-09-02": {
+      "file": "cassini--saturn-2017-09-02.2d463cbef598.bin",
+      "target": "-82",
+      "center": "saturn",
+      "startJdTdb": 2453186.416666667,
       "stepDays": 0.25,
-      "sampleCount": 20,
-      "segmentOf": "voyager2",
+      "sampleCount": 19283,
+      "impulses": [
+        2453187.586149
+      ],
+      "segmentOf": "cassini"
+    },
+    "juno--jupiter-2024-10-22": {
+      "file": "juno--jupiter-2024-10-22.5e49c89aa777.bin",
+      "target": "-61",
+      "center": "jupiter",
+      "startJdTdb": 2457573.416666667,
+      "stepDays": 0.5,
+      "sampleCount": 8880,
+      "impulses": [
+        2457574.618637
+      ],
+      "segmentOf": "juno"
+    },
+    "voyager1--saturn-1980-11-12": {
+      "file": "voyager1--saturn-1980-11-12.b32ede3044a5.bin",
+      "target": "-31",
+      "center": "saturn",
+      "startJdTdb": 2444552.625,
+      "stepDays": 0.5,
+      "sampleCount": 17,
+      "segmentOf": "voyager1",
       "flyby": true
     }
   }

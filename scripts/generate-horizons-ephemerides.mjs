@@ -745,7 +745,10 @@ const BODIES = [
     expectedName: 'juno',
     center: 'sun',
     startTime: '2011-08-07',
-    stopTime: '2028-09-29',
+    // Horizons ne sert plus Juno au-delà du 2028-09-02 01:37 UT (« No ephemeris for target
+    // "Juno (spacecraft)" after », lu le 2026-10-11) ; le fichier livré allait jusqu'au
+    // 2028-09-29, sur une solution antérieure que plus rien ne permettait de vérifier.
+    stopTime: '2028-09-01',
     stepDays: PROBE_EVENT_STEP_DAYS,
   },
   {
@@ -911,7 +914,13 @@ const FLYBY_SEGMENTS = FLYBY_PLAN.encounters
       expectedName: probe.expectedName,
       center: encounter.planet,
       segmentOf: encounter.probe,
-      flyby: true,
+      // Un segment de SURVOL porte le drapeau ; une phase EN ORBITE est un segment ordinaire,
+      // comme celui de BepiColombo autour de Mercure.
+      ...(encounter.segment.kind === 'orbit' ? {} : { flyby: true }),
+      // Les poussées que l'outil a TROUVÉES (mise en orbite), publiées telles quelles.
+      ...(encounter.segment.impulses
+        ? { plannedImpulses: encounter.segment.impulses }
+        : {}),
       startTime: encounter.segment.from,
       stopTime: encounter.segment.to,
       stepDays: encounter.segment.stepMinutes / 1440,
@@ -1406,7 +1415,18 @@ async function fetchBody(body) {
     : undefined;
   const impulses = body.impulses
     ? await readImpulses(body, rows)
-    : detectedImpulses;
+    : (body.plannedImpulses ?? detectedImpulses);
+  if (body.plannedImpulses)
+    for (const jd of body.plannedImpulses) {
+      if (jd <= rows[0].jd || jd >= rows.at(-1).jd)
+        throw new Error(
+          `${body.name}: poussée du plan hors du fichier (JD ${jd})`
+        );
+      if (rows.some((row) => Math.abs(row.jd - jd) < 1e-6))
+        throw new Error(
+          `${body.name}: poussée du plan posée sur une ancre (JD ${jd})`
+        );
+    }
   const binary = encodeBinary(rows);
   const hash = createHash('sha256').update(binary).digest('hex').slice(0, 12);
   const file = `${body.name}.${hash}.bin`;
