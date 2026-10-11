@@ -319,21 +319,40 @@ function stepWords(minutes: number, locale: DocLocale): string {
  * pas et la borne, tous LUS (manifeste et plan), aucun recopié. La borne est tenue par
  * `src/config/flybyAccuracy.test.ts`.
  */
+/**
+ * Un segment de rencontre qui commence au PREMIER nœud du fichier de sa sonde est un DÉPART de
+ * la Terre, au lancement, et non un survol : 13 des 65 au 2026-10-11. Les appeler tous
+ * « survols » était faux, et c'est l'inventaire qui l'a montré.
+ */
+export function isDeparture(
+  entry: EphemerisManifestEntry,
+  bodies: Readonly<Record<string, EphemerisManifestEntry>>
+): boolean {
+  const probe =
+    entry.segmentOf === undefined ? undefined : bodies[entry.segmentOf];
+  return (
+    probe !== undefined && entry.startJdTdb - probe.startJdTdb <= probe.stepDays
+  );
+}
+
 function flybySegmentText(
   entries: readonly [string, EphemerisManifestEntry][],
+  bodies: Readonly<Record<string, EphemerisManifestEntry>>,
   locale: DocLocale
 ): string {
   if (entries.length === 0) return '';
+  const departures = entries.filter(([, e]) => isDeparture(e, bodies)).length;
+  const flybys = entries.length - departures;
   const probes = new Set(entries.map(([, e]) => e.segmentOf)).size;
   const minutes = entries.map(([, e]) => Math.round(e.stepDays * 1440));
   const finest = stepWords(Math.min(...minutes), locale);
   const coarsest = stepWords(Math.max(...minutes), locale);
   const percent = exact(FLYBY_PLAN.segmentShare * 100, locale);
   const text: DocText = {
-    en: ` During ${entries.length} planetary flybys made by ${probes} of them, a short file takes over for a few days: the position relative to the centre of the planet, every ${finest} to ${coarsest}, propagated along the hyperbola around the planet between samples. The flybys are detected in the true trajectory (a stay inside the planet’s sphere of influence), and each step is the coarsest that keeps the position within ${percent} % of the distance to the planet, measured against Horizons at every flyby: a validation at fixed dates never falls on one.`,
-    fr: ` Pendant ${entries.length} survols de planètes faits par ${probes} d’entre elles, un fichier court prend la main pour quelques jours : la position relative au centre de la planète, toutes les ${finest} à ${coarsest}, propagée le long de l’hyperbole autour de la planète entre deux échantillons. Les survols sont détectés dans la trajectoire vraie (un séjour dans la sphère d’influence de la planète), et chaque pas est le plus grossier qui garde la position à moins de ${percent} % de la distance à la planète, mesuré contre Horizons à chaque survol : une validation à dates fixes ne tombe jamais sur l’un d’eux.`,
-    es: ` Durante ${entries.length} sobrevuelos de planetas hechos por ${probes} de ellas, un archivo corto toma el relevo durante unos días: la posición relativa al centro del planeta, cada ${finest} a ${coarsest}, propagada a lo largo de la hipérbola alrededor del planeta entre dos muestras. Los sobrevuelos se detectan en la trayectoria real (una estancia dentro de la esfera de influencia del planeta), y cada paso es el más grueso que mantiene la posición a menos del ${percent} % de la distancia al planeta, medido contra Horizons en cada sobrevuelo: una validación en fechas fijas nunca cae en uno.`,
-    'pt-BR': ` Durante ${entries.length} sobrevoos de planetas feitos por ${probes} delas, um arquivo curto assume por alguns dias: a posição relativa ao centro do planeta, a cada ${finest} a ${coarsest}, propagada ao longo da hipérbole em torno do planeta entre duas amostras. Os sobrevoos são detectados na trajetória real (uma estadia dentro da esfera de influência do planeta), e cada passo é o mais grosso que mantém a posição a menos de ${percent} % da distância ao planeta, medido contra o Horizons em cada sobrevoo: uma validação em datas fixas nunca cai em um deles.`,
+    en: ` During ${flybys} planetary flybys and ${departures} departures from the Earth, made by ${probes} of them, a short file takes over for a few days: the position relative to the centre of the planet, every ${finest} to ${coarsest}, propagated along the hyperbola around the planet between samples. These passages are detected in the true trajectory (a stay inside the planet’s sphere of influence), and each step is the coarsest that keeps the position within ${percent} % of the distance to the planet, measured against Horizons at every passage: a validation at fixed dates never falls on one.`,
+    fr: ` Pendant ${flybys} survols de planètes et ${departures} départs de la Terre, faits par ${probes} d’entre elles, un fichier court prend la main pour quelques jours : la position relative au centre de la planète, toutes les ${finest} à ${coarsest}, propagée le long de l’hyperbole autour de la planète entre deux échantillons. Ces passages sont détectés dans la trajectoire vraie (un séjour dans la sphère d’influence de la planète), et chaque pas est le plus grossier qui garde la position à moins de ${percent} % de la distance à la planète, mesuré contre Horizons à chaque passage : une validation à dates fixes ne tombe jamais sur l’un d’eux.`,
+    es: ` Durante ${flybys} sobrevuelos de planetas y ${departures} salidas desde la Tierra, hechos por ${probes} de ellas, un archivo corto toma el relevo durante unos días: la posición relativa al centro del planeta, cada ${finest} a ${coarsest}, propagada a lo largo de la hipérbola alrededor del planeta entre dos muestras. Estos pasos se detectan en la trayectoria real (una estancia dentro de la esfera de influencia del planeta), y cada paso es el más grueso que mantiene la posición a menos del ${percent} % de la distancia al planeta, medido contra Horizons en cada paso: una validación en fechas fijas nunca cae en uno.`,
+    'pt-BR': ` Durante ${flybys} sobrevoos de planetas e ${departures} partidas da Terra, feitos por ${probes} delas, um arquivo curto assume por alguns dias: a posição relativa ao centro do planeta, a cada ${finest} a ${coarsest}, propagada ao longo da hipérbole em torno do planeta entre duas amostras. Essas passagens são detectadas na trajetória real (uma estadia dentro da esfera de influência do planeta), e cada passo é o mais grosso que mantém a posição a menos de ${percent} % da distância ao planeta, medido contra o Horizons em cada passagem: uma validação em datas fixas nunca cai em uma delas.`,
   };
   return text[locale];
 }
@@ -431,7 +450,7 @@ function methodologyPage(input: MethodologyInput, locale: DocLocale): DocPage {
     ([, e]) => e.segmentOf !== undefined && !e.flyby
   );
   const flybySegments = allBinaries.filter(([, e]) => e.flyby);
-  const flybyText = flybySegmentText(flybySegments, locale);
+  const flybyText = flybySegmentText(flybySegments, manifest.bodies, locale);
   const segmentText =
     segments
       .map(([, e]) =>

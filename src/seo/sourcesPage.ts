@@ -1041,17 +1041,17 @@ function sourcesPage(input: SourcesInput, locale: DocLocale): DocPage {
         ) +
         (flybyRows.length > 0
           ? `<p>${L({
-              en: `During a planetary flyby, a short file relative to the centre of the planet takes over from the spacecraft’s file for a few days (${flybyRows.length} files). Each flyby is detected in the true trajectory, and each step is the coarsest that keeps the position within ${formatQuantity(FLYBY_PLAN.segmentShare * 100, locale)} % of the distance to the planet, measured against Horizons.`,
-              fr: `Pendant un survol de planète, un fichier court relatif au centre de la planète prend le relais du fichier de la sonde pour quelques jours (${flybyRows.length} fichiers). Chaque survol est détecté dans la trajectoire vraie, et chaque pas est le plus grossier qui garde la position à moins de ${formatQuantity(FLYBY_PLAN.segmentShare * 100, locale)} % de la distance à la planète, mesuré contre Horizons.`,
-              es: `Durante un sobrevuelo de un planeta, un archivo corto relativo al centro del planeta toma el relevo del archivo de la sonda durante unos días (${flybyRows.length} archivos). Cada sobrevuelo se detecta en la trayectoria real, y cada paso es el más grueso que mantiene la posición a menos del ${formatQuantity(FLYBY_PLAN.segmentShare * 100, locale)} % de la distancia al planeta, medido contra Horizons.`,
-              'pt-BR': `Durante um sobrevoo de planeta, um arquivo curto relativo ao centro do planeta assume no lugar do arquivo da sonda por alguns dias (${flybyRows.length} arquivos). Cada sobrevoo é detectado na trajetória real, e cada passo é o mais grosso que mantém a posição a menos de ${formatQuantity(FLYBY_PLAN.segmentShare * 100, locale)} % da distância ao planeta, medido contra o Horizons.`,
+              en: `During a planetary flyby, or a departure from the Earth, a short file relative to the centre of the planet takes over from the spacecraft’s file for a few days (${flybyRows.length} files). Each passage is detected in the true trajectory, and each step is the coarsest that keeps the position within ${formatQuantity(FLYBY_PLAN.segmentShare * 100, locale)} % of the distance to the planet, measured against Horizons.`,
+              fr: `Pendant un survol de planète, ou un départ de la Terre, un fichier court relatif au centre de la planète prend le relais du fichier de la sonde pour quelques jours (${flybyRows.length} fichiers). Chaque passage est détecté dans la trajectoire vraie, et chaque pas est le plus grossier qui garde la position à moins de ${formatQuantity(FLYBY_PLAN.segmentShare * 100, locale)} % de la distance à la planète, mesuré contre Horizons.`,
+              es: `Durante un sobrevuelo de un planeta, o una salida desde la Tierra, un archivo corto relativo al centro del planeta toma el relevo del archivo de la sonda durante unos días (${flybyRows.length} archivos). Cada paso se detecta en la trayectoria real, y cada paso es el más grueso que mantiene la posición a menos del ${formatQuantity(FLYBY_PLAN.segmentShare * 100, locale)} % de la distancia al planeta, medido contra Horizons.`,
+              'pt-BR': `Durante um sobrevoo de planeta, ou uma partida da Terra, um arquivo curto relativo ao centro do planeta assume no lugar do arquivo da sonda por alguns dias (${flybyRows.length} arquivos). Cada passagem é detectada na trajetória real, e cada passo é o mais grosso que mantém a posição a menos de ${formatQuantity(FLYBY_PLAN.segmentShare * 100, locale)} % da distância ao planeta, medido contra o Horizons.`,
             })}</p>` +
             docTable(
               L({
-                en: 'Flyby segments',
-                fr: 'Segments de survol',
-                es: 'Segmentos de sobrevuelo',
-                'pt-BR': 'Segmentos de sobrevoo',
+                en: 'Flyby and departure segments',
+                fr: 'Segments de survol et de départ',
+                es: 'Segmentos de sobrevuelo y de salida',
+                'pt-BR': 'Segmentos de sobrevoo e de partida',
               }),
               [
                 L({

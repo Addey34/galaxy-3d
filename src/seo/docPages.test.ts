@@ -36,6 +36,7 @@ import {
 import {
   assertPublishableSummary,
   displayNameResolver,
+  isDeparture,
   methodologyPages,
   synchronousSpinDrifts,
   type EphemerisManifest,
@@ -457,10 +458,10 @@ describe('page /sources', () => {
     const flybys = Object.values(manifest.bodies).filter((e) => e.flyby);
     expect(flybys.length).toBeGreaterThan(0);
     const captions = [
-      'Flyby segments',
-      'Segments de survol',
-      'Segmentos de sobrevuelo',
-      'Segmentos de sobrevoo',
+      'Flyby and departure segments',
+      'Segments de survol et de départ',
+      'Segmentos de sobrevuelo y de salida',
+      'Segmentos de sobrevoo e de partida',
     ];
     sources.forEach((page, i) => {
       const table =
@@ -469,14 +470,20 @@ describe('page /sources', () => {
           ?.split('</table>')[0] ?? '';
       expect(table.match(/<tr>/g)?.length, captions[i]).toBe(flybys.length + 1);
     });
+    // 13 des 65 sont des DÉPARTS de la Terre au lancement, pas des survols (2026-10-11).
+    const departures = flybys.filter((e) =>
+      isDeparture(e, manifest.bodies)
+    ).length;
+    expect(departures).toBeGreaterThan(0);
+    const n = flybys.length - departures;
     const words = [
-      'planetary flybys',
-      'survols de planètes',
-      'sobrevuelos de planetas',
-      'sobrevoos de planetas',
+      `${n} planetary flybys and ${departures} departures from the Earth`,
+      `${n} survols de planètes et ${departures} départs de la Terre`,
+      `${n} sobrevuelos de planetas y ${departures} salidas desde la Tierra`,
+      `${n} sobrevoos de planetas e ${departures} partidas da Terra`,
     ];
     methodology.forEach((page, i) => {
-      expect(page.body).toContain(`${flybys.length} ${words[i]}`);
+      expect(page.body).toContain(words[i]);
       expect(page.body).not.toMatch(/tourne autour de Vénus|orbits Venus/);
     });
   });

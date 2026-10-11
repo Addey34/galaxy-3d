@@ -1752,7 +1752,7 @@ l'ont seulement fait voir.
   bruit sur la cubique de Hermite. Le premier plan exigeait ainsi des ancres toutes les 10 min,
   pour 533 Ko ; 13 km restaient au plus près de Mercure, alors que les voisins à 10 min
   rendaient 2 km. La branche hyperbolique (anomalie hyperbolique, mêmes fonctions f et g) ramène
-  le plan à **65 segments et 66 720 octets**, 63 d'entre eux à 6 ou 12 h. Elle est testée par la
+  le plan à **65 segments et 66 720 octets**, 63 d'entre eux à 6 ou 12 h. Treize de ces rencontres sont le DÉPART de la Terre au lancement et non un survol (un segment qui commence au premier nœud du fichier de sa sonde) : les pages disent « 52 survols et 13 départs », nombres dérivés du manifeste (`isDeparture`). Elle est testée par la
   conservation de l'énergie et du moment cinétique, par un aller-retour, et contre une
   intégration RK4 indépendante d'un survol de la Terre (moins de 10 m sur 6 h).
 - **Une exception mesurée** : le survol de la Terre par Hayabusa2 du 2015-12-03 exige 10 min.
