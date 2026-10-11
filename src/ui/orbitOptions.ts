@@ -23,10 +23,11 @@ interface Row {
   instrument: boolean;
   /**
    * Ce que la colonne « Orbite » règle pour cette ligne : une orbite fermée (corps du
-   * catalogue), une trajectoire ouverte (objet interstellaire), ou rien (une sonde n'a pas
-   * d'orbite fermée, et sa trajectoire n'est pas dessinée).
+   * catalogue), ou une trajectoire (objet interstellaire ; sonde depuis le 2026-10-11, son
+   * chemin en route et sa révolution en cours autour d'un corps, cf.
+   * `ui/spacecraftTrajectories.ts`).
    */
-  orbit: 'orbit' | 'trajectory' | null;
+  orbit: 'orbit' | 'trajectory';
 }
 
 /**
@@ -37,7 +38,7 @@ interface Row {
 export interface InstrumentVisibility {
   setHiddenNames(names: ReadonlySet<string>): void;
   setHiddenLabelNames(names: ReadonlySet<string>): void;
-  /** Trajectoires à tracer, pour une couche qui en dessine (objets interstellaires). */
+  /** Trajectoires à tracer, pour une couche qui en dessine (sondes, objets interstellaires). */
   setTrajectoryNames?(names: ReadonlySet<string>): void;
 }
 
@@ -123,7 +124,7 @@ export function setupOrbitOptions(
       name,
       cfg,
       instrument: true,
-      orbit: cfg.kind === 'interstellar' ? 'trajectory' : null,
+      orbit: 'trajectory',
     })),
   ];
   const rowByName = new Map(rows.map((row) => [row.name, row]));
@@ -324,8 +325,8 @@ export function setupOrbitOptions(
         const cells: Partial<Record<Column, HTMLInputElement>> = {};
         for (const column of COLUMNS) {
           if (!state[column].has(row.name)) {
-            // Une sonde n'a pas d'orbite fermée, et sa trajectoire n'est pas dessinée : la
-            // cellule reste VIDE plutôt que de porter une case sans effet.
+            // Une cellule que la ligne ne règle pas reste VIDE plutôt que de porter une case
+            // sans effet (une sonde jusqu'au 2026-10-11, avant que sa trajectoire se trace).
             tr.append(emptyCell());
             continue;
           }

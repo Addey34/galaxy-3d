@@ -412,6 +412,27 @@ interface HorizonsManifest {
   bodies: Record<string, HorizonsBodyManifest>;
 }
 
+/** Ce que `HorizonsEphemerisService.trajectoryCoverage` rend pour une sonde. */
+export interface TrajectoryCoverage {
+  fromMs: number;
+  toMs: number;
+  segments: readonly { fromMs: number; toMs: number; stepDays: number }[];
+}
+
+/**
+ * Les instants extrêmes d'une grille, en millisecondes UTC, RENTRÉS de deux minutes : la grille
+ * est en TDB, en avance de 69 s sur l'UTC, et lue comme une date UTC sa fin tomberait 69 s
+ * APRÈS le dernier nœud, hors du fichier.
+ */
+function gridRangeMs(grid: SampleGrid): { fromMs: number; toMs: number } {
+  const ms = (jd: number) => (jd - 2_440_587.5) * 86_400_000;
+  const inset = 120_000;
+  return {
+    fromMs: ms(grid.startJdTdb) + inset,
+    toMs: ms(grid.startJdTdb + (grid.sampleCount - 1) * grid.stepDays) - inset,
+  };
+}
+
 interface LoadedBody {
   manifest: HorizonsBodyManifest;
   /**
@@ -1021,6 +1042,32 @@ export class HorizonsEphemerisService implements PreciseEphemerisProvider {
       : holdsWindow(held, plan);
   }
 
+  /**
+   * LA COUVERTURE D'UNE SONDE, LUE AU MANIFESTE, avant que le moindre octet ne soit arrivé :
+   * l'intervalle de son fichier héliocentrique et celui de chacun de ses segments (survols,
+   * phases en orbite, détails). C'est ce que demande le tracé de sa trajectoire
+   * (`ui/spacecraftTrajectories.ts`) pour savoir quels instants échantillonner. `null` pour un
+   * nom que le manifeste ignore.
+   */
+  trajectoryCoverage(name: string): TrajectoryCoverage | null {
+    const entries: [string, HorizonsBodyManifest][] = this._pending?.manifest
+      ? this._pending.manifest.entries
+      : [...this.bodies].map(([key, body]) => [key, body.manifest]);
+    const own = entries.find(([key]) => key === name)?.[1];
+    if (!own) return null;
+    const segments = entries
+      .filter(([, entry]) => entry.segmentOf === name)
+      .map(([, entry]) => ({
+        ...gridRangeMs(HorizonsEphemerisService._grid(entry)),
+        stepDays: entry.stepDays,
+      }))
+      .sort((a, b) => a.fromMs - b.fromMs);
+    return {
+      ...gridRangeMs(HorizonsEphemerisService._grid(own)),
+      segments,
+    };
+  }
+
   /** Ce plan a-t-il déjà été demandé, sans revenir ? */
   private _attemptCovers(name: string, plan: SampleWindow | 'full'): boolean {
     const attempted = this._attempted.get(name);
@@ -1073,6 +1120,27 @@ export class HorizonsEphemerisService implements PreciseEphemerisProvider {
         }) !== null
         ? 'full'
         : null;
+    }
+    // Un intervalle demandé pour une SONDE vaut pour ses segments (survols, phases en orbite,
+    // détails) : c'est sa trajectoire sur cet intervalle qui est demandée, et non son seul
+    // fichier héliocentrique. Planifié depuis une date que le segment couvre, sans quoi
+    // `planBodyWindow` ignorerait l'intervalle d'un segment que la date de la scène ne touche
+    // pas (un survol de 1979 vu en 2026).
+    const probeSpan =
+      entry.segmentOf !== undefined
+        ? scene.spans?.[entry.segmentOf]
+        : undefined;
+    if (probeSpan !== undefined) {
+      const grid = HorizonsEphemerisService._grid(entry);
+      const range = gridRangeMs(grid);
+      if (
+        probeSpan.from.getTime() <= range.toMs &&
+        probeSpan.to.getTime() >= range.fromMs
+      )
+        return planBodyWindow(grid, {
+          date: new Date((range.fromMs + range.toMs) / 2),
+          span: probeSpan,
+        });
     }
     return planBodyWindow(HorizonsEphemerisService._grid(entry), {
       date: scene.date,

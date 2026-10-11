@@ -562,3 +562,57 @@ describe('six requêtes au moins, davantage sur un lien mesuré rapide (ligne 45
     expect(fast.state.peak).toBeGreaterThan(6);
   });
 });
+
+describe('l’intervalle demandé pour une sonde vaut pour ses segments (2026-10-11)', () => {
+  /**
+   * Le tracé de la trajectoire d'une sonde demande un intervalle pour elle
+   * (`ui/spacecraftTrajectories.ts`). Ce qui se voit est sa position, que ses SEGMENTS donnent
+   * sur leur couverture : un intervalle qui ne chargerait que son fichier héliocentrique la
+   * placerait, au survol de la Terre par Juno (2013-10-09), à des milliers de km de sa place. Et
+   * le segment n'est pas à la date de la scène, ce qui faisait ignorer l'intervalle.
+   */
+  it('charge le survol de 2013 vu depuis 2026, et place Juno comme le fichier entier', async () => {
+    const log: Served[] = [];
+    const service = await loadWindowed(
+      log,
+      {},
+      sceneRequest(SCENE_DATE, false)
+    );
+    const flyby = new Date('2013-10-09T19:00:00Z');
+    await service.ensureCoverage({
+      date: new Date('2013-10-08T00:00:00Z'),
+      spans: {
+        juno: {
+          from: new Date('2013-10-08T00:00:00Z'),
+          to: new Date('2013-10-11T00:00:00Z'),
+        },
+      },
+    });
+    expect(log.some((call) => call.body === 'juno--earth-2013-10-09')).toBe(
+      true
+    );
+    const whole = horizonsServiceFromDisk().getHeliocentricAU('juno', flyby)!;
+    const served = service.getHeliocentricAU('juno', flyby)!;
+    expect(served.distanceTo(whole)).toBeLessThan(1e-12);
+  });
+
+  it('expose la couverture de la sonde et de chacun de ses segments, avant tout octet', async () => {
+    const log: Served[] = [];
+    const service = await loadWindowed(
+      log,
+      {},
+      sceneRequest(SCENE_DATE, false)
+    );
+    const coverage = service.trajectoryCoverage('juno')!;
+    expect(coverage.segments).toHaveLength(3);
+    expect(new Date(coverage.fromMs).toISOString().slice(0, 10)).toBe(
+      '2011-08-07'
+    );
+    // Un bord rentré de deux minutes tombe DANS le fichier, malgré les 69 s du TDB.
+    const disk = horizonsServiceFromDisk();
+    expect(
+      disk.getHeliocentricAU('juno', new Date(coverage.toMs))
+    ).not.toBeNull();
+    expect(service.trajectoryCoverage('pas-une-sonde')).toBeNull();
+  });
+});
