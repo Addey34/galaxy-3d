@@ -39,9 +39,11 @@ import {
   docPath,
   docSection,
   docTable,
+  formatQuantity,
 } from './documentPage';
 import { displayNameResolver, type EphemerisManifest } from './methodologyPage';
 import { renderMarkdown } from './markdown';
+import FLYBY_PLAN from '@/config/flybyEncounters.json';
 import { citationSection, type CitationMetadata } from './citation';
 import { blockLabel, cardBlockSourceRows } from './cardBlockSources';
 
@@ -355,6 +357,12 @@ const LAYER_LABELS: Record<string, DocText> = {
 const JD_UNIX_EPOCH = 2_440_587.5;
 const isoFromJd = (jd: number): string =>
   new Date((jd - JD_UNIX_EPOCH) * 86_400_000).toISOString().slice(0, 10);
+/** La même date à la minute : un segment de survol couvre quelques jours, pas des années. */
+const isoMinuteFromJd = (jd: number): string =>
+  new Date(Math.round((jd - JD_UNIX_EPOCH) * 1440) * 60_000)
+    .toISOString()
+    .slice(0, 16)
+    .replace('T', ' ');
 
 const link = (url: string, text: string): string =>
   `<a href="${escapeHtml(url)}" rel="noopener noreferrer">${text}</a>`;
@@ -942,36 +950,48 @@ function sourcesPage(input: SourcesInput, locale: DocLocale): DocPage {
   }
 
   // ── Éphémérides ──
-  const ephemerisRows = Object.entries(manifest.bodies).map(([body, e]) => [
-    // Un SEGMENT porte le nom de la sonde qu'il prolonge, pas sa clé de fichier.
-    escapeHtml(name(e.segmentOf ?? body, locale)),
-    // La solution substituée sur un intervalle (2026-10-06) : sans elle, qui redemande la cible
-    // obtient d'autres vecteurs que le fichier (67P : jusqu'à 1 318 km en 2014-2016).
-    `<code>${escapeHtml(e.target)}</code>` +
-      (e.primary
-        ? `<br>${L({
-            en: `replaced by <code>${escapeHtml(e.primary.target)}</code> from ${escapeHtml(isoFromJd(e.primary.fromJdTdb))} to ${escapeHtml(isoFromJd(e.primary.toJdTdb))}`,
-            fr: `remplacée par <code>${escapeHtml(e.primary.target)}</code> du ${escapeHtml(isoFromJd(e.primary.fromJdTdb))} au ${escapeHtml(isoFromJd(e.primary.toJdTdb))}`,
-            es: `sustituida por <code>${escapeHtml(e.primary.target)}</code> del ${escapeHtml(isoFromJd(e.primary.fromJdTdb))} al ${escapeHtml(isoFromJd(e.primary.toJdTdb))}`,
-            'pt-BR': `substituída por <code>${escapeHtml(e.primary.target)}</code> de ${escapeHtml(isoFromJd(e.primary.fromJdTdb))} a ${escapeHtml(isoFromJd(e.primary.toJdTdb))}`,
-          })}`
-        : '') +
-      (e.segmentOf
-        ? `<br>${L({
-            en: `segment, ${e.impulses?.length ?? 0} manoeuvres read in the trajectory`,
-            fr: `segment, ${e.impulses?.length ?? 0} manœuvres lues dans la trajectoire`,
-            es: `segmento, ${e.impulses?.length ?? 0} maniobras leídas en la trayectoria`,
-            'pt-BR': `segmento, ${e.impulses?.length ?? 0} manobras lidas na trajetória`,
-          })}`
-        : ''),
-    escapeHtml(
-      e.center === 'sun'
-        ? L({ en: 'Sun', fr: 'Soleil', es: 'Sol', 'pt-BR': 'Sol' })
-        : name(e.center, locale)
-    ),
-    String(e.stepDays),
-    `${isoFromJd(e.startJdTdb)} → ${isoFromJd(e.startJdTdb + (e.sampleCount - 1) * e.stepDays)}`,
-  ]);
+  // Les segments de SURVOL (ligne 45.10) ont leur table à eux, plus bas : ils sont des dizaines.
+  const ephemerisRows = Object.entries(manifest.bodies)
+    .filter(([, e]) => !e.flyby)
+    .map(([body, e]) => [
+      // Un SEGMENT porte le nom de la sonde qu'il prolonge, pas sa clé de fichier.
+      escapeHtml(name(e.segmentOf ?? body, locale)),
+      // La solution substituée sur un intervalle (2026-10-06) : sans elle, qui redemande la cible
+      // obtient d'autres vecteurs que le fichier (67P : jusqu'à 1 318 km en 2014-2016).
+      `<code>${escapeHtml(e.target)}</code>` +
+        (e.primary
+          ? `<br>${L({
+              en: `replaced by <code>${escapeHtml(e.primary.target)}</code> from ${escapeHtml(isoFromJd(e.primary.fromJdTdb))} to ${escapeHtml(isoFromJd(e.primary.toJdTdb))}`,
+              fr: `remplacée par <code>${escapeHtml(e.primary.target)}</code> du ${escapeHtml(isoFromJd(e.primary.fromJdTdb))} au ${escapeHtml(isoFromJd(e.primary.toJdTdb))}`,
+              es: `sustituida por <code>${escapeHtml(e.primary.target)}</code> del ${escapeHtml(isoFromJd(e.primary.fromJdTdb))} al ${escapeHtml(isoFromJd(e.primary.toJdTdb))}`,
+              'pt-BR': `substituída por <code>${escapeHtml(e.primary.target)}</code> de ${escapeHtml(isoFromJd(e.primary.fromJdTdb))} a ${escapeHtml(isoFromJd(e.primary.toJdTdb))}`,
+            })}`
+          : '') +
+        (e.segmentOf
+          ? `<br>${L({
+              en: `segment, ${e.impulses?.length ?? 0} manoeuvres read in the trajectory`,
+              fr: `segment, ${e.impulses?.length ?? 0} manœuvres lues dans la trajectoire`,
+              es: `segmento, ${e.impulses?.length ?? 0} maniobras leídas en la trayectoria`,
+              'pt-BR': `segmento, ${e.impulses?.length ?? 0} manobras lidas na trajetória`,
+            })}`
+          : ''),
+      escapeHtml(
+        e.center === 'sun'
+          ? L({ en: 'Sun', fr: 'Soleil', es: 'Sol', 'pt-BR': 'Sol' })
+          : name(e.center, locale)
+      ),
+      String(e.stepDays),
+      `${isoFromJd(e.startJdTdb)} → ${isoFromJd(e.startJdTdb + (e.sampleCount - 1) * e.stepDays)}`,
+    ]);
+  const flybyRows = Object.values(manifest.bodies)
+    .filter((e) => e.flyby)
+    .sort((a, b) => a.startJdTdb - b.startJdTdb)
+    .map((e) => [
+      escapeHtml(name(e.segmentOf!, locale)),
+      escapeHtml(name(e.center, locale)),
+      String(Math.round(e.stepDays * 1440)),
+      `${isoMinuteFromJd(e.startJdTdb)} → ${isoMinuteFromJd(e.startJdTdb + (e.sampleCount - 1) * e.stepDays)}`,
+    ]);
   sections.push(
     docSection(
       'ephemerides',
@@ -1018,7 +1038,51 @@ function sourcesPage(input: SourcesInput, locale: DocLocale): DocPage {
           ],
           ephemerisRows,
           3
-        )
+        ) +
+        (flybyRows.length > 0
+          ? `<p>${L({
+              en: `During a planetary flyby, a short file relative to the centre of the planet takes over from the spacecraft’s file for a few days (${flybyRows.length} files). Each flyby is detected in the true trajectory, and each step is the coarsest that keeps the position within ${formatQuantity(FLYBY_PLAN.segmentShare * 100, locale)} % of the distance to the planet, measured against Horizons.`,
+              fr: `Pendant un survol de planète, un fichier court relatif au centre de la planète prend le relais du fichier de la sonde pour quelques jours (${flybyRows.length} fichiers). Chaque survol est détecté dans la trajectoire vraie, et chaque pas est le plus grossier qui garde la position à moins de ${formatQuantity(FLYBY_PLAN.segmentShare * 100, locale)} % de la distance à la planète, mesuré contre Horizons.`,
+              es: `Durante un sobrevuelo de un planeta, un archivo corto relativo al centro del planeta toma el relevo del archivo de la sonda durante unos días (${flybyRows.length} archivos). Cada sobrevuelo se detecta en la trayectoria real, y cada paso es el más grueso que mantiene la posición a menos del ${formatQuantity(FLYBY_PLAN.segmentShare * 100, locale)} % de la distancia al planeta, medido contra Horizons.`,
+              'pt-BR': `Durante um sobrevoo de planeta, um arquivo curto relativo ao centro do planeta assume no lugar do arquivo da sonda por alguns dias (${flybyRows.length} arquivos). Cada sobrevoo é detectado na trajetória real, e cada passo é o mais grosso que mantém a posição a menos de ${formatQuantity(FLYBY_PLAN.segmentShare * 100, locale)} % da distância ao planeta, medido contra o Horizons.`,
+            })}</p>` +
+            docTable(
+              L({
+                en: 'Flyby segments',
+                fr: 'Segments de survol',
+                es: 'Segmentos de sobrevuelo',
+                'pt-BR': 'Segmentos de sobrevoo',
+              }),
+              [
+                L({
+                  en: 'Spacecraft',
+                  fr: 'Sonde',
+                  es: 'Sonda',
+                  'pt-BR': 'Sonda',
+                }),
+                L({
+                  en: 'Planet',
+                  fr: 'Planète',
+                  es: 'Planeta',
+                  'pt-BR': 'Planeta',
+                }),
+                L({
+                  en: 'Step (minutes)',
+                  fr: 'Pas (minutes)',
+                  es: 'Paso (minutos)',
+                  'pt-BR': 'Passo (minutos)',
+                }),
+                L({
+                  en: 'Coverage (TDB)',
+                  fr: 'Couverture (TDB)',
+                  es: 'Cobertura (TDB)',
+                  'pt-BR': 'Cobertura (TDB)',
+                }),
+              ],
+              flybyRows,
+              2
+            )
+          : '')
     )
   );
 

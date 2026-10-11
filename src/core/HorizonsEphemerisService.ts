@@ -323,6 +323,13 @@ export interface HorizonsBodyManifest {
    * pas d'un jour ne décrit pas (jusqu'à 27 000 km d'écart, mesuré contre Horizons).
    */
   segmentOf?: string;
+  /**
+   * Ce segment est celui d'un SURVOL planétaire (ligne 45.10, 2026-10-11) : quelques jours
+   * autour du passage au plus près, écrits par `pnpm ephemeris:generate --flybys` depuis le
+   * plan `src/config/flybyEncounters.json`. Le service le traite comme tout segment ; les pages
+   * et l'inventaire les comptent à part, parce qu'ils sont des dizaines.
+   */
+  flyby?: true;
 }
 
 /**

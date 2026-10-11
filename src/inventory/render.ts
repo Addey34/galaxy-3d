@@ -65,9 +65,14 @@ function positionCell(row: InventoryRow): string {
     binary?.samplesPerRevolution != null
       ? ` ${binary.samplesPerRevolution.toFixed(2)} ech/rev`
       : '';
-  const segments = (binary?.segments ?? [])
-    .map((segment) => ` + segment ${segment.center} ${segment.stepDays} j`)
-    .join('');
+  const all = binary?.segments ?? [];
+  const flybys = all.filter((segment) => segment.flyby).length;
+  const segments =
+    all
+      .filter((segment) => !segment.flyby)
+      .map((segment) => ` + segment ${segment.center} ${segment.stepDays} j`)
+      .join('') +
+    (flybys > 0 ? ` + ${flybys} survol${flybys > 1 ? 's' : ''}` : '');
   return `${step}${perRev}${segments}, ${km(medianKm)}`;
 }
 

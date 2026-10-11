@@ -22,9 +22,31 @@ import {
  */
 const SECONDS_PER_DAY = 86_400;
 
-const grids = Object.values(
-  (manifest as { bodies: Record<string, { stepDays: number }> }).bodies
+const entries = Object.entries(
+  (
+    manifest as {
+      bodies: Record<
+        string,
+        {
+          stepDays: number;
+          startJdTdb: number;
+          sampleCount: number;
+          flyby?: boolean;
+        }
+      >;
+    }
+  ).bodies
 );
+/**
+ * Les fichiers PERMANENTS. Les segments de survol (ligne 45.10, `flyby` au manifeste) couvrent chacun
+ * quelques jours : à la vitesse maximale, un survol passe en quelques millisecondes et coûte son
+ * fichier ENTIER une fois, ce qu'une densité par jour simulé surestimerait de trois ordres de
+ * grandeur. Ils ont leur propre garde, plus bas.
+ */
+const grids = entries.filter(([, e]) => !e.flyby).map(([, grid]) => grid);
+const flybySegments = entries
+  .filter(([, e]) => e.flyby)
+  .map(([, grid]) => grid);
 
 describe('bytesPerSimulatedDay', () => {
   it('reproduit la mesure publiée : 4,05 Mbit/s à la vitesse maximale', () => {
@@ -38,11 +60,35 @@ describe('bytesPerSimulatedDay', () => {
     // sondes de l'ESA (2026-10-09, 3 × 48 / 1 : Solar Orbiter, JUICE et Hera). Si le
     // catalogue change, ce chiffre change AVEC lui : c'est le point, la demande est calculée et
     // non déclarée.
+    // Les 65 segments de survol (2026-10-11) n'y entrent pas : cf. `grids` et la garde suivante.
     expect(grids.length).toBe(96);
     expect(perDay).toBeCloseTo(1386.0, 1);
     const atMaxSpeed = (perDay * MAX_SIMULATION_SCALE) / SECONDS_PER_DAY;
     expect(atMaxSpeed).toBeCloseTo(506_236.5, 0);
     expect((atMaxSpeed * 8) / 1e6).toBeCloseTo(4.05, 2);
+  });
+
+  /**
+   * Un segment de survol coûte son fichier, une fois par passage. MESURÉ le 2026-10-11 :
+   * 65 segments, 66 720 octets en tout, aucun ne couvrant plus de dix jours. Répartis sur les
+   * années qu'ils couvrent, ils ajoutent quelques octets par jour simulé aux 1 386 des fichiers
+   * permanents : moins de 1 %, donc rien que le plafond de vitesse doive compter à part.
+   */
+  it('les segments de survol sont courts, et leur coût réparti est négligeable', () => {
+    expect(flybySegments.length).toBeGreaterThan(0);
+    let bytes = 0;
+    let first = Infinity;
+    let last = -Infinity;
+    for (const grid of flybySegments) {
+      const span = (grid.sampleCount - 1) * grid.stepDays;
+      expect(span).toBeLessThanOrEqual(10);
+      bytes += grid.sampleCount * BYTES_PER_SAMPLE;
+      first = Math.min(first, grid.startJdTdb);
+      last = Math.max(last, grid.startJdTdb + span);
+    }
+    expect(bytes / (last - first)).toBeLessThan(
+      0.01 * bytesPerSimulatedDay(grids)
+    );
   });
 
   it('ne compte que les corps passés : un corps hors couverture ne demande rien', () => {

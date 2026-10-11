@@ -569,8 +569,9 @@ describe('ce que la première vue coûte réellement', () => {
     // 54 921 264 avec le segment de BepiColombo autour de Mercure (2026-10-06, 357 ancres de
     // 12 h, cf. `segmentReference.test.ts`) ; 55 973 520 avec les trois objets interstellaires
     // (2026-10-08 : 1I au pas d'un jour, 2I et 3I au pas de 4 jours, sur ±20 ans) ; 56 343 648
-    // avec les trois sondes de l'ESA (2026-10-09 : Solar Orbiter, JUICE et Hera au pas d'un jour).
-    expect(shipped).toBe(56_343_648);
+    // avec les trois sondes de l'ESA (2026-10-09 : Solar Orbiter, JUICE et Hera au pas d'un jour) ;
+    // 56 410 368 avec les 65 segments de survol (2026-10-11, 66 720 octets, ligne 45.10).
+    expect(shipped).toBe(56_410_368);
     // 62 au lot 17, plus les 23 cibles de missions du 2026-10-04 et leurs deux satellites : une
     // requête par corps ; 90 avec les trois objets interstellaires (2026-10-08), couverts à
     // cette date ; 93 avec les trois sondes de l'ESA (2026-10-09), couvertes elles aussi.

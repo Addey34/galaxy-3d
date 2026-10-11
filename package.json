@@ -23,6 +23,7 @@
     "ephemeris:interstellar": "node scripts/derive-interstellar-elements.mjs",
     "ephemeris:small-body": "node scripts/derive-small-body-elements.mjs",
     "ephemeris:validate": "node scripts/validate-against-horizons.mjs",
+    "ephemeris:flybys": "node scripts/measure-flybys.mjs",
     "facts:snapshot": "node scripts/snapshot-fact-sources.mjs",
     "smallbodies:generate": "node scripts/generate-small-body-dataset.mjs",
     "shapes:generate": "node scripts/generate-shape-models.mjs",

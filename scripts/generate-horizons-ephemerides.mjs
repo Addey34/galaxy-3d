@@ -23,6 +23,11 @@ const PROBE_EVENT_STEP_DAYS = 1;
 const CENTER_IDS = {
   sun: '10',
   mercury: '199',
+  // Centres des SEGMENTS DE SURVOL (ligne 45.10) : le CENTRE de la planète. Pour la Terre, le
+  // segment est relatif à son centre (399) et s'ajoute à la Terre DESSINÉE au barycentre
+  // Terre-Lune (fichier `earth`, cible 3), exactement comme la Lune y est placée.
+  venus: '299',
+  earth: '399',
   mars: '499',
   jupiter: '599',
   saturn: '699',
@@ -878,6 +883,43 @@ const BODIES = [
 ];
 
 /**
+ * LES SEGMENTS DE SURVOL (ligne 45.10, 2026-10-11), un par rencontre planétaire qui en a
+ * besoin, LUS dans le plan que `pnpm ephemeris:flybys --write` écrit
+ * (`src/config/flybyEncounters.json`) : rencontre détectée sur la trajectoire vraie, intervalle
+ * où le fichier héliocentrique échoue, pas le plus grossier dont la simulation tient la borne.
+ * Aucune date ni aucun pas n'est écrit ici. Chaque segment est la position relative au CENTRE
+ * de la planète, propagée à deux corps (hyperbole comprise) entre ses ancres.
+ */
+const FLYBY_PLAN = JSON.parse(
+  await readFile(resolve(ROOT, 'src/config/flybyEncounters.json'), 'utf8')
+);
+const FLYBY_SEGMENTS = FLYBY_PLAN.encounters
+  .filter((encounter) => encounter.segment)
+  .map((encounter) => {
+    const probe = BODIES.find((entry) => entry.name === encounter.probe);
+    if (!probe)
+      throw new Error(
+        `survol : sonde « ${encounter.probe} » absente de BODIES`
+      );
+    if (!CENTER_IDS[encounter.planet])
+      throw new Error(
+        `survol : aucun identifiant Horizons pour « ${encounter.planet} »`
+      );
+    return {
+      name: encounter.segment.name,
+      target: probe.target,
+      expectedName: probe.expectedName,
+      center: encounter.planet,
+      segmentOf: encounter.probe,
+      flyby: true,
+      startTime: encounter.segment.from,
+      stopTime: encounter.segment.to,
+      stepDays: encounter.segment.stepMinutes / 1440,
+    };
+  });
+BODIES.push(...FLYBY_SEGMENTS);
+
+/**
  * Le pas, dans l'unité la plus grossière qui l'exprime EXACTEMENT.
  *
  * Horizons n'accepte qu'un entier d'unités, et il accepte bien les MINUTES : vérifié à l'API le
@@ -1051,8 +1093,14 @@ async function requestSplitAtSolutionEpoch(body, startTime, stopTime) {
  */
 const MAX_ROWS_PER_REQUEST = 45_000;
 
+// Un jour seul (« 2024-08-17 ») ou un jour et une heure (« 2024-08-17 18:00 », segments de
+// survol). Ne sert qu'à COMPTER les lignes : la requête garde la chaîne telle quelle.
 const jdOfIso = (iso) =>
-  Date.parse(`${iso}T00:00:00Z`) / 86_400_000 + 2440587.5;
+  Date.parse(
+    iso.includes(' ') ? `${iso.replace(' ', 'T')}:00Z` : `${iso}T00:00:00Z`
+  ) /
+    86_400_000 +
+  2440587.5;
 const jdOfBound = (bound) =>
   typeof bound === 'string' && bound.startsWith('JD ')
     ? Number(bound.slice(3))
@@ -1374,6 +1422,7 @@ async function fetchBody(body) {
     ...(primary ? { primary } : {}),
     ...(impulses ? { impulses } : {}),
     ...(body.segmentOf ? { segmentOf: body.segmentOf } : {}),
+    ...(body.flyby ? { flyby: true } : {}),
   };
 }
 
@@ -1385,8 +1434,17 @@ await mkdir(OUTPUT_DIR, { recursive: true });
  * depuis changerait des fichiers sans rapport avec la modification voulue.
  */
 const onlyIndex = process.argv.indexOf('--only');
-const only =
-  onlyIndex === -1 ? null : new Set(process.argv[onlyIndex + 1].split(','));
+/**
+ * `--flybys` : régénère les SEGMENTS DE SURVOL du plan, et retire du manifeste ceux qui n'y
+ * sont plus (leur nom porte `--`, réservé à ces segments). C'est la commande à rejouer après
+ * `pnpm ephemeris:flybys --write`.
+ */
+const flybys = process.argv.includes('--flybys');
+const only = flybys
+  ? new Set(FLYBY_SEGMENTS.map((body) => body.name))
+  : onlyIndex === -1
+    ? null
+    : new Set(process.argv[onlyIndex + 1].split(','));
 if (only) {
   const manifest = JSON.parse(
     await readFile(resolve(OUTPUT_DIR, 'manifest.json'), 'utf8')
@@ -1414,6 +1472,15 @@ if (only) {
    * octets livrés ont changé pour la dernière fois, ce qui est vrai et utile.
    */
   let changedBytes = false;
+  if (flybys) {
+    for (const [name, entry] of Object.entries(manifest.bodies)) {
+      if (!name.includes('--') || only.has(name)) continue;
+      replaced.push(entry.file);
+      delete manifest.bodies[name];
+      changedBytes = true;
+      process.stdout.write(`segment retiré du plan : ${name}\n`);
+    }
+  }
   for (const name of only) {
     const body = BODIES.find((entry) => entry.name === name);
     if (!body) throw new Error(`--only : corps inconnu « ${name} »`);

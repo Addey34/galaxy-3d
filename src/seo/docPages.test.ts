@@ -431,8 +431,9 @@ describe('page /sources', () => {
 
   it('nomme un segment par sa sonde et dit ses manœuvres, dans chaque langue', () => {
     // 2026-10-06 : la clé de fichier « bepicolombo-mercury » s'affichait comme un nom de corps.
+    // Les segments de SURVOL (ligne 45.10) ont leur propre table, cf. le cas suivant.
     const segments = Object.entries(manifest.bodies).filter(
-      ([, e]) => e.segmentOf
+      ([, e]) => e.segmentOf && !e.flyby
     );
     expect(segments.length).toBeGreaterThanOrEqual(1);
     const words = ['manoeuvres', 'manœuvres', 'maniobras', 'manobras'];
@@ -447,6 +448,36 @@ describe('page /sources', () => {
     methodology.forEach((page, i) => {
       for (const [, entry] of segments)
         expect(page.body).toContain(`${entry.impulses!.length} ${words[i]}`);
+    });
+  });
+
+  it('liste chaque segment de survol à part et les dit dans la méthode, dans chaque langue', () => {
+    // 2026-10-11 (ligne 45.10) : 65 segments décrits « pendant que la sonde tourne autour de… »
+    // auraient été 65 phrases fausses.
+    const flybys = Object.values(manifest.bodies).filter((e) => e.flyby);
+    expect(flybys.length).toBeGreaterThan(0);
+    const captions = [
+      'Flyby segments',
+      'Segments de survol',
+      'Segmentos de sobrevuelo',
+      'Segmentos de sobrevoo',
+    ];
+    sources.forEach((page, i) => {
+      const table =
+        page.body
+          .split(`<caption>${captions[i]!}</caption>`)[1]
+          ?.split('</table>')[0] ?? '';
+      expect(table.match(/<tr>/g)?.length, captions[i]).toBe(flybys.length + 1);
+    });
+    const words = [
+      'planetary flybys',
+      'survols de planètes',
+      'sobrevuelos de planetas',
+      'sobrevoos de planetas',
+    ];
+    methodology.forEach((page, i) => {
+      expect(page.body).toContain(`${flybys.length} ${words[i]}`);
+      expect(page.body).not.toMatch(/tourne autour de Vénus|orbits Venus/);
     });
   });
 

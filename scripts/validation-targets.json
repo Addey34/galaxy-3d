@@ -357,6 +357,14 @@
       "id": "10",
       "expect": "sun"
     },
+    "mercury": {
+      "id": "199",
+      "expect": "mercury"
+    },
+    "venus": {
+      "id": "299",
+      "expect": "venus"
+    },
     "earth": {
       "id": "399",
       "expect": "earth"

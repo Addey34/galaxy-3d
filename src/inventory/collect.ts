@@ -87,6 +87,8 @@ export interface PositionState {
       readonly center: string;
       readonly stepDays: number;
       readonly bytes: number | null;
+      /** Segment d'un SURVOL planétaire (ligne 45.10) : compté à part par le rendu. */
+      readonly flyby: boolean;
     }[];
   } | null;
   /**
@@ -236,6 +238,7 @@ interface ManifestEntry {
   sampleCount: number;
   meanMotionScale?: number;
   segmentOf?: string;
+  flyby?: true;
 }
 
 interface LadderRow {
@@ -338,6 +341,7 @@ function positionOf(
                 center: segment.center,
                 stepDays: segment.stepDays,
                 bytes: existsSync(path) ? statSync(path).size : null,
+                flyby: segment.flyby === true,
               };
             }),
         }
