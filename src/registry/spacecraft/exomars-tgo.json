@@ -1,0 +1,64 @@
+{
+  "$schema": "../schema/spacecraft.schema.json",
+  "id": "exomars-tgo",
+  "targetClass": "spacecraft",
+  "displayName": {
+    "en": "ExoMars Trace Gas Orbiter",
+    "fr": "ExoMars Trace Gas Orbiter",
+    "es": "ExoMars Trace Gas Orbiter",
+    "pt-BR": "ExoMars Trace Gas Orbiter"
+  },
+  "description": {
+    "en": "Launched in 2016 with the Schiaparelli lander, in orbit around Mars since October 2016, to look for methane and other trace gases in its atmosphere.",
+    "fr": "Lancée en 2016 avec l’atterrisseur Schiaparelli, en orbite autour de Mars depuis octobre 2016, pour chercher du méthane et d’autres gaz à l’état de traces dans son atmosphère.",
+    "es": "Lanzada en 2016 con el módulo de aterrizaje Schiaparelli, en órbita alrededor de Marte desde octubre de 2016, para buscar metano y otros gases traza en su atmósfera.",
+    "pt-BR": "Lançada em 2016 com o módulo de pouso Schiaparelli, em órbita ao redor de Marte desde outubro de 2016, para procurar metano e outros gases-traço em sua atmosfera."
+  },
+  "launchDate": "2016-03-14",
+  "color": "0xb4e05a",
+  "identifiers": {
+    "naif": -143
+  },
+  "facts": {
+    "launchDate": {
+      "source": "jpl-horizons-object-data",
+      "method": "measured",
+      "citation": "Horizons -143: \"ExoMars was successfully launched March 14, 2016 @ 09:31 UTC from the Baikonur Cosmodrome in Kazakhstan.\""
+    },
+    "launchVehicle": {
+      "value": "Roscosmos Proton",
+      "source": "jpl-horizons-object-data",
+      "method": "measured",
+      "citation": "Horizons -143: \"will be launched together in March 2016 on a Roscosmos Proton rocket\""
+    },
+    "launchSite": {
+      "value": "Baikonur Cosmodrome in Kazakhstan",
+      "source": "jpl-horizons-object-data",
+      "method": "measured",
+      "citation": "Horizons -143: \"ExoMars was successfully launched March 14, 2016 @ 09:31 UTC from the Baikonur Cosmodrome in Kazakhstan.\""
+    },
+    "massKg": {
+      "value": 4332,
+      "source": "jpl-horizons-object-data",
+      "method": "measured",
+      "citation": "Horizons -143: \"Launch mass 4332 kg (includes 112 kg science payload, 600 kg Schiaparelli lander)\""
+    }
+  },
+  "satelliteOf": [
+    {
+      "body": "mars",
+      "from": "2016-10-20T00:00:00Z",
+      "to": "2039-01-03T00:00:00Z"
+    }
+  ],
+  "coverage": {
+    "temporal": {
+      "interval": [
+        [
+          "2016-03-15T00:00:00Z",
+          "2039-01-03T00:00:00Z"
+        ]
+      ]
+    }
+  }
+}

@@ -1,0 +1,64 @@
+{
+  "$schema": "../schema/spacecraft.schema.json",
+  "id": "mars-express",
+  "targetClass": "spacecraft",
+  "displayName": {
+    "en": "Mars Express",
+    "fr": "Mars Express",
+    "es": "Mars Express",
+    "pt-BR": "Mars Express"
+  },
+  "description": {
+    "en": "Launched in 2003 and in orbit around Mars since December 2003, to observe its surface and atmosphere. Its lander, Beagle 2, was lost.",
+    "fr": "Lancée en 2003 et en orbite autour de Mars depuis décembre 2003, pour en observer la surface et l’atmosphère. Son atterrisseur, Beagle 2, a été perdu.",
+    "es": "Lanzada en 2003 y en órbita alrededor de Marte desde diciembre de 2003, para observar su superficie y su atmósfera. Su módulo de aterrizaje, Beagle 2, se perdió.",
+    "pt-BR": "Lançada em 2003 e em órbita ao redor de Marte desde dezembro de 2003, para observar sua superfície e sua atmosfera. Seu módulo de pouso, o Beagle 2, foi perdido."
+  },
+  "launchDate": "2003-06-02",
+  "color": "0xe0703a",
+  "identifiers": {
+    "naif": -41
+  },
+  "facts": {
+    "launchDate": {
+      "source": "jpl-horizons-object-data",
+      "method": "measured",
+      "citation": "Horizons -41: \"LAUNCH DATE: MARS ARRIVAL DATE: June 02, 2003\""
+    },
+    "launchVehicle": {
+      "value": "Soyuz-Fregat",
+      "source": "jpl-horizons-object-data",
+      "method": "measured",
+      "citation": "Horizons -41: \"launched on a Soyuz-Fregat launch vehicle from Baikonur, Kazakhstan\""
+    },
+    "launchSite": {
+      "value": "Baikonur, Kazakhstan",
+      "source": "jpl-horizons-object-data",
+      "method": "measured",
+      "citation": "Horizons -41: \"launched on a Soyuz-Fregat launch vehicle from Baikonur, Kazakhstan\""
+    },
+    "massKg": {
+      "value": 1223,
+      "source": "jpl-horizons-object-data",
+      "method": "measured",
+      "citation": "Horizons -41: \"Total launch mass = 1223 kg\""
+    }
+  },
+  "satelliteOf": [
+    {
+      "body": "mars",
+      "from": "2003-12-26T00:00:00Z",
+      "to": "2032-12-31T00:00:00Z"
+    }
+  ],
+  "coverage": {
+    "temporal": {
+      "interval": [
+        [
+          "2003-06-03T00:00:00Z",
+          "2032-12-31T00:00:00Z"
+        ]
+      ]
+    }
+  }
+}

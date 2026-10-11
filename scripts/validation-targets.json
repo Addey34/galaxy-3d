@@ -242,6 +242,14 @@
       "command": "-91",
       "expect": "hera"
     },
+    "mars-express": {
+      "command": "-41",
+      "expect": "mars express"
+    },
+    "exomars-tgo": {
+      "command": "-143",
+      "expect": "exomars16 tgo"
+    },
     "oumuamua": {
       "command": "1I",
       "expect": "oumuamua"

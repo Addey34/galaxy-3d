@@ -1882,10 +1882,69 @@ manœuvre toutes les quelques heures.
   fichiers permanents, annonçaient 3 882 octets par jour simulé, une demande qui n'existe à aucune
   date. `playbackBudget.test.ts` compte désormais ce que l'application compte
   (`budgetGrids(date)`), à la date la plus chère : 92 fichiers le 2016-09-10, 1 578 octets par
-  jour simulé, 4,61 Mbit/s à la vitesse maximale. Les détails suivent la règle des survols.
+  jour simulé, 4,61 Mbit/s à la vitesse maximale [SUPERSEDED le même jour : 2 238 octets et
+  6,54 Mbit/s au 2020-08-16 depuis Mars Express et ExoMars TGO, cf. le paragraphe suivant]. Les
+  détails suivent la règle des survols.
 - **L'outil** : `pnpm ephemeris:flybys --write`, puis `pnpm ephemeris:generate --flybys`. Garde :
   `src/config/flybyAccuracy.test.ts` (toutes les références de chaque phase, et deux
   falsifications permanentes : sans son détail, le prélèvement sort de la borne).
+
+**Mars Express et ExoMars TGO autour de Mars (2026-10-11, ligne 45.11, pas 2).** Les deux
+orbiteurs de l'ESA, chacun avec sa fiche, son fichier au pas d'un jour (bornes LUES dans Horizons :
+Mars Express du 2003-06-03 au 2032-12-31, reconstruite jusqu'au 2026-09-23 puis prédite ; TGO du
+2016-03-15 au 2039-01-03, ajustée jusqu'au 2025-06-21 puis trajectoire de référence), sa phase
+`satelliteOf` dérivée (Mars Express dès le 2003-12-26, TGO dès le 2016-10-20), ses instruments
+(registre du PDS, espace `urn:esa:psa` : 7 et 4) et ses faits de lancement, lus dans l'en-tête
+Horizons parce que le Master Catalog du NSSDCA sert sa page d'erreur pour 2003-022A et 2016-017A
+(Juno témoin lisible). Autour de Mars, le fichier d'un jour les plaçait à 60 448 km (Mars Express)
+et 73 484 km (TGO) de leur vraie position relative, c'est-à-dire n'importe où.
+
+- **La recherche de Juno ne suffisait pas.** Elle lit au plus quatre épisodes de poussée ; ces
+  deux phases en portent des dizaines (maintien d'orbite sur 29 et 22 ans), et aucun pas jusqu'à
+  3 h ne tenait. L'outil retombe alors sur la méthode des petits corps (`planAroundManoeuvres`) :
+  tirage au pas de 10 min de TOUTE la phase (en tranches de 40 000 lignes, une réponse d'Horizons
+  n'en porte pas plus), poussées lues dans les résidus SOUS LA DYNAMIQUE DU SERVICE, puis le pas
+  le plus grossier qui tient, et des détails là où ça casse. Juno et Cassini ne passent pas par
+  là : leur plan est inchangé, octet pour octet.
+- **Le J2 entre dans la détection.** À 400 km de Mars, le résidu à deux corps sur 10 min est de
+  1,4 km en médiane (TGO, 2020-06) et noierait toute poussée ; avec le J2, 0,15 km en médiane et
+  0,50 km au 99ᵉ centile, le reste étant les harmoniques au-delà de J2. Seuil : 2 km sur 10 min
+  (`PLANET_MANOEUVRE_THRESHOLD_KM`), 0,2 km sur 1 min dans un détail. Mars Express : 30 poussées
+  lues, fond de 1,9 m en médiane, dont 28 publiées : une paire tombe dans un même intervalle de
+  6 h, où le service ne propage qu'un seul saut, et n'est donc pas déclarée ; la simulation de
+  la phase entière tient la borne sans elle ; TGO : 20
+  lues et publiées, fond de 144 m. Une poussée sous le seuil écarte la
+  sonde de moins que la borne sur un pas.
+- **Le pas, mesuré d'abord sur deux semaines calmes** : Mars Express tient la moitié de la borne
+  dès 6 h (0,07 %), TGO à 3 h (0,28 %). Le plan : Mars Express au pas de 6 h (2 035 248 octets)
+  et UN détail au pas de 5 min sur sa mise en orbite (2003-12-25) ; TGO au pas de 3 h
+  (3 114 864 octets) et CINQ détails : sa mise en orbite (2016-10-19, une poussée continue de
+  141 minutes, d'où une poussée par minute au pas d'une minute, 6,9 m au pire), trois journées de
+  mars et avril 2018, et le 2025-06-21 à 15 h 14, l'instant exact où Horizons passe de la
+  trajectoire ajustée à la trajectoire de référence : un raccord de la SOURCE, pris comme une
+  poussée. Au pire, 14,7 km (0,317 %) et 22,9 km (0,475 %) de la distance à Mars.
+- **Deux défauts de l'outil trouvés en chemin.** D'abord, une phase qui court jusqu'à la FIN de
+  son fichier posait son dernier nœud là où tombait la grille de son début : à 19 h pour Mars
+  Express, cinq heures avant la fin, que le fichier d'un jour servait à 30 504 km près, à TOUS
+  les pas candidats (le même pire, à la même minute, était la signature). Le début est désormais
+  reculé sur la grille de 12 h qui aboutit à la fin du fichier, dans ce seul chemin. Ensuite, un
+  `--write` rejoué après la livraison de détails les retirait du plan : le service de la
+  simulation charge les fichiers LIVRÉS, prend le plus fin qui couvre une date, et les détails
+  livrés masquaient ainsi les défauts du pas grossier simulé, qui « tenait » seul. Les détails
+  livrés d'une phase sont désormais écartés pendant qu'on la replanifie ; le plan rejoué est
+  identique au plan livré, segments compris (seuls bougent quelques vecteurs de référence, dont
+  l'un est par construction le pire instant SERVI aujourd'hui).
+- **Les références de la garde** : une phase en orbite garde tous ses périapses jusqu'à mille
+  (`MAX_ORBIT_PERIAPSES` ; Cassini en a 889, inchangée), puis un sur k : 29 ans de Mars Express en
+  compteraient quarante mille. 2 966 et 2 978 vecteurs, tous sous la borne dans
+  `flybyAccuracy.test.ts`.
+- **Le prix.** 6 090 192 octets livrés en tout pour les deux sondes, dont 5,15 Mo de phases.
+  Rien au démarrage : les fichiers se lisent par fenêtres (`Range`). En lecture accélérée, le
+  pic de la demande passe au 2020-08-16 (la phase d'OSIRIS-REx au pas de 3 h y croise les deux
+  orbiteurs) : 2 238 octets par jour simulé au lieu de 1 578, **6,54 Mbit/s** à la vitesse
+  maximale au lieu de 4,61, et un lien à 2 Mbit/s plafonne la vitesse à 30,0 % du maximum au lieu
+  de 42,6 % (`playbackBudget.test.ts`). C'est le coût mesuré de deux sondes placées à 0,5 % près
+  sur des orbites de 2 et 7 heures.
 
 **Pourquoi un survol reste héliocentrique.** La règle des lunes étire √d : à la frontière de la
 sphère de Hill de Jupiter elle poserait l'objet à 35 × 3,43 × √0,355 ≈ 49 unités de la planète,

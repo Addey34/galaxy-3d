@@ -1,5 +1,5 @@
 {
- "generatedAt": "2026-10-11T05:04:51.770Z",
+ "generatedAt": "2026-10-11T14:15:46.035Z",
  "samplesPerCase": 48,
  "spk": {
   "kernel": true,
@@ -17588,10 +17588,10 @@
    "rejected": 0,
    "sources": {},
    "km": {
-    "mean": 2971,
-    "median": 1.785,
-    "p95": 5130,
-    "max": 93750
+    "mean": 2.611,
+    "median": 1.81,
+    "p95": 7.189,
+    "max": 9.667
    },
    "radii": null
   },
@@ -17600,7 +17600,7 @@
    "provider": "horizons-binary",
    "windowKind": "binary",
    "windowFrom": "2011-08-08",
-   "windowTo": "2028-09-28",
+   "windowTo": "2028-08-31",
    "windowClipped": false,
    "target": "-61",
    "relative": false,
@@ -17610,10 +17610,10 @@
    "rejected": 0,
    "sources": {},
    "km": {
-    "mean": 1057,
-    "median": 0.1239,
-    "p95": 689.5,
-    "max": 47700
+    "mean": 37.18,
+    "median": 38.18,
+    "p95": 89.23,
+    "max": 106.2
    },
    "radii": null
   },
@@ -17632,10 +17632,10 @@
    "rejected": 0,
    "sources": {},
    "km": {
-    "mean": 2.881,
-    "median": 0.2315,
+    "mean": 2.048,
+    "median": 0.1113,
     "p95": 20.31,
-    "max": 27.04
+    "max": 23.56
    },
    "radii": null
   },
@@ -17654,7 +17654,7 @@
    "rejected": 0,
    "sources": {},
    "km": {
-    "mean": 2.036,
+    "mean": 2.015,
     "median": 0.4095,
     "p95": 9.443,
     "max": 21
@@ -17676,8 +17676,8 @@
    "rejected": 0,
    "sources": {},
    "km": {
-    "mean": 25.49,
-    "median": 2.168,
+    "mean": 25.25,
+    "median": 2.162,
     "p95": 158.4,
     "max": 486.7
    },
@@ -17834,6 +17834,50 @@
     "median": 0.001392,
     "p95": 0.06416,
     "max": 0.0989
+   },
+   "radii": null
+  },
+  {
+   "body": "mars-express",
+   "provider": "horizons-binary",
+   "windowKind": "binary",
+   "windowFrom": "2003-06-04",
+   "windowTo": "2032-12-30",
+   "windowClipped": false,
+   "target": "-41",
+   "relative": false,
+   "radiusKm": null,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 4.303,
+    "median": 4.028,
+    "p95": 9.756,
+    "max": 11.05
+   },
+   "radii": null
+  },
+  {
+   "body": "exomars-tgo",
+   "provider": "horizons-binary",
+   "windowKind": "binary",
+   "windowFrom": "2016-03-16",
+   "windowTo": "2039-01-02",
+   "windowClipped": false,
+   "target": "-143",
+   "relative": false,
+   "radiusKm": null,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 102.6,
+    "median": 3.936,
+    "p95": 9.568,
+    "max": 4711
    },
    "radii": null
   },

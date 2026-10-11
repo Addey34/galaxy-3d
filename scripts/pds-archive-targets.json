@@ -18,7 +18,7 @@
     "numérique il doit ÊTRE ÉGAL au `identifiers.naif` de la fiche — ce qui est exercé sur donnée",
     "réelle par Hayabusa2 (-37) et OSIRIS-REx (-64), et non sur un cas hypothétique.",
     "",
-    "QUATRE SONDES SUR QUATORZE N'Y SONT PAS, et c'est écrit plutôt que comblé (règle de parité) : voir",
+    "QUATRE SONDES SUR SEIZE N'Y SONT PAS, et c'est écrit plutôt que comblé (règle de parité) : voir",
     "leur `absent` ci-dessous, mesuré avec un témoin le 2026-09-30."
   ],
   "spacecraft": {
@@ -64,6 +64,12 @@
       "instrumentHosts": ["urn:esa:psa:context:instrument_host:spacecraft.juice"],
       "hostNaifId": -28000,
       "hostNaifIdReason": "Le PDS publie -28000 comme `naif_host_id` de ce porteur, et la fiche déclare -28. Les deux désignent la MÊME sonde : le noyau de repères de l'ESA (https://spiftp.esac.esa.int/data/SPICE/JUICE/kernels/fk/juice_v46.tf, lu le 2026-10-09) associe -28 aux noms « JUICE » et « JUPITER ICY MOONS EXPLORER », et -28000 à « JUICE_SC », la structure de la sonde (repère JUICE_SPACECRAFT). Horizons résout -28 en « JUICE (spacecraft) » et ne connaît pas -28000 (« No such record »)."
+    },
+    "mars-express": {
+      "instrumentHosts": ["urn:esa:psa:context:instrument_host:spacecraft.mex"]
+    },
+    "exomars-tgo": {
+      "instrumentHosts": ["urn:esa:psa:context:instrument_host:spacecraft.tgo"]
     },
     "solar-orbiter": {
       "absent": "Le registre de contexte du PDS ne déclare NI investigation NI porteur d'instruments pour cette mission. Mesuré le 2026-10-09 avec un témoin : aucune des 113 investigations de type « Mission » (réponse lue le 2026-09-30) ne la nomme, ni sur le nom ni sur l'identifiant, et les identifiants plausibles `spacecraft.solo`, `spacecraft.so`, `spacecraft.solarorbiter` et `spacecraft.solar_orbiter` de l'espace `urn:esa:psa` rendent HTTP 404 alors que `spacecraft.juice`, du même espace, rend 200. Comme Parker Solar Probe, c'est une mission d'héliophysique, que le PDS planétaire n'archive pas."

@@ -73,6 +73,18 @@
    "investigations": 1,
    "instruments": 16,
    "bytes": 2370
+  },
+  "mars-express": {
+   "hosts": 1,
+   "investigations": 1,
+   "instruments": 7,
+   "bytes": 1571
+  },
+  "exomars-tgo": {
+   "hosts": 1,
+   "investigations": 1,
+   "instruments": 4,
+   "bytes": 747
   }
  },
  "absent": {
