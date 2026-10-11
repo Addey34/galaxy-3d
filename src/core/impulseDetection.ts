@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { propagateTwoBody } from './twoBodyPropagation';
+import { propagateOblate, type Oblateness } from './oblatePropagation';
 
 /**
  * LES MANŒUVRES D'UNE SONDE, LUES DANS SA PROPRE TRAJECTOIRE (2026-10-06).
@@ -43,7 +44,9 @@ const KM_PER_AU = 149_597_870.7;
  */
 export function twoBodyResiduals(
   rows: readonly StateRow[],
-  mu: number
+  mu: number,
+  /** L'aplatissement de l'attracteur : sans lui, le fond au ras d'une géante noie tout. */
+  oblateness?: Oblateness
 ): number[] {
   const r = new THREE.Vector3();
   const v = new THREE.Vector3();
@@ -54,7 +57,10 @@ export function twoBodyResiduals(
     r.set(x, y, z);
     v.set(vx, vy, vz);
     const next = rows[i + 1].state;
-    const p = propagateTwoBody(r, v, rows[i + 1].jd - rows[i].jd, mu, out);
+    const dt = rows[i + 1].jd - rows[i].jd;
+    const p = oblateness
+      ? propagateOblate(r, v, dt, mu, oblateness, out)
+      : propagateTwoBody(r, v, dt, mu, out);
     if (!p) throw new Error(`propagation impossible à l'état ${i}`);
     residuals.push(
       Math.hypot(p.x - next[0], p.y - next[1], p.z - next[2]) * KM_PER_AU

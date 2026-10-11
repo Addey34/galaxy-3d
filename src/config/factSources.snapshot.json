@@ -58,6 +58,7 @@
         "geometricAlbedo": 0.142,
         "semiMajorAxisAU": 0.38709893,
         "moonCount": 0,
+        "j2e6": 50.3,
         "surfacePressure": {
           "raw": "<~5 x 10-15 bar (0.005 picobar)",
           "bar": 5.000000000000001e-15,
@@ -79,6 +80,7 @@
         "geometricAlbedo": 0.689,
         "semiMajorAxisAU": 0.72333199,
         "moonCount": 0,
+        "j2e6": 4.458,
         "surfacePressure": {
           "raw": "92 bars",
           "bar": 92,
@@ -100,6 +102,7 @@
         "geometricAlbedo": 0.434,
         "semiMajorAxisAU": 1.00000011,
         "moonCount": 1,
+        "j2e6": 1082.63,
         "surfacePressure": {
           "raw": "1014 mb",
           "bar": 1.014,
@@ -121,6 +124,7 @@
         "geometricAlbedo": 0.17,
         "semiMajorAxisAU": 1.52366231,
         "moonCount": 2,
+        "j2e6": 1960.45,
         "surfacePressure": {
           "raw": "6.36 mb at mean radius (variable from 4.0 to 8.7 mb depending on season)",
           "bar": 0.00636,
@@ -142,6 +146,7 @@
         "geometricAlbedo": 0.538,
         "semiMajorAxisAU": 5.20336301,
         "moonCount": 95,
+        "j2e6": 14736,
         "surfacePressure": {
           "raw": ">>1000 bars",
           "bar": 1000,
@@ -163,6 +168,7 @@
         "geometricAlbedo": 0.499,
         "semiMajorAxisAU": 9.53707032,
         "moonCount": 274,
+        "j2e6": 16298,
         "surfacePressure": {
           "raw": ">>1000 bars",
           "bar": 1000,
@@ -184,6 +190,7 @@
         "geometricAlbedo": 0.488,
         "semiMajorAxisAU": 19.19126393,
         "moonCount": 28,
+        "j2e6": 3343.43,
         "surfacePressure": {
           "raw": ">>1000 bars",
           "bar": 1000,
@@ -205,6 +212,7 @@
         "geometricAlbedo": 0.442,
         "semiMajorAxisAU": 30.06896348,
         "moonCount": 16,
+        "j2e6": 3411,
         "surfacePressure": {
           "raw": ">>1000 bars",
           "bar": 1000,

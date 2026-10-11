@@ -7,9 +7,10 @@
  * reste continu et suit la trajectoire numérique Horizons sans requête réseau par frame.
  */
 import * as THREE from 'three';
-import { eclipticToScene } from './frames';
+import { eclipticToScene, OBLIQUITY_RAD } from './frames';
 import { jdTdbFromDate } from './timeScale';
 import { propagateTwoBody } from './twoBodyPropagation';
+import { propagateOblate, type Oblateness } from './oblatePropagation';
 import type { BodyDynamics } from '@/config/gravity';
 import type { PreciseEphemerisProvider } from './PreciseEphemerisProvider';
 import { mapWithByteBudget, mapWithConcurrency } from '@/utils/concurrency';
@@ -330,6 +331,39 @@ export interface HorizonsBodyManifest {
    * et l'inventaire les comptent à part, parce qu'ils sont des dizaines.
    */
   flyby?: true;
+  /**
+   * L'aplatissement de ce corps (J2, rayon de référence, pôle IAU), LU au relevé des faits par
+   * `pnpm ephemeris:oblateness` (ligne 45.10, pas 2). Un segment relatif à ce corps se propage
+   * alors avec le terme J2 (`core/oblatePropagation.ts`).
+   */
+  oblateness?: {
+    j2: number;
+    radiusKm: number;
+    poleRaDeg: number;
+    poleDecDeg: number;
+  };
+}
+
+const KM_PER_AU = 149_597_870.7;
+
+/** L'aplatissement publié au manifeste, dans les unités et le repère des échantillons. */
+export function oblatenessOf(
+  published: NonNullable<HorizonsBodyManifest['oblateness']>
+): Oblateness {
+  const ra = (published.poleRaDeg * Math.PI) / 180;
+  const dec = (published.poleDecDeg * Math.PI) / 180;
+  // Équatorial J2000 -> écliptique J2000 : rotation de l'obliquité autour de x.
+  const y = Math.cos(dec) * Math.sin(ra);
+  const z = Math.sin(dec);
+  return {
+    j2: published.j2,
+    radiusAU: published.radiusKm / KM_PER_AU,
+    pole: {
+      x: Math.cos(dec) * Math.cos(ra),
+      y: Math.cos(OBLIQUITY_RAD) * y + Math.sin(OBLIQUITY_RAD) * z,
+      z: -Math.sin(OBLIQUITY_RAD) * y + Math.cos(OBLIQUITY_RAD) * z,
+    },
+  };
 }
 
 /**
@@ -347,7 +381,11 @@ export function withPublishedReflex(
     const attractorMu = bodyMu[entry.center]?.attractorMu;
     if (attractorMu === undefined || bodyMu[name]) continue;
     merged ??= { ...bodyMu };
-    merged[name] = { mu: attractorMu };
+    const flat = entries.find(([n]) => n === entry.center)?.[1].oblateness;
+    merged[name] = {
+      mu: attractorMu,
+      ...(flat ? { oblateness: oblatenessOf(flat) } : {}),
+    };
   }
   for (const [name, entry] of entries) {
     if (!entry.reflex || bodyMu[name]?.reflex) continue;
@@ -1542,13 +1580,13 @@ export class HorizonsEphemerisService implements PreciseEphemerisProvider {
     _stateR.set(values[a], values[a + 1], values[a + 2]);
     _stateV.set(values[a + 3], values[a + 4], values[a + 5]);
 
-    const forward = propagateTwoBody(
-      _stateR,
-      _stateV,
-      u * stepDays * timeScale,
-      mu,
-      _forward
-    );
+    // Autour d'une planète qui publie son aplatissement, le terme J2 (ligne 45.10, pas 2).
+    const flat = dynamics.oblateness;
+    const propagate = (dt: number, out: THREE.Vector3): THREE.Vector3 | null =>
+      flat
+        ? propagateOblate(_stateR, _stateV, dt, mu, flat, out)
+        : propagateTwoBody(_stateR, _stateV, dt, mu, out);
+    const forward = propagate(u * stepDays * timeScale, _forward);
     if (!forward) return null;
     // Avant le saut, seule l'ancre d'avant décrit l'orbite suivie ; après, seule celle d'après.
     // Le raccord au saut est continu en position, au plancher de propagation près.
@@ -1557,13 +1595,7 @@ export class HorizonsEphemerisService implements PreciseEphemerisProvider {
 
     _stateR.set(values[b], values[b + 1], values[b + 2]);
     _stateV.set(values[b + 3], values[b + 4], values[b + 5]);
-    const backward = propagateTwoBody(
-      _stateR,
-      _stateV,
-      -(1 - u) * stepDays * timeScale,
-      mu,
-      _backward
-    );
+    const backward = propagate(-(1 - u) * stepDays * timeScale, _backward);
     if (!backward) return null;
     if (impulseU !== null)
       return eclipticToScene(backward.x, backward.y, backward.z);

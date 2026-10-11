@@ -271,10 +271,16 @@ async function nssdca() {
     // désormais (`core/displayAlbedo.ts`). Libellé de la table « Bulk parameters ».
     ['geometricAlbedo', 'Geometric albedo'],
   ];
+  // LE J2 (2026-10-11, ligne 45.10) : l'aplatissement du champ de gravité, qui gouverne une
+  // sonde en orbite basse (Juno à 4 000 km des nuages de Jupiter). Il n'est pas affiché : le
+  // manifeste des éphémérides le publie pour la propagation (`pnpm ephemeris:oblateness`),
+  // avec le rayon équatorial de la même fiche, son rayon de référence.
+  const j2 = ['j2e6', 'J2 (x 10-6)'];
   const terrestrial = [
     ...common('Equatorial radius (km)', 'Surface gravity (mean) (m/s2)'),
     ['semiMajorAxisAU', 'Semimajor axis (AU)'],
     ['moonCount', 'Number of natural satellites'],
+    j2,
   ];
   const giant = [
     ...common(
@@ -283,6 +289,7 @@ async function nssdca() {
     ),
     ['semiMajorAxisAU', 'Semimajor axis (AU)'],
     ['moonCount', 'Number of natural satellites'],
+    j2,
   ];
   await planet('mercury', 'mercuryfact.html', terrestrial);
   await planet('venus', 'venusfact.html', terrestrial);
