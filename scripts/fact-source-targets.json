@@ -91,10 +91,12 @@
     }
   },
   "horizonsObjectData": {
-    "$comment": "Sondes que le Master Catalog du NSSDCA ne sert pas (2026-10-09 : Solar Orbiter et JUICE rendent sa page d'erreur générique, Hera « ORA-01403: no data found ») : leur lancement se lit dans l'en-tête de l'objet Horizons. `expect` doit figurer, avec la commande, sur la première ligne de cet en-tête.",
+    "$comment": "Sondes que le Master Catalog du NSSDCA ne sert pas (2026-10-09 : Solar Orbiter et JUICE rendent sa page d'erreur générique, Hera « ORA-01403: no data found » ; 2026-10-11 : Mars Express 2003-022A et ExoMars TGO 2016-017A rendent la page d'erreur, Juno témoin lisible) : leur lancement se lit dans l'en-tête de l'objet Horizons. `expect` doit figurer, avec la commande, sur la première ligne de cet en-tête.",
     "solar-orbiter": { "command": "-144", "expect": "Solar Orbiter" },
     "juice": { "command": "-28", "expect": "JUICE" },
-    "hera": { "command": "-91", "expect": "Hera" }
+    "hera": { "command": "-91", "expect": "Hera" },
+    "mars-express": { "command": "-41", "expect": "Mars Express" },
+    "exomars-tgo": { "command": "-143", "expect": "ExoMars16 TGO" }
   },
   "sbdbInterstellar": {
     "oumuamua": {

@@ -79,7 +79,7 @@ const peak = (() => {
 })();
 
 describe('bytesPerSimulatedDay', () => {
-  it('compte la demande au pic : 4,61 Mbit/s à la vitesse maximale', () => {
+  it('compte la demande au pic : 6,54 Mbit/s à la vitesse maximale', () => {
     const perDay = peak.perDay;
     // 64 corps au 2026-09-24 (800,2 o par jour simulé, 2,34 Mbit/s, la mesure du plan) ; 87
     // depuis les 23 cibles de missions du 2026-10-04, 89 avec leurs deux satellites le même
@@ -97,17 +97,21 @@ describe('bytesPerSimulatedDay', () => {
     // Depuis les phases autour des petits corps (même jour, 110 fichiers), le compte est celui
     // du PIC (cf. `peak`) : 92 fichiers couvrent ensemble le 2016-09-10 (lancement d'OSIRIS-REx,
     // Juno et Cassini en orbite, Rosetta à 67P), 1 578 octets par jour simulé.
-    expect(grids.length).toBe(110);
-    expect(peak.grids.length).toBe(92);
+    // Mars Express et ExoMars TGO (2026-10-11, ligne 45.11) : 114 fichiers, et le pic passe au
+    // 2020-08-16, 96 fichiers ensemble (la phase d'OSIRIS-REx au pas de 3 h y croise Mars Express
+    // au pas de 6 h et TGO au pas de 3 h, 48 × 4 + 48 × 8 octets par jour), 2 238 octets par
+    // jour simulé, 6,54 Mbit/s à la vitesse maximale.
+    expect(grids.length).toBe(114);
+    expect(peak.grids.length).toBe(96);
     expect(
       new Date((peak.startJdTdb - 2_440_587.5) * 86_400_000)
         .toISOString()
         .slice(0, 10)
-    ).toBe('2016-09-10');
-    expect(perDay).toBeCloseTo(1578.0, 1);
+    ).toBe('2020-08-16');
+    expect(perDay).toBeCloseTo(2238.0, 1);
     const atMaxSpeed = (perDay * MAX_SIMULATION_SCALE) / SECONDS_PER_DAY;
-    expect(atMaxSpeed).toBeCloseTo(576_364.5, 0);
-    expect((atMaxSpeed * 8) / 1e6).toBeCloseTo(4.61, 2);
+    expect(atMaxSpeed).toBeCloseTo(817_429.5, 0);
+    expect((atMaxSpeed * 8) / 1e6).toBeCloseTo(6.54, 2);
   });
 
   /**
@@ -229,8 +233,10 @@ describe('sustainableTimeScale', () => {
     );
     expect(cap).toBe(expected);
     // 40,1 % depuis Juno et Cassini en orbite (2026-10-11), 48,5 % avant ; 42,6 % au PIC de
-    // la demande (même jour, cf. `peak`), qui remplace le compte de tous les fichiers.
-    expect(cap! / MAX_SIMULATION_SCALE).toBeCloseTo(0.426, 2);
+    // la demande (même jour, cf. `peak`), qui remplace le compte de tous les fichiers ; 30,0 %
+    // depuis Mars Express et ExoMars TGO en orbite (2026-10-11), le pic passant de 1 578 à 2 238
+    // octets par jour simulé.
+    expect(cap! / MAX_SIMULATION_SCALE).toBeCloseTo(0.3, 2);
   });
 
   it('un lien deux fois plus lent plafonne deux fois plus bas, à peu près', () => {

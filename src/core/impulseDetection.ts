@@ -88,9 +88,14 @@ export function twoBodyResiduals(
 export function detectImpulses(
   rows: readonly StateRow[],
   mu: number,
-  thresholdKm: number
+  thresholdKm: number,
+  /**
+   * L'aplatissement de l'attracteur. Au ras de Mars, sans lui, le fond sur 10 min est de 1,4 km
+   * en médiane (ExoMars TGO, 2020-06) et noie toute poussée ; avec lui, 0,15 km (2026-10-11).
+   */
+  oblateness?: Oblateness
 ): ImpulseDetection {
-  const residuals = twoBodyResiduals(rows, mu);
+  const residuals = twoBodyResiduals(rows, mu, oblateness);
   const inEpisode = new Array<boolean>(residuals.length).fill(false);
   const impulses: number[] = [];
   let weakest: number | null = null;

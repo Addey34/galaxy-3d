@@ -177,9 +177,11 @@ describe('le débit mesuré par le service (phase 17D)', () => {
     // segments de survol (2026-10-11), dont aucun ne couvre cette date : toujours 93. 163 avec
     // Juno et Cassini en orbite (même jour) : le segment de Juno couvre cette date, 94 demandés.
     // 216 avec les 12 phases autour des petits corps et leurs 41 détails (même jour), dont aucun
-    // ne couvre cette date : toujours 94.
-    expect(Object.keys(horizonsManifest.bodies).length).toBe(216);
-    expect(today.length).toBe(94);
+    // ne couvre cette date : toujours 94. 228 avec Mars Express et ExoMars TGO (même jour, deux
+    // fichiers, deux départs de la Terre, deux phases autour de Mars et six détails), dont les
+    // deux fichiers et les deux phases couvrent cette date : 98 demandés.
+    expect(Object.keys(horizonsManifest.bodies).length).toBe(228);
+    expect(today.length).toBe(98);
     expect(then.length).toBeLessThan(today.length);
     expect(bytesPerSimulatedDay(then)).toBeLessThan(
       bytesPerSimulatedDay(today)

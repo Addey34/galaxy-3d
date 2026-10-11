@@ -984,7 +984,8 @@ function sourcesPage(input: SourcesInput, locale: DocLocale): DocPage {
       `${isoFromJd(e.startJdTdb)} → ${isoFromJd(e.startJdTdb + (e.sampleCount - 1) * e.stepDays)}`,
     ]);
   // Les segments de DÉTAIL (ligne 45.10, 2026-10-11) : quelques heures au pas de quelques
-  // minutes autour d'un petit corps, là où des manœuvres rapprochées cassent la phase.
+  // minutes, là où la trajectoire change trop vite pour le pas de la phase (des manœuvres
+  // rapprochées près d'un petit corps ; une mise en orbite autour de Mars, ligne 45.11).
   const detailRows = Object.values(manifest.bodies)
     .filter((e) => e.detail)
     .sort((a, b) => a.startJdTdb - b.startJdTdb)
@@ -1096,17 +1097,17 @@ function sourcesPage(input: SourcesInput, locale: DocLocale): DocPage {
           : '') +
         (detailRows.length > 0
           ? `<p>${L({
-              en: `Near a small body, where manoeuvres follow each other within hours, a short file relative to the body as it is drawn takes over from the phase around it for those hours (${detailRows.length} files), every few minutes, under the same bound.`,
-              fr: `Près d’un petit corps, là où les manœuvres se suivent à quelques heures, un fichier court relatif au corps tel qu’il est dessiné prend le relais de la phase qui l’entoure pour ces heures-là (${detailRows.length} fichiers), toutes les quelques minutes, sous la même borne.`,
-              es: `Cerca de un cuerpo pequeño, donde las maniobras se suceden en pocas horas, un archivo corto relativo al cuerpo tal como se dibuja toma el relevo de la fase que lo rodea durante esas horas (${detailRows.length} archivos), cada pocos minutos, bajo el mismo límite.`,
-              'pt-BR': `Perto de um corpo pequeno, onde as manobras se sucedem em poucas horas, um arquivo curto relativo ao corpo tal como é desenhado assume no lugar da fase que o envolve durante essas horas (${detailRows.length} arquivos), a cada poucos minutos, sob o mesmo limite.`,
+              en: `Where the trajectory changes within hours (manoeuvres near a small body, an orbit insertion around a planet), a short file relative to the body as it is drawn takes over from the phase around it for those hours (${detailRows.length} files), every few minutes, under the same bound.`,
+              fr: `Là où la trajectoire change en quelques heures (des manœuvres près d’un petit corps, une mise en orbite autour d’une planète), un fichier court relatif au corps tel qu’il est dessiné prend le relais de la phase qui l’entoure pour ces heures-là (${detailRows.length} fichiers), toutes les quelques minutes, sous la même borne.`,
+              es: `Donde la trayectoria cambia en pocas horas (maniobras cerca de un cuerpo pequeño, una inserción en órbita alrededor de un planeta), un archivo corto relativo al cuerpo tal como se dibuja toma el relevo de la fase que lo rodea durante esas horas (${detailRows.length} archivos), cada pocos minutos, bajo el mismo límite.`,
+              'pt-BR': `Onde a trajetória muda em poucas horas (manobras perto de um corpo pequeno, uma inserção em órbita ao redor de um planeta), um arquivo curto relativo ao corpo tal como é desenhado assume no lugar da fase que o envolve durante essas horas (${detailRows.length} arquivos), a cada poucos minutos, sob o mesmo limite.`,
             })}</p>` +
             docTable(
               L({
-                en: 'Detail segments near small bodies',
-                fr: 'Segments de détail près des petits corps',
-                es: 'Segmentos de detalle cerca de cuerpos pequeños',
-                'pt-BR': 'Segmentos de detalhe perto de corpos pequenos',
+                en: 'Detail segments',
+                fr: 'Segments de détail',
+                es: 'Segmentos de detalle',
+                'pt-BR': 'Segmentos de detalhe',
               }),
               [
                 L({

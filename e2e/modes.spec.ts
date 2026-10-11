@@ -153,8 +153,9 @@ test('settings column header reflects mixed row state and bulk-toggles all rows'
   await page.locator('#settings-trigger').click();
 
   const bodyToggle = page.locator('#bodies-visible');
+  // Le NOM exact : « Mars » seul désigne aussi Mars Express et ExoMars TGO (2026-10-11).
   const marsRow = page.locator('#settings-table tr.oo-tr', {
-    hasText: 'Mars',
+    has: page.locator('.oo-name', { hasText: /^Mars$/ }),
   });
   const marsBodyCheckbox = marsRow.locator('td:nth-child(3) .oo-checkbox');
   const planets = page.locator(

@@ -305,20 +305,23 @@ const T = {
 
 /** Un pas en minutes, dit dans l'unité qui l'écrit le plus simplement. */
 function stepWords(minutes: number, locale: DocLocale): string {
+  // Une heure s'écrit sans chiffre : « toutes les 1 heures » n'est une phrase dans aucune langue.
   const words: DocText =
-    minutes < 60
-      ? {
-          en: `${minutes} minutes`,
-          fr: `${minutes} minutes`,
-          es: `${minutes} minutos`,
-          'pt-BR': `${minutes} minutos`,
-        }
-      : {
-          en: `${minutes / 60} hours`,
-          fr: `${minutes / 60} heures`,
-          es: `${minutes / 60} horas`,
-          'pt-BR': `${minutes / 60} horas`,
-        };
+    minutes === 60
+      ? { en: 'hour', fr: 'heures', es: 'hora', 'pt-BR': 'hora' }
+      : minutes < 60
+        ? {
+            en: `${minutes} minutes`,
+            fr: `${minutes} minutes`,
+            es: `${minutes} minutos`,
+            'pt-BR': `${minutes} minutos`,
+          }
+        : {
+            en: `${minutes / 60} hours`,
+            fr: `${minutes / 60} heures`,
+            es: `${minutes / 60} horas`,
+            'pt-BR': `${minutes / 60} horas`,
+          };
   return words[locale];
 }
 
@@ -550,7 +553,10 @@ function methodologyPage(input: MethodologyInput, locale: DocLocale): DocPage {
     ([, e]) =>
       e.segmentOf !== undefined && !e.flyby && !e.detail && aroundSmallBody(e)
   );
-  const detailSegments = allBinaries.filter(([, e]) => e.detail);
+  // Les détails d'une phase autour d'une PLANÈTE (Mars Express, ExoMars TGO) sont dits avec elle.
+  const detailSegments = allBinaries.filter(
+    ([, e]) => e.detail && aroundSmallBody(e)
+  );
   const flybySegments = allBinaries.filter(([, e]) => e.flyby);
   const flybyText = flybySegmentText(flybySegments, manifest.bodies, locale);
   const smallBodyText = smallBodySegmentText(
@@ -567,12 +573,41 @@ function methodologyPage(input: MethodologyInput, locale: DocLocale): DocPage {
         const n = e.impulses?.length ?? 0;
         // L'aplatissement de la planète, quand le manifeste le publie (ligne 45.10, pas 2).
         const flat = manifest.bodies[e.center!]?.oblateness !== undefined;
-        return L({
-          en: ` While ${who} orbits ${around}, a second file takes over: its position relative to ${around}, every ${exact(e.stepDays, locale)} day, propagated around ${around}${flat ? ' (its gravity and its flattening, the J2 term)' : ''} between samples, with the ${n} manoeuvre${n === 1 ? '' : 's'} of that period read in a finer sampling of the trajectory and propagated from one side only.`,
-          fr: ` Pendant que ${who} tourne autour de ${around}, un second fichier prend la main : sa position relative à ${around}, tous les ${exact(e.stepDays, locale)} jour, propagée autour de ${around}${flat ? ' (sa gravité et son aplatissement, le terme J2)' : ''} entre deux échantillons, avec ${n === 1 ? 'la manœuvre' : `les ${n} manœuvres`} de cette période, lue${n === 1 ? '' : 's'} dans un échantillonnage plus fin de la trajectoire et propagée${n === 1 ? '' : 's'} d’un seul côté.`,
-          es: ` Mientras ${who} orbita ${around}, toma el relevo un segundo archivo: su posición relativa a ${around}, cada ${exact(e.stepDays, locale)} día, propagada alrededor de ${around}${flat ? ' (su gravedad y su achatamiento, el término J2)' : ''} entre dos muestras, con ${n === 1 ? 'la maniobra' : `las ${n} maniobras`} de ese periodo, leída${n === 1 ? '' : 's'} en un muestreo más fino de la trayectoria y propagada${n === 1 ? '' : 's'} desde un solo lado.`,
-          'pt-BR': ` Enquanto ${who} orbita ${around}, um segundo arquivo assume: a sua posição relativa a ${around}, a cada ${exact(e.stepDays, locale)} dia, propagada ao redor de ${around}${flat ? ' (a sua gravidade e o seu achatamento, o termo J2)' : ''} entre duas amostras, com ${n === 1 ? 'a manobra' : `as ${n} manobras`} desse período, lida${n === 1 ? '' : 's'} numa amostragem mais fina da trajetória e propagada${n === 1 ? '' : 's'} de um só lado.`,
-        });
+        // Le pas en mots (« 12 heures », « 3 heures ») : « 0,125 jour » ne se lit pas.
+        const step = (l: DocLocale): string =>
+          stepWords(Math.round(e.stepDays * 1440), l);
+        // Ses DÉTAILS : quelques heures au pas de quelques minutes, là où la trajectoire change
+        // trop vite pour son pas (une mise en orbite, des manœuvres rapprochées).
+        const own = allBinaries
+          .filter(
+            ([, d]) =>
+              d.detail && d.segmentOf === e.segmentOf && d.center === e.center
+          )
+          .map(([, d]) => Math.round(d.stepDays * 1440));
+        const k = own.length;
+        const range =
+          k === 0
+            ? ''
+            : Math.min(...own) === Math.max(...own)
+              ? `${Math.min(...own)}`
+              : `${Math.min(...own)} ${L({ en: 'to', fr: 'à', es: 'a', 'pt-BR': 'a' })} ${Math.max(...own)}`;
+        const detail =
+          k === 0
+            ? ''
+            : L({
+                en: ` Where the trajectory changes too fast for that step (the orbit insertion, for example), ${k === 1 ? 'a short file' : `${k} short files`}, at a step of ${range} minute${range === '1' ? '' : 's'}, take${k === 1 ? 's' : ''} over for a few hours.`,
+                fr: ` Là où la trajectoire change trop vite pour ce pas (la mise en orbite, par exemple), ${k === 1 ? 'un fichier court' : `${k} fichiers courts`}, au pas de ${range} minute${range === '1' ? '' : 's'}, ${k === 1 ? 'prend' : 'prennent'} la main pour quelques heures.`,
+                es: ` Donde la trayectoria cambia demasiado rápido para ese paso (la inserción en órbita, por ejemplo), ${k === 1 ? 'un archivo corto' : `${k} archivos cortos`}, con un paso de ${range} minuto${range === '1' ? '' : 's'}, toma${k === 1 ? '' : 'n'} el relevo durante unas horas.`,
+                'pt-BR': ` Onde a trajetória muda rápido demais para esse passo (a inserção em órbita, por exemplo), ${k === 1 ? 'um arquivo curto' : `${k} arquivos curtos`}, com um passo de ${range} minuto${range === '1' ? '' : 's'}, assume${k === 1 ? '' : 'm'} por algumas horas.`,
+              });
+        return (
+          L({
+            en: ` While ${who} orbits ${around}, a second file takes over: its position relative to ${around}, every ${step('en')}, propagated around ${around}${flat ? ' (its gravity and its flattening, the J2 term)' : ''} between samples, with the ${n} manoeuvre${n === 1 ? '' : 's'} of that period read in a finer sampling of the trajectory and propagated from one side only.`,
+            fr: ` Pendant ${/^[AEIOUÉaeiouéh]/.test(who) ? 'qu’' : 'que '}${who} tourne autour de ${around}, un second fichier prend la main : sa position relative à ${around}, toutes les ${step('fr')}, propagée autour de ${around}${flat ? ' (sa gravité et son aplatissement, le terme J2)' : ''} entre deux échantillons, avec ${n === 1 ? 'la manœuvre' : `les ${n} manœuvres`} de cette période, lue${n === 1 ? '' : 's'} dans un échantillonnage plus fin de la trajectoire et propagée${n === 1 ? '' : 's'} d’un seul côté.`,
+            es: ` Mientras ${who} orbita ${around}, toma el relevo un segundo archivo: su posición relativa a ${around}, cada ${step('es')}, propagada alrededor de ${around}${flat ? ' (su gravedad y su achatamiento, el término J2)' : ''} entre dos muestras, con ${n === 1 ? 'la maniobra' : `las ${n} maniobras`} de ese periodo, leída${n === 1 ? '' : 's'} en un muestreo más fino de la trayectoria y propagada${n === 1 ? '' : 's'} desde un solo lado.`,
+            'pt-BR': ` Enquanto ${who} orbita ${around}, um segundo arquivo assume: a sua posição relativa a ${around}, a cada ${step('pt-BR')}, propagada ao redor de ${around}${flat ? ' (a sua gravidade e o seu achatamento, o termo J2)' : ''} entre duas amostras, com ${n === 1 ? 'a manobra' : `as ${n} manobras`} desse período, lida${n === 1 ? '' : 's'} numa amostragem mais fina da trajetória e propagada${n === 1 ? '' : 's'} de um só lado.`,
+          }) + detail
+        );
       })
       .join('') +
     smallBodyText +

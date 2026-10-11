@@ -82,6 +82,13 @@
     "pt-BR": "Jupiter Icy Moons Explorer"
   },
   "hera": { "en": "Hera", "fr": "Hera", "es": "Hera", "pt-BR": "Hera" },
+  "mars-express": { "en": "Mars Express", "fr": "Mars Express", "es": "Mars Express", "pt-BR": "Mars Express" },
+  "exomars-tgo": {
+    "en": "ExoMars Trace Gas Orbiter",
+    "fr": "ExoMars Trace Gas Orbiter",
+    "es": "ExoMars Trace Gas Orbiter",
+    "pt-BR": "ExoMars Trace Gas Orbiter"
+  },
   "voyager1": { "en": "Voyager 1", "fr": "Voyager 1", "es": "Voyager 1", "pt-BR": "Voyager 1" },
   "voyager2": { "en": "Voyager 2", "fr": "Voyager 2", "es": "Voyager 2", "pt-BR": "Voyager 2" },
   "atlas": { "en": "3I/ATLAS", "fr": "3I/ATLAS", "es": "3I/ATLAS", "pt-BR": "3I/ATLAS" },

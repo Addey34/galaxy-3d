@@ -76,6 +76,8 @@ const ORBITAL_PHASE_DAYS = 60;
 const ORBITAL_STEPS_MINUTES = [720, 360, 240, 180];
 /** Vecteurs de référence gardés par rencontre pour la garde hors ligne. */
 const MAX_REFERENCES = 12;
+/** Périapses gardés au plus par phase EN ORBITE (cf. le choix des références). */
+const MAX_ORBIT_PERIAPSES = 1000;
 /** Marge de chaque côté d'une rencontre, en jours. */
 const MARGIN_DAYS = 1;
 /** Horizons plafonne une réponse vers 90 000 lignes ; on reste loin dessous. */
@@ -485,7 +487,76 @@ const hourIso = (jd, round) => {
  * `buildUrl` (temps TDB par défaut, UA et UA/jour, table 2) : la simulation porte donc sur le
  * fichier qui sera livré, nœud pour nœud, et non sur une approximation.
  */
+/**
+ * Les états d'un segment relatif à `centerId`, EN TRANCHES quand la durée dépasse ce qu'une
+ * réponse d'Horizons porte (`MAX_ROWS`) : le tirage au pas de 10 min d'une phase en orbite de
+ * Mars Express couvre 29 ans (2026-10-11). Une durée courte part en une seule requête, la même
+ * qu'avant, donc les réponses déjà en cache le restent.
+ */
 async function segmentStatesAt(
+  command,
+  expect,
+  centerId,
+  startIso,
+  stopIso,
+  stepMinutes
+) {
+  const isoJd = (iso) =>
+    iso.startsWith('JD ')
+      ? Number(iso.slice(3))
+      : Date.parse(`${iso.replace(' ', 'T')}:00Z`) / MS_PER_DAY + UNIX_EPOCH_JD;
+  const stepDays = stepMinutes / 1440;
+  const rowsWanted = (isoJd(stopIso) - isoJd(startIso)) / stepDays;
+  if (rowsWanted <= MAX_ROWS)
+    return segmentStatesOnce(
+      command,
+      expect,
+      centerId,
+      startIso,
+      stopIso,
+      stepMinutes
+    );
+  const first = await segmentStatesOnce(
+    command,
+    expect,
+    centerId,
+    startIso,
+    `JD ${(isoJd(startIso) + MAX_ROWS * stepDays).toFixed(9)}`,
+    stepMinutes
+  );
+  const parts = [first.samples];
+  let count = first.samples.length / 6;
+  // Les tranches suivantes partent du dernier nœud lu, en TDB : la grille ne glisse pas.
+  for (let guard = 0; guard < 1000; guard++) {
+    const fromJd = first.startJdTdb + (count - 1) * stepDays;
+    const toJd = Math.min(fromJd + MAX_ROWS * stepDays, isoJd(stopIso));
+    if (toJd - fromJd < stepDays / 2) break;
+    const part = await segmentStatesOnce(
+      command,
+      expect,
+      centerId,
+      `JD ${fromJd.toFixed(9)}`,
+      `JD ${toJd.toFixed(9)}`,
+      stepMinutes
+    );
+    if (Math.abs(part.startJdTdb - fromJd) > 1e-6)
+      throw new Error(
+        `segment ${command} : tranche partie de JD ${part.startJdTdb}, attendu ${fromJd}`
+      );
+    parts.push(part.samples.subarray(6));
+    count += part.samples.length / 6 - 1;
+    if (part.samples.length / 6 < 2) break;
+  }
+  const samples = new Float64Array(count * 6);
+  let at = 0;
+  for (const chunk of parts) {
+    samples.set(chunk, at);
+    at += chunk.length;
+  }
+  return { startJdTdb: first.startJdTdb, stepDays, samples };
+}
+
+async function segmentStatesOnce(
   command,
   expect,
   centerId,
@@ -719,10 +790,44 @@ const MANOEUVRE_PROBE_MINUTES = 10;
  */
 const MANOEUVRE_THRESHOLD_KM = 0.001;
 
+/**
+ * Seuil d'une manœuvre sur 10 min autour d'une PLANÈTE. MESURÉ le 2026-10-11 sous la dynamique
+ * du service (gravité et J2 de Mars) : fond de 0,15 km en médiane, 0,50 km au 99ᵉ centile et
+ * 0,58 km au plus pour ExoMars TGO à 400 km d'altitude (les harmoniques au-delà de J2), 2 m en
+ * médiane et 0,44 km au plus pour Mars Express. Le seuil laisse le fond sous son tiers ; une
+ * poussée plus faible se lit mal, mais elle écarte la sonde de moins que la borne sur un pas.
+ */
+const PLANET_MANOEUVRE_THRESHOLD_KM = 2;
+/** Et sur 1 min, dans un détail : le dixième, pour la même raison qu'autour d'un petit corps. */
+const PLANET_DETAIL_THRESHOLD_KM = 0.2;
+/**
+ * Les pas candidats d'une telle phase. Mesuré sur deux semaines calmes (2026-10-11) : Mars
+ * Express tient la moitié de la borne dès 6 h (0,07 %), ExoMars TGO à 3 h (0,28 %, 0,47 % à 4 h).
+ */
+const PLANET_ORBIT_STEPS_MINUTES = [720, 360, 240, 180, 120, 60];
+
 /** Les pas candidats d'un segment de petit corps : multiples du tirage, du plus grossier au plus fin. */
 const SMALL_BODY_STEPS_MINUTES = [720, 360, 240, 180, 120, 60, 30, 20, 10];
 
-async function planAroundManoeuvres({
+/**
+ * LES DÉTAILS LIVRÉS d'une phase sont écartés du service pendant qu'on la replanifie. Le service
+ * prend le segment le plus FIN qui couvre une date : laissés en place, ils masquaient les
+ * défauts du pas grossier simulé, qui « tenait » alors seul, et un `--write` rejoué après leur
+ * livraison les retirait du plan (OSIRIS-REx et Rosetta, constaté le 2026-10-11). Le plan ne
+ * doit pas dépendre de l'état qu'il produit.
+ */
+async function planAroundManoeuvres(args) {
+  const prefix = `${args.name}-`;
+  const shipped = [...service.bodies].filter(([key]) => key.startsWith(prefix));
+  for (const [key] of shipped) service.bodies.delete(key);
+  try {
+    return await planPhase(args);
+  } finally {
+    for (const [key, value] of shipped) service.bodies.set(key, value);
+  }
+}
+
+async function planPhase({
   fileEndJd,
   enc,
   name,
@@ -732,11 +837,16 @@ async function planAroundManoeuvres({
   stopOnGrid,
   dynamics,
   samples,
+  // Autour d'une PLANÈTE (Mars Express, ExoMars TGO, 2026-10-11) : seuil en km, pas candidats
+  // et seuil des détails propres, et l'aplatissement dans la détection (`dynamics.oblateness`).
+  thresholdKm = MANOEUVRE_THRESHOLD_KM,
+  steps = SMALL_BODY_STEPS_MINUTES,
+  detailThresholdKm = DETAIL_THRESHOLD_KM,
 }) {
   // Le tirage s'arrête sur la grille du pas le plus GROSSIER, dont tous les candidats sont
   // des diviseurs : chaque décimation finit alors sur le même nœud, celui que le générateur
   // demandera (`stopIso`), quel que soit le pas retenu.
-  const stopIso = stopOnGrid(SMALL_BODY_STEPS_MINUTES[0]);
+  const stopIso = stopOnGrid(steps[0]);
   const fine = await segmentStates(
     target.command,
     target.expect,
@@ -751,16 +861,21 @@ async function planAroundManoeuvres({
       jd: fine.startJdTdb + (i * MANOEUVRE_PROBE_MINUTES) / 1440,
       state: Array.from(fine.samples.subarray(i * 6, i * 6 + 6)),
     });
-  const found = detectImpulses(rows, dynamics.mu, MANOEUVRE_THRESHOLD_KM);
+  const found = detectImpulses(
+    rows,
+    dynamics.mu,
+    thresholdKm,
+    dynamics.oblateness
+  );
   const background =
     `fond ${(found.backgroundMedianKm * 1000).toFixed(2)} m en médiane, ` +
     `${(found.backgroundP99Km * 1000).toFixed(2)} m au 99e centile, ${(found.backgroundMaxKm * 1000).toFixed(2)} m au plus`;
   console.log(
-    `  ${name} : ${found.impulses.length} manœuvres au seuil de ${MANOEUVRE_THRESHOLD_KM * 1000} m sur ${MANOEUVRE_PROBE_MINUTES} min ; ${background}`
+    `  ${name} : ${found.impulses.length} manœuvres au seuil de ${thresholdKm * 1000} m sur ${MANOEUVRE_PROBE_MINUTES} min ; ${background}`
   );
   // Un fond trop près du seuil ne se découpe pas au hasard : la phase se planifie alors SANS
   // poussée déclarée, au pas uniforme, et ce qui ne tient pas le dit (Hayabusa2 à Ryugu).
-  const readable = found.backgroundP99Km <= MANOEUVRE_THRESHOLD_KM / 3;
+  const readable = found.backgroundP99Km <= thresholdKm / 3;
   if (!readable)
     console.log(
       `  ${name} : manœuvres illisibles (${background}), planifiée sans poussée`
@@ -811,13 +926,13 @@ async function planAroundManoeuvres({
         stepMinutes,
         bytes: anchors.length * 48,
         ...(kept.length ? { impulses: kept } : {}),
-        relativeTo: segmentCenter.minus,
+        ...(segmentCenter.minus ? { relativeTo: segmentCenter.minus } : {}),
       },
     };
   };
   let best = null;
   let plainPlan = null;
-  for (const stepMinutes of SMALL_BODY_STEPS_MINUTES) {
+  for (const stepMinutes of steps) {
     const coarse = simulateCoarse(stepMinutes);
     if (!coarse) continue;
     const simulated = measure(enc, samples, coarse.served);
@@ -854,7 +969,7 @@ async function planAroundManoeuvres({
   let detailTarget = SEGMENT_SHARE;
   let cheapest = plainPlan;
   const searchDetails = async () => {
-    for (const stepMinutes of SMALL_BODY_STEPS_MINUTES) {
+    for (const stepMinutes of steps) {
       const coarse = simulateCoarse(stepMinutes);
       if (!coarse) continue;
       const failing = samples.filter(
@@ -922,7 +1037,7 @@ async function planAroundManoeuvres({
   // l'arrivée de Hayabusa2 à Ryugu, Horizons fait sauter la sonde de 31,5 à 15,3 km du corps
   // entre 00:00 et 00:10 UT (2018-06-27), vitesse nulle ensuite : une discontinuité de la
   // source, que nulle interpolation ne suit.
-  const residuals = twoBodyResiduals(rows, dynamics.mu);
+  const residuals = twoBodyResiduals(rows, dynamics.mu, dynamics.oblateness);
   let jump = 0;
   for (let k = 1; k < residuals.length; k++)
     if (residuals[k] > residuals[jump]) jump = k;
@@ -985,17 +1100,26 @@ async function planAroundManoeuvres({
         jd: probe.startJdTdb + (i * DETAIL_PROBE_MINUTES) / 1440,
         state: Array.from(probe.samples.subarray(i * 6, i * 6 + 6)),
       });
-    const found = detectImpulses(fineRows, dynamics.mu, DETAIL_THRESHOLD_KM);
+    const found = detectImpulses(
+      fineRows,
+      dynamics.mu,
+      detailThresholdKm,
+      dynamics.oblateness
+    );
     // Un fond trop près du seuil ne se découpe pas : le détail se tire alors sans poussée.
-    const readable = found.backgroundP99Km <= DETAIL_THRESHOLD_KM / 3;
+    const readable = found.backgroundP99Km <= detailThresholdKm / 3;
     // À cette échelle, CHAQUE minute qui dépasse le seuil porte sa poussée, en son milieu, et
     // non une seule par épisode : à l'arrivée de Hayabusa2 à Ryugu (2018-06-26), deux heures de
     // poussée continue et de raccords de trajectoire réduites à deux instants laissaient 18 km.
     // Propagée d'un seul côté, chaque minute reste exacte à ses deux bouts.
-    const residuals = twoBodyResiduals(fineRows, dynamics.mu);
+    const residuals = twoBodyResiduals(
+      fineRows,
+      dynamics.mu,
+      dynamics.oblateness
+    );
     const jumps = readable
       ? residuals.flatMap((km, k) =>
-          km > DETAIL_THRESHOLD_KM
+          km > detailThresholdKm
             ? [Number(((fineRows[k].jd + fineRows[k + 1].jd) / 2).toFixed(8))]
             : []
         )
@@ -1099,6 +1223,21 @@ const jdOfMinuteIso = (iso) =>
 
 /** La vérité sonde MOINS corps dessiné, à la minute, sur une fenêtre courte. */
 async function relativeTruth(target, center, fromJd, toJd) {
+  // Autour d'une PLANÈTE, la vérité est servie depuis son centre, comme celle de la rencontre.
+  if (typeof center === 'string')
+    return (
+      await truthChunked(
+        target.command,
+        target.expect,
+        fromJd,
+        toJd,
+        DETAIL_TRUTH_MINUTES,
+        center
+      )
+    ).map((row) => {
+      const rel = sceneOfKm(row.km);
+      return { jd: row.jd, rel, rKm: rel.length() * KM_PER_AU };
+    });
   const drawn = center.minus;
   const probeRows = await truthChunked(
     target.command,
@@ -1399,7 +1538,51 @@ for (const enc of encounters) {
           break;
         }
       }
-      if (!plan && !smallBody)
+      // UNE PHASE EN ORBITE AUX MANŒUVRES NOMBREUSES (Mars Express, ExoMars TGO, 2026-10-11) :
+      // au-delà de MAX_IMPULSES épisodes, la recherche ci-dessus renonce. La phase se planifie
+      // alors comme autour d'un petit corps : un tirage au pas de 10 min de TOUTE la phase, les
+      // poussées lues dans ses résidus sous la dynamique du service (J2 compris), puis le pas le
+      // plus grossier qui tient, et des détails là où les manœuvres se suivent.
+      if (!plan && !smallBody && orbital) {
+        // Une phase qui court jusqu'à la FIN du fichier y pose son dernier nœud : son début est
+        // reculé sur la grille de 12 h qui y aboutit, et tous les pas candidats la divisent.
+        // Sans cela, le dernier nœud de Mars Express tombait à 19 h, cinq heures avant la fin
+        // du fichier, que le fichier au pas d'un jour servait à 30 504 km près (2026-10-11).
+        const toEnd = lastJd >= gridEnd(entry);
+        const coarsest = PLANET_ORBIT_STEPS_MINUTES[0] * 60_000;
+        const endMs = (gridEnd(entry) - UNIX_EPOCH_JD) * MS_PER_DAY;
+        const alignedMs = toEnd
+          ? endMs - Math.ceil((endMs - startMs) / coarsest) * coarsest
+          : startMs;
+        const alignedIso = new Date(alignedMs)
+          .toISOString()
+          .slice(0, 16)
+          .replace('T', ' ');
+        const alignedStop = (stepMinutes) => {
+          if (!toEnd) return stopOnGrid(stepMinutes);
+          return new Date(endMs).toISOString().slice(0, 16).replace('T', ' ');
+        };
+        const many = await planAroundManoeuvres({
+          fileEndJd: gridEnd(entry),
+          enc,
+          name,
+          target,
+          segmentCenter,
+          startIso: alignedIso,
+          stopOnGrid: alignedStop,
+          dynamics,
+          samples,
+          thresholdKm: PLANET_MANOEUVRE_THRESHOLD_KM,
+          steps: PLANET_ORBIT_STEPS_MINUTES,
+          detailThresholdKm: PLANET_DETAIL_THRESHOLD_KM,
+        });
+        if (many.plan) plan = many.plan;
+        else {
+          note = many.note;
+          enc.unresolved = many.unresolved;
+        }
+      }
+      if (!plan && !smallBody && !note)
         note = `aucun pas jusqu'à ${candidates.at(-1)} min ne tient la borne`;
     }
   }
@@ -1413,14 +1596,25 @@ for (const enc of encounters) {
   if (!note) {
     const periapses = [];
     const per2h = Math.round(120 / step);
-    for (let i = 1; i < samples.length - 1; i++) {
+    const minima = [];
+    for (let i = 1; i < samples.length - 1; i++)
       if (
         samples[i].rKm <= samples[i - 1].rKm &&
         samples[i].rKm < samples[i + 1].rKm
       )
+        minima.push(i);
+    // Une phase en orbite garde TOUS ses périapses jusqu'à MAX_ORBIT_PERIAPSES (Cassini : 889),
+    // puis un sur k, répartis : 29 ans de Mars Express en compteraient quarante mille.
+    const stride =
+      plan?.kind === 'orbit'
+        ? Math.max(1, Math.ceil(minima.length / MAX_ORBIT_PERIAPSES))
+        : 1;
+    minima
+      .filter((_, n) => n % stride === 0)
+      .forEach((i) => {
         for (const j of [i - per2h, i, i + per2h])
           if (samples[j]) periapses.push(j);
-    }
+      });
     // Au plus MAX_REFERENCES par survol, répartis sur toute la liste ; TOUS les périapses d'une
     // phase en orbite, sans quoi la garde ne voit pas ce qui la fait tenir (sans le terme J2,
     // Juno restait à 0,87 % sur 12 références, le 2026-10-11).

@@ -90,8 +90,9 @@ describe('affichage par défaut', () => {
     // 3I/ATLAS nommés dès le chargement, le nom d'OSIRIS-REx sur celui de Vénus. Les sondes
     // et les objets interstellaires sont des aides de navigation, en option comme les orbites
     // des petits corps ; l'objet sélectionné, lui, reste toujours peint (cf. les overlays).
-    // 17 depuis les trois sondes de l'ESA (2026-10-09) : quatorze sondes, trois interstellaires.
-    expect(NAVIGABLE_TARGETS.size).toBe(17);
+    // 17 depuis les trois sondes de l'ESA (2026-10-09), 19 depuis ses deux orbiteurs de Mars
+    // (2026-10-11) : seize sondes, trois interstellaires.
+    expect(NAVIGABLE_TARGETS.size).toBe(19);
     for (const [name, cfg] of NAVIGABLE_TARGETS) {
       expect(INSTRUMENT_KINDS.has(cfg.kind)).toBe(true);
       expect(defaultDisplay(name, cfg.kind)).toEqual({

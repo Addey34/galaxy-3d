@@ -585,13 +585,17 @@ describe('ce que la première vue coûte réellement', () => {
     // 57 754 512 avec Juno et Cassini en orbite (même jour, pas 2 : 426 240 et 925 584 octets,
     // les survols replanifiés avec le terme J2, Juno ramené à la couverture d'Horizons) ;
     // 58 364 208 avec les phases autour des petits corps (même jour, ligne 45.10 : Rosetta, OSIRIS-
-    // REx, New Horizons à Pluton et Hera à Didymos, 12 phases et 41 détails, 609 696 octets).
-    expect(shipped).toBe(58_364_208);
+    // REx, New Horizons à Pluton et Hera à Didymos, 12 phases et 41 détails, 609 696 octets) ;
+    // 64 454 400 avec Mars Express et ExoMars TGO (même jour, ligne 45.11 : deux fichiers au pas
+    // d'un jour, leurs départs de la Terre, leurs phases autour de Mars au pas de 6 et 3 h et six
+    // détails, 6 090 192 octets).
+    expect(shipped).toBe(64_454_400);
     // 62 au lot 17, plus les 23 cibles de missions du 2026-10-04 et leurs deux satellites : une
     // requête par corps ; 90 avec les trois objets interstellaires (2026-10-08), couverts à
     // cette date ; 93 avec les trois sondes de l'ESA (2026-10-09), couvertes elles aussi.
-    // 94 avec le segment de Juno autour de Jupiter (2026-10-11), qui couvre cette date.
-    expect(requests).toBe(94);
+    // 94 avec le segment de Juno autour de Jupiter (2026-10-11), qui couvre cette date. 98 avec
+    // Mars Express et ExoMars TGO (même jour) : chacun son fichier et sa phase autour de Mars.
+    expect(requests).toBe(98);
     // Moins de 2 % de ce qui est livré aujourd'hui : c'est tout l'objet du lot.
     expect(bytes).toBeLessThan(shipped * 0.02);
     expect(bytes).toBeGreaterThan(500_000);

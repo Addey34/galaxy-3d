@@ -483,17 +483,27 @@ describe('page /sources', () => {
     const details = Object.values(manifest.bodies).filter((e) => e.detail);
     expect(details.length).toBeGreaterThan(0);
     const captions = [
-      'Detail segments near small bodies',
-      'Segments de détail près des petits corps',
-      'Segmentos de detalle cerca de cuerpos pequeños',
-      'Segmentos de detalhe perto de corpos pequenos',
+      'Detail segments',
+      'Segments de détail',
+      'Segmentos de detalle',
+      'Segmentos de detalhe',
     ];
     sources.forEach((page, i) => {
       expect(page.body).toContain(captions[i]!);
       expect(page.body).toContain(`(${details.length} `);
     });
+    // La méthode les dit avec leur phase : ceux des petits corps ensemble, ceux d'une phase
+    // autour d'une PLANÈTE (Mars Express, ExoMars TGO, 2026-10-11) dans la phrase de sa phase.
+    const catalogue = flattenBodies(CELESTIAL_CONFIG);
+    const nearSmall = details.filter((e) =>
+      ['asteroid', 'comet', 'dwarf'].includes(
+        catalogue.get(e.center)?.kind ?? ''
+      )
+    );
+    expect(nearSmall.length).toBeGreaterThan(0);
+    expect(details.length).toBeGreaterThan(nearSmall.length);
     methodology.forEach((page) =>
-      expect(page.body).toContain(` ${details.length} `)
+      expect(page.body).toContain(` ${nearSmall.length} `)
     );
   });
 

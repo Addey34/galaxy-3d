@@ -847,6 +847,30 @@ const BODIES = [
     stopTime: '2026-11-03',
     stepDays: PROBE_EVENT_STEP_DAYS,
   },
+  // ORBITEURS DE MARS DE L'ESA (ligne 45.11, pas 2, 2026-10-11). Bornes LUES dans Horizons ce
+  // jour : Mars Express 2003-06-02 19:12 au 2033-01-01 00:01 TDB (reconstruite jusqu'au
+  // 2026-09-23, prédite ensuite), ExoMars TGO 2016-03-14 08:14 au 2039-01-04 06:31 (ajustée
+  // jusqu'au 2025-06-21, trajectoire de référence ensuite). Pas d'un jour pour le départ de la
+  // Terre et l'arrivée à Mars ; autour de Mars, ce sont les SEGMENTS du plan
+  // (`pnpm ephemeris:flybys`) qui placent la sonde, comme Juno autour de Jupiter.
+  {
+    name: 'mars-express',
+    target: '-41',
+    expectedName: 'mars express',
+    center: 'sun',
+    startTime: '2003-06-03',
+    stopTime: '2032-12-31',
+    stepDays: PROBE_EVENT_STEP_DAYS,
+  },
+  {
+    name: 'exomars-tgo',
+    target: '-143',
+    expectedName: 'exomars16 tgo',
+    center: 'sun',
+    startTime: '2016-03-15',
+    stopTime: '2039-01-03',
+    stepDays: PROBE_EVENT_STEP_DAYS,
+  },
   // OBJETS INTERSTELLAIRES (2026-10-08) : la solution d'Horizons, accélérations non
   // gravitationnelles comprises, au lieu du seul modèle à deux corps des éléments (122 919 km
   // d'écart au périhélie de 1I, 0,3 % de sa distance au Soleil). Bornes = la fenêtre affichée,

@@ -219,7 +219,9 @@ describe('phases de satellite des sondes', () => {
     // du centre de la sphère agrandie (où la compression héliocentrique la cachait) à sa place
     // dans le système du corps. Mesuré : au plus 3,69 rayons Éducatif du corps (Juno au dernier
     // jour de son fichier), 3,54 pour BepiColombo à l'entrée, 2,20 aux bords des deux phases
-    // autour d'astéroïdes. Un fondu continu entre les deux repères ramènerait l'écart de
+    // autour d'astéroïdes, et 4,19 pour Mars Express à son arrivée (2026-10-11) : son orbite de
+    // capture s'éloignait à 185 000 km de Mars (Horizons, 2004-01-01), et une planète petite
+    // grandit le saut compté en rayons. Un fondu continu entre les deux repères ramènerait l'écart de
     // dizaines d'unités décrit dans `core/satellitePhases.ts`.
     const report: string[] = [];
     const out = new THREE.Vector3();
@@ -268,7 +270,7 @@ describe('phases de satellite des sondes', () => {
           placeInstrument(before, probe, null, 0);
           placeInstrument(out, probe, { parent, parentHelioAU: parentAU }, 0);
           const jump = out.distanceTo(before) / parent.radius;
-          if (jump > 4)
+          if (jump > 4.5)
             report.push(
               `${mission.name}/${phase.body} ${iso(edge)} saut ${jump.toFixed(2)} rayons`
             );
