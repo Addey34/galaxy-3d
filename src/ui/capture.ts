@@ -7,7 +7,8 @@
  * car cette fonctionnalité mute temporairement l'état visuel de l'app (contrairement à `share.ts`,
  * sans effet de bord en cas d'échec).
  */
-import { t, intlLocale } from '@/i18n';
+import { t, intlLocale, getLocale } from '@/i18n';
+import { formatDateText } from '@/core/dateText';
 import { bodyDisplayName } from '@/i18n/bodyText';
 import type { CameraSystem } from '@/components/systems/CameraSystem';
 import type { OrbitalMechanics } from '@/core/OrbitalMechanics';
@@ -44,7 +45,13 @@ export function buildCartoucheText(
   date: Date,
   distanceKm: number | null
 ): { title: string; subtitle: string } {
-  const dateStr = date.toLocaleDateString(intlLocale(), { dateStyle: 'long' });
+  // Le premier du mois en ordinal (« 1er mars »), comme partout ailleurs (`core/dateText.ts`).
+  const dateStr = formatDateText(
+    date,
+    { dateStyle: 'long' },
+    getLocale(),
+    intlLocale()
+  );
   const subtitle =
     distanceKm !== null
       ? `${dateStr} · ${formatLiveDistance(distanceKm)}`

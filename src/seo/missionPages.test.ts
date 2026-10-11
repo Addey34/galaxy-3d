@@ -195,7 +195,7 @@ describe('les pages des missions', () => {
     // Voyager : le projet commence en 1972, cinq ans avant le lancement, et ne déclare pas de fin.
     const voyager = page('voyager', 'fr').body;
     expect(voyager).toContain('Début du projet');
-    expect(voyager).toContain('1 juillet 1972');
+    expect(voyager).toContain('1er juillet 1972');
     expect(voyager).toContain('non déclarée');
     expect(voyager).not.toMatch(/lancée? le|en cours</);
   });

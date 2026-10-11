@@ -135,3 +135,44 @@ describe('formatDateText', () => {
     expect([...ORDINAL_FIRST_DAY_LOCALES].sort()).toEqual(['fr', 'pt-BR']);
   });
 });
+
+/**
+ * UNE DATE QUI AFFICHE LE JOUR PASSE PAR CE MODULE, PARTOUT (2026-10-11). La règle de l'ordinal
+ * avait un seul propriétaire, et deux endroits l'ignoraient encore : la page d'une sonde
+ * (« précalculée du 7 août 2011 au 1 septembre 2028 ») et le cartouche d'une capture. Ce
+ * balayage refuse tout `toLocaleDateString` ou `Intl.DateTimeFormat` dont les options
+ * demandent le jour (`day`, `dateStyle`) hors de `core/dateText.ts`. Un mois seul (« octobre
+ * 2026 ») ne pose pas la question et reste libre.
+ */
+describe('aucune date qui affiche le jour ne contourne la règle de l’ordinal', () => {
+  it('balaie tout le code livré', async () => {
+    const { readdirSync, readFileSync, statSync } = await import('node:fs');
+    const { join } = await import('node:path');
+    const root = join(__dirname, '..');
+    const files: string[] = [];
+    const walk = (dir: string) => {
+      for (const name of readdirSync(dir)) {
+        const path = join(dir, name);
+        if (statSync(path).isDirectory()) walk(path);
+        else if (/\.ts$/.test(name) && !/\.test\.ts$/.test(name))
+          files.push(path);
+      }
+    };
+    walk(root);
+    expect(files.length).toBeGreaterThan(100);
+    const offenders: string[] = [];
+    for (const file of files) {
+      if (file.endsWith(join('core', 'dateText.ts'))) continue;
+      const text = readFileSync(file, 'utf8');
+      const call = /(toLocaleDateString\(|new Intl\.DateTimeFormat\()/g;
+      for (let m = call.exec(text); m; m = call.exec(text)) {
+        const options = text.slice(m.index, m.index + 240);
+        if (/\bday\s*:|dateStyle\s*:/.test(options))
+          offenders.push(
+            `${file.slice(root.length + 1)}:${text.slice(0, m.index).split('\n').length}`
+          );
+      }
+    }
+    expect(offenders).toEqual([]);
+  });
+});
