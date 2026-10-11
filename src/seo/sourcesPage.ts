@@ -952,7 +952,7 @@ function sourcesPage(input: SourcesInput, locale: DocLocale): DocPage {
   // ── Éphémérides ──
   // Les segments de SURVOL (ligne 45.10) ont leur table à eux, plus bas : ils sont des dizaines.
   const ephemerisRows = Object.entries(manifest.bodies)
-    .filter(([, e]) => !e.flyby)
+    .filter(([, e]) => !e.flyby && !e.detail)
     .map(([body, e]) => [
       // Un SEGMENT porte le nom de la sonde qu'il prolonge, pas sa clé de fichier.
       escapeHtml(name(e.segmentOf ?? body, locale)),
@@ -982,6 +982,17 @@ function sourcesPage(input: SourcesInput, locale: DocLocale): DocPage {
       ),
       String(e.stepDays),
       `${isoFromJd(e.startJdTdb)} → ${isoFromJd(e.startJdTdb + (e.sampleCount - 1) * e.stepDays)}`,
+    ]);
+  // Les segments de DÉTAIL (ligne 45.10, 2026-10-11) : quelques heures au pas de quelques
+  // minutes autour d'un petit corps, là où des manœuvres rapprochées cassent la phase.
+  const detailRows = Object.values(manifest.bodies)
+    .filter((e) => e.detail)
+    .sort((a, b) => a.startJdTdb - b.startJdTdb)
+    .map((e) => [
+      escapeHtml(name(e.segmentOf!, locale)),
+      escapeHtml(name(e.center, locale)),
+      String(Math.round(e.stepDays * 1440)),
+      `${isoMinuteFromJd(e.startJdTdb)} → ${isoMinuteFromJd(e.startJdTdb + (e.sampleCount - 1) * e.stepDays)}`,
     ]);
   const flybyRows = Object.values(manifest.bodies)
     .filter((e) => e.flyby)
@@ -1080,6 +1091,50 @@ function sourcesPage(input: SourcesInput, locale: DocLocale): DocPage {
                 }),
               ],
               flybyRows,
+              2
+            )
+          : '') +
+        (detailRows.length > 0
+          ? `<p>${L({
+              en: `Near a small body, where manoeuvres follow each other within hours, a short file relative to the body as it is drawn takes over from the phase around it for those hours (${detailRows.length} files), every few minutes, under the same bound.`,
+              fr: `Près d’un petit corps, là où les manœuvres se suivent à quelques heures, un fichier court relatif au corps tel qu’il est dessiné prend le relais de la phase qui l’entoure pour ces heures-là (${detailRows.length} fichiers), toutes les quelques minutes, sous la même borne.`,
+              es: `Cerca de un cuerpo pequeño, donde las maniobras se suceden en pocas horas, un archivo corto relativo al cuerpo tal como se dibuja toma el relevo de la fase que lo rodea durante esas horas (${detailRows.length} archivos), cada pocos minutos, bajo el mismo límite.`,
+              'pt-BR': `Perto de um corpo pequeno, onde as manobras se sucedem em poucas horas, um arquivo curto relativo ao corpo tal como é desenhado assume no lugar da fase que o envolve durante essas horas (${detailRows.length} arquivos), a cada poucos minutos, sob o mesmo limite.`,
+            })}</p>` +
+            docTable(
+              L({
+                en: 'Detail segments near small bodies',
+                fr: 'Segments de détail près des petits corps',
+                es: 'Segmentos de detalle cerca de cuerpos pequeños',
+                'pt-BR': 'Segmentos de detalhe perto de corpos pequenos',
+              }),
+              [
+                L({
+                  en: 'Spacecraft',
+                  fr: 'Sonde',
+                  es: 'Sonda',
+                  'pt-BR': 'Sonda',
+                }),
+                L({
+                  en: 'Body',
+                  fr: 'Corps',
+                  es: 'Cuerpo',
+                  'pt-BR': 'Corpo',
+                }),
+                L({
+                  en: 'Step (minutes)',
+                  fr: 'Pas (minutes)',
+                  es: 'Paso (minutos)',
+                  'pt-BR': 'Passo (minutos)',
+                }),
+                L({
+                  en: 'Coverage (TDB)',
+                  fr: 'Couverture (TDB)',
+                  es: 'Cobertura (TDB)',
+                  'pt-BR': 'Cobertura (TDB)',
+                }),
+              ],
+              detailRows,
               2
             )
           : '')

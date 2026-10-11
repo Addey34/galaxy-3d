@@ -898,17 +898,17 @@ const FLYBY_PLAN = JSON.parse(
 );
 const FLYBY_SEGMENTS = FLYBY_PLAN.encounters
   .filter((encounter) => encounter.segment)
-  .map((encounter) => {
+  .flatMap((encounter) => {
     const probe = BODIES.find((entry) => entry.name === encounter.probe);
     if (!probe)
       throw new Error(
         `survol : sonde « ${encounter.probe} » absente de BODIES`
       );
-    if (!CENTER_IDS[encounter.planet])
+    if (!encounter.segment.relativeTo && !CENTER_IDS[encounter.planet])
       throw new Error(
         `survol : aucun identifiant Horizons pour « ${encounter.planet} »`
       );
-    return {
+    const segment = {
       name: encounter.segment.name,
       target: probe.target,
       expectedName: probe.expectedName,
@@ -921,10 +921,31 @@ const FLYBY_SEGMENTS = FLYBY_PLAN.encounters
       ...(encounter.segment.impulses
         ? { plannedImpulses: encounter.segment.impulses }
         : {}),
+      // Autour d'un PETIT CORPS, que Horizons ne sert pas toujours comme centre (Ryugu), le
+      // segment est la sonde MOINS le corps tel que son fichier le dessine (cf. `fetchBody`).
+      ...(encounter.segment.relativeTo
+        ? { relativeTo: encounter.segment.relativeTo }
+        : {}),
       startTime: encounter.segment.from,
       stopTime: encounter.segment.to,
       stepDays: encounter.segment.stepMinutes / 1440,
     };
+    // Les DÉTAILS d'une phase autour d'un petit corps : quelques heures au pas de quelques
+    // minutes, là où des manœuvres rapprochées cassent la phase (le service préfère le plus fin).
+    const details = (encounter.segment.details ?? []).map((detail) => ({
+      name: detail.name,
+      target: probe.target,
+      expectedName: probe.expectedName,
+      center: encounter.planet,
+      segmentOf: encounter.probe,
+      detail: true,
+      relativeTo: encounter.segment.relativeTo,
+      ...(detail.impulses ? { plannedImpulses: detail.impulses } : {}),
+      startTime: detail.from,
+      stopTime: detail.to,
+      stepDays: detail.stepMinutes / 1440,
+    }));
+    return [segment, ...details];
   });
 BODIES.push(...FLYBY_SEGMENTS);
 
@@ -1368,6 +1389,44 @@ async function probeImpulses(body) {
   }
 }
 
+/**
+ * UN SEGMENT AUTOUR D'UN PETIT CORPS (ligne 45.10, 2026-10-11) : la sonde et le corps, servis
+ * tous deux depuis le Soleil sur la même grille, puis soustraits état par état. Horizons ne sert
+ * un petit corps comme CENTRE que s'il porte un noyau de mission (Bennu, 67P ; ni Ryugu ni
+ * Lutetia), et même alors c'est la solution de la MISSION, pas celle qui dessine le corps : la
+ * paire que la scène montre est celle-ci. La commande du corps est celle que le plan a mesurée
+ * (`relativeTo`, sa solution `primary` comprise).
+ */
+async function requestDifference(body) {
+  const start = body.startTime;
+  const stop = body.stopTime;
+  const probe = await requestChunked({ ...body, center: 'sun' }, start, stop);
+  const drawn = await requestChunked(
+    {
+      ...body,
+      center: 'sun',
+      target: body.relativeTo.command,
+      expectedName: body.relativeTo.expect.toLowerCase(),
+    },
+    start,
+    stop
+  );
+  if (
+    probe.rows.length !== drawn.rows.length ||
+    probe.rows.some((row, i) => Math.abs(row.jd - drawn.rows[i].jd) > 1e-9)
+  )
+    throw new Error(
+      `${body.name}: grilles différentes pour ${body.target} et ${body.relativeTo.command}`
+    );
+  return {
+    stepDays: probe.stepDays,
+    rows: probe.rows.map((row, i) => ({
+      jd: row.jd,
+      state: row.state.map((v, k) => v - drawn.rows[i].state[k]),
+    })),
+  };
+}
+
 async function fetchBody(body) {
   process.stdout.write(`Fetching ${body.name}... `);
   let rows;
@@ -1403,6 +1462,8 @@ async function fetchBody(body) {
       stepDays,
       impulses: detectedImpulses,
     } = await probeImpulses(body));
+  } else if (body.relativeTo) {
+    ({ rows, stepDays } = await requestDifference(body));
   } else {
     ({ rows, stepDays } = await requestChunked(
       body,
@@ -1443,6 +1504,7 @@ async function fetchBody(body) {
     ...(impulses ? { impulses } : {}),
     ...(body.segmentOf ? { segmentOf: body.segmentOf } : {}),
     ...(body.flyby ? { flyby: true } : {}),
+    ...(body.detail ? { detail: true } : {}),
   };
 }
 

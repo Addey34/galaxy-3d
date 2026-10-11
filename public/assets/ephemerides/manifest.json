@@ -1,7 +1,7 @@
 {
   "version": 1,
   "source": "NASA/JPL Horizons",
-  "generatedAt": "2026-10-11T09:39:35.563Z",
+  "generatedAt": "2026-10-11T12:13:32.094Z",
   "frame": "ECLIPTIC_J2000",
   "center": "SUN",
   "units": "AU-D",
@@ -1550,6 +1550,953 @@
       "sampleCount": 17,
       "segmentOf": "voyager1",
       "flyby": true
+    },
+    "hera--didymos-2026-11-02": {
+      "file": "hera--didymos-2026-11-02.71f50ad9a944.bin",
+      "target": "-91",
+      "center": "didymos",
+      "startJdTdb": 2461344.416666667,
+      "stepDays": 0.5,
+      "sampleCount": 4,
+      "impulses": [
+        2461344.586806
+      ],
+      "segmentOf": "hera"
+    },
+    "new-horizons--pluto-2015-07-14": {
+      "file": "new-horizons--pluto-2015-07-14.6186c43a5357.bin",
+      "target": "-98",
+      "center": "pluto",
+      "startJdTdb": 2457217.708333333,
+      "stepDays": 0.5,
+      "sampleCount": 3,
+      "impulses": [
+        2457218.212254
+      ],
+      "segmentOf": "new-horizons"
+    },
+    "osiris-rex--bennu-2018-12-16": {
+      "file": "osiris-rex--bennu-2018-12-16.5382be6bfef5.bin",
+      "target": "-64",
+      "center": "bennu",
+      "startJdTdb": 2458450.791666667,
+      "stepDays": 0.5,
+      "sampleCount": 44,
+      "impulses": [
+        2458458.211805,
+        2458460.211805,
+        2458462.211805,
+        2458464.211805,
+        2458466.211805,
+        2458468.211805,
+        2458470.194422,
+        2458472.211805
+      ],
+      "segmentOf": "osiris-rex"
+    },
+    "osiris-rex--bennu-2018-12-16-2018-12-03-06h53": {
+      "file": "osiris-rex--bennu-2018-12-16-2018-12-03-06h53.9c45efec6b0c.bin",
+      "target": "-64",
+      "center": "bennu",
+      "startJdTdb": 2458455.786805556,
+      "stepDays": 0.006944444444444444,
+      "sampleCount": 67,
+      "impulses": [
+        2458456.209375,
+        2458456.22951389
+      ],
+      "segmentOf": "osiris-rex",
+      "detail": true
+    },
+    "osiris-rex--bennu-2020-04-14": {
+      "file": "osiris-rex--bennu-2020-04-14.e09d0ada1531.bin",
+      "target": "-64",
+      "center": "bennu",
+      "startJdTdb": 2458475.291666667,
+      "stepDays": 0.16666666666666666,
+      "sampleCount": 2893,
+      "impulses": [
+        2458482.211806,
+        2458484.322918,
+        2458515.503472,
+        2458543.211806,
+        2458545.211806,
+        2458574.503472,
+        2458576.211806,
+        2458583.211806,
+        2458599.503472,
+        2458601.211805,
+        2458604.211805,
+        2458608.211805,
+        2458611.211805,
+        2458615.211805,
+        2458618.211805,
+        2458622.211805,
+        2458625.211805,
+        2458629.211805,
+        2458632.211805,
+        2458639.211806,
+        2458643.211806,
+        2458645.211806,
+        2458647.315973,
+        2458660.211808,
+        2458662.461805,
+        2458702.211806,
+        2458704.482639,
+        2458748.211806,
+        2458755.211805,
+        2458760.211806,
+        2458762.545139,
+        2458765.211806,
+        2458767.211805,
+        2458769.545139,
+        2458772.211806,
+        2458774.211805,
+        2458776.545139,
+        2458779.211805,
+        2458781.211806,
+        2458783.545139,
+        2458786.211806,
+        2458788.461806,
+        2458863.211809,
+        2458870.357639,
+        2458870.760416,
+        2458884.211809,
+        2458891.218749,
+        2458891.677083,
+        2458912.295139,
+        2458912.503471,
+        2458919.211806,
+        2458921.461822,
+        2458954.28125,
+        2458954.447878
+      ],
+      "segmentOf": "osiris-rex"
+    },
+    "osiris-rex--bennu-2020-04-14-2019-03-05-14h43": {
+      "file": "osiris-rex--bennu-2020-04-14-2019-03-05-14h43.c67181331e21.bin",
+      "target": "-64",
+      "center": "bennu",
+      "startJdTdb": 2458548.113194444,
+      "stepDays": 0.006944444444444444,
+      "sampleCount": 29,
+      "impulses": [
+        2458548.19895833,
+        2458548.21909722
+      ],
+      "segmentOf": "osiris-rex",
+      "detail": true
+    },
+    "osiris-rex--bennu-2020-04-14-2019-03-09-15h13": {
+      "file": "osiris-rex--bennu-2020-04-14-2019-03-09-15h13.8e910e29ce81.bin",
+      "target": "-64",
+      "center": "bennu",
+      "startJdTdb": 2458552.134027778,
+      "stepDays": 0.006944444444444444,
+      "sampleCount": 22,
+      "impulses": [
+        2458552.19895833,
+        2458552.21909722
+      ],
+      "segmentOf": "osiris-rex",
+      "detail": true
+    },
+    "osiris-rex--bennu-2020-04-14-2019-03-12-15h13": {
+      "file": "osiris-rex--bennu-2020-04-14-2019-03-12-15h13.27e119f25953.bin",
+      "target": "-64",
+      "center": "bennu",
+      "startJdTdb": 2458555.134027778,
+      "stepDays": 0.006944444444444444,
+      "sampleCount": 22,
+      "impulses": [
+        2458555.19895833,
+        2458555.21909722
+      ],
+      "segmentOf": "osiris-rex",
+      "detail": true
+    },
+    "osiris-rex--bennu-2020-04-14-2019-03-19-15h13": {
+      "file": "osiris-rex--bennu-2020-04-14-2019-03-19-15h13.8fdf61586089.bin",
+      "target": "-64",
+      "center": "bennu",
+      "startJdTdb": 2458562.134027778,
+      "stepDays": 0.006944444444444444,
+      "sampleCount": 13,
+      "impulses": [
+        2458562.19895833
+      ],
+      "segmentOf": "osiris-rex",
+      "detail": true
+    },
+    "osiris-rex--bennu-2020-04-14-2019-04-06-14h43": {
+      "file": "osiris-rex--bennu-2020-04-14-2019-04-06-14h43.43423ddf03ca.bin",
+      "target": "-64",
+      "center": "bennu",
+      "startJdTdb": 2458580.113194444,
+      "stepDays": 0.006944444444444444,
+      "sampleCount": 29,
+      "impulses": [
+        2458580.19895833,
+        2458580.21909722
+      ],
+      "segmentOf": "osiris-rex",
+      "detail": true
+    },
+    "osiris-rex--bennu-2020-04-14-2019-04-13-15h13": {
+      "file": "osiris-rex--bennu-2020-04-14-2019-04-13-15h13.6497ab15db37.bin",
+      "target": "-64",
+      "center": "bennu",
+      "startJdTdb": 2458587.134027778,
+      "stepDays": 0.006944444444444444,
+      "sampleCount": 22,
+      "impulses": [
+        2458587.19895833,
+        2458587.21909722
+      ],
+      "segmentOf": "osiris-rex",
+      "detail": true
+    },
+    "osiris-rex--bennu-2020-04-14-2019-04-20-15h13": {
+      "file": "osiris-rex--bennu-2020-04-14-2019-04-20-15h13.1f5fb7bb3703.bin",
+      "target": "-64",
+      "center": "bennu",
+      "startJdTdb": 2458594.134027778,
+      "stepDays": 0.006944444444444444,
+      "sampleCount": 13,
+      "impulses": [
+        2458594.19895833
+      ],
+      "segmentOf": "osiris-rex",
+      "detail": true
+    },
+    "osiris-rex--bennu-2020-04-14-2019-06-01-14h43": {
+      "file": "osiris-rex--bennu-2020-04-14-2019-06-01-14h43.4eb58498e0f6.bin",
+      "target": "-64",
+      "center": "bennu",
+      "startJdTdb": 2458636.113194444,
+      "stepDays": 0.006944444444444444,
+      "sampleCount": 29,
+      "impulses": [
+        2458636.209375,
+        2458636.22951389
+      ],
+      "segmentOf": "osiris-rex",
+      "detail": true
+    },
+    "osiris-rex--bennu-2020-04-14-2019-09-24-15h13": {
+      "file": "osiris-rex--bennu-2020-04-14-2019-09-24-15h13.14f3ede73577.bin",
+      "target": "-64",
+      "center": "bennu",
+      "startJdTdb": 2458751.134027778,
+      "stepDays": 0.006944444444444444,
+      "sampleCount": 22,
+      "impulses": [
+        2458751.19895833,
+        2458751.21909722
+      ],
+      "segmentOf": "osiris-rex",
+      "detail": true
+    },
+    "osiris-rex--bennu-2020-04-14-2020-03-03-18h13": {
+      "file": "osiris-rex--bennu-2020-04-14-2020-03-03-18h13.402759be7c37.bin",
+      "target": "-64",
+      "center": "bennu",
+      "startJdTdb": 2458912.259027778,
+      "stepDays": 0.006944444444444444,
+      "sampleCount": 26,
+      "impulses": [
+        2458912.29270833
+      ],
+      "segmentOf": "osiris-rex",
+      "detail": true
+    },
+    "osiris-rex--bennu-2020-04-14-2020-03-12-22h13": {
+      "file": "osiris-rex--bennu-2020-04-14-2020-03-12-22h13.b76832955573.bin",
+      "target": "-64",
+      "center": "bennu",
+      "startJdTdb": 2458921.425694444,
+      "stepDays": 0.006944444444444444,
+      "sampleCount": 16,
+      "impulses": [
+        2458921.46423611
+      ],
+      "segmentOf": "osiris-rex",
+      "detail": true
+    },
+    "osiris-rex--bennu-2020-04-14-2020-04-14-17h13": {
+      "file": "osiris-rex--bennu-2020-04-14-2020-04-14-17h13.31f149ed3d6c.bin",
+      "target": "-64",
+      "center": "bennu",
+      "startJdTdb": 2458954.217361111,
+      "stepDays": 0.0006944444444444445,
+      "sampleCount": 401,
+      "impulses": [
+        2458954.278125,
+        2458954.44409722,
+        2458954.44479167,
+        2458954.45104167
+      ],
+      "segmentOf": "osiris-rex",
+      "detail": true
+    },
+    "osiris-rex--bennu-2020-08-11": {
+      "file": "osiris-rex--bennu-2020-08-11.af1df369942c.bin",
+      "target": "-64",
+      "center": "bennu",
+      "startJdTdb": 2458960.541666667,
+      "stepDays": 0.16666666666666666,
+      "sampleCount": 697,
+      "impulses": [
+        2458965.211806,
+        2458968.211806,
+        2458970.434027,
+        2458993.211803,
+        2458996.357639,
+        2458996.572916,
+        2459017.211808,
+        2459021.211806,
+        2459031.211806,
+        2459038.211806,
+        2459040.434029,
+        2459066.211805,
+        2459073.260417,
+        2459073.438768,
+        2459076.211806
+      ],
+      "segmentOf": "osiris-rex"
+    },
+    "osiris-rex--bennu-2020-08-11-2020-05-19-17h43": {
+      "file": "osiris-rex--bennu-2020-08-11-2020-05-19-17h43.8ea69fe51fe5.bin",
+      "target": "-64",
+      "center": "bennu",
+      "startJdTdb": 2458989.238194444,
+      "stepDays": 0.006944444444444444,
+      "sampleCount": 14,
+      "segmentOf": "osiris-rex",
+      "detail": true
+    },
+    "osiris-rex--bennu-2020-08-11-2020-05-23-16h13": {
+      "file": "osiris-rex--bennu-2020-08-11-2020-05-23-16h13.b5cf78715f1d.bin",
+      "target": "-64",
+      "center": "bennu",
+      "startJdTdb": 2458993.175694444,
+      "stepDays": 0.006944444444444444,
+      "sampleCount": 14,
+      "segmentOf": "osiris-rex",
+      "detail": true
+    },
+    "osiris-rex--bennu-2020-08-11-2020-05-26-21h13": {
+      "file": "osiris-rex--bennu-2020-08-11-2020-05-26-21h13.8154253da9eb.bin",
+      "target": "-64",
+      "center": "bennu",
+      "startJdTdb": 2458996.384027778,
+      "stepDays": 0.006944444444444444,
+      "sampleCount": 35,
+      "impulses": [
+        2458996.56979167
+      ],
+      "segmentOf": "osiris-rex",
+      "detail": true
+    },
+    "osiris-rex--bennu-2020-08-11-2020-08-11-17h43": {
+      "file": "osiris-rex--bennu-2020-08-11-2020-08-11-17h43.a7142c6e23b2.bin",
+      "target": "-64",
+      "center": "bennu",
+      "startJdTdb": 2459073.238194444,
+      "stepDays": 0.0006944444444444445,
+      "sampleCount": 331,
+      "impulses": [
+        2459073.26145833,
+        2459073.42743056,
+        2459073.428125,
+        2459073.43506944,
+        2459073.43784722
+      ],
+      "segmentOf": "osiris-rex",
+      "detail": true
+    },
+    "osiris-rex--bennu-2020-10-20": {
+      "file": "osiris-rex--bennu-2020-10-20.145f1399abf9.bin",
+      "target": "-64",
+      "center": "bennu",
+      "startJdTdb": 2459077.541666667,
+      "stepDays": 0.125,
+      "sampleCount": 549,
+      "impulses": [
+        2459084.211806,
+        2459087.211806,
+        2459129.211812,
+        2459131.45486,
+        2459143.232639,
+        2459143.409091
+      ],
+      "segmentOf": "osiris-rex"
+    },
+    "osiris-rex--bennu-2020-10-20-2020-08-27-21h43": {
+      "file": "osiris-rex--bennu-2020-10-20-2020-08-27-21h43.7480f9712ab9.bin",
+      "target": "-64",
+      "center": "bennu",
+      "startJdTdb": 2459089.404861111,
+      "stepDays": 0.006944444444444444,
+      "sampleCount": 25,
+      "impulses": [
+        2459089.43784722,
+        2459089.45868056
+      ],
+      "segmentOf": "osiris-rex",
+      "detail": true
+    },
+    "osiris-rex--bennu-2020-10-20-2020-10-20-19h43": {
+      "file": "osiris-rex--bennu-2020-10-20-2020-10-20-19h43.1ed67843a863.bin",
+      "target": "-64",
+      "center": "bennu",
+      "startJdTdb": 2459143.321527778,
+      "stepDays": 0.0006944444444444445,
+      "sampleCount": 181,
+      "impulses": [
+        2459143.39548611,
+        2459143.39618056,
+        2459143.403125,
+        2459143.41076389,
+        2459143.41145833
+      ],
+      "segmentOf": "osiris-rex",
+      "detail": true
+    },
+    "osiris-rex--bennu-2021-04-04": {
+      "file": "osiris-rex--bennu-2021-04-04.2751100d1bb1.bin",
+      "target": "-64",
+      "center": "bennu",
+      "startJdTdb": 2459297.541666667,
+      "stepDays": 0.5,
+      "sampleCount": 47,
+      "impulses": [
+        2459301.336806,
+        2459309.336805,
+        2459312.503472
+      ],
+      "segmentOf": "osiris-rex"
+    },
+    "osiris-rex--bennu-2021-04-04-2021-04-07-18h43": {
+      "file": "osiris-rex--bennu-2021-04-04-2021-04-07-18h43.0aff8aaa72b8.bin",
+      "target": "-64",
+      "center": "bennu",
+      "startJdTdb": 2459312.279861111,
+      "stepDays": 0.006944444444444444,
+      "sampleCount": 37,
+      "impulses": [
+        2459312.50034722
+      ],
+      "segmentOf": "osiris-rex",
+      "detail": true
+    },
+    "rosetta--churyumov-gerasimenko-2015-02-14": {
+      "file": "rosetta--churyumov-gerasimenko-2015-02-14.a144defdba91.bin",
+      "target": "-226",
+      "center": "churyumov-gerasimenko",
+      "startJdTdb": 2456872.416666667,
+      "stepDays": 0.5,
+      "sampleCount": 486,
+      "impulses": [
+        2456875.878472,
+        2456879.878472,
+        2456882.878472,
+        2456886.878472,
+        2456889.878472,
+        2456893.878472,
+        2456896.878472,
+        2456900.878472,
+        2456903.878472,
+        2456907.878472,
+        2456910.878472,
+        2456914.878472,
+        2456917.878472,
+        2456917.947917,
+        2456921.878472,
+        2456924.878472,
+        2456929.878472,
+        2456931.982638,
+        2456935.885415,
+        2456938.878472,
+        2456942.885416,
+        2456945.885416,
+        2456949.87847,
+        2456952.878472,
+        2456959.045138,
+        2456961.59375,
+        2456964.885417,
+        2456974.315972,
+        2456975.753472,
+        2456980.545139,
+        2456983.545138,
+        2456990.552083,
+        2456994.545139,
+        2456997.545139,
+        2457001.545137,
+        2457007.281251,
+        2457008.54514,
+        2457011.545139,
+        2457015.552083,
+        2457019.045139,
+        2457022.545141,
+        2457036.545139,
+        2457039.545138,
+        2457046.545139,
+        2457057.545139,
+        2457064.545139,
+        2457067.545139,
+        2457070.545139,
+        2457071.545139,
+        2457074.545139,
+        2457078.552083,
+        2457081.545139,
+        2457085.545139,
+        2457088.545139,
+        2457092.545139,
+        2457095.545139,
+        2457099.545139,
+        2457102.545139,
+        2457106.545139,
+        2457109.545139,
+        2457114.045139
+      ],
+      "segmentOf": "rosetta"
+    },
+    "rosetta--churyumov-gerasimenko-2015-02-14-2014-08-02-22h13": {
+      "file": "rosetta--churyumov-gerasimenko-2015-02-14-2014-08-02-22h13.3e5a5c72adff.bin",
+      "target": "-226",
+      "center": "churyumov-gerasimenko",
+      "startJdTdb": 2456872.425694444,
+      "stepDays": 0.006944444444444444,
+      "sampleCount": 70,
+      "impulses": [
+        2456872.43506944,
+        2456872.88159722
+      ],
+      "segmentOf": "rosetta",
+      "detail": true
+    },
+    "rosetta--churyumov-gerasimenko-2015-02-14-2014-10-15-06h13": {
+      "file": "rosetta--churyumov-gerasimenko-2015-02-14-2014-10-15-06h13.9b0c4c2fedb3.bin",
+      "target": "-226",
+      "center": "churyumov-gerasimenko",
+      "startJdTdb": 2456945.759027778,
+      "stepDays": 0.006944444444444444,
+      "sampleCount": 26,
+      "impulses": [
+        2456945.88298611
+      ],
+      "segmentOf": "rosetta",
+      "detail": true
+    },
+    "rosetta--churyumov-gerasimenko-2015-02-14-2014-10-22-07h43": {
+      "file": "rosetta--churyumov-gerasimenko-2015-02-14-2014-10-22-07h43.e45e00da3f9b.bin",
+      "target": "-226",
+      "center": "churyumov-gerasimenko",
+      "startJdTdb": 2456952.821527778,
+      "stepDays": 0.006944444444444444,
+      "sampleCount": 13,
+      "impulses": [
+        2456952.87604167
+      ],
+      "segmentOf": "rosetta",
+      "detail": true
+    },
+    "rosetta--churyumov-gerasimenko-2015-02-14-2014-11-11-22h13": {
+      "file": "rosetta--churyumov-gerasimenko-2015-02-14-2014-11-11-22h13.cd09da9dd9ed.bin",
+      "target": "-226",
+      "center": "churyumov-gerasimenko",
+      "startJdTdb": 2456973.425694444,
+      "stepDays": 0.006944444444444444,
+      "sampleCount": 74,
+      "impulses": [
+        2456973.75659722,
+        2456973.85868056,
+        2456973.88854167
+      ],
+      "segmentOf": "rosetta",
+      "detail": true
+    },
+    "rosetta--churyumov-gerasimenko-2015-02-14-2014-11-15-22h13": {
+      "file": "rosetta--churyumov-gerasimenko-2015-02-14-2014-11-15-22h13.6d800dd7650b.bin",
+      "target": "-226",
+      "center": "churyumov-gerasimenko",
+      "startJdTdb": 2456977.425694444,
+      "stepDays": 0.006944444444444444,
+      "sampleCount": 65,
+      "impulses": [
+        2456977.75243056,
+        2456977.82048611,
+        2456977.821875
+      ],
+      "segmentOf": "rosetta",
+      "detail": true
+    },
+    "rosetta--churyumov-gerasimenko-2015-02-14-2015-02-07-00h43": {
+      "file": "rosetta--churyumov-gerasimenko-2015-02-14-2015-02-07-00h43.d41b3d721ac0.bin",
+      "target": "-226",
+      "center": "churyumov-gerasimenko",
+      "startJdTdb": 2457060.529861111,
+      "stepDays": 0.006944444444444444,
+      "sampleCount": 52,
+      "impulses": [
+        2457060.54479167,
+        2457060.61354167
+      ],
+      "segmentOf": "rosetta",
+      "detail": true
+    },
+    "rosetta--churyumov-gerasimenko-2015-04-25": {
+      "file": "rosetta--churyumov-gerasimenko-2015-04-25.49920ed4c7c5.bin",
+      "target": "-226",
+      "center": "churyumov-gerasimenko",
+      "startJdTdb": 2457116.333333333,
+      "stepDays": 0.5,
+      "sampleCount": 109,
+      "impulses": [
+        2457116.545139,
+        2457121.045139,
+        2457123.552083,
+        2457127.545139,
+        2457134.545139,
+        2457141.545139,
+        2457148.572917,
+        2457155.572917,
+        2457162.572917,
+        2457165.572917,
+        2457170.079861
+      ],
+      "segmentOf": "rosetta"
+    },
+    "rosetta--churyumov-gerasimenko-2015-07-08": {
+      "file": "rosetta--churyumov-gerasimenko-2015-07-08.e0b18d8d844e.bin",
+      "target": "-226",
+      "center": "churyumov-gerasimenko",
+      "startJdTdb": 2457170.291666667,
+      "stepDays": 0.16666666666666666,
+      "sampleCount": 421,
+      "impulses": [
+        2457176.572917,
+        2457183.572917,
+        2457190.572917,
+        2457190.663194,
+        2457193.572917,
+        2457193.663194,
+        2457197.572917,
+        2457197.663194,
+        2457200.572917,
+        2457200.663194,
+        2457204.579861,
+        2457207.572917,
+        2457207.663194,
+        2457211.579861,
+        2457214.572917,
+        2457214.663194,
+        2457218.579861,
+        2457221.572917,
+        2457221.663194,
+        2457225.579861,
+        2457228.579861,
+        2457232.572917,
+        2457235.579861,
+        2457239.572917
+      ],
+      "segmentOf": "rosetta"
+    },
+    "rosetta--churyumov-gerasimenko-2016-03-23": {
+      "file": "rosetta--churyumov-gerasimenko-2016-03-23.09cb5bd1c43d.bin",
+      "target": "-226",
+      "center": "churyumov-gerasimenko",
+      "startJdTdb": 2457326.791666667,
+      "stepDays": 0.5,
+      "sampleCount": 302,
+      "impulses": [
+        2457330.572917,
+        2457333.572917,
+        2457337.579861,
+        2457340.579861,
+        2457344.579861,
+        2457347.572917,
+        2457351.572917,
+        2457354.572917,
+        2457358.572917,
+        2457361.579861,
+        2457365.579861,
+        2457368.572917,
+        2457372.572917,
+        2457375.572917,
+        2457379.572917,
+        2457382.579861,
+        2457386.579861,
+        2457389.572917,
+        2457393.572917,
+        2457396.572917,
+        2457400.572917,
+        2457407.572917,
+        2457410.572917,
+        2457414.572917,
+        2457417.572917,
+        2457424.572917,
+        2457428.572917,
+        2457438.572916,
+        2457442.579861,
+        2457445.572917,
+        2457449.572916,
+        2457452.572917,
+        2457456.572917,
+        2457459.579861,
+        2457463.572917,
+        2457466.579861,
+        2457470.579861,
+        2457473.579861
+      ],
+      "segmentOf": "rosetta"
+    },
+    "rosetta--churyumov-gerasimenko-2016-03-23-2016-01-15-19h43": {
+      "file": "rosetta--churyumov-gerasimenko-2016-03-23-2016-01-15-19h43.8292fe30dd78.bin",
+      "target": "-226",
+      "center": "churyumov-gerasimenko",
+      "startJdTdb": 2457403.321527778,
+      "stepDays": 0.006944444444444444,
+      "sampleCount": 58,
+      "impulses": [
+        2457403.571875,
+        2457403.66215278
+      ],
+      "segmentOf": "rosetta",
+      "detail": true
+    },
+    "rosetta--churyumov-gerasimenko-2016-03-23-2016-02-02-19h43": {
+      "file": "rosetta--churyumov-gerasimenko-2016-03-23-2016-02-02-19h43.9d6468f7d1b0.bin",
+      "target": "-226",
+      "center": "churyumov-gerasimenko",
+      "startJdTdb": 2457421.321527778,
+      "stepDays": 0.006944444444444444,
+      "sampleCount": 62,
+      "impulses": [
+        2457421.571875,
+        2457421.66215278
+      ],
+      "segmentOf": "rosetta",
+      "detail": true
+    },
+    "rosetta--churyumov-gerasimenko-2016-03-23-2016-02-12-19h13": {
+      "file": "rosetta--churyumov-gerasimenko-2016-03-23-2016-02-12-19h13.a00af6c7ede8.bin",
+      "target": "-226",
+      "center": "churyumov-gerasimenko",
+      "startJdTdb": 2457431.300694444,
+      "stepDays": 0.006944444444444444,
+      "sampleCount": 68,
+      "impulses": [
+        2457431.571875,
+        2457431.66215278
+      ],
+      "segmentOf": "rosetta",
+      "detail": true
+    },
+    "rosetta--churyumov-gerasimenko-2016-03-23-2016-02-16-19h13": {
+      "file": "rosetta--churyumov-gerasimenko-2016-03-23-2016-02-16-19h13.742221623010.bin",
+      "target": "-226",
+      "center": "churyumov-gerasimenko",
+      "startJdTdb": 2457435.300694444,
+      "stepDays": 0.006944444444444444,
+      "sampleCount": 68,
+      "impulses": [
+        2457435.571875,
+        2457435.66215278
+      ],
+      "segmentOf": "rosetta",
+      "detail": true
+    },
+    "rosetta--churyumov-gerasimenko-2016-10-01": {
+      "file": "rosetta--churyumov-gerasimenko-2016-10-01.2980598b5507.bin",
+      "target": "-226",
+      "center": "churyumov-gerasimenko",
+      "startJdTdb": 2457480.416666667,
+      "stepDays": 0.16666666666666666,
+      "sampleCount": 1105,
+      "impulses": [
+        2457481.072917,
+        2457484.572917,
+        2457487.572917,
+        2457490.079861,
+        2457491.572917,
+        2457495.572917,
+        2457498.579861,
+        2457502.572914,
+        2457505.572917,
+        2457512.572917,
+        2457519.572916,
+        2457523.572917,
+        2457527.072917,
+        2457530.57986,
+        2457533.572908,
+        2457540.572916,
+        2457544.579861,
+        2457547.579861,
+        2457547.663194,
+        2457551.572917,
+        2457551.663194,
+        2457554.579861,
+        2457554.663195,
+        2457558.579861,
+        2457561.572917,
+        2457568.572917,
+        2457586.57986,
+        2457587.593749,
+        2457596.572917,
+        2457600.572919,
+        2457603.572934,
+        2457610.878473,
+        2457612.878472,
+        2457613.878472,
+        2457615.878473,
+        2457616.878471,
+        2457618.878473,
+        2457619.878471,
+        2457621.878474,
+        2457622.878471,
+        2457624.878474,
+        2457625.878469,
+        2457627.878474,
+        2457628.878467,
+        2457630.878473,
+        2457631.87847,
+        2457633.878473,
+        2457634.87847,
+        2457636.878472,
+        2457637.878469,
+        2457639.878471,
+        2457640.878471,
+        2457642.878472,
+        2457643.878464,
+        2457645.878473,
+        2457646.87847,
+        2457648.878473,
+        2457649.368344,
+        2457649.878467,
+        2457651.878472,
+        2457652.381392,
+        2457652.878472,
+        2457654.878476,
+        2457655.378665,
+        2457655.878472,
+        2457657.878472,
+        2457659.600695,
+        2457661.371528,
+        2457663.110963
+      ],
+      "segmentOf": "rosetta"
+    },
+    "rosetta--churyumov-gerasimenko-2016-10-01-2016-08-27-18h43": {
+      "file": "rosetta--churyumov-gerasimenko-2016-10-01-2016-08-27-18h43.29b4278fdf03.bin",
+      "target": "-226",
+      "center": "churyumov-gerasimenko",
+      "startJdTdb": 2457628.279861111,
+      "stepDays": 0.006944444444444444,
+      "sampleCount": 16,
+      "segmentOf": "rosetta",
+      "detail": true
+    },
+    "rosetta--churyumov-gerasimenko-2016-10-01-2016-08-30-18h13": {
+      "file": "rosetta--churyumov-gerasimenko-2016-10-01-2016-08-30-18h13.2c193851261b.bin",
+      "target": "-226",
+      "center": "churyumov-gerasimenko",
+      "startJdTdb": 2457631.259027778,
+      "stepDays": 0.006944444444444444,
+      "sampleCount": 40,
+      "segmentOf": "rosetta",
+      "detail": true
+    },
+    "rosetta--churyumov-gerasimenko-2016-10-01-2016-09-02-18h13": {
+      "file": "rosetta--churyumov-gerasimenko-2016-10-01-2016-09-02-18h13.c5f51bf8eb30.bin",
+      "target": "-226",
+      "center": "churyumov-gerasimenko",
+      "startJdTdb": 2457634.259027778,
+      "stepDays": 0.006944444444444444,
+      "sampleCount": 46,
+      "segmentOf": "rosetta",
+      "detail": true
+    },
+    "rosetta--churyumov-gerasimenko-2016-10-01-2016-09-05-18h13": {
+      "file": "rosetta--churyumov-gerasimenko-2016-10-01-2016-09-05-18h13.997c6604021c.bin",
+      "target": "-226",
+      "center": "churyumov-gerasimenko",
+      "startJdTdb": 2457637.259027778,
+      "stepDays": 0.006944444444444444,
+      "sampleCount": 46,
+      "segmentOf": "rosetta",
+      "detail": true
+    },
+    "rosetta--churyumov-gerasimenko-2016-10-01-2016-09-08-18h43": {
+      "file": "rosetta--churyumov-gerasimenko-2016-10-01-2016-09-08-18h43.0f3e45eeac6a.bin",
+      "target": "-226",
+      "center": "churyumov-gerasimenko",
+      "startJdTdb": 2457640.279861111,
+      "stepDays": 0.006944444444444444,
+      "sampleCount": 43,
+      "segmentOf": "rosetta",
+      "detail": true
+    },
+    "rosetta--churyumov-gerasimenko-2016-10-01-2016-09-11-18h13": {
+      "file": "rosetta--churyumov-gerasimenko-2016-10-01-2016-09-11-18h13.8db317199d48.bin",
+      "target": "-226",
+      "center": "churyumov-gerasimenko",
+      "startJdTdb": 2457643.259027778,
+      "stepDays": 0.006944444444444444,
+      "sampleCount": 46,
+      "segmentOf": "rosetta",
+      "detail": true
+    },
+    "rosetta--churyumov-gerasimenko-2016-10-01-2016-09-14-22h13": {
+      "file": "rosetta--churyumov-gerasimenko-2016-10-01-2016-09-14-22h13.b570d566c05f.bin",
+      "target": "-226",
+      "center": "churyumov-gerasimenko",
+      "startJdTdb": 2457646.425694444,
+      "stepDays": 0.006944444444444444,
+      "sampleCount": 23,
+      "segmentOf": "rosetta",
+      "detail": true
+    },
+    "rosetta--churyumov-gerasimenko-2016-10-01-2016-09-17-19h13": {
+      "file": "rosetta--churyumov-gerasimenko-2016-10-01-2016-09-17-19h13.df2aa3989c06.bin",
+      "target": "-226",
+      "center": "churyumov-gerasimenko",
+      "startJdTdb": 2457649.300694444,
+      "stepDays": 0.006944444444444444,
+      "sampleCount": 41,
+      "segmentOf": "rosetta",
+      "detail": true
+    },
+    "rosetta--churyumov-gerasimenko-2016-10-01-2016-09-20-19h13": {
+      "file": "rosetta--churyumov-gerasimenko-2016-10-01-2016-09-20-19h13.c64f3f586ba5.bin",
+      "target": "-226",
+      "center": "churyumov-gerasimenko",
+      "startJdTdb": 2457652.300694444,
+      "stepDays": 0.006944444444444444,
+      "sampleCount": 38,
+      "segmentOf": "rosetta",
+      "detail": true
+    },
+    "rosetta--churyumov-gerasimenko-2016-10-01-2016-09-23-19h13": {
+      "file": "rosetta--churyumov-gerasimenko-2016-10-01-2016-09-23-19h13.d957b776a10f.bin",
+      "target": "-226",
+      "center": "churyumov-gerasimenko",
+      "startJdTdb": 2457655.300694444,
+      "stepDays": 0.006944444444444444,
+      "sampleCount": 38,
+      "segmentOf": "rosetta",
+      "detail": true
+    },
+    "rosetta--churyumov-gerasimenko-2016-10-01-2016-09-30-09h13": {
+      "file": "rosetta--churyumov-gerasimenko-2016-10-01-2016-09-30-09h13.73b18279315a.bin",
+      "target": "-226",
+      "center": "churyumov-gerasimenko",
+      "startJdTdb": 2457661.884027778,
+      "stepDays": 0.0006944444444444445,
+      "sampleCount": 3761,
+      "segmentOf": "rosetta",
+      "detail": true
     }
   }
 }

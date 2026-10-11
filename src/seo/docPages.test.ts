@@ -433,8 +433,9 @@ describe('page /sources', () => {
   it('nomme un segment par sa sonde et dit ses manœuvres, dans chaque langue', () => {
     // 2026-10-06 : la clé de fichier « bepicolombo-mercury » s'affichait comme un nom de corps.
     // Les segments de SURVOL (ligne 45.10) ont leur propre table, cf. le cas suivant.
+    // Les DÉTAILS (ligne 45.10, 2026-10-11) ont aussi leur propre table, cf. plus bas.
     const segments = Object.entries(manifest.bodies).filter(
-      ([, e]) => e.segmentOf && !e.flyby
+      ([, e]) => e.segmentOf && !e.flyby && !e.detail
     );
     expect(segments.length).toBeGreaterThanOrEqual(1);
     // Une seule manœuvre (la mise en orbite de Juno, 2026-10-11) s'écrit au singulier.
@@ -455,10 +456,45 @@ describe('page /sources', () => {
       (n: number) => (n === 1 ? 'la maniobra' : `las ${n} maniobras`),
       (n: number) => (n === 1 ? 'a manobra' : `as ${n} manobras`),
     ];
+    // Autour d'un PETIT CORPS, les phases sont dites en une phrase, avec le TOTAL de leurs
+    // manœuvres (lues à 10 min ; les détails ont les leurs) : une phrase par phase en aurait
+    // fait une douzaine.
+    const catalogue = flattenBodies(CELESTIAL_CONFIG);
+    const aroundSmallBody = (center?: string) =>
+      center !== undefined &&
+      ['asteroid', 'comet', 'dwarf'].includes(
+        catalogue.get(center)?.kind ?? ''
+      );
+    const total = Object.values(manifest.bodies)
+      .filter(
+        (e) => e.segmentOf && !e.flyby && !e.detail && aroundSmallBody(e.center)
+      )
+      .reduce((n, e) => n + (e.impulses?.length ?? 0), 0);
+    expect(total).toBeGreaterThan(0);
     methodology.forEach((page, i) => {
       for (const [, entry] of segments)
-        expect(page.body).toContain(methodWords[i]!(entry.impulses!.length));
+        if (!aroundSmallBody(entry.center))
+          expect(page.body).toContain(methodWords[i]!(entry.impulses!.length));
+      expect(page.body).toContain(methodWords[i]!(total));
     });
+  });
+
+  it('liste chaque segment de détail à part, dans chaque langue', () => {
+    const details = Object.values(manifest.bodies).filter((e) => e.detail);
+    expect(details.length).toBeGreaterThan(0);
+    const captions = [
+      'Detail segments near small bodies',
+      'Segments de détail près des petits corps',
+      'Segmentos de detalle cerca de cuerpos pequeños',
+      'Segmentos de detalhe perto de corpos pequenos',
+    ];
+    sources.forEach((page, i) => {
+      expect(page.body).toContain(captions[i]!);
+      expect(page.body).toContain(`(${details.length} `);
+    });
+    methodology.forEach((page) =>
+      expect(page.body).toContain(` ${details.length} `)
+    );
   });
 
   it('liste chaque segment de survol à part et les dit dans la méthode, dans chaque langue', () => {

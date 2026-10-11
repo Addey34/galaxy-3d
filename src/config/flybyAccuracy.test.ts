@@ -59,6 +59,7 @@ const bodies = horizonsManifest.bodies as Record<
     segmentOf?: string;
     stepDays: number;
     flyby?: boolean;
+    detail?: boolean;
     impulses?: number[];
   }
 >;
@@ -70,8 +71,22 @@ describe('Rencontres planétaires des sondes contre Horizons', () => {
   });
 
   it('chaque segment du plan est livré, et seuls ceux-là', () => {
+    // Une phase autour d'un petit corps porte ses DÉTAILS (quelques heures au pas de quelques
+    // minutes, ligne 45.10) : chacun est un segment livré de plus, marqué `detail`.
     const planned = plan.encounters.flatMap((e) =>
-      e.segment ? [{ ...e.segment, probe: e.probe, planet: e.planet }] : []
+      e.segment
+        ? [
+            { ...e.segment, probe: e.probe, planet: e.planet },
+            ...('details' in e.segment && e.segment.details
+              ? e.segment.details.map((d) => ({
+                  ...d,
+                  kind: 'detail',
+                  probe: e.probe,
+                  planet: e.planet,
+                }))
+              : []),
+          ]
+        : []
     );
     for (const segment of planned) {
       const entry = bodies[segment.name];
@@ -92,6 +107,13 @@ describe('Rencontres planétaires des sondes contre Horizons', () => {
       .map((s) => s.name)
       .sort();
     const flagged = Object.keys(bodies).filter((name) => bodies[name]?.flyby);
+    const detailed = Object.keys(bodies).filter((name) => bodies[name]?.detail);
+    expect(detailed.sort()).toEqual(
+      planned
+        .filter((s) => s.kind === 'detail')
+        .map((s) => s.name)
+        .sort()
+    );
     const named = Object.keys(bodies).filter((name) => name.includes('--'));
     expect(flagged.sort()).toEqual(flybyNames);
     expect(named.sort()).toEqual(planNames);
@@ -163,5 +185,44 @@ describe('Rencontres planétaires des sondes contre Horizons', () => {
     } finally {
       loaded.set(e.segment.name, segment);
     }
+  });
+
+  /**
+   * Le prélèvement d'OSIRIS-REx sur Bennu (2020-10-20) ne tient qu'avec son segment de DÉTAIL,
+   * au pas d'une minute : sans lui, la phase au pas de 3 h laisse la sonde à des dizaines de
+   * mètres d'un corps de 500 m (ligne 45.10, mesuré le 2026-10-11).
+   */
+  it('sans son détail, le prélèvement d’OSIRIS-REx sort de la borne (la garde mord)', () => {
+    const e = plan.encounters.find(
+      (encounter) =>
+        encounter.probe === 'osiris-rex' &&
+        encounter.closestAt.startsWith('2020-10-20')
+    );
+    const name = 'osiris-rex--bennu-2020-10-20-2020-10-20-19h43';
+    if (!e?.segment || !('details' in e.segment))
+      throw new Error('phase du prélèvement absente du plan');
+    const loaded = (service as unknown as { bodies: Map<string, unknown> })
+      .bodies;
+    const detail = loaded.get(name);
+    expect(detail).toBeDefined();
+    loaded.delete(name);
+    try {
+      expect(worstShare(e.probe, e.planet, e.reference).share).toBeGreaterThan(
+        plan.maxShare
+      );
+    } finally {
+      loaded.set(name, detail);
+    }
+  });
+
+  it('une sonde près d’un petit corps se mesure contre le corps DESSINÉ, et le dit', () => {
+    // Horizons ne sert Ryugu ni Lutetia comme centre : la vérité est la sonde MOINS le corps
+    // par la solution du fichier qui le dessine, et le segment en porte la commande.
+    const aroundSmall = plan.encounters.filter(
+      (e) => e.segment && 'relativeTo' in e.segment
+    );
+    expect(aroundSmall.length).toBeGreaterThanOrEqual(10);
+    for (const e of aroundSmall)
+      expect(bodies[e.segment!.name]?.center).toBe(e.planet);
   });
 });

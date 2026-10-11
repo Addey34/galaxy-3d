@@ -23,6 +23,22 @@ describe('solveKepler', () => {
     }
   });
 
+  /**
+   * Près de e = 1 et de M = 0, Newton sans encadrement divergeait : 820 solutions fausses sur
+   * 24 006 couples, jusqu'à E = −2e20 (2026-10-11), et une sonde à 14 km de Bennu servie à
+   * 12 000 km. Falsifié : sans l'encadrement, ce test rougit.
+   */
+  it('reste juste près de e = 1 et de M = 0 (orbite relative autour d’un petit corps)', () => {
+    let worst = 0;
+    for (const e of [0.99, 0.995, 0.999, 0.9999])
+      for (let k = -400; k <= 400; k++) {
+        const M = (k / 400) * 0.03;
+        const E = solveKepler(M, e);
+        worst = Math.max(worst, Math.abs(E - e * Math.sin(E) - M));
+      }
+    expect(worst).toBeLessThan(1e-10);
+  });
+
   it('returns E = M for a circular orbit (e = 0)', () => {
     expect(solveKepler(1.23, 0)).toBeCloseTo(1.23, 12);
   });

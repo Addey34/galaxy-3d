@@ -176,7 +176,9 @@ describe('le débit mesuré par le service (phase 17D)', () => {
     // (2026-10-09), toutes en vol à cette date : 93 corps demandés. 161 fichiers avec les 65
     // segments de survol (2026-10-11), dont aucun ne couvre cette date : toujours 93. 163 avec
     // Juno et Cassini en orbite (même jour) : le segment de Juno couvre cette date, 94 demandés.
-    expect(Object.keys(horizonsManifest.bodies).length).toBe(163);
+    // 216 avec les 12 phases autour des petits corps et leurs 41 détails (même jour), dont aucun
+    // ne couvre cette date : toujours 94.
+    expect(Object.keys(horizonsManifest.bodies).length).toBe(216);
     expect(today.length).toBe(94);
     expect(then.length).toBeLessThan(today.length);
     expect(bytesPerSimulatedDay(then)).toBeLessThan(

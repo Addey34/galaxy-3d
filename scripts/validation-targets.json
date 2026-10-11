@@ -353,6 +353,22 @@
     }
   },
   "centers": {
+    "bennu": {
+      "id": "2101955",
+      "expect": "bennu"
+    },
+    "churyumov-gerasimenko": {
+      "id": "1000012",
+      "expect": "1000012"
+    },
+    "steins": {
+      "id": "2002867",
+      "expect": "2002867"
+    },
+    "arrokoth": {
+      "id": "2486958",
+      "expect": "arrokoth"
+    },
     "sun": {
       "id": "10",
       "expect": "sun"

@@ -14,7 +14,7 @@
  */
 import textureLadder from '@/config/textureLadder.json';
 import displayAlbedoTable from '@/config/displayAlbedo.json';
-import type { CelestialConfig } from '@/types';
+import { SMALL_BODY_KINDS, type CelestialConfig } from '@/types';
 import {
   flattenBodies,
   forEachBody,
@@ -137,6 +137,7 @@ export interface EphemerisManifestEntry {
   segmentOf?: string;
   /** Segment d'un SURVOL planétaire (ligne 45.10). */
   flyby?: true;
+  detail?: true;
   /** Aplatissement publié par `pnpm ephemeris:oblateness` (ligne 45.10, pas 2). */
   oblateness?: {
     j2: number;
@@ -364,6 +365,89 @@ function flybySegmentText(
   return text[locale];
 }
 
+/**
+ * LES PHASES AUTOUR DES PETITS CORPS (ligne 45.10, 2026-10-11), en une phrase : les corps, le
+ * nombre de fichiers et de détails, l'étendue des pas, les manœuvres lues, la borne, la phase
+ * tenue sans marge et celle qui ne l'est pas, avec ce qui la casse. Tout est LU (manifeste et
+ * plan), rien n'est recopié ; la borne est tenue par `src/config/flybyAccuracy.test.ts`.
+ */
+function smallBodySegmentText(
+  phases: readonly [string, EphemerisManifestEntry][],
+  details: readonly [string, EphemerisManifestEntry][],
+  nameOf: (id: string, locale: DocLocale) => string,
+  locale: DocLocale
+): string {
+  if (phases.length === 0) return '';
+  const list = (names: readonly string[]): string =>
+    new Intl.ListFormat(INTL_LOCALE[locale], { type: 'conjunction' }).format(
+      names
+    );
+  const centers = list(
+    [...new Set(phases.map(([, e]) => e.center!))].map((c) => nameOf(c, locale))
+  );
+  const probes = new Set(phases.map(([, e]) => e.segmentOf)).size;
+  const minutes = (entries: typeof phases) =>
+    entries.map(([, e]) => Math.round(e.stepDays * 1440));
+  const phaseFinest = stepWords(Math.min(...minutes(phases)), locale);
+  const phaseCoarsest = stepWords(Math.max(...minutes(phases)), locale);
+  // Les manœuvres des PHASES, lues à 10 min ; celles des détails le sont à la minute.
+  const manoeuvres = phases.reduce(
+    (n, [, e]) => n + (e.impulses?.length ?? 0),
+    0
+  );
+  const percent = exact(FLYBY_PLAN.segmentShare * 100, locale);
+  const bound = exact(FLYBY_PLAN.maxShare * 100, locale);
+  const detailMinutes = minutes(details);
+  const detailText: DocText =
+    details.length === 0
+      ? { en: '', fr: '', es: '', 'pt-BR': '' }
+      : {
+          en: ` Where manoeuvres follow each other within hours (the sample collection of OSIRIS-REx on Bennu), ${details.length} short files, at a step of ${Math.min(...detailMinutes)} to ${Math.max(...detailMinutes)} minutes, take over for those hours.`,
+          fr: ` Là où les manœuvres se suivent à quelques heures (le prélèvement d’OSIRIS-REx sur Bennu), ${details.length} fichiers courts, au pas de ${Math.min(...detailMinutes)} à ${Math.max(...detailMinutes)} minutes, prennent la main pour ces heures-là.`,
+          es: ` Donde las maniobras se suceden en pocas horas (la toma de muestras de OSIRIS-REx en Bennu), ${details.length} archivos cortos, con un paso de ${Math.min(...detailMinutes)} a ${Math.max(...detailMinutes)} minutos, toman el relevo durante esas horas.`,
+          'pt-BR': ` Onde as manobras se sucedem em poucas horas (a coleta de amostras da OSIRIS-REx em Bennu), ${details.length} arquivos curtos, com um passo de ${Math.min(...detailMinutes)} a ${Math.max(...detailMinutes)} minutos, assumem durante essas horas.`,
+        };
+  const withoutMargin = FLYBY_PLAN.encounters.filter(
+    (e) => e.segment !== undefined && 'withoutMargin' in e.segment
+  );
+  const marginText: DocText =
+    withoutMargin.length === 0
+      ? { en: '', fr: '', es: '', 'pt-BR': '' }
+      : {
+          en: ` ${withoutMargin.length === 1 ? 'One phase, around' : `${withoutMargin.length} phases, around`} ${list(withoutMargin.map((e) => `${nameOf(e.planet, locale)} on ${e.closestAt.slice(0, 10)}`))}, keeps only the bound of ${bound} %, not half of it: at the contact, a sample every minute still leaves a few metres.`,
+          fr: ` ${withoutMargin.length === 1 ? 'Une phase, autour de' : `${withoutMargin.length} phases, autour de`} ${list(withoutMargin.map((e) => `${nameOf(e.planet, locale)} le ${e.closestAt.slice(0, 10)}`))}, ne tient que la borne de ${bound} %, et non sa moitié : au contact, un échantillon par minute laisse encore quelques mètres.`,
+          es: ` ${withoutMargin.length === 1 ? 'Una fase, alrededor de' : `${withoutMargin.length} fases, alrededor de`} ${list(withoutMargin.map((e) => `${nameOf(e.planet, locale)} el ${e.closestAt.slice(0, 10)}`))}, solo mantiene el límite del ${bound} %, no su mitad: en el contacto, una muestra por minuto aún deja unos metros.`,
+          'pt-BR': ` ${withoutMargin.length === 1 ? 'Uma fase, ao redor de' : `${withoutMargin.length} fases, ao redor de`} ${list(withoutMargin.map((e) => `${nameOf(e.planet, locale)} em ${e.closestAt.slice(0, 10)}`))}, só mantém o limite de ${bound} %, não a sua metade: no contato, uma amostra por minuto ainda deixa alguns metros.`,
+        };
+  const unresolved = FLYBY_PLAN.encounters.flatMap((e) =>
+    'unresolved' in e && e.unresolved
+      ? [{ probe: e.probe, body: e.planet, ...e.unresolved }]
+      : []
+  );
+  const unresolvedText = unresolved
+    .map((u) => {
+      const who = nameOf(u.probe, locale);
+      const around = nameOf(u.body, locale);
+      const km = exact(Math.round(u.largestResidualKm), locale);
+      const day = u.largestResidualAt.slice(0, 10);
+      const text: DocText = {
+        en: ` ${who} near ${around} is not corrected: the trajectory that Horizons serves there jumps by up to ${km} km in ten minutes (${day}), a discontinuity of the source that no interpolation can follow, and the spacecraft keeps the position of its own file.`,
+        fr: ` ${who} près de ${around} n’est pas corrigée : la trajectoire qu’y sert Horizons saute de jusqu’à ${km} km en dix minutes (${day}), une discontinuité de la source qu’aucune interpolation ne peut suivre, et la sonde garde la position de son propre fichier.`,
+        es: ` ${who} cerca de ${around} no se corrige: la trayectoria que sirve Horizons salta hasta ${km} km en diez minutos (${day}), una discontinuidad de la fuente que ninguna interpolación puede seguir, y la sonda conserva la posición de su propio archivo.`,
+        'pt-BR': ` ${who} perto de ${around} não é corrigida: a trajetória que o Horizons serve ali salta até ${km} km em dez minutos (${day}), uma descontinuidade da fonte que nenhuma interpolação consegue seguir, e a sonda mantém a posição do seu próprio arquivo.`,
+      };
+      return text[locale];
+    })
+    .join('');
+  const text: DocText = {
+    en: ` Near a small body or a dwarf planet (${centers}), ${phases.length} files, made by ${probes} of them, give the position relative to the body as it is drawn, every ${phaseFinest} to ${phaseCoarsest}, with the ${manoeuvres} manoeuvres read in a sampling of the trajectory every ten minutes, each propagated from one side only: the body’s gravity alone could not carry the spacecraft from one sample to the next.${detailText.en} Each keeps the position within ${percent} % of the distance to the body, measured against Horizons over every phase.`,
+    fr: ` Près d’un petit corps ou d’une planète naine (${centers}), ${phases.length} fichiers, faits par ${probes} d’entre elles, donnent la position relative au corps tel qu’il est dessiné, toutes les ${phaseFinest} à ${phaseCoarsest}, avec les ${manoeuvres} manœuvres lues dans un échantillonnage de la trajectoire toutes les dix minutes, chacune propagée d’un seul côté : la gravité du corps ne suffirait pas à porter la sonde d’un échantillon au suivant.${detailText.fr} Chacun garde la position à moins de ${percent} % de la distance au corps, mesuré contre Horizons sur toute la phase.`,
+    es: ` Cerca de un cuerpo pequeño o de un planeta enano (${centers}), ${phases.length} archivos, hechos por ${probes} de ellas, dan la posición relativa al cuerpo tal como se dibuja, cada ${phaseFinest} a ${phaseCoarsest}, con las ${manoeuvres} maniobras leídas en un muestreo de la trayectoria cada diez minutos, cada una propagada desde un solo lado: la gravedad del cuerpo no bastaría para llevar la sonda de una muestra a la siguiente.${detailText.es} Cada uno mantiene la posición a menos del ${percent} % de la distancia al cuerpo, medido contra Horizons en toda la fase.`,
+    'pt-BR': ` Perto de um corpo pequeno ou de um planeta anão (${centers}), ${phases.length} arquivos, feitos por ${probes} delas, dão a posição relativa ao corpo tal como é desenhado, a cada ${phaseFinest} a ${phaseCoarsest}, com as ${manoeuvres} manobras lidas numa amostragem da trajetória a cada dez minutos, cada uma propagada de um só lado: a gravidade do corpo não bastaria para levar a sonda de uma amostra à seguinte.${detailText['pt-BR']} Cada um mantém a posição a menos de ${percent} % da distância ao corpo, medido contra o Horizons em toda a fase.`,
+  };
+  return text[locale] + marginText[locale] + unresolvedText;
+}
+
 export interface MethodologyInput {
   summary: ValidationSummary;
   manifest: EphemerisManifest;
@@ -453,11 +537,28 @@ function methodologyPage(input: MethodologyInput, locale: DocLocale): DocPage {
   // Un SEGMENT (2026-10-06) prolonge le fichier d'une sonde ; il n'est pas un corps de plus.
   const allBinaries = Object.entries(manifest.bodies);
   const binaries = allBinaries.filter(([, e]) => e.segmentOf === undefined);
+  // Autour d'un PETIT CORPS (ligne 45.10, 2026-10-11), phases et détails sont dits en une phrase.
+  const catalogue = flattenBodies(config);
+  const aroundSmallBody = (e: EphemerisManifestEntry): boolean =>
+    e.center !== undefined &&
+    SMALL_BODY_KINDS.has(catalogue.get(e.center)?.kind ?? 'planet');
   const segments = allBinaries.filter(
-    ([, e]) => e.segmentOf !== undefined && !e.flyby
+    ([, e]) =>
+      e.segmentOf !== undefined && !e.flyby && !e.detail && !aroundSmallBody(e)
   );
+  const smallBodyPhases = allBinaries.filter(
+    ([, e]) =>
+      e.segmentOf !== undefined && !e.flyby && !e.detail && aroundSmallBody(e)
+  );
+  const detailSegments = allBinaries.filter(([, e]) => e.detail);
   const flybySegments = allBinaries.filter(([, e]) => e.flyby);
   const flybyText = flybySegmentText(flybySegments, manifest.bodies, locale);
+  const smallBodyText = smallBodySegmentText(
+    smallBodyPhases,
+    detailSegments,
+    name,
+    locale
+  );
   const segmentText =
     segments
       .map(([, e]) => {
@@ -473,7 +574,9 @@ function methodologyPage(input: MethodologyInput, locale: DocLocale): DocPage {
           'pt-BR': ` Enquanto ${who} orbita ${around}, um segundo arquivo assume: a sua posição relativa a ${around}, a cada ${exact(e.stepDays, locale)} dia, propagada ao redor de ${around}${flat ? ' (a sua gravidade e o seu achatamento, o termo J2)' : ''} entre duas amostras, com ${n === 1 ? 'a manobra' : `as ${n} manobras`} desse período, lida${n === 1 ? '' : 's'} numa amostragem mais fina da trajetória e propagada${n === 1 ? '' : 's'} de um só lado.`,
         });
       })
-      .join('') + flybyText;
+      .join('') +
+    smallBodyText +
+    flybyText;
   const binarySpacecraft = binaries.filter(([n]) => spacecraftNames.has(n));
   const binaryNatural = binaries.filter(([n]) => !fileOnlyNames.has(n));
   const stepsOf = (entries: typeof binaries): number[] =>

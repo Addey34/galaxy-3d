@@ -122,8 +122,10 @@ describe('le service charge des fenêtres (lot 17C)', () => {
     // avec les trois sondes de l'ESA (2026-10-09 : Solar Orbiter, JUICE et Hera au pas d'un jour) ;
     // 56 410 368 avec les 65 segments de survol (2026-10-11, 66 720 octets, ligne 45.10) ;
     // 57 754 512 avec Juno et Cassini en orbite (même jour, pas 2 : 426 240 et 925 584 octets,
-    // les survols replanifiés avec le terme J2, Juno ramené à la couverture d'Horizons).
-    expect(shipped).toBe(57_754_512);
+    // les survols replanifiés avec le terme J2, Juno ramené à la couverture d'Horizons) ;
+    // 58 364 208 avec les phases autour des petits corps (même jour, ligne 45.10 : Rosetta, OSIRIS-
+    // REx, New Horizons à Pluton et Hera à Didymos, 12 phases et 41 détails, 609 696 octets).
+    expect(shipped).toBe(58_364_208);
     // MESURÉ ici avec TOUTES les lignes d'orbite allumées, le pire cas qu'un visiteur obtient en
     // allumant la colonne entière : Halley en demande 333 Ko à elle seule (76 ans de révolution,
     // pas de 4 jours), Uranus 368 Ko. Le démarrage, lui, ne demande depuis le 2026-10-04 que les

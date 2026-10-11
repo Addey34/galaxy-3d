@@ -70,11 +70,13 @@ function positionCell(row: InventoryRow): string {
     (segment) => segment.flyby && !segment.departure
   ).length;
   const departures = all.filter((segment) => segment.departure).length;
+  const details = all.filter((segment) => segment.detail).length;
   const segments =
     all
-      .filter((segment) => !segment.flyby)
+      .filter((segment) => !segment.flyby && !segment.detail)
       .map((segment) => ` + segment ${segment.center} ${segment.stepDays} j`)
       .join('') +
+    (details > 0 ? ` + ${details} détail${details > 1 ? 's' : ''}` : '') +
     (flybys > 0 ? ` + ${flybys} survol${flybys > 1 ? 's' : ''}` : '') +
     (departures > 0 ? ' + départ' : '');
   return `${step}${perRev}${segments}, ${km(medianKm)}`;
