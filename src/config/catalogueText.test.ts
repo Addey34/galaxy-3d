@@ -11,6 +11,7 @@ import {
   deferLongText,
   englishStrings,
   hydrateDeferred,
+  SAME_AS_ENGLISH,
   stripToEnglish,
   textKey,
 } from '@/core/registryText';
@@ -143,7 +144,7 @@ function hydrateBoot(
   if (typeof record.en === 'string' && !(DEFERRED_KEY in record)) {
     const text = boot[textKey(record.en)];
     if (typeof text === 'string' && record[locale] === undefined)
-      record[locale] = text;
+      record[locale] = text === SAME_AS_ENGLISH ? record.en : text;
   }
   for (const v of Object.values(record)) hydrateBoot(v, boot, locale);
 }
