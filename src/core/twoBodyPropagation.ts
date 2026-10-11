@@ -14,12 +14,15 @@
  * dynamique, elle, sait franchir un intervalle qui contient dix révolutions : c'est
  * exactement ce que fait cette fonction.
  *
- * Forme elliptique seulement (e < 1), via les fonctions f et g. C'est le cas de tous les
- * corps du catalogue ; un état non elliptique renvoie `null` plutôt qu'une position
- * silencieusement fausse, à charge de l'appelant de retomber sur son interpolation.
+ * Ellipse (e < 1) ET hyperbole (e > 1), via les fonctions f et g. L'hyperbole est la forme
+ * d'un SURVOL (ligne 45.10, 2026-10-11) : une sonde qui passe une planète a une énergie
+ * positive par rapport à elle. Tant que ce module refusait l'hyperbole, les segments de survol
+ * retombaient sans bruit sur la cubique de Hermite, qui laissait 13 km au plus près de Mercure
+ * avec des ancres toutes les 10 min. Seul l'état PARABOLIQUE (énergie exactement nulle) renvoie
+ * encore `null`, à charge de l'appelant de retomber sur son interpolation.
  */
 import * as THREE from 'three';
-import { solveKepler } from './kepler';
+import { solveHyperbolicKepler, solveKepler } from './kepler';
 
 /** Constante de Gauss (UA^1.5·jour⁻¹) — μ☉ = k² en UA³/jour². */
 const GAUSS_K = 0.017_202_098_95;
@@ -48,8 +51,7 @@ export function gravitationalParameter(massKg: number): number {
  * Avance un état (position UA, vitesse UA/jour) de `deltaDays` le long de sa conique
  * osculatrice. `deltaDays` peut être négatif (propagation vers le passé).
  *
- * Renvoie `null` si l'état n'est pas elliptique — orbite ouverte, μ nul, ou position
- * dégénérée — cas où aucune conique fermée ne passe par cet état.
+ * Renvoie `null` pour un état parabolique, un μ nul ou une position dégénérée.
  *
  * @param position  position relative au corps central (UA)
  * @param velocity  vitesse relative au corps central (UA/jour)
@@ -70,7 +72,9 @@ export function propagateTwoBody(
   // Demi-grand axe par l'énergie spécifique : ε = v²/2 − μ/r = −μ/(2a).
   const v2 = velocity.lengthSq();
   const energy = v2 / 2 - mu / r0;
-  if (energy >= 0) return null; // parabolique ou hyperbolique
+  if (energy > 0)
+    return propagateHyperbolic(position, velocity, deltaDays, mu, energy, out);
+  if (energy === 0) return null; // parabolique
   const a = -mu / (2 * energy);
   if (!Number.isFinite(a) || a <= 0) return null;
 
@@ -114,6 +118,42 @@ export function propagateTwoBody(
   const f = 1 - (a / r0) * (1 - Math.cos(deltaE));
   const g = deltaDays - (deltaE - Math.sin(deltaE)) / meanMotion;
 
+  return out.copy(position).multiplyScalar(f).addScaledVector(velocity, g);
+}
+
+/**
+ * La branche HYPERBOLIQUE, par l'anomalie hyperbolique H (équation de Kepler e·sinh H − H = M).
+ * Mêmes fonctions f et g que l'ellipse, cosinus et sinus devenus hyperboliques :
+ *   f = 1 − (|a| / r₀)(cosh ΔH − 1)     g = Δt − (sinh ΔH − ΔH) / n,   n = √(μ / |a|³).
+ * H n'est pas périodique : aucun déroulement de tours, contrairement à l'ellipse.
+ */
+function propagateHyperbolic(
+  position: THREE.Vector3,
+  velocity: THREE.Vector3,
+  deltaDays: number,
+  mu: number,
+  energy: number,
+  out: THREE.Vector3
+): THREE.Vector3 | null {
+  const r0 = position.length();
+  const a = mu / (2 * energy); // |a|
+  if (!Number.isFinite(a) || a <= 0) return null;
+  const sqrtMuA = Math.sqrt(mu * a);
+  // e·cosh H₀ = 1 + r₀/|a| et e·sinh H₀ = (r·v)/√(μ|a|) : leur rapport donne H₀ sans 1/e.
+  const eCosh = 1 + r0 / a;
+  const eSinh = position.dot(velocity) / sqrtMuA;
+  const eccentricity = Math.sqrt(eCosh * eCosh - eSinh * eSinh);
+  if (!(eccentricity > 1)) return null;
+  const hyperbolicAnomaly0 = Math.atanh(eSinh / eCosh);
+  const meanMotion = Math.sqrt(mu / (a * a * a));
+  const meanAnomaly0 = eSinh - hyperbolicAnomaly0;
+  const hyperbolicAnomaly = solveHyperbolicKepler(
+    meanAnomaly0 + meanMotion * deltaDays,
+    eccentricity
+  );
+  const deltaH = hyperbolicAnomaly - hyperbolicAnomaly0;
+  const f = 1 - (a / r0) * (Math.cosh(deltaH) - 1);
+  const g = deltaDays - (Math.sinh(deltaH) - deltaH) / meanMotion;
   return out.copy(position).multiplyScalar(f).addScaledVector(velocity, g);
 }
 
