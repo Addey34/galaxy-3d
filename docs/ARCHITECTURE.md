@@ -1827,6 +1827,66 @@ géante. Mesuré en trois temps, et chaque temps a changé le plan :
   avec et sans le greffon : l'écart est celui de deux captures d'un même build. La marge passe
   de 112 à 14 972 octets, puis à **13 465** une fois la propagation J2 ajoutée.
 
+**Les phases autour des petits corps (2026-10-11, ligne 45.10, la fin).** La sphère d'influence
+de Laplace d'un petit corps fait quelques dizaines de kilomètres (67P : 62 km), et Rosetta a suivi
+la comète de 10 à 1 500 km : l'outil ne voyait aucune de ces phases. Mesuré une fois qu'il les a
+vues : **Hayabusa2 jusqu'à 1 483 km de sa vraie place relative à Ryugu**, alors qu'elle s'en tenait
+à 20 km ; OSIRIS-REx à 11 à 16 km de Bennu en orbite à quelques kilomètres ; Rosetta à 22 à 60 km
+de 67P. Le fichier héliocentrique de chaque sonde, au pas de 4 jours, ne suit pas une sonde qui
+manœuvre toutes les quelques heures.
+
+- **La détection** : un petit corps (astéroïde, comète, planète naine) se rencontre dans sa
+  sphère de HILL à sa distance du moment, le critère des phases `satelliteOf`
+  (`core/satellitePhases.ts`). Le passage se juge sur le SEGMENT qui joint deux échantillons de
+  détection, parce qu'un survol rapide traverse la sphère en quelques minutes (Rosetta à Šteins).
+  Les 71 rencontres planétaires sont restées identiques, plan compris.
+- **La référence est la paire DESSINÉE.** Horizons ne sert un petit corps comme centre que s'il
+  porte un noyau de mission (Bennu, 67P, Šteins, Arrokoth ; ni Ryugu ni Lutetia, essayé sous trois
+  syntaxes). La vérité, et le segment livré, sont donc la sonde MOINS le corps, tous deux servis
+  depuis le Soleil, le corps par la solution du fichier qui le dessine (la `primary` de 67P sur la
+  mission). Là où le centre existe, le vecteur direct sert de TÉMOIN : 0,0 km pour Bennu et 67P.
+  Le plan porte la commande du corps (`relativeTo`), et le générateur la lit (`requestDifference`).
+- **Les ancres suivent les manœuvres** (méthode du segment de BepiColombo). Un tirage au pas de
+  10 min, les poussées lues dans ses résidus à deux corps (seuil 1 m ; fond de 2 à 7 cm au
+  99ᵉ centile, 30 cm sur la fin de mission de Rosetta, poussées de 1 m à 3 km), puis le pas le plus grossier dont la simulation tient la
+  moitié de la borne. Un intervalle qui porte PLUSIEURS manœuvres n'en déclare aucune : la
+  simulation l'y voit fautif, et c'est l'une des grappes que couvre un détail.
+- **Les DÉTAILS.** Là où les instants fautifs se regroupent en quelques heures (les répétitions
+  et le prélèvement d'OSIRIS-REx, la descente finale de Rosetta), un segment court au pas de 1 à
+  10 min, ses poussées lues au tirage d'une MINUTE (une par minute qui dépasse le seuil), se pose
+  sur la phase. Le service prend le segment le plus FIN qui couvre la date
+  (`HorizonsEphemerisService._segmentAt`, falsifié : le plus grossier rend quatre rencontres
+  rouges). Un détail est vérifié contre une vérité tirée à la minute dans sa fenêtre, et
+  marqué `detail` au manifeste. Tous les pas grossiers sont essayés, et le plan le moins LOURD,
+  détails compris, gagne : la phase de Rosetta du début de 2015 passe ainsi de 558 Ko au pas de
+  30 min à 38 Ko au pas de 12 h avec six détails.
+- **Le résultat** : 12 phases (Rosetta et 67P, OSIRIS-REx et Bennu, New Horizons à Pluton, Hera à
+  l'approche de Didymos sur sa trajectoire prévue) et 41 détails, 609 696 octets, toutes sous la
+  borne. Le prélèvement d'OSIRIS-REx (2020-10-20) ne tient que la borne de 1 % et non sa moitié :
+  au contact, une ancre par minute laisse encore 2,1 m, soit 0,92 % de la distance. Le plan le
+  dit (`withoutMargin`), et la page aussi.
+- **Ce qui n'est PAS corrigé, et pourquoi** : Hayabusa2 près de Ryugu. La trajectoire qu'Horizons
+  sert y est discontinue : à l'arrivée, elle oscille entre 31 et 14 km du corps en dix minutes,
+  puis saute de 31,5 à 15,3 km entre 00:00 et 00:10 UT le 2018-06-27, vitesse nulle ensuite ; son
+  plus grand résidu atteint 60 km en dix minutes (2019-11-20). Et son maintien en vol stationnaire
+  ne laisse aucun fond séparable des poussées (99ᵉ centile 0,98 m pour un seuil de 1 m). Le plan
+  écrit ces chiffres (`unresolved`), et `/methodology` les publie.
+- **Un défaut trouvé en chemin, dans `solveKepler`.** Newton sans encadrement divergeait près de
+  e = 1 et de M = 0 : sur 24 006 couples (e de 0,9 à 0,9999), 820 solutions fausses, jusqu'à
+  E = −2e20. C'est l'orbite relative d'une sonde qui dérive à quelques cm/s d'un petit corps
+  (OSIRIS-REx à 14 km de Bennu : e ≈ 0,99), et la position servie partait à 12 000 km. La racine
+  est désormais encadrée sur [−π, π], une bissection prenant le relais quand Newton en sort ; aux
+  excentricités ordinaires, rien ne change. Tout corps propagé sur une orbite très excentrique en
+  profite.
+- **Le budget de lecture se compte au PIC.** Douze phases de quelques mois, comptées comme des
+  fichiers permanents, annonçaient 3 882 octets par jour simulé, une demande qui n'existe à aucune
+  date. `playbackBudget.test.ts` compte désormais ce que l'application compte
+  (`budgetGrids(date)`), à la date la plus chère : 92 fichiers le 2016-09-10, 1 578 octets par
+  jour simulé, 4,61 Mbit/s à la vitesse maximale. Les détails suivent la règle des survols.
+- **L'outil** : `pnpm ephemeris:flybys --write`, puis `pnpm ephemeris:generate --flybys`. Garde :
+  `src/config/flybyAccuracy.test.ts` (toutes les références de chaque phase, et deux
+  falsifications permanentes : sans son détail, le prélèvement sort de la borne).
+
 **Pourquoi un survol reste héliocentrique.** La règle des lunes étire √d : à la frontière de la
 sphère de Hill de Jupiter elle poserait l'objet à 35 × 3,43 × √0,355 ≈ 49 unités de la planète,
 l'orbite de Saturne à l'écran, et un fondu entre les deux repères le ferait jaillir puis revenir.

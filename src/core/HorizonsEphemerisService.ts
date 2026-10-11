@@ -332,6 +332,13 @@ export interface HorizonsBodyManifest {
    */
   flyby?: true;
   /**
+   * Ce segment est un DÉTAIL (ligne 45.10, 2026-10-11) : quelques heures au pas de quelques
+   * minutes, posées sur une phase autour d'un petit corps là où des manœuvres rapprochées la
+   * cassent. Il l'emporte sur la phase qui l'entoure (cf. `_segmentAt`) ; comme un survol, il
+   * coûte son fichier une fois par passage et ne compte pas parmi les fichiers permanents.
+   */
+  detail?: true;
+  /**
    * L'aplatissement de ce corps (J2, rayon de référence, pôle IAU), LU au relevé des faits par
    * `pnpm ephemeris:oblateness` (ligne 45.10, pas 2). Un segment relatif à ce corps se propage
    * alors avec le terme J2 (`core/oblatePropagation.ts`).
@@ -1394,18 +1401,25 @@ export class HorizonsEphemerisService implements PreciseEphemerisProvider {
     return body ? this._samplePosition(body, date) : null;
   }
 
-  /** Le segment de `name` dont la grille couvre `date`, s'il y en a un d'inscrit. */
+  /**
+   * Le segment de `name` dont la grille couvre `date`, s'il y en a un d'inscrit. Quand deux le
+   * couvrent, le plus FIN gagne : un segment de DÉTAIL (`detail` au manifeste, quelques heures
+   * au pas de quelques minutes) se pose sur la phase au pas grossier qui l'entoure, là où une
+   * suite de manœuvres rapprochées la casse (le prélèvement d'OSIRIS-REx sur Bennu).
+   */
   private _segmentAt(name: string, date: Date): LoadedBody | null {
+    let found: LoadedBody | null = null;
     for (const body of this.bodies.values()) {
       const m = body.manifest;
       if (
         m.segmentOf === name &&
         m.center !== undefined &&
-        covers(HorizonsEphemerisService._grid(m), date)
+        covers(HorizonsEphemerisService._grid(m), date) &&
+        (found === null || m.stepDays < found.manifest.stepDays)
       )
-        return body;
+        found = body;
     }
-    return null;
+    return found;
   }
   /** Returns a precise child-minus-parent vector when both Horizons states are covered. */
   getParentRelativeAU(

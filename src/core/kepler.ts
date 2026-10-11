@@ -131,13 +131,30 @@ export function solveKepler(meanAnomaly: number, eccentricity: number): number {
   if (m > Math.PI) m -= twoPi;
   if (m < -Math.PI) m += twoPi;
 
-  // Graine : E ≈ M + e·sin(M) (premier ordre), robuste jusqu'aux fortes excentricités.
+  // Graine : E ≈ M + e·sin(M) (premier ordre).
+  //
+  // NEWTON GARDÉ PAR UN ENCADREMENT (2026-10-11). Près de e = 1 et de M = 0, la pente
+  // 1 − e·cos E tombe à 1 − e, et un pas de Newton sautait hors de [−π, π] puis divergeait :
+  // mesuré sur 24 006 couples (e de 0,9 à 0,9999), 820 solutions FAUSSES, jusqu'à E = −2e20.
+  // C'est l'orbite relative d'une sonde qui dérive à quelques cm/s d'un petit corps
+  // (OSIRIS-REx à 14 km de Bennu : e ≈ 0,99), et la position servie partait à 12 000 km.
+  // f(E) = E − e·sin E − M est CROISSANTE (f' = 1 − e·cos E ≥ 1 − e > 0) et change de signe
+  // sur [−π, π] : la racine y reste encadrée, et un pas qui sort de l'encadrement est
+  // remplacé par une bissection. Aux excentricités ordinaires, Newton ne sort jamais de
+  // l'encadrement et le résultat est inchangé.
+  let lo = -Math.PI;
+  let hi = Math.PI;
   let e = m + eccentricity * Math.sin(m);
-  for (let i = 0; i < 30; i++) {
+  for (let i = 0; i < 100; i++) {
     const f = e - eccentricity * Math.sin(e) - m;
+    if (f === 0) break;
+    if (f > 0) hi = e;
+    else lo = e;
     const fPrime = 1 - eccentricity * Math.cos(e);
-    const delta = f / fPrime;
-    e -= delta;
+    let next = e - f / fPrime;
+    if (!(next >= lo && next <= hi)) next = (lo + hi) / 2;
+    const delta = next - e;
+    e = next;
     if (Math.abs(delta) < 1e-12) break;
   }
   return e;

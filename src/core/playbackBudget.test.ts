@@ -32,6 +32,7 @@ const entries = Object.entries(
           startJdTdb: number;
           sampleCount: number;
           flyby?: boolean;
+          detail?: boolean;
         }
       >;
     }
@@ -43,14 +44,43 @@ const entries = Object.entries(
  * fichier ENTIER une fois, ce qu'une densité par jour simulé surestimerait de trois ordres de
  * grandeur. Ils ont leur propre garde, plus bas.
  */
-const grids = entries.filter(([, e]) => !e.flyby).map(([, grid]) => grid);
+const brief = (e: { flyby?: boolean; detail?: boolean }) =>
+  e.flyby === true || e.detail === true;
+// Un segment de DÉTAIL (quelques heures autour d'un prélèvement, ligne 45.10) suit la même règle.
+const grids = entries.filter(([, e]) => !brief(e)).map(([, grid]) => grid);
 const flybySegments = entries
-  .filter(([, e]) => e.flyby)
+  .filter(([, e]) => brief(e))
   .map(([, grid]) => grid);
 
+/**
+ * LA DEMANDE AU PIC : les fichiers qui couvrent ENSEMBLE la date où leur somme est la plus
+ * forte, et non tous les fichiers comme s'ils couvraient chacun toute date. C'est ce que
+ * l'application compte (`budgetGrids(date)`, puis `bytesPerSimulatedDay`), à la date la plus
+ * chère. La somme ne change qu'au début ou à la fin d'un fichier, donc son maximum tombe au
+ * début de l'un d'eux : on les essaie tous, sans date inventée.
+ *
+ * Remplace le 2026-10-11 (ligne 45.10, les phases autour des petits corps) le compte de TOUS
+ * les fichiers : douze phases de quelques mois y passaient pour des fichiers permanents, et la
+ * demande annoncée (3 882 octets par jour simulé, 9,7 Mbit/s) n'existait à aucune date.
+ */
+const gridEnd = (grid: (typeof grids)[number]) =>
+  grid.startJdTdb + (grid.sampleCount - 1) * grid.stepDays;
+const peak = (() => {
+  let best = { grids: [] as typeof grids, perDay: -1, startJdTdb: 0 };
+  for (const start of new Set(grids.map((grid) => grid.startJdTdb))) {
+    const covering = grids.filter(
+      (grid) => grid.startJdTdb <= start && start < gridEnd(grid)
+    );
+    const perDay = bytesPerSimulatedDay(covering);
+    if (perDay > best.perDay)
+      best = { grids: covering, perDay, startJdTdb: start };
+  }
+  return best;
+})();
+
 describe('bytesPerSimulatedDay', () => {
-  it('reproduit la mesure publiée : 4,89 Mbit/s à la vitesse maximale', () => {
-    const perDay = bytesPerSimulatedDay(grids);
+  it('compte la demande au pic : 4,61 Mbit/s à la vitesse maximale', () => {
+    const perDay = peak.perDay;
     // 64 corps au 2026-09-24 (800,2 o par jour simulé, 2,34 Mbit/s, la mesure du plan) ; 87
     // depuis les 23 cibles de missions du 2026-10-04, 89 avec leurs deux satellites le même
     // jour, 1 002 quand Patrocle passe au pas de 4 jours (2026-10-05, +48/4 − 48/16), 1 074
@@ -64,11 +94,20 @@ describe('bytesPerSimulatedDay', () => {
     // 98 et 1 674 avec Juno autour de Jupiter (48 / 0,5) et Cassini autour de Saturne
     // (48 / 0,25), le même jour : des segments de PLUSIEURS ANNÉES, comptés comme les fichiers
     // permanents, donc comme s'ils couvraient toute date (ils ne couvrent que 2004-2028).
-    expect(grids.length).toBe(98);
-    expect(perDay).toBeCloseTo(1674.0, 1);
+    // Depuis les phases autour des petits corps (même jour, 110 fichiers), le compte est celui
+    // du PIC (cf. `peak`) : 92 fichiers couvrent ensemble le 2016-09-10 (lancement d'OSIRIS-REx,
+    // Juno et Cassini en orbite, Rosetta à 67P), 1 578 octets par jour simulé.
+    expect(grids.length).toBe(110);
+    expect(peak.grids.length).toBe(92);
+    expect(
+      new Date((peak.startJdTdb - 2_440_587.5) * 86_400_000)
+        .toISOString()
+        .slice(0, 10)
+    ).toBe('2016-09-10');
+    expect(perDay).toBeCloseTo(1578.0, 1);
     const atMaxSpeed = (perDay * MAX_SIMULATION_SCALE) / SECONDS_PER_DAY;
-    expect(atMaxSpeed).toBeCloseTo(611_428.5, 0);
-    expect((atMaxSpeed * 8) / 1e6).toBeCloseTo(4.89, 2);
+    expect(atMaxSpeed).toBeCloseTo(576_364.5, 0);
+    expect((atMaxSpeed * 8) / 1e6).toBeCloseTo(4.61, 2);
   });
 
   /**
@@ -150,8 +189,9 @@ describe('demandBytesPerSecond', () => {
 });
 
 describe('sustainableTimeScale', () => {
-  const perSimulatedDay = bytesPerSimulatedDay(grids);
-  const bodyCount = grids.length;
+  // À la date la plus chère (cf. `peak`) : partout ailleurs, le plafond est plus haut.
+  const perSimulatedDay = peak.perDay;
+  const bodyCount = peak.grids.length;
   const ceiling = (bytesPerSecond: number | null): number | null =>
     sustainableTimeScale({
       bytesPerSecond,
@@ -164,7 +204,7 @@ describe('sustainableTimeScale', () => {
     expect(ceiling(null)).toBeNull();
   });
 
-  it('ne plafonne rien au-dessus de la demande maximale (4,89 Mbit/s)', () => {
+  it('ne plafonne rien au-dessus de la demande maximale (4,61 Mbit/s)', () => {
     // 10 Mbit/s : le plan mesure que ce lien absorbe la vitesse maximale. Le plafond doit donc
     // être ABSENT, et pas égal au maximum : l'interface ne dit rien quand il n'y a rien à dire.
     expect(ceiling(1_250_000)).toBeNull();
@@ -188,8 +228,9 @@ describe('sustainableTimeScale', () => {
         perSimulatedDay
     );
     expect(cap).toBe(expected);
-    // 40,1 % depuis Juno et Cassini en orbite (2026-10-11), 48,5 % avant.
-    expect(cap! / MAX_SIMULATION_SCALE).toBeCloseTo(0.401, 2);
+    // 40,1 % depuis Juno et Cassini en orbite (2026-10-11), 48,5 % avant ; 42,6 % au PIC de
+    // la demande (même jour, cf. `peak`), qui remplace le compte de tous les fichiers.
+    expect(cap! / MAX_SIMULATION_SCALE).toBeCloseTo(0.426, 2);
   });
 
   it('un lien deux fois plus lent plafonne deux fois plus bas, à peu près', () => {

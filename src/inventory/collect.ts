@@ -89,6 +89,7 @@ export interface PositionState {
       readonly bytes: number | null;
       /** Segment d'une rencontre planétaire (ligne 45.10) : compté à part par le rendu. */
       readonly flyby: boolean;
+      readonly detail: boolean;
       /** Cette rencontre est le DÉPART de la Terre au lancement, pas un survol. */
       readonly departure: boolean;
     }[];
@@ -241,6 +242,7 @@ interface ManifestEntry {
   meanMotionScale?: number;
   segmentOf?: string;
   flyby?: true;
+  detail?: true;
   startJdTdb: number;
 }
 
@@ -345,6 +347,7 @@ function positionOf(
                 stepDays: segment.stepDays,
                 bytes: existsSync(path) ? statSync(path).size : null,
                 flyby: segment.flyby === true,
+                detail: segment.detail === true,
                 // Un segment qui commence au premier nœud du fichier est un DÉPART, pas un survol.
                 departure:
                   segment.flyby === true &&

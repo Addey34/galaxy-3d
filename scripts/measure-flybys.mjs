@@ -14,7 +14,11 @@
  *   1. DÉTECTION. La trajectoire VRAIE de chaque sonde (Horizons, pas de 6 h, toute la
  *      couverture du binaire livré) est confrontée à chaque planète ; une RENCONTRE est un
  *      intervalle passé dans sa sphère d'influence de Laplace, a·(m/M☉)^(2/5), masses et
- *      distances lues au catalogue. Détecter sur la vérité et non sur l'interpolation livrée,
+ *      distances lues au catalogue. Un PETIT CORPS (2026-10-11 au soir) se rencontre dans sa
+ *      sphère de Hill, et sa phase se planifie autrement : sonde MOINS corps dessiné, ancres
+ *      autour des manœuvres, segments de DÉTAIL là où elles se suivent à quelques heures
+ *      (cf. `planAroundManoeuvres` et `docs/ARCHITECTURE.md` § « Les phases autour des petits
+ *      corps »). Détecter sur la vérité et non sur l'interpolation livrée,
  *      c'est ne pas manquer une rencontre que l'application rate justement.
  *   2. MESURE. Sur chaque rencontre élargie d'un jour de part et d'autre, Horizons au pas de
  *      10 min (60 min au-delà de 20 jours, c'est-à-dire les années de Juno et de Cassini en
@@ -307,21 +311,57 @@ const { horizonsServiceFromDisk } = await load(
 );
 const { bodyDynamics } = await load('/src/config/gravity.ts');
 const { oblatenessOf } = await load('/src/core/HorizonsEphemerisService.ts');
-const { twoBodyResiduals } = await load('/src/core/impulseDetection.ts');
+const { twoBodyResiduals, detectImpulses, decimateAroundImpulses } = await load(
+  '/src/core/impulseDetection.ts'
+);
+const { SMALL_BODY_KINDS } = await load('/src/types.ts');
+const { hillRadiusAU } = await load('/src/core/satellitePhases.ts');
+const { MU_SUN_AU3_PER_DAY2 } = await load('/src/core/twoBodyPropagation.ts');
 
 const catalogue = new Map(flattenBodies(CELESTIAL_CONFIG));
 const service = horizonsServiceFromDisk();
 
-/** Les planètes, dérivées du catalogue et non listées : `kind === 'planet'`. */
+/**
+ * Les corps rencontrés, dérivés du catalogue et non listés. Une PLANÈTE se rencontre dans sa
+ * sphère d'influence de Laplace. Un PETIT CORPS héliocentrique doté d'une masse, dans sa sphère
+ * de Hill à sa distance du moment : celle de Laplace d'une comète fait quelques dizaines de km
+ * (67P : 62 km, quand Rosetta l'a suivie de 10 à 1 500 km), et c'est le critère des phases
+ * `satelliteOf` (`core/satellitePhases.ts`), qui le rencontre donc au même endroit.
+ */
 const planets = [...catalogue]
-  .filter(([, cfg]) => cfg.kind === 'planet')
-  .map(([name, cfg]) => ({
-    name,
-    radiusKm: cfg.realData.radiusKm,
-    soiAU:
-      cfg.realData.distanceAU *
-      Math.pow(cfg.realData.massKg / SUN_MASS_KG, 0.4),
-  }));
+  .filter(
+    ([, cfg]) =>
+      cfg.kind === 'planet' ||
+      (SMALL_BODY_KINDS.has(cfg.kind) &&
+        cfg.frame !== 'parentRelative' &&
+        cfg.realData?.massKg > 0)
+  )
+  .map(([name, cfg]) => {
+    const radiusKm = cfg.realData.radiusKm;
+    if (cfg.kind === 'planet') {
+      const soiAU =
+        cfg.realData.distanceAU *
+        Math.pow(cfg.realData.massKg / SUN_MASS_KG, 0.4);
+      return { name, radiusKm, sphereAU: () => soiAU };
+    }
+    const mu = (MU_SUN_AU3_PER_DAY2 * cfg.realData.massKg) / SUN_MASS_KG;
+    return {
+      name,
+      radiusKm,
+      sphereAU: (position) => hillRadiusAU(position.length(), mu),
+    };
+  });
+
+/**
+ * Distance minimale (UA) entre deux échantillons, le mouvement relatif pris RECTILIGNE : un
+ * survol de petit corps traverse sa sphère de Hill en quelques minutes (Rosetta à Šteins,
+ * 8,6 km/s), que le pas de détection de 6 h enjamberait.
+ */
+function closestBetween(a, b) {
+  const d = b.clone().sub(a);
+  const t = Math.min(1, Math.max(0, -a.dot(d) / (d.lengthSq() || 1)));
+  return { distance: a.clone().addScaledVector(d, t).length(), t };
+}
 
 // Toutes les dates demandées tombent sur une minute entière : on rend la seconde exacte que
 // les 9 décimales du JD arrondissent (« 00:13:59.999 »).
@@ -365,6 +405,9 @@ for (const probe of probes) {
   for (const planet of planets) {
     let open = null;
     let last = null;
+    // Le passage le plus rapide de la rencontre, rapporté à sa distance : il fixe le pas de
+    // la mesure (cf. `measureStepMinutes`).
+    let fastest = Infinity;
     const close = () => {
       if (open === null) return;
       encounters.push({
@@ -372,19 +415,42 @@ for (const probe of probes) {
         planet: planet.name,
         fromJd: Math.max(startJd + 0.01, open - MARGIN_DAYS),
         toJd: Math.min(stopJd - 0.01, last + MARGIN_DAYS),
+        crossingMinutes: fastest,
       });
       open = null;
+      fastest = Infinity;
     };
+    let previous = null;
     for (const row of coarse) {
       const p = service.getHeliocentricAU(planet.name, dateOfUtJd(row.jd));
-      if (!p) continue;
-      const inside = sceneOfKm(row.km).distanceTo(p) < planet.soiAU;
-      if (inside) {
-        // Deux passages séparés de moins de deux marges se mesurent ensemble.
-        if (open !== null && row.jd - last > 2 * MARGIN_DAYS) close();
-        if (open === null) open = row.jd;
-        last = row.jd;
+      if (!p) {
+        previous = null;
+        continue;
       }
+      const rel = sceneOfKm(row.km).sub(p);
+      // Le passage se juge sur le SEGMENT qui joint deux échantillons, pas sur ses bouts.
+      const pass = previous
+        ? closestBetween(previous.rel, rel)
+        : { distance: rel.length(), t: 1 };
+      const sphere = planet.sphereAU(p);
+      // Un échantillon DANS la sphère date la rencontre lui-même ; un passage vu seulement
+      // entre deux échantillons, par l'instant du plus près sur leur segment.
+      const jd =
+        rel.length() < sphere || !previous
+          ? row.jd
+          : previous.jd + pass.t * (row.jd - previous.jd);
+      if (pass.distance < sphere) {
+        // Deux passages séparés de moins de deux marges se mesurent ensemble.
+        if (open !== null && jd - last > 2 * MARGIN_DAYS) close();
+        if (open === null) open = jd;
+        last = jd;
+        if (previous) {
+          const speed =
+            rel.distanceTo(previous.rel) / ((row.jd - previous.jd) * 1440);
+          fastest = Math.min(fastest, pass.distance / speed);
+        }
+      }
+      previous = { rel, jd: row.jd };
     }
     close();
   }
@@ -419,7 +485,7 @@ const hourIso = (jd, round) => {
  * `buildUrl` (temps TDB par défaut, UA et UA/jour, table 2) : la simulation porte donc sur le
  * fichier qui sera livré, nœud pour nœud, et non sur une approximation.
  */
-async function segmentStates(
+async function segmentStatesAt(
   command,
   expect,
   centerId,
@@ -471,6 +537,51 @@ async function segmentStates(
     stepDays: stepMinutes / 1440,
     samples,
   };
+}
+
+/**
+ * Les états d'un segment relatif à `center` : un identifiant Horizons, ou `{ minus }` pour un
+ * PETIT CORPS, dont le segment est la sonde MOINS le corps dessiné, tous deux servis depuis le
+ * Soleil par la même requête que le générateur (cf. `bodyCommand`). Les deux grilles sont
+ * identiques, ce qui se vérifie.
+ */
+async function segmentStates(
+  command,
+  expect,
+  center,
+  startIso,
+  stopIso,
+  stepMinutes
+) {
+  if (typeof center === 'string')
+    return segmentStatesAt(
+      command,
+      expect,
+      center,
+      startIso,
+      stopIso,
+      stepMinutes
+    );
+  const [probe, body] = await Promise.all([
+    segmentStatesAt(command, expect, '10', startIso, stopIso, stepMinutes),
+    segmentStatesAt(
+      center.minus.command,
+      center.minus.expect,
+      '10',
+      startIso,
+      stopIso,
+      stepMinutes
+    ),
+  ]);
+  if (
+    probe.samples.length !== body.samples.length ||
+    Math.abs(probe.startJdTdb - body.startJdTdb) > 1e-9
+  )
+    throw new Error(
+      `segment : grilles différentes pour ${command} et ${center.minus.command}`
+    );
+  const samples = probe.samples.map((v, i) => v - body.samples[i]);
+  return { ...probe, samples };
 }
 
 /** Écart relatif à la planète dessinée, sur les échantillons vrais d'une rencontre. */
@@ -575,30 +686,532 @@ async function findImpulses(enc, samples, segment, centerId, dynamics) {
   }
   return found;
 }
+/**
+ * La commande Horizons du fichier qui DESSINE un petit corps sur la fenêtre d'une rencontre :
+ * sa solution `primary` quand le manifeste en publie une qui la couvre (67P sur la mission
+ * Rosetta), sa cible sinon. Une fenêtre à cheval sur les deux est refusée plutôt que mêlée.
+ */
+function bodyCommand(enc) {
+  const entry = manifest.bodies[enc.planet];
+  const declared = targets[enc.planet] ?? {};
+  const primary = entry.primary;
+  if (primary && enc.fromJd < primary.toJdTdb && enc.toJd > primary.fromJdTdb) {
+    if (enc.fromJd < primary.fromJdTdb || enc.toJd > primary.toJdTdb)
+      throw new Error(
+        `${enc.probe} / ${enc.planet} : la rencontre chevauche la fin de la solution ${primary.target}`
+      );
+    return {
+      command: primary.target,
+      expect: declared.primaryExpect ?? primary.target,
+    };
+  }
+  return { command: entry.target, expect: declared.expect ?? enc.planet };
+}
+
+/** Pas du tirage où se lisent les manœuvres autour d'un petit corps. */
+const MANOEUVRE_PROBE_MINUTES = 10;
+/**
+ * Seuil d'une manœuvre sur 10 min. MESURÉ le 2026-10-11 sur les phases d'OSIRIS-REx et de
+ * Rosetta : fond de 2 à 7 cm au 99ᵉ centile (30 cm sur la fin de mission de Rosetta), poussées de 1 m à 3 km. Le seuil tombe entre les
+ * deux ordres de grandeur, et un fond dont le 99ᵉ centile s'en approche (au-delà du tiers)
+ * est REFUSÉ plutôt que découpé au hasard. Le maximum ne sert pas de critère : il est fait de
+ * petites poussées sous le seuil, que la simulation juge.
+ */
+const MANOEUVRE_THRESHOLD_KM = 0.001;
+
+/** Les pas candidats d'un segment de petit corps : multiples du tirage, du plus grossier au plus fin. */
+const SMALL_BODY_STEPS_MINUTES = [720, 360, 240, 180, 120, 60, 30, 20, 10];
+
+async function planAroundManoeuvres({
+  fileEndJd,
+  enc,
+  name,
+  target,
+  segmentCenter,
+  startIso,
+  stopOnGrid,
+  dynamics,
+  samples,
+}) {
+  // Le tirage s'arrête sur la grille du pas le plus GROSSIER, dont tous les candidats sont
+  // des diviseurs : chaque décimation finit alors sur le même nœud, celui que le générateur
+  // demandera (`stopIso`), quel que soit le pas retenu.
+  const stopIso = stopOnGrid(SMALL_BODY_STEPS_MINUTES[0]);
+  const fine = await segmentStates(
+    target.command,
+    target.expect,
+    segmentCenter,
+    startIso,
+    stopIso,
+    MANOEUVRE_PROBE_MINUTES
+  );
+  const rows = [];
+  for (let i = 0; i < fine.samples.length / 6; i++)
+    rows.push({
+      jd: fine.startJdTdb + (i * MANOEUVRE_PROBE_MINUTES) / 1440,
+      state: Array.from(fine.samples.subarray(i * 6, i * 6 + 6)),
+    });
+  const found = detectImpulses(rows, dynamics.mu, MANOEUVRE_THRESHOLD_KM);
+  const background =
+    `fond ${(found.backgroundMedianKm * 1000).toFixed(2)} m en médiane, ` +
+    `${(found.backgroundP99Km * 1000).toFixed(2)} m au 99e centile, ${(found.backgroundMaxKm * 1000).toFixed(2)} m au plus`;
+  console.log(
+    `  ${name} : ${found.impulses.length} manœuvres au seuil de ${MANOEUVRE_THRESHOLD_KM * 1000} m sur ${MANOEUVRE_PROBE_MINUTES} min ; ${background}`
+  );
+  // Un fond trop près du seuil ne se découpe pas au hasard : la phase se planifie alors SANS
+  // poussée déclarée, au pas uniforme, et ce qui ne tient pas le dit (Hayabusa2 à Ryugu).
+  const readable = found.backgroundP99Km <= MANOEUVRE_THRESHOLD_KM / 3;
+  if (!readable)
+    console.log(
+      `  ${name} : manœuvres illisibles (${background}), planifiée sans poussée`
+    );
+  // Jamais SUR une ancre : décalé d'une minute, comme une poussée trouvée sur une planète.
+  const impulses = (readable ? found.impulses : []).map((jd) => {
+    const u = (jd - rows[0].jd) / (MANOEUVRE_PROBE_MINUTES / 1440);
+    return Number(
+      (Math.abs(u - Math.round(u)) < 1e-3 ? jd + 1 / 1440 : jd).toFixed(6)
+    );
+  });
+  /**
+   * La phase au pas `stepMinutes`, ancres décimées autour des manœuvres, INSCRITE dans le
+   * service (à retirer par `release`) ; `null` quand deux manœuvres tombent dans un intervalle.
+   */
+  const simulateCoarse = (stepMinutes) => {
+    const every = stepMinutes / MANOEUVRE_PROBE_MINUTES;
+    // Un intervalle qui porte PLUSIEURS manœuvres ne déclare aucune d'elles : le service ne
+    // propage que d'un côté d'un seul saut. La simulation l'y voit fautif, et c'est l'une des
+    // grappes qu'un segment de détail couvre ensuite.
+    const kept = impulsesAlone(rows, every, impulses);
+    const anchors = decimateAroundImpulses(rows, every, kept);
+    if (anchors.length < 3) return null;
+    const samplesOut = new Float64Array(anchors.length * 6);
+    anchors.forEach((row, i) => samplesOut.set(row.state, i * 6));
+    service.bodies.set(name, {
+      manifest: {
+        file: 'simulation',
+        target: target.command,
+        center: enc.planet,
+        startJdTdb: anchors[0].jd,
+        stepDays: stepMinutes / 1440,
+        sampleCount: anchors.length,
+        segmentOf: enc.probe,
+        ...(kept.length ? { impulses: kept } : {}),
+      },
+      samples: samplesOut,
+      dynamics,
+    });
+    return {
+      served: (d) => service.getHeliocentricAU(enc.probe, d),
+      release: () => service.bodies.delete(name),
+      plan: {
+        name,
+        kind: 'orbit',
+        from: startIso,
+        to: stopIso,
+        stepMinutes,
+        bytes: anchors.length * 48,
+        ...(kept.length ? { impulses: kept } : {}),
+        relativeTo: segmentCenter.minus,
+      },
+    };
+  };
+  let best = null;
+  let plainPlan = null;
+  for (const stepMinutes of SMALL_BODY_STEPS_MINUTES) {
+    const coarse = simulateCoarse(stepMinutes);
+    if (!coarse) continue;
+    const simulated = measure(enc, samples, coarse.served);
+    coarse.release();
+    console.log(
+      `  ${name} au pas de ${stepMinutes} min : pire ${simulated.errKm.toFixed(3)} km ` +
+        `(${(simulated.share * 100).toFixed(2)} %) le ${dateOfUtJd(simulated.jd).toISOString().slice(0, 16)}`
+    );
+    if (!best || simulated.share < best.share)
+      best = { stepMinutes, ...simulated };
+    // Le pas le plus grossier qui tient SEUL est un candidat ; un plan à détails plus léger
+    // peut encore le battre (Rosetta au début de 2015 : de nombreux tours, peu de grappes).
+    if (simulated.share <= SEGMENT_SHARE) {
+      plainPlan = {
+        bytes: coarse.plan.bytes,
+        plan: {
+          ...coarse.plan,
+          simulatedKm: simulated.errKm,
+          simulatedShare: simulated.share,
+        },
+      };
+      break;
+    }
+  }
+  // DÉTAILS : aucun pas ne tient partout. Les instants fautifs sont-ils regroupés en quelques
+  // heures (une suite de manœuvres rapprochées, le prélèvement) ? Alors la phase garde un pas
+  // grossier, et chaque grappe reçoit un segment court au pas de quelques minutes, qui
+  // l'emporte sur la phase (`_segmentAt`). Vérifié contre une vérité tirée à la minute dans
+  // chaque fenêtre : la mesure ordinaire d'une longue phase, au pas de 30 min, n'y verrait rien.
+  // Tous les pas grossiers sont essayés, et le plan le moins LOURD, détails compris, gagne.
+  // Si rien ne tient la MOITIÉ de la borne, la borne seule est acceptée pour les détails, et le
+  // plan le DIT (`withoutMargin`) : au contact du prélèvement d’OSIRIS-REx (2020-10-20), une
+  // ancre par minute laisse encore 2,1 m, soit 0,92 % de la distance.
+  let detailTarget = SEGMENT_SHARE;
+  let cheapest = plainPlan;
+  const searchDetails = async () => {
+    for (const stepMinutes of SMALL_BODY_STEPS_MINUTES) {
+      const coarse = simulateCoarse(stepMinutes);
+      if (!coarse) continue;
+      const failing = samples.filter(
+        (x) => shareAt(enc, x, coarse.served) > SEGMENT_SHARE
+      );
+      const clusters = [];
+      for (const x of failing) {
+        const last = clusters.at(-1);
+        if (last && x.jd - last.to <= DETAIL_GAP_DAYS) last.to = x.jd;
+        else clusters.push({ from: x.jd, to: x.jd });
+      }
+      if (
+        clusters.length === 0 ||
+        clusters.length > MAX_DETAILS ||
+        clusters.some((c) => c.to - c.from > DETAIL_MAX_DAYS) ||
+        (cheapest && coarse.plan.bytes >= cheapest.bytes)
+      ) {
+        coarse.release();
+        continue;
+      }
+      const details = [];
+      let held = true;
+      for (const cluster of clusters) {
+        const chosen = await planDetail(cluster, coarse.served);
+        if (!chosen) {
+          held = false;
+          break;
+        }
+        details.push(chosen);
+      }
+      const whole = held ? measure(enc, samples, coarse.served) : null;
+      for (const d of details) service.bodies.delete(d.name);
+      coarse.release();
+      console.log(
+        `  ${name} au pas de ${stepMinutes} min et ${clusters.length} détail(s) : ` +
+          (held
+            ? `pire ${(whole.share * 100).toFixed(3)} %, ${coarse.plan.bytes + details.reduce((a, d) => a + d.bytes, 0)} o`
+            : 'un détail ne tient pas')
+      );
+      if (!held || whole.share > detailTarget) continue;
+      const bytes =
+        coarse.plan.bytes + details.reduce((a, d) => a + d.bytes, 0);
+      if (!cheapest || bytes < cheapest.bytes)
+        cheapest = {
+          bytes,
+          plan: {
+            ...coarse.plan,
+            simulatedKm: whole.errKm,
+            simulatedShare: whole.share,
+            details,
+            bytes,
+          },
+        };
+    }
+  };
+  await searchDetails();
+  if (!cheapest) {
+    detailTarget = MAX_SHARE;
+    detailCache.clear();
+    await searchDetails();
+    if (cheapest) cheapest.plan.withoutMargin = true;
+  }
+  if (cheapest) return { plan: cheapest.plan };
+  // Ce qui casse, MESURÉ dans la trajectoire servie : son plus grand résidu sur 10 min. À
+  // l'arrivée de Hayabusa2 à Ryugu, Horizons fait sauter la sonde de 31,5 à 15,3 km du corps
+  // entre 00:00 et 00:10 UT (2018-06-27), vitesse nulle ensuite : une discontinuité de la
+  // source, que nulle interpolation ne suit.
+  const residuals = twoBodyResiduals(rows, dynamics.mu);
+  let jump = 0;
+  for (let k = 1; k < residuals.length; k++)
+    if (residuals[k] > residuals[jump]) jump = k;
+  const jumpText = `plus grand résidu de la trajectoire servie : ${residuals[jump].toFixed(1)} km en ${MANOEUVRE_PROBE_MINUTES} min le ${dateOfUtJd(rows[jump].jd).toISOString().slice(0, 16)} TDB`;
+  return {
+    unresolved: {
+      ...(best
+        ? {
+            bestShare: Number(best.share.toFixed(4)),
+            bestKm: Number(best.errKm.toFixed(3)),
+            bestStepMinutes: best.stepMinutes,
+          }
+        : {}),
+      readable,
+      largestResidualKm: Number(residuals[jump].toFixed(1)),
+      largestResidualAt: dateOfUtJd(rows[jump].jd).toISOString(),
+    },
+    note: best
+      ? `aucun pas ne tient la borne : au mieux ${(best.share * 100).toFixed(2)} % (${best.errKm.toFixed(3)} km) au pas de ${best.stepMinutes} min, le ${dateOfUtJd(best.jd).toISOString().slice(0, 16)} ; ${readable ? '' : `manœuvres illisibles (${background}) ; `}${jumpText}`
+      : `aucun pas ne sépare les manœuvres ; ${jumpText}`,
+  };
+
+  /**
+   * Le segment de DÉTAIL d'une grappe, INSCRIT dans le service s'il tient (à retirer par
+   * l'appelant), `null` sinon. Même méthode que la phase, une échelle plus bas : tirage à la
+   * minute, manœuvres lues dedans (le contact du prélèvement est une poussée de quelques
+   * secondes), puis le pas le plus grossier qui les sépare et tient la borne.
+   */
+  async function planDetail(cluster, served) {
+    const fromIso = minuteIso(cluster.from - DETAIL_MARGIN_DAYS, Math.floor);
+    // La fin tombe sur la grille du plus grand pas candidat, que tous les autres divisent.
+    const span = DETAIL_STEPS_MINUTES[0] / 1440;
+    // Et jamais au-delà du fichier de la sonde : rien n'y sert plus de position (Rosetta, dont
+    // le fichier s'arrête trois jours après l'impact).
+    const startJd = jdOfMinuteIso(fromIso);
+    let n = Math.ceil((cluster.to + DETAIL_MARGIN_DAYS - startJd) / span);
+    while (n > 1 && startJd + n * span > fileEndJd) n--;
+    const toJd = startJd + n * span;
+    const toIso = minuteIso(toJd, Math.round);
+    const detailName = `${name}-${fromIso.slice(0, 10)}-${fromIso.slice(11, 13)}h${fromIso.slice(14, 16)}`;
+    const cached = detailCache.get(detailName + toIso);
+    if (cached === null) return null;
+    const dense = await relativeTruth(
+      target,
+      segmentCenter,
+      jdOfMinuteIso(fromIso),
+      jdOfMinuteIso(toIso)
+    );
+    const probe = await segmentStates(
+      target.command,
+      target.expect,
+      segmentCenter,
+      fromIso,
+      toIso,
+      DETAIL_PROBE_MINUTES
+    );
+    const fineRows = [];
+    for (let i = 0; i < probe.samples.length / 6; i++)
+      fineRows.push({
+        jd: probe.startJdTdb + (i * DETAIL_PROBE_MINUTES) / 1440,
+        state: Array.from(probe.samples.subarray(i * 6, i * 6 + 6)),
+      });
+    const found = detectImpulses(fineRows, dynamics.mu, DETAIL_THRESHOLD_KM);
+    // Un fond trop près du seuil ne se découpe pas : le détail se tire alors sans poussée.
+    const readable = found.backgroundP99Km <= DETAIL_THRESHOLD_KM / 3;
+    // À cette échelle, CHAQUE minute qui dépasse le seuil porte sa poussée, en son milieu, et
+    // non une seule par épisode : à l'arrivée de Hayabusa2 à Ryugu (2018-06-26), deux heures de
+    // poussée continue et de raccords de trajectoire réduites à deux instants laissaient 18 km.
+    // Propagée d'un seul côté, chaque minute reste exacte à ses deux bouts.
+    const residuals = twoBodyResiduals(fineRows, dynamics.mu);
+    const jumps = readable
+      ? residuals.flatMap((km, k) =>
+          km > DETAIL_THRESHOLD_KM
+            ? [Number(((fineRows[k].jd + fineRows[k + 1].jd) / 2).toFixed(8))]
+            : []
+        )
+      : [];
+    for (const detailMinutes of DETAIL_STEPS_MINUTES) {
+      const every = detailMinutes / DETAIL_PROBE_MINUTES;
+      const kept = impulsesAlone(fineRows, every, jumps);
+      const anchors = decimateAroundImpulses(fineRows, every, kept);
+      if (anchors.length < 3) continue;
+      const out = new Float64Array(anchors.length * 6);
+      anchors.forEach((row, i) => out.set(row.state, i * 6));
+      service.bodies.set(detailName, {
+        manifest: {
+          file: 'simulation',
+          target: target.command,
+          center: enc.planet,
+          startJdTdb: anchors[0].jd,
+          stepDays: detailMinutes / 1440,
+          sampleCount: anchors.length,
+          segmentOf: enc.probe,
+          detail: true,
+          ...(kept.length ? { impulses: kept } : {}),
+        },
+        samples: out,
+        dynamics,
+      });
+      const local = measure(enc, dense, served);
+      console.log(
+        `    détail ${detailName} au pas de ${detailMinutes} min, ${kept.length} poussée(s) ` +
+          `(fond ${(found.backgroundP99Km * 1e6).toFixed(1)} mm au 99e centile) : ` +
+          `pire ${(local.errKm * 1000).toFixed(1)} m (${(local.share * 100).toFixed(2)} %)`
+      );
+      if (local.share <= detailTarget)
+        return {
+          name: detailName,
+          from: fromIso,
+          to: toIso,
+          stepMinutes: detailMinutes,
+          bytes: anchors.length * 48,
+          ...(kept.length ? { impulses: kept } : {}),
+        };
+      service.bodies.delete(detailName);
+    }
+    detailCache.set(detailName + toIso, null);
+    return null;
+  }
+}
+
+/** Les détails qui ne tiennent à aucun pas, pour ne pas les rejouer d'un pas grossier à l'autre. */
+const detailCache = new Map();
+
+/** Les manœuvres seules dans leur intervalle de `every` lignes, à l'intérieur de la grille. */
+function impulsesAlone(rows, every, impulses) {
+  const last = Math.floor((rows.length - 1) / every) * every;
+  const start = rows[0].jd;
+  const end = rows[last].jd;
+  const span = rows[every].jd - start;
+  const count = new Map();
+  const inside = impulses.filter((jd) => jd > start && jd < end);
+  for (const jd of inside) {
+    const k = Math.floor((jd - start) / span);
+    count.set(k, (count.get(k) ?? 0) + 1);
+  }
+  return inside.filter(
+    (jd) => count.get(Math.floor((jd - start) / span)) === 1
+  );
+}
+
+/** Segments de DÉTAIL : pas candidats, marge, écart qui coupe deux grappes, durée maximale. */
+const DETAIL_STEPS_MINUTES = [10, 5, 2, 1];
+const DETAIL_MARGIN_DAYS = 1 / 24;
+const DETAIL_GAP_DAYS = 0.25;
+const DETAIL_MAX_DAYS = 3;
+const MAX_DETAILS = 30;
+/** Pas de la vérité tirée dans la fenêtre d'un détail, et du tirage où s'y lisent les poussées. */
+const DETAIL_TRUTH_MINUTES = 1;
+const DETAIL_PROBE_MINUTES = 1;
+/**
+ * Seuil d'une poussée sur 1 min : celui de 10 min divisé par dix, puisqu'un saut de vitesse
+ * écarte la trajectoire LINÉAIREMENT avec le temps (1 m en 10 min, c'est 1,7 mm/s).
+ */
+const DETAIL_THRESHOLD_KM = 0.0001;
+
+/** L'écart relatif d'un échantillon de vérité à ce que `position` sert. */
+function shareAt(enc, sample, position) {
+  const date = dateOfUtJd(sample.jd);
+  const body = service.getHeliocentricAU(enc.planet, date);
+  const served = position(date);
+  if (!body || !served) return Infinity;
+  return (served.sub(body).distanceTo(sample.rel) * KM_PER_AU) / sample.rKm;
+}
+
+/** Une date UT arrondie à la minute, au format qu'Horizons et le générateur lisent. */
+const minuteIso = (jd, round) =>
+  new Date(round(Math.round((jd - UNIX_EPOCH_JD) * 1440 * 1e6) / 1e6) * 60_000)
+    .toISOString()
+    .slice(0, 16)
+    .replace('T', ' ');
+const jdOfMinuteIso = (iso) =>
+  Date.parse(`${iso.replace(' ', 'T')}:00Z`) / MS_PER_DAY + UNIX_EPOCH_JD;
+
+/** La vérité sonde MOINS corps dessiné, à la minute, sur une fenêtre courte. */
+async function relativeTruth(target, center, fromJd, toJd) {
+  const drawn = center.minus;
+  const probeRows = await truthChunked(
+    target.command,
+    target.expect,
+    fromJd,
+    toJd,
+    DETAIL_TRUTH_MINUTES
+  );
+  const bodyRows = await truthChunked(
+    drawn.command,
+    drawn.expect,
+    fromJd,
+    toJd,
+    DETAIL_TRUTH_MINUTES
+  );
+  return probeRows.map((row, i) => {
+    const rel = sceneOfKm(row.km.map((v, k) => v - bodyRows[i].km[k]));
+    return { jd: row.jd, rel, rKm: rel.length() * KM_PER_AU };
+  });
+}
+
 const segments = [];
 
 for (const enc of encounters) {
   const target = targets[enc.probe];
   const planet = planets.find((p) => p.name === enc.planet);
   const long = enc.toJd - enc.fromJd > LONG_ENCOUNTER_DAYS + 2 * MARGIN_DAYS;
-  const step = long ? LONG_STEP_MINUTES : FINE_STEP_MINUTES;
+  // Un petit corps ne dévie presque pas la sonde : le passage estimé en ligne droite est juste,
+  // et un survol rapide se mesure au quart du temps qu'il met à parcourir sa distance au plus
+  // près (Rosetta à Lutetia, 3 170 km à 15 km/s : un pas d'une minute). Une planète courbe la
+  // trajectoire, l'estimation n'y vaut rien, et le pas de 10 min y est mesuré suffisant.
+  const smallBody = SMALL_BODY_KINDS.has(catalogue.get(enc.planet).kind);
+  const step =
+    smallBody && !long
+      ? Math.max(
+          1,
+          Math.min(FINE_STEP_MINUTES, Math.floor(enc.crossingMinutes / 4))
+        )
+      : long
+        ? LONG_STEP_MINUTES
+        : FINE_STEP_MINUTES;
   // La vérité RELATIVE à la planète (son centre), comparée à ce que la scène sert relativement
   // à la planète qu'elle DESSINE. C'est ce qui se voit, et c'est la seule comparaison juste pour
   // la Terre, dessinée au barycentre Terre-Lune (4 700 km du centre) comme toute sa famille :
   // la Lune y est placée par son vecteur géocentrique, et une sonde doit l'être de même.
   const center = centers[enc.planet];
-  if (!center)
-    throw new Error(
-      `identifiant Horizons de « ${enc.planet} » absent de validation-targets.json`
+  let rows;
+  let referenceKm = null;
+  if (smallBody) {
+    // Un PETIT CORPS n'est un centre d'Horizons que s'il a un noyau de mission (Bennu, 67P,
+    // Šteins, Arrokoth ; ni Ryugu ni Lutetia, mesuré le 2026-10-11). La vérité est donc la
+    // sonde MOINS le corps tels que le fichier DESSINÉ le place, même solution comprise (la
+    // `primary` de 67P sur la mission) : c'est la paire que la scène montre.
+    const drawn = bodyCommand(enc);
+    const probeRows = await truthChunked(
+      target.command,
+      target.expect,
+      enc.fromJd,
+      enc.toJd,
+      step
     );
-  const rows = await truthChunked(
-    target.command,
-    target.expect,
-    enc.fromJd,
-    enc.toJd,
-    step,
-    center.id
-  );
+    const bodyRows = await truthChunked(
+      drawn.command,
+      drawn.expect,
+      enc.fromJd,
+      enc.toJd,
+      step
+    );
+    if (bodyRows.length !== probeRows.length)
+      throw new Error(
+        `${enc.probe} / ${enc.planet} : ${probeRows.length} lignes de sonde, ${bodyRows.length} de corps`
+      );
+    rows = probeRows.map((row, i) => ({
+      jd: row.jd,
+      km: row.km.map((v, k) => v - bodyRows[i].km[k]),
+    }));
+    // TÉMOIN DE RÉFÉRENCE, quand le corps est un centre : le vecteur que la MISSION sert
+    // directement contre la paire dessinée. Leur désaccord n'est pas une erreur
+    // d'interpolation, c'est la distance entre deux solutions du même corps, et il est publié.
+    // Horizons peut ne pas servir la sonde relativement au corps (Hera et Didymos en 2026 :
+    // « Insufficient ephemeris data ») : le témoin manque alors, et on le dit.
+    const direct = center
+      ? await truthChunked(
+          target.command,
+          target.expect,
+          enc.fromJd,
+          enc.toJd,
+          step,
+          center.id
+        ).catch(() => null)
+      : null;
+    if (direct) {
+      referenceKm = 0;
+      for (let i = 0; i < Math.min(direct.length, rows.length); i++)
+        referenceKm = Math.max(
+          referenceKm,
+          Math.hypot(...direct[i].km.map((v, k) => v - rows[i].km[k]))
+        );
+    }
+  } else {
+    if (!center)
+      throw new Error(
+        `identifiant Horizons de « ${enc.planet} » absent de validation-targets.json`
+      );
+    rows = await truthChunked(
+      target.command,
+      target.expect,
+      enc.fromJd,
+      enc.toJd,
+      step,
+      center.id
+    );
+  }
   const samples = rows.map((row) => {
     const rel = sceneOfKm(row.km);
     return { jd: row.jd, km: row.km, rel, rKm: rel.length() * KM_PER_AU };
@@ -687,6 +1300,8 @@ for (const enc of encounters) {
           .slice(0, 16)
           .replace('T', ' ');
       };
+      // Le segment d'un petit corps se lit sur la paire dessinée (cf. `segmentStates`).
+      const segmentCenter = smallBody ? { minus: bodyCommand(enc) } : center.id;
       const mu = dynamicsByBody[enc.planet]?.attractorMu;
       if (!(mu > 0))
         throw new Error(`aucune masse au catalogue pour ${enc.planet}`);
@@ -698,14 +1313,39 @@ for (const enc of encounters) {
         mu,
         ...(flat ? { oblateness: oblatenessOf(flat) } : {}),
       };
-      for (const stepMinutes of orbital
-        ? ORBITAL_STEPS_MINUTES
-        : SEGMENT_STEPS_MINUTES) {
+      // AUTOUR D'UN PETIT CORPS, les ancres suivent les MANŒUVRES (méthode du segment de
+      // BepiColombo, `core/impulseDetection.ts`) : un tirage au pas de 10 min, les poussées
+      // lues dans ses résidus à deux corps, puis le pas le plus grossier qui ne met jamais deux
+      // poussées dans un même intervalle et dont la simulation tient la borne.
+      if (smallBody) {
+        const smallBodyPlan = await planAroundManoeuvres({
+          fileEndJd: gridEnd(entry),
+          enc,
+          name,
+          target,
+          segmentCenter,
+          startIso,
+          stopOnGrid,
+          dynamics: { mu },
+          samples,
+        });
+        if (smallBodyPlan.plan) plan = smallBodyPlan.plan;
+        else {
+          note = smallBodyPlan.note;
+          enc.unresolved = smallBodyPlan.unresolved;
+        }
+      }
+      const candidates = smallBody
+        ? []
+        : orbital
+          ? ORBITAL_STEPS_MINUTES
+          : SEGMENT_STEPS_MINUTES;
+      for (const stepMinutes of candidates) {
         const stopIso = stopOnGrid(stepMinutes);
         const states = await segmentStates(
           target.command,
           target.expect,
-          center.id,
+          segmentCenter,
           startIso,
           stopIso,
           stepMinutes
@@ -735,7 +1375,7 @@ for (const enc of encounters) {
             enc,
             samples,
             service.bodies.get(name),
-            center.id,
+            segmentCenter,
             dynamics
           );
           if (impulses.length > 0) {
@@ -759,8 +1399,8 @@ for (const enc of encounters) {
           break;
         }
       }
-      if (!plan)
-        note = `aucun pas jusqu'à ${(orbital ? ORBITAL_STEPS_MINUTES : SEGMENT_STEPS_MINUTES).at(-1)} min ne tient la borne`;
+      if (!plan && !smallBody)
+        note = `aucun pas jusqu'à ${candidates.at(-1)} min ne tient la borne`;
     }
   }
   if (plan) segments.push(plan);
@@ -813,6 +1453,9 @@ for (const enc of encounters) {
     `${enc.probe.padEnd(19)} ${enc.planet.padEnd(8)} ${closestIso.slice(0, 10)} ` +
       `au plus près ${String(enc.closestKm).padStart(9)} km ; servi ${served.errKm.toFixed(0).padStart(7)} km ` +
       `(${(served.share * 100).toFixed(2)} %) : ${verdict.padEnd(10)} ; témoin ${witnessKm.toFixed(3)} km ; ` +
+      (referenceKm === null
+        ? ''
+        : `référence de mission à ${referenceKm.toFixed(1)} km ; `) +
       (plan
         ? `segment ${plan.from} → ${plan.to} au pas de ${plan.stepMinutes} min, ${plan.bytes} o, ` +
           `simulé ${plan.simulatedKm.toFixed(1)} km (${(plan.simulatedShare * 100).toFixed(3)} %)`
@@ -868,10 +1511,24 @@ if (WRITE) {
               to: e.plan.to,
               stepMinutes: e.plan.stepMinutes,
               ...(e.plan.impulses ? { impulses: e.plan.impulses } : {}),
+              ...(e.plan.relativeTo ? { relativeTo: e.plan.relativeTo } : {}),
+              ...(e.plan.withoutMargin ? { withoutMargin: true } : {}),
+              ...(e.plan.details
+                ? {
+                    details: e.plan.details.map((d) => ({
+                      name: d.name,
+                      from: d.from,
+                      to: d.to,
+                      stepMinutes: d.stepMinutes,
+                      ...(d.impulses ? { impulses: d.impulses } : {}),
+                    })),
+                  }
+                : {}),
             },
           }
         : {}),
       ...(e.note ? { note: e.note } : {}),
+      ...(e.unresolved ? { unresolved: e.unresolved } : {}),
       reference: e.reference,
     })),
   };

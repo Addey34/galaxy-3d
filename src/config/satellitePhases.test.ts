@@ -155,7 +155,9 @@ describe('phases de satellite des sondes', () => {
     // insertion de Juno achevée le 2016-07-05 à 03 h 53 UTC (publiée au 4 juillet, heure de
     // Californie), de Cassini le 2004-07-01 ; JWST ne quitte jamais la
     // Terre ; OSIRIS-REx arrive à Bennu le 2018-12-03 et Hayabusa2 à Ryugu le 2018-06-27 (dans
-    // leur sphère de Hill dès le 2018-12-01 et le 2018-06-22).
+    // leur sphère de Hill dès le 2018-12-02 et le 2018-06-22). Le 2018-12-01 jusqu'au
+    // 2026-10-11 : la sonde était lue sur son fichier au pas de 4 jours, à 15 km de sa vraie
+    // place ; ses segments autour de Bennu (ligne 45.10) la posent où elle était.
     const phase = (name: string) =>
       SPACECRAFT_MISSIONS.find((m) => m.name === name)!.satelliteOf.map(
         (p) => `${p.body} ${iso(p.fromMs).slice(0, 10)}`
@@ -163,7 +165,7 @@ describe('phases de satellite des sondes', () => {
     expect(phase('juno')).toEqual(['jupiter 2016-07-05']);
     expect(phase('cassini')).toEqual(['saturn 2004-07-01']);
     expect(phase('jwst')[0]).toMatch(/^earth 2021-12-2/);
-    expect(phase('osiris-rex')).toEqual(['bennu 2018-12-01']);
+    expect(phase('osiris-rex')).toEqual(['bennu 2018-12-02']);
     expect(phase('hayabusa2')).toEqual(['ryugu 2018-06-22']);
     // Un survol n'en donne pas : Voyager 1 passe à Jupiter et Saturne sans y orbiter.
     expect(phase('voyager1')).toEqual([]);

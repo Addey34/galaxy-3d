@@ -31,6 +31,12 @@ export interface ImpulseDetection {
   impulses: number[];
   /** Résidu médian et maximal hors manœuvre, en km : le fond qui fixe le seuil. */
   backgroundMedianKm: number;
+  /**
+   * 99ᵉ centile du fond : autour d'un petit corps, le MAXIMUM est fait de petites poussées
+   * sous le seuil (0,35 à 0,99 m sur 10 min pour Rosetta et OSIRIS-REx, médiane 1 à 3 cm,
+   * 2026-10-11), pas de bruit, et c'est ce centile qui dit si le seuil sépare deux populations.
+   */
+  backgroundP99Km: number;
   backgroundMaxKm: number;
   /** Résidu le plus faible parmi les épisodes retenus, en km. */
   weakestImpulseKm: number | null;
@@ -117,6 +123,9 @@ export function detectImpulses(
     impulses,
     backgroundMedianKm: background.length
       ? background[background.length >> 1]
+      : 0,
+    backgroundP99Km: background.length
+      ? background[Math.floor(0.99 * (background.length - 1))]
       : 0,
     backgroundMaxKm: background.length ? background[background.length - 1] : 0,
     weakestImpulseKm: weakest,
