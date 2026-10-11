@@ -89,6 +89,13 @@ const MARKERS = [
     what: 'découvertes des planètes (JPL)',
   },
   {
+    prefix: 'https://ssd.jpl.nasa.gov/api/horizons.api',
+    // Lu le 2026-10-09 : l'en-tête d'un objet commence par sa date de révision ; une commande
+    // inconnue rend « No such record », sans elle.
+    marker: () => 'Revised:',
+    what: "en-tête d'objet Horizons",
+  },
+  {
     prefix: 'https://ssd-api.jpl.nasa.gov/sbdb.api',
     marker: () => '"object"',
     what: 'API du Small-Body Database',

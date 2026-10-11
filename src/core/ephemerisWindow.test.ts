@@ -568,12 +568,13 @@ describe('ce que la première vue coûte réellement', () => {
     // Dimorphos composé tienne sous son diamètre (cf. `compositeReference.test.ts`) ;
     // 54 921 264 avec le segment de BepiColombo autour de Mercure (2026-10-06, 357 ancres de
     // 12 h, cf. `segmentReference.test.ts`) ; 55 973 520 avec les trois objets interstellaires
-    // (2026-10-08 : 1I au pas d'un jour, 2I et 3I au pas de 4 jours, sur ±20 ans).
-    expect(shipped).toBe(55_973_520);
+    // (2026-10-08 : 1I au pas d'un jour, 2I et 3I au pas de 4 jours, sur ±20 ans) ; 56 343 648
+    // avec les trois sondes de l'ESA (2026-10-09 : Solar Orbiter, JUICE et Hera au pas d'un jour).
+    expect(shipped).toBe(56_343_648);
     // 62 au lot 17, plus les 23 cibles de missions du 2026-10-04 et leurs deux satellites : une
     // requête par corps ; 90 avec les trois objets interstellaires (2026-10-08), couverts à
-    // cette date.
-    expect(requests).toBe(90);
+    // cette date ; 93 avec les trois sondes de l'ESA (2026-10-09), couvertes elles aussi.
+    expect(requests).toBe(93);
     // Moins de 2 % de ce qui est livré aujourd'hui : c'est tout l'objet du lot.
     expect(bytes).toBeLessThan(shipped * 0.02);
     expect(bytes).toBeGreaterThan(500_000);

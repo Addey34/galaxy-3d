@@ -230,6 +230,18 @@
       "command": "-37",
       "expect": "hayabusa 2"
     },
+    "solar-orbiter": {
+      "command": "-144",
+      "expect": "solar orbiter"
+    },
+    "juice": {
+      "command": "-28",
+      "expect": "juice"
+    },
+    "hera": {
+      "command": "-91",
+      "expect": "hera"
+    },
     "oumuamua": {
       "command": "1I",
       "expect": "oumuamua"

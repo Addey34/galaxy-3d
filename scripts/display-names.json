@@ -74,6 +74,14 @@
     "pt-BR": "Sonda Solar Parker"
   },
   "rosetta": { "en": "Rosetta", "fr": "Rosetta", "es": "Rosetta", "pt-BR": "Rosetta" },
+  "solar-orbiter": { "en": "Solar Orbiter", "fr": "Solar Orbiter", "es": "Solar Orbiter", "pt-BR": "Solar Orbiter" },
+  "juice": {
+    "en": "Jupiter Icy Moons Explorer",
+    "fr": "Jupiter Icy Moons Explorer",
+    "es": "Jupiter Icy Moons Explorer",
+    "pt-BR": "Jupiter Icy Moons Explorer"
+  },
+  "hera": { "en": "Hera", "fr": "Hera", "es": "Hera", "pt-BR": "Hera" },
   "voyager1": { "en": "Voyager 1", "fr": "Voyager 1", "es": "Voyager 1", "pt-BR": "Voyager 1" },
   "voyager2": { "en": "Voyager 2", "fr": "Voyager 2", "es": "Voyager 2", "pt-BR": "Voyager 2" },
   "atlas": { "en": "3I/ATLAS", "fr": "3I/ATLAS", "es": "3I/ATLAS", "pt-BR": "3I/ATLAS" },

@@ -67,10 +67,18 @@
    "investigations": 1,
    "instruments": 6,
    "bytes": 1310
+  },
+  "juice": {
+   "hosts": 1,
+   "investigations": 1,
+   "instruments": 16,
+   "bytes": 2370
   }
  },
  "absent": {
   "parker-solar-probe": true,
-  "jwst": true
+  "jwst": true,
+  "solar-orbiter": true,
+  "hera": true
  }
 }

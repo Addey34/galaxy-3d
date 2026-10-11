@@ -1448,6 +1448,52 @@ async function sbdbInterstellar() {
   return out;
 }
 
+// ── JPL Horizons : en-tête d'une sonde que le Master Catalog ne sert pas ────────────────────
+
+/**
+ * L'EN-TÊTE DE L'OBJET d'une sonde dans Horizons (2026-10-09, sondes de l'ESA). Le Master
+ * Catalog du NSSDCA ne sert aucune des trois : Solar Orbiter (2020-010A) et JUICE (2023-053A)
+ * rendent la page d'erreur générique de la ligne 23.2, Hera (2024-180A) « ORA-01403: no data
+ * found », avec Juno pour témoin lisible. Horizons publie leur lancement en PROSE, dans le texte
+ * que son équipe tient à jour (« Revised: Sep 30, 2026 »).
+ *
+ * On relève donc le TEXTE, et rien n'en est extrait ici : chaque fait de la fiche cite une
+ * phrase qui doit s'y trouver mot pour mot et contenir sa valeur, ce que
+ * `config/factProvenance.test.ts` vérifie. La première ligne porte le nom et la commande, et
+ * elle est CONFRONTÉE au nom attendu : un identifiant NAIF faux rendrait un autre objet.
+ */
+const HORIZONS_OBJECT_TARGET = JSON.parse(
+  readFileSync(new URL('./fact-source-targets.json', import.meta.url), 'utf8')
+).horizonsObjectData;
+
+async function horizonsObjectData() {
+  const out = {};
+  for (const [body, target] of Object.entries(HORIZONS_OBJECT_TARGET)) {
+    if (body.startsWith('$')) continue;
+    out[body] = await entry('horizonsObjectData', body, async () => {
+      const url = `https://ssd.jpl.nasa.gov/api/horizons.api?format=text&COMMAND='${target.command}'&OBJ_DATA=YES&MAKE_EPHEM=NO`;
+      const response = await get(url);
+      // Le bloc de l'objet est encadré par deux lignes d'astérisques.
+      const block = response.text.split(/^\*{20,}\s*$/m)[1];
+      if (!block)
+        throw new Error(`Horizons ${target.command} : bloc objet introuvable`);
+      const first = block.trim().split('\n')[0];
+      if (!first.includes(target.expect) || !first.includes(target.command))
+        throw new Error(
+          `Horizons ${target.command} : « ${first.trim()} » ne nomme pas « ${target.expect} »`
+        );
+      return {
+        url,
+        retrieved: response.retrieved,
+        command: target.command,
+        name: target.expect,
+        text: block.replace(/\s+/g, ' ').trim(),
+      };
+    });
+  }
+  return out;
+}
+
 const sections = {
   nssdca: await nssdca(),
   nssdcaSatellites: await nssdcaSatellites(),
@@ -1458,6 +1504,7 @@ const sections = {
   sbdb: await sbdb(),
   sbdbInterstellar: await sbdbInterstellar(),
   nssdcaMasterCatalog: await nssdcaMasterCatalog(),
+  horizonsObjectData: await horizonsObjectData(),
   articles: await articles(),
 };
 

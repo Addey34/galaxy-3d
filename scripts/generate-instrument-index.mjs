@@ -243,6 +243,15 @@ const { order, naif } = spacecraftFiches();
         `la raison d'absence de ${id} est trop courte pour être une mesure : ` +
           `elle doit dire ce qui a été cherché, et avec quel témoin`
       );
+    // Un code de porteur distinct de celui de la fiche n'est admis qu'avec sa PREUVE écrite.
+    if (
+      entry.hostNaifId !== undefined &&
+      (!Number.isInteger(entry.hostNaifId) ||
+        (entry.hostNaifIdReason ?? '').length < 80)
+    )
+      throw new Error(
+        `${id} déclare le code de porteur ${entry.hostNaifId} sans raison mesurée et sourcée`
+      );
   }
 }
 
@@ -326,7 +335,13 @@ for (const id of order) {
      * `null`, ou la phrase « not applicable », et il n'y a alors rien à croiser.
      */
     const published = naifNumber(props['pds:Instrument_Host.pds:naif_host_id']);
-    const expected = naif.get(id);
+    /**
+     * Le code attendu est celui de la fiche, SAUF déclaration contraire PROUVÉE : le PDS publie
+     * pour JUICE -28000, que le noyau de repères de l'ESA nomme « JUICE_SC », la structure de la
+     * sonde dont l'objet « JUICE » porte -28 (`juice_v46.tf`, 2026-10-09). L'égalité reste
+     * exigée, contre le code déclaré.
+     */
+    const expected = entry.hostNaifId ?? naif.get(id);
     if (published !== null && published !== expected)
       throw new Error(
         `désaccord d'identifiant NAIF sur ${hostLid} : le PDS publie ${published} et la fiche ` +

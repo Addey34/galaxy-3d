@@ -1,0 +1,57 @@
+{
+  "$schema": "../schema/spacecraft.schema.json",
+  "id": "hera",
+  "targetClass": "spacecraft",
+  "displayName": {
+    "en": "Hera",
+    "fr": "Hera",
+    "es": "Hera",
+    "pt-BR": "Hera"
+  },
+  "description": {
+    "en": "Launched in 2024, on its way to the asteroid Didymos and its moon Dimorphos, to study what NASA’s DART impact left behind.",
+    "fr": "Lancée en 2024, en route vers l’astéroïde Didymos et sa lune Dimorphos, pour étudier ce qu’a laissé l’impact de DART, la sonde de la NASA.",
+    "es": "Lanzada en 2024, camino del asteroide Didymos y de su luna Dimorphos, para estudiar lo que dejó el impacto de DART, la sonda de la NASA.",
+    "pt-BR": "Lançada em 2024, a caminho do asteroide Didymos e de sua lua Dimorphos, para estudar o que deixou o impacto da DART, a sonda da NASA."
+  },
+  "launchDate": "2024-10-07",
+  "color": "0xff7ab0",
+  "identifiers": {
+    "naif": -91
+  },
+  "facts": {
+    "launchDate": {
+      "source": "jpl-horizons-object-data",
+      "method": "measured",
+      "citation": "Horizons -91: \"Launch Date: Didymos Arrival Date: 2024-Oct-07 14:52 UTC\""
+    },
+    "launchVehicle": {
+      "value": "SpaceX Falcon 9",
+      "source": "jpl-horizons-object-data",
+      "method": "measured",
+      "citation": "Horizons -91: \"Launch Vehicle: Launch Site: SpaceX Falcon 9 Cape Canaveral, SFS\""
+    },
+    "launchSite": {
+      "value": "Cape Canaveral, SFS",
+      "source": "jpl-horizons-object-data",
+      "method": "measured",
+      "citation": "Horizons -91: \"Launch Vehicle: Launch Site: SpaceX Falcon 9 Cape Canaveral, SFS\""
+    },
+    "massKg": {
+      "value": 1801,
+      "source": "jpl-horizons-object-data",
+      "method": "measured",
+      "citation": "Horizons -91: \"1801 kg fully fueled\""
+    }
+  },
+  "coverage": {
+    "temporal": {
+      "interval": [
+        [
+          "2024-10-08T00:00:00Z",
+          "2026-11-03T00:00:00Z"
+        ]
+      ]
+    }
+  }
+}

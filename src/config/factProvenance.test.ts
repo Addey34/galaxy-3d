@@ -194,6 +194,58 @@ const nssdcaMaster = snapshot.nssdcaMasterCatalog as Record<
     launchMassMentions: string[];
   }
 >;
+const horizonsObject = snapshot.horizonsObjectData as Record<
+  string,
+  { command: string; name: string; text: string }
+>;
+
+/**
+ * EN-TÊTE D'OBJET HORIZONS (sondes de l'ESA, 2026-10-09) : la fiche cite
+ * `Horizons <commande>: "<phrase>"`, et la phrase doit se trouver MOT POUR MOT dans l'en-tête
+ * relevé de CETTE commande. C'est ce qui rend une valeur en prose retrouvable et vérifiable,
+ * comme l'identifiant COSPAR l'est pour le Master Catalog.
+ */
+function horizonsQuote(name: string, citation: string | undefined): string {
+  const row = horizonsObject[name];
+  if (!row)
+    throw new Error(`${name} : absente du relevé des en-têtes Horizons`);
+  const match = /^Horizons (-?\d+): "(.+)"$/.exec(citation ?? '');
+  if (!match) throw new Error(`${name} : citation « ${citation} » mal formée`);
+  if (match[1] !== row.command)
+    throw new Error(`${name} : commande ${match[1]} ≠ relevé ${row.command}`);
+  if (!row.text.includes(match[2]))
+    throw new Error(`${name} : « ${match[2]} » absente de l'en-tête Horizons`);
+  return match[2];
+}
+
+const MONTHS = [
+  'Jan',
+  'Feb',
+  'Mar',
+  'Apr',
+  'May',
+  'Jun',
+  'Jul',
+  'Aug',
+  'Sep',
+  'Oct',
+  'Nov',
+  'Dec',
+];
+/** La date d'une phrase d'Horizons, sous ses deux formes publiées : `2020-Feb-10` et `April 14, 2023`. */
+function quotedDate(quote: string): string | null {
+  const iso = /(\d{4})-([A-Z][a-z]{2})-(\d{2})/.exec(quote);
+  const prose = /([A-Z][a-z]+) (\d{1,2}), (\d{4})/.exec(quote);
+  const [year, month, day] = iso
+    ? [iso[1], iso[2], iso[3]]
+    : prose
+      ? [prose[3], prose[1]!.slice(0, 3), prose[2]]
+      : [];
+  const index = MONTHS.indexOf(month ?? '');
+  if (index < 0) return null;
+  return `${year}-${String(index + 1).padStart(2, '0')}-${day!.padStart(2, '0')}`;
+}
+
 const sbdbInterstellar = snapshot.sbdbInterstellar as Record<
   string,
   {
@@ -651,6 +703,15 @@ function expected(
       }
       break;
     }
+    case 'jpl-horizons-object-data': {
+      const quote = horizonsQuote(name, p.citation);
+      if (field === 'massKg') {
+        const kg = /(\d+(?:\.\d+)?) kg/.exec(quote);
+        if (!kg) fail(`aucune masse en kg dans « ${quote} »`);
+        return { values: [Number(kg![1])], tolerance: 0 };
+      }
+      break;
+    }
     case 'jpl-sbdb': {
       // Un interstellaire n'est pas dans le relevé `sbdb` (diamètre, GM, rotation) : ses deux
       // faits sont traités d'abord, avant que l'absence de ligne ne fasse échouer.
@@ -918,8 +979,12 @@ describe('faits datés : confrontés à leur source', () => {
       if (cfg.realData?.sources?.[field])
         cases.push([`${name}.${field}`, name, cfg, field]);
 
-  it('couvre les onze sondes et les trois interstellaires', () => {
-    expect(cases.length).toBe(14);
+  it('couvre chaque sonde et chaque interstellaire', () => {
+    expect(cases.length).toBe(
+      SPACECRAFT_MISSIONS.length +
+        [...NAVIGABLE_TARGETS.values()].filter((t) => t.kind === 'interstellar')
+          .length
+    );
   });
 
   it.each(cases)('%s', (_label, name, cfg, field) => {
@@ -927,6 +992,14 @@ describe('faits datés : confrontés à leur source', () => {
     expect(factual.kind, `${name}.${field}`).toBe('date');
     const iso = factual.kind === 'date' ? factual.iso : '';
     const provenance = cfg.realData!.sources![field]!;
+    if (
+      field === 'launchDate' &&
+      provenance.source === 'jpl-horizons-object-data'
+    ) {
+      const quote = horizonsQuote(name, provenance.citation);
+      expect(quotedDate(quote), `${name}.launchDate`).toBe(iso);
+      return;
+    }
     if (field === 'launchDate') {
       const row = nssdcaMaster[name];
       expect(row, `${name} absente du relevé NSSDCA`).toBeDefined();
@@ -947,8 +1020,12 @@ describe('faits datés : confrontés à leur source', () => {
     // les deux, même si la page lue existait bel et bien.
     for (const mission of SPACECRAFT_MISSIONS) {
       const row = nssdcaMaster[mission.name];
-      expect(row, mission.name).toBeDefined();
-      expect(mission.launchDate, mission.name).toBe(row.launchDate);
+      if (row) {
+        expect(mission.launchDate, mission.name).toBe(row.launchDate);
+        continue;
+      }
+      // Sans fiche au Master Catalog, la date se lit dans l'en-tête Horizons, qui doit être là.
+      expect(horizonsObject[mission.name], mission.name).toBeDefined();
     }
   });
 });
@@ -966,8 +1043,8 @@ describe('faits nommés : recopiés de leur source', () => {
       if (cfg.realData?.sources?.[field])
         cases.push([`${name}.${field}`, name, cfg, field]);
 
-  it('couvre le lanceur et le site des onze sondes', () => {
-    expect(cases.length).toBe(22);
+  it('couvre le lanceur et le site de chaque sonde', () => {
+    expect(cases.length).toBe(2 * SPACECRAFT_MISSIONS.length);
   });
 
   it.each(cases)('%s', (_label, name, cfg, field) => {
@@ -975,6 +1052,11 @@ describe('faits nommés : recopiés de leur source', () => {
     expect(factual.kind, `${name}.${field}`).toBe('name');
     const text = factual.kind === 'name' ? factual.text : '';
     const provenance = cfg.realData!.sources![field]!;
+    if (provenance.source === 'jpl-horizons-object-data') {
+      // La chaîne affichée est dans la phrase citée, telle quelle, casse comprise.
+      expect(horizonsQuote(name, provenance.citation)).toContain(text);
+      return;
+    }
     const row = nssdcaMaster[name];
     expect(row, `${name} absente du relevé NSSDCA`).toBeDefined();
     expect(provenance.source).toBe('nssdca-master-catalog');

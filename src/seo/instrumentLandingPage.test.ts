@@ -64,7 +64,8 @@ describe('les pages des objets d’instrument', () => {
         locale
       );
       expect(pages.length).toBe(NAVIGABLE_TARGETS.size);
-      expect(pages.length).toBe(14);
+      // Quatorze sondes (onze, puis les trois de l'ESA le 2026-10-09) et trois interstellaires.
+      expect(pages.length).toBe(17);
       for (const page of pages) {
         expect(page.title).toBe(
           messages[locale]['title.instrument'].replace(

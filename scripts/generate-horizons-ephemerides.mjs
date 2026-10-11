@@ -807,6 +807,38 @@ const BODIES = [
     startTime: '2014-12-05',
     stopTime: '2026-11-25',
   },
+  // SONDES DE L'ESA (2026-10-09). Bornes LUES dans Horizons ce jour (« No ephemeris for target
+  // … prior to / after »), resserrées au jour plein : Solar Orbiter 2020-02-10 04:56 au
+  // 2030-11-20 04:41 TDB, JUICE 2023-04-14 12:43 au 2031-07-21 06:30, Hera 2024-10-07 16:08 au
+  // 2026-11-04 01:01 (Horizons ne publie pas encore l'arrivée à Didymos). Pas d'un jour : les
+  // trois enchaînent des survols (Vénus et la Terre, Mars pour Hera) que 4 jours ne résolvent pas.
+  {
+    name: 'solar-orbiter',
+    target: '-144',
+    expectedName: 'solar orbiter',
+    center: 'sun',
+    startTime: '2020-02-11',
+    stopTime: '2030-11-19',
+    stepDays: PROBE_EVENT_STEP_DAYS,
+  },
+  {
+    name: 'juice',
+    target: '-28',
+    expectedName: 'juice',
+    center: 'sun',
+    startTime: '2023-04-15',
+    stopTime: '2031-07-20',
+    stepDays: PROBE_EVENT_STEP_DAYS,
+  },
+  {
+    name: 'hera',
+    target: '-91',
+    expectedName: 'hera',
+    center: 'sun',
+    startTime: '2024-10-08',
+    stopTime: '2026-11-03',
+    stepDays: PROBE_EVENT_STEP_DAYS,
+  },
   // OBJETS INTERSTELLAIRES (2026-10-08) : la solution d'Horizons, accélérations non
   // gravitationnelles comprises, au lieu du seul modèle à deux corps des éléments (122 919 km
   // d'écart au périhélie de 1I, 0,3 % de sa distance au Soleil). Bornes = la fenêtre affichée,

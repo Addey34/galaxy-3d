@@ -1,5 +1,5 @@
 {
- "generatedAt": "2026-10-08T04:34:43.974Z",
+ "generatedAt": "2026-10-11T05:04:51.770Z",
  "samplesPerCase": 48,
  "spk": {
   "kernel": true,
@@ -17768,6 +17768,72 @@
     "median": 0.02923,
     "p95": 0.438,
     "max": 30.47
+   },
+   "radii": null
+  },
+  {
+   "body": "solar-orbiter",
+   "provider": "horizons-binary",
+   "windowKind": "binary",
+   "windowFrom": "2020-02-12",
+   "windowTo": "2030-11-18",
+   "windowClipped": false,
+   "target": "-144",
+   "relative": false,
+   "radiusKm": null,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 1.499,
+    "median": 0.3101,
+    "p95": 5.878,
+    "max": 19.35
+   },
+   "radii": null
+  },
+  {
+   "body": "juice",
+   "provider": "horizons-binary",
+   "windowKind": "binary",
+   "windowFrom": "2023-04-16",
+   "windowTo": "2031-07-19",
+   "windowClipped": false,
+   "target": "-28",
+   "relative": false,
+   "radiusKm": null,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 0.01731,
+    "median": 0.003289,
+    "p95": 0.06251,
+    "max": 0.1743
+   },
+   "radii": null
+  },
+  {
+   "body": "hera",
+   "provider": "horizons-binary",
+   "windowKind": "binary",
+   "windowFrom": "2024-10-09",
+   "windowTo": "2026-11-02",
+   "windowClipped": false,
+   "target": "-91",
+   "relative": false,
+   "radiusKm": null,
+   "n": 48,
+   "uncovered": 0,
+   "rejected": 0,
+   "sources": {},
+   "km": {
+    "mean": 0.009664,
+    "median": 0.001392,
+    "p95": 0.06416,
+    "max": 0.0989
    },
    "radii": null
   },
