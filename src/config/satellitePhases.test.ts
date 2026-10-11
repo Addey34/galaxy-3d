@@ -181,8 +181,16 @@ describe('phases de satellite des sondes', () => {
         const parent = CELESTIAL_CONFIG.bodies[phase.body]!;
         for (let t = phase.fromMs; t <= phase.toMs; t += 2 * DAY_MS) {
           const date = new Date(t);
-          const probe = service.getHeliocentricAU(mission.name, date)!;
-          const parentAU = service.getHeliocentricAU(phase.body, date)!;
+          const probe = service.getHeliocentricAU(mission.name, date);
+          const parentAU = service.getHeliocentricAU(phase.body, date);
+          // Une phase liée jusqu'au bout va au minuit qui suit la fin du fichier (grille TDB,
+          // quelques dizaines de secondes avant) : au-delà, il n'y a plus de position.
+          if (!probe || !parentAU) {
+            expect(t, `${mission.name} ${iso(t)}`).toBeGreaterThanOrEqual(
+              coverageMs(mission.name)[1]
+            );
+            continue;
+          }
           placeInstrument(out, probe, { parent, parentHelioAU: parentAU }, 0);
           const center = scaleToScene(
             new THREE.Vector3(),
@@ -221,8 +229,14 @@ describe('phases de satellite des sondes', () => {
         let worstHill = 0;
         for (let t = phase.fromMs; t <= phase.toMs; t += DAY_MS) {
           const date = new Date(t);
-          const probe = service.getHeliocentricAU(mission.name, date)!;
-          const parentAU = service.getHeliocentricAU(phase.body, date)!;
+          const probe = service.getHeliocentricAU(mission.name, date);
+          const parentAU = service.getHeliocentricAU(phase.body, date);
+          if (!probe || !parentAU) {
+            expect(t, `${mission.name} ${iso(t)}`).toBeGreaterThanOrEqual(
+              coverageMs(mission.name)[1]
+            );
+            continue;
+          }
           worstHill = Math.max(
             worstHill,
             probe.distanceTo(parentAU) / hillRadiusAU(parentAU.length(), mu)
@@ -232,12 +246,12 @@ describe('phases de satellite des sondes', () => {
         let worstClamp = 0;
         for (let t = phase.fromMs; t <= phase.toMs; t += DAY_MS) {
           const date = new Date(t);
+          const probe = service.getHeliocentricAU(mission.name, date);
+          const parentAU = service.getHeliocentricAU(phase.body, date);
+          if (!probe || !parentAU) continue; // au-delà du fichier, cf. plus haut
           worstClamp = Math.max(
             worstClamp,
-            service
-              .getHeliocentricAU(mission.name, date)!
-              .distanceTo(service.getHeliocentricAU(phase.body, date)!) /
-              clampAU
+            probe.distanceTo(parentAU) / clampAU
           );
         }
         if (worstHill > 2.1 && worstClamp > 1)

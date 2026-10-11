@@ -114,6 +114,17 @@ function windowedService(
     if (companionWindow)
       loaded.set(companion, loadWindow(companion, companionWindow));
   }
+  // Les SEGMENTS de ce corps (ligne 45.10 : Juno autour de Jupiter couvre la date de la scène)
+  // et leur planète, sur la MÊME date : le service complet les compose, la fenêtre aussi.
+  for (const [segment, entry] of Object.entries(horizonsManifest.bodies)) {
+    if ((entry as { segmentOf?: string }).segmentOf !== name) continue;
+    const segmentWindow = planBodyWindow(gridOf(segment), { date: SCENE_DATE });
+    const center = entry.center!;
+    const centerWindow = planBodyWindow(gridOf(center), { date: SCENE_DATE });
+    if (!segmentWindow || !centerWindow) continue;
+    loaded.set(segment, loadWindow(segment, segmentWindow));
+    loaded.set(center, loadWindow(center, centerWindow));
+  }
   type Ctor = new (bodies: Map<string, unknown>) => HorizonsEphemerisService;
   return new (HorizonsEphemerisService as unknown as Ctor)(loaded);
 }
@@ -570,12 +581,15 @@ describe('ce que la première vue coûte réellement', () => {
     // 12 h, cf. `segmentReference.test.ts`) ; 55 973 520 avec les trois objets interstellaires
     // (2026-10-08 : 1I au pas d'un jour, 2I et 3I au pas de 4 jours, sur ±20 ans) ; 56 343 648
     // avec les trois sondes de l'ESA (2026-10-09 : Solar Orbiter, JUICE et Hera au pas d'un jour) ;
-    // 56 410 368 avec les 65 segments de survol (2026-10-11, 66 720 octets, ligne 45.10).
-    expect(shipped).toBe(56_410_368);
+    // 56 410 368 avec les 65 segments de survol (2026-10-11, 66 720 octets, ligne 45.10) ;
+    // 57 754 512 avec Juno et Cassini en orbite (même jour, pas 2 : 426 240 et 925 584 octets,
+    // les survols replanifiés avec le terme J2, Juno ramené à la couverture d'Horizons).
+    expect(shipped).toBe(57_754_512);
     // 62 au lot 17, plus les 23 cibles de missions du 2026-10-04 et leurs deux satellites : une
     // requête par corps ; 90 avec les trois objets interstellaires (2026-10-08), couverts à
     // cette date ; 93 avec les trois sondes de l'ESA (2026-10-09), couvertes elles aussi.
-    expect(requests).toBe(93);
+    // 94 avec le segment de Juno autour de Jupiter (2026-10-11), qui couvre cette date.
+    expect(requests).toBe(94);
     // Moins de 2 % de ce qui est livré aujourd'hui : c'est tout l'objet du lot.
     expect(bytes).toBeLessThan(shipped * 0.02);
     expect(bytes).toBeGreaterThan(500_000);

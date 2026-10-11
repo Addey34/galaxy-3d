@@ -1769,12 +1769,63 @@ l'ont seulement fait voir.
   couvrent, les 65 segments ajoutent quelques octets par jour simulé aux 1 386 des fichiers
   permanents, ce que garde `playbackBudget.test.ts`. La branche hyperbolique coûte 384 octets
   au démarrage : la marge du budget JS tombe de 496 à **112 octets**.
-- **Ce qui reste (ligne 45.10, pas 2)** : les deux phases EN ORBITE, Juno autour de Jupiter et
-  Cassini autour de Saturne. Ce sont des années de périapses toutes les quelques semaines, à
-  774 657 et 340 907 km d'écart au pire. Un segment uniforme de Cassini tient la borne au pas
-  de 90 min, pour 3,7 Mo ; au pas de 6 h, il dépasse à peine (1,13 %), à l'insertion en orbite,
-  qui est une poussée. Juno bute sur une couverture : son fichier livré va jusqu'au 2028-09-29,
-  alors qu'Horizons ne la sert plus que jusqu'au 2028-09-02 (lu le 2026-10-11).
+- **Mis à jour le même jour (pas 2)** : la marge du budget JS n'est plus de 112 octets mais
+  de 13 465, cf. le paragraphe suivant.
+
+**Juno et Cassini en orbite : l'aplatissement et la mise en orbite (2026-10-11, ligne 45.10,
+pas 2).** Les deux phases EN ORBITE restaient hors de la borne, à 538 638 km (728 %) et
+340 708 km (551 %) au pire : des années de périapses toutes les quelques semaines, au ras d'une
+géante. Mesuré en trois temps, et chaque temps a changé le plan :
+
+- **La conique seule ne suffit à aucun pas raisonnable.** Juno au pas de 90 min (3,4 Mo)
+  restait à 1,06 %. Une expérience hors application a désigné la cause : l'APLATISSEMENT de
+  Jupiter. Avec le terme J2, sur six mois de 2024, le pas de 12 h tient 0,12 % au lieu de 1,58 %.
+- **Le J2 est publié au MANIFESTE, pas au catalogue.** `pnpm ephemeris:oblateness`
+  (`scripts/publish-oblateness.mjs`) écrit sur chaque planète son J2 et son rayon équatorial,
+  lus sur sa fiche du NSSDCA (la ligne « J2 (x 10-6) », ajoutée au relevé des faits), et son
+  pôle IAU, lu dans le noyau PCK. Le catalogue voyage dans le JavaScript du démarrage, alors que
+  seul le service des éphémérides s'en sert. `--check` sort en code 1 sur une dérive.
+- **La propagation** (`core/oblatePropagation.ts`) est un Runge-Kutta d'ordre 4 à pas variable,
+  à 2 % du temps caractéristique local √(r³/μ). Elle sert tout SEGMENT dont la planète publie
+  son aplatissement : les phases en orbite, BepiColombo autour de Mercure et les survols. Son
+  témoin indépendant est la régression des nœuds, dΩ/dt = −1,5 n J2 (R/a)² cos i, falsifiée par
+  un signe inversé. Avec le J2, 63 des 65 survols passent au pas de 12 h.
+- **Une seule poussée par phase la casse, et l'outil la TROUVE.** Au pas de 12 h, Juno ne
+  dépassait qu'à sa mise en orbite (0,99 %) ; ailleurs 0,16 % au plus. L'outil relit au pas de
+  10 min les intervalles qui débordent, propage chaque ligne jusqu'à la suivante sous la même
+  dynamique, et prend le barycentre de l'épisode le plus fort. Mesuré : 35 à 49 km par
+  intervalle pendant la poussée de Juno, contre 0,2 km au 95ᵉ centile et 7,7 km au ras de
+  Jupiter (les harmoniques au-delà de J2). Les instants trouvés sont 2016-07-05 02:50 TDB pour
+  Juno (épisode de 40 min) et 2004-07-01 02:04 TDB pour Cassini (100 min). Ils sont publiés en
+  `impulses`, et le service propage d'un seul côté.
+- **Le plan** : Juno au pas de 12 h (426 240 octets, 0,16 % au pire, mesuré au pas de 30 min) ;
+  Cassini au pas de 6 h (925 584 octets, 0,32 %). Au pas de 12 h, les passages près de Titan
+  dépassent la moitié de la borne (0,506 %), et ce ne sont pas des poussées.
+- **La garde** garde TOUS les périapses d'une phase en orbite (331 pour Juno, 889 pour Cassini),
+  et pas 12 comme pour un survol. Sur 12 références seulement, Juno restait à 0,87 % sans le J2,
+  et la garde n'aurait rien vu. Elle est falsifiée en permanence : sans l'aplatissement, Juno
+  sort de la borne.
+- **Deux défauts trouvés en chemin.** D'abord, la fin d'un segment s'arrondissait à l'heure et
+  non sur sa grille : le dernier nœud tombait jusqu'à un pas avant la fin voulue, et ces heures
+  retombaient sur le fichier héliocentrique (Juno le 2028-08-28 : 21 000 km au pas de 12 h).
+  Ensuite, une phase `satelliteOf` s'arrêtait un jour avant la fin du fichier : le dernier nœud
+  est daté en TDB, 69 s AVANT le minuit UTC qu'échantillonne la dérivation, donc la sonde
+  quittait son corps un jour durant avant de disparaître (Juno : saut de 4,08 rayons Éducatif).
+  Une sonde liée au dernier jour couvert l'est désormais jusqu'au minuit suivant ; Cassini,
+  BepiColombo, JWST et Rosetta y gagnent un jour.
+- **Juno ramené à la couverture d'Horizons** (2028-09-01, au lieu du 2028-09-29 d'une solution
+  antérieure). La nouvelle solution diffère de l'ancienne de 755 000 km au plus en 2028, et
+  de moins de 100 km avant le 2026-10-11.
+- **Le budget JS, libéré avant d'être dépensé.** Les shaders GLSL vivent dans des gabarits
+  JavaScript, dont le minifieur ne touche jamais le contenu : 13 832 octets de commentaires
+  (en français, ceux qui portent la mesure) et 4 475 d'indentation partaient au démarrage.
+  `src/build/glslComments.ts` les retire du SOURCE. Le greffon `stripGlslComments` est actif en
+  dev aussi, pour que la suite e2e compile les shaders transformés. La transformation garde
+  chaque fin de ligne, ne touche jamais une expression `${…}`, et laisse un commentaire qui
+  court jusqu'à une expression. Sa garde confronte tous les shaders du dépôt à une seconde
+  méthode : aucun jeton GLSL changé. Le rendu a été comparé pixel à pixel sur trois scènes,
+  avec et sans le greffon : l'écart est celui de deux captures d'un même build. La marge passe
+  de 112 à 14 972 octets, puis à **13 465** une fois la propagation J2 ajoutée.
 
 **Pourquoi un survol reste héliocentrique.** La règle des lunes étire √d : à la frontière de la
 sphère de Hill de Jupiter elle poserait l'objet à 35 × 3,43 × √0,355 ≈ 49 unités de la planète,

@@ -437,18 +437,27 @@ describe('page /sources', () => {
       ([, e]) => e.segmentOf && !e.flyby
     );
     expect(segments.length).toBeGreaterThanOrEqual(1);
-    const words = ['manoeuvres', 'manœuvres', 'maniobras', 'manobras'];
+    // Une seule manœuvre (la mise en orbite de Juno, 2026-10-11) s'écrit au singulier.
+    const words = ['manoeuvre', 'manœuvre', 'maniobra', 'manobra'];
+    const counted = (n: number, i: number) =>
+      `${n} ${words[i]}${n === 1 ? '' : 's'}`;
     sources.forEach((page, i) => {
       for (const [key, entry] of segments) {
         expect(page.body).not.toMatch(new RegExp(`>${key}<`, 'i'));
         expect(page.body).toContain(
-          `segment${i < 2 ? '' : 'o'}, ${entry.impulses!.length} ${words[i]}`
+          `segment${i < 2 ? '' : 'o'}, ${counted(entry.impulses!.length, i)}`
         );
       }
     });
+    const methodWords = [
+      (n: number) => `the ${n} manoeuvre${n === 1 ? '' : 's'}`,
+      (n: number) => (n === 1 ? 'la manœuvre' : `les ${n} manœuvres`),
+      (n: number) => (n === 1 ? 'la maniobra' : `las ${n} maniobras`),
+      (n: number) => (n === 1 ? 'a manobra' : `as ${n} manobras`),
+    ];
     methodology.forEach((page, i) => {
       for (const [, entry] of segments)
-        expect(page.body).toContain(`${entry.impulses!.length} ${words[i]}`);
+        expect(page.body).toContain(methodWords[i]!(entry.impulses!.length));
     });
   });
 

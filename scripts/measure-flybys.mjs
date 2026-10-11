@@ -54,7 +54,7 @@ const SUN_MASS_KG = 1.98847e30;
 const DETECT_STEP_MINUTES = 360;
 /** Pas de la mesure, et au-delà de quelle durée de rencontre on passe au pas long. */
 const FINE_STEP_MINUTES = 10;
-const LONG_STEP_MINUTES = 60;
+const LONG_STEP_MINUTES = 30;
 const LONG_ENCOUNTER_DAYS = 20;
 /**
  * Pas candidats d'un segment, du plus grossier au plus fin. Le générateur n'accepte qu'un
@@ -63,10 +63,13 @@ const LONG_ENCOUNTER_DAYS = 20;
 const SEGMENT_STEPS_MINUTES = [720, 360, 240, 180, 120, 60, 30, 20, 10];
 /**
  * Au-delà, l'intervalle à couvrir n'est plus un survol mais une phase EN ORBITE (Juno autour
- * de Jupiter, Cassini autour de Saturne) : plusieurs années, des périapses toutes les quelques
- * semaines, et un pas uniforme qui les résout coûterait des mégaoctets. Elle se traite à part.
+ * de Jupiter, Cassini autour de Saturne : des années, des périapses toutes les quelques
+ * semaines). Son segment se planifie de même, mais ses pas candidats s'arrêtent à 3 h : en
+ * dessous il coûterait des mégaoctets, et le terme J2 de la propagation (pas 2, 2026-10-11)
+ * est ce qui le rend possible.
  */
 const ORBITAL_PHASE_DAYS = 60;
+const ORBITAL_STEPS_MINUTES = [720, 360, 240, 180];
 /** Vecteurs de référence gardés par rencontre pour la garde hors ligne. */
 const MAX_REFERENCES = 12;
 /** Marge de chaque côté d'une rencontre, en jours. */
@@ -303,6 +306,8 @@ const { horizonsServiceFromDisk } = await load(
   '/src/core/horizonsTestFixture.ts'
 );
 const { bodyDynamics } = await load('/src/config/gravity.ts');
+const { oblatenessOf } = await load('/src/core/HorizonsEphemerisService.ts');
+const { twoBodyResiduals } = await load('/src/core/impulseDetection.ts');
 
 const catalogue = new Map(flattenBodies(CELESTIAL_CONFIG));
 const service = horizonsServiceFromDisk();
@@ -485,6 +490,91 @@ function measure(enc, samples, position) {
 }
 
 const dynamicsByBody = bodyDynamics();
+
+/** Au-delà, on ne cherche pas de poussées : ce n'est plus une mise en orbite, c'est le pas. */
+const MAX_IMPULSES = 4;
+/** Pas du tirage fin où une poussée se lit. */
+const IMPULSE_PROBE_MINUTES = 10;
+
+/**
+ * LES POUSSÉES D'UN SEGMENT SIMULÉ, cherchées là seulement où il déborde. Chaque groupe
+ * d'intervalles fautifs est relu au pas de 10 min ; l'état de chaque ligne est propagé jusqu'à
+ * la suivante sous la MÊME dynamique que le service (gravité et J2), et la poussée est le
+ * barycentre des résidus de l'épisode le plus fort (au-dessus du quart de son pic). Mesuré sur
+ * Juno le 2026-10-11 : 35 à 49 km par intervalle de 10 min pendant la mise en orbite, 0,2 km au
+ * 95ᵉ centile ailleurs, 7,7 km au plus au ras de Jupiter (les harmoniques au-delà de J2).
+ */
+async function findImpulses(enc, samples, segment, centerId, dynamics) {
+  const m = segment.manifest;
+  const intervals = new Set();
+  for (const sample of samples) {
+    const date = dateOfUtJd(sample.jd);
+    const planetPos = service.getHeliocentricAU(enc.planet, date);
+    const p = service.getHeliocentricAU(enc.probe, date);
+    if (!planetPos || !p) continue;
+    if (
+      p.sub(planetPos).distanceTo(sample.rel) * KM_PER_AU <=
+      SEGMENT_SHARE * sample.rKm
+    )
+      continue;
+    intervals.add(
+      Math.floor((jdTdbFromDate(date) - m.startJdTdb) / m.stepDays)
+    );
+  }
+  // Intervalles contigus regroupés : une poussée déborde souvent sur ses deux voisins.
+  const sorted = [...intervals].sort((a, b) => a - b);
+  const groups = [];
+  for (const k of sorted) {
+    if (groups.length && k - groups.at(-1).at(-1) <= 1) groups.at(-1).push(k);
+    else groups.push([k]);
+  }
+  if (groups.length === 0 || groups.length > MAX_IMPULSES) return [];
+  const target = targets[enc.probe];
+  const found = [];
+  for (const group of groups) {
+    const fromJd = m.startJdTdb + (group[0] - 1) * m.stepDays;
+    const toJd = m.startJdTdb + (group.at(-1) + 2) * m.stepDays;
+    const fine = await segmentStates(
+      target.command,
+      target.expect,
+      centerId,
+      `JD ${fromJd.toFixed(6)}`,
+      `JD ${toJd.toFixed(6)}`,
+      IMPULSE_PROBE_MINUTES
+    );
+    const rows = [];
+    for (let i = 0; i < fine.samples.length / 6; i++)
+      rows.push({
+        jd: fine.startJdTdb + (i * IMPULSE_PROBE_MINUTES) / 1440,
+        state: Array.from(fine.samples.subarray(i * 6, i * 6 + 6)),
+      });
+    const residuals = twoBodyResiduals(rows, dynamics.mu, dynamics.oblateness);
+    let peak = 0;
+    for (let k = 1; k < residuals.length; k++)
+      if (residuals[k] > residuals[peak]) peak = k;
+    let a = peak;
+    let b = peak;
+    while (a > 0 && residuals[a - 1] > residuals[peak] / 4) a--;
+    while (b + 1 < residuals.length && residuals[b + 1] > residuals[peak] / 4)
+      b++;
+    let weight = 0;
+    let moment = 0;
+    for (let k = a; k <= b; k++) {
+      weight += residuals[k];
+      moment += (residuals[k] * (rows[k].jd + rows[k + 1].jd)) / 2;
+    }
+    let jd = moment / weight;
+    // Jamais SUR une ancre : le service propage d'un côté ou de l'autre de l'instant.
+    const u = (jd - m.startJdTdb) / m.stepDays;
+    if (Math.abs(u - Math.round(u)) < 1e-4) jd += 1 / 1440;
+    found.push(Number(jd.toFixed(6)));
+    console.log(
+      `  poussée de ${enc.probe} vers JD ${jd.toFixed(4)} (${dateOfUtJd(jd).toISOString().slice(0, 16)} TDB) : ` +
+        `pic ${residuals[peak].toFixed(1)} km sur ${IMPULSE_PROBE_MINUTES} min, épisode de ${(b - a + 1) * IMPULSE_PROBE_MINUTES} min`
+    );
+  }
+  return found;
+}
 const segments = [];
 
 for (const enc of encounters) {
@@ -577,16 +667,41 @@ for (const enc of encounters) {
     );
     if (covering) {
       note = `couverte par le segment livré ${covering[0]}`;
-    } else if (needTo - needFrom > ORBITAL_PHASE_DAYS) {
-      note = `phase en orbite de ${Math.round(needTo - needFrom)} jours, hors du périmètre des survols`;
     } else {
+      const orbital = needTo - needFrom > ORBITAL_PHASE_DAYS;
       const startIso = hourIso(Math.max(needFrom, entry.startJdTdb), Math.ceil);
-      const stopIso = hourIso(Math.min(needTo, gridEnd(entry)), Math.floor);
+      // La fin se pose sur la GRILLE du segment, arrondie vers le haut : arrondie à l'heure
+      // seulement, le dernier nœud tombait jusqu'à un pas AVANT la fin voulue, et ces heures
+      // retombaient sur le fichier héliocentrique (Juno le 2028-08-28 : 21 000 km au pas de 12 h).
+      // Les deux chaînes sont lues par Horizons dans la même échelle, donc leur écart en est un.
+      const lastJd = Math.min(needTo, gridEnd(entry));
+      const startMs = Date.parse(`${startIso.replace(' ', 'T')}:00Z`);
+      const stopOnGrid = (stepMinutes) => {
+        const step = stepMinutes * 60_000;
+        const wanted = (lastJd - UNIX_EPOCH_JD) * MS_PER_DAY;
+        const limit = (gridEnd(entry) - UNIX_EPOCH_JD) * MS_PER_DAY;
+        let n = Math.ceil((wanted - startMs) / step);
+        while (n > 0 && startMs + n * step > limit) n--;
+        return new Date(startMs + n * step)
+          .toISOString()
+          .slice(0, 16)
+          .replace('T', ' ');
+      };
       const mu = dynamicsByBody[enc.planet]?.attractorMu;
       if (!(mu > 0))
         throw new Error(`aucune masse au catalogue pour ${enc.planet}`);
       const name = segmentName(enc, closestIso);
-      for (const stepMinutes of SEGMENT_STEPS_MINUTES) {
+      // La même dynamique que le service : la gravité de la planète, et son aplatissement
+      // quand le manifeste le publie (`pnpm ephemeris:oblateness`).
+      const flat = manifest.bodies[enc.planet]?.oblateness;
+      const dynamics = {
+        mu,
+        ...(flat ? { oblateness: oblatenessOf(flat) } : {}),
+      };
+      for (const stepMinutes of orbital
+        ? ORBITAL_STEPS_MINUTES
+        : SEGMENT_STEPS_MINUTES) {
+        const stopIso = stopOnGrid(stepMinutes);
         const states = await segmentStates(
           target.command,
           target.expect,
@@ -608,27 +723,44 @@ for (const enc of encounters) {
             segmentOf: enc.probe,
           },
           samples: states.samples,
-          dynamics: { mu },
+          dynamics,
         });
-        const simulated = measure(enc, samples, (d) =>
-          service.getHeliocentricAU(enc.probe, d)
-        );
+        const served = (d) => service.getHeliocentricAU(enc.probe, d);
+        let simulated = measure(enc, samples, served);
+        // Une POUSSÉE (la mise en orbite) casse la propagation d'un intervalle : on la cherche
+        // là où la simulation déborde, et on la publie pour être propagée d'un seul côté.
+        let impulses = [];
+        if (simulated.share > SEGMENT_SHARE) {
+          impulses = await findImpulses(
+            enc,
+            samples,
+            service.bodies.get(name),
+            center.id,
+            dynamics
+          );
+          if (impulses.length > 0) {
+            service.bodies.get(name).manifest.impulses = impulses;
+            simulated = measure(enc, samples, served);
+          }
+        }
         service.bodies.delete(name);
         if (simulated.share <= SEGMENT_SHARE) {
           plan = {
             name,
+            kind: orbital ? 'orbit' : 'flyby',
             from: startIso,
             to: stopIso,
             stepMinutes,
             bytes: sampleCount * 48,
             simulatedKm: simulated.errKm,
             simulatedShare: simulated.share,
+            ...(impulses.length > 0 ? { impulses } : {}),
           };
           break;
         }
       }
       if (!plan)
-        note = `aucun pas jusqu'à ${SEGMENT_STEPS_MINUTES.at(-1)} min ne tient la borne`;
+        note = `aucun pas jusqu'à ${(orbital ? ORBITAL_STEPS_MINUTES : SEGMENT_STEPS_MINUTES).at(-1)} min ne tient la borne`;
     }
   }
   if (plan) segments.push(plan);
@@ -649,8 +781,13 @@ for (const enc of encounters) {
         for (const j of [i - per2h, i, i + per2h])
           if (samples[j]) periapses.push(j);
     }
-    // Au plus MAX_REFERENCES par rencontre, répartis sur toute la liste.
-    const every = Math.max(1, Math.ceil(periapses.length / MAX_REFERENCES));
+    // Au plus MAX_REFERENCES par survol, répartis sur toute la liste ; TOUS les périapses d'une
+    // phase en orbite, sans quoi la garde ne voit pas ce qui la fait tenir (sans le terme J2,
+    // Juno restait à 0,87 % sur 12 références, le 2026-10-11).
+    const every =
+      plan?.kind === 'orbit'
+        ? 1
+        : Math.max(1, Math.ceil(periapses.length / MAX_REFERENCES));
     periapses.filter((_, i) => i % every === 0).forEach((j) => picks.add(j));
     const worstIndex = samples.findIndex((s) => s.jd === served.jd);
     if (worstIndex >= 0) picks.add(worstIndex);
@@ -726,9 +863,11 @@ if (WRITE) {
         ? {
             segment: {
               name: e.plan.name,
+              kind: e.plan.kind,
               from: e.plan.from,
               to: e.plan.to,
               stepMinutes: e.plan.stepMinutes,
+              ...(e.plan.impulses ? { impulses: e.plan.impulses } : {}),
             },
           }
         : {}),

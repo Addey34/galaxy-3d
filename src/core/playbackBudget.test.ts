@@ -49,7 +49,7 @@ const flybySegments = entries
   .map(([, grid]) => grid);
 
 describe('bytesPerSimulatedDay', () => {
-  it('reproduit la mesure publiée : 4,05 Mbit/s à la vitesse maximale', () => {
+  it('reproduit la mesure publiée : 4,89 Mbit/s à la vitesse maximale', () => {
     const perDay = bytesPerSimulatedDay(grids);
     // 64 corps au 2026-09-24 (800,2 o par jour simulé, 2,34 Mbit/s, la mesure du plan) ; 87
     // depuis les 23 cibles de missions du 2026-10-04, 89 avec leurs deux satellites le même
@@ -61,11 +61,14 @@ describe('bytesPerSimulatedDay', () => {
     // catalogue change, ce chiffre change AVEC lui : c'est le point, la demande est calculée et
     // non déclarée.
     // Les 65 segments de survol (2026-10-11) n'y entrent pas : cf. `grids` et la garde suivante.
-    expect(grids.length).toBe(96);
-    expect(perDay).toBeCloseTo(1386.0, 1);
+    // 98 et 1 674 avec Juno autour de Jupiter (48 / 0,5) et Cassini autour de Saturne
+    // (48 / 0,25), le même jour : des segments de PLUSIEURS ANNÉES, comptés comme les fichiers
+    // permanents, donc comme s'ils couvraient toute date (ils ne couvrent que 2004-2028).
+    expect(grids.length).toBe(98);
+    expect(perDay).toBeCloseTo(1674.0, 1);
     const atMaxSpeed = (perDay * MAX_SIMULATION_SCALE) / SECONDS_PER_DAY;
-    expect(atMaxSpeed).toBeCloseTo(506_236.5, 0);
-    expect((atMaxSpeed * 8) / 1e6).toBeCloseTo(4.05, 2);
+    expect(atMaxSpeed).toBeCloseTo(611_428.5, 0);
+    expect((atMaxSpeed * 8) / 1e6).toBeCloseTo(4.89, 2);
   });
 
   /**
@@ -161,7 +164,7 @@ describe('sustainableTimeScale', () => {
     expect(ceiling(null)).toBeNull();
   });
 
-  it('ne plafonne rien au-dessus de la demande maximale (3,63 Mbit/s)', () => {
+  it('ne plafonne rien au-dessus de la demande maximale (4,89 Mbit/s)', () => {
     // 10 Mbit/s : le plan mesure que ce lien absorbe la vitesse maximale. Le plafond doit donc
     // être ABSENT, et pas égal au maximum : l'interface ne dit rien quand il n'y a rien à dire.
     expect(ceiling(1_250_000)).toBeNull();
@@ -185,7 +188,8 @@ describe('sustainableTimeScale', () => {
         perSimulatedDay
     );
     expect(cap).toBe(expected);
-    expect(cap! / MAX_SIMULATION_SCALE).toBeCloseTo(0.485, 2);
+    // 40,1 % depuis Juno et Cassini en orbite (2026-10-11), 48,5 % avant.
+    expect(cap! / MAX_SIMULATION_SCALE).toBeCloseTo(0.401, 2);
   });
 
   it('un lien deux fois plus lent plafonne deux fois plus bas, à peu près', () => {

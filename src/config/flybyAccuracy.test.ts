@@ -59,6 +59,7 @@ const bodies = horizonsManifest.bodies as Record<
     segmentOf?: string;
     stepDays: number;
     flyby?: boolean;
+    impulses?: number[];
   }
 >;
 
@@ -78,14 +79,23 @@ describe('Rencontres planétaires des sondes contre Horizons', () => {
       expect(entry?.segmentOf).toBe(segment.probe);
       expect(entry?.center).toBe(segment.planet);
       expect(entry?.stepDays).toBeCloseTo(segment.stepMinutes / 1440, 12);
+      // Les poussées que l'outil a trouvées sont publiées telles quelles (mises en orbite).
+      expect(entry?.impulses ?? []).toEqual(
+        'impulses' in segment ? segment.impulses : []
+      );
     }
-    // Le drapeau `flyby` et le séparateur `--` (réservé à ces segments, cf. `--flybys` du
-    // générateur) désignent exactement les mêmes fichiers : ceux du plan.
+    // Le séparateur `--` est réservé aux segments du plan (cf. `--flybys` du générateur) ; le
+    // drapeau `flyby` aux SURVOLS, une phase en orbite (`kind: 'orbit'`) n'en porte pas.
     const planNames = planned.map((s) => s.name).sort();
+    const flybyNames = planned
+      .filter((s) => s.kind === 'flyby')
+      .map((s) => s.name)
+      .sort();
     const flagged = Object.keys(bodies).filter((name) => bodies[name]?.flyby);
     const named = Object.keys(bodies).filter((name) => name.includes('--'));
-    expect(flagged.sort()).toEqual(planNames);
+    expect(flagged.sort()).toEqual(flybyNames);
     expect(named.sort()).toEqual(planNames);
+    expect(planned.filter((s) => s.kind === 'orbit').length).toBeGreaterThan(0);
   });
 
   it('une rencontre que le relevé ne corrige pas dit pourquoi', () => {
@@ -107,6 +117,35 @@ describe('Rencontres planétaires des sondes contre Horizons', () => {
       ).toBeLessThan(plan.maxShare);
     });
   }
+
+  /**
+   * Juno autour de Jupiter (pas 2) ne tient la borne au pas de 12 h QUE par le terme J2 de la
+   * propagation : sans lui, ses périjoves (4 000 km des nuages) sortent de la borne. Mesuré le
+   * 2026-10-11 : 1,58 % au pire en deux corps sur six mois de 2024, 0,16 % avec J2.
+   */
+  it('sans l’aplatissement de Jupiter, Juno en orbite sort de la borne', () => {
+    const e = plan.encounters.find(
+      (encounter) =>
+        encounter.segment?.kind === 'orbit' && encounter.probe === 'juno'
+    );
+    if (!e?.segment) throw new Error('phase en orbite de Juno absente du plan');
+    const loaded = (
+      service as unknown as {
+        bodies: Map<string, { dynamics?: { oblateness?: unknown } }>;
+      }
+    ).bodies;
+    const dynamics = loaded.get(e.segment.name)!.dynamics!;
+    const flat = dynamics.oblateness;
+    expect(flat).toBeDefined();
+    delete dynamics.oblateness;
+    try {
+      expect(worstShare(e.probe, e.planet, e.reference).share).toBeGreaterThan(
+        plan.maxShare
+      );
+    } finally {
+      dynamics.oblateness = flat;
+    }
+  });
 
   it('sans son segment, un survol retombe hors de la borne (la garde mord)', () => {
     const e = plan.encounters.find(

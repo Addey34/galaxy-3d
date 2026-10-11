@@ -969,10 +969,10 @@ function sourcesPage(input: SourcesInput, locale: DocLocale): DocPage {
           : '') +
         (e.segmentOf
           ? `<br>${L({
-              en: `segment, ${e.impulses?.length ?? 0} manoeuvres read in the trajectory`,
-              fr: `segment, ${e.impulses?.length ?? 0} manœuvres lues dans la trajectoire`,
-              es: `segmento, ${e.impulses?.length ?? 0} maniobras leídas en la trayectoria`,
-              'pt-BR': `segmento, ${e.impulses?.length ?? 0} manobras lidas na trajetória`,
+              en: `segment, ${e.impulses?.length ?? 0} manoeuvre${e.impulses?.length === 1 ? '' : 's'} read in the trajectory`,
+              fr: `segment, ${e.impulses?.length ?? 0} manœuvre${e.impulses?.length === 1 ? ' lue' : 's lues'} dans la trajectoire`,
+              es: `segmento, ${e.impulses?.length ?? 0} maniobra${e.impulses?.length === 1 ? ' leída' : 's leídas'} en la trayectoria`,
+              'pt-BR': `segmento, ${e.impulses?.length ?? 0} manobra${e.impulses?.length === 1 ? ' lida' : 's lidas'} na trajetória`,
             })}`
           : ''),
       escapeHtml(
