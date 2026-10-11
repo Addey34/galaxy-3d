@@ -90,6 +90,12 @@
       "expect": "Hayabusa2"
     }
   },
+  "horizonsObjectData": {
+    "$comment": "Sondes que le Master Catalog du NSSDCA ne sert pas (2026-10-09 : Solar Orbiter et JUICE rendent sa page d'erreur générique, Hera « ORA-01403: no data found ») : leur lancement se lit dans l'en-tête de l'objet Horizons. `expect` doit figurer, avec la commande, sur la première ligne de cet en-tête.",
+    "solar-orbiter": { "command": "-144", "expect": "Solar Orbiter" },
+    "juice": { "command": "-28", "expect": "JUICE" },
+    "hera": { "command": "-91", "expect": "Hera" }
+  },
   "sbdbInterstellar": {
     "oumuamua": {
       "sstr": "1I/2017 U1",

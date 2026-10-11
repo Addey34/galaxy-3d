@@ -37,6 +37,7 @@ import jplSsdSatellitePhysicalParameters from './jpl-ssd-satellite-physical-para
 import jplSsdSatelliteMeanElements from './jpl-ssd-satellite-mean-elements.json';
 import jplSbdb from './jpl-sbdb.json';
 import jplHorizons from './jpl-horizons.json';
+import jplHorizonsObjectData from './jpl-horizons-object-data.json';
 import naifPck from './naif-pck.json';
 import nasaScienceJupiterMoons from './nasa-science-jupiter-moons.json';
 import nasaScienceSaturnMoons from './nasa-science-saturn-moons.json';
@@ -98,6 +99,7 @@ const asPositionSource = <
 export const FACT_SOURCE_PROVIDERS = {
   'nssdca-fact-sheets': asFactSource(nssdcaFactSheets),
   'nssdca-master-catalog': asFactSource(nssdcaMasterCatalog),
+  'jpl-horizons-object-data': asFactSource(jplHorizonsObjectData),
   'jpl-ssd-satellite-physical-parameters': asFactSource(
     jplSsdSatellitePhysicalParameters
   ),

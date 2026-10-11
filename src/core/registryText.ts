@@ -109,6 +109,9 @@ export function stripToEnglish<T>(value: T): T {
 }
 
 /** Les traductions d'une langue, indexées par la chaîne anglaise. */
+/** Valeur d'une carte de langue qui veut dire « le même texte qu'en anglais ». */
+export const SAME_AS_ENGLISH = '';
+
 export function collectTranslations(
   value: unknown,
   locale: DerivedTextLocale,
@@ -131,14 +134,20 @@ export function collectTranslations(
     const translation = value[locale];
     if (typeof translation === 'string') {
       const key = textKey(english);
+      const stored = translation === english ? SAME_AS_ENGLISH : translation;
       const existing = into[key];
       // Deux anglais différents sous la même empreinte, avec des traductions différentes :
       // impossible à trancher au runtime, donc refusé ici, en nommant les deux.
-      if (existing !== undefined && existing !== translation)
+      if (existing !== undefined && existing !== stored)
         throw new Error(
           `collision d'empreinte de texte (${key}) : « ${existing} » et « ${translation} »`
         );
-      into[key] = translation;
+      // Une traduction IDENTIQUE à l'anglais s'écrit `SAME_AS_ENGLISH` : la recopier mettait dans
+      // le morceau de la langue une chaîne déjà présente au démarrage, et la garde des fuites de
+      // langue y voyait une fuite (« Jupiter Icy Moons Explorer », titre identique dans les
+      // quatre langues, 2026-10-09). L'entrée reste PRÉSENTE : une traduction absente se distingue
+      // toujours d'une traduction égale.
+      into[key] = stored;
     }
     return into;
   }
@@ -179,7 +188,8 @@ export function hydrateLocalized(
   if (isLocalizedBlock(value)) {
     const translation = map[textKey(value.en as string)];
     if (typeof translation !== 'string') return 0;
-    (value as Record<string, unknown>)[locale] = translation;
+    (value as Record<string, unknown>)[locale] =
+      translation === SAME_AS_ENGLISH ? value.en : translation;
     return 1;
   }
   if (value !== null && typeof value === 'object') {

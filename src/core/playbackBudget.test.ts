@@ -27,21 +27,22 @@ const grids = Object.values(
 );
 
 describe('bytesPerSimulatedDay', () => {
-  it('reproduit la mesure publiée : 3,63 Mbit/s à la vitesse maximale', () => {
+  it('reproduit la mesure publiée : 4,05 Mbit/s à la vitesse maximale', () => {
     const perDay = bytesPerSimulatedDay(grids);
     // 64 corps au 2026-09-24 (800,2 o par jour simulé, 2,34 Mbit/s, la mesure du plan) ; 87
     // depuis les 23 cibles de missions du 2026-10-04, 89 avec leurs deux satellites le même
     // jour, 1 002 quand Patrocle passe au pas de 4 jours (2026-10-05, +48/4 − 48/16), 1 074
     // quand Didymos et Dimorphos passent au pas d'un jour (le même jour, 2 × (48 − 48/4)), 1 170
     // avec le segment de BepiColombo autour de Mercure (2026-10-06, 48 / 0,5), 1 242 avec les
-    // trois objets interstellaires (2026-10-08, 48 / 1 + 2 × 48 / 4). Si le
+    // trois objets interstellaires (2026-10-08, 48 / 1 + 2 × 48 / 4), 1 386 avec les trois
+    // sondes de l'ESA (2026-10-09, 3 × 48 / 1 : Solar Orbiter, JUICE et Hera). Si le
     // catalogue change, ce chiffre change AVEC lui : c'est le point, la demande est calculée et
     // non déclarée.
-    expect(grids.length).toBe(93);
-    expect(perDay).toBeCloseTo(1242.0, 1);
+    expect(grids.length).toBe(96);
+    expect(perDay).toBeCloseTo(1386.0, 1);
     const atMaxSpeed = (perDay * MAX_SIMULATION_SCALE) / SECONDS_PER_DAY;
-    expect(atMaxSpeed).toBeCloseTo(453_640.5, 0);
-    expect((atMaxSpeed * 8) / 1e6).toBeCloseTo(3.629, 2);
+    expect(atMaxSpeed).toBeCloseTo(506_236.5, 0);
+    expect((atMaxSpeed * 8) / 1e6).toBeCloseTo(4.05, 2);
   });
 
   it('ne compte que les corps passés : un corps hors couverture ne demande rien', () => {
@@ -125,19 +126,20 @@ describe('sustainableTimeScale', () => {
     const cap = ceiling(250_000);
     expect(cap).not.toBeNull();
     expect(cap!).toBeLessThan(MAX_SIMULATION_SCALE);
-    // 54,1 % du maximum, dérivé : (250 000 − surcoût) × 86 400 / 1 242. C'était 84,5 % avec les
+    // 48,5 % du maximum, dérivé : (250 000 − surcoût) × 86 400 / 1 386. C'était 84,5 % avec les
     // 64 fichiers du lot 17 : chaque corps tracé fait venir ses positions en lecture accélérée.
     // Le prix des 23 cibles de missions et de leurs deux satellites (2026-10-04), mesuré et
     // écrit (69,5 % avant les satellites, 67,8 % avant le pas de 4 jours de Patrocle, 67,1 %
     // avant le pas d'un jour de Didymos et de Dimorphos, 2026-10-05 ; 62,6 % avant le segment
     // de BepiColombo autour de Mercure, 2026-10-06, compté ici comme s'il couvrait toute date ;
-    // 57,5 % avant les trois objets interstellaires, 2026-10-08).
+    // 57,5 % avant les trois objets interstellaires, 2026-10-08 ; 54,1 % avant les trois sondes
+    // de l'ESA, 2026-10-09).
     const expected = Math.floor(
       ((250_000 - overheadBytesPerSecond(bodyCount)) * SECONDS_PER_DAY) /
         perSimulatedDay
     );
     expect(cap).toBe(expected);
-    expect(cap! / MAX_SIMULATION_SCALE).toBeCloseTo(0.541, 2);
+    expect(cap! / MAX_SIMULATION_SCALE).toBeCloseTo(0.485, 2);
   });
 
   it('un lien deux fois plus lent plafonne deux fois plus bas, à peu près', () => {

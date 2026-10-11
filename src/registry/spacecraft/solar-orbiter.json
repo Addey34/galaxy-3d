@@ -1,0 +1,57 @@
+{
+  "$schema": "../schema/spacecraft.schema.json",
+  "id": "solar-orbiter",
+  "targetClass": "spacecraft",
+  "displayName": {
+    "en": "Solar Orbiter",
+    "fr": "Solar Orbiter",
+    "es": "Solar Orbiter",
+    "pt-BR": "Solar Orbiter"
+  },
+  "description": {
+    "en": "Launched in 2020, it studies the Sun from an elongated orbit that dips inside Mercury’s and climbs out of the plane of the planets.",
+    "fr": "Lancée en 2020, elle étudie le Soleil depuis une orbite allongée qui passe à l’intérieur de celle de Mercure et s’élève hors du plan des planètes.",
+    "es": "Lanzada en 2020, estudia el Sol desde una órbita alargada que pasa por dentro de la de Mercurio y se eleva fuera del plano de los planetas.",
+    "pt-BR": "Lançada em 2020, estuda o Sol a partir de uma órbita alongada que passa por dentro da de Mercúrio e se eleva para fora do plano dos planetas."
+  },
+  "launchDate": "2020-02-10",
+  "color": "0xffe08a",
+  "identifiers": {
+    "naif": -144
+  },
+  "facts": {
+    "launchDate": {
+      "source": "jpl-horizons-object-data",
+      "method": "measured",
+      "citation": "Horizons -144: \"was launched 2020-Feb-10@4:03 UTC\""
+    },
+    "launchVehicle": {
+      "value": "Atlas V 411",
+      "source": "jpl-horizons-object-data",
+      "method": "measured",
+      "citation": "Horizons -144: \"on an Atlas V 411 launch vehicle\""
+    },
+    "launchSite": {
+      "value": "Cape Canaveral, Florida (SLC-41)",
+      "source": "jpl-horizons-object-data",
+      "method": "measured",
+      "citation": "Horizons -144: \"from Cape Canaveral, Florida (SLC-41)\""
+    },
+    "massKg": {
+      "value": 1800,
+      "source": "jpl-horizons-object-data",
+      "method": "measured",
+      "citation": "Horizons -144: \"Launch mass : 1800 kg\""
+    }
+  },
+  "coverage": {
+    "temporal": {
+      "interval": [
+        [
+          "2020-02-11T00:00:00Z",
+          "2030-11-19T00:00:00Z"
+        ]
+      ]
+    }
+  }
+}

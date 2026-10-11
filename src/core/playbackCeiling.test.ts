@@ -172,9 +172,10 @@ describe('le débit mesuré par le service (phase 17D)', () => {
     // satellites, couverts eux aussi. 90 fichiers avec le segment de BepiColombo autour de
     // Mercure (2026-10-06), qui ne commence que le 2026-10-13 : il ne demande rien à cette date.
     // 93 avec les trois objets interstellaires (2026-10-08), dont les fenêtres de ±20 ans
-    // couvrent toutes cette date : 90 corps demandés.
-    expect(Object.keys(horizonsManifest.bodies).length).toBe(93);
-    expect(today.length).toBe(90);
+    // couvrent toutes cette date : 90 corps demandés. 96 avec les trois sondes de l'ESA
+    // (2026-10-09), toutes en vol à cette date : 93 corps demandés.
+    expect(Object.keys(horizonsManifest.bodies).length).toBe(96);
+    expect(today.length).toBe(93);
     expect(then.length).toBeLessThan(today.length);
     expect(bytesPerSimulatedDay(then)).toBeLessThan(
       bytesPerSimulatedDay(today)

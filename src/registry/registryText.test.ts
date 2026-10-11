@@ -3,6 +3,7 @@ import { join, resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import {
   DERIVED_TEXT_LOCALES,
+  SAME_AS_ENGLISH,
   collectTranslations,
   englishStrings,
   hydrateLocalized,
@@ -188,5 +189,29 @@ describe('la traversée d’une Map', () => {
     // Deux lectures du même objet : si `englishStrings` ignorait la Map alors que
     // `hydrateLocalized` la traverse, la garde de `config/catalogueText.test.ts` serait verte à tort.
     expect(englishStrings(new Map([['probe', fiche()]])).size).toBe(1);
+  });
+});
+
+describe('une traduction identique à l’anglais (2026-10-09)', () => {
+  const block = (fr: string | undefined) => ({
+    name: { en: 'Jupiter Icy Moons Explorer', ...(fr ? { fr } : {}) },
+  });
+
+  it('s’écrit vide dans la carte, sans recopier la chaîne du démarrage', () => {
+    const map = collectTranslations(block('Jupiter Icy Moons Explorer'), 'fr');
+    expect(Object.values(map)).toEqual([SAME_AS_ENGLISH]);
+  });
+
+  it('se remet en place en anglais, quand une traduction ABSENTE reste absente', () => {
+    const map = collectTranslations(block('Jupiter Icy Moons Explorer'), 'fr');
+    const served = stripToEnglish(block('Jupiter Icy Moons Explorer'));
+    hydrateLocalized(served, map, 'fr');
+    expect(served.name).toEqual({
+      en: 'Jupiter Icy Moons Explorer',
+      fr: 'Jupiter Icy Moons Explorer',
+    });
+    const missing = stripToEnglish(block(undefined));
+    hydrateLocalized(missing, {}, 'fr');
+    expect(missing.name).toEqual({ en: 'Jupiter Icy Moons Explorer' });
   });
 });

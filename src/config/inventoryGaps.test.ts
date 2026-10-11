@@ -8,6 +8,7 @@ import { CELESTIAL_CONFIG } from './bodies';
 import { flattenBodies } from './catalog';
 import { NAVIGABLE_TARGETS } from './navigable';
 import { LOCALES } from '@/i18n/locales';
+import { order as spacecraftOrder } from '@/registry/spacecraft/order.json';
 
 /**
  * L'INVENTAIRE DÉRIVÉ — ce que cette garde tient.
@@ -45,9 +46,10 @@ describe('inventaire dérivé du dépôt', () => {
       .map((row) => row.id)
       .sort();
     expect(seen).toEqual(expected);
+    // Le compte se LIT dans l'ordre du registre des sondes : quatorze depuis les sondes de l'ESA.
     expect(
       inventory.rows.filter((row) => row.family === 'spacecraft')
-    ).toHaveLength(11);
+    ).toHaveLength(spacecraftOrder.length);
     expect(
       inventory.rows.filter((row) => row.family === 'interstellar')
     ).toHaveLength(3);

@@ -800,6 +800,16 @@ plafond **3,67 Mbit/s** ; à 2 Mbit/s le plafond vaut **54,1 %** du maximum, à 
 partout, la demande montait à 1 314 octets. Les éphémérides livrées passent de 54 921 264 à
 55 973 520 octets.
 
+**Mis à jour le 2026-10-09** : les trois sondes de l'ESA (Solar Orbiter, JUICE, Hera) reçoivent
+leur fichier Horizons au pas d'un jour. **1 386 octets par jour simulé, 4,05 Mbit/s** à la vitesse
+maximale, seuil sans plafond **4,09 Mbit/s** ; à 2 Mbit/s le plafond vaut **48,5 %** du maximum, à
+120 ko/s **22,8 %**. Le pas a été MESURÉ, au survol même et non sur les 48 dates de la validation,
+qui n'en touchent aucun : au pas de 4 jours, l'interpolation laissait jusqu'à 256 000 km (JUICE
+au survol de la Terre), 134 000 km (Solar Orbiter) et 24 600 km (Hera, Mars) ; au pas d'un jour,
+encore 59 000, 36 000 et 10 400 km, ce que la file de travail porte comme un défaut de TOUTES les
+sondes à survols (BepiColombo 74 500 km à Vénus, OSIRIS-REx 274 000 km à son retour, même
+mesure). Les éphémérides livrées passent de 55 973 520 à 56 343 648 octets.
+
 **Corrigé le même jour (ligne 45.4) : un objet interstellaire que la scène ne montre pas ne
 demande rien.** Ces chiffres supposaient les trois objets toujours servis, alors qu'ils sont
 MASQUÉS par défaut. Mesuré en CI par un A/B simultané (même machine, même build, manifeste avec

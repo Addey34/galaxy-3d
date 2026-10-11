@@ -1,0 +1,60 @@
+{
+  "$schema": "../schema/spacecraft.schema.json",
+  "id": "juice",
+  "targetClass": "spacecraft",
+  "displayName": {
+    "en": "Jupiter Icy Moons Explorer",
+    "fr": "Jupiter Icy Moons Explorer",
+    "es": "Jupiter Icy Moons Explorer",
+    "pt-BR": "Jupiter Icy Moons Explorer"
+  },
+  "description": {
+    "en": "Launched in 2023, on its way to Jupiter through flybys of the Earth and Venus, to study Ganymede, Europa and Callisto.",
+    "fr": "Lancée en 2023, en route vers Jupiter par des survols de la Terre et de Vénus, pour étudier Ganymède, Europe et Callisto.",
+    "es": "Lanzada en 2023, camino de Júpiter mediante sobrevuelos de la Tierra y de Venus, para estudiar Ganímedes, Europa y Calisto.",
+    "pt-BR": "Lançada em 2023, a caminho de Júpiter por meio de sobrevoos da Terra e de Vênus, para estudar Ganímedes, Europa e Calisto."
+  },
+  "launchDate": "2023-04-14",
+  "color": "0x6fb7ff",
+  "identifiers": {
+    "naif": -28
+  },
+  "facts": {
+    "launchDate": {
+      "source": "jpl-horizons-object-data",
+      "method": "measured",
+      "citation": "Horizons -28: \"launched April 14, 2023 @ 12:14 UTC\""
+    },
+    "launchVehicle": {
+      "value": "Ariane 5",
+      "source": "jpl-horizons-object-data",
+      "method": "measured",
+      "citation": "Horizons -28: \"on an Ariane 5\""
+    },
+    "launchSite": {
+      "value": "French Guiana (ELA-3)",
+      "source": "jpl-horizons-object-data",
+      "method": "measured",
+      "citation": "Horizons -28: \"from French Guiana (ELA-3)\""
+    },
+    "massKg": {
+      "published": false,
+      "reason": {
+        "en": "JPL Horizons gives only an approximate dry mass at launch (“~1800 kg”) beside about 3000 kg of propellant, and no launch mass. No published figure describes the object this marker follows, so none is shown.",
+        "fr": "JPL Horizons ne donne qu’une masse sèche approchée au lancement (« ~1800 kg »), à côté d’environ 3000 kg d’ergols, et aucune masse au lancement. Aucun chiffre publié ne décrit l’objet que suit ce marqueur : aucun n’est donc affiché.",
+        "es": "JPL Horizons solo da una masa en seco aproximada en el lanzamiento («~1800 kg»), junto a unos 3000 kg de propulsante, y ninguna masa en el lanzamiento. Ninguna cifra publicada describe el objeto que sigue este marcador: por eso no se muestra ninguna.",
+        "pt-BR": "O JPL Horizons dá apenas uma massa seca aproximada no lançamento («~1800 kg»), ao lado de cerca de 3000 kg de propelente, e nenhuma massa no lançamento. Nenhuma cifra publicada descreve o objeto que este marcador segue: por isso nenhuma é exibida."
+      }
+    }
+  },
+  "coverage": {
+    "temporal": {
+      "interval": [
+        [
+          "2023-04-15T00:00:00Z",
+          "2031-07-20T00:00:00Z"
+        ]
+      ]
+    }
+  }
+}

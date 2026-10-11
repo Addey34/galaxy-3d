@@ -25,7 +25,13 @@ describe('schéma des sondes', () => {
     const files = readdirSync(directory).filter(
       (name) => name.endsWith('.json') && name !== 'order.json'
     );
-    expect(files).toHaveLength(11);
+    // Une fiche par sonde de l'ordre, ni plus ni moins.
+    const { order } = JSON.parse(
+      readFileSync(resolve(directory, 'order.json'), 'utf8')
+    ) as { order: string[] };
+    expect(files.map((name) => name.slice(0, -5)).sort()).toEqual(
+      [...order].sort()
+    );
     for (const name of files) {
       const record: unknown = JSON.parse(
         readFileSync(resolve(directory, name), 'utf8')

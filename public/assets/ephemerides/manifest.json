@@ -1,7 +1,7 @@
 {
   "version": 1,
   "source": "NASA/JPL Horizons",
-  "generatedAt": "2026-10-08T04:21:47.821Z",
+  "generatedAt": "2026-10-09T15:22:17.403Z",
   "frame": "ECLIPTIC_J2000",
   "center": "SUN",
   "units": "AU-D",
@@ -801,6 +801,30 @@
       "startJdTdb": 2453671.5,
       "stepDays": 4,
       "sampleCount": 3654
+    },
+    "solar-orbiter": {
+      "file": "solar-orbiter.2f1b39e08cd2.bin",
+      "target": "-144",
+      "center": "sun",
+      "startJdTdb": 2458890.5,
+      "stepDays": 1,
+      "sampleCount": 3935
+    },
+    "juice": {
+      "file": "juice.f9d5ee8a2496.bin",
+      "target": "-28",
+      "center": "sun",
+      "startJdTdb": 2460049.5,
+      "stepDays": 1,
+      "sampleCount": 3019
+    },
+    "hera": {
+      "file": "hera.91a06cc221aa.bin",
+      "target": "-91",
+      "center": "sun",
+      "startJdTdb": 2460591.5,
+      "stepDays": 1,
+      "sampleCount": 757
     }
   }
 }
