@@ -1641,10 +1641,46 @@ le marqueur, pas ce que le rayon trouverait derrière lui. Falsifié en inversan
 **Ce qu'ils n'ont pas, et pourquoi.** Pas de case dans la colonne « Orbite » du tableau
 Réglages pour une sonde : elle n'a pas d'orbite fermée (assistances gravitationnelles, halo L2),
 et sa trajectoire n'est pas dessinée ; la cellule reste vide plutôt que de porter une case sans
-effet. Un objet interstellaire, lui, y a sa trajectoire hyperbolique. Pas de fait chiffré dans
+effet. [SUPERSEDED le 2026-10-11 : la cellule d'une sonde porte sa trajectoire, cf. le
+paragraphe suivant.] Un objet interstellaire, lui, y a sa trajectoire hyperbolique. Pas de fait chiffré dans
 leur fiche non plus : leurs registres portent une date de lancement et une désignation, mais
 sans champ `source`, et un fait sans provenance ne s'affiche pas (§ « Faits sourcés »). Les
-sourcer est le travail qui rendrait leur fiche comparable à celle d'un corps.
+sourcer est le travail qui rendrait leur fiche comparable à celle d'un corps. [SUPERSEDED pour
+les faits : les sondes portent des faits de lancement sourcés depuis le 2026-09-20 (PR #14).]
+
+**La trajectoire d'une sonde (2026-10-11).** Sa case de la colonne « Orbite », éteinte par
+défaut comme celles des objets interstellaires. Ses positions étant désormais tenues partout à
+1 % de la distance au corps rencontré (survols, phases en orbite, petits corps), une ligne qui
+passe par elles dit vrai. Deux tracés, parce qu'une sonde change de repère :
+
+- **En route**, hors des phases `satelliteOf` : le chemin héliocentrique sur toute la couverture
+  du fichier, en tronçons coupés aux phases (`core/spacecraftTrajectory.ts`). 1 500 instants
+  répartis au prorata de la durée, plus 64 dans chaque segment qui touche un tronçon : un survol
+  tourne en quelques heures, et une corde entre deux points à un mois d'écart traverserait la
+  planète. Chaque point est placé par `scaleToScene`, la règle du marqueur hors d'une phase.
+- **En orbite**, quand la date tombe dans une phase : la révolution en cours, sur une période
+  osculatrice centrée sur la date (vitesse par différence centrée de ±60 s, vis-viva), bornée à
+  la phase. Ses 240 instants sont répartis en ANOMALIE EXCENTRIQUE et non en temps : Juno passe
+  son périjove en quelques heures sur une orbite de 53 jours (e ≈ 0,98), et des instants
+  réguliers en temps coupaient le périjove d'une corde (vu à l'écran, puis tenu par
+  `spacecraftTrajectory.test.ts`). Chaque point est la position du corps À LA DATE DE LA SCÈNE
+  plus le vecteur relatif à son instant, puis passe par le placeur du marqueur
+  (`core/instrumentPlacement.ts`) : la ligne passe par le marqueur et se pose autour du corps
+  comme la ligne d'orbite d'une lune, en Éducatif, en Explo et pendant le morph. En Explo, une
+  orbite de Mars Express reste sous le pixel à vraie échelle : c'est l'invariant du mode.
+- **Le chemin parcouru** est tracé plus franchement (opacité 0,55) que le chemin à venir (0,22).
+- **Rien au démarrage.** Le tracé (`ui/spacecraftTrajectories.ts`) est un morceau déclaré hors
+  démarrage, chargé à la première trajectoire allumée ; ses octets se demandent alors, tronçon
+  par tronçon, par `ensureCoverage` avec un intervalle par sonde. **Cet intervalle vaut pour les
+  segments de la sonde** (`HorizonsEphemerisService._planBody`) : sans cela, le survol de la
+  Terre par Juno en 2013 n'était pas chargé pour une scène de 2026, et la ligne y passait par le
+  fichier d'un jour. Le planificateur ignorait en effet l'intervalle d'un fichier que la date de
+  la scène ne touche pas ; un segment se planifie donc depuis une date qu'il couvre (garde :
+  `ephemerisWindowLoad.test.ts`, falsifiée en retirant la règle). La couverture d'une sonde et
+  de ses segments se lit au manifeste, avant tout octet (`trajectoryCoverage`), ses bords rentrés
+  de deux minutes : le fichier est en TDB, en avance de 69 s sur l'UTC.
+- **La garde e2e** (`e2e/spacecraft.spec.ts`) : ni ligne ni module au démarrage, puis la
+  trajectoire de Mars Express tracée sans son marqueur, puis éteinte.
 
 ## Une sonde en orbite se pose comme une lune (lot 14)
 

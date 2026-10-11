@@ -27,6 +27,7 @@ import type { LabelSpace } from '@/core/labelSpace';
 import type { HorizonsEphemerisService } from '@/core/HorizonsEphemerisService';
 import { getLocale } from '@/i18n';
 import type { SpacecraftMission } from '@/config/spacecraft';
+import type { SpacecraftTrajectories } from './spacecraftTrajectories';
 
 export class SpacecraftOverlay {
   /** Les corps qui masquent un repère passé derrière eux (ligne 45.8), ou rien. */
@@ -53,6 +54,13 @@ export class SpacecraftOverlay {
    */
   private readonly _markers: { name: string; x: number; y: number }[] = [];
   private readonly _p = new THREE.Vector3();
+  /** Trajectoires allumées (colonne « Orbite ») : vide par défaut. */
+  private trajectoryNames: ReadonlySet<string> = new Set();
+  /** Le tracé, chargé à la PREMIÈRE trajectoire allumée (cf. `spacecraftTrajectories.ts`). */
+  private trajectories: SpacecraftTrajectories | null = null;
+  private trajectoryModule: Promise<
+    typeof import('./spacecraftTrajectories')
+  > | null = null;
 
   constructor(missions: SpacecraftMission[]) {
     this.missions = missions;
@@ -76,6 +84,7 @@ export class SpacecraftOverlay {
       this._clear();
       // Plus rien n'est peint : plus rien n'est cliquable (cf. `markerAt`).
       this._markers.length = 0;
+      this._paths = 0;
       this._publish();
     }
   }
@@ -88,6 +97,36 @@ export class SpacecraftOverlay {
   /** Noms à ne pas écrire (colonne « Étiquette »), les marqueurs restent. */
   setHiddenLabelNames(names: ReadonlySet<string>): void {
     this.hiddenLabels = new Set(names);
+  }
+
+  /**
+   * Trajectoires à tracer, sonde par sonde : la colonne « Orbite » du tableau Réglages. Le
+   * module du tracé ne se charge qu'à la première allumée, et ses octets d'éphémérides aussi.
+   */
+  setTrajectoryNames(names: ReadonlySet<string>): void {
+    const own = new Set(
+      [...names].filter((n) => this.missions.some((m) => m.name === n))
+    );
+    this.trajectoryNames = own;
+    this.trajectories?.setNames(own);
+    if (own.size > 0)
+      this.trajectoryModule ??= import('./spacecraftTrajectories');
+  }
+
+  /** Le tracé, créé quand son module est arrivé et que le service est connu. */
+  private _trajectoriesFor(
+    horizons: HorizonsEphemerisService
+  ): SpacecraftTrajectories | null {
+    if (this.trajectories || !this.trajectoryModule) return this.trajectories;
+    void this.trajectoryModule.then((module) => {
+      if (this.trajectories) return;
+      this.trajectories = new module.SpacecraftTrajectories(
+        horizons,
+        this.missions
+      );
+      this.trajectories.setNames(this.trajectoryNames);
+    });
+    return null;
   }
 
   /**
@@ -138,6 +177,12 @@ export class SpacecraftOverlay {
     this._clear();
     this._markers.length = 0;
     const locale = getLocale();
+    // Sous les marqueurs : une ligne ne masque jamais le point qu'elle relie.
+    const trajectories = this._trajectoriesFor(horizons);
+    this._paths =
+      trajectories && this.trajectoryNames.size > 0
+        ? trajectories.draw(this.ctx, camera, date, morph, place, w, h)
+        : 0;
 
     for (const mission of this.missions) {
       const isTarget = mission.name === this.target;
@@ -204,7 +249,14 @@ export class SpacecraftOverlay {
     const value = String(this._markers.length);
     if (this.canvas.dataset['markers'] !== value)
       this.canvas.dataset['markers'] = value;
+    // `data-paths` : trajectoires RÉELLEMENT tracées à la dernière image (même contrat que
+    // `interstellarOverlay`), 0 par défaut puisqu'elles sont en option.
+    const paths = String(this._paths);
+    if (this.canvas.dataset['paths'] !== paths)
+      this.canvas.dataset['paths'] = paths;
   }
+
+  private _paths = 0;
 
   private _clear(): void {
     this.ctx?.clearRect(0, 0, this.canvas.width, this.canvas.height);

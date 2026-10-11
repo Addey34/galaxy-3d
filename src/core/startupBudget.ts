@@ -442,6 +442,11 @@ export const NON_BOOT_CHUNKS: readonly BootDynamicChunk[] = [
       "le même texte de fiche en portugais du Brésil, chargé à la première ouverture d'une fiche quand l'interface est en portugais (`config/cardText.ts`).",
   },
   {
+    chunk: 'spacecraftTrajectories',
+    reason:
+      "les trajectoires des sondes (2026-10-11) sont éteintes par défaut, comme celles des objets interstellaires : leur tracé (`ui/spacecraftTrajectories`) ne se charge qu'à la première allumée dans la colonne « Orbite », et ses octets d'éphémérides aussi.",
+  },
+  {
     chunk: 'cardBlocks',
     reason:
       "les blocs Découverte, Missions, Instruments et Formations observées de la fiche (lots 40 à 44) ne sont chargés qu'à la PREMIÈRE ouverture d'une fiche (`ui/cardBlocks`) : aucun n'agit avant, et le lot 44 les a sortis du démarrage pour financer le sien au lieu de grignoter une marge déjà à 1,7 %.",

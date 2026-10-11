@@ -120,14 +120,18 @@ test('a probe is searchable, selectable and listed in the settings table', async
   // sonde a sa page, donc son adresse est `/juno/` et non plus `?body=juno`.
   await expect(page).toHaveURL(/\/juno\/(\?|$)/);
 
-  // Et elle a une ligne de réglages : nom et marqueur, jamais d'orbite (elle n'en a pas).
+  // Et elle a une ligne de réglages : nom, marqueur et, depuis le 2026-10-11, sa trajectoire.
   await page.keyboard.press('Escape');
   await page.locator('#settings-trigger').click();
   const row = page
     .locator('#settings-table .oo-tr')
     .filter({ hasText: 'Juno' })
     .first();
-  await expect(row.locator('.oo-checkbox')).toHaveCount(2);
+  await expect(row.locator('.oo-checkbox')).toHaveCount(3);
+  await expect(row.locator('td:nth-child(4) .oo-checkbox')).toHaveAttribute(
+    'aria-label',
+    /trajectory/
+  );
 
   expect(errors, `Erreurs page : ${errors.join(' | ')}`).toEqual([]);
 });
@@ -154,4 +158,48 @@ test('a probe outside its Horizons coverage is listed but not selectable', async
   await entry.evaluate((el) => (el as HTMLButtonElement).click());
   await expect(entry).not.toHaveClass(/is-active/);
   await expect(page.locator('#body-info .bi-name')).not.toHaveText('Cassini');
+});
+
+/**
+ * LA TRAJECTOIRE D'UNE SONDE (2026-10-11) : la colonne « Orbite » de sa ligne, éteinte par
+ * défaut. Rien n'est demandé au démarrage, ni le module du tracé ni ses octets ; allumée, la
+ * ligne se trace sans que le marqueur soit montré, comme l'orbite d'un corps masqué. Mars
+ * Express le 2020-06-01 est en orbite autour de Mars : c'est sa révolution en cours qui se
+ * trace, autour du corps.
+ */
+test('a probe trajectory is the Orbit column of its row, loaded only when switched on', async ({
+  page,
+}) => {
+  const errors: string[] = [];
+  page.on('pageerror', (err) => errors.push(err.message));
+  const module: string[] = [];
+  page.on('request', (request) => {
+    if (/spacecraftTrajectories/.test(request.url()))
+      module.push(request.url());
+  });
+
+  await page.goto('/?date=2020-06-01T12%3A00%3A00Z');
+  await expect(page.locator('#loader')).toBeHidden({ timeout: 30_000 });
+  const overlay = page.locator('#spacecraft-overlay');
+  await expect(overlay).toHaveAttribute('data-paths', '0');
+  expect(module, 'le tracé ne se charge pas au démarrage').toEqual([]);
+
+  await page.locator('#settings-trigger').click();
+  await page
+    .locator('.oo-group[data-group="nav.group.spacecraft"] .oo-group-toggle')
+    .click();
+  const row = page.locator('#settings-table .oo-tr', {
+    has: page.locator('.oo-name', { hasText: /^Mars Express$/ }),
+  });
+  const trajectory = row.locator('td:nth-child(4) .oo-checkbox');
+  await expect(trajectory).not.toBeChecked();
+  await trajectory.check();
+  // Les octets de la révolution et du chemin en route arrivent à la demande.
+  await expect(overlay).toHaveAttribute('data-paths', '1', { timeout: 60_000 });
+  expect(module.length).toBeGreaterThan(0);
+  await expect(overlay).toHaveAttribute('data-markers', '0');
+
+  await trajectory.uncheck();
+  await expect(overlay).toHaveAttribute('data-paths', '0');
+  expect(errors, `Erreurs page : ${errors.join(' | ')}`).toEqual([]);
 });
