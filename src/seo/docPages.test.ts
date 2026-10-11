@@ -36,6 +36,7 @@ import {
 import {
   assertPublishableSummary,
   displayNameResolver,
+  isDeparture,
   methodologyPages,
   synchronousSpinDrifts,
   type EphemerisManifest,
@@ -431,8 +432,9 @@ describe('page /sources', () => {
 
   it('nomme un segment par sa sonde et dit ses manœuvres, dans chaque langue', () => {
     // 2026-10-06 : la clé de fichier « bepicolombo-mercury » s'affichait comme un nom de corps.
+    // Les segments de SURVOL (ligne 45.10) ont leur propre table, cf. le cas suivant.
     const segments = Object.entries(manifest.bodies).filter(
-      ([, e]) => e.segmentOf
+      ([, e]) => e.segmentOf && !e.flyby
     );
     expect(segments.length).toBeGreaterThanOrEqual(1);
     const words = ['manoeuvres', 'manœuvres', 'maniobras', 'manobras'];
@@ -447,6 +449,42 @@ describe('page /sources', () => {
     methodology.forEach((page, i) => {
       for (const [, entry] of segments)
         expect(page.body).toContain(`${entry.impulses!.length} ${words[i]}`);
+    });
+  });
+
+  it('liste chaque segment de survol à part et les dit dans la méthode, dans chaque langue', () => {
+    // 2026-10-11 (ligne 45.10) : 65 segments décrits « pendant que la sonde tourne autour de… »
+    // auraient été 65 phrases fausses.
+    const flybys = Object.values(manifest.bodies).filter((e) => e.flyby);
+    expect(flybys.length).toBeGreaterThan(0);
+    const captions = [
+      'Flyby and departure segments',
+      'Segments de survol et de départ',
+      'Segmentos de sobrevuelo y de salida',
+      'Segmentos de sobrevoo e de partida',
+    ];
+    sources.forEach((page, i) => {
+      const table =
+        page.body
+          .split(`<caption>${captions[i]!}</caption>`)[1]
+          ?.split('</table>')[0] ?? '';
+      expect(table.match(/<tr>/g)?.length, captions[i]).toBe(flybys.length + 1);
+    });
+    // 13 des 65 sont des DÉPARTS de la Terre au lancement, pas des survols (2026-10-11).
+    const departures = flybys.filter((e) =>
+      isDeparture(e, manifest.bodies)
+    ).length;
+    expect(departures).toBeGreaterThan(0);
+    const n = flybys.length - departures;
+    const words = [
+      `${n} planetary flybys and ${departures} departures from the Earth`,
+      `${n} survols de planètes et ${departures} départs de la Terre`,
+      `${n} sobrevuelos de planetas y ${departures} salidas desde la Tierra`,
+      `${n} sobrevoos de planetas e ${departures} partidas da Terra`,
+    ];
+    methodology.forEach((page, i) => {
+      expect(page.body).toContain(words[i]);
+      expect(page.body).not.toMatch(/tourne autour de Vénus|orbits Venus/);
     });
   });
 

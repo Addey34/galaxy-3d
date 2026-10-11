@@ -65,9 +65,18 @@ function positionCell(row: InventoryRow): string {
     binary?.samplesPerRevolution != null
       ? ` ${binary.samplesPerRevolution.toFixed(2)} ech/rev`
       : '';
-  const segments = (binary?.segments ?? [])
-    .map((segment) => ` + segment ${segment.center} ${segment.stepDays} j`)
-    .join('');
+  const all = binary?.segments ?? [];
+  const flybys = all.filter(
+    (segment) => segment.flyby && !segment.departure
+  ).length;
+  const departures = all.filter((segment) => segment.departure).length;
+  const segments =
+    all
+      .filter((segment) => !segment.flyby)
+      .map((segment) => ` + segment ${segment.center} ${segment.stepDays} j`)
+      .join('') +
+    (flybys > 0 ? ` + ${flybys} survol${flybys > 1 ? 's' : ''}` : '') +
+    (departures > 0 ? ' + départ' : '');
   return `${step}${perRev}${segments}, ${km(medianKm)}`;
 }
 

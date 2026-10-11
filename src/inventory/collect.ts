@@ -87,6 +87,10 @@ export interface PositionState {
       readonly center: string;
       readonly stepDays: number;
       readonly bytes: number | null;
+      /** Segment d'une rencontre planétaire (ligne 45.10) : compté à part par le rendu. */
+      readonly flyby: boolean;
+      /** Cette rencontre est le DÉPART de la Terre au lancement, pas un survol. */
+      readonly departure: boolean;
     }[];
   } | null;
   /**
@@ -236,6 +240,8 @@ interface ManifestEntry {
   sampleCount: number;
   meanMotionScale?: number;
   segmentOf?: string;
+  flyby?: true;
+  startJdTdb: number;
 }
 
 interface LadderRow {
@@ -338,6 +344,11 @@ function positionOf(
                 center: segment.center,
                 stepDays: segment.stepDays,
                 bytes: existsSync(path) ? statSync(path).size : null,
+                flyby: segment.flyby === true,
+                // Un segment qui commence au premier nœud du fichier est un DÉPART, pas un survol.
+                departure:
+                  segment.flyby === true &&
+                  segment.startJdTdb - entry.startJdTdb <= entry.stepDays,
               };
             }),
         }

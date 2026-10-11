@@ -173,8 +173,9 @@ describe('le débit mesuré par le service (phase 17D)', () => {
     // Mercure (2026-10-06), qui ne commence que le 2026-10-13 : il ne demande rien à cette date.
     // 93 avec les trois objets interstellaires (2026-10-08), dont les fenêtres de ±20 ans
     // couvrent toutes cette date : 90 corps demandés. 96 avec les trois sondes de l'ESA
-    // (2026-10-09), toutes en vol à cette date : 93 corps demandés.
-    expect(Object.keys(horizonsManifest.bodies).length).toBe(96);
+    // (2026-10-09), toutes en vol à cette date : 93 corps demandés. 161 fichiers avec les 65
+    // segments de survol (2026-10-11), dont aucun ne couvre cette date : toujours 93.
+    expect(Object.keys(horizonsManifest.bodies).length).toBe(161);
     expect(today.length).toBe(93);
     expect(then.length).toBeLessThan(today.length);
     expect(bytesPerSimulatedDay(then)).toBeLessThan(

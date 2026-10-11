@@ -165,17 +165,92 @@ describe('propagateTwoBody', () => {
     expect(rMax).toBeCloseTo(a * (1 + e), 6);
   });
 
-  it('refuse un état non elliptique plutôt que d’inventer une position', () => {
+  it('refuse un μ nul plutôt que d’inventer une position', () => {
+    expect(
+      propagateTwoBody(
+        new THREE.Vector3(1, 0, 0),
+        new THREE.Vector3(0, 1e-3, 0),
+        10,
+        0
+      )
+    ).toBeNull();
+  });
+
+  /**
+   * L'HYPERBOLE (ligne 45.10) : la forme d'un survol. Deux propriétés indépendantes de la
+   * formule f et g testée : l'énergie et le moment cinétique se conservent. Une branche fausse
+   * (signe de |a|, sinh au lieu de cosh) casse l'une des deux.
+   */
+  it('propage une hyperbole en conservant énergie et moment cinétique', () => {
     const mu = MU_SUN_AU3_PER_DAY2;
-    const position = new THREE.Vector3(1, 0, 0);
-    // Vitesse au-delà de la libération (√(2μ/r)) → orbite ouverte.
-    const escape = Math.sqrt((2 * mu) / 1) * 1.2;
-    expect(
-      propagateTwoBody(position, new THREE.Vector3(0, escape, 0), 10, mu)
-    ).toBeNull();
-    expect(
-      propagateTwoBody(position, new THREE.Vector3(0, 1e-3, 0), 10, 0)
-    ).toBeNull();
+    const position = new THREE.Vector3(1, 0.2, 0.05);
+    const velocity = new THREE.Vector3(-0.004, 0.03, 0.002); // au-delà de la libération
+    const energy = (v: THREE.Vector3, r: THREE.Vector3) =>
+      v.lengthSq() / 2 - mu / r.length();
+    const e0 = energy(velocity, position);
+    expect(e0).toBeGreaterThan(0);
+    const h0 = new THREE.Vector3().crossVectors(position, velocity);
+    for (const dt of [-40, -3, 0.5, 7, 60]) {
+      const step = 1e-4;
+      const p = propagateTwoBody(position, velocity, dt, mu)!;
+      const v = propagateTwoBody(position, velocity, dt + step, mu)!
+        .sub(propagateTwoBody(position, velocity, dt - step, mu)!)
+        .divideScalar(2 * step);
+      expect(energy(v, p) / e0).toBeCloseTo(1, 6);
+      const h = new THREE.Vector3().crossVectors(p, v);
+      expect(h.distanceTo(h0) / h0.length()).toBeLessThan(1e-7);
+    }
+  });
+
+  it('revient à son point de départ après un aller-retour hyperbolique', () => {
+    const mu = MU_SUN_AU3_PER_DAY2;
+    const position = new THREE.Vector3(0.4, -0.3, 0.1);
+    const velocity = new THREE.Vector3(0.02, 0.035, -0.003);
+    const there = propagateTwoBody(position, velocity, 25, mu)!;
+    const step = 1e-4;
+    const v = propagateTwoBody(position, velocity, 25 + step, mu)!
+      .sub(propagateTwoBody(position, velocity, 25 - step, mu)!)
+      .divideScalar(2 * step);
+    const back = propagateTwoBody(there, v, -25, mu)!;
+    expect(back.distanceTo(position)).toBeLessThan(1e-9);
+  });
+
+  /**
+   * Témoin INDÉPENDANT de la formule : une intégration numérique (RK4, pas d'une seconde) de
+   * la même hyperbole autour de la Terre, au passage au plus près d'un survol réel (JUICE,
+   * 2024 : ~13 000 km du centre à ~13,7 km/s). Sans la branche, la fonction rendait `null`.
+   */
+  it('suit une intégration numérique d’un survol de la Terre', () => {
+    const mu = gravitationalParameter(5.972e24);
+    const KM = 1 / 1.495_978_707e8;
+    const position = new THREE.Vector3(13_000 * KM, 0, 0);
+    const velocity = new THREE.Vector3(0, 13.7 * KM * 86_400, 1 * KM * 86_400);
+    const accel = (r: THREE.Vector3) =>
+      r.clone().multiplyScalar(-mu / Math.pow(r.length(), 3));
+    const r = position.clone();
+    const v = velocity.clone();
+    const h = 1 / 86_400;
+    const span = 0.25; // six heures
+    for (let t = 0; t < span - h / 2; t += h) {
+      const k1v = accel(r);
+      const k1r = v.clone();
+      const k2v = accel(r.clone().addScaledVector(k1r, h / 2));
+      const k2r = v.clone().addScaledVector(k1v, h / 2);
+      const k3v = accel(r.clone().addScaledVector(k2r, h / 2));
+      const k3r = v.clone().addScaledVector(k2v, h / 2);
+      const k4v = accel(r.clone().addScaledVector(k3r, h));
+      const k4r = v.clone().addScaledVector(k3v, h);
+      r.addScaledVector(
+        k1r.add(k2r.multiplyScalar(2)).add(k3r.multiplyScalar(2)).add(k4r),
+        h / 6
+      );
+      v.addScaledVector(
+        k1v.add(k2v.multiplyScalar(2)).add(k3v.multiplyScalar(2)).add(k4v),
+        h / 6
+      );
+    }
+    const propagated = propagateTwoBody(position, velocity, span, mu)!;
+    expect(propagated.distanceTo(r) / KM).toBeLessThan(0.01); // moins de 10 m
   });
 
   /**

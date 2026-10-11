@@ -56,6 +56,7 @@ import {
   formatQuantity,
 } from './documentPage';
 import { citationSection, type CitationMetadata } from './citation';
+import FLYBY_PLAN from '@/config/flybyEncounters.json';
 import { brightnessSection } from './brightnessSection';
 
 // ─────────────────────────── données d'entrée ───────────────────────────
@@ -134,6 +135,8 @@ export interface EphemerisManifestEntry {
   impulses?: readonly number[];
   /** La sonde que ce fichier prolonge sur sa couverture (segment relatif à `center`). */
   segmentOf?: string;
+  /** Segment d'un SURVOL planétaire (ligne 45.10). */
+  flyby?: true;
 }
 
 export interface EphemerisManifest {
@@ -292,6 +295,68 @@ const T = {
   },
 } satisfies Record<string, DocText>;
 
+/** Un pas en minutes, dit dans l'unité qui l'écrit le plus simplement. */
+function stepWords(minutes: number, locale: DocLocale): string {
+  const words: DocText =
+    minutes < 60
+      ? {
+          en: `${minutes} minutes`,
+          fr: `${minutes} minutes`,
+          es: `${minutes} minutos`,
+          'pt-BR': `${minutes} minutos`,
+        }
+      : {
+          en: `${minutes / 60} hours`,
+          fr: `${minutes / 60} heures`,
+          es: `${minutes / 60} horas`,
+          'pt-BR': `${minutes / 60} horas`,
+        };
+  return words[locale];
+}
+
+/**
+ * LES SEGMENTS DE SURVOL (ligne 45.10), en une phrase : leur nombre, les sondes, l'étendue des
+ * pas et la borne, tous LUS (manifeste et plan), aucun recopié. La borne est tenue par
+ * `src/config/flybyAccuracy.test.ts`.
+ */
+/**
+ * Un segment de rencontre qui commence au PREMIER nœud du fichier de sa sonde est un DÉPART de
+ * la Terre, au lancement, et non un survol : 13 des 65 au 2026-10-11. Les appeler tous
+ * « survols » était faux, et c'est l'inventaire qui l'a montré.
+ */
+export function isDeparture(
+  entry: EphemerisManifestEntry,
+  bodies: Readonly<Record<string, EphemerisManifestEntry>>
+): boolean {
+  const probe =
+    entry.segmentOf === undefined ? undefined : bodies[entry.segmentOf];
+  return (
+    probe !== undefined && entry.startJdTdb - probe.startJdTdb <= probe.stepDays
+  );
+}
+
+function flybySegmentText(
+  entries: readonly [string, EphemerisManifestEntry][],
+  bodies: Readonly<Record<string, EphemerisManifestEntry>>,
+  locale: DocLocale
+): string {
+  if (entries.length === 0) return '';
+  const departures = entries.filter(([, e]) => isDeparture(e, bodies)).length;
+  const flybys = entries.length - departures;
+  const probes = new Set(entries.map(([, e]) => e.segmentOf)).size;
+  const minutes = entries.map(([, e]) => Math.round(e.stepDays * 1440));
+  const finest = stepWords(Math.min(...minutes), locale);
+  const coarsest = stepWords(Math.max(...minutes), locale);
+  const percent = exact(FLYBY_PLAN.segmentShare * 100, locale);
+  const text: DocText = {
+    en: ` During ${flybys} planetary flybys and ${departures} departures from the Earth, made by ${probes} of them, a short file takes over for a few days: the position relative to the centre of the planet, every ${finest} to ${coarsest}, propagated along the hyperbola around the planet between samples. These passages are detected in the true trajectory (a stay inside the planet’s sphere of influence), and each step is the coarsest that keeps the position within ${percent} % of the distance to the planet, measured against Horizons at every passage: a validation at fixed dates never falls on one.`,
+    fr: ` Pendant ${flybys} survols de planètes et ${departures} départs de la Terre, faits par ${probes} d’entre elles, un fichier court prend la main pour quelques jours : la position relative au centre de la planète, toutes les ${finest} à ${coarsest}, propagée le long de l’hyperbole autour de la planète entre deux échantillons. Ces passages sont détectés dans la trajectoire vraie (un séjour dans la sphère d’influence de la planète), et chaque pas est le plus grossier qui garde la position à moins de ${percent} % de la distance à la planète, mesuré contre Horizons à chaque passage : une validation à dates fixes ne tombe jamais sur l’un d’eux.`,
+    es: ` Durante ${flybys} sobrevuelos de planetas y ${departures} salidas desde la Tierra, hechos por ${probes} de ellas, un archivo corto toma el relevo durante unos días: la posición relativa al centro del planeta, cada ${finest} a ${coarsest}, propagada a lo largo de la hipérbola alrededor del planeta entre dos muestras. Estos pasos se detectan en la trayectoria real (una estancia dentro de la esfera de influencia del planeta), y cada paso es el más grueso que mantiene la posición a menos del ${percent} % de la distancia al planeta, medido contra Horizons en cada paso: una validación en fechas fijas nunca cae en uno.`,
+    'pt-BR': ` Durante ${flybys} sobrevoos de planetas e ${departures} partidas da Terra, feitos por ${probes} delas, um arquivo curto assume por alguns dias: a posição relativa ao centro do planeta, a cada ${finest} a ${coarsest}, propagada ao longo da hipérbole em torno do planeta entre duas amostras. Essas passagens são detectadas na trajetória real (uma estadia dentro da esfera de influência do planeta), e cada passo é o mais grosso que mantém a posição a menos de ${percent} % da distância ao planeta, medido contra o Horizons em cada passagem: uma validação em datas fixas nunca cai em uma delas.`,
+  };
+  return text[locale];
+}
+
 export interface MethodologyInput {
   summary: ValidationSummary;
   manifest: EphemerisManifest;
@@ -381,17 +446,22 @@ function methodologyPage(input: MethodologyInput, locale: DocLocale): DocPage {
   // Un SEGMENT (2026-10-06) prolonge le fichier d'une sonde ; il n'est pas un corps de plus.
   const allBinaries = Object.entries(manifest.bodies);
   const binaries = allBinaries.filter(([, e]) => e.segmentOf === undefined);
-  const segments = allBinaries.filter(([, e]) => e.segmentOf !== undefined);
-  const segmentText = segments
-    .map(([, e]) =>
-      L({
-        en: ` While ${escapeHtml(name(e.segmentOf!, locale))} orbits ${escapeHtml(name(e.center!, locale))}, a second file takes over: its position relative to ${escapeHtml(name(e.center!, locale))}, every ${exact(e.stepDays, locale)} day, propagated around ${escapeHtml(name(e.center!, locale))} between samples, with the ${e.impulses?.length ?? 0} manoeuvres of that period read in a finer sampling of the trajectory and propagated from one side only.`,
-        fr: ` Pendant que ${escapeHtml(name(e.segmentOf!, locale))} tourne autour de ${escapeHtml(name(e.center!, locale))}, un second fichier prend la main : sa position relative à ${escapeHtml(name(e.center!, locale))}, tous les ${exact(e.stepDays, locale)} jour, propagée autour de ${escapeHtml(name(e.center!, locale))} entre deux échantillons, avec les ${e.impulses?.length ?? 0} manœuvres de cette période, lues dans un échantillonnage plus fin de la trajectoire et propagées d’un seul côté.`,
-        es: ` Mientras ${escapeHtml(name(e.segmentOf!, locale))} orbita ${escapeHtml(name(e.center!, locale))}, toma el relevo un segundo archivo: su posición relativa a ${escapeHtml(name(e.center!, locale))}, cada ${exact(e.stepDays, locale)} día, propagada alrededor de ${escapeHtml(name(e.center!, locale))} entre dos muestras, con las ${e.impulses?.length ?? 0} maniobras de ese periodo, leídas en un muestreo más fino de la trayectoria y propagadas desde un solo lado.`,
-        'pt-BR': ` Enquanto ${escapeHtml(name(e.segmentOf!, locale))} orbita ${escapeHtml(name(e.center!, locale))}, um segundo arquivo assume: a sua posição relativa a ${escapeHtml(name(e.center!, locale))}, a cada ${exact(e.stepDays, locale)} dia, propagada ao redor de ${escapeHtml(name(e.center!, locale))} entre duas amostras, com as ${e.impulses?.length ?? 0} manobras desse período, lidas numa amostragem mais fina da trajetória e propagadas de um só lado.`,
-      })
-    )
-    .join('');
+  const segments = allBinaries.filter(
+    ([, e]) => e.segmentOf !== undefined && !e.flyby
+  );
+  const flybySegments = allBinaries.filter(([, e]) => e.flyby);
+  const flybyText = flybySegmentText(flybySegments, manifest.bodies, locale);
+  const segmentText =
+    segments
+      .map(([, e]) =>
+        L({
+          en: ` While ${escapeHtml(name(e.segmentOf!, locale))} orbits ${escapeHtml(name(e.center!, locale))}, a second file takes over: its position relative to ${escapeHtml(name(e.center!, locale))}, every ${exact(e.stepDays, locale)} day, propagated around ${escapeHtml(name(e.center!, locale))} between samples, with the ${e.impulses?.length ?? 0} manoeuvres of that period read in a finer sampling of the trajectory and propagated from one side only.`,
+          fr: ` Pendant que ${escapeHtml(name(e.segmentOf!, locale))} tourne autour de ${escapeHtml(name(e.center!, locale))}, un second fichier prend la main : sa position relative à ${escapeHtml(name(e.center!, locale))}, tous les ${exact(e.stepDays, locale)} jour, propagée autour de ${escapeHtml(name(e.center!, locale))} entre deux échantillons, avec les ${e.impulses?.length ?? 0} manœuvres de cette période, lues dans un échantillonnage plus fin de la trajectoire et propagées d’un seul côté.`,
+          es: ` Mientras ${escapeHtml(name(e.segmentOf!, locale))} orbita ${escapeHtml(name(e.center!, locale))}, toma el relevo un segundo archivo: su posición relativa a ${escapeHtml(name(e.center!, locale))}, cada ${exact(e.stepDays, locale)} día, propagada alrededor de ${escapeHtml(name(e.center!, locale))} entre dos muestras, con las ${e.impulses?.length ?? 0} maniobras de ese periodo, leídas en un muestreo más fino de la trayectoria y propagadas desde un solo lado.`,
+          'pt-BR': ` Enquanto ${escapeHtml(name(e.segmentOf!, locale))} orbita ${escapeHtml(name(e.center!, locale))}, um segundo arquivo assume: a sua posição relativa a ${escapeHtml(name(e.center!, locale))}, a cada ${exact(e.stepDays, locale)} dia, propagada ao redor de ${escapeHtml(name(e.center!, locale))} entre duas amostras, com as ${e.impulses?.length ?? 0} manobras desse período, lidas numa amostragem mais fina da trajetória e propagadas de um só lado.`,
+        })
+      )
+      .join('') + flybyText;
   const binarySpacecraft = binaries.filter(([n]) => spacecraftNames.has(n));
   const binaryNatural = binaries.filter(([n]) => !fileOnlyNames.has(n));
   const stepsOf = (entries: typeof binaries): number[] =>
@@ -1059,11 +1129,11 @@ function methodologyPage(input: MethodologyInput, locale: DocLocale): DocPage {
         )}</p>` +
         epochTable +
         `<p>${L({
-          en: 'For spacecraft the median is the meaningful figure: errors peak briefly around close flybys and perihelia, where the trajectory bends faster than the file’s step can resolve.',
-          fr: 'Pour les sondes, la médiane est le chiffre parlant : l’erreur culmine brièvement autour des survols rapprochés et des périhélies, où la trajectoire se courbe plus vite que le pas du fichier ne peut le résoudre.',
-          es: 'Para las sondas la cifra significativa es la mediana: los errores culminan brevemente alrededor de los sobrevuelos cercanos y de los perihelios, donde la trayectoria se curva más rápido de lo que el paso del archivo puede resolver.',
+          en: 'For spacecraft the median is the meaningful figure: errors peak briefly around perihelia and around the periapses of a spacecraft orbiting a planet (Juno, Cassini), where the trajectory bends faster than the file’s step can resolve. Planetary flybys have their own files, described above.',
+          fr: 'Pour les sondes, la médiane est le chiffre parlant : l’erreur culmine brièvement autour des périhélies et des périapses d’une sonde en orbite autour d’une planète (Juno, Cassini), où la trajectoire se courbe plus vite que le pas du fichier ne peut le résoudre. Les survols de planètes ont leurs propres fichiers, décrits plus haut.',
+          es: 'Para las sondas la cifra significativa es la mediana: los errores culminan brevemente alrededor de los perihelios y de los periapsis de una sonda en órbita alrededor de un planeta (Juno, Cassini), donde la trayectoria se curva más rápido de lo que el paso del archivo puede resolver. Los sobrevuelos de planetas tienen sus propios archivos, descritos más arriba.',
           'pt-BR':
-            'Para as sondas o número significativo é a mediana: os erros atingem um pico breve em torno dos sobrevoos próximos e dos periélios, onde a trajetória se curva mais rápido do que o passo do arquivo consegue resolver.',
+            'Para as sondas o número significativo é a mediana: os erros atingem um pico breve em torno dos periélios e dos periapsides de uma sonda em órbita de um planeta (Juno, Cassini), onde a trajetória se curva mais rápido do que o passo do arquivo consegue resolver. Os sobrevoos de planetas têm os seus próprios arquivos, descritos acima.',
         })}</p>` +
         spacecraftTable +
         `<h3>${L({ en: 'Full measurements, by source', fr: 'Mesures complètes, par source', es: 'Mediciones completas, por fuente', 'pt-BR': 'Medições completas, por fonte' })}</h3><p>${L(

@@ -1717,6 +1717,65 @@ PAS de repli (sans les octets du segment, la position est absente, comme hors fe
   2 h ne faisait pas mieux au pire, 103 km, pour six fois les octets ; le pas de 10 min, 1,23 Mo,
   aurait multiplié par sept le débit de la lecture accélérée).
 
+**Les survols : un segment par rencontre (2026-10-11, ligne 45.10).** La validation à
+48 dates (`pnpm ephemeris:validate`) ne tombe jamais sur un survol, qui dure quelques heures :
+elle annonçait 0,1 km pour JUICE, que la scène plaçait à 20 000 km de sa vraie position au
+survol de la Terre du 2024-08-20, c'est-à-dire de l'autre côté de la planète. Mesuré sur les
+14 sondes : **71 rencontres, 61 hors d'une borne de 1 % de la distance à la planète**, jusqu'à
+3 732 % (OSIRIS-REx à son retour de 2023). Le défaut était antérieur aux sondes de l'ESA, qui
+l'ont seulement fait voir.
+
+- **L'outil** : `pnpm ephemeris:flybys` (`scripts/measure-flybys.mjs`). Il DÉTECTE les
+  rencontres sur la trajectoire VRAIE (Horizons au pas de 6 h, toute la couverture du fichier),
+  comme un séjour dans la sphère d'influence de Laplace d'une planète, a·(m/M☉)^(2/5), masses et
+  distances lues au catalogue ; aucune date n'est saisie. Il mesure ensuite chaque rencontre au
+  pas de 10 min contre la position que le service de production sert. Il garde un TÉMOIN aux
+  nœuds du fichier, qui doit rendre zéro : il rend 0,001 à 0,053 km, et c'est lui qui avait
+  démasqué la première mesure, fausse d'une unité astronomique (repère de scène contre écliptique).
+- **Relatif à la planète DESSINÉE.** L'écart se lit sur la position de la sonde moins celle de
+  la planète que la scène dessine, contre le vecteur qu'Horizons sert depuis le CENTRE de la
+  planète. C'est ce qui se voit, et c'est la seule comparaison juste pour la Terre, dessinée au
+  barycentre Terre-Lune (4 700 km du centre) avec toute sa famille : la Lune y est placée par son
+  vecteur géocentrique, et un segment de la Terre l'est de même (centre `399` ajouté au fichier
+  `earth`, cible `3`). Mesurée en héliocentrique, chaque rencontre de la Terre portait un plancher
+  de 4 700 km qui n'est pas une erreur d'interpolation.
+- **Le plan se DÉRIVE, il ne se déclare pas.** Le segment couvre l'intervalle où le seul fichier
+  héliocentrique dépasse la moitié de la borne, élargi de 6 h et arrondi à l'heure. Ce critère
+  ne change pas quand le segment est ajouté, donc le plan ne dépend pas de l'état qu'il produit.
+  Le pas est le plus GROSSIER des candidats (12 h à 10 min) dont la SIMULATION tient la moitié
+  de la borne. La simulation insère dans le service réel les états mêmes que le générateur
+  demandera, par la même requête. L'outil écrit le plan dans `src/config/flybyEncounters.json`
+  (`--write`), et `pnpm ephemeris:generate --flybys` le LIT : il écrit les segments du plan (nom
+  `sonde--planète-date`, drapeau `flyby` au manifeste) et retire ceux qui n'y sont plus.
+- **L'hyperbole manquait au propagateur.** `propagateTwoBody` rendait `null` pour toute énergie
+  positive, et un survol EST une hyperbole autour de la planète : le service retombait alors sans
+  bruit sur la cubique de Hermite. Le premier plan exigeait ainsi des ancres toutes les 10 min,
+  pour 533 Ko ; 13 km restaient au plus près de Mercure, alors que les voisins à 10 min
+  rendaient 2 km. La branche hyperbolique (anomalie hyperbolique, mêmes fonctions f et g) ramène
+  le plan à **65 segments et 66 720 octets**, 63 d'entre eux à 6 ou 12 h. Treize de ces rencontres sont le DÉPART de la Terre au lancement et non un survol (un segment qui commence au premier nœud du fichier de sa sonde) : les pages disent « 52 survols et 13 départs », nombres dérivés du manifeste (`isDeparture`). Elle est testée par la
+  conservation de l'énergie et du moment cinétique, par un aller-retour, et contre une
+  intégration RK4 indépendante d'un survol de la Terre (moins de 10 m sur 6 h).
+- **Une exception mesurée** : le survol de la Terre par Hayabusa2 du 2015-12-03 exige 10 min.
+  Entre 12 h et 1 h, l'écart au plus près reste près de 660 km, quel que soit le pas ; il ne tombe
+  qu'à 30 min. C'est la signature d'une discontinuité de la trajectoire servie, non vérifiée.
+  Ce segment pèse 40 Ko, soit 60 % du total, pour six jours.
+- **La garde** : `src/config/flybyAccuracy.test.ts` confronte au service réel des vecteurs
+  d'Horizons pris à chaque périapse de chaque rencontre, plus son pire instant, et exige moins de
+  1 % de la distance vraie. Elle vérifie aussi que le manifeste porte exactement les segments du
+  plan. Falsifiée : sans la branche hyperbolique, chaque survol est rouge ; sans le segment de
+  JUICE, son survol rend plus de 100 %.
+- **Le budget** : un segment couvre au plus dix jours. En lecture accélérée, un survol passe en
+  quelques millisecondes et coûte son fichier entier une fois. Réparti sur les années qu'ils
+  couvrent, les 65 segments ajoutent quelques octets par jour simulé aux 1 386 des fichiers
+  permanents, ce que garde `playbackBudget.test.ts`. La branche hyperbolique coûte 384 octets
+  au démarrage : la marge du budget JS tombe de 496 à **112 octets**.
+- **Ce qui reste (ligne 45.10, pas 2)** : les deux phases EN ORBITE, Juno autour de Jupiter et
+  Cassini autour de Saturne. Ce sont des années de périapses toutes les quelques semaines, à
+  774 657 et 340 907 km d'écart au pire. Un segment uniforme de Cassini tient la borne au pas
+  de 90 min, pour 3,7 Mo ; au pas de 6 h, il dépasse à peine (1,13 %), à l'insertion en orbite,
+  qui est une poussée. Juno bute sur une couverture : son fichier livré va jusqu'au 2028-09-29,
+  alors qu'Horizons ne la sert plus que jusqu'au 2028-09-02 (lu le 2026-10-11).
+
 **Pourquoi un survol reste héliocentrique.** La règle des lunes étire √d : à la frontière de la
 sphère de Hill de Jupiter elle poserait l'objet à 35 × 3,43 × √0,355 ≈ 49 unités de la planète,
 l'orbite de Saturne à l'écran, et un fondu entre les deux repères le ferait jaillir puis revenir.
