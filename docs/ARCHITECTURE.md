@@ -5583,7 +5583,12 @@ une fois par cycle et servi en fichiers statiques à tous les visiteurs
 compte par ADRESSE IP. Une grille mondiale à 4° fait 4 140 points ; après UNE grille de vent,
 Open-Meteo a répondu 429 « Hourly API request limit exceeded », pour une vingtaine de requêtes
 HTTP dans la session. Deux couches dans la même heure, une seule pendant un voyage dans le
-temps, ou une classe entière derrière la connexion d'une école épuisaient le quota. Ce n'était
+temps, ou une classe entière derrière la connexion d'une école épuisaient le quota. **Témoin du
+même jour, quota horaire remis à zéro** : des requêtes de 1 000 points espacées de 65 s, deux
+passent, la troisième reçoit 429 « Daily API request limit exceeded » ; compter par requête
+donnerait une trentaine d'appels pour la journée, très loin de 10 000. Le compte est donc de
+l'ordre d'UN APPEL PAR POINT (le compteur n'est pas lisible, l'ordre de grandeur l'est), soit
+deux grilles mondiales par visiteur et par jour. Ce n'était
 pas un quota à augmenter mais une architecture à corriger : la même grille mondiale, redemandée
 par chaque visiteur.
 
