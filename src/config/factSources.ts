@@ -128,6 +128,7 @@ export const DETAIL = {
   meanGravity1Bar: { message: 'detail.meanGravity1Bar' },
   equatorialGravity: { message: 'detail.equatorialGravity' },
   temperature1Bar: { message: 'detail.temperature1Bar' },
+  hemisphereAverage: { message: 'detail.hemisphereAverage' },
   effectiveTemperature: { message: 'detail.effectiveTemperature' },
   surfaceTemperature: { message: 'detail.surfaceTemperature' },
   solarRotationAt16Degrees: { message: 'detail.solarRotationAt16Degrees' },

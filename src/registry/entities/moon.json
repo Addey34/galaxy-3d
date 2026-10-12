@@ -71,7 +71,8 @@
     "meanTempC": {
       "value": -20,
       "source": "nssdca-fact-sheets",
-      "method": "measured"
+      "method": "measured",
+      "detail": "hemisphereAverage"
     },
     "axialTilt": {
       "value": {

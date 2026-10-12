@@ -617,6 +617,8 @@ export const es: Record<MessageKey, string> = {
     'radio ecuatorial en el nivel de presión de 1 bar',
   'detail.meanGravity1Bar': 'gravedad media en el nivel de presión de 1 bar',
   'detail.equatorialGravity': 'gravedad en el ecuador',
+  'detail.hemisphereAverage':
+    'promedio entre el hemisferio iluminado y el oscuro, que no representa ninguna región de la superficie',
   'detail.temperature1Bar': 'temperatura media en el nivel de presión de 1 bar',
   'detail.effectiveTemperature':
     'temperatura efectiva, 5772 K, convertida a °C',

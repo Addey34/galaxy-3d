@@ -643,6 +643,8 @@ export const en = {
     'equatorial radius at the 1-bar pressure level',
   'detail.meanGravity1Bar': 'mean gravity at the 1-bar pressure level',
   'detail.equatorialGravity': 'gravity at the equator',
+  'detail.hemisphereAverage':
+    'average over the sunlit and dark hemispheres, which represents no region of the surface',
   'detail.temperature1Bar': 'mean temperature at the 1-bar pressure level',
   'detail.effectiveTemperature':
     'effective temperature, 5772 K, converted to °C',
