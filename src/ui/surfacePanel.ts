@@ -23,6 +23,7 @@ import { formatIsoDay } from '@/core/dateText';
 import { getLocale, intlLocale, onLocaleChange, t } from '@/i18n';
 import Logger from '@/utils/Logger';
 import { NOTICE_CHANGED } from './ephemerisNotice';
+import { SURFACE_CHOICES, type SurfaceChoiceId } from './surfaceChoices';
 import type {
   PlanetarySurfaceEngine,
   SurfaceImageryState,
@@ -70,20 +71,25 @@ export function setupSurfacePanel(api: PublicAPI): () => void {
     document.getElementById('settings-section-rendering') ?? document.body
   ).append(wrapper);
 
-  // Couche DATÉE de la Terre (lot 48) : elle n'est jamais demandée tant que ce réglage est
-  // éteint, et il ne persiste pas, comme le reste du contenu de la scène.
-  const dailyWrapper = document.createElement('label');
-  dailyWrapper.id = 'surface-daily-toggle-wrapper';
-  dailyWrapper.className = 'settings-switch';
-  const dailyCheckbox = document.createElement('input');
-  dailyCheckbox.id = 'surface-daily-toggle';
-  dailyCheckbox.type = 'checkbox';
-  dailyCheckbox.className = 'oo-checkbox settings-checkbox';
-  const dailyLabel = document.createElement('span');
-  dailyLabel.className = 'settings-switch-label';
-  dailyWrapper.append(dailyCheckbox, dailyLabel);
-  wrapper.after(dailyWrapper);
-  let daily = false;
+  // FOND DE LA TERRE (lot 48) : la mosaïque par défaut, l'image du jour de la scène ou un fond de
+  // rechange. Rien d'autre que la mosaïque n'est demandé tant qu'on n'en choisit pas un autre,
+  // et le choix ne persiste pas, comme le reste du contenu de la scène.
+  const baseWrapper = document.createElement('label');
+  baseWrapper.id = 'surface-earth-base-wrapper';
+  baseWrapper.className = 'settings-switch';
+  const baseLabel = document.createElement('span');
+  baseLabel.className = 'settings-switch-label';
+  const baseSelect = document.createElement('select');
+  baseSelect.id = 'surface-earth-base';
+  const baseOptions = SURFACE_CHOICES.map((choice) => {
+    const option = document.createElement('option');
+    option.value = choice;
+    return option;
+  });
+  baseSelect.append(...baseOptions);
+  baseWrapper.append(baseLabel, baseSelect);
+  wrapper.after(baseWrapper);
+  let choice: SurfaceChoiceId = 'mosaic';
 
   // ── Bandeau de provenance ──────────────────────────────────────────────────────────────
   const badge = document.createElement('div');
@@ -115,7 +121,12 @@ export function setupSurfacePanel(api: PublicAPI): () => void {
   const renderLabels = (): void => {
     switchLabel.textContent = t('settings.surfaceImagery');
     checkbox.setAttribute('aria-label', t('settings.surfaceImagery'));
-    dailyLabel.textContent = t('settings.surfaceDailyEarth');
+    baseLabel.textContent = t('settings.surfaceEarthBase');
+    baseOptions.forEach((option, rank) => {
+      option.textContent = t(
+        `settings.surfaceEarthBase.${SURFACE_CHOICES[rank]!}`
+      );
+    });
     renderBadge();
   };
 
@@ -299,7 +310,7 @@ export function setupSurfacePanel(api: PublicAPI): () => void {
       return;
     }
 
-    const tileset = chooseTileset?.(name, daily);
+    const tileset = chooseTileset?.(name, choice);
     if (!tileset) {
       if (engine.attachedBody) disable();
       return;
@@ -395,8 +406,8 @@ export function setupSurfacePanel(api: PublicAPI): () => void {
     writeStored(enabled);
     if (!enabled) disable();
   });
-  dailyCheckbox.addEventListener('change', () => {
-    daily = dailyCheckbox.checked;
+  baseSelect.addEventListener('change', () => {
+    choice = baseSelect.value as SurfaceChoiceId;
   });
 
   renderLabels();
@@ -414,7 +425,7 @@ export function setupSurfacePanel(api: PublicAPI): () => void {
     engine = null;
     badge.remove();
     wrapper.remove();
-    dailyWrapper.remove();
+    baseWrapper.remove();
   };
 }
 

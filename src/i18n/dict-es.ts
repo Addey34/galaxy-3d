@@ -349,8 +349,12 @@ export const es: Record<MessageKey, string> = {
   'settings.exposure': 'Brillo (exposición)',
   'settings.colorblind': 'Colores de órbita adaptados al daltonismo',
   'settings.gazetteer': 'Nombres de las formaciones (UAI)',
-  'settings.surfaceDailyEarth':
-    'Suelo de la Tierra del día de la escena (VIIRS)',
+  'settings.surfaceEarthBase': 'Suelo de la Tierra',
+  'settings.surfaceEarthBase.mosaic': 'Mosaico Blue Marble (2004)',
+  'settings.surfaceEarthBase.daily': 'El día de la escena (VIIRS)',
+  'settings.surfaceEarthBase.shaded-relief': 'Relieve sombreado y batimetría',
+  'settings.surfaceEarthBase.night-lights':
+    'Luces nocturnas (Black Marble 2016)',
   'settings.surfaceImagery':
     'Transmitir la imagen de superficie de alta resolución',
   'surface.imagery.headline': '{title} a {resolution}/píxel',

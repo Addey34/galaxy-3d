@@ -2346,6 +2346,29 @@ Ce choix vit dans le morceau chargé à l'approche (`createDatedChooser`), pas d
 plus pâle que sous Blue Marble ; la tuile BRUTE de GIBS au même endroit l'est autant (cirrus et
 poussière ce jour-là) : c'est le ciel du jour, pas un défaut de rendu.
 
+### Les fonds de rechange de la Terre : un choix, pas une pile (lot 48)
+
+Depuis le 2026-10-12, le réglage « Sol de la Terre » (section Rendu, `#surface-earth-base`) remplace
+la case « Terre du jour ». Il choisit UN fond parmi la mosaïque Blue Marble (par défaut), le jour
+de la scène (VIIRS, § ci-dessus), le relief ombré avec bathymétrie et les lumières nocturnes. Un
+seul fond est posé sur le globe à la fois, parce que tous recouvrent le même maillage ; les couches
+météo restent par-dessus.
+
+- **Un fond de rechange est une fiche** (`src/registry/products/tilesets/`) qui déclare
+  `variant`, dans un vocabulaire FERMÉ du schéma (`shaded-relief`, `night-lights`). La mosaïque
+  par défaut est la fiche sans variante ni dimension de temps, une seule par corps ;
+  `config/surfaceTilesets.test.ts` rougit si deux fiches prennent le même rôle, ce qui les
+  écraserait en silence dans la table indexée par corps.
+- **Le panneau vit au démarrage et ne lit pas les fiches** : il porte la liste des choix
+  (`ui/surfaceChoices.ts`) et leurs libellés en quatre langues, et le même test exige qu'ils
+  correspondent exactement aux variantes des fiches. Coût mesuré au démarrage : 663 o.
+- **Black Marble est figé sur 2016**, une année que publie la dimension de la couche (elle ne porte
+  que 2012 et 2016 ; 2015 rend 404, sans CORS). Le gabarit l'écrit en clair, sans jeton `{Time}` :
+  c'est une mosaïque, et son intervalle est l'année entière, période déclarée `P1Y`.
+- Rien d'autre que la mosaïque n'est demandé tant qu'on n'en choisit pas un autre, et le choix ne
+  persiste pas, comme le reste du contenu de la scène. Un choix qu'un corps ne propose pas retombe
+  sur sa mosaïque.
+
 ## Relief mesuré — des hauteurs cuites hors ligne, jamais devinées
 
 Depuis le 2026-09-21 (lot 9, phase 9D), un corps peut déclarer un JEU DE HAUTEURS

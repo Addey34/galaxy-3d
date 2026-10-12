@@ -9,6 +9,7 @@ import {
   DATED_SURFACE_TILESETS,
   DOMAIN_MAX_AGE_MS,
   SURFACE_TILESETS,
+  SURFACE_VARIANTS,
   tilesetForDay,
   tilesetProduct,
   type SurfaceTileset,
@@ -38,6 +39,9 @@ const ROOT = resolve(import.meta.dirname, '../..');
 const ALL_TILESETS: ReadonlyArray<[string, SurfaceTileset]> = [
   ...SURFACE_TILESETS.values(),
   ...DATED_SURFACE_TILESETS.values(),
+  ...[...SURFACE_VARIANTS.values()].flatMap((variants) => [
+    ...variants.values(),
+  ]),
 ].map((tileset) => [`${tileset.body} (${tileset.id})`, tileset]);
 
 /**
@@ -66,11 +70,18 @@ describe('fiches de jeux de tuiles', () => {
     expect(ALL_TILESETS.length).toBe(TILESET_PRODUCTS.length);
     expect(SURFACE_TILESETS.size).toBeGreaterThan(0);
     for (const product of TILESET_PRODUCTS) {
-      const map = product.service.time
-        ? DATED_SURFACE_TILESETS
-        : SURFACE_TILESETS;
-      expect(map.get(product.body)?.id).toBe(product.id);
+      const found = product.variant
+        ? SURFACE_VARIANTS.get(product.body)?.get(product.variant)
+        : (product.service.time
+            ? DATED_SURFACE_TILESETS
+            : SURFACE_TILESETS
+          ).get(product.body);
+      // Deux fiches au même rôle sur un corps s'écraseraient en silence : une seule gagne.
+      expect(found?.id, product.id).toBe(product.id);
     }
+    // Un fond de rechange se choisit À LA PLACE de la mosaïque : sans elle, rien à remplacer.
+    for (const body of SURFACE_VARIANTS.keys())
+      expect(SURFACE_TILESETS.has(body), body).toBe(true);
     // Une couche datée retombe sur la MOSAÏQUE de son corps pour tout jour non publié : sans
     // mosaïque, ce repli n'existerait pas.
     for (const body of DATED_SURFACE_TILESETS.keys())
@@ -496,44 +507,44 @@ describe('choix entre la mosaïque et la couche datée', () => {
   it('réglage éteint : la mosaïque, et rien n’est demandé', () => {
     const fetchText = vi.fn(async () => DOMAINS);
     const { choose } = setup(fetchText);
-    expect(choose('earth', false)).toBe(blueMarble);
+    expect(choose('earth', 'mosaic')).toBe(blueMarble);
     expect(fetchText).not.toHaveBeenCalled();
     // Un corps sans couche datée reste sur sa mosaïque, réglage allumé ou non.
-    expect(choose('moon', true)).toBe(SURFACE_TILESETS.get('moon'));
+    expect(choose('moon', 'daily')).toBe(SURFACE_TILESETS.get('moon'));
   });
 
   it('la mosaïque tant que les jours ne sont pas lus, puis le jour de la scène, même objet', async () => {
     const fetchText = vi.fn(async () => DOMAINS);
     const { choose, advance } = setup(fetchText);
-    expect(choose('earth', true)).toBe(blueMarble);
+    expect(choose('earth', 'daily')).toBe(blueMarble);
     await flush();
-    const first = choose('earth', true);
+    const first = choose('earth', 'daily');
     expect(first?.day).toBe('2026-10-11');
     advance(DATED_RECHECK_MS + 1);
     // Le moteur compare par IDENTITÉ : un objet neuf à chaque image changerait de génération.
-    expect(choose('earth', true)).toBe(first);
+    expect(choose('earth', 'daily')).toBe(first);
     expect(fetchText).toHaveBeenCalledTimes(1);
   });
 
   it('un jour dans un TROU rend la mosaïque, jamais un jour voisin', async () => {
     const { choose, advance, setDate } = setup(async () => DOMAINS);
-    choose('earth', true);
+    choose('earth', 'daily');
     await flush();
     setDate('2022-08-01T12:00:00Z');
     advance(DATED_RECHECK_MS + 1);
-    expect(choose('earth', true)).toBe(blueMarble);
+    expect(choose('earth', 'daily')).toBe(blueMarble);
   });
 
   it('ne relit la date qu’à sa cadence, puis suit le jour', async () => {
     const { choose, advance, setDate } = setup(async () => DOMAINS);
-    choose('earth', true);
+    choose('earth', 'daily');
     await flush();
-    expect(choose('earth', true)?.day).toBe('2026-10-11');
+    expect(choose('earth', 'daily')?.day).toBe('2026-10-11');
     setDate('2026-10-10T12:00:00Z');
     advance(DATED_RECHECK_MS - 1);
-    expect(choose('earth', true)?.day).toBe('2026-10-11');
+    expect(choose('earth', 'daily')?.day).toBe('2026-10-11');
     advance(2);
-    expect(choose('earth', true)?.day).toBe('2026-10-10');
+    expect(choose('earth', 'daily')?.day).toBe('2026-10-10');
   });
 
   it('une lecture ratée laisse la mosaïque, le dit, et se retente une heure plus tard', async () => {
@@ -542,18 +553,67 @@ describe('choix entre la mosaïque et la couche datée', () => {
       .mockRejectedValueOnce(new Error('réseau'))
       .mockResolvedValue(DOMAINS);
     const { choose, warnings, advance } = setup(fetchText);
-    choose('earth', true);
+    choose('earth', 'daily');
     await flush();
-    expect(choose('earth', true)).toBe(blueMarble);
+    expect(choose('earth', 'daily')).toBe(blueMarble);
     expect(warnings).toHaveLength(1);
     advance(DOMAIN_MAX_AGE_MS - 1);
-    choose('earth', true);
+    choose('earth', 'daily');
     expect(fetchText).toHaveBeenCalledTimes(1);
     advance(2);
-    choose('earth', true);
+    choose('earth', 'daily');
     expect(fetchText).toHaveBeenCalledTimes(2);
     await flush();
     advance(DATED_RECHECK_MS + 1);
-    expect(choose('earth', true)?.day).toBe('2026-10-11');
+    expect(choose('earth', 'daily')?.day).toBe('2026-10-11');
+  });
+});
+
+describe('les fonds de rechange de la Terre (lot 48)', () => {
+  const blueMarble = SURFACE_TILESETS.get('earth')!;
+  const choose = createDatedChooser({
+    date: () => new Date('2026-10-11T12:00:00Z'),
+    fetchText: async () => {
+      throw new Error('aucun réseau pour un fond de rechange');
+    },
+  });
+
+  it('proposent exactement les variantes que le panneau sait nommer', async () => {
+    // Le panneau vit au démarrage et ne lit pas les fiches : il porte la liste et ses libellés.
+    // Une variante ajoutée sans libellé, ou un libellé sans fiche, rougit ici.
+    const { SURFACE_CHOICES } = await import('@/ui/surfaceChoices');
+    const offered = SURFACE_CHOICES.filter(
+      (choice) => choice !== 'mosaic' && choice !== 'daily'
+    );
+    expect([...SURFACE_VARIANTS.get('earth')!.keys()].sort()).toEqual(
+      [...offered].sort()
+    );
+  });
+
+  it.each([
+    ['shaded-relief', 'BlueMarble_ShadedRelief_Bathymetry'],
+    ['night-lights', 'VIIRS_Black_Marble'],
+  ] as const)(
+    '%s : sa couche GIBS, sur la grille de la mosaïque',
+    (choice, layer) => {
+      const tileset = choose('earth', choice)!;
+      expect(tileset.service.template).toContain(`/${layer}/`);
+      expect(tileset.matrix).toEqual(blueMarble.matrix);
+      // Une couche statique : aucun jeton de temps ne reste à résoudre.
+      expect(tileset.service.template).not.toContain('{Time}');
+    }
+  );
+
+  it('retombe sur la mosaïque d’un corps qui n’a pas ce fond', () => {
+    expect(choose('moon', 'night-lights')).toBe(SURFACE_TILESETS.get('moon'));
+    expect(choose('earth', 'mosaic')).toBe(blueMarble);
+  });
+
+  it('fige Black Marble sur une année PUBLIÉE, et la décrit', () => {
+    // La dimension publiée ne porte que 2012 et 2016 ; une autre année rend 404 sans CORS.
+    const night = choose('earth', 'night-lights')!;
+    expect(night.service.template).toContain('/2016-01-01/');
+    expect(new Date(night.acquired.from).getUTCFullYear()).toBe(2016);
+    expect(new Date(night.acquired.to).getUTCFullYear()).toBe(2016);
   });
 });
