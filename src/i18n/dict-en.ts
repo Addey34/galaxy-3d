@@ -386,7 +386,7 @@ export const en = {
   'weather.cloudsModel': 'Clouds (Open-Meteo)',
   'weather.precip': 'Rain (NASA IMERG)',
   'weather.precipModel': 'Rain (Open-Meteo)',
-  'weather.wind': 'Wind',
+  'weather.wind': 'Wind (Open-Meteo)',
   'weather.thermal': 'Air temperature (MERRA-2)',
   'weather.thermalModel': 'Air temperature (Open-Meteo)',
   'weather.clouds.note':
@@ -454,7 +454,7 @@ export const en = {
   'position.offset':
     'That is {times} times its diameter: at this date, the body is drawn away from its true place.',
   'weather.wind.note':
-    'Wind flow (Open-Meteo): colour and speed follow wind strength.',
+    'Modelled wind 10 m above the ground: colour and motion follow its speed, and calm air shows little flow.',
   'weather.thermal.note': 'Air temperature near the surface (MERRA-2 monthly):',
 
   // ── Divers ──

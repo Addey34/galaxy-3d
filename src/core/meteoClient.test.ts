@@ -1,5 +1,9 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { clearMeteoClientCache, fetchMeteoGrid } from './meteoClient';
+import {
+  clearMeteoClientCache,
+  fetchMeteoGrid,
+  fetchMeteoGrids,
+} from './meteoClient';
 import { meteoHourKey } from './meteoTimeTravel';
 
 const now = new Date('2026-08-14T12:00:00Z');
@@ -224,5 +228,44 @@ describe('fetchMeteoGrid', () => {
     await fetchMeteoGrid(new Date('2026-08-14T12:00:00Z'), options);
 
     expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('fetchMeteoGrids (le vent, 2026-10-12)', () => {
+  it('sert vitesse ET direction d’une seule requête, à l’heure de la scène même à J+3', async () => {
+    // Chaque point porte les deux séries, de longueur suffisante pour plusieurs jours.
+    const both = Array.from({ length: 12 }, () => ({
+      hourly: {
+        wind_speed_10m: Array.from({ length: 24 * 6 }, (_, h) => h),
+        wind_direction_10m: Array.from({ length: 24 * 6 }, (_, h) => 1000 + h),
+      },
+    }));
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue(new Response(JSON.stringify(both), { status: 200 }));
+    vi.stubGlobal('fetch', fetchMock);
+
+    const scene = new Date('2026-08-17T06:00:00Z'); // J+3 de `now`
+    const result = await fetchMeteoGrids(scene, {
+      variables: ['wind_speed_10m', 'wind_direction_10m'],
+      forecastGrid: grid,
+      archiveGrid: grid,
+      now,
+    });
+
+    // UNE requête pour les deux variables, qui les demande toutes deux.
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    const body = JSON.parse(String(fetchMock.mock.calls[0]?.[1]?.body)) as {
+      hourly: string[];
+      forecast_days: number;
+    };
+    expect(body.hourly).toEqual(['wind_speed_10m', 'wind_direction_10m']);
+    // La fenêtre couvre J+3 : l'ancien prototype demandait toujours un seul jour.
+    expect(body.forecast_days).toBeGreaterThanOrEqual(4);
+    // L'index lu est celui de J+3 06:00 dans la série, pas 06:00 d'aujourd'hui.
+    const speed = result.grids?.['wind_speed_10m']?.values[0];
+    const direction = result.grids?.['wind_direction_10m']?.values[0];
+    expect(speed).toBeGreaterThanOrEqual(3 * 24 + 6);
+    expect(direction).toBe(1000 + speed!);
   });
 });

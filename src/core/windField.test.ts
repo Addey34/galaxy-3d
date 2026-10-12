@@ -1,51 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import {
-  buildWindArchiveUrl,
-  buildWindGridUrl,
-  parseWindGrid,
   sampleWind,
-  windGridCoords,
+  windGridFromScalars,
   windToUV,
   type WindGrid,
 } from './windField';
-
-describe('windGridCoords', () => {
-  it('produces a full lon ring per lat row', () => {
-    const { lats, lons } = windGridCoords({ step: 10, maxLat: 80 });
-    // 17 rangées de lat (-80..80) × 36 lon (-180..170) = 612 points.
-    expect(lats.length).toBe(612);
-    expect(lons.length).toBe(612);
-    expect(lats[0]).toBe(-80);
-    expect(lons[0]).toBe(-180);
-  });
-});
-
-describe('buildWindGridUrl', () => {
-  it('requests speed + direction for the grid', () => {
-    const url = new URL(buildWindGridUrl({ step: 10 }));
-    expect(url.origin + url.pathname).toBe('https://api.open-meteo.com/v1/gfs');
-    expect(url.searchParams.get('hourly')).toBe(
-      'wind_speed_10m,wind_direction_10m'
-    );
-    expect(url.searchParams.get('latitude')?.split(',').length).toBe(612);
-  });
-});
-
-describe('buildWindArchiveUrl (voyage temps ERA5)', () => {
-  it('targets the ERA5 archive endpoint for a single past day', () => {
-    const url = new URL(buildWindArchiveUrl('2019-03-10', { step: 10 }));
-    expect(url.origin + url.pathname).toBe(
-      'https://archive-api.open-meteo.com/v1/archive'
-    );
-    expect(url.searchParams.get('hourly')).toBe(
-      'wind_speed_10m,wind_direction_10m'
-    );
-    // Journée unique : start = end. La grille est identique à celle du forecast.
-    expect(url.searchParams.get('start_date')).toBe('2019-03-10');
-    expect(url.searchParams.get('end_date')).toBe('2019-03-10');
-    expect(url.searchParams.get('latitude')?.split(',').length).toBe(612);
-  });
-});
 
 describe("windToUV (météo: direction = d'où vient le vent)", () => {
   it('north wind (0°) blows toward the south → v negative', () => {
@@ -68,21 +27,36 @@ describe("windToUV (météo: direction = d'où vient le vent)", () => {
   });
 });
 
-describe('parseWindGrid', () => {
-  it('fills u/v from the response at the given hour', () => {
-    const opts = { step: 90, maxLat: 90 }; // grille minuscule 3 lat × 4 lon = 12 pts
-    const { lats } = windGridCoords(opts);
-    const response = lats.map(() => ({
-      hourly: { wind_speed_10m: [10, 20], wind_direction_10m: [270, 0] },
-    }));
-    const grid = parseWindGrid(response, opts, 0);
+describe('windGridFromScalars', () => {
+  const scalar = (values: number[]) => ({
+    step: 90,
+    latMin: -90,
+    lonMin: -180,
+    nLat: 3,
+    nLon: 4,
+    values: Float32Array.from(values),
+  });
+
+  it('compose u/v point par point depuis vitesse et direction', () => {
+    const grid = windGridFromScalars(
+      scalar(Array(12).fill(10)),
+      scalar([270, 0, ...Array(10).fill(90)])
+    );
+    // Vent d'ouest (270°) : l'air va vers l'est, u > 0.
+    expect(grid.u[0]).toBeCloseTo(10, 4);
+    // Vent du nord (0°) : l'air va vers le sud, v < 0.
+    expect(grid.v[1]).toBeCloseTo(-10, 4);
     expect(grid.nLat).toBe(3);
     expect(grid.nLon).toBe(4);
-    // heure 0 : vent d'ouest 10 → u ≈ +10
-    expect(grid.u[0]).toBeCloseTo(10, 4);
-    const grid1 = parseWindGrid(response, opts, 1);
-    // heure 1 : vent du nord 20 → v ≈ -20
-    expect(grid1.v[0]).toBeCloseTo(-20, 4);
+  });
+
+  it('refuse deux grilles qui ne viennent pas de la même requête', () => {
+    expect(() =>
+      windGridFromScalars(scalar(Array(12).fill(1)), {
+        ...scalar(Array(12).fill(1)),
+        step: 45,
+      })
+    ).toThrow(/désaccordées/);
   });
 });
 

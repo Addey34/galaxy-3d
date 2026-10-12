@@ -92,6 +92,22 @@ export const HUMIDITY_PALETTE: Palette = {
 
 /** Domaine pourcentage de l'humidité relative. */
 export const HUMIDITY_DOMAIN = { min: 0, max: 100 };
+
+/**
+ * Palette VENT à 10 m (km/h), celle des particules ET de leur légende (2026-10-12) : cyan doux
+ * au calme, blanc, jaune chaud à la tempête. Les particules l'écrivaient en dur dans leur
+ * module, et aucune légende ne la donnait.
+ */
+export const WIND_PALETTE: Palette = {
+  stops: [
+    { t: 0.0, rgb: [110, 198, 255] }, // calme
+    { t: 0.5, rgb: [255, 255, 255] },
+    { t: 1.0, rgb: [255, 210, 74] }, // tempête
+  ],
+};
+
+/** Domaine km/h du vent : au-delà de `max`, la couleur sature. */
+export const WIND_DOMAIN = { min: 0, max: 90 };
 function clamp01(x: number): number {
   return x < 0 ? 0 : x > 1 ? 1 : x;
 }

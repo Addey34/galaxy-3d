@@ -373,7 +373,7 @@ export const es: Record<MessageKey, string> = {
   'weather.cloudsModel': 'Nubes (Open-Meteo)',
   'weather.precip': 'Lluvia (NASA IMERG)',
   'weather.precipModel': 'Lluvia (Open-Meteo)',
-  'weather.wind': 'Viento',
+  'weather.wind': 'Viento (Open-Meteo)',
   'weather.thermal': 'Temperatura del aire (MERRA-2)',
   'weather.thermalModel': 'Temperatura del aire (Open-Meteo)',
   'weather.clouds.note':
@@ -441,7 +441,7 @@ export const es: Record<MessageKey, string> = {
   'position.offset':
     'Es decir, {times} veces su diámetro: en esta fecha, el cuerpo se dibuja fuera de su lugar real.',
   'weather.wind.note':
-    'Flujo del viento (Open-Meteo): el color y la velocidad siguen la fuerza del viento.',
+    'Viento modelado a 10 m del suelo: el color y el movimiento siguen su velocidad, y el aire en calma muestra poco flujo.',
   'weather.thermal.note':
     'Temperatura del aire cerca del suelo (MERRA-2 mensual):',
 

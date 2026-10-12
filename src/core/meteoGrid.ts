@@ -141,8 +141,12 @@ export interface MeteoPayload {
  * 414) ; le découpage respecte la limite de 1000 points. Concaténées dans l'ordre, les réponses
  * reforment la grille complète.
  */
+const hourlyOf = (variable: string | readonly string[]): string[] =>
+  typeof variable === 'string' ? [variable] : [...variable];
+
 export function buildMeteoPayloads(
-  variable: string,
+  /** Une variable, ou plusieurs servies par la MÊME requête (vitesse et direction du vent). */
+  variable: string | readonly string[],
   options: MeteoGridOptions & {
     /** Mode forecast. */
     pastDays?: number;
@@ -158,7 +162,7 @@ export function buildMeteoPayloads(
       return {
         latitude: chunk.lats,
         longitude: chunk.lons,
-        hourly: [variable],
+        hourly: hourlyOf(variable),
         start_date: days,
         end_date: days,
       };
@@ -166,7 +170,7 @@ export function buildMeteoPayloads(
     return {
       latitude: chunk.lats,
       longitude: chunk.lons,
-      hourly: [variable],
+      hourly: hourlyOf(variable),
       ...(options.pastDays !== undefined
         ? { past_days: options.pastDays }
         : {}),

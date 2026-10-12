@@ -1,8 +1,10 @@
 /**
  * Champ de VENT mondial (composantes u/v) pour l'animation de particules. Module PUR
- * (pas de DOM/three/réseau) → unit-testable. Source : Open-Meteo GFS
- * (`api.open-meteo.com/v1/gfs`), grille lat/lon en une requête, CORS ouvert, sans clé,
- * horaire. La réponse donne vitesse + direction ; on en dérive u (est) / v (nord).
+ * (pas de DOM/three/réseau) → unit-testable. La donnée vient du SOCLE MÉTÉO commun
+ * (`fetchMeteoGrids`, 2026-10-12) : Open-Meteo, prévision ou archive ERA5 selon la date, vitesse
+ * et direction dans la même requête ; on en dérive u (est) / v (nord). Le module avait ses
+ * propres URL, qui demandaient toujours `forecast_days: 1` : une scène à J+3 recevait le vent
+ * d'aujourd'hui à la même heure.
  *
  * Convention météo : `wind_direction` = direction D'OÙ VIENT le vent (0 = du Nord).
  * Le vecteur de déplacement de l'air est donc :
@@ -12,19 +14,7 @@
  */
 
 import { DEG_TO_RAD as DEG2RAD } from './MathConstants';
-
-const OPEN_METEO_GFS = 'https://api.open-meteo.com/v1/gfs';
-// Réanalyse ERA5 pour le VOYAGE TEMPS vers le passé (jusqu'à ~5 j avant le présent, retour
-// jusqu'en 1940). Même schéma horaire vitesse+direction que le forecast GFS ; seule l'URL et
-// la fenêtre temporelle (start_date=end_date=jour ciblé) changent. Cf. core/meteoTimeTravel.
-const OPEN_METEO_ARCHIVE = 'https://archive-api.open-meteo.com/v1/archive';
-
-export interface WindGridOptions {
-  /** Pas de la grille en degrés (défaut 10 → 612 points, 1 requête). */
-  step?: number;
-  /** Latitude absolue maximale échantillonnée (défaut 80 : évite les pôles dégénérés). */
-  maxLat?: number;
-}
+import type { ScalarGrid } from './meteoGrid';
 
 /** Grille régulière de vent échantillonnable. u/v en km/h, indexés [row*nLon + col]. */
 export interface WindGrid {
@@ -37,56 +27,8 @@ export interface WindGrid {
   v: Float32Array; // composante nord (km/h)
 }
 
-/** Génère les latitudes/longitudes de la grille (ordre lat croissant, lon croissant). */
-export function windGridCoords(options: WindGridOptions = {}): {
-  lats: number[];
-  lons: number[];
-} {
-  const step = options.step ?? 10;
-  const maxLat = options.maxLat ?? 80;
-  const lats: number[] = [];
-  const lons: number[] = [];
-  for (let la = -maxLat; la <= maxLat + 1e-9; la += step) {
-    for (let lo = -180; lo < 180 - 1e-9; lo += step) {
-      lats.push(Number(la.toFixed(4)));
-      lons.push(Number(lo.toFixed(4)));
-    }
-  }
-  return { lats, lons };
-}
-
-/** URL Open-Meteo GFS pour la grille : vitesse + direction horaires. */
-export function buildWindGridUrl(options: WindGridOptions = {}): string {
-  const { lats, lons } = windGridCoords(options);
-  const params = new URLSearchParams({
-    latitude: lats.join(','),
-    longitude: lons.join(','),
-    hourly: 'wind_speed_10m,wind_direction_10m',
-    forecast_days: '1',
-  });
-  return `${OPEN_METEO_GFS}?${params.toString()}`;
-}
-
-/**
- * URL archive ERA5 pour la grille de vent d'un JOUR passé (`isoDay` = `YYYY-MM-DD`).
- * `start_date`/`end_date` bornent la journée ; la réponse porte 24 valeurs horaires par
- * point, dont `parseWindGrid` sélectionne l'heure via `hourIndex`. Mêmes coordonnées de
- * grille que `buildWindGridUrl` → réponse dans le même ordre, parsing identique.
- */
-export function buildWindArchiveUrl(
-  isoDay: string,
-  options: WindGridOptions = {}
-): string {
-  const { lats, lons } = windGridCoords(options);
-  const params = new URLSearchParams({
-    latitude: lats.join(','),
-    longitude: lons.join(','),
-    hourly: 'wind_speed_10m,wind_direction_10m',
-    start_date: isoDay,
-    end_date: isoDay,
-  });
-  return `${OPEN_METEO_ARCHIVE}?${params.toString()}`;
-}
+/** Les deux variables qu'Open-Meteo sert pour le vent à 10 m, demandées dans la même requête. */
+export const WIND_VARIABLES = ['wind_speed_10m', 'wind_direction_10m'] as const;
 
 /** Convertit vitesse (km/h) + direction météo (°) en composantes u (est) / v (nord). */
 export function windToUV(
@@ -98,37 +40,32 @@ export function windToUV(
 }
 
 /**
- * Construit une `WindGrid` depuis la réponse Open-Meteo (tableau de points, un par coord,
- * dans le MÊME ordre que `windGridCoords`). `hourIndex` sélectionne l'heure de la journée.
+ * La grille u/v à partir des deux grilles scalaires du socle météo (`fetchMeteoGrids`), qui
+ * décrivent la MÊME heure dans le même ordre de points. Deux grilles de géométrie différente
+ * font échouer : elles ne viendraient pas de la même requête.
  */
-export function parseWindGrid(
-  response: unknown,
-  options: WindGridOptions = {},
-  hourIndex = 0
+export function windGridFromScalars(
+  speed: ScalarGrid,
+  direction: ScalarGrid
 ): WindGrid {
-  const step = options.step ?? 10;
-  const maxLat = options.maxLat ?? 80;
-  const nLat = Math.round((2 * maxLat) / step) + 1;
-  const nLon = Math.round(360 / step);
-  const u = new Float32Array(nLat * nLon);
-  const v = new Float32Array(nLat * nLon);
-
-  const points = Array.isArray(response) ? response : [];
-  for (let i = 0; i < points.length && i < nLat * nLon; i++) {
-    const p = points[i] as {
-      hourly?: {
-        wind_speed_10m?: number[];
-        wind_direction_10m?: number[];
-      };
-    };
-    const speed = p?.hourly?.wind_speed_10m?.[hourIndex] ?? 0;
-    const dir = p?.hourly?.wind_direction_10m?.[hourIndex] ?? 0;
-    const { u: uu, v: vv } = windToUV(speed, dir);
-    u[i] = uu;
-    v[i] = vv;
+  if (
+    speed.step !== direction.step ||
+    speed.nLat !== direction.nLat ||
+    speed.nLon !== direction.nLon ||
+    speed.latMin !== direction.latMin ||
+    speed.lonMin !== direction.lonMin
+  )
+    throw new Error('grilles de vitesse et de direction désaccordées');
+  const n = speed.values.length;
+  const u = new Float32Array(n);
+  const v = new Float32Array(n);
+  for (let i = 0; i < n; i++) {
+    const uv = windToUV(speed.values[i]!, direction.values[i]!);
+    u[i] = uv.u;
+    v[i] = uv.v;
   }
-
-  return { step, latMin: -maxLat, lonMin: -180, nLat, nLon, u, v };
+  const { step, latMin, lonMin, nLat, nLon } = speed;
+  return { step, latMin, lonMin, nLat, nLon, u, v };
 }
 
 function wrapLon(lon: number): number {

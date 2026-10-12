@@ -1,29 +1,38 @@
 /**
- * Prototype couche VENT : particules advectées par le champ de vent réel (Open-Meteo GFS),
- * plaquées sur la Terre. Récupère une grille de vent mondiale, crée `WindParticles`,
- * l'attache au groupe rotatif de la Terre, et advecte les particules à chaque frame.
+ * Couche VENT : particules advectées par le champ de vent réel à 10 m, plaquées sur la Terre.
  *
- * Le CYCLE DE DONNÉES (quand/quoi charger, dédup, backoff, synchro sur l'heure de
- * simulation) est délégué au socle générique `datedDataLayer` — seul le RENDU (advection
- * des particules par frame) vit ici. Repli : si le fetch échoue, pas de grille → les
- * particules dérivent doucement (minDrift) sans champ, la Terre reste normale.
+ * La DONNÉE vient du socle météo commun (`fetchMeteoGrids`, 2026-10-12), comme la température ou
+ * la pression : prévision Open-Meteo ou archive ERA5 selon la date de la scène, vitesse et
+ * direction dans la même requête, grille des autres modèles. Le cycle (quand charger, dédup,
+ * backoff, synchro sur l'heure de simulation) est délégué à `datedDataLayer` ; seul le RENDU
+ * (advection des particules par image) vit ici.
+ *
+ * Trois défauts du prototype, corrigés en la rallumant :
+ *   - hors archive, la couche demandait toujours `forecast_days: 1` puis prenait l'heure de la
+ *     scène : une scène à J+3 recevait le vent d'AUJOURD'HUI à la même heure ;
+ *   - elle lançait son chargeur au démarrage, éteinte ou non : une couche éteinte ne demande
+ *     désormais rien à personne, comme les événements terrestres ;
+ *   - elle n'avait ni badge de source ni légende.
  */
 import { WIND_SETTINGS } from '@/config/engine';
-import { meteoHourKey, planMeteoRequest } from '@/core/meteoTimeTravel';
+import { meteoHourKey } from '@/core/meteoTimeTravel';
+import { fetchMeteoGrids } from '@/core/meteoClient';
 import { LAYER_RADIUS_SCALE } from '@/config/layerConfig';
 import {
-  buildWindArchiveUrl,
-  buildWindGridUrl,
-  parseWindGrid,
+  WIND_VARIABLES,
+  windGridFromScalars,
   type WindGrid,
 } from '@/core/windField';
+import { paletteToCss, WIND_DOMAIN, WIND_PALETTE } from '@/core/meteoPalette';
 import { WindParticles } from '@/components/celestial/WindParticles';
 import { createDatedDataLayer } from './datedDataLayer';
 import {
   getEarth,
   createLoadStateRelay,
+  createResolvedRelay,
   type WeatherLayerHandle,
 } from './earthLayer';
+import { meteoSourceCandidate } from './meteoModelLayer';
 import {
   describeMeteoGrid,
   type MeteoLayerDiagnostics,
@@ -31,8 +40,8 @@ import {
 import type { PublicAPI } from '@/SolarSystemApp';
 
 /**
- * Monte la couche vent. Renvoie `null` si désactivée (WIND_SETTINGS.enabled) ou si la Terre
- * est absente — le registre l'ignore alors (pas de ligne « Vent » dans le panneau).
+ * Monte la couche vent. Renvoie `null` si désactivée (palier `low`) ou si la Terre est absente :
+ * le registre l'ignore alors (pas de ligne « Vent » dans le panneau).
  */
 export function setupWindLayer(api: PublicAPI): WeatherLayerHandle | null {
   const settings = WIND_SETTINGS;
@@ -48,88 +57,92 @@ export function setupWindLayer(api: PublicAPI): WeatherLayerHandle | null {
     lifeSeconds: settings.lifeSeconds,
     opacity: settings.opacity,
     size: settings.size,
-    speedMax: settings.speedMax,
-    lonOffset: settings.lonOffset,
-    maxLat: settings.maxLat,
-    minDriftKmh: settings.minDriftKmh,
+    maxLat: settings.particleMaxLat,
+    calmKmh: settings.calmKmh,
   });
+  particles.points.visible = false;
   earth.attachSpinningChild(particles.points);
 
-  // Grille de vent courante (appliquée par le socle de données ; lue à chaque frame par
-  // l'advection). null tant qu'aucun fetch n'a abouti ou hors de la plage du modèle : les
+  // Grille courante, lue à chaque image par l'advection. null tant qu'aucune grille ne décrit la
+  // date de la scène (avant le premier chargement, ou hors de la plage du modèle) : les
   // particules sont alors masquées (`syncPoints`).
   let grid: WindGrid | null = null;
   let gridDiagnostics: MeteoLayerDiagnostics['grid'];
+  let lastSource: MeteoLayerDiagnostics['source'];
   let phase: MeteoLayerDiagnostics['phase'] = 'idle';
   const loadState = createLoadStateRelay();
+  const relay = createResolvedRelay();
   /** Choix du panneau ; l'affichage exige en plus une grille pour la date de la scène. */
   let wanted = false;
   const syncPoints = (): void => {
     particles.points.visible = wanted && grid !== null;
   };
 
-  // Cycle de données délégué : clé = heure de simulation ; fetch = grille Open-Meteo GFS.
-  const stopData = createDatedDataLayer<WindGrid | null>(api, {
-    name: 'WindLayer',
-    enabled: true,
-    keyForDate: meteoHourKey,
-    fetchForKey: async (key, signal) => {
-      // VOYAGE TEMPS : la clé (YYYY-MM-DDTHH) porte la date de simulation. On route vers
-      // l'archive ERA5 (passé lointain) ou le forecast GFS (zone récente + futur ≤ horizon)
-      // via le plan partagé. Hors plage (avant 1940 / futur au-delà de l'horizon) → AUCUNE
-      // grille : garder la précédente ferait souffler, pour cette date, le vent d'une autre.
-      // Les particules sont masquées tant qu'aucune grille ne décrit la date de la scène. Ce
-      // n'est pas un échec réseau : pas d'erreur, pas de backoff.
-      const simDate = new Date(`${key}:00:00Z`);
-      const plan = planMeteoRequest(simDate);
-      if (plan.outOfRange) return null;
-      const gridOptions = { step: settings.gridStep, maxLat: settings.maxLat };
-      const url =
-        plan.source === 'archive' && plan.date
-          ? buildWindArchiveUrl(plan.date, gridOptions)
-          : buildWindGridUrl(gridOptions);
-      const res = signal ? await fetch(url, { signal }) : await fetch(url);
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const json = (await res.json()) as unknown;
-      // L'index horaire sélectionne l'heure du jour : forecast_days:1 comme archive (24 h/jour)
-      // exposent l'heure 0..23 de la journée demandée.
-      const hour = simDate.getUTCHours();
-      return parseWindGrid(json, gridOptions, hour);
-    },
-    onStateChange: (next) => {
-      phase = next;
-      loadState.push(next);
-    },
-    apply: (loaded) => {
-      grid = loaded;
-      syncPoints();
-      gridDiagnostics = loaded ? describeMeteoGrid(loaded) : undefined;
-      phase = 'ready';
-    },
-    // Réévaluation horaire (chaque seconde suffit ; le gating par clé évite les re-fetch).
-    checkIntervalMs: 1000,
-  });
+  let stopData: (() => void) | null = null;
+  const startData = (): void => {
+    if (stopData) return;
+    stopData = createDatedDataLayer(api, {
+      name: 'WindLayer',
+      enabled: true,
+      keyForDate: meteoHourKey,
+      fetchForKey: (key, signal) =>
+        fetchMeteoGrids(new Date(`${key}:00:00Z`), {
+          variables: WIND_VARIABLES,
+          forecastGrid: { step: settings.gridStep, maxLat: settings.maxLat },
+          archiveGrid: {
+            step: settings.archiveGridStep,
+            maxLat: settings.maxLat,
+          },
+          signal,
+        }),
+      onStateChange: (next) => {
+        phase = next;
+        loadState.push(next);
+      },
+      apply: (data) => {
+        // Hors de la plage du modèle (avant 1940, au-delà de l'horizon de prévision) : AUCUNE
+        // grille. Garder la précédente ferait souffler, pour cette date, le vent d'une autre.
+        const speed = data.grids?.[WIND_VARIABLES[0]];
+        const direction = data.grids?.[WIND_VARIABLES[1]];
+        grid =
+          speed && direction ? windGridFromScalars(speed, direction) : null;
+        gridDiagnostics = speed ? describeMeteoGrid(speed) : undefined;
+        syncPoints();
+        phase = 'ready';
+        const source = meteoSourceCandidate({ id: 'wind' }, data);
+        lastSource = source;
+        relay.push(source);
+      },
+      checkIntervalMs: 1000,
+    });
+  };
 
-  // Advection à chaque frame (rendu) — indépendante du cycle de données.
+  // Advection à chaque image (rendu), seulement quand les particules se voient.
   let last = performance.now();
   const unsubscribe = api.animationSystem.onFrame(() => {
     const now = performance.now();
     const dt = Math.min((now - last) / 1000, 0.1);
     last = now;
-    particles.update(dt, grid);
+    if (particles.points.visible) particles.update(dt, grid);
   });
 
   return {
     id: 'wind',
     labelKey: 'weather.wind',
     onLoadStateChange: loadState.subscribe,
+    onResolved: relay.subscribe,
     // Éteinte au démarrage : le vent est un INSTRUMENT, pas l'apparence de la Terre.
-    // « Présente donc affichée » partait d'une bonne intention et donnait un globe couvert de
-    // données avant même que le visiteur ait demandé quoi que ce soit.
     initial: false,
     noteKey: 'weather.wind.note',
+    // La palette même des particules, bornes tirées de son domaine.
+    legendGradient: {
+      css: paletteToCss(WIND_PALETTE),
+      loText: `${WIND_DOMAIN.min} km/h`,
+      hiText: `${WIND_DOMAIN.max}+ km/h`,
+    },
     setVisible: (visible) => {
       wanted = visible;
+      if (visible) startData();
       syncPoints();
     },
     diagnostics: () => ({
@@ -139,10 +152,12 @@ export function setupWindLayer(api: PublicAPI): WeatherLayerHandle | null {
       visible: wanted,
       phase,
       updatedAt: Date.now(),
+      source: lastSource,
       grid: gridDiagnostics,
     }),
     dispose: () => {
-      stopData();
+      stopData?.();
+      stopData = null;
       unsubscribe();
       particles.points.removeFromParent();
       particles.dispose();

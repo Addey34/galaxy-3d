@@ -369,7 +369,7 @@ export const ptBR: Record<MessageKey, string> = {
   'weather.cloudsModel': 'Nuvens (Open-Meteo)',
   'weather.precip': 'Chuva (NASA IMERG)',
   'weather.precipModel': 'Chuva (Open-Meteo)',
-  'weather.wind': 'Vento',
+  'weather.wind': 'Vento (Open-Meteo)',
   'weather.thermal': 'Temperatura do ar (MERRA-2)',
   'weather.thermalModel': 'Temperatura do ar (Open-Meteo)',
   'weather.clouds.note':
@@ -438,7 +438,7 @@ export const ptBR: Record<MessageKey, string> = {
   'position.offset':
     'Ou seja, {times} vezes o seu diâmetro: nesta data, o corpo é desenhado fora do seu lugar real.',
   'weather.wind.note':
-    'Fluxo do vento (Open-Meteo): a cor e a velocidade seguem a força do vento.',
+    'Vento modelado a 10 m do solo: a cor e o movimento seguem a sua velocidade, e o ar calmo mostra pouco fluxo.',
   'weather.thermal.note': 'Temperatura do ar perto do solo (MERRA-2 mensal):',
 
   // ── Divers ──

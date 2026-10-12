@@ -56,18 +56,23 @@ export interface MeteoModelLayerConfig {
   sourceLabel?: (data: MeteoGridData) => string;
 }
 
-function defaultSourceLabel(data: MeteoGridData): string {
+function defaultSourceLabel(data: Pick<MeteoGridData, 'plan'>): string {
   return data.plan.source === 'archive' ? 'ERA5' : 'Open-Meteo';
 }
 
-function sourceCandidate(
-  config: MeteoModelLayerConfig,
-  data: MeteoGridData
+/**
+ * La source qu'une grille Open-Meteo a RÉELLEMENT servie, pour le badge du panneau. Exportée
+ * pour la couche de vent (2026-10-12), qui n'est pas une texture et ne passe donc pas par
+ * `setupMeteoModelLayer`, mais dont la donnée vient du même socle et se badge de même.
+ */
+export function meteoSourceCandidate(
+  config: Pick<MeteoModelLayerConfig, 'id' | 'sourceIdPrefix' | 'sourceLabel'>,
+  data: Pick<MeteoGridData, 'plan' | 'realDate'>
 ): SourceCandidate {
   const prefix = config.sourceIdPrefix ?? 'openmeteo-' + config.id;
   return {
     id: prefix + ':' + data.plan.source + ':' + data.realDate.slice(0, 13),
-    label: (config.sourceLabel ?? defaultSourceLabel)(data),
+    label: (config.sourceLabel ?? defaultSourceLabel)(data as MeteoGridData),
     url: '',
     realDate: data.realDate,
     // L'heure servie est celle demandée : une prévision n'est pas une « date approchée »,
@@ -155,7 +160,7 @@ export function setupMeteoModelLayer(
           phase = 'ready';
           applyIfVisible();
         }
-        const source = sourceCandidate(config, data);
+        const source = meteoSourceCandidate(config, data);
         lastSource = source;
         relay.push(source);
       },

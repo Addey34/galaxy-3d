@@ -220,16 +220,39 @@ export async function fetchMeteoGrid(
   simDate: Date,
   options: MeteoGridFetchOptions
 ): Promise<MeteoGridData> {
+  const { grids, plan, realDate } = await fetchMeteoGrids(simDate, {
+    ...options,
+    variables: [options.variable],
+  });
+  return { grid: grids?.[options.variable] ?? null, plan, realDate };
+}
+
+/**
+ * Plusieurs variables d'un même instant, dans les MÊMES requêtes : le vent a besoin de sa vitesse
+ * et de sa direction, et les demander séparément doublerait les appels pour deux grilles qui
+ * doivent décrire la même heure. Même plan temporel, même découpage, même cache que
+ * `fetchMeteoGrid`, qui n'en est que le cas à une variable.
+ */
+export async function fetchMeteoGrids(
+  simDate: Date,
+  options: Omit<MeteoGridFetchOptions, 'variable'> & {
+    variables: readonly string[];
+  }
+): Promise<{
+  grids: Record<string, ScalarGrid> | null;
+  plan: MeteoTimePlan;
+  realDate: string;
+}> {
   const now = options.now ?? new Date();
   const plan = planMeteoRequest(simDate, { now });
   const realDate = simDate.toISOString();
 
-  if (plan.outOfRange) return { grid: null, plan, realDate };
+  if (plan.outOfRange) return { grids: null, plan, realDate };
 
   const isArchive = plan.source === 'archive';
   const gridOptions = isArchive ? options.archiveGrid : options.forecastGrid;
   const endpoint = isArchive ? OPEN_METEO_ARCHIVE : OPEN_METEO_FORECAST;
-  const payloads = buildMeteoPayloads(options.variable, {
+  const payloads = buildMeteoPayloads(options.variables, {
     ...gridOptions,
     ...(isArchive
       ? { date: plan.date }
@@ -243,6 +266,11 @@ export async function fetchMeteoGrid(
   const hour = isArchive
     ? archiveHourIndex(simDate)
     : meteoHourIndex(simDate, now, plan.pastDays);
-  const grid = parseScalarGrid(responses, options.variable, gridOptions, hour);
-  return { grid, plan, realDate };
+  const grids = Object.fromEntries(
+    options.variables.map((variable) => [
+      variable,
+      parseScalarGrid(responses, variable, gridOptions, hour),
+    ])
+  );
+  return { grids, plan, realDate };
 }
