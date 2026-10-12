@@ -24,7 +24,7 @@ import {
   type WindGrid,
 } from '@/core/windField';
 import { paletteToCss, WIND_DOMAIN, WIND_PALETTE } from '@/core/meteoPalette';
-import { WindParticles } from '@/components/celestial/WindParticles';
+import type { WindParticles } from '@/components/celestial/WindParticles';
 import { createDatedDataLayer } from './datedDataLayer';
 import {
   getEarth,
@@ -50,18 +50,30 @@ export function setupWindLayer(api: PublicAPI): WeatherLayerHandle | null {
   const earth = getEarth(api, 'WindLayer');
   if (!earth) return null;
 
-  const particles = new WindParticles({
-    radius: earth.layerRadius * (LAYER_RADIUS_SCALE['wind'] ?? 1.012),
-    count: settings.particleCount,
-    speedScale: settings.speedScale,
-    lifeSeconds: settings.lifeSeconds,
-    opacity: settings.opacity,
-    size: settings.size,
-    maxLat: settings.particleMaxLat,
-    calmKmh: settings.calmKmh,
-  });
-  particles.points.visible = false;
-  earth.attachSpinningChild(particles.points);
+  // Les particules (et leur module) ne naissent qu'à la PREMIÈRE activation : la couche est
+  // éteinte au démarrage, et le budget JS du démarrage n'a pas à les payer (lot 46).
+  let particles: WindParticles | null = null;
+  let creating: Promise<void> | null = null;
+  const ensureParticles = (): Promise<void> =>
+    (creating ??= import('@/components/celestial/WindParticles').then(
+      ({ WindParticles }) => {
+        if (disposed) return;
+        particles = new WindParticles({
+          radius: earth.layerRadius * (LAYER_RADIUS_SCALE['wind'] ?? 1.012),
+          count: settings.particleCount,
+          speedScale: settings.speedScale,
+          lifeSeconds: settings.lifeSeconds,
+          opacity: settings.opacity,
+          size: settings.size,
+          maxLat: settings.particleMaxLat,
+          calmKmh: settings.calmKmh,
+        });
+        particles.points.visible = false;
+        earth.attachSpinningChild(particles.points);
+        syncPoints();
+      }
+    ));
+  let disposed = false;
 
   // Grille courante, lue à chaque image par l'advection. null tant qu'aucune grille ne décrit la
   // date de la scène (avant le premier chargement, ou hors de la plage du modèle) : les
@@ -75,7 +87,7 @@ export function setupWindLayer(api: PublicAPI): WeatherLayerHandle | null {
   /** Choix du panneau ; l'affichage exige en plus une grille pour la date de la scène. */
   let wanted = false;
   const syncPoints = (): void => {
-    particles.points.visible = wanted && grid !== null;
+    if (particles) particles.points.visible = wanted && grid !== null;
   };
 
   let stopData: (() => void) | null = null;
@@ -123,7 +135,7 @@ export function setupWindLayer(api: PublicAPI): WeatherLayerHandle | null {
     const now = performance.now();
     const dt = Math.min((now - last) / 1000, 0.1);
     last = now;
-    if (particles.points.visible) particles.update(dt, grid);
+    if (particles?.points.visible) particles.update(dt, grid);
   });
 
   return {
@@ -142,7 +154,10 @@ export function setupWindLayer(api: PublicAPI): WeatherLayerHandle | null {
     },
     setVisible: (visible) => {
       wanted = visible;
-      if (visible) startData();
+      if (visible) {
+        startData();
+        void ensureParticles();
+      }
       syncPoints();
     },
     diagnostics: () => ({
@@ -159,8 +174,9 @@ export function setupWindLayer(api: PublicAPI): WeatherLayerHandle | null {
       stopData?.();
       stopData = null;
       unsubscribe();
-      particles.points.removeFromParent();
-      particles.dispose();
+      disposed = true;
+      particles?.points.removeFromParent();
+      particles?.dispose();
     },
   };
 }
