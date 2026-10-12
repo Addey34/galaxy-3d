@@ -718,6 +718,15 @@ function wireChrome(): {
     );
     syncPermalink = permalink.sync;
     permalink.applyInitialState();
+    // La recherche typée de la palette AGIT par les commandes qui existent déjà : la sélection
+    // partagée, le mode, le permalien (lot 47). Son code et son index ne se chargent qu'à la
+    // première frappe utile (cf. ui/paletteSearch).
+    planetNav.setSearchContext({
+      api,
+      selectBody: (name) => planetNav.selectBody(name),
+      setMode: (mode) => modeSwitcher.setMode(mode),
+      sync: () => syncPermalink(),
+    });
     setupShare(cameraSystem, permalink);
     setupCapture(cameraSystem, orbitalMechanics, planetNav);
     setupAstronomicalEvents(orbitalMechanics, {

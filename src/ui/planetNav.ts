@@ -8,6 +8,7 @@
  */
 import type { CameraSystem } from '@/components/systems/CameraSystem';
 import { setupBodyPalette, type BodyPalette } from './bodyPalette';
+import type { SearchContext } from './paletteSearch';
 import type { OverlayCoordinator } from './overlayCoordinator';
 
 export interface PlanetNavigation {
@@ -25,6 +26,8 @@ export interface PlanetNavigation {
    * interstellaire hors fenêtre). Transmis tel quel à la palette : c'est elle qui l'affiche.
    */
   setUnavailable(names: ReadonlySet<string>): void;
+  /** Les commandes de la recherche typée de la palette (lot 47), branchées une fois prêtes. */
+  setSearchContext(context: SearchContext): void;
 }
 
 export function setupPlanetControls(
@@ -59,5 +62,6 @@ export function setupPlanetControls(
     selectBody,
     getSelectedBody: () => selectedBody,
     setUnavailable: (names) => palette.setUnavailable(names),
+    setSearchContext: (context) => palette.setSearchContext(context),
   };
 }

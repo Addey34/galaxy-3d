@@ -17,6 +17,8 @@ import { bodyAccentColor, hexToRgbTriplet, onAccentChange } from './bodyAccent';
 import type { OverlayCoordinator } from './overlayCoordinator';
 import { BODY_GROUPS } from './bodyGroups';
 import { getAnnouncer } from './announcer';
+import type { SearchHit } from '@/core/search';
+import type { SearchContext } from './paletteSearch';
 
 const BODY_CONFIGS = NAVIGABLE_BODIES;
 
@@ -42,7 +44,19 @@ export interface BodyPalette {
    * il n'y a aucune position à aller voir, et suivre la dernière connue serait un mensonge.
    */
   setUnavailable(names: ReadonlySet<string>): void;
+  /**
+   * Les commandes dont la recherche typée a besoin pour AGIR (lot 47) : elles n'existent qu'après
+   * la palette (mode, permalien), d'où ce branchement tardif. Sans lui, seuls les corps se
+   * cherchent.
+   */
+  setSearchContext(context: SearchContext): void;
   close(): void;
+}
+
+/** Une ligne qu'on atteint aux flèches : un corps ou un résultat typé. */
+interface NavItem {
+  button: HTMLButtonElement;
+  activate(): void;
 }
 
 /**
@@ -141,7 +155,12 @@ export function setupBodyPalette(
   );
 
   if (!panel || !trigger || !input || !results) {
-    return { setActive: () => {}, setUnavailable: () => {}, close: () => {} };
+    return {
+      setActive: () => {},
+      setUnavailable: () => {},
+      setSearchContext: () => {},
+      close: () => {},
+    };
   }
 
   const entries = collectEntries();
@@ -172,9 +191,26 @@ export function setupBodyPalette(
       results.append(entry.button);
     }
   }
-  results.append(emptyEl);
+  // Les résultats typés (lieux, missions, instruments, survols), sous les corps, reconstruits à
+  // chaque requête : leur nombre et leur contenu changent, à la différence des corps.
+  const typedEl = document.createElement('div');
+  typedEl.className = 'palette-typed';
+  results.append(typedEl, emptyEl);
 
   let lastVisible: PaletteEntry[] = [];
+  let typedItems: NavItem[] = [];
+  let searchContext: SearchContext | null = null;
+  /** Numéro de la dernière requête : une réponse plus ancienne arrivée après est ignorée. */
+  let typedSeq = 0;
+
+  const bodyItems = (): NavItem[] =>
+    lastVisible.map((entry) => ({
+      button: entry.button,
+      activate: () => {
+        if (!unavailable.has(entry.name)) onSelect(entry.name);
+      },
+    }));
+  const navItems = (): NavItem[] => [...bodyItems(), ...typedItems];
 
   const render = (query: string): void => {
     const q = query.trim().toLowerCase();
@@ -192,21 +228,53 @@ export function setupBodyPalette(
         (entry) => entry.button.dataset['group'] === key
       );
     }
-    emptyEl.hidden = visible.length > 0;
     emptyEl.textContent = t('events.empty');
+    // Le vide se dit d'abord sur les corps ; `refreshTyped` le corrige quand les résultats
+    // typés arrivent (« aucun corps » ne veut plus dire « aucun résultat »).
+    emptyEl.hidden = visible.length > 0 || typedItems.length > 0;
 
     highlighted = -1;
     lastVisible = visible;
-    syncHighlight(visible);
+    syncHighlight();
+    void refreshTyped(query);
   };
 
-  const syncHighlight = (visible: PaletteEntry[]): void => {
-    visible.forEach((entry, index) => {
+  /** Les résultats typés de la requête, chargés à la PREMIÈRE frappe utile avec leur morceau. */
+  const refreshTyped = async (query: string): Promise<void> => {
+    const seq = ++typedSeq;
+    let hits: SearchHit[] = [];
+    let search: typeof import('./paletteSearch') | null = null;
+    if (searchContext && query.trim().length >= 2) {
+      try {
+        search = await import('./paletteSearch');
+        hits = await search.searchTyped(query);
+      } catch {
+        hits = [];
+      }
+    }
+    if (seq !== typedSeq) return;
+    const hadTyped = typedItems.length > 0;
+    typedEl.replaceChildren();
+    // Le rendu vit dans le morceau de la recherche : rien de ce code ne sert avant la
+    // première frappe, et le budget du démarrage n'a pas à le payer.
+    typedItems =
+      search && searchContext
+        ? search.renderHits(typedEl, hits, searchContext, unavailable)
+        : [];
+    emptyEl.hidden = lastVisible.length + typedItems.length > 0;
+    syncHighlight();
+    if (search || hadTyped)
+      announceResults(lastVisible.length + typedItems.length);
+  };
+
+  const syncHighlight = (): void => {
+    const items = navItems();
+    items.forEach((item, index) => {
       const isHighlighted = index === highlighted;
-      entry.button.classList.toggle('is-highlighted', isHighlighted);
-      entry.button.setAttribute('aria-selected', String(isHighlighted));
+      item.button.classList.toggle('is-highlighted', isHighlighted);
+      item.button.setAttribute('aria-selected', String(isHighlighted));
     });
-    const active = highlighted >= 0 ? visible[highlighted] : undefined;
+    const active = highlighted >= 0 ? items[highlighted] : undefined;
     if (active) {
       active.button.scrollIntoView({ block: 'nearest' });
       input.setAttribute('aria-activedescendant', active.button.id);
@@ -256,20 +324,22 @@ export function setupBodyPalette(
 
   input.addEventListener('input', () => {
     render(input.value);
-    announceResults(lastVisible.length);
+    // Avec la recherche typée, le compte vient avec ses résultats (`refreshTyped`) : annoncer
+    // d'abord celui des seuls corps dirait un nombre faux une seconde plus tôt.
+    if (!searchContext || input.value.trim().length < 2)
+      announceResults(lastVisible.length);
   });
   input.addEventListener('keydown', (event) => {
     if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
       event.preventDefault();
       const dir = event.key === 'ArrowDown' ? 1 : -1;
-      highlighted =
-        (highlighted + dir + lastVisible.length) %
-        Math.max(1, lastVisible.length);
-      syncHighlight(lastVisible);
+      const count = navItems().length;
+      highlighted = (highlighted + dir + count) % Math.max(1, count);
+      syncHighlight();
     } else if (event.key === 'Enter') {
       event.preventDefault();
-      const entry = lastVisible[highlighted] ?? lastVisible[0];
-      if (entry && !unavailable.has(entry.name)) onSelect(entry.name);
+      const items = navItems();
+      (items[highlighted] ?? items[0])?.activate();
     } else if (event.key === 'Escape') {
       event.preventDefault();
       setOpen(false);
@@ -290,6 +360,8 @@ export function setupBodyPalette(
       if (off) entry.button.title = t('nav.unavailable');
       else entry.button.removeAttribute('title');
     }
+    // Un instrument dont la sonde n'existe pas à cette date se grise comme elle.
+    if (typedItems.length) void refreshTyped(input.value);
   };
 
   // Clic sur une entrée : commande de navigation partagée.
@@ -297,7 +369,8 @@ export function setupBodyPalette(
     const button = (event.target as HTMLElement).closest<HTMLButtonElement>(
       '.palette-item'
     );
-    if (!button) return;
+    // Un résultat typé porte son propre geste (`renderTyped`).
+    if (!button || button.classList.contains('palette-hit')) return;
     const name = button.id.replace('orbit-', '');
     if (unavailable.has(name)) return;
     onSelect(name);
@@ -351,6 +424,9 @@ export function setupBodyPalette(
   return {
     setActive,
     setUnavailable,
+    setSearchContext: (context) => {
+      searchContext = context;
+    },
     close: () => setOpen(false),
   };
 }

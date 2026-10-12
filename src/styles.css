@@ -915,6 +915,24 @@ button {
   text-transform: uppercase;
   letter-spacing: 0.06em;
 }
+/* Les résultats typés de la recherche (lot 47) : même colonne que les corps. Leur détail (le
+   corps d'une formation, la sonde d'un instrument) peut être long : il cède la place au nom au
+   lieu de déborder à 390 px. */
+.palette-typed {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+.palette-typed:empty {
+  display: none;
+}
+.palette-hit .palette-item-kind {
+  flex: 0 1 auto;
+  max-width: 45%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 .palette-empty {
   padding: var(--sp-3) var(--sp-2);
   color: var(--ink-faint);
