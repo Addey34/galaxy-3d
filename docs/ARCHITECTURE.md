@@ -2480,8 +2480,86 @@ de la source, aucune carte d'ombrage employée comme géométrie (un ombrage fig
 scène fait bouger le Soleil). Le plancher d'approche reste une altitude au-dessus du RAYON DE
 RÉFÉRENCE, pas au-dessus du sol : au-dessus d'un massif, la caméra s'approche donc davantage du
 sol que le plancher ne le laisse croire, et `?debug-surface` affiche l'altitude MESURÉE du sol
-sous la caméra pour qu'on puisse le voir. Aucune aire fine n'est déclarée ailleurs que sur la
-Lune, et Mars garde donc son imagerie sans relief.
+sous la caméra pour qu'on puisse le voir. Des aires fines ne sont déclarées que sur la Lune et
+sur Cérès ; Mars et la Terre n'ont que leur socle (chaque manifeste en liste la couverture). La
+phrase qui disait « aucune aire fine ailleurs que sur la Lune, et Mars garde son imagerie sans
+relief » est SUPERSEDED le 2026-10-12 : Mars a son socle MEGR, Cérès Occator et Ahuna Mons.
+
+### Le relief de la Terre : ETOPO 2022, l'eau à son niveau, servi par la VM (lot 48, pas 3)
+
+Depuis le 2026-10-12, la Terre a son jeu de hauteurs (`earth-etopo-2022`), cuit par le même
+`pnpm surface:tiles` depuis ETOPO 2022 à 60″ (NOAA NCEI, non soumis au droit d'auteur aux
+États-Unis, métadonnées ISO lues ce jour). Quatre choses le distinguent des autres corps, et
+chacune a été MESURÉE avant d'être écrite.
+
+**La grille est celle de l'imagerie, lue dans ses fiches.** Une tuile d'imagerie désigne sa tuile
+de hauteurs par son seul indice (`core/heightPyramid.ts`). La Terre est servie par NASA GIBS,
+10 × 5 au niveau 3 ; cuire son relief sur la grille de Trek (2 × 1 au niveau 0) l'aurait posé à côté
+de son image, en silence. Le cuiseur lit donc la grille dans les fiches d'imagerie du corps
+(`imageryGrid`, et refuse si elles en décrivent deux), l'écrit dans le manifeste (`matrix`, que
+les trois autres manifestes portent aussi depuis ce jour, sans qu'un octet de tuile ait changé :
+mêmes hachages), et le moteur refuse d'attacher un relief dont la grille n'est pas celle de
+l'imagerie (`sameGrid`). Socle global aux niveaux 3 à 6 : l'imagerie GIBS commence au niveau 3, et
+au niveau 6 une tuile porte 56,9 échantillons par degré, la finesse de la source (60).
+
+**Des RAYONS, pas des hauteurs au-dessus du géoïde.** ETOPO publie des hauteurs au-dessus d'EGM2008,
+en flottants ; le cuiseur ne place que des rayons (règle de la ligne 45.3). Chaque cellule devient
+rayon de l'ellipsoïde rendu dans sa direction + ondulation du géoïde, publiée par ETOPO dans un
+second GeoTIFF + hauteur. Les deux fichiers n'ont pas le même REGISTRE (`PixelIsArea` attaché au
+coin pour la surface, `PixelIsPoint` attaché au centre de la première cellule pour le géoïde,
+mêmes centres) : `scripts/geotiff-grid.mjs` lit les balises et refuse toute emprise qui n'est pas
+le globe exact, puisqu'un demi-échantillon vaut 926 m et reste plausible à l'œil. Le quantum
+(1 m) est le seul nombre de la cuisson qui ne soit pas lu : la source n'en a pas. Négligé, et
+écrit : la latitude d'ETOPO est géodésique et l'application la pose comme une direction
+(l'imagerie aussi, donc les deux restent l'une sur l'autre).
+
+**L'eau à son niveau (`scripts/earth-water-level.mjs`).** Sous l'eau, ETOPO publie le FOND. Mesuré
+étendue par étendue avec le masque d'eau MODIS/SRTM de NASA GIBS : il donne la SURFACE de la
+plupart des lacs, plate au mètre (mer Morte, Victoria, Tanganyika, Titicaca), et le fond de
+quelques autres (Caspienne, mer Noire, Baïkal, Grands Lacs), qui ne sont donc pas plats. La règle,
+dont le manifeste publie les seuils et chaque étendue modifiée avec son niveau :
+
+- l'océan (la plus grande étendue) au zéro d'ETOPO, qui est le géoïde, donc le niveau moyen de la
+  mer ;
+- un **bras de mer** (rive au niveau de la mer, fond profond) au plus bas de zéro et de la médiane
+  de sa rive : les fjords que le masque coupe de l'océan, la mer Noire, et la Caspienne sous le
+  niveau de la mer. Le critère de profondeur laisse la dépression du Danakil intacte ;
+- un **grand lac** (rive au-dessus de zéro, grand, fond bien sous la rive) à la médiane de sa
+  rive, donc un peu au-dessus de l'eau, puisque la rive monte. Il ne prend que les cinq lacs dont
+  ETOPO publie le fond, et laisse l'Ob, la Petchora, l'Aral, les réservoirs et les taches « d'eau »
+  du masque sur les volcans du Kamtchatka ;
+- **le masque a des trous, et ETOPO les révèle** : aucune terre émergée n'est plus basse que la plus
+  basse surface d'eau plate publiée (la mer Morte, −427 m, DÉRIVÉE des données en une première
+  passe) ; une « terre » plus basse est de l'eau (une cellule à −5 899 m en plein océan Indien, des
+  fjords du Groenland). Et une cellule de rive dite « terre » mais plus basse qu'une eau nivelée
+  voisine est inondée, sur trois cellules au plus : c'est la garde du lac Supérieur qui a trouvé
+  cet anneau, à 52 m sous l'ellipsoïde autour d'eaux à 182 et 194 m.
+
+On ne fait que RELEVER : une cellule plus haute que son niveau garde son altitude.
+
+**Servi par le service de données, pas par Firebase.** 4 250 tuiles, 562 Mo : sur l'hébergeur dont
+le quota de stockage a déjà cassé un déploiement (§ « Quota de stockage » de `CLAUDE.md`), ce
+serait 562 Mo par version retenue. Le manifeste reste sur le site (`public/assets/height-tiles/
+earth/manifest.json`, quelques kilo-octets, lu par les gardes) et déclare `tileOrigin` ; les
+tuiles s'écrivent dans `.cache/galaxy-data/`, ignoré par git, et se TÉLÉVERSENT sur la VM sous le
+même chemin haché. Le Caddy du service leur donne un cache immuable d'un an (le répertoire porte
+le hachage du contenu). `connect-src` autorisait déjà l'hôte.
+
+**Gardé sur les octets livrés, sans les livrer au dépôt.** Le cuiseur copie six tuiles TÉMOINS
+dans `src/config/heightWitnesses/`, sous le même chemin haché : les deux pôles, la mer Morte, la
+Caspienne, le lac Supérieur, l'Everest. `src/config/surfaceHeights.test.ts` les lit comme des
+tuiles servies, et un témoin d'une cuisson périmée ne se trouve plus. Les gardes de l'eau ont été
+falsifiées en recuisant avec la règle désarmée ; `e2e/surfaceImagery.spec.ts` tient l'origine, le
+répertoire haché et la grille des tuiles DEMANDÉES.
+
+| | |
+|---|---|
+| La recette (sources, niveaux, masque, témoins) | `scripts/surface-height-targets.json` |
+| La lecture des balises GeoTIFF | `scripts/geotiff-grid.mjs` |
+| La règle de l'eau | `scripts/earth-water-level.mjs` (testé : `src/config/earthRelief.test.ts`) |
+| Les mesures (grille, géoïde, eau, origine) | `public/assets/height-tiles/earth/manifest.json` |
+| Déployer les tuiles | `services/galaxy-data/README.md` § « Le relief de la Terre » |
+
 
 ## L'échelle de résolutions d'une texture : jusqu'où on livre, et pourquoi (lot 16)
 

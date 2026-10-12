@@ -25,7 +25,7 @@ import {
   TILE_PROVIDERS,
 } from '@/registry/providers/runtimeServices';
 import { ALL_FACT_FIELDS, bodyFact } from '@/core/bodyFacts';
-import { groundResolutionKm } from '@/core/tilePyramid';
+import { groundResolutionKm, type TileMatrixShape } from '@/core/tilePyramid';
 import type { FactField, FactMethod } from '@/types';
 import { SMALL_BODY_ELEMENTS } from '@/config/smallBodies';
 import { INTERSTELLAR_OBJECTS } from '@/config/interstellar';
@@ -75,12 +75,71 @@ export interface HeightfieldProvenance {
   instrument: string;
   credit: string;
   sourceUrl: string;
-  /** Niveau du socle global de la pyramide de tuiles. */
+  /**
+   * Niveau le plus FIN du socle global (la Terre en cuit quatre, 3 à 6, parce que son imagerie
+   * commence au niveau 3), et la grille de la pyramide telle que le manifeste la déclare : la
+   * finesse affichée se calcule sur ELLE, pas sur la grille de Trek (lot 48).
+   */
   baseLevel: number;
+  matrix: TileMatrixShape;
+  /** Hôte qui sert les tuiles quand ce n'est pas le site lui-même, sinon `null`. */
+  servedBy: string | null;
   /** Aires nommées cuites plus finement, avec le niveau atteint. */
   areas: readonly { name: string; level: number }[];
   tiles: number;
   bytes: number;
+}
+
+/** Le manifeste d'un jeu de hauteurs, dans ce que la page en lit. */
+export interface HeightManifestSummary {
+  matrix: TileMatrixShape;
+  tileOrigin?: string;
+  tiles: number;
+  bytes: number;
+  coverage: { level: number; levels?: number[]; area?: { name: string } }[];
+}
+
+/**
+ * La ligne de relief d'un jeu : la fiche pour l'identité, le manifeste du cuiseur pour les
+ * MESURES. Une seule lecture, partagée par le plugin Vite et la garde de la page, pour que la
+ * page ne soit jamais comparée à une copie d'elle-même.
+ */
+export function heightfieldProvenance(
+  product: {
+    body: string;
+    title: string;
+    mission: string;
+    instrument: string;
+    providers: readonly { name: string }[];
+    links: readonly { rel: string; href: string }[];
+  },
+  manifest: HeightManifestSummary
+): HeightfieldProvenance {
+  return {
+    body: product.body,
+    title: product.title,
+    mission: product.mission,
+    instrument: product.instrument,
+    credit: product.providers.map((p) => p.name).join(' · '),
+    sourceUrl:
+      product.links.find((l) => l.rel === 'via')?.href ??
+      product.links.find((l) => l.rel === 'describedby')!.href,
+    baseLevel: Math.max(
+      ...manifest.coverage
+        .filter((entry) => !entry.area)
+        .flatMap((entry) => entry.levels ?? [entry.level])
+    ),
+    matrix: manifest.matrix,
+    servedBy: manifest.tileOrigin ? new URL(manifest.tileOrigin).host : null,
+    areas: manifest.coverage
+      .filter((entry) => entry.area)
+      .map((entry) => ({
+        name: entry.area!.name,
+        level: Math.max(...(entry.levels ?? [entry.level])),
+      })),
+    tiles: manifest.tiles,
+    bytes: manifest.bytes,
+  };
 }
 
 export interface SourcesInput {
@@ -869,9 +928,13 @@ function sourcesPage(input: SourcesInput, locale: DocLocale): DocPage {
 
   // ── Relief ──
   if (input.heightfields.length > 0) {
-    const metres = (body: string, level: number): string => {
+    const metres = (
+      body: string,
+      level: number,
+      matrix: TileMatrixShape
+    ): string => {
       const radiusKm = flat.get(body)?.realData?.radiusKm ?? 0;
-      const value = groundResolutionKm(level, radiusKm) * 1000;
+      const value = groundResolutionKm(level, radiusKm, matrix) * 1000;
       return value >= 1000
         ? `${(value / 1000).toFixed(2).replace('.', DECIMAL[locale])} km`
         : `${Math.round(value)} m`;
@@ -881,12 +944,15 @@ function sourcesPage(input: SourcesInput, locale: DocLocale): DocPage {
       set.sourceUrl
         ? link(set.sourceUrl, escapeHtml(set.title))
         : escapeHtml(set.title),
-      escapeHtml(metres(set.body, set.baseLevel)),
+      escapeHtml(metres(set.body, set.baseLevel, set.matrix)),
       set.areas.length === 0
         ? L({ en: 'none', fr: 'aucune', es: 'ninguno', 'pt-BR': 'nenhum' })
         : escapeHtml(
             set.areas
-              .map((area) => `${area.name} (${metres(set.body, area.level)})`)
+              .map(
+                (area) =>
+                  `${area.name} (${metres(set.body, area.level, set.matrix)})`
+              )
               .join(', ')
           ),
       escapeHtml(
@@ -896,7 +962,15 @@ function sourcesPage(input: SourcesInput, locale: DocLocale): DocPage {
             '.',
             DECIMAL[locale]
           )} ${L({ en: 'MB', fr: 'Mo', es: 'MB', 'pt-BR': 'MB' })}`
-      ),
+      ) +
+        (set.servedBy
+          ? ` · ${L({
+              en: 'served by',
+              fr: 'servies par',
+              es: 'servidas por',
+              'pt-BR': 'servidas por',
+            })} ${escapeHtml(set.servedBy)}`
+          : ''),
     ]);
     sections.push(
       docSection(
@@ -908,13 +982,19 @@ function sourcesPage(input: SourcesInput, locale: DocLocale): DocPage {
           es: 'Al acercarse, el suelo se desplaza con altitudes medidas, nunca con detalle inventado: sin relieve fractal, y sin usar una imagen de relieve sombreado como geometría. Las teselas se cuecen fuera de línea a partir de un modelo de elevación publicado, porque ninguna fuente de alturas en teselas se sirve con el encabezado de origen cruzado que un navegador necesita. Una base global cubre todo el cuerpo; unas pocas áreas nombradas, encuadradas en su formación publicada, se cuecen más finas.',
           'pt-BR':
             'Na aproximação, o solo é deslocado por altitudes medidas, nunca por detalhe inventado: sem relevo fractal, e sem usar uma imagem de relevo sombreado como geometria. Os blocos são cozidos offline a partir de um modelo de elevação publicado, porque nenhuma fonte de alturas em blocos é servida com o cabeçalho de origem cruzada que um navegador precisa. Uma base global cobre todo o corpo; algumas áreas nomeadas, enquadradas na sua formação publicada, são cozidas mais finas.',
+        })}</p><p>${L({
+          en: 'On the Earth, the elevation model gives the floor under the water (the oceans, and a few large lakes), whereas the imagery shows its surface. The bodies of water whose floor it publishes are therefore brought back to their level before cooking, outlined by the NASA GIBS water mask, and the manifest lists every body changed with its level. These tiles are too heavy for the site host and are served by the Galaxy data service.',
+          fr: 'Sur la Terre, le modèle d’élévation donne le fond sous l’eau (les océans, et quelques grands lacs), alors que l’imagerie en montre la surface. Les étendues dont il publie le fond sont donc ramenées à leur niveau avant la cuisson, délimitées par le masque d’eau de NASA GIBS, et le manifeste liste chaque étendue modifiée avec son niveau. Ces tuiles sont trop lourdes pour l’hébergeur du site et sont servies par le service de données de Galaxy.',
+          es: 'En la Tierra, el modelo de elevación da el fondo bajo el agua (los océanos y algunos grandes lagos), mientras que las imágenes muestran su superficie. Las masas de agua cuyo fondo publica se devuelven por tanto a su nivel antes de la cocción, delimitadas por la máscara de agua de NASA GIBS, y el manifiesto enumera cada masa modificada con su nivel. Estas teselas pesan demasiado para el alojamiento del sitio y las sirve el servicio de datos de Galaxy.',
+          'pt-BR':
+            'Na Terra, o modelo de elevação dá o fundo sob a água (os oceanos e alguns grandes lagos), enquanto as imagens mostram a sua superfície. As massas de água cujo fundo ele publica são portanto levadas de volta ao seu nível antes do cozimento, delimitadas pela máscara de água da NASA GIBS, e o manifesto lista cada massa modificada com o seu nível. Esses blocos são pesados demais para a hospedagem do site e são servidos pelo serviço de dados do Galaxy.',
         })}</p>` +
           docTable(
             L({
-              en: 'Height tile sets shipped',
-              fr: 'Jeux de tuiles de hauteurs livrés',
-              es: 'Conjuntos de teselas de altura entregados',
-              'pt-BR': 'Conjuntos de blocos de altura entregues',
+              en: 'Height tile sets',
+              fr: 'Jeux de tuiles de hauteurs',
+              es: 'Conjuntos de teselas de altura',
+              'pt-BR': 'Conjuntos de blocos de altura',
             }),
             [
               L({ en: 'Body', fr: 'Corps', es: 'Cuerpo', 'pt-BR': 'Corpo' }),
@@ -937,10 +1017,10 @@ function sourcesPage(input: SourcesInput, locale: DocLocale): DocPage {
                 'pt-BR': 'Áreas nomeadas',
               }),
               L({
-                en: 'Tiles shipped',
-                fr: 'Tuiles livrées',
-                es: 'Teselas entregadas',
-                'pt-BR': 'Blocos entregues',
+                en: 'Tiles',
+                fr: 'Tuiles',
+                es: 'Teselas',
+                'pt-BR': 'Blocos',
               }),
             ],
             reliefRows

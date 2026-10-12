@@ -38,6 +38,24 @@ L'image joue les deux contrôles hors réseau au build (`ingest.py --self-test`,
 `era5.py --self-test`) : une image qui casserait le format, l'origine du temps d'ERA5 ou le pont
 des analyses ne se construit pas.
 
+## Le relief de la Terre (lot 48)
+
+Le service sert aussi les tuiles de hauteurs de la Terre (`assets/height-tiles/earth/<hachage>/`,
+562 Mo), cuites par `pnpm surface:tiles --only earth-etopo-2022` dans `.cache/galaxy-data/`. Leur
+manifeste vit sur le SITE (`public/assets/height-tiles/earth/manifest.json`) et nomme le
+répertoire haché : téléverser les tuiles AVANT de livrer un manifeste qui les nomme.
+
+```bash
+# depuis le dépôt, après une cuisson
+tar cf earth-heights.tar -C .cache/galaxy-data assets
+scp earth-heights.tar ubuntu@82.70.233.45:/tmp/
+ssh ubuntu@82.70.233.45 'docker run --rm -v galaxy-data_galaxy_data:/srv -v /tmp/earth-heights.tar:/in.tar:ro alpine tar xf /in.tar -C /srv && rm /tmp/earth-heights.tar'
+```
+
+Un répertoire d'une cuisson précédente peut rester tant qu'un visiteur garde l'ancien manifeste ;
+il se retire à la main une fois le nouveau livré. L'ingestion GFS n'élague que `gfs/`, `era5/` et
+`era5t/`, jamais `assets/`.
+
 ## Vérifier
 
 ```bash

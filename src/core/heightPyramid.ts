@@ -50,11 +50,12 @@ export interface HeightSource {
  */
 export function heightTileFor(
   imagery: TileIndex,
-  coverage: readonly HeightCoverageEntry[]
+  coverage: readonly HeightCoverageEntry[],
+  shape: TileMatrixShape = WMTS_EQUIRECTANGULAR_2x1
 ): HeightSource | null {
   let best: { level: number; entry: HeightCoverageEntry } | null = null;
   for (const entry of coverage) {
-    if (entry.bounds && !containsTile(entry.bounds, imagery)) continue;
+    if (entry.bounds && !containsTile(entry.bounds, imagery, shape)) continue;
     for (const level of entry.levels) {
       if (level > imagery.level) continue;
       if (best === null || level > best.level) best = { level, entry };
@@ -70,6 +71,21 @@ export function heightTileFor(
     },
     entry: best.entry,
   };
+}
+
+/**
+ * Les hauteurs et l'imagerie décrivent-elles la MÊME grille (lot 48) ? Une tuile d'imagerie ne
+ * désigne sa tuile de hauteurs que par son indice : sur deux grilles différentes (Trek 2 × 1 au
+ * niveau 0, GIBS 10 × 5 au niveau 3), le même indice tombe ailleurs sur le globe, et le relief
+ * serait posé à côté de son image sans que rien ne le dise. La taille des tuiles en pixels n'y
+ * entre pas : une tuile de hauteurs a ses propres échantillons.
+ */
+export function sameGrid(a: TileMatrixShape, b: TileMatrixShape): boolean {
+  return (
+    a.columnsAtLevelZero === b.columnsAtLevelZero &&
+    a.rowsAtLevelZero === b.rowsAtLevelZero &&
+    (a.referenceLevel ?? 0) === (b.referenceLevel ?? 0)
+  );
 }
 
 /** L'emprise d'une tuile d'imagerie tient-elle ENTIÈREMENT dans une emprise cuite ? */

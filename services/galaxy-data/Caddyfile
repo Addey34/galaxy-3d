@@ -25,6 +25,13 @@
 	header @field ?Cache-Control "public, max-age=31536000, immutable"
 	header @field ?Content-Type application/octet-stream
 
+	# Le relief de la Terre (lot 48) : des tuiles dont le RÉPERTOIRE porte le hachage de leur
+	# contenu (`assets/height-tiles/earth/<hachage>/…`), donc une adresse ne change jamais d'octets.
+	# Son manifeste vit sur le site, pas ici : il est petit et les gardes du dépôt le lisent.
+	@heights path *.hgt
+	header @heights Cache-Control "public, max-age=31536000, immutable"
+	header @heights Content-Type application/octet-stream
+
 	# Rien d'autre n'est servi : ni liste de dossier, ni fichier en cours d'écriture.
 	@hidden path */.* *.part
 	respond @hidden 404

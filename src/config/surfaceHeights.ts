@@ -18,6 +18,7 @@
 import type { HeightfieldSetProduct } from '@/registry/schema/product';
 import type { HeightCoverageEntry } from '@/core/heightPyramid';
 import type { DatedProduct, TimeInterval } from '@/core/temporal';
+import type { TileMatrixShape } from '@/core/tilePyramid';
 
 const asHeightfield = (record: unknown): HeightfieldSetProduct =>
   record as HeightfieldSetProduct;
@@ -48,6 +49,18 @@ export interface SurfaceHeightSet {
 export interface HeightManifest {
   /** Répertoire publié des tuiles, haché par le contenu. */
   directory: string;
+  /**
+   * Origine qui SERT les tuiles, vide pour le site lui-même (lot 48). Le relief de la Terre pèse
+   * des centaines de mégaoctets et vit sur le service de données de la VM, pas sur Firebase dont
+   * le quota de stockage a déjà cassé un déploiement : le manifeste reste sur le site (il est
+   * petit, et les gardes le lisent dans le dépôt), les tuiles non.
+   */
+  tileOrigin: string;
+  /**
+   * La grille de la pyramide, écrite par le cuiseur : celle de l'imagerie du corps, puisqu'une
+   * tuile d'imagerie désigne sa tuile de hauteurs par son seul indice (`core/heightPyramid.ts`).
+   */
+  matrix: TileMatrixShape;
   /** Échantillons par côté d'une tuile (registre grille). */
   samples: number;
   quantumMetres: number;
@@ -108,11 +121,18 @@ export function heightTilePath(
   manifest: HeightManifest,
   index: { level: number; row: number; column: number }
 ): string {
-  return `/${manifest.directory}/${index.level}/${index.row}/${index.column}.hgt`;
+  return `${manifest.tileOrigin}/${manifest.directory}/${index.level}/${index.row}/${index.column}.hgt`;
 }
 
 interface RawManifest {
   directory?: unknown;
+  tileOrigin?: unknown;
+  matrix?: {
+    columnsAtLevelZero?: unknown;
+    rowsAtLevelZero?: unknown;
+    tileSizePx?: unknown;
+    referenceLevel?: unknown;
+  };
   format?: { samples?: unknown };
   quantumMetres?: unknown;
   offsetMetres?: unknown;
@@ -145,6 +165,40 @@ export function parseHeightManifest(raw: unknown): HeightManifest {
     );
   if (!Array.isArray(data.coverage) || data.coverage.length === 0)
     throw new Error('manifeste de hauteurs : couverture vide');
+  // Une origine absente est le site lui-même ; une origine présente est une adresse https NUE,
+  // sans chemin : le répertoire s'écrit à sa suite, exactement comme sur le site.
+  const tileOrigin = data.tileOrigin ?? '';
+  if (
+    typeof tileOrigin !== 'string' ||
+    (tileOrigin !== '' && !/^https:\/\/[a-z0-9.-]+$/.test(tileOrigin))
+  )
+    throw new Error(
+      `manifeste de hauteurs : origine des tuiles invalide (${String(tileOrigin)})`
+    );
+  const integer = (value: unknown, name: string, minimum: number): number => {
+    const found = number(value, name, minimum);
+    if (!Number.isInteger(found))
+      throw new Error(`manifeste de hauteurs : ${name} non entier (${found})`);
+    return found;
+  };
+  const matrix: TileMatrixShape = {
+    columnsAtLevelZero: integer(
+      data.matrix?.columnsAtLevelZero,
+      'colonnes de la grille',
+      1
+    ),
+    rowsAtLevelZero: integer(
+      data.matrix?.rowsAtLevelZero,
+      'lignes de la grille',
+      1
+    ),
+    tileSizePx: integer(data.matrix?.tileSizePx, 'taille de tuile', 1),
+    referenceLevel: integer(
+      data.matrix?.referenceLevel,
+      'niveau de référence de la grille',
+      0
+    ),
+  };
 
   const coverage: HeightCoverageEntry[] = data.coverage.map((entry, rank) => {
     const record = entry as {
@@ -183,6 +237,8 @@ export function parseHeightManifest(raw: unknown): HeightManifest {
   const elevation = data.elevationMetres ?? {};
   return {
     directory,
+    tileOrigin,
+    matrix,
     samples,
     quantumMetres: number(data.quantumMetres, 'quantum', Number.MIN_VALUE),
     offsetMetres:

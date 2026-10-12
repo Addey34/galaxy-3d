@@ -849,6 +849,101 @@ test('paints the Earth from NASA GIBS, never below its reference level', async (
 });
 
 /**
+ * LE RELIEF DE LA TERRE, SERVI PAR LE SERVICE DE DONNÉES (lot 48). ETOPO 2022 cuit sur la grille de
+ * l'imagerie GIBS pèse 562 Mo : ses tuiles vivent sur `galaxy-data.adrianguichard.dev`, pas sur
+ * Firebase, et son manifeste sur le site. Ce scénario tient les trois choses qu'aucune capture ne
+ * montre : l'ORIGINE demandée, le répertoire HACHÉ du manifeste, et la GRILLE (10 × 5 au niveau 3,
+ * jamais en dessous) ; sur la grille de Trek, le même indice tomberait ailleurs sur le globe.
+ *
+ * Les tuiles sont servies par le test, d'altitude nulle et d'en-tête exact (le décodeur refuse une
+ * tuile dont l'en-tête ne nomme pas l'indice demandé) : ce qui est mesuré est la DEMANDE.
+ */
+function flatHeightTile(level: number, row: number, column: number): Buffer {
+  const samples = 257;
+  const bytes = Buffer.alloc(32 + samples * samples * 2);
+  bytes.write('GXHT', 0, 'latin1');
+  bytes.writeUInt16LE(1, 4);
+  bytes.writeUInt16LE(32, 6);
+  bytes.writeUInt16LE(level, 8);
+  bytes.writeUInt16LE(row, 10);
+  bytes.writeUInt16LE(column, 12);
+  bytes.writeUInt16LE(samples, 14);
+  bytes.writeDoubleLE(1, 16);
+  bytes.writeDoubleLE(0, 24);
+  return bytes;
+}
+
+test('raises the Earth from ETOPO relief, asked of the data service on the GIBS grid', async ({
+  page,
+}) => {
+  const errors: string[] = [];
+  page.on('pageerror', (err) => errors.push(err.message));
+  const manifest = JSON.parse(
+    readFileSync(
+      resolve(HERE, '../public/assets/height-tiles/earth/manifest.json'),
+      'utf-8'
+    )
+  ) as { directory: string; tileOrigin: string };
+  await page.route(
+    '**gibs.earthdata.nasa.gov/wmts/epsg4326/best/BlueMarble_NextGeneration/**',
+    (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: 'image/jpeg',
+        headers: { 'access-control-allow-origin': '*' },
+        body: TILE_JPEG,
+      })
+  );
+  const asked: string[] = [];
+  await page.route('**galaxy-data.adrianguichard.dev/**/*.hgt', (route) => {
+    const url = route.request().url();
+    asked.push(url);
+    const match = /\/(\d+)\/(\d+)\/(\d+)\.hgt$/.exec(url);
+    if (!match) return route.abort();
+    const [level, row, column] = match.slice(1).map(Number) as [
+      number,
+      number,
+      number,
+    ];
+    return route.fulfill({
+      status: 200,
+      contentType: 'application/octet-stream',
+      headers: { 'access-control-allow-origin': '*' },
+      body: flatHeightTile(level, row, column),
+    });
+  });
+
+  await boot(page, '?debug-surface&mode=explo&body=earth');
+  await expect(page.locator('#surface-probe')).toContainText('earth', {
+    timeout: 30_000,
+  });
+  await zoomIn(page);
+  const badge = page.locator('#surface-imagery');
+  await expect(badge).toHaveAttribute('data-relief', /\d+/, {
+    timeout: 30_000,
+  });
+  await expect(badge.locator('.si-relief')).toContainText('ETOPO 2022');
+  await expect(badge.locator('.si-credit')).toContainText('NOAA');
+
+  expect(asked.length, 'aucune tuile de relief demandée').toBeGreaterThan(0);
+  for (const url of asked) {
+    expect(
+      url.startsWith(`${manifest.tileOrigin}/${manifest.directory}/`),
+      url
+    ).toBe(true);
+    const [level, row, column] = /\/(\d+)\/(\d+)\/(\d+)\.hgt$/
+      .exec(url)!
+      .slice(1)
+      .map(Number) as [number, number, number];
+    expect(level, url).toBeGreaterThanOrEqual(3);
+    const scale = 2 ** (level - 3);
+    expect(row, url).toBeLessThan(5 * scale);
+    expect(column, url).toBeLessThan(10 * scale);
+  }
+  expect(errors, `Erreurs page : ${errors.join(' | ')}`).toEqual([]);
+});
+
+/**
  * LA TERRE DU JOUR DE LA SCÈNE (lot 48) : VIIRS SNPP, un jour par image, sur réglage.
  *
  * Deux affirmations, l'une par scénario, parce qu'aucune ne se voit sur une capture :
