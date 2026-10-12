@@ -128,9 +128,14 @@ for (const mode of ['slow index', 'search code unavailable'] as const) {
   test(`the result count is announced even with a ${mode}`, async ({
     page,
   }) => {
+    // Un ORDRE, pas une durée : une borne en secondes mesurait aussi la vitesse du coureur
+    // (3,1 s sur la CI du 2026-10-12, annonce pourtant faite). L'index retenu dix secondes,
+    // l'annonce doit être LÀ avant qu'il soit rendu, et le morceau refusé, avant ce même délai.
+    let released = false;
     if (mode === 'slow index')
       await page.route(`**${INDEX}`, async (route) => {
-        await new Promise((resolve) => setTimeout(resolve, 3_000));
+        await new Promise((resolve) => setTimeout(resolve, 10_000));
+        released = true;
         return route.continue();
       });
     // Le MORCEAU introuvable (hors ligne, déploiement en cours) : l'index refusé, lui, laissait
@@ -138,9 +143,22 @@ for (const mode of ['slow index', 'search code unavailable'] as const) {
     else await page.route('**/*paletteSearch*', (route) => route.abort());
     await openPalette(page);
     const live = page.locator('body > p[role="status"][aria-live="polite"]');
-    const typedAt = Date.now();
     await page.locator('#palette-input').fill('mars');
-    await expect(live).toContainText(/match/i, { timeout: 2_500 });
-    expect(Date.now() - typedAt).toBeLessThan(2_500);
+    await expect(live).toContainText(/match/i, { timeout: 9_000 });
+    expect(released, 'annoncé seulement APRÈS l’arrivée de l’index').toBe(
+      false
+    );
   });
 }
+test('a discovery: found by its discoverer, it shows the body', async ({
+  page,
+}) => {
+  await openPalette(page);
+  await page.locator('#palette-input').pressSequentially('herschel');
+  const hit = page
+    .locator('.palette-hit[data-kind="discovery"]')
+    .filter({ hasText: 'Titania' });
+  await expect(hit).toContainText('1787');
+  await hit.click();
+  await expect(page).toHaveURL(/\/titania\//, { timeout: 30_000 });
+});

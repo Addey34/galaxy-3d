@@ -12,7 +12,9 @@
  *     catalogue si elle est UNIQUE (dont la fiche liste la mission), sinon sa page, qui donne
  *     toutes ses cibles ;
  *   - un instrument : sa sonde ;
- *   - un survol : la date du point le plus proche, la sonde, en Explo.
+ *   - un survol : la date du point le plus proche, la sonde, en Explo ;
+ *   - une découverte : le corps, ou son parent quand on ne le dessine pas (sa fiche dit ce qu'on
+ *     savait à la date de la scène).
  */
 import { iauLongitudeToSceneLongitude } from '@/core/gazetteer';
 import {
@@ -113,6 +115,8 @@ export function hitDetail(hit: SearchHit): string {
       return bodyDisplayName(hit.probe);
     case 'flyby':
       return '';
+    case 'discovery':
+      return [hit.when, hit.who].filter(Boolean).join(' · ');
   }
 }
 
@@ -213,6 +217,9 @@ export function runHit(
     }
     case 'instrument':
       context.selectBody(hit.probe);
+      return;
+    case 'discovery':
+      context.selectBody(hit.body);
       return;
     case 'flyby': {
       const om = api.orbitalMechanics;

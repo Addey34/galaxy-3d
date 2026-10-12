@@ -135,6 +135,7 @@ export const en = {
   'search.group.place': 'Places',
   'search.group.mission': 'Missions',
   'search.group.instrument': 'Instruments',
+  'search.group.discovery': 'Discoveries',
   'search.group.flyby': 'Flybys',
   'search.missionPage': 'mission page',
   'nav.searchPlaceholder': 'Search a body, a crater, a mission…',

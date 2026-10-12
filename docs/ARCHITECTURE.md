@@ -5615,12 +5615,13 @@ clé `STORAGE_KEYS` nouvelle à déclarer.
 La palette (`#body-palette`) ne cherchait que des noms de corps. Elle cherche désormais aussi des
 **couches de données** (les couches météo de l'application), des **lieux** (les formations
 nommées par l'UAI), des **missions** (le registre du PDS), des **instruments** (ceux qu'une sonde
-embarque) et des **survols** (mesurés à la seconde). Chaque
+embarque), des **survols** (mesurés à la seconde) et des **découvertes** (« Herschel » trouve
+Uranus, Titania, Obéron, Mimas et Encelade). Chaque
 résultat AGIT : la recherche est une navigation, pas un annuaire.
 
 **L'index se DÉRIVE.** `pnpm search:generate` (`scripts/generate-search-index.mjs`) le lit dans
 les fichiers déjà livrés (gazetteer, `missionCatalogue.json`, fichiers d'instruments,
-`flybyEvents.json`) et écrit `public/assets/search/index.json` ; aucune entrée n'est écrite à la
+`flybyEvents.json`, fichiers de découverte et `discoveryIndex.json`) et écrit `public/assets/search/index.json` ; aucune entrée n'est écrite à la
 main. `src/config/searchIndex.test.ts` exige que le fichier livré soit exactement ce que le
 générateur rend (falsifié par un octet), et que chaque cible nommée soit sélectionnable. À rejouer
 après tout générateur de ces sources ; `--check` sort en code 1 sur une dérive.
@@ -5654,7 +5655,12 @@ caractères ; une lettre ne demande rien (`e2e/search.spec.ts`).
   29 plusieurs, 8 aucune. La sonde d'une mission se DÉRIVE : le fichier d'instruments d'une sonde
   déclare les investigations où elle figure.
 - **un instrument** : sa sonde, grisé comme elle quand elle n'existe pas à cette date ;
-- **un survol** : la date du point le plus proche, la sonde, en Explo.
+- **un survol** : la date du point le plus proche, la sonde, en Explo ;
+- **une découverte** : le corps, ou son PARENT quand on ne le dessine pas (Pan montre Saturne),
+  dont la fiche dit ce qu'on savait à la date de la scène. 515 découvertes : les satellites des
+  fichiers de chaque système, puis les corps du catalogue qui n'y sont pas, par leur seule
+  revendication DATÉE (jour ou année). « Préhistorique », « antique » et un retour PRÉDIT (Halley,
+  1758, que NASA Science requalifie) ne sont pas une découverte à ce jour-là et n'entrent pas.
 
 **Le cœur est pur** (`core/search.ts`) : casse, accents et apostrophes pliés (« ʻOumuamua » se
 tape « oumuamua »), tous les mots doivent correspondre, le contexte compris (« copernicus moon »
@@ -5677,7 +5683,7 @@ désormais servis en `max-age=3600, must-revalidate` et en réseau d'abord, comm
 `src/config/stableAssetCaching.test.ts` croise les deux côtés.
 
 **Écrit, pas oublié** : l'imagerie de surface comme couche de données (elle s'active aujourd'hui
-d'elle-même à l'approche, par un interrupteur des Réglages), et les découvertes comme événements. Plan et journal :
+d'elle-même à l'approche, par un interrupteur des Réglages). Plan et journal :
 `docs/private/RECHERCHE_LOT47.md`.
 
 ## Le service de données de Galaxy (lot 46, 2026-10-12)

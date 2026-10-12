@@ -28,6 +28,11 @@ const file: SearchIndexFile = {
   missions: [['Cassini-Huygens', 'chs', 'cassini', 'saturn']],
   instruments: [['Imaging Science Subsystem', 'cassini']],
   flybys: [['voyager2', 'neptune', '1989-08-25T03:56:36Z']],
+  discoveries: [
+    ['Titania', 'uranus', '1787', 'W. Herschel'],
+    ['Pan', 'saturn', '1990', 'M.R. Showalter'],
+    [null, 'mars', '1610', null],
+  ],
 };
 const index = prepareSearchIndex(file, nameOf, [
   { id: 'wind', label: 'Wind (model)', body: 'earth' },
@@ -84,6 +89,19 @@ describe('searchPrepared', () => {
     });
     // Le corps de la couche est dans son contexte : « earth wind » la trouve aussi.
     expect(labels('earth wind')).toEqual(['dataset:Wind (model)']);
+  });
+
+  it('une découverte se trouve par son découvreur et montre son corps', () => {
+    expect(labels('herschel')).toEqual(['discovery:Titania']);
+    expect(searchPrepared(index, 'showalter')[0]).toEqual({
+      kind: 'discovery',
+      label: 'Pan',
+      body: 'saturn',
+      when: '1990',
+      who: 'M.R. Showalter',
+    });
+    // Sans nom propre, la découverte prend celui du corps.
+    expect(labels('mars 1610')).toEqual(['discovery:Mars']);
   });
 
   it('chaque résultat porte de quoi agir', () => {
