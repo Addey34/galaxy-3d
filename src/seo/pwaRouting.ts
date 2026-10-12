@@ -28,8 +28,11 @@ const ECLIPSE_SEGMENT = 'eclipse';
  */
 const MISSIONS_SEGMENT = 'missions';
 
+/** Segment des pages de survol (`/flybys/voyager2-neptune-1989-08-25/`), `documentPage.ts::FLYBYS_SLUG`. */
+const FLYBYS_SEGMENT = 'flybys';
+
 /** Les rubriques dont les pages vivent DEUX segments sous la racine, ou sous la langue. */
-const NESTED_SEGMENTS = [ECLIPSE_SEGMENT, MISSIONS_SEGMENT];
+const NESTED_SEGMENTS = [ECLIPSE_SEGMENT, MISSIONS_SEGMENT, FLYBYS_SEGMENT];
 
 /**
  * Préfixes des pages documentaires NON anglaises (`/fr/methodology/`, `/es/…`, `/pt-br/…`).

@@ -53,7 +53,7 @@ function generatedDocuments(): string[] {
   ];
   const docs: string[] = [];
   for (const prefix of prefixes)
-    for (const name of ['methodology', 'sources', 'missions'])
+    for (const name of ['methodology', 'sources', 'missions', 'flybys'])
       if (existsSync(join(DIST, prefix, name, 'index.html')))
         docs.push(prefix ? `${prefix}/${name}` : name);
   return docs;
@@ -74,6 +74,14 @@ const INSTRUMENT_PAGE = 'voyager1';
  */
 const MISSION_PAGES = DOCUMENTS.filter((d) => d.endsWith('missions')).map(
   (index) => `${index}/voyager`
+);
+
+/**
+ * Une page de survol (2026-10-12), la sixième famille, dans les quatre langues : une PRÉDICTION,
+ * dont la note est le plus long paragraphe de la famille.
+ */
+const FLYBY_PAGES = DOCUMENTS.filter((d) => d.endsWith('flybys')).map(
+  (index) => `${index}/solar-orbiter-venus-2026-12-24`
 );
 
 async function settleAnimations(page: Page): Promise<void> {
@@ -141,10 +149,12 @@ async function expectSeparatedLanguages(page: Page, path: string) {
 test.describe('pages générées, à 390 px', () => {
   test.use({ viewport: { width: 390, height: 844 } });
 
-  test('la dérivation trouve les trois documents dans les quatre langues', () => {
+  test('la dérivation trouve les quatre documents dans les quatre langues', () => {
     // Un compte, pour qu'une langue perdue se voie ici plutôt que par l'absence d'un scénario.
-    expect(DOCUMENTS.length).toBe(12);
+    expect(DOCUMENTS.length).toBe(16);
     expect(MISSION_PAGES.length).toBe(4);
+    expect(FLYBY_PAGES.length).toBe(4);
+    expect(DOCUMENTS).toContain('pt-br/flybys');
     expect(DOCUMENTS).toContain('methodology');
     expect(DOCUMENTS).toContain('es/missions');
     expect(DOCUMENTS).toContain('fr/sources');
@@ -171,7 +181,7 @@ test.describe('pages générées, à 390 px', () => {
     await checkDocument(page, INSTRUMENT_PAGE);
   });
 
-  for (const path of MISSION_PAGES) {
+  for (const path of [...MISSION_PAGES, ...FLYBY_PAGES]) {
     test(`/${path} se charge, passe axe et ne déborde pas`, async ({
       page,
     }) => {
@@ -209,7 +219,12 @@ test.describe('pages générées, à 390 px', () => {
     const shell =
       (await page.locator('h1').first().textContent())?.trim() ?? '';
     expect(shell.length, 'la coquille porte un <h1>').toBeGreaterThan(0);
-    for (const path of [...DOCUMENTS, BODY_PAGE, INSTRUMENT_PAGE])
+    for (const path of [
+      ...DOCUMENTS,
+      BODY_PAGE,
+      INSTRUMENT_PAGE,
+      ...FLYBY_PAGES,
+    ])
       expect(
         builtHeading(path),
         `${path} ne se distingue pas de la coquille`
