@@ -131,6 +131,7 @@ export const en = {
   'offline.progress': 'Downloading: {done} of {total} files.',
   'offline.started': 'Offline preparation started.',
   'offline.forget': 'Free {size} MB',
+  'search.group.dataset': 'Data layers',
   'search.group.place': 'Places',
   'search.group.mission': 'Missions',
   'search.group.instrument': 'Instruments',

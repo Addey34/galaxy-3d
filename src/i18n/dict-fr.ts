@@ -105,6 +105,7 @@ export const fr: Record<MessageKey, string> = {
   'offline.progress': 'Téléchargement : {done} fichiers sur {total}.',
   'offline.started': 'Préparation du hors-ligne lancée.',
   'offline.forget': 'Libérer {size} Mo',
+  'search.group.dataset': 'Couches de données',
   'search.group.place': 'Lieux',
   'search.group.mission': 'Missions',
   'search.group.instrument': 'Instruments',

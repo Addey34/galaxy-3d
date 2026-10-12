@@ -97,3 +97,23 @@ test('a mission whose probe is gone at this date opens its page', async ({
     timeout: 30_000,
   });
 });
+
+test('a data layer: Earth, the weather panel open, the layer checked', async ({
+  page,
+}) => {
+  await openPalette(page);
+  await page.locator('#palette-input').pressSequentially('wind');
+  const hit = page.locator('.palette-hit[data-kind="dataset"]').first();
+  await expect(hit).toContainText('Wind (model)');
+  await expect(hit).toContainText('Earth');
+  await hit.click();
+  await expect(page).toHaveURL(/\/earth\//, { timeout: 30_000 });
+  await expect(page.locator('#weather-layers')).toBeVisible();
+  // La case cochée est celle du panneau : le même chemin qu'un clic.
+  await expect(
+    page
+      .locator('#weather-layers .wl-item')
+      .filter({ hasText: 'Wind (model)' })
+      .locator('input')
+  ).toBeChecked();
+});

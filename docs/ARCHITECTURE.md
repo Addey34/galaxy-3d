@@ -5573,8 +5573,9 @@ clé `STORAGE_KEYS` nouvelle à déclarer.
 ## La recherche universelle typée (lot 47, 2026-10-12)
 
 La palette (`#body-palette`) ne cherchait que des noms de corps. Elle cherche désormais aussi des
-**lieux** (les formations nommées par l'UAI), des **missions** (le registre du PDS), des
-**instruments** (ceux qu'une sonde embarque) et des **survols** (mesurés à la seconde). Chaque
+**couches de données** (les couches météo de l'application), des **lieux** (les formations
+nommées par l'UAI), des **missions** (le registre du PDS), des **instruments** (ceux qu'une sonde
+embarque) et des **survols** (mesurés à la seconde). Chaque
 résultat AGIT : la recherche est une navigation, pas un annuaire.
 
 **L'index se DÉRIVE.** `pnpm search:generate` (`scripts/generate-search-index.mjs`) le lit dans
@@ -5593,6 +5594,11 @@ caractères ; une lettre ne demande rien (`e2e/search.spec.ts`).
 
 **Ce que fait un résultat**, toujours par les commandes que l'application possède déjà :
 
+- **une couche de données** : la Terre, puis la couche cochée PAR SA CASE du panneau météo
+  (`WeatherLayersApi.show`), donc avec l'exclusivité, la légende et le badge d'un clic, panneau
+  ouvert. Ces couches ne sont pas dans le fichier d'index : elles sont dans l'application, qui
+  donne leurs libellés traduits (« wind », « température »). Falsifié : sans l'appel au panneau,
+  `e2e/search.spec.ts` rougit.
 - **un lieu** : son corps, puis la caméra FACE à la formation une fois le vol fini (sinon le vol
   l'écraserait). La position vient du fichier du gazetteer du corps, que l'application charge déjà
   à l'approche ; la direction va du centre du corps RENDU au point que
@@ -5630,8 +5636,8 @@ noms stables, réécrits à chaque régénération, et tombaient sous l'`immutab
 désormais servis en `max-age=3600, must-revalidate` et en réseau d'abord, comme les textures ;
 `src/config/stableAssetCaching.test.ts` croise les deux côtés.
 
-**Écrit, pas oublié** : les « datasets » (couches météo, imagerie de surface) comme résultat qui
-ACTIVE une couche, et les découvertes comme événements. Plan et journal :
+**Écrit, pas oublié** : l'imagerie de surface comme couche de données (elle s'active aujourd'hui
+d'elle-même à l'approche, par un interrupteur des Réglages), et les découvertes comme événements. Plan et journal :
 `docs/private/RECHERCHE_LOT47.md`.
 
 ## Le service de données de Galaxy (lot 46, 2026-10-12)

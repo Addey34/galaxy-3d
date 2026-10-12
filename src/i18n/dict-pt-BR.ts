@@ -113,6 +113,7 @@ export const ptBR: Record<MessageKey, string> = {
   'offline.progress': 'Baixando: {done} de {total} arquivos.',
   'offline.started': 'Preparação offline iniciada.',
   'offline.forget': 'Liberar {size} MB',
+  'search.group.dataset': 'Camadas de dados',
   'search.group.place': 'Lugares',
   'search.group.mission': 'Missões',
   'search.group.instrument': 'Instrumentos',

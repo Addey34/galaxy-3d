@@ -5,7 +5,8 @@
  * `core/search.ts`, l'index est dérivé par `scripts/generate-search-index.mjs`.
  *
  * Chaque résultat AGIT, par les commandes que l'application possède déjà (la sélection partagée,
- * le mode, l'horloge, la caméra), jamais par un chemin à lui :
+ * le mode, l'horloge, la caméra, le panneau météo), jamais par un chemin à lui :
+ *   - une couche de données : son corps, puis la couche cochée PAR SA CASE, panneau ouvert ;
  *   - un lieu : son corps, puis la caméra face à la formation, une fois le vol fini ;
  *   - une mission : sa sonde si on la dessine et qu'elle existe à cette date, sinon sa cible du
  *     catalogue si elle est UNIQUE (dont la fiche liste la mission), sinon sa page, qui donne
@@ -18,6 +19,7 @@ import {
   prepareSearchIndex,
   searchPrepared,
   type PreparedIndex,
+  type SearchDataset,
   type SearchHit,
   type SearchIndexFile,
   type SearchKind,
@@ -38,6 +40,10 @@ export interface SearchContext {
   setMode(mode: 'educ' | 'explo'): void;
   /** Re-synchronise le permalien après une action qui a changé la date ou le cadrage. */
   sync(): void;
+  /** Les couches de données de l'application, libellé dans la langue courante. */
+  datasets(): SearchDataset[];
+  /** Active une couche comme un clic sur sa case, et montre son panneau. */
+  showDataset(id: string): void;
 }
 
 /** Adresse ABSOLUE : une adresse relative résoudrait sous `/titan/` quand on démarre sur une page de corps. */
@@ -65,7 +71,10 @@ function loadIndex(): Promise<SearchIndexFile | null> {
 }
 
 /** Les résultats typés d'une requête ; `[]` tant que l'index n'est pas là ou s'il manque. */
-export async function searchTyped(query: string): Promise<SearchHit[]> {
+export async function searchTyped(
+  query: string,
+  context: SearchContext
+): Promise<SearchHit[]> {
   const data = await loadIndex();
   if (!data) return [];
   const locale = getLocale();
@@ -73,7 +82,11 @@ export async function searchTyped(query: string): Promise<SearchHit[]> {
   if (prepared?.locale !== locale)
     prepared = {
       locale,
-      index: prepareSearchIndex(data, (id) => bodyDisplayName(id)),
+      index: prepareSearchIndex(
+        data,
+        (id) => bodyDisplayName(id),
+        context.datasets()
+      ),
     };
   return searchPrepared(prepared.index, query);
 }
@@ -87,6 +100,7 @@ export function hitProbe(hit: SearchHit): string | null {
 /** La ligne secondaire d'un résultat : de quoi il s'agit, dans la langue courante. */
 export function hitDetail(hit: SearchHit): string {
   switch (hit.kind) {
+    case 'dataset':
     case 'place':
       return bodyDisplayName(hit.body);
     case 'mission':
@@ -175,6 +189,10 @@ export function runHit(
 ): void {
   const { api } = context;
   switch (hit.kind) {
+    case 'dataset':
+      context.selectBody(hit.body);
+      context.showDataset(hit.id);
+      return;
     case 'place': {
       context.selectBody(hit.body);
       void lookAtFormation(hit.body, hit.label, context);

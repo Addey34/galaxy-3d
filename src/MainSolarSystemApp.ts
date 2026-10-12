@@ -307,7 +307,7 @@ function wireChrome(): {
     // partagent le même mesh Terre) : nuages, pluie. Les couches modèle COLORÉES (température,
     // pression, humidité) partagent TOUTES le mesh `thermal` → un seul groupe les rend exclusives
     // entre elles ET avec la couche satellite température (activer l'une masque les autres).
-    setupWeatherLayers(
+    const weatherPanel = setupWeatherLayers(
       api,
       {
         layers: weatherLayers,
@@ -726,6 +726,14 @@ function wireChrome(): {
       selectBody: (name) => planetNav.selectBody(name),
       setMode: (mode) => modeSwitcher.setMode(mode),
       sync: () => syncPermalink(),
+      // Les couches météo vivent sur la Terre : c'est le corps qu'un tel résultat montre.
+      datasets: () =>
+        weatherPanel.list().map(({ id, labelKey }) => ({
+          id,
+          label: t(labelKey),
+          body: 'earth',
+        })),
+      showDataset: (id) => weatherPanel.show(id),
     });
     setupShare(cameraSystem, permalink);
     setupCapture(cameraSystem, orbitalMechanics, planetNav);

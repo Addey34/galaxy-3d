@@ -247,7 +247,7 @@ export function setupBodyPalette(
     if (searchContext && query.trim().length >= 2) {
       try {
         search = await import('./paletteSearch');
-        hits = await search.searchTyped(query);
+        hits = await search.searchTyped(query, searchContext);
       } catch {
         hits = [];
       }

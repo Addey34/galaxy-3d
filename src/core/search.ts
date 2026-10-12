@@ -2,16 +2,19 @@
  * LA RECHERCHE UNIVERSELLE TYPÉE (lot 47, 2026-10-12). Module PUR : il prépare l'index livré par
  * `scripts/generate-search-index.mjs` et y cherche, sans DOM ni réseau.
  *
- * Quatre types en plus des corps (que la palette cherche déjà en mémoire) : les formations
- * nommées par l'UAI, les missions du PDS, les instruments d'une sonde et les survols mesurés.
+ * Cinq types en plus des corps (que la palette cherche déjà en mémoire) : les couches de données
+ * de l'application (qu'un résultat ACTIVE), les formations nommées par l'UAI, les missions du
+ * PDS, les instruments d'une sonde et les survols mesurés.
  * Chaque résultat porte ce qu'il faut pour AGIR (le corps, la sonde, la date), pas seulement un
  * libellé : la recherche est une navigation, pas un annuaire.
  */
 
-export type SearchKind = 'place' | 'mission' | 'instrument' | 'flyby';
+export type SearchKind =
+  'dataset' | 'place' | 'mission' | 'instrument' | 'flyby';
 
 /** L'ordre d'affichage des types, sous les corps. */
 export const SEARCH_KINDS: readonly SearchKind[] = [
+  'dataset',
   'place',
   'mission',
   'instrument',
@@ -28,6 +31,7 @@ export interface SearchIndexFile {
 }
 
 export type SearchHit =
+  | { kind: 'dataset'; label: string; id: string; body: string }
   | { kind: 'place'; label: string; body: string }
   | {
       kind: 'mission';
@@ -70,15 +74,25 @@ export function fold(text: string): string {
     .trim();
 }
 
+/** Une couche de données de l'application : son identifiant, son libellé traduit, son corps. */
+export interface SearchDataset {
+  id: string;
+  label: string;
+  body: string;
+}
+
 /**
  * Prépare l'index une fois : les noms des corps et des sondes viennent de l'appelant, dans la
- * langue courante, pour que « Lune » et « Moon » trouvent les formations lunaires.
+ * langue courante, pour que « Lune » et « Moon » trouvent les formations lunaires. Les couches
+ * de données ne sont pas dans le fichier : elles sont dans l'application, qui les donne.
  */
 export function prepareSearchIndex(
   file: SearchIndexFile,
-  nameOf: (id: string) => string
+  nameOf: (id: string) => string,
+  datasets: readonly SearchDataset[] = []
 ): PreparedIndex {
   const prepared: PreparedIndex = {
+    dataset: [],
     place: [],
     mission: [],
     instrument: [],
@@ -92,6 +106,8 @@ export function prepareSearchIndex(
       haystack: context ? `${label} ${fold(context)}` : label,
     });
   };
+  for (const { id, label, body } of datasets)
+    add({ kind: 'dataset', label, id, body }, nameOf(body));
   for (const [body, names] of Object.entries(file.places)) {
     const bodyName = nameOf(body);
     for (const name of names)

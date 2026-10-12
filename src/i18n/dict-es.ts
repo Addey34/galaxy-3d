@@ -116,6 +116,7 @@ export const es: Record<MessageKey, string> = {
   'offline.progress': 'Descargando: {done} de {total} archivos.',
   'offline.started': 'Preparación sin conexión iniciada.',
   'offline.forget': 'Liberar {size} MB',
+  'search.group.dataset': 'Capas de datos',
   'search.group.place': 'Lugares',
   'search.group.mission': 'Misiones',
   'search.group.instrument': 'Instrumentos',

@@ -9,6 +9,7 @@ import {
 } from './search';
 
 const NAMES: Record<string, string> = {
+  earth: 'Earth',
   moon: 'Moon',
   mars: 'Mars',
   neptune: 'Neptune',
@@ -28,7 +29,10 @@ const file: SearchIndexFile = {
   instruments: [['Imaging Science Subsystem', 'cassini']],
   flybys: [['voyager2', 'neptune', '1989-08-25T03:56:36Z']],
 };
-const index = prepareSearchIndex(file, nameOf);
+const index = prepareSearchIndex(file, nameOf, [
+  { id: 'wind', label: 'Wind (model)', body: 'earth' },
+  { id: 'thermal-model', label: 'Air temperature (model)', body: 'earth' },
+]);
 const labels = (query: string) =>
   searchPrepared(index, query).map((hit) => `${hit.kind}:${hit.label}`);
 
@@ -68,6 +72,18 @@ describe('searchPrepared', () => {
       'mission:Cassini-Huygens',
       'instrument:Imaging Science Subsystem',
     ]);
+  });
+
+  it('une couche de données se trouve par son libellé, et passe en tête', () => {
+    expect(labels('wind')).toEqual(['dataset:Wind (model)']);
+    expect(searchPrepared(index, 'temperature')[0]).toEqual({
+      kind: 'dataset',
+      label: 'Air temperature (model)',
+      id: 'thermal-model',
+      body: 'earth',
+    });
+    // Le corps de la couche est dans son contexte : « earth wind » la trouve aussi.
+    expect(labels('earth wind')).toEqual(['dataset:Wind (model)']);
   });
 
   it('chaque résultat porte de quoi agir', () => {
