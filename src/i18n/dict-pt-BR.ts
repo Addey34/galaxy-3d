@@ -345,7 +345,12 @@ export const ptBR: Record<MessageKey, string> = {
   'settings.exposure': 'Brilho (exposição)',
   'settings.colorblind': 'Cores de órbita adaptadas ao daltonismo',
   'settings.gazetteer': 'Nomes das formações (UAI)',
-  'settings.surfaceDailyEarth': 'Solo da Terra no dia da cena (VIIRS)',
+  'settings.surfaceEarthBase': 'Solo da Terra',
+  'settings.surfaceEarthBase.mosaic': 'Mosaico Blue Marble (2004)',
+  'settings.surfaceEarthBase.daily': 'O dia da cena (VIIRS)',
+  'settings.surfaceEarthBase.shaded-relief': 'Relevo sombreado e batimetria',
+  'settings.surfaceEarthBase.night-lights':
+    'Luzes noturnas (Black Marble 2016)',
   'settings.surfaceImagery':
     'Transmitir a imagem de superfície em alta resolução',
   'surface.imagery.headline': '{title} a {resolution}/pixel',

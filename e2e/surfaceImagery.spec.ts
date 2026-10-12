@@ -1003,15 +1003,71 @@ async function serveViirs(page: Page): Promise<{
   return seen;
 }
 
-/** Allume le réglage par le panneau, comme un visiteur, puis le referme. */
-async function enableDailyEarth(page: Page): Promise<void> {
+/** Choisit le fond de la Terre par le panneau, comme un visiteur, puis le referme. */
+async function chooseEarthBase(page: Page, choice: string): Promise<void> {
   await page.locator('#settings-trigger').click();
-  const toggle = page.locator('#surface-daily-toggle');
-  await expect(toggle).toBeVisible();
-  await toggle.check();
+  const select = page.locator('#surface-earth-base');
+  await expect(select).toBeVisible();
+  await select.selectOption(choice);
   await page.keyboard.press('Escape');
   await expect(page.locator('#orbit-options')).toBeHidden();
 }
+
+const enableDailyEarth = (page: Page) => chooseEarthBase(page, 'daily');
+
+/**
+ * LES FONDS DE RECHANGE DE LA TERRE (lot 48) : relief ombré avec bathymétrie, et lumières
+ * nocturnes (Black Marble 2016). Chacun est une mosaïque statique de GIBS, sur la grille de Blue
+ * Marble ; le scénario tient qu'un choix fait demander SA couche, et rien de la couche du jour.
+ */
+test.describe('the Earth’s alternate grounds', () => {
+  for (const [choice, layer, extension] of [
+    [
+      'shaded-relief',
+      'BlueMarble_ShadedRelief_Bathymetry/default/500m',
+      'jpeg',
+    ],
+    ['night-lights', 'VIIRS_Black_Marble/default/2016-01-01/500m', 'png'],
+  ] as const) {
+    test(`paints ${choice} once chosen`, async ({ page }) => {
+      const errors: string[] = [];
+      page.on('pageerror', (err) => errors.push(err.message));
+      const asked: string[] = [];
+      const viirs: string[] = [];
+      await page.route('**gibs.earthdata.nasa.gov/wmts/**', (route) => {
+        const url = route.request().url();
+        if (url.includes('VIIRS_SNPP_')) viirs.push(url);
+        if (url.includes(`/${layer}/`)) asked.push(url);
+        return route.fulfill({
+          status: 200,
+          contentType: 'image/jpeg',
+          headers: { 'access-control-allow-origin': '*' },
+          body: TILE_JPEG,
+        });
+      });
+      await boot(page, '?debug-surface&mode=explo&body=earth');
+      await expect(page.locator('#surface-probe')).toContainText('earth', {
+        timeout: 30_000,
+      });
+      await chooseEarthBase(page, choice);
+      await zoomIn(page);
+      await expect(page.locator('#surface-imagery')).toBeVisible({
+        timeout: 30_000,
+      });
+      await expect
+        .poll(() => asked.length, { timeout: 30_000 })
+        .toBeGreaterThan(0);
+      for (const url of asked)
+        expect(url, url).toMatch(
+          new RegExp('/' + String.raw`\d+/\d+/\d+\.` + extension + '$')
+        );
+      expect(viirs, 'la couche du jour, non choisie, a été demandée').toEqual(
+        []
+      );
+      expect(errors, `Erreurs page : ${errors.join(' | ')}`).toEqual([]);
+    });
+  }
+});
 
 test('paints the Earth of the scene’s day from VIIRS, and names that day', async ({
   page,

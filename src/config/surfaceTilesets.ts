@@ -102,10 +102,9 @@ function toTileset(fiche: ImageryTilesetProduct): SurfaceTileset {
 
 /** Les MOSAÏQUES déclarées, indexées par nom de corps du catalogue : la surface par défaut. */
 export const SURFACE_TILESETS: ReadonlyMap<string, SurfaceTileset> = new Map(
-  FICHES.filter((fiche) => !fiche.service.time).map((fiche) => [
-    fiche.body,
-    toTileset(fiche),
-  ])
+  FICHES.filter((fiche) => !fiche.service.time && !fiche.variant).map(
+    (fiche) => [fiche.body, toTileset(fiche)]
+  )
 );
 
 /**
@@ -120,6 +119,31 @@ export const DATED_SURFACE_TILESETS: ReadonlyMap<string, SurfaceTileset> =
       toTileset(fiche),
     ])
   );
+
+/** Fond de rechange d'un corps (lot 48), au vocabulaire fermé du schéma. */
+export type SurfaceVariant = NonNullable<ImageryTilesetProduct['variant']>;
+
+/**
+ * Ce que le visiteur choisit pour le sol d'un corps : la mosaïque par défaut, la couche du jour
+ * de la scène, ou un fond de rechange. Un choix que le corps ne propose pas retombe sur la
+ * mosaïque : la Lune n'a pas de « lumières nocturnes », et le réglage vaut pour la Terre.
+ */
+export type SurfaceChoice = 'mosaic' | 'daily' | SurfaceVariant;
+
+/** Les fonds de rechange, par corps puis par variante. */
+export const SURFACE_VARIANTS: ReadonlyMap<
+  string,
+  ReadonlyMap<SurfaceVariant, SurfaceTileset>
+> = (() => {
+  const byBody = new Map<string, Map<SurfaceVariant, SurfaceTileset>>();
+  for (const fiche of FICHES) {
+    if (!fiche.variant) continue;
+    const variants = byBody.get(fiche.body) ?? new Map();
+    variants.set(fiche.variant, toTileset(fiche));
+    byBody.set(fiche.body, variants);
+  }
+  return byBody;
+})();
 
 /**
  * La couche datée FIGÉE sur un jour publié : `{Time}` résolu dans le gabarit, et l'intervalle
@@ -191,7 +215,8 @@ export function createDatedChooser(options: {
   warn?: (message: string) => void;
   mosaics?: ReadonlyMap<string, SurfaceTileset>;
   dated?: ReadonlyMap<string, SurfaceTileset>;
-}): (body: string, daily: boolean) => SurfaceTileset | undefined {
+  variants?: ReadonlyMap<string, ReadonlyMap<SurfaceVariant, SurfaceTileset>>;
+}): (body: string, choice: SurfaceChoice) => SurfaceTileset | undefined {
   const now = options.now ?? (() => performance.now());
   const fetchText =
     options.fetchText ??
@@ -203,6 +228,7 @@ export function createDatedChooser(options: {
   const warn = options.warn ?? ((message: string) => Logger.warn(message));
   const mosaics = options.mosaics ?? SURFACE_TILESETS;
   const datedSets = options.dated ?? DATED_SURFACE_TILESETS;
+  const variantSets = options.variants ?? SURFACE_VARIANTS;
 
   const domains = new Map<
     string,
@@ -215,10 +241,12 @@ export function createDatedChooser(options: {
     tileset: SurfaceTileset | undefined;
   } | null = null;
 
-  return (body, daily) => {
+  return (body, choice) => {
     const base = mosaics.get(body);
+    if (choice !== 'mosaic' && choice !== 'daily')
+      return variantSets.get(body)?.get(choice) ?? base;
     const dated = datedSets.get(body);
-    if (!daily || !base || !dated?.domainsUrl) return base;
+    if (choice !== 'daily' || !base || !dated?.domainsUrl) return base;
     const t = now();
     const known = domains.get(body);
     if (!known?.loading && (!known || t - known.at > DOMAIN_MAX_AGE_MS)) {

@@ -241,6 +241,13 @@ const imageryTileset = z
     title: z.string().min(1),
     /** Fiche `providers/` du service contacté (rôle `tile-source`). */
     providerId: kebabId,
+    /**
+     * FOND DE RECHANGE d'un corps (lot 48) : le visiteur le choisit dans les réglages, à la place
+     * de la mosaïque par défaut (la fiche sans variante et sans dimension de temps, une seule par
+     * corps). Le vocabulaire est FERMÉ : le panneau, qui vit au démarrage, en porte le libellé
+     * en quatre langues, et `config/surfaceTilesets.test.ts` confronte les deux.
+     */
+    variant: z.enum(['shaded-relief', 'night-lights']).optional(),
     mission: z.string().min(1),
     instrument: z.string().min(1),
     service: z
@@ -338,6 +345,12 @@ const imageryTileset = z
         code: 'custom',
         message:
           'un jeu de tuiles cite les capacités WMTS dont son gabarit est recopié (rel=describedby)',
+      });
+    if (product.variant && product.service.time)
+      ctx.addIssue({
+        code: 'custom',
+        message:
+          'un fond de rechange est une mosaïque : pas de dimension `time`',
       });
     const [from, to] = product.acquired.interval[0]!;
     if (from === null)

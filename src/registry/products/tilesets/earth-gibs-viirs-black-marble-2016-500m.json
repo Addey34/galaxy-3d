@@ -1,0 +1,57 @@
+{
+  "$schema": "../../schema/product.schema.json",
+  "id": "earth-gibs-viirs-black-marble-2016-500m",
+  "type": "tileset",
+  "body": "earth",
+  "title": "Black Marble, annual composite 2016 (VIIRS_Black_Marble)",
+  "providerId": "nasa-gibs",
+  "variant": "night-lights",
+  "mission": "Suomi NPP",
+  "instrument": "VIIRS Day/Night Band",
+  "service": {
+    "template": "https://gibs.earthdata.nasa.gov/wmts/epsg4326/best/VIIRS_Black_Marble/default/2016-01-01/{TileMatrixSet}/{TileMatrix}/{TileRow}/{TileCol}.png",
+    "style": "default",
+    "tileMatrixSet": "500m",
+    "format": "image/png",
+    "matrix": {
+      "columnsAtLevelZero": 10,
+      "rowsAtLevelZero": 5,
+      "tileSizePx": 512,
+      "referenceLevel": 3
+    },
+    "minLevel": 3,
+    "maxLevel": 7
+  },
+  "publishedPixelsPerDegree": 240,
+  "acquired": {
+    "interval": [["2016-01-01T00:00:00Z", "2016-12-31T23:59:59Z"]]
+  },
+  "license": "other",
+  "rights": "public-domain",
+  "links": [
+    {
+      "rel": "license",
+      "href": "https://www.earthdata.nasa.gov/engage/open-data-services-software/earthdata-developer-portal/gibs-api"
+    },
+    {
+      "rel": "describedby",
+      "href": "https://gibs.earthdata.nasa.gov/wmts/epsg4326/best/1.0.0/WMTSCapabilities.xml"
+    },
+    {
+      "rel": "via",
+      "href": "https://gibs.earthdata.nasa.gov/layer-metadata/v1.0/VIIRS_Black_Marble.json"
+    }
+  ],
+  "providers": [
+    {
+      "name": "NASA GIBS (EOSDIS)",
+      "roles": ["host"],
+      "url": "https://www.earthdata.nasa.gov/engage/open-data-services-software/earthdata-developer-portal/gibs-api"
+    },
+    {
+      "name": "NASA Earth Observatory, Suomi NPP VIIRS",
+      "roles": ["producer"]
+    }
+  ],
+  "verified": "2026-10-12"
+}

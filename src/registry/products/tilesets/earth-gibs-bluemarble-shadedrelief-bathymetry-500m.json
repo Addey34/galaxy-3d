@@ -1,0 +1,57 @@
+{
+  "$schema": "../../schema/product.schema.json",
+  "id": "earth-gibs-bluemarble-shadedrelief-bathymetry-500m",
+  "type": "tileset",
+  "body": "earth",
+  "title": "Blue Marble, August 2004, Shaded Relief and Bathymetry (BlueMarble_ShadedRelief_Bathymetry)",
+  "providerId": "nasa-gibs",
+  "variant": "shaded-relief",
+  "mission": "Terra and Aqua",
+  "instrument": "MODIS",
+  "service": {
+    "template": "https://gibs.earthdata.nasa.gov/wmts/epsg4326/best/BlueMarble_ShadedRelief_Bathymetry/default/{TileMatrixSet}/{TileMatrix}/{TileRow}/{TileCol}.jpeg",
+    "style": "default",
+    "tileMatrixSet": "500m",
+    "format": "image/jpeg",
+    "matrix": {
+      "columnsAtLevelZero": 10,
+      "rowsAtLevelZero": 5,
+      "tileSizePx": 512,
+      "referenceLevel": 3
+    },
+    "minLevel": 3,
+    "maxLevel": 7
+  },
+  "publishedPixelsPerDegree": 240,
+  "acquired": {
+    "interval": [["2004-08-01T00:00:00Z", "2004-08-31T23:59:59Z"]]
+  },
+  "license": "other",
+  "rights": "public-domain",
+  "links": [
+    {
+      "rel": "license",
+      "href": "https://www.earthdata.nasa.gov/engage/open-data-services-software/earthdata-developer-portal/gibs-api"
+    },
+    {
+      "rel": "describedby",
+      "href": "https://gibs.earthdata.nasa.gov/wmts/epsg4326/best/1.0.0/WMTSCapabilities.xml"
+    },
+    {
+      "rel": "via",
+      "href": "https://gibs.earthdata.nasa.gov/layer-metadata/v1.0/BlueMarble_ShadedRelief_Bathymetry.json"
+    }
+  ],
+  "providers": [
+    {
+      "name": "NASA GIBS (EOSDIS)",
+      "roles": ["host"],
+      "url": "https://www.earthdata.nasa.gov/engage/open-data-services-software/earthdata-developer-portal/gibs-api"
+    },
+    {
+      "name": "NASA Earth Observatory, MODIS",
+      "roles": ["producer"]
+    }
+  ],
+  "verified": "2026-10-12"
+}
