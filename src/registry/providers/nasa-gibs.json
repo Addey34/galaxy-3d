@@ -14,14 +14,14 @@
   "accessed": "2026-10-12",
   "extent": {
     "temporal": {
-      "interval": [["2004-08-01T00:00:00Z", "2004-08-31T23:59:59Z"]]
+      "interval": [["2004-08-01T00:00:00Z", null]]
     }
   },
   "use": {
-    "en": "Earth weather layers from satellites and reanalysis (VIIRS and MODIS clouds, IMERG precipitation, MERRA-2 surface air temperature), and the Earth's surface imagery streamed on approach, only for the patch of ground in view.",
-    "fr": "Couches météo terrestres issues de satellites et de réanalyse (nuages VIIRS et MODIS, précipitations IMERG, température de l’air en surface MERRA-2), et imagerie de la surface de la Terre streamée à l’approche, seulement pour la portion de sol visible.",
-    "es": "Capas meteorológicas terrestres por satélite y reanálisis (nubes VIIRS y MODIS, precipitación IMERG, temperatura del aire en superficie MERRA-2), e imágenes de la superficie terrestre transmitidas al acercarse, solo para la porción de suelo visible.",
-    "pt-BR": "Camadas meteorológicas terrestres por satélite e reanálise (nuvens VIIRS e MODIS, precipitação IMERG, temperatura do ar na superfície MERRA-2), e imagens da superfície da Terra transmitidas na aproximação, somente para a porção de solo visível."
+    "en": "Earth weather layers from satellites and reanalysis (VIIRS and MODIS clouds, IMERG precipitation, MERRA-2 surface air temperature), and the Earth's surface imagery streamed on approach, only for the patch of ground in view: the Blue Marble mosaic of August 2004, or, when switched on in the settings, the VIIRS image of the scene's day.",
+    "fr": "Couches météo terrestres issues de satellites et de réanalyse (nuages VIIRS et MODIS, précipitations IMERG, température de l’air en surface MERRA-2), et imagerie de la surface de la Terre streamée à l’approche, seulement pour la portion de sol visible : la mosaïque Blue Marble d’août 2004, ou, si le réglage l’active, l’image VIIRS du jour de la scène.",
+    "es": "Capas meteorológicas terrestres por satélite y reanálisis (nubes VIIRS y MODIS, precipitación IMERG, temperatura del aire en superficie MERRA-2), e imágenes de la superficie terrestre transmitidas al acercarse, solo para la porción de suelo visible: el mosaico Blue Marble de agosto de 2004 o, si se activa en los ajustes, la imagen VIIRS del día de la escena.",
+    "pt-BR": "Camadas meteorológicas terrestres por satélite e reanálise (nuvens VIIRS e MODIS, precipitação IMERG, temperatura do ar na superfície MERRA-2), e imagens da superfície da Terra transmitidas na aproximação, somente para a porção de solo visível: o mosaico Blue Marble de agosto de 2004 ou, se ativada nas configurações, a imagem VIIRS do dia da cena."
   },
   "terms": {
     "en": "NASA supports full and open sharing of data; GIBS states no restriction and no rate limit (read at the source on 2026-10-12). It asks clients to acknowledge it: “We acknowledge the use of imagery provided by services from NASA's Global Imagery Browse Services (GIBS), part of NASA's Earth Science Data and Information System (ESDIS).”",

@@ -338,8 +338,10 @@ export const fr: Record<MessageKey, string> = {
   'settings.exposure': 'Luminosité (exposition)',
   'settings.colorblind': 'Couleurs d’orbite adaptées au daltonisme',
   'settings.gazetteer': 'Noms des formations (UAI)',
+  'settings.surfaceDailyEarth': 'Sol de la Terre au jour de la scène (VIIRS)',
   'settings.surfaceImagery': 'Streamer l’imagerie de surface haute résolution',
   'surface.imagery.headline': '{title} à {resolution}/pixel',
+  'surface.imagery.day': 'image du {day}',
   'surface.imagery.acquired': 'images de {from} à {to}',
   'surface.imagery.oversampled':
     'affichée {factor} fois plus grande que la mosaïque publiée ({published} px/degré)',

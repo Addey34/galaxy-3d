@@ -363,8 +363,10 @@ export const en = {
   'settings.exposure': 'Brightness (exposure)',
   'settings.colorblind': 'Color-blind friendly orbit colors',
   'settings.gazetteer': 'Surface feature names (IAU)',
+  'settings.surfaceDailyEarth': 'Earth’s ground on the scene’s day (VIIRS)',
   'settings.surfaceImagery': 'Stream high-resolution surface imagery',
   'surface.imagery.headline': '{title} at {resolution}/pixel',
+  'surface.imagery.day': 'image of {day}',
   'surface.imagery.acquired': 'images from {from} to {to}',
   'surface.imagery.oversampled':
     'shown {factor}x larger than the published mosaic ({published} px/degree)',

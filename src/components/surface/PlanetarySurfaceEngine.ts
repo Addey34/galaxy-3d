@@ -143,6 +143,8 @@ export interface SurfaceImageryState {
   attached: number;
   /** Intervalle décrit par la mosaïque. */
   acquired: { from: number; to: number };
+  /** Jour d'une couche datée (`AAAA-MM-JJ`), ou `null` pour une mosaïque. */
+  day: string | null;
   publishedPixelsPerDegree: number;
   /** Relief RÉELLEMENT posé sous les carreaux peints, ou `null` s'il n'y en a pas. */
   relief: SurfaceReliefState | null;
@@ -236,6 +238,15 @@ export class PlanetarySurfaceEngine {
   private _host: SurfaceHost | null = null;
   private _tileset: SurfaceTileset | null = null;
   private _radiusKm = 0;
+  /**
+   * GÉNÉRATION des carreaux d'imagerie (lot 48). Elle change quand le jeu attaché change sur le
+   * MÊME corps, typiquement le jour d'une couche datée : les carreaux de la génération
+   * précédente restent peints jusqu'à ce que la nouvelle couvre le champ, comme lors d'un
+   * changement de niveau, au lieu de laisser le sol disparaître à chaque jour.
+   */
+  private _generation = 0;
+  /** Jeu des carreaux de la génération précédente encore peints, ou `null`. */
+  private _staleTileset: SurfaceTileset | null = null;
 
   private readonly _tiles = new Map<string, SurfaceTile>();
   private readonly _pending = new Map<string, AbortController>();
@@ -307,12 +318,63 @@ export class PlanetarySurfaceEngine {
       this._heights?.set === heights?.set
     )
       return;
+    // Même corps, même relief, autre jeu : on CHANGE de jeu sans détacher. Un détachement
+    // remettrait la finesse déclarée à zéro, donc le plancher d'approche à celui de la texture
+    // livrée, et la caméra remonterait toute seule à chaque changement de jour.
+    if (
+      this._host === host &&
+      this._tileset !== null &&
+      this._heights?.set === heights?.set
+    ) {
+      this._swapTileset(tileset);
+      return;
+    }
     this.detach();
     this._host = host;
     this._tileset = tileset;
     this._radiusKm = radiusKm;
     this._heights = heights;
     this._heightAbort = heights ? new AbortController() : null;
+  }
+
+  /**
+   * Passe à un autre jeu sur le même corps. Les carreaux peints deviennent la génération
+   * PRÉCÉDENTE, gardée jusqu'à ce que la nouvelle soit complète ; on n'en garde qu'UNE : si la
+   * génération courante n'avait pas fini (dates qui défilent plus vite que le réseau), ses
+   * carreaux partiels sont jetés et l'ancienne génération complète reste en place. Sans cette
+   * borne, chaque jour traversé laisserait ses carreaux en mémoire.
+   */
+  private _swapTileset(tileset: SurfaceTileset): void {
+    for (const controller of this._pending.values()) controller.abort();
+    this._pending.clear();
+    this._queue.length = 0;
+    this._failed.clear();
+    const current = this._prefix();
+    const hasStale = [...this._tiles.keys()].some(
+      (key) => !key.startsWith(current)
+    );
+    if (hasStale) {
+      for (const [key, tile] of this._tiles)
+        if (key.startsWith(current)) {
+          tile.dispose();
+          this._tiles.delete(key);
+          this._relief.delete(key);
+        }
+    } else if (this._tiles.size > 0) {
+      this._staleTileset = this._tileset;
+    }
+    this._generation += 1;
+    this._tileset = tileset;
+  }
+
+  /** Préfixe des clés de la génération courante. */
+  private _prefix(): string {
+    return `${this._generation}|`;
+  }
+
+  /** Clé d'un carreau d'imagerie de la génération courante. */
+  private _key(index: TileIndex): string {
+    return `${this._prefix()}${tileKey(index)}`;
   }
 
   /**
@@ -333,7 +395,11 @@ export class PlanetarySurfaceEngine {
   private _declareImageryWidth(): void {
     const host = this._host;
     const tileset = this._tileset;
-    if (!host || !tileset || this._tiles.size === 0) return;
+    if (!host || !tileset) return;
+    // Un carreau du jeu COURANT : ceux d'une génération précédente ne prouvent rien sur le
+    // service qu'on vient de choisir, qui peut être en panne.
+    const current = this._prefix();
+    if (![...this._tiles.keys()].some((key) => key.startsWith(current))) return;
     if (
       host.setStreamedImageryWidth(
         pyramidWidthPx(tileset.maxLevel, tileset.matrix)
@@ -462,17 +528,23 @@ export class PlanetarySurfaceEngine {
       tileset.matrix
     );
 
-    const wanted = new Set(tiles.map(tileKey));
+    const wanted = new Set(tiles.map((index) => this._key(index)));
     // Les carreaux d'un AUTRE niveau restent en place tant que le nouveau n'est pas complet :
-    // sans cela le sol disparaît à chaque changement de niveau (défaut 2 du docblock).
-    const complete = tiles.every((index) => this._tiles.has(tileKey(index)));
+    // sans cela le sol disparaît à chaque changement de niveau (défaut 2 du docblock). Même
+    // règle pour ceux d'une génération précédente (un autre jour d'une couche datée).
+    const complete = tiles.every((index) => this._tiles.has(this._key(index)));
+    const current = this._prefix();
     for (const [key, tile] of this._tiles) {
-      if (tile.level === level ? !wanted.has(key) : complete) {
+      const stale = !key.startsWith(current);
+      if (
+        stale ? complete : tile.level === level ? !wanted.has(key) : complete
+      ) {
         tile.dispose();
         this._tiles.delete(key);
         this._relief.delete(key);
       }
     }
+    if (complete) this._staleTileset = null;
     for (const [key, controller] of this._pending) {
       if (!wanted.has(key)) {
         controller.abort();
@@ -482,7 +554,7 @@ export class PlanetarySurfaceEngine {
 
     this._queue.length = 0;
     for (const index of tiles) {
-      const key = tileKey(index);
+      const key = this._key(index);
       if (
         this._tiles.has(key) ||
         this._pending.has(key) ||
@@ -503,9 +575,25 @@ export class PlanetarySurfaceEngine {
     requested: number,
     centre: { latitudeDeg: number; longitudeDeg: number }
   ): void {
-    let painted = 0;
-    for (const tile of this._tiles.values())
-      if (tile.level === level) painted += 1;
+    // Le bandeau dit ce qui est PEINT : tant qu'aucun carreau du jeu courant ne l'est, ce sont
+    // ceux de la génération précédente qu'on voit, et c'est elle qu'il décrit.
+    const count = (prefix: string | null): number => {
+      let n = 0;
+      for (const [key, tile] of this._tiles)
+        if (
+          tile.level === level &&
+          (prefix === null
+            ? !key.startsWith(this._prefix())
+            : key.startsWith(prefix))
+        )
+          n += 1;
+      return n;
+    };
+    let painted = count(this._prefix());
+    if (painted === 0 && this._staleTileset) {
+      tileset = this._staleTileset;
+      painted = count(null);
+    }
 
     const next: SurfaceImageryState = {
       body: tileset.body,
@@ -527,11 +615,13 @@ export class PlanetarySurfaceEngine {
       painted,
       attached: this._tiles.size,
       acquired: tileset.acquired,
+      day: tileset.day ?? null,
       publishedPixelsPerDegree: tileset.publishedPixelsPerDegree,
       relief: this._reliefState(level, centre),
     };
     if (
       this._state &&
+      this._state.tilesetId === next.tilesetId &&
       this._state.level === next.level &&
       this._state.painted === next.painted &&
       this._state.requested === next.requested &&
@@ -595,6 +685,7 @@ export class PlanetarySurfaceEngine {
     for (const tile of this._tiles.values()) tile.dispose();
     this._tiles.clear();
     this._relief.clear();
+    this._staleTileset = null;
     // Plus un seul carreau de relief : la sphère livrée reprend sa taille, sinon le corps
     // resterait rétréci de son altitude minimale une fois les carreaux partis.
     if (this._shellScaled) {
@@ -880,7 +971,7 @@ export class PlanetarySurfaceEngine {
     const tileset = this._tileset;
     const host = this._host;
     if (!tileset || !host) return;
-    const key = tileKey(index);
+    const key = this._key(index);
     const controller = new AbortController();
     this._pending.set(key, controller);
 

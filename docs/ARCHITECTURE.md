@@ -2286,7 +2286,8 @@ quelle que soit la date de la scène.
 
 **Ce qui diffère de Trek, et que les gardes ont appris sans s'affaiblir** : un gabarit en `.jpeg`
 et sans jeton `{Style}` (le style est écrit dans le chemin), une couverture du fournisseur
-`nasa-gibs` DÉRIVÉE de ses jeux de tuiles (août 2004, et non sa durée de service), et la règle
+`nasa-gibs` DÉRIVÉE de ses jeux de tuiles (et non de sa durée de service : août 2004 au pas 1,
+« depuis août 2004, en cours » depuis la couche datée ci-dessous), et la règle
 des quatre endroits d'un hôte de tuiles : **GIBS n'était qu'en `connect-src`** (les couches météo
 téléchargent par `fetch`), alors que le moteur charge ses tuiles comme des images. Le serveur de
 dev n'applique pas la CSP : les tuiles s'affichaient, et la production les aurait toutes
@@ -2301,6 +2302,49 @@ Sardaigne, le sol est celui de Blue Marble, flou parce que 489 m par pixel y son
 voilerait l'écran vue de l'intérieur) a été DÉMENTI par un témoin : la même vue avec et sans la
 correction avait la même couleur moyenne ; le gris strié des premières captures était l'océan de
 Blue Marble, bleu presque noir. Aucun code n'a été livré contre lui.
+
+### La Terre du jour de la scène : une couche DATÉE, et ses trous (lot 48, pas 2)
+
+Sur réglage (« Sol de la Terre au jour de la scène (VIIRS) », section Rendu, éteint par défaut et
+non mémorisé, comme le reste du contenu de la scène), la Terre lit
+**VIIRS SNPP Corrected Reflectance True Color** (`earth-gibs-viirs-snpp-truecolor-250m`) : une
+image par jour depuis le 2015-11-24, au jeu de matrices `250m` (niveaux 3 à 8, 244 m par pixel
+servis). La fiche déclare la finesse du CAPTEUR (375 m, la bande rouge I1, lue dans la
+description de la couche), donc le bandeau dit qu'au niveau 8 la pyramide l'agrandit de 1,53.
+
+**Une couche datée est une fiche avec une dimension** : `service.time` (le gabarit DescribeDomains
+recopié des capacités, et la période `P1D`) va de pair avec un jeton `{Time}` dans le gabarit
+(le schéma refuse l'un sans l'autre), et seule une couche datée peut avoir une campagne EN COURS
+(fin `null`, au sens STAC). `config/surfaceTilesets.ts` les sépare des mosaïques
+(`DATED_SURFACE_TILESETS`), et une couche datée n'est jamais attachée telle quelle :
+`tilesetForDay` la fige sur un jour, et `core/tileUrl.ts` refuse un `{Time}` non résolu.
+
+**Les trous sont la raison d'être de ce pas.** La dimension de VIIRS déclarait sept trous le
+2026-10-12, et une tuile demandée dans l'un d'eux rend **404 sans en-tête CORS** (mesuré sur
+2022-08-01) : dans un navigateur, indiscernable d'un refus CORS, le piège déjà payé avec Trek.
+Les jours publiés ne sont PAS recopiés dans la fiche (la couche en gagne un chaque jour, et ses
+trous changent) : le client lit la réponse DescribeDomains de la couche (488 octets, CORS `*`),
+au plus une fois par heure, et `core/timeDomain.ts::publishedDay` rend le jour de la scène
+seulement s'il y figure, jamais le voisin. Tout autre cas, y compris avant la lecture, retombe
+sur la mosaïque Blue Marble. La date de la scène est relue toutes les 500 ms, la cadence des
+couches météo datées : relue à chaque image, une horloge rapide changerait de jour soixante fois
+par seconde.
+
+**Changer de jour ne détache rien.** Le moteur compare les jeux par identité ; sur le même corps,
+un autre jeu ouvre une nouvelle GÉNÉRATION de carreaux, et ceux de la précédente restent peints
+jusqu'à ce que la nouvelle couvre le champ, comme lors d'un changement de niveau. Détacher aurait
+remis la finesse déclarée à zéro, donc fait remonter la caméra à chaque jour. Une seule
+génération ancienne est gardée : quand les jours défilent plus vite que le réseau, les carreaux
+partiels du jour courant sont jetés, sans quoi chaque jour traversé resterait en mémoire. Le
+bandeau décrit ce qui est PEINT, donc l'ancien jour tant que le nouveau n'a aucun carreau.
+
+Ce choix vit dans le morceau chargé à l'approche (`createDatedChooser`), pas dans
+`ui/surfacePanel.ts` : il pesait près de 2 ko dans le budget du démarrage.
+
+**Vérifié dans un vrai navigateur, contre les vraies tuiles** (2026-10-12, serveur de dev) :
+42 tuiles du 2026-10-10 en 200, la dimension lue une fois, le bandeau daté. Le Sahara y paraît
+plus pâle que sous Blue Marble ; la tuile BRUTE de GIBS au même endroit l'est autant (cirrus et
+poussière ce jour-là) : c'est le ciel du jour, pas un défaut de rendu.
 
 ## Relief mesuré — des hauteurs cuites hors ligne, jamais devinées
 

@@ -345,9 +345,11 @@ export const ptBR: Record<MessageKey, string> = {
   'settings.exposure': 'Brilho (exposição)',
   'settings.colorblind': 'Cores de órbita adaptadas ao daltonismo',
   'settings.gazetteer': 'Nomes das formações (UAI)',
+  'settings.surfaceDailyEarth': 'Solo da Terra no dia da cena (VIIRS)',
   'settings.surfaceImagery':
     'Transmitir a imagem de superfície em alta resolução',
   'surface.imagery.headline': '{title} a {resolution}/pixel',
+  'surface.imagery.day': 'imagem de {day}',
   'surface.imagery.acquired': 'imagens de {from} a {to}',
   'surface.imagery.oversampled':
     'exibida {factor} vezes maior que o mosaico publicado ({published} px/grau)',

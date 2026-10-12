@@ -1,0 +1,64 @@
+{
+  "$schema": "../../schema/product.schema.json",
+  "id": "earth-gibs-viirs-snpp-truecolor-250m",
+  "type": "tileset",
+  "body": "earth",
+  "title": "Corrected Reflectance (True Color, VIIRS, Suomi NPP)",
+  "providerId": "nasa-gibs",
+  "mission": "Suomi NPP",
+  "instrument": "VIIRS",
+  "service": {
+    "template": "https://gibs.earthdata.nasa.gov/wmts/epsg4326/best/VIIRS_SNPP_CorrectedReflectance_TrueColor/default/{Time}/{TileMatrixSet}/{TileMatrix}/{TileRow}/{TileCol}.jpeg",
+    "style": "default",
+    "tileMatrixSet": "250m",
+    "format": "image/jpeg",
+    "matrix": {
+      "columnsAtLevelZero": 10,
+      "rowsAtLevelZero": 5,
+      "tileSizePx": 512,
+      "referenceLevel": 3
+    },
+    "minLevel": 3,
+    "maxLevel": 8,
+    "time": {
+      "domains": "https://gibs.earthdata.nasa.gov/wmts/epsg4326/best/1.0.0/VIIRS_SNPP_CorrectedReflectance_TrueColor/default/{TileMatrixSet}/all/all.xml",
+      "period": "P1D"
+    }
+  },
+  "publishedPixelsPerDegree": 296.5,
+  "acquired": {
+    "interval": [["2015-11-24T00:00:00Z", null]]
+  },
+  "license": "other",
+  "rights": "public-domain",
+  "links": [
+    {
+      "rel": "license",
+      "href": "https://www.earthdata.nasa.gov/engage/open-data-services-software/earthdata-developer-portal/gibs-api"
+    },
+    {
+      "rel": "describedby",
+      "href": "https://gibs.earthdata.nasa.gov/wmts/epsg4326/best/1.0.0/WMTSCapabilities.xml"
+    },
+    {
+      "rel": "via",
+      "href": "https://gibs.earthdata.nasa.gov/layer-metadata/v1.0/VIIRS_SNPP_CorrectedReflectance_TrueColor.json"
+    },
+    {
+      "rel": "via",
+      "href": "https://raw.githubusercontent.com/nasa-gibs/worldview/main/config/default/common/config/metadata/layers/viirs/snpp/VIIRS_SNPP_CorrectedReflectance_TrueColor.md"
+    }
+  ],
+  "providers": [
+    {
+      "name": "NASA GIBS (EOSDIS)",
+      "roles": ["host"],
+      "url": "https://www.earthdata.nasa.gov/engage/open-data-services-software/earthdata-developer-portal/gibs-api"
+    },
+    {
+      "name": "NASA LANCE, Suomi NPP VIIRS",
+      "roles": ["producer"]
+    }
+  ],
+  "verified": "2026-10-12"
+}

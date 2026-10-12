@@ -349,9 +349,12 @@ export const es: Record<MessageKey, string> = {
   'settings.exposure': 'Brillo (exposición)',
   'settings.colorblind': 'Colores de órbita adaptados al daltonismo',
   'settings.gazetteer': 'Nombres de las formaciones (UAI)',
+  'settings.surfaceDailyEarth':
+    'Suelo de la Tierra del día de la escena (VIIRS)',
   'settings.surfaceImagery':
     'Transmitir la imagen de superficie de alta resolución',
   'surface.imagery.headline': '{title} a {resolution}/píxel',
+  'surface.imagery.day': 'imagen del {day}',
   'surface.imagery.acquired': 'imágenes de {from} a {to}',
   'surface.imagery.oversampled':
     'mostrada {factor} veces más grande que el mosaico publicado ({published} px/grado)',

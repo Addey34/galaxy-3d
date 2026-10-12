@@ -260,16 +260,38 @@ const imageryTileset = z
           .strict(),
         minLevel: z.number().int().min(0),
         maxLevel: z.number().int().min(0),
+        /**
+         * DIMENSION TEMPORELLE d'une couche datée (lot 48) : le gabarit porte alors un jeton
+         * `{Time}`, un jour par image. Les jours publiés ne sont PAS recopiés ici : la couche
+         * en gagne un chaque jour et ses trous changent, donc le client lit à l'exécution la
+         * réponse DescribeDomains dont `domains` est le gabarit, recopié des capacités. Une
+         * date hors de ces jours rend 404 SANS en-tête CORS chez GIBS : elle n'est jamais
+         * demandée.
+         */
+        time: z
+          .object({
+            domains: httpsUrl,
+            period: z.literal('P1D'),
+          })
+          .strict()
+          .optional(),
       })
       .strict()
       .refine((s) => s.maxLevel >= s.minLevel, 'maxLevel < minLevel')
+      .refine(
+        (s) => s.template.includes('{Time}') === (s.time !== undefined),
+        'un jeton {Time} et une dimension `time` vont ensemble'
+      )
       .refine(
         (s) => s.minLevel >= (s.matrix.referenceLevel ?? 0),
         'minLevel sous le niveau de référence de la matrice'
       ),
     /** Finesse de la mosaïque publiée, en pixels par degré. */
     publishedPixelsPerDegree: z.number().positive(),
-    /** Intervalle décrit par la mosaïque (STAC ; bornes `null` interdites ici : une campagne finie). */
+    /**
+     * Intervalle décrit par la mosaïque (STAC). Une fin `null` veut dire « en cours », au sens
+     * STAC, et n'est permise qu'à une couche DATÉE : une mosaïque est une campagne finie.
+     */
     acquired: z
       .object({
         interval: z
@@ -282,6 +304,7 @@ const imageryTileset = z
                     /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/,
                     'instant ISO UTC'
                   )
+                  .nullable()
               )
               .length(2)
           )
@@ -315,6 +338,14 @@ const imageryTileset = z
         code: 'custom',
         message:
           'un jeu de tuiles cite les capacités WMTS dont son gabarit est recopié (rel=describedby)',
+      });
+    const [from, to] = product.acquired.interval[0]!;
+    if (from === null)
+      ctx.addIssue({ code: 'custom', message: 'une campagne a un début' });
+    if (to === null && !product.service.time)
+      ctx.addIssue({
+        code: 'custom',
+        message: 'seule une couche datée (`service.time`) peut être en cours',
       });
   });
 

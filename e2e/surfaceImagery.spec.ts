@@ -805,6 +805,15 @@ test('paints the Earth from NASA GIBS, never below its reference level', async (
     }
   );
 
+  const viirsSeen: string[] = [];
+  await page.route(
+    '**gibs.earthdata.nasa.gov/wmts/**VIIRS_SNPP_**',
+    (route) => {
+      viirsSeen.push(route.request().url());
+      return route.abort();
+    }
+  );
+
   await boot(page, '?debug-surface&mode=explo&body=earth');
   await expect(page.locator('#surface-probe')).toContainText('earth', {
     timeout: 30_000,
@@ -834,5 +843,141 @@ test('paints the Earth from NASA GIBS, never below its reference level', async (
 
   await expect(badge.locator('.si-credit')).toContainText('NASA GIBS');
   await expect(badge).toContainText('2004');
+  // La couche DATÉE est éteinte par défaut : ni ses jours publiés ni ses tuiles ne sont demandés.
+  expect(viirsSeen, 'la couche du jour, éteinte, a été demandée').toEqual([]);
+  expect(errors, `Erreurs page : ${errors.join(' | ')}`).toEqual([]);
+});
+
+/**
+ * LA TERRE DU JOUR DE LA SCÈNE (lot 48) : VIIRS SNPP, un jour par image, sur réglage.
+ *
+ * Deux affirmations, l'une par scénario, parce qu'aucune ne se voit sur une capture :
+ *  1. un jour PUBLIÉ est demandé tel quel, et le bandeau nomme ce jour ;
+ *  2. un jour tombé dans un TROU de la dimension n'est JAMAIS demandé : GIBS y rend 404 sans
+ *     en-tête CORS (mesuré le 2026-10-12 sur 2022-08-01), et la surface retombe sur la mosaïque.
+ *
+ * Les jours publiés sont SERVIS PAR LE TEST, dans la forme exacte de la réponse réelle
+ * (`src/core/timeDomain.test.ts` en garde une copie), avec un trou délibéré autour du
+ * 2022-08-01 comme dans la vraie dimension.
+ */
+const VIIRS_DOMAINS =
+  "<Domains xmlns:ows='http://www.opengis.net/ows/1.1'><DimensionDomain>" +
+  '<ows:Identifier>time</ows:Identifier><Domain>2015-11-24/2022-07-27/P1D,' +
+  '2022-08-10/2026-10-12/P1D</Domain><Size>2</Size></DimensionDomain></Domains>';
+
+async function serveViirs(page: Page): Promise<{
+  domains: string[];
+  viirs: string[];
+  blueMarble: string[];
+}> {
+  const seen = {
+    domains: [] as string[],
+    viirs: [] as string[],
+    blueMarble: [] as string[],
+  };
+  const tile =
+    (list: string[]) => (route: import('@playwright/test').Route) => {
+      list.push(route.request().url());
+      return route.fulfill({
+        status: 200,
+        contentType: 'image/jpeg',
+        headers: { 'access-control-allow-origin': '*' },
+        body: TILE_JPEG,
+      });
+    };
+  await page.route(
+    '**gibs.earthdata.nasa.gov/wmts/epsg4326/best/1.0.0/VIIRS_SNPP_CorrectedReflectance_TrueColor/**',
+    (route) => {
+      seen.domains.push(route.request().url());
+      return route.fulfill({
+        status: 200,
+        contentType: 'text/xml',
+        headers: { 'access-control-allow-origin': '*' },
+        body: VIIRS_DOMAINS,
+      });
+    }
+  );
+  await page.route(
+    '**gibs.earthdata.nasa.gov/wmts/epsg4326/best/VIIRS_SNPP_CorrectedReflectance_TrueColor/**',
+    tile(seen.viirs)
+  );
+  await page.route(
+    '**gibs.earthdata.nasa.gov/wmts/epsg4326/best/BlueMarble_NextGeneration/**',
+    tile(seen.blueMarble)
+  );
+  return seen;
+}
+
+/** Allume le réglage par le panneau, comme un visiteur, puis le referme. */
+async function enableDailyEarth(page: Page): Promise<void> {
+  await page.locator('#settings-trigger').click();
+  const toggle = page.locator('#surface-daily-toggle');
+  await expect(toggle).toBeVisible();
+  await toggle.check();
+  await page.keyboard.press('Escape');
+  await expect(page.locator('#orbit-options')).toBeHidden();
+}
+
+test('paints the Earth of the scene’s day from VIIRS, and names that day', async ({
+  page,
+}) => {
+  const errors: string[] = [];
+  page.on('pageerror', (err) => errors.push(err.message));
+  const seen = await serveViirs(page);
+
+  await boot(
+    page,
+    '?debug-surface&mode=explo&body=earth&date=2026-10-11T12:00:00Z'
+  );
+  await expect(page.locator('#surface-probe')).toContainText('earth', {
+    timeout: 30_000,
+  });
+  await enableDailyEarth(page);
+  await zoomIn(page);
+
+  const badge = page.locator('#surface-imagery');
+  await expect(badge).toHaveAttribute('data-day', '2026-10-11', {
+    timeout: 30_000,
+  });
+  expect(seen.domains.length, 'jours publiés jamais lus').toBeGreaterThan(0);
+  expect(seen.domains[0]).toMatch(/\/default\/250m\/all\/all\.xml$/);
+  expect(seen.viirs.length, 'aucune tuile VIIRS demandée').toBeGreaterThan(0);
+  for (const url of seen.viirs)
+    expect(url).toMatch(
+      /\/VIIRS_SNPP_CorrectedReflectance_TrueColor\/default\/2026-10-11\/250m\/\d+\/\d+\/\d+\.jpeg$/
+    );
+  await expect(badge).toContainText('October 11, 2026');
+  await expect(badge.locator('.si-credit')).toContainText('Suomi NPP VIIRS');
+  expect(errors, `Erreurs page : ${errors.join(' | ')}`).toEqual([]);
+});
+
+test('never asks VIIRS for an Earth day in a gap of its dimension, and falls back on Blue Marble', async ({
+  page,
+}) => {
+  const errors: string[] = [];
+  page.on('pageerror', (err) => errors.push(err.message));
+  const seen = await serveViirs(page);
+
+  await boot(
+    page,
+    '?debug-surface&mode=explo&body=earth&date=2022-08-01T12:00:00Z'
+  );
+  await expect(page.locator('#surface-probe')).toContainText('earth', {
+    timeout: 30_000,
+  });
+  await enableDailyEarth(page);
+  await zoomIn(page);
+
+  const badge = page.locator('#surface-imagery');
+  await expect(badge).toBeVisible({ timeout: 30_000 });
+  // La dimension a bien été LUE : sans cela, le repli prouverait seulement qu'elle manquait.
+  await expect.poll(() => seen.domains.length).toBeGreaterThan(0);
+  await expect(badge).toContainText('2004');
+  await expect(badge).not.toHaveAttribute('data-day', /.+/);
+  expect(seen.blueMarble.length).toBeGreaterThan(0);
+  expect(
+    seen.viirs,
+    'un jour hors dimension a été demandé (404 sans CORS chez GIBS)'
+  ).toEqual([]);
   expect(errors, `Erreurs page : ${errors.join(' | ')}`).toEqual([]);
 });
