@@ -19,6 +19,9 @@ export async function blockExternalNetwork(page: Page): Promise<void> {
   await page.route('**gibs.earthdata.nasa.gov/**', (route) => route.abort());
   await page.route('**earthdata.nasa.gov/**', (route) => route.abort());
   await page.route('**open-meteo.com/**', (route) => route.abort());
+  await page.route('**galaxy-data.adrianguichard.dev/**', (route) =>
+    route.abort()
+  );
   // Les deux couches d'événements terrestres sont éteintes au départ et ne demandent rien ;
   // ces deux routes couvrent le cas où un test les allume sans vouloir de réseau réel.
   await page.route('**earthquake.usgs.gov/**', (route) => route.abort());

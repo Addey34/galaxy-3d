@@ -1,0 +1,30 @@
+# Serveur INTERNE des fichiers du service de données ; le Caddy partagé de la VM le relaie
+# (`galaxy-data.adrianguichard.dev`) et y pose le TLS.
+{
+	admin off
+	auto_https off
+}
+
+:80 {
+	root * /srv/galaxy-data
+	encode zstd gzip
+
+	# CORS limité à Galaxy et au développement local : la donnée est publique, la bande
+	# passante de la VM ne l'est pas.
+	@allowed header_regexp origin Origin ^(https://galaxy\.adrianguichard\.dev|http://localhost:[0-9]+)$
+	header @allowed Access-Control-Allow-Origin {re.origin.0}
+	header Vary Origin
+
+	# Le manifeste change à chaque passage ; un champ publié ne change jamais (son cycle est
+	# dans son chemin).
+	@manifest path */manifest.json
+	header @manifest Cache-Control "public, max-age=300"
+	@field path *.bin
+	header @field Cache-Control "public, max-age=31536000, immutable"
+	header @field Content-Type application/octet-stream
+
+	# Rien d'autre n'est servi : ni liste de dossier, ni fichier en cours d'écriture.
+	@hidden path */.* *.part
+	respond @hidden 404
+	file_server
+}

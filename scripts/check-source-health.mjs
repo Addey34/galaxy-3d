@@ -41,6 +41,17 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 
+/** L'origine du service de données, lue dans `src/core/galaxyData.ts` (son seul propriétaire). */
+const GALAXY_DATA_ORIGIN = (() => {
+  const source = readFileSync(join(ROOT, 'src/core/galaxyData.ts'), 'utf8');
+  const origin = /GALAXY_DATA_ORIGIN = '([^']+)'/.exec(source)?.[1];
+  if (!origin)
+    throw new Error(
+      'GALAXY_DATA_ORIGIN introuvable dans src/core/galaxyData.ts'
+    );
+  return origin;
+})();
+
 const argv = process.argv.slice(2);
 const asJson = argv.includes('--json');
 const asMarkdown = argv.includes('--markdown');
@@ -165,6 +176,37 @@ const MARKERS = [
     },
     what: 'registre de contexte du PDS',
   },
+  {
+    prefix: GALAXY_DATA_ORIGIN,
+    /**
+     * LE SERVICE DE DONNÉES DE GALAXY (lot 46, 2026-10-12), notre propre serveur. Le marqueur est
+     * la signature du format, lue sur le manifeste réel. Mais sa panne la plus probable n'est
+     * pas le silence : c'est une INGESTION arrêtée, qui laisse le manifeste répondre, de plus en
+     * plus vieux. D'où `fresh` : la dernière ANALYSE doit dater de moins de 24 h (un cycle toutes
+     * les 6 h, publié avec environ 5 h de délai), sans quoi la source est dite muette.
+     */
+    marker: () => '"format":"GXF1"',
+    fresh: (body, now) => {
+      const times = Object.entries(JSON.parse(body).times ?? {});
+      const analyses = times
+        .filter(([, entry]) => entry.kind === 'analysis')
+        .map(([stamp]) => stamp)
+        .sort();
+      const newest = analyses.at(-1);
+      if (!newest) return 'aucune analyse au manifeste';
+      const at = Date.UTC(
+        Number(newest.slice(0, 4)),
+        Number(newest.slice(4, 6)) - 1,
+        Number(newest.slice(6, 8)),
+        Number(newest.slice(8, 10))
+      );
+      const hours = (now - at) / 3_600_000;
+      return hours > 24
+        ? `dernière analyse ${newest}, vieille de ${Math.round(hours)} h (plus de 24 h)`
+        : null;
+    },
+    what: 'service de données de Galaxy (manifeste)',
+  },
 ];
 
 export const MARKER_RULES = MARKERS;
@@ -177,14 +219,26 @@ export const markerFor = (url) => MARKERS.find((m) => url.startsWith(m.prefix));
  *
  * `finalUrl` est l'adresse où le client a ATTERRI, qui n'est pas toujours celle demandée.
  */
-export function judgeResponse({ url, finalUrl, body, status }) {
+export function judgeResponse({
+  url,
+  finalUrl,
+  body,
+  status,
+  now = Date.now(),
+}) {
   const rule = markerFor(url);
   if (!rule)
     return { url, verdict: 'sans-marqueur', detail: 'aucun marqueur déclaré' };
-  const expected = rule.marker(url);
-  const alive = String(body)
+  let expected = rule.marker(url);
+  let alive = String(body)
     .toLowerCase()
     .includes(String(expected).toLowerCase());
+  // Une réponse vivante mais PÉRIMÉE ne sert pas mieux qu'une réponse muette.
+  const stale = alive && rule.fresh ? rule.fresh(String(body), now) : null;
+  if (stale) {
+    alive = false;
+    expected = stale;
+  }
   const landedElsewhere = new URL(finalUrl ?? url).host !== new URL(url).host;
   return {
     url,
@@ -216,7 +270,7 @@ const SBDB_PAGE = 'https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html';
 const SBDB_API = 'https://ssd-api.jpl.nasa.gov/sbdb.api?sstr=1&phys-par=1';
 
 export function derivedSources() {
-  const urls = new Set();
+  const urls = new Set([`${GALAXY_DATA_ORIGIN}/gfs/manifest.json`]);
   const snapshot = JSON.parse(
     readFileSync(join(ROOT, 'src/config/factSources.snapshot.json'), 'utf8')
   );

@@ -56,7 +56,10 @@ export interface MeteoModelLayerConfig {
   sourceLabel?: (data: MeteoGridData) => string;
 }
 
-function defaultSourceLabel(data: Pick<MeteoGridData, 'plan'>): string {
+function defaultSourceLabel(
+  data: Pick<MeteoGridData, 'plan' | 'provider'>
+): string {
+  if (data.provider) return data.provider;
   return data.plan.source === 'archive' ? 'ERA5' : 'Open-Meteo';
 }
 
@@ -67,7 +70,7 @@ function defaultSourceLabel(data: Pick<MeteoGridData, 'plan'>): string {
  */
 export function meteoSourceCandidate(
   config: Pick<MeteoModelLayerConfig, 'id' | 'sourceIdPrefix' | 'sourceLabel'>,
-  data: Pick<MeteoGridData, 'plan' | 'realDate'>
+  data: Pick<MeteoGridData, 'plan' | 'realDate' | 'provider'>
 ): SourceCandidate {
   const prefix = config.sourceIdPrefix ?? 'openmeteo-' + config.id;
   return {

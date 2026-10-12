@@ -38,6 +38,11 @@ export async function mockOpenMeteo(page: Page, value = 70): Promise<void> {
     });
   };
 
+  // Le service de données de Galaxy passe AVANT Open-Meteo (lot 46) : coupé ici, pour que ces
+  // scénarios exercent le repli qu'ils décrivent et ne dépendent jamais du vrai serveur.
+  await page.route('**/galaxy-data.adrianguichard.dev/**', (route) =>
+    route.abort()
+  );
   await page.route('**/api.open-meteo.com/**', (route) => respond(route, 48));
   await page.route('**/archive-api.open-meteo.com/**', (route) =>
     respond(route, 24)

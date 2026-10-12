@@ -3,6 +3,9 @@ import { expect, test, type Locator, type Page } from '@playwright/test';
 test.beforeEach(async ({ page }) => {
   await page.route('**/sbdb_query.api*', (route) => route.abort());
   await page.route('**/api.open-meteo.com/**', (route) => route.abort());
+  await page.route('**galaxy-data.adrianguichard.dev/**', (route) =>
+    route.abort()
+  );
   await page.route('**/archive-api.open-meteo.com/**', (route) =>
     route.abort()
   );
@@ -48,30 +51,34 @@ test('desktop weather defaults are explicit and satellite-first', async ({
 }) => {
   await openWeatherPanel(page);
 
-  await expect(page.locator('#weather-layers .wl-item')).toHaveCount(8);
+  // Neuf depuis le 2026-10-12 : le vent, rallumé sur le service de données (lot 46).
+  await expect(page.locator('#weather-layers .wl-item')).toHaveCount(9);
+  await expect(
+    weatherRow(page, 'Wind (model)').locator('input')
+  ).not.toBeChecked();
   await expect(
     weatherRow(page, 'Clouds (NASA)').locator('input')
   ).toBeChecked();
   await expect(
-    weatherRow(page, 'Clouds (Open-Meteo)').locator('input')
+    weatherRow(page, 'Clouds (model)').locator('input')
   ).not.toBeChecked();
   await expect(
     weatherRow(page, 'Rain (NASA IMERG)').locator('input')
   ).not.toBeChecked();
   await expect(
-    weatherRow(page, 'Rain (Open-Meteo)').locator('input')
+    weatherRow(page, 'Rain (model)').locator('input')
   ).not.toBeChecked();
   await expect(
     weatherRow(page, 'Air temperature (MERRA-2)').locator('input')
   ).not.toBeChecked();
   await expect(
-    weatherRow(page, 'Air temperature (Open-Meteo)').locator('input')
+    weatherRow(page, 'Air temperature (model)').locator('input')
   ).not.toBeChecked();
   await expect(
-    weatherRow(page, 'Sea-level pressure (Open-Meteo)').locator('input')
+    weatherRow(page, 'Sea-level pressure (model)').locator('input')
   ).not.toBeChecked();
   await expect(
-    weatherRow(page, 'Relative humidity (Open-Meteo)').locator('input')
+    weatherRow(page, 'Relative humidity (model)').locator('input')
   ).not.toBeChecked();
 });
 
@@ -79,7 +86,7 @@ test('satellite and model layers are mutually exclusive', async ({ page }) => {
   await openWeatherPanel(page);
 
   const satellite = weatherRow(page, 'Clouds (NASA)').locator('input');
-  const model = weatherRow(page, 'Clouds (Open-Meteo)').locator('input');
+  const model = weatherRow(page, 'Clouds (model)').locator('input');
   await model.check();
   await expect(model).toBeChecked();
   await expect(satellite).not.toBeChecked();
@@ -108,7 +115,7 @@ test('a layer switched off while it loads can be switched back on', async ({
   await openWeatherPanel(page);
 
   const satellite = weatherRow(page, 'Clouds (NASA)').locator('input');
-  const model = weatherRow(page, 'Clouds (Open-Meteo)').locator('input');
+  const model = weatherRow(page, 'Clouds (model)').locator('input');
   // Témoin : la couche active qui charge est bien verrouillée (le clic unique du mobile).
   await expect(satellite).toBeChecked();
   await expect(satellite).toBeDisabled();
@@ -152,9 +159,7 @@ test('weather debug exposes the render contract', async ({ page }) => {
   expect(cloudsSnapshot).toContain('render: hidden');
   await page.locator('#weather-trigger').click();
   await expect(page.locator('#weather-layers')).toBeVisible();
-  await weatherRow(page, 'Relative humidity (Open-Meteo)')
-    .locator('input')
-    .check();
+  await weatherRow(page, 'Relative humidity (model)').locator('input').check();
   await expect
     .poll(() => debug.innerText())
     .toMatch(/humidity-model \[model\] (idle|loading|ready|error) ON/);
@@ -172,13 +177,11 @@ test('pressure and humidity models stay optional and mutually exclusive', async 
 }) => {
   await openWeatherPanel(page);
 
-  const thermal = weatherRow(page, 'Air temperature (Open-Meteo)').locator(
+  const thermal = weatherRow(page, 'Air temperature (model)').locator('input');
+  const pressure = weatherRow(page, 'Sea-level pressure (model)').locator(
     'input'
   );
-  const pressure = weatherRow(page, 'Sea-level pressure (Open-Meteo)').locator(
-    'input'
-  );
-  const humidity = weatherRow(page, 'Relative humidity (Open-Meteo)').locator(
+  const humidity = weatherRow(page, 'Relative humidity (model)').locator(
     'input'
   );
 
@@ -207,7 +210,11 @@ test.describe('mobile weather defaults', () => {
   }) => {
     await openWeatherPanel(page);
 
-    await expect(page.locator('#weather-layers .wl-item')).toHaveCount(8);
+    // Neuf depuis le 2026-10-12 : le vent, rallumé sur le service de données (lot 46).
+    await expect(page.locator('#weather-layers .wl-item')).toHaveCount(9);
+    await expect(
+      weatherRow(page, 'Wind (model)').locator('input')
+    ).not.toBeChecked();
     await expect(
       weatherRow(page, 'Clouds (NASA)').locator('input')
     ).not.toBeChecked();
@@ -215,14 +222,10 @@ test.describe('mobile weather defaults', () => {
       weatherRow(page, 'Rain (NASA IMERG)').locator('input')
     ).not.toBeChecked();
     await expect(
-      weatherRow(page, 'Rain (Open-Meteo)').locator('input')
+      weatherRow(page, 'Rain (model)').locator('input')
     ).not.toBeChecked();
-    await expect(
-      weatherRow(page, 'Sea-level pressure (Open-Meteo)')
-    ).toHaveCount(1);
-    await expect(
-      weatherRow(page, 'Relative humidity (Open-Meteo)')
-    ).toHaveCount(1);
+    await expect(weatherRow(page, 'Sea-level pressure (model)')).toHaveCount(1);
+    await expect(weatherRow(page, 'Relative humidity (model)')).toHaveCount(1);
   });
 
   test('mobile weather layer activates with one click', async ({ page }) => {

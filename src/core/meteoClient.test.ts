@@ -47,6 +47,7 @@ describe('fetchMeteoGrid', () => {
       forecastGrid: grid,
       archiveGrid: grid,
       now,
+      skipGalaxyData: true,
     });
 
     expect(result.plan.source).toBe('forecast');
@@ -70,6 +71,7 @@ describe('fetchMeteoGrid', () => {
       forecastGrid: grid,
       archiveGrid: grid,
       now,
+      skipGalaxyData: true,
     });
 
     expect(result.plan.source).toBe('archive');
@@ -88,6 +90,7 @@ describe('fetchMeteoGrid', () => {
       forecastGrid: grid,
       archiveGrid: grid,
       now,
+      skipGalaxyData: true,
     });
 
     expect(result.grid).toBeNull();
@@ -112,6 +115,7 @@ describe('fetchMeteoGrid', () => {
       forecastGrid: grid,
       archiveGrid: grid,
       now,
+      skipGalaxyData: true,
       network: { baseDelayMs: 0, sleep: async () => undefined },
     });
 
@@ -143,6 +147,7 @@ describe('fetchMeteoGrid', () => {
       forecastGrid: grid,
       archiveGrid: grid,
       now,
+      skipGalaxyData: true,
       signal: controller.signal,
     });
     await Promise.resolve();
@@ -175,6 +180,7 @@ describe('fetchMeteoGrid', () => {
       forecastGrid: grid,
       archiveGrid: grid,
       now,
+      skipGalaxyData: true,
       network: { cacheTtlMs: 0 },
     };
     const first = fetchMeteoGrid(new Date('2026-08-14T12:00:00Z'), {
@@ -221,6 +227,7 @@ describe('fetchMeteoGrid', () => {
       forecastGrid: grid,
       archiveGrid: grid,
       now,
+      skipGalaxyData: true,
       network: { cacheTtlMs: 60_000 },
     };
 
@@ -251,6 +258,7 @@ describe('fetchMeteoGrids (le vent, 2026-10-12)', () => {
       forecastGrid: grid,
       archiveGrid: grid,
       now,
+      skipGalaxyData: true,
     });
 
     // UNE requête pour les deux variables, qui les demande toutes deux.

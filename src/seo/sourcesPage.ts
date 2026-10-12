@@ -156,15 +156,34 @@ export const LIVE_DATA_SERVICES: readonly LiveDataService[] = [
     },
   },
   {
+    host: 'galaxy-data.adrianguichard.dev',
+    name: 'Galaxy data service (NOAA GFS)',
+    url: 'https://www.nco.ncep.noaa.gov/pmb/products/gfs/',
+    use: {
+      en: 'Model weather layers, the past ten days and up to sixteen days ahead: the NOAA GFS model at 1°, fetched by Galaxy once per model run and served to every visitor.',
+      fr: 'Couches météo de modèle, des dix derniers jours jusqu’à seize jours à venir : le modèle GFS de la NOAA au pas de 1°, récupéré par Galaxy une fois par cycle du modèle et servi à tous les visiteurs.',
+      es: 'Capas meteorológicas modelizadas, de los últimos diez días hasta dieciséis días por delante: el modelo GFS de la NOAA a 1°, obtenido por Galaxy una vez por ciclo del modelo y servido a todos los visitantes.',
+      'pt-BR':
+        'Camadas meteorológicas modeladas, dos últimos dez dias até dezesseis dias à frente: o modelo GFS da NOAA a 1°, obtido pela Galaxy uma vez por ciclo do modelo e servido a todos os visitantes.',
+    },
+    terms: {
+      en: 'NOAA NCEP GFS, a U.S. Government work in the public domain; NOAA is credited as the source.',
+      fr: 'NOAA NCEP GFS, œuvre du gouvernement des États-Unis, dans le domaine public ; la NOAA est citée comme source.',
+      es: 'NOAA NCEP GFS, obra del Gobierno de los Estados Unidos en el dominio público; se cita a la NOAA como fuente.',
+      'pt-BR':
+        'NOAA NCEP GFS, obra do Governo dos Estados Unidos em domínio público; a NOAA é citada como fonte.',
+    },
+  },
+  {
     host: 'api.open-meteo.com',
     name: 'Open-Meteo',
     url: 'https://open-meteo.com/',
     use: {
-      en: 'Model weather layers (forecast and recent days): clouds, precipitation, wind, temperature, pressure, humidity.',
-      fr: 'Couches météo de modèle (prévision et jours récents) : nuages, précipitations, vent, température, pression, humidité.',
-      es: 'Capas meteorológicas modelizadas (previsión y días recientes): nubes, precipitación, viento, temperatura, presión, humedad.',
+      en: 'The same model layers when the Galaxy data service does not answer.',
+      fr: 'Les mêmes couches de modèle quand le service de données de Galaxy ne répond pas.',
+      es: 'Las mismas capas modelizadas cuando el servicio de datos de Galaxy no responde.',
       'pt-BR':
-        'Camadas meteorológicas modeladas (previsão e dias recentes): nuvens, precipitação, vento, temperatura, pressão, umidade.',
+        'As mesmas camadas modeladas quando o serviço de dados da Galaxy não responde.',
     },
     terms: {
       en: 'Weather data by Open-Meteo.com, licensed under CC BY 4.0; values are resampled into map textures. Free API used under its non-commercial terms.',

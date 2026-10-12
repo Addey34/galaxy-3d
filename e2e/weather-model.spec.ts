@@ -36,7 +36,7 @@ test('cloud model fallback loads and activates without a WebGL shader error', as
   await page.locator('#weather-trigger').click();
   const model = page
     .locator('#weather-layers .wl-item')
-    .filter({ hasText: 'Clouds (Open-Meteo)' })
+    .filter({ hasText: 'Clouds (model)' })
     .locator('input');
   await model.check();
   await expect(debug).toContainText('clouds-model [model] ready ON', {
@@ -63,6 +63,9 @@ test('satellite cloud shader compiles with a local NASA image', async ({
 
   await page.route('**/sbdb_query.api*', (route) => route.abort());
   await page.route('**/api.open-meteo.com/**', (route) => route.abort());
+  await page.route('**galaxy-data.adrianguichard.dev/**', (route) =>
+    route.abort()
+  );
   await page.route('**/archive-api.open-meteo.com/**', (route) =>
     route.abort()
   );
@@ -103,6 +106,9 @@ test('raw cloud diagnostic uses True Color without supplemental maps', async ({
 
   await page.route('**/sbdb_query.api*', (route) => route.abort());
   await page.route('**/api.open-meteo.com/**', (route) => route.abort());
+  await page.route('**galaxy-data.adrianguichard.dev/**', (route) =>
+    route.abort()
+  );
   await page.route('**/archive-api.open-meteo.com/**', (route) =>
     route.abort()
   );

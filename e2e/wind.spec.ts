@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { expect, test } from '@playwright/test';
 import { mockOpenMeteo } from './openMeteoMock';
 
@@ -43,7 +45,7 @@ test('wind layer: silent when off, then sourced and legended when on', async ({
   await page.locator('#weather-trigger').click();
   const item = page
     .locator('#weather-layers .wl-item')
-    .filter({ hasText: 'Wind (Open-Meteo)' });
+    .filter({ hasText: 'Wind (model)' });
   await item.locator('input').check();
   await expect(debug).toContainText('wind [vector] ready ON', {
     timeout: 15_000,
@@ -58,5 +60,75 @@ test('wind layer: silent when off, then sourced and legended when on', async ({
   await expect(item.locator('.wl-legend-labels')).toContainText('0 km/h');
   await expect(item.locator('.wl-legend-labels')).toContainText('90+ km/h');
 
+  expect(pageErrors).toEqual([]);
+});
+
+/**
+ * LE CHEMIN DU SERVICE DE DONNÉES (lot 46) : le manifeste et un champ réel (le fichier témoin que
+ * l'encodeur Python écrit) servis par la route du service, Open-Meteo coupé. La couche doit lire
+ * le service, ne jamais toucher Open-Meteo, et le DIRE dans son badge.
+ */
+test('wind layer reads the Galaxy data service first, and says so', async ({
+  page,
+}) => {
+  const pageErrors: string[] = [];
+  page.on('pageerror', (error) => pageErrors.push(error.message));
+  await page.route('**/sbdb_query.api*', (route) => route.abort());
+  const openMeteo: string[] = [];
+  await page.route('**open-meteo.com/**', (route) => {
+    openMeteo.push(route.request().url());
+    return route.abort();
+  });
+  // L'instant du manifeste : l'heure ronde de 3 h la plus proche de maintenant, comme le service.
+  const step = 3 * 3_600_000;
+  const at = new Date(Math.round(Date.now() / step) * step);
+  const stamp = at.toISOString().slice(0, 13).replace(/[-T]/g, '');
+  const manifest = {
+    format: 'GXF1',
+    generated: new Date().toISOString(),
+    source: { name: 'NOAA', url: '', licence: '' },
+    stepHours: 3,
+    path: 'gfs/{validTime}/{cycle}/{field}.bin',
+    fields: { wind10m: { unit: 'm/s', bands: 2 } },
+    times: { [stamp]: { cycle: stamp, kind: 'analysis', fields: ['wind10m'] } },
+  };
+  const fixture = readFileSync(
+    resolve(import.meta.dirname, '../src/core/galaxyData.fixture.bin')
+  );
+  await page.route('**/galaxy-data.adrianguichard.dev/**', (route) =>
+    route.request().url().endsWith('/manifest.json')
+      ? route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify(manifest),
+        })
+      : route.fulfill({
+          status: 200,
+          contentType: 'application/octet-stream',
+          body: fixture,
+        })
+  );
+  await page.addInitScript(() => {
+    localStorage.setItem('ssv-guided-tour-v1', '1');
+    localStorage.setItem('ssv-explo-tour-nudge-v1', '1');
+    localStorage.setItem('ssv-locale', 'en');
+  });
+
+  await page.goto('/?debug-meteo');
+  await expect(page.locator('#loader')).toBeHidden({ timeout: 30_000 });
+  await page.locator('#weather-trigger').click();
+  const item = page
+    .locator('#weather-layers .wl-item')
+    .filter({ hasText: 'Wind (model)' });
+  await item.locator('input').check();
+  await expect(page.locator('#meteo-debug')).toContainText(
+    'wind [vector] ready ON',
+    { timeout: 15_000 }
+  );
+  await expect(item.locator('.wl-source')).toContainText('NOAA GFS');
+  expect(
+    openMeteo,
+    'Open-Meteo jamais interrogé quand le service répond'
+  ).toEqual([]);
   expect(pageErrors).toEqual([]);
 });
