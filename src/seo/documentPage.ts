@@ -47,7 +47,9 @@ export const DOC_SLUGS: readonly DocSlug[] = ['methodology', 'sources'];
  * la navigation de tous les documents.
  */
 export const MISSIONS_SLUG = 'missions';
-const NAV_SLUGS: readonly string[] = [...DOC_SLUGS, MISSIONS_SLUG];
+/** Les pages des survols (2026-10-12), même forme : `/flybys/` et `/flybys/voyager2-neptune-1989-08-25/`. */
+export const FLYBYS_SLUG = 'flybys';
+const NAV_SLUGS: readonly string[] = [...DOC_SLUGS, MISSIONS_SLUG, FLYBYS_SLUG];
 
 /**
  * Texte dans les quatre langues livrées, sans repli : une page documentaire n'a pas le droit
@@ -103,6 +105,12 @@ const NAV: Record<string, DocText> = {
     fr: 'Missions',
     es: 'Misiones',
     'pt-BR': 'Missões',
+  },
+  flybys: {
+    en: 'Flybys',
+    fr: 'Survols',
+    es: 'Sobrevuelos',
+    'pt-BR': 'Sobrevoos',
   },
 };
 

@@ -231,6 +231,11 @@ export interface BodyPage extends LandingPage {
    * (`missionPages.ts`, 2026-10-04). Vide pour un corps qu'aucune mission ne vise.
    */
   missions: { name: string; href: string }[];
+  /**
+   * Les survols de ce corps, fragment HTML déjà échappé que `flybyPages.ts` rend (2026-10-12).
+   * Vide pour un corps qu'aucune sonde suivie n'a survolé.
+   */
+  flybys: string;
   canonical: string;
   /**
    * Vignette de partage PROPRE à ce corps. Les cinquante et une pages partageaient jusqu'ici
@@ -702,7 +707,9 @@ export function bodyLandingPages(
   missions: ReadonlyMap<
     string,
     readonly { name: string; slug: string }[]
-  > = new Map()
+  > = new Map(),
+  /** Corps → fragment HTML de ses survols, dans cette langue (`flybyListsByObject`). */
+  flybys: ReadonlyMap<string, string> = new Map()
 ): BodyPage[] {
   const flat = flattenBodies(config);
   const parentOf = new Map<string, string>();
@@ -766,6 +773,7 @@ export function bodyLandingPages(
             ? `/${mission.slug}/`
             : `/${LOCALE_PATH[locale]}/${mission.slug}/`,
       })),
+      flybys: flybys.get(name) ?? '',
       // Barre finale VOULUE. La page est `dist/<slug>/index.html` : Firebase sert un index de
       // répertoire et redirige `/jupiter` (301) vers `/jupiter/`. Un canonique sans barre
       // désignerait donc une URL qui redirige — le canonique doit nommer l'adresse finale.
@@ -872,6 +880,7 @@ function contentBlock(page: BodyPage): string {
     `<p>${escapeHtml(pageText('intro', page.locale, page.displayName))}</p>` +
     (facts ? `<dl>${facts}</dl>` : '') +
     missions +
+    page.flybys +
     sources
   );
 }

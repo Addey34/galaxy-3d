@@ -1,0 +1,762 @@
+{
+  "$comment": "Écrit par `pnpm flybys:generate` (scripts/generate-flyby-events.mjs), jamais à la main. Point le plus proche de chaque survol que `src/config/flybyEncounters.json` détecte, mesuré à la seconde contre Horizons, relatif au CENTRE du corps. `excluded` : ce que la mesure écarte, avec sa raison (departure : la rencontre commence avec la trajectoire, c’est un départ ; edge : minimum au bord de la fenêtre, ou fenêtre hors de la couverture ; bound : périapse d’une orbite ; unresolved : trajectoire servie non résolue ; phase : opérations de proximité dans une phase `satelliteOf` déclarée).",
+  "source": "NASA/JPL Horizons, CENTER 500@<corps> (différence de deux vecteurs héliocentriques quand le corps n’est pas un centre), ECLIPTIC J2000, VEC_CORR NONE, UT",
+  "events": [
+    {
+      "probe": "voyager1",
+      "body": "jupiter",
+      "closestAt": "1979-03-05T12:04:35Z",
+      "closestKm": 348435,
+      "speedKmS": 29.04,
+      "solution": "Voyager_1_ST+refit2022_m",
+      "measuredFrom": "centre",
+      "retrieved": "2026-10-12"
+    },
+    {
+      "probe": "voyager2",
+      "body": "jupiter",
+      "closestAt": "1979-07-09T22:29:01Z",
+      "closestKm": 721375,
+      "speedKmS": 20.23,
+      "solution": "Voyager_2_ST+refit2022_m",
+      "measuredFrom": "centre",
+      "retrieved": "2026-10-12"
+    },
+    {
+      "probe": "voyager1",
+      "body": "saturn",
+      "closestAt": "1980-11-12T23:45:38Z",
+      "closestKm": 184030,
+      "speedKmS": 25.31,
+      "solution": "Voyager_1_ST+refit2022_m",
+      "measuredFrom": "centre",
+      "retrieved": "2026-10-12"
+    },
+    {
+      "probe": "voyager2",
+      "body": "saturn",
+      "closestAt": "1981-08-26T03:24:05Z",
+      "closestKm": 160691,
+      "speedKmS": 24.21,
+      "solution": "Voyager_2_ST+refit2022_m",
+      "measuredFrom": "centre",
+      "retrieved": "2026-10-12"
+    },
+    {
+      "probe": "voyager2",
+      "body": "uranus",
+      "closestAt": "1986-01-24T17:58:51Z",
+      "closestKm": 107154,
+      "speedKmS": 18.03,
+      "solution": "Voyager_2_ST+refit2022_m",
+      "measuredFrom": "centre",
+      "retrieved": "2026-10-12"
+    },
+    {
+      "probe": "voyager2",
+      "body": "neptune",
+      "closestAt": "1989-08-25T03:55:40Z",
+      "closestKm": 29236,
+      "speedKmS": 27.33,
+      "solution": "Voyager_2_ST+refit2022_m",
+      "measuredFrom": "centre",
+      "retrieved": "2026-10-12"
+    },
+    {
+      "probe": "cassini",
+      "body": "venus",
+      "closestAt": "1998-04-26T13:44:41Z",
+      "closestKm": 6336,
+      "speedKmS": 11.79,
+      "solution": "cassini_merge",
+      "measuredFrom": "centre",
+      "retrieved": "2026-10-12"
+    },
+    {
+      "probe": "cassini",
+      "body": "venus",
+      "closestAt": "1999-06-24T20:29:55Z",
+      "closestKm": 6654,
+      "speedKmS": 13.64,
+      "solution": "cassini_merge",
+      "measuredFrom": "centre",
+      "retrieved": "2026-10-12"
+    },
+    {
+      "probe": "cassini",
+      "body": "earth",
+      "closestAt": "1999-08-18T03:28:26Z",
+      "closestKm": 7550,
+      "speedKmS": 19.03,
+      "solution": "cassini_merge",
+      "measuredFrom": "centre",
+      "retrieved": "2026-10-12"
+    },
+    {
+      "probe": "cassini",
+      "body": "jupiter",
+      "closestAt": "2000-12-30T10:04:22Z",
+      "closestKm": 9794457,
+      "speedKmS": 11.6,
+      "solution": "cassini_merge",
+      "measuredFrom": "centre",
+      "retrieved": "2026-10-12"
+    },
+    {
+      "probe": "rosetta",
+      "body": "earth",
+      "closestAt": "2005-03-04T22:09:14Z",
+      "closestKm": 8332,
+      "speedKmS": 10.52,
+      "solution": "rosetta_merged",
+      "measuredFrom": "centre",
+      "retrieved": "2026-10-12"
+    },
+    {
+      "probe": "rosetta",
+      "body": "mars",
+      "closestAt": "2007-02-25T01:44:18Z",
+      "closestKm": 3650,
+      "speedKmS": 10.05,
+      "solution": "rosetta_merged",
+      "measuredFrom": "centre",
+      "retrieved": "2026-10-12"
+    },
+    {
+      "probe": "new-horizons",
+      "body": "jupiter",
+      "closestAt": "2007-02-28T05:43:40Z",
+      "closestKm": 2304505,
+      "speedKmS": 21.22,
+      "solution": "NH_merged",
+      "measuredFrom": "centre",
+      "retrieved": "2026-10-12"
+    },
+    {
+      "probe": "rosetta",
+      "body": "earth",
+      "closestAt": "2007-11-13T20:57:23Z",
+      "closestKm": 11678,
+      "speedKmS": 12.49,
+      "solution": "rosetta_merged",
+      "measuredFrom": "centre",
+      "retrieved": "2026-10-12"
+    },
+    {
+      "probe": "rosetta",
+      "body": "earth",
+      "closestAt": "2009-11-13T07:45:40Z",
+      "closestKm": 8859,
+      "speedKmS": 13.34,
+      "solution": "rosetta_merged",
+      "measuredFrom": "centre",
+      "retrieved": "2026-10-12"
+    },
+    {
+      "probe": "rosetta",
+      "body": "lutetia",
+      "closestAt": "2010-07-10T15:44:54Z",
+      "closestKm": 3174,
+      "speedKmS": 15,
+      "solution": "rosetta_merged",
+      "measuredFrom": "difference",
+      "retrieved": "2026-10-12"
+    },
+    {
+      "probe": "juno",
+      "body": "earth",
+      "closestAt": "2013-10-09T19:21:25Z",
+      "closestKm": 6932,
+      "speedKmS": 14.93,
+      "solution": "Juno_merged",
+      "measuredFrom": "centre",
+      "retrieved": "2026-10-12"
+    },
+    {
+      "probe": "new-horizons",
+      "body": "pluto",
+      "closestAt": "2015-07-14T11:48:29Z",
+      "closestKm": 13676,
+      "speedKmS": 13.78,
+      "solution": "NH_merged",
+      "measuredFrom": "centre",
+      "retrieved": "2026-10-12"
+    },
+    {
+      "probe": "hayabusa2",
+      "body": "earth",
+      "closestAt": "2015-12-03T10:07:53Z",
+      "closestKm": 9521,
+      "speedKmS": 9.74,
+      "solution": "hayabusa-2_merged",
+      "measuredFrom": "centre",
+      "retrieved": "2026-10-12"
+    },
+    {
+      "probe": "osiris-rex",
+      "body": "earth",
+      "closestAt": "2017-09-22T16:51:46Z",
+      "closestKm": 23592,
+      "speedKmS": 8.52,
+      "solution": "ORX_merged",
+      "measuredFrom": "centre",
+      "retrieved": "2026-10-12"
+    },
+    {
+      "probe": "parker-solar-probe",
+      "body": "venus",
+      "closestAt": "2018-10-03T08:44:28Z",
+      "closestKm": 8481,
+      "speedKmS": 24.55,
+      "solution": "psp_merged",
+      "measuredFrom": "centre",
+      "retrieved": "2026-10-12"
+    },
+    {
+      "probe": "parker-solar-probe",
+      "body": "venus",
+      "closestAt": "2019-12-26T18:14:46Z",
+      "closestKm": 9057,
+      "speedKmS": 24.45,
+      "solution": "psp_merged",
+      "measuredFrom": "centre",
+      "retrieved": "2026-10-12"
+    },
+    {
+      "probe": "bepicolombo",
+      "body": "earth",
+      "closestAt": "2020-04-10T04:24:57Z",
+      "closestKm": 19064,
+      "speedKmS": 7.6,
+      "solution": "BepiColombo_ESA",
+      "measuredFrom": "centre",
+      "retrieved": "2026-10-12"
+    },
+    {
+      "probe": "parker-solar-probe",
+      "body": "venus",
+      "closestAt": "2020-07-11T03:23:40Z",
+      "closestKm": 6885,
+      "speedKmS": 24.94,
+      "solution": "psp_merged",
+      "measuredFrom": "centre",
+      "retrieved": "2026-10-12"
+    },
+    {
+      "probe": "bepicolombo",
+      "body": "venus",
+      "closestAt": "2020-10-15T03:58:32Z",
+      "closestKm": 16774,
+      "speedKmS": 10.1,
+      "solution": "BepiColombo_ESA",
+      "measuredFrom": "centre",
+      "retrieved": "2026-10-12"
+    },
+    {
+      "probe": "hayabusa2",
+      "body": "earth",
+      "closestAt": "2020-12-05T17:32:00Z",
+      "closestKm": 6712,
+      "speedKmS": 11.74,
+      "solution": "hayabusa-2_merged",
+      "measuredFrom": "centre",
+      "retrieved": "2026-10-12"
+    },
+    {
+      "probe": "solar-orbiter",
+      "body": "venus",
+      "closestAt": "2020-12-27T12:39:20Z",
+      "closestKm": 13489,
+      "speedKmS": 13.5,
+      "solution": "SOLO_ESA",
+      "measuredFrom": "centre",
+      "retrieved": "2026-10-12"
+    },
+    {
+      "probe": "parker-solar-probe",
+      "body": "venus",
+      "closestAt": "2021-02-20T20:05:45Z",
+      "closestKm": 8437,
+      "speedKmS": 24.59,
+      "solution": "psp_merged",
+      "measuredFrom": "centre",
+      "retrieved": "2026-10-12"
+    },
+    {
+      "probe": "solar-orbiter",
+      "body": "venus",
+      "closestAt": "2021-08-09T04:41:09Z",
+      "closestKm": 14047,
+      "speedKmS": 13.42,
+      "solution": "SOLO_ESA",
+      "measuredFrom": "centre",
+      "retrieved": "2026-10-12"
+    },
+    {
+      "probe": "bepicolombo",
+      "body": "venus",
+      "closestAt": "2021-08-10T13:51:54Z",
+      "closestKm": 6604,
+      "speedKmS": 12.74,
+      "solution": "BepiColombo_ESA",
+      "measuredFrom": "centre",
+      "retrieved": "2026-10-12"
+    },
+    {
+      "probe": "bepicolombo",
+      "body": "mercury",
+      "closestAt": "2021-10-01T23:34:42Z",
+      "closestKm": 2639,
+      "speedKmS": 7.78,
+      "solution": "BepiColombo_ESA",
+      "measuredFrom": "centre",
+      "retrieved": "2026-10-12"
+    },
+    {
+      "probe": "parker-solar-probe",
+      "body": "venus",
+      "closestAt": "2021-10-16T09:30:50Z",
+      "closestKm": 9861,
+      "speedKmS": 24.35,
+      "solution": "psp_merged",
+      "measuredFrom": "centre",
+      "retrieved": "2026-10-12"
+    },
+    {
+      "probe": "solar-orbiter",
+      "body": "earth",
+      "closestAt": "2021-11-27T04:30:31Z",
+      "closestKm": 6832,
+      "speedKmS": 15.14,
+      "solution": "SOLO_ESA",
+      "measuredFrom": "centre",
+      "retrieved": "2026-10-12"
+    },
+    {
+      "probe": "bepicolombo",
+      "body": "mercury",
+      "closestAt": "2022-06-23T09:44:22Z",
+      "closestKm": 2639,
+      "speedKmS": 7.53,
+      "solution": "BepiColombo_ESA",
+      "measuredFrom": "centre",
+      "retrieved": "2026-10-12"
+    },
+    {
+      "probe": "solar-orbiter",
+      "body": "venus",
+      "closestAt": "2022-09-04T01:26:27Z",
+      "closestKm": 12499,
+      "speedKmS": 19.82,
+      "solution": "SOLO_ESA",
+      "measuredFrom": "centre",
+      "retrieved": "2026-10-12"
+    },
+    {
+      "probe": "bepicolombo",
+      "body": "mercury",
+      "closestAt": "2023-06-19T19:34:25Z",
+      "closestKm": 2675,
+      "speedKmS": 5.45,
+      "solution": "BepiColombo_ESA",
+      "measuredFrom": "centre",
+      "retrieved": "2026-10-12"
+    },
+    {
+      "probe": "parker-solar-probe",
+      "body": "venus",
+      "closestAt": "2023-08-21T12:02:54Z",
+      "closestKm": 10057,
+      "speedKmS": 24.32,
+      "solution": "psp_merged",
+      "measuredFrom": "centre",
+      "retrieved": "2026-10-12"
+    },
+    {
+      "probe": "osiris-rex",
+      "body": "earth",
+      "closestAt": "2023-09-24T14:44:48Z",
+      "closestKm": 7151,
+      "speedKmS": 12.26,
+      "solution": "ORX_merged",
+      "measuredFrom": "centre",
+      "retrieved": "2026-10-12"
+    },
+    {
+      "probe": "juice",
+      "body": "earth",
+      "closestAt": "2024-08-20T21:56:14Z",
+      "closestKm": 13210,
+      "speedKmS": 8.44,
+      "solution": "JUICE_merged",
+      "measuredFrom": "centre",
+      "retrieved": "2026-10-12"
+    },
+    {
+      "probe": "bepicolombo",
+      "body": "mercury",
+      "closestAt": "2024-09-04T21:48:49Z",
+      "closestKm": 2604,
+      "speedKmS": 4.97,
+      "solution": "BepiColombo_ESA",
+      "measuredFrom": "centre",
+      "retrieved": "2026-10-12"
+    },
+    {
+      "probe": "parker-solar-probe",
+      "body": "venus",
+      "closestAt": "2024-11-06T18:43:40Z",
+      "closestKm": 6428,
+      "speedKmS": 25.07,
+      "solution": "psp_merged",
+      "measuredFrom": "centre",
+      "retrieved": "2026-10-12"
+    },
+    {
+      "probe": "bepicolombo",
+      "body": "mercury",
+      "closestAt": "2024-12-01T14:23:41Z",
+      "closestKm": 40066,
+      "speedKmS": 2.86,
+      "solution": "BepiColombo_ESA",
+      "measuredFrom": "centre",
+      "retrieved": "2026-10-12"
+    },
+    {
+      "probe": "bepicolombo",
+      "body": "mercury",
+      "closestAt": "2025-01-08T05:58:52Z",
+      "closestKm": 2736,
+      "speedKmS": 4.43,
+      "solution": "BepiColombo_ESA",
+      "measuredFrom": "centre",
+      "retrieved": "2026-10-12"
+    },
+    {
+      "probe": "solar-orbiter",
+      "body": "venus",
+      "closestAt": "2025-02-18T20:48:46Z",
+      "closestKm": 6430,
+      "speedKmS": 21.02,
+      "solution": "SOLO_ESA",
+      "measuredFrom": "centre",
+      "retrieved": "2026-10-12"
+    },
+    {
+      "probe": "hera",
+      "body": "mars",
+      "closestAt": "2025-03-12T12:50:47Z",
+      "closestKm": 9060,
+      "speedKmS": 9.28,
+      "solution": "hera_current",
+      "measuredFrom": "centre",
+      "retrieved": "2026-10-12"
+    },
+    {
+      "probe": "juice",
+      "body": "venus",
+      "closestAt": "2025-08-31T05:28:51Z",
+      "closestKm": 11140,
+      "speedKmS": 10.44,
+      "solution": "JUICE_merged",
+      "measuredFrom": "centre",
+      "retrieved": "2026-10-12"
+    },
+    {
+      "probe": "osiris-rex",
+      "body": "earth",
+      "closestAt": "2025-09-23T17:00:03Z",
+      "closestKm": 9814,
+      "speedKmS": 10.96,
+      "solution": "ORX_merged",
+      "measuredFrom": "centre",
+      "retrieved": "2026-10-12"
+    },
+    {
+      "probe": "juice",
+      "body": "earth",
+      "closestAt": "2026-09-28T11:45:11Z",
+      "closestKm": 15017,
+      "speedKmS": 13.12,
+      "solution": "JUICE_merged",
+      "measuredFrom": "centre",
+      "retrieved": "2026-10-12"
+    },
+    {
+      "probe": "solar-orbiter",
+      "body": "venus",
+      "closestAt": "2026-12-24T22:57:48Z",
+      "closestKm": 7000,
+      "speedKmS": 20.82,
+      "solution": "SOLO_ESA",
+      "measuredFrom": "centre",
+      "retrieved": "2026-10-12"
+    },
+    {
+      "probe": "osiris-rex",
+      "body": "earth",
+      "closestAt": "2027-03-16T03:29:32Z",
+      "closestKm": 10558,
+      "speedKmS": 10.7,
+      "solution": "ORX_merged",
+      "measuredFrom": "centre",
+      "retrieved": "2026-10-12"
+    },
+    {
+      "probe": "solar-orbiter",
+      "body": "venus",
+      "closestAt": "2028-03-18T08:16:26Z",
+      "closestKm": 6402,
+      "speedKmS": 21.03,
+      "solution": "SOLO_ESA",
+      "measuredFrom": "centre",
+      "retrieved": "2026-10-12"
+    },
+    {
+      "probe": "juice",
+      "body": "earth",
+      "closestAt": "2029-01-17T18:33:57Z",
+      "closestKm": 11012,
+      "speedKmS": 13.83,
+      "solution": "JUICE_merged",
+      "measuredFrom": "centre",
+      "retrieved": "2026-10-12"
+    },
+    {
+      "probe": "osiris-rex",
+      "body": "earth",
+      "closestAt": "2029-04-13T23:05:28Z",
+      "closestKm": 7523,
+      "speedKmS": 11.85,
+      "solution": "ORX_merged",
+      "measuredFrom": "centre",
+      "retrieved": "2026-10-12"
+    },
+    {
+      "probe": "solar-orbiter",
+      "body": "venus",
+      "closestAt": "2029-06-10T17:41:30Z",
+      "closestKm": 6402,
+      "speedKmS": 21.03,
+      "solution": "SOLO_ESA",
+      "measuredFrom": "centre",
+      "retrieved": "2026-10-12"
+    },
+    {
+      "probe": "solar-orbiter",
+      "body": "venus",
+      "closestAt": "2030-09-03T02:57:55Z",
+      "closestKm": 8670,
+      "speedKmS": 20.39,
+      "solution": "SOLO_ESA",
+      "measuredFrom": "centre",
+      "retrieved": "2026-10-12"
+    }
+  ],
+  "excluded": [
+    {
+      "probe": "bepicolombo",
+      "body": "earth",
+      "planAt": "2018-10-22T00:14:00.000Z",
+      "reason": "departure"
+    },
+    {
+      "probe": "bepicolombo",
+      "body": "mercury",
+      "planAt": "2026-10-26T12:53:00.000Z",
+      "reason": "phase"
+    },
+    {
+      "probe": "bepicolombo",
+      "body": "mercury",
+      "planAt": "2027-04-08T23:13:00.000Z",
+      "reason": "phase"
+    },
+    {
+      "probe": "cassini",
+      "body": "earth",
+      "planAt": "1997-10-17T00:14:00.000Z",
+      "reason": "departure"
+    },
+    {
+      "probe": "cassini",
+      "body": "saturn",
+      "planAt": "2017-09-02T13:14:00.000Z",
+      "reason": "phase"
+    },
+    {
+      "probe": "exomars-tgo",
+      "body": "earth",
+      "planAt": "2016-03-15T00:14:00.000Z",
+      "reason": "departure"
+    },
+    {
+      "probe": "exomars-tgo",
+      "body": "mars",
+      "planAt": "2018-01-21T19:43:00.000Z",
+      "reason": "phase"
+    },
+    {
+      "probe": "hayabusa2",
+      "body": "earth",
+      "planAt": "2014-12-05T00:14:00.000Z",
+      "reason": "departure"
+    },
+    {
+      "probe": "hayabusa2",
+      "body": "ryugu",
+      "planAt": "2019-03-24T00:43:00.000Z",
+      "reason": "unresolved"
+    },
+    {
+      "probe": "hera",
+      "body": "earth",
+      "planAt": "2024-10-08T00:14:00.000Z",
+      "reason": "departure"
+    },
+    {
+      "probe": "hera",
+      "body": "didymos",
+      "planAt": "2026-11-02T23:43:00.000Z",
+      "reason": "edge"
+    },
+    {
+      "probe": "juice",
+      "body": "earth",
+      "planAt": "2023-04-15T00:14:00.000Z",
+      "reason": "departure"
+    },
+    {
+      "probe": "juice",
+      "body": "jupiter",
+      "planAt": "2031-07-19T23:43:00.000Z",
+      "reason": "edge"
+    },
+    {
+      "probe": "juno",
+      "body": "earth",
+      "planAt": "2011-08-07T00:14:00.000Z",
+      "reason": "departure"
+    },
+    {
+      "probe": "juno",
+      "body": "jupiter",
+      "planAt": "2024-10-22T18:14:00.000Z",
+      "reason": "phase"
+    },
+    {
+      "probe": "jwst",
+      "body": "earth",
+      "planAt": "2021-12-26T00:14:00.000Z",
+      "reason": "departure"
+    },
+    {
+      "probe": "mars-express",
+      "body": "earth",
+      "planAt": "2003-06-03T00:14:00.000Z",
+      "reason": "departure"
+    },
+    {
+      "probe": "mars-express",
+      "body": "mars",
+      "planAt": "2004-06-28T20:13:00.000Z",
+      "reason": "phase"
+    },
+    {
+      "probe": "osiris-rex",
+      "body": "earth",
+      "planAt": "2016-09-10T00:14:00.000Z",
+      "reason": "departure"
+    },
+    {
+      "probe": "osiris-rex",
+      "body": "bennu",
+      "planAt": "2018-12-16T16:43:00.000Z",
+      "reason": "phase"
+    },
+    {
+      "probe": "osiris-rex",
+      "body": "bennu",
+      "planAt": "2020-04-14T22:43:00.000Z",
+      "reason": "phase"
+    },
+    {
+      "probe": "osiris-rex",
+      "body": "bennu",
+      "planAt": "2020-08-11T22:13:00.000Z",
+      "reason": "phase"
+    },
+    {
+      "probe": "osiris-rex",
+      "body": "bennu",
+      "planAt": "2020-10-20T21:43:00.000Z",
+      "reason": "phase"
+    },
+    {
+      "probe": "osiris-rex",
+      "body": "bennu",
+      "planAt": "2021-04-04T00:13:00.000Z",
+      "reason": "phase"
+    },
+    {
+      "probe": "parker-solar-probe",
+      "body": "earth",
+      "planAt": "2018-08-13T00:14:00.000Z",
+      "reason": "departure"
+    },
+    {
+      "probe": "rosetta",
+      "body": "earth",
+      "planAt": "2004-03-04T00:14:00.000Z",
+      "reason": "departure"
+    },
+    {
+      "probe": "rosetta",
+      "body": "churyumov-gerasimenko",
+      "planAt": "2015-02-14T12:43:00.000Z",
+      "reason": "phase"
+    },
+    {
+      "probe": "rosetta",
+      "body": "churyumov-gerasimenko",
+      "planAt": "2015-04-25T08:13:00.000Z",
+      "reason": "phase"
+    },
+    {
+      "probe": "rosetta",
+      "body": "churyumov-gerasimenko",
+      "planAt": "2015-07-08T21:43:00.000Z",
+      "reason": "phase"
+    },
+    {
+      "probe": "rosetta",
+      "body": "churyumov-gerasimenko",
+      "planAt": "2016-03-23T01:43:00.000Z",
+      "reason": "phase"
+    },
+    {
+      "probe": "rosetta",
+      "body": "churyumov-gerasimenko",
+      "planAt": "2016-10-01T10:13:00.000Z",
+      "reason": "phase"
+    },
+    {
+      "probe": "solar-orbiter",
+      "body": "earth",
+      "planAt": "2020-02-11T00:14:00.000Z",
+      "reason": "departure"
+    },
+    {
+      "probe": "voyager1",
+      "body": "earth",
+      "planAt": "1977-09-06T00:14:00.000Z",
+      "reason": "departure"
+    },
+    {
+      "probe": "voyager2",
+      "body": "earth",
+      "planAt": "1977-08-21T00:14:00.000Z",
+      "reason": "departure"
+    }
+  ]
+}

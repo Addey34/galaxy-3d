@@ -5125,6 +5125,61 @@ livrés, citation, sentinelle, étalonnage, liens, quatre langues ; règles fals
 `e2e/built-pages.spec.ts` (l'index et la page de Voyager, la plus longue, dans les quatre
 langues : axe et 390 px, sur le build).
 
+## Pages des survols (`/flybys/`, 2026-10-12)
+
+L'index `/flybys/` et une page par survol (`/flybys/voyager2-neptune-1989-08-25/`), dans les
+quatre langues, générés au build et ajoutés au sitemap. Même rendu que les pages des missions
+(`documentPage.ts`) : aucun octet au démarrage. Générateur pur : `src/seo/flybyPages.ts`.
+
+- **La donnée** : `pnpm flybys:generate` (`scripts/generate-flyby-events.mjs`) écrit
+  `src/seo/flybyEvents.json` (dossier jamais livré au client). Il part des rencontres que
+  `pnpm ephemeris:flybys` DÉTECTE (`src/config/flybyEncounters.json`) et mesure le point le plus
+  proche de chacune contre Horizons : ±6 h au pas d'une minute autour du plus proche du plan,
+  puis ±90 s au pas d'une seconde. **Le plan ne suffit pas à publier** : il échantillonne toutes
+  les 10 min pour juger un segment, et donnait Voyager 2 au plus près de Neptune à 03:43 et
+  33 889 km, quand la mesure à la seconde dit 03:55:40 et 29 236 km.
+- **Distance au CENTRE du corps**, la Terre à son centre (399) et non au barycentre que la scène
+  dessine. Un petit corps qu'Horizons ne sert pas comme centre (Lutetia) se mesure par
+  différence des deux vecteurs héliocentriques, et sa page le dit (`measuredFrom`).
+- **Ce qui n'a pas de page, dérivé et non listé**, écrit avec sa raison dans `excluded` :
+  `departure` (le plan trouve son minimum au premier instant de la rencontre, qui commence donc
+  avec la trajectoire), `edge` (minimum au bord de la fenêtre, ou fenêtre hors de la couverture
+  d'Horizons : une arrivée que la trajectoire publiée n'atteint pas), `phase` (l'instant tombe
+  dans une phase `satelliteOf` que la fiche de la sonde déclare autour de ce corps : Rosetta à
+  67P, OSIRIS-REx à Bennu, Juno, Cassini, les deux orbiteurs de Mars, et BepiColombo dans la
+  phase qu'il déclare autour de Mercure à partir du 2026-10-13), `bound` (énergie relative
+  négative, masse lue au catalogue ; aucune rencontre ne l'atteint aujourd'hui, les phases
+  déclarées les couvrant toutes) et `unresolved` (Hayabusa2 à Ryugu, que le plan déclare non
+  résolue). Le compte se lit dans le fichier, pas ici.
+- **Une prédiction est dite** : un survol postérieur à la date de lecture de SA réponse
+  (`scripts/fact-source-cache.mjs`) est marqué comme tel sur l'index et sur sa page.
+- **La solution de trajectoire** qu'Horizons cite dans l'en-tête de sa réponse est publiée telle
+  quelle : c'est ce qui permet de refaire la mesure.
+- **La scène est à un lien** : la page de la sonde à l'instant du passage, en Explo
+  (`/voyager2/?mode=explo&date=1989-08-25T03:55:40Z`). L'horloge part alors de cet instant en
+  temps réel, comme pour tout permalien daté.
+- **Les liens retour** : la page de chaque corps et de chaque sonde porte la liste de ses survols
+  (`flybyListsByObject`, fragment rendu par ce module et passé tout fait, puisque les deux
+  modules de page sont importés par celui-ci). Les pages de document ont une entrée « Survols »
+  dans leur navigation.
+
+**Trouvé par la garde, pas en relisant** : la règle `departure` n'existait pas au premier tirage.
+ExoMars TGO « survolait » alors la Terre à 7 127 km le jour de son lancement, le point bas de
+l'injection tombant DANS la fenêtre de six heures, donc invisible à la règle du bord. C'est la
+comparaison au plan (la mesure fine doit tomber à moins de 30 min de la sienne) qui l'a
+trahi : 4 h 19 d'écart.
+
+Routage du service worker : `flybys` est la troisième rubrique à deux segments
+(`NESTED_SEGMENTS` de `pwaRouting.ts`), confrontée à toutes les pages par `pwaRouting.test.ts`.
+
+Gardes : `src/seo/flybyPages.test.ts` (toute rencontre du plan est un survol ou une exclusion
+nommée ; la mesure fine n'est jamais plus loin que celle du plan ni à plus de 30 min d'elle ;
+aucune page dans une phase déclarée ; prédiction exactement après la lecture ; liens retour
+exactement deux par survol), `e2e/flybys.spec.ts` (le lien ouvre Voyager 2 en Explo à
+l'instant publié), `e2e/built-pages.spec.ts` (l'index et une page de prédiction dans les quatre
+langues : axe et 390 px, sur le build). `pnpm flybys:generate --check` sort en code 1 si le
+relevé livré a dérivé ; à rejouer après tout `pnpm ephemeris:flybys --write`.
+
 ## Les cibles des missions entrées au catalogue (2026-10-04, vague 1)
 
 Les pages des missions montraient ce que le registre du PDS déclare, et vingt de ses missions ne

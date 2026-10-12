@@ -12,6 +12,8 @@ import { ECLIPSE_PATH_SEGMENT } from '@/core/eclipsePages';
 import { LOCALES } from '@/i18n/locales';
 import { docPath, MISSIONS_SLUG } from './documentPage';
 import missionCatalogue from './missionCatalogue.json';
+import flybyRecord from './flybyEvents.json';
+import { flybySlug } from './flybyPages';
 
 /**
  * Chaque page que le build écrit doit être à la fois NON précachée et NON remplacée par l'app
@@ -29,6 +31,12 @@ const pages = [
       canonical: `${ORIGIN}${docPath(`${MISSIONS_SLUG}/${mission.slug}`, locale)}`,
     }))
   ),
+  // Les pages de survol (2026-10-12), même forme.
+  ...LOCALES.flatMap((locale) =>
+    flybyRecord.events.map((event) => ({
+      canonical: `${ORIGIN}${docPath(flybySlug(event), locale)}`,
+    }))
+  ),
 ];
 
 describe('routage du service worker pour les pages d’atterrissage', () => {
@@ -38,6 +46,11 @@ describe('routage du service worker pour les pages d’atterrissage', () => {
     expect(ECLIPSE_SEGMENT_FOR_TESTS).toBe(ECLIPSE_PATH_SEGMENT);
     expect(
       pages.some((p) => p.canonical.endsWith('/pt-br/missions/voyager/'))
+    ).toBe(true);
+    expect(
+      pages.some((p) =>
+        p.canonical.endsWith('/es/flybys/voyager2-neptune-1989-08-25/')
+      )
     ).toBe(true);
   });
 

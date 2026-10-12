@@ -46,7 +46,8 @@ function stripGlslComments() {
     name: 'strip-glsl-comments',
     enforce: 'pre' as const,
     transform(code: string, id: string): { code: string; map: null } | null {
-      if (!/[\\/]src[\\/].+\.ts$/.test(id) || /\.test\.ts$/.test(id)) return null;
+      if (!/[\\/]src[\\/].+\.ts$/.test(id) || /\.test\.ts$/.test(id))
+        return null;
       const out = stripGlslSource(code, id);
       return out === null ? null : { code: out, map: null };
     },
@@ -302,11 +303,39 @@ function bodyLandingPages() {
           )
         ) as import('./src/seo/missionPages').MissionCatalogue;
         const missionsByBody = missionSeo.missionsByBody(missionCatalogue);
+        /**
+         * LES SURVOLS (2026-10-12) : le relevé écrit par `pnpm flybys:generate`, mesuré à la
+         * seconde contre Horizons. Lu ici parce que les pages de corps et de sondes portent la
+         * liste des leurs, tirée du relevé même qui fait les pages `/flybys/`.
+         */
+        const flybySeo = (await loader.ssrLoadModule(
+          '/src/seo/flybyPages.ts'
+        )) as typeof import('./src/seo/flybyPages');
+        const flybyRecord = JSON.parse(
+          await readFile(
+            resolve(__dirname, 'src/seo/flybyEvents.json'),
+            'utf-8'
+          )
+        ) as import('./src/seo/flybyPages').FlybyRecord;
+        const flybyNavigable = (await loader.ssrLoadModule(
+          '/src/config/navigable.ts'
+        )) as typeof import('./src/config/navigable');
+        const flybyLists = (locale: import('./src/i18n/locales').Locale) =>
+          flybySeo.flybyListsByObject(
+            {
+              record: flybyRecord,
+              config: catalogue.CELESTIAL_CONFIG,
+              navigable: flybyNavigable.NAVIGABLE_TARGETS,
+              origin: SITE_ORIGIN,
+            },
+            locale
+          );
         const pages = seo.bodyLandingPages(
           catalogue.CELESTIAL_CONFIG,
           SITE_ORIGIN,
           'en',
-          missionsByBody
+          missionsByBody,
+          flybyLists('en')
         );
         // Un catalogue vide, un chargeur qui rend un module vide, un renommage de champ : le
         // build produirait alors zéro page et un sitemap réduit à deux URL, SANS rien signaler
@@ -329,7 +358,8 @@ function bodyLandingPages() {
             catalogue.CELESTIAL_CONFIG,
             SITE_ORIGIN,
             locale,
-            missionsByBody
+            missionsByBody,
+            flybyLists(locale)
           )
         );
         for (const page of [...pages, ...localisedBodyPages]) {
@@ -466,12 +496,17 @@ function bodyLandingPages() {
               read(primitive.indices) as ArrayLike<number>
             ),
             // La couleur que l'application affiche sur ce modèle quand il n'a pas de texture.
-            ...(factor ? { baseColor: [factor[0]!, factor[1]!, factor[2]!] } : {}),
+            ...(factor
+              ? { baseColor: [factor[0]!, factor[1]!, factor[2]!] }
+              : {}),
             // Un ATLAS (67P) : la texture se lit à ces coordonnées, pas par direction.
             ...(primitive.attributes.TEXCOORD_0 !== undefined
               ? {
                   uv: Float32Array.from(
-                    read(primitive.attributes.TEXCOORD_0, 2) as ArrayLike<number>
+                    read(
+                      primitive.attributes.TEXCOORD_0,
+                      2
+                    ) as ArrayLike<number>
                   ),
                 }
               : {}),
@@ -659,6 +694,7 @@ function bodyLandingPages() {
           archiveRetrieved: instrumentIndex.retrieved,
           coverage,
           missionPages: missionSeo.missionSlugsByLid(missionCatalogue),
+          flybys: flybyLists,
         };
         const instrumentPages = instrumentSeo.instrumentLandingPages(
           navigable.NAVIGABLE_TARGETS,
@@ -929,17 +965,18 @@ function bodyLandingPages() {
             spacecraftByMission.set(investigation.lid, list);
           }
         }
-        const missionDocPages = [undefined, ...OTHER_LOCALES].flatMap((locale) =>
-          missionSeo.missionPages(
-            {
-              catalogue: missionCatalogue,
-              config: catalogue.CELESTIAL_CONFIG,
-              navigable: navigable.NAVIGABLE_TARGETS,
-              spacecraftByMission,
-              origin: SITE_ORIGIN,
-            },
-            locale ?? 'en'
-          )
+        const missionDocPages = [undefined, ...OTHER_LOCALES].flatMap(
+          (locale) =>
+            missionSeo.missionPages(
+              {
+                catalogue: missionCatalogue,
+                config: catalogue.CELESTIAL_CONFIG,
+                navigable: navigable.NAVIGABLE_TARGETS,
+                spacecraftByMission,
+                origin: SITE_ORIGIN,
+              },
+              locale ?? 'en'
+            )
         );
         // L'index plus une page par mission, dans chaque langue : rien de moins.
         if (
@@ -950,6 +987,26 @@ function bodyLandingPages() {
             `pages des missions : ${missionDocPages.length} au lieu de ${(missionCatalogue.missions.length + 1) * DOC_LOCALE_COUNT}`
           );
         docPages.push(...missionDocPages);
+        // Les survols : l'index plus une page par survol, dans chaque langue (relevé lu plus haut).
+        const flybyDocPages = [undefined, ...OTHER_LOCALES].flatMap((locale) =>
+          flybySeo.flybyPages(
+            {
+              record: flybyRecord,
+              config: catalogue.CELESTIAL_CONFIG,
+              navigable: navigable.NAVIGABLE_TARGETS,
+              origin: SITE_ORIGIN,
+            },
+            locale ?? 'en'
+          )
+        );
+        if (
+          flybyDocPages.length !==
+          (flybyRecord.events.length + 1) * DOC_LOCALE_COUNT
+        )
+          throw new Error(
+            `pages des survols : ${flybyDocPages.length} au lieu de ${(flybyRecord.events.length + 1) * DOC_LOCALE_COUNT}`
+          );
+        docPages.push(...flybyDocPages);
         for (const page of docPages) {
           const dir = resolve(dist, new URL(page.canonical).pathname.slice(1));
           await mkdir(dir, { recursive: true });
