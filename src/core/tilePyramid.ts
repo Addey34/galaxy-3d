@@ -21,12 +21,24 @@
 
 /** Forme d'une matrice de tuiles, telle qu'une fiche de jeu de tuiles la déclare. */
 export interface TileMatrixShape {
-  /** Colonnes au niveau 0 (2 pour une pyramide équirectangulaire 2:1). */
+  /**
+   * Colonnes au niveau de RÉFÉRENCE (2 pour une pyramide équirectangulaire 2:1 de Trek, où ce
+   * niveau est 0). Le nom garde la forme d'origine : avec `referenceLevel` absent, c'est bien le
+   * niveau zéro.
+   */
   columnsAtLevelZero: number;
-  /** Lignes au niveau 0 (1 pour une pyramide équirectangulaire 2:1). */
+  /** Lignes au niveau de référence (1 pour une pyramide équirectangulaire 2:1). */
   rowsAtLevelZero: number;
   /** Côté d'une tuile, en pixels. */
   tileSizePx: number;
+  /**
+   * Premier niveau où la grille couvre EXACTEMENT le globe et à partir duquel elle double (lot 48,
+   * 2026-10-12). Trek double dès le niveau 0 (absent = 0). NASA GIBS en EPSG:4326 publie
+   * `2x1, 3x2, 5x3` puis `10x5, 20x10…` en tuiles de 512 px : la tuile de niveau 0 couvre 288°,
+   * la grille déborde du globe, et seul le niveau 3 tombe juste (10 × 36° = 360°). Une fiche GIBS
+   * déclare donc 10 × 5 au niveau 3. Aucun niveau inférieur n'existe pour le moteur.
+   */
+  referenceLevel?: number;
 }
 
 /** La forme publiée par Trek dans ses capacités WMTS (jeu `default028mm`). */
@@ -60,14 +72,21 @@ export interface TileMatrix {
   rows: number;
 }
 
-/** Matrice d'un niveau : les dimensions doublent à chaque niveau, dans les deux sens. */
+/**
+ * Matrice d'un niveau : les dimensions doublent à chaque niveau, dans les deux sens, à partir du
+ * niveau de référence. Un niveau inférieur est ramené à la référence : il n'existe pas pour la
+ * fiche (`isWithinMatrix` le refuse), et l'arithmétique ne doit pas fabriquer une grille
+ * fractionnaire qui aurait l'air plausible.
+ */
 export function tileMatrix(
   level: number,
   shape: TileMatrixShape = WMTS_EQUIRECTANGULAR_2x1
 ): TileMatrix {
-  const factor = Math.pow(2, Math.max(0, Math.floor(level)));
+  const reference = shape.referenceLevel ?? 0;
+  const actual = Math.max(reference, Math.floor(level));
+  const factor = Math.pow(2, actual - reference);
   return {
-    level: Math.max(0, Math.floor(level)),
+    level: actual,
     columns: shape.columnsAtLevelZero * factor,
     rows: shape.rowsAtLevelZero * factor,
   };
@@ -134,6 +153,8 @@ export function isWithinMatrix(
   shape: TileMatrixShape = WMTS_EQUIRECTANGULAR_2x1
 ): boolean {
   if (!Number.isInteger(index.level) || index.level < 0) return false;
+  // Sous la référence, la grille publiée déborde du globe : aucune tuile n'y est demandée.
+  if (index.level < (shape.referenceLevel ?? 0)) return false;
   if (!Number.isInteger(index.row) || !Number.isInteger(index.column))
     return false;
   const matrix = tileMatrix(index.level, shape);

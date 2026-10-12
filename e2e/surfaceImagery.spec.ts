@@ -775,3 +775,64 @@ test('displaces Ceres with the Dawn terrain model, on its fitted ellipsoid', asy
   await expectAltitudeInManifestRange(page, probe, 'ceres');
   expect(errors, `Erreurs page : ${errors.join(' | ')}`).toEqual([]);
 });
+
+/**
+ * LA TERRE, DEPUIS NASA GIBS (lot 48). Ce qui DIFFÈRE de Trek, et que ce scénario tient :
+ *
+ *   - une grille qui ne double qu'à partir du niveau 3 (`2x1, 3x2, 5x3` puis `10x5…`, tuiles de
+ *     512 px, capabilities lues le 2026-10-12) : aucune tuile n'est demandée sous ce niveau, où
+ *     la grille déborde du globe et poserait l'image au mauvais endroit ;
+ *   - un gabarit sans jeton `{Style}` et en `.jpeg` ;
+ *   - une mosaïque d'UN mois (« Blue Marble (August 2004) », métadonnées de la couche), que le
+ *     bandeau date.
+ */
+test('paints the Earth from NASA GIBS, never below its reference level', async ({
+  page,
+}) => {
+  const errors: string[] = [];
+  page.on('pageerror', (err) => errors.push(err.message));
+  const seen: string[] = [];
+  await page.route(
+    '**gibs.earthdata.nasa.gov/wmts/epsg4326/best/BlueMarble_NextGeneration/**',
+    (route) => {
+      seen.push(route.request().url());
+      return route.fulfill({
+        status: 200,
+        contentType: 'image/jpeg',
+        headers: { 'access-control-allow-origin': '*' },
+        body: TILE_JPEG,
+      });
+    }
+  );
+
+  await boot(page, '?debug-surface&mode=explo&body=earth');
+  await expect(page.locator('#surface-probe')).toContainText('earth', {
+    timeout: 30_000,
+  });
+  await zoomIn(page);
+  const badge = page.locator('#surface-imagery');
+  await expect(badge).toBeVisible({ timeout: 30_000 });
+  expect(seen.length, 'aucune tuile demandée en approche').toBeGreaterThan(0);
+
+  for (const url of seen) {
+    const match =
+      /\/BlueMarble_NextGeneration\/default\/500m\/(\d+)\/(\d+)\/(\d+)\.jpeg$/.exec(
+        url
+      );
+    expect(match, url).not.toBeNull();
+    const [level, row, column] = match!.slice(1).map(Number) as [
+      number,
+      number,
+      number,
+    ];
+    expect(level, url).toBeGreaterThanOrEqual(3);
+    // La matrice du niveau, telle que les capabilities la publient : 10 × 5 au niveau 3.
+    const scale = 2 ** (level - 3);
+    expect(row, url).toBeLessThan(5 * scale);
+    expect(column, url).toBeLessThan(10 * scale);
+  }
+
+  await expect(badge.locator('.si-credit')).toContainText('NASA GIBS');
+  await expect(badge).toContainText('2004');
+  expect(errors, `Erreurs page : ${errors.join(' | ')}`).toEqual([]);
+});

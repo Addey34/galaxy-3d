@@ -249,3 +249,44 @@ describe('forme de matrice déclarée par une autre fiche', () => {
     });
   });
 });
+
+/**
+ * LA GRILLE DE NASA GIBS EN EPSG:4326 (lot 48), recopiée de ses capabilities lues le 2026-10-12 :
+ * `2x1, 3x2, 5x3, 10x5, 20x10…` en tuiles de 512 px. Exacte et doublante à partir du niveau 3
+ * seulement. L'emprise attendue de la tuile (3, 1, 4) est celle de la tuile TÉMOIN téléchargée ce
+ * jour-là : Gibraltar, les Açores et les Canaries tombaient chacun au pixel calculé.
+ */
+describe('la grille GIBS, exacte à partir de son niveau de référence', () => {
+  const GIBS = {
+    columnsAtLevelZero: 10,
+    rowsAtLevelZero: 5,
+    tileSizePx: 512,
+    referenceLevel: 3,
+  };
+
+  it('double à partir du niveau 3, comme les capabilities le publient', () => {
+    expect(tileMatrix(3, GIBS)).toEqual({ level: 3, columns: 10, rows: 5 });
+    expect(tileMatrix(7, GIBS)).toEqual({ level: 7, columns: 160, rows: 80 });
+    expect(pyramidWidthPx(8, GIBS)).toBe(320 * 512);
+  });
+
+  it('la tuile témoin (3, 1, 4) couvre 36° O à 0°, 54° N à 18° N', () => {
+    expect(tileBounds({ level: 3, row: 1, column: 4 }, GIBS)).toEqual({
+      west: -36,
+      east: 0,
+      south: 18,
+      north: 54,
+    });
+  });
+
+  it('refuse tout niveau sous la référence : la grille publiée y déborde du globe', () => {
+    expect(isWithinMatrix({ level: 2, row: 0, column: 0 }, GIBS)).toBe(false);
+    expect(isWithinMatrix({ level: 3, row: 4, column: 9 }, GIBS)).toBe(true);
+    expect(isWithinMatrix({ level: 3, row: 5, column: 0 }, GIBS)).toBe(false);
+  });
+
+  it('sans référence déclarée, la grille de Trek ne change pas', () => {
+    expect(tileMatrix(0)).toEqual({ level: 0, columns: 2, rows: 1 });
+    expect(tileMatrix(2)).toEqual({ level: 2, columns: 8, rows: 4 });
+  });
+});

@@ -145,6 +145,13 @@ const MARKERS = [
     what: 'capabilities WMTS',
   },
   {
+    // L'imagerie de la Terre (lot 48) : les capabilities de NASA GIBS en EPSG:4326, lues le
+    // 2026-10-12 (5 318 465 o, racine `<Capabilities`).
+    prefix: 'https://gibs.earthdata.nasa.gov/wmts/',
+    marker: () => '<Capabilities',
+    what: 'capabilities WMTS',
+  },
+  {
     prefix: 'https://oderest.rsl.wustl.edu/',
     /**
      * Lu le 2026-09-30 sur une réponse RÉELLE : l'ODE rend ses erreurs en HTTP 200, avec

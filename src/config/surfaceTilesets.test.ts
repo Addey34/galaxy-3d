@@ -105,16 +105,18 @@ describe('fiches de jeux de tuiles', () => {
     // Ce n'est pas théorique : les couches de Trek mêlent les deux (la Lune, Mars, Mercure et
     // Cérès servent du JPEG, Vénus du PNG), et l'adresse composée à la main en `.jpg` pour une
     // couche PNG a réellement rendu 404 au lot 27.
-    const EXTENSIONS: Record<string, string> = {
-      'image/jpeg': '.jpg',
-      'image/png': '.png',
+    // GIBS écrit `.jpeg` là où Trek écrit `.jpg` (capabilities lues le 2026-10-12) : les deux
+    // désignent du JPEG, et le gabarit se RECOPIE, il ne se normalise pas.
+    const EXTENSIONS: Record<string, string[]> = {
+      'image/jpeg': ['.jpg', '.jpeg'],
+      'image/png': ['.png'],
     };
     expect(TILESET_PRODUCTS.length).toBeGreaterThan(0);
     for (const product of TILESET_PRODUCTS) {
       const expected = EXTENSIONS[product.service.format];
       expect(expected, `${product.id} : format inconnu`).toBeDefined();
       expect(
-        product.service.template.endsWith(expected!),
+        expected!.some((ext) => product.service.template.endsWith(ext)),
         `${product.id} déclare ${product.service.format} mais son gabarit finit par ` +
           `« ${product.service.template.slice(-4)} »`
       ).toBe(true);
@@ -130,7 +132,15 @@ describe('fiches de jeux de tuiles', () => {
       expect(tileset.service.template, body).toContain(
         '{TileMatrix}/{TileRow}/{TileCol}'
       );
-      expect(tileset.service.template, body).toContain('{Style}');
+      // Trek publie un jeton `{Style}` ; GIBS écrit son style (`default`) en dur dans le chemin.
+      // Les deux sont recopiés des capacités : ce qui compte est que le style DÉCLARÉ soit
+      // celui que l'adresse emploie.
+      const template = tileset.service.template;
+      expect(
+        template.includes('{Style}') ||
+          template.includes(`/${tileset.service.style}/`),
+        `${body} : ni jeton {Style}, ni style « ${tileset.service.style} » dans le chemin`
+      ).toBe(true);
       expect(tileset.service.template, body).toContain('{TileMatrixSet}');
     }
   });
