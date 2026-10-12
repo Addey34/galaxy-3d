@@ -2349,8 +2349,9 @@ poussière ce jour-là) : c'est le ciel du jour, pas un défaut de rendu.
 ### Les fonds de rechange de la Terre : un choix, pas une pile (lot 48)
 
 Depuis le 2026-10-12, le réglage « Sol de la Terre » (section Rendu, `#surface-earth-base`) remplace
-la case « Terre du jour ». Il choisit UN fond parmi la mosaïque Blue Marble (par défaut), le jour
-de la scène (VIIRS, § ci-dessus), le relief ombré avec bathymétrie et les lumières nocturnes. Un
+la case « Terre du jour ». Il choisit UN fond parmi la mosaïque Blue Marble (par défaut),
+Sentinel-2 sans nuages (EOX, § ci-dessous, depuis le 2026-10-13), le jour de la scène (VIIRS,
+§ ci-dessus), le relief ombré avec bathymétrie et les lumières nocturnes. Un
 seul fond est posé sur le globe à la fois, parce que tous recouvrent le même maillage ; les couches
 météo restent par-dessus.
 
@@ -2368,6 +2369,30 @@ météo restent par-dessus.
 - Rien d'autre que la mosaïque n'est demandé tant qu'on n'en choisit pas un autre, et le choix ne
   persiste pas, comme le reste du contenu de la scène. Un choix qu'un corps ne propose pas retombe
   sur sa mosaïque.
+
+### Sentinel-2 sans nuages d'EOX : 10 m, non commercial, et sur une autre grille (2026-10-13)
+
+Un cinquième fond du réglage « Sol de la Terre » : EOxCloudless 2024 (`earth-eox-s2cloudless-2024`,
+fournisseur `eox-cloudless`), à 10 m par pixel, niveaux 5 à 13 de la grille `WGS84` d'EOX, celle que
+la documentation d'EOX publie (« zoom levels 0–13 for EPSG:4326 ») ; au-delà, le service ne fait
+qu'agrandir. Quatre choses lues à la source le 2026-10-13, qui décident :
+
+- **la licence** : CC BY-NC-SA 4.0 pour les couches de 2018 à 2025, usage non commercial seulement
+  (Galaxy est gratuit et éducatif ; un usage payant demanderait une licence d'EOX) ;
+- **l'attribution EXACTE**, « displayed legibly and in proximity to the usage » : le crédit du
+  bandeau la porte mot pour mot, et `config/surfaceTilesets.test.ts` l'exige du crédit de toute
+  fiche dont le fournisseur n'est pas la NASA ;
+- **le service** : EOX permet d'employer ses points d'accès WMTS directement dans une application,
+  les fournit en l'état, et limite le débit sous forte charge en REDIRIGEANT vers une page. Le
+  guetteur des sources l'en distingue par son marqueur ; Blue Marble reste le fond par défaut ;
+- **la grille n'est pas celle de GIBS** : c'est celle de Trek (2 × 1 au niveau 0, 256 px). D'où un
+  second relief (§ « Le relief de la Terre »), et le plancher compté depuis le sol (§ « Relief
+  mesuré »), que les 10 m ont rendu nécessaire.
+
+Le texte des fournisseurs contactés à l'exécution (`tile-source`, `event-source`) ne voyage plus
+dans le catalogue du démarrage (plugin `deriveRegistryText`) : seule `/sources` le lit, au build.
+Mesuré : 2,7 Ko par langue rendus au démarrage, dont 968 o pour le seul fournisseur EOX ; le build
+casse si un module client venait à importer l'une de ces fiches.
 
 ## Relief mesuré — des hauteurs cuites hors ligne, jamais devinées
 
@@ -2500,10 +2525,16 @@ ce plancher. L'étiquette de la source publie par ailleurs ses propres extrêmes
 
 **Ce que le relief ne fait PAS.** Aucun relief fractal, aucun détail synthétisé sous la résolution
 de la source, aucune carte d'ombrage employée comme géométrie (un ombrage fige un Soleil, et la
-scène fait bouger le Soleil). Le plancher d'approche reste une altitude au-dessus du RAYON DE
-RÉFÉRENCE, pas au-dessus du sol : au-dessus d'un massif, la caméra s'approche donc davantage du
-sol que le plancher ne le laisse croire, et `?debug-surface` affiche l'altitude MESURÉE du sol
-sous la caméra pour qu'on puisse le voir. Des aires fines ne sont déclarées que sur la Lune et
+scène fait bouger le Soleil). **Le plancher d'approche se compte depuis le SOL, dans la direction
+de la caméra, depuis le 2026-10-13** : le plus haut de la sphère de rendu, de l'ellipsoïde rendu et
+du sol mesuré par le relief sous la visée (`CelestialObject.getClearanceRadius`, reposé à chaque
+image par `CameraSystem`, le plan proche aussi). La phrase qui disait « le plancher reste une
+altitude au-dessus du rayon de référence, pas au-dessus du sol » est SUPERSEDED ce jour : avec
+Sentinel-2 à 10 m, ce plancher tombait à 0,9 km de la sphère de 6 371 km, et la caméra passait
+3,2 km SOUS le sol de la Terre (mesuré, puis falsifié par `e2e/surfaceImagery.spec.ts` : −4,083 km
+sans la correction). Le maximum avec la sphère est conservateur aux pôles d'un globe aplati
+(environ 14 km de plancher en trop sur la Terre), jamais dangereux. `?debug-surface` affiche
+l'altitude MESURÉE du sol sous la caméra. Des aires fines ne sont déclarées que sur la Lune et
 sur Cérès ; Mars et la Terre n'ont que leur socle (chaque manifeste en liste la couverture). La
 phrase qui disait « aucune aire fine ailleurs que sur la Lune, et Mars garde son imagerie sans
 relief » est SUPERSEDED le 2026-10-12 : Mars a son socle MEGR, Cérès Occator et Ahuna Mons.
@@ -2559,6 +2590,14 @@ dont le manifeste publie les seuils et chaque étendue modifiée avec son niveau
   cet anneau, à 52 m sous l'ellipsoïde autour d'eaux à 182 et 194 m.
 
 On ne fait que RELEVER : une cellule plus haute que son niveau garde son altitude.
+
+**Un relief par grille d'imagerie (2026-10-13).** Depuis Sentinel-2 (§ ci-dessus), la Terre est
+servie sur DEUX grilles, GIBS et celle de Trek que suit EOX. Chaque cible du cuiseur nomme la fiche
+dont elle suit la grille (`gridOf`), le moteur choisit le jeu dont le manifeste porte la grille de
+l'imagerie (`config/surfaceHeights.ts::heightsForGrid`), et le second jeu (`earth-etopo-2022-trek`,
+niveaux 5 et 6, 10 240 tuiles, 1 353 Mo) vient de la MÊME source et de la MÊME règle de l'eau, le
+premier gardant exactement son hachage. Une falsification l'a montré : prendre le jeu au hasard
+de l'ordre des fichiers tombait juste par chance (le tiret se trie avant le point).
 
 **Servi par le service de données, pas par Firebase.** 4 250 tuiles, 562 Mo : sur l'hébergeur dont
 le quota de stockage a déjà cassé un déploiement (§ « Quota de stockage » de `CLAUDE.md`), ce

@@ -19,6 +19,7 @@ import type { HeightfieldSetProduct } from '@/registry/schema/product';
 import type { HeightCoverageEntry } from '@/core/heightPyramid';
 import type { DatedProduct, TimeInterval } from '@/core/temporal';
 import type { TileMatrixShape } from '@/core/tilePyramid';
+import { sameGrid } from '@/core/heightPyramid';
 
 const asHeightfield = (record: unknown): HeightfieldSetProduct =>
   record as HeightfieldSetProduct;
@@ -101,9 +102,71 @@ function toSet(fiche: HeightfieldSetProduct): SurfaceHeightSet {
   };
 }
 
-/** Les jeux de hauteurs déclarés, indexés par nom de corps du catalogue. */
-export const SURFACE_HEIGHT_SETS: ReadonlyMap<string, SurfaceHeightSet> =
-  new Map(FICHES.map((fiche) => [fiche.body, toSet(fiche)]));
+/**
+ * Les jeux de hauteurs déclarés, par nom de corps du catalogue. Un corps servi sur deux grilles
+ * d'imagerie en a un par grille (la Terre, lot 48 : GIBS et EOX), parce qu'une tuile d'imagerie ne
+ * désigne sa tuile de hauteurs que par son indice. Le jeu employé se choisit par la grille du
+ * MANIFESTE (`heightsForGrid`), jamais par l'ordre des fiches.
+ */
+export const SURFACE_HEIGHT_SETS: ReadonlyMap<
+  string,
+  readonly SurfaceHeightSet[]
+> = (() => {
+  const byBody = new Map<string, SurfaceHeightSet[]>();
+  for (const fiche of FICHES) {
+    const list = byBody.get(fiche.body) ?? [];
+    list.push(toSet(fiche));
+    byBody.set(fiche.body, list);
+  }
+  return byBody;
+})();
+
+/** Un jeu de hauteurs et son manifeste lu, prêts pour le moteur. */
+export interface LoadedHeights {
+  set: SurfaceHeightSet;
+  manifest: HeightManifest;
+}
+
+/**
+ * Lit les manifestes de TOUS les jeux d'un corps. Un manifeste illisible est écarté et dit : ses
+ * carreaux restent plats, ce qui est une dégradation honnête, jamais une attente.
+ */
+export async function loadBodyHeights(
+  body: string,
+  warn: (message: string) => void,
+  fetchJson: (path: string) => Promise<unknown> = async (path) => {
+    const response = await fetch(path, { credentials: 'omit' });
+    if (!response.ok) throw new Error(`manifeste ${response.status}`);
+    return response.json();
+  }
+): Promise<LoadedHeights[]> {
+  const loaded = await Promise.all(
+    (SURFACE_HEIGHT_SETS.get(body) ?? []).map(async (set) => {
+      try {
+        return {
+          set,
+          manifest: parseHeightManifest(
+            await fetchJson(`/${set.manifestPath}`)
+          ),
+        };
+      } catch (error) {
+        warn(`[Surface] relief ${set.id} indisponible : ${String(error)}`);
+        return null;
+      }
+    })
+  );
+  return loaded.filter((entry): entry is LoadedHeights => entry !== null);
+}
+
+/** Le relief cuit sur la grille de cette imagerie, ou `null` : aucun relief d'une autre grille. */
+export function heightsForGrid(
+  loaded: readonly LoadedHeights[],
+  matrix: TileMatrixShape
+): LoadedHeights | null {
+  return (
+    loaded.find((entry) => sameGrid(entry.manifest.matrix, matrix)) ?? null
+  );
+}
 
 /**
  * Produit daté d'un jeu de hauteurs, pour `classifyTemporal`.

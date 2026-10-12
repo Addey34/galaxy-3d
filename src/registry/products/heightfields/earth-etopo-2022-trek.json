@@ -1,0 +1,43 @@
+{
+  "$schema": "../../schema/product.schema.json",
+  "id": "earth-etopo-2022-trek",
+  "type": "heightfield",
+  "body": "earth",
+  "title": "ETOPO 2022 Global Relief Model, ice surface (60 arc-second), with its EGM2008 geoid heights, on the EOX Sentinel-2 imagery grid",
+  "mission": "ETOPO 2022",
+  "instrument": "Global relief compilation (topography and bathymetry)",
+  "manifest": "assets/height-tiles/earth-trek/manifest.json",
+  "generatedBy": "scripts/bake-surface-height-tiles.mjs",
+  "acquired": {
+    "interval": [["1998-01-01T00:00:00Z", "2022-09-01T23:59:59Z"]]
+  },
+  "license": "other",
+  "rights": "public-domain",
+  "links": [
+    {
+      "rel": "license",
+      "href": "https://www.ncei.noaa.gov/products/etopo-global-relief-model"
+    },
+    {
+      "rel": "describedby",
+      "href": "https://www.ncei.noaa.gov/metadata/geoportal/rest/metadata/item/gov.noaa.ngdc.mgg.dem:etopo_2022/xml"
+    },
+    {
+      "rel": "via",
+      "href": "https://www.ngdc.noaa.gov/mgg/global/relief/ETOPO2022/data/60s/"
+    }
+  ],
+  "providers": [
+    {
+      "name": "NOAA National Centers for Environmental Information (ETOPO 2022)",
+      "roles": ["producer", "host"],
+      "url": "https://www.ncei.noaa.gov/products/etopo-global-relief-model"
+    },
+    {
+      "name": "Water mask: NASA GIBS (MODIS/SRTM)",
+      "roles": ["processor"],
+      "url": "https://gibs.earthdata.nasa.gov/"
+    }
+  ],
+  "verified": "2026-10-12"
+}

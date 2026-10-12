@@ -858,9 +858,15 @@ test('paints the Earth from NASA GIBS, never below its reference level', async (
  * Les tuiles sont servies par le test, d'altitude nulle et d'en-tête exact (le décodeur refuse une
  * tuile dont l'en-tête ne nomme pas l'indice demandé) : ce qui est mesuré est la DEMANDE.
  */
-function flatHeightTile(level: number, row: number, column: number): Buffer {
+function flatHeightTile(
+  level: number,
+  row: number,
+  column: number,
+  metres = 0
+): Buffer {
   const samples = 257;
   const bytes = Buffer.alloc(32 + samples * samples * 2);
+  bytes.fill(0);
   bytes.write('GXHT', 0, 'latin1');
   bytes.writeUInt16LE(1, 4);
   bytes.writeUInt16LE(32, 6);
@@ -870,6 +876,8 @@ function flatHeightTile(level: number, row: number, column: number): Buffer {
   bytes.writeUInt16LE(samples, 14);
   bytes.writeDoubleLE(1, 16);
   bytes.writeDoubleLE(0, 24);
+  for (let i = 0; i < samples * samples; i += 1)
+    bytes.writeInt16LE(metres, 32 + i * 2);
   return bytes;
 }
 
@@ -1014,6 +1022,108 @@ async function chooseEarthBase(page: Page, choice: string): Promise<void> {
 }
 
 const enableDailyEarth = (page: Page) => chooseEarthBase(page, 'daily');
+
+/**
+ * SENTINEL-2 SANS NUAGES D'EOX (lot 48) : le seul fond de la Terre servi sur la grille de TREK
+ * (2 × 1 au niveau 0, tuiles de 256 px), quand tout le reste est sur celle de GIBS. Ce scénario
+ * tient les deux conséquences qu'aucune capture ne montre : les tuiles demandées à EOX restent
+ * dans sa grille publiée (niveaux 5 à 13), et le relief est demandé dans le jeu cuit sur CETTE
+ * grille (`earth-trek`), jamais dans celui de GIBS, dont le même indice tomberait ailleurs. Et
+ * l'attribution qu'EOX exige est à l'écran.
+ */
+test('paints Sentinel-2 on the Trek grid, with the relief baked on that grid', async ({
+  page,
+}) => {
+  const errors: string[] = [];
+  page.on('pageerror', (err) => errors.push(err.message));
+  const trek = JSON.parse(
+    readFileSync(
+      resolve(HERE, '../public/assets/height-tiles/earth-trek/manifest.json'),
+      'utf-8'
+    )
+  ) as { directory: string };
+  const eox: string[] = [];
+  await page.route('**tiles.maps.eox.at/**', (route) => {
+    eox.push(route.request().url());
+    return route.fulfill({
+      status: 200,
+      contentType: 'image/jpeg',
+      headers: { 'access-control-allow-origin': '*' },
+      body: TILE_JPEG,
+    });
+  });
+  const relief: string[] = [];
+  await page.route('**galaxy-data.adrianguichard.dev/**/*.hgt', (route) => {
+    const url = route.request().url();
+    relief.push(url);
+    const [level, row, column] = /\/(\d+)\/(\d+)\/(\d+)\.hgt$/
+      .exec(url)!
+      .slice(1)
+      .map(Number) as [number, number, number];
+    return route.fulfill({
+      status: 200,
+      contentType: 'application/octet-stream',
+      headers: { 'access-control-allow-origin': '*' },
+      // Un sol à 5 000 m au-dessus de la sphère de référence : un plancher compté depuis elle
+      // mettrait la caméra dessous, et c'est ce que la sonde doit démentir plus bas.
+      body: flatHeightTile(level, row, column, 5000),
+    });
+  });
+
+  await boot(page, '?debug-surface&mode=explo&body=earth');
+  await expect(page.locator('#surface-probe')).toContainText('earth', {
+    timeout: 30_000,
+  });
+  await chooseEarthBase(page, 'sentinel-2');
+  await zoomIn(page);
+  const badge = page.locator('#surface-imagery');
+  await expect(badge).toHaveAttribute('data-relief', /\d+/, {
+    timeout: 30_000,
+  });
+  await expect(badge.locator('.si-credit')).toContainText(
+    'EOxCloudless https://cloudless.eox.at by EOX IT Services GmbH (Contains modified Copernicus Sentinel data 2024)'
+  );
+  expect(eox.length, 'aucune tuile EOX demandée').toBeGreaterThan(0);
+  for (const url of eox) {
+    const [level, row, column] = /\/WGS84\/(\d+)\/(\d+)\/(\d+)\.jpg$/
+      .exec(url)!
+      .slice(1)
+      .map(Number) as [number, number, number];
+    expect(level, url).toBeGreaterThanOrEqual(5);
+    expect(level, url).toBeLessThanOrEqual(13);
+    expect(row, url).toBeLessThan(2 ** level);
+    expect(column, url).toBeLessThan(2 * 2 ** level);
+  }
+  expect(relief.length, 'aucune tuile de relief demandée').toBeGreaterThan(0);
+  for (const url of relief) expect(url, url).toContain(`/${trek.directory}/`);
+  // LE PLANCHER SE COMPTE DEPUIS LE SOL (lot 48) : mesuré sur la vraie Terre avant correction, la
+  // caméra descendait à 3,2 km SOUS le sol, l'ellipsoïde et le relief dépassant la sphère. Le
+  // plancher ne descend qu'à mesure que des niveaux plus fins se peignent : on descend donc par
+  // crans, jusqu'au niveau le plus fin, avant de lire la sonde.
+  await expect
+    .poll(
+      async () => {
+        await zoomIn(page);
+        return Number((await badge.getAttribute('data-level')) ?? 0);
+      },
+      { timeout: 60_000, intervals: [1500] }
+    )
+    // 12 et non 13 : à 0,9 km au-dessus d'un sol à 5 000 m, le niveau servi est le 12 ; sous le
+    // sol, la caméra fautive atteignait le 13 (mesuré des deux côtés).
+    .toBeGreaterThanOrEqual(12);
+  await zoomIn(page);
+  await expect
+    .poll(
+      async () => {
+        const text = (await page.locator('#surface-probe').textContent()) ?? '';
+        const match = /→\s*(-?[\d.]+) km au-dessus du sol/.exec(text);
+        return match ? Number(match[1]) : null;
+      },
+      { timeout: 30_000 }
+    )
+    .toBeGreaterThan(0);
+  expect(errors, `Erreurs page : ${errors.join(' | ')}`).toEqual([]);
+});
 
 /**
  * LES FONDS DE RECHANGE DE LA TERRE (lot 48) : relief ombré avec bathymétrie, et lumières

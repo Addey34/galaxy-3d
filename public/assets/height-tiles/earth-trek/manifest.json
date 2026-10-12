@@ -1,0 +1,509 @@
+{
+  "$comment": "Écrit par pnpm surface:tiles. Ne pas éditer à la main : les tuiles portent le même quantum et le même offset dans leur propre en-tête.",
+  "id": "earth-etopo-2022-trek",
+  "body": "earth",
+  "directory": "assets/height-tiles/earth-trek/d439b0847474",
+  "format": {
+    "magic": "GXHT",
+    "version": 1,
+    "samples": 257
+  },
+  "quantumMetres": 1,
+  "offsetMetres": 0,
+  "datumRadiusKm": 6371,
+  "coordinateSystem": "GEODETIC (WGS 84 + EGM2008), posée comme direction",
+  "matrix": {
+    "columnsAtLevelZero": 2,
+    "rowsAtLevelZero": 1,
+    "referenceLevel": 0,
+    "tileSizePx": 256
+  },
+  "tileOrigin": "https://galaxy-data.adrianguichard.dev",
+  "baseLevel": 5,
+  "geoid": {
+    "productId": "ETOPO_2022_v1_60s_N90W180_geoid.tif",
+    "minimumMetres": -107,
+    "maximumMetres": 85.9
+  },
+  "water": {
+    "mask": "https://gibs.earthdata.nasa.gov/wmts/epsg4326/best/MODIS_Water_Mask/default/250m/5/{TileRow}/{TileCol}.png",
+    "rule": {
+      "minimumCells": 50,
+      "flatShare": 0.5,
+      "seaArmFloorMetres": -150,
+      "greatLakeCells": 5000,
+      "shoreCells": 3,
+      "submergedMetres": 50
+    },
+    "dryLand": {
+      "lowestFlatWaterMetres": -427,
+      "at": {
+        "latitudeDeg": 31.514947089947093,
+        "longitudeDeg": 35.49755291005292
+      },
+      "cellsTurnedToWater": 3010,
+      "shoreCellsFlooded": 117865
+    },
+    "bodies": [
+      {
+        "kind": "ocean",
+        "latitudeDeg": -0.5322489918007562,
+        "longitudeDeg": -9.099888475676295,
+        "cells": 155758398,
+        "levelMetres": 0,
+        "deepestMetres": -10752
+      },
+      {
+        "kind": "sea-arm",
+        "latitudeDeg": 43.50332005062129,
+        "longitudeDeg": 34.40783133286007,
+        "cells": 185956,
+        "levelMetres": 0,
+        "deepestMetres": -2485,
+        "modeMetres": -11
+      },
+      {
+        "kind": "sea-arm",
+        "latitudeDeg": 41.756216119566595,
+        "longitudeDeg": 50.785868698211544,
+        "cells": 149607,
+        "levelMetres": -27,
+        "deepestMetres": -1046,
+        "modeMetres": -29
+      },
+      {
+        "kind": "great-lake",
+        "latitudeDeg": 44.477619780864394,
+        "longitudeDeg": -84.45241778923037,
+        "cells": 47733,
+        "levelMetres": 182,
+        "deepestMetres": -97,
+        "modeMetres": 173
+      },
+      {
+        "kind": "great-lake",
+        "latitudeDeg": 47.518785382819665,
+        "longitudeDeg": -87.74819600782557,
+        "cells": 35269,
+        "levelMetres": 194,
+        "deepestMetres": -198,
+        "modeMetres": 3
+      },
+      {
+        "kind": "great-lake",
+        "latitudeDeg": 53.40149506814729,
+        "longitudeDeg": 107.68908092089782,
+        "cells": 15579,
+        "levelMetres": 470,
+        "deepestMetres": -1184,
+        "modeMetres": -443
+      },
+      {
+        "kind": "great-lake",
+        "latitudeDeg": 42.139371434192405,
+        "longitudeDeg": -81.24477834612105,
+        "cells": 10166,
+        "levelMetres": 176,
+        "deepestMetres": 111,
+        "modeMetres": 152
+      },
+      {
+        "kind": "great-lake",
+        "latitudeDeg": 43.638790329593874,
+        "longitudeDeg": -77.7754109052961,
+        "cells": 7666,
+        "levelMetres": 80,
+        "deepestMetres": -153,
+        "modeMetres": 73
+      },
+      {
+        "kind": "sea-arm",
+        "latitudeDeg": -32.838814002089876,
+        "longitudeDeg": -53.07812434691746,
+        "cells": 1595,
+        "levelMetres": 0,
+        "deepestMetres": -346,
+        "modeMetres": 2
+      },
+      {
+        "kind": "sea-arm",
+        "latitudeDeg": 53.729899203000464,
+        "longitudeDeg": -59.45155883731833,
+        "cells": 1422,
+        "levelMetres": 0,
+        "deepestMetres": -236,
+        "modeMetres": -7
+      },
+      {
+        "kind": "sea-arm",
+        "latitudeDeg": -53.09090632603406,
+        "longitudeDeg": -71.72682481751825,
+        "cells": 1096,
+        "levelMetres": 0,
+        "deepestMetres": -391,
+        "modeMetres": -1
+      },
+      {
+        "kind": "sea-arm",
+        "latitudeDeg": 67.71935897435897,
+        "longitudeDeg": -51.78125246548322,
+        "cells": 845,
+        "levelMetres": 0,
+        "deepestMetres": -538,
+        "modeMetres": -1
+      },
+      {
+        "kind": "sea-arm",
+        "latitudeDeg": 45.89697563098346,
+        "longitudeDeg": -60.77221496953872,
+        "cells": 383,
+        "levelMetres": 0,
+        "deepestMetres": -211,
+        "modeMetres": -26
+      },
+      {
+        "kind": "sea-arm",
+        "latitudeDeg": 66.71631016042781,
+        "longitudeDeg": -51.561720142602496,
+        "cells": 374,
+        "levelMetres": 0,
+        "deepestMetres": -272,
+        "modeMetres": 35
+      },
+      {
+        "kind": "sea-arm",
+        "latitudeDeg": 56.38725319396051,
+        "longitudeDeg": 162.7401567944251,
+        "cells": 287,
+        "levelMetres": 0,
+        "deepestMetres": -213,
+        "modeMetres": -8
+      },
+      {
+        "kind": "sea-arm",
+        "latitudeDeg": 69.19320330969268,
+        "longitudeDeg": -50.35171394799053,
+        "cells": 282,
+        "levelMetres": -170,
+        "deepestMetres": -784,
+        "modeMetres": -650
+      },
+      {
+        "kind": "sea-arm",
+        "latitudeDeg": 79.81925770308123,
+        "longitudeDeg": -74.2763305322129,
+        "cells": 238,
+        "levelMetres": 0,
+        "deepestMetres": -221,
+        "modeMetres": -154
+      },
+      {
+        "kind": "sea-arm",
+        "latitudeDeg": 52.23728070175439,
+        "longitudeDeg": -127.32755183413079,
+        "cells": 209,
+        "levelMetres": 0,
+        "deepestMetres": -583,
+        "modeMetres": -294
+      },
+      {
+        "kind": "sea-arm",
+        "latitudeDeg": 50.59406250000001,
+        "longitudeDeg": -124.95395833333333,
+        "cells": 160,
+        "levelMetres": 0,
+        "deepestMetres": -648,
+        "modeMetres": 220
+      },
+      {
+        "kind": "sea-arm",
+        "latitudeDeg": 67.23230593607306,
+        "longitudeDeg": 15.117808219178102,
+        "cells": 146,
+        "levelMetres": 0,
+        "deepestMetres": -510,
+        "modeMetres": -498
+      },
+      {
+        "kind": "sea-arm",
+        "latitudeDeg": 50.80072463768116,
+        "longitudeDeg": -125.7828502415459,
+        "cells": 138,
+        "levelMetres": 0,
+        "deepestMetres": -516,
+        "modeMetres": -162
+      },
+      {
+        "kind": "sea-arm",
+        "latitudeDeg": 61.009549878345496,
+        "longitudeDeg": -45.59385644768855,
+        "cells": 137,
+        "levelMetres": 0,
+        "deepestMetres": -286,
+        "modeMetres": -144
+      },
+      {
+        "kind": "sea-arm",
+        "latitudeDeg": 60.156829573934836,
+        "longitudeDeg": -44.17374686716792,
+        "cells": 133,
+        "levelMetres": 0,
+        "deepestMetres": -472,
+        "modeMetres": 63
+      },
+      {
+        "kind": "sea-arm",
+        "latitudeDeg": 47.22398218829517,
+        "longitudeDeg": -122.7134223918575,
+        "cells": 131,
+        "levelMetres": 0,
+        "deepestMetres": -160,
+        "modeMetres": -27
+      },
+      {
+        "kind": "sea-arm",
+        "latitudeDeg": 63.954301075268816,
+        "longitudeDeg": 11.199193548387086,
+        "cells": 124,
+        "levelMetres": 0,
+        "deepestMetres": -218,
+        "modeMetres": -17
+      },
+      {
+        "kind": "sea-arm",
+        "latitudeDeg": 75.95917366946779,
+        "longitudeDeg": -20.8874649859944,
+        "cells": 119,
+        "levelMetres": 0,
+        "deepestMetres": -152,
+        "modeMetres": -8
+      },
+      {
+        "kind": "sea-arm",
+        "latitudeDeg": 61.84279661016949,
+        "longitudeDeg": 6.299293785310709,
+        "cells": 118,
+        "levelMetres": 0,
+        "deepestMetres": -352,
+        "modeMetres": -4
+      },
+      {
+        "kind": "sea-arm",
+        "latitudeDeg": 6.528616352201254,
+        "longitudeDeg": 3.591823899371093,
+        "cells": 106,
+        "levelMetres": 0,
+        "deepestMetres": -155,
+        "modeMetres": 3
+      },
+      {
+        "kind": "sea-arm",
+        "latitudeDeg": 71.19769841269841,
+        "longitudeDeg": -73.15833333333333,
+        "cells": 105,
+        "levelMetres": 0,
+        "deepestMetres": -250,
+        "modeMetres": -74
+      },
+      {
+        "kind": "sea-arm",
+        "latitudeDeg": 48.37141577060932,
+        "longitudeDeg": -70.68611111111112,
+        "cells": 93,
+        "levelMetres": 0,
+        "deepestMetres": -232,
+        "modeMetres": 0
+      },
+      {
+        "kind": "sea-arm",
+        "latitudeDeg": 55.50778985507247,
+        "longitudeDeg": -130.06576086956522,
+        "cells": 92,
+        "levelMetres": 0,
+        "deepestMetres": -281,
+        "modeMetres": -177
+      },
+      {
+        "kind": "sea-arm",
+        "latitudeDeg": 74.41458333333333,
+        "longitudeDeg": -21.648295454545462,
+        "cells": 88,
+        "levelMetres": 0,
+        "deepestMetres": -228,
+        "modeMetres": -78
+      },
+      {
+        "kind": "sea-arm",
+        "latitudeDeg": 31.125968992248062,
+        "longitudeDeg": 35.4403100775194,
+        "cells": 86,
+        "levelMetres": -385,
+        "deepestMetres": -397,
+        "modeMetres": -391
+      },
+      {
+        "kind": "sea-arm",
+        "latitudeDeg": 64.47895833333334,
+        "longitudeDeg": 11.278333333333364,
+        "cells": 80,
+        "levelMetres": 0,
+        "deepestMetres": -436,
+        "modeMetres": 23
+      },
+      {
+        "kind": "sea-arm",
+        "latitudeDeg": -45.940258215962444,
+        "longitudeDeg": -73.94636150234741,
+        "cells": 71,
+        "levelMetres": 0,
+        "deepestMetres": -197,
+        "modeMetres": -82
+      },
+      {
+        "kind": "sea-arm",
+        "latitudeDeg": 63.07548309178745,
+        "longitudeDeg": -41.9993961352657,
+        "cells": 69,
+        "levelMetres": -8,
+        "deepestMetres": -758,
+        "modeMetres": -577
+      },
+      {
+        "kind": "sea-arm",
+        "latitudeDeg": 62.804951690821255,
+        "longitudeDeg": 8.279589371980649,
+        "cells": 69,
+        "levelMetres": 0,
+        "deepestMetres": -307,
+        "modeMetres": -180
+      },
+      {
+        "kind": "sea-arm",
+        "latitudeDeg": 50.90261194029851,
+        "longitudeDeg": -126.47251243781095,
+        "cells": 67,
+        "levelMetres": 0,
+        "deepestMetres": -468,
+        "modeMetres": -372
+      },
+      {
+        "kind": "sea-arm",
+        "latitudeDeg": 72.81380208333333,
+        "longitudeDeg": -27.25859374999999,
+        "cells": 64,
+        "levelMetres": 0,
+        "deepestMetres": -449,
+        "modeMetres": -89
+      },
+      {
+        "kind": "sea-arm",
+        "latitudeDeg": 60.49791666666667,
+        "longitudeDeg": 5.314062500000006,
+        "cells": 64,
+        "levelMetres": 0,
+        "deepestMetres": -390,
+        "modeMetres": -5
+      },
+      {
+        "kind": "sea-arm",
+        "latitudeDeg": 72.36695402298851,
+        "longitudeDeg": -81.01954022988505,
+        "cells": 58,
+        "levelMetres": 0,
+        "deepestMetres": -249,
+        "modeMetres": -70
+      },
+      {
+        "kind": "sea-arm",
+        "latitudeDeg": 66.26359649122807,
+        "longitudeDeg": 13.921198830409338,
+        "cells": 57,
+        "levelMetres": 0,
+        "deepestMetres": -483,
+        "modeMetres": -406
+      },
+      {
+        "kind": "sea-arm",
+        "latitudeDeg": -49.2699404761905,
+        "longitudeDeg": -74.375,
+        "cells": 56,
+        "levelMetres": 0,
+        "deepestMetres": -191,
+        "modeMetres": -49
+      },
+      {
+        "kind": "sea-arm",
+        "latitudeDeg": -46.67469135802469,
+        "longitudeDeg": -73.92993827160495,
+        "cells": 54,
+        "levelMetres": 0,
+        "deepestMetres": -173,
+        "modeMetres": -31
+      },
+      {
+        "kind": "sea-arm",
+        "latitudeDeg": -48.72530864197529,
+        "longitudeDeg": -75.23333333333333,
+        "cells": 54,
+        "levelMetres": 0,
+        "deepestMetres": -474,
+        "modeMetres": 62
+      },
+      {
+        "kind": "sea-arm",
+        "latitudeDeg": 64.91022012578617,
+        "longitudeDeg": -51.72311320754716,
+        "cells": 53,
+        "levelMetres": 0,
+        "deepestMetres": -227,
+        "modeMetres": -104
+      },
+      {
+        "kind": "sea-arm",
+        "latitudeDeg": 61.89455128205128,
+        "longitudeDeg": 5.729166666666657,
+        "cells": 52,
+        "levelMetres": 0,
+        "deepestMetres": -525,
+        "modeMetres": -333
+      },
+      {
+        "kind": "sea-arm",
+        "latitudeDeg": 65.99233333333333,
+        "longitudeDeg": -51.86500000000001,
+        "cells": 50,
+        "levelMetres": 0,
+        "deepestMetres": -276,
+        "modeMetres": -80
+      }
+    ]
+  },
+  "coverage": [
+    {
+      "level": 6,
+      "levels": [
+        5,
+        6
+      ],
+      "global": true,
+      "sourcePixelsPerDegree": 60,
+      "sourceProductId": "ETOPO_2022_v1_60s_N90W180_surface.tif"
+    }
+  ],
+  "elevationMetres": {
+    "minimum": -14233,
+    "maximum": 12748
+  },
+  "figure": {
+    "source": "naif-pck",
+    "renderRadiusKm": 6371,
+    "radiiKm": [
+      6378.1366,
+      6378.1366,
+      6356.7519
+    ]
+  },
+  "figureFloorRatio": 0.999889,
+  "tiles": 10240,
+  "bytes": 1353011200
+}

@@ -1,0 +1,31 @@
+{
+  "$schema": "../schema/provider.schema.json",
+  "id": "eox-cloudless",
+  "role": "tile-source",
+  "publisher": "EOX IT Services GmbH",
+  "title": "EOxCloudless (Sentinel-2 cloudless), EOX::Maps WMTS",
+  "url": "https://cloudless.eox.at/",
+  "kind": "measurement",
+  "host": "tiles.maps.eox.at",
+  "license": "CC-BY-NC-SA-4.0",
+  "licenseUrl": "https://cloudless.eox.at/license-non-commercial",
+  "attribution": "EOxCloudless https://cloudless.eox.at by EOX IT Services GmbH (Contains modified Copernicus Sentinel data 2024)",
+  "accessed": "2026-10-13",
+  "extent": {
+    "temporal": {
+      "interval": [["2024-01-01T00:00:00Z", "2024-12-31T23:59:59Z"]]
+    }
+  },
+  "use": {
+    "en": "The Earth's surface imagery streamed on approach, only when chosen in the settings and only for the patch of ground in view: the cloud-free Sentinel-2 mosaic of 2024, at about 10 m per pixel.",
+    "fr": "Imagerie de la surface de la Terre streamée à l’approche, seulement si le réglage la choisit et seulement pour la portion de sol visible : la mosaïque Sentinel-2 sans nuages de 2024, à environ 10 m par pixel.",
+    "es": "Imágenes de la superficie terrestre transmitidas al acercarse, solo si se eligen en los ajustes y solo para la porción de suelo visible: el mosaico Sentinel-2 sin nubes de 2024, a unos 10 m por píxel.",
+    "pt-BR": "Imagens da superfície da Terra transmitidas na aproximação, somente se escolhidas nas configurações e somente para a porção de solo visível: o mosaico Sentinel-2 sem nuvens de 2024, a cerca de 10 m por pixel."
+  },
+  "terms": {
+    "en": "Free for non-commercial use under CC BY-NC-SA 4.0 for the 2018 to 2025 layers, with the attribution “EOxCloudless https://cloudless.eox.at by EOX IT Services GmbH (Contains modified Copernicus Sentinel data 2024)” displayed wherever the imagery is shown; EOX allows the WMTS endpoints to be used directly in an application, offers them as-is, and applies rate limiting under heavy load (read at the source on 2026-10-13). Commercial use requires an EOX licence.",
+    "fr": "Libre pour un usage non commercial sous CC BY-NC-SA 4.0 pour les couches de 2018 à 2025, avec l’attribution « EOxCloudless https://cloudless.eox.at by EOX IT Services GmbH (Contains modified Copernicus Sentinel data 2024) » affichée partout où l’imagerie paraît ; EOX permet d’employer ses points d’accès WMTS directement dans une application, les fournit en l’état et limite le débit en cas de forte charge (lu à la source le 2026-10-13). Un usage commercial demande une licence d’EOX.",
+    "es": "Libre para uso no comercial bajo CC BY-NC-SA 4.0 para las capas de 2018 a 2025, con la atribución «EOxCloudless https://cloudless.eox.at by EOX IT Services GmbH (Contains modified Copernicus Sentinel data 2024)» mostrada allí donde aparezcan las imágenes; EOX permite usar sus puntos de acceso WMTS directamente en una aplicación, los ofrece tal cual y limita el caudal en caso de carga elevada (leído en la fuente el 2026-10-13). Un uso comercial requiere una licencia de EOX.",
+    "pt-BR": "Livre para uso não comercial sob CC BY-NC-SA 4.0 para as camadas de 2018 a 2025, com a atribuição “EOxCloudless https://cloudless.eox.at by EOX IT Services GmbH (Contains modified Copernicus Sentinel data 2024)” exibida onde quer que as imagens apareçam; a EOX permite usar seus pontos de acesso WMTS diretamente em um aplicativo, os oferece no estado em que se encontram e limita a vazão sob carga elevada (lido na fonte em 2026-10-13). Um uso comercial exige uma licença da EOX."
+  }
+}

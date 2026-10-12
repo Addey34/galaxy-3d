@@ -247,7 +247,7 @@ const imageryTileset = z
      * corps). Le vocabulaire est FERMÉ : le panneau, qui vit au démarrage, en porte le libellé
      * en quatre langues, et `config/surfaceTilesets.test.ts` confronte les deux.
      */
-    variant: z.enum(['shaded-relief', 'night-lights']).optional(),
+    variant: z.enum(['shaded-relief', 'night-lights', 'sentinel-2']).optional(),
     mission: z.string().min(1),
     instrument: z.string().min(1),
     service: z

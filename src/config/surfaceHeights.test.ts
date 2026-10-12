@@ -36,6 +36,10 @@ import { bodyFigure, figureRadiiKm } from './bodyFigure';
 
 const ROOT = resolve(import.meta.dirname, '../..');
 
+/** Tous les jeux déclarés, un par grille d'imagerie (la Terre en a deux, lot 48). */
+const ALL_SETS = [...SURFACE_HEIGHT_SETS.values()].flat();
+const setById = (id: string) => ALL_SETS.find((set) => set.id === id)!;
+
 function loadManifest(path: string): HeightManifest {
   return parseHeightManifest(
     JSON.parse(readFileSync(resolve(ROOT, 'public', path), 'utf-8'))
@@ -76,7 +80,7 @@ describe('jeux de hauteurs déclarés', () => {
   });
 
   it('pointe un manifeste réellement livré', () => {
-    for (const [, set] of SURFACE_HEIGHT_SETS)
+    for (const set of ALL_SETS)
       expect(
         existsSync(resolve(ROOT, 'public', set.manifestPath)),
         `${set.manifestPath} absent : le relief serait annoncé et jamais servi`
@@ -85,7 +89,7 @@ describe('jeux de hauteurs déclarés', () => {
 });
 
 describe('tuiles de hauteurs de la Lune', () => {
-  const set = SURFACE_HEIGHT_SETS.get('moon')!;
+  const set = setById('moon-lola-ldem');
   const manifest = loadManifest(set.manifestPath);
 
   it('décrit un socle global et des aires nommées', () => {
@@ -198,7 +202,7 @@ describe('tuiles de hauteurs de la Lune', () => {
  * le serait pas.
  */
 describe('bords partagés, par le chemin du moteur', () => {
-  const set = SURFACE_HEIGHT_SETS.get('moon')!;
+  const set = setById('moon-lola-ldem');
   const manifest = loadManifest(set.manifestPath);
   const RADIUS = 0.27;
   const RADIUS_KM = 1737.4;
@@ -288,7 +292,7 @@ describe('bords partagés, par le chemin du moteur', () => {
  * ne sont pas celles de l'auteur, qui ne les publie pas.
  */
 describe('profondeur de Tycho, contre la mesure publiée par l’équipe LROC', () => {
-  const set = SURFACE_HEIGHT_SETS.get('moon')!;
+  const set = setById('moon-lola-ldem');
   const manifest = loadManifest(set.manifestPath);
   const cache = new Map<string, ReturnType<typeof loadTile>>();
 
@@ -386,9 +390,10 @@ describe('profondeur de Tycho, contre la mesure publiée par l’équipe LROC', 
 describe('le relief et le globe rendu décrivent la MÊME figure (ligne 45.3)', () => {
   const bodies = flattenBodies(CELESTIAL_CONFIG);
 
-  it.each([...SURFACE_HEIGHT_SETS].map(([body, set]) => [body, set] as const))(
+  it.each(ALL_SETS.map((set) => [set.id, set] as const))(
     '%s : le cuiseur a supposé le globe que l’application dessine',
-    (body, set) => {
+    (_id, set) => {
+      const body = set.body;
       const manifest = loadManifest(set.manifestPath);
       const radiusKm = bodies.get(body)!.realData!.radiusKm!;
       // Le cuiseur recopie la règle de `bodyFigure` (il ne lit pas de TypeScript) : c'est ici
@@ -420,9 +425,10 @@ describe('le relief LIVRÉ tombe sur la forme publiée du corps (ligne 45.3)', (
    */
   const POLAR_TOLERANCE_KM = 10;
 
-  it.each([...SURFACE_HEIGHT_SETS].map(([body, set]) => [body, set] as const))(
+  it.each(ALL_SETS.map((set) => [set.id, set] as const))(
     '%s : rayon mesuré aux deux pôles près du rayon polaire rendu',
-    (body, set) => {
+    (_id, set) => {
+      const body = set.body;
       const manifest = loadManifest(set.manifestPath);
       const radiusKm = bodies.get(body)!.realData!.radiusKm!;
       const radii = figureRadiiKm(body);
@@ -444,7 +450,7 @@ describe('le relief LIVRÉ tombe sur la forme publiée du corps (ligne 45.3)', (
 });
 
 describe('relief de la Terre : l’eau à son niveau, sur les témoins LIVRÉS (lot 48)', () => {
-  const set = SURFACE_HEIGHT_SETS.get('earth')!;
+  const set = setById('earth-etopo-2022');
   const manifest = loadManifest(set.manifestPath);
   const raw = JSON.parse(
     readFileSync(resolve(ROOT, 'public', set.manifestPath), 'utf-8')
@@ -503,6 +509,24 @@ describe('relief de la Terre : l’eau à son niveau, sur les témoins LIVRÉS (
         Math.abs(body.latitudeDeg - latitude) < 1 &&
         Math.abs(body.longitudeDeg - longitude) < 1
     )!.levelMetres;
+
+  it('cuit un relief par grille d’imagerie, et le même relief sur chacune', () => {
+    // GIBS (10 × 5 au niveau 3) et EOX (Trek, 2 × 1 au niveau 0) : sur la mauvaise grille, le même
+    // indice tombe ailleurs. Les deux jeux viennent de la MÊME source et de la MÊME règle de l'eau.
+    const trek = loadManifest(setById('earth-etopo-2022-trek').manifestPath);
+    expect(trek.matrix).toMatchObject({
+      columnsAtLevelZero: 2,
+      rowsAtLevelZero: 1,
+      referenceLevel: 0,
+    });
+    expect(trek.tileOrigin).toBe(manifest.tileOrigin);
+    expect(trek.datumRadiusKm).toBe(manifest.datumRadiusKm);
+    expect(
+      SURFACE_HEIGHT_SETS.get('earth')!
+        .map((set) => set.id)
+        .sort()
+    ).toEqual(['earth-etopo-2022', 'earth-etopo-2022-trek']);
+  });
 
   it('suit la grille de son imagerie GIBS, et ses tuiles sont servies par le service de données', () => {
     expect(manifest.matrix).toMatchObject({
@@ -568,5 +592,39 @@ describe('relief de la Terre : l’eau à son niveau, sur les témoins LIVRÉS (
       )
     );
     expect(highest).toBeGreaterThan(7000);
+  });
+});
+
+describe('le relief se choisit par la grille de l’imagerie (lot 48)', () => {
+  it('rend le jeu de la même grille, et aucun d’une autre', async () => {
+    const { heightsForGrid, loadBodyHeights } =
+      await import('./surfaceHeights');
+    const loaded = await loadBodyHeights(
+      'earth',
+      (message) => {
+        throw new Error(message);
+      },
+      async (path) =>
+        JSON.parse(
+          readFileSync(resolve(ROOT, 'public', path.slice(1)), 'utf-8')
+        )
+    );
+    expect(loaded).toHaveLength(2);
+    const gibs = {
+      columnsAtLevelZero: 10,
+      rowsAtLevelZero: 5,
+      tileSizePx: 512,
+      referenceLevel: 3,
+    };
+    const trek = { columnsAtLevelZero: 2, rowsAtLevelZero: 1, tileSizePx: 256 };
+    expect(heightsForGrid(loaded, gibs)?.set.id).toBe('earth-etopo-2022');
+    expect(heightsForGrid(loaded, trek)?.set.id).toBe('earth-etopo-2022-trek');
+    expect(
+      heightsForGrid(loaded, {
+        columnsAtLevelZero: 4,
+        rowsAtLevelZero: 2,
+        tileSizePx: 256,
+      })
+    ).toBeNull();
   });
 });

@@ -11,6 +11,7 @@ import {
   deferLongText,
   englishStrings,
   hydrateDeferred,
+  isRuntimeServiceFiche,
   SAME_AS_ENGLISH,
   stripToEnglish,
   textKey,
@@ -90,6 +91,8 @@ function splitOf(dir: string): { deferred: Set<string>; boot: Set<string> } {
   const deferred = new Set<string>();
   const boot = new Set<string>();
   for (const fiche of fichesOf(dir)) {
+    // Hors du catalogue du démarrage, par construction : la garde B ci-dessous le vérifie.
+    if (dir === 'providers' && isRuntimeServiceFiche(fiche)) continue;
     if (!DEFERRING_DIRS.includes(dir)) {
       englishStrings(fiche, boot);
       continue;
@@ -201,6 +204,27 @@ describe('le texte du registre livré', () => {
       ).toEqual([]);
     });
   }
+
+  /**
+   * LES FOURNISSEURS CONTACTÉS À L'EXÉCUTION ne paient rien au démarrage (lot 48) : leurs textes
+   * propres (ceux qu'aucune autre fiche ne porte) sont ABSENTS de la carte de chaque langue.
+   */
+  for (const locale of DERIVED_TEXT_LOCALES)
+    it(`A ter. la carte ${locale} ne porte pas le texte des fournisseurs contactés à l'exécution`, async () => {
+      const map = (await MAPS[locale]()).default;
+      const elsewhere = new Set<string>();
+      for (const dir of dirs)
+        for (const text of splitOf(dir).boot) elsewhere.add(text);
+      const runtime = new Set<string>();
+      for (const fiche of fichesOf('providers'))
+        if (isRuntimeServiceFiche(fiche)) englishStrings(fiche, runtime);
+      expect(runtime.size).toBeGreaterThan(0);
+      const leaked = [...runtime].filter(
+        (english) =>
+          !elsewhere.has(english) && map[textKey(english)] !== undefined
+      );
+      expect(leaked.slice(0, 3)).toEqual([]);
+    });
 
   /**
    * LA PROMESSE DU BUDGET : un texte seulement différé ne part PAS au démarrage. S'il restait dans

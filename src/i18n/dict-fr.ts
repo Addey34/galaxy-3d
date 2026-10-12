@@ -340,6 +340,7 @@ export const fr: Record<MessageKey, string> = {
   'settings.gazetteer': 'Noms des formations (UAI)',
   'settings.surfaceEarthBase': 'Sol de la Terre',
   'settings.surfaceEarthBase.mosaic': 'Mosaïque Blue Marble (2004)',
+  'settings.surfaceEarthBase.sentinel-2': 'Sentinel-2 sans nuages (2024, 10 m)',
   'settings.surfaceEarthBase.daily': 'Le jour de la scène (VIIRS)',
   'settings.surfaceEarthBase.shaded-relief': 'Relief ombré et bathymétrie',
   'settings.surfaceEarthBase.night-lights':

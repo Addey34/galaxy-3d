@@ -642,30 +642,42 @@ const TREK_GRID = {
   referenceLevel: 0,
 };
 
-function imageryGrid(body) {
+function imageryGrid(body, gridOf) {
   const dir = join(ROOT, 'src', 'registry', 'products', 'tilesets');
-  const grids = readdirSync(dir)
+  const fiches = readdirSync(dir)
     .filter((name) => name.endsWith('.json'))
     .map((name) => JSON.parse(readFileSync(join(dir, name), 'utf8')))
-    .filter((fiche) => fiche.body === body)
-    .map((fiche) => {
-      const matrix = fiche.service?.matrix;
-      return matrix
-        ? {
-            columnsAtLevelZero: matrix.columnsAtLevelZero,
-            rowsAtLevelZero: matrix.rowsAtLevelZero,
-            referenceLevel: matrix.referenceLevel ?? 0,
-          }
-        : TREK_GRID;
-    });
-  if (grids.length === 0)
+    .filter((fiche) => fiche.body === body);
+  const gridOfFiche = (fiche) => {
+    const matrix = fiche.service?.matrix;
+    return matrix
+      ? {
+          columnsAtLevelZero: matrix.columnsAtLevelZero,
+          rowsAtLevelZero: matrix.rowsAtLevelZero,
+          referenceLevel: matrix.referenceLevel ?? 0,
+        }
+      : TREK_GRID;
+  };
+  if (fiches.length === 0)
     throw new Error(
       `${body} : aucune fiche d'imagerie, donc aucune grille à suivre`
     );
+  // Un corps servi sur DEUX grilles (la Terre : GIBS et EOX, lot 48) cuit un relief par grille, et
+  // chaque cible NOMME la fiche dont elle suit la grille : rien n'est deviné, et une cible qui
+  // nommerait une fiche absente ou d'un autre corps échoue ici.
+  if (gridOf) {
+    const fiche = fiches.find((f) => f.id === gridOf);
+    if (!fiche)
+      throw new Error(
+        `${body} : aucune fiche d'imagerie « ${gridOf} » dont suivre la grille`
+      );
+    return gridOfFiche(fiche);
+  }
+  const grids = fiches.map(gridOfFiche);
   const keys = new Set(grids.map((grid) => JSON.stringify(grid)));
   if (keys.size !== 1)
     throw new Error(
-      `${body} : ses fiches d'imagerie décrivent ${keys.size} grilles différentes, le relief ne peut en suivre qu'une`
+      `${body} : ses fiches d'imagerie décrivent ${keys.size} grilles différentes ; la cible doit nommer celle qu'elle suit (gridOf)`
     );
   return grids[0];
 }
@@ -1079,7 +1091,7 @@ async function readWaterMask(water, width, height, cacheDir) {
 async function bakeSet(set, { cacheDir, dryRun }) {
   console.log(`
 === ${set.id} (${set.body}) ===`);
-  const grid = imageryGrid(set.body);
+  const grid = imageryGrid(set.body, set.gridOf);
   const baseLevels = set.base.levels ?? [set.base.level];
   const { baseLabel, baseDem, samples, water, geoid } = set.base.geotiff
     ? await loadGeoTiffBase(set, cacheDir)

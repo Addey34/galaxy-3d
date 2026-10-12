@@ -569,7 +569,7 @@ export function collectInventory(root: string): Inventory {
       : [];
     const shape = shapeOf(id, cfg, root);
     const tileset = SURFACE_TILESETS.get(id);
-    const heightfield = SURFACE_HEIGHT_SETS.get(id);
+    const heightfield = SURFACE_HEIGHT_SETS.get(id)?.[0];
     const missions = applicable.includes('missions')
       ? ((missionIndex.bodies as Record<string, { count: number } | undefined>)[
           id
