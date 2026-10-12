@@ -2262,6 +2262,46 @@ Le critère est donc lisible sans juger à l'œil : un corps qui livre un fichie
 calottes. Drapper une mosaïque sur un maillage irrégulier est un autre travail, avec sa propre
 paramétrisation UV, et ce n'est pas ce que `components/surface/` fait aujourd'hui.
 
+### La Terre, depuis NASA GIBS : une grille exacte à partir de son niveau de référence (lot 48)
+
+La Terre n'avait pas de jeu de tuiles alors que la Lune, Mars, Mercure, Vénus, Cérès, Europe et
+Titan en avaient un : son aperçu le plus fin était la texture fixe de 8k. Elle lit désormais
+**Blue Marble Next Generation** chez NASA GIBS (`earth-gibs-bluemarble-ng-500m`), au pas de
+489 m par pixel au niveau 7.
+
+**La grille de GIBS ne double pas dès le niveau 0**, mesuré dans ses capabilities EPSG:4326 le
+2026-10-12 : `2x1, 3x2, 5x3`, puis `10x5, 20x10…`, en tuiles de 512 px. La tuile de niveau 0
+couvre 288° et la grille déborde du globe ; seul le niveau 3 tombe juste (10 × 36° = 360°), et la
+grille double ensuite. La forme de matrice porte donc un `referenceLevel` (Trek 0, absent ;
+GIBS 3) : `colonnes = colonnes de référence × 2^(niveau − référence)`, et aucune tuile n'est
+demandée sous la référence (`isWithinMatrix`), le schéma exigeant `minLevel` ≥ référence.
+Brancher GIBS sans cela aurait posé l'image au mauvais endroit, sans aucune erreur. **Témoin** :
+la tuile (3, 1, 4) couvre 36° O à 0°, 54° N à 18° N, et Gibraltar, les Açores et les Canaries y
+tombaient chacun au pixel calculé ; `src/core/tilePyramid.test.ts` tient cette emprise.
+
+**Ce que la mosaïque est** se lit dans les métadonnées de la couche
+(`gibs.earthdata.nasa.gov/layer-metadata/v1.0/BlueMarble_NextGeneration.json`) : « Blue Marble
+(August 2004) », un seul mois. Le bandeau le date ; neige et végétation sont celles d'août 2004,
+quelle que soit la date de la scène.
+
+**Ce qui diffère de Trek, et que les gardes ont appris sans s'affaiblir** : un gabarit en `.jpeg`
+et sans jeton `{Style}` (le style est écrit dans le chemin), une couverture du fournisseur
+`nasa-gibs` DÉRIVÉE de ses jeux de tuiles (août 2004, et non sa durée de service), et la règle
+des quatre endroits d'un hôte de tuiles : **GIBS n'était qu'en `connect-src`** (les couches météo
+téléchargent par `fetch`), alors que le moteur charge ses tuiles comme des images. Le serveur de
+dev n'applique pas la CSP : les tuiles s'affichaient, et la production les aurait toutes
+bloquées en silence. C'est `src/core/gibsLegend.test.ts` qui l'a dit. Le fournisseur remplace la
+ligne GIBS écrite à la main de `/sources` ; ses conditions sont lues à la source (« full and open
+sharing », aucune limite publiée) avec la phrase d'attribution qu'il demande.
+
+**Vérifié dans un vrai navigateur, contre les vraies tuiles** : à 47 km au-dessus de la
+Sardaigne, le sol est celui de Blue Marble, flou parce que 489 m par pixel y sont agrandis
+8 fois. C'est la limite de la mosaïque ; une source plus fine est la suite du lot
+(`docs/private/TERRE3D_LOT48.md`). Un défaut que j'avais cru voir (la coquille d'atmosphère qui
+voilerait l'écran vue de l'intérieur) a été DÉMENTI par un témoin : la même vue avec et sans la
+correction avait la même couleur moyenne ; le gris strié des premières captures était l'océan de
+Blue Marble, bleu presque noir. Aucun code n'a été livré contre lui.
+
 ## Relief mesuré — des hauteurs cuites hors ligne, jamais devinées
 
 Depuis le 2026-09-21 (lot 9, phase 9D), un corps peut déclarer un JEU DE HAUTEURS
