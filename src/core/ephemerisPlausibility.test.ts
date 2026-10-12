@@ -358,7 +358,10 @@ describe('borne héliocentrique de plausibilité', () => {
     expect(bodies).toContain('halley');
     // Et le premier corps à déclarer sa distance mesurée (2026-10-04).
     expect(bodies).toContain('wild-2');
-  });
+    // Délai EXPLICITE, avec sa mesure (2026-10-12) : ce test lit tous les binaires et prend
+    // 3,2 s seul ; le défaut de 5 s a été dépassé dans la suite parallèle d'une machine chargée,
+    // ce qui le faisait échouer au hasard de la charge et non du code.
+  }, 30_000);
 
   /**
    * UNE DISTANCE DÉCLARÉE NE DÉRIVE PAS EN SILENCE : elle doit couvrir le maximum que le fichier
