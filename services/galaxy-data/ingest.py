@@ -321,13 +321,26 @@ def backfill_analyses(now: dt.datetime, limit: int = 8) -> int:
     return done
 
 
+def instant_folders(base: str) -> list[str]:
+    """
+    Les dossiers d'INSTANT de `gfs/` : dix chiffres, rien d'autre. Le dossier porte aussi le
+    manifeste et les marqueurs de cycle ; les prendre pour des instants a fait échouer le second
+    passage du service (NotADirectoryError sur `manifest.json`, 2026-10-12).
+    """
+    if not os.path.isdir(base):
+        return []
+    return sorted(
+        name
+        for name in os.listdir(base)
+        if len(name) == 10 and name.isdigit() and os.path.isdir(os.path.join(base, name))
+    )
+
+
 def build_manifest(now: dt.datetime) -> dict:
     """Pour chaque instant gardé, la meilleure donnée : une analyse, sinon la prévision la plus récente."""
     base = os.path.join(ROOT, "gfs")
     times = {}
-    for valid in sorted(os.listdir(base)) if os.path.isdir(base) else []:
-        if valid.startswith("."):
-            continue
+    for valid in instant_folders(base):
         cycles = sorted(c for c in os.listdir(os.path.join(base, valid)) if not c.startswith("."))
         if not cycles:
             continue
@@ -359,9 +372,7 @@ def prune(now: dt.datetime) -> int:
         return 0
     horizon = stamp(now - dt.timedelta(days=RETAIN_PAST_DAYS))
     removed = 0
-    for valid in os.listdir(base):
-        if valid.startswith("."):
-            continue
+    for valid in instant_folders(base):
         folder = os.path.join(base, valid)
         if valid < horizon:
             shutil.rmtree(folder)
@@ -422,6 +433,27 @@ def self_test() -> None:
     except ValueError:
         pass
     assert latest_cycle(dt.datetime(2026, 10, 12, 17, 59, tzinfo=dt.timezone.utc)).hour == 12
+
+    # Un passage complet de publication sur un dossier temporaire, MANIFESTE COMPRIS : le second
+    # passage du service réel a échoué sur ce manifeste, que le premier n'avait pas encore écrit.
+    global ROOT
+    saved = ROOT
+    with tempfile.TemporaryDirectory() as scratch:
+        ROOT = scratch
+        now = dt.datetime(2026, 10, 12, 12, tzinfo=dt.timezone.utc)
+        for valid, cycle in [("2026101206", "2026101206"), ("2026101206", "2026101200"),
+                             ("2026101212", "2026101200"), ("2026100100", "2026100100")]:
+            write_atomic(os.path.join(scratch, "gfs", valid, cycle, "t2m.bin"), b"x")
+        write_atomic(os.path.join(scratch, "gfs", ".cycles", "2026101200"), b"x")
+        for _ in range(2):  # le second passage voit le manifeste du premier
+            prune(now)
+            manifest = build_manifest(now)
+            write_atomic(os.path.join(scratch, "gfs", "manifest.json"), json.dumps(manifest).encode())
+        assert set(manifest["times"]) == {"2026101206", "2026101212"}, manifest["times"]
+        assert manifest["times"]["2026101206"] == {
+            "cycle": "2026101206", "kind": "analysis", "fields": ["t2m"]}
+        assert manifest["times"]["2026101212"]["kind"] == "forecast"
+    ROOT = saved
     print("self-test : OK")
 
 

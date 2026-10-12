@@ -5570,6 +5570,93 @@ La comparaison se fait par SUFFIXE : citer « open-meteo.com » décrit honnête
 commande de navigation, contrairement aux sondes), et aucun réglage n'est persisté, donc aucune
 clé `STORAGE_KEYS` nouvelle à déclarer.
 
+## Le service de données de Galaxy (lot 46, 2026-10-12)
+
+Les couches météo de MODÈLE (nuages, pluie, vent, température, pression, humidité) lisent
+d'abord un service que Galaxy héberge : le modèle **GFS de la NOAA** au pas de 1°, récupéré
+une fois par cycle et servi en fichiers statiques à tous les visiteurs
+(`galaxy-data.adrianguichard.dev`, code dans `services/galaxy-data/`, client dans
+`src/core/galaxyData.ts`).
+
+**Pourquoi, mesuré.** Chaque navigateur interrogeait Open-Meteo. Son API gratuite permet
+600 appels par minute, 5 000 par heure et 10 000 par jour (conditions lues à la source), et
+compte par ADRESSE IP. Une grille mondiale à 4° fait 4 140 points ; après UNE grille de vent,
+Open-Meteo a répondu 429 « Hourly API request limit exceeded », pour une vingtaine de requêtes
+HTTP dans la session. Deux couches dans la même heure, une seule pendant un voyage dans le
+temps, ou une classe entière derrière la connexion d'une école épuisaient le quota. Ce n'était
+pas un quota à augmenter mais une architecture à corriger : la même grille mondiale, redemandée
+par chaque visiteur.
+
+**Ce que fait le service.**
+
+- **La source primaire, sans clé** : NOMADS (`filter_gfs_1p00.pl`) filtre les sept champs
+  instantanés dont les couches ont besoin, présents dès l'analyse (f000), mesuré : vent à 10 m
+  (u, v), température et humidité à 2 m, pression au niveau de la mer, nébulosité totale, taux
+  de précipitation. Environ 600 ko par échéance, une requête.
+- **Par INSTANT, la meilleure donnée** : l'analyse d'un cycle quand elle existe, sinon la
+  prévision du cycle le plus récent. Le manifeste le dit (`kind`), et le client le traduit dans
+  le modèle temporel : une analyse est une donnée reconstruite du passé (`reanalysis`), une
+  prévision reste `forecastModel`.
+- **La fenêtre** : de dix jours en arrière (analyses, rattrapées au démarrage) à seize jours en
+  avant (f000 à f384 au pas de 3 h), l'horizon que le client demandait déjà à Open-Meteo. Plus
+  court, les dates de J+7 à J+16 retomberaient sur le quota par visiteur.
+- **Le format GXF1** (signature, en-tête JSON, int16 quantifiés) : le décodeur du client est
+  testé sur un fichier écrit par l'encodeur Python, donc les deux ne peuvent pas dériver.
+- **Rétention bornée et écrite** : instants de la fenêtre, deux cycles au plus par instant
+  (un client peut avoir lu le manifeste précédent). Environ 0,9 Mo par instant, mesuré ; la
+  fenêtre pleine est ESTIMÉE sous 300 Mo, à relire sur la VM (`du -sh`) une fois remplie.
+
+**Le client, et son repli.** `fetchMeteoGrids` essaie le service AVANT Open-Meteo. Il passe à
+Open-Meteo quand la variable n'a pas de champ, quand l'instant est hors de la fenêtre (l'archive
+de plus de dix jours), ou quand le service ne répond pas ou sert un fichier invalide. Une panne
+du manifeste est gardée une minute en mémoire, pour ne pas re-sonder à chaque couche et à chaque
+heure. **L'instant servi est celui du CHAMP**, au plus un demi-pas de la scène (1 h 30) : le
+badge affiche cet écart au lieu de le cacher, et au-delà la donnée n'est pas montrée sous la
+date de la scène.
+
+**Ce qui reste à Open-Meteo, et pourquoi c'est écrit** : l'archive de plus de dix jours (ERA5),
+toujours demandée par le navigateur, donc soumise au quota par visiteur. Ce n'est pas une
+régression, c'était déjà le cas, mais c'est la prochaine étape du lot (`DONNEES_LOT46.md`).
+
+**Le libellé suit la nature, le badge dit la source.** Les couches s'appelaient « Nuages
+(Open-Meteo) » : un libellé qui aurait affirmé une source fausse dès que le service répond. Elles
+s'appellent « (modèle) », et le badge nomme ce qui a réellement été servi (« NOAA GFS »,
+« Open-Meteo », « ERA5 »). Le panneau météo et les crédits citent la NOAA.
+
+**Ce que le service voit** : l'adresse IP d'un visiteur qui active une couche de modèle, comme
+tout serveur web. Aucun journal d'accès n'est tenu, ni par le Caddy partagé de la VM ni par le
+Caddy interne (aucune directive `log`, vérifié le 2026-10-12) ; `public/privacy.html` le dit
+dans les quatre langues. CORS limité à l'origine de Galaxy et à `localhost`.
+
+**Surveillance** : `pnpm sources:health` sonde le manifeste (adresse DÉRIVÉE de
+`GALAXY_DATA_ORIGIN`, jamais recopiée) et le juge muet si sa dernière analyse a plus de 24 h.
+La panne probable d'un service qu'on héberge n'est pas le silence, c'est une ingestion arrêtée
+qui laisse un manifeste répondre, de plus en plus vieux.
+
+**Trouvé en déployant, pas en relisant** : le second passage de l'ingestion a échoué
+(`NotADirectoryError`), parce que le dossier `gfs/` porte aussi le manifeste, que le premier
+passage n'avait pas encore écrit. Le contrôle hors réseau (`ingest.py --self-test`, joué au
+build de l'image) fait désormais DEUX passages complets sur un dossier temporaire ; falsifié, il
+reproduit exactement l'erreur vue en production.
+
+Gardes : `src/core/galaxyData.test.ts` (format contre le fichier Python, réindexation de la
+grille, direction météo, choix de l'instant, service d'abord et repli), `src/config/
+sourceHealth.test.ts` (manifeste vivant, périmé, étranger), `e2e/wind.spec.ts` (la couche lit le
+service et le dit, sans toucher Open-Meteo ; éteinte, elle ne demande rien),
+`src/config/privacyDisclosure.test.ts` (l'hôte est nommé dans la page de confidentialité).
+
+### La couche de vent, rallumée
+
+Coupée du 2026-08-19 au 2026-10-12 (« rendu peu lisible en particules CPU »), elle cachait
+quatre défauts de plus que sa lisibilité : hors archive elle demandait toujours
+`forecast_days: 1` puis prenait l'heure de la scène, donc une scène à J+3 recevait le vent
+d'AUJOURD'HUI ; elle lançait son chargeur au démarrage, éteinte ou non ; elle n'avait ni badge
+ni légende ; et elle ajoutait au calme une dérive de 6 km/h, un flux que le modèle ne donnait
+pas. Elle passe désormais par le client commun (vitesse et direction dans la même requête), ne
+demande rien tant qu'elle est éteinte, porte un badge et une légende tirée de la palette même des
+particules (`WIND_PALETTE`), et estompe ses particules au calme au lieu de les pousser. Le palier
+de qualité `low` s'en passe, comme de la pluie modélisée : l'advection se calcule sur le CPU.
+
 ## Architecture météo
 
 Trois frontières simples (le plan directeur complet avec l'historique des décisions et des
