@@ -397,6 +397,16 @@ export interface BootDynamicChunk {
  */
 export const NON_BOOT_CHUNKS: readonly BootDynamicChunk[] = [
   {
+    chunk: 'galaxyDataClient',
+    reason:
+      "le client du service de données de Galaxy (lot 46) n'est importé qu'au premier chargement d'une couche météo de modèle, toutes éteintes au démarrage. Il y entrait avec le service et faisait dépasser le plafond de 1 039 octets (mesuré le 2026-10-12).",
+  },
+  {
+    chunk: 'WindParticles',
+    reason:
+      "les particules du vent (lot 46) ne naissent qu'à la première activation de la couche de vent, éteinte au démarrage.",
+  },
+  {
     chunk: 'eclipseProbe',
     reason:
       "la sonde d'éclipse (ligne 45.2) n'est importée que sous `?debug-eclipse`, que seul `e2e/eclipseLanding.spec.ts` demande : un visiteur ne la charge jamais.",

@@ -370,36 +370,36 @@ export const es: Record<MessageKey, string> = {
   'weather.trigger.aria': 'Capas meteorológicas',
   'weather.dialog.aria': 'Capas meteorológicas',
   'weather.clouds': 'Nubes (NASA)',
-  'weather.cloudsModel': 'Nubes (Open-Meteo)',
+  'weather.cloudsModel': 'Nubes (modelo)',
   'weather.precip': 'Lluvia (NASA IMERG)',
-  'weather.precipModel': 'Lluvia (Open-Meteo)',
-  'weather.wind': 'Viento',
+  'weather.precipModel': 'Lluvia (modelo)',
+  'weather.wind': 'Viento (modelo)',
   'weather.thermal': 'Temperatura del aire (MERRA-2)',
-  'weather.thermalModel': 'Temperatura del aire (Open-Meteo)',
+  'weather.thermalModel': 'Temperatura del aire (modelo)',
   'weather.clouds.note':
     'Cobertura nubosa real, imagen de satélite de la NASA (imagen del día).',
   'weather.cloudsModel.note':
-    'Cobertura nubosa modelizada (Open-Meteo): mundial sin huecos, admite pasado y previsión; elíjala para el directo y el viaje en el tiempo.',
+    'Cobertura nubosa modelizada: mundial sin huecos, admite pasado y previsión; elíjala para el directo y el viaje en el tiempo.',
   'weather.precip.note':
     'Lluvia observada NASA IMERG V07: se conserva su máscara alfa nativa; no se añade ninguna extrapolación polar.',
   'weather.precip.legendLo': 'Débil',
   'weather.precip.legendHi': 'Intensa',
   'weather.precipModel.note':
-    'Lluvia modelizada (Open-Meteo): mundial sin huecos, pasado + previsión. Las zonas secas quedan transparentes.',
+    'Lluvia modelizada: mundial sin huecos, pasado + previsión. Las zonas secas quedan transparentes.',
   'weather.precipModel.lo': '0 mm/h',
   'weather.precipModel.hi': '20+ mm/h',
   'weather.thermalModel.note':
-    'Temperatura del aire a 2 m modelizada (Open-Meteo): mundial sin huecos, pasado (ERA5) + previsión.',
+    'Temperatura del aire a 2 m modelizada: mundial sin huecos, pasado + previsión.',
   'weather.thermalModel.lo': '−40 °C',
   'weather.thermalModel.hi': '+45 °C',
-  'weather.pressureModel': 'Presión al nivel del mar (Open-Meteo)',
+  'weather.pressureModel': 'Presión al nivel del mar (modelo)',
   'weather.pressureModel.note':
     'Presión al nivel del mar mostrada como isobaras suaves en hPa.',
   'weather.pressureModel.lo': '960 hPa',
   'weather.pressureModel.hi': '1060 hPa',
-  'weather.humidityModel': 'Humedad relativa (Open-Meteo)',
+  'weather.humidityModel': 'Humedad relativa (modelo)',
   'weather.humidityModel.note':
-    'Humedad relativa a 2 m de Open-Meteo, en porcentaje.',
+    'Humedad relativa a 2 m modelizada, en porcentaje.',
   'weather.humidityModel.lo': '0 %',
   'weather.humidityModel.hi': '100 %',
   'weather.source.prefix': 'Fuente:',
@@ -441,7 +441,7 @@ export const es: Record<MessageKey, string> = {
   'position.offset':
     'Es decir, {times} veces su diámetro: en esta fecha, el cuerpo se dibuja fuera de su lugar real.',
   'weather.wind.note':
-    'Flujo del viento (Open-Meteo): el color y la velocidad siguen la fuerza del viento.',
+    'Viento modelado a 10 m del suelo: el color y el movimiento siguen su velocidad, y el aire en calma muestra poco flujo.',
   'weather.thermal.note':
     'Temperatura del aire cerca del suelo (MERRA-2 mensual):',
 

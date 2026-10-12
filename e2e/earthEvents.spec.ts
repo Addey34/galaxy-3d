@@ -183,6 +183,9 @@ test('a measurement and a report never get the same label', async ({
   await page.route('**gibs.earthdata.nasa.gov/**', (route) => route.abort());
   await page.route('**earthdata.nasa.gov/**', (route) => route.abort());
   await page.route('**open-meteo.com/**', (route) => route.abort());
+  await page.route('**galaxy-data.adrianguichard.dev/**', (route) =>
+    route.abort()
+  );
   await page.route('**earthquake.usgs.gov/**', (route) =>
     route.fulfill({ json: QUAKE_RESPONSE })
   );

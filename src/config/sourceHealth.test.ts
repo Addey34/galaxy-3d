@@ -208,3 +208,81 @@ describe('santé des sources : la liste se DÉRIVE du dépôt', () => {
     );
   });
 });
+
+/**
+ * LE SERVICE DE DONNÉES DE GALAXY (lot 46). Fragment COPIÉ du manifeste réel servi par la VM le
+ * 2026-10-12 (premier instant, une analyse ; le dernier, une prévision ; le bloc `archive` tel
+ * que servi à 10 h 46 UTC). Sa panne probable n'est pas le silence mais une ingestion arrêtée :
+ * le manifeste répond alors, de plus en plus vieux.
+ */
+const GALAXY_MANIFEST_URL =
+  'https://galaxy-data.adrianguichard.dev/gfs/manifest.json';
+const GALAXY_ARCHIVE =
+  '"archive":{"era5":{"from":"1940010100","path":"era5/{time}/{field}.bin","to":"2026063023"},' +
+  '"era5t":{"from":"2026070100","path":"era5t/{time}/{field}.bin","to":"2026100323"},' +
+  '"fields":["prate","prmsl","rh2m","t2m","tcc","wind10m"],"stepHours":1},';
+const GALAXY_MANIFEST =
+  '{' +
+  GALAXY_ARCHIVE +
+  '"fields":{"wind10m":{"bands":2,"unit":"m/s"}},"format":"GXF1","generated":"2026-10-12T02:53:40Z",' +
+  '"times":{"2026101118":{"cycle":"2026101118","fields":["prate","prmsl","rh2m","t2m","tcc","wind10m"],"kind":"analysis"},' +
+  '"2026101818":{"cycle":"2026101118","fields":["prate","prmsl","rh2m","t2m","tcc","wind10m"],"kind":"forecast"}}}';
+
+describe('santé des sources : le service de données de Galaxy', () => {
+  it('est dans la liste DÉRIVÉE, sans être recopié', () => {
+    expect(derivedSources()).toContain(GALAXY_MANIFEST_URL);
+  });
+
+  it('dit VIVANTE un manifeste dont la dernière analyse a moins de 24 h', () => {
+    const result = judgeResponse({
+      url: GALAXY_MANIFEST_URL,
+      body: GALAXY_MANIFEST,
+      status: 200,
+      now: Date.parse('2026-10-12T12:00:00Z'),
+    });
+    expect(result.verdict).toBe('vivante');
+  });
+
+  it('dit MUETTE un manifeste qui répond mais dont l’ingestion s’est arrêtée', () => {
+    const result = judgeResponse({
+      url: GALAXY_MANIFEST_URL,
+      body: GALAXY_MANIFEST,
+      status: 200,
+      now: Date.parse('2026-10-13T00:00:00Z'),
+    });
+    expect(result.verdict).toBe('muette');
+    expect(result.expected).toMatch(/2026101118.*30 h/);
+  });
+
+  it('dit MUETTE un manifeste sans archive : la VM ne joint plus ARCO-ERA5', () => {
+    const result = judgeResponse({
+      url: GALAXY_MANIFEST_URL,
+      body: GALAXY_MANIFEST.replace(GALAXY_ARCHIVE, ''),
+      status: 200,
+      now: Date.parse('2026-10-12T12:00:00Z'),
+    });
+    expect(result.verdict).toBe('muette');
+    expect(result.expected).toMatch(/aucune archive/);
+  });
+
+  it('dit MUETTE une archive dont la copie ERA5T ne suit plus', () => {
+    const result = judgeResponse({
+      url: GALAXY_MANIFEST_URL,
+      body: GALAXY_MANIFEST.replace('"to":"2026100323"', '"to":"2026090323"'),
+      status: 200,
+      now: Date.parse('2026-10-12T12:00:00Z'),
+    });
+    expect(result.verdict).toBe('muette');
+    expect(result.expected).toMatch(/2026090323.*39 j/);
+  });
+
+  it('dit MUETTE une page qui n’est pas un manifeste', () => {
+    expect(
+      judgeResponse({
+        url: GALAXY_MANIFEST_URL,
+        body: '<!doctype html><title>Galaxy</title>',
+        status: 200,
+      }).verdict
+    ).toBe('muette');
+  });
+});

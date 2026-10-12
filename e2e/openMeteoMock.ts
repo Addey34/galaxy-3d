@@ -21,9 +21,15 @@ export async function mockOpenMeteo(page: Page, value = 70): Promise<void> {
       latitude?: number[];
       hourly?: string[];
     };
-    const variable = body.hourly?.[0] ?? 'cloud_cover';
+    // TOUTES les variables demandées : le vent en demande deux dans la même requête.
+    const variables = body.hourly?.length ? body.hourly : ['cloud_cover'];
     const points = (body.latitude ?? []).map(() => ({
-      hourly: { [variable]: Array.from({ length: hours }, () => value) },
+      hourly: Object.fromEntries(
+        variables.map((variable) => [
+          variable,
+          Array.from({ length: hours }, () => value),
+        ])
+      ),
     }));
     await route.fulfill({
       status: 200,
@@ -32,6 +38,11 @@ export async function mockOpenMeteo(page: Page, value = 70): Promise<void> {
     });
   };
 
+  // Le service de données de Galaxy passe AVANT Open-Meteo (lot 46) : coupé ici, pour que ces
+  // scénarios exercent le repli qu'ils décrivent et ne dépendent jamais du vrai serveur.
+  await page.route('**/galaxy-data.adrianguichard.dev/**', (route) =>
+    route.abort()
+  );
   await page.route('**/api.open-meteo.com/**', (route) => respond(route, 48));
   await page.route('**/archive-api.open-meteo.com/**', (route) =>
     respond(route, 24)

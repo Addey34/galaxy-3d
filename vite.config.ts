@@ -1268,6 +1268,7 @@ export default defineConfig({
             // temporelle honnête gérée côté app via core/temporal.ts).
             urlPattern: ({ url }) =>
               [
+                'galaxy-data.adrianguichard.dev',
                 'gibs.earthdata.nasa.gov',
                 'api.open-meteo.com',
                 'archive-api.open-meteo.com',

@@ -15,6 +15,8 @@
 import * as THREE from 'three';
 import { sampleWind, type WindGrid } from '@/core/windField';
 import { DEG_TO_RAD as DEG2RAD } from '@/core/MathConstants';
+import { geographicToLocalDirection } from '@/core/frames';
+import { samplePalette, WIND_DOMAIN, WIND_PALETTE } from '@/core/meteoPalette';
 
 export interface WindParticlesOptions {
   radius: number;
@@ -27,18 +29,19 @@ export interface WindParticlesOptions {
   opacity: number;
   /** Taille de base d'un point (unités monde ; le rayon Terre ≈ 1). */
   size: number;
-  /** Vitesse de vent (km/h) qui sature l'échelle de couleur (au-delà = tempête). */
-  speedMax: number;
-  /** Décalage de longitude (rad) pour aligner sur l'orientation des textures. */
-  lonOffset: number;
   /**
    * Latitude absolue max où le champ de vent est défini (= `maxLat` de la grille). Les
    * particules sont ensemencées et confinées dans [-maxLat, +maxLat] : au-delà le champ
    * est clampé et toutes les particules liraient la même rangée → paquet figé aux pôles.
    */
   maxLat: number;
-  /** Dérive minimale (km/h) ajoutée au champ pour éviter les amas statiques en vent calme. */
-  minDriftKmh: number;
+  /**
+   * Vitesse (km/h) sous laquelle une particule S'ESTOMPE au lieu de bouger (2026-10-12). Il y
+   * avait ici une dérive minimale AJOUTÉE au champ, qui faisait couler un flux de 6 km/h là où
+   * le modèle n'en donnait aucun : un mouvement inventé. Le calme se montre désormais comme
+   * peu de flux visible, ce qu'il est.
+   */
+  calmKmh: number;
 }
 
 const clamp01 = (x: number): number => (x < 0 ? 0 : x > 1 ? 1 : x);
@@ -48,10 +51,10 @@ const smoothstep01 = (x: number): number => {
   return t * t * (3 - 2 * t);
 };
 
-// Rampe de couleur vent (faible → fort), style carte météo : cyan → blanc → jaune.
-const COLOR_CALM = new THREE.Color(0x6ec6ff); // vent faible : cyan doux
-const COLOR_MID = new THREE.Color(0xffffff); // vent moyen : blanc
-const COLOR_STRONG = new THREE.Color(0xffd24a); // vent fort : jaune chaud
+// Couleur initiale d'une particule, avant sa première advection : le bas de la palette.
+const [CALM_R, CALM_G, CALM_B] = samplePalette(WIND_PALETTE, 0).map(
+  (c) => c / 255
+) as [number, number, number];
 
 export class WindParticles {
   readonly points: THREE.Points;
@@ -65,7 +68,7 @@ export class WindParticles {
   private readonly age: Float32Array;
   private readonly life: Float32Array;
   private readonly opts: WindParticlesOptions;
-  private readonly _color = new THREE.Color();
+  private readonly _local = new THREE.Vector3();
 
   constructor(options: WindParticlesOptions) {
     this.opts = options;
@@ -165,28 +168,22 @@ export class WindParticles {
     this.alphas[i] = 0;
     this.sizes[i] = this.opts.size;
     // Couleur initiale neutre (recalculée dès la 1re advection selon la vitesse).
-    this.colors[i * 3] = COLOR_CALM.r;
-    this.colors[i * 3 + 1] = COLOR_CALM.g;
-    this.colors[i * 3 + 2] = COLOR_CALM.b;
+    this.colors[i * 3] = CALM_R;
+    this.colors[i * 3 + 1] = CALM_G;
+    this.colors[i * 3 + 2] = CALM_B;
   }
 
-  /** lat/lon → position monde sur la sphère (même orientation que les textures). */
+  /**
+   * lat/lon → position locale, par la fonction qui pose aussi les séismes et le point subsolaire
+   * (`core/frames.ts`). Ce module en avait sa propre copie, alignée par un décalage réglé à la
+   * main (`lonOffset: π`) : la même formule, mais deux propriétaires.
+   */
   private _writePosition(i: number): void {
-    const phi = (90 - this.lat[i]) * DEG2RAD; // angle polaire depuis +Y
-    const theta = this.lon[i] * DEG2RAD + this.opts.lonOffset;
+    const p = geographicToLocalDirection(this.lat[i], this.lon[i], this._local);
     const r = this.opts.radius;
-    const s = Math.sin(phi);
-    this.positions[i * 3] = -r * s * Math.cos(theta);
-    this.positions[i * 3 + 1] = r * Math.cos(phi);
-    this.positions[i * 3 + 2] = r * s * Math.sin(theta);
-  }
-
-  /** Couleur (cyan→blanc→jaune) selon la vitesse normalisée [0..1]. */
-  private _speedColor(t: number): THREE.Color {
-    if (t < 0.5) {
-      return this._color.copy(COLOR_CALM).lerp(COLOR_MID, t * 2);
-    }
-    return this._color.copy(COLOR_MID).lerp(COLOR_STRONG, (t - 0.5) * 2);
+    this.positions[i * 3] = p.x * r;
+    this.positions[i * 3 + 1] = p.y * r;
+    this.positions[i * 3 + 2] = p.z * r;
   }
 
   /**
@@ -197,25 +194,12 @@ export class WindParticles {
     if (!grid || dt <= 0) return;
     const n = this.opts.count;
     const k = this.opts.speedScale * dt;
-    const invMax = 1 / this.opts.speedMax;
+    const span = WIND_DOMAIN.max - WIND_DOMAIN.min;
     const maxLat = this.opts.maxLat;
-    const minDrift = this.opts.minDriftKmh;
+    const calm = this.opts.calmKmh;
     for (let i = 0; i < n; i++) {
-      let { u, v } = sampleWind(grid, this.lat[i], this.lon[i]);
-      // Dérive minimale : sous un seuil, le vent est trop faible pour déplacer la
-      // particule → elle stagne et scintille en amas. On force une vitesse plancher dans
-      // la direction du champ (ou une direction stable dérivée de la longitude si nul).
+      const { u, v } = sampleWind(grid, this.lat[i], this.lon[i]);
       const speed = Math.hypot(u, v);
-      if (speed < minDrift) {
-        if (speed > 1e-4) {
-          const boost = minDrift / speed;
-          u *= boost;
-          v *= boost;
-        } else {
-          // Champ quasi nul : petite dérive zonale (est) stable, pas de direction aléatoire.
-          u = minDrift;
-        }
-      }
       // u = est (→ lon+), v = nord (→ lat+). Le déplacement en longitude s'élargit près
       // des pôles (méridiens resserrés) → on divise par cos(lat) (borné).
       const cosLat = Math.max(0.2, Math.cos(this.lat[i] * DEG2RAD));
@@ -237,19 +221,19 @@ export class WindParticles {
       }
       this._writePosition(i);
       // Fondu naissance → plein → mort, lissé (Hermite) : pas de « claque » d'apparition
-      // ni de disparition qui produit le scintillement moucheté.
+      // ni de disparition qui produit le scintillement moucheté. Au calme, la particule
+      // s'estompe : elle ne bouge presque pas, et la montrer pleine ferait un amas.
       const t = this.age[i] / this.life[i];
       const fadeIn = smoothstep01(t / 0.25); // plein après 25 % de la vie
       const fadeOut = smoothstep01((1 - t) / 0.25); // s'éteint sur les 25 % finaux
-      this.alphas[i] = Math.min(fadeIn, fadeOut);
+      this.alphas[i] = Math.min(fadeIn, fadeOut) * smoothstep01(speed / calm);
 
-      // Couleur + taille selon la vitesse du vent RÉELLE (carte météo — la dérive
-      // plancher n'influence pas la couleur, seulement le mouvement).
-      const sn = Math.min(1, speed * invMax);
-      const c = this._speedColor(sn);
-      this.colors[i * 3] = c.r;
-      this.colors[i * 3 + 1] = c.g;
-      this.colors[i * 3 + 2] = c.b;
+      // Couleur + taille selon la vitesse RÉELLE, par la palette que la légende affiche.
+      const sn = clamp01((speed - WIND_DOMAIN.min) / span);
+      const [r, g, b] = samplePalette(WIND_PALETTE, sn);
+      this.colors[i * 3] = r / 255;
+      this.colors[i * 3 + 1] = g / 255;
+      this.colors[i * 3 + 2] = b / 255;
       // Vent fort = point un peu plus gros (jusqu'à ×1.8), vent calme = discret.
       this.sizes[i] = this.opts.size * (0.7 + 1.1 * sn);
     }

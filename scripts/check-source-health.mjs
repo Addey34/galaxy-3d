@@ -41,6 +41,17 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 
+/** L'origine du service de données, lue dans `src/core/galaxyData.ts` (son seul propriétaire). */
+const GALAXY_DATA_ORIGIN = (() => {
+  const source = readFileSync(join(ROOT, 'src/core/galaxyData.ts'), 'utf8');
+  const origin = /GALAXY_DATA_ORIGIN = '([^']+)'/.exec(source)?.[1];
+  if (!origin)
+    throw new Error(
+      'GALAXY_DATA_ORIGIN introuvable dans src/core/galaxyData.ts'
+    );
+  return origin;
+})();
+
 const argv = process.argv.slice(2);
 const asJson = argv.includes('--json');
 const asMarkdown = argv.includes('--markdown');
@@ -165,7 +176,53 @@ const MARKERS = [
     },
     what: 'registre de contexte du PDS',
   },
+  {
+    prefix: GALAXY_DATA_ORIGIN,
+    /**
+     * LE SERVICE DE DONNÉES DE GALAXY (lot 46, 2026-10-12), notre propre serveur. Le marqueur est
+     * la signature du format, lue sur le manifeste réel. Mais sa panne la plus probable n'est
+     * pas le silence : c'est une INGESTION arrêtée, qui laisse le manifeste répondre, de plus en
+     * plus vieux. D'où `fresh` : la dernière ANALYSE doit dater de moins de 24 h (un cycle toutes
+     * les 6 h, publié avec environ 5 h de délai), sans quoi la source est dite muette.
+     *
+     * L'ARCHIVE aussi : le manifeste déclare la couverture qu'il a lue chez ARCO-ERA5 à chaque
+     * passage. Absente, la VM ne joint plus cette source ; une fin d'ERA5T de plus de 30 jours,
+     * la copie publique ne suit plus (mesuré le 2026-10-12 : neuf jours de retard). Une seule
+     * sonde, la nôtre, couvre donc les deux dépendances amont.
+     */
+    marker: () => '"format":"GXF1"',
+    fresh: (body, now) => {
+      const manifest = JSON.parse(body);
+      const archiveEnd = manifest.archive?.era5t?.to;
+      if (!archiveEnd) return 'aucune archive ERA5 au manifeste';
+      const archiveDays = (now - stampMs(archiveEnd)) / 86_400_000;
+      if (archiveDays > 30)
+        return `archive ERA5T arrêtée au ${archiveEnd}, ${Math.round(archiveDays)} j de retard (plus de 30)`;
+      const times = Object.entries(manifest.times ?? {});
+      const analyses = times
+        .filter(([, entry]) => entry.kind === 'analysis')
+        .map(([stamp]) => stamp)
+        .sort();
+      const newest = analyses.at(-1);
+      if (!newest) return 'aucune analyse au manifeste';
+      const hours = (now - stampMs(newest)) / 3_600_000;
+      return hours > 24
+        ? `dernière analyse ${newest}, vieille de ${Math.round(hours)} h (plus de 24 h)`
+        : null;
+    },
+    what: 'service de données de Galaxy (manifeste)',
+  },
 ];
+
+/** `AAAAMMJJHH` → instant UTC, la convention du service de données. */
+function stampMs(stamp) {
+  return Date.UTC(
+    Number(stamp.slice(0, 4)),
+    Number(stamp.slice(4, 6)) - 1,
+    Number(stamp.slice(6, 8)),
+    Number(stamp.slice(8, 10))
+  );
+}
 
 export const MARKER_RULES = MARKERS;
 
@@ -177,14 +234,26 @@ export const markerFor = (url) => MARKERS.find((m) => url.startsWith(m.prefix));
  *
  * `finalUrl` est l'adresse où le client a ATTERRI, qui n'est pas toujours celle demandée.
  */
-export function judgeResponse({ url, finalUrl, body, status }) {
+export function judgeResponse({
+  url,
+  finalUrl,
+  body,
+  status,
+  now = Date.now(),
+}) {
   const rule = markerFor(url);
   if (!rule)
     return { url, verdict: 'sans-marqueur', detail: 'aucun marqueur déclaré' };
-  const expected = rule.marker(url);
-  const alive = String(body)
+  let expected = rule.marker(url);
+  let alive = String(body)
     .toLowerCase()
     .includes(String(expected).toLowerCase());
+  // Une réponse vivante mais PÉRIMÉE ne sert pas mieux qu'une réponse muette.
+  const stale = alive && rule.fresh ? rule.fresh(String(body), now) : null;
+  if (stale) {
+    alive = false;
+    expected = stale;
+  }
   const landedElsewhere = new URL(finalUrl ?? url).host !== new URL(url).host;
   return {
     url,
@@ -216,7 +285,7 @@ const SBDB_PAGE = 'https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html';
 const SBDB_API = 'https://ssd-api.jpl.nasa.gov/sbdb.api?sstr=1&phys-par=1';
 
 export function derivedSources() {
-  const urls = new Set();
+  const urls = new Set([`${GALAXY_DATA_ORIGIN}/gfs/manifest.json`]);
   const snapshot = JSON.parse(
     readFileSync(join(ROOT, 'src/config/factSources.snapshot.json'), 'utf8')
   );

@@ -47,6 +47,9 @@ test('IMERG keeps its native alpha mask and compiles the observed rain layer', a
 
   await page.route('**/sbdb_query.api*', (route) => route.abort());
   await page.route('**/api.open-meteo.com/**', (route) => route.abort());
+  await page.route('**galaxy-data.adrianguichard.dev/**', (route) =>
+    route.abort()
+  );
   await page.route('**/archive-api.open-meteo.com/**', (route) =>
     route.abort()
   );

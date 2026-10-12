@@ -628,41 +628,32 @@ export const THERMAL_SETTINGS = {
   visibleByDefault: false,
 };
 
-// Couche VENT : particules advectées par le champ de vent réel (Open-Meteo GFS).
-// Voir core/windField.ts, components/celestial/WindParticles.ts, ui/windLayer.ts.
-// DÉSACTIVÉE pour l'instant (rendu peu lisible en particules CPU) : le code est conservé
-// pour servir de base à l'estimation temps réel du « Chemin B » (données vent exploitées
-// pour reconstruire un état atmosphérique, pas seulement affichées).
+// Couche VENT : particules advectées par le champ de vent réel (Open-Meteo, prévision ou archive
+// ERA5 selon la date). Voir core/windField.ts, components/celestial/WindParticles.ts,
+// ui/windLayer.ts. Désactivée du 2026-08-19 au 2026-10-12 (« rendu peu lisible en particules
+// CPU ») ; rallumée en passant par le socle météo commun : bonne heure pour toute date, grille
+// quatre fois plus fine, badge de source, légende, et plus aucun mouvement inventé au calme.
 export const WIND_SETTINGS = {
-  // Rendu particulaire en prototype ; les données restent conservées pour la simulation future
-  // ou le remplissage de données manquantes.
-  enabled: false,
-  // Pas de la grille de vent (degrés). 10° = 612 points en une requête.
-  gridStep: 10,
-  // Latitude absolue max couverte par la grille (et donc par les particules) : au-delà,
-  // le vent est extrapolé/clampé → paquets figés aux pôles. On garde grille ET
-  // ensemencement des particules dans cette bande pour éviter l'entassement polaire.
-  maxLat: 80,
+  ...METEO_MODEL_GRID_SETTINGS,
+  // L'advection est CPU, à chaque image : le palier `low` s'en passe, comme de la pluie modélisée.
+  enabled: BOOT_QUALITY_TIER !== 'low',
+  // Bande où les particules vivent : au-delà, les méridiens se resserrent et toutes les
+  // particules liraient la même rangée, d'où un paquet figé aux pôles. La GRILLE, elle, couvre
+  // tout le globe comme celle des autres modèles.
+  particleMaxLat: 80,
   // Nombre de particules (advection CPU).
   particleCount: 3500,
   // Vitesse d'advection : degrés de déplacement par (km/h · s). Réglé pour un flux lisible.
   speedScale: 0.02,
-  // Dérive minimale (km/h équivalents) ajoutée au champ : empêche les particules en vent
-  // calme de stagner et de former des amas statiques scintillants.
-  minDriftKmh: 6,
+  // Sous cette vitesse (km/h), une particule s'estompe : elle ne bougerait presque pas, et une
+  // particule pleine immobile fait un amas qui scintille. Il n'y a plus de dérive AJOUTÉE.
+  calmKmh: 6,
   // Durée de vie moyenne d'une particule (s) avant ré-ensemencement (traînées).
   lifeSeconds: 4,
   // Opacité globale : filet lumineux DISCRET qui s'ajoute à la surface (additif).
   opacity: 0.35,
   // Taille de base d'un point (unités monde ; rayon Terre ≈ 1). Petit = flux fin.
   size: 0.01,
-  // Vitesse (km/h) qui sature l'échelle de couleur (cyan calme → jaune tempête).
-  speedMax: 90,
-  // Décalage de longitude (rad) pour aligner les particules sur la texture équirectangulaire.
-  // SphereGeometry Three.js met u=0 (bord gauche de la texture) à theta=0 ; une texture
-  // Blue Marble standard est centrée sur Greenwich (lon 0 → u=0.5), soit un demi-tour de
-  // décalage → π. (Si le flux paraît tourné de 90°, ajuster par ±π/2 selon la texture.)
-  lonOffset: Math.PI,
 };
 
 export const TEXTURE_SETTINGS: TextureSettings = {

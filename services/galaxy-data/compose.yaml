@@ -1,0 +1,57 @@
+# Le service de données de Galaxy (lot 46) : une ingestion qui écrit, un serveur qui lit.
+# Même convention que les autres projets de la VM : un projet compose, le réseau `edge` pour
+# le seul conteneur que Caddy relaie, aucun secret (la source est publique, sans clé).
+name: galaxy-data
+
+services:
+  ingest:
+    build: .
+    container_name: galaxy-data-ingest
+    restart: unless-stopped
+    volumes:
+      - galaxy_data:/srv/galaxy-data
+    # Léger par construction : la VM sert une vingtaine d'autres services.
+    cpus: 0.5
+    mem_limit: 512m
+    logging:
+      driver: json-file
+      options: { max-size: "5m", max-file: "3" }
+
+  # L'archive ERA5, construite à la demande (`era5.py`) : seul Caddy interne la joint, par le
+  # réseau `internal` ; elle sort vers Google par le pont de ce réseau.
+  era5:
+    build: .
+    container_name: galaxy-data-era5
+    restart: unless-stopped
+    command: ["python", "era5.py", "--serve"]
+    volumes:
+      - galaxy_data:/srv/galaxy-data
+    networks:
+      - internal
+    cpus: 0.5
+    mem_limit: 384m
+    logging:
+      driver: json-file
+      options: { max-size: "5m", max-file: "3" }
+
+  web:
+    image: caddy:2-alpine
+    container_name: galaxy-data-web
+    restart: unless-stopped
+    volumes:
+      - galaxy_data:/srv/galaxy-data:ro
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+    networks:
+      - edge
+      - internal
+    cpus: 0.25
+    mem_limit: 128m
+
+networks:
+  edge:
+    external: true
+  internal:
+    name: galaxy_data_internal
+
+volumes:
+  galaxy_data:

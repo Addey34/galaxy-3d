@@ -4,6 +4,11 @@
  * Les couches nuages, température et pluie ont le même cycle : plan temporel, choix forecast/
  * archive, découpage POST, index horaire puis parsing. Ce module centralise ce cycle afin qu'une
  * correction de fenêtre ou de lot soit appliquée à toutes les couches.
+ *
+ * DEPUIS LE LOT 46 (2026-10-12), le SERVICE DE DONNÉES de Galaxy passe d'abord : le modèle GFS de
+ * la NOAA au pas de 1°, récupéré une fois par cycle et servi à tous (`core/galaxyData.ts`). Open-
+ * Meteo ne sert plus que ce que le service ne couvre pas (l'archive au-delà de sa fenêtre), ou
+ * quand il ne répond pas : son quota se compte par adresse IP, et une grille mondiale l'épuisait.
  */
 import {
   OPEN_METEO_ARCHIVE,
@@ -29,6 +34,8 @@ export interface MeteoGridFetchOptions {
   signal?: AbortSignal;
   /** Réglages réseau facultatifs, principalement utiles aux tests déterministes. */
   network?: MeteoNetworkOptions;
+  /** Open-Meteo seulement, sans le service de données : les tests de ce chemin. */
+  skipGalaxyData?: boolean;
 }
 
 export interface MeteoNetworkOptions {
@@ -48,7 +55,12 @@ export interface MeteoGridData {
   grid: ScalarGrid | null;
   plan: MeteoTimePlan;
   realDate: string;
+  /** Le fournisseur RÉELLEMENT interrogé, quand ce n'est pas Open-Meteo (« NOAA GFS »). */
+  provider?: string;
 }
+/** Change à chaque `clearMeteoClientCache` : le client du service vide alors ses caches. */
+let galaxyDataEpoch = 0;
+
 const DEFAULT_NETWORK: Required<Omit<MeteoNetworkOptions, 'sleep'>> = {
   maxAttempts: 3,
   baseDelayMs: 1000,
@@ -208,6 +220,8 @@ async function fetchJson(
 
 /** Vide le cache mémoire du client, notamment entre deux scénarios de test. */
 export function clearMeteoClientCache(): void {
+  // Le client du service est chargé à la demande : il vide ses caches au prochain appel.
+  galaxyDataEpoch++;
   responseCache.clear();
   [...inFlightRequests.values()].forEach(({ controller }) =>
     controller.abort()
@@ -220,16 +234,58 @@ export async function fetchMeteoGrid(
   simDate: Date,
   options: MeteoGridFetchOptions
 ): Promise<MeteoGridData> {
+  const { grids, plan, realDate, provider } = await fetchMeteoGrids(simDate, {
+    ...options,
+    variables: [options.variable],
+  });
+  return {
+    grid: grids?.[options.variable] ?? null,
+    plan,
+    realDate,
+    ...(provider ? { provider } : {}),
+  };
+}
+
+/**
+ * Plusieurs variables d'un même instant, dans les MÊMES requêtes : le vent a besoin de sa vitesse
+ * et de sa direction, et les demander séparément doublerait les appels pour deux grilles qui
+ * doivent décrire la même heure. Même plan temporel, même découpage, même cache que
+ * `fetchMeteoGrid`, qui n'en est que le cas à une variable.
+ */
+export async function fetchMeteoGrids(
+  simDate: Date,
+  options: Omit<MeteoGridFetchOptions, 'variable'> & {
+    variables: readonly string[];
+  }
+): Promise<{
+  grids: Record<string, ScalarGrid> | null;
+  plan: MeteoTimePlan;
+  realDate: string;
+  provider?: string;
+}> {
   const now = options.now ?? new Date();
   const plan = planMeteoRequest(simDate, { now });
   const realDate = simDate.toISOString();
 
-  if (plan.outOfRange) return { grid: null, plan, realDate };
+  if (plan.outOfRange) return { grids: null, plan, realDate };
+
+  if (!options.skipGalaxyData) {
+    // Chargé À LA DEMANDE : aucune couche de modèle n'est active au démarrage, et le budget JS
+    // du démarrage n'a pas à payer un décodeur qu'on n'utilise qu'en cochant une couche.
+    const { fromGalaxyData } = await import('./galaxyDataClient');
+    const served = await fromGalaxyData(
+      simDate,
+      options.variables,
+      options,
+      galaxyDataEpoch
+    );
+    if (served) return served;
+  }
 
   const isArchive = plan.source === 'archive';
   const gridOptions = isArchive ? options.archiveGrid : options.forecastGrid;
   const endpoint = isArchive ? OPEN_METEO_ARCHIVE : OPEN_METEO_FORECAST;
-  const payloads = buildMeteoPayloads(options.variable, {
+  const payloads = buildMeteoPayloads(options.variables, {
     ...gridOptions,
     ...(isArchive
       ? { date: plan.date }
@@ -243,6 +299,11 @@ export async function fetchMeteoGrid(
   const hour = isArchive
     ? archiveHourIndex(simDate)
     : meteoHourIndex(simDate, now, plan.pastDays);
-  const grid = parseScalarGrid(responses, options.variable, gridOptions, hour);
-  return { grid, plan, realDate };
+  const grids = Object.fromEntries(
+    options.variables.map((variable) => [
+      variable,
+      parseScalarGrid(responses, variable, gridOptions, hour),
+    ])
+  );
+  return { grids, plan, realDate };
 }

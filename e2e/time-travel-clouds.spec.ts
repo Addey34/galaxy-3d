@@ -26,6 +26,9 @@ test.beforeEach(async ({ page }) => {
   // garde le rendu propre. sbdb déjà abort ci-dessus.
   await page.route('**gibs.earthdata.nasa.gov/**', (route) => route.abort());
   await page.route('**open-meteo.com/**', (route) => route.abort());
+  await page.route('**galaxy-data.adrianguichard.dev/**', (route) =>
+    route.abort()
+  );
   await page.addInitScript(() => {
     localStorage.setItem('ssv-guided-tour-v1', '1');
     localStorage.setItem('ssv-explo-tour-nudge-v1', '1');

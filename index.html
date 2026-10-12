@@ -1326,10 +1326,19 @@
           <!-- populated by ui/weatherLayers.ts -->
         </div>
         <!-- Attribution exigée par la licence CC BY 4.0 d'Open-Meteo, « à côté de tout endroit
-             où ses données sont affichées », et citation demandée par NASA et Copernicus. -->
+             où ses données sont affichées », et citation demandée par NASA et Copernicus. La
+             NOAA (GFS, domaine public) est citée comme source principale des couches de modèle
+             depuis le service de données (lot 46). -->
         <p class="wl-note wl-attribution">
           <span data-i18n="weather.attribution.prefix">Weather data:</span>
           NASA GIBS (EOSDIS) ·
+          <a
+            href="https://www.nco.ncep.noaa.gov/pmb/products/gfs/"
+            target="_blank"
+            rel="noopener noreferrer"
+            >NOAA NCEP GFS</a
+          >
+          ·
           <a
             href="https://open-meteo.com/"
             target="_blank"
@@ -1569,6 +1578,7 @@
             <dt data-i18n="credits.data">Data</dt>
             <dd>
               Astronomy Engine · NASA/JPL Horizons · JPL SBDB · NASA GIBS ·
+              NOAA NCEP GFS ·
               <a
                 href="https://pds.nasa.gov/"
                 target="_blank"

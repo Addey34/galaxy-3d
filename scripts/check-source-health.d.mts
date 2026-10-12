@@ -43,6 +43,8 @@ export function judgeResponse(input: {
   finalUrl?: string;
   body: string;
   status?: number;
+  /** L'instant du jugement (ms), pour la règle de fraîcheur ; `Date.now()` par défaut. */
+  now?: number;
 }): SourceResult;
 
 /** Le code de sortie que ces résultats commandent. Un seul endroit décide. */

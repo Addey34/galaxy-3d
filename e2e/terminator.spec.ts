@@ -74,6 +74,9 @@ test('the twilight band leaves no dark gap along the terminator', async ({
   page,
 }) => {
   await page.route('**open-meteo.com/**', (route) => route.abort());
+  await page.route('**galaxy-data.adrianguichard.dev/**', (route) =>
+    route.abort()
+  );
   await page.goto(
     `/?debug-terminator&body=earth&date=${encodeURIComponent(DATE)}`
   );
@@ -133,7 +136,7 @@ test('a model weather layer keeps its layer’s twilight, not its own', async ({
   await page.locator('#weather-trigger').click();
   await page
     .locator('#weather-layers .wl-item')
-    .filter({ hasText: 'Clouds (Open-Meteo)' })
+    .filter({ hasText: 'Clouds (model)' })
     .locator('input')
     .check();
   await expect(debug).toContainText('clouds-model [model] ready ON', {

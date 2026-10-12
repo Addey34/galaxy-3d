@@ -156,15 +156,34 @@ export const LIVE_DATA_SERVICES: readonly LiveDataService[] = [
     },
   },
   {
+    host: 'galaxy-data.adrianguichard.dev',
+    name: 'Galaxy data service (NOAA GFS, ECMWF ERA5)',
+    url: 'https://www.nco.ncep.noaa.gov/pmb/products/gfs/',
+    use: {
+      en: 'Model weather layers from 1940 to sixteen days ahead, at 1°, served to every visitor from our own server: the ERA5 reanalysis for the past (hourly, from the public ARCO-ERA5 copy, built once per requested hour), then the NOAA GFS model, fetched once per model run, for the last days and the forecast.',
+      fr: 'Couches météo de modèle de 1940 à seize jours à venir, au pas de 1°, servies à tous les visiteurs depuis notre propre serveur : la réanalyse ERA5 pour le passé (horaire, depuis la copie publique ARCO-ERA5, construite une fois par heure demandée), puis le modèle GFS de la NOAA, récupéré une fois par cycle, pour les derniers jours et la prévision.',
+      es: 'Capas meteorológicas modelizadas desde 1940 hasta dieciséis días por delante, a 1°, servidas a todos los visitantes desde nuestro propio servidor: el reanálisis ERA5 para el pasado (horario, desde la copia pública ARCO-ERA5, construido una vez por hora solicitada) y luego el modelo GFS de la NOAA, obtenido una vez por ciclo, para los últimos días y el pronóstico.',
+      'pt-BR':
+        'Camadas meteorológicas modeladas de 1940 até dezesseis dias à frente, a 1°, servidas a todos os visitantes a partir do nosso próprio servidor: a reanálise ERA5 para o passado (horária, a partir da cópia pública ARCO-ERA5, construída uma vez por hora solicitada) e depois o modelo GFS da NOAA, obtido uma vez por ciclo, para os últimos dias e a previsão.',
+    },
+    terms: {
+      en: 'NOAA NCEP GFS, a U.S. Government work in the public domain; NOAA is credited as the source. ERA5 under CC BY 4.0: Hersbach, H. et al. (2023), ERA5 hourly data on single levels from 1940 to present, ECMWF, doi:10.24381/cds.adbb2d47, read through ARCO-ERA5 (Google Research). Modified: subsampled from 0.25° to 1° and quantised; relative humidity derived from temperature and dew point. Generated using Copernicus Climate Change Service information.',
+      fr: 'NOAA NCEP GFS, œuvre du gouvernement des États-Unis, dans le domaine public ; la NOAA est citée comme source. ERA5 sous CC BY 4.0 : Hersbach, H. et al. (2023), ERA5 hourly data on single levels from 1940 to present, ECMWF, doi:10.24381/cds.adbb2d47, lu par ARCO-ERA5 (Google Research). Modifié : sous-échantillonné de 0,25° à 1° et quantifié ; humidité relative dérivée de la température et du point de rosée. Generated using Copernicus Climate Change Service information.',
+      es: 'NOAA NCEP GFS, obra del Gobierno de los Estados Unidos en el dominio público; se cita a la NOAA como fuente. ERA5 bajo CC BY 4.0: Hersbach, H. et al. (2023), ERA5 hourly data on single levels from 1940 to present, ECMWF, doi:10.24381/cds.adbb2d47, leído a través de ARCO-ERA5 (Google Research). Modificado: submuestreado de 0,25° a 1° y cuantificado; humedad relativa derivada de la temperatura y del punto de rocío. Generado con información del Servicio de Cambio Climático de Copernicus.',
+      'pt-BR':
+        'NOAA NCEP GFS, obra do Governo dos Estados Unidos em domínio público; a NOAA é citada como fonte. ERA5 sob CC BY 4.0: Hersbach, H. et al. (2023), ERA5 hourly data on single levels from 1940 to present, ECMWF, doi:10.24381/cds.adbb2d47, lido através do ARCO-ERA5 (Google Research). Modificado: subamostrado de 0,25° para 1° e quantizado; umidade relativa derivada da temperatura e do ponto de orvalho. Gerado com informações do Serviço de Mudanças Climáticas do Copernicus.',
+    },
+  },
+  {
     host: 'api.open-meteo.com',
     name: 'Open-Meteo',
     url: 'https://open-meteo.com/',
     use: {
-      en: 'Model weather layers (forecast and recent days): clouds, precipitation, wind, temperature, pressure, humidity.',
-      fr: 'Couches météo de modèle (prévision et jours récents) : nuages, précipitations, vent, température, pression, humidité.',
-      es: 'Capas meteorológicas modelizadas (previsión y días recientes): nubes, precipitación, viento, temperatura, presión, humedad.',
+      en: 'The same model layers when the Galaxy data service does not answer.',
+      fr: 'Les mêmes couches de modèle quand le service de données de Galaxy ne répond pas.',
+      es: 'Las mismas capas modelizadas cuando el servicio de datos de Galaxy no responde.',
       'pt-BR':
-        'Camadas meteorológicas modeladas (previsão e dias recentes): nuvens, precipitação, vento, temperatura, pressão, umidade.',
+        'As mesmas camadas modeladas quando o serviço de dados da Galaxy não responde.',
     },
     terms: {
       en: 'Weather data by Open-Meteo.com, licensed under CC BY 4.0; values are resampled into map textures. Free API used under its non-commercial terms.',
@@ -179,11 +198,11 @@ export const LIVE_DATA_SERVICES: readonly LiveDataService[] = [
     name: 'Open-Meteo Historical Weather API (ERA5)',
     url: 'https://open-meteo.com/en/docs/historical-weather-api',
     use: {
-      en: 'The same model layers for past dates, from the ERA5 reanalysis.',
-      fr: 'Les mêmes couches de modèle pour les dates passées, d’après la réanalyse ERA5.',
-      es: 'Las mismas capas modelizadas para fechas pasadas, a partir del reanálisis ERA5.',
+      en: 'The same model layers for past dates, from the ERA5 reanalysis, when the Galaxy data service does not answer or has reached its hourly cap.',
+      fr: 'Les mêmes couches de modèle pour les dates passées, d’après la réanalyse ERA5, quand le service de données de Galaxy ne répond pas ou a atteint son plafond horaire.',
+      es: 'Las mismas capas modelizadas para fechas pasadas, a partir del reanálisis ERA5, cuando el servicio de datos de Galaxy no responde o ha alcanzado su límite horario.',
       'pt-BR':
-        'As mesmas camadas modeladas para datas passadas, a partir da reanálise ERA5.',
+        'As mesmas camadas modeladas para datas passadas, a partir da reanálise ERA5, quando o serviço de dados da Galaxy não responde ou atingiu o seu limite por hora.',
     },
     terms: {
       en: 'CC BY 4.0 through Open-Meteo. Hersbach, H. et al. (2023), ERA5 hourly data on single levels from 1940 to present, ECMWF, doi:10.24381/cds.adbb2d47. Generated using Copernicus Climate Change Service information.',
