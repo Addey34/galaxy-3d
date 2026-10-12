@@ -109,6 +109,7 @@ export const fr: Record<MessageKey, string> = {
   'search.group.place': 'Lieux',
   'search.group.mission': 'Missions',
   'search.group.instrument': 'Instruments',
+  'search.group.discovery': 'Découvertes',
   'search.group.flyby': 'Survols',
   'search.missionPage': 'page de la mission',
   'nav.searchPlaceholder': 'Un corps, un cratère, une mission…',

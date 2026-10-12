@@ -14,6 +14,8 @@
  *   - missions     src/seo/missionCatalogue.json                 (pnpm missions:generate)
  *   - instruments  public/assets/instruments/{sonde}.json        (pnpm instruments:generate)
  *   - survols      src/seo/flybyEvents.json                      (pnpm flybys:generate)
+ *   - découvertes  public/assets/discovery/{parent}.json et src/config/discoveryIndex.json
+ *                                                                (pnpm discovery:generate)
  * La sonde d'une mission se DÉRIVE : le fichier d'instruments d'une sonde déclare les
  * investigations où elle figure, par identifiant PDS.
  *
@@ -82,7 +84,42 @@ export function buildSearchIndex() {
     e.closestAt,
   ]);
 
-  return { format: 1, places, missions, instruments, flybys };
+  // [nom, corps à montrer, quand (jour ou année), découvreurs]. Les satellites viennent des
+  // fichiers de chaque système, y compris ceux qu'on ne dessine pas (Pan pour Saturne) : on montre
+  // alors leur parent, dont la fiche dit ce qu'on savait à cette date. Les corps du catalogue sans
+  // fichier de système viennent de l'index, revendication DATÉE seulement : « préhistorique »,
+  // « antique » et un retour PRÉDIT (Halley, 1758, que NASA Science requalifie) ne sont pas une
+  // découverte à ce jour-là.
+  const discoveries = [];
+  const covered = new Set();
+  for (const file of jsonFiles('public/assets/discovery')) {
+    const parent = file.slice(0, -5);
+    for (const moon of read(`public/assets/discovery/${file}`)) {
+      if (moon.body) covered.add(moon.body);
+      discoveries.push([
+        moon.name,
+        moon.body ?? parent,
+        String(moon.years[0]),
+        moon.who ?? null,
+      ]);
+    }
+  }
+  const index = read('src/config/discoveryIndex.json').bodies;
+  for (const [body, entry] of Object.entries(index)) {
+    if (covered.has(body)) continue;
+    const claim = (entry.claims ?? []).find(
+      (c) => !c.role && (c.form === 'day' || c.form === 'years')
+    );
+    if (!claim) continue;
+    discoveries.push([
+      null,
+      body,
+      claim.form === 'day' ? claim.day : String(claim.years[0]),
+      claim.who ?? null,
+    ]);
+  }
+
+  return { format: 1, places, missions, instruments, flybys, discoveries };
 }
 
 const serialize = (index) => JSON.stringify(index) + '\n';
@@ -109,7 +146,8 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
     const index = JSON.parse(text);
     console.log(
       `index de recherche : ${Object.values(index.places).flat().length} lieux, ${index.missions.length} missions, ` +
-        `${index.instruments.length} instruments, ${index.flybys.length} survols, ${text.length} o`
+        `${index.instruments.length} instruments, ${index.flybys.length} survols, ` +
+        `${index.discoveries.length} découvertes, ${text.length} o`
     );
   }
 }

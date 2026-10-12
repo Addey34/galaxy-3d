@@ -144,3 +144,15 @@ for (const mode of ['slow index', 'search code unavailable'] as const) {
     expect(Date.now() - typedAt).toBeLessThan(2_500);
   });
 }
+test('a discovery: found by its discoverer, it shows the body', async ({
+  page,
+}) => {
+  await openPalette(page);
+  await page.locator('#palette-input').pressSequentially('herschel');
+  const hit = page
+    .locator('.palette-hit[data-kind="discovery"]')
+    .filter({ hasText: 'Titania' });
+  await expect(hit).toContainText('1787');
+  await hit.click();
+  await expect(page).toHaveURL(/\/titania\//, { timeout: 30_000 });
+});

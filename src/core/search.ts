@@ -2,15 +2,16 @@
  * LA RECHERCHE UNIVERSELLE TYPÉE (lot 47, 2026-10-12). Module PUR : il prépare l'index livré par
  * `scripts/generate-search-index.mjs` et y cherche, sans DOM ni réseau.
  *
- * Cinq types en plus des corps (que la palette cherche déjà en mémoire) : les couches de données
+ * Six types en plus des corps (que la palette cherche déjà en mémoire) : les couches de données
  * de l'application (qu'un résultat ACTIVE), les formations nommées par l'UAI, les missions du
- * PDS, les instruments d'une sonde et les survols mesurés.
+ * PDS, les instruments d'une sonde, les survols mesurés et les découvertes (on cherche « Herschel »
+ * et on trouve les lunes qu'il a vues).
  * Chaque résultat porte ce qu'il faut pour AGIR (le corps, la sonde, la date), pas seulement un
  * libellé : la recherche est une navigation, pas un annuaire.
  */
 
 export type SearchKind =
-  'dataset' | 'place' | 'mission' | 'instrument' | 'flyby';
+  'dataset' | 'place' | 'mission' | 'instrument' | 'flyby' | 'discovery';
 
 /** L'ordre d'affichage des types, sous les corps. */
 export const SEARCH_KINDS: readonly SearchKind[] = [
@@ -19,6 +20,7 @@ export const SEARCH_KINDS: readonly SearchKind[] = [
   'mission',
   'instrument',
   'flyby',
+  'discovery',
 ];
 
 /** La forme du fichier livré, écrite par le générateur. */
@@ -28,6 +30,8 @@ export interface SearchIndexFile {
   missions: [string, string, string | null, string | null][];
   instruments: [string, string][];
   flybys: [string, string, string][];
+  /** [nom ou null (alors celui du corps), corps à montrer, jour ou année, découvreurs ou null] */
+  discoveries?: [string | null, string, string, string | null][];
 }
 
 export type SearchHit =
@@ -47,6 +51,13 @@ export type SearchHit =
       probe: string;
       body: string;
       closestAt: string;
+    }
+  | {
+      kind: 'discovery';
+      label: string;
+      body: string;
+      when: string;
+      who: string | null;
     };
 
 interface Prepared {
@@ -66,7 +77,7 @@ export type PreparedIndex = Record<SearchKind, Prepared[]>;
 export function fold(text: string): string {
   return text
     .normalize('NFD')
-    .replace(/[̀-ͯ]/g, '')
+    .replace(/[\u0300-\u036f]/g, '')
     .replace(/[ʻʼ’'`´]/g, '')
     .replace(/[-‐‑–_/]/g, ' ')
     .toLowerCase()
@@ -97,6 +108,7 @@ export function prepareSearchIndex(
     mission: [],
     instrument: [],
     flyby: [],
+    discovery: [],
   };
   const add = (hit: SearchHit, context: string): void => {
     const label = fold(hit.label);
@@ -123,6 +135,13 @@ export function prepareSearchIndex(
   for (const [probe, body, closestAt] of file.flybys) {
     const label = `${nameOf(probe)} · ${nameOf(body)} · ${closestAt.slice(0, 10)}`;
     add({ kind: 'flyby', label, probe, body, closestAt }, `${probe} ${body}`);
+  }
+  for (const [name, body, when, who] of file.discoveries ?? []) {
+    const label = name ?? nameOf(body);
+    add(
+      { kind: 'discovery', label, body, when, who },
+      [who, when, nameOf(body)].filter(Boolean).join(' ')
+    );
   }
   return prepared;
 }
