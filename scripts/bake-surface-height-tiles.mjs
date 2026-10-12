@@ -40,12 +40,17 @@ import { createHash } from 'node:crypto';
 import {
   existsSync,
   mkdirSync,
+  readdirSync,
   readFileSync,
   rmSync,
   writeFileSync,
 } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import sharp from 'sharp';
+
+import { levelWater, WATER_RULE } from './earth-water-level.mjs';
+import { geoTiffGrid } from './geotiff-grid.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const TARGETS = join(ROOT, 'scripts', 'surface-height-targets.json');
@@ -623,9 +628,63 @@ function fitOblate(samples, label, step) {
 
 // ── Cuisson d'une tuile ──────────────────────────────────────────────────────────────────────
 
-function tileBounds(level, row, column) {
-  const columns = 2 * 2 ** level;
-  const rows = 2 ** level;
+/**
+ * LA GRILLE DES HAUTEURS EST CELLE DE L'IMAGERIE DU CORPS, et elle se LIT dans ses fiches (lot 48).
+ *
+ * Une tuile d'imagerie ne désigne sa tuile de hauteurs que par son indice (`core/heightPyramid.ts`).
+ * Trek double dès le niveau 0 sur une grille 2 × 1 ; NASA GIBS publie 10 × 5 au niveau 3. Cuire la
+ * Terre sur la grille de Trek aurait posé chaque relief à côté de son image, en silence. Toutes les
+ * fiches d'imagerie du corps doivent donc décrire la MÊME grille, sinon le cuiseur refuse.
+ */
+const TREK_GRID = {
+  columnsAtLevelZero: 2,
+  rowsAtLevelZero: 1,
+  referenceLevel: 0,
+};
+
+function imageryGrid(body) {
+  const dir = join(ROOT, 'src', 'registry', 'products', 'tilesets');
+  const grids = readdirSync(dir)
+    .filter((name) => name.endsWith('.json'))
+    .map((name) => JSON.parse(readFileSync(join(dir, name), 'utf8')))
+    .filter((fiche) => fiche.body === body)
+    .map((fiche) => {
+      const matrix = fiche.service?.matrix;
+      return matrix
+        ? {
+            columnsAtLevelZero: matrix.columnsAtLevelZero,
+            rowsAtLevelZero: matrix.rowsAtLevelZero,
+            referenceLevel: matrix.referenceLevel ?? 0,
+          }
+        : TREK_GRID;
+    });
+  if (grids.length === 0)
+    throw new Error(
+      `${body} : aucune fiche d'imagerie, donc aucune grille à suivre`
+    );
+  const keys = new Set(grids.map((grid) => JSON.stringify(grid)));
+  if (keys.size !== 1)
+    throw new Error(
+      `${body} : ses fiches d'imagerie décrivent ${keys.size} grilles différentes, le relief ne peut en suivre qu'une`
+    );
+  return grids[0];
+}
+
+/** Dimensions de la grille à un niveau (jamais sous le niveau de référence : il n'existe pas). */
+function gridAt(grid, level) {
+  if (level < grid.referenceLevel)
+    throw new Error(
+      `niveau ${level} sous le niveau de référence ${grid.referenceLevel} de la grille`
+    );
+  const factor = 2 ** (level - grid.referenceLevel);
+  return {
+    columns: grid.columnsAtLevelZero * factor,
+    rows: grid.rowsAtLevelZero * factor,
+  };
+}
+
+function tileBounds(grid, level, row, column) {
+  const { columns, rows } = gridAt(grid, level);
   const lonStep = 360 / columns;
   const latStep = 180 / rows;
   const west = -180 + column * lonStep;
@@ -642,8 +701,8 @@ function tileBounds(level, row, column) {
  * portion de longitude, et le pôle deviendrait une étoile à autant de branches qu'il y a de
  * colonnes (piège 4 du plan).
  */
-function bakeTile(grid, level, row, column, quantum, poles) {
-  const bounds = tileBounds(level, row, column);
+function bakeTile(dem, grid, level, row, column, quantum, poles) {
+  const bounds = tileBounds(grid, level, row, column);
   const values = new Int16Array(TILE_SAMPLES * TILE_SAMPLES);
   const latSpan = bounds.north - bounds.south;
   const lonSpan = bounds.east - bounds.west;
@@ -653,7 +712,7 @@ function bakeTile(grid, level, row, column, quantum, poles) {
       latitude >= 90 ? poles.north : latitude <= -90 ? poles.south : null;
     for (let i = 0; i < TILE_SAMPLES; i += 1) {
       const longitude = bounds.west + (lonSpan * i) / (TILE_SAMPLES - 1);
-      const metres = polar ?? grid.elevationAt(latitude, longitude);
+      const metres = polar ?? dem.elevationAt(latitude, longitude);
       const dn = Math.round(metres / quantum);
       if (dn < -32768 || dn > 32767)
         throw new Error(
@@ -704,9 +763,8 @@ function areaSpanDeg(diameterKm, radiusKm, latitudeDeg) {
   return { latitude, longitude: Math.min(3, latitude / cos) };
 }
 
-function tilesForBox(level, box) {
-  const columns = 2 * 2 ** level;
-  const rows = 2 ** level;
+function tilesForBox(grid, level, box) {
+  const { columns, rows } = gridAt(grid, level);
   const lonStep = 360 / columns;
   const latStep = 180 / rows;
   const first = {
@@ -751,8 +809,8 @@ async function main() {
   }
 }
 
-async function bakeSet(set, { cacheDir, dryRun }) {
-  console.log(`\n=== ${set.id} (${set.body}) ===`);
+/** Le socle d'une étiquette PDS3 et de son image brute (Lune, Mars, Cérès). */
+async function loadPdsBase(set, cacheDir) {
   const baseLabel = parseLabel(
     await fetchLabel(set.base.label, set.base.image),
     set.base.label.split('/').pop()
@@ -794,10 +852,241 @@ async function bakeSet(set, { cacheDir, dryRun }) {
   }
   if (baseLabel.missingDn !== undefined)
     fillExtremeRows(samples, baseLabel, set.base.image);
-  const baseGrid = new DemGrid(baseLabel, samples);
+  return {
+    baseLabel,
+    baseDem: new DemGrid(baseLabel, samples),
+    samples,
+    water: null,
+    geoid: null,
+  };
+}
+
+/**
+ * LE SOCLE D'UN GEOTIFF (lot 48, la Terre) : ETOPO 2022, surface ET géoïde, plus le masque d'eau.
+ *
+ * ETOPO publie des hauteurs au-dessus du GÉOÏDE EGM2008, en flottants. Le cuiseur ne place que
+ * des RAYONS (règle de la ligne 45.3 : une hauteur rapportée à un géoïde n'est pas un rayon, et
+ * posée sur une sphère elle met les pôles 21 km trop haut sur la Terre). On la convertit donc
+ * ici, cellule par cellule, en distance au centre : rayon du globe RENDU dans cette direction
+ * (l'ellipsoïde du noyau PCK, celui que l'application dessine) + ondulation du géoïde publiée
+ * par ETOPO pour ce même géoïde + hauteur. Le rayon de référence des tuiles est celui de la
+ * fiche, comme ailleurs. Ce que cette conversion néglige est écrit : la latitude d'ETOPO est
+ * GÉODÉSIQUE, et l'application la pose comme une direction (l'imagerie aussi, donc les deux
+ * restent l'une sur l'autre) ; l'écart de rayon qui en résulte est borné par 75 m vers 45°.
+ *
+ * Le quantum ne vient pas d'une étiquette : la source est en flottants. Il est DÉCLARÉ par la
+ * cible (1 m, sous la précision verticale publiée d'ETOPO), et c'est le seul nombre de la cuisson
+ * qui ne soit pas lu.
+ */
+async function loadGeoTiffBase(set, cacheDir) {
+  const source = set.base.geotiff;
+  if (source.quantumMetres !== 1)
+    throw new Error(
+      `${set.id} : quantum ${source.quantumMetres} m, seul 1 m est lu (les échantillons sont en mètres)`
+    );
+  const read = async (url) => {
+    const name = url.split('/').pop();
+    const bytes = await cachedFile(url, cacheDir);
+    const grid = geoTiffGrid(bytes, name);
+    // `sharp` relit le fichier depuis le disque : garder 466 Mo en double ne sert à rien.
+    const { data, info } = await sharp(join(cacheDir, name), {
+      limitInputPixels: false,
+    })
+      .extractChannel(0)
+      .raw({ depth: 'float' })
+      .toBuffer({ resolveWithObject: true });
+    if (info.width !== grid.width || info.height !== grid.height)
+      throw new Error(
+        `${name} : sharp rend ${info.width} x ${info.height}, les balises ${grid.width} x ${grid.height}`
+      );
+    const values = new Float32Array(
+      data.buffer,
+      data.byteOffset,
+      grid.width * grid.height
+    );
+    if (grid.noData !== undefined) {
+      let holes = 0;
+      for (const value of values) if (value === grid.noData) holes += 1;
+      if (holes > 0)
+        throw new Error(
+          `${name} : ${holes} échantillons sans mesure, refus de combler`
+        );
+    }
+    return { name, grid, values };
+  };
+  const surface = await read(source.surface);
+  const geoid = await read(source.geoid);
+  for (const key of [
+    'width',
+    'height',
+    'westDeg',
+    'northDeg',
+    'pixelsPerDegree',
+  ])
+    if (Math.abs(surface.grid[key] - geoid.grid[key]) > 1e-9)
+      throw new Error(
+        `${geoid.name} : ${key} ${geoid.grid[key]}, la surface dit ${surface.grid[key]}`
+      );
+  const { width, height, pixelsPerDegree } = surface.grid;
+  console.log(
+    `source ${surface.name} : ${width} x ${height} à ${pixelsPerDegree} px/degré, ` +
+      `attachée au ${surface.grid.attachedTo === 'corner' ? 'coin' : 'centre'} ; géoïde ${geoid.name} ` +
+      `attaché au ${geoid.grid.attachedTo === 'corner' ? 'coin' : 'centre'}, mêmes centres`
+  );
+
+  const waterMask = await readWaterMask(source.water, width, height, cacheDir);
+  const { dryLand, bodies: water } = levelWater(
+    surface.values,
+    waterMask,
+    width,
+    height
+  );
+  console.log(
+    `terre sèche au-dessus de ${dryLand.lowestFlatWaterMetres} m (surface d'eau plate la plus basse, ` +
+      `${dryLand.at.latitudeDeg.toFixed(2)}, ${dryLand.at.longitudeDeg.toFixed(2)}) : ` +
+      `${dryLand.cellsTurnedToWater} cellules de « terre » plus basses rendues à l'eau, ` +
+      `${dryLand.shoreCellsFlooded} cellules de rive sous une eau voisine`
+  );
+  for (const body of water.slice(0, 12))
+    console.log(
+      `eau ${body.kind} ${body.latitudeDeg.toFixed(2)}, ${body.longitudeDeg.toFixed(2)} : ` +
+        `${body.cells} cellules, niveau ${body.levelMetres} m, fond ${body.deepestMetres} m`
+    );
+  console.log(`${water.length} étendues ramenées à leur niveau`);
+
+  let geoidMin = Number.POSITIVE_INFINITY;
+  let geoidMax = Number.NEGATIVE_INFINITY;
+  for (const value of geoid.values) {
+    if (value < geoidMin) geoidMin = value;
+    if (value > geoidMax) geoidMax = value;
+  }
+  const figure = renderFigure(set.body, null);
+  const datumKm = figure.radiusKm;
+  const heights = surface.values;
+  for (let row = 0; row < height; row += 1) {
+    const latitude = 90 - (row + 0.5) / pixelsPerDegree;
+    for (let column = 0; column < width; column += 1) {
+      const longitude = -180 + (column + 0.5) / pixelsPerDegree;
+      const cell = row * width + column;
+      const ellipsoidM =
+        (renderRadiusAt(figure, latitude, longitude) - datumKm) * 1000;
+      heights[cell] = ellipsoidM + geoid.values[cell] + heights[cell];
+    }
+  }
+  const baseLabel = {
+    productId: surface.name,
+    coordinateSystem: 'GEODETIC (WGS 84 + EGM2008), posée comme direction',
+    pixelsPerDegree,
+    westDeg: -180,
+    eastDeg: 180,
+    northDeg: 90,
+    southDeg: -90,
+    lines: height,
+    lineSamples: width,
+    quantumMetres: 1,
+    radiusKm: datumKm,
+  };
+  return {
+    baseLabel,
+    baseDem: new DemGrid(baseLabel, heights),
+    samples: heights,
+    geoid: {
+      productId: geoid.name,
+      // L'écart publié entre hauteur au-dessus du géoïde et hauteur au-dessus de l'ellipsoïde :
+      // il borne ce qu'une garde peut affirmer sur une tuile sans relire le géoïde.
+      minimumMetres: Math.floor(geoidMin * 10) / 10,
+      maximumMetres: Math.ceil(geoidMax * 10) / 10,
+    },
+    water: {
+      mask: source.water.template.replace(
+        '{TileMatrix}',
+        String(source.water.level)
+      ),
+      rule: WATER_RULE,
+      dryLand,
+      bodies: water,
+    },
+  };
+}
+
+/**
+ * Le masque d'eau sur la grille de la source : tuiles PNG de NASA GIBS (eau opaque, terre
+ * transparente, lu dans sa palette publiée), prises au plus proche du centre de chaque cellule.
+ * Les tuiles sont gardées en cache : 800 requêtes au niveau 5, une fois.
+ */
+async function readWaterMask(water, width, height, cacheDir) {
+  const tileSize = water.tileSizePx;
+  const columns = water.columns;
+  const rows = water.rows;
+  const maskWidth = columns * tileSize;
+  const maskHeight = rows * tileSize;
+  if (maskWidth / maskHeight !== 2)
+    throw new Error(
+      `masque d'eau ${columns} x ${rows} tuiles : pas un globe 2:1`
+    );
+  const mask = new Uint8Array(maskWidth * maskHeight);
+  const dir = join(cacheDir, 'modis-water-mask', String(water.level));
+  for (let row = 0; row < rows; row += 1)
+    for (let column = 0; column < columns; column += 1) {
+      const path = join(dir, String(row), `${column}.png`);
+      if (!existsSync(path)) {
+        const url = water.template
+          .replace('{TileMatrix}', String(water.level))
+          .replace('{TileRow}', String(row))
+          .replace('{TileCol}', String(column));
+        const response = await fetch(url);
+        // Une erreur GIBS peut venir en 200 : le type de contenu tranche, pas le code.
+        if (
+          !response.ok ||
+          response.headers.get('content-type') !== 'image/png'
+        )
+          throw new Error(
+            `${url} : HTTP ${response.status} ${response.headers.get('content-type')}`
+          );
+        mkdirSync(dirname(path), { recursive: true });
+        writeFileSync(path, Buffer.from(await response.arrayBuffer()));
+      }
+      const { data, info } = await sharp(readFileSync(path))
+        .ensureAlpha()
+        .raw()
+        .toBuffer({ resolveWithObject: true });
+      if (info.width !== tileSize || info.height !== tileSize)
+        throw new Error(
+          `${path} : ${info.width} x ${info.height}, attendu ${tileSize}`
+        );
+      for (let y = 0; y < tileSize; y += 1)
+        for (let x = 0; x < tileSize; x += 1)
+          mask[(row * tileSize + y) * maskWidth + column * tileSize + x] =
+            data[(y * tileSize + x) * 4 + 3] > 127 ? 1 : 0;
+    }
+  const out = new Uint8Array(width * height);
+  for (let j = 0; j < height; j += 1) {
+    const my = Math.min(
+      maskHeight - 1,
+      Math.floor(((j + 0.5) / height) * maskHeight)
+    );
+    for (let i = 0; i < width; i += 1) {
+      const mx = Math.min(
+        maskWidth - 1,
+        Math.floor(((i + 0.5) / width) * maskWidth)
+      );
+      out[j * width + i] = mask[my * maskWidth + mx];
+    }
+  }
+  return out;
+}
+
+async function bakeSet(set, { cacheDir, dryRun }) {
+  console.log(`
+=== ${set.id} (${set.body}) ===`);
+  const grid = imageryGrid(set.body);
+  const baseLevels = set.base.levels ?? [set.base.level];
+  const { baseLabel, baseDem, samples, water, geoid } = set.base.geotiff
+    ? await loadGeoTiffBase(set, cacheDir)
+    : await loadPdsBase(set, cacheDir);
   const poles = {
-    north: baseGrid.rowMean(0),
-    south: baseGrid.rowMean(baseLabel.lines - 1),
+    north: baseDem.rowMean(0),
+    south: baseDem.rowMean(baseLabel.lines - 1),
   };
   console.log(
     `pôles (moyenne de la ligne extrême) : nord ${poles.north.toFixed(1)} m, ` +
@@ -829,7 +1118,7 @@ async function bakeSet(set, { cacheDir, dryRun }) {
   const datumKm = baseLabel.radiusKm;
 
   const emit = (level, row, column, values) => {
-    const b = tileBounds(level, row, column);
+    const b = tileBounds(grid, level, row, column);
     for (let j = 0; j < TILE_SAMPLES; j += 1) {
       const latitude = b.north - ((b.north - b.south) * j) / (TILE_SAMPLES - 1);
       for (let i = 0; i < TILE_SAMPLES; i += 1) {
@@ -851,23 +1140,39 @@ async function bakeSet(set, { cacheDir, dryRun }) {
     });
   };
 
-  // Socle global.
-  const baseTiles = tilesForBox(set.base.level, {
-    west: -180,
-    east: 180,
-    north: 90,
-    south: -90,
-  });
-  console.log(`socle niveau ${set.base.level} : ${baseTiles.length} tuiles`);
-  for (const tile of baseTiles)
-    emit(
-      tile.level,
-      tile.row,
-      tile.column,
-      bakeTile(baseGrid, tile.level, tile.row, tile.column, quantum, poles)
-    );
+  // Socle global, à chaque niveau déclaré : une tuile d'imagerie ne prend qu'un relief de niveau
+  // inférieur ou égal au sien (`core/heightPyramid.ts`), donc un socle qui commence trop fin
+  // laisserait les premiers niveaux de l'imagerie plats. Sur la Terre, l'imagerie commence au
+  // niveau 3 de GIBS.
+  for (const level of baseLevels) {
+    const baseTiles = tilesForBox(grid, level, {
+      west: -180,
+      east: 180,
+      north: 90,
+      south: -90,
+    });
+    console.log(`socle niveau ${level} : ${baseTiles.length} tuiles`);
+    for (const tile of baseTiles)
+      emit(
+        tile.level,
+        tile.row,
+        tile.column,
+        bakeTile(
+          baseDem,
+          grid,
+          tile.level,
+          tile.row,
+          tile.column,
+          quantum,
+          poles
+        )
+      );
+  }
   coverage.push({
-    level: set.base.level,
+    level: Math.max(...baseLevels),
+    ...(baseLevels.length > 1
+      ? { levels: [...baseLevels].sort((a, b) => a - b) }
+      : {}),
     global: true,
     sourcePixelsPerDegree: baseLabel.pixelsPerDegree,
     sourceProductId: baseLabel.productId,
@@ -907,7 +1212,7 @@ async function bakeSet(set, { cacheDir, dryRun }) {
       north: Math.min(label.northDeg, area.centre.latitudeDeg + span.latitude),
       south: Math.max(label.southDeg, area.centre.latitudeDeg - span.latitude),
     };
-    const tiles = area.levels.flatMap((level) => tilesForBox(level, box));
+    const tiles = area.levels.flatMap((level) => tilesForBox(grid, level, box));
     if (tiles.length === 0)
       throw new Error(
         `aire ${area.id} : aucune tuile dans l'emprise demandée, la cible ou la source est fausse`
@@ -915,10 +1220,10 @@ async function bakeSet(set, { cacheDir, dryRun }) {
     // Emprise RÉELLE : celle des tuiles cuites, pas celle du carré demandé. C'est elle que
     // l'application consultera pour savoir si une tuile d'imagerie est couverte.
     const finest = Math.max(...area.levels);
-    const finestTiles = tilesForBox(finest, box);
+    const finestTiles = tilesForBox(grid, finest, box);
     const bounds = finestTiles.reduce(
       (acc, tile) => {
-        const b = tileBounds(tile.level, tile.row, tile.column);
+        const b = tileBounds(grid, tile.level, tile.row, tile.column);
         return {
           west: Math.min(acc.west, b.west),
           east: Math.max(acc.east, b.east),
@@ -976,9 +1281,9 @@ async function bakeSet(set, { cacheDir, dryRun }) {
     // Une aire qui lit le MÊME fichier que le socle (Cérès : un seul modèle global à 60 px/degré)
     // reprend la grille déjà en mémoire. La lire par plages serait inutile, et l'archive de Dawn
     // refuse les requêtes multi-plages (HTTP 200, le fichier entier).
-    const grid =
+    const dem =
       area.image === set.base.image
-        ? baseGrid
+        ? baseDem
         : new DemGrid(
             label,
             await fetchWindow(
@@ -995,7 +1300,7 @@ async function bakeSet(set, { cacheDir, dryRun }) {
         tile.level,
         tile.row,
         tile.column,
-        bakeTile(grid, tile.level, tile.row, tile.column, quantum, poles)
+        bakeTile(dem, grid, tile.level, tile.row, tile.column, quantum, poles)
       );
     coverage.push({
       level: finest,
@@ -1033,7 +1338,13 @@ async function bakeSet(set, { cacheDir, dryRun }) {
     offsetMetres: 0,
     datumRadiusKm: baseLabel.radiusKm,
     coordinateSystem: baseLabel.coordinateSystem,
-    baseLevel: set.base.level,
+    // La grille de l'imagerie du corps, que le relief suit (`imageryGrid`) ; `tileSizePx` y compte
+    // les INTERVALLES d'une tuile de hauteurs, ses échantillons moins un.
+    matrix: { ...grid, tileSizePx: TILE_SAMPLES - 1 },
+    ...(set.tiles ? { tileOrigin: set.tiles.origin } : {}),
+    baseLevel: Math.min(...baseLevels),
+    ...(geoid ? { geoid } : {}),
+    ...(water ? { water } : {}),
     coverage,
     elevationMetres: {
       minimum: Number(minElevation.toFixed(1)),
@@ -1081,13 +1392,19 @@ async function bakeSet(set, { cacheDir, dryRun }) {
   }
 
   const outputDir = join(ROOT, set.output);
+  // Les tuiles servies AILLEURS que par le site (la Terre, sur le service de données) s'écrivent
+  // dans un dossier ignoré par git, à téléverser ; le manifeste, lui, reste dans `public/`.
+  const tilesRoot = set.tiles
+    ? join(ROOT, set.tiles.output)
+    : join(ROOT, 'public');
+  const tilesDir = join(tilesRoot, set.output.replace(/^public\//, ''));
   // La cuisson précédente vivait dans un répertoire haché différent : la laisser doublerait le
   // poids du dépôt à chaque passage.
-  if (existsSync(outputDir)) rmSync(outputDir, { recursive: true });
+  for (const dir of new Set([outputDir, tilesDir]))
+    if (existsSync(dir)) rmSync(dir, { recursive: true });
   for (const entry of entries) {
     const path = join(
-      ROOT,
-      'public',
+      tilesRoot,
       manifest.directory,
       String(entry.level),
       String(entry.row),
@@ -1096,6 +1413,43 @@ async function bakeSet(set, { cacheDir, dryRun }) {
     mkdirSync(dirname(path), { recursive: true });
     writeFileSync(path, entry.bytes);
   }
+  // Les témoins (tuiles servies ailleurs) : copiés tels quels dans le dépôt, sous le MÊME chemin
+  // haché, pour que les gardes lisent les octets servis et qu'un témoin périmé ne se lise plus.
+  const witnesses = set.tiles?.witnesses;
+  if (witnesses) {
+    const witnessDir = join(
+      ROOT,
+      witnesses.output,
+      set.output.replace(/^public\//, '')
+    );
+    if (existsSync(witnessDir)) rmSync(witnessDir, { recursive: true });
+    for (const tile of witnesses.tiles) {
+      const entry = entries.find(
+        (e) =>
+          e.level === tile.level &&
+          e.row === tile.row &&
+          e.column === tile.column
+      );
+      if (!entry)
+        throw new Error(
+          `témoin ${tile.level}/${tile.row}/${tile.column} (${tile.why}) non cuit`
+        );
+      const path = join(
+        ROOT,
+        witnesses.output,
+        manifest.directory,
+        String(tile.level),
+        String(tile.row),
+        `${tile.column}.hgt`
+      );
+      mkdirSync(dirname(path), { recursive: true });
+      writeFileSync(path, entry.bytes);
+    }
+    console.log(
+      `${witnesses.tiles.length} témoins copiés dans ${witnesses.output}`
+    );
+  }
+  mkdirSync(outputDir, { recursive: true });
   writeFileSync(
     join(outputDir, 'manifest.json'),
     `${JSON.stringify(manifest, null, 2)}\n`

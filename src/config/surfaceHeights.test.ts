@@ -15,7 +15,7 @@ import {
   patchSegments,
 } from '@/core/heightPyramid';
 import { buildTilePatch } from '@/core/tilePatch';
-import { tileBounds } from '@/core/tilePyramid';
+import { tileBounds, tileMatrix } from '@/core/tilePyramid';
 import { CELESTIAL_CONFIG } from './bodies';
 import { flattenBodies } from './catalog';
 import { bodyFigure, figureRadiiKm } from './bodyFigure';
@@ -42,15 +42,21 @@ function loadManifest(path: string): HeightManifest {
   );
 }
 
+/**
+ * Une tuile LIVRÉE. Servie par le site, elle est dans `public/` ; servie ailleurs (la Terre, sur
+ * le service de données), seules ses TÉMOINS sont dans le dépôt, sous le même chemin haché, copiés
+ * par le cuiseur : un témoin d'une cuisson périmée ne se trouve plus.
+ */
 function loadTile(
   manifest: HeightManifest,
   index: { level: number; row: number; column: number }
 ) {
-  const file = resolve(
-    ROOT,
-    'public',
-    heightTilePath(manifest, index).slice(1)
+  const path = heightTilePath(manifest, index).slice(
+    manifest.tileOrigin.length + 1
   );
+  const file = manifest.tileOrigin
+    ? resolve(ROOT, 'src/config/heightWitnesses', path)
+    : resolve(ROOT, 'public', path);
   const bytes = readFileSync(file);
   return decodeHeightTile(
     bytes.buffer.slice(
@@ -422,7 +428,7 @@ describe('le relief LIVRÉ tombe sur la forme publiée du corps (ligne 45.3)', (
       const radii = figureRadiiKm(body);
       const polarKm = bodyFigure(body, radiusKm) && radii ? radii[2] : radiusKm;
       const level = manifest.baseLevel;
-      const rows = 2 ** level;
+      const { rows } = tileMatrix(level, manifest.matrix);
       for (const row of [0, rows - 1]) {
         const tile = loadTile(manifest, { level, row, column: 0 });
         const y = row === 0 ? 0 : tile.samples - 1;
@@ -435,4 +441,132 @@ describe('le relief LIVRÉ tombe sur la forme publiée du corps (ligne 45.3)', (
       }
     }
   );
+});
+
+describe('relief de la Terre : l’eau à son niveau, sur les témoins LIVRÉS (lot 48)', () => {
+  const set = SURFACE_HEIGHT_SETS.get('earth')!;
+  const manifest = loadManifest(set.manifestPath);
+  const raw = JSON.parse(
+    readFileSync(resolve(ROOT, 'public', set.manifestPath), 'utf-8')
+  ) as {
+    geoid: { minimumMetres: number; maximumMetres: number };
+    water: {
+      dryLand: { lowestFlatWaterMetres: number };
+      bodies: {
+        kind: string;
+        latitudeDeg: number;
+        longitudeDeg: number;
+        levelMetres: number;
+      }[];
+    };
+  };
+  const [a, b, c] = figureRadiiKm('earth')!;
+
+  /** Hauteur au-dessus de l'ellipsoïde RENDU, en mètres, pour chaque échantillon de la tuile. */
+  function ellipsoidHeights(
+    index: { level: number; row: number; column: number },
+    keep: (latitude: number, longitude: number) => boolean = () => true
+  ) {
+    const tile = loadTile(manifest, index);
+    const bounds = tileBounds(index, manifest.matrix);
+    const out: { latitude: number; metres: number }[] = [];
+    for (let y = 0; y < tile.samples; y += 1)
+      for (let x = 0; x < tile.samples; x += 1) {
+        const latitude =
+          bounds.north -
+          ((bounds.north - bounds.south) * y) / (tile.samples - 1);
+        const longitude =
+          bounds.west + ((bounds.east - bounds.west) * x) / (tile.samples - 1);
+        if (!keep(latitude, longitude)) continue;
+        const phi = (latitude * Math.PI) / 180;
+        const lambda = (longitude * Math.PI) / 180;
+        const ux = Math.cos(phi) * Math.cos(lambda);
+        const uy = Math.cos(phi) * Math.sin(lambda);
+        const uz = Math.sin(phi);
+        const ellipsoidKm =
+          1 / Math.sqrt((ux / a) ** 2 + (uy / b) ** 2 + (uz / c) ** 2);
+        out.push({
+          latitude,
+          metres:
+            (manifest.datumRadiusKm - ellipsoidKm) * 1000 +
+            heightMetresAt(tile, x, y),
+        });
+      }
+    return out;
+  }
+  const lowest = (index: { level: number; row: number; column: number }) =>
+    Math.min(...ellipsoidHeights(index).map((s) => s.metres));
+  const level = (kind: string, latitude: number, longitude: number) =>
+    raw.water.bodies.find(
+      (body) =>
+        body.kind === kind &&
+        Math.abs(body.latitudeDeg - latitude) < 1 &&
+        Math.abs(body.longitudeDeg - longitude) < 1
+    )!.levelMetres;
+
+  it('suit la grille de son imagerie GIBS, et ses tuiles sont servies par le service de données', () => {
+    expect(manifest.matrix).toMatchObject({
+      columnsAtLevelZero: 10,
+      rowsAtLevelZero: 5,
+      referenceLevel: 3,
+    });
+    expect(manifest.tileOrigin).toBe('https://galaxy-data.adrianguichard.dev');
+    expect(manifest.coverage[0]!.levels).toEqual([3, 4, 5, 6]);
+  });
+
+  it('borne la terre sèche par la plus basse surface d’eau plate, celle de la mer Morte', () => {
+    expect(raw.water.dryLand.lowestFlatWaterMetres).toBeLessThan(-400);
+    expect(raw.water.dryLand.lowestFlatWaterMetres).toBeGreaterThan(-450);
+  });
+
+  it('ramène la Caspienne à son niveau : son centre n’est plus le fond publié', () => {
+    // Sans la règle, ETOPO y donne −448 m (le fond) ; avec elle, le niveau de l'eau à l'écart du
+    // géoïde près. Le MINIMUM de la tuile ne dirait rien : la dépression de Karagiye, une vraie
+    // terre, y descend plus bas que le lac.
+    const at = level('sea-arm', 41.76, 50.79);
+    const centre = ellipsoidHeights(
+      { level: 6, row: 10, column: 51 },
+      (latitude, longitude) =>
+        Math.abs(latitude - 42) < 0.1 && Math.abs(longitude - 51) < 0.1
+    );
+    expect(centre.length).toBeGreaterThan(0);
+    for (const sample of centre) {
+      expect(sample.metres).toBeGreaterThanOrEqual(
+        at + raw.geoid.minimumMetres - 1
+      );
+      expect(sample.metres).toBeLessThanOrEqual(
+        at + raw.geoid.maximumMetres + 1
+      );
+    }
+  });
+
+  it('ne laisse aucune fosse dans la tuile du lac Supérieur, ni au large ni sur la rive', () => {
+    // Le fond publié y descend à −198 m ; un anneau de rive que le masque dit « terre » gardait
+    // encore 52 m. Rien dans cette tuile n'est plus bas que le plus bas des lacs qu'elle porte
+    // (Michigan-Huron), à l'écart du géoïde près.
+    const lakes = Math.min(
+      level('great-lake', 47.52, -87.75),
+      level('great-lake', 44.48, -84.45)
+    );
+    expect(lowest({ level: 6, row: 9, column: 20 })).toBeGreaterThanOrEqual(
+      lakes + raw.geoid.minimumMetres - 1
+    );
+  });
+
+  it('garde la mer Morte à sa surface publiée, plus basse que toute terre de sa tuile', () => {
+    const floor = lowest({ level: 6, row: 13, column: 47 });
+    const surface = raw.water.dryLand.lowestFlatWaterMetres;
+    expect(floor).toBeGreaterThanOrEqual(surface + raw.geoid.minimumMetres - 1);
+    expect(floor).toBeLessThanOrEqual(surface + raw.geoid.maximumMetres + 1);
+  });
+
+  it('porte l’Himalaya dans la tuile de l’Everest', () => {
+    // À 60″ (1,85 km) le sommet est lissé : on n'attend pas 8 849 m, seulement un massif.
+    const highest = Math.max(
+      ...ellipsoidHeights({ level: 6, row: 13, column: 59 }).map(
+        (s) => s.metres
+      )
+    );
+    expect(highest).toBeGreaterThan(7000);
+  });
 });

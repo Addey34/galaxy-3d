@@ -54,6 +54,7 @@ import {
   heightTileFor,
   heightWindow,
   patchSegments,
+  sameGrid,
   type HeightCoverageEntry,
 } from '@/core/heightPyramid';
 import {
@@ -330,6 +331,14 @@ export class PlanetarySurfaceEngine {
       return;
     }
     this.detach();
+    // Un relief cuit sur une AUTRE grille que l'imagerie serait posé à côté de son image : les
+    // deux ne se rejoignent que par l'indice de tuile. Mieux vaut des carreaux plats, et le dire.
+    if (heights && !sameGrid(heights.manifest.matrix, tileset.matrix)) {
+      Logger.warn(
+        `[Surface] relief ${heights.set.id} ignoré : sa grille n'est pas celle de ${tileset.id}`
+      );
+      heights = null;
+    }
     this._host = host;
     this._tileset = tileset;
     this._radiusKm = radiusKm;
@@ -711,7 +720,11 @@ export class PlanetarySurfaceEngine {
     const heights = this._heights;
     const host = this._host;
     if (!heights || !host || this._radiusKm <= 0) return null;
-    const source = heightTileFor(imagery, heights.manifest.coverage);
+    const source = heightTileFor(
+      imagery,
+      heights.manifest.coverage,
+      heights.manifest.matrix
+    );
     if (!source) {
       // Le socle est global par construction : n'arriver ici signale une couverture
       // incomplète dans le manifeste, pas une situation normale.
@@ -790,8 +803,9 @@ export class PlanetarySurfaceEngine {
     if (window.y0 + window.span === last) rows.push(1);
     if (columns.length === 1 && rows.length === 1) return;
 
-    const matrix = tileMatrix(index.level);
     const coverage = this._heights?.manifest.coverage ?? [];
+    const shape = this._heights?.manifest.matrix;
+    const matrix = tileMatrix(index.level, shape);
     const wanted: TileIndex[] = [];
     for (const dRow of rows)
       for (const dColumn of columns) {
@@ -807,7 +821,9 @@ export class PlanetarySurfaceEngine {
         // été cuite. La demander reviendrait à recevoir la page de l'application en HTTP 200,
         // donc un avertissement par carreau de bord pour rien. On ne demande que ce que le
         // manifeste DÉCLARE à ce niveau.
-        if (heightTileFor(neighbour, coverage)?.index.level !== index.level)
+        if (
+          heightTileFor(neighbour, coverage, shape)?.index.level !== index.level
+        )
           continue;
         wanted.push(neighbour);
       }
@@ -836,9 +852,9 @@ export class PlanetarySurfaceEngine {
     if (x >= 0 && x <= last && y >= 0 && y <= last)
       return heightMetresAt(tile, x, y);
 
-    // La pyramide des hauteurs est celle du cuiseur (équirectangulaire 2:1, 257 échantillons),
-    // pas celle de l'imagerie : c'est la forme par défaut de `core/tilePyramid.ts`.
-    const matrix = tileMatrix(index.level);
+    // La grille des hauteurs est celle que le manifeste déclare (celle de l'imagerie du corps,
+    // vérifiée à l'attachement) ; ses tuiles ont leurs propres échantillons.
+    const matrix = tileMatrix(index.level, this._heights?.manifest.matrix);
     let column = index.column;
     let row = index.row;
     let localX = x;
@@ -887,11 +903,15 @@ export class PlanetarySurfaceEngine {
       centre.longitudeDeg,
       tileset.matrix
     );
-    const source = heightTileFor(imagery, heights.manifest.coverage);
+    const source = heightTileFor(
+      imagery,
+      heights.manifest.coverage,
+      heights.manifest.matrix
+    );
     if (!source) return null;
     const tile = this._heightTiles.get(tileKey(source.index));
     if (!tile) return null;
-    const bounds = tileBounds(source.index);
+    const bounds = tileBounds(source.index, heights.manifest.matrix);
     const x =
       ((centre.longitudeDeg - bounds.west) / (bounds.east - bounds.west)) *
       (tile.samples - 1);

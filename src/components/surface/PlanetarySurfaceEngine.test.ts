@@ -209,6 +209,13 @@ describe('le relief sous les carreaux', () => {
     },
     manifest: {
       directory: 'assets/height-tiles/essai/abcdef',
+      tileOrigin: '',
+      matrix: {
+        columnsAtLevelZero: 2,
+        rowsAtLevelZero: 1,
+        tileSizePx: 256,
+        referenceLevel: 0,
+      },
       samples: 257,
       quantumMetres: 0.5,
       offsetMetres: 0,

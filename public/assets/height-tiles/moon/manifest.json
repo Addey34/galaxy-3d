@@ -12,6 +12,12 @@
   "offsetMetres": 0,
   "datumRadiusKm": 1737.4,
   "coordinateSystem": "MEAN EARTH/POLAR AXIS OF DE421",
+  "matrix": {
+    "columnsAtLevelZero": 2,
+    "rowsAtLevelZero": 1,
+    "referenceLevel": 0,
+    "tileSizePx": 256
+  },
   "baseLevel": 4,
   "coverage": [
     {

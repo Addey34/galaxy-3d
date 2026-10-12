@@ -12,6 +12,12 @@
   "offsetMetres": 0,
   "datumRadiusKm": 3396,
   "coordinateSystem": "PLANETOCENTRIC",
+  "matrix": {
+    "columnsAtLevelZero": 2,
+    "rowsAtLevelZero": 1,
+    "referenceLevel": 0,
+    "tileSizePx": 256
+  },
   "baseLevel": 4,
   "coverage": [
     {

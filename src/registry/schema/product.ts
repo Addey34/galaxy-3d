@@ -355,8 +355,10 @@ const imageryTileset = z
  *
  * Il diffère d'un jeu d'imagerie sur un point qui décide de tout le reste : **il n'est servi par
  * personne**. Aucune source de hauteurs tuilée n'est publiée en CORS (la seule couche « DEM » de
- * Trek est une image 8 bits), donc `pnpm surface:tiles` lit un DEM PDS3 et écrit nos propres
- * tuiles, qui sont livrées avec le site.
+ * Trek est une image 8 bits), donc `pnpm surface:tiles` lit un DEM publié (PDS3, ou GeoTIFF pour
+ * la Terre) et écrit nos propres tuiles, livrées avec le site, ou servies par le service de données
+ * quand elles sont trop lourdes pour lui (la Terre, 562 Mo : le manifeste déclare alors son
+ * `tileOrigin`).
  *
  * Le détail — quantum, offset, rayon de référence, couverture, altitudes extrêmes, répertoire
  * haché — vit dans le MANIFESTE écrit par ce script, jamais recopié ici : deux déclarations

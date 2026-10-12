@@ -44,11 +44,13 @@ import {
 } from './methodologyPage';
 import {
   connectHostsFromFirebase,
+  heightfieldProvenance,
   LIVE_DATA_SERVICES,
   liveServiceMismatch,
   missingTextureProvenance,
   shippedTextureLayers,
   sourcesPages,
+  type HeightManifestSummary,
   type SourcesInput,
   type TextureProvenance,
 } from './sourcesPage';
@@ -133,35 +135,14 @@ function smallBodySnapshot(): { retrieved: string; count: number } {
  * à une copie d'elle-même.
  */
 function shippedHeightfields() {
-  return HEIGHTFIELD_PRODUCTS.map((product) => {
-    const manifest = JSON.parse(
-      readFileSync(resolve(ROOT, 'public', product.manifest), 'utf-8')
-    ) as {
-      baseLevel: number;
-      tiles: number;
-      bytes: number;
-      coverage: { level: number; levels?: number[]; area?: { name: string } }[];
-    };
-    return {
-      body: product.body,
-      title: product.title,
-      mission: product.mission,
-      instrument: product.instrument,
-      credit: product.providers.map((p) => p.name).join(' · '),
-      sourceUrl:
-        product.links.find((l) => l.rel === 'via')?.href ??
-        product.links.find((l) => l.rel === 'describedby')!.href,
-      baseLevel: manifest.baseLevel,
-      areas: manifest.coverage
-        .filter((entry) => entry.area)
-        .map((entry) => ({
-          name: entry.area!.name,
-          level: Math.max(...(entry.levels ?? [entry.level])),
-        })),
-      tiles: manifest.tiles,
-      bytes: manifest.bytes,
-    };
-  });
+  return HEIGHTFIELD_PRODUCTS.map((product) =>
+    heightfieldProvenance(
+      product,
+      JSON.parse(
+        readFileSync(resolve(ROOT, 'public', product.manifest), 'utf-8')
+      ) as HeightManifestSummary
+    )
+  );
 }
 
 const sourcesInput: SourcesInput = {

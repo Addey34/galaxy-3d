@@ -8,6 +8,7 @@ import {
   NAVIGATE_FALLBACK_DENYLIST,
 } from './src/seo/pwaRouting';
 import { stripGlslComments as stripGlslSource } from './src/build/glslComments';
+import type { HeightManifestSummary } from './src/seo/sourcesPage';
 import {
   collectTranslations,
   collectDeferredText,
@@ -877,37 +878,12 @@ function bodyLandingPages() {
         // manifeste écrit par `pnpm surface:tiles` donne les MESURES (niveaux cuits, aires
         // nommées, nombre de tuiles, poids). La page n'en recopie aucune.
         const heightfields = await Promise.all(
-          productRegistry.HEIGHTFIELD_PRODUCTS.map(async (product) => {
-            const manifest = await readJson<{
-              baseLevel: number;
-              tiles: number;
-              bytes: number;
-              coverage: {
-                level: number;
-                levels?: number[];
-                area?: { name: string };
-              }[];
-            }>(`public/${product.manifest}`);
-            return {
-              body: product.body,
-              title: product.title,
-              mission: product.mission,
-              instrument: product.instrument,
-              credit: product.providers.map((p) => p.name).join(' · '),
-              sourceUrl:
-                product.links.find((l) => l.rel === 'via')?.href ??
-                product.links.find((l) => l.rel === 'describedby')!.href,
-              baseLevel: manifest.baseLevel,
-              areas: manifest.coverage
-                .filter((entry) => entry.area)
-                .map((entry) => ({
-                  name: entry.area!.name,
-                  level: Math.max(...(entry.levels ?? [entry.level])),
-                })),
-              tiles: manifest.tiles,
-              bytes: manifest.bytes,
-            };
-          })
+          productRegistry.HEIGHTFIELD_PRODUCTS.map(async (product) =>
+            sourcesSeo.heightfieldProvenance(
+              product,
+              await readJson<HeightManifestSummary>(`public/${product.manifest}`)
+            )
+          )
         );
         // Hôtes que la CSP de production autorise : la page /sources doit décrire exactement
         // ceux-là (voir `LIVE_DATA_SERVICES`).
