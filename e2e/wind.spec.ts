@@ -79,10 +79,20 @@ test('wind layer reads the Galaxy data service first, and says so', async ({
     openMeteo.push(route.request().url());
     return route.abort();
   });
-  // L'instant du manifeste : l'heure ronde de 3 h la plus proche de maintenant, comme le service.
+  // Les instants du manifeste au pas de 3 h, de −12 h à +12 h, comme le vrai service. UN seul
+  // instant « le plus proche de maintenant » rendait le scénario dépendant de l'heure : la couche
+  // demande l'heure PLEINE de la scène, et à 04:34 elle cherchait 04:00 quand l'instant simulé
+  // était 06:00, au-delà du demi-pas toléré (CI du 2026-10-12, vert en local).
   const step = 3 * 3_600_000;
-  const at = new Date(Math.round(Date.now() / step) * step);
-  const stamp = at.toISOString().slice(0, 13).replace(/[-T]/g, '');
+  const base = Math.floor(Date.now() / step) * step;
+  const times: Record<string, object> = {};
+  for (let k = -4; k <= 4; k++) {
+    const stamp = new Date(base + k * step)
+      .toISOString()
+      .slice(0, 13)
+      .replace(/[-T]/g, '');
+    times[stamp] = { cycle: stamp, kind: 'analysis', fields: ['wind10m'] };
+  }
   const manifest = {
     format: 'GXF1',
     generated: new Date().toISOString(),
@@ -90,7 +100,7 @@ test('wind layer reads the Galaxy data service first, and says so', async ({
     stepHours: 3,
     path: 'gfs/{validTime}/{cycle}/{field}.bin',
     fields: { wind10m: { unit: 'm/s', bands: 2 } },
-    times: { [stamp]: { cycle: stamp, kind: 'analysis', fields: ['wind10m'] } },
+    times,
   };
   const fixture = readFileSync(
     resolve(import.meta.dirname, '../src/core/galaxyData.fixture.bin')
