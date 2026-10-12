@@ -26,7 +26,7 @@ export const SERVICE_ACCESS: Readonly<
 > = {
   'galaxy-data.adrianguichard.dev': {
     access: 'own-service',
-    why: 'Le modèle GFS de la NOAA, récupéré une fois par cycle et servi à tous (lot 46).',
+    why: 'Le modèle GFS de la NOAA, récupéré une fois par cycle, et l’archive ERA5 construite une fois par heure demandée, servis à tous (lot 46).',
   },
   'gibs.earthdata.nasa.gov': {
     access: 'public-tiles',
@@ -50,7 +50,7 @@ export const SERVICE_ACCESS: Readonly<
   },
   'archive-api.open-meteo.com': {
     access: 'quota-fallback',
-    why: 'Archive ERA5 au-delà des dix jours que le service garde ; quota par IP, étape suivante du lot 46.',
+    why: 'Repli de l’archive ERA5 quand le service ne répond pas ou a atteint son plafond horaire ; quota par IP.',
   },
   'cloudflareinsights.com': {
     access: 'analytics',

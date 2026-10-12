@@ -5574,7 +5574,8 @@ clé `STORAGE_KEYS` nouvelle à déclarer.
 
 Les couches météo de MODÈLE (nuages, pluie, vent, température, pression, humidité) lisent
 d'abord un service que Galaxy héberge : le modèle **GFS de la NOAA** au pas de 1°, récupéré
-une fois par cycle et servi en fichiers statiques à tous les visiteurs
+une fois par cycle, et la réanalyse **ERA5** depuis 1940, construite une fois par heure
+demandée, tous deux servis en fichiers statiques à tous les visiteurs
 (`galaxy-data.adrianguichard.dev`, code dans `services/galaxy-data/`, client dans
 `src/core/galaxyData.ts`).
 
@@ -5608,20 +5609,66 @@ par chaque visiteur.
 - **Le format GXF1** (signature, en-tête JSON, int16 quantifiés) : le décodeur du client est
   testé sur un fichier écrit par l'encodeur Python, donc les deux ne peuvent pas dériver.
 - **Rétention bornée et écrite** : instants de la fenêtre, deux cycles au plus par instant
-  (un client peut avoir lu le manifeste précédent). Environ 0,9 Mo par instant, mesuré ; la
-  fenêtre pleine est ESTIMÉE sous 300 Mo, à relire sur la VM (`du -sh`) une fois remplie.
+  (un client peut avoir lu le manifeste précédent). Environ 0,9 Mo par instant ; la fenêtre
+  pleine pèse **195 Mo, mesuré** sur la VM le 2026-10-12 (estimée sous 300 Mo). Au-delà de la
+  fenêtre, une ANALYSE reste tant qu'ERA5T ne la couvre pas (au plus 60 jours), parce que c'est
+  elle qui fait le pont avec l'archive.
 
-**Le client, et son repli.** `fetchMeteoGrids` essaie le service AVANT Open-Meteo. Il passe à
-Open-Meteo quand la variable n'a pas de champ, quand l'instant est hors de la fenêtre (l'archive
-de plus de dix jours), ou quand le service ne répond pas ou sert un fichier invalide. Une panne
-du manifeste est gardée une minute en mémoire, pour ne pas re-sonder à chaque couche et à chaque
-heure. **L'instant servi est celui du CHAMP**, au plus un demi-pas de la scène (1 h 30) : le
-badge affiche cet écart au lieu de le cacher, et au-delà la donnée n'est pas montrée sous la
-date de la scène.
+**L'archive : ERA5 à la demande, de 1940 à environ une semaine avant aujourd'hui.** Un relais
+d'Open-Meteo par la VM n'aurait pas suffi : son quota compte environ un appel par point, soit
+10 000 pour TOUS les visiteurs et par jour. La source primaire, mesurée le 2026-10-12, est
+**ARCO-ERA5**, la copie Zarr publique d'ERA5 par Google, lisible sans clé :
 
-**Ce qui reste à Open-Meteo, et pourquoi c'est écrit** : l'archive de plus de dix jours (ERA5),
-toujours demandée par le navigateur, donc soumise au quota par visiteur. Ce n'est pas une
-régression, c'était déjà le cas, mais c'est la prochaine étape du lot (`DONNEES_LOT46.md`).
+- un morceau est UNE heure, le globe entier, 721 × 1440 à 0,25° en float32 Blosc, 1,8 à 3,3 Mo,
+  lu en 1,2 à 1,7 s depuis la VM ;
+- latitude de 90 à −90, longitude de 0 à 359,75 : **un point sur quatre retombe exactement sur
+  la grille GFS** (181 × 360), donc même format GXF1, même décodeur, mêmes unités ;
+- **l'axe du temps compte en heures depuis 1900**, pas depuis 1940. Compté depuis 1940, l'index
+  tombait quarante ans plus tard et rendait des températures plausibles à toutes les dates, y
+  compris hors couverture ; le témoin qui l'a trahi est une date au-delà de la fin déclarée qui
+  répondait 200. Hors couverture, la source rend un 404 franc, jamais un remplissage NaN ;
+- deux versions, deux chemins : ERA5 définitif (`era5/`, jusqu'à trois mois de délai) et ERA5T
+  préliminaire (`era5t/`, environ une semaine). Une adresse ne sert donc jamais deux contenus, et
+  un champ reste immuable ; un champ ERA5T que le définitif couvre est retiré du cache ;
+- la couverture se LIT chez la source (attributs du Zarr) à chaque passage de l'ingestion et
+  entre au manifeste (`archive`) : le client ne demande jamais un instant que la source n'a pas.
+
+`services/galaxy-data/era5.py` construit un champ MANQUANT (lecture, sous-échantillonnage,
+dérivation, quantification), l'écrit, le rend ; un champ déjà construit est un fichier que Caddy
+sert sans lui (mesuré : 2,3 s la première fois, 6 ms ensuite). Il est **borné par écrit** :
+600 morceaux lus par heure glissante et trois à la fois, au-delà un 503 `no-store` et le client
+passe à son repli ; 4 Gio de cache, les plus anciennement écrits partant d'abord (Caddy sert les
+lectures sans que ce serveur les voie, donc l'ordre est celui de l'écriture). Trois grandeurs ne
+sont pas publiées telles quelles par ERA5 : l'humidité relative se DÉRIVE de la température et du
+point de rosée (formule de Magnus, coefficients d'Alduchov et Eskridge 1996), la nébulosité passe
+d'une fraction à un pourcentage, et le cumul horaire de précipitation (mètres d'eau de l'heure
+qui finit à l'instant) devient des mm/h, l'unité du taux de GFS.
+
+**Témoin de valeur, pas seulement de forme** : à 1990-01-15 12 UTC, la température servie vaut
+19,63 °C à (−34°, 151°), 1,36 °C à (64°, −22°) et 6,25 °C à (49°, 2°), contre 19,5, 1,4 et 5,6 °C
+pour l'archive ERA5 d'Open-Meteo aux mêmes points. Une heure décalée ou une grille retournée
+donnerait des écarts de plusieurs degrés. L'écart de 0,65 °C au troisième point n'est pas
+expliqué ; il n'est pas corrigé à l'aveugle.
+
+**Licence** : ERA5 est sous CC BY 4.0 (catalogue du Copernicus Climate Data Store, lu à la
+source le 2026-10-12 ; le lien de licence que cite ARCO-ERA5 rend 404). Citation, mention de
+Copernicus et nature de la modification sont publiées sur `/sources`.
+
+**Le client, et son repli.** `fetchMeteoGrids` essaie le service AVANT Open-Meteo, dans cet
+ordre : l'archive ERA5 si la couverture déclarée contient l'heure la plus proche (réanalyse
+horaire, la référence de ce qui s'est passé, donc AVANT une analyse GFS là où les deux
+existent), puis GFS (le pont des analyses, puis la prévision). Un champ d'archive qui ne vient
+pas (503 du plafond, 404) laisse passer à GFS, puis à Open-Meteo. Il passe aussi à Open-Meteo
+quand la variable n'a pas de champ ou que le service ne répond pas ou sert un fichier invalide.
+Une panne du manifeste est gardée une minute en mémoire, pour ne pas re-sonder à chaque couche
+et à chaque heure. **L'instant servi est celui du CHAMP**, au plus une demi-heure de la scène pour
+ERA5 et un demi-pas (1 h 30) pour GFS : le badge affiche cet écart au lieu de le cacher, et
+au-delà la donnée n'est pas montrée sous la date de la scène. Le badge nomme « ECMWF ERA5T »
+quand la donnée est la version préliminaire.
+
+**Ce qui reste à Open-Meteo, et pourquoi c'est écrit** : le REPLI seulement (service injoignable,
+plafond atteint). Aucune date de 1940 à seize jours à venir ne dépend plus d'un quota par
+visiteur tant que le service répond.
 
 **Le libellé suit la nature, le badge dit la source.** Les couches s'appelaient « Nuages
 (Open-Meteo) » : un libellé qui aurait affirmé une source fausse dès que le service répond. Elles
@@ -5634,9 +5681,12 @@ Caddy interne (aucune directive `log`, vérifié le 2026-10-12) ; `public/privac
 dans les quatre langues. CORS limité à l'origine de Galaxy et à `localhost`.
 
 **Surveillance** : `pnpm sources:health` sonde le manifeste (adresse DÉRIVÉE de
-`GALAXY_DATA_ORIGIN`, jamais recopiée) et le juge muet si sa dernière analyse a plus de 24 h.
-La panne probable d'un service qu'on héberge n'est pas le silence, c'est une ingestion arrêtée
-qui laisse un manifeste répondre, de plus en plus vieux.
+`GALAXY_DATA_ORIGIN`, jamais recopiée) et le juge muet si sa dernière analyse a plus de 24 h,
+s'il ne déclare plus d'archive (la VM ne joint plus ARCO-ERA5) ou si la fin d'ERA5T a plus de
+30 jours (la copie publique ne suit plus ; neuf jours de retard mesurés le 2026-10-12). La panne
+probable d'un service qu'on héberge n'est pas le silence, c'est une ingestion arrêtée qui laisse
+un manifeste répondre, de plus en plus vieux ; une seule sonde, la nôtre, couvre ainsi les deux
+sources amont.
 
 **Trouvé en déployant, pas en relisant** : le second passage de l'ingestion a échoué
 (`NotADirectoryError`), parce que le dossier `gfs/` porte aussi le manifeste, que le premier
@@ -5645,8 +5695,11 @@ build de l'image) fait désormais DEUX passages complets sur un dossier temporai
 reproduit exactement l'erreur vue en production.
 
 Gardes : `src/core/galaxyData.test.ts` (format contre le fichier Python, réindexation de la
-grille, direction météo, choix de l'instant, service d'abord et repli), `src/config/
-sourceHealth.test.ts` (manifeste vivant, périmé, étranger), `e2e/wind.spec.ts` (la couche lit le
+grille, direction météo, choix de l'instant et de l'heure d'archive, ERA5 avant GFS, repli au
+503 du plafond), `era5.py --self-test` et `ingest.py --self-test` joués au build de l'image
+(origine 1900 de l'axe du temps, sous-échantillonnage sur la grille GFS, Magnus, plafond, cache
+borné, pont des analyses ; celui-ci falsifié), `src/config/
+sourceHealth.test.ts` (manifeste vivant, périmé, étranger, sans archive, archive figée), `e2e/wind.spec.ts` (la couche lit le
 service et le dit, sans toucher Open-Meteo ; éteinte, elle ne demande rien),
 `src/config/privacyDisclosure.test.ts` (l'hôte est nommé dans la page de confidentialité).
 

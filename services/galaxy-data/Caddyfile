@@ -20,11 +20,22 @@
 	@manifest path */manifest.json
 	header @manifest Cache-Control "public, max-age=300"
 	@field path *.bin
-	header @field Cache-Control "public, max-age=31536000, immutable"
-	header @field Content-Type application/octet-stream
+	# `?` : une valeur PAR DÉFAUT, posée seulement si la réponse n'en porte pas. Un 503 du serveur
+	# d'archive (`no-store`) ne doit pas devenir immuable un an parce que son chemin finit en .bin.
+	header @field ?Cache-Control "public, max-age=31536000, immutable"
+	header @field ?Content-Type application/octet-stream
 
 	# Rien d'autre n'est servi : ni liste de dossier, ni fichier en cours d'écriture.
 	@hidden path */.* *.part
 	respond @hidden 404
+
+	# L'archive ERA5 : un champ déjà construit est un fichier comme un autre ; un MANQUANT va au
+	# serveur d'archive, qui le construit, l'écrit et le rend (ses 503 disent « plafond atteint »).
+	@archiveMissing {
+		path /era5/* /era5t/*
+		not file
+	}
+	reverse_proxy @archiveMissing galaxy-data-era5:8080
+
 	file_server
 }

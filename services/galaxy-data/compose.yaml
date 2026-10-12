@@ -17,6 +17,23 @@ services:
       driver: json-file
       options: { max-size: "5m", max-file: "3" }
 
+  # L'archive ERA5, construite à la demande (`era5.py`) : seul Caddy interne la joint, par le
+  # réseau `internal` ; elle sort vers Google par le pont de ce réseau.
+  era5:
+    build: .
+    container_name: galaxy-data-era5
+    restart: unless-stopped
+    command: ["python", "era5.py", "--serve"]
+    volumes:
+      - galaxy_data:/srv/galaxy-data
+    networks:
+      - internal
+    cpus: 0.5
+    mem_limit: 384m
+    logging:
+      driver: json-file
+      options: { max-size: "5m", max-file: "3" }
+
   web:
     image: caddy:2-alpine
     container_name: galaxy-data-web
@@ -26,12 +43,15 @@ services:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
     networks:
       - edge
+      - internal
     cpus: 0.25
     mem_limit: 128m
 
 networks:
   edge:
     external: true
+  internal:
+    name: galaxy_data_internal
 
 volumes:
   galaxy_data:

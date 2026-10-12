@@ -4,11 +4,13 @@
  * démarrage était dépassé de 1 039 octets quand ce code y entrait (mesuré le 2026-10-12).
  */
 import {
+  ARCHIVE_PROVIDER,
   GALAXY_DATA_MANIFEST,
   GALAXY_DATA_VARIABLES,
   composeVariable,
   decodeGxf,
   galaxyDataFieldUrl,
+  pickGalaxyDataArchive,
   pickGalaxyDataTime,
   stampToMs,
   type GalaxyDataManifest,
@@ -56,11 +58,44 @@ async function galaxyDataManifest(
 const fieldCache = new Map<string, ReturnType<typeof decodeGxf>>();
 const FIELD_CACHE_MAX = 24;
 
+/** Un champ, depuis le cache ou le réseau ; `null` si le service ne le rend pas (404, 503…). */
+async function loadField(
+  url: string,
+  signal?: AbortSignal
+): Promise<ReturnType<typeof decodeGxf> | null> {
+  const cached = fieldCache.get(url);
+  if (cached) return cached;
+  const response = await fetch(url, { signal });
+  if (!response.ok) return null;
+  const entry = decodeGxf(await response.arrayBuffer());
+  fieldCache.set(url, entry);
+  if (fieldCache.size > FIELD_CACHE_MAX)
+    fieldCache.delete(fieldCache.keys().next().value!);
+  return entry;
+}
+
+/** Tous les champs demandés, ou `null` dès qu'un seul manque. */
+async function loadFields(
+  urls: Record<string, string>,
+  signal?: AbortSignal
+): Promise<Map<string, ReturnType<typeof decodeGxf>> | null> {
+  const entries = await Promise.all(
+    Object.entries(urls).map(
+      async ([field, url]) => [field, await loadField(url, signal)] as const
+    )
+  );
+  if (entries.some(([, entry]) => !entry)) return null;
+  return new Map(entries as [string, ReturnType<typeof decodeGxf>][]);
+}
+
 /**
  * Les grilles servies par le service de données, ou `null` pour passer à Open-Meteo : variable
- * que le service ne rend pas, instant hors de sa fenêtre, service injoignable ou champ invalide.
- * Le produit rendu dit ce qui est RÉELLEMENT servi : l'instant du champ (au pas de 3 h ou 6 h,
- * donc parfois décalé de la scène, ce que le badge montre), une analyse du passé ou une prévision.
+ * que le service ne rend pas, instant hors de sa couverture, service injoignable, plafond de
+ * l'archive atteint ou champ invalide. Dans l'ordre : l'ARCHIVE ERA5 (réanalyse horaire, de 1940
+ * à environ une semaine avant aujourd'hui), puis GFS (les analyses qui font le pont, puis la
+ * prévision). Le produit rendu dit ce qui est RÉELLEMENT servi : l'instant du champ (au pas
+ * d'une heure pour ERA5, de 3 h pour GFS, donc parfois décalé de la scène, ce que le badge
+ * montre), une réanalyse, une analyse ou une prévision.
  */
 export async function fromGalaxyData(
   simDate: Date,
@@ -84,38 +119,42 @@ export async function fromGalaxyData(
   const fields = [
     ...new Set(variables.map((v) => GALAXY_DATA_VARIABLES[v]!.field)),
   ];
-  const picked = pickGalaxyDataTime(manifest, simDate.getTime(), fields);
-  if (!picked) return null;
+  const now = options.now ?? new Date();
   try {
-    const decoded = new Map<string, ReturnType<typeof decodeGxf>>();
-    for (const field of fields) {
-      const url = galaxyDataFieldUrl(
-        manifest,
-        picked.stamp,
-        picked.cycle,
-        field
-      );
-      let entry = fieldCache.get(url);
-      if (!entry) {
-        const response = await fetch(url, { signal: options.signal });
-        if (!response.ok) return null;
-        entry = decodeGxf(await response.arrayBuffer());
-        fieldCache.set(url, entry);
-        if (fieldCache.size > FIELD_CACHE_MAX)
-          fieldCache.delete(fieldCache.keys().next().value!);
+    const archive = pickGalaxyDataArchive(manifest, simDate.getTime(), fields);
+    if (archive) {
+      const decoded = await loadFields(archive.urls, options.signal);
+      if (decoded) {
+        const servedMs = stampToMs(archive.stamp);
+        return served(
+          variables,
+          decoded,
+          servedMs,
+          now,
+          {
+            kind: 'reanalysis',
+            validTime: { from: servedMs, to: servedMs },
+            offsetToleranceMs: 1_800_000,
+          },
+          ARCHIVE_PROVIDER[archive.version]
+        );
       }
-      decoded.set(field, entry);
     }
-    const grids = Object.fromEntries(
-      variables.map((v) => [
-        v,
-        composeVariable(v, decoded.get(GALAXY_DATA_VARIABLES[v]!.field)!),
-      ])
+
+    const picked = pickGalaxyDataTime(manifest, simDate.getTime(), fields);
+    if (!picked) return null;
+    const decoded = await loadFields(
+      Object.fromEntries(
+        fields.map((field) => [
+          field,
+          galaxyDataFieldUrl(manifest, picked.stamp, picked.cycle, field),
+        ])
+      ),
+      options.signal
     );
+    if (!decoded) return null;
     const servedMs = stampToMs(picked.stamp);
-    const plan = planMeteoRequest(new Date(servedMs), {
-      now: options.now ?? new Date(),
-    });
+    const plan = planMeteoRequest(new Date(servedMs), { now });
     const product: DatedProduct =
       picked.kind === 'analysis'
         ? {
@@ -131,14 +170,37 @@ export async function fromGalaxyData(
               ? { reliableHorizonMs: plan.product.reliableHorizonMs }
               : {}),
           };
-    return {
-      grids,
-      plan: { ...plan, product },
-      realDate: new Date(servedMs).toISOString(),
-      provider: 'NOAA GFS',
-    };
+    return served(variables, decoded, servedMs, now, product, 'NOAA GFS');
   } catch (error) {
     if (options.signal?.aborted) throw error;
     return null;
   }
+}
+
+function served(
+  variables: readonly string[],
+  decoded: Map<string, ReturnType<typeof decodeGxf>>,
+  servedMs: number,
+  now: Date,
+  product: DatedProduct,
+  provider: string
+): {
+  grids: Record<string, ScalarGrid>;
+  plan: MeteoTimePlan;
+  realDate: string;
+  provider: string;
+} {
+  const grids = Object.fromEntries(
+    variables.map((v) => [
+      v,
+      composeVariable(v, decoded.get(GALAXY_DATA_VARIABLES[v]!.field)!),
+    ])
+  );
+  const plan = planMeteoRequest(new Date(servedMs), { now });
+  return {
+    grids,
+    plan: { ...plan, product },
+    realDate: new Date(servedMs).toISOString(),
+    provider,
+  };
 }

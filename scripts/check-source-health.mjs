@@ -184,23 +184,28 @@ const MARKERS = [
      * pas le silence : c'est une INGESTION arrêtée, qui laisse le manifeste répondre, de plus en
      * plus vieux. D'où `fresh` : la dernière ANALYSE doit dater de moins de 24 h (un cycle toutes
      * les 6 h, publié avec environ 5 h de délai), sans quoi la source est dite muette.
+     *
+     * L'ARCHIVE aussi : le manifeste déclare la couverture qu'il a lue chez ARCO-ERA5 à chaque
+     * passage. Absente, la VM ne joint plus cette source ; une fin d'ERA5T de plus de 30 jours,
+     * la copie publique ne suit plus (mesuré le 2026-10-12 : neuf jours de retard). Une seule
+     * sonde, la nôtre, couvre donc les deux dépendances amont.
      */
     marker: () => '"format":"GXF1"',
     fresh: (body, now) => {
-      const times = Object.entries(JSON.parse(body).times ?? {});
+      const manifest = JSON.parse(body);
+      const archiveEnd = manifest.archive?.era5t?.to;
+      if (!archiveEnd) return 'aucune archive ERA5 au manifeste';
+      const archiveDays = (now - stampMs(archiveEnd)) / 86_400_000;
+      if (archiveDays > 30)
+        return `archive ERA5T arrêtée au ${archiveEnd}, ${Math.round(archiveDays)} j de retard (plus de 30)`;
+      const times = Object.entries(manifest.times ?? {});
       const analyses = times
         .filter(([, entry]) => entry.kind === 'analysis')
         .map(([stamp]) => stamp)
         .sort();
       const newest = analyses.at(-1);
       if (!newest) return 'aucune analyse au manifeste';
-      const at = Date.UTC(
-        Number(newest.slice(0, 4)),
-        Number(newest.slice(4, 6)) - 1,
-        Number(newest.slice(6, 8)),
-        Number(newest.slice(8, 10))
-      );
-      const hours = (now - at) / 3_600_000;
+      const hours = (now - stampMs(newest)) / 3_600_000;
       return hours > 24
         ? `dernière analyse ${newest}, vieille de ${Math.round(hours)} h (plus de 24 h)`
         : null;
@@ -208,6 +213,16 @@ const MARKERS = [
     what: 'service de données de Galaxy (manifeste)',
   },
 ];
+
+/** `AAAAMMJJHH` → instant UTC, la convention du service de données. */
+function stampMs(stamp) {
+  return Date.UTC(
+    Number(stamp.slice(0, 4)),
+    Number(stamp.slice(4, 6)) - 1,
+    Number(stamp.slice(6, 8)),
+    Number(stamp.slice(8, 10))
+  );
+}
 
 export const MARKER_RULES = MARKERS;
 

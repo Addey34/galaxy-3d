@@ -8,6 +8,10 @@
  * de 4° en coûte des milliers). Le service récupère le modèle GFS de la NOAA UNE fois par cycle
  * et le sert à tous, au pas de 1°.
  *
+ * Au-delà des analyses GFS, le même service sert l'ARCHIVE ERA5 (1940 à environ une semaine avant
+ * aujourd'hui), construite à la demande par `services/galaxy-data/era5.py` depuis la copie publique
+ * ARCO-ERA5 : le manifeste en déclare la couverture (`archive`).
+ *
  * Le FORMAT est celui de `ingest.py` (« GXF1 ») : signature, longueur de l'en-tête JSON, en-tête,
  * puis int16 LE bande après bande ; valeur = brut × scale + offset, −32768 = absente.
  */
@@ -31,7 +35,31 @@ export interface GalaxyDataManifest {
     string,
     { cycle: string; kind: 'analysis' | 'forecast'; fields: string[] }
   >;
+  /** Absent quand la source de l'archive n'a pas répondu au dernier passage. */
+  archive?: GalaxyDataArchive;
 }
+
+/** Une plage d'archive, instants `AAAAMMJJHH` INCLUSIFS. */
+export interface GalaxyDataArchiveRange {
+  from: string;
+  to: string;
+  path: string;
+}
+
+export interface GalaxyDataArchive {
+  era5: GalaxyDataArchiveRange;
+  era5t: GalaxyDataArchiveRange;
+  stepHours: number;
+  fields: string[];
+}
+
+export type GalaxyDataArchiveVersion = 'era5' | 'era5t';
+
+/** Le nom affiché par le badge : ERA5T est la version PRÉLIMINAIRE, et le badge le dit. */
+export const ARCHIVE_PROVIDER: Record<GalaxyDataArchiveVersion, string> = {
+  era5: 'ECMWF ERA5',
+  era5t: 'ECMWF ERA5T',
+};
 
 export interface GxfHeader {
   field: string;
@@ -46,9 +74,11 @@ export interface GxfHeader {
   dLat: number;
   dLon: number;
   validTime: string;
-  cycle: string;
-  lead: number;
-  kind: 'analysis' | 'forecast';
+  /** Champs GFS seulement : une réanalyse n'a ni cycle ni échéance. */
+  cycle?: string;
+  lead?: number;
+  kind: 'analysis' | 'forecast' | 'reanalysis';
+  product?: GalaxyDataArchiveVersion;
   source: string;
 }
 
@@ -82,6 +112,46 @@ export function pickGalaxyDataTime(
   if (!best) return null;
   const entry = manifest.times[best.stamp]!;
   return { stamp: best.stamp, cycle: entry.cycle, kind: entry.kind };
+}
+
+/** `AAAAMMJJHH` d'un instant UTC. */
+export function msToStamp(ms: number): string {
+  return new Date(ms).toISOString().replace(/[-T:]/g, '').slice(0, 10);
+}
+
+/**
+ * Le champ d'ARCHIVE de la scène : l'heure la plus proche (ERA5 est horaire, donc à au plus une
+ * demi-heure de la scène), si la couverture déclarée la contient et porte TOUS les champs. ERA5
+ * passe AVANT les analyses GFS là où les deux existent : c'est une réanalyse, horaire, et la
+ * référence de ce qui s'est passé ; GFS ne fait que le pont des derniers jours.
+ */
+export function pickGalaxyDataArchive(
+  manifest: GalaxyDataManifest,
+  sceneMs: number,
+  fields: readonly string[]
+): {
+  stamp: string;
+  version: GalaxyDataArchiveVersion;
+  urls: Record<string, string>;
+} | null {
+  const archive = manifest.archive;
+  if (!archive || !fields.every((f) => archive.fields.includes(f))) return null;
+  const stepMs = archive.stepHours * HOUR_MS;
+  const stamp = msToStamp(Math.round(sceneMs / stepMs) * stepMs);
+  for (const version of ['era5', 'era5t'] as const) {
+    const range = archive[version];
+    if (stamp < range.from || stamp > range.to) continue;
+    const urls = Object.fromEntries(
+      fields.map((field) => [
+        field,
+        `${GALAXY_DATA_ORIGIN}/${range.path
+          .replace('{time}', stamp)
+          .replace('{field}', field)}`,
+      ])
+    );
+    return { stamp, version, urls };
+  }
+  return null;
 }
 
 /** Le chemin d'un champ, tel que le manifeste le déclare (`gfs/{validTime}/{cycle}/{field}.bin`). */

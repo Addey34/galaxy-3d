@@ -27,7 +27,9 @@ le cycle, l'échéance et la source : le fichier se lit sans rien deviner.
 
 RÉTENTION BORNÉE ET ÉCRITE (leçon du quota de Firebase) : les instants de la fenêtre
 [maintenant − RETAIN_PAST_DAYS, dernier cycle + FORECAST_HOURS]. Au-delà dans le passé, le
-client passe à l'archive (ERA5).
+client passe à l'archive (ERA5, `era5.py`). Une ANALYSE plus ancienne reste gardée tant
+qu'ERA5T ne la couvre pas encore, sinon un trou s'ouvrirait entre les deux (ERA5T a environ une
+semaine de délai, et sa copie publique davantage) ; jamais au-delà de RETAIN_MAX_DAYS.
 
 Usage :
     python ingest.py --once            un passage (le dernier cycle complet, s'il est nouveau)
@@ -58,6 +60,7 @@ USER_AGENT = "galaxy-data/1 (+https://galaxy.adrianguichard.dev)"
 FORECAST_HOURS = 384
 STEP_HOURS = 3
 RETAIN_PAST_DAYS = 10
+RETAIN_MAX_DAYS = 60
 CHECK_MINUTES = 30
 # Entre deux requêtes à NOMADS : la NOAA bloque les clients trop pressés.
 PAUSE_SECONDS = 1.5
@@ -336,7 +339,7 @@ def instant_folders(base: str) -> list[str]:
     )
 
 
-def build_manifest(now: dt.datetime) -> dict:
+def build_manifest(now: dt.datetime, archive: dict | None = None) -> dict:
     """Pour chaque instant gardé, la meilleure donnée : une analyse, sinon la prévision la plus récente."""
     base = os.path.join(ROOT, "gfs")
     times = {}
@@ -362,21 +365,45 @@ def build_manifest(now: dt.datetime) -> dict:
         "path": "gfs/{validTime}/{cycle}/{field}.bin",
         "fields": {name: {"unit": spec["unit"], "bands": len(spec["bands"])} for name, spec in FIELDS.items()},
         "times": times,
+        # La couverture de l'archive ERA5 servie à la demande (`era5.py`), lue chez la source à
+        # chaque passage ; absente si la source n'a pas répondu, et le client n'y croit alors pas.
+        **({"archive": archive} if archive else {}),
     }
 
 
-def prune(now: dt.datetime) -> int:
+def retention_horizon(now: dt.datetime, archive: dict | None) -> tuple[str, str]:
+    """
+    (horizon de tout instant, horizon d'une ANALYSE). Une analyse plus ancienne que la fenêtre
+    reste tant qu'ERA5T ne la couvre pas : sans archive connue, on garde tout jusqu'à
+    RETAIN_MAX_DAYS plutôt que d'ouvrir un trou.
+    """
+    window = stamp(now - dt.timedelta(days=RETAIN_PAST_DAYS))
+    floor = stamp(now - dt.timedelta(days=RETAIN_MAX_DAYS))
+    if archive is None:
+        return window, floor
+    covered_to = archive["era5t"]["to"]
+    return window, min(window, max(floor, covered_to))
+
+
+def prune(now: dt.datetime, archive: dict | None = None) -> int:
     """Retire les instants hors fenêtre, et les cycles qu'un cycle plus récent a remplacés."""
     base = os.path.join(ROOT, "gfs")
     if not os.path.isdir(base):
         return 0
-    horizon = stamp(now - dt.timedelta(days=RETAIN_PAST_DAYS))
+    horizon, analysis_horizon = retention_horizon(now, archive)
     removed = 0
     for valid in instant_folders(base):
         folder = os.path.join(base, valid)
-        if valid < horizon:
+        is_analysis = os.path.isdir(os.path.join(folder, valid))
+        if valid < (analysis_horizon if is_analysis else horizon):
             shutil.rmtree(folder)
             removed += 1
+            continue
+        if valid < horizon:
+            # Au-delà de la fenêtre, seule l'analyse est gardée : c'est elle qui fait le pont.
+            for cycle in os.listdir(folder):
+                if cycle != valid and not cycle.startswith("."):
+                    shutil.rmtree(os.path.join(folder, cycle))
             continue
         cycles = sorted(c for c in os.listdir(folder) if not c.startswith("."))
         keep = {valid} if valid in cycles else set()
@@ -405,8 +432,11 @@ def run_once() -> None:
         if ingest_cycle(candidate):
             break
     backfill_analyses(now)
-    removed = prune(now)
-    manifest = build_manifest(now)
+    from era5 import read_coverage  # stdlib seulement pour la couverture
+
+    archive = read_coverage()
+    removed = prune(now, archive)
+    manifest = build_manifest(now, archive)
     write_atomic(
         os.path.join(ROOT, "gfs", "manifest.json"),
         json.dumps(manifest, separators=(",", ":"), sort_keys=True).encode("utf-8"),
@@ -445,14 +475,29 @@ def self_test() -> None:
                              ("2026101212", "2026101200"), ("2026100100", "2026100100")]:
             write_atomic(os.path.join(scratch, "gfs", valid, cycle, "t2m.bin"), b"x")
         write_atomic(os.path.join(scratch, "gfs", ".cycles", "2026101200"), b"x")
+        covered = {"era5t": {"to": "2026100323"}}  # ERA5T couvre l'analyse du 1er octobre
         for _ in range(2):  # le second passage voit le manifeste du premier
-            prune(now)
+            prune(now, covered)
             manifest = build_manifest(now)
             write_atomic(os.path.join(scratch, "gfs", "manifest.json"), json.dumps(manifest).encode())
         assert set(manifest["times"]) == {"2026101206", "2026101212"}, manifest["times"]
         assert manifest["times"]["2026101206"] == {
             "cycle": "2026101206", "kind": "analysis", "fields": ["t2m"]}
         assert manifest["times"]["2026101212"]["kind"] == "forecast"
+        assert "archive" not in manifest
+
+        # Une analyse hors fenêtre reste tant qu'ERA5T ne la couvre pas ; une prévision, non.
+        for valid, cycle in [("2026092812", "2026092812"), ("2026092812", "2026092800"),
+                             ("2026092818", "2026092806"), ("2026092500", "2026092500")]:
+            write_atomic(os.path.join(scratch, "gfs", valid, cycle, "t2m.bin"), b"x")
+        archive = {"era5t": {"to": "2026092623"}}
+        prune(now, archive)
+        kept = build_manifest(now, archive)["times"]
+        assert kept.get("2026092812") == {"cycle": "2026092812", "kind": "analysis", "fields": ["t2m"]}, kept
+        assert os.listdir(os.path.join(scratch, "gfs", "2026092812")) == ["2026092812"]
+        assert "2026092818" not in kept, "une prévision hors fenêtre ne fait pas le pont"
+        assert "2026092500" not in kept, "ERA5T la couvre : elle part"
+        assert retention_horizon(now, None)[1] == "2026081312", "sans archive : la borne dure"
     ROOT = saved
     print("self-test : OK")
 
