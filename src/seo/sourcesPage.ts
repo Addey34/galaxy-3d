@@ -137,25 +137,6 @@ export interface LiveDataService {
  */
 export const LIVE_DATA_SERVICES: readonly LiveDataService[] = [
   {
-    host: 'gibs.earthdata.nasa.gov',
-    name: 'NASA GIBS (EOSDIS)',
-    url: 'https://www.earthdata.nasa.gov/engage/open-data-services-software/earthdata-developer-portal/gibs-api',
-    use: {
-      en: 'Earth weather layers from satellites and reanalysis: VIIRS and MODIS (Terra, Aqua) clouds, IMERG precipitation, MERRA-2 surface air temperature.',
-      fr: 'Couches météo terrestres issues de satellites et de réanalyse : nuages VIIRS et MODIS (Terra, Aqua), précipitations IMERG, température de l’air en surface MERRA-2.',
-      es: 'Capas meteorológicas terrestres por satélite y reanálisis: nubes VIIRS y MODIS (Terra, Aqua), precipitación IMERG, temperatura del aire en superficie MERRA-2.',
-      'pt-BR':
-        'Camadas meteorológicas terrestres por satélite e reanálise: nuvens VIIRS e MODIS (Terra, Aqua), precipitação IMERG, temperatura do ar na superfície MERRA-2.',
-    },
-    terms: {
-      en: 'NASA EOSDIS data, no restriction on use; NASA is acknowledged as the source.',
-      fr: 'Données NASA EOSDIS, sans restriction d’usage ; la NASA est citée comme source.',
-      es: 'Datos NASA EOSDIS, sin restricción de uso; la NASA se cita como fuente.',
-      'pt-BR':
-        'Dados NASA EOSDIS, sem restrição de uso; a NASA é citada como fonte.',
-    },
-  },
-  {
     host: 'galaxy-data.adrianguichard.dev',
     name: 'Galaxy data service (NOAA GFS, ECMWF ERA5)',
     url: 'https://www.nco.ncep.noaa.gov/pmb/products/gfs/',

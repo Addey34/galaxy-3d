@@ -23,6 +23,7 @@ import type {
 import usgsEarthquakeCatalog from './usgs-earthquake-catalog.json';
 import nasaEonet from './nasa-eonet.json';
 import nasaTrek from './nasa-trek.json';
+import nasaGibs from './nasa-gibs.json';
 
 /**
  * Même raison que les deux fonctions d'assertion d'`index.ts` : un import JSON élargit
@@ -63,5 +64,7 @@ const asTileSource = <
   record as T & Pick<TileSourceProvider, 'kind' | 'role' | 'rights'>;
 
 export const TILE_PROVIDERS = {
+  // GIBS sert AUSSI les couches météo : sa ligne de `/sources` décrit les deux usages, une fois.
+  'nasa-gibs': asTileSource(nasaGibs),
   'nasa-trek': asTileSource(nasaTrek),
 };

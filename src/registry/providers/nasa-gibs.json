@@ -1,0 +1,32 @@
+{
+  "$schema": "../schema/provider.schema.json",
+  "id": "nasa-gibs",
+  "role": "tile-source",
+  "publisher": "NASA GIBS (EOSDIS)",
+  "title": "Global Imagery Browse Services, WMTS",
+  "url": "https://www.earthdata.nasa.gov/engage/open-data-services-software/earthdata-developer-portal/gibs-api",
+  "kind": "measurement",
+  "host": "gibs.earthdata.nasa.gov",
+  "license": "other",
+  "rights": "public-domain",
+  "licenseUrl": "https://www.earthdata.nasa.gov/engage/open-data-services-software/earthdata-developer-portal/gibs-api",
+  "attribution": "We acknowledge the use of imagery provided by services from NASA's Global Imagery Browse Services (GIBS), part of NASA's Earth Science Data and Information System (ESDIS)",
+  "accessed": "2026-10-12",
+  "extent": {
+    "temporal": {
+      "interval": [["2004-08-01T00:00:00Z", "2004-08-31T23:59:59Z"]]
+    }
+  },
+  "use": {
+    "en": "Earth weather layers from satellites and reanalysis (VIIRS and MODIS clouds, IMERG precipitation, MERRA-2 surface air temperature), and the Earth's surface imagery streamed on approach, only for the patch of ground in view.",
+    "fr": "Couches météo terrestres issues de satellites et de réanalyse (nuages VIIRS et MODIS, précipitations IMERG, température de l’air en surface MERRA-2), et imagerie de la surface de la Terre streamée à l’approche, seulement pour la portion de sol visible.",
+    "es": "Capas meteorológicas terrestres por satélite y reanálisis (nubes VIIRS y MODIS, precipitación IMERG, temperatura del aire en superficie MERRA-2), e imágenes de la superficie terrestre transmitidas al acercarse, solo para la porción de suelo visible.",
+    "pt-BR": "Camadas meteorológicas terrestres por satélite e reanálise (nuvens VIIRS e MODIS, precipitação IMERG, temperatura do ar na superfície MERRA-2), e imagens da superfície da Terra transmitidas na aproximação, somente para a porção de solo visível."
+  },
+  "terms": {
+    "en": "NASA supports full and open sharing of data; GIBS states no restriction and no rate limit (read at the source on 2026-10-12). It asks clients to acknowledge it: “We acknowledge the use of imagery provided by services from NASA's Global Imagery Browse Services (GIBS), part of NASA's Earth Science Data and Information System (ESDIS).”",
+    "fr": "La NASA soutient le partage complet et ouvert des données ; GIBS n’indique ni restriction ni limite de débit (lu à la source le 2026-10-12). Il demande aux clients de le citer : « We acknowledge the use of imagery provided by services from NASA's Global Imagery Browse Services (GIBS), part of NASA's Earth Science Data and Information System (ESDIS). »",
+    "es": "La NASA apoya el intercambio completo y abierto de datos; GIBS no indica ninguna restricción ni límite de caudal (leído en la fuente el 2026-10-12). Pide a los clientes que lo citen: «We acknowledge the use of imagery provided by services from NASA's Global Imagery Browse Services (GIBS), part of NASA's Earth Science Data and Information System (ESDIS).»",
+    "pt-BR": "A NASA apoia o compartilhamento completo e aberto de dados; o GIBS não indica nenhuma restrição nem limite de vazão (lido na fonte em 2026-10-12). Ele pede aos clientes que o citem: “We acknowledge the use of imagery provided by services from NASA's Global Imagery Browse Services (GIBS), part of NASA's Earth Science Data and Information System (ESDIS).”"
+  }
+}

@@ -254,13 +254,19 @@ const imageryTileset = z
             columnsAtLevelZero: z.number().int().positive(),
             rowsAtLevelZero: z.number().int().positive(),
             tileSizePx: z.number().int().positive(),
+            /** Premier niveau exact et doublant ; absent = 0 (cf. `core/tilePyramid.ts`). */
+            referenceLevel: z.number().int().min(0).optional(),
           })
           .strict(),
         minLevel: z.number().int().min(0),
         maxLevel: z.number().int().min(0),
       })
       .strict()
-      .refine((s) => s.maxLevel >= s.minLevel, 'maxLevel < minLevel'),
+      .refine((s) => s.maxLevel >= s.minLevel, 'maxLevel < minLevel')
+      .refine(
+        (s) => s.minLevel >= (s.matrix.referenceLevel ?? 0),
+        'minLevel sous le niveau de référence de la matrice'
+      ),
     /** Finesse de la mosaïque publiée, en pixels par degré. */
     publishedPixelsPerDegree: z.number().positive(),
     /** Intervalle décrit par la mosaïque (STAC ; bornes `null` interdites ici : une campagne finie). */
