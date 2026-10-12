@@ -1292,6 +1292,45 @@ async function articles() {
   return out;
 }
 
+// ── NASA NSSDCA : les DÉFINITIONS des fiches, citées mot pour mot ───────────────────────────
+
+/**
+ * Ce qu'une grandeur des fiches du NSSDCA VEUT DIRE se lit dans leurs notes, une page à part
+ * (2026-10-12). Une précision affichée sous une valeur (`detail.…`) qui en dérive y est citée ici
+ * mot pour mot, puis cherchée dans le texte servi : `factQuantity.test.ts` relie la précision à
+ * cette citation, comme un fait d'article à la sienne. La première : la température moyenne de
+ * Mercure et de la Lune, moyenne de deux hémisphères qu'aucune région ne connaît.
+ */
+const NSSDCA_NOTES_URL =
+  'https://nssdc.gsfc.nasa.gov/planetary/factsheet/planetfact_notes.html';
+const NSSDCA_DEFINITIONS = {
+  hemisphereAverage: {
+    url: NSSDCA_NOTES_URL,
+    quotes: [
+      'For Mercury and the Moon, for example, this is an average over the sunlit (very hot) and dark (very cold) hemispheres and so is not representative of any given region on the planet',
+    ],
+  },
+};
+
+async function nssdcaDefinitions() {
+  const out = {};
+  for (const [id, definition] of Object.entries(NSSDCA_DEFINITIONS)) {
+    const response = await get(definition.url);
+    const text = collapse(decode(response.text.replace(/<[^>]*>/g, ' ')));
+    for (const quote of definition.quotes)
+      if (!text.includes(collapse(quote)))
+        throw new Error(
+          `${id} : citation introuvable dans les notes du NSSDCA : « ${quote} »`
+        );
+    out[id] = {
+      url: definition.url,
+      retrieved: response.retrieved,
+      verifiedQuotes: definition.quotes,
+    };
+  }
+  return out;
+}
+
 // ── NASA NSSDCA Master Catalog : sondes ──────────────────────────────────────────────────────
 
 /**
@@ -1513,6 +1552,7 @@ const sections = {
   nssdcaMasterCatalog: await nssdcaMasterCatalog(),
   horizonsObjectData: await horizonsObjectData(),
   articles: await articles(),
+  nssdcaDefinitions: await nssdcaDefinitions(),
 };
 
 /**

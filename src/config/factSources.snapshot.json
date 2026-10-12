@@ -38,6 +38,9 @@
       "2026-09-28",
       "2026-10-04",
       "2026-10-07"
+    ],
+    "nssdcaDefinitions": [
+      "2026-10-12"
     ]
   },
   "nssdca": {
@@ -5154,6 +5157,15 @@
           "value": 0.065,
           "quote": "The geometric albedo of the comet is 6.5$\\pm$0.2\\% at 649 nm"
         }
+      ]
+    }
+  },
+  "nssdcaDefinitions": {
+    "hemisphereAverage": {
+      "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/planetfact_notes.html",
+      "retrieved": "2026-10-12",
+      "verifiedQuotes": [
+        "For Mercury and the Moon, for example, this is an average over the sunlit (very hot) and dark (very cold) hemispheres and so is not representative of any given region on the planet"
       ]
     }
   }

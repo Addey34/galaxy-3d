@@ -610,6 +610,8 @@ export const ptBR: Record<MessageKey, string> = {
   'detail.equatorialRadius1Bar': 'raio equatorial no nível de pressão de 1 bar',
   'detail.meanGravity1Bar': 'gravidade média no nível de pressão de 1 bar',
   'detail.equatorialGravity': 'gravidade no equador',
+  'detail.hemisphereAverage':
+    'média entre o hemisfério iluminado e o escuro, que não representa nenhuma região da superfície',
   'detail.temperature1Bar': 'temperatura média no nível de pressão de 1 bar',
   'detail.effectiveTemperature':
     'temperatura efetiva, 5772 K, convertida para °C',

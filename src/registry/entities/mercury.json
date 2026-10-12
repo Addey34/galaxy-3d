@@ -72,7 +72,8 @@
     "meanTempC": {
       "value": 167,
       "source": "nssdca-fact-sheets",
-      "method": "measured"
+      "method": "measured",
+      "detail": "hemisphereAverage"
     },
     "moonCount": {
       "value": 0,

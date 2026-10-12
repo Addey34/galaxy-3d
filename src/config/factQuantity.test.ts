@@ -18,6 +18,7 @@ const s = snapshot as unknown as {
   sbdb: Record<string, { rotationHours?: { desc?: string | null } | null }>;
   nasaScienceBodies: Record<string, { sentence: string }>;
   articles: Record<string, { verifiedQuotes: string[] }>;
+  nssdcaDefinitions: Record<string, { verifiedQuotes: string[] }>;
 };
 
 interface Shown {
@@ -117,5 +118,31 @@ describe('la température', () => {
     for (const giant of ['jupiter', 'saturn', 'uranus', 'neptune'])
       expect(at(giant), giant).toBe('stat.meanTemperature1Bar');
     expect(at('earth')).toBe('stat.meanTemperature');
+  });
+
+  /**
+   * « Moyenne de deux hémisphères » (2026-10-12) : les notes du NSSDCA le DISENT de Mercure et de
+   * la Lune, et de personne d'autre. La précision vient de cette phrase, vérifiée dans le texte
+   * servi par le relevé ; elle est portée par ces deux corps exactement, sur une valeur du NSSDCA.
+   */
+  it('Mercure et la Lune, et eux seuls, portent la moyenne des deux hémisphères', () => {
+    const quote =
+      s.nssdcaDefinitions.hemisphereAverage!.verifiedQuotes.join(' ');
+    expect(quote).toMatch(/For Mercury and the Moon/);
+    expect(quote).toMatch(/not representative of any given region/);
+    const carriers = temperatures.filter(
+      (t) =>
+        t.provenance.detail &&
+        'message' in t.provenance.detail &&
+        t.provenance.detail.message === 'detail.hemisphereAverage'
+    );
+    expect(carriers.map((t) => t.body).sort()).toEqual(['mercury', 'moon']);
+    for (const t of carriers) {
+      expect(t.provenance.source, t.body).toBe('nssdca-fact-sheets');
+      // Une précision de DÉFINITION ne change pas la grandeur : c'est bien une moyenne.
+      expect(temperatureLabelKey(t.provenance), t.body).toBe(
+        'stat.meanTemperature'
+      );
+    }
   });
 });

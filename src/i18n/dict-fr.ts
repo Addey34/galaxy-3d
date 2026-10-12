@@ -603,6 +603,8 @@ export const fr: Record<MessageKey, string> = {
     'rayon équatorial au niveau de pression de 1 bar',
   'detail.meanGravity1Bar': 'gravité moyenne au niveau de pression de 1 bar',
   'detail.equatorialGravity': 'gravité à l’équateur',
+  'detail.hemisphereAverage':
+    'moyenne entre l’hémisphère éclairé et l’hémisphère obscur, qui ne représente aucune région de la surface',
   'detail.temperature1Bar':
     'température moyenne au niveau de pression de 1 bar',
   'detail.effectiveTemperature':
