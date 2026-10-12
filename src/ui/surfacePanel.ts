@@ -181,6 +181,10 @@ export function setupSurfacePanel(api: PublicAPI): () => void {
         ? `${state.credit} · ${reliefState.credit}`
         : state.credit;
     badge.dataset['level'] = String(state.level);
+    // Carreaux VOULUS au niveau courant : peints = voulus veut dire couverture finie, un signal
+    // d'état que l'e2e lit au lieu d'un silence de deux secondes, qui ne prouve rien sur un
+    // coureur où chaque envoi au GPU fige plusieurs secondes (CI du 2026-10-12).
+    badge.dataset['requested'] = String(state.requested);
     badge.dataset['painted'] = String(state.painted);
     badge.dataset['attached'] = String(state.attached);
     // Lu par `?debug-surface` et par l'e2e : la finesse SERVIE, en pixels sur 360°.

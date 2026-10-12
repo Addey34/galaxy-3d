@@ -33,6 +33,9 @@ interface PaletteEntry {
 /** Ordre et libellé des groupes : ceux du tableau des Réglages (cf. `bodyGroups.ts`). */
 const GROUPS = BODY_GROUPS;
 
+/** Au-delà, le compte affiché est annoncé sans attendre les résultats typés. */
+const PROVISIONAL_COUNT_MS = 800;
+
 export interface BodyPalette {
   /** Reflète la sélection courante (état actif + libellé du déclencheur). */
   setActive(name: string | null): void;
@@ -202,6 +205,16 @@ export function setupBodyPalette(
   let searchContext: SearchContext | null = null;
   /** Numéro de la dernière requête : une réponse plus ancienne arrivée après est ignorée. */
   let typedSeq = 0;
+  /**
+   * LE COMPTE ANNONCÉ, BORNÉ DANS LE TEMPS. Les résultats typés attendent leur morceau et leur
+   * index à la première frappe : attendre pour annoncer un compte exact a fait passer la garde
+   * NVDA du lot 19 au réessai sur un coureur lent (CI du 2026-10-12), et un morceau qui ne se
+   * charge pas (hors ligne) n'annonçait plus RIEN. Le compte part donc au plus tard après
+   * `PROVISIONAL_COUNT_MS` ; s'ils arrivent après, un second compte ne suit que s'il diffère.
+   */
+  let countTimer: number | undefined;
+  let announcedCount: number | null = null;
+  let countDue = false;
 
   const bodyItems = (): NavItem[] =>
     lastVisible.map((entry) => ({
@@ -263,8 +276,14 @@ export function setupBodyPalette(
         : [];
     emptyEl.hidden = lastVisible.length + typedItems.length > 0;
     syncHighlight();
-    if (search || hadTyped)
-      announceResults(lastVisible.length + typedItems.length);
+    // Seule une FRAPPE annonce : un changement de langue ou de date redessine sans parler.
+    if (countDue && (search || hadTyped || announcedCount === null)) {
+      window.clearTimeout(countTimer);
+      const total = lastVisible.length + typedItems.length;
+      if (total !== announcedCount) announceResults(total);
+      announcedCount = total;
+      countDue = false;
+    }
   };
 
   const syncHighlight = (): void => {
@@ -323,11 +342,22 @@ export function setupBodyPalette(
   };
 
   input.addEventListener('input', () => {
-    render(input.value);
-    // Avec la recherche typée, le compte vient avec ses résultats (`refreshTyped`) : annoncer
-    // d'abord celui des seuls corps dirait un nombre faux une seconde plus tôt.
-    if (!searchContext || input.value.trim().length < 2)
+    window.clearTimeout(countTimer);
+    announcedCount = null;
+    if (!searchContext || input.value.trim().length < 2) {
+      countDue = false;
+      render(input.value);
       announceResults(lastVisible.length);
+      return;
+    }
+    // Avec la recherche typée, le compte EXACT vient avec ses résultats (`refreshTyped`) ;
+    // s'ils tardent, celui qui est affiché part quand même, une fois.
+    countDue = true;
+    render(input.value);
+    countTimer = window.setTimeout(() => {
+      announcedCount = lastVisible.length + typedItems.length;
+      announceResults(announcedCount);
+    }, PROVISIONAL_COUNT_MS);
   });
   input.addEventListener('keydown', (event) => {
     if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {

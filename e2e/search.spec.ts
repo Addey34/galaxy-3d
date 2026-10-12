@@ -117,3 +117,30 @@ test('a data layer: Earth, the weather panel open, the layer checked', async ({
       .locator('input')
   ).toBeChecked();
 });
+
+/**
+ * LE COMPTE ANNONCÉ N'ATTEND PAS UN INDEX LENT, ET NE DISPARAÎT PAS SANS LUI. Payé en CI le
+ * 2026-10-12 : la garde NVDA (« la recherche annonce combien de corps correspondent ») n'est
+ * passée qu'au réessai, parce que l'annonce attendait le morceau et l'index de la recherche.
+ * Ici la lenteur est PROVOQUÉE, pas espérée d'un coureur lent.
+ */
+for (const mode of ['slow index', 'search code unavailable'] as const) {
+  test(`the result count is announced even with a ${mode}`, async ({
+    page,
+  }) => {
+    if (mode === 'slow index')
+      await page.route(`**${INDEX}`, async (route) => {
+        await new Promise((resolve) => setTimeout(resolve, 3_000));
+        return route.continue();
+      });
+    // Le MORCEAU introuvable (hors ligne, déploiement en cours) : l'index refusé, lui, laissait
+    // le morceau annoncer, et ne discriminait rien (falsifié contre l'ancien code).
+    else await page.route('**/*paletteSearch*', (route) => route.abort());
+    await openPalette(page);
+    const live = page.locator('body > p[role="status"][aria-live="polite"]');
+    const typedAt = Date.now();
+    await page.locator('#palette-input').fill('mars');
+    await expect(live).toContainText(/match/i, { timeout: 2_500 });
+    expect(Date.now() - typedAt).toBeLessThan(2_500);
+  });
+}
