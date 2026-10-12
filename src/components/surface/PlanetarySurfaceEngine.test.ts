@@ -475,3 +475,120 @@ describe('la finesse déclarée au corps', () => {
     ]);
   });
 });
+
+/**
+ * CHANGER DE JOUR SANS PERDRE LE SOL (lot 48).
+ *
+ * Une couche datée change de jeu à chaque jour de la scène, sur le MÊME corps. Détacher puis
+ * rattacher remettrait la finesse déclarée à zéro (la caméra remonterait) et ferait disparaître
+ * le sol jusqu'à l'arrivée des nouvelles tuiles. Le moteur garde donc les carreaux du jour
+ * précédent jusqu'à ce que le nouveau couvre le champ, et le bandeau décrit ce qui est PEINT.
+ */
+describe('changement de jour d’une couche datée', () => {
+  const day = (iso: string): SurfaceTileset => ({
+    ...TILESET,
+    id: `essai@${iso}`,
+    service: {
+      ...TILESET.service,
+      template: TILESET.service.template.replace('{Style}', iso),
+    },
+  });
+
+  it('garde le sol du jour précédent, sans redéclarer la finesse, puis le remplace', async () => {
+    const pending: Array<() => void> = [];
+    const urls: string[] = [];
+    const fetchTile = vi.fn<TileFetcher>(
+      (url) =>
+        new Promise<ImageBitmap>((resolve) => {
+          urls.push(url);
+          pending.push(() => resolve(bitmap()));
+        })
+    );
+    const states: Array<{ id: string; painted: number } | null> = [];
+    const engine = new PlanetarySurfaceEngine({
+      budget: { maxTiles: 25, maxConcurrentLoads: 25 },
+      fetchTile,
+      onState: (s) => states.push(s && { id: s.tilesetId, painted: s.painted }),
+    });
+    const host = makeHost();
+    const camera = cameraAt(8);
+
+    engine.attach(host, day('2026-10-10'), RADIUS_KM);
+    engine.update(camera, 800);
+    await vi.waitFor(() => expect(pending).toHaveLength(25));
+    pending.splice(0).forEach((done) => done());
+    await vi.waitFor(() => {
+      engine.update(camera, 800);
+      expect(engine.state?.painted).toBe(25);
+    });
+    const declared = [...host.declared];
+    const children = host.group.children.length;
+
+    engine.attach(host, day('2026-10-11'), RADIUS_KM);
+    engine.update(camera, 800);
+    await vi.waitFor(() => expect(pending).toHaveLength(25));
+    expect(urls.slice(25).every((u) => u.includes('/2026-10-11/'))).toBe(true);
+    // Rien de neuf n'est peint : on voit encore le 10, et le bandeau le DIT.
+    expect(host.group.children.length).toBe(children);
+    expect(engine.state?.tilesetId).toBe('essai@2026-10-10');
+    expect(host.declared, 'aucun détachement').toEqual(declared);
+
+    pending.splice(0).forEach((done) => done());
+    await vi.waitFor(() => {
+      engine.update(camera, 800);
+      expect(engine.state?.tilesetId).toBe('essai@2026-10-11');
+      expect(engine.state?.painted).toBe(25);
+    });
+    // Le 10 est parti une fois le 11 complet : pas de double couverture.
+    expect(host.group.children.length).toBe(children);
+    expect(states.every((s) => s !== null)).toBe(true);
+    engine.dispose();
+  });
+
+  it('ne garde qu’UNE génération quand les jours défilent plus vite que le réseau', async () => {
+    const pending: Array<() => void> = [];
+    const fetchTile = vi.fn<TileFetcher>(
+      () =>
+        new Promise<ImageBitmap>((resolve) =>
+          pending.push(() => resolve(bitmap()))
+        )
+    );
+    const engine = new PlanetarySurfaceEngine({
+      budget: { maxTiles: 25, maxConcurrentLoads: 25 },
+      fetchTile,
+    });
+    const host = makeHost();
+    const camera = cameraAt(8);
+    engine.attach(host, day('2026-10-01'), RADIUS_KM);
+    engine.update(camera, 800);
+    await vi.waitFor(() => expect(pending).toHaveLength(25));
+    pending.splice(0).forEach((done) => done());
+    await vi.waitFor(() => {
+      engine.update(camera, 800);
+      expect(engine.state?.painted).toBe(25);
+    });
+
+    // Dix jours traversés, chacun n'ayant reçu que quelques tuiles avant le suivant.
+    for (let d = 2; d <= 11; d += 1) {
+      engine.attach(
+        host,
+        day(`2026-10-${String(d).padStart(2, '0')}`),
+        RADIUS_KM
+      );
+      engine.update(camera, 800);
+      await vi.waitFor(() => expect(pending.length).toBeGreaterThan(0));
+      const before = host.group.children.length;
+      pending.splice(0, 3).forEach((done) => done());
+      pending.length = 0;
+      // Trois carreaux du jour RÉELLEMENT peints avant que le suivant n'arrive.
+      await vi.waitFor(() =>
+        expect(host.group.children.length).toBe(before + 3)
+      );
+    }
+    // Les 25 carreaux du 1er, plus les 3 du jour courant : jamais l'accumulation (55 sinon).
+    expect(host.group.children.length).toBe(28);
+    engine.update(camera, 800);
+    expect(engine.state?.tilesetId).toBe('essai@2026-10-11');
+    engine.dispose();
+  });
+});

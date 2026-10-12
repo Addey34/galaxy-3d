@@ -1,9 +1,18 @@
 import { readFileSync } from 'node:fs';
 import { LOCALES } from '@/i18n/locales';
 import { resolve } from 'node:path';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
-import { SURFACE_TILESETS, tilesetProduct } from './surfaceTilesets';
+import {
+  createDatedChooser,
+  DATED_RECHECK_MS,
+  DATED_SURFACE_TILESETS,
+  DOMAIN_MAX_AGE_MS,
+  SURFACE_TILESETS,
+  tilesetForDay,
+  tilesetProduct,
+  type SurfaceTileset,
+} from './surfaceTilesets';
 import { CELESTIAL_CONFIG } from './bodies';
 import { flattenBodies } from './catalog';
 import { TILESET_PRODUCTS } from '@/registry/products';
@@ -20,6 +29,16 @@ import { approachFloorRadiusFactor } from '@/core/surfaceApproach';
 import { TEXTURE_QUALITY_PIXELS } from '@/components/systems/TextureSystem';
 
 const ROOT = resolve(import.meta.dirname, '../..');
+
+/**
+ * TOUS les jeux, mosaïques ET couches datées (lot 48), clé lisible : les gardes ci-dessous
+ * valent pour les deux, et une couche datée qui y échapperait serait le défaut habituel d'une
+ * liste qu'on oublie d'étendre.
+ */
+const ALL_TILESETS: ReadonlyArray<[string, SurfaceTileset]> = [
+  ...SURFACE_TILESETS.values(),
+  ...DATED_SURFACE_TILESETS.values(),
+].map((tileset) => [`${tileset.body} (${tileset.id})`, tileset]);
 
 /**
  * Finesse de la texture de surface LIVRÉE d'un corps, en pixels sur 360°, au meilleur palier
@@ -43,11 +62,19 @@ function shippedSurfaceWidthPx(body: string): number {
  * des fournisseurs, la CSP servie.
  */
 describe('fiches de jeux de tuiles', () => {
-  it('expose exactement les fiches du registre, indexées par corps', () => {
-    expect(SURFACE_TILESETS.size).toBe(TILESET_PRODUCTS.length);
+  it('expose exactement les fiches du registre, une mosaïque et au plus une couche datée par corps', () => {
+    expect(ALL_TILESETS.length).toBe(TILESET_PRODUCTS.length);
     expect(SURFACE_TILESETS.size).toBeGreaterThan(0);
-    for (const product of TILESET_PRODUCTS)
-      expect(SURFACE_TILESETS.get(product.body)?.id).toBe(product.id);
+    for (const product of TILESET_PRODUCTS) {
+      const map = product.service.time
+        ? DATED_SURFACE_TILESETS
+        : SURFACE_TILESETS;
+      expect(map.get(product.body)?.id).toBe(product.id);
+    }
+    // Une couche datée retombe sur la MOSAÏQUE de son corps pour tout jour non publié : sans
+    // mosaïque, ce repli n'existerait pas.
+    for (const body of DATED_SURFACE_TILESETS.keys())
+      expect(SURFACE_TILESETS.has(body), body).toBe(true);
   });
 
   it('ne recouvre que des corps du catalogue, dont le rayon est publié', () => {
@@ -57,7 +84,7 @@ describe('fiches de jeux de tuiles', () => {
         cfg.realData?.radiusKm,
       ])
     );
-    for (const [body] of SURFACE_TILESETS) {
+    for (const [, { body }] of ALL_TILESETS) {
       expect(radii.has(body), `${body} absent du catalogue`).toBe(true);
       // Sans rayon publié, le moteur ne saurait convertir ni altitude ni résolution au sol.
       expect(radii.get(body), `${body} sans rayon publié`).toBeGreaterThan(0);
@@ -70,7 +97,8 @@ describe('fiches de jeux de tuiles', () => {
     // phase 9C, mesuré à 1 541 km sur la Lune) : une fiche dont le niveau MAXIMAL n'améliore
     // rien ne peindrait donc jamais rien, sans erreur et sans un mot. C'est exactement le
     // piège qu'un corps ajouté par une fiche seule doit rencontrer ici, et pas en production.
-    for (const [body, tileset] of SURFACE_TILESETS) {
+    for (const [label, tileset] of ALL_TILESETS) {
+      const body = tileset.body;
       const shippedPx = shippedSurfaceWidthPx(body);
       expect(
         shippedPx,
@@ -78,13 +106,13 @@ describe('fiches de jeux de tuiles', () => {
       ).toBeGreaterThan(0);
       expect(
         pyramidWidthPx(tileset.maxLevel, tileset.matrix),
-        `${body} : le niveau maximal n’améliore pas la texture livrée`
+        `${label} : le niveau maximal n’améliore pas la texture livrée`
       ).toBeGreaterThan(shippedPx);
     }
   });
 
   it('cite un fournisseur du registre, dont l’hôte est bien celui du gabarit', () => {
-    for (const [body, tileset] of SURFACE_TILESETS) {
+    for (const [body, tileset] of ALL_TILESETS) {
       const provider = (TILE_PROVIDERS as Record<string, { host: string }>)[
         tileset.providerId
       ];
@@ -128,7 +156,7 @@ describe('fiches de jeux de tuiles', () => {
     // les autres tests. L'application émettrait alors des adresses VALIDES montrant un autre
     // endroit du corps, ce que ni une erreur ni un 404 ne signaleraient. Le gabarit se recopie
     // des capacités, et cet ordre — niveau, LIGNE, colonne — est celui du RESTful WMTS.
-    for (const [body, tileset] of SURFACE_TILESETS) {
+    for (const [body, tileset] of ALL_TILESETS) {
       expect(tileset.service.template, body).toContain(
         '{TileMatrix}/{TileRow}/{TileCol}'
       );
@@ -148,7 +176,7 @@ describe('fiches de jeux de tuiles', () => {
   it('affiche un crédit non vide qui nomme la NASA, comme ses conditions l’exigent', () => {
     // « NASA should be acknowledged as the source of the material », lu à la source
     // le 2026-09-21. Un crédit vide rendrait l'usage non conforme, en silence.
-    for (const [body, tileset] of SURFACE_TILESETS) {
+    for (const [body, tileset] of ALL_TILESETS) {
       expect(tileset.credit.length, body).toBeGreaterThan(0);
       expect(tileset.credit, body).toMatch(/NASA/);
     }
@@ -161,6 +189,15 @@ describe('fiches de jeux de tuiles', () => {
       expect(Number.isFinite(tileset.acquired.to), body).toBe(true);
       expect(tileset.acquired.from, body).toBeLessThan(tileset.acquired.to);
       expect(tileset.acquired.to, body).toBeLessThan(now);
+    }
+  });
+
+  it('une couche datée commence dans le passé et reste EN COURS', () => {
+    // STAC : une fin `null` veut dire « en cours ». La fiche ne recopie pas le dernier jour
+    // publié, qui change chaque jour : il se lit à l'exécution (`core/timeDomain.ts`).
+    for (const [body, tileset] of DATED_SURFACE_TILESETS) {
+      expect(tileset.acquired.from, body).toBeLessThan(Date.now());
+      expect(tileset.acquired.to, body).toBe(Number.POSITIVE_INFINITY);
     }
   });
 });
@@ -179,7 +216,7 @@ describe('couverture déclarée par le fournisseur', () => {
     // dérive, alors elle est désormais DÉRIVÉE et vérifiée des deux côtés.
     for (const [id, provider] of Object.entries(TILE_PROVIDERS)) {
       const [from, to] = provider.extent.temporal.interval[0]!;
-      const own = [...SURFACE_TILESETS.values()].filter(
+      const own = ALL_TILESETS.map(([, t]) => t).filter(
         (t) => t.providerId === id
       );
       expect(own.length, `${id} ne sert aucun jeu de tuiles`).toBeGreaterThan(
@@ -198,7 +235,8 @@ describe('couverture déclarée par le fournisseur', () => {
       expect(
         to === null ? Infinity : Date.parse(to),
         `${id} : fin déclarée ${to}, union des campagnes ` +
-          `${new Date(union.to).toISOString()}`
+          // Infini : une couche datée en cours, que seule une fin `null` décrit.
+          `${Number.isFinite(union.to) ? new Date(union.to).toISOString() : 'en cours'}`
       ).toBe(union.to);
     }
   });
@@ -345,5 +383,177 @@ describe('divulgation de l’hôte des tuiles', () => {
         LOCALES.length
       );
     }
+  });
+});
+
+/**
+ * LA COUCHE DATÉE DE LA TERRE (lot 48) : VIIRS SNPP True Color, un jour par image.
+ *
+ * Trois choses que ni une capture ni une erreur ne montreraient : le jour est bien écrit dans
+ * l'adresse, un gabarit dont le jour n'a PAS été résolu est refusé avant d'émettre (GIBS rend
+ * alors 404 sans CORS), et la réponse DescribeDomains interrogée est celle de la MÊME couche,
+ * au même jeu de matrices, que les tuiles.
+ */
+describe('la couche datée de la Terre', () => {
+  const viirs = DATED_SURFACE_TILESETS.get('earth');
+
+  it('existe, et va plus loin que la mosaïque Blue Marble', () => {
+    expect(viirs).toBeTruthy();
+    expect(viirs!.maxLevel).toBe(8);
+    expect(pyramidWidthPx(viirs!.maxLevel, viirs!.matrix)).toBeGreaterThan(
+      pyramidWidthPx(
+        SURFACE_TILESETS.get('earth')!.maxLevel,
+        SURFACE_TILESETS.get('earth')!.matrix
+      )
+    );
+  });
+
+  it('écrit le jour figé dans l’adresse, et ne décrit plus que ce jour', () => {
+    const day = tilesetForDay(viirs!, '2026-10-11');
+    const url = tileUrl(day.service, { level: 8, row: 40, column: 150 });
+    expect(url).toBe(
+      'https://gibs.earthdata.nasa.gov/wmts/epsg4326/best/VIIRS_SNPP_CorrectedReflectance_TrueColor/default/2026-10-11/250m/8/40/150.jpeg'
+    );
+    expect(day.day).toBe('2026-10-11');
+    expect(new Date(day.acquired.from).toISOString()).toBe(
+      '2026-10-11T00:00:00.000Z'
+    );
+    expect(new Date(day.acquired.to).toISOString()).toBe(
+      '2026-10-11T23:59:59.000Z'
+    );
+    // Le jour du produit est celui de l'image : à la scène du même jour, c'est une mesure.
+    expect(
+      classifyTemporal(
+        tilesetProduct(day),
+        new Date('2026-10-11T12:00:00Z'),
+        new Date('2026-10-12T12:00:00Z')
+      ).category
+    ).toBe('observed');
+  });
+
+  it('refuse d’émettre tant que le jour n’est pas résolu', () => {
+    expect(() =>
+      tileUrl(viirs!.service, { level: 3, row: 1, column: 4 })
+    ).toThrow(/\{Time\}/);
+  });
+
+  it('interroge les jours publiés de la MÊME couche, au même jeu de matrices', () => {
+    const layer = /\/best\/([^/]+)\/default\//.exec(
+      viirs!.service.template
+    )![1];
+    expect(viirs!.domainsUrl).toBe(
+      `https://gibs.earthdata.nasa.gov/wmts/epsg4326/best/1.0.0/${layer}/default/${viirs!.service.tileMatrixSet}/all/all.xml`
+    );
+  });
+
+  it('déclare la finesse du CAPTEUR, 375 m, et non celle de la pyramide', () => {
+    // « The sensor resolution is 750 m and 375 m (M Bands are 750 m, I Bands are 375 m),
+    // imagery resolution is 250 m » (description de la couche, lue le 2026-10-12). La bande
+    // rouge I1 est à 375 m : c'est la finesse publiée, convertie au rayon du catalogue. Le
+    // bandeau dira donc qu'au niveau 8 la pyramide l'agrandit.
+    const radiusKm = new Map([...flattenBodies(CELESTIAL_CONFIG)]).get('earth')!
+      .realData!.radiusKm!;
+    const kmPerDegree = (2 * Math.PI * radiusKm) / 360;
+    expect(viirs!.publishedPixelsPerDegree).toBeCloseTo(kmPerDegree / 0.375, 1);
+    expect(
+      oversamplingFactor(
+        viirs!.maxLevel,
+        viirs!.publishedPixelsPerDegree,
+        viirs!.matrix
+      )
+    ).toBeGreaterThan(1);
+  });
+});
+
+/**
+ * LE CHOIX, IMAGE APRÈS IMAGE (lot 48) : mosaïque ou couche datée, et jamais un jour non lu.
+ * Doublures injectées : horloge, date de la scène et réseau.
+ */
+describe('choix entre la mosaïque et la couche datée', () => {
+  const DOMAINS =
+    '<Domain>2015-11-24/2022-07-27/P1D,2022-08-10/2026-10-12/P1D</Domain>';
+
+  function setup(fetchText: (url: string) => Promise<string>) {
+    let t = 0;
+    let date = new Date('2026-10-11T12:00:00Z');
+    const warnings: string[] = [];
+    const choose = createDatedChooser({
+      date: () => date,
+      now: () => t,
+      fetchText,
+      warn: (m) => warnings.push(m),
+    });
+    return {
+      choose,
+      warnings,
+      advance: (ms: number) => (t += ms),
+      setDate: (iso: string) => (date = new Date(iso)),
+    };
+  }
+  const flush = () => new Promise((r) => setTimeout(r, 0));
+  const blueMarble = SURFACE_TILESETS.get('earth')!;
+
+  it('réglage éteint : la mosaïque, et rien n’est demandé', () => {
+    const fetchText = vi.fn(async () => DOMAINS);
+    const { choose } = setup(fetchText);
+    expect(choose('earth', false)).toBe(blueMarble);
+    expect(fetchText).not.toHaveBeenCalled();
+    // Un corps sans couche datée reste sur sa mosaïque, réglage allumé ou non.
+    expect(choose('moon', true)).toBe(SURFACE_TILESETS.get('moon'));
+  });
+
+  it('la mosaïque tant que les jours ne sont pas lus, puis le jour de la scène, même objet', async () => {
+    const fetchText = vi.fn(async () => DOMAINS);
+    const { choose, advance } = setup(fetchText);
+    expect(choose('earth', true)).toBe(blueMarble);
+    await flush();
+    const first = choose('earth', true);
+    expect(first?.day).toBe('2026-10-11');
+    advance(DATED_RECHECK_MS + 1);
+    // Le moteur compare par IDENTITÉ : un objet neuf à chaque image changerait de génération.
+    expect(choose('earth', true)).toBe(first);
+    expect(fetchText).toHaveBeenCalledTimes(1);
+  });
+
+  it('un jour dans un TROU rend la mosaïque, jamais un jour voisin', async () => {
+    const { choose, advance, setDate } = setup(async () => DOMAINS);
+    choose('earth', true);
+    await flush();
+    setDate('2022-08-01T12:00:00Z');
+    advance(DATED_RECHECK_MS + 1);
+    expect(choose('earth', true)).toBe(blueMarble);
+  });
+
+  it('ne relit la date qu’à sa cadence, puis suit le jour', async () => {
+    const { choose, advance, setDate } = setup(async () => DOMAINS);
+    choose('earth', true);
+    await flush();
+    expect(choose('earth', true)?.day).toBe('2026-10-11');
+    setDate('2026-10-10T12:00:00Z');
+    advance(DATED_RECHECK_MS - 1);
+    expect(choose('earth', true)?.day).toBe('2026-10-11');
+    advance(2);
+    expect(choose('earth', true)?.day).toBe('2026-10-10');
+  });
+
+  it('une lecture ratée laisse la mosaïque, le dit, et se retente une heure plus tard', async () => {
+    const fetchText = vi
+      .fn<(url: string) => Promise<string>>()
+      .mockRejectedValueOnce(new Error('réseau'))
+      .mockResolvedValue(DOMAINS);
+    const { choose, warnings, advance } = setup(fetchText);
+    choose('earth', true);
+    await flush();
+    expect(choose('earth', true)).toBe(blueMarble);
+    expect(warnings).toHaveLength(1);
+    advance(DOMAIN_MAX_AGE_MS - 1);
+    choose('earth', true);
+    expect(fetchText).toHaveBeenCalledTimes(1);
+    advance(2);
+    choose('earth', true);
+    expect(fetchText).toHaveBeenCalledTimes(2);
+    await flush();
+    advance(DATED_RECHECK_MS + 1);
+    expect(choose('earth', true)?.day).toBe('2026-10-11');
   });
 });

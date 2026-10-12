@@ -19,7 +19,8 @@ import { flattenBodies } from '@/config/catalog';
 import { STORAGE_KEYS } from '@/config/storageKeys';
 import { BOOT_QUALITY_PROFILE } from '@/config/engine';
 import { classifyTemporal, temporalCategoryLabelKey } from '@/core/temporal';
-import { intlLocale, onLocaleChange, t } from '@/i18n';
+import { formatIsoDay } from '@/core/dateText';
+import { getLocale, intlLocale, onLocaleChange, t } from '@/i18n';
 import Logger from '@/utils/Logger';
 import { NOTICE_CHANGED } from './ephemerisNotice';
 import type {
@@ -69,6 +70,21 @@ export function setupSurfacePanel(api: PublicAPI): () => void {
     document.getElementById('settings-section-rendering') ?? document.body
   ).append(wrapper);
 
+  // Couche DATÉE de la Terre (lot 48) : elle n'est jamais demandée tant que ce réglage est
+  // éteint, et il ne persiste pas, comme le reste du contenu de la scène.
+  const dailyWrapper = document.createElement('label');
+  dailyWrapper.id = 'surface-daily-toggle-wrapper';
+  dailyWrapper.className = 'settings-switch';
+  const dailyCheckbox = document.createElement('input');
+  dailyCheckbox.id = 'surface-daily-toggle';
+  dailyCheckbox.type = 'checkbox';
+  dailyCheckbox.className = 'oo-checkbox settings-checkbox';
+  const dailyLabel = document.createElement('span');
+  dailyLabel.className = 'settings-switch-label';
+  dailyWrapper.append(dailyCheckbox, dailyLabel);
+  wrapper.after(dailyWrapper);
+  let daily = false;
+
   // ── Bandeau de provenance ──────────────────────────────────────────────────────────────
   const badge = document.createElement('div');
   badge.id = 'surface-imagery';
@@ -99,6 +115,7 @@ export function setupSurfacePanel(api: PublicAPI): () => void {
   const renderLabels = (): void => {
     switchLabel.textContent = t('settings.surfaceImagery');
     checkbox.setAttribute('aria-label', t('settings.surfaceImagery'));
+    dailyLabel.textContent = t('settings.surfaceDailyEarth');
     renderBadge();
   };
 
@@ -127,17 +144,26 @@ export function setupSurfacePanel(api: PublicAPI): () => void {
       resolution: formatResolution(state.groundResolutionM),
     });
     const parts = [
-      t('surface.imagery.acquired', {
-        from: formatMonth(state.acquired.from),
-        to: formatMonth(state.acquired.to),
-      }),
+      state.day
+        ? t('surface.imagery.day', {
+            day: formatIsoDay(state.day, getLocale(), intlLocale()),
+          })
+        : t('surface.imagery.acquired', {
+            from: formatMonth(state.acquired.from),
+            to: formatMonth(state.acquired.to),
+          }),
       t(temporalCategoryLabelKey(stamp.category)),
     ];
     if (state.oversampling > 1) {
       parts.push(
         t('surface.imagery.oversampled', {
           factor: decimals(state.oversampling, 2),
-          published: String(state.publishedPixelsPerDegree),
+          // Dans la langue de la page : « 296.5 » s'affichait tel quel en français (lot 48),
+          // invisible tant que toutes les mosaïques publiaient un nombre entier.
+          published: decimals(
+            state.publishedPixelsPerDegree,
+            Number.isInteger(state.publishedPixelsPerDegree) ? 0 : 1
+          ),
         })
       );
     }
@@ -181,6 +207,8 @@ export function setupSurfacePanel(api: PublicAPI): () => void {
         ? `${state.credit} · ${reliefState.credit}`
         : state.credit;
     badge.dataset['level'] = String(state.level);
+    if (state.day) badge.dataset['day'] = state.day;
+    else delete badge.dataset['day'];
     // Carreaux VOULUS au niveau courant : peints = voulus veut dire couverture finie, un signal
     // d'état que l'e2e lit au lieu d'un silence de deux secondes, qui ne prouve rien sur un
     // coureur où chaque envoi au GPU fige plusieurs secondes (CI du 2026-10-12).
@@ -271,7 +299,7 @@ export function setupSurfacePanel(api: PublicAPI): () => void {
       return;
     }
 
-    const tileset = tilesets?.get(name);
+    const tileset = chooseTileset?.(name, daily);
     if (!tileset) {
       if (engine.attachedBody) disable();
       return;
@@ -285,10 +313,11 @@ export function setupSurfacePanel(api: PublicAPI): () => void {
     );
   };
 
-  let tilesets: ReadonlyMap<
-    string,
-    import('@/config/surfaceTilesets').SurfaceTileset
+  /** Jeu à attacher (mosaïque ou couche datée), créé avec le moteur (`config/surfaceTilesets.ts`). */
+  let chooseTileset: ReturnType<
+    typeof import('@/config/surfaceTilesets').createDatedChooser
   > | null = null;
+
   let heightSets: ReadonlyMap<
     string,
     import('@/config/surfaceHeights').SurfaceHeightSet
@@ -339,14 +368,16 @@ export function setupSurfacePanel(api: PublicAPI): () => void {
   async function loadEngine(): Promise<void> {
     const [
       { PlanetarySurfaceEngine },
-      { SURFACE_TILESETS },
+      { createDatedChooser },
       { SURFACE_HEIGHT_SETS, parseHeightManifest },
     ] = await Promise.all([
       import('@/components/surface/PlanetarySurfaceEngine'),
       import('@/config/surfaceTilesets'),
       import('@/config/surfaceHeights'),
     ]);
-    tilesets = SURFACE_TILESETS;
+    chooseTileset = createDatedChooser({
+      date: () => api.orbitalMechanics.simulationDate,
+    });
     heightSets = SURFACE_HEIGHT_SETS;
     parseManifest = parseHeightManifest;
     engine = new PlanetarySurfaceEngine({
@@ -364,6 +395,9 @@ export function setupSurfacePanel(api: PublicAPI): () => void {
     writeStored(enabled);
     if (!enabled) disable();
   });
+  dailyCheckbox.addEventListener('change', () => {
+    daily = dailyCheckbox.checked;
+  });
 
   renderLabels();
   onLocaleChange(renderLabels);
@@ -380,6 +414,7 @@ export function setupSurfacePanel(api: PublicAPI): () => void {
     engine = null;
     badge.remove();
     wrapper.remove();
+    dailyWrapper.remove();
   };
 }
 
