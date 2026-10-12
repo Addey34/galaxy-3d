@@ -71,6 +71,7 @@ function createFixture(overlayHits: OverlayHitTest[] = []): {
     selectBody,
     getSelectedBody: () => null,
     setUnavailable: () => {},
+    setSearchContext: () => {},
   };
   setupBodyPicker(scene, camera, canvas, nav, new Set(['earth']), overlayHits);
 

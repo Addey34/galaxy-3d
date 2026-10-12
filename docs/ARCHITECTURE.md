@@ -5570,6 +5570,76 @@ La comparaison se fait par SUFFIXE : citer « open-meteo.com » décrit honnête
 commande de navigation, contrairement aux sondes), et aucun réglage n'est persisté, donc aucune
 clé `STORAGE_KEYS` nouvelle à déclarer.
 
+## La recherche universelle typée (lot 47, 2026-10-12)
+
+La palette (`#body-palette`) ne cherchait que des noms de corps. Elle cherche désormais aussi des
+**couches de données** (les couches météo de l'application), des **lieux** (les formations
+nommées par l'UAI), des **missions** (le registre du PDS), des **instruments** (ceux qu'une sonde
+embarque) et des **survols** (mesurés à la seconde). Chaque
+résultat AGIT : la recherche est une navigation, pas un annuaire.
+
+**L'index se DÉRIVE.** `pnpm search:generate` (`scripts/generate-search-index.mjs`) le lit dans
+les fichiers déjà livrés (gazetteer, `missionCatalogue.json`, fichiers d'instruments,
+`flybyEvents.json`) et écrit `public/assets/search/index.json` ; aucune entrée n'est écrite à la
+main. `src/config/searchIndex.test.ts` exige que le fichier livré soit exactement ce que le
+générateur rend (falsifié par un octet), et que chaque cible nommée soit sélectionnable. À rejouer
+après tout générateur de ces sources ; `--check` sort en code 1 sur une dérive.
+
+**Il ne pèse rien au démarrage, mesuré.** Les seuls noms de surface (16 067 sur 36 corps) font
+351 245 o, 79 ko gzip : quinze fois la marge du budget JS du démarrage (5 396 o le 2026-10-12).
+L'index est donc un fichier servi (77 ko gzip, noms SEULEMENT : avec latitude, longitude et
+diamètre il en pesait 213), et le code de la recherche un morceau à part (`ui/paletteSearch`,
+déclaré dans `NON_BOOT_CHUNKS`). Les deux ne sont demandés qu'à la PREMIÈRE frappe d'au moins deux
+caractères ; une lettre ne demande rien (`e2e/search.spec.ts`).
+
+**Ce que fait un résultat**, toujours par les commandes que l'application possède déjà :
+
+- **une couche de données** : la Terre, puis la couche cochée PAR SA CASE du panneau météo
+  (`WeatherLayersApi.show`), donc avec l'exclusivité, la légende et le badge d'un clic, panneau
+  ouvert. Ces couches ne sont pas dans le fichier d'index : elles sont dans l'application, qui
+  donne leurs libellés traduits (« wind », « température »). Falsifié : sans l'appel au panneau,
+  `e2e/search.spec.ts` rougit.
+- **un lieu** : son corps, puis la caméra FACE à la formation une fois le vol fini (sinon le vol
+  l'écraserait). La position vient du fichier du gazetteer du corps, que l'application charge déjà
+  à l'approche ; la direction va du centre du corps RENDU au point que
+  `CelestialObject.surfacePointToWorld` donne, avec la conversion de longitude des noms
+  (`iauLongitudeToSceneLongitude`). L'action publie `data-search-focus` sur le canvas (nom,
+  distance au centre de l'image, face) : « Tycho » tombe à moins de 0,05 du centre, sur la face
+  visible ; visé depuis l'origine de la scène au lieu du centre de la Lune, il tombe à 0,199 et la
+  garde rougit (falsifié).
+- **une mission** : sa sonde si on la dessine et qu'elle existe à la date affichée ; sinon sa cible
+  du catalogue si elle est UNIQUE, dont la fiche liste la mission ; sinon sa page, qui donne toutes
+  ses cibles. « Unique » et non « la première », mesuré : la première cible de Cassini-Huygens est
+  Masursky, un astéroïde croisé en route, et celle de Juno la Terre. 75 missions ont une cible,
+  29 plusieurs, 8 aucune. La sonde d'une mission se DÉRIVE : le fichier d'instruments d'une sonde
+  déclare les investigations où elle figure.
+- **un instrument** : sa sonde, grisé comme elle quand elle n'existe pas à cette date ;
+- **un survol** : la date du point le plus proche, la sonde, en Explo.
+
+**Le cœur est pur** (`core/search.ts`) : casse, accents et apostrophes pliés (« ʻOumuamua » se
+tape « oumuamua »), tous les mots doivent correspondre, le contexte compris (« copernicus moon »
+trouve le cratère lunaire, pas celui de Mars), classement nom exact, début du nom, début d'un mot,
+n'importe où, puis le seul contexte, cinq résultats au plus par type, ordre stable. L'index est
+préparé PAR LANGUE : « Lune » trouve les formations lunaires en français.
+
+**La palette** garde ses corps tels quels (les boutons `#orbit-{nom}`) et ajoute dessous les
+résultats typés, reconstruits à chaque requête. Les flèches traversent les deux ; le compte annoncé
+est celui des deux, dit une fois les résultats typés arrivés (annoncer d'abord celui des corps
+dirait un nombre faux une seconde plus tôt) ; une réponse plus ancienne arrivée après une plus
+récente est ignorée. axe et la largeur de 390 px sont mesurés palette ouverte sur des résultats
+typés, ligne par ligne (`e2e/a11y-audit.spec.ts`, falsifié).
+
+**Trouvé en route, corrigé pour tout (règle de parité)** : les dossiers de DONNÉES générées
+(`gazetteer`, `missions`, `instruments`, `discovery`, `place-observations`, et l'index) ont des
+noms stables, réécrits à chaque régénération, et tombaient sous l'`immutable` d'un an de
+`/assets/**` côté Firebase et sous le cache d'abord de 30 jours du service worker. Ils sont
+désormais servis en `max-age=3600, must-revalidate` et en réseau d'abord, comme les textures ;
+`src/config/stableAssetCaching.test.ts` croise les deux côtés.
+
+**Écrit, pas oublié** : l'imagerie de surface comme couche de données (elle s'active aujourd'hui
+d'elle-même à l'approche, par un interrupteur des Réglages), et les découvertes comme événements. Plan et journal :
+`docs/private/RECHERCHE_LOT47.md`.
+
 ## Le service de données de Galaxy (lot 46, 2026-10-12)
 
 Les couches météo de MODÈLE (nuages, pluie, vent, température, pression, humidité) lisent

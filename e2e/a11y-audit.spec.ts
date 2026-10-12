@@ -118,6 +118,47 @@ test('body search palette has no automatically detectable a11y violations', asyn
   ).toEqual([]);
 });
 
+/**
+ * LA PALETTE AVEC SES RÉSULTATS TYPÉS (lot 47) : lieux, missions, instruments et survols sont des
+ * options construites à chaque frappe, avec un détail qui peut être long. Scannés par axe, et
+ * mesurés ÉLÉMENT PAR ÉLÉMENT à 390 px : la palette défile, donc une mesure globale ne verrait
+ * pas un nom rogné.
+ */
+for (const viewport of [
+  { width: 1280, height: 800 },
+  { width: 390, height: 844 },
+]) {
+  test(`search palette with typed results is accessible and unclipped at ${viewport.width}px`, async ({
+    page,
+  }) => {
+    await page.setViewportSize(viewport);
+    await boot(page);
+    await page.locator('#body-search-trigger').click();
+    // « voyager » rend des missions, des instruments et des survols, aux libellés longs.
+    await page.locator('#palette-input').pressSequentially('voyager');
+    await expect(
+      page.locator('.palette-hit[data-kind="flyby"]').first()
+    ).toBeVisible();
+    const results = await runAxe(page);
+    expect(
+      results.violations,
+      JSON.stringify(results.violations, null, 2)
+    ).toEqual([]);
+    const clipped = await page.evaluate(() =>
+      // Le nom et le détail TRONQUENT par conception (« … ») ; ce qui ne doit pas déborder est
+      // la ligne elle-même, qui les contient.
+      [...document.querySelectorAll<HTMLElement>('#body-palette .palette-hit')]
+        .filter((e) => e.scrollWidth - e.clientWidth > 1)
+        .map((e) => `${e.className}:${e.scrollWidth - e.clientWidth}`)
+    );
+    expect(clipped).toEqual([]);
+    const pageOverflow = await page.evaluate(
+      () => document.documentElement.scrollWidth - window.innerWidth
+    );
+    expect(pageOverflow).toBeLessThanOrEqual(0);
+  });
+}
+
 test('display settings panel has no automatically detectable a11y violations', async ({
   page,
 }) => {

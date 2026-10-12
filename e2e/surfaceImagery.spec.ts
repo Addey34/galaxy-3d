@@ -189,6 +189,28 @@ test('paints tiles on the Moon, says what it serves, and lowers the floor', asyn
   // attendues, 47 reçues) — la file n'avait pas fini d'arriver, et la première pause décidait
   // à sa place. On attend donc que le compte CESSE DE MONTER, puis on vérifie qu'il ne monte
   // plus : l'affirmation est la même, elle ne dépend plus de la montre.
+  //
+  // ET LE SILENCE NE SUFFIT PAS NON PLUS (2026-10-12) : sur un Xeon 8370C, deux secondes sans
+  // requête ont été lues comme « couverture finie » alors que sept tuiles étaient encore dues
+  // (40 attendues, 47 reçues), chaque envoi au GPU figeant la page en rendu logiciel. On attend
+  // donc d'abord l'ÉTAT que le moteur publie : carreaux peints = carreaux voulus au niveau
+  // courant. Ce qui suit distingue alors deux pannes : une couverture lente, et un moteur qui
+  // redemande alors que plus rien n'est dû.
+  await expect
+    .poll(
+      async () => {
+        const [painted, requested] = await Promise.all([
+          badge.getAttribute('data-painted'),
+          badge.getAttribute('data-requested'),
+        ]);
+        return requested !== null && painted === requested;
+      },
+      {
+        timeout: 90_000,
+        message: 'les carreaux voulus n’ont jamais tous été peints',
+      }
+    )
+    .toBe(true);
   let previous = -1;
   await expect
     .poll(

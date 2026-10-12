@@ -29,15 +29,28 @@ export interface WeatherLayersDeps {
   exclusiveGroups?: string[][];
 }
 
+/** Ce que le panneau prête au reste de l'application : la recherche typée (lot 47) s'en sert. */
+export interface WeatherLayersApi {
+  /** Les couches, dans l'ordre du panneau, avec la clé de leur libellé. */
+  list(): { id: string; labelKey: string }[];
+  /**
+   * Active une couche PAR SA CASE, comme un clic (exclusivité, légende, badge suivent le même
+   * chemin), puis ouvre le panneau pour qu'on voie ce qui a été activé.
+   */
+  show(id: string): void;
+}
+
+const NO_WEATHER: WeatherLayersApi = { list: () => [], show: () => {} };
+
 export function setupWeatherLayers(
   api: PublicAPI,
   deps: WeatherLayersDeps,
   coordinator?: OverlayCoordinator
-): void {
+): WeatherLayersApi {
   const panel = document.getElementById('weather-layers');
-  if (!panel) return;
+  if (!panel) return NO_WEATHER;
   const bodyEl = panel.querySelector<HTMLElement>('.wl-body');
-  if (!bodyEl) return;
+  if (!bodyEl) return NO_WEATHER;
 
   const layers = deps.layers;
   const byId = new Map(layers.map((l) => [l.id, l]));
@@ -281,4 +294,17 @@ export function setupWeatherLayers(
   });
 
   setOpen(false);
+
+  return {
+    list: () => layers.map(({ id, labelKey }) => ({ id, labelKey })),
+    show: (id) => {
+      const control = controls.get(id);
+      if (!control) return;
+      if (!control.checkbox.checked) {
+        control.checkbox.checked = true;
+        control.checkbox.dispatchEvent(new Event('change'));
+      }
+      setOpen(true);
+    },
+  };
 }

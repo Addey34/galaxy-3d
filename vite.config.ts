@@ -1207,10 +1207,21 @@ export default defineConfig({
             // courante, cache en secours hors-ligne — c'est ce qui donne aux petits corps un
             // mode hors ligne qu'ils n'ont jamais eu, du temps où ils venaient de JPL.
             // Cette règle DOIT rester avant le CacheFirst générique ci-dessous.
+            // Les DONNÉES générées aussi (lot 47, 2026-10-12) : noms de surface, missions,
+            // instruments, découvertes, observations des lieux et index de recherche sont
+            // réécrits sous le même nom à chaque régénération. Ils tombaient dans le CacheFirst
+            // générique (30 jours) derrière l'`immutable` d'un an de Firebase : une régénération
+            // pouvait rester invisible à un visiteur déjà passé.
             urlPattern: ({ url }) =>
               url.pathname.startsWith('/assets/textures/') ||
               url.pathname.startsWith('/assets/models/') ||
-              url.pathname.startsWith('/assets/small-bodies/'),
+              url.pathname.startsWith('/assets/small-bodies/') ||
+              url.pathname.startsWith('/assets/gazetteer/') ||
+              url.pathname.startsWith('/assets/missions/') ||
+              url.pathname.startsWith('/assets/instruments/') ||
+              url.pathname.startsWith('/assets/discovery/') ||
+              url.pathname.startsWith('/assets/place-observations/') ||
+              url.pathname.startsWith('/assets/search/'),
             handler: 'NetworkFirst',
             options: {
               cacheName: 'ssv-stable-visual-assets',
