@@ -16,6 +16,7 @@
 import { z } from 'zod';
 import { Body } from 'astronomy-engine';
 import { decode, EXPRESSION_FORMS } from '../load';
+import { SKY_SCATTERING_MODELS } from '../../core/atmosphereScattering';
 
 const kebabId = z.string().regex(/^[a-z0-9]+(-[a-z0-9]+)*$/);
 
@@ -253,6 +254,12 @@ const catalogueConfig = z
     fallbackColor: color.optional(),
     model: plainObject.optional(),
     atmosphereColor: color.optional(),
+    /**
+     * Modèle PUBLIÉ de diffusion de l'air (vocabulaire fermé, `core/atmosphereScattering.ts`) :
+     * déclaré, le corps a un ciel calculé par diffusion simple, vu de l'orbite comme du sol, au
+     * lieu du halo de Fresnel. Absent, il garde son halo.
+     */
+    skyScattering: z.enum(SKY_SCATTERING_MODELS).optional(),
     ring: plainObject.optional(),
     satellites: satellites.optional(),
     realData: z

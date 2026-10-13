@@ -120,6 +120,15 @@ export class Starfield {
     this.points.position.copy(cameraPosition);
   }
 
+  /**
+   * Part visible des étoiles, 0 à 1 : sous un ciel de jour elles s'effacent
+   * (`core/atmosphereScattering.ts`, `starVisibility`). Invisible, le nuage n'est pas dessiné.
+   */
+  setVisibility(fraction: number): void {
+    this.material.opacity = fraction;
+    this.points.visible = fraction > 0;
+  }
+
   dispose(): void {
     this.geometry.dispose();
     this.material.dispose();

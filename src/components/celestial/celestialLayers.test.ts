@@ -1,3 +1,5 @@
+import { getSky } from '@/shaders/SkyScatteringShader';
+import { skyScattering } from '@/core/atmosphereScattering';
 import { describe, expect, it } from 'vitest';
 import * as THREE from 'three';
 import { buildLayers } from './celestialLayers';
@@ -12,23 +14,45 @@ describe('celestial atmosphere capability', () => {
     ).toBeUndefined();
   });
 
-  it('creates an additive back-side atmosphere mesh for Earth', () => {
+  it('gives the Earth a computed sky, from the model its fiche declares', () => {
     const earth = CELESTIAL_CONFIG.bodies.earth;
+    expect(earth.skyScattering).toBe('bruneton-2017');
     const layers = buildLayers(earth, 'earth');
     const atmosphere = layers.get('atmosphere');
 
     expect(atmosphere?.name).toBe('earth_atmosphere');
-    expect(atmosphere?.material).toBeInstanceOf(THREE.ShaderMaterial);
     const material = atmosphere?.material as THREE.ShaderMaterial;
-    expect(material.transparent).toBe(true);
+    const sky = getSky(material);
+    expect(sky, 'le ciel calculé de la Terre').toBeDefined();
+    // Face ARRIÈRE de la coque : le halo vu de l'extérieur, la voûte vue de l'intérieur.
+    expect(material.side).toBe(THREE.BackSide);
+    // Ce que l'air diffuse s'AJOUTE ; ce qui est derrière lui en sort atténué.
+    expect(material.blending).toBe(THREE.CustomBlending);
+    expect(material.blendSrc).toBe(THREE.OneFactor);
+    expect(material.blendDst).toBe(THREE.SrcAlphaFactor);
+    const model = skyScattering('bruneton-2017');
+    expect(sky!.thicknessKm).toBe(model.thicknessKm);
+    expect(sky!.uniforms.uRayleigh.value.toArray()).toEqual(
+      model.rayleighScatteringPerKm
+    );
+    expect(sky!.uniforms.uMieG.value).toBe(model.mieG);
+
+    for (const mesh of layers.values()) {
+      mesh.geometry.dispose();
+      (mesh.material as THREE.Material).dispose();
+    }
+  });
+
+  it('keeps the Fresnel halo where no published single-scattering model applies (Venus)', () => {
+    const venus = CELESTIAL_CONFIG.bodies.venus;
+    expect(venus.skyScattering).toBeUndefined();
+    const layers = buildLayers(venus, 'venus');
+    const material = layers.get('atmosphere')?.material as THREE.ShaderMaterial;
+    expect(getSky(material)).toBeUndefined();
     expect(material.blending).toBe(THREE.AdditiveBlending);
     expect(material.side).toBe(THREE.BackSide);
-    expect(AtmosphereShader.fragmentShader).toContain('rayleighBeta');
     expect(AtmosphereShader.fragmentShader).toContain('miePhase');
-    expect(AtmosphereShader.fragmentShader).toContain('transmission');
     expect(material.uniforms.uRayleighStrength?.value).toBeGreaterThan(0);
-    expect(material.uniforms.uMieStrength?.value).toBeGreaterThan(0);
-    expect(material.uniforms.uMieG?.value).toBeCloseTo(0.76);
 
     for (const mesh of layers.values()) {
       mesh.geometry.dispose();
