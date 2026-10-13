@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { MAGNIFICATION_FADE_GLSL } from '@/core/dataMagnification';
 import { describe, expect, it } from 'vitest';
 import {
   createCloudsMaterial,
@@ -7,6 +8,7 @@ import {
   createSurfaceMaterial,
   LAYER_TERMINATOR_WRAP,
   createThermalMaterial,
+  hasMagnificationFade,
   getThermalUniforms,
   THERMAL_DEFAULT_OPACITY,
 } from './layerConfig';
@@ -658,7 +660,9 @@ describe('precip layer at rest', () => {
     expect(shader.fragmentShader).toContain('diffuseColor.a = 0.0;');
     // La cle de cache doit changer avec la source, sinon un programme compile avant le
     // correctif serait reutilise tel quel.
-    expect(material.customProgramCacheKey()).toBe('precip-remap-v5-sharedterm');
+    expect(material.customProgramCacheKey()).toBe(
+      'precip-remap-v6-magnification'
+    );
     material.dispose();
   });
 });
@@ -686,6 +690,41 @@ describe('thermal layer at rest', () => {
     expect(uniforms?.opacity.value).toBe(THERMAL_DEFAULT_OPACITY);
     expect(THERMAL_DEFAULT_OPACITY).toBeGreaterThan(0);
     expect(uniforms?.enabled.value).toBe(0);
+    material.dispose();
+  });
+});
+
+describe('magnification fade of the appearance layers', () => {
+  const compile = (material: THREE.Material) => {
+    const shader = {
+      uniforms: {},
+      vertexShader: '#include <common>\n#include <worldpos_vertex>',
+      fragmentShader:
+        '#include <common>\n#include <map_pars_fragment>\n#include <map_fragment>\n#include <dithering_fragment>',
+    } as Parameters<NonNullable<THREE.Material['onBeforeCompile']>>[0];
+    material.onBeforeCompile(shader, {} as THREE.WebGLRenderer);
+    return shader;
+  };
+
+  it('fades clouds, rain and terminator overlays after everything else', () => {
+    for (const material of [
+      createCloudsMaterial(),
+      createPrecipMaterial(),
+      createColoredOverlayMaterial(0.85, LAYER_TERMINATOR_WRAP['clouds']),
+    ]) {
+      expect(hasMagnificationFade(material)).toBe(true);
+      const shader = compile(material);
+      // APRÈS le dithering, donc après tout ce que le shader propre a fait de l'alpha.
+      expect(shader.fragmentShader).toContain(
+        '#include <dithering_fragment>' + MAGNIFICATION_FADE_GLSL
+      );
+      material.dispose();
+    }
+  });
+
+  it('leaves instrument overlays alone: their grid is information', () => {
+    const material = createColoredOverlayMaterial(0.72);
+    expect(hasMagnificationFade(material)).toBe(false);
     material.dispose();
   });
 });

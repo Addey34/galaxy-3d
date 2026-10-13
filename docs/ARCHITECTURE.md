@@ -6038,3 +6038,32 @@ modèle ou remplissage synthétique n'est présenté comme une observation offic
 porte un statut (`observed`/`analysis`/`forecast`/`forecast_uncertain`/`climatology`/
 `unavailable`) affiché dans son badge (la carte de repérage fichier par fichier utile en debug
 vit hors dépôt, dans la documentation privée du projet).
+
+### Les nuages du jour : extraire avant d'interpoler, s'effacer quand la donnée est trop grossie (2026-10-13)
+
+La couche nuages (allumée par défaut) n'est pas une carte de nuages : c'est l'image True Color
+VIIRS du jour (WMS de GIBS, 2 048 x 1 024 pour le globe, ~20 km par texel), dont le shader
+`REAL_CLOUDS_GLSL` (`config/layerConfig.ts`) EXTRAIT les nuages par deux seuils, luminance et
+saturation, complétés par les fractions nuageuses MODIS là où l'optique manque. Trois défauts
+mesurés sur des captures de la vraie Terre, et leur correction :
+
+- **Un seuil final binarisait l'alpha.** Un `smoothstep( 0.5 - fwidth, 0.5 + fwidth )` voulait
+  adoucir les lisières ; de près `fwidth` tend vers 0 et l'alpha devenait 0 ou 1, d'où des taches
+  blanches opaques à bords francs (4 235 km). Retiré : l'alpha extrait est déjà continu.
+- **Un seuil appliqué après une moyenne dessine la grille.** Le GPU interpolait les COULEURS, puis
+  les seuils découpaient ce dégradé selon des contours alignés sur les texels. On extrait donc
+  l'alpha aux quatre texels voisins, puis on interpole l'alpha (`bilinearCloudAlpha`), avec les
+  dérivées de l'UV continu (`textureGrad`) pour que la mipmap ne saute pas aux frontières. Même
+  principe pour les fractions MODIS, codées dans une palette et lues au plus proche : décodées aux
+  quatre voisins, puis interpolées (`bilinearCloudFraction`).
+- **Une donnée trop grossie n'est plus une image.** À 1 036 km, un texel couvre 14 px d'écran et
+  l'on ne voit que la grille, posée sur un sol servi à 10 m. Toute couche d'APPARENCE (nuages,
+  pluie, overlays modèle qui portent un terminateur) multiplie donc son alpha final par un facteur
+  de grossissement calculé par fragment, en pixels d'écran par texel de SA donnée :
+  `core/dataMagnification.ts`, seuils, raison et GLSL à côté de leur miroir testé. Les couches
+  d'instrument (température, pression, humidité) n'en ont pas : leur grille est une information.
+  La règle couvre d'office la caméra sous la coquille où ces couches sont peintes (1,01 rayon).
+
+Ce qui rouvrirait la question : une source de nuages plus fine (les tuiles VIIRS à 250 m du fond
+« jour de la scène » en sont une, mais les nuages y sont déjà dans le sol), qui déplacerait le
+grossissement auquel la couche s'efface sans changer la règle.
