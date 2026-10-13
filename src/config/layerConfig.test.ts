@@ -728,3 +728,25 @@ describe('magnification fade of the appearance layers', () => {
     material.dispose();
   });
 });
+
+describe('cloud extraction helpers', () => {
+  it('only exist when the material has a map, since they read `map`', () => {
+    const material = createCloudsMaterial();
+    const shader = {
+      uniforms: {},
+      vertexShader: '#include <common>',
+      fragmentShader: '#include <common>\n#include <map_pars_fragment>',
+    } as Parameters<NonNullable<THREE.Material['onBeforeCompile']>>[0];
+    material.onBeforeCompile(shader, {} as THREE.WebGLRenderer);
+    const pars = shader.fragmentShader.slice(
+      shader.fragmentShader.indexOf('#include <map_pars_fragment>')
+    );
+    const guard = pars.indexOf('#ifdef USE_MAP');
+    expect(guard).toBeGreaterThan(-1);
+    expect(pars.indexOf('float extractCloudAlpha(')).toBeGreaterThan(guard);
+    expect(pars.indexOf('#endif')).toBeGreaterThan(
+      pars.indexOf('float bilinearCloudAlpha(')
+    );
+    material.dispose();
+  });
+});

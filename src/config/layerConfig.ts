@@ -317,6 +317,9 @@ const CLOUD_FRACTION_DECODE_GLSL = `
         }`;
 
 const REAL_CLOUDS_PARS_GLSL = `
+        // Sous USE_MAP : sans image posée, map n'est pas déclaré et ces fonctions ne
+        // compileraient pas (mesuré : l'erreur de shader du matériau nuages au démarrage).
+        #ifdef USE_MAP
         // L'ALPHA D'UN TEXEL True Color : blanc lumineux et désaturé = nuage, sol coloré rejeté.
         // Deux seuils bas, sur l'océan (fond sombre) et sur la terre (sable clair ≈ nuage), la
         // distinction venant du canal g de la carte océan.
@@ -357,7 +360,8 @@ const REAL_CLOUDS_PARS_GLSL = `
           float a01 = extractCloudAlpha( vec2( uv00.x, v1 ), gx, gy );
           float a11 = extractCloudAlpha( vec2( uv00.x + texel.x, v1 ), gx, gy );
           return mix( mix( a00, a10, f.x ), mix( a01, a11, f.x ), f.y );
-        }`;
+        }
+        #endif`;
 
 const REAL_CLOUDS_GLSL = `
         #ifdef USE_MAP
