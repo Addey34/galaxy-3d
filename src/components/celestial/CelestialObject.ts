@@ -1310,15 +1310,27 @@ export default class CelestialObject {
   private readonly _skyScratch = new THREE.Vector3();
 
   /**
-   * Charge le ciel calculé (`skyLayer.ts`, un morceau à part) quand la caméra arrive à moins de
-   * `SKY_LOAD_RADII` rayons d'un corps qui déclare un modèle de diffusion ; jamais au démarrage.
+   * Charge le ciel calculé (`skyLayer.ts`, un morceau à part) quand la caméra arrive, EN EXPLO, à
+   * moins de `SKY_LOAD_RADII` rayons d'un corps qui déclare un modèle de diffusion ; jamais au
+   * démarrage. Mesuré le 2026-10-13 : en Éducatif, regarder la Lune le chargeait (elle y est à
+   * moins de 20 rayons terrestres) et recompilait les matériaux de la Terre, ~7 s de thread de
+   * plus sous frein × 6, assez pour faire rougir `e2e/places.spec.ts` trois fois sur un EPYC 7763.
    * Un échec se rejoue à l'approche suivante.
    */
   private _maybeLoadSky(cameraWorld: THREE.Vector3): void {
     const model = this.config.skyScattering;
     const radiusKm = this.config.realData?.radiusKm;
     const atmosphere = this.layers.get('atmosphere');
-    if (!model || !radiusKm || !atmosphere || this._sky) return;
+    // EN EXPLO SEULEMENT (facteur d'échelle 1 = Éducatif) : le planétarium compressé place la
+    // Lune à moins de 20 rayons de la Terre, et le ciel s'y chargeait en regardant la Lune.
+    if (
+      !model ||
+      !radiusKm ||
+      !atmosphere ||
+      this._sky ||
+      this._scaleFactor === 1
+    )
+      return;
     if (
       cameraWorld.distanceTo(this.group.getWorldPosition(this._skyScratch)) >
       this.renderedRadius() * SKY_LOAD_RADII
@@ -1332,7 +1344,7 @@ export default class CelestialObject {
       },
       (error: unknown) => {
         this._sky = 0;
-        Logger.warn('[Sky]', error);
+        Logger.warn(error);
       }
     );
   }

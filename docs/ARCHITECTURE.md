@@ -2688,10 +2688,13 @@ ciel de nuit.
 - **Chargé à l'approche, jamais au démarrage.** Shader, coefficients et miroir JS pèsent ~7 ko
   (`components/celestial/skyLayer.ts`, un morceau déclaré dans `NON_BOOT_CHUNKS`) : au démarrage
   ils dépassaient le plafond du JavaScript de 7 332 octets. Tout corps démarre avec le halo de
-  Fresnel ; à moins de 20 rayons d'un corps qui déclare un modèle (`skyApproach.ts`), le morceau
-  se charge et REMPLACE le matériau. Mesuré : aucune requête du ciel au démarrage par la vue
+  Fresnel ; EN EXPLO, à moins de 20 rayons d'un corps qui déclare un modèle (`skyApproach.ts`), le
+  morceau se charge et REMPLACE le matériau. En Éducatif, jamais : le planétarium compressé place
+  la Lune à moins de 20 rayons terrestres, et la regarder chargeait le ciel et recompilait les
+  matériaux de la Terre (~7 s de thread sous frein × 6, mesuré ; `e2e/places.spec.ts` rouge trois
+  fois sur un EPYC 7763). Mesuré : aucune requête du ciel au démarrage par la vue
   d'ensemble, en Éducatif comme en Explo. Ce qui reste au démarrage (le chargement, l'estompage des
-  étoiles) laisse une marge de **18 octets** au plafond, le 2026-10-13 : le prochain ajout au
+  étoiles, la condition « Explo seulement ») laisse une marge de **3 octets** au plafond, le 2026-10-13 : le prochain ajout au
   démarrage devra alléger ou relever le plafond par écrit.
 - **Dans le repère de la vue, en km.** En coordonnées monde, la Terre est à 35 unités de
   l'origine pour un rayon de 0,0015 : en flottants 32 bits un fragment n'y est connu qu'à ~16 km
@@ -2708,12 +2711,22 @@ ciel de nuit.
   civil quelques cd/m²). Les marqueurs de la couche d'instrument (astéroïdes, sondes) restent : ils
   ne sont pas le ciel.
 
+- **Le voile sur le sol : la perspective aérienne** (`components/celestial/aerialPerspective.ts`,
+  dans le même morceau). Entre l'œil et un point du sol, l'air diffuse de la lumière vers l'œil et
+  atténue celle du sol : `couleur = sol × transmittance + diffusé`, par la MÊME intégrale que le
+  ciel (`SCATTER_GLSL`, partagée), arrêtée au point du sol. Par SOMMET (huit échantillons le long
+  de la visée, quatre vers le Soleil), sur la radiance linéaire avant la courbe de tons, pour la
+  sphère du corps et ses carreaux (ceux posés ensuite aussi : la fabrique du corps est enveloppée
+  au chargement du ciel). La géométrie est posée par le SOL, dessiné avant la voûte, sinon le voile
+  lirait l'image précédente. Vu au-dessus du Mont-Blanc à 50 km : Léman, Jura et Alpes bleuissant
+  avec la distance jusqu'à un horizon fondu dans le ciel ; à 10 km, les crêtes lointaines en plans
+  bleus ; à 8 000 km, un voile léger au bord du globe.
+
 Mesuré sur captures, à exposition de jour : au-dessus du Mont-Blanc à 3 km, zénith (34, 61, 91),
 mi-hauteur (62, 91, 113), horizon pâle (104, 118, 115), contre une forêt au soleil à (24, 31, 19) ;
 au-dessus de l'Everest à 12 km, un ciel plus sombre (l'air est sous la caméra) ; au coucher
 (30,5° N, 96° E, Soleil à 1,3°), une bande orangée vers le Soleil. Ce qui manque encore : la
-perspective aérienne (le voile bleu sur le sol lointain et, vu de l'orbite, sur le disque), et la
-diffusion multiple, qui éclaircirait surtout l'horizon.
+diffusion multiple, qui éclaircirait surtout l'horizon, et le voile sur les nuages.
 
 ## L'échelle de résolutions d'une texture : jusqu'où on livre, et pourquoi (lot 16)
 

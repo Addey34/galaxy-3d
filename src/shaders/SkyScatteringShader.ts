@@ -56,9 +56,15 @@ export const vertexShader = /* glsl */ `
   }
 `;
 
-export const fragmentShader = /* glsl */ `
-  #define VIEW_SAMPLES ${SKY_VIEW_SAMPLES}
-  #define LIGHT_SAMPLES ${SKY_LIGHT_SAMPLES}
+/**
+ * LA DIFFUSION LE LONG D'UN SEGMENT, partagée par le ciel (par pixel, jusqu'au sol) et par la
+ * perspective aérienne du sol (`aerialPerspective.ts`, par sommet, jusqu'au sommet). L'inclusion
+ * définit `VIEW_SAMPLES` et `LIGHT_SAMPLES` avant elle. Repère centré sur le corps, en km.
+ *
+ * `scatterSegment` rend la lumière diffusée vers l'origine et la transmittance de l'origine au
+ * bout du segment ; `false` si le segment ne traverse pas l'air.
+ */
+export const SCATTER_GLSL = /* glsl */ `
   #define PI 3.141592653589793
 
   uniform vec3 uCenterView;
@@ -76,8 +82,6 @@ export const fragmentShader = /* glsl */ `
   uniform vec3 uOzone;
   uniform float uOzonePeak;
   uniform float uOzoneHalfWidth;
-
-  varying vec3 vViewPosition;
 
   // Intersections d'un rayon (origine o, direction unitaire d) avec la sphère de rayon r centrée
   // à l'origine : (t proche, t lointain), ou (-1, -1) sans intersection.
@@ -103,18 +107,21 @@ export const fragmentShader = /* glsl */ `
     return uRayleigh * depth.x + vec3( uMieExtinction ) * depth.y + uOzone * depth.z;
   }
 
-  void main() {
-    // Repère centré sur le corps, en km : la caméra est en -centre.
-    vec3 origin = -uCenterView * uKmPerUnit;
-    vec3 dir = normalize( vViewPosition );
-
+  bool scatterSegment(
+    vec3 origin, vec3 dir, float limit, bool stopAtGround,
+    out vec3 radiance, out vec3 transmittance
+  ) {
+    radiance = vec3( 0.0 );
+    transmittance = vec3( 1.0 );
     vec2 top = sphere( origin, dir, uTopKm );
-    if ( top.y <= 0.0 ) discard;
+    if ( top.y <= 0.0 ) return false;
     float start = max( top.x, 0.0 );
-    float end = top.y;
-    vec2 ground = sphere( origin, dir, uGroundKm );
-    if ( ground.x > 0.0 ) end = min( end, ground.x );
-    if ( end <= start ) discard;
+    float end = min( top.y, limit );
+    if ( stopAtGround ) {
+      vec2 ground = sphere( origin, dir, uGroundKm );
+      if ( ground.x > 0.0 ) end = min( end, ground.x );
+    }
+    if ( end <= start ) return false;
 
     float ds = ( end - start ) / float( VIEW_SAMPLES );
     vec3 viewDepth = vec3( 0.0 );
@@ -134,9 +141,9 @@ export const fragmentShader = /* glsl */ `
           vec3 q = p + uSunDirView * ( ( float( j ) + 0.5 ) * dl );
           lightDepth += densities( length( q ) - uGroundKm ) * dl;
         }
-        vec3 transmittance = exp( -extinction( viewDepth + lightDepth ) );
-        sumRayleigh += transmittance * rho.x;
-        sumMie += transmittance * rho.y;
+        vec3 t = exp( -extinction( viewDepth + lightDepth ) );
+        sumRayleigh += t * rho.x;
+        sumMie += t * rho.y;
       }
       viewDepth += rho * 0.5;
     }
@@ -146,13 +153,31 @@ export const fragmentShader = /* glsl */ `
     float g = uMieG;
     float miePhase = 3.0 / ( 8.0 * PI ) * ( 1.0 - g * g ) / ( 2.0 + g * g )
       * ( 1.0 + mu * mu ) / pow( 1.0 + g * g - 2.0 * g * mu, 1.5 );
-    vec3 radiance = uSunIntensity * (
+    radiance = uSunIntensity * (
       uRayleigh * sumRayleigh * rayleighPhase
       + vec3( uMieScattering ) * sumMie * miePhase
     );
+    transmittance = exp( -extinction( viewDepth ) );
+    return true;
+  }
+`;
+
+export const fragmentShader = /* glsl */ `
+  #define VIEW_SAMPLES ${SKY_VIEW_SAMPLES}
+  #define LIGHT_SAMPLES ${SKY_LIGHT_SAMPLES}
+  ${SCATTER_GLSL}
+
+  varying vec3 vViewPosition;
+
+  void main() {
+    // Repère centré sur le corps, en km : la caméra est en -centre.
+    vec3 radiance;
+    vec3 behind;
+    if ( !scatterSegment(
+      -uCenterView * uKmPerUnit, normalize( vViewPosition ), 1e9, true, radiance, behind
+    ) ) discard;
     // Ce qui est derrière l'air (les étoiles) en sort atténué : alpha = transmittance moyenne,
     // employée comme facteur de destination (cf. le matériau).
-    vec3 behind = exp( -extinction( viewDepth ) );
     gl_FragColor = vec4( radiance, ( behind.r + behind.g + behind.b ) / 3.0 );
   }
 `;

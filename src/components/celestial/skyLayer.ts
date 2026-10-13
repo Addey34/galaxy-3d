@@ -26,6 +26,7 @@ import {
 import { createSkyMaterial, getSky } from '@/shaders/SkyScatteringShader';
 import { LIGHTING_SETTINGS } from '@/config/engine';
 import { ATTACHED_SKIES } from './skyApproach';
+import { addAerialPerspective } from './aerialPerspective';
 
 /** Ce que le ciel demande d'un corps. Plus petit qu'un `CelestialObject`, et c'est écrit. */
 export interface SkyBody {
@@ -36,6 +37,11 @@ export interface SkyBody {
   figureRatioToward(worldPoint: THREE.Vector3): number;
   /** Position monde du Soleil (la dernière connue). */
   readonly sunWorld: THREE.Vector3;
+  /**
+   * Fabrique du matériau d'un carreau d'imagerie : enveloppée pour que chaque carreau NEUF reçoive
+   * la perspective aérienne (`aerialPerspective.ts`). Absente, seuls les sols déjà posés l'ont.
+   */
+  createSurfaceOverlayMaterial?(): THREE.Material;
 }
 
 export interface SkyBinding {
@@ -65,8 +71,10 @@ export function attachSky(
   const toCamera = new THREE.Vector3();
   const toSun = new THREE.Vector3();
 
-  const previousHook = mesh.onBeforeRender;
-  mesh.onBeforeRender = (_renderer, _scene, camera) => {
+  // La géométrie du ciel, posée par la PREMIÈRE des deux surfaces dessinées à chaque image : le sol
+  // (opaque, dessiné avant) pour sa perspective aérienne, puis la voûte, qui retrouve les mêmes
+  // valeurs. Sans le sol, le voile aurait lu la position de l'image précédente.
+  const place = (camera: THREE.Camera) => {
     const u = sky.uniforms;
     body.group.getWorldPosition(centre);
     u.uKmPerUnit.value = radiusKm / body.renderedRadius();
@@ -79,6 +87,30 @@ export function attachSky(
     u.uCenterView.value.copy(centre).applyMatrix4(camera.matrixWorldInverse);
     u.uSunIntensity.value = sunIntensity;
   };
+  const previousHook = mesh.onBeforeRender;
+  mesh.onBeforeRender = (_renderer, _scene, camera) => place(camera);
+
+  // LE SOL : la sphère du corps et ses carreaux, voisins de la coque dans le groupe en rotation.
+  const ground = (child: THREE.Object3D): child is THREE.Mesh =>
+    child instanceof THREE.Mesh &&
+    (child.name.endsWith('_surface') || child.name.startsWith('tile_'));
+  const hooked: { mesh: THREE.Mesh; hook: THREE.Mesh['onBeforeRender'] }[] = [];
+  for (const child of mesh.parent?.children ?? []) {
+    if (!ground(child)) continue;
+    for (const m of [child.material].flat())
+      addAerialPerspective(m, sky.uniforms);
+    if (child.name.endsWith('_surface')) {
+      hooked.push({ mesh: child, hook: child.onBeforeRender });
+      child.onBeforeRender = (_renderer, _scene, camera) => place(camera);
+    }
+  }
+  const createTileMaterial = body.createSurfaceOverlayMaterial;
+  if (createTileMaterial)
+    body.createSurfaceOverlayMaterial = () => {
+      const tile = createTileMaterial.call(body);
+      addAerialPerspective(tile, sky.uniforms);
+      return tile;
+    };
 
   const binding: SkyBinding = {
     starVisibilityFrom(cameraWorld) {
@@ -103,6 +135,10 @@ export function attachSky(
       ATTACHED_SKIES.delete(binding);
       mesh.material = previous;
       mesh.onBeforeRender = previousHook;
+      for (const { mesh: surface, hook } of hooked)
+        surface.onBeforeRender = hook;
+      if (createTileMaterial)
+        body.createSurfaceOverlayMaterial = createTileMaterial;
       material.dispose();
     },
   };
