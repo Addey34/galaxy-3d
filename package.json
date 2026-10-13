@@ -45,6 +45,7 @@
     "instruments:generate": "node scripts/generate-instrument-index.mjs",
     "inventory:gaps": "node scripts/inventory-gaps.mjs",
     "budget:startup": "node scripts/check-startup-budget.mjs",
+    "e2e:durations": "node scripts/e2e-durations.mjs",
     "ci:health": "node scripts/check-ci-health.mjs",
     "sources:health": "node scripts/check-source-health.mjs",
     "screenreader:nvda": "node scripts/nvda-session.mjs",
