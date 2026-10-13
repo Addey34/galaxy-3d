@@ -1,3 +1,4 @@
+import type { SkyScatteringModelId } from '@/core/atmosphereScattering';
 import type { ModelQuality } from '@/core/modelLod';
 /**
  * Interfaces TypeScript partagées par toute l'application : configuration des corps
@@ -216,6 +217,8 @@ export interface CelestialBodyConfig {
   model?: ModelConfig;
   /** Teinte du halo atmosphérique (Fresnel). Défaut : bleu ciel. */
   atmosphereColor?: number;
+  /** Modèle publié de diffusion de l'air : un ciel calculé au lieu du halo (`core/atmosphereScattering.ts`). */
+  skyScattering?: SkyScatteringModelId;
   ring?: RingConfig;
   satellites?: Record<string, CelestialBodyConfig>;
   /** Données astronomiques réelles — utilisées par OrbitalMechanics en mode Explo. */

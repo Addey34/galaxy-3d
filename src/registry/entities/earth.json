@@ -53,6 +53,7 @@
       ]
     },
     "atmosphereColor": "0x4a90e0",
+    "skyScattering": "bruneton-2017",
     "realData": {
       "orbitalInclination": 0,
       "ascendingNode": 0,
@@ -133,6 +134,7 @@
   },
   "notes": {
     "atmosphereColor": "L'atmosphère terrestre est un phénomène de diffusion rendu par shader ; elle ne nécessite pas une texture bitmap supplémentaire.",
+    "skyScattering": "Le ciel est calculé par diffusion simple (Rayleigh, Mie, ozone) avec les constantes publiées du modèle d'E. Bruneton (2017), dérivées dans core/atmosphereScattering.ts : vu de l'orbite il donne le halo, vu du sol le ciel bleu et le crépuscule.",
     "positionBody": "Position au barycentre Terre-Lune : évite le ballant lunaire réel (~4700 km, ~27 j) qui se voit comme un zigzag à vraie échelle et vitesse max. L'axe/jour-nuit reste sur Body.Earth. La Lune (parentRelative) est alors référencée à l'EMB, restant à sa vraie position."
   }
 }

@@ -205,6 +205,8 @@ function createAtmosphereLayer(
 ): THREE.Mesh {
   const settings = SHADER_SETTINGS.atmosphere;
   const color = config.atmosphereColor ?? settings.defaultColor;
+  // Le halo de Fresnel pour tous. Un corps qui déclare un modèle de diffusion (`skyScattering`)
+  // le voit remplacé par un ciel calculé à l'approche (`skyLayer.ts`), jamais au démarrage.
   const material = new THREE.ShaderMaterial({
     vertexShader: AtmosphereShader.vertexShader,
     fragmentShader: AtmosphereShader.fragmentShader,

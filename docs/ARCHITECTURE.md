@@ -2665,6 +2665,69 @@ Constat, sans correction dans ce pas : à 3 km du sol, le relief d'ETOPO 2022 à
 décidera d'un relief plus fin. Et le ciel reste noir sous la coquille de l'atmosphère, qui n'est
 dessinée que de l'extérieur.
 
+### Le ciel de la Terre : une diffusion simple le long de la visée, de l'orbite au sol (lot 48, pas 6)
+
+La couche atmosphère était un liseré de Fresnel, `pow(1 − |n·v|, p)` sur la face arrière d'une
+coque à 1,02 rayon : juste au limbe vu de l'orbite, NOIR vu de dessous, où la visée est parallèle
+à la normale. Relevée vers l'horizon (pas 5), la descente montrait des Alpes ensoleillées sous un
+ciel de nuit.
+
+- **Une seule physique.** `shaders/SkyScatteringShader.ts` intègre, pour chaque pixel de la même
+  coque, la lumière du Soleil diffusée une fois vers la caméra (Rayleigh, Mie), atténuée en chemin
+  par Rayleigh, Mie et l'ozone (16 échantillons le long de la visée, 6 vers le Soleil depuis
+  chacun). Vu de l'orbite c'est le halo ; vu du sol, un ciel bleu plus clair à l'horizon, une bande
+  orangée au coucher, et la nuit d'elle-même dans l'ombre de la planète, sans terminateur à régler.
+- **Des coefficients dérivés, pas recopiés.** `core/atmosphereScattering.ts` les tire des
+  constantes publiées du modèle d'E. Bruneton (`precomputed_atmospheric_scattering`,
+  `atmosphere/demo/demo.cc`, 2017, BSD à trois clauses, lues à la source le 2026-10-13) aux
+  longueurs d'onde que ce fichier associe au rouge, au vert et au bleu. Un test les confronte à
+  un calcul fait à la main depuis ces constantes.
+- **Déclaré par la fiche.** `skyScattering` (vocabulaire fermé, `bruneton-2017`) : la Terre le
+  déclare. Vénus garde son halo de Fresnel, et c'est une raison et non un oubli : sous 92 bar, la
+  diffusion MULTIPLE domine, et un modèle à diffusion simple y serait faux.
+- **Chargé à l'approche, jamais au démarrage.** Shader, coefficients et miroir JS pèsent ~7 ko
+  (`components/celestial/skyLayer.ts`, un morceau déclaré dans `NON_BOOT_CHUNKS`) : au démarrage
+  ils dépassaient le plafond du JavaScript de 7 332 octets. Tout corps démarre avec le halo de
+  Fresnel ; EN EXPLO, à moins de 20 rayons d'un corps qui déclare un modèle (`skyApproach.ts`), le
+  morceau se charge et REMPLACE le matériau. En Éducatif, jamais : le planétarium compressé place
+  la Lune à moins de 20 rayons terrestres, et la regarder chargeait le ciel et recompilait les
+  matériaux de la Terre (~7 s de thread sous frein × 6, mesuré ; `e2e/places.spec.ts` rouge trois
+  fois sur un EPYC 7763). Mesuré : aucune requête du ciel au démarrage par la vue
+  d'ensemble, en Éducatif comme en Explo. Ce qui reste au démarrage (le chargement, l'estompage des
+  étoiles, la condition « Explo seulement ») laisse une marge de **3 octets** au plafond, le 2026-10-13 : le prochain ajout au
+  démarrage devra alléger ou relever le plafond par écrit.
+- **Dans le repère de la vue, en km.** En coordonnées monde, la Terre est à 35 unités de
+  l'origine pour un rayon de 0,0015 : en flottants 32 bits un fragment n'y est connu qu'à ~16 km
+  près, plus que la hauteur d'échelle de l'air (8 km). Le centre du corps et la direction du
+  Soleil sont donc passés dans le repère de la vue, calculés en double précision juste avant le
+  rendu (`CelestialObject._bindSky`), et le bas de l'air est le NIVEAU DE LA MER sous la caméra
+  (l'ellipsoïde dans sa direction) : à 46° N il est 3,6 km sous la sphère moyenne, et une caméra
+  à 1 km du sol se serait trouvée « sous terre » pour le modèle.
+- **Les étoiles s'effacent sous un ciel de jour.** Elles sont dessinées à un éclat d'affichage
+  fixe, et restaient visibles sous un ciel bleu. `AnimationSystem` estompe le champ procédural et
+  la Voie lactée du fond selon la luminance du ciel CALCULÉE au zénith de la caméra (un miroir JS
+  du shader), rapportée au zénith de jour que le même modèle donne : visibles sous 10⁻⁵, effacées
+  au-dessus de 10⁻³, des ordres de grandeur choisis (ciel de jour ~10⁴ cd/m², fin du crépuscule
+  civil quelques cd/m²). Les marqueurs de la couche d'instrument (astéroïdes, sondes) restent : ils
+  ne sont pas le ciel.
+
+- **Le voile sur le sol : la perspective aérienne** (`components/celestial/aerialPerspective.ts`,
+  dans le même morceau). Entre l'œil et un point du sol, l'air diffuse de la lumière vers l'œil et
+  atténue celle du sol : `couleur = sol × transmittance + diffusé`, par la MÊME intégrale que le
+  ciel (`SCATTER_GLSL`, partagée), arrêtée au point du sol. Par SOMMET (huit échantillons le long
+  de la visée, quatre vers le Soleil), sur la radiance linéaire avant la courbe de tons, pour la
+  sphère du corps et ses carreaux (ceux posés ensuite aussi : la fabrique du corps est enveloppée
+  au chargement du ciel). La géométrie est posée par le SOL, dessiné avant la voûte, sinon le voile
+  lirait l'image précédente. Vu au-dessus du Mont-Blanc à 50 km : Léman, Jura et Alpes bleuissant
+  avec la distance jusqu'à un horizon fondu dans le ciel ; à 10 km, les crêtes lointaines en plans
+  bleus ; à 8 000 km, un voile léger au bord du globe.
+
+Mesuré sur captures, à exposition de jour : au-dessus du Mont-Blanc à 3 km, zénith (34, 61, 91),
+mi-hauteur (62, 91, 113), horizon pâle (104, 118, 115), contre une forêt au soleil à (24, 31, 19) ;
+au-dessus de l'Everest à 12 km, un ciel plus sombre (l'air est sous la caméra) ; au coucher
+(30,5° N, 96° E, Soleil à 1,3°), une bande orangée vers le Soleil. Ce qui manque encore : la
+diffusion multiple, qui éclaircirait surtout l'horizon, et le voile sur les nuages.
+
 ## L'échelle de résolutions d'une texture : jusqu'où on livre, et pourquoi (lot 16)
 
 « Chaque corps a tout ce qu'ont les autres » (règle de parité de l'utilisateur) ne veut **pas**

@@ -1,3 +1,7 @@
+import { getSky } from '@/shaders/SkyScatteringShader';
+import { attachSky } from './skyLayer';
+import { ATTACHED_SKIES } from './skyApproach';
+import { skyScattering } from '@/core/atmosphereScattering';
 import { describe, expect, it } from 'vitest';
 import * as THREE from 'three';
 import { buildLayers } from './celestialLayers';
@@ -12,23 +16,67 @@ describe('celestial atmosphere capability', () => {
     ).toBeUndefined();
   });
 
-  it('creates an additive back-side atmosphere mesh for Earth', () => {
+  it('gives the Earth a computed sky on approach, from the model its fiche declares', () => {
     const earth = CELESTIAL_CONFIG.bodies.earth;
+    expect(earth.skyScattering).toBe('bruneton-2017');
     const layers = buildLayers(earth, 'earth');
-    const atmosphere = layers.get('atmosphere');
+    const atmosphere = layers.get('atmosphere')!;
+    expect(atmosphere.name).toBe('earth_atmosphere');
+    // Au démarrage, le halo de Fresnel : le ciel arrive dans son propre morceau, à l'approche.
+    const halo = atmosphere.material as THREE.ShaderMaterial;
+    expect(getSky(halo)).toBeUndefined();
 
-    expect(atmosphere?.name).toBe('earth_atmosphere');
-    expect(atmosphere?.material).toBeInstanceOf(THREE.ShaderMaterial);
-    const material = atmosphere?.material as THREE.ShaderMaterial;
-    expect(material.transparent).toBe(true);
+    const binding = attachSky(
+      {
+        group: new THREE.Group(),
+        renderedRadius: () => 1,
+        figureRatioToward: () => 1,
+        sunWorld: new THREE.Vector3(1e6, 0, 0),
+      },
+      earth.skyScattering!,
+      6371,
+      atmosphere
+    );
+    const material = atmosphere.material as THREE.ShaderMaterial;
+    const sky = getSky(material);
+    expect(sky, 'le ciel calculé de la Terre').toBeDefined();
+    // Face ARRIÈRE de la coque : le halo vu de l'extérieur, la voûte vue de l'intérieur.
+    expect(material.side).toBe(THREE.BackSide);
+    // Ce que l'air diffuse s'AJOUTE ; ce qui est derrière lui en sort atténué.
+    expect(material.blending).toBe(THREE.CustomBlending);
+    expect(material.blendSrc).toBe(THREE.OneFactor);
+    expect(material.blendDst).toBe(THREE.SrcAlphaFactor);
+    const model = skyScattering('bruneton-2017');
+    expect(sky!.thicknessKm).toBe(model.thicknessKm);
+    expect(sky!.uniforms.uRayleigh.value.toArray()).toEqual(
+      model.rayleighScatteringPerKm
+    );
+    // Hors de l'air, les étoiles ne sont pas touchées ; au sol à midi, elles disparaissent.
+    expect(binding.starVisibilityFrom(new THREE.Vector3(0, 0, 3))).toBe(1);
+    expect(binding.starVisibilityFrom(new THREE.Vector3(1.0001, 0, 0))).toBe(0);
+
+    // Posé, il s'inscrit parmi les ciels que la boucle de rendu interroge pour les étoiles.
+    expect(ATTACHED_SKIES.has(binding)).toBe(true);
+
+    binding.dispose();
+    expect(ATTACHED_SKIES.has(binding)).toBe(false);
+    expect(atmosphere.material).toBe(halo);
+    for (const mesh of layers.values()) {
+      mesh.geometry.dispose();
+      (mesh.material as THREE.Material).dispose();
+    }
+  });
+
+  it('keeps the Fresnel halo where no published single-scattering model applies (Venus)', () => {
+    const venus = CELESTIAL_CONFIG.bodies.venus;
+    expect(venus.skyScattering).toBeUndefined();
+    const layers = buildLayers(venus, 'venus');
+    const material = layers.get('atmosphere')?.material as THREE.ShaderMaterial;
+    expect(getSky(material)).toBeUndefined();
     expect(material.blending).toBe(THREE.AdditiveBlending);
     expect(material.side).toBe(THREE.BackSide);
-    expect(AtmosphereShader.fragmentShader).toContain('rayleighBeta');
     expect(AtmosphereShader.fragmentShader).toContain('miePhase');
-    expect(AtmosphereShader.fragmentShader).toContain('transmission');
     expect(material.uniforms.uRayleighStrength?.value).toBeGreaterThan(0);
-    expect(material.uniforms.uMieStrength?.value).toBeGreaterThan(0);
-    expect(material.uniforms.uMieG?.value).toBeCloseTo(0.76);
 
     for (const mesh of layers.values()) {
       mesh.geometry.dispose();

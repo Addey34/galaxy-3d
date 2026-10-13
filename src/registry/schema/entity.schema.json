@@ -1128,6 +1128,12 @@
               "type": "string",
               "pattern": "^0x[0-9a-f]{6}$"
             },
+            "skyScattering": {
+              "type": "string",
+              "enum": [
+                "bruneton-2017"
+              ]
+            },
             "ring": {
               "type": "object",
               "propertyNames": {

@@ -10,6 +10,7 @@
  * Gère aussi le LOD des textures (résolution selon la distance caméra) et le passage
  * Éducatif ↔ Explo (taille de base vs vraie taille physique via radiusKm).
  */
+import { SKY_LOAD_RADII } from './skyApproach';
 import * as THREE from 'three';
 import {
   buildLayers,
@@ -46,6 +47,7 @@ import {
 } from '@/config/layerConfig';
 import {
   BOOT_QUALITY_PROFILE,
+  LIGHTING_SETTINGS,
   PRECIP_SETTINGS,
   REALTIME_CLOUDS_SETTINGS,
 } from '@/config/engine';
@@ -1012,6 +1014,8 @@ export default class CelestialObject {
     // Le reste de cette méthode (uniformes de shader) n'a, lui, aucun effet cumulatif : il reste
     // légitimement derrière le test de visibilité.
     this._advanceSpin(delta);
+    if (sunWorldPosition) this.sunWorld.copy(sunWorldPosition);
+    if (_cameraPosition) this._maybeLoadSky(_cameraPosition);
     if (!visible) return;
 
     const lights = this.layers.get('lights');
@@ -1041,10 +1045,12 @@ export default class CelestialObject {
       atmosphere?.material instanceof THREE.ShaderMaterial &&
       sunWorldPosition
     ) {
+      // Le ciel calculé (`skyScattering`) n'a pas cet uniform : il lit le Soleil juste avant son
+      // rendu, dans le repère de la vue (`skyLayer.ts`).
       const uniforms = atmosphere.material.uniforms as unknown as {
-        sunPosition: THREE.IUniform<THREE.Vector3 | null>;
+        sunPosition?: THREE.IUniform<THREE.Vector3 | null>;
       };
-      uniforms.sunPosition.value?.copy(sunWorldPosition);
+      uniforms.sunPosition?.value?.copy(sunWorldPosition);
     }
 
     // Ombre portée de la planète sur son anneau : centre + rayon (échelle
@@ -1278,13 +1284,7 @@ export default class CelestialObject {
     // relief quand il est posé. Mesuré sur la Terre sous Sentinel-2 : un plancher de 0,9 km
     // compté depuis la sphère de 6 371 km plaçait la caméra 3,2 km SOUS le sol à 23° de
     // latitude, l'ellipsoïde y passant 3,8 km plus haut et le relief plus haut encore.
-    const local = this._meshGroup.worldToLocal(
-      this._towardScratch.copy(toward)
-    );
-    const onFigure =
-      this.figure && local.lengthSq() > 0
-        ? figureRadius(this.figure, ...normalized(local))
-        : 1;
+    const onFigure = this.figureRatioToward(toward);
     const radiusKm = this.config.realData?.radiusKm;
     const ground =
       this._measuredGroundKm !== null && radiusKm
@@ -1303,32 +1303,73 @@ export default class CelestialObject {
 
   private _measuredGroundKm: number | null = null;
   private readonly _towardScratch = new THREE.Vector3();
+  /** Position monde du Soleil, la dernière reçue par `update` (le ciel calculé la lit). */
+  readonly sunWorld = new THREE.Vector3();
+  /** Ciel calculé : 0 absent, 1 en chargement, 2 posé (`skyLayer.ts`). */
+  private _sky = 0;
+  private readonly _skyScratch = new THREE.Vector3();
 
   /**
-   * Jusqu'où la caméra peut descendre, en multiples du rayon, d'après la FINESSE de l'image
-   * que ce corps affiche — et non d'après une constante unique pour tout le catalogue.
-   *
-   * Le corps est le seul à savoir ce qu'il montre. La règle et ses chiffres vivent dans
-   * `core/surfaceApproach.ts` ; la largeur en pixels d'un palier vient de la table de
-   * `TextureSystem`, jamais d'une copie. Un corps sans texture de surface (modèle de forme,
-   * couleur pleine) ne répond RIEN, et c'est l'appelant qui garde son plancher par défaut :
-   * sa finesse n'est pas celle d'une image, et ce n'est pas au corps de le savoir.
-   *
-   * On demande la qualité RÉELLEMENT SERVIE au plus près (distance 0), pas la meilleure que
-   * le catalogue déclare : le profil mobile plafonne à 2k et un GPU peut refuser le 8k. La
-   * déclaration aurait laissé un téléphone agrandir quatre fois au-delà de son image
-   * (mesuré le 2026-09-20 : 33,8 pixels par texel à 390 px de large avant cette correction).
+   * Charge le ciel calculé (`skyLayer.ts`, un morceau à part) quand la caméra arrive, EN EXPLO, à
+   * moins de `SKY_LOAD_RADII` rayons d'un corps qui déclare un modèle de diffusion ; jamais au
+   * démarrage. Mesuré le 2026-10-13 : en Éducatif, regarder la Lune le chargeait (elle y est à
+   * moins de 20 rayons terrestres) et recompilait les matériaux de la Terre, ~7 s de thread de
+   * plus sous frein × 6, assez pour faire rougir `e2e/places.spec.ts` trois fois sur un EPYC 7763.
+   * Un échec se rejoue à l'approche suivante.
    */
+  private _maybeLoadSky(cameraWorld: THREE.Vector3): void {
+    const model = this.config.skyScattering;
+    const radiusKm = this.config.realData?.radiusKm;
+    const atmosphere = this.layers.get('atmosphere');
+    // EN EXPLO SEULEMENT (facteur d'échelle 1 = Éducatif) : le planétarium compressé place la
+    // Lune à moins de 20 rayons de la Terre, et le ciel s'y chargeait en regardant la Lune.
+    if (
+      !model ||
+      !radiusKm ||
+      !atmosphere ||
+      this._sky ||
+      this._scaleFactor === 1
+    )
+      return;
+    if (
+      cameraWorld.distanceTo(this.group.getWorldPosition(this._skyScratch)) >
+      this.renderedRadius() * SKY_LOAD_RADII
+    )
+      return;
+    this._sky = 1;
+    void import('./skyLayer').then(
+      (sky) => {
+        sky.attachSky(this, model, radiusKm, atmosphere);
+        this._sky = 2;
+      },
+      (error: unknown) => {
+        this._sky = 0;
+        Logger.warn(error);
+      }
+    );
+  }
+
+  /** Rayon RENDU courant (le morph Éduc↔Explo le fait varier). */
+  renderedRadius(): number {
+    return (
+      (this.group.userData['radius'] as number | undefined) ??
+      this.config.radius * this._scaleFactor
+    );
+  }
+
   /**
-   * Finesse de la texture LIVRÉE de ce corps, en pixels sur 360° de longitude, telle qu'elle
-   * est réellement SERVIE au plus près (le profil mobile plafonne à 2k). 0 s'il n'affiche pas
-   * de surface texturée.
-   *
-   * Le moteur d'imagerie streamée s'en sert pour ne JAMAIS recouvrir la surface d'un niveau
-   * plus grossier qu'elle : mesuré le 2026-09-21 à 1 541 km d'altitude, le niveau choisi
-   * valait 2,67 km/px contre 1,33 pour la texture 8k, et la vue était donc DÉGRADÉE par des
-   * carreaux censés l'améliorer.
+   * Rapport du rayon de l'ellipsoïde RENDU au rayon moyen, dans la direction d'un point monde :
+   * le niveau de la mer sous ce point. Lu par le plancher d'approche et par le ciel calculé.
    */
+  figureRatioToward(worldPoint: THREE.Vector3): number {
+    const local = this._meshGroup.worldToLocal(
+      this._towardScratch.copy(worldPoint)
+    );
+    return this.figure && local.lengthSq() > 0
+      ? figureRadius(this.figure, ...normalized(local))
+      : 1;
+  }
+
   shippedSurfaceWidthPx(): number {
     const served = this.textureSystem.resolveSurfaceQuality(this.name, 0);
     return (served ? TEXTURE_QUALITY_PIXELS[served] : 0) ?? 0;

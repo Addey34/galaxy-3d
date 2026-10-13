@@ -22,6 +22,8 @@ import {
   type SphericalOccluder,
 } from '@/core/eclipse';
 import { LOD_UPDATE_INTERVAL } from '@/core/modelLod';
+import { RENDER_SETTINGS } from '@/config/engine';
+import { ATTACHED_SKIES } from '@/components/celestial/skyApproach';
 import { SQRT_K } from '@/core/ScaleService';
 import type { CameraSystem } from './CameraSystem';
 import type { CelestialBodies } from './SceneSystem';
@@ -438,9 +440,31 @@ export class AnimationSystem {
       : this.camera;
   }
 
+  /**
+   * Sous un ciel de jour, les étoiles s'effacent (`core/atmosphereScattering.ts`) : le champ
+   * procédural ET la Voie lactée du fond. Le corps dont l'air entoure la caméra répond ; hors
+   * de toute atmosphère, rien ne change.
+   */
+  private _fadeStarsUnderDaylight(): void {
+    let visibility = 1;
+    for (const sky of ATTACHED_SKIES)
+      visibility = Math.min(
+        visibility,
+        sky.starVisibilityFrom(this.camera.position)
+      );
+    if (visibility === this._starVisibility) return;
+    this._starVisibility = visibility;
+    this.starfield?.setVisibility(visibility);
+    this.scene.backgroundIntensity =
+      RENDER_SETTINGS.backgroundIntensity * visibility;
+  }
+
+  private _starVisibility = 1;
+
   private _render(): void {
     // Recentre le champ d'étoiles sur la caméra (décor à l'infini, cf. Starfield).
     this.starfield?.followCamera(this.camera.position);
+    this._fadeStarsUnderDaylight();
     // En session XR : rendu direct obligatoire, l'EffectComposer (bloom) n'a pas de chemin
     // stéréo/multiview dans cette version de Three.js. Sinon, le composer prend le relais
     // quand il est actif.
