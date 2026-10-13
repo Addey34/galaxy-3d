@@ -2728,6 +2728,38 @@ au-dessus de l'Everest à 12 km, un ciel plus sombre (l'air est sous la caméra)
 (30,5° N, 96° E, Soleil à 1,3°), une bande orangée vers le Soleil. Ce qui manque encore : la
 diffusion multiple, qui éclaircirait surtout l'horizon, et le voile sur les nuages.
 
+### ETOPO 15″ sur les grands reliefs : des crêtes nettes là où elles se voient (lot 48, pas 8)
+
+Relevée vers l'horizon (pas 5), la descente montrait à 3 km du Mont-Blanc des crêtes rondes et
+molles : ETOPO 2022 à 60″ met un échantillon tous les 1,8 km. ETOPO publie aussi 15″ (463 m), en
+288 tuiles de 15° x 15° (surface et géoïde, ~28 Mo chacune).
+
+- **Pourquoi pas le globe d'un coup.** La règle de l'eau (`scripts/earth-water-level.mjs`) tient
+  le globe en mémoire : 155 millions de cellules à 60″, déjà au bord des tableaux de JavaScript ;
+  à 15″ ce serait 3,7 milliards. Le global demande de la refaire tuile par tuile. Décision de
+  l'utilisateur (2026-10-13) : les grands reliefs d'abord.
+- **Où, sans liste écrite à la main.** `bakeFine` (`scripts/bake-surface-height-tiles.mjs`) mesure
+  sur le socle lu le relief des TERRES (max − min des cellules au-dessus de 0 m, avant conversion en
+  rayons, par quart de degré) dans chaque boîte de niveau `boxLevel`, et cuit au niveau fin les
+  boîtes au-delà de `minReliefMetres` (4 000 m), ENTIÈREMENT : le moteur ne prend une tuile de
+  hauteurs que dans une emprise qui contient la tuile d'imagerie, donc aucune ne manque. Ce seuil
+  sépare les grands reliefs mesurés (Himalaya et Karakoram jusqu'à 7 711 m de relief, Pamir, Tian
+  Shan, Andes, Alaska, Afrique de l'Est, Caucase, Elbourz, Nouvelle-Guinée, volcans du Mexique,
+  Hawaï, Antarctique, les Alpes à 4 105 m) ; un seuil plus bas étendra la couverture. Grille de
+  Sentinel-2 : 70 boîtes de niveau 5 cuites au niveau 7 (1 120 tuiles, 611 m par échantillon) ;
+  grille de GIBS : 81 boîtes de niveau 6 cuites au niveau 8 (1 296 tuiles, 15,8″).
+- **La même conversion que le socle.** Surface et géoïde à 15″ ont le registre du socle (surface au
+  coin, géoïde au centre, mêmes centres, lu par `geoTiffGrid` avec l'emprise ANNONCÉE par le nom de
+  la tuile, refusée sinon) ; rayon = ellipsoïde rendu + géoïde + hauteur. L'eau n'est pas
+  recalculée : là où le masque dit « eau », c'est la valeur du socle, déjà ramenée à son niveau.
+- **Mesuré.** Le sommet de la tuile témoin de l'Everest passe de 7 856 m (60″) à 8 461 m (15″) au
+  -dessus de l'ellipsoïde rendu, à 27,988° N, là où il est ; il reste sous sa hauteur
+  ellipsoïdale (~8 820 m), la cellule de 15″ moyennant 463 m. Tenu par
+  `src/config/surfaceHeights.test.ts`. Vu à 1,5 km au-dessus de Chamonix : arêtes et aiguilles là
+  où le 60″ dessinait des dômes.
+- **Servi** par le service de données de la VM, comme le socle (`assets/height-tiles/earth*/<hachage>/`,
+  1,5 Go pour la grille de Sentinel-2, 733 Mo pour celle de GIBS), téléversé AVANT le manifeste.
+
 ## L'échelle de résolutions d'une texture : jusqu'où on livre, et pourquoi (lot 16)
 
 « Chaque corps a tout ce qu'ont les autres » (règle de parité de l'utilisateur) ne veut **pas**

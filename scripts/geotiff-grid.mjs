@@ -85,7 +85,9 @@ const EPSG_WGS84 = 4326;
  * 89,99167°). Même largeur (21 600), mêmes centres. En « point », le coin est donc à un
  * demi-échantillon vers l'extérieur ; dans les deux cas l'emprise doit faire exactement le globe.
  */
-export function geoTiffGrid(bytes, source) {
+const GLOBE = { west: -180, east: 180, north: 90, south: -90 };
+
+export function geoTiffGrid(bytes, source, expected = GLOBE) {
   const tags = readTiffTags(bytes);
   const one = (tag, name) => {
     const value = tags.get(tag);
@@ -140,18 +142,22 @@ export function geoTiffGrid(bytes, source) {
   const pixelsPerDegree = 1 / sx;
   const eastDeg = westDeg + width * sx;
   const southDeg = northDeg - height * sx;
-  // Règle 2 du cuiseur : une grille globale couvre EXACTEMENT le globe, de −180° à 180° et de 90°
-  // à −90°. Une grille à nœuds (une colonne de plus, qui recouvre l'antiméridien) est refusée : le
-  // cuiseur ne sait pas la lire, et elle tomberait ici plutôt que décalée d'un demi-échantillon.
+  // Règle 2 du cuiseur : une grille couvre EXACTEMENT l'emprise attendue, le globe par défaut (de
+  // −180° à 180° et de 90° à −90°), ou celle qu'annonce le nom d'une tuile régionale (ETOPO 15″ :
+  // 15° x 15°, coin nord-ouest dans le nom). Une grille à nœuds (une colonne de plus) est refusée :
+  // le cuiseur ne sait pas la lire, et elle tomberait ici plutôt que décalée d'un demi-échantillon.
   const off = (a, b) => Math.abs(a - b) > 1e-6;
   if (
-    off(westDeg, -180) ||
-    off(eastDeg, 180) ||
-    off(northDeg, 90) ||
-    off(southDeg, -90)
+    off(westDeg, expected.west) ||
+    off(eastDeg, expected.east) ||
+    off(northDeg, expected.north) ||
+    off(southDeg, expected.south)
   )
     throw new Error(
-      `${source} : emprise ${westDeg}…${eastDeg}° x ${southDeg}…${northDeg}° (${width} x ${height} à ${sx}°), pas le globe`
+      `${source} : emprise ${westDeg}…${eastDeg}° x ${southDeg}…${northDeg}° (${width} x ${height} à ${sx}°), ` +
+        (expected === GLOBE
+          ? 'pas le globe'
+          : `attendu ${expected.west}…${expected.east}° x ${expected.south}…${expected.north}°`)
     );
   const noDataText = tags.get(TAG.noData);
   return {

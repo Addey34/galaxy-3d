@@ -57,6 +57,8 @@ const TARGETS = join(ROOT, 'scripts', 'surface-height-targets.json');
 
 /** Échantillons par côté d'une tuile : 256 intervalles, donc 257 sommets (registre GRILLE). */
 const TILE_SAMPLES = 257;
+/** Finesse de la grille de relief des terres qui choisit où cuire ETOPO 15″ (`bakeFine`). */
+const RELIEF_CELLS_PER_DEGREE = 4;
 /** Un échantillon sur six, dans chaque direction, pour ajuster un ellipsoïde (6,5 M sur Cérès). */
 const FIT_SAMPLE_STEP = 6;
 /** Octets d'en-tête d'une tuile. Doit rester pair : les hauteurs sont des entiers 16 bits. */
@@ -874,6 +876,41 @@ async function loadPdsBase(set, cacheDir) {
 }
 
 /**
+ * Un GeoTIFF flottant d'ETOPO, lu en entier : ses balises (emprise EXACTE attendue, le globe par
+ * défaut) et ses valeurs. Une source à trous est refusée : on ne comble pas.
+ */
+async function readFloatGeoTiff(url, cacheDir, expected) {
+  const name = url.split('/').pop();
+  const bytes = await cachedFile(url, cacheDir);
+  const grid = geoTiffGrid(bytes, name, expected);
+  // `sharp` relit le fichier depuis le disque : garder 466 Mo en double ne sert à rien.
+  const { data, info } = await sharp(join(cacheDir, name), {
+    limitInputPixels: false,
+  })
+    .extractChannel(0)
+    .raw({ depth: 'float' })
+    .toBuffer({ resolveWithObject: true });
+  if (info.width !== grid.width || info.height !== grid.height)
+    throw new Error(
+      `${name} : sharp rend ${info.width} x ${info.height}, les balises ${grid.width} x ${grid.height}`
+    );
+  const values = new Float32Array(
+    data.buffer,
+    data.byteOffset,
+    grid.width * grid.height
+  );
+  if (grid.noData !== undefined) {
+    let holes = 0;
+    for (const value of values) if (value === grid.noData) holes += 1;
+    if (holes > 0)
+      throw new Error(
+        `${name} : ${holes} échantillons sans mesure, refus de combler`
+      );
+  }
+  return { name, grid, values };
+}
+
+/**
  * LE SOCLE D'UN GEOTIFF (lot 48, la Terre) : ETOPO 2022, surface ET géoïde, plus le masque d'eau.
  *
  * ETOPO publie des hauteurs au-dessus du GÉOÏDE EGM2008, en flottants. Le cuiseur ne place que
@@ -896,38 +933,8 @@ async function loadGeoTiffBase(set, cacheDir) {
     throw new Error(
       `${set.id} : quantum ${source.quantumMetres} m, seul 1 m est lu (les échantillons sont en mètres)`
     );
-  const read = async (url) => {
-    const name = url.split('/').pop();
-    const bytes = await cachedFile(url, cacheDir);
-    const grid = geoTiffGrid(bytes, name);
-    // `sharp` relit le fichier depuis le disque : garder 466 Mo en double ne sert à rien.
-    const { data, info } = await sharp(join(cacheDir, name), {
-      limitInputPixels: false,
-    })
-      .extractChannel(0)
-      .raw({ depth: 'float' })
-      .toBuffer({ resolveWithObject: true });
-    if (info.width !== grid.width || info.height !== grid.height)
-      throw new Error(
-        `${name} : sharp rend ${info.width} x ${info.height}, les balises ${grid.width} x ${grid.height}`
-      );
-    const values = new Float32Array(
-      data.buffer,
-      data.byteOffset,
-      grid.width * grid.height
-    );
-    if (grid.noData !== undefined) {
-      let holes = 0;
-      for (const value of values) if (value === grid.noData) holes += 1;
-      if (holes > 0)
-        throw new Error(
-          `${name} : ${holes} échantillons sans mesure, refus de combler`
-        );
-    }
-    return { name, grid, values };
-  };
-  const surface = await read(source.surface);
-  const geoid = await read(source.geoid);
+  const surface = await readFloatGeoTiff(source.surface, cacheDir);
+  const geoid = await readFloatGeoTiff(source.geoid, cacheDir);
   for (const key of [
     'width',
     'height',
@@ -965,6 +972,25 @@ async function loadGeoTiffBase(set, cacheDir) {
         `${body.cells} cellules, niveau ${body.levelMetres} m, fond ${body.deepestMetres} m`
     );
   console.log(`${water.length} étendues ramenées à leur niveau`);
+
+  // LE RELIEF DES TERRES, par cellule d'un quart de degré : où cuire ETOPO 15″ (`bakeFine`). Lu
+  // AVANT la conversion en rayons, sinon l'ellipsoïde (plusieurs km sur quelques degrés) s'y
+  // mêlerait ; sur la terre seule (> 0 m), sinon toute côte compterait la profondeur de la mer.
+  const reliefStep = Math.round(pixelsPerDegree / RELIEF_CELLS_PER_DEGREE);
+  const reliefWidth = 360 * RELIEF_CELLS_PER_DEGREE;
+  const reliefHeight = 180 * RELIEF_CELLS_PER_DEGREE;
+  const landMin = new Float32Array(reliefWidth * reliefHeight).fill(Infinity);
+  const landMax = new Float32Array(reliefWidth * reliefHeight).fill(-Infinity);
+  for (let row = 0; row < height; row += 1) {
+    const r = Math.floor(row / reliefStep) * reliefWidth;
+    for (let column = 0; column < width; column += 1) {
+      const h = surface.values[row * width + column];
+      if (!(h > 0)) continue;
+      const cell = r + Math.floor(column / reliefStep);
+      if (h < landMin[cell]) landMin[cell] = h;
+      if (h > landMax[cell]) landMax[cell] = h;
+    }
+  }
 
   let geoidMin = Number.POSITIVE_INFINITY;
   let geoidMax = Number.NEGATIVE_INFINITY;
@@ -1008,6 +1034,17 @@ async function loadGeoTiffBase(set, cacheDir) {
       // il borne ce qu'une garde peut affirmer sur une tuile sans relire le géoïde.
       minimumMetres: Math.floor(geoidMin * 10) / 10,
       maximumMetres: Math.ceil(geoidMax * 10) / 10,
+    },
+    fine: {
+      landMin,
+      landMax,
+      reliefWidth,
+      waterMask,
+      maskPixelsPerDegree: pixelsPerDegree,
+      maskWidth: width,
+      maskHeight: height,
+      figure,
+      datumKm,
     },
     water: {
       mask: source.water.template.replace(
@@ -1093,7 +1130,14 @@ async function bakeSet(set, { cacheDir, dryRun }) {
 === ${set.id} (${set.body}) ===`);
   const grid = imageryGrid(set.body, set.gridOf);
   const baseLevels = set.base.levels ?? [set.base.level];
-  const { baseLabel, baseDem, samples, water, geoid } = set.base.geotiff
+  const {
+    baseLabel,
+    baseDem,
+    samples,
+    water,
+    geoid,
+    fine: fineContext,
+  } = set.base.geotiff
     ? await loadGeoTiffBase(set, cacheDir)
     : await loadPdsBase(set, cacheDir);
   const poles = {
@@ -1189,6 +1233,193 @@ async function bakeSet(set, { cacheDir, dryRun }) {
     sourcePixelsPerDegree: baseLabel.pixelsPerDegree,
     sourceProductId: baseLabel.productId,
   });
+
+  // ETOPO 15″ SUR LES GRANDS RELIEFS (lot 48, pas 8). À 60″, à 3 km du sol, les crêtes sont rondes
+  // et molles (mesuré au-dessus du Mont-Blanc, pas 5). Le global à 15″ demanderait de refaire la
+  // règle de l'eau tuile par tuile (3,7 milliards de cellules) : on cuit d'abord les BOÎTES du
+  // niveau `boxLevel` dont le relief des terres dépasse `minReliefMetres`, mesuré sur le socle
+  // lu. Chaque boîte est cuite ENTIÈREMENT au niveau fin, donc une tuile d'imagerie qui y tombe
+  // trouve toujours sa tuile de hauteurs (le moteur ne prend qu'une emprise qui la contient).
+  // L'eau n'est pas recalculée : là où le masque dit « eau », c'est la valeur du socle, déjà
+  // ramenée à son niveau, qui est prise.
+  const fine = set.base.geotiff?.fine;
+  if (fine && fineContext) {
+    const ctx = fineContext;
+    const ppd = fine.pixelsPerDegree;
+    const reliefAt = (b) => {
+      let lo = Infinity;
+      let hi = -Infinity;
+      const r0 = Math.max(
+        0,
+        Math.floor((90 - b.north) * RELIEF_CELLS_PER_DEGREE)
+      );
+      const r1 = Math.min(
+        180 * RELIEF_CELLS_PER_DEGREE,
+        Math.ceil((90 - b.south) * RELIEF_CELLS_PER_DEGREE)
+      );
+      const c0 = Math.floor((b.west + 180) * RELIEF_CELLS_PER_DEGREE);
+      const c1 = Math.ceil((b.east + 180) * RELIEF_CELLS_PER_DEGREE);
+      for (let r = r0; r < r1; r += 1)
+        for (let c = c0; c < c1; c += 1) {
+          const cell =
+            r * ctx.reliefWidth + ((c + ctx.reliefWidth) % ctx.reliefWidth);
+          if (ctx.landMin[cell] < lo) lo = ctx.landMin[cell];
+          if (ctx.landMax[cell] > hi) hi = ctx.landMax[cell];
+        }
+      return hi > lo ? hi - lo : 0;
+    };
+    const boxes = tilesForBox(grid, fine.boxLevel, {
+      west: -180,
+      east: 180,
+      north: 90,
+      south: -90,
+    })
+      .map((t) => ({
+        ...t,
+        bounds: tileBounds(grid, t.level, t.row, t.column),
+      }))
+      .map((t) => ({ ...t, relief: reliefAt(t.bounds) }))
+      .filter((t) => t.relief > fine.minReliefMetres);
+    console.log(
+      `ETOPO 15″ : ${boxes.length} boîtes de niveau ${fine.boxLevel} au relief des terres > ` +
+        `${fine.minReliefMetres} m, cuites au niveau ${fine.level}`
+    );
+
+    // Les tuiles sources (15° x 15°, coin nord-ouest dans le nom), gardées tant qu'elles servent.
+    const sourceName = (north, west) =>
+      `${north >= 0 ? 'N' : 'S'}${String(Math.abs(north)).padStart(2, '0')}` +
+      `${west >= 0 ? 'E' : 'W'}${String(Math.abs(west)).padStart(3, '0')}`;
+    const sources = new Map();
+    const source = async (north, west) => {
+      const key = sourceName(north, west);
+      if (!sources.has(key)) {
+        const expected = { west, east: west + 15, north, south: north - 15 };
+        const url = (kind) => fine[kind].replace('{tile}', key);
+        const surface = await readFloatGeoTiff(
+          url('surface'),
+          cacheDir,
+          expected
+        );
+        const geoid = await readFloatGeoTiff(url('geoid'), cacheDir, expected);
+        if (
+          surface.grid.pixelsPerDegree !== ppd ||
+          geoid.grid.pixelsPerDegree !== ppd
+        )
+          throw new Error(
+            `${key} : ${surface.grid.pixelsPerDegree} px/degré, la cible dit ${ppd}`
+          );
+        sources.set(key, { surface: surface.values, geoid: geoid.values });
+      }
+      return sources.get(key);
+    };
+
+    let fineTiles = 0;
+    for (const box of boxes) {
+      const b = box.bounds;
+      // Fenêtre d'échantillons de 15″ couvrant la boîte, avec une marge d'un échantillon pour
+      // l'interpolation bilinéaire. Centres en `ouest + (i + 0,5) / ppd`, comme la source.
+      const west = Math.floor(b.west * ppd - 1) / ppd;
+      const north = Math.ceil(b.north * ppd + 1) / ppd;
+      const columns = Math.round((b.east - b.west) * ppd) + 2;
+      const rows = Math.round((b.north - b.south) * ppd) + 2;
+      const values = new Float32Array(columns * rows);
+      // Les sources de la boîte, chargées d'avance : la boucle par cellule reste synchrone. Une
+      // boîte (moins de 15°) touche au plus deux sources par dimension : ses quatre coins suffisent.
+      const needed = new Map();
+      for (const latitude of [north - 0.5 / ppd, north - (rows - 0.5) / ppd])
+        for (const lon of [west + 0.5 / ppd, west + (columns - 0.5) / ppd]) {
+          const lat = Math.max(-89.999, Math.min(89.999, latitude));
+          const longitude = ((((lon + 180) % 360) + 360) % 360) - 180;
+          const tileNorth = Math.floor(lat / 15) * 15 + 15;
+          const tileWest = Math.floor(longitude / 15) * 15;
+          needed.set(sourceName(tileNorth, tileWest), [tileNorth, tileWest]);
+        }
+      const loaded = new Map();
+      for (const [key, [n, w]] of needed) loaded.set(key, await source(n, w));
+      for (let j = 0; j < rows; j += 1) {
+        const latitude = Math.max(
+          -89.999,
+          Math.min(89.999, north - (j + 0.5) / ppd)
+        );
+        for (let i = 0; i < columns; i += 1) {
+          let longitude = west + (i + 0.5) / ppd;
+          if (longitude >= 180) longitude -= 360;
+          if (longitude < -180) longitude += 360;
+          const maskRow = Math.min(
+            ctx.maskHeight - 1,
+            Math.floor((90 - latitude) * ctx.maskPixelsPerDegree)
+          );
+          const maskColumn = Math.min(
+            ctx.maskWidth - 1,
+            Math.floor((longitude + 180) * ctx.maskPixelsPerDegree)
+          );
+          if (ctx.waterMask[maskRow * ctx.maskWidth + maskColumn]) {
+            values[j * columns + i] = baseDem.elevationAt(latitude, longitude);
+            continue;
+          }
+          const tileNorth = Math.floor(latitude / 15) * 15 + 15;
+          const tileWest = Math.floor(longitude / 15) * 15;
+          const src = loaded.get(sourceName(tileNorth, tileWest));
+          if (!src)
+            throw new Error(
+              `source ${sourceName(tileNorth, tileWest)} non chargée pour la boîte`
+            );
+          const x = Math.min(
+            15 * ppd - 1,
+            Math.floor((longitude - tileWest) * ppd)
+          );
+          const y = Math.min(
+            15 * ppd - 1,
+            Math.floor((tileNorth - latitude) * ppd)
+          );
+          const at = y * 15 * ppd + x;
+          const ellipsoidM =
+            (renderRadiusAt(ctx.figure, latitude, longitude) - ctx.datumKm) *
+            1000;
+          values[j * columns + i] =
+            ellipsoidM + src.geoid[at] + src.surface[at];
+        }
+      }
+      const label = {
+        productId: 'ETOPO_2022_v1_15s',
+        pixelsPerDegree: ppd,
+        westDeg: west,
+        eastDeg: west + columns / ppd,
+        northDeg: north,
+        southDeg: north - rows / ppd,
+        lines: rows,
+        lineSamples: columns,
+        quantumMetres: 1,
+        radiusKm: ctx.datumKm,
+      };
+      const dem = new DemGrid(label, values);
+      for (const tile of tilesForBox(grid, fine.level, b)) {
+        emit(
+          tile.level,
+          tile.row,
+          tile.column,
+          bakeTile(dem, grid, tile.level, tile.row, tile.column, quantum, poles)
+        );
+        fineTiles += 1;
+      }
+      coverage.push({
+        level: fine.level,
+        levels: [fine.level],
+        bounds: b,
+        reliefMetres: Math.round(box.relief),
+        sourcePixelsPerDegree: ppd,
+        sourceProductId: 'ETOPO_2022_v1_15s (surface + géoïde)',
+      });
+      // Au-delà de huit paires gardées (≈ 100 Mo chacune), on libère celles que cette boîte n'a pas
+      // lues : les boîtes voisines, cuites ensuite, sont les plus susceptibles de les reprendre.
+      if (sources.size > 8)
+        for (const key of [...sources.keys()])
+          if (!needed.has(key)) sources.delete(key);
+    }
+    console.log(
+      `ETOPO 15″ : ${fineTiles} tuiles, ${sources.size} sources encore en mémoire`
+    );
+  }
 
   // Aires nommées.
   for (const area of set.areas ?? []) {
