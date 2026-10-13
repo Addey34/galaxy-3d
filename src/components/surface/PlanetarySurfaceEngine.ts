@@ -37,17 +37,16 @@ import type { Figure } from '@/core/ellipsoid';
 import * as THREE from 'three';
 
 import {
-  coverageTileCount,
   groundResolutionKm,
-  levelForGroundResolution,
   oversamplingFactor,
   pyramidWidthPx,
   tileBounds,
   tileIndexAt,
   tileMatrix,
-  tilesCovering,
   type TileIndex,
 } from '@/core/tilePyramid';
+import { selectTiles, type TileView } from '@/core/tileSelection';
+import { geographicToLocalDirection } from '@/core/frames';
 import { tileUrl } from '@/core/tileUrl';
 import { screenPixelsPerKm } from '@/core/surfaceApproach';
 import {
@@ -287,6 +286,15 @@ export class PlanetarySurfaceEngine {
 
   private readonly _cameraLocal = new THREE.Vector3();
   private readonly _bodyWorld = new THREE.Vector3();
+  private readonly _frustum = new THREE.Frustum();
+  private readonly _projScreen = new THREE.Matrix4();
+  private readonly _sphere = new THREE.Sphere();
+  /** Objet vide accroché au groupe en rotation : le repère des carreaux, pour `_tileView`. */
+  private _anchor: THREE.Object3D | null = null;
+  /** Dernier rayon du sol mesuré sous la caméra, en km (l'horizon se compte depuis lui). */
+  private _measuredGroundKm: number | null = null;
+  /** Clés des carreaux voulus à la dernière passe. */
+  private _wanted = new Set<string>();
 
   constructor(options: {
     budget: TileBudget;
@@ -426,6 +434,9 @@ export class PlanetarySurfaceEngine {
   detach(): void {
     const host = this._host;
     host?.setMeasuredGroundRadiusKm?.(null);
+    this._measuredGroundKm = null;
+    this._anchor?.removeFromParent();
+    this._anchor = null;
     this._dropEverything();
     this._heightAbort?.abort();
     this._heightAbort = null;
@@ -476,84 +487,65 @@ export class PlanetarySurfaceEngine {
     }
 
     const kmPerUnit = this._radiusKm / renderedRadius;
-    const altitudeKm = distanceUnits * kmPerUnit - this._radiusKm;
-
-    const pxPerKm = screenPixelsPerKm({
-      altitudeKm,
-      fovDeg: camera.fov,
-      viewportHeightPx: Math.max(1, viewportHeightPx),
-    });
-    // Un pixel d'écran pour un pixel de mosaïque : au-delà on télécharge du détail que
-    // l'écran ne peut pas montrer, en deçà on affiche une image agrandie.
-    const targetKm = pxPerKm > 0 ? 1 / pxPerKm : Number.POSITIVE_INFINITY;
-
     const centre = host.worldPointToGeographic(
       this._cameraLocal.copy(camera.position)
     );
 
-    // Demi-angle au sol réellement cadré, converti en degrés sur le corps. On prend le côté
-    // le plus large du viewport : un écran large voit plus de sol que sa hauteur ne le dit.
-    const halfSpanKm =
-      altitudeKm *
-      Math.tan((camera.fov * Math.PI) / 360) *
-      Math.max(1, camera.aspect);
-    const halfAngleDeg = Math.min(
-      90,
-      ((halfSpanKm / this._radiusKm) * 180) / Math.PI
-    );
+    // Le premier niveau PEINT : jamais sous le minimum de la fiche, et jamais aussi grossier que
+    // la texture livrée. Mesuré le 2026-09-21 à 1 541 km d'altitude sur la Lune : niveau 3
+    // servi, 2,67 km/px, contre 1,33 km/px pour la texture 8k du catalogue. Peindre ces
+    // carreaux dégrade la vue au lieu de l'améliorer ; plus grossiers, ils se subdivisent.
+    let firstDrawableLevel = tileset.minLevel;
+    while (
+      firstDrawableLevel <= tileset.maxLevel &&
+      pyramidWidthPx(firstDrawableLevel, tileset.matrix) <=
+        host.shippedSurfaceWidthPx()
+    )
+      firstDrawableLevel += 1;
 
-    // On ne descend au niveau que l'écran mérite que s'il TIENT dans le budget : mieux vaut
-    // un niveau complet qu'une fraction du suivant, qui laisserait des trous dans le champ.
-    let level = levelForGroundResolution(
-      this._radiusKm,
-      targetKm,
-      { minLevel: tileset.minLevel, maxLevel: tileset.maxLevel },
-      tileset.matrix
+    // UN QUADTREE, plus une fenêtre d'un seul niveau (lot 48, pas 5) : la caméra regarde
+    // l'horizon près du sol, et le sol visible va de quelques kilomètres à quelques centaines.
+    // La règle de subdivision et ce qui l'a décidée vivent dans `core/tileSelection.ts`.
+    const tiles = selectTiles(
+      this._tileView(camera, viewportHeightPx, centre, kmPerUnit),
+      {
+        shape: tileset.matrix,
+        maxLevel: tileset.maxLevel,
+        firstDrawableLevel,
+        maxTiles: this._budget.maxTiles,
+      }
     );
-    // Descendre d'un niveau n'aide que si cela réduit VRAIMENT le compte : sous un certain
-    // angle la fenêtre vaut 5 x 5 à tous les niveaux, et la boucle dégringolait alors jusqu'au
-    // niveau le plus grossier sans rien gagner (mesuré à 390 px : 5,3 km/px au lieu de 83 m/px).
-    let count = coverageTileCount(level, centre, halfAngleDeg, tileset.matrix);
-    while (level > tileset.minLevel && count > this._budget.maxTiles) {
-      const coarser = coverageTileCount(
-        level - 1,
-        centre,
-        halfAngleDeg,
-        tileset.matrix
-      );
-      if (coarser >= count) break;
-      level -= 1;
-      count = coarser;
-    }
-
-    // NE JAMAIS RECOUVRIR LA SURFACE PAR PLUS GROSSIER QU'ELLE. Loin du corps, le budget fait
-    // retomber le niveau sous la finesse de la texture livrée : peindre ces carreaux dégrade
-    // la vue au lieu de l'améliorer. Mesuré le 2026-09-21 à 1 541 km d'altitude sur la Lune :
-    // niveau 3 servi, 2,67 km/px, contre 1,33 km/px pour la texture 8k du catalogue.
-    if (pyramidWidthPx(level, tileset.matrix) <= host.shippedSurfaceWidthPx()) {
+    if (tiles.length === 0) {
       this._clear();
       return;
     }
-
-    const tiles = tilesCovering(
-      level,
-      centre,
-      halfAngleDeg,
-      this._budget.maxTiles,
-      tileset.matrix
+    // Le niveau ANNONCÉ est celui du carreau sous la caméra : c'est là que le plancher lit le
+    // sol. Le carreau du nadir est toujours retenu (cf. `_tileView`), le repli ne sert qu'en
+    // cas de budget épuisé avant lui.
+    const under = tiles.find((index) =>
+      boundsContain(tileBounds(index, tileset.matrix), centre)
     );
+    const level = (under ?? tiles[0]!).level;
 
     const wanted = new Set(tiles.map((index) => this._key(index)));
-    // Les carreaux d'un AUTRE niveau restent en place tant que le nouveau n'est pas complet :
-    // sans cela le sol disparaît à chaque changement de niveau (défaut 2 du docblock). Même
-    // règle pour ceux d'une génération précédente (un autre jour d'une couche datée).
-    const complete = tiles.every((index) => this._tiles.has(this._key(index)));
+    this._wanted = wanted;
+    // Un carreau qui n'est plus voulu reste en place tant qu'il couvre du sol VOULU et pas encore
+    // peint : sans cela le sol disparaît à chaque changement de niveau (défaut 2 du docblock).
+    // Et seulement dans ce cas : le quadtree bouge à chaque image, la couverture n'est presque
+    // jamais « complète », et la règle d'avant (garder tout tant qu'elle ne l'est pas) aurait
+    // laissé les carreaux s'accumuler. Ceux d'une génération précédente (un autre jour d'une
+    // couche datée) restent, eux, jusqu'à ce que la nouvelle soit complète.
+    const missing = tiles.filter((index) => !this._tiles.has(this._key(index)));
+    const complete = missing.length === 0;
     const current = this._prefix();
     for (const [key, tile] of this._tiles) {
+      if (wanted.has(key)) continue;
       const stale = !key.startsWith(current);
-      if (
-        stale ? complete : tile.level === level ? !wanted.has(key) : complete
-      ) {
+      const index = stale ? null : indexOfKey(key);
+      const needed =
+        !complete &&
+        (stale || (index !== null && missing.some((m) => overlaps(m, index))));
+      if (!needed) {
         tile.dispose();
         this._tiles.delete(key);
         this._relief.delete(key);
@@ -595,29 +587,21 @@ export class PlanetarySurfaceEngine {
     const ground = this._heights
       ? this._groundElevationAt(centre, level)
       : null;
-    this._host?.setMeasuredGroundRadiusKm?.(
+    this._measuredGroundKm =
       ground === null || !this._heights
         ? null
-        : this._heights.manifest.datumRadiusKm + ground / 1000
-    );
+        : this._heights.manifest.datumRadiusKm + ground / 1000;
+    this._host?.setMeasuredGroundRadiusKm?.(this._measuredGroundKm);
     // Le bandeau dit ce qui est PEINT : tant qu'aucun carreau du jeu courant ne l'est, ce sont
     // ceux de la génération précédente qu'on voit, et c'est elle qu'il décrit.
-    const count = (prefix: string | null): number => {
-      let n = 0;
-      for (const [key, tile] of this._tiles)
-        if (
-          tile.level === level &&
-          (prefix === null
-            ? !key.startsWith(this._prefix())
-            : key.startsWith(prefix))
-        )
-          n += 1;
-      return n;
-    };
-    let painted = count(this._prefix());
+    // Les carreaux VOULUS déjà peints (plusieurs niveaux depuis le quadtree) ; à défaut, ceux
+    // de la génération précédente encore en place.
+    let painted = 0;
+    for (const key of this._wanted) if (this._tiles.has(key)) painted += 1;
     if (painted === 0 && this._staleTileset) {
       tileset = this._staleTileset;
-      painted = count(null);
+      for (const key of this._tiles.keys())
+        if (!key.startsWith(this._prefix())) painted += 1;
     }
 
     const next: SurfaceImageryState = {
@@ -675,7 +659,7 @@ export class PlanetarySurfaceEngine {
     if (!heights || this._relief.size === 0) return null;
     let best: { level: number; entry: HeightCoverageEntry } | null = null;
     for (const [key, relief] of this._relief) {
-      if (this._tiles.get(key)?.level !== level) continue;
+      if (!this._wanted.has(key) || !this._tiles.has(key)) continue;
       if (!best || relief.level > best.level) best = relief;
     }
     if (!best) return null;
@@ -699,8 +683,115 @@ export class PlanetarySurfaceEngine {
   }
 
   /** Jette carreaux et requêtes, sans détacher le corps ni toucher la finesse déclarée. */
+  /**
+   * Ce que `core/tileSelection.ts` demande d'un carreau, calculé dans la vue de CETTE image.
+   *
+   * Les points d'un carreau sont posés comme ses sommets (`geographicToLocalDirection` au rayon
+   * local des couches) dans le repère de l'ancre, un objet vide accroché au groupe qui porte la
+   * rotation diurne : le même repère que les carreaux eux-mêmes, pôle et phase compris.
+   *
+   *  - **visible** : un point du carreau au-dessus de l'horizon (sol sous la caméra, plus le
+   *    relief le plus haut du système solaire, qui dépasse l'horizon géométrique), ET sa sphère
+   *    englobante dans le champ. Le carreau SOUS la caméra est toujours visible : la caméra
+   *    regarde l'horizon et ne voit plus son nadir, mais c'est là que le plancher lit le sol ;
+   *  - **grossissement** : un texel du niveau, en pixels d'écran, au point du carreau le plus
+   *    proche du nadir.
+   */
+  private _tileView(
+    camera: THREE.PerspectiveCamera,
+    viewportHeightPx: number,
+    centre: { latitudeDeg: number; longitudeDeg: number },
+    kmPerUnit: number
+  ): TileView {
+    const host = this._host!;
+    const tileset = this._tileset!;
+    if (!this._anchor || this._anchor.parent === null) {
+      this._anchor = new THREE.Object3D();
+      host.attachSpinningChild(this._anchor);
+    }
+    this._anchor.updateWorldMatrix(true, false);
+    const toWorld = this._anchor.matrixWorld;
+    camera.updateMatrixWorld();
+    this._frustum.setFromProjectionMatrix(
+      this._projScreen.multiplyMatrices(
+        camera.projectionMatrix,
+        camera.matrixWorldInverse
+      )
+    );
+    const radius = host.layerRadius;
+    const point = (latitudeDeg: number, longitudeDeg: number) =>
+      geographicToLocalDirection(latitudeDeg, longitudeDeg, new THREE.Vector3())
+        .multiplyScalar(radius)
+        .applyMatrix4(toWorld);
+
+    const cameraKm = camera.position.distanceTo(this._bodyWorld) * kmPerUnit;
+    const groundKm = Math.min(
+      this._measuredGroundKm ?? this._radiusKm,
+      cameraKm
+    );
+    const horizon =
+      Math.acos(Math.min(1, groundKm / cameraKm)) +
+      Math.acos(groundKm / (groundKm + HIGHEST_RELIEF_KM));
+    const pxPerKm = (distanceKm: number) =>
+      screenPixelsPerKm({
+        altitudeKm: Math.max(distanceKm, 1e-6),
+        fovDeg: camera.fov,
+        viewportHeightPx: Math.max(1, viewportHeightPx),
+      });
+    const reliefUnits = HIGHEST_RELIEF_KM / kmPerUnit;
+
+    const nearest = (index: TileIndex) => {
+      const b = tileBounds(index, tileset.matrix);
+      // La longitude de la caméra ramenée au tour le plus proche du carreau.
+      const mid = (b.west + b.east) / 2;
+      const lon =
+        centre.longitudeDeg +
+        360 * Math.round((mid - centre.longitudeDeg) / 360);
+      return {
+        bounds: b,
+        latitudeDeg: Math.min(b.north, Math.max(b.south, centre.latitudeDeg)),
+        longitudeDeg: Math.min(b.east, Math.max(b.west, lon)),
+        contains:
+          centre.latitudeDeg >= b.south &&
+          centre.latitudeDeg <= b.north &&
+          lon >= b.west &&
+          lon <= b.east,
+      };
+    };
+
+    return {
+      visible: (index) => {
+        const n = nearest(index);
+        if (n.contains) return true;
+        if (angularDistance(centre, n.latitudeDeg, n.longitudeDeg) > horizon)
+          return false;
+        const b = n.bounds;
+        const middle = point((b.north + b.south) / 2, (b.west + b.east) / 2);
+        let r = 0;
+        for (const la of [b.north, (b.north + b.south) / 2, b.south])
+          for (const lo of [b.west, (b.west + b.east) / 2, b.east])
+            r = Math.max(r, middle.distanceTo(point(la, lo)));
+        this._sphere.center.copy(middle);
+        this._sphere.radius = r + reliefUnits;
+        return this._frustum.intersectsSphere(this._sphere);
+      },
+      pixelsPerTexel: (index) => {
+        const n = nearest(index);
+        const distanceKm =
+          camera.position.distanceTo(point(n.latitudeDeg, n.longitudeDeg)) *
+          kmPerUnit;
+        return (
+          groundResolutionKm(index.level, this._radiusKm, tileset.matrix) *
+          pxPerKm(distanceKm)
+        );
+      },
+    };
+  }
+
   private _clear(): void {
     this._host?.setMeasuredGroundRadiusKm?.(null);
+    this._measuredGroundKm = null;
+    this._wanted = new Set();
     if (this._tiles.size === 0 && this._pending.size === 0 && !this._state)
       return;
     this._dropEverything();
@@ -1076,4 +1167,62 @@ export class PlanetarySurfaceEngine {
 
 function tileKey(index: TileIndex): string {
   return `${index.level}/${index.row}/${index.column}`;
+}
+
+/**
+ * Le plus haut relief du système solaire au-dessus de son sol moyen, en km (Olympus Mons, ~22 km) :
+ * un sommet dépasse l'horizon géométrique, et le carreau qui le porte doit rester candidat. Une
+ * borne commune à tous les corps, plutôt qu'une valeur par corps à entretenir : elle ne coûte que
+ * quelques carreaux GROSSIERS au-delà de l'horizon, qu'aucun grossissement ne fait subdiviser.
+ */
+const HIGHEST_RELIEF_KM = 22;
+
+/** Angle au centre entre la visée et un point géographique, en radians. */
+function angularDistance(
+  from: { latitudeDeg: number; longitudeDeg: number },
+  latitudeDeg: number,
+  longitudeDeg: number
+): number {
+  const rad = Math.PI / 180;
+  const c =
+    Math.sin(from.latitudeDeg * rad) * Math.sin(latitudeDeg * rad) +
+    Math.cos(from.latitudeDeg * rad) *
+      Math.cos(latitudeDeg * rad) *
+      Math.cos((longitudeDeg - from.longitudeDeg) * rad);
+  return Math.acos(Math.min(1, Math.max(-1, c)));
+}
+
+/** L'indice d'un carreau, relu dans sa clé (`génération|niveau/ligne/colonne`). */
+function indexOfKey(key: string): TileIndex | null {
+  const match = /\|(\d+)\/(\d+)\/(\d+)$/.exec(key);
+  if (!match) return null;
+  return {
+    level: Number(match[1]),
+    row: Number(match[2]),
+    column: Number(match[3]),
+  };
+}
+
+/** Deux carreaux de la même grille se recouvrent-ils (l'un contient l'autre, ou égaux) ? */
+function overlaps(a: TileIndex, b: TileIndex): boolean {
+  const [coarse, fine] = a.level <= b.level ? [a, b] : [b, a];
+  const k = 2 ** (fine.level - coarse.level);
+  return (
+    Math.floor(fine.row / k) === coarse.row &&
+    Math.floor(fine.column / k) === coarse.column
+  );
+}
+
+/** Le point géographique tombe-t-il dans ces bornes ? */
+function boundsContain(
+  bounds: { west: number; east: number; south: number; north: number },
+  point: { latitudeDeg: number; longitudeDeg: number }
+): boolean {
+  const lon = ((((point.longitudeDeg + 180) % 360) + 360) % 360) - 180;
+  return (
+    point.latitudeDeg >= bounds.south &&
+    point.latitudeDeg <= bounds.north &&
+    lon >= bounds.west &&
+    lon < bounds.east
+  );
 }

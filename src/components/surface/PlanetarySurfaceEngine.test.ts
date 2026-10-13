@@ -9,6 +9,10 @@ import {
   type TileFetcher,
 } from './PlanetarySurfaceEngine';
 import { pyramidWidthPx, WMTS_EQUIRECTANGULAR_2x1 } from '@/core/tilePyramid';
+import {
+  geographicToLocalDirection,
+  localDirectionToGeographic,
+} from '@/core/frames';
 import type { SurfaceTileset } from '@/config/surfaceTilesets';
 
 /**
@@ -63,8 +67,10 @@ function makeHost(): SurfaceHost & { declared: number[]; shell: number[] } {
     attachSpinningChild: (object) => group.add(object),
     createSurfaceOverlayMaterial: () => new THREE.MeshBasicMaterial(),
     releaseSurfaceOverlayMaterial: () => undefined,
-    // La caméra du test regarde toujours le même point : la couverture est donc stable.
-    worldPointToGeographic: () => ({ latitudeDeg: 0, longitudeDeg: 0 }),
+    // La VRAIE géographie du point, pas une constante : depuis le quadtree (lot 48), le moteur
+    // confronte la visée au champ de la caméra, et une visée posée ailleurs que sous elle ne
+    // verrait aucun carreau.
+    worldPointToGeographic: (point) => localDirectionToGeographic(point),
     setStreamedImageryWidth: (widthPx) => {
       if (declared[declared.length - 1] === widthPx) return false;
       declared.push(widthPx);
@@ -74,12 +80,28 @@ function makeHost(): SurfaceHost & { declared: number[]; shell: number[] } {
   };
 }
 
-/** Caméra à `altitudeKm` au-dessus d'un corps de rayon 1 unité placé à l'origine. */
+/**
+ * Caméra à `altitudeKm` au-dessus du point (0°, 0°) d'un corps de rayon 1 unité placé à
+ * l'origine, qui regarde son centre : la vue verticale d'avant le lot 48.
+ */
 function cameraAt(altitudeKm: number): THREE.PerspectiveCamera {
-  const camera = new THREE.PerspectiveCamera(55, 1.6, 0.1, 1000);
-  camera.position.set(0, 0, 1 + altitudeKm / RADIUS_KM);
+  const camera = new THREE.PerspectiveCamera(55, 1.6, 1e-6, 1000);
+  geographicToLocalDirection(0, 0, camera.position).multiplyScalar(
+    1 + altitudeKm / RADIUS_KM
+  );
+  camera.lookAt(0, 0, 0);
+  camera.updateMatrixWorld();
   return camera;
 }
+
+/**
+ * Les CARREAUX posés : les maillages du groupe. Le moteur y accroche aussi une ancre vide (le
+ * repère où il mesure la visibilité des carreaux, lot 48), qui n'est pas un carreau.
+ */
+const meshes = (host: SurfaceHost): THREE.Mesh[] =>
+  host.group.children.filter(
+    (child): child is THREE.Mesh => child instanceof THREE.Mesh
+  );
 
 /** Une image décodée factice : le moteur n'en lit que la présence. */
 const bitmap = (): ImageBitmap =>
@@ -297,11 +319,9 @@ describe('le relief sous les carreaux', () => {
     const host = makeHost();
     engine.attach(host, TILESET, RADIUS_KM, HEIGHTS);
     engine.update(cameraAt(8), 800);
-    await vi.waitFor(() =>
-      expect(host.group.children.length).toBeGreaterThan(0)
-    );
+    await vi.waitFor(() => expect(meshes(host).length).toBeGreaterThan(0));
 
-    const mesh = host.group.children[0] as THREE.Mesh;
+    const mesh = meshes(host)[0] as THREE.Mesh;
     const position = mesh.geometry.getAttribute('position');
     const vertex = new THREE.Vector3();
     let lowest = Number.POSITIVE_INFINITY;
@@ -367,14 +387,14 @@ describe('le relief sous les carreaux', () => {
     const host = makeHost();
     engine.attach(host, TILESET, RADIUS_KM, HEIGHTS);
     engine.update(cameraAt(8), 800);
-    await vi.waitFor(() => expect(host.group.children.length).toBe(25));
+    await vi.waitFor(() => expect(meshes(host).length).toBe(25));
 
     // La caméra vise 0°, 0° : la frontière des tuiles de socle (niveau 4) tombe exactement
     // entre les colonnes 255 et 256 du niveau 8.
-    const west = host.group.children.find(
+    const west = meshes(host).find(
       (child) => child.name === 'tile_8_128_255'
     ) as THREE.Mesh | undefined;
-    const east = host.group.children.find(
+    const east = meshes(host).find(
       (child) => child.name === 'tile_8_128_256'
     ) as THREE.Mesh | undefined;
     expect(west, 'carreau ouest absent').toBeDefined();
@@ -417,7 +437,7 @@ describe('le relief sous les carreaux', () => {
 
     const camera = cameraAt(8);
     engine.update(camera, 800);
-    await vi.waitFor(() => expect(host.group.children.length).toBe(25));
+    await vi.waitFor(() => expect(meshes(host).length).toBe(25));
     engine.update(camera, 800);
 
     // L'imagerie reste : un relief absent ne fait pas disparaître le sol.
@@ -529,14 +549,14 @@ describe('changement de jour d’une couche datée', () => {
       expect(engine.state?.painted).toBe(25);
     });
     const declared = [...host.declared];
-    const children = host.group.children.length;
+    const children = meshes(host).length;
 
     engine.attach(host, day('2026-10-11'), RADIUS_KM);
     engine.update(camera, 800);
     await vi.waitFor(() => expect(pending).toHaveLength(25));
     expect(urls.slice(25).every((u) => u.includes('/2026-10-11/'))).toBe(true);
     // Rien de neuf n'est peint : on voit encore le 10, et le bandeau le DIT.
-    expect(host.group.children.length).toBe(children);
+    expect(meshes(host).length).toBe(children);
     expect(engine.state?.tilesetId).toBe('essai@2026-10-10');
     expect(host.declared, 'aucun détachement').toEqual(declared);
 
@@ -547,7 +567,7 @@ describe('changement de jour d’une couche datée', () => {
       expect(engine.state?.painted).toBe(25);
     });
     // Le 10 est parti une fois le 11 complet : pas de double couverture.
-    expect(host.group.children.length).toBe(children);
+    expect(meshes(host).length).toBe(children);
     expect(states.every((s) => s !== null)).toBe(true);
     engine.dispose();
   });
@@ -584,16 +604,14 @@ describe('changement de jour d’une couche datée', () => {
       );
       engine.update(camera, 800);
       await vi.waitFor(() => expect(pending.length).toBeGreaterThan(0));
-      const before = host.group.children.length;
+      const before = meshes(host).length;
       pending.splice(0, 3).forEach((done) => done());
       pending.length = 0;
       // Trois carreaux du jour RÉELLEMENT peints avant que le suivant n'arrive.
-      await vi.waitFor(() =>
-        expect(host.group.children.length).toBe(before + 3)
-      );
+      await vi.waitFor(() => expect(meshes(host).length).toBe(before + 3));
     }
     // Les 25 carreaux du 1er, plus les 3 du jour courant : jamais l'accumulation (55 sinon).
-    expect(host.group.children.length).toBe(28);
+    expect(meshes(host).length).toBe(28);
     engine.update(camera, 800);
     expect(engine.state?.tilesetId).toBe('essai@2026-10-11');
     engine.dispose();

@@ -7,6 +7,7 @@
  * distances min/max selon le mode (Éducatif : grandes distances ; Explo : vraie échelle,
  * planètes à quelques millièmes d'unité).
  */
+import { horizonTiltRad } from '@/core/horizonTilt';
 import TWEEN, { Group as TweenGroup } from '@tweenjs/tween.js';
 import * as THREE from 'three';
 import { viewAnglesFromDirection, viewFromDistance } from '@/core/viewAngles';
@@ -425,6 +426,28 @@ export class CameraSystem {
 
     this._updateExploClipPlanes();
     this.controls.update();
+    this._tiltTowardsHorizon();
+  }
+
+  /**
+   * Relève la visée vers l'horizon près du sol (`core/horizonTilt.ts`), APRÈS `controls.update()`
+   * qui vient de la pointer sur le centre : seule l'orientation change, jamais la position, donc
+   * le zoom, le glisser, le plancher et les permaliens restent ceux du suivi. Le rayon est celui
+   * du SOL sous la caméra (relief et ellipsoïde), le même que le plancher.
+   */
+  private _tiltTowardsHorizon(): void {
+    const name = this.currentTarget?.name;
+    if (!name) return;
+    const distance = this.camera.position.distanceTo(this.controls.target);
+    const ground =
+      this._target(name)?.getClearanceRadius?.(
+        this._scaleMode,
+        this.camera.position
+      ) ??
+      (this.currentTarget?.group.userData['radius'] as number | undefined) ??
+      0;
+    const tilt = horizonTiltRad(distance, ground, this.camera.fov);
+    if (tilt > 0) this.camera.rotateX(tilt);
   }
 
   /**
