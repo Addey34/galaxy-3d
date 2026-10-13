@@ -5,6 +5,7 @@
  */
 export const SURFACE_CHOICES = [
   'mosaic',
+  'sentinel-2',
   'daily',
   'shaded-relief',
   'night-lights',

@@ -184,12 +184,18 @@ describe('fiches de jeux de tuiles', () => {
     }
   });
 
-  it('affiche un crédit non vide qui nomme la NASA, comme ses conditions l’exigent', () => {
-    // « NASA should be acknowledged as the source of the material », lu à la source
-    // le 2026-09-21. Un crédit vide rendrait l'usage non conforme, en silence.
+  it('affiche le crédit que les conditions de son fournisseur exigent', () => {
+    // NASA : « NASA should be acknowledged as the source of the material », lu à la source le
+    // 2026-09-21. EOX (lot 48) : son attribution EXACTE, « displayed legibly and in proximity
+    // to the usage », lue le 2026-10-13 ; c'est le crédit du bandeau qui la porte à l'écran.
+    // Un crédit vide ou tronqué rendrait l'usage non conforme, en silence.
     for (const [body, tileset] of ALL_TILESETS) {
       expect(tileset.credit.length, body).toBeGreaterThan(0);
-      expect(tileset.credit, body).toMatch(/NASA/);
+      const provider =
+        TILE_PROVIDERS[tileset.providerId as keyof typeof TILE_PROVIDERS];
+      if (provider.publisher.includes('NASA'))
+        expect(tileset.credit, body).toMatch(/NASA/);
+      else expect(tileset.credit, body).toContain(provider.attribution);
     }
   });
 

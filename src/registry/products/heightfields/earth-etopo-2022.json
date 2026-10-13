@@ -3,7 +3,7 @@
   "id": "earth-etopo-2022",
   "type": "heightfield",
   "body": "earth",
-  "title": "ETOPO 2022 Global Relief Model, ice surface (60 arc-second), with its EGM2008 geoid heights",
+  "title": "ETOPO 2022 Global Relief Model, ice surface (60 arc-second), with its EGM2008 geoid heights, on the NASA GIBS imagery grid",
   "mission": "ETOPO 2022",
   "instrument": "Global relief compilation (topography and bathymetry)",
   "manifest": "assets/height-tiles/earth/manifest.json",

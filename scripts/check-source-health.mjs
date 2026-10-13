@@ -152,6 +152,14 @@ const MARKERS = [
     what: 'capabilities WMTS',
   },
   {
+    // Sentinel-2 cloudless d'EOX (lot 48) : capabilities lues le 2026-10-13 (67 911 o, racine
+    // `<Capabilities`). EOX limite son débit sous forte charge et REDIRIGE alors vers une page :
+    // le marqueur, absent de cette page, la distingue d'une réponse valide.
+    prefix: 'https://tiles.maps.eox.at/wmts/',
+    marker: () => '<Capabilities',
+    what: 'capabilities WMTS',
+  },
+  {
     prefix: 'https://oderest.rsl.wustl.edu/',
     /**
      * Lu le 2026-09-30 sur une réponse RÉELLE : l'ODE rend ses erreurs en HTTP 200, avec

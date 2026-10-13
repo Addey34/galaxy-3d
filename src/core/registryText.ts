@@ -225,6 +225,24 @@ export function englishStrings(
 }
 
 /**
+ * LES FOURNISSEURS CONTACTÉS À L'EXÉCUTION n'ont pas leur texte au catalogue du démarrage (lot 48) :
+ * leur usage et leurs conditions ne sont lus que par `/sources`, au build, sur la copie SSR que le
+ * plugin `deriveRegistryText` ne touche pas. Mesuré : 2,7 Ko par langue au démarrage, dont 968 o
+ * pour le seul fournisseur EOX. Le plugin casse le build si un module client en importe un.
+ */
+export const RUNTIME_SERVICE_ROLES: readonly string[] = [
+  'event-source',
+  'tile-source',
+];
+
+/** Une fiche de fournisseur contacté à l'exécution (rôle déclaré par la fiche). */
+export function isRuntimeServiceFiche(fiche: unknown): boolean {
+  return RUNTIME_SERVICE_ROLES.includes(
+    String((fiche as { role?: unknown } | null)?.role ?? '')
+  );
+}
+
+/**
  * LE TEXTE LONG D'UNE FICHE NE PART PLUS AU DÉMARRAGE (2026-10-04).
  *
  * Mesuré avant d'ajouter 25 corps au catalogue : l'anglais localisé des 58 fiches pesait

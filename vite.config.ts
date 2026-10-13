@@ -13,6 +13,7 @@ import {
   collectTranslations,
   collectDeferredText,
   deferLongText,
+  isRuntimeServiceFiche,
   stripToEnglish,
   CARD_TEXT_LOCALES,
   DERIVED_TEXT_LOCALES,
@@ -106,6 +107,9 @@ function deriveRegistryText() {
    */
   const CARD_PREFIX = 'virtual:registry-text/card-';
   const DEFERRING_DIRS = ['entities', 'spacecraft', 'interstellar'];
+  // Les fournisseurs contactés à l'exécution n'ont pas leur texte au catalogue du démarrage :
+  // `core/registryText.ts::isRuntimeServiceFiche`, seule propriétaire de la règle.
+  const isRuntimeService = isRuntimeServiceFiche;
   const isRegistryJson = (id: string): boolean =>
     /[\\/]src[\\/]registry[\\/].+\.json$/.test(id) &&
     !/order\.json$/.test(id) &&
@@ -176,13 +180,15 @@ function deriveRegistryText() {
         );
       const map: Record<string, string> = {};
       // Les blocs différés n'entrent pas dans la carte du démarrage : ils sont dans `card-`.
-      for (const { dir, fiche } of await readFiches())
+      for (const { dir, fiche } of await readFiches()) {
+        if (dir === 'providers' && isRuntimeService(fiche)) continue;
         collectTranslations(
           fiche,
           locale as DerivedTextLocale,
           map,
           DEFERRING_DIRS.includes(dir)
         );
+      }
       // Un module vide voudrait dire que les fiches n'ont pas été lues : mieux vaut casser le
       // build que servir une langue silencieusement vide.
       if (Object.keys(map).length < 50)
@@ -198,7 +204,15 @@ function deriveRegistryText() {
     ): string | null {
       if (options?.ssr) return null;
       if (!isRegistryJson(id)) return null;
-      const english = stripToEnglish(JSON.parse(code));
+      const parsed = JSON.parse(code);
+      if (
+        /[\\/]registry[\\/]providers[\\/]/.test(id) &&
+        isRuntimeService(parsed)
+      )
+        throw new Error(
+          `${id} : fournisseur contacté à l'exécution importé par le CLIENT ; son texte n'est pas au catalogue du démarrage (cf. RUNTIME_SERVICE_ROLES)`
+        );
+      const english = stripToEnglish(parsed);
       return JSON.stringify(defersText(id) ? deferLongText(english) : english);
     },
   };

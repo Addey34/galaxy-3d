@@ -105,6 +105,11 @@ export interface SurfaceHost {
    * donnée ne porte pas, et elle est rétablie dès que le relief se retire.
    */
   setSurfaceShellScale(factor: number): void;
+  /**
+   * Rayon du sol MESURÉ sous la visée, en km, ou `null` (lot 48) : la caméra en tient compte pour
+   * ne jamais passer sous le relief. Optionnel : un hôte d'essai peut l'ignorer.
+   */
+  setMeasuredGroundRadiusKm?(km: number | null): void;
 }
 
 /** Un jeu de hauteurs prêt à l'emploi : la fiche, et son manifeste déjà lu. */
@@ -420,6 +425,7 @@ export class PlanetarySurfaceEngine {
   /** Vide tout : requêtes en vol, carreaux, état, et la finesse déclarée au corps. */
   detach(): void {
     const host = this._host;
+    host?.setMeasuredGroundRadiusKm?.(null);
     this._dropEverything();
     this._heightAbort?.abort();
     this._heightAbort = null;
@@ -584,6 +590,16 @@ export class PlanetarySurfaceEngine {
     requested: number,
     centre: { latitudeDeg: number; longitudeDeg: number }
   ): void {
+    // Le sol sous la visée, à CHAQUE passe : l'état publié ne change qu'avec le niveau ou les
+    // carreaux, et la caméra a besoin du sol courant pour ne pas descendre dessous.
+    const ground = this._heights
+      ? this._groundElevationAt(centre, level)
+      : null;
+    this._host?.setMeasuredGroundRadiusKm?.(
+      ground === null || !this._heights
+        ? null
+        : this._heights.manifest.datumRadiusKm + ground / 1000
+    );
     // Le bandeau dit ce qui est PEINT : tant qu'aucun carreau du jeu courant ne l'est, ce sont
     // ceux de la génération précédente qu'on voit, et c'est elle qu'il décrit.
     const count = (prefix: string | null): number => {
@@ -669,7 +685,14 @@ export class PlanetarySurfaceEngine {
       title: heights.set.title,
       credit: heights.set.credit,
       level: best.level,
-      groundResolutionM: groundResolutionKm(best.level, this._radiusKm) * 1000,
+      // Sur la grille du RELIEF : celle de Trek par défaut annonçait 1 222 m par échantillon
+      // pour le niveau 6 de GIBS, qui en vaut 1 955 (lot 48).
+      groundResolutionM:
+        groundResolutionKm(
+          best.level,
+          this._radiusKm,
+          heights.manifest.matrix
+        ) * 1000,
       areaName: best.entry.areaName ?? null,
       acquired: heights.set.acquired,
     };
@@ -677,6 +700,7 @@ export class PlanetarySurfaceEngine {
 
   /** Jette carreaux et requêtes, sans détacher le corps ni toucher la finesse déclarée. */
   private _clear(): void {
+    this._host?.setMeasuredGroundRadiusKm?.(null);
     if (this._tiles.size === 0 && this._pending.size === 0 && !this._state)
       return;
     this._dropEverything();

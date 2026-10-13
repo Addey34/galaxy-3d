@@ -317,7 +317,12 @@ export function setupSurfacePanel(api: PublicAPI): () => void {
     }
     // Le relief n'arrive qu'avec son manifeste, chargé une fois par corps.
     if (ensureHeights(name) === 'pending') return;
-    engine.attach(body, tileset, radiusKm, heights.get(name) ?? null);
+    engine.attach(
+      body,
+      tileset,
+      radiusKm,
+      heightsFor?.(heights.get(name) ?? [], tileset.matrix) ?? null
+    );
     engine.update(
       api.cameraSystem.camera,
       api.sceneSystem.renderer.domElement.clientHeight
@@ -329,49 +334,31 @@ export function setupSurfacePanel(api: PublicAPI): () => void {
     typeof import('@/config/surfaceTilesets').createDatedChooser
   > | null = null;
 
-  let heightSets: ReadonlyMap<
-    string,
-    import('@/config/surfaceHeights').SurfaceHeightSet
-  > | null = null;
-  let parseManifest:
-    typeof import('@/config/surfaceHeights').parseHeightManifest | null = null;
-  /** Manifeste de hauteurs par corps : `undefined` = en cours, `null` = pas de relief. */
+  let loadHeights:
+    typeof import('@/config/surfaceHeights').loadBodyHeights | null = null;
+  let heightsFor:
+    typeof import('@/config/surfaceHeights').heightsForGrid | null = null;
+  /** Reliefs lus par corps, un par grille d'imagerie ; absent = pas encore demandé. */
   const heights = new Map<
     string,
-    import('@/components/surface/PlanetarySurfaceEngine').AttachedHeights | null
+    import('@/config/surfaceHeights').LoadedHeights[]
   >();
   const heightsLoading = new Set<string>();
 
   /**
-   * Charge le manifeste de hauteurs d'un corps, une fois.
+   * Charge les manifestes de hauteurs d'un corps, une fois.
    *
-   * Tant qu'il n'a pas répondu, le moteur n'attache rien : sans cela le premier attachement se
+   * Tant qu'ils n'ont pas répondu, le moteur n'attache rien : sans cela le premier attachement se
    * ferait sans relief, le second avec, et le détachement intermédiaire remettrait le plancher
    * d'approche à la finesse de la texture livrée — la caméra remonterait toute seule.
    */
   function ensureHeights(body: string): 'pending' | 'ready' {
     if (heights.has(body)) return 'ready';
-    const set = heightSets?.get(body);
-    if (!set || !parseManifest) {
-      heights.set(body, null);
-      return 'ready';
-    }
+    if (!loadHeights) return 'pending';
     if (heightsLoading.has(body)) return 'pending';
     heightsLoading.add(body);
-    const parse = parseManifest;
-    void fetch(`/${set.manifestPath}`, { credentials: 'omit' })
-      .then((response) => {
-        if (!response.ok) throw new Error(`manifeste ${response.status}`);
-        return response.json();
-      })
-      .then((raw: unknown) => {
-        heights.set(body, { set, manifest: parse(raw) });
-      })
-      .catch((error: unknown) => {
-        // Sans manifeste, les carreaux restent plats : dégradation honnête, jamais d'attente.
-        heights.set(body, null);
-        Logger.warn(`[Surface] relief indisponible : ${String(error)}`);
-      })
+    void loadHeights(body, (message) => Logger.warn(message))
+      .then((loaded) => heights.set(body, loaded))
       .finally(() => heightsLoading.delete(body));
     return 'pending';
   }
@@ -380,7 +367,7 @@ export function setupSurfacePanel(api: PublicAPI): () => void {
     const [
       { PlanetarySurfaceEngine },
       { createDatedChooser },
-      { SURFACE_HEIGHT_SETS, parseHeightManifest },
+      { loadBodyHeights, heightsForGrid },
     ] = await Promise.all([
       import('@/components/surface/PlanetarySurfaceEngine'),
       import('@/config/surfaceTilesets'),
@@ -389,8 +376,8 @@ export function setupSurfacePanel(api: PublicAPI): () => void {
     chooseTileset = createDatedChooser({
       date: () => api.orbitalMechanics.simulationDate,
     });
-    heightSets = SURFACE_HEIGHT_SETS;
-    parseManifest = parseHeightManifest;
+    loadHeights = loadBodyHeights;
+    heightsFor = heightsForGrid;
     engine = new PlanetarySurfaceEngine({
       budget: BOOT_QUALITY_PROFILE.surfaceTiles,
       onState,

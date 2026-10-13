@@ -26,7 +26,7 @@ export const SERVICE_ACCESS: Readonly<
 > = {
   'galaxy-data.adrianguichard.dev': {
     access: 'own-service',
-    why: 'Le modèle GFS de la NOAA, récupéré une fois par cycle, et l’archive ERA5 construite une fois par heure demandée, servis à tous (lot 46).',
+    why: 'Le modèle GFS de la NOAA, récupéré une fois par cycle, l’archive ERA5 construite une fois par heure demandée (lot 46), et le relief de la Terre (lot 48), servis à tous.',
   },
   'gibs.earthdata.nasa.gov': {
     access: 'public-tiles',
@@ -35,6 +35,10 @@ export const SERVICE_ACCESS: Readonly<
   'trek.nasa.gov': {
     access: 'public-tiles',
     why: 'Tuiles WMTS de surface des Treks de la NASA, sans clé, demandées seulement à l’approche.',
+  },
+  'tiles.maps.eox.at': {
+    access: 'public-tiles',
+    why: 'Tuiles WMTS Sentinel-2 d’EOX, sans clé, usage direct permis par EOX, demandées seulement si ce fond est choisi et à l’approche ; débit limité par EOX sous forte charge (lot 48).',
   },
   'earthquake.usgs.gov': {
     access: 'public-tiles',

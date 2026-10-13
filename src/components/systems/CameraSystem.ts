@@ -27,7 +27,7 @@ export interface CameraTarget {
   group: THREE.Group;
   cameraDistance?: CameraDistance;
   getFrameRadius?(mode: 'educ' | 'explo'): number;
-  getClearanceRadius?(mode: 'educ' | 'explo'): number;
+  getClearanceRadius?(mode: 'educ' | 'explo', toward?: THREE.Vector3): number;
   /**
    * Plancher d'approche propre à cette cible, en multiples de son rayon, ou rien si elle
    * n'affiche aucune surface — une ancre d'objet d'instrument, un petit corps sans texture.
@@ -418,6 +418,9 @@ export class CameraSystem {
         this.targetWorldPosition.z + offsetZ
       );
       this._recordSunSide();
+      // Le dégagement dépend de la DIRECTION (ellipsoïde, sol mesuré sous la visée) : on le
+      // repose à chaque image, sinon un pan vers l'équateur ferait passer la caméra sous le sol.
+      this.refreshApproachBounds();
     }
 
     this._updateExploClipPlanes();
@@ -450,9 +453,14 @@ export class CameraSystem {
         .subVectors(this.camera.position, this.controls.target)
         .length();
       // Rayon de DÉGAGEMENT : le near doit rester devant le point le plus saillant, sinon un
-      // corps irrégulier approché de près est coupé en deux sans erreur.
+      // corps irrégulier approché de près est coupé en deux sans erreur. Pris DANS LA
+      // DIRECTION de la caméra (lot 48) : compté depuis la sphère, la moitié de l'altitude
+      // valait 2,5 km sur la Terre pour un sol à 0,93 km, et le sol disparaissait tout entier.
       const r =
-        this._target(this.currentTarget.name)?.getClearanceRadius?.('explo') ??
+        this._target(this.currentTarget.name)?.getClearanceRadius?.(
+          'explo',
+          this.camera.position
+        ) ??
         (this.currentTarget.group.userData['radius'] as number | undefined) ??
         0;
       // Moitié de l'altitude, et rien ne doit le relever : la règle et ce qu'elle a coûté
@@ -588,7 +596,9 @@ export class CameraSystem {
       target?.getFrameRadius?.(this._scaleMode) ??
       (this.currentTarget?.group.userData['radius'] as number | undefined) ??
       1;
-    const clearance = target?.getClearanceRadius?.(this._scaleMode) ?? radius;
+    const clearance =
+      target?.getClearanceRadius?.(this._scaleMode, this.camera.position) ??
+      radius;
     this._applyTargetZoomBounds(
       clearance,
       target?.getApproachFloorFactor?.() ??

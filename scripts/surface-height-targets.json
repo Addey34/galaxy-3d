@@ -118,6 +118,7 @@
     {
       "id": "earth-etopo-2022",
       "body": "earth",
+      "gridOf": "earth-gibs-bluemarble-ng-500m",
       "$comment": "Lot 48. Le relief de la Terre pèse des centaines de mégaoctets : les tuiles vont sur le service de données de la VM (`tiles`), jamais dans Firebase dont le quota de stockage a déjà cassé un déploiement ; le manifeste reste dans public/. Grille : celle de l'imagerie GIBS du corps, LUE dans ses fiches. Niveaux 3 à 6 : l'imagerie GIBS commence au niveau 3, et au niveau 6 une tuile de 4,5° porte 56,9 échantillons par degré, la finesse de la source (60). L'eau : scripts/earth-water-level.mjs.",
       "output": "public/assets/height-tiles/earth",
       "tiles": {
@@ -138,6 +139,42 @@
       },
       "base": {
         "levels": [3, 4, 5, 6],
+        "geotiff": {
+          "surface": "https://www.ngdc.noaa.gov/mgg/global/relief/ETOPO2022/data/60s/60s_surface_elev_gtif/ETOPO_2022_v1_60s_N90W180_surface.tif",
+          "geoid": "https://www.ngdc.noaa.gov/mgg/global/relief/ETOPO2022/data/60s/60s_geoid_gtif/ETOPO_2022_v1_60s_N90W180_geoid.tif",
+          "quantumMetres": 1,
+          "water": {
+            "template": "https://gibs.earthdata.nasa.gov/wmts/epsg4326/best/MODIS_Water_Mask/default/250m/{TileMatrix}/{TileRow}/{TileCol}.png",
+            "level": 5,
+            "columns": 40,
+            "rows": 20,
+            "tileSizePx": 512
+          }
+        }
+      },
+      "areas": []
+    },
+    {
+      "id": "earth-etopo-2022-trek",
+      "body": "earth",
+      "gridOf": "earth-eox-s2cloudless-2024",
+      "$comment": "Lot 48. Le MÊME relief que earth-etopo-2022, cuit sur la grille de Trek que suit l'imagerie Sentinel-2 d'EOX : une tuile d'imagerie ne désigne sa tuile de hauteurs que par son indice, donc un relief par grille. Niveaux 5 et 6 : l'imagerie EOX commence au niveau 5 (plus fin que la texture livrée de 8k), et au niveau 6 une tuile de 2,8125° porte 91 échantillons par degré, au-delà de la source (60).",
+      "output": "public/assets/height-tiles/earth-trek",
+      "tiles": {
+        "origin": "https://galaxy-data.adrianguichard.dev",
+        "output": ".cache/galaxy-data",
+        "$comment": "Les témoins : quelques tuiles copiées DANS le dépôt, pour que les gardes de pnpm verify lisent les vrais octets servis (les autres ne sont que sur la VM). Les deux pôles, et une tuile de niveau 6 sur chaque cas que la règle de l'eau tranche ou laisse.",
+        "witnesses": {
+          "output": "src/config/heightWitnesses",
+          "tiles": [
+            { "level": 5, "row": 0, "column": 0, "why": "pôle nord" },
+            { "level": 5, "row": 31, "column": 0, "why": "pôle sud" },
+            { "level": 6, "row": 15, "column": 32, "why": "lac Supérieur, fond publié ramené au niveau" }
+          ]
+        }
+      },
+      "base": {
+        "levels": [5, 6],
         "geotiff": {
           "surface": "https://www.ngdc.noaa.gov/mgg/global/relief/ETOPO2022/data/60s/60s_surface_elev_gtif/ETOPO_2022_v1_60s_N90W180_surface.tif",
           "geoid": "https://www.ngdc.noaa.gov/mgg/global/relief/ETOPO2022/data/60s/60s_geoid_gtif/ETOPO_2022_v1_60s_N90W180_geoid.tif",

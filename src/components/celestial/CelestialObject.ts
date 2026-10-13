@@ -1271,9 +1271,38 @@ export default class CelestialObject {
    * approcher « à 1,15 rayon » plaçait la caméra à l'intérieur du maillage. Sans modèle, la
    * sphère EST le corps et les deux rayons coïncident.
    */
-  getClearanceRadius(mode: 'educ' | 'explo'): number {
-    return this.getFrameRadius(mode) * (this.config.model?.extentRatio ?? 1);
+  getClearanceRadius(mode: 'educ' | 'explo', toward?: THREE.Vector3): number {
+    const extent = this.config.model?.extentRatio ?? 1;
+    if (!toward) return this.getFrameRadius(mode) * extent;
+    // DANS LA DIRECTION DE LA CAMÉRA (lot 48) : l'ellipsoïde rendu, et le sol MESURÉ par le
+    // relief quand il est posé. Mesuré sur la Terre sous Sentinel-2 : un plancher de 0,9 km
+    // compté depuis la sphère de 6 371 km plaçait la caméra 3,2 km SOUS le sol à 23° de
+    // latitude, l'ellipsoïde y passant 3,8 km plus haut et le relief plus haut encore.
+    const local = this._meshGroup.worldToLocal(
+      this._towardScratch.copy(toward)
+    );
+    const onFigure =
+      this.figure && local.lengthSq() > 0
+        ? figureRadius(this.figure, ...normalized(local))
+        : 1;
+    const radiusKm = this.config.realData?.radiusKm;
+    const ground =
+      this._measuredGroundKm !== null && radiusKm
+        ? this._measuredGroundKm / radiusKm
+        : 0;
+    return this.getFrameRadius(mode) * Math.max(extent, onFigure, ground);
   }
+
+  /**
+   * Rayon du sol MESURÉ sous la visée, en km (moteur de surface, relief posé), ou `null` : le
+   * dégagement retombe alors sur l'ellipsoïde rendu.
+   */
+  setMeasuredGroundRadiusKm(km: number | null): void {
+    this._measuredGroundKm = km !== null && Number.isFinite(km) ? km : null;
+  }
+
+  private _measuredGroundKm: number | null = null;
+  private readonly _towardScratch = new THREE.Vector3();
 
   /**
    * Jusqu'où la caméra peut descendre, en multiples du rayon, d'après la FINESSE de l'image
@@ -1733,4 +1762,10 @@ export default class CelestialObject {
     this._disposeShapeModel();
     Logger.warn(`[CelestialObject] Disposed "${this.name}"`);
   }
+}
+
+/** Les trois composantes d'un vecteur, ramené à une longueur unité. */
+function normalized(v: THREE.Vector3): [number, number, number] {
+  const length = v.length();
+  return [v.x / length, v.y / length, v.z / length];
 }

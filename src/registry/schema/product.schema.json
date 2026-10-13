@@ -461,7 +461,8 @@
           "type": "string",
           "enum": [
             "shaded-relief",
-            "night-lights"
+            "night-lights",
+            "sentinel-2"
           ]
         },
         "mission": {
