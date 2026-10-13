@@ -510,6 +510,42 @@ describe('relief de la Terre : l’eau à son niveau, sur les témoins LIVRÉS (
         Math.abs(body.longitudeDeg - longitude) < 1
     )!.levelMetres;
 
+  it('cuit ETOPO 15″ sur les grands reliefs : l’Everest, plus haut et à sa place (lot 48, pas 8)', () => {
+    const summit = (index: { level: number; row: number; column: number }) =>
+      ellipsoidHeights(index).reduce((top, s) =>
+        s.metres > top.metres ? s : top
+      );
+    const coarse = summit({ level: 6, row: 13, column: 59 });
+    const fine = summit({ level: 8, row: 55, column: 237 });
+    // Mesuré le 2026-10-13, en hauteur au-dessus de l'ellipsoïde rendu : 7 856 m à 60″, 8 461 m à
+    // 15″. La cellule de 15″ moyenne 463 m autour du sommet, donc elle reste SOUS sa hauteur
+    // ellipsoïdale (8 849 m d'altitude, géoïde à −29 m : ~8 820 m) ; une valeur au-dessus dirait
+    // une conversion fausse, et un gain de moins de 400 m une source qui n'est pas la plus fine.
+    expect(fine.metres - coarse.metres).toBeGreaterThan(400);
+    expect(fine.metres).toBeLessThan(8820);
+    expect(fine.metres).toBeGreaterThan(8300);
+    expect(Math.abs(fine.latitude - 27.988)).toBeLessThan(0.01);
+    // La boîte qui le porte est bien déclarée au niveau fin, avec la finesse de la source.
+    const box = (
+      raw as unknown as {
+        coverage: {
+          levels?: number[];
+          bounds?: { west: number; east: number; south: number; north: number };
+          sourcePixelsPerDegree: number;
+        }[];
+      }
+    ).coverage.find(
+      (e) =>
+        e.levels?.includes(8) &&
+        e.bounds &&
+        e.bounds.west <= 86.925 &&
+        86.925 <= e.bounds.east &&
+        e.bounds.south <= 27.988 &&
+        27.988 <= e.bounds.north
+    );
+    expect(box?.sourcePixelsPerDegree).toBe(240);
+  });
+
   it('cuit un relief par grille d’imagerie, et le même relief sur chacune', () => {
     // GIBS (10 × 5 au niveau 3) et EOX (Trek, 2 × 1 au niveau 0) : sur la mauvaise grille, le même
     // indice tombe ailleurs. Les deux jeux viennent de la MÊME source et de la MÊME règle de l'eau.

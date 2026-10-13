@@ -133,7 +133,8 @@
             { "level": 6, "row": 13, "column": 47, "why": "mer Morte, surface plate publiée" },
             { "level": 6, "row": 10, "column": 51, "why": "Caspienne, fond publié ramené au niveau" },
             { "level": 6, "row": 9, "column": 20, "why": "lac Supérieur, fond publié ramené au niveau" },
-            { "level": 6, "row": 13, "column": 59, "why": "Everest" }
+            { "level": 6, "row": 13, "column": 59, "why": "Everest" },
+            { "level": 8, "row": 55, "column": 237, "why": "Everest, ETOPO 15″" }
           ]
         }
       },
@@ -143,6 +144,15 @@
           "surface": "https://www.ngdc.noaa.gov/mgg/global/relief/ETOPO2022/data/60s/60s_surface_elev_gtif/ETOPO_2022_v1_60s_N90W180_surface.tif",
           "geoid": "https://www.ngdc.noaa.gov/mgg/global/relief/ETOPO2022/data/60s/60s_geoid_gtif/ETOPO_2022_v1_60s_N90W180_geoid.tif",
           "quantumMetres": 1,
+          "fine": {
+            "$comment": "Lot 48, pas 8 : ETOPO 15″ sur les boîtes de niveau 6 (4,5°) dont le relief des terres dépasse 4 000 m, cuites au niveau 8 (1,125°, 15,8″ par échantillon, la finesse de la source). Seuil mesuré : il sépare les grands reliefs (Himalaya, Andes, Alaska, Alpes…) du reste ; un seuil plus bas les étendra.",
+            "surface": "https://www.ngdc.noaa.gov/mgg/global/relief/ETOPO2022/data/15s/15s_surface_elev_gtif/ETOPO_2022_v1_15s_{tile}_surface.tif",
+            "geoid": "https://www.ngdc.noaa.gov/mgg/global/relief/ETOPO2022/data/15s/15s_geoid_gtif/ETOPO_2022_v1_15s_{tile}_geoid.tif",
+            "pixelsPerDegree": 240,
+            "boxLevel": 6,
+            "level": 8,
+            "minReliefMetres": 4000
+          },
           "water": {
             "template": "https://gibs.earthdata.nasa.gov/wmts/epsg4326/best/MODIS_Water_Mask/default/250m/{TileMatrix}/{TileRow}/{TileCol}.png",
             "level": 5,
@@ -169,7 +179,8 @@
           "tiles": [
             { "level": 5, "row": 0, "column": 0, "why": "pôle nord" },
             { "level": 5, "row": 31, "column": 0, "why": "pôle sud" },
-            { "level": 6, "row": 15, "column": 32, "why": "lac Supérieur, fond publié ramené au niveau" }
+            { "level": 6, "row": 15, "column": 32, "why": "lac Supérieur, fond publié ramené au niveau" },
+            { "level": 7, "row": 44, "column": 189, "why": "Everest, ETOPO 15″" }
           ]
         }
       },
@@ -179,6 +190,15 @@
           "surface": "https://www.ngdc.noaa.gov/mgg/global/relief/ETOPO2022/data/60s/60s_surface_elev_gtif/ETOPO_2022_v1_60s_N90W180_surface.tif",
           "geoid": "https://www.ngdc.noaa.gov/mgg/global/relief/ETOPO2022/data/60s/60s_geoid_gtif/ETOPO_2022_v1_60s_N90W180_geoid.tif",
           "quantumMetres": 1,
+          "fine": {
+            "$comment": "Lot 48, pas 8 : ETOPO 15″ sur les boîtes de niveau 5 (5,625°) dont le relief des terres dépasse 4 000 m, cuites au niveau 7 (1,40625°, 19,7″ par échantillon). Mesuré : 61 boîtes, 40 tuiles sources de 15°.",
+            "surface": "https://www.ngdc.noaa.gov/mgg/global/relief/ETOPO2022/data/15s/15s_surface_elev_gtif/ETOPO_2022_v1_15s_{tile}_surface.tif",
+            "geoid": "https://www.ngdc.noaa.gov/mgg/global/relief/ETOPO2022/data/15s/15s_geoid_gtif/ETOPO_2022_v1_15s_{tile}_geoid.tif",
+            "pixelsPerDegree": 240,
+            "boxLevel": 5,
+            "level": 7,
+            "minReliefMetres": 4000
+          },
           "water": {
             "template": "https://gibs.earthdata.nasa.gov/wmts/epsg4326/best/MODIS_Water_Mask/default/250m/{TileMatrix}/{TileRow}/{TileCol}.png",
             "level": 5,

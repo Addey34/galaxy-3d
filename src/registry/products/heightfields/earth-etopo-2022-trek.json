@@ -3,7 +3,7 @@
   "id": "earth-etopo-2022-trek",
   "type": "heightfield",
   "body": "earth",
-  "title": "ETOPO 2022 Global Relief Model, ice surface (60 arc-second), with its EGM2008 geoid heights, on the EOX Sentinel-2 imagery grid",
+  "title": "ETOPO 2022 Global Relief Model, ice surface (60 arc-second, 15 arc-second over the strongest relief), with its EGM2008 geoid heights, on the EOX Sentinel-2 imagery grid",
   "mission": "ETOPO 2022",
   "instrument": "Global relief compilation (topography and bathymetry)",
   "manifest": "assets/height-tiles/earth-trek/manifest.json",
@@ -25,6 +25,10 @@
     {
       "rel": "via",
       "href": "https://www.ngdc.noaa.gov/mgg/global/relief/ETOPO2022/data/60s/"
+    },
+    {
+      "rel": "via",
+      "href": "https://www.ngdc.noaa.gov/mgg/global/relief/ETOPO2022/data/15s/"
     }
   ],
   "providers": [
