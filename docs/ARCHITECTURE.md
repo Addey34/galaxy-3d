@@ -2623,6 +2623,48 @@ répertoire haché et la grille des tuiles DEMANDÉES.
 | Déployer les tuiles | `services/galaxy-data/README.md` § « Le relief de la Terre » |
 
 
+### La descente regarde l'horizon : une bascule géométrique, et un quadtree de carreaux (lot 48, pas 5)
+
+La caméra suivie orbite autour du CENTRE du corps et le regarde. De loin c'est le bon cadrage ;
+près du sol la vue reste verticale, et un relief mesuré vu d'aplomb n'est qu'une carte. Deux
+pièces, chacune pure et testée, et un constat mesuré sur captures au-dessus du massif du
+Mont-Blanc (scène du 2026-10-10, Sentinel-2, fenêtre de 1 280 x 800).
+
+- **La bascule** (`core/horizonTilt.ts`, appliquée par `CameraSystem` APRÈS `controls.update()`).
+  L'horizon est tenu à un tiers du champ vertical au-dessus du centre de l'image : relèvement
+  depuis le nadir `90° − acos(R / (R + h)) − fov / 3`, nul tant que le globe ne remplit pas
+  l'image (vers 2,2 rayons d'altitude pour 55°), puis continu jusqu'au sol. Seule l'orientation
+  change : zoom, glisser, plancher d'approche et permaliens restent ceux du suivi. Le rayon est
+  celui du SOL sous la caméra, le même que le plancher. **En Explo seulement** : l'Éducatif est le
+  planétarium compressé, dont l'étiquette de cible suppose le corps au centre, et un retour
+  d'Explo y pose la caméra à 1,15 rayon. Conséquence assumée en Explo : il n'existe plus de vue
+  rapprochée sans ciel (la bascule commence à 3,2 rayons de distance, avant que le globe ne
+  remplisse l'image), et deux scénarios e2e mesurent désormais leur affirmation SOUS l'horizon.
+- **Le quadtree** (`core/tileSelection.ts`). Le moteur peignait un seul niveau dans une fenêtre
+  sous le nadir ; relevée, la caméra voit du sol de quelques kilomètres à quelques centaines, et
+  un niveau unique y est soit trop grossier sous les pieds, soit impayable à l'horizon (mesuré à
+  50 km : un îlot de relief fin sur une plaine floue et plate). On part du niveau de référence de
+  la grille et l'on subdivise, le plus grossi d'abord, tout carreau visible dont un texel couvre
+  plus d'un pixel d'écran au point le plus proche, dans le budget du profil. Les feuilles ne se
+  recouvrent jamais. Un carreau plus grossier que la texture livrée ne se peint pas mais se
+  subdivise. Le moteur répond aux deux questions du module (visible ? grossi de combien ?) dans
+  le repère des carreaux eux-mêmes, par une ancre vide accrochée au groupe en rotation : horizon
+  compté depuis le sol mesuré plus le plus haut relief du système solaire (22 km), puis champ de
+  la caméra. Le carreau SOUS la caméra est toujours retenu, même hors du champ : c'est là que le
+  plancher lit le sol.
+- **Ce qui reste en place pendant un changement** : un carreau qui n'est plus voulu ne reste que
+  s'il couvre du sol voulu et pas encore peint. La règle d'avant (tout garder tant que la
+  couverture n'est pas complète) aurait laissé les carreaux s'accumuler, un quadtree bougeant à
+  chaque image.
+- **Le grossissement d'une couche d'apparence** (`core/dataMagnification.ts`) se lit sur l'axe le
+  PLUS grossi : en vue rasante l'autre est comprimé, et le choisir laissait des blocs de nuages
+  blancs à l'horizon (300 km).
+
+Constat, sans correction dans ce pas : à 3 km du sol, le relief d'ETOPO 2022 à 60″ (~1,2 km par
+échantillon sur la grille de Sentinel-2) donne des crêtes rondes et molles ; c'est la mesure qui
+décidera d'un relief plus fin. Et le ciel reste noir sous la coquille de l'atmosphère, qui n'est
+dessinée que de l'extérieur.
+
 ## L'échelle de résolutions d'une texture : jusqu'où on livre, et pourquoi (lot 16)
 
 « Chaque corps a tout ce qu'ont les autres » (règle de parité de l'utilisateur) ne veut **pas**

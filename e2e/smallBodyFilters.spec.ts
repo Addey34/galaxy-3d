@@ -81,5 +81,39 @@ test('asteroid markers behind a near planet are hidden, not painted on its groun
       timeout: 30_000,
     })
     .toBeGreaterThan(0);
-  expect(Number(await overlay.getAttribute('data-drawn'))).toBe(0);
+  // DEPUIS LE LOT 48 (pas 5) la caméra Explo regarde l'horizon près du sol : le ciel occupe le
+  // haut de l'image, et des astéroïdes y sont légitimement dessinés. Ce qui ne doit JAMAIS
+  // arriver reste le défaut d'origine, un marqueur peint sur le SOL. Mesuré en bandes de 10 % :
+  // ciel en 0 à 20 %, horizon dans la troisième, sol de 30 % au bas (86 à 100 % allumé), et les
+  // marqueurs seulement dans le ciel. On lit donc les deux couches sous 40 %.
+  const below = await page.evaluate(() => {
+    const read = (
+      selector: string,
+      painted: (d: Uint8ClampedArray, i: number) => boolean
+    ) => {
+      const source = document.querySelector(
+        selector
+      ) as HTMLCanvasElement | null;
+      if (!source) return -1;
+      const flat = document.createElement('canvas');
+      flat.width = 160;
+      flat.height = 100;
+      const context = flat.getContext('2d')!;
+      context.drawImage(source, 0, 0, 160, 100);
+      const { data } = context.getImageData(0, 40, 160, 60);
+      let n = 0;
+      for (let i = 0; i < data.length; i += 4) if (painted(data, i)) n += 1;
+      return n / (160 * 60);
+    };
+    return {
+      ground: read(
+        'canvas[data-engine]',
+        (d, i) => d[i]! + d[i + 1]! + d[i + 2]! > 30
+      ),
+      markers: read('#smallbody-overlay', (d, i) => d[i + 3]! > 0),
+    };
+  });
+  // Le témoin : sous 40 % c'est bien Mars (sinon l'absence de marqueurs ne prouverait rien).
+  expect(below.ground, 'le sol de Mars sous l’horizon').toBeGreaterThan(0.95);
+  expect(below.markers, 'des marqueurs peints sur le sol').toBe(0);
 });

@@ -47,15 +47,17 @@ const glslFloat = (value: number): string =>
  * Fin de fragment : multiplie `gl_FragColor.a` par le facteur de grossissement de `map`.
  * Texels parcourus par pixel d'écran, LONGUEUR de chaque dérivée d'écran et non `fwidth`, qui
  * somme les valeurs absolues des deux et surestimait jusqu'au double les texels par pixel (donc
- * sous-estimait le grossissement : à 2 492 km, la couche restait presque entière). Le plus grand
- * des deux, donc le plus PETIT grossissement : au limbe une direction est comprimée, et la couche
- * y reste une image. Sans `map`, rien à mesurer.
+ * sous-estimait le grossissement : à 2 492 km, la couche restait presque entière). Le plus PETIT
+ * des deux, donc le plus GRAND grossissement : en vue rasante, une direction est comprimée et
+ * l'autre étire les texels en blocs, et c'est elle qui montre la grille. Choisir l'autre (ce que
+ * faisait la première version) laissait des blocs blancs à l'horizon, mesurés à 300 km au-dessus
+ * des Alpes une fois la caméra relevée (lot 48, pas 5). Sans `map`, rien à mesurer.
  */
 export const MAGNIFICATION_FADE_GLSL = `
 	#ifdef USE_MAP
 	{
 		vec2 texelCoord = vMapUv * vec2( textureSize( map, 0 ) );
-		float texelsPerPx = max( length( dFdx( texelCoord ) ), length( dFdy( texelCoord ) ) );
+		float texelsPerPx = min( length( dFdx( texelCoord ) ), length( dFdy( texelCoord ) ) );
 		float pxPerTexel = 1.0 / max( texelsPerPx, 1e-6 );
 		gl_FragColor.a *= 1.0 - smoothstep( ${glslFloat(MAGNIFICATION_FADE_START_PX)}, ${glslFloat(MAGNIFICATION_FADE_END_PX)}, pxPerTexel );
 	}

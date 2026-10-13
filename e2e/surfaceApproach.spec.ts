@@ -48,11 +48,15 @@ async function descendToFloor(
   return { radii, clipped: text.includes('COUPE LE CORPS') };
 }
 
-/** Part des pixels non noirs du rendu WebGL : la seule preuve que le corps est là. */
+/**
+ * Part des pixels non noirs du rendu WebGL SOUS une ligne de l'image (fraction de la hauteur,
+ * 0 = tout le cadre) : la seule preuve que le corps est là.
+ */
 async function paintedFraction(
-  page: import('@playwright/test').Page
+  page: import('@playwright/test').Page,
+  fromRowFraction = 0
 ): Promise<number> {
-  return page.evaluate(() => {
+  return page.evaluate((from) => {
     const gl = document.querySelector(
       'canvas[data-engine]'
     ) as HTMLCanvasElement | null;
@@ -65,13 +69,19 @@ async function paintedFraction(
     const context = flat.getContext('2d');
     if (!context) return -1;
     context.drawImage(gl, 0, 0, flat.width, flat.height);
-    const { data } = context.getImageData(0, 0, flat.width, flat.height);
+    const top = Math.round(flat.height * from);
+    const { data } = context.getImageData(
+      0,
+      top,
+      flat.width,
+      flat.height - top
+    );
     let lit = 0;
     for (let i = 0; i < data.length; i += 4) {
       if (data[i]! + data[i + 1]! + data[i + 2]! > 30) lit++;
     }
-    return lit / (flat.width * flat.height);
-  });
+    return lit / (flat.width * (flat.height - top));
+  }, fromRowFraction);
 }
 
 /**
@@ -91,10 +101,13 @@ test('the approach floor follows the resolution of the body it shows', async ({
   expect(moon.radii).toBeLessThan(1.09);
 
   // En bas de la descente, le corps est encore DESSINÉ : le plan proche reste derrière la
-  // surface, et la Lune remplit la vue. Une fraction basse voudrait dire un ciel vide, ce que
-  // donnait le plan proche fautif (mesuré : zéro pixel de Lune à 11,8 km d'altitude).
+  // surface, et la Lune remplit la vue SOUS SON HORIZON. Une fraction basse voudrait dire un ciel
+  // vide, ce que donnait le plan proche fautif (mesuré : zéro pixel de Lune à 11,8 km
+  // d'altitude). Depuis le lot 48 (pas 5) la caméra Explo regarde l'horizon près du sol, et le
+  // haut de l'image est du ciel : mesuré en bandes de 10 %, ciel en 0 à 20 %, horizon dans la
+  // troisième, Lune de 30 % au bas (98 à 100 % allumée). On compte donc sous 40 %.
   expect(moon.clipped, 'le plan proche passe devant la surface').toBe(false);
-  expect(await paintedFraction(page)).toBeGreaterThan(0.8);
+  expect(await paintedFraction(page, 0.4)).toBeGreaterThan(0.95);
 
   expect(errors, `Erreurs page : ${errors.join(' | ')}`).toEqual([]);
 });
