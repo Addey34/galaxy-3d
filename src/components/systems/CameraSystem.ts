@@ -434,10 +434,15 @@ export class CameraSystem {
    * qui vient de la pointer sur le centre : seule l'orientation change, jamais la position, donc
    * le zoom, le glisser, le plancher et les permaliens restent ceux du suivi. Le rayon est celui
    * du SOL sous la caméra (relief et ellipsoïde), le même que le plancher.
+   *
+   * EN EXPLO SEULEMENT : la descente est celle du voyage à vraie échelle. L'Éducatif est le
+   * planétarium compressé, dont l'étiquette de cible suppose le corps au centre, et un retour
+   * d'Explo y pose la caméra à 1,15 rayon (le corps grandit, la caméra ne bouge pas) : relevée,
+   * elle y perdait la cible du champ (mesuré : `e2e/modes.spec.ts`, deux scénarios).
    */
   private _tiltTowardsHorizon(): void {
     const name = this.currentTarget?.name;
-    if (!name) return;
+    if (!name || this._scaleMode !== 'explo') return;
     const distance = this.camera.position.distanceTo(this.controls.target);
     const ground =
       this._target(name)?.getClearanceRadius?.(
