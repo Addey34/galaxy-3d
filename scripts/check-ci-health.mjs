@@ -94,7 +94,7 @@ function ghJson(path) {
  * l'étape du guetteur depuis un dossier de travail : les six journaux devenaient illisibles d'un
  * coup, et seul le job déjà rouge sauvait le verdict.
  */
-function jobLog(jobId) {
+export function jobLog(jobId) {
   try {
     return execFileSync(
       'gh',

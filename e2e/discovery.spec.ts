@@ -275,6 +275,13 @@ test('la Lune : les désignations lettrées comptées à part des noms propres',
 test('Vénus : le satellite signalé dès 1645, puis la recherche qui n’en trouve aucun', async ({
   page,
 }) => {
+  // QUATRE démarrages de l'application (un par date), et c'est le scénario, pas une lenteur.
+  // Mesuré le 2026-10-13 sous frein CPU × 6 : 47,8 + 22,4 + 22,5 + 22,9 s, soit 116 s pour un
+  // budget de test de 120 s. Sur un Xeon 8370C, le plus lent des processeurs que GitHub sert,
+  // il a dépassé trois fois sur trois (run `38425770648`, shard 3/12), Vénus à 5,26 rayons et
+  // AUCUN carreau peint, avec des temps identiques avant et après la PR #198. Le budget suit
+  // donc le nombre de démarrages.
+  test.setTimeout(240_000);
   const index = JSON.parse(
     readFileSync(resolve(ROOT, 'src/config/discoveryIndex.json'), 'utf-8')
   ) as {
