@@ -3,6 +3,7 @@
  * Centralise les conventions de rendu : facteurs d'échelle des couches (surface, nuages,
  * atmosphère, lumières), finesse des sphères/anneaux et matériaux standard réutilisés.
  */
+import { MAGNIFICATION_FADE_GLSL } from '@/core/dataMagnification';
 import { deformToFigure, isSphere, type Figure } from '@/core/ellipsoid';
 import * as THREE from 'three';
 import {
@@ -45,6 +46,31 @@ function chainOnBeforeCompile(
     previous?.(shader, renderer);
     fn(shader, renderer);
   };
+}
+
+const MAGNIFICATION_FADE_KEY = '__magnificationFade';
+
+/** Vrai si ce matériau s'efface quand sa donnée est trop grossie (`core/dataMagnification.ts`). */
+export function hasMagnificationFade(material: THREE.Material): boolean {
+  return material.userData[MAGNIFICATION_FADE_KEY] === true;
+}
+
+/**
+ * Multiplie l'alpha FINAL du fragment par le facteur de grossissement de sa donnée. Posé en toute
+ * fin de shader (`dithering_fragment`), il vaut pour n'importe quel matériau de la famille des
+ * couches d'APPARENCE, quel que soit ce que son propre shader a fait de `diffuseColor.a` : nuages
+ * satellite, pluie, et overlays modèle qui portent un terminateur. Les couches d'instrument
+ * (température, pression, humidité) n'en ont pas : un champ de données colorié ne prétend pas
+ * être une image, et sa grille y est une information.
+ */
+function installMagnificationFade(material: THREE.Material): void {
+  material.userData[MAGNIFICATION_FADE_KEY] = true;
+  chainOnBeforeCompile(material, (shader) => {
+    shader.fragmentShader = shader.fragmentShader.replace(
+      '#include <dithering_fragment>',
+      '#include <dithering_fragment>' + MAGNIFICATION_FADE_GLSL
+    );
+  });
 }
 
 // Chaque couche est légèrement plus grande que la précédente pour éviter le
@@ -263,23 +289,85 @@ const CLOUD_FRACTION_DECODE_GLSL = `
           if ( abs(r-170.0)<1.5 && abs(g-0.0)<1.5 ) return (88.0 + b) / 100.0;
           if ( abs(r-255.0)<1.5 && abs(g-0.0)<1.5 ) return (95.0 + b) / 100.0;
           return 0.0;
+        }
+        // FRACTION NUAGEUSE INTERPOLÉE (2026-10-13). Les cartes MODIS codent la fraction dans une
+        // PALETTE : interpoler deux couleurs en fabriquerait une troisième, d'où le filtrage au
+        // plus proche de ces textures. Lue telle quelle, chaque texel (~20 km) devenait un carré
+        // franc à l'approche. On décode donc les quatre texels voisins, puis on interpole les
+        // FRACTIONS, pondérées par leur alpha (hors fauchée = pas de mesure, pas un zéro).
+        // Retour : x = fraction, y = alpha interpolé (la couverture locale).
+        vec2 bilinearCloudFraction( sampler2D map, vec2 uv, vec2 texel ) {
+          vec2 st = uv / max( texel, vec2( 1e-6 ) ) - 0.5;
+          vec2 cell = floor( st );
+          vec2 f = st - cell;
+          vec2 uv00 = ( cell + 0.5 ) * texel;
+          float v0 = clamp( uv00.y, 0.0, 1.0 );
+          float v1 = clamp( uv00.y + texel.y, 0.0, 1.0 );
+          vec4 c00 = texture2D( map, vec2( uv00.x, v0 ) );
+          vec4 c10 = texture2D( map, vec2( uv00.x + texel.x, v0 ) );
+          vec4 c01 = texture2D( map, vec2( uv00.x, v1 ) );
+          vec4 c11 = texture2D( map, vec2( uv00.x + texel.x, v1 ) );
+          float w = mix( mix( c00.a, c10.a, f.x ), mix( c01.a, c11.a, f.x ), f.y );
+          float n = mix(
+            mix( decodeCloudFraction( c00.rgb ) * c00.a, decodeCloudFraction( c10.rgb ) * c10.a, f.x ),
+            mix( decodeCloudFraction( c01.rgb ) * c01.a, decodeCloudFraction( c11.rgb ) * c11.a, f.x ),
+            f.y
+          );
+          return vec2( n / max( w, 0.001 ), w );
         }`;
 
-const REAL_CLOUDS_GLSL = `
+const REAL_CLOUDS_PARS_GLSL = `
+        // Sous USE_MAP : sans image posée, map n'est pas déclaré et ces fonctions ne
+        // compileraient pas (mesuré : l'erreur de shader du matériau nuages au démarrage).
         #ifdef USE_MAP
-        if ( uRealClouds > 0.5 ) {
-          vec3 rc = diffuseColor.rgb;
+        // L'ALPHA D'UN TEXEL True Color : blanc lumineux et désaturé = nuage, sol coloré rejeté.
+        // Deux seuils bas, sur l'océan (fond sombre) et sur la terre (sable clair ≈ nuage), la
+        // distinction venant du canal g de la carte océan.
+        float extractCloudAlpha( vec2 uv, vec2 gx, vec2 gy ) {
+          vec3 rc = textureGrad( map, uv, gx, gy ).rgb;
           float rcMax = max( rc.r, max( rc.g, rc.b ) );
           float rcMin = min( rc.r, min( rc.g, rc.b ) );
           float rcSat = rcMax > 0.0001 ? ( rcMax - rcMin ) / rcMax : 0.0;
           float rcOcean = uHasOceanMask > 0.5
-            ? texture2D( uCloudOceanMask, vMapUv ).g
+            ? textureGrad( uCloudOceanMask, uv, gx, gy ).g
             : 0.0;
           float rcLumLow = mix( uCloudLumLowLand, uCloudLumLow, rcOcean );
           float rcBright = smoothstep( rcLumLow, uCloudLumHigh, rcMin );
           float rcSatMax = uCloudSatMax + rcOcean * uCloudSatOceanBoost;
           float rcDesat = 1.0 - smoothstep( rcSatMax, rcSatMax + uCloudEdgeSoft, rcSat );
-          float rcAlpha = rcBright * rcDesat;
+          return rcBright * rcDesat;
+        }
+        // EXTRAIRE PUIS INTERPOLER (2026-10-13). L'image True Color vaut ~20 km par texel. Le
+        // filtrage bilinéaire du GPU interpolait les COULEURS, puis les seuils ci-dessus
+        // découpaient ce dégradé : des contours alignés sur la grille des texels, donc des carrés
+        // de ~15 px d'écran à 1 000 km d'altitude, mesurés. Un seuil ne commute pas avec une
+        // moyenne : on extrait l'alpha aux quatre texels voisins et on interpole l'alpha.
+        // Les quatre lectures portent les dérivées de l'UV CONTINU (textureGrad) : celles de la
+        // coordonnée de texel, constante par cellule, sautent à chaque frontière, et le GPU y
+        // choisissait le niveau de mipmap le plus grossier (des points sombres alignés).
+        float bilinearCloudAlpha( vec2 uv ) {
+          vec2 texel = 1.0 / vec2( textureSize( map, 0 ) );
+          vec2 gx = dFdx( uv );
+          vec2 gy = dFdy( uv );
+          vec2 st = uv / texel - 0.5;
+          vec2 cell = floor( st );
+          vec2 f = st - cell;
+          vec2 uv00 = ( cell + 0.5 ) * texel;
+          float v0 = clamp( uv00.y, 0.0, 1.0 );
+          float v1 = clamp( uv00.y + texel.y, 0.0, 1.0 );
+          float a00 = extractCloudAlpha( vec2( uv00.x, v0 ), gx, gy );
+          float a10 = extractCloudAlpha( vec2( uv00.x + texel.x, v0 ), gx, gy );
+          float a01 = extractCloudAlpha( vec2( uv00.x, v1 ), gx, gy );
+          float a11 = extractCloudAlpha( vec2( uv00.x + texel.x, v1 ), gx, gy );
+          return mix( mix( a00, a10, f.x ), mix( a01, a11, f.x ), f.y );
+        }
+        #endif`;
+
+const REAL_CLOUDS_GLSL = `
+        #ifdef USE_MAP
+        if ( uRealClouds > 0.5 ) {
+          // Extraite AUX TEXELS puis interpolée (cf. bilinearCloudAlpha), jamais l'inverse.
+          float rcAlpha = bilinearCloudAlpha( vMapUv );
           // Lissage de la frontière True Color/no-data : la décision de bascule vers MODIS
           // est spatiale, tandis que rcMax reste local pour extraire les nuages optiques.
           vec2 opticalStep = uCloudDayTexelSize * uCloudOpticalBlendRadiusTexels;
@@ -310,17 +398,11 @@ const REAL_CLOUDS_GLSL = `
           );
           // Voisins verticaux clampés en v (même raison qu'opticalNeighbourMax : pas de
           // rabattement sur la bande de bord au pôle → pas d'anneau).
-          // FRACTION locale (précise) : 3 samples verticaux serrés, pondérés par leur alpha.
+          // FRACTION locale : décodée aux quatre texels voisins PUIS interpolée (cf.
+          // bilinearCloudFraction) ; lue au plus proche, elle peignait des carrés de ~20 km.
           float dY = uCloudDayTexelSize.y;
-          vec4 dayTexel1 = texture2D( uCloudDayMap, vec2( vMapUv.x, clamp( vMapUv.y - dY, 0.0, 1.0 ) ) );
-          vec4 dayTexel2 = texture2D( uCloudDayMap, vMapUv );
-          vec4 dayTexel3 = texture2D( uCloudDayMap, vec2( vMapUv.x, clamp( vMapUv.y + dY, 0.0, 1.0 ) ) );
-          float dayFracWeight = dayTexel1.a + dayTexel2.a + dayTexel3.a;
-          float dayFraction = (
-              decodeCloudFraction( dayTexel1.rgb ) * dayTexel1.a
-              + decodeCloudFraction( dayTexel2.rgb ) * dayTexel2.a
-              + decodeCloudFraction( dayTexel3.rgb ) * dayTexel3.a
-            ) / max( dayFracWeight, 0.001 );
+          vec2 dayBilinear = bilinearCloudFraction( uCloudDayMap, vMapUv, uCloudDayTexelSize );
+          float dayFraction = dayBilinear.x;
           // COUVERTURE (frontière douce) : l'alpha MODIS est binaire (1 sur la fauchée, 0 hors) →
           // une frontière NETTE = déchirure. On l'étale sur une LARGE bande verticale (rayon
           // uCloudOpticalBlendRadiusTexels) : la moyenne des alphas sur ~16 texels donne une rampe
@@ -329,30 +411,23 @@ const REAL_CLOUDS_GLSL = `
           float dayCoverRaw = (
               texture2D( uCloudDayMap, vec2( vMapUv.x, clamp( vMapUv.y - dCov * 2.0, 0.0, 1.0 ) ) ).a
               + texture2D( uCloudDayMap, vec2( vMapUv.x, clamp( vMapUv.y - dCov, 0.0, 1.0 ) ) ).a
-              + dayTexel2.a
+              + dayBilinear.y
               + texture2D( uCloudDayMap, vec2( vMapUv.x, clamp( vMapUv.y + dCov, 0.0, 1.0 ) ) ).a
               + texture2D( uCloudDayMap, vec2( vMapUv.x, clamp( vMapUv.y + dCov * 2.0, 0.0, 1.0 ) ) ).a
             ) / 5.0;
           float dayCoverage = dayCoverRaw * uHasCloudDayMap;
           float dayAlpha = pow( clamp( dayFraction, 0.0, 1.0 ), 0.72 )
             * dayCoverage * uCloudDayStrength;
-          // Fraction nuit : 3 samples verticaux serrés, pondérés par leur alpha.
+          // Fraction nuit : même décodage puis interpolation que le jour.
           float nY = uCloudNightTexelSize.y;
-          vec4 nightTexel1 = texture2D( uCloudNightMap, vec2( vMapUv.x, clamp( vMapUv.y - nY, 0.0, 1.0 ) ) );
-          vec4 nightTexel2 = texture2D( uCloudNightMap, vMapUv );
-          vec4 nightTexel3 = texture2D( uCloudNightMap, vec2( vMapUv.x, clamp( vMapUv.y + nY, 0.0, 1.0 ) ) );
-          float nightFracWeight = nightTexel1.a + nightTexel2.a + nightTexel3.a;
-          float nightFraction = (
-              decodeCloudFraction( nightTexel1.rgb ) * nightTexel1.a
-              + decodeCloudFraction( nightTexel2.rgb ) * nightTexel2.a
-              + decodeCloudFraction( nightTexel3.rgb ) * nightTexel3.a
-            ) / max( nightFracWeight, 0.001 );
+          vec2 nightBilinear = bilinearCloudFraction( uCloudNightMap, vMapUv, uCloudNightTexelSize );
+          float nightFraction = nightBilinear.x;
           // Couverture nuit : même frontière douce large que le jour (alpha binaire → rampe).
           float nCov = nY * uCloudCoverageBlendRadiusTexels;
           float nightCoverRaw = (
               texture2D( uCloudNightMap, vec2( vMapUv.x, clamp( vMapUv.y - nCov * 2.0, 0.0, 1.0 ) ) ).a
               + texture2D( uCloudNightMap, vec2( vMapUv.x, clamp( vMapUv.y - nCov, 0.0, 1.0 ) ) ).a
-              + nightTexel2.a
+              + nightBilinear.y
               + texture2D( uCloudNightMap, vec2( vMapUv.x, clamp( vMapUv.y + nCov, 0.0, 1.0 ) ) ).a
               + texture2D( uCloudNightMap, vec2( vMapUv.x, clamp( vMapUv.y + nCov * 2.0, 0.0, 1.0 ) ) ).a
             ) / 5.0;
@@ -406,15 +481,12 @@ const REAL_CLOUDS_GLSL = `
           float modelAlpha = texture2D( uCloudModelMap, vMapUv ).g
             * uHasCloudModelMap * uCloudModelStrength;
           rcAlpha = max( rcAlpha, modelAlpha * ( 1.0 - satelliteCoverage ) );
-          // Anti-aliasing du bord d'extraction : les seuils (luminance/saturation) produisent
-          // un alpha quasi binaire → lisières de nuages en escalier (« griffures ») visibles au
-          // gros plan. On enveloppe l'alpha final d'un fondu large d'UN pixel-écran via fwidth
-          // (dérivée d'écran de rcAlpha). Effet uniquement sur les bords francs ; les zones
-          // pleines (alpha ~0 ou ~1) ont une dérivée nulle → inchangées. N'altère AUCUNE
-          // donnée : la position des nuages reste celle vue par le satellite, seuls les bords
-          // deviennent vaporeux au lieu de crénelés. Indépendant de la calibration océan/pôles.
-          float rcAA = fwidth( rcAlpha );
-          rcAlpha = smoothstep( 0.5 - rcAA, 0.5 + rcAA, rcAlpha );
+          // PAS DE SEUIL SUR L'ALPHA (2026-10-13). Un smoothstep( 0.5 - fwidth, 0.5 + fwidth )
+          // vivait ici pour adoucir les lisières « en escalier » : il les rendait au contraire
+          // FRANCHES. À l'approche, fwidth tend vers 0 et l'alpha devenait binaire (0 ou 1, à
+          // 0,5), d'où des taches blanches opaques à bords nets, mesurées à 4 200 km
+          // d'altitude. L'alpha extrait est déjà continu (rampes de luminance et de saturation,
+          // filtrage bilinéaire de l'image) : on le garde tel quel.
           // Fondu jour/nuit : les nuages sont éclairés par le Soleil comme la surface → côté
           // NUIT profonde ils doivent DISPARAÎTRE (comme la pluie), pas rester une couche grise
           // opaque. On atténue l'alpha selon l'orientation de la normale monde vs Soleil (même
@@ -489,6 +561,7 @@ export function createCloudsMaterial(): THREE.MeshStandardMaterial {
     },
   };
   material.userData[REAL_CLOUDS_UNIFORM_KEY] = realClouds;
+  installMagnificationFade(material);
   chainOnBeforeCompile(material, (shader) => {
     shader.uniforms['uRealClouds'] = realClouds.enabled;
     shader.uniforms['uCloudLumLow'] = realClouds.lumLow;
@@ -528,13 +601,17 @@ export function createCloudsMaterial(): THREE.MeshStandardMaterial {
           CLOUD_FRACTION_DECODE_GLSL
       )
       .replace(
+        '#include <map_pars_fragment>',
+        '#include <map_pars_fragment>' + REAL_CLOUDS_PARS_GLSL
+      )
+      .replace(
         '#include <map_fragment>',
         '#include <map_fragment>' + REAL_CLOUDS_GLSL
       );
   });
   const previousCacheKey = material.customProgramCacheKey?.bind(material);
   material.customProgramCacheKey = () =>
-    `${previousCacheKey ? previousCacheKey() : ''}-realclouds-covgate3`;
+    `${previousCacheKey ? previousCacheKey() : ''}-realclouds-extract-then-interpolate`;
   return material;
 }
 const THERMAL_UNIFORM_KEY = '__thermalUniforms';
@@ -671,7 +748,8 @@ export function createColoredOverlayMaterial(
         }`
       );
   });
-  material.customProgramCacheKey = () => 'overlay-terminator-v1';
+  installMagnificationFade(material);
+  material.customProgramCacheKey = () => 'overlay-terminator-v2-magnification';
   return material;
 }
 const PRECIP_UNIFORM_KEY = '__precipUniforms';
@@ -821,7 +899,8 @@ export function createPrecipMaterial(): THREE.MeshBasicMaterial {
         '#include <map_fragment>' + PRECIP_REMAP_GLSL
       );
   });
-  material.customProgramCacheKey = () => 'precip-remap-v5-sharedterm';
+  installMagnificationFade(material);
+  material.customProgramCacheKey = () => 'precip-remap-v6-magnification';
 
   return material;
 }
