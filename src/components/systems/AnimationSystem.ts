@@ -23,6 +23,7 @@ import {
 } from '@/core/eclipse';
 import { LOD_UPDATE_INTERVAL } from '@/core/modelLod';
 import { RENDER_SETTINGS } from '@/config/engine';
+import { ATTACHED_SKIES } from '@/components/celestial/skyApproach';
 import { SQRT_K } from '@/core/ScaleService';
 import type { CameraSystem } from './CameraSystem';
 import type { CelestialBodies } from './SceneSystem';
@@ -446,10 +447,10 @@ export class AnimationSystem {
    */
   private _fadeStarsUnderDaylight(): void {
     let visibility = 1;
-    for (const body of Object.values(this.celestialBodies ?? {}))
+    for (const sky of ATTACHED_SKIES)
       visibility = Math.min(
         visibility,
-        body.starVisibilityFrom(this.camera.position)
+        sky.starVisibilityFrom(this.camera.position)
       );
     if (visibility === this._starVisibility) return;
     this._starVisibility = visibility;

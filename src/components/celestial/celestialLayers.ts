@@ -3,8 +3,6 @@
  * lumières nocturnes · anneau). Extrait de CelestialObject : ajouter un type de couche se
  * fait ici, pas dans la classe qui n'orchestre que le cycle de vie (tilt, rotation, LOD).
  */
-import { skyScattering } from '@/core/atmosphereScattering';
-import { createSkyMaterial } from '@/shaders/SkyScatteringShader';
 import { bodyFigure } from '@/config/bodyFigure';
 import type { Figure } from '@/core/ellipsoid';
 import * as THREE from 'three';
@@ -207,22 +205,20 @@ function createAtmosphereLayer(
 ): THREE.Mesh {
   const settings = SHADER_SETTINGS.atmosphere;
   const color = config.atmosphereColor ?? settings.defaultColor;
-  // Un modèle de diffusion publié déclaré par la fiche : un ciel calculé, vu de l'orbite comme
-  // du sol (`shaders/SkyScatteringShader.ts`). Sinon, le halo de Fresnel d'avant.
-  const material = config.skyScattering
-    ? createSkyMaterial(skyScattering(config.skyScattering))
-    : new THREE.ShaderMaterial({
-        vertexShader: AtmosphereShader.vertexShader,
-        fragmentShader: AtmosphereShader.fragmentShader,
-        uniforms: AtmosphereShader.createUniforms(color, settings),
-        transparent: true,
-        blending: THREE.AdditiveBlending,
-        // BackSide : on ne voit que la face arrière de la sphère → un anneau de halo
-        // au limbe. depthWrite off (couche additive), depthTest on pour être occulté
-        // par les corps devant.
-        side: THREE.BackSide,
-        depthWrite: false,
-      });
+  // Le halo de Fresnel pour tous. Un corps qui déclare un modèle de diffusion (`skyScattering`)
+  // le voit remplacé par un ciel calculé à l'approche (`skyLayer.ts`), jamais au démarrage.
+  const material = new THREE.ShaderMaterial({
+    vertexShader: AtmosphereShader.vertexShader,
+    fragmentShader: AtmosphereShader.fragmentShader,
+    uniforms: AtmosphereShader.createUniforms(color, settings),
+    transparent: true,
+    blending: THREE.AdditiveBlending,
+    // BackSide : on ne voit que la face arrière de la sphère → un anneau de halo
+    // au limbe. depthWrite off (couche additive), depthTest on pour être occulté
+    // par les corps devant.
+    side: THREE.BackSide,
+    depthWrite: false,
+  });
 
   const mesh = new THREE.Mesh(
     createSphereGeometry(

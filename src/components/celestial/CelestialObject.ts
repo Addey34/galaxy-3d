@@ -10,14 +10,7 @@
  * Gère aussi le LOD des textures (résolution selon la distance caméra) et le passage
  * Éducatif ↔ Explo (taille de base vs vraie taille physique via radiusKm).
  */
-import {
-  dayZenithLuminance,
-  skyScattering,
-  starVisibility,
-  zenithSkyLuminance,
-  type SkyScattering,
-} from '@/core/atmosphereScattering';
-import { getSky } from '@/shaders/SkyScatteringShader';
+import { SKY_LOAD_RADII } from './skyApproach';
 import * as THREE from 'three';
 import {
   buildLayers,
@@ -244,7 +237,6 @@ export default class CelestialObject {
 
     this.layers = buildLayers(config, name);
     this.layers.forEach((mesh) => this._meshGroup.add(mesh));
-    this._bindSky();
     const surface = this.layers.get('surface');
     if (surface && !Array.isArray(surface.material)) {
       this._cloudShadow = getCloudShadowUniforms(surface.material);
@@ -1022,7 +1014,8 @@ export default class CelestialObject {
     // Le reste de cette méthode (uniformes de shader) n'a, lui, aucun effet cumulatif : il reste
     // légitimement derrière le test de visibilité.
     this._advanceSpin(delta);
-    if (sunWorldPosition) this._sunWorld.copy(sunWorldPosition);
+    if (sunWorldPosition) this.sunWorld.copy(sunWorldPosition);
+    if (_cameraPosition) this._maybeLoadSky(_cameraPosition);
     if (!visible) return;
 
     const lights = this.layers.get('lights');
@@ -1053,7 +1046,7 @@ export default class CelestialObject {
       sunWorldPosition
     ) {
       // Le ciel calculé (`skyScattering`) n'a pas cet uniform : il lit le Soleil juste avant son
-      // rendu, dans le repère de la vue (`_bindSky`).
+      // rendu, dans le repère de la vue (`skyLayer.ts`).
       const uniforms = atmosphere.material.uniforms as unknown as {
         sunPosition?: THREE.IUniform<THREE.Vector3 | null>;
       };
@@ -1291,13 +1284,7 @@ export default class CelestialObject {
     // relief quand il est posé. Mesuré sur la Terre sous Sentinel-2 : un plancher de 0,9 km
     // compté depuis la sphère de 6 371 km plaçait la caméra 3,2 km SOUS le sol à 23° de
     // latitude, l'ellipsoïde y passant 3,8 km plus haut et le relief plus haut encore.
-    const local = this._meshGroup.worldToLocal(
-      this._towardScratch.copy(toward)
-    );
-    const onFigure =
-      this.figure && local.lengthSq() > 0
-        ? figureRadius(this.figure, ...normalized(local))
-        : 1;
+    const onFigure = this.figureRatioToward(toward);
     const radiusKm = this.config.realData?.radiusKm;
     const ground =
       this._measuredGroundKm !== null && radiusKm
@@ -1316,119 +1303,61 @@ export default class CelestialObject {
 
   private _measuredGroundKm: number | null = null;
   private readonly _towardScratch = new THREE.Vector3();
-  private readonly _sunWorld = new THREE.Vector3();
-  private readonly _skyCentre = new THREE.Vector3();
-  private readonly _skyLocal = new THREE.Vector3();
+  /** Position monde du Soleil, la dernière reçue par `update` (le ciel calculé la lit). */
+  readonly sunWorld = new THREE.Vector3();
+  /** Ciel calculé : 0 absent, 1 en chargement, 2 posé (`skyLayer.ts`). */
+  private _sky = 0;
+  private readonly _skyScratch = new THREE.Vector3();
 
   /**
-   * Le ciel calculé (`shaders/SkyScatteringShader.ts`) reçoit sa géométrie JUSTE AVANT son rendu,
-   * de la caméra qui le dessine (celle d'une session XR comprise) : le centre du corps et la
-   * direction du Soleil dans le repère de la VUE, calculés ici en double précision, l'échelle en
-   * km, et le niveau de la mer SOUS la caméra (l'ellipsoïde dans sa direction, pas la sphère
-   * moyenne, et pas les montagnes : au-dessus d'un plateau l'air est vraiment plus mince).
+   * Charge le ciel calculé (`skyLayer.ts`, un morceau à part) quand la caméra arrive à moins de
+   * `SKY_LOAD_RADII` rayons d'un corps qui déclare un modèle de diffusion ; jamais au démarrage.
+   * Un échec se rejoue à l'approche suivante.
    */
-  /**
-   * Part des étoiles visible depuis cette caméra à travers l'air de ce corps (1 sans ciel
-   * calculé, ou hors de son atmosphère) : la luminance du ciel au zénith de la caméra, par le
-   * miroir JS du shader, rapportée au zénith de jour du même modèle.
-   */
-  starVisibilityFrom(cameraWorld: THREE.Vector3): number {
-    const mesh = this.layers.get('atmosphere');
-    if (!mesh || Array.isArray(mesh.material)) return 1;
-    const sky = getSky(mesh.material);
+  private _maybeLoadSky(cameraWorld: THREE.Vector3): void {
+    const model = this.config.skyScattering;
     const radiusKm = this.config.realData?.radiusKm;
-    if (!sky || !radiusKm || !this._skyModel) return 1;
-    this.group.getWorldPosition(this._skyCentre);
-    const rendered =
+    const atmosphere = this.layers.get('atmosphere');
+    if (!model || !radiusKm || !atmosphere || this._sky) return;
+    if (
+      cameraWorld.distanceTo(this.group.getWorldPosition(this._skyScratch)) >
+      this.renderedRadius() * SKY_LOAD_RADII
+    )
+      return;
+    this._sky = 1;
+    void import('./skyLayer').then(
+      (sky) => {
+        sky.attachSky(this, model, radiusKm, atmosphere);
+        this._sky = 2;
+      },
+      (error: unknown) => {
+        this._sky = 0;
+        Logger.warn('[Sky]', error);
+      }
+    );
+  }
+
+  /** Rayon RENDU courant (le morph Éduc↔Explo le fait varier). */
+  renderedRadius(): number {
+    return (
       (this.group.userData['radius'] as number | undefined) ??
-      this.config.radius * this._scaleFactor;
-    const kmPerUnit = radiusKm / rendered;
-    const up = this._skyLocal.subVectors(cameraWorld, this._skyCentre);
-    const cameraKm = up.length() * kmPerUnit;
-    if (cameraKm <= 0) return 1;
-    up.normalize();
+      this.config.radius * this._scaleFactor
+    );
+  }
+
+  /**
+   * Rapport du rayon de l'ellipsoïde RENDU au rayon moyen, dans la direction d'un point monde :
+   * le niveau de la mer sous ce point. Lu par le plancher d'approche et par le ciel calculé.
+   */
+  figureRatioToward(worldPoint: THREE.Vector3): number {
     const local = this._meshGroup.worldToLocal(
-      this._towardScratch.copy(cameraWorld)
+      this._towardScratch.copy(worldPoint)
     );
-    const onFigure =
-      this.figure && local.lengthSq() > 0
-        ? figureRadius(this.figure, ...normalized(local))
-        : 1;
-    const groundKm = radiusKm * onFigure;
-    if (cameraKm >= groundKm + sky.thicknessKm) return 1;
-    const sunCos = this._sunDirScratch
-      .subVectors(this._sunWorld, this._skyCentre)
-      .normalize()
-      .dot(up);
-    const intensity = LIGHTING_SETTINGS.sun.intensity;
-    return starVisibility(
-      zenithSkyLuminance(this._skyModel, groundKm, cameraKm, sunCos, intensity),
-      dayZenithLuminance(this._skyModel, intensity)
-    );
+    return this.figure && local.lengthSq() > 0
+      ? figureRadius(this.figure, ...normalized(local))
+      : 1;
   }
 
-  private readonly _sunDirScratch = new THREE.Vector3();
-  private _skyModel: SkyScattering | null = null;
-
-  private _bindSky(): void {
-    const mesh = this.layers.get('atmosphere');
-    if (!mesh || Array.isArray(mesh.material)) return;
-    const sky = getSky(mesh.material);
-    const radiusKm = this.config.realData?.radiusKm;
-    if (!sky || !radiusKm || !this.config.skyScattering) return;
-    this._skyModel = skyScattering(this.config.skyScattering);
-    mesh.onBeforeRender = (_renderer, _scene, camera) => {
-      const u = sky.uniforms;
-      this.group.getWorldPosition(this._skyCentre);
-      const rendered =
-        (this.group.userData['radius'] as number | undefined) ??
-        this.config.radius * this._scaleFactor;
-      u.uKmPerUnit.value = radiusKm / rendered;
-      const local = this._meshGroup.worldToLocal(
-        this._skyLocal.copy(camera.position)
-      );
-      const onFigure =
-        this.figure && local.lengthSq() > 0
-          ? figureRadius(this.figure, ...normalized(local))
-          : 1;
-      u.uGroundKm.value = radiusKm * onFigure;
-      u.uTopKm.value = u.uGroundKm.value + sky.thicknessKm;
-      u.uSunDirView.value
-        .subVectors(this._sunWorld, this._skyCentre)
-        .normalize()
-        .transformDirection(camera.matrixWorldInverse);
-      u.uCenterView.value
-        .copy(this._skyCentre)
-        .applyMatrix4(camera.matrixWorldInverse);
-      u.uSunIntensity.value = LIGHTING_SETTINGS.sun.intensity;
-    };
-  }
-
-  /**
-   * Jusqu'où la caméra peut descendre, en multiples du rayon, d'après la FINESSE de l'image
-   * que ce corps affiche — et non d'après une constante unique pour tout le catalogue.
-   *
-   * Le corps est le seul à savoir ce qu'il montre. La règle et ses chiffres vivent dans
-   * `core/surfaceApproach.ts` ; la largeur en pixels d'un palier vient de la table de
-   * `TextureSystem`, jamais d'une copie. Un corps sans texture de surface (modèle de forme,
-   * couleur pleine) ne répond RIEN, et c'est l'appelant qui garde son plancher par défaut :
-   * sa finesse n'est pas celle d'une image, et ce n'est pas au corps de le savoir.
-   *
-   * On demande la qualité RÉELLEMENT SERVIE au plus près (distance 0), pas la meilleure que
-   * le catalogue déclare : le profil mobile plafonne à 2k et un GPU peut refuser le 8k. La
-   * déclaration aurait laissé un téléphone agrandir quatre fois au-delà de son image
-   * (mesuré le 2026-09-20 : 33,8 pixels par texel à 390 px de large avant cette correction).
-   */
-  /**
-   * Finesse de la texture LIVRÉE de ce corps, en pixels sur 360° de longitude, telle qu'elle
-   * est réellement SERVIE au plus près (le profil mobile plafonne à 2k). 0 s'il n'affiche pas
-   * de surface texturée.
-   *
-   * Le moteur d'imagerie streamée s'en sert pour ne JAMAIS recouvrir la surface d'un niveau
-   * plus grossier qu'elle : mesuré le 2026-09-21 à 1 541 km d'altitude, le niveau choisi
-   * valait 2,67 km/px contre 1,33 pour la texture 8k, et la vue était donc DÉGRADÉE par des
-   * carreaux censés l'améliorer.
-   */
   shippedSurfaceWidthPx(): number {
     const served = this.textureSystem.resolveSurfaceQuality(this.name, 0);
     return (served ? TEXTURE_QUALITY_PIXELS[served] : 0) ?? 0;

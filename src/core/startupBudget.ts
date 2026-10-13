@@ -482,6 +482,11 @@ export const NON_BOOT_CHUNKS: readonly BootDynamicChunk[] = [
       "l'index des instruments du registre de contexte du PDS (lot 42) n'est lu que par le bloc « Instruments » de la fiche d'une SONDE, chargé à son ouverture (`config/instruments`). Les listes elles-mêmes ne sont pas dans le bundle : elles vivent en actifs servis à l'ouverture d'une fiche, comme les missions du lot 40 et les noms de surface du lot 37.",
   },
   {
+    chunk: 'skyLayer',
+    reason:
+      "le ciel calculé (lot 48, pas 6 : shader de diffusion simple, coefficients du modèle de Bruneton, miroir JS des étoiles) n'est chargé qu'à moins de 20 rayons d'un corps qui déclare un modèle (`components/celestial/skyApproach.ts`) ; de loin, le halo de Fresnel suffit. Au démarrage il dépassait le plafond de 7 332 octets (mesuré le 2026-10-13).",
+  },
+  {
     chunk: 'PlanetarySurfaceEngine',
     reason:
       "l'imagerie de surface n'est demandée qu'à l'approche d'un corps qui déclare un jeu de tuiles, jamais au démarrage ni au-dessus de 6 rayons apparents (lot 9, phase 9C).",
