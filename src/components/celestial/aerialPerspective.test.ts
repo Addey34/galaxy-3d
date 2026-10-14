@@ -4,6 +4,7 @@ import {
   addAerialPerspective,
   AERIAL_FRAGMENT_APPLY,
   AERIAL_VERTEX_MAIN,
+  AERIAL_VERTEX_MAIN_BELOW,
   hasAerialPerspective,
 } from './aerialPerspective';
 import { attachSky } from './skyLayer';
@@ -72,7 +73,7 @@ describe('the sky veils the ground it is attached to', () => {
       new THREE.MeshStandardMaterial()
     );
     tile.name = 'tile_5_3_7';
-    const clouds = new THREE.Mesh(
+    const clouds = new THREE.Mesh<THREE.BufferGeometry, THREE.Material>(
       new THREE.SphereGeometry(1.01),
       new THREE.MeshStandardMaterial()
     );
@@ -92,13 +93,41 @@ describe('the sky veils the ground it is attached to', () => {
 
     expect(hasAerialPerspective(surface.material)).toBe(true);
     expect(hasAerialPerspective(tile.material)).toBe(true);
-    // Les nuages ne sont pas du sol : ils ont leur propre physique.
+    // Les nuages : leur matériau COURANT est voilé avant chaque rendu, y compris celui qui le
+    // remplace ensuite (la couche du modèle bascule le maillage sur son propre matériau).
+    const render = () =>
+      clouds.onBeforeRender(
+        {} as THREE.WebGLRenderer,
+        new THREE.Scene(),
+        new THREE.PerspectiveCamera(),
+        clouds.geometry,
+        clouds.material,
+        new THREE.Group()
+      );
+    render();
+    expect(hasAerialPerspective(clouds.material)).toBe(true);
+    // Le voile du sol SOUS le nuage : sa coque à 1,01 rayon est au-dessus de presque tout l'air.
+    expect(compile(clouds.material).vertexShader).toContain(
+      AERIAL_VERTEX_MAIN_BELOW
+    );
+    const ownClouds = clouds.material;
+    clouds.material = new THREE.MeshStandardMaterial();
+    render();
+    expect(hasAerialPerspective(clouds.material)).toBe(true);
+    expect(hasAerialPerspective(ownClouds)).toBe(true);
+    // Pas un matériau en couleurs d'affichage (le modèle) : le voile est une radiance linéaire.
+    clouds.material = new THREE.MeshBasicMaterial({ toneMapped: false });
+    render();
     expect(hasAerialPerspective(clouds.material)).toBe(false);
     expect(hasAerialPerspective(body.createSurfaceOverlayMaterial())).toBe(
       true
     );
 
     binding.dispose();
+    // Le crochet des nuages est rendu : un matériau neuf n'est plus voilé.
+    clouds.material = new THREE.MeshStandardMaterial();
+    render();
+    expect(hasAerialPerspective(clouds.material)).toBe(false);
     expect(body.createSurfaceOverlayMaterial).toBe(original);
     expect(hasAerialPerspective(body.createSurfaceOverlayMaterial())).toBe(
       false
