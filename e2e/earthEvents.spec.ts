@@ -77,6 +77,8 @@ for (const date of CASES) {
   }) => {
     await blockExternalNetwork(page);
     await page.goto(`/?debug-geo&body=earth&date=${encodeURIComponent(date)}`);
+    // Le chargeur d'abord : le panneau vient d'un morceau importé après le démarrage (#203).
+    await expect(page.locator('#loader')).toBeHidden({ timeout: 60_000 });
     const panel = page.locator('#geo-debug');
     await expect(panel).toBeVisible({ timeout: 40_000 });
     await expect(panel).toContainText('sanfrancisco', { timeout: 20_000 });

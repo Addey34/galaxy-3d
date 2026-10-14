@@ -112,6 +112,8 @@ test('the subsolar longitude does not drift while the clock races', async ({
   page,
 }) => {
   await page.goto('/?debug-solar&body=earth');
+  // Le chargeur d'abord : le panneau vient d'un morceau importé après le démarrage (#203).
+  await expect(page.locator('#loader')).toBeHidden({ timeout: 60_000 });
   const panel = page.locator('#solar-debug');
   await expect(panel).toBeVisible({ timeout: 40_000 });
   await expect(panel).toContainText('lat error', { timeout: 20_000 });
