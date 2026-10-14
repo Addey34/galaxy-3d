@@ -43,6 +43,10 @@ export interface SkyScattering {
   /** Couche d'ozone en tente : nulle à `peak ± halfWidth`, pleine au pic. */
   ozonePeakKm: number;
   ozoneHalfWidthKm: number;
+  /** Rayon du sol du modèle, pour sa table de diffusion multiple. */
+  bottomRadiusKm: number;
+  /** Albédo du sol (lambertien), qui renvoie la lumière dans l'air. */
+  groundAlbedo: number;
 }
 
 /**
@@ -58,6 +62,7 @@ const BRUNETON_2017 = {
   kMieAngstromBeta: 5.328e-3,
   kMieSingleScatteringAlbedo: 0.9,
   kMiePhaseFunctionG: 0.8,
+  kGroundAlbedo: 0.1,
   kBottomRadius: 6_360_000,
   kTopRadius: 6_420_000,
   kDobsonUnit: 2.687e20,
@@ -105,15 +110,27 @@ function bruneton2017(): SkyScattering {
     ),
     ozonePeakKm: k.ozonePeak / PER_KM,
     ozoneHalfWidthKm: k.ozoneHalfWidth / PER_KM,
+    bottomRadiusKm: k.kBottomRadius / PER_KM,
+    groundAlbedo: k.kGroundAlbedo,
   };
 }
 
-/** Les coefficients du modèle qu'une fiche déclare. */
+const MODELS = new Map<SkyScatteringModelId, SkyScattering>();
+
+/**
+ * Les coefficients du modèle qu'une fiche déclare : le MÊME objet à chaque appel, ce qui permet
+ * de calculer une seule fois ce qui en dérive (la table de diffusion multiple).
+ */
 export function skyScattering(model: SkyScatteringModelId): SkyScattering {
-  switch (model) {
-    case 'bruneton-2017':
-      return bruneton2017();
+  let known = MODELS.get(model);
+  if (!known) {
+    switch (model) {
+      case 'bruneton-2017':
+        known = bruneton2017();
+    }
+    MODELS.set(model, known);
   }
+  return known;
 }
 
 /**
@@ -173,7 +190,13 @@ export function zenithSkyLuminance(
   cameraRadiusKm: number,
   sunCosZenith: number,
   sunIntensity: number,
-  samples = { view: 16, light: 6 }
+  samples = { view: 16, light: 6 },
+  /**
+   * La diffusion multiple Ψ (canal vert) à une altitude et une hauteur de Soleil, lue dans la
+   * table du shader (`core/multipleScattering.ts`) ; absente, le miroir ne compte que l'ordre un.
+   * Passée en argument pour que ce module, chargé au démarrage, n'importe pas la table.
+   */
+  multiple?: (altitudeKm: number, sunCosZenith: number) => number
 ): number {
   const topKm = groundKm + sky.thicknessKm;
   if (cameraRadiusKm >= topKm) return 0;
@@ -195,6 +218,7 @@ export function zenithSkyLuminance(
   let view = { r: 0, m: 0, o: 0 };
   let sumR = 0;
   let sumM = 0;
+  let sumMultiple = 0;
   for (let i = 0; i < samples.view; i += 1) {
     const z = start + (i + 0.5) * ds;
     const d0 = density(z - groundKm);
@@ -204,6 +228,12 @@ export function zenithSkyLuminance(
       m: view.m + rho.m / 2,
       o: view.o + rho.o / 2,
     };
+    if (multiple)
+      sumMultiple +=
+        Math.exp(-ext(view)) *
+        (sky.rayleighScatteringPerKm[g]! * rho.r +
+          sky.mieScatteringPerKm * rho.m) *
+        multiple(z - groundKm, sunCosZenith);
     // Route vers le Soleil depuis (0, z) : coupée par le sol, l'échantillon est à l'ombre.
     const b = z * sun.z;
     const cGround = z * z - groundKm * groundKm;
@@ -246,6 +276,7 @@ export function zenithSkyLuminance(
   return (
     sunIntensity *
     (sky.rayleighScatteringPerKm[g]! * sumR * rayleighPhase +
-      sky.mieScatteringPerKm * sumM * miePhase)
+      sky.mieScatteringPerKm * sumM * miePhase +
+      sumMultiple)
   );
 }

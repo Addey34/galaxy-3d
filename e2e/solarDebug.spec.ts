@@ -29,6 +29,12 @@ test('solar debug keeps the correct hemisphere illuminated at both solstices', a
     { date: '2026-12-21', latitude: -23.43, north: 'NIGHT', south: 'DAY' },
   ]) {
     await page.goto(`/?debug-solar&date=${scenario.date}&body=earth`);
+    // Le chargeur d'abord, comme au scénario précédent : depuis que les sondes de débogage sont
+    // un morceau importé après le démarrage (#203), le panneau n'existe qu'une fois l'application
+    // démarrée. Attendu seul pendant 30 s, il tenait juste (1,0 et 1,1 min pour deux démarrages
+    // sur les runs sains de `main` 38563624743 et 38540198086) et a échoué trois fois de suite
+    // sur un EPYC 9V74 (run 38583190608).
+    await expect(page.locator('#loader')).toBeHidden({ timeout: 60_000 });
     await expect(page.locator('#solar-debug')).toBeVisible({ timeout: 30_000 });
 
     const panel = page.locator('#solar-debug');
