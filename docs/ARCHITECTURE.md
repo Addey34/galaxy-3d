@@ -2658,7 +2658,9 @@ Mont-Blanc (scène du 2026-10-10, Sentinel-2, fenêtre de 1 280 x 800).
   chaque image.
 - **Le grossissement d'une couche d'apparence** (`core/dataMagnification.ts`) se lit sur l'axe le
   PLUS grossi : en vue rasante l'autre est comprimé, et le choisir laissait des blocs de nuages
-  blancs à l'horizon (300 km).
+  blancs à l'horizon (300 km). (Précisé le 2026-10-14 : la plus courte des deux dérivées d'écran
+  n'était cet axe que s'il est aligné sur l'écran ; c'est désormais la plus petite valeur
+  singulière de la jacobienne, cf. § « Les nuages du jour ».)
 
 Constat, sans correction dans ce pas : à 3 km du sol, le relief d'ETOPO 2022 à 60″ (~1,2 km par
 échantillon sur la grille de Sentinel-2) donne des crêtes rondes et molles ; c'est la mesure qui
@@ -6221,6 +6223,35 @@ mesurés sur des captures de la vraie Terre, et leur correction :
   `core/dataMagnification.ts`, seuils, raison et GLSL à côté de leur miroir testé. Les couches
   d'instrument (température, pression, humidité) n'en ont pas : leur grille est une information.
   La règle couvre d'office la caméra sous la coquille où ces couches sont peintes (1,01 rayon).
+
+**Deux défauts de plus, mesurés le 2026-10-14** sur une descente au-dessus de l'Atlantique (scène
+du 2026-10-10), à chaque fois en comparant la capture normale à celle du drapeau
+`?debug-clouds-raw` (True Color seule) aux mêmes altitudes :
+
+- **L'océan clair était déclaré « sans observation ».** La disponibilité optique (au-dessous,
+  MODIS comble) compare la moyenne de cinq voisins à une fenêtre ; la texture est déclarée sRGB,
+  donc le GPU la DÉCODE et le shader lit du linéaire, alors que la fenêtre 0,02 → 0,12 avait été
+  pensée en valeurs d'image : elle valait 39 → 97 sur 255, en plein dans l'océan observé. Mesuré
+  sur l'image VIIRS servie (moyenne de cinq voisins, comme le shader) : l'absence de donnée tient
+  à 0-3 sur 255 (14,2 % du globe), l'océan clair commence vers 24, et entre les deux il n'y a
+  presque rien. Sur l'Atlantique de 35° S à 45° N, 17 % de la surface (la plus sombre, hors du
+  reflet du Soleil) recevait les cellules MODIS de ~20 km : des plaques marbrées à bords francs, et
+  une couture droite le long du reflet. La fenêtre s'écrit désormais en OCTETS sRGB (4 → 20,
+  `cloudOpticalAvailability{Low,High}Srgb` dans `config/engine.ts`) et passe par
+  `core/srgb.ts` avant d'atteindre le shader ; `core/srgb.test.ts` exige que l'océan le plus sombre
+  soit observé et l'absence de donnée non, et rougit avec l'ancienne fenêtre.
+- **Le grossissement se lisait mal sur un horizon incliné.** Il prenait la plus courte des deux
+  dérivées d'écran de la coordonnée de texel, ce qui ne vaut que si la direction comprimée est
+  alignée sur un axe de l'écran. Près d'un horizon incliné de 20°, il lisait 2,4 px par texel là
+  où il y en a 4, et la couche restait entière : les bords des nuages y dessinaient la grille en
+  escalier (1 587 km). C'est désormais l'inverse de la plus petite valeur SINGULIÈRE de la
+  jacobienne (`maxPxPerTexel`, même calcul en GLSL), indépendante de l'orientation de l'écran, ce
+  que son test vérifie de 10° à 135°.
+
+Reste, délibérément : un cumulus isolé d'un texel se lit en petit carré vers 3 à 4 px par texel
+(4 235 km, avant-plan). C'est la donnée à sa résolution, dans la zone que la règle garde entière ;
+une reconstruction plus ronde (B-spline de l'alpha extrait) coûterait seize extractions par
+fragment au lieu de quatre.
 
 Ce qui rouvrirait la question : une source de nuages plus fine (les tuiles VIIRS à 250 m du fond
 « jour de la scène » en sont une, mais les nuages y sont déjà dans le sol), qui déplacerait le

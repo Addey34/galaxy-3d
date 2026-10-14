@@ -20,6 +20,8 @@
  */
 
 /** Luminance linéaire moyenne affichée par unité d'albédo géométrique. */
+import { srgbByteToLinear } from './srgb';
+
 export const DISPLAY_LUMINANCE_PER_ALBEDO = 0.5;
 
 /**
@@ -46,11 +48,6 @@ export function bakedGain(bakedPerAlbedo: number): number {
   return DISPLAY_LUMINANCE_PER_ALBEDO / bakedPerAlbedo;
 }
 
-const toLinear = (byte: number): number => {
-  const c = byte / 255;
-  return c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
-};
-
 /**
  * Luminance LINÉAIRE moyenne d'une image RVB 8 bits (sRGB), pondérée par l'aire : cos(latitude)
  * sur une carte équirectangulaire, uniforme sur l'atlas d'un modèle (xatlas égalise l'aire des
@@ -63,7 +60,7 @@ export function meanLinearLuminance(
   channels: number,
   atlas: boolean
 ): number {
-  const lut = Array.from({ length: 256 }, (_, c) => toLinear(c));
+  const lut = Array.from({ length: 256 }, (_, c) => srgbByteToLinear(c));
   let sum = 0;
   let area = 0;
   for (let y = 0; y < height; y++) {
@@ -98,7 +95,7 @@ export function faceContrast(
   height: number,
   channels: number
 ): number {
-  const lut = Array.from({ length: 256 }, (_, c) => toLinear(c));
+  const lut = Array.from({ length: 256 }, (_, c) => srgbByteToLinear(c));
   const yFrom = Math.round(height * (0.5 - FACE_HALF_LATITUDE_DEG / 180));
   const yTo = Math.round(height * (0.5 + FACE_HALF_LATITUDE_DEG / 180));
   // Une colonne : somme pondérée de sa luminance et de son aire, sur la bande de latitudes.

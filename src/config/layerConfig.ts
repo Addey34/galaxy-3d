@@ -4,6 +4,7 @@
  * atmosphère, lumières), finesse des sphères/anneaux et matériaux standard réutilisés.
  */
 import { MAGNIFICATION_FADE_GLSL } from '@/core/dataMagnification';
+import { srgbByteToLinear } from '@/core/srgb';
 import { deformToFigure, isSphere, type Figure } from '@/core/ellipsoid';
 import * as THREE from 'three';
 import {
@@ -530,10 +531,14 @@ export function createCloudsMaterial(): THREE.MeshStandardMaterial {
     edgeSoftness: { value: REALTIME_CLOUDS_SETTINGS.edgeSoftness },
     satOceanBoost: { value: REALTIME_CLOUDS_SETTINGS.cloudSatOceanBoost },
     opticalAvailabilityLow: {
-      value: REALTIME_CLOUDS_SETTINGS.cloudOpticalAvailabilityLow,
+      value: srgbByteToLinear(
+        REALTIME_CLOUDS_SETTINGS.cloudOpticalAvailabilityLowSrgb
+      ),
     },
     opticalAvailabilityHigh: {
-      value: REALTIME_CLOUDS_SETTINGS.cloudOpticalAvailabilityHigh,
+      value: srgbByteToLinear(
+        REALTIME_CLOUDS_SETTINGS.cloudOpticalAvailabilityHighSrgb
+      ),
     },
     opticalBlendRadiusTexels: {
       value: REALTIME_CLOUDS_SETTINGS.cloudOpticalBlendRadiusTexels,
