@@ -15,6 +15,8 @@ const N = MULTIPLE_SCATTERING_LUT_SIZE;
 /**
  * UNE RÉFÉRENCE CALCULÉE AUTREMENT : toute la sphère (pas de symétrie), une transmittance vers le
  * Soleil MARCHÉE à chaque point (pas de table), d'autres pas. Le canal vert d'une case.
+ * 20 pas par marche : à 60 elle ne bouge que de 0,3 % au plus (mesuré sur les quatre cases) et
+ * coûtait 11,3 s sur le coureur de la CI, au-delà des 5 s d'un test.
  */
 function reference(h: number, muS: number): number {
   const g = sky.bottomRadiusKm;
@@ -41,7 +43,7 @@ function reference(h: number, muS: number): number {
     if (exit(p, sun, g)[0]! > 0) return 0;
     const len = exit(p, sun, top)[1]!;
     let depth = 0;
-    const steps = 60;
+    const steps = 20;
     for (let k = 0; k < steps; k += 1) {
       const t = ((k + 0.5) * len) / steps;
       const q = p.map((v, i) => v + sun[i]! * t);
@@ -63,7 +65,7 @@ function reference(h: number, muS: number): number {
       const ground = exit(p0, d, g);
       const hit = ground[0]! > 0;
       const len = hit ? ground[0]! : exit(p0, d, top)[1]!;
-      const steps = 60;
+      const steps = 20;
       const ds = len / steps;
       let tr = 1;
       let l = 0;
