@@ -44,21 +44,49 @@ const glslFloat = (value: number): string =>
   Number.isInteger(value) ? `${value}.0` : String(value);
 
 /**
- * Fin de fragment : multiplie `gl_FragColor.a` par le facteur de grossissement de `map`.
- * Texels parcourus par pixel d'écran, LONGUEUR de chaque dérivée d'écran et non `fwidth`, qui
- * somme les valeurs absolues des deux et surestimait jusqu'au double les texels par pixel (donc
- * sous-estimait le grossissement : à 2 492 km, la couche restait presque entière). Le plus PETIT
- * des deux, donc le plus GRAND grossissement : en vue rasante, une direction est comprimée et
- * l'autre étire les texels en blocs, et c'est elle qui montre la grille. Choisir l'autre (ce que
- * faisait la première version) laissait des blocs blancs à l'horizon, mesurés à 300 km au-dessus
- * des Alpes une fois la caméra relevée (lot 48, pas 5). Sans `map`, rien à mesurer.
+ * Grossissement MAXIMAL de la donnée sous un pixel, en pixels d'écran par texel (2026-10-14).
+ *
+ * `dx` et `dy` sont les dérivées d'écran de la coordonnée de texel (les colonnes de la jacobienne
+ * écran → texels). Le grossissement le plus fort est l'inverse de sa PLUS PETITE VALEUR
+ * SINGULIÈRE : la direction de l'écran où un pixel parcourt le moins de texels. La première
+ * version prenait la plus courte des deux colonnes, ce qui ne vaut que si cette direction est
+ * alignée sur un axe de l'écran. Près d'un horizon incliné de 20° (texels à un quart de pixel le
+ * long de l'horizon, à un pixel en travers), elle lisait 2,4 px par texel là où il y en a 4 : la
+ * couche restait entière, et les bords des nuages y dessinaient la grille de la donnée en
+ * escalier, vu à 1 587 km au-dessus de l'Atlantique (lot 48). La valeur singulière ne dépend pas
+ * de l'orientation de l'écran.
+ */
+export function maxPxPerTexel(
+  dx: readonly [number, number],
+  dy: readonly [number, number]
+): number {
+  const sum = dx[0] ** 2 + dx[1] ** 2 + dy[0] ** 2 + dy[1] ** 2;
+  const det = Math.abs(dx[0] * dy[1] - dx[1] * dy[0]);
+  const sigmaMax = Math.sqrt(
+    (sum + Math.sqrt(Math.max(0, sum * sum - 4 * det * det))) / 2
+  );
+  const sigmaMin = sigmaMax > 0 ? det / sigmaMax : 0;
+  return 1 / Math.max(sigmaMin, 1e-6);
+}
+
+/**
+ * Fin de fragment : multiplie `gl_FragColor.a` par le facteur de grossissement de `map`
+ * ({@link maxPxPerTexel}, même calcul). Texels parcourus par pixel d'écran, depuis les dérivées
+ * d'écran de la coordonnée de texel ; jamais `fwidth`, qui somme les valeurs absolues des deux et
+ * surestimait jusqu'au double les texels par pixel (à 2 492 km, la couche restait presque
+ * entière). Sans `map`, rien à mesurer.
  */
 export const MAGNIFICATION_FADE_GLSL = `
 	#ifdef USE_MAP
 	{
 		vec2 texelCoord = vMapUv * vec2( textureSize( map, 0 ) );
-		float texelsPerPx = min( length( dFdx( texelCoord ) ), length( dFdy( texelCoord ) ) );
-		float pxPerTexel = 1.0 / max( texelsPerPx, 1e-6 );
+		vec2 jx = dFdx( texelCoord );
+		vec2 jy = dFdy( texelCoord );
+		float jSum = dot( jx, jx ) + dot( jy, jy );
+		float jDet = abs( jx.x * jy.y - jx.y * jy.x );
+		float sigmaMax = sqrt( 0.5 * ( jSum + sqrt( max( jSum * jSum - 4.0 * jDet * jDet, 0.0 ) ) ) );
+		float sigmaMin = sigmaMax > 0.0 ? jDet / sigmaMax : 0.0;
+		float pxPerTexel = 1.0 / max( sigmaMin, 1e-6 );
 		gl_FragColor.a *= 1.0 - smoothstep( ${glslFloat(MAGNIFICATION_FADE_START_PX)}, ${glslFloat(MAGNIFICATION_FADE_END_PX)}, pxPerTexel );
 	}
 	#endif`;

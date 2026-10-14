@@ -455,14 +455,18 @@ export const REALTIME_CLOUDS_SETTINGS = {
   // au nord). Sur mer, pas de sol coloré à rejeter → on tolère plus de saturation. 0 = ancien
   // comportement (seuil identique terre/mer).
   cloudSatOceanBoost: 0.45,
-  // Un pixel True Color sombre reste une observation valide, notamment sur l ocean.
-  // Seuls les pixels presque noirs sont consideres sans observation optique. La fenêtre
-  // (Low→High) définit la LARGEUR du fondu entre la True Color et les masques MODIS : trop
-  // étroite (0.01→0.08), la jonction se fait sur une bande mince → « déchirure » circulaire
-  // visible au Sud. Élargie (0.02→0.22), le recouvrement s'étale sur plus de latitudes →
-  // continuité douce entre les deux sources de nuages, sans ligne de coupure.
-  cloudOpticalAvailabilityLow: 0.02,
-  cloudOpticalAvailabilityHigh: 0.12,
+  // Un pixel True Color sombre reste une observation valide, notamment sur l'océan. Seuls les
+  // pixels presque noirs sont considérés sans observation optique, et c'est là que les masques
+  // MODIS prennent le relais. Fenêtre en OCTETS sRGB de l'image (2026-10-14) : la texture est
+  // décodée en linéaire par le GPU, et l'ancienne fenêtre 0,02 → 0,12, lue en linéaire, valait 39
+  // → 97 sur 255, en plein dans l'océan clair. Mesuré sur VIIRS du 2026-10-10 (moyenne des cinq
+  // voisins comme le shader, 2 048 x 1 024) : l'absence de donnée tient à 0-3 (14,2 % du globe),
+  // l'océan observé commence vers 24, et entre les deux il n'y a presque rien (0,01 % par pas de
+  // deux). L'ancienne fenêtre déclarait « sans observation » 17 % de l'Atlantique de jour (35° S à 45° N), que
+  // MODIS peignait de ses cellules (des blocs de ~20 km et une couture le long du reflet du
+  // Soleil). La largeur spatiale du fondu vient du voisinage de huit texels, pas de la fenêtre.
+  cloudOpticalAvailabilityLowSrgb: 4,
+  cloudOpticalAvailabilityHighSrgb: 20,
   // Rayon (en texels) de lissage autour des frontières True Color/no-data. Les produits
   // orbitaux changent parfois de couverture sur une ligne nette ; une petite moyenne spatiale
   // évite de voir la jonction avec le masque MODIS sans flouter la texture nuageuse.
