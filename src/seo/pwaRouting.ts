@@ -31,8 +31,16 @@ const MISSIONS_SEGMENT = 'missions';
 /** Segment des pages de survol (`/flybys/voyager2-neptune-1989-08-25/`), `documentPage.ts::FLYBYS_SLUG`. */
 const FLYBYS_SEGMENT = 'flybys';
 
+/** Segment des mises en orbite (`/orbit-insertions/juno-jupiter-2016-07-05/`), `documentPage.ts::ORBIT_INSERTIONS_SLUG`. */
+const ORBIT_INSERTIONS_SEGMENT = 'orbit-insertions';
+
 /** Les rubriques dont les pages vivent DEUX segments sous la racine, ou sous la langue. */
-const NESTED_SEGMENTS = [ECLIPSE_SEGMENT, MISSIONS_SEGMENT, FLYBYS_SEGMENT];
+const NESTED_SEGMENTS = [
+  ECLIPSE_SEGMENT,
+  MISSIONS_SEGMENT,
+  FLYBYS_SEGMENT,
+  ORBIT_INSERTIONS_SEGMENT,
+];
 
 /**
  * Préfixes des pages documentaires NON anglaises (`/fr/methodology/`, `/es/…`, `/pt-br/…`).

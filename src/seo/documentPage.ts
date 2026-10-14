@@ -49,7 +49,14 @@ export const DOC_SLUGS: readonly DocSlug[] = ['methodology', 'sources'];
 export const MISSIONS_SLUG = 'missions';
 /** Les pages des survols (2026-10-12), même forme : `/flybys/` et `/flybys/voyager2-neptune-1989-08-25/`. */
 export const FLYBYS_SLUG = 'flybys';
-const NAV_SLUGS: readonly string[] = [...DOC_SLUGS, MISSIONS_SLUG, FLYBYS_SLUG];
+/** Les mises en orbite (lot 49), même forme : `/orbit-insertions/juno-jupiter-2016-07-05/`. */
+export const ORBIT_INSERTIONS_SLUG = 'orbit-insertions';
+const NAV_SLUGS: readonly string[] = [
+  ...DOC_SLUGS,
+  MISSIONS_SLUG,
+  FLYBYS_SLUG,
+  ORBIT_INSERTIONS_SLUG,
+];
 
 /**
  * Texte dans les quatre langues livrées, sans repli : une page documentaire n'a pas le droit
@@ -111,6 +118,12 @@ const NAV: Record<string, DocText> = {
     fr: 'Survols',
     es: 'Sobrevuelos',
     'pt-BR': 'Sobrevoos',
+  },
+  'orbit-insertions': {
+    en: 'Orbit insertions',
+    fr: 'Mises en orbite',
+    es: 'Inserciones en órbita',
+    'pt-BR': 'Inserções em órbita',
   },
 };
 

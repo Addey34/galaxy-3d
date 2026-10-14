@@ -34,6 +34,10 @@ describe('l’index de la recherche universelle', () => {
       ...index.missions.flatMap(([, , probe, body]) => [probe, body]),
       ...index.instruments.map(([, probe]) => probe),
       ...index.flybys.flatMap(([probe, body]) => [probe, body]),
+      ...(index.orbitInsertions ?? []).flatMap(([probe, body]) => [
+        probe,
+        body,
+      ]),
       ...(index.discoveries ?? []).map(([, body]) => body),
     ].filter((id): id is string => id !== null);
     expect(named.filter((id) => !selectable.has(id))).toEqual([]);

@@ -111,6 +111,7 @@ export const fr: Record<MessageKey, string> = {
   'search.group.instrument': 'Instruments',
   'search.group.discovery': 'Découvertes',
   'search.group.flyby': 'Survols',
+  'search.group.orbitInsertion': 'Mises en orbite',
   'search.missionPage': 'page de la mission',
   'nav.searchPlaceholder': 'Un corps, un cratère, une mission…',
   'nav.paletteAria':

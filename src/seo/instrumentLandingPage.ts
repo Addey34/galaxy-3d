@@ -59,8 +59,8 @@ export interface InstrumentPageInputs {
    * un nom sans lien.
    */
   missionPages?: ReadonlyMap<string, string>;
-  /** Par langue, objet → fragment HTML de ses survols (`flybyPages.ts::flybyListsByObject`). */
-  flybys?: (locale: Locale) => ReadonlyMap<string, string>;
+  /** Par langue, objet → fragment HTML de ses survols et mises en orbite. */
+  events?: (locale: Locale) => ReadonlyMap<string, string>;
 }
 
 export interface InstrumentPage extends LandingPage {
@@ -320,7 +320,7 @@ export function instrumentLandingPages(
             inputs.missionPages
           )
         : '') +
-      (inputs.flybys?.(locale).get(name) ?? '');
+      (inputs.events?.(locale).get(name) ?? '');
     const metaBase = described || intro;
     // Le gabarit vient du DICTIONNAIRE, comme le titre de l'onglet (`ui/documentTitle`) : la
     // parité est tenue par `titleParity.test.ts`. « Trajectoire » et non « orbite » : Voyager

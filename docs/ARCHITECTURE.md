@@ -5609,6 +5609,58 @@ l'instant publié), `e2e/built-pages.spec.ts` (l'index et une page de prédictio
 langues : axe et 390 px, sur le build). `pnpm flybys:generate --check` sort en code 1 si le
 relevé livré a dérivé ; à rejouer après tout `pnpm ephemeris:flybys --write`.
 
+## Pages des mises en orbite (`/orbit-insertions/`, lot 49, 2026-10-14)
+
+L'index `/orbit-insertions/` et une page par mise en orbite
+(`/orbit-insertions/juno-jupiter-2016-07-05/`), dans les quatre langues, même rendu et même
+routage que les survols (`NESTED_SEGMENTS`). Générateur pur : `src/seo/orbitInsertionPages.ts`,
+qui importe de `flybyPages.ts` les noms, les nombres et l'heure au lieu de les recopier.
+
+- **Ce qui est mesuré n'est pas recopié d'un communiqué** : `pnpm orbits:generate`
+  (`scripts/generate-orbit-insertions.mjs`) cherche, sur la trajectoire que sert Horizons, le
+  PREMIER instant où l'énergie orbitale spécifique de la sonde relative au corps, v²/2 − GM/r,
+  devient négative (masse lue au catalogue), au pas d'une heure dans chaque rencontre du plan
+  (`src/config/flybyEncounters.json`), puis d'une minute, puis d'une seconde. Écrit
+  `src/seo/orbitInsertions.json`.
+- **Témoins mesurés avant la première ligne**, contre les dates publiées : Juno passe sous zéro
+  à 02:57 TDB le 2016-07-05, dans sa combustion ; Cassini à 02:38 TDB le 2004-07-01, dans la
+  sienne ; Mars Express, TGO, OSIRIS-REx (Orbital A, 2018-12-31) et Rosetta (67P, 2014-09-10)
+  tombent le jour publié.
+- **Deux règles, décidées par une mesure.** Le passage doit avoir lieu DANS la sphère d'influence
+  (les fenêtres du plan) : BepiColombo est « liée » à Mercure dès le 2026-10-07 à 314 000 km,
+  hors de toute sphère. Et seul le PREMIER compte : autour de Bennu l'énergie change de signe des
+  dizaines de fois en 2019, à chaque opération de proximité.
+- **Le témoin de chaque page** : la manœuvre la plus proche que `pnpm ephemeris:flybys` a
+  DÉTECTÉE sur la même trajectoire par le résidu à deux corps (`impulses`, JD TDB convertis par
+  `core/timeScale.ts`), écart signé publié. Mesuré entre 0 et 34 min (Cassini).
+- **L'énergie peut SAUTER sous zéro** : une trajectoire modélise une manœuvre comme une
+  impulsion, et Rosetta est à 73 % de la libération à sa première seconde liée. Aucune garde ne
+  suppose donc un passage « à peine » sous le seuil.
+- **La précision publiée est mesurée** : quand la fiche du corps publie l'incertitude de GM
+  (Bennu 0,02 %, 67P 0,03 %), l'instant est recalculé aux deux bornes ; il bouge de moins d'une
+  seconde, ce qui justifie la seconde, et la page le dit.
+- **Ce qui n'a pas de page, avec sa raison, NOMMÉ sur l'index** : `boundAtEntry` (BepiColombo,
+  déjà liée en entrant dans la sphère sur la trajectoire publiée : capture balistique),
+  `coverage` (Hera, JUICE : la trajectoire publiée s'arrête pendant l'approche, critère r·v < 0
+  au dernier échantillon) et `unresolved` (Hayabusa2 à Ryugu, comme pour les survols).
+- **Horizons ne sert pas toujours le CENTRE** : Didymos (920065803) rend « Insufficient ephemeris
+  data » fin octobre 2026 quand Hera est servie jusqu'au 4 novembre. `horizons-relative.mjs`, le
+  module d'accès à Horizons partagé avec les survols, retombe alors sur la différence de deux
+  héliocentriques (`fallbackToDifference`, désactivé pour les survols, dont le relevé a été écrit
+  sans lui ; `pnpm flybys:generate --offline --check` est resté vert après l'extraction).
+- **Les liens retour** : les pages de corps et de sondes portent un fragment `events`, survols
+  PUIS mises en orbite, tiré des deux relevés. La recherche universelle les indexe
+  (`orbitInsertion`, même geste qu'un survol : la date, Explo, la sonde).
+
+Gardes : `src/seo/orbitInsertionPages.test.ts` (chaque mise en orbite dans une rencontre du
+plan ; chaque phase `satelliteOf` déclarée par une fiche a sa mise en orbite ou une raison, JWST
+à L2 excepté avec la sienne, et la mesure tombe dans la phase ou au plus deux jours avant son
+début écrit ; une manœuvre détectée à moins d'une heure ; vitesse sous la libération ; index qui
+nomme chaque écart), `e2e/built-pages.spec.ts` (l'index et la page de Rosetta, quatre langues).
+Falsifiées : la manœuvre de Juno retirée, puis l'exclusion de Hayabusa2, rougissent chacune.
+`pnpm orbits:generate --check` sort en code 1 sur une dérive ; à rejouer après tout
+`pnpm ephemeris:flybys --write`.
+
 ## Les cibles des missions entrées au catalogue (2026-10-04, vague 1)
 
 Les pages des missions montraient ce que le registre du PDS déclare, et vingt de ses missions ne

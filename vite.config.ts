@@ -335,22 +335,43 @@ function bodyLandingPages() {
         const flybyNavigable = (await loader.ssrLoadModule(
           '/src/config/navigable.ts'
         )) as typeof import('./src/config/navigable');
-        const flybyLists = (locale: import('./src/i18n/locales').Locale) =>
-          flybySeo.flybyListsByObject(
-            {
-              record: flybyRecord,
-              config: catalogue.CELESTIAL_CONFIG,
-              navigable: flybyNavigable.NAVIGABLE_TARGETS,
-              origin: SITE_ORIGIN,
-            },
+        /**
+         * LES MISES EN ORBITE (lot 49) : le relevé écrit par `pnpm orbits:generate`. Les pages de
+         * corps et de sondes listent leurs survols PUIS leurs mises en orbite, dans un même
+         * fragment (`events`), tiré des deux relevés qui font les pages.
+         */
+        const orbitSeo = (await loader.ssrLoadModule(
+          '/src/seo/orbitInsertionPages.ts'
+        )) as typeof import('./src/seo/orbitInsertionPages');
+        const orbitRecord = JSON.parse(
+          await readFile(
+            resolve(__dirname, 'src/seo/orbitInsertions.json'),
+            'utf-8'
+          )
+        ) as import('./src/seo/orbitInsertionPages').OrbitInsertionRecord;
+        const eventLists = (locale: import('./src/i18n/locales').Locale) => {
+          const inputs = {
+            config: catalogue.CELESTIAL_CONFIG,
+            navigable: flybyNavigable.NAVIGABLE_TARGETS,
+            origin: SITE_ORIGIN,
+          };
+          const lists = flybySeo.flybyListsByObject(
+            { ...inputs, record: flybyRecord },
             locale
           );
+          for (const [id, html] of orbitSeo.orbitInsertionListsByObject(
+            { ...inputs, record: orbitRecord },
+            locale
+          ))
+            lists.set(id, (lists.get(id) ?? '') + html);
+          return lists;
+        };
         const pages = seo.bodyLandingPages(
           catalogue.CELESTIAL_CONFIG,
           SITE_ORIGIN,
           'en',
           missionsByBody,
-          flybyLists('en')
+          eventLists('en')
         );
         // Un catalogue vide, un chargeur qui rend un module vide, un renommage de champ : le
         // build produirait alors zéro page et un sitemap réduit à deux URL, SANS rien signaler
@@ -374,7 +395,7 @@ function bodyLandingPages() {
             SITE_ORIGIN,
             locale,
             missionsByBody,
-            flybyLists(locale)
+            eventLists(locale)
           )
         );
         for (const page of [...pages, ...localisedBodyPages]) {
@@ -709,7 +730,7 @@ function bodyLandingPages() {
           archiveRetrieved: instrumentIndex.retrieved,
           coverage,
           missionPages: missionSeo.missionSlugsByLid(missionCatalogue),
-          flybys: flybyLists,
+          events: eventLists,
         };
         const instrumentPages = instrumentSeo.instrumentLandingPages(
           navigable.NAVIGABLE_TARGETS,
@@ -997,6 +1018,26 @@ function bodyLandingPages() {
             `pages des survols : ${flybyDocPages.length} au lieu de ${(flybyRecord.events.length + 1) * DOC_LOCALE_COUNT}`
           );
         docPages.push(...flybyDocPages);
+        // Les mises en orbite : l'index plus une page par mise en orbite, dans chaque langue.
+        const orbitDocPages = [undefined, ...OTHER_LOCALES].flatMap((locale) =>
+          orbitSeo.orbitInsertionPages(
+            {
+              record: orbitRecord,
+              config: catalogue.CELESTIAL_CONFIG,
+              navigable: navigable.NAVIGABLE_TARGETS,
+              origin: SITE_ORIGIN,
+            },
+            locale ?? 'en'
+          )
+        );
+        if (
+          orbitDocPages.length !==
+          (orbitRecord.insertions.length + 1) * DOC_LOCALE_COUNT
+        )
+          throw new Error(
+            `pages des mises en orbite : ${orbitDocPages.length} au lieu de ${(orbitRecord.insertions.length + 1) * DOC_LOCALE_COUNT}`
+          );
+        docPages.push(...orbitDocPages);
         for (const page of docPages) {
           const dir = resolve(dist, new URL(page.canonical).pathname.slice(1));
           await mkdir(dir, { recursive: true });
