@@ -1034,6 +1034,10 @@ const enableDailyEarth = (page: Page) => chooseEarthBase(page, 'daily');
 test('paints Sentinel-2 on the Trek grid, with the relief baked on that grid', async ({
   page,
 }) => {
+  // Une descente par crans jusqu'au niveau 12 : ses propres attentes dépassent les 120 s par
+  // défaut. Mesuré sur un EPYC 7763 : 1,7 min vert (run 38477193311), puis 2,0 et 2,2 min en
+  // échec et 1,8 min au second réessai (run 38535537219). L'enveloppe était pleine.
+  test.setTimeout(180_000);
   const errors: string[] = [];
   page.on('pageerror', (err) => errors.push(err.message));
   const trek = JSON.parse(
