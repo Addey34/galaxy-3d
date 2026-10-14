@@ -43,6 +43,10 @@ export interface SkyScattering {
   /** Couche d'ozone en tente : nulle à `peak ± halfWidth`, pleine au pic. */
   ozonePeakKm: number;
   ozoneHalfWidthKm: number;
+  /** Rayon du sol du modèle, pour sa table de diffusion multiple. */
+  bottomRadiusKm: number;
+  /** Albédo du sol (lambertien), qui renvoie la lumière dans l'air. */
+  groundAlbedo: number;
 }
 
 /**
@@ -58,6 +62,7 @@ const BRUNETON_2017 = {
   kMieAngstromBeta: 5.328e-3,
   kMieSingleScatteringAlbedo: 0.9,
   kMiePhaseFunctionG: 0.8,
+  kGroundAlbedo: 0.1,
   kBottomRadius: 6_360_000,
   kTopRadius: 6_420_000,
   kDobsonUnit: 2.687e20,
@@ -105,6 +110,8 @@ function bruneton2017(): SkyScattering {
     ),
     ozonePeakKm: k.ozonePeak / PER_KM,
     ozoneHalfWidthKm: k.ozoneHalfWidth / PER_KM,
+    bottomRadiusKm: k.kBottomRadius / PER_KM,
+    groundAlbedo: k.kGroundAlbedo,
   };
 }
 
