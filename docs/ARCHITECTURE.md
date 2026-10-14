@@ -2695,7 +2695,11 @@ ciel de nuit.
   fois sur un EPYC 7763). Mesuré : aucune requête du ciel au démarrage par la vue
   d'ensemble, en Éducatif comme en Explo. Ce qui reste au démarrage (le chargement, l'estompage des
   étoiles, la condition « Explo seulement ») laisse une marge de **3 octets** au plafond, le 2026-10-13 : le prochain ajout au
-  démarrage devra alléger ou relever le plafond par écrit.
+  démarrage devra alléger ou relever le plafond par écrit. **Allégé le 2026-10-14** : les six
+  sondes de débogage (`?debug-solar`, `-geo`, `-earth`, `-terminator`, `-surface`, `-meteo`),
+  inertes sans leur drapeau mais importées statiquement, forment désormais un morceau
+  `debugProbes` chargé seulement sous un drapeau `debug-…` ; la marge est remontée à
+  **12 628 octets** (mesure de `pnpm budget:startup`).
 - **Dans le repère de la vue, en km.** En coordonnées monde, la Terre est à 35 unités de
   l'origine pour un rayon de 0,0015 : en flottants 32 bits un fragment n'y est connu qu'à ~16 km
   près, plus que la hauteur d'échelle de l'air (8 km). Le centre du corps et la direction du
