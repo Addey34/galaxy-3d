@@ -41,7 +41,8 @@ des analyses ne se construit pas.
 ## Le relief de la Terre (lot 48)
 
 Le service sert aussi les tuiles de hauteurs de la Terre (`assets/height-tiles/earth/<hachage>/`,
-562 Mo), cuites par `pnpm surface:tiles --only earth-etopo-2022` dans `.cache/galaxy-data/`. Leur
+1,5 Go sur la grille de GIBS et 2,1 Go sur celle de Sentinel-2 au 2026-10-14, ETOPO 15″ compris),
+cuites par `pnpm surface:tiles --only earth-etopo-2022` (ou `earth-etopo-2022-trek`) dans `.cache/galaxy-data/`. Leur
 manifeste vit sur le SITE (`public/assets/height-tiles/earth/manifest.json`) et nomme le
 répertoire haché : téléverser les tuiles AVANT de livrer un manifeste qui les nomme.
 

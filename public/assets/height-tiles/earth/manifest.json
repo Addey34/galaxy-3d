@@ -2,7 +2,7 @@
   "$comment": "Écrit par pnpm surface:tiles. Ne pas éditer à la main : les tuiles portent le même quantum et le même offset dans leur propre en-tête.",
   "id": "earth-etopo-2022",
   "body": "earth",
-  "directory": "assets/height-tiles/earth/563d240b9612",
+  "directory": "assets/height-tiles/earth/5d60dafa2d7f",
   "format": {
     "magic": "GXHT",
     "version": 1,
@@ -497,12 +497,492 @@
         8
       ],
       "bounds": {
+        "west": -81,
+        "east": -76.5,
+        "north": 85.5,
+        "south": 81
+      },
+      "reliefMetres": 2185,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": -76.5,
+        "east": -72,
+        "north": 85.5,
+        "south": 81
+      },
+      "reliefMetres": 2373,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": -81,
+        "east": -76.5,
+        "north": 81,
+        "south": 76.5
+      },
+      "reliefMetres": 2036,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": -76.5,
+        "east": -72,
+        "north": 81,
+        "south": 76.5
+      },
+      "reliefMetres": 2036,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": -63,
+        "east": -58.5,
+        "north": 81,
+        "south": 76.5
+      },
+      "reliefMetres": 2102,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": -31.5,
+        "east": -27,
+        "north": 81,
+        "south": 76.5
+      },
+      "reliefMetres": 2042,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": -27,
+        "east": -22.5,
+        "north": 81,
+        "south": 76.5
+      },
+      "reliefMetres": 2201,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": -58.5,
+        "east": -54,
+        "north": 76.5,
+        "south": 72
+      },
+      "reliefMetres": 2128,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": -54,
+        "east": -49.5,
+        "north": 76.5,
+        "south": 72
+      },
+      "reliefMetres": 2541,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": -31.5,
+        "east": -27,
+        "north": 76.5,
+        "south": 72
+      },
+      "reliefMetres": 2887,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": -27,
+        "east": -22.5,
+        "north": 76.5,
+        "south": 72
+      },
+      "reliefMetres": 2470,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": -153,
+        "east": -148.5,
+        "north": 72,
+        "south": 67.5
+      },
+      "reliefMetres": 2025,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": -148.5,
+        "east": -144,
+        "north": 72,
+        "south": 67.5
+      },
+      "reliefMetres": 2386,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": -144,
+        "east": -139.5,
+        "north": 72,
+        "south": 67.5
+      },
+      "reliefMetres": 2390,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": -54,
+        "east": -49.5,
+        "north": 72,
+        "south": 67.5
+      },
+      "reliefMetres": 2076,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": -49.5,
+        "east": -45,
+        "north": 72,
+        "south": 67.5
+      },
+      "reliefMetres": 2526,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": -36,
+        "east": -31.5,
+        "north": 72,
+        "south": 67.5
+      },
+      "reliefMetres": 3109,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": -31.5,
+        "east": -27,
+        "north": 72,
+        "south": 67.5
+      },
+      "reliefMetres": 3401,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": -27,
+        "east": -22.5,
+        "north": 72,
+        "south": 67.5
+      },
+      "reliefMetres": 2585,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 126,
+        "east": 130.5,
+        "north": 72,
+        "south": 67.5
+      },
+      "reliefMetres": 2121,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
         "west": -153,
         "east": -148.5,
         "north": 67.5,
         "south": 63
       },
       "reliefMetres": 5714,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": -148.5,
+        "east": -144,
+        "north": 67.5,
+        "south": 63
+      },
+      "reliefMetres": 3601,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": -135,
+        "east": -130.5,
+        "north": 67.5,
+        "south": 63
+      },
+      "reliefMetres": 2328,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": -130.5,
+        "east": -126,
+        "north": 67.5,
+        "south": 63
+      },
+      "reliefMetres": 2451,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": -67.5,
+        "east": -63,
+        "north": 67.5,
+        "south": 63
+      },
+      "reliefMetres": 2036,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": -49.5,
+        "east": -45,
+        "north": 67.5,
+        "south": 63
+      },
+      "reliefMetres": 2439,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": -45,
+        "east": -40.5,
+        "north": 67.5,
+        "south": 63
+      },
+      "reliefMetres": 2875,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": -40.5,
+        "east": -36,
+        "north": 67.5,
+        "south": 63
+      },
+      "reliefMetres": 3171,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": -36,
+        "east": -31.5,
+        "north": 67.5,
+        "south": 63
+      },
+      "reliefMetres": 2951,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 139.5,
+        "east": 144,
+        "north": 67.5,
+        "south": 63
+      },
+      "reliefMetres": 2250,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 144,
+        "east": 148.5,
+        "north": 67.5,
+        "south": 63
+      },
+      "reliefMetres": 2571,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 148.5,
+        "east": 153,
+        "north": 67.5,
+        "south": 63
+      },
+      "reliefMetres": 2046,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": -157.5,
+        "east": -153,
+        "north": 63,
+        "south": 58.5
+      },
+      "reliefMetres": 2455,
       "sourcePixelsPerDegree": 240,
       "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
     },
@@ -572,12 +1052,507 @@
         8
       ],
       "bounds": {
+        "west": -135,
+        "east": -130.5,
+        "north": 63,
+        "south": 58.5
+      },
+      "reliefMetres": 2193,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": -126,
+        "east": -121.5,
+        "north": 63,
+        "south": 58.5
+      },
+      "reliefMetres": 2364,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": -49.5,
+        "east": -45,
+        "north": 63,
+        "south": 58.5
+      },
+      "reliefMetres": 2829,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": -45,
+        "east": -40.5,
+        "north": 63,
+        "south": 58.5
+      },
+      "reliefMetres": 2844,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 4.5,
+        "east": 9,
+        "north": 63,
+        "south": 58.5
+      },
+      "reliefMetres": 2190,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 9,
+        "east": 13.5,
+        "north": 63,
+        "south": 58.5
+      },
+      "reliefMetres": 2019,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 135,
+        "east": 139.5,
+        "north": 63,
+        "south": 58.5
+      },
+      "reliefMetres": 2065,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 139.5,
+        "east": 144,
+        "north": 63,
+        "south": 58.5
+      },
+      "reliefMetres": 2741,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 144,
+        "east": 148.5,
+        "north": 63,
+        "south": 58.5
+      },
+      "reliefMetres": 2180,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 148.5,
+        "east": 153,
+        "north": 63,
+        "south": 58.5
+      },
+      "reliefMetres": 2067,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 171,
+        "east": 175.5,
+        "north": 63,
+        "south": 58.5
+      },
+      "reliefMetres": 2058,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": -166.5,
+        "east": -162,
+        "north": 58.5,
+        "south": 54
+      },
+      "reliefMetres": 2413,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": -162,
+        "east": -157.5,
+        "north": 58.5,
+        "south": 54
+      },
+      "reliefMetres": 2147,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": -157.5,
+        "east": -153,
+        "north": 58.5,
+        "south": 54
+      },
+      "reliefMetres": 2039,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": -135,
+        "east": -130.5,
+        "north": 58.5,
+        "south": 54
+      },
+      "reliefMetres": 2686,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": -130.5,
+        "east": -126,
+        "north": 58.5,
+        "south": 54
+      },
+      "reliefMetres": 2361,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": -126,
+        "east": -121.5,
+        "north": 58.5,
+        "south": 54
+      },
+      "reliefMetres": 2259,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": -121.5,
+        "east": -117,
+        "north": 58.5,
+        "south": 54
+      },
+      "reliefMetres": 2354,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 94.5,
+        "east": 99,
+        "north": 58.5,
+        "south": 54
+      },
+      "reliefMetres": 2342,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 108,
+        "east": 112.5,
+        "north": 58.5,
+        "south": 54
+      },
+      "reliefMetres": 2119,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 112.5,
+        "east": 117,
+        "north": 58.5,
+        "south": 54
+      },
+      "reliefMetres": 2257,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 117,
+        "east": 121.5,
+        "north": 58.5,
+        "south": 54
+      },
+      "reliefMetres": 2381,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
         "west": 157.5,
         "east": 162,
         "north": 58.5,
         "south": 54
       },
       "reliefMetres": 4533,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": -130.5,
+        "east": -126,
+        "north": 54,
+        "south": 49.5
+      },
+      "reliefMetres": 2667,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": -126,
+        "east": -121.5,
+        "north": 54,
+        "south": 49.5
+      },
+      "reliefMetres": 3366,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": -121.5,
+        "east": -117,
+        "north": 54,
+        "south": 49.5
+      },
+      "reliefMetres": 3283,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": -117,
+        "east": -112.5,
+        "north": 54,
+        "south": 49.5
+      },
+      "reliefMetres": 2579,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 81,
+        "east": 85.5,
+        "north": 54,
+        "south": 49.5
+      },
+      "reliefMetres": 2381,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 85.5,
+        "east": 90,
+        "north": 54,
+        "south": 49.5
+      },
+      "reliefMetres": 3863,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 90,
+        "east": 94.5,
+        "north": 54,
+        "south": 49.5
+      },
+      "reliefMetres": 3534,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 94.5,
+        "east": 99,
+        "north": 54,
+        "south": 49.5
+      },
+      "reliefMetres": 2639,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 99,
+        "east": 103.5,
+        "north": 54,
+        "south": 49.5
+      },
+      "reliefMetres": 2680,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 153,
+        "east": 157.5,
+        "north": 54,
+        "south": 49.5
+      },
+      "reliefMetres": 2094,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 157.5,
+        "east": 162,
+        "north": 54,
+        "south": 49.5
+      },
+      "reliefMetres": 3003,
       "sourcePixelsPerDegree": 240,
       "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
     },
@@ -602,12 +1577,447 @@
         8
       ],
       "bounds": {
+        "west": -121.5,
+        "east": -117,
+        "north": 49.5,
+        "south": 45
+      },
+      "reliefMetres": 3474,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": -117,
+        "east": -112.5,
+        "north": 49.5,
+        "south": 45
+      },
+      "reliefMetres": 2827,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": -112.5,
+        "east": -108,
+        "north": 49.5,
+        "south": 45
+      },
+      "reliefMetres": 2898,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": -108,
+        "east": -103.5,
+        "north": 49.5,
+        "south": 45
+      },
+      "reliefMetres": 2181,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
         "west": 4.5,
         "east": 9,
         "north": 49.5,
         "south": 45
       },
       "reliefMetres": 4145,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 9,
+        "east": 13.5,
+        "north": 49.5,
+        "south": 45
+      },
+      "reliefMetres": 3603,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 13.5,
+        "east": 18,
+        "north": 49.5,
+        "south": 45
+      },
+      "reliefMetres": 2546,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 18,
+        "east": 22.5,
+        "north": 49.5,
+        "south": 45
+      },
+      "reliefMetres": 2122,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 22.5,
+        "east": 27,
+        "north": 49.5,
+        "south": 45
+      },
+      "reliefMetres": 2262,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 76.5,
+        "east": 81,
+        "north": 49.5,
+        "south": 45
+      },
+      "reliefMetres": 3871,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 81,
+        "east": 85.5,
+        "north": 49.5,
+        "south": 45
+      },
+      "reliefMetres": 3520,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 85.5,
+        "east": 90,
+        "north": 49.5,
+        "south": 45
+      },
+      "reliefMetres": 3674,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 90,
+        "east": 94.5,
+        "north": 49.5,
+        "south": 45
+      },
+      "reliefMetres": 3112,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 94.5,
+        "east": 99,
+        "north": 49.5,
+        "south": 45
+      },
+      "reliefMetres": 2662,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 99,
+        "east": 103.5,
+        "north": 49.5,
+        "south": 45
+      },
+      "reliefMetres": 2619,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": -126,
+        "east": -121.5,
+        "north": 45,
+        "south": 40.5
+      },
+      "reliefMetres": 3945,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": -121.5,
+        "east": -117,
+        "north": 45,
+        "south": 40.5
+      },
+      "reliefMetres": 2456,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": -117,
+        "east": -112.5,
+        "north": 45,
+        "south": 40.5
+      },
+      "reliefMetres": 2820,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": -112.5,
+        "east": -108,
+        "north": 45,
+        "south": 40.5
+      },
+      "reliefMetres": 2788,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": -108,
+        "east": -103.5,
+        "north": 45,
+        "south": 40.5
+      },
+      "reliefMetres": 2819,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": -9,
+        "east": -4.5,
+        "north": 45,
+        "south": 40.5
+      },
+      "reliefMetres": 2333,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": -4.5,
+        "east": 0,
+        "north": 45,
+        "south": 40.5
+      },
+      "reliefMetres": 2829,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 0,
+        "east": 4.5,
+        "north": 45,
+        "south": 40.5
+      },
+      "reliefMetres": 3067,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 4.5,
+        "east": 9,
+        "north": 45,
+        "south": 40.5
+      },
+      "reliefMetres": 3508,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 9,
+        "east": 13.5,
+        "north": 45,
+        "south": 40.5
+      },
+      "reliefMetres": 2262,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 13.5,
+        "east": 18,
+        "north": 45,
+        "south": 40.5
+      },
+      "reliefMetres": 2551,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 18,
+        "east": 22.5,
+        "north": 45,
+        "south": 40.5
+      },
+      "reliefMetres": 2439,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 22.5,
+        "east": 27,
+        "north": 45,
+        "south": 40.5
+      },
+      "reliefMetres": 2644,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 31.5,
+        "east": 36,
+        "north": 45,
+        "south": 40.5
+      },
+      "reliefMetres": 2297,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 36,
+        "east": 40.5,
+        "north": 45,
+        "south": 40.5
+      },
+      "reliefMetres": 3136,
       "sourcePixelsPerDegree": 240,
       "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
     },
@@ -737,12 +2147,252 @@
         8
       ],
       "bounds": {
+        "west": 94.5,
+        "east": 99,
+        "north": 45,
+        "south": 40.5
+      },
+      "reliefMetres": 3991,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 99,
+        "east": 103.5,
+        "north": 45,
+        "south": 40.5
+      },
+      "reliefMetres": 3119,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 126,
+        "east": 130.5,
+        "north": 45,
+        "south": 40.5
+      },
+      "reliefMetres": 2500,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 139.5,
+        "east": 144,
+        "north": 45,
+        "south": 40.5
+      },
+      "reliefMetres": 2040,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": -126,
+        "east": -121.5,
+        "north": 40.5,
+        "south": 36
+      },
+      "reliefMetres": 2865,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
         "west": -121.5,
         "east": -117,
         "north": 40.5,
         "south": 36
       },
       "reliefMetres": 4035,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": -117,
+        "east": -112.5,
+        "north": 40.5,
+        "south": 36
+      },
+      "reliefMetres": 3535,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": -112.5,
+        "east": -108,
+        "north": 40.5,
+        "south": 36
+      },
+      "reliefMetres": 3091,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": -108,
+        "east": -103.5,
+        "north": 40.5,
+        "south": 36
+      },
+      "reliefMetres": 2887,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": -9,
+        "east": -4.5,
+        "north": 40.5,
+        "south": 36
+      },
+      "reliefMetres": 2287,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": -4.5,
+        "east": 0,
+        "north": 40.5,
+        "south": 36
+      },
+      "reliefMetres": 3178,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 13.5,
+        "east": 18,
+        "north": 40.5,
+        "south": 36
+      },
+      "reliefMetres": 3074,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 18,
+        "east": 22.5,
+        "north": 40.5,
+        "south": 36
+      },
+      "reliefMetres": 2602,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 22.5,
+        "east": 27,
+        "north": 40.5,
+        "south": 36
+      },
+      "reliefMetres": 2271,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 27,
+        "east": 31.5,
+        "north": 40.5,
+        "south": 36
+      },
+      "reliefMetres": 2795,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 31.5,
+        "east": 36,
+        "north": 40.5,
+        "south": 36
+      },
+      "reliefMetres": 3448,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 36,
+        "east": 40.5,
+        "north": 40.5,
+        "south": 36
+      },
+      "reliefMetres": 3252,
       "sourcePixelsPerDegree": 240,
       "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
     },
@@ -788,6 +2438,51 @@
         "south": 36
       },
       "reliefMetres": 4426,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 54,
+        "east": 58.5,
+        "north": 40.5,
+        "south": 36
+      },
+      "reliefMetres": 3734,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 58.5,
+        "east": 63,
+        "north": 40.5,
+        "south": 36
+      },
+      "reliefMetres": 3035,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 63,
+        "east": 67.5,
+        "north": 40.5,
+        "south": 36
+      },
+      "reliefMetres": 3707,
       "sourcePixelsPerDegree": 240,
       "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
     },
@@ -902,12 +2597,312 @@
         8
       ],
       "bounds": {
+        "west": 99,
+        "east": 103.5,
+        "north": 40.5,
+        "south": 36
+      },
+      "reliefMetres": 3947,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 103.5,
+        "east": 108,
+        "north": 40.5,
+        "south": 36
+      },
+      "reliefMetres": 2274,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 108,
+        "east": 112.5,
+        "north": 40.5,
+        "south": 36
+      },
+      "reliefMetres": 2268,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 112.5,
+        "east": 117,
+        "north": 40.5,
+        "south": 36
+      },
+      "reliefMetres": 2851,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 126,
+        "east": 130.5,
+        "north": 40.5,
+        "south": 36
+      },
+      "reliefMetres": 2026,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 135,
+        "east": 139.5,
+        "north": 40.5,
+        "south": 36
+      },
+      "reliefMetres": 2789,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 139.5,
+        "east": 144,
+        "north": 40.5,
+        "south": 36
+      },
+      "reliefMetres": 2137,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": -121.5,
+        "east": -117,
+        "north": 36,
+        "south": 31.5
+      },
+      "reliefMetres": 2903,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": -117,
+        "east": -112.5,
+        "north": 36,
+        "south": 31.5
+      },
+      "reliefMetres": 3217,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": -112.5,
+        "east": -108,
+        "north": 36,
+        "south": 31.5
+      },
+      "reliefMetres": 3258,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": -108,
+        "east": -103.5,
+        "north": 36,
+        "south": 31.5
+      },
+      "reliefMetres": 2891,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": -9,
+        "east": -4.5,
+        "north": 36,
+        "south": 31.5
+      },
+      "reliefMetres": 3812,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": -4.5,
+        "east": 0,
+        "north": 36,
+        "south": 31.5
+      },
+      "reliefMetres": 3202,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 4.5,
+        "east": 9,
+        "north": 36,
+        "south": 31.5
+      },
+      "reliefMetres": 2138,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 22.5,
+        "east": 27,
+        "north": 36,
+        "south": 31.5
+      },
+      "reliefMetres": 2254,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 31.5,
+        "east": 36,
+        "north": 36,
+        "south": 31.5
+      },
+      "reliefMetres": 2522,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 36,
+        "east": 40.5,
+        "north": 36,
+        "south": 31.5
+      },
+      "reliefMetres": 2943,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 45,
+        "east": 49.5,
+        "north": 36,
+        "south": 31.5
+      },
+      "reliefMetres": 3845,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
         "west": 49.5,
         "east": 54,
         "north": 36,
         "south": 31.5
       },
       "reliefMetres": 4784,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 54,
+        "east": 58.5,
+        "north": 36,
+        "south": 31.5
+      },
+      "reliefMetres": 3261,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 58.5,
+        "east": 63,
+        "north": 36,
+        "south": 31.5
+      },
+      "reliefMetres": 2749,
       "sourcePixelsPerDegree": 240,
       "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
     },
@@ -977,6 +2972,51 @@
         8
       ],
       "bounds": {
+        "west": 81,
+        "east": 85.5,
+        "north": 36,
+        "south": 31.5
+      },
+      "reliefMetres": 2739,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 90,
+        "east": 94.5,
+        "north": 36,
+        "south": 31.5
+      },
+      "reliefMetres": 2614,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 94.5,
+        "east": 99,
+        "north": 36,
+        "south": 31.5
+      },
+      "reliefMetres": 3057,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
         "west": 99,
         "east": 103.5,
         "north": 36,
@@ -1007,6 +3047,156 @@
         8
       ],
       "bounds": {
+        "west": 108,
+        "east": 112.5,
+        "north": 36,
+        "south": 31.5
+      },
+      "reliefMetres": 2762,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 135,
+        "east": 139.5,
+        "north": 36,
+        "south": 31.5
+      },
+      "reliefMetres": 3378,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": -117,
+        "east": -112.5,
+        "north": 31.5,
+        "south": 27
+      },
+      "reliefMetres": 2701,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": -112.5,
+        "east": -108,
+        "north": 31.5,
+        "south": 27
+      },
+      "reliefMetres": 2720,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": -108,
+        "east": -103.5,
+        "north": 31.5,
+        "south": 27
+      },
+      "reliefMetres": 2371,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": -103.5,
+        "east": -99,
+        "north": 31.5,
+        "south": 27
+      },
+      "reliefMetres": 2597,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": -18,
+        "east": -13.5,
+        "north": 31.5,
+        "south": 27
+      },
+      "reliefMetres": 3374,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": -13.5,
+        "east": -9,
+        "north": 31.5,
+        "south": 27
+      },
+      "reliefMetres": 2072,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": -9,
+        "east": -4.5,
+        "north": 31.5,
+        "south": 27
+      },
+      "reliefMetres": 3625,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 31.5,
+        "east": 36,
+        "north": 31.5,
+        "south": 27
+      },
+      "reliefMetres": 2442,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
         "west": 49.5,
         "east": 54,
         "north": 31.5,
@@ -1028,6 +3218,51 @@
         "south": 27
       },
       "reliefMetres": 4194,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 58.5,
+        "east": 63,
+        "north": 31.5,
+        "south": 27
+      },
+      "reliefMetres": 3482,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 63,
+        "east": 67.5,
+        "north": 31.5,
+        "south": 27
+      },
+      "reliefMetres": 3230,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 67.5,
+        "east": 72,
+        "north": 31.5,
+        "south": 27
+      },
+      "reliefMetres": 3180,
       "sourcePixelsPerDegree": 240,
       "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
     },
@@ -1142,12 +3377,252 @@
         8
       ],
       "bounds": {
+        "west": 108,
+        "east": 112.5,
+        "north": 31.5,
+        "south": 27
+      },
+      "reliefMetres": 2831,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": -112.5,
+        "east": -108,
+        "north": 27,
+        "south": 22.5
+      },
+      "reliefMetres": 2087,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": -108,
+        "east": -103.5,
+        "north": 27,
+        "south": 22.5
+      },
+      "reliefMetres": 3101,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": -103.5,
+        "east": -99,
+        "north": 27,
+        "south": 22.5
+      },
+      "reliefMetres": 3369,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 4.5,
+        "east": 9,
+        "north": 27,
+        "south": 22.5
+      },
+      "reliefMetres": 2119,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 36,
+        "east": 40.5,
+        "north": 27,
+        "south": 22.5
+      },
+      "reliefMetres": 2044,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 54,
+        "east": 58.5,
+        "north": 27,
+        "south": 22.5
+      },
+      "reliefMetres": 2792,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 58.5,
+        "east": 63,
+        "north": 27,
+        "south": 22.5
+      },
+      "reliefMetres": 2102,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 85.5,
+        "east": 90,
+        "north": 27,
+        "south": 22.5
+      },
+      "reliefMetres": 3664,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 90,
+        "east": 94.5,
+        "north": 27,
+        "south": 22.5
+      },
+      "reliefMetres": 2766,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 94.5,
+        "east": 99,
+        "north": 27,
+        "south": 22.5
+      },
+      "reliefMetres": 3920,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 99,
+        "east": 103.5,
+        "north": 27,
+        "south": 22.5
+      },
+      "reliefMetres": 3927,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 103.5,
+        "east": 108,
+        "north": 27,
+        "south": 22.5
+      },
+      "reliefMetres": 2715,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 117,
+        "east": 121.5,
+        "north": 27,
+        "south": 22.5
+      },
+      "reliefMetres": 3525,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 121.5,
+        "east": 126,
+        "north": 27,
+        "south": 22.5
+      },
+      "reliefMetres": 2487,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
         "west": -157.5,
         "east": -153,
         "north": 22.5,
         "south": 18
       },
       "reliefMetres": 4064,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": -108,
+        "east": -103.5,
+        "north": 22.5,
+        "south": 18
+      },
+      "reliefMetres": 3858,
       "sourcePixelsPerDegree": 240,
       "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
     },
@@ -1189,10 +3664,400 @@
       "bounds": {
         "west": -76.5,
         "east": -72,
+        "north": 22.5,
+        "south": 18
+      },
+      "reliefMetres": 2306,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": -72,
+        "east": -67.5,
+        "north": 22.5,
+        "south": 18
+      },
+      "reliefMetres": 2847,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 13.5,
+        "east": 18,
+        "north": 22.5,
+        "south": 18
+      },
+      "reliefMetres": 2752,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 18,
+        "east": 22.5,
+        "north": 22.5,
+        "south": 18
+      },
+      "reliefMetres": 3078,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 36,
+        "east": 40.5,
+        "north": 22.5,
+        "south": 18
+      },
+      "reliefMetres": 2340,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 40.5,
+        "east": 45,
+        "north": 22.5,
+        "south": 18
+      },
+      "reliefMetres": 2873,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 90,
+        "east": 94.5,
+        "north": 22.5,
+        "south": 18
+      },
+      "reliefMetres": 2827,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 94.5,
+        "east": 99,
+        "north": 22.5,
+        "south": 18
+      },
+      "reliefMetres": 2360,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 99,
+        "east": 103.5,
+        "north": 22.5,
+        "south": 18
+      },
+      "reliefMetres": 2373,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 103.5,
+        "east": 108,
+        "north": 22.5,
+        "south": 18
+      },
+      "reliefMetres": 2736,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 117,
+        "east": 121.5,
+        "north": 22.5,
+        "south": 18
+      },
+      "reliefMetres": 2000,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": -103.5,
+        "east": -99,
+        "north": 18,
+        "south": 13.5
+      },
+      "reliefMetres": 3215,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": -99,
+        "east": -94.5,
+        "north": 18,
+        "south": 13.5
+      },
+      "reliefMetres": 3474,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": -94.5,
+        "east": -90,
+        "north": 18,
+        "south": 13.5
+      },
+      "reliefMetres": 3724,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": -90,
+        "east": -85.5,
+        "north": 18,
+        "south": 13.5
+      },
+      "reliefMetres": 2681,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": -27,
+        "east": -22.5,
+        "north": 18,
+        "south": 13.5
+      },
+      "reliefMetres": 2278,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 36,
+        "east": 40.5,
+        "north": 18,
+        "south": 13.5
+      },
+      "reliefMetres": 3199,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 40.5,
+        "east": 45,
+        "north": 18,
+        "south": 13.5
+      },
+      "reliefMetres": 3449,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 45,
+        "east": 49.5,
+        "north": 18,
+        "south": 13.5
+      },
+      "reliefMetres": 2359,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 103.5,
+        "east": 108,
+        "north": 18,
+        "south": 13.5
+      },
+      "reliefMetres": 2306,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 117,
+        "east": 121.5,
+        "north": 18,
+        "south": 13.5
+      },
+      "reliefMetres": 2704,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": -85.5,
+        "east": -81,
+        "north": 13.5,
+        "south": 9
+      },
+      "reliefMetres": 3617,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": -76.5,
+        "east": -72,
         "north": 13.5,
         "south": 9
       },
       "reliefMetres": 5192,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": -72,
+        "east": -67.5,
+        "north": 13.5,
+        "south": 9
+      },
+      "reliefMetres": 3920,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": -67.5,
+        "east": -63,
+        "north": 13.5,
+        "south": 9
+      },
+      "reliefMetres": 2328,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 22.5,
+        "east": 27,
+        "north": 13.5,
+        "south": 9
+      },
+      "reliefMetres": 2433,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 31.5,
+        "east": 36,
+        "north": 13.5,
+        "south": 9
+      },
+      "reliefMetres": 2168,
       "sourcePixelsPerDegree": 240,
       "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
     },
@@ -1208,6 +4073,156 @@
         "south": 9
       },
       "reliefMetres": 4329,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 40.5,
+        "east": 45,
+        "north": 13.5,
+        "south": 9
+      },
+      "reliefMetres": 3015,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 45,
+        "east": 49.5,
+        "north": 13.5,
+        "south": 9
+      },
+      "reliefMetres": 2329,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 49.5,
+        "east": 54,
+        "north": 13.5,
+        "south": 9
+      },
+      "reliefMetres": 2010,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 72,
+        "east": 76.5,
+        "north": 13.5,
+        "south": 9
+      },
+      "reliefMetres": 2268,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 76.5,
+        "east": 81,
+        "north": 13.5,
+        "south": 9
+      },
+      "reliefMetres": 2451,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 108,
+        "east": 112.5,
+        "north": 13.5,
+        "south": 9
+      },
+      "reliefMetres": 2103,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 117,
+        "east": 121.5,
+        "north": 13.5,
+        "south": 9
+      },
+      "reliefMetres": 2202,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 121.5,
+        "east": 126,
+        "north": 13.5,
+        "south": 9
+      },
+      "reliefMetres": 2116,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": -85.5,
+        "east": -81,
+        "north": 9,
+        "south": 4.5
+      },
+      "reliefMetres": 3181,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": -81,
+        "east": -76.5,
+        "north": 9,
+        "south": 4.5
+      },
+      "reliefMetres": 2036,
       "sourcePixelsPerDegree": 240,
       "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
     },
@@ -1247,6 +4262,171 @@
         8
       ],
       "bounds": {
+        "west": -67.5,
+        "east": -63,
+        "north": 9,
+        "south": 4.5
+      },
+      "reliefMetres": 2246,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": -63,
+        "east": -58.5,
+        "north": 9,
+        "south": 4.5
+      },
+      "reliefMetres": 2620,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 9,
+        "east": 13.5,
+        "north": 9,
+        "south": 4.5
+      },
+      "reliefMetres": 2813,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 31.5,
+        "east": 36,
+        "north": 9,
+        "south": 4.5
+      },
+      "reliefMetres": 2487,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 36,
+        "east": 40.5,
+        "north": 9,
+        "south": 4.5
+      },
+      "reliefMetres": 3894,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 40.5,
+        "east": 45,
+        "north": 9,
+        "south": 4.5
+      },
+      "reliefMetres": 2480,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 76.5,
+        "east": 81,
+        "north": 9,
+        "south": 4.5
+      },
+      "reliefMetres": 2283,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 94.5,
+        "east": 99,
+        "north": 9,
+        "south": 4.5
+      },
+      "reliefMetres": 2600,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 112.5,
+        "east": 117,
+        "north": 9,
+        "south": 4.5
+      },
+      "reliefMetres": 3729,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 121.5,
+        "east": 126,
+        "north": 9,
+        "south": 4.5
+      },
+      "reliefMetres": 2560,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 126,
+        "east": 130.5,
+        "north": 9,
+        "south": 4.5
+      },
+      "reliefMetres": 2347,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
         "west": -81,
         "east": -76.5,
         "north": 4.5,
@@ -1277,12 +4457,147 @@
         8
       ],
       "bounds": {
+        "west": -67.5,
+        "east": -63,
+        "north": 4.5,
+        "south": 0
+      },
+      "reliefMetres": 2706,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 4.5,
+        "east": 9,
+        "north": 4.5,
+        "south": 0
+      },
+      "reliefMetres": 2668,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 9,
+        "east": 13.5,
+        "north": 4.5,
+        "south": 0
+      },
+      "reliefMetres": 3743,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
         "west": 27,
         "east": 31.5,
         "north": 4.5,
         "south": 0
       },
       "reliefMetres": 4102,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 31.5,
+        "east": 36,
+        "north": 4.5,
+        "south": 0
+      },
+      "reliefMetres": 3765,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 36,
+        "east": 40.5,
+        "north": 4.5,
+        "south": 0
+      },
+      "reliefMetres": 3167,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 94.5,
+        "east": 99,
+        "north": 4.5,
+        "south": 0
+      },
+      "reliefMetres": 3257,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 99,
+        "east": 103.5,
+        "north": 4.5,
+        "south": 0
+      },
+      "reliefMetres": 2455,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 112.5,
+        "east": 117,
+        "north": 4.5,
+        "south": 0
+      },
+      "reliefMetres": 2176,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 117,
+        "east": 121.5,
+        "north": 4.5,
+        "south": 0
+      },
+      "reliefMetres": 2505,
       "sourcePixelsPerDegree": 240,
       "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
     },
@@ -1307,12 +4622,132 @@
         8
       ],
       "bounds": {
+        "west": 27,
+        "east": 31.5,
+        "north": 0,
+        "south": -4.5
+      },
+      "reliefMetres": 3455,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 31.5,
+        "east": 36,
+        "north": 0,
+        "south": -4.5
+      },
+      "reliefMetres": 2829,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
         "west": 36,
         "east": 40.5,
         "north": 0,
         "south": -4.5
       },
       "reliefMetres": 5727,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 99,
+        "east": 103.5,
+        "north": 0,
+        "south": -4.5
+      },
+      "reliefMetres": 3268,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 103.5,
+        "east": 108,
+        "north": 0,
+        "south": -4.5
+      },
+      "reliefMetres": 2211,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 117,
+        "east": 121.5,
+        "north": 0,
+        "south": -4.5
+      },
+      "reliefMetres": 3124,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 121.5,
+        "east": 126,
+        "north": 0,
+        "south": -4.5
+      },
+      "reliefMetres": 2509,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 126,
+        "east": 130.5,
+        "north": 0,
+        "south": -4.5
+      },
+      "reliefMetres": 2650,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 130.5,
+        "east": 135,
+        "north": 0,
+        "south": -4.5
+      },
+      "reliefMetres": 2640,
       "sourcePixelsPerDegree": 240,
       "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
     },
@@ -1367,6 +4802,171 @@
         8
       ],
       "bounds": {
+        "west": -76.5,
+        "east": -72,
+        "north": -4.5,
+        "south": -9
+      },
+      "reliefMetres": 2939,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 27,
+        "east": 31.5,
+        "north": -4.5,
+        "south": -9
+      },
+      "reliefMetres": 2041,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 31.5,
+        "east": 36,
+        "north": -4.5,
+        "south": -9
+      },
+      "reliefMetres": 2452,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 36,
+        "east": 40.5,
+        "north": -4.5,
+        "south": -9
+      },
+      "reliefMetres": 2478,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 103.5,
+        "east": 108,
+        "north": -4.5,
+        "south": -9
+      },
+      "reliefMetres": 2706,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 108,
+        "east": 112.5,
+        "north": -4.5,
+        "south": -9
+      },
+      "reliefMetres": 3042,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 112.5,
+        "east": 117,
+        "north": -4.5,
+        "south": -9
+      },
+      "reliefMetres": 3343,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 117,
+        "east": 121.5,
+        "north": -4.5,
+        "south": -9
+      },
+      "reliefMetres": 2505,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 121.5,
+        "east": 126,
+        "north": -4.5,
+        "south": -9
+      },
+      "reliefMetres": 3385,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 126,
+        "east": 130.5,
+        "north": -4.5,
+        "south": -9
+      },
+      "reliefMetres": 2054,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 135,
+        "east": 139.5,
+        "north": -4.5,
+        "south": -9
+      },
+      "reliefMetres": 2333,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
         "west": 139.5,
         "east": 144,
         "north": -4.5,
@@ -1388,6 +4988,36 @@
         "south": -9
       },
       "reliefMetres": 4110,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 148.5,
+        "east": 153,
+        "north": -4.5,
+        "south": -9
+      },
+      "reliefMetres": 2009,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 153,
+        "east": 157.5,
+        "north": -4.5,
+        "south": -9
+      },
+      "reliefMetres": 2572,
       "sourcePixelsPerDegree": 240,
       "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
     },
@@ -1442,6 +5072,111 @@
         8
       ],
       "bounds": {
+        "west": 13.5,
+        "east": 18,
+        "north": -9,
+        "south": -13.5
+      },
+      "reliefMetres": 2442,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 31.5,
+        "east": 36,
+        "north": -9,
+        "south": -13.5
+      },
+      "reliefMetres": 2559,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 40.5,
+        "east": 45,
+        "north": -9,
+        "south": -13.5
+      },
+      "reliefMetres": 2262,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 121.5,
+        "east": 126,
+        "north": -9,
+        "south": -13.5
+      },
+      "reliefMetres": 2012,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 144,
+        "east": 148.5,
+        "north": -9,
+        "south": -13.5
+      },
+      "reliefMetres": 3267,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 148.5,
+        "east": 153,
+        "north": -9,
+        "south": -13.5
+      },
+      "reliefMetres": 3350,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 157.5,
+        "east": 162,
+        "north": -9,
+        "south": -13.5
+      },
+      "reliefMetres": 2017,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
         "west": -76.5,
         "east": -72,
         "north": -13.5,
@@ -1487,6 +5222,66 @@
         8
       ],
       "bounds": {
+        "west": 9,
+        "east": 13.5,
+        "north": -13.5,
+        "south": -18
+      },
+      "reliefMetres": 2291,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 31.5,
+        "east": 36,
+        "north": -13.5,
+        "south": -18
+      },
+      "reliefMetres": 2561,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 36,
+        "east": 40.5,
+        "north": -13.5,
+        "south": -18
+      },
+      "reliefMetres": 2033,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 45,
+        "east": 49.5,
+        "north": -13.5,
+        "south": -18
+      },
+      "reliefMetres": 2671,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
         "west": -72,
         "east": -67.5,
         "north": -18,
@@ -1508,6 +5303,111 @@
         "south": -22.5
       },
       "reliefMetres": 5388,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": -45,
+        "east": -40.5,
+        "north": -18,
+        "south": -22.5
+      },
+      "reliefMetres": 2539,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": -31.5,
+        "east": -27,
+        "north": -18,
+        "south": -22.5
+      },
+      "reliefMetres": 2034,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 13.5,
+        "east": 18,
+        "north": -18,
+        "south": -22.5
+      },
+      "reliefMetres": 2329,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 31.5,
+        "east": 36,
+        "north": -18,
+        "south": -22.5
+      },
+      "reliefMetres": 2428,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 45,
+        "east": 49.5,
+        "north": -18,
+        "south": -22.5
+      },
+      "reliefMetres": 2488,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 54,
+        "east": 58.5,
+        "north": -18,
+        "south": -22.5
+      },
+      "reliefMetres": 2598,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": -139.5,
+        "east": -135,
+        "north": -22.5,
+        "south": -27
+      },
+      "reliefMetres": 2118,
       "sourcePixelsPerDegree": 240,
       "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
     },
@@ -1547,6 +5447,21 @@
         8
       ],
       "bounds": {
+        "west": 13.5,
+        "east": 18,
+        "north": -22.5,
+        "south": -27
+      },
+      "reliefMetres": 2256,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
         "west": -72,
         "east": -67.5,
         "north": -27,
@@ -1577,6 +5492,21 @@
         8
       ],
       "bounds": {
+        "west": 27,
+        "east": 31.5,
+        "north": -27,
+        "south": -31.5
+      },
+      "reliefMetres": 3348,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
         "west": -72,
         "east": -67.5,
         "north": -31.5,
@@ -1592,12 +5522,1137 @@
         8
       ],
       "bounds": {
+        "west": -67.5,
+        "east": -63,
+        "north": -31.5,
+        "south": -36
+      },
+      "reliefMetres": 2478,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 22.5,
+        "east": 27,
+        "north": -31.5,
+        "south": -36
+      },
+      "reliefMetres": 2190,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": -76.5,
+        "east": -72,
+        "north": -36,
+        "south": -40.5
+      },
+      "reliefMetres": 2167,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
         "west": -72,
         "east": -67.5,
         "north": -36,
         "south": -40.5
       },
       "reliefMetres": 4190,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 144,
+        "east": 148.5,
+        "north": -36,
+        "south": -40.5
+      },
+      "reliefMetres": 2063,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 175.5,
+        "east": 180,
+        "north": -36,
+        "south": -40.5
+      },
+      "reliefMetres": 2531,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": -76.5,
+        "east": -72,
+        "north": -40.5,
+        "south": -45
+      },
+      "reliefMetres": 2218,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": -72,
+        "east": -67.5,
+        "north": -40.5,
+        "south": -45
+      },
+      "reliefMetres": 2948,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 166.5,
+        "east": 171,
+        "north": -40.5,
+        "south": -45
+      },
+      "reliefMetres": 3150,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 171,
+        "east": 175.5,
+        "north": -40.5,
+        "south": -45
+      },
+      "reliefMetres": 2501,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": -76.5,
+        "east": -72,
+        "north": -45,
+        "south": -49.5
+      },
+      "reliefMetres": 3701,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": -72,
+        "east": -67.5,
+        "north": -45,
+        "south": -49.5
+      },
+      "reliefMetres": 2500,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": -76.5,
+        "east": -72,
+        "north": -49.5,
+        "south": -54
+      },
+      "reliefMetres": 2884,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 72,
+        "east": 76.5,
+        "north": -49.5,
+        "south": -54
+      },
+      "reliefMetres": 2332,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": -72,
+        "east": -67.5,
+        "north": -54,
+        "south": -58.5
+      },
+      "reliefMetres": 2193,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": -40.5,
+        "east": -36,
+        "north": -54,
+        "south": -58.5
+      },
+      "reliefMetres": 2573,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": -67.5,
+        "east": -63,
+        "north": -63,
+        "south": -67.5
+      },
+      "reliefMetres": 2582,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": -63,
+        "east": -58.5,
+        "north": -63,
+        "south": -67.5
+      },
+      "reliefMetres": 2280,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 54,
+        "east": 58.5,
+        "north": -63,
+        "south": -67.5
+      },
+      "reliefMetres": 2024,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": -72,
+        "east": -67.5,
+        "north": -67.5,
+        "south": -72
+      },
+      "reliefMetres": 2879,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": -67.5,
+        "east": -63,
+        "north": -67.5,
+        "south": -72
+      },
+      "reliefMetres": 2995,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 0,
+        "east": 4.5,
+        "north": -67.5,
+        "south": -72
+      },
+      "reliefMetres": 2530,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 4.5,
+        "east": 9,
+        "north": -67.5,
+        "south": -72
+      },
+      "reliefMetres": 3062,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 9,
+        "east": 13.5,
+        "north": -67.5,
+        "south": -72
+      },
+      "reliefMetres": 2808,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 13.5,
+        "east": 18,
+        "north": -67.5,
+        "south": -72
+      },
+      "reliefMetres": 2407,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 22.5,
+        "east": 27,
+        "north": -67.5,
+        "south": -72
+      },
+      "reliefMetres": 2185,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 31.5,
+        "east": 36,
+        "north": -67.5,
+        "south": -72
+      },
+      "reliefMetres": 2363,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 36,
+        "east": 40.5,
+        "north": -67.5,
+        "south": -72
+      },
+      "reliefMetres": 2465,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 40.5,
+        "east": 45,
+        "north": -67.5,
+        "south": -72
+      },
+      "reliefMetres": 2691,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 45,
+        "east": 49.5,
+        "north": -67.5,
+        "south": -72
+      },
+      "reliefMetres": 2962,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 49.5,
+        "east": 54,
+        "north": -67.5,
+        "south": -72
+      },
+      "reliefMetres": 2363,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 54,
+        "east": 58.5,
+        "north": -67.5,
+        "south": -72
+      },
+      "reliefMetres": 2365,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 58.5,
+        "east": 63,
+        "north": -67.5,
+        "south": -72
+      },
+      "reliefMetres": 2797,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 63,
+        "east": 67.5,
+        "north": -67.5,
+        "south": -72
+      },
+      "reliefMetres": 2431,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 72,
+        "east": 76.5,
+        "north": -67.5,
+        "south": -72
+      },
+      "reliefMetres": 2009,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 76.5,
+        "east": 81,
+        "north": -67.5,
+        "south": -72
+      },
+      "reliefMetres": 2735,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 81,
+        "east": 85.5,
+        "north": -67.5,
+        "south": -72
+      },
+      "reliefMetres": 3000,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 85.5,
+        "east": 90,
+        "north": -67.5,
+        "south": -72
+      },
+      "reliefMetres": 2413,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 94.5,
+        "east": 99,
+        "north": -67.5,
+        "south": -72
+      },
+      "reliefMetres": 2036,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 99,
+        "east": 103.5,
+        "north": -67.5,
+        "south": -72
+      },
+      "reliefMetres": 2109,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 108,
+        "east": 112.5,
+        "north": -67.5,
+        "south": -72
+      },
+      "reliefMetres": 2021,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 112.5,
+        "east": 117,
+        "north": -67.5,
+        "south": -72
+      },
+      "reliefMetres": 2525,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 117,
+        "east": 121.5,
+        "north": -67.5,
+        "south": -72
+      },
+      "reliefMetres": 2530,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 121.5,
+        "east": 126,
+        "north": -67.5,
+        "south": -72
+      },
+      "reliefMetres": 2100,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 126,
+        "east": 130.5,
+        "north": -67.5,
+        "south": -72
+      },
+      "reliefMetres": 2319,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 139.5,
+        "east": 144,
+        "north": -67.5,
+        "south": -72
+      },
+      "reliefMetres": 2369,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 144,
+        "east": 148.5,
+        "north": -67.5,
+        "south": -72
+      },
+      "reliefMetres": 2286,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 148.5,
+        "east": 153,
+        "north": -67.5,
+        "south": -72
+      },
+      "reliefMetres": 2137,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 153,
+        "east": 157.5,
+        "north": -67.5,
+        "south": -72
+      },
+      "reliefMetres": 2208,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 157.5,
+        "east": 162,
+        "north": -67.5,
+        "south": -72
+      },
+      "reliefMetres": 2836,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 162,
+        "east": 166.5,
+        "north": -67.5,
+        "south": -72
+      },
+      "reliefMetres": 2297,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 166.5,
+        "east": 171,
+        "north": -67.5,
+        "south": -72
+      },
+      "reliefMetres": 3699,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": -139.5,
+        "east": -135,
+        "north": -72,
+        "south": -76.5
+      },
+      "reliefMetres": 3242,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": -135,
+        "east": -130.5,
+        "north": -72,
+        "south": -76.5
+      },
+      "reliefMetres": 2912,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": -130.5,
+        "east": -126,
+        "north": -72,
+        "south": -76.5
+      },
+      "reliefMetres": 3132,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": -126,
+        "east": -121.5,
+        "north": -72,
+        "south": -76.5
+      },
+      "reliefMetres": 3266,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": -121.5,
+        "east": -117,
+        "north": -72,
+        "south": -76.5
+      },
+      "reliefMetres": 2001,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": -117,
+        "east": -112.5,
+        "north": -72,
+        "south": -76.5
+      },
+      "reliefMetres": 3355,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": -112.5,
+        "east": -108,
+        "north": -72,
+        "south": -76.5
+      },
+      "reliefMetres": 3484,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": -72,
+        "east": -67.5,
+        "north": -72,
+        "south": -76.5
+      },
+      "reliefMetres": 2130,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": -67.5,
+        "east": -63,
+        "north": -72,
+        "south": -76.5
+      },
+      "reliefMetres": 2226,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": -13.5,
+        "east": -9,
+        "north": -72,
+        "south": -76.5
+      },
+      "reliefMetres": 2730,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": -9,
+        "east": -4.5,
+        "north": -72,
+        "south": -76.5
+      },
+      "reliefMetres": 2507,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": -4.5,
+        "east": 0,
+        "north": -72,
+        "south": -76.5
+      },
+      "reliefMetres": 2554,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 0,
+        "east": 4.5,
+        "north": -72,
+        "south": -76.5
+      },
+      "reliefMetres": 2052,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 18,
+        "east": 22.5,
+        "north": -72,
+        "south": -76.5
+      },
+      "reliefMetres": 2211,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 22.5,
+        "east": 27,
+        "north": -72,
+        "south": -76.5
+      },
+      "reliefMetres": 2485,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 27,
+        "east": 31.5,
+        "north": -72,
+        "south": -76.5
+      },
+      "reliefMetres": 2856,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 63,
+        "east": 67.5,
+        "north": -72,
+        "south": -76.5
+      },
+      "reliefMetres": 2532,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 67.5,
+        "east": 72,
+        "north": -72,
+        "south": -76.5
+      },
+      "reliefMetres": 2510,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 157.5,
+        "east": 162,
+        "north": -72,
+        "south": -76.5
+      },
+      "reliefMetres": 2938,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 162,
+        "east": 166.5,
+        "north": -72,
+        "south": -76.5
+      },
+      "reliefMetres": 3599,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 166.5,
+        "east": 171,
+        "north": -72,
+        "south": -76.5
+      },
+      "reliefMetres": 3050,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": -130.5,
+        "east": -126,
+        "north": -76.5,
+        "south": -81
+      },
+      "reliefMetres": 3282,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": -126,
+        "east": -121.5,
+        "north": -76.5,
+        "south": -81
+      },
+      "reliefMetres": 2881,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": -121.5,
+        "east": -117,
+        "north": -76.5,
+        "south": -81
+      },
+      "reliefMetres": 2317,
       "sourcePixelsPerDegree": 240,
       "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
     },
@@ -1637,12 +6692,117 @@
         8
       ],
       "bounds": {
+        "west": 153,
+        "east": 157.5,
+        "north": -76.5,
+        "south": -81
+      },
+      "reliefMetres": 3030,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 157.5,
+        "east": 162,
+        "north": -76.5,
+        "south": -81
+      },
+      "reliefMetres": 3438,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 162,
+        "east": 166.5,
+        "north": -76.5,
+        "south": -81
+      },
+      "reliefMetres": 3801,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 166.5,
+        "east": 171,
+        "north": -76.5,
+        "south": -81
+      },
+      "reliefMetres": 3654,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": -180,
+        "east": -175.5,
+        "north": -81,
+        "south": -85.5
+      },
+      "reliefMetres": 3149,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
         "west": -175.5,
         "east": -171,
         "north": -81,
         "south": -85.5
       },
       "reliefMetres": 4015,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": -171,
+        "east": -166.5,
+        "north": -81,
+        "south": -85.5
+      },
+      "reliefMetres": 3738,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": -166.5,
+        "east": -162,
+        "north": -81,
+        "south": -85.5
+      },
+      "reliefMetres": 2795,
       "sourcePixelsPerDegree": 240,
       "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
     },
@@ -1705,10 +6865,160 @@
       "reliefMetres": 4132,
       "sourcePixelsPerDegree": 240,
       "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": 175.5,
+        "east": 180,
+        "north": -81,
+        "south": -85.5
+      },
+      "reliefMetres": 3697,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": -166.5,
+        "east": -162,
+        "north": -85.5,
+        "south": -90
+      },
+      "reliefMetres": 3062,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": -162,
+        "east": -157.5,
+        "north": -85.5,
+        "south": -90
+      },
+      "reliefMetres": 3493,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": -157.5,
+        "east": -153,
+        "north": -85.5,
+        "south": -90
+      },
+      "reliefMetres": 3550,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": -153,
+        "east": -148.5,
+        "north": -85.5,
+        "south": -90
+      },
+      "reliefMetres": 2819,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": -148.5,
+        "east": -144,
+        "north": -85.5,
+        "south": -90
+      },
+      "reliefMetres": 2800,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": -144,
+        "east": -139.5,
+        "north": -85.5,
+        "south": -90
+      },
+      "reliefMetres": 2351,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": -139.5,
+        "east": -135,
+        "north": -85.5,
+        "south": -90
+      },
+      "reliefMetres": 2637,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": -135,
+        "east": -130.5,
+        "north": -85.5,
+        "south": -90
+      },
+      "reliefMetres": 2682,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
+    },
+    {
+      "level": 8,
+      "levels": [
+        8
+      ],
+      "bounds": {
+        "west": -130.5,
+        "east": -126,
+        "north": -85.5,
+        "south": -90
+      },
+      "reliefMetres": 2725,
+      "sourcePixelsPerDegree": 240,
+      "sourceProductId": "ETOPO_2022_v1_15s (surface + géoïde)"
     }
   ],
   "elevationMetres": {
-    "minimum": -14233,
+    "minimum": -14748,
     "maximum": 13296
   },
   "figure": {
@@ -1720,7 +7030,7 @@
       6356.7519
     ]
   },
-  "figureFloorRatio": 0.999891,
-  "tiles": 5546,
-  "bytes": 732792980
+  "figureFloorRatio": 0.999772,
+  "tiles": 11210,
+  "bytes": 1481177300
 }

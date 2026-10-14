@@ -2749,9 +2749,26 @@ molles : ETOPO 2022 à 60″ met un échantillon tous les 1,8 km. ETOPO publie a
   hauteurs que dans une emprise qui contient la tuile d'imagerie, donc aucune ne manque. Ce seuil
   sépare les grands reliefs mesurés (Himalaya et Karakoram jusqu'à 7 711 m de relief, Pamir, Tian
   Shan, Andes, Alaska, Afrique de l'Est, Caucase, Elbourz, Nouvelle-Guinée, volcans du Mexique,
-  Hawaï, Antarctique, les Alpes à 4 105 m) ; un seuil plus bas étendra la couverture. Grille de
+  Hawaï, Antarctique, les Alpes à 4 105 m) ; un seuil plus bas étendra la couverture (fait, voir
+  ci-dessous : les chiffres qui suivent sont ceux du seuil de 4 000 m, SUPERSEDED le 2026-10-14). Grille de
   Sentinel-2 : 70 boîtes de niveau 5 cuites au niveau 7 (1 120 tuiles, 611 m par échantillon) ;
   grille de GIBS : 81 boîtes de niveau 6 cuites au niveau 8 (1 296 tuiles, 15,8″).
+- **Le seuil abaissé à 2 000 m, sur mesure (2026-10-14).** Avant de cuire, deux mesures. Le
+  COÛT par seuil (boîtes, tuiles de 132 130 octets, paires sources de 15° à télécharger, ~44 Mo la
+  paire) : à 2 000 m, 363 boîtes et 767 Mo sur la grille de Sentinel-2, 437 boîtes et 924 Mo sur
+  celle de GIBS, 97 paires de plus ; le global (toute boîte avec des terres) ferait 2,55 et 3,7 Go.
+  Et le GAIN : l'écart RMS sur les terres entre 15″ et le 60″ interpolé, par boîte, sur les 214
+  boîtes entièrement couvertes par les paires déjà téléchargées. Il vaut 54 m (médiane) au-dessus
+  de 4 000 m de relief, 38 à 42 m entre 2 000 et 4 000, 16 m entre 1 500 et 2 000, 5 à 9 m en
+  dessous : le gain plafonne vers 2 000 m, et sous ce seuil 15″ ne dessine guère plus qu'une
+  dizaine de mètres sur des échantillons de 463 m. Décision de l'utilisateur : 2 000 m. Le global
+  reste à faire avec la règle de l'eau tuile par tuile, pour un gain mesuré faible en plaine.
+  `src/config/surfaceHeights.test.ts` exige que la plus faible boîte cuite tombe juste au-dessus
+  du seuil de la recette (un manifeste cuit à l'ancien seuil y échoue à 4 014 m), et un témoin aux
+  Pyrénées (Aneto) tient une boîte gagnée par ce seuil. Cuisson mesurée : grille de Sentinel-2,
+  363 boîtes, 5 808 tuiles fines, 16 048 tuiles et 2 120,4 Mo en tout ; grille de GIBS, 435
+  boîtes, 6 960 tuiles fines, 11 210 tuiles et 1 481,2 Mo. Le manifeste arrondit le relief au
+  mètre, donc la plus faible boîte s'y lit 2 000 sur les deux grilles.
 - **La même conversion que le socle.** Surface et géoïde à 15″ ont le registre du socle (surface au
   coin, géoïde au centre, mêmes centres, lu par `geoTiffGrid` avec l'emprise ANNONCÉE par le nom de
   la tuile, refusée sinon) ; rayon = ellipsoïde rendu + géoïde + hauteur. L'eau n'est pas
