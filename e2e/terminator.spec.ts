@@ -35,6 +35,12 @@ interface TerminatorBin {
 
 /** Cadre le terminateur au centre du disque, laisse le rendu se poser, puis mesure. */
 async function measure(page: Page): Promise<TerminatorBin[]> {
+  // La sonde arrive dans un morceau chargé APRÈS le démarrage (`ui/debugProbes`, sous un
+  // drapeau `debug-…`) : le chargeur masqué ne garantit pas qu'elle existe déjà. Sans cette
+  // attente, `terminatorProbe` valait `undefined` sur un coureur lent (run 38535537219).
+  await page.waitForFunction(() => 'terminatorProbe' in window, undefined, {
+    timeout: 30_000,
+  });
   const framed = await page.evaluate(() =>
     (
       window as unknown as { terminatorProbe: { frame(n?: string): boolean } }
