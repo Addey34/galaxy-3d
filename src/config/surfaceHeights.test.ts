@@ -546,6 +546,42 @@ describe('relief de la Terre : l’eau à son niveau, sur les témoins LIVRÉS (
     expect(box?.sourcePixelsPerDegree).toBe(240);
   });
 
+  it('cuit ETOPO 15″ avec le seuil de la recette, sur chaque grille (2026-10-14)', () => {
+    // Les boîtes cuites au niveau fin sont celles dont le relief des terres dépasse le seuil de la
+    // recette. Un manifeste d'une cuisson faite avec un AUTRE seuil (les 4 000 m du pas 8) a sa
+    // plus faible boîte loin au-dessus : la plus faible doit tomber juste au-dessus du seuil.
+    const recipe = JSON.parse(
+      readFileSync(
+        resolve(ROOT, 'scripts', 'surface-height-targets.json'),
+        'utf-8'
+      )
+    ) as {
+      sets: {
+        id: string;
+        base: { geotiff?: { fine?: { minReliefMetres: number } } };
+      }[];
+    };
+    for (const id of ['earth-etopo-2022', 'earth-etopo-2022-trek']) {
+      const threshold = recipe.sets.find((s) => s.id === id)!.base.geotiff!
+        .fine!.minReliefMetres;
+      const coverage = (
+        JSON.parse(
+          readFileSync(
+            resolve(ROOT, 'public', setById(id).manifestPath),
+            'utf-8'
+          )
+        ) as { coverage: { reliefMetres?: number }[] }
+      ).coverage;
+      const reliefs = coverage
+        .map((e) => e.reliefMetres)
+        .filter((r): r is number => r !== undefined);
+      expect(reliefs.length, id).toBeGreaterThan(0);
+      // Le manifeste ARRONDIT le relief au mètre : une boîte à 2 000,3 m s'y lit 2 000.
+      expect(Math.min(...reliefs), id).toBeGreaterThanOrEqual(threshold);
+      expect(Math.min(...reliefs), id).toBeLessThan(threshold * 1.05);
+    }
+  });
+
   it('cuit un relief par grille d’imagerie, et le même relief sur chacune', () => {
     // GIBS (10 × 5 au niveau 3) et EOX (Trek, 2 × 1 au niveau 0) : sur la mauvaise grille, le même
     // indice tombe ailleurs. Les deux jeux viennent de la MÊME source et de la MÊME règle de l'eau.
