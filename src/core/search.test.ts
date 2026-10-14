@@ -16,6 +16,8 @@ const NAMES: Record<string, string> = {
   voyager2: 'Voyager 2',
   cassini: 'Cassini',
   saturn: 'Saturn',
+  juno: 'Juno',
+  jupiter: 'Jupiter',
 };
 const nameOf = (id: string): string => NAMES[id] ?? id;
 
@@ -28,6 +30,7 @@ const file: SearchIndexFile = {
   missions: [['Cassini-Huygens', 'chs', 'cassini', 'saturn']],
   instruments: [['Imaging Science Subsystem', 'cassini']],
   flybys: [['voyager2', 'neptune', '1989-08-25T03:56:36Z']],
+  orbitInsertions: [['juno', 'jupiter', '2016-07-05T02:55:34Z']],
   discoveries: [
     ['Titania', 'uranus', '1787', 'W. Herschel'],
     ['Pan', 'saturn', '1990', 'M.R. Showalter'],
@@ -70,6 +73,19 @@ describe('searchPrepared', () => {
     expect(labels('voyager neptune')).toEqual([
       'flyby:Voyager 2 · Neptune · 1989-08-25',
     ]);
+  });
+
+  it('une mise en orbite se trouve par sa sonde et son corps, et porte son instant', () => {
+    expect(labels('juno jupiter')).toEqual([
+      'orbitInsertion:Juno · Jupiter · 2016-07-05',
+    ]);
+    expect(searchPrepared(index, 'juno')[0]).toEqual({
+      kind: 'orbitInsertion',
+      label: 'Juno · Jupiter · 2016-07-05',
+      probe: 'juno',
+      body: 'jupiter',
+      at: '2016-07-05T02:55:34Z',
+    });
   });
 
   it('une sonde trouve sa mission et ses instruments', () => {

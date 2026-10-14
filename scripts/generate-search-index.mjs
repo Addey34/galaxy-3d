@@ -14,6 +14,7 @@
  *   - missions     src/seo/missionCatalogue.json                 (pnpm missions:generate)
  *   - instruments  public/assets/instruments/{sonde}.json        (pnpm instruments:generate)
  *   - survols      src/seo/flybyEvents.json                      (pnpm flybys:generate)
+ *   - mises en orbite src/seo/orbitInsertions.json               (pnpm orbits:generate)
  *   - découvertes  public/assets/discovery/{parent}.json et src/config/discoveryIndex.json
  *                                                                (pnpm discovery:generate)
  * La sonde d'une mission se DÉRIVE : le fichier d'instruments d'une sonde déclare les
@@ -84,6 +85,11 @@ export function buildSearchIndex() {
     e.closestAt,
   ]);
 
+  // [sonde, corps, premier instant lié] : les mises en orbite (lot 49), même forme et même geste.
+  const orbitInsertions = read('src/seo/orbitInsertions.json').insertions.map(
+    (i) => [i.probe, i.body, i.at]
+  );
+
   // [nom, corps à montrer, quand (jour ou année), découvreurs]. Les satellites viennent des
   // fichiers de chaque système, y compris ceux qu'on ne dessine pas (Pan pour Saturne) : on montre
   // alors leur parent, dont la fiche dit ce qu'on savait à cette date. Les corps du catalogue sans
@@ -119,7 +125,15 @@ export function buildSearchIndex() {
     ]);
   }
 
-  return { format: 1, places, missions, instruments, flybys, discoveries };
+  return {
+    format: 1,
+    places,
+    missions,
+    instruments,
+    flybys,
+    orbitInsertions,
+    discoveries,
+  };
 }
 
 const serialize = (index) => JSON.stringify(index) + '\n';
@@ -147,6 +161,7 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
     console.log(
       `index de recherche : ${Object.values(index.places).flat().length} lieux, ${index.missions.length} missions, ` +
         `${index.instruments.length} instruments, ${index.flybys.length} survols, ` +
+        `${index.orbitInsertions.length} mises en orbite, ` +
         `${index.discoveries.length} découvertes, ${text.length} o`
     );
   }

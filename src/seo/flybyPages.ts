@@ -260,7 +260,7 @@ const TEXT = {
   },
 } as const satisfies Record<string, DocText>;
 
-const fill = (
+export const fill = (
   text: string,
   values: Readonly<Record<string, string | number>>
 ): string =>
@@ -287,7 +287,8 @@ export function flybySceneHref(event: FlybyEvent, locale: Locale): string {
   return `/${bodyPagePath(event.probe, locale)}/?mode=explo&date=${event.closestAt}`;
 }
 
-function names(inputs: Pick<FlybyPageInputs, 'config' | 'navigable'>) {
+/** Le nom d'un corps ou d'une sonde dans une langue ; partagé avec `orbitInsertionPages.ts`. */
+export function names(inputs: Pick<FlybyPageInputs, 'config' | 'navigable'>) {
   const named = new Map<string, CelestialBodyConfig>([
     ...flattenBodies(inputs.config),
     ...inputs.navigable,
@@ -300,10 +301,10 @@ function names(inputs: Pick<FlybyPageInputs, 'config' | 'navigable'>) {
 }
 
 /** `03:55:40 UTC` : l'heure de l'instant publié, à la seconde, sans conversion. */
-const clock = (iso: string): string => `${iso.slice(11, 19)} UTC`;
+export const clock = (iso: string): string => `${iso.slice(11, 19)} UTC`;
 
 /** Les km entiers, groupés comme la langue les groupe. */
-const km = (value: number, locale: Locale): string =>
+export const km = (value: number, locale: Locale): string =>
   new Intl.NumberFormat(INTL_LOCALE[locale], {
     maximumFractionDigits: 0,
   }).format(value);

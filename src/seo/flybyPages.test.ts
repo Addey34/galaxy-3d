@@ -194,8 +194,8 @@ describe('les liens retour', () => {
       flybyListsByObject(inputs, 'fr')
     );
     const neptune = pages.find((p) => p.body === 'neptune')!;
-    expect(neptune.flybys).toContain('/fr/flybys/voyager2-neptune-1989-08-25/');
+    expect(neptune.events).toContain('/fr/flybys/voyager2-neptune-1989-08-25/');
     const titan = pages.find((p) => p.body === 'titan')!;
-    expect(titan.flybys).toBe('');
+    expect(titan.events).toBe('');
   });
 });

@@ -114,6 +114,7 @@ export function hitDetail(hit: SearchHit): string {
     case 'instrument':
       return bodyDisplayName(hit.probe);
     case 'flyby':
+    case 'orbitInsertion':
       return '';
     case 'discovery':
       return [hit.when, hit.who].filter(Boolean).join(' · ');
@@ -221,10 +222,11 @@ export function runHit(
     case 'discovery':
       context.selectBody(hit.body);
       return;
-    case 'flyby': {
+    case 'flyby':
+    case 'orbitInsertion': {
       const om = api.orbitalMechanics;
-      const delta =
-        (Date.parse(hit.closestAt) - om.simulationDate.getTime()) / MS_PER_DAY;
+      const at = hit.kind === 'flyby' ? hit.closestAt : hit.at;
+      const delta = (Date.parse(at) - om.simulationDate.getTime()) / MS_PER_DAY;
       om.addTimeOffset(delta);
       context.setMode('explo');
       context.selectBody(hit.probe);

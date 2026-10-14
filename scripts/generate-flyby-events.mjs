@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/* global console, process, fetch, setTimeout, URLSearchParams */
+/* global console, process */
 /**
  * LES SURVOLS, MESURÉS À LA SECONDE (pages `/flybys/`, 2026-10-12).
  *
@@ -42,18 +42,19 @@
  * `--offline` refuse le réseau (cache `.cache/flyby-events/`), `--check` n'écrit rien et sort en
  * code 1 si le fichier livré a dérivé.
  */
-import { createHash } from 'node:crypto';
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { stampNow, stampOf } from './fact-source-cache.mjs';
+import {
+  G_KM3,
+  horizonsRelative,
+  norm,
+  OutsideCoverage,
+} from './horizons-relative.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const CACHE_DIR = join(ROOT, '.cache', 'flyby-events');
 const OUT = join(ROOT, 'src/seo/flybyEvents.json');
-const API = 'https://ssd.jpl.nasa.gov/api/horizons.api';
-/** Constante de la gravitation, km³ kg⁻¹ s⁻² (CODATA 2018). */
-const G_KM3 = 6.6743e-20;
 const COARSE_HALF_MINUTES = 360;
 const FINE_HALF_SECONDS = 90;
 
@@ -94,129 +95,15 @@ const catalogue = new Map(flattenBodies(CELESTIAL_CONFIG));
 
 // ─────────────────────────── Horizons, avec cache daté ───────────────────────────
 
-async function horizons(params, label) {
-  const url = `${API}?${new URLSearchParams({ format: 'text', ...params })}`;
-  const key = createHash('sha256').update(url).digest('hex').slice(0, 32);
-  const file = join(CACHE_DIR, `${key}.txt`);
-  if (existsSync(file))
-    return { text: readFileSync(file, 'utf8'), retrieved: stampOf(file) };
-  if (OFFLINE)
-    throw new Error(`--offline : réponse absente du cache (${label})`);
-  let text = '';
-  for (let attempt = 0; attempt < 5; attempt++) {
-    const response = await fetch(url);
-    text = await response.text();
-    if (response.ok && text.includes('$$SOE')) break;
-    if (response.ok && COVERAGE.test(text)) break;
-    await new Promise((r) => setTimeout(r, 2000 * 2 ** attempt));
-  }
-  if (!text.includes('$$SOE') && !COVERAGE.test(text))
-    throw new Error(`Horizons sans table (${label}) :\n${text.slice(0, 600)}`);
-  mkdirSync(CACHE_DIR, { recursive: true });
-  writeFileSync(file, text);
-  return { text, retrieved: stampNow(file) };
-}
+const { relative: relativeOf } = horizonsRelative({
+  cacheDir: CACHE_DIR,
+  offline: OFFLINE,
+  targets,
+  centers,
+});
+const relative = (enc, fromMs, toMs, step) =>
+  relativeOf(enc.probe, enc.planet, fromMs, toMs, step);
 
-/**
- * Une fenêtre qui déborde la couverture d'une trajectoire : c'est une RÉPONSE (la rencontre
- * touche le début ou la fin de ce qu'Horizons sert), pas une panne.
- */
-const COVERAGE = /Insufficient ephemeris data|No ephemeris for target/;
-class OutsideCoverage extends Error {}
-
-const utc = (ms) => new Date(ms).toISOString().slice(0, 19).replace('T', ' ');
-
-/** États (km, km/s), écliptique J2000, dates UT, d'une cible vue d'un centre. */
-async function states(command, expect, centerId, fromMs, toMs, step, label) {
-  const { text, retrieved } = await horizons(
-    {
-      COMMAND: `'${command}'`,
-      OBJ_DATA: 'NO',
-      MAKE_EPHEM: 'YES',
-      EPHEM_TYPE: 'VECTORS',
-      CENTER: `'500@${centerId}'`,
-      START_TIME: `'${utc(fromMs)}'`,
-      STOP_TIME: `'${utc(toMs)}'`,
-      STEP_SIZE: `'${step}'`,
-      TIME_TYPE: 'UT',
-      REF_PLANE: 'ECLIPTIC',
-      REF_SYSTEM: 'ICRF',
-      OUT_UNITS: 'KM-S',
-      VEC_TABLE: '2',
-      VEC_CORR: 'NONE',
-      CSV_FORMAT: 'YES',
-      TIME_DIGITS: 'FRACSEC',
-    },
-    label
-  );
-  if (!text.includes('$$SOE')) throw new OutsideCoverage(label);
-  const name = /Target body name: ([^{\n]*)/.exec(text)?.[1].trim() ?? '';
-  if (!name.toLowerCase().includes(expect))
-    throw new Error(
-      `${label} : Horizons a servi « ${name} », attendu « ${expect} »`
-    );
-  const solution = /Target body name:[^\n]*\{source: ([^}]+)\}/.exec(text)?.[1];
-  const body = text.slice(text.indexOf('$$SOE') + 5, text.indexOf('$$EOE'));
-  const rows = body
-    .trim()
-    .split('\n')
-    .map((line) => {
-      const f = line.split(',').map((s) => s.trim());
-      // Le jour julien UT, arrondi à la seconde : la table est au pas d'une seconde au plus fin.
-      const at =
-        Math.round(((Number(f[0]) - 2440587.5) * 86_400_000) / 1000) * 1000;
-      return { at, p: f.slice(2, 5).map(Number), v: f.slice(5, 8).map(Number) };
-    });
-  return { rows, retrieved, solution };
-}
-
-/** Sonde relative au corps : par centre d'Horizons, ou par différence de deux héliocentriques. */
-async function relative(enc, fromMs, toMs, step) {
-  const probe = targets[enc.probe];
-  const label = `${enc.probe} / ${enc.planet} ${utc(fromMs)} (${step})`;
-  const center = centers[enc.planet];
-  if (center) {
-    return states(
-      probe.command,
-      probe.expect,
-      center.id,
-      fromMs,
-      toMs,
-      step,
-      label
-    );
-  }
-  const body = targets[enc.planet];
-  const [a, b] = await Promise.all([
-    states(probe.command, probe.expect, '10', fromMs, toMs, step, label),
-    states(
-      body.command,
-      body.expect ?? enc.planet,
-      '10',
-      fromMs,
-      toMs,
-      step,
-      label
-    ),
-  ]);
-  if (a.rows.length !== b.rows.length)
-    throw new Error(`${label} : tables de longueurs différentes`);
-  return {
-    retrieved: [a.retrieved, b.retrieved].sort().at(-1),
-    solution: a.solution,
-    rows: a.rows.map((r, k) => {
-      if (r.at !== b.rows[k].at)
-        throw new Error(`${label} : dates désaccordées`);
-      return {
-        at: r.at,
-        p: r.p.map((x, i) => x - b.rows[k].p[i]),
-        v: r.v.map((x, i) => x - b.rows[k].v[i]),
-      };
-    }),
-  };
-}
-
-const norm = (u) => Math.hypot(...u);
 const nearest = (rows) =>
   rows.reduce((best, r, k) => (norm(r.p) < norm(rows[best].p) ? k : best), 0);
 
@@ -297,7 +184,7 @@ for (const enc of plan.encounters) {
     closestKm: Math.round(r),
     speedKmS: Math.round(speed * 100) / 100,
     solution: fine.solution ?? null,
-    measuredFrom: centers[enc.planet] ? 'centre' : 'difference',
+    measuredFrom: fine.measuredFrom,
     retrieved: [coarse.retrieved, fine.retrieved].sort().at(-1),
   });
 }

@@ -119,6 +119,7 @@ export const ptBR: Record<MessageKey, string> = {
   'search.group.instrument': 'Instrumentos',
   'search.group.discovery': 'Descobertas',
   'search.group.flyby': 'Sobrevoos',
+  'search.group.orbitInsertion': 'Inserções em órbita',
   'search.missionPage': 'página da missão',
   'nav.searchPlaceholder': 'Um corpo, uma cratera, uma missão…',
   'nav.paletteAria':

@@ -1,0 +1,124 @@
+{
+  "$comment": "Écrit par `pnpm orbits:generate` (scripts/generate-orbit-insertions.mjs), jamais à la main. Premier instant où chaque sonde devient liée à un corps (énergie orbitale spécifique négative) DANS sa sphère d’influence, mesuré à la seconde contre Horizons, avec la manœuvre détectée la plus proche (`impulses` de `src/config/flybyEncounters.json`) et, quand la fiche publie l’incertitude de GM, le déplacement de l’instant qu’elle entraîne. `excluded` : boundAtEntry, la sonde entre déjà liée dans la sphère (capture balistique) ; coverage, la trajectoire publiée s’arrête avant ; unresolved, trajectoire servie non résolue.",
+  "source": "NASA/JPL Horizons, CENTER 500@<corps> (différence de deux vecteurs héliocentriques quand le corps n’est pas un centre), ECLIPTIC J2000, VEC_CORR NONE, UT ; masses du catalogue de Galaxy",
+  "insertions": [
+    {
+      "probe": "mars-express",
+      "body": "mars",
+      "at": "2003-12-25T03:17:32Z",
+      "distanceKm": 4379.051,
+      "speedKmS": 4.42272157,
+      "manoeuvre": {
+        "at": "2003-12-25T03:04:52Z",
+        "minutesFromInsertion": -13
+      },
+      "massRelativeUncertainty": null,
+      "massSensitivitySeconds": null,
+      "solution": "MEX_merged",
+      "measuredFrom": "centre",
+      "retrieved": "2026-10-14"
+    },
+    {
+      "probe": "cassini",
+      "body": "saturn",
+      "at": "2004-07-01T02:36:40Z",
+      "distanceKm": 80260.592,
+      "speedKmS": 30.74410687,
+      "manoeuvre": {
+        "at": "2004-07-01T02:02:59Z",
+        "minutesFromInsertion": -34
+      },
+      "massRelativeUncertainty": null,
+      "massSensitivitySeconds": null,
+      "solution": "cassini_merge",
+      "measuredFrom": "centre",
+      "retrieved": "2026-10-14"
+    },
+    {
+      "probe": "rosetta",
+      "body": "churyumov-gerasimenko",
+      "at": "2014-09-10T09:01:28Z",
+      "distanceKm": 29.306,
+      "speedKmS": 0.00015584,
+      "manoeuvre": {
+        "at": "2014-09-10T09:03:53Z",
+        "minutesFromInsertion": 2
+      },
+      "massRelativeUncertainty": 0.0003020235578375113,
+      "massSensitivitySeconds": 0,
+      "solution": "rosetta_merged",
+      "measuredFrom": "centre",
+      "retrieved": "2026-10-14"
+    },
+    {
+      "probe": "juno",
+      "body": "jupiter",
+      "at": "2016-07-05T02:55:34Z",
+      "distanceKm": 78444.027,
+      "speedKmS": 56.83289718,
+      "manoeuvre": {
+        "at": "2016-07-05T02:49:42Z",
+        "minutesFromInsertion": -6
+      },
+      "massRelativeUncertainty": null,
+      "massSensitivitySeconds": null,
+      "solution": "Juno_merged",
+      "measuredFrom": "centre",
+      "retrieved": "2026-10-14"
+    },
+    {
+      "probe": "exomars-tgo",
+      "body": "mars",
+      "at": "2016-10-19T15:16:29Z",
+      "distanceKm": 6397.317,
+      "speedKmS": 3.65907937,
+      "manoeuvre": {
+        "at": "2016-10-19T15:16:22Z",
+        "minutesFromInsertion": 0
+      },
+      "massRelativeUncertainty": null,
+      "massSensitivitySeconds": null,
+      "solution": "ExoMars16_merged",
+      "measuredFrom": "centre",
+      "retrieved": "2026-10-14"
+    },
+    {
+      "probe": "osiris-rex",
+      "body": "bennu",
+      "at": "2018-12-31T19:44:02Z",
+      "distanceKm": 2.112,
+      "speedKmS": 0.000064,
+      "manoeuvre": {
+        "at": "2018-12-31T19:43:51Z",
+        "minutesFromInsertion": 0
+      },
+      "massRelativeUncertainty": 0.0001840340258465565,
+      "massSensitivitySeconds": 0,
+      "solution": "ORX_merged",
+      "measuredFrom": "centre",
+      "retrieved": "2026-10-14"
+    }
+  ],
+  "excluded": [
+    {
+      "probe": "bepicolombo",
+      "body": "mercury",
+      "reason": "boundAtEntry"
+    },
+    {
+      "probe": "hayabusa2",
+      "body": "ryugu",
+      "reason": "unresolved"
+    },
+    {
+      "probe": "hera",
+      "body": "didymos",
+      "reason": "coverage"
+    },
+    {
+      "probe": "juice",
+      "body": "jupiter",
+      "reason": "coverage"
+    }
+  ]
+}

@@ -53,7 +53,13 @@ function generatedDocuments(): string[] {
   ];
   const docs: string[] = [];
   for (const prefix of prefixes)
-    for (const name of ['methodology', 'sources', 'missions', 'flybys'])
+    for (const name of [
+      'methodology',
+      'sources',
+      'missions',
+      'flybys',
+      'orbit-insertions',
+    ])
       if (existsSync(join(DIST, prefix, name, 'index.html')))
         docs.push(prefix ? `${prefix}/${name}` : name);
   return docs;
@@ -82,6 +88,15 @@ const MISSION_PAGES = DOCUMENTS.filter((d) => d.endsWith('missions')).map(
  */
 const FLYBY_PAGES = DOCUMENTS.filter((d) => d.endsWith('flybys')).map(
   (index) => `${index}/solar-orbiter-venus-2026-12-24`
+);
+
+/**
+ * Une page de mise en orbite (lot 49), la septième famille, dans les quatre langues : Rosetta
+ * autour de 67P, le plus long nom de corps et la seule famille à porter la phrase sur
+ * l'incertitude de masse, donc le pire cas à 390 px.
+ */
+const ORBIT_PAGES = DOCUMENTS.filter((d) => d.endsWith('orbit-insertions')).map(
+  (index) => `${index}/rosetta-churyumov-gerasimenko-2014-09-10`
 );
 
 async function settleAnimations(page: Page): Promise<void> {
@@ -149,11 +164,13 @@ async function expectSeparatedLanguages(page: Page, path: string) {
 test.describe('pages générées, à 390 px', () => {
   test.use({ viewport: { width: 390, height: 844 } });
 
-  test('la dérivation trouve les quatre documents dans les quatre langues', () => {
+  test('la dérivation trouve les cinq documents dans les quatre langues', () => {
     // Un compte, pour qu'une langue perdue se voie ici plutôt que par l'absence d'un scénario.
-    expect(DOCUMENTS.length).toBe(16);
+    expect(DOCUMENTS.length).toBe(20);
     expect(MISSION_PAGES.length).toBe(4);
     expect(FLYBY_PAGES.length).toBe(4);
+    expect(ORBIT_PAGES.length).toBe(4);
+    expect(DOCUMENTS).toContain('es/orbit-insertions');
     expect(DOCUMENTS).toContain('pt-br/flybys');
     expect(DOCUMENTS).toContain('methodology');
     expect(DOCUMENTS).toContain('es/missions');
@@ -181,7 +198,7 @@ test.describe('pages générées, à 390 px', () => {
     await checkDocument(page, INSTRUMENT_PAGE);
   });
 
-  for (const path of [...MISSION_PAGES, ...FLYBY_PAGES]) {
+  for (const path of [...MISSION_PAGES, ...FLYBY_PAGES, ...ORBIT_PAGES]) {
     test(`/${path} se charge, passe axe et ne déborde pas`, async ({
       page,
     }) => {
@@ -224,6 +241,7 @@ test.describe('pages générées, à 390 px', () => {
       BODY_PAGE,
       INSTRUMENT_PAGE,
       ...FLYBY_PAGES,
+      ...ORBIT_PAGES,
     ])
       expect(
         builtHeading(path),
