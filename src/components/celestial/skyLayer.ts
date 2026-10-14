@@ -112,6 +112,25 @@ export function attachSky(
       child.onBeforeRender = (_renderer, _scene, camera) => place(camera);
     }
   }
+  // LES NUAGES : le voile du sol sous eux (`AERIAL_VERTEX_MAIN_BELOW`). En mélange alpha
+  // au-dessus d'un sol déjà voilé, `nuage × T + diffusé` est exact : la part du sol vue à travers
+  // le nuage porte déjà le diffusé du trajet entier. Vérifié sur le matériau COURANT avant chaque
+  // rendu, parce que la couche du modèle (`setDataOverlay`) le remplace puis rend l'original, qui
+  // peut ne pas être en place à la pose du ciel. Seulement un matériau soumis à la courbe de tons :
+  // le voile est une radiance LINÉAIRE, et le matériau du modèle (`toneMapped: false`) écrit des
+  // couleurs d'affichage, où l'ajouter blanchirait la palette. Ils posent aussi la géométrie, au
+  // cas où la sphère du sol ne serait pas dessinée à cette image.
+  for (const child of mesh.parent?.children ?? []) {
+    if (!(child instanceof THREE.Mesh) || !child.name.endsWith('_clouds'))
+      continue;
+    const clouds = child;
+    hooked.push({ mesh: clouds, hook: clouds.onBeforeRender });
+    clouds.onBeforeRender = (_renderer, _scene, camera) => {
+      place(camera);
+      for (const m of [clouds.material].flat())
+        if (m.toneMapped) addAerialPerspective(m, sky.uniforms, 'below');
+    };
+  }
   const createTileMaterial = body.createSurfaceOverlayMaterial;
   if (createTileMaterial)
     body.createSurfaceOverlayMaterial = () => {

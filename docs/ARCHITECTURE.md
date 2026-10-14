@@ -2732,7 +2732,7 @@ Mesuré sur captures, à exposition de jour : au-dessus du Mont-Blanc à 3 km, z
 mi-hauteur (62, 91, 113), horizon pâle (104, 118, 115), contre une forêt au soleil à (24, 31, 19) ;
 au-dessus de l'Everest à 12 km, un ciel plus sombre (l'air est sous la caméra) ; au coucher
 (30,5° N, 96° E, Soleil à 1,3°), une bande orangée vers le Soleil. Ce qui manquait alors, la
-diffusion multiple, est ajoutée ci-dessous ; ce qui manque encore : le voile sur les nuages.
+diffusion multiple, est ajoutée ci-dessous, et le voile sur les nuages après elle.
 
 - **La diffusion multiple, par la table de Hillaire** (2026-10-14, `core/multipleScattering.ts`).
   La diffusion simple est juste en plein jour mais trop sombre au crépuscule, dans l'ombre de la
@@ -2757,6 +2757,17 @@ diffusion multiple, est ajoutée ci-dessous ; ce qui manque encore : le voile su
   62 km, est dans l'ombre de la Terre) et seule la diffusion multiple éclaire encore le ciel du
   crépuscule (tenu par `multipleScattering.test.ts`). Vénus garde son halo : l'hypothèse isotrope ne vaut que pour une
   atmosphère optiquement MINCE.
+- **Le voile sur les nuages** (2026-10-14, `AERIAL_VERTEX_MAIN_BELOW`). Les nuages sont
+  transparents, dessinés après un sol déjà voilé ; en mélange alpha, `nuage × T + diffusé` y est
+  EXACT, puisque la part du sol vue à travers le nuage porte déjà le diffusé du trajet entier.
+  Mais leur coque est à 1,01 rayon (64 km), un écart contre le z-fighting et non une altitude :
+  presque tout l'air est dessous, et un voile arrêté à la coque ne changeait rien (1 à 2 niveaux
+  sur 255 vu de 4 235 km, mesuré). L'image ne dit pas la hauteur d'un nuage, donc le segment
+  s'arrête au niveau de la mer à la verticale du sommet : une BORNE, juste pour un brouillard, un
+  peu forte pour un cirrus. Mesuré au même point de vue : les nuages bleuissent vers le limbe
+  comme le sol sous eux, sans liseré. Le matériau du modèle de nuages (`toneMapped: false`)
+  n'est pas voilé, et c'est une raison : il écrit des couleurs d'affichage, et le voile est une
+  radiance linéaire, que la courbe de tons n'y traiterait pas.
 
 ### ETOPO 15″ sur les grands reliefs : des crêtes nettes là où elles se voient (lot 48, pas 8)
 

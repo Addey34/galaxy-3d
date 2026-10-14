@@ -13,7 +13,7 @@
  *
  * Injecté APRÈS l'éclairage (`opaque_fragment`) et AVANT la courbe de tons : le voile s'ajoute à la
  * radiance linéaire, comme l'air le fait. Il ne touche que les matériaux qu'on lui confie : la
- * sphère du corps et ses carreaux d'imagerie.
+ * sphère du corps, ses carreaux d'imagerie et ses nuages.
  */
 import type * as THREE from 'three';
 import { SCATTER_GLSL } from '@/shaders/SkyScatteringShader';
@@ -46,6 +46,30 @@ export const AERIAL_VERTEX_MAIN = /* glsl */ `
   }
 `;
 
+/**
+ * LES NUAGES : le voile du SOL QUI EST SOUS EUX (2026-10-14). Leur coque est à 1,01 rayon
+ * (64 km), un écart choisi contre le z-fighting et non une altitude : presque tout l'air est
+ * dessous, et un voile arrêté au sommet de la coque y valait zéro (mesuré : 1 à 2 niveaux sur 255
+ * vu de 4 235 km, hors du limbe). L'image ne dit pas la hauteur d'un nuage ; le segment s'arrête
+ * donc au niveau de la mer à la verticale du sommet, ce qui BORNE le voile par celui du sol
+ * (exact pour un brouillard, un peu fort pour un cirrus), et au sol s'il le croise avant.
+ */
+export const AERIAL_VERTEX_MAIN_BELOW = /* glsl */ `
+  {
+    vec3 aerialCentre = uCenterView * uKmPerUnit;
+    vec3 aerialTo = aerialCentre
+      + normalize( mvPosition.xyz * uKmPerUnit - aerialCentre ) * uGroundKm;
+    float aerialDistance = length( aerialTo );
+    if ( !scatterSegment(
+      -aerialCentre, aerialTo / max( aerialDistance, 1e-6 ), aerialDistance, true,
+      vAerialIn, vAerialT
+    ) ) {
+      vAerialIn = vec3( 0.0 );
+      vAerialT = vec3( 1.0 );
+    }
+  }
+`;
+
 export const AERIAL_FRAGMENT_APPLY = /* glsl */ `
   gl_FragColor.rgb = gl_FragColor.rgb * vAerialT + vAerialIn;
 `;
@@ -61,7 +85,9 @@ export function hasAerialPerspective(material: THREE.Material): boolean {
  */
 export function addAerialPerspective(
   material: THREE.Material,
-  uniforms: Record<string, THREE.IUniform>
+  uniforms: Record<string, THREE.IUniform>,
+  /** `below` : le voile du sol à la verticale (les nuages, cf. `AERIAL_VERTEX_MAIN_BELOW`). */
+  endpoint: 'vertex' | 'below' = 'vertex'
 ): void {
   if (hasAerialPerspective(material)) return;
   material.userData[FLAG] = true;
@@ -73,7 +99,8 @@ export function addAerialPerspective(
       .replace('#include <common>', '#include <common>\n' + AERIAL_VERTEX_GLSL)
       .replace(
         '#include <project_vertex>',
-        '#include <project_vertex>\n' + AERIAL_VERTEX_MAIN
+        '#include <project_vertex>\n' +
+          (endpoint === 'below' ? AERIAL_VERTEX_MAIN_BELOW : AERIAL_VERTEX_MAIN)
       );
     shader.fragmentShader = shader.fragmentShader
       .replace(
@@ -86,6 +113,7 @@ export function addAerialPerspective(
       );
   };
   const previousKey = material.customProgramCacheKey.bind(material);
-  material.customProgramCacheKey = () => `${previousKey()}-aerial`;
+  material.customProgramCacheKey = () =>
+    `${previousKey()}-aerial${endpoint === 'below' ? '-below' : ''}`;
   material.needsUpdate = true;
 }
