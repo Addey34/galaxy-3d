@@ -2731,8 +2731,32 @@ ciel de nuit.
 Mesuré sur captures, à exposition de jour : au-dessus du Mont-Blanc à 3 km, zénith (34, 61, 91),
 mi-hauteur (62, 91, 113), horizon pâle (104, 118, 115), contre une forêt au soleil à (24, 31, 19) ;
 au-dessus de l'Everest à 12 km, un ciel plus sombre (l'air est sous la caméra) ; au coucher
-(30,5° N, 96° E, Soleil à 1,3°), une bande orangée vers le Soleil. Ce qui manque encore : la
-diffusion multiple, qui éclaircirait surtout l'horizon, et le voile sur les nuages.
+(30,5° N, 96° E, Soleil à 1,3°), une bande orangée vers le Soleil. Ce qui manquait alors, la
+diffusion multiple, est ajoutée ci-dessous ; ce qui manque encore : le voile sur les nuages.
+
+- **La diffusion multiple, par la table de Hillaire** (2026-10-14, `core/multipleScattering.ts`).
+  La diffusion simple est juste en plein jour mais trop sombre au crépuscule, dans l'ombre de la
+  planète et vers l'horizon, là où la lumière qui arrive à l'œil a été diffusée plusieurs fois.
+  Méthode de S. Hillaire (EGSR 2020, § 5.5) : au-delà du premier ordre la diffusion est supposée
+  ISOTROPE, donc sa contribution Ψ ne dépend que de l'altitude et de la hauteur du Soleil. Une
+  table de 32 × 32, sol lambertien compris (albédo 0,1, `kGroundAlbedo` de `demo.cc`), est
+  calculée une fois par modèle à l'approche (~50 ms sous Node, mesuré) et partagée par le ciel,
+  la perspective aérienne et le miroir JS des étoiles. Le shader l'ajoute à chaque échantillon de
+  la visée, multipliée par la diffusion locale et la transmittance vers l'œil, SANS ombre.
+  **Les 64 directions de l'article ne suffisent pas ici** : confrontée à une référence calculée
+  autrement (sphère entière, transmittance marchée vers le Soleil, convergée à 3 % près entre 32
+  et 64 directions par côté), une case (8,4 km, Soleil à 16°) sortait 11 % trop basse, et c'est la
+  résolution en HAUTEUR qui manquait : 8 azimuts × 16 cosinus tiennent 8 %. Une stratification
+  séparée sous et sur l'horizon du point, essayée parce que le bord du disque du sol est une
+  discontinuité, n'a rien gagné et a été retirée. La table est en flottants 32 bits lue texel par
+  texel, l'interpolation écrite dans le GLSL : le filtrage linéaire d'une texture flottante n'est
+  pas garanti sur mobile, et un demi-flottant aurait ramené le crépuscule profond à zéro (valeurs
+  de 10⁻¹⁴ à 0,05) tout en tirant 1,4 ko de conversion dans le morceau de Three du démarrage.
+  Mesuré au zénith, depuis le sol : +26 % avec le Soleil à 60°, +29 % sur l'horizon, +81 % à
+  −4° ; à −8°, la diffusion simple y vaut exactement zéro (tout l'air au-dessus de la caméra, sur
+  62 km, est dans l'ombre de la Terre) et seule la diffusion multiple éclaire encore le ciel du
+  crépuscule (tenu par `multipleScattering.test.ts`). Vénus garde son halo : l'hypothèse isotrope ne vaut que pour une
+  atmosphère optiquement MINCE.
 
 ### ETOPO 15″ sur les grands reliefs : des crêtes nettes là où elles se voient (lot 48, pas 8)
 

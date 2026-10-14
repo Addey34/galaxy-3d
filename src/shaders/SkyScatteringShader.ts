@@ -21,6 +21,10 @@
  */
 import * as THREE from 'three';
 import type { SkyScattering } from '@/core/atmosphereScattering';
+import {
+  MULTIPLE_SCATTERING_LUT_SIZE,
+  sharedMultipleScatteringTable,
+} from '@/core/multipleScattering';
 
 /** Échantillons le long de la visée, puis vers le Soleil depuis chacun. */
 export const SKY_VIEW_SAMPLES = 16;
@@ -42,6 +46,7 @@ export interface SkyScatteringUniforms {
   uOzone: THREE.IUniform<THREE.Vector3>;
   uOzonePeak: THREE.IUniform<number>;
   uOzoneHalfWidth: THREE.IUniform<number>;
+  uMultipleScattering: THREE.IUniform<THREE.DataTexture>;
   // Requis par le type des uniforms de THREE.ShaderMaterial.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   [key: string]: THREE.IUniform<any>;
@@ -82,6 +87,26 @@ export const SCATTER_GLSL = /* glsl */ `
   uniform vec3 uOzone;
   uniform float uOzonePeak;
   uniform float uOzoneHalfWidth;
+  // Table de la diffusion multiple (core/multipleScattering.ts), en flottants 32 bits.
+  uniform sampler2D uMultipleScattering;
+  #define MS_SIZE ${MULTIPLE_SCATTERING_LUT_SIZE}
+
+  // Lecture bilinéaire ÉCRITE ICI, texel par texel : le filtrage linéaire d'une texture flottante
+  // 32 bits n'est pas garanti sur mobile, sa lecture exacte l'est. Même règle que
+  // sampleMultipleScattering (bords bloqués), et au niveau 0, donc lisible aussi au sommet.
+  vec3 multipleScattering( vec2 uv ) {
+    vec2 x = clamp( uv, 0.0, 1.0 ) * float( MS_SIZE ) - 0.5;
+    vec2 cell = floor( x );
+    vec2 f = x - cell;
+    ivec2 last = ivec2( MS_SIZE - 1 );
+    ivec2 i0 = clamp( ivec2( cell ), ivec2( 0 ), last );
+    ivec2 i1 = clamp( ivec2( cell ) + 1, ivec2( 0 ), last );
+    vec3 a = texelFetch( uMultipleScattering, ivec2( i0.x, i0.y ), 0 ).rgb;
+    vec3 b = texelFetch( uMultipleScattering, ivec2( i1.x, i0.y ), 0 ).rgb;
+    vec3 c = texelFetch( uMultipleScattering, ivec2( i0.x, i1.y ), 0 ).rgb;
+    vec3 d = texelFetch( uMultipleScattering, ivec2( i1.x, i1.y ), 0 ).rgb;
+    return mix( mix( a, b, f.x ), mix( c, d, f.x ), f.y );
+  }
 
   // Intersections d'un rayon (origine o, direction unitaire d) avec la sphère de rayon r centrée
   // à l'origine : (t proche, t lointain), ou (-1, -1) sans intersection.
@@ -127,10 +152,22 @@ export const SCATTER_GLSL = /* glsl */ `
     vec3 viewDepth = vec3( 0.0 );
     vec3 sumRayleigh = vec3( 0.0 );
     vec3 sumMie = vec3( 0.0 );
+    vec3 sumMultiple = vec3( 0.0 );
+    float thickness = uTopKm - uGroundKm;
     for ( int i = 0; i < VIEW_SAMPLES; i++ ) {
       vec3 p = origin + dir * ( start + ( float( i ) + 0.5 ) * ds );
-      vec3 rho = densities( length( p ) - uGroundKm ) * ds;
+      float r = length( p );
+      vec3 rho = densities( r - uGroundKm ) * ds;
       viewDepth += rho * 0.5;
+      // Les ordres suivants, supposés isotropes : sans ombre, lus dans la table (altitude,
+      // hauteur du Soleil), multipliés par la diffusion locale.
+      vec2 msUv = vec2(
+        dot( p, uSunDirView ) / r * 0.5 + 0.5,
+        ( r - uGroundKm ) / thickness
+      );
+      vec3 psi = multipleScattering( msUv );
+      sumMultiple += exp( -extinction( viewDepth ) )
+        * ( uRayleigh * rho.x + vec3( uMieScattering ) * rho.y ) * psi;
       // Route vers le Soleil : coupée par le sol, l'échantillon est dans l'ombre de la planète.
       vec2 shadow = sphere( p, uSunDirView, uGroundKm );
       if ( shadow.x <= 0.0 ) {
@@ -156,6 +193,7 @@ export const SCATTER_GLSL = /* glsl */ `
     radiance = uSunIntensity * (
       uRayleigh * sumRayleigh * rayleighPhase
       + vec3( uMieScattering ) * sumMie * miePhase
+      + sumMultiple
     );
     transmittance = exp( -extinction( viewDepth ) );
     return true;
@@ -199,7 +237,37 @@ export function createUniforms(sky: SkyScattering): SkyScatteringUniforms {
     uOzone: { value: new THREE.Vector3(...sky.ozoneAbsorptionPerKm) },
     uOzonePeak: { value: sky.ozonePeakKm },
     uOzoneHalfWidth: { value: sky.ozoneHalfWidthKm },
+    uMultipleScattering: { value: multipleScatteringTexture(sky) },
   };
+}
+
+const MS_TEXTURES = new WeakMap<SkyScattering, THREE.DataTexture>();
+
+/**
+ * La table de diffusion multiple en texture flottante 32 bits, lue texel par texel (cf.
+ * `multipleScattering` dans le GLSL). Ses valeurs vont de ~10⁻¹⁴ à ~0,05 (mesuré) : un
+ * demi-flottant aurait ramené le crépuscule profond à zéro, et sa conversion tirait 1,4 ko dans le
+ * morceau de Three chargé au démarrage. Calculée une fois par modèle (~50 ms mesurées sous Node).
+ */
+export function multipleScatteringTexture(
+  sky: SkyScattering
+): THREE.DataTexture {
+  const known = MS_TEXTURES.get(sky);
+  if (known) return known;
+  const size = MULTIPLE_SCATTERING_LUT_SIZE;
+  const texture = new THREE.DataTexture(
+    sharedMultipleScatteringTable(sky),
+    size,
+    size,
+    THREE.RGBAFormat,
+    THREE.FloatType
+  );
+  texture.minFilter = THREE.NearestFilter;
+  texture.magFilter = THREE.NearestFilter;
+  texture.colorSpace = THREE.NoColorSpace;
+  texture.needsUpdate = true;
+  MS_TEXTURES.set(sky, texture);
+  return texture;
 }
 
 /**

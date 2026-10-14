@@ -12,7 +12,7 @@
  * éclaire aussi ce que le Soleil ne voit pas).
  *
  * Pour chaque case (altitude h, cosinus μs du Soleil) : la lumière du second ordre L₂ reçue de
- * toutes les directions (64, sur la sphère), sol lambertien compris, et la part f_ms d'une lumière
+ * toutes les directions de la sphère (128, cf. plus bas), sol lambertien compris, et la part f_ms d'une lumière
  * UNITÉ isotrope qui revient au point après une diffusion ; tous les ordres suivants forment alors
  * une série géométrique, Ψ = L₂ / (1 − f_ms). Ce n'est valable que pour une atmosphère MINCE
  * optiquement (la Terre) : sous les 92 bar de Vénus, l'hypothèse isotrope ne tient plus, et Vénus
@@ -25,9 +25,16 @@ import type { SkyScattering } from './atmosphereScattering';
 /** Côté de la table, en cases (altitude × cosinus du Soleil). */
 export const MULTIPLE_SCATTERING_LUT_SIZE = 32;
 
-/** Directions de la sphère (grille stratifiée √N × √N) et pas le long de chacune. */
-const SPHERE_SQRT_SAMPLES = 8;
-const RAY_STEPS = 20;
+/**
+ * Directions de la sphère (azimuts × cosinus, grille stratifiée) et pas le long de chacune.
+ * MESURÉ contre une référence convergée (`multipleScattering.test.ts`) : les 8 × 8 directions de
+ * Hillaire laissent une case 11 % trop basse (8,4 km, Soleil à 16°), et c'est la résolution en
+ * HAUTEUR qui manque (8 azimuts × 16 cosinus tiennent les 8 %, pour la moitié du coût de
+ * 16 × 16) ; le nombre de pas ne change presque rien (20 ou 60 : 0,1 %), d'où 10.
+ */
+const SPHERE_AZIMUTHS = 8;
+const SPHERE_COSINES = 16;
+const RAY_STEPS = 10;
 
 /** Table de transmittance vers le haut de l'air : altitudes × cosinus de la visée. */
 const T_ALTITUDES = 32;
@@ -112,7 +119,8 @@ export function transmittanceTable(sky: SkyScattering): {
         const b = data[(i0 * T_COSINES + j0 + 1) * 3 + c]!;
         const d = data[((i0 + 1) * T_COSINES + j0) * 3 + c]!;
         const e = data[((i0 + 1) * T_COSINES + j0 + 1) * 3 + c]!;
-        out[c] = (a * (1 - fy) + b * fy) * (1 - fx) + (d * (1 - fy) + e * fy) * fx;
+        out[c] =
+          (a * (1 - fy) + b * fy) * (1 - fx) + (d * (1 - fy) + e * fy) * fx;
       }
       return out;
     },
@@ -135,12 +143,13 @@ export function multipleScatteringTable(
   const scattering = (d: Rgb, c: number) =>
     sky.rayleighScatteringPerKm[c]! * d[0] + sky.mieScatteringPerKm * d[1];
   const tSun: Rgb = [0, 0, 0];
-  const n = SPHERE_SQRT_SAMPLES;
+  const n = SPHERE_AZIMUTHS;
+  const m = SPHERE_COSINES;
   // La lumière ne dépend que de l'angle de la visée au plan (zénith, Soleil) : les directions
   // d'azimut θ et −θ donnent la même chose. La grille (k + ½)/n est symétrique, on n'en
   // parcourt que la moitié, comptée deux fois.
   const halfAzimuths = n / 2;
-  const weight = (2 * 4 * Math.PI) / (n * n);
+  const weight = (2 * 4 * Math.PI) / (n * m);
 
   for (let row = 0; row < size; row += 1) {
     const h = ((row + 0.5) / size) * sky.thicknessKm;
@@ -152,8 +161,8 @@ export function multipleScatteringTable(
       const fms: Rgb = [0, 0, 0];
       for (let a = 0; a < halfAzimuths; a += 1) {
         const theta = (2 * Math.PI * (a + 0.5)) / n;
-        for (let b = 0; b < n; b += 1) {
-          const cosPhi = 1 - (2 * (b + 0.5)) / n;
+        for (let b = 0; b < m; b += 1) {
+          const cosPhi = 1 - (2 * (b + 0.5)) / m;
           const sinPhi = Math.sqrt(Math.max(0, 1 - cosPhi * cosPhi));
           // Visée : composante verticale cosPhi, horizontale dans le plan du Soleil cos θ.
           const dir = {
@@ -222,6 +231,20 @@ export function multipleScatteringTable(
   return table;
 }
 
+const TABLES = new WeakMap<SkyScattering, Float32Array>();
+
+/** La table d'un modèle, calculée une seule fois (le shader et le miroir JS lisent la même). */
+export function sharedMultipleScatteringTable(
+  sky: SkyScattering
+): Float32Array {
+  let table = TABLES.get(sky);
+  if (!table) {
+    table = multipleScatteringTable(sky);
+    TABLES.set(sky, table);
+  }
+  return table;
+}
+
 /** Lecture bilinéaire de la table, comme le fait la texture (bords bloqués). */
 export function sampleMultipleScattering(
   table: Float32Array,
@@ -238,7 +261,8 @@ export function sampleMultipleScattering(
   const r1 = Math.min(size - 1, r0 + 1);
   const fu = Math.max(0, Math.min(1, u - c0));
   const fv = Math.max(0, Math.min(1, v - r0));
-  const at = (r: number, c: number, k: number) => table[(r * size + c) * 4 + k]!;
+  const at = (r: number, c: number, k: number) =>
+    table[(r * size + c) * 4 + k]!;
   const out: Rgb = [0, 0, 0];
   for (let k = 0; k < 3; k += 1)
     out[k] =

@@ -24,6 +24,10 @@ import {
   type SkyScatteringModelId,
 } from '@/core/atmosphereScattering';
 import { createSkyMaterial, getSky } from '@/shaders/SkyScatteringShader';
+import {
+  sampleMultipleScattering,
+  sharedMultipleScatteringTable,
+} from '@/core/multipleScattering';
 import { LIGHTING_SETTINGS } from '@/config/engine';
 import { ATTACHED_SKIES } from './skyApproach';
 import { addAerialPerspective } from './aerialPerspective';
@@ -64,6 +68,10 @@ export function attachSky(
   const sky = getSky(material)!;
   mesh.material = material;
   const sunIntensity = LIGHTING_SETTINGS.sun.intensity;
+  // La même table que la texture du shader, calculée une fois par modèle.
+  const multipleTable = sharedMultipleScatteringTable(model);
+  const multiple = (altitudeKm: number, sunCos: number) =>
+    sampleMultipleScattering(multipleTable, model, altitudeKm, sunCos)[1];
   const seaLevelKm = (point: THREE.Vector3) =>
     radiusKm * body.figureRatioToward(point);
 
@@ -127,7 +135,15 @@ export function attachSky(
         .normalize()
         .dot(up);
       return starVisibility(
-        zenithSkyLuminance(model, groundKm, cameraKm, sunCos, sunIntensity),
+        zenithSkyLuminance(
+          model,
+          groundKm,
+          cameraKm,
+          sunCos,
+          sunIntensity,
+          undefined,
+          multiple
+        ),
         dayZenithLuminance(model, sunIntensity)
       );
     },
