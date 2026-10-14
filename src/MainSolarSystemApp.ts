@@ -93,13 +93,7 @@ import {
   bytesPerSimulatedDay,
   sustainableTimeScale,
 } from '@/core/playbackBudget';
-import { setupSolarDebug } from './ui/solarDebug';
-import { setupGeoDebug } from './ui/geoDebug';
-import { setupTerminatorProbe } from './ui/terminatorProbe';
-import { setupEarthDebug } from './ui/earthDebug';
-import { setupSurfaceProbe } from './ui/surfaceProbe';
-import { hasDebugFlag } from '@/utils/debugFlags';
-import { setupMeteoDebug } from './ui/meteoDebug';
+import { hasAnyDebugFlag, hasDebugFlag } from '@/utils/debugFlags';
 import { loadSmallBodies } from './core/sbdb';
 import { CELESTIAL_CONFIG } from './config/bodies';
 import { hydrateCatalogueText } from './config/catalogueText';
@@ -269,11 +263,16 @@ function wireChrome(): {
         ) > 0.001,
       (cb) => animationSystem.onFrame(cb)
     );
-    setupSolarDebug(api);
-    setupGeoDebug(api);
-    setupEarthDebug(api);
-    setupTerminatorProbe(api);
-    setupSurfaceProbe(api);
+    // Sondes de débogage (`?debug-solar`, `-geo`, `-earth`, `-terminator`, `-surface`,
+    // `-meteo`) : un seul morceau, chargé seulement si un drapeau `debug-…` est présent.
+    const debugProbes = hasAnyDebugFlag() ? import('./ui/debugProbes') : null;
+    void debugProbes?.then((m) => {
+      m.setupSolarDebug(api);
+      m.setupGeoDebug(api);
+      m.setupEarthDebug(api);
+      m.setupTerminatorProbe(api);
+      m.setupSurfaceProbe(api);
+    });
     // Sonde d'éclipse (ligne 45.2) : chargée À LA DEMANDE, seulement sous `?debug-eclipse`, pour
     // ne rien ajouter au démarrage ordinaire.
     if (hasDebugFlag('debug-eclipse'))
@@ -320,7 +319,7 @@ function wireChrome(): {
       overlayCoordinator
     );
 
-    setupMeteoDebug(api, weatherLayers);
+    void debugProbes?.then((m) => m.setupMeteoDebug(api, weatherLayers));
 
     // Fiche d'info par corps : s'ouvre pour toute sélection (barre, clic 3D, label Explo),
     // se ferme sur retour Vue Globale. Toutes les sources passent par planetNav.selectBody.

@@ -422,6 +422,11 @@ export const NON_BOOT_CHUNKS: readonly BootDynamicChunk[] = [
       "la sonde d'éclipse (ligne 45.2) n'est importée que sous `?debug-eclipse`, que seul `e2e/eclipseLanding.spec.ts` demande : un visiteur ne la charge jamais.",
   },
   {
+    chunk: 'debugProbes',
+    reason:
+      'les six sondes de débogage (`?debug-solar`, `-geo`, `-earth`, `-terminator`, `-surface`, `-meteo`, réunies dans `ui/debugProbes`) ne se chargent que si un drapeau `debug-…` est présent : chacune était inerte sans le sien, mais importée statiquement. Les sortir du démarrage (2026-10-14) a rendu la marge que le ciel du lot 48 avait consommée.',
+  },
+  {
     chunk: 'gazetteerAdoptionIndex',
     reason:
       "les dates d'adoption des noms de surface par l'UAI (ligne 22.10, front des noms) ne sont lues que par le bloc « Découverte » de la fiche, chargé à son ouverture (`config/nameAdoptions`). Comptées par corps et par date au générateur, pour que la fiche de la Lune n'ait pas à télécharger ses 9 087 noms pour répondre.",

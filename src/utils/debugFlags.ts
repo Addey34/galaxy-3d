@@ -8,3 +8,15 @@ export function hasDebugFlag(flag: string): boolean {
   if (typeof window === 'undefined') return false;
   return new URLSearchParams(window.location.search).has(flag);
 }
+
+/**
+ * Vrai dès qu'un paramètre `debug-…` est présent, quel qu'il soit. Sert à décider s'il faut
+ * charger le morceau des sondes de débogage (`ui/debugProbes`) : chaque sonde vérifie ensuite
+ * SON drapeau, donc aucune liste de drapeaux n'a à être recopiée ici.
+ */
+export function hasAnyDebugFlag(): boolean {
+  if (typeof window === 'undefined') return false;
+  return [...new URLSearchParams(window.location.search).keys()].some((key) =>
+    key.startsWith('debug-')
+  );
+}
