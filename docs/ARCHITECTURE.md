@@ -2787,8 +2787,17 @@ molles : ETOPO 2022 à 60″ met un échantillon tous les 1,8 km. ETOPO publie a
   boîtes entièrement couvertes par les paires déjà téléchargées. Il vaut 54 m (médiane) au-dessus
   de 4 000 m de relief, 38 à 42 m entre 2 000 et 4 000, 16 m entre 1 500 et 2 000, 5 à 9 m en
   dessous : le gain plafonne vers 2 000 m, et sous ce seuil 15″ ne dessine guère plus qu'une
-  dizaine de mètres sur des échantillons de 463 m. Décision de l'utilisateur : 2 000 m. Le global
-  reste à faire avec la règle de l'eau tuile par tuile, pour un gain mesuré faible en plaine.
+  dizaine de mètres sur des échantillons de 463 m. Décision de l'utilisateur : 2 000 m.
+- **Le global n'est PAS cuit, et c'est une mesure défavorable, pas un oubli (2026-10-14).** Sous
+  2 000 m de relief, 15″ n'ajoute que 5 à 16 m RMS au 60″ interpolé (mesuré ci-dessus), soit moins
+  que l'altitude d'un immeuble, sur des échantillons de 463 m, et la caméra ne descend pas sous
+  le kilomètre. Le prix : des tuiles fines de 2,55 et 3,7 Go selon la grille au lieu de 767 et
+  924 Mo au seuil de 2 000 m (Sentinel-2, puis GIBS ; mesuré ci-dessus), et réécrire la règle de
+  l'eau tuile par tuile, puisqu'elle tient le globe en mémoire (3,7 milliards de cellules à 15″). **Ce qui
+  rouvrirait la question** : une descente plus basse que le kilomètre, où une dizaine de mètres
+  se verrait, ou un relief de plaine VU faux sur une capture (une falaise, une vallée encaissée
+  sous 2 000 m de relief) ; on abaisserait alors le seuil sur mesure, comme au 2026-10-14, plutôt
+  que de tout cuire.
   `src/config/surfaceHeights.test.ts` exige que la plus faible boîte cuite tombe juste au-dessus
   du seuil de la recette (un manifeste cuit à l'ancien seuil y échoue à 4 014 m), et un témoin aux
   Pyrénées (Aneto) tient une boîte gagnée par ce seuil. Cuisson mesurée : grille de Sentinel-2,
@@ -2805,7 +2814,8 @@ molles : ETOPO 2022 à 60″ met un échantillon tous les 1,8 km. ETOPO publie a
   `src/config/surfaceHeights.test.ts`. Vu à 1,5 km au-dessus de Chamonix : arêtes et aiguilles là
   où le 60″ dessinait des dômes.
 - **Servi** par le service de données de la VM, comme le socle (`assets/height-tiles/earth*/<hachage>/`,
-  1,5 Go pour la grille de Sentinel-2, 733 Mo pour celle de GIBS), téléversé AVANT le manifeste.
+  2 120,4 Mo pour la grille de Sentinel-2, 1 481,2 Mo pour celle de GIBS au seuil de 2 000 m ; 1,5 Go
+  et 733 Mo au seuil de 4 000 m, SUPERSEDED le 2026-10-14), téléversé AVANT le manifeste.
 
 ## L'échelle de résolutions d'une texture : jusqu'où on livre, et pourquoi (lot 16)
 
