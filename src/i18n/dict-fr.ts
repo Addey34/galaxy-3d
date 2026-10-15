@@ -105,15 +105,6 @@ export const fr: Record<MessageKey, string> = {
   'offline.progress': 'Téléchargement : {done} fichiers sur {total}.',
   'offline.started': 'Préparation du hors-ligne lancée.',
   'offline.forget': 'Libérer {size} Mo',
-  'search.group.dataset': 'Couches de données',
-  'search.group.place': 'Lieux',
-  'search.group.mission': 'Missions',
-  'search.group.instrument': 'Instruments',
-  'search.group.discovery': 'Découvertes',
-  'search.group.flyby': 'Survols',
-  'search.group.orbitInsertion': 'Mises en orbite',
-  'search.group.contact': 'Contacts',
-  'search.missionPage': 'page de la mission',
   'nav.searchPlaceholder': 'Un corps, un cratère, une mission…',
   'nav.paletteAria':
     'Rechercher et sélectionner un corps, un lieu, une mission, un instrument ou un survol',
@@ -359,9 +350,6 @@ export const fr: Record<MessageKey, string> = {
   'surface.relief.acquired': 'hauteurs mesurées entre {from} et {to}',
   'settings.surfaceCompare': 'Comparer avec l’année',
   'settings.surfaceCompare.none': 'Aucune comparaison',
-  'surface.compare.slider': 'Rideau avant/après',
-  'surface.compare.valuetext':
-    '{before} à gauche de la ligne, {after} à droite, ligne à {percent} % de la largeur',
   'surface.compare.badge':
     'à gauche de la ligne : {title}, images de {from} à {to}',
   'settings.units': 'Unités impériales (mi, °F)',
@@ -474,106 +462,11 @@ export const fr: Record<MessageKey, string> = {
   // Missions déclarées sur un corps (voir core/missions.ts et config/missions.ts).
   // Cf. dict-en pour la raison de « ce corps ».
   'bi.discovery.label': 'Découverte',
-  'bi.discovery.according': '{source}, lu le {date}',
-  'bi.discovery.prehistoric': 'Depuis la préhistoire',
-  'bi.discovery.ancient': 'Depuis l’Antiquité',
-  'bi.discovery.ancientObservations':
-    'Observations anciennes remontant à plus de deux mille ans',
-  'bi.discovery.predictedReturn': 'Retour prédit, observé le {date}',
-  'bi.discovery.notYetKnown':
-    'À la date de la scène, ce corps n’était pas encore connu.',
-  'bi.discovery.known': 'À la date de la scène, ce corps était déjà connu.',
-  'bi.discovery.onTheDay': 'La date de la scène est le jour de sa découverte.',
-  'bi.discovery.withinYear':
-    'La date de la scène tombe dans l’année de sa découverte, dont la source ne donne pas le jour.',
-  'bi.discovery.withinDates':
-    'La date de la scène tombe entre les dates publiées : la réponse dépend de la source.',
-  'bi.discovery.moonsKnown':
-    'Lunes déjà vues à cette date : {count} sur les {total} que recense aujourd’hui le JPL',
-  'bi.discovery.moonsKnownRange':
-    'Lunes déjà vues à cette date : entre {min} et {max} sur les {total} que recense aujourd’hui le JPL',
-  'bi.discovery.moonsKnownOne':
-    'Lunes déjà vues à cette date : {count} sur la seule que recense aujourd’hui le JPL',
-  'bi.discovery.moonsKnownRangeOne':
-    'Lunes déjà vues à cette date : entre {min} et {max} sur la seule que recense aujourd’hui le JPL',
-  'bi.discovery.moonsNext': 'Découverte suivante : {year} ({names})',
-  'bi.discovery.moonsMore': '{names} et {count} autres',
-  'bi.discovery.moonsNote':
-    'Ce compte ne retient que les lunes que la table du JPL recense aujourd’hui, lue le {date} : une lune annoncée puis réfutée n’y figure pas, donc ce n’est pas ce que l’on croyait à l’époque.',
-  'bi.discovery.moonsNoteSbdb':
-    'Ce compte ne retient que les satellites que la JPL Small-Body Database confirme aujourd’hui, lue le {date} : un satellite annoncé puis réfuté n’y figure pas, donc ce n’est pas ce que l’on croyait à l’époque.',
-  'bi.discovery.moonsUnconfirmed':
-    'Non comptés, parce que la base les dit non confirmés : {names}.',
-  'bi.discovery.names':
-    'Noms de surface que l’UAI avait rendus officiels à cette date : {count} sur {total}',
-  'bi.discovery.namesRange':
-    'Noms de surface que l’UAI avait rendus officiels à cette date : entre {min} et {max} sur {total}',
-  'bi.discovery.lettered':
-    'Désignations lettrées comme « Copernicus A » rendues officielles à cette date : {count} sur {total}',
-  'bi.discovery.letteredRange':
-    'Désignations lettrées comme « Copernicus A » rendues officielles à cette date : entre {min} et {max} sur {total}',
-  'bi.discovery.namesNext': 'Adoption suivante : {date}, {count} de plus',
-  'bi.discovery.namesNote':
-    'Dates d’adoption du Gazetteer of Planetary Nomenclature de l’UAI, lu le {date} : la date à laquelle un nom est devenu officiel, pas celle où la formation a été vue ou nommée pour la première fois.',
-  'bi.discovery.refutedThatYear':
-    'En {year}, l’année de la scène, {who} signale un possible satellite de ce corps ; la source ne donne pas le jour.',
-  'bi.discovery.refutedReported':
-    'À cette date, un possible satellite de ce corps avait déjà été signalé : dès {year} par {who}, puis plusieurs fois par d’autres observateurs, dont {others}.',
-  'bi.discovery.refutedSearched':
-    'Une recherche déposée le {date} n’en a trouvé aucun, jusqu’à environ {radius} km de rayon.',
   'position.yearBeforeEra': '{year} av. J.-C.',
   'bi.missions.label': 'Missions',
-  'bi.atmosphere.label': 'Profil mesuré (sonde Galileo)',
-  'bi.atmosphere.labelNone': 'Profil mesuré de l’atmosphère',
-  'bi.atmosphere.altitude': 'Au-dessus de 1 bar',
-  'bi.atmosphere.pressure': 'Pression',
-  'bi.atmosphere.temperature': 'Température',
-  'bi.atmosphere.local':
-    'Un seul point du globe, latitude {min}° à {max}°, traversé le {date}. L’article de l’équipe le situe au bord d’une tache chaude à 5 µm de la bande équatoriale nord.',
-  'bi.atmosphere.adjusted':
-    'À partir de {altitude}, l’équipe a ajusté l’adiabatique sèche aux données : ces lignes ne sont pas des points mesurés.',
-  'bi.atmosphere.citation':
-    '{authors} ({year}), {title}, NASA Planetary Data System, DOI {doi}. {reference} Lu le {date}.',
-  'bi.atmosphere.absent':
-    'Aucun profil de température et de pression de la basse atmosphère n’est publié en données au Planetary Data System de la NASA pour cette planète : {count} collections lues le {date}, aucune n’en est un.',
-  'bi.missions.countAtDate': '{count}, dont {active} à cette date',
-  'bi.missions.countAllAtDate': '{count}, toutes à cette date',
-  'bi.missions.none':
-    'Aucune mission de cette archive ne déclare ce corps parmi ses cibles.',
-  'bi.missions.span': 'du {from} au {to}',
-  'bi.missions.spanUndeclared': 'dates non déclarées',
-  'bi.missions.spanEndOnly': 'jusqu’au {to}, début non déclaré',
-  'bi.missions.spanOpen': 'depuis le {from}, fin non déclarée',
-  'bi.missions.atDate': 'avait commencé à la date de la scène',
-  'bi.missions.note':
-    'Ce que l’archive du PDS déclare pour chaque mission : l’intervalle de ses données et les corps qu’elle prend pour cibles, lu le {date}. Une cible déclarée n’est pas un relevé d’observations, et le début est celui du projet, pas le lancement.',
   // Cf. dict-en pour la raison du mot « investigations ».
   'bi.instruments.label': 'Instruments',
-  'bi.instruments.investigations': 'Investigations où elle figure',
-  'bi.instruments.hostEmpty': '(aucun instrument déclaré)',
-  'bi.instruments.absent':
-    'L’archive du PDS ne déclare ici aucune investigation, et donc aucun instrument.',
-  'bi.instruments.absentNote': 'Lu dans l’archive du PDS le {date}.',
-  'bi.instruments.note':
-    'Ce que l’archive du PDS déclare que cette sonde embarque, lu le {date}. Chaque nom est celui que l’archive publie, et l’identifiant sous lui en est la citation.',
   'bi.places.label': 'Formations observées',
-  'bi.places.count': '{observed} sur {total} nommées',
-  'bi.places.search': 'Formation nommée',
-  'bi.places.hint':
-    'Saisissez le nom d’une formation pour voir quels orbiteurs l’ont observée.',
-  'bi.places.unknown': 'Aucune formation de ce corps ne porte ce nom.',
-  'bi.places.none':
-    'Aucune empreinte publiée par l’Orbital Data Explorer ne touche cette formation.',
-  'bi.places.unavailable':
-    'Les observations de cette formation n’ont pas pu être chargées.',
-  'bi.places.observations': 'Observations : {count}, {span}',
-  'bi.places.observationsUndated': 'Observations : {count}, dates non publiées',
-  'bi.places.firstLabel': 'Première observation (étiquette PDS)',
-  'bi.places.announce': '{name}, instruments : {count}',
-  'bi.places.uncovered':
-    'Les empreintes des observations n’ont été trouvées, dans l’Orbital Data Explorer de la NASA, que pour ces corps : {bodies}. Aucun service public d’empreintes n’a été trouvé pour ce corps.',
-  'bi.places.note':
-    'Empreintes lues dans l’Orbital Data Explorer de la NASA (PDS Geosciences Node), produits créés jusqu’au {date}. Un produit dont l’empreinte couvre aussi l’antipode de la formation, comme une carte globale, n’est pas compté.',
   'stat.radius': 'Rayon',
   'stat.meanDistanceSun': 'Distance moyenne (Soleil)',
   'stat.meanDistanceFrom': 'Distance moyenne ({parent})',

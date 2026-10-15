@@ -16,7 +16,8 @@
  * (`config/bodies.ts`, champ `LocalizedText`) — le catalogue est la source unique du contenu.
  */
 
-import { en, type MessageKey } from './dict-en';
+import { en, type MessageKey as BootMessageKey } from './dict-en';
+import type { CardMessageKey } from './dict-card-en';
 
 export type Locale = 'en' | 'fr' | 'es' | 'pt-BR';
 
@@ -39,10 +40,17 @@ export const LOCALES: readonly Locale[] = ['en', 'fr', 'es', 'pt-BR'];
  */
 export const UNREVIEWED_TRANSLATIONS: readonly Locale[] = ['es', 'pt-BR'];
 
-export type Dict = Record<MessageKey, string>;
+/** Le dictionnaire du DÉMARRAGE d'une langue, celui que `loadDictionary` rend. */
+export type Dict = Record<BootMessageKey, string>;
+
+/**
+ * Les phrases des blocs hors démarrage (lot 52, piste C) : `./dict-card-en.ts`, chargées par
+ * `./deferredMessages.ts`. Une clé de l'application est de l'un ou de l'autre.
+ */
+export type CardDict = Record<CardMessageKey, string>;
+export type MessageKey = BootMessageKey | CardMessageKey;
 
 export { en };
-export type { MessageKey };
 
 /**
  * Segment d'URL de chaque langue, pour les pages générées (`/methodology/`, `/fr/methodology/`).

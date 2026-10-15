@@ -1,7 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { messages } from './allDictionaries';
 import { LOCALES, type Locale } from './locales';
-import { en } from './dict-en';
+
+// L'anglais COMPLET, démarrage et blocs hors démarrage (lot 52, piste C) : lire le seul
+// `dict-en` laisserait les phrases déplacées hors de chaque garde de ce fichier.
+const en = messages.en;
 
 /**
  * CE QU'UNE MACHINE PEUT VÉRIFIER D'UNE TRADUCTION — et ce lot en a besoin.

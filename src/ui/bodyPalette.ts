@@ -13,6 +13,7 @@ import { NAVIGABLE_BODIES, NAVIGABLE_TARGETS } from '@/config/navigable';
 import type { BodyKind, CelestialConfig } from '@/types';
 import { bodyDisplayName } from '@/i18n/bodyText';
 import { onLocaleChange, t } from '@/i18n';
+import { loadDeferredMessages } from '@/i18n/deferredMessages';
 import { bodyAccentColor, hexToRgbTriplet, onAccentChange } from './bodyAccent';
 import type { OverlayCoordinator } from './overlayCoordinator';
 import { BODY_GROUPS } from './bodyGroups';
@@ -259,7 +260,11 @@ export function setupBodyPalette(
     let search: typeof import('./paletteSearch') | null = null;
     if (searchContext && query.trim().length >= 2) {
       try {
-        search = await import('./paletteSearch');
+        // Les intitulés des groupes arrivent avec le morceau (`i18n/deferredMessages`).
+        [search] = await Promise.all([
+          import('./paletteSearch'),
+          loadDeferredMessages(),
+        ]);
         hits = await search.searchTyped(query, searchContext);
       } catch {
         hits = [];

@@ -63,12 +63,22 @@ test('aucune carte de fiche ne part au démarrage, la première ouverture la dem
         decodeURIComponent(request.url())
       );
     if (match) requested.push(match[1]!);
+    // Les phrases des blocs hors démarrage (lot 52, piste C) : `src/i18n/dict-card-fr.ts` en dev,
+    // `/assets/dict-card-fr-<empreinte>.js` au build.
+    const phrases =
+      /(?:\/i18n\/|\/assets\/)(dict-card-(?:en|fr|es|pt-BR))(?=[-.]|$)/.exec(
+        decodeURIComponent(request.url())
+      );
+    if (phrases) requested.push(phrases[1]!);
   });
   await boot(page, 'fr', '/');
   // LE TÉMOIN : la vue d'ensemble n'ouvre aucune fiche, donc rien ne doit avoir été demandé.
   expect(requested).toEqual([]);
+  // Jupiter et non Mars : Mars déclare un jeu de tuiles, et le panneau de surface, qui se charge à
+  // l'approche, demande lui aussi les phrases des blocs (rideau avant/après). Ce scénario ne
+  // prouverait alors rien du chargeur des blocs de fiche (mesuré le 2026-10-15 en le retirant).
   await page
-    .locator('#orbit-mars')
+    .locator('#orbit-jupiter')
     .evaluate((el) => (el as HTMLElement).click());
   await expect(page.locator('#body-info .bi-desc')).not.toBeEmpty();
   // La provenance des faits (lot 52) est reposée : la liste n'est plus occupée, et un fait
@@ -77,9 +87,16 @@ test('aucune carte de fiche ne part au démarrage, la première ouverture la dem
   await expect(stats).not.toHaveAttribute('aria-busy', 'true');
   await expect(stats.locator('.bi-ref').first()).toBeVisible();
   // L'anglais (repli de chaque bloc), la langue active et la provenance, rien d'autre.
+  // Les blocs de fiche rendent leurs phrases, jamais une clé brute.
+  await expect(page.locator('#body-info .bi-missions-count')).toContainText(
+    /\d/
+  );
+  await expect(page.locator('#body-info')).not.toContainText('bi.');
   expect([...new Set(requested)].sort()).toEqual([
     'card-en',
     'card-facts',
     'card-fr',
+    'dict-card-en',
+    'dict-card-fr',
   ]);
 });

@@ -17,13 +17,19 @@ import { en } from './dict-en';
 import { fr } from './dict-fr';
 import { es } from './dict-es';
 import { ptBR } from './dict-pt-BR';
-import type { Dict, Locale } from './locales';
+import { cardEn } from './dict-card-en';
+import { cardFr } from './dict-card-fr';
+import { cardEs } from './dict-card-es';
+import { cardPtBR } from './dict-card-pt-BR';
+import type { CardDict, Dict, Locale } from './locales';
 
-export const messages: Record<Locale, Dict> = {
-  en,
-  fr,
-  es,
-  'pt-BR': ptBR,
+// Les deux dictionnaires de chaque langue, réunis : les pages générées et les tests lisent
+// toutes les clés, celles du démarrage comme celles des blocs hors démarrage (lot 52, piste C).
+export const messages: Record<Locale, Dict & CardDict> = {
+  en: { ...en, ...cardEn },
+  fr: { ...fr, ...cardFr },
+  es: { ...es, ...cardEs },
+  'pt-BR': { ...ptBR, ...cardPtBR },
 };
 
 /**
