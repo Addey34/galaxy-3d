@@ -536,6 +536,19 @@ export const es: Record<MessageKey, string> = {
     'Una búsqueda depositada el {date} no encontró ninguno, hasta unos {radius} km de radio.',
   'position.yearBeforeEra': '{year} a. C.',
   'bi.missions.label': 'Misiones',
+  'bi.atmosphere.label': 'Perfil medido (sonda Galileo)',
+  'bi.atmosphere.labelNone': 'Perfil medido de la atmósfera',
+  'bi.atmosphere.altitude': 'Sobre 1 bar',
+  'bi.atmosphere.pressure': 'Presión',
+  'bi.atmosphere.temperature': 'Temperatura',
+  'bi.atmosphere.local':
+    'Un solo punto del globo, latitud {min}° a {max}°, atravesado el {date}. El artículo del equipo lo sitúa en el borde de una mancha caliente a 5 µm del cinturón ecuatorial norte.',
+  'bi.atmosphere.adjusted':
+    'A partir de {altitude}, el equipo ajustó la adiabática seca a los datos: esas filas no son puntos medidos.',
+  'bi.atmosphere.citation':
+    '{authors} ({year}), {title}, NASA Planetary Data System, DOI {doi}. {reference} Leído el {date}.',
+  'bi.atmosphere.absent':
+    'Ningún perfil de temperatura y presión de la baja atmósfera se publica como datos en el Planetary Data System de la NASA para este planeta: {count} colecciones leídas el {date}, ninguna lo es.',
   'bi.missions.countAtDate': '{count}, de las cuales {active} en esta fecha',
   'bi.missions.countAllAtDate': '{count}, todas en esta fecha',
   'bi.missions.none':

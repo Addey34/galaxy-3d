@@ -1,5 +1,5 @@
 /**
- * LES QUATRE BLOCS DE LA FICHE QUI NE SERVENT QU'UNE FOIS UNE FICHE OUVERTE, en un seul morceau
+ * LES BLOCS DE LA FICHE QUI NE SERVENT QU'UNE FOIS UNE FICHE OUVERTE, en un seul morceau
  * chargé à la PREMIÈRE ouverture (lot 44).
  *
  * POURQUOI, MESURÉ : le lot 43 avait laissé le budget JavaScript du démarrage à 22 063 octets de
@@ -15,6 +15,7 @@
  */
 import type { PublicAPI } from '@/SolarSystemApp';
 import type { BodyInfoPanel } from './bodyInfo';
+import { setupAtmosphereBlock } from './atmosphereBlock';
 import { setupDiscoveryBlock } from './discoveryBlock';
 import { setupInstrumentsBlock } from './instrumentsBlock';
 import { setupMissionsBlock } from './missionsBlock';
@@ -22,6 +23,7 @@ import { setupPlacesBlock } from './placesBlock';
 
 export function setupCardBlocks(api: PublicAPI, bodyInfo: BodyInfoPanel): void {
   setupDiscoveryBlock(api, bodyInfo);
+  setupAtmosphereBlock(api, bodyInfo);
   setupMissionsBlock(api, bodyInfo);
   setupInstrumentsBlock(api, bodyInfo);
   setupPlacesBlock(api, bodyInfo);

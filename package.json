@@ -39,6 +39,7 @@
     "surface:editions": "node scripts/generate-eox-editions.mjs",
     "gibs:colormap": "node scripts/import-gibs-colormap.mjs",
     "fingerprint:generated": "node scripts/fingerprint-generated.mjs",
+    "atmosphere:generate": "node scripts/generate-atmosphere-profiles.mjs",
     "gazetteer:generate": "node scripts/generate-gazetteer.mjs",
     "places:pull": "node scripts/pull-ode-footprints.mjs",
     "places:generate": "node scripts/generate-place-observations.mjs",

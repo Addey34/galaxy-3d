@@ -482,6 +482,11 @@ export const NON_BOOT_CHUNKS: readonly BootDynamicChunk[] = [
       "l'index des découvertes (lot 44) n'est lu que par le bloc « Découverte » de la fiche, chargé à son ouverture (`config/discovery`). Les satellites de chaque système ne sont pas dans le bundle : ils vivent en actifs servis à l'ouverture de la fiche de leur parent, comme les missions du lot 40.",
   },
   {
+    chunk: 'atmosphereProfileIndex',
+    reason:
+      "l'index des profils mesurés d'atmosphère (lot 51) n'est lu que par le bloc « Profil mesuré » de la fiche d'une géante, chargé à son ouverture (`config/atmosphereProfiles`). Le profil de Jupiter lui-même n'est pas dans le bundle : il vit en actif servi à l'ouverture de sa fiche.",
+  },
+  {
     chunk: 'instrumentIndex',
     reason:
       "l'index des instruments du registre de contexte du PDS (lot 42) n'est lu que par le bloc « Instruments » de la fiche d'une SONDE, chargé à son ouverture (`config/instruments`). Les listes elles-mêmes ne sont pas dans le bundle : elles vivent en actifs servis à l'ouverture d'une fiche, comme les missions du lot 40 et les noms de surface du lot 37.",

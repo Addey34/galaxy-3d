@@ -1,0 +1,34 @@
+{
+  "$comment": "Écrit par `pnpm atmosphere:generate`. Les géantes sans profil : collections rattachées par le registre du PDS au jour de la lecture, aucune n’étant un profil de la basse atmosphère (lu le 2026-10-15). Un compte qui bouge se relit.",
+  "provider": {
+    "publisher": "NASA Planetary Data System, Atmospheres Node",
+    "title": "Galileo Probe (GP) Bundle",
+    "url": "https://atmos.nmsu.edu/PDS/data/PDS4/galileo_probe_bundle/",
+    "doi": "10.17189/0hsp-bb78"
+  },
+  "retrieved": "2026-10-15",
+  "profiles": {
+    "jupiter": {
+      "samples": 686
+    }
+  },
+  "witness": {
+    "jupiter": "urn:nasa:pds:gp:data_asi",
+    "collections": 496,
+    "retrieved": "2026-10-15"
+  },
+  "absent": {
+    "neptune": {
+      "collections": 77,
+      "retrieved": "2026-10-15"
+    },
+    "saturn": {
+      "collections": 281,
+      "retrieved": "2026-10-15"
+    },
+    "uranus": {
+      "collections": 109,
+      "retrieved": "2026-10-15"
+    }
+  }
+}

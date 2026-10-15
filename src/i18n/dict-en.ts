@@ -554,6 +554,19 @@ export const en = {
     'A survey submitted on {date} found none, down to about {radius} km in radius.',
   'position.yearBeforeEra': '{year} BC',
   'bi.missions.label': 'Missions',
+  'bi.atmosphere.label': 'Measured profile (Galileo probe)',
+  'bi.atmosphere.labelNone': 'Measured atmospheric profile',
+  'bi.atmosphere.altitude': 'Above 1 bar',
+  'bi.atmosphere.pressure': 'Pressure',
+  'bi.atmosphere.temperature': 'Temperature',
+  'bi.atmosphere.local':
+    'One point of the globe, latitude {min}° to {max}°, entered on {date}. The team’s article places it near the edge of a 5-µm hot spot in the north equatorial belt.',
+  'bi.atmosphere.adjusted':
+    'From {altitude} down, the team fitted the dry adiabat to the data: those rows are not measured points.',
+  'bi.atmosphere.citation':
+    '{authors} ({year}), {title}, NASA Planetary Data System, DOI {doi}. {reference} Read on {date}.',
+  'bi.atmosphere.absent':
+    'No temperature and pressure profile of the lower atmosphere is published as data in the NASA Planetary Data System for this planet: {count} collections read on {date}, none of them one.',
   'bi.missions.countAtDate': '{count}, of which {active} at this date',
   'bi.missions.countAllAtDate': '{count}, all at this date',
   'bi.missions.none':

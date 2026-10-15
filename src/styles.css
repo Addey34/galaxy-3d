@@ -1174,6 +1174,29 @@ button {
   font-size: 0.62em;
   color: var(--ink-faint);
 }
+/* Le profil mesuré d'une géante (lot 51) : trois colonnes de valeurs, alignées comme la fiche. */
+.bi-atmosphere-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.78rem;
+  font-variant-numeric: tabular-nums;
+}
+.bi-atmosphere-table th {
+  color: var(--ink-faint);
+  font-weight: 400;
+  text-align: right;
+}
+.bi-atmosphere-table td {
+  text-align: right;
+  padding: 0.12rem 0 0.12rem 0.4rem;
+}
+.bi-atmosphere-table tr.is-adjusted td {
+  font-style: italic;
+}
+.bi-atmosphere p {
+  font-size: 0.75rem;
+  color: var(--ink-faint);
+}
 .bi-stats .bi-asof,
 .bi-stats .bi-remark {
   font-size: 0.85em;
