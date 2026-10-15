@@ -104,6 +104,11 @@
       "source": "nssdca-fact-sheets",
       "method": "measured"
     },
+    "windSpeedMs": {
+      "value": [0, 580],
+      "source": "nssdca-fact-sheets",
+      "method": "measured"
+    },
     "moonCount": {
       "value": 16,
       "source": "nasa-science-neptune-moons",

@@ -593,6 +593,9 @@ export const ptBR: Record<MessageKey, string> = {
   'stat.density1Bar': 'Densidade a 1 bar',
   'stat.scaleHeight': 'Altura de escala',
   'stat.meanMolecularWeight': 'Massa molecular média',
+  'stat.winds': 'Ventos',
+  'stat.windBands':
+    'até {below} abaixo de {lat}° de latitude, {above} além disso',
   'stat.range': '{min} a {max}',
   'stat.temperature1BarGap':
     'a tabela principal do mesmo catálogo dá {value}, a {gap} K de diferença',

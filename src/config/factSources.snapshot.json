@@ -162,7 +162,12 @@
           "temperature01BarK": 112,
           "density1BarKgM3": 0.16,
           "scaleHeightKm": 27,
-          "meanMolecularWeight": 2.22
+          "meanMolecularWeight": 2.22,
+          "windSpeedMs": {
+            "belowLatDeg": 30,
+            "belowMaxMs": 150,
+            "aboveMaxMs": 40
+          }
         }
       },
       "saturn": {
@@ -191,7 +196,12 @@
           "temperature01BarK": 84,
           "density1BarKgM3": 0.19,
           "scaleHeightKm": 59.5,
-          "meanMolecularWeight": 2.07
+          "meanMolecularWeight": 2.07,
+          "windSpeedMs": {
+            "belowLatDeg": 30,
+            "belowMaxMs": 400,
+            "aboveMaxMs": 150
+          }
         }
       },
       "uranus": {
@@ -220,7 +230,11 @@
           "temperature01BarK": 53,
           "density1BarKgM3": 0.42,
           "scaleHeightKm": 27.7,
-          "meanMolecularWeight": 2.64
+          "meanMolecularWeight": 2.64,
+          "windSpeedMs": [
+            0,
+            250
+          ]
         }
       },
       "neptune": {
@@ -255,6 +269,10 @@
           "meanMolecularWeight": [
             2.53,
             2.69
+          ],
+          "windSpeedMs": [
+            0,
+            580
           ]
         }
       },

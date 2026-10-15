@@ -396,6 +396,8 @@ function rangeFact(
         label: dict['stat.meanMolecularWeight'],
         value: `${span(2)} g/mol`,
       };
+    case 'windSpeedMs':
+      return { label: dict['stat.winds'], value: `${span(0)}\u00a0m/s` };
     default:
       return null;
   }
@@ -412,6 +414,7 @@ const PAGE_FACT_ORDER: readonly FactField[] = [
   'density1BarKgM3',
   'scaleHeightKm',
   'meanMolecularWeight',
+  'windSpeedMs',
   'distanceAU',
   'orbitPeriodDays',
   'rotationPeriod',
@@ -568,6 +571,20 @@ export function bodyFactsWithSources(
       if (!range) continue;
       facts.push({
         ...range,
+        source: citations.get(entry.provenance.source),
+        method: entry.provenance.method,
+      });
+      continue;
+    }
+    if (entry.value.kind === 'latitudeBands') {
+      if (entry.field !== 'windSpeedMs') continue;
+      const ms = (v: number) => `${formatNumber(v, 0, locale)}\u00a0m/s`;
+      facts.push({
+        label: dict['stat.winds'],
+        value: dict['stat.windBands']
+          .replace('{below}', ms(entry.value.belowMaxMs))
+          .replace('{lat}', formatNumber(entry.value.belowLatDeg, 0, locale))
+          .replace('{above}', ms(entry.value.aboveMaxMs)),
         source: citations.get(entry.provenance.source),
         method: entry.provenance.method,
       });

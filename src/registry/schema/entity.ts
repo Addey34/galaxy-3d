@@ -234,6 +234,7 @@ const facts = z
     density1BarKgM3: fact,
     scaleHeightKm: fact,
     meanMolecularWeight: fact,
+    windSpeedMs: fact,
   })
   .partial()
   .strict();

@@ -488,6 +488,12 @@ function sourcesPage(input: SourcesInput, locale: DocLocale): DocPage {
       es: 'altura de escala',
       'pt-BR': 'altura de escala',
     },
+    windSpeedMs: {
+      en: 'winds',
+      fr: 'vents',
+      es: 'vientos',
+      'pt-BR': 'ventos',
+    },
     meanMolecularWeight: {
       en: 'mean molecular weight',
       fr: 'masse molaire moyenne',

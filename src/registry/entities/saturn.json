@@ -118,6 +118,11 @@
       "source": "nssdca-fact-sheets",
       "method": "measured"
     },
+    "windSpeedMs": {
+      "value": { "belowLatDeg": 30, "belowMaxMs": 400, "aboveMaxMs": 150 },
+      "source": "nssdca-fact-sheets",
+      "method": "measured"
+    },
     "moonCount": {
       "value": 293,
       "source": "nasa-science-saturn-moons",

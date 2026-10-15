@@ -305,6 +305,12 @@ export interface RealData {
   scaleHeightKm?: number | readonly [number, number];
   /** Masse molaire moyenne, en g/mol (« Mean molecular weight »). */
   meanMolecularWeight?: number | readonly [number, number];
+  /**
+   * Vents, en m/s, dans l'une des DEUX écritures de la source : une plage (« 0-250 m/s », Uranus)
+   * ou deux maxima de part et d'autre d'une latitude (« Up to 150 m/s (<30 degrees latitude) »,
+   * Jupiter).
+   */
+  windSpeedMs?: readonly [number, number] | WindBands;
   // ── Objets de la couche instrument (`config/navigable.ts`) ────────────────────────────────
   // Ces champs ne décrivent AUCUN corps du catalogue : une planète n'a pas de date de
   // lancement, et l'excentricité d'une orbite fermée n'est pas une grandeur que Galaxy publie.
@@ -417,7 +423,15 @@ export type FactField =
   | 'temperature01BarK'
   | 'density1BarKgM3'
   | 'scaleHeightKm'
-  | 'meanMolecularWeight';
+  | 'meanMolecularWeight'
+  | 'windSpeedMs';
+
+/** Deux maxima de vent de part et d'autre d'une latitude, tels que la source les publie. */
+export interface WindBands {
+  readonly belowLatDeg: number;
+  readonly belowMaxMs: number;
+  readonly aboveMaxMs: number;
+}
 
 /** Champs documentaires qui peuvent n'avoir aucune valeur affichée (cf. `RealData.unknown`). */
 export type UnknownableField = FactField;

@@ -171,12 +171,18 @@ const ATMOSPHERE_FIELDS: ReadonlySet<FactField> = new Set<FactField>([
   'density1BarKgM3',
   'scaleHeightKm',
   'meanMolecularWeight',
+  'windSpeedMs',
 ]);
-function atmosphereOf(name: string, field: FactField): number | number[] {
+function atmosphereOf(
+  name: string,
+  field: FactField
+): number | number[] | Record<string, number> {
   const body = (
     snapshot.nssdca.bodies as unknown as Record<
       string,
-      { atmosphere?: Record<string, number | number[]> }
+      {
+        atmosphere?: Record<string, number | number[] | Record<string, number>>;
+      }
     >
   )[name];
   const value = body?.atmosphere?.[field];
@@ -614,8 +620,10 @@ function expected(
       if (!sheet) fail('corps absent des fiches');
       if (ATMOSPHERE_FIELDS.has(field)) {
         const published = atmosphereOf(name, field);
-        if (Array.isArray(published))
-          fail('la source publie un INTERVALLE, la fiche un nombre');
+        if (typeof published !== 'number')
+          fail(
+            'la source publie un INTERVALLE ou des BANDES, la fiche un nombre'
+          );
         return { values: [published as number], tolerance: 0 };
       }
       switch (field) {
@@ -969,6 +977,14 @@ describe('faits affichés : confrontés à leur source', () => {
     const factual = factValue(cfg, field)!;
     // Un INTERVALLE publié (lot 51) : ses deux bornes sont celles de la source, exactement, et
     // seule la fiche du NSSDCA en publie aujourd'hui.
+    // Deux maxima par bande de latitude (les vents de Jupiter et de Saturne) : les trois nombres
+    // de la source, exactement.
+    if (factual.kind === 'latitudeBands') {
+      expect(provenance.source, `${name}.${field}`).toBe('nssdca-fact-sheets');
+      const { kind: _kind, ...bands } = factual;
+      expect(bands, `${name}.${field}`).toEqual(atmosphereOf(name, field));
+      return;
+    }
     if (factual.kind === 'range') {
       expect(provenance.source, `${name}.${field}`).toBe('nssdca-fact-sheets');
       expect([factual.min, factual.max], `${name}.${field}`).toEqual(

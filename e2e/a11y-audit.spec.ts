@@ -438,6 +438,32 @@ test.describe('mobile viewport', () => {
   }
 
   /**
+   * LES VENTS PAR BANDE DE LATITUDE (lot 51) : la plus longue valeur de la fiche, mesurée sur les
+   * quatre langues, est celle de Saturne en espagnol (« hasta 400 m/s por debajo de 30° de
+   * latitud, 150 m/s más allá »). Neptune, le témoin ci-dessus, n'a qu'une plage.
+   */
+  test('giant wind bands, es, are clean at 390 px', async ({ page }) => {
+    await page.addInitScript(() => {
+      localStorage.setItem('ssv-locale', 'es');
+    });
+    await page.goto('/?body=saturn');
+    await expect(page.locator('#loader')).toBeHidden({ timeout: 30_000 });
+    const card = page.locator('#body-info');
+    await expect(card.locator('.bi-stats')).toContainText('por debajo de 30°');
+    expect(
+      await page.evaluate(
+        () =>
+          document.documentElement.scrollWidth -
+          document.documentElement.clientWidth
+      ),
+      'débordement de la page'
+    ).toBeLessThanOrEqual(0);
+    expect(await clippedOverflow(page), 'texte rogné dans la fiche').toEqual(
+      []
+    );
+  });
+
+  /**
    * LE BLOC « INSTRUMENTS » D'UNE SONDE (lot 42), même mesure et pour la même raison qu'au lot 40 :
    * les scénarios ci-dessus ouvrent la fiche d'un CORPS, où ce bloc est masqué. Il n'aurait donc
    * jamais été audité, et un contraste ou un débordement y serait resté vert indéfiniment.
