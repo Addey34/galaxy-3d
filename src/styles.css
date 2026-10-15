@@ -2416,9 +2416,8 @@ button {
   /* Au quart de la hauteur et non au centre : la caméra vise le centre, la poignée y cachait
      la cible même qu'on compare. */
   top: 25%;
-  /* La LIGNE va jusqu'au bord ; la poignée reste entière à l'écran (à 100 %, elle sortait de
-     moitié, vu en vrai navigateur). */
-  left: clamp(3.75rem, var(--sc-x, 50%), calc(100% - 3.75rem));
+  /* Position bornée par sa largeur mesurée : `compareCurtain.ts::placeHandle`. */
+  left: var(--sc-x, 50%);
   transform: translate(-50%, -50%);
   display: flex;
   gap: 0.6rem;

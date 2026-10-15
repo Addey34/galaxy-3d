@@ -132,6 +132,20 @@ export function createCompareCurtain(
     // `gl_FragCoord` compte en pixels du tampon, depuis le bord GAUCHE : la même origine que
     // l'écran, et la largeur du tampon, qui inclut le rapport de pixels.
     COMPARE_SPLIT.value = fraction * canvas.width;
+    placeHandle();
+  }
+
+  /**
+   * La LIGNE va jusqu'au bord ; la poignée reste entière à l'écran, bornée par sa largeur
+   * MESURÉE. Une borne fixe en CSS ne suffisait pas : sur le coureur Linux, la police de repli
+   * (DejaVu Sans) élargit la poignée et elle dépassait de 6 px à 100 % (run 38702211731).
+   */
+  function placeHandle(): void {
+    if (root.hidden) return;
+    const width = root.clientWidth;
+    const half = handle.offsetWidth / 2;
+    const x = fraction * width;
+    handle.style.left = `${Math.min(Math.max(x, half), Math.max(half, width - half))}px`;
   }
 
   const unsubscribe = onLocaleChange(render);
@@ -142,6 +156,7 @@ export function createCompareCurtain(
       years = next;
       root.hidden = next === null;
       render();
+      placeHandle();
     },
     sync,
     dispose() {
