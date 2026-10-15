@@ -123,6 +123,7 @@ export const es: Record<MessageKey, string> = {
   'search.group.discovery': 'Descubrimientos',
   'search.group.flyby': 'Sobrevuelos',
   'search.group.orbitInsertion': 'Inserciones en órbita',
+  'search.group.contact': 'Contactos',
   'search.missionPage': 'página de la misión',
   'nav.searchPlaceholder': 'Un cuerpo, un cráter, una misión…',
   'nav.paletteAria':

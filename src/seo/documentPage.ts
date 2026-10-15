@@ -51,11 +51,14 @@ export const MISSIONS_SLUG = 'missions';
 export const FLYBYS_SLUG = 'flybys';
 /** Les mises en orbite (lot 49), même forme : `/orbit-insertions/juno-jupiter-2016-07-05/`. */
 export const ORBIT_INSERTIONS_SLUG = 'orbit-insertions';
+/** Les contacts avec un corps (lot 49, pas 3), même forme : `/contacts/rosetta-churyumov-gerasimenko-2016-09-30/`. */
+export const CONTACTS_SLUG = 'contacts';
 const NAV_SLUGS: readonly string[] = [
   ...DOC_SLUGS,
   MISSIONS_SLUG,
   FLYBYS_SLUG,
   ORBIT_INSERTIONS_SLUG,
+  CONTACTS_SLUG,
 ];
 
 /**
@@ -124,6 +127,12 @@ const NAV: Record<string, DocText> = {
     fr: 'Mises en orbite',
     es: 'Inserciones en órbita',
     'pt-BR': 'Inserções em órbita',
+  },
+  contacts: {
+    en: 'Contacts',
+    fr: 'Contacts',
+    es: 'Contactos',
+    'pt-BR': 'Contatos',
   },
 };
 

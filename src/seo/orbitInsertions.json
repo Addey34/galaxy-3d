@@ -25,14 +25,14 @@
       "distanceKm": 80260.592,
       "speedKmS": 30.74410687,
       "manoeuvre": {
-        "at": "2004-07-01T02:02:59Z",
-        "minutesFromInsertion": -34
+        "at": "2004-07-01T02:04:00Z",
+        "minutesFromInsertion": -33
       },
       "massRelativeUncertainty": null,
       "massSensitivitySeconds": null,
       "solution": "cassini_merge",
       "measuredFrom": "centre",
-      "retrieved": "2026-10-14"
+      "retrieved": "2026-10-15"
     },
     {
       "probe": "rosetta",

@@ -138,6 +138,7 @@ export const en = {
   'search.group.discovery': 'Discoveries',
   'search.group.flyby': 'Flybys',
   'search.group.orbitInsertion': 'Orbit insertions',
+  'search.group.contact': 'Contacts',
   'search.missionPage': 'mission page',
   'nav.searchPlaceholder': 'Search a body, a crater, a mission…',
   'nav.paletteAria':

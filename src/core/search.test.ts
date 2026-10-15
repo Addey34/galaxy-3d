@@ -18,6 +18,8 @@ const NAMES: Record<string, string> = {
   saturn: 'Saturn',
   juno: 'Juno',
   jupiter: 'Jupiter',
+  rosetta: 'Rosetta',
+  'churyumov-gerasimenko': '67P/Churyumov–Gerasimenko',
 };
 const nameOf = (id: string): string => NAMES[id] ?? id;
 
@@ -31,6 +33,7 @@ const file: SearchIndexFile = {
   instruments: [['Imaging Science Subsystem', 'cassini']],
   flybys: [['voyager2', 'neptune', '1989-08-25T03:56:36Z']],
   orbitInsertions: [['juno', 'jupiter', '2016-07-05T02:55:34Z']],
+  contacts: [['rosetta', 'churyumov-gerasimenko', '2016-09-30T10:39:34Z']],
   discoveries: [
     ['Titania', 'uranus', '1787', 'W. Herschel'],
     ['Pan', 'saturn', '1990', 'M.R. Showalter'],
@@ -85,6 +88,19 @@ describe('searchPrepared', () => {
       probe: 'juno',
       body: 'jupiter',
       at: '2016-07-05T02:55:34Z',
+    });
+  });
+
+  it('un contact se trouve par sa sonde et son corps, et porte l’instant de la scène', () => {
+    expect(labels('rosetta churyumov')).toEqual([
+      'contact:Rosetta · 67P/Churyumov–Gerasimenko · 2016-09-30',
+    ]);
+    expect(searchPrepared(index, 'rosetta')[0]).toEqual({
+      kind: 'contact',
+      label: 'Rosetta · 67P/Churyumov–Gerasimenko · 2016-09-30',
+      probe: 'rosetta',
+      body: 'churyumov-gerasimenko',
+      at: '2016-09-30T10:39:34Z',
     });
   });
 

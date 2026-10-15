@@ -349,6 +349,16 @@ function bodyLandingPages() {
             'utf-8'
           )
         ) as import('./src/seo/orbitInsertionPages').OrbitInsertionRecord;
+        /** LES CONTACTS (lot 49, pas 3) : le relevé écrit par `pnpm contacts:generate`, listé après. */
+        const contactSeo = (await loader.ssrLoadModule(
+          '/src/seo/surfaceContactPages.ts'
+        )) as typeof import('./src/seo/surfaceContactPages');
+        const contactRecord = JSON.parse(
+          await readFile(
+            resolve(__dirname, 'src/seo/surfaceContacts.json'),
+            'utf-8'
+          )
+        ) as import('./src/seo/surfaceContactPages').SurfaceContactRecord;
         const eventLists = (locale: import('./src/i18n/locales').Locale) => {
           const inputs = {
             config: catalogue.CELESTIAL_CONFIG,
@@ -361,6 +371,11 @@ function bodyLandingPages() {
           );
           for (const [id, html] of orbitSeo.orbitInsertionListsByObject(
             { ...inputs, record: orbitRecord },
+            locale
+          ))
+            lists.set(id, (lists.get(id) ?? '') + html);
+          for (const [id, html] of contactSeo.surfaceContactListsByObject(
+            { ...inputs, record: contactRecord },
             locale
           ))
             lists.set(id, (lists.get(id) ?? '') + html);
@@ -916,7 +931,9 @@ function bodyLandingPages() {
           productRegistry.HEIGHTFIELD_PRODUCTS.map(async (product) =>
             sourcesSeo.heightfieldProvenance(
               product,
-              await readJson<HeightManifestSummary>(`public/${product.manifest}`)
+              await readJson<HeightManifestSummary>(
+                `public/${product.manifest}`
+              )
             )
           )
         );
@@ -1038,6 +1055,27 @@ function bodyLandingPages() {
             `pages des mises en orbite : ${orbitDocPages.length} au lieu de ${(orbitRecord.insertions.length + 1) * DOC_LOCALE_COUNT}`
           );
         docPages.push(...orbitDocPages);
+        // Les contacts : l'index plus une page par contact, dans chaque langue.
+        const contactDocPages = [undefined, ...OTHER_LOCALES].flatMap(
+          (locale) =>
+            contactSeo.surfaceContactPages(
+              {
+                record: contactRecord,
+                config: catalogue.CELESTIAL_CONFIG,
+                navigable: navigable.NAVIGABLE_TARGETS,
+                origin: SITE_ORIGIN,
+              },
+              locale ?? 'en'
+            )
+        );
+        if (
+          contactDocPages.length !==
+          (contactRecord.contacts.length + 1) * DOC_LOCALE_COUNT
+        )
+          throw new Error(
+            `pages des contacts : ${contactDocPages.length} au lieu de ${(contactRecord.contacts.length + 1) * DOC_LOCALE_COUNT}`
+          );
+        docPages.push(...contactDocPages);
         for (const page of docPages) {
           const dir = resolve(dist, new URL(page.canonical).pathname.slice(1));
           await mkdir(dir, { recursive: true });

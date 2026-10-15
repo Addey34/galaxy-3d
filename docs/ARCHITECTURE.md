@@ -5661,6 +5661,57 @@ Falsifiées : la manœuvre de Juno retirée, puis l'exclusion de Hayabusa2, roug
 `pnpm orbits:generate --check` sort en code 1 sur une dérive ; à rejouer après tout
 `pnpm ephemeris:flybys --write`.
 
+## Pages des contacts (`/contacts/`, lot 49, pas 3, 2026-10-15)
+
+L'index `/contacts/` et une page par contact d'une sonde avec un corps
+(`/contacts/rosetta-churyumov-gerasimenko-2016-09-30/`), dans les quatre langues, même rendu et
+même routage que les survols et les mises en orbite (`NESTED_SEGMENTS`). Générateur pur :
+`src/seo/surfaceContactPages.ts`.
+
+- **Deux signatures, lues sur la trajectoire que sert Horizons** par `pnpm contacts:generate`
+  (`scripts/generate-surface-contacts.mjs`, même accès à Horizons que les survols et les mises
+  en orbite), qui écrit `src/seo/surfaceContacts.json` :
+  - **le repos sur un petit corps** : la distance au centre CESSE DE VARIER (vitesse radiale
+    sous 2 mm/s pendant au moins trois secondes). La trajectoire porte alors la sonde avec la
+    surface qui tourne. `rest` quand le repos dure jusqu'à la fin de la rencontre (Rosetta sur
+    67P), `touch` quand la sonde repart (OSIRIS-REx sur Bennu, six secondes) ;
+  - **le niveau de 1 bar d'une planète géante**, qui n'a pas de surface solide (`entry`) :
+    l'ellipsoïde des rayons du noyau PCK de l'UAI (relevé des faits, `naifRotation`), orienté
+    par le pôle de l'UAI à la date (`core/iauPole.ts`). Une géante se reconnaît à ce que la fiche
+    du NSSDCA ne publie de sa pression « de surface » qu'une borne.
+- **PIÈGE mesuré : Horizons PROLONGE l'arc de Cassini À TRAVERS Saturne**, jusqu'à 23 000 km du
+  centre à 11:46 UT. Le minimum de distance n'est donc pas l'événement ; le passage du niveau
+  l'est.
+- **Les témoins, d'une autre nature que le critère, publiés et gardés** : au repos, la vitesse de
+  la sonde ne dépasse pas celle d'un point de l'équateur à cette distance, par la période de
+  rotation de la FICHE (`rotationSpeedKmS`) ; au niveau de 1 bar, la vitesse relative à la
+  planète en rotation (période et pôle du PCK) est tombée sous le dixième de la plus grande
+  atteinte avant (`peak`) : la trajectoire a ralenti dans l'atmosphère, ce n'est pas une chute
+  libre qui traverse une sphère.
+- **Détection sans liste écrite à la main** : chaque rencontre du plan dont le plus proche passe
+  sous deux fois le plus grand rayon du corps (PCK, sinon rayon du catalogue fois l'élongation
+  mesurée du modèle de forme) est relue à la minute, puis à la seconde autour du premier repos
+  et du plus proche. Les répétitions d'OSIRIS-REx (avril et août 2020) descendent aussi bas et ne
+  se posent pas : elles n'ont pas de page. Hayabusa2 à Ryugu, non résolue au plan, est nommée sur
+  l'index (`unresolved`).
+- **La fin de Cassini entre dans la scène** : son fichier s'arrêtait au 2017-09-14 en affirmant
+  que la solution s'arrêtait là, ce qui était faux. La grille est calée sur 10:46 TDB, sa
+  dernière minute avant le niveau de 1 bar, et `pnpm ephemeris:flybys` y planifie la plongée. La
+  page ouvre la scène UNE MINUTE avant le passage (`sceneAt`), puisque la sonde n'est plus
+  dessinée au-delà, et le lien le dit. La recherche des poussées du planificateur ne lit plus
+  au-delà du dernier échantillon d'un segment : elle demandait à Horizons une heure qu'il ne
+  sert pas.
+- **Ce que la page ne dit pas** : ni le nom d'une opération, ni une perte de signal, ni la
+  destruction d'une sonde. La trajectoire ne le dit pas.
+- **Les liens retour** : le fragment `events` des pages de corps et de sondes liste survols, mises
+  en orbite PUIS contacts. La recherche universelle les indexe (`contact`, l'instant de la SCÈNE).
+
+Gardes : `src/seo/surfaceContactPages.test.ts` (les trois formes présentes ; chaque contact
+s'ouvre dans une rencontre du plan ET dans le fichier livré ; les deux témoins ; le fichier de la
+sonde s'arrête avant le niveau de 1 bar ; liens retour exacts), `e2e/built-pages.spec.ts` (l'index
+et la page de Cassini, quatre langues). `pnpm contacts:generate --check` sort en code 1 sur une
+dérive ; à rejouer après tout `pnpm ephemeris:flybys --write`.
+
 ## Les cibles des missions entrées au catalogue (2026-10-04, vague 1)
 
 Les pages des missions montraient ce que le registre du PDS déclare, et vingt de ses missions ne

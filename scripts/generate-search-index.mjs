@@ -15,6 +15,7 @@
  *   - instruments  public/assets/instruments/{sonde}.json        (pnpm instruments:generate)
  *   - survols      src/seo/flybyEvents.json                      (pnpm flybys:generate)
  *   - mises en orbite src/seo/orbitInsertions.json               (pnpm orbits:generate)
+ *   - contacts     src/seo/surfaceContacts.json                  (pnpm contacts:generate)
  *   - découvertes  public/assets/discovery/{parent}.json et src/config/discoveryIndex.json
  *                                                                (pnpm discovery:generate)
  * La sonde d'une mission se DÉRIVE : le fichier d'instruments d'une sonde déclare les
@@ -90,6 +91,14 @@ export function buildSearchIndex() {
     (i) => [i.probe, i.body, i.at]
   );
 
+  // [sonde, corps, instant où la scène s'ouvre] : les contacts (lot 49, pas 3). L'instant de la
+  // SCÈNE et non celui du contact : sous le niveau de 1 bar, la sonde n'est plus dessinée.
+  const contacts = read('src/seo/surfaceContacts.json').contacts.map((c) => [
+    c.probe,
+    c.body,
+    c.sceneAt,
+  ]);
+
   // [nom, corps à montrer, quand (jour ou année), découvreurs]. Les satellites viennent des
   // fichiers de chaque système, y compris ceux qu'on ne dessine pas (Pan pour Saturne) : on montre
   // alors leur parent, dont la fiche dit ce qu'on savait à cette date. Les corps du catalogue sans
@@ -132,6 +141,7 @@ export function buildSearchIndex() {
     instruments,
     flybys,
     orbitInsertions,
+    contacts,
     discoveries,
   };
 }
@@ -161,7 +171,7 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
     console.log(
       `index de recherche : ${Object.values(index.places).flat().length} lieux, ${index.missions.length} missions, ` +
         `${index.instruments.length} instruments, ${index.flybys.length} survols, ` +
-        `${index.orbitInsertions.length} mises en orbite, ` +
+        `${index.orbitInsertions.length} mises en orbite, ${index.contacts.length} contacts, ` +
         `${index.discoveries.length} découvertes, ${text.length} o`
     );
   }
