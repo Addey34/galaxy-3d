@@ -228,6 +228,12 @@ const facts = z
     distanceAU: fact,
     orbitPeriodDays: fact,
     rotationPeriod: fact,
+    // L'atmosphère d'une géante (lot 51), points de la fiche du NSSDCA.
+    temperature1BarK: fact,
+    temperature01BarK: fact,
+    density1BarKgM3: fact,
+    scaleHeightKm: fact,
+    meanMolecularWeight: fact,
   })
   .partial()
   .strict();

@@ -4314,11 +4314,12 @@ masse d'une sonde est la MÊME grandeur que celle d'une planète, et la déclare
 couche instrument l'efface de tout le catalogue — 40 valeurs disparues d'un coup, attrapé par
 `factProvenance.test.ts`.
 
-**Un fait peut être une DATE, ou un NOM.** `FactValue` est une union fermée de trois natures :
-nombre, date de calendrier, nom propre. Encoder une date en nombre aurait rendu la fiche JSON
+**Un fait peut être une DATE, ou un NOM.** `FactValue` est une union fermée de quatre natures
+(trois jusqu'au lot 51, voir « L'atmosphère des géantes » ci-dessous) : nombre, intervalle publié,
+date de calendrier, nom propre. Encoder une date en nombre aurait rendu la fiche JSON
 illisible et laissé `displayedUncertainty` calculer une incertitude relative sur un instant. Les
-pages publiques, elles, ne décrivent que des corps du catalogue, dont tous les faits sont
-numériques : elles écartent explicitement les autres natures au lieu de le supposer.
+pages publiques, elles, ne décrivent que des corps du catalogue, dont les faits sont des nombres
+ou des intervalles : elles écartent explicitement les autres natures au lieu de le supposer.
 
 La troisième nature est arrivée au lot 10 (2026-09-22), et c'était une décision de modèle, pas
 une corvée. Le lanceur et le site de lancement ne sont pas des nombres, et le modèle avait été
@@ -4330,6 +4331,33 @@ la source écrit, recopiée à l'identique**, jamais traduite ni composée (« T
 compare caractère pour caractère au relevé, sans tolérance ni normalisation. Une phrase écrite
 par nous ne passerait pas cette garde. Falsifié : un tiret retiré d'un lanceur, un site traduit
 en français, tous deux rouges.
+
+**L'atmosphère des géantes : des points, pas un profil (lot 51, 2026-10-15).** Les fiches du
+NSSDCA de Jupiter, Saturne, Uranus et Neptune publient un bloc « Atmosphere » de POINTS : la
+température à 1 et à 0,1 bar, la masse volumique à 1 bar, la hauteur d'échelle et la masse
+molaire moyenne. Le relevé des faits les lit (`atmosphere` de chaque géante dans
+`factSources.snapshot.json`), les fiches du registre les portent avec leur source, et la fiche
+de l'application comme la page publique les affichent, sur les quatre et sur aucun autre corps
+(`src/ui/bodyInfo.test.ts`). Trois décisions :
+
+- **Un intervalle publié reste un intervalle.** La fiche de Neptune écrit « Scale height: 19.1 -
+  20.3 km » et « Mean molecular weight: 2.53 - 2.69 ». D'où la quatrième nature de `FactValue`,
+  `range`, écrite `[min, max]` dans la fiche JSON : son milieu, ou un milieu « ± demi-largeur »,
+  publierait un nombre que la source n'écrit pas. `factProvenance.test.ts` exige les deux bornes
+  exactes, et refuse un nombre là où la source publie un intervalle. Falsifié : une borne
+  changée, et l'intervalle réduit à son milieu, tous deux rouges.
+- **Deux températures à 1 bar, et l'écart se dit.** La table principale du même catalogue
+  (« Mean Temperature », « for the gas giants at the one bar level » selon sa note de
+  définition) donne une autre valeur que la fiche de chaque géante : 0,85 à 2,15 K d'écart. Les
+  deux sont affichées, et la ligne de la fiche porte l'autre valeur et l'écart
+  (`core/bodyFacts.ts::oneBarTemperatureGap`, lu par la fiche et par la page). Le choix est celui
+  de l'utilisateur (2026-10-15), plutôt que de n'en garder qu'une.
+- **Les vents ne sont pas encore publiés.** La fiche les écrit par bande de latitude (« Up to
+  150 m/s (<30 degrees latitude) », Jupiter) ou en plage (« 0-250 m/s », Uranus) : une forme à
+  concevoir avant de l'afficher. Ce n'est pas un oubli, c'est l'étape suivante.
+
+La page publique ne réécrit pas les décimales de la source : « 27 km » reste 27 et non « 27,0 »,
+comme sur la fiche (garde de parité page/fiche, falsifiée).
 
 **Une magnitude porte son incertitude en valeur absolue.** La SBDB publie H = 22,08 ± 0,445 pour
 ʻOumuamua. En relatif, cela ferait 2 %, sous le seuil d'affichage de 5 %, donc on le tairait ;

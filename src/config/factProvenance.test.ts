@@ -161,6 +161,29 @@ const nssdca = snapshot.nssdca.bodies as unknown as Record<
   string,
   Record<string, number | string>
 >;
+/**
+ * L'atmosphère d'une géante (lot 51), telle que le relevé l'a lue : un nombre, ou un intervalle
+ * `[min, max]` quand la fiche en publie un (Neptune).
+ */
+const ATMOSPHERE_FIELDS: ReadonlySet<FactField> = new Set<FactField>([
+  'temperature1BarK',
+  'temperature01BarK',
+  'density1BarKgM3',
+  'scaleHeightKm',
+  'meanMolecularWeight',
+]);
+function atmosphereOf(name: string, field: FactField): number | number[] {
+  const body = (
+    snapshot.nssdca.bodies as unknown as Record<
+      string,
+      { atmosphere?: Record<string, number | number[]> }
+    >
+  )[name];
+  const value = body?.atmosphere?.[field];
+  if (value === undefined)
+    throw new Error(`${name}.${field} : absent du relevé de l'atmosphère`);
+  return value;
+}
 const nssdcaSat = snapshot.nssdcaSatellites as Record<
   string,
   {
@@ -589,6 +612,12 @@ function expected(
           tolerance: MEASURED,
         };
       if (!sheet) fail('corps absent des fiches');
+      if (ATMOSPHERE_FIELDS.has(field)) {
+        const published = atmosphereOf(name, field);
+        if (Array.isArray(published))
+          fail('la source publie un INTERVALLE, la fiche un nombre');
+        return { values: [published as number], tolerance: 0 };
+      }
       switch (field) {
         case 'radiusKm':
           return {
@@ -938,6 +967,15 @@ describe('faits affichés : confrontés à leur source', () => {
 
   it.each(cases)('%s', (_label, name, cfg, field, provenance) => {
     const factual = factValue(cfg, field)!;
+    // Un INTERVALLE publié (lot 51) : ses deux bornes sont celles de la source, exactement, et
+    // seule la fiche du NSSDCA en publie aujourd'hui.
+    if (factual.kind === 'range') {
+      expect(provenance.source, `${name}.${field}`).toBe('nssdca-fact-sheets');
+      expect([factual.min, factual.max], `${name}.${field}`).toEqual(
+        atmosphereOf(name, field)
+      );
+      return;
+    }
     // Cette confrontation-ci est NUMÉRIQUE ; les faits datés ont la leur, plus bas.
     if (factual.kind !== 'number')
       throw new Error(

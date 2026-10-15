@@ -37,6 +37,7 @@ import {
   bodyFact,
   citationOrder,
   displayedUncertainty,
+  oneBarTemperatureGap,
 } from '@/core/bodyFacts';
 import { factSource } from '@/config/factSources';
 import { rotationLabelKey, temperatureLabelKey } from '@/core/factQuantity';
@@ -355,12 +356,57 @@ function factLabel(key: keyof typeof FACT_LABELS, locale: Locale): string {
   return FACT_LABELS[key][locale];
 }
 
+/**
+ * Les décimales qu'écrit la source, plafonnées : « 27 km » reste 27 et non « 27,0 », comme
+ * sur la fiche, dont le formateur n'ajoute jamais de zéro (`maximumFractionDigits`).
+ */
+const publishedDecimals = (value: number, max: number): number =>
+  Math.min(max, (String(value).split('.')[1] ?? '').length);
+
+/**
+ * Un INTERVALLE publié (lot 51), même forme que la fiche : « 19,1 à 20,3 km ». `null` pour un
+ * champ dont aucune source n'écrit d'intervalle : la page ne publie pas une forme non relue.
+ */
+function rangeFact(
+  field: FactField,
+  range: { min: number; max: number },
+  locale: Locale,
+  dict: (typeof messages)[Locale]
+): { label: string; value: string } | null {
+  const span = (max: number): string =>
+    dict['stat.range']
+      .replace(
+        '{min}',
+        formatNumber(range.min, publishedDecimals(range.min, max), locale)
+      )
+      .replace(
+        '{max}',
+        formatNumber(range.max, publishedDecimals(range.max, max), locale)
+      );
+  switch (field) {
+    case 'scaleHeightKm':
+      return { label: dict['stat.scaleHeight'], value: `${span(1)} km` };
+    case 'meanMolecularWeight':
+      return {
+        label: dict['stat.meanMolecularWeight'],
+        value: `${span(2)} g/mol`,
+      };
+    default:
+      return null;
+  }
+}
+
 /** Ordre des faits sur la page publique d'un corps. */
 const PAGE_FACT_ORDER: readonly FactField[] = [
   'radiusKm',
   'massKg',
   'gravity',
   'meanTempC',
+  'temperature1BarK',
+  'temperature01BarK',
+  'density1BarKgM3',
+  'scaleHeightKm',
+  'meanMolecularWeight',
   'distanceAU',
   'orbitPeriodDays',
   'rotationPeriod',
@@ -508,9 +554,20 @@ export function bodyFactsWithSources(
     });
   for (const entry of entries) {
     if (entry.status !== 'value') continue;
-    // Les pages publiques ne décrivent que des corps du catalogue, dont tous les faits sont
-    // numériques : les faits DATÉS n'existent que pour la couche instrument, qui n'a pas de
-    // page (cf. `config/navigable.ts`). Le filtre est explicite plutôt que supposé.
+    // Les pages publiques ne décrivent que des corps du catalogue, dont les faits sont des
+    // nombres ou, depuis le lot 51, des INTERVALLES publiés (l'atmosphère de Neptune) : les
+    // faits DATÉS et les NOMS n'existent que pour la couche instrument, dont la page a son
+    // propre module. Le filtre est explicite plutôt que supposé.
+    if (entry.value.kind === 'range') {
+      const range = rangeFact(entry.field, entry.value, locale, dict);
+      if (!range) continue;
+      facts.push({
+        ...range,
+        source: citations.get(entry.provenance.source),
+        method: entry.provenance.method,
+      });
+      continue;
+    }
     if (entry.value.kind !== 'number') continue;
     const v = entry.value.value;
     let label: string;
@@ -570,6 +627,38 @@ export function bodyFactsWithSources(
       case 'moonCount':
         label = factLabel('knownMoons', locale);
         value = formatNumber(v, 0, locale);
+        break;
+      // L'atmosphère d'une géante (lot 51), mêmes formes que la fiche de l'application.
+      case 'temperature1BarK':
+      case 'temperature01BarK': {
+        label =
+          dict[
+            entry.field === 'temperature1BarK'
+              ? 'stat.temperature1Bar'
+              : 'stat.temperature01Bar'
+          ];
+        value = `${formatNumber(v, 0, locale)} K (${formatNumber(v - 273.15, 0, locale)} °C)`;
+        const gap =
+          entry.field === 'temperature1BarK'
+            ? oneBarTemperatureGap(config)
+            : null;
+        if (gap)
+          value += ` (${dict['stat.temperature1BarGap']
+            .replace('{value}', `${formatNumber(gap.tableC, 0, locale)} °C`)
+            .replace('{gap}', formatNumber(gap.gapK, 2, locale))})`;
+        break;
+      }
+      case 'density1BarKgM3':
+        label = dict['stat.density1Bar'];
+        value = `${formatNumber(v, publishedDecimals(v, 2), locale)} kg/m³`;
+        break;
+      case 'scaleHeightKm':
+        label = dict['stat.scaleHeight'];
+        value = `${formatNumber(v, publishedDecimals(v, 1), locale)} km`;
+        break;
+      case 'meanMolecularWeight':
+        label = dict['stat.meanMolecularWeight'];
+        value = `${formatNumber(v, publishedDecimals(v, 2), locale)} g/mol`;
         break;
       default:
         // Faits propres à la couche instrument : jamais dans `PAGE_FACT_ORDER`, donc jamais ici.

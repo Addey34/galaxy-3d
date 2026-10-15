@@ -83,6 +83,31 @@
       "method": "measured",
       "detail": "temperature1Bar"
     },
+    "temperature1BarK": {
+      "value": 165,
+      "source": "nssdca-fact-sheets",
+      "method": "measured"
+    },
+    "temperature01BarK": {
+      "value": 112,
+      "source": "nssdca-fact-sheets",
+      "method": "measured"
+    },
+    "density1BarKgM3": {
+      "value": 0.16,
+      "source": "nssdca-fact-sheets",
+      "method": "measured"
+    },
+    "scaleHeightKm": {
+      "value": 27,
+      "source": "nssdca-fact-sheets",
+      "method": "measured"
+    },
+    "meanMolecularWeight": {
+      "value": 2.22,
+      "source": "nssdca-fact-sheets",
+      "method": "measured"
+    },
     "moonCount": {
       "value": 115,
       "source": "nasa-science-jupiter-moons",

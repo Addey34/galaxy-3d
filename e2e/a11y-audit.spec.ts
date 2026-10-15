@@ -398,6 +398,46 @@ test.describe('mobile viewport', () => {
   }
 
   /**
+   * L'ATMOSPHÈRE D'UNE GÉANTE (lot 51) : cinq lignes de plus, dont des INTERVALLES et une note
+   * d'écart entre deux documents du NSSDCA, les plus longs textes de valeur de la fiche. Neptune
+   * est le témoin MESURÉ : la seule géante qui porte les deux intervalles, avec la note. Les
+   * quatre langues, parce que la note espagnole et portugaise est la plus longue.
+   */
+  for (const locale of ['en', 'fr', 'es', 'pt-BR'] as const) {
+    test(`giant atmosphere rows, ${locale}, are clean at 390 px`, async ({
+      page,
+    }) => {
+      await page.addInitScript((lang) => {
+        localStorage.setItem('ssv-locale', lang);
+      }, locale);
+      await page.goto('/?body=neptune');
+      await expect(page.locator('#loader')).toBeHidden({ timeout: 30_000 });
+      const card = page.locator('#body-info');
+      await expect(card).toBeVisible();
+      // Les deux intervalles et la note, dans la langue choisie : la ligne est bien rendue.
+      await expect(card.locator('.bi-stats')).toContainText(/19[.,]1/);
+      await expect(card.locator('.bi-stats .bi-remark')).toHaveCount(1);
+      const results = await runAxe(page);
+      expect(
+        results.violations,
+        JSON.stringify(results.violations, null, 2)
+      ).toEqual([]);
+      expect(
+        await page.evaluate(
+          () =>
+            document.documentElement.scrollWidth -
+            document.documentElement.clientWidth
+        ),
+        `débordement de la page (${locale})`
+      ).toBeLessThanOrEqual(0);
+      expect(
+        await clippedOverflow(page),
+        `texte rogné dans la fiche (${locale})`
+      ).toEqual([]);
+    });
+  }
+
+  /**
    * LE BLOC « INSTRUMENTS » D'UNE SONDE (lot 42), même mesure et pour la même raison qu'au lot 40 :
    * les scénarios ci-dessus ouvrent la fiche d'un CORPS, où ce bloc est masqué. Il n'aurait donc
    * jamais été audité, et un contraste ou un débordement y serait resté vert indéfiniment.

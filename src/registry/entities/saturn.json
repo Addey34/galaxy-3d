@@ -93,6 +93,31 @@
       "method": "measured",
       "detail": "temperature1Bar"
     },
+    "temperature1BarK": {
+      "value": 134,
+      "source": "nssdca-fact-sheets",
+      "method": "measured"
+    },
+    "temperature01BarK": {
+      "value": 84,
+      "source": "nssdca-fact-sheets",
+      "method": "measured"
+    },
+    "density1BarKgM3": {
+      "value": 0.19,
+      "source": "nssdca-fact-sheets",
+      "method": "measured"
+    },
+    "scaleHeightKm": {
+      "value": 59.5,
+      "source": "nssdca-fact-sheets",
+      "method": "measured"
+    },
+    "meanMolecularWeight": {
+      "value": 2.07,
+      "source": "nssdca-fact-sheets",
+      "method": "measured"
+    },
     "moonCount": {
       "value": 293,
       "source": "nasa-science-saturn-moons",

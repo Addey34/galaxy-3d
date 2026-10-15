@@ -1174,7 +1174,8 @@ button {
   font-size: 0.62em;
   color: var(--ink-faint);
 }
-.bi-stats .bi-asof {
+.bi-stats .bi-asof,
+.bi-stats .bi-remark {
   font-size: 0.85em;
   color: var(--ink-faint);
 }

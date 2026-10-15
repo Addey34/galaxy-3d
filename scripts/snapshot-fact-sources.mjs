@@ -243,7 +243,7 @@ async function nssdca() {
     mainTableUpdated: lastUpdated(main),
     bodies: {},
   };
-  const planet = async (name, file, labels) => {
+  const planet = async (name, file, labels, extra) => {
     const { lines, retrieved } = await sheet(file);
     const entry = {
       updated: lastUpdated(lines),
@@ -256,6 +256,7 @@ async function nssdca() {
     if (pressure) entry.surfacePressure = pressure;
     if (meanTemperature[name] !== undefined)
       entry.meanTemperatureC = meanTemperature[name];
+    if (extra) Object.assign(entry, extra(lines));
     out.bodies[name] = entry;
   };
 
@@ -295,10 +296,11 @@ async function nssdca() {
   await planet('venus', 'venusfact.html', terrestrial);
   await planet('earth', 'earthfact.html', terrestrial);
   await planet('mars', 'marsfact.html', terrestrial);
-  await planet('jupiter', 'jupiterfact.html', giant);
-  await planet('saturn', 'saturnfact.html', giant);
-  await planet('uranus', 'uranusfact.html', giant);
-  await planet('neptune', 'neptunefact.html', giant);
+  const giantAtmosphere = (lines) => ({ atmosphere: atmosphere(lines) });
+  await planet('jupiter', 'jupiterfact.html', giant, giantAtmosphere);
+  await planet('saturn', 'saturnfact.html', giant, giantAtmosphere);
+  await planet('uranus', 'uranusfact.html', giant, giantAtmosphere);
+  await planet('neptune', 'neptunefact.html', giant, giantAtmosphere);
   await planet('pluto', 'plutofact.html', [
     ...common('Equatorial radius (km)', 'Surface Gravity (mean) (m/s2)'),
     ['semiMajorAxisAU', 'Semimajor axis (AU)'],
@@ -366,6 +368,37 @@ function surfacePressure(lines) {
     raw,
     bar: mantissa * 10 ** exponent * u,
     lowerBound: raw.startsWith('>'),
+  };
+}
+
+/**
+ * L'ATMOSPHÈRE D'UNE GÉANTE (lot 51, 2026-10-15) : le bloc « … Atmosphere » des quatre fiches,
+ * qui publie des POINTS et non un profil. Écritures mesurées sur les quatre fiches :
+ * « Temperature at 1 bar: 165 K (-108 C) », « Density at 1 bar: 0.16 kg/m3 » (exposant
+ * collé par la suppression du `<sup>`), « Scale height: 27 km » et, pour Neptune, des
+ * INTERVALLES : « Scale height: 19.1 - 20.3 km », « Mean molecular weight: 2.53 - 2.69 ».
+ * Un intervalle reste un intervalle, `[min, max]` : son milieu serait un nombre que la source
+ * n'écrit pas. La température à 1 bar est celle de la FICHE ; la table principale en donne une
+ * autre (`meanTemperatureC`, « at the one bar level » selon sa note), à 1 ou 2 K près, et les
+ * deux sont gardées, puisqu'elles divergent.
+ */
+function atmosphere(lines) {
+  const field = (label, unit) => {
+    const line = lines.find((l) => l.startsWith(label));
+    if (!line) throw new Error(`ligne d'atmosphère introuvable : « ${label} »`);
+    const rest = line.slice(label.length).trim();
+    const m = rest.match(
+      new RegExp(String.raw`^(-?[\d.]+)(?:\s*-\s*([\d.]+))?\s*${unit}(?:\s|$)`)
+    );
+    if (!m) throw new Error(`valeur d'atmosphère illisible : « ${line} »`);
+    return m[2] === undefined ? number(m[1]) : [number(m[1]), number(m[2])];
+  };
+  return {
+    temperature1BarK: field('Temperature at 1 bar:', 'K'),
+    temperature01BarK: field('Temperature at 0.1 bar:', 'K'),
+    density1BarKgM3: field('Density at 1 bar:', String.raw`kg/m\s*3`),
+    scaleHeightKm: field('Scale height:', 'km'),
+    meanMolecularWeight: field('Mean molecular weight:', ''),
   };
 }
 

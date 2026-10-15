@@ -10,6 +10,7 @@
  * Module PUR : ni DOM, ni i18n, ni Three.js.
  */
 import { NOT_YET_SOURCED } from '@/config/factSources';
+import { temperatureLabelKey } from '@/core/factQuantity';
 import type {
   CelestialBodyConfig,
   FactField,
@@ -18,8 +19,12 @@ import type {
 } from '@/types';
 
 /**
- * Valeur d'un fait. Trois natures, et trois seulement : un NOMBRE dans l'unité du catalogue,
- * une DATE de calendrier, ou un NOM propre.
+ * Valeur d'un fait. Quatre natures, et quatre seulement : un NOMBRE dans l'unité du catalogue,
+ * un INTERVALLE publié comme tel, une DATE de calendrier, ou un NOM propre.
+ *
+ * L'intervalle est arrivé au lot 51 avec l'atmosphère des géantes : la fiche de Neptune publie
+ * « Scale height: 19.1 - 20.3 km ». Le réduire à son milieu, ou à un milieu « ± demi-largeur »,
+ * publierait un nombre que la source n'écrit pas.
  *
  * La date est arrivée avec les objets d'instrument (lancement d'une sonde, première
  * observation d'un interstellaire) : l'encoder en nombre aurait rendu le champ illisible dans
@@ -35,6 +40,7 @@ import type {
  */
 export type FactValue =
   | { kind: 'number'; value: number }
+  | { kind: 'range'; min: number; max: number }
   | { kind: 'date'; iso: string }
   | { kind: 'name'; text: string };
 
@@ -71,6 +77,11 @@ const FACT_LABEL_ORDER: Record<FactField, true> = {
   launchVehicle: true,
   launchSite: true,
   absoluteMagnitude: true,
+  temperature1BarK: true,
+  temperature01BarK: true,
+  density1BarKgM3: true,
+  scaleHeightKm: true,
+  meanMolecularWeight: true,
 };
 
 /** Tous les champs de faits connus, dans l'ordre de leur déclaration. */
@@ -202,6 +213,13 @@ export function factValue(
     return typeof value === 'string' && value.length > 0
       ? { kind: 'name', text: value }
       : undefined;
+  if (
+    Array.isArray(value) &&
+    value.length === 2 &&
+    value.every((v) => typeof v === 'number' && Number.isFinite(v)) &&
+    value[0] < value[1]
+  )
+    return { kind: 'range', min: value[0], max: value[1] };
   return typeof value === 'number' ? { kind: 'number', value } : undefined;
 }
 
@@ -288,3 +306,29 @@ export function citationOrder(
  * par les pages publiques : les deux écrivaient la même masse différemment.
  */
 export const SCIENTIFIC_MASS_KG = 1e6;
+
+/**
+ * LES DEUX TEMPÉRATURES À 1 BAR DU NSSDCA (lot 51). La table principale (« Mean Temperature »,
+ * « for the gas giants at the one bar level » selon sa note de définition) et la fiche de chaque
+ * géante (« Temperature at 1 bar ») ne donnent pas la même valeur : 0,85 à 2,15 K d'écart sur
+ * les quatre, relevé du 2026-09-28. Les deux sont publiées, et la ligne de la fiche dit l'autre
+ * valeur et l'écart : la fiche ne tranche pas en silence, et un lecteur ne croit pas à une faute
+ * de recopie. `null` quand le corps n'a pas les deux valeurs de la même source, ou qu'elles
+ * s'accordent. Partagée par la fiche de l'application et la page publique du corps.
+ */
+export function oneBarTemperatureGap(
+  cfg: CelestialBodyConfig
+): { tableC: number; gapK: number } | null {
+  const sheet = bodyFact(cfg, 'temperature1BarK');
+  const table = bodyFact(cfg, 'meanTempC');
+  if (sheet.status !== 'value' || table.status !== 'value') return null;
+  if (sheet.value.kind !== 'number' || table.value.kind !== 'number')
+    return null;
+  if (
+    temperatureLabelKey(table.provenance) !== 'stat.meanTemperature1Bar' ||
+    table.provenance.source !== sheet.provenance.source
+  )
+    return null;
+  const gapK = Math.abs(sheet.value.value - 273.15 - table.value.value);
+  return gapK < 0.005 ? null : { tableC: table.value.value, gapK };
+}
