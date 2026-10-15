@@ -637,7 +637,7 @@ export function bodyFactsWithSources(
               ? 'stat.temperature1Bar'
               : 'stat.temperature01Bar'
           ];
-        value = `${formatNumber(v, 0, locale)} K (${formatNumber(v - 273.15, 0, locale)} °C)`;
+        value = `${formatNumber(v, 0, locale)}\u00a0K (${formatNumber(v - 273.15, 0, locale)}\u00a0°C)`;
         const gap =
           entry.field === 'temperature1BarK'
             ? oneBarTemperatureGap(config)

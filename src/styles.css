@@ -1179,6 +1179,12 @@ button {
   font-size: 0.85em;
   color: var(--ink-faint);
 }
+/* Une remarque sur une valeur (lot 51 : deux documents du NSSDCA qui divergent) court sur les
+   deux colonnes, sous la ligne qu'elle commente. */
+.bi-stats dd.bi-remark {
+  grid-column: 1 / -1;
+  margin-top: -0.2rem;
+}
 /* La découverte (lot 44) : même séparation que la position, dont elle est la voisine, parce
    qu'elle dépend elle aussi de la date de la scène. Une affirmation par ligne, avec sa source,
    et deux affirmations qui divergent (Pluton) restent côte à côte : la fiche ne tranche pas. */

@@ -359,10 +359,10 @@ describe('fiche d’information — atmosphère des géantes (lot 51)', () => {
 
   it('écrit le kelvin publié, suivi de sa conversion', () => {
     expect(row('jupiter', 'Température à 1 bar')?.value).toMatch(
-      /^165 K \([-−]108 °C\)$/
+      /^165\u00a0K \([-−]108\u00a0°C\)$/
     );
     expect(row('uranus', 'Température à 0,1 bar')?.value).toMatch(
-      /^53 K \([-−]220 °C\)$/
+      /^53\u00a0K \([-−]220\u00a0°C\)$/
     );
     expect(row('saturn', 'Masse volumique à 1 bar')?.value).toBe('0,19 kg/m³');
   });

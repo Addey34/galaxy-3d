@@ -352,7 +352,8 @@ function formatFact(name: string, field: FactField, value: FactValue): string {
 /** Un kelvin publié, suivi de sa conversion dans l'unité choisie (« 165 K (-108 °C) »). */
 function formatKelvin(kelvin: number): string {
   const temp = convertTemperatureC(kelvin - 273.15);
-  return `${num(kelvin)} K (${num(temp.value)} ${temp.unit})`;
+  // Insécables entre un nombre et son unité : la coupure ne tombe qu'avant la conversion.
+  return `${num(kelvin)}\u00a0K (${num(temp.value)}\u00a0${temp.unit})`;
 }
 
 /**
@@ -899,12 +900,6 @@ export function setupBodyInfo(coordinator?: OverlayCoordinator): BodyInfoPanel {
         dd.setAttribute('aria-label', stat.note);
         dd.classList.add('is-unknown');
       }
-      if (stat.remark) {
-        const remark = document.createElement('span');
-        remark.className = 'bi-remark';
-        remark.textContent = `(${stat.remark})`;
-        dd.append(' ', remark);
-      }
       if (stat.asOf) {
         // Un fait qui évolue n'est vrai qu'à une date : elle se lit à côté du chiffre.
         const asOf = document.createElement('span');
@@ -931,6 +926,14 @@ export function setupBodyInfo(coordinator?: OverlayCoordinator): BodyInfoPanel {
         }
       }
       statsEl.append(dt, dd);
+      if (stat.remark) {
+        // Un second `<dd>` pour le même terme, sur toute la largeur de la grille : dans la
+        // colonne des valeurs, la note s'empilait sur six lignes à 390 px.
+        const remark = document.createElement('dd');
+        remark.className = 'bi-remark';
+        remark.textContent = `(${stat.remark})`;
+        statsEl.append(remark);
+      }
     }
 
     // Sources citées : repliées par défaut pour garder la fiche compacte, toujours présentes.
