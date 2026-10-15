@@ -27,6 +27,32 @@ export type TemperatureLabelKey =
   | 'stat.effectiveTemperature'
   | 'stat.surfaceTemperature';
 
+/**
+ * LA SPHÈRE D'UNE GÉANTE EST LE NIVEAU DE 1 BAR (lot 51, 2026-10-15). Le NSSDCA publie leur rayon
+ * comme « Equatorial radius (1 bar level) » et leur gravité comme « Gravity (mean, 1 bar) » : une
+ * géante n'a pas de sol, et « Rayon » nu ou « Gravité de surface » le laissaient croire. Les deux
+ * précisions sont déjà portées par la provenance (`detail`) ; le libellé les suit, comme la
+ * température et la rotation.
+ */
+export type RadiusLabelKey = 'stat.radius' | 'stat.radius1Bar';
+export type GravityLabelKey = 'stat.gravity' | 'stat.gravity1Bar';
+
+export function radiusLabelKey(
+  provenance: FactProvenance | undefined
+): RadiusLabelKey {
+  return detailKey(provenance) === 'detail.equatorialRadius1Bar'
+    ? 'stat.radius1Bar'
+    : 'stat.radius';
+}
+
+export function gravityLabelKey(
+  provenance: FactProvenance | undefined
+): GravityLabelKey {
+  return detailKey(provenance) === 'detail.meanGravity1Bar'
+    ? 'stat.gravity1Bar'
+    : 'stat.gravity';
+}
+
 export type RotationLabelKey =
   | 'stat.siderealRotation'
   | 'stat.siderealRotationAt16'

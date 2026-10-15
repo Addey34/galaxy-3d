@@ -4359,6 +4359,16 @@ de l'application comme la page publique les affichent, sur les quatre et sur auc
 La page publique ne réécrit pas les décimales de la source : « 27 km » reste 27 et non « 27,0 »,
 comme sur la fiche (garde de parité page/fiche, falsifiée).
 
+**La sphère d'une géante est le niveau de 1 bar, et les libellés le disent (lot 51, pas 2).** Le
+NSSDCA publie le rayon des quatre géantes comme « Equatorial radius (1 bar level) » et leur
+gravité comme « Gravity (mean, 1 bar) », précisions déjà portées par la provenance (`detail`).
+La page publique écrivait pourtant « Gravité de surface » pour elles, et la fiche « Rayon » nu :
+deux libellés qui prêtaient un sol à un corps qui n'en a pas. `core/factQuantity.ts` étend donc à
+ces deux faits la règle de la température et de la rotation (le libellé suit la grandeur que la
+source déclare) : « Rayon équatorial à 1 bar » et « Gravité à 1 bar », sur la fiche, la page et
+la vignette de partage, sur ces quatre corps et sur eux seuls (`factQuantity.test.ts`, falsifié
+en désarmant la règle).
+
 **Une magnitude porte son incertitude en valeur absolue.** La SBDB publie H = 22,08 ± 0,445 pour
 ʻOumuamua. En relatif, cela ferait 2 %, sous le seuil d'affichage de 5 %, donc on le tairait ;
 or 0,45 magnitude est un facteur 1,5 sur la brillance. `ABSOLUTE_UNCERTAINTY_FACTS` soustrait la

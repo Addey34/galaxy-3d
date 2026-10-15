@@ -3,7 +3,12 @@ import { CELESTIAL_CONFIG } from '@/config/bodies';
 import { flattenBodies } from '@/config/catalog';
 import { bodyFact } from '@/core/bodyFacts';
 import snapshot from '@/config/factSources.snapshot.json';
-import { rotationLabelKey, temperatureLabelKey } from '@/core/factQuantity';
+import {
+  gravityLabelKey,
+  radiusLabelKey,
+  rotationLabelKey,
+  temperatureLabelKey,
+} from '@/core/factQuantity';
 import type { FactProvenance } from '@/types';
 
 /**
@@ -27,7 +32,9 @@ interface Shown {
 }
 
 /** Les faits AFFICHÉS d'un champ, sur tout le catalogue (une valeur, pas une raison). */
-function shown(field: 'meanTempC' | 'rotationPeriod'): Shown[] {
+function shown(
+  field: 'meanTempC' | 'rotationPeriod' | 'radiusKm' | 'gravity'
+): Shown[] {
   const out: Shown[] = [];
   for (const [body, cfg] of flattenBodies(CELESTIAL_CONFIG)) {
     const entry = bodyFact(cfg, field);
@@ -144,5 +151,27 @@ describe('la température', () => {
         'stat.meanTemperature'
       );
     }
+  });
+});
+
+/**
+ * LA SPHÈRE D'UNE GÉANTE EST LE NIVEAU DE 1 BAR (lot 51). Le relevé lit leur rayon sous le
+ * libellé « Equatorial radius (1 bar level) (km) » et leur gravité sous « Gravity (mean, 1 bar) »
+ * (`scripts/snapshot-fact-sources.mjs`, liste `giant`) ; le libellé de la fiche et de la page le
+ * dit, sur ces quatre corps et sur eux seuls, et jamais « de surface ».
+ */
+describe('le rayon et la gravité d’une géante', () => {
+  const GIANTS = ['jupiter', 'neptune', 'saturn', 'uranus'];
+  it('« à 1 bar » sur les quatre géantes, et sur elles seules', () => {
+    const radius = shown('radiusKm').filter(
+      (r) => radiusLabelKey(r.provenance) === 'stat.radius1Bar'
+    );
+    const gravity = shown('gravity').filter(
+      (g) => gravityLabelKey(g.provenance) === 'stat.gravity1Bar'
+    );
+    expect(radius.map((r) => r.body).sort()).toEqual(GIANTS);
+    expect(gravity.map((g) => g.body).sort()).toEqual(GIANTS);
+    for (const r of [...radius, ...gravity])
+      expect(r.provenance.source, r.body).toBe('nssdca-fact-sheets');
   });
 });
