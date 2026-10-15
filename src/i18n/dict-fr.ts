@@ -357,6 +357,13 @@ export const fr: Record<MessageKey, string> = {
   'surface.relief.headline': 'Relief {title} à {resolution}/pixel',
   'surface.relief.area': 'aire nommée {name}',
   'surface.relief.acquired': 'hauteurs mesurées entre {from} et {to}',
+  'settings.surfaceCompare': 'Comparer avec l’année',
+  'settings.surfaceCompare.none': 'Aucune comparaison',
+  'surface.compare.slider': 'Rideau avant/après',
+  'surface.compare.valuetext':
+    '{before} à gauche de la ligne, {after} à droite, ligne à {percent} % de la largeur',
+  'surface.compare.badge':
+    'à gauche de la ligne : {title}, images de {from} à {to}',
   'settings.units': 'Unités impériales (mi, °F)',
 
   // ── Champ d'astéroïdes et de comètes, section des Réglages ──

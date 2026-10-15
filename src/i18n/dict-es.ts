@@ -369,6 +369,13 @@ export const es: Record<MessageKey, string> = {
   'surface.relief.headline': 'Relieve {title} a {resolution}/píxel',
   'surface.relief.area': 'área nombrada {name}',
   'surface.relief.acquired': 'alturas medidas entre {from} y {to}',
+  'settings.surfaceCompare': 'Comparar con el año',
+  'settings.surfaceCompare.none': 'Sin comparación',
+  'surface.compare.slider': 'Cortina antes y después',
+  'surface.compare.valuetext':
+    '{before} a la izquierda de la línea, {after} a la derecha, línea al {percent} % del ancho',
+  'surface.compare.badge':
+    'a la izquierda de la línea: {title}, imágenes de {from} a {to}',
   'settings.units': 'Unidades imperiales (mi, °F)',
 
   // ── Champ d'astéroïdes et de comètes, section des Réglages ──

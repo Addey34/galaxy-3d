@@ -1459,6 +1459,11 @@ button {
   background: var(--control-bg);
   cursor: pointer;
 }
+/* `display: flex` écrase le `display: none` de l'attribut `hidden` (même piège que le bandeau
+   d'imagerie) : le choix d'année du rideau, masqué hors du fond Sentinel-2, restait affiché. */
+.settings-switch[hidden] {
+  display: none;
+}
 .settings-switch:hover {
   border-color: var(--hairline-strong);
   background: var(--control-bg-hover);
@@ -2384,6 +2389,61 @@ button {
 .surface-imagery-badge .si-credit {
   opacity: 0.8;
 }
+/* RIDEAU AVANT/APRÈS (lot 50, pas 2) : la ligne n'est qu'un repère, le shader des carreaux
+   sépare les deux années. Seule la poignée reçoit le pointeur : la scène reste manipulable de
+   part et d'autre de la ligne. */
+.surface-compare {
+  position: fixed;
+  inset: 0;
+  z-index: 4;
+  pointer-events: none;
+}
+.surface-compare[hidden] {
+  display: none;
+}
+.surface-compare .sc-line {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: var(--sc-x, 50%);
+  width: 2px;
+  transform: translateX(-1px);
+  background: rgba(255, 255, 255, 0.85);
+  box-shadow: 0 0 4px rgba(0, 0, 0, 0.6);
+}
+.surface-compare .sc-handle {
+  position: absolute;
+  /* Au quart de la hauteur et non au centre : la caméra vise le centre, la poignée y cachait
+     la cible même qu'on compare. */
+  top: 25%;
+  /* La LIGNE va jusqu'au bord ; la poignée reste entière à l'écran (à 100 %, elle sortait de
+     moitié, vu en vrai navigateur). */
+  left: clamp(3.75rem, var(--sc-x, 50%), calc(100% - 3.75rem));
+  transform: translate(-50%, -50%);
+  display: flex;
+  gap: 0.6rem;
+  padding: 0.3rem 0.6rem;
+  border-radius: 999px;
+  background: var(--surface);
+  backdrop-filter: var(--blur);
+  border: 1px solid var(--hairline);
+  color: var(--ink);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: ew-resize;
+  touch-action: none;
+  pointer-events: auto;
+}
+.surface-compare .sc-handle:focus-visible {
+  outline: 2px solid rgba(var(--accent), 0.95);
+  outline-offset: 2px;
+}
+.surface-compare .sc-before::before {
+  content: '\2190\00a0';
+}
+.surface-compare .sc-after::after {
+  content: '\00a0\2192';
+}
 @media (max-width: 40rem) {
   .surface-imagery-badge {
     left: var(--edge-x);
@@ -2404,6 +2464,7 @@ body.is-capturing #interstellar-overlay,
 body.is-capturing #earth-events-overlay,
 body.is-capturing #gazetteer-overlay,
 body.is-capturing #surface-imagery,
+body.is-capturing #surface-compare,
 body.is-capturing #loader {
   display: none;
 }

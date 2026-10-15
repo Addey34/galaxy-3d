@@ -2424,6 +2424,40 @@ rend le même objet, donc le moteur ne change de génération qu'au changement d
   de 2025 en 2022). Vérifié contre le vrai service le 2026-10-15 : tuiles de 2022 puis de 2023
   peintes, bandeau et attribution de chaque année.
 
+### Le rideau avant/après : deux éditions de part et d'autre d'une ligne (lot 50, pas 2, 2026-10-15)
+
+Avec le fond « Sentinel-2 », le réglage « Comparer avec l'année » (`#surface-earth-compare`)
+propose les années des éditions. L'année choisie est peinte à GAUCHE d'une ligne verticale,
+celle de la scène à DROITE ; le visiteur déplace la ligne à la souris, au doigt ou au clavier.
+
+- **Un moteur, une géométrie, deux images par carreau.** `PlanetarySurfaceEngine.attach` reçoit
+  l'édition comparée (même grille exigée, sinon refusée et dite) ; chaque carreau demande les DEUX
+  images de sa tuile et ne se montre qu'avec les deux, sans quoi un côté de la ligne afficherait
+  l'autre année sans le dire. L'édition comparée fait partie de la génération : la changer ou la
+  retirer garde le sol peint jusqu'à la relève, comme un changement de jour. Deux moteurs auraient
+  dédoublé la pyramide, le relief et le plancher d'approche.
+- **La séparation est dans le shader** (`components/surface/compareMaterial.ts`) : un
+  `onBeforeCompile` chaîné en dernier sur le matériau que le corps donne au carreau remplace
+  `#include <map_fragment>` par le choix de la carte selon `gl_FragCoord.x`. Les deux années
+  reçoivent donc le même éclairage, la même ombre et le même gain d'albédo. Les patchs du corps qui
+  ajoutent du code après cet include restent derrière lui (vérifié sur le vrai matériau de la
+  Terre, `compareMaterial.test.ts`). L'abscisse est un uniforme PARTAGÉ, en pixels du tampon.
+- **Le rideau** (`components/surface/compareCurtain.ts`) est chargé avec le moteur, jamais au
+  démarrage. Sa poignée est un `role="slider"` dont la valeur dit les deux années ; la molette y
+  zoome comme sur la scène (même renvoi que les étiquettes d'Explo) ; elle est posée au quart de la
+  hauteur, parce que la caméra vise le centre ; elle reste entière à l'écran au bout de sa course.
+- **Les deux attributions exigées paraissent**, avec une ligne du bandeau qui nomme l'édition
+  peinte à gauche et l'intervalle de ses données.
+- Coût : deux images par carreau, seulement quand le visiteur l'a demandé. Au démarrage, le seul
+  réglage et la liste des années (`src/config/eoxEditionYears.json`, écrite par
+  `pnpm surface:editions`).
+- **Piège payé** : `.settings-switch` pose `display: flex`, qui écrase l'attribut `hidden` ; le
+  choix d'année restait affiché hors du fond Sentinel-2. Règle `.settings-switch[hidden]`.
+- Gardes : `PlanetarySurfaceEngine.test.ts` (« le rideau avant/après »), `compareMaterial.test.ts`,
+  `e2e/surfaceImagery.spec.ts` (« compares two Sentinel-2 editions… » : mêmes tuiles demandées aux
+  deux éditions, deux attributions, clavier, axe, poignée à l'écran ; falsifié sur l'attribution et
+  sur la poignée). Vérifié contre le vrai service le 2026-10-15 au-dessus de Kakhovka, à 41 km.
+
 ## Relief mesuré — des hauteurs cuites hors ligne, jamais devinées
 
 Depuis le 2026-09-21 (lot 9, phase 9D), un corps peut déclarer un JEU DE HAUTEURS

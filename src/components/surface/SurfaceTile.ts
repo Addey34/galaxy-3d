@@ -26,6 +26,7 @@
  */
 import { deformToFigure, isSphere, type Figure } from '@/core/ellipsoid';
 import * as THREE from 'three';
+import { setCompareMap } from './compareMaterial';
 
 import { buildTilePatch, type PatchHeights } from '@/core/tilePatch';
 import {
@@ -46,6 +47,8 @@ export class SurfaceTile {
   private readonly _geometry: THREE.BufferGeometry;
   private readonly _material: THREE.Material;
   private _texture: THREE.Texture | null = null;
+  /** Image de l'édition comparée (rideau avant/après, lot 50), ou `null`. */
+  private _compare: THREE.Texture | null = null;
   private readonly _releaseMaterial?: (material: THREE.Material) => void;
 
   constructor(params: {
@@ -131,19 +134,29 @@ export class SurfaceTile {
     this.mesh.renderOrder = 1 + this.level;
   }
 
-  /** Pose l'image décodée et rend le carreau visible. */
-  setTexture(texture: THREE.Texture): void {
-    texture.colorSpace = THREE.SRGBColorSpace;
-    // Le bord d'un carreau touche celui du voisin : répéter y ramènerait le pixel opposé.
-    texture.wrapS = THREE.ClampToEdgeWrapping;
-    texture.wrapT = THREE.ClampToEdgeWrapping;
-    texture.minFilter = THREE.LinearMipmapLinearFilter;
-    texture.magFilter = THREE.LinearFilter;
-    texture.generateMipmaps = true;
-    texture.needsUpdate = true;
+  /**
+   * Pose l'image décodée et rend le carreau visible. Avec une seconde image, celle de l'édition
+   * COMPARÉE (lot 50), le carreau montre l'une ou l'autre selon le côté de la ligne du rideau
+   * (`compareMaterial.ts`) ; les deux sont réglées de la même façon.
+   */
+  setTexture(texture: THREE.Texture, compare?: THREE.Texture): void {
+    for (const image of compare ? [texture, compare] : [texture]) {
+      image.colorSpace = THREE.SRGBColorSpace;
+      // Le bord d'un carreau touche celui du voisin : répéter y ramènerait le pixel opposé.
+      image.wrapS = THREE.ClampToEdgeWrapping;
+      image.wrapT = THREE.ClampToEdgeWrapping;
+      image.minFilter = THREE.LinearMipmapLinearFilter;
+      image.magFilter = THREE.LinearFilter;
+      image.generateMipmaps = true;
+      image.needsUpdate = true;
+    }
     this._texture = texture;
     const material = this._material as THREE.MeshStandardMaterial;
     material.map = texture;
+    if (compare) {
+      this._compare = compare;
+      setCompareMap(material, compare);
+    }
     material.needsUpdate = true;
     this.mesh.visible = true;
   }
@@ -153,6 +166,8 @@ export class SurfaceTile {
     this._geometry.dispose();
     this._texture?.dispose();
     this._texture = null;
+    this._compare?.dispose();
+    this._compare = null;
     this._releaseMaterial?.(this._material);
     this._material.dispose();
   }

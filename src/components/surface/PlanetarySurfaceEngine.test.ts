@@ -14,6 +14,7 @@ import {
   localDirectionToGeographic,
 } from '@/core/frames';
 import type { SurfaceTileset } from '@/config/surfaceTilesets';
+import { compareMapOf } from './compareMaterial';
 
 /**
  * CE QUE LE MOTEUR DEMANDE, ET CE QU'IL NE REDEMANDE PAS.
@@ -614,6 +615,137 @@ describe('changement de jour d’une couche datée', () => {
     expect(meshes(host).length).toBe(28);
     engine.update(camera, 800);
     expect(engine.state?.tilesetId).toBe('essai@2026-10-11');
+    engine.dispose();
+  });
+});
+
+/**
+ * LE RIDEAU AVANT/APRÈS (lot 50, pas 2) : chaque carreau porte l'image de DEUX éditions, et ne
+ * se montre qu'avec les deux, sans quoi un côté de la ligne afficherait l'autre année sans le
+ * dire.
+ */
+describe('le rideau avant/après', () => {
+  const edition = (year: number): SurfaceTileset => ({
+    ...TILESET,
+    id: `essai-${year}`,
+    edition: year,
+    credit: `Essai ${year}`,
+    service: {
+      ...TILESET.service,
+      template: TILESET.service.template.replace('{Style}', String(year)),
+    },
+  });
+
+  it('demande les deux images de chaque tuile, et ne montre le carreau qu’avec les deux', async () => {
+    const pending = new Map<string, () => void>();
+    const fetchTile = vi.fn<TileFetcher>(
+      (url) =>
+        new Promise<ImageBitmap>((resolve) => {
+          pending.set(url, () => resolve(bitmap()));
+        })
+    );
+    const engine = new PlanetarySurfaceEngine({
+      budget: { maxTiles: 25, maxConcurrentLoads: 25 },
+      fetchTile,
+    });
+    const host = makeHost();
+    const camera = cameraAt(8);
+    engine.attach(host, edition(2023), RADIUS_KM, null, edition(2022));
+    engine.update(camera, 800);
+    await vi.waitFor(() => expect(pending.size).toBe(50));
+    const urls = [...pending.keys()];
+    expect(urls.filter((u) => u.includes('/2023/'))).toHaveLength(25);
+    expect(urls.filter((u) => u.includes('/2022/'))).toHaveLength(25);
+
+    // Les seules images de 2023 : aucun carreau, il manque l'autre côté.
+    for (const [url, done] of pending) if (url.includes('/2023/')) done();
+    await new Promise((r) => setTimeout(r, 0));
+    expect(meshes(host)).toHaveLength(0);
+
+    for (const [url, done] of pending) if (url.includes('/2022/')) done();
+    await vi.waitFor(() => expect(meshes(host)).toHaveLength(25));
+    for (const mesh of meshes(host))
+      expect(compareMapOf(mesh.material as THREE.Material)).not.toBeNull();
+    engine.update(camera, 800);
+    expect(engine.state?.edition).toBe(2023);
+    expect(engine.state?.compare?.edition).toBe(2022);
+    expect(engine.state?.compare?.credit).toBe('Essai 2022');
+    engine.dispose();
+  });
+
+  it('retient l’échec d’une des deux images comme celui de la tuile', async () => {
+    const fetchTile = vi.fn<TileFetcher>(async (url) => {
+      if (url.includes('/2022/')) throw new Error('404');
+      return bitmap();
+    });
+    const engine = new PlanetarySurfaceEngine({
+      budget: { maxTiles: 25, maxConcurrentLoads: 25 },
+      fetchTile,
+    });
+    const host = makeHost();
+    const camera = cameraAt(8);
+    engine.attach(host, edition(2023), RADIUS_KM, null, edition(2022));
+    engine.update(camera, 800);
+    await vi.waitFor(() => expect(fetchTile).toHaveBeenCalledTimes(50));
+    await new Promise((r) => setTimeout(r, 0));
+    for (let i = 0; i < 5; i += 1) engine.update(camera, 800);
+    expect(fetchTile).toHaveBeenCalledTimes(50);
+    expect(meshes(host)).toHaveLength(0);
+    engine.dispose();
+  });
+
+  it('retirer la comparaison ouvre une génération sans rideau, et garde le sol jusque-là', async () => {
+    const pending: Array<() => void> = [];
+    const fetchTile = vi.fn<TileFetcher>(
+      () =>
+        new Promise<ImageBitmap>((resolve) =>
+          pending.push(() => resolve(bitmap()))
+        )
+    );
+    const engine = new PlanetarySurfaceEngine({
+      budget: { maxTiles: 25, maxConcurrentLoads: 25 },
+      fetchTile,
+    });
+    const host = makeHost();
+    const camera = cameraAt(8);
+    const main = edition(2023);
+    engine.attach(host, main, RADIUS_KM, null, edition(2022));
+    engine.update(camera, 800);
+    await vi.waitFor(() => expect(pending).toHaveLength(50));
+    pending.splice(0).forEach((done) => done());
+    await vi.waitFor(() => expect(meshes(host)).toHaveLength(25));
+    const declared = [...host.declared];
+
+    engine.attach(host, main, RADIUS_KM, null, null);
+    engine.update(camera, 800);
+    await vi.waitFor(() => expect(pending).toHaveLength(25));
+    // Le rideau est encore PEINT, et le bandeau le dit tant que rien d'autre ne l'est.
+    expect(engine.state?.compare?.edition).toBe(2022);
+    expect(host.declared, 'aucun détachement').toEqual(declared);
+    pending.splice(0).forEach((done) => done());
+    await vi.waitFor(() => {
+      engine.update(camera, 800);
+      expect(engine.state?.compare).toBeNull();
+      expect(engine.state?.painted).toBe(25);
+    });
+    for (const mesh of meshes(host))
+      expect(compareMapOf(mesh.material as THREE.Material)).toBeNull();
+    engine.dispose();
+  });
+
+  it('refuse une édition comparée sur une autre grille', () => {
+    const engine = new PlanetarySurfaceEngine({
+      budget: { maxTiles: 25, maxConcurrentLoads: 25 },
+      fetchTile: async () => bitmap(),
+    });
+    const host = makeHost();
+    const other = {
+      ...edition(2022),
+      matrix: { ...TILESET.matrix, columnsAtLevelZero: 10, rowsAtLevelZero: 5 },
+    };
+    engine.attach(host, edition(2023), RADIUS_KM, null, other);
+    engine.update(cameraAt(8), 800);
+    expect(engine.state?.compare ?? null).toBeNull();
     engine.dispose();
   });
 });

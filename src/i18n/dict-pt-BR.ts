@@ -365,6 +365,13 @@ export const ptBR: Record<MessageKey, string> = {
   'surface.relief.headline': 'Relevo {title} a {resolution}/pixel',
   'surface.relief.area': 'área nomeada {name}',
   'surface.relief.acquired': 'alturas medidas entre {from} e {to}',
+  'settings.surfaceCompare': 'Comparar com o ano',
+  'settings.surfaceCompare.none': 'Sem comparação',
+  'surface.compare.slider': 'Cortina antes e depois',
+  'surface.compare.valuetext':
+    '{before} à esquerda da linha, {after} à direita, linha a {percent} % da largura',
+  'surface.compare.badge':
+    'à esquerda da linha: {title}, imagens de {from} a {to}',
   'settings.units': 'Unidades imperiais (mi, °F)',
 
   // ── Champ d'astéroïdes et de comètes, section des Réglages ──

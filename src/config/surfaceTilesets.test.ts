@@ -8,6 +8,7 @@ import {
   DATED_RECHECK_MS,
   DATED_SURFACE_TILESETS,
   DOMAIN_MAX_AGE_MS,
+  compareEdition,
   editionFor,
   SURFACE_TILESETS,
   SURFACE_VARIANTS,
@@ -21,6 +22,7 @@ import { TILESET_PRODUCTS } from '@/registry/products';
 import { TILE_PROVIDERS } from '@/registry/providers/runtimeServices';
 import eoxProvider from '@/registry/providers/eox-cloudless.json';
 import eoxEditions from './eoxEditions.json';
+import eoxEditionYears from './eoxEditionYears.json';
 import { tileServiceHost, tileUrl } from '@/core/tileUrl';
 import {
   groundResolutionKm,
@@ -686,6 +688,24 @@ describe('les éditions annuelles de Sentinel-2 (lot 50)', () => {
     expect(chosen?.edition).toBe(2021);
     // Le moteur compare les jeux par IDENTITÉ : la même année rend le même objet.
     expect(choose('earth', 'sentinel-2')).toBe(chosen);
+  });
+
+  it('le réglage du rideau propose exactement les années des fiches', () => {
+    // Le réglage vit au démarrage et ne lit pas les fiches : sa liste doit être la leur.
+    expect(eoxEditionYears).toEqual(editions.map((t) => t.edition));
+  });
+
+  it('compare une autre édition de la série, jamais celle qu’on montre déjà', () => {
+    const shown = editionFor(editions, new Date('2023-07-01T00:00:00Z'))!;
+    expect(compareEdition('earth', 'sentinel-2', 2022, shown)?.edition).toBe(
+      2022
+    );
+    expect(compareEdition('earth', 'sentinel-2', 2023, shown)).toBeNull();
+    expect(compareEdition('earth', 'sentinel-2', null, shown)).toBeNull();
+    // 2017 n'a pas d'édition, et un fond qui n'est pas une série n'a pas de rideau.
+    expect(compareEdition('earth', 'sentinel-2', 2017, shown)).toBeNull();
+    expect(compareEdition('earth', 'mosaic', 2022, shown)).toBeNull();
+    expect(compareEdition('earth', 'night-lights', 2016, shown)).toBeNull();
   });
 
   it('les phrases publiées nomment les éditions et l’écartée que le relevé décrit', () => {
