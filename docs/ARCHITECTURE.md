@@ -4314,12 +4314,13 @@ masse d'une sonde est la MÊME grandeur que celle d'une planète, et la déclare
 couche instrument l'efface de tout le catalogue — 40 valeurs disparues d'un coup, attrapé par
 `factProvenance.test.ts`.
 
-**Un fait peut être une DATE, ou un NOM.** `FactValue` est une union fermée de quatre natures
+**Un fait peut être une DATE, ou un NOM.** `FactValue` est une union fermée de cinq natures
 (trois jusqu'au lot 51, voir « L'atmosphère des géantes » ci-dessous) : nombre, intervalle publié,
-date de calendrier, nom propre. Encoder une date en nombre aurait rendu la fiche JSON
+maxima par bande de latitude, date de calendrier, nom propre. Encoder une date en nombre aurait rendu la fiche JSON
 illisible et laissé `displayedUncertainty` calculer une incertitude relative sur un instant. Les
 pages publiques, elles, ne décrivent que des corps du catalogue, dont les faits sont des nombres
-ou des intervalles : elles écartent explicitement les autres natures au lieu de le supposer.
+ou des intervalles ou des bandes de latitude : elles écartent explicitement les autres natures au
+lieu de le supposer.
 
 La troisième nature est arrivée au lot 10 (2026-09-22), et c'était une décision de modèle, pas
 une corvée. Le lanceur et le site de lancement ne sont pas des nombres, et le modèle avait été
@@ -4352,9 +4353,13 @@ de l'application comme la page publique les affichent, sur les quatre et sur auc
   deux sont affichées, et la ligne de la fiche porte l'autre valeur et l'écart
   (`core/bodyFacts.ts::oneBarTemperatureGap`, lu par la fiche et par la page). Le choix est celui
   de l'utilisateur (2026-10-15), plutôt que de n'en garder qu'une.
-- **Les vents ne sont pas encore publiés.** La fiche les écrit par bande de latitude (« Up to
-  150 m/s (<30 degrees latitude) », Jupiter) ou en plage (« 0-250 m/s », Uranus) : une forme à
-  concevoir avant de l'afficher. Ce n'est pas un oubli, c'est l'étape suivante.
+- **Les vents s'écrivent comme la source les publie** (ajoutés le 2026-10-15, forme choisie par
+  l'utilisateur) : une seule ligne « Vents », en plage pour Uranus et Neptune (« 0 à 250 m/s »,
+  `[0, 250]`) et par bande de latitude pour Jupiter et Saturne (« jusqu'à 150 m/s sous 30° de
+  latitude, 40 m/s au-delà », écrit `{belowLatDeg, belowMaxMs, aboveMaxMs}`, cinquième nature de
+  `FactValue`, `latitudeBands`). Le relevé exige la MÊME frontière de latitude sur les deux lignes
+  de la source et échoue sur toute autre écriture. Garde falsifiée : un maximum et une borne
+  changés, la reconnaissance des bandes désarmée.
 
 La page publique ne réécrit pas les décimales de la source : « 27 km » reste 27 et non « 27,0 »,
 comme sur la fiche (garde de parité page/fiche, falsifiée).

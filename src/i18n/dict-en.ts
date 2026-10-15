@@ -621,6 +621,8 @@ export const en = {
   'stat.density1Bar': 'Density at 1 bar',
   'stat.scaleHeight': 'Scale height',
   'stat.meanMolecularWeight': 'Mean molecular weight',
+  'stat.winds': 'Winds',
+  'stat.windBands': 'up to {below} below {lat}° latitude, {above} beyond',
   'stat.range': '{min} to {max}',
   'stat.temperature1BarGap':
     'the main table of the same catalogue gives {value}, {gap} K apart',

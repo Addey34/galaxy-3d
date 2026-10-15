@@ -399,7 +399,39 @@ function atmosphere(lines) {
     density1BarKgM3: field('Density at 1 bar:', String.raw`kg/m\s*3`),
     scaleHeightKm: field('Scale height:', 'km'),
     meanMolecularWeight: field('Mean molecular weight:', ''),
+    windSpeedMs: winds(lines),
   };
+}
+
+/**
+ * LES VENTS D'UNE GÉANTE (lot 51), deux écritures mesurées sur les quatre fiches, gardées telles :
+ *   - une PLAGE sur la ligne même, « Wind speeds: 0-250 m/s » (Uranus, Neptune) → `[0, 250]` ;
+ *   - deux MAXIMA par bande de latitude sur les deux lignes suivantes, « Up to 150 m/s (<30 degrees
+ *     latitude) » puis « Up to 40 m/s (>30 degrees latitude) » (Jupiter, Saturne) →
+ *     `{ belowLatDeg, belowMaxMs, aboveMaxMs }`, la frontière devant être la MÊME sur les deux.
+ * Toute autre écriture échoue : une forme non relue ne se publie pas.
+ */
+function winds(lines) {
+  const at = lines.findIndex((l) => l.startsWith('Wind speeds'));
+  if (at < 0) throw new Error('ligne des vents introuvable');
+  const span = lines[at].match(/^Wind speeds:\s*(\d+)\s*-\s*(\d+)\s*m\/s$/);
+  if (span) return [number(span[1]), number(span[2])];
+  const band = (line, sign) => {
+    const m = line?.match(
+      new RegExp(
+        String.raw`^Up to (\d+) m/s \(${sign}(\d+) degrees latitude\)$`
+      )
+    );
+    if (!m) throw new Error(`vents illisibles : « ${line} »`);
+    return { ms: number(m[1]), lat: number(m[2]) };
+  };
+  const below = band(lines[at + 1], '<');
+  const above = band(lines[at + 2], '>');
+  if (lines[at] !== 'Wind speeds' || below.lat !== above.lat)
+    throw new Error(
+      `vents illisibles : « ${lines.slice(at, at + 3).join(' / ')} »`
+    );
+  return { belowLatDeg: below.lat, belowMaxMs: below.ms, aboveMaxMs: above.ms };
 }
 
 // ── NASA NSSDCA : fiches des satellites ──────────────────────────────────────────────────────

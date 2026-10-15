@@ -351,6 +351,13 @@ function formatFact(name: string, field: FactField, value: FactValue): string {
   if (value.kind === 'name') return value.text;
   if (value.kind === 'range')
     return formatRangeFact(field, value.min, value.max);
+  if (value.kind === 'latitudeBands')
+    // Les vents de Jupiter et de Saturne, écrits comme la source les publie (lot 51).
+    return t('stat.windBands', {
+      below: `${num(value.belowMaxMs)}\u00a0m/s`,
+      lat: num(value.belowLatDeg),
+      above: `${num(value.aboveMaxMs)}\u00a0m/s`,
+    });
   return formatNumericFact(name, field, value.value);
 }
 
@@ -375,6 +382,8 @@ function formatRangeFact(field: FactField, min: number, max: number): string {
     }
     case 'meanMolecularWeight':
       return `${t('stat.range', { min: num(min, 2), max: num(max, 2) })} g/mol`;
+    case 'windSpeedMs':
+      return `${t('stat.range', { min: num(min), max: num(max) })}\u00a0m/s`;
     default:
       throw new Error(`intervalle inattendu pour ${field}`);
   }
@@ -440,6 +449,8 @@ function formatNumericFact(
     }
     case 'meanMolecularWeight':
       return `${num(value, 2)} g/mol`;
+    case 'windSpeedMs':
+      return `${num(value)}\u00a0m/s`;
     case 'launchDate':
     case 'firstObservation':
     case 'launchVehicle':
@@ -501,6 +512,8 @@ function factLabel(
       return t('stat.scaleHeight');
     case 'meanMolecularWeight':
       return t('stat.meanMolecularWeight');
+    case 'windSpeedMs':
+      return t('stat.winds');
   }
 }
 
@@ -520,6 +533,7 @@ export const CARD_FACT_ORDER: readonly FactField[] = [
   'density1BarKgM3',
   'scaleHeightKm',
   'meanMolecularWeight',
+  'windSpeedMs',
   'rotationPeriod',
   'orbitPeriodDays',
   'moonCount',

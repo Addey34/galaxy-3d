@@ -149,7 +149,7 @@ function factValue(entry: FactEntry, locale: Locale): string | null {
   if (value.kind === 'name') return value.text;
   // Un intervalle n'existe que pour l'atmosphère d'une géante (lot 51), jamais pour un objet
   // d'instrument : échouer plutôt que publier une forme que ce module n'a jamais relue.
-  if (value.kind === 'range')
+  if (value.kind === 'range' || value.kind === 'latitudeBands')
     throw new Error(
       `intervalle inattendu sur un objet d'instrument : ${entry.field}`
     );

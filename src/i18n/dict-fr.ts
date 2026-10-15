@@ -585,6 +585,8 @@ export const fr: Record<MessageKey, string> = {
   'stat.density1Bar': 'Masse volumique à 1 bar',
   'stat.scaleHeight': 'Hauteur d’échelle',
   'stat.meanMolecularWeight': 'Masse molaire moyenne',
+  'stat.winds': 'Vents',
+  'stat.windBands': 'jusqu’à {below} sous {lat}° de latitude, {above} au-delà',
   'stat.range': '{min} à {max}',
   'stat.temperature1BarGap':
     'la table principale du même catalogue donne {value}, à {gap} K d’écart',

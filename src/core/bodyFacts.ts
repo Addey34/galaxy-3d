@@ -16,11 +16,13 @@ import type {
   FactField,
   FactProvenance,
   UnknownReason,
+  WindBands,
 } from '@/types';
 
 /**
- * Valeur d'un fait. Quatre natures, et quatre seulement : un NOMBRE dans l'unité du catalogue,
- * un INTERVALLE publié comme tel, une DATE de calendrier, ou un NOM propre.
+ * Valeur d'un fait. Cinq natures, et cinq seulement : un NOMBRE dans l'unité du catalogue, un
+ * INTERVALLE publié comme tel, deux maxima PAR BANDE DE LATITUDE (les vents de Jupiter et de
+ * Saturne, lot 51), une DATE de calendrier, ou un NOM propre.
  *
  * L'intervalle est arrivé au lot 51 avec l'atmosphère des géantes : la fiche de Neptune publie
  * « Scale height: 19.1 - 20.3 km ». Le réduire à son milieu, ou à un milieu « ± demi-largeur »,
@@ -41,6 +43,7 @@ import type {
 export type FactValue =
   | { kind: 'number'; value: number }
   | { kind: 'range'; min: number; max: number }
+  | ({ kind: 'latitudeBands' } & WindBands)
   | { kind: 'date'; iso: string }
   | { kind: 'name'; text: string };
 
@@ -82,6 +85,7 @@ const FACT_LABEL_ORDER: Record<FactField, true> = {
   density1BarKgM3: true,
   scaleHeightKm: true,
   meanMolecularWeight: true,
+  windSpeedMs: true,
 };
 
 /** Tous les champs de faits connus, dans l'ordre de leur déclaration. */
@@ -213,6 +217,7 @@ export function factValue(
     return typeof value === 'string' && value.length > 0
       ? { kind: 'name', text: value }
       : undefined;
+  if (isWindBands(value)) return { kind: 'latitudeBands', ...value };
   if (
     Array.isArray(value) &&
     value.length === 2 &&
@@ -221,6 +226,19 @@ export function factValue(
   )
     return { kind: 'range', min: value[0], max: value[1] };
   return typeof value === 'number' ? { kind: 'number', value } : undefined;
+}
+
+/** Les deux maxima par bande de latitude (vents de Jupiter et de Saturne), exactement ces clés. */
+function isWindBands(value: unknown): value is WindBands {
+  if (typeof value !== 'object' || value === null || Array.isArray(value))
+    return false;
+  const keys = Object.keys(value).sort().join();
+  return (
+    keys === 'aboveMaxMs,belowLatDeg,belowMaxMs' &&
+    Object.values(value).every(
+      (v) => typeof v === 'number' && Number.isFinite(v)
+    )
+  );
 }
 
 /** Valeur numérique d'un fait, ou `undefined` si ce fait n'est pas un nombre ou n'existe pas. */

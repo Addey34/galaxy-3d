@@ -339,6 +339,7 @@ describe('fiche d’information — atmosphère des géantes (lot 51)', () => {
     'Masse volumique à 1 bar',
     'Hauteur d’échelle',
     'Masse molaire moyenne',
+    'Vents',
   ];
   const row = (name: string, label: string) =>
     bodyStats(name, CONFIGS.get(name)!).find((s) => s.label === label);
@@ -373,6 +374,17 @@ describe('fiche d’information — atmosphère des géantes (lot 51)', () => {
       '2,53 à 2,69 g/mol'
     );
     expect(row('jupiter', 'Hauteur d’échelle')?.value).toBe('27 km');
+  });
+
+  it('écrit les vents comme la source les publie : par bande de latitude, ou en plage', () => {
+    expect(row('jupiter', 'Vents')?.value).toBe(
+      'jusqu’à 150\u00a0m/s sous 30° de latitude, 40\u00a0m/s au-delà'
+    );
+    expect(row('saturn', 'Vents')?.value).toBe(
+      'jusqu’à 400\u00a0m/s sous 30° de latitude, 150\u00a0m/s au-delà'
+    );
+    expect(row('neptune', 'Vents')?.value).toBe('0 à 580\u00a0m/s');
+    expect(row('uranus', 'Vents')?.value).toBe('0 à 250\u00a0m/s');
   });
 
   it('dit l’écart des deux températures à 1 bar du NSSDCA, sur les quatre', () => {

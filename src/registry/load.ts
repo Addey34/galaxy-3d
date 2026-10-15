@@ -303,6 +303,7 @@ const CATALOGUE_VALUE_FIELD: Partial<Record<FactField, string>> = {
   density1BarKgM3: 'density1BarKgM3',
   scaleHeightKm: 'scaleHeightKm',
   meanMolecularWeight: 'meanMolecularWeight',
+  windSpeedMs: 'windSpeedMs',
 };
 
 /**
