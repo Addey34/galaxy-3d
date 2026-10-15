@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { blockExternalNetwork } from './netBlock';
+import { bootAndSettle } from './mainThread';
 
 // Déterminisme : on ne dépend pas de l'API JPL SBDB live (réseau) pendant les tests.
 // L'overlay des petits corps dégrade proprement en champ vide — suffisant pour ces scénarios.
@@ -25,8 +26,8 @@ test('explo mode shows projected labels and the live distance in the info card',
   const errors: string[] = [];
   page.on('pageerror', (err) => errors.push(err.message));
 
-  await page.goto('/');
-  await expect(page.locator('#loader')).toBeHidden({ timeout: 30_000 });
+  // Le chargeur masqué n'est pas « la page accepte un clic » (`e2e/mainThread.ts`).
+  await bootAndSettle(page, '/');
 
   // Dès le boot : couche active, en style éducatif (labels au-dessus des meshes).
   const labels = page.locator('#explo-labels');
@@ -40,11 +41,17 @@ test('explo mode shows projected labels and the live distance in the info card',
 
   // Cliquer un corps lance le voyage rapproché : la fiche unique s'ouvre avec la cible et sa
   // distance réelle live (bloc .bi-live fusionné depuis l'ancien HUD « TARGET »).
+  //
+  // NEPTUNE et non la Terre (2026-10-15) : la vue de la Terre est la plus coûteuse en rendu
+  // logiciel (~1,1 s par image sur le coureur, CLAUDE.md § « Pièges »), et le clic sur
+  // « Éducatif » qui suit est resté bloqué 15 s sur « waiting for scheduled navigations » au run
+  // de `main` 38741994643 (EPYC 7763). Ce scénario tient la fiche et sa distance en direct, pas
+  // la Terre : n'importe quel corps le prouve.
   await page.locator('#body-search-trigger').click();
-  await page.locator('#orbit-earth').click();
+  await page.locator('#orbit-neptune').click();
   const info = page.locator('#body-info');
   await expect(info).toBeVisible();
-  await expect(info.locator('.bi-name')).toHaveText('Earth');
+  await expect(info.locator('.bi-name')).toHaveText('Neptune');
   await expect(info.locator('.bi-live-dist')).toContainText('AU');
 
   // Au moins un marqueur de corps projeté est affiché.
