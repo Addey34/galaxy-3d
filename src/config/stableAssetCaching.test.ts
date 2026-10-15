@@ -54,7 +54,8 @@ describe('actifs au nom stable : cache Firebase et service worker d’accord', (
       'noms hachés par contenu ; seul le manifeste a un nom stable, et sa règle propre le revalide',
     'height-tiles':
       'répertoires hachés par contenu ; le manifeste a sa règle, tenue par la garde suivante',
-    kernels: 'non déployé : exclu par `ignore` dans firebase.json',
+    kernels:
+      'non déployé (exclu par `ignore` dans firebase.json), et absent de git : posé en local par `pnpm spk:stage`',
     social:
       'jamais demandé par l’application, donc pas de règle de service worker ; Firebase le revalide',
   };
@@ -71,8 +72,11 @@ describe('actifs au nom stable : cache Firebase et service worker d’accord', (
         prefixes.has(`/assets/${dir}/`) || dir in OUTSIDE_THE_RULE,
         `public/assets/${dir}/ : ni servi « réseau d'abord », ni écarté avec sa raison`
       ).toBe(true);
+    // Une exception sans dossier est une exception morte, SAUF `kernels`, qui n'existe que sur une
+    // machine où le noyau optionnel a été posé (`.gitignore`) : la CI l'a montré au premier passage.
     for (const dir of Object.keys(OUTSIDE_THE_RULE))
-      expect(shipped, `exception sans dossier : ${dir}`).toContain(dir);
+      if (dir !== 'kernels')
+        expect(shipped, `exception sans dossier : ${dir}`).toContain(dir);
     const social = firebase.hosting.headers.find(
       (entry) => entry.source === '/assets/social/**'
     );
