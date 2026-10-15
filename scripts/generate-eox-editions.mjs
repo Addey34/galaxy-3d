@@ -17,8 +17,9 @@
  * 2017 » là où les capacités disent « data 2016 ». Les années de données viennent de la page de
  * licence, et le désaccord est écrit dans `src/config/eoxEditions.json`.
  *
- * Écrit `src/registry/products/tilesets/earth-eox-s2cloudless-AAAA.json` (une par édition) et
- * `src/config/eoxEditions.json` (éditions, écartées, désaccords, dates de lecture).
+ * Écrit `src/registry/products/tilesets/earth-eox-s2cloudless-AAAA.json` (une par édition),
+ * `src/config/eoxEditions.json` (éditions, écartées, désaccords, dates de lecture) et
+ * `src/config/eoxEditionYears.json` (les seules années, pour le réglage du rideau).
  * `--offline` (cache `.cache/eox-editions/`), `--check` (code 1 si un fichier a dérivé).
  */
 import {
@@ -37,6 +38,11 @@ const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const CACHE_DIR = join(ROOT, '.cache', 'eox-editions');
 const TILESETS = join(ROOT, 'src/registry/products/tilesets');
 const RECORD = join(ROOT, 'src/config/eoxEditions.json');
+/**
+ * Les seules années, pour le réglage du rideau (lot 50, pas 2) : il vit au démarrage et ne lit
+ * pas les fiches, et le relevé entier y pèserait ses phrases de désaccord pour rien.
+ */
+const YEARS = join(ROOT, 'src/config/eoxEditionYears.json');
 const CAPABILITIES =
   'https://tiles.maps.eox.at/wmts/1.0.0/WMTSCapabilities.xml';
 const LICENCE = 'https://cloudless.eox.at/license-non-commercial';
@@ -260,6 +266,8 @@ outputs.set(
     disagreements,
   })
 );
+
+outputs.set(YEARS, await json(editions.map((e) => e.year)));
 
 // Une édition retirée chez EOX ne doit pas laisser sa fiche derrière elle.
 const stale = readdirSync(TILESETS)

@@ -153,6 +153,22 @@ export interface SurfaceImageryState {
   publishedPixelsPerDegree: number;
   /** Relief RÉELLEMENT posé sous les carreaux peints, ou `null` s'il n'y en a pas. */
   relief: SurfaceReliefState | null;
+  /** Année d'une édition annuelle (lot 50), ou `null`. */
+  edition: number | null;
+  /**
+   * L'édition COMPARÉE, peinte à gauche du rideau (lot 50, pas 2), ou `null` sans rideau. Son
+   * attribution est exigée au même titre que celle de l'édition principale.
+   */
+  compare: SurfaceCompareState | null;
+}
+
+/** Ce que le bandeau et le rideau disent de l'édition comparée. */
+export interface SurfaceCompareState {
+  tilesetId: string;
+  title: string;
+  credit: string;
+  acquired: { from: number; to: number };
+  edition: number | null;
 }
 
 /** Ce que le bandeau dit du relief, quand il y en a un sous les carreaux peints. */
@@ -252,6 +268,12 @@ export class PlanetarySurfaceEngine {
   private _generation = 0;
   /** Jeu des carreaux de la génération précédente encore peints, ou `null`. */
   private _staleTileset: SurfaceTileset | null = null;
+  /**
+   * Édition COMPARÉE (rideau avant/après, lot 50) : chaque carreau porte aussi son image, sur la
+   * même grille. Elle fait partie de la génération : la changer en ouvre une nouvelle.
+   */
+  private _compare: SurfaceTileset | null = null;
+  private _staleCompare: SurfaceTileset | null = null;
 
   private readonly _tiles = new Map<string, SurfaceTile>();
   private readonly _pending = new Map<string, AbortController>();
@@ -324,11 +346,20 @@ export class PlanetarySurfaceEngine {
     host: SurfaceHost,
     tileset: SurfaceTileset,
     radiusKm: number,
-    heights: AttachedHeights | null = null
+    heights: AttachedHeights | null = null,
+    compare: SurfaceTileset | null = null
   ): void {
+    // Une édition comparée sur une AUTRE grille serait posée à côté de son image : refusée.
+    if (compare && !sameGrid(compare.matrix, tileset.matrix)) {
+      Logger.warn(
+        `[Surface] comparaison ${compare.id} ignorée : sa grille n'est pas celle de ${tileset.id}`
+      );
+      compare = null;
+    }
     if (
       this._host === host &&
       this._tileset === tileset &&
+      this._compare === compare &&
       this._heights?.set === heights?.set
     )
       return;
@@ -340,7 +371,7 @@ export class PlanetarySurfaceEngine {
       this._tileset !== null &&
       this._heights?.set === heights?.set
     ) {
-      this._swapTileset(tileset);
+      this._swapTileset(tileset, compare);
       return;
     }
     this.detach();
@@ -354,6 +385,7 @@ export class PlanetarySurfaceEngine {
     }
     this._host = host;
     this._tileset = tileset;
+    this._compare = compare;
     this._radiusKm = radiusKm;
     this._heights = heights;
     this._heightAbort = heights ? new AbortController() : null;
@@ -366,7 +398,10 @@ export class PlanetarySurfaceEngine {
    * carreaux partiels sont jetés et l'ancienne génération complète reste en place. Sans cette
    * borne, chaque jour traversé laisserait ses carreaux en mémoire.
    */
-  private _swapTileset(tileset: SurfaceTileset): void {
+  private _swapTileset(
+    tileset: SurfaceTileset,
+    compare: SurfaceTileset | null
+  ): void {
     for (const controller of this._pending.values()) controller.abort();
     this._pending.clear();
     this._queue.length = 0;
@@ -384,9 +419,11 @@ export class PlanetarySurfaceEngine {
         }
     } else if (this._tiles.size > 0) {
       this._staleTileset = this._tileset;
+      this._staleCompare = this._compare;
     }
     this._generation += 1;
     this._tileset = tileset;
+    this._compare = compare;
   }
 
   /** Préfixe des clés de la génération courante. */
@@ -446,6 +483,7 @@ export class PlanetarySurfaceEngine {
     this._heightFailed.clear();
     this._host = null;
     this._tileset = null;
+    this._compare = null;
     this._radiusKm = 0;
     if (host?.setStreamedImageryWidth(0)) this._onImageryWidthChanged();
     if (this._state !== null) {
@@ -551,7 +589,10 @@ export class PlanetarySurfaceEngine {
         this._relief.delete(key);
       }
     }
-    if (complete) this._staleTileset = null;
+    if (complete) {
+      this._staleTileset = null;
+      this._staleCompare = null;
+    }
     for (const [key, controller] of this._pending) {
       if (!wanted.has(key)) {
         controller.abort();
@@ -597,9 +638,11 @@ export class PlanetarySurfaceEngine {
     // Les carreaux VOULUS déjà peints (plusieurs niveaux depuis le quadtree) ; à défaut, ceux
     // de la génération précédente encore en place.
     let painted = 0;
+    let compare = this._compare;
     for (const key of this._wanted) if (this._tiles.has(key)) painted += 1;
     if (painted === 0 && this._staleTileset) {
       tileset = this._staleTileset;
+      compare = this._staleCompare;
       for (const key of this._tiles.keys())
         if (!key.startsWith(this._prefix())) painted += 1;
     }
@@ -627,6 +670,16 @@ export class PlanetarySurfaceEngine {
       day: tileset.day ?? null,
       publishedPixelsPerDegree: tileset.publishedPixelsPerDegree,
       relief: this._reliefState(level, centre),
+      edition: tileset.edition ?? null,
+      compare: compare
+        ? {
+            tilesetId: compare.id,
+            title: compare.title,
+            credit: compare.credit,
+            acquired: compare.acquired,
+            edition: compare.edition ?? null,
+          }
+        : null,
     };
     if (
       this._state &&
@@ -635,7 +688,7 @@ export class PlanetarySurfaceEngine {
       this._state.painted === next.painted &&
       this._state.requested === next.requested &&
       this._state.attached === next.attached &&
-      this._state.tilesetId === next.tilesetId &&
+      this._state.compare?.tilesetId === next.compare?.tilesetId &&
       this._state.relief?.level === next.relief?.level &&
       this._state.relief?.areaName === next.relief?.areaName
     )
@@ -810,6 +863,7 @@ export class PlanetarySurfaceEngine {
     this._tiles.clear();
     this._relief.clear();
     this._staleTileset = null;
+    this._staleCompare = null;
     // Plus un seul carreau de relief : la sphère livrée reprend sa taille, sinon le corps
     // resterait rétréci de son altitude minimale une fois les carreaux partis.
     if (this._shellScaled) {
@@ -1104,19 +1158,34 @@ export class PlanetarySurfaceEngine {
 
   private async _load(index: TileIndex): Promise<void> {
     const tileset = this._tileset;
+    const compareSet = this._compare;
     const host = this._host;
     if (!tileset || !host) return;
     const key = this._key(index);
     const controller = new AbortController();
     this._pending.set(key, controller);
+    const bitmaps: ImageBitmap[] = [];
+    const release = () => {
+      for (const image of bitmaps) image.close?.();
+    };
 
     try {
-      const url = tileUrl(tileset.service, index);
-      const bitmap = await this._fetchTile(url, controller.signal);
+      // Avec un rideau, les DEUX images de la tuile : le carreau ne se montre qu'avec les deux,
+      // sans quoi un côté de la ligne afficherait l'autre année sans le dire.
+      const [bitmap, compareBitmap] = await Promise.all(
+        [tileset, ...(compareSet ? [compareSet] : [])].map((set) =>
+          this._fetchTile(tileUrl(set.service, index), controller.signal).then(
+            (image) => {
+              bitmaps.push(image);
+              return image;
+            }
+          )
+        )
+      );
       // La cible a pu changer pendant le vol : ne rien poser sur un corps qu'on a quitté, ni
       // un carreau qu'on vient d'abandonner.
       if (this._pending.get(key) !== controller || this._host !== host) {
-        bitmap.close?.();
+        release();
         return;
       }
       // Le relief est demandé APRÈS l'image : une tuile de hauteurs sert des dizaines de
@@ -1124,15 +1193,19 @@ export class PlanetarySurfaceEngine {
       // l'imagerie — le carreau est alors posé plat, et le bandeau ne parle pas de relief.
       const relief = await this._reliefFor(index);
       if (this._pending.get(key) !== controller || this._host !== host) {
-        bitmap.close?.();
+        release();
         return;
       }
-      const texture = new THREE.Texture();
-      texture.image = bitmap;
       // L'image est déjà retournée dans le bitmap (cf. `defaultFetcher`) : ne pas la retourner
       // une seconde fois. Three ignore ce drapeau pour un ImageBitmap, on le pose pour que le
       // code dise la même chose que le GPU.
-      texture.flipY = false;
+      const textureOf = (image: ImageBitmap) => {
+        const texture = new THREE.Texture();
+        texture.image = image;
+        texture.flipY = false;
+        return texture;
+      };
+      const texture = textureOf(bitmap!);
       const tile = new SurfaceTile({
         index,
         radius: host.layerRadius,
@@ -1145,7 +1218,10 @@ export class PlanetarySurfaceEngine {
           ? { heights: relief.heights, skirtDepth: relief.skirtDepth }
           : {}),
       });
-      tile.setTexture(texture);
+      tile.setTexture(
+        texture,
+        compareBitmap ? textureOf(compareBitmap) : undefined
+      );
       host.attachSpinningChild(tile.mesh);
       this._tiles.set(key, tile);
       if (relief) {
@@ -1153,6 +1229,9 @@ export class PlanetarySurfaceEngine {
         this._applyShellScale();
       }
     } catch (error) {
+      // L'autre image de la paire, encore en vol, ne servirait plus à rien.
+      controller.abort();
+      release();
       if ((error as Error)?.name === 'AbortError') return;
       // Un échec se RETIENT : sans cela la même tuile serait redemandée à chaque frame, et
       // un service en panne recevrait soixante requêtes par seconde.

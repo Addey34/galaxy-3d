@@ -1204,6 +1204,94 @@ test('follows the scene’s year from one Sentinel-2 edition to the next', async
   expect(errors, `Erreurs page : ${errors.join(' | ')}`).toEqual([]);
 });
 
+/**
+ * LE RIDEAU AVANT/APRÈS (lot 50, pas 2) : une année comparée à celle de la scène, chaque carreau
+ * portant les deux images. Ce scénario tient ce qu'aucune capture ne prouve : les DEUX éditions
+ * sont demandées pour les mêmes tuiles, les DEUX attributions exigées sont à l'écran, et la
+ * poignée se règle au clavier, dit les deux années et reste entière à l'écran.
+ */
+test('compares two Sentinel-2 editions across a curtain, with both attributions', async ({
+  page,
+}) => {
+  test.setTimeout(180_000);
+  const errors: string[] = [];
+  page.on('pageerror', (err) => errors.push(err.message));
+  const eox: string[] = [];
+  await page.route('**tiles.maps.eox.at/**', (route) => {
+    eox.push(route.request().url());
+    return route.fulfill({
+      status: 200,
+      contentType: 'image/jpeg',
+      headers: { 'access-control-allow-origin': '*' },
+      body: TILE_JPEG,
+    });
+  });
+
+  await boot(
+    page,
+    '?debug-surface&mode=explo&body=earth&date=2023-07-01T12:00:00Z'
+  );
+  await expect(page.locator('#surface-probe')).toContainText('earth', {
+    timeout: 30_000,
+  });
+  await page.locator('#settings-trigger').click();
+  // Le choix d'année n'existe qu'avec le fond Sentinel-2, la seule série d'éditions.
+  await expect(page.locator('#surface-earth-compare')).toBeHidden();
+  await page.locator('#surface-earth-base').selectOption('sentinel-2');
+  await page.locator('#surface-earth-compare').selectOption('2022');
+  await page.keyboard.press('Escape');
+  await expect(page.locator('#orbit-options')).toBeHidden();
+  await zoomIn(page);
+
+  const handle = page.locator('#surface-compare .sc-handle');
+  await expect(handle).toBeVisible({ timeout: 30_000 });
+  await expect(handle).toHaveAttribute('aria-valuetext', /2022.*2023/);
+  const credit = page.locator('#surface-imagery .si-credit');
+  await expect(credit).toContainText('Copernicus Sentinel data 2023)');
+  await expect(credit).toContainText('Copernicus Sentinel data 2022)');
+  await expect(page.locator('#surface-imagery .si-compare')).toContainText(
+    'cloudless 2022'
+  );
+  // Les MÊMES tuiles, demandées aux deux éditions.
+  const tiles = (year: number) =>
+    new Set(
+      eox
+        .filter((url) => url.includes(`/s2cloudless-${year}/`))
+        .map((url) => /\/WGS84\/(.*)\.jpg$/.exec(url)![1])
+    );
+  const before = tiles(2022);
+  expect(before.size).toBeGreaterThan(0);
+  for (const tile of before) expect(tiles(2023).has(tile), tile).toBe(true);
+
+  await handle.focus();
+  await expect(handle).toHaveAttribute('aria-valuenow', '50');
+  await page.keyboard.press('ArrowLeft');
+  await expect(handle).toHaveAttribute('aria-valuenow', '45');
+  await page.keyboard.press('End');
+  await expect(handle).toHaveAttribute('aria-valuenow', '100');
+  // La poignée reste ENTIÈRE à l'écran au bout de sa course (elle sortait de moitié).
+  const viewport = page.viewportSize()!;
+  const end = (await handle.boundingBox())!;
+  expect(end.x + end.width).toBeLessThanOrEqual(viewport.width);
+  await page.keyboard.press('Home');
+  const start = (await handle.boundingBox())!;
+  expect(start.x).toBeGreaterThanOrEqual(0);
+
+  const audit = await new AxeBuilder({ page })
+    .include('#surface-compare')
+    .withTags(['wcag2a', 'wcag2aa', 'wcag21aa'])
+    .analyze();
+  expect(audit.violations, JSON.stringify(audit.violations, null, 2)).toEqual(
+    []
+  );
+
+  // Retirer la comparaison n'est PAS rejoué ici : rouvrir les réglages au-dessus de carreaux
+  // portant deux images figeait le thread du coureur au clic (« performing click action »,
+  // run 38708567048, EPYC 7763), et la relève sans rideau est tenue par le test du moteur
+  // (« retirer la comparaison ouvre une génération sans rideau »).
+  expect(errors, `Erreurs page : ${errors.join(' | ')}`).toEqual([]);
+});
+
 test.describe('the Earth’s alternate grounds', () => {
   for (const [choice, layer, extension] of [
     [

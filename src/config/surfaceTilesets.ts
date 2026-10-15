@@ -203,6 +203,29 @@ export function tilesetForDay(
 }
 
 /**
+ * L'ÉDITION COMPARÉE du rideau avant/après (lot 50, pas 2) : celle de l'année demandée, quand le
+ * fond choisi est une série d'éditions qui la publie, et qu'elle n'est pas déjà celle qu'on
+ * montre. Sinon `null` : pas de rideau, plutôt qu'un rideau entre deux images identiques.
+ */
+export function compareEdition(
+  body: string,
+  choice: SurfaceChoice,
+  year: number | null,
+  shown: SurfaceTileset | undefined,
+  variants: ReadonlyMap<
+    string,
+    ReadonlyMap<SurfaceVariant, readonly SurfaceTileset[]>
+  > = SURFACE_VARIANTS
+): SurfaceTileset | null {
+  if (year === null || choice === 'mosaic' || choice === 'daily') return null;
+  const found = variants
+    .get(body)
+    ?.get(choice)
+    ?.find((edition) => edition.edition === year);
+  return found && found !== shown ? found : null;
+}
+
+/**
  * Produit daté d'une mosaïque, pour `classifyTemporal`.
  *
  * `kind: 'measurement'` : une mosaïque est un assemblage d'images prises par un capteur, sur

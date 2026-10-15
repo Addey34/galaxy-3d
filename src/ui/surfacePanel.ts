@@ -24,6 +24,7 @@ import { getLocale, intlLocale, onLocaleChange, t } from '@/i18n';
 import Logger from '@/utils/Logger';
 import { NOTICE_CHANGED } from './ephemerisNotice';
 import { SURFACE_CHOICES, type SurfaceChoiceId } from './surfaceChoices';
+import EDITION_YEARS from '@/config/eoxEditionYears.json';
 import type {
   PlanetarySurfaceEngine,
   SurfaceImageryState,
@@ -91,6 +92,31 @@ export function setupSurfacePanel(api: PublicAPI): () => void {
   wrapper.after(baseWrapper);
   let choice: SurfaceChoiceId = 'mosaic';
 
+  // RIDEAU AVANT/APRÈS (lot 50, pas 2) : une année à comparer à celle de la scène, proposée
+  // seulement avec le fond Sentinel-2, le seul qui soit une série d'éditions. Les années viennent
+  // de `pnpm surface:editions` ; elles ne persistent pas, comme le reste du contenu de la scène.
+  const compareWrapper = document.createElement('label');
+  compareWrapper.id = 'surface-earth-compare-wrapper';
+  compareWrapper.className = 'settings-switch';
+  compareWrapper.hidden = true;
+  const compareLabel = document.createElement('span');
+  compareLabel.className = 'settings-switch-label';
+  const compareSelect = document.createElement('select');
+  compareSelect.id = 'surface-earth-compare';
+  const noCompare = document.createElement('option');
+  noCompare.value = '';
+  compareSelect.append(
+    noCompare,
+    ...EDITION_YEARS.map((year) => {
+      const option = document.createElement('option');
+      option.value = option.textContent = String(year);
+      return option;
+    })
+  );
+  compareWrapper.append(compareLabel, compareSelect);
+  baseWrapper.after(compareWrapper);
+  let compareYear: number | null = null;
+
   // ── Bandeau de provenance ──────────────────────────────────────────────────────────────
   const badge = document.createElement('div');
   badge.id = 'surface-imagery';
@@ -105,9 +131,13 @@ export function setupSurfacePanel(api: PublicAPI): () => void {
   const relief = document.createElement('span');
   relief.className = 'si-relief';
   relief.hidden = true;
+  // Ligne du RIDEAU : l'édition peinte à gauche de la ligne, et son intervalle.
+  const compareLine = document.createElement('span');
+  compareLine.className = 'si-compare';
+  compareLine.hidden = true;
   const credit = document.createElement('span');
   credit.className = 'si-credit';
-  badge.append(headline, detail, relief, credit);
+  badge.append(headline, detail, compareLine, relief, credit);
   document.body.append(badge);
 
   let enabled = readStored();
@@ -127,6 +157,8 @@ export function setupSurfacePanel(api: PublicAPI): () => void {
         `settings.surfaceEarthBase.${SURFACE_CHOICES[rank]!}`
       );
     });
+    compareLabel.textContent = t('settings.surfaceCompare');
+    noCompare.textContent = t('settings.surfaceCompare.none');
     renderBadge();
   };
 
@@ -211,12 +243,24 @@ export function setupSurfacePanel(api: PublicAPI): () => void {
       delete badge.dataset['reliefM'];
       delete badge.dataset['ground'];
     }
+    const compared = state.compare;
+    compareLine.hidden = compared === null;
+    if (compared)
+      compareLine.textContent = t('surface.compare.badge', {
+        title: compared.title,
+        from: formatMonth(compared.acquired.from),
+        to: formatMonth(compared.acquired.to),
+      });
     // Les conditions de la NASA demandent de citer la source : quand le relief vient d'ailleurs
-    // que l'imagerie, les DEUX crédits sont affichés.
-    credit.textContent =
-      reliefState && reliefState.credit !== state.credit
-        ? `${state.credit} · ${reliefState.credit}`
-        : state.credit;
+    // que l'imagerie, les DEUX crédits sont affichés. Avec le rideau, l'attribution de CHAQUE
+    // édition est exigée (lot 50) : les deux années paraissent.
+    credit.textContent = [
+      state.credit,
+      ...(compared ? [compared.credit] : []),
+      ...(reliefState && reliefState.credit !== state.credit
+        ? [reliefState.credit]
+        : []),
+    ].join(' · ');
     badge.dataset['level'] = String(state.level);
     if (state.day) badge.dataset['day'] = state.day;
     else delete badge.dataset['day'];
@@ -260,6 +304,11 @@ export function setupSurfacePanel(api: PublicAPI): () => void {
   const onState = (next: SurfaceImageryState | null): void => {
     state = next;
     renderBadge();
+    curtain?.update(
+      next && next.painted > 0 && next.compare
+        ? { before: next.compare.edition, after: next.edition }
+        : null
+    );
   };
 
   const disable = (): void => {
@@ -321,8 +370,10 @@ export function setupSurfacePanel(api: PublicAPI): () => void {
       body,
       tileset,
       radiusKm,
-      heightsFor?.(heights.get(name) ?? [], tileset.matrix) ?? null
+      heightsFor?.(heights.get(name) ?? [], tileset.matrix) ?? null,
+      compareFor?.(name, choice, compareYear, tileset) ?? null
     );
+    curtain?.sync();
     engine.update(
       api.cameraSystem.camera,
       api.sceneSystem.renderer.domElement.clientHeight
@@ -333,6 +384,12 @@ export function setupSurfacePanel(api: PublicAPI): () => void {
   let chooseTileset: ReturnType<
     typeof import('@/config/surfaceTilesets').createDatedChooser
   > | null = null;
+
+  /** Édition comparée et rideau (lot 50, pas 2), chargés avec le moteur. */
+  let compareFor:
+    typeof import('@/config/surfaceTilesets').compareEdition | null = null;
+  let curtain:
+    import('@/components/surface/compareCurtain').CompareCurtain | null = null;
 
   let loadHeights:
     typeof import('@/config/surfaceHeights').loadBodyHeights | null = null;
@@ -366,16 +423,20 @@ export function setupSurfacePanel(api: PublicAPI): () => void {
   async function loadEngine(): Promise<void> {
     const [
       { PlanetarySurfaceEngine },
-      { createDatedChooser },
+      { createDatedChooser, compareEdition },
       { loadBodyHeights, heightsForGrid },
+      { createCompareCurtain },
     ] = await Promise.all([
       import('@/components/surface/PlanetarySurfaceEngine'),
       import('@/config/surfaceTilesets'),
       import('@/config/surfaceHeights'),
+      import('@/components/surface/compareCurtain'),
     ]);
     chooseTileset = createDatedChooser({
       date: () => api.orbitalMechanics.simulationDate,
     });
+    compareFor = compareEdition;
+    curtain = createCompareCurtain(api.sceneSystem.renderer.domElement);
     loadHeights = loadBodyHeights;
     heightsFor = heightsForGrid;
     engine = new PlanetarySurfaceEngine({
@@ -395,6 +456,10 @@ export function setupSurfacePanel(api: PublicAPI): () => void {
   });
   baseSelect.addEventListener('change', () => {
     choice = baseSelect.value as SurfaceChoiceId;
+    compareWrapper.hidden = choice !== 'sentinel-2';
+  });
+  compareSelect.addEventListener('change', () => {
+    compareYear = compareSelect.value ? Number(compareSelect.value) : null;
   });
 
   renderLabels();
@@ -410,9 +475,12 @@ export function setupSurfacePanel(api: PublicAPI): () => void {
     window.removeEventListener('resize', placeBadge);
     engine?.dispose();
     engine = null;
+    curtain?.dispose();
+    curtain = null;
     badge.remove();
     wrapper.remove();
     baseWrapper.remove();
+    compareWrapper.remove();
   };
 }
 

@@ -501,6 +501,16 @@ export const NON_BOOT_CHUNKS: readonly BootDynamicChunk[] = [
     reason: 'façade des fiches de tuiles, chargée avec le moteur de surfaces.',
   },
   {
+    chunk: 'compareCurtain',
+    reason:
+      'le rideau avant/après (lot 50, pas 2), chargé avec le moteur de surfaces et seulement affiché quand une année est comparée.',
+  },
+  {
+    chunk: 'compareMaterial',
+    reason:
+      'le patch de shader du rideau, partagé par le moteur de surfaces et le rideau, tous deux chargés à l’approche.',
+  },
+  {
     chunk: 'surfaceHeights',
     reason:
       'façade des fiches de hauteurs, chargée avec le moteur de surfaces.',

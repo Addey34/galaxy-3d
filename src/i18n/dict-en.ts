@@ -381,6 +381,13 @@ export const en = {
   'surface.relief.headline': 'Relief {title} at {resolution}/pixel',
   'surface.relief.area': 'named area {name}',
   'surface.relief.acquired': 'heights measured from {from} to {to}',
+  'settings.surfaceCompare': 'Compare with the year',
+  'settings.surfaceCompare.none': 'No comparison',
+  'surface.compare.slider': 'Before and after curtain',
+  'surface.compare.valuetext':
+    '{before} left of the line, {after} right of it, line at {percent} % of the width',
+  'surface.compare.badge':
+    'left of the line: {title}, images from {from} to {to}',
   'settings.units': 'Imperial units (mi, °F)',
 
   // ── Champ d'astéroïdes et de comètes (NEO / comètes / TNO), section des Réglages ──
