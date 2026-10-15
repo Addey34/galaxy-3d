@@ -4799,6 +4799,31 @@ En passant, un défaut visible corrigé : le crédit d'un modèle de forme ne ch
 `fr` et `en`, si bien qu'un visiteur espagnol ou portugais le lisait en anglais alors que la fiche
 porte sa traduction.
 
+### 3 ter. La PROVENANCE des faits n'arrive qu'avec la fiche (lot 52, 2026-10-15)
+
+Mesuré quand la marge JavaScript n'était plus que de 2 296 octets : les objets `facts` des fiches
+pesaient **71 998 octets** dans le morceau d'entrée (recoupés à 1,2 % près par le JSON compact des
+fiches), dont **11 535** seulement de valeurs. Source, méthode, citation, incertitude, détail, date
+et raison ne sont lus que par la fiche (`core/bodyFacts.ts`, `realData.sources` et `.unknown`).
+
+- le greffon réduit chaque fait du navigateur à sa VALEUR et marque la fiche `factsDeferred`
+  (`core/registryText.ts::deferFactProvenance`, appliquée après `stripToEnglish` et
+  `deferLongText`, donc une raison reste une empreinte) ;
+- il expose `virtual:registry-text/card-facts`, la provenance par corps, que `config/cardFacts.ts`
+  charge AVANT le texte de fiche, à sa première ouverture, et que
+  `registry/load.ts::hydrateFactProvenance` repose par les règles mêmes du chargement complet
+  (`provenanceOf`, `reasonOf`), en s'ajoutant à ce que le code a déjà posé (distance et période
+  d'un petit corps) ;
+- tant qu'elle n'est pas là, la liste des faits est `aria-busy` et VIDE : sans provenance,
+  `bodyFact` rendrait chaque valeur « pas encore sourcée », une affirmation fausse à l'écran.
+
+Résultat mesuré : `SolarSystemApp` **589 588 → 536 242 octets**, marge **2 296 → 55 642** ; le
+morceau `card-facts` pèse 63 916 octets hors démarrage. Les 1 447 documents générés sont
+identiques. Gardes : `src/config/cardFacts.test.ts` (catalogue, sondes et interstellaires allégés
+puis reposés égaux au chargement complet, falsifié en ne reposant plus les raisons : 2 rouges) et
+`e2e/cardText.spec.ts` (la provenance ne part qu'à la première ouverture, et un fait porte son
+renvoi de source).
+
 ### 4. Le budget compte des groupes EXCLUSIFS
 
 Un visiteur charge **un** dictionnaire et **une** carte de texte. `BOOT_EXCLUSIVE_CHUNK_GROUPS`

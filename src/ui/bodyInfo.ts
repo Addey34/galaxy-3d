@@ -8,6 +8,7 @@
  */
 import { localizedOrKey } from '@/i18n/localizedOrKey';
 import { loadCardText } from '@/config/cardText';
+import { factProvenancePending } from '@/config/cardFacts';
 import { CELESTIAL_CONFIG } from '@/config/bodies';
 import { allBodies, hasIllustrativeSurface } from '@/config/catalog';
 import { TEXTURE_SETTINGS } from '@/config/engine';
@@ -907,7 +908,12 @@ export function setupBodyInfo(coordinator?: OverlayCoordinator): BodyInfoPanel {
     }
 
     statsEl.replaceChildren();
-    for (const stat of bodyStats(name, cfg)) {
+    // Sans sa provenance, chaque valeur se lirait « pas encore sourcée » : la liste attend la
+    // première ouverture (`config/cardFacts.ts`), occupée plutôt que fausse.
+    const factsPending = factProvenancePending();
+    if (factsPending) statsEl.setAttribute('aria-busy', 'true');
+    else statsEl.removeAttribute('aria-busy');
+    for (const stat of factsPending ? [] : bodyStats(name, cfg)) {
       const dt = document.createElement('dt');
       dt.textContent = stat.label;
       const dd = document.createElement('dd');
@@ -957,7 +963,7 @@ export function setupBodyInfo(coordinator?: OverlayCoordinator): BodyInfoPanel {
 
     // Sources citées : repliées par défaut pour garder la fiche compacte, toujours présentes.
     if (sourcesEl && sourcesList) {
-      const items = bodySources(name, cfg);
+      const items = factsPending ? [] : bodySources(name, cfg);
       sourcesList.replaceChildren(
         ...items.map((item) => {
           const li = document.createElement('li');

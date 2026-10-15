@@ -337,6 +337,27 @@ export function spreadFacts(
   sources: Partial<Record<FactField, FactProvenance>>;
   unknown: Partial<Record<FactField, UnknownReason>>;
 } {
+  for (const [field, entry] of Object.entries(facts) as [
+    FactField,
+    FactEntry,
+  ][]) {
+    if (entry.value === undefined) continue;
+    const at = `${where}.facts.${field}`;
+    const key = valueField[field];
+    if (!key) throw new Error(`${at} : ce fait ne porte pas de valeur ici`);
+    target[key] = decode(entry.value, `${at}.value`);
+  }
+  return factProvenanceTables(facts, where);
+}
+
+/** Les provenances et les raisons d'un ensemble de faits, sans toucher à leurs valeurs. */
+function factProvenanceTables(
+  facts: Partial<Record<FactField, FactEntry>>,
+  where: string
+): {
+  sources: Partial<Record<FactField, FactProvenance>>;
+  unknown: Partial<Record<FactField, UnknownReason>>;
+} {
   const sources: Partial<Record<FactField, FactProvenance>> = {};
   const unknown: Partial<Record<FactField, UnknownReason>> = {};
   for (const [field, entry] of Object.entries(facts) as [
@@ -344,17 +365,44 @@ export function spreadFacts(
     FactEntry,
   ][]) {
     const at = `${where}.facts.${field}`;
-    if (entry.value !== undefined) {
-      const key = valueField[field];
-      if (!key) throw new Error(`${at} : ce fait ne porte pas de valeur ici`);
-      target[key] = decode(entry.value, `${at}.value`);
-    }
     const provenance = provenanceOf(entry, at);
     if (provenance) sources[field] = provenance;
     const reason = reasonOf(entry, at);
     if (reason) unknown[field] = reason;
   }
   return { sources, unknown };
+}
+
+/**
+ * Repose la provenance DIFFÉRÉE des faits (`core/registryText.ts::deferFactProvenance`) sur les
+ * corps déjà construits, par les règles mêmes du chargement : `provenanceOf` et `reasonOf`, donc
+ * les mêmes refus. Les tables s'AJOUTENT à celles que le code a déjà posées (distance et période
+ * d'un petit corps, dérivées de ses éléments par `smallBodyToConfig`), dans l'ordre où le
+ * chargement complet les aurait écrites : la fiche l'emporte. Rend le nombre de faits reposés.
+ */
+export function hydrateFactProvenance(
+  bodies: ReadonlyMap<string, { realData?: Record<string, unknown> }>,
+  provenance: Readonly<Record<string, Partial<Record<FactField, FactEntry>>>>
+): number {
+  let count = 0;
+  for (const [name, facts] of Object.entries(provenance)) {
+    const realData = bodies.get(name)?.realData;
+    if (!realData)
+      throw new Error(`provenance de faits pour un corps inconnu : ${name}`);
+    const { sources, unknown } = factProvenanceTables(facts, name);
+    if (Object.keys(sources).length > 0)
+      realData.sources = {
+        ...(realData.sources as object | undefined),
+        ...sources,
+      };
+    if (Object.keys(unknown).length > 0)
+      realData.unknown = {
+        ...(realData.unknown as object | undefined),
+        ...unknown,
+      };
+    count += Object.keys(sources).length + Object.keys(unknown).length;
+  }
+  return count;
 }
 
 // ── Assemblage ────────────────────────────────────────────────────────────────────────────────

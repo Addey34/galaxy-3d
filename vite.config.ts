@@ -12,6 +12,7 @@ import type { HeightManifestSummary } from './src/seo/sourcesPage';
 import {
   collectTranslations,
   collectDeferredText,
+  deferFactProvenance,
   deferLongText,
   isRuntimeServiceFiche,
   stripToEnglish,
@@ -153,6 +154,22 @@ function deriveRegistryText() {
         : null;
     },
     async load(id: string): Promise<string | null> {
+      // La provenance des faits (lot 52) : par corps, chaque fait privé de sa valeur, sous la
+      // forme même que le navigateur reçoit pour le reste de la fiche (raisons en empreintes).
+      if (id === `\0${CARD_PREFIX}facts`) {
+        const map: Record<string, unknown> = {};
+        for (const { fiche } of await readFiches(DEFERRING_DIRS)) {
+          const { provenance } = deferFactProvenance(
+            deferLongText(stripToEnglish(fiche))
+          );
+          if (provenance) map[(fiche as { id: string }).id] = provenance;
+        }
+        if (Object.keys(map).length < 50)
+          throw new Error(
+            `provenance des faits : ${Object.keys(map).length} corps seulement, fiches non lues ?`
+          );
+        return `export default ${JSON.stringify(map)};`;
+      }
       if (id.startsWith(`\0${CARD_PREFIX}`)) {
         const locale = id.slice(`\0${CARD_PREFIX}`.length);
         if (!(CARD_TEXT_LOCALES as readonly string[]).includes(locale))
@@ -213,7 +230,11 @@ function deriveRegistryText() {
           `${id} : fournisseur contacté à l'exécution importé par le CLIENT ; son texte n'est pas au catalogue du démarrage (cf. RUNTIME_SERVICE_ROLES)`
         );
       const english = stripToEnglish(parsed);
-      return JSON.stringify(defersText(id) ? deferLongText(english) : english);
+      return JSON.stringify(
+        defersText(id)
+          ? deferFactProvenance(deferLongText(english)).fiche
+          : english
+      );
     },
   };
 }

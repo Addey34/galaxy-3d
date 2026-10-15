@@ -300,6 +300,50 @@ export function deferLongText<T>(value: T, key = ''): T {
   return value;
 }
 
+/**
+ * LA PROVENANCE DES FAITS VOYAGE AVEC LA FICHE, PAS AU DÉMARRAGE (lot 52, 2026-10-15).
+ *
+ * Mesuré dans le morceau d'entrée : les objets `facts` des fiches y pesaient 71 998 octets, dont
+ * 11 535 seulement de VALEURS (rayon, masse, période, que la scène lit) ; le reste, source,
+ * méthode, citation, incertitude, détail, date et raison, n'est lu que par la fiche
+ * (`core/bodyFacts.ts`). Le navigateur reçoit donc chaque fait réduit à sa valeur, et la fiche
+ * marquée `factsDeferred` ; la provenance part dans `virtual:registry-text/card-facts`, chargée
+ * avec le texte de fiche à sa première ouverture (`config/cardFacts.ts`), et
+ * `registry/load.ts::hydrateFactProvenance` la repose avec les MÊMES règles qu'au chargement.
+ *
+ * Rend la fiche allégée et sa provenance (`null` si elle n'a aucun fait). À appeler sur la fiche
+ * que le navigateur va recevoir, donc APRÈS `stripToEnglish` et `deferLongText` : une raison y
+ * reste une empreinte, reposée par la carte de texte.
+ */
+export const FACTS_DEFERRED_FLAG = 'factsDeferred';
+
+export function deferFactProvenance<T>(fiche: T): {
+  fiche: T;
+  provenance: Record<string, Record<string, unknown>> | null;
+} {
+  const record = fiche as Record<string, unknown>;
+  const facts = record.facts as
+    Record<string, Record<string, unknown>> | undefined;
+  if (!facts || Object.keys(facts).length === 0)
+    return { fiche, provenance: null };
+  const values: Record<string, { value: unknown }> = {};
+  const provenance: Record<string, Record<string, unknown>> = {};
+  for (const [field, entry] of Object.entries(facts)) {
+    const { value, ...rest } = entry;
+    if (value !== undefined) values[field] = { value };
+    if (Object.keys(rest).length > 0) provenance[field] = rest;
+  }
+  const { facts: _facts, ...others } = record;
+  return {
+    fiche: {
+      ...others,
+      ...(Object.keys(values).length > 0 ? { facts: values } : {}),
+      [FACTS_DEFERRED_FLAG]: true,
+    } as T,
+    provenance,
+  };
+}
+
 /** La carte « empreinte → texte » des blocs différés d'une langue, anglais compris. */
 export function collectDeferredText(
   value: unknown,
