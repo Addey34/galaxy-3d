@@ -4374,6 +4374,33 @@ source déclare) : « Rayon équatorial à 1 bar » et « Gravité à 1 bar », 
 la vignette de partage, sur ces quatre corps et sur eux seuls (`factQuantity.test.ts`, falsifié
 en désarmant la règle).
 
+**Le profil mesuré de Jupiter, dans la fiche (lot 51, pas 3, 2026-10-15).** Une seule géante a été
+traversée par un instrument : Jupiter, par la sonde de Galileo. `pnpm atmosphere:generate`
+(`scripts/generate-atmosphere-profiles.mjs`, `--offline`, `--check`) lit les deux tables réduites
+par l'équipe de l'ASI dans le paquet PDS4 `urn:nasa:pds:gp` (DOI lu dans le registre, tables
+identiques octet pour octet au volume PDS3 `gp_0001`), colonnes et unités LUES dans les étiquettes
+XML (l'entrée écrit sa pression en millibars, la descente en bars), et écrit
+`public/assets/atmosphere-profiles/jupiter.json`, chargé à l'ouverture de la fiche par le bloc
+`ui/atmosphereBlock.ts` (morceau des blocs de fiche, rien au démarrage). Quatre décisions :
+
+- **Dans la fiche, pas à l'altitude de la caméra.** Le plancher d'approche se dérive de la texture
+  (`core/surfaceApproach.ts`) : la caméra s'arrête à 10 533 km au-dessus du niveau de 1 bar de
+  Jupiter, et le profil couvre +1 028 à −132 km. Lu « à l'altitude de la caméra », il
+  n'afficherait jamais rien. Choix de l'utilisateur.
+- **Des échantillons publiés, jamais interpolés** (`core/atmosphereProfile.ts`) : le plus haut,
+  le plus proche en pression de 1 mbar, 0,1, 1 et 10 bar, le plus bas. Témoins contre une source
+  indépendante, la fiche du NSSDCA : 166 K contre 165 K à 1 bar, 112,6 K contre 112 K à 0,1 bar
+  (`src/config/atmosphereProfiles.test.ts`, falsifié en lisant les millibars comme des bars).
+- **Local, et en partie ajusté, comme la source le dit.** La latitude est lue dans la table (6,4 à
+  6,7°), la tache chaude vient du titre même de l'article cité par le jeu (Seiff et al. 1998), et
+  la descente porte la phrase de `asiinfo.txt`, exigée mot pour mot : « not a list of measured
+  points, but is derived using the dry adiabat which fits the data ». Ses lignes sont en italique.
+- **Les trois autres géantes disent l'absence.** `src/config/atmosphereProfileIndex.json` porte,
+  pour chacune, le nombre de collections que le registre du PDS lui rattache au jour de la lecture,
+  aucune n'étant un profil de la basse atmosphère (lu à la main) ; la requête a un TÉMOIN, la
+  collection de l'ASI sur Jupiter. Un compte qui bouge fait sortir `--check` en code 1, pour
+  relire. Le jeu est cité dans le bloc, comme ceux des blocs Missions et Instruments.
+
 **Une magnitude porte son incertitude en valeur absolue.** La SBDB publie H = 22,08 ± 0,445 pour
 ʻOumuamua. En relatif, cela ferait 2 %, sous le seuil d'affichage de 5 %, donc on le tairait ;
 or 0,45 magnitude est un facteur 1,5 sur la brillance. `ABSOLUTE_UNCERTAINTY_FACTS` soustrait la

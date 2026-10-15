@@ -438,6 +438,52 @@ test.describe('mobile viewport', () => {
   }
 
   /**
+   * LE PROFIL MESURÉ DE JUPITER (lot 51, pas 3) : un tableau de trois colonnes dans une fiche de
+   * 390 px, dont la pression en notation scientifique, et deux phrases de source. Ouvert par la
+   * propriété, comme les autres blocs de cette suite : c'est la mise en page qu'on mesure.
+   */
+  for (const locale of ['fr', 'pt-BR'] as const) {
+    test(`Jupiter measured profile, ${locale}, is clean at 390 px`, async ({
+      page,
+    }) => {
+      await page.addInitScript((lang) => {
+        localStorage.setItem('ssv-locale', lang);
+      }, locale);
+      await page.goto('/?body=jupiter');
+      // 60 s et non 30 : le démarrage sur Jupiter charge sa texture 4k, et le premier passage à
+      // froid a dépassé 30 s deux fois sur deux en local (les suivants, en cache, non).
+      await expect(page.locator('#loader')).toBeHidden({ timeout: 60_000 });
+      const block = page.locator('#body-info .bi-atmosphere');
+      await expect(block).toBeVisible({ timeout: 15_000 });
+      await block.evaluate((el) => {
+        (el as HTMLDetailsElement).open = true;
+      });
+      // Six lignes, chacune un échantillon publié ; le niveau de 1 bar est à 166 K.
+      await expect(block.locator('tbody tr')).toHaveCount(6);
+      await expect(block.locator('tbody')).toContainText('166');
+      await expect(block.locator('tr.is-adjusted')).not.toHaveCount(0);
+      await expect(block).toContainText('10.17189/0hsp-bb78');
+      const results = await runAxe(page);
+      expect(
+        results.violations,
+        JSON.stringify(results.violations, null, 2)
+      ).toEqual([]);
+      expect(
+        await page.evaluate(
+          () =>
+            document.documentElement.scrollWidth -
+            document.documentElement.clientWidth
+        ),
+        `débordement de la page (${locale})`
+      ).toBeLessThanOrEqual(0);
+      expect(
+        await clippedOverflow(page),
+        `texte rogné dans la fiche (${locale})`
+      ).toEqual([]);
+    });
+  }
+
+  /**
    * LES VENTS PAR BANDE DE LATITUDE (lot 51) : la plus longue valeur de la fiche, mesurée sur les
    * quatre langues, est celle de Saturne en espagnol (« hasta 400 m/s por debajo de 30° de
    * latitud, 150 m/s más allá »). Neptune, le témoin ci-dessus, n'a qu'une plage.
@@ -450,6 +496,14 @@ test.describe('mobile viewport', () => {
     await expect(page.locator('#loader')).toBeHidden({ timeout: 30_000 });
     const card = page.locator('#body-info');
     await expect(card.locator('.bi-stats')).toContainText('por debajo de 30°');
+    // La mesure de l'absence d'un profil (lot 51) : le bloc reste, et dit pourquoi.
+    await expect(card.locator('.bi-atmosphere')).toContainText(
+      'Ningún perfil de temperatura y presión',
+      { timeout: 15_000 }
+    );
+    await card.evaluate((el) => {
+      for (const d of el.querySelectorAll('details')) d.open = true;
+    });
     expect(
       await page.evaluate(
         () =>

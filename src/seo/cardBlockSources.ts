@@ -1,11 +1,12 @@
 /**
  * Les sources des blocs de fiche, telles que `/sources` les publie (ligne 44.1).
  *
- * Cinq blocs de la fiche d'un corps lisent chacun un index livré dans `src/config/` : les noms de
+ * Six blocs de la fiche d'un corps lisent chacun un index livré dans `src/config/` : les noms de
  * la surface (gazetteer de l'UAI, lot 37), les missions (registre de contexte du PDS, lot 40), les
  * instruments d'une sonde (le même registre, lot 42), les formations observées (Orbital Data
  * Explorer, lot 43) et la découverte (trois sources primaires et deux qui les requalifient,
- * lot 44). Chaque bloc cite sa source SUR la fiche ; la page publique des sources n'en disait rien.
+ * lot 44), et le profil mesuré d'une géante (paquet PDS4 de la sonde Galileo, lot 51). Chaque
+ * bloc cite sa source SUR la fiche ; la page publique des sources n'en disait rien.
  *
  * Rien n'est recopié : l'éditeur, le titre, l'adresse, la date et les comptes sont LUS dans
  * chaque index, qui porte déjà sa provenance, et le nom de chaque bloc est lu dans les
@@ -21,6 +22,7 @@ import missionIndex from '@/config/missionIndex.json';
 import instrumentIndex from '@/config/instrumentIndex.json';
 import placeObservationIndex from '@/config/placeObservationIndex.json';
 import discoveryIndex from '@/config/discoveryIndex.json';
+import atmosphereProfileIndex from '@/config/atmosphereProfileIndex.json';
 import { messages } from '@/i18n/allDictionaries';
 import type { MessageKey } from '@/i18n/locales';
 import type { DocLocale } from './documentPage';
@@ -158,6 +160,29 @@ function instrumentRows(): CardBlockSourceRow[] {
   ];
 }
 
+function atmosphereProfileRows(): CardBlockSourceRow[] {
+  const { provider, profiles, absent } = atmosphereProfileIndex;
+  const samples = sum(Object.values(profiles), (p) => p.samples);
+  const none = Object.keys(absent).length;
+  return [
+    {
+      index: 'atmosphereProfileIndex.json',
+      publisher: provider.publisher,
+      title: `${provider.title} (DOI ${provider.doi})`,
+      url: provider.url,
+      usedBy: ['bi.atmosphere.label'],
+      coverage: (locale) =>
+        ({
+          en: `${count(samples, locale)} samples of the Galileo probe’s temperature and pressure profile for Jupiter; ${count(none, locale)} giants with none published as data, and their card says so`,
+          fr: `${count(samples, locale)} échantillons du profil de température et de pression de la sonde Galileo pour Jupiter ; ${count(none, locale)} géantes sans profil publié en données, et leur fiche le dit`,
+          es: `${count(samples, locale)} muestras del perfil de temperatura y presión de la sonda Galileo para Júpiter; ${count(none, locale)} gigantes sin perfil publicado como datos, y su ficha lo dice`,
+          'pt-BR': `${count(samples, locale)} amostras do perfil de temperatura e pressão da sonda Galileo para Júpiter; ${count(none, locale)} gigantes sem perfil publicado como dados, e a ficha delas o diz`,
+        })[locale],
+      asOf: atmosphereProfileIndex.retrieved,
+    },
+  ];
+}
+
 function placeObservationRows(): CardBlockSourceRow[] {
   const { provider } = placeObservationIndex;
   if (!placeObservationIndex.complete)
@@ -275,6 +300,7 @@ export const CARD_BLOCK_INDEXES: Record<string, () => CardBlockSourceRow[]> = {
   'instrumentIndex.json': instrumentRows,
   'placeObservationIndex.json': placeObservationRows,
   'discoveryIndex.json': discoveryRows,
+  'atmosphereProfileIndex.json': atmosphereProfileRows,
 };
 
 export function cardBlockSourceRows(): CardBlockSourceRow[] {
