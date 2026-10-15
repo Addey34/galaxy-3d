@@ -142,8 +142,10 @@ export function createCompareCurtain(
    */
   function placeHandle(): void {
     if (root.hidden) return;
-    const width = root.clientWidth;
-    const half = handle.offsetWidth / 2;
+    // Largeurs FRACTIONNAIRES : `offsetWidth` arrondit, et la poignée dépassait encore de
+    // 0,2 px (run 38705931943).
+    const width = root.getBoundingClientRect().width;
+    const half = handle.getBoundingClientRect().width / 2;
     const x = fraction * width;
     handle.style.left = `${Math.min(Math.max(x, half), Math.max(half, width - half))}px`;
   }
