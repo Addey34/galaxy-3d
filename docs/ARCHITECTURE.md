@@ -2419,7 +2419,7 @@ rend le même objet, donc le moteur ne change de génération qu'au changement d
   éditions ne sont donc pas une même image recopiée. Mesuré sur les tuiles brutes d'EOX ; toutes
   les années répondent aux niveaux 0, 5, 13 et 14 avec `Access-Control-Allow-Origin: *`.
 - Gardes : `config/surfaceTilesets.test.ts` (une fiche par édition nommée, attribution, choix par
-  année, phrases publiées confrontées au relevé, chacune falsifiée) et `e2e/surfaceImagery.spec.ts`
+  année, phrases publiées confrontées au relevé, chacune falsifiée) et `e2e/surfaceImageryEarth.spec.ts`
   (« follows the scene's year… », falsifié : un choix figé sur la dernière édition affiche l'attribution
   de 2025 en 2022). Vérifié contre le vrai service le 2026-10-15 : tuiles de 2022 puis de 2023
   peintes, bandeau et attribution de chaque année.
@@ -2454,7 +2454,7 @@ celle de la scène à DROITE ; le visiteur déplace la ligne à la souris, au do
 - **Piège payé** : `.settings-switch` pose `display: flex`, qui écrase l'attribut `hidden` ; le
   choix d'année restait affiché hors du fond Sentinel-2. Règle `.settings-switch[hidden]`.
 - Gardes : `PlanetarySurfaceEngine.test.ts` (« le rideau avant/après »), `compareMaterial.test.ts`,
-  `e2e/surfaceImagery.spec.ts` (« compares two Sentinel-2 editions… » : mêmes tuiles demandées aux
+  `e2e/surfaceImageryEarth.spec.ts` (« compares two Sentinel-2 editions… » : mêmes tuiles demandées aux
   deux éditions, deux attributions, clavier, axe, poignée à l'écran ; falsifié sur l'attribution et
   sur la poignée). Vérifié contre le vrai service le 2026-10-15 au-dessus de Kakhovka, à 41 km.
 
@@ -2595,7 +2595,7 @@ du sol mesuré par le relief sous la visée (`CelestialObject.getClearanceRadius
 image par `CameraSystem`, le plan proche aussi). La phrase qui disait « le plancher reste une
 altitude au-dessus du rayon de référence, pas au-dessus du sol » est SUPERSEDED ce jour : avec
 Sentinel-2 à 10 m, ce plancher tombait à 0,9 km de la sphère de 6 371 km, et la caméra passait
-3,2 km SOUS le sol de la Terre (mesuré, puis falsifié par `e2e/surfaceImagery.spec.ts` : −4,083 km
+3,2 km SOUS le sol de la Terre (mesuré, puis falsifié par `e2e/surfaceImageryEarth.spec.ts` : −4,083 km
 sans la correction). Le maximum avec la sphère est conservateur aux pôles d'un globe aplati
 (environ 14 km de plancher en trop sur la Terre), jamais dangereux. `?debug-surface` affiche
 l'altitude MESURÉE du sol sous la caméra. Des aires fines ne sont déclarées que sur la Lune et
@@ -2675,7 +2675,7 @@ le hachage du contenu). `connect-src` autorisait déjà l'hôte.
 dans `src/config/heightWitnesses/`, sous le même chemin haché : les deux pôles, la mer Morte, la
 Caspienne, le lac Supérieur, l'Everest. `src/config/surfaceHeights.test.ts` les lit comme des
 tuiles servies, et un témoin d'une cuisson périmée ne se trouve plus. Les gardes de l'eau ont été
-falsifiées en recuisant avec la règle désarmée ; `e2e/surfaceImagery.spec.ts` tient l'origine, le
+falsifiées en recuisant avec la règle désarmée ; `e2e/surfaceImageryEarth.spec.ts` tient l'origine, le
 répertoire haché et la grille des tuiles DEMANDÉES.
 
 | | |
