@@ -1290,7 +1290,8 @@ export default defineConfig({
               url.pathname.startsWith('/assets/instruments/') ||
               url.pathname.startsWith('/assets/discovery/') ||
               url.pathname.startsWith('/assets/place-observations/') ||
-              url.pathname.startsWith('/assets/search/'),
+              url.pathname.startsWith('/assets/search/') ||
+              url.pathname.startsWith('/assets/atmosphere-profiles/'),
             handler: 'NetworkFirst',
             options: {
               cacheName: 'ssv-stable-visual-assets',
