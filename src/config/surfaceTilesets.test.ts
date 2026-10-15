@@ -8,6 +8,7 @@ import {
   DATED_RECHECK_MS,
   DATED_SURFACE_TILESETS,
   DOMAIN_MAX_AGE_MS,
+  editionFor,
   SURFACE_TILESETS,
   SURFACE_VARIANTS,
   tilesetForDay,
@@ -18,6 +19,8 @@ import { CELESTIAL_CONFIG } from './bodies';
 import { flattenBodies } from './catalog';
 import { TILESET_PRODUCTS } from '@/registry/products';
 import { TILE_PROVIDERS } from '@/registry/providers/runtimeServices';
+import eoxProvider from '@/registry/providers/eox-cloudless.json';
+import eoxEditions from './eoxEditions.json';
 import { tileServiceHost, tileUrl } from '@/core/tileUrl';
 import {
   groundResolutionKm,
@@ -39,9 +42,9 @@ const ROOT = resolve(import.meta.dirname, '../..');
 const ALL_TILESETS: ReadonlyArray<[string, SurfaceTileset]> = [
   ...SURFACE_TILESETS.values(),
   ...DATED_SURFACE_TILESETS.values(),
-  ...[...SURFACE_VARIANTS.values()].flatMap((variants) => [
-    ...variants.values(),
-  ]),
+  ...[...SURFACE_VARIANTS.values()].flatMap((variants) =>
+    [...variants.values()].flat()
+  ),
 ].map((tileset) => [`${tileset.body} (${tileset.id})`, tileset]);
 
 /**
@@ -71,7 +74,9 @@ describe('fiches de jeux de tuiles', () => {
     expect(SURFACE_TILESETS.size).toBeGreaterThan(0);
     for (const product of TILESET_PRODUCTS) {
       const found = product.variant
-        ? SURFACE_VARIANTS.get(product.body)?.get(product.variant)
+        ? SURFACE_VARIANTS.get(product.body)
+            ?.get(product.variant)
+            ?.find((t) => t.edition === product.edition)
         : (product.service.time
             ? DATED_SURFACE_TILESETS
             : SURFACE_TILESETS
@@ -79,6 +84,15 @@ describe('fiches de jeux de tuiles', () => {
       // Deux fiches au même rôle sur un corps s'écraseraient en silence : une seule gagne.
       expect(found?.id, product.id).toBe(product.id);
     }
+    // Plusieurs fiches au même fond ne se départagent que par leur ÉDITION (lot 50) : deux
+    // fiches sans année, ou à la même année, s'écraseraient.
+    for (const variants of SURFACE_VARIANTS.values())
+      for (const [variant, editions] of variants) {
+        if (editions.length === 1) continue;
+        const years = editions.map((t) => t.edition);
+        expect(years.every(Number.isInteger), variant).toBe(true);
+        expect(new Set(years).size, variant).toBe(years.length);
+      }
     // Un fond de rechange se choisit À LA PLACE de la mosaïque : sans elle, rien à remplacer.
     for (const body of SURFACE_VARIANTS.keys())
       expect(SURFACE_TILESETS.has(body), body).toBe(true);
@@ -621,5 +635,72 @@ describe('les fonds de rechange de la Terre (lot 48)', () => {
     expect(night.service.template).toContain('/2016-01-01/');
     expect(new Date(night.acquired.from).getUTCFullYear()).toBe(2016);
     expect(new Date(night.acquired.to).getUTCFullYear()).toBe(2016);
+  });
+});
+
+/**
+ * LES ÉDITIONS ANNUELLES DE SENTINEL-2 (lot 50), confrontées à ce que `pnpm surface:editions` a
+ * lu chez EOX : la page de licence fait foi, une couche qu'elle ne nomme pas est écartée.
+ */
+describe('les éditions annuelles de Sentinel-2 (lot 50)', () => {
+  const editions = SURFACE_VARIANTS.get('earth')!.get('sentinel-2')!;
+  const at = (iso: string) => editionFor(editions, new Date(iso))?.edition;
+
+  it('une fiche par édition que la page de licence nomme, et aucune autre', () => {
+    expect(editions.map((t) => t.edition)).toEqual(eoxEditions.editions);
+    for (const excluded of eoxEditions.excluded)
+      expect(editions.map((t) => t.edition)).not.toContain(excluded.year);
+  });
+
+  it('chaque édition affiche son attribution, et ses données finissent dans son année', () => {
+    for (const edition of editions) {
+      expect(edition.credit).toMatch(
+        new RegExp(
+          String.raw`^EOxCloudless https://cloudless\.eox\.at by EOX IT Services GmbH \(Contains modified Copernicus Sentinel data (\d{4} & )?${edition.edition}( & \d{4})?\)$`
+        )
+      );
+      // Le NOM de l'édition choisit, l'intervalle de ses données se publie : ils doivent se
+      // recouvrir, sinon « l'édition de l'année de la scène » ne voudrait rien dire.
+      const from = new Date(edition.acquired.from).getUTCFullYear();
+      const to = new Date(edition.acquired.to).getUTCFullYear();
+      expect(from).toBeLessThanOrEqual(edition.edition!);
+      expect(to).toBeGreaterThanOrEqual(edition.edition!);
+    }
+  });
+
+  it('montre l’édition de l’année de la scène, la précédente dans un trou, une borne au-delà', () => {
+    expect(at('2023-06-30T00:00:00Z')).toBe(2023);
+    expect(at('2023-01-01T00:00:00Z')).toBe(2023);
+    expect(at('2022-12-31T23:59:59Z')).toBe(2022);
+    // 2017 n'a pas d'édition : celle de 2016, dont les données portent 2017.
+    expect(at('2017-07-01T00:00:00Z')).toBe(2016);
+    expect(at('1990-01-01T00:00:00Z')).toBe(editions[0]!.edition);
+    expect(at('2040-01-01T00:00:00Z')).toBe(editions.at(-1)!.edition);
+    const choose = createDatedChooser({
+      date: () => new Date('2021-05-01T00:00:00Z'),
+      fetchText: async () => {
+        throw new Error('aucun réseau pour une édition');
+      },
+    });
+    const chosen = choose('earth', 'sentinel-2');
+    expect(chosen?.edition).toBe(2021);
+    // Le moteur compare les jeux par IDENTITÉ : la même année rend le même objet.
+    expect(choose('earth', 'sentinel-2')).toBe(chosen);
+  });
+
+  it('les phrases publiées nomment les éditions et l’écartée que le relevé décrit', () => {
+    const years = eoxEditions.editions;
+    for (const locale of LOCALES) {
+      const use = eoxProvider.use[locale];
+      expect(use, locale).toContain(String(years[0]));
+      expect(use, locale).toContain(String(years.at(-1)));
+      for (const excluded of eoxEditions.excluded)
+        expect(eoxProvider.terms[locale], locale).toContain(
+          String(excluded.year)
+        );
+    }
+    // « 2016 et 2018 à 2025 » : une suite contiguë après la première, que la prose résume.
+    const rest = years.slice(1);
+    expect(rest).toEqual(rest.map((_, i) => rest[0]! + i));
   });
 });

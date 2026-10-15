@@ -465,6 +465,11 @@
             "sentinel-2"
           ]
         },
+        "edition": {
+          "type": "integer",
+          "minimum": 1900,
+          "maximum": 2100
+        },
         "mission": {
           "type": "string",
           "minLength": 1

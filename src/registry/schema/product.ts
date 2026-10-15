@@ -248,6 +248,13 @@ const imageryTileset = z
      * en quatre langues, et `config/surfaceTilesets.test.ts` confronte les deux.
      */
     variant: z.enum(['shaded-relief', 'night-lights', 'sentinel-2']).optional(),
+    /**
+     * ÉDITION ANNUELLE d'un fond de rechange (lot 50) : EOX publie une mosaïque Sentinel-2 par
+     * année, chacune sa couche, sa licence et son attribution. Plusieurs fiches partagent alors
+     * la même variante, distinguées par leur année, et le fond montre celle de l'année de la
+     * scène (`config/surfaceTilesets.ts::editionFor`). Écrites par `pnpm surface:editions`.
+     */
+    edition: z.number().int().min(1900).max(2100).optional(),
     mission: z.string().min(1),
     instrument: z.string().min(1),
     service: z
@@ -345,6 +352,12 @@ const imageryTileset = z
         code: 'custom',
         message:
           'un jeu de tuiles cite les capacités WMTS dont son gabarit est recopié (rel=describedby)',
+      });
+    if (product.edition !== undefined && !product.variant)
+      ctx.addIssue({
+        code: 'custom',
+        message:
+          'une édition annuelle est celle d’un fond de rechange (`variant`)',
       });
     if (product.variant && product.service.time)
       ctx.addIssue({

@@ -36,6 +36,7 @@
     "spacecraft:phases": "node scripts/derive-spacecraft-phases.mjs",
     "surface:tiles": "node --max-old-space-size=4096 scripts/bake-surface-height-tiles.mjs",
     "surface:capabilities": "node scripts/read-wmts-capabilities.mjs",
+    "surface:editions": "node scripts/generate-eox-editions.mjs",
     "gibs:colormap": "node scripts/import-gibs-colormap.mjs",
     "fingerprint:generated": "node scripts/fingerprint-generated.mjs",
     "gazetteer:generate": "node scripts/generate-gazetteer.mjs",

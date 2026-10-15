@@ -62,6 +62,8 @@ export interface SurfaceTileset {
   domainsUrl?: string;
   /** Jour figé (`AAAA-MM-JJ`) d'une couche datée, posé par {@link tilesetForDay}. */
   day?: string;
+  /** Année d'une ÉDITION annuelle d'un fond de rechange (lot 50), cf. {@link editionFor}. */
+  edition?: number;
 }
 
 function toTileset(fiche: ImageryTilesetProduct): SurfaceTileset {
@@ -90,6 +92,7 @@ function toTileset(fiche: ImageryTilesetProduct): SurfaceTileset {
       to: to === null ? Number.POSITIVE_INFINITY : Date.parse(to!),
     },
     credit: fiche.providers.map((provider) => provider.name).join(' · '),
+    ...(fiche.edition !== undefined ? { edition: fiche.edition } : {}),
     ...(time
       ? {
           domainsUrl: time.domains
@@ -130,20 +133,49 @@ export type SurfaceVariant = NonNullable<ImageryTilesetProduct['variant']>;
  */
 export type SurfaceChoice = 'mosaic' | 'daily' | SurfaceVariant;
 
-/** Les fonds de rechange, par corps puis par variante. */
+/**
+ * Les fonds de rechange, par corps puis par variante : ses ÉDITIONS, dans l'ordre des années
+ * (lot 50), ou une seule fiche pour un fond qui n'en a pas.
+ */
 export const SURFACE_VARIANTS: ReadonlyMap<
   string,
-  ReadonlyMap<SurfaceVariant, SurfaceTileset>
+  ReadonlyMap<SurfaceVariant, readonly SurfaceTileset[]>
 > = (() => {
-  const byBody = new Map<string, Map<SurfaceVariant, SurfaceTileset>>();
+  const byBody = new Map<string, Map<SurfaceVariant, SurfaceTileset[]>>();
   for (const fiche of FICHES) {
     if (!fiche.variant) continue;
     const variants = byBody.get(fiche.body) ?? new Map();
-    variants.set(fiche.variant, toTileset(fiche));
+    variants.set(fiche.variant, [
+      ...(variants.get(fiche.variant) ?? []),
+      toTileset(fiche),
+    ]);
     byBody.set(fiche.body, variants);
   }
+  for (const variants of byBody.values())
+    for (const editions of variants.values())
+      editions.sort((a, b) => (a.edition ?? 0) - (b.edition ?? 0));
   return byBody;
 })();
+
+/**
+ * L'ÉDITION À MONTRER à une date (lot 50) : la dernière dont l'année est au plus celle de la
+ * scène, sinon la première. Une édition porte le nom de l'année de sa mosaïque, et ses données
+ * peuvent déborder sur l'année d'avant (« data 2017 & 2018 » pour 2018) : c'est son NOM qui
+ * décide, et le bandeau publie l'intervalle de ses données.
+ *
+ * Avant la première édition, la première, et après la dernière, la dernière : le bandeau dit
+ * alors l'écart entre la scène et les images, comme pour toute mosaïque.
+ */
+export function editionFor(
+  editions: readonly SurfaceTileset[],
+  date: Date
+): SurfaceTileset | undefined {
+  const year = date.getUTCFullYear();
+  let found = editions[0];
+  for (const edition of editions)
+    if ((edition.edition ?? Number.NEGATIVE_INFINITY) <= year) found = edition;
+  return found;
+}
 
 /**
  * La couche datée FIGÉE sur un jour publié : `{Time}` résolu dans le gabarit, et l'intervalle
@@ -215,7 +247,10 @@ export function createDatedChooser(options: {
   warn?: (message: string) => void;
   mosaics?: ReadonlyMap<string, SurfaceTileset>;
   dated?: ReadonlyMap<string, SurfaceTileset>;
-  variants?: ReadonlyMap<string, ReadonlyMap<SurfaceVariant, SurfaceTileset>>;
+  variants?: ReadonlyMap<
+    string,
+    ReadonlyMap<SurfaceVariant, readonly SurfaceTileset[]>
+  >;
 }): (body: string, choice: SurfaceChoice) => SurfaceTileset | undefined {
   const now = options.now ?? (() => performance.now());
   const fetchText =
@@ -243,8 +278,10 @@ export function createDatedChooser(options: {
 
   return (body, choice) => {
     const base = mosaics.get(body);
-    if (choice !== 'mosaic' && choice !== 'daily')
-      return variantSets.get(body)?.get(choice) ?? base;
+    if (choice !== 'mosaic' && choice !== 'daily') {
+      const editions = variantSets.get(body)?.get(choice);
+      return (editions && editionFor(editions, options.date())) ?? base;
+    }
     const dated = datedSets.get(body);
     if (choice !== 'daily' || !base || !dated?.domainsUrl) return base;
     const t = now();
