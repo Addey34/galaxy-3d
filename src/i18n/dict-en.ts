@@ -367,7 +367,8 @@ export const en = {
   'settings.gazetteer': 'Surface feature names (IAU)',
   'settings.surfaceEarthBase': 'Earth’s ground',
   'settings.surfaceEarthBase.mosaic': 'Blue Marble mosaic (2004)',
-  'settings.surfaceEarthBase.sentinel-2': 'Sentinel-2 cloudless (2024, 10 m)',
+  'settings.surfaceEarthBase.sentinel-2':
+    'Sentinel-2 cloudless, the scene’s year (10 m)',
   'settings.surfaceEarthBase.daily': 'The scene’s day (VIIRS)',
   'settings.surfaceEarthBase.shaded-relief': 'Shaded relief and bathymetry',
   'settings.surfaceEarthBase.night-lights': 'Night lights (Black Marble 2016)',

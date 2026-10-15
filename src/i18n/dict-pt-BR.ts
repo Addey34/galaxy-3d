@@ -349,7 +349,8 @@ export const ptBR: Record<MessageKey, string> = {
   'settings.gazetteer': 'Nomes das formações (UAI)',
   'settings.surfaceEarthBase': 'Solo da Terra',
   'settings.surfaceEarthBase.mosaic': 'Mosaico Blue Marble (2004)',
-  'settings.surfaceEarthBase.sentinel-2': 'Sentinel-2 sem nuvens (2024, 10 m)',
+  'settings.surfaceEarthBase.sentinel-2':
+    'Sentinel-2 sem nuvens, o ano da cena (10 m)',
   'settings.surfaceEarthBase.daily': 'O dia da cena (VIIRS)',
   'settings.surfaceEarthBase.shaded-relief': 'Relevo sombreado e batimetria',
   'settings.surfaceEarthBase.night-lights':
