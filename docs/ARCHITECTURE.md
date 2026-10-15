@@ -4836,6 +4836,25 @@ documents générés identiques. Gardes : `src/build/clientFactSnapshot.test.ts`
 exactement ses rayons (falsifié en oubliant Saturne : rouge) et aucun autre module livré
 n'importe le relevé, sans quoi il recevrait un objet amputé (falsifié par un second lecteur :
 rouge).
+### 3 quinquies. Les phrases des blocs hors démarrage ont leur dictionnaire (lot 52, C)
+
+74 clés du dictionnaire n'étaient lues que par des morceaux chargés à la demande : les blocs de
+fiche (`ui/cardBlocks`), la recherche typée (`ui/paletteSearch`) et le rideau avant/après
+(`components/surface/compareCurtain`). Elles vivent désormais dans `i18n/dict-card-<langue>.ts`
+(`CardMessageKey` dérivé de l'anglais, donc la parité des quatre langues reste tenue par le
+compilateur), que `i18n/deferredMessages.ts` pose pour `t()` avec l'anglais de repli ; chaque
+chargeur de ces morceaux l'attend avant de rendre, et un changement de langue l'attend ensuite par
+`onLocaleLoading`. Les pages générées et les tests lisent les deux dictionnaires réunis
+(`i18n/allDictionaries.ts`) ; `translationFidelity.test.ts` lit l'anglais COMPLET, sans quoi ces
+phrases sortaient de chacune de ses gardes.
+
+Résultat mesuré : démarrage **−13 226 octets** (entrée −5 972, `dict-fr` −7 254), quatre morceaux
+`dict-card-*` de 6 760 à 7 285 octets hors démarrage, documents générés identiques. Gardes :
+`src/i18n/deferredMessages.test.ts` (aucun module du démarrage ne lit une de ces clés, falsifié par
+un lecteur ajouté : rouge) et `e2e/cardText.spec.ts` (les phrases ne partent qu'à la première
+ouverture, la fiche n'affiche aucune clé brute ; falsifié en retirant l'attente du chargeur :
+« bi.missions.countAtDate » à l'écran). Ce scénario passe par Jupiter et non par Mars : le panneau
+de surface d'un corps à tuiles charge aussi ces phrases, et le test n'aurait alors rien prouvé.
 
 ### 4. Le budget compte des groupes EXCLUSIFS
 

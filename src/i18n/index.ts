@@ -144,13 +144,33 @@ export function onLocaleChange(cb: () => void): () => void {
 }
 
 /**
+ * Les phrases des blocs HORS démarrage, par langue (lot 52, piste C) : posées par
+ * `./deferredMessages.ts` quand un de ces blocs se charge, lues par `t()` après le dictionnaire du
+ * démarrage. Avant, leurs clés n'existent pas pour `t()`, et c'est pourquoi chaque chargeur de
+ * ces blocs attend leur arrivée avant de rendre.
+ */
+const deferred = new Map<Locale, Readonly<Record<string, string>>>();
+
+export function installDeferredMessages(
+  locale: Locale,
+  dict: Readonly<Record<string, string>>
+): void {
+  deferred.set(locale, dict);
+}
+
+/**
  * Traduit une clé dans la langue courante. Repli : anglais, puis la clé brute.
  * `vars` interpole les gabarits `{nom}` (ex. `t('subtitle.planetOrdinal', { ordinal: '3ᵉ' })`).
  */
 export function t(key: string, vars?: Record<string, string | number>): string {
   const dict = active as Record<string, string | undefined>;
   const fallback = en as Record<string, string | undefined>;
-  let s = dict[key] ?? fallback[key] ?? key;
+  let s =
+    dict[key] ??
+    deferred.get(current)?.[key] ??
+    fallback[key] ??
+    deferred.get('en')?.[key] ??
+    key;
   if (vars) {
     for (const [k, v] of Object.entries(vars)) {
       s = s.replace(`{${k}}`, String(v));

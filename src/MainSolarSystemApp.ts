@@ -16,6 +16,7 @@ import Logger from '@/utils/Logger';
 import { SolarSystemApp } from './SolarSystemApp';
 import { LabelSpace } from '@/core/labelSpace';
 import { initLocale, onLocaleLoading, t } from './i18n';
+import { loadDeferredMessages } from './i18n/deferredMessages';
 import { bodyDisplayName } from './i18n/bodyText';
 import { initStaticI18n } from './i18n/dom';
 import { updateProgress, hideLoader, showError } from './ui/loader';
@@ -336,8 +337,10 @@ function wireChrome(): {
       if (cardBlocks !== 'idle' || !bodyInfo.currentBody()) return;
       if (performance.now() < cardBlocksRetryAt) return;
       cardBlocks = 'loading';
-      void import('./ui/cardBlocks')
-        .then((module) => {
+      // Leurs phrases arrivent avec eux (`i18n/deferredMessages`, lot 52) : rendre avant
+      // afficherait des clés brutes.
+      void Promise.all([import('./ui/cardBlocks'), loadDeferredMessages()])
+        .then(([module]) => {
           module.setupCardBlocks(api, bodyInfo);
           cardBlocks = 'ready';
         })

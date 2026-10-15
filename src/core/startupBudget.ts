@@ -467,6 +467,26 @@ export const NON_BOOT_CHUNKS: readonly BootDynamicChunk[] = [
       "le même texte de fiche en portugais du Brésil, chargé à la première ouverture d'une fiche quand l'interface est en portugais (`config/cardText.ts`).",
   },
   {
+    chunk: 'dict-card-en',
+    reason:
+      "les phrases des blocs hors démarrage (blocs de fiche, recherche typée, rideau avant/après), sorties du dictionnaire anglais statique au lot 52 (`i18n/deferredMessages.ts`) : elles n'arrivent qu'avec ces morceaux, que leurs chargeurs attendent avant de rendre. L'anglais vient toujours, repli de chaque phrase.",
+  },
+  {
+    chunk: 'dict-card-fr',
+    reason:
+      "les mêmes phrases en français, chargées avec l'anglais quand l'interface est en français (`i18n/deferredMessages.ts`).",
+  },
+  {
+    chunk: 'dict-card-es',
+    reason:
+      "les mêmes phrases en espagnol, chargées avec l'anglais quand l'interface est en espagnol (`i18n/deferredMessages.ts`).",
+  },
+  {
+    chunk: 'dict-card-pt-BR',
+    reason:
+      "les mêmes phrases en portugais du Brésil, chargées avec l'anglais quand l'interface est en portugais (`i18n/deferredMessages.ts`).",
+  },
+  {
     chunk: 'card-facts',
     reason:
       'la PROVENANCE des faits des fiches (source, méthode, citation, incertitude, détail, date, raison), sortie du démarrage au lot 52 (`config/cardFacts.ts`) : seule la fiche la lit, et elle arrive avec le texte de fiche à sa première ouverture. Le démarrage ne garde que les valeurs, que la scène lit.',

@@ -21,6 +21,7 @@ import { BOOT_QUALITY_PROFILE } from '@/config/engine';
 import { classifyTemporal, temporalCategoryLabelKey } from '@/core/temporal';
 import { formatIsoDay } from '@/core/dateText';
 import { getLocale, intlLocale, onLocaleChange, t } from '@/i18n';
+import { loadDeferredMessages } from '@/i18n/deferredMessages';
 import Logger from '@/utils/Logger';
 import { NOTICE_CHANGED } from './ephemerisNotice';
 import { SURFACE_CHOICES, type SurfaceChoiceId } from './surfaceChoices';
@@ -431,6 +432,8 @@ export function setupSurfacePanel(api: PublicAPI): () => void {
       import('@/config/surfaceTilesets'),
       import('@/config/surfaceHeights'),
       import('@/components/surface/compareCurtain'),
+      // Les libellés du rideau (`i18n/deferredMessages`, lot 52).
+      loadDeferredMessages(),
     ]);
     chooseTileset = createDatedChooser({
       date: () => api.orbitalMechanics.simulationDate,
