@@ -351,9 +351,10 @@ function distance(value: number, locale: Locale): string {
 
 /**
  * Une vitesse : en km/s au centième, ou en cm/s quand elle passe sous le mètre par seconde, où
- * « 0,00 km/s » se lirait comme un arrêt (Bennu : 6 cm/s, 67P : 16 cm/s).
+ * « 0,00 km/s » se lirait comme un arrêt (Bennu : 6 cm/s, 67P : 16 cm/s). Partagée avec
+ * `surfaceContactPages.ts`.
  */
-function speed(valueKmS: number, locale: Locale): string {
+export function speed(valueKmS: number, locale: Locale): string {
   const format = (value: number, digits: number) =>
     new Intl.NumberFormat(INTL_LOCALE[locale], {
       minimumFractionDigits: digits,

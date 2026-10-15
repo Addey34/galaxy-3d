@@ -588,8 +588,10 @@ describe('ce que la première vue coûte réellement', () => {
     // REx, New Horizons à Pluton et Hera à Didymos, 12 phases et 41 détails, 609 696 octets) ;
     // 64 454 400 avec Mars Express et ExoMars TGO (même jour, ligne 45.11 : deux fichiers au pas
     // d'un jour, leurs départs de la Terre, leurs phases autour de Mars au pas de 6 et 3 h et six
-    // détails, 6 090 192 octets).
-    expect(shipped).toBe(64_454_400);
+    // détails, 6 090 192 octets) ; 63 992 208 quand la fin de Cassini entre dans la scène (lot 49,
+    // 2026-10-15 : grille calée sur 10:46 TDB le 2017-09-15, et son segment autour de Saturne tient
+    // alors au pas de 12 h au lieu de 6 h, 462 192 octets de moins en tout).
+    expect(shipped).toBe(63_992_208);
     // 62 au lot 17, plus les 23 cibles de missions du 2026-10-04 et leurs deux satellites : une
     // requête par corps ; 90 avec les trois objets interstellaires (2026-10-08), couverts à
     // cette date ; 93 avec les trois sondes de l'ESA (2026-10-09), couvertes elles aussi.

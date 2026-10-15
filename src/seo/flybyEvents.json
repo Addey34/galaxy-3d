@@ -70,7 +70,7 @@
       "speedKmS": 11.79,
       "solution": "cassini_merge",
       "measuredFrom": "centre",
-      "retrieved": "2026-10-12"
+      "retrieved": "2026-10-15"
     },
     {
       "probe": "cassini",
@@ -80,7 +80,7 @@
       "speedKmS": 13.64,
       "solution": "cassini_merge",
       "measuredFrom": "centre",
-      "retrieved": "2026-10-12"
+      "retrieved": "2026-10-15"
     },
     {
       "probe": "cassini",
@@ -90,7 +90,7 @@
       "speedKmS": 19.03,
       "solution": "cassini_merge",
       "measuredFrom": "centre",
-      "retrieved": "2026-10-12"
+      "retrieved": "2026-10-15"
     },
     {
       "probe": "cassini",
@@ -100,7 +100,7 @@
       "speedKmS": 11.6,
       "solution": "cassini_merge",
       "measuredFrom": "centre",
-      "retrieved": "2026-10-12"
+      "retrieved": "2026-10-15"
     },
     {
       "probe": "rosetta",
@@ -575,13 +575,13 @@
     {
       "probe": "cassini",
       "body": "earth",
-      "planAt": "1997-10-17T00:14:00.000Z",
+      "planAt": "1997-10-17T11:00:00.000Z",
       "reason": "departure"
     },
     {
       "probe": "cassini",
       "body": "saturn",
-      "planAt": "2017-09-02T13:14:00.000Z",
+      "planAt": "2017-09-15T10:30:00.000Z",
       "reason": "phase"
     },
     {

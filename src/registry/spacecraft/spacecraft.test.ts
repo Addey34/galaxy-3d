@@ -48,8 +48,10 @@ describe('sondes du registre', () => {
       expect(entry).toBeDefined();
       expect(entry.center).toBe('sun');
       expect(String(record.identifiers.naif)).toBe(entry.target);
+      // À la seconde : la grille de Cassini est calée sur 10:46 TDB (sa dernière minute avant le
+      // niveau de 1 bar), dont le jour julien ne s'écrit pas exactement en binaire.
       const instant = (jd: number) =>
-        new Date((jd - 2440587.5) * 86400000)
+        new Date(Math.round((jd - 2440587.5) * 86400) * 1000)
           .toISOString()
           .replace('.000Z', 'Z');
       expect(record.coverage.temporal.interval).toEqual([

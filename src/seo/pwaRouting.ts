@@ -34,12 +34,16 @@ const FLYBYS_SEGMENT = 'flybys';
 /** Segment des mises en orbite (`/orbit-insertions/juno-jupiter-2016-07-05/`), `documentPage.ts::ORBIT_INSERTIONS_SLUG`. */
 const ORBIT_INSERTIONS_SEGMENT = 'orbit-insertions';
 
+/** Segment des contacts avec un corps (`/contacts/rosetta-churyumov-gerasimenko-2016-09-30/`), `documentPage.ts::CONTACTS_SLUG`. */
+const CONTACTS_SEGMENT = 'contacts';
+
 /** Les rubriques dont les pages vivent DEUX segments sous la racine, ou sous la langue. */
 const NESTED_SEGMENTS = [
   ECLIPSE_SEGMENT,
   MISSIONS_SEGMENT,
   FLYBYS_SEGMENT,
   ORBIT_INSERTIONS_SEGMENT,
+  CONTACTS_SEGMENT,
 ];
 
 /**

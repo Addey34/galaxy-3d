@@ -26,6 +26,7 @@
     "ephemeris:flybys": "node scripts/measure-flybys.mjs",
     "flybys:generate": "node scripts/generate-flyby-events.mjs",
     "orbits:generate": "node scripts/generate-orbit-insertions.mjs",
+    "contacts:generate": "node scripts/generate-surface-contacts.mjs",
     "ephemeris:oblateness": "node scripts/publish-oblateness.mjs",
     "facts:snapshot": "node scripts/snapshot-fact-sources.mjs",
     "smallbodies:generate": "node scripts/generate-small-body-dataset.mjs",

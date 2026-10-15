@@ -714,8 +714,11 @@ async function findImpulses(enc, samples, segment, centerId, dynamics) {
   const target = targets[enc.probe];
   const found = [];
   for (const group of groups) {
-    const fromJd = m.startJdTdb + (group[0] - 1) * m.stepDays;
-    const toJd = m.startJdTdb + (group.at(-1) + 2) * m.stepDays;
+    // Jamais au-delà du dernier échantillon du segment : il peut tomber au ras de la fin de la
+    // trajectoire servie (Cassini, plongée du 2017-09-15), et Horizons n'a rien après.
+    const fromJd = m.startJdTdb + Math.max(0, group[0] - 1) * m.stepDays;
+    const toJd =
+      m.startJdTdb + Math.min(group.at(-1) + 2, m.sampleCount - 1) * m.stepDays;
     const fine = await segmentStates(
       target.command,
       target.expect,

@@ -59,6 +59,7 @@ function generatedDocuments(): string[] {
       'missions',
       'flybys',
       'orbit-insertions',
+      'contacts',
     ])
       if (existsSync(join(DIST, prefix, name, 'index.html')))
         docs.push(prefix ? `${prefix}/${name}` : name);
@@ -97,6 +98,14 @@ const FLYBY_PAGES = DOCUMENTS.filter((d) => d.endsWith('flybys')).map(
  */
 const ORBIT_PAGES = DOCUMENTS.filter((d) => d.endsWith('orbit-insertions')).map(
   (index) => `${index}/rosetta-churyumov-gerasimenko-2014-09-10`
+);
+
+/**
+ * Une page de contact (lot 49, pas 3), la huitième famille : Cassini dans Saturne, la seule à
+ * porter les deux paragraphes du niveau de 1 bar, donc la plus longue à 390 px.
+ */
+const CONTACT_PAGES = DOCUMENTS.filter((d) => d.endsWith('contacts')).map(
+  (index) => `${index}/cassini-saturn-2017-09-15`
 );
 
 async function settleAnimations(page: Page): Promise<void> {
@@ -164,12 +173,14 @@ async function expectSeparatedLanguages(page: Page, path: string) {
 test.describe('pages générées, à 390 px', () => {
   test.use({ viewport: { width: 390, height: 844 } });
 
-  test('la dérivation trouve les cinq documents dans les quatre langues', () => {
+  test('la dérivation trouve les six documents dans les quatre langues', () => {
     // Un compte, pour qu'une langue perdue se voie ici plutôt que par l'absence d'un scénario.
-    expect(DOCUMENTS.length).toBe(20);
+    expect(DOCUMENTS.length).toBe(24);
     expect(MISSION_PAGES.length).toBe(4);
     expect(FLYBY_PAGES.length).toBe(4);
     expect(ORBIT_PAGES.length).toBe(4);
+    expect(CONTACT_PAGES.length).toBe(4);
+    expect(DOCUMENTS).toContain('pt-br/contacts');
     expect(DOCUMENTS).toContain('es/orbit-insertions');
     expect(DOCUMENTS).toContain('pt-br/flybys');
     expect(DOCUMENTS).toContain('methodology');
@@ -198,7 +209,12 @@ test.describe('pages générées, à 390 px', () => {
     await checkDocument(page, INSTRUMENT_PAGE);
   });
 
-  for (const path of [...MISSION_PAGES, ...FLYBY_PAGES, ...ORBIT_PAGES]) {
+  for (const path of [
+    ...MISSION_PAGES,
+    ...FLYBY_PAGES,
+    ...ORBIT_PAGES,
+    ...CONTACT_PAGES,
+  ]) {
     test(`/${path} se charge, passe axe et ne déborde pas`, async ({
       page,
     }) => {
@@ -242,6 +258,7 @@ test.describe('pages générées, à 390 px', () => {
       INSTRUMENT_PAGE,
       ...FLYBY_PAGES,
       ...ORBIT_PAGES,
+      ...CONTACT_PAGES,
     ])
       expect(
         builtHeading(path),

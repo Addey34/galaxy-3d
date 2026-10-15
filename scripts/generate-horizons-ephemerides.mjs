@@ -732,11 +732,16 @@ const BODIES = [
     target: '-82',
     expectedName: 'cassini',
     center: 'sun',
-    // Mission TERMINÉE : plongée finale dans Saturne le 15 septembre 2017, et la solution
-    // s'arrête là. Au-delà, `getHeliocentricAU` rend `null` et la couche saute la sonde —
-    // c'est le comportement voulu, une sonde détruite ne doit pas continuer de voler.
-    startTime: '1997-10-17',
-    stopTime: '2017-09-14',
+    // Mission TERMINÉE : plongée finale dans Saturne le 15 septembre 2017. Au-delà,
+    // `getHeliocentricAU` rend `null` et la couche saute la sonde, une sonde détruite ne doit
+    // pas continuer de voler. Ce fichier s'arrêtait au 2017-09-14 en affirmant que la solution
+    // s'arrêtait là : FAUX, lu le 2026-10-15, Horizons sert Cassini jusqu'au 2017-09-15
+    // 11:56:50 UT, et PROLONGE l'arc à travers Saturne (23 000 km du centre à 11:46). La
+    // grille est donc calée à l'heure (TDB) pour que son dernier échantillon tombe sur la
+    // dernière minute AVANT le niveau de 1 bar (10:45:32 UT, `pnpm contacts:generate`) : la
+    // plongée entre dans la scène, la traversée de la planète n'y entre pas.
+    startTime: '1997-10-17 10:46',
+    stopTime: '2017-09-15 10:46',
     stepDays: PROBE_EVENT_STEP_DAYS,
   },
   {
