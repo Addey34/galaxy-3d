@@ -4856,6 +4856,22 @@ ouverture, la fiche n'affiche aucune clé brute ; falsifié en retirant l'attent
 « bi.missions.countAtDate » à l'écran). Ce scénario passe par Jupiter et non par Mars : le panneau
 de surface d'un corps à tuiles charge aussi ces phrases, et le test n'aurait alors rien prouvé.
 
+### 3 sexies. La fiche elle-même RESTE au démarrage, et c'est une décision (lot 52, D)
+
+Le code de la fiche (`ui/bodyInfo.ts` 13 068 octets, `core/bodyFacts.ts` 3 027,
+`core/factQuantity.ts` 866, `ui/positionProvenance.ts` 692, mesurés dans le morceau d'entrée)
+pourrait se charger à la demande : ~17 650 octets. Ce n'est PAS fait, par décision de
+l'utilisateur du 2026-10-15, pour une raison mesurée : un visiteur qui arrive par une page de corps
+(`/jupiter/`, toutes les pages indexées) ouvre une fiche pendant le démarrage. Pour lui le gain est
+nul, la fiche arriverait un aller-retour réseau plus tard, et le budget compterait comme « hors
+démarrage » des octets qu'il paie. Il faudrait aussi un mandataire de la fiche pour la navigation,
+la boucle de rendu, la capture et les cinq blocs. Ce qui rouvrirait la question : une mesure
+montrant que la plupart des visites arrivent par l'accueil.
+
+Après les pistes A, B et C, la famille JavaScript est à **1 221 120 octets** pour un plafond de
+1 300 000, soit **78 880 octets de marge** (2 296 au matin du 2026-10-15), sans qu'aucun plafond
+ait bougé.
+
 ### 4. Le budget compte des groupes EXCLUSIFS
 
 Un visiteur charge **un** dictionnaire et **une** carte de texte. `BOOT_EXCLUSIVE_CHUNK_GROUPS`
