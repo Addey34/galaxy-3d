@@ -8,6 +8,7 @@ import {
   NAVIGATE_FALLBACK_DENYLIST,
 } from './src/seo/pwaRouting';
 import { stripGlslComments as stripGlslSource } from './src/build/glslComments';
+import { clientFactSnapshot as reduceFactSnapshot } from './src/build/clientFactSnapshot';
 import type { HeightManifestSummary } from './src/seo/sourcesPage';
 import {
   collectTranslations,
@@ -53,6 +54,28 @@ function stripGlslComments() {
         return null;
       const out = stripGlslSource(code, id);
       return out === null ? null : { code: out, map: null };
+    },
+  };
+}
+
+/**
+ * Le relevé des faits réduit, CÔTÉ CLIENT, aux seuls rayons que lit `config/bodyFigure.ts` (lot 52,
+ * piste B) : règle et gardes dans `src/build/clientFactSnapshot.ts`. Les tests et les pages
+ * générées passent par le rendu serveur, qui reçoit le fichier entier.
+ */
+function clientFactSnapshot() {
+  return {
+    name: 'client-fact-snapshot',
+    enforce: 'pre' as const,
+    transform(
+      code: string,
+      id: string,
+      options?: { ssr?: boolean }
+    ): string | null {
+      if (options?.ssr) return null;
+      if (!/[\\/]src[\\/]config[\\/]factSources[.]snapshot[.]json$/.test(id))
+        return null;
+      return JSON.stringify(reduceFactSnapshot(JSON.parse(code)));
     },
   };
 }
@@ -1178,6 +1201,7 @@ export default defineConfig({
   plugins: [
     stripGlslComments(),
     stripRegistryNotes(),
+    clientFactSnapshot(),
     deriveRegistryText(),
     stripProductionHtmlComments(),
     bodyLandingPages(),
