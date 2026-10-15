@@ -37,3 +37,14 @@ declare module 'virtual:registry-text/card-pt-BR' {
   const map: Record<string, string>;
   export default map;
 }
+// La PROVENANCE des faits, par corps puis par champ (lot 52) : chargée avec le texte de fiche
+// (`config/cardFacts.ts`). La forme est celle d'un fait de fiche privé de sa valeur.
+declare module 'virtual:registry-text/card-facts' {
+  const provenance: Record<
+    string,
+    Partial<
+      Record<import('@/types').FactField, import('@/registry/load').FactEntry>
+    >
+  >;
+  export default provenance;
+}

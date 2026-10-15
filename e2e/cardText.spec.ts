@@ -59,7 +59,7 @@ test('aucune carte de fiche ne part au démarrage, la première ouverture la dem
   page.on('request', (request) => {
     // Deux formes : le module virtuel servi par Vite en dev, le morceau haché du build.
     const match =
-      /(?:registry-text\/|\/assets\/)(card-(?:en|fr|es|pt-BR))(?=[-.]|$)/.exec(
+      /(?:registry-text\/|\/assets\/)(card-(?:en|fr|es|pt-BR|facts))(?=[-.]|$)/.exec(
         decodeURIComponent(request.url())
       );
     if (match) requested.push(match[1]!);
@@ -71,6 +71,15 @@ test('aucune carte de fiche ne part au démarrage, la première ouverture la dem
     .locator('#orbit-mars')
     .evaluate((el) => (el as HTMLElement).click());
   await expect(page.locator('#body-info .bi-desc')).not.toBeEmpty();
-  // L'anglais (repli de chaque bloc) et la langue active, rien d'autre.
-  expect([...new Set(requested)].sort()).toEqual(['card-en', 'card-fr']);
+  // La provenance des faits (lot 52) est reposée : la liste n'est plus occupée, et un fait
+  // porte son renvoi de source.
+  const stats = page.locator('#body-info .bi-stats');
+  await expect(stats).not.toHaveAttribute('aria-busy', 'true');
+  await expect(stats.locator('.bi-ref').first()).toBeVisible();
+  // L'anglais (repli de chaque bloc), la langue active et la provenance, rien d'autre.
+  expect([...new Set(requested)].sort()).toEqual([
+    'card-en',
+    'card-facts',
+    'card-fr',
+  ]);
 });

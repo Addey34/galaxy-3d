@@ -14,6 +14,7 @@
  * zéro bloc, et `loadCardText` le dit par son retour.
  */
 import { TEXT_ROOTS } from './catalogueText';
+import { loadCardFacts } from './cardFacts';
 import { hydrateDeferred, type CardTextLocale } from '@/core/registryText';
 import type { Locale } from '@/i18n/locales';
 
@@ -38,10 +39,13 @@ export function loadCardText(locale: Locale): Promise<number> {
   const known = pending.get(locale);
   if (known) return known;
   const run = (async () => {
+    // La provenance des faits D'ABORD : ses raisons sont des empreintes que la carte de texte
+    // reposera dans la foulée (`config/cardFacts.ts`).
+    const facts = await loadCardFacts();
     const english = (await LOADERS.en()).default;
     const translation =
       locale === 'en' ? null : (await LOADERS[locale]()).default;
-    let count = 0;
+    let count = facts;
     for (const root of TEXT_ROOTS)
       count += hydrateDeferred(root, english, translation, locale);
     return count;
