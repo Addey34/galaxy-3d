@@ -4824,6 +4824,19 @@ puis reposés égaux au chargement complet, falsifié en ne reposant plus les ra
 `e2e/cardText.spec.ts` (la provenance ne part qu'à la première ouverture, et un fait porte son
 renvoi de source).
 
+### 3 quater. Le relevé des faits ne part au navigateur que par ses rayons (lot 52, B)
+
+`config/bodyFigure.ts` est le seul module livré qui importe `factSources.snapshot.json`, et il
+n'y lit que `naifRotation.bodies[corps].radiiKm`. L'élagage de Vite s'arrête à la clé de premier
+niveau : la section `naifRotation` partait entière (11 342 octets) pour 1 047 octets de rayons. Le
+greffon `clientFactSnapshot` de `vite.config.ts` réduit donc, côté client seulement, le relevé à
+ces rayons (`src/build/clientFactSnapshot.ts`) ; tests et pages générées lisent le fichier
+entier. Résultat mesuré : `SolarSystemApp` **536 242 → 526 230 octets**, marge **55 642 → 65 654**,
+documents générés identiques. Gardes : `src/build/clientFactSnapshot.test.ts`, chaque corps garde
+exactement ses rayons (falsifié en oubliant Saturne : rouge) et aucun autre module livré
+n'importe le relevé, sans quoi il recevrait un objet amputé (falsifié par un second lecteur :
+rouge).
+
 ### 4. Le budget compte des groupes EXCLUSIFS
 
 Un visiteur charge **un** dictionnaire et **une** carte de texte. `BOOT_EXCLUSIVE_CHUNK_GROUPS`
