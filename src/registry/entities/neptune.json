@@ -79,6 +79,31 @@
       "method": "measured",
       "detail": "temperature1Bar"
     },
+    "temperature1BarK": {
+      "value": 72,
+      "source": "nssdca-fact-sheets",
+      "method": "measured"
+    },
+    "temperature01BarK": {
+      "value": 55,
+      "source": "nssdca-fact-sheets",
+      "method": "measured"
+    },
+    "density1BarKgM3": {
+      "value": 0.45,
+      "source": "nssdca-fact-sheets",
+      "method": "measured"
+    },
+    "scaleHeightKm": {
+      "value": [19.1, 20.3],
+      "source": "nssdca-fact-sheets",
+      "method": "measured"
+    },
+    "meanMolecularWeight": {
+      "value": [2.53, 2.69],
+      "source": "nssdca-fact-sheets",
+      "method": "measured"
+    },
     "moonCount": {
       "value": 16,
       "source": "nasa-science-neptune-moons",

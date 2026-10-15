@@ -147,6 +147,12 @@ function factValue(entry: FactEntry, locale: Locale): string | null {
   const value = entry.value;
   if (value.kind === 'date') return longDay(value.iso, locale);
   if (value.kind === 'name') return value.text;
+  // Un intervalle n'existe que pour l'atmosphère d'une géante (lot 51), jamais pour un objet
+  // d'instrument : échouer plutôt que publier une forme que ce module n'a jamais relue.
+  if (value.kind === 'range')
+    throw new Error(
+      `intervalle inattendu sur un objet d'instrument : ${entry.field}`
+    );
   const v = value.value;
   const au = messages[locale]['unit.au'];
   let text: string;

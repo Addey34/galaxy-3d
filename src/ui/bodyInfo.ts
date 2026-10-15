@@ -30,6 +30,7 @@ import {
   citationOrder,
   displayedAbsoluteUncertainty,
   displayedUncertainty,
+  oneBarTemperatureGap,
   SCIENTIFIC_MASS_KG,
   type FactEntry,
   type FactValue,
@@ -289,6 +290,11 @@ export interface Stat {
   sourceIndex?: number;
   /** Date de validité mise en forme, pour un fait qui évolue (« août 2026 »). */
   asOf?: string;
+  /**
+   * Remarque LISIBLE à côté de la valeur (lot 51) : deux documents d'une même source qui
+   * divergent se montrent côte à côte, la fiche ne tranche pas en silence.
+   */
+  remark?: string;
   /** Méthode, précision et source, lisibles en infobulle et par un lecteur d'écran. */
   provenance?: string;
 }
@@ -338,7 +344,35 @@ function formatFact(name: string, field: FactField, value: FactValue): string {
   // Un nom se montre tel que la source l'écrit, dans les deux langues : le traduire, ce serait
   // publier une chaîne que la garde de `factProvenance.test.ts` ne peut plus confronter.
   if (value.kind === 'name') return value.text;
+  if (value.kind === 'range')
+    return formatRangeFact(field, value.min, value.max);
   return formatNumericFact(name, field, value.value);
+}
+
+/** Un kelvin publié, suivi de sa conversion dans l'unité choisie (« 165 K (-108 °C) »). */
+function formatKelvin(kelvin: number): string {
+  const temp = convertTemperatureC(kelvin - 273.15);
+  // Insécables entre un nombre et son unité : la coupure ne tombe qu'avant la conversion.
+  return `${num(kelvin)}\u00a0K (${num(temp.value)}\u00a0${temp.unit})`;
+}
+
+/**
+ * Un INTERVALLE publié comme tel (lot 51) : « 19,1 à 20,3 km ». Seuls les deux champs dont une
+ * source écrit un intervalle l'acceptent ; tout autre champ échoue bruyamment plutôt que de
+ * publier une forme que personne n'a relue.
+ */
+function formatRangeFact(field: FactField, min: number, max: number): string {
+  switch (field) {
+    case 'scaleHeightKm': {
+      const a = convertDistanceKm(min);
+      const b = convertDistanceKm(max);
+      return `${t('stat.range', { min: num(a.value, 1), max: num(b.value, 1) })} ${a.unit}`;
+    }
+    case 'meanMolecularWeight':
+      return `${t('stat.range', { min: num(min, 2), max: num(max, 2) })} g/mol`;
+    default:
+      throw new Error(`intervalle inattendu pour ${field}`);
+  }
 }
 
 function formatNumericFact(
@@ -390,6 +424,17 @@ function formatNumericFact(
     case 'absoluteMagnitude':
       // Deux décimales, celles que la SBDB publie ; l'incertitude suit en valeur absolue.
       return num(value, 2);
+    case 'temperature1BarK':
+    case 'temperature01BarK':
+      return formatKelvin(value);
+    case 'density1BarKgM3':
+      return `${num(value, 2)} kg/m³`;
+    case 'scaleHeightKm': {
+      const height = convertDistanceKm(value);
+      return `${num(height.value, 1)} ${height.unit}`;
+    }
+    case 'meanMolecularWeight':
+      return `${num(value, 2)} g/mol`;
     case 'launchDate':
     case 'firstObservation':
     case 'launchVehicle':
@@ -441,6 +486,16 @@ function factLabel(
       return t('stat.launchSite');
     case 'absoluteMagnitude':
       return t('stat.absoluteMagnitude');
+    case 'temperature1BarK':
+      return t('stat.temperature1Bar');
+    case 'temperature01BarK':
+      return t('stat.temperature01Bar');
+    case 'density1BarKgM3':
+      return t('stat.density1Bar');
+    case 'scaleHeightKm':
+      return t('stat.scaleHeight');
+    case 'meanMolecularWeight':
+      return t('stat.meanMolecularWeight');
   }
 }
 
@@ -455,6 +510,11 @@ export const CARD_FACT_ORDER: readonly FactField[] = [
   'massKg',
   'gravity',
   'meanTempC',
+  'temperature1BarK',
+  'temperature01BarK',
+  'density1BarKgM3',
+  'scaleHeightKm',
+  'meanMolecularWeight',
   'rotationPeriod',
   'orbitPeriodDays',
   'moonCount',
@@ -517,6 +577,7 @@ export function bodyStats(name: string, cfg: CelestialBodyConfig): Stat[] {
               `${formatted} (±\u00a0${num(uncertainty * 100)}\u00a0%)`,
       sourceIndex: citations.get(provenance.source),
       ...(provenance.asOf ? { asOf: formatAsOf(provenance.asOf) } : {}),
+      ...remarkFor(cfg, entry),
       provenance: [
         t(`fact.method.${provenance.method}`),
         provenance.detail ? localizedOrKey(provenance.detail) : undefined,
@@ -528,6 +589,23 @@ export function bodyStats(name: string, cfg: CelestialBodyConfig): Stat[] {
     });
   }
   return stats;
+}
+
+/** L'écart des deux températures à 1 bar du NSSDCA, dit sur la ligne de la fiche. */
+function remarkFor(
+  cfg: CelestialBodyConfig,
+  entry: FactEntry
+): { remark?: string } {
+  if (entry.field !== 'temperature1BarK') return {};
+  const gap = oneBarTemperatureGap(cfg);
+  if (!gap) return {};
+  const temp = convertTemperatureC(gap.tableC);
+  return {
+    remark: t('stat.temperature1BarGap', {
+      value: `${num(temp.value)} ${temp.unit}`,
+      gap: num(gap.gapK, 2),
+    }),
+  };
 }
 
 export interface SourceItem {
@@ -848,6 +926,14 @@ export function setupBodyInfo(coordinator?: OverlayCoordinator): BodyInfoPanel {
         }
       }
       statsEl.append(dt, dd);
+      if (stat.remark) {
+        // Un second `<dd>` pour le même terme, sur toute la largeur de la grille : dans la
+        // colonne des valeurs, la note s'empilait sur six lignes à 390 px.
+        const remark = document.createElement('dd');
+        remark.className = 'bi-remark';
+        remark.textContent = `(${stat.remark})`;
+        statsEl.append(remark);
+      }
     }
 
     // Sources citées : repliées par défaut pour garder la fiche compacte, toujours présentes.

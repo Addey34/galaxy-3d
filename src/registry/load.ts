@@ -298,6 +298,11 @@ const CATALOGUE_VALUE_FIELD: Partial<Record<FactField, string>> = {
   axialTilt: 'axialTilt',
   distanceAU: 'distanceAU',
   orbitPeriodDays: 'orbitPeriodDays',
+  temperature1BarK: 'temperature1BarK',
+  temperature01BarK: 'temperature01BarK',
+  density1BarKgM3: 'density1BarKgM3',
+  scaleHeightKm: 'scaleHeightKm',
+  meanMolecularWeight: 'meanMolecularWeight',
 };
 
 /**

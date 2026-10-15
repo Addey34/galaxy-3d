@@ -3,6 +3,7 @@ import { CELESTIAL_CONFIG } from '@/config/bodies';
 import { flattenBodies } from '@/config/catalog';
 import { NAVIGABLE_TARGETS } from '@/config/navigable';
 import { setLocale } from '@/i18n';
+import { bodyFacts as pageFacts } from '@/seo/bodyLandingPage';
 import { bodySources, bodyStats, formatPositionProvenance } from './bodyInfo';
 
 /**
@@ -316,5 +317,91 @@ describe('fiche d’information : faits nommés et magnitude', () => {
     const atlas = statOf('atlas', 'Magnitude absolue');
     expect(atlas?.note).toMatch(/M1/);
     expect(atlas?.sourceIndex).toBeUndefined();
+  });
+});
+
+/**
+ * L'ATMOSPHÈRE DES GÉANTES (lot 51) : les points que publie la fiche du NSSDCA, les mêmes pour
+ * les quatre, et sur aucun autre corps. Valeurs confrontées au relevé par
+ * `src/config/factProvenance.test.ts` ; ici, ce que la fiche en ÉCRIT.
+ */
+describe('fiche d’information — atmosphère des géantes (lot 51)', () => {
+  beforeAll(async () => {
+    vi.stubGlobal('document', { documentElement: {} });
+    await setLocale('en');
+    await setLocale('fr');
+  });
+
+  const GIANTS = ['jupiter', 'saturn', 'uranus', 'neptune'];
+  const ATMOSPHERE = [
+    'Température à 1 bar',
+    'Température à 0,1 bar',
+    'Masse volumique à 1 bar',
+    'Hauteur d’échelle',
+    'Masse molaire moyenne',
+  ];
+  const row = (name: string, label: string) =>
+    bodyStats(name, CONFIGS.get(name)!).find((s) => s.label === label);
+
+  it('donne la même liste aux quatre géantes, et à aucun autre corps', () => {
+    for (const giant of GIANTS) {
+      const labels = bodyStats(giant, CONFIGS.get(giant)!).map((s) => s.label);
+      for (const label of ATMOSPHERE)
+        expect(labels, `${giant} : ${label}`).toContain(label);
+    }
+    for (const [name, cfg] of CONFIGS) {
+      if (GIANTS.includes(name)) continue;
+      const labels = bodyStats(name, cfg).map((s) => s.label);
+      for (const label of ATMOSPHERE)
+        expect(labels, `${name} : ${label}`).not.toContain(label);
+    }
+  });
+
+  it('écrit le kelvin publié, suivi de sa conversion', () => {
+    expect(row('jupiter', 'Température à 1 bar')?.value).toMatch(
+      /^165\u00a0K \([-−]108\u00a0°C\)$/
+    );
+    expect(row('uranus', 'Température à 0,1 bar')?.value).toMatch(
+      /^53\u00a0K \([-−]220\u00a0°C\)$/
+    );
+    expect(row('saturn', 'Masse volumique à 1 bar')?.value).toBe('0,19 kg/m³');
+  });
+
+  it('garde un intervalle publié comme un intervalle, jamais réduit à son milieu', () => {
+    expect(row('neptune', 'Hauteur d’échelle')?.value).toBe('19,1 à 20,3 km');
+    expect(row('neptune', 'Masse molaire moyenne')?.value).toBe(
+      '2,53 à 2,69 g/mol'
+    );
+    expect(row('jupiter', 'Hauteur d’échelle')?.value).toBe('27 km');
+  });
+
+  it('dit l’écart des deux températures à 1 bar du NSSDCA, sur les quatre', () => {
+    expect(row('jupiter', 'Température à 1 bar')?.remark).toMatch(
+      /^la table principale du même catalogue donne [-−]110 °C, à 1,85 K d’écart$/
+    );
+    for (const giant of GIANTS)
+      expect(row(giant, 'Température à 1 bar')?.remark, giant).toBeDefined();
+    // La ligne de la table principale reste, avec son libellé exact.
+    expect(row('jupiter', 'Température moyenne à 1 bar')?.value).toMatch(
+      /^[-−]110 °C$/
+    );
+  });
+
+  it('écrit ces lignes comme la page publique du corps, mot pour mot', () => {
+    // Deux surfaces publient les mêmes grandeurs (`core/bodyFacts.ts`) : la page écrivait
+    // « 27,0 km » quand la fiche et la source disent « 27 km ».
+    const same = (text: string) =>
+      text.replace(/\u2212/g, '-').replace(/\u202f/g, ' ');
+    for (const giant of GIANTS) {
+      const page = pageFacts(CONFIGS.get(giant)!, undefined, 'fr');
+      for (const label of ATMOSPHERE) {
+        const card = row(giant, label)!;
+        const published = page.find((f) => f.label === label);
+        expect(published, `${giant} : ${label}`).toBeDefined();
+        expect(same(published!.value), `${giant} : ${label}`).toBe(
+          same(card.remark ? `${card.value} (${card.remark})` : card.value)
+        );
+      }
+    }
   });
 });

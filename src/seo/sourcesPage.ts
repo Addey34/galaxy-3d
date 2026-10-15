@@ -464,6 +464,36 @@ function sourcesPage(input: SourcesInput, locale: DocLocale): DocPage {
   // (`core/bodyFacts.ts`) : ce qui s'affiche, ce qui est dérivé, ce qui attend encore sa source.
   const FACT_FIELDS: FactField[] = [...ALL_FACT_FIELDS];
   const FIELD_LABELS: Record<FactField, DocText> = {
+    temperature1BarK: {
+      en: 'temperature at 1 bar',
+      fr: 'température à 1 bar',
+      es: 'temperatura a 1 bar',
+      'pt-BR': 'temperatura a 1 bar',
+    },
+    temperature01BarK: {
+      en: 'temperature at 0.1 bar',
+      fr: 'température à 0,1 bar',
+      es: 'temperatura a 0,1 bar',
+      'pt-BR': 'temperatura a 0,1 bar',
+    },
+    density1BarKgM3: {
+      en: 'density at 1 bar',
+      fr: 'masse volumique à 1 bar',
+      es: 'densidad a 1 bar',
+      'pt-BR': 'densidade a 1 bar',
+    },
+    scaleHeightKm: {
+      en: 'scale height',
+      fr: 'hauteur d’échelle',
+      es: 'altura de escala',
+      'pt-BR': 'altura de escala',
+    },
+    meanMolecularWeight: {
+      en: 'mean molecular weight',
+      fr: 'masse molaire moyenne',
+      es: 'masa molecular media',
+      'pt-BR': 'massa molecular média',
+    },
     radiusKm: { en: 'radius', fr: 'rayon', es: 'radio', 'pt-BR': 'raio' },
     massKg: { en: 'mass', fr: 'masse', es: 'masa', 'pt-BR': 'massa' },
     gravity: {

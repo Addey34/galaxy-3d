@@ -292,6 +292,19 @@ export interface RealData {
   meanTempC?: number;
   /** Nombre de satellites naturels connus. */
   moonCount?: number;
+  // ── Atmosphère d'une géante (lot 51) : les POINTS que publie la fiche du NSSDCA. ──────────
+  // Un intervalle publié (« 19.1 - 20.3 km », Neptune) reste un intervalle `[min, max]` : son
+  // milieu serait un nombre que la source n'écrit pas.
+  /** Température au niveau de pression de 1 bar, en kelvins (« Temperature at 1 bar »). */
+  temperature1BarK?: number;
+  /** Température au niveau de pression de 0,1 bar, en kelvins. */
+  temperature01BarK?: number;
+  /** Masse volumique au niveau de 1 bar, en kg/m³. */
+  density1BarKgM3?: number;
+  /** Hauteur d'échelle, en km. */
+  scaleHeightKm?: number | readonly [number, number];
+  /** Masse molaire moyenne, en g/mol (« Mean molecular weight »). */
+  meanMolecularWeight?: number | readonly [number, number];
   // ── Objets de la couche instrument (`config/navigable.ts`) ────────────────────────────────
   // Ces champs ne décrivent AUCUN corps du catalogue : une planète n'a pas de date de
   // lancement, et l'excentricité d'une orbite fermée n'est pas une grandeur que Galaxy publie.
@@ -399,7 +412,12 @@ export type FactField =
   | 'perihelionAU'
   | 'launchVehicle'
   | 'launchSite'
-  | 'absoluteMagnitude';
+  | 'absoluteMagnitude'
+  | 'temperature1BarK'
+  | 'temperature01BarK'
+  | 'density1BarKgM3'
+  | 'scaleHeightKm'
+  | 'meanMolecularWeight';
 
 /** Champs documentaires qui peuvent n'avoir aucune valeur affichée (cf. `RealData.unknown`). */
 export type UnknownableField = FactField;
