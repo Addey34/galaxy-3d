@@ -614,6 +614,8 @@ export const en = {
   'stat.orbit': 'Orbit',
   'stat.knownMoons': 'Known moons',
   'stat.axialTilt': 'Axial tilt',
+  'stat.radius1Bar': 'Equatorial radius at 1 bar',
+  'stat.gravity1Bar': 'Gravity at 1 bar',
   'stat.temperature1Bar': 'Temperature at 1 bar',
   'stat.temperature01Bar': 'Temperature at 0.1 bar',
   'stat.density1Bar': 'Density at 1 bar',

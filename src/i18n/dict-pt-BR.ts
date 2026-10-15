@@ -586,6 +586,8 @@ export const ptBR: Record<MessageKey, string> = {
   'stat.orbit': 'Órbita',
   'stat.knownMoons': 'Luas conhecidas',
   'stat.axialTilt': 'Inclinação axial',
+  'stat.radius1Bar': 'Raio equatorial a 1 bar',
+  'stat.gravity1Bar': 'Gravidade a 1 bar',
   'stat.temperature1Bar': 'Temperatura a 1 bar',
   'stat.temperature01Bar': 'Temperatura a 0,1 bar',
   'stat.density1Bar': 'Densidade a 1 bar',

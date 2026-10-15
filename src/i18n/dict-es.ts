@@ -592,6 +592,8 @@ export const es: Record<MessageKey, string> = {
   'stat.orbit': 'Órbita',
   'stat.knownMoons': 'Lunas conocidas',
   'stat.axialTilt': 'Inclinación axial',
+  'stat.radius1Bar': 'Radio ecuatorial a 1 bar',
+  'stat.gravity1Bar': 'Gravedad a 1 bar',
   'stat.temperature1Bar': 'Temperatura a 1 bar',
   'stat.temperature01Bar': 'Temperatura a 0,1 bar',
   'stat.density1Bar': 'Densidad a 1 bar',

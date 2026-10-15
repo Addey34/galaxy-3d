@@ -49,7 +49,12 @@ import {
   type MeasuredWindow,
   type PositionSource,
 } from '@/core/positionProvenance';
-import { rotationLabelKey, temperatureLabelKey } from '@/core/factQuantity';
+import {
+  gravityLabelKey,
+  radiusLabelKey,
+  rotationLabelKey,
+  temperatureLabelKey,
+} from '@/core/factQuantity';
 import {
   DAY_MS,
   temporalCategoryLabelKey,
@@ -452,7 +457,7 @@ function factLabel(
   const parent = PARENT_OF.get(name) ?? null;
   switch (field) {
     case 'radiusKm':
-      return t('stat.radius');
+      return t(radiusLabelKey(provenance));
     case 'distanceAU':
       // L'ancien libellé disait « Distance (Terre) » pour toutes les lunes, faux sauf pour la Lune.
       return parent
@@ -461,7 +466,7 @@ function factLabel(
     case 'massKg':
       return t('stat.mass');
     case 'gravity':
-      return t('stat.gravity');
+      return t(gravityLabelKey(provenance));
     case 'meanTempC':
       return t(temperatureLabelKey(provenance));
     case 'rotationPeriod':

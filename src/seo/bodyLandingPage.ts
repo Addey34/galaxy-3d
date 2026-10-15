@@ -40,7 +40,12 @@ import {
   oneBarTemperatureGap,
 } from '@/core/bodyFacts';
 import { factSource } from '@/config/factSources';
-import { rotationLabelKey, temperatureLabelKey } from '@/core/factQuantity';
+import {
+  gravityLabelKey,
+  radiusLabelKey,
+  rotationLabelKey,
+  temperatureLabelKey,
+} from '@/core/factQuantity';
 import { KM_PER_AU } from '@/core/ScaleService';
 import { distanceDecimals } from '@/core/units';
 import { CARD_HEIGHT, CARD_WIDTH } from './socialCard';
@@ -576,7 +581,11 @@ export function bodyFactsWithSources(
       case 'radiusKm':
         // Décimales selon l'ordre de grandeur, même règle que la fiche de l'application. Sans
         // elle Bennu, 242 mètres de rayon, annonçait « 0 km » sur sa page ET sur sa vignette.
-        label = factLabel('radius', locale);
+        // La sphère d'une géante est le niveau de 1 bar (`core/factQuantity.ts`), comme sur la fiche.
+        label =
+          radiusLabelKey(entry.provenance) === 'stat.radius1Bar'
+            ? dict['stat.radius1Bar']
+            : factLabel('radius', locale);
         value = `${formatNumber(v, distanceDecimals(v), locale)} km`;
         break;
       case 'massKg':
@@ -584,7 +593,11 @@ export function bodyFactsWithSources(
         value = formatMass(v, locale);
         break;
       case 'gravity':
-        label = factLabel('gravity', locale);
+        // « Gravité de surface » ne vaut pas pour une géante, qui n'a pas de sol.
+        label =
+          gravityLabelKey(entry.provenance) === 'stat.gravity1Bar'
+            ? dict['stat.gravity1Bar']
+            : factLabel('gravity', locale);
         value = `${formatNumber(v, v < 0.1 ? 4 : 2, locale)} m/s²`;
         break;
       case 'meanTempC':
