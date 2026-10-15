@@ -1,0 +1,52 @@
+{
+  "$schema": "../../schema/product.schema.json",
+  "id": "earth-eox-s2cloudless-2016",
+  "type": "tileset",
+  "body": "earth",
+  "title": "EOxCloudless Sentinel-2 cloudless 2016 (s2cloudless)",
+  "providerId": "eox-cloudless",
+  "variant": "sentinel-2",
+  "edition": 2016,
+  "mission": "Copernicus Sentinel-2",
+  "instrument": "MSI",
+  "service": {
+    "template": "https://tiles.maps.eox.at/wmts/1.0.0/s2cloudless/default/{TileMatrixSet}/{TileMatrix}/{TileRow}/{TileCol}.jpg",
+    "style": "default",
+    "tileMatrixSet": "WGS84",
+    "format": "image/jpeg",
+    "matrix": {
+      "columnsAtLevelZero": 2,
+      "rowsAtLevelZero": 1,
+      "tileSizePx": 256
+    },
+    "minLevel": 5,
+    "maxLevel": 13
+  },
+  "publishedPixelsPerDegree": 11132,
+  "acquired": {
+    "interval": [["2016-01-01T00:00:00Z", "2017-12-31T23:59:59Z"]]
+  },
+  "license": "CC-BY-4.0",
+  "links": [
+    {
+      "rel": "license",
+      "href": "https://cloudless.eox.at/license-non-commercial"
+    },
+    {
+      "rel": "describedby",
+      "href": "https://tiles.maps.eox.at/wmts/1.0.0/WMTSCapabilities.xml"
+    },
+    {
+      "rel": "via",
+      "href": "https://cloudless.eox.at/documentation/product-list"
+    }
+  ],
+  "providers": [
+    {
+      "name": "EOxCloudless https://cloudless.eox.at by EOX IT Services GmbH (Contains modified Copernicus Sentinel data 2016 & 2017)",
+      "roles": ["producer", "licensor", "host"],
+      "url": "https://cloudless.eox.at/"
+    }
+  ],
+  "verified": "2026-10-15"
+}

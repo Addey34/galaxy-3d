@@ -1074,7 +1074,12 @@ test('paints Sentinel-2 on the Trek grid, with the relief baked on that grid', a
     });
   });
 
-  await boot(page, '?debug-surface&mode=explo&body=earth');
+  // DATÉ (lot 50) : le fond Sentinel-2 montre l'édition de l'année de la scène, donc un
+  // démarrage à la date du jour changerait d'édition, et d'attribution, chaque 1er janvier.
+  await boot(
+    page,
+    '?debug-surface&mode=explo&body=earth&date=2024-07-01T12:00:00Z'
+  );
   await expect(page.locator('#surface-probe')).toContainText('earth', {
     timeout: 30_000,
   });
@@ -1134,6 +1139,71 @@ test('paints Sentinel-2 on the Trek grid, with the relief baked on that grid', a
  * nocturnes (Black Marble 2016). Chacun est une mosaïque statique de GIBS, sur la grille de Blue
  * Marble ; le scénario tient qu'un choix fait demander SA couche, et rien de la couche du jour.
  */
+/**
+ * LES ÉDITIONS ANNUELLES (lot 50) : le fond Sentinel-2 montre la mosaïque de l'ANNÉE de la scène,
+ * et changer d'année change d'édition ET d'attribution exigée. Le témoin réel est le réservoir de
+ * Kakhovka, en eau sur l'édition 2022 et à sec sur celle de 2023 (mesuré chez EOX) ; ici on tient
+ * ce que l'application en demande et ce qu'elle affiche.
+ */
+test('follows the scene’s year from one Sentinel-2 edition to the next', async ({
+  page,
+}) => {
+  test.setTimeout(180_000);
+  const errors: string[] = [];
+  page.on('pageerror', (err) => errors.push(err.message));
+  const eox: string[] = [];
+  await page.route('**tiles.maps.eox.at/**', (route) => {
+    eox.push(route.request().url());
+    return route.fulfill({
+      status: 200,
+      contentType: 'image/jpeg',
+      headers: { 'access-control-allow-origin': '*' },
+      body: TILE_JPEG,
+    });
+  });
+
+  await boot(
+    page,
+    '?debug-surface&mode=explo&body=earth&date=2022-07-01T12:00:00Z'
+  );
+  await expect(page.locator('#surface-probe')).toContainText('earth', {
+    timeout: 30_000,
+  });
+  await chooseEarthBase(page, 'sentinel-2');
+  await zoomIn(page);
+  const credit = page.locator('#surface-imagery .si-credit');
+  await expect(credit).toHaveText(
+    'EOxCloudless https://cloudless.eox.at by EOX IT Services GmbH (Contains modified Copernicus Sentinel data 2022)',
+    { timeout: 30_000 }
+  );
+  expect(eox.length, 'aucune tuile EOX demandée').toBeGreaterThan(0);
+  for (const url of eox) expect(url).toContain('/s2cloudless-2022/');
+
+  const before = eox.length;
+  const input = page.locator('#date-input');
+  await input.fill('2023-07-01');
+  await input.dispatchEvent('change');
+  await expect(credit).toHaveText(
+    'EOxCloudless https://cloudless.eox.at by EOX IT Services GmbH (Contains modified Copernicus Sentinel data 2023)',
+    { timeout: 30_000 }
+  );
+  // Des tuiles de 2022 peuvent encore partir juste après le saut : la date n'est relue qu'à sa
+  // cadence (`DATED_RECHECK_MS`) et l'ancienne génération reste peinte jusqu'à la relève. Une
+  // fois l'attribution de 2023 à l'écran, en revanche, plus rien ne se demande à 2022.
+  expect(
+    eox.slice(before).some((url) => url.includes('/s2cloudless-2023/')),
+    'aucune tuile 2023 demandée'
+  ).toBe(true);
+  const settled = eox.length;
+  await zoomIn(page);
+  await expect
+    .poll(() => eox.length, { timeout: 30_000 })
+    .toBeGreaterThan(settled);
+  for (const url of eox.slice(settled))
+    expect(url).toContain('/s2cloudless-2023/');
+  expect(errors, `Erreurs page : ${errors.join(' | ')}`).toEqual([]);
+});
+
 test.describe('the Earth’s alternate grounds', () => {
   for (const [choice, layer, extension] of [
     [

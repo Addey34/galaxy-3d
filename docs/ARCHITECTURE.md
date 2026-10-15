@@ -2394,6 +2394,36 @@ dans le catalogue du démarrage (plugin `deriveRegistryText`) : seule `/sources`
 Mesuré : 2,7 Ko par langue rendus au démarrage, dont 968 o pour le seul fournisseur EOX ; le build
 casse si un module client venait à importer l'une de ces fiches.
 
+### Les éditions annuelles de Sentinel-2 : la Terre de l'année de la scène (lot 50, 2026-10-15)
+
+**SUPERSEDED en partie, le 2026-10-15** : le fond « Sentinel-2 » n'est plus la seule édition 2024
+décrite ci-dessus. EOX publie une mosaïque par ANNÉE, chacune sa couche WMTS (`s2cloudless` pour
+2016, puis `s2cloudless-AAAA`), et le fond montre désormais l'édition de l'année de la scène :
+la dernière dont l'année est au plus celle de la scène, la première avant elle
+(`config/surfaceTilesets.ts::editionFor`). Le bandeau dit l'intervalle des données de l'édition
+et son attribution exacte ; la date se relit à la cadence des couches datées, et une même année
+rend le même objet, donc le moteur ne change de génération qu'au changement d'année.
+
+- **Une fiche par édition, écrite par `pnpm surface:editions`** (`scripts/generate-eox-editions.mjs`),
+  jamais à la main. Le champ `edition` du schéma distingue les fiches d'une même variante. Le
+  script lit DEUX documents d'EOX et les croise : les capacités WMTS (couches servies, gabarit,
+  grille) et la page de licence, qui FAIT FOI parce qu'elle dit ce qu'on doit afficher.
+- **La licence change selon l'année** : 2016 en CC BY 4.0, 2018 à 2025 en CC BY-NC-SA 4.0, chaque
+  édition avec SA propre attribution (« data 2017 & 2018 » pour 2018, par exemple).
+- **Deux désaccords mesurés entre les deux documents**, écrits dans `src/config/eoxEditions.json`
+  et non tranchés en silence : la couche 2017 est servie (CC BY 4.0 selon ses capacités) mais la
+  page de licence ne la nomme pas, donc elle est ÉCARTÉE ; et l'attribution de 2016 dit « data 2016
+  & 2017 » sur la page, « data 2016 » dans les capacités (la page fait foi).
+- **Le témoin de changement est le réservoir de Kakhovka**, vidé en juin 2023 : la même tuile
+  (niveau 9, ligne 121, colonne 609) montre l'eau de 2016 à 2022 et le lit à nu de 2023 à 2025. Les
+  éditions ne sont donc pas une même image recopiée. Mesuré sur les tuiles brutes d'EOX ; toutes
+  les années répondent aux niveaux 0, 5, 13 et 14 avec `Access-Control-Allow-Origin: *`.
+- Gardes : `config/surfaceTilesets.test.ts` (une fiche par édition nommée, attribution, choix par
+  année, phrases publiées confrontées au relevé, chacune falsifiée) et `e2e/surfaceImagery.spec.ts`
+  (« follows the scene's year… », falsifié : un choix figé sur la dernière édition affiche l'attribution
+  de 2025 en 2022). Vérifié contre le vrai service le 2026-10-15 : tuiles de 2022 puis de 2023
+  peintes, bandeau et attribution de chaque année.
+
 ## Relief mesuré — des hauteurs cuites hors ligne, jamais devinées
 
 Depuis le 2026-09-21 (lot 9, phase 9D), un corps peut déclarer un JEU DE HAUTEURS

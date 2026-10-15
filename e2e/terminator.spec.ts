@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import { waitForCalmMainThread } from './mainThread';
 import { mockOpenMeteo } from './openMeteoMock';
 
 /**
@@ -87,6 +88,7 @@ test('the twilight band leaves no dark gap along the terminator', async ({
     `/?debug-terminator&body=earth&date=${encodeURIComponent(DATE)}`
   );
   await expect(page.locator('#loader')).toBeHidden({ timeout: 40_000 });
+  await waitForCalmMainThread(page);
   await page.waitForTimeout(2500);
 
   const bins = await measure(page);
@@ -122,6 +124,10 @@ test('a model weather layer keeps its layer’s twilight, not its own', async ({
     `/?debug-terminator&debug-meteo&body=earth&date=${encodeURIComponent(DATE)}`
   );
   await expect(page.locator('#loader')).toBeHidden({ timeout: 40_000 });
+  // Le chargeur masqué ne veut pas dire « la page répond » (`e2e/mainThread.ts`) : sans cette
+  // attente, la lecture du panneau de diagnostic a dépassé ses 15 s sur un EPYC 7763, puis est
+  // passée au réessai (run 38696561156, 2026-10-15).
+  await waitForCalmMainThread(page);
   const debug = page.locator('#meteo-debug');
 
   // La largeur du crépuscule que le matériau applique RÉELLEMENT, telle que le rendu la voit.

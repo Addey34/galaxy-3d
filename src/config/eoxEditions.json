@@ -1,0 +1,22 @@
+{
+  "source": {
+    "capabilities": "https://tiles.maps.eox.at/wmts/1.0.0/WMTSCapabilities.xml",
+    "licence": "https://cloudless.eox.at/license-non-commercial"
+  },
+  "retrieved": { "capabilities": "2026-10-15", "licence": "2026-10-15" },
+  "editions": [2016, 2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025],
+  "excluded": [
+    {
+      "layer": "s2cloudless-2017",
+      "year": 2017,
+      "reason": "licence-page-silent"
+    }
+  ],
+  "disagreements": [
+    {
+      "year": 2016,
+      "capabilities": "EOxCloudless https://cloudless.eox.at by EOX IT Services GmbH (Contains modified Copernicus Sentinel data 2016)",
+      "licence": "EOxCloudless https://cloudless.eox.at by EOX IT Services GmbH (Contains modified Copernicus Sentinel data 2016 & 2017)"
+    }
+  ]
+}
