@@ -205,8 +205,8 @@ describe('Explo : approche des corps sous-kilométriques', () => {
       .copy(body.position)
       .add(new THREE.Vector3(0, 0, r * distanceRadii));
     (
-      cameraSystem as unknown as { _updateExploClipPlanes(): void }
-    )._updateExploClipPlanes();
+      cameraSystem as unknown as { _updateClipPlanes(): void }
+    )._updateClipPlanes();
     return { cameraSystem, r };
   }
 

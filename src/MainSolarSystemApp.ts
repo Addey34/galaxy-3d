@@ -59,6 +59,7 @@ import { EarthEventsOverlay } from './ui/earthEventsOverlay';
 import { GazetteerOverlay } from './ui/gazetteerOverlay';
 import { setupGazetteerToggle } from './ui/gazetteerToggle';
 import gazetteerIndex from './config/gazetteerIndex.json';
+import { EARTH_NAMES_BODY } from './core/earthNames';
 import { setupEarthEvents } from './ui/earthEvents';
 import { earthquakeLayer, naturalEventLayer } from './core/earthEventLayers';
 import { SpacecraftOverlay } from './ui/spacecraftOverlay';
@@ -489,7 +490,13 @@ function wireChrome(): {
       const km = cfg.realData?.radiusKm;
       if (km && named.has(name)) gazetteerRadii.set(name, km);
     }
-    const gazetteerOverlay = new GazetteerOverlay(gazetteerRadii);
+    // La Terre, que l'UAI ne nomme pas, porte les noms de Natural Earth (lot 53).
+    const earthRadiusKm =
+      flattenBodies(CELESTIAL_CONFIG).get(EARTH_NAMES_BODY)?.realData?.radiusKm;
+    const gazetteerOverlay = new GazetteerOverlay(
+      gazetteerRadii,
+      earthRadiusKm ? { name: EARTH_NAMES_BODY, radiusKm: earthRadiusKm } : null
+    );
     gazetteerOverlay.mount();
     setupGazetteerToggle(gazetteerOverlay);
     setupEarthEvents(

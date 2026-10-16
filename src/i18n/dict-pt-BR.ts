@@ -337,7 +337,7 @@ export const ptBR: Record<MessageKey, string> = {
   'settings.group.orbit.aria': 'Mostrar todas as órbitas: {group}',
   'settings.exposure': 'Brilho (exposição)',
   'settings.colorblind': 'Cores de órbita adaptadas ao daltonismo',
-  'settings.gazetteer': 'Nomes das formações (UAI)',
+  'settings.gazetteer': 'Nomes da superfície',
   'settings.surfaceEarthBase': 'Solo da Terra',
   'settings.surfaceEarthBase.mosaic': 'Mosaico Blue Marble (2004)',
   'settings.surfaceEarthBase.sentinel-2':

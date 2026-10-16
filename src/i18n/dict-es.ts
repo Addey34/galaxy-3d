@@ -341,7 +341,7 @@ export const es: Record<MessageKey, string> = {
   'settings.group.orbit.aria': 'Mostrar todas las órbitas: {group}',
   'settings.exposure': 'Brillo (exposición)',
   'settings.colorblind': 'Colores de órbita adaptados al daltonismo',
-  'settings.gazetteer': 'Nombres de las formaciones (UAI)',
+  'settings.gazetteer': 'Nombres de la superficie',
   'settings.surfaceEarthBase': 'Suelo de la Tierra',
   'settings.surfaceEarthBase.mosaic': 'Mosaico Blue Marble (2004)',
   'settings.surfaceEarthBase.sentinel-2':

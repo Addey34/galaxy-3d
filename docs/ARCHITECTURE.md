@@ -2057,6 +2057,13 @@ Deux points qui ne se devinent pas :
 - **une cible sans surface garde `targetMinRadiusFactor`** : les ancres de sondes et d'objets
   interstellaires, les petits corps sans texture. Elles n'affichent aucune image, donc rien ne les
   rend plus ou moins approchables ; leur finesse est celle d'un maillage, une autre question.
+- **en Éducatif aussi, le plan proche suit la cible dès que le near fixe la couperait** (lot 53,
+  2026-10-16). Le near Éduc valait 0,1 unité en toutes circonstances, soit 637 km pour la Terre,
+  alors que le plancher d'approche descend à ~1,007 rayon : sous 637 km d'altitude, la Terre était
+  découpée par le plan proche et DISPARAISSAIT de l'écran, en production (« near vs sol COUPE LE
+  CORPS » sous `?debug-surface`, mesuré à 469 et 47 km). `CameraSystem._updateEducClipPlanes`
+  applique alors la règle du suivi rapproché (`followNearPlane`, moitié de l'altitude) et ramène
+  le far au système intérieur, comme l'Explo ; au-dessus, le near et le far fixes restent.
 
 **Le plan proche vaut la MOITIÉ DE L'ALTITUDE, et rien ne doit le relever.** Un plancher exprimé
 en fraction du rayon (il valait 1 %) passe devant la surface dès qu'on descend sous cette
@@ -5065,6 +5072,37 @@ avec la dérivation du lot 20 et n'était visible que dans le navigateur, puisqu
 sont pas allégées. `core/registryText.ts` traverse maintenant une `Map`, et deux gardes le tiennent
 (une unitaire dans `src/registry/registryText.test.ts`, une d'intégration dans
 `src/config/catalogueText.test.ts`), chacune falsifiée séparément.
+
+## Les noms de la Terre viennent de Natural Earth (lot 53)
+
+L'UAI ne nomme pas la Terre : le gazetteer donne ses formations à 44 corps et aucune à la Terre,
+seul corps majeur qui n'affichait aucun nom. Ses noms viennent de **Natural Earth**, en domaine
+public (« No permission is needed to use Natural Earth. Crediting the authors is unnecessary. »,
+naturalearthdata.com/about/terms-of-use, lu le 2026-10-16), dont les traductions sont celles de
+Wikidata (CC0).
+
+- `pnpm earthnames:generate` lit quatre couches de la version ÉPINGLÉE `v5.1.2` (océans et mers,
+  régions physiques, sommets et points cotés, lieux habités), cache daté dans
+  `.cache/earth-names/`, `--offline`, `--check`. Il écrit `public/assets/earth-names/earth.json`
+  (servi à l'approche de la Terre seulement, comme le fichier d'un corps du gazetteer) et
+  `src/config/earthNamesIndex.json` (provenance et comptes, lu par `/sources`).
+- **La règle d'affichage est celle de la source** (`core/earthNames.ts`) : Natural Earth publie pour
+  chaque nom le niveau de zoom d'une carte web où il paraît (`MIN_ZOOM`, `min_zoom`, `min_label`)
+  et, pour un nom trop grand vu de près, celui où il s'efface (`max_label`, la Méditerranée de 2 à
+  7,5). La vue est convertie en niveau de zoom par la DÉFINITION d'un niveau, sa résolution à
+  l'équateur (40 075 016,686 m sur 256 × 2^z pixels), à partir des mètres par pixel au point de
+  la surface le plus proche. Aucune taille n'est inventée pour une ville.
+- Le nom d'un polygone se pose sur son pôle d'inaccessibilité (le point intérieur le plus loin de
+  son bord), pas sur son centroïde, qui tomberait à terre pour un golfe en croissant.
+- La couche est celle des noms de surface (`ui/gazetteerOverlay.ts`), avec son placement par
+  `CelestialObject.surfacePointToWorld` et son évitement d'étiquettes, mais le nom est écrit dans
+  la LANGUE de l'interface ; le portugais du Brésil lit le portugais de Wikidata (`pt`), la source
+  n'ayant pas de variante brésilienne. Le canevas publie `data-drawn`, les noms écrits, parce
+  qu'un canevas ne se lit pas et que la langue d'un nom doit se vérifier.
+
+Gardes : `src/core/earthNames.test.ts` (conversion, règle, langue), `src/config/earthNames.test.ts`
+(fichier contre index, témoins Everest, Méditerranée, Himalaya, licence) et `e2e/earthNames.spec.ts`
+(rien au démarrage ; à l'approche, des noms en français, falsifié en rendant toujours l'anglais).
 
 ## Quelles missions ont étudié ce corps (lot 40)
 

@@ -41,6 +41,7 @@
     "fingerprint:generated": "node scripts/fingerprint-generated.mjs",
     "atmosphere:generate": "node scripts/generate-atmosphere-profiles.mjs",
     "gazetteer:generate": "node scripts/generate-gazetteer.mjs",
+    "earthnames:generate": "node scripts/generate-earth-names.mjs",
     "places:pull": "node scripts/pull-ode-footprints.mjs",
     "places:generate": "node scripts/generate-place-observations.mjs",
     "missions:generate": "node scripts/generate-mission-index.mjs",

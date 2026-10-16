@@ -17,6 +17,7 @@
  * Module PUR, réservé au build (`src/seo/`) : il importe les quatre dictionnaires ensemble.
  */
 import gazetteerIndex from '@/config/gazetteerIndex.json';
+import earthNamesIndex from '@/config/earthNamesIndex.json';
 import gazetteerAdoptionIndex from '@/config/gazetteerAdoptionIndex.json';
 import missionIndex from '@/config/missionIndex.json';
 import instrumentIndex from '@/config/instrumentIndex.json';
@@ -75,6 +76,32 @@ function gazetteerRows(): CardBlockSourceRow[] {
           fr: `${count(names, locale)} noms sur ${count(bodies.length, locale)} corps`,
           es: `${count(names, locale)} nombres en ${count(bodies.length, locale)} cuerpos`,
           'pt-BR': `${count(names, locale)} nomes em ${count(bodies.length, locale)} corpos`,
+        })[locale],
+      asOf: provider.accessed,
+      rights: { id: provider.rights, statedAt: provider.rightsStatedAt },
+    },
+  ];
+}
+
+/**
+ * Les noms de la TERRE (lot 53), que l'UAI ne nomme pas : Natural Earth, affichés par la même
+ * couche que le gazetteer, selon le niveau de zoom que la source publie pour chacun.
+ */
+function earthNameRows(): CardBlockSourceRow[] {
+  const { provider, count: names } = earthNamesIndex;
+  return [
+    {
+      index: 'earthNamesIndex.json',
+      publisher: provider.publisher,
+      title: provider.title,
+      url: provider.url,
+      usedBy: ['settings.gazetteer'],
+      coverage: (locale) =>
+        ({
+          en: `${count(names, locale)} names on the Earth`,
+          fr: `${count(names, locale)} noms sur la Terre`,
+          es: `${count(names, locale)} nombres en la Tierra`,
+          'pt-BR': `${count(names, locale)} nomes na Terra`,
         })[locale],
       asOf: provider.accessed,
       rights: { id: provider.rights, statedAt: provider.rightsStatedAt },
@@ -295,6 +322,7 @@ function discoveryRows(): CardBlockSourceRow[] {
 /** Une entrée par index livré, par nom de fichier. */
 export const CARD_BLOCK_INDEXES: Record<string, () => CardBlockSourceRow[]> = {
   'gazetteerIndex.json': gazetteerRows,
+  'earthNamesIndex.json': earthNameRows,
   'gazetteerAdoptionIndex.json': gazetteerAdoptionRows,
   'missionIndex.json': missionRows,
   'instrumentIndex.json': instrumentRows,

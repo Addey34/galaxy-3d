@@ -330,7 +330,7 @@ export const fr: Record<MessageKey, string> = {
   'settings.group.orbit.aria': 'Afficher toutes les orbites : {group}',
   'settings.exposure': 'Luminosité (exposition)',
   'settings.colorblind': 'Couleurs d’orbite adaptées au daltonisme',
-  'settings.gazetteer': 'Noms des formations (UAI)',
+  'settings.gazetteer': 'Noms de la surface',
   'settings.surfaceEarthBase': 'Sol de la Terre',
   'settings.surfaceEarthBase.mosaic': 'Mosaïque Blue Marble (2004)',
   'settings.surfaceEarthBase.sentinel-2':
