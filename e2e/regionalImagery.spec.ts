@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { boot, prepareSurfacePage, TILE_JPEG, zoomIn } from './surfaceTiles';
+import { boot, prepareSurfacePage, TILE_JPEG } from './surfaceTiles';
 
 /**
  * L'ORTHOPHOTO DE L'IGN SOUS LES 10 M (lot 53, pas 4), dans un vrai navigateur.
@@ -16,7 +16,7 @@ test.beforeEach(async ({ page }) => {
 test('approaching Paris, the tiles beyond the base come from the IGN', async ({
   page,
 }) => {
-  test.setTimeout(240_000);
+  test.setTimeout(300_000);
   const tile = (route: import('@playwright/test').Route) =>
     route.fulfill({
       status: 200,
@@ -47,17 +47,24 @@ test('approaching Paris, the tiles beyond the base come from the IGN', async ({
     timeout: 60_000,
   });
 
-  // On descend par crans jusqu'à ce que l'IGN serve : le plancher ne baisse qu'à mesure que des
-  // niveaux plus fins se peignent (`e2e/surfaceImageryEarth.spec.ts`, même méthode).
+  // On descend par crans jusqu'à ce que le BANDEAU crédite l'IGN : il décrit la tuile SOUS la
+  // caméra, donc les premières tuiles régionales (vers le bord du champ) ne suffisent pas. La
+  // position du canevas est lue UNE fois : la relire à chaque cran attendait le fil principal,
+  // saturé sur le coureur par l'arrivée des tuiles (`boundingBox` dépassé, run 38981348969).
+  const box = await canvas.boundingBox();
+  if (!box) throw new Error('canvas absent');
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+  const credit = page.locator('#surface-imagery .si-credit');
   await expect
     .poll(
       async () => {
-        await zoomIn(page);
-        return ign.length;
+        await page.mouse.wheel(0, -12_000);
+        return (await credit.textContent()) ?? '';
       },
-      { timeout: 150_000, intervals: [1500] }
+      { timeout: 180_000, intervals: [2000] }
     )
-    .toBeGreaterThan(0);
+    .toContain('IGN, BD ORTHO®');
+  expect(ign.length).toBeGreaterThan(0);
 
   for (const url of ign) {
     expect(url).toContain('SERVICE=WMS');
@@ -75,8 +82,4 @@ test('approaching Paris, the tiles beyond the base come from the IGN', async ({
     expect(east, url).toBeLessThan(4.5);
     expect(east - west, url).toBeLessThanOrEqual(1.125);
   }
-  await expect(page.locator('#surface-imagery .si-credit')).toContainText(
-    'IGN, BD ORTHO®',
-    { timeout: 60_000 }
-  );
 });
