@@ -300,3 +300,25 @@ describe('la catégorie ignore ce que le produit ne déclare pas', () => {
       expect(classifyTemporal(polluted, sim, now)).toEqual(reference);
     });
 });
+
+describe('une analyse de niveau 4 (lot 53)', () => {
+  it('se lit « analysée », ni observée ni reconstruite par un modèle', () => {
+    const day = utcDayInterval('2010-03-05');
+    const now = new Date('2026-10-16T12:00:00Z');
+    expect(
+      classifyTemporal(
+        { kind: 'analysis', validTime: day },
+        new Date('2010-03-05T15:00:00Z'),
+        now
+      ).category
+    ).toBe('analysed');
+    // LE TÉMOIN : la même journée en mesure reste « observée ».
+    expect(
+      classifyTemporal(
+        { kind: 'measurement', validTime: day },
+        new Date('2010-03-05T15:00:00Z'),
+        now
+      ).category
+    ).toBe('observed');
+  });
+});

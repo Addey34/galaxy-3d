@@ -21,6 +21,8 @@ import {
   GIBS_CLOUD_FRACTION_NIGHT_MIN_DATE,
   GIBS_LST_LAYER,
   GIBS_LST_MIN_DATE,
+  GIBS_SST_LAYER,
+  GIBS_SST_MIN_DATE,
   gibsCloudDateFor,
   gibsCloudUrl,
   gibsMonthlyDateFor,
@@ -302,6 +304,57 @@ export function resolveThermalSources(
       approx: i > 0,
       // MERRA-2 est une réanalyse (modèle qui assimile des observations), pas une mesure.
       product: { kind: 'reanalysis', validTime: utcMonthInterval(date) },
+    });
+  }
+  return out;
+}
+
+export interface SeaSurfaceTemperatureResolveOptions {
+  /** Jours de retard de publication de l'analyse (le jour courant n'existe pas encore). */
+  latencyDays?: number;
+  /** Borne basse ISO (défaut : premier jour publié par GIBS). */
+  minDate?: string;
+  /** Jours à reculer quand l'image la plus récente n'est pas encore servie. */
+  stepBackDays?: number;
+  /** Largeur de l'image équirectangulaire demandée. */
+  resolution?: number;
+}
+
+/**
+ * La température de surface de la mer du JOUR de la scène (GHRSST MUR, lot 53), puis les jours
+ * précédents si l'analyse de ce jour n'est pas encore publiée. Une analyse de niveau 4 décrit un
+ * jour UTC ; sa nature est `analysis` (champ reconstruit à partir de mesures), jamais une mesure.
+ */
+export function resolveSeaSurfaceTemperatureSources(
+  simDate: Date,
+  now: Date = new Date(),
+  options: SeaSurfaceTemperatureResolveOptions = {}
+): SourceCandidate[] {
+  const minDate = options.minDate ?? GIBS_SST_MIN_DATE;
+  const base = gibsCloudDateFor(simDate, {
+    now,
+    minDate,
+    latencyDays: options.latencyDays ?? 2,
+  });
+  if (base === null) return [];
+  const out: SourceCandidate[] = [];
+  const steps = options.stepBackDays ?? 3;
+  for (let i = 0; i <= steps; i++) {
+    const day = new Date(`${base}T00:00:00Z`);
+    day.setUTCDate(day.getUTCDate() - i);
+    const date = toGibsDateString(day);
+    if (!isOnOrAfter(date, minDate)) break;
+    out.push({
+      id: `${GIBS_SST_LAYER}:${date}`,
+      label: 'GHRSST MUR',
+      url: gibsCloudUrl(date, {
+        layer: GIBS_SST_LAYER,
+        width: options.resolution,
+        format: 'image/png',
+      }),
+      realDate: date,
+      approx: i > 0,
+      product: { kind: 'analysis', validTime: utcDayInterval(date) },
     });
   }
   return out;

@@ -80,6 +80,7 @@ import { setupPrecipLayer } from './ui/precipLayer';
 import { setupPrecipModelLayer } from './ui/precipModelLayer';
 import { setupWindLayer } from './ui/windLayer';
 import { setupThermalLayer } from './ui/thermalLayer';
+import { setupSeaTemperatureLayer } from './ui/seaTemperatureLayer';
 import { setupThermalModelLayer } from './ui/thermalModelLayer';
 import { setupPressureModelLayer } from './ui/pressureModelLayer';
 import { setupHumidityModelLayer } from './ui/humidityModelLayer';
@@ -299,6 +300,7 @@ function wireChrome(): {
       setupPrecipModelLayer(api),
       setupWindLayer(api),
       setupThermalLayer(api),
+      setupSeaTemperatureLayer(api),
       setupThermalModelLayer(api),
       setupPressureModelLayer(api),
       setupHumidityModelLayer(api),
@@ -315,7 +317,13 @@ function wireChrome(): {
         exclusiveGroups: [
           ['clouds', 'clouds-model'],
           ['precip', 'precip-model'],
-          ['thermal', 'thermal-model', 'pressure-model', 'humidity-model'],
+          [
+            'thermal',
+            'sea-temperature',
+            'thermal-model',
+            'pressure-model',
+            'humidity-model',
+          ],
         ],
       },
       overlayCoordinator
@@ -679,7 +687,8 @@ function wireChrome(): {
           ? (sceneSystem.getBody(cameraSystem.targetName) ?? undefined)
           : undefined,
         cameraSystem.targetName,
-        labelSpace
+        labelSpace,
+        occlusion
       );
       bodyInfo.updateLive(
         currentMode === 'explo'

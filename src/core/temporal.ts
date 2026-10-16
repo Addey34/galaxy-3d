@@ -32,6 +32,13 @@ export type ProductKind =
   | 'measurement'
   /** Modèle qui assimile des observations sur le passé (ERA5, MERRA-2). */
   | 'reanalysis'
+  /**
+   * Champ SANS LACUNE construit à partir de mesures de plusieurs capteurs, par interpolation
+   * statistique et non par un modèle physique (« analyse de niveau 4 », GHRSST MUR, lot 53). Ce
+   * n'est pas une mesure brute : entre deux passages, la valeur est estimée. Elle a donc sa
+   * propre catégorie visible, `analysed`, et ne se lit ni « observée » ni « reconstruite (modèle) ».
+   */
+  | 'analysis'
   /** Run de prévision : analyse sur le présent, prévision au-delà. */
   | 'forecastModel'
   /** Position calculée (éphéméride numérique, théorie analytique, éléments képlériens). */
@@ -50,6 +57,11 @@ export type TemporalCategory =
   | 'live'
   /** Mesure d'un instant passé. */
   | 'observed'
+  /**
+   * Champ reconstruit à partir de MESURES, sans modèle physique (analyse de niveau 4, lot 53) :
+   * entre deux passages de satellite, la valeur est interpolée. Ni une mesure, ni un modèle.
+   */
+  | 'analysed'
   /** Modèle ajusté aux observations, sur un instant passé ou présent. */
   | 'reconstructed'
   /** Événement rapporté par un tiers, pas mesuré par l'application ni par sa source. */
@@ -64,6 +76,7 @@ export type TemporalCategory =
 export const TEMPORAL_CATEGORIES: readonly TemporalCategory[] = [
   'live',
   'observed',
+  'analysed',
   'reported',
   'reconstructed',
   'predicted',
@@ -211,6 +224,7 @@ export function classifyTemporal(
   if (validTime.from <= nowMs) {
     if (product.kind === 'measurement') return stamp('observed');
     if (product.kind === 'report') return stamp('reported');
+    if (product.kind === 'analysis') return stamp('analysed');
     return stamp('reconstructed');
   }
 

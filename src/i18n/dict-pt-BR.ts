@@ -385,6 +385,7 @@ export const ptBR: Record<MessageKey, string> = {
   'weather.precipModel': 'Chuva (modelo)',
   'weather.wind': 'Vento (modelo)',
   'weather.thermal': 'Temperatura do ar (MERRA-2)',
+  'weather.seaTemperature': 'Temperatura do mar (GHRSST)',
   'weather.thermalModel': 'Temperatura do ar (modelo)',
   'weather.clouds.note':
     'Cobertura de nuvens real, imagem de satélite da NASA (imagem do dia).',
@@ -432,6 +433,7 @@ export const ptBR: Record<MessageKey, string> = {
   // Catégorie temporelle d'une donnée affichée (voir core/temporal.ts).
   'time.category.live': 'ao vivo',
   'time.category.observed': 'observado',
+  'time.category.analysed': 'analisado (medições interpoladas)',
   'time.category.reported': 'relatado',
   'time.category.reconstructed': 'reconstruído (modelo)',
   'time.category.predicted': 'previsto',
@@ -454,6 +456,8 @@ export const ptBR: Record<MessageKey, string> = {
   'weather.wind.note':
     'Vento modelado a 10 m do solo: a cor e o movimento seguem a sua velocidade, e o ar calmo mostra pouco fluxo.',
   'weather.thermal.note': 'Temperatura do ar perto do solo (MERRA-2 mensal):',
+  'weather.seaTemperature.note':
+    'Temperatura da superfície do mar (análise diária GHRSST MUR, construída a partir de vários satélites):',
 
   // ── Divers ──
   'fullscreen.title': 'Tela cheia',

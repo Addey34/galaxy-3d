@@ -1,3 +1,4 @@
+import colormaps from '@/config/gibsColormap.json';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
@@ -5,6 +6,8 @@ import { TILE_PROVIDERS } from '@/registry/providers/runtimeServices';
 import { connectHostsFromFirebase } from '@/seo/sourcesPage';
 import {
   GIBS_COLORMAP,
+  GIBS_LEGEND_LAYERS,
+  gibsColormap,
   colormapBoundsC,
   colormapToCss,
   type GibsColormap,
@@ -67,9 +70,28 @@ describe('barème de couleurs GIBS importé', () => {
     expect(colormapBoundsC()).toEqual({ lo: '−53 °C', hi: '+37 °C' });
   });
 
-  it('refuse un barème qui ne serait pas en kelvins', () => {
-    const celsius = { ...GIBS_COLORMAP, units: 'C' } as GibsColormap;
-    expect(() => colormapBoundsC(celsius)).toThrow(/kelvins/);
+  it('lit l’unité DÉCLARÉE par le barème, et refuse celle qu’il ne connaît pas', () => {
+    const unknown = { ...GIBS_COLORMAP, units: 'mm/h' } as GibsColormap;
+    expect(() => colormapBoundsC(unknown)).toThrow(/kelvins ou en °C/);
+    // La mer est publiée en degrés Celsius : aucun décalage de 273,15 ne s'y applique.
+    const sea = gibsColormap('GHRSST_L4_MUR_Sea_Surface_Temperature');
+    expect(sea.units).toBe('°C');
+    expect(colormapBoundsC(sea)).toEqual({
+      lo: `+${Math.round(sea.min)} °C`,
+      hi: `+${Math.round(sea.max)} °C`,
+    });
+  });
+
+  it('le fichier livré porte exactement les barèmes de la liste', () => {
+    expect(Object.keys(colormaps).sort()).toEqual(
+      [...GIBS_LEGEND_LAYERS].sort()
+    );
+    for (const layer of GIBS_LEGEND_LAYERS) {
+      expect(gibsColormap(layer).layer).toBe(layer);
+      expect(gibsColormap(layer).source).toMatch(
+        /^https:\/\/gibs\.earthdata\.nasa\.gov\/colormaps\/v1\.3\//
+      );
+    }
   });
 });
 
