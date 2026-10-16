@@ -355,7 +355,7 @@ export const en = {
   'settings.group.orbit.aria': 'Show every orbit in {group}',
   'settings.exposure': 'Brightness (exposure)',
   'settings.colorblind': 'Color-blind friendly orbit colors',
-  'settings.gazetteer': 'Surface feature names (IAU)',
+  'settings.gazetteer': 'Surface names',
   'settings.surfaceEarthBase': 'Earth’s ground',
   'settings.surfaceEarthBase.mosaic': 'Blue Marble mosaic (2004)',
   'settings.surfaceEarthBase.sentinel-2':

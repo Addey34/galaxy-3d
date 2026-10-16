@@ -1,0 +1,20 @@
+{
+  "provider": {
+    "publisher": "Natural Earth",
+    "title": "Natural Earth 1:10m vectors, v5.1.2",
+    "url": "https://www.naturalearthdata.com/",
+    "source": "https://github.com/nvkelso/natural-earth-vector/tree/v5.1.2/geojson",
+    "rights": "public-domain",
+    "rightsStatedAt": "https://www.naturalearthdata.com/about/terms-of-use/",
+    "rightsQuote": "All versions of Natural Earth raster + vector map data found on this website are in the public domain.",
+    "translations": "Noms traduits par Natural Earth depuis Wikidata (CC0). Le portugais est celui de Wikidata (`pt`), sans variante brésilienne.",
+    "accessed": "2026-10-16"
+  },
+  "count": 9328,
+  "layers": {
+    "ne_10m_geography_marine_polys": 295,
+    "ne_10m_geography_regions_polys": 1047,
+    "ne_10m_geography_regions_elevation_points": 644,
+    "ne_10m_populated_places": 7342
+  }
+}

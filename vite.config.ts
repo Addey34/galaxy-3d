@@ -1331,6 +1331,7 @@ export default defineConfig({
               url.pathname.startsWith('/assets/models/') ||
               url.pathname.startsWith('/assets/small-bodies/') ||
               url.pathname.startsWith('/assets/gazetteer/') ||
+              url.pathname.startsWith('/assets/earth-names/') ||
               url.pathname.startsWith('/assets/missions/') ||
               url.pathname.startsWith('/assets/instruments/') ||
               url.pathname.startsWith('/assets/discovery/') ||

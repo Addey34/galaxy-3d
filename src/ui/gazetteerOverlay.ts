@@ -9,8 +9,17 @@ import type { LabelSpace } from '@/core/labelSpace';
 import {
   featuresToLabel,
   iauLongitudeToSceneLongitude,
+  MAX_FEATURE_LABELS,
   type NamedFeature,
 } from '@/core/gazetteer';
+import {
+  earthNameIn,
+  earthNamesToLabel,
+  metresPerPixelAt,
+  webMapZoom,
+  type EarthName,
+} from '@/core/earthNames';
+import { getLocale } from '@/i18n';
 import Logger from '@/utils/Logger';
 import type CelestialObject from '@/components/celestial/CelestialObject';
 
@@ -31,6 +40,11 @@ import type CelestialObject from '@/components/celestial/CelestialObject';
  * La conversion de convention (UAI en longitude est 0-360, la scène en −180..180 est) vit dans
  * `core/gazetteer.ts` avec sa garde : les deux sont EST, il n'y a donc aucun miroir à appliquer,
  * et un miroir ne déformerait rien tout en posant chaque nom à l'opposé.
+ *
+ * LA TERRE (lot 53), que l'UAI ne nomme pas, a ses noms de Natural Earth
+ * (`/assets/earth-names/earth.json`) : même canevas, même placement, même évitement, mais la
+ * règle de sélection de SA source, le niveau de zoom publié pour chaque nom (`core/earthNames.ts`),
+ * et le nom dans la langue de l'interface.
  */
 
 /** Au-delà de cette taille apparente, on ne charge rien : le corps n'occupe pas l'écran. */
@@ -40,6 +54,7 @@ export class GazetteerOverlay {
   private readonly canvas: HTMLCanvasElement;
   private readonly ctx: CanvasRenderingContext2D | null;
   private readonly cache = new Map<string, NamedFeature[]>();
+  private earthNames: EarthName[] | null = null;
   private readonly failed = new Set<string>();
   private loading: string | null = null;
   private active = false;
@@ -55,7 +70,11 @@ export class GazetteerOverlay {
    * du catalogue, lu une fois au montage — `CelestialObject` garde sa configuration privée, et
    * la lui arracher pour une seule grandeur serait ouvrir une porte pour rien.
    */
-  constructor(private readonly radiiKm: ReadonlyMap<string, number>) {
+  constructor(
+    private readonly radiiKm: ReadonlyMap<string, number>,
+    /** Le corps qui porte les noms de Natural Earth, et son rayon publié. */
+    private readonly earth: { name: string; radiusKm: number } | null = null
+  ) {
     this.canvas = document.createElement('canvas');
     this.canvas.id = 'gazetteer-overlay';
     this.ctx = this.canvas.getContext('2d');
@@ -94,13 +113,21 @@ export class GazetteerOverlay {
     // Chemin ABSOLU, et ce n'est pas un detail : le corps est porte par le CHEMIN de l'URL
     // (`/moon`), donc une adresse relative resout en `/moon/assets/gazetteer/moon.json` et rend
     // un 404 — mesure faite dans un vrai navigateur, ou la couche restait vide sans un mot.
-    void fetch(`/assets/gazetteer/${body}.json`)
+    const isEarth = body === this.earth?.name;
+    void fetch(
+      isEarth
+        ? '/assets/earth-names/earth.json'
+        : `/assets/gazetteer/${body}.json`
+    )
       .then((res) => {
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        return res.json() as Promise<NamedFeature[]>;
+        return res.json() as Promise<NamedFeature[] | EarthName[]>;
       })
       .then((list) => {
-        this.cache.set(body, list);
+        if (isEarth) {
+          this.earthNames = list as EarthName[];
+          this.cache.set(body, []);
+        } else this.cache.set(body, list as NamedFeature[]);
       })
       .catch((error: unknown) => {
         this.failed.add(body);
@@ -124,10 +151,14 @@ export class GazetteerOverlay {
     // cinq noms alors qu'on s'est éloigné et qu'elle ne peint plus rien. C'est un témoin
     // d'e2e, donc un témoin qui ment est pire que pas de témoin du tout.
     this.canvas.dataset['names'] = '0';
+    this.canvas.dataset['drawn'] = '';
     if (!this.ctx || !this.active) return;
     this._clear();
     if (!target || !targetName) return;
-    const radiusKm = this.radiiKm.get(targetName) ?? 0;
+    const isEarth = targetName === this.earth?.name;
+    const radiusKm = isEarth
+      ? this.earth!.radiusKm
+      : (this.radiiKm.get(targetName) ?? 0);
     if (radiusKm <= 0) return;
 
     const sceneRadius =
@@ -146,13 +177,26 @@ export class GazetteerOverlay {
     const bounds = overlayLabelBounds(w, h);
     this.ctx.font = '11px sans-serif';
 
-    for (const feature of featuresToLabel(
-      features,
-      radiusKm,
-      apparentRadii,
-      h,
-      camera.fov
-    )) {
+    // Une seule liste de noms à poser, quelle que soit leur source : le placement ne change pas.
+    const locale = getLocale();
+    const labels: { lat: number; lon: number; text: string }[] = isEarth
+      ? earthNamesToLabel(
+          this.earthNames ?? [],
+          webMapZoom(
+            metresPerPixelAt(
+              (apparentRadii - 1) * radiusKm * 1000,
+              camera.fov,
+              h
+            )
+          ),
+          MAX_FEATURE_LABELS
+        ).map((e) => ({ lat: e.lat, lon: e.lon, text: earthNameIn(e, locale) }))
+      : featuresToLabel(features, radiusKm, apparentRadii, h, camera.fov).map(
+          (f) => ({ lat: f.lat, lon: f.lon, text: f.name })
+        );
+
+    const drawnText: string[] = [];
+    for (const feature of labels) {
       target.surfacePointToWorld(
         feature.lat,
         iauLongitudeToSceneLongitude(feature.lon),
@@ -177,7 +221,7 @@ export class GazetteerOverlay {
 
       const x = (this._point.x * 0.5 + 0.5) * w;
       const y = (-this._point.y * 0.5 + 0.5) * h;
-      const textWidth = this.ctx.measureText(feature.name).width;
+      const textWidth = this.ctx.measureText(feature.text).width;
       const placed = space
         ? space.placeText(
             x,
@@ -197,14 +241,18 @@ export class GazetteerOverlay {
       this.ctx.fill();
       this.ctx.fillStyle = 'rgba(225, 238, 255, 0.92)';
       this.ctx.fillText(
-        feature.name,
+        feature.text,
         x + placed.dx - textWidth / 2,
         y + placed.dy + 4
       );
       this.lastDrawn += 1;
+      drawnText.push(feature.text);
     }
 
     this.canvas.dataset['names'] = String(this.lastDrawn);
+    // Les noms ÉCRITS, au plus `MAX_FEATURE_LABELS` : un canevas ne se lit pas, et c'est le seul
+    // moyen pour l'e2e de vérifier la LANGUE d'un nom de la Terre.
+    this.canvas.dataset['drawn'] = drawnText.join('|');
   }
 
   dispose(): void {

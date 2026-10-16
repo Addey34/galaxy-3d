@@ -424,7 +424,7 @@ export class CameraSystem {
       this.refreshApproachBounds();
     }
 
-    this._updateExploClipPlanes();
+    this._updateClipPlanes();
     this.controls.update();
     this._tiltTowardsHorizon();
   }
@@ -464,11 +464,21 @@ export class CameraSystem {
    *
    * On resserre le near sur la distance réelle à la cible (juste devant la surface la plus
    * proche), ce qui rétablit la précision de profondeur sans rien clipper d'utile. far reste
-   * large pour garder le reste du système visible. En Éducatif, near/far fixes suffisent.
+   * large pour garder le reste du système visible.
+   *
+   * EN ÉDUCATIF, near/far fixes suffisaient tant qu'on ne frôlait pas un corps. SUPERSEDED le
+   * 2026-10-16 (lot 53), mesuré en production : le plancher d'approche y descend à ~1,007 rayon
+   * de la Terre (la finesse de son image l'autorise), alors que le near fixe vaut 0,1 unité,
+   * soit 637 km ; sous cette altitude la Terre était découpée par le plan proche et disparaissait
+   * de l'écran (« near vs sol COUPE LE CORPS » sous `?debug-surface`). L'Éducatif suit donc la
+   * même règle que l'Explo DÈS QUE le near fixe couperait la cible, et seulement alors.
    */
   private readonly _tgtDelta = new THREE.Vector3();
-  private _updateExploClipPlanes(): void {
-    if (this._scaleMode !== 'explo') return;
+  private _updateClipPlanes(): void {
+    if (this._scaleMode !== 'explo') {
+      this._updateEducClipPlanes();
+      return;
+    }
 
     const originDist = this.camera.position.length();
 
@@ -510,6 +520,41 @@ export class CameraSystem {
       const far = Math.min(CAMERA_SETTINGS.exploFar, originDist + 1200);
       this._applyClipPlanes(near, far);
     }
+  }
+
+  /**
+   * Éducatif : near/far FIXES, sauf quand le near fixe couperait la cible suivie. Alors la règle
+   * du suivi rapproché (`followNearPlane`, moitié de l'altitude) et un far ramené au système
+   * intérieur, pour que le rapport far/near reste celui que l'Explo a mesuré sans scintillement.
+   */
+  private _updateEducClipPlanes(): void {
+    const { educNear, educFar } = CAMERA_SETTINGS;
+    if (this.currentTarget) {
+      const d = this._tgtDelta
+        .subVectors(this.camera.position, this.controls.target)
+        .length();
+      const r =
+        this._target(this.currentTarget.name)?.getClearanceRadius?.(
+          'educ',
+          this.camera.position
+        ) ??
+        (this.currentTarget.group.userData['radius'] as number | undefined) ??
+        0;
+      const near = followNearPlane(
+        d,
+        r,
+        CAMERA_CONTROLS_SETTINGS.exploMinFloor
+      );
+      if (near < educNear) {
+        const originDist = this.camera.position.length();
+        this._applyClipPlanes(
+          near,
+          Math.min(educFar, Math.max(originDist * 2.5, d * 50) + r)
+        );
+        return;
+      }
+    }
+    this._applyClipPlanes(educNear, educFar);
   }
 
   /** Applique near/far seulement sur variation significative (évite un updateProjectionMatrix/frame). */
