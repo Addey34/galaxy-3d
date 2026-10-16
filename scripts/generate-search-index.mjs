@@ -45,6 +45,17 @@ export function buildSearchIndex() {
     const body = file.slice(0, -5);
     places[body] = read(`public/assets/gazetteer/${file}`).map((f) => f.name);
   }
+  // LA TERRE (lot 53), que l'UAI ne nomme pas : ses noms de Natural Earth, dans les quatre
+  // langues que la source publie, pour que « mer Méditerranée » se trouve en français comme
+  // « Mediterranean Sea » en anglais. La position se relit dans le fichier servi à l'approche.
+  places.earth = [
+    ...new Set(
+      read('public/assets/earth-names/earth.json').flatMap((n) => [
+        n.name,
+        ...Object.values(n.names ?? {}),
+      ])
+    ),
+  ];
 
   const probeOfInvestigation = new Map();
   const instruments = [];

@@ -40,6 +40,10 @@ export const SERVICE_ACCESS: Readonly<
     access: 'public-tiles',
     why: 'Tuiles WMTS Sentinel-2 d’EOX, sans clé, usage direct permis par EOX, demandées seulement si ce fond est choisi et à l’approche ; débit limité par EOX sous forte charge (lot 48).',
   },
+  'data.geopf.fr': {
+    access: 'public-tiles',
+    why: 'WMS de la Géoplateforme de l’IGN (orthophotos BD ORTHO®), sans clé, Licence Ouverte Etalab ; demandé seulement à l’approche du sol en France, au-delà du niveau le plus fin de l’imagerie de base (lot 53).',
+  },
   'earthquake.usgs.gov': {
     access: 'public-tiles',
     why: 'Flux GeoJSON public de l’USGS, une requête par fenêtre de temps, seulement si la couche est active.',

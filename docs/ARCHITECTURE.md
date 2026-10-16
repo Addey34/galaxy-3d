@@ -2092,6 +2092,52 @@ déjà à l'ancien plancher), parce que la direction d'approche vise le terminat
 trois points n'a changé au lot 9C (2026-09-21), qui n'a touché ni la géométrie de la sphère, ni
 les couches d'instrument, ni la direction d'approche ; le § suivant dit ce qu'il a changé.
 
+
+### Les imageries régionales plus fines que la base (lot 53, pas 4)
+
+Sentinel-2 s'arrête à ~10 m par pixel et la mosaïque par défaut de la Terre (Blue Marble) à
+~500 m. Une imagerie NATIONALE va bien plus loin : l'orthophoto de l'IGN (BD ORTHO®, 20 cm), que
+la Géoplateforme sert par WMS jusqu'à 0,2986 m par pixel (sa plus petite échelle déclarée,
+`MinScaleDenominator` 1 066,36). Un WMS rend N'IMPORTE quelle emprise : l'IGN se demande donc sur
+la grille de la base en cours (EPSG:4326, `BBOX={South},{West},{North},{East}`, jetons d'emprise
+de `core/tileUrl.ts`), sans Web Mercator, et le relief, aligné sur cette grille, reste juste.
+
+- **La règle** (`core/regionalImagery.ts`) : un niveau AU-DELÀ du maximum de la base n'existe que
+  dans la couverture régionale, et c'est la source régionale qui le sert ; en deçà, la base. Le
+  niveau maximal régional se DÉRIVE de la finesse publiée et de la grille (`pixelsPerDegree`), la
+  sélection des tuiles reçoit un maximum PAR TUILE (`maxLevelAt`), et le bandeau comme le plancher
+  d'approche suivent la source de la tuile sous la caméra. Une comparaison avant/après n'emploie
+  pas la source régionale : ses deux images doivent rester de la même source.
+- **La couverture**, mesurée avant d'être écrite : hors de France, à fort grossissement, l'IGN rend
+  une image BLANCHE opaque (Berne, Genève), mais sur la côte il couvre aussi la mer proche (le
+  Vieux-Port de Marseille et plusieurs kilomètres au large). `pnpm surface:regions`
+  (`scripts/generate-regional-coverage.mjs`) retient donc les boîtes de 0,044° (niveau 12 de la
+  grille de Sentinel-2) dont le centre est dans le pays et qui ne touchent AUCUN autre pays,
+  marge d'1 km comprise, d'après Natural Earth admin-0 1:10m (version épinglée) ; écrit
+  `src/config/regionalCoverage.json` (36 344 boîtes pour la France, métropole et outre-mer, en
+  plages par ligne, ~10 ko, dans le morceau de la surface). Une tuile de n'importe quelle grille
+  est régionale si TOUTES les boîtes qu'elle touche le sont. Une première version exigeait la
+  boîte entièrement à terre au niveau 10 : elle ôtait tout le littoral.
+- **Ajouter un pays est de la donnée** : sa fiche (`regional: true`, schéma), son fournisseur, sa
+  ligne dans `scripts/regional-imagery-targets.json`, après lecture de SA licence. La parité : un
+  pays sans imagerie ouverte lue et vérifiée garde Sentinel-2, et ce n'est pas un manque caché.
+- **Licence lue à la source** : les conditions de la Géoplateforme renvoient aux métadonnées de la
+  donnée, et la fiche ISO de la BD ORTHO® déclare la Licence Ouverte Etalab 2.0 ; prises de vue de
+  2021 à 2026 selon le département (tableau de l'IGN du 2026-09-21). Le bandeau crédite l'IGN dès
+  qu'elle sert la tuile sous la caméra ; l'hôte `data.geopf.fr` est dans la CSP, la page de
+  confidentialité (quatre langues) et le guetteur des sources.
+- **La recherche trouve les lieux de la Terre** (même pas) : les 9 328 noms de Natural Earth, dans
+  les quatre langues publiées, entrent dans l'index de la recherche universelle, et choisir
+  « Paris » tourne la caméra vers Paris. L'index passe de 86 à 169 ko gzip, demandé à la première
+  frappe utile seulement.
+
+Gardes : `src/core/regionalImagery.test.ts` (couverture, niveau dérivé, règle, gabarit WMS),
+`src/config/surfaceTilesets.test.ts` (jamais une base, niveaux de la fiche dérivés, témoins Paris,
+Marseille, Saint-Denis de la Réunion dedans, Genève, Bâle, Monaco, Londres dehors),
+`e2e/regionalImagery.spec.ts` (chercher Paris, descendre : les tuiles au-delà de la base partent
+vers l'IGN, en France, et le bandeau la crédite ; falsifié en ne branchant pas la source
+régionale).
+
 ## Le globe est l'ellipsoïde publié, pas une sphère (ligne 45.3, lot 1, 2026-10-09)
 
 Jusqu'à ce lot, tous les corps étaient des sphères : Saturne avait le même rayon au pôle et à

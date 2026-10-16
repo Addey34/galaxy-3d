@@ -15,6 +15,7 @@
 
 import {
   isWithinMatrix,
+  tileBounds,
   tileMatrix,
   WMTS_EQUIRECTANGULAR_2x1,
   type TileIndex,
@@ -33,8 +34,26 @@ export interface TileService {
   matrix?: TileMatrixShape;
 }
 
-/** Les jetons que ce module sait remplacer. Tout autre jeton restant est une erreur. */
-const TOKENS = ['Style', 'TileMatrixSet', 'TileMatrix', 'TileRow', 'TileCol'];
+/**
+ * Les jetons que ce module sait remplacer. Tout autre jeton restant est une erreur.
+ *
+ * Les quatre jetons d'EMPRISE (lot 53, pas 4) servent un WMS, qui rend n'importe quelle emprise
+ * dans la projection qu'il déclare : l'orthophoto de l'IGN se demande ainsi sur la grille même de
+ * Sentinel-2 (EPSG:4326), sans Web Mercator. Ils sont en degrés, tirés de `tileBounds` sur la
+ * matrice du service, et l'ordre de `BBOX` (latitude d'abord en WMS 1.3.0 et EPSG:4326) est écrit
+ * dans le gabarit de la fiche, jamais deviné ici.
+ */
+const TOKENS = [
+  'Style',
+  'TileMatrixSet',
+  'TileMatrix',
+  'TileRow',
+  'TileCol',
+  'West',
+  'South',
+  'East',
+  'North',
+];
 
 /**
  * Adresse d'une tuile, ou une exception si l'indice sort de la matrice de son niveau.
@@ -54,12 +73,17 @@ export function tileUrl(service: TileService, index: TileIndex): string {
     );
   }
 
+  const bounds = tileBounds(index, shape);
   const values: Record<string, string> = {
     Style: service.style,
     TileMatrixSet: service.tileMatrixSet,
     TileMatrix: String(index.level),
     TileRow: String(index.row),
     TileCol: String(index.column),
+    West: String(bounds.west),
+    South: String(bounds.south),
+    East: String(bounds.east),
+    North: String(bounds.north),
   };
 
   let url = service.template;

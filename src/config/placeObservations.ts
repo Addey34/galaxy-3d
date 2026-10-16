@@ -14,6 +14,7 @@
  * (`/moon`), et une adresse relative résoudrait sous `/moon/assets/…`.
  */
 import type { NamedFeature } from '@/core/gazetteer';
+import { EARTH_NAMES_BODY, type EarthName } from '@/core/earthNames';
 import Logger from '@/utils/Logger';
 
 interface PlaceObservationIndex {
@@ -98,11 +99,38 @@ const features = new Map<string, Promise<NamedFeature[] | null>>();
 export function loadFormations(body: string): Promise<NamedFeature[] | null> {
   let p = features.get(body);
   if (!p) {
-    p = fetch(`/assets/gazetteer/${body}.json`)
+    // La Terre a ses noms de Natural Earth (lot 53), un fichier à part ; chaque nom TRADUIT y
+    // devient une entrée de plus au même point, puisque la recherche le retrouve par son nom.
+    const earth = body === EARTH_NAMES_BODY;
+    p = fetch(
+      earth
+        ? '/assets/earth-names/earth.json'
+        : `/assets/gazetteer/${body}.json`
+    )
       .then((res) => {
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        return res.json() as Promise<NamedFeature[]>;
+        return res.json() as Promise<NamedFeature[] | EarthName[]>;
       })
+      .then((list) =>
+        earth
+          ? (list as EarthName[]).flatMap((n) =>
+              [n.name, ...Object.values(n.names ?? {})].map(
+                (name) =>
+                  ({
+                    name,
+                    code: '',
+                    type: n.kind,
+                    lat: n.lat,
+                    lon: n.lon,
+                    diameterKm: 0,
+                    approved: '',
+                    origin: '',
+                    iauId: 0,
+                  }) satisfies NamedFeature
+              )
+            )
+          : (list as NamedFeature[])
+      )
       .catch((error: unknown) => {
         features.delete(body);
         Logger.warn(

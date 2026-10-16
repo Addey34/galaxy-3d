@@ -10,6 +10,7 @@ import {
   DOMAIN_MAX_AGE_MS,
   compareEdition,
   editionFor,
+  REGIONAL_TILESETS,
   SURFACE_TILESETS,
   SURFACE_VARIANTS,
   tilesetForDay,
@@ -17,6 +18,7 @@ import {
   type SurfaceTileset,
 } from './surfaceTilesets';
 import { CELESTIAL_CONFIG } from './bodies';
+import { coversBounds, regionalMaxLevel } from '@/core/regionalImagery';
 import { flattenBodies } from './catalog';
 import { TILESET_PRODUCTS } from '@/registry/products';
 import { TILE_PROVIDERS } from '@/registry/providers/runtimeServices';
@@ -47,7 +49,11 @@ const ALL_TILESETS: ReadonlyArray<[string, SurfaceTileset]> = [
   ...[...SURFACE_VARIANTS.values()].flatMap((variants) =>
     [...variants.values()].flat()
   ),
+  ...[...REGIONAL_TILESETS.values()].map((regional) => regional.tileset),
 ].map((tileset) => [`${tileset.body} (${tileset.id})`, tileset]);
+
+/** Un gabarit WMS (lot 53, pas 4) : une emprise par requête, pas un chemin WMTS. */
+const isWms = (template: string): boolean => template.includes('SERVICE=WMS');
 
 /**
  * Finesse de la texture de surface LIVRÉE d'un corps, en pixels sur 360°, au meilleur palier
@@ -75,14 +81,16 @@ describe('fiches de jeux de tuiles', () => {
     expect(ALL_TILESETS.length).toBe(TILESET_PRODUCTS.length);
     expect(SURFACE_TILESETS.size).toBeGreaterThan(0);
     for (const product of TILESET_PRODUCTS) {
-      const found = product.variant
-        ? SURFACE_VARIANTS.get(product.body)
-            ?.get(product.variant)
-            ?.find((t) => t.edition === product.edition)
-        : (product.service.time
-            ? DATED_SURFACE_TILESETS
-            : SURFACE_TILESETS
-          ).get(product.body);
+      const found = product.regional
+        ? REGIONAL_TILESETS.get(product.body)?.tileset
+        : product.variant
+          ? SURFACE_VARIANTS.get(product.body)
+              ?.get(product.variant)
+              ?.find((t) => t.edition === product.edition)
+          : (product.service.time
+              ? DATED_SURFACE_TILESETS
+              : SURFACE_TILESETS
+            ).get(product.body);
       // Deux fiches au même rôle sur un corps s'écraseraient en silence : une seule gagne.
       expect(found?.id, product.id).toBe(product.id);
     }
@@ -170,6 +178,13 @@ describe('fiches de jeux de tuiles', () => {
     for (const product of TILESET_PRODUCTS) {
       const expected = EXTENSIONS[product.service.format];
       expect(expected, `${product.id} : format inconnu`).toBeDefined();
+      // Un WMS déclare son format dans `FORMAT=`, pas dans une extension.
+      if (isWms(product.service.template)) {
+        expect(product.service.template, product.id).toContain(
+          `FORMAT=${product.service.format}`
+        );
+        continue;
+      }
       expect(
         expected!.some((ext) => product.service.template.endsWith(ext)),
         `${product.id} déclare ${product.service.format} mais son gabarit finit par ` +
@@ -184,6 +199,17 @@ describe('fiches de jeux de tuiles', () => {
     // endroit du corps, ce que ni une erreur ni un 404 ne signaleraient. Le gabarit se recopie
     // des capacités, et cet ordre — niveau, LIGNE, colonne — est celui du RESTful WMTS.
     for (const [body, tileset] of ALL_TILESETS) {
+      // Un WMS se demande par EMPRISE, en EPSG:4326 et dans l'ordre latitude puis longitude
+      // qu'impose WMS 1.3.0 pour ce système : intervertir montrerait un autre endroit, sans
+      // erreur ni 404, exactement comme des lignes et colonnes interverties.
+      if (isWms(tileset.service.template)) {
+        expect(tileset.service.template, body).toContain('VERSION=1.3.0');
+        expect(tileset.service.template, body).toContain('CRS=EPSG:4326');
+        expect(tileset.service.template, body).toContain(
+          'BBOX={South},{West},{North},{East}'
+        );
+        continue;
+      }
       expect(tileset.service.template, body).toContain(
         '{TileMatrix}/{TileRow}/{TileCol}'
       );
@@ -722,5 +748,53 @@ describe('les éditions annuelles de Sentinel-2 (lot 50)', () => {
     // « 2016 et 2018 à 2025 » : une suite contiguë après la première, que la prose résume.
     const rest = years.slice(1);
     expect(rest).toEqual(rest.map((_, i) => rest[0]! + i));
+  });
+});
+
+describe('imageries régionales (lot 53, pas 4)', () => {
+  it('ne sont jamais une base, et prennent la suite de la base la plus fine de leur grille', () => {
+    expect(REGIONAL_TILESETS.size).toBeGreaterThan(0);
+    for (const [body, { tileset }] of REGIONAL_TILESETS) {
+      expect(SURFACE_TILESETS.get(body)?.id).not.toBe(tileset.id);
+      // Les niveaux de la fiche sont ceux qu'elle prendrait sur sa propre matrice : jusqu'à sa
+      // finesse publiée, et à partir du niveau suivant la base la plus fine de même grille.
+      expect(tileset.maxLevel, tileset.id).toBe(
+        regionalMaxLevel(tileset.matrix, tileset.publishedPixelsPerDegree)
+      );
+      const sameGrid = [...(SURFACE_VARIANTS.get(body)?.values() ?? [])]
+        .flat()
+        .filter(
+          (t) =>
+            t.matrix.columnsAtLevelZero === tileset.matrix.columnsAtLevelZero &&
+            t.matrix.tileSizePx === tileset.matrix.tileSizePx
+        );
+      expect(sameGrid.length, tileset.id).toBeGreaterThan(0);
+      expect(tileset.minLevel, tileset.id).toBe(
+        Math.max(...sameGrid.map((t) => t.maxLevel)) + 1
+      );
+    }
+  });
+
+  it('couvre la France et pas ses voisins (témoins nommés)', () => {
+    const ign = REGIONAL_TILESETS.get('earth')!.source.coverage;
+    const around = (lat: number, lon: number) => ({
+      west: lon - 0.001,
+      east: lon + 0.001,
+      south: lat - 0.001,
+      north: lat + 0.001,
+    });
+    for (const [name, lat, lon] of [
+      ['Paris', 48.8566, 2.3522],
+      ['Marseille', 43.2951, 5.374],
+      ['Saint-Denis de la Réunion', -20.8789, 55.4481],
+    ] as const)
+      expect(coversBounds(around(lat, lon), ign), name).toBe(true);
+    for (const [name, lat, lon] of [
+      ['Genève', 46.2044, 6.1432],
+      ['Bâle', 47.5596, 7.5886],
+      ['Monaco', 43.7384, 7.4246],
+      ['Londres', 51.507, -0.128],
+    ] as const)
+      expect(coversBounds(around(lat, lon), ign), name).toBe(false);
   });
 });
